@@ -75,7 +75,6 @@ MOD_UNLOAD(m_help)
 
 /*
 ** m_help (help/write to +h currently online) -Donwulff
-**	parv[0] = sender prefix
 **	parv[1] = optional message text
 */
 CMD_FUNC(m_help)
@@ -89,18 +88,18 @@ CMD_FUNC(m_help)
 	{
 		/* New syntax: ?... never goes out, !... always does. */
 		if (BadPtr(message)) {
-			parse_help(sptr, parv[0], NULL);
+			parse_help(sptr, sptr->name, NULL);
 			return 0;
 		}
 		else if (message[0] == '?') {
-			parse_help(sptr, parv[0], message+1);
+			parse_help(sptr, sptr->name, message+1);
 			return 0;
 		}
 		else if (message[0] == '!') {
 			message++;
 		}
 		else {
-			if (parse_help(sptr, parv[0], message))
+			if (parse_help(sptr, sptr->name, message))
 				return 0;
 		}
 	}

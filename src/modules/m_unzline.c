@@ -77,7 +77,6 @@ MOD_UNLOAD(m_unzline)
 
 /*
  *  m_unzline                        remove a temporary zap line
- *    parv[0] = sender prefix
  *    parv[1] = host
  */
 
@@ -85,11 +84,11 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
         if (!MyClient(sptr) || !ValidatePermissionsForPath("tkl:zline:local:remove",sptr,NULL,NULL,NULL))
         {
-                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
                 return 0;
         }
 
-        sendto_one(sptr, ":%s NOTICE %s :Please use /zline -user@host", me.name, parv[0]);
+        sendto_one(sptr, ":%s NOTICE %s :Please use /zline -user@host", me.name, sptr->name);
 
 	return 0;
 }

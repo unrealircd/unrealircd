@@ -76,7 +76,6 @@ MOD_UNLOAD(m_svssno)
 
 /*
  * do_svssno() 
- * parv[0] - sender
  * parv[1] - username to change snomask for
  * parv[2] - snomasks to change
  * show_change determines whether to show the change to the user

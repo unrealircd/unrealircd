@@ -382,7 +382,7 @@ DLLFUNC CMD_FUNC(m_stats)
 	if (parc < 2 || !*parv[1])
 	{
 		stats_help(sptr);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], '*');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, '*');
 		return 0;
 	}
 
@@ -391,7 +391,7 @@ DLLFUNC CMD_FUNC(m_stats)
 	{
 		if (!ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_short(parv[1][0]))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);	
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);	
 			return 0;
 		}	
 		/* Old style, we can use a binary search here */
@@ -401,7 +401,7 @@ DLLFUNC CMD_FUNC(m_stats)
 	{
 		if (!ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_long(parv[1]))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);	
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);	
 			return 0;
 		}
 		/* New style, search the hard way */
@@ -414,7 +414,7 @@ DLLFUNC CMD_FUNC(m_stats)
 		{
 			if (!ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_long(stat->longflag))
 			{
-				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 				return 0;
 			}
 		}
@@ -423,7 +423,7 @@ DLLFUNC CMD_FUNC(m_stats)
 		{
 			if (!ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_short(stat->flag))
 			{
-				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);	
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);	
 				return 0;
 			}
 		}
@@ -450,7 +450,7 @@ DLLFUNC CMD_FUNC(m_stats)
 		}
 		else
 			stat->func(sptr, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat->flag);
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, stat->flag);
 		if (!IsULine(sptr))
 			sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
 				stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
@@ -461,7 +461,7 @@ DLLFUNC CMD_FUNC(m_stats)
 	else
 	{
 		stats_help(sptr);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], '*');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, '*');
 		return 0;
 	}
 	return 0;

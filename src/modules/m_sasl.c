@@ -135,7 +135,6 @@ static const char *encode_puid(aClient *client)
 /*
  * SVSLOGIN message
  *
- * parv[0]: source
  * parv[1]: propagation mask
  * parv[2]: target PUID
  * parv[3]: ESVID
@@ -170,7 +169,7 @@ static int m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	/* not for us; propagate. */
 	sendto_server(cptr, 0, 0, ":%s SVSLOGIN %s %s %s",
-	    parv[0], parv[1], parv[2], parv[3]);
+	    sptr->name, parv[1], parv[2], parv[3]);
 
 	return 0;
 }
@@ -178,7 +177,6 @@ static int m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 /*
  * SASL message
  *
- * parv[0]: prefix
  * parv[1]: distribution mask
  * parv[2]: target PUID
  * parv[3]: mode/state
@@ -202,10 +200,10 @@ static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			make_user(target_p);
 
 		/* reject if another SASL agent is answering */
-		if (*target_p->sasl_agent && stricmp(parv[0], target_p->sasl_agent))
+		if (*target_p->sasl_agent && stricmp(sptr->name, target_p->sasl_agent))
 			return 0;
 		else
-			strlcpy(target_p->sasl_agent, parv[0], sizeof(target_p->sasl_agent));
+			strlcpy(target_p->sasl_agent, sptr->name, sizeof(target_p->sasl_agent));
 
 		if (*parv[3] == 'C')
 			sendto_one(target_p, "AUTHENTICATE %s", parv[4]);
@@ -227,7 +225,7 @@ static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	/* not for us; propagate. */
 	sendto_server(cptr, 0, 0, ":%s SASL %s %s %c %s %s",
-	    parv[0], parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
+	    sptr->name, parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
 
 	return 0;
 }
@@ -235,7 +233,6 @@ static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 /*
  * AUTHENTICATE message
  *
- * parv[0]: prefix
  * parv[1]: data
  */
 static int m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])

@@ -73,7 +73,6 @@ MOD_UNLOAD(m_samode)
 
 /*
  * m_samode
- * parv[0] = sender
  * parv[1] = channel
  * parv[2] = modes
  * -t
@@ -91,13 +90,13 @@ DLLFUNC CMD_FUNC(m_samode)
 	else
         {
                 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-                    me.name, parv[0], "SAMODE");
+                    me.name, sptr->name, "SAMODE");
                 return 0;
         }
 
 	if (!ValidatePermissionsForPath("samode",sptr,NULL,chptr,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 

@@ -77,7 +77,6 @@ MOD_UNLOAD(m_cycle)
 
 /*
  * m_cycle() - Stskeeps
- * parv[0] = prefix
  * parv[1] = channels
 */
 

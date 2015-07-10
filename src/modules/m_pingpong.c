@@ -85,7 +85,6 @@ MOD_UNLOAD(m_pingpong)
 
 /*
 ** m_ping
-**	parv[0] = sender prefix
 **	parv[1] = origin
 **	parv[2] = destination
 */
@@ -96,7 +95,7 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NOORIGIN), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOORIGIN), me.name, sptr->name);
 		return 0;
 	}
 	origin = parv[1];
@@ -117,11 +116,11 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (MyClient(sptr))
 			origin = sptr->name; /* Make sure origin is not spoofed */
 		if ((acptr = find_server_quick(destination)) && (acptr != &me))
-			sendto_one(acptr, ":%s PING %s :%s", parv[0], origin, destination);
+			sendto_one(acptr, ":%s PING %s :%s", sptr->name, origin, destination);
 		else
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
-			    me.name, parv[0], destination);
+			    me.name, sptr->name, destination);
 			return 0;
 		}
 	}
@@ -133,7 +132,6 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 /*
 ** m_nospoof - allows clients to respond to no spoofing patch
-**	parv[0] = prefix
 **	parv[1] = code
 */
 DLLFUNC int  m_nospoof(aClient *cptr, aClient *sptr, int parc, char *parv[])
@@ -177,7 +175,6 @@ Debug((DEBUG_NOTICE, "NOSPOOF"));
 
 /*
 ** m_pong
-**	parv[0] = sender prefix
 **	parv[1] = origin
 **	parv[2] = destination
 */
@@ -191,7 +188,7 @@ DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NOORIGIN), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOORIGIN), me.name, sptr->name);
 		return 0;
 	}
 
@@ -212,17 +209,17 @@ DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (!IsServer(cptr) && !IsServer(acptr))
 			{
 				sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
-				    me.name, parv[0], destination);
+				    me.name, sptr->name, destination);
 				return 0;
 			}
 			else
 				sendto_one(acptr, ":%s PONG %s %s",
-				    parv[0], origin, destination);
+				    sptr->name, origin, destination);
 		}
 		else
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
-			    me.name, parv[0], destination);
+			    me.name, sptr->name, destination);
 			return 0;
 		}
 	}

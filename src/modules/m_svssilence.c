@@ -77,7 +77,6 @@ MOD_UNLOAD(m_svssilence)
 /* m_svssilence()
  * written by Syzop (copied a lot from m_silence),
  * suggested by <??>.
- * parv[0] - sender
  * parv[1] - target nick
  * parv[2] - space delimited silence list (+Blah +Blih -Bluh etc)
  * SERVER DISTRIBUTION:
@@ -96,7 +95,7 @@ CMD_FUNC(m_svssilence)
 	if (parc < 3 || BadPtr(parv[2]) || !(acptr = find_person(parv[1], NULL)))
 		return 0;
 	
-	sendto_server(sptr, 0, 0, ":%s SVSSILENCE %s :%s", parv[0], parv[1], parv[2]);
+	sendto_server(sptr, 0, 0, ":%s SVSSILENCE %s :%s", sptr->name, parv[1], parv[2]);
 
 	mine = MyClient(acptr) ? 1 : 0;
 
@@ -118,7 +117,7 @@ CMD_FUNC(m_svssilence)
 			(c != '-' && !add_silence(acptr, cp, 0)))
 		{
 			if (mine)
-				sendto_prefix_one(acptr, acptr, ":%s SILENCE %c%s", parv[0], c, cp);
+				sendto_prefix_one(acptr, acptr, ":%s SILENCE %c%s", sptr->name, c, cp);
 		}
 	}
 	return 0;

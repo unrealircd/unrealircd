@@ -75,7 +75,6 @@ MOD_UNLOAD(m_sapart)
    Copied off PTlink IRCd (C) PTlink coders team.
    Coded for Sadmin by Stskeeps
    also Modified by NiQuiL (niquil@programmer.net)
-	parv[0] - sender
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
 	parv[3] - comment
@@ -94,20 +93,20 @@ DLLFUNC CMD_FUNC(m_sapart)
 
 	if (parc < 3)
         {
-                sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SAPART");
+                sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "SAPART");
                 return 0;
         }
 
         if (!(acptr = find_person(parv[1], NULL)))
         {
-                sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
+                sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, parv[1]);
                 return 0;
         }
 
 	/* See if we can operate on this vicim/this command */
 	if (!IsULine(sptr) && !ValidatePermissionsForPath("sapart",sptr,acptr,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 
@@ -121,7 +120,7 @@ DLLFUNC CMD_FUNC(m_sapart)
 		{
 			if (!(chptr = get_channel(acptr, name, 0)))
 			{
-				sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+				sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, sptr->name,
 					name);
 				continue;
 			}
@@ -129,13 +128,13 @@ DLLFUNC CMD_FUNC(m_sapart)
 			/* Validate oper can do this on chan/victim */
 			if (!IsULine(sptr) && !ValidatePermissionsForPath("sapart",sptr,acptr,chptr,NULL))
         		{
-                		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+                		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 				continue;
         		}
 	
 			if (!(lp = find_membership_link(acptr->user->channel, chptr)))
 			{
-				sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL), me.name, parv[0],
+				sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL), me.name, sptr->name,
 					parv[1], name);
 				continue;
 			}
@@ -156,7 +155,7 @@ DLLFUNC CMD_FUNC(m_sapart)
 			strlcat(commentx, comment, 512);
 		}
 
-		parv[0] = parv[1]; // nick
+		parv[0] = acptr->name; // nick
 		parv[1] = parv[2]; // chan
 		parv[2] = comment ? commentx : NULL; // comment
 		if (comment)
@@ -164,25 +163,25 @@ DLLFUNC CMD_FUNC(m_sapart)
 			sendnotice(acptr,
 			    "*** You were forced to part %s (%s)",
 			    parv[1], commentx);
-			sendto_realops("%s used SAPART to make %s part %s (%s)", sptr->name, parv[0],
+			sendto_realops("%s used SAPART to make %s part %s (%s)", sptr->name, acptr->name,
 				parv[1], comment);
 			sendto_server(&me, 0, 0, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
-				me.name, sptr->name, parv[0], parv[1], comment);
+				me.name, sptr->name, acptr->name, parv[1], comment);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
-				sptr->name, parv[0], parv[1], comment);
+				sptr->name, acptr->name, parv[1], comment);
 		}
 		else
 		{
 			sendnotice(acptr,
 			    "*** You were forced to part %s", parv[1]);
-			sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[0],
+			sendto_realops("%s used SAPART to make %s part %s", sptr->name, acptr->name,
 				parv[1]);
 			sendto_server(&me, 0, 0, ":%s GLOBOPS :%s used SAPART to make %s part %s",
-				me.name, sptr->name, parv[0], parv[1]);
+				me.name, sptr->name, acptr->name, parv[1]);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
-				sptr->name, parv[0], parv[1]);
+				sptr->name, acptr->name, parv[1]);
 		}
 		do_cmd(acptr, acptr, "PART", comment ? 3 : 2, parv);
 	}
@@ -190,7 +189,7 @@ DLLFUNC CMD_FUNC(m_sapart)
 	{
 		if (comment)
 		{
-			sendto_one(acptr, ":%s SAPART %s %s :%s", parv[0],
+			sendto_one(acptr, ":%s SAPART %s %s :%s", sptr->name,
 			    parv[1], parv[2], comment);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
@@ -198,7 +197,7 @@ DLLFUNC CMD_FUNC(m_sapart)
 		}
 		else
 		{
-			sendto_one(acptr, ":%s SAPART %s %s", parv[0], parv[1],
+			sendto_one(acptr, ":%s SAPART %s %s", sptr->name, parv[1],
 				   parv[2]);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",

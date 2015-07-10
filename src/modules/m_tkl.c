@@ -183,7 +183,6 @@ MOD_UNLOAD(m_tkl)
 ** m_gline (oper function - /TKL takes care of distribution)
 ** /gline [+|-]u@h mask time :reason
 **
-** parv[0] = sender
 ** parv[1] = [+|-]u@h mask
 ** parv[2] = for how long
 ** parv[3] = reason
@@ -395,7 +394,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	if (!ValidatePermissionsForPath("tkl:kline:remove",sptr,NULL,NULL,NULL) && *parv[1] == '-')
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	return m_tkl_line(cptr, sptr, parc, parv, "k");
@@ -465,7 +464,6 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 ** m_tkl_line (oper function - /TKL takes care of distribution)
 ** /gline [+|-]u@h mask time :reason
 **
-** parv[0] = sender
 ** parv[1] = [+|-]u@h mask
 ** parv[2] = for how long
 ** parv[3] = reason

@@ -174,13 +174,11 @@ long set_usermode(char *umode)
 **
 **	parv	a NULL terminated list of parameter pointers,
 **
-**			parv[0], sender (prefix string), if not present
-**				this points to an empty string.
 **			parv[1]...parv[parc-1]
 **				pointers to additional parameters
 **			parv[parc] == NULL, *always*
 **
-**		note:	it is guaranteed that parv[0]..parv[parc-1] are all
+**		note:	it is guaranteed that parv[1]..parv[parc-1] are all
 **			non-NULL pointers.
 */
 
@@ -279,13 +277,13 @@ int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int pa
 			return HUNTED_ISME;
 		if (match(acptr->name, parv[server]))
 			parv[server] = acptr->name;
-		sendto_one(acptr, command, parv[0],
+		sendto_one(acptr, command, sptr->name,
 		    parv[1], parv[2], parv[3], parv[4],
 		    parv[5], parv[6], parv[7], parv[8]);
 		return (HUNTED_PASS);
 	}
 	sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name,
-	    parv[0], parv[server]);
+	    sptr->name, parv[server]);
 	return (HUNTED_NOSUCH);
 }
 

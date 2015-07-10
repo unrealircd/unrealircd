@@ -171,14 +171,14 @@ int ret;
 	if (!(alias = Find_alias(cmd))) 
 	{
 		sendto_one(sptr, ":%s %d %s %s :Unknown command",
-			me.name, ERR_UNKNOWNCOMMAND, parv[0], cmd);
+			me.name, ERR_UNKNOWNCOMMAND, sptr->name, cmd);
 		return 0;
 	}
 	
 	/* If it isn't an ALIAS_COMMAND, we require a paramter ... We check ALIAS_COMMAND LATER */
 	if (alias->type != ALIAS_COMMAND && (parc < 2 || *parv[1] == '\0'))
 	{
-		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, sptr->name);
 		return -1;
 	}
 
@@ -188,12 +188,12 @@ int ret;
 		{
 			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
 				return ret;
-			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
+			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", sptr->name,
 				alias->nick, SERVICES_NAME, parv[1]);
 		}
 		else
 			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
-				parv[0], alias->nick);
+				sptr->name, alias->nick);
 	}
 	else if (alias->type == ALIAS_STATS) 
 	{
@@ -201,12 +201,12 @@ int ret;
 		{
 			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
 				return ret;
-			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
+			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", sptr->name,
 				alias->nick, STATS_SERVER, parv[1]);
 		}
 		else
 			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
-				parv[0], alias->nick);
+				sptr->name, alias->nick);
 	}
 	else if (alias->type == ALIAS_NORMAL) 
 	{
@@ -215,16 +215,16 @@ int ret;
 			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
 				return ret;
 			if (MyClient(acptr))
-				sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", parv[0], 
+				sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
 					sptr->user->username, GetHost(sptr),
 					alias->nick, parv[1]);
 			else
-				sendto_one(acptr, ":%s PRIVMSG %s :%s", parv[0],
+				sendto_one(acptr, ":%s PRIVMSG %s :%s", sptr->name,
 					alias->nick, parv[1]);
 		}
 		else
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
-				parv[0], alias->nick);
+				sptr->name, alias->nick);
 	}
 	else if (alias->type == ALIAS_CHANNEL)
 	{
@@ -237,12 +237,12 @@ int ret;
 					return ret;
 				sendto_channelprefix_butone(sptr,
 				    sptr, chptr, PREFIX_ALL,
-                                    ":%s PRIVMSG %s :%s", parv[0],
+                                    ":%s PRIVMSG %s :%s", sptr->name,
 				    chptr->chname, parv[1]);
 				return 0;
 			}
 		}
-		sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, sptr->name,
 				cmd, "You may not use this command at this time");
 	}
 	else if (alias->type == ALIAS_COMMAND) 
@@ -295,8 +295,8 @@ int ret;
 						else if (format->parameters[i] == 'n' ||
 							 format->parameters[i] == 'N')
 						{
-							strlcat(output, parv[0], sizeof output);
-							j += strlen(parv[0]);
+							strlcat(output, sptr->name, sizeof output);
+							j += strlen(sptr->name);
 						}
 						else 
 						{
@@ -322,11 +322,11 @@ int ret;
 					{
 						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
 							return ret;
-						sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
+						sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", sptr->name,
 							format->nick, SERVICES_NAME, output);
 					} else
 						sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
-							parv[0], format->nick);
+							sptr->name, format->nick);
 				}
 				else if (format->type == ALIAS_STATS) 
 				{
@@ -334,11 +334,11 @@ int ret;
 					{
 						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
 							return ret;
-						sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
+						sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", sptr->name,
 							format->nick, STATS_SERVER, output);
 					} else
 						sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
-							parv[0], format->nick);
+							sptr->name, format->nick);
 				}
 				else if (format->type == ALIAS_NORMAL) 
 				{
@@ -347,16 +347,16 @@ int ret;
 						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
 							return ret;
 						if (MyClient(acptr))
-							sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", parv[0], 
+							sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
 							sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
 							format->nick, output);
 						else
-							sendto_one(acptr, ":%s PRIVMSG %s :%s", parv[0],
+							sendto_one(acptr, ":%s PRIVMSG %s :%s", sptr->name,
 								format->nick, output);
 					}
 					else
 						sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
-							parv[0], format->nick);
+							sptr->name, format->nick);
 				}
 				else if (format->type == ALIAS_CHANNEL)
 				{
@@ -369,13 +369,13 @@ int ret;
 								return ret;
 							sendto_channelprefix_butone(sptr,
 							    sptr, chptr, PREFIX_ALL,
-			                                    ":%s PRIVMSG %s :%s", parv[0],
+			                                    ":%s PRIVMSG %s :%s", sptr->name,
 							    chptr->chname, parv[1]);
 							return 0;
 						}
 					}
 					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name,
-						 parv[0], cmd, 
+						 sptr->name, cmd, 
 						"You may not use this command at this time");
 				}
 				else if (format->type == ALIAS_REAL)
@@ -387,7 +387,7 @@ int ret;
 
 					if (recursive_alias)
 					{
-						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], cmd, "You may not use this command at this time -- recursion");
+						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, sptr->name, cmd, "You may not use this command at this time -- recursion");
 						return -1;
 					}
 

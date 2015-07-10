@@ -78,7 +78,6 @@ MOD_UNLOAD(m_sendumode)
 
 /*
 ** m_sendumode - Stskeeps
-**      parv[0] = sender prefix
 **      parv[1] = target
 **      parv[2] = message text
 ** Pretty handy proc.. 
@@ -102,18 +101,18 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 3)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "SENDUMODE");
+		    me.name, sptr->name, "SENDUMODE");
 		return 0;
 	}
 
 	if (!IsServer(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 
 	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0,
-	    ":%s SENDUMODE %s :%s", parv[0], parv[1], message);
+	    ":%s SENDUMODE %s :%s", sptr->name, parv[1], message);
 
 	for (p = parv[1]; *p; p++)
 	{

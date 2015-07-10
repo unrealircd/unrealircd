@@ -88,7 +88,7 @@ DLLFUNC CMD_FUNC(m_eos)
 	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: got sync from %s (path:%s)", sptr->name, cptr->name);
 	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: broadcasting it back to everyone except route from %s", cptr->name);
 #endif
-	sendto_server(cptr, 0, 0, ":%s EOS", parv[0]);
+	sendto_server(cptr, 0, 0, ":%s EOS", sptr->name);
 
 	return 0;
 }

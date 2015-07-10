@@ -85,7 +85,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "VHOST");
+		    me.name, sptr->name, "VHOST");
 		return 0;
 
 	}

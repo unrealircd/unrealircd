@@ -72,7 +72,6 @@ MOD_UNLOAD(m_netinfo)
 /*
 ** m_netinfo
 ** by Stskeeps
-**  parv[0] = sender prefix
 **  parv[1] = max global count
 **  parv[2] = time of end sync
 **  parv[3] = unreal protocol using (numeric)

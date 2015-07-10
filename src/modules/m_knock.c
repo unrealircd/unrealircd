@@ -73,7 +73,6 @@ MOD_UNLOAD(m_knock)
 
 /*
 ** m_knock
-**	parv[0] - sender prefix
 **	parv[1] - channel
 **	parv[2] - reason
 **
@@ -94,7 +93,7 @@ CMD_FUNC(m_knock)
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "KNOCK");
+		    me.name, sptr->name, "KNOCK");
 		return -1;
 	}
 

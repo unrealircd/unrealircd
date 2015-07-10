@@ -107,7 +107,6 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
    **         
    **  Modified for UnrealIRCd by Stskeeps
    **  Recoded by Stskeeps
-   **      parv[0] = sender prefix
    **      parv[1]	aChannel *chptr;
 	aClient *cptr;
 	int  parc;

@@ -168,7 +168,6 @@ int i=0,j=0;
 
 /*
 ** m_join
-**	parv[0] = sender prefix
 **	parv[1] = channel
 **	parv[2] = channel password (key)
 */
@@ -335,7 +334,7 @@ DLLFUNC CMD_FUNC(_do_join)
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "JOIN");
+		    me.name, sptr->name, "JOIN");
 		return 0;
 	}
 	bouncedtimes++;
@@ -379,9 +378,7 @@ DLLFUNC CMD_FUNC(_do_join)
 		else if (!IsChannelName(name))
 		{
 			if (MyClient(sptr))
-				sendto_one(sptr,
-				    err_str(ERR_NOSUCHCHANNEL), me.name,
-				    parv[0], name);
+				sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, sptr->name, name);
 			continue;
 		}
 		if (*jbuf)
@@ -412,13 +409,13 @@ DLLFUNC CMD_FUNC(_do_join)
 			{
 				chptr = lp->chptr;
 				sendto_channel_butserv(chptr, sptr,
-				    PARTFMT2, parv[0], chptr->chname,
+				    PARTFMT2, sptr->name, chptr->chname,
 				    "Left all channels");
 				if (MyConnect(sptr))
 					RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, "Left all channels");
 				remove_user_from_channel(sptr, chptr);
 			}
-			sendto_server(cptr, 0, 0, ":%s JOIN 0", parv[0]);
+			sendto_server(cptr, 0, 0, ":%s JOIN 0", sptr->name);
 			continue;
 		}
 
@@ -444,7 +441,7 @@ DLLFUNC CMD_FUNC(_do_join)
 					sendto_one(sptr,
 					    err_str
 					    (ERR_TOOMANYCHANNELS),
-					    me.name, parv[0], name);
+					    me.name, sptr->name, name);
 					RET(0)
 				}
 /* RESTRICTCHAN */
@@ -461,7 +458,7 @@ DLLFUNC CMD_FUNC(_do_join)
 								get_client_name(sptr, 1), name);
 						}
 						if (d->reason)
-							sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, BadPtr(parv[0]) ? "*" : parv[0], name, d->reason);
+							sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, sptr->name, name, d->reason);
 						if (d->redirect)
 						{
 							sendnotice(sptr, "*** Redirecting you to %s", d->redirect);
@@ -477,7 +474,7 @@ DLLFUNC CMD_FUNC(_do_join)
 			}
 			if (ValidatePermissionsForPath("immune:forbiddenchan",sptr,NULL,NULL,NULL) && (tklban = find_qline(sptr, name, &ishold)))
 			{
-				sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, BadPtr(parv[0]) ? "*" : parv[0], name, tklban->reason);
+				sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, sptr->name, name, tklban->reason);
 				continue;
 			}
 			/* ugly set::spamfilter::virus-help-channel-deny hack.. */
@@ -540,8 +537,7 @@ DLLFUNC CMD_FUNC(_do_join)
 #else
 				if (i != -1)
 #endif
-					sendto_one(sptr, err_str(i),
-					    me.name, parv[0], name);
+					sendto_one(sptr, err_str(i), me.name, sptr->name, name);
 #ifndef NO_OPEROVERRIDE
 				else if (i != -1 && ValidatePermissionsForPath("override:join",sptr,NULL,chptr,NULL) )
 				{

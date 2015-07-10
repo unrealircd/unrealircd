@@ -147,7 +147,6 @@ ConfigItem_ban *bconf;
  ***************************************************************************/
 /*
 ** m_pass
-**	parv[0] = sender prefix
 **	parv[1] = password
 */
 DLLFUNC CMD_FUNC(m_pass)
@@ -157,13 +156,13 @@ DLLFUNC CMD_FUNC(m_pass)
 	if (BadPtr(password))
 	{
 		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "PASS");
+		    me.name, sptr->name, "PASS");
 		return 0;
 	}
 	if (!MyConnect(sptr) || (!IsUnknown(cptr) && !IsHandshake(cptr)))
 	{
 		sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
-		    me.name, parv[0]);
+		    me.name, sptr->name);
 		return 0;
 	}
 

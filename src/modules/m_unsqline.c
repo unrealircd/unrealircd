@@ -75,7 +75,6 @@ MOD_UNLOAD(m_unsqline)
 }
 
 /*    m_unsqline
-**	parv[0] = sender
 **	parv[1] = nickmask
 */
 DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])

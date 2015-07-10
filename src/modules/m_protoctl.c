@@ -71,7 +71,6 @@ MOD_UNLOAD(m_protoctl)
 
 /*
  * m_protoctl
- *	parv[0] = Sender prefix
  *	parv[1+] = Options
  */
 CMD_FUNC(m_protoctl)

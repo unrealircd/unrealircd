@@ -80,7 +80,6 @@ static char buf[BUFSIZE];
 
 /*
 ** m_names
-**	parv[0] = sender prefix
 **	parv[1] = channel
 */
 #define TRUNCATED_NAMES 64
@@ -103,7 +102,7 @@ DLLFUNC CMD_FUNC(m_names)
 	if (parc < 2 || !MyConnect(sptr))
 	{
 		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
-		    parv[0], "*");
+		    sptr->name, "*");
 		return 0;
 	}
 
@@ -126,7 +125,7 @@ DLLFUNC CMD_FUNC(m_names)
 	if (!chptr || (!ShowChannel(sptr, chptr) && !ValidatePermissionsForPath("override:see:names:secret",sptr,NULL,chptr,NULL)))
 	{
 		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
-		    parv[0], para);
+		    sptr->name, para);
 		return 0;
 	}
 
@@ -226,16 +225,16 @@ DLLFUNC CMD_FUNC(m_names)
 		if (mlen + idx + bufLen > BUFSIZE - 7)
 		{
 			sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name,
-			    parv[0], buf);
+			    sptr->name, buf);
 			idx = spos;
 			flag = 0;
 		}
 	}
 
 	if (flag)
-		sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name, parv[0], buf);
+		sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name, sptr->name, buf);
 
-	sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name, parv[0], para);
+	sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name, sptr->name, para);
 
 	return 0;
 

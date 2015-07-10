@@ -77,7 +77,6 @@ MOD_UNLOAD(m_svskill)
 
 /*
 ** m_svskill
-**	parv[0] = servername
 **	parv[1] = client
 **	parv[2] = kill message
 */
@@ -104,7 +103,7 @@ CMD_FUNC(m_svskill)
 	if (!(acptr = find_person(parv[1], NULL)))
 		return 0;
 
-	sendto_server(cptr, 0, 0, ":%s SVSKILL %s :%s", parv[0], parv[1], comment);
+	sendto_server(cptr, 0, 0, ":%s SVSKILL %s :%s", sptr->name, parv[1], comment);
 
 	acptr->flags |= FLAGS_KILLED;
 

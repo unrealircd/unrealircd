@@ -77,7 +77,6 @@ MOD_UNLOAD(m_svspart)
 /* m_svspart() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.
   Modified for PART by Stskeeps
-	parv[0] - sender
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
 	parv[3] - comment
@@ -94,7 +93,7 @@ CMD_FUNC(m_svspart)
 
 	if (MyClient(acptr))
 	{
-		parv[0] = parv[1];
+		parv[0] = acptr->name;
 		parv[1] = parv[2];
 		parv[2] = comment;
 		parv[3] = NULL;
@@ -103,10 +102,10 @@ CMD_FUNC(m_svspart)
 	else
 	{
 		if (comment)
-			sendto_one(acptr, ":%s SVSPART %s %s :%s", parv[0],
+			sendto_one(acptr, ":%s SVSPART %s %s :%s", sptr->name,
 			    parv[1], parv[2], parv[3]);
 		else
-			sendto_one(acptr, ":%s SVSPART %s %s", parv[0],
+			sendto_one(acptr, ":%s SVSPART %s %s", sptr->name,
 			    parv[1], parv[2]);
 	}
 

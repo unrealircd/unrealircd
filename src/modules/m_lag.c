@@ -75,7 +75,6 @@ MOD_UNLOAD(m_lag)
 }
 
 /* m_lag (lag measure) - Stskeeps
- * parv[0] = prefix
  * parv[1] = server to query
 */
 
@@ -85,21 +84,20 @@ DLLFUNC int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (MyClient(sptr))
 		if (!ValidatePermissionsForPath("server:info:lag",sptr,NULL,NULL,NULL))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 			return 0;
 		}
 
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "LAG");
+		    me.name, sptr->name, "LAG");
 		return 0;
 	}
 	if (*parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "LAG");
+		    me.name, sptr->name, "LAG");
 		return 0;
 	}
 	if (hunt_server(cptr, sptr, ":%s LAG :%s", 1, parc, parv) == HUNTED_NOSUCH)

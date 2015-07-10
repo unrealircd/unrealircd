@@ -130,13 +130,11 @@ void reread_motdsandrules();
 **
 **	parv	a NULL terminated list of parameter pointers,
 **
-**			parv[0], sender (prefix string), if not present
-**				this points to an empty string.
 **			parv[1]...parv[parc-1]
 **				pointers to additional parameters
 **			parv[parc] == NULL, *always*
 **
-**		note:	it is guaranteed that parv[0]..parv[parc-1] are all
+**		note:	it is guaranteed that parv[1]..parv[parc-1] are all
 **			non-NULL pointers.
 */
 #ifndef _WIN32
@@ -177,7 +175,6 @@ inline void send_version(aClient* sptr, int reply)
 
 /*
 ** m_version
-**	parv[0] = sender prefix
 **	parv[1] = remote server
 */
 CMD_FUNC(m_version)
@@ -189,7 +186,7 @@ CMD_FUNC(m_version)
 	if (hunt_server(cptr, sptr, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
-		    parv[0], version, debugmode, me.name,
+		    sptr->name, version, debugmode, me.name,
 		    serveropts, extraflags ? extraflags : "",
 		    tainted ? "3" : "",
 		    (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? MYOSNAME : "*"), UnrealProtocol);
@@ -317,7 +314,6 @@ char **text = unrealinfo;
 
 /*
 ** m_info
-**	parv[0] = sender prefix
 **	parv[1] = servername
 **  Modified for hardcode by Stskeeps
 */
@@ -337,7 +333,6 @@ CMD_FUNC(m_info)
 
 /*
 ** m_dalinfo
-**      parv[0] = sender prefix
 **      parv[1] = servername
 */
 CMD_FUNC(m_dalinfo)
@@ -351,15 +346,15 @@ CMD_FUNC(m_dalinfo)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
-			    me.name, parv[0], *text++);
+			    me.name, sptr->name, *text++);
 
-		sendto_one(sptr, rpl_str(RPL_INFO), me.name, parv[0], "");
+		sendto_one(sptr, rpl_str(RPL_INFO), me.name, sptr->name, "");
 		sendto_one(sptr,
 		    ":%s %d %s :Birth Date: %s, compile # %s",
-		    me.name, RPL_INFO, parv[0], creation, generation);
+		    me.name, RPL_INFO, sptr->name, creation, generation);
 		sendto_one(sptr, ":%s %d %s :On-line since %s",
-		    me.name, RPL_INFO, parv[0], myctime(me.firsttime));
-		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, parv[0]);
+		    me.name, RPL_INFO, sptr->name, myctime(me.firsttime));
+		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, sptr->name);
 	}
 
 	return 0;
@@ -367,7 +362,6 @@ CMD_FUNC(m_dalinfo)
 
 /*
 ** m_license
-**      parv[0] = sender prefix
 **      parv[1] = servername
 */
 CMD_FUNC(m_license)
@@ -381,10 +375,10 @@ CMD_FUNC(m_license)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
-			    me.name, parv[0], *text++);
+			    me.name, sptr->name, *text++);
 
-		sendto_one(sptr, rpl_str(RPL_INFO), me.name, parv[0], "");
-		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, parv[0]);
+		sendto_one(sptr, rpl_str(RPL_INFO), me.name, sptr->name, "");
+		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, sptr->name);
 	}
 
 	return 0;
@@ -392,7 +386,6 @@ CMD_FUNC(m_license)
 
 /*
 ** m_credits
-**      parv[0] = sender prefix
 **      parv[1] = servername
 */
 CMD_FUNC(m_credits)
@@ -406,15 +399,15 @@ CMD_FUNC(m_credits)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
-			    me.name, parv[0], *text++);
+			    me.name, sptr->name, *text++);
 
-		sendto_one(sptr, rpl_str(RPL_INFO), me.name, parv[0], "");
+		sendto_one(sptr, rpl_str(RPL_INFO), me.name, sptr->name, "");
 		sendto_one(sptr,
 		    ":%s %d %s :Birth Date: %s, compile # %s",
-		    me.name, RPL_INFO, parv[0], creation, generation);
+		    me.name, RPL_INFO, sptr->name, creation, generation);
 		sendto_one(sptr, ":%s %d %s :On-line since %s",
-		    me.name, RPL_INFO, parv[0], myctime(me.firsttime));
-		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, parv[0]);
+		    me.name, RPL_INFO, sptr->name, myctime(me.firsttime));
+		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, sptr->name);
 	}
 
 	return 0;
@@ -471,33 +464,31 @@ char *get_client_name2(aClient *acptr, int showports)
 
 /*
 ** m_summon
-** parv[0] = sender prefix
 */
 CMD_FUNC(m_summon)
 {
 	/* /summon is old and out dated, we just return an error as
 	 * required by RFC1459 -- codemastr
-	 */ sendto_one(sptr, err_str(ERR_SUMMONDISABLED), me.name, parv[0]);
+	 */ sendto_one(sptr, err_str(ERR_SUMMONDISABLED), me.name, sptr->name);
 	return 0;
 }
 /*
 ** m_users
-**	parv[0] = sender prefix
 **	parv[1] = servername
 */ 
 CMD_FUNC(m_users)
 {
 	/* /users is out of date, just return an error as  required by
 	 * RFC1459 -- codemastr
-	 */ sendto_one(sptr, err_str(ERR_USERSDISABLED), me.name, parv[0]);
+	 */ sendto_one(sptr, err_str(ERR_USERSDISABLED), me.name, sptr->name);
 	return 0;
 }
+
 /*
 ** Note: At least at protocol level ERROR has only one parameter,
 ** although this is called internally from other functions
 ** --msa
 **
-**	parv[0] = sender prefix
 **	parv[*] = parameters
 */ 
 CMD_FUNC(m_error)
@@ -626,13 +617,13 @@ CMD_FUNC(m_rehash)
 
 	if (MyClient(sptr) && !ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	if (!MyClient(sptr) && !ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL)
 	    && !IsULine(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	x = 0;
@@ -657,7 +648,7 @@ CMD_FUNC(m_rehash)
 	if (cptr != sptr)
 	{
 #ifndef REMOTE_REHASH
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 #endif
 		if (parv[2] == NULL)
@@ -673,7 +664,7 @@ CMD_FUNC(m_rehash)
 			    me.name, sptr->name);
 			sendto_ops
 			    ("%s is remotely rehashing server config file",
-			    parv[0]);
+			    sptr->name);
 			reread_motdsandrules();
 			return rehash(cptr, sptr,
 			    (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
@@ -698,7 +689,7 @@ CMD_FUNC(m_rehash)
 			 */
 			if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
 			{
-				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 				sendnotice(sptr, "'/REHASH -global' requires you to have server::rehash permissions");
 				return 0;
 			}
@@ -726,7 +717,7 @@ CMD_FUNC(m_rehash)
 
 		if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 			return 0;
 		}
 
@@ -797,12 +788,12 @@ CMD_FUNC(m_rehash)
 				me.name, sptr->name);
 			return 0;
 		}
-		sendto_ops("%s is rehashing server config file", parv[0]);
+		sendto_ops("%s is rehashing server config file", sptr->name);
 	}
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
 	if (cptr == sptr)
-		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
+		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, sptr->name, configfile);
 	x = rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 	reread_motdsandrules();
 	return x;
@@ -825,12 +816,12 @@ char *reason = parv[1];
 	/* Check permissions */
 	if (MyClient(sptr) && !ValidatePermissionsForPath("server:restart",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	if (!MyClient(sptr) && !ValidatePermissionsForPath("server:restart",sptr,NULL,NULL,NULL) && !IsULine(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 
@@ -844,7 +835,7 @@ char *reason = parv[1];
 	{
 		if (conf_drpass)
 		{
-			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "RESTART");
+			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "RESTART");
 			return 0;
 		}
 	} else
@@ -857,7 +848,7 @@ char *reason = parv[1];
 			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
 			if (ret == -1)
 			{
-				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
+				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, sptr->name);
 				return 0;
 			}
 			if (ret < 1)
@@ -865,7 +856,7 @@ char *reason = parv[1];
 			reason = parv[2];
 		}
 	}
-	sendto_ops("Server is Restarting by request of %s", parv[0]);
+	sendto_ops("Server is Restarting by request of %s", sptr->name);
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
@@ -1183,7 +1174,7 @@ CMD_FUNC(m_die)
 	int  i;
 	if (!MyClient(sptr) || !ValidatePermissionsForPath("server:die",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 
@@ -1192,14 +1183,14 @@ CMD_FUNC(m_die)
 		if (parc < 2)	/* And if so, require a password :) */
 		{
 			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-			    parv[0], "DIE");
+			    sptr->name, "DIE");
 			return 0;
 		}
 		i = Auth_Check(cptr, conf_drpass->dieauth, parv[1]);
 		if (i == -1)
 		{
 			sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
-			    parv[0]);
+			    sptr->name);
 			return 0;
 		}
 		if (i < 1)
@@ -1209,7 +1200,7 @@ CMD_FUNC(m_die)
 	}
 
 	/* Let the +s know what is going on */
-	sendto_ops("Server Terminating by request of %s", parv[0]);
+	sendto_ops("Server Terminating by request of %s", sptr->name);
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{

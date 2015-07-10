@@ -40,7 +40,6 @@ static char buffer[1024];
 ** DoNumeric (replacement for the old do_numeric)
 **
 **	parc	number of arguments ('sender' counted as one!)
-**	parv[0]	pointer to 'sender' (may point to empty string) (not used)
 **	parv[1]..parv[parc-1]
 **		pointers to additional parameters, this is a NULL
 **		terminated list (parv[parc] == NULL).
@@ -100,7 +99,7 @@ int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[
 	else
 		sendto_realops("do_numeric( %i, %s, %s, %i, { %s, %s } )!",
 		    numeric, cptr->name, sptr->name, parc,
-		    parv[0], parv[1] ? parv[1] : "<null>");
+		    sptr->name, parv[1] ? parv[1] : "<null>");
 	for (; (nick = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
 		if ((acptr = find_client(nick, (aClient *)NULL)))
@@ -128,21 +127,21 @@ int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[
 				 */
 
 				sendto_prefix_one(acptr, sptr, ":%s %d %s%s",
-				    parv[0], numeric, nick, buffer);
+				    sptr->name, numeric, nick, buffer);
 			}
 			else if (IsServer(acptr) && acptr->from != cptr)
 				sendto_prefix_one(acptr, sptr, ":%s %d %s%s",
-				    parv[0], numeric, nick, buffer);
+				    sptr->name, numeric, nick, buffer);
 		}
 		else if ((acptr = find_server_quick(nick)))
 		{
 			if (!IsMe(acptr) && acptr->from != cptr)
 				sendto_prefix_one(acptr, sptr, ":%s %d %s%s",
-				    parv[0], numeric, nick, buffer);
+				    sptr->name, numeric, nick, buffer);
 		}
 		else if ((chptr = find_channel(nick, (aChannel *)NULL)))
 			sendto_channel_butone(cptr, sptr, chptr, ":%s %d %s%s",
-			    parv[0], numeric, chptr->chname, buffer);
+			    sptr->name, numeric, chptr->chname, buffer);
 	}
 	return 0;
 }

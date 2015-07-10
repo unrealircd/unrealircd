@@ -71,14 +71,6 @@ MOD_UNLOAD(m_links)
 	return MOD_SUCCESS;
 }
 
-/*
-** m_links
-**	parv[0] = sender prefix
-** or
-**	parv[0] = sender prefix
-**
-** Recoded by Stskeeps
-*/
 DLLFUNC CMD_FUNC(m_links)
 {
 	aClient *acptr;
@@ -91,14 +83,14 @@ DLLFUNC CMD_FUNC(m_links)
 			continue;
 		if (flat)
 			sendto_one(sptr, rpl_str(RPL_LINKS),
-			    me.name, parv[0], acptr->name, me.name,
+			    me.name, sptr->name, acptr->name, me.name,
 			    (acptr != &me) ? 1 : 1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 		else
 			sendto_one(sptr, rpl_str(RPL_LINKS),
-			    me.name, parv[0], acptr->name, acptr->serv->up,
+			    me.name, sptr->name, acptr->name, acptr->serv->up,
 			    acptr->hopcount, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 	}
 
-	sendto_one(sptr, rpl_str(RPL_ENDOFLINKS), me.name, parv[0], "*");
+	sendto_one(sptr, rpl_str(RPL_ENDOFLINKS), me.name, sptr->name, "*");
 	return 0;
 }

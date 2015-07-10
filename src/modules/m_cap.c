@@ -422,7 +422,7 @@ DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		/* I know nothing! */
 		if (IsPerson(sptr))
-			sendto_one(sptr, err_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CAP");
+			sendto_one(sptr, err_str(ERR_UNKNOWNCOMMAND), me.name, sptr->name, "CAP");
 		else
 			sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "CAP");
 		return 0;

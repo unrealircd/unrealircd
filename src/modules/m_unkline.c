@@ -76,7 +76,6 @@ MOD_UNLOAD(m_unkline)
 
 /*
  *  m_unkline
- *    parv[0] = sender prefix
  *    parv[1] = userhost
  */
 
@@ -84,10 +83,10 @@ DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (!MyClient(sptr) || !ValidatePermissionsForPath("tkl:kline:remove",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
-	sendto_one(sptr, ":%s NOTICE %s :Please use /kline -user@host", me.name, parv[0]);
+	sendto_one(sptr, ":%s NOTICE %s :Please use /kline -user@host", me.name, sptr->name);
 
 	return 0;
 }

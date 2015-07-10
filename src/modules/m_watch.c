@@ -210,7 +210,7 @@ DLLFUNC CMD_FUNC(m_watch)
 				    (lp = lp->next); count++)
 					;
 			sendto_one(sptr, rpl_str(RPL_WATCHSTAT), me.name,
-			    parv[0], sptr->watches, count);
+			    sptr->name, sptr->watches, count);
 
 			/*
 			 * Send a list of everybody in their WATCH list. Be careful
@@ -219,13 +219,13 @@ DLLFUNC CMD_FUNC(m_watch)
 			if ((lp = sptr->watch) == NULL)
 			{
 				sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST),
-				    me.name, parv[0], *s);
+				    me.name, sptr->name, *s);
 				continue;
 			}
 			*buf = '\0';
 			strlcpy(buf, lp->value.wptr->nick, sizeof buf);
 			count =
-			    strlen(parv[0]) + strlen(me.name) + 10 +
+			    strlen(sptr->name) + strlen(me.name) + 10 +
 			    strlen(buf);
 			while ((lp = lp->next))
 			{
@@ -233,10 +233,10 @@ DLLFUNC CMD_FUNC(m_watch)
 				    BUFSIZE - 2)
 				{
 					sendto_one(sptr, rpl_str(RPL_WATCHLIST),
-					    me.name, parv[0], buf);
+					    me.name, sptr->name, buf);
 					*buf = '\0';
 					count =
-					    strlen(parv[0]) + strlen(me.name) +
+					    strlen(sptr->name) + strlen(me.name) +
 					    10;
 				}
 				strcat(buf, " ");
@@ -244,10 +244,10 @@ DLLFUNC CMD_FUNC(m_watch)
 				count += (strlen(lp->value.wptr->nick) + 1);
 			}
 			sendto_one(sptr, rpl_str(RPL_WATCHLIST), me.name,
-			    parv[0], buf);
+			    sptr->name, buf);
 
 			sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST), me.name,
-			    parv[0], *s);
+			    sptr->name, *s);
 			continue;
 		}
 
@@ -268,7 +268,7 @@ DLLFUNC CMD_FUNC(m_watch)
 				    find_person(lp->value.wptr->nick, NULL)))
 				{
 					sendto_one(sptr, rpl_str(RPL_NOWON),
-					    me.name, parv[0], acptr->name,
+					    me.name, sptr->name, acptr->name,
 					    acptr->user->username,
 					    IsHidden(acptr) ? acptr->user->
 					    virthost : acptr->user->realhost,
@@ -280,14 +280,14 @@ DLLFUNC CMD_FUNC(m_watch)
 				 */
 				else if (isupper(*s))
 					sendto_one(sptr, rpl_str(RPL_NOWOFF),
-					    me.name, parv[0],
+					    me.name, sptr->name,
 					    lp->value.wptr->nick, "*", "*",
 					    lp->value.wptr->lasttime);
 				lp = lp->next;
 			}
 
 			sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST), me.name,
-			    parv[0], *s);
+			    sptr->name, *s);
 
 			continue;
 		}

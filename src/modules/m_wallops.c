@@ -73,7 +73,6 @@ MOD_UNLOAD(m_wallops)
 
 /*
 ** m_wallops (write to *all* opers currently online)
-**	parv[0] = sender prefix
 **	parv[1] = message text
 */
 DLLFUNC CMD_FUNC(m_wallops)
@@ -84,15 +83,15 @@ DLLFUNC CMD_FUNC(m_wallops)
 	if (BadPtr(message))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "WALLOPS");
+		    me.name, sptr->name, "WALLOPS");
 		return 0;
 	}
 	if (MyClient(sptr) && !ValidatePermissionsForPath("chat:wallops",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,
-	    ":%s WALLOPS :%s", parv[0], message);
+	    ":%s WALLOPS :%s", sptr->name, message);
 	return 0;
 }

@@ -378,7 +378,6 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 /*
  * do_svsmode() [merge from svsmode/svs2mode]
- * parv[0] - sender
  * parv[1] - username to change mode for
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)
@@ -544,11 +543,11 @@ int  what, setflags;
 
 	if (parc > 3)
 		sendto_server(cptr, 0, 0, ":%s %s %s %s %s",
-		    parv[0], show_change ? "SVS2MODE" : "SVSMODE",
+		    sptr->name, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2], parv[3]);
 	else
 		sendto_server(cptr, 0, 0,  ":%s %s %s %s",
-		    parv[0], show_change ? "SVS2MODE" : "SVSMODE",
+		    sptr->name, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2]);
 
 	/* Here we trigger the same hooks that m_mode does and, likewise,
@@ -562,7 +561,7 @@ int  what, setflags;
 		char buf[BUFSIZE];
 		send_umode(NULL, acptr, setflags, ALL_UMODES, buf);
 		if (MyClient(acptr) && buf[0] && buf[1])
-			sendto_one(acptr, ":%s MODE %s :%s", parv[0], parv[1], buf);
+			sendto_one(acptr, ":%s MODE %s :%s", sptr->name, parv[1], buf);
 	}
 
 	VERIFY_OPERCOUNT(acptr, "svsmodeX");
@@ -571,7 +570,6 @@ int  what, setflags;
 
 /*
  * m_svsmode() added by taz
- * parv[0] - sender
  * parv[1] - username to change mode for
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)
@@ -583,7 +581,6 @@ int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 /*
  * m_svs2mode() added by Potvin
- * parv[0] - sender
  * parv[1] - username to change mode for
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)

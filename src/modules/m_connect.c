@@ -75,7 +75,6 @@ MOD_UNLOAD(m_connect)
  * m_connect() - Added by Jto 11 Feb 1989
  ***********************************************************************//*
    ** m_connect
-   **  parv[0] = sender prefix
    **  parv[1] = servername
  */
 DLLFUNC CMD_FUNC(m_connect)
@@ -89,12 +88,12 @@ DLLFUNC CMD_FUNC(m_connect)
 	if (!IsServer(sptr) && MyConnect(sptr) && !ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && parc > 3)
 	{			/* Only allow LocOps to make */
 		/* local CONNECTS --SRB      */
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	if (!IsServer(sptr) && MyClient(sptr) && !ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL) && parc <= 3)
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	if (hunt_server(cptr, sptr, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
@@ -103,7 +102,7 @@ DLLFUNC CMD_FUNC(m_connect)
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "CONNECT");
+		    me.name, sptr->name, "CONNECT");
 		return -1;
 	}
 

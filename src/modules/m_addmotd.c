@@ -88,13 +88,13 @@ DLLFUNC CMD_FUNC(m_addmotd)
 
 	if (!ValidatePermissionsForPath("server:addmotd",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "ADDMOTD");
+		    me.name, sptr->name, "ADDMOTD");
 		return 0;
 	}
 	conf = fopen(MOTD, "a");

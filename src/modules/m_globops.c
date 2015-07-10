@@ -73,7 +73,6 @@ MOD_UNLOAD(m_globops)
 
 /*
 ** m_globops (write to opers who are +g currently online)
-**      parv[0] = sender prefix
 **      parv[1] = message text
 */
 DLLFUNC CMD_FUNC(m_globops)
@@ -85,13 +84,13 @@ DLLFUNC CMD_FUNC(m_globops)
 	if (BadPtr(message))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "GLOBOPS");
+		    me.name, sptr->name, "GLOBOPS");
 		return 0;
 	}
 
 	if (MyClient(sptr) && !ValidatePermissionsForPath("chat:globops",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 

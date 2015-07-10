@@ -73,7 +73,6 @@ MOD_UNLOAD(m_silence)
 
 /*
 ** m_silence
-**	parv[0] = sender prefix
 ** From local client:
 **	parv[1] = mask (NULL sends the list)
 ** From remote client:
@@ -111,7 +110,7 @@ DLLFUNC CMD_FUNC(m_silence)
 		    index(cp, '!') || index(cp, '*')))
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
-			    parv[0], parv[1]);
+			    sptr->name, parv[1]);
 			return -1;
 		}
 		else
@@ -121,7 +120,7 @@ DLLFUNC CMD_FUNC(m_silence)
 		    (c != '-' && !add_silence(sptr, cp, 1)))
 		{
 			sendto_prefix_one(sptr, sptr, ":%s SILENCE %c%s",
-			    parv[0], c, cp);
+			    sptr->name, c, cp);
 			if (c == '-')
 				sendto_server(NULL, 0, 0, ":%s SILENCE * -%s",
 				    sptr->name, cp);
@@ -129,7 +128,7 @@ DLLFUNC CMD_FUNC(m_silence)
 	}
 	else if (parc < 3 || *parv[2] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name,
 		    "SILENCE");
 		return -1;
 	}
@@ -139,20 +138,19 @@ DLLFUNC CMD_FUNC(m_silence)
 		{
 			if (!del_silence(sptr, parv[2] + 1))
 				sendto_server(cptr, 0, 0, ":%s SILENCE %s :%s",
-				    parv[0], parv[1], parv[2]);
+				    sptr->name, parv[1], parv[2]);
 		}
 		else
 		{
 			(void)add_silence(sptr, parv[2], 1);
 			if (!MyClient(acptr))
 				sendto_one(acptr, ":%s SILENCE %s :%s",
-				    parv[0], parv[1], parv[2]);
+				    sptr->name, parv[1], parv[2]);
 		}
 	}
 	else
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0],
-		    parv[1]);
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, parv[1]);
 		return -1;
 	}
 	return 0;

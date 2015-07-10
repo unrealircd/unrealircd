@@ -77,7 +77,6 @@ MOD_UNLOAD(m_sethost)
    m_sethost() added by Stskeeps (30/04/1999)
                (modified at 15/05/1999) by Stskeeps | Potvin
    :prefix SETHOST newhost
-   parv[0] - sender
    parv[1] - newhost
 */
 DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
@@ -87,7 +86,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (!ValidatePermissionsForPath("client:host",sptr,NULL,NULL,NULL))
 	{
   		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-	        parv[0]);
+	        sptr->name);
 		return 0;
 	}
 
@@ -103,7 +102,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** Syntax: /SetHost <new host>",
-			    me.name, parv[0]);
+			    me.name, sptr->name);
 		}
 		return 0;
 	}
@@ -131,7 +130,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** /SetHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
-		    me.name, parv[0]);
+		    me.name, sptr->name);
 		return 0;
 	}
 	if (vhost[0] == ':')
@@ -144,7 +143,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** /SetHost Error: requested host is same as current host.",
-		    me.name, parv[0]);
+		    me.name, sptr->name);
 		return 0;
 	}
 
@@ -196,8 +195,8 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, vhost);
 		sendto_one(sptr,
 		    ":%s NOTICE %s :Your nick!user@host-mask is now (%s!%s@%s) - To disable it type /mode %s -x",
-		    me.name, parv[0], parv[0], sptr->user->username, vhost,
-		    parv[0]);
+		    me.name, sptr->name, sptr->name, sptr->user->username, vhost,
+		    sptr->name);
 	}
 	return 0;
 }

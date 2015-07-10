@@ -73,17 +73,15 @@ MOD_UNLOAD(m_umode2)
 
 /*
     m_umode2 added by Stskeeps
-    parv[0] - sender
     parv[1] - modes to change
-
     Small wrapper to bandwidth save
 */
 
 CMD_FUNC(m_umode2)
 {
 	char *xparv[5] = {
-		parv[0],
-		parv[0],
+		sptr->name,
+		sptr->name,
 		parv[1],
 		(parc > 3) ? parv[3] : NULL,
 		NULL

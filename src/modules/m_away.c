@@ -85,7 +85,6 @@ MOD_UNLOAD(m_away)
 
 /*
 ** m_away
-**      parv[0] = sender prefix
 **      parv[1] = away message
 */
 int  m_away(aClient *cptr, aClient *sptr, int parc, char *parv[])
@@ -105,14 +104,14 @@ int n, wasaway = 0;
                         MyFree(away);
                         sptr->user->away = NULL;
 			/* Only send this if they were actually away -- codemastr */
-	                sendto_server(cptr, 0, 0, ":%s AWAY", parv[0]);
+	                sendto_server(cptr, 0, 0, ":%s AWAY", sptr->name);
 	                hash_check_watch(cptr, RPL_NOTAWAY);
 
 			sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s AWAY", sptr->name);
                 }
                 /* hope this works XX */
                 if (MyConnect(sptr))
-                        sendto_one(sptr, rpl_str(RPL_UNAWAY), me.name, parv[0]);
+                        sendto_one(sptr, rpl_str(RPL_UNAWAY), me.name, sptr->name);
 				RunHook2(HOOKTYPE_AWAY, sptr, NULL);
                 return 0;
         }
@@ -133,7 +132,7 @@ int n, wasaway = 0;
 			sptr->user->flood.away_c++;
 		if (sptr->user->flood.away_c > AWAY_COUNT)
 		{
-			sendto_one(sptr, err_str(ERR_TOOMANYAWAY), me.name, parv[0]);
+			sendto_one(sptr, err_str(ERR_TOOMANYAWAY), me.name, sptr->name);
 			return 0;
 		}
 	}
@@ -148,7 +147,7 @@ int n, wasaway = 0;
 
 	sptr->user->lastaway = TStime();
 	
-        sendto_server(cptr, 0, 0, ":%s AWAY :%s", parv[0], awy2);
+        sendto_server(cptr, 0, 0, ":%s AWAY :%s", sptr->name, awy2);
 
 	if (away)
 	{
@@ -159,7 +158,7 @@ int n, wasaway = 0;
 	away = sptr->user->away = strdup(awy2);
 
         if (MyConnect(sptr))
-                sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, parv[0]);
+                sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, sptr->name);
 
 	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
 	sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s AWAY :%s", sptr->name, away);

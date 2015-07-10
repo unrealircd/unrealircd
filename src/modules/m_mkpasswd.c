@@ -75,7 +75,6 @@ MOD_UNLOAD(m_mkpasswd)
 
 /*
 ** m_mkpasswd
-**      parv[0] = sender prefix
 **      parv[1] = password to encrypt
 */
 int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])

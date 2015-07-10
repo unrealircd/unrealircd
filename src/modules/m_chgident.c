@@ -87,7 +87,6 @@ MOD_UNLOAD(m_chgident)
 /* 
  * m_chgident - 12/07/1999 (two months after I made SETIDENT) - Stskeeps
  * :prefix CHGIDENT <nick> <new identname>
- * parv[0] - sender
  * parv[1] - nickname
  * parv[2] - identname
  *
@@ -101,7 +100,7 @@ int  legalident = 1;
 
 	if (!ValidatePermissionsForPath("client:ident",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 

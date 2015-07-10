@@ -84,13 +84,13 @@ DLLFUNC CMD_FUNC(m_addline)
 
 	if (!ValidatePermissionsForPath("server:addline",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "ADDLINE");
+		    me.name, sptr->name, "ADDLINE");
 		return 0;
 	}
 	/* writes to current -f */

@@ -83,7 +83,6 @@ MOD_UNLOAD(m_rping)
 /*
  * m_rping  -- by Run
  *
- *    parv[0] = sender (sptr->name thus)
  * if sender is a person: (traveling towards start server)
  *    parv[1] = pinged server[mask]
  *    parv[2] = start server (current target)
@@ -101,13 +100,13 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!IsServer(sptr) && !ValidatePermissionsForPath("server:rping",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	
 	if (parc < (ValidatePermissionsForPath("server:rping",sptr,NULL,NULL,NULL) ? (MyConnect(sptr) ? 2 : 3) : 6))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name,
 		    "RPING");
 		return 0;
 	}
@@ -134,7 +133,7 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!(acptr = (aClient *)find_match_server(parv[1])) || !IsServer(acptr))
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name,
-			    parv[0], parv[1]);
+			    sptr->name, parv[1]);
 			return 0;
 		}
 		sendto_one(acptr, ":%s RPING %s %s %s :%s",
@@ -145,7 +144,7 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		if (hunt_server(cptr, sptr, ":%s RPING %s %s %s %s :%s", 1, parc, parv) != HUNTED_ISME)
 			return 0;
-		sendto_one(cptr, ":%s RPONG %s %s %s %s :%s", me.name, parv[0],
+		sendto_one(cptr, ":%s RPONG %s %s %s %s :%s", me.name, sptr->name,
 		    parv[2], parv[3], parv[4], parv[5]);
 	}
 	return 0;
@@ -153,7 +152,6 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 /*
  * m_rpong  -- by Run too :)
  *
- * parv[0] = sender prefix
  * parv[1] = from pinged server: start server; from start server: sender
  * parv[2] = from pinged server: sender; from start server: pinged server
  * parv[3] = pingtime in ms
@@ -169,7 +167,7 @@ DLLFUNC int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 5)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "RPING");
+		    me.name, sptr->name, "RPING");
 		return 0;
 	}
 
@@ -183,7 +181,7 @@ DLLFUNC int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (IsServer(acptr) && parc > 5)
 		{
 			sendto_one(acptr, ":%s RPONG %s %s %s %s :%s",
-			    parv[0], parv[1], parv[2], parv[3], parv[4],
+			    sptr->name, parv[1], parv[2], parv[3], parv[4],
 			    parv[5]);
 			return 0;
 		}
@@ -192,7 +190,6 @@ DLLFUNC int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		parv[1] = parv[2];
 		parv[2] = sptr->name;
-		parv[0] = me.name;
 		parv[3] = militime(parv[3], parv[4]);
 		parv[4] = parv[5];
 		if (!(acptr = find_person(parv[1], (aClient *)NULL)))
@@ -200,7 +197,7 @@ DLLFUNC int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	sendto_one(acptr, ":%s RPONG %s %s %s :%s",
-	    parv[0], parv[1], parv[2], parv[3], parv[4]);
+	    sptr->name, parv[1], parv[2], parv[3], parv[4]);
 	return 0;
 }
 

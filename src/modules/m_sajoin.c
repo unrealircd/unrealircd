@@ -75,7 +75,6 @@ MOD_UNLOAD(m_sajoin)
    Copied off PTlink IRCd (C) PTlink coders team.
    Coded for Sadmin by Stskeeps
    also Modified by NiQuiL (niquil@programmer.net)
-	parv[0] - sender
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
 */
@@ -87,20 +86,20 @@ DLLFUNC CMD_FUNC(m_sajoin)
 
 	if (parc < 3) 
         {
-         sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SAJOIN");     
+         sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "SAJOIN");     
          return 0;
         }
 
 	if (!(acptr = find_person(parv[1], NULL)))
         {
-                sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
+                sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, parv[1]);
                 return 0;
         }
 
 	/* Is this user disallowed from operating on this victim at all? */
 	if (!IsULine(sptr) && !ValidatePermissionsForPath("sajoin",sptr,acptr,NULL,NULL))
 	{
-	 sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	 sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 	 return 0;
 	}
 
@@ -132,7 +131,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			{
 				sendto_one(sptr,
 				    err_str(ERR_NOSUCHCHANNEL), me.name,
-				    parv[0], name);
+				    sptr->name, name);
 				continue;
 			}
 
@@ -141,13 +140,13 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			/* If this _specific_ channel is not permitted, skip it */
 			if (!IsULine(sptr) && !ValidatePermissionsForPath("sajoin",sptr,acptr,chptr,NULL))
         		{
-         			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+         			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 				continue;
 		        }
 
 			if (!parted && chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
 			{
-				sendto_one(sptr, err_str(ERR_USERONCHANNEL), me.name, parv[0], 
+				sendto_one(sptr, err_str(ERR_USERONCHANNEL), me.name, sptr->name, 
 					   parv[1], name);
 				continue;
 			}
@@ -224,8 +223,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 	}
 	else
 	{
-		sendto_one(acptr, ":%s SAJOIN %s %s", parv[0],
-		    parv[1], parv[2]);
+		sendto_one(acptr, ":%s SAJOIN %s %s", sptr->name, parv[1], parv[2]);
 
 		/* Logging function added by XeRXeS */
 		ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",

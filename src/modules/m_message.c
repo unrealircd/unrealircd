@@ -175,7 +175,6 @@ int ret;
 ** m_message (used in m_private() and m_notice())
 ** the general function to deliver MSG's between users/channels
 **
-**	parv[0] = sender prefix
 **	parv[1] = receiver list
 **	parv[2] = message text
 **
@@ -217,13 +216,13 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NORECIPIENT),
-		    me.name, parv[0], cmd);
+		    me.name, sptr->name, cmd);
 		return -1;
 	}
 
 	if (parc < 3 || *parv[2] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, sptr->name);
 		return -1;
 	}
 
@@ -258,7 +257,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			ret = can_privmsg(cptr, sptr, acptr, notice, &text, &newcmd);
 			if (ret == CANPRIVMSG_SEND)
 			{
-				sendto_message_one(acptr, sptr, parv[0], newcmd, nick, text);
+				sendto_message_one(acptr, sptr, sptr->name, newcmd, nick, text);
 				continue;
 			} else
 			if (ret == CANPRIVMSG_CONTINUE)
@@ -400,7 +399,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				    sptr, chptr,
 				    prefix,
 				    notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
-				    parv[0], nick, text);
+				    sptr->name, nick, text);
 
 				sendanyways = 0;
 				RunHook4(HOOKTYPE_CHANMSG, sptr, chptr, text, notice);
@@ -411,7 +410,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			{
 				if (!notice || (cansend == 8)) /* privmsg or 'cannot send notice'... */
 					sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-					    me.name, parv[0], chptr->chname,
+					    me.name, sptr->name, chptr->chname,
 					    err_cantsend[cansend - 1], p2);
 			}
 			continue;
@@ -419,7 +418,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		else if (p2)
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
-			    parv[0], p2);
+			    sptr->name, p2);
 			continue;
 		}
 
@@ -437,7 +436,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			    sptr, nick + 1,
 			    (*nick == '#') ? MATCH_HOST :
 			    MATCH_SERVER,
-			    ":%s %s %s :%s", parv[0], cmd, nick, parv[2]);
+			    ":%s %s %s :%s", sptr->name, cmd, nick, parv[2]);
 			continue;
 		}
 
@@ -478,16 +477,16 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				}
 				/* NICK@SERVER NOT FOUND: */
 				if (server && strncasecmp(server + 1, SERVICES_NAME, strlen(SERVICES_NAME)) == 0)
-					sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name, parv[0], nick);
+					sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name, sptr->name, nick);
 				else
-					sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], fulltarget);
+					sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, fulltarget);
 
 				continue;
 			}
 
 		}
 		/* nothing, nada, not anything found */
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name,
 		    nick);
 		continue;
 	}
@@ -496,7 +495,6 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 /*
 ** m_private
-**	parv[0] = sender prefix
 **	parv[1] = receiver list
 **	parv[2] = message text
 */
@@ -508,7 +506,6 @@ DLLFUNC int  m_private(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 /*
 ** m_notice
-**	parv[0] = sender prefix
 **	parv[1] = receiver list
 **	parv[2] = notice text
 */

@@ -79,7 +79,6 @@ extern MODVAR aWhowas *WHOWASHASH[WW_MAX];
 
 /*
 ** m_whowas
-**      parv[0] = sender prefix
 **      parv[1] = nickname queried
 */
 DLLFUNC CMD_FUNC(m_whowas)
@@ -92,7 +91,7 @@ DLLFUNC CMD_FUNC(m_whowas)
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
-		    me.name, parv[0]);
+		    me.name, sptr->name);
 		return 0;
 	}
 	if (parc > 2)
@@ -115,7 +114,7 @@ DLLFUNC CMD_FUNC(m_whowas)
 		if (!mycmp(nick, temp->name))
 		{
 			sendto_one(sptr, rpl_str(RPL_WHOWASUSER),
-			    me.name, parv[0], temp->name,
+			    me.name, sptr->name, temp->name,
 			    temp->username,
 			    (IsOper(sptr) ? temp->hostname :
 			    (*temp->virthost !=
@@ -123,7 +122,7 @@ DLLFUNC CMD_FUNC(m_whowas)
 			    temp->realname);
                 	if (!((Find_uline(temp->servername)) && !IsOper(sptr) && HIDE_ULINES))
 				sendto_one(sptr, rpl_str(RPL_WHOISSERVER), me.name,
-				    parv[0], temp->name, temp->servername,
+				    sptr->name, temp->name, temp->servername,
 				    myctime(temp->logoff));
 			cur++;
 			found++;
@@ -133,8 +132,8 @@ DLLFUNC CMD_FUNC(m_whowas)
 	}
 	if (!found)
 		sendto_one(sptr, err_str(ERR_WASNOSUCHNICK),
-		    me.name, parv[0], nick);
+		    me.name, sptr->name, nick);
 
-	sendto_one(sptr, rpl_str(RPL_ENDOFWHOWAS), me.name, parv[0], parv[1]);
+	sendto_one(sptr, rpl_str(RPL_ENDOFWHOWAS), me.name, sptr->name, parv[1]);
 	return 0;
 }

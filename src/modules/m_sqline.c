@@ -78,7 +78,6 @@ MOD_UNLOAD(m_sqline)
 }
 
 /*    m_sqline
-**	parv[0] = sender
 **	parv[1] = nickmask
 **	parv[2] = reason
 */

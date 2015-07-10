@@ -74,7 +74,6 @@ MOD_UNLOAD(m_sdesc)
 
 /* m_sdesc - 15/05/1999 - Stskeeps
  *  :prefix SDESC
- *  parv[0] - sender
  *  parv[1] - description
  *  D: Sets server info if you are Server Admin (ONLINE)
 */
@@ -119,9 +118,9 @@ int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (MyConnect(sptr))
 		sendto_one(sptr,
 			":%s NOTICE %s :Your \"server description\" is now set to be %s - you have to set it manually to undo it",
-			me.name, parv[0], parv[1]);
+			me.name, sptr->name, parv[1]);
 
 	sendto_ops("Server description for %s is now '%s' changed by %s",
-		sptr->srvptr->name, sptr->srvptr->info, parv[0]);
+		sptr->srvptr->name, sptr->srvptr->info, sptr->name);
 	return 0;
 }

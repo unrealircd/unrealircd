@@ -72,7 +72,6 @@ MOD_UNLOAD(m_undccdeny)
 }
 
 /* Remove a temporary dccdeny line
- * parv[0] - sender
  * parv[1] - file/mask
  */
 DLLFUNC CMD_FUNC(m_undccdeny)
@@ -83,43 +82,34 @@ DLLFUNC CMD_FUNC(m_undccdeny)
 
 	if (!ValidatePermissionsForPath("client:dcc",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 
 	if (parc < 2)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name,
 		    "UNDCCDENY");
 		return 0;
 	}
 
 	if (BadPtr(parv[1]))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name,
 		    "UNDCCDENY");
 		return 0;
 	}
-/* If we find an exact match even if it is a wild card only remove the exact match -- codemastr */
 	if ((p = Find_deny_dcc(parv[1])) && p->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 	{
-		sendto_ops("%s removed a temp dccdeny for %s", parv[0],
+		sendto_ops("%s removed a temp dccdeny for %s", sptr->name,
 		    parv[1]);
 		DCCdeny_del(p);
 		return 1;
 	}
-/* Next search using the wild card -- codemastr */
-/* Uncommented by Stskeeps:
-	else if (dcc_del_wild_match(parv[1]) == 1)
-		sendto_ops
-		    ("%s removed a temp dccdeny for all dccdenys matching %s",
-		    parv[0], parv[1]);
-*/
-/* If still no match, give an error */
 	else
 		sendto_one(sptr,
 		    "NOTICE %s :*** Unable to find a temp dccdeny matching %s",
-		    parv[0], parv[1]);
+		    sptr->name, parv[1]);
 	return 0;
 
 }

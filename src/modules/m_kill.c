@@ -79,7 +79,6 @@ MOD_UNLOAD(m_kill)
 
 /*
 ** m_kill
-**	parv[0] = sender prefix
 **	parv[1] = kill victim(s) - comma separated list
 **	parv[2] = kill path
 */
@@ -96,7 +95,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "KILL");
+		    me.name, sptr->name, "KILL");
 		return 0;
 	}
 
@@ -112,13 +111,13 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!IsServer(cptr) && !ValidatePermissionsForPath("kill:global",sptr,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	if (BadPtr(path))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "KILL");
+		    me.name, sptr->name, "KILL");
 		return 0;
 	}
 	if (strlen(path) > (size_t)TOPICLEN)
@@ -144,7 +143,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    get_history(nick, (long)KILLCHASETIMELIMIT)))
 			{
 				sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-				    me.name, parv[0], nick);
+				    me.name, sptr->name, nick);
 				continue;
 			}
 			sendnotice(sptr,
@@ -156,21 +155,18 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    || (MyConnect(acptr) && MyClient(cptr)
 		    && !ValidatePermissionsForPath("kill:local",sptr,acptr,NULL,NULL)))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 			continue;
 		}
 		if (IsServer(acptr) || IsMe(acptr))
 		{
-			sendto_one(sptr, err_str(ERR_CANTKILLSERVER),
-			    me.name, parv[0]);
+			sendto_one(sptr, err_str(ERR_CANTKILLSERVER), me.name, sptr->name);
 			continue;
 		}
 		if (!IsPerson(acptr))
 		{
 			/* Nick exists but user is not registered yet: IOTW "doesn't exist". -- Syzop */
-			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-			    me.name, parv[0], nick);
+			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, nick);
 			continue;
 		}
 
@@ -239,10 +235,10 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    "*** Notice -- Received KILL message for %s!%s@%s from %s Path: %s!%s",
 		    acptr->name, auser->username,
 		    IsHidden(acptr) ? auser->virthost : auser->realhost,
-		    parv[0], inpath, path);
+		    sptr->name, inpath, path);
 #if defined(USE_SYSLOG) && defined(SYSLOG_KILL)
 			syslog(LOG_DEBUG, "KILL From %s For %s Path %s!%s",
-			    parv[0], acptr->name, inpath, path);
+			    sptr->name, acptr->name, inpath, path);
 #endif
 		/*
 		 * By otherguy
@@ -251,7 +247,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
                     (LOG_KILL, "KILL (%s) by  %s(%s!%s)",
                            make_nick_user_host
                      (acptr->name, acptr->user->username, GetHost(acptr)),
-                            parv[0],
+                            sptr->name,
                             inpath,
                             path);
 		/*
@@ -263,7 +259,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!MyConnect(acptr) || !MyConnect(sptr))
 		{
 			sendto_server(cptr, 0, 0, ":%s KILL %s :%s!%s",
-			    parv[0], acptr->name, inpath, path);
+			    sptr->name, acptr->name, inpath, path);
 			if (chasing && IsServer(cptr))
 				sendto_one(cptr, ":%s KILL %s :%s!%s",
 				    me.name, acptr->name, inpath, path);
@@ -278,7 +274,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		 */
 		if (MyConnect(acptr))
 			sendto_prefix_one(acptr, sptr, ":%s KILL %s :%s!%s",
-			    parv[0], acptr->name, inpath, path);
+			    sptr->name, acptr->name, inpath, path);
 		/*
 		   ** Set FLAGS_KILLED. This prevents exit_one_client from sending
 		   ** the unnecessary QUIT for this. (This flag should never be

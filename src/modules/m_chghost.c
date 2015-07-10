@@ -81,7 +81,6 @@ MOD_UNLOAD(m_chghost)
 /* 
  * m_chghost - 12/07/1999 (two months after I made SETIDENT) - Stskeeps
  * :prefix CHGHOST <nick> <new hostname>
- * parv[0] - sender
  * parv[1] - nickname
  * parv[2] - hostname
  *
@@ -93,8 +92,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (MyClient(sptr) && !ValidatePermissionsForPath("client:host",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 

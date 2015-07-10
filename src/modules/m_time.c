@@ -77,13 +77,12 @@ MOD_UNLOAD(m_time)
 
 /*
 ** m_time
-**	parv[0] = sender prefix
 **	parv[1] = servername
 */
 CMD_FUNC(m_time)
 {
 	if (hunt_server(cptr, sptr, ":%s TIME :%s", 1, parc, parv) == HUNTED_ISME)
-		sendto_one(sptr, rpl_str(RPL_TIME), me.name, parv[0], me.name,
+		sendto_one(sptr, rpl_str(RPL_TIME), me.name, sptr->name, me.name,
 		    date((long)0));
 	return 0;
 }

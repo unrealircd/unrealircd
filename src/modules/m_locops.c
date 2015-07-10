@@ -73,7 +73,6 @@ MOD_UNLOAD(m_locops)
 
 /*
 ** m_locops (write to opers who are +g currently online *this* server)
-**      parv[0] = sender prefix
 **      parv[1] = message text
 */
 DLLFUNC CMD_FUNC(m_locops)
@@ -85,14 +84,14 @@ DLLFUNC CMD_FUNC(m_locops)
 	if (BadPtr(message))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "LOCOPS");
+		    me.name, sptr->name, "LOCOPS");
 		return 0;
 	}
 	if (MyClient(sptr) && !ValidatePermissionsForPath("chat:locops",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
-	sendto_umode(UMODE_OPER, "from %s: %s", parv[0], message);
+	sendto_umode(UMODE_OPER, "from %s: %s", sptr->name, message);
 	return 0;
 }

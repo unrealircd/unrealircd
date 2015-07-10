@@ -149,7 +149,7 @@ int i = 0;
 		i = parse_who_options(sptr, parc - 1, parv + 1);
 		if (i < 0)
 		{
-			sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
+			sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, mask);
 			return 0;
 		}
 	}
@@ -167,14 +167,14 @@ int i = 0;
 	if (*mask == '\0')
 	{
 		/* no mask given */
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], "*");
+		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, "*");
 		return 0;
 	}
 
 	if ((target_channel = find_channel(mask, NULL)) != NULL)
 	{
 		do_channel_who(sptr, target_channel, mask);
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
+		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, mask);
 		return 0;
 	}
 
@@ -182,13 +182,13 @@ int i = 0;
 	    (target_channel = find_channel(wfl.channel, NULL)) != NULL)
 	{
 		do_channel_who(sptr, target_channel, mask);
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
+		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, mask);
 		return 0;
 	}
 	else
 	{
 		do_other_who(sptr, mask);
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
+		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, mask);
 		return 0;
 	}
 

@@ -165,7 +165,6 @@ int cnt = 0, hide_ulines;
 ** New /MAP format. -Potvin
 ** m_map (NEW)
 **
-**      parv[0] = sender prefix
 **      parv[1] = server mask
 **/
 DLLFUNC CMD_FUNC(m_map)
@@ -188,7 +187,7 @@ DLLFUNC CMD_FUNC(m_map)
 		dump_flat_map(sptr, &me, longest);
 	else
 		dump_map(sptr, &me, "*", 0, longest);
-	sendto_one(sptr, rpl_str(RPL_MAPEND), me.name, parv[0]);
+	sendto_one(sptr, rpl_str(RPL_MAPEND), me.name, sptr->name);
 
 	return 0;
 }

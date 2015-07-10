@@ -76,7 +76,6 @@ MOD_UNLOAD(m_svswatch)
 }
 
 /* m_svswatch() - written by Syzop, suggested by Griever.
- * parv[0] - sender
  * parv[1] - target nick
  * parv[2] - parameters
  */
@@ -91,13 +90,13 @@ CMD_FUNC(m_svswatch)
 
 	if (MyClient(acptr))
 	{
-		parv[0] = parv[1];
+		parv[0] = acptr->name;
 		parv[1] = parv[2];
 		parv[2] = NULL;
 		do_cmd(acptr, acptr, "WATCH", 2, parv);
 	}
 	else
-		sendto_one(acptr, ":%s SVSWATCH %s :%s", parv[0], parv[1], parv[2]);
+		sendto_one(acptr, ":%s SVSWATCH %s :%s", sptr->name, parv[1], parv[2]);
 
 	return 0;
 }

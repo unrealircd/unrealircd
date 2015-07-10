@@ -74,7 +74,6 @@ MOD_UNLOAD(m_setident)
 
 /* m_setident - 12/05/1999 - Stskeeps
  *  :prefix SETIDENT newident
- *  parv[0] - sender
  *  parv[1] - newident
  *  D: This will set your username to be <x> (like (/setident Root))
  *     (if you are IRCop) **efg*
@@ -101,7 +100,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (!ValidatePermissionsForPath("self:ident",sptr,NULL,NULL,NULL))
 		  {
 			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
+			      sptr->name);
 			  return 0;
 		  }
 		  break;
@@ -109,7 +108,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (MyConnect(sptr))
 		  {
 			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
+			      sptr->name);
 			  return 0;
 		  }
 		  break;
@@ -132,7 +131,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** Syntax: /SetIdent <new ident>",
-			    me.name, parv[0]);
+			    me.name, sptr->name);
 		}
 		return 1;
 	}
@@ -172,7 +171,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** /SetIdent Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.' - Please only use them",
-		    me.name, parv[0]);
+		    me.name, sptr->name);
 		return 0;
 	}
 
@@ -213,7 +212,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :Your nick!user@host-mask is now (%s!%s@%s) - To disable ident set change it manually by /setident'ing again",
-		    me.name, parv[0], parv[0], sptr->user->username, GetHost(sptr));
+		    me.name, sptr->name, sptr->name, sptr->user->username, GetHost(sptr));
 	}
 	return 0;
 }

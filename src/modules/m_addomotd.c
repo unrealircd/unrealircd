@@ -88,13 +88,13 @@ DLLFUNC CMD_FUNC(m_addomotd)
 
 	if (!ValidatePermissionsForPath("server:addomotd",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "ADDOMOTD");
+		    me.name, sptr->name, "ADDOMOTD");
 		return 0;
 	}
 	conf = fopen(conf_files->opermotd_file, "a");

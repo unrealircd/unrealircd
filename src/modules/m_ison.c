@@ -92,7 +92,7 @@ DLLFUNC CMD_FUNC(m_ison) {
 
 	if (parc < 2) {
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "ISON");
+		    me.name, sptr->name, "ISON");
 		return 0;
 	}
 

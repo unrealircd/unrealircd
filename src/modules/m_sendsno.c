@@ -76,7 +76,6 @@ MOD_UNLOAD(m_sendsno)
 
 /*
 ** m_sendsno - Written by Syzop, bit based on SENDUMODE from Stskeeps
-**      parv[0] = sender prefix
 **      parv[1] = target snomask
 **      parv[2] = message text
 ** Servers can use this to:
@@ -91,7 +90,7 @@ aClient *acptr;
 
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SENDSNO");
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "SENDSNO");
 		return 0;
 	}
 	sno = parv[1];

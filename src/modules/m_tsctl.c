@@ -79,7 +79,6 @@ MOD_UNLOAD(m_tsctl)
 
 /*
 ** m_tsctl - Stskeeps
-**      parv[0] = sender prefix
 **      parv[1] = command
 **      parv[2] = options
 */
@@ -93,7 +92,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		goto doit;
 	if (!ValidatePermissionsForPath("server:tsctl",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
       doit:
@@ -102,7 +101,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (*parv[1] == '\0')
 		{
 			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			    me.name, parv[0], "TSCTL");
+			    me.name, sptr->name, "TSCTL");
 			return 0;
 		}
 
@@ -110,7 +109,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (!ValidatePermissionsForPath("server:tsctl:set",sptr,NULL,NULL,NULL))
                         {
-			    sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+			    sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 			    return 0;
 			}
 
@@ -189,13 +188,13 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (!IsULine(sptr))
 			{
-				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 				return 0;
 			}
 
 			if (!parv[2] || *parv[2] == '\0')
 			{
-				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "TSCTL");
+				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "TSCTL");
 				return 0;
 			}
 
@@ -218,7 +217,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	//default: no parameter was entered
-	sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "TSCTL");
+	sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "TSCTL");
 
 	return 0;
 }

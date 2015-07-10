@@ -74,7 +74,6 @@ MOD_UNLOAD(m_setname)
 
 /* m_setname - 12/05/1999 - Stskeeps
  * :prefix SETNAME :gecos
- * parv[0] - sender
  * parv[1] - gecos
  * D: This will set your gecos to be <x> (like (/setname :The lonely wanderer))
    yes it is experimental but anyways ;P
@@ -88,7 +87,7 @@ DLLFUNC CMD_FUNC(m_setname)
 
  	if ((parc < 2) || BadPtr(parv[1]))
  	{
- 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SETNAME");
+ 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "SETNAME");
  		return 0;
 	}
 

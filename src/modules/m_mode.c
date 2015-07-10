@@ -112,7 +112,6 @@ MOD_UNLOAD(m_mode)
  * *decent* coding.  This is also easier to read, change, and fine-tune.  Plus,
  * everything isn't scattered; everything's grouped where it should be.
  *
- * parv[0] - sender
  * parv[1] - channel
  */
 CMD_FUNC(m_mode)
@@ -139,7 +138,7 @@ CMD_FUNC(m_mode)
 	else
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "MODE");
+		    me.name, sptr->name, "MODE");
 		return 0;
 	}
 
@@ -152,9 +151,9 @@ CMD_FUNC(m_mode)
 
 		modebuf[1] = '\0';
 		channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
-		sendto_one(sptr, rpl_str(RPL_CHANNELMODEIS), me.name, parv[0],
+		sendto_one(sptr, rpl_str(RPL_CHANNELMODEIS), me.name, sptr->name,
 		    chptr->chname, modebuf, parabuf);
-		sendto_one(sptr, rpl_str(RPL_CREATIONTIME), me.name, parv[0],
+		sendto_one(sptr, rpl_str(RPL_CREATIONTIME), me.name, sptr->name,
 		    chptr->chname, chptr->creationtime);
 		return 0;
 	}
@@ -286,11 +285,11 @@ CMD_FUNC(m_mode)
 		if (cptr == sptr)
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-			    me.name, parv[0], chptr->chname);
+			    me.name, sptr->name, chptr->chname);
 			return 0;
 		}
 		sendto_one(cptr, ":%s MODE %s -oh %s %s 0",
-		    me.name, chptr->chname, parv[0], parv[0]);
+		    me.name, chptr->chname, sptr->name, sptr->name);
 		/* Tell the other server that the user is
 		 * de-opped.  Fix op desyncs. */
 		bounce_mode(chptr, cptr, parc - 2, parv + 2);
@@ -1574,7 +1573,6 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 
 /*
  * m_umode() added 15/10/91 By Darren Reed.
- * parv[0] - sender
  * parv[1] - username to change mode for
  * parv[2] - modes to change
  */
@@ -1592,7 +1590,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "MODE");
+		    me.name, sptr->name, "MODE");
 		return 0;
 	}
 
@@ -1600,7 +1598,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	{
 		if (MyConnect(sptr))
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-			    me.name, parv[0], parv[1]);
+			    me.name, sptr->name, parv[1]);
 		return 0;
 	}
 	if (acptr != sptr)
@@ -1609,10 +1607,10 @@ DLLFUNC CMD_FUNC(_m_umode)
 	if (parc < 3)
 	{
 		sendto_one(sptr, rpl_str(RPL_UMODEIS),
-		    me.name, parv[0], get_mode_str(sptr));
+		    me.name, sptr->name, get_mode_str(sptr));
 		if (sptr->user->snomask)
 			sendto_one(sptr, rpl_str(RPL_SNOMASK),
-				me.name, parv[0], get_sno_str(sptr));
+				me.name, sptr->name, get_sno_str(sptr));
 		return 0;
 	}
 
@@ -1749,7 +1747,7 @@ DLLFUNC CMD_FUNC(_m_umode)
   			  	  {
 				  	sendto_one(sptr,
 				      		err_str(ERR_UMODEUNKNOWNFLAG),
-				      		me.name, parv[0]);
+				      		me.name, sptr->name);
 					  rpterror = 1;
 				  }
 			  }
@@ -1880,7 +1878,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 
 	if (MyConnect(sptr) && setsnomask != sptr->user->snomask)
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
-			me.name, parv[0], get_sno_str(sptr));
+			me.name, sptr->name, get_sno_str(sptr));
 
 	return 0;
 }

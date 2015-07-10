@@ -73,7 +73,6 @@ MOD_UNLOAD(m_part)
 
 /*
 ** m_part
-**	parv[0] = sender prefix
 **	parv[1] = channel
 **	parv[2] = comment (added by Lefler)
 */
@@ -91,7 +90,7 @@ DLLFUNC CMD_FUNC(m_part)
 	if (parc < 2 || parv[1][0] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "PART");
+		    me.name, sptr->name, "PART");
 		return 0;
 	}
 
@@ -124,7 +123,7 @@ DLLFUNC CMD_FUNC(m_part)
 		if (!chptr)
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
-			    me.name, parv[0], name);
+			    me.name, sptr->name, name);
 			continue;
 		}
 
@@ -143,7 +142,7 @@ DLLFUNC CMD_FUNC(m_part)
 			if (MyClient(sptr))
 				sendto_one(sptr,
 				    err_str(ERR_NOTONCHANNEL), me.name,
-				    parv[0], name);
+				    sptr->name, name);
 			continue;
 		}
 
@@ -225,11 +224,11 @@ DLLFUNC CMD_FUNC(m_part)
 				if (!comment)
 
 					sendto_channel_butserv(chptr,
-					    sptr, PARTFMT, parv[0],
+					    sptr, PARTFMT, sptr->name,
 					    chptr->chname);
 				else
 					sendto_channel_butserv(chptr,
-					    sptr, PARTFMT2, parv[0],
+					    sptr, PARTFMT2, sptr->name,
 					    chptr->chname, comment);
 			}
 			if (MyClient(sptr))

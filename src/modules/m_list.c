@@ -84,7 +84,7 @@ MOD_UNLOAD(m_list)
  * HTM is active -- codemastr */
 
 /*
- * * m_list *      parv[0] = sender prefix *      parv[1] = channel
+ * parv[1] = channel
  */
 DLLFUNC CMD_FUNC(m_list)
 {
@@ -123,7 +123,7 @@ DLLFUNC CMD_FUNC(m_list)
 	/* If a /list is in progress, then another one will cancel it */
 	if ((lopt = sptr->user->lopt) != NULL)
 	{
-		sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, parv[0]);
+		sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, sptr->name);
 		free_str_list(sptr->user->lopt->yeslist);
 		free_str_list(sptr->user->lopt->nolist);
 		MyFree(sptr->user->lopt);
@@ -134,7 +134,7 @@ DLLFUNC CMD_FUNC(m_list)
 	if (parc < 2 || BadPtr(parv[1]))
 	{
 
-		sendto_one(sptr, rpl_str(RPL_LISTSTART), me.name, parv[0]);
+		sendto_one(sptr, rpl_str(RPL_LISTSTART), me.name, sptr->name);
 		lopt = sptr->user->lopt = (LOpts *) MyMalloc(sizeof(LOpts));
 		memset(lopt, '\0', sizeof(LOpts));
 
@@ -155,7 +155,7 @@ DLLFUNC CMD_FUNC(m_list)
 		return 0;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_LISTSTART), me.name, parv[0]);
+	sendto_one(sptr, rpl_str(RPL_LISTSTART), me.name, sptr->name);
 
 	chantimemax = topictimemax = currenttime + 86400;
 	chantimemin = topictimemin = 0;
@@ -260,7 +260,7 @@ DLLFUNC CMD_FUNC(m_list)
 #endif
 					  sendto_one(sptr,
 					      rpl_str(RPL_LIST),
-					      me.name, parv[0],
+					      me.name, sptr->name,
 					      name, chptr->users,
 #ifdef LIST_SHOW_MODES
 					      modebuf,
@@ -290,7 +290,7 @@ DLLFUNC CMD_FUNC(m_list)
 		return 0;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, parv[0]);
+	sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, sptr->name);
 
 	return 0;
 }

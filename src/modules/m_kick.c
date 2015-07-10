@@ -73,7 +73,6 @@ MOD_UNLOAD(m_kick)
 
 /*
 ** m_kick
-**	parv[0] = sender prefix
 **	parv[1] = channel
 **	parv[2] = client to kick
 **	parv[3] = kick comment
@@ -99,11 +98,11 @@ CMD_FUNC(m_kick)
 	if (parc < 3 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "KICK");
+		    me.name, sptr->name, "KICK");
 		return 0;
 	}
 
-	comment = (BadPtr(parv[3])) ? parv[0] : parv[3];
+	comment = (BadPtr(parv[3])) ? sptr->name : parv[3];
 
 	if (strlen(comment) > (size_t)TOPICLEN)
 		comment[TOPICLEN] = '\0';
@@ -115,7 +114,7 @@ CMD_FUNC(m_kick)
 		if (!chptr)
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
-			    me.name, parv[0], name);
+			    me.name, sptr->name, name);
 			continue;
 		}
 		/* Store "sptr" access flags */
@@ -125,7 +124,7 @@ CMD_FUNC(m_kick)
 		    && !(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-			    me.name, parv[0], chptr->chname);
+			    me.name, sptr->name, chptr->chname);
 			continue;
 		}
 
@@ -330,7 +329,7 @@ CMD_FUNC(m_kick)
 						/* NORMAL */
 						sendto_channel_butserv(chptr,
 						    sptr, ":%s KICK %s %s :%s",
-						    parv[0], chptr->chname, who->name, comment);
+						    sptr->name, chptr->chname, who->name, comment);
 					}
 				}
 				sendto_server(cptr, PROTO_SID, 0, ":%s KICK %s %s :%s",
@@ -345,7 +344,7 @@ CMD_FUNC(m_kick)
 			else if (MyClient(sptr))
 				sendto_one(sptr,
 				    err_str(ERR_USERNOTINCHANNEL),
-				    me.name, parv[0], user, name);
+				    me.name, sptr->name, user, name);
 			if (MyClient(cptr))
 				break;
 		}		/* loop on parv[2] */

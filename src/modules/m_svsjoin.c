@@ -76,7 +76,6 @@ MOD_UNLOAD(m_svsjoin)
 
 /* m_svsjoin() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.
-	parv[0] - sender
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
 	parv[3] - (optional) channel key(s)
@@ -92,7 +91,7 @@ CMD_FUNC(m_svsjoin)
 
 	if (MyClient(acptr))
 	{
-		parv[0] = parv[1];
+		parv[0] = acptr->name;
 		parv[1] = parv[2];
 		if (parc == 3)
 		{
@@ -107,10 +106,10 @@ CMD_FUNC(m_svsjoin)
 	else
 	{
 		if (parc == 3)
-			sendto_one(acptr, ":%s SVSJOIN %s %s", parv[0],
+			sendto_one(acptr, ":%s SVSJOIN %s %s", sptr->name,
 			    parv[1], parv[2]);
 		else
-			sendto_one(acptr, ":%s SVSJOIN %s %s %s", parv[0],
+			sendto_one(acptr, ":%s SVSJOIN %s %s %s", sptr->name,
 				parv[1], parv[2], parv[3]);
 	}
 

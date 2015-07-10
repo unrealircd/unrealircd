@@ -90,7 +90,7 @@ int do_svsnolag(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 
 	if (!MyClient(acptr))
 	{
-		sendto_one(acptr, ":%s %s %s %s", parv[0], cmd, parv[1], parv[2]);
+		sendto_one(acptr, ":%s %s %s %s", sptr->name, cmd, parv[1], parv[2]);
 		return 0;
 	}
 

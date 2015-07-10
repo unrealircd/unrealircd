@@ -87,7 +87,6 @@ MOD_UNLOAD(m_chgname)
 /*
  * m_chgname - Tue May 23 13:06:35 BST 200 (almost a year after I made CHGIDENT) - Stskeeps
  * :prefix CHGNAME <nick> <new realname>
- * parv[0] - sender
  * parv[1] - nickname
  * parv[2] - realname
  *
@@ -99,8 +98,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!ValidatePermissionsForPath("client:name",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-		    parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 

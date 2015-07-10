@@ -87,7 +87,6 @@ int send_invite_list(aClient *sptr)
 
 /*
 ** m_invite
-**	parv[0] - sender prefix
 **	parv[1] - user to invite
 **	parv[2] - channel number
 */
@@ -104,14 +103,14 @@ DLLFUNC CMD_FUNC(m_invite)
         else if (parc < 3 || *parv[1] == '\0')
         {
                 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-                    me.name, parv[0], "INVITE");
+                    me.name, sptr->name, "INVITE");
                 return -1;
         }
 
         if (!(acptr = find_person(parv[1], (aClient *)NULL)))
         {
                 sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-                    me.name, parv[0], parv[1]);
+                    me.name, sptr->name, parv[1]);
                 return -1;
         }
 
@@ -121,7 +120,7 @@ DLLFUNC CMD_FUNC(m_invite)
         if (!(chptr = find_channel(parv[2], NullChn)))
         {
                 sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
-                    me.name, parv[0], parv[2]);
+                    me.name, sptr->name, parv[2]);
                 return -1;
         }
 
@@ -140,7 +139,7 @@ DLLFUNC CMD_FUNC(m_invite)
                 else {
 #endif
                         sendto_one(sptr, err_str(ERR_NOINVITE),
-                            me.name, parv[0], parv[2]);
+                            me.name, sptr->name, parv[2]);
                         return -1;
 #ifndef NO_OPEROVERRIDE
                 }
@@ -155,7 +154,7 @@ DLLFUNC CMD_FUNC(m_invite)
                 else {
 #endif
                         sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
-                            me.name, parv[0], parv[2]);
+                            me.name, sptr->name, parv[2]);
                         return -1;
 #ifndef NO_OPEROVERRIDE
                 }
@@ -165,7 +164,7 @@ DLLFUNC CMD_FUNC(m_invite)
         if (IsMember(acptr, chptr))
         {
                 sendto_one(sptr, err_str(ERR_USERONCHANNEL),
-                    me.name, parv[0], parv[1], parv[2]);
+                    me.name, sptr->name, parv[1], parv[2]);
                 return 0;
         }
 
@@ -179,7 +178,7 @@ DLLFUNC CMD_FUNC(m_invite)
                         else {
 #endif
                                 sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-                                    me.name, parv[0], chptr->chname);
+                                    me.name, sptr->name, chptr->chname);
                                 return -1;
 #ifndef NO_OPEROVERRIDE
                         }
@@ -193,7 +192,7 @@ DLLFUNC CMD_FUNC(m_invite)
                         else {
 #endif
                                 sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-                                    me.name, parv[0],
+                                    me.name, sptr->name,
                                         ((chptr) ? (chptr->chname) : parv[2]));
                                 return -1;
 #ifndef NO_OPEROVERRIDE
@@ -207,7 +206,7 @@ DLLFUNC CMD_FUNC(m_invite)
 		    !is_chan_op(sptr, chptr) && !ValidatePermissionsForPath("immune:viruscheck",sptr,NULL,NULL,NULL))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-				me.name, parv[0], chptr->chname);
+				me.name, sptr->name, chptr->chname);
 			return -1;
 		}
 
@@ -218,11 +217,11 @@ DLLFUNC CMD_FUNC(m_invite)
                 if (!over)
                 {
                         sendto_one(sptr, rpl_str(RPL_INVITING), me.name,
-                            parv[0], acptr->name,
+                            sptr->name, acptr->name,
                             ((chptr) ? (chptr->chname) : parv[2]));
                         if (acptr->user->away)
                                 sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
-                                    parv[0], acptr->name, acptr->user->away);
+                                    sptr->name, acptr->name, acptr->user->away);
                 }
         }
         /* Note: is_banned() here will cause some extra CPU load,
@@ -306,7 +305,7 @@ DLLFUNC CMD_FUNC(m_invite)
 			}
 	}
 	if (!is_silenced(sptr, acptr))
-		sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s", parv[0],
+		sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s", sptr->name,
 			acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
 
         return 0;

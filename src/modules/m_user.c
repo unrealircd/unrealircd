@@ -73,7 +73,6 @@ MOD_UNLOAD(m_user)
 
 /*
 ** m_user
-**	parv[0] = sender prefix
 **	parv[1] = username (login name, account)
 **	parv[2] = client host name (used only from other servers)
 **	parv[3] = server host name (used only from other servers)
@@ -106,10 +105,10 @@ DLLFUNC CMD_FUNC(m_user)
 	    *parv[3] == '\0' || *parv[4] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "USER");
+		    me.name, sptr->name, "USER");
 		if (IsServer(cptr))
 			sendto_ops("bad USER param count for %s from %s",
-			    parv[0], get_client_name(cptr, FALSE));
+			    sptr->name, get_client_name(cptr, FALSE));
 		else
 			return 0;
 	}
@@ -171,7 +170,7 @@ DLLFUNC CMD_FUNC(m_user)
 	if (!IsUnknown(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_ALREADYREGISTRED),
-		    me.name, parv[0]);
+		    me.name, sptr->name);
 		return 0;
 	}
 

@@ -73,7 +73,6 @@ MOD_UNLOAD(m_dccdeny)
 
 /* Add a temporary dccdeny line
  *
- * parv[0] - sender
  * parv[1] - file
  * parv[2] - reason
  */
@@ -84,32 +83,32 @@ DLLFUNC CMD_FUNC(m_dccdeny)
 
 	if (!ValidatePermissionsForPath("client:dcc",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 	/* fixup --Stskeeps */
 	if (parc < 2)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name,
 		    "DCCDENY");
 		return 0;
 	}
 	
 	if (BadPtr(parv[2]))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name,
 		    "DCCDENY");
 		return 0;
 	}
 	if (!Find_deny_dcc(parv[1]))
 	{
-		sendto_ops("%s added a temp dccdeny for %s (%s)", parv[0],
+		sendto_ops("%s added a temp dccdeny for %s (%s)", sptr->name,
 		    parv[1], parv[2]);
 		DCCdeny_add(parv[1], parv[2], DCCDENY_HARD, CONF_BAN_TYPE_TEMPORARY);
 		return 0;
 	}
 	else
-		sendto_one(sptr, "NOTICE %s :*** %s already has a dccdeny", parv[0],
+		sendto_one(sptr, "NOTICE %s :*** %s already has a dccdeny", sptr->name,
 		    parv[1]);
 	return 0;
 }

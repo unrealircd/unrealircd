@@ -97,7 +97,6 @@ void set_oper_host(aClient *sptr, char *host)
 
 /*
 ** m_oper
-**	parv[0] = sender prefix
 **	parv[1] = oper name
 **	parv[2] = oper password
 */
@@ -114,7 +113,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc < 2) {
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "OPER");
+		    me.name, sptr->name, "OPER");
 		return 0;
 	}
 
@@ -126,7 +125,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (IsOper(sptr)) {
 		sendto_one(sptr, rpl_str(RPL_YOUREOPER),
-		    me.name, parv[0]);
+		    me.name, sptr->name);
 		// TODO: de-confuse this ? ;)
 		return 0;
 	}
@@ -136,11 +135,11 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!(aconf = Find_oper(name)))
 	{
-		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, sptr->name);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) [unknown oper]",
-		    parv[0], sptr->user->username, sptr->sockhost);
-		ircd_log(LOG_OPER, "OPER UNKNOWNOPER (%s) by (%s!%s@%s)", name, parv[0],
+		    sptr->name, sptr->user->username, sptr->sockhost);
+		ircd_log(LOG_OPER, "OPER UNKNOWNOPER (%s) by (%s!%s@%s)", name, sptr->name,
 			sptr->user->username, sptr->sockhost);
 		sptr->since += 7;
 		return 0;
@@ -148,11 +147,11 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!unreal_mask_match(sptr, aconf->mask))
 	{
-		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, sptr->name);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [host doesnt match]",
-		    parv[0], sptr->user->username, sptr->sockhost, name);
-		ircd_log(LOG_OPER, "OPER NOHOSTMATCH (%s) by (%s!%s@%s)", name, parv[0],
+		    sptr->name, sptr->user->username, sptr->sockhost, name);
+		ircd_log(LOG_OPER, "OPER NOHOSTMATCH (%s) by (%s!%s@%s)", name, sptr->name,
 			sptr->user->username, sptr->sockhost);
 		sptr->since += 7;
 		return 0;
@@ -161,15 +160,15 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	i = Auth_Check(cptr, aconf->auth, password);
 	if (i == -1)
 	{
-		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, sptr->name);
 		if (FAILOPER_WARN)
 			sendnotice(sptr,
 			    "*** Your attempt has been logged.");
-		ircd_log(LOG_OPER, "OPER FAILEDAUTH (%s) by (%s!%s@%s)", name, parv[0],
+		ircd_log(LOG_OPER, "OPER FAILEDAUTH (%s) by (%s!%s@%s)", name, sptr->name,
 			sptr->user->username, sptr->sockhost);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [FAILEDAUTH]",
-		    parv[0], sptr->user->username, sptr->sockhost, name);
+		    sptr->name, sptr->user->username, sptr->sockhost, name);
 		sptr->since += 7;
 		return 0;
 	}
@@ -185,12 +184,12 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* Check oper::require_modes */
 	if (aconf->require_modes & ~sptr->umodes)
 	{
-		sendto_one(sptr, ":%s %d %s :You are missing user modes required to OPER", me.name, ERR_NOOPERHOST, parv[0]);
+		sendto_one(sptr, ":%s %d %s :You are missing user modes required to OPER", me.name, ERR_NOOPERHOST, sptr->name);
 		sendto_snomask_global
 			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) [lacking modes '%s' in oper::require-modes]",
-			 parv[0], sptr->user->username, sptr->sockhost, get_modestr(aconf->require_modes & ~sptr->umodes));
+			 sptr->name, sptr->user->username, sptr->sockhost, get_modestr(aconf->require_modes & ~sptr->umodes));
 		ircd_log(LOG_OPER, "OPER MISSINGMODES (%s) by (%s!%s@%s), needs modes=%s",
-			 name, parv[0], sptr->user->username, sptr->sockhost,
+			 name, sptr->name, sptr->user->username, sptr->sockhost,
 			 get_modestr(aconf->require_modes & ~sptr->umodes));
 		sptr->since += 7;
 		return 0;
@@ -198,13 +197,13 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (aconf->maxlogins && (count_oper_sessions(aconf->name) >= aconf->maxlogins))
 	{
-		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, sptr->name);
 		sendto_one(sptr, ":%s NOTICE %s :Your maximum number of concurrent oper logins has been reached (%d)",
 			me.name, sptr->name, aconf->maxlogins);
 		sendto_snomask_global
 			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [maxlogins reached]",
-			parv[0], sptr->user->username, sptr->sockhost, name);
-		ircd_log(LOG_OPER, "OPER TOOMANYLOGINS (%s) by (%s!%s@%s)", name, parv[0],
+			sptr->name, sptr->user->username, sptr->sockhost, name);
+		ircd_log(LOG_OPER, "OPER TOOMANYLOGINS (%s) by (%s!%s@%s)", name, sptr->name,
 			sptr->user->username, sptr->sockhost);
 		sptr->since += 4;
 		return 0;
@@ -250,10 +249,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	sendto_snomask_global(SNO_OPER,
 		"%s (%s@%s) [%s] is now an operator",
-		parv[0], sptr->user->username, sptr->sockhost,
+		sptr->name, sptr->user->username, sptr->sockhost,
 		parv[1]);
 
-	ircd_log(LOG_OPER, "OPER (%s) by (%s!%s@%s)", name, parv[0], sptr->user->username,
+	ircd_log(LOG_OPER, "OPER (%s) by (%s!%s@%s)", name, sptr->name, sptr->user->username,
 		sptr->sockhost);
 
 	/* set oper snomasks */
@@ -272,13 +271,13 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	old = (sptr->umodes & ALL_UMODES);
 	send_umode_out(cptr, sptr, old);
 	sendto_one(sptr, rpl_str(RPL_SNOMASK),
-		me.name, parv[0], get_sno_str(sptr));
+		me.name, sptr->name, get_sno_str(sptr));
 
 	list_add(&sptr->special_node, &oper_list);
 
 	RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 1);
 
-	sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
+	sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, sptr->name);
 
 	/* Update statistics */
 	if (IsInvisible(sptr) && !(old & UMODE_INVISIBLE))

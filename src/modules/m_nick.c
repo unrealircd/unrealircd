@@ -86,7 +86,6 @@ static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
 
 /*
 ** m_uid
-**	parv[0] = sender prefix
 **	parv[1] = nickname
 **      parv[2] = hopcount
 **      parv[3] = timestamp
@@ -125,13 +124,13 @@ DLLFUNC CMD_FUNC(m_uid)
 	if (IsServer(cptr) && !do_remote_nick_name(nick))
 	{
 		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
-		    me.name, parv[0], parv[1], "Illegal characters");
+		    me.name, sptr->name, parv[1], "Illegal characters");
 
 		if (IsServer(cptr))
 		{
 			ircstp->is_kill++;
 			sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
-			    parv[1], parv[0], get_client_name(cptr, FALSE));
+			    parv[1], sptr->name, get_client_name(cptr, FALSE));
 			sendto_one(cptr, ":%s KILL %s :%s (%s <- %s[%s])",
 			    me.name, parv[1], me.name, parv[1],
 			    nick, cptr->name);
@@ -139,9 +138,9 @@ DLLFUNC CMD_FUNC(m_uid)
 			{	/* bad nick change */
 				sendto_server(cptr, 0, 0,
 				    ":%s KILL %s :%s (%s <- %s!%s@%s)",
-				    me.name, parv[0], me.name,
+				    me.name, sptr->name, me.name,
 				    get_client_name(cptr, FALSE),
-				    parv[0],
+				    sptr->name,
 				    sptr->user ? sptr->username : "",
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
@@ -178,10 +177,10 @@ DLLFUNC CMD_FUNC(m_uid)
 	 */
 	if (IsServer(cptr) &&
 	    (parc > 7
-	    && (!(serv = (aClient *)find_server(parv[0], NULL))
+	    && (!(serv = (aClient *)find_server(sptr->name, NULL))
 	    || serv->from != cptr->from)))
 	{
-		sendto_realops("Cannot find SID %s (%s)", parv[0],
+		sendto_realops("Cannot find SID for %s (%s)", sptr->name,
 		    backupbuf);
 		return 0;
 	}
@@ -191,17 +190,10 @@ DLLFUNC CMD_FUNC(m_uid)
 	   ** client, just reject it. -Lefler
 	   ** Allow opers to use Q-lined nicknames. -Russell
 	 */
-	if (!stricmp("ircd", nick))
+	if (!stricmp("ircd", nick) || !stricmp("irc", nick))
 	{
 		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
-		    BadPtr(parv[0]) ? "*" : parv[0], nick,
-		    "Reserved for internal IRCd purposes");
-		return 0;
-	}
-	if (!stricmp("irc", nick))
-	{
-		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
-		    BadPtr(parv[0]) ? "*" : parv[0], nick,
+		    sptr->name, nick,
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
@@ -358,7 +350,7 @@ DLLFUNC CMD_FUNC(m_uid)
 	{
 		/* XXX: we need to split this out into register_remote_user() or something. */
 		parv[3] = nick;
-		parv[6] = parv[0];
+		parv[6] = sptr->name;
 		do_cmd(cptr, sptr, "USER", parc - 3, &parv[3]);
 		if (GotNetInfo(cptr) && !IsULine(sptr))
 			sendto_fconnectnotice(sptr->name, sptr->user, sptr, 0, NULL);
@@ -371,7 +363,6 @@ DLLFUNC CMD_FUNC(m_uid)
 
 /*
 ** m_nick
-**	parv[0] = sender prefix
 **	parv[1] = nickname
 **  if from new client  -taz
 **	parv[2] = nick password
@@ -412,7 +403,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
-		    me.name, parv[0]);
+		    me.name, sptr->name);
 		return 0;
 	}
 
@@ -442,13 +433,13 @@ DLLFUNC CMD_FUNC(m_nick)
 	    (!IsServer(cptr) && !do_nick_name(nick)))
 	{
 		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
-		    me.name, parv[0], parv[1], "Illegal characters");
+		    me.name, sptr->name, parv[1], "Illegal characters");
 
 		if (IsServer(cptr))
 		{
 			ircstp->is_kill++;
 			sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
-			    parv[1], parv[0], get_client_name(cptr, FALSE));
+			    parv[1], sptr->name, get_client_name(cptr, FALSE));
 			sendto_one(cptr, ":%s KILL %s :%s (%s <- %s[%s])",
 			    me.name, parv[1], me.name, parv[1],
 			    nick, cptr->name);
@@ -456,9 +447,9 @@ DLLFUNC CMD_FUNC(m_nick)
 			{	/* bad nick change */
 				sendto_server(cptr, 0, 0,
 				    ":%s KILL %s :%s (%s <- %s!%s@%s)",
-				    me.name, parv[0], me.name,
+				    me.name, sptr->name, me.name,
 				    get_client_name(cptr, FALSE),
-				    parv[0],
+				    sptr->name,
 				    sptr->user ? sptr->username : "",
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
@@ -522,7 +513,7 @@ DLLFUNC CMD_FUNC(m_nick)
 			}
 #endif
 			sendto_one(sptr, err_str(ERR_NICKNAMEINUSE), me.name,
-			    BadPtr(parv[0]) ? "*" : parv[0], nick);
+			    *sptr->name ? sptr->name : "*", nick);
 			return 0;	/* NICK message ignored */
 		}
 	}
@@ -532,17 +523,10 @@ DLLFUNC CMD_FUNC(m_nick)
 	   ** client, just reject it. -Lefler
 	   ** Allow opers to use Q-lined nicknames. -Russell
 	 */
-	if (!stricmp("ircd", nick))
+	if (!stricmp("ircd", nick) || !stricmp("irc", nick))
 	{
 		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
-		    BadPtr(parv[0]) ? "*" : parv[0], nick,
-		    "Reserved for internal IRCd purposes");
-		return 0;
-	}
-	if (!stricmp("irc", nick))
-	{
-		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
-		    BadPtr(parv[0]) ? "*" : parv[0], nick,
+		    *sptr->name ? sptr->name : "*", nick,
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
@@ -581,7 +565,7 @@ DLLFUNC CMD_FUNC(m_nick)
 			if (ishold)
 			{
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
-				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
+				    me.name, *sptr->name ? sptr->name : "*",
 				    nick, tklban->reason);
 				return 0;
 			}
@@ -589,7 +573,7 @@ DLLFUNC CMD_FUNC(m_nick)
 			{
 				sptr->since += 4; /* lag them up */
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
-				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
+				    me.name, *sptr->name ? sptr->name : "*",
 				    nick, tklban->reason);
 				sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
 				    nick, get_client_name(cptr, FALSE));
@@ -706,8 +690,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		}
 #endif
 		sendto_one(sptr, err_str(ERR_NICKNAMEINUSE),
-		    /* parv[0] is empty when connecting */
-		    me.name, BadPtr(parv[0]) ? "*" : parv[0], nick);
+		    me.name, *sptr->name ? sptr->name : "*", nick);
 		return 0;	/* NICK message ignored */
 	}
 	/*
@@ -911,7 +894,7 @@ DLLFUNC CMD_FUNC(m_nick)
 				{
 					sendto_one(sptr,
 					    err_str(ERR_BANNICKCHANGE),
-					    me.name, parv[0],
+					    me.name, sptr->name,
 					    mp->chptr->chname);
 					return 0;
 				}
@@ -919,7 +902,7 @@ DLLFUNC CMD_FUNC(m_nick)
 				{
 					sendto_one(sptr,
 					    ":%s 437 %s %s :Cannot change to a nickname banned on channel",
-					    me.name, parv[0],
+					    me.name, sptr->name,
 					    mp->chptr->chname);
 					return 0;
 				}
@@ -935,7 +918,7 @@ DLLFUNC CMD_FUNC(m_nick)
 				{
 					sendto_one(sptr,
 					    err_str(ERR_NONICKCHANGE),
-					    me.name, parv[0],
+					    me.name, sptr->name,
 					    mp->chptr->chname);
 					return 0;
 				}
@@ -964,7 +947,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		 * on a channel, send note of change to all clients
 		 * on that channel. Propagate notice to other servers.
 		 */
-		if (mycmp(parv[0], nick) ||
+		if (mycmp(sptr->name, nick) ||
 		    /* Next line can be removed when all upgraded  --Run */
 		    (!MyClient(sptr) && parc > 2
 		    && atol(parv[2]) < sptr->lastnick))
@@ -976,9 +959,9 @@ DLLFUNC CMD_FUNC(m_nick)
 			sptr->lastnick = TStime();
 		}
 		add_history(sptr, 1);
-		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
+		sendto_common_channels(sptr, ":%s NICK :%s", sptr->name, nick);
 		sendto_server(cptr, 0, 0, ":%s NICK %s %ld",
-		    parv[0], nick, sptr->lastnick);
+		    sptr->name, nick, sptr->lastnick);
 		if (removemoder)
 			sptr->umodes &= ~UMODE_REGNICK;
 	}
@@ -1112,7 +1095,7 @@ extern int short_motd(aClient *sptr);
 int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip)
 {
 	ConfigItem_ban *bconf;
-	char *parv[3], *tmpstr;
+	char *tmpstr;
 	const char *id;
 #ifdef HOSTILENAME
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
@@ -1137,8 +1120,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	aTKline *savetkl = NULL;
 	ConfigItem_tld *tlds;
 	cptr->last = TStime();
-	parv[0] = sptr->name;
-	parv[1] = parv[2] = NULL;
 	nick = sptr->name; /* <- The data is always the same, but the pointer is sometimes not,
 	                    *    I need this for one of my modules, so do not remove! ;) -- Syzop */
 	
@@ -1358,7 +1339,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
 			    me.name, version);
 		sendto_one(sptr, rpl_str(RPL_CREATED), me.name, nick, creation);
-		sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
+		sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, sptr->name,
 		    me.name, version, umodestring, cmodestring);
 
 		for (i = 0; IsupportStrings[i]; i++)
@@ -1370,13 +1351,25 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, user->virthost);
 
 		if (sptr->flags & FLAGS_SSL)
+		{
 			if (sptr->ssl)
+			{
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** You are connected to %s with %s",
 				    me.name, sptr->name, me.name,
 				    ssl_get_cipher(sptr->ssl));
-		do_cmd(sptr, sptr, "LUSERS", 1, parv);
+			}
+		}
+		
+		{
+			char *parv[2];
+			parv[0] = sptr->name;
+			parv[1] = NULL;
+			do_cmd(sptr, sptr, "LUSERS", 1, parv);
+		}
+		
 		short_motd(sptr);
+
 #ifdef EXPERIMENTAL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** \2NOTE:\2 This server is running experimental IRC server software (Unreal%s). If you find any bugs or problems, please report them at http://bugs.unrealircd.org/",

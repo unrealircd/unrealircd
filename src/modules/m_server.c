@@ -262,7 +262,6 @@ skip_host_check:
 
 /*
 ** m_sid
-**      parv[0] = sender prefix
 **      parv[1] = servername
 **      parv[2] = hopcount
 **      parv[3] = sid
@@ -271,7 +270,6 @@ skip_host_check:
 
 /*
 ** m_server
-**	parv[0] = sender prefix
 **	parv[1] = servername
 **      parv[2] = hopcount
 **      parv[3] = numeric { ignored }
@@ -299,7 +297,7 @@ DLLFUNC CMD_FUNC(m_server)
 	if (IsPerson(sptr))
 	{
 		sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
-		    me.name, parv[0]);
+		    me.name, sptr->name);
 		sendnotice(cptr,
 		    "*** Sorry, but your IRC program doesn't appear to support changing servers.");
 		sptr->since += 7;
@@ -569,7 +567,7 @@ CMD_FUNC(m_server_remote)
 				cptr->name, servername);
 			return exit_client(cptr, cptr, cptr, "Too deep link depth (leaf)");
 	}
-	acptr = make_client(cptr, find_server(parv[0], cptr));
+	acptr = make_client(cptr, find_server(sptr->name, cptr));
 	(void)make_server(acptr);
 	acptr->hopcount = hop;
 

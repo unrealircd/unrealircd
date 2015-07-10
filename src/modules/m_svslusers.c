@@ -73,7 +73,6 @@ MOD_UNLOAD(m_svslusers)
 }
 /*
 ** m_svslusers
-**      parv[0] = sender
 **      parv[1] = server to update
 **      parv[2] = max global users
 **      parv[3] = max local users

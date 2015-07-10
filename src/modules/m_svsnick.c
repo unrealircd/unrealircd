@@ -74,7 +74,6 @@ MOD_UNLOAD(m_svsnick)
 }
 /*
 ** m_svsnick
-**      parv[0] = sender
 **      parv[1] = old nickname
 **      parv[2] = new nickname
 **      parv[3] = timestamp
