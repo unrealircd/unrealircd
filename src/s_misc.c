@@ -1161,7 +1161,7 @@ int swhois_add(aClient *acptr, char *tag, int priority, char *swhois, aClient *f
 	s->line = strdup(swhois);
 	s->setby = strdup(tag);
 	s->priority = priority;
-	AddListItem(s, acptr->user->swhois);
+	AddListItemPrio(s, acptr->user->swhois, s->priority);
 	
 	sendto_server(skip, 0, PROTO_EXTSWHOIS, ":%s SWHOIS %s :%s",
 		from->name, acptr->name, swhois);
