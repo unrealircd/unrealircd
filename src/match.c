@@ -440,7 +440,10 @@ void unreal_delete_match(aMatch *m)
 	if (m->type == MATCH_TRE_REGEX)
 	{
 		if (m->ext.tre_expr)
+		{
 			regfree(m->ext.tre_expr);
+			MyFree(m->ext.tre_expr);
+		}
 	}
 #endif
 	if (m->type == MATCH_PCRE_REGEX)

@@ -1434,6 +1434,8 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->spamfilter_ban_reason);
 	safefree(i->spamfilter_virus_help_channel);
 	safefree(i->spamexcept_line);
+	safefree(i->timesynch_server);
+	safefree(i->link_bindip);
 }
 
 int	config_test();
@@ -1933,6 +1935,8 @@ void	config_rehash()
 		next = (ListStruct *)oper_ptr->next;
 		safefree(oper_ptr->name);
 		safefree(oper_ptr->snomask);
+		safefree(oper_ptr->operclass);
+		safefree(oper_ptr->vhost);
 		Auth_DeleteAuthStruct(oper_ptr->auth);
 		unreal_delete_masks(oper_ptr->mask);
 		DelListItem(oper_ptr, conf_oper);
@@ -2039,6 +2043,7 @@ void	config_rehash()
 	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *) next)
 	{
 		ConfigItem_mask *vhost_mask;
+		SWhois *s, *s_next;
 
 		next = (ListStruct *)vhost_ptr->next;
 
@@ -2047,6 +2052,13 @@ void	config_rehash()
 		safefree(vhost_ptr->virthost);
 		safefree(vhost_ptr->virtuser);
 		unreal_delete_masks(vhost_ptr->mask);
+		for (s = vhost_ptr->swhois; s; s = s_next)
+		{
+			s_next = s->next;
+			safefree(s->line);
+			safefree(s->setby);
+			MyFree(s);
+		}
 		DelListItem(vhost_ptr, conf_vhost);
 		MyFree(vhost_ptr);
 	}
@@ -2202,7 +2214,7 @@ void	config_rehash()
 		if (iConf.modes_on_join.extparams[i])
 			free(iConf.modes_on_join.extparams[i]);
 	}
-
+	
 	/*
 	  reset conf_files -- should this be in its own function? no, because
 	  it's only used here
@@ -9210,7 +9222,7 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 void link_cleanup(ConfigItem_link *link_ptr)
 {
 	safefree(link_ptr->servername);
-	safefree(link_ptr->incoming.mask); // TODO: will become a list
+	unreal_delete_masks(link_ptr->incoming.mask);
 	Auth_DeleteAuthStruct(link_ptr->auth);
 	safefree(link_ptr->outgoing.bind_ip);
 	safefree(link_ptr->outgoing.hostname);
