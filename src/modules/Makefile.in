@@ -40,7 +40,7 @@ R_MODULES= \
 	 m_chgname.so m_guest.so m_kill.so \
 	 m_lag.so m_message.so m_oper.so m_pingpong.so \
 	 m_quit.so m_rping.so m_sendumode.so m_sqline.so \
-	 m_tsctl.so m_unkline.so m_unsqline.so m_unzline.so m_whois.so \
+	 m_tsctl.so m_unsqline.so m_whois.so \
 	 m_tkl.so m_vhost.so m_cycle.so m_svsjoin.so m_svspart.so \
 	 m_svswatch.so m_svssilence.so m_sendsno.so m_svssno.so \
 	 m_sajoin.so m_sapart.so m_samode.so m_kick.so m_topic.so \
@@ -124,17 +124,9 @@ m_tsctl.so: m_tsctl.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_tsctl.so m_tsctl.c
 
-m_unkline.so: m_unkline.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_unkline.so m_unkline.c
-
 m_unsqline.so: m_unsqline.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_unsqline.so m_unsqline.c
-
-m_unzline.so: m_unzline.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_unzline.so m_unzline.c
 
 m_whois.so: m_whois.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
