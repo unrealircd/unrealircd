@@ -139,6 +139,9 @@ DLLFUNC CMD_FUNC(m_trace)
 
 	if (doall) {
 		list_for_each_entry(acptr, &client_list, client_node)
+		{
+			if (acptr->from->fd < 0)
+				continue;
 #ifdef	SHOW_INVISIBLE_LUSERS
 			if (IsPerson(acptr))
 				link_u[acptr->from->fd]++;
@@ -149,6 +152,7 @@ DLLFUNC CMD_FUNC(m_trace)
 #endif
 			else if (IsServer(acptr))
 				link_s[acptr->from->fd]++;
+		}
 	}
 
 	/* report all direct connections */
@@ -212,15 +216,15 @@ DLLFUNC CMD_FUNC(m_trace)
 		  case STAT_SERVER:
 			  if (acptr->serv->user)
 				  sendto_one(sptr, rpl_str(RPL_TRACESERVER),
-				      me.name, sptr->name, class, link_s[i],
-				      link_u[i], name, acptr->serv->by,
+				      me.name, sptr->name, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
+				      acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, acptr->serv->by,
 				      acptr->serv->user->username,
 				      acptr->serv->user->realhost,
 				      now - acptr->lasttime);
 			  else
 				  sendto_one(sptr, rpl_str(RPL_TRACESERVER),
-				      me.name, sptr->name, class, link_s[i],
-				      link_u[i], name, *(acptr->serv->by) ?
+				      me.name, sptr->name, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
+				      acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, *(acptr->serv->by) ?
 				      acptr->serv->by : "*", "*", me.name,
 				      now - acptr->lasttime);
 			  cnt++;
