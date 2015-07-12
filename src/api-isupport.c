@@ -40,7 +40,9 @@
 #include "proto.h"
 
 Isupport *Isupports; /* List of ISUPPORT (005) tokens */
-MODVAR char *IsupportStrings[5] = {0,0,0,0,0}; /* If we get more than 5 strings, God help us! */
+#define MAXISUPPORTLINES 10
+
+MODVAR char *IsupportStrings[MAXISUPPORTLINES+1];
 extern char *cmdstr;
 
 /**
@@ -54,11 +56,11 @@ void make_isupportstrings(void)
 	int bufsize = BUFSIZE-HOSTLEN-NICKLEN-39;
 	int tokcnt = 0, len = 0;
 	Isupport *isupport;
+
 	/* Clear out the old junk */
 	for (i = 0; IsupportStrings[i]; i++)
 	{
-		free(IsupportStrings[i]);
-		IsupportStrings[i] = NULL;
+		safefree(IsupportStrings[i]);
 	}
 
 	i = 0;
@@ -93,7 +95,9 @@ void make_isupportstrings(void)
 			ircsnprintf(IsupportStrings[i]+len, bufsize-len, "%s%s=%s", IsupportStrings[i][0]? " ": "", isupport->token, isupport->value);
 			len += toklen;
 			tokcnt++;
-		}	
+		}
+		if (i == MAXISUPPORTLINES)
+			abort(); /* should never happen anyway */
 	}
 }
 
@@ -103,6 +107,11 @@ void make_isupportstrings(void)
 void isupport_init(void)
 {
 	char tmpbuf[512];
+	int i;
+
+	for (i=0; i <= MAXISUPPORTLINES; i++)
+		IsupportStrings[i] = NULL;
+
 	IsupportAdd(NULL, "INVEX", NULL);
 	IsupportAdd(NULL, "EXCEPTS", NULL);
 #ifdef PREFIX_AQ
