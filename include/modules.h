@@ -111,6 +111,7 @@ typedef enum ModuleObjectType {
 	MOBJ_CMODE = 13,
 	MOBJ_MODDATA = 14,
 	MOBJ_VALIDATOR = 15,
+	MOBJ_CLICAP = 16,
 } ModuleObjectType;
 
 typedef struct {
@@ -375,34 +376,18 @@ typedef struct _versionflag {
 	ModuleChild *parents;
 } Versionflag;
 
-typedef struct _isupport {
-	struct _isupport *prev, *next;
-	char *token;
-	char *value;
-	Module *owner;
-} Isupport;
+#define CLICAP_FLAGS_NONE               0x0
+#define CLICAP_FLAGS_STICKY             0x1
+#define CLICAP_FLAGS_CLIACK             0x2
 
-typedef struct _ModuleObject {
-	struct _ModuleObject *prev, *next;
-	ModuleObjectType type;
-	union {
-		Event *event;
-		Hook *hook;
-		Command *command;
-		Hooktype *hooktype;
-		Versionflag *versionflag;
-		Snomask *snomask;
-		Umode *umode;
-		Cmdoverride *cmdoverride;
-		Extban *extban;
-		Callback *callback;
-		Efunction *efunction;
-		Isupport *isupport;
-		Cmode *cmode;
-		ModDataInfo *moddata;
-		OperClassValidator *validator;
-	} object;
-} ModuleObject;
+typedef struct _clientcapability {
+	struct _clientcapability *prev, *next;
+	char *name;
+	int cap;
+	int flags;
+	int (*visible)(void);
+	Module *owner;
+} ClientCapability;
 
 struct _irchook {
 	Hook *prev, *next;
@@ -454,6 +439,37 @@ struct _hooktype {
 	char *string;
 	ModuleChild *parents;
 };
+
+typedef struct _isupport {
+	struct _isupport *prev, *next;
+	char *token;
+	char *value;
+	Module *owner;
+} Isupport;
+
+typedef struct _ModuleObject {
+	struct _ModuleObject *prev, *next;
+	ModuleObjectType type;
+	union {
+		Event *event;
+		Hook *hook;
+		Command *command;
+		Hooktype *hooktype;
+		Versionflag *versionflag;
+		Snomask *snomask;
+		Umode *umode;
+		Cmdoverride *cmdoverride;
+		Extban *extban;
+		Callback *callback;
+		Efunction *efunction;
+		Isupport *isupport;
+		Cmode *cmode;
+		ModDataInfo *moddata;
+		OperClassValidator *validator;
+		ClientCapability *clicap;
+	} object;
+} ModuleObject;
+
 /*
  * What we use to keep track internally of the modules
 */
@@ -537,6 +553,12 @@ struct _eventinfo {
 
 /* Huh? Why are those not marked as extern?? -- Syzop */
 
+extern MODVAR Hook		*Hooks[MAXHOOKTYPES];
+extern MODVAR Hooktype		Hooktypes[MAXCUSTOMHOOKS];
+extern MODVAR Callback *Callbacks[MAXCALLBACKS], *RCallbacks[MAXCALLBACKS];
+extern MODVAR Efunction *Efunctions[MAXEFUNCTIONS];
+extern MODVAR ClientCapability *clicaps;
+
 #define EventAdd(name, every, howmany, event, data) EventAddEx(NULL, name, every, howmany, event, data)
 Event   *EventAddEx(Module *, char *name, long every, long howmany,
                   vFP event, void *data);
@@ -549,10 +571,7 @@ void    EventStatus(aClient *sptr);
 void    SetupEvents(void);
 void	LockEventSystem(void);
 void	UnlockEventSystem(void);
-extern MODVAR Hook		*Hooks[MAXHOOKTYPES];
-extern MODVAR Hooktype		Hooktypes[MAXCUSTOMHOOKS];
-extern MODVAR Callback *Callbacks[MAXCALLBACKS], *RCallbacks[MAXCALLBACKS];
-extern MODVAR Efunction *Efunctions[MAXEFUNCTIONS];
+
 
 void    Module_Init(void);
 char    *Module_Create(char *path);
@@ -568,23 +587,27 @@ int	Module_free(Module *mod);
 void *obsd_dlsym(void *handle, char *symbol);
 #endif
 
-Versionflag *VersionflagAdd(Module *module, char flag);
-void VersionflagDel(Versionflag *vflag, Module *module);
+extern Versionflag *VersionflagAdd(Module *module, char flag);
+extern void VersionflagDel(Versionflag *vflag, Module *module);
 
-Isupport *IsupportAdd(Module *module, const char *token, const char *value);
-void IsupportSetValue(Isupport *isupport, const char *value);
-void IsupportDel(Isupport *isupport);
-Isupport *IsupportFind(const char *token);
+extern Isupport *IsupportAdd(Module *module, const char *token, const char *value);
+extern void IsupportSetValue(Isupport *isupport, const char *value);
+extern void IsupportDel(Isupport *isupport);
+extern Isupport *IsupportFind(const char *token);
+
+extern ClientCapability *ClientCapabilityFind(const char *token);
+extern ClientCapability *ClientCapabilityAdd(Module *module, ClientCapability *clicap_request);
+extern void ClientCapabilityDel(ClientCapability *clicap);
 
 #define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL)
 #define HookAddVoid(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, func, NULL)
 #define HookAddPChar(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, func)
 
-Hook	*HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*pcharfunc)());
-Hook	*HookDel(Hook *hook);
+extern Hook	*HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*pcharfunc)());
+extern Hook	*HookDel(Hook *hook);
 
-Hooktype *HooktypeAdd(Module *module, char *string, int *type);
-void HooktypeDel(Hooktype *hooktype, Module *module);
+extern Hooktype *HooktypeAdd(Module *module, char *string, int *type);
+extern void HooktypeDel(Hooktype *hooktype, Module *module);
 
 #define RunHook0(hooktype) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next)(*(h->func.intfunc))(); } while(0)
 #define RunHook(hooktype,x) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(x); } while(0)
@@ -716,7 +739,6 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_PACKET 51
 #define HOOKTYPE_HANDSHAKE 52
 #define HOOKTYPE_AWAY 53
-#define HOOKTYPE_CAPLIST 54
 #define HOOKTYPE_INVITE 55
 #define HOOKTYPE_CAN_JOIN 56
 #define HOOKTYPE_CAN_SEND 57

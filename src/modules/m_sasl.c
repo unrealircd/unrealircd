@@ -41,7 +41,6 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
-#include "m_cap.h"
 
 #define MSG_AUTHENTICATE "AUTHENTICATE"
 
@@ -294,23 +293,10 @@ static int abort_sasl(struct Client *cptr)
 	return 0;
 }
 
-static void m_sasl_caplist(struct list_head *head)
-{
-ClientCapability *cap;
-
-	/* if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
-	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
-		return;
-
-	cap = MyMallocEx(sizeof(ClientCapability));
-	cap->name = strdup("sasl");
-	cap->cap = PROTO_SASL;
-	clicap_append(head, cap);
-}
-
-/* This is called on module init, before Server Ready */
 MOD_INIT(m_sasl)
 {
+	ClientCapability cap;
+	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	CommandAdd(modinfo->handle, MSG_SASL, m_sasl, MAXPARA, M_USER|M_SERVER);
@@ -320,18 +306,20 @@ MOD_INIT(m_sasl)
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, abort_sasl);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, abort_sasl);
 
-	HookAddVoid(modinfo->handle, HOOKTYPE_CAPLIST, 0, m_sasl_caplist);
+	memset(&cap, 0, sizeof(cap));
+	cap.name = "sasl";
+	cap.cap = PROTO_SASL;
+	// todo: validate function
+	ClientCapabilityAdd(modinfo->handle, &cap);
 
 	return MOD_SUCCESS;
 }
 
-/* Is first run when server is 100% ready */
 MOD_LOAD(m_sasl)
 {
 	return MOD_SUCCESS;
 }
 
-/* Called when module is unloaded */
 MOD_UNLOAD(m_sasl)
 {
 	return MOD_SUCCESS;

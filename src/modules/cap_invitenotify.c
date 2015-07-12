@@ -17,29 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "proto.h"
-#include "channel.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
-#include "h.h"
-#ifdef _WIN32
-#include "version.h"
-#endif
-#include "m_cap.h"
+#include "unrealircd.h"
 
 ModuleHeader MOD_HEADER(cap_invitenotify)
   = {
@@ -51,40 +29,32 @@ ModuleHeader MOD_HEADER(cap_invitenotify)
     };
 
 
-static void cap_invitenotify_caplist(struct list_head *head)
-{
-ClientCapability *cap;
-
-	cap = MyMallocEx(sizeof(ClientCapability));
-	cap->name = strdup("invite-notify");
-	cap->cap = PROTO_INVITENOTIFY;
-	clicap_append(head, cap);
-}
-
 static void cap_invitenotify_invite(aClient *from, aClient *to, aChannel *chptr)
 {
 	sendto_channel_butone_with_capability(from, PROTO_INVITENOTIFY,
 		from, chptr, "INVITE %s :%s", to->name, chptr->chname);
 }
 
-/* This is called on module init, before Server Ready */
 MOD_INIT(cap_invitenotify)
 {
-        MARK_AS_OFFICIAL_MODULE(modinfo);
+	ClientCapability cap;
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	HookAddVoid(modinfo->handle, HOOKTYPE_INVITE, 0, cap_invitenotify_invite);
-	HookAddVoid(modinfo->handle, HOOKTYPE_CAPLIST, 0, cap_invitenotify_caplist);
 
-        return MOD_SUCCESS;
+	memset(&cap, 0, sizeof(cap));
+	cap.name = "invite-notify";
+	cap.cap = PROTO_INVITENOTIFY;
+	ClientCapabilityAdd(modinfo->handle, &cap);
+
+	return MOD_SUCCESS;
 }
 
-/* Is first run when server is 100% ready */
 MOD_LOAD(cap_invitenotify)
 {
         return MOD_SUCCESS;
 }
 
-/* Called when module is unloaded */
 MOD_UNLOAD(cap_invitenotify)
 {
         return MOD_SUCCESS;

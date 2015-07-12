@@ -40,7 +40,6 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
-#include "m_cap.h"
 
 DLLFUNC CMD_FUNC(m_starttls);
 
@@ -55,15 +54,18 @@ ModuleHeader MOD_HEADER(m_starttls)
 	NULL 
     };
 
-static void m_starttls_caplist(struct list_head *head);
-
 MOD_INIT(m_starttls)
 {
+	ClientCapability cap;
+	
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, MSG_STARTTLS, m_starttls, MAXPARA, M_UNREGISTERED|M_ANNOUNCE);
 
-	HookAddVoid(modinfo->handle, HOOKTYPE_CAPLIST, 0, m_starttls_caplist);
+	memset(&cap, 0, sizeof(cap));
+	cap.name = "tls";
+	cap.cap = PROTO_STARTTLS;
+	ClientCapabilityAdd(modinfo->handle, &cap);
 
-	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
@@ -75,17 +77,6 @@ MOD_LOAD(m_starttls)
 MOD_UNLOAD(m_starttls)
 {
 	return MOD_SUCCESS;
-}
-
-static void m_starttls_caplist(struct list_head *head)
-{
-ClientCapability *cap;
-
-	cap = MyMallocEx(sizeof(ClientCapability));
-	cap->name = strdup("tls");
-	cap->cap = PROTO_STARTTLS,
-	clicap_append(head, cap); /* this is wrong.. head? and unfreed */
-	/* todo: free */
 }
 
 DLLFUNC CMD_FUNC(m_starttls)

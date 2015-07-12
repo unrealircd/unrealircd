@@ -20,34 +20,11 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "proto.h"
-#include "channel.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
-#include "h.h"
-#ifdef _WIN32
-#include "version.h"
-#endif
-#include "m_cap.h"
+#include "unrealircd.h"
 
 typedef int (*bqcmp)(const void *, const void *);
 
-DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
-static struct list_head clicap_list;
+CMD_FUNC(m_cap);
 
 #define MSG_CAP 	"CAP"
 
@@ -60,36 +37,44 @@ ModuleHeader MOD_HEADER(m_cap)
 	NULL 
     };
 
-
-static void clicap_build_list(void)
+MOD_INIT(m_cap)
 {
-	ClientCapability *cap;
+	ClientCapability c;
+	
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	CommandAdd(modinfo->handle, MSG_CAP, m_cap, MAXPARA, M_UNREGISTERED|M_USER);
 
-	INIT_LIST_HEAD(&clicap_list);
+	memset(&c, 0, sizeof(c));
+	c.name = "account-notify";
+	c.cap = PROTO_ACCOUNT_NOTIFY;
+	ClientCapabilityAdd(modinfo->handle, &c);
+	
+	memset(&c, 0, sizeof(c));
+	c.name = "away-notify";
+	c.cap = PROTO_AWAY_NOTIFY;
+	ClientCapabilityAdd(modinfo->handle, &c);
 
-	/* ADD BUILTINS */
+	memset(&c, 0, sizeof(c));
+	c.name = "multi-prefix";
+	c.cap = PROTO_NAMESX;
+	ClientCapabilityAdd(modinfo->handle, &c);
 
-	cap = MyMallocEx(sizeof(ClientCapability));
-	cap->name = strdup("account-notify");
-	cap->cap = PROTO_ACCOUNT_NOTIFY;
-	clicap_append(&clicap_list, cap);
+	memset(&c, 0, sizeof(c));
+	c.name = "userhost-in-names";
+	c.cap = PROTO_UHNAMES;
+	ClientCapabilityAdd(modinfo->handle, &c);
 
-	cap = MyMallocEx(sizeof(ClientCapability));
-	cap->name = strdup("away-notify");
-	cap->cap = PROTO_AWAY_NOTIFY;
-	clicap_append(&clicap_list, cap);
+	return MOD_SUCCESS;
+}
 
-	cap = MyMallocEx(sizeof(ClientCapability));
-	cap->name = strdup("multi-prefix");
-	cap->cap = PROTO_NAMESX;
-	clicap_append(&clicap_list, cap);
+MOD_LOAD(m_cap)
+{
+	return MOD_SUCCESS;
+}
 
-	cap = MyMallocEx(sizeof(ClientCapability));
-	cap->name = strdup("userhost-in-names");
-	cap->cap = PROTO_UHNAMES;
-	clicap_append(&clicap_list, cap);
-
-	RunHook(HOOKTYPE_CAPLIST, &clicap_list);
+MOD_UNLOAD(m_cap)
+{
+	return MOD_SUCCESS;
 }
 
 static ClientCapability *clicap_find(const char *data, int *negate, int *finished)
@@ -102,7 +87,7 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 	*negate = 0;
 
 	if (data)
-        {
+	{
 		strlcpy(buf, data, sizeof(buf));
 		p = buf;
 	}
@@ -133,23 +118,11 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 	if((s = strchr(p, ' ')))
 		*s++ = '\0';
 
-	if (!stricmp(p, "sasl") && (!SASL_SERVER || !find_server(SASL_SERVER, NULL)))
-		return NULL; /* hack: if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
-
-	list_for_each_entry2(cap, ClientCapability, &clicap_list, caplist_node)
-	{
-		if (!stricmp(cap->name, p))
-		{
-			if (s)
-				p = s;
-			else
-				*finished = 1;
-
-			return cap;
-		}
-	}
-
-	return NULL;
+	cap = ClientCapabilityFind(p);
+	if (!s)
+		*finished = 1;
+	
+	return cap;
 }
 
 static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int clear)
@@ -173,7 +146,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 		return;
 	}
 
-	list_for_each_entry2(cap, ClientCapability, &clicap_list, caplist_node)
+	for (cap = clicaps; cap; cap = cap->next)
 	{
 		if (flags)
 		{
@@ -271,10 +244,10 @@ static int cap_ack(aClient *sptr, const char *arg)
 
 static int cap_clear(aClient *sptr, const char *arg)
 {
-        clicap_generate(sptr, "ACK", sptr->proto ? sptr->proto : -1, 1);
+	clicap_generate(sptr, "ACK", sptr->proto ? sptr->proto : -1, 1);
 
-     	sptr->proto = 0;
-     	return 0;
+	sptr->proto = 0;
+	return 0;
 }
 
 static int cap_end(aClient *sptr, const char *arg)
@@ -292,8 +265,8 @@ static int cap_end(aClient *sptr, const char *arg)
 
 static int cap_list(aClient *sptr, const char *arg)
 {
-        clicap_generate(sptr, "LIST", sptr->proto ? sptr->proto : -1, 0);
-        return 0;
+	clicap_generate(sptr, "LIST", sptr->proto ? sptr->proto : -1, 0);
+	return 0;
 }
 
 static int cap_ls(aClient *sptr, const char *arg)
@@ -411,10 +384,10 @@ static struct clicap_cmd clicap_cmdtable[] = {
 
 static int clicap_cmd_search(const char *command, struct clicap_cmd *entry)
 {
-        return strcmp(command, entry->cmd);
+	return strcmp(command, entry->cmd);
 }
 
-DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_cap)
 {
 	struct clicap_cmd *cmd;
 
@@ -440,7 +413,7 @@ DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if(!(cmd = bsearch(parv[1], clicap_cmdtable,
 			   sizeof(clicap_cmdtable) / sizeof(struct clicap_cmd),
 			   sizeof(struct clicap_cmd), (bqcmp) clicap_cmd_search)))
-        {
+	{
 		sendto_one(sptr, err_str(ERR_INVALIDCAPCMD),
 			   me.name, BadPtr(sptr->name) ? "*" : sptr->name,
 			   parv[1]);
@@ -451,26 +424,3 @@ DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return (cmd->func)(sptr, parv[2]);
 }
 
-/* This is called on module init, before Server Ready */
-MOD_INIT(m_cap)
-{
-	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_CAP, m_cap, MAXPARA, M_UNREGISTERED|M_USER);
-
-	return MOD_SUCCESS;
-}
-
-/* Is first run when server is 100% ready */
-MOD_LOAD(m_cap)
-{
-	clicap_build_list();
-	return MOD_SUCCESS;
-}
-
-
-/* Called when module is unloaded */
-MOD_UNLOAD(m_cap)
-{
-	// XXX free cap list
-	return MOD_SUCCESS;
-}

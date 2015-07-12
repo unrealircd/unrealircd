@@ -627,6 +627,7 @@ extern void delete_classblock(ConfigItem_class *class_ptr);
 extern void del_async_connects(void);
 extern void make_extbanstr(void);
 extern void isupport_init(void);
+extern void clicap_init(void);
 extern int do_cmd(aClient *cptr, aClient *sptr, char *cmd, int parc, char *parv[]);
 extern void create_snomask(aClient *sptr, anUser *user, char *snomask);
 extern MODVAR char *me_hash;
