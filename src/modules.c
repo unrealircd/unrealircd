@@ -958,14 +958,8 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	Efunction *e;
 #endif
 
-	/* Opers can do /module <servername> */
 	if ((parc > 1) && (hunt_server(cptr, sptr, ":%s MODULES :%s", 1, parc, parv) != HUNTED_ISME))
 		return 0;
-	if (!Modules)
-	{
-		sendto_one(sptr, ":%s NOTICE %s :*** No modules loaded", me.name, sptr->name);
-		return 1;
-	}
 	
 	for (mi = Modules; mi; mi = mi->next)
 	{
