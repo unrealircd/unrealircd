@@ -204,9 +204,12 @@ void DeleteTempModules(void)
 
 	while ((dir = readdir(fd)))
 	{
-		if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, ".."))
+		char *fname = dir->d_name;
+		if (!strcmp(fname, ".") || !strcmp(fname, ".."))
 			continue;
-		ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, dir->d_name);
+		if (!strstr(fname, ".so") && !strstr(fname, ".conf") && strstr(fname, "core"))
+			continue; /* core dump */
+		ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, fname);
 		remove(tempbuf);
 	}
 	closedir(fd);

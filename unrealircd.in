@@ -88,7 +88,7 @@ elif [ "$1" = "gencloak" ] ; then
 elif [ "$1" = "upgrade-conf" ] ; then
 	@BINDIR@/unrealircd -U
 elif [ "$1" = "backtrace" ] ; then
-	cd @PERMDATADIR@
+	cd @TMPDIR@
 
 	modpath="@MODULESDIR@"
 

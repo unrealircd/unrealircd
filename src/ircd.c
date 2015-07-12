@@ -1352,10 +1352,17 @@ int InitwIRCD(int argc, char *argv[])
 	do_version_check();
 
 #if !defined(CHROOTDIR) && !defined(_WIN32)
-	if (chdir(PERMDATADIR)) {
+#ifndef _WIN32
+	mkdir(TMPDIR, S_IRUSR|S_IWUSR|S_IXUSR); /* Create the tmp dir, if it doesn't exist */
+ 	mkdir(CACHEDIR, S_IRUSR|S_IWUSR|S_IXUSR); /* Create the cache dir, if it doesn't exist */
+#else
+	mkdir(TMPDIR);
+	mkdir(CACHEDIR);
+#endif
+	if (chdir(TMPDIR)) {
 # ifndef _WIN32
 		perror("chdir");
-		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", CONFDIR);
+		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", TMPDIR);
 # else
 		if (!IsService) {
 			MessageBox(NULL, strerror(GetLastError()),
@@ -1364,13 +1371,6 @@ int InitwIRCD(int argc, char *argv[])
 # endif
 		exit(-1);
 	}
-#endif
-#ifndef _WIN32
-	mkdir(TMPDIR, S_IRUSR|S_IWUSR|S_IXUSR); /* Create the tmp dir, if it doesn't exist */
- 	mkdir(CACHEDIR, S_IRUSR|S_IWUSR|S_IXUSR); /* Create the cache dir, if it doesn't exist */
-#else
-	mkdir(TMPDIR);
-	mkdir(CACHEDIR);
 #endif
 #ifndef _WIN32
 	/*
