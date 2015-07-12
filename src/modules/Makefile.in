@@ -37,7 +37,7 @@ R_MODULES= \
 	 m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
 	 m_svsmotd.so m_svsnline.so m_who.so m_mkpasswd.so \
 	 m_away.so m_svsnoop.so m_svsnick.so \
-	 m_chgname.so m_guest.so m_kill.so \
+	 m_chgname.so m_kill.so \
 	 m_lag.so m_message.so m_oper.so m_pingpong.so \
 	 m_quit.so m_rping.so m_sendumode.so m_sqline.so \
 	 m_tsctl.so m_unsqline.so m_whois.so \
@@ -79,10 +79,6 @@ build: $(MODULES)
 m_chgname.so: m_chgname.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_chgname.so m_chgname.c
-
-m_guest.so: m_guest.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_guest.so m_guest.c
 
 m_kill.so: m_kill.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

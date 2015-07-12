@@ -505,13 +505,11 @@ DLLFUNC CMD_FUNC(m_nick)
 	{
 		if (MyConnect(sptr))
 		{
-#ifdef GUEST
 			if (IsUnknown(sptr))
 			{
 				RunHook4(HOOKTYPE_GUEST, cptr, sptr, parc, parv);
 				return 0;
 			}
-#endif
 			sendto_one(sptr, err_str(ERR_NICKNAMEINUSE), me.name,
 			    *sptr->name ? sptr->name : "*", nick);
 			return 0;	/* NICK message ignored */
@@ -682,13 +680,11 @@ DLLFUNC CMD_FUNC(m_nick)
 		   ** NICK is coming from local client connection. Just
 		   ** send error reply and ignore the command.
 		 */
-#ifdef GUEST
 		if (IsUnknown(sptr))
 		{
 			RunHook4(HOOKTYPE_GUEST, cptr, sptr, parc, parv);
 			return 0;
 		}
-#endif
 		sendto_one(sptr, err_str(ERR_NICKNAMEINUSE),
 		    me.name, *sptr->name ? sptr->name : "*", nick);
 		return 0;	/* NICK message ignored */
