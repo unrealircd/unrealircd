@@ -1418,6 +1418,10 @@ void read_packet(int fd, int revents, void *data)
 			if (length < 0 && (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN || ERRNO == P_EINTR))
 				return;
 
+			if (IsServer(cptr) || cptr->serv) /* server or outgoing connection */
+				sendto_umode_global(UMODE_OPER, "Lost connection to %s: Read error",
+				    get_client_name(cptr, FALSE));
+
 			exit_client(cptr, cptr, cptr, "Read error");
 			return;
 		}
