@@ -95,21 +95,23 @@ typedef struct {
 } ModuleInfo;
 
 
-#define MOBJ_EVENT        0x0001
-#define MOBJ_HOOK         0x0002
-#define MOBJ_COMMAND      0x0004
-#define MOBJ_HOOKTYPE     0x0008
-#define MOBJ_VERSIONFLAG  0x0010
-#define MOBJ_SNOMASK      0x0020
-#define MOBJ_UMODE        0x0040
-#define MOBJ_CMDOVERRIDE  0x0080
-#define MOBJ_EXTBAN       0x0100
-#define MOBJ_CALLBACK     0x0200
-#define MOBJ_ISUPPORT	  0x0400
-#define MOBJ_EFUNCTION    0x0800
-#define MOBJ_CMODE        0x1000
-#define MOBJ_MODDATA      0x2000
-#define MOBJ_VALIDATOR	  0x4000
+typedef enum ModuleObjectType {
+	MOBJ_EVENT = 1,
+	MOBJ_HOOK = 2,
+	MOBJ_COMMAND = 3,
+	MOBJ_HOOKTYPE = 4,
+	MOBJ_VERSIONFLAG = 5,
+	MOBJ_SNOMASK = 6,
+	MOBJ_UMODE = 7,
+	MOBJ_CMDOVERRIDE = 8,
+	MOBJ_EXTBAN = 9,
+	MOBJ_CALLBACK = 10,
+	MOBJ_ISUPPORT = 11,
+	MOBJ_EFUNCTION = 12,
+	MOBJ_CMODE = 13,
+	MOBJ_MODDATA = 14,
+	MOBJ_VALIDATOR = 15,
+} ModuleObjectType;
 
 typedef struct {
         long mode; /**< Mode mask */
@@ -382,7 +384,7 @@ typedef struct _isupport {
 
 typedef struct _ModuleObject {
 	struct _ModuleObject *prev, *next;
-	short type;
+	ModuleObjectType type;
 	union {
 		Event *event;
 		Hook *hook;
