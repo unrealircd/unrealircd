@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_wallops)
 
 MOD_INIT(m_wallops)
 {
-	CommandAdd(modinfo->handle, MSG_WALLOPS, m_wallops, 1, 0);
+	CommandAdd(modinfo->handle, MSG_WALLOPS, m_wallops, 1, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -86,12 +86,15 @@ DLLFUNC CMD_FUNC(m_wallops)
 		    me.name, sptr->name, "WALLOPS");
 		return 0;
 	}
-	if (MyClient(sptr) && !ValidatePermissionsForPath("chat:wallops",sptr,NULL,NULL,NULL))
+
+	if (!ValidatePermissionsForPath("chat:wallops",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
+
 	sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,
 	    ":%s WALLOPS :%s", sptr->name, message);
+
 	return 0;
 }

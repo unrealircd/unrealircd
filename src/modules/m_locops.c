@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_locops)
 
 MOD_INIT(m_locops)
 {
-	CommandAdd(modinfo->handle, MSG_LOCOPS, m_locops, 1, 0);
+	CommandAdd(modinfo->handle, MSG_LOCOPS, m_locops, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

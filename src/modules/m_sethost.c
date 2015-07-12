@@ -58,7 +58,7 @@ ModuleHeader MOD_HEADER(m_sethost)
 
 MOD_INIT(m_sethost)
 {
-	CommandAdd(modinfo->handle, MSG_SETHOST, m_sethost, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SETHOST, m_sethost, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

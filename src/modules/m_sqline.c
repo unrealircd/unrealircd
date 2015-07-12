@@ -59,7 +59,7 @@ ModuleHeader MOD_HEADER(m_sqline)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_sqline)
 {
-	CommandAdd(modinfo->handle, MSG_SQLINE, m_sqline, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SQLINE, m_sqline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -96,9 +96,6 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 NULL,           /*7  set_at */
                 "no reason"     /*8  reason */
         };
-
-	if (!IsServer(cptr))
-		return 0;
 
 	if (parc < 2)
 		return 0;

@@ -58,7 +58,7 @@ ModuleHeader MOD_HEADER(m_vhost)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_vhost)
 {
-	CommandAdd(modinfo->handle, MSG_VHOST, m_vhost, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_VHOST, m_vhost, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

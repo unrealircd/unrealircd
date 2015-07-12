@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_svssilence)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_svssilence)
 {
-	CommandAdd(modinfo->handle, MSG_SVSSILENCE, m_svssilence, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSSILENCE, m_svssilence, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

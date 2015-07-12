@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_netinfo)
 
 MOD_INIT(m_netinfo)
 {
-	CommandAdd(modinfo->handle, MSG_NETINFO, m_netinfo, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_NETINFO, m_netinfo, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -89,29 +89,15 @@ DLLFUNC CMD_FUNC(m_netinfo)
 	long 		endsync, protocol;
 	char		buf[512];
 
-	if (IsPerson(sptr))
-		return 0;
-	if (!IsServer(cptr))
-		return 0;
-
-	if (parc < 3)
-	{
-		/* Talking to a UnProtocol 2090 */
-		sendto_realops
-		    ("Link %s is using a too old UnProtocol - (parc < 3)",
-		    cptr->name);
-		return 0;
-	}
 	if (parc < 9)
-	{
 		return 0;
-	}
 
 	if (GotNetInfo(cptr))
 	{
 		sendto_realops("Already got NETINFO from Link %s", cptr->name);
 		return 0;
 	}
+
 	/* is a long therefore not ATOI */
 	lmax = atol(parv[1]);
 	endsync = atol(parv[2]);

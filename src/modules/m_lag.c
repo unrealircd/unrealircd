@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_lag)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_lag)
 {
-	CommandAdd(modinfo->handle, MSG_LAG, m_lag, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_LAG, m_lag, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -80,13 +80,11 @@ MOD_UNLOAD(m_lag)
 
 DLLFUNC int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-
-	if (MyClient(sptr))
-		if (!ValidatePermissionsForPath("server:info:lag",sptr,NULL,NULL,NULL))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
-			return 0;
-		}
+	if (!ValidatePermissionsForPath("server:info:lag",sptr,NULL,NULL,NULL))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		return 0;
+	}
 
 	if (parc < 2)
 	{

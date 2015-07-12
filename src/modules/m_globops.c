@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_globops)
 
 MOD_INIT(m_globops)
 {
-	CommandAdd(modinfo->handle, MSG_GLOBOPS, m_globops, 1, 0);
+	CommandAdd(modinfo->handle, MSG_GLOBOPS, m_globops, 1, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

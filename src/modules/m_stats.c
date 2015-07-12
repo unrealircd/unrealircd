@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_stats)
 
 MOD_INIT(m_stats)
 {
-	CommandAdd(modinfo->handle, MSG_STATS, m_stats, 3, 0);
+	CommandAdd(modinfo->handle, MSG_STATS, m_stats, 3, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

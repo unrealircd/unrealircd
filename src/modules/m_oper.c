@@ -59,7 +59,7 @@ ModuleHeader MOD_HEADER(m_oper)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_oper)
 {
-	CommandAdd(modinfo->handle, MSG_OPER, m_oper, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_OPER, m_oper, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

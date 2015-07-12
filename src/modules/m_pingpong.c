@@ -63,8 +63,7 @@ MOD_INIT(m_pingpong)
 	/*
 	 * We call our add_Command crap here
 	*/
-	Debug((DEBUG_NOTICE, "INIT"));
-	CommandAdd(modinfo->handle, MSG_PING, m_ping, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_PING, m_ping, MAXPARA, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -137,7 +136,6 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 DLLFUNC int  m_nospoof(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	unsigned long result;
-Debug((DEBUG_NOTICE, "NOSPOOF"));
 
 	if (IsNotSpoof(cptr))
 		return 0;
@@ -223,10 +221,6 @@ DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 		}
 	}
-#ifdef	DEBUGMODE
-	else
-		Debug((DEBUG_NOTICE, "PONG: %s %s", origin,
-		    destination ? destination : "*"));
-#endif
+
 	return 0;
 }

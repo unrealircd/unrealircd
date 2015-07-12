@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_samode)
 
 MOD_INIT(m_samode)
 {
-	CommandAdd(modinfo->handle, MSG_SAMODE, m_samode, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SAMODE, m_samode, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

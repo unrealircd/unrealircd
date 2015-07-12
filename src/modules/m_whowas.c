@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_whowas)
 
 MOD_INIT(m_whowas)
 {
-	CommandAdd(modinfo->handle, MSG_WHOWAS, m_whowas, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_WHOWAS, m_whowas, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

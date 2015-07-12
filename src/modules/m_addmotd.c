@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_addmotd)
 
 MOD_INIT(m_addmotd)
 {
-	CommandAdd(modinfo->handle, MSG_ADDMOTD, m_addmotd, 1, 0);
+	CommandAdd(modinfo->handle, MSG_ADDMOTD, m_addmotd, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_setident)
 
 MOD_INIT(m_setident)
 {
-	CommandAdd(modinfo->handle, MSG_SETIDENT, m_setident, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SETIDENT, m_setident, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

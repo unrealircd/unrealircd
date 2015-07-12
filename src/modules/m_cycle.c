@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_cycle)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_cycle)
 {
-	CommandAdd(modinfo->handle, MSG_CYCLE, m_cycle, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_CYCLE, m_cycle, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -82,12 +82,9 @@ MOD_UNLOAD(m_cycle)
 
 CMD_FUNC(m_cycle)
 {
-char channels[BUFSIZE];
-int n;
+	char channels[BUFSIZE];
+	int n;
 	
-	if (IsServer(sptr))
-		return 0;
-
 	if (parc < 2)
 		return 0;
 

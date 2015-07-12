@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_svskill)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_svskill)
 {
-	CommandAdd(modinfo->handle, MSG_SVSKILL, m_svskill, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSKILL, m_svskill, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

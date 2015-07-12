@@ -58,8 +58,8 @@ ModuleHeader MOD_HEADER(m_sendumode)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_sendumode)
 {
-	CommandAdd(modinfo->handle, MSG_SENDUMODE, m_sendumode, MAXPARA, 0);
-	CommandAdd(modinfo->handle, MSG_SMO, m_sendumode, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SENDUMODE, m_sendumode, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SMO, m_sendumode, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -102,12 +102,6 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, sptr->name, "SENDUMODE");
-		return 0;
-	}
-
-	if (!IsServer(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 

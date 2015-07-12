@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_svsjoin)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_svsjoin)
 {
-	CommandAdd(modinfo->handle, MSG_SVSJOIN, m_svsjoin, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSJOIN, m_svsjoin, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -83,6 +83,7 @@ MOD_UNLOAD(m_svsjoin)
 CMD_FUNC(m_svsjoin)
 {
 	aClient *acptr;
+
 	if (!IsULine(sptr))
 		return 0;
 

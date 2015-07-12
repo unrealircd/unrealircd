@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_squit)
 
 MOD_INIT(m_squit)
 {
-	CommandAdd(modinfo->handle, MSG_SQUIT, m_squit, 2, 0);
+	CommandAdd(modinfo->handle, MSG_SQUIT, m_squit, 2, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -80,11 +80,9 @@ CMD_FUNC(m_squit)
 {
 	char *server;
 	aClient *acptr;
-	char *comment = (parc > 2 && parv[parc - 1]) ?
-	    parv[parc - 1] : cptr->name;
+	char *comment = (parc > 2 && parv[parc - 1]) ? parv[parc - 1] : cptr->name;
 
-
-	if (!IsServer(sptr) && !ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;

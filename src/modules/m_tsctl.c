@@ -60,7 +60,7 @@ MOD_INIT(m_tsctl)
 	/*
 	 * We call our add_Command crap here
 	*/
-	CommandAdd(modinfo->handle, MSG_TSCTL, m_tsctl, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_TSCTL, m_tsctl, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -87,15 +87,12 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	time_t timediff;
 
-
-	if (!MyClient(sptr))
-		goto doit;
 	if (!ValidatePermissionsForPath("server:tsctl",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
-      doit:
+
 	if (parv[1])
 	{
 		if (*parv[1] == '\0')

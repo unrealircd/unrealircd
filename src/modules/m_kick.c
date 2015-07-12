@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_kick)
 
 MOD_INIT(m_kick)
 {
-	CommandAdd(modinfo->handle, MSG_KICK, m_kick, 3, 0);
+	CommandAdd(modinfo->handle, MSG_KICK, m_kick, 3, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

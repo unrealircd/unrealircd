@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_svslusers)
 
 MOD_INIT(m_svslusers)
 {
-	CommandAdd(modinfo->handle, MSG_SVSLUSERS, m_svslusers, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSLUSERS, m_svslusers, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

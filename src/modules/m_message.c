@@ -76,7 +76,7 @@ MOD_TEST(m_message)
 MOD_INIT(m_message)
 {
 	CommandAdd(modinfo->handle, MSG_PRIVATE, m_private, 2, M_USER|M_SERVER|M_RESETIDLE|M_VIRUS);
-	CommandAdd(modinfo->handle, MSG_NOTICE, m_notice, 2, 0);
+	CommandAdd(modinfo->handle, MSG_NOTICE, m_notice, 2, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;	
 }

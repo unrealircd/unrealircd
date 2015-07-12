@@ -22,7 +22,7 @@
 CC = do not run make from this directory
 
 OBJS=timesynch.o res.o s_bsd.o auth.o aln.o channel.o cloak.o crule.o dbuf.o \
-	events.o fdlist.o hash.o help.o ircd.o ircsprintf.o list.o \
+	events.o fdlist.o hash.o ircd.o ircsprintf.o list.o \
 	match.o modules.o packet.o parse.o s_auth.o mempool.o operclass.o \
 	s_conf.o s_debug.o s_dispatch.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
@@ -129,9 +129,6 @@ s_svs.o: s_svs.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_svs.c
 events.o: events.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c events.c
-
-help.o: help.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c help.c
 
 #install: all
 #	-if [ ! -d ${IRCDDIR} -a ! -f ${IRCDDIR} ] ; then \

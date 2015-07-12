@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_svsfline)
 
 MOD_INIT(m_svsfline)
 {
-	CommandAdd(modinfo->handle, MSG_SVSFLINE, m_svsfline, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSFLINE, m_svsfline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -73,9 +73,6 @@ MOD_UNLOAD(m_svsfline)
 
 DLLFUNC CMD_FUNC(m_svsfline)
 {
-	if (!IsServer(sptr))
-		return 0;
-
 	if (parc < 2)
 		return 0;
 

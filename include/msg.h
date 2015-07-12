@@ -151,7 +151,6 @@
 #define MSG_DCCDENY	"DCCDENY"
 #define MSG_UNDCCDENY   "UNDCCDENY"
 #define MSG_CHGNAME	"CHGNAME"
-#define MSG_SVSNAME	"SVSNAME"
 #define MSG_SHUN	"SHUN"
 #define MSG_NEWJOIN 	"NEWJOIN"	/* For CR Java Chat */
 #define MSG_POST	"POST"

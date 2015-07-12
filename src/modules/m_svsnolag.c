@@ -57,8 +57,8 @@ ModuleHeader MOD_HEADER(m_svsnolag)
 
 MOD_INIT(m_svsnolag)
 {
-	CommandAdd(modinfo->handle, MSG_SVSNOLAG, m_svsnolag, MAXPARA, 0);
-	CommandAdd(modinfo->handle, MSG_SVS2NOLAG, m_svs2nolag, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSNOLAG, m_svsnolag, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVS2NOLAG, m_svs2nolag, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -77,7 +77,6 @@ int do_svsnolag(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 {
 	aClient *acptr;
 	char *cmd = show_change ? MSG_SVS2NOLAG : MSG_SVSNOLAG;
-
 
 	if (!IsULine(sptr))
 		return 0;

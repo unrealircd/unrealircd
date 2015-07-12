@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_userhost)
 
 MOD_INIT(m_userhost)
 {
-	CommandAdd(modinfo->handle, MSG_USERHOST, m_userhost, 1, 0);
+	CommandAdd(modinfo->handle, MSG_USERHOST, m_userhost, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -79,7 +79,6 @@ MOD_UNLOAD(m_userhost)
  */
 DLLFUNC CMD_FUNC(m_userhost)
 {
-
 	char *p;		/* scratch end pointer */
 	char *cn;		/* current name */
 	struct Client *acptr;

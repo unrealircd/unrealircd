@@ -58,7 +58,7 @@ ModuleHeader MOD_HEADER(m_swhois)
 
 MOD_INIT(m_swhois)
 {
-	CommandAdd(modinfo->handle, MSG_SWHOIS, m_swhois, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SWHOIS, m_swhois, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -94,9 +94,6 @@ int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[])
         int priority = 0;
 
         *tag = *swhois = '\0';
-
-        if (!(IsServer(sptr) || IsULine(sptr)))
-                return 0;
 
         if (parc < 3)
                 return 0;

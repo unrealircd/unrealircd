@@ -45,11 +45,10 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
-/* Place includes here */
 #define MSG_CHGNAME     "CHGNAME"
+#define MSG_SVSNAME     "SVSNAME"
 
+DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 ModuleHeader MOD_HEADER(m_chgname)
   = {
@@ -64,8 +63,8 @@ ModuleHeader MOD_HEADER(m_chgname)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_chgname)
 {
-	CommandAdd(modinfo->handle, MSG_CHGNAME, m_chgname, 2, 0);
-	CommandAdd(modinfo->handle, MSG_SVSNAME, m_chgname, 2, 0);
+	CommandAdd(modinfo->handle, MSG_CHGNAME, m_chgname, 2, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSNAME, m_chgname, 2, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

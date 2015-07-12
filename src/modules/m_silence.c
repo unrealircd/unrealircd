@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_silence)
 
 MOD_INIT(m_silence)
 {
-	CommandAdd(modinfo->handle, MSG_SILENCE, m_silence, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SILENCE, m_silence, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

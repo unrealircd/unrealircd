@@ -61,8 +61,8 @@ ModuleHeader MOD_HEADER(m_rping)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_rping)
 {
-	CommandAdd(modinfo->handle, MSG_RPING, m_rping, MAXPARA, 0);
-	CommandAdd(modinfo->handle, MSG_RPONG, m_rpong, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_RPING, m_rping, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_RPONG, m_rpong, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

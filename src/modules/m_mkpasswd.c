@@ -58,7 +58,7 @@ ModuleHeader MOD_HEADER(m_mkpasswd)
 
 MOD_INIT(m_mkpasswd)
 {
-	CommandAdd(modinfo->handle, MSG_MKPASSWD, m_mkpasswd, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_MKPASSWD, m_mkpasswd, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_svsnline)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_svsnline)
 {
-	CommandAdd(modinfo->handle, MSG_SVSNLINE, m_svsnline, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSNLINE, m_svsnline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -109,9 +109,6 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_ban *bconf;
 	char		*s;
-
-	if (!IsServer(sptr))
-		return 0;
 
 	if (parc < 2)
 		return 0;

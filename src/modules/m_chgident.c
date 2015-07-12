@@ -64,12 +64,7 @@ ModuleHeader MOD_HEADER(m_chgident)
 
 MOD_INIT(m_chgident)
 {
-	/* extern variable to export m_chgident_info to temporary
-           ModuleHeader *modulebuffer;
-	   the module_load() will use this to add to the modules linked 
-	   list
-	*/
-	CommandAdd(modinfo->handle, MSG_CHGIDENT, m_chgident, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_CHGIDENT, m_chgident, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

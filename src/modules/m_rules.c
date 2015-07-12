@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_rules)
 
 MOD_INIT(m_rules)
 {
-	CommandAdd(modinfo->handle, MSG_RULES, m_rules, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_RULES, m_rules, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -83,9 +83,6 @@ DLLFUNC CMD_FUNC(m_rules)
 
 	temp = NULL;
 
-	if (IsServer(sptr))
-		return 0;
-		
 	if (hunt_server(cptr, sptr, ":%s RULES :%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
 
@@ -97,7 +94,6 @@ DLLFUNC CMD_FUNC(m_rules)
 	if(!temp)
 		temp = rules.lines;
 
-      playrules:
 	if (temp == NULL)
 	{
 		sendto_one(sptr, err_str(ERR_NORULES), me.name, sptr->name);

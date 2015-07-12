@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_sdesc)
 
 MOD_INIT(m_sdesc)
 {
-	CommandAdd(modinfo->handle, MSG_SDESC, m_sdesc, 1, 0);
+	CommandAdd(modinfo->handle, MSG_SDESC, m_sdesc, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -86,29 +86,22 @@ int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 	
-	if (parc < 2)
+	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "SDESC");
 		return 0;
 	}
 
-	if (strlen(parv[1]) < 1)
-		if (MyConnect(sptr))
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Nothing to change to (SDESC)",
-			    me.name, sptr->name);
-			return 0;
-		}
-	if (strlen(parv[1]) > (REALLEN))
+	if (strlen(parv[1]) > REALLEN)
 	{
 		if (MyConnect(sptr))
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** /SDESC Error: \"Server info\" may maximum be %i characters of length",
 			    me.name, sptr->name, REALLEN);
+			return 0;
 		}
-		return 0;
+		parv[1][REALLEN] = '\0';
 	}
 
 	ircsnprintf(sptr->srvptr->info, sizeof(sptr->srvptr->info), "%s", parv[1]);

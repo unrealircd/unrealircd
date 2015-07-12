@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_unsqline)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_unsqline)
 {
-	CommandAdd(modinfo->handle, MSG_UNSQLINE, m_unsqline, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_UNSQLINE, m_unsqline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -74,25 +74,24 @@ MOD_UNLOAD(m_unsqline)
 	return MOD_SUCCESS;
 }
 
-/*    m_unsqline
+/* m_unsqline
 **	parv[1] = nickmask
 */
 DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-       char *tkllayer[6] = {
-                me.name,        /*0  server.name */
-                "-",            /*1  - */
-                "Q",            /*2  Q   */
-                "*",            /*3  unused */
-                parv[1],        /*4  host */
-                sptr->name      /*5  whoremoved */
-        };
+	char *tkllayer[6] = {
+		me.name,           /*0  server.name */
+		"-",               /*1  - */
+		"Q",               /*2  Q   */
+		"*",               /*3  unused */
+		parv[1],           /*4  host */
+		sptr->name         /*5  whoremoved */
+	};
 
 	if (parc < 2)
 		return 0;
-        if (!IsServer(cptr))
-                return 0;
 
-        m_tkl(&me, &me, 6, tkllayer);
-        return 0;
+	m_tkl(&me, &me, 6, tkllayer);
+	
+	return 0;
 }

@@ -219,7 +219,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	for (ch = buffer; *ch == ' '; ch++)
 		;
 	//para[0] = from->name;
-	para[0] = 0xDEADBEEF; /* helps us catch bugs :) -- 1/2 */
+	para[0] = (char *)0xDEADBEEF; /* helps us catch bugs :) -- 1/2 */
 	if (*ch == ':' || *ch == '@')
 	{
 		/*
@@ -247,7 +247,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			if (!from && index(sender, '@'))
 				from = find_nickserv(sender, (aClient *)NULL);
 			//para[0] = sender;
-			para[0] = 0xDEADBEEF; /* helps us catch bugs :) -- 2/2 */
+			para[0] = (char *)0xDEADBEEF; /* helps us catch bugs :) -- 2/2 */
 
 			/* Hmm! If the client corresponding to the
 			 * prefix is not found--what is the correct

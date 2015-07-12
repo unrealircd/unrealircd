@@ -58,8 +58,8 @@ ModuleHeader MOD_HEADER(m_svssno)
 
 MOD_INIT(m_svssno)
 {
-	CommandAdd(modinfo->handle, MSG_SVSSNO, m_svssno, MAXPARA, 0);
-	CommandAdd(modinfo->handle, MSG_SVS2SNO, m_svs2sno, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSSNO, m_svssno, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVS2SNO, m_svs2sno, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

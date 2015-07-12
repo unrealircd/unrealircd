@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_ison)
 
 MOD_INIT(m_ison)
 {
-	CommandAdd(modinfo->handle, MSG_ISON, m_ison, 1, 0);
+	CommandAdd(modinfo->handle, MSG_ISON, m_ison, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -82,15 +82,20 @@ MOD_UNLOAD(m_ison)
  */
 
 static char buf[BUFSIZE];
-DLLFUNC CMD_FUNC(m_ison) {
+
+DLLFUNC CMD_FUNC(m_ison)
+{
 	char namebuf[USERLEN + HOSTLEN + 4];
 	aClient *acptr;
 	char *s, **pav = parv, *user;
 	int  len;
 	char *p = NULL;
 
+	if (!MyClient(sptr))
+		return 0;
 
-	if (parc < 2) {
+	if (parc < 2)
+	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, sptr->name, "ISON");
 		return 0;
@@ -99,11 +104,14 @@ DLLFUNC CMD_FUNC(m_ison) {
 	ircsnprintf(buf, sizeof(buf), rpl_str(RPL_ISON), me.name, *parv);
 	len = strlen(buf);
 
-	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " ")) {
+	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " "))
+	{
 		if ((user = index(s, '!')))
 			*user++ = '\0';
-		if ((acptr = find_person(s, NULL))) {
-			if (user) {
+		if ((acptr = find_person(s, NULL)))
+		{
+			if (user)
+			{
 				ircsnprintf(namebuf, sizeof(namebuf), "%s@%s", acptr->user->username, GetHost(acptr));
 				if (match(user, namebuf)) continue;
 				*--user = '!';

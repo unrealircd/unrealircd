@@ -59,7 +59,7 @@ ModuleHeader MOD_HEADER(m_svsnoop)
 
 MOD_INIT(m_svsnoop)
 {
-	CommandAdd(modinfo->handle, MSG_SVSNOOP, m_svsnoop, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSNOOP, m_svsnoop, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

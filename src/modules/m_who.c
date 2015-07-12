@@ -64,7 +64,7 @@ ModuleHeader MOD_HEADER(m_who)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_who)
 {
-	CommandAdd(modinfo->handle, MSG_WHO, m_who, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_WHO, m_who, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

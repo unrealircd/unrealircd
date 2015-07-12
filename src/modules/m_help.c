@@ -57,8 +57,8 @@ ModuleHeader MOD_HEADER(m_help)
 
 MOD_INIT(m_help)
 {
-	CommandAdd(modinfo->handle, MSG_HELP, m_help, 1, 0);
-	CommandAdd(modinfo->handle, MSG_HELPOP, m_help, 1, 0);
+	CommandAdd(modinfo->handle, MSG_HELP, m_help, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_HELPOP, m_help, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -73,36 +73,91 @@ MOD_UNLOAD(m_help)
 	return MOD_SUCCESS;
 }
 
+#define HDR(str) sendto_one(sptr, ":%s 290 %s :%s", me.name, sptr->name, str);
+#define SND(str) sendto_one(sptr, ":%s 292 %s :%s", me.name, sptr->name, str);
+
+ConfigItem_help *Find_Help(char *command) {
+	ConfigItem_help *help;
+	if (!command) {
+		for (help = conf_help; help; help = (ConfigItem_help *)help->next) {
+			if (help->command == NULL)
+				return help;
+		}
+		return NULL;
+	}
+	for (help = conf_help; help; help = (ConfigItem_help *)help->next) {
+		if (help->command == NULL)
+			continue;
+		else if (!stricmp(command,help->command))
+			return help;
+	}
+	return NULL;
+}
+
+int  parse_help(aClient *sptr, char *name, char *help)
+{
+	ConfigItem_help *helpitem;
+	aMotdLine *text;
+	if (BadPtr(help))
+	{
+		helpitem = Find_Help(NULL);
+		if (!helpitem)
+			return 1;
+		SND(" -");
+		HDR("        ***** UnrealIRCd Help System *****");
+		SND(" -");
+		text = helpitem->text;
+		while (text) {
+			SND(text->line);
+			text = text->next;
+		}
+		SND(" -");
+		return 1;
+		
+	}
+	helpitem = Find_Help(help);
+	if (!helpitem) {
+		SND(" -");
+		HDR("        ***** No Help Available *****");
+		SND(" -");
+		SND("   We're sorry, we don't have help available for the command you requested.");
+		SND(" -");
+		sendto_one(sptr,":%s 292 %s : ***** Go to %s if you have any further questions *****",
+		    me.name, sptr->name, helpchan);
+		SND(" -");
+		return 0;
+	}
+	text = helpitem->text;
+	SND(" -");
+	sendto_one(sptr,":%s 290 %s :***** %s *****",
+	    me.name, sptr->name, helpitem->command);
+	SND(" -");
+	while (text) {
+		SND(text->line);
+		text = text->next;
+	}
+	SND(" -");
+	return 1;
+}
+
 /*
 ** m_help (help/write to +h currently online) -Donwulff
 **	parv[1] = optional message text
 */
 CMD_FUNC(m_help)
 {
-	char *message, *s;
+	char *helptopic, *s;
 	Link *tmpl;
 
-	message = parc > 1 ? parv[1] : NULL;
+	if (!MyClient(sptr))
+		return 0; /* never remote */
 
-	if (MyConnect(sptr))
-	{
-		/* New syntax: ?... never goes out, !... always does. */
-		if (BadPtr(message)) {
-			parse_help(sptr, sptr->name, NULL);
-			return 0;
-		}
-		else if (message[0] == '?') {
-			parse_help(sptr, sptr->name, message+1);
-			return 0;
-		}
-		else if (message[0] == '!') {
-			message++;
-		}
-		else {
-			if (parse_help(sptr, sptr->name, message))
-				return 0;
-		}
-	}
+	helptopic = parc > 1 ? parv[1] : NULL;
+	
+	if (helptopic && (*helptopic == '?'))
+		helptopic++;
+
+	parse_help(sptr, sptr->name, BadPtr(helptopic) ? NULL : helptopic);
 
 	return 0;
 }

@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_dccdeny)
 
 MOD_INIT(m_dccdeny)
 {
-	CommandAdd(modinfo->handle, MSG_DCCDENY, m_dccdeny, 2, 0);
+	CommandAdd(modinfo->handle, MSG_DCCDENY, m_dccdeny, 2, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

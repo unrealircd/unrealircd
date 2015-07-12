@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_sjoin)
 
 MOD_INIT(m_sjoin)
 {
-	CommandAdd(modinfo->handle, MSG_SJOIN, m_sjoin, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SJOIN, m_sjoin, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

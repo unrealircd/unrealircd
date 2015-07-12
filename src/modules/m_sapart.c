@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_sapart)
 
 MOD_INIT(m_sapart)
 {
-	CommandAdd(modinfo->handle, MSG_SAPART, m_sapart, 3, 0);
+	CommandAdd(modinfo->handle, MSG_SAPART, m_sapart, 3, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -104,7 +104,7 @@ DLLFUNC CMD_FUNC(m_sapart)
         }
 
 	/* See if we can operate on this vicim/this command */
-	if (!IsULine(sptr) && !ValidatePermissionsForPath("sapart",sptr,acptr,NULL,NULL))
+	if (!ValidatePermissionsForPath("sapart",sptr,acptr,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;

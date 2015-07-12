@@ -58,7 +58,7 @@ ModuleHeader MOD_HEADER(m_svsnick)
 
 MOD_INIT(m_svsnick)
 {
-	CommandAdd(modinfo->handle, MSG_SVSNICK, m_svsnick, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSNICK, m_svsnick, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -110,9 +110,9 @@ aClient *ocptr; /* Other client */
 	if (acptr != ocptr)
 		acptr->umodes &= ~UMODE_REGNICK;
 	acptr->lastnick = atol(parv[3]);
-	sendto_common_channels(acptr, ":%s NICK :%s", parv[1], parv[2]);
+	sendto_common_channels(acptr, ":%s NICK :%s", acptr->name, parv[2]);
 	add_history(acptr, 1);
-	sendto_server(NULL, 0, 0, ":%s NICK %s :%ld", parv[1], parv[2], atol(parv[3]));
+	sendto_server(NULL, 0, 0, ":%s NICK %s :%ld", acptr->name, parv[2], atol(parv[3]));
 
 	(void)del_from_client_hash_table(acptr->name, acptr);
 	hash_check_watch(acptr, RPL_LOGOFF);

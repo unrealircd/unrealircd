@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_svspart)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_svspart)
 {
-	CommandAdd(modinfo->handle, MSG_SVSPART, m_svspart, 3, 0);
+	CommandAdd(modinfo->handle, MSG_SVSPART, m_svspart, 3, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

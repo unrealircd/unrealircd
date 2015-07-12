@@ -62,7 +62,7 @@ ModuleHeader MOD_HEADER(m_chghost)
 
 MOD_INIT(m_chghost)
 {
-	CommandAdd(modinfo->handle, MSG_CHGHOST, m_chghost, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_CHGHOST, m_chghost, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

@@ -59,7 +59,7 @@ ModuleHeader MOD_HEADER(m_whois)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_whois)
 {
-	CommandAdd(modinfo->handle, MSG_WHOIS, m_whois, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_WHOIS, m_whois, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -91,9 +91,6 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char *p = NULL;
 	int  found, len, mlen, cnt = 0;
 	char querybuf[BUFSIZE];
-
-	if (IsServer(sptr))	
-		return 0;
 
 	if (parc < 2)
 	{

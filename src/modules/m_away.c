@@ -58,7 +58,7 @@ DLLFUNC ModuleHeader MOD_HEADER(m_away)
 
 MOD_INIT(m_away)
 {
-	CommandAdd(modinfo->handle, MSG_AWAY, m_away, 1, 0);
+	CommandAdd(modinfo->handle, MSG_AWAY, m_away, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

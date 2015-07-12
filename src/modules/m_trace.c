@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_trace)
 
 MOD_INIT(m_trace)
 {
-	CommandAdd(modinfo->handle, MSG_TRACE, m_trace, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_TRACE, m_trace, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
