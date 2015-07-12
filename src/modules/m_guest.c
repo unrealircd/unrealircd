@@ -59,9 +59,6 @@ ModuleInfo *ModGuestInfo;
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_guest)
 {
-	/*
-	 * We call our add_Command crap here
-	*/
 #ifdef GUEST
 	ModGuestInfo = modinfo;
 	GuestHook = HookAdd(ModGuestInfo->handle, HOOKTYPE_GUEST, 0, m_guest);

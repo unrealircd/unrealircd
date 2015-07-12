@@ -57,9 +57,6 @@ ModuleHeader MOD_HEADER(m_tsctl)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_tsctl)
 {
-	/*
-	 * We call our add_Command crap here
-	*/
 	CommandAdd(modinfo->handle, MSG_TSCTL, m_tsctl, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

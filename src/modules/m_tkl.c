@@ -151,9 +151,6 @@ MOD_TEST(m_tkl)
 MOD_INIT(m_tkl)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	/*
-	 * We call our add_Command crap here
-	*/
 	CommandAdd(modinfo->handle, MSG_GLINE, m_gline, 3, M_OPER);
 	CommandAdd(modinfo->handle, MSG_SHUN, m_shun, 3, M_OPER);
 	CommandAdd(modinfo->handle, MSG_TEMPSHUN, m_tempshun, 2, M_OPER);
