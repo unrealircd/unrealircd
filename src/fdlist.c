@@ -110,6 +110,9 @@ int fd_unmap(int fd)
 				fd);
 		ircd_log(LOG_ERROR, "[BUG] trying to close fd #%d in fd table, but this FD isn't reported open",
 				fd);
+#ifdef DEBUGMODE
+		abort();
+#endif
 		return 0;
 	}
 
