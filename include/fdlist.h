@@ -24,6 +24,7 @@ extern MODVAR FDEntry fd_table[MAXCONNECTIONS + 1];
 
 extern int fd_open(int fd, const char *desc);
 extern void fd_close(int fd);
+extern int fd_unmap(int fd);
 extern void fd_unnotify(int fd);
 extern int fd_socket(int family, int type, int protocol, const char *desc);
 extern int fd_accept(int sockfd);

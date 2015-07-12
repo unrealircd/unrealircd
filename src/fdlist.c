@@ -89,7 +89,7 @@ int fd_fileopen(const char *path, unsigned int flags)
 	return fd_open(fd, comment);
 }
 
-void fd_close(int fd)
+int fd_unmap(int fd)
 {
 	FDEntry *fde;
 	unsigned int befl;
@@ -100,7 +100,7 @@ void fd_close(int fd)
 				fd, MAXCONNECTIONS);
 		ircd_log(LOG_ERROR, "[BUG] trying to close fd #%d in fd table, but MAXCONNECTIONS is %d",
 				fd, MAXCONNECTIONS);
-		return;
+		return 0;
 	}
 
 	fde = &fd_table[fd];
@@ -110,7 +110,7 @@ void fd_close(int fd)
 				fd);
 		ircd_log(LOG_ERROR, "[BUG] trying to close fd #%d in fd table, but this FD isn't reported open",
 				fd);
-		return;
+		return 0;
 	}
 
 	befl = fde->backend_flags;
@@ -121,6 +121,17 @@ void fd_close(int fd)
 	/* only notify the backend if it is actively tracking the FD */
 	if (befl)
 		fd_refresh(fd);
+	
+	return 1;
+}
+
+void fd_close(int fd)
+{
+	FDEntry *fde;
+	unsigned int befl;
+
+	if (!fd_unmap(fd))
+		return;
 
 	CLOSE_SOCK(fd);
 }

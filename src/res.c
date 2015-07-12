@@ -105,6 +105,15 @@ static void unrealdns_sock_state_cb(void *data, ares_socket_t fd, int read, int 
 {
 	int selflags = 0;
 
+	if (!read && !write)
+	{
+		/* Socket is going to be closed *BY C-ARES*..
+		 * so don't call fd_close() but fd_unmap().
+		 */
+		fd_close(fd);
+//		return;
+	}
+	
 	if (read)
 		selflags |= FD_SELECT_READ;
 
