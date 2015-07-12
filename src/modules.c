@@ -348,7 +348,7 @@ _	 */
 	if (!strstr(path, MODULE_SUFFIX))
 		strlcat(path, MODULE_SUFFIX, sizeof(path));
 	
-	tmppath = unreal_mktemp(TMPDIR, unreal_getfilename(path));
+	tmppath = unreal_mktemp(TMPDIR, unreal_getmodfilename(path));
 	if (!tmppath)
 		return "Unable to create temporary file!";
 

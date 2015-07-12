@@ -1630,6 +1630,53 @@ char *unreal_getfilename(char *path)
         return end;
 }
 
+/* Returns the special module tmp name for a given path
+ * The original string is not modified
+ */
+char *unreal_getmodfilename(char *path)
+{
+	static char ret[512];
+	char buf[512];
+	char *p;
+	char *name = NULL;
+	char *directory = NULL;
+	
+	if (BadPtr(path))
+		return path;
+	
+	strlcpy(buf, path, sizeof(buf));
+	
+	/* Backtrack... */
+	for (p = buf + strlen(buf); p >= buf; p--)
+	{
+		if ((*p == '/') || (*p == '\\'))
+		{
+			name = p+1;
+			*p = '\0';
+			directory = buf; /* fallback */
+			for (; p >= buf; p--)
+			{
+				if ((*p == '/') || (*p == '\\'))
+				{
+					directory = p + 1;
+					break;
+				}
+			}
+			break;
+		}
+	}
+	
+	if (!name)
+		name = buf;
+	
+	if (!directory || !strcmp(directory, "modules"))
+		snprintf(ret, sizeof(ret), "%s", name);
+	else
+		snprintf(ret, sizeof(ret), "%s.%s", directory, name);
+	
+	return ret;
+}
+
 /* Returns a consistent filename for the cache/ directory.
  * Returned value will be like: cache/<hash of url>
  */

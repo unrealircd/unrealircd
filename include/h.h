@@ -563,6 +563,7 @@ extern int count_oper_sessions(char *);
 extern char *unreal_mktemp(const char *dir, const char *suffix);
 extern char *unreal_getpathname(char *filepath, char *path);
 extern char *unreal_getfilename(char *path);
+extern char *unreal_getmodfilename(char *path);
 extern char *unreal_mkcache(const char *url);
 extern int has_cached_version(const char *url);
 extern int unreal_copyfile(const char *src, const char *dest);

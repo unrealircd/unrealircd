@@ -88,7 +88,7 @@ elif [ "$1" = "gencloak" ] ; then
 elif [ "$1" = "upgrade-conf" ] ; then
 	@BINDIR@/unrealircd -U
 elif [ "$1" = "backtrace" ] ; then
-	cd @IRCDDIR@
+	cd @PERMDATADIR@
 
 	modpath="@MODULESDIR@"
 
@@ -133,13 +133,13 @@ elif [ "$1" = "backtrace" ] ; then
 	# (ugly) scripting to recreate the tmp/*.so links to the modules *.so files...
 	echo 'info sharedlibrary'|gdb @BINDIR@/unrealircd $corefile 2>/dev/null|\
 	grep No|grep tmp/|awk '{ print $2 }'|\
-	awk -F '.' "{ system(\"ln -s ../$modpath/\" \$2 \".so \" \$0) }"
+	awk -F '.' "{ system(\"[ -f $modpath/\" \$2 \"/\" \$3 \".so ] && ln -s $modpath/\" \$2 \"/\" \$3 \".so \" \$0 \" || ln -s $modpath/\" \$2 \".so \" \$0) }"
 	
 	echo ""
 	echo "=================== START HERE ======================"
 	echo "BACKTRACE:"
 
-cat >gdb.commands << __EOF__
+cat >@TMPDIR@/gdb.commands << __EOF__
 bt
 echo \n
 frame
@@ -150,8 +150,8 @@ bt 3 full
 quit
 __EOF__
 
-	gdb -batch -x gdb.commands @BINDIR@/unrealircd $corefile
-	rm -f gdb.commands
+	gdb -batch -x @TMPDIR@/gdb.commands @BINDIR@/unrealircd $corefile
+	rm -f @TMPDIR@/gdb.commands
 	echo "GCC: `gcc -v 2>&1|tail -n 1`"
 	echo "UNAME: `uname -a`"
 	echo "UNREAL: `$0 version`"

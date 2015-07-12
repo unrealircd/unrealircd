@@ -36,7 +36,7 @@ SRC=$(OBJS:%.o=%.c)
 MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'LDFLAGS=${LDFLAGS}' 'IRCDMODE=${IRCDMODE}' \
 		'BINDIR=${BINDIR}' 'INSTALL=${INSTALL}' \
-		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
+		'INCLUDEDIR=${INCLUDEDIR}' \
 		'MANDIR=${MANDIR}' 'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
 		'RES=${RES}' 'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
 		'CRYPTOLIB=${CRYPTOLIB}' \
@@ -129,19 +129,6 @@ s_svs.o: s_svs.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_svs.c
 events.o: events.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c events.c
-
-#install: all
-#	-if [ ! -d ${IRCDDIR} -a ! -f ${IRCDDIR} ] ; then \
-#		mkdir ${IRCDDIR}; \
-#	fi
-#	../bsdinstall -m ${IRCDMODE} ircd ${BINDIR}
-#	../bsdinstall -m 700 chkconf ${BINDIR}
-#	$(CP) ../doc/example.conf ${IRCDDIR}
-#	$(TOUCH) ${IRCDDIR}/ircd.motd
-#	$(RM) -f ${IRCDDIR}/ircd.m4
-#	$(TOUCH) ${IRCDDIR}/ircd.m4
-#	chmod +x buildm4
-#	./buildm4 ${IRCDDIR}
 
 clean:
 	$(RM) -f *.o *.so *~ core ircd version.c; \

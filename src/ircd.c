@@ -1352,7 +1352,7 @@ int InitwIRCD(int argc, char *argv[])
 	do_version_check();
 
 #if !defined(CHROOTDIR) && !defined(_WIN32)
-	if (chdir(CONFDIR)) {
+	if (chdir(PERMDATADIR)) {
 # ifndef _WIN32
 		perror("chdir");
 		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", CONFDIR);
