@@ -613,20 +613,13 @@ extern void reinit_resolver(aClient *sptr);
 */
 CMD_FUNC(m_rehash)
 {
-	int  x;
+	int x = 0;
 
-	if (MyClient(sptr) && !ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
-	if (!MyClient(sptr) && !ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL)
-	    && !IsULine(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
-		return 0;
-	}
-	x = 0;
 
 	if ((parc < 3) || BadPtr(parv[2])) {
 		/* If the argument starts with a '-' (like -motd, -opermotd, etc) then it's
@@ -813,13 +806,9 @@ CMD_FUNC(m_restart)
 char *reason = parv[1];
 	aClient *acptr;
 	int i;
+
 	/* Check permissions */
-	if (MyClient(sptr) && !ValidatePermissionsForPath("server:restart",sptr,NULL,NULL,NULL))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
-		return 0;
-	}
-	if (!MyClient(sptr) && !ValidatePermissionsForPath("server:restart",sptr,NULL,NULL,NULL) && !IsULine(sptr))
+	if (!ValidatePermissionsForPath("server:restart",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
@@ -1172,7 +1161,8 @@ CMD_FUNC(m_die)
 {
 	aClient *acptr;
 	int  i;
-	if (!MyClient(sptr) || !ValidatePermissionsForPath("server:die",sptr,NULL,NULL,NULL))
+
+	if (!ValidatePermissionsForPath("server:die",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;

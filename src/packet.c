@@ -74,19 +74,19 @@ void	init_CommandHash(void)
 #endif
 	
 	bzero(CommandHash, sizeof(CommandHash));
-	add_CommandX(MSG_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
-	add_CommandX(MSG_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
-	add_Command(MSG_SUMMON, m_summon, 1);
-	add_Command(MSG_USERS, m_users, MAXPARA);
-	add_Command(MSG_INFO, m_info, MAXPARA);
-	add_Command(MSG_DNS, m_dns, MAXPARA);
-	add_Command(MSG_REHASH, m_rehash, MAXPARA);
-	add_Command(MSG_RESTART, m_restart, 2);
-	add_Command(MSG_DIE, m_die, MAXPARA);
-	add_Command(MSG_DALINFO, m_dalinfo, MAXPARA);
-	add_Command(MSG_CREDITS, m_credits, MAXPARA);
-	add_Command(MSG_LICENSE, m_license, MAXPARA);
-	add_Command(MSG_MODULE, m_module, MAXPARA);
+	CommandAdd(NULL, MSG_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
+	CommandAdd(NULL, MSG_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
+	CommandAdd(NULL, MSG_SUMMON, m_summon, 1, M_USER);
+	CommandAdd(NULL, MSG_USERS, m_users, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_INFO, m_info, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_DNS, m_dns, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_REHASH, m_rehash, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(NULL, MSG_RESTART, m_restart, 2, M_USER);
+	CommandAdd(NULL, MSG_DIE, m_die, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_DALINFO, m_dalinfo, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_CREDITS, m_credits, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_LICENSE, m_license, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_MODULE, m_module, MAXPARA, M_USER);
 		
 #ifdef DEVELOP_DEBUG
 	for (i = 0; i <= 255; i++)
@@ -116,20 +116,6 @@ aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters
 	AddListItem(newcmd, CommandHash[toupper(*cmd)]);
 
 	return newcmd;
-}
-
-void	add_Command(char *name, int (*func)(), unsigned char parameters)
-{
-	aCommand *cmd, *tok;
-	cmd = add_Command_backend(name, func, parameters, 0);
-	cmd->friend = NULL;
-}
-
-void    add_CommandX(char *name, int (*func)(), unsigned char parameters, int flags) 
-{
-	aCommand *cmd, *tok;
-	cmd = add_Command_backend(name, func, parameters, flags);
-	cmd->friend = NULL;
 }
 
 inline aCommand *find_CommandEx(char *cmd, int (*func)(), int token)
