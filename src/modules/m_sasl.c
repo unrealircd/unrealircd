@@ -293,6 +293,14 @@ static int abort_sasl(struct Client *cptr)
 	return 0;
 }
 
+int sasl_capability_visible(void)
+{
+	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
+		return 0;
+	
+	return 1;
+}
+
 MOD_INIT(m_sasl)
 {
 	ClientCapability cap;
@@ -309,7 +317,7 @@ MOD_INIT(m_sasl)
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "sasl";
 	cap.cap = PROTO_SASL;
-	// todo: validate function
+	cap.visible = sasl_capability_visible;
 	ClientCapabilityAdd(modinfo->handle, &cap);
 
 	return MOD_SUCCESS;

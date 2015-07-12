@@ -148,6 +148,9 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 
 	for (cap = clicaps; cap; cap = cap->next)
 	{
+		if (cap->visible && !cap->visible())
+			continue; /* hidden */
+
 		if (flags)
 		{
 			if (!CHECKPROTO(sptr, cap->cap))
