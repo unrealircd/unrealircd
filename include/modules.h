@@ -694,7 +694,6 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_REHASH 7
 #define HOOKTYPE_PRE_LOCAL_CONNECT 8
 #define HOOKTYPE_PRE_LOCAL_QUIT 9
-#define HOOKTYPE_GUEST 10
 #define HOOKTYPE_SERVER_CONNECT 11
 #define HOOKTYPE_SERVER_QUIT 12
 #define HOOKTYPE_STATS 13
