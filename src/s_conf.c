@@ -523,16 +523,6 @@ long config_checkval(char *orig, unsigned short flags) {
 	return ret;
 }
 
-int iplist_onlist(IPList *iplist, char *ip)
-{
-IPList *e;
-
-	for (e = iplist; e; e = e->next)
-		if (!match(e->mask, ip))
-			return 1;
-	return 0;
-}
-
 void set_channelmodes(char *modes, struct ChMode *store, int warn)
 {
 	aCtab *tab;

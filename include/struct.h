@@ -1214,13 +1214,6 @@ struct _configitem_ban {
 	unsigned short action;
 };
 
-typedef struct _iplist IPList;
-struct _iplist {
-	IPList *prev, *next;
-	char *mask;
-/*	struct irc_netmask  *netmask; */
-};
-
 struct _configitem_deny_dcc {
 	ConfigItem		*prev, *next;
 	ConfigFlag_ban		flag;
