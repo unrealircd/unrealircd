@@ -1,22 +1,23 @@
-Unreal3.4-alpha4 Release Notes
-===============================
+UnrealIRCd 3.4-beta1 Release Notes
+===================================
 
-This is the fourth 'alpha' version of UnrealIRCd 3.4. We plan to move to
-'beta' stage in a month to have a stable 3.4.x release later in 2015.
+This is the first 'beta' version of UnrealIRCd 3.4. We plan to have a
+'stable' UnrealIRCd 3.4 release by Q4 2015.
 
-IMPORTANT REMARKS as long as UnrealIRCd 3.4.x is in alpha stage:
-* Because this is an alpha version it is far more likely to crash or hang.
-* Security issues are handled as regular issues (no security advisories!)
+IMPORTANT REMARKS:
+* The ending of the 'alpha' stage means that most features we want are
+  in 3.4 now. During 'beta' stage we will work towards getting a stable
+  IRC server.
+* Because this is the very first beta version, the process of 'stabilizing'
+  the IRCd has only just begun. The IRCd can have crash or hang issues.
 * Linking with 3.2.x servers is supported but highly untested.
-* Things are likely to change between alpha versions. Including but not
-  limited to: configuration, command syntax, location of files, etc.
 
 Therefore:
-* You should never run 3.4-alpha4 as a production server
-* You should not link 3.4-alpha4 with a production 3.2.x network
+* You should never run 3.4-beta1 as a production server
+* You should not link 3.4-beta1 with a production 3.2.x network (yet)
 
 Please do:
-* Install 3.4-alpha4 to play around, show to your friends, have fun with
+* Install 3.4-beta1 to play around, show to your friends, have fun with
   the latest features and improvements, test things.
 * Report any problems, bugs, issues and other feedback on
   https://bugs.unrealircd.org/ so we can improve 3.4.x!
@@ -32,13 +33,13 @@ UnrealIRCd 3.4.x documentation is now located in a wiki online at:
 The old unreal32docs.*html files have been removed.
 
 ==[ CONFIGURATION CHANGES ]==
-Starting with 3.4-alpha4 we use a new directory structure.
+UnrealIRCd 3.4 uses a new directory structure.
 
 *NIX: If you are not on Windows then this means you must now choose a
       target directory to install UnrealIRCd to. ./Config will ask this
       and it's ~/unrealircd by default (eg: /home/nerd/unrealircd).
       You also need to run 'make install' after 'make' now.
-      After compiling, you should leave your Unreal3.4-alphaX directory
+      After compiling, you should leave your Unreal3.4-beta1 directory
       and change to ~/unrealircd as everything takes place there.
       For example to start UnrealIRCd you run './unrealircd start'
       (again, from the /home/xxxx/unrealircd directory).
@@ -70,8 +71,9 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 
 ==[ GENERAL INFORMATION ]==
 * Below you will see a summary of all changes. Changes may be tagged when
-  a change was made in a specific version, e.g. "(A3)" means 3.4-alpha3.
-  For a complete list of changes (600+) use 'git log' or have a look at
+  a change was made in a specific version, e.g. "(A3)" means 3.4-alpha3
+  and "(B1)" means 3.4-beta1.
+  For a complete list of changes (600+) use 'git log' or have a look at:
   https://github.com/unrealircd/unrealircd/commits/unreal34
 
 ==[ NEW ]==
@@ -117,7 +119,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   mechanisms such as epoll and kqueue.
 * Memory pooling has been added to improve memory allocation efficiency
   and performance.
-* On-connect DNSBL/RBL checking via the new blacklist block. (A5)
+* On-connect DNSBL/RBL checking via the new blacklist block. (B1)
 * The local nickname length can be modified without recompiling the IRCd
 * Channel Mode +d: This will hide joins/parts for users who don't say
   anything in a channel. Whenever a user speaks for the first time they
@@ -202,20 +204,17 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   been added to aid the user in deciding whether to load or not to
   load each module. (A4)
 * Snomask +s is now (always) IRCOp-only. (A4)
-* There's now actually an idea behind HalfOp permissions. The idea
-  is that halfops should be able to help out in case of a flood but
-  not be able to
 * Previously there was little logic behind what modes halfops could
   set. Now the idea is as follows: halfops should be able to help out
   in case of a flood but not be able to change any 'policy decission
   modes' such as +G, +S, +c, +s. Due to this change halfops can now
   set modes +beiklmntIMKNCR (was: +beikmntI). (A4)
-* If no link::hub or link::leaf is specified then assume hub "*". (A5)
+* If no link::hub or link::leaf is specified then assume hub "*". (B1)
 * SWHOIS (Special whois title) has been extended in a number of ways:
   * We now "track" who or what set an swhois. This allows us to
     remove the swhois received via oper/vhost on de-oper/de-vhost.
   * You can now have multiple swhois lines
-  * Multiple oper::swhois items are supported (in vhost::swhois too)
+  * Multiple oper::swhois and vhost::swhois items are supported. (B1)
 
 ==[ MODULE CODERS / DEVELOPERS ]==
 * A lot of technical documentation for module coders has been added
@@ -233,7 +232,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * There have been *a lot* of source code cleanups (ALL)
 * We now use the information from PROTOCTL CHANMODES= for parameter
   skipping if the channel mode is unknown. Also, when channel modes
-  are loaded or unloaded we re-broadcast PROTOCTL CHANMODES=. (A5)
+  are loaded or unloaded we re-broadcast PROTOCTL CHANMODES=. (B1)
 
 ==[ MAJOR BUGS FIXED ]==
 * Crash bug on-boot in alpha1 (A2)
@@ -250,11 +249,11 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * Detect "IRCd not running" situations better (A4)
 * './unrealircd restart' will now always try to start UnrealIRCd,
   so also if it wasn't running previously. (A4)
-* alpha4's upgrade-conf could get confused by set::host block (A5)
-* ExtBan ~a (account) did not work with +I (A5)
+* alpha4's upgrade-conf could get confused by set::host block (B1)
+* ExtBan ~a (account) did not work with +I (B1)
 * On Windows we didn't create the data/ directory resulting in a
-  "Unable to write tunefile" error in alpha4. (A5)
-* A number of minor (<1K total) memory leaks on /REHASH. (A5)
+  "Unable to write tunefile" error in alpha4. (B1)
+* A number of minor (<1K total) memory leaks on /REHASH. (B1)
 
 ==[ REMOVED / DROPPED ]==
 * Numeric server IDs, see above. (A1)
@@ -262,7 +261,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * Ziplinks have been removed. (A1)
 * WebTV support. (A3)
 * Channel Mode +j was removed and replaced by the configuration setting
-  set::anti-flood::join-flood (default: 3 per 90 seconds). (A5)
+  set::anti-flood::join-flood (default: 3 per 90 seconds). (B1)
 * /CHATOPS: use /GLOBOPS instead which does the same
   /ADCHAT & /NACHAT: gone as we don't have such oper levels anymore
   Your opers should actually be in an #opers channel. If you also want
