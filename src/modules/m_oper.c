@@ -106,7 +106,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	ConfigItem_oper *aconf;
 	char *name, *password;
 	int i = 0, j = 0;
-	long old; /* old user modes */
+	long old = sptr->umodes & ALL_UMODES; /* old user modes */
 
 	if (!MyClient(sptr))
 		return 0;
@@ -268,7 +268,6 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sptr->umodes |= UMODE_SERVNOTICE;
 	}
 	
-	old = (sptr->umodes & ALL_UMODES);
 	send_umode_out(cptr, sptr, old);
 	sendto_one(sptr, rpl_str(RPL_SNOMASK),
 		me.name, sptr->name, get_sno_str(sptr));
