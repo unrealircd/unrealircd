@@ -861,30 +861,6 @@ void close_connection(aClient *cptr)
 	 * remove outstanding DNS queries.
 	 */
 	unrealdns_delreq_bycptr(cptr);
-	/*
-	 * If the connection has been up for a long amount of time, schedule
-	 * a 'quick' reconnect, else reset the next-connect cycle.
-	 *
-	 * Now just hold on a minute.  We're currently doing this when a
-	 * CLIENT exits too?  I don't think so!  If its not a server, or
-	 * the SQUIT flag has been set, then we don't schedule a fast
-	 * reconnect.  Pisses off too many opers. :-)  -Cabal95
-	 */
-	if (IsServer(cptr) && !(cptr->flags & FLAGS_SQUIT) && cptr->serv->conf &&
-	    (!cptr->serv->conf->flag.temporary &&
-	      (cptr->serv->conf->options & CONNECT_AUTO)))
-	{
-		aconf = cptr->serv->conf;
-		/*
-		 * Reschedule a faster reconnect, if this was a automaticly
-		 * connected configuration entry. (Note that if we have had
-		 * a rehash in between, the status has been changed to
-		 * CONF_ILLEGAL). But only do this if it was a "good" link.
-		 */
-		aconf->hold = TStime();
-		aconf->hold += (aconf->hold - cptr->since > HANGONGOODLINK) ?
-		    HANGONRETRYDELAY : aconf->class->connfreq;
-	}
 
 	if (cptr->authfd >= 0)
 	{

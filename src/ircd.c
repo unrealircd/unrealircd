@@ -404,52 +404,38 @@ EVENT(try_connections)
 	ConfigItem_deny_link *deny;
 	aClient *cptr;
 	int  confrq;
-	ConfigItem_class *cltmp;
+	ConfigItem_class *class;
 
-	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next) {
-		/*
-		 * Also when already connecting! (update holdtimes) --SRB 
-		 */
+	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next)
+	{
+		/* We're only interested in autoconnect blocks that are valid (and ignore temporary link blocks) */
 		if (!(aconf->outgoing.options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
 			continue;
 
-		cltmp = aconf->class;
-		/*
-		 * ** Skip this entry if the use of it is still on hold until
-		 * ** future. Otherwise handle this entry (and set it on hold
-		 * ** until next time). Will reset only hold times, if already
-		 * ** made one successfull connection... [this algorithm is
-		 * ** a bit fuzzy... -- msa >;) ]
-		 */
-
+		class = aconf->class;
+		
+		/* Only do one connection attempt per <connfreq> seconds (for the same server) */
 		if ((aconf->hold > TStime()))
 			continue;
-
-		confrq = cltmp->connfreq;
+		confrq = class->connfreq;
 		aconf->hold = TStime() + confrq;
-		/*
-		 * ** Found a CONNECT config with port specified, scan clients
-		 * ** and see if this server is already connected?
-		 */
-		cptr = find_name(aconf->servername, (aClient *)NULL);
 
-		if (!cptr && (cltmp->clients < cltmp->maxclients)) {
-			/*
-			 * Check connect rules to see if we're allowed to try 
-			 */
-			for (deny = conf_deny_link; deny;
-			    deny = (ConfigItem_deny_link *) deny->next)
-				if (!match(deny->mask, aconf->servername)
-				    && crule_eval(deny->rule))
-					break;
+		cptr = find_name(aconf->servername, NULL);
+		if (cptr)
+			continue; /* Server already connected (or connecting) */
 
-			if (!deny && connect_server(aconf, (aClient *)NULL,
-			    (struct hostent *)NULL) == 0)
-				sendto_realops
-				    ("Connection to %s[%s] activated.",
-				    aconf->servername, aconf->outgoing.hostname);
+		if (class->clients >= class->maxclients)
+			continue; /* Class is full */
 
-		}
+		/* Check connect rules to see if we're allowed to try the link */
+		for (deny = conf_deny_link; deny; deny = deny->next)
+			if (!match(deny->mask, aconf->servername) && crule_eval(deny->rule))
+				break;
+
+		if (!deny && connect_server(aconf, NULL, NULL) == 0)
+			sendto_realops("Connection to %s[%s] activated.",
+				aconf->servername, aconf->outgoing.hostname);
+
 	}
 }
 

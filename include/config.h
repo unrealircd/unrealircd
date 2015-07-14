@@ -422,18 +422,6 @@
 #define PINGFREQUENCY    120	/* Recommended value: 120 */
 
 /*
- * Often net breaks for a short time and it's useful to try to
- * establishing the same connection again faster than CONNECTFREQUENCY
- * would allow. But, to keep trying on bad connection, we require
- * that connection has been open for certain minimum time
- * (HANGONGOODLINK) and we give the net few seconds to steady
- * (HANGONRETRYDELAY). This latter has to be long enough that the
- * other end of the connection has time to notice it broke too.
- */
-#define HANGONRETRYDELAY 20	/* Recommended value: 20 seconds */
-#define HANGONGOODLINK 300	/* Recommended value: 5 minutes */
-
-/*
  * Number of seconds to wait for write to complete if stuck.
  */
 #define WRITEWAITDELAY     15	/* Recommended value: 15 */

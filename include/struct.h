@@ -1221,9 +1221,9 @@ struct _configitem_deny_dcc {
 };
 
 struct _configitem_deny_link {
-	ConfigItem              *prev, *next;
-	ConfigFlag_except       flag;
-	char			*mask, *rule, *prettyrule;
+	ConfigItem_deny_link *prev, *next;
+	ConfigFlag_except flag;
+	char *mask, *rule, *prettyrule;
 };
 
 struct _configitem_deny_version {

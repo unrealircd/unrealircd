@@ -3952,7 +3952,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	safestrdup(class->name, ce->ce_vardata);
 
-	class->connfreq = 60; /* default */
+	class->connfreq = 15; /* default */
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -4069,9 +4069,9 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			}
 			has_connfreq = 1;
 			l = atol(cep->ce_vardata);
-			if ((l < 10) || (l > 604800))
+			if ((l < 5) || (l > 604800))
 			{
-				config_error("%s:%i: class::connfreq with illegal value (must be >10 and <7d)",
+				config_error("%s:%i: class::connfreq with illegal value (must be >5 and <7d)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
