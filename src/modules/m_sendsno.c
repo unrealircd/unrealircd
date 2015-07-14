@@ -114,7 +114,7 @@ aClient *acptr;
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{
 		if (acptr->user->snomask & snomask)
-			sendto_one(acptr, ":%s NOTICE %s :%s", me.name, acptr->name, msg);
+			sendto_one(acptr, ":%s NOTICE %s :%s", sptr->name, acptr->name, msg);
 	}
 
 	return 0;
