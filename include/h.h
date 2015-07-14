@@ -138,13 +138,13 @@ extern int del_exbanid(aChannel *chptr, char *banid);
 #ifdef SHOWCONNECTINFO
 
 
-#define BREPORT_DO_DNS	"NOTICE AUTH :*** Looking up your hostname...\r\n"
-#define BREPORT_FIN_DNS	"NOTICE AUTH :*** Found your hostname\r\n"
-#define BREPORT_FIN_DNSC "NOTICE AUTH :*** Found your hostname (cached)\r\n"
-#define BREPORT_FAIL_DNS "NOTICE AUTH :*** Couldn't resolve your hostname; using your IP address instead\r\n"
-#define BREPORT_DO_ID	"NOTICE AUTH :*** Checking ident...\r\n"
-#define BREPORT_FIN_ID	"NOTICE AUTH :*** Received identd response\r\n"
-#define BREPORT_FAIL_ID	"NOTICE AUTH :*** No ident response; username prefixed with ~\r\n"
+#define BREPORT_DO_DNS	"NOTICE * :*** Looking up your hostname...\r\n"
+#define BREPORT_FIN_DNS	"NOTICE * :*** Found your hostname\r\n"
+#define BREPORT_FIN_DNSC "NOTICE * :*** Found your hostname (cached)\r\n"
+#define BREPORT_FAIL_DNS "NOTICE * :*** Couldn't resolve your hostname; using your IP address instead\r\n"
+#define BREPORT_DO_ID	"NOTICE * :*** Checking ident...\r\n"
+#define BREPORT_FIN_ID	"NOTICE * :*** Received identd response\r\n"
+#define BREPORT_FAIL_ID	"NOTICE * :*** No ident response; username prefixed with ~\r\n"
 
 extern MODVAR char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
     REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
