@@ -204,8 +204,7 @@ install: all
 	$(INSTALL) -m 0700 -d @MODULESDIR@/third
 	@#Ugly stuff to detect 0 files in this directory:
 	@+for f in src/modules/third/*.so; do \
-		[ -e "$f" ] && $(INSTALL) -m 0700 src/modules/third/*.so @MODULESDIR@/third; \
-		break;\
+		[ -e "$f" ] && $(INSTALL) -m 0700 src/modules/third/*.so @MODULESDIR@/third || echo; \
 	done
 	$(INSTALL) -m 0700 -d @TMPDIR@
 	$(INSTALL) -m 0700 -d @CACHEDIR@
