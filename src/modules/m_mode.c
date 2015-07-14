@@ -158,9 +158,7 @@ CMD_FUNC(m_mode)
 		return 0;
 	}
 
-	if (IsPerson(sptr) && parc < 4 && ((*parv[2] == 'b'
-	    && parv[2][1] == '\0') || (parv[2][1] == 'b' && parv[2][2] == '\0'
-	    && (*parv[2] == '+' || *parv[2] == '-'))))
+	if (IsPerson(sptr) && strstr(parv[2], "b") && BadPtr(parv[3]))
 	{
 		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:remotebanlist",sptr,NULL,chptr,NULL))
 			return 0;
@@ -175,9 +173,7 @@ CMD_FUNC(m_mode)
 		return 0;
 	}
 
-	if (IsPerson(sptr) && parc < 4 && ((*parv[2] == 'e'
-	    && parv[2][1] == '\0') || (parv[2][1] == 'e' && parv[2][2] == '\0'
-	    && (*parv[2] == '+' || *parv[2] == '-'))))
+	if (IsPerson(sptr) && strstr(parv[2], "e") && BadPtr(parv[3]))
 	{
 		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:remotebanlist",sptr,NULL,chptr,NULL))
 			return 0;
@@ -192,9 +188,20 @@ CMD_FUNC(m_mode)
 		return 0;
 	}
 
-	if (IsPerson(sptr) && parc < 4 && ((*parv[2] == 'q'
-	    && parv[2][1] == '\0') || (parv[2][1] == 'q' && parv[2][2] == '\0'
-	    && (*parv[2] == '+' || *parv[2] == '-'))))
+	if (IsPerson(sptr) && strstr(parv[2], "I") && BadPtr(parv[3]))
+	{
+		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:remoteinvexlist",sptr,NULL,chptr,NULL))
+			return 0;
+		for (ban = chptr->invexlist; ban; ban = ban->next)
+			sendto_one(sptr, rpl_str(RPL_INVEXLIST), me.name,
+			    sptr->name, chptr->chname, ban->banstr,
+			    ban->who, ban->when);
+		sendto_one(sptr, rpl_str(RPL_ENDOFINVEXLIST), me.name,
+		    sptr->name, chptr->chname);
+		return 0;
+	}
+
+	if (IsPerson(sptr) && strstr(parv[2], "q") && BadPtr(parv[3]))
 	{
 		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:remoteownerlist",sptr,NULL,chptr,NULL))
 			return 0;
@@ -218,9 +225,7 @@ CMD_FUNC(m_mode)
 		}
 	}
 
-	if (IsPerson(sptr) && parc < 4 && ((*parv[2] == 'a'
-	    && parv[2][1] == '\0') || (parv[2][1] == 'a' && parv[2][2] == '\0'
-	    && (*parv[2] == '+' || *parv[2] == '-'))))
+	if (IsPerson(sptr) && strstr(parv[2], "a") && BadPtr(parv[3]))
 	{
 		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:remoteownerlist",sptr,NULL,chptr,NULL))
 			return 0;
@@ -244,21 +249,6 @@ CMD_FUNC(m_mode)
 		}
 	}
 
-
-	if (IsPerson(sptr) && parc < 4 && ((*parv[2] == 'I'
-	    && parv[2][1] == '\0') || (parv[2][1] == 'I' && parv[2][2] == '\0'
-	    && (*parv[2] == '+' || *parv[2] == '-'))))
-	{
-		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:remoteinvexlist",sptr,NULL,chptr,NULL))
-			return 0;
-		for (ban = chptr->invexlist; ban; ban = ban->next)
-			sendto_one(sptr, rpl_str(RPL_INVEXLIST), me.name,
-			    sptr->name, chptr->chname, ban->banstr,
-			    ban->who, ban->when);
-		sendto_one(sptr, rpl_str(RPL_ENDOFINVEXLIST), me.name,
-		    sptr->name, chptr->chname);
-		return 0;
-	}
 	opermode = 0;
 
 #ifndef NO_OPEROVERRIDE
