@@ -6492,8 +6492,16 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			config_detect_duplicate(&has_options, cep, &errors);
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				if ((ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, ARRAY_SIZEOF(_LinkFlags))))
+				if (!strcmp(cep->ce_varname, "quarantine"))
 					;
+				else
+				{
+					config_error("%s:%d: link::options only has one possible option ('quarantine', rarely used). "
+					             "Option '%s' is unrecognized. "
+					             "Perhaps you meant to set an outgoing option in link::outgoing::options instead?",
+					             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+					errors++;
+				}
 			}
 		}
 	}

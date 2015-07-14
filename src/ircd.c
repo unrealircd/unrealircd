@@ -410,7 +410,7 @@ EVENT(try_connections)
 		/*
 		 * Also when already connecting! (update holdtimes) --SRB 
 		 */
-		if (!(aconf->options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
+		if (!(aconf->outgoing.options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
 			continue;
 
 		cltmp = aconf->class;
