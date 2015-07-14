@@ -101,7 +101,7 @@ DLLFUNC CMD_FUNC(m_ison)
 		return 0;
 	}
 
-	ircsnprintf(buf, sizeof(buf), rpl_str(RPL_ISON), me.name, *parv);
+	ircsnprintf(buf, sizeof(buf), rpl_str(RPL_ISON), me.name, sptr->name);
 	len = strlen(buf);
 
 	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " "))
