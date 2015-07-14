@@ -585,6 +585,8 @@ int upgrade_loadmodule(ConfigEntry *ce)
 
 	newfile = !strncmp(tmp, "src/", 4) ? tmp+4 : tmp;
 	
+	newfile = !strncmp(newfile, "modules/", 8) ? newfile+8 : newfile;
+	
 	if (!strcmp(newfile, file))
 		return 0; /* no change */
 	
