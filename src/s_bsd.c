@@ -759,6 +759,19 @@ int  check_client(aClient *cptr, char *username)
 	return 0;
 }
 
+/** Reject an insecure (outgoing) server link that isn't SSL/TLS.
+ * This function is void and not int because it can be called from other void functions
+ */
+void reject_insecure_server(aClient *cptr)
+{
+	sendto_umode(UMODE_OPER, "Could not link with server %s with SSL/TLS enabled. "
+	                         "Please check logs on the other side of the link and make sure the other IRCd "
+	                         "is compiled with SSL support enabled. "
+	                         "If you insist with insecure linking then you can set link::options::outgoing::insecure",
+	                         cptr->name);
+	dead_link(cptr, "Rejected link without SSL/TLS");
+}
+
 void start_server_handshake(aClient *cptr)
 {
 	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
@@ -819,7 +832,7 @@ void completed_connection(int fd, int revents, void *data)
 		return;
 	}
 
-	if (!cptr->ssl && !(aconf->outgoing.options & CONNECT_NO_STARTTLS))
+	if (!cptr->ssl && !(aconf->outgoing.options & CONNECT_INSECURE))
 	{
 		sendto_one(cptr, "STARTTLS");
 	} else

@@ -57,40 +57,56 @@ int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[
 	char *nick, *p;
 	int  i;
 
-	/* Is this an outgoing connect, and we get a numeric 451 (not registered) back for the
-	 * magic command __PANGPANG__ and we did not send a SERVER message yet?
-	 * Then this means we are dealing with an Unreal server <3.2.9 and we should send the
-	 * SERVER command right now.
-	 */
-	if (!IsServer(sptr) && !IsPerson(sptr) && (numeric == 451) && (parc > 2) && strstr(parv[1], "__PANGPANG__") &&
-	    IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr))
+	if (!IsServer(sptr) && !IsPerson(sptr) && IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr))
 	{
-		send_server_message(sptr);
-		return 0;
-	}
-
-	if (!IsServer(sptr) && !IsPerson(sptr) && (numeric == 451) && (parc > 2) && strstr(parv[1], "STARTTLS") &&
-	    IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr))
-	{
-		start_server_handshake(cptr);
-	}
-
-	// TODO: handle 691 as well (starttls failed) ? unusual.
-
-	if (!IsServer(sptr) && !IsPerson(sptr) && (numeric == 670) &&
-	    IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr))
-	{
-		int ret = client_starttls(cptr);
-		if (ret < 0)
-		{
-			// When failed we could continue with start_server_handshake() here.
-			return ret;
-		}
-		/* We don't call start_server_handshake() here. First the TLS handshake will
-		 * be completed, then completed_connection() will be called for a second time,
-		 * which will call completed_connection() from there.
+		/* This is an outgoing server connect that is currently not yet IsServer() but in 'unknown' state.
+		 * We need to handle a few responses here.
 		 */
-		return 0;
+		
+		/* If we get a numeric 451 (not registered) back for the magic command __PANGPANG__
+		 * Then this means we are dealing with an Unreal server <3.2.9 and we should send the
+		 * SERVER command right now.
+		 */
+		if ((numeric == 451) && (parc > 2) && strstr(parv[1], "__PANGPANG__"))
+		{
+			send_server_message(sptr);
+			return 0;
+		}
+
+		/* STARTTLS: unknown command */
+		if ((numeric == 451) && (parc > 2) && strstr(parv[1], "STARTTLS"))
+		{
+			if (cptr->serv->conf && (cptr->serv->conf->outgoing.options & CONNECT_INSECURE))
+				start_server_handshake(cptr);
+			else
+				reject_insecure_server(cptr);
+			return 0;
+		}
+
+		/* STARTTLS failed */
+		if (numeric == 691)
+		{
+			sendto_umode(UMODE_OPER, "STARTTLS failed for link %s. Please check the other side of the link.", cptr->name);
+			reject_insecure_server(cptr);
+			return 0;
+		}
+
+		/* STARTTLS OK */
+		if (numeric == 670)
+		{
+			int ret = client_starttls(cptr);
+			if (ret < 0)
+			{
+				sendto_umode(UMODE_OPER, "STARTTLS handshake failed for link %s. Strange.", cptr->name);
+				reject_insecure_server(cptr);
+				return ret;
+			}
+			/* We don't call start_server_handshake() here. First the TLS handshake will
+			 * be completed, then completed_connection() will be called for a second time,
+			 * which will call completed_connection() from there.
+			 */
+			return 0;
+		}
 	}
 
 	if (parc < 1 || !IsServer(sptr))
