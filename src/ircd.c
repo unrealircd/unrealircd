@@ -439,13 +439,6 @@ EVENT(try_connections)
 	}
 }
 
-/* I have separated the TKL verification code from the ping checking
- * code.  This way we can just trigger a TKL check when we need to,
- * instead of complicating the ping checking code, which is presently
- * more than sufficiently hairy.  The advantage of checking bans at the
- * same time as pings is really negligible because we rarely process TKLs
- * anyway. --nenolod
- */
 int check_tkls(aClient *cptr)
 {
 	ConfigItem_ban *bconf = NULL;
@@ -510,7 +503,7 @@ int check_tkls(aClient *cptr)
 	if (loop.do_bancheck_spamf_user && IsPerson(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
 		return 0;
 
-	if (loop.do_bancheck_spamf_user && IsPerson(cptr) && cptr->user->away != NULL &&
+	if (loop.do_bancheck_spamf_away && IsPerson(cptr) && cptr->user->away != NULL &&
 		dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
 		return 0;
 
@@ -647,8 +640,8 @@ EVENT(check_pings)
 
 	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
 	{
-		/* Check TKLs for this user (huh, always?) */
-		if (!check_tkls(cptr))
+		/* Check TKLs for this user */
+		if (loop.do_bancheck && !check_tkls(cptr))
 			continue;
 		check_ping(cptr);
 		/* don't touch 'cptr' after this as it may have been killed */
@@ -658,6 +651,9 @@ EVENT(check_pings)
 	{
 		check_ping(cptr);
 	}
+	
+	loop.do_bancheck = loop.do_bancheck_spamf_user = loop.do_bancheck_spamf_away = 0;
+	/* done */
 }
 
 EVENT(check_deadsockets)

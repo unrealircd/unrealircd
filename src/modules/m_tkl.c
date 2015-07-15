@@ -1436,7 +1436,7 @@ static char buf[256];
 
 void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr)
 {
-	ircsnprintf(buf, sizeof(buf), "%s!%s@%s:%s",
+	snprintf(buf, NICKLEN+USERLEN+HOSTLEN+1, "%s!%s@%s:%s",
 		nick, acptr->user->username, SpamfilterMagicHost(acptr->user->realhost), acptr->info);
 }
 
