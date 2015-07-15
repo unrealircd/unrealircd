@@ -296,7 +296,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	FLAGS_GOTID      0x1000	/* successful ident lookup achieved */
 #define	FLAGS_DOID       0x2000	/* I-lines say must use ident return */
 #define	FLAGS_NONL       0x4000	/* No \n in buffer */
-//0x8000 unused (was cgiirc)
+#define FLAGS_NCALL      0x8000 /* Next call (don't ask...) */
 #define FLAGS_ULINE      0x10000	/* User/server is considered U-lined */
 #define FLAGS_SQUIT      0x20000	/* Server has been /squit by an oper */
 #define FLAGS_PROTOCTL   0x40000	/* Received a PROTOCTL message */
