@@ -591,7 +591,10 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 		{
 			case SSL_ERROR_SYSCALL:
 				if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
-				return 1;
+				{
+					return 1;
+				}
+				return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, ERRNO, acptr);
 			case SSL_ERROR_WANT_READ:
 				fd_setselect(fd, FD_SELECT_READ, ircd_SSL_accept_retry, acptr);
 				fd_setselect(fd, FD_SELECT_WRITE, NULL, acptr);
@@ -629,7 +632,9 @@ int ircd_SSL_connect(aClient *acptr, int fd) {
 	    case SSL_ERROR_SYSCALL:
 		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
 		{
-			/* Hmmm.. both? */
+			/* Hmmm. This implementation is different than in ircd_SSL_accept().
+			 * One of them must be wrong -- better check! (TODO)
+			 */
 			fd_setselect(fd, FD_SELECT_READ|FD_SELECT_WRITE, ircd_SSL_connect_retry, acptr);
 			return 0;
 		}
