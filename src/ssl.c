@@ -596,6 +596,15 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 				}
 				return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, ERRNO, acptr);
 			case SSL_ERROR_WANT_READ:
+				if ((acptr->ssl->packet_length >= 8) && !strncmp(acptr->ssl->packet, "STARTTLS", 8))
+				{
+					char buf[512];
+					snprintf(buf, sizeof(buf),
+						"ERROR :STARTTLS received but this is an SSL-only port. Check your connect settings. "
+						"If this is a server linking in then add 'ssl' in your link::outgoing::options block.\r\n");
+					send(fd, buf, strlen(buf), 0);
+					return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, ERRNO, acptr);
+				}
 				fd_setselect(fd, FD_SELECT_READ, ircd_SSL_accept_retry, acptr);
 				fd_setselect(fd, FD_SELECT_WRITE, NULL, acptr);
 				return 1;
