@@ -416,7 +416,7 @@ int  ssl_handshake(aClient *cptr)
 
 	cptr->ssl = SSL_new(ctx_server);
 	CHK_NULL(cptr->ssl);
-	SSL_set_fd((SSL *) cptr->ssl, cptr->fd);
+	SSL_set_fd(cptr->ssl, cptr->fd);
 	set_non_blocking(cptr->fd, cptr);
 	/* 
 	 *  if necessary, SSL_write() will negotiate a TLS/SSL session, if not already explicitly
@@ -426,9 +426,9 @@ int  ssl_handshake(aClient *cptr)
 	 *   
 	 */
 	if (!ircd_SSL_accept(cptr, cptr->fd)) {
-		SSL_set_shutdown((SSL *)cptr->ssl, SSL_RECEIVED_SHUTDOWN);
-		SSL_smart_shutdown((SSL *)cptr->ssl);
-		SSL_free((SSL *)cptr->ssl);
+		SSL_set_shutdown(cptr->ssl, SSL_RECEIVED_SHUTDOWN);
+		SSL_smart_shutdown(cptr->ssl);
+		SSL_free(cptr->ssl);
 		cptr->ssl = NULL;
 		return -1;
 	}
@@ -456,12 +456,11 @@ int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 		return -1;
 	}
 /*	set_blocking(cptr->fd); */
-	SSL_set_fd((SSL *)cptr->ssl, cptr->fd);
-	SSL_set_connect_state((SSL *)cptr->ssl);
+	SSL_set_fd(cptr->ssl, cptr->fd);
+	SSL_set_connect_state(cptr->ssl);
 	if (l && l->ciphers)
 	{
-		if (SSL_set_cipher_list((SSL *)cptr->ssl, 
-			l->ciphers) == 0)
+		if (SSL_set_cipher_list(cptr->ssl, l->ciphers) == 0)
 		{
 			/* We abort */
 			sendto_realops("SSL cipher selecting for %s was unsuccesful (%s)",
@@ -469,7 +468,7 @@ int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 			return -2;
 		}
 	}
-	if (SSL_connect((SSL *)cptr->ssl) <= 0)
+	if (SSL_connect(cptr->ssl) <= 0)
 	{
 #if 0
 		sendto_realops("Couldn't SSL_connect");
@@ -545,7 +544,7 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 
 	if (acptr->serv && acptr->serv->conf->ciphers)
 	{
-		if (SSL_set_cipher_list((SSL *)acptr->ssl, 
+		if (SSL_set_cipher_list(acptr->ssl, 
 			acptr->serv->conf->ciphers) == 0)
 		{
 			/* We abort */
@@ -605,9 +604,9 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 			acptr->flags |= FLAGS_NCALL;
 	}
 #endif
-    if ((ssl_err = SSL_accept((SSL *)acptr->ssl)) <= 0)
+    if ((ssl_err = SSL_accept(acptr->ssl)) <= 0)
     {
-		switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err))
+		switch(ssl_err = SSL_get_error(acptr->ssl, ssl_err))
 		{
 			case SSL_ERROR_SYSCALL:
 				if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
@@ -644,9 +643,9 @@ static void ircd_SSL_connect_retry(int fd, int revents, void *data)
 int ircd_SSL_connect(aClient *acptr, int fd) {
 
     int ssl_err;
-    if((ssl_err = SSL_connect((SSL *)acptr->ssl)) <= 0)
+    if((ssl_err = SSL_connect(acptr->ssl)) <= 0)
     {
-	ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err);
+	ssl_err = SSL_get_error(acptr->ssl, ssl_err);
 	switch(ssl_err)
 	{
 	    case SSL_ERROR_SYSCALL:

@@ -529,7 +529,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 
 			if (!cptr->ssl)
 				return -1;
-			x509_clientcert = SSL_get_peer_certificate((SSL *)cptr->ssl);
+			x509_clientcert = SSL_get_peer_certificate(cptr->ssl);
 			if (!x509_clientcert)
 				return -1;
 			if (!(x509_f = fopen(as->data, "r")))

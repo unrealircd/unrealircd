@@ -1211,7 +1211,7 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 		    sptr->listener->port, nick, user->username, user->realhost,
 		    sptr->class ? sptr->class->name : "",
 		IsSecure(sptr) ? "[secure " : "",
-		IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
+		IsSecure(sptr) ? SSL_get_cipher(sptr->ssl) : "",
 		IsSecure(sptr) ? "]" : "");
 		ircsnprintf(connecth, sizeof(connecth),
 		    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,

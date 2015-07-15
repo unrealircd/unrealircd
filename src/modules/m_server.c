@@ -666,9 +666,9 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	{
 		sendto_server(&me, 0, 0, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
 			me.name,
-			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
+			me.name, inpath, (char *) ssl_get_cipher(cptr->ssl));
 		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
-			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
+			me.name, inpath, (char *) ssl_get_cipher(cptr->ssl));
 	}
 	else
 	{

@@ -916,9 +916,9 @@ void close_connection(aClient *cptr)
 	{
 		send_queued(cptr);
 		if (IsSSL(cptr) && cptr->ssl) {
-			SSL_set_shutdown((SSL *)cptr->ssl, SSL_RECEIVED_SHUTDOWN);
-			SSL_smart_shutdown((SSL *)cptr->ssl);
-			SSL_free((SSL *)cptr->ssl);
+			SSL_set_shutdown(cptr->ssl, SSL_RECEIVED_SHUTDOWN);
+			SSL_smart_shutdown(cptr->ssl);
+			SSL_free(cptr->ssl);
 			cptr->ssl = NULL;
 		}
 		fd_close(cptr->fd);

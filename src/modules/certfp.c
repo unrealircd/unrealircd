@@ -81,7 +81,7 @@ char *get_fingerprint_for_client(aClient *cptr)
 	if (!MyConnect(cptr) || !cptr->ssl)
 		return NULL;
 	
-	x509_clientcert = SSL_get_peer_certificate((SSL *)cptr->ssl);
+	x509_clientcert = SSL_get_peer_certificate(cptr->ssl);
 
 	if (x509_clientcert)
 	{
