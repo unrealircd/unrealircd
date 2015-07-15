@@ -722,8 +722,17 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 	
 	if (where == SAFE_SSL_CONNECT)
 	{
-		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s",
-			get_client_name(sptr, FALSE), ssl_func, ssl_errstr);
+		char extra[256];
+		*extra = '\0';
+		if (ssl_error == SSL_ERROR_SSL)
+		{
+			snprintf(extra, sizeof(extra),
+			         ". Please verify that listen::options::ssl is enabled on port %d in %s's configuration file.",
+			         (sptr->serv && sptr->serv->conf) ? sptr->serv->conf->outgoing.port : -1,
+			         sptr->name);
+		}
+		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s%s",
+			get_client_name(sptr, FALSE), ssl_func, ssl_errstr, extra);
                 /* This is a connect() that fails, we don't broadcast that for non-SSL either (noisy) */
 	} else
 	if ((IsServer(sptr) || (sptr->serv && sptr->serv->conf)) && (where != SAFE_SSL_WRITE))
