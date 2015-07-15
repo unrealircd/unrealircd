@@ -39,8 +39,10 @@ int CommandExists(char *name)
 	return 0;
 }
 
-Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char params, int flags) {
+Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char params, int flags)
+{
 	Command *command;
+	aCommand *c;
 
 	if (find_Command_simple(cmd))
 	{
@@ -48,17 +50,30 @@ Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char para
 			module->errorcode = MODERR_EXISTS;
 		return NULL;
 	}
-	command = MyMallocEx(sizeof(Command));
-	command->cmd = add_Command_backend(cmd,func,params, flags);
-	command->cmd->owner = module;
-	command->cmd->friend = NULL;
-	if (module) {
+	
+	if (!flags)
+	{
+		config_error("CommandAdd(): Could not add command '%s': flags are 0", cmd);
+		if (module)
+			module->errorcode = MODERR_INVALID;
+		return NULL;
+	}
+	
+	c = add_Command_backend(cmd, func, params, flags);
+
+	if (module)
+	{
 		ModuleObject *cmdobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		command = MyMallocEx(sizeof(Command));
+		command->cmd = c;
+		command->cmd->owner = module;
+		command->cmd->friend = NULL;
 		cmdobj->object.command = command;
 		cmdobj->type = MOBJ_COMMAND;
 		AddListItem(cmdobj, module->objects);
 		module->errorcode = MODERR_NOERROR;
 	}
+
 	if (flags & M_ANNOUNCE)
 	{
 		char *tmp;
@@ -81,6 +96,7 @@ Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char para
 			IsupportAdd(NULL, "CMDS", tmp);
 		cmdstr = tmp;
 	}
+
 	return command;
 }
 
