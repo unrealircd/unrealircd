@@ -585,27 +585,27 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 
     int ssl_err;
 
-    if((ssl_err = SSL_accept((SSL *)acptr->ssl)) <= 0) {
-	switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err)) {
-	    case SSL_ERROR_SYSCALL:
-		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK
-			|| ERRNO == P_EAGAIN)
-		    return 1;
-	    case SSL_ERROR_WANT_READ:
-		fd_setselect(fd, FD_SELECT_READ, ircd_SSL_accept_retry, acptr);
-		fd_setselect(fd, FD_SELECT_WRITE, NULL, acptr);
-		return 1;
-	    case SSL_ERROR_WANT_WRITE:
-		fd_setselect(fd, FD_SELECT_READ, NULL, acptr);
-		fd_setselect(fd, FD_SELECT_WRITE, ircd_SSL_accept_retry, acptr);
-		return 1;
-	    default:
-		return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, ERRNO, acptr);
-		
+    if ((ssl_err = SSL_accept((SSL *)acptr->ssl)) <= 0)
+    {
+		switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err))
+		{
+			case SSL_ERROR_SYSCALL:
+				if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
+				return 1;
+			case SSL_ERROR_WANT_READ:
+				fd_setselect(fd, FD_SELECT_READ, ircd_SSL_accept_retry, acptr);
+				fd_setselect(fd, FD_SELECT_WRITE, NULL, acptr);
+				return 1;
+			case SSL_ERROR_WANT_WRITE:
+				fd_setselect(fd, FD_SELECT_READ, NULL, acptr);
+				fd_setselect(fd, FD_SELECT_WRITE, ircd_SSL_accept_retry, acptr);
+				return 1;
+			default:
+				return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, ERRNO, acptr);
+		}
+		/* NOTREACHED */
+		return -1;
 	}
-	/* NOTREACHED */
-	return -1;
-    }
 
     start_of_normal_client_handshake(acptr);
 
