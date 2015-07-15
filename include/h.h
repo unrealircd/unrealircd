@@ -759,3 +759,5 @@ extern int config_parse_flood(char *orig, int *times, int *period);
 extern int swhois_add(aClient *acptr, char *tag, int priority, char *swhois, aClient *from, aClient *skip);
 extern int swhois_delete(aClient *acptr, char *tag, char *swhois, aClient *from, aClient *skip);
 extern void remove_oper_privileges(aClient *sptr, int broadcast_mode_change);
+extern int client_starttls(aClient *acptr);
+extern void start_server_handshake(aClient *cptr);

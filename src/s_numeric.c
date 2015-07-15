@@ -69,6 +69,30 @@ int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[
 		return 0;
 	}
 
+	if (!IsServer(sptr) && !IsPerson(sptr) && (numeric == 451) && (parc > 2) && strstr(parv[1], "STARTTLS") &&
+	    IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr))
+	{
+		start_server_handshake(cptr);
+	}
+
+	// TODO: handle 691 as well (starttls failed) ? unusual.
+
+	if (!IsServer(sptr) && !IsPerson(sptr) && (numeric == 670) &&
+	    IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr))
+	{
+		int ret = client_starttls(cptr);
+		if (ret < 0)
+		{
+			// When failed we could continue with start_server_handshake() here.
+			return ret;
+		}
+		/* We don't call start_server_handshake() here. First the TLS handshake will
+		 * be completed, then completed_connection() will be called for a second time,
+		 * which will call completed_connection() from there.
+		 */
+		return 0;
+	}
+
 	if (parc < 1 || !IsServer(sptr))
 		return 0;
 	/* Remap low number numerics. */

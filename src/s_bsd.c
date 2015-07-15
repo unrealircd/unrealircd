@@ -759,23 +759,14 @@ int  check_client(aClient *cptr, char *username)
 	return 0;
 }
 
-/*
-** completed_connection
-**	Complete non-blocking connect()-sequence. Check access and
-**	terminate connection, if trouble detected.
-**
-**	Return	TRUE, if successfully completed
-**		FALSE, if failed and ClientExit
-*/
-void completed_connection(int fd, int revents, void *data)
+void start_server_handshake(aClient *cptr)
 {
-	aClient *cptr = data;
 	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
-	SetHandshake(cptr);
 
 	if (!aconf)
 	{
-		sendto_ops("Lost configuration for %s", get_client_name(cptr, FALSE));
+		/* Should be impossible. */
+		sendto_ops("Lost configuration for %s in start_server_handshake()", get_client_name(cptr, FALSE));
 		return;
 	}
 
@@ -797,6 +788,45 @@ void completed_connection(int fd, int revents, void *data)
 	} else {
 		send_server_message(cptr);
 	}
+}
+
+/*
+** completed_connection
+**	Complete non-blocking connect()-sequence. Check access and
+**	terminate connection, if trouble detected.
+**
+**	Return	TRUE, if successfully completed
+**		FALSE, if failed and ClientExit
+*/
+void completed_connection(int fd, int revents, void *data)
+{
+	aClient *cptr = data;
+	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
+
+	if (IsHandshake(cptr))
+	{
+		/* Due to delayed ircd_SSL_connect call */
+		start_server_handshake(cptr);
+		fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
+		return;
+	}
+
+	SetHandshake(cptr);
+
+	if (!aconf)
+	{
+		sendto_ops("Lost configuration for %s", get_client_name(cptr, FALSE));
+		return;
+	}
+
+	if (!cptr->ssl && !(aconf->outgoing.options & CONNECT_NO_STARTTLS))
+	{
+		sendto_one(cptr, "STARTTLS");
+	} else
+	{
+		start_server_handshake(cptr);
+	}
+
 	if (!IsDead(cptr))
 		start_auth(cptr);
 

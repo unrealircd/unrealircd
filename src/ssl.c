@@ -18,16 +18,9 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "h.h"
-#include "proto.h"
-#include "sys.h"
-#include <string.h>
-#ifdef _WIN32
-#include <windows.h>
+#include "unrealircd.h"
 
+#ifdef _WIN32
 #define IDC_PASS                        1166
 extern HINSTANCE hInst;
 extern HWND hwIRCDWnd;
@@ -628,12 +621,19 @@ static void ircd_SSL_connect_retry(int fd, int revents, void *data)
 int ircd_SSL_connect(aClient *acptr, int fd) {
 
     int ssl_err;
-    if((ssl_err = SSL_connect((SSL *)acptr->ssl)) <= 0) {
+    if((ssl_err = SSL_connect((SSL *)acptr->ssl)) <= 0)
+    {
 	ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err);
-	switch(ssl_err) {
+	switch(ssl_err)
+	{
 	    case SSL_ERROR_SYSCALL:
-		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK
-			|| ERRNO == P_EAGAIN)
+		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
+		{
+			/* Hmmm.. both? */
+			fd_setselect(fd, FD_SELECT_READ|FD_SELECT_WRITE, ircd_SSL_connect_retry, acptr);
+			return 0;
+		}
+		return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, ERRNO, acptr);
 	    case SSL_ERROR_WANT_READ:
 		fd_setselect(fd, FD_SELECT_READ, ircd_SSL_connect_retry, acptr);
 		fd_setselect(fd, FD_SELECT_WRITE, NULL, acptr);
@@ -751,3 +751,32 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
     return -1;
 }
 
+int client_starttls(aClient *acptr)
+{
+	if ((acptr->ssl = SSL_new(ctx_client)) == NULL)
+		goto fail_starttls;
+
+	acptr->flags |= FLAGS_SSL;
+
+	SSL_set_fd(acptr->ssl, acptr->fd);
+	SSL_set_nonblocking(acptr->ssl);
+
+	if (ircd_SSL_connect(acptr, acptr->fd) < 0)
+	{
+		Debug((DEBUG_DEBUG, "Failed SSL connect handshake in instance 1: %s", acptr->name));
+		SSL_set_shutdown(acptr->ssl, SSL_RECEIVED_SHUTDOWN);
+		SSL_smart_shutdown(acptr->ssl);
+		SSL_free(acptr->ssl);
+		goto fail_starttls;
+	}
+
+	/* HANDSHAKE IN PROGRESS */
+	return 0;
+fail_starttls:
+	/* Failure */
+	sendto_one(acptr, err_str(ERR_STARTTLS), me.name, !BadPtr(acptr->name) ? acptr->name : "*", "STARTTLS failed");
+	acptr->ssl = NULL;
+	acptr->flags &= ~FLAGS_SSL;
+	SetUnknown(acptr);
+	return 0; /* hm. we allow to continue anyway. not sure if we want that. */
+}

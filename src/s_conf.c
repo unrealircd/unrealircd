@@ -172,6 +172,7 @@ static NameValue _ListenerFlags[] = {
 /* This MUST be alphabetized */
 static NameValue _LinkFlags[] = {
 	{ CONNECT_AUTO,	"autoconnect" },
+	{ CONNECT_NO_STARTTLS,	"no-starttls"		  },
 	{ CONNECT_QUARANTINE, "quarantine"},
 	{ CONNECT_SSL,	"ssl"		  },
 };
@@ -6434,6 +6435,8 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 						if (!strcmp(ceppp->ce_varname, "autoconnect"))
 							;
 						else if (!strcmp(ceppp->ce_varname, "ssl"))
+							;
+						else if (!strcmp(ceppp->ce_varname, "no-starttls"))
 							;
 						else
 						{
