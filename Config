@@ -95,7 +95,7 @@ fi
 echo $CONF
 $CONF || exit 1
 cd "$UNREALCWD"
-if [  "$CRYPTOIRCD" = "1" ] ; then
+if [  "$QUICK" != "1" ] ; then
 if [ ! -f $CONFDIR/ssl/server.cert.pem ]; then
 export OPENSSLPATH
 TEST=""
@@ -353,7 +353,6 @@ n=""
 UNREALCWD="`pwd`"
 BASEPATH="$HOME/unrealircd"
 DEFPERM="0600"
-CRYPTOIRCD="1"
 SSLDIR=""
 NICKNAMEHISTORYLENGTH="2000"
 MAXSENDQLENGTH="3000000"
@@ -382,6 +381,7 @@ fi
 NOCACHE=""
 IMPORTEDSETTINGS=""
 NOINTRO=""
+QUICK=""
 CLEAN=""
 ADVANCED=""
 while [ $# -ge 1 ] ; do
@@ -400,6 +400,7 @@ while [ $# -ge 1 ] ; do
 	elif [ $1 = "-nointro" ] ; then
 		NOINTRO="1"
 	elif [ $1 = "-quick" -o $1 = "-q" ] ; then
+		QUICK="1"
 		echo "running quick config"
 		if [ -f "config.settings" ] ; then
 			. ./config.settings
@@ -544,9 +545,6 @@ while [ -z "$TEST" ] ; do
 
 done
 
-CRYPTOIRCD="1"
-
-if [ "$CRYPTOIRCD" = "1" ] ; then
 TEST="$SSLDIR"
 echo ""
 echo "If you know the path to OpenSSL on your system, enter it here. If not"
@@ -557,7 +555,6 @@ if [ -z "$cc" ] ; then
     SSLDIR="$TEST"
 else 
     SSLDIR=`eval echo $cc` # modified
-fi
 fi
 
 TEST=""
@@ -897,7 +894,6 @@ MAXSENDQLENGTH="$MAXSENDQLENGTH"
 MAXCONNECTIONS="$MAXCONNECTIONS"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
 DEFPERM="$DEFPERM"
-CRYPTOIRCD="$CRYPTOIRCD"
 SSLDIR="$SSLDIR"
 REMOTEINC="$REMOTEINC"
 CURLDIR="$CURLDIR"
