@@ -140,6 +140,10 @@ int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[
 		sendto_realops("do_numeric( %i, %s, %s, %i, { %s, %s } )!",
 		    numeric, cptr->name, sptr->name, parc,
 		    sptr->name, parv[1] ? parv[1] : "<null>");
+
+	if (BadPtr(parv[1]))
+		return 0;
+
 	for (; (nick = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
 		if ((acptr = find_client(nick, (aClient *)NULL)))

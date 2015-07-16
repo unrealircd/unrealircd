@@ -1739,6 +1739,7 @@ int unreal_copyfile(const char *src, const char *dest)
 	if (destfd < 0)
 	{
 		config_error("Unable to create file '%s': %s", dest, strerror(errno));
+		close(srcfd);
 		return 0;
 	}
 
@@ -1748,14 +1749,14 @@ int unreal_copyfile(const char *src, const char *dest)
 			config_error("Write error to file '%s': %s [not enough free hd space / quota? need several mb's!]",
 				dest, strerror(ERRNO));
 			cancel_copy(srcfd,destfd,dest);
-                	return 0;
+			return 0;
 		}
 
 	if (len < 0) /* very unusual.. perhaps an I/O error */
 	{
 		config_error("Read error from file '%s': %s", src, strerror(errno));
 		cancel_copy(srcfd,destfd,dest);
-        	return 0;
+		return 0;
 	}
 
 	close(srcfd);
@@ -2036,7 +2037,7 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size)
 	/*
 	 * Format the result.
 	 */
-        if (size < (IN6ADDRSZ / INT16SZ)) return 0;
+	if (size < (IN6ADDRSZ / INT16SZ)) return 0;
 	tp = tmp;
 	for (i = 0; i < (IN6ADDRSZ / INT16SZ); i++) {
 		/* Are we inside the best run of 0x00? */

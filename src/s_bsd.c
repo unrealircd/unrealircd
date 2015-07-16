@@ -686,9 +686,6 @@ void write_pidfile(void)
  */
 static int check_init(aClient *cptr, char *sockn, size_t size)
 {
-	struct SOCKADDR_IN sk;
-	int  len = sizeof(struct SOCKADDR_IN);
-
 	strlcpy(sockn, cptr->sockhost, HOSTLEN);
 	
 	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, ==0);
@@ -703,8 +700,6 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 		}
 		strlcpy(sockn, "localhost", HOSTLEN);
 	}
-
-	cptr->port = (int)ntohs(sk.SIN_PORT);
 
 	return 0;
 }

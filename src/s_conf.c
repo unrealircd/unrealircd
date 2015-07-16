@@ -757,6 +757,7 @@ ConfigFile *config_load(char *filename)
 	{
 		/* Workaround for empty files */
 		cfptr = config_parse(filename, " ");
+		close(fd);
 		return cfptr;
 	}
 	buf = MyMalloc(sb.st_size+1);

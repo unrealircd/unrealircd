@@ -956,7 +956,7 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 {
 	aTKline *nl;
 	int index;
-	aMatch *m;
+	aMatch *m = NULL;
 
 	/* Pre-allocate etc check for spamfilters that fail to compile.
 	 * This could happen if for example TRE supports a feature on server X, but not
@@ -975,9 +975,6 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 	}
 
 	nl = (aTKline *) MyMallocEx(sizeof(aTKline));
-
-	if (!nl)
-		return NULL;
 
 	nl->type = type;
 	nl->expire_at = expire_at;
@@ -2056,7 +2053,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 		}
 					if (tk->type & TKL_NICK)
 					{
-						if (!(*tk->usermask) == 'H')
+						if (*tk->usermask != 'H')
 					 		sendto_snomask(SNO_TKL, "tkl update for %s/reason='%s'/by=%s/set=%ld/expire=%ld [causedby: %s]",
 					 			tk->hostmask, tk->reason, tk->setby, tk->set_at, tk->expire_at, sptr->name);
 					}

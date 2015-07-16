@@ -88,7 +88,7 @@ char tmpbuf[512];
 	for (slot = 0; slot < EXTBANTABLESZ; slot++)
 		if (ExtBan_Table[slot].flag == '\0')
 			break;
-	if (slot == EXTBANTABLESZ - 1)
+	if (slot >= EXTBANTABLESZ - 1)
 	{
 		if (module)
 			module->errorcode = MODERR_NOSPACE;

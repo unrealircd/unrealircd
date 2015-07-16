@@ -1142,7 +1142,8 @@ void VersionflagDel(Versionflag *vflag, Module *module)
 		MyFree(vflag);
 	}
 }
-		
+
+#if 0
 Hooktype *HooktypeAdd(Module *module, char *string, int *type) {
 	Hooktype *hooktype;
 	int i;
@@ -1220,7 +1221,7 @@ void HooktypeDel(Hooktype *hooktype, Module *module) {
 		hooktype->parents = NULL;
 	}
 }
-		
+#endif		
 	
 Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), void (*vfunc)(), char *(*cfunc)())
 {

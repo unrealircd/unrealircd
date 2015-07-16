@@ -79,7 +79,7 @@ void modify_file(int start, char *ins, int stop)
 {
 	char configfiletmp2[512];
 	FILE *fdi, *fdo;
-	char *rdbuf, *wbuf;
+	char *rdbuf = NULL, *wbuf;
 	int n;
 	int first = 1;
 		
@@ -109,7 +109,7 @@ void modify_file(int start, char *ins, int stop)
 	
 	fwrite(rdbuf, 1, start, fdo);
 	
-	MyFree(rdbuf);
+	safefree(rdbuf);
 
 	if (ins)
 		fwrite(ins, 1, strlen(ins), fdo); /* insert this piece */
@@ -155,7 +155,7 @@ end:
 	fclose(fdi);
 	fclose(fdo);
 	
-	MyFree(rdbuf);
+	safefree(rdbuf);
 	// todo: handle write errors and such..
 
 	unlink(configfiletmp);
@@ -1282,7 +1282,6 @@ void update_read_settings(char *cfgfile)
 		needs_modules_default_conf = 0;
 	else if (strstr(cfgfile, "operclass.default.conf"))
 		needs_operclass_default_conf = 0;
-	
 
 	/* This needs to be read early, as the rest may depend on it */
 	for (ce = cf->cf_entries; ce; ce = ce->ce_next)
@@ -1499,6 +1498,8 @@ void build_include_list_ex(char *fname, ConfigFile **cf_list)
 			if (!already_included(ce->ce_vardata, *cf_list))
 				build_include_list_ex(ce->ce_vardata, cf_list);
 		}
+	
+	config_free(cf);
 }
 
 ConfigFile *build_include_list(char *fname)
