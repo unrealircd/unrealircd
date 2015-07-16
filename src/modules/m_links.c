@@ -84,7 +84,7 @@ DLLFUNC CMD_FUNC(m_links)
 		if (flat)
 			sendto_one(sptr, rpl_str(RPL_LINKS),
 			    me.name, sptr->name, acptr->name, me.name,
-			    (acptr != &me) ? 1 : 1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
+			    1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 		else
 			sendto_one(sptr, rpl_str(RPL_LINKS),
 			    me.name, sptr->name, acptr->name, acptr->serv->up,
