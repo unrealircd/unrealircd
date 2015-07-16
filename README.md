@@ -13,7 +13,7 @@ If you want to run a stable IRCd then download UnrealIRCd 3.2 from www.unrealirc
 or use the 'master' branch on GitHub (NOTE: this is not the default branch!).
 
 Otherwise, if you want to check out the latest technology and features, don't mind
-crashing once in a while and want to help us test, then try out **3.4.x (alpha!)**.
+crashing once in a while and want to help us test, then try out **3.4.x (beta!)**.
 On GitHub use the 'unreal34' branch (the default).
 
 If you are just interested in checking out UnrealIRCd for the first time then we
