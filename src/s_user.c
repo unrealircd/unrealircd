@@ -21,11 +21,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef CLEAN_COMPILE
-static char sccsid[] =
-    "@(#)s_user.c	2.74 2/8/94 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-#endif
+/* s_user.c 2.74 2/8/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
+
 #include "macros.h"
 #include "config.h"
 #include "struct.h"

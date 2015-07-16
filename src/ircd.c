@@ -18,11 +18,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef CLEAN_COMPILE
-static char sccsid[] =
-    "@(#)ircd.c	2.48 3/9/94 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-#endif
+/* ircd.c	2.48 3/9/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
 #include "config.h"
 #include "struct.h"
@@ -993,6 +989,7 @@ int InitwIRCD(int argc, char *argv[])
 	euid = geteuid();
 	gid = getgid();
 	egid = getegid();
+	timeofday = time(NULL);
 
 #ifndef IRC_USER
 	if (!euid && uid)

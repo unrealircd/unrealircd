@@ -33,11 +33,7 @@
  * Added SO_REUSEADDR fix from zessel@informatik.uni-kl.de
  */
 
-#ifndef CLEAN_COMPILE
-static char sccsid[] =
-    "@(#)	2.78 2/7/94 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-#endif
+/* 2.78 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
 #ifdef _WIN32
 #include <WinSock2.h>

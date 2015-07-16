@@ -22,18 +22,12 @@
  * Changed the order of defines...
  */
 
-#ifndef CLEAN_COMPILE
-static char sccsid[] =
-    "@(#)parse.c	2.33 1/30/94 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-#endif
+/* parse.c 2.33 1/30/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
+
 #include <string.h>
 #include "struct.h"
 #include "common.h"
 
-ID_Copyright
-    ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
-ID_Notes("2.33 1/30/94");
 #undef RAWDEBUG
 
 char backupbuf[8192];

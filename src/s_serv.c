@@ -21,10 +21,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef CLEAN_COMPILE
-static char sccsid[] =
-    "@(#)s_serv.c	2.55 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen";
-#endif
+/* s_serv.c 2.55 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
+
 #define AllocCpy(x,y) x  = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
 
 #include "struct.h"

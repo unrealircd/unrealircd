@@ -21,11 +21,7 @@
 #include "numeric.h"
 #include "common.h"
 
-#ifndef CLEAN_COMPILE
-static char sccsid[] = "@(#)s_err.c	1.12 11/1/93 (C) 1992 Darren Reed";
-#endif
-
-
+/* "s_err.c	1.12 11/1/93 (C) 1992 Darren Reed */
 /* Redone to be similar to bahamut's s_err.c -- codemastr */
 
 static char *replies[] = {

@@ -18,14 +18,11 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/* send.c 2.32 2/28/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
+
 /* -- Jto -- 16 Jun 1990
  * Added Armin's PRIVMSG patches...
  */
-
-#ifndef CLEAN_COMPILE
-static char sccsid[] =
-    "@(#)send.c	2.32 2/28/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen";
-#endif
 
 #include "struct.h"
 #include "numeric.h"

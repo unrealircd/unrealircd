@@ -15,14 +15,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * $Id$
  */
 
-#ifndef CLEAN_COMPILE
-static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
-1992, 1993 Darren Reed";
-#endif
+/* support.c 2.21 4/13/94 1990, 1991 Armin Gruner; 1992, 1993 Darren Reed */
 
 #include "config.h"
 #include "struct.h"
