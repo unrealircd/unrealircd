@@ -1096,12 +1096,10 @@ void do_read_motd(const char *filename, aMotdFile *themotd)
 		if ((tmp = strchr(line, '\r')))
 			*tmp = '\0';
 		
-		if (strlen(tmp) > 510)
-			tmp[510] = '\0';
+		if (strlen(line) > 510)
+			line[510] = '\0';
 
-		temp = MyMalloc(sizeof(aMotdLine));
-		if (!temp)
-			outofmemory();
+		temp = MyMallocEx(sizeof(aMotdLine));
 		AllocCpy(temp->line, line);
 
 		if(last)
