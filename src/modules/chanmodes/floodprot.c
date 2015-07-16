@@ -92,7 +92,7 @@ void floodprottimer_stopchantimers(aChannel *chptr);
 static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r);
 static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b);
 static int do_floodprot(aChannel *chptr, int what);
-char *channel_modef_string(ChanFloodProt *x);
+char *channel_modef_string(ChanFloodProt *x, char *str);
 int  check_for_chan_flood(aClient *sptr, aChannel *chptr);
 void do_floodprot_action(aChannel *chptr, int what, char *text);
 
@@ -562,7 +562,7 @@ static char retbuf[512];
 	if (!r)
 		return NULL;
 
-	strcpy(retbuf, channel_modef_string(r)); /* safe: buffer is large enough */
+	channel_modef_string(r, retbuf);
 	return retbuf;
 }
 
@@ -771,7 +771,7 @@ char *xp;
 		
 	} /* if param[0] == '[' */ 
 
-	strlcpy(retbuf, channel_modef_string(&newf), sizeof(retbuf));
+	channel_modef_string(&newf, retbuf);
 	return retbuf;
 }
 
@@ -865,11 +865,13 @@ char tmpbuf[16], *p2 = tmpbuf;
 	return p;
 }
 
-/** returns the channelmode +f string (ie: '[5k,40j]:10') */
-char *channel_modef_string(ChanFloodProt *x)
+/** returns the channelmode +f string (ie: '[5k,40j]:10').
+ * 'retbuf' is suggested to be of size 512, which is more than X times the maximum (for safety).
+ */
+char *channel_modef_string(ChanFloodProt *x, char *retbuf)
 {
-static char retbuf[512]; /* overkill :p */
-char *p = retbuf;
+	char *p = retbuf;
+
 	*p++ = '[';
 
 	/* (alphabetized) */
