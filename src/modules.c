@@ -584,7 +584,7 @@ void FreeModObj(ModuleObject *obj, Module *m)
 		CommandDel(obj->object.command);
 	}
 	else if (obj->type == MOBJ_HOOKTYPE) {
-		HooktypeDel(obj->object.hooktype, m);
+		//HooktypeDel(obj->object.hooktype, m); -- reinstate if we audited this code
 	}
 	else if (obj->type == MOBJ_VERSIONFLAG) {
 		VersionflagDel(obj->object.versionflag, m);
