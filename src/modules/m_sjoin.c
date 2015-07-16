@@ -87,8 +87,7 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 	pparv.parv[0] = xmbuf;
 	c = 1;
 	
-	for (s = (char *)strtoken(&p, parmbuf, " "); s;
-		s = (char *)strtoken(&p, NULL, " "))
+	for (s = strtoken(&p, parmbuf, " "); s; s = strtoken(&p, NULL, " "))
 	{
 		pparv.parv[c] = s;
 		c++; /* in my dreams */
@@ -386,7 +385,7 @@ CMD_FUNC(m_sjoin)
 		ID(sptr), ts, sj3_parabuf);
 	uptr = uid_buf + buflen;
 
-	for (s = s0 = strtoken(&p, cbuf, " "); s; s = s0 = strtoken(&p, (char *)NULL, " "))
+	for (s = s0 = strtoken(&p, cbuf, " "); s; s = s0 = strtoken(&p, NULL, " "))
 	{
 		c = f = 0;
 		modeflags = 0;
@@ -762,7 +761,7 @@ CMD_FUNC(m_sjoin)
 			    MAX(oldmode.limit, chptr->mode.limit);
 			if (oldmode.limit != chptr->mode.limit)
 			{
-				Addit('l', (char *)my_itoa(chptr->mode.limit));
+				Addit('l', my_itoa(chptr->mode.limit));
 			}
 		}
 		/* sketch, longest key wins */
