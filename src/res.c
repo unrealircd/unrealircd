@@ -580,8 +580,6 @@ struct IN_ADDR addr;
 	if (unrealdns_num_cache >= DNS_MAX_ENTRIES)
 	{
 		for (c = cache_list; c->next; c = c->next);
-		if (!c)
-			abort(); /* impossible */
 		unrealdns_removecacherecord(c);
 	}
 
