@@ -318,31 +318,30 @@ aClient *hash_find_id(const char *name, aClient *cptr)
 /*
  * hash_find_nickserver
  */
-aClient *hash_find_nickserver(const char *name, aClient *cptr)
+aClient *hash_find_nickserver(const char *str, aClient *cptr)
 {
-	aClient *tmp;
-	unsigned int  hashv;
 	char *serv;
+	char nick[NICKLEN+HOSTLEN+1];
+	aClient *acptr;
+	
+	strlcpy(nick, str, sizeof(nick)); /* let's work on a copy */
 
-	serv = (char *)strchr(name, '@');
-	*serv++ = '\0';
-	hashv = hash_nick_name(name);
+	serv = strchr(nick, '@');
+	if (serv)
+		*serv++ = '\0';
 
-	/*
-	 * Got the bucket, now search the chain.
-	 */
-	list_for_each_entry(tmp, &clientTable[hashv], client_hash)
-	{
-		if (smycmp(name, tmp->name) == 0 && tmp->user &&
-		    smycmp(serv, tmp->user->server) == 0)
-		{
-			*--serv = '\0';
-			return (tmp);
-		}
-	}
+	acptr = find_client(nick, NULL);
+	if (!acptr)
+		return NULL; /* client not found */
+	
+	if (!serv)
+		return acptr; /* validated: was just 'nick' and not 'nick@serv' */
 
-	*--serv = '\0';
-	return (cptr);
+	/* Now validate the server portion */
+	if (acptr->user && !smycmp(serv, acptr->user->server))
+		return acptr; /* validated */
+	
+	return cptr;
 }
 /*
  * hash_find_server

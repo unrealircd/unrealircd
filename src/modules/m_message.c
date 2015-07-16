@@ -229,8 +229,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	if (MyConnect(sptr))
 		parv[1] = (char *)canonize(parv[1]);
 		
-	for (p = NULL, nick = strtoken(&p, parv[1], ","); nick;
-	    nick = strtoken(&p, NULL, ","))
+	for (p = NULL, nick = strtoken(&p, parv[1], ","); nick; nick = strtoken(&p, NULL, ","))
 	{
 		/* The nicks "ircd" and "irc" are special (and reserved) */
 
@@ -249,25 +248,10 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			return 0;
 		}
 		
-		/* nickname addressed? */
-		if (*nick != '#' && (acptr = find_person(nick, NULL)))
-		{
-			text = parv[2];
-			newcmd = cmd;
-			ret = can_privmsg(cptr, sptr, acptr, notice, &text, &newcmd);
-			if (ret == CANPRIVMSG_SEND)
-			{
-				sendto_message_one(acptr, sptr, sptr->name, newcmd, nick, text);
-				continue;
-			} else
-			if (ret == CANPRIVMSG_CONTINUE)
-				continue;
-			else
-				return ret;
-		}
-
-		p2 = (char *)strchr(nick, '#');
+		p2 = strchr(nick, '#');
 		prefix = 0;
+		
+		/* Message to channel */
 		if (p2 && (chptr = find_channel(p2, NullChn)))
 		{
 			if (p2 != nick)
@@ -423,14 +407,8 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		}
 
 
-		/*
-		   ** the following two cases allow masks in NOTICEs
-		   ** (for OPERs only)
-		   **
-		   ** Armin, 8Jun90 (gruner@informatik.tu-muenchen.de)
-		 */
-		if ((*nick == '$' || *nick == '#') && 
-		    ValidatePermissionsForPath("notice:global",sptr,NULL,NULL,NULL))
+		/* Message to $servermask */
+		if ((*nick == '$' || *nick == '#') &&  ValidatePermissionsForPath("notice:global",sptr,NULL,NULL,NULL))
 		{
 			sendto_match_butone(IsServer(cptr) ? cptr : NULL,
 			    sptr, nick + 1,
@@ -440,54 +418,37 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			continue;
 		}
 
-		/*
-		   ** user[%host]@server addressed?
-		 */
-		server = index(nick, '@');
-		if (server)	/* meaning there is a @ */
+		/* nickname addressed? */
+		acptr = hash_find_nickserver(nick, NULL);
+		if (acptr)
 		{
-			/* There is always a \0 if its a string */
-			if (*(server + 1) != '\0')
+			text = parv[2];
+			newcmd = cmd;
+			ret = can_privmsg(cptr, sptr, acptr, notice, &text, &newcmd);
+			if (ret == CANPRIVMSG_SEND)
 			{
-				char fulltarget[NICKLEN + HOSTLEN + 1];
-				
-				strlcpy(fulltarget, nick, sizeof(fulltarget)); /* lame.. I know.. */
-				
-				srvptr = find_server_quick(server + 1);
-				if (srvptr)
-				{
-					acptr = find_nickserv(nick, NULL);
-					if (acptr && (acptr->srvptr == srvptr))
-					{
-						text = parv[2];
-						newcmd = cmd;
-						ret = can_privmsg(cptr, sptr, acptr, notice, &text, &newcmd);
-						if (ret == CANPRIVMSG_CONTINUE)
-							continue;
-						else if (ret != CANPRIVMSG_SEND)
-							return ret;
-						/* If we end up here, we have to actually send it... */
+				sendto_message_one(acptr, sptr, sptr->name, newcmd, (MyClient(acptr) ? acptr->name : nick), text);
+				continue;
+			} else
+			if (ret == CANPRIVMSG_CONTINUE)
+				continue;
+			else
+				return ret;
+		}
 
-						if (IsMe(acptr))
-							sendto_prefix_one(acptr, sptr, ":%s %s %s :%s", sptr->name, newcmd, acptr->name, text);
-						else
-							sendto_message_one(acptr, sptr, sptr->name, newcmd, fulltarget, text);
-						continue;
-					}
-				}
-				/* NICK@SERVER NOT FOUND: */
-				if (server && strncasecmp(server + 1, SERVICES_NAME, strlen(SERVICES_NAME)) == 0)
-					sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name, sptr->name, nick);
-				else
-					sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, fulltarget);
-
+		/* If nick@server -and- the @server portion was set::services-server then send a special message */
+		if (!acptr)
+		{
+			char *server = index(nick, '@');
+			if (server && strncasecmp(server + 1, SERVICES_NAME, strlen(SERVICES_NAME)) == 0)
+			{
+				sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name, sptr->name, nick);
 				continue;
 			}
-
 		}
+
 		/* nothing, nada, not anything found */
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name,
-		    nick);
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, nick);
 		continue;
 	}
 	return 0;
