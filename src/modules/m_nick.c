@@ -985,13 +985,11 @@ DLLFUNC CMD_FUNC(m_nick)
 		 */
 		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN))
 		{
-			if (sptr->passwd)
-				MyFree(sptr->passwd);
-			sptr->passwd = MyMalloc(strlen(parv[2]) + 1);
-			(void)strcpy(sptr->passwd, parv[2]);
+			safefree(sptr->passwd);
+			sptr->passwd = strdup(parv[2]);
 		}
 		/* This had to be copied here to avoid problems.. */
-		(void)strcpy(sptr->name, nick);
+		strlcpy(sptr->name, nick, sizeof(sptr->name));
 		if (sptr->user && *sptr->user->username && IsNotSpoof(sptr) && !CHECKPROTO(sptr, PROTO_CLICAP))
 		{
 			/*
@@ -1010,7 +1008,7 @@ DLLFUNC CMD_FUNC(m_nick)
 			if (register_user(cptr, sptr, nick,
 			    sptr->user->username, NULL, NULL, NULL) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
-			strcpy(nick, sptr->name); /* don't ask, but I need this. do not remove! -- Syzop */
+			strlcpy(nick, sptr->name, sizeof(nick)); /* don't ask, but I need this. do not remove! -- Syzop */
 			update_watch = 0;
 			newusr = 1;
 		}
