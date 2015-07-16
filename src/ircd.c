@@ -694,7 +694,7 @@ static int bad_command(const char *argv0)
 {
 #ifndef _WIN32
 	if (!argv0)
-		argv0 = "ircd";
+		argv0 = "unrealircd";
 
 	(void)printf
 	    ("Usage: %s [-f <config>] [-h <servername>] [-p <port>] [-x <loglevel>] [-t] [-F]\n"

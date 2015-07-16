@@ -1610,7 +1610,7 @@ void upgrade_conf_to_34(void)
 		             "as a service again."); /* TODO: make this unnecessary :D */
 	}
 #endif
-	config_error("To upgrade it to the new 3.4.x format, run: ./unreal upgrade-conf");
+	config_error("To upgrade it to the new 3.4.x format, run: ./unrealircd upgrade-conf");
 
 	config_error("******************************************************************");
 	/* TODO: win32 may require a different error */
