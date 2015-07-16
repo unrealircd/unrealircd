@@ -192,9 +192,9 @@ MEMORYSTATUS mstat;
 #ifndef _WIN32
 	gettimeofday(&rdat.nowt, NULL);
 	fd = open("/dev/urandom", O_RDONLY);
-	if (fd) {
-		int n;
-		n = read(fd, &rdat.rnd, sizeof(rdat.rnd));
+	if (fd >= 0)
+	{
+		int n = read(fd, &rdat.rnd, sizeof(rdat.rnd));
 		Debug((DEBUG_INFO, "init_random: read from /dev/urandom returned %d", n));
 		close(fd);
 	}
