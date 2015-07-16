@@ -1185,10 +1185,8 @@ Cmode_t get_extmode_bitbychar(char m)
 
 EVENT(modef_event)
 {
-RemoveFld *e = removefld_list;
-time_t now;
-long mode;
-Cmode_t extmode;
+	RemoveFld *e = removefld_list;
+	time_t now;
 
 	now = TStime();
 	
@@ -1197,6 +1195,8 @@ Cmode_t extmode;
 		if (e->when <= now)
 		{
 			/* Remove chanmode... */
+			long mode = 0;
+			Cmode_t extmode = 0;
 #ifdef NEWFLDDBG
 			sendto_realops("modef_event: chan %s mode -%c EXPIRED", e->chptr->chname, e->m);
 #endif
