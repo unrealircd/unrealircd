@@ -1524,7 +1524,10 @@ int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 				int found = 0;
 				for (i=0; i <= Channelmode_highest; i++)
 					if (Channelmode_Table[i].flag == *pm->modebuf)
+					{
+						found = 1;
 						break;
+					}
 				if (!found)
 				{
 					/* Not found. Will be ignored, just move on.. */
