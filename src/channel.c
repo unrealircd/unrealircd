@@ -1101,8 +1101,7 @@ aChannel *get_channel(aClient *cptr, char *chname, int flag)
 		return (chptr);
 	if (flag == CREATE)
 	{
-		chptr = (aChannel *)MyMalloc(sizeof(aChannel) + len);
-		bzero((char *)chptr, sizeof(aChannel));
+		chptr = MyMallocEx(sizeof(aChannel) + len);
 		strlcpy(chptr->chname, chname, len + 1);
 		if (channel)
 			channel->prevch = chptr;

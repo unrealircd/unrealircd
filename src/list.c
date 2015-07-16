@@ -128,9 +128,7 @@ aClient *make_client(aClient *from, aClient *servr)
 	if (!from)
 		size = CLIENT_LOCAL_SIZE;
 
-	if (!(cptr = (aClient *)MyMalloc(size)))
-		outofmemory();
-	bzero((char *)cptr, (int)size);
+	cptr = MyMallocEx(size);
 
 #ifdef	DEBUGMODE
 	if (size == CLIENT_LOCAL_SIZE)

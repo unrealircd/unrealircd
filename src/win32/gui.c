@@ -663,10 +663,10 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			unsigned char	String[16384];
 			int size;
 			unsigned char *RTFString;
-			StreamIO *stream = malloc(sizeof(StreamIO));
+			StreamIO *stream = MyMallocEx(sizeof(StreamIO));
 			EDITSTREAM edit;
 			SetWindowText(hDlg, title);
-			bzero(String, 16384);
+			bzero(String, sizeof(String));
 			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
 			while (*s) 
 			{
@@ -675,8 +675,7 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 					strcat(String, "\r\n");
 			}
 			size = CountRTFSize(String)+1;
-			RTFString = malloc(size);
-			bzero(RTFString, size);
+			RTFString = MyMallocEx(size);
 			IRCToRTF(String,RTFString);
 			RTFBuf = RTFString;
 			size--;
@@ -746,7 +745,7 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			int fd,len;
 			unsigned char *buffer = '\0', *string = '\0';
 			EDITSTREAM edit;
-			StreamIO *stream = malloc(sizeof(StreamIO));
+			StreamIO *stream = MyMallocEx(sizeof(StreamIO));
 			unsigned char szText[256];
 			struct stat sb;
 			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT), hTip;
@@ -757,13 +756,12 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			{
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
-				buffer = malloc(sb.st_size+1);
+				buffer = MyMallocEx(sb.st_size+1);
 				buffer[0] = 0;
 				len = read(fd, buffer, sb.st_size); 
 				buffer[len] = 0;
 				len = CountRTFSize(buffer)+1;
-				string = malloc(len);
-				bzero(string,len);
+				string = MyMallocEx(len);
 				IRCToRTF(buffer,string);
 				RTFBuf = string;
 				len--;

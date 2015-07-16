@@ -85,8 +85,7 @@ void	umode_init(void)
 {
 	long val = 1;
 	int	i;
-	Usermode_Table = MyMalloc(sizeof(Umode) * UMODETABLESZ);
-	bzero(Usermode_Table, sizeof(Umode) * UMODETABLESZ);
+	Usermode_Table = MyMallocEx(sizeof(Umode) * UMODETABLESZ);
 	for (i = 0; i < UMODETABLESZ; i++)
 	{
 		Usermode_Table[i].mode = val;
@@ -94,8 +93,7 @@ void	umode_init(void)
 	}
 	Usermode_highest = 0;
 
-	Snomask_Table = MyMalloc(sizeof(Snomask) * UMODETABLESZ);
-	bzero(Snomask_Table, sizeof(Snomask) * UMODETABLESZ);
+	Snomask_Table = MyMallocEx(sizeof(Snomask) * UMODETABLESZ);
 	val = 1;
 	for (i = 0; i < UMODETABLESZ; i++)
 	{

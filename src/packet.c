@@ -103,9 +103,7 @@ void	init_CommandHash(void)
 
 aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, int flags)
 {
-	aCommand	*newcmd = (aCommand *) MyMalloc(sizeof(aCommand));
-	
-	bzero(newcmd, sizeof(aCommand));
+	aCommand *newcmd = MyMallocEx(sizeof(aCommand));
 	
 	newcmd->cmd = (char *) strdup(cmd);
 	newcmd->parameters = (parameters > MAXPARA) ? MAXPARA : parameters;
