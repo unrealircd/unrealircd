@@ -254,9 +254,9 @@ char *updconf_addquotes(char *str)
 int upgrade_me_block(ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
-	char *name;
-	char *info;
-	int numeric;
+	char *name = NULL;
+	char *info = NULL;
+	int numeric = 0;
 
 	char sid[16];
 

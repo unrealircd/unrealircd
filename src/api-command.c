@@ -41,7 +41,7 @@ int CommandExists(char *name)
 
 Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char params, int flags)
 {
-	Command *command;
+	Command *command = NULL;
 	aCommand *c;
 
 	if (find_Command_simple(cmd))

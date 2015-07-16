@@ -69,11 +69,12 @@ char	*my_itoa(int i)
 
 char *strtoken(char **save, char *str, char *fs)
 {
-	char *pos = *save;	/* keep last position across calls */
-	char *tmp;
+	char *pos, *tmp;
 
 	if (str)
 		pos = str;	/* new string scan */
+	else
+		pos = *save; /* keep last position across calls */
 
 	while (pos && *pos && index(fs, *pos) != NULL)
 		pos++;		/* skip leading separators */

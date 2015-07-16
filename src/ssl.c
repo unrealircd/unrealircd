@@ -597,7 +597,7 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 			snprintf(buf, sizeof(buf),
 				"ERROR :STARTTLS received but this is an SSL-only port. Check your connect settings. "
 				"If this is a server linking in then add 'ssl' in your link::outgoing::options block.\r\n");
-			send(fd, buf, strlen(buf), 0);
+			(void)send(fd, buf, strlen(buf), 0);
 			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, acptr);
 		}
 		if (n > 0)
