@@ -494,22 +494,23 @@ void	SSL_set_nonblocking(SSL *s)
 	BIO_set_nbio(SSL_get_wbio(s),1);  
 }
 
-char	*ssl_get_cipher(SSL *ssl)
+char *ssl_get_cipher(SSL *ssl)
 {
-	static char buf[400];
+	static char buf[256];
 	int bits;
 	const SSL_CIPHER *c; 
 	
 	buf[0] = '\0';
-	strcpy(buf, SSL_get_version(ssl));
-	strcat(buf, "-");
-	strcat(buf, SSL_get_cipher(ssl));
+	strlcpy(buf, SSL_get_version(ssl), sizeof(buf));
+	strlcat(buf, "-", sizeof(buf));
+	strlcat(buf, SSL_get_cipher(ssl), sizeof(buf));
 	c = SSL_get_current_cipher(ssl);
 	SSL_CIPHER_get_bits(c, &bits);
-	strcat(buf, "-");
-	strcat(buf, (char *)my_itoa(bits));
-	strcat(buf, "bits");
-	return (buf);
+	strlcat(buf, "-", sizeof(buf));
+	strlcat(buf, my_itoa(bits), sizeof(buf));
+	strlcat(buf, "bits", sizeof(buf));
+
+	return buf;
 }
 
 void ircd_SSL_client_handshake(int fd, int revents, void *data)

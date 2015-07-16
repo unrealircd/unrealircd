@@ -537,8 +537,7 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 	if (params)
 	{
 		params++;
-		parambuf = MyMalloc(strlen(params)+1);
-		strcpy(parambuf, params);
+		parambuf = strdup(params);
 		param = strtoken(&save, parambuf, " ");
 	}
 
@@ -2763,10 +2762,10 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			if (index(aconf->hostname, '@'))
 			{
 				if (aconf->flags.noident)
-					strcpy(uhost, username);
+					strlcpy(uhost, username, sizeof(uhost));
 				else
-					strcpy(uhost, cptr->username);
-				strcat(uhost, "@localhost");
+					strlcpy(uhost, cptr->username, sizeof(uhost));
+				strlcat(uhost, "@localhost", sizeof(uhost));
 			}
 			else
 				strcpy(uhost, "localhost");
@@ -4533,7 +4532,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	int	    start, end, iport, isnew;
 	int tmpflags =0;
 
-	strcpy(copy, ce->ce_vardata);
+	strlcpy(copy, ce->ce_vardata, sizeof(copy));
 	/* Seriously cheap hack to make listen <port> work -Stskeeps */
 	ipport_seperate(copy, &ip, &port);
 	if (!ip || !*ip)
@@ -4607,7 +4606,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 		return 1;
 	}
 
-	strcpy(copy, ce->ce_vardata);
+	strlcpy(copy, ce->ce_vardata, sizeof(copy));
 	/* Seriously cheap hack to make listen <port> work -Stskeeps */
 	ipport_seperate(copy, &ip, &port);
 	if (!ip || !*ip)

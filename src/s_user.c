@@ -349,12 +349,19 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 */
 extern char *canonize(char *buffer)
 {
-	static char cbuf[BUFSIZ];
+	static char cbuf[2048];
 	char *s, *t, *cp = cbuf;
 	int  l = 0;
 	char *p = NULL, *p2;
 
 	*cp = '\0';
+
+	if (!buffer)
+		return NULL;
+
+	/* Ohh.. so lazy. But then again, this should never happen with a 2K buffer anyway. */
+	if (strlen(buffer) >= sizeof(cbuf))
+		buffer[sizeof(cbuf)-1] = '\0';
 
 	for (s = strtoken(&p, buffer, ","); s; s = strtoken(&p, NULL, ","))
 	{

@@ -207,7 +207,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 
 	/* this call is a bit obsolete? - takes up CPU */
 	backupbuf[0] = '\0';
-	strcpy(backupbuf, buffer);
+	strlcpy(backupbuf, buffer, sizeof(backupbuf));
 	s = sender;
 	*s = '\0';
 	for (ch = buffer; *ch == ' '; ch++)
