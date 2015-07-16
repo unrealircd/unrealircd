@@ -402,11 +402,11 @@ invalidsyntax:
 
 void *cmodef_put_param(void *fld_in, char *param)
 {
-ChanFloodProt *fld = (ChanFloodProt *)fld_in;
-char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
-int v;
-unsigned short warnings = 0, breakit;
-unsigned char r;
+	ChanFloodProt *fld = (ChanFloodProt *)fld_in;
+	char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
+	int v;
+	unsigned short warnings = 0, breakit;
+	unsigned char r;
 
 	strlcpy(xbuf, param, sizeof(xbuf));
 
@@ -420,10 +420,16 @@ unsigned char r;
 
 	p2 = strchr(xbuf+1, ']');
 	if (!p2)
+	{
+		MyFree(fld);
 		return NULL;
+	}
 	*p2 = '\0';
 	if (*(p2+1) != ':')
+	{
+		MyFree(fld);
 		return NULL;
+	}
 	breakit = 0;
 	for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
 	{
@@ -441,7 +447,10 @@ unsigned char r;
 		*p = '\0';
 		v = atoi(x);
 		if (v < 1)
+		{
+			MyFree(fld);
 			return NULL;
+		}
 		p++;
 		a = '\0';
 		r = 0;
@@ -506,19 +515,29 @@ unsigned char r;
 				/** fld->r[FLD_TEXT] ** not supported */
 				break;
 			default:
+				MyFree(fld);
 				return NULL;
 		}
 	} /* for */
 	/* parse 'per' */
 	p2++;
 	if (*p2 != ':')
+	{
+		MyFree(fld);
 		return NULL;
+	}
 	p2++;
 	if (!*p2)
+	{
+		MyFree(fld);
 		return NULL;
+	}
 	v = atoi(p2);
 	if (v < 1)
+	{
+		MyFree(fld);
 		return NULL;
+	}
 	fld->per = v;
 	
 	/* Is anything turned on? (to stop things like '+f []:15' */
@@ -527,7 +546,10 @@ unsigned char r;
 		if (fld->l[v])
 			breakit=0;
 	if (breakit)
+	{
+		MyFree(fld);
 		return NULL;
+	}
 
 	return (void *)fld;
 }
