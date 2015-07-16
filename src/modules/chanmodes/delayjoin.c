@@ -295,32 +295,32 @@ DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 	if ((channel_is_delayed(chptr) || channel_is_post_delayed(chptr)))
 	{
 		ParseMode pm;
-		 int ret;
-		 for (ret = parse_chanmode(&pm, modebuf, parabuf); ret; ret = parse_chanmode(&pm, NULL, NULL))
-		 {
-			 if (pm.what == MODE_ADD && (pm.modechar == 'o' || pm.modechar == 'h' || pm.modechar == 'a' || pm.modechar == 'q' || pm.modechar == 'v'))
-			 {
-				 Member* i;
-				 aClient* user = find_client(pm.param,NULL);
-				 if (!user)
-					 continue;
+		int ret;
+		for (ret = parse_chanmode(&pm, modebuf, parabuf); ret; ret = parse_chanmode(&pm, NULL, NULL))
+		{
+			if (pm.what == MODE_ADD && (pm.modechar == 'o' || pm.modechar == 'h' || pm.modechar == 'a' || pm.modechar == 'q' || pm.modechar == 'v'))
+			{
+				Member* i;
+				aClient* user = find_client(pm.param,NULL);
+				if (!user)
+					continue;
 
-				 if (moded_user_invisible(user,chptr))
-					 clear_user_invisible_announce(chptr,user);
+				if (moded_user_invisible(user,chptr))
+					clear_user_invisible_announce(chptr,user);
 
-				 if (pm.modechar == 'v')
-					 continue;
+				if (pm.modechar == 'v')
+					continue;
 
-				 for (i = chptr->members; i; i = i->next)
-				 {
-					 if (i->cptr == user)
-						 continue;
-					 if (moded_user_invisible(i->cptr,chptr))
-						 sendto_one(user,":%s!%s@%s JOIN :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
-				 }
+				for (i = chptr->members; i; i = i->next)
+				{
+					if (i->cptr == user)
+						continue;
+					if (moded_user_invisible(i->cptr,chptr))
+						sendto_one(user,":%s!%s@%s JOIN :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
+				}
 
-			 }
-		 }
+			}
+		}
 	}
 
 	return 0;
