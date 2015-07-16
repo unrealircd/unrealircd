@@ -984,7 +984,7 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 		if (p->conv_param)
 			return p->conv_param(mask);
 		/* else, do some basic sanity checks and cut it off at 80 bytes */
-		if ((cp[1] != ':') || (cp[2] == '\0'))
+		if ((mask[1] != ':') || (mask[2] == '\0'))
 		    return NULL; /* require a ":<char>" after extban type */
 		if (strlen(mask) > 80)
 			mask[80] = '\0';
