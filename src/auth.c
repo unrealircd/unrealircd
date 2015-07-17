@@ -75,7 +75,7 @@ int Auth_AutoDetectHashType(char *hash)
 		if ((strlen(hash) == 64) || (strlen(hash) == 95))
 		{
 			char *p;
-			char hexchars[16] = "0123456789abcdef";
+			char hexchars[16] = "0123456789abcdefABCDEF";
 			for (p = hash; *p; p++)
 				if ((*hash != ':') && !strchr(hexchars, *p))
 					return AUTHTYPE_PLAINTEXT; /* not hex and not colon */
