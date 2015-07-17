@@ -180,6 +180,7 @@ static void send_authports(int fd, int revents, void *data)
 			return; /* Not connected yet, try again later */
 authsenderr:
 		ident_failed(cptr);
+		return;
 	}
 	cptr->flags &= ~FLAGS_WRAUTH;
 
