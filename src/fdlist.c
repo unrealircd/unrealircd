@@ -51,6 +51,9 @@ int fd_open(int fd, const char *desc)
 				fd, MAXCONNECTIONS);
 		ircd_log(LOG_ERROR, "[BUG] trying to add fd #%d to fd table, but MAXCONNECTIONS is %d",
 				fd, MAXCONNECTIONS);
+#ifdef DEBUGMODE
+		abort();
+#endif
 		return -1;
 	}
 
@@ -100,6 +103,9 @@ int fd_unmap(int fd)
 				fd, MAXCONNECTIONS);
 		ircd_log(LOG_ERROR, "[BUG] trying to close fd #%d in fd table, but MAXCONNECTIONS is %d",
 				fd, MAXCONNECTIONS);
+#ifdef DEBUGMODE
+		abort();
+#endif
 		return 0;
 	}
 
@@ -191,6 +197,9 @@ void fd_desc(int fd, const char *desc)
 				fd, MAXCONNECTIONS);
 		ircd_log(LOG_ERROR, "[BUG] trying to modify fd #%d in fd table, but MAXCONNECTIONS is %d",
 				fd, MAXCONNECTIONS);
+#ifdef DEBUGMODE
+		abort();
+#endif
 		return;
 	}
 
@@ -201,6 +210,9 @@ void fd_desc(int fd, const char *desc)
 				fd);
 		ircd_log(LOG_ERROR, "[BUG] trying to modify fd #%d in fd table, but this FD isn't reported open",
 				fd);
+#ifdef DEBUGMODE
+		abort();
+#endif
 		return;
 	}
 

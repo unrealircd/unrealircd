@@ -77,6 +77,9 @@ void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 				fd, MAXCONNECTIONS);
 		ircd_log(LOG_ERROR, "[BUG] trying to modify fd #%d in fd table, but MAXCONNECTIONS is %d",
 				fd, MAXCONNECTIONS);
+#ifdef DEBUGMODE
+		abort();
+#endif
 		return;
 	}
 
