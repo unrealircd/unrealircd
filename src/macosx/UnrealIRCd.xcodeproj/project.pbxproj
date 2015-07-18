@@ -160,6 +160,7 @@
 		1FE784E71B3DF0DD006CB6DD /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 0700;
 				LastUpgradeCheck = 0630;
 				ORGANIZATIONNAME = "UnrealIRCd Team";
 				TargetAttributes = {

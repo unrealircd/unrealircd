@@ -10,29 +10,36 @@
                 <application id="hnw-xV-0zn" sceneMemberID="viewController">
                     <menu key="mainMenu" title="Main Menu" systemMenu="main" id="AYu-sK-qS6">
                         <items>
-                            <menuItem title="Configure UnrealIRCd" id="dMs-cI-mzQ">
+                            <menuItem title="Menu" id="arB-Ko-zYF">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="configureDaemon:" target="Voe-Tx-rLC" id="jAU-2P-oeO"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Start UnrealIRCd" id="aUF-d1-5bR">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="startDaemon:" target="Voe-Tx-rLC" id="JJ6-R9-Yqf"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Stop UnrealIRCd" id="wpr-3q-Mcd">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="stopDaemon:" target="Voe-Tx-rLC" id="EhI-ZX-pmo"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Help" id="GJF-j3-lpm">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="help:" target="Voe-Tx-rLC" id="ljC-El-YsA"/>
-                                </connections>
+                                <menu key="submenu" title="Menu" id="nGf-dN-dCb">
+                                    <items>
+                                        <menuItem title="Configure UnrealIRCd" id="hg4-Jt-NlG">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="configureDaemon:" target="Voe-Tx-rLC" id="lTe-kQ-PcS"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Start UnrealIRCd" id="sdz-uA-JlO">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="startDaemon:" target="Voe-Tx-rLC" id="pAe-Ca-hpE"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Stop UnrealIRCd" id="mWB-m4-eGp">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="stopDaemon:" target="Voe-Tx-rLC" id="nCK-J9-mwB"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Help" id="Z7I-ow-aOT">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="help:" target="Voe-Tx-rLC" id="3u2-Sx-rc5"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
                             </menuItem>
                         </items>
                     </menu>
@@ -42,7 +49,7 @@
                 </application>
                 <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="UnrealIRCd" customModuleProvider="target">
                     <connections>
-                        <outlet property="mainMenu" destination="AYu-sK-qS6" id="YPC-KJ-UJI"/>
+                        <outlet property="mainMenu" destination="nGf-dN-dCb" id="k5P-Yl-n8g"/>
                     </connections>
                 </customObject>
                 <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>

@@ -26,21 +26,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     }
     
-    @IBAction func startDaemon(sender: AnyObject) {
+    @IBAction func startDaemon(sender: NSMenuItem) {
         
     }
     
-    @IBAction func stopDaemon(sender: AnyObject) {
+    @IBAction func stopDaemon(sender: NSMenuItem) {
         
     }
     
-    @IBAction func configureDaemon(sender: AnyObject) {
+    @IBAction func configureDaemon(sender: NSMenuItem) {
         let storyboard = NSStoryboard(name: "Main", bundle:nil)
         let controller = storyboard!.instantiateControllerWithIdentifier("Configuration")
         controller!.showWindow(self)
     }
     
-    @IBAction func help(sender: AnyObject) {
+    @IBAction func help(sender: NSMenuItem) {
         
     }
 
