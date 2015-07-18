@@ -16,7 +16,7 @@ src/modules/usermodes/Makefile
 src/modules/Makefile
 src/modules/third/Makefile
 /Makefile
-unrealircd
+/unrealircd
 include/setup.h
 
 # Ignore tags file
