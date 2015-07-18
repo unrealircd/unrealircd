@@ -591,13 +591,6 @@ char logbuf[BUFSIZ];
 #ifdef HAVE_SYSLOG
 closelog(); /* temporary close syslog, as we mass close() fd's below... */
 #endif
-#ifndef NOCLOSEFD
-for (fd = 3; fd < MAXCONNECTIONS; fd++)
-{
-	(void)close(fd);
-}
-(void)close(1);
-#endif
 
 if (bootopt & BOOT_TTY)		/* debugging is going to a tty */
 	goto init_dgram;
