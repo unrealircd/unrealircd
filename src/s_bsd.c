@@ -767,6 +767,8 @@ void start_server_handshake(aClient *cptr)
 		return;
 	}
 
+	RunHook(HOOKTYPE_SERVER_HANDSHAKE_OUT, cptr);
+
 	sendto_one(cptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 
 	send_protoctl_servers(cptr, 0);

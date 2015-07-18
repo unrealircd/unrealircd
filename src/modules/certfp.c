@@ -24,6 +24,7 @@ ModuleHeader MOD_HEADER(certfp)
 void certfp_free(ModData *m);
 char *certfp_serialize(ModData *m);
 void certfp_unserialize(char *str, ModData *m);
+int certfp_handshake(aClient *sptr);
 int certfp_connect(aClient *sptr);
 int certfp_whois(aClient *sptr, aClient *acptr);
 
@@ -49,6 +50,8 @@ ModDataInfo mreq;
 		abort();
 
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, certfp_connect);
+	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, certfp_handshake);
+	HookAdd(modinfo->handle, HOOKTYPE_SERVER_HANDSHAKE_OUT, 0, certfp_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, certfp_whois);
 
 	return MOD_SUCCESS;
@@ -100,18 +103,30 @@ char *get_fingerprint_for_client(aClient *cptr)
 	return NULL;
 }
 
-int certfp_connect(aClient *acptr)
+int certfp_handshake(aClient *acptr)
 {
-	if (IsSecure(acptr))
+	if (acptr->ssl)
 	{
 		char *fp = get_fingerprint_for_client(acptr);
 
 		if (!fp)
-			return 0; /* wtf? */
+			return 0;
 
 		moddata_client_set(acptr, "certfp", fp); /* set & broadcast */
-		sendnotice(acptr, "*** Your SSL fingerprint is %s", fp);
 	}
+	return 0;
+}
+
+int certfp_connect(aClient *acptr)
+{
+	if (IsSecure(acptr))
+	{
+		char *fp = moddata_client_get(acptr, "certfp");
+	
+		if (fp)
+			sendnotice(acptr, "*** Your SSL fingerprint is %s", fp);
+	}
+
 	return 0;
 }
 
