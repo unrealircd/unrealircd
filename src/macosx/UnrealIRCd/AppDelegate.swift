@@ -12,26 +12,40 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     
-    @IBOutlet var mainMenu : NSMenu?
-    var menuItem : NSStatusItem!
+    @IBOutlet weak var mainMenu : NSMenu?
+    var appModel : AppModel
+    var daemonModel : DaemonModel
+    var configurationModel : ConfigurationModel
     
-    func applicationDidFinishLaunching(aNotification: NSNotification) {
-        // Compiler error - hack below
-        menuItem = NSStatusBar.systemStatusBar().statusItemWithLength(-1/*NSVariableStatusItemLength*/)
-        menuItem.image = NSImage(named: "logo.png")
-        menuItem.menu = mainMenu!
+    override init() {
+        appModel = AppModel()
+        daemonModel = DaemonModel()
+        configurationModel = ConfigurationModel()
+        super.init()
+    }
+ 
+    func applicationDidFinishLaunching(aNotification: NSNotification)
+    {
+        assert(mainMenu != nil, "Unable to load Menu from XIB")
+        appModel.setupStatusItem(mainMenu!)
+        
+        if configurationModel.shouldAutoStart
+        {
+            daemonModel.start()
+        }
+        
     }
 
     func applicationWillTerminate(aNotification: NSNotification) {
-
+        daemonModel.stop()
     }
     
     @IBAction func startDaemon(sender: NSMenuItem) {
-        
+        daemonModel.start()
     }
     
     @IBAction func stopDaemon(sender: NSMenuItem) {
-        
+        daemonModel.stop()
     }
     
     @IBAction func configureDaemon(sender: NSMenuItem) {
@@ -41,7 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @IBAction func help(sender: NSMenuItem) {
-        
+        appModel.launchHelp()
     }
 
 
