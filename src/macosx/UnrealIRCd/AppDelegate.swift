@@ -50,8 +50,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     @IBAction func configureDaemon(sender: NSMenuItem) {
         let storyboard = NSStoryboard(name: "Main", bundle:nil)
-        let controller = storyboard!.instantiateControllerWithIdentifier("Configuration")
-        controller!.showWindow(self)
+        let controller = storyboard!.instantiateControllerWithIdentifier("Configuration") as! NSWindowController
+        
+        controller.showWindow(self)
     }
     
     @IBAction func help(sender: NSMenuItem) {
