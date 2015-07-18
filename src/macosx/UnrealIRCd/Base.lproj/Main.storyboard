@@ -14,28 +14,37 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Menu" id="nGf-dN-dCb">
                                     <items>
-                                        <menuItem title="Configure UnrealIRCd" id="hg4-Jt-NlG">
+                                        <menuItem title="Preferences..." id="hg4-Jt-NlG">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="configureDaemon:" target="Voe-Tx-rLC" id="lTe-kQ-PcS"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="U1o-b6-ve3"/>
                                         <menuItem title="Start UnrealIRCd" id="sdz-uA-JlO">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="startDaemon:" target="Voe-Tx-rLC" id="pAe-Ca-hpE"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Stop UnrealIRCd" id="mWB-m4-eGp">
+                                        <menuItem title="Stop UnrealIRCd" enabled="NO" id="mWB-m4-eGp">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="stopDaemon:" target="Voe-Tx-rLC" id="nCK-J9-mwB"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="eTD-rh-FcN"/>
                                         <menuItem title="Help" id="Z7I-ow-aOT">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="help:" target="Voe-Tx-rLC" id="3u2-Sx-rc5"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="8za-1l-uTx"/>
+                                        <menuItem title="Quit" id="33Y-FY-tQn">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="quit:" target="Voe-Tx-rLC" id="ejg-Xk-bjF"/>
                                             </connections>
                                         </menuItem>
                                     </items>

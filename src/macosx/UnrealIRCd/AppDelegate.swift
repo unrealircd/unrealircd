@@ -57,6 +57,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBAction func help(sender: NSMenuItem) {
         appModel.launchHelp()
     }
+    
+    @IBAction func quit(sender: NSMenuItem) {
+        exit(0)
+    }
 
 
 }
