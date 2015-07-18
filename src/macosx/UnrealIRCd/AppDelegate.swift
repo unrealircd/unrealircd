@@ -7,24 +7,41 @@
 //
 
 import Cocoa
-import AppKit
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     
-
-    var menuItem : NSStatusItem!;
+    @IBOutlet var mainMenu : NSMenu?
+    var menuItem : NSStatusItem!
     
     func applicationDidFinishLaunching(aNotification: NSNotification) {
-        println("App did finish launching!")
         // Compiler error - hack below
         menuItem = NSStatusBar.systemStatusBar().statusItemWithLength(-1/*NSVariableStatusItemLength*/)
-        menuItem.image = NSImage(named: "bat23.png")
+        menuItem.image = NSImage(named: "logo.png")
+        menuItem.menu = mainMenu!
     }
 
     func applicationWillTerminate(aNotification: NSNotification) {
 
+    }
+    
+    @IBAction func startDaemon(sender: AnyObject) {
+        
+    }
+    
+    @IBAction func stopDaemon(sender: AnyObject) {
+        
+    }
+    
+    @IBAction func configureDaemon(sender: AnyObject) {
+        let storyboard = NSStoryboard(name: "Main", bundle:nil)
+        let controller = storyboard!.instantiateControllerWithIdentifier("Configuration")
+        controller!.showWindow(self)
+    }
+    
+    @IBAction func help(sender: AnyObject) {
+        
     }
 
 

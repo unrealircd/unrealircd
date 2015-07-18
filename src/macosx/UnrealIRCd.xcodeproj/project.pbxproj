@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1FC660CF1B3EA90B008EFAD1 /* bat23.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC660CE1B3EA90B008EFAD1 /* bat23.png */; };
+		1F101A741B59EF2F00FE6A5B /* logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F101A721B59EF2F00FE6A5B /* logo.png */; };
+		1F101A751B59EF2F00FE6A5B /* logo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F101A731B59EF2F00FE6A5B /* logo@2x.png */; };
 		1FE784F51B3DF0DD006CB6DD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE784F41B3DF0DD006CB6DD /* AppDelegate.swift */; };
 		1FE784F71B3DF0DD006CB6DD /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE784F61B3DF0DD006CB6DD /* ViewController.swift */; };
 		1FE784F91B3DF0DD006CB6DD /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FE784F81B3DF0DD006CB6DD /* Images.xcassets */; };
@@ -26,7 +27,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		1FC660CE1B3EA90B008EFAD1 /* bat23.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bat23.png; sourceTree = "<group>"; };
+		1F101A721B59EF2F00FE6A5B /* logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo.png; sourceTree = "<group>"; };
+		1F101A731B59EF2F00FE6A5B /* logo@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo@2x.png"; sourceTree = "<group>"; };
 		1FE784EF1B3DF0DD006CB6DD /* UnrealIRCd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UnrealIRCd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FE784F31B3DF0DD006CB6DD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1FE784F41B3DF0DD006CB6DD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -89,7 +91,8 @@
 		1FE784F21B3DF0DD006CB6DD /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				1FC660CE1B3EA90B008EFAD1 /* bat23.png */,
+				1F101A721B59EF2F00FE6A5B /* logo.png */,
+				1F101A731B59EF2F00FE6A5B /* logo@2x.png */,
 				1FE784F31B3DF0DD006CB6DD /* Info.plist */,
 			);
 			name = "Supporting Files";
@@ -122,6 +125,7 @@
 				1FE784EB1B3DF0DD006CB6DD /* Sources */,
 				1FE784EC1B3DF0DD006CB6DD /* Frameworks */,
 				1FE784ED1B3DF0DD006CB6DD /* Resources */,
+				1F91FBDA1B58D9EB00A60151 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -192,9 +196,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1FC660CF1B3EA90B008EFAD1 /* bat23.png in Resources */,
 				1FE784F91B3DF0DD006CB6DD /* Images.xcassets in Resources */,
+				1F101A751B59EF2F00FE6A5B /* logo@2x.png in Resources */,
 				1FE784FC1B3DF0DD006CB6DD /* Main.storyboard in Resources */,
+				1F101A741B59EF2F00FE6A5B /* logo.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -206,6 +211,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1F91FBDA1B58D9EB00A60151 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1FE784EB1B3DF0DD006CB6DD /* Sources */ = {
