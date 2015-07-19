@@ -548,7 +548,8 @@ void sendto_common_channels_local_butone(aClient *user, int cap, char *pattern, 
 	va_end(vl);
 
 	++current_serial;
-	user->serial = current_serial;
+	if (MyConnect(user))
+		user->serial = current_serial;
 	if (user->user)
 	{
 		for (channels = user->user->channel; channels; channels = channels->next)
