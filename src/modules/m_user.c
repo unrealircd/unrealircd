@@ -87,7 +87,6 @@ DLLFUNC CMD_FUNC(m_user)
 	char *username, *host, *server, *realname, *umodex = NULL, *virthost =
 	    NULL, *ip = NULL;
 	char *sstamp = NULL;
-	anUser *user;
 	aClient *acptr;
 
 	if (IsServer(cptr) && !IsUnknown(sptr))
@@ -155,15 +154,16 @@ DLLFUNC CMD_FUNC(m_user)
 	{
 		realname = (BadPtr(parv[4])) ? "<bad-realname>" : parv[4];
 	}
-	user = make_user(sptr);
+	
+	make_user(sptr);
 
 	if (!MyConnect(sptr))
 	{
 		if (sptr->srvptr == NULL)
 			sendto_ops("WARNING, User %s introduced as being "
 			    "on non-existant server %s.", sptr->name, server);
-		user->server = find_or_add(sptr->srvptr->name);
-		strlcpy(user->realhost, host, sizeof(user->realhost));
+		sptr->user->server = find_or_add(sptr->srvptr->name);
+		strlcpy(sptr->user->realhost, host, sizeof(sptr->user->realhost));
 		goto user_finish;
 	}
 
@@ -180,7 +180,7 @@ DLLFUNC CMD_FUNC(m_user)
 		if (CONNECT_SNOMASK)
 		{
 			sptr->umodes |= UMODE_SERVNOTICE;
-			create_snomask(sptr, user, CONNECT_SNOMASK);
+			create_snomask(sptr, sptr->user, CONNECT_SNOMASK);
 		}
 	}
 
@@ -188,13 +188,13 @@ DLLFUNC CMD_FUNC(m_user)
 	 * this was copying user supplied data directly into user->realhost
 	 * which seemed bad. Not to say this is much better ;p. -- Syzop
 	 */
-	strlcpy(user->realhost, Inet_ia2p(&sptr->local->ip), sizeof(user->realhost));
-	if (!user->ip_str)
-		user->ip_str = strdup(Inet_ia2p(&sptr->local->ip));
-	user->server = me_hash;
+	strlcpy(sptr->user->realhost, Inet_ia2p(&sptr->local->ip), sizeof(sptr->user->realhost));
+	if (!sptr->user->ip_str)
+		sptr->user->ip_str = strdup(Inet_ia2p(&sptr->local->ip));
+	sptr->user->server = me_hash;
       user_finish:
 	if (sstamp != NULL && *sstamp != '*')
-		strlcpy(user->svid, sstamp, sizeof(user->svid));
+		strlcpy(sptr->user->svid, sstamp, sizeof(sptr->user->svid));
 
 	strlcpy(sptr->info, realname, sizeof(sptr->info));
 	if (*sptr->name &&
