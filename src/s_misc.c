@@ -650,7 +650,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		if (IsPerson(sptr))
 		{
 			RunHook2(HOOKTYPE_LOCAL_QUIT, sptr, comment);
-			sendto_connectnotice(sptr->name, sptr->user, sptr, 1, comment);
+			sendto_connectnotice(sptr, 1, comment);
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_watch_list(sptr);
 			if (sptr->user && sptr->user->lopt)
@@ -704,7 +704,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 	else if (IsPerson(sptr) && !IsULine(sptr))
 	{
 		if (sptr->srvptr != &me)
-			sendto_fconnectnotice(sptr->name, sptr->user, sptr, 1, comment);
+			sendto_fconnectnotice(sptr, 1, comment);
 	}
 
 	/*

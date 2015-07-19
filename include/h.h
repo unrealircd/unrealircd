@@ -258,7 +258,7 @@ extern void terminate(), write_pidfile();
 extern void *MyMallocEx(size_t size);
 extern int advanced_check(char *userhost, int ipstat);
 extern int send_queued(aClient *);
-extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
+extern void sendto_connectnotice(aClient *sptr, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *nick, int hopcount,
 long lastnick, char *username, char *realhost, char *server, char *svid, char *info, char *umodes,
 char *virthost);
@@ -618,7 +618,7 @@ extern int efunctions_check(void);
 extern void efunctions_switchover(void);
 extern char *encode_ip(u_char *);
 extern char *decode_ip(char *);
-extern void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
+extern void sendto_fconnectnotice(aClient *sptr, int disconnect, char *comment);
 extern void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes);
 extern int on_dccallow_list(aClient *to, aClient *from);
 extern int add_dccallow(aClient *sptr, aClient *optr);

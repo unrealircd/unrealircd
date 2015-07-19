@@ -353,7 +353,7 @@ DLLFUNC CMD_FUNC(m_uid)
 		parv[6] = sptr->name;
 		do_cmd(cptr, sptr, "USER", parc - 3, &parv[3]);
 		if (GotNetInfo(cptr) && !IsULine(sptr))
-			sendto_fconnectnotice(sptr->name, sptr->user, sptr, 0, NULL);
+			sendto_fconnectnotice(sptr, 0, NULL);
 	}
 
 	RunHook(HOOKTYPE_REMOTE_CONNECT, sptr);
@@ -1037,7 +1037,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		parv[3] = nick;
 		do_cmd(cptr, sptr, "USER", parc - 3, &parv[3]);
 		if (GotNetInfo(cptr) && !IsULine(sptr))
-			sendto_fconnectnotice(sptr->name, sptr->user, sptr, 0, NULL);
+			sendto_fconnectnotice(sptr, 0, NULL);
 	}
 	else if (IsPerson(sptr) && update_watch)
 		hash_check_watch(sptr, RPL_LOGON);
@@ -1444,7 +1444,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	{
 		char userhost[USERLEN + HOSTLEN + 6];
 
-		sendto_connectnotice(nick, user, sptr, 0, NULL); /* moved down, for modules. */
+		sendto_connectnotice(sptr, 0, NULL); /* moved down, for modules. */
 
 		/* Send password from sptr->local->passwd to NickServ for identification,
 		 * if passwd given and if NickServ is online.
