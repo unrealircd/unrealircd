@@ -812,30 +812,30 @@ DLLFUNC CMD_FUNC(m_nick)
 		if ((differ && (acptr->lastnick < lastnick)) ||
 		    (!differ && (acptr->lastnick > lastnick)))
 		{
-			/* acptr (our user) won, let's kill sptr (their user),
-			   ** and reintroduce our "correct" user
-			 */
+			/* acptr (our user) won, let's kill sptr (their user) */
 			ircstp->is_kill++;
 			/* Kill the user trying to change their nick. */
-			sendto_server(cptr, 0, 0,
-			    ":%s KILL %s :%s (Nick collision: %s <- %s)",
-			    me.name, sptr->name, me.name,
-			    sptr->from->name, acptr->from->name);
-			sptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, sptr, &me, "Nick collision");
-			/*
-			 * Introduce our "correct" user to the other server
-			 */
-			/* Kill their user. */
 			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
 			    me.name, parv[1], me.name);
-			send_umode(NULL, acptr, 0, SEND_UMODES, buf);
-			sendto_one_nickcmd(cptr, acptr, buf);
-			if (acptr->user->away)
-				sendto_one(cptr, ":%s AWAY :%s", acptr->name,
-				    acptr->user->away);
-
-			send_user_joins(cptr, acptr);
+			sptr->flags |= FLAGS_KILLED;
+			(void)exit_client(NULL, sptr, &me, "Nick collision");
+			/* Previously we did the following two things too:
+			 * 1) Send the KILL to ALL servers.
+			 *    This is confusing, they might kill our nick instead.
+			 * 2) Re-introduce our user.
+			 *    That would fix #1 but it can still cause strange issues
+			 *    and we always forget to 'sync' information below so
+			 *    this was never in full.
+			 * I changed it so we just:
+			 * 0) Kill their nick
+			 *
+			 * Most likely our own 'nick' is in-flight to cptr.
+			 * They'll introduce our nick as it will 'win'.
+			 *
+			 * I suppose there could be some other deynch which is now
+			 * unhandled, but how? Prove it to me and I'll look into
+			 * it. -- Syzop
+			 */
 			return 0;	/* their user lost, ignore the NICK */
 		}
 
