@@ -21,5 +21,10 @@ class DaemonModel
         return false
     }
     
+    var isRunning : Bool
+    {
+        return false;
+    }
+    
     
 }
