@@ -1198,44 +1198,32 @@ void sendto_connectnotice(aClient *acptr, int disconnect, char *comment)
 {
 	aClient *cptr;
 	int  i, j;
-	char connectd[1024];
-	char connecth[1024];
+	char connect[512], secure[256];
 
 	if (!disconnect)
 	{
 		RunHook(HOOKTYPE_LOCAL_CONNECT, acptr);
-		ircsnprintf(connectd, sizeof(connectd),
-		    "*** Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
-		    acptr->local->listener->port, acptr->name, acptr->user->username, acptr->user->realhost,
-		    acptr->local->class ? acptr->local->class->name : "",
-		IsSecure(acptr) ? "[secure " : "",
-		IsSecure(acptr) ? SSL_get_cipher(acptr->local->ssl) : "",
-		IsSecure(acptr) ? "]" : "");
-		ircsnprintf(connecth, sizeof(connecth),
-		    "*** Client connecting: %s (%s@%s) [%s] {%s}", acptr->name,
+
+		*secure = '\0';
+		if (IsSecure(acptr))
+			snprintf(secure, sizeof(secure), " [secure %s]", SSL_get_cipher(acptr->local->ssl));
+
+		ircsnprintf(connect, sizeof(connect),
+		    "*** Client connecting: %s (%s@%s) [%s] {%s}%s", acptr->name,
 		    acptr->user->username, acptr->user->realhost, Inet_ia2p(&acptr->local->ip),
-		    acptr->local->class ? acptr->local->class->name : "0");
+		    acptr->local->class ? acptr->local->class->name : "0",
+		    secure);
 	}
 	else
 	{
-		ircsnprintf(connectd, sizeof(connectd), "*** Client exiting: %s (%s@%s) [%s]",
-			acptr->name, acptr->user->username, acptr->user->realhost, comment);
-		ircsnprintf(connecth, sizeof(connecth), "*** Client exiting: %s (%s@%s) [%s] [%s]",
-			acptr->name, acptr->user->username, acptr->user->realhost, comment, Inet_ia2p(&acptr->local->ip));
+		ircsnprintf(connect, sizeof(connect), "*** Client exiting: %s (%s@%s) [%s] (%s)",
+			acptr->name, acptr->user->username, acptr->user->realhost, Inet_ia2p(&acptr->local->ip), comment);
 	}
 
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
 		if (cptr->user->snomask & SNO_CLIENT)
-		{
-			if (IsHybNotice(cptr))
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
-				    cptr->name, connecth);
-			else
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
-				    cptr->name, connectd);
-
-		}
+			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, connect);
 	}
 }
 
@@ -1243,38 +1231,30 @@ void sendto_fconnectnotice(aClient *acptr, int disconnect, char *comment)
 {
 	aClient *cptr;
 	int  i, j;
-	char connectd[1024];
-	char connecth[1024];
+	char connect[512], secure[256];
 
 	if (!disconnect)
 	{
-		ircsnprintf(connectd, sizeof(connectd), "*** Client connecting at %s: %s (%s@%s)",
-			    acptr->user->server, acptr->name, acptr->user->username, acptr->user->realhost);
-		ircsnprintf(connecth, sizeof(connecth),
-		    "*** Client connecting at %s: %s (%s@%s) [%s] {0}", acptr->user->server, acptr->name,
-		    acptr->user->username, acptr->user->realhost, acptr->ip ? acptr->ip : "0");
+		*secure = '\0';
+		if (IsSecureConnect(acptr))
+			strcpy(secure, " [secure]"); /* will we ever expand this? */
+
+		ircsnprintf(connect, sizeof(connect),
+		    "*** Client connecting: %s (%s@%s) [%s] {0}%s", acptr->name,
+		    acptr->user->username, acptr->user->realhost, acptr->ip ? acptr->ip : "0",
+		    secure);
 	}
 	else
 	{
-		ircsnprintf(connectd, sizeof(connectd), "*** Client exiting at %s: %s!%s@%s (%s)",
-			   acptr->user->server, acptr->name, acptr->user->username, acptr->user->realhost, comment);
-		ircsnprintf(connecth, sizeof(connecth), "*** Client exiting at %s: %s (%s@%s) [%s] [%s]",
-			acptr->user->server, acptr->name, acptr->user->username, acptr->user->realhost, comment,
+		ircsnprintf(connect, sizeof(connect), "*** Client exiting: %s (%s@%s) [%s] (%s)",
+			acptr->name, acptr->user->username, acptr->user->realhost, comment,
 			acptr->ip ? acptr->ip : "0");
 	}
 
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
 		if (cptr->user->snomask & SNO_FCLIENT)
-		{
-			if (IsHybNotice(cptr))
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
-				    cptr->name, connecth);
-			else
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
-				    cptr->name, connectd);
-
-		}
+			sendto_one(cptr, ":%s NOTICE %s :%s", acptr->user->server, cptr->name, connect);
 	}
 }
 
