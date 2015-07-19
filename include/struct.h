@@ -126,6 +126,7 @@ typedef struct liststructprio ListStructPrio;
 
 typedef struct Watch aWatch;
 typedef struct Client aClient;
+typedef struct LocalClient aLocalClient;
 typedef struct Channel aChannel;
 typedef struct User anUser;
 typedef struct Server aServer;
@@ -840,7 +841,7 @@ struct Client {
 	struct list_head client_node; 	/* for global client list (client_list) */
 	struct list_head client_hash;	/* for clientTable */
 	struct list_head id_hash;	/* for idTable */
-
+	aLocalClient *local;	/* for locally connected clients */
 	anUser *user;		/* ...defined, if this is a User */
 	aServer *serv;		/* ...defined, if this is a server */
 	TS   lastnick;		/* TimeStamp on nick */
@@ -867,8 +868,9 @@ struct Client {
 
 	struct list_head lclient_node;	/* for local client list (lclient_list) */
 	struct list_head special_node;	/* for special lists (server || unknown || oper) */
+};
 
-#if 1
+struct LocalClient {
 	TS   since;		/* time they will next be allowed to send something */
 	TS   firsttime;		/* Time it was created */
 	TS   lasttime;		/* last time any message was received */
@@ -876,7 +878,6 @@ struct Client {
 	TS   nexttarget;	/* next time that a new target will be allowed (msg/notice/invite) */
  	TS   nextnick;		/* Time the next nick change will be allowed */
 	u_char targets[MAXTARGETS];	/* hash values of targets */
-#endif
 	char buffer[BUFSIZE];	/* Incoming message buffer */
 	short lastsq;		/* # of 2k blocks when sendqueued called last */
 	dbuf sendQ;		/* Outgoing message queue--if socket full */

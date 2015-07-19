@@ -119,19 +119,11 @@ void outofmemory(void)
 aClient *make_client(aClient *from, aClient *servr)
 {
 	aClient *cptr = NULL;
-	unsigned size = CLIENT_REMOTE_SIZE;
 
-	/*
-	 * Check freelists first to see if we can grab a client without
-	 * having to call malloc.
-	 */
-	if (!from)
-		size = CLIENT_LOCAL_SIZE;
-
-	cptr = MyMallocEx(size);
+	cptr = MyMallocEx(sizeof(aClient));
 
 #ifdef	DEBUGMODE
-	if (size == CLIENT_LOCAL_SIZE)
+	if (!from)
 		cloc.inuse++;
 	else
 		crem.inuse++;
@@ -149,22 +141,26 @@ aClient *make_client(aClient *from, aClient *servr)
 	INIT_LIST_HEAD(&cptr->id_hash);
 
 	(void)strcpy(cptr->username, "unknown");
-	if (size == CLIENT_LOCAL_SIZE)
+	if (!from)
 	{
+		/* Local client */
+		
+		cptr->local = MyMallocEx(sizeof(LocalClient));
+		
 		INIT_LIST_HEAD(&cptr->lclient_node);
 		INIT_LIST_HEAD(&cptr->special_node);
 
-		cptr->since = cptr->lasttime =
-		    cptr->lastnick = cptr->firsttime = TStime();
-		cptr->class = NULL;
-		cptr->passwd = NULL;
-		cptr->sockhost[0] = '\0';
-		cptr->buffer[0] = '\0';
-		cptr->authfd = -1;
+		cptr->local->since = cptr->local->lasttime =
+		cptr->local->lastnick = cptr->local->firsttime = TStime();
+		cptr->local->class = NULL;
+		cptr->local->passwd = NULL;
+		cptr->local->sockhost[0] = '\0';
+		cptr->local->buffer[0] = '\0';
+		cptr->local->authfd = -1;
 		cptr->fd = -1;
 
-		dbuf_queue_init(&cptr->recvQ);
-		dbuf_queue_init(&cptr->sendQ);
+		dbuf_queue_init(&cptr->local->recvQ);
+		dbuf_queue_init(&cptr->local->sendQ);
 	} else {
 		cptr->fd = -256;
 	}
@@ -183,18 +179,18 @@ void free_client(aClient *cptr)
 			list_del(&cptr->special_node);
 
 		RunHook(HOOKTYPE_FREE_CLIENT, cptr);
-		if (cptr->passwd)
-			MyFree((char *)cptr->passwd);
-		if (cptr->error_str)
-			MyFree(cptr->error_str);
-		if (cptr->hostp)
-			unreal_free_hostent(cptr->hostp);
-
-		assert(list_empty(&cptr->lclient_node));
-		assert(list_empty(&cptr->special_node));
+		if (cptr->local)
+		{
+			safefree(cptr->local->passwd);
+			safefree(cptr->local->error_str);
+			if (cptr->local->hostp)
+				unreal_free_hostent(cptr->local->hostp);
+			
+			MyFree(cptr->local);
+		}
 	}
 
-	MyFree((char *)cptr);
+	MyFree(cptr);
 }
 
 /*

@@ -845,11 +845,11 @@ struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 		/* users */
 		if (MyClient(acptr))
 		{
-			if (acptr->nextnick > TStime())
+			if (acptr->local->nextnick > TStime())
 			{
-				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->nextnick %ld -> %ld",
-					acptr->name, acptr->nextnick, TStime()));
-				acptr->nextnick = TStime();
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->local->nextnick %ld -> %ld",
+					acptr->name, acptr->local->nextnick, TStime()));
+				acptr->local->nextnick = TStime();
 			}
 			if (acptr->nexttarget > TStime())
 			{
