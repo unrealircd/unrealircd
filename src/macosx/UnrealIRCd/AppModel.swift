@@ -80,7 +80,7 @@ class AppModel : ChangeNotifierDelegate
     {
         let daemonStatus = daemonModel.isRunning
         mainMenu.itemWithTitle("Start UnrealIRCd")?.enabled = !daemonStatus
-        mainMenu.itemWithTitle("Stop UnrealIRCd")?.enabled = !daemonStatus
+        mainMenu.itemWithTitle("Stop UnrealIRCd")?.enabled = daemonStatus
     }
     
 }

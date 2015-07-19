@@ -76,6 +76,11 @@ class ViewController: NSViewController, ChangeNotifierDelegate {
             updateConfigurationOptions()
         }
     }
+    
+    @IBAction func configure(sender: AnyObject)
+    {
+        
+    }
 
 
 }
