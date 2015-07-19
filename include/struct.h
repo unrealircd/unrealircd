@@ -304,7 +304,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define FLAGS_PING       0x80000
 #define FLAGS_EAUTH      0x100000
 #define FLAGS_NETINFO    0x200000
-#define FLAGS_HYBNOTICE  0x400000
+//0x400000 was hybnotice
 #define FLAGS_QUARANTINE 0x800000
 //0x1000000 unused (was ziplinks)
 #define FLAGS_DCCNOTICE  0x2000000 /* Has the user seen a notice on how to use DCCALLOW already? */
@@ -393,9 +393,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SetNoFakeLag(x)     ((x)->flags |= FLAGS_NOFAKELAG)
 #define ClearNoFakeLag(x)   ((x)->flags &= ~FLAGS_NOFAKELAG)
 
-#define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)
-#define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
-#define ClearHybNotice(x)	((x)->flags &= ~FLAGS_HYBNOTICE)
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
 #define IsSetHost(x)			((x)->umodes & UMODE_SETHOST)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)

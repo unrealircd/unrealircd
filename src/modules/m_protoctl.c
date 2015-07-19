@@ -146,19 +146,6 @@ CMD_FUNC(m_protoctl)
 			SetNoQuit(cptr);
 
 		}
-		else if (strcmp(s, "HCN") == 0)
-		{
-#ifndef PROTOCTL_MADNESS
-			if (remove)
-			{
-				ClearHybNotice(cptr);
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
-			    proto, cptr->name));
-			SetHybNotice(cptr);
-		}
 		else if (strcmp(s, "SJOIN") == 0)
 		{
 #ifndef PROTOCTL_MADNESS
