@@ -1427,7 +1427,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sptr->user->virthost = strdup(virthost);
 		}
 		if (ip && (*ip != '*'))
-			sptr->user->ip_str = strdup(decode_ip(ip));
+			sptr->ip = strdup(decode_ip(ip));
 	}
 
 	hash_check_watch(sptr, RPL_LOGON);	/* Uglier hack */

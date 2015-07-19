@@ -1252,7 +1252,7 @@ void sendto_fconnectnotice(aClient *acptr, int disconnect, char *comment)
 			    acptr->user->server, acptr->name, acptr->user->username, acptr->user->realhost);
 		ircsnprintf(connecth, sizeof(connecth),
 		    "*** Notice -- Client connecting at %s: %s (%s@%s) [%s] {0}", acptr->user->server, acptr->name,
-		    acptr->user->username, acptr->user->realhost, acptr->user->ip_str ? acptr->user->ip_str : "0");
+		    acptr->user->username, acptr->user->realhost, acptr->ip ? acptr->ip : "0");
 	}
 	else
 	{
@@ -1260,7 +1260,7 @@ void sendto_fconnectnotice(aClient *acptr, int disconnect, char *comment)
 			   acptr->user->server, acptr->name, acptr->user->username, acptr->user->realhost, comment);
 		ircsnprintf(connecth, sizeof(connecth), "*** Notice -- Client exiting at %s: %s (%s@%s) [%s] [%s]",
 			acptr->user->server, acptr->name, acptr->user->username, acptr->user->realhost, comment,
-			acptr->user->ip_str ? acptr->user->ip_str : "0");
+			acptr->ip ? acptr->ip : "0");
 	}
 
 	list_for_each_entry(cptr, &oper_list, special_node)
@@ -1305,14 +1305,14 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 			":%s UID %s %d %ld %s %s %s %s %s %s %s %s :%s",
 			sptr->srvptr->id, nick, hopcount, lastnick, username,
 			realhost, sptr->id, svid, umodes, vhost, getcloak(sptr),
-			encode_ip(sptr->user->ip_str), info);
+			encode_ip(sptr->ip), info);
 	}
 
 	sendto_server(one, PROTO_NICKv2 | PROTO_VHP, *sptr->id ? PROTO_SID : 0,
 		"NICK %s %d %ld %s %s %s %s %s %s %s %s :%s",
 		nick, hopcount, lastnick, username,
 		realhost, server, svid, umodes, vhost, getcloak(sptr),
-		encode_ip(sptr->user->ip_str), info);
+		encode_ip(sptr->ip), info);
 }
 
 /*
@@ -1348,7 +1348,7 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 			sptr->srvptr->id, sptr->name, sptr->hopcount, sptr->lastnick,
 			sptr->user->username, sptr->user->realhost, sptr->id,
 			sptr->user->svid, umodes, vhost, getcloak(sptr),
-			encode_ip(sptr->user->ip_str), sptr->info);
+			encode_ip(sptr->ip), sptr->info);
 		return;
 	}
 
@@ -1358,7 +1358,7 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 		    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
 		    sptr->user->realhost, sptr->srvptr->name,
 		    sptr->user->svid, umodes, vhost,
-		    encode_ip(sptr->user->ip_str),
+		    encode_ip(sptr->ip),
 		    sptr->info);
 
 	return;

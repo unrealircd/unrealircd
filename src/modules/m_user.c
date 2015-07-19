@@ -189,8 +189,8 @@ DLLFUNC CMD_FUNC(m_user)
 	 * which seemed bad. Not to say this is much better ;p. -- Syzop
 	 */
 	strlcpy(sptr->user->realhost, Inet_ia2p(&sptr->local->ip), sizeof(sptr->user->realhost));
-	if (!sptr->user->ip_str)
-		sptr->user->ip_str = strdup(Inet_ia2p(&sptr->local->ip));
+	if (!sptr->ip)
+		sptr->ip = strdup(Inet_ia2p(&sptr->local->ip));
 	sptr->user->server = me_hash;
       user_finish:
 	if (sstamp != NULL && *sstamp != '*')

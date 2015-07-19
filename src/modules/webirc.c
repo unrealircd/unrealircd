@@ -336,9 +336,8 @@ int dowebirc(aClient *cptr, char *ip, char *host)
 	if (cptr->user)
 	{
 		/* Kinda unsure if this is actually used.. But maybe if USER, PASS, NICK ? */
-		if (cptr->user->ip_str)
-			MyFree(cptr->user->ip_str);
-		cptr->user->ip_str = strdup(ip);
+		safefree(cptr->ip);
+		cptr->ip = strdup(ip);
 	}
 		
 	/* STEP 3: Update cptr->local->hostp */

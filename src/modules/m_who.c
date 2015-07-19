@@ -486,7 +486,7 @@ char has_common_chan = 0;
 		{
 			char *ip;
 
-			ip = acptr->user->ip_str;
+			ip = acptr->ip;
 			if (!ip)
 				return WHO_CANTSEE;
 
@@ -713,7 +713,7 @@ int oper = IsOper(sptr);
 					goto matchok;
 				if (IsHidden(acptr) && !match(mask, acptr->user->virthost))
 					goto matchok;
-				if (acptr->user->ip_str && !match(mask, acptr->user->ip_str))
+				if (acptr->ip && !match(mask, acptr->ip))
 					goto matchok;
 				/* nothing matched... */
 				continue;
@@ -768,8 +768,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 		if (who_flags & WF_REALHOST)
 			host = acptr->user->realhost;
 		else if (who_flags & WF_IP)
-			host = (acptr->user->ip_str ? acptr->user->ip_str : 
-			        acptr->user->realhost);
+			host = (acptr->ip ? acptr->ip : acptr->user->realhost);
 		else
 			host = GetHost(acptr);
 	}

@@ -168,7 +168,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, rpl_str(RPL_WHOISHOST),
 				    me.name, sptr->name, acptr->name,
 					(MyConnect(acptr) && strcmp(acptr->username, "unknown")) ? acptr->username : "*",
-					acptr->user->realhost, acptr->user->ip_str ? acptr->user->ip_str : "");
+					acptr->user->realhost, acptr->ip ? acptr->ip : "");
 			}
 
 			if (IsARegNick(acptr))
