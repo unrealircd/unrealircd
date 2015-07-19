@@ -255,7 +255,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					}
 
 					access = get_access(acptr, chptr);
-					if (!SupportNAMESX(sptr))
+					if (!MyClient(sptr) || !SupportNAMESX(sptr))
 					{
 #ifdef PREFIX_AQ
 						if (access & CHFL_CHANOWNER)
