@@ -414,9 +414,9 @@ int  ssl_handshake(aClient *cptr)
 		return -1;
 	}
 
-	cptr->ssl = SSL_new(ctx_server);
-	CHK_NULL(cptr->ssl);
-	SSL_set_fd(cptr->ssl, cptr->fd);
+	cptr->local->ssl = SSL_new(ctx_server);
+	CHK_NULL(cptr->local->ssl);
+	SSL_set_fd(cptr->local->ssl, cptr->fd);
 	set_non_blocking(cptr->fd, cptr);
 	/* 
 	 *  if necessary, SSL_write() will negotiate a TLS/SSL session, if not already explicitly
@@ -426,10 +426,10 @@ int  ssl_handshake(aClient *cptr)
 	 *   
 	 */
 	if (!ircd_SSL_accept(cptr, cptr->fd)) {
-		SSL_set_shutdown(cptr->ssl, SSL_RECEIVED_SHUTDOWN);
-		SSL_smart_shutdown(cptr->ssl);
-		SSL_free(cptr->ssl);
-		cptr->ssl = NULL;
+		SSL_set_shutdown(cptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
+		SSL_smart_shutdown(cptr->local->ssl);
+		SSL_free(cptr->local->ssl);
+		cptr->local->ssl = NULL;
 		return -1;
 	}
 	return 0;
@@ -448,19 +448,19 @@ int  ssl_handshake(aClient *cptr)
 */
 int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 {
-	cptr->ssl = SSL_new((SSL_CTX *)ctx_client);
-	if (!cptr->ssl)
+	cptr->local->ssl = SSL_new((SSL_CTX *)ctx_client);
+	if (!cptr->local->ssl)
 	{
 		sendto_realops("Couldn't SSL_new(ctx_client) on %s",
 			get_client_name(cptr, FALSE));
 		return -1;
 	}
 /*	set_blocking(cptr->fd); */
-	SSL_set_fd(cptr->ssl, cptr->fd);
-	SSL_set_connect_state(cptr->ssl);
+	SSL_set_fd(cptr->local->ssl, cptr->fd);
+	SSL_set_connect_state(cptr->local->ssl);
 	if (l && l->ciphers)
 	{
-		if (SSL_set_cipher_list(cptr->ssl, l->ciphers) == 0)
+		if (SSL_set_cipher_list(cptr->local->ssl, l->ciphers) == 0)
 		{
 			/* We abort */
 			sendto_realops("SSL cipher selecting for %s was unsuccesful (%s)",
@@ -468,7 +468,7 @@ int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 			return -2;
 		}
 	}
-	if (SSL_connect(cptr->ssl) <= 0)
+	if (SSL_connect(cptr->local->ssl) <= 0)
 	{
 #if 0
 		sendto_realops("Couldn't SSL_connect");
@@ -523,29 +523,29 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 		return;
 	}
 
-	acptr->ssl = SSL_new(ctx_client);
-	if (!acptr->ssl)
+	acptr->local->ssl = SSL_new(ctx_client);
+	if (!acptr->local->ssl)
 	{
 		sendto_realops("Failed to SSL_new(ctx_client)");
 		return;
 	}
-	SSL_set_fd(acptr->ssl, acptr->fd);
-	SSL_set_connect_state(acptr->ssl);
-	SSL_set_nonblocking(acptr->ssl);
+	SSL_set_fd(acptr->local->ssl, acptr->fd);
+	SSL_set_connect_state(acptr->local->ssl);
+	SSL_set_nonblocking(acptr->local->ssl);
         if (iConf.ssl_renegotiate_bytes > 0)
 	{
-          BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->ssl), iConf.ssl_renegotiate_bytes);
-          BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->ssl), iConf.ssl_renegotiate_bytes);
+          BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->local->ssl), iConf.ssl_renegotiate_bytes);
+          BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->local->ssl), iConf.ssl_renegotiate_bytes);
         }
         if (iConf.ssl_renegotiate_timeout > 0)
         {
-          BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->ssl), iConf.ssl_renegotiate_timeout);
-          BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->ssl), iConf.ssl_renegotiate_timeout);
+          BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->local->ssl), iConf.ssl_renegotiate_timeout);
+          BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->local->ssl), iConf.ssl_renegotiate_timeout);
         }
 
 	if (acptr->serv && acptr->serv->conf->ciphers)
 	{
-		if (SSL_set_cipher_list(acptr->ssl, 
+		if (SSL_set_cipher_list(acptr->local->ssl, 
 			acptr->serv->conf->ciphers) == 0)
 		{
 			/* We abort */
@@ -605,9 +605,9 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 			acptr->flags |= FLAGS_NCALL;
 	}
 #endif
-    if ((ssl_err = SSL_accept(acptr->ssl)) <= 0)
+    if ((ssl_err = SSL_accept(acptr->local->ssl)) <= 0)
     {
-		switch(ssl_err = SSL_get_error(acptr->ssl, ssl_err))
+		switch(ssl_err = SSL_get_error(acptr->local->ssl, ssl_err))
 		{
 			case SSL_ERROR_SYSCALL:
 				if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
@@ -644,9 +644,9 @@ static void ircd_SSL_connect_retry(int fd, int revents, void *data)
 int ircd_SSL_connect(aClient *acptr, int fd) {
 
     int ssl_err;
-    if((ssl_err = SSL_connect(acptr->ssl)) <= 0)
+    if((ssl_err = SSL_connect(acptr->local->ssl)) <= 0)
     {
-	ssl_err = SSL_get_error(acptr->ssl, ssl_err);
+	ssl_err = SSL_get_error(acptr->local->ssl, ssl_err);
 	switch(ssl_err)
 	{
 	    case SSL_ERROR_SYSCALL:
@@ -772,10 +772,10 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 	if (errtmp)
 	{
 		SET_ERRNO(errtmp);
-		sptr->error_str = strdup(strerror(errtmp));
+		sptr->local->error_str = strdup(strerror(errtmp));
 	} else {
 		SET_ERRNO(P_EIO);
-		sptr->error_str = strdup(ssl_errstr);
+		sptr->local->error_str = strdup(ssl_errstr);
 	}
 	
     /* deregister I/O notification since we don't care anymore. the actual closing of socket will happen later. */
@@ -787,20 +787,20 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 
 int client_starttls(aClient *acptr)
 {
-	if ((acptr->ssl = SSL_new(ctx_client)) == NULL)
+	if ((acptr->local->ssl = SSL_new(ctx_client)) == NULL)
 		goto fail_starttls;
 
 	acptr->flags |= FLAGS_SSL;
 
-	SSL_set_fd(acptr->ssl, acptr->fd);
-	SSL_set_nonblocking(acptr->ssl);
+	SSL_set_fd(acptr->local->ssl, acptr->fd);
+	SSL_set_nonblocking(acptr->local->ssl);
 
 	if (ircd_SSL_connect(acptr, acptr->fd) < 0)
 	{
 		Debug((DEBUG_DEBUG, "Failed SSL connect handshake in instance 1: %s", acptr->name));
-		SSL_set_shutdown(acptr->ssl, SSL_RECEIVED_SHUTDOWN);
-		SSL_smart_shutdown(acptr->ssl);
-		SSL_free(acptr->ssl);
+		SSL_set_shutdown(acptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
+		SSL_smart_shutdown(acptr->local->ssl);
+		SSL_free(acptr->local->ssl);
 		goto fail_starttls;
 	}
 
@@ -809,7 +809,7 @@ int client_starttls(aClient *acptr)
 fail_starttls:
 	/* Failure */
 	sendto_one(acptr, err_str(ERR_STARTTLS), me.name, !BadPtr(acptr->name) ? acptr->name : "*", "STARTTLS failed");
-	acptr->ssl = NULL;
+	acptr->local->ssl = NULL;
 	acptr->flags &= ~FLAGS_SSL;
 	SetUnknown(acptr);
 	return 0; /* hm. we allow to continue anyway. not sure if we want that. */

@@ -105,7 +105,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			ocomment = sptr->name;
 		
 		if (!ValidatePermissionsForPath("immune:antispamtimer",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
-			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+			if (sptr->local->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 				ocomment = sptr->name;
 
                 for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT]; tmphook; tmphook = tmphook->next)

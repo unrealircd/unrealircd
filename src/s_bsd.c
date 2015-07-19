@@ -154,9 +154,9 @@ void close_connections(void)
 			cptr->fd = -2;
 		}
 
-		if (cptr->authfd >= 0)
+		if (cptr->local->authfd >= 0)
 		{
-			fd_close(cptr->authfd);
+			fd_close(cptr->local->authfd);
 			cptr->fd = -1;
 		}
 	}
@@ -675,17 +675,17 @@ void write_pidfile(void)
  */
 static int check_init(aClient *cptr, char *sockn, size_t size)
 {
-	strlcpy(sockn, cptr->sockhost, HOSTLEN);
+	strlcpy(sockn, cptr->local->sockhost, HOSTLEN);
 	
 	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, ==0);
 
 	/* Some silly hack to convert 127.0.0.1 and such into 'localhost' */
 	if (IsLocal(cptr))
 	{
-		if (cptr->hostp)
+		if (cptr->local->hostp)
 		{
-			unreal_free_hostent(cptr->hostp);
-			cptr->hostp = NULL;
+			unreal_free_hostent(cptr->local->hostp);
+			cptr->local->hostp = NULL;
 		}
 		strlcpy(sockn, "localhost", HOSTLEN);
 	}
@@ -708,12 +708,12 @@ int  check_client(aClient *cptr, char *username)
 	
 	ClearAccess(cptr);
 	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]",
-	    cptr->name, inetntoa((char *)&cptr->ip)));
+	    cptr->name, inetntoa((char *)&cptr->local->ip)));
 
 	if (check_init(cptr, sockname, sizeof(sockname)))
 		return -2;
 
-	hp = cptr->hostp;
+	hp = cptr->local->hostp;
 	/*
 	 * Verify that the host to ip mapping is correct both ways and that
 	 * the ip#(s) for the socket is listed for the host.
@@ -721,13 +721,13 @@ int  check_client(aClient *cptr, char *username)
 	if (hp)
 	{
 		for (i = 0; hp->h_addr_list[i]; i++)
-			if (!bcmp(hp->h_addr_list[i], (char *)&cptr->ip,
+			if (!bcmp(hp->h_addr_list[i], (char *)&cptr->local->ip,
 			    sizeof(struct IN_ADDR)))
 				break;
 		if (!hp->h_addr_list[i])
 		{
 			sendto_snomask(SNO_JUNK, "IP# Mismatch: %s != %s[%08lx]",
-			    Inet_ia2p((struct IN_ADDR *)&cptr->ip), hp->h_name,
+			    Inet_ia2p((struct IN_ADDR *)&cptr->local->ip), hp->h_name,
 			    *((unsigned long *)hp->h_addr));
 			hp = NULL;
 		}
@@ -818,7 +818,7 @@ void completed_connection(int fd, int revents, void *data)
 		return;
 	}
 
-	if (!cptr->ssl && !(aconf->outgoing.options & CONNECT_INSECURE))
+	if (!cptr->local->ssl && !(aconf->outgoing.options & CONNECT_INSECURE))
 	{
 		sendto_one(cptr, "STARTTLS");
 	} else
@@ -848,11 +848,11 @@ void close_connection(aClient *cptr)
 	if (IsServer(cptr))
 	{
 		ircstp->is_sv++;
-		ircstp->is_sbs += cptr->sendB;
-		ircstp->is_sbr += cptr->receiveB;
-		ircstp->is_sks += cptr->sendK;
-		ircstp->is_skr += cptr->receiveK;
-		ircstp->is_sti += TStime() - cptr->firsttime;
+		ircstp->is_sbs += cptr->local->sendB;
+		ircstp->is_sbr += cptr->local->receiveB;
+		ircstp->is_sks += cptr->local->sendK;
+		ircstp->is_skr += cptr->local->receiveK;
+		ircstp->is_sti += TStime() - cptr->local->firsttime;
 		if (ircstp->is_sbs > 1023)
 		{
 			ircstp->is_sks += (ircstp->is_sbs >> 10);
@@ -867,11 +867,11 @@ void close_connection(aClient *cptr)
 	else if (IsClient(cptr))
 	{
 		ircstp->is_cl++;
-		ircstp->is_cbs += cptr->sendB;
-		ircstp->is_cbr += cptr->receiveB;
-		ircstp->is_cks += cptr->sendK;
-		ircstp->is_ckr += cptr->receiveK;
-		ircstp->is_cti += TStime() - cptr->firsttime;
+		ircstp->is_cbs += cptr->local->sendB;
+		ircstp->is_cbr += cptr->local->receiveB;
+		ircstp->is_cks += cptr->local->sendK;
+		ircstp->is_ckr += cptr->local->receiveK;
+		ircstp->is_cti += TStime() - cptr->local->firsttime;
 		if (ircstp->is_cbs > 1023)
 		{
 			ircstp->is_cks += (ircstp->is_cbs >> 10);
@@ -891,27 +891,27 @@ void close_connection(aClient *cptr)
 	 */
 	unrealdns_delreq_bycptr(cptr);
 
-	if (cptr->authfd >= 0)
+	if (cptr->local->authfd >= 0)
 	{
-		fd_close(cptr->authfd);
-		cptr->authfd = -1;
+		fd_close(cptr->local->authfd);
+		cptr->local->authfd = -1;
 		--OpenFiles;
 	}
 
 	if (cptr->fd >= 0)
 	{
 		send_queued(cptr);
-		if (IsSSL(cptr) && cptr->ssl) {
-			SSL_set_shutdown(cptr->ssl, SSL_RECEIVED_SHUTDOWN);
-			SSL_smart_shutdown(cptr->ssl);
-			SSL_free(cptr->ssl);
-			cptr->ssl = NULL;
+		if (IsSSL(cptr) && cptr->local->ssl) {
+			SSL_set_shutdown(cptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
+			SSL_smart_shutdown(cptr->local->ssl);
+			SSL_free(cptr->local->ssl);
+			cptr->local->ssl = NULL;
 		}
 		fd_close(cptr->fd);
 		cptr->fd = -2;
 		--OpenFiles;
-		DBufClear(&cptr->sendQ);
-		DBufClear(&cptr->recvQ);
+		DBufClear(&cptr->local->sendQ);
+		DBufClear(&cptr->local->recvQ);
 
 	}
 
@@ -1154,20 +1154,20 @@ add_con_refuse:
 		 * have something valid to put into error messages...
 		 */
 		get_sockhost(acptr, Inet_si2p(&addr));
-		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->ip, sizeof(struct IN_ADDR));
+		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->local->ip, sizeof(struct IN_ADDR));
 
 		/* Tag loopback connections as FLAGS_LOCAL */
 #ifdef INET6
-		if (IN6_IS_ADDR_LOOPBACK(&acptr->ip) ||
-			(acptr->ip.s6_addr[0] == mysk.sin6_addr.s6_addr[0] &&
-			acptr->ip.s6_addr[1] == mysk.sin6_addr.s6_addr[1])
+		if (IN6_IS_ADDR_LOOPBACK(&acptr->local->ip) ||
+			(acptr->local->ip.s6_addr[0] == mysk.sin6_addr.s6_addr[0] &&
+			acptr->local->ip.s6_addr[1] == mysk.sin6_addr.s6_addr[1])
 	/* ||
-			   IN6_ARE_ADDR_SAMEPREFIX(&acptr->ip, &mysk.SIN_ADDR))
+			   IN6_ARE_ADDR_SAMEPREFIX(&acptr->local->ip, &mysk.SIN_ADDR))
 	 about the same, I think              NOT */
 			)
 #else
-		if (inet_netof(acptr->ip) == IN_LOOPBACKNET ||
-			inet_netof(acptr->ip) == inet_netof(mysk.SIN_ADDR))
+		if (inet_netof(acptr->local->ip) == IN_LOOPBACKNET ||
+			inet_netof(acptr->local->ip) == inet_netof(mysk.SIN_ADDR))
 #endif
 		{
 			ircstp->is_loc++;
@@ -1178,9 +1178,9 @@ add_con_refuse:
 
 		list_for_each_entry(acptr2, &unknown_list, lclient_node)
 #ifndef INET6
-			if (acptr2->ip.S_ADDR == acptr->ip.S_ADDR)
+			if (acptr2->local->ip.S_ADDR == acptr->local->ip.S_ADDR)
 #else
-			if (!bcmp(acptr2->ip.S_ADDR, acptr->ip.S_ADDR, sizeof(acptr->ip.S_ADDR)))
+			if (!bcmp(acptr2->ip.S_ADDR, acptr->local->ip.S_ADDR, sizeof(acptr->local->ip.S_ADDR)))
 #endif
 			{
 				j++;
@@ -1189,7 +1189,7 @@ add_con_refuse:
 					ircsnprintf(zlinebuf, sizeof(zlinebuf),
 						"ERROR :Closing Link: [%s] (Too many unknown connections from your IP)"
 						"\r\n",
-						Inet_ia2p(&acptr->ip));
+						Inet_ia2p(&acptr->local->ip));
 					set_non_blocking(fd, acptr);
 					set_sock_opts(fd, acptr);
 					send(fd, zlinebuf, strlen(zlinebuf), 0);
@@ -1197,13 +1197,13 @@ add_con_refuse:
 				}
 			}
 
-		if ((bconf = Find_ban(acptr, Inet_ia2p(&acptr->ip), CONF_BAN_IP))) {
+		if ((bconf = Find_ban(acptr, Inet_ia2p(&acptr->local->ip), CONF_BAN_IP))) {
 			if (bconf)
 			{
 				ircsnprintf(zlinebuf, sizeof(zlinebuf),
 					"ERROR :Closing Link: [%s] (You are not welcome on "
 					"this server: %s. Email %s for more information.)\r\n",
-					Inet_ia2p(&acptr->ip),
+					Inet_ia2p(&acptr->local->ip),
 					bconf->reason ? bconf->reason : "no reason",
 					KLINE_ADDRESS);
 				set_non_blocking(fd, acptr);
@@ -1222,12 +1222,12 @@ add_con_refuse:
 		else
 		{
 			int val;
-			if (!(val = throttle_can_connect(acptr, &acptr->ip)))
+			if (!(val = throttle_can_connect(acptr, &acptr->local->ip)))
 			{
 				ircsnprintf(zlinebuf, sizeof(zlinebuf),
 					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
 						"Email %s for more information.\r\n",
-						Inet_ia2p(&acptr->ip),
+						Inet_ia2p(&acptr->local->ip),
 						KLINE_ADDRESS);
 				set_non_blocking(fd, acptr);
 				set_sock_opts(fd, acptr);
@@ -1235,15 +1235,15 @@ add_con_refuse:
 				goto add_con_refuse;
 			}
 			else if (val == 1)
-				add_throttling_bucket(&acptr->ip);
+				add_throttling_bucket(&acptr->local->ip);
 		}
-		acptr->port = ntohs(addr.SIN_PORT);
+		acptr->local->port = ntohs(addr.SIN_PORT);
 	}
 
 	acptr->fd = fd;
-	acptr->listener = cptr;
-	if (acptr->listener != NULL)
-		acptr->listener->clients++;
+	acptr->local->listener = cptr;
+	if (acptr->local->listener != NULL)
+		acptr->local->listener->clients++;
 	add_client_to_list(acptr);
 
 	set_non_blocking(acptr->fd, acptr);
@@ -1256,19 +1256,19 @@ add_con_refuse:
 	if ((cptr->options & LISTENER_SSL) && ctx_server)
 	{
 		SetSSLAcceptHandshake(acptr);
-		Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", acptr->sockhost));
-		if ((acptr->ssl = SSL_new(ctx_server)) == NULL)
+		Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", acptr->local->sockhost));
+		if ((acptr->local->ssl = SSL_new(ctx_server)) == NULL)
 		{
 			goto add_con_refuse;
 		}
 		acptr->flags |= FLAGS_SSL;
-		SSL_set_fd(acptr->ssl, fd);
-		SSL_set_nonblocking(acptr->ssl);
+		SSL_set_fd(acptr->local->ssl, fd);
+		SSL_set_nonblocking(acptr->local->ssl);
 		if (!ircd_SSL_accept(acptr, fd)) {
-			Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", acptr->sockhost));
-			SSL_set_shutdown(acptr->ssl, SSL_RECEIVED_SHUTDOWN);
-			SSL_smart_shutdown(acptr->ssl);
-  	                SSL_free(acptr->ssl);
+			Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", acptr->local->sockhost));
+			SSL_set_shutdown(acptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
+			SSL_smart_shutdown(acptr->local->ssl);
+  	                SSL_free(acptr->local->ssl);
 	  	        goto add_con_refuse;
 	  	}
 	}
@@ -1289,13 +1289,13 @@ struct hostent *he;
 
 	if (!DONT_RESOLVE)
 	{
-		if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->listener))
+		if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->local->listener))
 			sendto_one(acptr, "%s", REPORT_DO_DNS);
 		dns_special_flag = 1;
 		he = unrealdns_doclient(acptr);
 		dns_special_flag = 0;
 
-		if (acptr->hostp)
+		if (acptr->local->hostp)
 			goto doauth; /* Race condition detected, DNS has been done, continue with auth */
 
 		if (!he)
@@ -1304,8 +1304,8 @@ struct hostent *he;
 			SetDNS(acptr);
 		} else {
 			/* Host was in our cache */
-			acptr->hostp = he;
-			if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->listener))
+			acptr->local->hostp = he;
+			if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->local->listener))
 				sendto_one(acptr, "%s", REPORT_FIN_DNSC);
 		}
 	}
@@ -1318,9 +1318,9 @@ doauth:
 void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 {
 	ClearDNS(acptr);
-	acptr->hostp = he;
-	if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->listener))
-		sendto_one(acptr, "%s", acptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
+	acptr->local->hostp = he;
+	if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->local->listener))
+		sendto_one(acptr, "%s", acptr->local->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 
 	if (!dns_special_flag && !DoingAuth(acptr))
 		finish_auth(acptr);
@@ -1354,10 +1354,10 @@ static int parse_client_queued(aClient *cptr)
 	if (DoingDNS(cptr))
 		return 0; /* we delay processing of data until the host is resolved */
 
-	while (DBufLength(&cptr->recvQ) &&
-	    ((cptr->status < STAT_UNKNOWN) || (cptr->since - now < 10)))
+	while (DBufLength(&cptr->local->recvQ) &&
+	    ((cptr->status < STAT_UNKNOWN) || (cptr->local->since - now < 10)))
 	{
-		dolen = dbuf_getmsg(&cptr->recvQ, buf);
+		dolen = dbuf_getmsg(&cptr->local->recvQ, buf);
 
 		if (dolen == 0)
 			return 0;
@@ -1383,13 +1383,13 @@ void read_packet(int fd, int revents, void *data)
 
 	while (1)
 	{
-		if (IsSSL(cptr) && cptr->ssl != NULL)
+		if (IsSSL(cptr) && cptr->local->ssl != NULL)
 		{
-			length = SSL_read(cptr->ssl, readbuf, sizeof(readbuf));
+			length = SSL_read(cptr->local->ssl, readbuf, sizeof(readbuf));
 
 			if (length < 0)
 			{
-				int err = SSL_get_error(cptr->ssl, length);
+				int err = SSL_get_error(cptr->local->ssl, length);
 
 				switch (err)
 				{
@@ -1431,9 +1431,9 @@ void read_packet(int fd, int revents, void *data)
 			return;
 		}
 
-		cptr->lasttime = now;
-		if (cptr->lasttime > cptr->since)
-			cptr->since = cptr->lasttime;
+		cptr->local->lasttime = now;
+		if (cptr->local->lasttime > cptr->local->since)
+			cptr->local->since = cptr->local->lasttime;
 		cptr->flags &= ~(FLAGS_PINGSENT | FLAGS_NONL);
 
 		for (h = Hooks[HOOKTYPE_RAWPACKET_IN]; h; h = h->next)
@@ -1443,7 +1443,7 @@ void read_packet(int fd, int revents, void *data)
 				return;
 		}
 
-		dbuf_put(&cptr->recvQ, readbuf, length);
+		dbuf_put(&cptr->local->recvQ, readbuf, length);
 
 		/* parse some of what we have (inducing fakelag, etc) */
 		if (!(DoingDNS(cptr) || DoingAuth(cptr)))
@@ -1451,14 +1451,14 @@ void read_packet(int fd, int revents, void *data)
 				return;
 
 		/* excess flood check */
-		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > get_recvq(cptr))
+		if (IsPerson(cptr) && DBufLength(&cptr->local->recvQ) > get_recvq(cptr))
 		{
 			sendto_snomask(SNO_FLOOD,
 			    "*** Flood -- %s!%s@%s (%d) exceeds %d recvQ",
 			    cptr->name[0] ? cptr->name : "*",
 			    cptr->user ? cptr->user->username : "*",
 			    cptr->user ? cptr->user->realhost : "*",
-			    DBufLength(&cptr->recvQ), get_recvq(cptr));
+			    DBufLength(&cptr->local->recvQ), get_recvq(cptr));
 			exit_client(cptr, cptr, cptr, "Excess Flood");
 			return;
 		}
@@ -1475,11 +1475,11 @@ void process_clients(void)
         aClient *cptr, *cptr2;
 
         list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
-                if ((cptr->fd >= 0) && DBufLength(&cptr->recvQ))
+                if ((cptr->fd >= 0) && DBufLength(&cptr->local->recvQ))
                         parse_client_queued(cptr);
 
         list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
-                if ((cptr->fd >= 0) && DBufLength(&cptr->recvQ))
+                if ((cptr->fd >= 0) && DBufLength(&cptr->local->recvQ))
                         parse_client_queued(cptr);
 }
 
@@ -1542,12 +1542,12 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 		}
 	}
 	cptr = make_client(NULL, NULL);
-	cptr->hostp = hp;
+	cptr->local->hostp = hp;
 	/*
 	 * Copy these in so we have something for error detection.
 	 */
 	strlcpy(cptr->name, aconf->servername, sizeof(cptr->name));
-	strlcpy(cptr->sockhost, aconf->outgoing.hostname, HOSTLEN + 1);
+	strlcpy(cptr->local->sockhost, aconf->outgoing.hostname, HOSTLEN + 1);
 
 	svp = connect_inet(aconf, cptr, &len);
 	if (!svp)
@@ -1707,7 +1707,7 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 	if (aconf->ipnum.S_ADDR == -1)
 #endif
 	{
-		hp = cptr->hostp;
+		hp = cptr->local->hostp;
 		if (!hp)
 		{
 			Debug((DEBUG_FATAL, "%s: unknown host", aconf->outgoing.hostname));
@@ -1716,7 +1716,7 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 		bcopy(hp->h_addr, (char *)&aconf->ipnum, sizeof(struct IN_ADDR));
 	}
 	bcopy((char *)&aconf->ipnum, (char *)&server.SIN_ADDR, sizeof(struct IN_ADDR));
-	bcopy((char *)&aconf->ipnum, (char *)&cptr->ip, sizeof(struct IN_ADDR));
+	bcopy((char *)&aconf->ipnum, (char *)&cptr->local->ip, sizeof(struct IN_ADDR));
 	server.SIN_PORT = htons(((aconf->outgoing.port > 0) ? aconf->outgoing.port : portnum));
 	*lenp = sizeof(server);
 	return (struct SOCKADDR *)&server;

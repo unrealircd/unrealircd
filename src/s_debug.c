@@ -242,7 +242,7 @@ void send_usage(aClient *cptr, char *nick)
 		return;
 	}
 	secs = rus.ru_utime.tv_sec + rus.ru_stime.tv_sec;
-	rup = TStime() - me.since;
+	rup = TStime() - me.local->since;
 	if (secs == 0)
 		secs = 1;
 
@@ -306,6 +306,6 @@ int checkprotoflags(aClient *sptr, int flags, char *file, int line)
 	if (!MyConnect(sptr))
 		ircd_log(LOG_ERROR, "[Debug] [BUG] ERROR: %s:%d: IsToken(<%s>,%d) on remote client",
 		         file, line, sptr->name, flags);
-	return (sptr->proto & flags) ? 1 : 0;
+	return (sptr->local->proto & flags) ? 1 : 0;
 }
 #endif

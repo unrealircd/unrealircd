@@ -305,38 +305,38 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 
 	if (ValidatePermissionsForPath("immune:limits",sptr,NULL,NULL,NULL))
 		return 0;
-	if (sptr->targets[0] == hash)
+	if (sptr->local->targets[0] == hash)
 		return 0;
 
-	for (p = sptr->targets; p < &sptr->targets[MAXTARGETS - 1];)
+	for (p = sptr->local->targets; p < &sptr->local->targets[MAXTARGETS - 1];)
 		if (*++p == hash)
 		{
 			/* move targethash to first position... */
-			memmove(&sptr->targets[1], &sptr->targets[0],
-			    p - sptr->targets);
-			sptr->targets[0] = hash;
+			memmove(&sptr->local->targets[1], &sptr->local->targets[0],
+			    p - sptr->local->targets);
+			sptr->local->targets[0] = hash;
 			return 0;
 		}
 
-	if (TStime() < sptr->nexttarget)
+	if (TStime() < sptr->local->nexttarget)
 	{
-		sptr->since += TARGET_DELAY; /* lag them up */
-		sptr->nexttarget += TARGET_DELAY;
+		sptr->local->since += TARGET_DELAY; /* lag them up */
+		sptr->local->nexttarget += TARGET_DELAY;
 		sendto_one(sptr, err_str(ERR_TARGETTOOFAST), me.name, sptr->name,
-			name, sptr->nexttarget - TStime());
+			name, sptr->local->nexttarget - TStime());
 
 		return 1;
 	}
 
-	if (TStime() > sptr->nexttarget + TARGET_DELAY*MAXTARGETS)
+	if (TStime() > sptr->local->nexttarget + TARGET_DELAY*MAXTARGETS)
 	{
-		sptr->nexttarget = TStime() - TARGET_DELAY*MAXTARGETS;
+		sptr->local->nexttarget = TStime() - TARGET_DELAY*MAXTARGETS;
 	}
 
-	sptr->nexttarget += TARGET_DELAY;
+	sptr->local->nexttarget += TARGET_DELAY;
 
-	memmove(&sptr->targets[1], &sptr->targets[0], MAXTARGETS - 1);
-	sptr->targets[0] = hash;
+	memmove(&sptr->local->targets[1], &sptr->local->targets[0], MAXTARGETS - 1);
+	sptr->local->targets[0] = hash;
 #endif
 	return 0;
 }

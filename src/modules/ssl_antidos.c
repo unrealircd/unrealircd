@@ -95,12 +95,12 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
  */
 int ssl_antidos_handshake(aClient *acptr)
 {
-	if (acptr->ssl)
+	if (acptr->local->ssl)
 	{
 		SAD *sad = MyMallocEx(sizeof(SAD));
 		sad->acptr = acptr;
-		SSL_set_info_callback(acptr->ssl, ssl_info_callback);
-		SSL_set_ex_data(acptr->ssl, ssl_antidos_index, sad);
+		SSL_set_info_callback(acptr->local->ssl, ssl_info_callback);
+		SSL_set_ex_data(acptr->local->ssl, ssl_antidos_index, sad);
 	}
 	return 0;
 }

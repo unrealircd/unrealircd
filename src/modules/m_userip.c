@@ -131,7 +131,7 @@ DLLFUNC CMD_FUNC(m_userip)
 			    (acptr->user->away) ? '-' : '+',
 			    acptr->user->username, ip);
 			/* add extra fakelag (penalty) because of all the work we need to do: 1s per entry: */
-			sptr->since += 1;
+			sptr->local->since += 1;
 		}
 		if (p)
 			p++;

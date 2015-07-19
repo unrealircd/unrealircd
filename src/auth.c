@@ -527,9 +527,9 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			X509 *x509_filecert = NULL;
 			FILE *x509_f = NULL;
 
-			if (!cptr->ssl)
+			if (!cptr->local->ssl)
 				return -1;
-			x509_clientcert = SSL_get_peer_certificate(cptr->ssl);
+			x509_clientcert = SSL_get_peer_certificate(cptr->local->ssl);
 			if (!x509_clientcert)
 				return -1;
 			if (!(x509_f = fopen(as->data, "r")))
@@ -561,7 +561,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			char hexcolon[EVP_MAX_MD_SIZE * 3 + 1];
 			char *fp;
 
-			if (!cptr->ssl)
+			if (!cptr->local->ssl)
 				return -1;
 			
 			fp = moddata_client_get(cptr, "certfp");

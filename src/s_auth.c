@@ -47,16 +47,16 @@ void ident_failed(aClient *cptr)
 {
 	Debug((DEBUG_NOTICE, "ident_failed() for %x", cptr));
 	ircstp->is_abad++;
-	if (cptr->authfd != -1)
+	if (cptr->local->authfd != -1)
 	{
-		fd_close(cptr->authfd);
+		fd_close(cptr->local->authfd);
 		--OpenFiles;
-		cptr->authfd = -1;
+		cptr->local->authfd = -1;
 	}
 	cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
 	if (!DoingDNS(cptr))
 		finish_auth(cptr);
-	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->listener))
+	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
 		sendto_one(cptr, "%s", REPORT_FAIL_ID);
 }
 
@@ -84,7 +84,7 @@ void start_auth(aClient *cptr)
 	Debug((DEBUG_NOTICE, "start_auth(%x) fd=%d, status=%d",
 	    cptr, cptr->fd, cptr->status));
 	snprintf(buf, sizeof buf, "identd: %s", get_client_name(cptr, TRUE));
-	if ((cptr->authfd = fd_socket(AFINET, SOCK_STREAM, 0, buf)) == -1)
+	if ((cptr->local->authfd = fd_socket(AFINET, SOCK_STREAM, 0, buf)) == -1)
 	{
 		Debug((DEBUG_ERROR, "Unable to create auth socket for %s:%s",
 		    get_client_name(cptr, TRUE), strerror(get_sockerr(cptr))));
@@ -94,21 +94,21 @@ void start_auth(aClient *cptr)
 	if (++OpenFiles >= (MAXCONNECTIONS - 2))
 	{
 		sendto_ops("Can't allocate fd, too many connections.");
-		fd_close(cptr->authfd);
+		fd_close(cptr->local->authfd);
 		--OpenFiles;
-		cptr->authfd = -1;
+		cptr->local->authfd = -1;
 		return;
 	}
 
 #if defined(INET6) && defined(IPV6_V6ONLY)
         int opt = 0;
-        setsockopt(cptr->authfd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
+        setsockopt(cptr->local->authfd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
 #endif
 
-	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->listener))
+	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
 		sendto_one(cptr, "%s", REPORT_DO_ID);
 
-	set_non_blocking(cptr->authfd, cptr);
+	set_non_blocking(cptr->local->authfd, cptr);
 
 	/* Bind to the IP the user got in */
 	memset(&sock, 0, sizeof(sock));
@@ -122,23 +122,23 @@ void start_auth(aClient *cptr)
 #endif
 		sock.SIN_PORT = 0;
 		sock.SIN_FAMILY = AFINET;	/* redundant? */
-		(void)bind(cptr->authfd, (struct SOCKADDR *)&sock, sizeof(sock));
+		(void)bind(cptr->local->authfd, (struct SOCKADDR *)&sock, sizeof(sock));
 	}
 
-	bcopy((char *)&cptr->ip, (char *)&sock.SIN_ADDR,
+	bcopy((char *)&cptr->local->ip, (char *)&sock.SIN_ADDR,
 	    sizeof(struct IN_ADDR));
 
 	sock.SIN_PORT = htons(113);
 	sock.SIN_FAMILY = AFINET;
 
-	if (connect(cptr->authfd, (struct sockaddr *)&sock, sizeof(sock)) == -1 && !(ERRNO == P_EWORKING))
+	if (connect(cptr->local->authfd, (struct sockaddr *)&sock, sizeof(sock)) == -1 && !(ERRNO == P_EWORKING))
 	{
 		ident_failed(cptr);
 		return;
 	}
 	cptr->flags |= (FLAGS_WRAUTH | FLAGS_AUTH);
 
-	fd_setselect(cptr->authfd, FD_SELECT_WRITE, send_authports, cptr);
+	fd_setselect(cptr->local->authfd, FD_SELECT_WRITE, send_authports, cptr);
 
 	return;
 }
@@ -160,7 +160,7 @@ static void send_authports(int fd, int revents, void *data)
 	aClient *cptr = data;
 
 	Debug((DEBUG_NOTICE, "write_authports(%x) fd %d authfd %d stat %d",
-	    cptr, cptr->fd, cptr->authfd, cptr->status));
+	    cptr, cptr->fd, cptr->local->authfd, cptr->status));
 	tlen = ulen = sizeof(us);
 	if (getsockname(cptr->fd, (struct SOCKADDR *)&us, &ulen) ||
 	    getpeername(cptr->fd, (struct SOCKADDR *)&them, &tlen))
@@ -174,7 +174,7 @@ static void send_authports(int fd, int revents, void *data)
 
 	Debug((DEBUG_SEND, "sending [%s] to auth port %s.113",
 	    authbuf, inetntoa((char *)&them.SIN_ADDR)));
-	if (WRITE_SOCK(cptr->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
+	if (WRITE_SOCK(cptr->local->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
 	{
 		if (ERRNO == P_EAGAIN)
 			return; /* Not connected yet, try again later */
@@ -184,7 +184,7 @@ authsenderr:
 	}
 	cptr->flags &= ~FLAGS_WRAUTH;
 
-	fd_setselect(cptr->authfd, FD_SELECT_READ, read_authports, cptr);
+	fd_setselect(cptr->local->authfd, FD_SELECT_READ, read_authports, cptr);
 
 	return;
 }
@@ -206,7 +206,7 @@ static void read_authports(int fd, int revents, void *userdata)
 
 	*system = *ruser = '\0';
 	Debug((DEBUG_NOTICE, "read_authports(%x) fd %d authfd %d stat %d",
-	    cptr, cptr->fd, cptr->authfd, cptr->status));
+	    cptr, cptr->fd, cptr->local->authfd, cptr->status));
 	/*
 	 * Nasty.  Cant allow any other reads from client fd while we're
 	 * waiting on the authfd to return a full valid string.  Use the
@@ -214,21 +214,21 @@ static void read_authports(int fd, int revents, void *userdata)
 	 * Oh. this is needed because an authd reply may come back in more
 	 * than 1 read! -avalon
 	 */
-	  if ((len = READ_SOCK(cptr->authfd, cptr->buffer + cptr->count,
-		  sizeof(cptr->buffer) - 1 - cptr->count)) >= 0)
+	  if ((len = READ_SOCK(cptr->local->authfd, cptr->local->buffer + cptr->count,
+		  sizeof(cptr->local->buffer) - 1 - cptr->count)) >= 0)
 	{
 		cptr->count += len;
-		cptr->buffer[cptr->count] = '\0';
+		cptr->local->buffer[cptr->count] = '\0';
 	}
 
-	cptr->lasttime = TStime();
-	if ((len > 0) && (cptr->count != (sizeof(cptr->buffer) - 1)) &&
-	    (sscanf(cptr->buffer, "%hd , %hd : USERID : %*[^:]: %10s",
+	cptr->local->lasttime = TStime();
+	if ((len > 0) && (cptr->count != (sizeof(cptr->local->buffer) - 1)) &&
+	    (sscanf(cptr->local->buffer, "%hd , %hd : USERID : %*[^:]: %10s",
 	    &remp, &locp, ruser) == 3))
 	{
-		s = rindex(cptr->buffer, ':');
+		s = rindex(cptr->local->buffer, ':');
 		*s++ = '\0';
-		for (t = (rindex(cptr->buffer, ':') + 1); *t; t++)
+		for (t = (rindex(cptr->local->buffer, ':') + 1); *t; t++)
 			if (!isspace(*t))
 				break;
 		strlcpy(system, t, sizeof(system));
@@ -241,23 +241,23 @@ static void read_authports(int fd, int revents, void *userdata)
 	}
 	else if (len != 0)
 	{
-		if (!index(cptr->buffer, '\n') && !index(cptr->buffer, '\r'))
+		if (!index(cptr->local->buffer, '\n') && !index(cptr->local->buffer, '\r'))
 			return;
 		Debug((DEBUG_ERROR, "local %d remote %d", locp, remp));
-		Debug((DEBUG_ERROR, "bad auth reply in [%s]", cptr->buffer));
+		Debug((DEBUG_ERROR, "bad auth reply in [%s]", cptr->local->buffer));
 		*ruser = '\0';
 	}
-    fd_close(cptr->authfd);
+    fd_close(cptr->local->authfd);
     --OpenFiles;
-    cptr->authfd = -1;
+    cptr->local->authfd = -1;
 	cptr->count = 0;
 	ClearAuth(cptr);
 	if (!DoingDNS(cptr))
 		finish_auth(cptr);
 	if (len > 0)
-		Debug((DEBUG_INFO, "ident reply: [%s]", cptr->buffer));
+		Debug((DEBUG_INFO, "ident reply: [%s]", cptr->local->buffer));
 
-	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->listener))
+	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
 		sendto_one(cptr, "%s", REPORT_FIN_ID);
 
 	if (!locp || !remp || !*ruser)

@@ -145,13 +145,13 @@ aClient *make_client(aClient *from, aClient *servr)
 	{
 		/* Local client */
 		
-		cptr->local = MyMallocEx(sizeof(LocalClient));
+		cptr->local = MyMallocEx(sizeof(aLocalClient));
 		
 		INIT_LIST_HEAD(&cptr->lclient_node);
 		INIT_LIST_HEAD(&cptr->special_node);
 
 		cptr->local->since = cptr->local->lasttime =
-		cptr->local->lastnick = cptr->local->firsttime = TStime();
+		cptr->lastnick = cptr->local->firsttime = TStime();
 		cptr->local->class = NULL;
 		cptr->local->passwd = NULL;
 		cptr->local->sockhost[0] = '\0';

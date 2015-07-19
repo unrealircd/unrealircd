@@ -260,26 +260,26 @@ char ipv4[4];
 static struct hostent *he;
 char *cache_name, ipv6;
 
-	cache_name = unrealdns_findcache_byaddr(&cptr->ip);
+	cache_name = unrealdns_findcache_byaddr(&cptr->local->ip);
 	if (cache_name)
-		return unreal_create_hostent(cache_name, &cptr->ip);
+		return unreal_create_hostent(cache_name, &cptr->local->ip);
 
 	/* Create a request */
 	r = MyMallocEx(sizeof(DNSReq));
 	r->cptr = cptr;
-	r->ipv6 = isipv6(&cptr->ip);
+	r->ipv6 = isipv6(&cptr->local->ip);
 	unrealdns_addreqtolist(r);
 
 	/* Execute it */
 #ifndef INET6
 	/* easy */
-	ares_gethostbyaddr(resolver_channel, &cptr->ip, 4, AF_INET, unrealdns_cb_iptoname, r);
+	ares_gethostbyaddr(resolver_channel, &cptr->local->ip, 4, AF_INET, unrealdns_cb_iptoname, r);
 #else
 	if (r->ipv6)
-		ares_gethostbyaddr(resolver_channel, &cptr->ip, 16, AF_INET6, unrealdns_cb_iptoname, r);
+		ares_gethostbyaddr(resolver_channel, &cptr->local->ip, 16, AF_INET6, unrealdns_cb_iptoname, r);
 	else {
 		/* This is slightly more tricky: convert it to an IPv4 presentation and issue the request with that */
-		memcpy(ipv4, ((char *)&cptr->ip) + 12, 4);
+		memcpy(ipv4, ((char *)&cptr->local->ip) + 12, 4);
 		ares_gethostbyaddr(resolver_channel, ipv4, 4, AF_INET, unrealdns_cb_iptoname, r);
 	}
 #endif
@@ -397,9 +397,9 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 
 	if (!ipv6)
 #ifndef INET6
-		ipv4_addr = acptr->ip.S_ADDR;
+		ipv4_addr = acptr->local->ip.S_ADDR;
 #else
-		inet6_to_inet4(&acptr->ip, &ipv4_addr);
+		inet6_to_inet4(&acptr->local->ip, &ipv4_addr);
 #endif
 
 	/* Verify ip->name and name->ip mapping... */
@@ -411,7 +411,7 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 #else
 		if (ipv6)
 		{
-			if ((he->h_length == 16) && !memcmp(he->h_addr_list[i], &acptr->ip, 16))
+			if ((he->h_length == 16) && !memcmp(he->h_addr_list[i], &acptr->local->ip, 16))
 				break;
 		} else {
 			if ((he->h_length == 4) && !memcmp(he->h_addr_list[i], &ipv4_addr, 4))
@@ -435,9 +435,9 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 	}
 
 	/* Entry was found, verified, and can be added to cache */
-	unrealdns_addtocache(r->name, &acptr->ip, sizeof(acptr->ip));
+	unrealdns_addtocache(r->name, &acptr->local->ip, sizeof(acptr->local->ip));
 	
-	he2 = unreal_create_hostent(r->name, &acptr->ip);
+	he2 = unreal_create_hostent(r->name, &acptr->local->ip);
 	proceed_normal_client_handshake(acptr, he2);
 
 bad:
@@ -777,7 +777,7 @@ char *param;
 		sendtxtnumeric(sptr, "DNS Request List:");
 		for (r = requests; r; r = r->next)
 			sendtxtnumeric(sptr, " %s",
-				r->cptr ? Inet_ia2p(&r->cptr->ip) : "<client lost>");
+				r->cptr ? Inet_ia2p(&r->cptr->local->ip) : "<client lost>");
 	} else
 	if (*param == 'c') /* CLEAR CACHE */
 	{

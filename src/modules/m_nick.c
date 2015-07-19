@@ -564,7 +564,7 @@ DLLFUNC CMD_FUNC(m_nick)
 			}
 			if (!ValidatePermissionsForPath("override:nick:qline",sptr,NULL,NULL,nick))
 			{
-				sptr->since += 4; /* lag them up */
+				sptr->local->since += 4; /* lag them up */
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
 				    me.name, *sptr->name ? sptr->name : "*",
 				    nick, tklban->reason);
@@ -603,7 +603,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	}
 
 	if (MyClient(cptr) && ValidatePermissionsForPath("override:nick:flood",sptr,NULL,NULL,NULL))
-		cptr->since += 3;	/* Nick-flood prot. -Donwulff */
+		cptr->local->since += 3;	/* Nick-flood prot. -Donwulff */
 
 	if (!(acptr = find_client(nick, NULL)))
 		goto nickkilldone;	/* No collisions, all clear... */
@@ -960,9 +960,9 @@ DLLFUNC CMD_FUNC(m_nick)
 			 *
 			 * Generate a random string for them to pong with.
 			 */
-			sptr->nospoof = getrandom32();
+			sptr->local->nospoof = getrandom32();
 
-			sendto_one(sptr, "PING :%X", sptr->nospoof);
+			sendto_one(sptr, "PING :%X", sptr->local->nospoof);
 		}
 
 #ifdef CONTACT_EMAIL
@@ -985,8 +985,8 @@ DLLFUNC CMD_FUNC(m_nick)
 		 */
 		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN))
 		{
-			safefree(sptr->passwd);
-			sptr->passwd = strdup(parv[2]);
+			safefree(sptr->local->passwd);
+			sptr->local->passwd = strdup(parv[2]);
 		}
 		/* This had to be copied here to avoid problems.. */
 		strlcpy(sptr->name, nick, sizeof(sptr->name));
@@ -1103,7 +1103,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	};
 	aTKline *savetkl = NULL;
 	ConfigItem_tld *tlds;
-	cptr->last = TStime();
+	cptr->local->last = TStime();
 	nick = sptr->name; /* <- The data is always the same, but the pointer is sometimes not,
 	                    *    I need this for one of my modules, so do not remove! ;) -- Syzop */
 	
@@ -1129,19 +1129,19 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			    "You are not authorized to connect to this server");
 		}
 
-		if (sptr->hostp)
+		if (sptr->local->hostp)
 		{
 			/* reject ASCII < 32 and ASCII >= 127 (note: upper resolver might be even more strict). */
-			for (tmpstr = sptr->sockhost; *tmpstr > ' ' && *tmpstr < 127; tmpstr++);
+			for (tmpstr = sptr->local->sockhost; *tmpstr > ' ' && *tmpstr < 127; tmpstr++);
 			
 			/* if host contained invalid ASCII _OR_ the DNS reply is an IP-like reply
 			 * (like: 1.2.3.4 or ::ffff:1.2.3.4), then reject it and use IP instead.
 			 */
-			if (*tmpstr || !*user->realhost || (isdigit(*sptr->sockhost) && (sptr->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
-			    || (sptr->sockhost[0] == ':'))
-				strlcpy(sptr->sockhost, Inet_ia2p(&sptr->ip), sizeof(sptr->sockhost));
+			if (*tmpstr || !*user->realhost || (isdigit(*sptr->local->sockhost) && (sptr->local->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
+			    || (sptr->local->sockhost[0] == ':'))
+				strlcpy(sptr->local->sockhost, Inet_ia2p(&sptr->local->ip), sizeof(sptr->local->sockhost));
 		}
-		strlcpy(user->realhost, sptr->sockhost, sizeof(sptr->sockhost)); /* SET HOSTNAME */
+		strlcpy(user->realhost, sptr->local->sockhost, sizeof(sptr->local->sockhost)); /* SET HOSTNAME */
 
 		/*
 		 * I do not consider *, ~ or ! 'hostile' in usernames,
@@ -1334,12 +1334,12 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		if (sptr->flags & FLAGS_SSL)
 		{
-			if (sptr->ssl)
+			if (sptr->local->ssl)
 			{
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** You are connected to %s with %s",
 				    me.name, sptr->name, me.name,
-				    ssl_get_cipher(sptr->ssl));
+				    ssl_get_cipher(sptr->local->ssl));
 			}
 		}
 		
@@ -1391,7 +1391,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			    acptr->name, acptr->from->name);
 			sendto_one(cptr, ":%s KILL %s :%s (%s != %s[%s])",
 			    me.name, sptr->name, me.name, user->server,
-			    acptr->from->name, acptr->from->sockhost);
+			    acptr->from->name, acptr->from->local->sockhost);
 			sptr->flags |= FLAGS_KILLED;
 			return exit_client(sptr, sptr, &me,
 			    "USER server wrong direction");
@@ -1446,11 +1446,11 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		sendto_connectnotice(nick, user, sptr, 0, NULL); /* moved down, for modules. */
 
-		/* Send password from sptr->passwd to NickServ for identification,
+		/* Send password from sptr->local->passwd to NickServ for identification,
 		 * if passwd given and if NickServ is online.
 		 * - by taz, modified by Wizzu
 		 */
-		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
+		if (sptr->local->passwd && (nsptr = find_person(NickServ, NULL)))
 		{
 			int do_identify = 1;
 			Hook *h;
@@ -1466,7 +1466,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			if (do_identify)
 				sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 				    sptr->name,
-				    NickServ, SERVICES_NAME, sptr->passwd);
+				    NickServ, SERVICES_NAME, sptr->local->passwd);
 		}
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
@@ -1507,10 +1507,10 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		/* NOTE: If you add something here.. be sure to check the 'if (savetkl)' note above */
 	}
 
-	if (MyConnect(sptr) && !BadPtr(sptr->passwd))
+	if (MyConnect(sptr) && !BadPtr(sptr->local->passwd))
 	{
-		MyFree(sptr->passwd);
-		sptr->passwd = NULL;
+		MyFree(sptr->local->passwd);
+		sptr->local->passwd = NULL;
 	}
 	return 0;
 }

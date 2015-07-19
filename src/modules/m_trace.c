@@ -170,7 +170,7 @@ DLLFUNC CMD_FUNC(m_trace)
 		if (!dow && mycmp(tname, acptr->name))
 			continue;
 		name = get_client_name(acptr, FALSE);
-		class = acptr->class ? acptr->class->name : "default";
+		class = acptr->local->class ? acptr->local->class->name : "default";
 		switch (acptr->status)
 		{
 		  case STAT_CONNECTING:
@@ -203,13 +203,13 @@ DLLFUNC CMD_FUNC(m_trace)
 					      me.name,
 					      sptr->name, class, acptr->name,
 					      GetHost(acptr),
-					      now - acptr->lasttime);
+					      now - acptr->local->lasttime);
 				  else
 					  sendto_one(sptr,
 					      rpl_str(RPL_TRACEUSER), me.name,
 					      sptr->name, class, acptr->name,
 					      acptr->user->realhost,
-					      now - acptr->lasttime);
+					      now - acptr->local->lasttime);
 				  cnt++;
 			  }
 			  break;
@@ -220,18 +220,18 @@ DLLFUNC CMD_FUNC(m_trace)
 				      acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, acptr->serv->by,
 				      acptr->serv->user->username,
 				      acptr->serv->user->realhost,
-				      now - acptr->lasttime);
+				      now - acptr->local->lasttime);
 			  else
 				  sendto_one(sptr, rpl_str(RPL_TRACESERVER),
 				      me.name, sptr->name, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
 				      acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, *(acptr->serv->by) ?
 				      acptr->serv->by : "*", "*", me.name,
-				      now - acptr->lasttime);
+				      now - acptr->local->lasttime);
 			  cnt++;
 			  break;
 		  case STAT_LOG:
 			  sendto_one(sptr, rpl_str(RPL_TRACELOG), me.name,
-			      sptr->name, LOGFILE, acptr->port);
+			      sptr->name, LOGFILE, acptr->local->port);
 			  cnt++;
 			  break;
 #ifdef USE_SSL

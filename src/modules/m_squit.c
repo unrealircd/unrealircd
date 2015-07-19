@@ -96,7 +96,7 @@ CMD_FUNC(m_squit)
 		if (acptr && IsMe(acptr))
 		{
 			acptr = cptr;
-			server = cptr->sockhost;
+			server = cptr->local->sockhost;
 		}
 	}
 	else
@@ -105,7 +105,7 @@ CMD_FUNC(m_squit)
 		   ** This is actually protocol error. But, well, closing
 		   ** the link is very proper answer to that...
 		 */
-		server = cptr->sockhost;
+		server = cptr->local->sockhost;
 		acptr = cptr;
 	}
 

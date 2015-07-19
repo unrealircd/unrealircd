@@ -479,11 +479,11 @@ int   add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
 		anptr->watch->next = lp;
 		
 		lp = make_link();
-		lp->next = cptr->watch;
+		lp->next = cptr->local->watch;
 		lp->value.wptr = anptr;
 		lp->flags = awaynotify;
-		cptr->watch = lp;
-		cptr->watches++;
+		cptr->local->watch = lp;
+		cptr->local->watches++;
 	}
 	
 	return 0;
@@ -612,7 +612,7 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 	
 	/* Do the same regarding the links in client-record... */
 	last = NULL;
-	if ((lp = cptr->watch))
+	if ((lp = cptr->local->watch))
 	  while (lp && (lp->value.wptr != anptr)) {
 		  last = lp;
 		  lp = lp->next;
@@ -629,7 +629,7 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 					 nick, cptr->user);
 	else {
 		if (!last) /* First one matched */
-		  cptr->watch = lp->next;
+		  cptr->local->watch = lp->next;
 		else
 		  last->next = lp->next;
 		free_link(lp);
@@ -644,7 +644,7 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 	}
 	
 	/* Update count of notifies on nick */
-	cptr->watches--;
+	cptr->local->watches--;
 	
 	return 0;
 }
@@ -659,10 +659,10 @@ int   hash_del_watch_list(aClient *cptr)
 	Link  *np, *lp, *last;
 	
 	
-	if (!(np = cptr->watch))
+	if (!(np = cptr->local->watch))
 	  return 0;   /* Nothing to do */
 	
-	cptr->watch = NULL; /* Break the watch-list for client */
+	cptr->local->watch = NULL; /* Break the watch-list for client */
 	while (np) {
 		/* Find the watch-record from hash-table... */
 		anptr = np->value.wptr;
@@ -714,7 +714,7 @@ int   hash_del_watch_list(aClient *cptr)
 		free_link(lp); /* Free the previous */
 	}
 	
-	cptr->watches = 0;
+	cptr->local->watches = 0;
 	
 	return 0;
 }

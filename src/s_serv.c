@@ -304,7 +304,7 @@ char **text = unrealinfo;
 	sendto_one(sptr, ":%s %d %s :Birth Date: %s, compile # %s", me.name,
 	    RPL_INFO, sptr->name, creation, generation);
 	sendto_one(sptr, ":%s %d %s :On-line since %s", me.name, RPL_INFO,
-	    sptr->name, myctime(me.firsttime));
+	    sptr->name, myctime(me.local->firsttime));
 	sendto_one(sptr, ":%s %d %s :ReleaseID (%s)", me.name, RPL_INFO,
 	    sptr->name, buildid);
 	sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, sptr->name);
@@ -351,7 +351,7 @@ CMD_FUNC(m_dalinfo)
 		    ":%s %d %s :Birth Date: %s, compile # %s",
 		    me.name, RPL_INFO, sptr->name, creation, generation);
 		sendto_one(sptr, ":%s %d %s :On-line since %s",
-		    me.name, RPL_INFO, sptr->name, myctime(me.firsttime));
+		    me.name, RPL_INFO, sptr->name, myctime(me.local->firsttime));
 		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, sptr->name);
 	}
 
@@ -404,7 +404,7 @@ CMD_FUNC(m_credits)
 		    ":%s %d %s :Birth Date: %s, compile # %s",
 		    me.name, RPL_INFO, sptr->name, creation, generation);
 		sendto_one(sptr, ":%s %d %s :On-line since %s",
-		    me.name, RPL_INFO, sptr->name, myctime(me.firsttime));
+		    me.name, RPL_INFO, sptr->name, myctime(me.local->firsttime));
 		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, sptr->name);
 	}
 

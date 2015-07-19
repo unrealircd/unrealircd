@@ -240,16 +240,16 @@ static int cap_ack(aClient *sptr, const char *arg)
 			capadd |= cap->cap;
 	}
 
-	sptr->proto |= capadd;
-	sptr->proto &= ~capdel;
+	sptr->local->proto |= capadd;
+	sptr->local->proto &= ~capdel;
 	return 0;
 }
 
 static int cap_clear(aClient *sptr, const char *arg)
 {
-	clicap_generate(sptr, "ACK", sptr->proto ? sptr->proto : -1, 1);
+	clicap_generate(sptr, "ACK", sptr->local->proto ? sptr->local->proto : -1, 1);
 
-	sptr->proto = 0;
+	sptr->local->proto = 0;
 	return 0;
 }
 
@@ -258,9 +258,9 @@ static int cap_end(aClient *sptr, const char *arg)
 	if (IsRegisteredUser(sptr))
 		return 0;
 
-	sptr->proto &= ~PROTO_CLICAP;
+	sptr->local->proto &= ~PROTO_CLICAP;
 
-	if (sptr->name[0] && sptr->user != NULL && sptr->nospoof == 0)
+	if (sptr->name[0] && sptr->user != NULL && sptr->local->nospoof == 0)
 		return register_user(sptr, sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
 
 	return 0;
@@ -268,14 +268,14 @@ static int cap_end(aClient *sptr, const char *arg)
 
 static int cap_list(aClient *sptr, const char *arg)
 {
-	clicap_generate(sptr, "LIST", sptr->proto ? sptr->proto : -1, 0);
+	clicap_generate(sptr, "LIST", sptr->local->proto ? sptr->local->proto : -1, 0);
 	return 0;
 }
 
 static int cap_ls(aClient *sptr, const char *arg)
 {
 	if (!IsRegisteredUser(sptr))
-		sptr->proto |= PROTO_CLICAP;
+		sptr->local->proto |= PROTO_CLICAP;
 
        	clicap_generate(sptr, "LS", 0, 0);
        	return 0;
@@ -292,7 +292,7 @@ static int cap_req(aClient *sptr, const char *arg)
 	int finished = 0, negate;
 
 	if (!IsRegisteredUser(sptr))
-		sptr->proto |= PROTO_CLICAP;
+		sptr->local->proto |= PROTO_CLICAP;
 
 	if (BadPtr(arg))
 		return 0;
@@ -366,8 +366,8 @@ static int cap_req(aClient *sptr, const char *arg)
 	else
 		sendto_one(sptr, "%s :%s", buf, pbuf[0]);
 
-	sptr->proto |= capadd;
-	sptr->proto &= ~capdel;
+	sptr->local->proto |= capadd;
+	sptr->local->proto &= ~capdel;
 	return 0;
 }
 

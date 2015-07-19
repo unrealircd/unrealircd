@@ -367,7 +367,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISIDLE),
 				    me.name, sptr->name, name,
-				    TStime() - acptr->last, acptr->firsttime);
+				    TStime() - acptr->local->last, acptr->local->firsttime);
 			}
 		}
 		if (!found)

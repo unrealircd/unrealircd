@@ -317,9 +317,9 @@ int dowebirc(aClient *cptr, char *ip, char *host)
 	if (host && !strcmp(ip, host))
 		host = NULL; /* host did not resolve, make it NULL */
 
-	/* STEP 1: Update cptr->ip
+	/* STEP 1: Update cptr->local->ip
 	   inet_pton() returns 1 on success, 0 on bad input, -1 on bad AF */
-	if(inet_pton(AFINET, ip, &cptr->ip) != 1)
+	if(inet_pton(AFINET, ip, &cptr->local->ip) != 1)
 	{
 #ifndef INET6
 		/* then we have an invalid IP */
@@ -327,7 +327,7 @@ int dowebirc(aClient *cptr, char *ip, char *host)
 #else
 		/* The address may be IPv4. We have to try ::ffff:ipv4 */
 		snprintf(ipbuf, sizeof(ipbuf), "::ffff:%s", ip);
-		if(inet_pton(AFINET, ipbuf, &cptr->ip) != 1)
+		if(inet_pton(AFINET, ipbuf, &cptr->local->ip) != 1)
 			return exit_client(cptr, cptr, &me, "Invalid IP address");
 #endif
 	}
@@ -341,27 +341,27 @@ int dowebirc(aClient *cptr, char *ip, char *host)
 		cptr->user->ip_str = strdup(ip);
 	}
 		
-	/* STEP 3: Update cptr->hostp */
+	/* STEP 3: Update cptr->local->hostp */
 	/* (free old) */
-	if (cptr->hostp)
+	if (cptr->local->hostp)
 	{
-		unreal_free_hostent(cptr->hostp);
-		cptr->hostp = NULL;
+		unreal_free_hostent(cptr->local->hostp);
+		cptr->local->hostp = NULL;
 	}
 	/* (create new) */
 	if (host && verify_hostname(host))
-		cptr->hostp = unreal_create_hostent(host, &cptr->ip);
+		cptr->local->hostp = unreal_create_hostent(host, &cptr->local->ip);
 
 	/* STEP 4: Update sockhost
 	   Make sure that if this any IPv4 address is _not_ prefixed with
 	   "::ffff:" by using Inet_ia2p().
 	 */
-	sockhost = Inet_ia2p(&cptr->ip);
+	sockhost = Inet_ia2p(&cptr->local->ip);
 	if(!sockhost)
 	{
 		return exit_client(cptr, cptr, &me, "Error processing CGI:IRC IP address.");
 	}
-	strlcpy(cptr->sockhost, sockhost, sizeof(cptr->sockhost));
+	strlcpy(cptr->local->sockhost, sockhost, sizeof(cptr->local->sockhost));
 
 	SetWEBIRC(cptr);
 

@@ -138,10 +138,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, sptr->name);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) [unknown oper]",
-		    sptr->name, sptr->user->username, sptr->sockhost);
+		    sptr->name, sptr->user->username, sptr->local->sockhost);
 		ircd_log(LOG_OPER, "OPER UNKNOWNOPER (%s) by (%s!%s@%s)", name, sptr->name,
-			sptr->user->username, sptr->sockhost);
-		sptr->since += 7;
+			sptr->user->username, sptr->local->sockhost);
+		sptr->local->since += 7;
 		return 0;
 	}
 
@@ -150,10 +150,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, sptr->name);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [host doesnt match]",
-		    sptr->name, sptr->user->username, sptr->sockhost, name);
+		    sptr->name, sptr->user->username, sptr->local->sockhost, name);
 		ircd_log(LOG_OPER, "OPER NOHOSTMATCH (%s) by (%s!%s@%s)", name, sptr->name,
-			sptr->user->username, sptr->sockhost);
-		sptr->since += 7;
+			sptr->user->username, sptr->local->sockhost);
+		sptr->local->since += 7;
 		return 0;
 	}
 
@@ -165,11 +165,11 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendnotice(sptr,
 			    "*** Your attempt has been logged.");
 		ircd_log(LOG_OPER, "OPER FAILEDAUTH (%s) by (%s!%s@%s)", name, sptr->name,
-			sptr->user->username, sptr->sockhost);
+			sptr->user->username, sptr->local->sockhost);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [FAILEDAUTH]",
-		    sptr->name, sptr->user->username, sptr->sockhost, name);
-		sptr->since += 7;
+		    sptr->name, sptr->user->username, sptr->local->sockhost, name);
+		sptr->local->since += 7;
 		return 0;
 	}
 	
@@ -187,11 +187,11 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, ":%s %d %s :You are missing user modes required to OPER", me.name, ERR_NOOPERHOST, sptr->name);
 		sendto_snomask_global
 			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) [lacking modes '%s' in oper::require-modes]",
-			 sptr->name, sptr->user->username, sptr->sockhost, get_modestr(aconf->require_modes & ~sptr->umodes));
+			 sptr->name, sptr->user->username, sptr->local->sockhost, get_modestr(aconf->require_modes & ~sptr->umodes));
 		ircd_log(LOG_OPER, "OPER MISSINGMODES (%s) by (%s!%s@%s), needs modes=%s",
-			 name, sptr->name, sptr->user->username, sptr->sockhost,
+			 name, sptr->name, sptr->user->username, sptr->local->sockhost,
 			 get_modestr(aconf->require_modes & ~sptr->umodes));
-		sptr->since += 7;
+		sptr->local->since += 7;
 		return 0;
 	}
 
@@ -202,10 +202,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			me.name, sptr->name, aconf->maxlogins);
 		sendto_snomask_global
 			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [maxlogins reached]",
-			sptr->name, sptr->user->username, sptr->sockhost, name);
+			sptr->name, sptr->user->username, sptr->local->sockhost, name);
 		ircd_log(LOG_OPER, "OPER TOOMANYLOGINS (%s) by (%s!%s@%s)", name, sptr->name,
-			sptr->user->username, sptr->sockhost);
-		sptr->since += 4;
+			sptr->user->username, sptr->local->sockhost);
+		sptr->local->since += 4;
 		return 0;
 	}
 
@@ -216,10 +216,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	sptr->user->operlogin = strdup(aconf->name);
 
 	/* Put in the right class */
-	if (sptr->class)
-		sptr->class->clients--;
-	sptr->class = aconf->class;
-	sptr->class->clients++;
+	if (sptr->local->class)
+		sptr->local->class->clients--;
+	sptr->local->class = aconf->class;
+	sptr->local->class->clients++;
 
 	/* oper::swhois */
 	if (aconf->swhois)
@@ -249,11 +249,11 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	sendto_snomask_global(SNO_OPER,
 		"%s (%s@%s) [%s] is now an operator",
-		sptr->name, sptr->user->username, sptr->sockhost,
+		sptr->name, sptr->user->username, sptr->local->sockhost,
 		parv[1]);
 
 	ircd_log(LOG_OPER, "OPER (%s) by (%s!%s@%s)", name, sptr->name, sptr->user->username,
-		sptr->sockhost);
+		sptr->local->sockhost);
 
 	/* set oper snomasks */
 	if (aconf->snomask)

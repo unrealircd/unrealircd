@@ -505,7 +505,7 @@ char has_common_chan = 0;
 			if (!MyClient(acptr))
 				return WHO_CANTSEE;
 
-			port = acptr->listener->port;
+			port = acptr->local->listener->port;
 
 			if (((wfl.want_port == WHO_WANT) && wfl.port != port) ||
 			    ((wfl.want_port == WHO_DONTWANT) && wfl.port == port))

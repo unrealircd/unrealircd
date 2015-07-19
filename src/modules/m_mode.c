@@ -1785,7 +1785,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 			sptr->umodes |= UMODE_HIDE;
 			rejoin_joinandmode(sptr);
 			if (MyClient(sptr))
-				sptr->since += 7; /* Add fake lag */
+				sptr->local->since += 7; /* Add fake lag */
 		}
 		if (MyClient(sptr))
 			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->virthost);
@@ -1802,7 +1802,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 			sptr->umodes &= ~UMODE_HIDE;
 			rejoin_joinandmode(sptr);
 			if (MyClient(sptr))
-				sptr->since += 7; /* Add fake lag */
+				sptr->local->since += 7; /* Add fake lag */
 		}
 		/* (Re)create the cloaked virthost, because it will be used
 		 * for ban-checking... free+recreate here because it could have

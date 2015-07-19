@@ -44,9 +44,9 @@ extern MODVAR int bootopt;
 extern MODVAR time_t TSoffset;
 extern MODVAR time_t timeofday;
 /* newconf */
-#define get_sendq(x) ((x)->class ? (x)->class->sendq : MAXSENDQLENGTH) 
+#define get_sendq(x) ((x)->local->class ? (x)->local->class->sendq : MAXSENDQLENGTH)
 /* get_recvq is only called in send.c for local connections */
-#define get_recvq(x) ((x)->class->recvq ? (x)->class->recvq : CLIENT_FLOOD) 
+#define get_recvq(x) ((x)->local->class->recvq ? (x)->local->class->recvq : CLIENT_FLOOD)
 
 #define CMD_FUNC(x) int (x) (aClient *cptr, aClient *sptr, int parc, char *parv[])
 

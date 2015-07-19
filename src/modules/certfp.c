@@ -81,10 +81,10 @@ char *get_fingerprint_for_client(aClient *cptr)
 	const EVP_MD *digest = EVP_sha256();
 	X509 *x509_clientcert = NULL;
 
-	if (!MyConnect(cptr) || !cptr->ssl)
+	if (!MyConnect(cptr) || !cptr->local->ssl)
 		return NULL;
 	
-	x509_clientcert = SSL_get_peer_certificate(cptr->ssl);
+	x509_clientcert = SSL_get_peer_certificate(cptr->local->ssl);
 
 	if (x509_clientcert)
 	{
@@ -105,7 +105,7 @@ char *get_fingerprint_for_client(aClient *cptr)
 
 int certfp_handshake(aClient *acptr)
 {
-	if (acptr->ssl)
+	if (acptr->local->ssl)
 	{
 		char *fp = get_fingerprint_for_client(acptr);
 

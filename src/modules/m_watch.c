@@ -146,7 +146,7 @@ DLLFUNC CMD_FUNC(m_watch)
 				continue;
 			if (do_nick_name(s + 1))
 			{
-				if (sptr->watches >= MAXWATCH)
+				if (sptr->local->watches >= MAXWATCH)
 				{
 					sendto_one(sptr,
 					    err_str(ERR_TOOMANYWATCH), me.name,
@@ -210,13 +210,13 @@ DLLFUNC CMD_FUNC(m_watch)
 				    (lp = lp->next); count++)
 					;
 			sendto_one(sptr, rpl_str(RPL_WATCHSTAT), me.name,
-			    sptr->name, sptr->watches, count);
+			    sptr->name, sptr->local->watches, count);
 
 			/*
 			 * Send a list of everybody in their WATCH list. Be careful
 			 * not to buffer overflow.
 			 */
-			if ((lp = sptr->watch) == NULL)
+			if ((lp = sptr->local->watch) == NULL)
 			{
 				sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST),
 				    me.name, sptr->name, *s);
@@ -258,7 +258,7 @@ DLLFUNC CMD_FUNC(m_watch)
 		 */
 		if ((*s == 'L' || *s == 'l') && !did_l)
 		{
-			Link *lp = sptr->watch;
+			Link *lp = sptr->local->watch;
 
 			did_l = 1;
 

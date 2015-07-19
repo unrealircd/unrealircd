@@ -160,7 +160,7 @@ ConfigItem_ban *bconf;
 	
 	strcpy(xerrmsg, "No matching link configuration");
 
-	if (!cptr->passwd)
+	if (!cptr->local->passwd)
 	{
 		sendto_one(cptr, "ERROR :Missing password");
 		return exit_client(cptr, sptr, &me, "Missing password");
@@ -210,14 +210,14 @@ errlink:
 		    servername, GetIP(cptr), inpath);
 		/* And send the "verbose" error msg only to locally connected ircops */
 		sendto_umode(UMODE_OPER, "Link denied for %s(%s@%s) (%s) %s",
-		    servername, cptr->username, cptr->sockhost, xerrmsg, inpath);
+		    servername, cptr->username, cptr->local->sockhost, xerrmsg, inpath);
 		return exit_client(cptr, sptr, &me,
 		    "Link denied (No link block found with your server name or link::incoming::mask did not match)");
 	}
 
 skip_host_check:
 	/* Now for checking passwords */
-	if (Auth_Check(cptr, link->auth, cptr->passwd) == -1)
+	if (Auth_Check(cptr, link->auth, cptr->local->passwd) == -1)
 	{
 		sendto_one(cptr,
 		    "ERROR :Link '%s' denied (Authentication failed) %s",
@@ -237,9 +237,9 @@ skip_host_check:
 		/* Found. Bad. Quit. */
 		acptr = acptr->from;
 		ocptr =
-		    (cptr->firsttime > acptr->firsttime) ? acptr : cptr;
+		    (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
 		acptr =
-		    (cptr->firsttime > acptr->firsttime) ? cptr : acptr;
+		    (cptr->local->firsttime > acptr->local->firsttime) ? cptr : acptr;
 		sendto_one(acptr,
 		    "ERROR :Server %s already exists from %s",
 		    servername,
@@ -311,7 +311,7 @@ DLLFUNC CMD_FUNC(m_server)
 		    me.name, sptr->name);
 		sendnotice(cptr,
 		    "*** Sorry, but your IRC program doesn't appear to support changing servers.");
-		sptr->since += 7;
+		sptr->local->since += 7;
 		return 0;
 	}
 
@@ -325,7 +325,7 @@ DLLFUNC CMD_FUNC(m_server)
 			"Not enough parameters");		
 	}
 
-	if (IsUnknown(cptr) && (cptr->listener->options & LISTENER_CLIENTSONLY))
+	if (IsUnknown(cptr) && (cptr->local->listener->options & LISTENER_CLIENTSONLY))
 	{
 		return exit_client(cptr, sptr, &me,
 		    "This port is for clients only");
@@ -355,7 +355,7 @@ DLLFUNC CMD_FUNC(m_server)
 		return exit_client(cptr, sptr, &me, "Bogus server name");
 	}
 
-	if ((IsUnknown(cptr) || IsHandshake(cptr)) && !cptr->passwd)
+	if ((IsUnknown(cptr) || IsHandshake(cptr)) && !cptr->local->passwd)
 	{
 		sendto_one(sptr, "ERROR :Missing password");
 		return exit_client(cptr, sptr, &me, "Missing password");
@@ -511,9 +511,9 @@ CMD_FUNC(m_server_remote)
 		/* Found. Bad. Quit. */
 		acptr = acptr->from;
 		ocptr =
-		    (cptr->firsttime > acptr->firsttime) ? acptr : cptr;
+		    (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
 		acptr =
-		    (cptr->firsttime > acptr->firsttime) ? cptr : acptr;
+		    (cptr->local->firsttime > acptr->local->firsttime) ? cptr : acptr;
 		sendto_one(acptr,
 		    "ERROR :Server %s already exists from %s",
 		    servername,
@@ -634,10 +634,10 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 
 	ircd_log(LOG_SERVER, "SERVER %s", cptr->name);
 
-	if (cptr->passwd)
+	if (cptr->local->passwd)
 	{
-		MyFree(cptr->passwd);
-		cptr->passwd = NULL;
+		MyFree(cptr->local->passwd);
+		cptr->local->passwd = NULL;
 	}
 	if (incoming)
 	{
@@ -666,9 +666,9 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	{
 		sendto_server(&me, 0, 0, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
 			me.name,
-			me.name, inpath, (char *) ssl_get_cipher(cptr->ssl));
+			me.name, inpath, (char *) ssl_get_cipher(cptr->local->ssl));
 		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
-			me.name, inpath, (char *) ssl_get_cipher(cptr->ssl));
+			me.name, inpath, (char *) ssl_get_cipher(cptr->local->ssl));
 	}
 	else
 	{
@@ -701,7 +701,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
 	}
 	cptr->serv->conf->class->clients++;
-	cptr->class = cptr->serv->conf->class;
+	cptr->local->class = cptr->serv->conf->class;
 	RunHook(HOOKTYPE_SERVER_CONNECT, cptr);
 
 	if (*cptr->id)

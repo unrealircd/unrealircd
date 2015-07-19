@@ -159,11 +159,11 @@ inline void parse_addlag(aClient *cptr, int cmdbytes)
 {
 	if (!IsServer(cptr) && !IsNoFakeLag(cptr) &&
 #ifdef FAKELAG_CONFIGURABLE
-		!(cptr->class && (cptr->class->options & CLASS_OPT_NOFAKELAG)) && 
+		!(cptr->local->class && (cptr->local->class->options & CLASS_OPT_NOFAKELAG)) && 
 #endif
 	!ValidatePermissionsForPath("privacy:fakelag",cptr,NULL,NULL,NULL))
 	{
-		cptr->since += (1 + cmdbytes/90);
+		cptr->local->since += (1 + cmdbytes/90);
 	}		
 }
 
@@ -197,10 +197,10 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	if (IsDead(cptr))
 		return 0;
 
-	if ((cptr->receiveK >= UNKNOWN_FLOOD_AMOUNT) && IsUnknown(cptr))
+	if ((cptr->local->receiveK >= UNKNOWN_FLOOD_AMOUNT) && IsUnknown(cptr))
 	{
 		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
-			cptr->sockhost);
+			cptr->local->sockhost);
 		ban_flooder(cptr);
 		return FLUSH_BUFFER;
 	}
@@ -278,7 +278,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		Debug((DEBUG_NOTICE, "Empty message from host %s:%s",
 		    cptr->name, from->name));
 		if (!IsServer(cptr))
-			cptr->since++; /* 1s fake lag */
+			cptr->local->since++; /* 1s fake lag */
 		return (-1);
 	}
 
@@ -438,7 +438,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		return (do_numeric(numeric, cptr, from, i, para));
 	cmptr->count++;
 	if (IsRegisteredUser(cptr) && (cmptr->flags & M_RESETIDLE))
-		cptr->last = TStime();
+		cptr->local->last = TStime();
 
 #ifndef DEBUGMODE
 	if (cmptr->flags & M_ALIAS)
@@ -467,7 +467,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			cmptr->rticks += ticks;
 		else
 			cmptr->lticks += ticks;
-		cptr->cputime += ticks;
+		cptr->local->cputime += ticks;
 	}
 
 	return retval;

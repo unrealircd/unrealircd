@@ -1071,7 +1071,7 @@ void _tkl_check_local_remove_shun(aTKline *tmp)
 		list_for_each_entry(acptr, &lclient_list, lclient_node)
 			if (MyClient(acptr) && IsShunned(acptr))
 			{
-				chost = acptr->sockhost;
+				chost = acptr->local->sockhost;
 				cname = acptr->user->username;
 
 				cip = GetIP(acptr);
@@ -1231,7 +1231,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 		return -1;
 
 	nowtime = TStime();
-	chost = cptr->sockhost;
+	chost = cptr->local->sockhost;
 	cname = cptr->user ? cptr->user->username : "unknown";
 	cip = GetIP(cptr);
 
@@ -1246,7 +1246,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 			/* If it's tangy and brown, you're in CIDR town! */
 			if (lp->ptr.netmask)
 			{
-				if (match_ip(cptr->ip, NULL, NULL, lp->ptr.netmask) && 
+				if (match_ip(cptr->local->ip, NULL, NULL, lp->ptr.netmask) && 
 				    !match(lp->usermask, cname))
 				{
 					points = 1;
@@ -1284,7 +1284,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 
 		if (excepts->netmask)
 		{
-			if (match_ip(cptr->ip, host2, excepts->mask, excepts->netmask))
+			if (match_ip(cptr->local->ip, host2, excepts->mask, excepts->netmask))
 				return 1;		
 		} else
 		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
@@ -1359,7 +1359,7 @@ int  _find_shun(aClient *cptr)
 		return 1;
 
 	nowtime = TStime();
-	chost = cptr->sockhost;
+	chost = cptr->local->sockhost;
 	cname = cptr->user ? cptr->user->username : "unknown";
 	cip = GetIP(cptr);
 
@@ -1373,7 +1373,7 @@ int  _find_shun(aClient *cptr)
 		/* CIDR */
 		if (lp->ptr.netmask)
 		{
-			if (match_ip(cptr->ip, NULL, NULL, lp->ptr.netmask) && 
+			if (match_ip(cptr->local->ip, NULL, NULL, lp->ptr.netmask) && 
 			    !match(lp->usermask, cname))
 			{
 				points = 1;
@@ -1408,7 +1408,7 @@ int  _find_shun(aClient *cptr)
 			continue;
 		if (excepts->netmask)
 		{
-			if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
+			if (match_ip(cptr->local->ip, NULL, NULL, excepts->netmask))
 				return 1;		
 		}
 		else if (!match(excepts->mask, host) || !match(excepts->mask, host2))
@@ -1548,7 +1548,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 		return lp;
 	}
 
-	chost = cptr->user ? cptr->user->realhost : (MyConnect(cptr) ? cptr->sockhost : "unknown");
+	chost = cptr->user ? cptr->user->realhost : (MyConnect(cptr) ? cptr->local->sockhost : "unknown");
 	cname = cptr->user ? cptr->user->username : "unknown";
 	strlcpy(host, make_user_host(cname, chost), sizeof(host));
 
@@ -1565,7 +1565,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 			continue;
 		if (excepts->netmask)
 		{
-			if (MyConnect(cptr) && match_ip(cptr->ip, NULL, NULL, excepts->netmask))
+			if (MyConnect(cptr) && match_ip(cptr->local->ip, NULL, NULL, excepts->netmask))
 				return NULL;
 		} else
 		if (!match(excepts->mask, host) || (host2 && !match(excepts->mask, host2)))
@@ -1597,7 +1597,7 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 	{
 		if (lp->type & TKL_ZAP)
 		{
-			if ((lp->ptr.netmask && match_ip(cptr->ip, NULL, NULL, lp->ptr.netmask))
+			if ((lp->ptr.netmask && match_ip(cptr->local->ip, NULL, NULL, lp->ptr.netmask))
 			    || !match(lp->hostmask, cip))
 			{
 
@@ -1612,7 +1612,7 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 						continue;
 					if (excepts->netmask)
 					{
-						if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
+						if (match_ip(cptr->local->ip, NULL, NULL, excepts->netmask))
 							return -1;		
 					} else if (!match(excepts->mask, cip))
 						return -1;		
@@ -1625,9 +1625,9 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 				ircsnprintf(msge, sizeof(msge),
 				    "ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",
 #ifndef INET6
-				    inetntoa((char *)&cptr->ip), lp->reason);
+				    inetntoa((char *)&cptr->local->ip), lp->reason);
 #else
-				    inet_ntop(AF_INET6, (char *)&cptr->ip,
+				    inet_ntop(AF_INET6, (char *)&cptr->local->ip,
 				    mydummy, MYDUMMY_SIZE), lp->reason);
 #endif
 				strlcpy(zlinebuf, msge, sizeof zlinebuf);
@@ -1853,7 +1853,7 @@ void _tkl_synch(aClient *sptr)
 					typ = 'F';
 				if (tk->type & TKL_NICK)
 					typ = 'Q';
-				if ((tk->type & TKL_SPAMF) && (sptr->proto & PROTO_TKLEXT))
+				if ((tk->type & TKL_SPAMF) && (sptr->local->proto & PROTO_TKLEXT))
 				{
 					sendto_one(sptr,
 					    ":%s TKL + %c %s %s %s %li %li %li %s :%s", me.name,

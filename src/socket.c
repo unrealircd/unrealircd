@@ -71,13 +71,13 @@ int  deliver_it(aClient *cptr, char *str, int len)
 		return -1;
 	}
 
-	if (IsSSL(cptr) && cptr->ssl != NULL)
+	if (IsSSL(cptr) && cptr->local->ssl != NULL)
 	{
-		retval = SSL_write(cptr->ssl, str, len);
+		retval = SSL_write(cptr->local->ssl, str, len);
 
 		if (retval < 0)
 		{
-			switch (SSL_get_error(cptr->ssl, retval))
+			switch (SSL_get_error(cptr->local->ssl, retval))
 			{
 			case SSL_ERROR_WANT_READ:
 				/* retry later */
@@ -116,17 +116,17 @@ int  deliver_it(aClient *cptr, char *str, int len)
 
 	if (retval > 0)
 	{
-		cptr->sendB += retval;
-		me.sendB += retval;
-		if (cptr->sendB > 1023)
+		cptr->local->sendB += retval;
+		me.local->sendB += retval;
+		if (cptr->local->sendB > 1023)
 		{
-			cptr->sendK += (cptr->sendB >> 10);
-			cptr->sendB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
+			cptr->local->sendK += (cptr->local->sendB >> 10);
+			cptr->local->sendB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
 		}
-		if (me.sendB > 1023)
+		if (me.local->sendB > 1023)
 		{
-			me.sendK += (me.sendB >> 10);
-			me.sendB &= 0x03ff;
+			me.local->sendK += (me.local->sendB >> 10);
+			me.local->sendB &= 0x03ff;
 		}
 	}
 

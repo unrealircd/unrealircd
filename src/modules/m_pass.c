@@ -103,9 +103,9 @@ ConfigItem_ban *bconf;
 	{
 		if (IsUnknown(acptr) &&
 #ifndef INET6
-			acptr->ip.S_ADDR == cptr->ip.S_ADDR)
+			acptr->local->ip.S_ADDR == cptr->local->ip.S_ADDR)
 #else
-			!bcmp(acptr->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+			!bcmp(acptr->local->ip.S_ADDR, cptr->local->ip.S_ADDR, sizeof(cptr->local->ip.S_ADDR)))
 #endif
 		{
 			j++;
@@ -114,7 +114,7 @@ ConfigItem_ban *bconf;
 		}
 	}
 
-	if ((bconf = Find_ban(cptr, Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
+	if ((bconf = Find_ban(cptr, Inet_ia2p(&cptr->local->ip), CONF_BAN_IP)))
 	{
 		ircsnprintf(zlinebuf, BUFSIZE,
 			"You are not welcome on this server: %s. Email %s for more information.",
@@ -129,14 +129,14 @@ ConfigItem_ban *bconf;
 	else
 	{
 		int val;
-		if (!(val = throttle_can_connect(cptr, &cptr->ip)))
+		if (!(val = throttle_can_connect(cptr, &cptr->local->ip)))
 		{
 			ircsnprintf(zlinebuf, BUFSIZE, "Throttled: Reconnecting too fast - Email %s for more information.",
 					KLINE_ADDRESS);
 			return exit_client(cptr, cptr, &me, zlinebuf);
 		}
 		else if (val == 1)
-			add_throttling_bucket(&cptr->ip);
+			add_throttling_bucket(&cptr->local->ip);
 	}
 
 	return 0;
@@ -167,12 +167,12 @@ DLLFUNC CMD_FUNC(m_pass)
 	}
 
 	PassLen = strlen(password);
-	if (cptr->passwd)
-		MyFree(cptr->passwd);
+	if (cptr->local->passwd)
+		MyFree(cptr->local->passwd);
 	if (PassLen > (PASSWDLEN))
 		PassLen = PASSWDLEN;
-	cptr->passwd = MyMalloc(PassLen + 1);
-	strlcpy(cptr->passwd, password, PassLen + 1);
+	cptr->local->passwd = MyMalloc(PassLen + 1);
+	strlcpy(cptr->local->passwd, password, PassLen + 1);
 
 	/* note: the original non-truncated password is supplied as 2nd parameter. */
 	RunHookReturnInt2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);

@@ -140,7 +140,7 @@ DLLFUNC CMD_FUNC(m_list)
 
 		lopt->showall = 1;
 
-		if (DBufLength(&cptr->sendQ) < 2048)
+		if (DBufLength(&cptr->local->sendQ) < 2048)
 			send_list(cptr, 64);
 
 		return 0;
@@ -285,7 +285,7 @@ DLLFUNC CMD_FUNC(m_list)
 		lopt->nolist = nolist;
 		lopt->yeslist = yeslist;
 
-		if (DBufLength(&cptr->sendQ) < 2048)
+		if (DBufLength(&cptr->local->sendQ) < 2048)
 			send_list(cptr, 64);
 		return 0;
 	}

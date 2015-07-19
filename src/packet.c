@@ -46,21 +46,21 @@ aCommand	*CommandHash[256]; /* one per letter */
 */
 int  dopacket(aClient *cptr, char *buffer, int length)
 {
-	me.receiveB += length;	/* Update bytes received */
-	cptr->receiveB += length;
-	if (cptr->receiveB > 1023)
+	me.local->receiveB += length;	/* Update bytes received */
+	cptr->local->receiveB += length;
+	if (cptr->local->receiveB > 1023)
 	{
-		cptr->receiveK += (cptr->receiveB >> 10);
-		cptr->receiveB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
+		cptr->local->receiveK += (cptr->local->receiveB >> 10);
+		cptr->local->receiveB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
 	}
-	if (me.receiveB > 1023)
+	if (me.local->receiveB > 1023)
 	{
-		me.receiveK += (me.receiveB >> 10);
-		me.receiveB &= 0x03ff;
+		me.local->receiveK += (me.local->receiveB >> 10);
+		me.local->receiveB &= 0x03ff;
 	}
 
-	me.receiveM += 1;	/* Update messages received */
-	cptr->receiveM += 1;
+	me.local->receiveM += 1;	/* Update messages received */
+	cptr->local->receiveM += 1;
 
 	return parse(cptr, buffer, buffer + length);
 }

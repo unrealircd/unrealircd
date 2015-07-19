@@ -452,11 +452,9 @@ int check_tkls(aClient *cptr)
 	{
 		/* Check ban user { } and ban realname { } */
 
-		bconf = Find_ban(cptr, make_user_host(cptr->
-				user ? cptr->user->username : cptr->
-				username,
-				cptr->user ? cptr->user->realhost : cptr->
-				sockhost), CONF_BAN_USER);
+		bconf = Find_ban(cptr, make_user_host(cptr->user ? cptr->user->username : cptr->username,
+				                              cptr->user ? cptr->user->realhost : cptr->local->sockhost),
+				                              CONF_BAN_USER);
 
 		if (bconf)
 			killflag++;
@@ -465,7 +463,7 @@ int check_tkls(aClient *cptr)
 	}
 
 	/* If still no match, check ban ip { } */
-	if (!killflag && (bconf = Find_ban(cptr, Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
+	if (!killflag && (bconf = Find_ban(cptr, Inet_ia2p(&cptr->local->ip), CONF_BAN_IP)))
 		killflag++;
 
 	/* If user is meant to be killed, take action: */
@@ -531,7 +529,7 @@ EVENT(check_unknowns)
 
 	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
 	{
-		if (cptr->firsttime && ((TStime() - cptr->firsttime) > CONNECTTIMEOUT))
+		if (cptr->local->firsttime && ((TStime() - cptr->local->firsttime) > CONNECTTIMEOUT))
 			(void)exit_client(cptr, cptr, &me, "Registration Timeout");
 	}
 }
@@ -542,34 +540,34 @@ int check_ping(aClient *cptr)
 	char scratch[64];
 	int ping = 0;
 
-	ping = cptr->class ? cptr->class->pingfreq : CONNECTTIMEOUT;
+	ping = cptr->local->class ? cptr->local->class->pingfreq : CONNECTTIMEOUT;
 	Debug((DEBUG_DEBUG, "c(%s)=%d p %d a %d", cptr->name,
 		cptr->status, ping,
-		TStime() - cptr->lasttime));
+		TStime() - cptr->local->lasttime));
 	
 	/* If ping is less than or equal to the last time we received a command from them */
-	if (ping > (TStime() - cptr->lasttime))
+	if (ping > (TStime() - cptr->local->lasttime))
 		return 0; /* some recent command was executed */
 
 	if (
 		/* If we have sent a ping */
 		((cptr->flags & FLAGS_PINGSENT)
 		/* And they had 2x ping frequency to respond */
-		&& ((TStime() - cptr->lasttime) >= (2 * ping)))
+		&& ((TStime() - cptr->local->lasttime) >= (2 * ping)))
 		|| 
 		/* Or isn't registered and time spent is larger than ping .. */
-		(!IsRegistered(cptr) && (TStime() - cptr->since >= ping))
+		(!IsRegistered(cptr) && (TStime() - cptr->local->since >= ping))
 		)
 	{
 		/* if it's registered and doing dns/auth, timeout */
 		if (!IsRegistered(cptr) && (DoingDNS(cptr) || DoingAuth(cptr)))
 		{
-			if (cptr->authfd >= 0) {
-				fd_close(cptr->authfd);
+			if (cptr->local->authfd >= 0) {
+				fd_close(cptr->local->authfd);
 				--OpenFiles;
-				cptr->authfd = -1;
+				cptr->local->authfd = -1;
 				cptr->count = 0;
-				*cptr->buffer = '\0';
+				*cptr->local->buffer = '\0';
 			}
 			if (SHOWCONNECTINFO && !cptr->serv) {
 				if (DoingDNS(cptr))
@@ -584,8 +582,8 @@ int check_ping(aClient *cptr)
 			ClearAuth(cptr);
 			ClearDNS(cptr);
 			SetAccess(cptr);
-			cptr->firsttime = TStime();
-			cptr->lasttime = TStime();
+			cptr->local->firsttime = TStime();
+			cptr->local->lasttime = TStime();
 			return -5;
 		}
 		if (IsServer(cptr) || IsConnecting(cptr) ||
@@ -601,10 +599,10 @@ int check_ping(aClient *cptr)
 				FALSE));
 		}
 		if (IsSSLAcceptHandshake(cptr))
-			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->sockhost,
-				TStime(), cptr->since, ping));
+			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->local->sockhost,
+				TStime(), cptr->local->since, ping));
 		(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %ld seconds",
-			(long) (TStime() - cptr->lasttime));
+			(long) (TStime() - cptr->local->lasttime));
 		return exit_client(cptr, cptr, &me, scratch);
 	}
 	else if (IsRegistered(cptr) &&
@@ -618,7 +616,7 @@ int check_ping(aClient *cptr)
 		/*
 		 * not nice but does the job 
 		 */
-		cptr->lasttime = TStime() - ping;
+		cptr->local->lasttime = TStime() - ping;
 		sendto_one(cptr, "PING :%s", me.name);
 	}
 	
@@ -663,7 +661,7 @@ EVENT(check_deadsockets)
 #ifdef DEBUGMODE
 			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->fd, cptr->name);
 #endif
-			(void)exit_client(cptr, cptr, &me, cptr->error_str ? cptr->error_str : "Dead socket");
+			(void)exit_client(cptr, cptr, &me, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
 			continue;
 		}
 	}
@@ -675,7 +673,7 @@ EVENT(check_deadsockets)
 #ifdef DEBUGMODE
 			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->fd, cptr->name);
 #endif
-			(void)exit_client(cptr, cptr, &me, cptr->error_str ? cptr->error_str : "Dead socket");
+			(void)exit_client(cptr, cptr, &me, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
 			continue;
 		}
 	}
@@ -823,23 +821,23 @@ struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (acptr->since > TStime())
+		if (acptr->local->since > TStime())
 		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->since %ld -> %ld",
-				acptr->name, acptr->since, TStime()));
-			acptr->since = TStime();
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->local->since %ld -> %ld",
+				acptr->name, acptr->local->since, TStime()));
+			acptr->local->since = TStime();
 		}
-		if (acptr->lasttime > TStime())
+		if (acptr->local->lasttime > TStime())
 		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->lasttime %ld -> %ld",
-				acptr->name, acptr->lasttime, TStime()));
-			acptr->lasttime = TStime();
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->local->lasttime %ld -> %ld",
+				acptr->name, acptr->local->lasttime, TStime()));
+			acptr->local->lasttime = TStime();
 		}
-		if (acptr->last > TStime())
+		if (acptr->local->last > TStime())
 		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->last %ld -> %ld",
-				acptr->name, acptr->last, TStime()));
-			acptr->last = TStime();
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->local->last %ld -> %ld",
+				acptr->name, acptr->local->last, TStime()));
+			acptr->local->last = TStime();
 		}
 
 		/* users */
@@ -851,11 +849,11 @@ struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 					acptr->name, acptr->local->nextnick, TStime()));
 				acptr->local->nextnick = TStime();
 			}
-			if (acptr->nexttarget > TStime())
+			if (acptr->local->nexttarget > TStime())
 			{
-				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->nexttarget %ld -> %ld",
-					acptr->name, acptr->nexttarget, TStime()));
-				acptr->nexttarget = TStime();
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->local->nexttarget %ld -> %ld",
+					acptr->name, acptr->local->nexttarget, TStime()));
+				acptr->local->nexttarget = TStime();
 			}
 			
 		}
@@ -976,6 +974,8 @@ int InitwIRCD(int argc, char *argv[])
 	memset(&motd, '\0', sizeof(aMotdFile));
 	memset(&smotd, '\0', sizeof(aMotdFile));
 	memset(&svsmotd, '\0', sizeof(aMotdFile));
+	memset(&me, 0, sizeof(me));
+	me.local = MyMallocEx(sizeof(aLocalClient));
 
 	SetupEvents();
 
@@ -1133,7 +1133,6 @@ int InitwIRCD(int argc, char *argv[])
 #else
 	WSAStartup(wVersionRequested, &wsaData);
 #endif
-	bzero((char *)&me, sizeof(me));
 	bzero(&StatsZ, sizeof(StatsZ));
 	setup_signals();
 	charsys_reset();
@@ -1449,8 +1448,7 @@ int InitwIRCD(int argc, char *argv[])
 	open_debugfile();
 	if (portnum < 0)
 		portnum = PORTNUM;
-	memset(&me, 0, sizeof(me));
-	me.port = portnum;
+	me.local->port = portnum;
 	(void)init_sys();
 	me.flags = FLAGS_LISTEN;
 	me.fd = -1;
@@ -1472,7 +1470,7 @@ int InitwIRCD(int argc, char *argv[])
 	read_motd(conf_files->svsmotd_file, &svsmotd);
 
 	me.hopcount = 0;
-	me.authfd = -1;
+	me.local->authfd = -1;
 	me.user = NULL;
 	me.from = &me;
 
@@ -1482,7 +1480,7 @@ int InitwIRCD(int argc, char *argv[])
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
 	timeofday = time(NULL);
-	me.lasttime = me.since = me.firsttime = TStime();
+	me.local->lasttime = me.local->since = me.local->firsttime = TStime();
 	(void)add_to_client_hash_table(me.name, &me);
 	(void)add_to_id_hash_table(me.id, &me);
 	list_add(&me.client_node, &global_server_list);
@@ -1673,11 +1671,10 @@ static void open_debugfile(void)
 		cptr = make_client(NULL, NULL);
 		cptr->fd = 2;
 		SetLog(cptr);
-		cptr->port = debuglevel;
+		cptr->local->port = debuglevel;
 		cptr->flags = 0;
 
-		(void)strlcpy(cptr->sockhost, me.sockhost,
-		    sizeof cptr->sockhost);
+		(void)strlcpy(cptr->local->sockhost, me.local->sockhost, sizeof cptr->local->sockhost);
 # ifndef _WIN32
 		/*(void)printf("isatty = %d ttyname = %#x\n",
 		    isatty(2), (u_int)ttyname(2)); */
@@ -1698,7 +1695,7 @@ static void open_debugfile(void)
 			strlcpy(cptr->name, "FD2-Pipe", sizeof(cptr->name));
 		Debug((DEBUG_FATAL,
 		    "Debug: File <%s> Level: %d at %s", cptr->name,
-		    cptr->port, myctime(time(NULL))));
+		    cptr->local->port, myctime(time(NULL))));
 	}
 #endif
 }

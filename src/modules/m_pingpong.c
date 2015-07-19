@@ -144,15 +144,15 @@ DLLFUNC int  m_nospoof(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		goto temp;
 	result = strtoul(parv[1], NULL, 16);
 	/* Accept code in second parameter (ircserv) */
-	if (result != sptr->nospoof)
+	if (result != sptr->local->nospoof)
 	{
 		if (BadPtr(parv[2]))
 			goto temp;
 		result = strtoul(parv[2], NULL, 16);
-		if (result != sptr->nospoof)
+		if (result != sptr->local->nospoof)
 			goto temp;
 	}
-	sptr->nospoof = 0;
+	sptr->local->nospoof = 0;
 	if (USE_BAN_VERSION && MyConnect(sptr))
 		sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 			   me.name, sptr->name);
@@ -164,7 +164,7 @@ DLLFUNC int  m_nospoof(aClient *cptr, aClient *sptr, int parc, char *parv[])
       temp:
 	/* Homer compatibility */
 	sendto_one(cptr, ":%X!nospoof@%s PRIVMSG %s :\1VERSION\1",
-	    cptr->nospoof, me.name, cptr->name);
+	    cptr->local->nospoof, me.name, cptr->name);
 	return 0;
 }
 

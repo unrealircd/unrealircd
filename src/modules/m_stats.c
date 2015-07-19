@@ -684,11 +684,11 @@ int stats_traffic(aClient *sptr, char *para)
 	{
 		if (IsServer(acptr))
 		{
-			sp->is_sbs += acptr->sendB;
-			sp->is_sbr += acptr->receiveB;
-			sp->is_sks += acptr->sendK;
-			sp->is_skr += acptr->receiveK;
-			sp->is_sti += now - acptr->firsttime;
+			sp->is_sbs += acptr->local->sendB;
+			sp->is_sbr += acptr->local->receiveB;
+			sp->is_sks += acptr->local->sendK;
+			sp->is_skr += acptr->local->receiveK;
+			sp->is_sti += now - acptr->local->firsttime;
 			sp->is_sv++;
 			if (sp->is_sbs > 1023)
 			{
@@ -703,11 +703,11 @@ int stats_traffic(aClient *sptr, char *para)
 		}
 		else if (IsClient(acptr))
 		{
-			sp->is_cbs += acptr->sendB;
-			sp->is_cbr += acptr->receiveB;
-			sp->is_cks += acptr->sendK;
-			sp->is_ckr += acptr->receiveK;
-			sp->is_cti += now - acptr->firsttime;
+			sp->is_cbs += acptr->local->sendB;
+			sp->is_cbr += acptr->local->receiveB;
+			sp->is_cks += acptr->local->sendK;
+			sp->is_ckr += acptr->local->receiveK;
+			sp->is_cti += now - acptr->local->firsttime;
 			sp->is_cl++;
 			if (sp->is_cbs > 1023)
 			{
@@ -1338,7 +1338,7 @@ int stats_uptime(aClient *sptr, char *para)
 {
 	time_t tmpnow;
 
-	tmpnow = TStime() - me.since;
+	tmpnow = TStime() - me.local->since;
 	sendto_one(sptr, rpl_str(RPL_STATSUPTIME), me.name, sptr->name,
 	    tmpnow / 86400, (tmpnow / 3600) % 24, (tmpnow / 60) % 60,
 	    tmpnow % 60);
@@ -1456,8 +1456,8 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 			continue;
 
 #ifdef DEBUGMODE
-		ircsnprintf(pbuf, sizeof(pbuf), "%ld :%ld", (long)acptr->cputime,
-		      (long)(acptr->user && MyConnect(acptr)) ? TStime() - acptr->last : 0);
+		ircsnprintf(pbuf, sizeof(pbuf), "%ld :%ld", (long)acptr->local->cputime,
+		      (long)(acptr->user && MyConnect(acptr)) ? TStime() - acptr->local->last : 0);
 #endif
 		if (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
 		{
@@ -1467,14 +1467,14 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 				(get_client_name2(acptr, showports)) :
 				(get_client_name(acptr, FALSE)),
 				get_cptr_status(acptr),
-				(int)DBufLength(&acptr->sendQ),
-				(int)acptr->sendM, (int)acptr->sendK,
-				(int)acptr->receiveM,
-				(int)acptr->receiveK,
-			 	TStime() - acptr->firsttime,
+				(int)DBufLength(&acptr->local->sendQ),
+				(int)acptr->local->sendM, (int)acptr->local->sendK,
+				(int)acptr->local->receiveM,
+				(int)acptr->local->receiveK,
+			 	TStime() - acptr->local->firsttime,
 #ifndef DEBUGMODE
 				(acptr->user && MyConnect(acptr)) ?
-				TStime() - acptr->last : 0);
+				TStime() - acptr->local->last : 0);
 #else
 				pbuf);
 #endif
@@ -1491,14 +1491,14 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 				get_client_name2(acptr, showports) :
 				get_client_name(acptr, FALSE),
 				get_cptr_status(acptr),
-				(int)DBufLength(&acptr->sendQ),
-				(int)acptr->sendM, (int)acptr->sendK,
-				(int)acptr->receiveM,
-				(int)acptr->receiveK,
-				TStime() - acptr->firsttime,
+				(int)DBufLength(&acptr->local->sendQ),
+				(int)acptr->local->sendM, (int)acptr->local->sendK,
+				(int)acptr->local->receiveM,
+				(int)acptr->local->receiveK,
+				TStime() - acptr->local->firsttime,
 #ifndef DEBUGMODE
 				(acptr->user && MyConnect(acptr)) ?
-				TStime() - acptr->last : 0);
+				TStime() - acptr->local->last : 0);
 #else
 				pbuf);
 #endif

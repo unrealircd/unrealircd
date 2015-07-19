@@ -275,7 +275,7 @@ CMD_FUNC(m_protoctl)
 		else if (strcmp(s, "NICKIP") == 0)
 		{
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
-			cptr->proto |= PROTO_NICKIP;
+			cptr->local->proto |= PROTO_NICKIP;
 		}
 		else if (strncmp(s, "NICKCHARS=", 10) == 0)
 		{
@@ -310,7 +310,7 @@ CMD_FUNC(m_protoctl)
 
 			strlcpy(cptr->id, sid, IDLEN);
 			add_to_id_hash_table(cptr->id, cptr);
-			cptr->proto |= PROTO_SID;
+			cptr->local->proto |= PROTO_SID;
 		}
 		else if ((strncmp(s, "EAUTH=", 6) == 0) && NEW_LINKING_PROTOCOL)
 		{
@@ -442,12 +442,12 @@ CMD_FUNC(m_protoctl)
 #ifdef PROTOCTL_MADNESS
 			if (remove)
 			{
-				cptr->proto &= ~PROTO_MLOCK;
+				cptr->local->proto &= ~PROTO_MLOCK;
 				continue;
 			}
 #endif
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
-			cptr->proto |= PROTO_MLOCK;
+			cptr->local->proto |= PROTO_MLOCK;
 		}
 		else if ((strncmp(s, "CHANMODES=", 10) == 0) && sptr->serv)
 		{
@@ -483,12 +483,12 @@ CMD_FUNC(m_protoctl)
 #ifdef PROTOCTL_MADNESS
 			if (remove)
 			{
-				cptr->proto &= ~PROTO_EXTSWHOIS;
+				cptr->local->proto &= ~PROTO_EXTSWHOIS;
 				continue;
 			}
 #endif
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
-			cptr->proto |= PROTO_EXTSWHOIS;
+			cptr->local->proto |= PROTO_EXTSWHOIS;
 		}
 
 		/*

@@ -79,7 +79,7 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode)
 		} */
 		unload_all_modules();
 /*		for (i = LastSlot; i >= 0; i--)
-			if ((acptr = local[i]) && DBufLength(&acptr->sendQ) > 0)
+			if ((acptr = local[i]) && DBufLength(&acptr->local->sendQ) > 0)
 				(void)send_queued(acptr); */
 		SetServiceStop(0);
 	}

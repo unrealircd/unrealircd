@@ -297,7 +297,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						i++;
 						break;
 					}
-					if (ts && ts != acptr->since) {
+					if (ts && ts != acptr->local->since) {
 						i++;
 						break;
 					}
@@ -318,7 +318,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						i++;
 						break;
 					}
-					if (ts && ts != acptr->since) {
+					if (ts && ts != acptr->local->since) {
 						i++;
 						break;
 					}
@@ -338,7 +338,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						i++;
 						break;
 					}
-					if (ts && ts != acptr->since) {
+					if (ts && ts != acptr->local->since) {
 						i++;
 						break;
 					}

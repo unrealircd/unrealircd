@@ -92,7 +92,7 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		/* Non-opers /mkpasswd usage: lag them up, and send a notice to eyes snomask.
 		 * This notice is always sent, even in case of bad usage/bad auth methods/etc.
 		 */
-		sptr->since += 7;
+		sptr->local->since += 7;
 		sendto_snomask(SNO_EYES, "*** /mkpasswd used by %s (%s@%s)",
 			sptr->name, sptr->user->username, GetHost(sptr));
 	}

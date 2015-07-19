@@ -400,10 +400,10 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define IsSetHost(x)			((x)->umodes & UMODE_SETHOST)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
 #define IsSSL(x)		IsSecure(x)
-#define	IsNotSpoof(x)		((x)->nospoof == 0)
+#define	IsNotSpoof(x)		((x)->local->nospoof == 0)
 
 #define GetHost(x)			(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
-#define GetIP(x)			((x->user && x->user->ip_str) ? x->user->ip_str : (MyConnect(x) ? Inet_ia2p(&x->ip) : "255.255.255.255"))
+#define GetIP(x)			((x->user && x->user->ip_str) ? x->user->ip_str : (MyConnect(x) ? Inet_ia2p(&x->local->ip) : "255.255.255.255"))
 
 #define SetKillsF(x)		((x)->user->snomask |= SNO_KILLS)
 #define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
@@ -441,7 +441,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
  * ProtoCtl options
  */
 #ifndef DEBUGMODE
-#define CHECKPROTO(x,y)	((x)->proto & y)
+#define CHECKPROTO(x,y)	((x)->local->proto & y)
 #else
 #define CHECKPROTO(x,y) (checkprotoflags(x, y, __FILE__, __LINE__))
 #endif
@@ -462,30 +462,30 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SupportUHNAMES(x)	(CHECKPROTO(x, PROTO_UHNAMES))
 #define SupportSID(x)		(CHECKPROTO(x, PROTO_SID))
 
-#define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
-#define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
-#define SetNICKv2(x)		((x)->proto |= PROTO_NICKv2)
-#define SetSJOIN2(x)		((x)->proto |= PROTO_SJOIN2)
-#define SetUMODE2(x)		((x)->proto |= PROTO_UMODE2)
-#define SetVL(x)		((x)->proto |= PROTO_VL)
-#define SetSJ3(x)		((x)->proto |= PROTO_SJ3)
-#define SetVHP(x)		((x)->proto |= PROTO_VHP)
-#define SetTKLEXT(x)	((x)->proto |= PROTO_TKLEXT)
-#define SetTKLEXT2(x)	((x)->proto |= PROTO_TKLEXT2)
-#define SetNAMESX(x)	((x)->proto |= PROTO_NAMESX)
-#define SetCLK(x)		((x)->proto |= PROTO_CLK)
-#define SetUHNAMES(x)	((x)->proto |= PROTO_UHNAMES)
+#define SetSJOIN(x)		((x)->local->proto |= PROTO_SJOIN)
+#define SetNoQuit(x)		((x)->local->proto |= PROTO_NOQUIT)
+#define SetNICKv2(x)		((x)->local->proto |= PROTO_NICKv2)
+#define SetSJOIN2(x)		((x)->local->proto |= PROTO_SJOIN2)
+#define SetUMODE2(x)		((x)->local->proto |= PROTO_UMODE2)
+#define SetVL(x)		((x)->local->proto |= PROTO_VL)
+#define SetSJ3(x)		((x)->local->proto |= PROTO_SJ3)
+#define SetVHP(x)		((x)->local->proto |= PROTO_VHP)
+#define SetTKLEXT(x)	((x)->local->proto |= PROTO_TKLEXT)
+#define SetTKLEXT2(x)	((x)->local->proto |= PROTO_TKLEXT2)
+#define SetNAMESX(x)	((x)->local->proto |= PROTO_NAMESX)
+#define SetCLK(x)		((x)->local->proto |= PROTO_CLK)
+#define SetUHNAMES(x)	((x)->local->proto |= PROTO_UHNAMES)
 
-#define ClearSJOIN(x)		((x)->proto &= ~PROTO_SJOIN)
-#define ClearNoQuit(x)		((x)->proto &= ~PROTO_NOQUIT)
-#define ClearNICKv2(x)		((x)->proto &= ~PROTO_NICKv2)
-#define ClearSJOIN2(x)		((x)->proto &= ~PROTO_SJOIN2)
-#define ClearUMODE2(x)		((x)->proto &= ~PROTO_UMODE2)
-#define ClearVL(x)		((x)->proto &= ~PROTO_VL)
-#define ClearVHP(x)		((x)->proto &= ~PROTO_VHP)
-#define ClearSJ3(x)		((x)->proto &= ~PROTO_SJ3)
-#define ClearTKLEXT(x)		((x)->proto &= ~PROTO_TKLEXT)
-#define ClearTKLEXT2(x)		((x)->proto &= ~PROTO_TKLEXT2)
+#define ClearSJOIN(x)		((x)->local->proto &= ~PROTO_SJOIN)
+#define ClearNoQuit(x)		((x)->local->proto &= ~PROTO_NOQUIT)
+#define ClearNICKv2(x)		((x)->local->proto &= ~PROTO_NICKv2)
+#define ClearSJOIN2(x)		((x)->local->proto &= ~PROTO_SJOIN2)
+#define ClearUMODE2(x)		((x)->local->proto &= ~PROTO_UMODE2)
+#define ClearVL(x)		((x)->local->proto &= ~PROTO_VL)
+#define ClearVHP(x)		((x)->local->proto &= ~PROTO_VHP)
+#define ClearSJ3(x)		((x)->local->proto &= ~PROTO_SJ3)
+#define ClearTKLEXT(x)		((x)->local->proto &= ~PROTO_TKLEXT)
+#define ClearTKLEXT2(x)		((x)->local->proto &= ~PROTO_TKLEXT2)
 
 /*
  * defined debugging levels
@@ -888,10 +888,6 @@ struct LocalClient {
 	long sendK;		/* Statistics: total k-bytes send */
 	long receiveM;		/* Statistics: protocol messages received */
 	SSL		*ssl;
-#ifndef NO_FDLIST
-	long lastrecvM;		/* to check for activity --Mika */
-	int  priority;
-#endif
 	long receiveK;		/* Statistics: total k-bytes received */
 	u_short sendB;		/* counters to count upto 1-k lots of bytes */
 	u_short receiveB;	/* sent and received. */

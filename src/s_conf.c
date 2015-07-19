@@ -2588,7 +2588,7 @@ ConfigItem_except *Find_except(aClient *sptr, char *host, short type) {
 	for(excepts = conf_except; excepts; excepts =(ConfigItem_except *) excepts->next) {
 		if (excepts->flag.type == type)
 		{
-			if (match_ip(sptr->ip, host, excepts->mask, excepts->netmask))
+			if (match_ip(sptr->local->ip, host, excepts->mask, excepts->netmask))
 				return excepts;
 		}
 	}
@@ -2655,7 +2655,7 @@ ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
 		{
 			if (sptr)
 			{
-				if (match_ip(sptr->ip, host, ban->mask, ban->netmask))
+				if (match_ip(sptr->local->ip, host, ban->mask, ban->netmask))
 				{
 					/* Person got a exception */
 					if ((type == CONF_BAN_USER || type == CONF_BAN_IP)
@@ -2686,7 +2686,7 @@ ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
 		{
 			if (sptr)
 			{
-				if (match_ip(sptr->ip, host, ban->mask, ban->netmask)) {
+				if (match_ip(sptr->local->ip, host, ban->mask, ban->netmask)) {
 					/* Person got a exception */
 					if (Find_except(sptr, host, type))
 						return NULL;
@@ -2715,7 +2715,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 	{
 		if (!aconf->hostname || !aconf->ip)
 			goto attach;
-		if (aconf->auth && !cptr->passwd && aconf->flags.nopasscont)
+		if (aconf->auth && !cptr->local->passwd && aconf->flags.nopasscont)
 			continue;
 		if (aconf->flags.ssl && !IsSecure(cptr))
 			continue;
@@ -2752,7 +2752,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			*uhost = '\0';
 		strlcat(uhost, sockhost, sizeof(uhost));
 		/* Check the IP */
-		if (match_ip(cptr->ip, uhost, aconf->ip, aconf->netmask))
+		if (match_ip(cptr->local->ip, uhost, aconf->ip, aconf->netmask))
 			goto attach;
 
 		/* Hmm, localhost is a special case, hp == NULL and sockhost contains
@@ -2785,7 +2785,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			strlcpy(uhost, sockhost, sizeof(uhost));
 		get_sockhost(cptr, uhost);
 #ifdef INET6
-		is_ipv4 = IN6_IS_ADDR_V4MAPPED(&cptr->ip);
+		is_ipv4 = IN6_IS_ADDR_V4MAPPED(&cptr->local->ip);
 #endif /* INET6 */
 
 		/* FIXME */
@@ -2798,15 +2798,15 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			{
 				if (
 #ifndef INET6
-				    acptr->ip.S_ADDR == cptr->ip.S_ADDR)
+				    acptr->local->ip.S_ADDR == cptr->local->ip.S_ADDR)
 #else
 				    /*
 				     * match IPv4 exactly and the ipv6
 				     * based on ipv6_clone_mask.
 				     */
 				    (is_ipv4
-					? !bcmp(acptr->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR))
-					: match_ipv6(&acptr->ip, &cptr->ip, aconf->ipv6_clone_mask)))
+					? !bcmp(acptr->local->ip.S_ADDR, cptr->local->ip.S_ADDR, sizeof(cptr->local->ip.S_ADDR))
+					: match_ipv6(&acptr->local->ip, &cptr->local->ip, aconf->ipv6_clone_mask)))
 
 #endif
 				{
@@ -2820,21 +2820,21 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 				}
 			}
 		}
-		if ((i = Auth_Check(cptr, aconf->auth, cptr->passwd)) == -1)
+		if ((i = Auth_Check(cptr, aconf->auth, cptr->local->passwd)) == -1)
 		{
 			exit_client(cptr, cptr, &me,
 				"Password mismatch");
 			return -5;
 		}
-		if ((i == 2) && (cptr->passwd))
+		if ((i == 2) && (cptr->local->passwd))
 		{
-			MyFree(cptr->passwd);
-			cptr->passwd = NULL;
+			MyFree(cptr->local->passwd);
+			cptr->local->passwd = NULL;
 		}
 		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
 		{
-			cptr->class = aconf->class;
-			cptr->class->clients++;
+			cptr->local->class = aconf->class;
+			cptr->local->class->clients++;
 		}
 		else
 		{
@@ -2865,14 +2865,14 @@ ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name)
 
 	for (dchannel = conf_deny_channel; dchannel; dchannel = (ConfigItem_deny_channel *)dchannel->next)
 	{
-		if (!match(dchannel->channel, name) && (dchannel->class ? !strcmp(cptr->class->name, dchannel->class) : 1))
+		if (!match(dchannel->channel, name) && (dchannel->class ? !strcmp(cptr->local->class->name, dchannel->class) : 1))
 			break;
 	}
 	if (dchannel)
 	{
 		for (achannel = conf_allow_channel; achannel; achannel = (ConfigItem_allow_channel *)achannel->next)
 		{
-			if (!match(achannel->channel, name) && (achannel->class ? !strcmp(cptr->class->name, achannel->class) : 1))
+			if (!match(achannel->channel, name) && (achannel->class ? !strcmp(cptr->local->class->name, achannel->class) : 1))
 				break;
 		}
 		if (achannel)

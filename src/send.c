@@ -72,10 +72,10 @@ int dead_link(aClient *to, char *notice)
 	 * If because of BUFFERPOOL problem then clean dbuf's now so that
 	 * notices don't hurt operators below.
 	 */
-	DBufClear(&to->recvQ);
-	DBufClear(&to->sendQ);
+	DBufClear(&to->local->recvQ);
+	DBufClear(&to->local->sendQ);
 
-	if ((to->flags & FLAGS_DEADSOCKET) && to->error_str)
+	if ((to->flags & FLAGS_DEADSOCKET) && to->local->error_str)
 		return -1; /* already pending to be closed */
 
 	to->flags |= FLAGS_DEADSOCKET;
@@ -84,7 +84,7 @@ int dead_link(aClient *to, char *notice)
 		sendto_umode(UMODE_OPER, "Closing link: %s - %s",
 			notice, get_client_name(to, FALSE));
 	Debug((DEBUG_ERROR, "dead_link: %s - %s", notice, get_client_name(to, FALSE)));
-	to->error_str = strdup(notice);
+	to->local->error_str = strdup(notice);
 	return -1;
 }
 
@@ -129,9 +129,9 @@ int  send_queued(aClient *to)
 		return -1;
 	}
 
-	while (DBufLength(&to->sendQ) > 0)
+	while (DBufLength(&to->local->sendQ) > 0)
 	{
-		block = container_of(to->sendQ.dbuf_list.next, dbufbuf, dbuf_node);
+		block = container_of(to->local->sendQ.dbuf_list.next, dbufbuf, dbuf_node);
 		len = block->size;
 
 		/* Returns always len > 0 */
@@ -141,8 +141,8 @@ int  send_queued(aClient *to)
 			snprintf(buf, 256, "Write error: %s", STRERROR(ERRNO));
 			return dead_link(to, buf);
 		}
-		(void)dbuf_delete(&to->sendQ, rlen);
-		to->lastsq = DBufLength(&to->sendQ) / 1024;
+		(void)dbuf_delete(&to->local->sendQ, rlen);
+		to->local->lastsq = DBufLength(&to->local->sendQ) / 1024;
 		if (rlen < block->size)
 		{
 			/* incomplete write due to EWOULDBLOCK, reschedule */
@@ -152,7 +152,7 @@ int  send_queued(aClient *to)
 	}
 	
 	/* Nothing left to write, stop asking for write-ready notification. */
-	if ((DBufLength(&to->sendQ) == 0) && (to->fd >= 0))
+	if ((DBufLength(&to->local->sendQ) == 0) && (to->fd >= 0))
 		fd_setselect(to->fd, FD_SELECT_NOWRITE, NULL, to);
 
 	return (IsDead(to)) ? -1 : 0;
@@ -246,27 +246,27 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 		(*(h->func.intfunc))(&me, to, &msg, &len);
 		if(!msg) return;
 	}
-	if (DBufLength(&to->sendQ) > get_sendq(to))
+	if (DBufLength(&to->local->sendQ) > get_sendq(to))
 	{
 		if (IsServer(to))
 			sendto_ops("Max SendQ limit exceeded for %s: %u > %d",
-			    get_client_name(to, FALSE), DBufLength(&to->sendQ),
+			    get_client_name(to, FALSE), DBufLength(&to->local->sendQ),
 			    get_sendq(to));
 		dead_link(to, "Max SendQ exceeded");
 		return;
 	}
 
-	dbuf_put(&to->sendQ, msg, len);
+	dbuf_put(&to->local->sendQ, msg, len);
 
 	/*
 	 * Update statistics. The following is slightly incorrect
 	 * because it counts messages even if queued, but bytes
 	 * only really sent. Queued bytes get updated in SendQueued.
 	 */
-	to->sendM += 1;
-	me.sendM += 1;
+	to->local->sendM += 1;
+	me.local->sendM += 1;
 
-	if (DBufLength(&to->sendQ) > 0)
+	if (DBufLength(&to->local->sendQ) > 0)
 		send_queued(to);
 }
 
@@ -287,9 +287,9 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 			continue;
 		if (MyConnect(acptr))	/* (It is always a client) */
 			vsendto_prefix_one(acptr, from, pattern, vl);
-		else if (acptr->from->serial != current_serial)
+		else if (acptr->from->local->serial != current_serial)
 		{
-			acptr->from->serial = current_serial;
+			acptr->from->local->serial = current_serial;
 			/*
 			 * Burst messages comes here..
 			 */
@@ -319,9 +319,9 @@ void sendto_channel_butone_with_capability(aClient *one, unsigned int cap,
 			continue;
 		if (MyConnect(acptr))	/* (It is always a client) */
 			vsendto_prefix_one(acptr, from, pattern, vl);
-		else if (acptr->from->serial != current_serial)
+		else if (acptr->from->local->serial != current_serial)
 		{
-			acptr->from->serial = current_serial;
+			acptr->from->local->serial = current_serial;
 			/*
 			 * Burst messages comes here..
 			 */
@@ -386,7 +386,7 @@ good:
 		{
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if (acptr->from->serial != current_serial)
+			if (acptr->from->local->serial != current_serial)
 			{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
 				for (h = Hooks[HOOKTYPE_CAN_SEND_SECURE]; h; h = h->next)
@@ -403,7 +403,7 @@ good:
 				vsendto_prefix_one(acptr, from, pattern, vl);
 				va_end(vl);
 
-				acptr->from->serial = current_serial;
+				acptr->from->local->serial = current_serial;
 			}
 		}
 	}
@@ -508,15 +508,15 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 
 	++current_serial;
 	if (MyConnect(user))
-		user->serial = current_serial;
+		user->local->serial = current_serial;
 	if (user->user)
 		for (channels = user->user->channel; channels; channels = channels->next)
 			for (users = channels->chptr->members; users; users = users->next)
 			{
 				cptr = users->cptr;
-				if (!MyConnect(cptr) || (cptr->serial == current_serial))
+				if (!MyConnect(cptr) || (cptr->local->serial == current_serial))
 					continue;
-				cptr->serial = current_serial;
+				cptr->local->serial = current_serial;
 				sendbufto_one(cptr, sendbuf, sendlen);
 			}
 
@@ -549,17 +549,17 @@ void sendto_common_channels_local_butone(aClient *user, int cap, char *pattern, 
 
 	++current_serial;
 	if (MyConnect(user))
-		user->serial = current_serial;
+		user->local->serial = current_serial;
 	if (user->user)
 	{
 		for (channels = user->user->channel; channels; channels = channels->next)
 			for (users = channels->chptr->members; users; users = users->next)
 			{
 				cptr = users->cptr;
-				if (!MyConnect(cptr) || (cptr->serial == current_serial) ||
+				if (!MyConnect(cptr) || (cptr->local->serial == current_serial) ||
 				    !CHECKPROTO(cptr, cap))
 					continue;
-				cptr->serial = current_serial;
+				cptr->local->serial = current_serial;
 				sendbufto_one(cptr, sendbuf, sendlen);
 			}
 	}
@@ -1009,11 +1009,11 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 	{
 		if (!SendWallops(cptr))
 			continue;
-		if (cptr->from->serial == current_serial)	/* sent message along it already ? */
+		if (cptr->from->local->serial == current_serial)	/* sent message along it already ? */
 			continue;
 		if (cptr->from == one)
 			continue;	/* ...was the one I should skip */
-		cptr->from->serial = current_serial;
+		cptr->from->local->serial = current_serial;
 
 		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
@@ -1039,11 +1039,11 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 	{
 		if (!IsOper(cptr))
 			continue;
-		if (cptr->from->serial == current_serial)	/* sent message along it already ? */
+		if (cptr->from->local->serial == current_serial)	/* sent message along it already ? */
 			continue;
 		if (cptr->from == one)
 			continue;	/* ...was the one I should skip */
-		cptr->from->serial = current_serial;
+		cptr->from->local->serial = current_serial;
 
 		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
@@ -1067,11 +1067,11 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
 	{
 		if (!SendWallops(cptr))
 			continue;
-		if (cptr->from->serial == current_serial)	/* sent message along it already ? */
+		if (cptr->from->local->serial == current_serial)	/* sent message along it already ? */
 			continue;
 		if (!strcmp(cptr->user->server, me.name))	/* a locop */
 			continue;
-		cptr->from->serial = current_serial;
+		cptr->from->local->serial = current_serial;
 
 		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
@@ -1206,22 +1206,22 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 		RunHook(HOOKTYPE_LOCAL_CONNECT, sptr);
 		ircsnprintf(connectd, sizeof(connectd),
 		    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
-		    sptr->listener->port, nick, user->username, user->realhost,
-		    sptr->class ? sptr->class->name : "",
+		    sptr->local->listener->port, nick, user->username, user->realhost,
+		    sptr->local->class ? sptr->local->class->name : "",
 		IsSecure(sptr) ? "[secure " : "",
-		IsSecure(sptr) ? SSL_get_cipher(sptr->ssl) : "",
+		IsSecure(sptr) ? SSL_get_cipher(sptr->local->ssl) : "",
 		IsSecure(sptr) ? "]" : "");
 		ircsnprintf(connecth, sizeof(connecth),
 		    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
-		    user->username, user->realhost, Inet_ia2p(&sptr->ip),
-		    sptr->class ? sptr->class->name : "0");
+		    user->username, user->realhost, Inet_ia2p(&sptr->local->ip),
+		    sptr->local->class ? sptr->local->class->name : "0");
 	}
 	else
 	{
 		ircsnprintf(connectd, sizeof(connectd), "*** Notice -- Client exiting: %s (%s@%s) [%s]",
 			nick, user->username, user->realhost, comment);
 		ircsnprintf(connecth, sizeof(connecth), "*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
-			nick, user->username, user->realhost, comment, Inet_ia2p(&sptr->ip));
+			nick, user->username, user->realhost, comment, Inet_ia2p(&sptr->local->ip));
 	}
 
 	list_for_each_entry(cptr, &oper_list, special_node)

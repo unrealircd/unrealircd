@@ -324,7 +324,7 @@ int  check_registered(aClient *sptr)
 **
 ** NOTE 1:
 **	Watch out the allocation of "nbuf", if either sptr->name
-**	or sptr->sockhost gets changed into pointers instead of
+**	or sptr->local->sockhost gets changed into pointers instead of
 **	directly allocated within the structure...
 **
 ** NOTE 2:
@@ -345,16 +345,16 @@ char *get_client_name(aClient *sptr, int showip)
 			    sptr->username,
 #ifdef INET6
 			    inetntop(AF_INET6,
-			    (char *)&sptr->ip, mydummy, MYDUMMY_SIZE),
+			    (char *)&sptr->local->ip, mydummy, MYDUMMY_SIZE),
 #else
-			    inetntoa((char *)&sptr->ip),
+			    inetntoa((char *)&sptr->local->ip),
 #endif
-			    (unsigned int)sptr->port);
+			    (unsigned int)sptr->local->port);
 		else
 		{
-			if (mycmp(sptr->name, sptr->sockhost))
+			if (mycmp(sptr->name, sptr->local->sockhost))
 				(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%s]",
-				    sptr->name, sptr->sockhost);
+				    sptr->name, sptr->local->sockhost);
 			else
 				return sptr->name;
 		}
@@ -369,12 +369,12 @@ char *get_client_host(aClient *cptr)
 
 	if (!MyConnect(cptr))
 		return cptr->name;
-	if (!cptr->hostp)
+	if (!cptr->local->hostp)
 		return get_client_name(cptr, FALSE);
 	(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%-.*s@%-.*s]",
 	    cptr->name, USERLEN,
   	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
-	    HOSTLEN, cptr->hostp->h_name);
+	    HOSTLEN, cptr->local->hostp->h_name);
 	return nbuf;
 }
 
@@ -389,7 +389,7 @@ void get_sockhost(aClient *cptr, char *host)
 		s++;
 	else
 		s = host;
-	strlcpy(cptr->sockhost, s, sizeof(cptr->sockhost));
+	strlcpy(cptr->local->sockhost, s, sizeof(cptr->local->sockhost));
 }
 
 void remove_dcc_references(aClient *sptr)
@@ -605,13 +605,13 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 
 	if (MyConnect(sptr))
 	{
-		if (sptr->class)
+		if (sptr->local->class)
 		{
-			sptr->class->clients--;
-			if ((sptr->class->flag.temporary) && !sptr->class->clients && !sptr->class->xrefcount)
+			sptr->local->class->clients--;
+			if ((sptr->local->class->flag.temporary) && !sptr->local->class->clients && !sptr->local->class->xrefcount)
 			{
-				delete_classblock(sptr->class);
-				sptr->class = NULL;
+				delete_classblock(sptr->local->class);
+				sptr->local->class = NULL;
 			}
 		}
 		if (IsClient(sptr))
@@ -635,10 +635,10 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			ircd_log(LOG_SERVER, "SQUIT %s (%s)", sptr->name, comment);
 		}
 		free_pending_net(sptr);
-		if (sptr->listener)
-			if (sptr->listener && !IsOutgoing(sptr))
+		if (sptr->local->listener)
+			if (sptr->local->listener && !IsOutgoing(sptr))
 			{
-				listen_conf = sptr->listener;
+				listen_conf = sptr->local->listener;
 				listen_conf->clients--;
 				if (listen_conf->flag.temporary && (listen_conf->clients == 0))
 				{
@@ -659,7 +659,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 				free_str_list(sptr->user->lopt->nolist);
 				MyFree(sptr->user->lopt);
 			}
-			on_for = TStime() - sptr->firsttime;
+			on_for = TStime() - sptr->local->firsttime;
 			if (IsHidden(sptr))
 				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s [VHOST %s] (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
@@ -1109,20 +1109,20 @@ int unreal_mask_match(aClient *acptr, ConfigItem_mask *m)
 	{
 		/* is a person */
 		strlcpy(nuhost, make_user_host(acptr->user->username, acptr->user->realhost), sizeof(nuhost));
-		strlcpy(nuip, make_user_host(acptr->user->username, Inet_ia2pNB(&acptr->ip, 0)), sizeof(nuip));
-		strlcpy(nuip2, make_user_host(acptr->user->username, Inet_ia2pNB(&acptr->ip, 1)), sizeof(nuip2));
+		strlcpy(nuip, make_user_host(acptr->user->username, Inet_ia2pNB(&acptr->local->ip, 0)), sizeof(nuip));
+		strlcpy(nuip2, make_user_host(acptr->user->username, Inet_ia2pNB(&acptr->local->ip, 1)), sizeof(nuip2));
 	} else {
 		/* is an unknown or a server */
-		snprintf(nuhost, sizeof(nuhost), "%s@%s", acptr->username, acptr->sockhost);
-		snprintf(nuip, sizeof(nuip), "%s@%s", acptr->username, Inet_ia2pNB(&acptr->ip, 0));
-		snprintf(nuip2, sizeof(nuip2), "%s@%s", acptr->username, Inet_ia2pNB(&acptr->ip, 1));
+		snprintf(nuhost, sizeof(nuhost), "%s@%s", acptr->username, acptr->local->sockhost);
+		snprintf(nuip, sizeof(nuip), "%s@%s", acptr->username, Inet_ia2pNB(&acptr->local->ip, 0));
+		snprintf(nuip2, sizeof(nuip2), "%s@%s", acptr->username, Inet_ia2pNB(&acptr->local->ip, 1));
 	}
 
 	// wait.. if we use match_ip() we don't need both nuip & nuip2 ? better verify... (IPv4-IPv6 fun)
 
 	for (; m; m = m->next)
 	{
-		if (match_ip(acptr->ip, nuip, m->mask, m->netmask) || !match(m->mask, nuhost))
+		if (match_ip(acptr->local->ip, nuip, m->mask, m->netmask) || !match(m->mask, nuhost))
 			return 1;
 	}
 	

@@ -93,7 +93,7 @@ DLLFUNC CMD_FUNC(m_user)
 	if (IsServer(cptr) && !IsUnknown(sptr))
 		return 0;
 
-	if (MyConnect(sptr) && (sptr->listener->options & LISTENER_SERVERSONLY))
+	if (MyConnect(sptr) && (sptr->local->listener->options & LISTENER_SERVERSONLY))
 	{
 		return exit_client(cptr, sptr, sptr,
 		    "This port is for servers only");
@@ -188,9 +188,9 @@ DLLFUNC CMD_FUNC(m_user)
 	 * this was copying user supplied data directly into user->realhost
 	 * which seemed bad. Not to say this is much better ;p. -- Syzop
 	 */
-	strlcpy(user->realhost, Inet_ia2p(&sptr->ip), sizeof(user->realhost));
+	strlcpy(user->realhost, Inet_ia2p(&sptr->local->ip), sizeof(user->realhost));
 	if (!user->ip_str)
-		user->ip_str = strdup(Inet_ia2p(&sptr->ip));
+		user->ip_str = strdup(Inet_ia2p(&sptr->local->ip));
 	user->server = me_hash;
       user_finish:
 	if (sstamp != NULL && *sstamp != '*')
