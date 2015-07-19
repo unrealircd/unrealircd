@@ -1247,8 +1247,8 @@ void sendto_fconnectnotice(aClient *acptr, int disconnect, char *comment)
 	else
 	{
 		ircsnprintf(connect, sizeof(connect), "*** Client exiting: %s (%s@%s) [%s] (%s)",
-			acptr->name, acptr->user->username, acptr->user->realhost, comment,
-			acptr->ip ? acptr->ip : "0");
+			acptr->name, acptr->user->username, acptr->user->realhost,
+			acptr->ip ? acptr->ip : "0", comment);
 	}
 
 	list_for_each_entry(cptr, &oper_list, special_node)
