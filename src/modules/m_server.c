@@ -155,6 +155,12 @@ char *inpath = get_client_name(cptr, TRUE);
 aClient *acptr = NULL, *ocptr = NULL;
 ConfigItem_ban *bconf;
 
+	/* We set the sockhost here so you can have incoming masks based on hostnames.
+	 * Perhaps a bit late to do it here, but does anyone care?
+	 */
+	if (cptr->local->hostp && cptr->local->hostp->h_name)
+		get_sockhost(cptr, cptr->local->hostp->h_name);
+
 	if (link_out)
 		*link_out = NULL;
 	
