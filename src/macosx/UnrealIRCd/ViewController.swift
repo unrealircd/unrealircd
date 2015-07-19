@@ -11,32 +11,69 @@ import AppKit
 
 class ViewController: NSViewController, ChangeNotifierDelegate {
     
-    @IBOutlet weak var autoStartAgentCheckbox : NSButton?
-    @IBOutlet weak var autoStartDaemonCheckbox : NSButton?
-    @IBOutlet weak var startStopButton : NSButton?
+    @IBOutlet private weak var autoStartAgentCheckbox : NSButton?
+    @IBOutlet private weak var autoStartDaemonCheckbox : NSButton?
+    @IBOutlet private weak var startStopButton : NSButton?
     static let stopButtonString = "Stop"
     static let startButtonString = "Start"
     var configModel : ConfigurationModel?
-    
-    func updateInterface(model: ConfigurationModel, daemonStatus: Bool)
     {
-        configModel = model
-        autoStartAgentCheckbox?.state = model.shouldAutoStartAgent ? NSOnState : NSOffState
-        autoStartDaemonCheckbox?.state = model.shouldAutoStartDaemon ? NSOnState : NSOffState
-        startStopButton?.title = daemonStatus ? ViewController.stopButtonString : ViewController.startButtonString
+        didSet {
+            updateConfigurationOptions()
+            configModel?.attachChangeDelegate(self)
+        }
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    var daemonModel : DaemonModel?
+    {
+        didSet {
+            updateDaemonButton()
+            daemonModel?.attachChangeDelegate(self)
+        }
+    }
+    
+    func updateDaemonButton()
+    {
+        startStopButton?.title = daemonModel!.isRunning ? ViewController.stopButtonString : ViewController.startButtonString
+    }
+    
+    func updateConfigurationOptions()
+    {
+        autoStartAgentCheckbox?.state = configModel!.shouldAutoStartAgent ? NSOnState : NSOffState
+        autoStartDaemonCheckbox?.state = configModel!.shouldAutoStartDaemon ? NSOnState : NSOffState
     }
     
     override func viewWillDisappear() {
+        saveConfigurationOptions()
+    }
+    
+    func saveConfigurationOptions()
+    {
         configModel?.shouldAutoStartAgent = autoStartAgentCheckbox?.state == NSOnState ? true : false
         configModel?.shouldAutoStartDaemon = autoStartAgentCheckbox?.state == NSOnState ? true : false
     }
-
-    override var representedObject: AnyObject? {
-        didSet {
+    
+    @IBAction func startStopServer(sender: AnyObject)
+    {
+        if daemonModel!.isRunning
+        {
+            daemonModel?.stop()
+        }
+        else
+        {
+            daemonModel?.start()
+        }
+    }
+    
+    func modelChanged(model: ChangeNotifier) {
+        if model === daemonModel
+        {
+            updateDaemonButton()
+        }
+        
+        else if model === configModel
+        {
+            updateConfigurationOptions()
         }
     }
 

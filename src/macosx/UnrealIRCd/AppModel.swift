@@ -54,8 +54,9 @@ class AppModel : ChangeNotifierDelegate
         
         
         let storyboard = NSStoryboard(name: "Main", bundle:nil)
-        let controller = storyboard!.instantiateControllerWithIdentifier("Configuration") as! NSWindowController?
+        let controller = storyboard!.instantiateControllerWithIdentifier("Configuration") as! WindowController?
         assert(controller != nil, "Unable to load window from XIB")
+        controller?.setupModels(daemonModel, configurationModel: configurationModel)
         windowController = controller
     }
     
@@ -67,12 +68,12 @@ class AppModel : ChangeNotifierDelegate
     
     func startDaemon()
     {
-        daemonModel.stop()
+        daemonModel.start()
     }
     
     func stopDaemon()
     {
-        daemonModel.start()
+        daemonModel.stop()
     }
     
     func modelChanged(model: ChangeNotifier)

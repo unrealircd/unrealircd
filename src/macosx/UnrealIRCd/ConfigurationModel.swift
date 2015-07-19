@@ -17,6 +17,7 @@ class ConfigurationModel : ChangeNotifier {
         set(value)
         {
             defaults.setBool(value, forKey: ConfigurationModel.autoStartAgentKey)
+            defaults.synchronize()
             notifyListeners();
         }
         get
@@ -29,6 +30,7 @@ class ConfigurationModel : ChangeNotifier {
         set(value)
         {
             defaults.setBool(value, forKey: ConfigurationModel.autoStartDaemonKey)
+            defaults.synchronize()
             notifyListeners();
         }
         get

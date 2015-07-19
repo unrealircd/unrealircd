@@ -69,7 +69,7 @@
         <!--Window Controller-->
         <scene sceneID="R2V-B0-nI4">
             <objects>
-                <windowController storyboardIdentifier="Configuration" id="B8D-0N-5wS" sceneMemberID="viewController">
+                <windowController storyboardIdentifier="Configuration" id="B8D-0N-5wS" customClass="WindowController" customModule="UnrealIRCd" customModuleProvider="target" sceneMemberID="viewController">
                     <window key="window" title="UnrealIRCd Configuration" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="IQv-IB-iLA">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
@@ -81,11 +81,6 @@
                     </connections>
                 </windowController>
                 <customObject id="Oky-zY-oP4" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
-                <customObject id="Vyg-9E-Gh9" customClass="AppDelegate" customModule="UnrealIRCd" customModuleProvider="target">
-                    <connections>
-                        <outlet property="mainMenu" destination="nGf-dN-dCb" id="EwD-6y-sm5"/>
-                    </connections>
-                </customObject>
             </objects>
             <point key="canvasLocation" x="75" y="250"/>
         </scene>
@@ -103,6 +98,9 @@
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
+                                <connections>
+                                    <action selector="startStopServer:" target="XfG-lQ-9wD" id="EhM-sP-aEa"/>
+                                </connections>
                             </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6bw-Ac-zJw">
                                 <rect key="frame" x="132" y="146" width="159" height="17"/>
@@ -143,13 +141,13 @@
                             </button>
                         </subviews>
                     </view>
+                    <connections>
+                        <outlet property="autoStartAgentCheckbox" destination="fya-YD-1uu" id="Kx6-Ab-fEZ"/>
+                        <outlet property="autoStartDaemonCheckbox" destination="uW3-i9-Wt6" id="ZTJ-tW-iPq"/>
+                        <outlet property="startStopButton" destination="4S5-7w-SIn" id="jBU-RO-YdF"/>
+                    </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
-                <customObject id="oyo-qn-tpc" customClass="AppDelegate" customModule="UnrealIRCd" customModuleProvider="target">
-                    <connections>
-                        <outlet property="mainMenu" destination="nGf-dN-dCb" id="Qwx-H9-9Nj"/>
-                    </connections>
-                </customObject>
             </objects>
             <point key="canvasLocation" x="75" y="612.5"/>
         </scene>

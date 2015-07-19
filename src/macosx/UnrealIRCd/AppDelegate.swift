@@ -13,42 +13,41 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     
     @IBOutlet weak var mainMenu : NSMenu?
-    var appModel : AppModel
+    var appModel : AppModel?
     
     override init() {
-        assert(mainMenu != nil, "Unable to load Menu from XIB")
-        appModel = AppModel(menu: mainMenu!)
         super.init()
     }
  
     func applicationDidFinishLaunching(aNotification: NSNotification)
     {
-        appModel.startup()
+        appModel = AppModel(menu: mainMenu!)
+        appModel?.startup()
         
     }
 
     func applicationWillTerminate(aNotification: NSNotification) {
-        appModel.shutdown()
+        appModel?.shutdown()
     }
     
     @IBAction func startDaemon(sender: NSMenuItem) {
-        appModel.startDaemon()
+        appModel?.startDaemon()
     }
     
     @IBAction func stopDaemon(sender: NSMenuItem) {
-        appModel.stopDaemon()
+        appModel?.stopDaemon()
     }
     
     @IBAction func configureDaemon(sender: NSMenuItem) {
-        appModel.showPreferences()
+        appModel?.showPreferences()
     }
     
     @IBAction func help(sender: NSMenuItem) {
-        appModel.launchHelp()
+        appModel?.launchHelp()
     }
     
     @IBAction func quit(sender: NSMenuItem) {
-        appModel.shutdown()
+        appModel?.shutdown()
     }
 
 
