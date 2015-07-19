@@ -8,22 +8,32 @@
 
 import Foundation
 
-class DaemonModel
+class DaemonModel : ChangeNotifier
 {
     
-    func start() -> Bool
+    
+    override init()
     {
-        return false
+        isRunning = false
+        super.init()
+    }
+
+    
+    func start()
+    {
+        isRunning = true
     }
     
-    func stop() -> Bool
+    func stop()
     {
-        return false
+        isRunning = false
     }
     
     var isRunning : Bool
     {
-        return false;
+        didSet {
+            notifyListeners()
+        }
     }
     
     

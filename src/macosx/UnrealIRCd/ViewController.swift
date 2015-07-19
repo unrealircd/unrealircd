@@ -9,7 +9,7 @@
 import Cocoa
 import AppKit
 
-class ViewController: NSViewController {
+class ViewController: NSViewController, ChangeNotifierDelegate {
     
     @IBOutlet weak var autoStartAgentCheckbox : NSButton?
     @IBOutlet weak var autoStartDaemonCheckbox : NSButton?

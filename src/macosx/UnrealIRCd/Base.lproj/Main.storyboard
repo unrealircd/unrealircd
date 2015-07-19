@@ -61,6 +61,7 @@
                         <outlet property="mainMenu" destination="nGf-dN-dCb" id="k5P-Yl-n8g"/>
                     </connections>
                 </customObject>
+                <customObject id="vdW-9I-abO"/>
                 <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="16.5" y="-49"/>
@@ -80,6 +81,11 @@
                     </connections>
                 </windowController>
                 <customObject id="Oky-zY-oP4" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+                <customObject id="Vyg-9E-Gh9" customClass="AppDelegate" customModule="UnrealIRCd" customModuleProvider="target">
+                    <connections>
+                        <outlet property="mainMenu" destination="nGf-dN-dCb" id="EwD-6y-sm5"/>
+                    </connections>
+                </customObject>
             </objects>
             <point key="canvasLocation" x="75" y="250"/>
         </scene>
@@ -139,6 +145,11 @@
                     </view>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+                <customObject id="oyo-qn-tpc" customClass="AppDelegate" customModule="UnrealIRCd" customModuleProvider="target">
+                    <connections>
+                        <outlet property="mainMenu" destination="nGf-dN-dCb" id="Qwx-H9-9Nj"/>
+                    </connections>
+                </customObject>
             </objects>
             <point key="canvasLocation" x="75" y="612.5"/>
         </scene>

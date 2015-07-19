@@ -9,7 +9,7 @@
 import Foundation
 import AppKit
 
-class AppModel
+class AppModel : ChangeNotifierDelegate
 {
     var menuItem : NSStatusItem
     static let logoName = "logo.png"
@@ -19,19 +19,17 @@ class AppModel
     var windowController : NSWindowController?
     var mainMenu : NSMenu
     
-    init()
+    init(menu: NSMenu)
     {
-        
-        daemonModel = DaemonModel()
-        configurationModel = ConfigurationModel()
         menuItem = NSStatusBar.systemStatusBar().statusItemWithLength(-1/*NSVariableStatusItemLength*/)
-    }
-    
-    func setupStatusItem(menu: NSMenu)
-    {
         mainMenu = menu
         menuItem.image = NSImage(named: AppModel.logoName)
         menuItem.menu = menu
+        
+        daemonModel = DaemonModel()
+        configurationModel = ConfigurationModel()
+
+        daemonModel.attachChangeDelegate(self)
     }
     
     func launchHelp()
@@ -47,12 +45,11 @@ class AppModel
         windowController!.showWindow(self)
     }
     
-    func startupComplete()
+    func startup()
     {
         if configurationModel.shouldAutoStartDaemon
         {
             daemonModel.start()
-            updateUIFromDaemon()
         }
         
         
@@ -71,16 +68,14 @@ class AppModel
     func startDaemon()
     {
         daemonModel.stop()
-        updateUIFromDaemon()
     }
     
     func stopDaemon()
     {
         daemonModel.start()
-        updateUIFromDaemon()
     }
     
-    func updateUIFromDaemon()
+    func modelChanged(model: ChangeNotifier)
     {
         let daemonStatus = daemonModel.isRunning
         mainMenu.itemWithTitle("Start UnrealIRCd")?.enabled = !daemonStatus

@@ -7,27 +7,11 @@
 //
 
 import Foundation
-class ConfigurationModel {
+class ConfigurationModel : ChangeNotifier {
 
     let defaults = NSUserDefaults.standardUserDefaults()
-    var changeDelegates : Set<ConfigurationModelChangeDelegate> = []
     static let autoStartDaemonKey = "IRCD_AUTOSTART"
     static let autoStartAgentKey = "AGENT_AUTOSTART"
-    
-    init()
-    {
-        
-    }
-    
-    func attachChangeDelegate(delegate: ConfigurationModelChangeDelegate)
-    {
-        changeDelegates.insert(delegate)
-    }
-    
-    func dettachChangeDelegate(delegate: ConfigurationModelChangeDelegate)
-    {
-        changeDelegates.remove(delegate)
-    }
     
     var shouldAutoStartAgent : Bool {
         set(value)
@@ -52,17 +36,4 @@ class ConfigurationModel {
             return defaults.boolForKey(ConfigurationModel.autoStartDaemonKey)
         }
     }
-    
-    func notifyListeners()
-    {
-        for listener in changeDelegates
-        {
-            listener.configurationModelChanged(self)
-        }
-    }
-}
-
-protocol ConfigurationModelChangeDelegate : Hashable
-{
-    func configurationModelChanged(model: ConfigurationModel);
 }

@@ -16,16 +16,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var appModel : AppModel
     
     override init() {
-        appModel = AppModel()
+        assert(mainMenu != nil, "Unable to load Menu from XIB")
+        appModel = AppModel(menu: mainMenu!)
         super.init()
     }
  
     func applicationDidFinishLaunching(aNotification: NSNotification)
     {
-        assert(mainMenu != nil, "Unable to load Menu from XIB")
-        
-        appModel.setupStatusItem(mainMenu!)
-        appModel.startupComplete()
+        appModel.startup()
         
     }
 
