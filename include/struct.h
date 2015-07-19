@@ -403,7 +403,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	IsNotSpoof(x)		((x)->local->nospoof == 0)
 
 #define GetHost(x)			(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
-#define GetIP(x)			((x->user && x->user->ip_str) ? x->user->ip_str : (MyConnect(x) ? Inet_ia2p(&x->local->ip) : "255.255.255.255"))
+#define GetIP(x)			(x->ip ? x->ip : "255.255.255.255")
 
 #define SetKillsF(x)		((x)->user->snomask |= SNO_KILLS)
 #define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
@@ -676,7 +676,6 @@ struct User {
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
-	char *ip_str;		/* The IP in string form */
 	char *operlogin;	/* Only used if person is/was opered, used for oper::maxlogins */
 	struct {
 		time_t nick_t;
@@ -868,6 +867,8 @@ struct Client {
 
 	struct list_head lclient_node;	/* for local client list (lclient_list) */
 	struct list_head special_node;	/* for special lists (server || unknown || oper) */
+	
+	char *ip; /* IP of user or server */
 };
 
 struct LocalClient {

@@ -171,6 +171,7 @@ void free_client(aClient *cptr)
 {
 	if (!list_empty(&cptr->client_node))
 		list_del(&cptr->client_node);
+
 	if (MyConnect(cptr))
 	{
 		if (!list_empty(&cptr->lclient_node))
@@ -189,6 +190,8 @@ void free_client(aClient *cptr)
 			MyFree(cptr->local);
 		}
 	}
+	
+	safefree(cptr->ip);
 
 	MyFree(cptr);
 }
@@ -228,7 +231,6 @@ anUser *make_user(aClient *cptr)
 		user->snomask = 0;
 		*user->realhost = '\0';
 		user->virthost = NULL;
-		user->ip_str = NULL;
 		cptr->user = user;		
 	}
 	return user;
@@ -281,8 +283,6 @@ void free_user(anUser *user, aClient *cptr)
 		}
 		if (user->virthost)
 			MyFree(user->virthost);
-		if (user->ip_str)
-			MyFree(user->ip_str);
 		if (user->operlogin)
 			MyFree(user->operlogin);
 		mp_pool_release(user);

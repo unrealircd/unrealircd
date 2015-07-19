@@ -1133,6 +1133,7 @@ aClient *add_connection(ConfigItem_listen *cptr, int fd)
 		struct SOCKADDR_IN addr;
 		aClient *acptr2;
 		int  len = sizeof(struct SOCKADDR_IN);
+		char *s;
 
 		if (getpeername(fd, (struct SOCKADDR *)&addr, &len) == -1)
 		{
@@ -1155,6 +1156,8 @@ add_con_refuse:
 		 */
 		get_sockhost(acptr, Inet_si2p(&addr));
 		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->local->ip, sizeof(struct IN_ADDR));
+		
+		acptr->ip = strdup(Inet_ia2p(&acptr->local->ip)); /* can't fail.. can it? */
 
 		/* Tag loopback connections as FLAGS_LOCAL */
 #ifdef INET6
@@ -1717,6 +1720,8 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 	}
 	bcopy((char *)&aconf->ipnum, (char *)&server.SIN_ADDR, sizeof(struct IN_ADDR));
 	bcopy((char *)&aconf->ipnum, (char *)&cptr->local->ip, sizeof(struct IN_ADDR));
+	cptr->ip = strdup(Inet_ia2p(&cptr->local->ip)); /* can't fail.. can it? */
+	
 	server.SIN_PORT = htons(((aconf->outgoing.port > 0) ? aconf->outgoing.port : portnum));
 	*lenp = sizeof(server);
 	return (struct SOCKADDR *)&server;

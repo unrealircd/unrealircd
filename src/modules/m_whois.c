@@ -84,7 +84,6 @@ MOD_UNLOAD(m_whois)
 DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	Membership *lp;
-	anUser *user;
 	aClient *acptr;
 	aChannel *chptr;
 	char *nick, *tmp, *name;
@@ -139,11 +138,10 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (!IsPerson(acptr))
 				continue;
 
-			user = acptr->user;
 			name = (!*acptr->name) ? "?" : acptr->name;
 
 			invis = acptr != sptr && IsInvisible(acptr);
-			member = (user->channel) ? 1 : 0;
+			member = (acptr->user->channel) ? 1 : 0;
 
 			hideoper = 0;
 			if (IsHideOper(acptr) && (acptr != sptr) && !IsOper(sptr))
@@ -151,8 +149,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
 			    sptr->name, name,
-			    user->username,
-			    IsHidden(acptr) ? user->virthost : user->realhost,
+			    acptr->user->username,
+			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,
 			    acptr->info);
 
 			if (IsOper(sptr) || acptr == sptr)
@@ -170,7 +168,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, rpl_str(RPL_WHOISHOST),
 				    me.name, sptr->name, acptr->name,
 					(MyConnect(acptr) && strcmp(acptr->username, "unknown")) ? acptr->username : "*",
-					user->realhost, user->ip_str ? user->ip_str : "");
+					acptr->user->realhost, acptr->user->ip_str ? acptr->user->ip_str : "");
 			}
 
 			if (IsARegNick(acptr))
@@ -178,7 +176,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			
 			found = 1;
 			mlen = strlen(me.name) + strlen(sptr->name) + 10 + strlen(name);
-			for (len = 0, *buf = '\0', lp = user->channel; lp; lp = lp->next)
+			for (len = 0, *buf = '\0', lp = acptr->user->channel; lp; lp = lp->next)
 			{
 				Hook *h;
 				int ret = EX_ALLOW;
@@ -302,12 +300,12 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
                         if (!(IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES))
 				sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
-				    me.name, sptr->name, name, user->server,
+				    me.name, sptr->name, name, acptr->user->server,
 				    acptr->srvptr ? acptr->srvptr->info : "*Not On This Net*");
 
-			if (user->away)
+			if (acptr->user->away)
 				sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
-				    sptr->name, name, user->away);
+				    sptr->name, name, acptr->user->away);
 
 			if (IsOper(acptr) && !hideoper)
 			{
@@ -342,11 +340,11 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			
 			RunHook2(HOOKTYPE_WHOIS, sptr, acptr);
 
-			if (user->swhois && !hideoper)
+			if (acptr->user->swhois && !hideoper)
 			{
 				SWhois *s;
 				
-				for (s = user->swhois; s; s = s->next)
+				for (s = acptr->user->swhois; s; s = s->next)
 					sendto_one(sptr, ":%s %d %s %s :%s",
 					    me.name, RPL_WHOISSPECIAL, sptr->name,
 					    name, s->line);
@@ -356,8 +354,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 * display services account name if it's actually a services account name and
 			 * not a legacy timestamp.  --nenolod
 			 */
-			if (!isdigit(*user->svid))
-				sendto_one(sptr, rpl_str(RPL_WHOISLOGGEDIN), me.name, sptr->name, name, user->svid);
+			if (!isdigit(*acptr->user->svid))
+				sendto_one(sptr, rpl_str(RPL_WHOISLOGGEDIN), me.name, sptr->name, name, acptr->user->svid);
 
 			/*
 			 * Umode +I hides an oper's idle time from regular users.
