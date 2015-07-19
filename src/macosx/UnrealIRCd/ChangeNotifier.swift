@@ -23,13 +23,11 @@ class ChangeNotifier {
     
     func dettachChangeDelegate(delegate: ChangeNotifierDelegate)
     {
-        
-        
         for i in 0 ... changeDelegates.count
         {
             if changeDelegates[i] === delegate
             {
-                changeDelegates.removeAtIndex(index)
+                changeDelegates.removeAtIndex(i)
             }
         }
     }
@@ -42,7 +40,7 @@ class ChangeNotifier {
     }
 }
 
-protocol ChangeNotifierDelegate
+protocol ChangeNotifierDelegate : class
 {
     func modelChanged(model: ChangeNotifier);
 }

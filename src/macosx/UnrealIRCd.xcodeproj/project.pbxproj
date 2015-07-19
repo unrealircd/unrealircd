@@ -18,6 +18,7 @@
 		1FE784F91B3DF0DD006CB6DD /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FE784F81B3DF0DD006CB6DD /* Images.xcassets */; };
 		1FE784FC1B3DF0DD006CB6DD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1FE784FA1B3DF0DD006CB6DD /* Main.storyboard */; };
 		1FE785081B3DF0DD006CB6DD /* UnrealIRCdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE785071B3DF0DD006CB6DD /* UnrealIRCdTests.swift */; };
+		1FFB26B51B5BABFF00FF2D71 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFB26B41B5BABFF00FF2D71 /* WindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +47,7 @@
 		1FE785011B3DF0DD006CB6DD /* UnrealIRCdTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UnrealIRCdTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FE785061B3DF0DD006CB6DD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1FE785071B3DF0DD006CB6DD /* UnrealIRCdTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnrealIRCdTests.swift; sourceTree = "<group>"; };
+		1FFB26B41B5BABFF00FF2D71 /* WindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,6 +98,7 @@
 				1F1E10F71B5A43D800D69F41 /* ConfigurationModel.swift */,
 				1F1E10F91B5A43EE00D69F41 /* AppModel.swift */,
 				1F67373E1B5B93CC00C213D8 /* ChangeNotifier.swift */,
+				1FFB26B41B5BABFF00FF2D71 /* WindowController.swift */,
 			);
 			path = UnrealIRCd;
 			sourceTree = "<group>";
@@ -249,6 +252,7 @@
 				1F1E10F81B5A43D800D69F41 /* ConfigurationModel.swift in Sources */,
 				1FE784F71B3DF0DD006CB6DD /* ViewController.swift in Sources */,
 				1FE784F51B3DF0DD006CB6DD /* AppDelegate.swift in Sources */,
+				1FFB26B51B5BABFF00FF2D71 /* WindowController.swift in Sources */,
 				1F1E10FA1B5A43EE00D69F41 /* AppModel.swift in Sources */,
 				1F1E10F61B5A43CD00D69F41 /* DaemonModel.swift in Sources */,
 				1F67373F1B5B93CC00C213D8 /* ChangeNotifier.swift in Sources */,
