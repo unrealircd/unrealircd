@@ -917,13 +917,13 @@ DLLFUNC CMD_FUNC(m_nick)
 			} else
 				sptr->user->flood.nick_c++;
 
-			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed their nickname to %s",
+			sendto_snomask(SNO_NICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
 				sptr->name, sptr->user->username, sptr->user->realhost, nick);
 
 			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
 		} else {
 			if (!IsULine(sptr))
-				sendto_snomask(SNO_FNICKCHANGE, "*** Notice -- %s (%s@%s) has changed their nickname to %s",
+				sendto_snomask(SNO_FNICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
 					sptr->name, sptr->user->username, sptr->user->realhost, nick);
 
 			RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, cptr, sptr, nick);
@@ -1117,7 +1117,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				return FLUSH_BUFFER;
 
 			sendto_snomask(SNO_CLIENT,
-			    "*** Notice -- %s from %s.",
+			    "*** %s from %s.",
 			    i == -3 ? "Too many connections" :
 			    "Unauthorized connection", get_client_host(sptr));
 			ircstp->is_ref++;

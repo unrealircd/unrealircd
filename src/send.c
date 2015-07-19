@@ -763,7 +763,7 @@ void sendto_ops(char *pattern, ...)
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 		if (!IsServer(cptr) && !IsMe(cptr) && SendServNotice(cptr))
 		{
-			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Notice -- ", me.name, cptr->name);
+			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, cptr->name);
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
@@ -1170,7 +1170,7 @@ void sendto_realops(char *pattern, ...)
 
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
-		(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Notice -- ",
+		(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ",
 		    me.name, cptr->name);
 		(void)strlcat(nbuf, pattern, sizeof nbuf);
 
@@ -1205,22 +1205,22 @@ void sendto_connectnotice(aClient *acptr, int disconnect, char *comment)
 	{
 		RunHook(HOOKTYPE_LOCAL_CONNECT, acptr);
 		ircsnprintf(connectd, sizeof(connectd),
-		    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
+		    "*** Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
 		    acptr->local->listener->port, acptr->name, acptr->user->username, acptr->user->realhost,
 		    acptr->local->class ? acptr->local->class->name : "",
 		IsSecure(acptr) ? "[secure " : "",
 		IsSecure(acptr) ? SSL_get_cipher(acptr->local->ssl) : "",
 		IsSecure(acptr) ? "]" : "");
 		ircsnprintf(connecth, sizeof(connecth),
-		    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", acptr->name,
+		    "*** Client connecting: %s (%s@%s) [%s] {%s}", acptr->name,
 		    acptr->user->username, acptr->user->realhost, Inet_ia2p(&acptr->local->ip),
 		    acptr->local->class ? acptr->local->class->name : "0");
 	}
 	else
 	{
-		ircsnprintf(connectd, sizeof(connectd), "*** Notice -- Client exiting: %s (%s@%s) [%s]",
+		ircsnprintf(connectd, sizeof(connectd), "*** Client exiting: %s (%s@%s) [%s]",
 			acptr->name, acptr->user->username, acptr->user->realhost, comment);
-		ircsnprintf(connecth, sizeof(connecth), "*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
+		ircsnprintf(connecth, sizeof(connecth), "*** Client exiting: %s (%s@%s) [%s] [%s]",
 			acptr->name, acptr->user->username, acptr->user->realhost, comment, Inet_ia2p(&acptr->local->ip));
 	}
 
@@ -1248,17 +1248,17 @@ void sendto_fconnectnotice(aClient *acptr, int disconnect, char *comment)
 
 	if (!disconnect)
 	{
-		ircsnprintf(connectd, sizeof(connectd), "*** Notice -- Client connecting at %s: %s (%s@%s)",
+		ircsnprintf(connectd, sizeof(connectd), "*** Client connecting at %s: %s (%s@%s)",
 			    acptr->user->server, acptr->name, acptr->user->username, acptr->user->realhost);
 		ircsnprintf(connecth, sizeof(connecth),
-		    "*** Notice -- Client connecting at %s: %s (%s@%s) [%s] {0}", acptr->user->server, acptr->name,
+		    "*** Client connecting at %s: %s (%s@%s) [%s] {0}", acptr->user->server, acptr->name,
 		    acptr->user->username, acptr->user->realhost, acptr->ip ? acptr->ip : "0");
 	}
 	else
 	{
-		ircsnprintf(connectd, sizeof(connectd), "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
+		ircsnprintf(connectd, sizeof(connectd), "*** Client exiting at %s: %s!%s@%s (%s)",
 			   acptr->user->server, acptr->name, acptr->user->username, acptr->user->realhost, comment);
-		ircsnprintf(connecth, sizeof(connecth), "*** Notice -- Client exiting at %s: %s (%s@%s) [%s] [%s]",
+		ircsnprintf(connecth, sizeof(connecth), "*** Client exiting at %s: %s (%s@%s) [%s] [%s]",
 			acptr->user->server, acptr->name, acptr->user->username, acptr->user->realhost, comment,
 			acptr->ip ? acptr->ip : "0");
 	}

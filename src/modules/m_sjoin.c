@@ -851,7 +851,7 @@ CMD_FUNC(m_sjoin)
 	if (oldts != -1)
 		if (oldts != chptr->creationtime)
 			sendto_channel_butserv(chptr, &me,
-			    ":%s NOTICE %s :*** Notice -- TS for %s changed from %ld to %ld",
+			    ":%s NOTICE %s :*** TS for %s changed from %ld to %ld",
 			    me.name, chptr->chname, chptr->chname,
 			    oldts, chptr->creationtime);
 
