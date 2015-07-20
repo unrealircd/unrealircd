@@ -438,7 +438,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
  * ProtoCtl options
  */
 #ifndef DEBUGMODE
-#define CHECKPROTO(x,y)	((x)->local->proto & y)
+#define CHECKPROTO(x,y)	(((x)->local->proto & y) == y)
 #else
 #define CHECKPROTO(x,y) (checkprotoflags(x, y, __FILE__, __LINE__))
 #endif
