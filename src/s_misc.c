@@ -445,6 +445,9 @@ recurse_send_quits(aClient *cptr, aClient *sptr, aClient *from, aClient *to,
 {
 	aClient *acptr, *next;
 
+	if (!MyConnect(to))
+		return; /* We shouldn't even be called for non-remotes */
+
 	if (!CHECKPROTO(to, PROTO_NOQUIT))
 	{
 		list_for_each_entry_safe(acptr, next, &client_list, client_node)
@@ -507,7 +510,6 @@ remove_dependents(aClient *sptr, aClient *from, const char *comment, const char 
 {
 	aClient *acptr;
 
-	/* XXX: something here and/or in recurse_send_quits is SERIOUSLY wrong (FIXME/TODO) */
 	list_for_each_entry(acptr, &global_server_list, client_node)
 		recurse_send_quits(sptr, sptr, from, acptr, comment, splitstr);
 
