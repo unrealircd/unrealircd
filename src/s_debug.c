@@ -306,6 +306,6 @@ int checkprotoflags(aClient *sptr, int flags, char *file, int line)
 	if (!MyConnect(sptr))
 		ircd_log(LOG_ERROR, "[Debug] [BUG] ERROR: %s:%d: IsToken(<%s>,%d) on remote client",
 		         file, line, sptr->name, flags);
-	return (sptr->local->proto & flags) ? 1 : 0;
+	return ((sptr->local->proto & flags) == flags) ? 1 : 0;
 }
 #endif
