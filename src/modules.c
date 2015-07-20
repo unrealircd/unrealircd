@@ -115,6 +115,7 @@ void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
 int (*is_silenced)(aClient *sptr, aClient *acptr);
 void (*send_protoctl_servers)(aClient *sptr, int response);
 int (*verify_link)(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
+void (*introduce_user)(aClient *to, aClient *acptr);
 void (*send_server_message)(aClient *sptr);
 void (*send_md_client)(ModDataInfo *mdi, aClient *acptr, ModData *md);
 void (*send_md_channel)(ModDataInfo *mdi, aChannel *chptr, ModData *md);
@@ -166,7 +167,8 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 40 */	{"send_md_member", (void *)&send_md_member}, 
 /* 41 */	{"send_md_membership", (void *)&send_md_membership},
 /* 42 */	{"check_banned", (void *)&check_banned},
-/* 43 */	{NULL, NULL}
+/* 43 */	{"introduce_user", (void *)&introduce_user},
+/* 44 */	{NULL, NULL}
 };
 
 #ifdef UNDERSCORE

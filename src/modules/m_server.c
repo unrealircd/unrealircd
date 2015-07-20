@@ -47,6 +47,7 @@ DLLFUNC int m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[]
 int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
 void _send_protoctl_servers(aClient *sptr, int response);
 void _send_server_message(aClient *sptr);
+void _introduce_user(aClient *to, aClient *acptr);
 
 static char buf[BUFSIZE];
 
@@ -68,6 +69,7 @@ MOD_TEST(m_server)
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_PROTOCTL_SERVERS, _send_protoctl_servers);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_SERVER_MESSAGE, _send_server_message);
 	EfunctionAdd(modinfo->handle, EFUNC_VERIFY_LINK, _verify_link);
+	EfunctionAddVoid(modinfo->handle, EFUNC_INTRODUCE_USER, _introduce_user);
 	return MOD_SUCCESS;
 }
 
@@ -631,6 +633,36 @@ CMD_FUNC(m_server_remote)
 	return 0;
 }
 
+void _introduce_user(aClient *to, aClient *acptr)
+{
+	send_umode(NULL, acptr, 0, SEND_UMODES, buf);
+
+	sendto_one_nickcmd(to, acptr, buf);
+	
+	send_moddata_client(to, acptr);
+
+	if (acptr->user->away)
+		sendto_one(to, ":%s AWAY :%s", CHECKPROTO(to, PROTO_SID) ? ID(acptr) : acptr->name,
+			acptr->user->away);
+
+	if (acptr->user->swhois)
+	{
+		SWhois *s;
+		for (s = acptr->user->swhois; s; s = s->next)
+		{
+			if (CHECKPROTO(to, PROTO_EXTSWHOIS))
+			{
+				sendto_one(to, ":%s SWHOIS %s + %s %d :%s",
+					me.name, acptr->name, s->setby, s->priority, s->line);
+			} else
+			{
+				sendto_one(to, ":%s SWHOIS %s :%s",
+					me.name, acptr->name, s->line);
+			}
+		}
+	}
+}
+
 int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
@@ -769,33 +801,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			continue;
 		if (IsPerson(acptr))
 		{
-			send_umode(NULL, acptr, 0, SEND_UMODES, buf);
-
-			sendto_one_nickcmd(cptr, acptr, buf);
-			
-			send_moddata_client(cptr, acptr);
-
-			if (acptr->user->away)
-				sendto_one(cptr, ":%s AWAY :%s", CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name,
-				    acptr->user->away);
-
-			if (acptr->user->swhois)
-			{
-				SWhois *s;
-				for (s = acptr->user->swhois; s; s = s->next)
-				{
-					if (CHECKPROTO(cptr, PROTO_EXTSWHOIS))
-					{
-						sendto_one(cptr, ":%s SWHOIS %s + %s %d :%s",
-							me.name, acptr->name, s->setby, s->priority, s->line);
-					} else
-					{
-						sendto_one(cptr, ":%s SWHOIS %s :%s",
-							me.name, acptr->name, s->line);
-					}
-				}
-			}
-
+			introduce_user(cptr, acptr);
 			if (!SupportSJOIN(cptr))
 				send_user_joins(cptr, acptr);
 		}
