@@ -231,6 +231,18 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 		abort();
 	}
 
+#if defined(DEBUGMODE) && defined(RAWCMDLOGGING)
+	{
+		char copy[512], *p;
+		strlcpy(copy, msg, len > sizeof(copy) ? sizeof(copy) : len); 
+		p = strchr(copy, '\n');
+		if (p) *p = '\0';
+		p = strchr(copy, '\r');
+		if (p) *p = '\0';
+		ircd_log(LOG_ERROR, "-> %s: %s", to->name, copy);
+	}
+#endif
+
 	if (IsMe(to))
 	{
 		char tmp_msg[500], *p;
@@ -1288,7 +1300,12 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 			encode_ip(sptr->ip), info);
 	}
 
-	sendto_server(one, PROTO_NICKv2 | PROTO_VHP, *sptr->id ? PROTO_SID : 0,
+	/* Hmmm this code had PROTO_NICKv2|PROTO_VHP as 2nd argument which
+	 * caused NICK messages not to be sent to non-SID servers.
+	 * I removed PROTO_VHP here seeing nenolod already ripped out the
+	 * SupportVHP() check ~20 lines up. Double check if this is OK?
+	 */
+	sendto_server(one, PROTO_NICKv2, *sptr->id ? PROTO_SID : 0,
 		"NICK %s %d %ld %s %s %s %s %s %s %s %s :%s",
 		nick, hopcount, lastnick, username,
 		realhost, server, svid, umodes, vhost, getcloak(sptr),

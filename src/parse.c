@@ -208,6 +208,9 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	/* this call is a bit obsolete? - takes up CPU */
 	backupbuf[0] = '\0';
 	strlcpy(backupbuf, buffer, sizeof(backupbuf));
+#if defined(DEBUGMODE) && defined(RAWCMDLOGGING)
+	ircd_log(LOG_ERROR, "<- %s: %s", cptr->name, backupbuf);
+#endif
 	s = sender;
 	*s = '\0';
 	for (ch = buffer; *ch == ' '; ch++)
