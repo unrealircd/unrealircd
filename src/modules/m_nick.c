@@ -84,6 +84,168 @@ MOD_UNLOAD(m_nick)
 static char buf[BUFSIZE];
 static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
 
+#define NICKCOL_EQUAL         0
+#define NICKCOL_NEW_WON       1
+#define NICKCOL_EXISTING_WON  2
+
+/* Assume that on collision a NICK is in flight and the other server will take
+ * the exact same decision we would do, and thus we don't send a KILL to cptr?
+ * This works great with this code, seems to kill the correct person and not
+ * cause desynchs even without UID/SID. HOWEVER.. who knows what code the other servers run?
+ * As my co-worker always says: "assumptions are dangerous" ;).
+ * Should use UID/SID anyway, then this whole problem doesn't exist.
+ */
+#undef ASSUME_NICK_IN_FLIGHT
+
+/** Nick collission detected. A winner has been decided upstream. Deal with killing.
+ * I moved this all to a single routine here rather than having all code duplicated
+ * due to SID vs NICK and some code quadruplicated.
+ */
+void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aClient *existing, int type)
+{
+	char comment[512];
+	char *new_server, *existing_server;
+	char reintroduce_existing_user = 0;
+	
+	ircd_log(LOG_ERROR, "Nick collision: %s[%s]@%s (new) vs %s[%s]@%s (existing). Winner: %s. Type: %s",
+		newnick, newid ? newid : "", cptr->name,
+		existing->name, existing->id ? existing->id : "", existing->srvptr->name,
+		(type == NICKCOL_EQUAL) ? "None (equal)" : ((type == NICKCOL_NEW_WON) ? "New won" : "Existing won"),
+		new ? "nick-change" : "new user connecting");
+
+	new_server = cptr->name; // not correct, should be sptr
+	existing_server = (existing == existing->from) ? me.name : existing->from->name;
+	if (type == NICKCOL_EXISTING_WON)
+		snprintf(comment, sizeof(comment), "Nick collision: %s <- %s", new_server, existing_server);
+	else if (type == NICKCOL_NEW_WON)
+		snprintf(comment, sizeof(comment), "Nick collision: %s <- %s", existing_server, new_server);
+	else
+		snprintf(comment, sizeof(comment), "Nick collision: %s <-> %s", existing_server, new_server);
+
+	if ((type == NICKCOL_EQUAL) || (type == NICKCOL_EXISTING_WON))
+	{
+		/* Kill 'new':
+		 * - 'new' is known by the cptr-side as 'newnick' already
+		 * - if not nick-changing then the other servers don't know this user
+		 * - if nick-changing, then the the other servers know the user as new->name
+		 */
+
+		/* cptr case first... this side knows the user by newnick/newid */
+		if (CHECKPROTO(cptr, PROTO_SID) && !BadPtr(newid))
+		{
+			/* SID server can kill 'new' by ID */
+			sendto_one(cptr, ":%s KILL %s :%s (%s)",
+				me.name, newid, me.name, comment);
+		} else {
+#ifndef ASSUME_NICK_IN_FLIGHT
+			/* cptr is not SID-capable or user has no UID */
+			sendto_one(cptr, ":%s KILL %s :%s (%s)",
+				me.name, newnick, me.name, comment);
+
+			if (type == NICKCOL_EXISTING_WON)
+				reintroduce_existing_user = 1; /* we may have killed 'existing' by the above, so.. */
+#else
+			/* Don't send a kill here since most likely this is a crossing
+			 * NICK over the wire (in flight) so the other end will kill
+			 * the nick already.
+			 * We avoid sending the KILL because it may/will cause our
+			 * own client to be killed, which then needs to be re-introduced.
+			 */
+#endif
+		}
+		
+		/* non-cptr case... only necessary if nick-changing. */
+		if (new)
+		{
+			/* non-cptr side knows this user by their old nick name */
+			sendto_server(cptr, PROTO_SID, 0,
+				":%s KILL %s :%s (%s)",
+				me.name, ID(new), me.name, comment);
+
+			sendto_server(cptr, 0, PROTO_SID,
+				":%s KILL %s :%s (%s)",
+				me.name, new->name, me.name, comment);
+			
+			/* Exit the client */
+			ircstp->is_kill++;
+			new->flags |= FLAGS_KILLED;
+			(void)exit_client(NULL, new, &me, comment);
+		}
+	}
+	
+	if ((type == NICKCOL_EQUAL) || (type == NICKCOL_NEW_WON))
+	{
+		/* Now let's kill 'existing' */
+		sendto_server(NULL, PROTO_SID, 0,
+			":%s KILL %s :%s (%s)",
+			me.name, ID(existing), me.name, comment);
+		
+#ifndef ASSUME_NICK_IN_FLIGHT
+		/* This is not ideal on non-SID servers, may kill the wrong person. */
+		sendto_server(NULL, 0, PROTO_SID,
+			":%s KILL %s :%s (%s)",
+			 me.name, existing->name, me.name, comment);
+#else
+		sendto_server(cptr, 0, PROTO_SID,
+			":%s KILL %s :%s (%s)",
+			 me.name, existing->name, me.name, comment);
+#endif
+		
+		/* NOTE: we may have sent two KILLs on the same nick in some cases.
+		 * Should be acceptable and only happens in a non-100% UID network.
+		 */
+
+		/* Exit the client */
+		ircstp->is_kill++;
+		existing->flags |= FLAGS_KILLED;
+		(void)exit_client(NULL, existing, &me, comment);
+	}
+	
+#ifndef ASSUME_NICK_IN_FLIGHT
+	if (reintroduce_existing_user)
+	{
+		/* Due to non-SID capable or no UID for the user we were forced
+		 * to send a KILL that could possibly match our own user.
+		 * So we re-introduce the user here.
+		 * This is not ideal but if we don't do this then 'cptr'-side would be desynced.
+		 */
+		introduce_user(cptr, existing);
+		if (!SupportSJ3(cptr))
+		{
+			/* Wow. Old. */
+			send_user_joins(cptr, existing);
+			/* Didn't bother to do the +vhoaq stuff for this. Shouldn't we rip out SJOIN/SJOIN2 anyway? */
+		} else
+		{
+			/* Hmmm duplicate code... hmmmmmm. taken from send_channel_modes_sjoin3. */
+			Membership *lp;
+			char flags[16], *p;
+			
+			for (lp = existing->user->channel; lp; lp = lp->next)
+			{
+				p = flags;
+				if (lp->flags & MODE_CHANOP)
+					*p++ = '@';
+				if (lp->flags & MODE_VOICE)
+					*p++ = '+';
+				if (lp->flags & MODE_HALFOP)
+					*p++ = '%';
+				if (lp->flags & MODE_CHANOWNER)
+					*p++ = '*';
+				if (lp->flags & MODE_CHANPROT)
+					*p++ = '~';
+				*p = '\0';
+				
+				sendto_one(cptr, ":%s SJOIN %ld %s + :%s%s",
+					me.name, lp->chptr->creationtime, lp->chptr->chname,
+					flags, existing->name);
+			}
+		}
+		/* Could synch channel-member-data here. But this is apparently an old server anyway.. */
+	}
+#endif
+}
+
 /*
 ** m_uid
 **	parv[1] = nickname
@@ -279,47 +441,29 @@ DLLFUNC CMD_FUNC(m_uid)
 		 */
 		if (!(parc > 3) || (acptr->lastnick == lastnick))
 		{
-			ircstp->is_kill++;
-			sendto_server(NULL, 0, 0,
-			    ":%s KILL %s :%s (Nick Collision)",
-			    me.name, acptr->name, me.name);
-			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, acptr, &me,
-			    "Nick collision with no timestamp/equal timestamps");
+			nick_collision(cptr, parv[1], ((parc > 6) ? parv[6] : NULL), NULL, acptr, NICKCOL_EQUAL);
 			return 0;	/* We killed both users, now stop the process. */
 		}
 
 		if ((differ && (acptr->lastnick > lastnick)) ||
 		    (!differ && (acptr->lastnick < lastnick)) || acptr->from == cptr)	/* we missed a QUIT somewhere ? */
 		{
-			ircstp->is_kill++;
-			sendto_server(cptr, 0, 0,
-			    ":%s KILL %s :%s (Nick Collision)",
-			    me.name, acptr->name, me.name);
-			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, acptr, &me, "Nick collision");
+			nick_collision(cptr, parv[1], ((parc > 6) ? parv[6] : NULL), NULL, acptr, NICKCOL_NEW_WON);
+			/* We got rid of the "wrong" user. Introduce the correct one. */
+			/* ^^ hmm.. why was this absent in nenolod's code, resulting in a 'return 0'? seems wrong. */
+			goto nickkill2done;
 		}
 
 		if ((differ && (acptr->lastnick < lastnick)) ||
 		    (!differ && (acptr->lastnick > lastnick)))
 		{
-			/*
-			 * Introduce our "correct" user to the other server
-			 */
-
-			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
-			    me.name, parv[1], me.name);
-			send_umode(NULL, acptr, 0, SEND_UMODES, buf);
-			sendto_one_nickcmd(cptr, acptr, buf);
-			if (acptr->user->away)
-				sendto_one(cptr, ":%s AWAY :%s", acptr->name,
-				    acptr->user->away);
-			send_user_joins(cptr, acptr);
+			nick_collision(cptr, parv[1], ((parc > 6) ? parv[6] : NULL), NULL, acptr, NICKCOL_EXISTING_WON);
 			return 0;	/* Ignore the NICK */
 		}
-		return 0;
+		return 0; /* just in case */
 	}
 
+nickkill2done:
 	if (IsServer(sptr))
 	{
 		/* A server introducing a new client, change source */
@@ -397,6 +541,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	unsigned char newusr = 0, removemoder = 1;
 	Hook *h;
 	int i = 0;
+	char *nickid = (IsPerson(sptr) && *sptr->id) ? sptr->id : NULL;
 	/*
 	 * If the user didn't specify a nickname, complain
 	 */
@@ -725,47 +870,25 @@ DLLFUNC CMD_FUNC(m_nick)
 		 */
 		if (!(parc > 3) || (acptr->lastnick == lastnick))
 		{
-			ircstp->is_kill++;
-			sendto_server(NULL, 0, 0,
-			    ":%s KILL %s :%s (Nick Collision)",
-			    me.name, acptr->name, me.name);
-			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, acptr, &me,
-			    "Nick collision with no timestamp/equal timestamps");
-			return 0;	/* We killed both users, now stop the process. */
+			nick_collision(cptr, parv[1], nickid, NULL, acptr, NICKCOL_EQUAL);
+			return 0; /* We killed both users, now stop the process. */
 		}
 
 		if ((differ && (acptr->lastnick > lastnick)) ||
 		    (!differ && (acptr->lastnick < lastnick)) || acptr->from == cptr)	/* we missed a QUIT somewhere ? */
 		{
-			ircstp->is_kill++;
-			sendto_server(cptr, 0, 0,
-			    ":%s KILL %s :%s (Nick Collision)",
-			    me.name, acptr->name, me.name);
-			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, acptr, &me, "Nick collision");
-			goto nickkilldone;	/* OK, we got rid of the "wrong" user,
-						   ** now we're going to add the user the
-						   ** other server introduced.
-						 */
+			nick_collision(cptr, parv[1], nickid, NULL, acptr, NICKCOL_NEW_WON);
+			/* OK, we got rid of the "wrong" user, now we're going to add the
+			 * user the other server introduced.
+			 */
+			goto nickkilldone;
 		}
 
 		if ((differ && (acptr->lastnick < lastnick)) ||
 		    (!differ && (acptr->lastnick > lastnick)))
 		{
-			/*
-			 * Introduce our "correct" user to the other server
-			 */
-
-			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
-			    me.name, parv[1], me.name);
-			send_umode(NULL, acptr, 0, SEND_UMODES, buf);
-			sendto_one_nickcmd(cptr, acptr, buf);
-			if (acptr->user->away)
-				sendto_one(cptr, ":%s AWAY :%s", acptr->name,
-				    acptr->user->away);
-			send_user_joins(cptr, acptr);
-			return 0;	/* Ignore the NICK */
+			nick_collision(cptr, parv[1], nickid, NULL, acptr, NICKCOL_EXISTING_WON);
+			return 0; /* Ignore the NICK. */
 		}
 		return 0;
 	}
@@ -783,60 +906,20 @@ DLLFUNC CMD_FUNC(m_nick)
 		    sptr->from->name, lastnick);
 		if (!(parc > 2) || lastnick == acptr->lastnick)
 		{
-			ircstp->is_kill += 2;
-			sendto_server(NULL, 0, 0, /* First kill the new nick. */
-			    ":%s KILL %s :%s (Self Collision)",
-			    me.name, acptr->name, me.name);
-			sendto_server(cptr, 0, 0, /* Tell my servers to kill the old */
-			    ":%s KILL %s :%s (Self Collision)",
-			    me.name, sptr->name, me.name);
-			sptr->flags |= FLAGS_KILLED;
-			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, sptr, &me, "Self Collision");
-			(void)exit_client(NULL, acptr, &me, "Self Collision");
-			return 0;	/* Now that I killed them both, ignore the NICK */
+			nick_collision(cptr, parv[1], nickid, sptr, acptr, NICKCOL_EQUAL);
+			return 0; /* Now that I killed them both, ignore the NICK */
 		}
 		if ((differ && (acptr->lastnick > lastnick)) ||
 		    (!differ && (acptr->lastnick < lastnick)))
 		{
-			/* sptr (their user) won, let's kill acptr (our user) */
-			ircstp->is_kill++;
-			sendto_server(cptr, 0, 0,
-			    ":%s KILL %s :%s (Nick collision: %s <- %s)",
-			    me.name, acptr->name, me.name,
-			    acptr->from->name, sptr->from->name);
-			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, acptr, &me, "Nick collision");
+			nick_collision(cptr, parv[1], nickid, sptr, acptr, NICKCOL_NEW_WON);
 			goto nickkilldone;	/* their user won, introduce new nick */
 		}
 		if ((differ && (acptr->lastnick < lastnick)) ||
 		    (!differ && (acptr->lastnick > lastnick)))
 		{
-			/* acptr (our user) won, let's kill sptr (their user) */
-			ircstp->is_kill++;
-			/* Kill the user trying to change their nick. */
-			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
-			    me.name, parv[1], me.name);
-			sptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, sptr, &me, "Nick collision");
-			/* Previously we did the following two things too:
-			 * 1) Send the KILL to ALL servers.
-			 *    This is confusing, they might kill our nick instead.
-			 * 2) Re-introduce our user.
-			 *    That would fix #1 but it can still cause strange issues
-			 *    and we always forget to 'sync' information below so
-			 *    this was never in full.
-			 * I changed it so we just:
-			 * 0) Kill their nick
-			 *
-			 * Most likely our own 'nick' is in-flight to cptr.
-			 * They'll introduce our nick as it will 'win'.
-			 *
-			 * I suppose there could be some other deynch which is now
-			 * unhandled, but how? Prove it to me and I'll look into
-			 * it. -- Syzop
-			 */
-			return 0;	/* their user lost, ignore the NICK */
+			nick_collision(cptr, parv[1], nickid, sptr, acptr, NICKCOL_EXISTING_WON);
+			return 0; /* their user lost, ignore the NICK */
 		}
 
 	}
@@ -945,9 +1028,11 @@ DLLFUNC CMD_FUNC(m_nick)
 			sptr->lastnick = TStime();
 		}
 		add_history(sptr, 1);
-		sendto_common_channels(sptr, ":%s NICK :%s", sptr->name, nick);
-		sendto_server(cptr, 0, 0, ":%s NICK %s %ld",
+		sendto_server(cptr, PROTO_SID, 0, ":%s NICK %s %ld",
+		    ID(sptr), nick, sptr->lastnick);
+		sendto_server(cptr, 0, PROTO_SID, ":%s NICK %s %ld",
 		    sptr->name, nick, sptr->lastnick);
+		sendto_common_channels(sptr, ":%s NICK :%s", sptr->name, nick);
 		if (removemoder)
 			sptr->umodes &= ~UMODE_REGNICK;
 	}
