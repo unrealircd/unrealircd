@@ -6794,10 +6794,12 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "level-on-join")) {
 			tempiConf.level_on_join = channellevel_to_int(cep->ce_vardata);
 		}
-		/* setting "all" will enforce static-quit and static-part to all users
+		/* setting "all" will cause anti-spam-quit-message-time, static-quit
+		 * and static-part to affect all users
 		 * 
-		 * setting "unregistered" will enforce static-quit and static-part to
-		 * unregistered users only -dboyz
+		 * setting "unregistered" will cause anti-spam-quit-message-time,
+		 * static-quit and static-part to affect unregistered users only
+		 * -dboyz
 		 * TODO: Produce error message by adding else
 		 */
 		else if (!strcmp(cep->ce_varname, "static-quit-part-users")) {
