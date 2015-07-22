@@ -89,30 +89,27 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		int n;
 		char *s = comment;
 		Hook *tmphook;
-		if (STATIC_QUIT)
+
+		/* 
+		 * Enhance anti-spam-quit-message-time and integrate it with STATIC_
+		 * QUIT and STATIC_PART. Anti-spam-quit-message-time is now checked
+		 * before the codes below. Original code by katsklaw. -dboyz
+		 */
+		if (!ValidatePermissionsForPath("immune:antispamtimer",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME == -1)
 		{
-			/* Lets not let unregistered users spam us even without STATIC_QUIT
-			 * except opers. -katsklaw
-			 * Enhance anti-spam-quit-message-time and integrate it with STATIC_
-			 * QUIT and STATIC_PART. Remodified katsklaw's code to further add
-			 * configuration flexibility.
-			 * TODO: update config file and docs -dboyz
-			 */
-			if (ANTI_SPAM_QUIT_MSG_TIME == -1)
+			if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
+				return exit_client(cptr, sptr, sptr, STATIC_QUIT ? STATIC_QUIT : sptr->name);
+		}
+		else if (!ValidatePermissionsForPath("immune:antispamtimer",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
+		{
+			/* we only care of users within the time range -dboyz */
+			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 			{
 				if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
-					return exit_client(cptr, sptr, sptr, STATIC_QUIT);
-			}
-			else if (ANTI_SPAM_QUIT_MSG_TIME)
-			{
-				/* we only care of users within the time range -dboyz */
-				if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
-				{
-					if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
-						return exit_client(cptr, sptr, sptr, STATIC_QUIT);
-				}
+					return exit_client(cptr, sptr, sptr, STATIC_QUIT ? STATIC_QUIT : sptr->name);
 			}
 		}
+
 		if (IsVirus(sptr))
 			return exit_client(cptr, sptr, sptr, "Client exited");
 
@@ -125,20 +122,6 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return n;
 		if (n < 0)
 			ocomment = sptr->name;
-
-		if (!ValidatePermissionsForPath("immune:antispamtimer",sptr,NULL,NULL,NULL) && (ANTI_SPAM_QUIT_MSG_TIME == -1))
-		{
-			if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
-				ocomment = sptr->name;
-		}
-		else if (!ValidatePermissionsForPath("immune:antispamtimer",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
-		{
-			if (sptr->local->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
-			{
-				if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
-					ocomment = sptr->name;
-			}
-		}
 
                 for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT]; tmphook; tmphook = tmphook->next)
 		{

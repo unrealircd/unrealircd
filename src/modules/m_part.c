@@ -98,37 +98,23 @@ DLLFUNC CMD_FUNC(m_part)
 	{
 		if (IsShunned(sptr))
 			commentx = NULL;
-		if (STATIC_PART)
+		
+		/*
+		 * Enhance anti-spam-quit-message-time and integrate it with STATIC_
+		 * QUIT and STATIC_PART. -dboyz
+		 */
+		if (!ValidatePermissionsForPath("immune:antispamtimer",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME == -1)
 		{
-			if (ANTI_SPAM_QUIT_MSG_TIME == -1)
-			{
-				if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
-					commentx = STATIC_PART;
-			}
-			else if (ANTI_SPAM_QUIT_MSG_TIME)
-			{
-				/* we only care of users within the time range -dboyz */
-				if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
-				{
-					if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
-						commentx = STATIC_PART;
-				}
-			}
+			if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
+				commentx = STATIC_PART ? STATIC_PART : NULL;
 		}
-		else
+		else if (!ValidatePermissionsForPath("immune:antispamtimer",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
 		{
-			if (!IsAnOper(sptr) && (ANTI_SPAM_QUIT_MSG_TIME == -1))
+			/* we only care of users within the time range -dboyz */
+			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 			{
 				if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
-					commentx = NULL;
-			}
-			else if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
-			{
-				if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
-				{
-					if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
-						commentx = NULL;
-				}
+					commentx = STATIC_PART ? STATIC_PART : NULL;
 			}
 		}
 		
