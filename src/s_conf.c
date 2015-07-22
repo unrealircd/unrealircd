@@ -6891,15 +6891,17 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "new-linking-protocol")) {
 			tempiConf.new_linking_protocol = atoi(cep->ce_vardata);
 		}
-		/* setting a valid value according to config_checkval will enforce 
-		 * static-quit and static-part to newly connected users during the 
-		 * duration specified
+		/* anti-spam-quit-message-time defines users' *maturity time*
+		 * of which QUIT and PART messages of non-oper users will be
+		 * *disabled* if the *maturity time* is not met. It must be
+		 * set appropriately according to config_checkval.
 		 *
 		 * setting value 0 disables the feature
 		 *
-		 * anti-spam-quit-message-time can now be enforced all the time by
-		 * setting "static". This will also enforce static-quit and static-
-		 * part all the time, when enabled. -dboyz
+		 * setting value to `static` persistently enforces this feature.
+		 * 
+		 * anti-spam-quit-message-time is now integrated but can work
+		 * separately with STATIC_QUIT and STATIC_PART. -dboyz
 		 */
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			if(!strcmp(ce->ce_vardata, "static"))
