@@ -6901,7 +6901,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		 * setting value to `static` persistently enforces this feature.
 		 * 
 		 * anti-spam-quit-message-time is now integrated but can work
-		 * separately with STATIC_QUIT and STATIC_PART. -dboyz
+		 * separately with static-quit and static-part. -dboyz
 		 */
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			if(!strcmp(ce->ce_vardata, "static"))
