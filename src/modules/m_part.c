@@ -111,7 +111,7 @@ DLLFUNC CMD_FUNC(m_part)
 		else if (!ValidatePermissionsForPath("immune:antispamtimer",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
 		{
 			/* we only care of users within the time range -dboyz */
-			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+			if (sptr->local->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 			{
 				if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
 					commentx = STATIC_PART ? STATIC_PART : NULL;

@@ -6803,7 +6803,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "static-quit-part-users")) {
 			if(!strcmp(ce->ce_vardata, "all"))
 				tempiConf.static_quit_part_users = 0;
-			else if (!strcmp(ce->vardata, "unregistered"))
+			else if (!strcmp(ce->ce_vardata, "unregistered"))
 				tempiConf.static_quit_part_users = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {

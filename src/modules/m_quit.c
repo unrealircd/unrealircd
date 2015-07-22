@@ -103,7 +103,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		else if (!ValidatePermissionsForPath("immune:antispamtimer",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
 		{
 			/* we only care of users within the time range -dboyz */
-			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+			if (sptr->local->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 			{
 				if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
 					return exit_client(cptr, sptr, sptr, STATIC_QUIT ? STATIC_QUIT : sptr->name);
