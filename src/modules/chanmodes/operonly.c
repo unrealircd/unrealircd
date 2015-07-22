@@ -93,7 +93,7 @@ MOD_UNLOAD(noctcp)
 
 DLLFUNC int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[])
 {
-	if ((chptr->mode.extmode & EXTCMODE_OPERONLY) && ValidatePermissionsForPath("channel:operonly",cptr,NULL,chptr,NULL))
+	if ((chptr->mode.extmode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly",cptr,NULL,chptr,NULL))
 		return ERR_OPERONLY;
 	return 0;
 }
