@@ -183,8 +183,8 @@ void fd_select(time_t delay)
 	memcpy(&work_read_fds, &read_fds, sizeof(fd_set));
 	memcpy(&work_write_fds, &write_fds, sizeof(fd_set));
 
-	to.tv_sec = delay % 1000;
-	to.tv_usec = delay * 1000;
+	to.tv_sec = delay / 1000;
+	to.tv_usec = (delay % 1000) * 1000;
 
 #ifdef DEBUGMODE
 	ircd_log(LOG_ERROR, "fd_select() on 0-%d...", highest_fd+1);
