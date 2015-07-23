@@ -1,23 +1,23 @@
-UnrealIRCd 3.4-beta1 Release Notes
+UnrealIRCd 3.4-beta2 Release Notes
 ===================================
 
-This is the first 'beta' version of UnrealIRCd 3.4. We plan to have a
+This is the second 'beta' version of UnrealIRCd 3.4. We plan to have a
 'stable' UnrealIRCd 3.4 release by Q4 2015.
 
 IMPORTANT REMARKS:
 * The ending of the 'alpha' stage means that most features we want are
   in 3.4 now. During 'beta' stage we will work towards getting a stable
   IRC server.
-* Because this is the very first beta version, the process of 'stabilizing'
+* Because this is an early beta version, the process of 'stabilizing'
   the IRCd has only just begun. The IRCd can have crash or hang issues.
 * Linking with 3.2.x servers is supported but highly untested.
 
 Therefore:
-* You should never run 3.4-beta1 as a production server
-* You should not link 3.4-beta1 with a production 3.2.x network (yet)
+* You should never run 3.4-beta2 as a production server
+* You should not link 3.4-beta2 with a production 3.2.x network (yet)
 
 Please do:
-* Install 3.4-beta1 to play around, show to your friends, have fun with
+* Install 3.4-beta2 to play around, show to your friends, have fun with
   the latest features and improvements, test things.
 * Report any problems, bugs, issues and other feedback on
   https://bugs.unrealircd.org/ so we can improve 3.4.x!
@@ -39,7 +39,7 @@ UnrealIRCd 3.4 uses a new directory structure.
       target directory to install UnrealIRCd to. ./Config will ask this
       and it's ~/unrealircd by default (eg: /home/nerd/unrealircd).
       You also need to run 'make install' after 'make' now.
-      After compiling, you should leave your Unreal3.4-beta1 directory
+      After compiling, you should leave your Unreal3.4-beta2 directory
       and change to ~/unrealircd as everything takes place there.
       For example to start UnrealIRCd you run './unrealircd start'
       (again, from the /home/xxxx/unrealircd directory).
@@ -215,6 +215,10 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
     remove the swhois received via oper/vhost on de-oper/de-vhost.
   * You can now have multiple swhois lines
   * Multiple oper::swhois and vhost::swhois items are supported. (B1)
+* When trying to link two servers without link::outgoing::options::ssl
+  (which is not recommended) we try to use STARTTLS in order to
+  'upgrade' the connection to use SSL/TLS anyway. This can be disabled
+  via link::outgoing::options::insecure. (B2)
 
 ==[ MODULE CODERS / DEVELOPERS ]==
 * A lot of technical documentation for module coders has been added
@@ -241,6 +245,13 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * This is still an alpha release, so likely contains major issues
 * If the IRCd could not bind to any ports it started anyway (A4)
 * alpha3 did not compile on x86 (32 bit) systems (A4)
+* Multiple major crash bugs in earlier 3.4 alpha/beta versions caused
+  by OOB read, OOB write, read-after-free, etc. (B2)
+* Spamfilter 'u' not working, likely since alpha1 (B2)
+* Secure server linking with sslclientcertfp was broken since alpha3,
+  making our secure server linking tutorial on the wiki unusable. (B2)
+* Windows version: if all clients on the server were completely idle
+  then internal timers and such wouldn't be called correctly. (B2)
 
 ==[ MINOR BUGS FIXED ]==
 * Errors in example configuration files (A2)
@@ -254,6 +265,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * On Windows we didn't create the data/ directory resulting in a
   "Unable to write tunefile" error in alpha4. (B1)
 * A number of minor (<1K total) memory leaks on /REHASH. (B1)
+* The new 3rd party modules compile and install script introduced in
+  beta1 was not working correctly. (B2)
 
 ==[ REMOVED / DROPPED ]==
 * Numeric server IDs, see above. (A1)
