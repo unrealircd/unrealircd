@@ -557,41 +557,10 @@ int check_ping(aClient *cptr)
 		/* And they had 2x ping frequency to respond */
 		&& ((TStime() - cptr->local->lasttime) >= (2 * ping)))
 		|| 
-		/* Or isn't registered and time spent is larger than ping .. */
+		/* Or isn't registered and time spent is larger than ping (CONNECTTIMEOUT).. */
 		(!IsRegistered(cptr) && (TStime() - cptr->local->since >= ping))
 		)
 	{
-	
-		// TODO: hmm this can be removed right? we never reach this because
-		//       we should timeout before, and it seems BAD code -- Syzop
-		
-		/* if it's registered and doing dns/auth, timeout */
-		if (!IsRegistered(cptr) && (DoingDNS(cptr) || DoingAuth(cptr)))
-		{
-			if (cptr->local->authfd >= 0) {
-				fd_close(cptr->local->authfd);
-				--OpenFiles;
-				cptr->local->authfd = -1;
-				cptr->count = 0;
-				*cptr->local->buffer = '\0';
-			}
-			if (SHOWCONNECTINFO && !cptr->serv) {
-				if (DoingDNS(cptr))
-					sendto_one(cptr, "%s", REPORT_FAIL_DNS);
-				else if (DoingAuth(cptr))
-					sendto_one(cptr, "%s", REPORT_FAIL_ID);
-			}
-			Debug((DEBUG_NOTICE,
-				"DNS/AUTH timeout %s",
-				get_client_name(cptr, TRUE)));
-			unrealdns_delreq_bycptr(cptr);
-			ClearAuth(cptr);
-			ClearDNS(cptr);
-			SetAccess(cptr);
-			cptr->local->firsttime = TStime();
-			cptr->local->lasttime = TStime();
-			return -5;
-		}
 		if (IsServer(cptr) || IsConnecting(cptr) ||
 			IsHandshake(cptr)
 			|| IsSSLConnectHandshake(cptr)
