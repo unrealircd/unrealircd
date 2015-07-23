@@ -530,7 +530,10 @@ EVENT(check_unknowns)
 	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
 	{
 		if (cptr->local->firsttime && ((TStime() - cptr->local->firsttime) > CONNECTTIMEOUT))
+		{
 			(void)exit_client(cptr, cptr, &me, "Registration Timeout");
+			continue;
+		}
 		if (DoingAuth(cptr) && ((TStime() - cptr->local->firsttime) > IDENT_CONNECT_TIMEOUT))
 			ident_failed(cptr);
 	}
