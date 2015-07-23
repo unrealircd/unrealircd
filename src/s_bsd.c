@@ -1475,15 +1475,41 @@ void read_packet(int fd, int revents, void *data)
 /* Process input from clients that may have been deliberately delayed due to fake lag */
 void process_clients(void)
 {
-        aClient *cptr, *cptr2;
+	aClient *cptr;
+        
+	/* Problem:
+	 * 1) When 'cptr' exits we can't check 'current_element->next' since this
+	 *    has been freed.
+	 * 2) We can't use list_for_each_entry_safe() which would take care of #1
+	 *    (like if 'cptr' exited). This is because it would set
+	 *    next = current_element->next, however parse_client_queued may
+	 *    potentially kill 'next' (eg /KILL user) so then we would follow
+	 *    an invalid pointer.
+	 * So I'm just re-running the loop. We could use some kind of 'tagging'
+	 * to mark already processed clients, however parse_client_queued() already
+	 * takes care not to read (fake) lagged up clients, and we don't actually
+	 * read/recv anything, so clients in the beginning of the list won't
+	 * benefit/get higher prio.
+	 * Another alternative is not to run the loop again, but that WOULD be
+	 * unfair to clients later in the list which wouldn't be processed then
+	 * under a heavy (kill) load scenario.
+	 * I think the chosen solution is best, though it remains silly. -- Syzop
+	 */
 
-        list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
-                if ((cptr->fd >= 0) && DBufLength(&cptr->local->recvQ))
-                        parse_client_queued(cptr);
+	do {
+		list_for_each_entry(cptr, &lclient_list, lclient_node)
+			if ((cptr->fd >= 0) && DBufLength(&cptr->local->recvQ))
+				if (parse_client_queued(cptr) == FLUSH_BUFFER)
+					break;
+	} while(&cptr->lclient_node != &lclient_list);
 
-        list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
-                if ((cptr->fd >= 0) && DBufLength(&cptr->local->recvQ))
-                        parse_client_queued(cptr);
+	/* For unknown_list we also have to take into account the unknown->client transition */
+	do {
+		list_for_each_entry(cptr, &unknown_list, lclient_node)
+			if ((cptr->fd >= 0) && DBufLength(&cptr->local->recvQ))
+				if ((parse_client_queued(cptr) == FLUSH_BUFFER) || !IsUnknown(cptr))
+					break;
+	} while(&cptr->lclient_node != &unknown_list);
 }
 
 /* When auth is finished, go back and parse all prior input. */
