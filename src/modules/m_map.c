@@ -90,7 +90,7 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 	else
 	{
 		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,
-		    length, server->name, server->serv->users, server->id);
+		    length, server->name, server->serv->users, IsOper(cptr) ? server->id : "");
 		cnt = 0;
 	}
 
@@ -140,7 +140,7 @@ int cnt = 0, hide_ulines;
 	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("map:ulines",cptr,NULL,NULL,NULL)) ? 1 : 0;
 
 	sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, "",
-	    length, server->name, server->serv->users);
+	    length, server->name, server->serv->users, "");
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -157,7 +157,7 @@ int cnt = 0, hide_ulines;
 		if (--cnt == 0)
 			*buf = '`';
 		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, buf,
-		    length-2, acptr->name, acptr->serv->users);
+		    length-2, acptr->name, acptr->serv->users, "");
 	}
 }
 
