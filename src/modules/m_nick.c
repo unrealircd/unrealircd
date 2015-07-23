@@ -1560,6 +1560,17 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_one(sptr, rpl_str(RPL_SNOMASK),
 				me.name, sptr->name, get_snostr(user->snomask));
 		strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof(userhost));
+		
+		/* Make creation time the real 'online since' time, excluding registration time.
+		 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean
+		 * 1 second in practice (#2174).
+		 */
+		sptr->local->firsttime = TStime();
+		
+		/* Give the user a fresh start as far as fake-lag is concerned.
+		 * Otherwise the user could be lagged up already due to all the CAP stuff.
+		 */
+		sptr->local->since = TStime();
 
 		/* NOTE: Code after this 'if (savetkl)' will not be executed for quarantined-
 		 *       virus-users. So be carefull with the order. -- Syzop
