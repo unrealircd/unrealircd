@@ -763,3 +763,4 @@ extern void remove_oper_privileges(aClient *sptr, int broadcast_mode_change);
 extern int client_starttls(aClient *acptr);
 extern void start_server_handshake(aClient *cptr);
 extern void reject_insecure_server(aClient *cptr);
+extern void ident_failed(aClient *cptr);

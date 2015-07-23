@@ -1357,6 +1357,9 @@ static int parse_client_queued(aClient *cptr)
 	if (DoingDNS(cptr))
 		return 0; /* we delay processing of data until the host is resolved */
 
+	if (DoingAuth(cptr))
+		return 0; /* we delay processing of data until identd has replied */
+
 	while (DBufLength(&cptr->local->recvQ) &&
 	    ((cptr->status < STAT_UNKNOWN) || (cptr->local->since - now < 10)))
 	{

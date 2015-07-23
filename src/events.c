@@ -215,7 +215,7 @@ void	SetupEvents(void)
 	EventAddEx(NULL, "unrealdns_removeoldrecords", 15, 0, unrealdns_removeoldrecords, NULL);
 	EventAddEx(NULL, "check_pings", 1, 0, check_pings, NULL);
 	EventAddEx(NULL, "check_deadsockets", 1, 0, check_deadsockets, NULL);
-	EventAddEx(NULL, "check_unknowns", 16, 0, check_unknowns, NULL);
+	EventAddEx(NULL, "check_unknowns", 1, 0, check_unknowns, NULL);
 	EventAddEx(NULL, "try_connections", 2, 0, try_connections, NULL);
 
 	UnlockEventSystem();

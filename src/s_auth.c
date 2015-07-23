@@ -54,10 +54,10 @@ void ident_failed(aClient *cptr)
 		cptr->local->authfd = -1;
 	}
 	cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
-	if (!DoingDNS(cptr))
-		finish_auth(cptr);
 	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
 		sendto_one(cptr, "%s", REPORT_FAIL_ID);
+	if (!DoingDNS(cptr))
+		finish_auth(cptr);
 }
 
 /*

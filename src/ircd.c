@@ -531,6 +531,8 @@ EVENT(check_unknowns)
 	{
 		if (cptr->local->firsttime && ((TStime() - cptr->local->firsttime) > CONNECTTIMEOUT))
 			(void)exit_client(cptr, cptr, &me, "Registration Timeout");
+		if (DoingAuth(cptr) && ((TStime() - cptr->local->firsttime) > IDENT_CONNECT_TIMEOUT))
+			ident_failed(cptr);
 	}
 }
 
@@ -559,6 +561,10 @@ int check_ping(aClient *cptr)
 		(!IsRegistered(cptr) && (TStime() - cptr->local->since >= ping))
 		)
 	{
+	
+		// TODO: hmm this can be removed right? we never reach this because
+		//       we should timeout before, and it seems BAD code -- Syzop
+		
 		/* if it's registered and doing dns/auth, timeout */
 		if (!IsRegistered(cptr) && (DoingDNS(cptr) || DoingAuth(cptr)))
 		{
