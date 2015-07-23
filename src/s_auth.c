@@ -184,7 +184,7 @@ authsenderr:
 	}
 	cptr->flags &= ~FLAGS_WRAUTH;
 
-	fd_setselect(cptr->local->authfd, FD_SELECT_READ, read_authports, cptr);
+	fd_setselect(cptr->local->authfd, FD_SELECT_READ|FD_SELECT_NOWRITE, read_authports, cptr);
 
 	return;
 }
