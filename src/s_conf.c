@@ -3707,40 +3707,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "password"))
-		{
-			if (has_password)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "oper::password");
-				continue;
-			}
-			has_password = 1;
-			if (Auth_CheckError(cep) < 0)
-				errors++;
-
-			if (ce->ce_vardata && cep->ce_vardata &&
-			    !strcmp(ce->ce_vardata, "bobsmith") &&
-			    !strcmp(cep->ce_vardata, "test"))
-			{
-				config_error("%s:%i: please change the the name and password of the "
-				             "default 'bobsmith' oper block",
-				             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-				errors++;
-			}
-			continue;
-		}
-		if (!strcmp(cep->ce_varname, "operclass"))
-		{
-			if (has_operclass)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum, "oper::operclass");
-				continue;
-			}
-			has_operclass = 1;
-			continue;
-		}
 		/* Regular variables */
 		if (!cep->ce_entries)
 		{
@@ -3749,8 +3715,44 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}
+			/* oper::password */
+			if (!strcmp(cep->ce_varname, "password"))
+			{
+				if (has_password)
+				{
+					config_warn_duplicate(cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum, "oper::password");
+					continue;
+				}
+				has_password = 1;
+				if (Auth_CheckError(cep) < 0)
+					errors++;
+
+				if (ce->ce_vardata && cep->ce_vardata &&
+					!strcmp(ce->ce_vardata, "bobsmith") &&
+					!strcmp(cep->ce_vardata, "test"))
+				{
+					config_error("%s:%i: please change the the name and password of the "
+								 "default 'bobsmith' oper block",
+								 ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					errors++;
+				}
+				continue;
+			}
+			/* oper::operclass */
+			else if (!strcmp(cep->ce_varname, "operclass"))
+			{
+				if (has_operclass)
+				{
+					config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "oper::operclass");
+					continue;
+				}
+				has_operclass = 1;
+				continue;
+			} 
 			/* oper::class */
-			if (!strcmp(cep->ce_varname, "class"))
+			else if (!strcmp(cep->ce_varname, "class"))
 			{
 				if (has_class)
 				{
@@ -3890,6 +3892,11 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->ce_varname, "swhois"))
 			{
 				/* ok */
+			}
+			else if (!strcmp(cep->ce_varname, "mask"))
+			{
+				if (cep->ce_vardata || cep->ce_entries)
+					has_mask = 1;
 			}
 			else
 			{
