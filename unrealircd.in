@@ -40,7 +40,10 @@ if [ "$1" = "start" ] ; then
 		if [ -r $PID_BACKUP ] ; then
 			mv -f $PID_BACKUP $PID_FILE
 		fi
+		exit 1
 	fi
+	# Now check if we need to create a crash report.
+	@BINDIR@/unrealircd -R
 elif [ "$1" = "stop" ] ; then
 	echo "Stopping UnrealIRCd"
 	if [ ! -r $PID_FILE ] ; then

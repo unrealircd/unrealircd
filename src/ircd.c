@@ -1312,6 +1312,9 @@ int InitwIRCD(int argc, char *argv[])
 		      chdir(CONFDIR);
 		      update_conf();
 		      exit(0);
+		  case 'R':
+		      report_crash();
+		      exit(0);
 		  default:
 #ifndef _WIN32
 			  return bad_command(myargv[0]);

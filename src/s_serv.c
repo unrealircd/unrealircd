@@ -1198,7 +1198,11 @@ CMD_FUNC(m_die)
 			    me.name, get_client_name(sptr, TRUE));
 	}
 
+#ifdef DEBUGMODE
+	abort(); /* for crash tests */
+#else
 	(void)s_die();
+#endif
 	return 0;
 }
 
