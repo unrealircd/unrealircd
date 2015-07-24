@@ -3971,9 +3971,9 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "maxclients"))
 			class->maxclients = atol(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "sendq"))
-			class->sendq = atol(cep->ce_vardata);
+			class->sendq = config_checkval(cep->ce_vardata,CFG_SIZE);
 		else if (!strcmp(cep->ce_varname, "recvq"))
-			class->recvq = atol(cep->ce_vardata);
+			class->recvq = config_checkval(cep->ce_vardata,CFG_SIZE);
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
 			for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
