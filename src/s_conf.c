@@ -3967,7 +3967,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "pingfreq"))
 			class->pingfreq = atol(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "connfreq"))
-			class->connfreq = atol(cep->ce_vardata);
+			class->connfreq = config_checkval(cep->ce_vardata,CFG_TIME);
 		else if (!strcmp(cep->ce_varname, "maxclients"))
 			class->maxclients = atol(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "sendq"))
@@ -4030,7 +4030,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		/* class::pingfreq */
 		else if (!strcmp(cep->ce_varname, "pingfreq"))
 		{
-			int v = atol(cep->ce_vardata);
+			int v = config_checkval(cep->ce_vardata,CFG_TIME);
 			if (has_pingfreq)
 			{
 				config_warn_duplicate(cep->ce_fileptr->cf_filename,
@@ -4095,7 +4095,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_sendq = 1;
-			l = atol(cep->ce_vardata);
+			l = config_checkval(cep->ce_vardata,CFG_SIZE);
 			if ((l <= 0) || (l > 2000000000))
 			{
 				config_error("%s:%i: class::sendq with illegal value",
@@ -4114,7 +4114,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_recvq = 1;
-			l = atol(cep->ce_vardata);
+			l = config_checkval(cep->ce_vardata,CFG_SIZE);
 			if ((l < 512) || (l > 32768))
 			{
 				config_error("%s:%i: class::recvq with illegal value (must be >512 and <32k)",
