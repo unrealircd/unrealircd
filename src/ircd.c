@@ -791,11 +791,11 @@ extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_SIZE+1];
  */
 void fix_timers(void)
 {
-int i, cnt;
-aClient *acptr;
-Event *e;
-struct ThrottlingBucket *n;
-struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
+	int i, cnt;
+	aClient *acptr;
+	Event *e;
+	struct ThrottlingBucket *thr;
+	ConfigItem_link *lnk;
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
@@ -848,17 +848,34 @@ struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 		}
 	}
 
-	/* Just flush all throttle stuff... */
+	/* For throttling we only have to deal with time jumping backward, which
+	 * is a real problem as if the jump was, say, 900 seconds, then it would
+	 * (potentially) throttle for 900 seconds.
+	 * Time going forward is "no problem", it just means we expire our entries
+	 * sonner than we should.
+	 */
 	cnt = 0;
 	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
-		for (n = ThrottlingHash[i]; n; n = n->next)
+	{
+		for (thr = ThrottlingHash[i]; thr; thr = thr->next)
 		{
-			z.next = (struct ThrottlingBucket *) DelListItem(n, ThrottlingHash[i]);
-			cnt++;
-			MyFree(n);
-			n = &z;
+			if (thr->since > TStime())
+				thr->since = TStime();
 		}
+	}
 	Debug((DEBUG_DEBUG, "fix_timers(): removed %d throttling item(s)", cnt));
+
+	/* Make sure autoconnect for servers still works (lnk->hold) */
+	for (lnk = conf_link; lnk; lnk = (ConfigItem_link *) lnk->next)
+	{
+		int t = lnk->class ? lnk->class->connfreq : 90;
+
+		if (lnk->hold > TStime() + t)
+		{
+			lnk->hold = TStime() + (t / 2); /* compromise */
+			Debug((DEBUG_DEBUG, "fix_timers(): link '%s' hold-time adjusted to %ld", lnk->servername, lnk->hold));
+		}
+	}
 }
 
 
