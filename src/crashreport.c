@@ -339,16 +339,31 @@ int getfilesize(char *fname)
 
 #define CRASH_REPORT_HOST "crash.unrealircd.org"
 
+SSL_CTX *crashreport_init_ssl(void)
+{
+	SSL_CTX *ctx_client;
+	
+	SSL_load_error_strings();
+	SSLeay_add_ssl_algorithms();
+
+	ctx_client = SSL_CTX_new(SSLv23_client_method());
+	if (!ctx_client)
+		return NULL;
+	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3);
+
+	return ctx_client;
+}	
+
 int crashreport_send(char *fname)
 {
 	char buf[1024];
 	char header[512], footer[512];
 	char delimiter[41];
 	int filesize;
-	int s, n;
-	struct hostent *he;
-	struct sockaddr_in cli;
+	int n;
 	FILE *fd;
+	SSL_CTX *ctx_client;
+	BIO *socket = NULL;
 	
 	filesize = getfilesize(fname);
 	if (filesize < 0)
@@ -365,23 +380,31 @@ int crashreport_send(char *fname)
 	                           delimiter);
 	snprintf(footer, sizeof(footer), "\r\n--%s--\r\n", delimiter);
 
-	s = fd_socket(AF_INET, SOCK_STREAM, 0, "crash reporter");
-	if (!s)
-		return 0;
-	
-	he = gethostbyname(CRASH_REPORT_HOST);
-	if (!he || !he->h_addr_list[0])
+	ctx_client = crashreport_init_ssl();
+	if (!ctx_client)
 	{
-		printf("ERROR: Could not resolve %s\n", CRASH_REPORT_HOST);
+		printf("ERROR: SSL initalization failure (I)\n");
 		return 0;
 	}
 	
-	memcpy(&cli.sin_addr, he->h_addr_list[0], he->h_length);
-	cli.sin_family = AF_INET;
-	cli.sin_port = htons(80);
-	if (connect(s, (struct sockaddr *)&cli, sizeof(cli)))
+	socket = BIO_new_ssl_connect(ctx_client);
+	if (!socket)
 	{
-		printf("ERROR: could not connect to crash report site (%s)\n", CRASH_REPORT_HOST);
+		printf("ERROR: SSL initalization failure (II)\n");
+		return 0;
+	}
+	
+	BIO_set_conn_hostname(socket, CRASH_REPORT_HOST ":443");
+
+	if (BIO_do_connect(socket) != 1)
+	{
+		printf("ERROR: Could not connect to %s\n", CRASH_REPORT_HOST);
+		return 0;
+	}
+	
+	if (BIO_do_handshake(socket) != 1)
+	{
+		printf("ERROR: Could not connect to %s (SSL handshake failed)\n", CRASH_REPORT_HOST);
 		return 0;
 	}
 	
@@ -398,10 +421,10 @@ int crashreport_send(char *fname)
 	                    (int)(filesize+strlen(header)+strlen(footer)),
 	                    delimiter);
 	
-	write(s, buf, strlen(buf));
+	BIO_puts(socket, buf);
 	
 	memset(buf, 0, sizeof(buf));
-	n = recv(s, buf, 255, 0);
+	n = BIO_read(socket, buf, 255);
 	if ((n < 0) || strncmp(buf, "HTTP/1.1 100", 12))
 	{
 		printf("Error transmitting bug report (stage II, n=%d)\n", n);
@@ -412,18 +435,21 @@ int crashreport_send(char *fname)
 	if (!fd)
 		return 0;
 
-	send(s, header, strlen(header), 0);
+	BIO_puts(socket, header);
 	
 	while ((fgets(buf, sizeof(buf), fd)))
 	{
-		send(s, buf, strlen(buf), 0);
+		BIO_puts(socket, buf);
 	}
+	fclose(fd);
 
-	
-	send(s, footer, strlen(footer), 0);
-	
+	BIO_puts(socket, footer);
+
+	do { } while(BIO_should_retry(socket)); /* is this needed? */
 	sleep(1);
-	close(s);
+	BIO_free_all(socket);
+	
+	SSL_CTX_free(ctx_client);
 	
 	return 1;
 }
@@ -432,7 +458,7 @@ void mark_coredump_as_read(char *coredump)
 {
 	char buf[512];
 	
-	snprintf(buf, sizeof(buf), "%s.%ld.done", coredump, (int)time(NULL));
+	snprintf(buf, sizeof(buf), "%s.%ld.done", coredump, (long)time(NULL));
 	
 	rename(coredump, buf);
 }
