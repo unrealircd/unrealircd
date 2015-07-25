@@ -452,7 +452,7 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 	{
 		int yes = 1;
 
-		setsockopt(listener->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &yes, sizeof(int));
+		(void)setsockopt(listener->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &yes, sizeof(int));
 	}
 #endif
 

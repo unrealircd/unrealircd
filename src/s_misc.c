@@ -776,7 +776,7 @@ char text[2048];
 		return;
 	snprintf(text, sizeof(text), "[BUG] operator count bug! value in /lusers is '%d', we counted '%d', "
 	               "user='%s', userserver='%s', tag=%s. Corrected. ",
-	               IRCstats.operators, counted, orig->name ? orig->name : "<null>",
+	               IRCstats.operators, counted, orig->name,
 	               orig->srvptr ? orig->srvptr->name : "<null>", tag ? tag : "<null>");
 #ifdef DEBUGMODE
 	sendto_realops("%s", text);
