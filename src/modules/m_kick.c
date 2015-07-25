@@ -251,7 +251,6 @@ CMD_FUNC(m_kick)
 							   me.name, sptr->name, "KICK",
 							   errbuf);
 						goto deny;
-						continue;
 					}	/* chanprot/chanowner */
 				}
 				
