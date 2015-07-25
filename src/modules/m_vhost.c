@@ -154,16 +154,9 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				/* join sent later when the host has been changed */
 				break;
 		}
-		if (sptr->user->virthost)
+		safestrdup(sptr->user->virthost, vhost->virthost);
+		if (vhost->virtuser)
 		{
-			MyFree(sptr->user->virthost);
-			sptr->user->virthost = NULL;
-		}
-		len = strlen(vhost->virthost);
-		length =  len > HOSTLEN ? HOSTLEN : len;
-		sptr->user->virthost = MyMalloc(length + 1);
-		strlcpy(sptr->user->virthost, vhost->virthost, length + 1);
-		if (vhost->virtuser) {
 			strcpy(olduser, sptr->user->username);
 			strlcpy(sptr->user->username, vhost->virtuser, USERLEN);
 			sendto_server(cptr, 0, 0, ":%s SETIDENT %s", sptr->name,

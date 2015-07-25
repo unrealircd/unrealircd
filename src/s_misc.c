@@ -791,10 +791,15 @@ char text[2048];
  */
 int valid_host(char *host)
 {
-char *p;
+	char *p;
+	
+	if (strlen(host) > HOSTLEN)
+		return 0; /* too long hosts are invalid too */
+
 	for (p=host; *p; p++)
 		if (!isalnum(*p) && (*p != '_') && (*p != '-') && (*p != '.') && (*p != ':'))
 			return 0;
+
 	return 1;
 }
 
