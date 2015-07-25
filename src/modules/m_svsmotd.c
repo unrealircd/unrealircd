@@ -43,7 +43,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svsmotd);
 
 #define MSG_SVSMOTD 	"SVSMOTD"	
 
@@ -77,7 +77,7 @@ MOD_UNLOAD(m_svsmotd)
 ** m_svsmotd
 **
 */
-int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svsmotd)
 {
         FILE *conf = NULL;
 

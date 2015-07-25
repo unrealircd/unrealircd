@@ -40,9 +40,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_quit);
 
-/* Place includes here */
 #define MSG_QUIT        "QUIT"  /* QUIT */
 
 ModuleHeader MOD_HEADER(m_quit)
@@ -78,7 +77,7 @@ MOD_UNLOAD(m_quit)
 ** m_quit
 **	parv[1] = comment
 */
-DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_quit)
 {
 	char *ocomment = (parc > 1 && parv[1]) ? parv[1] : sptr->name;
 	static char comment[TOPICLEN + 1];

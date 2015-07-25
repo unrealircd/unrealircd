@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_dccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_dccdeny);
 
 #define MSG_DCCDENY 	"DCCDENY"	
 
@@ -76,7 +76,7 @@ MOD_UNLOAD(m_dccdeny)
  * parv[1] - file
  * parv[2] - reason
  */
-DLLFUNC CMD_FUNC(m_dccdeny)
+CMD_FUNC(m_dccdeny)
 {
 	if (!MyClient(sptr))
 		return 0;

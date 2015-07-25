@@ -48,7 +48,7 @@ ModDataInfo *webirc_md = NULL;
 ConfigItem_webirc *conf_webirc = NULL;
 
 /* Forward declarations */
-int m_webirc(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_webirc);
 int webirc_check_init(aClient *cptr, char *sockn, size_t size);
 int webirc_local_pass(aClient *sptr, char *password);
 int webirc_config_test(ConfigFile *, ConfigEntry *, int, int *);
@@ -372,7 +372,7 @@ int dowebirc(aClient *cptr, char *ip, char *host)
 }
 
 /* WEBIRC <pass> "cgiirc" <hostname> <ip> */
-int m_webirc(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_webirc)
 {
 	char *ip, *host, *password;
 	size_t ourlen;

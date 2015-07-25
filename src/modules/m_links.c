@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_links(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_links);
 
 #define MSG_LINKS 	"LINKS"	
 
@@ -71,7 +71,7 @@ MOD_UNLOAD(m_links)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC CMD_FUNC(m_links)
+CMD_FUNC(m_links)
 {
 	aClient *acptr;
 	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;

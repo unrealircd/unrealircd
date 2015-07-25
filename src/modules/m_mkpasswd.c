@@ -43,7 +43,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_mkpasswd);
 
 #define MSG_MKPASSWD 	"MKPASSWD"	
 
@@ -77,7 +77,7 @@ MOD_UNLOAD(m_mkpasswd)
 ** m_mkpasswd
 **      parv[1] = password to encrypt
 */
-int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_mkpasswd)
 {
 	short	type;
 	char	*result = NULL;

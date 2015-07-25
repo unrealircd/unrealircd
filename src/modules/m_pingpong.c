@@ -40,10 +40,9 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_nospoof(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
+CMD_FUNC(m_ping);
+CMD_FUNC(m_pong);
+CMD_FUNC(m_nospoof);
 
 /* Place includes here */
 #define MSG_PING        "PING"  /* PING */
@@ -84,7 +83,7 @@ MOD_UNLOAD(m_pingpong)
 **	parv[1] = origin
 **	parv[2] = destination
 */
-DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_ping)
 {
 	aClient *acptr;
 	char *origin, *destination;
@@ -130,7 +129,7 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 ** m_nospoof - allows clients to respond to no spoofing patch
 **	parv[1] = code
 */
-DLLFUNC int  m_nospoof(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_nospoof)
 {
 	unsigned long result;
 
@@ -173,7 +172,7 @@ DLLFUNC int  m_nospoof(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[1] = origin
 **	parv[2] = destination
 */
-DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_pong)
 {
 	aClient *acptr;
 	char *origin, *destination;

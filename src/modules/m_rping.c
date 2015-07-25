@@ -41,8 +41,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_rping);
+CMD_FUNC(m_rpong);
 DLLFUNC char *militime(char *sec, char *usec);
 
 /* Place includes here */
@@ -94,7 +94,7 @@ MOD_UNLOAD(m_rping)
  *    parv[4] = start time in us
  *    parv[5] = the optional remark
  */
-DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_rping)
 {
 	aClient *acptr;
 
@@ -157,7 +157,7 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[3] = pingtime in ms
  * parv[4] = client info (for instance start time)
  */
-DLLFUNC int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_rpong)
 {
 	aClient *acptr;
 

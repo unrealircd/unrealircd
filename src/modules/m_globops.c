@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_globops(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_globops);
 
 #define MSG_GLOBOPS 	"GLOBOPS"	
 
@@ -75,7 +75,7 @@ MOD_UNLOAD(m_globops)
 ** m_globops (write to opers who are +g currently online)
 **      parv[1] = message text
 */
-DLLFUNC CMD_FUNC(m_globops)
+CMD_FUNC(m_globops)
 {
 	char *message;
 

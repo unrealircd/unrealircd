@@ -40,7 +40,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_cycle(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_cycle);
 
 /* Place includes here */
 #define MSG_CYCLE       "CYCLE"

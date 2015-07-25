@@ -40,7 +40,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_kill);
 static char buf[BUFSIZE], buf2[BUFSIZE];
 
 /* Place includes here */
@@ -82,7 +82,7 @@ MOD_UNLOAD(m_kill)
 **	parv[1] = kill victim(s) - comma separated list
 **	parv[2] = kill path
 */
-DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_kill)
 {
 	aClient *acptr;
 	char inpath[HOSTLEN * 2 + USERLEN + 5];

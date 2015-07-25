@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_connect(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_connect);
 
 #define MSG_CONNECT 	"CONNECT"	
 
@@ -77,7 +77,7 @@ MOD_UNLOAD(m_connect)
    ** m_connect
    **  parv[1] = servername
  */
-DLLFUNC CMD_FUNC(m_connect)
+CMD_FUNC(m_connect)
 {
 	int  retval;
 	ConfigItem_link	*aconf;

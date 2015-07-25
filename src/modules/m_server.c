@@ -42,8 +42,8 @@
 void send_channel_modes(aClient *cptr, aChannel *chptr);
 void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
 void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
-DLLFUNC int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_server);
+CMD_FUNC(m_server_remote);
 int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
 void _send_protoctl_servers(aClient *sptr, int response);
 void _send_server_message(aClient *sptr);

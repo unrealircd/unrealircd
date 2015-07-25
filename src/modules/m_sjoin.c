@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_sjoin);
 
 #define MSG_SJOIN 	"SJOIN"	
 

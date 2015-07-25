@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_help(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_help);
 
 #define MSG_HELP 	"HELP"	
 #define MSG_HELPOP	"HELPOP"

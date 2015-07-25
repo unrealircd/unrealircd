@@ -47,7 +47,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_who);
 
 /* Place includes here */
 #define MSG_WHO 	"WHO"
@@ -134,7 +134,7 @@ struct {
 } wfl;
 
 /** The /who command: retrieves information from users. */
-DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_who)
 {
 aChannel *target_channel;
 char *mask = parv[1];

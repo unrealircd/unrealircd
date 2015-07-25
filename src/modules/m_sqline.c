@@ -40,7 +40,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_sqline);
 
 /* Place includes here */
 #define MSG_SQLINE      "SQLINE"        /* SQLINE */
@@ -77,11 +77,11 @@ MOD_UNLOAD(m_sqline)
 	return MOD_SUCCESS;
 }
 
-/*    m_sqline
-**	parv[1] = nickmask
-**	parv[2] = reason
-*/
-DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+/* m_sqline
+ *	parv[1] = nickmask
+ *	parv[2] = reason
+ */
+CMD_FUNC(m_sqline)
 {
 	char    mo[1024];
 	char *comment = (parc == 3) ? parv[2] : NULL;

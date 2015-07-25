@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_kick);
 
 #define MSG_KICK 	"KICK"	
 

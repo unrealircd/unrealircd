@@ -42,10 +42,9 @@
 
 static char buf[BUFSIZE];
 
-DLLFUNC int m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_whois);
 
-/* Place includes here */
-#define MSG_WHOIS       "WHOIS" /* WHOI */
+#define MSG_WHOIS       "WHOIS"
 
 ModuleHeader MOD_HEADER(m_whois)
   = {
@@ -81,7 +80,7 @@ MOD_UNLOAD(m_whois)
 ** m_whois
 **	parv[1] = nickname masklist
 */
-DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_whois)
 {
 	Membership *lp;
 	aClient *acptr;

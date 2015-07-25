@@ -42,7 +42,7 @@
 #endif
 #include "whowas.h"
 
-DLLFUNC int m_whowas(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_whowas);
 
 #define MSG_WHOWAS 	"WHOWAS"	
 

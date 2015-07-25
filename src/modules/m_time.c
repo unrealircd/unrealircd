@@ -39,7 +39,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_time(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_time);
 
 /* Place includes here */
 #define MSG_TIME	"TIME"

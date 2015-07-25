@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_locops(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_locops);
 
 #define MSG_LOCOPS 	"LOCOPS"	
 

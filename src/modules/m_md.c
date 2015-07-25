@@ -27,7 +27,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_md(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_md);
 void _send_md_client(ModDataInfo *mdi, aClient *acptr, ModData *md);
 void _send_md_channel(ModDataInfo *mdi, aChannel *chptr, ModData *md);
 void _send_md_member(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md);
@@ -78,7 +78,7 @@ MOD_UNLOAD(m_md)
  * The appropriate module is called to set the data (unserialize).
  * When the command is received it is broadcasted further to all other servers.
  */
-DLLFUNC int m_md(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_md)
 {
 char *type, *objname, *varname, *value;
 ModDataInfo *md;

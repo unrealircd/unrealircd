@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_stats(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_stats);
 
 #define MSG_STATS 	"STATS"	
 

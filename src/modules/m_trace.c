@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_trace(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_trace);
 
 #define MSG_TRACE 	"TRACE"	
 

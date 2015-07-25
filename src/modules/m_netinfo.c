@@ -39,7 +39,7 @@
 #include "h.h"
 #include "version.h"
 
-DLLFUNC int m_netinfo(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_netinfo);
 
 #define MSG_NETINFO 	"NETINFO"	
 

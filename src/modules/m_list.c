@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_list(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_list);
 void _send_list(aClient *cptr, int numsend);
 
 #define MSG_LIST 	"LIST"	

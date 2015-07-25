@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_addomotd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_addomotd);
 
 #define MSG_ADDOMOTD 	"ADDOMOTD"	
 
@@ -76,7 +76,7 @@ MOD_UNLOAD(m_addomotd)
 **
 ** De-Potvinized by codemastr
 */
-DLLFUNC CMD_FUNC(m_addomotd)
+CMD_FUNC(m_addomotd)
 {
 	FILE *conf;
 	char *text;

@@ -40,7 +40,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_svssilence(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svssilence);
 
 /* Place includes here */
 #define MSG_SVSSILENCE       "SVSSILENCE"

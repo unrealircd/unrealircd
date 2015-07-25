@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_rules(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_rules);
 
 #define MSG_RULES 	"RULES"	
 

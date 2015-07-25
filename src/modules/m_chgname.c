@@ -48,7 +48,7 @@
 #define MSG_CHGNAME     "CHGNAME"
 #define MSG_SVSNAME     "SVSNAME"
 
-DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_chgname);
 
 ModuleHeader MOD_HEADER(m_chgname)
   = {
@@ -90,8 +90,7 @@ MOD_UNLOAD(m_chgname)
  * parv[2] - realname
  *
 */
-
-DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_chgname)
 {
 	aClient *acptr;
 

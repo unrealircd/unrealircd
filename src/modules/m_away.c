@@ -43,7 +43,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_away(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_away);
 
 #define MSG_AWAY 	"AWAY"	
 
@@ -87,7 +87,7 @@ MOD_UNLOAD(m_away)
 ** m_away
 **      parv[1] = away message
 */
-int  m_away(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_away)
 {
 char *away, *awy2 = parv[1];
 int n, wasaway = 0;

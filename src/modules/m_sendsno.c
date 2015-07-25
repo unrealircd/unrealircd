@@ -40,9 +40,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_sendsno(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_sendsno);
 
-/* Place includes here */
 #define MSG_SENDSNO   "SENDSNO"
 
 ModuleHeader MOD_HEADER(m_sendsno)
@@ -81,7 +80,7 @@ MOD_UNLOAD(m_sendsno)
 ** Servers can use this to:
 **   :server.unreal.net SENDSNO e :Hiiiii
 */
-DLLFUNC int m_sendsno(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_sendsno)
 {
 char *sno, *msg, *p;
 long snomask = 0;

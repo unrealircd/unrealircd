@@ -40,8 +40,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_svsnolag(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_svs2nolag(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svsnolag);
+CMD_FUNC(m_svs2nolag);
 
 #define MSG_SVSNOLAG 	"SVSNOLAG"	
 #define MSG_SVS2NOLAG 	"SVS2NOLAG"	
@@ -115,13 +115,12 @@ int do_svsnolag(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 	return 0;
 }
 
-
-int m_svsnolag(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svsnolag)
 {
 	return do_svsnolag(cptr, sptr, parc, parv, 0);
 }
 
-int m_svs2nolag(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svs2nolag)
 {
 	return do_svsnolag(cptr, sptr, parc, parv, 1);
 }

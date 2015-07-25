@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_admin(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_admin);
 
 #define MSG_ADMIN 	"ADMIN"	
 
@@ -75,7 +75,7 @@ MOD_UNLOAD(m_admin)
 ** m_admin
 **	parv[1] = servername
 */
-DLLFUNC CMD_FUNC(m_admin)
+CMD_FUNC(m_admin)
 {
 	ConfigItem_admin *admin;
 	/* Users may want to get the address in case k-lined, etc. -- Barubary

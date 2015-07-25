@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_ison(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_ison);
 
 #define MSG_ISON 	"ISON"	
 

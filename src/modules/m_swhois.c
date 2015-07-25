@@ -43,7 +43,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_swhois);
 
 #define MSG_SWHOIS 	"SWHOIS"	
 
@@ -83,9 +83,8 @@ MOD_UNLOAD(m_swhois)
  * parv[3] = added-by tag
  * parv[4] = priority
  * parv[5] = swhois
-*/
-
-int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[])
+ */
+CMD_FUNC(m_swhois)
 {
         aClient *acptr;
         char tag[HOSTLEN+1];

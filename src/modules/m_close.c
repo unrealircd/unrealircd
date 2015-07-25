@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_close(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_close);
 
 #define MSG_CLOSE 	"CLOSE"	
 
@@ -74,7 +74,7 @@ MOD_UNLOAD(m_close)
 /*
 ** m_close - added by Darren Reed Jul 13 1992.
 */
-DLLFUNC CMD_FUNC(m_close)
+CMD_FUNC(m_close)
 {
 	aClient *acptr, *acptr2;
 	int  i;

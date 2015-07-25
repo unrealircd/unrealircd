@@ -40,7 +40,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_svsjoin(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svsjoin);
 
 /* Place includes here */
 #define MSG_SVSJOIN       "SVSJOIN"

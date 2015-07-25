@@ -44,7 +44,7 @@
 
 #define MSG_SETIDENT 	"SETIDENT"	/* set ident */
 
-DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_setident);
 
 ModuleHeader MOD_HEADER(m_setident)
   = {
@@ -80,8 +80,7 @@ MOD_UNLOAD(m_setident)
  *     Very experimental currently
  * 	   Cloning of m_sethost at some points - so same authors ;P
 */
-
-DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_setident)
 {
 
 	char *vident, *s;

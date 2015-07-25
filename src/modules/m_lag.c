@@ -40,7 +40,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_lag);
 
 /* Place includes here */
 #define MSG_LAG         "LAG"   /* Lag detect */
@@ -78,7 +78,7 @@ MOD_UNLOAD(m_lag)
  * parv[1] = server to query
 */
 
-DLLFUNC int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_lag)
 {
 	if (!ValidatePermissionsForPath("server:info:lag",sptr,NULL,NULL,NULL))
 	{

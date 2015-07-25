@@ -39,7 +39,7 @@
 #include "h.h"
 #include "version.h"
 
-DLLFUNC int m_protoctl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_protoctl);
 
 #define MSG_PROTOCTL 	"PROTOCTL"	
 

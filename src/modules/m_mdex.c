@@ -26,7 +26,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_mdex(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_mdex);
 
 ModuleHeader MOD_HEADER(m_mdex)
   = {
@@ -85,10 +85,10 @@ MOD_UNLOAD(m_mdex)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int m_mdex(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_mdex)
 {
-char *action, *type, *objname, *varname, *value;
-ModDataInfo *md;
+	char *action, *type, *objname, *varname, *value;
+	ModDataInfo *md;
 
 	if (!IsOper(sptr) || (parc < 5) || BadPtr(parv[4]))
 		return 0;

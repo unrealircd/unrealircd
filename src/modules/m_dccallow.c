@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_dccallow(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_dccallow);
 
 #define MSG_DCCALLOW 	"DCCALLOW"
 
@@ -75,7 +75,7 @@ MOD_UNLOAD(m_dccallow)
  * HISTORY:
  * Taken from bahamut 1.8.1
  */
-DLLFUNC int m_dccallow(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_dccallow)
 {
 Link *lp;
 char *p, *s;

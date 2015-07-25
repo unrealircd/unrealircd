@@ -41,9 +41,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_setname(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_setname);
 
-/* Place includes here */
 #define MSG_SETNAME 	"SETNAME"	/* setname */
 
 ModuleHeader MOD_HEADER(m_setname)

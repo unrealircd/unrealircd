@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_samode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_samode);
 
 #define MSG_SAMODE 	"SAMODE"	
 

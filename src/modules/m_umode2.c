@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_umode2(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_umode2);
 
 #define MSG_UMODE2 	"UMODE2"	
 

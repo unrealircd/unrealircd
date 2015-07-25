@@ -40,7 +40,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_svswatch(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svswatch);
 
 /* Place includes here */
 #define MSG_SVSWATCH       "SVSWATCH"

@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_vhost);
 
 /* Place includes here */
 #define MSG_VHOST       "VHOST"
@@ -76,7 +76,7 @@ MOD_UNLOAD(m_vhost)
 	return MOD_SUCCESS;	
 }
 
-int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_vhost)
 {
 	ConfigItem_vhost *vhost;
 	char *login, *password, host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];

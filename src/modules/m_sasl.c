@@ -138,7 +138,7 @@ static const char *encode_puid(aClient *client)
  * parv[2]: target PUID
  * parv[3]: ESVID
  */
-static int m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svslogin)
 {
 	if (!SASL_SERVER || MyClient(sptr) || (parc < 3) || !parv[3])
 		return 0;
@@ -182,7 +182,7 @@ static int m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[4]: data
  * parv[5]: out-of-bound data
  */
-static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_sasl)
 {
 	if (!SASL_SERVER || MyClient(sptr) || (parc < 4) || !parv[4])
 		return 0;
@@ -234,7 +234,7 @@ static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
  *
  * parv[1]: data
  */
-static int m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_authenticate)
 {
 	aClient *agent_p = NULL;
 

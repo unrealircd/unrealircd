@@ -42,7 +42,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_sethost);
 
 /* Place includes here */
 #define MSG_SETHOST 	"SETHOST"	/* sethost */
@@ -79,7 +79,7 @@ MOD_UNLOAD(m_sethost)
    :prefix SETHOST newhost
    parv[1] - newhost
 */
-DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_sethost)
 {
 	char *vhost;
 

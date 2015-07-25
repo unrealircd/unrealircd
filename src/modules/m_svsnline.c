@@ -43,9 +43,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svsnline);
 
-/* Place includes here */
 #define MSG_SVSNLINE 	"SVSNLINE"	/* svsnline */
 
 ModuleHeader MOD_HEADER(m_svsnline)
@@ -104,8 +103,7 @@ void wipe_svsnlines(void)
  * SVSNLINE *     Wipes
  * -Stskeeps
 */
-
-DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svsnline)
 {
 	ConfigItem_ban *bconf;
 	char		*s;

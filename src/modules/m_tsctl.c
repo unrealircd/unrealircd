@@ -40,7 +40,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_tsctl);
 
 /* Place includes here */
 #define MSG_TSCTL       "TSCTL"
@@ -79,8 +79,7 @@ MOD_UNLOAD(m_tsctl)
 **      parv[1] = command
 **      parv[2] = options
 */
-
-DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_tsctl)
 {
 	time_t timediff;
 

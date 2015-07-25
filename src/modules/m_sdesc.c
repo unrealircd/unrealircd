@@ -41,9 +41,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_sdesc);
 
-/* Place includes here */
 #define MSG_SDESC 	"SDESC"	/* sdesc */
 
 ModuleHeader MOD_HEADER(m_sdesc)
@@ -78,7 +77,7 @@ MOD_UNLOAD(m_sdesc)
  *  D: Sets server info if you are Server Admin (ONLINE)
 */
 
-int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_sdesc)
 {
 	if (!ValidatePermissionsForPath("server:description",sptr,NULL,NULL,NULL))
 	{

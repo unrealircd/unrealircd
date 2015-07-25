@@ -41,8 +41,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_svssno(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_svs2sno(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svssno);
+CMD_FUNC(m_svs2sno);
 
 #define MSG_SVSSNO 	"SVSSNO"	
 #define MSG_SVS2SNO 	"SVS2SNO"	

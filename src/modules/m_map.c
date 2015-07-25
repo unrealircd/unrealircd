@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_map(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_map);
 
 #define MSG_MAP 	"MAP"	
 

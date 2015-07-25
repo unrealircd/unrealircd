@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_oper);
 
 
 /* Place includes here */
@@ -100,8 +100,7 @@ void set_oper_host(aClient *sptr, char *host)
 **	parv[1] = oper name
 **	parv[2] = oper password
 */
-
-DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_oper)
 {
 	ConfigItem_oper *aconf;
 	char *name, *password;

@@ -40,9 +40,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_svspart(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svspart);
 
-/* Place includes here */
 #define MSG_SVSPART       "SVSPART"
 
 ModuleHeader MOD_HEADER(m_svspart)

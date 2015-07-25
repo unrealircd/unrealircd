@@ -50,7 +50,7 @@
 
 #define MSG_CHGHOST 	"CHGHOST"
 
-DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_chghost);
 
 ModuleHeader MOD_HEADER(m_chghost)
   = {
@@ -86,7 +86,7 @@ MOD_UNLOAD(m_chghost)
  *
 */
 
-DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_chghost)
 {
 	aClient *acptr;
 

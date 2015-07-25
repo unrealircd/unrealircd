@@ -43,7 +43,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svsnoop);
 
 #define MSG_SVSNOOP 	"SVSNOOP"	
 
@@ -73,13 +73,14 @@ MOD_UNLOAD(m_svsnoop)
 {
 	return MOD_SUCCESS;
 }
-int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
+
+CMD_FUNC(m_svsnoop)
 {
-aClient *acptr;
+	aClient *acptr;
 
 	if (!(IsULine(sptr) && parc > 2))
 		return 0;
-	/* svsnoop bugfix --binary */
+
 	if (hunt_server(cptr, sptr, ":%s SVSNOOP %s :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		if (parv[2][0] == '+')

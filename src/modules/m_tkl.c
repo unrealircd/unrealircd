@@ -64,14 +64,14 @@
 #  endif
 #endif
 
-DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_tempshun(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_gline);
+CMD_FUNC(m_shun);
+CMD_FUNC(m_tempshun);
+CMD_FUNC(m_gzline);
+CMD_FUNC(m_tkline);
+CMD_FUNC(m_tzline);
+CMD_FUNC(m_spamfilter);
 DLLFUNC int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type);
-DLLFUNC int m_spamfilter(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
@@ -184,8 +184,7 @@ MOD_UNLOAD(m_tkl)
 ** parv[2] = for how long
 ** parv[3] = reason
 */
-
-DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_gline)
 {
 	if (IsServer(sptr))
 		return 0;
@@ -211,7 +210,7 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 }
 
-DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_gzline)
 {
 	if (IsServer(sptr))
 		return 0;
@@ -237,7 +236,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 }
 
-DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_shun)
 {
 	if (IsServer(sptr))
 		return 0;
@@ -262,12 +261,12 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 }
 
-DLLFUNC int m_tempshun(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_tempshun)
 {
-aClient *acptr;
-char *comment = ((parc > 2) && !BadPtr(parv[2])) ? parv[2] : "no reason";
-char *name;
-int remove = 0;
+	aClient *acptr;
+	char *comment = ((parc > 2) && !BadPtr(parv[2])) ? parv[2] : "no reason";
+	char *name;
+	int remove = 0;
 
 	if (MyClient(sptr) && (!ValidatePermissionsForPath("tkl:shun:temporary",sptr,NULL,NULL,NULL)))
 	{
@@ -335,7 +334,7 @@ int remove = 0;
 	return 0;
 }
 
-DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_tkline)
 {
 	if (IsServer(sptr))
 		return 0;
@@ -398,7 +397,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 }
 
-DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_tzline)
 {
 	if (IsServer(sptr))
 		return 0;
@@ -729,7 +728,7 @@ int spamfilter_new_usage(aClient *cptr, aClient *sptr, char *parv[])
 /** /spamfilter [add|del|remove|+|-] [match-type] [type] [action] [tkltime] [reason] [regex]
  *                   1                    2         3        4        5        6        7
  */
-DLLFUNC int m_spamfilter(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_spamfilter)
 {
 int  whattodo = 0;	/* 0 = add  1 = del */
 char mo[32], mo2[32];

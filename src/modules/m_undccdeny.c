@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_undccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_undccdeny);
 
 #define MSG_UNDCCDENY 	"UNDCCDENY"	
 

@@ -46,9 +46,9 @@ char *_StripControlCodes(unsigned char *text);
 
 int	ban_version(aClient *sptr, char *text);
 
-DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice);
-DLLFUNC int m_notice(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_private(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_private);
+CMD_FUNC(m_notice);
+int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice);
 
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
@@ -182,7 +182,7 @@ int ret;
 ** rev argv 6/91
 **
 */
-DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
+int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 {
 	aClient *acptr, *srvptr;
 	char *s;
@@ -459,8 +459,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 **	parv[1] = receiver list
 **	parv[2] = message text
 */
-
-DLLFUNC int  m_private(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_private)
 {
 	return m_message(cptr, sptr, parc, parv, 0);
 }
@@ -470,11 +469,11 @@ DLLFUNC int  m_private(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[1] = receiver list
 **	parv[2] = notice text
 */
-
-DLLFUNC int  m_notice(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_notice)
 {
 	return m_message(cptr, sptr, parc, parv, 1);
 }
+
 /***********************************************************************
  * m_silence() - Added 19 May 1994 by Run.
  *

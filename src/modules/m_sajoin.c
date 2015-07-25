@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_sajoin(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_sajoin);
 
 #define MSG_SAJOIN 	"SAJOIN"	
 

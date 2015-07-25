@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_wallops(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_wallops);
 
 #define MSG_WALLOPS 	"WALLOPS"	
 

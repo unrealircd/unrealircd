@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_sapart(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_sapart);
 
 #define MSG_SAPART 	"SAPART"	
 

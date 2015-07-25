@@ -42,7 +42,8 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
-DLLFUNC int m_svslusers(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+
+CMD_FUNC(m_svslusers);
 
 #define MSG_SVSLUSERS 	"SVSLUSERS"	
 
@@ -79,7 +80,7 @@ MOD_UNLOAD(m_svslusers)
 **      If -1 is specified for either number, it is ignored and the current count
 **      is kept.
 */
-int  m_svslusers(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svslusers)
 {
         if (!IsULine(sptr) || parc < 4)
 		return -1;  

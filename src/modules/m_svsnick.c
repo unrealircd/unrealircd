@@ -43,7 +43,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svsnick);
 
 #define MSG_SVSNICK 	"SVSNICK"	
 
@@ -78,10 +78,10 @@ MOD_UNLOAD(m_svsnick)
 **      parv[2] = new nickname
 **      parv[3] = timestamp
 */
-int  m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svsnick)
 {
-aClient *acptr;
-aClient *ocptr; /* Other client */
+	aClient *acptr;
+	aClient *ocptr; /* Other client */
 
 	if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return -1; /* This looks like an error anyway -Studded */

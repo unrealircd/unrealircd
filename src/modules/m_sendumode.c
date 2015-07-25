@@ -40,7 +40,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_sendumode);
 
 /* Place includes here */
 #define MSG_SENDUMODE   "SENDUMODE"
@@ -87,7 +87,7 @@ MOD_UNLOAD(m_sendumode)
 ** Silly half-snomask support ripped out in 2015. Very confusing, and broken.
 ** We have SENDSNO for snomask sending since 2004. -- Syzop
 */
-DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_sendumode)
 {
 	char *message;
 	char *p;

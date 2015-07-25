@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_topic);
 
 #define MSG_TOPIC 	"TOPIC"	
 

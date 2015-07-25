@@ -40,9 +40,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_unsqline);
 
-/* Place includes here */
 #define MSG_UNSQLINE    "UNSQLINE"      /* UNSQLINE */
 
 ModuleHeader MOD_HEADER(m_unsqline)
@@ -77,7 +76,7 @@ MOD_UNLOAD(m_unsqline)
 /* m_unsqline
 **	parv[1] = nickmask
 */
-DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_unsqline)
 {
 	char *tkllayer[6] = {
 		me.name,           /*0  server.name */

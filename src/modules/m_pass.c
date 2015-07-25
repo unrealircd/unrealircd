@@ -44,8 +44,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_pass(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
+CMD_FUNC(m_pass);
 extern MODVAR char zlinebuf[BUFSIZE];
 
 #define MSG_PASS 	"PASS"	

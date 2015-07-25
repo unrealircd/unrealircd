@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_invite(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_invite);
 
 #define MSG_INVITE 	"INVITE"	
 

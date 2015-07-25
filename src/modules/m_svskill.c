@@ -39,9 +39,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_svskill(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svskill);
 
-/* Place includes here */
 #define MSG_SVSKILL	"SVSKILL"
 
 ModuleHeader MOD_HEADER(m_svskill)

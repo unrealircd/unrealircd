@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_eos(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_eos);
 
 #define MSG_EOS 	"EOS"	
 
@@ -78,7 +78,7 @@ MOD_UNLOAD(m_eos)
  *          etc are introduced). Makes us able to know if a server is linked.
  * History: Added in beta18 (in cvs since 2003-08-11) by Syzop
  */
-DLLFUNC CMD_FUNC(m_eos)
+CMD_FUNC(m_eos)
 {
 	if (!IsServer(sptr))
 		return 0;

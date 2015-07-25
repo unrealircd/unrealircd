@@ -50,8 +50,7 @@
 
 #define MSG_CHGIDENT 	"CHGIDENT"
 
-DLLFUNC int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
+CMD_FUNC(m_chgident);
 
 ModuleHeader MOD_HEADER(m_chgident)
   = {
@@ -87,11 +86,11 @@ MOD_UNLOAD(m_chgident)
  *
 */
 
-int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_chgident)
 {
-aClient *acptr;
-char *s;
-int  legalident = 1;
+	aClient *acptr;
+	char *s;
+	int legalident = 1;
 
 	if (!ValidatePermissionsForPath("client:ident",sptr,NULL,NULL,NULL))
 	{

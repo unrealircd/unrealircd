@@ -44,8 +44,8 @@
 #endif
 
 void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param);
-DLLFUNC int m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_svsmode);
+CMD_FUNC(m_svs2mode);
 
 #define MSG_SVSMODE 	"SVSMODE"	
 #define MSG_SVS2MODE    "SVS2MODE"
@@ -574,7 +574,7 @@ int  what, setflags;
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)
  */
-int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svsmode)
 {
 	return do_svsmode(cptr, sptr, parc, parv, 0);
 }
@@ -585,7 +585,7 @@ int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)
  */
-int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svs2mode)
 {
 	return do_svsmode(cptr, sptr, parc, parv, 1);
 }
