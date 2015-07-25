@@ -105,7 +105,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		parv[1] = parv[2];
 	}
 
-	strcpy(querybuf, parv[1]);
+	strlcpy(querybuf, parv[1], sizeof(querybuf));
 
 	for (tmp = canonize(parv[1]); (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
