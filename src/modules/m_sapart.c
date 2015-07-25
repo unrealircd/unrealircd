@@ -183,7 +183,8 @@ CMD_FUNC(m_sapart)
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
 				sptr->name, acptr->name, parv[1]);
 		}
-		do_cmd(acptr, acptr, "PART", comment ? 3 : 2, parv);
+		(void)do_cmd(acptr, acptr, "PART", comment ? 3 : 2, parv);
+		/* acptr may be killed now due to the part reason @ spamfilter */
 	}
 	else
 	{

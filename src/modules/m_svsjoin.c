@@ -97,11 +97,13 @@ CMD_FUNC(m_svsjoin)
 		if (parc == 3)
 		{
 			parv[2] = NULL;
-			do_cmd(acptr, acptr, "JOIN", 2, parv);
+			(void)do_cmd(acptr, acptr, "JOIN", 2, parv);
+			/* NOTE: 'acptr' may be killed if we ever implement spamfilter join channel target */
 		} else {
 			parv[2] = parv[3];
 			parv[3] = NULL;
-			do_cmd(acptr, acptr, "JOIN", 3, parv);
+			(void)do_cmd(acptr, acptr, "JOIN", 3, parv);
+			/* NOTE: 'acptr' may be killed if we ever implement spamfilter join channel target */
 		}
 	}
 	else

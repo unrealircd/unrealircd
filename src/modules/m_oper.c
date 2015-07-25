@@ -287,7 +287,7 @@ CMD_FUNC(m_oper)
 		IRCstats.operators++;
 
 	if (SHOWOPERMOTD == 1)
-		do_cmd(cptr, sptr, "OPERMOTD", parc, parv);
+		(void)do_cmd(cptr, sptr, "OPERMOTD", parc, parv);
 
 	if (!BadPtr(OPER_AUTO_JOIN_CHANS) && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
 	{
