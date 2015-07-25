@@ -3965,7 +3965,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "pingfreq"))
-			class->pingfreq = atol(cep->ce_vardata);
+			class->pingfreq = config_checkval(cep->ce_vardata,CFG_TIME);
 		else if (!strcmp(cep->ce_varname, "connfreq"))
 			class->connfreq = config_checkval(cep->ce_vardata,CFG_TIME);
 		else if (!strcmp(cep->ce_varname, "maxclients"))
