@@ -1071,11 +1071,13 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
 		if (banthem)
 		{		/* ban. */
 			sprintf(mask, "*!*@%s", GetHost(sptr));
-			add_listmode(&chptr->banlist, &me, chptr, mask);
-			sendto_server(&me, 0, 0, ":%s MODE %s +b %s 0",
-			    me.name, chptr->chname, mask);
-			sendto_channel_butserv(chptr, &me,
-			    ":%s MODE %s +b %s", me.name, chptr->chname, mask);
+			if (add_listmode(&chptr->banlist, &me, chptr, mask) == 0)
+			{
+				sendto_server(&me, 0, 0, ":%s MODE %s +b %s 0",
+				    me.name, chptr->chname, mask);
+				sendto_channel_butserv(chptr, &me,
+				    ":%s MODE %s +b %s", me.name, chptr->chname, mask);
+			} /* else.. ban list is full */
 		}
 		sendto_channel_butserv(chptr, &me,
 		    ":%s KICK %s %s :%s", me.name,
