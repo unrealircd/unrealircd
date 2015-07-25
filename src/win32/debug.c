@@ -58,16 +58,19 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 	char curmodule[32];
 	DWORD symOptions, dwDisp, frame;
 	HANDLE hProcess = GetCurrentProcess();
-	IMAGEHLP_SYMBOL *pSym = malloc(sizeof(IMAGEHLP_SYMBOL)+500);
+	IMAGEHLP_SYMBOL *pSym = MyMallocEx(sizeof(IMAGEHLP_SYMBOL)+500);
 	IMAGEHLP_LINE pLine;
 	IMAGEHLP_MODULE pMod;
 	STACKFRAME Stack;
 
 	/* Load the stack information */
+	memset(&Stack, 0, sizeof(Stack));
 	Stack.AddrPC.Offset = e->ContextRecord->Eip;
 	Stack.AddrPC.Mode = AddrModeFlat;
 	Stack.AddrFrame.Offset = e->ContextRecord->Ebp;
 	Stack.AddrFrame.Mode = AddrModeFlat;
+	Stack.AddrStack.Offset = e->ContextRecord->Esp;
+	Stack.AddrStack.Mode = AddrModeFlat;
 	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
 		hProcess = (HANDLE)GetCurrentProcessId();
 	else
