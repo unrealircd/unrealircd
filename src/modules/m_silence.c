@@ -80,7 +80,7 @@ MOD_UNLOAD(m_silence)
 **      parv[2] = mask
 */
 
-DLLFUNC CMD_FUNC(m_silence)
+CMD_FUNC(m_silence)
 {
 	Link *lp;
 	aClient *acptr;

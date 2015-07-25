@@ -81,7 +81,7 @@ extern MODVAR aWhowas *WHOWASHASH[WW_MAX];
 ** m_whowas
 **      parv[1] = nickname queried
 */
-DLLFUNC CMD_FUNC(m_whowas)
+CMD_FUNC(m_whowas)
 {
 	aWhowas *temp;
 	int  cur = 0;

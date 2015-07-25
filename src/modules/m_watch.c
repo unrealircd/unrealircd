@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_watch);
+CMD_FUNC(m_watch);
 
 #define MSG_WATCH 	"WATCH"	
 
@@ -110,7 +110,7 @@ static char buf[BUFSIZE];
 /*
  * m_watch
  */
-DLLFUNC CMD_FUNC(m_watch)
+CMD_FUNC(m_watch)
 {
 	aClient *acptr;
 	char *s, **pav = parv, *user;

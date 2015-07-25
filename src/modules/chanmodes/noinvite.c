@@ -39,7 +39,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(noinvite);
+CMD_FUNC(noinvite);
 
 ModuleHeader MOD_HEADER(noinvite)
   = {

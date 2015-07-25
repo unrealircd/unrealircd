@@ -78,7 +78,7 @@ MOD_UNLOAD(m_userip)
  * information only (no spurious AWAY labels or channels).
  * Re-written by Dianora 1999
  */
-DLLFUNC CMD_FUNC(m_userip)
+CMD_FUNC(m_userip)
 {
 
 	char *p;		/* scratch end pointer */

@@ -43,12 +43,12 @@
 #endif
 
 /* Forward declarations */
-DLLFUNC CMD_FUNC(m_mode);
-DLLFUNC CMD_FUNC(m_mlock);
+CMD_FUNC(m_mode);
+CMD_FUNC(m_mlock);
 DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
 DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-DLLFUNC CMD_FUNC(_m_umode);
+CMD_FUNC(_m_umode);
 
 /* local: */
 static void bounce_mode(aChannel *, aClient *, int, char **);
@@ -1566,7 +1566,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
  * parv[1] - username to change mode for
  * parv[2] - modes to change
  */
-DLLFUNC CMD_FUNC(_m_umode)
+CMD_FUNC(_m_umode)
 {
 	int  i;
 	char **p, *m;

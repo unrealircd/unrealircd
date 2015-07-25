@@ -39,7 +39,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(stripcolor);
+CMD_FUNC(stripcolor);
 
 ModuleHeader MOD_HEADER(stripcolor)
   = {

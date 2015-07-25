@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_opermotd);
+CMD_FUNC(m_opermotd);
 
 #define MSG_OPERMOTD 	"OPERMOTD"	
 
@@ -74,7 +74,7 @@ MOD_UNLOAD(m_opermotd)
 /*
  * Modified from comstud by codemastr
  */
-DLLFUNC CMD_FUNC(m_opermotd)
+CMD_FUNC(m_opermotd)
 {
 	aMotdLine *motdline;
 	ConfigItem_tld *tld;

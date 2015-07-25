@@ -77,7 +77,7 @@ MOD_UNLOAD(m_samode)
  * parv[2] = modes
  * -t
  */
-DLLFUNC CMD_FUNC(m_samode)
+CMD_FUNC(m_samode)
 {
 	aChannel *chptr;
 

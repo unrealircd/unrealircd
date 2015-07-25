@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_botmotd);
+CMD_FUNC(m_botmotd);
 
 #define MSG_BOTMOTD 	"BOTMOTD"	
 
@@ -74,7 +74,7 @@ MOD_UNLOAD(m_botmotd)
 /*
  * Modified from comstud by codemastr
  */
-DLLFUNC CMD_FUNC(m_botmotd)
+CMD_FUNC(m_botmotd)
 {
 	aMotdLine *motdline;
 	ConfigItem_tld *tld;

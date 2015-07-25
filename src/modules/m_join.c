@@ -42,9 +42,9 @@
 #endif
 
 /* Forward declarations */
-DLLFUNC CMD_FUNC(m_join);
+CMD_FUNC(m_join);
 DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
-DLLFUNC CMD_FUNC(_do_join);
+CMD_FUNC(_do_join);
 DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 #define MAXBOUNCE   5 /** Most sensible */
 
@@ -171,7 +171,7 @@ int i=0,j=0;
 **	parv[1] = channel
 **	parv[2] = channel password (key)
 */
-DLLFUNC CMD_FUNC(m_join)
+CMD_FUNC(m_join)
 {
 int r;
 
@@ -319,7 +319,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
  * increased every time we enter this loop and decreased anytime we leave the
  * loop. So be carefull not to use a simple 'return' after bouncedtimes++. -- Syzop
  */
-DLLFUNC CMD_FUNC(_do_join)
+CMD_FUNC(_do_join)
 {
 	char jbuf[BUFSIZE];
 	Membership *lp;

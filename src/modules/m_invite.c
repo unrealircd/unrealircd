@@ -90,7 +90,7 @@ int send_invite_list(aClient *sptr)
 **	parv[1] - user to invite
 **	parv[2] - channel number
 */
-DLLFUNC CMD_FUNC(m_invite)
+CMD_FUNC(m_invite)
 {
 	aClient *acptr;
 	aChannel *chptr;

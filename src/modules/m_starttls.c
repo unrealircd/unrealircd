@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_starttls);
+CMD_FUNC(m_starttls);
 
 #define MSG_STARTTLS 	"STARTTLS"	
 
@@ -79,7 +79,7 @@ MOD_UNLOAD(m_starttls)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC CMD_FUNC(m_starttls)
+CMD_FUNC(m_starttls)
 {
 	if (!MyConnect(sptr) || !IsUnknown(sptr))
 		return 0;

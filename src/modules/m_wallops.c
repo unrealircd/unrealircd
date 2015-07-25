@@ -75,7 +75,7 @@ MOD_UNLOAD(m_wallops)
 ** m_wallops (write to *all* opers currently online)
 **	parv[1] = message text
 */
-DLLFUNC CMD_FUNC(m_wallops)
+CMD_FUNC(m_wallops)
 {
 	char *message;
 	message = parc > 1 ? parv[1] : NULL;

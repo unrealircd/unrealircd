@@ -39,7 +39,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(noctcp);
+CMD_FUNC(noctcp);
 
 ModuleHeader MOD_HEADER(noctcp)
   = {

@@ -39,7 +39,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(operonly);
+CMD_FUNC(operonly);
 
 ModuleHeader MOD_HEADER(operonly)
   = {

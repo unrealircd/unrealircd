@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_names);
+CMD_FUNC(m_names);
 
 #define MSG_NAMES 	"NAMES"
 
@@ -83,7 +83,7 @@ static char buf[BUFSIZE];
 **	parv[1] = channel
 */
 #define TRUNCATED_NAMES 64
-DLLFUNC CMD_FUNC(m_names)
+CMD_FUNC(m_names)
 {
 	int uhnames = (MyConnect(sptr) && SupportUHNAMES(sptr)); // cache UHNAMES support
 	int bufLen = NICKLEN + (!uhnames ? 0 : (1 + USERLEN + 1 + HOSTLEN));

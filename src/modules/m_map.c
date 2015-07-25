@@ -167,7 +167,7 @@ int cnt = 0, hide_ulines;
 **
 **      parv[1] = server mask
 **/
-DLLFUNC CMD_FUNC(m_map)
+CMD_FUNC(m_map)
 {
 	aClient *acptr;
 	int  longest = strlen(me.name);

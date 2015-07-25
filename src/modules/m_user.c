@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_user);
+CMD_FUNC(m_user);
 
 #define MSG_USER 	"USER"	
 
@@ -81,7 +81,7 @@ MOD_UNLOAD(m_user)
 ** NOTE: Be advised that multiple USER messages are possible,
 **       hence, always check if a certain struct is already allocated... -- Syzop
 */
-DLLFUNC CMD_FUNC(m_user)
+CMD_FUNC(m_user)
 {
 	char *username, *host, *server, *realname;
 	aClient *acptr;

@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_part);
+CMD_FUNC(m_part);
 
 #define MSG_PART 	"PART"	
 
@@ -76,7 +76,7 @@ MOD_UNLOAD(m_part)
 **	parv[1] = channel
 **	parv[2] = comment (added by Lefler)
 */
-DLLFUNC CMD_FUNC(m_part)
+CMD_FUNC(m_part)
 {
 	aChannel *chptr;
 	Membership *lp;

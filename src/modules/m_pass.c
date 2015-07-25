@@ -148,7 +148,7 @@ ConfigItem_ban *bconf;
 ** m_pass
 **	parv[1] = password
 */
-DLLFUNC CMD_FUNC(m_pass)
+CMD_FUNC(m_pass)
 {
 	char *password = parc > 1 ? parv[1] : NULL;
 	int  PassLen = 0;

@@ -74,7 +74,7 @@ MOD_UNLOAD(m_undccdeny)
 /* Remove a temporary dccdeny line
  * parv[1] - file/mask
  */
-DLLFUNC CMD_FUNC(m_undccdeny)
+CMD_FUNC(m_undccdeny)
 {
 	ConfigItem_deny_dcc *p;
 	if (!MyClient(sptr))

@@ -78,7 +78,7 @@ MOD_UNLOAD(m_setname)
    yes it is experimental but anyways ;P
     FREEDOM TO THE USERS! ;) 
 */ 
-DLLFUNC CMD_FUNC(m_setname)
+CMD_FUNC(m_setname)
 {
     int xx;
     char tmpinfo[REALLEN + 1];

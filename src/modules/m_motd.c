@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_motd);
+CMD_FUNC(m_motd);
 
 #define MSG_MOTD 	"MOTD"	
 
@@ -75,7 +75,7 @@ MOD_UNLOAD(m_motd)
  * Heavily modified from the ircu m_motd by codemastr
  * Also svsmotd support added
  */
-DLLFUNC CMD_FUNC(m_motd)
+CMD_FUNC(m_motd)
 {
 	ConfigItem_tld *ptr;
 	aMotdFile *themotd;

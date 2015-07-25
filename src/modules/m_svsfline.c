@@ -71,7 +71,7 @@ MOD_UNLOAD(m_svsfline)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC CMD_FUNC(m_svsfline)
+CMD_FUNC(m_svsfline)
 {
 	if (parc < 2)
 		return 0;

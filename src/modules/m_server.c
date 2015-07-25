@@ -298,7 +298,7 @@ skip_host_check:
 **
 **  Recode 2001 by Stskeeps
 */
-DLLFUNC CMD_FUNC(m_server)
+CMD_FUNC(m_server)
 {
 	char *servername = NULL;	/* Pointer for servername */
  /*	char *password = NULL; */

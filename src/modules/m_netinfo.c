@@ -82,7 +82,7 @@ MOD_UNLOAD(m_netinfo)
 **  parv[8] = ircnet
 **/
 
-DLLFUNC CMD_FUNC(m_netinfo)
+CMD_FUNC(m_netinfo)
 {
 	long 		lmax;
 	time_t	 	xx;

@@ -75,7 +75,7 @@ MOD_UNLOAD(m_locops)
 ** m_locops (write to opers who are +g currently online *this* server)
 **      parv[1] = message text
 */
-DLLFUNC CMD_FUNC(m_locops)
+CMD_FUNC(m_locops)
 {
 	char *message;
 

@@ -39,7 +39,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(nocolor);
+CMD_FUNC(nocolor);
 
 ModuleHeader MOD_HEADER(nocolor)
   = {

@@ -75,7 +75,7 @@ MOD_UNLOAD(m_trace)
 ** m_trace
 **	parv[1] = servername
 */
-DLLFUNC CMD_FUNC(m_trace)
+CMD_FUNC(m_trace)
 {
 	int  i;
 	aClient *acptr;

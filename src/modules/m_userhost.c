@@ -77,7 +77,7 @@ MOD_UNLOAD(m_userhost)
  * information only (no spurious AWAY labels or channels).
  * Re-written by Dianora 1999
  */
-DLLFUNC CMD_FUNC(m_userhost)
+CMD_FUNC(m_userhost)
 {
 	char *p;		/* scratch end pointer */
 	char *cn;		/* current name */

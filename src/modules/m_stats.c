@@ -365,7 +365,7 @@ static inline char *stats_operonly_long_to_short()
 	return buffer;
 }
 
-DLLFUNC CMD_FUNC(m_stats)
+CMD_FUNC(m_stats)
 {
 	struct statstab *stat;
 

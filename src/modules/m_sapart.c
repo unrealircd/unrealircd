@@ -80,7 +80,7 @@ MOD_UNLOAD(m_sapart)
 	parv[3] - comment
 */
 
-DLLFUNC CMD_FUNC(m_sapart)
+CMD_FUNC(m_sapart)
 {
 	aClient *acptr;
 	aChannel *chptr;

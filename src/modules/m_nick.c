@@ -41,8 +41,8 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_nick);
-DLLFUNC CMD_FUNC(m_uid);
+CMD_FUNC(m_nick);
+CMD_FUNC(m_uid);
 DLLFUNC int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 
 #define MSG_NICK 	"NICK"	
@@ -261,7 +261,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 **	parv[11] = ip
 **	parv[12] = info
 */
-DLLFUNC CMD_FUNC(m_uid)
+CMD_FUNC(m_uid)
 {
 	aTKline *tklban;
 	int ishold;
@@ -528,7 +528,7 @@ nickkill2done:
 **      parv[10] = ip
 **      parv[11] = info
 */
-DLLFUNC CMD_FUNC(m_nick)
+CMD_FUNC(m_nick)
 {
 	aTKline *tklban;
 	int ishold;

@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_lusers);
+CMD_FUNC(m_lusers);
 
 #define MSG_LUSERS 	"LUSERS"	
 
@@ -74,7 +74,7 @@ MOD_UNLOAD(m_lusers)
 /*
  * parv[1] = server to query
  */
-DLLFUNC CMD_FUNC(m_lusers)
+CMD_FUNC(m_lusers)
 {
 char flatmap;
 

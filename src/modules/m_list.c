@@ -86,7 +86,7 @@ MOD_UNLOAD(m_list)
 /*
  * parv[1] = channel
  */
-DLLFUNC CMD_FUNC(m_list)
+CMD_FUNC(m_list)
 {
 	aChannel *chptr;
 	TS   currenttime = TStime();

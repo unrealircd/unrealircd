@@ -83,7 +83,7 @@ MOD_UNLOAD(m_ison)
 
 static char buf[BUFSIZE];
 
-DLLFUNC CMD_FUNC(m_ison)
+CMD_FUNC(m_ison)
 {
 	char namebuf[USERLEN + HOSTLEN + 4];
 	aClient *acptr;

@@ -78,7 +78,7 @@ MOD_UNLOAD(m_sajoin)
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
 */
-DLLFUNC CMD_FUNC(m_sajoin)
+CMD_FUNC(m_sajoin)
 {
 	aClient *acptr;
 	char jbuf[BUFSIZE];

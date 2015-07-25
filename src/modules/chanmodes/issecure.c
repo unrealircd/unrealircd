@@ -46,7 +46,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(issecure);
+CMD_FUNC(issecure);
 
 ModuleHeader MOD_HEADER(issecure)
   = {

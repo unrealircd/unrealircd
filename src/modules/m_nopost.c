@@ -41,7 +41,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_nopost);
+CMD_FUNC(m_nopost);
 
 ModuleHeader MOD_HEADER(m_nopost)
   = {
@@ -238,7 +238,7 @@ DynList *d;
 }
 
 
-DLLFUNC CMD_FUNC(m_nopost)
+CMD_FUNC(m_nopost)
 {
 	if (MyConnect(sptr) && !is_except_host(sptr))
 	{

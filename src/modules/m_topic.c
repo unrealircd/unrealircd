@@ -94,7 +94,7 @@ void topicoverride(aClient *sptr, aChannel *chptr, char *topic)
 **	parv[3] = topic time
 **	parv[4] = topic text
 */
-DLLFUNC CMD_FUNC(m_topic)
+CMD_FUNC(m_topic)
 {
 aChannel *chptr = NullChn;
 char *topic = NULL, *name, *tnick = NULL;

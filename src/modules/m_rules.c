@@ -75,7 +75,7 @@ MOD_UNLOAD(m_rules)
  * Heavily modified from the ircu m_motd by codemastr
  * Also svsmotd support added
  */
-DLLFUNC CMD_FUNC(m_rules)
+CMD_FUNC(m_rules)
 {
 	ConfigItem_tld *ptr;
 	aMotdLine *temp;
