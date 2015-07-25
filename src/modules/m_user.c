@@ -83,89 +83,11 @@ MOD_UNLOAD(m_user)
 */
 DLLFUNC CMD_FUNC(m_user)
 {
-#define	UFLAGS	(UMODE_INVISIBLE|UMODE_WALLOP|UMODE_SERVNOTICE)
-	char *username, *host, *server, *realname, *umodex = NULL, *virthost =
-	    NULL, *ip = NULL;
-	char *sstamp = NULL;
+	char *username, *host, *server, *realname;
 	aClient *acptr;
 
-	if (IsServer(cptr) && !IsUnknown(sptr))
-		return 0;
-
-	if (MyConnect(sptr) && (sptr->local->listener->options & LISTENER_SERVERSONLY))
-	{
-		return exit_client(cptr, sptr, sptr,
-		    "This port is for servers only");
-	}
-
-	if (parc > 2 && (username = (char *)index(parv[1], '@')))
-		*username = '\0';
-	if (parc < 5 || *parv[1] == '\0' || *parv[2] == '\0' ||
-	    *parv[3] == '\0' || *parv[4] == '\0')
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, sptr->name, "USER");
-		if (IsServer(cptr))
-			sendto_ops("bad USER param count for %s from %s",
-			    sptr->name, get_client_name(cptr, FALSE));
-		else
-			return 0;
-	}
-
-
-	/* Copy parameters into better documenting variables */
-
-	username = (parc < 2 || BadPtr(parv[1])) ? "<bad-boy>" : parv[1];
-	host = (parc < 3 || BadPtr(parv[2])) ? "<nohost>" : parv[2];
-	server = (parc < 4 || BadPtr(parv[3])) ? "<noserver>" : parv[3];
-
-	/* This we can remove as soon as all servers have upgraded. */
-
-	if (parc == 6 && IsServer(cptr))
-	{
-		sstamp = (BadPtr(parv[4])) ? "0" : parv[4];
-		realname = (BadPtr(parv[5])) ? "<bad-realname>" : parv[5];
-		umodex = NULL;
-	}
-	else if (parc == 8 && IsServer(cptr))
-	{
-		sstamp = (BadPtr(parv[4])) ? "0" : parv[4];
-		realname = (BadPtr(parv[7])) ? "<bad-realname>" : parv[7];
-		umodex = parv[5];
-		virthost = parv[6];
-	}
-	else if (parc == 9 && IsServer(cptr))
-	{
-		sstamp = (BadPtr(parv[4])) ? "0" : parv[4];
-		realname = (BadPtr(parv[8])) ? "<bad-realname>" : parv[8];
-		umodex = parv[5];
-		virthost = parv[6];
-		ip = parv[7];
-	}
-	else if (parc == 10 && IsServer(cptr))
-	{
-		sstamp = (BadPtr(parv[4])) ? "0" : parv[4];
-		realname = (BadPtr(parv[9])) ? "<bad-realname>" : parv[9];
-		umodex = parv[5];
-		virthost = parv[6];
-		ip = parv[8];
-	}
-	else
-	{
-		realname = (BadPtr(parv[4])) ? "<bad-realname>" : parv[4];
-	}
-	
-	make_user(sptr);
-
 	if (!MyConnect(sptr))
-	{
-		if (sptr->srvptr == NULL)
-			sendto_ops("WARNING, User %s introduced as being "
-			    "on non-existant server %s.", sptr->name, server);
-		sptr->user->server = find_or_add(sptr->srvptr->name);
-		strlcpy(sptr->user->realhost, host, sizeof(sptr->user->realhost));
-		goto user_finish;
-	}
+		return 0;
 
 	if (!IsUnknown(sptr))
 	{
@@ -174,42 +96,50 @@ DLLFUNC CMD_FUNC(m_user)
 		return 0;
 	}
 
-	if (!IsServer(cptr))
+	if (sptr->local->listener->options & LISTENER_SERVERSONLY)
+		return exit_client(cptr, sptr, sptr, "This port is for servers only");
+
+	if (parc > 2 && (username = (char *)index(parv[1], '@')))
+		*username = '\0';
+
+	if (parc < 5 || BadPtr(parv[4]))
 	{
-		sptr->umodes |= CONN_MODES;
-		if (CONNECT_SNOMASK)
-		{
-			sptr->umodes |= UMODE_SERVNOTICE;
-			create_snomask(sptr, sptr->user, CONNECT_SNOMASK);
-		}
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "USER");
+		return 0;
+	}
+
+	username = parv[1];
+	host = parv[2];
+	server = parv[3];
+	realname = parv[4];
+	
+	if (!sptr->user)
+		make_user(sptr);
+
+	sptr->umodes |= CONN_MODES;
+	if (CONNECT_SNOMASK)
+	{
+		sptr->umodes |= UMODE_SERVNOTICE;
+		create_snomask(sptr, sptr->user, CONNECT_SNOMASK);
 	}
 
 	/* Set it temporarely to at least something trusted,
 	 * this was copying user supplied data directly into user->realhost
 	 * which seemed bad. Not to say this is much better ;p. -- Syzop
 	 */
-	strlcpy(sptr->user->realhost, Inet_ia2p(&sptr->local->ip), sizeof(sptr->user->realhost));
-	if (!sptr->ip)
-		sptr->ip = strdup(Inet_ia2p(&sptr->local->ip));
+	strlcpy(sptr->user->realhost, GetIP(sptr), sizeof(sptr->user->realhost));
 	sptr->user->server = me_hash;
-      user_finish:
-	if (sstamp != NULL && *sstamp != '*')
-		strlcpy(sptr->user->svid, sstamp, sizeof(sptr->user->svid));
 
 	strlcpy(sptr->info, realname, sizeof(sptr->info));
-	if (*sptr->name &&
-		(IsServer(cptr) || (IsNotSpoof(sptr) && !CHECKPROTO(sptr, PROTO_CLICAP)))
-           )
-		/* NICK and no-spoof already received, now we have USER... */
+
+	if (*sptr->name && (IsNotSpoof(sptr) && !CHECKPROTO(sptr, PROTO_CLICAP)))
 	{
+		/* NICK and no-spoof already received, now we have USER... */
 		if (USE_BAN_VERSION && MyConnect(sptr))
-			sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
-				me.name, sptr->name);
+			sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1", me.name, sptr->name);
 		if (strlen(username) > USERLEN)
 			username[USERLEN] = '\0'; /* cut-off */
-		return(
-		    register_user(cptr, sptr, sptr->name, username, umodex,
-		    virthost,ip));
+		return register_user(cptr, sptr, sptr->name, username, NULL, NULL, NULL);
 	}
 	else
 		strlcpy(sptr->user->username, username, USERLEN + 1);
