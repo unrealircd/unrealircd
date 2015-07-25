@@ -1195,7 +1195,7 @@ add_con_refuse:
 						Inet_ia2p(&acptr->local->ip));
 					set_non_blocking(fd, acptr);
 					set_sock_opts(fd, acptr);
-					send(fd, zlinebuf, strlen(zlinebuf), 0);
+					(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
 					goto add_con_refuse;
 				}
 			}
@@ -1211,7 +1211,7 @@ add_con_refuse:
 					KLINE_ADDRESS);
 				set_non_blocking(fd, acptr);
 				set_sock_opts(fd, acptr);
-				send(fd, zlinebuf, strlen(zlinebuf), 0);
+				(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
 				goto add_con_refuse;
 			}
 		}
@@ -1219,7 +1219,7 @@ add_con_refuse:
 		{
 			set_non_blocking(fd, acptr);
 			set_sock_opts(fd, acptr);
-			send(fd, zlinebuf, strlen(zlinebuf), 0);
+			(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
 			goto add_con_refuse;
 		}
 		else
@@ -1234,7 +1234,7 @@ add_con_refuse:
 						KLINE_ADDRESS);
 				set_non_blocking(fd, acptr);
 				set_sock_opts(fd, acptr);
-				send(fd, zlinebuf, strlen(zlinebuf), 0);
+				(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
 				goto add_con_refuse;
 			}
 			else if (val == 1)
