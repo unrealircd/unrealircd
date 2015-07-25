@@ -26,6 +26,7 @@
 #include "proto.h"
 #include "version.h"
 #include <string.h>
+#include <signal.h>
 #ifndef IRCDTOTALVERSION
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
@@ -305,10 +306,22 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
+void GotSigAbort(int signal)
+{
+	/* I just want to call ExceptionFilter() but it requires an argument which we don't have...
+	 * So just crash, which is rather silly but produces at least a crash report.
+	 * Feel free to improve this!
+	 */
+	char *crash = NULL;
+	*crash = 'X';
+}
+
 /* Initializes the exception handler */
 void InitDebug(void) 
 {
 	SetUnhandledExceptionFilter(&ExceptionFilter);
+	_set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+	signal(SIGABRT, GotSigAbort);
 }
 
 
