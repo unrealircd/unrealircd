@@ -79,33 +79,39 @@ MOD_UNLOAD(m_vhost)
 int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_vhost *vhost;
-	char *user, *pwd, host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
+	char *login, *password, host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 	int	len, length;
 	int 	i;
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, sptr->name, "VHOST");
-		return 0;
 
-	}
 	if (!MyClient(sptr))
 		return 0;
 
-	user = parv[1];
-	pwd = (parc >= 2) ? parv[2] : "";
-	if (strlen(user) > HOSTLEN)
-		*(user + HOSTLEN) = '\0';
+	if ((parc < 2) || BadPtr(parv[1]))
+	{
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "VHOST");
+		return 0;
 
-	if (!(vhost = Find_vhost(user))) {
+	}
+
+	login = parv[1];
+	password = (parc > 2) ? parv[2] : "";
+
+	/* cut-off too long login names. HOSTLEN is arbitrary, we just don't want our
+	 * error messages to be cut off because the user is sending huge login names.
+	 */
+	if (strlen(login) > HOSTLEN)
+		login[HOSTLEN] = '\0';
+
+	if (!(vhost = Find_vhost(login)))
+	{
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
-		    user, sptr->name,
+		    login, sptr->name,
 		    sptr->user->username,
 		    sptr->user->realhost);
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
-		    me.name, sptr->name, user);
+		    me.name, sptr->name, login);
 		return 0;
 	}
 	
@@ -113,14 +119,14 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - host does not match",
-		    user, sptr->name, sptr->user->username, sptr->user->realhost);
+		    login, sptr->name, sptr->user->username, sptr->user->realhost);
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** No vHost lines available for your host",
 		    me.name, sptr->name);
 		return 0;
 	}
 
-	i = Auth_Check(cptr, vhost->auth, pwd);
+	i = Auth_Check(cptr, vhost->auth, password);
 	if (i > 0)
 	{
 		char olduser[USERLEN+1];
@@ -181,7 +187,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			vhost->virtuser ? "@" : "", vhost->virthost);
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s%s%s",
-		    user, sptr->name,
+		    login, sptr->name,
 		    vhost->virtuser ? olduser : sptr->user->username,
 		    sptr->user->realhost, vhost->virtuser ? vhost->virtuser : "", 
 		    	vhost->virtuser ? "@" : "", vhost->virthost);
@@ -193,12 +199,12 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
-		    user, sptr->name,
+		    login, sptr->name,
 		    sptr->user->username,
 		    sptr->user->realhost);
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
-		    me.name, sptr->name, user);
+		    me.name, sptr->name, login);
 		return 0;
 	}
 	/* Belay that order, Lt. (upon -2)*/
