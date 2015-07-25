@@ -107,9 +107,10 @@ DLLFUNC CMD_FUNC(m_setname)
     strcpy(sptr->info, parv[1]);
     spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
     xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
-    if (xx < 0) {
-        if (sptr)
-            strcpy(sptr->info, tmpinfo);
+    if (xx < 0)
+    {
+        if (xx != FLUSH_BUFFER)
+            strcpy(sptr->info, tmpinfo); /* restore (if client wasn't killed already, that is) */
         return xx;
     }
 
