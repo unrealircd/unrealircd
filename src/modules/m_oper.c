@@ -111,19 +111,22 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (!MyClient(sptr))
 		return 0;
 
-	if (parc < 2) {
+	if ((parc < 2) || BadPtr(parv[1]))
+	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, sptr->name, "OPER");
 		return 0;
 	}
 
-	if (SVSNOOP) {
+	if (SVSNOOP)
+	{
 		sendnotice(sptr,
 		    "*** This server is in NOOP mode, you cannot /oper");
 		return 0;
 	}
 
-	if (IsOper(sptr)) {
+	if (IsOper(sptr))
+	{
 		sendto_one(sptr, rpl_str(RPL_YOUREOPER),
 		    me.name, sptr->name);
 		// TODO: de-confuse this ? ;)
@@ -131,7 +134,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	name = parv[1];
-	password = (parc >= 2) ? parv[2] : "";
+	password = (parc > 2) ? parv[2] : "";
 
 	if (!(aconf = Find_oper(name)))
 	{
