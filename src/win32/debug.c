@@ -191,6 +191,36 @@ __inline char *GetException(DWORD code)
 	}
 }
 
+void StartCrashReporter(void)
+{
+	char fname[MAX_PATH], fnamewarg[MAX_PATH+32];
+	PROCESS_INFORMATION pi;
+	STARTUPINFO si;
+	
+	memset(&pi, 0, sizeof(pi));
+	memset(&si, 0, sizeof(si));
+	
+	GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
+	
+	snprintf(fnamewarg, sizeof(fnamewarg), "\"%s\" %s", fname, "-R");
+	CreateProcess(fname, fnamewarg, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+}
+
+void StartUnrealAgain(void)
+{
+	char fname[MAX_PATH], fnamewarg[MAX_PATH+32];
+	PROCESS_INFORMATION pi;
+	STARTUPINFO si;
+	
+	memset(&pi, 0, sizeof(pi));
+	memset(&si, 0, sizeof(si));
+	
+	GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
+	
+	snprintf(fnamewarg, sizeof(fnamewarg), "\"%s\"", fname);
+	CreateProcess(fname, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+}
+
 /* Callback for the exception handler
  * Parameters:
  *  e - The exception information
@@ -230,9 +260,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 		     GetException(e->ExceptionRecord->ExceptionCode), backupbuf, 
 		     GetRegisters(e->ContextRecord), StackTrace(e));
 
-	sprintf(text, "UnrealIRCd has encountered a fatal error. Debugging information has"
-		      " been dumped to wircd.%d.core, please email this file to "
-		      "file a bug at http://bugs.unrealircd.org/ and attach this file", getpid());
+	sprintf(text, "UnrealIRCd has encountered a fatal error. Debugging information has been dumped to %s.", file);
 	fclose(fd);
 
 #ifndef NOMINIDUMP
@@ -253,14 +281,10 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 
 				if (pDump(GetCurrentProcess(), GetCurrentProcessId(), hDump, MiniDumpNormal, &ExInfo, NULL, NULL))
 				{
-					sprintf(text, "UnrealIRCd has encountered a fatal error. Debugging information has"
-						" been dumped to wircd.%d.core and %s, please upload those 2 files to http://bugs.unrealircd.org/"
-						" after filing a bug.",
-						getpid(), minidumpf);
+					sprintf(text, "UnrealIRCd has encountered a fatal error. Debugging information has been dumped to %s and %s.", file, minidumpf);
 				}
 				CloseHandle(hDump);
 			}
-#if 0
 			sprintf(minidumpf, "wircd.%d.full.mdmp", getpid());
 			hDump = CreateFile(minidumpf, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hDump != INVALID_HANDLE_VALUE)
@@ -269,19 +293,17 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 				ExInfo.ExceptionPointers = e;
 				ExInfo.ClientPointers = 0;
 
-				if (pDump(GetCurrentProcess(), GetCurrentProcessId(), hDump, MiniDumpWithFullMemory, &ExInfo, NULL, NULL))
-				{
-					strcat(text, " [extended debuginfo is available too]");
-				}
 				CloseHandle(hDump);
 			}
-#endif
 		}
 	}
 #endif
 	
 	if (!IsService)
+	{
 		MessageBox(NULL, text, "Fatal Error", MB_OK);
+		StartCrashReporter();
+	}
 	else 
 	{
 		FILE *fd = fopen("service.log", "a");
@@ -293,14 +315,6 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 					"this file to http://bugs.unrealircd.org/.", getpid());
 			fclose(fd);
 		}
-#ifdef _DEBUG
-		else
-		{
-			OutputDebugString("UnrealIRCd has encountered a fatal error. Debugging information "
-					"has been dumped to wircd.%d.core, please file a bug and upload "
-					"this file to http://bugs.unrealircd.org/.", getpid());
-		}
-#endif
 	}
 	CleanUp();
 	return EXCEPTION_EXECUTE_HANDLER;

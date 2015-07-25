@@ -6,14 +6,15 @@
 #include "unrealircd.h"
 #ifndef _WIN32
 #include <dirent.h>
-#include <sys/utsname.h>
+#else
+extern void StartUnrealAgain(void);
 #endif
 
 #include "version.h"
 
 extern char *getosname(void);
 
-#ifndef _WIN32
+
 time_t get_file_time(char *fname)
 {
 	struct stat st;
@@ -28,11 +29,12 @@ char *find_best_coredump(void)
 {
 	static char best_fname[512];
 	TS best_time = 0, t;
-	DIR *fd = opendir(TMPDIR);
 	struct dirent *dir;
-	
+#ifndef _WIN32
+	DIR *fd = opendir(TMPDIR);
+
 	if (!fd)
-		return NULL; /* no TMPDIR. fun. */
+		return NULL;
 	
 	*best_fname = '\0';
 	
@@ -55,6 +57,32 @@ char *find_best_coredump(void)
 		}
 	}
 	closedir(fd);
+#else
+	/* Windows */
+	WIN32_FIND_DATA hData;
+	HANDLE hFile;
+	
+	hFile = FindFirstFile("wircd.*.core", &hData);
+	if (hFile == INVALID_HANDLE_VALUE)
+		return NULL;
+	
+	while (FindNextFile(hFile, &hData))
+	{
+		char *fname = hData.cFileName;
+		if (!strstr(fname, ".done"))
+		{
+			char buf[512];
+			strlcpy(buf, fname, sizeof(buf));
+			t = get_file_time(buf);
+			if (t && (t > best_time))
+			{
+				best_time = t;
+				strlcpy(best_fname, buf, sizeof(best_fname));
+			}
+		}
+	}
+	FindClose(hFile);
+#endif	
 	
 	if (*best_fname)
 		return best_fname;
@@ -98,10 +126,11 @@ char **explode(char *str, char *delimiter)
 
 void crash_report_fix_libs(char *coredump)
 {
+#ifndef _WIN32
 	FILE *fd;
 	char cmd[512], buf[1024];
 	
-	snprintf(cmd, sizeof(cmd), "echo info sharedlibrary|gdb %s/unrealircd %s",
+	snprintf(cmd, sizeof(cmd), "echo info sharedlibrary|gdb %s/unrealircd %s 2>&1",
 		BINDIR, coredump);
 
 	fd = popen(cmd, "r");
@@ -138,7 +167,6 @@ void crash_report_fix_libs(char *coredump)
 		 * 5BE7DF9.m_svsnline.so          for modules/m_svsnline.so
 		 * 300AA138.chanmodes.nokick.so   for modules/chanmodes/nokick.so
 		 */
-		printf("f: %s\n", file);
 		arr = explode(file, ".");
 		if (!arr[3])
 			snprintf(target, sizeof(target), "%s/%s.%s", MODULESDIR, arr[1], arr[2]);
@@ -155,6 +183,7 @@ void crash_report_fix_libs(char *coredump)
 		
 	}
 	fclose(fd);
+#endif
 }
 
 int crash_report_backtrace(FILE *reportfd, char *coredump)
@@ -162,6 +191,7 @@ int crash_report_backtrace(FILE *reportfd, char *coredump)
 	FILE *fd;
 	char cmd[512], buf[1024];
 
+#ifndef _WIN32
 	snprintf(buf, sizeof(buf), "%s/gdb.commands", TMPDIR);
 	fd = fopen(buf, "w");
 	if (!fd)
@@ -185,7 +215,7 @@ int crash_report_backtrace(FILE *reportfd, char *coredump)
 	fclose(fd);
 
 	
-	snprintf(cmd, sizeof(cmd), "gdb -batch -x %s %s/unrealircd %s",
+	snprintf(cmd, sizeof(cmd), "gdb -batch -x %s %s/unrealircd %s 2>&1",
 		buf, BINDIR, coredump);
 	
 	fd = popen(cmd, "r");
@@ -200,14 +230,26 @@ int crash_report_backtrace(FILE *reportfd, char *coredump)
 		char **arr;
 
 		stripcrlf(buf);
-		printf("GOT: %s\n", buf);
 		fprintf(reportfd, " %s\n", buf);
 	}
 	fclose(fd);
 	
 	fprintf(reportfd, "END OF BACKTRACE\n");
-
 	return 1;
+#else
+	fd = fopen(coredump, "r");
+	if (!fd)
+		return 0;
+	fprintf(reportfd, "START OF CRASH DUMP\n");
+	while((fgets(buf, sizeof(buf), fd)))
+	{
+		stripcrlf(buf);
+		fprintf(reportfd, " %s\n", buf);
+	}
+	fclose(fd);
+	fprintf(reportfd, "END OF CRASH DUMP\n");
+	return 1;
+#endif
 }
 
 void crash_report_header(FILE *reportfd, char *coredump)
@@ -224,7 +266,7 @@ void crash_report_header(FILE *reportfd, char *coredump)
 	fprintf(reportfd, "          Compiler: %s\n", __VERSION__);
 #endif
 	
-	fprintf(reportfd, "  Operating System: %s\n", getosname());
+	fprintf(reportfd, "  Operating System: %s\n", MYOSNAME);
 
 	
 	fprintf(reportfd, "Using core file: %s\n", coredump);
@@ -248,6 +290,7 @@ void crash_report_header(FILE *reportfd, char *coredump)
  */
 int corefile_vs_binary_mismatch(char *coredump)
 {
+#ifndef _WIN32
 	time_t core, binary;
 	char fname[512];
 	
@@ -263,6 +306,9 @@ int corefile_vs_binary_mismatch(char *coredump)
 		return 1; /* yup, mismatch ;/ */
 	
 	return 0; /* GOOD! */
+#else
+	return 0; /* guess we don't check this on Windows? Or will we check wircd.exe... hmm.. yeah maybe good idea */
+#endif
 }
 
 char *generate_crash_report(char *coredump)
@@ -276,8 +322,8 @@ char *generate_crash_report(char *coredump)
 	if (coredump == NULL)
 		return NULL; /* nothing available */
 
-//	if (corefile_vs_binary_mismatch(coredump))
-		//return NULL;
+	if (corefile_vs_binary_mismatch(coredump))
+		return NULL;
 	
 	snprintf(reportfname, sizeof(reportfname), "%s/crash.report.%s.%ld.txt",
 		TMPDIR, unreal_getfilename(coredump), (long)time(NULL));
@@ -306,6 +352,7 @@ char *generate_crash_report(char *coredump)
 
 int running_interactive(void)
 {
+#ifndef _WIN32
 	char *s;
 	
 	if (!isatty(0))
@@ -316,15 +363,15 @@ int running_interactive(void)
 		return 0;
 
 	return 1;
-}
+#else
+	return IsService ? 0 : 1;
 #endif
+}
 
 #define REPORT_NEVER	-1
 #define REPORT_ASK		0
 #define REPORT_AUTO		1
 
-
-// __ TODO__SET_SOME_LIMIT_ON_SENDING_____BY_DATE___OR_SOMETHING___?
 
 int getfilesize(char *fname)
 {
@@ -431,7 +478,7 @@ int crashreport_send(char *fname)
 		return 0;
 	}
 	
-	fd = fopen(fname, "r");
+	fd = fopen(fname, "rb");
 	if (!fd)
 		return 0;
 
@@ -445,8 +492,8 @@ int crashreport_send(char *fname)
 
 	BIO_puts(socket, footer);
 
-	do { } while(BIO_should_retry(socket)); /* is this needed? */
-	sleep(1);
+	do { } while(BIO_should_retry(socket)); /* make sure we are really finished (you never know with SSL) */
+	
 	BIO_free_all(socket);
 	
 	SSL_CTX_free(ctx_client);
@@ -467,8 +514,6 @@ static int report_pref = REPORT_ASK;
 
 void report_crash(void)
 {
-#ifndef _WIN32
-	/* UNIX */
 	char *coredump, *fname;
 	int crashed_secs_ago;
 
@@ -488,19 +533,20 @@ void report_crash(void)
 	if (!fname)
 		return;
 		
+#ifndef _WIN32
 	printf("The IRCd has been started now (and is running), but it did crash %d seconds ago.\n", crashed_secs_ago);
 	printf("Crash report generated in: %s\n\n", fname);
 		
 	if (report_pref == REPORT_NEVER)
 	{
-		printf("Crash report will not be sent to UnrealIRCd Team.\n");
+		printf("Crash report will not be sent to UnrealIRCd Team.\n\n");
+		printf("Feel free to read the report at %s and if you change your mind you can submit it anyway at https://bugs.unrealircd.org/\n", fname);
 	} else
 	if (report_pref == REPORT_ASK)
 	{
 		char answerbuf[64], *answer;
 		printf("May I send a crash report to the UnrealIRCd developers?\n");
-		printf("* All reports will be treated confidentially\n");
-		printf("* Crash reports help us greatly with fixing bugs that affect you and others\n");
+		printf("Crash reports help us greatly with fixing bugs that affect you and others\n");
 		printf("\n");
 		
 		do
@@ -511,7 +557,8 @@ void report_crash(void)
 			
 			if (answer && (toupper(*answer) == 'N'))
 			{
-				printf("Ok, not sending bug report.\n");
+				printf("Ok, not sending bug report.\n\n");
+				printf("Feel free to read the report at %s and if you change your mind you can submit it anyway at https://bugs.unrealircd.org/\n", fname);
 				return;
 			}
 			if (answer && (toupper(*answer) == 'Y'))
@@ -566,7 +613,29 @@ void report_crash(void)
 		printf("\nThe crash report has been sent to the UnrealIRCd developers. "
 		       "Thanks a lot for helping to make UnrealIRCd a better product!\n\n");
 	}
-	
+#else
+	/* Windows */
+	if (MessageBox(NULL, "UnrealIRCd crashed. May I send a report about this to the UnrealIRCd developers? This helps us a lot.",
+	                     "UnrealIRCd crash",
+	                     MB_YESNO|MB_ICONQUESTION) == IDYES)
+	{
+		/* Yay */
+		
+		if (crashreport_send(fname))
+		{
+			MessageBox(NULL, "The crash report has been sent to the UnrealIRCd developers. Thanks a lot for helping to make UnrealIRCd a better product!",
+			           "UnrealIRCd crash report sent", MB_ICONINFORMATION|MB_OK);
+		}
+	}
+#endif
 	mark_coredump_as_read(coredump);
+	
+#ifdef _WIN32
+	if (MessageBox(NULL, "Start UnrealIRCd again?",
+	                     "UnrealIRCd crash",
+	                     MB_YESNO|MB_ICONQUESTION) == IDYES)
+	{
+		StartUnrealAgain();
+	}
 #endif
 }
