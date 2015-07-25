@@ -1665,10 +1665,12 @@ static void parse_tkl_para(char *para, TKLFlag *flag)
 	char *flags, *tmp;
 	char what = '+';
 
+	bzero(flag, sizeof(TKLFlag));
 	strlcpy(paratmp, para, sizeof(paratmp));
 	flags = strtok(paratmp, " ");
+	if (!flags)
+		return;
 
-	bzero(flag, sizeof(TKLFlag));
 	for (; *flags; flags++)
 	{
 		switch (*flags)
@@ -1866,7 +1868,7 @@ void _tkl_synch(aClient *sptr)
 					sendto_one(sptr,
 					    ":%s TKL + %c %s %s %s %li %li :%s", me.name,
 					    typ,
-					    tk->usermask ? tk->usermask : "*", tk->hostmask, tk->setby,
+					    *tk->usermask ? tk->usermask : "*", tk->hostmask, tk->setby,
 					    tk->expire_at, tk->set_at, tk->reason);
 			}
 		}
