@@ -388,7 +388,7 @@ int parc = *parc_out;
 		if (match("*!*@*", parv[i]))
 			len -= 4; /* must adjust accordingly.. */
 		parv[i] = NULL;
-		*parc_out--;
+		(*parc_out)--;
 		if (len < 510)
 			break;
 	}
