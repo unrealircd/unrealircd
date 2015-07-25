@@ -182,7 +182,7 @@ void crash_report_fix_libs(char *coredump)
 		}
 		
 	}
-	fclose(fd);
+	pclose(fd);
 #endif
 }
 
@@ -232,7 +232,7 @@ int crash_report_backtrace(FILE *reportfd, char *coredump)
 		stripcrlf(buf);
 		fprintf(reportfd, " %s\n", buf);
 	}
-	fclose(fd);
+	pclose(fd);
 	
 	fprintf(reportfd, "END OF BACKTRACE\n");
 	return 1;
@@ -507,7 +507,7 @@ void mark_coredump_as_read(char *coredump)
 	
 	snprintf(buf, sizeof(buf), "%s.%ld.done", coredump, (long)time(NULL));
 	
-	rename(coredump, buf);
+	(void)rename(coredump, buf);
 }
 
 static int report_pref = REPORT_ASK;
