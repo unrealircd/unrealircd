@@ -101,7 +101,7 @@ DLLFUNC CMD_FUNC(m_invite)
 	if (parc == 1)
 		return send_invite_list(sptr);
 	
-	 if (parc < 3 || *parv[1] == '\0')
+	if (parc < 3 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, sptr->name, "INVITE");
@@ -125,12 +125,12 @@ DLLFUNC CMD_FUNC(m_invite)
 		return -1;
 	}
 
-    	for (h = Hooks[HOOKTYPE_PRE_INVITE]; h; h = h->next)
-    	{
-    		i = (*(h->func.intfunc))(sptr,chptr);
-    		if (i == HOOK_DENY || i == HOOK_ALLOW)
-    			break;
-    	}
+	for (h = Hooks[HOOKTYPE_PRE_INVITE]; h; h = h->next)
+	{
+		i = (*(h->func.intfunc))(sptr,chptr);
+		if (i == HOOK_DENY || i == HOOK_ALLOW)
+			break;
+	}
 
 	if (i == HOOK_DENY && !IsULine(sptr))
 	{
