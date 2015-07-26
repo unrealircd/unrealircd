@@ -20,6 +20,8 @@
 #*/
 # major edit from fez - to compile objects individually...
 
+CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
+
 INCLUDES = ../include/auth.h ../include/channel.h \
 	../include/class.h ../include/common.h ../include/config.h ../include/dbuf.h \
 	../include/dynconf.h ../include/events.h ../include/fdlist.h ../include/h.h \
@@ -60,7 +62,6 @@ R_MODULES= \
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
-CC=@CC@
 RM=@RM@
 
 all: build

@@ -19,7 +19,7 @@
 #*   $Id$
 #*/
 
-CC = do not run make from this directory
+CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
 
 OBJS=timesynch.o res.o s_bsd.o auth.o aln.o channel.o cloak.o crule.o dbuf.o \
 	events.o fdlist.o hash.o ircd.o ircsprintf.o list.o \

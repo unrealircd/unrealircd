@@ -17,6 +17,8 @@
 #*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #*/
 
+CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
+
 INCLUDES = ../../include/auth.h ../../include/badwords.h ../../include/channel.h \
 	../../include/class.h ../../include/common.h ../../include/config.h ../../include/dbuf.h \
 	../../include/dynconf.h ../../include/events.h ../../include/fdlist.h ../../include/h.h \
@@ -34,7 +36,6 @@ R_MODULES=\
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
-CC=@CC@
 RM=@RM@
 
 all: build
