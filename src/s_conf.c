@@ -3971,9 +3971,9 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "maxclients"))
 			class->maxclients = atol(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "sendq"))
-			class->sendq = atol(cep->ce_vardata);
+			class->sendq = config_checkval(cep->ce_vardata,CFG_SIZE);
 		else if (!strcmp(cep->ce_varname, "recvq"))
-			class->recvq = atol(cep->ce_vardata);
+			class->recvq = config_checkval(cep->ce_vardata,CFG_SIZE);
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
 			for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
@@ -4095,7 +4095,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_sendq = 1;
-			l = atol(cep->ce_vardata);
+			l = config_checkval(cep->ce_vardata,CFG_SIZE);
 			if ((l <= 0) || (l > 2000000000))
 			{
 				config_error("%s:%i: class::sendq with illegal value",
@@ -4114,7 +4114,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_recvq = 1;
-			l = atol(cep->ce_vardata);
+			l = config_checkval(cep->ce_vardata,CFG_SIZE);
 			if ((l < 512) || (l > 32768))
 			{
 				config_error("%s:%i: class::recvq with illegal value (must be >512 and <32k)",
