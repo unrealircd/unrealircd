@@ -1183,7 +1183,7 @@ add_con_refuse:
 #ifndef INET6
 			if (acptr2->local->ip.S_ADDR == acptr->local->ip.S_ADDR)
 #else
-			if (!bcmp(acptr2->ip.S_ADDR, acptr->local->ip.S_ADDR, sizeof(acptr->local->ip.S_ADDR)))
+			if (!bcmp(acptr2->local->ip.S_ADDR, acptr->local->ip.S_ADDR, sizeof(acptr->local->ip.S_ADDR)))
 #endif
 			{
 				j++;
