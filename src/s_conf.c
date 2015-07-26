@@ -4076,7 +4076,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_connfreq = 1;
-			l = atol(cep->ce_vardata);
+			l = config_checkval(cep->ce_vardata,CFG_TIME);
 			if ((l < 5) || (l > 604800))
 			{
 				config_error("%s:%i: class::connfreq with illegal value (must be >5 and <7d)",
