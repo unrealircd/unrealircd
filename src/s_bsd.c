@@ -1156,7 +1156,7 @@ add_con_refuse:
 			report_error("Failed to accept new client %s (could not get ip): %s", acptr);
 			goto add_con_refuse;
 		}
-		get_sockhost(acptr, s);
+		set_sockhost(acptr, s);
 		acptr->ip = strdup(s);
 
 		/* Tag loopback connections as FLAGS_LOCAL */
@@ -1652,7 +1652,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	SetOutgoing(cptr);
 	IRCstats.unknown++;
 	list_add(&cptr->lclient_node, &unknown_list);
-	get_sockhost(cptr, aconf->outgoing.hostname);
+	set_sockhost(cptr, aconf->outgoing.hostname);
 	add_client_to_list(cptr);
 
 	if (aconf->outgoing.options & CONNECT_SSL)
@@ -1697,7 +1697,7 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 	}
 	mysk.SIN_PORT = 0;
 
-	get_sockhost(cptr, aconf->outgoing.hostname);
+	set_sockhost(cptr, aconf->outgoing.hostname);
 
 	if (!aconf->outgoing.bind_ip && iConf.link_bindip)
 		bindip = iConf.link_bindip;

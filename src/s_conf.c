@@ -2783,7 +2783,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			strlcpy(uhost, fullname, sizeof(uhost));
 		else
 			strlcpy(uhost, sockhost, sizeof(uhost));
-		get_sockhost(cptr, uhost);
+		set_sockhost(cptr, uhost);
 #ifdef INET6
 		is_ipv4 = IN6_IS_ADDR_V4MAPPED(&cptr->local->ip);
 #endif /* INET6 */

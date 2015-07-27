@@ -203,7 +203,7 @@ extern void reset_help();
 
 extern MODVAR char *debugmode, *configfile, *sbrk0;
 extern char *getfield(char *);
-extern void get_sockhost(aClient *, char *);
+extern void set_sockhost(aClient *, char *);
 #ifndef _WIN32
 extern char *strerror(int);
 #else

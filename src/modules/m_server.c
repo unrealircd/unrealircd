@@ -161,7 +161,7 @@ ConfigItem_ban *bconf;
 	 * Perhaps a bit late to do it here, but does anyone care?
 	 */
 	if (cptr->local->hostp && cptr->local->hostp->h_name)
-		get_sockhost(cptr, cptr->local->hostp->h_name);
+		set_sockhost(cptr, cptr->local->hostp->h_name);
 
 	if (link_out)
 		*link_out = NULL;

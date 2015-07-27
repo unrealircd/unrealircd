@@ -379,10 +379,9 @@ char *get_client_host(aClient *cptr)
 }
 
 /*
- * Form sockhost such that if the host is of form user@host, only the host
- * portion is copied.
+ * Set sockhost to 'host'. Skip the user@ part of 'host' if necessary.
  */
-void get_sockhost(aClient *cptr, char *host)
+void set_sockhost(aClient *cptr, char *host)
 {
 	char *s;
 	if ((s = (char *)index(host, '@')))
