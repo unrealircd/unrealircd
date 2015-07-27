@@ -1468,9 +1468,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->new_linking_protocol = 1;
 	i->uhnames = 1;
 	i->ping_cookie = 1;
-#ifdef INET6
 	i->default_ipv6_clone_mask = 64;
-#endif /* INET6 */
 	i->nicklen = NICKLEN;
 	i->link_bindip = strdup("*");
 	i->oper_only_stats = strdup("*");
@@ -2285,9 +2283,8 @@ int	config_run()
 	ConfigCommand	*cc;
 	int		errors = 0;
 	Hook *h;
-#ifdef INET6
 	ConfigItem_allow *allow;
-#endif /* INET6 */
+
 	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
 	{
 		if (config_verbose > 1)
@@ -2310,7 +2307,6 @@ int	config_run()
 			}
 		}
 	}
-#ifdef INET6
 	/*
 	 * transfer default values from set::ipv6_clones_mask into
 	 * each individual allow block. If other similar things like
@@ -2320,7 +2316,6 @@ int	config_run()
 	for(allow = conf_allow; allow; allow = (ConfigItem_allow *)allow->next)
 		if(!allow->ipv6_clone_mask)
 			allow->ipv6_clone_mask = tempiConf.default_ipv6_clone_mask;
-#endif /* INET6 */
 
 	close_listeners();
 	listen_cleanup();
@@ -4797,14 +4792,12 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			allow->port = atoi(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "ipv6-clone-mask"))
 		{
-#ifdef INET6
 			/*
 			 * If this item isn't set explicitly by the
 			 * user, the value will temporarily be
 			 * zero. Defaults are applied in config_run().
 			 */
 			allow->ipv6_clone_mask = atoi(cep->ce_vardata);
-#endif /* INET6 */
 		}
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
@@ -7209,9 +7202,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "default-ipv6-clone-mask"))
 		{
-#ifdef INET6
 			tempiConf.default_ipv6_clone_mask = atoi(cep->ce_vardata);
-#endif /* INET6 */
 		}
 		else
 		{

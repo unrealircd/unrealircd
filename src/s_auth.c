@@ -115,11 +115,7 @@ void start_auth(aClient *cptr)
 	len = sizeof(us);
 	if (!getsockname(cptr->fd, (struct SOCKADDR *)&us, &len))
 	{
-#ifndef INET6
-		sock.SIN_ADDR = us.SIN_ADDR;
-#else
 		bcopy(&us.SIN_ADDR, &sock.SIN_ADDR, sizeof(struct IN_ADDR));
-#endif
 		sock.SIN_PORT = 0;
 		sock.SIN_FAMILY = AFINET;	/* redundant? */
 		(void)bind(cptr->local->authfd, (struct SOCKADDR *)&sock, sizeof(sock));

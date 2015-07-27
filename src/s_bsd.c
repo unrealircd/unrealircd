@@ -1112,7 +1112,7 @@ void set_non_blocking(int fd, aClient *cptr)
 
 int is_loopback_ip(char *ip)
 {
-	if (!strcmp(ip, "127.0.0.1") || !strcmp(ip, "0:0:0:0:0:0:0:1"))
+	if (!strcmp(ip, "127.0.0.1") || !strcmp(ip, "0:0:0:0:0:0:0:1") || !strcmp(ip, "0:0:0:0:0:ffff:127.0.0.1"))
 		return 1;
 
 	return 0;
@@ -1177,11 +1177,8 @@ add_con_refuse:
 		j = 1;
 
 		list_for_each_entry(acptr2, &unknown_list, lclient_node)
-#ifndef INET6
-			if (acptr2->local->ip.S_ADDR == acptr->local->ip.S_ADDR)
-#else
-			if (!bcmp(acptr2->local->ip.S_ADDR, acptr->local->ip.S_ADDR, sizeof(acptr->local->ip.S_ADDR)))
-#endif
+		{
+			if (!strcmp(acptr->ip,GetIP(acptr2)))
 			{
 				j++;
 				if (j > MAXUNKNOWNCONNECTIONSPERIP)
@@ -1196,8 +1193,10 @@ add_con_refuse:
 					goto add_con_refuse;
 				}
 			}
+		}
 
-		if ((bconf = Find_ban(acptr, Inet_ia2p(&acptr->local->ip), CONF_BAN_IP))) {
+		if ((bconf = Find_ban(acptr, acptr->ip, CONF_BAN_IP)))
+		{
 			if (bconf)
 			{
 				ircsnprintf(zlinebuf, sizeof(zlinebuf),
