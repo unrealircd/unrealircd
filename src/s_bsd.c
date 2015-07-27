@@ -1110,6 +1110,14 @@ void set_non_blocking(int fd, aClient *cptr)
 	return;
 }
 
+int is_loopback_ip(char *ip)
+{
+	if (!strcmp(ip, "127.0.0.1") || !strcmp(ip, "0:0:0:0:0:0:0:1"))
+		return 1;
+
+	return 0;
+}
+
 /*
  * Creates a client which has just connected to us on the given fd.
  * The sockhost field is initialized with the ip# of the host.
@@ -1160,18 +1168,7 @@ add_con_refuse:
 		acptr->ip = strdup(s);
 
 		/* Tag loopback connections as FLAGS_LOCAL */
-#ifdef INET6
-		if (IN6_IS_ADDR_LOOPBACK(&acptr->local->ip) ||
-			(acptr->local->ip.s6_addr[0] == mysk.sin6_addr.s6_addr[0] &&
-			acptr->local->ip.s6_addr[1] == mysk.sin6_addr.s6_addr[1])
-	/* ||
-			   IN6_ARE_ADDR_SAMEPREFIX(&acptr->local->ip, &mysk.SIN_ADDR))
-	 about the same, I think              NOT */
-			)
-#else
-		if (inet_netof(acptr->local->ip) == IN_LOOPBACKNET ||
-			inet_netof(acptr->local->ip) == inet_netof(mysk.SIN_ADDR))
-#endif
+		if (is_loopback_ip(acptr->ip))
 		{
 			ircstp->is_loc++;
 			acptr->flags |= FLAGS_LOCAL;
