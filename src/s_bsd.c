@@ -326,10 +326,8 @@ static void listener_accept(int fd, int revents, void *data)
 		return;
 	}
 
-	 /*
-	  * Use of add_connection (which never fails :) meLazy
-	  */
-	(void) add_connection(cptr, cli_fd);
+	/* add_connection() may fail. we just don't care. */
+	(void)add_connection(cptr, cli_fd);
 }
 
 int  inetport(ConfigItem_listen *listener, char *name, int port)
@@ -1141,7 +1139,7 @@ aClient *add_connection(ConfigItem_listen *cptr, int fd)
 			 * so it's not a serious error and can happen quite frequently -- Syzop
 			 */
 			if (ERRNO != P_ENOTCONN)
-				report_error("Failed in connecting to %s :%s", acptr);
+				report_error("Failed to accept new client %s :%s", acptr);
 add_con_refuse:
 			ircstp->is_ref++;
 			acptr->fd = -2;
@@ -1150,14 +1148,16 @@ add_con_refuse:
 			--OpenFiles;
 			return NULL;
 		}
-		/* don't want to add "Failed in connecting to" here.. */
-		/* Copy ascii address to 'sockhost' just in case. Then we
-		 * have something valid to put into error messages...
-		 */
-		get_sockhost(acptr, Inet_si2p(&addr));
+		/* Fill in sockhost & ip ASAP */
 		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->local->ip, sizeof(struct IN_ADDR));
-		
-		acptr->ip = strdup(Inet_ia2p(&acptr->local->ip)); /* can't fail.. can it? */
+		s = Inet_si2p(&addr);
+		if (!s)
+		{
+			report_error("Failed to accept new client %s (could not get ip): %s", acptr);
+			goto add_con_refuse;
+		}
+		get_sockhost(acptr, s);
+		acptr->ip = strdup(s);
 
 		/* Tag loopback connections as FLAGS_LOCAL */
 #ifdef INET6
