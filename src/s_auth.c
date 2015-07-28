@@ -69,7 +69,6 @@ void ident_failed(aClient *cptr)
  */
 void start_auth(aClient *cptr)
 {
-	struct SOCKADDR_IN sock;
 	int len;
 	char buf[BUFSIZE];
 
@@ -82,7 +81,7 @@ void start_auth(aClient *cptr)
 	Debug((DEBUG_NOTICE, "start_auth(%x) fd=%d, status=%d",
 	    cptr, cptr->fd, cptr->status));
 	snprintf(buf, sizeof buf, "identd: %s", get_client_name(cptr, TRUE));
-	if ((cptr->local->authfd = fd_socket(AFINET, SOCK_STREAM, 0, buf)) == -1)
+	if ((cptr->local->authfd = fd_socket(IsIPV6(cptr) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf)) == -1)
 	{
 		Debug((DEBUG_ERROR, "Unable to create auth socket for %s:%s",
 		    get_client_name(cptr, TRUE), strerror(get_sockerr(cptr))));
@@ -98,42 +97,17 @@ void start_auth(aClient *cptr)
 		return;
 	}
 
-#if defined(IPV6_V6ONLY)
-	if (IsIPV6(cptr))
-	{
-		int opt = 1;
-		setsockopt(cptr->local->authfd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
-	}
-#endif
-
 	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
 		sendto_one(cptr, "%s", REPORT_DO_ID);
 
+	set_sock_opts(cptr->local->authfd, cptr, IsIPV6(cptr));
 	set_non_blocking(cptr->local->authfd, cptr);
 
 	/* Bind to the IP the user got in */
-	memset(&sock, 0, sizeof(sock));
-	len = sizeof(sock);
-	if (!getsockname(cptr->fd, (struct SOCKADDR *)&sock, &len))
-	{
-		sock.SIN_PORT = 0;
-		(void)bind(cptr->local->authfd, (struct SOCKADDR *)&sock, sizeof(sock));
-	}
+	unreal_bind(cptr->local->authfd, cptr->local->listener->ip, 0, IsIPV6(cptr));
 
-	memset(&sock, 0, sizeof(sock));
-	sock.SIN_PORT = htons(113);
-	if (IsIPV6(cptr))
-	{
-		sock.SIN_FAMILY = AF_INET6;
-		inet_pton(AF_INET6, cptr->ip, &sock.SIN_ADDR);
-	}
-	else
-	{
-		sock.SIN_FAMILY = AF_INET;
-		inet_pton(AF_INET, cptr->ip, &sock.SIN_ADDR);
-	}
-
-	if (connect(cptr->local->authfd, (struct sockaddr *)&sock, sizeof(sock)) == -1 && !(ERRNO == P_EWORKING))
+	/* And connect... */
+	if (!unreal_connect(cptr->local->authfd, cptr->ip, 113, IsIPV6(cptr)))
 	{
 		ident_failed(cptr);
 		return;
@@ -156,26 +130,18 @@ void start_auth(aClient *cptr)
  */
 static void send_authports(int fd, int revents, void *data)
 {
-	struct SOCKADDR_IN us, them;
 	char authbuf[32];
 	int  ulen, tlen;
 	aClient *cptr = data;
 
 	Debug((DEBUG_NOTICE, "write_authports(%x) fd %d authfd %d stat %d",
 	    cptr, cptr->fd, cptr->local->authfd, cptr->status));
-	tlen = ulen = sizeof(us);
-	if (getsockname(cptr->fd, (struct SOCKADDR *)&us, &ulen) ||
-	    getpeername(cptr->fd, (struct SOCKADDR *)&them, &tlen))
-	{
-		goto authsenderr;
-	}
 
-	ircsnprintf(authbuf, sizeof(authbuf), "%u , %u\r\n",
-	    (unsigned int)ntohs(them.SIN_PORT),
-	    (unsigned int)ntohs(us.SIN_PORT));
+	ircsnprintf(authbuf, sizeof(authbuf), "%d , %d\r\n",
+		cptr->local->port,
+		cptr->local->listener->port);
 
-	Debug((DEBUG_SEND, "sending [%s] to auth port %s.113",
-	    authbuf, inetntoa((char *)&them.SIN_ADDR)));
+	Debug((DEBUG_SEND, "sending [%s] to auth port %s.113", authbuf, cptr->ip));
 	if (WRITE_SOCK(cptr->local->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
 	{
 		if (ERRNO == P_EAGAIN)

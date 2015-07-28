@@ -132,3 +132,62 @@ int  deliver_it(aClient *cptr, char *str, int len)
 
 	return (retval);
 }
+
+/** Initiate an outgoing connection, the actual connect() call. */
+int unreal_connect(int fd, char *ip, int port, int ipv6)
+{
+	int n;
+	
+	if (ipv6)
+	{
+		struct sockaddr_in6 server;
+		memset(&server, 0, sizeof(server));
+		inet_pton(AF_INET6, ip, &server.sin6_addr);
+		server.sin6_port = htons(port);
+		
+		n = connect(fd, (struct sockaddr *)&server, sizeof(server));
+	} else {
+		struct sockaddr_in server;
+		memset(&server, 0, sizeof(server));
+		inet_pton(AF_INET, ip, &server.sin_addr);
+		server.sin_port = htons(port);
+		n = connect(fd, (struct sockaddr *)&server, sizeof(server));
+	}
+
+#ifndef _WIN32
+	if (n < 0 && (errno != EINPROGRESS))
+#else
+	if (n < 0 && (WSAGetLastError() != WSAEINPROGRESS) && (WSAGetLastError() != WSAEWOULDBLOCK))
+#endif
+	{
+		return 0; /* FATAL ERROR */
+	}
+	
+	return 1; /* SUCCESS (probably still in progress) */
+}
+
+/** Bind to an IP/port (port may be 0 for auto).
+ * @returns 0 on failure, other on success.
+ */
+int unreal_bind(int fd, char *ip, int port, int ipv6)
+{
+	if (ipv6)
+	{
+		struct sockaddr_in6 server;
+		memset(&server, 0, sizeof(server));
+		server.sin6_family = AF_INET6;
+		server.sin6_port = htons(port);
+		if (inet_pton(AF_INET6, ip, &server.sin6_addr.s6_addr) != 1)
+			return 0;
+		return !bind(fd, (struct sockaddr *)&server, sizeof(server));
+	} else {
+		struct sockaddr_in server;
+		memset(&server, 0, sizeof(server));
+		server.sin_family = AF_INET;
+		server.sin_port = htons(port);
+		if (inet_pton(AF_INET, ip, &server.sin_addr.s_addr) != 1)
+			return 0;
+		return !bind(fd, (struct sockaddr *)&server, sizeof(server));
+	}
+}
+

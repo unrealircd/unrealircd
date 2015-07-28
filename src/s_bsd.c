@@ -327,31 +327,6 @@ static void listener_accept(int fd, int revents, void *data)
 	(void)add_connection(cptr, cli_fd);
 }
 
-/** Bind to an IP/port (port may be 0 for auto).
- * @returns 0 on failure, other on success.
- */
-int unreal_bind(int fd, char *ip, int port, int ipv6)
-{
-	if (ipv6)
-	{
-		struct sockaddr_in6 server;
-		memset(&server, 0, sizeof(server));
-		server.sin6_family = AF_INET6;
-		server.sin6_port = htons(port);
-		if (inet_pton(AF_INET6, ip, &server.sin6_addr.s6_addr) != 1)
-			return 0;
-		return !bind(fd, (struct sockaddr *)&server, sizeof(server));
-	} else {
-		struct sockaddr_in server;
-		memset(&server, 0, sizeof(server));
-		server.sin_family = AF_INET;
-		server.sin_port = htons(port);
-		if (inet_pton(AF_INET, ip, &server.sin_addr.s_addr) != 1)
-			return 0;
-		return !bind(fd, (struct sockaddr *)&server, sizeof(server));
-	}
-}
-
 /*
  * inetport
  *
@@ -1640,30 +1615,5 @@ int connect_inet(ConfigItem_link *aconf, aClient *cptr)
 	set_non_blocking(cptr->fd, cptr);
 	set_sock_opts(cptr->fd, cptr, IsIPV6(cptr));
 
-	if (IsIPV6(cptr))
-	{
-		struct sockaddr_in6 server;
-		memset(&server, 0, sizeof(server));
-		inet_pton(AF_INET6, cptr->ip, &server.sin6_addr);
-		server.sin6_port = htons(aconf->outgoing.port);
-		
-		n = connect(cptr->fd, (struct sockaddr *)&server, sizeof(server));
-	} else {
-		struct sockaddr_in server;
-		memset(&server, 0, sizeof(server));
-		inet_pton(AF_INET, cptr->ip, &server.sin_addr);
-		server.sin_port = htons(aconf->outgoing.port);
-		n = connect(cptr->fd, (struct sockaddr *)&server, sizeof(server));
-	}
-
-#ifndef _WIN32
-	if (n < 0 && (errno != EINPROGRESS))
-#else
-	if (n < 0 && (WSAGetLastError() != WSAEINPROGRESS) && (WSAGetLastError() != WSAEWOULDBLOCK))
-#endif
-	{
-		return 0;
-	}
-	
-	return 1; /* connected or in progress */
+	return unreal_connect(cptr->fd, cptr->ip, aconf->outgoing.port, IsIPV6(cptr));
 }

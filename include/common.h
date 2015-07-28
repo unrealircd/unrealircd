@@ -49,9 +49,7 @@ typedef int bool;
 #define true 1
 #endif
 
-#if !defined(IN_ADDR)
 #include "sys.h"
-#endif
 
 #include "ircsprintf.h"
 #include "list.h"
@@ -125,7 +123,7 @@ extern unsigned long inet_addr(char *);
 #include <netinet/in.h>
 #endif
 #ifdef NEED_INET_NTOA
-extern char *inet_ntoa(struct IN_ADDR);
+extern char *inet_ntoa(struct in_addr);
 #endif
 
 #ifndef HAVE_INET_NTOP

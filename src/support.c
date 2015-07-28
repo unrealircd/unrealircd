@@ -2236,27 +2236,6 @@ int inet_pton6(const char *src, unsigned char *dst)
 	return (1);
 }
 
-/** Transforms an IPv4 address (assumed in network byte order) to inet6 (as ::ffff:a.b.c.d). */
-void inet4_to_inet6(const void *src_in, void *dst_in)
-{
-char *dst = dst_in;
-const char *src = src_in;
-
-	memset(dst, 0, 10);
-	dst[10] = 0xff;
-	dst[11] = 0xff;
-	memcpy(&dst[12], src, 4);
-}
-
-/** Transforms an IPv4-in-IPv6 mapped address to IPv4 (so ::ffff:a.b.c.d to a.b.c.d),
- * both are (/will be) in NETWORK BYTE ORDER.
- */
-void inet6_to_inet4(const void *src, void *dst)
-{
-	memcpy(dst, (char *)src + 12, 4);
-}
-
-
 #ifdef _WIN32
 /* Microsoft makes things nice and fun for us! */
 struct u_WSA_errors {

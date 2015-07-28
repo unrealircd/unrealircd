@@ -181,25 +181,7 @@ typedef unsigned __int32 uint32_t;
 
 # define MYDUMMY_SIZE 128
 
-
 #ifdef INET6
-
-# define AND16(x) ((x)[0]&(x)[1]&(x)[2]&(x)[3]&(x)[4]&(x)[5]&(x)[6]&(x)[7]&(x)[8]&(x)[9]&(x)[10]&(x)[11]&(x)[12]&(x)[13]&(x)[14]&(x)[15])
-# define WHOSTENTP(x) ((x)[0]|(x)[1]|(x)[2]|(x)[3]|(x)[4]|(x)[5]|(x)[6]|(x)[7]|(x)[8]|(x)[9]|(x)[10]|(x)[11]|(x)[12]|(x)[13]|(x)[14]|(x)[15])
-
-# define	AFINET		AF_INET6
-# define	SOCKADDR_IN	sockaddr_in6
-# define	SOCKADDR	sockaddr
-# define	SIN_FAMILY	sin6_family
-# define	SIN_PORT	sin6_port
-# define	SIN_ADDR	sin6_addr
-# define	S_ADDR		s6_addr
-# define	IN_ADDR		in6_addr
-
-// # ifndef uint32_t
-//#  define uint32_t __u32
-// # endif
-
 char mydummy[MYDUMMY_SIZE];
 char mydummy2[MYDUMMY_SIZE];
 
@@ -219,16 +201,6 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 # define IRCDCONF_DELIMITER '%'
 
 #else
-# define	AFINET		AF_INET
-# define	SOCKADDR_IN	sockaddr_in
-# define	SOCKADDR	sockaddr
-# define	SIN_FAMILY	sin_family
-# define	SIN_PORT	sin_port
-# define	SIN_ADDR	sin_addr
-# define	S_ADDR		s_addr
-# define	IN_ADDR		in_addr
-
-# define WHOSTENTP(x) (x)
 # define IRCDCONF_DELIMITER ':'
 #endif
 
