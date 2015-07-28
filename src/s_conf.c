@@ -1977,8 +1977,6 @@ void	config_rehash()
 		next = (ListStruct *)allow_ptr->next;
 		safefree(allow_ptr->ip);
 		safefree(allow_ptr->hostname);
-		if (allow_ptr->netmask)
-			MyFree(allow_ptr->netmask);
 		Auth_DeleteAuthStruct(allow_ptr->auth);
 		DelListItem(allow_ptr, conf_allow);
 		MyFree(allow_ptr);
@@ -1987,8 +1985,6 @@ void	config_rehash()
 	{
 		next = (ListStruct *)except_ptr->next;
 		safefree(except_ptr->mask);
-		if (except_ptr->netmask)
-			MyFree(except_ptr->netmask);
 		DelListItem(except_ptr, conf_except);
 		MyFree(except_ptr);
 	}
@@ -1999,8 +1995,6 @@ void	config_rehash()
 		{
 			safefree(ban_ptr->mask);
 			safefree(ban_ptr->reason);
-			if (ban_ptr->netmask)
-				MyFree(ban_ptr->netmask);
 			DelListItem(ban_ptr, conf_ban);
 			MyFree(ban_ptr);
 		}
@@ -2574,16 +2568,15 @@ ConfigItem_ulines *Find_uline(char *host) {
 }
 
 
-ConfigItem_except *Find_except(aClient *sptr, char *host, short type) {
+ConfigItem_except *Find_except(aClient *sptr, short type)
+{
 	ConfigItem_except *excepts;
 
-	if (!host)
-		return NULL;
-
-	for(excepts = conf_except; excepts; excepts =(ConfigItem_except *) excepts->next) {
+	for(excepts = conf_except; excepts; excepts =(ConfigItem_except *) excepts->next)
+	{
 		if (excepts->flag.type == type)
 		{
-			if (match_ip(sptr->local->ip, host, excepts->mask, excepts->netmask))
+			if (match_user(excepts->mask, sptr, MATCH_CHECK_REAL))
 				return excepts;
 		}
 	}
@@ -2650,11 +2643,11 @@ ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
 		{
 			if (sptr)
 			{
-				if (match_ip(sptr->local->ip, host, ban->mask, ban->netmask))
+				if (match_user(ban->mask, sptr, MATCH_CHECK_REAL))
 				{
 					/* Person got a exception */
 					if ((type == CONF_BAN_USER || type == CONF_BAN_IP)
-					    && Find_except(sptr, host, CONF_EXCEPT_BAN))
+					    && Find_except(sptr, CONF_EXCEPT_BAN))
 						return NULL;
 					return ban;
 				}
@@ -2681,9 +2674,10 @@ ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
 		{
 			if (sptr)
 			{
-				if (match_ip(sptr->local->ip, host, ban->mask, ban->netmask)) {
+				if (match_user(ban->mask, sptr, MATCH_CHECK_REAL))
+				{
 					/* Person got a exception */
-					if (Find_except(sptr, host, type))
+					if (Find_except(sptr, type))
 						return NULL;
 					return ban;
 				}
@@ -2747,7 +2741,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			*uhost = '\0';
 		strlcat(uhost, sockhost, sizeof(uhost));
 		/* Check the IP */
-		if (match_ip(cptr->local->ip, uhost, aconf->ip, aconf->netmask))
+		if (match_user(aconf->ip, cptr, MATCH_CHECK_IP))
 			goto attach;
 
 		/* Hmm, localhost is a special case, hp == NULL and sockhost contains
@@ -2791,19 +2785,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			ii = 1;
 			list_for_each_entry_safe(acptr, acptr2, &lclient_list, lclient_node)
 			{
-				if (
-#ifndef INET6
-				    acptr->local->ip.S_ADDR == cptr->local->ip.S_ADDR)
-#else
-				    /*
-				     * match IPv4 exactly and the ipv6
-				     * based on ipv6_clone_mask.
-				     */
-				    (is_ipv4
-					? !bcmp(acptr->local->ip.S_ADDR, cptr->local->ip.S_ADDR, sizeof(cptr->local->ip.S_ADDR))
-					: match_ipv6(&acptr->local->ip, &cptr->local->ip, aconf->ipv6_clone_mask)))
-
-#endif
+				if (!strcmp(GetIP(acptr), GetIP(cptr)))
 				{
 					ii++;
 					if (ii > aconf->maxperip)
@@ -4734,7 +4716,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp;
 	ConfigItem_allow *allow;
 	Hook *h;
-	struct irc_netmask tmp;
+
 	if (ce->ce_vardata)
 	{
 		if (!strcmp(ce->ce_vardata, "channel"))
@@ -4760,13 +4742,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "ip"))
 		{
 			allow->ip = strdup(cep->ce_vardata);
-			/* CIDR */
-			tmp.type = parse_netmask(allow->ip, &tmp);
-			if (tmp.type != HM_HOST)
-			{
-				allow->netmask = MyMallocEx(sizeof(struct irc_netmask));
-				bcopy(&tmp, allow->netmask, sizeof(struct irc_netmask));
-			}
 		}
 		else if (!strcmp(cep->ce_varname, "hostname"))
 			allow->hostname = strdup(cep->ce_vardata);
@@ -5199,23 +5174,12 @@ int	_test_allow_dcc(ConfigFile *conf, ConfigEntry *ce)
 void create_tkl_except_ii(char *mask, char *type)
 {
 	ConfigItem_except *ca;
-	struct irc_netmask tmp;
 	NameValue *opf;
 	ca = MyMallocEx(sizeof(ConfigItem_except));
 	ca->mask = strdup(mask);
 
 	opf = config_binary_flags_search(ExceptTklFlags, type, ARRAY_SIZEOF(ExceptTklFlags));
 	ca->type = opf->flag;
-
-	if (ca->type & TKL_KILL || ca->type & TKL_ZAP || ca->type & TKL_SHUN)
-	{
-		tmp.type = parse_netmask(ca->mask, &tmp);
-		if (tmp.type != HM_HOST)
-		{
-			ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
-			bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
-		}
-	}
 	ca->flag.type = CONF_EXCEPT_TKL;
 	AddListItem(ca, conf_except);
 }
@@ -5240,7 +5204,6 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigItem_except *ca;
 	Hook *h;
-	struct irc_netmask tmp;
 
 	if (!strcmp(ce->ce_vardata, "ban")) {
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -5248,12 +5211,6 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 			if (!strcmp(cep->ce_varname, "mask")) {
 				ca = MyMallocEx(sizeof(ConfigItem_except));
 				ca->mask = strdup(cep->ce_vardata);
-				tmp.type = parse_netmask(ca->mask, &tmp);
-				if (tmp.type != HM_HOST)
-				{
-					ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
-					bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
-				}
 				ca->flag.type = CONF_EXCEPT_BAN;
 				AddListItem(ca, conf_except);
 			}
@@ -5267,12 +5224,6 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 			if (!strcmp(cep->ce_varname, "mask")) {
 				ca = MyMallocEx(sizeof(ConfigItem_except));
 				ca->mask = strdup(cep->ce_vardata);
-				tmp.type = parse_netmask(ca->mask, &tmp);
-				if (tmp.type != HM_HOST)
-				{
-					ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
-					bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
-				}
 				ca->flag.type = CONF_EXCEPT_THROTTLE;
 				AddListItem(ca, conf_except);
 			}
@@ -6611,16 +6562,6 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "mask"))
 		{
 			ca->mask = strdup(cep->ce_vardata);
-			if (ca->flag.type == CONF_BAN_IP || ca->flag.type == CONF_BAN_USER)
-			{
-				struct irc_netmask tmp;
-				tmp.type = parse_netmask(ca->mask, &tmp);
-				if (tmp.type != HM_HOST)
-				{
-					ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
-					bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
-				}
-			}
 		}
 		else if (!strcmp(cep->ce_varname, "reason"))
 			ca->reason = strdup(cep->ce_vardata);

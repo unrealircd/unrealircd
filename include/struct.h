@@ -531,13 +531,6 @@ union _moddata
         void *ptr;
 };
 
-struct irc_netmask
-{
-	short int type;
-	struct IN_ADDR mask;
-	short int bits;
-};
-
 #ifdef USE_LIBCURL
 struct Motd;
 struct MotdDownload
@@ -759,7 +752,6 @@ struct t_kline {
 	unsigned short subtype; /* subtype (currently spamfilter only), see SPAMF_* */
 	union {
 		Spamfilter *spamf;
-		struct irc_netmask *netmask;
 	} ptr;
 	char usermask[USERLEN + 3];
 	char *hostmask, *reason, *setby;
@@ -1049,11 +1041,8 @@ struct _configitem_allow {
 	unsigned short		maxperip;
 	int					port;
 	ConfigItem_class	*class;
-	struct irc_netmask	*netmask;
 	ConfigFlag_allow	flags;
-#ifdef INET6
 	unsigned short ipv6_clone_mask;
-#endif /* INET6 */
 };
 
 struct _operClassACLPath
@@ -1122,7 +1111,6 @@ struct _configitem_mask {
 	ConfigItem_mask *prev, *next;
 	ConfigFlag flag;
 	char *mask;
-	struct irc_netmask *netmask;
 };
 
 struct _configitem_drpass {
@@ -1199,14 +1187,12 @@ struct _configitem_except {
 	ConfigFlag_except      flag;
 	int type;
 	char		*mask;
-	struct irc_netmask *netmask;
 };
 
 struct _configitem_ban {
 	ConfigItem		*prev, *next;
 	ConfigFlag_ban	flag;
 	char			*mask, *reason;
-	struct irc_netmask	*netmask;
 	unsigned short action;
 };
 
@@ -1737,6 +1723,19 @@ int	throttle_can_connect(aClient *, struct IN_ADDR *in);
 #define BANCHK_NICK		2	/* checking if a ban forbids the person from changing his/her nick */
 
 #define TKLISTLEN 26
+
+#define MATCH_CHECK_IP              0x0001
+#define MATCH_CHECK_REAL_HOST       0x0002
+#define MATCH_CHECK_CLOAKED_HOST    0x0004
+#define MATCH_CHECK_VISIBLE_HOST    0x0008
+
+#define MATCH_CHECK_ALL             (MATCH_CHECK_IP|MATCH_CHECK_REAL_HOST|MATCH_CHECK_CLOAKED_HOST|MATCH_CHECK_VISIBLE_HOST)
+#define MATCH_CHECK_REAL            (MATCH_CHECK_IP|MATCH_CHECK_REAL_HOST)
+
+#define MATCH_MASK_IS_UHOST         0x1000
+#define MATCH_MASK_IS_HOST          0x2000
+
+#define MATCH_USE_IDENT             0x0100
 
 #endif /* __struct_include__ */
 

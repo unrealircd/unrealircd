@@ -2084,9 +2084,6 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size)
  * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
  */
 
-static int	inet_pton4(const char *src, unsigned char *dst);
-static int	inet_pton6(const char *src, unsigned char *dst);
-
 /* int
  * inet_pton(af, src, dst)
  *	convert from presentation format (which usually means ASCII printable)
@@ -2115,6 +2112,7 @@ int inet_pton(int af, const char *src, void *dst)
 	}
 	/* NOTREACHED */
 }
+#endif /* !HAVE_INET_PTON */
 
 /* int
  * inet_pton4(src, dst)
@@ -2126,8 +2124,7 @@ int inet_pton(int af, const char *src, void *dst)
  * author:
  *	Paul Vixie, 1996.
  */
-static int
-inet_pton4(const char *src, unsigned char *dst)
+int inet_pton4(const char *src, unsigned char *dst)
 {
 	static const char digits[] = "0123456789";
 	int saw_digit, octets, ch;
@@ -2178,8 +2175,7 @@ inet_pton4(const char *src, unsigned char *dst)
  * author:
  *	Paul Vixie, 1996.
  */
-static int
-inet_pton6(const char *src, unsigned char *dst)
+int inet_pton6(const char *src, unsigned char *dst)
 {
 	static const char xdigits_l[] = "0123456789abcdef",
 			  xdigits_u[] = "0123456789ABCDEF";
@@ -2261,7 +2257,6 @@ inet_pton6(const char *src, unsigned char *dst)
 	memcpy(dst, tmp, IN6ADDRSZ);
 	return (1);
 }
-#endif /* !HAVE_INET_PTON */
 
 /** Finds out if an address is IPv6, returns 1 if so, otherwise 0 */
 int isipv6(struct IN_ADDR *addr)

@@ -27,7 +27,7 @@ OBJS=timesynch.o res.o s_bsd.o auth.o aln.o channel.o cloak.o crule.o dbuf.o \
 	s_conf.o s_debug.o s_dispatch.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
 	ssl.o s_user.o charsys.o scache.o send.o support.o umodes.o \
-	version.o whowas.o cidr.o random.o extcmodes.o moddata.o uid.o \
+	version.o whowas.o random.o extcmodes.o moddata.o uid.o \
 	extbans.o api-isupport.o api-command.o api-clicap.o md5.o crypt_blowfish.o \
 	updconf.o crashreport.o $(URL)
 
@@ -210,9 +210,6 @@ hash.o: hash.c $(INCLUDES)
 
 crule.o: crule.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c crule.c
-
-cidr.o: cidr.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c cidr.c
 
 random.o: random.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c random.c

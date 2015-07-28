@@ -108,7 +108,7 @@ extern ConfigItem_oper		*Find_oper(char *name);
 extern ConfigItem_operclass	*Find_operclass(char *name);
 extern ConfigItem_listen	*Find_listen(char *ipmask, int port);
 extern ConfigItem_ulines	*Find_uline(char *host);
-extern ConfigItem_except	*Find_except(aClient *, char *host, short type);
+extern ConfigItem_except	*Find_except(aClient *, short type);
 extern ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
 extern ConfigItem_link		*Find_link(char *servername, aClient *acptr);
 extern ConfigItem_ban 		*Find_ban(aClient *, char *host, short type);
@@ -122,11 +122,7 @@ extern OperPermission ValidatePermissionsForPath(char *path, aClient *sptr, aCli
 extern void OperClassValidatorDel(OperClassValidator *validator);
 
 extern int AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
-extern int parse_netmask(const char *text, struct irc_netmask *netmask);
-extern int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask);
-#ifdef INET6
-extern int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits);
-#endif
+extern int match_user(char *rmask, aClient *acptr, int options);
 extern ConfigItem_ban  *Find_ban_ip(aClient *sptr);
 extern void add_ListItem(ListStruct *, ListStruct **);
 extern void add_ListItemPrio(ListStructPrio *, ListStructPrio **, int);
@@ -765,3 +761,5 @@ extern void start_server_handshake(aClient *cptr);
 extern void reject_insecure_server(aClient *cptr);
 extern void ident_failed(aClient *cptr);
 extern void report_crash(void);
+extern int inet_pton4(const char *src, unsigned char *dst);
+extern int inet_pton6(const char *src, unsigned char *dst);

@@ -855,7 +855,7 @@ int	throttle_can_connect(aClient *sptr, struct IN_ADDR *in)
 		return 1;
 	else
 	{
-		if (Find_except(sptr, Inet_ia2p(in), CONF_EXCEPT_THROTTLE))
+		if (Find_except(sptr, CONF_EXCEPT_THROTTLE))
 			return 2;
 		if (b->count+1 > (THROTTLING_COUNT ? THROTTLING_COUNT : 3))
 			return 0;

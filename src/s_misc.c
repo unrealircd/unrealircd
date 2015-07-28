@@ -1062,7 +1062,6 @@ void unreal_delete_masks(ConfigItem_mask *m)
 		m_next = m->next;
 
 		safefree(m->mask);
-		safefree(m->netmask);
 
 		MyFree(m);
 	}
@@ -1072,9 +1071,6 @@ void unreal_delete_masks(ConfigItem_mask *m)
 static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 {
 	ConfigItem_mask *m = MyMallocEx(sizeof(ConfigItem_mask));
-	struct irc_netmask tmp;
-
-	memset(&tmp, 0, sizeof(tmp));
 
 	/* Since we allow both mask "xyz"; and mask { abc; def; };... */
 	if (!strcmp(ce->ce_varname, "mask") && ce->ce_vardata)
@@ -1082,12 +1078,6 @@ static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 	else
 		safestrdup(m->mask, ce->ce_varname);
 	
-	tmp.type = parse_netmask(m->mask, &tmp);
-	if (tmp.type != HM_HOST)
-	{
-		m->netmask = MyMallocEx(sizeof(struct irc_netmask));
-		bcopy(&tmp, m->netmask, sizeof(struct irc_netmask));
-	}
 	add_ListItem((ListStruct *)m, (ListStruct **)head);
 }
 
@@ -1108,28 +1098,9 @@ void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce)
 /** Check if a client matches any of the masks in the mask list */
 int unreal_mask_match(aClient *acptr, ConfigItem_mask *m)
 {
-	static char nuhost[NICKLEN + USERLEN + HOSTLEN + 8];
-	static char nuip[NICKLEN + USERLEN + HOSTLEN + 8];
-	static char nuip2[NICKLEN + USERLEN + HOSTLEN + 8];
-
-	if (acptr->user)
-	{
-		/* is a person */
-		strlcpy(nuhost, make_user_host(acptr->user->username, acptr->user->realhost), sizeof(nuhost));
-		strlcpy(nuip, make_user_host(acptr->user->username, Inet_ia2pNB(&acptr->local->ip, 0)), sizeof(nuip));
-		strlcpy(nuip2, make_user_host(acptr->user->username, Inet_ia2pNB(&acptr->local->ip, 1)), sizeof(nuip2));
-	} else {
-		/* is an unknown or a server */
-		snprintf(nuhost, sizeof(nuhost), "%s@%s", acptr->username, acptr->local->sockhost);
-		snprintf(nuip, sizeof(nuip), "%s@%s", acptr->username, Inet_ia2pNB(&acptr->local->ip, 0));
-		snprintf(nuip2, sizeof(nuip2), "%s@%s", acptr->username, Inet_ia2pNB(&acptr->local->ip, 1));
-	}
-
-	// wait.. if we use match_ip() we don't need both nuip & nuip2 ? better verify... (IPv4-IPv6 fun)
-
 	for (; m; m = m->next)
 	{
-		if (match_ip(acptr->local->ip, nuip, m->mask, m->netmask) || !match(m->mask, nuhost))
+		if (match_user(m->mask, acptr, MATCH_CHECK_REAL))
 			return 1;
 	}
 	

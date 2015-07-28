@@ -142,9 +142,7 @@ struct zConfiguration {
 	int watch_away_notification;
 	int uhnames;
 	aNetwork network;
-#ifdef INET6
 	unsigned short default_ipv6_clone_mask;
-#endif /* INET6 */
 	int ping_cookie;
 	int nicklen;
 };

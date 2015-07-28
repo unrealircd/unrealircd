@@ -624,6 +624,8 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 				return 0;
 			}
 
+			// TODO (FIXME): check broadness
+#if 0
 			/* STEP 2: Check CIDR.. allow x.x/16, but not /15, /14, etc... */
 			c = tolower(*type);
 			if (c == 'k' || c == 'z' || *type == 'G' || *type == 's')
@@ -640,6 +642,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 					}
 				}
 			}
+#endif
 		}
 	}
 
@@ -1005,15 +1008,6 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 			loop.do_bancheck_spamf_away = 1;
 
 	}
-	else if (type & TKL_KILL || type & TKL_ZAP || type & TKL_SHUN)
-	{
-		struct irc_netmask tmp;
-		if ((tmp.type = parse_netmask(nl->hostmask, &tmp)) != HM_HOST)
-		{
-			nl->ptr.netmask = MyMallocEx(sizeof(struct irc_netmask));
-			bcopy(&tmp, nl->ptr.netmask, sizeof(struct irc_netmask));
-		}
-	}
 	index = tkl_hash(tkl_typetochar(type));
 	AddListItem(nl, tklines[index]);
 
@@ -1040,9 +1034,6 @@ aTKline *_tkl_del_line(aTKline *tkl)
 					MyFree(p->ptr.spamf->tkl_reason);
 				MyFree(p->ptr.spamf);
 			}
-			if ((p->type & TKL_KILL || p->type & TKL_ZAP || p->type & TKL_SHUN)
-			     && p->ptr.netmask)
-				MyFree(p->ptr.netmask);
 			DelListItem(p, tklines[index]);
 			MyFree(p);
 			return q;
@@ -1216,83 +1207,67 @@ EVENT(_tkl_check_expire)
 int  _find_tkline_match(aClient *cptr, int xx)
 {
 	aTKline *lp;
-	char *chost, *cname, *cip;
-	TS   nowtime;
 	char msge[1024];
-	int	points = 0;
+	int	banned = 0;
 	ConfigItem_except *excepts;
-	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 	int match_type = 0;
 	int index;
-	Hook *tmphook;
+	Hook *hook;
 
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
 
-	nowtime = TStime();
-	chost = cptr->local->sockhost;
-	cname = cptr->user ? cptr->user->username : "unknown";
-	cip = GetIP(cptr);
-
-	points = 0;
 	for (index = 0; index < TKLISTLEN; index++)
 	{
 		for (lp = tklines[index]; lp; lp = lp->next)
 		{
+			char uhost[NICKLEN+HOSTLEN+1];
+			
 			if ((lp->type & TKL_SHUN) || (lp->type & TKL_SPAMF) || (lp->type & TKL_NICK))
 				continue;
+			
+			snprintf(uhost, sizeof(uhost), "%s@%s", lp->usermask, lp->hostmask);
 
-			/* If it's tangy and brown, you're in CIDR town! */
-			if (lp->ptr.netmask)
+			if (match_user(uhost, cptr, MATCH_CHECK_REAL|MATCH_USE_IDENT))
 			{
-				if (match_ip(cptr->local->ip, NULL, NULL, lp->ptr.netmask) && 
-				    !match(lp->usermask, cname))
+				/* Found match. Now check for exception... */
+				banned = 1;
+
+				if (((lp->type & TKL_KILL) || (lp->type & TKL_ZAP)) && !(lp->type & TKL_GLOBAL))
+					match_type = CONF_EXCEPT_BAN;
+				else
+					match_type = CONF_EXCEPT_TKL;
+				
+				for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next)
 				{
-					points = 1;
-					break;
+					if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL && 
+						excepts->type != lp->type))
+						continue;
+					
+					if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL|MATCH_USE_IDENT))
+					{
+						banned = 0; /* exempt by except block */
+						break;
+					}
 				}
-				continue;
-			}
-			if (!match(lp->usermask, cname) && !match(lp->hostmask, chost))
-			{
-				points = 1;
-				break;
-			}
-			if (!match(lp->usermask, cname) && !match(lp->hostmask, cip))
-			{
-				points = 1;
-				break;
+				for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
+				{
+					if (hook->func.intfunc(cptr, lp) > 0)
+					{
+						banned = 0; /* exempt by hook */
+						break;
+					}
+				}
+				if (banned)
+					break;
 			}
 		}
-		if (points)
+		if (banned)
 			break;
 	}
 
-	if (points != 1)
+	if (!banned)
 		return 1;
-	strlcpy(host, make_user_host(cname, chost), sizeof(host));
-	strlcpy(host2, make_user_host(cname, cip), sizeof(host2));
-	if (((lp->type & TKL_KILL) || (lp->type & TKL_ZAP)) && !(lp->type & TKL_GLOBAL))
-		match_type = CONF_EXCEPT_BAN;
-	else
-		match_type = CONF_EXCEPT_TKL;
-	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
-		if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL && 
-		    excepts->type != lp->type))
-			continue;
-
-		if (excepts->netmask)
-		{
-			if (match_ip(cptr->local->ip, host2, excepts->mask, excepts->netmask))
-				return 1;		
-		} else
-		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
-			return 1;		
-	}
-
-	for (tmphook = Hooks[HOOKTYPE_TKL_EXCEPT]; tmphook; tmphook = tmphook->next)
-		if (tmphook->func.intfunc(cptr, lp) > 0)
-			return 1;
 	
 	if ((lp->type & TKL_KILL) && (xx != 2))
 	{
@@ -1344,76 +1319,63 @@ int  _find_shun(aClient *cptr)
 {
 	aTKline *lp;
 	char *chost, *cname, *cip;
-	TS   nowtime;
-	int	points = 0;
 	ConfigItem_except *excepts;
 	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 	int match_type = 0;
+	Hook *hook;
+	int banned = 0;
+
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
 
 	if (IsShunned(cptr))
 		return 1;
+
 	if (ValidatePermissionsForPath("immune:shun",cptr,NULL,NULL,NULL))
 		return 1;
 
-	nowtime = TStime();
-	chost = cptr->local->sockhost;
-	cname = cptr->user ? cptr->user->username : "unknown";
-	cip = GetIP(cptr);
-
 	for (lp = tklines[tkl_hash('s')]; lp; lp = lp->next)
 	{
-		points = 0;
+		char uhost[NICKLEN+HOSTLEN+1];
 		
 		if (!(lp->type & TKL_SHUN))
 			continue;
+		
+		snprintf(uhost, sizeof(uhost), "%s@%s", lp->usermask, lp->hostmask);
 
-		/* CIDR */
-		if (lp->ptr.netmask)
+		if (match_user(uhost, cptr, MATCH_CHECK_REAL|MATCH_USE_IDENT))
 		{
-			if (match_ip(cptr->local->ip, NULL, NULL, lp->ptr.netmask) && 
-			    !match(lp->usermask, cname))
+			/* Found match. Now check for exception... */
+			banned = 1;
+			match_type = CONF_EXCEPT_TKL;
+			for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next)
 			{
-				points = 1;
-				break;
+				if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL && 
+					excepts->type != lp->type))
+					continue;
+				
+				if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL|MATCH_USE_IDENT))
+				{
+					banned = 0; /* exempt by except block */
+					break;
+				}
 			}
-			continue;
+			for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
+			{
+				if (hook->func.intfunc(cptr, lp) > 0)
+				{
+					banned = 0; /* exempt by hook */
+					break;
+				}
+			}
+			if (banned)
+				break;
 		}
-
-		if (!match(lp->usermask, cname) && !match(lp->hostmask, chost))
-		{
-			points = 1;
-			break;
-		}
-		if (!match(lp->usermask, cname) && !match(lp->hostmask, cip))
-		{
-			points = 1;
-			break;
-		}
-		else
-			points = 0;
 	}
 
-	if (points != 1)
+	if (!banned)
 		return 1;
-	strlcpy(host, make_user_host(cname, chost), sizeof(host));
-	strlcpy(host2, make_user_host(cname, cip), sizeof(host2));
-		match_type = CONF_EXCEPT_TKL;
 
-	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
-		if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL && 
-		    excepts->type != lp->type))
-			continue;
-		if (excepts->netmask)
-		{
-			if (match_ip(cptr->local->ip, NULL, NULL, excepts->netmask))
-				return 1;		
-		}
-		else if (!match(excepts->mask, host) || !match(excepts->mask, host2))
-			return 1;		
-	}
-	
 	SetShunned(cptr);
 	return 2;
 }
@@ -1557,19 +1519,16 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 		strlcpy(hostbuf2, make_user_host(cname, cip), sizeof(hostbuf2));
 		host2 = hostbuf2;
 	}
-
+	
+	
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next)
 	{
 		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != TKL_NICK)
 			continue;
-		if (excepts->netmask)
-		{
-			if (MyConnect(cptr) && match_ip(cptr->local->ip, NULL, NULL, excepts->netmask))
-				return NULL;
-		} else
-		if (!match(excepts->mask, host) || (host2 && !match(excepts->mask, host2)))
-			return NULL;
+		if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL|MATCH_USE_IDENT))
+			return NULL; /* exempt */
 	}
+
 	return lp;
 }
 
@@ -1581,7 +1540,7 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 	TS   nowtime;
 	char msge[1024];
 	ConfigItem_except *excepts;
-	Hook *tmphook;
+	Hook *hook;
 
 	if (rettk)
 		*rettk = NULL;
@@ -1594,46 +1553,37 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 
 	for (lp = tklines[tkl_hash('z')]; lp; lp = lp->next)
 	{
-		if (lp->type & TKL_ZAP)
+		if ((lp->type & TKL_ZAP) && match_user(lp->hostmask, cptr, MATCH_CHECK_IP|MATCH_USE_IDENT))
 		{
-			if ((lp->ptr.netmask && match_ip(cptr->local->ip, NULL, NULL, lp->ptr.netmask))
-			    || !match(lp->hostmask, cip))
-			{
-
-				for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
-					/* This used to be:
-					 * if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
-					 * It now checks for 'except ban', hope this is what most people want,
-					 * it is at least the same as in find_tkline_match, which is how it currently
-					 * is when a user is connected. -- Syzop/20081221
-					 */
-					if (excepts->flag.type != CONF_EXCEPT_BAN)
-						continue;
-					if (excepts->netmask)
-					{
-						if (match_ip(cptr->local->ip, NULL, NULL, excepts->netmask))
-							return -1;		
-					} else if (!match(excepts->mask, cip))
-						return -1;		
-				}
-				for (tmphook = Hooks[HOOKTYPE_TKL_EXCEPT]; tmphook; tmphook = tmphook->next)
-					if (tmphook->func.intfunc(cptr, lp) > 0)
-						return -1;
-
-				ircstp->is_ref++;
-				ircsnprintf(msge, sizeof(msge),
-				    "ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",
-#ifndef INET6
-				    inetntoa((char *)&cptr->local->ip), lp->reason);
-#else
-				    inet_ntop(AF_INET6, (char *)&cptr->local->ip,
-				    mydummy, MYDUMMY_SIZE), lp->reason);
-#endif
-				strlcpy(zlinebuf, msge, sizeof zlinebuf);
-				if (rettk)
-					*rettk = lp;
-				return (1);
+			for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
+				/* This used to be:
+				 * if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
+				 * It now checks for 'except ban', hope this is what most people want,
+				 * it is at least the same as in find_tkline_match, which is how it currently
+				 * is when a user is connected. -- Syzop/20081221
+				 */
+				if (excepts->flag.type != CONF_EXCEPT_BAN)
+					continue;
+				if (match_user(excepts->mask, cptr, MATCH_CHECK_IP|MATCH_USE_IDENT))
+					return -1; /* exempt */
 			}
+			for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
+				if (hook->func.intfunc(cptr, lp) > 0)
+					return -1; /* exempt */
+
+			ircstp->is_ref++;
+			ircsnprintf(msge, sizeof(msge),
+				"ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",
+#ifndef INET6
+			    inetntoa((char *)&cptr->local->ip), lp->reason);
+#else
+			    inet_ntop(AF_INET6, (char *)&cptr->local->ip,
+			    mydummy, MYDUMMY_SIZE), lp->reason);
+#endif
+			strlcpy(zlinebuf, msge, sizeof zlinebuf);
+			if (rettk)
+				*rettk = lp;
+			return (1);
 		}
 	}
 	return -1;
