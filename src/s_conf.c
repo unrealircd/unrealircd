@@ -2583,15 +2583,13 @@ ConfigItem_except *Find_except(aClient *sptr, short type)
 	return NULL;
 }
 
-ConfigItem_tld *Find_tld(aClient *cptr, char *uhost) {
+ConfigItem_tld *Find_tld(aClient *cptr)
+{
 	ConfigItem_tld *tld;
 
-	if (!uhost || !cptr)
-		return NULL;
-
-	for(tld = conf_tld; tld; tld = (ConfigItem_tld *) tld->next)
+	for (tld = conf_tld; tld; tld = (ConfigItem_tld *) tld->next)
 	{
-		if (!match(tld->mask, uhost))
+		if (match_user(tld->mask, cptr, MATCH_CHECK_REAL))
 		{
 			if ((tld->options & TLD_SSL) && !IsSecure(cptr))
 				continue;
@@ -2600,6 +2598,7 @@ ConfigItem_tld *Find_tld(aClient *cptr, char *uhost) {
 			return tld;
 		}
 	}
+
 	return NULL;
 }
 

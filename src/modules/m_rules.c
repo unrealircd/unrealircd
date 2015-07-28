@@ -79,15 +79,13 @@ CMD_FUNC(m_rules)
 {
 	ConfigItem_tld *ptr;
 	aMotdLine *temp;
-	char userhost[USERLEN + HOSTLEN + 6];
 
 	temp = NULL;
 
 	if (hunt_server(cptr, sptr, ":%s RULES :%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
 
-	strlcpy(userhost,make_user_host(sptr->user->username, sptr->user->realhost), sizeof userhost);
-	ptr = Find_tld(sptr, userhost);
+	ptr = Find_tld(sptr);
 
 	if (ptr)
 		temp = ptr->rules.lines;

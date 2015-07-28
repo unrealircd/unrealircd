@@ -868,14 +868,12 @@ int short_motd(aClient *sptr)
        aMotdFile *themotd;
        aMotdLine *motdline;
        struct tm *tm;
-       char userhost[HOSTLEN + USERLEN + 6];
        char is_short;
 
        tm = NULL;
        is_short = 1;
 
-       strlcpy(userhost,make_user_host(sptr->user->username, sptr->user->realhost), sizeof userhost);
-       tld = Find_tld(sptr, userhost);
+       tld = Find_tld(sptr);
 
        /*
 	* Try different sources of short MOTDs, falling back to the

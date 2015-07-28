@@ -109,7 +109,7 @@ extern ConfigItem_operclass	*Find_operclass(char *name);
 extern ConfigItem_listen	*Find_listen(char *ipmask, int port);
 extern ConfigItem_ulines	*Find_uline(char *host);
 extern ConfigItem_except	*Find_except(aClient *, short type);
-extern ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
+extern ConfigItem_tld		*Find_tld(aClient *cptr);
 extern ConfigItem_link		*Find_link(char *servername, aClient *acptr);
 extern ConfigItem_ban 		*Find_ban(aClient *, char *host, short type);
 extern ConfigItem_ban 		*Find_banEx(aClient *,char *host, short type, short type2);

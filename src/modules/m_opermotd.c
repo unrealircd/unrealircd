@@ -78,7 +78,6 @@ CMD_FUNC(m_opermotd)
 {
 	aMotdLine *motdline;
 	ConfigItem_tld *tld;
-	char userhost[HOSTLEN + USERLEN + 6];
 
 	if (!ValidatePermissionsForPath("server:opermotd",sptr,NULL,NULL,NULL))
 	{
@@ -86,8 +85,7 @@ CMD_FUNC(m_opermotd)
 		return 0;
 	}
 
-	strlcpy(userhost, make_user_host(cptr->user->username, cptr->user->realhost), sizeof(userhost));
-	tld = Find_tld(sptr, userhost);
+	tld = Find_tld(sptr);
 
 	motdline = NULL;
 	if (tld)

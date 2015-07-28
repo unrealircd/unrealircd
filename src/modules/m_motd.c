@@ -81,15 +81,15 @@ CMD_FUNC(m_motd)
 	aMotdFile *themotd;
 	aMotdLine *motdline;
 	int  svsnofile = 0;
-	char userhost[HOSTLEN + USERLEN + 6];
 
 
 	if (IsServer(sptr))
 		return 0;
+
 	if (hunt_server(cptr, sptr, ":%s MOTD :%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
-	strlcpy(userhost, make_user_host(sptr->user->username, sptr->user->realhost), sizeof(userhost));
-	ptr = Find_tld(sptr, userhost);
+
+	ptr = Find_tld(sptr);
 
 	if (ptr)
 		themotd = &ptr->motd;

@@ -452,10 +452,7 @@ int check_tkls(aClient *cptr)
 	{
 		/* Check ban user { } and ban realname { } */
 
-		bconf = Find_ban(cptr, make_user_host(cptr->user ? cptr->user->username : cptr->username,
-				                              cptr->user ? cptr->user->realhost : cptr->local->sockhost),
-				                              CONF_BAN_USER);
-
+		bconf = Find_ban(cptr, NULL, CONF_BAN_USER);
 		if (bconf)
 			killflag++;
 		else if (!ValidatePermissionsForPath("immune",cptr,NULL,NULL,NULL) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
@@ -463,7 +460,7 @@ int check_tkls(aClient *cptr)
 	}
 
 	/* If still no match, check ban ip { } */
-	if (!killflag && (bconf = Find_ban(cptr, Inet_ia2p(&cptr->local->ip), CONF_BAN_IP)))
+	if (!killflag && (bconf = Find_ban(cptr, NULL, CONF_BAN_IP)))
 		killflag++;
 
 	/* If user is meant to be killed, take action: */

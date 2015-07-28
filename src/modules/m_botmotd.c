@@ -78,7 +78,6 @@ CMD_FUNC(m_botmotd)
 {
 	aMotdLine *motdline;
 	ConfigItem_tld *tld;
-	char userhost[HOSTLEN + USERLEN + 6];
 
 	if (hunt_server(cptr, sptr, ":%s BOTMOTD :%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
@@ -86,8 +85,7 @@ CMD_FUNC(m_botmotd)
 	if (!IsPerson(sptr))
 		return 0;
 
-	strlcpy(userhost, make_user_host(sptr->user->username, sptr->user->realhost), sizeof(userhost));
-	tld = Find_tld(sptr, userhost);
+	tld = Find_tld(sptr);
 
 	motdline = NULL;
 	if (tld)
