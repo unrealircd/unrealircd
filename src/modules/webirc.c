@@ -355,12 +355,8 @@ int dowebirc(aClient *cptr, char *ip, char *host)
 	   Make sure that if this any IPv4 address is _not_ prefixed with
 	   "::ffff:" by using Inet_ia2p().
 	 */
-	sockhost = Inet_ia2p(&cptr->local->ip);
-	if(!sockhost)
-	{
-		return exit_client(cptr, cptr, &me, "Error processing CGI:IRC IP address.");
-	}
-	strlcpy(cptr->local->sockhost, sockhost, sizeof(cptr->local->sockhost));
+	// Hmm I ignored above warning. May be bad during transition period.
+	strlcpy(cptr->local->sockhost, cptr->ip, sizeof(cptr->local->sockhost));
 
 	SetWEBIRC(cptr);
 

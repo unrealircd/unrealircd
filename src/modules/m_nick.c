@@ -1224,7 +1224,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			 */
 			if (*tmpstr || !*user->realhost || (isdigit(*sptr->local->sockhost) && (sptr->local->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
 			    || (sptr->local->sockhost[0] == ':'))
-				strlcpy(sptr->local->sockhost, Inet_ia2p(&sptr->local->ip), sizeof(sptr->local->sockhost));
+				strlcpy(sptr->local->sockhost, sptr->ip, sizeof(sptr->local->sockhost));
 		}
 		strlcpy(user->realhost, sptr->local->sockhost, sizeof(sptr->local->sockhost)); /* SET HOSTNAME */
 

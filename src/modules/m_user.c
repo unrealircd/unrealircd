@@ -188,9 +188,7 @@ DLLFUNC CMD_FUNC(m_user)
 	 * this was copying user supplied data directly into user->realhost
 	 * which seemed bad. Not to say this is much better ;p. -- Syzop
 	 */
-	strlcpy(sptr->user->realhost, Inet_ia2p(&sptr->local->ip), sizeof(sptr->user->realhost));
-	if (!sptr->ip)
-		sptr->ip = strdup(Inet_ia2p(&sptr->local->ip));
+	strlcpy(sptr->user->realhost, sptr->ip, sizeof(sptr->user->realhost));
 	sptr->user->server = me_hash;
       user_finish:
 	if (sstamp != NULL && *sstamp != '*')

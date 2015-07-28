@@ -1560,12 +1560,7 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 			ircstp->is_ref++;
 			ircsnprintf(msge, sizeof(msge),
 				"ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",
-#ifndef INET6
-			    inetntoa((char *)&cptr->local->ip), lp->reason);
-#else
-			    inet_ntop(AF_INET6, (char *)&cptr->local->ip,
-			    mydummy, MYDUMMY_SIZE), lp->reason);
-#endif
+				acptr->ip, lp->reason);
 			strlcpy(zlinebuf, msge, sizeof zlinebuf);
 			if (rettk)
 				*rettk = lp;
