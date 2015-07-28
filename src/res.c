@@ -273,12 +273,12 @@ struct hostent *unrealdns_doclient(aClient *cptr)
 		struct in6_addr addr;
 		memset(&addr, 0, sizeof(addr));
 		inet_pton(AF_INET6, cptr->ip, &addr);
-		ares_gethostbyaddr(resolver_channel, &addr, 16, AF_INET, unrealdns_cb_iptoname, r);
+		ares_gethostbyaddr(resolver_channel, &addr, 16, AF_INET6, unrealdns_cb_iptoname, r);
 	} else {
 		struct in_addr addr;
 		memset(&addr, 0, sizeof(addr));
 		inet_pton(AF_INET, cptr->ip, &addr);
-		ares_gethostbyaddr(resolver_channel, &addr, 4, AF_INET6, unrealdns_cb_iptoname, r);
+		ares_gethostbyaddr(resolver_channel, &addr, 4, AF_INET, unrealdns_cb_iptoname, r);
 	}
 
 	return NULL;

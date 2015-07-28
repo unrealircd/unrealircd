@@ -22,13 +22,11 @@
 #include "sys.h"
 #include "numeric.h"
 #include "version.h"
+#include "inet.h"
 #ifndef _WIN32
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
-#if defined(__hpux)
-# include "inet.h"
-#endif
 #else
 #include <io.h>
 #endif

@@ -343,12 +343,7 @@ char *get_client_name(aClient *sptr, int showip)
 			    sptr->name,
 			    (!(sptr->flags & FLAGS_GOTID)) ? "" :
 			    sptr->username,
-#ifdef INET6
-			    inetntop(AF_INET6,
-			    (char *)&sptr->local->ip, mydummy, MYDUMMY_SIZE),
-#else
-			    inetntoa((char *)&sptr->local->ip),
-#endif
+			    sptr->ip ? sptr->ip : "???",
 			    (unsigned int)sptr->local->port);
 		else
 		{

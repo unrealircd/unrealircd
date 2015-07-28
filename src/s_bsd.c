@@ -1640,7 +1640,7 @@ int connect_inet(ConfigItem_link *aconf, aClient *cptr)
 
 	if (bindip && strcmp("*", bindip))
 	{
-		if (!unreal_bind(cptr, cptr->fd, bindip, IsIPV6(cptr)))
+		if (!unreal_bind(cptr->fd, bindip, 0, IsIPV6(cptr)))
 		{
 			report_baderror("error binding to local port for %s:%s", cptr);
 			return 0;

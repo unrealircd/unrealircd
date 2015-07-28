@@ -306,9 +306,7 @@ ConfigItem_webirc *Find_webirc(aClient *sptr, WEBIRCType type)
 /* Does the CGI:IRC host spoofing work */
 int dowebirc(aClient *cptr, char *ip, char *host)
 {
-#ifdef INET6
-	char ipbuf[64];
-#endif
+	char scratch[64];
 	char *sockhost;
 
 	if (IsWEBIRC(cptr))
@@ -319,26 +317,16 @@ int dowebirc(aClient *cptr, char *ip, char *host)
 
 	/* STEP 1: Update cptr->local->ip
 	   inet_pton() returns 1 on success, 0 on bad input, -1 on bad AF */
-	if(inet_pton(AFINET, ip, &cptr->local->ip) != 1)
+	if ((inet_pton(AF_INET, ip, scratch) != 1) &&
+	    (inet_pton(AF_INET6, ip, scratch) != 1))
 	{
-#ifndef INET6
 		/* then we have an invalid IP */
 		return exit_client(cptr, cptr, &me, "Invalid IP address");
-#else
-		/* The address may be IPv4. We have to try ::ffff:ipv4 */
-		snprintf(ipbuf, sizeof(ipbuf), "::ffff:%s", ip);
-		if(inet_pton(AFINET, ipbuf, &cptr->local->ip) != 1)
-			return exit_client(cptr, cptr, &me, "Invalid IP address");
-#endif
 	}
 
 	/* STEP 2: Update GetIP() */
-	if (cptr->user)
-	{
-		/* Kinda unsure if this is actually used.. But maybe if USER, PASS, NICK ? */
-		safefree(cptr->ip);
-		cptr->ip = strdup(ip);
-	}
+	safefree(cptr->ip);
+	cptr->ip = strdup(ip);
 		
 	/* STEP 3: Update cptr->local->hostp */
 	/* (free old) */
@@ -349,7 +337,7 @@ int dowebirc(aClient *cptr, char *ip, char *host)
 	}
 	/* (create new) */
 	if (host && verify_hostname(host))
-		cptr->local->hostp = unreal_create_hostent(host, &cptr->local->ip);
+		cptr->local->hostp = unreal_create_hostent(host, cptr->ip);
 
 	/* STEP 4: Update sockhost
 	   Make sure that if this any IPv4 address is _not_ prefixed with
