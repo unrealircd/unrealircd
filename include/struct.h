@@ -286,6 +286,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
 #define	FLAGS_DEADSOCKET 0x0002	/* Local socket is dead--Exiting soon */
 #define	FLAGS_KILLED     0x0004	/* Prevents "QUIT" from being sent for this */
+#define FLAGS_IPV6       0x0008 /* For quick checking */
 #define FLAGS_OUTGOING   0x0010 /* outgoing connection, do not touch cptr->listener->clients */
 #define	FLAGS_CLOSING    0x0020	/* set when closing to suppress errors */
 #define	FLAGS_LISTEN     0x0040	/* used to mark clients which we listen() on */
@@ -434,6 +435,8 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define ClearHidden(x)          ((x)->umodes &= ~UMODE_HIDE)
 #define ClearHideOper(x)    ((x)->umodes &= ~UMODE_HIDEOPER)
 
+#define SetIPV6(x)			do { x->flags |= FLAGS_IPV6; } while(0)
+#define IsIPV6(x)			((x)->flags & FLAGS_IPV6)
 /*
  * ProtoCtl options
  */

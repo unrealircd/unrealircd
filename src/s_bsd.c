@@ -1145,6 +1145,9 @@ add_con_refuse:
 		}
 		set_sockhost(acptr, s);
 		acptr->ip = strdup(s);
+		
+		if (strchr(acptr->ip, ':'))
+			SetIPV6(acptr);
 
 		/* Tag loopback connections as FLAGS_LOCAL */
 		if (is_loopback_ip(acptr->ip))

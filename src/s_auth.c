@@ -71,7 +71,7 @@ void ident_failed(aClient *cptr)
  */
 void start_auth(aClient *cptr)
 {
-	struct SOCKADDR_IN sock, us;
+	struct SOCKADDR_IN sock;
 	int len;
 	char buf[BUFSIZE];
 
@@ -112,20 +112,25 @@ void start_auth(aClient *cptr)
 
 	/* Bind to the IP the user got in */
 	memset(&sock, 0, sizeof(sock));
-	len = sizeof(us);
-	if (!getsockname(cptr->fd, (struct SOCKADDR *)&us, &len))
+	len = sizeof(sock);
+	if (!getsockname(cptr->fd, (struct SOCKADDR *)&sock, &len))
 	{
-		bcopy(&us.SIN_ADDR, &sock.SIN_ADDR, sizeof(struct IN_ADDR));
 		sock.SIN_PORT = 0;
-		sock.SIN_FAMILY = AFINET;	/* redundant? */
 		(void)bind(cptr->local->authfd, (struct SOCKADDR *)&sock, sizeof(sock));
 	}
 
-	bcopy((char *)&cptr->local->ip, (char *)&sock.SIN_ADDR,
-	    sizeof(struct IN_ADDR));
-
+	memset(&sock, 0, sizeof(sock));
 	sock.SIN_PORT = htons(113);
-	sock.SIN_FAMILY = AFINET;
+	if (IsIPV6(cptr))
+	{
+		sock.SIN_FAMILY = AF_INET6;
+		inet_pton(AF_INET6, cptr->ip, &sock.SIN_ADDR);
+	}
+	else
+	{
+		sock.SIN_FAMILY = AF_INET;
+		inet_pton(AF_INET, cptr->ip, &sock.SIN_ADDR);
+	}
 
 	if (connect(cptr->local->authfd, (struct sockaddr *)&sock, sizeof(sock)) == -1 && !(ERRNO == P_EWORKING))
 	{
