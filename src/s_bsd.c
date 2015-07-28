@@ -81,11 +81,6 @@ static unsigned char minus_one[] =
 #define IN_LOOPBACKNET	0x7f
 #endif
 
-#ifndef INADDRSZ
-#define INADDRSZ sizeof(struct IN_ADDR)
-#define IN6ADDRSZ sizeof(struct IN_ADDR)
-#endif
-
 #ifndef _WIN32
 #define SET_ERRNO(x) errno = x
 #else
@@ -101,7 +96,6 @@ static unsigned char minus_one[] =
 extern char backupbuf[8192];
 int      OpenFiles = 0;    /* GLOBAL - number of files currently open */
 int readcalls = 0;
-static struct SOCKADDR_IN mysk;
 
 int connect_inet(ConfigItem_link *, aClient *);
 void completed_connection(int, int, void *);
@@ -361,10 +355,8 @@ int unreal_bind(int fd, char *ip, int port, int ipv6)
 /*
  * inetport
  *
- * Create a socket in the AFINET domain, bind it to the port given in
- * 'port' and listen to it.  Connections are accepted to this socket
- * depending on the IP# mask given by 'name'.  Returns the fd of the
- * socket created or -1 on error.
+ * Create a socket, bind it to the 'ip' and 'port' and listen to it.
+ * Returns the fd of the socket created or -1 on error.
  */
 int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 {
@@ -1067,7 +1059,7 @@ char *getpeerip(aClient *acptr, int fd, int *port)
 		struct sockaddr_in6 addr;
 		int len = sizeof(addr);
 
-		if (getpeername(fd, (struct SOCKADDR *)&addr, &len) < 0)
+		if (getpeername(fd, (struct sockaddr *)&addr, &len) < 0)
 			return NULL;
 		*port = ntohs(addr.sin6_port);
 		return inetntop(AF_INET6, &addr.sin6_addr.s6_addr, ret, sizeof(ret));
@@ -1076,7 +1068,7 @@ char *getpeerip(aClient *acptr, int fd, int *port)
 		struct sockaddr_in addr;
 		int len = sizeof(addr);
 
-		if (getpeername(fd, (struct SOCKADDR *)&addr, &len) < 0)
+		if (getpeername(fd, (struct sockaddr *)&addr, &len) < 0)
 			return NULL;
 		*port = ntohs(addr.sin_port);
 		return inetntop(AF_INET, &addr.sin_addr.s_addr, ret, sizeof(ret));
@@ -1596,7 +1588,6 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 
 int connect_inet(ConfigItem_link *aconf, aClient *cptr)
 {
-	static struct SOCKADDR_IN server;
 	int len;
 	struct hostent *hp;
 	char *bindip;
@@ -1612,7 +1603,7 @@ int connect_inet(ConfigItem_link *aconf, aClient *cptr)
 	cptr->ip = strdup(aconf->connect_ip);
 	
 	snprintf(buf, sizeof buf, "Outgoing connection: %s", get_client_name(cptr, TRUE));
-	cptr->fd = fd_socket(AFINET, SOCK_STREAM, 0, buf);
+	cptr->fd = fd_socket(IsIPV6(cptr) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf);
 	if (cptr->fd < 0)
 	{
 		if (ERRNO == P_EMFILE)
@@ -1629,7 +1620,6 @@ int connect_inet(ConfigItem_link *aconf, aClient *cptr)
 		sendto_realops("No more connections allowed (%s)", cptr->name);
 		return 0;
 	}
-	mysk.SIN_PORT = 0;
 
 	set_sockhost(cptr, aconf->outgoing.hostname);
 
