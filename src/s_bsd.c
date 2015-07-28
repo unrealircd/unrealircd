@@ -103,7 +103,7 @@ int      OpenFiles = 0;    /* GLOBAL - number of files currently open */
 int readcalls = 0;
 static struct SOCKADDR_IN mysk;
 
-static struct SOCKADDR *connect_inet(ConfigItem_link *, aClient *, int *);
+int connect_inet(ConfigItem_link *, aClient *);
 void completed_connection(int, int, void *);
 static int check_init(aClient *, char *, size_t);
 void set_sock_opts(int, aClient *, int);
@@ -333,6 +333,31 @@ static void listener_accept(int fd, int revents, void *data)
 	(void)add_connection(cptr, cli_fd);
 }
 
+/** Bind to an IP/port (port may be 0 for auto).
+ * @returns 0 on failure, other on success.
+ */
+int unreal_bind(int fd, char *ip, int port, int ipv6)
+{
+	if (ipv6)
+	{
+		struct sockaddr_in6 server;
+		memset(&server, 0, sizeof(server));
+		server.sin6_family = AF_INET6;
+		server.sin6_port = htons(port);
+		if (inet_pton(AF_INET6, ip, &server.sin6_addr.s6_addr) != 1)
+			return 0;
+		return !bind(fd, (struct sockaddr *)&server, sizeof(server));
+	} else {
+		struct sockaddr_in server;
+		memset(&server, 0, sizeof(server));
+		server.sin_family = AF_INET;
+		server.sin_port = htons(port);
+		if (inet_pton(AF_INET, ip, &server.sin_addr.s_addr) != 1)
+			return 0;
+		return !bind(fd, (struct sockaddr *)&server, sizeof(server));
+	}
+}
+
 /*
  * inetport
  *
@@ -343,8 +368,6 @@ static void listener_accept(int fd, int revents, void *data)
  */
 int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 {
-	int result;
-
 	if (BadPtr(ip))
 		ip = "*";
 	
@@ -385,30 +408,8 @@ int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 	set_sock_opts(listener->fd, NULL, ipv6);
 	set_non_blocking(listener->fd, NULL);
 
-	if (ipv6)
+	if (!unreal_bind(listener->fd, ip, port, ipv6))
 	{
-		struct sockaddr_in6 server;
-		memset(&server, 0, sizeof(server));
-		server.sin6_family = AF_INET6;
-		server.sin6_port = htons(port);
-		result = inet_pton(AF_INET6, ip, &server.sin6_addr.s6_addr);
-		if (result != 1)
-			goto binderr;
-		result = bind(listener->fd, (struct sockaddr *)&server, sizeof(server));
-	} else {
-		struct sockaddr_in server;
-		memset(&server, 0, sizeof(server));
-		server.sin_family = AF_INET;
-		server.sin_port = htons(port);
-		result = inet_pton(AF_INET, ip, &server.sin_addr.s_addr);
-		if (result != 1)
-			goto binderr;
-		result = bind(listener->fd, (struct sockaddr *)&server, sizeof(server));
-	}
-	
-	if (result < 0)
-	{
-binderr:
 		ircsnprintf(backupbuf, sizeof(backupbuf), "Error binding stream socket to IP %s port %i",
 			ip, port);
 		strlcat(backupbuf, " - %s:%s", sizeof backupbuf);
@@ -419,8 +420,7 @@ binderr:
 		return -1;
 	}
 
-	result = listen(listener->fd, LISTEN_SIZE);
-	if (result < 0)
+	if (listen(listener->fd, LISTEN_SIZE) < 0)
 	{
 		report_error("listen failed for %s:%s", NULL);
 		fd_close(listener->fd);
@@ -430,7 +430,7 @@ binderr:
 	}
 
 #ifdef TCP_DEFER_ACCEPT
-	if ((listener->options & LISTENER_DEFER_ACCEPT) && !result)
+	if (listener->options & LISTENER_DEFER_ACCEPT)
 	{
 		int yes = 1;
 
@@ -439,7 +439,7 @@ binderr:
 #endif
 
 #ifdef SO_ACCEPTFILTER
-	if ((listener->options & LISTENER_DEFER_ACCEPT) && !result)
+	if (listener->options & LISTENER_DEFER_ACCEPT)
 	{
 		struct accept_filter_arg afa;
 
@@ -1467,15 +1467,26 @@ void finish_auth(aClient *acptr)
 	parse_client_queued(acptr);
 }
 
+int is_valid_ip(char *str)
+{
+	char scratch[64];
+	
+	if (inet_pton(AF_INET, str, scratch) == 1)
+		return 1; /* IPv4 */
+	
+	if (inet_pton(AF_INET6, str, scratch) == 1)
+		return 6; /* IPv6 */
+	
+	return 0; /* not an IP address */
+}
+
 /*
  * connect_server
  */
 int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 {
-	struct SOCKADDR *svp;
 	aClient *cptr;
 	char *s;
-	int  errtmp, len;
 
 #ifdef DEBUGMODE
 	sendto_realops("connect_server() called with aconf %p, refcount: %d, TEMP: %s",
@@ -1488,26 +1499,22 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	if (!hp)
 	{
 		/* Remove "cache" */
-		memset(&aconf->ipnum, '\0', sizeof(struct IN_ADDR));
+		safefree(aconf->connect_ip);
 	}
 	/*
 	 * If we dont know the IP# for this host and itis a hostname and
 	 * not a ip# string, then try and find the appropriate host record.
 	 */
-	 if (!WHOSTENTP(aconf->ipnum.S_ADDR))
+	 if (!aconf->connect_ip)
 	 {
-		s = aconf->outgoing.hostname;
-#ifndef INET6
-		if ((aconf->ipnum.S_ADDR = inet_addr(s)) == -1)
-#else
-		if (!inet_pton(AF_INET6, s, aconf->ipnum.s6_addr))
-#endif
+	 	if (is_valid_ip(aconf->outgoing.hostname))
 		{
-#ifdef INET6
-			bzero(aconf->ipnum.s6_addr, IN6ADDRSZ);
-#else
-			aconf->ipnum.S_ADDR = 0;
-#endif
+			/* link::outgoing::hostname is an IP address. No need to resolve host. */
+			aconf->connect_ip = strdup(aconf->outgoing.hostname);
+		} else
+		{
+			/* It's a hostname, let the resolver look it up. */
+			
 			/* We need this 'aconf->refcount++' or else there's a race condition between
 			 * starting resolving the host and the result of the resolver (we could
 			 * REHASH in that timeframe) leading to an invalid (freed!) 'aconf'.
@@ -1526,30 +1533,9 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	strlcpy(cptr->name, aconf->servername, sizeof(cptr->name));
 	strlcpy(cptr->local->sockhost, aconf->outgoing.hostname, HOSTLEN + 1);
 
-	svp = connect_inet(aconf, cptr, &len);
-	if (!svp)
+	if (!connect_inet(aconf, cptr))
 	{
-		if (cptr->fd >= 0)
-		{
-			fd_close(cptr->fd);
-			--OpenFiles;
-		}
-		cptr->fd = -2;
-		free_client(cptr);
-		return -1;
-	}
-	set_non_blocking(cptr->fd, cptr);
-	set_sock_opts(cptr->fd, cptr, 1); // XXX/FIXME!!!!! always ipv6 atm.
-
-#ifndef _WIN32
-	if (connect(cptr->fd, svp, len) < 0 && errno != EINPROGRESS)
-#else
-	if (connect(cptr->fd, svp, len) < 0 &&
-            WSAGetLastError() != WSAEINPROGRESS &&
-            WSAGetLastError() != WSAEWOULDBLOCK)
-#endif
-	{
-		errtmp = ERRNO;
+		int errtmp = ERRNO;
 		report_error("Connect to host %s failed: %s", cptr);
 		if (by && IsPerson(by) && !MyClient(by))
 			sendto_one(by,
@@ -1564,10 +1550,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 			SET_ERRNO(P_ETIMEDOUT);
 		return -1;
 	}
-
-	/*
-	   ** The socket has been connected or connect is in progress.
-	 */
+	/* The socket has been connected or connect is in progress. */
 	(void)make_server(cptr);
 	cptr->serv->conf = aconf;
 	cptr->serv->conf->refcount++;
@@ -1611,17 +1594,23 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	return 0;
 }
 
-static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int *lenp)
+int connect_inet(ConfigItem_link *aconf, aClient *cptr)
 {
 	static struct SOCKADDR_IN server;
+	int len;
 	struct hostent *hp;
 	char *bindip;
 	char buf[BUFSIZE];
+	int n;
 
-	/*
-	 * Might as well get sockhost from here, the connection is attempted
-	 * with it so if it fails its useless.
-	 */
+	if (!aconf->connect_ip)
+		return 0; /* handled upstream or shouldn't happen */
+	
+	if (strchr(aconf->connect_ip, ':'))
+		SetIPV6(cptr);
+	
+	cptr->ip = strdup(aconf->connect_ip);
+	
 	snprintf(buf, sizeof buf, "Outgoing connection: %s", get_client_name(cptr, TRUE));
 	cptr->fd = fd_socket(AFINET, SOCK_STREAM, 0, buf);
 	if (cptr->fd < 0)
@@ -1630,15 +1619,15 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 		{
 		  sendto_realops("opening stream socket to server %s: No more sockets",
 					 get_client_name(cptr, TRUE));
-		  return NULL;
+		  return 0;
 		}
 		report_baderror("opening stream socket to server %s:%s", cptr);
-		return NULL;
+		return 0;
 	}
 	if (++OpenFiles >= MAXCLIENTS)
 	{
 		sendto_realops("No more connections allowed (%s)", cptr->name);
-		return NULL;
+		return 0;
 	}
 	mysk.SIN_PORT = 0;
 
@@ -1651,52 +1640,40 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 
 	if (bindip && strcmp("*", bindip))
 	{
-		bzero((char *)&server, sizeof(server));
-		server.SIN_FAMILY = AFINET;
-		server.SIN_PORT = 0;
-#ifndef INET6
-		server.SIN_ADDR.S_ADDR = inet_addr(bindip);
-#else
-		inet_pton(AF_INET6, bindip, server.SIN_ADDR.S_ADDR);
-#endif
-		if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
+		if (!unreal_bind(cptr, cptr->fd, bindip, IsIPV6(cptr)))
 		{
 			report_baderror("error binding to local port for %s:%s", cptr);
-			return NULL;
+			return 0;
 		}
 	}
 
-	bzero((char *)&server, sizeof(server));
-	server.SIN_FAMILY = AFINET;
-	/*
-	 * By this point we should know the IP# of the host listed in the
-	 * conf line, whether as a result of the hostname lookup or the ip#
-	 * being present instead. If we dont know it, then the connect fails.
-	 */
-#ifdef INET6
-	if (!WHOSTENTP(aconf->ipnum.S_ADDR) &&
-	    !inet_pton(AF_INET6, aconf->outgoing.hostname, aconf->ipnum.s6_addr))
-		bcopy(minus_one, aconf->ipnum.s6_addr, IN6ADDRSZ); /* IP->struct failed: make invalid */
-	if (AND16(aconf->ipnum.s6_addr) == 255)
+	set_non_blocking(cptr->fd, cptr);
+	set_sock_opts(cptr->fd, cptr, IsIPV6(cptr));
+
+	if (IsIPV6(cptr))
+	{
+		struct sockaddr_in6 server;
+		memset(&server, 0, sizeof(server));
+		inet_pton(AF_INET6, cptr->ip, &server.sin6_addr);
+		server.sin6_port = htons(aconf->outgoing.port);
+		
+		n = connect(cptr->fd, (struct sockaddr *)&server, sizeof(server));
+	} else {
+		struct sockaddr_in server;
+		memset(&server, 0, sizeof(server));
+		inet_pton(AF_INET, cptr->ip, &server.sin_addr);
+		server.sin_port = htons(aconf->outgoing.port);
+		n = connect(cptr->fd, (struct sockaddr *)&server, sizeof(server));
+	}
+
+#ifndef _WIN32
+	if (n < 0 && (errno != EINPROGRESS))
 #else
-	if (isdigit(*aconf->outgoing.hostname) && (aconf->ipnum.S_ADDR == -1))
-		aconf->ipnum.S_ADDR = inet_addr(aconf->outgoing.hostname);
-	if (aconf->ipnum.S_ADDR == -1)
+	if (n < 0 && (WSAGetLastError() != WSAEINPROGRESS) && (WSAGetLastError() != WSAEWOULDBLOCK))
 #endif
 	{
-		hp = cptr->local->hostp;
-		if (!hp)
-		{
-			Debug((DEBUG_FATAL, "%s: unknown host", aconf->outgoing.hostname));
-			return NULL;
-		}
-		bcopy(hp->h_addr, (char *)&aconf->ipnum, sizeof(struct IN_ADDR));
+		return 0;
 	}
-	bcopy((char *)&aconf->ipnum, (char *)&server.SIN_ADDR, sizeof(struct IN_ADDR));
-	bcopy((char *)&aconf->ipnum, (char *)&cptr->local->ip, sizeof(struct IN_ADDR));
-	cptr->ip = strdup(Inet_ia2p(&cptr->local->ip)); /* can't fail.. can it? */
 	
-	server.SIN_PORT = htons(((aconf->outgoing.port > 0) ? aconf->outgoing.port : portnum));
-	*lenp = sizeof(server);
-	return (struct SOCKADDR *)&server;
+	return 1; /* connected or in progress */
 }

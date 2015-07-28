@@ -888,8 +888,7 @@ struct LocalClient {
 	ConfigItem_class *class;		/* Configuration record associated */
 	int authfd;		/* fd for rfc931 authentication */
         long serial;            /* current serial for send.c functions */
-	struct IN_ADDR ip;	/* keep real ip# too */
-	u_short port;		/* and the remote port# too :-) */
+	u_short port;		/* remote port of client */
 	struct hostent *hostp;
 	u_short watches;	/* Keep track of count of notifies */
 	Link *watch;		/* Links to clients notify-structures */
@@ -1183,7 +1182,7 @@ struct _configitem_link {
 	/* internal: */
 	int	refcount; /**< Reference counter (used so we know if the struct may be freed) */
 	time_t hold; /**< For how long the server is "on hold" for outgoing connects (why?) */
-	struct IN_ADDR ipnum; /**< actual IP to use for outgoing connect (filled in after host is resolved) */
+	char *connect_ip; /**< actual IP to use for outgoing connect (filled in after host is resolved) */
 };
 
 struct _configitem_except {

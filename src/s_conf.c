@@ -2699,9 +2699,6 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 	int  i, ii = 0;
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
-#ifdef INET6
-	short is_ipv4;
-#endif /* INET6 */
 
 	for (aconf = conf_allow; aconf; aconf = (ConfigItem_allow *) aconf->next)
 	{
@@ -2776,9 +2773,6 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		else
 			strlcpy(uhost, sockhost, sizeof(uhost));
 		set_sockhost(cptr, uhost);
-#ifdef INET6
-		is_ipv4 = IN6_IS_ADDR_V4MAPPED(&cptr->local->ip);
-#endif /* INET6 */
 
 		/* FIXME */
 		if (aconf->maxperip)

@@ -61,10 +61,10 @@ void unrealdns_cb_iptoname(void *arg, int status, int timeouts, struct hostent *
 void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct hostent *he);
 void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct hostent *he);
 void unrealdns_delasyncconnects(void);
-static unsigned int unrealdns_haship(void *binaryip, int length);
-static void unrealdns_addtocache(char *name, void *binaryip, int length);
-static char *unrealdns_findcache_byaddr(struct IN_ADDR *addr);
-struct hostent *unreal_create_hostent(char *name, struct IN_ADDR *addr);
+static unsigned int unrealdns_haship(char *ip);
+static void unrealdns_addtocache(char *name, char *ip);
+static char *unrealdns_findcache_ip(char *ip);
+struct hostent *unreal_create_hostent(char *name, char *ip);
 static void unrealdns_freeandremovereq(DNSReq *r);
 void unrealdns_removecacherecord(DNSCache *c);
 
@@ -253,36 +253,33 @@ void unrealdns_addreqtolist(DNSReq *r)
  */
 struct hostent *unrealdns_doclient(aClient *cptr)
 {
-DNSReq *r;
-#ifdef INET6
-char ipv4[4];
-#endif
-static struct hostent *he;
-char *cache_name, ipv6;
+	DNSReq *r;
+	static struct hostent *he;
+	char *cache_name;
 
-	cache_name = unrealdns_findcache_byaddr(&cptr->local->ip);
+	cache_name = unrealdns_findcache_ip(cptr->ip);
 	if (cache_name)
-		return unreal_create_hostent(cache_name, &cptr->local->ip);
+		return unreal_create_hostent(cache_name, cptr->ip);
 
 	/* Create a request */
 	r = MyMallocEx(sizeof(DNSReq));
 	r->cptr = cptr;
-	r->ipv6 = isipv6(&cptr->local->ip);
+	r->ipv6 = IsIPV6(cptr);
 	unrealdns_addreqtolist(r);
 
 	/* Execute it */
-#ifndef INET6
-	/* easy */
-	ares_gethostbyaddr(resolver_channel, &cptr->local->ip, 4, AF_INET, unrealdns_cb_iptoname, r);
-#else
 	if (r->ipv6)
-		ares_gethostbyaddr(resolver_channel, &cptr->local->ip, 16, AF_INET6, unrealdns_cb_iptoname, r);
-	else {
-		/* This is slightly more tricky: convert it to an IPv4 presentation and issue the request with that */
-		memcpy(ipv4, ((char *)&cptr->local->ip) + 12, 4);
-		ares_gethostbyaddr(resolver_channel, ipv4, 4, AF_INET, unrealdns_cb_iptoname, r);
+	{
+		struct in6_addr addr;
+		memset(&addr, 0, sizeof(addr));
+		inet_pton(AF_INET6, cptr->ip, &addr);
+		ares_gethostbyaddr(resolver_channel, &addr, 16, AF_INET, unrealdns_cb_iptoname, r);
+	} else {
+		struct in_addr addr;
+		memset(&addr, 0, sizeof(addr));
+		inet_pton(AF_INET, cptr->ip, &addr);
+		ares_gethostbyaddr(resolver_channel, &addr, 4, AF_INET6, unrealdns_cb_iptoname, r);
 	}
-#endif
 
 	return NULL;
 }
@@ -383,41 +380,30 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 	if (!acptr)
 		goto bad;
 
-	if ((status != 0) ||
-#ifdef INET6
-	    ((he->h_length != 4) && (he->h_length != 16)))
-#else
-	    (he->h_length != 4))
-#endif
+	if ((status != 0) || (ipv6 && (he->h_length != 16)) || (!ipv6 && (he->h_length != 4)))
 	{
-		/* Failed: error code, or data length is not 4 (nor 16) */
+		/* Failed: error code, or data length is incorrect */
 		proceed_normal_client_handshake(acptr, NULL);
 		goto bad;
 	}
 
-	if (!ipv6)
-#ifndef INET6
-		ipv4_addr = acptr->local->ip.S_ADDR;
-#else
-		inet6_to_inet4(&acptr->local->ip, &ipv4_addr);
-#endif
-
 	/* Verify ip->name and name->ip mapping... */
 	for (i = 0; he->h_addr_list[i]; i++)
 	{
-#ifndef INET6
-		if ((he->h_length == 4) && !memcmp(he->h_addr_list[i], &ipv4_addr, 4))
-			break;
-#else
-		if (ipv6)
+		if (r->ipv6)
 		{
-			if ((he->h_length == 16) && !memcmp(he->h_addr_list[i], &acptr->local->ip, 16))
-				break;
+			struct in6_addr addr;
+			if (inet_pton(AF_INET6, acptr->ip, &addr) != 1)
+				continue; /* something fucked */
+			if (!memcmp(he->h_addr_list[i], &addr, 16))
+				break; /* MATCH */
 		} else {
-			if ((he->h_length == 4) && !memcmp(he->h_addr_list[i], &ipv4_addr, 4))
-				break;
+			struct in_addr addr;
+			if (inet_pton(AF_INET, acptr->ip, &addr) != 1)
+				continue; /* something fucked */
+			if (!memcmp(he->h_addr_list[i], &addr, 4))
+				break; /* MATCH */
 		}
-#endif
 	}
 
 	if (!he->h_addr_list[i])
@@ -435,9 +421,10 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 	}
 
 	/* Entry was found, verified, and can be added to cache */
-	unrealdns_addtocache(r->name, &acptr->local->ip, sizeof(acptr->local->ip));
+
+	unrealdns_addtocache(r->name, acptr->ip);
 	
-	he2 = unreal_create_hostent(r->name, &acptr->local->ip);
+	he2 = unreal_create_hostent(r->name, acptr->ip);
 	proceed_normal_client_handshake(acptr, he2);
 
 bad:
@@ -446,9 +433,11 @@ bad:
 
 void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct hostent *he)
 {
-DNSReq *r = (DNSReq *)arg;
-int n;
-struct hostent *he2;
+	DNSReq *r = (DNSReq *)arg;
+	int n;
+	struct hostent *he2;
+	char ipbuf[HOSTLEN+1];
+	char *ip;
 
 	if (!r->linkblock)
 	{
@@ -459,7 +448,6 @@ struct hostent *he2;
 
 	if (status != 0)
 	{
-#ifdef INET6
 		if (r->ipv6)
 		{
 			/* Retry for IPv4... */
@@ -468,7 +456,7 @@ struct hostent *he2;
 
 			return;
 		}
-#endif
+
 		/* fatal error while resolving */
 		sendto_realops("Unable to resolve hostname '%s', when trying to connect to server %s.",
 			r->name, r->linkblock->servername);
@@ -478,11 +466,8 @@ struct hostent *he2;
 	}
 	r->linkblock->refcount--;
 
-#ifdef INET6
-	if (((he->h_length != 4) && (he->h_length != 16)) || !he->h_addr_list[0])
-#else
-	if ((he->h_length != 4) || !he->h_addr_list[0])
-#endif
+	if (!he->h_addr_list[0] || (he->h_length != (r->ipv6 ? 16 : 4)) ||
+	    !(ip = inetntop(r->ipv6 ? AF_INET6 : AF_INET, &he->h_addr_list[0], ipbuf, sizeof(ipbuf))))
 	{
 		/* Illegal response -- fatal */
 		sendto_realops("Unable to resolve hostname '%s', when trying to connect to server %s.",
@@ -490,18 +475,12 @@ struct hostent *he2;
 		unrealdns_freeandremovereq(r);
 		return;
 	}
-
+	
 	/* Ok, since we got here, it seems things were actually succesfull */
 
 	/* Fill in [linkblockstruct]->ipnum */
-#ifdef INET6
-	if (he->h_length == 4)
-		inet4_to_inet6(he->h_addr_list[0], &r->linkblock->ipnum);
-	else
-#endif
-		memcpy(&r->linkblock->ipnum, he->h_addr_list[0], sizeof(struct IN_ADDR));
-
-	he2 = unreal_create_hostent(he->h_name, (struct IN_ADDR *)&he->h_addr_list[0]);
+	r->linkblock->connect_ip = ip;
+	he2 = unreal_create_hostent(he->h_name, ip);
 
 	switch ((n = connect_server(r->linkblock, r->cptr, he2)))
 	{
@@ -523,60 +502,30 @@ struct hostent *he2;
 	/* DONE */
 }
 
-static unsigned int unrealdns_haship(void *binaryip, int length)
+static unsigned int unrealdns_haship(char *ip)
 {
-#ifdef INET6
-u_int32_t alpha, beta;
-#endif
+	extern unsigned hash_nick_name(const char *nname);
 
-	if (length == 4)
-		return (*(unsigned int *)binaryip) % DNS_HASH_SIZE;
-
-#ifndef INET6
-	abort(); /* impossible */
-#else	
-	if (length != 16)
-		abort(); /* impossible */
-	
-	memcpy(&alpha, (char *)binaryip + 8, 4);
-	memcpy(&beta, (char *)binaryip + 12, 4);
-
-	return (alpha ^ beta) % DNS_HASH_SIZE;
-#endif
+	return hash_nick_name(ip) % DNS_HASH_SIZE; /* TODO: improve I guess ;D */
 }
 
-static void unrealdns_addtocache(char *name, void *binaryip, int length)
+static void unrealdns_addtocache(char *name, char *ip)
 {
-unsigned int hashv;
-DNSCache *c, *n;
-struct IN_ADDR addr;
+	unsigned int hashv;
+	DNSCache *c, *n;
 
 	dnsstats.cache_adds++;
-#ifdef INET6
-	/* If it was an ipv4 address, then we need to convert it to ipv4-in-ipv6 first. */
-	if (length == 4)
-	{
-		inet4_to_inet6(binaryip, &addr);
-	} else
-#endif
-		memcpy(&addr, binaryip, length);
 
-	hashv = unrealdns_haship(binaryip, length);
+	hashv = unrealdns_haship(ip);
 
 	/* Check first if it is already present in the cache.
 	 * This is possible, when 2 clients connect at the same time.
 	 */	
 	for (c = cache_hashtbl[hashv]; c; c = c->hnext)
-		if (!memcmp(&addr, &c->addr, sizeof(struct IN_ADDR)))
-			break;
+		if (!strcmp(ip, c->ip))
+			return; /* already present in cache */
 
-	if (c)
-	{
-		/* Already present (don't add duplicate), return. */
-		return;
-	}
-
-	/* Remove last item, if we got too many.. */
+	/* Remove last item, if we got too many entries.. */
 	if (unrealdns_num_cache >= DNS_MAX_ENTRIES)
 	{
 		for (c = cache_list; c->next; c = c->next);
@@ -586,8 +535,8 @@ struct IN_ADDR addr;
 	/* Create record */
 	c = MyMallocEx(sizeof(DNSCache));
 	c->name = strdup(name);
+	c->ip = strdup(ip);
 	c->expires = TStime() + DNSCACHE_TTL;
-	memcpy(&c->addr, &addr, sizeof(addr));
 	
 	/* Add to hash table */
 	if (cache_hashtbl[hashv])
@@ -612,15 +561,15 @@ struct IN_ADDR addr;
 /** Search the cache for a confirmed ip->name and name->ip match, by address.
  * @returns The resolved hostname, or NULL if not found in cache.
  */
-static char *unrealdns_findcache_byaddr(struct IN_ADDR *addr)
+static char *unrealdns_findcache_ip(char *ip)
 {
-unsigned int hashv;
-DNSCache *c;
+	unsigned int hashv;
+	DNSCache *c;
 
-	hashv = unrealdns_haship(addr, sizeof(struct IN_ADDR));
+	hashv = unrealdns_haship(ip);
 	
 	for (c = cache_hashtbl[hashv]; c; c = c->hnext)
-		if (!memcmp(addr, &c->addr, sizeof(struct IN_ADDR)))
+		if (!strcmp(ip, c->ip))
 		{
 			dnsstats.cache_hits++;
 			return c->name;
@@ -655,7 +604,7 @@ unsigned int hashv;
 		c->hprev->hnext = c->hnext;
 	else {
 		/* new hash HEAD */
-		hashv = unrealdns_haship(&c->addr, sizeof(struct IN_ADDR));
+		hashv = unrealdns_haship(c->ip);
 		if (cache_hashtbl[hashv] != c)
 			abort(); /* impossible */
 		cache_hashtbl[hashv] = c->hnext;
@@ -682,25 +631,35 @@ DNSCache *c, *next;
 		{
 #if 0
 			sendto_realops(sptr, "[Syzop/DNS] Expire: %s [%s] (%ld < %ld)",
-				c->name, Inet_ia2p(&c->addr), c->expires, TStime());
+				c->name, c->ip, c->expires, TStime());
 #endif
 			unrealdns_removecacherecord(c);
 		}
 	}
 }
 
-struct hostent *unreal_create_hostent(char *name, struct IN_ADDR *addr)
+struct hostent *unreal_create_hostent(char *name, char *ip)
 {
 struct hostent *he;
 
 	/* Create a hostent structure (I HATE HOSTENTS) and return it.. */
 	he = MyMallocEx(sizeof(struct hostent));
 	he->h_name = strdup(name);
-	he->h_addrtype = AFINET;
-	he->h_length = sizeof(struct IN_ADDR);
-	he->h_addr_list = MyMallocEx(sizeof(char *) * 2); /* alocate an array of 2 pointers */
-	he->h_addr_list[0] = MyMallocEx(sizeof(struct IN_ADDR));
-	memcpy(he->h_addr_list[0], addr, sizeof(struct IN_ADDR));
+	if (strchr(ip, ':'))
+	{
+		/* IPv6 */
+		he->h_addrtype = AF_INET6;
+		he->h_length = sizeof(struct in6_addr);
+		he->h_addr_list = MyMallocEx(sizeof(char *) * 2); /* alocate an array of 2 pointers */
+		he->h_addr_list[0] = MyMallocEx(sizeof(struct in6_addr));
+		inet_pton(AF_INET6, ip, he->h_addr_list[0]);
+	} else {
+		he->h_addrtype = AF_INET;
+		he->h_length = sizeof(struct in_addr);
+		he->h_addr_list = MyMallocEx(sizeof(char *) * 2); /* alocate an array of 2 pointers */
+		he->h_addr_list[0] = MyMallocEx(sizeof(struct in_addr));
+		inet_pton(AF_INET, ip, he->h_addr_list[0]);
+	}
 
 	return he;
 }
@@ -770,14 +729,13 @@ char *param;
 	{
 		sendtxtnumeric(sptr, "DNS CACHE List (%u items):", unrealdns_num_cache);
 		for (c = cache_list; c; c = c->next)
-			sendtxtnumeric(sptr, " %s [%s]", c->name, Inet_ia2p(&c->addr));
+			sendtxtnumeric(sptr, " %s [%s]", c->name, c->ip);
 	} else
 	if (*param == 'r') /* LIST REQUESTS */
 	{
 		sendtxtnumeric(sptr, "DNS Request List:");
 		for (r = requests; r; r = r->next)
-			sendtxtnumeric(sptr, " %s",
-				r->cptr ? Inet_ia2p(&r->cptr->local->ip) : "<client lost>");
+			sendtxtnumeric(sptr, " %s", r->cptr ? r->cptr->ip : "<client lost>");
 	} else
 	if (*param == 'c') /* CLEAR CACHE */
 	{

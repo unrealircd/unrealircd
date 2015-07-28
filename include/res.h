@@ -40,7 +40,7 @@ struct _dnscache {
 	DNSCache *prev, *next;		/**< Previous and next in linked list */
 	DNSCache *hprev, *hnext;	/**< Previous and next in hash list */
 	char *name;					/**< The hostname */
-	struct IN_ADDR addr;		/**< Stored IP address */
+	char *ip;					/**< The IP address */
 	time_t expires;				/**< When record expires */
 };
 

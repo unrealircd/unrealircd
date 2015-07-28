@@ -701,7 +701,7 @@ extern void unrealdns_delasyncconnects(void);
 extern int is_autojoin_chan(char *chname);
 extern void unreal_free_hostent(struct hostent *he);
 extern int match_esc(const char *mask, const char *name);
-extern struct hostent *unreal_create_hostent(char *name, struct IN_ADDR *addr);
+extern struct hostent *unreal_create_hostent(char *name, char *ip);
 extern char *unreal_time_synch_error(void);
 extern int unreal_time_synch(int timeout);
 extern char *getcloak(aClient *sptr);
