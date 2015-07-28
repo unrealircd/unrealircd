@@ -98,21 +98,6 @@ ConfigItem_ban *bconf;
 
 	j = 1;
 
-	list_for_each_entry(acptr, &unknown_list, lclient_node)
-	{
-		if (IsUnknown(acptr) &&
-#ifndef INET6
-			acptr->local->ip.S_ADDR == cptr->local->ip.S_ADDR)
-#else
-			!bcmp(acptr->local->ip.S_ADDR, cptr->local->ip.S_ADDR, sizeof(cptr->local->ip.S_ADDR)))
-#endif
-		{
-			j++;
-			if (j > MAXUNKNOWNCONNECTIONSPERIP)
-				return exit_client(cptr, cptr, &me, "Too many unknown connections from your IP");
-		}
-	}
-
 	if ((bconf = Find_ban(cptr, Inet_ia2p(&cptr->local->ip), CONF_BAN_IP)))
 	{
 		ircsnprintf(zlinebuf, BUFSIZE,
