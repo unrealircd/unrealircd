@@ -98,7 +98,7 @@ ConfigItem_ban *bconf;
 
 	j = 1;
 
-	if ((bconf = Find_ban(cptr, Inet_ia2p(&cptr->local->ip), CONF_BAN_IP)))
+	if ((bconf = Find_ban(cptr, NULL, CONF_BAN_IP)))
 	{
 		ircsnprintf(zlinebuf, BUFSIZE,
 			"You are not welcome on this server: %s. Email %s for more information.",
@@ -120,7 +120,7 @@ ConfigItem_ban *bconf;
 			return exit_client(cptr, cptr, &me, zlinebuf);
 		}
 		else if (val == 1)
-			add_throttling_bucket(&cptr->local->ip);
+			add_throttling_bucket(cptr);
 	}
 
 	return 0;
