@@ -752,3 +752,4 @@ extern int inet_pton4(const char *src, unsigned char *dst);
 extern int inet_pton6(const char *src, unsigned char *dst);
 extern int unreal_bind(int fd, char *ip, int port, int ipv6);
 extern int unreal_connect(int fd, char *ip, int port, int ipv6);
+extern int is_valid_ip(char *str);

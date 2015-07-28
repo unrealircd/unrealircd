@@ -181,6 +181,7 @@ int optmask;
 		optmask |= ARES_OPT_SERVERS;
 		options.servers = MyMallocEx(sizeof(struct in_addr));
 		options.servers[0].s_addr = inet_addr(NAME_SERVER);
+		// TODO/FIXME: how about IPv6 nameservers? ^ 
 		options.nservers = 1;
 		n = ares_init_options(&resolver_channel, &options, optmask);
 		if (n != ARES_SUCCESS)
@@ -771,8 +772,8 @@ char *param;
 		if(optmask & ARES_OPT_SERVERS)
 		{
 			sendtxtnumeric(sptr, "   # of servers: %d", inf.nservers);
-			for (i = 0; i < inf.nservers; i++)
-				sendtxtnumeric(sptr, "      server #%d: %s", i+1, inet_ntoa(inf.servers[i]));	
+/*			for (i = 0; i < inf.nservers; i++)
+				sendtxtnumeric(sptr, "      server #%d: %s", i+1, inet_ntoa(inf.servers[i]));	(TODO/UPG) */
 		}
 		if(optmask & ARES_OPT_DOMAINS)
 		{

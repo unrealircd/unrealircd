@@ -7550,12 +7550,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 						CheckNull(cepp);
 						if (!strcmp(cepp->ce_varname, "bind-ip")) {
-							struct in_addr in;
 							CheckDuplicate(cepp, dns_bind_ip, "link::bind-ip");
 							if (strcmp(cepp->ce_vardata, "*"))
 							{
-								in.s_addr = inet_addr(cepp->ce_vardata);
-								if (strcmp((char *)inet_ntoa(in), cepp->ce_vardata))
+								if (!is_valid_ip(cepp->ce_vardata))
 								{
 									config_error("%s:%i: set::link::bind-ip (%s) is not a valid IP",
 										cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
@@ -7577,11 +7575,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					CheckDuplicate(cepp, dns_retries, "dns::retries");
 				}
 				else if (!strcmp(cepp->ce_varname, "nameserver")) {
-					struct in_addr in;
 					CheckDuplicate(cepp, dns_nameserver, "dns::nameserver");
-
-					in.s_addr = inet_addr(cepp->ce_vardata);
-					if (strcmp((char *)inet_ntoa(in), cepp->ce_vardata))
+					
+					if (!is_valid_ip(cepp->ce_vardata))
 					{
 						config_error("%s:%i: set::dns::nameserver (%s) is not a valid IP",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
@@ -7591,12 +7587,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					}
 				}
 				else if (!strcmp(cepp->ce_varname, "bind-ip")) {
-					struct in_addr in;
 					CheckDuplicate(cepp, dns_bind_ip, "dns::bind-ip");
 					if (strcmp(cepp->ce_vardata, "*"))
 					{
-						in.s_addr = inet_addr(cepp->ce_vardata);
-						if (strcmp((char *)inet_ntoa(in), cepp->ce_vardata))
+						if (!is_valid_ip(cepp->ce_vardata))
 						{
 							config_error("%s:%i: set::dns::bind-ip (%s) is not a valid IP",
 								cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
