@@ -409,11 +409,6 @@ int del_listmode(Ban **list, aChannel *chptr, char *banid)
  * Moved to struct.h
  */
 
-/* Those pointers can be used by extended ban modules so they
- * don't have to do 4 make_nick_user_host()'s all the time:
- */
-char *ban_realhost = NULL, *ban_virthost = NULL, *ban_cloakhost = NULL, *ban_ip = NULL;
-
 /** is_banned - Check if a user is banned on a channel.
  * @param sptr   Client to check (can be remote client)
  * @param chptr  Channel to check
@@ -426,7 +421,7 @@ inline Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
 	return is_banned_with_nick(sptr, chptr, type, sptr->name);
 }
 
-/** ban_check_mask - Checks if the current user in ban checking (ban_ip, etc) matches the specified n!u@h mask -or- run an extended ban.
+/** ban_check_mask - Checks if the user matches the specified n!u@h mask -or- run an extended ban.
  * @param sptr         Client to check (can be remote client)
  * @param chptr        Channel to check
  * @param banstr       Mask string to check user
@@ -455,7 +450,7 @@ inline int ban_check_mask(aClient *sptr, aChannel *chptr, char *banstr, int type
 	else
 	{
 		/* Is a n!u@h mask. */
-		return extban_is_banned_helper(banstr);
+		return match_user(banstr, sptr, MATCH_CHECK_ALL);
 	}
 }
 
@@ -469,46 +464,8 @@ inline int ban_check_mask(aClient *sptr, aChannel *chptr, char *banstr, int type
 Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 {
 	Ban *tmp, *tmp2;
-	char *s;
-	static char realhost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char cloakhost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char virthost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 24];
-	Extban *extban;
 
-	if (!IsPerson(sptr) || !chptr->banlist)
-		return NULL;
-
-	ban_realhost = realhost;
-	ban_ip = ban_virthost = ban_cloakhost = NULL;
-
-	/* Might it be possible in the future to include the possiblity for SupportNICKIP(sptr->from), SupportCLK(sptr->from)? -- aquanight */
-	/* Nope, because servers not directly connected to the server in question have no idea about the capabilities at all.
-	 * However, there's no need for a MyConnect() requirement, just check if GetIP() is non-NULL and
-	 * if sptr->user->cloakedhost contains anything... -- Syzop
-	 */
-	if (GetIP(sptr))
-	{
-		make_nick_user_host_r(nuip, nick, sptr->user->username, GetIP(sptr));
-		ban_ip = nuip;
-	}
-	
-	if (*sptr->user->cloakedhost)
-	{
-		make_nick_user_host_r(cloakhost, nick, sptr->user->username, sptr->user->cloakedhost);
-		ban_cloakhost = cloakhost;
-	}
-
-	if (IsSetHost(sptr) && strcmp(sptr->user->realhost, sptr->user->virthost))
-	{
-		make_nick_user_host_r(virthost, nick, sptr->user->username, sptr->user->virthost);
-		ban_virthost = virthost;
-	}
-
-
-	make_nick_user_host_r(realhost, nick, sptr->user->username, sptr->user->realhost);
-
-	/* We now check +b first, if a +b is found we then see if there is a +e.
+	/* We check +b first, if a +b is found we then see if there is a +e.
 	 * If a +e was found we return NULL, if not, we return the ban.
 	 */
 	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
@@ -526,17 +483,6 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 	}
 
 	return (tmp);
-}
-
-int extban_is_banned_helper(char *buf)
-{
-	if ((match(buf, ban_realhost) == 0) ||
-	    (ban_virthost && (match(buf, ban_virthost) == 0)) ||
-	    (ban_ip && (match(buf, ban_ip) == 0)) ||
-	    (ban_cloakhost && (match(buf, ban_cloakhost) == 0)) )
-		return 1;
-	
-	return 0;
 }
 
 /*
@@ -1012,41 +958,7 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 
 int find_invex(aChannel *chptr, aClient *sptr)
 {
-	/* This routine is basically a copy-paste of is_banned_with_nick, with modifications, for invex */
 	Ban *inv;
-	char *s;
-	static char realhost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char cloakhost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char virthost[NICKLEN + USERLEN + HOSTLEN + 24];
-	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 24];
-	Extban *extban;
-
-	if (!IsPerson(sptr) || !chptr->invexlist)
-		return 0;
-
-	ban_realhost = realhost;
-	ban_ip = ban_virthost = ban_cloakhost = NULL;
-
-	if (GetIP(sptr))
-	{
-		make_nick_user_host_r(nuip, sptr->name, sptr->user->username, GetIP(sptr));
-		ban_ip = nuip;
-	}
-	
-	if (*sptr->user->cloakedhost)
-	{
-		make_nick_user_host_r(cloakhost, sptr->name, sptr->user->username, sptr->user->cloakedhost);
-		ban_cloakhost = cloakhost;
-	}
-
-	if (IsSetHost(sptr) && strcmp(sptr->user->realhost, sptr->user->virthost))
-	{
-		make_nick_user_host_r(virthost, sptr->name, sptr->user->username, sptr->user->virthost);
-		ban_virthost = virthost;
-	}
-
-
-	make_nick_user_host_r(realhost, sptr->name, sptr->user->username, sptr->user->realhost);
 
 	for (inv = chptr->invexlist; inv; inv = inv->next)
 		if (ban_check_mask(sptr, chptr, inv->banstr, BANCHK_JOIN, 0))
