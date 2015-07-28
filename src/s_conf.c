@@ -7550,7 +7550,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 						CheckNull(cepp);
 						if (!strcmp(cepp->ce_varname, "bind-ip")) {
-							CheckDuplicate(cepp, dns_bind_ip, "link::bind-ip");
+							CheckDuplicate(cepp, link_bind_ip, "link::bind-ip");
 							if (strcmp(cepp->ce_vardata, "*"))
 							{
 								if (!is_valid_ip(cepp->ce_vardata))

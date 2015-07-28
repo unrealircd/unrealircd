@@ -279,6 +279,7 @@ struct SetCheck {
 	unsigned has_dns_retries:1;
 	unsigned has_dns_nameserver:1;
 	unsigned has_dns_bind_ip:1;
+	unsigned has_link_bind_ip:1;
 	unsigned has_throttle_period:1;
 	unsigned has_throttle_connections:1;
 	unsigned has_kline_address:1;
