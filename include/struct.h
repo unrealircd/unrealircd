@@ -1703,12 +1703,12 @@ struct PendingNet {
 	aPendingServer *servers; /**< The list of servers connected to the client */
 };
 
-void	init_throttling_hash();
-int	hash_throttling(struct IN_ADDR *in);
-struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in);
-void	add_throttling_bucket(struct IN_ADDR *in);
-void	del_throttling_bucket(struct ThrottlingBucket *bucket);
-int	throttle_can_connect(aClient *, struct IN_ADDR *in);
+void init_throttling_hash();
+int hash_throttling(struct IN_ADDR *in);
+struct ThrottlingBucket *find_throttling_bucket(aClient *);
+void add_throttling_bucket(aClient *);
+void del_throttling_bucket(struct ThrottlingBucket *bucket);
+int throttle_can_connect(aClient *);
 
 #define VERIFY_OPERCOUNT(clnt,tag) { if (IRCstats.operators < 0) verify_opercount(clnt,tag); } while(0)
 

@@ -757,9 +757,10 @@ int	hash_throttling(struct IN_ADDR *in)
 #endif
 }
 
-struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in)
+struct	ThrottlingBucket *find_throttling_bucket(aClient *acptr)
 {
-	int			hash = 0;
+	struct IN_ADDR *in = &acptr->local->ip;
+	int hash = 0;
 	struct ThrottlingBucket *p;
 	hash = hash_throttling(in);
 	
@@ -814,10 +815,11 @@ EVENT(e_clean_out_throttling_buckets)
 	return;
 }
 
-void	add_throttling_bucket(struct IN_ADDR *in)
+void add_throttling_bucket(aClient *acptr)
 {
 	int	hash;
 	struct	ThrottlingBucket	*n;
+	struct IN_ADDR *in = &acptr->local->ip;
 	
 	n = MyMalloc(sizeof(struct ThrottlingBucket));	
 	n->next = n->prev = NULL; 
@@ -829,7 +831,7 @@ void	add_throttling_bucket(struct IN_ADDR *in)
 	return;
 }
 
-void	del_throttling_bucket(struct ThrottlingBucket *bucket)
+void del_throttling_bucket(struct ThrottlingBucket *bucket)
 {
 	int	hash;
 	hash = hash_throttling(&bucket->in);
@@ -844,14 +846,15 @@ void	del_throttling_bucket(struct ThrottlingBucket *bucket)
  * @retval 2 Allowed, not in list or is an exception.
  * @see add_connection()
  */
-int	throttle_can_connect(aClient *sptr, struct IN_ADDR *in)
+int	throttle_can_connect(aClient *sptr)
 {
 	struct ThrottlingBucket *b;
+	struct IN_ADDR *in = &sptr->local->ip;
 
 	if (!THROTTLING_PERIOD || !THROTTLING_COUNT)
 		return 2;
 
-	if (!(b = find_throttling_bucket(in)))
+	if (!(b = find_throttling_bucket(sptr)))
 		return 1;
 	else
 	{

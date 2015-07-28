@@ -128,7 +128,7 @@ ConfigItem_ban *bconf;
 	else
 	{
 		int val;
-		if (!(val = throttle_can_connect(cptr, &cptr->local->ip)))
+		if (!(val = throttle_can_connect(cptr)))
 		{
 			ircsnprintf(zlinebuf, BUFSIZE, "Throttled: Reconnecting too fast - Email %s for more information.",
 					KLINE_ADDRESS);
