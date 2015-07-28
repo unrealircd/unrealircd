@@ -1222,14 +1222,14 @@ void sendto_connectnotice(aClient *acptr, int disconnect, char *comment)
 
 		ircsnprintf(connect, sizeof(connect),
 		    "*** Client connecting: %s (%s@%s) [%s] {%s}%s", acptr->name,
-		    acptr->user->username, acptr->user->realhost, Inet_ia2p(&acptr->local->ip),
+		    acptr->user->username, acptr->user->realhost, acptr->ip,
 		    acptr->local->class ? acptr->local->class->name : "0",
 		    secure);
 	}
 	else
 	{
 		ircsnprintf(connect, sizeof(connect), "*** Client exiting: %s (%s@%s) [%s] (%s)",
-			acptr->name, acptr->user->username, acptr->user->realhost, Inet_ia2p(&acptr->local->ip), comment);
+			acptr->name, acptr->user->username, acptr->user->realhost, acptr->ip, comment);
 	}
 
 	list_for_each_entry(cptr, &oper_list, special_node)
