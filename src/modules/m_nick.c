@@ -1317,9 +1317,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		/*
 		 * following block for the benefit of time-dependent K:-lines
 		 */
-		if ((bconf =
-		    Find_ban(sptr, make_user_host(user->username, user->realhost),
-		    CONF_BAN_USER)))
+		if ((bconf = Find_ban(sptr, NULL, CONF_BAN_USER)))
 		{
 			ircstp->is_ref++;
 			sendto_one(cptr,
@@ -1527,8 +1525,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 	if (MyConnect(sptr))
 	{
-		char userhost[USERLEN + HOSTLEN + 6];
-
 		sendto_connectnotice(sptr, 0, NULL); /* moved down, for modules. */
 
 		/* Send password from sptr->local->passwd to NickServ for identification,
@@ -1559,7 +1555,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		if (user->snomask)
 			sendto_one(sptr, rpl_str(RPL_SNOMASK),
 				me.name, sptr->name, get_snostr(user->snomask));
-		strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof(userhost));
 		
 		/* Make creation time the real 'online since' time, excluding registration time.
 		 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean
@@ -1579,10 +1574,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			return dospamfilter_viruschan(sptr, savetkl, SPAMF_USER); /* [RETURN!] */
 
 		/* Force the user to join the given chans -- codemastr */
-		for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next) {
-			if (!match(tlds->mask, userhost))
-				break;
-		}
+		tlds = Find_tld(sptr);
+
 		if (tlds && !BadPtr(tlds->channel)) {
 			char *chans[3] = {
 				sptr->name,
