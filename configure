@@ -6017,21 +6017,6 @@ $as_echo "#define NEED_INET_NTOA /**/" >>confdefs.h
 fi
 done
 
-for ac_func in inet_netof
-do :
-  ac_fn_c_check_func "$LINENO" "inet_netof" "ac_cv_func_inet_netof"
-if test "x$ac_cv_func_inet_netof" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_INET_NETOF 1
-_ACEOF
-
-else
-
-$as_echo "#define NEED_INET_NETOF /**/" >>confdefs.h
-
-fi
-done
-
 LIBS="$save_libs"
 for ac_func in syslog
 do :

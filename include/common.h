@@ -128,10 +128,6 @@ extern unsigned long inet_addr(char *);
 extern char *inet_ntoa(struct IN_ADDR);
 #endif
 
-#ifdef NEED_INET_NETOF
-extern int inet_netof(struct IN_ADDR);
-#endif
-
 #ifndef HAVE_INET_NTOP
 const char *inet_ntop(int, const void *, char *, size_t);
 #endif

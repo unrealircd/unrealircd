@@ -100,9 +100,6 @@
 /* Define to 1 if you have the `inet_addr' function. */
 #undef HAVE_INET_ADDR
 
-/* Define to 1 if you have the `inet_netof' function. */
-#undef HAVE_INET_NETOF
-
 /* Define to 1 if you have the `inet_ntoa' function. */
 #undef HAVE_INET_NTOA
 
@@ -258,9 +255,6 @@
 
 /* Define if you need inet_addr */
 #undef NEED_INET_ADDR
-
-/* Define if you need inet_netof */
-#undef NEED_INET_NETOF
 
 /* Define if you need inet_ntoa */
 #undef NEED_INET_NTOA

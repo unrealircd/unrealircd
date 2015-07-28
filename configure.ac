@@ -445,7 +445,6 @@ save_libs="$LIBS"
 LIBS="$LIBS $SOCKLIB $INETLIB"
 AC_CHECK_FUNCS(inet_addr,,AC_DEFINE([NEED_INET_ADDR], [], [Define if you need inet_addr]))
 AC_CHECK_FUNCS(inet_ntoa,,AC_DEFINE([NEED_INET_NTOA], [], [Define if you need inet_ntoa]))
-AC_CHECK_FUNCS(inet_netof,,AC_DEFINE([NEED_INET_NETOF], [], [Define if you need inet_netof]))
 LIBS="$save_libs"
 AC_CHECK_FUNCS(syslog,AC_DEFINE([HAVE_SYSLOG], [], [Define if you have syslog]))
 AC_SUBST(STRTOUL)

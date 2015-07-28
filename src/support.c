@@ -157,28 +157,6 @@ char *inetntoa(char *in)
 
 	return buf;
 }
-#ifndef INET6
-#ifdef NEED_INET_NETOF
-/*
-**	inet_netof --	return the net portion of an internet number
-**			argv 11/90
-*/
-
-int  inet_netof(struct IN_ADDR in)
-{
-	int  addr = in.s_net;
-
-	if (addr & 0x80 == 0)
-		return ((int)in.s_net);
-
-	if (addr & 0x40 == 0)
-		return ((int)in.s_net * 256 + in.s_host);
-
-	return ((int)in.s_net * 256 + in.s_host * 256 + in.s_lh);
-}
-
-#endif /* NEED_INET_NETOF */
-#endif
 
 /*
  * inetntop: return the : notation of a given IPv6 internet number.
@@ -2256,19 +2234,6 @@ int inet_pton6(const char *src, unsigned char *dst)
 	/* bcopy(tmp, dst, IN6ADDRSZ); */
 	memcpy(dst, tmp, IN6ADDRSZ);
 	return (1);
-}
-
-/** Finds out if an address is IPv6, returns 1 if so, otherwise 0 */
-int isipv6(struct IN_ADDR *addr)
-{
-#ifndef INET6
-	return 0;
-#else
-static char compareme[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff }; /* First part of IPv4-in-IPv6 (::ffff) */
-
-	/* If memcmp returns non-zero it means it did not match, hence it is ipv6, otherwise it is ipv4 */
-	return memcmp(addr, compareme, 12) ? 1 : 0;
-#endif
 }
 
 /** Transforms an IPv4 address (assumed in network byte order) to inet6 (as ::ffff:a.b.c.d). */

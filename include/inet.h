@@ -38,7 +38,6 @@ extern const char *inet_ntop(int af, const void *src, char *dst, size_t cnt);
 extern __u_l inet_addr(char *);
 extern char *inet_ntoa(struct in_addr);
 extern int inet_aton(const char *, struct in_addr *);
-extern int  inet_netof(struct in_addr);
 # endif
 extern __u_l inet_makeaddr(int, int);
 extern __u_l inet_network(char *);
