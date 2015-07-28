@@ -1478,8 +1478,6 @@ aClient *acptr;
 aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 {
 	aTKline *lp;
-	char *chost, *cname, *cip;
-	char host[NICKLEN+USERLEN+HOSTLEN+6], hostbuf2[NICKLEN+USERLEN+HOSTLEN+6], *host2 = NULL;
 	int	points = 0;
 	ConfigItem_except *excepts;
 	*ishold = 0;
@@ -1509,18 +1507,6 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 		return lp;
 	}
 
-	chost = cptr->user ? cptr->user->realhost : (MyConnect(cptr) ? cptr->local->sockhost : "unknown");
-	cname = cptr->user ? cptr->user->username : "unknown";
-	strlcpy(host, make_user_host(cname, chost), sizeof(host));
-
-	cip = GetIP(cptr);
-	if (cip)
-	{
-		strlcpy(hostbuf2, make_user_host(cname, cip), sizeof(hostbuf2));
-		host2 = hostbuf2;
-	}
-	
-	
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next)
 	{
 		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != TKL_NICK)
