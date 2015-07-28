@@ -1669,9 +1669,9 @@ struct _cmdoverride {
 struct ThrottlingBucket
 {
 	struct ThrottlingBucket *prev, *next;
-	struct IN_ADDR	in;
-	time_t		since;
-	char		count;
+	char *ip;
+	time_t since;
+	char count;
 };
 
 typedef struct {
@@ -1707,7 +1707,6 @@ struct PendingNet {
 };
 
 void init_throttling_hash();
-int hash_throttling(struct IN_ADDR *in);
 struct ThrottlingBucket *find_throttling_bucket(aClient *);
 void add_throttling_bucket(aClient *);
 void del_throttling_bucket(struct ThrottlingBucket *bucket);

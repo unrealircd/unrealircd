@@ -741,52 +741,44 @@ long v;
 	EventAddEx(NULL, "bucketcleaning", v, 0, e_clean_out_throttling_buckets, NULL);
 }
 
-int	hash_throttling(struct IN_ADDR *in)
+int	hash_throttling(char *ip)
 {
-#ifdef INET6
-	u_char *cp;
-	unsigned int alpha, beta;
-#endif
-#ifndef INET6
-	return ((unsigned int)in->s_addr % THROTTLING_HASH_SIZE); 
-#else
-	cp = (u_char *) &in->s6_addr;
-	memcpy(&alpha, cp + 8, sizeof(alpha));
-	memcpy(&beta, cp + 12, sizeof(beta));
-	return ((alpha ^ beta) % THROTTLING_HASH_SIZE);
-#endif
+	return hash_nick_name(ip) %THROTTLING_HASH_SIZE; // TODO: improve/fix ;)
 }
 
 struct	ThrottlingBucket *find_throttling_bucket(aClient *acptr)
 {
-	struct IN_ADDR *in = &acptr->local->ip;
 	int hash = 0;
 	struct ThrottlingBucket *p;
-	hash = hash_throttling(in);
+	hash = hash_throttling(acptr->ip);
 	
 	for (p = ThrottlingHash[hash]; p; p = p->next)
 	{
-		if (bcmp(in, &p->in, sizeof(struct IN_ADDR)) == 0)
-			return(p);
+		if (!strcmp(p->ip, acptr->ip))
+			return p;
 	}
+	
 	return NULL;
 }
 
 EVENT(e_clean_out_throttling_buckets)
 {
-	struct ThrottlingBucket *n;
+	struct ThrottlingBucket *n, *n_next;
 	int	i;
-	struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 	static time_t t = 0;
 		
 	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
-		for (n = ThrottlingHash[i]; n; n = n->next)
+	{
+		for (n = ThrottlingHash[i]; n; n = n_next)
+		{
+			n_next = n->next;
 			if ((TStime() - n->since) > (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15))
 			{
-				z.next = (struct ThrottlingBucket *) DelListItem(n, ThrottlingHash[i]);
+				DelListItem(n, ThrottlingHash[i]);
 				MyFree(n);
-				n = &z;
 			}
+		}
+	}
 
 	if (!t || (TStime() - t > 30))
 	{
@@ -819,14 +811,13 @@ void add_throttling_bucket(aClient *acptr)
 {
 	int	hash;
 	struct	ThrottlingBucket	*n;
-	struct IN_ADDR *in = &acptr->local->ip;
 	
-	n = MyMalloc(sizeof(struct ThrottlingBucket));	
+	n = MyMallocEx(sizeof(struct ThrottlingBucket));	
 	n->next = n->prev = NULL; 
-	bcopy(in, &n->in, sizeof(struct IN_ADDR));
+	n->ip = strdup(acptr->ip);
 	n->since = TStime();
 	n->count = 1;
-	hash = hash_throttling(in);
+	hash = hash_throttling(acptr->ip);
 	AddListItem(n, ThrottlingHash[hash]);
 	return;
 }
@@ -834,7 +825,7 @@ void add_throttling_bucket(aClient *acptr)
 void del_throttling_bucket(struct ThrottlingBucket *bucket)
 {
 	int	hash;
-	hash = hash_throttling(&bucket->in);
+	hash = hash_throttling(bucket->ip);
 	DelListItem(bucket, ThrottlingHash[hash]);
 	MyFree(bucket);
 	return;
@@ -849,7 +840,6 @@ void del_throttling_bucket(struct ThrottlingBucket *bucket)
 int	throttle_can_connect(aClient *sptr)
 {
 	struct ThrottlingBucket *b;
-	struct IN_ADDR *in = &sptr->local->ip;
 
 	if (!THROTTLING_PERIOD || !THROTTLING_COUNT)
 		return 2;
