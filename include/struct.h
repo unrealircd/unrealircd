@@ -1147,6 +1147,7 @@ struct _configitem_listen {
 	int		port;
 	int		options, clients;
 	int		fd;
+	int     ipv6;
 };
 
 struct _configitem_vhost {

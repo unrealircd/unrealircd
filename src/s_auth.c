@@ -100,9 +100,12 @@ void start_auth(aClient *cptr)
 		return;
 	}
 
-#if defined(INET6) && defined(IPV6_V6ONLY)
-        int opt = 0;
-        setsockopt(cptr->local->authfd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
+#if defined(IPV6_V6ONLY)
+	if (IsIPV6(cptr))
+	{
+		int opt = 1;
+		setsockopt(cptr->local->authfd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
+	}
 #endif
 
 	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))

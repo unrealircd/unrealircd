@@ -92,6 +92,12 @@ static unsigned char minus_one[] =
 #define SET_ERRNO(x) WSASetLastError(x)
 #endif /* _WIN32 */
 
+#ifndef SOMAXCONN
+# define LISTEN_SIZE	(5)
+#else
+# define LISTEN_SIZE	(SOMAXCONN)
+#endif
+
 extern char backupbuf[8192];
 int      OpenFiles = 0;    /* GLOBAL - number of files currently open */
 int readcalls = 0;
@@ -100,7 +106,8 @@ static struct SOCKADDR_IN mysk;
 static struct SOCKADDR *connect_inet(ConfigItem_link *, aClient *, int *);
 void completed_connection(int, int, void *);
 static int check_init(aClient *, char *, size_t);
-void set_sock_opts(int, aClient *);
+void set_sock_opts(int, aClient *, int);
+void set_ipv6_opts(int);
 static char readbuf[BUFSIZE];
 char zlinebuf[BUFSIZE];
 extern char *version;
@@ -288,14 +295,7 @@ void report_baderror(char *text, aClient *cptr)
 	return;
 }
 
-/*
- * inetport
- *
- * Create a socket in the AFINET domain, bind it to the port given in
- * 'port' and listen to it.  Connections are accepted to this socket
- * depending on the IP# mask given by 'name'.  Returns the fd of the
- * socket created or -1 on error.
- */
+/** Accept an incoming client. */
 static void listener_accept(int fd, int revents, void *data)
 {
 	ConfigItem_listen *cptr = data;
@@ -309,6 +309,9 @@ static void listener_accept(int fd, int revents, void *data)
 	}
 
 	ircstp->is_ac++;
+
+	set_sock_opts(fd, NULL, cptr->ipv6);
+	set_non_blocking(fd, NULL);
 
 	if ((++OpenFiles >= MAXCLIENTS) || (fd >= MAXCLIENTS))
 	{
@@ -330,44 +333,47 @@ static void listener_accept(int fd, int revents, void *data)
 	(void)add_connection(cptr, cli_fd);
 }
 
-int  inetport(ConfigItem_listen *listener, char *name, int port)
+/*
+ * inetport
+ *
+ * Create a socket in the AFINET domain, bind it to the port given in
+ * 'port' and listen to it.  Connections are accepted to this socket
+ * depending on the IP# mask given by 'name'.  Returns the fd of the
+ * socket created or -1 on error.
+ */
+int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 {
-	static struct SOCKADDR_IN server;
-	int  ad[4], len = sizeof(server), result;
-	char ipname[64];
+	int result;
 
-	if (BadPtr(name))
-		name = "*";
-	ad[0] = ad[1] = ad[2] = ad[3] = 0;
-
-	/*
-	 * do it this way because building ip# from separate values for each
-	 * byte requires endian knowledge or some nasty messing. Also means
-	 * easy conversion of "*" 0.0.0.0 or 134.* to 134.0.0.0 :-)
-	 */
-#ifndef INET6
-	(void)sscanf(name, "%d.%d.%d.%d", &ad[0], &ad[1], &ad[2], &ad[3]);
-	(void)ircsnprintf(ipname, sizeof(ipname), "%d.%d.%d.%d", ad[0], ad[1], ad[2], ad[3]);
-#else
-	if (*name == '*')
-		ircsnprintf(ipname, sizeof(ipname), "::");
-	else
-		strlcpy(ipname, name, sizeof(ipname));
-#endif
-
-	/*
-	 * At first, open a new socket
-	 */
-	if (listener->fd == -1)
+	if (BadPtr(ip))
+		ip = "*";
+	
+	if (*ip == '*')
 	{
-		listener->fd = fd_socket(AFINET, SOCK_STREAM, 0, "Listener socket");
+		if (ipv6)
+			ip = "::";
+		else
+			ip = "0.0.0.0";
 	}
+
+	ircd_log(LOG_ERROR, "inetport() for %s:%d (%s)",
+		ip, port, ipv6 ? "IPv6" : "IPv4");
+
+	/* At first, open a new socket */
+	if (listener->fd != -1)
+		abort(); /* there was a (reverse check) for this. let's see if this ever happened :) */
+	
+	if (port == 0)
+		abort(); /* Impossible as well, right? */
+
+	listener->fd = fd_socket(ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0, "Listener socket");
 	if (listener->fd < 0)
 	{
 		report_baderror("Cannot open stream socket() %s:%s", NULL);
 		return -1;
 	}
-	else if (++OpenFiles >= MAXCLIENTS)
+
+	if (++OpenFiles >= MAXCLIENTS)
 	{
 		sendto_ops("No more connections allowed (%s)", listener->ip);
 		fd_close(listener->fd);
@@ -376,74 +382,52 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 		return -1;
 	}
 
-	set_sock_opts(listener->fd, NULL);
+	set_sock_opts(listener->fd, NULL, ipv6);
 	set_non_blocking(listener->fd, NULL);
 
-	/*
-	 * Bind a port to listen for new connections if port is non-null,
-	 * else assume it is already open and try get something from it.
-	 */
-	if (port)
+	if (ipv6)
 	{
-		server.SIN_FAMILY = AFINET;
-		/* per-port bindings, fixes /stats l */
-		
-#ifndef INET6
-		server.SIN_ADDR.S_ADDR = inet_addr(ipname);
-#else
-		inet_pton(AFINET, ipname, server.SIN_ADDR.S_ADDR);
-#endif
-		server.SIN_PORT = htons(port);
-		/*
-		 * Try 10 times to bind the socket with an interval of 20
-		 * seconds. Do this so we dont have to keepp trying manually
-		 * to bind. Why ? Because a port that has closed often lingers
-		 * around for a short time.
-		 * This used to be the case.  Now it no longer is.
-		 * Could cause the server to hang for too long - avalon
-		 */
-		if (bind(listener->fd, (struct SOCKADDR *)&server,
-		    sizeof(server)) == -1)
-		{
-			ircsnprintf(backupbuf, sizeof(backupbuf), "Error binding stream socket to IP %s port %i",
-				ipname, port);
-			strlcat(backupbuf, " - %s:%s", sizeof backupbuf);
-			report_baderror(backupbuf, NULL);
-#if !defined(_WIN32) && defined(INET6)
-			/* Check if ipv4-over-ipv6 (::ffff:a.b.c.d, RFC2553
-			 * section 3.7) is disabled, like at newer FreeBSD's. -- Syzop
-			 */
-			if (!strncasecmp(ipname, "::ffff:", 7))
-			{
-				ircd_log(LOG_ERROR, "You are trying to bind to an IPv4 address, "
-				                    "make sure the address exists at your machine. "
-				                    "If you are using *BSD you might need to "
-				                    "enable ipv6_ipv4mapping in /etc/rc.conf "
-				                    "and/or via sysctl.");
-			}
-#endif
-			fd_close(listener->fd);
-			listener->fd = -1;
-			--OpenFiles;
-			return -1;
-		}
+		struct sockaddr_in6 server;
+		memset(&server, 0, sizeof(server));
+		server.sin6_family = AF_INET6;
+		server.sin6_port = htons(port);
+		result = inet_pton(AF_INET6, ip, &server.sin6_addr.s6_addr);
+		if (result != 1)
+			goto binderr;
+		result = bind(listener->fd, (struct sockaddr *)&server, sizeof(server));
+	} else {
+		struct sockaddr_in server;
+		memset(&server, 0, sizeof(server));
+		server.sin_family = AF_INET;
+		server.sin_port = htons(port);
+		result = inet_pton(AF_INET, ip, &server.sin_addr.s_addr);
+		if (result != 1)
+			goto binderr;
+		result = bind(listener->fd, (struct sockaddr *)&server, sizeof(server));
 	}
-	if (getsockname(listener->fd, (struct SOCKADDR *)&server, &len))
+	
+	if (result < 0)
 	{
-		report_error("getsockname failed for %s:%s", NULL);
+binderr:
+		ircsnprintf(backupbuf, sizeof(backupbuf), "Error binding stream socket to IP %s port %i",
+			ip, port);
+		strlcat(backupbuf, " - %s:%s", sizeof backupbuf);
+		report_baderror(backupbuf, NULL);
 		fd_close(listener->fd);
 		listener->fd = -1;
 		--OpenFiles;
 		return -1;
 	}
 
-#ifndef SOMAXCONN
-# define LISTEN_SIZE	(5)
-#else
-# define LISTEN_SIZE	(SOMAXCONN)
-#endif
-
 	result = listen(listener->fd, LISTEN_SIZE);
+	if (result < 0)
+	{
+		report_error("listen failed for %s:%s", NULL);
+		fd_close(listener->fd);
+		listener->fd = -1;
+		--OpenFiles;
+		return -1;
+	}
 
 #ifdef TCP_DEFER_ACCEPT
 	if ((listener->options & LISTENER_DEFER_ACCEPT) && !result)
@@ -461,8 +445,7 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 
 		memset(&afa, '\0', sizeof afa);
 		strlcpy(afa.af_name, "dataready", sizeof afa.af_name);
-		(void) setsockopt(listener->fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa,
-			sizeof afa);
+		(void)setsockopt(listener->fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof afa);
 	}
 #endif
 
@@ -475,7 +458,7 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 
 int add_listener2(ConfigItem_listen *conf)
 {
-	if (inetport(conf, conf->ip, conf->port))
+	if (inetport(conf, conf->ip, conf->port, conf->ipv6))
 	{
 		ircd_log(LOG_ERROR, "inetport failed for %s:%u", conf->ip, conf->port);
 		conf->fd = -2;
@@ -897,27 +880,29 @@ void close_connection(aClient *cptr)
 	return;
 }
 
+void set_ipv6_opts(int fd)
+{
+	ircd_log(LOG_ERROR, "set_ipv6_opts(%d)", fd);
+#if defined(INET6) && defined(IPV6_V6ONLY)
+	int opt = 1;
+	setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
+#endif
+}
+
 /*
 ** set_sock_opts
 */
-void set_sock_opts(int fd, aClient *cptr)
+void set_sock_opts(int fd, aClient *cptr, int ipv6)
 {
 	int  opt;
+
+	if (ipv6)
+		set_ipv6_opts(fd);
 #ifdef SO_REUSEADDR
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (OPT_TYPE *)&opt,
 	    sizeof(opt)) < 0)
 			report_error("setsockopt(SO_REUSEADDR) %s:%s", cptr);
-#endif
-#if defined(INET6) && defined(IPV6_V6ONLY)
-	/* We deal with both IPv4 and IPv6 in one (listen) socket.
-	 * This used to be on by default, but FreeBSD, and much later Linux
-	 * sometimes as well, seem to default it to IPv6 only ('1').
-	 * We now have this new fancy option to turn it off in Unreal,
-	 * instead of requiring our users to sysctl.
-	 */
-	opt = 0;
-	setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
 #endif
 #if  defined(SO_DEBUG) && defined(DEBUGMODE) && 0
 /* Solaris with SO_DEBUG writes to syslog by default */
@@ -953,30 +938,6 @@ void set_sock_opts(int fd, aClient *cptr)
 	if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (OPT_TYPE *)&opt,
 	    sizeof(opt)) < 0)
 		report_error("setsockopt(SO_SNDBUF) %s:%s", cptr);
-#endif
-#if defined(IP_OPTIONS) && defined(IPPROTO_IP) && !defined(_WIN32) && !defined(INET6)
-	{
-		char *s = readbuf, *t = readbuf + sizeof(readbuf) / 2;
-
-		opt = sizeof(readbuf) / 8;
-		if (getsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)t, &opt) < 0)
-		{
-		    if (ERRNO != P_ECONNRESET) /* FreeBSD can generate this -- Syzop */
-		        report_error("getsockopt(IP_OPTIONS) %s:%s", cptr);
-		}
-		else if (opt > 0 && opt != sizeof(readbuf) / 8)
-		{
-			for (*readbuf = '\0'; opt > 0; opt--, s += 3)
-				(void)ircsnprintf(s, sizeof(readbuf)-(s-readbuf), "%2.2x:", *t++);
-			*s = '\0';
-			sendto_realops("Connection %s using IP opts: (%s)",
-			    get_client_name(cptr, TRUE), readbuf);
-		}
-		if (setsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)NULL,
-		    0) < 0)
-		    if (ERRNO != P_ECONNRESET) /* FreeBSD can generate this -- Syzop */
-			    report_error("setsockopt(IP_OPTIONS) %s:%s", cptr);
-	}
 #endif
 }
 
@@ -1097,6 +1058,31 @@ int is_loopback_ip(char *ip)
 	return 0;
 }
 
+char *getpeerip(aClient *acptr, int fd, int *port)
+{
+	static char ret[HOSTLEN+1];
+
+	if (IsIPV6(acptr))
+	{
+		struct sockaddr_in6 addr;
+		int len = sizeof(addr);
+
+		if (getpeername(fd, (struct SOCKADDR *)&addr, &len) < 0)
+			return NULL;
+		*port = ntohs(addr.sin6_port);
+		return inetntop(AF_INET6, &addr.sin6_addr.s6_addr, ret, sizeof(ret));
+	} else
+	{
+		struct sockaddr_in addr;
+		int len = sizeof(addr);
+
+		if (getpeername(fd, (struct SOCKADDR *)&addr, &len) < 0)
+			return NULL;
+		*port = ntohs(addr.sin_port);
+		return inetntop(AF_INET, &addr.sin_addr.s_addr, ret, sizeof(ret));
+	}
+}
+
 /*
  * Creates a client which has just connected to us on the given fd.
  * The sockhost field is initialized with the ip# of the host.
@@ -1105,28 +1091,29 @@ int is_loopback_ip(char *ip)
  */
 aClient *add_connection(ConfigItem_listen *cptr, int fd)
 {
-	aClient *acptr;
+	aClient *acptr, *acptr2;
 	ConfigItem_ban *bconf;
 	int i, j;
+	char *ip;
+	int port = 0;
+	
 	acptr = make_client(NULL, &me);
 
-	/* Removed preliminary access check. Full check is performed in
-	 * m_server and m_user instead. Also connection time out help to
-	 * get rid of unwanted connections.
-	 */
-	{
-		struct SOCKADDR_IN addr;
-		aClient *acptr2;
-		int  len = sizeof(struct SOCKADDR_IN);
-		char *s;
+	/* If listener (cptr) is IPv6 then mark client (acptr) as IPv6 */
+	if (cptr->ipv6)
+		SetIPV6(acptr);
 
-		if (getpeername(fd, (struct SOCKADDR *)&addr, &len) == -1)
+	ip = getpeerip(acptr, fd, &port);
+	
+	if (!ip)
+	{
+		/* On Linux 2.4 and FreeBSD the socket may just have been disconnected
+		 * so it's not a serious error and can happen quite frequently -- Syzop
+		 */
+		if (ERRNO != P_ENOTCONN)
 		{
-			/* On Linux 2.4 and FreeBSD the socket may just have been disconnected
-			 * so it's not a serious error and can happen quite frequently -- Syzop
-			 */
-			if (ERRNO != P_ENOTCONN)
-				report_error("Failed to accept new client %s :%s", acptr);
+			report_error("Failed to accept new client %s :%s", acptr);
+		}
 add_con_refuse:
 			ircstp->is_ref++;
 			acptr->fd = -2;
@@ -1134,91 +1121,73 @@ add_con_refuse:
 			fd_close(fd);
 			--OpenFiles;
 			return NULL;
-		}
-		/* Fill in sockhost & ip ASAP */
-		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->local->ip, sizeof(struct IN_ADDR));
-		s = Inet_si2p(&addr);
-		if (!s)
-		{
-			report_error("Failed to accept new client %s (could not get ip): %s", acptr);
-			goto add_con_refuse;
-		}
-		set_sockhost(acptr, s);
-		acptr->ip = strdup(s);
-		
-		if (strchr(acptr->ip, ':'))
-			SetIPV6(acptr);
+	}
 
-		/* Tag loopback connections as FLAGS_LOCAL */
-		if (is_loopback_ip(acptr->ip))
-		{
-			ircstp->is_loc++;
-			acptr->flags |= FLAGS_LOCAL;
-		}
+	/* Fill in sockhost & ip ASAP */
+	set_sockhost(acptr, ip);
+	acptr->ip = strdup(ip);
+	acptr->local->port = port;
 
-		j = 1;
+	/* Tag loopback connections as FLAGS_LOCAL */
+	if (is_loopback_ip(acptr->ip))
+	{
+		ircstp->is_loc++;
+		acptr->flags |= FLAGS_LOCAL;
+	}
 
-		list_for_each_entry(acptr2, &unknown_list, lclient_node)
-		{
-			if (!strcmp(acptr->ip,GetIP(acptr2)))
-			{
-				j++;
-				if (j > MAXUNKNOWNCONNECTIONSPERIP)
-				{
-					ircsnprintf(zlinebuf, sizeof(zlinebuf),
-						"ERROR :Closing Link: [%s] (Too many unknown connections from your IP)"
-						"\r\n",
-						acptr->ip);
-					set_non_blocking(fd, acptr);
-					set_sock_opts(fd, acptr);
-					(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
-					goto add_con_refuse;
-				}
-			}
-		}
+	j = 1;
 
-		if ((bconf = Find_ban(acptr, acptr->ip, CONF_BAN_IP)))
+	list_for_each_entry(acptr2, &unknown_list, lclient_node)
+	{
+		if (!strcmp(acptr->ip,GetIP(acptr2)))
 		{
-			if (bconf)
+			j++;
+			if (j > MAXUNKNOWNCONNECTIONSPERIP)
 			{
 				ircsnprintf(zlinebuf, sizeof(zlinebuf),
-					"ERROR :Closing Link: [%s] (You are not welcome on "
-					"this server: %s. Email %s for more information.)\r\n",
-					acptr->ip,
-					bconf->reason ? bconf->reason : "no reason",
-					KLINE_ADDRESS);
-				set_non_blocking(fd, acptr);
-				set_sock_opts(fd, acptr);
+					"ERROR :Closing Link: [%s] (Too many unknown connections from your IP)"
+					"\r\n",
+					acptr->ip);
 				(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
 				goto add_con_refuse;
 			}
 		}
-		else if (find_tkline_match_zap(acptr) != -1)
+	}
+
+	if ((bconf = Find_ban(acptr, acptr->ip, CONF_BAN_IP)))
+	{
+		if (bconf)
 		{
-			set_non_blocking(fd, acptr);
-			set_sock_opts(fd, acptr);
+			ircsnprintf(zlinebuf, sizeof(zlinebuf),
+				"ERROR :Closing Link: [%s] (You are not welcome on "
+				"this server: %s. Email %s for more information.)\r\n",
+				acptr->ip,
+				bconf->reason ? bconf->reason : "no reason",
+				KLINE_ADDRESS);
 			(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
 			goto add_con_refuse;
 		}
-		else
+	}
+	else if (find_tkline_match_zap(acptr) != -1)
+	{
+		(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
+		goto add_con_refuse;
+	}
+	else
+	{
+		int val;
+		if (!(val = throttle_can_connect(acptr)))
 		{
-			int val;
-			if (!(val = throttle_can_connect(acptr)))
-			{
-				ircsnprintf(zlinebuf, sizeof(zlinebuf),
-					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
-						"Email %s for more information.\r\n",
-						acptr->ip,
-						KLINE_ADDRESS);
-				set_non_blocking(fd, acptr);
-				set_sock_opts(fd, acptr);
-				(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
-				goto add_con_refuse;
-			}
-			else if (val == 1)
-				add_throttling_bucket(acptr);
+			ircsnprintf(zlinebuf, sizeof(zlinebuf),
+				"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
+					"Email %s for more information.\r\n",
+					acptr->ip,
+					KLINE_ADDRESS);
+			(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
+			goto add_con_refuse;
 		}
-		acptr->local->port = ntohs(addr.SIN_PORT);
+		else if (val == 1)
+			add_throttling_bucket(acptr);
 	}
 
 	acptr->fd = fd;
@@ -1227,8 +1196,6 @@ add_con_refuse:
 		acptr->local->listener->clients++;
 	add_client_to_list(acptr);
 
-	set_non_blocking(acptr->fd, acptr);
-	set_sock_opts(acptr->fd, acptr);
 	IRCstats.unknown++;
 	acptr->status = STAT_UNKNOWN;
 
@@ -1572,7 +1539,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 		return -1;
 	}
 	set_non_blocking(cptr->fd, cptr);
-	set_sock_opts(cptr->fd, cptr);
+	set_sock_opts(cptr->fd, cptr, 1); // XXX/FIXME!!!!! always ipv6 atm.
 
 #ifndef _WIN32
 	if (connect(cptr->fd, svp, len) < 0 && errno != EINPROGRESS)

@@ -2537,7 +2537,7 @@ int count_oper_sessions(char *name)
 	return count;
 }
 
-ConfigItem_listen	*Find_listen(char *ipmask, int port)
+ConfigItem_listen *Find_listen(char *ipmask, int port, int ipv6)
 {
 	ConfigItem_listen	*p;
 
@@ -2546,8 +2546,12 @@ ConfigItem_listen	*Find_listen(char *ipmask, int port)
 
 	for (p = conf_listen; p; p = (ConfigItem_listen *) p->next)
 	{
+		if (p->ipv6 != ipv6)
+			continue;
+
 		if (!match(p->ip, ipmask) && (port == p->port))
 			return (p);
+
 		if (!match(ipmask, p->ip) && (port == p->port))
 			return (p);
 	}
@@ -4549,23 +4553,53 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	}
 	for (iport = start; iport < end; iport++)
 	{
-		if (!(listen = Find_listen(ip, iport)))
+		/* Argh this is ugly duplicate code.. */
+
+		/* First deal with IPv4 */
+		if (!strchr(ip, ':'))
 		{
-			listen = MyMallocEx(sizeof(ConfigItem_listen));
-			listen->ip = strdup(ip);
-			listen->port = iport;
-			listen->fd = -1;
-			isnew = 1;
-		} else
-			isnew = 0;
+			if (!(listen = Find_listen(ip, iport, 0)))
+			{
+				listen = MyMallocEx(sizeof(ConfigItem_listen));
+				listen->ip = strdup(ip);
+				listen->port = iport;
+				listen->fd = -1;
+				listen->ipv6 = 0;
+				isnew = 1;
+			} else
+				isnew = 0;
 
-		if (listen->options & LISTENER_BOUND)
-			tmpflags |= LISTENER_BOUND;
+			if (listen->options & LISTENER_BOUND)
+				tmpflags |= LISTENER_BOUND;
 
-		listen->options = tmpflags;
-		if (isnew)
-			AddListItem(listen, conf_listen);
-		listen->flag.temporary = 0;
+			listen->options = tmpflags;
+			if (isnew)
+				AddListItem(listen, conf_listen);
+			listen->flag.temporary = 0;
+		}
+
+		/* Then deal with IPv6 */
+		if (strchr(ip, ':') || (*ip == '*'))
+		{
+			if (!(listen = Find_listen(ip, iport, 1)))
+			{
+				listen = MyMallocEx(sizeof(ConfigItem_listen));
+				listen->ip = strdup(ip);
+				listen->port = iport;
+				listen->fd = -1;
+				listen->ipv6 = 1;
+				isnew = 1;
+			} else
+				isnew = 0;
+
+			if (listen->options & LISTENER_BOUND)
+				tmpflags |= LISTENER_BOUND;
+
+			listen->options = tmpflags;
+			if (isnew)
+				AddListItem(listen, conf_listen);
+			listen->flag.temporary = 0;
+		}
 	}
 	return 1;
 }
