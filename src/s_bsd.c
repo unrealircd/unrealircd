@@ -705,36 +705,15 @@ int  check_client(aClient *cptr, char *username)
 	int  i;
 	
 	ClearAccess(cptr);
-	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]",
-	    cptr->name, inetntoa((char *)&cptr->local->ip)));
+	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]", cptr->name, cptr->local->sockhost));
 
 	if (check_init(cptr, sockname, sizeof(sockname)))
 		return -2;
 
 	hp = cptr->local->hostp;
-	/*
-	 * Verify that the host to ip mapping is correct both ways and that
-	 * the ip#(s) for the socket is listed for the host.
-	 */
-	if (hp)
-	{
-		for (i = 0; hp->h_addr_list[i]; i++)
-			if (!bcmp(hp->h_addr_list[i], (char *)&cptr->local->ip,
-			    sizeof(struct IN_ADDR)))
-				break;
-		if (!hp->h_addr_list[i])
-		{
-			sendto_snomask(SNO_JUNK, "IP# Mismatch: %s != %s[%08lx]",
-			    Inet_ia2p((struct IN_ADDR *)&cptr->local->ip), hp->h_name,
-			    *((unsigned long *)hp->h_addr));
-			hp = NULL;
-		}
-	}
 
 	if ((i = AllowClient(cptr, hp, sockname, username)))
-	{
 		return i;
-	}
 
 	Debug((DEBUG_DNS, "ch_cl: access ok: %s[%s]", cptr->name, sockname));
 
@@ -1186,7 +1165,7 @@ add_con_refuse:
 					ircsnprintf(zlinebuf, sizeof(zlinebuf),
 						"ERROR :Closing Link: [%s] (Too many unknown connections from your IP)"
 						"\r\n",
-						Inet_ia2p(&acptr->local->ip));
+						acptr->ip);
 					set_non_blocking(fd, acptr);
 					set_sock_opts(fd, acptr);
 					(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
@@ -1202,7 +1181,7 @@ add_con_refuse:
 				ircsnprintf(zlinebuf, sizeof(zlinebuf),
 					"ERROR :Closing Link: [%s] (You are not welcome on "
 					"this server: %s. Email %s for more information.)\r\n",
-					Inet_ia2p(&acptr->local->ip),
+					acptr->ip,
 					bconf->reason ? bconf->reason : "no reason",
 					KLINE_ADDRESS);
 				set_non_blocking(fd, acptr);
@@ -1221,12 +1200,12 @@ add_con_refuse:
 		else
 		{
 			int val;
-			if (!(val = throttle_can_connect(acptr, &acptr->local->ip)))
+			if (!(val = throttle_can_connect(acptr)))
 			{
 				ircsnprintf(zlinebuf, sizeof(zlinebuf),
 					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
 						"Email %s for more information.\r\n",
-						Inet_ia2p(&acptr->local->ip),
+						acptr->ip,
 						KLINE_ADDRESS);
 				set_non_blocking(fd, acptr);
 				set_sock_opts(fd, acptr);
@@ -1234,7 +1213,7 @@ add_con_refuse:
 				goto add_con_refuse;
 			}
 			else if (val == 1)
-				add_throttling_bucket(&acptr->local->ip);
+				add_throttling_bucket(acptr);
 		}
 		acptr->local->port = ntohs(addr.SIN_PORT);
 	}
