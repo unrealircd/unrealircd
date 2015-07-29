@@ -1572,6 +1572,18 @@ again:
 					config_status("- removed set::hosts. we now use oper::vhost for this.");
 					remove_section(cep->ce_fileposstart, cep->ce_fileposend); /* hmm something is wrong here */
 					goto again;
+				} else
+				if (!strcmp(cep->ce_varname, "dns"))
+				{
+					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+						if (!strcmp(cepp->ce_varname, "nameserver") ||
+						    !strcmp(cepp->ce_varname, "timeout") ||
+						    !strcmp(cepp->ce_varname, "retries"))
+						{
+							config_status("- removed set::dns::%s. this option is never used.", cepp->ce_varname);
+							remove_section(cepp->ce_fileposstart, cepp->ce_fileposend);
+							goto again;
+						}
 				}
 			}
 		}

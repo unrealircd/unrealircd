@@ -6819,16 +6819,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "dns")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "timeout")) {
-					tempiConf.host_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
-				}
-				else if (!strcmp(cepp->ce_varname, "retries")) {
-					tempiConf.host_retries = config_checkval(cepp->ce_vardata,CFG_TIME);
-				}
-				else if (!strcmp(cepp->ce_varname, "bind-ip")) {
+				if (!strcmp(cepp->ce_varname, "bind-ip")) {
 					safestrdup(tempiConf.dns_bindip, cepp->ce_vardata);
 				}
-
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
@@ -7463,18 +7456,16 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "dns")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				CheckNull(cepp);
-				if (!strcmp(cepp->ce_varname, "timeout")) {
-					CheckDuplicate(cepp, dns_timeout, "dns::timeout");
-				}
-				else if (!strcmp(cepp->ce_varname, "retries")) {
-					CheckDuplicate(cepp, dns_retries, "dns::retries");
-				}
-				else if (!strcmp(cepp->ce_varname, "nameserver")) {
-					config_warn("%s:%i: set::dns::nameserver is removed as this setting is always ignored "
-					            "(DNS settings are acquired from the OS)",
-					            cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-				}
-				else if (!strcmp(cepp->ce_varname, "bind-ip")) {
+				if (!strcmp(cepp->ce_varname, "nameserver") ||
+				    !strcmp(cepp->ce_varname, "timeout") ||
+				    !strcmp(cepp->ce_varname, "retries"))
+				{
+					config_error("%s:%i: set::dns::%s no longer exist in UnrealIRCd 3.4.x. "
+					             "Please remove it from your configuration file.",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+					errors++;
+				} else
+				if (!strcmp(cepp->ce_varname, "bind-ip")) {
 					CheckDuplicate(cepp, dns_bind_ip, "dns::bind-ip");
 					if (strcmp(cepp->ce_vardata, "*"))
 					{
