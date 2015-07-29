@@ -456,6 +456,45 @@ CMD_FUNC(m_tzline)
 
 }
 
+/** Check if a ban is placed with a too broad mask (like '*') */
+int ban_too_broad(char *usermask, char *hostmask)
+{
+	char *p;
+	int cnt = 0;
+
+	/* Scary config setting. Hmmm. */
+	if (ALLOW_INSANE_BANS)
+		return 0;
+
+	/* Allow things like clone@*, dsfsf@*, etc.. */
+	if (!strchr(usermask, '*') && !strchr(usermask, '?'))
+		return 0;
+	
+	/* STEP 1: Must at least contain 4 non-wildcard/non-dot characters */
+	for (p = hostmask; *p; p++)
+		if (*p != '*' && *p != '.' && *p != '?')
+			cnt++;
+
+	if (cnt < 4)
+		return 0;
+
+	p = strchr(hostmask, '/');
+	if (p)
+	{
+		int cidrlen = atoi(p+1);
+		if (strchr(hostmask, ':'))
+		{
+			if (cidrlen < 48)
+				return 0; /* too broad IPv6 CIDR mask */
+		} else {
+			if (cidrlen < 16)
+				return 0; /* too broad IPv4 CIDR mask */
+		}
+	}
+	
+	return 1;
+}
+
 /*
 ** m_tkl_line (oper function - /TKL takes care of distribution)
 ** /gline [+|-]u@h mask time :reason
@@ -596,54 +635,10 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			return 0;
 		}
 	}	
-	if (!whattodo)
+	if (!whattodo && ban_too_broad(usermask, hostmask))
 	{
-		char c;
-		
-		if ((!strchr(usermask, '*') && !strchr(usermask, '?')) || (ALLOW_INSANE_BANS))
-		{
-			/* Allow things like clone@*, dsfsf@*, etc.. */
-			/* Also allow insane bans if set::options::allow-insane-bans is set -- Stealth */
-		} else {
-			/* Check hostmask. */
-			
-			/* STEP 1: Must at least contain 4 non-wildcard/non-dot characters */
-			p++;
-			i = 0;
-			while (*p)
-			{
-				if (*p != '*' && *p != '.' && *p != '?')
-					i++;
-				p++;
-			}
-			if (i < 4)
-			{
-				sendto_one(sptr,
-				    ":%s NOTICE %s :*** [error] Too broad mask",
-				    me.name, sptr->name);
-				return 0;
-			}
-
-			// TODO (FIXME): check broadness
-#if 0
-			/* STEP 2: Check CIDR.. allow x.x/16, but not /15, /14, etc... */
-			c = tolower(*type);
-			if (c == 'k' || c == 'z' || *type == 'G' || *type == 's')
-			{
-				struct irc_netmask tmp;
-				if ((tmp.type = parse_netmask(hostmask, &tmp)) != HM_HOST)
-				{
-					if (tmp.bits < 16)
-					{
-						sendto_one(sptr,
-						    ":%s NOTICE %s :*** [error] Too broad mask",
-						    me.name, sptr->name);
-						return 0;
-					}
-				}
-			}
-#endif
-		}
+		sendnotice(sptr, "*** [error] Too broad mask");
+		return 0;
 	}
 
 	tkl_check_expire(NULL);
