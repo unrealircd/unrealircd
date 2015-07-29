@@ -728,25 +728,30 @@ char *param;
 	if (*param == 'i') /* INFORMATION */
 	{
 		struct ares_options inf;
+		struct ares_addr_node *ns = NULL;
 		int i;
 		int optmask;
 		
-		ares_save_options(resolver_channel, &inf, &optmask);
 
 		sendtxtnumeric(sptr, "****** DNS Configuration Information ******");
 		sendtxtnumeric(sptr, " c-ares version: %s",ares_version(NULL));
-
-		if(optmask & ARES_OPT_TIMEOUTMS)
-			sendtxtnumeric(sptr, "        timeout: %d", inf.timeout);
-		if(optmask & ARES_OPT_TRIES)
-			sendtxtnumeric(sptr, "          tries: %d", inf.tries);
-		if(optmask & ARES_OPT_SERVERS)
+		
+		i = 0;
+		for (ares_get_servers(resolver_channel, &ns); ns; ns = ns->next)
 		{
-			sendtxtnumeric(sptr, "   # of servers: %d", inf.nservers);
-/*			for (i = 0; i < inf.nservers; i++)
-				sendtxtnumeric(sptr, "      server #%d: %s", i+1, inet_ntoa(inf.servers[i]));	(TODO/UPG) */
+			char ipbuf[128], *ip;
+			i++;
+			
+			ip = inetntop(ns->family, &ns->addr, ipbuf, sizeof(ipbuf));
+			sendtxtnumeric(sptr, "      server #%d: %s", i, ip ? ip : "<error>");
 		}
-		if(optmask & ARES_OPT_DOMAINS)
+
+		ares_save_options(resolver_channel, &inf, &optmask);
+		if (optmask & ARES_OPT_TIMEOUTMS)
+			sendtxtnumeric(sptr, "        timeout: %d", inf.timeout);
+		if (optmask & ARES_OPT_TRIES)
+			sendtxtnumeric(sptr, "          tries: %d", inf.tries);
+		if (optmask & ARES_OPT_DOMAINS)
 		{
 			sendtxtnumeric(sptr, "   # of search domains: %d", inf.ndomains);
 			for (i = 0; i < inf.ndomains; i++)
