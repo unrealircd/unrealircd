@@ -882,7 +882,7 @@ char *trim_str(char *str, int len)
  */
 char *clean_ban_mask(char *mask, int what, aClient *cptr)
 {
-	char *cp;
+	char *cp, *x;
 	char *user;
 	char *host;
 	Extban *p;
@@ -891,10 +891,15 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	if (cp)
 		*cp = '\0';
 
-	/* Strip any ':' at beginning coz that desynchs clients/banlists */
+	/* Strip any ':' at beginning since that would cause a desynch */
 	for (; (*mask && (*mask == ':')); mask++);
 	if (!*mask)
 		return NULL;
+
+	/* Forbid ASCII < 32 in all bans */
+	for (x = mask; *x; x++)
+		if (*x < ' ')
+			return NULL;
 
 	/* Extended ban? */
 	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
