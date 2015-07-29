@@ -1179,7 +1179,7 @@ int stats_set(aClient *sptr, char *para)
 	sendto_one(sptr, ":%s %i %s :modes-on-oper: %s", me.name, RPL_TEXT,
 	    sptr->name, get_modestr(OPER_MODES));
 	*modebuf = *parabuf = 0;
-	chmode_str(iConf.modes_on_join, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
+	chmode_str(&iConf.modes_on_join, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
 	sendto_one(sptr, ":%s %i %s :modes-on-join: %s %s", me.name, RPL_TEXT,
 		sptr->name, modebuf, parabuf);
 	sendto_one(sptr, ":%s %i %s :nick-length: %i", me.name, RPL_TEXT,

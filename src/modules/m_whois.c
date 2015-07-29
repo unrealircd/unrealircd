@@ -154,8 +154,8 @@ CMD_FUNC(m_whois)
 
 			if (IsOper(sptr) || acptr == sptr)
 			{
-				char sno[512];
-				strcpy(sno, get_sno_str(acptr));
+				char sno[128];
+				strlcpy(sno, get_sno_str(acptr), sizeof(sno));
 				
 				/* send the target user's modes */
 				sendto_one(sptr, rpl_str(RPL_WHOISMODES),

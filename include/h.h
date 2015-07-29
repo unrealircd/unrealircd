@@ -532,7 +532,7 @@ extern void make_extcmodestr();
 extern void extcmode_duplicate_paramlist(void **xi, void **xo);
 extern void extcmode_free_paramlist(void **ar);
 
-extern void chmode_str(struct ChMode, char *, char *, size_t, size_t);
+extern void chmode_str(struct ChMode *, char *, char *, size_t, size_t);
 extern char *get_cptr_status(aClient *);
 extern char *get_snostr(long);
 #ifdef _WIN32

@@ -539,7 +539,7 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 		free(parambuf);
 }
 
-void chmode_str(struct ChMode modes, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size)
+void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size)
 {
 	aCtab *tab;
 	int i;
@@ -551,7 +551,7 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf, size_t mbuf_size, s
 	if (--mbuf_size == 0) return;
 	for (tab = &cFlagTab[0]; tab->mode; tab++)
 	{
-		if (modes.mode & tab->mode)
+		if (modes->mode & tab->mode)
 		{
 			if (!tab->parameters) {
 				*mbuf++ = tab->flag;
@@ -567,7 +567,7 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf, size_t mbuf_size, s
 		if (!(Channelmode_Table[i].flag))
 			continue;
 
-		if (modes.extmodes & Channelmode_Table[i].mode)
+		if (modes->extmodes & Channelmode_Table[i].mode)
 		{
 			if (mbuf_size) {
 				*mbuf++ = Channelmode_Table[i].flag;
@@ -578,8 +578,8 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf, size_t mbuf_size, s
 			}
 			if (Channelmode_Table[i].paracount)
 			{
-				strncat(pbuf, modes.extparams[i], pbuf_size-1);
-				pbuf_size-=strlen(modes.extparams[i]);
+				strncat(pbuf, modes->extparams[i], pbuf_size-1);
+				pbuf_size-=strlen(modes->extparams[i]);
 				if (!pbuf_size) break;
 				strncat(pbuf, " ", pbuf_size-1);
 				if (!--pbuf_size) break;
