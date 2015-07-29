@@ -83,7 +83,7 @@
 #ifdef SSL
 #include <openssl/ssl.h>
 #endif
-#ifdef INET6
+#if defined(INET6) && !defined(_WIN32)
 #include <netinet/in.h>
 #include <sys/socket.h>
 #endif
