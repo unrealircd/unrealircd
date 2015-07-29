@@ -1738,14 +1738,6 @@ int	load_conf(char *filename, const char *original_path)
 		}
 #endif
 	}
-	if (counter > 1 || my_inc->flag.type & INCLUDE_USED)
-	{
-		config_error("%s:%d:include: Config file %s has been loaded before %d time."
-			     " You may include each file only once.",
-			     my_inc->included_from, my_inc->included_from_line,
-			     filename, counter - 1);
-		return -1;
-	}
 	if (counter < 1 || !my_inc)
 	{
 		/*
@@ -1757,6 +1749,15 @@ int	load_conf(char *filename, const char *original_path)
 		config_error("I don't have a record for %s being included."
 			     " Perhaps someone forgot to call add_include()?",
 			     filename);
+		abort();
+	}
+	if (counter > 1 || my_inc->flag.type & INCLUDE_USED)
+	{
+		config_error("%s:%d:include: Config file %s has been loaded before %d time."
+			     " You may include each file only once.",
+			     my_inc->included_from, my_inc->included_from_line,
+			     filename, counter - 1);
+		return -1;
 	}
 	/* end include recursion checking code */
 
@@ -2080,7 +2081,8 @@ void	config_rehash()
 		ConfigItem_alias_format *fmt;
 		next = (ListStruct *)alias_ptr->next;
 		safefree(alias_ptr->nick);
-		del_Command(alias_ptr->alias, cmptr->func);
+		if (cmptr)
+			del_Command(alias_ptr->alias, cmptr->func);
 		safefree(alias_ptr->alias);
 		if (alias_ptr->format && (alias_ptr->type == ALIAS_COMMAND)) {
 			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) next2)
@@ -2845,7 +2847,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		return remote_include(ce);
 #endif
 #if !defined(_WIN32) && !defined(_AMIGA) && !defined(OSXTIGER) && DEFAULT_PERMISSIONS != 0
-	chmod(ce->ce_vardata, DEFAULT_PERMISSIONS);
+	(void)chmod(ce->ce_vardata, DEFAULT_PERMISSIONS);
 #endif
 #ifdef GLOBH
 #if defined(__OpenBSD__) && defined(GLOB_LIMIT)
@@ -3892,7 +3894,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	if (!ce->ce_vardata)
 	{
 		config_error_noname(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "class");
-		errors++;
+		return 1;
 	}
 	if (!strcasecmp(ce->ce_vardata, "default"))
 	{
@@ -3900,6 +3902,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
+
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "options"))
@@ -5952,10 +5955,10 @@ int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		temp = MyMalloc(sizeof(aMotdLine));
+		temp = MyMallocEx(sizeof(aMotdLine));
 		temp->line = strdup(cep->ce_varname);
 		temp->next = NULL;
-		if (!ca->text)
+		if (!last)
 			ca->text = temp;
 		else
 			last->next = temp;

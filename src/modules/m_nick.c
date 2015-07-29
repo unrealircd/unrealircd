@@ -109,7 +109,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 	
 	ircd_log(LOG_ERROR, "Nick collision: %s[%s]@%s (new) vs %s[%s]@%s (existing). Winner: %s. Type: %s",
 		newnick, newid ? newid : "", cptr->name,
-		existing->name, existing->id ? existing->id : "", existing->srvptr->name,
+		existing->name, existing->id, existing->srvptr->name,
 		(type == NICKCOL_EQUAL) ? "None (equal)" : ((type == NICKCOL_NEW_WON) ? "New won" : "Existing won"),
 		new ? "nick-change" : "new user connecting");
 
