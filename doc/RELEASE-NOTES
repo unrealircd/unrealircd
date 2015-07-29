@@ -120,6 +120,9 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * Memory pooling has been added to improve memory allocation efficiency
   and performance.
 * On-connect DNSBL/RBL checking via the new blacklist block. (B1)
+* The Windows version now has IPv6 support too. (B3)
+* On all OS's we compile with IPv6 support enabled. You can still
+  disable IPv6 at runtime by setting set::options::disable-ipv6. (B3)
 * The local nickname length can be modified without recompiling the IRCd
 * Channel Mode +d: This will hide joins/parts for users who don't say
   anything in a channel. Whenever a user speaks for the first time they
