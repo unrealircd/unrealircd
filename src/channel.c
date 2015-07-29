@@ -896,9 +896,9 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	if (!*mask)
 		return NULL;
 
-	/* Forbid ASCII < 32 in all bans */
+	/* Forbid ASCII <= 32 in all bans */
 	for (x = mask; *x; x++)
-		if (*x < ' ')
+		if (*x <= ' ')
 			return NULL;
 
 	/* Extended ban? */
