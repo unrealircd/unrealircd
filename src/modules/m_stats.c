@@ -1273,10 +1273,6 @@ int stats_set(aClient *sptr, char *para)
 		sptr->name, WHOLIMIT);
 	sendto_one(sptr, ":%s %i %s :silence-limit: %d", me.name, RPL_TEXT,
 		sptr->name, SILENCE_LIMIT);
-	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,
-	    sptr->name, pretty_time_val(HOST_TIMEOUT));
-	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
-	    sptr->name, HOST_RETRIES);
 	if (DNS_BINDIP)
 		sendto_one(sptr, ":%s %i %s :dns::bind-ip: %s", me.name, RPL_TEXT,
 		    sptr->name, DNS_BINDIP);
