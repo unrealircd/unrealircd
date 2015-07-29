@@ -844,7 +844,7 @@ void set_ipv6_opts(int fd)
 {
 #if defined(IPV6_V6ONLY)
 	int opt = 1;
-	setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
+	(void)setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
 #endif
 }
 
