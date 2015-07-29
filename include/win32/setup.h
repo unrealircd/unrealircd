@@ -43,7 +43,6 @@
 #undef  POSIX_SIGNALS
 #undef  TIMES_2
 #undef  GETRUSAGE_2
-#define HAVE_ALLOCA
 #define CONFDIR "conf"
 #define MODULESDIR "modules"
 #define LOGDIR "logs"
