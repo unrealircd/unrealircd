@@ -60,9 +60,7 @@ MODVAR char serveropts[] = {
 #ifdef	USE_SYSLOG
 	'Y',
 #endif
-#ifdef INET6
 	'6',
-#endif
 #ifdef USE_SSL
 	'e',
 #endif

@@ -289,29 +289,22 @@ struct hostent *unrealdns_doclient(aClient *cptr)
  */
 void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf)
 {
-DNSReq *r;
-#ifdef INET6
-char ipv4[4];
-#endif
+	DNSReq *r;
 
 	/* Create a request */
 	r = MyMallocEx(sizeof(DNSReq));
 	r->linkblock = conf;
 	r->name = strdup(name);
-#ifdef INET6
-	/* We try IPv6 first, and if that fails we try IPv4 */
-	r->ipv6 = 1;
-#else
-	r->ipv6 = 0;
-#endif
+	if (!DISABLE_IPV6)
+	{
+		/* We try an IPv6 lookup first, and if that fails we try IPv4. */
+		r->ipv6 = 1;
+	}
+
 	unrealdns_addreqtolist(r);
 
 	/* Execute it */
-#ifndef INET6
-	ares_gethostbyname(resolver_channel, r->name, AF_INET, unrealdns_cb_nametoip_link, r);
-#else
 	ares_gethostbyname(resolver_channel, r->name, r->ipv6 ? AF_INET6 : AF_INET, unrealdns_cb_nametoip_link, r);
-#endif
 }
 
 void unrealdns_cb_iptoname(void *arg, int status, int timeouts, struct hostent *he)
@@ -341,11 +334,7 @@ char ipv6 = r->ipv6;
 	newr->name = strdup(he->h_name);
 	unrealdns_addreqtolist(newr);
 
-#ifndef INET6
-	ares_gethostbyname(resolver_channel, he->h_name, AF_INET, unrealdns_cb_nametoip_verify, newr);
-#else
 	ares_gethostbyname(resolver_channel, he->h_name, ipv6 ? AF_INET6 : AF_INET, unrealdns_cb_nametoip_verify, newr);
-#endif
 }
 
 /*

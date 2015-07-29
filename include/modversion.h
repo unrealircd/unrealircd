@@ -50,11 +50,6 @@
   #define MYTOKEN_NOFLDAWAY ""
  #endif
  #define MYTOKEN_NEWCHF "/NOCHF"
- #ifdef INET6
-  #define MYTOKEN_INET6 "/IPV6"
- #else
-  #define MYTOKEN_INET6 ""
- #endif
 
 #ifdef __GNUC__
  #if defined(__GNUC_PATCHLEVEL__)
@@ -70,11 +65,11 @@
 #ifdef UNREALCORE
   char our_mod_version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
                                MYTOKEN_SSL \
-                               MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF MYTOKEN_INET6;
+                               MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF;
   unsigned int our_compiler_version = GCCVER;
 #else
   DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
                                MYTOKEN_SSL \
-                               MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF MYTOKEN_INET6;
+                               MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF;
   DLLFUNC unsigned int compiler_version = GCCVER;
 #endif

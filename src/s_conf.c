@@ -297,9 +297,10 @@ ConfigItem_include	*conf_include = NULL;
 ConfigItem_help		*conf_help = NULL;
 ConfigItem_offchans	*conf_offchans = NULL;
 
-aConfiguration		iConf;
+MODVAR aConfiguration		iConf;
 MODVAR aConfiguration		tempiConf;
 MODVAR ConfigFile		*conf = NULL;
+MODVAR int ipv6_disabled = 0;
 
 MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
@@ -1476,6 +1477,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->x_server_cert_pem = strdup(tmp);
 	snprintf(tmp, sizeof(tmp), "%s/ssl/server.key.pem", CONFDIR);
 	i->x_server_key_pem = strdup(tmp);
+	if (!ipv6_capable())
+		DISABLE_IPV6 = 1;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -2619,16 +2622,6 @@ ConfigItem_link *Find_link(char *servername, aClient *acptr)
 		}
 	}
 	return NULL;
-}
-
-/* ugly ugly ugly */
-int match_ip46(char *a, char *b)
-{
-#ifdef INET6
-	if (!strncmp(a, "::ffff:", 7) && !strcmp(a+7, b))
-		return 0; // match
-#endif
-	return 1; //nomatch
 }
 
 ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
@@ -4573,26 +4566,29 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		}
 
 		/* Then deal with IPv6 */
-		if (strchr(ip, ':') || (*ip == '*'))
+		if (!DISABLE_IPV6)
 		{
-			if (!(listen = Find_listen(ip, iport, 1)))
+			if (strchr(ip, ':') || (*ip == '*'))
 			{
-				listen = MyMallocEx(sizeof(ConfigItem_listen));
-				listen->ip = strdup(ip);
-				listen->port = iport;
-				listen->fd = -1;
-				listen->ipv6 = 1;
-				isnew = 1;
-			} else
-				isnew = 0;
+				if (!(listen = Find_listen(ip, iport, 1)))
+				{
+					listen = MyMallocEx(sizeof(ConfigItem_listen));
+					listen->ip = strdup(ip);
+					listen->port = iport;
+					listen->fd = -1;
+					listen->ipv6 = 1;
+					isnew = 1;
+				} else
+					isnew = 0;
 
-			if (listen->options & LISTENER_BOUND)
-				tmpflags |= LISTENER_BOUND;
+				if (listen->options & LISTENER_BOUND)
+					tmpflags |= LISTENER_BOUND;
 
-			listen->options = tmpflags;
-			if (isnew)
-				AddListItem(listen, conf_listen);
-			listen->flag.temporary = 0;
+				listen->options = tmpflags;
+				if (isnew)
+					AddListItem(listen, conf_listen);
+				listen->flag.temporary = 0;
+			}
 		}
 	}
 	return 1;
@@ -4632,29 +4628,18 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
+	if (!strchr(ip, '*') && !is_valid_ip(ip))
+	{
+		config_error("%s:%i: listen: illegal ip (%s)",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ip);
+		return 1;
+	}
 	if (!port || !*port)
 	{
 		config_error("%s:%i: listen: missing port in mask",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
-#ifdef INET6
-	if ((strlen(ip) > 6) && !strchr(ip, ':') && isdigit(ip[strlen(ip)-1]))
-	{
-		char crap[32];
-		if (inet_pton(AF_INET, ip, crap) != 0)
-		{
-			char ipv6buf[128];
-			snprintf(ipv6buf, sizeof(ipv6buf), "[::ffff:%s]:%s", ip, port);
-			ce->ce_vardata = strdup(ipv6buf);
-		} else {
-		/* Insert IPv6 validation here */
-			config_error("%s:%i: listen: '%s' looks like it might be IPv4, but is not a valid address.",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ip);
-			return 1;
-		}
-	}
-#endif
 	port_range(port, &start, &end);
 	if (start == end)
 	{
@@ -6318,28 +6303,6 @@ int config_detect_duplicate(int *var, ConfigEntry *ce, int *errors)
 	return 0;
 }
 
-/** For IPv6 users, auto-convert IPv4 ip's like '1.2.3.4' to '::ffff:1.2.3.4'.
- * This function is a no-op for IPv4 so may be called freely.
- */
-void auto_convert_ipv4_to_ipv6(ConfigEntry *cep)
-{
-#ifdef INET6
-	/* [ not null && len>6 && has not a : in it && last character is a digit ] */
-	if (cep->ce_vardata && (strlen(cep->ce_vardata) > 6) && !strchr(cep->ce_vardata, ':') &&
-		isdigit(cep->ce_vardata[strlen(cep->ce_vardata)-1]))
-	{
-		char crap[32];
-		if (inet_pton(AF_INET, cep->ce_vardata, crap) != 0)
-		{
-			char ipv6buf[48];
-			snprintf(ipv6buf, sizeof(ipv6buf), "::ffff:%s", cep->ce_vardata);
-			MyFree(cep->ce_vardata);
-			cep->ce_vardata = strdup(ipv6buf);
-		}
-	}
-#endif
-}
-
 int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
@@ -6388,12 +6351,11 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->ce_varname, "bind-ip"))
 				{
 					config_detect_duplicate(&has_outgoing_bind_ip, cepp, &errors);
-					auto_convert_ipv4_to_ipv6(cepp);
+					// todo: ipv4 vs ipv6
 				}
 				else if (!strcmp(cepp->ce_varname, "hostname"))
 				{
 					config_detect_duplicate(&has_outgoing_hostname, cepp, &errors);
-					auto_convert_ipv4_to_ipv6(cepp);
 					if (strchr(cepp->ce_vardata, '*') || strchr(cepp->ce_vardata, '?'))
 					{
 						config_error("%s:%i: hostname in link::outgoing(!) cannot contain wildcards",
@@ -7017,6 +6979,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "disable-cap")) {
 					tempiConf.disable_cap = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "disable-ipv6")) {
+					/* other code handles this */
 				}
 			}
 		}
@@ -7780,6 +7745,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "disable-cap")) {
 					CheckDuplicate(cepp, options_disable_cap, "options::disable-cap");
+				}
+				else if (!strcmp(cepp->ce_varname, "disable-ipv6")) {
+					CheckDuplicate(cepp, options_disable_ipv6, "options::disable-ipv6");
+					DISABLE_IPV6 = 1; /* ugly ugly. needs to be done here because at conf runtime is too late. */
 				}
 				else
 				{

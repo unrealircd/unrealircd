@@ -149,6 +149,7 @@ struct zConfiguration {
 
 #ifndef DYNCONF_C
 extern MODVAR aConfiguration iConf;
+extern MODVAR int ipv6_disabled;
 #endif
 
 #define KLINE_ADDRESS			iConf.kline_address
@@ -235,6 +236,8 @@ extern MODVAR aConfiguration iConf;
 
 #define DISABLE_CAP	iConf.disable_cap
 
+#define DISABLE_IPV6	ipv6_disabled
+
 #define BAN_VERSION_TKL_TIME	iConf.ban_version_tkl_time
 #define SILENCE_LIMIT (iConf.silence_limit ? iConf.silence_limit : 15)
 
@@ -272,7 +275,6 @@ struct SetCheck {
 	unsigned has_dont_resolve:1;
 	unsigned has_mkpasswd_for_everyone:1;
 	unsigned has_allow_part_if_shunned:1;
-	unsigned has_disable_cap:1;
 	unsigned has_ssl_egd:1;
 	unsigned has_ssl_server_cipher_list :1;
 	unsigned has_dns_timeout:1;
@@ -358,6 +360,7 @@ struct SetCheck {
 	unsigned has_options_allow_insane_bans:1;
 	unsigned has_options_allow_part_if_shunned:1;
 	unsigned has_options_disable_cap:1;
+	unsigned has_options_disable_ipv6:1;
 	unsigned has_ping_cookie:1;
 	unsigned has_nicklen:1;
 };

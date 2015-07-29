@@ -25,14 +25,9 @@
 #include <time.h>
 #ifdef _WIN32
 #include <malloc.h>
-#ifdef INET6
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#endif
 #include <windows.h>
-#ifndef INET6
-#include <winsock.h>
-#endif
 #include <process.h>
 #include <io.h>
 #endif

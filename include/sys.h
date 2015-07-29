@@ -83,11 +83,10 @@
 #ifdef SSL
 #include <openssl/ssl.h>
 #endif
-#if defined(INET6) && !defined(_WIN32)
+#ifndef _WIN32
 #include <netinet/in.h>
 #include <sys/socket.h>
-#endif
-#ifdef _WIN32
+#else
 #define _WIN32_WINNT 0x0501
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -175,34 +174,7 @@ typedef unsigned __int64 uint64_t;
 typedef unsigned __int32 uint32_t;
 #endif
 
-/*
- *  IPv4 or IPv6 structures?
- */
-
 # define MYDUMMY_SIZE 128
-
-#ifdef INET6
-char mydummy[MYDUMMY_SIZE];
-char mydummy2[MYDUMMY_SIZE];
-
-# if defined(linux) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(bsdi)
-#  ifndef s6_laddr
-#   define s6_laddr        s6_addr32
-#  endif
-# endif
-
-# if defined(linux) && defined(NO_IN6ADDR_ANY)
-static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0
-};
-
-# endif
-
-# define IRCDCONF_DELIMITER '%'
-
-#else
-# define IRCDCONF_DELIMITER ':'
-#endif
 
 /*
  * Socket, File, and Error portability macros

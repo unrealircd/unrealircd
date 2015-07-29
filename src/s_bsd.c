@@ -70,13 +70,6 @@
 #include "h.h"
 #include "fdlist.h"
 
-#ifdef INET6
-static unsigned char minus_one[] =
-    { 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 0
-};
-#endif
-
 #ifndef IN_LOOPBACKNET
 #define IN_LOOPBACKNET	0x7f
 #endif
@@ -849,8 +842,7 @@ void close_connection(aClient *cptr)
 
 void set_ipv6_opts(int fd)
 {
-	ircd_log(LOG_ERROR, "set_ipv6_opts(%d)", fd);
-#if defined(INET6) && defined(IPV6_V6ONLY)
+#if defined(IPV6_V6ONLY)
 	int opt = 1;
 	setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
 #endif
@@ -1616,4 +1608,18 @@ int connect_inet(ConfigItem_link *aconf, aClient *cptr)
 	set_sock_opts(cptr->fd, cptr, IsIPV6(cptr));
 
 	return unreal_connect(cptr->fd, cptr->ip, aconf->outgoing.port, IsIPV6(cptr));
+}
+
+/** Checks if the system is IPv6 capable.
+ * IPv6 is always available at compile time (libs, headers), but the OS may
+ * not have IPv6 enabled (or ipv6 kernel module not loaded). So we better check..
+ */
+int ipv6_capable(void)
+{
+	int s = socket(AF_INET6, SOCK_STREAM, 0);
+	if (s < 0)
+		return 0; /* NO ipv6 */
+	
+	close(s);
+	return 1; /* YES */
 }
