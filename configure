@@ -752,7 +752,6 @@ with_system_pcre2
 with_system_cares
 enable_ssl
 enable_dynamic_linking
-enable_inet6
 enable_libcurl
 '
       ac_precious_vars='build_alias
@@ -1393,7 +1392,6 @@ Optional Features:
                           Make the IRCd statically link with shared objects
                           rather than dynamically (noone knows if disabling
                           dynamic linking actually does anything or not)
-  --enable-inet6          Make the IRCd support IPv6
   --enable-libcurl=DIR    enable libcurl (remote include) support
 
 Optional Packages:
@@ -1625,6 +1623,48 @@ fi
 
 } # ac_fn_c_try_link
 
+# ac_fn_c_try_run LINENO
+# ----------------------
+# Try to link conftest.$ac_ext, and return whether this succeeded. Assumes
+# that executables *can* be run.
+ac_fn_c_try_run ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  if { { ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+$as_echo "$ac_try_echo"; } >&5
+  (eval "$ac_link") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; } && { ac_try='./conftest$ac_exeext'
+  { { case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+$as_echo "$ac_try_echo"; } >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; }; then :
+  ac_retval=0
+else
+  $as_echo "$as_me: program exited with status $ac_status" >&5
+       $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+       ac_retval=$ac_status
+fi
+  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+  as_fn_set_status $ac_retval
+
+} # ac_fn_c_try_run
+
 # ac_fn_c_try_cpp LINENO
 # ----------------------
 # Try to preprocess conftest.$ac_ext, and return whether this succeeded.
@@ -1752,48 +1792,6 @@ fi
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
 } # ac_fn_c_check_header_mongrel
-
-# ac_fn_c_try_run LINENO
-# ----------------------
-# Try to link conftest.$ac_ext, and return whether this succeeded. Assumes
-# that executables *can* be run.
-ac_fn_c_try_run ()
-{
-  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
-  if { { ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
-$as_echo "$ac_try_echo"; } >&5
-  (eval "$ac_link") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; } && { ac_try='./conftest$ac_exeext'
-  { { case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
-$as_echo "$ac_try_echo"; } >&5
-  (eval "$ac_try") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; }; then :
-  ac_retval=0
-else
-  $as_echo "$as_me: program exited with status $ac_status" >&5
-       $as_echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-       ac_retval=$ac_status
-fi
-  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
-  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
-  as_fn_set_status $ac_retval
-
-} # ac_fn_c_try_run
 
 # ac_fn_c_check_header_compile LINENO HEADER VAR INCLUDES
 # -------------------------------------------------------
@@ -3968,6 +3966,49 @@ fi
 
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if your system has IPv6 support" >&5
+$as_echo_n "checking if your system has IPv6 support... " >&6; }
+if ${ac_cv_ip6+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+save_libs="$LIBS"
+LIBS="$LIBS $SOCKLIB"
+if test "$cross_compiling" = yes; then :
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "cannot run test program while cross compiling
+See \`config.log' for more details" "$LINENO" 5; }
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <sys/types.h>
+#include <sys/socket.h>
+int main() {
+if (socket(AF_INET6, SOCK_STREAM, 0) < 0)
+exit(1);
+exit(0);
+}
+
+_ACEOF
+if ac_fn_c_try_run "$LINENO"; then :
+  ac_cv_ip6=yes
+else
+  ac_cv_ip6=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_ip6" >&5
+$as_echo "$ac_cv_ip6" >&6; }
+if test "$ac_cv_ip6" = "no"; then
+	as_fn_error $? "Your system does not support IPv6" "$LINENO" 5
+fi
+LIBS="$save_libs"
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -6607,92 +6648,6 @@ else
 
 $as_echo "#define STATIC_LINKING /**/" >>confdefs.h
 
-fi
-
-# Check whether --enable-inet6 was given.
-if test "${enable_inet6+set}" = set; then :
-  enableval=$enable_inet6; if test $enableval = "yes"; then :
-
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if your system has IPv6 support" >&5
-$as_echo_n "checking if your system has IPv6 support... " >&6; }
-if ${ac_cv_ip6+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-		save_libs="$LIBS"
-		LIBS="$LIBS $SOCKLIB"
-		if test "$cross_compiling" = yes; then :
-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "cannot run test program while cross compiling
-See \`config.log' for more details" "$LINENO" 5; }
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <sys/types.h>
-#include <sys/socket.h>
-int main() {
-if (socket(AF_INET6, SOCK_STREAM, 0) < 0)
-exit(1);
-exit(0);
-}
-
-_ACEOF
-if ac_fn_c_try_run "$LINENO"; then :
-  ac_cv_ip6=yes
-else
-  ac_cv_ip6=no
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_ip6" >&5
-$as_echo "$ac_cv_ip6" >&6; }
-	if test "$ac_cv_ip6" = "no"; then
-		as_fn_error $? "Your system does not support IPv6 so it will not be enabled" "$LINENO" 5
-	else
-
-$as_echo "#define INET6 /**/" >>confdefs.h
-
-				{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for struct in6addr_any" >&5
-$as_echo_n "checking for struct in6addr_any... " >&6; }
-		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#define IN_AUTOCONF
-				#include <sys/types.h>
-				#include <sys/socket.h>
-				#include <netinet/in.h>
-int
-main ()
-{
-struct in6_addr a = in6addr_any;
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-
-				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-$as_echo "#define NO_IN6ADDR_ANY 1" >>confdefs.h
-
-
-
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-	fi
-	LIBS="$save_libs"
-
-fi
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors" >&5

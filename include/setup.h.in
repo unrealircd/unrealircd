@@ -208,9 +208,6 @@
 /* Define to 1 if you have the `vsnprintf' function. */
 #undef HAVE_VSNPRINTF
 
-/* Define if you want IPv6 enabled */
-#undef INET6
-
 /* Define if you want modes shown in /list */
 #undef LIST_SHOW_MODES
 
@@ -273,9 +270,6 @@
 
 /* Define if you do not have the index function. */
 #undef NOINDEX
-
-/* Define to 1 if your system has no in6addr_any. */
-#undef NO_IN6ADDR_ANY
 
 /* Define if you want OperOverride disabled */
 #undef NO_OPEROVERRIDE

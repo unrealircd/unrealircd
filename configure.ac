@@ -158,11 +158,11 @@ dnl defined in the Makefiles using -D. Having it defined globally will
 dnl only cause braindamage and symbol collisions :-D.
 dnl AC_DEFINE([DYNAMIC_LINKING], [], [Link dynamically as opposed to statically. (Dynamic linking is the only supported method of linking atm)])
 ])
-AC_DEFUN([AC_ENABLE_INET6],[
-	AC_CACHE_CHECK([if your system has IPv6 support], [ac_cv_ip6], [
-		save_libs="$LIBS"
-		LIBS="$LIBS $SOCKLIB"
-		AC_TRY_RUN([
+
+AC_CACHE_CHECK([if your system has IPv6 support], [ac_cv_ip6], [
+save_libs="$LIBS"
+LIBS="$LIBS $SOCKLIB"
+AC_TRY_RUN([
 #include <sys/types.h>
 #include <sys/socket.h>
 int main() {
@@ -170,33 +170,14 @@ if (socket(AF_INET6, SOCK_STREAM, 0) < 0)
 exit(1);
 exit(0);
 }
-			],
-			[ac_cv_ip6=yes],
-			[ac_cv_ip6=no])
-		])
-	if test "$ac_cv_ip6" = "no"; then
-		AC_MSG_ERROR([Your system does not support IPv6 so it will not be enabled])
-	else
-		AC_DEFINE([INET6], [], [Define if you want IPv6 enabled])
-		dnl in6addr_any detection code taken from ratbox
-		AC_MSG_CHECKING([for struct in6addr_any])
-		AC_COMPILE_IFELSE(
-			[AC_LANG_PROGRAM(
-				[[#define IN_AUTOCONF
-				#include <sys/types.h>
-				#include <sys/socket.h>
-				#include <netinet/in.h>]],
-				[[struct in6_addr a = in6addr_any;]]
-			)],
-			[AC_MSG_RESULT(yes)],
-				[
-				AC_MSG_RESULT([no])
-				AC_DEFINE([NO_IN6ADDR_ANY], [1], [Define to 1 if your system has no in6addr_any.])
-				]
-			)
-	fi
-	LIBS="$save_libs"
+],
+	[ac_cv_ip6=yes],
+	[ac_cv_ip6=no])
 ])
+if test "$ac_cv_ip6" = "no"; then
+	AC_MSG_ERROR([Your system does not support IPv6])
+fi
+LIBS="$save_libs"
 
 AC_CHECK_HEADER(sys/param.h,
 	AC_DEFINE([PARAMH], [], [Define if you have the <sys/param.h> header file.]))
@@ -581,9 +562,6 @@ AS_IF([test $enable_dynamic_linking = "yes"],
 	[AC_ENABLE_DYN],
 	[AC_DEFINE([STATIC_LINKING], [], [Link... statically(?) (defining this macro will probably cause the build tofail)])])
 
-AC_ARG_ENABLE([inet6], [AS_HELP_STRING([--enable-inet6], [Make the IRCd support IPv6])],
-	[AS_IF([test $enableval = "yes"],
-		[AC_ENABLE_INET6])])
 AC_MSG_CHECKING([if FD_SETSIZE is large enough to allow $ac_fd file descriptors])
 AC_COMPILE_IFELSE([
 #include <sys/types.h>

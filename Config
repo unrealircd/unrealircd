@@ -66,9 +66,6 @@ fi
 if [ "$REMOTEINC" = "1" ] ; then
 ARG="$ARG--enable-libcurl=$CURLDIR "
 fi
-if [ "$INET6" = "1" ] ; then
-ARG="$ARG--enable-inet6 "
-fi
 if [ "$PREFIXAQ" != "1" ]; then
 ARG="$ARG--disable-prefixaq "
 fi
@@ -357,7 +354,6 @@ SSLDIR=""
 NICKNAMEHISTORYLENGTH="2000"
 MAXSENDQLENGTH="3000000"
 MAXCONNECTIONS="1024"
-INET6=""
 REMOTEINC=""
 CURLDIR=""
 PREFIXAQ="1"
@@ -556,35 +552,6 @@ if [ -z "$cc" ] ; then
 else 
     SSLDIR=`eval echo $cc` # modified
 fi
-
-TEST=""
-while [ -z "$TEST" ] ; do
-    if [ "$INET6" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want to enable IPv6 support?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
-	[Yy]*)
-	    INET6="1"
-	    ;;
-	[Nn]*)
-	    INET6=""
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
-done
 
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -888,7 +855,6 @@ LOGDIR="$LOGDIR"
 CACHEDIR="$CACHEDIR"
 DOCDIR="$DOCDIR"
 TMPDIR="$TMPDIR"
-INET6="$INET6"
 PREFIXAQ="$PREFIXAQ"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
 MAXCONNECTIONS="$MAXCONNECTIONS"

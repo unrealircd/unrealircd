@@ -55,7 +55,6 @@
 #define NEED_U_INT32_T
 #define PREFIX_AQ
 #define LIST_SHOW_MODES
-#define INET6
 #ifndef mode_t
 /*
   Needed in s_conf.c for the third argument of open(3p).
