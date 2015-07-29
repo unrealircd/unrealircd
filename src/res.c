@@ -177,30 +177,12 @@ int optmask;
 	n = ares_init_options(&resolver_channel, &options, optmask);
 	if (n != ARES_SUCCESS)
 	{
-		/* Try again with set::dns::nameserver block */
-		optmask |= ARES_OPT_SERVERS;
-		options.servers = MyMallocEx(sizeof(struct in_addr));
-		options.servers[0].s_addr = inet_addr(NAME_SERVER);
-		// TODO/FIXME: how about IPv6 nameservers? ^ 
-		options.nservers = 1;
-		n = ares_init_options(&resolver_channel, &options, optmask);
-		if (n != ARES_SUCCESS)
-		{
-			/* FATAL */
-			config_error("resolver: ares_init_options() failed with error code %d [%s]", n, ares_strerror(n));
+		/* FATAL */
+		config_error("resolver: ares_init_options() failed with error code %d [%s]", n, ares_strerror(n));
 #ifdef _WIN32
-			win_error();
+		win_error();
 #endif
-			exit(-7);
-		}
-		ircd_log(LOG_ERROR, "[warning] Unable to get DNS server from %s. Using the one from set::dns::nameserver (%s) instead",
-#ifdef _WIN32
-			"registry",
-#else
-			"resolv.conf",
-#endif
-			NAME_SERVER);
-		MyFree(options.servers);
+		exit(-7);
 	}
 
 	ares_set_socket_callback(resolver_channel, unrealdns_sock_create_cb, NULL);

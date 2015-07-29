@@ -1337,7 +1337,6 @@ ConfigCommand *config_binary_search(char *cmd) {
 
 void	free_iConf(aConfiguration *i)
 {
-	safefree(i->name_server);
 	safefree(i->kline_address);
 	safefree(i->gline_address);
 	safefree(i->auto_join_chans);
@@ -1403,7 +1402,6 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->timesynch_enabled = 1;
 	i->timesynch_timeout = 3;
 	i->timesynch_server = strdup("193.67.79.202,192.43.244.18,128.250.36.3"); /* nlnet (EU), NIST (US), uni melbourne (AU). All open acces, nonotify, nodns. */
-	i->name_server = strdup("127.0.0.1"); /* default, especially needed for w2003+ in some rare cases */
 	i->level_on_join = CHFL_CHANOP;
 	i->watch_away_notification = 1;
 	i->new_linking_protocol = 1;
@@ -2176,14 +2174,6 @@ int	config_post_test()
 		Error("set::kline-address is missing");
 	if (!settings.has_maxchannelsperuser)
 		Error("set::maxchannelsperuser is missing");
-#if 0
-	if (!settings.has_dns_nameserver)
-		Error("set::dns::nameserver is missing");
-	if (!settings.has_dns_timeout)
-		Error("set::dns::timeout is missing");
-	if (!settings.has_dns_retries)
-		Error("set::dns::retries is missing");
-#endif
 	if (!settings.has_services_server)
 		Error("set::services-server is missing");
 	if (!settings.has_default_server)
@@ -2707,7 +2697,6 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			strlcpy(uhost, sockhost, sizeof(uhost));
 		set_sockhost(cptr, uhost);
 
-		/* FIXME */
 		if (aconf->maxperip)
 		{
 			aClient *acptr, *acptr2;
@@ -2722,7 +2711,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 					{
 						exit_client(cptr, cptr, &me,
 							"Too many connections from your IP");
-						return -5;	/* Already got one with that ip# */
+						return -5;	/* Already got too many with that ip# */
 					}
 				}
 			}
@@ -6833,9 +6822,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "retries")) {
 					tempiConf.host_retries = config_checkval(cepp->ce_vardata,CFG_TIME);
 				}
-				else if (!strcmp(cepp->ce_varname, "nameserver")) {
-					safestrdup(tempiConf.name_server, cepp->ce_vardata);
-				}
 				else if (!strcmp(cepp->ce_varname, "bind-ip")) {
 					safestrdup(tempiConf.dns_bindip, cepp->ce_vardata);
 				}
@@ -7481,16 +7467,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					CheckDuplicate(cepp, dns_retries, "dns::retries");
 				}
 				else if (!strcmp(cepp->ce_varname, "nameserver")) {
-					CheckDuplicate(cepp, dns_nameserver, "dns::nameserver");
-					
-					if (!is_valid_ip(cepp->ce_vardata))
-					{
-						config_error("%s:%i: set::dns::nameserver (%s) is not a valid IP",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
-							cepp->ce_vardata);
-						errors++;
-						continue;
-					}
+					config_warn("%s:%i: set::dns::nameserver is removed as this setting is always ignored "
+					            "(DNS settings are acquired from the OS)",
+					            cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 				}
 				else if (!strcmp(cepp->ce_varname, "bind-ip")) {
 					CheckDuplicate(cepp, dns_bind_ip, "dns::bind-ip");

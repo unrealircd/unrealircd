@@ -71,7 +71,6 @@ struct zConfiguration {
 	unsigned use_egd : 1;
 	long host_timeout;
 	int  host_retries;
-	char *name_server;
 	char *dns_bindip;
 	char *link_bindip;
 	long throttle_period;
@@ -169,7 +168,6 @@ extern MODVAR int ipv6_disabled;
 #define OPER_AUTO_JOIN_CHANS		iConf.oper_auto_join_chans
 #define HOST_TIMEOUT			iConf.host_timeout
 #define HOST_RETRIES			iConf.host_retries
-#define NAME_SERVER			iConf.name_server
 #define DNS_BINDIP			iConf.dns_bindip
 #define LINK_BINDIP			iConf.link_bindip
 #define IDENT_CHECK			iConf.ident_check
@@ -279,7 +277,6 @@ struct SetCheck {
 	unsigned has_ssl_server_cipher_list :1;
 	unsigned has_dns_timeout:1;
 	unsigned has_dns_retries:1;
-	unsigned has_dns_nameserver:1;
 	unsigned has_dns_bind_ip:1;
 	unsigned has_link_bind_ip:1;
 	unsigned has_throttle_period:1;
