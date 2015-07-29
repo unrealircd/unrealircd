@@ -17,19 +17,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "sys.h"
-#include <windows.h>
+#include "unrealircd.h"
 #include <windowsx.h>
 #include <commctrl.h>
 #include <richedit.h>
 #include <commdlg.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <io.h>
-#include <fcntl.h>
 #include "resource.h"
-#include "setup.h"
 #include "win32.h"
 
 LRESULT CALLBACK GotoDLG(HWND, UINT, WPARAM, LPARAM);
@@ -336,7 +330,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		case WM_INITDIALOG: 
 		{
 			int fd,len;
-			unsigned char *buffer = '\0', *string = '\0';
+			char *buffer, *string;
 			EDITSTREAM edit;
 			StreamIO *stream = MyMallocEx(sizeof(StreamIO));
 			unsigned char szText[256];
