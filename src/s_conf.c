@@ -220,7 +220,6 @@ struct SetCheck settings;
  * Utilities
 */
 
-void	ipport_seperate(char *string, char **ip, char **port);
 void	port_range(char *string, int *start, int *end);
 long	config_checkval(char *value, unsigned short flags);
 
@@ -318,65 +317,6 @@ void load_includes(void);
 void unload_loaded_includes(void);
 int rehash_internal(aClient *cptr, aClient *sptr, int sig);
 
-
-/* Pick out the ip address and the port number from a string.
- * The string syntax is:  ip:port.  ip must be enclosed in brackets ([]) if its an ipv6
- * address because they contain colon (:) separators.  The ip part is optional.  If the string
- * contains a single number its assumed to be a port number.
- *
- * Returns with ip pointing to the ip address (if one was specified), a "*" (if only a port
- * was specified), or an empty string if there was an error.  port is returned pointing to the
- * port number if one was specified, otherwise it points to a empty string.
- */
-void ipport_seperate(char *string, char **ip, char **port)
-{
-	char *f;
-
-	/* assume failure */
-	*ip = *port = "";
-
-	/* sanity check */
-	if (string && strlen(string) > 0)
-	{
-		/* handle ipv6 type of ip address */
-		if (*string == '[')
-		{
-			if ((f = strrchr(string, ']')))
-			{
-				*ip = string + 1;	/* skip [ */
-				*f = '\0';			/* terminate the ip string */
-				/* next char must be a : if a port was specified */
-				if (*++f == ':')
-				{
-					*port = ++f;
-				}
-			}
-		}
-		/* handle ipv4 and port */
-		else if ((f = strchr(string, ':')))
-		{
-			/* we found a colon... we may have ip:port or just :port */
-			if (f == string)
-			{
-				/* we have just :port */
-				*ip = "*";
-			}
-			else
-			{
-				/* we have ip:port */
-				*ip = string;
-				*f = '\0';
-			}
-			*port = ++f;
-		}
-		/* no ip was specified, just a port number */
-		else if (!strcmp(string, my_itoa(atoi(string))))
-		{
-			*ip = "*";
-			*port = string;
-		}
-	}
-}
 
 void port_range(char *string, int *start, int *end)
 {
@@ -4499,57 +4439,42 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	ConfigItem_listen *listen = NULL;
-	NameValue    *ofp;
-	char	    copy[256];
-	char	    *ip;
-	char	    *port;
-	int	    start, end, iport, isnew;
+	char *ip;
+	int start=0, end=0, port, isnew;
 	int tmpflags =0;
 
-	strlcpy(copy, ce->ce_vardata, sizeof(copy));
-	/* Seriously cheap hack to make listen <port> work -Stskeeps */
-	ipport_seperate(copy, &ip, &port);
-	if (!ip || !*ip)
-	{
-		return -1;
-	}
-	if (strchr(ip, '*') && strcmp(ip, "*"))
-	{
-		return -1;
-	}
-	if (!port || !*port)
-	{
-		return -1;
-	}
-	port_range(port, &start, &end);
-	if ((start < 0) || (start > 65535) || (end < 0) || (end > 65535))
-	{
-		return -1;
-	}
-	end++;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
+		if (!strcmp(cep->ce_varname, "ip"))
+		{
+			ip = cep->ce_vardata;
+		} else
+		if (!strcmp(cep->ce_varname, "port"))
+		{
+			port_range(cep->ce_vardata, &start, &end);
+			if ((start < 0) || (start > 65535) || (end < 0) || (end > 65535))
+				return -1; /* this is already validated in _test_listen, but okay.. */
+		} else
 		if (!strcmp(cep->ce_varname, "options"))
 		{
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
+				NameValue *ofp;
 				if ((ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, ARRAY_SIZEOF(_ListenerFlags))))
 					tmpflags |= ofp->flag;
 			}
 		}
 	}
-	for (iport = start; iport < end; iport++)
+	for (port = start; port <= end; port++)
 	{
-		/* Argh this is ugly duplicate code.. */
-
 		/* First deal with IPv4 */
 		if (!strchr(ip, ':'))
 		{
-			if (!(listen = Find_listen(ip, iport, 0)))
+			if (!(listen = Find_listen(ip, port, 0)))
 			{
 				listen = MyMallocEx(sizeof(ConfigItem_listen));
 				listen->ip = strdup(ip);
-				listen->port = iport;
+				listen->port = port;
 				listen->fd = -1;
 				listen->ipv6 = 0;
 				isnew = 1;
@@ -4565,16 +4490,16 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			listen->flag.temporary = 0;
 		}
 
-		/* Then deal with IPv6 */
+		/* Then deal with IPv6 (if available/enabled) */
 		if (!DISABLE_IPV6)
 		{
 			if (strchr(ip, ':') || (*ip == '*'))
 			{
-				if (!(listen = Find_listen(ip, iport, 1)))
+				if (!(listen = Find_listen(ip, port, 1)))
 				{
 					listen = MyMallocEx(sizeof(ConfigItem_listen));
 					listen->ip = strdup(ip);
-					listen->port = iport;
+					listen->port = port;
 					listen->fd = -1;
 					listen->ipv6 = 1;
 					isnew = 1;
@@ -4598,81 +4523,18 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
-	char	    copy[256];
-	char	    *ip;
-	char	    *port;
-	int	    start, end;
-	int	    errors = 0;
-	char has_options = 0;
-	NameValue    *ofp;
+	int errors = 0;
+	char has_ip = 0, has_port = 0, has_options = 0;
 
-	if (!ce->ce_vardata)
+	if (ce->ce_vardata)
 	{
-		config_error("%s:%i: listen without ip:port",
+		config_error("%s:%i: listen block has a new syntax, see https://www.unrealircd.org/docs/Listen_block",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			
+		need_34_upgrade = 1;
 		return 1;
 	}
 
-	strlcpy(copy, ce->ce_vardata, sizeof(copy));
-	/* Seriously cheap hack to make listen <port> work -Stskeeps */
-	ipport_seperate(copy, &ip, &port);
-	if (!ip || !*ip)
-	{
-		config_error("%s:%i: listen: illegal ip:port mask",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return 1;
-	}
-	if (strchr(ip, '*') && strcmp(ip, "*"))
-	{
-		config_error("%s:%i: listen: illegal ip, (mask, and not '*')",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return 1;
-	}
-	if (!strchr(ip, '*') && !is_valid_ip(ip))
-	{
-		config_error("%s:%i: listen: illegal ip (%s)",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ip);
-		return 1;
-	}
-	if (!port || !*port)
-	{
-		config_error("%s:%i: listen: missing port in mask",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return 1;
-	}
-	port_range(port, &start, &end);
-	if (start == end)
-	{
-		if ((start < 0) || (start > 65535))
-		{
-			config_error("%s:%i: listen: illegal port (must be 0..65535)",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return 1;
-		}
-	}
-	else
-	{
-		if (end < start)
-		{
-			config_error("%s:%i: listen: illegal port range end value is less than starting value",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return 1;
-		}
-		if (end - start >= 100)
-		{
-			config_error("%s:%i: listen: you requested port %d-%d, that's %d ports "
-				"(and thus consumes %d sockets) this is probably not what you want.",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, start, end,
-				end - start + 1, end - start + 1);
-			return 1;
-		}
-		if ((start < 0) || (start > 65535) || (end < 0) || (end > 65535))
-		{
-			config_error("%s:%i: listen: illegal port range values must be between 0 and 65535",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return 1;
-		}
-	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
@@ -4693,6 +4555,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			has_options = 1;
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
+				NameValue *ofp;
 				if (!cepp->ce_varname)
 				{
 					config_error_blank(cepp->ce_fileptr->cf_filename,
@@ -4703,21 +4566,99 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				if (!(ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, ARRAY_SIZEOF(_ListenerFlags))))
 				{
 					config_error_unknownopt(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "class", cepp->ce_varname);
+						cepp->ce_varlinenum, "listen::options", cepp->ce_varname);
 					errors++;
 					continue;
 				}
 			}
 		}
 		else
+		if (!cep->ce_vardata)
+		{
+			config_error_empty(cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, "listen", cep->ce_varname);
+			errors++;
+			continue;
+		} else
+		if (!strcmp(cep->ce_varname, "ip"))
+		{
+			has_ip = 1;
+			
+			if (strcmp(cep->ce_vardata, "*") && !is_valid_ip(cep->ce_vardata))
+			{
+				config_error("%s:%i: listen: illegal listen::ip (%s). Must be either '*' or contain a valid IP.",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+				return 1;
+			}
+		} else
+		if (!strcmp(cep->ce_varname, "host"))
+		{
+			config_error("%s:%i: listen: unknown option listen::host, did you mean listen::ip?",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+		} else
+		if (!strcmp(cep->ce_varname, "port"))
+		{
+			int start = 0, end = 0;
+
+			has_port = 1;
+
+			port_range(cep->ce_vardata, &start, &end);
+			if (start == end)
+			{
+				if ((start < 0) || (start > 65535))
+				{
+					config_error("%s:%i: listen: illegal port (must be 0..65535)",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					return 1;
+				}
+			}
+			else
+			{
+				if (end < start)
+				{
+					config_error("%s:%i: listen: illegal port range end value is less than starting value",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					return 1;
+				}
+				if (end - start >= 100)
+				{
+					config_error("%s:%i: listen: you requested port %d-%d, that's %d ports "
+						"(and thus consumes %d sockets) this is probably not what you want.",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, start, end,
+						end - start + 1, end - start + 1);
+					return 1;
+				}
+				if ((start < 0) || (start > 65535) || (end < 0) || (end > 65535))
+				{
+					config_error("%s:%i: listen: illegal port range values must be between 0 and 65535",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					return 1;
+				}
+			}
+		} else
 		{
 			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				"listen", cep->ce_varname);
 			errors++;
 			continue;
 		}
-
 	}
+	
+	if (!has_ip)
+	{
+		config_error("%s:%d: listen block requires an listen::ip",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+
+	if (!has_port)
+	{
+		config_error("%s:%d: listen block requires an listen::port",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+
 	requiredstuff.conf_listen = 1;
 	return errors;
 }
