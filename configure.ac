@@ -306,7 +306,6 @@ dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_SETPGRP
 AC_FUNC_SETVBUF_REVERSED
-AC_FUNC_ALLOCA
 AC_CHECK_FUNCS(snprintf,
 	AC_DEFINE([HAVE_SNPRINTF], [], [Define if you have snprintf]))
 AC_CHECK_FUNCS(vsnprintf,
