@@ -1161,8 +1161,11 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, defserv);
 	sendto_one(sptr, ":%s %i %s :services-server: %s", me.name, RPL_TEXT,
 	    sptr->name, SERVICES_NAME);
-	sendto_one(sptr, ":%s %i %s :stats-server: %s", me.name, RPL_TEXT,
-	    sptr->name, STATS_SERVER);
+	if (STATS_SERVER)
+	{
+		sendto_one(sptr, ":%s %i %s :stats-server: %s", me.name, RPL_TEXT,
+		    sptr->name, STATS_SERVER);
+	}
 	sendto_one(sptr, ":%s %i %s :hiddenhost-prefix: %s", me.name, RPL_TEXT,
 	    sptr->name, hidden_host);
 	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.name, RPL_TEXT,
