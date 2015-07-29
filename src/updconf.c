@@ -752,7 +752,7 @@ int upgrade_spamfilter_block(ConfigEntry *ce)
 	return 1;
 }
 
-#define MAXALLOWOPTIONS 16
+#define MAXOPTIONS 32
 int upgrade_allow_block(ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
@@ -765,7 +765,7 @@ int upgrade_allow_block(ConfigEntry *ce)
 	char *class = NULL;
 	char *redirect_server = NULL;
 	int redirect_port = 0;
-	char *options[MAXALLOWOPTIONS];
+	char *options[MAXOPTIONS];
 	int optionscnt = 0;
 	char options_str[512], comment[512];
 
@@ -787,7 +787,7 @@ int upgrade_allow_block(ConfigEntry *ce)
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
-					if (optionscnt == MAXALLOWOPTIONS)
+					if (optionscnt == MAXOPTIONS)
 						break;
 					options[optionscnt++] = cepp->ce_varname;
 				}
@@ -914,6 +914,134 @@ int upgrade_allow_block(ConfigEntry *ce)
 	return 1;
 }
 
+/* Pick out the ip address and the port number from a string.
+ * The string syntax is:  ip:port.  ip must be enclosed in brackets ([]) if its an ipv6
+ * address because they contain colon (:) separators.  The ip part is optional.  If the string
+ * contains a single number its assumed to be a port number.
+ *
+ * Returns with ip pointing to the ip address (if one was specified), a "*" (if only a port
+ * was specified), or an empty string if there was an error.  port is returned pointing to the
+ * port number if one was specified, otherwise it points to a empty string.
+ */
+void ipport_separate(char *string, char **ip, char **port)
+{
+	char *f;
+
+	/* assume failure */
+	*ip = *port = "";
+
+	/* sanity check */
+	if (string && strlen(string) > 0)
+	{
+		/* handle ipv6 type of ip address */
+		if (*string == '[')
+		{
+			if ((f = strrchr(string, ']')))
+			{
+				*ip = string + 1;	/* skip [ */
+				*f = '\0';			/* terminate the ip string */
+				/* next char must be a : if a port was specified */
+				if (*++f == ':')
+				{
+					*port = ++f;
+				}
+			}
+		}
+		/* handle ipv4 and port */
+		else if ((f = strchr(string, ':')))
+		{
+			/* we found a colon... we may have ip:port or just :port */
+			if (f == string)
+			{
+				/* we have just :port */
+				*ip = "*";
+			}
+			else
+			{
+				/* we have ip:port */
+				*ip = string;
+				*f = '\0';
+			}
+			*port = ++f;
+		}
+		/* no ip was specified, just a port number */
+		else if (!strcmp(string, my_itoa(atoi(string))))
+		{
+			*ip = "*";
+			*port = string;
+		}
+	}
+}
+
+int upgrade_listen_block(ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+	char *ip = NULL;
+	char *port = NULL;
+	char *options[MAXOPTIONS];
+	int optionscnt = 0;
+	char options_str[512];
+	char copy[128];
+
+	memset(options, 0, sizeof(options));
+	*options_str = '\0';
+
+	if (!ce->ce_vardata)
+		return 0; /* already upgraded */
+
+	strlcpy(copy, ce->ce_vardata, sizeof(copy));
+	ipport_separate(copy, &ip, &port);
+	if (!ip || !*ip || !port || !*port)
+		return 0; /* invalid conf */
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "options"))
+		{
+			if (cep->ce_entries)
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (optionscnt == MAXOPTIONS)
+						break;
+					options[optionscnt++] = cepp->ce_varname;
+				}
+			}
+		}
+	}
+
+	/* build options list */
+	if (optionscnt == 0)
+	{
+		*options_str = '\0';
+	}
+	else
+	{
+		int i;
+		
+		for (i=0; i < optionscnt; i++)
+		{
+			snprintf(options_str+strlen(options_str), sizeof(options_str)-strlen(options_str),
+			         "%s; ", options[i]);
+		}
+	}
+
+	snprintf(buf, sizeof(buf), "listen {\n"
+	                           "\tip %s;\n"
+	                           "\tport %s;\n",
+	                           ip,
+	                           port);
+
+	if (*options_str)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\toptions { %s};\n", options_str);
+
+	strlcat(buf, "};\n", sizeof(buf));
+	
+	replace_section(ce, buf);
+	config_status("- listen block converted to new syntax");
+	return 1;
+}
+
 int upgrade_cgiirc_block(ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
@@ -1006,7 +1134,6 @@ int contains_flag(char **flags, int flagscnt, char *needle)
 	return 0;
 }
 
-#define MAXOPERFLAGS 64
 int upgrade_oper_block(ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
@@ -1015,7 +1142,7 @@ int upgrade_oper_block(ConfigEntry *ce)
 	char *password_type = NULL;
 	char *require_modes = NULL;
 	char *class = NULL;
-	char *flags[MAXOPERFLAGS];
+	char *flags[MAXOPTIONS];
 	int flagscnt = 0;
 	char *swhois = NULL;
 	char *snomask = NULL;
@@ -1048,7 +1175,7 @@ int upgrade_oper_block(ConfigEntry *ce)
 				char *p;
 				for (p = cep->ce_vardata; *p; p++)
 				{
-					if (flagscnt == MAXALLOWOPTIONS)
+					if (flagscnt == MAXOPTIONS)
 						break;
 					for (i = 0; FlagMappingTable[i].shortflag; i++)
 					{
@@ -1065,7 +1192,7 @@ int upgrade_oper_block(ConfigEntry *ce)
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
-					if (flagscnt == MAXALLOWOPTIONS)
+					if (flagscnt == MAXOPTIONS)
 						break;
 					flags[flagscnt++] = cepp->ce_varname;
 				}
@@ -1404,6 +1531,11 @@ again:
 		if (!strcmp(ce->ce_varname, "allow") && !ce->ce_vardata) /* 'allow' block for clients, not 'allow channel' etc.. */
 		{
 			if (upgrade_allow_block(ce))
+				goto again;
+		}
+		if (!strcmp(ce->ce_varname, "listen"))
+		{
+			if (upgrade_listen_block(ce))
 				goto again;
 		}
 		if (!strcmp(ce->ce_varname, "cgiirc"))
