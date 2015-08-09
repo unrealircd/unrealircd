@@ -275,7 +275,7 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					{
 						for (ceppp = cepp->ce_entries; ceppp; ceppp=ceppp->ce_next)
 						{
-							if (atoi(cepp->ce_vardata) <= 0)
+							if (atoi(ceppp->ce_varname) <= 0)
 							{
 								config_error("%s:%i: all items in blacklist::dns::reply must be >0",
 									cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
