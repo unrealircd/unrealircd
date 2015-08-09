@@ -142,13 +142,14 @@ int unreal_connect(int fd, char *ip, int port, int ipv6)
 	{
 		struct sockaddr_in6 server;
 		memset(&server, 0, sizeof(server));
+		server.sin6_family = AF_INET6;
 		inet_pton(AF_INET6, ip, &server.sin6_addr);
 		server.sin6_port = htons(port);
-		
 		n = connect(fd, (struct sockaddr *)&server, sizeof(server));
 	} else {
 		struct sockaddr_in server;
 		memset(&server, 0, sizeof(server));
+		server.sin_family = AF_INET;
 		inet_pton(AF_INET, ip, &server.sin_addr);
 		server.sin_port = htons(port);
 		n = connect(fd, (struct sockaddr *)&server, sizeof(server));
