@@ -300,6 +300,7 @@ MODVAR aConfiguration		iConf;
 MODVAR aConfiguration		tempiConf;
 MODVAR ConfigFile		*conf = NULL;
 MODVAR int ipv6_disabled = 0;
+MODVAR aClient *remote_rehash_client = NULL;
 
 MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
@@ -1116,6 +1117,8 @@ void config_error(char *format, ...)
 #endif
 	ircd_log(LOG_ERROR, "config error: %s", buffer);
 	sendto_realops("error: %s", buffer);
+	if (remote_rehash_client)
+		sendto_one(remote_rehash_client, ":%s NOTICE %s :error: %s", me.name, remote_rehash_client->name, buffer);
 	/* We cannot live with this */
 	config_error_flag = 1;
 }
@@ -1160,7 +1163,6 @@ void config_error_empty(const char *filename, int line, const char *block,
 		filename, line, block, entry);
 }
 
-/* Like above */
 void config_status(char *format, ...)
 {
 	va_list		ap;
@@ -1180,6 +1182,8 @@ void config_status(char *format, ...)
 #endif
 	ircd_log(LOG_ERROR, "%s", buffer);
 	sendto_realops("%s", buffer);
+	if (remote_rehash_client)
+		sendto_one(remote_rehash_client, ":%s NOTICE %s :%s", me.name, remote_rehash_client->name, buffer);
 }
 
 void config_warn(char *format, ...)
@@ -1201,6 +1205,8 @@ void config_warn(char *format, ...)
 #endif
 	ircd_log(LOG_ERROR, "[warning] %s", buffer);
 	sendto_realops("[warning] %s", buffer);
+	if (remote_rehash_client)
+		sendto_one(remote_rehash_client, ":%s NOTICE %s :[warning] %s", me.name, remote_rehash_client->name, buffer);
 }
 
 void config_warn_duplicate(const char *filename, int line, const char *entry)
@@ -9073,6 +9079,7 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 	unload_all_unused_extcmodes();
 	extcmodes_check_for_changes();
 	loop.ircd_rehashing = 0;
+	remote_rehash_client = NULL;
 	return 1;
 }
 

@@ -571,6 +571,8 @@ static void exit_one_client(aClient *sptr, const char *comment)
 		del_from_client_hash_table(sptr->name, sptr);
 	if (IsRegisteredUser(sptr))
 		hash_check_watch(sptr, RPL_LOGOFF);
+	if (remote_rehash_client == sptr)
+		remote_rehash_client = NULL; /* client did a /REHASH and QUIT before rehash was complete */
 	remove_client_from_list(sptr);
 }
 

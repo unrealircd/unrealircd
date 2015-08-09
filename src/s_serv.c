@@ -656,6 +656,7 @@ CMD_FUNC(m_rehash)
 			sendto_ops
 			    ("%s is remotely rehashing server config file",
 			    sptr->name);
+			remote_rehash_client = sptr;
 			reread_motdsandrules();
 			return rehash(cptr, sptr,
 			    (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
