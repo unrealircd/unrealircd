@@ -3869,9 +3869,9 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "pingfreq"))
-			class->pingfreq = atol(cep->ce_vardata);
+			class->pingfreq = config_checkval(cep->ce_vardata,CFG_TIME);
 		else if (!strcmp(cep->ce_varname, "connfreq"))
-			class->connfreq = atol(cep->ce_vardata);
+			class->connfreq = config_checkval(cep->ce_vardata,CFG_TIME);
 		else if (!strcmp(cep->ce_varname, "maxclients"))
 			class->maxclients = atol(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "sendq"))
@@ -3935,7 +3935,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		/* class::pingfreq */
 		else if (!strcmp(cep->ce_varname, "pingfreq"))
 		{
-			int v = atol(cep->ce_vardata);
+			int v = config_checkval(cep->ce_vardata,CFG_TIME);
 			if (has_pingfreq)
 			{
 				config_warn_duplicate(cep->ce_fileptr->cf_filename,
@@ -3981,7 +3981,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_connfreq = 1;
-			l = atol(cep->ce_vardata);
+			l = config_checkval(cep->ce_vardata,CFG_TIME);
 			if ((l < 5) || (l > 604800))
 			{
 				config_error("%s:%i: class::connfreq with illegal value (must be >5 and <7d)",
