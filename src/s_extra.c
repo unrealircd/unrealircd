@@ -317,16 +317,20 @@ static char recursion_trap=0;
 		{
 			if (stat(logs->file, &fstats) != -1 && logs->maxsize && fstats.st_size >= logs->maxsize)
 			{
+				char oldlog[512];
 				if (logs->logfd != -1)
+				{
+					write(logs->logfd, "Max file size reached, starting new log file\n", 45);
 					fd_close(logs->logfd);
-#ifndef _WIN32
+				}
+				
+				/* Rename log file to xxxxxx.old */
+				snprintf(oldlog, sizeof(oldlog), "%s.old", logs->file);
+				rename(logs->file, oldlog);
+				
 				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_WRONLY|O_TRUNC);
-#else
-				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_WRONLY|O_TRUNC);
-#endif
 				if (logs->logfd == -1)
 					continue;
-				write(logs->logfd, "Max file size reached, starting new log file\n", 45);
 			}
 			else if (logs->logfd == -1) {
 #ifndef _WIN32
