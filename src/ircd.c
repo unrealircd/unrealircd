@@ -718,17 +718,34 @@ char buf[1024];
  */
 static void do_version_check()
 {
-const char *compiledfor, *runtime;
-int error = 0;
+	const char *compiledfor, *runtime;
+	int error = 0;
+	char *p;
 
+	/* OPENSSL:
+	 * Nowadays (since openssl 1.0.0) they retain binary compatibility
+	 * when the first two version numbers are the same: eg 1.0.0 and 1.0.2
+	 */
 	compiledfor = OPENSSL_VERSION_TEXT;
 	runtime = SSLeay_version(SSLEAY_VERSION);
-	if (strcasecmp(compiledfor, runtime))
+	p = strchr(compiledfor, '.');
+	if (p)
 	{
-		version_check_logerror("OpenSSL version mismatch: compiled for '%s', library is '%s'",
-			compiledfor, runtime);
-		error=1;
+		p = strchr(p+1, '.');
+		if (p)
+		{
+			int versionlen = p - compiledfor + 1;
+			
+			if (strncasecmp(compiledfor, runtime, versionlen))
+			{
+				version_check_logerror("OpenSSL version mismatch: compiled for '%s', library is '%s'",
+					compiledfor, runtime);
+				error=1;
+			}
+		}
 	}
+	
+	
 #ifdef USE_LIBCURL
 	/* Perhaps someone should tell them to do this a bit more easy ;)
 	 * problem is runtime output is like: 'libcurl/7.11.1 c-ares/1.2.0'
