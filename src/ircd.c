@@ -1385,11 +1385,11 @@ int InitwIRCD(int argc, char *argv[])
 #endif
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
-	fprintf(stderr, "                           v%s\n", VERSIONONLY);
-	fprintf(stderr, "                     using %s\n", tre_version());
-	fprintf(stderr, "                     using %s\n", SSLeay_version(SSLEAY_VERSION));
+	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
+	fprintf(stderr, "  using %s\n", tre_version());
+	fprintf(stderr, "  using %s\n", SSLeay_version(SSLEAY_VERSION));
 #ifdef USE_LIBCURL
-	fprintf(stderr, "                     using %s\n", curl_version());
+	fprintf(stderr, "  using %s\n", curl_version());
 #endif
 	fprintf(stderr, "\n");
 #endif
@@ -1437,7 +1437,7 @@ int InitwIRCD(int argc, char *argv[])
 	}
 
 #ifndef _WIN32
-	fprintf(stderr, "* Initializing SSL.\n");
+	fprintf(stderr, "Initializing SSL..\n");
 #endif
 	if (!init_ssl())
 	{
@@ -1452,10 +1452,7 @@ int InitwIRCD(int argc, char *argv[])
 		}
 	}
 #ifndef _WIN32
-	fprintf(stderr,
-	    "* Dynamic configuration initialized .. booting IRCd.\n");
-	fprintf(stderr,
-	    "---------------------------------------------------------------------\n");
+	fprintf(stderr, "Dynamic configuration initialized.. booting IRCd.\n");
 #endif
 	open_debugfile();
 	if (portnum < 0)
@@ -1498,8 +1495,11 @@ int InitwIRCD(int argc, char *argv[])
 	list_add(&me.client_node, &global_server_list);
 #if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)
 	if (!(bootopt & BOOT_NOFORK))
+	{
 		if (fork())
 			exit(0);
+		loop.ircd_forked = 1;
+	}
 #endif
 	(void)ircsnprintf(REPORT_DO_DNS, sizeof(REPORT_DO_DNS), ":%s %s", me.name, BREPORT_DO_DNS);
 	(void)ircsnprintf(REPORT_FIN_DNS, sizeof(REPORT_FIN_DNS), ":%s %s", me.name, BREPORT_FIN_DNS);
@@ -1669,10 +1669,9 @@ void SocketLoop(void *dummy)
  *
  * If the -t option is not given on the command line when the server is
  * started, all debugging output is sent to the file set by LPATH in config.h
- * Here we just open that file and make sure it is opened to fd 2 so that
- * any fprintf's to stderr also goto the logfile.  If the debuglevel is not
- * set from the command line by -x, use /dev/null as the dummy logfile as long
- * as DEBUGMODE has been defined, else dont waste the fd.
+ * If the debuglevel is not set from the command line by -x, use /dev/null
+ * as the dummy logfile as long as DEBUGMODE has been defined, else don't
+ * waste the fd.
  */
 static void open_debugfile(void)
 {
@@ -1695,10 +1694,16 @@ static void open_debugfile(void)
 			if ((fd = open(LOGFILE, O_WRONLY | O_CREAT, 0600)) < 0)
 				if ((fd = open("/dev/null", O_WRONLY)) < 0)
 					exit(-1);
-			if (fd != 2) {
+			
+#if 1
+			cptr->fd = fd;
+			debugfd = fd;
+#else
+			/* if (fd != 2) {
 				(void)dup2(fd, 2);
 				(void)close(fd);
-			}
+			} -- hands off stderr! */
+#endif
 			strlcpy(cptr->name, LOGFILE, sizeof(cptr->name));
 		} else if (isatty(2) && ttyname(2))
 			strlcpy(cptr->name, ttyname(2), sizeof(cptr->name));

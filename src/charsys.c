@@ -229,7 +229,6 @@ ILangList *e, *e_next;
 	}
 	ilanglist = NULL;
 #ifdef DEBUGMODE
-	ircd_log(LOG_ERROR, "[Debug] langsinuse: '%s'", langsinuse);
 	if (strlen(langsinuse) > 490)
 		abort();
 #endif

@@ -534,10 +534,6 @@ closelog(); /* temporary close syslog, as we mass close() fd's below... */
 
 if (bootopt & BOOT_TTY)		/* debugging is going to a tty */
 	goto init_dgram;
-#ifndef NOCLOSEFD
-if (!(bootopt & BOOT_DEBUG))
-	(void)close(2);
-#endif
 
 if ((bootopt & BOOT_CONSOLE) || isatty(0))
 {

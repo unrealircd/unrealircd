@@ -582,6 +582,7 @@ struct MotdItem {
 struct aloopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned ircd_booted : 1;
+	unsigned ircd_forked : 1;
 	unsigned do_bancheck : 1; /* perform *line bancheck? */
 	unsigned do_bancheck_spamf_user : 1; /* perform 'user' spamfilter bancheck */
 	unsigned do_bancheck_spamf_away : 1; /* perform 'away' spamfilter bancheck */

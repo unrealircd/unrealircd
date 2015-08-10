@@ -1109,10 +1109,8 @@ void config_error(char *format, ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
+#ifdef _WIN32
 	if (!loop.ircd_booted)
-#ifndef _WIN32
-		fprintf(stderr, "[error] %s\n", buffer);
-#else
 		win_log("[error] %s", buffer);
 #endif
 	ircd_log(LOG_ERROR, "config error: %s", buffer);
@@ -1174,10 +1172,8 @@ void config_status(char *format, ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
+#ifdef _WIN32
 	if (!loop.ircd_booted)
-#ifndef _WIN32
-		fprintf(stderr, "* %s\n", buffer);
-#else
 		win_log("* %s", buffer);
 #endif
 	ircd_log(LOG_ERROR, "%s", buffer);
@@ -1197,10 +1193,8 @@ void config_warn(char *format, ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
+#ifdef _WIN32
 	if (!loop.ircd_booted)
-#ifndef _WIN32
-		fprintf(stderr, "[warning] %s\n", buffer);
-#else
 		win_log("[warning] %s", buffer);
 #endif
 	ircd_log(LOG_ERROR, "[warning] %s", buffer);
@@ -1298,10 +1292,8 @@ void config_progress(char *format, ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
+#ifdef _WIN32
 	if (!loop.ircd_booted)
-#ifndef _WIN32
-		fprintf(stderr, "* %s\n", buffer);
-#else
 		win_log("* %s", buffer);
 #endif
 	sendto_realops("%s", buffer);
@@ -1565,7 +1557,7 @@ int	init_conf(char *rootconf, int rehash)
 {
 	char *old_pid_file = NULL;
 
-	config_status("Loading IRCd configuration ..");
+	config_status("Loading IRCd configuration..");
 	if (conf)
 	{
 		config_error("%s:%i - Someone forgot to clean up", __FILE__, __LINE__);
@@ -1670,7 +1662,7 @@ int	init_conf(char *rootconf, int rehash)
 	do_weird_shun_stuff();
 	if (!conf_log)
 		make_default_logblock();
-	config_status("Configuration loaded without any problems ..");
+	config_status("Configuration loaded without any problems.");
 	return 0;
 }
 

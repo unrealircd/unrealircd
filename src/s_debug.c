@@ -122,6 +122,8 @@ char *extraflags = NULL;
 #define ssize_t unsigned int
 #endif
 
+MODVAR int debugfd = 2;
+
 void	flag_add(char ch)
 {
 	char *newextra;
@@ -196,10 +198,10 @@ void debug(int level, char *form, ...)
 #endif
 
 #ifndef _WIN32
-		(void)fprintf(stderr, "%s", debugbuf);
-		(void)fputc('\n', stderr);
+		strlcat(debugbuf, "\n", sizeof(debugbuf));
+		write(debugfd, debugbuf, strlen(debugbuf));
 #else
-		strncat(debugbuf, "\r\n", sizeof(debugbuf)-strlen(debugbuf)-1);
+		strlcat(debugbuf, "\r\n", sizeof(debugbuf));
 		OutputDebugString(debugbuf);
 #endif
 	}

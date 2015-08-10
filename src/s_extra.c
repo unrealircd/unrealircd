@@ -302,8 +302,12 @@ static char recursion_trap=0;
 	ircvsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
 	snprintf(timebuf, sizeof(timebuf), "[%s] - ", myctime(TStime()));
+
 	RunHook3(HOOKTYPE_LOG, flags, timebuf, buf);
 	strlcat(buf, "\n", sizeof(buf));
+
+	if (!loop.ircd_forked && (flags & LOG_ERROR))
+		fprintf(stderr, "%s", buf);
 
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
 #ifdef HAVE_SYSLOG

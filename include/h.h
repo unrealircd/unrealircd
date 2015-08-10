@@ -752,3 +752,4 @@ extern int unreal_connect(int fd, char *ip, int port, int ipv6);
 extern int is_valid_ip(char *str);
 extern int ipv6_capable(void);
 extern MODVAR aClient *remote_rehash_client;
+extern MODVAR int debugfd;
