@@ -417,7 +417,9 @@ int add_listener2(ConfigItem_listen *conf)
 {
 	if (inetport(conf, conf->ip, conf->port, conf->ipv6))
 	{
-		ircd_log(LOG_ERROR, "inetport failed for %s:%u", conf->ip, conf->port);
+		/* This error is already handled upstream:
+		 * ircd_log(LOG_ERROR, "inetport failed for %s:%u", conf->ip, conf->port);
+		 */
 		conf->fd = -2;
 	}
 	if (conf->fd >= 0)

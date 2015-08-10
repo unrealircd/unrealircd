@@ -8072,7 +8072,10 @@ int	_test_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 void	run_configuration(void)
 {
 	ConfigItem_listen 	*listenptr;
-	int ports_bound = 0;
+	int failed = 0, ports_bound = 0;
+	char boundmsg[512];
+	
+	*boundmsg = '\0';
 
 	for (listenptr = conf_listen; listenptr; listenptr = (ConfigItem_listen *) listenptr->next)
 	{
@@ -8081,6 +8084,10 @@ void	run_configuration(void)
 			if (add_listener2(listenptr) == -1)
 			{
 				ircd_log(LOG_ERROR, "Failed to bind to %s:%i", listenptr->ip, listenptr->port);
+				failed = 1;
+			} else {
+				snprintf(boundmsg+strlen(boundmsg), sizeof(boundmsg)-strlen(boundmsg),
+					"%s:%d, ", listenptr->ip, listenptr->port);
 			}
 		}
 
@@ -8099,6 +8106,18 @@ void	run_configuration(void)
 		                    "listen blocks, maybe you have to bind to a specific IP rather than \"*\".");
 		exit(-1);
 	}
+	
+	if (failed && !loop.ircd_booted)
+	{
+		ircd_log(LOG_ERROR, "Could not listen on all specified addresses/ports. See errors above. "
+		                    "Please fix your listen { } blocks and/or make sure no other programs "
+		                    "are listening on the same port.");
+		exit(-1);
+	}
+	
+	if (strlen(boundmsg) > 2)
+		boundmsg[strlen(boundmsg)-2] = '\0';
+	ircd_log(LOG_ERROR, "UnrealIRCd is now listening on the following addresses/ports: %s", boundmsg);
 }
 
 int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
