@@ -339,9 +339,6 @@ int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 			ip = "0.0.0.0";
 	}
 
-	ircd_log(LOG_ERROR, "inetport() for %s:%d (%s)",
-		ip, port, ipv6 ? "IPv6" : "IPv4");
-
 	/* At first, open a new socket */
 	if (listener->fd != -1)
 		abort(); /* there was a (reverse check) for this. let's see if this ever happened :) */
