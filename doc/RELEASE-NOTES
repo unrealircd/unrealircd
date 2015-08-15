@@ -148,6 +148,12 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   parameter. This can be useful in a scenario where you are slowly
   upgrading all your servers.
 * If you want to unset a vhost but keep cloaked then use /MODE yournick -t
+* A "crash reporter" was added. When UnrealIRCd is started it will check
+  if a previous UnrealIRCd instance crashed and (after booting a new
+  instance) it will spit out a report and ask if you want to submit it
+  to the UnrealIRCd developers. Doing so will help us a lot as many bugs
+  are often not reported. Note that UnrealIRCd will always ask before
+  sending any information and never do so automatically. (B3)
 
 ==[ CHANGED ]==
 * Numerics have been removed. Instead we now use SIDs (Server ID's) and
