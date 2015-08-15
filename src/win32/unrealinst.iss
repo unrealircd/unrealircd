@@ -6,7 +6,7 @@
 
 [Setup]
 AppName=UnrealIRCd 3.4
-AppVerName=UnrealIRCd3.4-beta2
+AppVerName=UnrealIRCd3.4-beta3
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com

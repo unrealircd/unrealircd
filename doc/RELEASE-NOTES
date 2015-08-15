@@ -1,7 +1,7 @@
-UnrealIRCd 3.4-beta2 Release Notes
+UnrealIRCd 3.4-beta3 Release Notes
 ===================================
 
-This is the second 'beta' version of UnrealIRCd 3.4. We plan to have a
+This is the third 'beta' version of UnrealIRCd 3.4. We plan to have a
 'stable' UnrealIRCd 3.4 release by Q4 2015.
 
 IMPORTANT REMARKS:
@@ -13,11 +13,11 @@ IMPORTANT REMARKS:
 * Linking with 3.2.x servers is supported but highly untested.
 
 Therefore:
-* You should never run 3.4-beta2 as a production server
-* You should not link 3.4-beta2 with a production 3.2.x network (yet)
+* You should never run 3.4-beta3 as a production server
+* You should not link 3.4-beta3 with a production 3.2.x network (yet)
 
 Please do:
-* Install 3.4-beta2 to play around, show to your friends, have fun with
+* Install 3.4-beta3 to play around, show to your friends, have fun with
   the latest features and improvements, test things.
 * Report any problems, bugs, issues and other feedback on
   https://bugs.unrealircd.org/ so we can improve 3.4.x!
@@ -39,7 +39,7 @@ UnrealIRCd 3.4 uses a new directory structure.
       target directory to install UnrealIRCd to. ./Config will ask this
       and it's ~/unrealircd by default (eg: /home/nerd/unrealircd).
       You also need to run 'make install' after 'make' now.
-      After compiling, you should leave your Unreal3.4-beta2 directory
+      After compiling, you should leave your Unreal3.4-beta3 directory
       and change to ~/unrealircd as everything takes place there.
       For example to start UnrealIRCd you run './unrealircd start'
       (again, from the /home/xxxx/unrealircd directory).
