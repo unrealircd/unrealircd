@@ -72,7 +72,9 @@ void start_auth(aClient *cptr)
 	int len;
 	char buf[BUFSIZE];
 
-	if (IDENT_CHECK == 0) {
+	/* If ident checking is disabled or it's an outgoing connect, then no ident check */
+	if ((IDENT_CHECK == 0) || (cptr->serv && IsHandshake(cptr)))
+	{
 		cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
 		if (!DoingDNS(cptr))
 			finish_auth(cptr);
