@@ -61,8 +61,8 @@ ModuleHeader MOD_HEADER(m_svsmode)
 
 MOD_INIT(m_svsmode)
 {
-	CommandAdd(modinfo->handle, MSG_SVSMODE, m_svsmode, MAXPARA, M_SERVER);
-	CommandAdd(modinfo->handle, MSG_SVS2MODE, m_svs2mode, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSMODE, m_svsmode, MAXPARA, M_SERVER|M_USER);
+	CommandAdd(modinfo->handle, MSG_SVS2MODE, m_svs2mode, MAXPARA, M_SERVER|M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -386,10 +386,10 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
  */
 int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_change)
 {
-int i;
-char *m;
-aClient *acptr;
-int  what, setflags;
+	int i;
+	char *m;
+	aClient *acptr;
+	int  what, setflags;
 
 	if (!IsULine(sptr))
 		return 0;
