@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_svskill)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_svskill)
 {
-	CommandAdd(modinfo->handle, MSG_SVSKILL, m_svskill, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSKILL, m_svskill, MAXPARA, M_SERVER|M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -83,8 +83,7 @@ CMD_FUNC(m_svskill)
 {
 	aClient *acptr;
 	/* this is very wierd ? */
-	char *comment = NULL;
-
+	char *comment = "SVS Killed";
 
 	if (parc < 2)
 		return -1;
@@ -92,9 +91,6 @@ CMD_FUNC(m_svskill)
 		return -1;
 	if (parc == 3)
 		comment = parv[2];
-
-	if (parc == 2)
-		comment = "SVS Killed";
 
 	if (!IsULine(sptr))
 		return -1;
@@ -107,6 +103,5 @@ CMD_FUNC(m_svskill)
 	acptr->flags |= FLAGS_KILLED;
 
 	return exit_client(cptr, acptr, sptr, comment);
-
 }
 
