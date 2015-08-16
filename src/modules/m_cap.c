@@ -260,7 +260,7 @@ static int cap_end(aClient *sptr, const char *arg)
 
 	sptr->local->proto &= ~PROTO_CLICAP;
 
-	if (sptr->name[0] && sptr->user != NULL && sptr->local->nospoof == 0)
+	if (*sptr->name && sptr->user && *sptr->user->username && IsNotSpoof(sptr))
 		return register_user(sptr, sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
 
 	return 0;
