@@ -1,4 +1,4 @@
-Unreal3.2.10.4 Release Notes
+Unreal3.2.10.5 Release Notes
 =============================
 
 ==[ GENERAL INFORMATION ]==
@@ -12,6 +12,11 @@ Unreal3.2.10.4 Release Notes
 - The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
   SUMMARY of the changes in this release. See the file 'Changes' for a
   complete list of all changes.
+
+==[ .5 RELEASE ]==
+The following issues have been fixed in 3.2.10.5:
+- Crash when SASL is enabled (set::sasl-server)
+- A compile problem with LibreSSL
 
 ==[ .4 RELEASE ]==
 Two major issues were fixed:
