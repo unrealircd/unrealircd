@@ -261,6 +261,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   making our secure server linking tutorial on the wiki unusable. (B2)
 * Windows version: if all clients on the server were completely idle
   then internal timers and such wouldn't be called correctly. (B2)
+* Fix crash if SASL is enabled (and in use) [B3]
 
 ==[ MINOR BUGS FIXED ]==
 * Errors in example configuration files (A2)
