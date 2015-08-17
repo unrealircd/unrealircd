@@ -286,6 +286,13 @@ SSL_CTX *ctx_server;
 			goto fail;
 		}
 	}
+	
+#if defined(SSL_CTX_set_ecdh_auto)
+	SSL_CTX_set_ecdh_auto(ctx_server, 1);
+#else
+	SSL_CTX_set_tmp_ecdh(ctx_server, EC_KEY_new_by_curve_name(NID_X9_62_prime256v1));
+#endif
+
 	return ctx_server;
 fail:
 	SSL_CTX_free(ctx_server);
