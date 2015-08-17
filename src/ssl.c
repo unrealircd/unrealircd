@@ -293,6 +293,7 @@ SSL_CTX *ctx_server;
 #else
 	SSL_CTX_set_tmp_ecdh(ctx_server, EC_KEY_new_by_curve_name(NID_X9_62_prime256v1));
 #endif
+	SSL_CTX_set_options(ctx_server, SSL_OP_SINGLE_ECDH_USE|SSL_OP_SINGLE_DH_USE);
 
 	return ctx_server;
 fail:
