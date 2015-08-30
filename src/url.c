@@ -111,13 +111,17 @@ char *url_getfilename(const char *url)
  */
 static void set_curl_ssl_options(CURL *curl)
 {
+	char buf[512];
+	
 	if (USE_EGD)
 		curl_easy_setopt(curl, CURLOPT_EGDSOCKET, EGD_PATH);
 	curl_easy_setopt(curl, CURLOPT_SSLCERT, SSL_SERVER_CERT_PEM);
 	if (SSLKeyPasswd)
 		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, SSLKeyPasswd);
 	curl_easy_setopt(curl, CURLOPT_SSLKEY, SSL_SERVER_KEY_PEM);
-	curl_easy_setopt(curl, CURLOPT_CAINFO, "curl-ca-bundle.crt");
+
+	snprintf(buf, sizeof(buf), "%s/ssl/curl-ca-bundle.crt", CONFDIR);
+	curl_easy_setopt(curl, CURLOPT_CAINFO, buf);
 }
 
 /*

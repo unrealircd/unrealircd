@@ -2805,6 +2805,29 @@ char *pretty_time_val(long timeval)
 	return buf;
 }
 
+/* This converts a relative path to an absolute path, but only if necessary. */
+void convert_to_absolute_path(char **path, char *reldir)
+{
+	char *s;
+	
+	if (!*path || !**path)
+		return; /* NULL or empty */
+	
+	if (url_is_valid(*path))
+		return; /* URL: don't touch */
+	
+	if ((**path == '/') || (**path == '\\'))
+		return; /* already absolute path */
+	
+	if (!strncmp(*path, reldir, strlen(reldir)))
+		return; /* already contains reldir */
+	
+	s = MyMallocEx(strlen(reldir) + strlen(*path) + 2);
+	sprintf(s, "%s/%s", reldir, *path); /* safe, see line above */
+	MyFree(*path);
+	*path = s;
+}
+
 /*
  * Actual config parser funcs
 */
@@ -2831,14 +2854,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 	if (!strcmp(ce->ce_vardata, "help.conf"))
 		need_34_upgrade = 1;
 
-	/* Hmmm... not really proper huh... */
-	if ((ce->ce_vardata[0] != '/') && (ce->ce_vardata[0] != '\\') && strcmp(ce->ce_vardata, CPATH))
-	{
-		char *str = MyMallocEx(strlen(ce->ce_vardata) + strlen(CONFDIR) + 4);
-		sprintf(str, "%s/%s", CONFDIR, ce->ce_vardata);
-		MyFree(ce->ce_vardata);
-		ce->ce_vardata = str;
-	}
+	convert_to_absolute_path(&ce->ce_vardata, CONFDIR);
 
 #ifdef USE_LIBCURL
 	if (url_is_valid(ce->ce_vardata))
@@ -6037,14 +6053,7 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 		return 1;
 	}
 
-	/* Hmmm... not really proper huh... */
-	if (ce->ce_vardata[0] != '/')
-	{
-		char *str = MyMallocEx(strlen(ce->ce_vardata) + strlen(LOGDIR) + 4);
-		sprintf(str, "%s/%s", LOGDIR, ce->ce_vardata);
-		MyFree(ce->ce_vardata);
-		ce->ce_vardata = str;
-	}
+	convert_to_absolute_path(&ce->ce_vardata, LOGDIR);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -7020,14 +7029,17 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
 				{
+					convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
 					safestrdup(tempiConf.x_server_cert_pem, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "key"))
 				{
+					convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
 					safestrdup(tempiConf.x_server_key_pem, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
 				{
+					convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
 					safestrdup(tempiConf.trusted_ca_file, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
