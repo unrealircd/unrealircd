@@ -1233,7 +1233,7 @@ int InitwIRCD(int argc, char *argv[])
 			      p = *++argv;
 			      argc--;
 			  }
-			  if (!*p)
+			  if (BadPtr(p))
 			  {
 #ifndef _WIN32
 			      p = getpass("Enter password to hash: ");
