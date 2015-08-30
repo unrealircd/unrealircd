@@ -1201,12 +1201,13 @@ int InitwIRCD(int argc, char *argv[])
 		  case 'f':
 #ifndef CMDLINE_CONFIG
 		      if ((uid == euid) && (gid == egid))
-			       configfile = p;
+			       configfile = strdup(p);
 			  else
 			       printf("ERROR: Command line config with a setuid/setgid ircd is not allowed");
 #else
-			  configfile = p;
+			  configfile = strdup(p);
 #endif
+			  convert_to_absolute_path(&configfile, CONFDIR);
 			  break;
 		  case 'h':
 			  if (!strchr(p, '.')) {
