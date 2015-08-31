@@ -2813,7 +2813,7 @@ void convert_to_absolute_path(char **path, char *reldir)
 	if (!*path || !**path)
 		return; /* NULL or empty */
 	
-	if (url_is_valid(*path))
+	if (strstr(*path, "://"))
 		return; /* URL: don't touch */
 	
 	if ((**path == '/') || (**path == '\\'))
