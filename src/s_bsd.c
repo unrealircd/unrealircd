@@ -340,8 +340,8 @@ int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 	}
 
 	/* At first, open a new socket */
-	if (listener->fd != -1)
-		abort(); /* there was a (reverse check) for this. let's see if this ever happened :) */
+	if (listener->fd >= 0)
+		abort(); /* Socket already exists but we are asked to create and listen on one. Bad! */
 	
 	if (port == 0)
 		abort(); /* Impossible as well, right? */
