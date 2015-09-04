@@ -18,6 +18,7 @@
 #include <string.h>
 #ifdef _WIN32
 #include <io.h>
+#include <sys/timeb.h>
 #endif
 #include <fcntl.h>
 #include "h.h"

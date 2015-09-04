@@ -32,9 +32,6 @@
 #endif
 
 #include <time.h>
-#ifdef _WIN32
-#include <sys/timeb.h>
-#endif
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
