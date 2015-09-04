@@ -239,7 +239,7 @@ static void url_check_multi_handles(void)
 			CURL *easyhand = msg->easy_handle;
 
 			curl_easy_getinfo(easyhand, CURLINFO_RESPONSE_CODE, &code);
-			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char *) &handle);
+			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char **) &handle);
 			curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
 			fclose(handle->fd);
 #if defined(IRC_USER) && defined(IRC_GROUP)
