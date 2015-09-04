@@ -682,7 +682,9 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		/* If this is an incomming connection, then we have just received
 		 * their stuff and now send our stuff back.
 		 */
-		sendto_one(cptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
+		if (!IsEAuth(cptr)) /* if eauth'd then we already sent the passwd */
+			sendto_one(cptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
+
 		send_proto(cptr, aconf);
 		sendto_one(cptr, "SERVER %s 1 :%s",
 			    me.name, me.info);
