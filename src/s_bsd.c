@@ -283,7 +283,7 @@ void report_baderror(char *text, aClient *cptr)
 }
 
 /** Accept an incoming client. */
-static void listener_accept(int fd, int revents, void *data)
+static void listener_accept(int listener_fd, int revents, void *data)
 {
 	ConfigItem_listen *cptr = data;
 	int cli_fd;
@@ -297,10 +297,10 @@ static void listener_accept(int fd, int revents, void *data)
 
 	ircstp->is_ac++;
 
-	set_sock_opts(fd, NULL, cptr->ipv6);
-	set_non_blocking(fd, NULL);
+	set_sock_opts(cli_fd, NULL, cptr->ipv6);
+	set_non_blocking(cli_fd, NULL);
 
-	if ((++OpenFiles >= MAXCLIENTS) || (fd >= MAXCLIENTS))
+	if ((++OpenFiles >= MAXCLIENTS) || (cli_fd >= MAXCLIENTS))
 	{
 		ircstp->is_ref++;
 		if (last_allinuse < TStime() - 15)
