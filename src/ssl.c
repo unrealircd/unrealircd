@@ -572,6 +572,7 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 		case -1:
 		        ircd_log(LOG_ERROR, "%s:%d: called for fd %d/%s", __FILE__, __LINE__, fd, acptr->name);
 			fd_close(fd);
+			acptr->fd = -1;
 			return;
 		case 0: 
 			Debug((DEBUG_DEBUG, "SetSSLConnectHandshake(%s)", get_client_name(acptr, TRUE)));
