@@ -824,6 +824,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define EFUNC_SEND_MD_MEMBERSHIP        41
 #define EFUNC_CHECK_BANNED              42
 #define EFUNC_INTRODUCE_USER            43
+#define EFUNC_CHECK_DENY_VERSION        44
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

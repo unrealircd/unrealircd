@@ -48,6 +48,7 @@ int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link
 void _send_protoctl_servers(aClient *sptr, int response);
 void _send_server_message(aClient *sptr);
 void _introduce_user(aClient *to, aClient *acptr);
+int _check_deny_version(aClient *cptr, char *version_string, int protocol, char *flags);
 
 static char buf[BUFSIZE];
 
@@ -70,6 +71,7 @@ MOD_TEST(m_server)
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_SERVER_MESSAGE, _send_server_message);
 	EfunctionAdd(modinfo->handle, EFUNC_VERIFY_LINK, _verify_link);
 	EfunctionAddVoid(modinfo->handle, EFUNC_INTRODUCE_USER, _introduce_user);
+	EfunctionAdd(modinfo->handle, EFUNC_CHECK_DENY_VERSION, _check_deny_version);
 	return MOD_SUCCESS;
 }
 
@@ -95,6 +97,87 @@ MOD_UNLOAD(m_server)
 
 int m_server_synch(aClient *cptr, ConfigItem_link *conf);
 
+/** Check deny version { } blocks.
+ * NOTE: cptr will always be valid, but all the other values may be NULL or 0 !!!
+ */
+int _check_deny_version(aClient *cptr, char *version_string, int protocol, char *flags)
+{
+	ConfigItem_deny_version *vlines;
+	
+	for (vlines = conf_deny_version; vlines; vlines = (ConfigItem_deny_version *) vlines->next)
+	{
+		if (!match(vlines->mask, cptr->name))
+			break;
+	}
+	
+	if (vlines)
+	{
+		char *proto = vlines->version;
+		char *vflags = vlines->flags;
+		int result = 0, i;
+		switch (*proto)
+		{
+			case '<':
+				proto++;
+				if (protocol < atoi(proto))
+					result = 1;
+				break;
+			case '>':
+				proto++;
+				if (protocol > atoi(proto))
+					result = 1;
+				break;
+			case '=':
+				proto++;
+				if (protocol == atoi(proto))
+					result = 1;
+				break;
+			case '!':
+				proto++;
+				if (protocol != atoi(proto))
+					result = 1;
+				break;
+			default:
+				if (protocol == atoi(proto))
+					result = 1;
+				break;
+		}
+		if (protocol == 0 || *proto == '*')
+			result = 0;
+
+		if (result)
+			return exit_client(cptr, cptr, cptr, "Denied by deny version { } block");
+
+		if (flags)
+		{
+			for (i = 0; vflags[i]; i++)
+			{
+				if (vflags[i] == '!')
+				{
+					i++;
+					if (strchr(flags, vflags[i])) {
+						result = 1;
+						break;
+					}
+				}
+				else if (!strchr(flags, vflags[i]))
+				{
+						result = 1;
+						break;
+				}
+			}
+
+			if (*vflags == '*' || !strcmp(flags, "0"))
+				result = 0;
+		}
+
+		if (result)
+			return exit_client(cptr, cptr, cptr, "Denied by deny version { } block");
+	}
+	
+	return 0;
+}
+
 /** Send our PROTOCTL SERVERS=x,x,x,x stuff.
  * When response is set, it will be PROTOCTL SERVERS=*x,x,x (mind the asterisk).
  */
@@ -106,8 +189,10 @@ void _send_protoctl_servers(aClient *sptr, int response)
 	if (!NEW_LINKING_PROTOCOL)
 		return;
 
-	ircsnprintf(buf, sizeof(buf), "PROTOCTL EAUTH=%s,%d SERVERS=%s",
-		me.name, UnrealProtocol, response ? "*" : "");
+	sendto_one(sptr, "PROTOCTL EAUTH=%s,%d,%s%s,%s",
+		me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", version);
+		
+	ircsnprintf(buf, sizeof(buf), "PROTOCTL SERVERS=%s", response ? "*" : "");
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -126,7 +211,7 @@ void _send_protoctl_servers(aClient *sptr, int response)
 
 void _send_server_message(aClient *sptr)
 {
-	if (sptr->serv->flags.server_sent)
+	if (sptr->serv && sptr->serv->flags.server_sent)
 	{
 #ifdef DEBUGMODE
 		abort();
@@ -134,9 +219,17 @@ void _send_server_message(aClient *sptr)
 		return;
 	}
 
-	sendto_one(sptr, "SERVER %s 1 :%s",
-		me.name, me.info);
-	sptr->serv->flags.server_sent = 1;
+	if (1) /* SupportVL(sptr)) -- always send like 3.2.x for now. */
+	{
+		sendto_one(sptr, "SERVER %s 1 :U%d-%s %s",
+			me.name, UnrealProtocol, serveropts, me.info);
+	} else {
+		sendto_one(sptr, "SERVER %s 1 :%s",
+			me.name, me.info);
+	}
+
+	if (sptr->serv)
+		sptr->serv->flags.server_sent = 1;
 }
 
 
@@ -391,7 +484,6 @@ CMD_FUNC(m_server)
 			/* we also have a fail safe incase they say they are sending
 			 * VL stuff and don't -- codemastr
 			 */
-			ConfigItem_deny_version *vlines;
 			inf = NULL;
 			protocol = NULL;
 			flags = NULL;
@@ -403,83 +495,24 @@ CMD_FUNC(m_server)
 				num = (char *)strtok((char *)NULL, " ");
 			if (num)
 				inf = (char *)strtok((char *)NULL, "");
-			if (inf) {
-				strlcpy(cptr->info, inf[0] ? inf : me.name,
-				    sizeof(cptr->info));
-
-				for (vlines = conf_deny_version; vlines; vlines = (ConfigItem_deny_version *) vlines->next) {
-					if (!match(vlines->mask, cptr->name))
-						break;
-				}
-				if (vlines) {
-					char *proto = vlines->version;
-					char *vflags = vlines->flags;
-					int version, result = 0, i;
-					protocol++;
-					version = atoi(protocol);
-					switch (*proto) {
-						case '<':
-							proto++;
-							if (version < atoi(proto))
-								result = 1;
-							break;
-						case '>':
-							proto++;
-							if (version > atoi(proto))
-								result = 1;
-							break;
-						case '=':
-							proto++;
-							if (version == atoi(proto))
-								result = 1;
-							break;
-						case '!':
-							proto++;
-							if (version != atoi(proto))
-								result = 1;
-							break;
-						default:
-							if (version == atoi(proto))
-								result = 1;
-							break;
-					}
-					if (version == 0 || *proto == '*')
-						result = 0;
-
-					if (result)
-						return exit_client(cptr, cptr, cptr,
-							"Denied by V:line");
-
-					for (i = 0; vflags[i]; i++) {
-						if (vflags[i] == '!') {
-							i++;
-							if (strchr(flags, vflags[i])) {
-								result = 1;
-								break;
-							}
-						}
-						else if (!strchr(flags, vflags[i])) {
-								result = 1;
-								break;
-						}
-					}
-					if (*vflags == '*' || !strcmp(flags, "0"))
-						result = 0;
-					if (result)
-						return exit_client(cptr, cptr, cptr,
-							"Denied by V:line");
-				}
+			if (inf)
+			{
+				int ret;
+				
+				strlcpy(cptr->info, inf[0] ? inf : me.name, sizeof(cptr->info)); /* set real description */
+				
+				ret = _check_deny_version(cptr, NULL, atoi(protocol), flags);
+				if (ret < 0)
+					return ret;
+			} else {
+				strlcpy(cptr->info, info[0] ? info : me.name, sizeof(cptr->info));
 			}
-			else
-				strlcpy(cptr->info, info[0] ? info : me.name,
-				    sizeof(cptr->info));
-
+		} else {
+				strlcpy(cptr->info, info[0] ? info : me.name, sizeof(cptr->info));
 		}
-		else
-				strlcpy(cptr->info, info[0] ? info : me.name,
-					sizeof(cptr->info));
 
-		for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) {
+		for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next)
+		{
 			if (deny->flag.type == CRULE_ALL && !match(deny->mask, servername)
 				&& crule_eval(deny->rule)) {
 				sendto_ops("Refused connection from %s.",
@@ -686,8 +719,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			sendto_one(cptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 
 		send_proto(cptr, aconf);
-		sendto_one(cptr, "SERVER %s 1 :%s",
-			    me.name, me.info);
+		send_server_message(cptr);
 	}
 
 	/* Set up server structure */

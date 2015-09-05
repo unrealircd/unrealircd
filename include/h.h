@@ -660,6 +660,7 @@ extern MODVAR void (*send_md_member)(ModDataInfo *mdi, aChannel *chptr, Member *
 extern MODVAR void (*send_md_membership)(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md);
 extern MODVAR int (*check_banned)(aClient *cptr);
 extern MODVAR void (*introduce_user)(aClient *to, aClient *acptr);
+extern MODVAR int (*check_deny_version)(aClient *cptr, char *version_string, int protocol, char *flags);
 
 /* /Efuncs */
 extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;

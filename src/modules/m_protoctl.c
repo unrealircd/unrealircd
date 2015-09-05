@@ -301,35 +301,25 @@ CMD_FUNC(m_protoctl)
 		}
 		else if ((strncmp(s, "EAUTH=", 6) == 0) && NEW_LINKING_PROTOCOL)
 		{
-			/* Early authorization: EAUTH=servername[,options] */
+			/* Early authorization: EAUTH=servername,protocol,flags,versiontext
+			 * (Only servername is mandatory, rest is optional)
+			 */
 			int ret;
-			int protocol = 0;
-			char *servername = s+6, *p;
+			char *p;
+			char *servername = NULL, *protocol = NULL, *flags = NULL, *versiontext = NULL;
+			char buf[512];
 			ConfigItem_link *aconf = NULL;
-			
-			if (strlen(servername) > HOSTLEN)
-				servername[HOSTLEN] = '\0';
 
-			for (p = servername; *p; p ++)
+			strlcpy(buf, s+6, sizeof(buf));
+			p = strchr(buf, ' ');
+			if (p)
 			{
-				if (*p == ',')
-				{
-					char *x;
-					
-					*p = '\0';
-					
-					/* upwards compatible */
-					x = strchr(p+1, ',');
-					if (x)
-						*x = '\0';
-					protocol = atoi(p+1);
-					break;
-				}
-				if (*p <= ' ' || *p > '~')
-					break;
+				*p = '\0';
+				p = NULL;
 			}
-
-			if (*p || !index(servername, '.'))
+			
+			servername = strtoken(&p, buf, ",");
+			if (!servername || (strlen(servername) > HOSTLEN) || !index(servername, '.'))
 			{
 				sendto_one(sptr, "ERROR :Bogus server name in EAUTH (%s)", servername);
 				sendto_snomask
@@ -339,14 +329,31 @@ CMD_FUNC(m_protoctl)
 
 				return exit_client(cptr, sptr, &me, "Bogus server name");
 			}
+			
+			
+			protocol = strtoken(&p, NULL, ",");
+			if (protocol)
+			{
+				flags = strtoken(&p, NULL, ",");
+				if (flags)
+				{
+					versiontext = strtoken(&p, NULL, ",");
+				}
+			}
+			
+			ret = verify_link(cptr, sptr, servername, &aconf);
+			if (ret < 0)
+				return ret; /* FLUSH_BUFFER */
 
-			ret = verify_link(cptr, sptr, s+6, &aconf);
+			/* note: versiontext, protocol and flags may be NULL */
+			ret = check_deny_version(sptr, versiontext, protocol ? atoi(protocol) : 0, flags);
 			if (ret < 0)
 				return ret; /* FLUSH_BUFFER */
 
 			SetEAuth(cptr);
 			make_server(cptr); /* allocate and set cptr->serv */
-			cptr->serv->features.protocol = protocol;
+			if (protocol)
+				cptr->serv->features.protocol = atoi(protocol);
 			if (!IsHandshake(cptr) && aconf) /* Send PASS early... */
 				sendto_one(sptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		}

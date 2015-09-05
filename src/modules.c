@@ -122,6 +122,7 @@ void (*send_md_channel)(ModDataInfo *mdi, aChannel *chptr, ModData *md);
 void (*send_md_member)(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md);
 void (*send_md_membership)(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md);
 int (*check_banned)(aClient *cptr);
+int (*check_deny_version)(aClient *cptr, char *version_string, int protocol, char *flags);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -168,7 +169,8 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 41 */	{"send_md_membership", (void *)&send_md_membership},
 /* 42 */	{"check_banned", (void *)&check_banned},
 /* 43 */	{"introduce_user", (void *)&introduce_user},
-/* 44 */	{NULL, NULL}
+/* 44 */	{"check_deny_version", (void *)&check_deny_version},
+/* 45 */	{NULL, NULL}
 };
 
 #ifdef UNDERSCORE
