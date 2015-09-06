@@ -8,9 +8,9 @@
 AppName=UnrealIRCd 3.4
 AppVerName=UnrealIRCd3.4-beta4
 AppPublisher=UnrealIRCd Team
-AppPublisherURL=http://www.unrealircd.com
-AppSupportURL=http://www.unrealircd.com
-AppUpdatesURL=http://www.unrealircd.com
+AppPublisherURL=https://www.unrealircd.org
+AppSupportURL=https://www.unrealircd.org
+AppUpdatesURL=https://www.unrealircd.org
 AppMutex=UnrealMutex,Global\UnrealMutex
 DefaultDirName={pf}\Unreal3.4
 DefaultGroupName=UnrealIRCd

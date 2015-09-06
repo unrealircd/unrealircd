@@ -871,7 +871,7 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			if (HIWORD(wParam) == BN_DBLCLK) 
 			{
 				if (LOWORD(wParam) == IDC_URL) 
-					ShellExecute(NULL, "open", "http://www.unrealircd.com", NULL, NULL, 
+					ShellExecute(NULL, "open", "https://www.unrealircd.org", NULL, NULL, 
 						SW_MAXIMIZE);
 				else if (LOWORD(wParam) == IDC_EMAIL)
 					ShellExecute(NULL, "open", "mailto:unreal-users@lists.sourceforge.net", NULL, NULL, 

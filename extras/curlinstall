@@ -1,5 +1,5 @@
 #!/bin/sh
-URL="http://www.unrealircd.com/files/curl-latest.tar.gz"
+URL="http://www.unrealircd.org/files/curl-latest.tar.gz"
 OUTF="curl-latest.tar.gz"
 OUTD="curl-latest"
 ARESPATH="`pwd`/extras/c-ares"

@@ -255,10 +255,10 @@ char *unrealinfo[] =
 	"This release was brought to you by the following people:",
 	"",
 	"Head coder:",
-	"* Syzop        <syzop@unrealircd.com>",
+	"* Syzop        <syzop@unrealircd.org>",
 	"",
 	"Coders:",
-	"* Heero        <heero@unrealircd.com>",
+	"* Heero        <heero@unrealircd.org>",
 	"",
 	"Previous coders:",
 	"* binki, nenolod, ..",
@@ -293,10 +293,10 @@ char **text = unrealinfo;
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please report them at:",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|  http://bugs.unrealircd.org/",
+	sendto_one(sptr, ":%s %d %s :|  https://bugs.unrealircd.org/",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr,
-	    ":%s %d %s :| UnrealIRCd Homepage: http://www.unrealircd.com",
+	    ":%s %d %s :| UnrealIRCd Homepage: https://www.unrealircd.org",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr,
 	    ":%s %d %s :-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=", me.name,
