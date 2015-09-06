@@ -1,23 +1,23 @@
-UnrealIRCd 3.4-beta3 Release Notes
+UnrealIRCd 3.4-beta4 Release Notes
 ===================================
 
-This is the third 'beta' version of UnrealIRCd 3.4. We plan to have a
+This is the fourth 'beta' version of UnrealIRCd 3.4. We plan to have a
 'stable' UnrealIRCd 3.4 release by Q4 2015.
 
 IMPORTANT REMARKS:
 * The ending of the 'alpha' stage means that most features we want are
   in 3.4 now. During 'beta' stage we will work towards getting a stable
   IRC server.
-* Because this is an early beta version, the process of 'stabilizing'
-  the IRCd has only just begun. The IRCd can have crash or hang issues.
-* Linking with 3.2.x servers is supported but highly untested.
+* Linking with 3.2.x servers is supported but not very well tested.
+  Note that if you have SSL enabled then this requires version 3.2.10.3
+  or later on the 3.2.x side.
 
 Therefore:
-* You should never run 3.4-beta3 as a production server
-* You should not link 3.4-beta3 with a production 3.2.x network (yet)
+* You should never run 3.4-beta4 as a production server
+* We do not recommend linking 3.4-beta4 to a production 3.2.x network (yet)
 
 Please do:
-* Install 3.4-beta3 to play around, show to your friends, have fun with
+* Install 3.4-beta4 to play around, show to your friends, have fun with
   the latest features and improvements, test things.
 * Report any problems, bugs, issues and other feedback on
   https://bugs.unrealircd.org/ so we can improve 3.4.x!
@@ -39,7 +39,7 @@ UnrealIRCd 3.4 uses a new directory structure.
       target directory to install UnrealIRCd to. ./Config will ask this
       and it's ~/unrealircd by default (eg: /home/nerd/unrealircd).
       You also need to run 'make install' after 'make' now.
-      After compiling, you should leave your Unreal3.4-beta3 directory
+      After compiling, you should leave your Unreal3.4-beta4 directory
       and change to ~/unrealircd as everything takes place there.
       For example to start UnrealIRCd you run './unrealircd start'
       (again, from the /home/xxxx/unrealircd directory).
@@ -154,6 +154,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   to the UnrealIRCd developers. Doing so will help us a lot as many bugs
   are often not reported. Note that UnrealIRCd will always ask before
   sending any information and never do so automatically. (B3)
+* SSL: Support for ECDHE has been added to provide "forward secrecy". (B4)
 
 ==[ CHANGED ]==
 * Numerics have been removed. Instead we now use SIDs (Server ID's) and
@@ -228,6 +229,9 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   (which is not recommended) we try to use STARTTLS in order to
   'upgrade' the connection to use SSL/TLS anyway. This can be disabled
   via link::outgoing::options::insecure. (B2)
+* SSLv3 has now been disabled for security. This also means you can
+  only link 3.4.x with 3.2.10.3 and later because earlier versions
+  used SSLv3 instead of TLS due to an OpenSSL API mistake. (B4)
 
 ==[ MODULE CODERS / DEVELOPERS ]==
 * A lot of technical documentation for module coders has been added
@@ -246,12 +250,15 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * We now use the information from PROTOCTL CHANMODES= for parameter
   skipping if the channel mode is unknown. Also, when channel modes
   are loaded or unloaded we re-broadcast PROTOCTL CHANMODES=. (B1)
+* The server protocol docs have been removed. The protocol is now
+  documented at https://www.unrealircd.org/docs/Server_protocol
+  See also https://www.unrealircd.org/docs/Server_protocol:Changes
+  for a list of changes between the 3.2 and 3.4 server protocol.
 
 ==[ MAJOR BUGS FIXED ]==
 * Crash bug on-boot in alpha1 (A2)
 * IRCOp commands such as /GLINE were not always working (A2)
 * link::outgoing::options::autoconnect did not work (A4)
-* This is still an alpha release, so likely contains major issues
 * If the IRCd could not bind to any ports it started anyway (A4)
 * alpha3 did not compile on x86 (32 bit) systems (A4)
 * Multiple major crash bugs in earlier 3.4 alpha/beta versions caused
@@ -261,7 +268,12 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   making our secure server linking tutorial on the wiki unusable. (B2)
 * Windows version: if all clients on the server were completely idle
   then internal timers and such wouldn't be called correctly. (B2)
-* Fix crash if SASL is enabled (and in use) [B3]
+* Crash if SASL is enabled (and in use) [B3]
+* Crash on outgoing server link attempt. [B4]
+* Crash on boot with bind/listen errors. [B4]
+* Compile problems on OpenBSD. [B4]
+* Possible freeze when SSL client is connecting. [B4]
+* Remote includes were broken. [B4]
 
 ==[ MINOR BUGS FIXED ]==
 * Errors in example configuration files (A2)
@@ -277,6 +289,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * A number of minor (<1K total) memory leaks on /REHASH. (B1)
 * The new 3rd party modules compile and install script introduced in
   beta1 was not working correctly. (B2)
+* Invalid output on './unrealircd mkpasswd <hashmethod>'
 
 ==[ REMOVED / DROPPED ]==
 * Numeric server IDs, see above. (A1)
