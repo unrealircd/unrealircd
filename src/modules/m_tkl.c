@@ -475,7 +475,7 @@ int ban_too_broad(char *usermask, char *hostmask)
 		if (*p != '*' && *p != '.' && *p != '?')
 			cnt++;
 
-	if (cnt < 4)
+	if (cnt >= 4)
 		return 0;
 
 	p = strchr(hostmask, '/');
