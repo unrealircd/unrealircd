@@ -274,6 +274,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * Compile problems on OpenBSD. [B4]
 * Possible freeze when SSL client is connecting. [B4]
 * Remote includes were broken. [B4]
+* GLINE/KLINE/.. refused perfectly good bans. [B4]
 
 ==[ MINOR BUGS FIXED ]==
 * Errors in example configuration files (A2)
