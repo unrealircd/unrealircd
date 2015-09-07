@@ -406,7 +406,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	int n;
 	struct hostent *he2;
 	char ipbuf[HOSTLEN+1];
-	char *ip;
+	char *ip = NULL;
 
 	if (!r->linkblock)
 	{
@@ -436,7 +436,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	r->linkblock->refcount--;
 
 	if (!he->h_addr_list[0] || (he->h_length != (r->ipv6 ? 16 : 4)) ||
-	    !(ip = inetntop(r->ipv6 ? AF_INET6 : AF_INET, &he->h_addr_list[0], ipbuf, sizeof(ipbuf))))
+	    !(ip = inetntop(r->ipv6 ? AF_INET6 : AF_INET, he->h_addr_list[0], ipbuf, sizeof(ipbuf))))
 	{
 		/* Illegal response -- fatal */
 		sendto_realops("Unable to resolve hostname '%s', when trying to connect to server %s.",
@@ -448,7 +448,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	/* Ok, since we got here, it seems things were actually succesfull */
 
 	/* Fill in [linkblockstruct]->ipnum */
-	r->linkblock->connect_ip = ip;
+	r->linkblock->connect_ip = strdup(ip);
 	he2 = unreal_create_hostent(he->h_name, ip);
 
 	switch ((n = connect_server(r->linkblock, r->cptr, he2)))
