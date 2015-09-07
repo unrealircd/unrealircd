@@ -3810,6 +3810,18 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				if (cep->ce_vardata || cep->ce_entries)
 					has_mask = 1;
 			}
+			else if (!strcmp(cep->ce_varname, "password"))
+			{
+				if (has_password)
+				{
+					config_warn_duplicate(cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum, "oper::password");
+					continue;
+				}
+				has_password = 1;
+				if (Auth_CheckError(cep) < 0)
+					errors++;
+			}
 			else
 			{
 				config_error_unknown(cep->ce_fileptr->cf_filename,
