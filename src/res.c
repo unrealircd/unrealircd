@@ -454,10 +454,10 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	switch ((n = connect_server(r->linkblock, r->cptr, he2)))
 	{
 		case 0:
-			sendto_realops("Connecting to %s[%s].", r->linkblock->servername, r->linkblock->outgoing.hostname);
+			sendto_realops("Connecting to %s[%s].", r->linkblock->servername, ip);
 			break;
 		case -1:
-			sendto_realops("Couldn't connect to %s.", r->linkblock->servername);
+			sendto_realops("Couldn't connect to %s[%s].", r->linkblock->servername, ip);
 			break;
 		case -2:
 			/* Should not happen since he is not NULL */
