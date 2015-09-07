@@ -9211,36 +9211,41 @@ char *find_loaded_remote_include(char *url)
 int remote_include(ConfigEntry *ce)
 {
 	char *errorbuf = NULL;
-	char *file = find_remote_include(ce->ce_vardata, &errorbuf);
+	char *url = ce->ce_vardata;
+	char *file = find_remote_include(url, &errorbuf);
 	int ret;
 	if (!loop.ircd_rehashing || (loop.ircd_rehashing && !file && !errorbuf))
 	{
 		char *error;
 		if (config_verbose > 0)
-			config_status("Downloading %s", ce->ce_vardata);
-		file = download_file(ce->ce_vardata, &error);
+			config_status("Downloading %s", url);
+		file = download_file(url, &error);
 		if (!file)
 		{
 #ifdef REMOTEINC_SPECIALCACHE
-			if (has_cached_version(ce->ce_vardata))
+			if (has_cached_version(url))
 			{
 				config_warn("%s:%i: include: error downloading '%s': %s -- using cached version instead.",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					ce->ce_vardata, error);
-				file = strdup(unreal_mkcache(ce->ce_vardata));
+					url, error);
+				file = strdup(unreal_mkcache(url));
 				/* Let it pass to load_conf()... */
 			} else {
 #endif
 				config_error("%s:%i: include: error downloading '%s': %s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					 ce->ce_vardata, error);
+					 url, error);
 				return -1;
 #ifdef REMOTEINC_SPECIALCACHE
 			}
 #endif
+		} else {
+#ifdef REMOTEINC_SPECIALCACHE
+			unreal_copyfileex(file, unreal_mkcache(url), 0);
+#endif
 		}
-		add_remote_include(file, ce->ce_vardata, 0, NULL, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		ret = load_conf(file, ce->ce_vardata);
+		add_remote_include(file, url, 0, NULL, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		ret = load_conf(file, url);
 		free(file);
 		return ret;
 	}
@@ -9249,27 +9254,27 @@ int remote_include(ConfigEntry *ce)
 		if (errorbuf)
 		{
 #ifdef REMOTEINC_SPECIALCACHE
-			if (has_cached_version(ce->ce_vardata))
+			if (has_cached_version(url))
 			{
 				config_warn("%s:%i: include: error downloading '%s': %s -- using cached version instead.",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					ce->ce_vardata, errorbuf);
+					url, errorbuf);
 				/* Let it pass to load_conf()... */
-				file = strdup(unreal_mkcache(ce->ce_vardata));
+				file = strdup(unreal_mkcache(url));
 			} else {
 #endif
 				config_error("%s:%i: include: error downloading '%s': %s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					ce->ce_vardata, errorbuf);
+					url, errorbuf);
 				return -1;
 #ifdef REMOTEINC_SPECIALCACHE
 			}
 #endif
 		}
 		if (config_verbose > 0)
-			config_status("Loading %s from download", ce->ce_vardata);
-		add_remote_include(file, ce->ce_vardata, 0, NULL, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		ret = load_conf(file, ce->ce_vardata);
+			config_status("Loading %s from download", url);
+		add_remote_include(file, url, 0, NULL, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		ret = load_conf(file, url);
 		return ret;
 	}
 	return 0;
