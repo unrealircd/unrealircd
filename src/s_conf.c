@@ -332,6 +332,7 @@ void port_range(char *string, int *start, int *end)
 	*c = '\0';
 	*start = atoi(string);
 	*end = atoi((c+1));
+	*c = '-';
 }
 
 /** Parses '5:60s' config values.
