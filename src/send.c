@@ -1306,9 +1306,9 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 	 * SupportVHP() check ~20 lines up. Double check if this is OK?
 	 */
 	sendto_server(one, PROTO_NICKv2, *sptr->id ? PROTO_SID : 0,
-		"NICK %s %d %ld %s %s %s %s %s %s %s %s :%s",
+		"NICK %s %d %ld %s %s %s %s %s %s %s :%s",
 		nick, hopcount, lastnick, username,
-		realhost, server, svid, umodes, vhost, getcloak(sptr),
+		realhost, server, svid, umodes, vhost,
 		encode_ip(sptr->ip), info);
 }
 
