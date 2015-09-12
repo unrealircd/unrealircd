@@ -1335,12 +1335,15 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 	}
 
 	sendto_one(cptr,
-		    "NICK %s %d %d %s %s %s %s %s %s %s :%s",
+		    "NICK %s %d %d %s %s %s %s %s %s %s%s%s%s:%s",
 		    sptr->name,
 		    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
 		    sptr->user->realhost, sptr->srvptr->name,
 		    sptr->user->svid, umodes, vhost,
-		    encode_ip(sptr->ip),
+		    CHECKPROTO(cptr, PROTO_CLK) ? getcloak(sptr) : "",
+		    CHECKPROTO(cptr, PROTO_CLK) ? " " : "",
+		    CHECKPROTO(cptr, PROTO_NICKIP) ? encode_ip(sptr->ip) : "",
+		    CHECKPROTO(cptr, PROTO_NICKIP) ? " " : "",
 		    sptr->info);
 
 	return;
