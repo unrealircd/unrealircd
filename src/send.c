@@ -1270,51 +1270,36 @@ void sendto_fconnectnotice(aClient *acptr, int disconnect, char *comment)
 	}
 }
 
-/*
- * sendto_server_butone_nickcmd
- *
- * Send a message to all connected servers except the client 'one'.
+/** Introduce user to NICKv2-capable and SID-capable servers.
+ * @param cptr Server to skip
+ * @param sptr Client to introduce
+ * @param umodes User modes of client
  */
-void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
-			char *nick, int hopcount,
-    long lastnick, char *username, char *realhost, char *server,
-    char *svid, char *info, char *umodes, char *virthost)
+void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *umodes)
 {
 	aClient *cptr;
-	char *vhost;
 
-	if (!*umodes)
+	if (BadPtr(umodes))
 		umodes = "+";
-
-	if (IsHidden(sptr))
-		vhost = sptr->user->virthost;
-	else
-		vhost = sptr->user->realhost;
-
-	if (*sptr->id)
+	
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		sendto_server(one, PROTO_SID, 0,
-			":%s UID %s %d %ld %s %s %s %s %s %s %s %s :%s",
-			sptr->srvptr->id, nick, hopcount, lastnick, username,
-			realhost, sptr->id, svid, umodes, vhost, getcloak(sptr),
-			encode_ip(sptr->ip), info);
-	}
+		va_list vl;
 
-	/* Hmmm this code had PROTO_NICKv2|PROTO_VHP as 2nd argument which
-	 * caused NICK messages not to be sent to non-SID servers.
-	 * I removed PROTO_VHP here seeing nenolod already ripped out the
-	 * SupportVHP() check ~20 lines up. Double check if this is OK?
-	 */
-	sendto_server(one, PROTO_NICKv2, *sptr->id ? PROTO_SID : 0,
-		"NICK %s %d %ld %s %s %s %s %s %s %s %s :%s",
-		nick, hopcount, lastnick, username,
-		realhost, server, svid, umodes, vhost, getcloak(sptr),
-		encode_ip(sptr->ip), info);
+		if (one && cptr == one->from)
+			continue;
+		
+		if (!CHECKPROTO(cptr, PROTO_SID) && !CHECKPROTO(cptr, PROTO_NICKv2))
+			continue;
+		
+		sendto_one_nickcmd(cptr, sptr, umodes);
+	}
 }
 
-/*
- * sendto_one_nickcmd
- *
+/** Introduce user to NICKv2-capable and SID-capable servers.
+ * @param cptr Server to send to (locally connected!)
+ * @param sptr Client to introduce
+ * @param umodes User modes of client
  */
 void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 {
