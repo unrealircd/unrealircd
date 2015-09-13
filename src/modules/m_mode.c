@@ -1611,7 +1611,7 @@ CMD_FUNC(_m_umode)
 		if ((sptr->umodes & Usermode_Table[i].mode))
 			setflags |= Usermode_Table[i].mode;
 
-	if (RESTRICT_USERMODES && !ValidatePermissionsForPath("self:restrictedumodes",sptr,NULL,NULL,NULL))
+	if (RESTRICT_USERMODES && MyClient(sptr) && !ValidatePermissionsForPath("self:restrictedumodes",sptr,NULL,NULL,NULL))
 		chk_restrict = 1;
 
 	if (MyConnect(sptr))
