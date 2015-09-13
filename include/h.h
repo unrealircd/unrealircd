@@ -255,9 +255,7 @@ extern void *MyMallocEx(size_t size);
 extern int advanced_check(char *userhost, int ipstat);
 extern int send_queued(aClient *);
 extern void sendto_connectnotice(aClient *sptr, int disconnect, char *comment);
-extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *nick, int hopcount,
-long lastnick, char *username, char *realhost, char *server, char *svid, char *info, char *umodes,
-char *virthost);
+extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *umodes);
 extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
     char *cmd, char *nick, char *msg);
 #define PREFIX_ALL		0
