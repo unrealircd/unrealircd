@@ -8090,9 +8090,9 @@ void	run_configuration(void)
 {
 	ConfigItem_listen 	*listenptr;
 	int failed = 0, ports_bound = 0;
-	char boundmsg[512];
+	char boundmsg_ipv4[512], boundmsg_ipv6[512];
 	
-	*boundmsg = '\0';
+	*boundmsg_ipv4 = *boundmsg_ipv6 = '\0';
 
 	for (listenptr = conf_listen; listenptr; listenptr = (ConfigItem_listen *) listenptr->next)
 	{
@@ -8103,8 +8103,12 @@ void	run_configuration(void)
 				ircd_log(LOG_ERROR, "Failed to bind to %s:%i", listenptr->ip, listenptr->port);
 				failed = 1;
 			} else {
-				snprintf(boundmsg+strlen(boundmsg), sizeof(boundmsg)-strlen(boundmsg),
-					"%s:%d, ", listenptr->ip, listenptr->port);
+				if (listenptr->ipv6)
+					snprintf(boundmsg_ipv6+strlen(boundmsg_ipv6), sizeof(boundmsg_ipv6)-strlen(boundmsg_ipv6),
+						"%s:%d, ", listenptr->ip, listenptr->port);
+				else
+					snprintf(boundmsg_ipv4+strlen(boundmsg_ipv4), sizeof(boundmsg_ipv4)-strlen(boundmsg_ipv4),
+						"%s:%d, ", listenptr->ip, listenptr->port);
 			}
 		}
 
@@ -8131,10 +8135,18 @@ void	run_configuration(void)
 		                    "are listening on the same port.");
 		exit(-1);
 	}
-	
-	if (strlen(boundmsg) > 2)
-		boundmsg[strlen(boundmsg)-2] = '\0';
-	ircd_log(LOG_ERROR, "UnrealIRCd is now listening on the following addresses/ports: %s", boundmsg);
+
+	if (!loop.ircd_booted)
+	{
+		if (strlen(boundmsg_ipv4) > 2)
+			boundmsg_ipv4[strlen(boundmsg_ipv4)-2] = '\0';
+		if (strlen(boundmsg_ipv6) > 2)
+			boundmsg_ipv6[strlen(boundmsg_ipv6)-2] = '\0';
+
+		ircd_log(LOG_ERROR, "UnrealIRCd is now listening on the following addresses/ports:");
+		ircd_log(LOG_ERROR, "IPv4: %s", *boundmsg_ipv4 ? boundmsg_ipv4 : "<none>");
+		ircd_log(LOG_ERROR, "IPv6: %s", *boundmsg_ipv6 ? boundmsg_ipv6 : "<none>");
+	}
 }
 
 int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
