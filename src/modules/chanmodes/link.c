@@ -49,7 +49,7 @@ void cmodeL_free_param(void *r);
 void *cmodeL_dup_struct(void *r_in);
 int cmodeL_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
 
-int link_can_join_limitexceeded(aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
+int link_can_join_limitexceeded(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 
 MOD_INIT(link)
 {
@@ -195,7 +195,7 @@ aModeLEntry *their = (aModeLEntry *)theirx;
 	return EXSJ_THEYWON;
 }
 
-int link_can_join_limitexceeded(aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
+int link_can_join_limitexceeded(aClient *sptr, aChannel *chptr, char *key, char *parv[])
 {
 	if (chptr->mode.extmode & EXTMODE_LINK)
 	{

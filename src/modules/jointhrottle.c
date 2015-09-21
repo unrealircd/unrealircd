@@ -58,7 +58,7 @@ struct JFlood {
 int jointhrottle_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int jointhrottle_config_run(ConfigFile *, ConfigEntry *, int);
 void jointhrottle_md_free(ModData *m);
-int jointhrottle_can_join(aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
+int jointhrottle_can_join(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 int jointhrottle_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
 static int isjthrottled(aClient *cptr, aChannel *chptr);
 static void jointhrottle_increase_usercounter(aClient *cptr, aChannel *chptr);
@@ -206,7 +206,7 @@ int num=cfg.num, t=cfg.t;
 	}
 }
 
-int jointhrottle_can_join(aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
+int jointhrottle_can_join(aClient *sptr, aChannel *chptr, char *key, char *parv[])
 {
 	if (!ValidatePermissionsForPath("immune:jointhrottle",sptr,NULL,chptr,NULL) && isjthrottled(sptr, chptr))
 		return ERR_TOOMANYJOINS;
