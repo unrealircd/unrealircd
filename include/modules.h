@@ -796,6 +796,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
  * 1) Add the #define HOOKTYPE_.... with a new number
  * 2) Add a hook prototypy (see below)
  * 3) Add typechecking (even more below)
+ * 4) Document the hook at https://www.unrealircd.org/docs/Dev:Hook_API
  */
 
 /* Hook prototypes */
@@ -814,8 +815,8 @@ int hooktype_stats(aClient *sptr, char *str);
 int hooktype_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
 int hooktype_configtest(ConfigFile *cfptr, ConfigEntry *ce, int section, int *errors);
 int hooktype_configrun(ConfigFile *cfptr, ConfigEntry *ce, int section);
-int hooktype_usermsg(aClient *sptr, aClient *to, char *text, int notice);
-int hooktype_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *hooktype_usermsg(aClient *sptr, aClient *to, char *text, int notice);
+char *hooktype_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
 int hooktype_local_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
 int hooktype_local_kick(aClient *cptr, aClient *sptr, aClient *victim, aChannel *chptr, char *comment);
 int hooktype_local_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode);
@@ -826,7 +827,7 @@ int hooktype_local_pass(aClient *sptr, char *password);
 int hooktype_remote_connect(aClient *sptr);
 int hooktype_remote_quit(aClient *sptr, char *comment);
 int hooktype_pre_local_join(aClient *sptr, aChannel *chptr, char *parv[]);
-int hooktype_pre_local_kick(aClient *sptr, aClient *victim, aChannel *chptr, char *comment);
+char *hooktype_pre_local_kick(aClient *sptr, aClient *victim, aChannel *chptr, char *comment);
 char *hooktype_pre_local_topic(aClient *cptr, aClient *sptr, aChannel *chptr, char *topic);
 int hooktype_remote_nickchange(aClient *cptr, aClient *sptr, char *newnick);
 int hooktype_channel_create(aClient *sptr, aChannel *chptr);
