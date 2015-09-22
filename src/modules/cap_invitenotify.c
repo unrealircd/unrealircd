@@ -33,6 +33,7 @@ static int cap_invitenotify_invite(aClient *from, aClient *to, aChannel *chptr)
 {
 	sendto_channel_butone_with_capability(from, PROTO_INVITENOTIFY,
 		from, chptr, "INVITE %s :%s", to->name, chptr->chname);
+	return 0;
 }
 
 MOD_INIT(cap_invitenotify)
