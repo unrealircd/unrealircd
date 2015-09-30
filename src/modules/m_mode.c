@@ -1593,6 +1593,9 @@ CMD_FUNC(_m_umode)
 		return 0;
 	}
 	if (acptr != sptr)
+		/* Reported at http://bugs.unrealircd.org/view.php?id=3691 */
+		sendto_one(sptr, err_str(ERR_USERSDONTMATCH),
+			me.name, sptr->name);
 		return 0;
 
 	if (parc < 3)
