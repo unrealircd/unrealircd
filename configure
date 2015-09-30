@@ -1384,7 +1384,7 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --disable-prefixaq      Enable chanadmin (+a) and chanowner (+q) prefixes
+  --disable-prefixaq      Disable chanadmin (+a) and chanowner (+q) prefixes
   --enable-ssl=           enable ssl will check /usr/local/ssl /usr/lib/ssl
                           /usr/ssl /usr/pkg /usr/sfw /usr/local /usr
   --disable-dynamic-linking
