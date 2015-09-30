@@ -269,7 +269,7 @@ CMD_FUNC(m_authenticate)
 	return 0;
 }
 
-static int abort_sasl(struct Client *cptr)
+static int abort_sasl(aClient *cptr)
 {
 	if (cptr->local->sasl_out == 0 || cptr->local->sasl_complete)
 		return 0;
@@ -301,6 +301,16 @@ int sasl_capability_visible(void)
 	return 1;
 }
 
+int sasl_connect(aClient *sptr)
+{
+	return abort_sasl(sptr);
+}
+
+int sasl_quit(aClient *sptr, char *comment)
+{
+	return abort_sasl(sptr);
+}
+
 MOD_INIT(m_sasl)
 {
 	ClientCapability cap;
@@ -311,8 +321,8 @@ MOD_INIT(m_sasl)
 	CommandAdd(modinfo->handle, MSG_SVSLOGIN, m_svslogin, MAXPARA, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, m_authenticate, MAXPARA, M_UNREGISTERED);
 
-	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, abort_sasl);
-	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, abort_sasl);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, sasl_connect);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, sasl_quit);
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "sasl";

@@ -620,5 +620,23 @@ error You stuffed up config.h signals
 # define SOCK_LEN_TYPE int
 #endif
 
+#if defined(__GNUC__) && defined(__GNUC_MINOR__) && \
+    ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)) && \
+    !defined(__cplusplus)
+ #define GCC_TYPECHECKING
+
+ /* copied from cURL: */
+
+ #define _UNREAL_WARNING(id, message) \
+   static void __attribute__((__warning__(message))) \
+   __attribute__((__unused__)) __attribute__((__noinline__)) \
+   id(void) { __asm__(""); }
+
+ #define _UNREAL_ERROR(id, message) \
+   static void __attribute__((__error__(message))) \
+   __attribute__((__unused__)) __attribute__((__noinline__)) \
+   id(void) { __asm__(""); }
+#endif
+
 #endif				/* __config_include__ */
 

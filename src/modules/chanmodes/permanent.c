@@ -21,19 +21,21 @@
 
 ModuleHeader MOD_HEADER(permanent)
   = {
-        "chanmodes/permanent",
-        "$Id$",
-        "Permanent channel mode (+P)", 
-        "3.2-b8-1",
-        NULL 
+	"chanmodes/permanent",
+	"$Id$",
+	"Permanent channel mode (+P)", 
+	"3.2-b8-1",
+	NULL 
     };
 
 static Cmode_t EXTMODE_PERMANENT = 0L;
 
-static void permanent_channel_destroy(aChannel *chptr, bool *should_destroy)
+static int permanent_channel_destroy(aChannel *chptr, int *should_destroy)
 {
 	if (chptr->mode.extmode & EXTMODE_PERMANENT)
-		*should_destroy = false;
+		*should_destroy = 0;
+	
+	return 0;
 }
 
 static int permanent_is_ok(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
@@ -52,28 +54,28 @@ MOD_INIT(permanent)
 {
 CmodeInfo req;
 
-        MARK_AS_OFFICIAL_MODULE(modinfo);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-        memset(&req, 0, sizeof(req));
+	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.flag = 'P';
 	req.is_ok = permanent_is_ok;
 	CmodeAdd(modinfo->handle, req, &EXTMODE_PERMANENT);
 
-	HookAddVoid(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 0, permanent_channel_destroy);
+	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 0, permanent_channel_destroy);
 
-        return MOD_SUCCESS;
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
 MOD_LOAD(permanent)
 {
-        return MOD_SUCCESS;
+	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
 MOD_UNLOAD(permanent)
 {
-        return MOD_SUCCESS;
+	return MOD_SUCCESS;
 }
 

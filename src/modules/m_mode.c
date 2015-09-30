@@ -1571,7 +1571,8 @@ CMD_FUNC(_m_umode)
 	int  i;
 	char **p, *m;
 	aClient *acptr;
-	int  what, setflags, setsnomask = 0;
+	int what, setsnomask = 0;
+	long setflags = 0;
 	/* (small note: keep 'what' as an int. -- Syzop). */
 	short rpterror = 0, umode_restrict_err = 0, chk_restrict = 0, modex_err = 0;
 
@@ -1605,13 +1606,11 @@ CMD_FUNC(_m_umode)
 	}
 
 	/* find flags already set for user */
-	setflags = 0;
-
 	for (i = 0; i <= Usermode_highest; i++)
 		if ((sptr->umodes & Usermode_Table[i].mode))
 			setflags |= Usermode_Table[i].mode;
 
-	if (RESTRICT_USERMODES && !ValidatePermissionsForPath("self:restrictedumodes",sptr,NULL,NULL,NULL))
+	if (RESTRICT_USERMODES && MyClient(sptr) && !ValidatePermissionsForPath("self:restrictedumodes",sptr,NULL,NULL,NULL))
 		chk_restrict = 1;
 
 	if (MyConnect(sptr))

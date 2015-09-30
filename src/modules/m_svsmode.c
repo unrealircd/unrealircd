@@ -389,7 +389,8 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 	int i;
 	char *m;
 	aClient *acptr;
-	int  what, setflags;
+	int  what;
+	long setflags = 0;
 
 	if (!IsULine(sptr))
 		return 0;
@@ -406,7 +407,6 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 		return 0;
 
 	/* initialize setflag to be the user's pre-SVSMODE flags */
-	setflags = 0;
 	for (i = 0; i <= Usermode_highest; i++)
 		if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
 			setflags |= Usermode_Table[i].mode;

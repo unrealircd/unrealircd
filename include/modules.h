@@ -599,9 +599,29 @@ extern ClientCapability *ClientCapabilityFind(const char *token);
 extern ClientCapability *ClientCapabilityAdd(Module *module, ClientCapability *clicap_request);
 extern void ClientCapabilityDel(ClientCapability *clicap);
 
+#ifndef GCC_TYPECHECKING
 #define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL)
 #define HookAddVoid(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, func, NULL)
 #define HookAddPChar(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, func)
+#else
+#define HookAdd(module, hooktype, priority, func) \
+__extension__ ({ \
+	ValidateHooks(hooktype, func); \
+    HookAddMain(module, hooktype, priority, func, NULL, NULL); \
+})
+
+#define HookAddVoid(module, hooktype, priority, func) \
+__extension__ ({ \
+	ValidateHooks(hooktype, func); \
+    HookAddMain(module, hooktype, priority, NULL, func, NULL); \
+})
+
+#define HookAddPChar(module, hooktype, priority, func) \
+__extension__ ({ \
+	ValidateHooks(hooktype, func); \
+    HookAddMain(module, hooktype, priority, NULL, NULL, func); \
+})
+#endif /* GCC_TYPCHECKING */
 
 extern Hook	*HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*pcharfunc)());
 extern Hook	*HookDel(Hook *hook);
@@ -669,10 +689,10 @@ extern Callback	*CallbackDel(Callback *cb);
 extern Efunction	*EfunctionAddMain(Module *module, int eftype, int (*intfunc)(), void (*voidfunc)(), void *(*pvoidfunc)(), char *(*pcharfunc)());
 extern Efunction	*EfunctionDel(Efunction *cb);
 
-Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char params, int flags);
+Command *CommandAdd(Module *module, char *cmd, int (*func)(aClient *cptr, aClient *sptr, int parc, char *parv[]), unsigned char params, int flags);
 void CommandDel(Command *command);
 int CommandExists(char *name);
-Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, iFP function);
+Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, int (*func)(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]));
 void CmdoverrideDel(Cmdoverride *ovr);
 int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
@@ -772,6 +792,195 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_SEE_CHANNEL_IN_WHOIS 86
 #define HOOKTYPE_DCC_DENIED 87
 #define HOOKTYPE_SERVER_HANDSHAKE_OUT 88
+/* Adding a new hook here?
+ * 1) Add the #define HOOKTYPE_.... with a new number
+ * 2) Add a hook prototypy (see below)
+ * 3) Add typechecking (even more below)
+ * 4) Document the hook at https://www.unrealircd.org/docs/Dev:Hook_API
+ */
+
+/* Hook prototypes */
+int hooktype_local_quit(aClient *sptr, char *comment);
+int hooktype_local_nickchange(aClient *sptr, char *newnick);
+int hooktype_local_connect(aClient *sptr);
+int hooktype_rehashflag(aClient *cptr, aClient *sptr, char *str);
+char *hooktype_pre_local_part(aClient *sptr, aChannel *chptr, char *comment);
+int hooktype_configposttest(int *errors);
+int hooktype_rehash(void);
+int hooktype_pre_local_connect(aClient *sptr);
+char *hooktype_pre_local_quit(aClient *sptr, char *comment);
+int hooktype_server_connect(aClient *sptr);
+int hooktype_server_quit(aClient *sptr);
+int hooktype_stats(aClient *sptr, char *str);
+int hooktype_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
+int hooktype_configtest(ConfigFile *cfptr, ConfigEntry *ce, int section, int *errors);
+int hooktype_configrun(ConfigFile *cfptr, ConfigEntry *ce, int section);
+int hooktype_usermsg(aClient *sptr, aClient *to, char *text, int notice);
+int hooktype_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+int hooktype_local_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
+int hooktype_local_kick(aClient *cptr, aClient *sptr, aClient *victim, aChannel *chptr, char *comment);
+int hooktype_local_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_local_topic(aClient *cptr, aClient *sptr, aChannel *chptr, char *topic);
+int hooktype_local_oper(aClient *sptr, int add);
+int hooktype_unkuser_quit(aClient *sptr, char *comment);
+int hooktype_local_pass(aClient *sptr, char *password);
+int hooktype_remote_connect(aClient *sptr);
+int hooktype_remote_quit(aClient *sptr, char *comment);
+int hooktype_pre_local_join(aClient *sptr, aChannel *chptr, char *parv[]);
+char *hooktype_pre_local_kick(aClient *sptr, aClient *victim, aChannel *chptr, char *comment);
+char *hooktype_pre_local_topic(aClient *cptr, aClient *sptr, aChannel *chptr, char *topic);
+int hooktype_remote_nickchange(aClient *cptr, aClient *sptr, char *newnick);
+int hooktype_channel_create(aClient *sptr, aChannel *chptr);
+int hooktype_channel_destroy(aChannel *chptr, int *should_destroy);
+int hooktype_remote_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_tkl_except(aClient *cptr, aTKline *tkl);
+int hooktype_umode_change(aClient *sptr, long setflags, long newflags);
+int hooktype_topic(aClient *cptr, aClient *sptr, aChannel *chptr, char *topic);
+int hooktype_rehash_complete(void);
+int hooktype_tkl_add(aClient *cptr, aClient *sptr, aTKline *tkl, int parc, char *parv[]);
+int hooktype_tkl_del(aClient *cptr, aClient *sptr, aTKline *tkl, int parc, char *parv[]);
+int hooktype_local_kill(aClient *sptr, aClient *victim, char *comment);
+int hooktype_log(int flags, char *timebuf, char *buf);
+int hooktype_remote_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
+int hooktype_remote_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
+int hooktype_remote_kick(aClient *cptr, aClient *sptr, aClient *victim, aChannel *chptr, char *comment);
+int hooktype_local_spamfilter(aClient *acptr, char *str, char *str_in, int type, char *target, aTKline *tkl);
+int hooktype_silenced(aClient *cptr, aClient *sptr, aClient *to, int notice);
+int hooktype_post_server_connect(aClient *sptr);
+int hooktype_rawpacket_in(aClient *sptr, char *readbuf, int *length);
+int hooktype_local_nickpass(aClient *sptr, aClient *nickserv);
+int hooktype_packet(aClient *from, aClient *to, char **msg, int length);
+int hooktype_handshake(aClient *sptr);
+int hooktype_away(aClient *sptr, char *reason);
+int hooktype_invite(aClient *from, aClient *to, aChannel *chptr);
+int hooktype_can_join(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
+int hooktype_can_send(aClient *sptr, aChannel *chptr, char *text, Membership *member, int notice);
+int hooktype_can_kick(aClient *sptr, aClient *victim, aChannel *chptr, char *comment, long sptr_flags, long victim_flags, char **error);
+int hooktype_free_client(aClient *acptr);
+int hooktype_free_user(anUser *user, aClient *acptr);
+char *hooktype_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *hooktype_pre_usermsg(aClient *sptr, aClient *to, char *text, int notice);
+int hooktype_knock(aClient *sptr, aChannel *chptr);
+int hooktype_modechar_del(aChannel *chptr, int modechar);
+int hooktype_modechar_add(aChannel *chptr, int modechar);
+int hooktype_exit_one_client(aClient *sptr);
+int hooktype_can_join_limitexceeded(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
+int hooktype_visible_in_channel(aClient *sptr, aChannel *chptr);
+int hooktype_pre_local_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_pre_remote_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_join_data(aClient *who, aChannel *chptr);
+int hooktype_pre_knock(aClient *sptr, aChannel *chptr);
+int hooktype_pre_invite(aClient *sptr, aChannel *chptr);
+int hooktype_oper_invite_ban(aClient *sptr, aChannel *chptr);
+int hooktype_view_topic_outside_channel(aClient *sptr, aChannel *chptr);
+int hooktype_chan_permit_nick_change(aClient *sptr, aChannel *chptr);
+int hooktype_is_channel_secure(aChannel *chptr);
+int hooktype_can_send_secure(aClient *sptr, aChannel *chptr);
+void hooktype_channel_synced(aChannel *chptr, unsigned short merge, unsigned short removetheirs, unsigned short nomode);
+int hooktype_can_sajoin(aClient *target, aChannel *chptr, aClient *sptr);
+int hooktype_whois(aClient *sptr, aClient *target);
+int hooktype_check_init(aClient *cptr, char *sockname, size_t size);
+int hooktype_who_status(aClient *sptr, aClient *target, aChannel *chptr, Member *member, char *status, int cansee);
+int hooktype_mode_deop(aClient *sptr, aClient *victim, aChannel *chptr, u_int what, char modechar, long my_access, char **badmode);
+int hooktype_pre_kill(aClient *sptr, aClient *victim, char *killpath);
+int hooktype_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr);
+int hooktype_dcc_denied(aClient *sptr, aClient *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
+int hooktype_server_handshake_out(aClient *sptr);
+
+#ifdef GCC_TYPECHECKING
+#define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
+
+_UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check arguments and return type of function.")
+
+#define ValidateHooks(hooktype, func) \
+    if (((hooktype == HOOKTYPE_LOCAL_QUIT) && !ValidateHook(hooktype_local_quit, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_NICKCHANGE) && !ValidateHook(hooktype_local_nickchange, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_CONNECT) && !ValidateHook(hooktype_local_connect, func)) || \
+        ((hooktype == HOOKTYPE_REHASHFLAG) && !ValidateHook(hooktype_rehashflag, func)) || \
+        ((hooktype == HOOKTYPE_PRE_LOCAL_PART) && !ValidateHook(hooktype_pre_local_part, func)) || \
+        ((hooktype == HOOKTYPE_CONFIGPOSTTEST) && !ValidateHook(hooktype_configposttest, func)) || \
+        ((hooktype == HOOKTYPE_REHASH) && !ValidateHook(hooktype_rehash, func)) || \
+        ((hooktype == HOOKTYPE_PRE_LOCAL_CONNECT) && !ValidateHook(hooktype_pre_local_connect, func)) || \
+        ((hooktype == HOOKTYPE_PRE_LOCAL_QUIT) && !ValidateHook(hooktype_pre_local_quit, func)) || \
+        ((hooktype == HOOKTYPE_SERVER_CONNECT) && !ValidateHook(hooktype_server_connect, func)) || \
+        ((hooktype == HOOKTYPE_SERVER_QUIT) && !ValidateHook(hooktype_server_quit, func)) || \
+        ((hooktype == HOOKTYPE_STATS) && !ValidateHook(hooktype_stats, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_JOIN) && !ValidateHook(hooktype_local_join, func)) || \
+        ((hooktype == HOOKTYPE_CONFIGTEST) && !ValidateHook(hooktype_configtest, func)) || \
+        ((hooktype == HOOKTYPE_CONFIGRUN) && !ValidateHook(hooktype_configrun, func)) || \
+        ((hooktype == HOOKTYPE_USERMSG) && !ValidateHook(hooktype_usermsg, func)) || \
+        ((hooktype == HOOKTYPE_CHANMSG) && !ValidateHook(hooktype_chanmsg, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_PART) && !ValidateHook(hooktype_local_part, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_KICK) && !ValidateHook(hooktype_local_kick, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_CHANMODE) && !ValidateHook(hooktype_local_chanmode, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_TOPIC) && !ValidateHook(hooktype_local_topic, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_OPER) && !ValidateHook(hooktype_local_oper, func)) || \
+        ((hooktype == HOOKTYPE_UNKUSER_QUIT) && !ValidateHook(hooktype_unkuser_quit, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_PASS) && !ValidateHook(hooktype_local_pass, func)) || \
+        ((hooktype == HOOKTYPE_REMOTE_CONNECT) && !ValidateHook(hooktype_remote_connect, func)) || \
+        ((hooktype == HOOKTYPE_REMOTE_QUIT) && !ValidateHook(hooktype_remote_quit, func)) || \
+        ((hooktype == HOOKTYPE_PRE_LOCAL_JOIN) && !ValidateHook(hooktype_pre_local_join, func)) || \
+        ((hooktype == HOOKTYPE_PRE_LOCAL_KICK) && !ValidateHook(hooktype_pre_local_kick, func)) || \
+        ((hooktype == HOOKTYPE_PRE_LOCAL_TOPIC) && !ValidateHook(hooktype_pre_local_topic, func)) || \
+        ((hooktype == HOOKTYPE_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_remote_nickchange, func)) || \
+        ((hooktype == HOOKTYPE_CHANNEL_CREATE) && !ValidateHook(hooktype_channel_create, func)) || \
+        ((hooktype == HOOKTYPE_CHANNEL_DESTROY) && !ValidateHook(hooktype_channel_destroy, func)) || \
+        ((hooktype == HOOKTYPE_REMOTE_CHANMODE) && !ValidateHook(hooktype_remote_chanmode, func)) || \
+        ((hooktype == HOOKTYPE_TKL_EXCEPT) && !ValidateHook(hooktype_tkl_except, func)) || \
+        ((hooktype == HOOKTYPE_UMODE_CHANGE) && !ValidateHook(hooktype_umode_change, func)) || \
+        ((hooktype == HOOKTYPE_TOPIC) && !ValidateHook(hooktype_topic, func)) || \
+        ((hooktype == HOOKTYPE_REHASH_COMPLETE) && !ValidateHook(hooktype_rehash_complete, func)) || \
+        ((hooktype == HOOKTYPE_TKL_ADD) && !ValidateHook(hooktype_tkl_add, func)) || \
+        ((hooktype == HOOKTYPE_TKL_DEL) && !ValidateHook(hooktype_tkl_del, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_KILL) && !ValidateHook(hooktype_local_kill, func)) || \
+        ((hooktype == HOOKTYPE_LOG) && !ValidateHook(hooktype_log, func)) || \
+        ((hooktype == HOOKTYPE_REMOTE_JOIN) && !ValidateHook(hooktype_remote_join, func)) || \
+        ((hooktype == HOOKTYPE_REMOTE_PART) && !ValidateHook(hooktype_remote_part, func)) || \
+        ((hooktype == HOOKTYPE_REMOTE_KICK) && !ValidateHook(hooktype_remote_kick, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_SPAMFILTER) && !ValidateHook(hooktype_local_spamfilter, func)) || \
+        ((hooktype == HOOKTYPE_SILENCED) && !ValidateHook(hooktype_silenced, func)) || \
+        ((hooktype == HOOKTYPE_POST_SERVER_CONNECT) && !ValidateHook(hooktype_post_server_connect, func)) || \
+        ((hooktype == HOOKTYPE_RAWPACKET_IN) && !ValidateHook(hooktype_rawpacket_in, func)) || \
+        ((hooktype == HOOKTYPE_LOCAL_NICKPASS) && !ValidateHook(hooktype_local_nickpass, func)) || \
+        ((hooktype == HOOKTYPE_PACKET) && !ValidateHook(hooktype_packet, func)) || \
+        ((hooktype == HOOKTYPE_HANDSHAKE) && !ValidateHook(hooktype_handshake, func)) || \
+        ((hooktype == HOOKTYPE_AWAY) && !ValidateHook(hooktype_away, func)) || \
+        ((hooktype == HOOKTYPE_INVITE) && !ValidateHook(hooktype_invite, func)) || \
+        ((hooktype == HOOKTYPE_CAN_JOIN) && !ValidateHook(hooktype_can_join, func)) || \
+        ((hooktype == HOOKTYPE_CAN_SEND) && !ValidateHook(hooktype_can_send, func)) || \
+        ((hooktype == HOOKTYPE_CAN_KICK) && !ValidateHook(hooktype_can_kick, func)) || \
+        ((hooktype == HOOKTYPE_FREE_CLIENT) && !ValidateHook(hooktype_free_client, func)) || \
+        ((hooktype == HOOKTYPE_FREE_USER) && !ValidateHook(hooktype_free_user, func)) || \
+        ((hooktype == HOOKTYPE_PRE_CHANMSG) && !ValidateHook(hooktype_pre_chanmsg, func)) || \
+        ((hooktype == HOOKTYPE_PRE_USERMSG) && !ValidateHook(hooktype_pre_usermsg, func)) || \
+        ((hooktype == HOOKTYPE_KNOCK) && !ValidateHook(hooktype_knock, func)) || \
+        ((hooktype == HOOKTYPE_MODECHAR_ADD) && !ValidateHook(hooktype_modechar_add, func)) || \
+        ((hooktype == HOOKTYPE_MODECHAR_DEL) && !ValidateHook(hooktype_modechar_del, func)) || \
+        ((hooktype == HOOKTYPE_EXIT_ONE_CLIENT) && !ValidateHook(hooktype_exit_one_client, func)) || \
+        ((hooktype == HOOKTYPE_CAN_JOIN_LIMITEXCEEDED) && !ValidateHook(hooktype_can_join_limitexceeded, func)) || \
+        ((hooktype == HOOKTYPE_VISIBLE_IN_CHANNEL) && !ValidateHook(hooktype_visible_in_channel, func)) || \
+        ((hooktype == HOOKTYPE_PRE_LOCAL_CHANMODE) && !ValidateHook(hooktype_pre_local_chanmode, func)) || \
+        ((hooktype == HOOKTYPE_PRE_REMOTE_CHANMODE) && !ValidateHook(hooktype_pre_remote_chanmode, func)) || \
+        ((hooktype == HOOKTYPE_JOIN_DATA) && !ValidateHook(hooktype_join_data, func)) || \
+        ((hooktype == HOOKTYPE_PRE_KNOCK) && !ValidateHook(hooktype_pre_knock, func)) || \
+        ((hooktype == HOOKTYPE_PRE_INVITE) && !ValidateHook(hooktype_pre_invite, func)) || \
+        ((hooktype == HOOKTYPE_OPER_INVITE_BAN) && !ValidateHook(hooktype_oper_invite_ban, func)) || \
+        ((hooktype == HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL) && !ValidateHook(hooktype_view_topic_outside_channel, func)) || \
+        ((hooktype == HOOKTYPE_CHAN_PERMIT_NICK_CHANGE) && !ValidateHook(hooktype_chan_permit_nick_change, func)) || \
+        ((hooktype == HOOKTYPE_IS_CHANNEL_SECURE) && !ValidateHook(hooktype_is_channel_secure, func)) || \
+        ((hooktype == HOOKTYPE_CAN_SEND_SECURE) && !ValidateHook(hooktype_can_send_secure, func)) || \
+        ((hooktype == HOOKTYPE_CHANNEL_SYNCED) && !ValidateHook(hooktype_channel_synced, func)) || \
+        ((hooktype == HOOKTYPE_CAN_SAJOIN) && !ValidateHook(hooktype_can_sajoin, func)) || \
+        ((hooktype == HOOKTYPE_WHOIS) && !ValidateHook(hooktype_whois, func)) || \
+        ((hooktype == HOOKTYPE_CHECK_INIT) && !ValidateHook(hooktype_check_init, func)) || \
+        ((hooktype == HOOKTYPE_WHO_STATUS) && !ValidateHook(hooktype_who_status, func)) || \
+        ((hooktype == HOOKTYPE_MODE_DEOP) && !ValidateHook(hooktype_mode_deop, func)) || \
+        ((hooktype == HOOKTYPE_PRE_KILL) && !ValidateHook(hooktype_pre_kill, func)) || \
+        ((hooktype == HOOKTYPE_SEE_CHANNEL_IN_WHOIS) && !ValidateHook(hooktype_see_channel_in_whois, func)) || \
+        ((hooktype == HOOKTYPE_DCC_DENIED) && !ValidateHook(hooktype_dcc_denied, func)) || \
+        ((hooktype == HOOKTYPE_SERVER_HANDSHAKE_OUT) && !ValidateHook(hooktype_server_handshake_out, func)) ) \
+        _hook_error_incompatible();
+#endif /* GCC_TYPECHECKING */
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

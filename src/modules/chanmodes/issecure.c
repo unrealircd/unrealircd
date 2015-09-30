@@ -68,7 +68,7 @@ DLLFUNC int issecure_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *c
 DLLFUNC int issecure_quit(aClient *acptr, char *comment);
 DLLFUNC int issecure_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment);
 DLLFUNC int issecure_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
-                             char *modebuf, char *parabuf, int sendts, int samode);
+                             char *modebuf, char *parabuf, time_t sendts, int samode);
                              
 
 MOD_TEST(issecure)
@@ -253,7 +253,7 @@ DLLFUNC int issecure_kick(aClient *cptr, aClient *sptr, aClient *victim, aChanne
 }
 
 DLLFUNC int issecure_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
-                             char *modebuf, char *parabuf, int sendts, int samode)
+                             char *modebuf, char *parabuf, time_t sendts, int samode)
 {
 	if (!strchr(modebuf, 'z'))
 		return 0; /* don't care */

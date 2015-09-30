@@ -1118,7 +1118,7 @@ void sub1_from_channel(aChannel *chptr)
 {
 	Ban *ban;
 	Link *lp;
-	bool should_destroy = true;
+	int should_destroy = 1;
 
 	--chptr->users;
 	if (chptr->users <= 0)

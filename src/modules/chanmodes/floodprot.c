@@ -105,7 +105,7 @@ void *cmodef_dup_struct(void *r_in);
 int cmodef_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
 int floodprot_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
 EVENT(modef_event);
-int cmodef_channel_destroy(aChannel *chptr);
+int cmodef_channel_destroy(aChannel *chptr, int *should_destroy);
 char *floodprot_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
 int floodprot_post_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
 int floodprot_knock(aClient *sptr, aChannel *chptr);
@@ -835,7 +835,7 @@ int cmodef_cleanup_user2(aClient *sptr)
 	return 0;
 }
 
-int cmodef_channel_destroy(aChannel *chptr)
+int cmodef_channel_destroy(aChannel *chptr, int *should_destroy)
 {
 	floodprottimer_stopchantimers(chptr);
 	return 0;

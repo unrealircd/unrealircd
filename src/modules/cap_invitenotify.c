@@ -29,10 +29,11 @@ ModuleHeader MOD_HEADER(cap_invitenotify)
     };
 
 
-static void cap_invitenotify_invite(aClient *from, aClient *to, aChannel *chptr)
+static int cap_invitenotify_invite(aClient *from, aClient *to, aChannel *chptr)
 {
 	sendto_channel_butone_with_capability(from, PROTO_INVITENOTIFY,
 		from, chptr, "INVITE %s :%s", to->name, chptr->chname);
+	return 0;
 }
 
 MOD_INIT(cap_invitenotify)
@@ -40,7 +41,7 @@ MOD_INIT(cap_invitenotify)
 	ClientCapability cap;
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	HookAddVoid(modinfo->handle, HOOKTYPE_INVITE, 0, cap_invitenotify_invite);
+	HookAdd(modinfo->handle, HOOKTYPE_INVITE, 0, cap_invitenotify_invite);
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "invite-notify";
