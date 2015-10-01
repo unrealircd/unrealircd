@@ -777,6 +777,8 @@ char *_StripColors(unsigned char *text) {
 		len--;
 	}
 	new_str[i] = 0;
+	if (new_str[0] == '\0')
+		return NULL;
 	return new_str;
 }
 
