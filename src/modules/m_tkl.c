@@ -1950,7 +1950,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						*tk->usermask = 'H';
 				}
 
-				if ((setat_1 != tk->set_at) || (expiry_1 != tk->expire_at) ||
+				if ((setat_1 < tk->set_at) || (expiry_1 != tk->expire_at) ||
 				    strcmp(tk->reason, reason) || strcmp(tk->setby, parv[5]))
 				{
 					/* here's how it goes:

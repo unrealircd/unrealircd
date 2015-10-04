@@ -626,7 +626,10 @@ int blacklist_parse_reply(struct hostent *he)
 void blacklist_hit(aClient *acptr, Blacklist *bl, int reply)
 {
 	char buf[1024];
-	
+
+	if (find_tkline_match(acptr, 0) < 0)
+		return; /* already klined/glined. Don't send the warning from below. */
+
 	if (IsPerson(acptr))
 		snprintf(buf, sizeof(buf), "[Blacklist] IP %s (%s) matches blacklist %s (%s/reply=%d)",
 			GetIP(acptr), acptr->name, bl->name, bl->backend->dns->name, reply);
