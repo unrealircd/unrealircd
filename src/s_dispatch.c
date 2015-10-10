@@ -424,7 +424,8 @@ void fd_refresh(int fd)
 		if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
 			return;
 
-		ircd_log(LOG_ERROR, "[BUG?] epoll returned error %d (%s)", errno, STRERROR(ERRNO));
+		ircd_log(LOG_ERROR, "[BUG?] epoll returned error %d (%s) for fd %d (%s)",
+			errno, STRERROR(ERRNO), fd, fde->desc);
 		return;
 	}
 
