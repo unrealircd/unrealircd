@@ -443,7 +443,7 @@ echo ""
 
 if [ -z "$NOCACHE" ] ; then
 	# This needs to be updated each release:
-	UNREALRELEASES="Unreal3.4-beta3 Unreal3.4-beta2 Unreal3.4-beta1 Unreal3.4-alpha4 Unreal3.4-alpha3 Unreal3.4-alpha2 Unreal3.4-alpha1"
+	UNREALRELEASES="Unreal3.4-beta4 Unreal3.4-beta3 Unreal3.4-beta2 Unreal3.4-beta1 Unreal3.4-alpha4 Unreal3.4-alpha3 Unreal3.4-alpha2 Unreal3.4-alpha1"
 	if [ -f "config.settings" ]; then
 		. ./config.settings
 	else
@@ -496,8 +496,8 @@ fi
 TEST="$BASEPATH"
 echo ""
 echo "In what directory do you want to install UnrealIRCd?"
-echo "(Note: in Unreal3.4.x you should always install somewhere,"
-echo "and if this directory does not exist it will be created)"
+echo "(Note: UnrealIRCd 4 will need to be installed somewhere."
+echo " If this directory does not exist it will be created.)"
 echo $n "[$TEST] -> $c"
 read cc
 if [ -z "$cc" ] ; then

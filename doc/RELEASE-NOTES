@@ -1,45 +1,47 @@
-UnrealIRCd 3.4-beta4 Release Notes
+UnrealIRCd 4.0.0-rc1 Release Notes
 ===================================
 
-This is the fourth 'beta' version of UnrealIRCd 3.4. We plan to have a
-'stable' UnrealIRCd 3.4 release by Q4 2015.
+This is the first Release Candidate for UnrealIRCd 4.
+We plan to have a 'stable' UnrealIRCd 4.0.0 release in Q4 2015.
 
 IMPORTANT REMARKS:
-* The ending of the 'alpha' stage means that most features we want are
-  in 3.4 now. During 'beta' stage we will work towards getting a stable
-  IRC server.
-* Linking with 3.2.x servers is supported but not very well tested.
-  Note that if you have SSL enabled then this requires version 3.2.10.3
-  or later on the 3.2.x side.
+* The UnrealIRCd version number of the development series has been bumped
+  from 3.4 to 4 to indicate the significant code and end-user changes.
+* 'Release Candidate' means that our focus lies entirely on fixing bugs
+  and improving stability. No new features will be added during RC phase.
+* Although running a mixed network is not 100% ideal, you CAN link in a
+  UnrealIRCd 4 server on a UnrealIRCd 3.2.x network. If you do, then
+  be sure to run 3.2.10.3 or later as otherwise linking will fail if you
+  have enabled SSL.
+* We run daily tests on UnrealIRCd 4 without any issues and UnrealIRCd 4
+  is becoming more stable each release. However, because it's still a
+  release *candidate* it may crash occasionally or have issues.
 
-Therefore:
-* You should never run 3.4-beta4 as a production server
-* We do not recommend linking 3.4-beta4 to a production 3.2.x network (yet)
-
-Please do:
-* Install 3.4-beta4 to play around, show to your friends, have fun with
+Feel free to:
+* Install 4.0.0-rc1 to play around, show to your friends, have fun with
   the latest features and improvements, test things.
+* Link in an UnrealIRCd 4 test server to your 3.2.x network
 * Report any problems, bugs, issues and other feedback on
-  https://bugs.unrealircd.org/ so we can improve 3.4.x!
+  https://bugs.unrealircd.org/ so we can improve UnrealIRCd!
 
 Finally:
 * If you are moving from 3.2.x then be sure to read 'CONFIGURATION CHANGES'
   which explains the new directory structure and how to make UnrealIRCd
-  convert your existing 3.2.x configuration file to the 3.4.x format.
+  convert your existing 3.2.x configuration file to the UnrealIRCd 4 format.
 
 ==[ DOCUMENTATION ]==
-UnrealIRCd 3.4.x documentation is now located in a wiki online at:
+THe UnrealIRCd 4 documentation is located in a wiki online at:
 * https://www.unrealircd.org/docs/
 The old unreal32docs.*html files have been removed.
 
 ==[ CONFIGURATION CHANGES ]==
-UnrealIRCd 3.4 uses a new directory structure.
+UnrealIRCd 4 uses a new directory structure.
 
 *NIX: If you are not on Windows then this means you must now choose a
       target directory to install UnrealIRCd to. ./Config will ask this
       and it's ~/unrealircd by default (eg: /home/nerd/unrealircd).
       You also need to run 'make install' after 'make' now.
-      After compiling, you should leave your Unreal3.4-beta4 directory
+      After compiling, you should leave your Unreal4.0.0-rc1 directory
       and change to ~/unrealircd as everything takes place there.
       For example to start UnrealIRCd you run './unrealircd start'
       (again, from the /home/xxxx/unrealircd directory).
@@ -52,8 +54,8 @@ tmp/       temporary files
 data/      persistent data such as ircd.tune
 cache/     cached remote includes
 
-It is possible to use your existing 3.2.x configuration file, but it needs
-to be 'upgraded' to the new 3.4.x syntax. UnrealIRCd can do this for you.
+It is possible to use your existing 3.2.x configuration file, but it needs to
+be 'upgraded' to the new UnrealIRCd 4 syntax. UnrealIRCd can do this for you.
 Simply place your unrealircd.conf (and any other .conf's you use) in the
 conf/ directory and then:
 * On *NIX run './unrealircd upgrade-conf' (from /home/xxxx/unrealircd)
@@ -71,8 +73,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 
 ==[ GENERAL INFORMATION ]==
 * Below you will see a summary of all changes. Changes may be tagged when
-  a change was made in a specific version, e.g. "(A3)" means 3.4-alpha3
-  and "(B1)" means 3.4-beta1.
+  a change was made in a specific version, e.g. "(A3)" means alpha3
+  and "(B1)" means beta1.
   For a complete list of changes (600+) use 'git log' or have a look at:
   https://github.com/unrealircd/unrealircd/commits/unreal34
 
@@ -140,8 +142,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * When you link two servers the current timestamp is exchanged. If the
   time differs more than 60 seconds then servers won't link and it will
   show a message that you should fix your clock(s). This requires
-  version 3.4-alpha3 (or later) on both ends of the link (A3)
-* Configuration file converter that will upgrade your 3.2.x conf to 3.4.x.
+  version alpha3 (or later) on both ends of the link (A3)
+* Configuration file converter that will upgrade your 3.2.x conf to 4.x.
   On *NIX run './unreal upgrade-conf'. On Windows simply try to boot and
   after the config errors screen UnrealIRCd offers the conversion. (A3)
 * The IRCd can now better handle unknown channel modes which expect a
@@ -184,11 +186,11 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   * -regex: this is the new fast PCRE2 regex engine
   * -simple: supports just strings and ? and * wildcards (super fast)
   * -posix: the old regex engine for compatibility with 3.2.x.  (A3)
-* If you have both 3.2.x and 3.4.x servers on your network then the
-  3.4.x server will only send spamfilters of type 'posix' to the 3.2.x
+* If you have both 3.2.x and 4.x servers on your network then the
+  4.x server will only send spamfilters of type 'posix' to the 3.2.x
   servers because 3.2.x servers don't support the other two types.
   So in a mixed network you probably want to keep using 'posix' for
-  a while until all your UnrealIRCd servers are on 3.4.x. (A3)
+  a while until all your servers are running UnrealIRCd 4. (A3)
 * set::oper-only-stats now defaults to "*"
 * oper::from::userhost and vhost::from::userhost are now called
   oper::mask and vhost::mask. The usermask@ part is now optional and
@@ -229,8 +231,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   (which is not recommended) we try to use STARTTLS in order to
   'upgrade' the connection to use SSL/TLS anyway. This can be disabled
   via link::outgoing::options::insecure. (B2)
-* SSLv3 has now been disabled for security. This also means you can
-  only link 3.4.x with 3.2.10.3 and later because earlier versions
+* SSLv3 has now been disabled for security. This also means you can only
+  link UnrealIRCd 4 with 3.2.10.3 and later because earlier versions
   used SSLv3 instead of TLS due to an OpenSSL API mistake. (B4)
 
 ==[ MODULE CODERS / DEVELOPERS ]==
@@ -253,7 +255,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * The server protocol docs have been removed. The protocol is now
   documented at https://www.unrealircd.org/docs/Server_protocol
   See also https://www.unrealircd.org/docs/Server_protocol:Changes
-  for a list of changes between the 3.2 and 3.4 server protocol.
+  for a list of changes between the 3.2 and 4.0 server protocol.
 
 ==[ MAJOR BUGS FIXED ]==
 * Crash bug on-boot in alpha1 (A2)
@@ -261,7 +263,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * link::outgoing::options::autoconnect did not work (A4)
 * If the IRCd could not bind to any ports it started anyway (A4)
 * alpha3 did not compile on x86 (32 bit) systems (A4)
-* Multiple major crash bugs in earlier 3.4 alpha/beta versions caused
+* Multiple major crash bugs in earlier alpha/beta versions caused
   by OOB read, OOB write, read-after-free, etc. (B2)
 * Spamfilter 'u' not working, likely since alpha1 (B2)
 * Secure server linking with sslclientcertfp was broken since alpha3,

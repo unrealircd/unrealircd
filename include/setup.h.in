@@ -369,13 +369,13 @@
 /* Define if you have the <unistd.h> header file. */
 #undef UNISTDH
 
-/* Generation version number (e.g.: 3 for Unreal3*) */
+/* Generation version number (e.g.: 4 for Unreal4*) */
 #undef UNREAL_VERSION_GENERATION
 
-/* Major version number (e.g.: 2 for Unreal3.2*) */
+/* Major version number (e.g.: 0 for Unreal4.0.0) */
 #undef UNREAL_VERSION_MAJOR
 
-/* Minor version number (e.g.: 1 for Unreal3.2.1) */
+/* Minor version number (e.g.: 0 for Unreal4.0.0) */
 #undef UNREAL_VERSION_MINOR
 
 /* Version suffix such as a beta marker or release candidate marker. (e.g.:

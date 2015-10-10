@@ -1074,7 +1074,7 @@ void win_error()
 	{
 		need_34_upgrade = 0; /* anti-recursion. yes, is needed. */
 		if (MessageBox(NULL, 
-		               "Shall I try to upgrade your configuration files to UnrealIRCd 3.4.x format?",
+		               "Shall I try to upgrade your configuration files to UnrealIRCd 4 format?",
 		               "3.2.x configuration detected",
 		               MB_YESNO|MB_ICONQUESTION) == IDNO)
 		{

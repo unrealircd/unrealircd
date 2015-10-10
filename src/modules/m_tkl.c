@@ -2144,7 +2144,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					if (mixed_network())
 					{
 						sendto_realops("WARNING: Spamfilter '%s' added of type '%s' and 3.2.x servers are linked. "
-						               "Spamfilter will not execute on non-3.4.x servers.",
+						               "Spamfilter will not execute on non-UnrealIRCd-4 servers.",
 						               parv[11] , parv[10]);
 					}
 				}

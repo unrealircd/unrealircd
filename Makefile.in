@@ -232,7 +232,7 @@ install: all
 	@echo '* To start/stop UnrealIRCd run: @SCRIPTDIR@/unrealircd"'
 	@echo ''
 	@echo '* Consult the documentation online at:'
-	@echo '  * https://www.unrealircd.org/docs/UnrealIRCd_3.4.x_documentation'
+	@echo '  * https://www.unrealircd.org/docs/UnrealIRCd_4_documentation'
 	@echo '  * https://www.unrealircd.org/docs/FAQ'
 	@echo ''
 	-@if [ "@SCRIPTDIR@/bin" = "@BINDIR@" ] ; then \

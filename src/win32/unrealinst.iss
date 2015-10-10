@@ -5,14 +5,14 @@
 #define USE_CURL
 
 [Setup]
-AppName=UnrealIRCd 3.4
-AppVerName=UnrealIRCd3.4-beta4
+AppName=UnrealIRCd 4.0
+AppVerName=UnrealIRCd4.0.0-rc1
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=https://www.unrealircd.org
 AppSupportURL=https://www.unrealircd.org
 AppUpdatesURL=https://www.unrealircd.org
 AppMutex=UnrealMutex,Global\UnrealMutex
-DefaultDirName={pf}\Unreal3.4
+DefaultDirName={pf}\Unreal4.0
 DefaultGroupName=UnrealIRCd
 AllowNoIcons=yes
 LicenseFile=src\win32\gplplusssl.rtf
@@ -195,7 +195,7 @@ Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
 Name: "{group}\Make Certificate"; Filename: "{app}\makecert.bat"; WorkingDir: "{app}"
 Name: "{group}\Encrypt Certificate"; Filename: "{app}\encpem.bat"; WorkingDir: "{app}"
-Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/UnrealIRCd_3.4.x_documentation"; WorkingDir: "{app}"
+Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/UnrealIRCd_4_documentation"; WorkingDir: "{app}"
 Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: quicklaunchicon
 

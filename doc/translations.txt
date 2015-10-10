@@ -1,11 +1,14 @@
 ==[ Translations ]===========================================================
 
-In UnrealIRCd 3.4.x we support the following translations:
-* on-line documentation at https://www.unrealircd.org/docs/
+In UnrealIRCd 4 we support the following translations:
+* on-line documentation at https://www.unrealircd.org/docs/ (wiki!)
 * help.conf
 * example.conf
 
-The following rules apply:
+For translating the wiki documentation see this article:
+https://www.unrealircd.org/docs/Translating_UnrealIRCd_wiki_pages
+
+For the .conf files the following rules apply:
 * You must translate the very latest (English) version of the document(s)
 * The translation must be correct. Not just the spelling and grammar,
   but also 'technically'. You should therefore have some real experience

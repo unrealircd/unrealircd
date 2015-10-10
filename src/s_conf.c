@@ -1540,7 +1540,7 @@ void upgrade_conf_to_34(void)
 		config_error("In next screen you will be prompted to automatically upgrade the configuration file(s).");
 	else
 	{
-		config_error("We offer a configuration file converter to convert 3.2.x conf's to 3.4.x, however this "
+		config_error("We offer a configuration file converter to convert 3.2.x conf's to 4.0, however this "
 		             "is not available when running as a service. If you want to use it, make UnrealIRCd "
 		             "run in GUI mode by running 'unreal uninstall'. Then start wircd.exe and when "
 		             "it prompts you to convert the configuration click 'Yes'. Check if UnrealIRCd boots properly. "
@@ -1548,7 +1548,7 @@ void upgrade_conf_to_34(void)
 		             "as a service again."); /* TODO: make this unnecessary :D */
 	}
 #endif
-	config_error("To upgrade it to the new 3.4.x format, run: ./unrealircd upgrade-conf");
+	config_error("To upgrade it to the new 4.0 format, run: ./unrealircd upgrade-conf");
 
 	config_error("******************************************************************");
 	/* TODO: win32 may require a different error */
@@ -3763,7 +3763,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::flags */
 			else if (!strcmp(cep->ce_varname, "flags"))
 			{
-				config_error("%s:%i: oper::flags no longer exists. UnrealIRCd 3.4.x uses a new style oper block now.",
+				config_error("%s:%i: oper::flags no longer exists. UnrealIRCd 4 uses a new style oper block.",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 				need_34_upgrade = 1;
@@ -3787,7 +3787,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::flags {} */
 			if (!strcmp(cep->ce_varname, "flags"))
 			{
-				config_error("%s:%i: oper::flags no longer exists. UnrealIRCd 3.4.x uses a new style oper block now.",
+				config_error("%s:%i: oper::flags no longer exists. UnrealIRCd 4 uses a new style oper block.",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 				need_34_upgrade = 1;
@@ -5683,7 +5683,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 			"vhost::mask");
 		errors++;
 	}
-	// TODO: 3.2.x -> 3.4.x upgrading hints
+	// TODO: 3.2.x -> 4.x upgrading hints
 	return errors;
 }
 
@@ -7483,7 +7483,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				    !strcmp(cepp->ce_varname, "timeout") ||
 				    !strcmp(cepp->ce_varname, "retries"))
 				{
-					config_error("%s:%i: set::dns::%s no longer exist in UnrealIRCd 3.4.x. "
+					config_error("%s:%i: set::dns::%s no longer exist in UnrealIRCd 4. "
 					             "Please remove it from your configuration file.",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
 					errors++;
@@ -7698,7 +7698,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
-			config_error("%s:%i: set::hosts has been removed in UnrealIRCd 3.4.x. You can use oper::vhost now.",
+			config_error("%s:%i: set::hosts has been removed in UnrealIRCd 4. You can use oper::vhost now.",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			errors++;
 			need_34_upgrade = 1;
@@ -8061,8 +8061,8 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	if (strstr(ce->ce_vardata, "modules/cloak") && !strcmp(conf->cf_filename, "modules.conf"))
 	{
 		config_error("You seem to have an include for 'modules.conf'.");
-		config_error("If you have this because you are upgrading from 3.4-alpha3 to a");
-		config_error("later 3.4.x version then please change the include \"modules.conf\";");
+		config_error("If you have this because you are upgrading from 3.4-alpha3 to");
+		config_error("UnrealIRCd 4 then please change the include \"modules.conf\";");
 		config_error("into an include \"modules.default.conf\"; (probably in your");
 		config_error("conf/unrealircd.conf). Yeah, we changed the file name.");
 		// TODO ^: silly win32 wrapping prevents this from being displayed otherwise. PLZ FIX! !
@@ -8357,7 +8357,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 			{
 				config_error("%s:%i: alias::format contains an invalid regex: %s",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, err);
-				config_error("Upgrading from 3.2.x to 3.4.x? Note that regex changed from POSIX Regex "
+				config_error("Upgrading from 3.2.x to UnrealIRCd 4? Note that regex changed from POSIX Regex "
 				             "to PCRE Regex!"); /* TODO: refer to some url ? */
 			} else {
 				unreal_delete_match(expr);
