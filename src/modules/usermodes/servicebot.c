@@ -77,7 +77,7 @@ MOD_UNLOAD(servicebot)
 int servicebot_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *comment,
                     long sptr_flags, long target_flags, char **reject_reason)
 {
-	static char errmsg[NICKLEN+32];
+	static char errmsg[NICKLEN+256];
 
 	if (MyClient(sptr) && !IsULine(sptr) && IsServiceBot(target))
 	{
@@ -98,7 +98,7 @@ int servicebot_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *c
 int servicebot_mode_deop(aClient *sptr, aClient *target, aChannel *chptr,
                     u_int what, char modechar, long my_access, char **reject_reason)
 {
-	static char errmsg[NICKLEN+32];
+	static char errmsg[NICKLEN+256];
 	
 	if (IsServiceBot(target) && MyClient(sptr) && !ValidatePermissionsForPath("servicebot:deop",sptr,target,chptr,NULL) && (what == MODE_DEL))
 	{

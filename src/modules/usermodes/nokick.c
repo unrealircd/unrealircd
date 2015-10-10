@@ -66,7 +66,7 @@ MOD_UNLOAD(nokick)
 int nokick_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *comment,
                     long sptr_flags, long target_flags, char **reject_reason)
 {
-	static char errmsg[NICKLEN+32];
+	static char errmsg[NICKLEN+256];
 
 	if (IsNokick(target) && !IsULine(sptr) && MyClient(sptr) && !ValidatePermissionsForPath("override:kick:nokick",sptr,target,chptr,NULL))
 	{
