@@ -256,6 +256,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   documented at https://www.unrealircd.org/docs/Server_protocol
   See also https://www.unrealircd.org/docs/Server_protocol:Changes
   for a list of changes between the 3.2 and 4.0 server protocol.
+* GCC typechecking has been added to make sure your HookAdd... calls
+  are adding hook functions with the correct parameter (types).
 
 ==[ MAJOR BUGS FIXED ]==
 * Crash bug on-boot in alpha1 (A2)
@@ -293,6 +295,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * The new 3rd party modules compile and install script introduced in
   beta1 was not working correctly. (B2)
 * Invalid output on './unrealircd mkpasswd <hashmethod>'
+* Explicit auth-type like password "...." { md5; }; was broken. (RC1)
+* Annoying warnings from blacklist module if user was already KLINEd. (RC1)
 
 ==[ REMOVED / DROPPED ]==
 * Numeric server IDs, see above. (A1)
