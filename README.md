@@ -8,24 +8,19 @@ swear filtering and module support. We are also particularly proud on our extens
 online documentation. 
 
 ## Pick the right branch!
-The **3.2.x (stable)** series have proven to be very reliable over the past 10(!) years.
-If you want to run a stable IRCd then download UnrealIRCd 3.2 from www.unrealircd.org,
-or use the 'master' branch on GitHub (NOTE: this is not the default branch!).
+**UnrealIRCd 4** is currently in Release Candidate stage and will soon be the next major
+version of UnrealIRCd. The plan is to release UnrealIRCd 4 in Q4 2015.
+This is the 'unreal40' branch and is the default branch on GitHub.
 
-Otherwise, if you want to check out the latest technology and features, don't mind
-crashing once in a while and want to help us test, then try out **3.4.x (beta!)**.
-On GitHub use the 'unreal34' branch (the default).
-
-If you are just interested in checking out UnrealIRCd for the first time then we
-recommend you to try 3.2.x and not 3.4.x. UnrealIRCd 3.2.x is full of features as
-well and is much more stable. Also the documentation for 3.4.x is not up to date
-which may hinder you getting started.
+The alternative are the **3.2.x (stable)** series which have proven to be very reliable
+over the past 10 years. If you want to run a really stable IRCd then download UnrealIRCd 3.2
+from www.unrealircd.org, or use the 'master' branch on GitHub (NOTE: this is not the default branch!).
 
 ## How to get started
 Please consult our excelent online documentation at https://www.unrealircd.org/docs/
 when setting up the IRCd!
 
-Note: the procedure below is for UnrealIRCd version 3.4.x (not 3.2.x!)
+Note: the procedure below is for UnrealIRCd 4 (not 3.2.x!)
 
 ### Step 1: Installation
 #### Windows
