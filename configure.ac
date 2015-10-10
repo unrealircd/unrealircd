@@ -20,17 +20,17 @@ if test "x$enable_dynamic_linking" = "x"; then
 fi
 
 dnl Calculate the versions. Perhaps the use of expr is a little too extravagant
-# Generation version number (e.g.: 4 for Unreal4*)
+# Generation version number (e.g.: X in X.Y.Z)
 UNREAL_VERSION_GENERATION=["4"]
-AC_DEFINE_UNQUOTED([UNREAL_VERSION_GENERATION], [$UNREAL_VERSION_GENERATION], [Generation version number (e.g.: 4 for Unreal4*)])
+AC_DEFINE_UNQUOTED([UNREAL_VERSION_GENERATION], [$UNREAL_VERSION_GENERATION], [Generation version number (e.g.: X for X.Y.Z)])
 
-# Major version number (e.g.: 0 for Unreal4.0.0)
+# Major version number (e.g.: Y in X.Y.Z)
 UNREAL_VERSION_MAJOR=["0"]
-AC_DEFINE_UNQUOTED([UNREAL_VERSION_MAJOR], [$UNREAL_VERSION_MAJOR], [Major version number (e.g.: 0 for Unreal4.0.0)])
+AC_DEFINE_UNQUOTED([UNREAL_VERSION_MAJOR], [$UNREAL_VERSION_MAJOR], [Major version number (e.g.: Y for X.Y.Z)])
 
-# Minor version number (e.g.: 0 for Unreal4.0.0)
+# Minor version number (e.g.: Z in X.Y.Z)
 UNREAL_VERSION_MINOR=["0"]
-AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor version number (e.g.: 0 for Unreal4.0.0)])
+AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor version number (e.g.: Z for X.Y.Z)])
 
 # The version suffix such as a beta marker or release candidate
 # marker. (e.g.: -rc2 for unrealircd-3.2.9-rc2). This macro is a

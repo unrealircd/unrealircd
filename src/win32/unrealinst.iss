@@ -5,14 +5,14 @@
 #define USE_CURL
 
 [Setup]
-AppName=UnrealIRCd 4.0
+AppName=UnrealIRCd 4
 AppVerName=UnrealIRCd4.0.0-rc1
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=https://www.unrealircd.org
 AppSupportURL=https://www.unrealircd.org
 AppUpdatesURL=https://www.unrealircd.org
 AppMutex=UnrealMutex,Global\UnrealMutex
-DefaultDirName={pf}\Unreal4.0
+DefaultDirName={pf}\UnrealIRCd 4
 DefaultGroupName=UnrealIRCd
 AllowNoIcons=yes
 LicenseFile=src\win32\gplplusssl.rtf

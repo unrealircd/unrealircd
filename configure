@@ -2517,7 +2517,7 @@ if test "x$enable_dynamic_linking" = "x"; then
 	exit 1
 fi
 
-# Generation version number (e.g.: 4 for Unreal4*)
+# Generation version number (e.g.: X in X.Y.Z)
 UNREAL_VERSION_GENERATION="4"
 
 cat >>confdefs.h <<_ACEOF
@@ -2525,7 +2525,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-# Major version number (e.g.: 0 for Unreal4.0.0)
+# Major version number (e.g.: Y in X.Y.Z)
 UNREAL_VERSION_MAJOR="0"
 
 cat >>confdefs.h <<_ACEOF
@@ -2533,7 +2533,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-# Minor version number (e.g.: 0 for Unreal4.0.0)
+# Minor version number (e.g.: Z in X.Y.Z)
 UNREAL_VERSION_MINOR="0"
 
 cat >>confdefs.h <<_ACEOF

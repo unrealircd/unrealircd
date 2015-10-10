@@ -41,7 +41,7 @@ UnrealIRCd 4 uses a new directory structure.
       target directory to install UnrealIRCd to. ./Config will ask this
       and it's ~/unrealircd by default (eg: /home/nerd/unrealircd).
       You also need to run 'make install' after 'make' now.
-      After compiling, you should leave your Unreal4.0.0-rc1 directory
+      After compiling, you should leave your unrealircd-4.0.0-rc1 directory
       and change to ~/unrealircd as everything takes place there.
       For example to start UnrealIRCd you run './unrealircd start'
       (again, from the /home/xxxx/unrealircd directory).
