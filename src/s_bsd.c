@@ -1615,6 +1615,6 @@ int ipv6_capable(void)
 	if (s < 0)
 		return 0; /* NO ipv6 */
 	
-	close(s);
+	CLOSE_SOCK(s);
 	return 1; /* YES */
 }
