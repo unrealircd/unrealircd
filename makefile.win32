@@ -131,12 +131,12 @@ CFLAGSST=$(DBGCFLAGST) $(TRE_INC) $(PCRE2_INC) $(CARES_INC) $(LIBCURL_INC) $(OPE
  $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
  dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(CARES_LIB) $(CARESLIB) $(TRE_LIB) $(TRELIB) \
-  $(PCRE2_LIB) $(PCRE2LIB) $(OPENSSL_LIB) $(SSLLIBS) $(LIBCURL_LIB) $(CURLLIB) /def:wircd.def /implib:wircd.lib \
- /nologo $(DBGLFLAG) /out:WIRCD.EXE
+  $(PCRE2_LIB) $(PCRE2LIB) $(OPENSSL_LIB) $(SSLLIBS) $(LIBCURL_LIB) $(CURLLIB) /def:UnrealIRCd.def /implib:UnrealIRCd.lib \
+ /nologo $(DBGLFLAG) /out:UnrealIRCd.exe
 MODCFLAGS=$(MODDBGCFLAG) $(SSLCFLAGS) $(CURLCFLAGS) /J /Fesrc/modules/ \
  /Fosrc/modules/ /nologo $(TRE_INC) $(PCRE2_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /I ./INCLUDE /D \
  DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
-MODLFLAGS=/link /def:src/modules/module.def wircd.lib ws2_32.lib $(TRE_LIB) $(TRELIB) \
+MODLFLAGS=/link /def:src/modules/module.def UnrealIRCd.lib ws2_32.lib $(TRE_LIB) $(TRELIB) \
  $(PCRE2_LIB) $(PCRE2LIB) $(CARES_LIB) $(OPENSSL_LIB) $(SSLLIBS) \
  $(LIBCURL_LIB) $(CURLLIB)
 
@@ -244,7 +244,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/EXTBANS/OPERCLASS.DLL \
  SRC/MODULES/EXTBANS/CERTFP.DLL
 
-ALL: CONF UNREAL.EXE WIRCD.EXE MODULES 
+ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
 
 CLEAN:
         -@erase src\*.obj >NUL
@@ -258,14 +258,14 @@ CLEAN:
 	-@erase src\modules\snomasks\*.dll >NUL
 	-@erase src\modules\extbans\*.dll >NUL
         -@erase .\*.exe >NUL
-	-@erase wircd.lib >NUL
+	-@erase UnrealIRCd.lib >NUL
 	-@erase src\modules\*.exp >NUL
 	-@erase src\modules\*.lib >NUL
 	-@erase src\modules\*.pdb >NUL
 	-@erase src\modules\*.ilk >NUL
 
-./UNREAL.EXE: SRC/UNREAL.OBJ SRC/WIN32/UNREAL.RES
-	$(LINK) $(DBGLFLAGST) advapi32.lib src/unreal.obj src/win32/unreal.res
+./UNREALSVC.EXE: SRC/UNREALSVC.OBJ SRC/WIN32/UNREALSVC.RES
+	$(LINK) $(DBGLFLAGST) advapi32.lib src/unrealsvc.obj src/win32/unrealsvc.res
 
 CONF:
 	-@copy include\win32\setup.h include\setup.h >NUL
@@ -274,10 +274,10 @@ CONF:
 
 
 
-./WIRCD.EXE: $(OBJ_FILES) SRC/win32/WIN32.RES
+./UnrealIRCd.exe: $(OBJ_FILES) SRC/win32/WIN32.RES
         $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/win32/WIN32.RES /MAP
 	-@erase src\win32\win32.res
-	$(MT) -manifest WIRCD.EXE.manifest -outputresource:WIRCD.EXE;1
+	$(MT) -manifest UnrealIRCd.exe.manifest -outputresource:UnrealIRCd.exe;1
 !IFNDEF DEBUGEXTRA
  @echo Standard version built 
 !ELSE
@@ -416,8 +416,8 @@ src/debug.obj: src/win32/debug.c $(INCLUDES)
 src/win32.obj: src/win32/win32.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/win32/win32.c
 
-src/unreal.obj: src/win32/unreal.c $(INCLUDES)
-	$(CC) $(CFLAGSST) src/win32/unreal.c
+src/unrealsvc.obj: src/win32/unrealsvc.c $(INCLUDES)
+	$(CC) $(CFLAGSST) src/win32/unrealsvc.c
 
 src/modules.obj: src/modules.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules.c
@@ -483,9 +483,9 @@ src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
               /d NDEBUG src/win32/win32gui.rc
 
-src/win32/unreal.res: src/win32/unreal.rc
-        $(RC) /l 0x409 /fosrc/win32/unreal.res /i ./include /i ./src \
-              /d NDEBUG src/win32/unreal.rc
+src/win32/unrealsvc.res: src/win32/unrealsvc.rc
+        $(RC) /l 0x409 /fosrc/win32/unrealsvc.res /i ./include /i ./src \
+              /d NDEBUG src/win32/unrealsvc.rc
 
 ################# Modules #################
 
@@ -495,8 +495,8 @@ CUSTOMMODULE: src/modules/$(MODULEFILE).c
 
 SYMBOLFILE: 
 	$(CC) src/win32/def-clean.c
-	dlltool --output-def wircd.def.in --export-all-symbols $(EXP_OBJ_FILES)
-	def-clean wircd.def.in wircd.def
+	dlltool --output-def UnrealIRCd.def.in --export-all-symbols $(EXP_OBJ_FILES)
+	def-clean UnrealIRCd.def.in UnrealIRCd.def
 
 MODULES: $(DLL_FILES)
 

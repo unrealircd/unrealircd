@@ -62,7 +62,7 @@ char *find_best_coredump(void)
 	WIN32_FIND_DATA hData;
 	HANDLE hFile;
 	
-	hFile = FindFirstFile("wircd.*.core", &hData);
+	hFile = FindFirstFile("unrealircd.*.core", &hData);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return NULL;
 	
@@ -307,7 +307,7 @@ int corefile_vs_binary_mismatch(char *coredump)
 	
 	return 0; /* GOOD! */
 #else
-	return 0; /* guess we don't check this on Windows? Or will we check wircd.exe... hmm.. yeah maybe good idea */
+	return 0; /* guess we don't check this on Windows? Or will we check UnrealIRCd.exe... hmm.. yeah maybe good idea */
 #endif
 }
 

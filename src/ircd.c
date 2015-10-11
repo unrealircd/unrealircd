@@ -687,7 +687,7 @@ static int bad_command(const char *argv0)
 #else
 	if (!IsService) {
 		MessageBox(NULL,
-		    "Usage: wircd [-h servername] [-p portnumber] [-x loglevel]\n",
+		    "Usage: UnrealIRCd [-h servername] [-p portnumber] [-x loglevel]\n",
 		    "UnrealIRCD/32", MB_OK);
 	}
 #endif
@@ -780,7 +780,7 @@ static void do_version_check()
 		version_check_logerror("Header<->library mismatches can make UnrealIRCd *CRASH*! "
 		                "Make sure you don't have multiple versions of openssl installed (eg: "
 		                "one in /usr and one in /usr/local). And, if you recently upgraded them, "
-		                "be sure to recompile Unreal.");
+		                "be sure to recompile UnrealIRCd.");
 #else
 		version_check_logerror("Header<->library mismatches can make UnrealIRCd *CRASH*! "
 		                "This should never happen with official Windows builds... unless "
@@ -956,7 +956,7 @@ static void generate_cloakkeys()
 #ifndef _WIN32
 int main(int argc, char *argv[])
 #else
-int InitwIRCD(int argc, char *argv[])
+int InitUnrealIRCd(int argc, char *argv[])
 #endif
 {
 #ifdef _WIN32

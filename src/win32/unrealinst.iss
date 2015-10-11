@@ -35,8 +35,8 @@ Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL opt
 Name: "fixperm"; Description: "Make UnrealIRCd folder writable by current user";
 
 [Files]
-Source: "wircd.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "WIRCD.pdb"; DestDir: "{app}"; Flags: ignoreversion
+Source: "UnrealIRCd.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "UnrealIRCd.pdb"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";Flags: ignoreversion
 Source: "doc\RELEASE-NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
 
@@ -52,7 +52,7 @@ Source: "doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
 Source: "doc\technical\*.*"; DestDir: "{app}\doc\technical"; Flags: ignoreversion
 Source: "doc\conf\aliases\*"; DestDir: "{app}\conf\aliases"; Flags: ignoreversion
 
-Source: "unreal.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
+Source: "unrealsvc.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
 
 Source: "src\win32\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "src\win32\encpem.bat"; DestDir: "{app}"; Flags: ignoreversion
@@ -192,25 +192,25 @@ begin
 end;
 
 [Icons]
-Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"
+Name: "{group}\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
 Name: "{group}\Make Certificate"; Filename: "{app}\makecert.bat"; WorkingDir: "{app}"
 Name: "{group}\Encrypt Certificate"; Filename: "{app}\encpem.bat"; WorkingDir: "{app}"
 Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/UnrealIRCd_4_documentation"; WorkingDir: "{app}"
-Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: desktopicon
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: quicklaunchicon
+Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"; Tasks: quicklaunchicon
 
 [Run]
 ;Filename: "notepad"; Description: "View example.conf"; Parameters: "{app}\conf\examples\example.conf"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "https://www.unrealircd.org/docs/UnrealIRCd_4_documentation"; Description: "View documentation"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "https://www.unrealircd.org/docs/Installing_%28Windows%29"; Description: "View installation instructions"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\RELEASE.NOTES.txt"; Flags: postinstall skipifsilent shellexec runmaximized
-Filename: "{app}\unreal.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
-Filename: "{app}\unreal.exe"; Parameters: "config startup manual"; Flags: runminimized nowait; Tasks: installservice/startdemand
-Filename: "{app}\unreal.exe"; Parameters: "config startup auto"; Flags: runminimized nowait; Tasks: installservice/startboot
-Filename: "{app}\unreal.exe"; Parameters: "config crashrestart 2"; Flags: runminimized nowait; Tasks: installservice/crashrestart
+Filename: "{app}\unrealsvc.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
+Filename: "{app}\unrealsvc.exe"; Parameters: "config startup manual"; Flags: runminimized nowait; Tasks: installservice/startdemand
+Filename: "{app}\unrealsvc.exe"; Parameters: "config startup auto"; Flags: runminimized nowait; Tasks: installservice/startboot
+Filename: "{app}\unrealsvc.exe"; Parameters: "config crashrestart 2"; Flags: runminimized nowait; Tasks: installservice/crashrestart
 Filename: "{app}\makecert.bat"; Tasks: makecert; Flags: postinstall;
 Filename: "{app}\encpem.bat"; WorkingDir: "{app}"; Tasks: enccert; Flags: postinstall;
 
 [UninstallRun]
-Filename: "{app}\unreal.exe"; Parameters: "uninstall"; Flags: runminimized; RunOnceID: "DelService"; Tasks: installservice
+Filename: "{app}\unrealsvc.exe"; Parameters: "uninstall"; Flags: runminimized; RunOnceID: "DelService"; Tasks: installservice

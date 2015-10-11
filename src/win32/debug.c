@@ -227,7 +227,7 @@ void StartUnrealAgain(void)
  * Returns:
  *  EXCEPTION_EXECUTE_HANDLER to terminate the process
  * Side Effects:
- *  wircd.PID.core is created
+ *  unrealircd.PID.core is created
  *  If not running in service mode, a message box is displayed, 
  *   else output is written to service.log
  */
@@ -242,7 +242,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 	HMODULE hDll = NULL;
 #endif
 
-	sprintf(file, "wircd.%d.core", getpid());
+	sprintf(file, "unrealircd.%d.core", getpid());
 	fd = fopen(file, "w");
 	GlobalMemoryStatus(&memStats);
 	fprintf(fd, "Generated at %s\n%s (%d.%d.%d)\n%s[%s%s%s] (%s)\n"
@@ -271,7 +271,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 		if (pDump)
 		{
 			MINIDUMP_EXCEPTION_INFORMATION ExInfo;
-			sprintf(minidumpf, "wircd.%d.mdmp", getpid());
+			sprintf(minidumpf, "unrealircd.%d.mdmp", getpid());
 			hDump = CreateFile(minidumpf, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hDump != INVALID_HANDLE_VALUE)
 			{
@@ -285,7 +285,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 				}
 				CloseHandle(hDump);
 			}
-			sprintf(minidumpf, "wircd.%d.full.mdmp", getpid());
+			sprintf(minidumpf, "unrealircd.%d.full.mdmp", getpid());
 			hDump = CreateFile(minidumpf, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hDump != INVALID_HANDLE_VALUE)
 			{
@@ -311,7 +311,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 		if (fd)
 		{
 			fprintf(fd, "UnrealIRCd has encountered a fatal error. Debugging information "
-					"has been dumped to wircd.%d.core, please file a bug and upload "
+					"has been dumped to unrealircd.%d.core, please file a bug and upload "
 					"this file to http://bugs.unrealircd.org/.", getpid());
 			fclose(fd);
 		}

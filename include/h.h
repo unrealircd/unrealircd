@@ -535,7 +535,7 @@ extern char *get_cptr_status(aClient *);
 extern char *get_snostr(long);
 #ifdef _WIN32
 extern void InitDebug(void);
-extern int InitwIRCD(int argc, char **);
+extern int InitUnrealIRCd(int argc, char **);
 extern void SocketLoop(void *);
 #endif
 extern void sendto_chmodemucrap(aClient *, aChannel *, char *);

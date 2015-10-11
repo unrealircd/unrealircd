@@ -267,14 +267,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	}
 	hInst = hInstance; 
     
-	hWnd = CreateDialog(hInstance, "WIRCD", 0, (DLGPROC)MainDLG); 
+	hWnd = CreateDialog(hInstance, "UnrealIRCd", 0, (DLGPROC)MainDLG); 
 	hwIRCDWnd = hWnd;
 	
 	TaskBarCreated();
 
-	if (InitwIRCD(__argc, __argv) != 1)
+	if (InitUnrealIRCd(__argc, __argv) != 1)
 	{
-		MessageBox(NULL, "UnrealIRCd has failed to initialize in InitwIRCD()", "UnrealIRCD Initalization Error" ,MB_OK);
+		MessageBox(NULL, "UnrealIRCd has failed to initialize in InitUnrealIRCd()", "UnrealIRCD Initalization Error" ,MB_OK);
 		return FALSE;
 	}
 	ShowWindow(hWnd, SW_SHOW);

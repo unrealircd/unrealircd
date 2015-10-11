@@ -1542,7 +1542,7 @@ void upgrade_conf_to_34(void)
 	{
 		config_error("We offer a configuration file converter to convert 3.2.x conf's to 4.0, however this "
 		             "is not available when running as a service. If you want to use it, make UnrealIRCd "
-		             "run in GUI mode by running 'unreal uninstall'. Then start wircd.exe and when "
+		             "run in GUI mode by running 'unreal uninstall'. Then start UnrealIRCd.exe and when "
 		             "it prompts you to convert the configuration click 'Yes'. Check if UnrealIRCd boots properly. "
 		             "Once everything is looking good you can run 'unreal install' to make UnrealIRCd run "
 		             "as a service again."); /* TODO: make this unnecessary :D */

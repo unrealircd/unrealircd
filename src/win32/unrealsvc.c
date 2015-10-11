@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 			*bslash = 0;
 		
 		strcpy(binpath,path);
-		strcat(binpath, "\\wircd.exe");
+		strcat(binpath, "\\UnrealIRCd.exe");
 		hService = CreateService(hSCManager, "UnrealIRCd", "UnrealIRCd",
 				 SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
 				 SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, binpath,

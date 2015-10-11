@@ -137,7 +137,7 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	}
 
 	/* Initialize the IRCd */
-	if ((error = InitwIRCD(dwArgc, lpszArgv)) != 1) 
+	if ((error = InitUnrealIRCd(dwArgc, lpszArgv)) != 1) 
 	{
 		SetServiceStop(error);
 		return;

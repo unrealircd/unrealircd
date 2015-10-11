@@ -100,7 +100,7 @@ M_OPER.obj : error LNK2019: unresolved external symbol _sendto_snomask_global
 
 (note: the exact name of the symbol will vary!)
 
-Then you will have to rebuild the wircd.def symbol file. You do this by
+Then you will have to rebuild the unrealircd.def symbol file. You do this by
 downloading http://www.vulnscan.org/tmp/dlltool.exe and putting the file somewhere
 in your path (eg: c:\winnt\system32).
 Then, to compile you do this:
