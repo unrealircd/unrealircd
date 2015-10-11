@@ -1197,7 +1197,7 @@ CMD_FUNC(m_die)
 			    me.name, get_client_name(sptr, TRUE));
 	}
 
-abort();
+	(void)s_die();
 
 	return 0;
 }
