@@ -55,7 +55,7 @@ CMD_FUNC(m_chghost);
 ModuleHeader MOD_HEADER(m_chghost)
   = {
 	"chghost",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"/chghost", /* Short description of module */
 	"3.2-b8-1",
     };

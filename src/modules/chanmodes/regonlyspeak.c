@@ -43,7 +43,7 @@
 ModuleHeader MOD_HEADER(regonlyspeak)
   = {
 	"chanmodes/regonlyspeak",
-	"$Id$",
+	"4.0",
 	"Channel Mode +M",
 	"3.2-b8-1",
 	NULL 

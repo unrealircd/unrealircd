@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER(nokick)
   = {
 	"usermodes/nokick",
-	"$Id$",
+	"4.0",
 	"User Mode +q",
 	"3.2-b8-1",
 	NULL 

@@ -48,7 +48,7 @@ CMD_FUNC(m_dccallow);
 ModuleHeader MOD_HEADER(m_dccallow)
   = {
 	"m_dccallow",
-	"$Id$",
+	"4.0",
 	"command /dccallow", 
 	"3.2-b8-1",
 	NULL 

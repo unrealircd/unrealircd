@@ -42,7 +42,7 @@
 ModuleHeader MOD_HEADER(noknock)
   = {
 	"chanmodes/noknock",
-	"$Id$",
+	"4.0",
 	"Channel Mode +V",
 	"3.2-b8-1",
 	NULL 

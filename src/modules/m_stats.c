@@ -48,7 +48,7 @@ CMD_FUNC(m_stats);
 ModuleHeader MOD_HEADER(m_stats)
   = {
 	"m_stats",
-	"$Id$",
+	"4.0",
 	"command /stats", 
 	"3.2-b8-1",
 	NULL 

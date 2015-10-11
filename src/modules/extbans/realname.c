@@ -21,7 +21,7 @@
 ModuleHeader MOD_HEADER(realname)
 = {
 	"chanmodes/extbans/realname",
-	"$Id$",
+	"4.0",
 	"ExtBan ~r - Ban based on realname/gecos field",
 	"3.2-b8-1",
 	NULL 

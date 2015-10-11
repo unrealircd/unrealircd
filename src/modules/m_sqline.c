@@ -50,7 +50,7 @@ CMD_FUNC(m_sqline);
 ModuleHeader MOD_HEADER(m_sqline)
   = {
 	"sqline",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /sqline", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

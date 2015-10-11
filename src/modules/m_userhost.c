@@ -48,7 +48,7 @@ CMD_FUNC(m_userhost);
 ModuleHeader MOD_HEADER(m_userhost)
   = {
 	"m_userhost",
-	"$Id$",
+	"4.0",
 	"command /userhost", 
 	"3.2-b8-1",
 	NULL 

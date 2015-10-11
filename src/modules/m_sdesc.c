@@ -48,7 +48,7 @@ CMD_FUNC(m_sdesc);
 ModuleHeader MOD_HEADER(m_sdesc)
   = {
 	"sdesc",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /sdesc", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

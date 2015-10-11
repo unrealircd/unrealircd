@@ -54,7 +54,7 @@
 ModuleHeader MOD_HEADER(m_sasl)
   = {
 	"m_sasl",
-	"$Id$",
+	"4.0",
 	"SASL", 
 	"3.2-b8-1",
 	NULL 

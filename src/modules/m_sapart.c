@@ -48,7 +48,7 @@ CMD_FUNC(m_sapart);
 ModuleHeader MOD_HEADER(m_sapart)
   = {
 	"m_sapart",
-	"$Id$",
+	"4.0",
 	"command /sapart", 
 	"3.2-b8-1",
 	NULL 

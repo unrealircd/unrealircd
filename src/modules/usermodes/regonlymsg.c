@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER(regonlymsg)
   = {
 	"usermodes/regonlymsg",
-	"$Id$",
+	"4.0",
 	"User Mode +R",
 	"3.2-b8-1",
 	NULL 

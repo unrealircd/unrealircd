@@ -27,7 +27,7 @@
 ModuleHeader MOD_HEADER(servicebot)
   = {
 	"usermodes/servicebot",
-	"$Id$",
+	"4.0",
 	"User Mode +q",
 	"3.2-b8-1",
 	NULL 

@@ -31,7 +31,7 @@ DLLFUNC char *militime(char *sec, char *usec);
 ModuleHeader MOD_HEADER(m_rping)
   = {
 	"rping",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /rping, /rpong", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

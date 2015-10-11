@@ -42,7 +42,7 @@
 ModuleHeader MOD_HEADER(nonotice)
   = {
 	"chanmodes/nonotice",
-	"$Id$",
+	"4.0",
 	"Channel Mode +T",
 	"3.2-b8-1",
 	NULL 

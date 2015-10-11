@@ -53,7 +53,7 @@ CMD_FUNC(m_chgname);
 ModuleHeader MOD_HEADER(m_chgname)
   = {
 	"chgname",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /chgname", /* Short description of module */
 	"3.2-b8-1",
 	NULL

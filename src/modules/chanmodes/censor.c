@@ -30,7 +30,7 @@
 ModuleHeader MOD_HEADER(censor)
   = {
 	"chanmodes/censor",
-	"$Id$",
+	"4.0",
 	"Channel Mode +G",
 	"3.2-b8-1",
 	NULL,

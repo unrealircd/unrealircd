@@ -29,7 +29,7 @@
 ModuleHeader MOD_HEADER(link)
   = {
 	"chanmodes/link",
-	"$Id$",
+	"4.0",
 	"Channel Mode +L",
 	"3.2-b8-1",
 	NULL,

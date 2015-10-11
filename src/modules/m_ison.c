@@ -48,7 +48,7 @@ CMD_FUNC(m_ison);
 ModuleHeader MOD_HEADER(m_ison)
   = {
 	"m_ison",
-	"$Id$",
+	"4.0",
 	"command /ison", 
 	"3.2-b8-1",
 	NULL 

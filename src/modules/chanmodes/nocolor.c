@@ -44,7 +44,7 @@ CMD_FUNC(nocolor);
 ModuleHeader MOD_HEADER(nocolor)
   = {
 	"chanmodes/nocolor",
-	"$Id$",
+	"4.0",
 	"Channel Mode +c",
 	"3.2-b8-1",
 	NULL 

@@ -47,7 +47,7 @@ CMD_FUNC(m_sendsno);
 ModuleHeader MOD_HEADER(m_sendsno)
   = {
 	"sendsno",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /sendsno", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

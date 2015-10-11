@@ -48,7 +48,7 @@ CMD_FUNC(m_umode2);
 ModuleHeader MOD_HEADER(m_umode2)
   = {
 	"m_umode2",
-	"$Id$",
+	"4.0",
 	"command /umode2", 
 	"3.2-b8-1",
 	NULL 

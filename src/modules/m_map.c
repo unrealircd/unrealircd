@@ -48,7 +48,7 @@ CMD_FUNC(m_map);
 ModuleHeader MOD_HEADER(m_map)
   = {
 	"m_map",
-	"$Id$",
+	"4.0",
 	"command /map", 
 	"3.2-b8-1",
 	NULL 

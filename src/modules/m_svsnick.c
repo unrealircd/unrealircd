@@ -50,7 +50,7 @@ CMD_FUNC(m_svsnick);
 ModuleHeader MOD_HEADER(m_svsnick)
   = {
 	"m_svsnick",
-	"$Id$",
+	"4.0",
 	"command /svsnick", 
 	"3.2-b8-1",
 	NULL 

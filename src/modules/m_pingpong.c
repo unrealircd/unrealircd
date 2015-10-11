@@ -51,7 +51,7 @@ CMD_FUNC(m_nospoof);
 ModuleHeader MOD_HEADER(m_pingpong)
   = {
 	"pingpong",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"ping, pong and nospoof", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

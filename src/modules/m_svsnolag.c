@@ -49,7 +49,7 @@ CMD_FUNC(m_svs2nolag);
 ModuleHeader MOD_HEADER(m_svsnolag)
   = {
 	"m_svsnolag",
-	"$Id$",
+	"4.0",
 	"commands /svsnolag and /svs2nolag", 
 	"3.2-b8-1",
 	NULL

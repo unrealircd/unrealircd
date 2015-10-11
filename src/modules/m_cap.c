@@ -31,7 +31,7 @@ CMD_FUNC(m_cap);
 ModuleHeader MOD_HEADER(m_cap)
   = {
 	"m_cap",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /cap", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

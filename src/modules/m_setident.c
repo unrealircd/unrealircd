@@ -49,7 +49,7 @@ CMD_FUNC(m_setident);
 ModuleHeader MOD_HEADER(m_setident)
   = {
 	"setident",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"/setident", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

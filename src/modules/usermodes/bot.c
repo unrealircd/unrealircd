@@ -27,7 +27,7 @@
 ModuleHeader MOD_HEADER(bot)
   = {
 	"usermodes/bot",
-	"$Id$",
+	"4.0",
 	"User Mode +B",
 	"3.2-b8-1",
 	NULL 

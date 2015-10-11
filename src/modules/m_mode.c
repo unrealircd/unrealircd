@@ -72,7 +72,7 @@ static int samode_in_progress = 0;
 ModuleHeader MOD_HEADER(m_mode)
   = {
 	"m_mode",
-	"$Id$",
+	"4.0",
 	"command /mode",
 	"3.2-b8-1",
 	NULL

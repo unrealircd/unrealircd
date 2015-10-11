@@ -30,7 +30,7 @@
 ModuleHeader MOD_HEADER(censor)
   = {
 	"usermodes/censor",
-	"$Id$",
+	"4.0",
 	"User Mode +G",
 	"3.2-b8-1",
 	NULL,

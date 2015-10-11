@@ -21,7 +21,7 @@
 ModuleHeader MOD_HEADER(account)
 = {
 	"chanmodes/extbans/account",
-	"$Id$",
+	"4.0",
 	"ExtBan ~a - Ban/exempt by services account name",
 	"3.2-b8-1",
 	NULL 

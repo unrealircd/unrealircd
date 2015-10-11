@@ -48,7 +48,7 @@ CMD_FUNC(m_trace);
 ModuleHeader MOD_HEADER(m_trace)
   = {
 	"m_trace",
-	"$Id$",
+	"4.0",
 	"command /trace", 
 	"3.2-b8-1",
 	NULL 

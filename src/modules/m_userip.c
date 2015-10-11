@@ -48,7 +48,7 @@ CMD_FUNC(m_userip);
 ModuleHeader MOD_HEADER(m_userip)
   = {
 	"m_userip",
-	"$Id$",
+	"4.0",
 	"command /userip", 
 	"3.2-b8-1",
 	NULL 

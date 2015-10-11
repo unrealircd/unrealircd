@@ -55,7 +55,7 @@ CMD_FUNC(m_chgident);
 ModuleHeader MOD_HEADER(m_chgident)
   = {
 	"chgident",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"/chgident", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

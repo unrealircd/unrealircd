@@ -48,7 +48,7 @@ CMD_FUNC(m_motd);
 ModuleHeader MOD_HEADER(m_motd)
   = {
 	"m_motd",
-	"$Id$",
+	"4.0",
 	"command /motd", 
 	"3.2-b8-1",
 	NULL 

@@ -50,7 +50,7 @@ CMD_FUNC(m_away);
 DLLFUNC ModuleHeader MOD_HEADER(m_away)
   = {
 	"m_away",
-	"$Id$",
+	"4.0",
 	"command /away", 
 	"3.2-b8-1",
 	NULL 

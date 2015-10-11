@@ -114,7 +114,7 @@ ModuleInfo *TklModInfo;
 ModuleHeader MOD_HEADER(m_tkl)
   = {
 	"tkl",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"commands /gline etc", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

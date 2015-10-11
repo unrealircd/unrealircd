@@ -48,7 +48,7 @@ CMD_FUNC(m_setname);
 ModuleHeader MOD_HEADER(m_setname)
   = {
 	"setname",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /setname", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

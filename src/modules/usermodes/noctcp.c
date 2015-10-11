@@ -44,7 +44,7 @@ CMD_FUNC(noctcp);
 ModuleHeader MOD_HEADER(noctcp)
   = {
 	"usermodes/noctcp",
-	"$Id$",
+	"4.0",
 	"User Mode +T",
 	"3.2-b8-1",
 	NULL 

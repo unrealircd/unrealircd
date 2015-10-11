@@ -49,7 +49,7 @@ CMD_FUNC(m_sendumode);
 ModuleHeader MOD_HEADER(m_sendumode)
   = {
 	"sendumode",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /sendumode", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

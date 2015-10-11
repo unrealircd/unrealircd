@@ -58,7 +58,7 @@ static char buf[BUFSIZE];
 ModuleHeader MOD_HEADER(m_server)
   = {
 	"m_server",
-	"$Id$",
+	"4.0",
 	"command /server", 
 	"3.2-b8-1",
 	NULL 

@@ -14,7 +14,7 @@
 ModuleHeader MOD_HEADER(certfp)
   = {
 	"certfp",
-	"$Id$",
+	"4.0",
 	"Certificate fingerprint",
 	"3.2-b8-1",
 	NULL 

@@ -26,7 +26,7 @@ CMD_FUNC(m_svspart);
 ModuleHeader MOD_HEADER(m_svspart)
   = {
 	"svspart",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /svspart", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

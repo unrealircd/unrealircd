@@ -21,7 +21,7 @@
 ModuleHeader MOD_HEADER(operclass)
 = {
 	"chanmodes/extbans/operclass",
-	"$Id$",
+	"4.0",
 	"ExtBan ~O - Ban/exempt operclass",
 	"3.2-b8-1",
 	NULL 

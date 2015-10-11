@@ -46,7 +46,7 @@ CMD_FUNC(m_svskill);
 ModuleHeader MOD_HEADER(m_svskill)
   = {
 	"svskill",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /svskill", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

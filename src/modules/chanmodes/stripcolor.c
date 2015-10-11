@@ -44,7 +44,7 @@ CMD_FUNC(stripcolor);
 ModuleHeader MOD_HEADER(stripcolor)
   = {
 	"chanmodes/stripcolor",
-	"$Id$",
+	"4.0",
 	"Channel Mode +S",
 	"3.2-b8-1",
 	NULL 

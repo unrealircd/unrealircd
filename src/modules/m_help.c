@@ -49,7 +49,7 @@ CMD_FUNC(m_help);
 ModuleHeader MOD_HEADER(m_help)
   = {
 	"m_help",
-	"$Id$",
+	"4.0",
 	"command /help", 
 	"3.2-b8-1",
 	NULL 

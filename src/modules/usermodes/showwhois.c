@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER(showwhois)
   = {
 	"usermodes/showwhois",
-	"$Id$",
+	"4.0",
 	"User Mode +W",
 	"3.2-b8-1",
 	NULL 

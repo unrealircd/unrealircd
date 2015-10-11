@@ -50,7 +50,7 @@ CMD_FUNC(m_svs2sno);
 ModuleHeader MOD_HEADER(m_svssno)
   = {
 	"m_svssno",
-	"$Id$",
+	"4.0",
 	"command /svssno", 
 	"3.2-b8-1",
 	NULL 

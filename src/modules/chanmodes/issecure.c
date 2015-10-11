@@ -51,7 +51,7 @@ CMD_FUNC(issecure);
 ModuleHeader MOD_HEADER(issecure)
   = {
 	"chanmodes/issecure",
-	"$Id$",
+	"4.0",
 	"Channel Mode +Z", 
 	"3.2-b8-1",
 	NULL 

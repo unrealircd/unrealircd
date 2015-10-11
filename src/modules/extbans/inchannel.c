@@ -21,7 +21,7 @@
 ModuleHeader MOD_HEADER(inchannel)
 = {
 	"chanmodes/extbans/inchannel",
-	"$Id$",
+	"4.0",
 	"ExtBan ~c - banned when in specified channel",
 	"3.2-b8-1",
 	NULL 

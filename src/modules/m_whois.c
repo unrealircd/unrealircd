@@ -49,7 +49,7 @@ CMD_FUNC(m_whois);
 ModuleHeader MOD_HEADER(m_whois)
   = {
 	"whois",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /whois", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

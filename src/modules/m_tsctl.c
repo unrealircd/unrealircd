@@ -48,7 +48,7 @@ CMD_FUNC(m_tsctl);
 ModuleHeader MOD_HEADER(m_tsctl)
   = {
 	"tsctl",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /tsctl", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

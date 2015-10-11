@@ -50,7 +50,7 @@ DLLFUNC int _register_user(aClient *cptr, aClient *sptr, char *nick, char *usern
 ModuleHeader MOD_HEADER(m_nick)
   = {
 	"m_nick",
-	"$Id$",
+	"4.0",
 	"command /nick", 
 	"3.2-b8-1",
 	NULL 

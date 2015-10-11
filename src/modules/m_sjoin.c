@@ -48,7 +48,7 @@ CMD_FUNC(m_sjoin);
 ModuleHeader MOD_HEADER(m_sjoin)
   = {
 	"m_sjoin",
-	"$Id$",
+	"4.0",
 	"command /sjoin", 
 	"3.2-b8-1",
 	NULL 

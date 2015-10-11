@@ -46,7 +46,7 @@ CMD_FUNC(m_protoctl);
 ModuleHeader MOD_HEADER(m_protoctl)
   = {
 	"m_protoctl",
-	"$Id$",
+	"4.0",
 	"command /protoctl", 
 	"3.2-b8-1",
 	NULL 

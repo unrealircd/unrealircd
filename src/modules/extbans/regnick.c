@@ -21,7 +21,7 @@
 ModuleHeader MOD_HEADER(regnick)
 = {
 	"chanmodes/extbans/regnick",
-	"$Id$",
+	"4.0",
 	"ExtBan ~R - Ban/exempt specific nick, but only if registered",
 	"3.2-b8-1",
 	NULL 

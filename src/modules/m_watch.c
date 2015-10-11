@@ -48,7 +48,7 @@ CMD_FUNC(m_watch);
 ModuleHeader MOD_HEADER(m_watch)
   = {
 	"m_watch",
-	"$Id$",
+	"4.0",
 	"command /watch", 
 	"3.2-b8-1",
 	NULL 

@@ -50,7 +50,7 @@ CMD_FUNC(m_swhois);
 ModuleHeader MOD_HEADER(m_swhois)
   = {
 	"m_swhois",
-	"$Id$",
+	"4.0",
 	"command /swhois", 
 	"3.2-b8-1",
 	NULL 

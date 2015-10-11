@@ -44,7 +44,7 @@ CMD_FUNC(noctcp);
 ModuleHeader MOD_HEADER(noctcp)
   = {
 	"chanmodes/noctcp",
-	"$Id$",
+	"4.0",
 	"Channel Mode +C",
 	"3.2-b8-1",
 	NULL 

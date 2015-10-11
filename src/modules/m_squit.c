@@ -48,7 +48,7 @@ CMD_FUNC(m_squit);
 ModuleHeader MOD_HEADER(m_squit)
   = {
 	"m_squit",
-	"$Id$",
+	"4.0",
 	"command /squit", 
 	"3.2-b8-1",
 	NULL 

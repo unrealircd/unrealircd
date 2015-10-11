@@ -48,7 +48,7 @@ CMD_FUNC(m_rules);
 ModuleHeader MOD_HEADER(m_rules)
   = {
 	"m_rules",
-	"$Id$",
+	"4.0",
 	"command /rules", 
 	"3.2-b8-1",
 	NULL 

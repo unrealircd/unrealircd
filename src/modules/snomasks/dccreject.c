@@ -23,7 +23,7 @@
 ModuleHeader MOD_HEADER(dccreject)
   = {
 	"snomasks/dccreject",
-	"$Id$",
+	"4.0",
 	"Snomask +D",
 	"3.2-b8-1",
 	NULL 

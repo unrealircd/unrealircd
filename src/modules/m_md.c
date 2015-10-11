@@ -36,7 +36,7 @@ void _send_md_membership(ModDataInfo *mdi, aClient *acptr, Membership *m, ModDat
 ModuleHeader MOD_HEADER(m_md)
   = {
 	"m_md",
-	"$Id$",
+	"4.0",
 	"command /MD (S2S only)",
 	"3.2-b8-1",
 	NULL 

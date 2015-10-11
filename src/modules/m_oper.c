@@ -50,7 +50,7 @@ CMD_FUNC(m_oper);
 ModuleHeader MOD_HEADER(m_oper)
   = {
 	"oper",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /oper", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

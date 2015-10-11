@@ -43,7 +43,7 @@
 ModuleHeader MOD_HEADER(nokick)
   = {
 	"chanmodes/nokick",
-	"$Id$",
+	"4.0",
 	"Channel Mode +Q",
 	"3.2-b8-1",
 	NULL 

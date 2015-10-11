@@ -47,7 +47,7 @@ CMD_FUNC(m_quit);
 ModuleHeader MOD_HEADER(m_quit)
   = {
 	"quit",	/* Name of module */
-	"$Id$", /* Version */
+	"4.0", /* Version */
 	"command /quit", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
