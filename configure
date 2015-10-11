@@ -2544,7 +2544,7 @@ _ACEOF
 # The version suffix such as a beta marker or release candidate
 # marker. (e.g.: -rc2 for unrealircd-3.2.9-rc2). This macro is a
 # string instead of an integer because it contains arbitrary data.
-UNREAL_VERSION_SUFFIX="`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\(.*\)'`"
+UNREAL_VERSION_SUFFIX="`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\.[0-9]*\(.*\)'`"
 
 cat >>confdefs.h <<_ACEOF
 #define UNREAL_VERSION_SUFFIX "$UNREAL_VERSION_SUFFIX"

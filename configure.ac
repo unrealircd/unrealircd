@@ -35,7 +35,7 @@ AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor versi
 # The version suffix such as a beta marker or release candidate
 # marker. (e.g.: -rc2 for unrealircd-3.2.9-rc2). This macro is a
 # string instead of an integer because it contains arbitrary data.
-UNREAL_VERSION_SUFFIX=["`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\(.*\)'`"]
+UNREAL_VERSION_SUFFIX=["`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\.[0-9]*\(.*\)'`"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_SUFFIX], ["$UNREAL_VERSION_SUFFIX"], [Version suffix such as a beta marker or release candidate marker. (e.g.: -rc2 for unrealircd-3.2.9-rc2)])
 
 AC_PROG_CC
