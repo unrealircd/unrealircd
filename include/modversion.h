@@ -63,12 +63,12 @@
   
 
 #ifdef UNREALCORE
-  char our_mod_version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
+  char our_mod_version[] = BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
                                MYTOKEN_SSL \
                                MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF;
   unsigned int our_compiler_version = GCCVER;
 #else
-  DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
+  DLLFUNC char Mod_Version[] = BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
                                MYTOKEN_SSL \
                                MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF;
   DLLFUNC unsigned int compiler_version = GCCVER;

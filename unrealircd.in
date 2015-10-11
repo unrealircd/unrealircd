@@ -121,7 +121,7 @@ elif [ "$1" = "backtrace" ] ; then
 		echo 'has permission to dump core (type "ulimit -c unlimited" and see'
 		echo 'if you get permission denied errors). Also verify that you did'
 		echo 'not run out of quota.'
-		echo 'If all that is ok, then it might be that Unreal did not crash but'
+		echo 'If all that is ok, then it might be that UnrealIRCd did not crash but'
 		echo 'got killed by the OS (eg: cpu/mem resource limits), the syadmin,'
 		echo 'or an automated process.'
 		exit 1
@@ -182,5 +182,5 @@ __EOF__
 	echo ""
 	echo "Thanks!"
 else
-	echo "Usage: unreal start|stop|rehash|restart|mkpasswd|version|gencloak|upgrade-conf"
+	echo "Usage: unrealircd start|stop|rehash|restart|mkpasswd|version|gencloak|upgrade-conf"
 fi

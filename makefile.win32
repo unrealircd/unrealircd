@@ -12,7 +12,7 @@ MT=mt
 # which passes all these arguments to nmake, like:
 # nmake -f makefile.win32 OPENSSL_INC_DIR="c:\dev\openssl" etc etc...
 # Both ways will work, but if you use a batch file it's easier with
-# upgrading Unreal as you won't have to edit this makefile again.
+# upgrading UnrealIRCd as you won't have to edit this makefile again.
 
 ### TRE ###
 #TRE_LIB_DIR="C:\dev\tre\win32\release"

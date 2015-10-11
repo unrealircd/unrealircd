@@ -54,7 +54,7 @@ cat >version.c <<!SUB!THIS!
 
 char *generation = "$generation";
 char *creation = "$creation";
-#define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
+#define IRCDTOTALVERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 char *version = IRCDTOTALVERSION;
 char *buildid = "$id";
 /* moved to s_serv.c */
@@ -134,7 +134,7 @@ char *unrealcredits[] =
 	"The UnrealIRCd Team would like to thank:",
 	" ",
 	"Nutcais - Phil Hawkins",
-	"- the original shell for Unreal development, useful comments,",
+	"- the original shell for UnrealIRCd development, useful comments,",
 	"  and supporting the project all through its life. Thanks for",
 	"  helping to get this project to take off.",
 	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-[Hosting]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
@@ -147,7 +147,7 @@ char *unrealcredits[] =
 	"Alcatraz Media - http://www.alcatrazmedia.com",
 	"- Donating more webhosting for the project",
 	"cknight^",
-	"- Donating a FreeBSD box to the Unreal project to host some stuff",
+	"- Donating a FreeBSD box to the UnrealIRCd project to host some stuff",
 	"KIREnet.com - http://www.kirenet.com",
 	"- Donating hosting for the above box on their line",
 	"Digital Intensity Webhosting - http://www.digital-intensity.net",
@@ -216,7 +216,7 @@ char unreallogo[] =
 95,124,92,95,95,95,47,92,95,124,32,
 92,95,124,32,92,95,95,95,95,47,92,
 95,95,44,95,124,10,0,85,110,114,
-101,97,108,0};
+101,97,108,73,82,67,100,0};
 
 char *dalinfotext[] =
     {

@@ -32,7 +32,7 @@ Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request";
 Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; Flags: unchecked; MinVersion: 0,5.0;
 Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL options:";
 Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL options:"; Flags: unchecked;
-Name: "fixperm"; Description: "Make Unreal folder writable by current user";
+Name: "fixperm"; Description: "Make UnrealIRCd folder writable by current user";
 
 [Files]
 Source: "wircd.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -160,7 +160,7 @@ if CurStep = ssPostInstall then
      d := ExpandConstant('{app}');
 	   if IsTaskSelected('fixperm') then
 	   begin
-	     // This fixes the permissions in the Unreal folder by granting full access to the user
+	     // This fixes the permissions in the UnrealIRCd folder by granting full access to the user
 	     // running the install.
 	     s := '-on "'+d+'" -ot file -actn ace -ace "n:'+GetUserNameString()+';p:full;m:set';
 	     Exec(d+'\tmp\setacl.exe', s, d, SW_HIDE, ewWaitUntilTerminated, Res);

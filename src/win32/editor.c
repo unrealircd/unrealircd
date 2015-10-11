@@ -314,7 +314,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				ft.chrg.cpMax = -1;
 			}
 			if (SendMessage(hRich, EM_FINDTEXTEX, flags, (LPARAM)&ft) == -1)
-				MessageBox(NULL, "Unreal has finished searching the document",
+				MessageBox(NULL, "UnrealIRCd has finished searching the document",
 					"Find", MB_ICONINFORMATION|MB_OK);
 			else
 			{

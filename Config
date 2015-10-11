@@ -206,7 +206,7 @@ while [ -z "$TEST" ] ; do
 	TEST="No"
     fi
     echo ""
-    echo "Should Unreal notify a user when they are no longer shunned?"
+    echo "Should UnrealIRCd notify a user when they are no longer shunned?"
     echo $n "[$TEST] -> $c"
 	read cc
     if [ -z "$cc" ] ; then
