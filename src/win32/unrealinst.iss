@@ -74,7 +74,7 @@ Source: "c:\dev\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 
 #ifdef USE_CURL
 ; curl with ssl support
-Source: "c:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-sspi-spnego\bin\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-sspi\bin\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 
 [Dirs]
