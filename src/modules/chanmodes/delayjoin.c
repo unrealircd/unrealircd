@@ -63,7 +63,7 @@ MOD_INIT(delayjoin)
 			/* I use config_error() here because it's printed to stderr in case of a load
 			 * on cmd line, and to all opers in case of a /rehash.
 			 */
-			config_error("delayjoin: Could not add usermode '+D' or '+d': %s", ModuleGetErrorStr(modinfo->handle));
+			config_error("delayjoin: Could not add channel mode '+D' or '+d': %s", ModuleGetErrorStr(modinfo->handle));
 			return MOD_FAILED;
 	}
 
