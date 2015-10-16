@@ -292,24 +292,30 @@ void fd_refresh(int fd)
 
 	fde->backend_flags = 0;
 
-	EV_SET(&ev, (uintptr_t) fd, (short) EVFILT_READ, fde->read_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
-	if (kevent(kqueue_fd, &ev, 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
+	if (fde->read_callback != NULL || fde->backend_flags & EVFILT_READ)
 	{
-		if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
-			return;
+		EV_SET(&ev, (uintptr_t) fd, (short) EVFILT_READ, fde->read_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
+		if (kevent(kqueue_fd, &ev, 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
+		{
+			if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
+				return;
 
-		ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
-		return;
+			ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
+			return;
+		}
 	}
 
-	EV_SET(&ev, (uintptr_t) fd, (short) EVFILT_WRITE, fde->write_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
-	if (kevent(kqueue_fd, &ev, 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
+	if (fde->write_callback != NULL || fde->backend_flags & EVFILT_WRITE)
 	{
-		if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
-			return;
+		EV_SET(&ev, (uintptr_t) fd, (short) EVFILT_WRITE, fde->write_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
+		if (kevent(kqueue_fd, &ev, 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
+		{
+			if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
+				return;
 
-		ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
-		return;
+			ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
+			return;
+		}
 	}
 
 	if (fde->read_callback != NULL)
@@ -517,7 +523,7 @@ void fd_select(time_t delay)
 #ifdef DEBUG_IOENGINE
 	gettimeofday(&t, NULL);
 	tdiff = ((t.tv_sec - oldt.tv_sec) * 1000000) + (t.tv_usec - oldt.tv_usec);
-	
+
 	if (tdiff > 1000000)
 	{
 		sendto_realops_and_log("WARNING: Slow I/O engine or high load: fd_select() took %lld ms! read_callbacks=%d, write_callbacks=%d",
