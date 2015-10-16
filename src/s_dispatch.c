@@ -300,10 +300,9 @@ void fd_fork()
 			if (kevent(kqueue_fd, &kqueue_prepared[p], 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
 			{
 				if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
-					return;
-
+					continue;
+					
 				ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
-				return;
 			}
 		}
 	}
