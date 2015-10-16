@@ -82,7 +82,7 @@ LoopStruct loop;
 MODVAR MemoryInfo StatsZ;
 #ifndef _WIN32
 uid_t irc_uid = 0;
-gid_t irc_gid = 0; 
+gid_t irc_gid = 0;
 #endif
 
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
@@ -197,7 +197,7 @@ VOIDSIG s_die()
 	else {
 		SERVICE_STATUS status;
 		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP); 
+		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP);
 		ControlService(hService, SERVICE_CONTROL_STOP, &status);
 	}
 #else
@@ -242,7 +242,7 @@ VOIDSIG s_restart()
 
 	if (restarting == 0) {
 		/*
-		 * Send (or attempt to) a dying scream to oper if present 
+		 * Send (or attempt to) a dying scream to oper if present
 		 */
 
 		restarting = 1;
@@ -339,7 +339,7 @@ void server_reboot(char *mesg)
 		IRCDStatus.dwCurrentState = SERVICE_STOP_PENDING;
 		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
 		GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
-		CreateProcess(fname, "restartsvc", NULL, NULL, FALSE, 
+		CreateProcess(fname, "restartsvc", NULL, NULL, FALSE,
 			0, NULL, NULL, &si, &pi);
 		IRCDStatus.dwCurrentState = SERVICE_STOPPED;
 		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
@@ -409,7 +409,7 @@ EVENT(try_connections)
 			continue;
 
 		class = aconf->class;
-		
+
 		/* Only do one connection attempt per <connfreq> seconds (for the same server) */
 		if ((aconf->hold > TStime()))
 			continue;
@@ -546,7 +546,7 @@ int check_ping(aClient *cptr)
 	Debug((DEBUG_DEBUG, "c(%s)=%d p %d a %d", cptr->name,
 		cptr->status, ping,
 		TStime() - cptr->local->lasttime));
-	
+
 	/* If ping is less than or equal to the last time we received a command from them */
 	if (ping > (TStime() - cptr->local->lasttime))
 		return 0; /* some recent command was executed */
@@ -556,7 +556,7 @@ int check_ping(aClient *cptr)
 		((cptr->flags & FLAGS_PINGSENT)
 		/* And they had 2x ping frequency to respond */
 		&& ((TStime() - cptr->local->lasttime) >= (2 * ping)))
-		|| 
+		||
 		/* Or isn't registered and time spent is larger than ping (CONNECTTIMEOUT).. */
 		(!IsRegistered(cptr) && (TStime() - cptr->local->since >= ping))
 		)
@@ -589,12 +589,12 @@ int check_ping(aClient *cptr)
 		 */
 		cptr->flags |= FLAGS_PINGSENT;
 		/*
-		 * not nice but does the job 
+		 * not nice but does the job
 		 */
 		cptr->local->lasttime = TStime() - ping;
 		sendto_one(cptr, "PING :%s", me.name);
 	}
-	
+
 	return 0;
 }
 
@@ -620,7 +620,7 @@ EVENT(check_pings)
 	{
 		check_ping(cptr);
 	}
-	
+
 	loop.do_bancheck = loop.do_bancheck_spamf_user = loop.do_bancheck_spamf_away = 0;
 	/* done */
 }
@@ -628,7 +628,7 @@ EVENT(check_pings)
 EVENT(check_deadsockets)
 {
 	aClient *cptr, *cptr2;
-	
+
 	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
 	{
 		/* No need to notify opers here. It's already done when "FLAGS_DEADSOCKET" is set. */
@@ -702,7 +702,7 @@ static void version_check_logerror(char *fmt, ...)
 {
 va_list va;
 char buf[1024];
-	
+
 	va_start(va, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, va);
 	va_end(va);
@@ -710,7 +710,7 @@ char buf[1024];
 	fprintf(stderr, "[!!!] %s\n", buf);
 #else
 	win_log("[!!!] %s", buf);
-#endif	
+#endif
 }
 
 /** Ugly version checker that ensures ssl/curl runtime libraries match the
@@ -735,7 +735,7 @@ static void do_version_check()
 		if (p)
 		{
 			int versionlen = p - compiledfor + 1;
-			
+
 			if (strncasecmp(compiledfor, runtime, versionlen))
 			{
 				version_check_logerror("OpenSSL version mismatch: compiled for '%s', library is '%s'",
@@ -744,8 +744,8 @@ static void do_version_check()
 			}
 		}
 	}
-	
-	
+
+
 #ifdef USE_LIBCURL
 	/* Perhaps someone should tell them to do this a bit more easy ;)
 	 * problem is runtime output is like: 'libcurl/7.11.1 c-ares/1.2.0'
@@ -753,7 +753,7 @@ static void do_version_check()
 	 */
 	{
 		char buf[128], *p;
-		
+
 		runtime = curl_version();
 		compiledfor = LIBCURL_VERSION;
 		if (!strncmp(runtime, "libcurl/", 8))
@@ -847,7 +847,7 @@ void fix_timers(void)
 					acptr->name, acptr->local->nexttarget, TStime()));
 				acptr->local->nexttarget = TStime();
 			}
-			
+
 		}
 	}
 
@@ -1017,7 +1017,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 			"         giving a cracker root SSH access to your box.\n"
 			"         You should either start UnrealIRCd under a different\n"
 			"         account than root, or set IRC_USER in include/config.h\n"
-			"         to a nonprivileged username and recompile.\n"); 
+			"         to a nonprivileged username and recompile.\n");
 		sleep(1); /* just to catch their attention */
 	}
 #endif /* IRC_USER */
@@ -1055,7 +1055,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	{
 		struct stat sb;
 		mode_t umaskold;
-		
+
 		umaskold = umask(0);
 		if (mkdir("dev", S_IRUSR|S_IWUSR|S_IXUSR|S_IXGRP|S_IXOTH) != 0 && errno != EEXIST)
 		{
@@ -1365,10 +1365,10 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 #ifndef _WIN32
 	/*
-	 * didn't set debuglevel 
+	 * didn't set debuglevel
 	 */
 	/*
-	 * but asked for debugging output to tty 
+	 * but asked for debugging output to tty
 	 */
 	if ((debuglevel < 0) && (bootopt & BOOT_TTY)) {
 		(void)fprintf(stderr,
@@ -1409,7 +1409,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 	init_dynconf();
 	/*
-	 * Add default class 
+	 * Add default class
 	 */
 	default_class =
 	    (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
@@ -1432,7 +1432,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	clicap_init();
 	if (!find_Command_simple("AWAY") /*|| !find_Command_simple("KILL") ||
 		!find_Command_simple("OPER") || !find_Command_simple("PING")*/)
-	{ 
+	{
 		config_error("Someone forgot to load modules with proper commands in them. READ THE DOCUMENTATION");
 		exit(-4);
 	}
@@ -1485,7 +1485,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	me.from = &me;
 
 	/*
-	 * This listener will never go away 
+	 * This listener will never go away
 	 */
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
@@ -1499,6 +1499,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	{
 		if (fork())
 			exit(0);
+    fd_fork();
 		loop.ircd_forked = 1;
 	}
 #endif
@@ -1551,8 +1552,8 @@ void SocketLoop(void *dummy)
 	TS   delay = 0;
 	static TS lastglinecheck = 0;
 	TS   last_tune;
-	
-	
+
+
 	while (1)
 #else
 	/*
@@ -1637,13 +1638,13 @@ void SocketLoop(void *dummy)
 			IRCstats.me_max = IRCstats.me_clients;
 
 		fd_select(SOCKETLOOP_MAX_DELAY);
-		
+
 		process_clients();
-		
+
 		timeofday = time(NULL) + TSoffset;
 
 		/*
-		 * Debug((DEBUG_DEBUG, "Got message(s)")); 
+		 * Debug((DEBUG_DEBUG, "Got message(s)"));
 		 */
 		/*
 		 * ** ...perhaps should not do these loops every time,
@@ -1653,7 +1654,7 @@ void SocketLoop(void *dummy)
 		 * ** time might be too far away... (similarly with
 		 * ** ping times) --msa
 		 */
-		if (dorehash) 
+		if (dorehash)
 		{
 			(void)rehash(&me, &me, 1);
 			dorehash = 0;
@@ -1695,7 +1696,7 @@ static void open_debugfile(void)
 			if ((fd = open(LOGFILE, O_WRONLY | O_CREAT, 0600)) < 0)
 				if ((fd = open("/dev/null", O_WRONLY)) < 0)
 					exit(-1);
-			
+
 #if 1
 			cptr->fd = fd;
 			debugfd = fd;
