@@ -728,6 +728,38 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	return 0;
 }
 
+/** Returns 1 if channel has this channel mode set and 0 if not */
+int has_channel_mode(aChannel *chptr, char mode)
+{
+	aCtab *tab = &cFlagTab[0];
+	int i;
+
+	/* Extended channel modes */
+	for (i=0; i <= Channelmode_highest; i++)
+	{
+		if ((Channelmode_Table[i].flag == mode) && (chptr->mode.extmode & Channelmode_Table[i].mode))
+			return 1;
+	}
+
+	/* Built-in channel modes */
+	while (tab->mode != 0x0)
+	{
+		if ((chptr->mode.mode & tab->mode) && (tab->flag == mode))
+			return 1;
+		tab++;
+	}
+
+	/* Special handling for +l (needed??) */
+	if (chptr->mode.limit && (mode == 'l'))
+		return 1;
+
+	/* Special handling for +k (needed??) */
+	if (chptr->mode.key && (mode == 'k'))
+		return 1;
+		
+	return 0; /* Not found */
+}
+
 /*
  * write the "simple" list of channel modes for channel chptr onto buffer mbuf
  * with the parameters in pbuf.
