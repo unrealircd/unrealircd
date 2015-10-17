@@ -270,10 +270,6 @@ void fd_select(time_t delay)
 	}
 }
 
-void fd_fork()
-{
-}
-
 #endif
 
 /***************************************************************************************
@@ -285,47 +281,21 @@ void fd_fork()
 
 static int kqueue_fd = -1;
 static struct kevent kqueue_events[MAXCONNECTIONS * 2];
-static struct kevent kqueue_prepared[MAXCONNECTIONS * 2];
-static char kqueue_enabled[MAXCONNECTIONS * 2];
-
-void fd_fork()
-{
-	kqueue_fd = kqueue();
-	int p;
-
-	for (p=0; p < MAXCONNECTIONS * 2; ++p)
-	{
-		if (kqueue_enabled[p])
-		{
-			if (kevent(kqueue_fd, &kqueue_prepared[p], 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
-			{
-				if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
-					continue;
-					
-				ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
-			}
-		}
-	}
-}
 
 void fd_refresh(int fd)
 {
+	struct kevent ev;
 	FDEntry *fde = &fd_table[fd];
 
 	if (kqueue_fd == -1)
-	{
 		kqueue_fd = kqueue();
-		memset(kqueue_enabled,0,MAXCONNECTIONS*2);
-	}
 
 	fde->backend_flags = 0;
-	kqueue_enabled[fd] = 0;
-	kqueue_enabled[fd+MAXCONNECTIONS] = 0;
 
 	if (fde->read_callback != NULL || fde->backend_flags & EVFILT_READ)
 	{
-		EV_SET(&kqueue_prepared[fd], (uintptr_t) fd, (short) EVFILT_READ, fde->read_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
-		if (kevent(kqueue_fd, &kqueue_prepared[fd], 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
+		EV_SET(&ev, (uintptr_t) fd, (short) EVFILT_READ, fde->read_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
+		if (kevent(kqueue_fd, &ev, 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
 		{
 			if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
 				return;
@@ -337,8 +307,8 @@ void fd_refresh(int fd)
 
 	if (fde->write_callback != NULL || fde->backend_flags & EVFILT_WRITE)
 	{
-		EV_SET(&kqueue_prepared[fd+MAXCONNECTIONS], (uintptr_t) fd, (short) EVFILT_WRITE, fde->write_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
-		if (kevent(kqueue_fd, &kqueue_prepared[fd+MAXCONNECTIONS], 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
+		EV_SET(&ev, (uintptr_t) fd, (short) EVFILT_WRITE, fde->write_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
+		if (kevent(kqueue_fd, &ev, 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
 		{
 			if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
 				return;
@@ -349,17 +319,10 @@ void fd_refresh(int fd)
 	}
 
 	if (fde->read_callback != NULL)
-	{
 		fde->backend_flags |= EVFILT_READ;
-		kqueue_enabled[fd] = 1;
-
-	}
 
 	if (fde->write_callback != NULL)
-	{
 		fde->backend_flags |= EVFILT_WRITE;
-		kqueue_enabled[fd+MAXCONNECTIONS] = 1;
-	}
 }
 
 void fd_select(time_t delay)
@@ -369,10 +332,7 @@ void fd_select(time_t delay)
 	struct kevent *ke;
 
 	if (kqueue_fd == -1)
-	{
 		kqueue_fd = kqueue();
-		memset(kqueue_enabled,0,MAXCONNECTIONS*2);
-	}
 
 	ts.tv_sec = delay / 1000;
 	ts.tv_nsec = delay % 1000 * 1000000;
@@ -417,6 +377,7 @@ void fd_select(time_t delay)
 		}
 	}
 }
+
 #endif
 
 /***************************************************************************************
@@ -571,11 +532,6 @@ void fd_select(time_t delay)
 #endif
 }
 
-
-void fd_fork()
-{
-}
-
 #endif
 
 /***************************************************************************************
@@ -672,11 +628,6 @@ void fd_select(time_t delay)
 			fde->write_oneshot = 0;
 		}
 	}
-}
-
-
-void fd_fork()
-{
 }
 
 #endif
