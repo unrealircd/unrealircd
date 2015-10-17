@@ -1394,6 +1394,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 	fprintf(stderr, "\n");
 #endif
+
 	clear_client_hash_table();
 	clear_channel_hash_table();
 	clear_watch_hash_table();
@@ -1455,6 +1456,14 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "Dynamic configuration initialized.. booting IRCd.\n");
 #endif
+#if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)
+	if (!(bootopt & BOOT_NOFORK))
+	{
+		if (fork())
+			exit(0);
+		loop.ircd_forked = 1;
+	}
+#endif
 	open_debugfile();
 	if (portnum < 0)
 		portnum = PORTNUM;
@@ -1494,15 +1503,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	(void)add_to_client_hash_table(me.name, &me);
 	(void)add_to_id_hash_table(me.id, &me);
 	list_add(&me.client_node, &global_server_list);
-#if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)
-	if (!(bootopt & BOOT_NOFORK))
-	{
-		if (fork())
-			exit(0);
-    fd_fork();
-		loop.ircd_forked = 1;
-	}
-#endif
+
 	(void)ircsnprintf(REPORT_DO_DNS, sizeof(REPORT_DO_DNS), ":%s %s", me.name, BREPORT_DO_DNS);
 	(void)ircsnprintf(REPORT_FIN_DNS, sizeof(REPORT_FIN_DNS), ":%s %s", me.name, BREPORT_FIN_DNS);
 	(void)ircsnprintf(REPORT_FIN_DNSC, sizeof(REPORT_FIN_DNSC), ":%s %s", me.name, BREPORT_FIN_DNSC);
