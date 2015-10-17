@@ -272,6 +272,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 			}
 #endif
 		}
+
 		if (chptr->topic)
 		{
 			sendto_one(sptr, rpl_str(RPL_TOPIC),
@@ -281,7 +282,13 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 			    sptr->name, chptr->chname, chptr->topic_nick,
 			    chptr->topic_time);
 		}
-		if (chptr->users == 1 && (MODES_ON_JOIN || iConf.modes_on_join.extmodes))
+		
+		/* Set default channel modes (set::modes-on-join).
+		 * Set only if it's the 1st user and only if no other modes have been set
+		 * already (eg: +P, permanent).
+		 */
+		if ((chptr->users == 1) && !chptr->mode.mode && !chptr->mode.extmode &&
+		    (MODES_ON_JOIN || iConf.modes_on_join.extmodes))
 		{
 			int i;
 			chptr->mode.extmode =  iConf.modes_on_join.extmodes;
@@ -303,9 +310,11 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 			    me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
 			sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
 		}
+
 		parv[0] = sptr->name;
 		parv[1] = chptr->chname;
 		(void)do_cmd(cptr, sptr, "NAMES", 2, parv);
+
 		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
 	} else {
 		RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, parv); /* (rarely used) */
