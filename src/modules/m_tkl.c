@@ -198,12 +198,11 @@ CMD_FUNC(m_gline)
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr, TKL_KILL|TKL_GLOBAL, NULL);
-		tkl_stats(sptr, TKL_ZAP|TKL_GLOBAL, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
-		sendto_snomask(SNO_EYES, "Stats \'g\' requested by %s (%s@%s)",
-			sptr->name, sptr->user->username, GetHost(sptr));
-		return 0;
+		char *parv[3];
+		parv[0] = NULL;
+		parv[1] = "gline";
+		parv[2] = NULL;
+		return do_cmd(sptr, sptr, "STATS", 2, parv);
 	}
 
 	return m_tkl_line(cptr, sptr, parc, parv, "G");
@@ -224,12 +223,11 @@ CMD_FUNC(m_gzline)
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr, TKL_GLOBAL|TKL_KILL, NULL);
-		tkl_stats(sptr, TKL_GLOBAL|TKL_ZAP, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
-		sendto_snomask(SNO_EYES, "Stats \'g\' requested by %s (%s@%s)",
-			sptr->name, sptr->user->username, GetHost(sptr));
-		return 0;
+		char *parv[3];
+		parv[0] = NULL;
+		parv[1] = "gline"; /* (there's no /STATS gzline, it's included in /STATS gline output) */
+		parv[2] = NULL;
+		return do_cmd(sptr, sptr, "STATS", 2, parv);
 	}
 
 	return m_tkl_line(cptr, sptr, parc, parv, "Z");
@@ -250,11 +248,11 @@ CMD_FUNC(m_shun)
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr, TKL_GLOBAL|TKL_SHUN, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 's');
-		sendto_snomask(SNO_EYES, "Stats \'s\' requested by %s (%s@%s)",
-			sptr->name, sptr->user->username, GetHost(sptr));
-		return 0;
+		char *parv[3];
+		parv[0] = NULL;
+		parv[1] = "shun";
+		parv[2] = NULL;
+		return do_cmd(sptr, sptr, "STATS", 2, parv);
 	}
 
 	return m_tkl_line(cptr, sptr, parc, parv, "s");
@@ -348,53 +346,20 @@ CMD_FUNC(m_tkline)
 
 	if (parc == 1)
 	{
-		/* Emulate /stats k */
-		ConfigItem_ban *bans;
-		ConfigItem_except *excepts;
-		char type[2];
-  		for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
-		{
-			if (bans->flag.type == CONF_BAN_USER) 
-			{
-				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
-					type[0] = 'K';
-				type[1] = '\0';
-				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-			 		me.name, sptr->name, type, bans->mask, bans->reason
-					? bans->reason : "<no reason>");
-			}
-			else if (bans->flag.type == CONF_BAN_IP) 
-			{
-				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
-					type[0] = 'Z';
-				else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
-					type[0] = 'z';
-				type[1] = '\0';
-				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-					me.name, sptr->name, type, bans->mask, bans->reason 
-					? bans->reason : "<no reason>");
-			}
-		}		
-		tkl_stats(sptr, TKL_KILL, NULL);
-		tkl_stats(sptr, TKL_ZAP, NULL);
-		for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) 
-		{
-			if (excepts->flag.type == 1)
-				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-					me.name, sptr->name, "E", excepts->mask, "");
-		}
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'k');
-		sendto_snomask(SNO_EYES, "Stats \'k\' requested by %s (%s@%s)",
-			sptr->name, sptr->user->username, GetHost(sptr));
-		return 0;
+		char *parv[3];
+		parv[0] = NULL;
+		parv[1] = "kline";
+		parv[2] = NULL;
+		return do_cmd(sptr, sptr, "STATS", 2, parv);
 	}
+
 	if (!ValidatePermissionsForPath("tkl:kline:remove",sptr,NULL,NULL,NULL) && *parv[1] == '-')
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
-	return m_tkl_line(cptr, sptr, parc, parv, "k");
 
+	return m_tkl_line(cptr, sptr, parc, parv, "k");
 }
 
 CMD_FUNC(m_tzline)
@@ -411,45 +376,11 @@ CMD_FUNC(m_tzline)
 
 	if (parc == 1)
 	{
-		/* Emulate /stats k */
-		ConfigItem_ban *bans;
-		ConfigItem_except *excepts;
-		char type[2];
-  		for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
-		{
-			if (bans->flag.type == CONF_BAN_USER) 
-			{
-				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
-					type[0] = 'K';
-				type[1] = '\0';
-				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-			 		me.name, sptr->name, type, bans->mask, bans->reason
-					? bans->reason : "<no reason>");
-			}
-			else if (bans->flag.type == CONF_BAN_IP) 
-			{
-				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
-					type[0] = 'Z';
-				else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
-					type[0] = 'z';
-				type[1] = '\0';
-				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-					me.name, sptr->name, type, bans->mask, bans->reason 
-					? bans->reason : "<no reason>");
-			}
-		}		
-		tkl_stats(sptr, TKL_KILL, NULL);
-		tkl_stats(sptr, TKL_ZAP, NULL);
-		for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) 
-		{
-			if (excepts->flag.type == 1)
-				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-					me.name, sptr->name, "E", excepts->mask, "");
-		}
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'k');
-		sendto_snomask(SNO_EYES, "Stats \'k\' requested by %s (%s@%s)",
-			sptr->name, sptr->user->username, GetHost(sptr));
-		return 0;
+		char *parv[3];
+		parv[0] = NULL;
+		parv[1] = "kline"; /* (there's no /STATS zline, it's included in /STATS kline output) */
+		parv[2] = NULL;
+		return do_cmd(sptr, sptr, "STATS", 2, parv);
 	}
 
 	return m_tkl_line(cptr, sptr, parc, parv, "z");
@@ -528,11 +459,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	struct tm *t;
 
 	if (parc == 1)
-	{
-		tkl_stats(sptr, 0, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
-		return 0;
-	}
+		return 0; /* shouldn't happen */
 
 	mask = parv[1];
 	if (*mask == '-')
@@ -764,12 +691,11 @@ char *err = NULL;
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr, TKL_SPAMF, NULL);
-		tkl_stats(sptr, TKL_SPAMF|TKL_GLOBAL, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'F');
-		sendto_snomask(SNO_EYES, "Stats \'f\' requested by %s (%s@%s)",
-			sptr->name, sptr->user->username, GetHost(sptr));
-		return 0;
+		char *parv[3];
+		parv[0] = NULL;
+		parv[1] = "spamfilter";
+		parv[2] = NULL;
+		return do_cmd(sptr, sptr, "STATS", 2, parv);
 	}
 
 	if ((parc == 7) && (*parv[2] != '-'))
@@ -2322,8 +2248,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  break;
 
 	  case '?':
-		  if (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
-			  tkl_stats(sptr,0,NULL);
+	  	  break; /* no idea what this was supposed to do... never used. */
 	}
 	return 0;
 }
