@@ -707,34 +707,30 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 	else
 		cansendlocal = cansendglobal = 1;
 
-	list_for_each_entry(cptr, &server_list, special_node)
+	/* To servers... */
+	if (cansendglobal)
 	{
-		if (cptr == one)	/* must skip the origin !! */
-			continue;
-		if (IsServer(cptr))
-		{
-			if (!cansendglobal)
-				continue;
-			list_for_each_entry(acptr, &client_list, client_node)
-				if (IsRegisteredUser(acptr)
-				    && match_it(acptr, mask, what)
-				    && acptr->from == cptr)
-					break;
-			/* a person on that server matches the mask, so we
-			   ** send *one* msg to that server ...
-			 */
-			if (acptr == NULL)
-				continue;
-			/* ... but only if there *IS* a matching person */
-		}
-		/* my client, does he match ? */
-		else if (!cansendlocal || (!(IsRegisteredUser(cptr) &&
-		    match_it(cptr, mask, what))))
-			continue;
+		char buf[512];
 
 		va_start(vl, pattern);
-		vsendto_prefix_one(cptr, from, pattern, vl);
+		ircvsnprintf(buf, sizeof(buf), pattern, vl);
 		va_end(vl);
+
+		sendto_server(one, 0, 0, "%s", buf);
+	}
+
+	/* To local clients... */
+	if (cansendlocal)
+	{
+		list_for_each_entry(cptr, &lclient_list, lclient_node)
+		{
+			if (!IsMe(cptr) && (cptr != one) && IsRegisteredUser(cptr) && match_it(cptr, mask, what))
+			{
+				va_start(vl, pattern);
+				vsendto_prefix_one(cptr, from, pattern, vl);
+				va_end(vl);
+			}
+		}
 	}
 }
 

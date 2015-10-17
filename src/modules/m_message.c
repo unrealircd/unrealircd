@@ -408,8 +408,17 @@ int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 
 
 		/* Message to $servermask */
-		if ((*nick == '$' || *nick == '#') &&  ValidatePermissionsForPath("notice:global",sptr,NULL,NULL,NULL))
+		if (*nick == '$')
 		{
+			if (!ValidatePermissionsForPath("notice:global", sptr, NULL, NULL, NULL))
+			{
+				/* Apparently no other IRCd does this, but I think it's confusing not to
+				 * send an error message, especially with our new privilege system.
+				 * Error message could be more descriptive perhaps.
+				 */
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+				continue;
+			}
 			sendto_match_butone(IsServer(cptr) ? cptr : NULL,
 			    sptr, nick + 1,
 			    (*nick == '#') ? MATCH_HOST :
