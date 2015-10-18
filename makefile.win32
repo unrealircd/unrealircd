@@ -489,9 +489,9 @@ src/win32/unrealsvc.res: src/win32/unrealsvc.rc
 
 ################# Modules #################
 
-CUSTOMMODULE: src/modules/$(MODULEFILE).c
-	$(CC) $(MODCFLAGS) src/modules/$(MODULEFILE).c $(MODLFLAGS) \
-	      /OUT:src/modules/$(MODULEFILE).dll $(EXLIBS)
+CUSTOMMODULE: src/modules/third/$(MODULEFILE).c
+	$(CC) $(MODCFLAGS) src/modules/third/$(MODULEFILE).c $(MODLFLAGS) \
+	      /OUT:src/modules/third/$(MODULEFILE).dll $(EXLIBS)
 
 SYMBOLFILE: 
 	$(CC) src/win32/def-clean.c
