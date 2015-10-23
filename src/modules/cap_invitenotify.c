@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER(cap_invitenotify)
 static int cap_invitenotify_invite(aClient *from, aClient *to, aChannel *chptr)
 {
 	sendto_channel_butone_with_capability(from, PROTO_INVITENOTIFY,
-		from, chptr, "INVITE %s :%s", to->name, chptr->chname);
+		from, chptr, ":%s INVITE %s :%s", from->name, to->name, chptr->chname);
 	return 0;
 }
 
