@@ -330,7 +330,11 @@ void sendto_channel_butone_with_capability(aClient *one, unsigned int cap,
 		if (!CHECKPROTO(acptr, cap))
 			continue;
 		if (MyConnect(acptr))	/* (It is always a client) */
+		{
+			va_start(vl, pattern);
 			vsendto_prefix_one(acptr, from, pattern, vl);
+			va_end(vl);
+		}
 		else if (acptr->from->local->serial != current_serial)
 		{
 			acptr->from->local->serial = current_serial;
