@@ -754,7 +754,7 @@ int has_channel_mode(aChannel *chptr, char mode)
 		return 1;
 
 	/* Special handling for +k (needed??) */
-	if (chptr->mode.key && (mode == 'k'))
+	if (chptr->mode.key[0] && (mode == 'k'))
 		return 1;
 		
 	return 0; /* Not found */
