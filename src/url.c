@@ -60,9 +60,11 @@ typedef struct
 int url_is_valid(const char *string)
 {
 	if (strstr(string, "telnet://") == string ||
-            strstr(string, "ldap://") == string ||
- 	    strstr(string, "dict://") == string)
+	    strstr(string, "ldap://") == string ||
+	    strstr(string, "dict://") == string)
+	{
 		return 0;
+	}
 	return (strstr(string, "://") != NULL);
 }
 
@@ -75,34 +77,34 @@ char *url_getfilename(const char *url)
 {
 	const char *c, *start;
 
-        if ((c = strstr(url, "://")))
-                c += 3;
-        else
-                c = url;
+	if ((c = strstr(url, "://")))
+		c += 3;
+	else
+		c = url;
 
-        while (*c && *c != '/')
-                c++;
+	while (*c && *c != '/')
+		c++;
 
-        if (*c == '/')
-        {
-                c++;
-                if (!*c || *c == '?')
-                        return strdup("-");
-                start = c;
-                while (*c && *c != '?')
-                        c++;
-                if (!*c)
-                        return strdup(start);
-                else
-                {
-                        char *file = malloc(c-start+1);
-                        strlcpy(file, start, c-start+1);
-                        return file;
-                }
-                return strdup("-");
+	if (*c == '/')
+	{
+		c++;
+		if (!*c || *c == '?')
+			return strdup("-");
+		start = c;
+		while (*c && *c != '?')
+			c++;
+		if (!*c)
+			return strdup(start);
+		else
+		{
+			char *file = malloc(c-start+1);
+			strlcpy(file, start, c-start+1);
+			return file;
+		}
+		return strdup("-");
 
-        }
-        return strdup("-");
+	}
+	return strdup("-");
 }
 
 /*
@@ -370,16 +372,16 @@ void url_init(void)
  * void callback(const char *url, const char *filename, char *errorbuf, int cached, void *data);
  *  - url will contain the original URL used to download the file.
  *  - filename will contain the name of the file (if successful, NULL on error or if cached).
- *        This file will be cleaned up after the callback returns, so save a copy to support caching.
+ *    This file will be cleaned up after the callback returns, so save a copy to support caching.
  *  - errorbuf will contain the error message (if failed, NULL otherwise).
  *  - cached 1 if the specified cachetime is >= the current file on the server,
- *        if so, errorbuf will be NULL, filename will contain the path to the file.
+ *    if so, errorbuf will be NULL, filename will contain the path to the file.
  *  - data will be the value of callback_data, allowing you to figure
- *        out how to use the data contained in the downloaded file ;-).
- *        Make sure that if you access the contents of this pointer, you
- *        know that this pointer will persist. A download could take more
- *        than 10 seconds to happen and the config file can be rehashed
- *        multiple times during that time.
+ *    out how to use the data contained in the downloaded file ;-).
+ *    Make sure that if you access the contents of this pointer, you
+ *    know that this pointer will persist. A download could take more
+ *    than 10 seconds to happen and the config file can be rehashed
+ *    multiple times during that time.
  */
 void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data)
 {
@@ -389,7 +391,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	{
 		char *file = url_getfilename(url);
 		char *filename = unreal_getfilename(file);
-        	char *tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
+		char *tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
 		FileHandle *handle = MyMallocEx(sizeof(FileHandle));
 		handle->fd = fopen(tmp, "wb");
 		if (!handle->fd)
@@ -410,23 +412,23 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 			free(file);
 
 		curl_easy_setopt(curl, CURLOPT_URL, url);
-                curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
-                curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->fd);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->fd);
 		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 		set_curl_ssl_options(curl);
 		bzero(handle->errorbuf, CURL_ERROR_SIZE);
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
 		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);
 		curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
-	/* We need to set CURLOPT_FORBID_REUSE because otherwise libcurl does not
-	 * notify us (or not in time) about FD close/opens, thus we end up closing and
-	 * screwing up another innocent FD, like a listener (BAD!). In my view a bug, but
-	 * mailing list archives seem to indicate curl devs have a different opinion
-	 * on these matters...
-	 * Actually I don't know for sure if this option alone fixes 100% of the cases
-	 * but at least I can't crash my server anymore.
-	 * As a side-effect we also fix useless CLOSE_WAIT connections.
-	 */
+		/* We need to set CURLOPT_FORBID_REUSE because otherwise libcurl does not
+		 * notify us (or not in time) about FD close/opens, thus we end up closing and
+		 * screwing up another innocent FD, like a listener (BAD!). In my view a bug, but
+		 * mailing list archives seem to indicate curl devs have a different opinion
+		 * on these matters...
+		 * Actually I don't know for sure if this option alone fixes 100% of the cases
+		 * but at least I can't crash my server anymore.
+		 * As a side-effect we also fix useless CLOSE_WAIT connections.
+		 */
 		curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
 		if (cachetime)
 		{
@@ -437,8 +439,8 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 45);
 		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15);
 #if LIBCURL_VERSION_NUM >= 0x070f01
-	 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
- 		curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
 #endif
 
 		curl_multi_add_handle(multihandle, curl);
