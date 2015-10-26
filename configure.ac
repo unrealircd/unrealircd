@@ -166,9 +166,8 @@ AC_TRY_RUN([
 #include <sys/types.h>
 #include <sys/socket.h>
 int main() {
-if (socket(AF_INET6, SOCK_STREAM, 0) < 0)
-exit(1);
-exit(0);
+int s = socket(AF_INET6, SOCK_STREAM, 0);
+exit(0); /* We only check if the code compiles, that's enough. We can deal with missing runtime IPv6 */
 }
 ],
 	[ac_cv_ip6=yes],
