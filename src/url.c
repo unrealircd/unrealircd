@@ -183,6 +183,16 @@ char *download_file(const char *url, char **error)
  	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
  	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
 #endif
+	/* We need to set CURLOPT_FORBID_REUSE because otherwise libcurl does not
+	 * notify us (or not in time) about FD close/opens, thus we end up closing and
+	 * screwing up another innocent FD, like a listener (BAD!). In my view a bug, but
+	 * mailing list archives seem to indicate curl devs have a different opinion
+	 * on these matters...
+	 * Actually I don't know for sure if this option alone fixes 100% of the cases
+	 * but at least I can't crash my server anymore.
+	 * As a side-effect we also fix useless CLOSE_WAIT connections.
+	 */
+	curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
 
 	set_curl_ssl_options(curl);
 	bzero(errorbuf, CURL_ERROR_SIZE);
@@ -300,14 +310,21 @@ static int url_socket_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *so
 {
 	Debug((DEBUG_DEBUG, "url_socket_cb: %d (%s)", (int)s, (what == CURL_POLL_REMOVE)?"remove":"add-or-modify"));
 	if (what == CURL_POLL_REMOVE)
-		fd_close(s);
+	{
+		/* Socket is going to be closed *BY CURL*.. so don't call fd_close() but fd_unmap().
+		 * Otherwise we (or actually, they) may end up closing the wrong fd.
+		 */
+		fd_unmap(s);
+	}
 	else
 	{
 		FDEntry *fde = &fd_table[s];
 		int flags = 0;
-
+		
 		if (!fde->is_open)
+		{
 			fd_open(s, "CURL transfer");
+		}
 
 		if (what == CURL_POLL_IN || what == CURL_POLL_INOUT)
 			flags |= FD_SELECT_READ;
@@ -401,6 +418,16 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
 		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);
 		curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
+	/* We need to set CURLOPT_FORBID_REUSE because otherwise libcurl does not
+	 * notify us (or not in time) about FD close/opens, thus we end up closing and
+	 * screwing up another innocent FD, like a listener (BAD!). In my view a bug, but
+	 * mailing list archives seem to indicate curl devs have a different opinion
+	 * on these matters...
+	 * Actually I don't know for sure if this option alone fixes 100% of the cases
+	 * but at least I can't crash my server anymore.
+	 * As a side-effect we also fix useless CLOSE_WAIT connections.
+	 */
+		curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
 		if (cachetime)
 		{
 			curl_easy_setopt(curl, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
