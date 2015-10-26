@@ -1,7 +1,7 @@
-UnrealIRCd 4.0.0-rc1 Release Notes
+UnrealIRCd 4.0.0-rc2 Release Notes
 ===================================
 
-This is the first Release Candidate for UnrealIRCd 4.
+This is the second Release Candidate for UnrealIRCd 4.
 We plan to have a 'stable' UnrealIRCd 4.0.0 release in Q4 2015.
 
 IMPORTANT REMARKS:
@@ -18,7 +18,7 @@ IMPORTANT REMARKS:
   release *candidate* it may crash occasionally or have issues.
 
 Feel free to:
-* Install 4.0.0-rc1 to play around, show to your friends, have fun with
+* Install 4.0.0-rc2 to play around, show to your friends, have fun with
   the latest features and improvements, test things.
 * Link in an UnrealIRCd 4 test server to your 3.2.x network
 * Report any problems, bugs, issues and other feedback on
@@ -41,7 +41,7 @@ UnrealIRCd 4 uses a new directory structure.
       target directory to install UnrealIRCd to. ./Config will ask this
       and it's ~/unrealircd by default (eg: /home/nerd/unrealircd).
       You also need to run 'make install' after 'make' now.
-      After compiling, you should leave your unrealircd-4.0.0-rc1 directory
+      After compiling, you should leave your unrealircd-4.0.0-rc2 directory
       and change to ~/unrealircd as everything takes place there.
       For example to start UnrealIRCd you run './unrealircd start'
       (again, from the /home/xxxx/unrealircd directory).

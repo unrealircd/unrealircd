@@ -442,8 +442,8 @@ echo "You can just press ENTER to accept the defaults!"
 echo ""
 
 if [ -z "$NOCACHE" ] ; then
-	# This needs to be updated each release:
-	UNREALRELEASES="Unreal3.4-beta4 Unreal3.4-beta3 Unreal3.4-beta2 Unreal3.4-beta1 Unreal3.4-alpha4 Unreal3.4-alpha3 Unreal3.4-alpha2 Unreal3.4-alpha1"
+	# This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
+	UNREALRELEASES="unrealircd-4.0.0-rc1 Unreal3.4-beta4 Unreal3.4-beta3 Unreal3.4-beta2 Unreal3.4-beta1 Unreal3.4-alpha4 Unreal3.4-alpha3 Unreal3.4-alpha2 Unreal3.4-alpha1"
 	if [ -f "config.settings" ]; then
 		. ./config.settings
 	else
