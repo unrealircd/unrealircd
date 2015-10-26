@@ -73,8 +73,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 
 ==[ GENERAL INFORMATION ]==
 * Below you will see a summary of all changes. Changes may be tagged when
-  a change was made in a specific version, e.g. "(A3)" means alpha3
-  and "(B1)" means beta1.
+  a change was made in a specific version, e.g. "[A3]" means alpha3
+  and "[B1]" means beta1.
   For a complete list of changes (600+) use 'git log' or have a look at:
   https://github.com/unrealircd/unrealircd/commits/unreal34
 
@@ -95,7 +95,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   a copy of that file, give it a different name, and include that one
   instead. Since the file is fully documented, you can just comment out
   or delete the loadmodule lines of things you don't want to load.
-* Oper permissions have changed completely: (A4+)
+* Oper permissions have changed completely: [A4+]
   * All previous oper levels/ranks no longer exist (Netadmin, Admin, ..)
   * oper::flags has been removed. Instead you must specify an operclass
     in oper::operclass (for example, 'operclass netadmin').
@@ -121,10 +121,10 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   mechanisms such as epoll and kqueue.
 * Memory pooling has been added to improve memory allocation efficiency
   and performance.
-* On-connect DNSBL/RBL checking via the new blacklist block. (B1)
-* The Windows version now has IPv6 support too. (B3)
+* On-connect DNSBL/RBL checking via the new blacklist block. [B1]
+* The Windows version now has IPv6 support too. [B3]
 * On all OS's we compile with IPv6 support enabled. You can still
-  disable IPv6 at runtime by setting set::options::disable-ipv6. (B3)
+  disable IPv6 at runtime by setting set::options::disable-ipv6. [B3]
 * The local nickname length can be modified without recompiling the IRCd
 * Channel Mode +d: This will hide joins/parts for users who don't say
   anything in a channel. Whenever a user speaks for the first time they
@@ -136,16 +136,16 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * ExtBan ~S:<certificate fingerprint> for ban exceptions / invex. This
   can be used like +iI ~S:000000000etc.
 * bcrypt has been added as a password hashing algorithm and is now the
-  preferred algorithm (A3)
-* './unreal mkpasswd' will now prompt you for the password to hash (A3)
-* Protection against SSL renegotiation attacks (A3)
+  preferred algorithm [A3]
+* './unreal mkpasswd' will now prompt you for the password to hash [A3]
+* Protection against SSL renegotiation attacks [A3]
 * When you link two servers the current timestamp is exchanged. If the
   time differs more than 60 seconds then servers won't link and it will
   show a message that you should fix your clock(s). This requires
-  version alpha3 (or later) on both ends of the link (A3)
+  version alpha3 (or later) on both ends of the link [A3]
 * Configuration file converter that will upgrade your 3.2.x conf to 4.x.
   On *NIX run './unreal upgrade-conf'. On Windows simply try to boot and
-  after the config errors screen UnrealIRCd offers the conversion. (A3)
+  after the config errors screen UnrealIRCd offers the conversion. [A3]
 * The IRCd can now better handle unknown channel modes which expect a
   parameter. This can be useful in a scenario where you are slowly
   upgrading all your servers.
@@ -155,8 +155,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   instance) it will spit out a report and ask if you want to submit it
   to the UnrealIRCd developers. Doing so will help us a lot as many bugs
   are often not reported. Note that UnrealIRCd will always ask before
-  sending any information and never do so automatically. (B3)
-* SSL: Support for ECDHE has been added to provide "forward secrecy". (B4)
+  sending any information and never do so automatically. [B3]
+* SSL: Support for ECDHE has been added to provide "forward secrecy". [B4]
 
 ==[ CHANGED ]==
 * Numerics have been removed. Instead we now use SIDs (Server ID's) and
@@ -165,32 +165,32 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * The module commands.so / commands.dll has been removed. All commands
   (those that are modular) are now in their own module.
 * Self-signed certificates are now generated using 4096 bits, a SHA256
-  hash and validity of 10 years. (A2)
-* Building with SSL (OpenSSL) is now mandatory (A2)
+  hash and validity of 10 years. [A2]
+* Building with SSL (OpenSSL) is now mandatory [A2]
 * The link { } block has been restructured, see
-  https://www.unrealircd.org/docs/Upgrading_from_3.2.x#Link_block (A3)
+  https://www.unrealircd.org/docs/Upgrading_from_3.2.x#Link_block [A3]
 * Better yet, check out our secure server linking tutorial:
   https://www.unrealircd.org/docs/Tutorial:_Linking_servers
-* If you have no set::throttle block you now get a default of 3:60 (A3)
+* If you have no set::throttle block you now get a default of 3:60 [A3]
 * password entries in the conf no longer require specifying an auth-type
-  like password "..." { md5; };. UnrealIRCd will now auto-detect. (A3)
-* You will now see a warning when you link to a non-SSL server. (A3)
+  like password "..." { md5; };. UnrealIRCd will now auto-detect. [A3]
+* You will now see a warning when you link to a non-SSL server. [A3]
 * Previously we used POSIX Regular expressions in spamfilters and at
   some other places. We have now moved to PCRE Regular expressions.
   They look very similar, but PCRE is a lot faster.
-  For backwards-compatibility we still compile with both regex engines. (A3)
+  For backwards-compatibility we still compile with both regex engines. [A3]
 * Spamfilter command syntax has been changed, it now has an extra option
   to indicate the matching method:
   /SPAMFILTER [add|del|remove|+|-] [method] [type] ....
   Where 'method' can be one of:
   * -regex: this is the new fast PCRE2 regex engine
   * -simple: supports just strings and ? and * wildcards (super fast)
-  * -posix: the old regex engine for compatibility with 3.2.x.  (A3)
+  * -posix: the old regex engine for compatibility with 3.2.x.  [A3]
 * If you have both 3.2.x and 4.x servers on your network then the
   4.x server will only send spamfilters of type 'posix' to the 3.2.x
   servers because 3.2.x servers don't support the other two types.
   So in a mixed network you probably want to keep using 'posix' for
-  a while until all your servers are running UnrealIRCd 4. (A3)
+  a while until all your servers are running UnrealIRCd 4. [A3]
 * set::oper-only-stats now defaults to "*"
 * oper::from::userhost and vhost::from::userhost are now called
   oper::mask and vhost::mask. The usermask@ part is now optional and
@@ -198,60 +198,60 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   For multiple entries the syntax is: mask { 192.168.*; 10.*; };
 * Because having both allow::ip and allow::hostname in the same allow
   block was highly confusing (it was an OR-match) you must now choose
-  between either allow::ip OR allow::hostname. (A3)
-* cgiirc block is renamed to webirc and the syntax has changed (A4)
-* set::pingpong-warning is removed, warning always off now (A4)
-* More helpful configuration file parse error messages (A4)
+  between either allow::ip OR allow::hostname. [A3]
+* cgiirc block is renamed to webirc and the syntax has changed [A4]
+* set::pingpong-warning is removed, warning always off now [A4]
+* More helpful configuration file parse error messages [A4]
 * You can use '/OPER username' without password if you use SSL
   certificate (fingerprint) authentication. The same is true for
-  '/VHOST username'. (A4)
-* You must now always use 'make install' on *NIX (A4)
+  '/VHOST username'. [A4]
+* You must now always use 'make install' on *NIX [A4]
 * Changed (default) directory structure entirely, see the section
-  titled 'CONFIGURATION CHANGES' about 100 lines up. (A4)
-* badword quit { } is removed, we use badword channel for it. (A4)
+  titled 'CONFIGURATION CHANGES' about 100 lines up. [A4]
+* badword quit { } is removed, we use badword channel for it. [A4]
 * badwords.*.conf is now just one badwords.conf
 * To load all default modules you now include modules.default.conf.
   This file was called modules.conf in earlier alpha's.
   The file has been split up in sections and a lot of comments have
   been added to aid the user in deciding whether to load or not to
-  load each module. (A4)
-* Snomask +s is now (always) IRCOp-only. (A4)
+  load each module. [A4]
+* Snomask +s is now (always) IRCOp-only. [A4]
 * Previously there was little logic behind what modes halfops could
   set. Now the idea is as follows: halfops should be able to help out
   in case of a flood but not be able to change any 'policy decission
   modes' such as +G, +S, +c, +s. Due to this change halfops can now
-  set modes +beiklmntIMKNCR (was: +beikmntI). (A4)
-* If no link::hub or link::leaf is specified then assume hub "*". (B1)
+  set modes +beiklmntIMKNCR (was: +beikmntI). [A4]
+* If no link::hub or link::leaf is specified then assume hub "*". [B1]
 * SWHOIS (Special whois title) has been extended in a number of ways:
   * We now "track" who or what set an swhois. This allows us to
     remove the swhois received via oper/vhost on de-oper/de-vhost.
   * You can now have multiple swhois lines
-  * Multiple oper::swhois and vhost::swhois items are supported. (B1)
+  * Multiple oper::swhois and vhost::swhois items are supported. [B1]
 * When trying to link two servers without link::outgoing::options::ssl
   (which is not recommended) we try to use STARTTLS in order to
   'upgrade' the connection to use SSL/TLS anyway. This can be disabled
-  via link::outgoing::options::insecure. (B2)
+  via link::outgoing::options::insecure. [B2]
 * SSLv3 has now been disabled for security. This also means you can only
   link UnrealIRCd 4 with 3.2.10.3 and later because earlier versions
-  used SSLv3 instead of TLS due to an OpenSSL API mistake. (B4)
+  used SSLv3 instead of TLS due to an OpenSSL API mistake. [B4]
 
 ==[ MODULE CODERS / DEVELOPERS ]==
 * A lot of technical documentation for module coders has been added
   at https://www.unrealircd.org/docs/ describing things like how to
   write a module from scratch, the User & Channel Mode System, Commands,
   Command Overrides, Hooks, attaching custom-data to users/channels,
-  and more. (A2+)
+  and more. [A2+]
 * For commands: do not read from parv[0] anymore, doing so will lead
   to a crash. Use sptr->name instead. This change is necessary as
   the "name" in parv[0] could possibly point to a UID/SID rather than
   a nick name. Thus, if you would send parv[0] to a non-UID or non-SID
   capable server this would lead to serious issues (not found errors).
 * Added MOD_OPT_PERM_RELOADABLE which permits reloading (eg: upgrades)
-  but disallows unloading of a module (A3)
+  but disallows unloading of a module [A3]
 * There have been *a lot* of source code cleanups (ALL)
 * We now use the information from PROTOCTL CHANMODES= for parameter
   skipping if the channel mode is unknown. Also, when channel modes
-  are loaded or unloaded we re-broadcast PROTOCTL CHANMODES=. (B1)
+  are loaded or unloaded we re-broadcast PROTOCTL CHANMODES=. [B1]
 * The server protocol docs have been removed. The protocol is now
   documented at https://www.unrealircd.org/docs/Server_protocol
   See also https://www.unrealircd.org/docs/Server_protocol:Changes
@@ -260,18 +260,18 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   are adding hook functions with the correct parameter (types).
 
 ==[ MAJOR BUGS FIXED ]==
-* Crash bug on-boot in alpha1 (A2)
-* IRCOp commands such as /GLINE were not always working (A2)
-* link::outgoing::options::autoconnect did not work (A4)
-* If the IRCd could not bind to any ports it started anyway (A4)
-* alpha3 did not compile on x86 (32 bit) systems (A4)
+* Crash bug on-boot in alpha1 [A2]
+* IRCOp commands such as /GLINE were not always working [A2]
+* link::outgoing::options::autoconnect did not work [A4]
+* If the IRCd could not bind to any ports it started anyway [A4]
+* alpha3 did not compile on x86 (32 bit) systems [A4]
 * Multiple major crash bugs in earlier alpha/beta versions caused
-  by OOB read, OOB write, read-after-free, etc. (B2)
-* Spamfilter 'u' not working, likely since alpha1 (B2)
+  by OOB read, OOB write, read-after-free, etc. [B2]
+* Spamfilter 'u' not working, likely since alpha1 [B2]
 * Secure server linking with sslclientcertfp was broken since alpha3,
-  making our secure server linking tutorial on the wiki unusable. (B2)
+  making our secure server linking tutorial on the wiki unusable. [B2]
 * Windows version: if all clients on the server were completely idle
-  then internal timers and such wouldn't be called correctly. (B2)
+  then internal timers and such wouldn't be called correctly. [B2]
 * Crash if SASL is enabled (and in use) [B3]
 * Crash on outgoing server link attempt. [B4]
 * Crash on boot with bind/listen errors. [B4]
@@ -279,32 +279,38 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * Possible freeze when SSL client is connecting. [B4]
 * Remote includes were broken. [B4]
 * GLINE/KLINE/.. refused perfectly good bans. [B4]
+* Crash with invite-notify [RC2]
+* OS X and *BSD: serious problems with the I/O engine [RC2]
 
 ==[ MINOR BUGS FIXED ]==
-* Errors in example configuration files (A2)
-* Some fixes in delayjoin (Channel mode +d) (A2)
-* Deal with services who allow you to log in by account name (A3)
-* Detect "IRCd not running" situations better (A4)
+* Errors in example configuration files [A2]
+* Some fixes in delayjoin (Channel mode +d) [A2]
+* Deal with services who allow you to log in by account name [A3]
+* Detect "IRCd not running" situations better [A4]
 * './unrealircd restart' will now always try to start UnrealIRCd,
-  so also if it wasn't running previously. (A4)
-* alpha4's upgrade-conf could get confused by set::host block (B1)
-* ExtBan ~a (account) did not work with +I (B1)
+  so also if it wasn't running previously. [A4]
+* alpha4's upgrade-conf could get confused by set::host block [B1]
+* ExtBan ~a (account) did not work with +I [B1]
 * On Windows we didn't create the data/ directory resulting in a
-  "Unable to write tunefile" error in alpha4. (B1)
-* A number of minor (<1K total) memory leaks on /REHASH. (B1)
+  "Unable to write tunefile" error in alpha4. [B1]
+* A number of minor (<1K total) memory leaks on /REHASH. [B1]
 * The new 3rd party modules compile and install script introduced in
-  beta1 was not working correctly. (B2)
+  beta1 was not working correctly. [B2]
 * Invalid output on './unrealircd mkpasswd <hashmethod>'
-* Explicit auth-type like password "...." { md5; }; was broken. (RC1)
-* Annoying warnings from blacklist module if user was already KLINEd. (RC1)
+* Explicit auth-type like password "...." { md5; }; was broken. [RC1]
+* Annoying warnings from blacklist module if user was already KLINEd. [RC1]
+* IPv6 compile problem on some OS's (rare?) [RC2]
+* Channel mode +P not working properly [RC2]
+* /NOTICE $* not working [RC2]
+* Unable to rehash if using Remote includes & adding a listener block [RC2]
 
 ==[ REMOVED / DROPPED ]==
-* Numeric server IDs, see above. (A1)
-* PROTOCTL TOKEN and SJB64 are no longer implemented. (A1)
-* Ziplinks have been removed. (A1)
-* WebTV support. (A3)
+* Numeric server IDs, see above. [A1]
+* PROTOCTL TOKEN and SJB64 are no longer implemented. [A1]
+* Ziplinks have been removed. [A1]
+* WebTV support. [A3]
 * Channel Mode +j was removed and replaced by the configuration setting
-  set::anti-flood::join-flood (default: 3 per 90 seconds). (B1)
+  set::anti-flood::join-flood (default: 3 per 90 seconds). [B1]
 * /CHATOPS: use /GLOBOPS instead which does the same
   /ADCHAT & /NACHAT: gone as we don't have such oper levels anymore
   Your opers should actually be in an #opers channel. If you also want
