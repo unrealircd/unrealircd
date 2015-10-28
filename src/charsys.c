@@ -575,13 +575,13 @@ char latin1=0, latin2=0, w1250=0, w1251=0, chinese=0;
 		/* supplied by Saevar */
 		charsys_addallowed("ÆæÖöÁáÍíĞğÚúÓóİıŞş");
 	}
-	if (latin1 || !strcmp(name, "arabic"))
+/*	if (latin1 || !strcmp(name, "arabic")) -- Since when is arabic considered latin(1)??? oh man...
 	{
 		char bytes[] = { 0xa0, 0xa4, 0xac, 0xad, 0xbb, 0xbf, 0x00 };
 		charsys_addallowed(bytes);
 		charsys_addallowed_range(0xc1, 0xda);
 		charsys_addallowed_range(0xe0, 0xf2);
-	}
+	} */
 	/* [LATIN2] */
 	/* actually hungarian is a special case, include it in both w1250 and latin2 ;p */
 	if (latin2 || w1250 || !strcmp(name, "hungarian"))
