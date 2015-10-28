@@ -229,59 +229,55 @@ aClient *next_client(aClient *next, char *ch)
 **		now --msa).
 **
 **	returns: (see #defines)
+**
+** Rewritten by Syzop / Oct 2015. This function was rather
+** complex and no longer understandable. It also was responsible
+** for mysterious issues and crashes. Hence rewritten.
 */
 int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int parc, char *parv[])
 {
 	aClient *acptr;
+	char *saved;
 
-	/*
-	   ** Assume it's me, if no server
-	 */
-	if (parc <= server || BadPtr(parv[server]) ||
-	    match(me.name, parv[server]) == 0 ||
-	    match(parv[server], me.name) == 0)
-		return (HUNTED_ISME);
-	/*
-	   ** These are to pickup matches that would cause the following
-	   ** message to go in the wrong direction while doing quick fast
-	   ** non-matching lookups.
-	 */
-	if ((acptr = find_client(parv[server], NULL)))
-		if (acptr->from == sptr->from && !MyConnect(acptr))
-			acptr = NULL;
-	if (!acptr && (acptr = find_server_quick(parv[server])))
-		if (acptr->from == sptr->from && !MyConnect(acptr))
-			acptr = NULL;
-	if (!acptr)
-		list_for_each_entry(acptr, &client_list, client_node)
-		{
-			if (acptr->from == sptr->from && !MyConnect(acptr))
-				continue;
-			/*
-			 * Fix to prevent looping in case the parameter for
-			 * some reason happens to match someone from the from
-			 * link --jto
-			 */
-			if (IsRegistered(acptr) && (acptr != cptr))
-				break;
-		}
-	/* Fix for unregistered client receiving msgs: */
-	if (acptr && MyConnect(acptr) && IsUnknown(acptr))
+	/* This would be strange and bad. Previous version assumed "it's for me". Hmm.. okay. */
+	if (parc <= server || BadPtr(parv[server]))
+		return HUNTED_ISME;
+
+	acptr = find_client(parv[server], NULL);
+
+	/* find_client() may find a variety of clients. Only servers/persons please, no 'unknowns'. */
+	if (acptr && MyConnect(acptr) && !IsMe(acptr) && !IsPerson(acptr) && !IsServer(acptr))
 		acptr = NULL;
-	if (acptr)
+
+	if (!acptr)
 	{
-		if (IsMe(acptr) || MyClient(acptr))
-			return HUNTED_ISME;
-		if (match(acptr->name, parv[server]))
-			parv[server] = acptr->name;
-		sendto_one(acptr, command, sptr->name,
-		    parv[1], parv[2], parv[3], parv[4],
-		    parv[5], parv[6], parv[7], parv[8]);
-		return (HUNTED_PASS);
+		sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name, sptr->name, parv[server]);
+		return HUNTED_NOSUCH;
 	}
-	sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name,
-	    sptr->name, parv[server]);
-	return (HUNTED_NOSUCH);
+	
+	if (IsMe(acptr) || MyClient(acptr))
+		return HUNTED_ISME;
+
+	/* Never send the message back from where it came from */
+	if (acptr->from == sptr->from)
+	{
+		sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name, sptr->name, parv[server]);
+		return HUNTED_NOSUCH;
+	}
+
+	/* Replace "server" part with actual servername (eg: 'User' -> 'x.y.net')
+	 * Ugly. Previous version didn't even restore the state, now we do.
+	 */
+	saved = parv[server];
+	parv[server] = acptr->name;
+
+	sendto_one(acptr, command, sptr->name,
+	    parv[1], parv[2], parv[3], parv[4],
+	    parv[5], parv[6], parv[7], parv[8]);
+
+	parv[server] = saved;
+
+	return HUNTED_PASS;
 }
 
 /*
