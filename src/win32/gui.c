@@ -40,6 +40,9 @@
 #include "win32.h"
 #include <Strsafe.h>
 
+#define TOOLBAR_START 82
+#define TOOLBAR_STOP (TOOLBAR_START+20)
+
 __inline void ShowDialog(HWND *handle, HINSTANCE inst, char *template, HWND parent, 
 			 DLGPROC proc)
 {
@@ -65,13 +68,14 @@ LRESULT CALLBACK MainDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK LicenseDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK InfoDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK CreditsDLG(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK DalDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK HelpDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK StatusDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ConfigErrorDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK FromVarDLG(HWND, UINT, WPARAM, LPARAM, unsigned char *, unsigned char **);
 LRESULT CALLBACK FromFileReadDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK FromFileDLG(HWND, UINT, WPARAM, LPARAM);
+
+HBRUSH MainDlgBackground;
 
 extern  void      SocketLoop(void *dummy);
 HINSTANCE hInst;
@@ -267,6 +271,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	}
 	hInst = hInstance; 
     
+    MainDlgBackground = CreateSolidBrush(RGB(75, 134, 238)); /* Background of main dialog */
+    
 	hWnd = CreateDialog(hInstance, "UnrealIRCd", 0, (DLGPROC)MainDLG); 
 	hwIRCDWnd = hWnd;
 	
@@ -330,6 +336,8 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				(LPARAM)(HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,32, 32, 0));
 			return TRUE;
 		}
+		case WM_CTLCOLORDLG:
+			return (LONG)MainDlgBackground;
 		case WM_SIZE: 
 		{
 			if (wParam & SIZE_MINIMIZED)
@@ -426,15 +434,15 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			POINT p;
 			p.x = LOWORD(lParam);
 			p.y = HIWORD(lParam);
-			if ((p.x >= 24) && (p.x <= 78) && (p.y >= 178) && (p.y <= 190)) 
+			if ((p.x >= 93) && (p.x <= 150) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP)) 
 				SetCursor(hCursor);
-			else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190)) 
+			else if ((p.x >= 160) && (p.x <= 208) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP)) 
 				SetCursor(hCursor);
-			else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190)) 
+			else if ((p.x >= 219) && (p.x <= 267) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP)) 
 				SetCursor(hCursor);
-			else if ((p.x >= 194) && (p.x <= 237) && (p.y >= 178) && (p.y <= 190)) 
+			else if ((p.x >= 279) && (p.x <= 325) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP)) 
 				SetCursor(hCursor);
-			else if ((p.x >= 245) && (p.x <= 311) && (p.y >= 178) && (p.y <= 190)) 
+			else if ((p.x >= 336) && (p.x <= 411) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP)) 
 				SetCursor(hCursor);
 			return 0;
 		}
@@ -443,18 +451,18 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			POINT p;
 	         	p.x = LOWORD(lParam);
 		     	p.y = HIWORD(lParam);
-			if ((p.x >= 24) && (p.x <= 78) && (p.y >= 178) && (p.y <= 190))
+			if ((p.x >= 93) && (p.x <= 150) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP))
              		{
 				ClientToScreen(hDlg,&p);
 				TrackPopupMenu(hRehash,TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
 				return 0;
 			}
-			else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190))
+			else if ((p.x >= 160) && (p.x <= 208) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP))
 			{
 				ShowDialog(&hStatusWnd, hInst, "Status", hDlg, StatusDLG);
 				return 0;
 			}
-			else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190))
+			else if ((p.x >= 219) && (p.x <= 267) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP))
 			{
 				unsigned long i = 60000;
 				ClientToScreen(hDlg,&p);
@@ -516,13 +524,13 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 				return 0;
 			}
-			else if ((p.x >= 194) && (p.x <= 237) && (p.y >= 178) && (p.y <= 190)) 
+			else if ((p.x >= 279) && (p.x <= 325) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP)) 
 			{
 				ClientToScreen(hDlg,&p);
 				TrackPopupMenu(hAbout,TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
 				return 0;
 			}
-			else if ((p.x >= 245) && (p.x <= 311) && (p.y >= 178) && (p.y <= 190)) 
+			else if ((p.x >= 336) && (p.x <= 411) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP)) 
 				return CloseUnreal(hDlg);
 		}
 		case WM_COMMAND: 
@@ -593,9 +601,6 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				case IDM_CREDITS:
 					DialogBox(hInst, "FromVar", hDlg, (DLGPROC)CreditsDLG);
 					break;
-				case IDM_DAL:
-					DialogBox(hInst, "FromVar", hDlg, (DLGPROC)DalDLG);
-					break;
 				case IDM_HELP:
 					DialogBox(hInst, "Help", hDlg, (DLGPROC)HelpDLG);
 					break;
@@ -645,11 +650,6 @@ LRESULT CALLBACK InfoDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK CreditsDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 {
 	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd Credits", unrealcredits);
-}
-
-LRESULT CALLBACK DalDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
-{
-	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd DALnet Credits", dalinfotext);
 }
 
 LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam,
