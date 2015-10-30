@@ -4257,7 +4257,7 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 	char has_mask = 0, has_motd = 0, has_rules = 0, has_shortmotd = 0, has_channel = 0;
 	char has_opermotd = 0, has_botmotd = 0, has_options = 0;
 
-        for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
 		{
@@ -4294,6 +4294,7 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_motd = 1;
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
 			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
 			{
 				config_error("%s:%i: tld::motd: %s: %s",
@@ -4314,6 +4315,7 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_rules = 1;
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
 			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
 			{
 				config_error("%s:%i: tld::rules: %s: %s",
@@ -4345,6 +4347,7 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_shortmotd = 1;
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
 			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
 			{
 				config_error("%s:%i: tld::shortmotd: %s: %s",
@@ -4365,6 +4368,7 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_opermotd = 1;
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
 			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
 			{
 				config_error("%s:%i: tld::opermotd: %s: %s",
@@ -4385,6 +4389,7 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_botmotd = 1;
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
 			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
 			{
 				config_error("%s:%i: tld::botmotd: %s: %s",
