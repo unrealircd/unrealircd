@@ -522,7 +522,7 @@ AC_ARG_WITH(fd-setsize, [AS_HELP_STRING([--with-fd-setsize=size], [Specify the m
 AC_DEFINE_UNQUOTED([MAXCONNECTIONS], [$ac_fd], [Set to the max connections you want])
 
 AC_ARG_ENABLE([prefixaq],
-	[AS_HELP_STRING([--disable-prefixaq],[Enable chanadmin (+a) and chanowner (+q) prefixes])],
+	[AS_HELP_STRING([--disable-prefixaq],[Disable chanadmin (+a) and chanowner (+q) prefixes])],
 	[],
 	[enable_prefixaq=yes])
 AS_IF([test $enable_prefixaq = "yes"],
