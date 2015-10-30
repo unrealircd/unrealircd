@@ -49,6 +49,15 @@ static int permanent_is_ok(aClient *cptr, aChannel *chptr, char mode, char *para
 	return EX_ALLOW;
 }
 
+int permanent_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode)
+{
+	/* Destroy the channel if it was set '(SA)MODE #chan -P' with nobody in it (#4442) */
+	if (!(chptr->mode.extmode & EXTMODE_PERMANENT) && (chptr->users <= 0))
+		sub1_from_channel(chptr);
+	
+	return 0;
+}
+
 /* This is called on module init, before Server Ready */
 MOD_INIT(permanent)
 {
@@ -63,6 +72,8 @@ CmodeInfo req;
 	CmodeAdd(modinfo->handle, req, &EXTMODE_PERMANENT);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 0, permanent_channel_destroy);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CHANMODE, 1000000, permanent_chanmode);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CHANMODE, 1000000, permanent_chanmode);
 
 	return MOD_SUCCESS;
 }

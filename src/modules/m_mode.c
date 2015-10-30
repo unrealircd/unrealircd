@@ -318,6 +318,7 @@ CMD_FUNC(m_mode)
 	 * Now, we can actually do the mode.  */
 
 	(void)do_mode(chptr, cptr, sptr, parc - 2, parv + 2, sendts, 0);
+	/* After this don't touch 'chptr' anymore, as permanent module may have destroyed the channel */
 	opermode = 0; /* Important since sometimes forgotten. -- Syzop */
 	return 0;
 }
@@ -546,6 +547,7 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 		RunHook7(HOOKTYPE_LOCAL_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
 	else
 		RunHook7(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
+	/* After this, don't touch 'chptr' anymore! As permanent module may destroy the channel. */
 }
 /* make_mode_str -- written by binary
  *	Reconstructs the mode string, to make it look clean.  mode_buf will
