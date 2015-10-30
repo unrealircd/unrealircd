@@ -79,7 +79,7 @@ CMD_FUNC(m_links)
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		/* Some checks */
-		if (HIDE_ULINES && IsULine(acptr) && !IsOper(sptr))
+		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("map:ulines",cptr,NULL,NULL,NULL))
 			continue;
 		if (flat)
 			sendto_one(sptr, rpl_str(RPL_LINKS),
