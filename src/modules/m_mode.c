@@ -1672,6 +1672,7 @@ CMD_FUNC(_m_umode)
 		  case 'O':
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
 			  {
+				sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", sptr->name, sptr->srvptr->name);
 			    sendto_server(NULL, 0, 0, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)", me.name, sptr->name, me.name);
 			    return exit_client(cptr, sptr, &me, "Quarantined: no global oper privileges allowed");
 			  }

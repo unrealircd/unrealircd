@@ -6393,7 +6393,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			config_detect_duplicate(&has_options, cep, &errors);
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				if (!strcmp(cep->ce_varname, "quarantine"))
+				if (!strcmp(cepp->ce_varname, "quarantine"))
 					;
 				else
 				{
