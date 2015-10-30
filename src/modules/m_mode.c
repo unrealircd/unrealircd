@@ -1673,8 +1673,8 @@ CMD_FUNC(_m_umode)
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
 			  {
 				sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", sptr->name, sptr->srvptr->name);
-			    sendto_server(NULL, 0, 0, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)", me.name, sptr->name, me.name);
-			    return exit_client(cptr, sptr, &me, "Quarantined: no global oper privileges allowed");
+			    sendto_server(NULL, 0, 0, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)", me.name, sptr->name, me.name);
+			    return exit_client(cptr, sptr, &me, "Quarantined: no oper privileges allowed");
 			  }
 			  /* A local user trying to set himself +o/+O is denied here.
 			   * A while later (outside this loop) it is handled as well (and +C, +N, etc too)

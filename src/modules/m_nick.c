@@ -319,7 +319,7 @@ CMD_FUNC(m_uid)
 	{
 		ircstp->is_kill++;
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(cptr, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)",
+		sendto_one(cptr, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
 			me.name, parv[1], me.name);
 		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
 			parv[1], sptr->name);
@@ -611,7 +611,7 @@ CMD_FUNC(m_nick)
 	{
 		ircstp->is_kill++;
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(cptr, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)",
+		sendto_one(cptr, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
 			me.name, parv[1], me.name);
 		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
 			parv[1], sptr->name);
