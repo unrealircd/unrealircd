@@ -281,6 +281,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * GLINE/KLINE/.. refused perfectly good bans. [B4]
 * Crash with invite-notify [RC2]
 * OS X and *BSD: serious problems with the I/O engine [RC2]
+* Strange behavior and possible crash in /WHOIS [RC3]
 
 ==[ MINOR BUGS FIXED ]==
 * Errors in example configuration files [A2]
@@ -303,6 +304,10 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * Channel mode +P not working properly [RC2]
 * /NOTICE $* not working [RC2]
 * Unable to rehash if using Remote includes & adding a listener block [RC2]
+* 'quarantine' didn't work in link::options [RC3]
+* In the tld { } block the motd was not read from the correct location [RC3]
+* set::allowed-nickchars 'latin1' was broken [RC3]
+* /MAP was hiding ulines and showing flat-map even for IRCOps [RC3]
 
 ==[ REMOVED / DROPPED ]==
 * Numeric server IDs, see above. [A1]
