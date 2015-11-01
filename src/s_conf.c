@@ -8110,15 +8110,19 @@ void	run_configuration(void)
 			} else {
 				if (loop.ircd_booted)
 				{
-					ircd_log(LOG_ERROR, "UnrealIRCd is now also listening on %s:%d (%s)",
-						listenptr->ip, listenptr->port, listenptr->ipv6 ? "IPv6" : "IPv4");
+					ircd_log(LOG_ERROR, "UnrealIRCd is now also listening on %s:%d (%s)%s",
+						listenptr->ip, listenptr->port,
+						listenptr->ipv6 ? "IPv6" : "IPv4",
+						listenptr->options & LISTENER_SSL ? " (SSL)" : "");
 				} else {
 					if (listenptr->ipv6)
 						snprintf(boundmsg_ipv6+strlen(boundmsg_ipv6), sizeof(boundmsg_ipv6)-strlen(boundmsg_ipv6),
-							"%s:%d, ", listenptr->ip, listenptr->port);
+							"%s:%d%s, ", listenptr->ip, listenptr->port,
+							listenptr->options & LISTENER_SSL ? "(SSL)" : "");
 					else
 						snprintf(boundmsg_ipv4+strlen(boundmsg_ipv4), sizeof(boundmsg_ipv4)-strlen(boundmsg_ipv4),
-							"%s:%d, ", listenptr->ip, listenptr->port);
+							"%s:%d%s, ", listenptr->ip, listenptr->port,
+							listenptr->options & LISTENER_SSL ? "(SSL)" : "");
 				}
 			}
 		}
