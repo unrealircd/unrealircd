@@ -346,6 +346,7 @@ static EVENT(curl_socket_timeout)
 	int dummy;
 
 	curl_multi_socket_action(multihandle, CURL_SOCKET_TIMEOUT, 0, &dummy);
+	url_check_multi_handles();
 }
 
 static Event *curl_socket_timeout_hdl = NULL;
