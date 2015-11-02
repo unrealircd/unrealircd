@@ -9413,7 +9413,11 @@ void unload_notloaded_includes(void)
 #ifdef USE_LIBCURL
 			if (inc->flag.type & INCLUDE_REMOTE)
 			{
-				remove(inc->file);
+				/* Delete the file, but only if it's not a cached version */
+				if (strncmp(inc->file, CACHEDIR, strlen(CACHEDIR)))
+				{
+					remove(inc->file);
+				}
 				free(inc->url);
 				if (inc->errorbuf)
 					free(inc->errorbuf);
@@ -9443,7 +9447,11 @@ void unload_loaded_includes(void)
 #ifdef USE_LIBCURL
 			if (inc->flag.type & INCLUDE_REMOTE)
 			{
-				remove(inc->file);
+				/* Delete the file, but only if it's not a cached version */
+				if (strncmp(inc->file, CACHEDIR, strlen(CACHEDIR)))
+				{
+					remove(inc->file);
+				}
 				free(inc->url);
 				if (inc->errorbuf)
 					free(inc->errorbuf);
