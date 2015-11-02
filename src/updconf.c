@@ -450,7 +450,7 @@ int upgrade_link_block(ConfigEntry *ce)
 			
 			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
 			         "\tpassword \"%s\"; /* WARNING: password changed due to 4.0 upgrade */\n",
-			         password_connect);
+			         options_autoconnect ? password_connect : password_receive);
 		} else
 		{
 			/* sslcertificate or sslcertficatefp */
