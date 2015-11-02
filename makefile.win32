@@ -199,7 +199,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_LUSERS.DLL SRC/MODULES/M_NAMES.DLL SRC/MODULES/M_SVSNOLAG.DLL \
  SRC/MODULES/M_STARTTLS.DLL \
  SRC/MODULES/M_NOPOST.DLL SRC/MODULES/M_CAP.DLL \
- SRC/MODULES/M_SASL.DLL SRC/MODULES/CAP_INVITENOTIFY.DLL \
+ SRC/MODULES/M_SASL.DLL \
  SRC/MODULES/SSL_ANTIDOS.DLL \
  SRC/MODULES/M_MD.DLL \
  SRC/MODULES/CERTFP.DLL \
@@ -802,9 +802,6 @@ src/modules/m_cap.dll: src/modules/m_cap.c $(INCLUDES)
 
 src/modules/m_sasl.dll: src/modules/m_sasl.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_sasl.c $(MODLFLAGS)
-
-src/modules/cap_invitenotify.dll: src/modules/cap_invitenotify.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/cap_invitenotify.c $(MODLFLAGS)
 
 src/modules/ssl_antidos.dll: src/modules/ssl_antidos.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/ssl_antidos.c $(MODLFLAGS)
