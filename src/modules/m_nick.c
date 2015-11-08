@@ -1226,7 +1226,15 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			    || (sptr->local->sockhost[0] == ':'))
 				strlcpy(sptr->local->sockhost, sptr->ip, sizeof(sptr->local->sockhost));
 		}
-		strlcpy(user->realhost, sptr->local->sockhost, sizeof(sptr->local->sockhost)); /* SET HOSTNAME */
+		if (sptr->local->sockhost[0])
+		{
+			strlcpy(user->realhost, sptr->local->sockhost, sizeof(sptr->local->sockhost)); /* SET HOSTNAME */
+		} else {
+			sendto_realops("[HOSTNAME BUG] sptr->local->sockhost is empty for user %s (%s, %s)",
+				sptr->name, sptr->ip ? sptr->ip : "<null>", user->realhost);
+			ircd_log(LOG_ERROR, "[HOSTNAME BUG] sptr->local->sockhost is empty for user %s (%s, %s)",
+				sptr->name, sptr->ip ? sptr->ip : "<null>", user->realhost);
+		}
 
 		/*
 		 * I do not consider *, ~ or ! 'hostile' in usernames,
