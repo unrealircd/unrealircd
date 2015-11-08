@@ -1,7 +1,7 @@
 UnrealIRCd 4.0.0-rc3 Release Notes
 ===================================
 
-This is the second Release Candidate for UnrealIRCd 4.
+This is the third Release Candidate for UnrealIRCd 4.
 We plan to have a 'stable' UnrealIRCd 4.0.0 release in Q4 2015.
 
 IMPORTANT REMARKS:
@@ -279,8 +279,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * Possible freeze when SSL client is connecting. [B4]
 * Remote includes were broken. [B4]
 * GLINE/KLINE/.. refused perfectly good bans. [B4]
-* Crash with invite-notify [RC2]
 * OS X and *BSD: serious problems with the I/O engine [RC2]
+* Crash with invite-notify, now removed [RC2, RC3]
 * Odd behavior and possible crash in /WHOIS [RC3]
 * Strange empty host bug [RC3]
 
