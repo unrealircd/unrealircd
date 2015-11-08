@@ -184,11 +184,6 @@ DLLFUNC CMD_FUNC(m_user)
 		}
 	}
 
-	/* Set it temporarely to at least something trusted,
-	 * this was copying user supplied data directly into user->realhost
-	 * which seemed bad. Not to say this is much better ;p. -- Syzop
-	 */
-	strlcpy(sptr->user->realhost, sptr->ip, sizeof(sptr->user->realhost));
 	sptr->user->server = me_hash;
       user_finish:
 	if (sstamp != NULL && *sstamp != '*')

@@ -229,7 +229,13 @@ anUser *make_user(aClient *cptr)
 		user->lopt = NULL;
 		user->whowas = NULL;
 		user->snomask = 0;
-		*user->realhost = '\0';
+		if (cptr->ip)
+		{
+			/* initially set cptr->user->realhost to IP */
+			strlcpy(user->realhost, cptr->ip, sizeof(user->realhost));
+		} else {
+			*user->realhost = '\0';
+		}
 		user->virthost = NULL;
 		cptr->user = user;		
 	}
