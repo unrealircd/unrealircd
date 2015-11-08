@@ -379,7 +379,7 @@
 #undef UNREAL_VERSION_MINOR
 
 /* Version suffix such as a beta marker or release candidate marker. (e.g.:
-   -rc2 for unrealircd-3.2.9-rc2) */
+   -rcX for unrealircd-3.2.9-rcX) */
 #undef UNREAL_VERSION_SUFFIX
 
 /* Define if you have libcurl installed to get remote includes and MOTD

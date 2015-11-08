@@ -1,4 +1,4 @@
-UnrealIRCd 4.0.0-rc2 Release Notes
+UnrealIRCd 4.0.0-rc3 Release Notes
 ===================================
 
 This is the second Release Candidate for UnrealIRCd 4.
@@ -18,7 +18,7 @@ IMPORTANT REMARKS:
   release *candidate* it may crash occasionally or have issues.
 
 Feel free to:
-* Install 4.0.0-rc2 to play around, show to your friends, have fun with
+* Install 4.0.0-rc3 to play around, show to your friends, have fun with
   the latest features and improvements, test things.
 * Link in an UnrealIRCd 4 test server to your 3.2.x network
 * Report any problems, bugs, issues and other feedback on
@@ -41,7 +41,7 @@ UnrealIRCd 4 uses a new directory structure.
       target directory to install UnrealIRCd to. ./Config will ask this
       and it's ~/unrealircd by default (eg: /home/nerd/unrealircd).
       You also need to run 'make install' after 'make' now.
-      After compiling, you should leave your unrealircd-4.0.0-rc2 directory
+      After compiling, you should leave your unrealircd-4.0.0-rc3 directory
       and change to ~/unrealircd as everything takes place there.
       For example to start UnrealIRCd you run './unrealircd start'
       (again, from the /home/xxxx/unrealircd directory).
@@ -281,7 +281,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * GLINE/KLINE/.. refused perfectly good bans. [B4]
 * Crash with invite-notify [RC2]
 * OS X and *BSD: serious problems with the I/O engine [RC2]
-* Strange behavior and possible crash in /WHOIS [RC3]
+* Odd behavior and possible crash in /WHOIS [RC3]
+* Strange empty host bug [RC3]
 
 ==[ MINOR BUGS FIXED ]==
 * Errors in example configuration files [A2]

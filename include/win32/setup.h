@@ -80,7 +80,7 @@
 #define UNREAL_VERSION_MINOR 0
 
 /* Version suffix such as a beta marker or release candidate marker. (e.g.:
-   -rc2 for unrealircd-3.2.9-rc2) */
-#define UNREAL_VERSION_SUFFIX "-rc2"
+   -rcX for unrealircd-3.2.9-rcX) */
+#define UNREAL_VERSION_SUFFIX "-rc3"
 
 #endif
