@@ -153,6 +153,9 @@ static char retbuf[CHANNELLEN+1];
 	return retbuf;
 }
 
+/** Convert parameter to something proper.
+ * NOTE: cptr may be NULL
+ */
 char *cmodeL_conv_param(char *param_in, aClient *sptr)
 {
 static char buf[CHANNELLEN+1];

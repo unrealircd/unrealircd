@@ -566,14 +566,18 @@ static char retbuf[512];
 	return retbuf;
 }
 
+/** Convert parameter to something proper.
+ * NOTE: cptr may be NULL if called for e.g. set::modes-on-join
+ */
 char *cmodef_conv_param(char *param_in, aClient *cptr)
 {
-static char retbuf[256];
-char param[256], *p;
-int num, t, fail = 0;
-ChanFloodProt newf;
-int xxi, xyi, xzi, hascolon;
-char *xp;
+	static char retbuf[256];
+	char param[256], *p;
+	int num, t, fail = 0;
+	ChanFloodProt newf;
+	int xxi, xyi, xzi, hascolon;
+	char *xp;
+	int localclient = (!cptr || MyClient(cptr)) ? 1 : 0;
 
 	memset(&newf, 0, sizeof(newf));
 		
@@ -674,12 +678,12 @@ char *xp;
 			v = atoi(x);
 			if ((v < 1) || (v > 999)) /* out of range... */
 			{
-				if (MyClient(cptr) || (v < 1))
+				if (localclient || (v < 1))
 					return NULL;
 			}
 			p++;
 			a = '\0';
-			r = MyClient(cptr) ? MODEF_DEFAULT_UNSETTIME : 0;
+			r = localclient ? MODEF_DEFAULT_UNSETTIME : 0;
 			if (*p != '\0')
 			{
 				if (*p == '#')
@@ -693,8 +697,8 @@ char *xp;
 						tv = atoi(p);
 						if (tv <= 0)
 							tv = 0; /* (ignored) */
-						if (tv > (MyClient(cptr) ? MODEF_MAX_UNSETTIME : 255))
-							tv = (MyClient(cptr) ? MODEF_MAX_UNSETTIME : 255); /* set to max */
+						if (tv > (localclient ? MODEF_MAX_UNSETTIME : 255))
+							tv = (localclient ? MODEF_MAX_UNSETTIME : 255); /* set to max */
 						r = (unsigned char)tv;
 					}
 				}
@@ -756,7 +760,7 @@ char *xp;
 		v = atoi(p2);
 		if ((v < 1) || (v > 999)) /* 'per' out of range */
 		{
-			if (MyClient(cptr) || (v < 1))
+			if (localclient || (v < 1))
 				return NULL;
 		}
 		newf.per = v;

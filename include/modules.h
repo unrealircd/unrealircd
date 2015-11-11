@@ -217,7 +217,7 @@ typedef struct {
 	 * Like +l "1aaa" becomes "1".
 	 * char *: the input parameter.
 	 * aClient *: the client that the mode request came from:
-	 *            1. Can be NULL (eg: if called for set::modes-on-join
+	 *            1. Can be NULL! (eg: if called for set::modes-on-join)
 	 *            2. Probably only used in rare cases, see also next remark
 	 *            3. ERRORS SHOULD NOT BE SENT BY conv_param BUT BY is_ok!
 	 * return value: pointer to output string (temp. storage)
