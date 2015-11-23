@@ -565,9 +565,6 @@ int blacklist_dns_request(aClient *cptr, Blacklist *d)
 
 void blacklist_cancel(BLUser *bl)
 {
-	if (bl->cptr)
-		ircd_log(LOG_ERROR, "Blacklist Requests for %s canceled (%s)", GetIP(bl->cptr), bl->cptr->name);
-	
 	bl->cptr = NULL;
 }
 
