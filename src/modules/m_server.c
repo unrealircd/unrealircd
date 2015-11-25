@@ -1319,6 +1319,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	char *bufptr; /* points somewhere in 'buf' */
 	char *p; /* points to somewhere in 'tbuf' */
 	int prebuflen = 0; /* points to after the <sjointoken> <TS> <chan> <fixmodes> <fixparas <..>> : part */
+	int sent = 0; /* we need this so we send at least 1 message about the channel (eg if +P and no members, no bans, #4459) */
 
 	if (*chptr->chname != '#')
 		return;
@@ -1405,6 +1406,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(cptr, "%s", buf);
+			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
 		}
@@ -1425,6 +1427,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(cptr, "%s", buf);
+			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
 		}
@@ -1445,6 +1448,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(cptr, "%s", buf);
+			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
 		}
@@ -1465,6 +1469,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(cptr, "%s", buf);
+			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
 		}
@@ -1472,6 +1477,6 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		bufptr = mystpcpy(bufptr, tbuf);
 	}
 
-	if (buf[prebuflen])
+	if (buf[prebuflen] || !sent)
 		sendto_one(cptr, "%s", buf);
 }
