@@ -1479,7 +1479,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 			return -2;
 		}
 	}
-	cptr = make_client(NULL, NULL);
+	cptr = make_client(NULL, &me);
 	cptr->local->hostp = hp;
 	/*
 	 * Copy these in so we have something for error detection.

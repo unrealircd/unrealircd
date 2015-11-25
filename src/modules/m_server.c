@@ -78,7 +78,7 @@ MOD_TEST(m_server)
 MOD_INIT(m_server)
 {
 	CommandAdd(modinfo->handle, MSG_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
-	CommandAdd(modinfo->handle, "SID", m_server_remote, MAXPARA, M_UNREGISTERED|M_SERVER);
+	CommandAdd(modinfo->handle, "SID", m_server_remote, MAXPARA, M_SERVER);
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
