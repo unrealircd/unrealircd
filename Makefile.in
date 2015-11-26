@@ -146,7 +146,7 @@ build: Makefile
 		( cd $$i; ${MAKE} ${MAKEARGS} build; ) \
 	done
 	@echo ''
-	@echo '* UnrealIRCd compiled succesfully'
+	@echo '* UnrealIRCd compiled successfully'
 	@echo '* YOU ARE NOT DONE YET! Run "make install" to install UnrealIRCd !'
 	@echo ''
 
