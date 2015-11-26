@@ -156,7 +156,7 @@ int n, addrlen, i, highestfd = 0;
 fd_set r;
 struct timeval tv;
 char buf[512], *buf_out;
-int succesfully_sent = 0;
+int successfully_sent = 0;
 
 	strlcpy(tmptimeservbuf, TIMESYNCH_SERVER, sizeof(tmptimeservbuf));
 
@@ -200,10 +200,10 @@ int succesfully_sent = 0;
 		if (n < 0)
 			ircd_log(LOG_ERROR, "TimeSync: WARNING: Was unable to send packet to server #%d... ", i);
 		else
-			succesfully_sent++;
+			successfully_sent++;
 	}
 
-	if (!succesfully_sent)
+	if (!successfully_sent)
 	{
 		ircd_log(LOG_ERROR, "TimeSync: WARNING: Unable to send time synchronization packets to ANY time server. "
 		                    "Perhaps your firewall is blocking outgoing packets to UDP port 123?");
@@ -274,9 +274,9 @@ gotit:
 	offset = t - now;
 
 	if ((offset >= -1) && (offset <= 1)) /* no offset (or only +1/-1) */
-		ircd_log(LOG_ERROR, "TIME SYNCH: IRCd clock succesfully synchronized to known good time source.");
+		ircd_log(LOG_ERROR, "TIME SYNCH: IRCd clock successfully synchronized to known good time source.");
 	else
-		ircd_log(LOG_ERROR, "TIME SYNCH: IRCd clock succesfully synchronized to known good time source [offset: %ld, was: %ld].",
+		ircd_log(LOG_ERROR, "TIME SYNCH: IRCd clock successfully synchronized to known good time source [offset: %ld, was: %ld].",
 			(long)offset, (long)TSoffset);
 	
 	TSoffset = offset;
