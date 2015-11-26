@@ -76,9 +76,9 @@ DLLFUNC int MOD_UNLOAD(m_watch)(int module_unload)
 }
 
 /*
- * RPL_NOWON	- Online at the moment (Succesfully added to WATCH-list)
- * RPL_NOWOFF	- Offline at the moement (Succesfully added to WATCH-list)
- * RPL_WATCHOFF	- Succesfully removed from WATCH-list.
+ * RPL_NOWON	- Online at the moment (Successfully added to WATCH-list)
+ * RPL_NOWOFF	- Offline at the moement (Successfully added to WATCH-list)
+ * RPL_WATCHOFF	- Successfully removed from WATCH-list.
  * ERR_TOOMANYWATCH - Take a guess :>  Too many WATCH entries.
  */
 static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2, int awaynotify)
