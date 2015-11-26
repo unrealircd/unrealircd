@@ -255,7 +255,7 @@ int successfully_sent = 0;
 					continue;
 				}
 
-				/* succes... check size */
+				/* success... check size */
 				if (n >= 48)
 				{
 					t = extracttime(buf);
