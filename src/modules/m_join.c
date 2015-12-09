@@ -541,19 +541,10 @@ CMD_FUNC(_do_join)
 			if (i != HOOK_ALLOW && 
 			   (i = can_join(cptr, sptr, chptr, key, parv)))
 			{
-#ifndef NO_OPEROVERRIDE
-				if (i != -1 && !ValidatePermissionsForPath("override:join",sptr,NULL,chptr,NULL))
-#else
 				if (i != -1)
-#endif
-					sendto_one(sptr, err_str(i), me.name, sptr->name, name);
-#ifndef NO_OPEROVERRIDE
-				else if (i != -1 && ValidatePermissionsForPath("override:join",sptr,NULL,chptr,NULL) )
 				{
-					sendto_snomask(SNO_EYES, "*** OperOverride -- %s (%s@%s) JOIN %s",
-						sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+					sendto_one(sptr, err_str(i), me.name, sptr->name, name);
 				}
-#endif
 				continue;
 			}
 		}
