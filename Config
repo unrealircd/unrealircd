@@ -126,7 +126,7 @@ while [ -z "$TEST" ] ; do
 done
 if [ "$GENCERTIFICATE" = 1 ]; then
 	make pem
-	echo Certificate created succesfully.
+	echo "Certificate created successfully."
 	sleep 1
 else
 	echo "Ok, not generating SSL certificate. Make sure that the certificate and key"
@@ -443,7 +443,7 @@ echo ""
 
 if [ -z "$NOCACHE" ] ; then
 	# This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
-	UNREALRELEASES="unrealircd-4.0.0-rc3 unrealircd-4.0.0-rc2 unrealircd-4.0.0-rc1 Unreal3.4-beta4 Unreal3.4-beta3 Unreal3.4-beta2 Unreal3.4-beta1 Unreal3.4-alpha4 Unreal3.4-alpha3 Unreal3.4-alpha2 Unreal3.4-alpha1"
+	UNREALRELEASES="unrealircd-4.0.0-rc4 unrealircd-4.0.0-rc3 unrealircd-4.0.0-rc2 unrealircd-4.0.0-rc1"
 	if [ -f "config.settings" ]; then
 		. ./config.settings
 	else

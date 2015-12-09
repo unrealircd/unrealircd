@@ -1,8 +1,8 @@
-UnrealIRCd 4.0.0-rc4 Release Notes
+UnrealIRCd 4.0.0-rc5 Release Notes
 ===================================
 
-This is the fourth Release Candidate for UnrealIRCd 4.
-We plan to have a 'stable' UnrealIRCd 4.0.0 release in Q4 2015.
+This is the fifth Release Candidate for UnrealIRCd 4.
+We plan to have a 'stable' UnrealIRCd 4.0.0 release in December 2015.
 
 IMPORTANT REMARKS:
 * The UnrealIRCd version number of the development series has been bumped
@@ -18,7 +18,7 @@ IMPORTANT REMARKS:
   release *candidate* it may crash occasionally or have issues.
 
 Feel free to:
-* Install 4.0.0-rc4 to play around, show to your friends, have fun with
+* Install 4.0.0-rc5 to play around, show to your friends, have fun with
   the latest features and improvements, test things.
 * Link in an UnrealIRCd 4 test server to your 3.2.x network
 * Report any problems, bugs, issues and other feedback on
@@ -41,7 +41,7 @@ UnrealIRCd 4 uses a new directory structure.
       target directory to install UnrealIRCd to. ./Config will ask this
       and it's ~/unrealircd by default (eg: /home/nerd/unrealircd).
       You also need to run 'make install' after 'make' now.
-      After compiling, you should leave your unrealircd-4.0.0-rc4 directory
+      After compiling, you should leave your unrealircd-4.0.0-rc5 directory
       and change to ~/unrealircd as everything takes place there.
       For example to start UnrealIRCd you run './unrealircd start'
       (again, from the /home/xxxx/unrealircd directory).
@@ -285,6 +285,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * Strange empty host bug [RC3]
 * Crash on linking attempt [RC4]
 * Crash on boot if mode +f was present in set::modes-on-join [RC4]
+* Crash on windows when connecting [RC5]
+* Added workaround for "Cannot accept connections" flood [RC5]
 
 ==[ MINOR BUGS FIXED ]==
 * Errors in example configuration files [A2]
@@ -312,6 +314,10 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * set::allowed-nickchars 'latin1' was broken [RC3]
 * /MAP was hiding ulines and showing flat-map even for IRCOps [RC3]
 * Channels with channel mode +P were not always synched correctly [RC4]
+* OperOverride did not work (INVITE+JOIN) [RC5]
+* LIST never ended if listing more than 50-100 channels [RC5]
+* IRCOps did not see JOIN error messages [RC5]
+* SAJOIN ignored set::level-on-join [RC5]
 
 ==[ REMOVED / DROPPED ]==
 * Numeric server IDs, see above. [A1]
