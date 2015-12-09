@@ -126,7 +126,7 @@ while [ -z "$TEST" ] ; do
 done
 if [ "$GENCERTIFICATE" = 1 ]; then
 	make pem
-	echo Certificate created succesfully.
+	echo Certificate created successfully.
 	sleep 1
 else
 	echo "Ok, not generating SSL certificate. Make sure that the certificate and key"
