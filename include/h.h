@@ -754,3 +754,4 @@ extern MODVAR aClient *remote_rehash_client;
 extern MODVAR int debugfd;
 extern void convert_to_absolute_path(char **path, char *reldir);
 extern int has_channel_mode(aChannel *chptr, char mode);
+extern void start_listeners(void);

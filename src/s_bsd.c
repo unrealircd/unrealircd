@@ -95,6 +95,7 @@ void completed_connection(int, int, void *);
 static int check_init(aClient *, char *, size_t);
 void set_sock_opts(int, aClient *, int);
 void set_ipv6_opts(int);
+void close_listener(ConfigItem_listen *listener);
 static char readbuf[BUFSIZE];
 char zlinebuf[BUFSIZE];
 extern char *version;
@@ -285,19 +286,31 @@ void report_baderror(char *text, aClient *cptr)
 /** Accept an incoming client. */
 static void listener_accept(int listener_fd, int revents, void *data)
 {
-	ConfigItem_listen *cptr = data;
+	ConfigItem_listen *listener = data;
 	int cli_fd;
 
-	if ((cli_fd = fd_accept(cptr->fd)) < 0)
+	if ((cli_fd = fd_accept(listener->fd)) < 0)
 	{
-	        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != P_ECONNABORTED))
+		if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != P_ECONNABORTED))
+		{
+			/* Trouble! accept() returns a strange error.
+			 * Previously in such a case we would just log/broadcast the error and return,
+			 * causing this message to be triggered at a rate of XYZ per second (100% CPU).
+			 * Now we close & re-start the listener.
+			 * Of course the underlying cause of this issue should be investigated, as this
+			 * is very much a workaround.
+			 */
 			report_baderror("Cannot accept connections %s:%s", NULL);
+			sendto_realops("[BUG] Restarting listener on %s:%d due to fatal errors (see previous message)", listener->ip, listener->port);
+			close_listener(listener);
+			start_listeners();
+		}
 		return;
 	}
 
 	ircstp->is_ac++;
 
-	set_sock_opts(cli_fd, NULL, cptr->ipv6);
+	set_sock_opts(cli_fd, NULL, listener->ipv6);
 	set_non_blocking(cli_fd, NULL);
 
 	if ((++OpenFiles >= MAXCLIENTS) || (cli_fd >= MAXCLIENTS))
@@ -305,7 +318,7 @@ static void listener_accept(int listener_fd, int revents, void *data)
 		ircstp->is_ref++;
 		if (last_allinuse < TStime() - 15)
 		{
-			sendto_realops("All connections in use. ([@%s/%u])", cptr->ip, cptr->port);
+			sendto_realops("All connections in use. ([@%s/%u])", listener->ip, listener->port);
 			last_allinuse = TStime();
 		}
 
@@ -317,7 +330,7 @@ static void listener_accept(int listener_fd, int revents, void *data)
 	}
 
 	/* add_connection() may fail. we just don't care. */
-	(void)add_connection(cptr, cli_fd);
+	(void)add_connection(listener, cli_fd);
 }
 
 /*

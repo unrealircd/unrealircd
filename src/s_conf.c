@@ -8087,11 +8087,7 @@ int	_test_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	return 0;
 }
 
-/*
- * Actually use configuration
-*/
-
-void	run_configuration(void)
+void start_listeners(void)
 {
 	ConfigItem_listen 	*listenptr;
 	int failed = 0, ports_bound = 0;
@@ -8162,6 +8158,12 @@ void	run_configuration(void)
 		ircd_log(LOG_ERROR, "IPv4: %s", *boundmsg_ipv4 ? boundmsg_ipv4 : "<none>");
 		ircd_log(LOG_ERROR, "IPv6: %s", *boundmsg_ipv6 ? boundmsg_ipv6 : "<none>");
 	}
+}
+
+/* Actually use configuration */
+void run_configuration(void)
+{
+	start_listeners();
 }
 
 int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
