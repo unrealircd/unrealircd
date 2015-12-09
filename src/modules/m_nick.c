@@ -92,10 +92,9 @@ static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
  * the exact same decision we would do, and thus we don't send a KILL to cptr?
  * This works great with this code, seems to kill the correct person and not
  * cause desynchs even without UID/SID. HOWEVER.. who knows what code the other servers run?
- * As my co-worker always says: "assumptions are dangerous" ;).
  * Should use UID/SID anyway, then this whole problem doesn't exist.
  */
-#undef ASSUME_NICK_IN_FLIGHT
+#define ASSUME_NICK_IN_FLIGHT
 
 /** Nick collission detected. A winner has been decided upstream. Deal with killing.
  * I moved this all to a single routine here rather than having all code duplicated
