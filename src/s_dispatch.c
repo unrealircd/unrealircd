@@ -123,7 +123,7 @@ void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 #endif
 
 static int highest_fd = -1;
-static fd_set read_fds, write_fds, except_fds;
+static fd_set read_fds, write_fds;
 
 void fd_refresh(int fd)
 {
@@ -177,11 +177,18 @@ void fd_select(time_t delay)
 {
 	struct timeval to;
 	int num, fd;
-	fd_set work_read_fds, work_write_fds, work_except_fds;
+	fd_set work_read_fds;
+	fd_set work_write_fds;
+#ifdef _WIN32
+	fd_set work_except_fds; /* only needed on windows as it may indicate a failed connect() */
+#endif
 
-	/* optimization: copy the FD sets so that our master sets are untouched */
+	/* copy the FD sets so that our master sets are untouched */
 	memcpy(&work_read_fds, &read_fds, sizeof(fd_set));
 	memcpy(&work_write_fds, &write_fds, sizeof(fd_set));
+#ifdef _WIN32
+	memcpy(&work_except_fds, &write_fds, sizeof(fd_set));
+#endif
 
 	to.tv_sec = delay / 1000;
 	to.tv_usec = (delay % 1000) * 1000;
@@ -190,7 +197,11 @@ void fd_select(time_t delay)
 	ircd_log(LOG_ERROR, "fd_select() on 0-%d...", highest_fd+1);
 #endif
 
+#ifdef _WIN32
+	num = select(highest_fd + 1, &work_read_fds, &work_write_fds, &work_except_fds, &to);
+#else
 	num = select(highest_fd + 1, &work_read_fds, &work_write_fds, NULL, &to);
+#endif
 	if (num < 0)
 	{
 		extern void report_baderror(char *text, aClient *cptr);
@@ -199,7 +210,10 @@ void fd_select(time_t delay)
 		memcpy(&work_read_fds, &read_fds, sizeof(fd_set));
 		memcpy(&work_write_fds, &write_fds, sizeof(fd_set));
 		fd_debug(&work_read_fds, highest_fd+1, "read");
-		fd_debug(&work_read_fds, highest_fd+1, "write");
+		fd_debug(&work_write_fds, highest_fd+1, "write");
+#ifdef _WIN32
+		Sleep(500);
+#endif
 	}
 
 	if (num <= 0)
@@ -225,9 +239,11 @@ void fd_select(time_t delay)
 		if (FD_ISSET(fd, &work_write_fds))
 			evflags |= FD_SELECT_WRITE;
 
-		/* if exception happens, just dispatch to something so we bail on the FD */
+#ifdef _WIN32
+		/* Exception may happen due to failed connect. Translate to write event, like on *NIX. */
 		if (FD_ISSET(fd, &work_except_fds))
-			evflags |= (FD_SELECT_READ | FD_SELECT_WRITE);
+			evflags |= FD_SELECT_WRITE;
+#endif
 
 		if (!evflags)
 			continue;
