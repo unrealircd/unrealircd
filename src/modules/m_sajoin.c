@@ -186,7 +186,7 @@ CMD_FUNC(m_sajoin)
 				strcpy(jbuf, "0");
 				continue;
 			}
-			flags = (ChannelExists(name)) ? CHFL_DEOPPED : CHFL_CHANOP;
+			flags = (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;
 			chptr = get_channel(acptr, name, CREATE);
 			if (chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
 				continue;
