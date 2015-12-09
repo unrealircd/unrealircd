@@ -42,7 +42,7 @@
 #endif
 
 CMD_FUNC(m_list);
-void _send_list(aClient *cptr, int numsend);
+void _send_list(aClient *cptr);
 
 #define MSG_LIST 	"LIST"	
 
@@ -55,6 +55,8 @@ ModuleHeader MOD_HEADER(m_list)
 	NULL 
     };
 
+EVENT(send_queued_list_data);
+
 MOD_TEST(m_list)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -65,6 +67,7 @@ MOD_TEST(m_list)
 MOD_INIT(m_list)
 {
 	CommandAdd(modinfo->handle, MSG_LIST, m_list, MAXPARA, M_USER);
+	EventAddEx(modinfo->handle, "send_queued_list_data", 1, 0, send_queued_list_data, NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -141,7 +144,7 @@ CMD_FUNC(m_list)
 		lopt->showall = 1;
 
 		if (DBufLength(&cptr->local->sendQ) < 2048)
-			send_list(cptr, 64);
+			send_list(cptr);
 
 		return 0;
 	}
@@ -286,7 +289,7 @@ CMD_FUNC(m_list)
 		lopt->yeslist = yeslist;
 
 		if (DBufLength(&cptr->local->sendQ) < 2048)
-			send_list(cptr, 64);
+			send_list(cptr);
 		return 0;
 	}
 
@@ -299,22 +302,23 @@ CMD_FUNC(m_list)
  * Operates by stepping through the hashtable, sending the entries back if
  * they match the criteria.
  * cptr = Local client to send the output back to.
- * numsend = Number (roughly) of lines to send back. Once this number has
- * been exceeded, send_list will finish with the current hash bucket,
- * and record that number as the number to start next time send_list
- * is called for this user. So, this function will almost always send
- * back more lines than specified by numsend (though not by much,
- * assuming CH_MAX is was well picked). So be conservative in your choice
- * of numsend. -Rak
+ * Taken from bahamut, modified for Unreal by codemastr.
  */
-
-/* Taken from bahamut, modified for Unreal by codemastr */
-
-void _send_list(aClient *cptr, int numsend)
+void _send_list(aClient *cptr)
 {
 	aChannel *chptr;
 	LOpts *lopt = cptr->user->lopt;
 	unsigned int  hashnum;
+	int numsend = (get_sendq(cptr) / 768) + 1; /* (was previously hard-coded) */
+	/* ^
+	 * numsend = Number (roughly) of lines to send back. Once this number has
+	 * been exceeded, send_list will finish with the current hash bucket,
+	 * and record that number as the number to start next time send_list
+	 * is called for this user. So, this function will almost always send
+	 * back more lines than specified by numsend (though not by much,
+	 * assuming CH_MAX is was well picked). So be conservative in your choice
+	 * of numsend. -Rak
+	 */	
 
 	/* Begin of /list? then send official channels. */
 	if ((lopt->starthash == 0) && conf_offchans)
@@ -431,4 +435,14 @@ void _send_list(aClient *cptr, int numsend)
 	 */
 	lopt->starthash = hashnum;
 	return;
+}
+
+EVENT(send_queued_list_data)
+{
+	aClient *acptr, *saved;
+	list_for_each_entry_safe(acptr, saved, &lclient_list, lclient_node)
+	{
+		if (DoList(acptr) && IsSendable(acptr))
+			send_list(acptr);
+	}
 }

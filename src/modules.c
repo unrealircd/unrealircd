@@ -108,7 +108,7 @@ int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
 int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
 int  (*find_tkline_match_zap_ex)(aClient *cptr, aTKline **rettk);
-void (*send_list)(aClient *cptr, int numsend);
+void (*send_list)(aClient *cptr);
 unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
 void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);

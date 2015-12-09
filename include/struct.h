@@ -1594,7 +1594,7 @@ struct liststructprio {
 
 /* Lifted somewhat from Undernet code --Rak */
 
-#define IsSendable(x)		(DBufLength(&x->sendQ) < 2048)
+#define IsSendable(x)		(DBufLength(&x->local->sendQ) < 2048)
 #define DoList(x)		((x)->user && (x)->user->lopt)
 
 /* used in SetMode() in channel.c and m_umode() in s_msg.c */

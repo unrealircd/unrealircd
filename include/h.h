@@ -644,7 +644,7 @@ extern MODVAR int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[])
 extern MODVAR int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
 extern MODVAR int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 extern MODVAR int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
-extern MODVAR void (*send_list)(aClient *cptr, int numsend);
+extern MODVAR void (*send_list)(aClient *cptr);
 extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
 extern MODVAR void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
