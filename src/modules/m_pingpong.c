@@ -59,7 +59,7 @@ ModuleHeader MOD_HEADER(m_pingpong)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_pingpong)
 {
-	CommandAdd(modinfo->handle, MSG_PING, m_ping, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_PING, m_ping, MAXPARA, M_USER|M_SERVER|M_SHUN);
 	CommandAdd(modinfo->handle, MSG_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
