@@ -1543,7 +1543,7 @@ int InitwIRCD(int argc, char *argv[])
 	fprintf(stderr,
 	    "---------------------------------------------------------------------\n");
 #endif
-	if (time(NULL) > 1477954800)
+	if (time(NULL) > 1459461600)
 	{
 		fprintf(stderr, "WARNING: UnrealIRCd 3.2.x is no longer supported after December 31, 2016.\n"
 		                "See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated\n");

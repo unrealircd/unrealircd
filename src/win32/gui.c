@@ -279,6 +279,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	}
 	ShowWindow(hWnd, SW_SHOW);
 	hMainThread = (HANDLE)_beginthread(SocketLoop, 0, NULL);
+	if (TStime() > 1459461600)
+	{
+		MessageBox(NULL, "UnrealIRCd 3.2.x is no longer supported after December 31, 2016. "
+		                 "You should upgrade to UnrealIRCd 4. "
+		                 "See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated",
+		                 "UnrealIRCd 3.2.x is deprecated", 		                 MB_OK);
+	}
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		if (!IsWindow(hStatusWnd) || !IsDialogMessage(hStatusWnd, &msg)) 
