@@ -64,7 +64,7 @@ int i;
 	/* [NOT IMPLEMENTED IN EXTCMODES] */
 
 	/* type 2: 1 par to set/unset (has .unset_with_param) */
-	p = extchmstr[2];
+	p = extchmstr[1];
 	for (i=0; i <= Channelmode_highest; i++)
 		if (Channelmode_Table[i].paracount && Channelmode_Table[i].flag &&
 		    Channelmode_Table[i].unset_with_param)
