@@ -52,6 +52,7 @@ EVENT(htm_calc);
 EVENT(e_check_fdlists);
 EVENT(garbage_collect);
 EVENT(loop_event);
+EVENT(deprecated_notice);
 /* support.c */
 char *my_itoa(int i);
 

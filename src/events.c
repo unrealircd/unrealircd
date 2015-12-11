@@ -222,5 +222,6 @@ void	SetupEvents(void)
 	EventAddEx(NULL, "cmodej_cleanup_structs", 60, 0, cmodej_cleanup_structs, NULL);
 #endif
 	EventAddEx(NULL, "unrealdns_removeoldrecords", 15, 0, unrealdns_removeoldrecords, NULL);
+	EventAddEx(NULL, "deprecated_notice", (86400*7)-(3600*8), 0, deprecated_notice, NULL);
 	UnlockEventSystem();
 }

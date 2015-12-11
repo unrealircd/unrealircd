@@ -11,7 +11,7 @@
 
 [Setup]
 AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.2.10.5
+AppVerName=UnrealIRCd3.2.10.6
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
@@ -84,7 +84,7 @@ Source: "c:\dev\zlib\zlibwapi.dll"; DestDir: "{app}"; Flags: ignoreversion
 #ifdef USE_SSL
 #ifdef USE_CURL
 ; curl with ssl support
-Source: "C:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-sspi-spnego\bin\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-sspi\bin\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\curl-ca-bundle.crt"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 #else
@@ -110,14 +110,26 @@ var
 // This is where all starts.
 //*********************************************************************************
 function InitializeSetup(): Boolean;
-
+var
+  d: Integer;
 begin
-
+  d := StrToInt(GetDateTimeString('yyyymm',#0,#0));
+  if (d > 201512) then
+  begin
+    MsgBox('You are installing the old UnrealIRCd 3.2.x stable series. This branch will receive security fixes only until December 31, 2016. ' +
+           'After that date, all support for the UnrealIRCd 3.2.x series will stop. ' +
+           'Please consider upgrading to UnrealIRCd 4. See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated', mbInformation, MB_OK);
+    if (d > 201603) then
+    begin
+      ShellExec('open', 'https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
+    end;
+  end;
 	Result := true;
     if ((not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{2F73A7B2-E50E-39A6-9ABC-EF89E4C62E36}'))
          and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E824E81C-80A4-3DFF-B5F9-4842A9FF5F7F}'))
          and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E7D4E834-93EB-351F-B8FB-82CDAE623003}'))
          and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{3D6AD258-61EA-35F5-812C-B7A02152996E}'))
+         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{BD95A8CD-1D9F-35AD-981A-3E7925026EBB}'))
         ) then
     begin
       MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2012 to be installed.' #13 +
