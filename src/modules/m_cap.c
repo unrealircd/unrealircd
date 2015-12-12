@@ -122,6 +122,8 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 	if (!s)
 		*finished = 1;
 	
+	p = s; /* point to next token for next iteration */
+
 	return cap;
 }
 
