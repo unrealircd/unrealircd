@@ -144,7 +144,7 @@ elif [ "$1" = "backtrace" ] ; then
 	echo 'info sharedlibrary'|gdb @BINDIR@/unrealircd $corefile 2>/dev/null|\
 	grep No|grep tmp/|awk '{ print $2 }'|\
 	awk -F '.' "{ system(\"[ -f $modpath/\" \$2 \"/\" \$3 \".so ] && ln -s $modpath/\" \$2 \"/\" \$3 \".so \" \$0 \" || ln -s $modpath/\" \$2 \".so \" \$0) }"
-	
+
 	echo ""
 	echo "=================== START HERE ======================"
 	echo "BACKTRACE:"

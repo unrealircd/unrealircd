@@ -3,7 +3,7 @@
 # Config script for UnrealIRCd
 # (C) 2001 The UnrealIRCd Team
 #
-# This configure script is free software; the UnrealIRCd Team gives 
+# This configure script is free software; the UnrealIRCd Team gives
 # unlimited permission to copy, distribute and modify as long as the
 # copyright headers stay intact
 #
@@ -22,7 +22,7 @@
 RUN_CONFIGURE () {
 ARG=" "
 
-if [ -z "$BINDIR" -o -z "$DATADIR" -o -z "$CONFDIR" -o -z "$MODULESDIR" -o -z "$LOGDIR" -o -z "$CACHEDIR" -o -z "$DOCDIR" -o -z "$TMPDIR" ]; then
+if [ -z "$BINDIR" -o -z "$DATADIR" -o -z "$CONFDIR" -o -z "$MODULESDIR" -o -z "$LOGDIR" -o -z "$CACHEDIR" -o -z "$DOCDIR" -o -z "$TMPDIR" -o -z "$SCRIPTDIR" ]; then
 	echo "Sorry './Config -quick' cannot be used because your 'config.settings'"
 	echo "file either does not exist or is from an old UnrealIRCd version"
 	echo "(older than version 3.4-alpha4)."
@@ -78,6 +78,7 @@ ARG="$ARG--with-logdir=$LOGDIR "
 ARG="$ARG--with-cachedir=$CACHEDIR "
 ARG="$ARG--with-docdir=$DOCDIR "
 ARG="$ARG--with-tmpdir=$TMPDIR "
+ARG="$ARG--with-scriptdir=$SCRIPTDIR "
 
 ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
 ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
@@ -515,6 +516,7 @@ LOGDIR="$BASEPATH/logs"
 CACHEDIR="$BASEPATH/cache"
 DOCDIR="$BASEPATH/doc"
 TMPDIR="$BASEPATH/tmp"
+SCRIPTDIR="$BASEPATH"
 
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -549,7 +551,7 @@ echo $n "[$TEST] -> $c"
     read cc
 if [ -z "$cc" ] ; then
     SSLDIR="$TEST"
-else 
+else
     SSLDIR=`eval echo $cc` # modified
 fi
 
@@ -619,11 +621,11 @@ if [ "$REMOTEINC" = "1" ] ; then
                           CURLDIR=""
                   fi
                 fi
-                
+
                 # Second, use the local curl if it exists (overrides above)
                 if [ -d "$HOME/curl" ]; then
                         CURLDIR="$HOME/curl"
-                        
+
                         # Check if it's recent enough...
                         # But first, check if curl-config can be trusted at all: it depends
                         # on 'bc' for some reason and not all systems have that installed!
@@ -670,13 +672,13 @@ if [ "$REMOTEINC" = "1" ] ; then
                             fi
                         fi
                 fi
-                
+
                 # Need to output it here, as the HOME check from above may cause this to be no longer relevant.
                 if [ "x$CURLDIR" = "x" -a "$GOTASYNC" != "1" ]; then
                 	echo "Curl library was found in $PREVCURLDIR, but it does not support Asynchronous DNS (not compiled with c-ares)"
                 	echo "so it's of no use to us."
                 fi
-                	
+
         fi
         if [ "x$CURLDIR" = "x" ]; then
         	# Still empty?
@@ -855,6 +857,7 @@ LOGDIR="$LOGDIR"
 CACHEDIR="$CACHEDIR"
 DOCDIR="$DOCDIR"
 TMPDIR="$TMPDIR"
+SCRIPTDIR="$SCRIPTDIR"
 PREFIXAQ="$PREFIXAQ"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
 MAXCONNECTIONS="$MAXCONNECTIONS"
