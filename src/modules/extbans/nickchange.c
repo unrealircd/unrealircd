@@ -71,6 +71,9 @@ int extban_nickchange_is_banned(aClient *sptr, aChannel *chptr, char *banin, int
 	if (type != BANCHK_NICK)
 		return 0;
 
+	if (has_voice(sptr, chptr))
+		return 0;
+
 	sub_ban = banin + 3;
 
 	return ban_check_mask(sptr, chptr, sub_ban, type, 0);
