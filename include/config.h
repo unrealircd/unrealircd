@@ -463,7 +463,7 @@
  * this when they connect, along with a pointer to bugs.unrealircd.org where
  * they can report any problems. This is mainly to help UnrealIRCd development.
  */
-#define EXPERIMENTAL
+#undef EXPERIMENTAL
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
