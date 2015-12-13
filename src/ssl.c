@@ -246,6 +246,9 @@ SSL_CTX *ctx_server;
 	SSL_CTX_set_verify(ctx_server, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE
 			| (iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
 	SSL_CTX_set_session_cache_mode(ctx_server, SSL_SESS_CACHE_OFF);
+#ifndef SSL_OP_NO_TICKET
+ #error "Your system has an outdated OpenSSL version. Please upgrade OpenSSL."
+#endif
 	SSL_CTX_set_options(ctx_server, SSL_OP_NO_TICKET);
 
 	setup_dh_params(ctx_server);
