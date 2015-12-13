@@ -15,7 +15,7 @@
 #*   You should have received a copy of the GNU General Public License
 #*   along with this program; if not, write to the Free Software
 #*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-#*  
+#*
 #*   $Id$
 #*/
 
@@ -57,7 +57,7 @@ XCFLAGS=@PTHREAD_CFLAGS@ @TRE_CFLAGS@ @PCRE2_CFLAGS@ @CARES_CFLAGS@ @CFLAGS@
 # Dynix/ptx V2.0.x
 #CFLAGS= -I$(INCLUDEDIR) -O -Xo
 #IRCDLIBS= -lsocket -linet -lnsl -lseq
-# 
+#
 # Dynix/ptx V1.x.x
 #IRCDLIBS= -lsocket -linet -lnsl -lseq
 #
@@ -86,7 +86,7 @@ XCFLAGS=@PTHREAD_CFLAGS@ @TRE_CFLAGS@ @PCRE2_CFLAGS@ @CARES_CFLAGS@ @CFLAGS@
 # The 4 at the front is important (allows for setuidness)
 #
 # WARNING: if you are making ircd SUID or SGID, check config.h to make sure
-#          you are not defining CMDLINE_CONFIG 
+#          you are not defining CMDLINE_CONFIG
 IRCDMODE = 711
 
 URL=@URL@
@@ -164,11 +164,11 @@ cleandir: clean
 	rm -rf include/setup.h Makefile Settings
 
 distclean: cleandir
-	rm -rf extras/*.bak extras/regexp extras/*.tar extras/c-ares 
+	rm -rf extras/*.bak extras/regexp extras/*.tar extras/c-ares
 	rm -rf extras/c-ares-* extras/tre-*
 	rm -rf config.log config.settings *.pem ircd.* unrealircd
 	rm -rf Makefile config.status
-	
+
 depend:
 	@+for i in $(SUBDIRS); do \
 		echo "Making dependencies in $$i";\
@@ -218,7 +218,7 @@ install: all
 	fi
 	@echo ''
 	@echo '* UnrealIRCd is now installed.'
-	
+
 	-@if [ "@SCRIPTDIR@/bin" = "@BINDIR@" ] ; then \
 		echo '* Leave this directory and run "cd @SCRIPTDIR@" now' ; \
 	fi
@@ -229,7 +229,7 @@ install: all
 	@echo '  * Configuration files: @CONFDIR@'
 	@echo '  * Log files: @LOGDIR@'
 	@echo '  * Modules: @MODULESDIR@'
-	@echo '* To start/stop UnrealIRCd run: @SCRIPTDIR@/unrealircd"'
+	@echo '* To start/stop UnrealIRCd run: "@SCRIPTDIR@/./unrealircd"'
 	@echo ''
 	@echo '* Consult the documentation online at:'
 	@echo '  * https://www.unrealircd.org/docs/UnrealIRCd_4_documentation'

@@ -441,7 +441,7 @@ configuration files])],
 	dnl we assume that a user thinks that `chmod 0600 blah' is the same as `chmod 600 blah'
 	dnl (#3189)
 	[AC_DEFINE_UNQUOTED([DEFAULT_PERMISSIONS], [0$withval], [The default permissions for configuration files. Set to 0 to prevent unrealircd from calling chmod() on the files.])],
-	[AC_DEFINE([DEFAULT_PERMISSIONS], [0600], [The default permissions for configuration files. Set to 0 to prevent unrealircd from calling chmod() on the files.])]) 
+	[AC_DEFINE([DEFAULT_PERMISSIONS], [0600], [The default permissions for configuration files. Set to 0 to prevent unrealircd from calling chmod() on the files.])])
 
 AC_ARG_WITH(bindir, [AS_HELP_STRING([--with-bindir=path],[Specify the directory for the unrealircd binary])],
 	[AC_DEFINE_UNQUOTED([BINDIR], ["$withval"], [Define the directory where the unrealircd binary is located])
