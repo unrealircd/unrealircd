@@ -78,7 +78,7 @@ ARG="$ARG--with-logdir=$LOGDIR "
 ARG="$ARG--with-cachedir=$CACHEDIR "
 ARG="$ARG--with-docdir=$DOCDIR "
 ARG="$ARG--with-tmpdir=$TMPDIR "
-
+ARG="$ARG--with-scriptdir=$BASEPATH "
 ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
 ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
 ARG="$ARG--with-permissions=$DEFPERM "
