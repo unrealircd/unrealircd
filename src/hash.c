@@ -827,6 +827,7 @@ void del_throttling_bucket(struct ThrottlingBucket *bucket)
 	int	hash;
 	hash = hash_throttling(bucket->ip);
 	DelListItem(bucket, ThrottlingHash[hash]);
+	MyFree(bucket->ip);
 	MyFree(bucket);
 	return;
 }
