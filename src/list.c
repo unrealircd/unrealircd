@@ -284,6 +284,8 @@ void free_user(anUser *user, aClient *cptr)
 			for (s = user->swhois; s; s = s_next)
 			{
 				s_next = s->next;
+				safefree(s->line);
+				safefree(s->setby);
 				MyFree(s);
 			}
 		}
