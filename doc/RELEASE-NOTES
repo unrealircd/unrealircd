@@ -1,7 +1,7 @@
-UnrealIRCd 4.0.0-rc5 Release Notes
+UnrealIRCd 4.0.0-rc6 Release Notes
 ===================================
 
-This is the fifth Release Candidate for UnrealIRCd 4.
+This is the sixth Release Candidate for UnrealIRCd 4.
 We plan to have a 'stable' UnrealIRCd 4.0.0 release in December 2015.
 
 IMPORTANT REMARKS:
@@ -18,7 +18,7 @@ IMPORTANT REMARKS:
   release *candidate* it may crash occasionally or have issues.
 
 Feel free to:
-* Install 4.0.0-rc5 to play around, show to your friends, have fun with
+* Install 4.0.0-rc6 to play around, show to your friends, have fun with
   the latest features and improvements, test things.
 * Link in an UnrealIRCd 4 test server to your 3.2.x network
 * Report any problems, bugs, issues and other feedback on
@@ -41,7 +41,7 @@ UnrealIRCd 4 uses a new directory structure.
       target directory to install UnrealIRCd to. ./Config will ask this
       and it's ~/unrealircd by default (eg: /home/nerd/unrealircd).
       You also need to run 'make install' after 'make' now.
-      After compiling, you should leave your unrealircd-4.0.0-rc5 directory
+      After compiling, you should leave your unrealircd-4.0.0-rc6 directory
       and change to ~/unrealircd as everything takes place there.
       For example to start UnrealIRCd you run './unrealircd start'
       (again, from the /home/xxxx/unrealircd directory).
@@ -282,11 +282,11 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * OS X and *BSD: serious problems with the I/O engine [RC2]
 * Crash with invite-notify, now removed [RC2, RC3]
 * Odd behavior and possible crash in /WHOIS [RC3]
-* Strange empty host bug [RC3]
 * Crash on linking attempt [RC4]
 * Crash on boot if mode +f was present in set::modes-on-join [RC4]
 * Crash on windows when connecting [RC5]
 * Added workaround for "Cannot accept connections" flood [RC5]
+* User could get an empty hostname [RC6]
 
 ==[ MINOR BUGS FIXED ]==
 * Errors in example configuration files [A2]
@@ -318,6 +318,9 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * LIST never ended if listing more than 50-100 channels [RC5]
 * IRCOps did not see JOIN error messages [RC5]
 * SAJOIN ignored set::level-on-join [RC5]
+* CAP REQ did not work with multiple arguments [RC6]
+* The 'unrealircd' script was always installed to ~/unrealircd [RC6]
+* Some small memory leaks [RC6]
 
 ==[ REMOVED / DROPPED ]==
 * Numeric server IDs, see above. [A1]
