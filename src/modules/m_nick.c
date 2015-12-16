@@ -1263,7 +1263,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			}
 			else {
 				*user->username = '~';
-				strlcpy((user->username + 1), temp, USERLEN+1);
+				strlcpy((user->username + 1), temp, sizeof(user->username)-1);
 #ifdef HOSTILENAME
 				noident = 1;
 #endif
@@ -1313,7 +1313,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			}
 
 			strlcpy(olduser, user->username + noident, USERLEN+1);
-			strlcpy(user->username + 1, stripuser, USERLEN+1);
+			strlcpy(user->username + 1, stripuser, sizeof(user->username)-1);
 			user->username[0] = '~';
 			user->username[USERLEN] = '\0';
 		}
