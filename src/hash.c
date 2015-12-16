@@ -775,6 +775,7 @@ EVENT(e_clean_out_throttling_buckets)
 			if ((TStime() - n->since) > (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15))
 			{
 				DelListItem(n, ThrottlingHash[i]);
+				MyFree(n->ip);
 				MyFree(n);
 			}
 		}
@@ -819,16 +820,6 @@ void add_throttling_bucket(aClient *acptr)
 	n->count = 1;
 	hash = hash_throttling(acptr->ip);
 	AddListItem(n, ThrottlingHash[hash]);
-	return;
-}
-
-void del_throttling_bucket(struct ThrottlingBucket *bucket)
-{
-	int	hash;
-	hash = hash_throttling(bucket->ip);
-	DelListItem(bucket, ThrottlingHash[hash]);
-	MyFree(bucket->ip);
-	MyFree(bucket);
 	return;
 }
 

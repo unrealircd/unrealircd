@@ -1708,7 +1708,6 @@ struct PendingNet {
 void init_throttling_hash();
 struct ThrottlingBucket *find_throttling_bucket(aClient *);
 void add_throttling_bucket(aClient *);
-void del_throttling_bucket(struct ThrottlingBucket *bucket);
 int throttle_can_connect(aClient *);
 
 #define VERIFY_OPERCOUNT(clnt,tag) { if (IRCstats.operators < 0) verify_opercount(clnt,tag); } while(0)
