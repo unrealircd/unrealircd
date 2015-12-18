@@ -324,7 +324,9 @@ CMD_FUNC(m_whois)
 							operclass = oper->operclass;
 						sendto_one(sptr,
 						    ":%s 313 %s %s :is %s (%s) [%s]", me.name,
-						    sptr->name, name, buf, acptr->user->operlogin, operclass);
+						    sptr->name, name, buf,
+						    acptr->user->operlogin ? acptr->user->operlogin : "unknown",
+						    operclass);
 					}
 					else
 						sendto_one(sptr,
