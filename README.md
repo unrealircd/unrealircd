@@ -15,7 +15,7 @@ when setting up the IRCd!
 #### Windows
 Simply download the UnrealIRCd Windows version from www.unrealircd.org
 
-Compiling UnrealIRCd for Windows yourself is not straightforward and thus not recommended.
+Alternatively you can compile UnrealIRCd for Windows yourself. However this is not straightforward and thus not recommended.
 
 #### *BSD/Linux/OS X
 First you must compile the IRCd:
