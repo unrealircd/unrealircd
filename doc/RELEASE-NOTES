@@ -21,6 +21,8 @@ Be sure not to use any other (older) documentation as it isn't fully
 compatible with UnrealIRCd 4. In particular, do NOT use unreal32docs*html.
 
 ==[ UPGRADING FROM 3.2.x ]==
+If you are upgrading from 3.2.x then there are three important things to know:
+
 1) NEW FILE LOCATIONS
 In UnrealIRCd 4 the location of the configuration files and other files have
 been changed. On *NIX the directory where you compile the IRCd from
@@ -40,6 +42,14 @@ Don't worry, UnrealIRCd can convert your existing 3.2.x configuration files
 to UnrealIRCd 4 format. There's no need to start from scratch.
 
 Please read https://www.unrealircd.org/docs/Upgrading_from_3.2.x !!
+
+3) THIRD PARTY MODULES
+If you are using 3rd party modules then they will need an update to run on
+UnrealIRCd 4. Due to the many core changes in UnrealIRCd 4 it was simply
+impossible to make 3.2.x modules work out-of-the-box on 4.x.
+Contact your developer for a new version or ask on our Modules forum where
+someone may be kind enough to convert the module for you if you ask nicely:
+https://forums.unrealircd.org/viewforum.php?f=52
 
 ==[ RUNNING A MIXED 3.2.X / 4.X NETWORK ]==
 You can run a mixed 3.2.x <-> 4.x network if you a follow a few simple rules:
