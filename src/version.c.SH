@@ -4,7 +4,7 @@ echo "Extracting src/version.c..."
 
 #id=`grep '$Id: Changes,v' ../Changes`
 #id=`echo $id |sed 's/.* Changes\,v \(.*\) .* Exp .*/\1/'`
-id="4.0.0-rc6"
+id="4.0.0"
 echo "$id"
 
 if test -r version.c
@@ -63,11 +63,12 @@ char *infotext[] =
 
 char *unrealcredits[] =
 {
-	"=-=--=-=-=-=-=-=-=-=-=[" IRCDTOTALVERSION " Credits]=-=-=-=-=-=-=-=-=-=-=-",
+	"==================[ " IRCDTOTALVERSION " Credits ]===================",
 	"The people on this list are people who have helped us with the",
 	"development of UnrealIRCd and who have made remarkable",
 	"contributions to the project.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=[Donations]=-=-=-=-=-=-=-=-=-=-=-=-=-=",
+	" ",
+	"==========================[ Donations ]==========================",
 	"BlueFlame^, [Real] - ChatFIRST.com, Jameno123 - ByteHosting,",
 	"Internet Services, Interlink Access Corp, Jan Knutar, ThePlayer,",
 	"Headband, noriko, powerstorm.net, RedMaxima, IronHelix, xnet.org,",
@@ -130,55 +131,26 @@ char *unrealcredits[] =
 	"Project Free TV - newprojectfreetv.com, companyaccountscheck.com,",
 	"Coyote Traffic - www.coyotetraffic.com, www.emailextractor14lite.com,",
 	"bet365 Bonus Code - williamspromocodes.co.uk/bet365-bonus-code-sports/",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
-	"The UnrealIRCd Team would like to thank:",
 	" ",
-	"Nutcais - Phil Hawkins",
-	"- the original shell for UnrealIRCd development, useful comments,",
-	"  and supporting the project all through its life. Thanks for",
-	"  helping to get this project to take off.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-[Hosting]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
-	"Current hosters:",
-	"http://www.vulnscan.org/  All WWW sites",
-	"http://FTCNetworks.com/   IRCd shell",
-	"Below are people who have donated hosting in the past:",
-	"Phil Veale - email@phillipveale.com - http://www.tiefighter.org",
-	"- Donating webhosting for the project amongst other things",
-	"Alcatraz Media - http://www.alcatrazmedia.com",
-	"- Donating more webhosting for the project",
-	"cknight^",
-	"- Donating a FreeBSD box to the UnrealIRCd project to host some stuff",
-	"KIREnet.com - http://www.kirenet.com",
-	"- Donating hosting for the above box on their line",
-	"Digital Intensity Webhosting - http://www.digital-intensity.net",
-	"- Creating and donating hosting for the first UnrealIRCd forums",
-	"HawkSites Webhosting - http://www.hawksites.com",
-	"- Donating hosting for the forums",
-	"UGCentral - http://www.ugcentral.com/",
-	"- Donating hosting of the forums and the main site",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=[Supporters]=-=-=-=-=-=-=-=-=-=-=-=-=-=",
-	"Cronus, fez, henk, jewles, Jobe, seraphim, SpaceDog, Stealth, warg",
+	"==========================[ Supporters ]==========================",
+	"Our support staff: Cronus, Jobe, SpaceDog, Stealth",
 	" ",
 	"Thanks to former supporters and anyone who has helped without",
 	"officially joining the staff.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-[Coders]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
+	" ",
+	"===========================[ Coders ]=============================",
 	"Syzop <syzop@unrealircd.org> - Head Coder / Project leader",
 	"Heero <heero@unrealircd.org> - Coder",
+	" ",
 	"For a full list of coders & contributors, see /INFO (/QUOTE INFO)",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
-	"Stskeeps would primarily like to thank Julie for her support",
-	"through the years.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
-	"This IRCd is dedicated to those who have kept us rocking and", 
-	"in good mood all through the years we've struggled with this",
-	"project. Unreal3.0 and up is dedicated to Morrigan.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
+	" ",
+	"==================================================================",
 	"Finally, we would like to thank everyone else who has helped",
 	"UnrealIRCd in any way: reporting bugs, testing releases, helping",
 	"others, recommending UnrealIRCd to friends, or simply just by",
 	"running UnrealIRCd to ensure that we are and will continue to be",
 	"the most used IRC daemon in the world.",
-	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
+	"==================================================================",
 	0
 }; 
 

@@ -255,10 +255,10 @@ char *unrealinfo[] =
 	"This release was brought to you by the following people:",
 	"",
 	"Head coder:",
-	"* Syzop        <syzop@unrealircd.org>",
+	"* Bram Matthys (Syzop) <syzop@unrealircd.org>",
 	"",
 	"Coders:",
-	"* Heero        <heero@unrealircd.org>",
+	"* Travis McArthur (Heero) <heero@unrealircd.org>",
 	"",
 	"Previous coders:",
 	"* binki, nenolod, ..",
@@ -275,7 +275,7 @@ void m_info_send(aClient *sptr)
 {
 char **text = unrealinfo;
 
-	sendto_one(sptr, ":%s %d %s :=-=-=-= %s =-=-=-=",
+	sendto_one(sptr, ":%s %d %s :========== %s ==========",
 	    me.name, RPL_INFO, sptr->name, IRCDTOTALVERSION);
 
 	while (*text)
@@ -299,7 +299,7 @@ char **text = unrealinfo;
 	    ":%s %d %s :| UnrealIRCd Homepage: https://www.unrealircd.org",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr,
-	    ":%s %d %s :-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=", me.name,
+	    ":%s %d %s :============================================", me.name,
 	    RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :Birth Date: %s, compile # %s", me.name,
 	    RPL_INFO, sptr->name, creation, generation);

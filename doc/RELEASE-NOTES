@@ -1,86 +1,73 @@
-UnrealIRCd 4.0.0-rc6 Release Notes
-===================================
+UnrealIRCd 4.0.0 Release Notes
+===============================
 
-This is the sixth Release Candidate for UnrealIRCd 4.
-We plan to have a 'stable' UnrealIRCd 4.0.0 release in December 2015.
+We have been working hard over the past few years to replace the successful
+3.2.x series with a more modern code base. At the same time we have been
+incorporating requests from our bug tracker, ideas from ourselves and
+many suggestions that came up during the UnrealIRCd survey from Q4 2013.
+After 4 alpha versions, 4 beta's and 6 release candidates we are proud to
+finally present you the first stable release of UnrealIRCd 4.
 
-IMPORTANT REMARKS:
-* The UnrealIRCd version number of the development series has been bumped
-  from 3.4 to 4 to indicate the significant code and end-user changes.
-* 'Release Candidate' means that our focus lies entirely on fixing bugs
-  and improving stability. No new features will be added during RC phase.
-* Although running a mixed network is not 100% ideal, you CAN link in a
-  UnrealIRCd 4 server on a UnrealIRCd 3.2.x network. If you do, then
-  be sure to run 3.2.10.3 or later as otherwise linking will fail if you
-  have enabled SSL.
-* We run daily tests on UnrealIRCd 4 without any issues and UnrealIRCd 4
-  is becoming more stable each release. However, because it's still a
-  release *candidate* it may crash occasionally or have issues.
-
-Feel free to:
-* Install 4.0.0-rc6 to play around, show to your friends, have fun with
-  the latest features and improvements, test things.
-* Link in an UnrealIRCd 4 test server to your 3.2.x network
-* Report any problems, bugs, issues and other feedback on
-  https://bugs.unrealircd.org/ so we can improve UnrealIRCd!
-
-Finally:
-* If you are moving from 3.2.x then be sure to read 'CONFIGURATION CHANGES'
-  which explains the new directory structure and how to make UnrealIRCd
-  convert your existing 3.2.x configuration file to the UnrealIRCd 4 format.
+UnrealIRCd is far more modular and configurable than before. For a brief
+overview of what's new in UnrealIRCd 4 have a look at:
+https://www.unrealircd.org/docs/What's_new_in_UnrealIRCd_4
 
 ==[ DOCUMENTATION ]==
-THe UnrealIRCd 4 documentation is located in a wiki online at:
-* https://www.unrealircd.org/docs/
-The old unreal32docs.*html files have been removed.
+All documentation has been moved to our wiki:
+* Documentation: https://www.unrealircd.org/docs/
+* FAQ: https://www.unrealircd.org/docs/FAQ
 
-==[ CONFIGURATION CHANGES ]==
-UnrealIRCd 4 uses a new directory structure.
+Be sure not to use any other (older) documentation as it isn't fully
+compatible with UnrealIRCd 4. In particular, do NOT use unreal32docs*html.
 
-*NIX: If you are not on Windows then this means you must now choose a
-      target directory to install UnrealIRCd to. ./Config will ask this
-      and it's ~/unrealircd by default (eg: /home/nerd/unrealircd).
-      You also need to run 'make install' after 'make' now.
-      After compiling, you should leave your unrealircd-4.0.0-rc6 directory
-      and change to ~/unrealircd as everything takes place there.
-      For example to start UnrealIRCd you run './unrealircd start'
-      (again, from the /home/xxxx/unrealircd directory).
+==[ UPGRADING FROM 3.2.x ]==
+1) NEW FILE LOCATIONS
+In UnrealIRCd 4 the location of the configuration files and other files have
+been changed. On *NIX the directory where you compile the IRCd from
+(previously 'Unreal3.2.X', now 'unrealircd-4.0.0') is no longer the same as
+the directory where the IRCd will be running from.
+By default the IRCd is installed to /home/yourusername/unrealircd on *NIX
+On Windows UnrealIRCd will install to C:\Program Files (x86\UnrealIRCd 4
 
 The new directory structure is as follows (both on Windows and *NIX):
 conf/      contains all configuration files
 logs/      for log files
 modules/   all modules (.so files on *NIX, .dll files on Windows)
-tmp/       temporary files
-data/      persistent data such as ircd.tune
-cache/     cached remote includes
 
-It is possible to use your existing 3.2.x configuration file, but it needs to
-be 'upgraded' to the new UnrealIRCd 4 syntax. UnrealIRCd can do this for you.
-Simply place your unrealircd.conf (and any other .conf's you use) in the
-conf/ directory and then:
-* On *NIX run './unrealircd upgrade-conf' (from /home/xxxx/unrealircd)
-* On Windows simply try to boot and watch all the errors, click OK and
-  you will be asked if UnrealIRCd should upgrade your configuration file.
-On either OS, after running the step from above, simply start UnrealIRCd
-again and it should boot up fine with your converted configuration file(s).
+2) CONFIGURATION FILE CHANGES
+There have also been changes in various configuration blocks and settings.
+Don't worry, UnrealIRCd can convert your existing 3.2.x configuration files
+to UnrealIRCd 4 format. There's no need to start from scratch.
 
-Note: UnrealIRCd can only convert *working* 3.2.x configuration files!
-If your 3.2.x configuration contains mistakes or errors then the upgrade
-process will likely fail or the resulting config file will fail to load.
+Please read https://www.unrealircd.org/docs/Upgrading_from_3.2.x !!
 
-You may still be interested in the configuration changes, they are
-listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
+==[ RUNNING A MIXED 3.2.X / 4.X NETWORK ]==
+You can run a mixed 3.2.x <-> 4.x network if you a follow a few simple rules:
+https://www.unrealircd.org/docs/Running_a_mixed_UnrealIRCd_3.2_and_UnrealIRCd_4_network
 
-==[ GENERAL INFORMATION ]==
+==[ END OF THE 3.2.X SERIES ]==
+With the release of UnrealIRCd 4.0.0 we are deprecating the previous series.
+All support for the 3.2.x series will stop after December 31, 2016.
+See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated
+
+==[ SUPPORT ]==
+Before you seek support, please check our Frequently Asked Questions:
+https://www.unrealircd.org/docs/FAQ
+
+For support you have two choices:
+* Forums: https://forums.unrealircd.org/
+* IRC: irc.unrealircd.org / #unreal-support
+
+==[ LIST OF CHANGES ]==
 * Below you will see a summary of all changes. Changes may be tagged when
   a change was made in a specific version, e.g. "[A3]" means alpha3
   and "[B1]" means beta1.
-  For a complete list of changes (600+) use 'git log' or have a look at:
+  For a complete list of changes (1100+) use 'git log' or have a look at:
   https://github.com/unrealircd/unrealircd/commits/unreal34
 
 ==[ NEW ]==
 * We moved a lot of functionality, including most channel modes, user
-  modes and all extended bans into 145 separate modules.
+  modes and all extended bans into 138 separate modules.
   This makes it...
   A) possible to fully customize what exact functionality you want to load.
      You could even strip down UnrealIRCd to get something close to the
