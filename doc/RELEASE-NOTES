@@ -1,6 +1,8 @@
 UnrealIRCd 4.0.0 Release Notes
 ===============================
 
+UnrealIRCd 4 is here!
+
 We have been working hard over the past few years to replace the successful
 3.2.x series with a more modern code base. At the same time we have been
 incorporating requests from our bug tracker, ideas from ourselves and
