@@ -7,20 +7,9 @@ Key features include SSL, cloaking, its advanced anti-flood and anti-spam system
 swear filtering and module support. We are also particularly proud on our extensive
 online documentation. 
 
-## Pick the right branch!
-**UnrealIRCd 4** is currently in Release Candidate stage and will soon be the next major
-version of UnrealIRCd. The plan is to release UnrealIRCd 4 in Q4 2015.
-This is the 'unreal40' branch and is the default branch on GitHub.
-
-The alternative are the **3.2.x (stable)** series which have proven to be very reliable
-over the past 10 years. If you want to run a really stable IRCd then download UnrealIRCd 3.2
-from www.unrealircd.org, or use the 'master' branch on GitHub (NOTE: this is not the default branch!).
-
 ## How to get started
-Please consult our excelent online documentation at https://www.unrealircd.org/docs/
+Please consult our excellent online documentation at https://www.unrealircd.org/docs/
 when setting up the IRCd!
-
-Note: the procedure below is for UnrealIRCd 4 (not 3.2.x!)
 
 ### Step 1: Installation
 #### Windows
@@ -58,8 +47,6 @@ You can find the **documentation** online at: http://www.unrealircd.org/docs/
 We also have a good **FAQ**: http://www.unrealircd.org/docs/FAQ
 
 ## Website, support, and other links ##
-* http://www.unrealircd.org - Our main website
-* http://forums.unrealircd.org - Support
-* http://bugs.unrealircd.org - Bug tracker
-* http://modules.unrealircd.org - 3rd party modules
-
+* https://www.unrealircd.org - Our main website
+* https://forums.unrealircd.org - Support
+* https://bugs.unrealircd.org - Bug tracker
