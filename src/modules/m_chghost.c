@@ -187,7 +187,8 @@ CMD_FUNC(m_chghost)
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
 			rejoin_joinandmode(acptr);
 		
-		sendto_one(acptr, err_str(RPL_HOSTHIDDEN), me.name, acptr->name, parv[2]);
+		if (MyClient(acptr))
+			sendto_one(acptr, err_str(RPL_HOSTHIDDEN), me.name, acptr->name, parv[2]);
 		
 		return 0;
 	}
