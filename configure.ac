@@ -771,9 +771,6 @@ AC_CONFIG_FILES([Makefile
 	src/modules/snomasks/Makefile
 	src/modules/extbans/Makefile
 	src/modules/third/Makefile
-	unrealircd
-	extras/ircdcron/ircdchk
-	extras/ircdcron/ircd.cron])
+	unrealircd])
 AC_OUTPUT
 chmod 0700 unrealircd
-chmod 0700 extras/ircdcron/ircdchk
