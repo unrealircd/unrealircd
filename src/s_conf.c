@@ -1547,8 +1547,9 @@ void upgrade_conf_to_34(void)
 		             "Once everything is looking good you can run 'unreal install' to make UnrealIRCd run "
 		             "as a service again."); /* TODO: make this unnecessary :D */
 	}
-#endif
+#else
 	config_error("To upgrade it to the new 4.0 format, run: ./unrealircd upgrade-conf");
+#endif
 
 	config_error("******************************************************************");
 	/* TODO: win32 may require a different error */
