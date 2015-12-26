@@ -89,6 +89,17 @@ elif [ "$1" = "restart" ] ; then
 		fi
 	fi
 	$0 start
+elif [ "$1" = "croncheck" ] ; then
+	if [ -r $PID_FILE ] ; then
+		kill -CHLD `cat $PID_FILE` 1>/dev/null 2>&1
+		if [ "$?" = 0 ]; then
+			# IRCd is running, bail out silently.
+			exit 0
+		fi
+	fi
+	# PID file not found or found but stale
+	echo "UnrealIRCd is not running. Starting now..."
+	$0 start
 elif [ "$1" = "mkpasswd" ] ; then
 	@BINDIR@/unrealircd -P $2 $3
 elif [ "$1" = "version" ] ; then
@@ -182,5 +193,5 @@ __EOF__
 	echo ""
 	echo "Thanks!"
 else
-	echo "Usage: unrealircd start|stop|rehash|restart|mkpasswd|version|gencloak|upgrade-conf"
+	echo "Usage: unrealircd start|stop|rehash|restart|mkpasswd|version|croncheck|gencloak|upgrade-conf"
 fi
