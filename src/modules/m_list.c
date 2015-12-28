@@ -162,7 +162,7 @@ CMD_FUNC(m_list)
 
 	chantimemax = topictimemax = currenttime + 86400;
 	chantimemin = topictimemin = 0;
-	usermin = 1;		/* Minimum of 1 */
+	usermin = 0;		/* Minimum of 0 */
 	usermax = -1;		/* No maximum */
 
 	for (name = strtoken(&p, parv[1], ","); name && !error;
