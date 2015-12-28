@@ -7592,7 +7592,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
 					    (cnt < 1) || (cnt > 255) || (period < 5))
 					{
-						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+						config_error("%s:%i: set::anti-flood::nick-flood error. Syntax is '<count>:<period>' (eg 5:60), "
 						             "count should be 1-255, period should be greater than 4",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
