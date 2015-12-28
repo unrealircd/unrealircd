@@ -210,7 +210,6 @@ install: all
 	$(INSTALL) -m 0700 -d @CACHEDIR@
 	$(INSTALL) -m 0700 -d @PERMDATADIR@
 	$(INSTALL) -m 0700 -d @LOGDIR@
-	# TODO: ircdcron.. where?
 	-@if [ ! -f "@CONFDIR@/ssl/server.cert.pem" ] ; then \
 		$(INSTALL) -m 0600 server.req.pem @CONFDIR@/ssl ; \
 		$(INSTALL) -m 0600 server.key.pem @CONFDIR@/ssl ; \
@@ -234,6 +233,8 @@ install: all
 	@echo '* Consult the documentation online at:'
 	@echo '  * https://www.unrealircd.org/docs/UnrealIRCd_4_documentation'
 	@echo '  * https://www.unrealircd.org/docs/FAQ'
+	@echo '* You may also wish to install a cron job to ensure UnrealIRCd is always running:'
+	@echo '  * https://www.unrealircd.org/docs/Cron_job'
 	@echo ''
 	-@if [ "@SCRIPTDIR@/bin" = "@BINDIR@" ] ; then \
 		echo 'Again, be sure to change to the @SCRIPTDIR@ directory!' ; \
