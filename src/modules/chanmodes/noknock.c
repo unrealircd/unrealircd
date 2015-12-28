@@ -43,7 +43,7 @@ ModuleHeader MOD_HEADER(noknock)
   = {
 	"chanmodes/noknock",
 	"4.0",
-	"Channel Mode +V",
+	"Channel Mode +K",
 	"3.2-b8-1",
 	NULL 
     };
