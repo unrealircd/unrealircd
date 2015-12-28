@@ -622,7 +622,8 @@ int blacklist_parse_reply(struct hostent *he)
 
 void blacklist_hit(aClient *acptr, Blacklist *bl, int reply)
 {
-	char buf[1024];
+	char buf[512];
+	char *name[4], *value[4];
 
 	if (find_tkline_match(acptr, 0) < 0)
 		return; /* already klined/glined. Don't send the warning from below. */
@@ -636,8 +637,17 @@ void blacklist_hit(aClient *acptr, Blacklist *bl, int reply)
 	
 	sendto_realops("%s", buf);
 	ircd_log(LOG_KILL, "%s", buf);
+
+	name[0] = "ip";
+	value[0] = GetIP(acptr);
+	name[1] = "server";
+	value[1] = me.name;
+	name[2] = NULL;
+	value[2] = NULL;
+
+	buildvarstring(bl->reason, buf, sizeof(buf), name, value);
 	
-	place_host_ban(acptr, bl->action, bl->reason, bl->ban_time);
+	place_host_ban(acptr, bl->action, buf, bl->ban_time);
 }
 
 void blacklist_process_result(aClient *acptr, int status, struct hostent *he)

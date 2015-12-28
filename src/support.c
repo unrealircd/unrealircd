@@ -2332,3 +2332,74 @@ char *sock_strerror(int error)
 	return unkerr;
 }
 #endif
+
+void buildvarstring(char *inbuf, char *outbuf, size_t len, char *name[], char *value[])
+{
+	char *i, *o, *p;
+	int left = len - 1;
+	int cnt, found;
+
+#ifdef DEBUGMODE
+	if (len <= 0)
+		abort();
+#endif
+
+	for (i = inbuf, o = outbuf; *i; i++)
+	{
+		if (*i == '$')
+		{
+			i++;
+
+			/* $$ = literal $ */
+			if (*i == '$')
+				goto literal;
+
+			if (!isalnum(*i))
+			{
+				/* What do we do with things like '$/' ? -- treat literal */
+				i--;
+				goto literal;
+			}
+			
+			/* find termination */
+			for (p=i; isalnum(*p); p++);
+			
+			/* find variable name in list */
+			found = 0;
+			for (cnt = 0; name[cnt]; cnt++)
+				if (!strncasecmp(name[cnt], i, p - i))
+				{
+					/* Found */
+					found = 1;
+
+					if (!BadPtr(value[cnt]))
+					{
+						strlcpy(o, value[cnt], left);
+						left -= strlen(value[cnt]); /* may become <0 */
+						if (left <= 0)
+							return; /* return - don't write \0 to 'o'. ensured by strlcpy already */
+						o += strlen(value[cnt]); /* value entirely written */
+					}
+
+					break; /* done */
+				}
+			
+			if (!found)
+			{
+				/* variable name does not exist -- treat literal */
+				i--;
+				goto literal;
+			}
+
+			/* value written. we're done. */
+			i = p - 1;
+			continue;
+		}
+literal:
+		if (!left)
+			break;
+		*o++ = *i;
+		left--;
+	}
+	*o = '\0';
+}
