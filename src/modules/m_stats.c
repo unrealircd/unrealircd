@@ -626,10 +626,11 @@ static char *stats_port_helper(ConfigItem_listen *listener)
 {
 	static char buf[256];
 
-	ircsnprintf(buf, sizeof(buf), "%s%s%s",
+	ircsnprintf(buf, sizeof(buf), "%s%s%s%s",
 	    (listener->options & LISTENER_CLIENTSONLY)? "clientsonly ": "",
 	    (listener->options & LISTENER_SERVERSONLY)? "serversonly ": "",
-	    (listener->options & LISTENER_SSL)?         "ssl ": "");
+	    (listener->options & LISTENER_SSL)?         "ssl ": "",
+	    !(listener->options & LISTENER_SSL)?        "plaintext ": "");
 	return buf;
 }
 
@@ -641,16 +642,17 @@ int stats_port(aClient *sptr, char *para)
 	for (listener = conf_listen; listener != NULL; listener = (ConfigItem_listen *) listener->next)
 	{
 		if (!(listener->options & LISTENER_BOUND))
-	  		continue;
+			continue;
 		if ((listener->options & LISTENER_SERVERSONLY) && !ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
 			continue;
-	  	sendto_one(sptr, ":%s NOTICE %s :*** Listener on %s:%i, clients %i. is %s %s",
-	  		me.name, sptr->name,
-	  		listener->ip,
-			listener->port,
-			listener->clients,
-			listener->flag.temporary ? "TEMPORARY" : "PERM",
-			stats_port_helper(listener));
+		sendto_one(sptr, ":%s NOTICE %s :*** Listener on %s:%i (%s): has %i client(s), options: %s %s",
+		           me.name, sptr->name,
+		           listener->ip,
+		           listener->port,
+		           listener->ipv6 ? "IPv6" : "IPv4",
+		           listener->clients,
+		           stats_port_helper(listener),
+		           listener->flag.temporary ? "[TEMPORARY]" : "");
 	}
 	return 0;
 }
