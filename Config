@@ -72,6 +72,7 @@ fi
 
 ARG="$ARG--with-bindir=$BINDIR "
 ARG="$ARG--with-datadir=$DATADIR "
+ARG="$ARG--with-pidfile=$DATADIR/unrealircd.pid "
 ARG="$ARG--with-confdir=$CONFDIR "
 ARG="$ARG--with-modulesdir=$MODULESDIR "
 ARG="$ARG--with-logdir=$LOGDIR "
