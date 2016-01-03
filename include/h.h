@@ -756,3 +756,4 @@ extern void convert_to_absolute_path(char **path, char *reldir);
 extern int has_channel_mode(aChannel *chptr, char mode);
 extern void start_listeners(void);
 extern void buildvarstring(char *inbuf, char *outbuf, size_t len, char *name[], char *value[]);
+extern void broadcast_moddata_client(aClient *acptr);

@@ -309,6 +309,17 @@ ModDataInfo *mdi;
 	}
 }
 
+/** Broadcast moddata attached to client 'acptr' to all servers. */
+void broadcast_moddata_client(aClient *acptr)
+{
+	aClient *cptr;
+
+	list_for_each_entry(cptr, &server_list, special_node)
+	{
+		send_moddata_client(cptr, acptr);
+	}
+}
+
 /** Send all moddata attached to channel 'chptr' to remote server 'srv' (if the module wants this), called by SJOIN */
 void send_moddata_channel(aClient *srv, aChannel *chptr)
 {
@@ -400,7 +411,10 @@ int moddata_client_set(aClient *acptr, char *varname, char *value)
 		memset(&moddata_client(acptr, md), 0, sizeof(ModData));
 	}
 
-	if (md->sync)
+	/* If 'sync' field is set and the user is not in pre-registered state then
+	 * broadcast the new setting.
+	 */
+	if (md->sync && IsPerson(acptr))
 	{
 		if (value)
 			sendto_server(NULL, 0, 0, ":%s MD %s %s %s :%s",

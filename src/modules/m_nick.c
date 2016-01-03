@@ -1528,6 +1528,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 	if (MyConnect(sptr))
 	{
+		broadcast_moddata_client(sptr);
 		sendto_connectnotice(sptr, 0, NULL); /* moved down, for modules. */
 
 		/* Send password from sptr->local->passwd to NickServ for identification,
