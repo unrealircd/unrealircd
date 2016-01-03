@@ -295,7 +295,8 @@ ModDataInfo *md;
 /** Send all moddata attached to client 'acptr' to remote server 'srv' (if the module wants this), called by .. */
 void send_moddata_client(aClient *srv, aClient *acptr)
 {
-ModDataInfo *mdi;
+	ModDataInfo *mdi;
+	char *user = CHECKPROTO(srv, PROTO_SID) ? ID(acptr) : acptr->name;
 
 	for (mdi = MDInfo; mdi; mdi = mdi->next)
 	{
@@ -304,7 +305,7 @@ ModDataInfo *mdi;
 			char *value = mdi->serialize(&moddata_client(acptr, mdi));
 			if (value)
 				sendto_one(srv, ":%s MD %s %s %s :%s",
-					me.name, "client", acptr->name, mdi->name, value);
+					me.name, "client", user, mdi->name, value);
 		}
 	}
 }
