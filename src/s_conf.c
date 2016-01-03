@@ -6920,6 +6920,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "mkpasswd-for-everyone")) {
 					tempiConf.mkpasswd_for_everyone = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "secret-ban-reasons")) {
+					tempiConf.secret_ban_reasons = 1;
+				}
 				else if (!strcmp(cepp->ce_varname, "allow-insane-bans")) {
 					tempiConf.allow_insane_bans = 1;
 				}
@@ -7679,6 +7682,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "mkpasswd-for-everyone")) {
 					CheckDuplicate(cepp, options_mkpasswd_for_everyone, "options::mkpasswd-for-everyone");
+				}
+				else if (!strcmp(cepp->ce_varname, "secret-ban-reasons")) {
+					CheckDuplicate(cepp, options_secret_ban_reasons, "options::secret-ban-reasons");
 				}
 				else if (!strcmp(cepp->ce_varname, "allow-insane-bans")) {
 					CheckDuplicate(cepp, options_allow_insane_bans, "options::allow-insane-bans");
