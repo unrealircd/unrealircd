@@ -6,26 +6,7 @@
  * receiving module data over the network.
  */
 
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "channel.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
-#include "h.h"
-#ifdef _WIN32
-#include "version.h"
-#endif
+#include "unrealircd.h"
 
 ModuleHeader MOD_HEADER(m_md)
   = {
