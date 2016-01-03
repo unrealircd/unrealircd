@@ -118,7 +118,7 @@ CMD_FUNC(m_mdex)
 				md->free(&moddata_client(acptr, md));
 				memset(&moddata_client(acptr, md), 0, sizeof(ModData));
 			}
-			send_md_client(md, acptr, &moddata_client(acptr, md));
+			broadcast_md_client(md, acptr, &moddata_client(acptr, md));
 		} else
 		if (!strcmp(type, "channel"))
 		{
@@ -133,7 +133,7 @@ CMD_FUNC(m_mdex)
 				md->free(&moddata_channel(chptr, md));
 				memset(&moddata_channel(chptr, md), 0, sizeof(ModData));
 			}
-			send_md_channel(md, chptr, &moddata_channel(chptr, md));
+			broadcast_md_channel(md, chptr, &moddata_channel(chptr, md));
 		} else
 		if (!strcmp(type, "member"))
 		{
@@ -171,7 +171,7 @@ CMD_FUNC(m_mdex)
 				md->free(&moddata_member(m, md));
 				memset(&moddata_member(m, md), 0, sizeof(ModData));
 			}
-			send_md_member(md, chptr, m, &moddata_member(m, md));
+			broadcast_md_member(md, chptr, m, &moddata_member(m, md));
 		} else
 		if (!strcmp(type, "membership"))
 		{
@@ -209,7 +209,7 @@ CMD_FUNC(m_mdex)
 				md->free(&moddata_membership(m, md));
 				memset(&moddata_membership(m, md), 0, sizeof(ModData));
 			}
-			send_md_membership(md, acptr, m, &moddata_membership(m, md));
+			broadcast_md_membership(md, acptr, m, &moddata_membership(m, md));
 		}
 	} else
 	if (!strcmp(action, "get"))

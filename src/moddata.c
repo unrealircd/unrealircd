@@ -43,7 +43,7 @@
 #define MAX(x,y)   ((x) > (y) ? (x) : (y))
 #endif
 
-ModDataInfo *MDInfo = NULL;
+MODVAR ModDataInfo *MDInfo = NULL;
 
 void moddata_init(void)
 {
@@ -290,105 +290,6 @@ ModDataInfo *md;
 	return NULL;
 }
 
-// TODO: move below to efuncs
-
-/** Send all moddata attached to client 'acptr' to remote server 'srv' (if the module wants this), called by .. */
-void send_moddata_client(aClient *srv, aClient *acptr)
-{
-	ModDataInfo *mdi;
-	char *user = CHECKPROTO(srv, PROTO_SID) ? ID(acptr) : acptr->name;
-
-	for (mdi = MDInfo; mdi; mdi = mdi->next)
-	{
-		if ((mdi->type == MODDATATYPE_CLIENT) && mdi->sync && mdi->serialize)
-		{
-			char *value = mdi->serialize(&moddata_client(acptr, mdi));
-			if (value)
-				sendto_one(srv, ":%s MD %s %s %s :%s",
-					me.name, "client", user, mdi->name, value);
-		}
-	}
-}
-
-/** Broadcast moddata attached to client 'acptr' to all servers. */
-void broadcast_moddata_client(aClient *acptr)
-{
-	aClient *cptr;
-
-	list_for_each_entry(cptr, &server_list, special_node)
-	{
-		send_moddata_client(cptr, acptr);
-	}
-}
-
-/** Send all moddata attached to channel 'chptr' to remote server 'srv' (if the module wants this), called by SJOIN */
-void send_moddata_channel(aClient *srv, aChannel *chptr)
-{
-ModDataInfo *mdi;
-
-	for (mdi = MDInfo; mdi; mdi = mdi->next)
-	{
-		if ((mdi->type == MODDATATYPE_CHANNEL) && mdi->sync && mdi->serialize)
-		{
-			char *value = mdi->serialize(&moddata_channel(chptr, mdi));
-			if (value)
-				sendto_one(srv, ":%s MD %s %s %s :%s",
-					me.name, "channel", chptr->chname, mdi->name, value);
-		}
-	}
-}
-
-/** Send all moddata attached to member & memberships for 'chptr' to remote server 'srv' (if the module wants this), called by SJOIN */
-void send_moddata_members(aClient *srv)
-{
-ModDataInfo *mdi;
-aChannel *chptr;
-aClient *acptr;
-
-	for (chptr = channel; chptr; chptr = chptr->nextch)
-	{
-		Member *m;
-		for (m = chptr->members; m; m = m->next)
-		{
-			if (m->cptr->from == srv)
-				continue; /* from srv's direction */
-			for (mdi = MDInfo; mdi; mdi = mdi->next)
-			{
-				if ((mdi->type == MODDATATYPE_MEMBER) && mdi->sync && mdi->serialize)
-				{
-					char *value = mdi->serialize(&moddata_member(m, mdi));
-					if (value)
-						sendto_one(srv, ":%s MD %s %s:%s %s :%s",
-							me.name, "member", chptr->chname, m->cptr->name, mdi->name, value);
-				}
-			}
-		}
-	}
-	
-	list_for_each_entry(acptr, &client_list, client_node)
-	{
-		Membership *m;
-		if (!IsPerson(acptr) || !acptr->user)
-			continue;
-
-		if (acptr->from == srv)
-			continue; /* from srv's direction */
-
-		for (m = acptr->user->channel; m; m = m->next)
-		{
-			for (mdi = MDInfo; mdi; mdi = mdi->next)
-			{
-				if ((mdi->type == MODDATATYPE_MEMBERSHIP) && mdi->sync && mdi->serialize)
-				{
-					char *value = mdi->serialize(&moddata_membership(m, mdi));
-					if (value)
-						sendto_one(srv, ":%s MD %s %s:%s %s :%s",
-							me.name, "membership", acptr->name, m->chptr->chname, mdi->name, value);
-				}
-			}
-		}
-	}
-}
 
 /** Set ModData for client (via variable name, string value) */
 int moddata_client_set(aClient *acptr, char *varname, char *value)
@@ -416,14 +317,8 @@ int moddata_client_set(aClient *acptr, char *varname, char *value)
 	 * broadcast the new setting.
 	 */
 	if (md->sync && IsPerson(acptr))
-	{
-		if (value)
-			sendto_server(NULL, 0, 0, ":%s MD %s %s %s :%s",
-				me.name, "client", acptr->name, md->name, value); /* set */
-		else
-			sendto_server(NULL, 0, 0, ":%s MD %s %s %s",
-				me.name, "client", acptr->name, md->name); /* unset */
-	}
+		broadcast_md_client_cmd(NULL, &me, acptr, md->name, value);
+
 	return 1;
 }
 
@@ -439,3 +334,7 @@ char *moddata_client_get(aClient *acptr, char *varname)
 
 	return md->serialize(&moddata_client(acptr, md)); /* can be NULL */
 }
+
+/* The rest of the MD related functions, the send/receive functions,
+ * are in src/modules/m_md.c
+ */

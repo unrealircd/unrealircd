@@ -117,12 +117,20 @@ void (*send_protoctl_servers)(aClient *sptr, int response);
 int (*verify_link)(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
 void (*introduce_user)(aClient *to, aClient *acptr);
 void (*send_server_message)(aClient *sptr);
-void (*send_md_client)(ModDataInfo *mdi, aClient *acptr, ModData *md);
-void (*send_md_channel)(ModDataInfo *mdi, aChannel *chptr, ModData *md);
-void (*send_md_member)(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md);
-void (*send_md_membership)(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md);
+void (*broadcast_md_client)(ModDataInfo *mdi, aClient *acptr, ModData *md);
+void (*broadcast_md_channel)(ModDataInfo *mdi, aChannel *chptr, ModData *md);
+void (*broadcast_md_member)(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md);
+void (*broadcast_md_membership)(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md);
 int (*check_banned)(aClient *cptr);
 int (*check_deny_version)(aClient *cptr, char *version_string, int protocol, char *flags);
+void (*broadcast_md_client_cmd)(aClient *except, aClient *sender, aClient *acptr, char *varname, char *value);
+void (*broadcast_md_channel_cmd)(aClient *except, aClient *sender, aChannel *chptr, char *varname, char *value);
+void (*broadcast_md_member_cmd)(aClient *except, aClient *sender, aChannel *chptr, aClient *acptr, char *varname, char *value);
+void (*broadcast_md_membership_cmd)(aClient *except, aClient *sender, aClient *acptr, aChannel *chptr, char *varname, char *value);
+void (*send_moddata_client)(aClient *srv, aClient *acptr);
+void (*send_moddata_channel)(aClient *srv, aChannel *chptr);
+void (*send_moddata_members)(aClient *srv);
+void (*broadcast_moddata_client)(aClient *acptr);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -163,14 +171,22 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 35 */	{"send_protoctl_servers", (void *)&send_protoctl_servers},
 /* 36 */	{"verify_link", (void *)&verify_link},
 /* 37 */	{"send_server_message", (void *)&send_server_message},
-/* 38 */	{"send_md_client", (void *)&send_md_client},
-/* 39 */	{"send_md_channel", (void *)&send_md_channel},
-/* 40 */	{"send_md_member", (void *)&send_md_member}, 
-/* 41 */	{"send_md_membership", (void *)&send_md_membership},
+/* 38 */	{"broadcast_md_client", (void *)&broadcast_md_client},
+/* 39 */	{"broadcast_md_channel", (void *)&broadcast_md_channel},
+/* 40 */	{"broadcast_md_member", (void *)&broadcast_md_member}, 
+/* 41 */	{"broadcast_md_membership", (void *)&broadcast_md_membership},
 /* 42 */	{"check_banned", (void *)&check_banned},
 /* 43 */	{"introduce_user", (void *)&introduce_user},
 /* 44 */	{"check_deny_version", (void *)&check_deny_version},
-/* 45 */	{NULL, NULL}
+/* 45 */	{"broadcast_md_client_cmd", (void *)&broadcast_md_client_cmd},
+/* 46 */	{"broadcast_md_channel_cmd", (void *)&broadcast_md_channel_cmd},
+/* 47 */	{"broadcast_md_member_cmd", (void *)&broadcast_md_member_cmd},
+/* 48 */	{"broadcast_md_membership_cmd", (void *)&broadcast_md_membership_cmd},
+/* 49 */	{"send_moddata_client", (void *)&send_moddata_client},
+/* 50 */	{"send_moddata_channel", (void *)&send_moddata_channel},
+/* 51 */	{"send_moddata_members", (void *)&send_moddata_members},
+/* 52 */	{"broadcast_moddata_client", (void *)&broadcast_moddata_client},
+/* 53 */	{NULL, NULL}
 };
 
 #ifdef UNDERSCORE
