@@ -1,4 +1,4 @@
-UnrealIRCd 4.0.0 Release Notes
+UnrealIRCd 4.0.1 Release Notes
 ===============================
 
 UnrealIRCd 4 is here!
@@ -28,7 +28,7 @@ If you are upgrading from 3.2.x then there are three important things to know:
 1) NEW FILE LOCATIONS
 In UnrealIRCd 4 the location of the configuration files and other files have
 been changed. On *NIX the directory where you compile the IRCd from
-(previously 'Unreal3.2.X', now 'unrealircd-4.0.0') is no longer the same as
+(previously 'Unreal3.2.X', now 'unrealircd-4.0.X') is no longer the same as
 the directory where the IRCd will be running from.
 By default the IRCd is installed to /home/yourusername/unrealircd on *NIX
 On Windows UnrealIRCd will install to C:\Program Files (x86\UnrealIRCd 4
@@ -58,7 +58,7 @@ You can run a mixed 3.2.x <-> 4.x network if you a follow a few simple rules:
 https://www.unrealircd.org/docs/Running_a_mixed_UnrealIRCd_3.2_and_UnrealIRCd_4_network
 
 ==[ END OF THE 3.2.X SERIES ]==
-With the release of UnrealIRCd 4.0.0 we are deprecating the previous series.
+With the release of UnrealIRCd 4 we are deprecating the previous series.
 All support for the 3.2.x series will stop after December 31, 2016.
 See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated
 
@@ -70,12 +70,28 @@ For support you have two choices:
 * Forums: https://forums.unrealircd.org/
 * IRC: irc.unrealircd.org / #unreal-support
 
-==[ LIST OF CHANGES ]==
-* Below you will see a summary of all changes. Changes may be tagged when
-  a change was made in a specific version, e.g. "[A3]" means alpha3
-  and "[B1]" means beta1.
-  For a complete list of changes (1100+) use 'git log' or have a look at:
-  https://github.com/unrealircd/unrealircd/commits/unreal34
+==[ CHANGES BETWEEN 4.0.0 AND 4.0.1 ]==
+The 4.0.1 release comes with the following minor improvements:
+* The blacklist module now supports %ip (=banned IP) in blacklist::reason.
+* *NIX: You can use cron again, see https://www.unrealircd.org/docs/Cron_job
+* /MODULE now lists only 3rd party modules by default so you don't get flooded.
+
+Major issue fixed:
+* MODEs set by a server (not by a user) were not always propagated
+  correctly accross the network. In practice this only affected /SAMODE
+  and possibly some services that don't send MODEs from ChanServ/BotServ.
+
+Minor issues fixed:
+* When doing /LIST under mIRC it would hide empty +P channels.
+* Servers wouldn't link if link::outgoing::hostname was a CNAME.
+* SSL Certificate fingerprint not communicated properly to servers/services.
+* *NIX: ./unrealircd [stop|rehash] failed if not installed to ~/unrealircd.
+* Windows: IRCd could crash after showing the config error screen on startup.
+
+==[ CHANGES BETWEEN 3.2.X AND 4.X ]==
+Below is a summary of the changes between UnrealIRCd 3.2.x and UnrealIRCd 4.
+For a complete list of all 1100+ changes you can use 'git log' or have a
+look at: https://github.com/unrealircd/unrealircd/commits/unreal40
 
 ==[ NEW ]==
 * We moved a lot of functionality, including most channel modes, user
@@ -257,69 +273,6 @@ For support you have two choices:
   for a list of changes between the 3.2 and 4.0 server protocol.
 * GCC typechecking has been added to make sure your HookAdd... calls
   are adding hook functions with the correct parameter (types).
-
-==[ MAJOR BUGS FIXED ]==
-* Crash bug on-boot in alpha1 [A2]
-* IRCOp commands such as /GLINE were not always working [A2]
-* link::outgoing::options::autoconnect did not work [A4]
-* If the IRCd could not bind to any ports it started anyway [A4]
-* alpha3 did not compile on x86 (32 bit) systems [A4]
-* Multiple major crash bugs in earlier alpha/beta versions caused
-  by OOB read, OOB write, read-after-free, etc. [B2]
-* Spamfilter 'u' not working, likely since alpha1 [B2]
-* Secure server linking with sslclientcertfp was broken since alpha3,
-  making our secure server linking tutorial on the wiki unusable. [B2]
-* Windows version: if all clients on the server were completely idle
-  then internal timers and such wouldn't be called correctly. [B2]
-* Crash if SASL is enabled (and in use) [B3]
-* Crash on outgoing server link attempt. [B4]
-* Crash on boot with bind/listen errors. [B4]
-* Compile problems on OpenBSD. [B4]
-* Possible freeze when SSL client is connecting. [B4]
-* Remote includes were broken. [B4]
-* GLINE/KLINE/.. refused perfectly good bans. [B4]
-* OS X and *BSD: serious problems with the I/O engine [RC2]
-* Crash with invite-notify, now removed [RC2, RC3]
-* Odd behavior and possible crash in /WHOIS [RC3]
-* Crash on linking attempt [RC4]
-* Crash on boot if mode +f was present in set::modes-on-join [RC4]
-* Crash on windows when connecting [RC5]
-* Added workaround for "Cannot accept connections" flood [RC5]
-* User could get an empty hostname [RC6]
-
-==[ MINOR BUGS FIXED ]==
-* Errors in example configuration files [A2]
-* Some fixes in delayjoin (Channel mode +d) [A2]
-* Deal with services who allow you to log in by account name [A3]
-* Detect "IRCd not running" situations better [A4]
-* './unrealircd restart' will now always try to start UnrealIRCd,
-  so also if it wasn't running previously. [A4]
-* alpha4's upgrade-conf could get confused by set::host block [B1]
-* ExtBan ~a (account) did not work with +I [B1]
-* On Windows we didn't create the data/ directory resulting in a
-  "Unable to write tunefile" error in alpha4. [B1]
-* A number of minor (<1K total) memory leaks on /REHASH. [B1]
-* The new 3rd party modules compile and install script introduced in
-  beta1 was not working correctly. [B2]
-* Invalid output on './unrealircd mkpasswd <hashmethod>'
-* Explicit auth-type like password "...." { md5; }; was broken. [RC1]
-* Annoying warnings from blacklist module if user was already KLINEd. [RC1]
-* IPv6 compile problem on some OS's (rare?) [RC2]
-* Channel mode +P not working properly [RC2]
-* /NOTICE $* not working [RC2]
-* Unable to rehash if using Remote includes & adding a listener block [RC2]
-* 'quarantine' didn't work in link::options [RC3]
-* In the tld { } block the motd was not read from the correct location [RC3]
-* set::allowed-nickchars 'latin1' was broken [RC3]
-* /MAP was hiding ulines and showing flat-map even for IRCOps [RC3]
-* Channels with channel mode +P were not always synched correctly [RC4]
-* OperOverride did not work (INVITE+JOIN) [RC5]
-* LIST never ended if listing more than 50-100 channels [RC5]
-* IRCOps did not see JOIN error messages [RC5]
-* SAJOIN ignored set::level-on-join [RC5]
-* CAP REQ did not work with multiple arguments [RC6]
-* The 'unrealircd' script was always installed to ~/unrealircd [RC6]
-* Some small memory leaks [RC6]
 
 ==[ REMOVED / DROPPED ]==
 * Numeric server IDs, see above. [A1]
