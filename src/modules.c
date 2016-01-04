@@ -976,19 +976,38 @@ int	Module_Depend_Resolve(Module *p, char *path)
  */
 int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	Module          *mi;
+	Module *mi;
 	int i;
 	char tmp[1024], *p;
 	aCommand *mptr;
+	int all = 0;
 #ifdef DEBUGMODE
 	Efunction *e;
 #endif
 
-	if ((parc > 1) && (hunt_server(cptr, sptr, ":%s MODULES :%s", 1, parc, parv) != HUNTED_ISME))
+	if ((parc > 1) && !strcmp(parv[1], "-all"))
+		all = 1;
+
+	if (MyClient(sptr) && !IsOper(sptr) && all)
+		sptr->local->since += 7; /* Lag them up. Big list. */
+
+	if ((parc > 2) && (hunt_server(cptr, sptr, ":%s MODULE %s :%s", 2, parc, parv) != HUNTED_ISME))
 		return 0;
-	
+
+	if ((parc == 2) && (parv[1][0] != '-') && (hunt_server(cptr, sptr, ":%s MODULE :%s", 1, parc, parv) != HUNTED_ISME))
+		return 0;
+
+	if (all)
+		sendnotice(sptr, "Showing ALL loaded modules:");
+	else
+		sendnotice(sptr, "Showing loaded 3rd party modules (use \"MODULE -all\" to show all modules):");
+
 	for (mi = Modules; mi; mi = mi->next)
 	{
+		/* Skip official modules unless "MODULE -all" */
+		if (!all && (mi->options & MOD_OPT_OFFICIAL))
+			continue;
+
 		tmp[0] = '\0';
 		if (mi->flags & MODFLAG_DELAYED)
 			strncat(tmp, "[Unloading] ", sizeof(tmp)-strlen(tmp)-1);
@@ -1006,6 +1025,8 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s) %s", me.name, sptr->name,
 				mi->header->name, mi->header->version, mi->header->description, tmp);
 	}
+
+	sendnotice(sptr, "End of module list");
 
 	if (!ValidatePermissionsForPath("server:module",sptr,NULL,NULL,NULL))
 		return 0;
