@@ -4785,6 +4785,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	Hook *h;
 	char has_ip = 0, has_hostname = 0, has_maxperip = 0, has_password = 0, has_class = 0;
 	char has_redirectserver = 0, has_redirectport = 0, has_options = 0;
+	int hostname_possible_silliness = 0;
 
 	if (ce->ce_vardata)
 	{
@@ -4897,6 +4898,8 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_hostname = 1;
+			if (!strcmp(cep->ce_vardata, "*@*") || !strcmp(cep->ce_vardata, "*"))
+				hostname_possible_silliness = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "password"))
 		{
@@ -4989,6 +4992,13 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		config_warn("%s:%d: allow block has both allow::ip and allow::hostname which is no longer permitted.",
 		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		need_34_upgrade = 1;
+	} else
+	if (hostname_possible_silliness)
+	{
+		config_warn("%s:%d: allow block contains 'hostname *;'. This means means that users "
+		            "without a valid hostname (unresolved IP's) will be unable to connect. "
+		            "You most likely want to use 'ip *;' instead.",
+		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 	}
 
 	if (!has_class)
