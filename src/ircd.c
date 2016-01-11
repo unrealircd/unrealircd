@@ -202,6 +202,7 @@ VOIDSIG s_die()
 	}
 #else
 	unload_all_modules();
+	unlink(conf_files ? conf_files->pid_file : IRCD_PIDFILE);
 	exit(-1);
 #endif
 }
