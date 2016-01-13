@@ -2534,7 +2534,7 @@ _ACEOF
 
 
 # Minor version number (e.g.: Z in X.Y.Z)
-UNREAL_VERSION_MINOR="0"
+UNREAL_VERSION_MINOR="1"
 
 cat >>confdefs.h <<_ACEOF
 #define UNREAL_VERSION_MINOR $UNREAL_VERSION_MINOR
