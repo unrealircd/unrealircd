@@ -8108,7 +8108,8 @@ void start_listeners(void)
 
 	for (listenptr = conf_listen; listenptr; listenptr = (ConfigItem_listen *) listenptr->next)
 	{
-		if (!(listenptr->options & LISTENER_BOUND))
+		/* Try to bind to any ports that are not yet bound and not marked as temporary */
+		if (!(listenptr->options & LISTENER_BOUND) && !listenptr->flag.temporary)
 		{
 			if (add_listener2(listenptr) == -1)
 			{

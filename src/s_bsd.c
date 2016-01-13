@@ -450,12 +450,20 @@ int add_listener2(ConfigItem_listen *conf)
 /*
  * close_listeners
  *
- * Close and free all clients which are marked as having their socket open
- * and in a state where they can accept connections.
+ * Close the listener. Note that this won't *free* the listen block, it
+ * just makes it so no new clients are accepted (and marks the listener
+ * as "not bound").
  */
 void close_listener(ConfigItem_listen *listener)
 {
-	fd_close(listener->fd);
+	if (listener->fd >= 0)
+	{
+		ircd_log(LOG_ERROR, "IRCd no longer listening on %s:%d (%s)%s",
+			listener->ip, listener->port,
+			listener->ipv6 ? "IPv6" : "IPv4",
+			listener->options & LISTENER_SSL ? " (SSL)" : "");
+		fd_close(listener->fd);
+	}
 
 	listener->options &= ~LISTENER_BOUND;
 	listener->fd = -1;
@@ -466,14 +474,12 @@ void close_listeners(void)
 	aClient *cptr;
 	ConfigItem_listen *aconf, *aconf_next;
 
-	/*
-	 * close all 'extra' listening ports we have
-	 */
+	/* close all 'extra' listening ports we have */
 	for (aconf = conf_listen; aconf != NULL; aconf = aconf_next)
 	{
 		aconf_next = (ConfigItem_listen *) aconf->next;
 
-		if (aconf->flag.temporary && (aconf->clients == 0))
+		if (aconf->flag.temporary)
 			close_listener(aconf);
 	}
 }
