@@ -75,6 +75,7 @@ The 4.0.1 release comes with the following minor improvements:
 * The blacklist module now supports %ip (=banned IP) in blacklist::reason.
 * *NIX: You can use cron again, see https://www.unrealircd.org/docs/Cron_job
 * /MODULE now lists only 3rd party modules by default so you don't get flooded.
+* *NIX: Added './unrealircd reloadtls' to reload TLS certificate and keys.
 
 Major issue fixed:
 * Crash if you removed a listen { } block with active clients on that port
