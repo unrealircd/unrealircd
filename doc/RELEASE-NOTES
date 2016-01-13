@@ -77,6 +77,7 @@ The 4.0.1 release comes with the following minor improvements:
 * /MODULE now lists only 3rd party modules by default so you don't get flooded.
 
 Major issue fixed:
+* Crash if you removed a listen { } block with active clients on that port
 * MODEs set by a server (not by a user) were not always propagated
   correctly accross the network. In practice this only affected /SAMODE
   and possibly some services that don't send MODEs from ChanServ/BotServ.
