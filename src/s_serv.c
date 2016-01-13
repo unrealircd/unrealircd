@@ -73,7 +73,6 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 
 extern aMotdLine *Find_file(char *, short);
 
-extern void reinit_ssl(aClient *);
 void reread_motdsandrules();
 
 

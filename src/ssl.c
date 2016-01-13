@@ -378,7 +378,9 @@ void reinit_ssl(aClient *acptr)
 {
 SSL_CTX *tmp;
 
-	if (IsPerson(acptr))
+	if (!acptr)
+		mylog("Reloading all SSL related data (./unrealircd reloadtls)");
+	else if (IsPerson(acptr))
 		mylog("%s (%s@%s) requested a reload of all SSL related data (/rehash -ssl)",
 			acptr->name, acptr->user->username, acptr->user->realhost);
 	else

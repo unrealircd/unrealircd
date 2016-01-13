@@ -146,7 +146,7 @@ int  debuglevel = 0;		/* Server debug level */
 int  bootopt = 0;		/* Server boot option flags */
 char *debugmode = "";		/*  -"-    -"-   -"-  */
 char *sbrk0;			/* initial sbrk(0) */
-static int dorehash = 0, dorestart = 0;
+static int dorehash = 0, dorestart = 0, doreloadcert = 0;
 MODVAR int  booted = FALSE;
 MODVAR TS   lastlucheck = 0;
 
@@ -229,6 +229,25 @@ VOIDSIG s_rehash()
 # endif
 #endif
 }
+
+#ifndef _WIN32
+static VOIDSIG s_reloadcert()
+{
+#ifdef	POSIX_SIGNALS
+	struct sigaction act;
+#endif
+	doreloadcert = 1;
+#ifdef	POSIX_SIGNALS
+	act.sa_handler = s_reloadcert;
+	act.sa_flags = 0;
+	(void)sigemptyset(&act.sa_mask);
+	(void)sigaddset(&act.sa_mask, SIGUSR1);
+	(void)sigaction(SIGUSR1, &act, NULL);
+#else
+	(void)signal(SIGUSR1, s_reloadcert);	/* sysV -argv */
+#endif
+}
+#endif
 
 void restart(char *mesg)
 {
@@ -1664,6 +1683,11 @@ void SocketLoop(void *dummy)
 		{
 			server_reboot("SIGINT");
 		}
+		if (doreloadcert)
+		{
+			reinit_ssl(NULL);
+			doreloadcert = 0;
+		}
 	}
 }
 
@@ -1747,6 +1771,10 @@ static void setup_signals()
 	act.sa_handler = s_die;
 	(void)sigaddset(&act.sa_mask, SIGTERM);
 	(void)sigaction(SIGTERM, &act, NULL);
+	act.sa_handler = s_reloadcert;
+	(void)sigemptyset(&act.sa_mask);
+	(void)sigaddset(&act.sa_mask, SIGUSR1);
+	(void)sigaction(SIGUSR1, &act, NULL);
 #else
 # ifndef	HAVE_RELIABLE_SIGNALS
 	(void)signal(SIGPIPE, dummy);
@@ -1763,6 +1791,7 @@ static void setup_signals()
 	(void)signal(SIGHUP, s_rehash);
 	(void)signal(SIGTERM, s_die);
 	(void)signal(SIGINT, s_restart);
+	(void)signal(SIGUSR1, s_reloadcert);
 #endif
 #ifdef RESTARTING_SYSTEMCALLS
 	/*
