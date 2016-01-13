@@ -415,6 +415,14 @@ CMD_FUNC(m_uid)
 		   ** A new NICK being introduced by a neighbouring
 		   ** server (e.g. message type "NICK new" received)
 		 */
+
+		if (MyConnect(acptr) && IsUnknown(acptr))
+		{
+			acptr->flags |= FLAGS_KILLED;
+			exit_client(NULL, acptr, &me, "Overridden");
+			goto nickkill2done;
+		}
+
 		if (parc > 3)
 		{
 			lastnick = atol(parv[3]);
