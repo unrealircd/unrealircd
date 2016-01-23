@@ -32,6 +32,7 @@ if [ -z "$BINDIR" -o -z "$DATADIR" -o -z "$CONFDIR" -o -z "$MODULESDIR" -o -z "$
 	exit
 fi
 
+
 mkdir -p $TMPDIR
 
 # Do this even if we're not in advanced mode
@@ -542,10 +543,23 @@ while [ -z "$TEST" ] ; do
 
 done
 
-TEST="$SSLDIR"
+
+
+
 echo ""
-echo "If you know the path to OpenSSL on your system, enter it here. If not"
-echo "leave this blank (in most cases it will be detected automatically)."
+if [ -z "$SSLDIR" ] && [ "$(uname)" == "Darwin" ]; then
+	echo "Looks like you're on a Mac - El Capitan and higher require"
+        echo "a 3rd party OpenSSL installation. We recommend using homebrew"
+        echo "to install OpenSSL, but you may install it any other way as well."
+        echo "We are selecting the default homebrew OpenSSL path - but you can"
+        echo "change it to another path if you have installed OpenSSL another way"
+	SSLDIR="/usr/local/opt/openssl/"
+else
+	echo "If you know the path to OpenSSL on your system, enter it here. If not"
+	echo "leave this blank (in most cases it will be detected automatically)."
+fi
+
+TEST="$SSLDIR"
 echo $n "[$TEST] -> $c"
     read cc
 if [ -z "$cc" ] ; then
