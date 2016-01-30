@@ -6082,7 +6082,9 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 		return 1;
 	}
 
-	convert_to_absolute_path(&ce->ce_vardata, LOGDIR);
+	/* Convert to absolute path (if needed) unless it's "syslog" */
+	if (strcmp(ce->ce_vardata, "syslog"))
+		convert_to_absolute_path(&ce->ce_vardata, LOGDIR);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
