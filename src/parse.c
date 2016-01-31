@@ -97,7 +97,7 @@ aClient inline *find_server(char *name, aClient *cptr)
 	{
 		aClient *acptr;
 
-		if ((acptr = find_client(name, NULL)) != NULL && IsServer(acptr))
+		if ((acptr = find_client(name, NULL)) != NULL && (IsServer(acptr) || IsMe(acptr)))
 			return acptr;
 	}
 

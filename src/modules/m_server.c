@@ -336,6 +336,15 @@ skip_host_check:
 	if ((acptr = find_server(servername, NULL)))
 	{
 		/* Found. Bad. Quit. */
+
+		if (IsMe(acptr))
+		{
+			sendto_realops("Link %s rejected, server trying to link with my name (%s)",
+				get_client_name(sptr, TRUE), me.name);
+			sendto_one(sptr, "ERROR: Server %s exists (it's me!)", me.name);
+			return exit_client(sptr, sptr, sptr, "Server Exists");
+		}
+
 		acptr = acptr->from;
 		ocptr =
 		    (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
@@ -550,6 +559,15 @@ CMD_FUNC(m_server_remote)
 	if ((acptr = find_server(servername, NULL)))
 	{
 		/* Found. Bad. Quit. */
+
+		if (IsMe(acptr))
+		{
+			sendto_realops("Link %s rejected, server trying to link with my name (%s)",
+				get_client_name(sptr, TRUE), me.name);
+			sendto_one(sptr, "ERROR: Server %s exists (it's me!)", me.name);
+			return exit_client(sptr, sptr, sptr, "Server Exists");
+		}
+
 		acptr = acptr->from;
 		ocptr =
 		    (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
