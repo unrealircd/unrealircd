@@ -559,10 +559,10 @@ static void exit_one_client(aClient *sptr, const char *comment)
 		 */
 		if (!MyConnect(sptr))
 			unrealdns_delreq_bycptr(sptr);
-		
-		/* Free module related data for this client */
-		moddata_free_client(sptr);
 	}
+
+	/* Free module related data for this client */
+	moddata_free_client(sptr);
 
 	/* Remove sptr from the client list */
 	if (*sptr->id)
