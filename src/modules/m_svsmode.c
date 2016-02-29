@@ -561,7 +561,7 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 		char buf[BUFSIZE];
 		send_umode(NULL, acptr, setflags, ALL_UMODES, buf);
 		if (MyClient(acptr) && buf[0] && buf[1])
-			sendto_one(acptr, ":%s MODE %s :%s", sptr->name, parv[1], buf);
+			sendto_one(acptr, ":%s MODE %s :%s", sptr->name, acptr->name, buf);
 	}
 
 	VERIFY_OPERCOUNT(acptr, "svsmodeX");
