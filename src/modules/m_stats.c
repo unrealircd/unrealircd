@@ -1257,6 +1257,8 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, DONT_RESOLVE);
 	sendto_one(sptr, ":%s %i %s :options::mkpasswd-for-everyone: %d", me.name, RPL_TEXT,
 	    sptr->name, MKPASSWD_FOR_EVERYONE);
+	sendto_one(sptr, ":%s %i %s :options::secret-ban-reasons: %d", me.name, RPL_TEXT,
+	    sptr->name, SECRET_BAN_REASONS);
 	sendto_one(sptr, ":%s %i %s :options::allow-insane-bans: %d", me.name, RPL_TEXT,
 	    sptr->name, ALLOW_INSANE_BANS);
 	sendto_one(sptr, ":%s %i %s :options::allow-part-if-shunned: %d", me.name, RPL_TEXT,

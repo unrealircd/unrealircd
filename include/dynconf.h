@@ -64,6 +64,7 @@ struct zConfiguration {
 	unsigned dont_resolve:1;
 	unsigned use_ban_version:1;
 	unsigned mkpasswd_for_everyone:1;
+	unsigned secret_ban_reasons;
 	unsigned allow_insane_bans;
 	unsigned allow_part_if_shunned:1;
 	unsigned disable_cap:1;
@@ -217,6 +218,7 @@ extern MODVAR int ipv6_disabled;
 #define IDENT_READ_TIMEOUT		iConf.ident_read_timeout
 
 #define MKPASSWD_FOR_EVERYONE	iConf.mkpasswd_for_everyone
+#define SECRET_BAN_REASONS		iConf.secret_ban_reasons
 #define ALLOW_INSANE_BANS		iConf.allow_insane_bans
 #define CHANCMDPFX iConf.channel_command_prefix
 
