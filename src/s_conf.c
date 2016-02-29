@@ -6840,6 +6840,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "hiddenhost-prefix")) {
 			safestrdup(tempiConf.network.x_hidden_host, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "hide-ban-reason")) {
+			tempiConf.hide_ban_reason = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
 		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
 			if (*cep->ce_vardata == '0')
 			{
@@ -7432,6 +7435,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, prefix_quit, "prefix-quit");
+		}
+		else if (!strcmp(cep->ce_varname, "hide-ban-reason")) {
+			CheckDuplicate(cep, hide_ban_reason, "hide-ban-reason");
 		}
 		else if (!strcmp(cep->ce_varname, "restrict-usermodes"))
 		{

@@ -64,6 +64,7 @@ struct zConfiguration {
 	unsigned dont_resolve:1;
 	unsigned use_ban_version:1;
 	unsigned mkpasswd_for_everyone:1;
+	unsigned hide_ban_reason;
 	unsigned allow_insane_bans;
 	unsigned allow_part_if_shunned:1;
 	unsigned disable_cap:1;
@@ -217,6 +218,7 @@ extern MODVAR int ipv6_disabled;
 #define IDENT_READ_TIMEOUT		iConf.ident_read_timeout
 
 #define MKPASSWD_FOR_EVERYONE	iConf.mkpasswd_for_everyone
+#define HIDE_BAN_REASON		iConf.hide_ban_reason
 #define ALLOW_INSANE_BANS		iConf.allow_insane_bans
 #define CHANCMDPFX iConf.channel_command_prefix
 
@@ -354,6 +356,7 @@ struct SetCheck {
 	unsigned has_options_disable_ipv6:1;
 	unsigned has_ping_cookie:1;
 	unsigned has_nicklen:1;
+	unsigned has_hide_ban_reason:1;
 };
 
 

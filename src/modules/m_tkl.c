@@ -1198,9 +1198,16 @@ int  _find_tkline_match(aClient *cptr, int xx)
 				           me.name, cptr->name,
 				           (lp->expire_at ? "banned" : "permanently banned"),
 				           ircnetwork, lp->reason);
-			ircsnprintf(msge, sizeof(msge), "User has been %s from %s (%s)",
-			            (lp->expire_at ? "banned" : "permanently banned"),
-			            ircnetwork, lp->reason);
+
+			if (HIDE_BAN_REASON && IsRegistered(cptr))
+				ircsnprintf(msge, sizeof(msge), "User has been %s from %s",
+							(lp->expire_at ? "banned" : "permanently banned"),
+							ircnetwork);
+			else
+				ircsnprintf(msge, sizeof(msge), "User has been %s from %s (%s)",
+							(lp->expire_at ? "banned" : "permanently banned"),
+							ircnetwork, lp->reason);
+
 			return exit_client(cptr, cptr, &me, msge);
 		}
 		else
@@ -1210,17 +1217,25 @@ int  _find_tkline_match(aClient *cptr, int xx)
 			           me.name, cptr->name,
 			           (lp->expire_at ? "banned" : "permanently banned"),
 			           me.name, lp->reason, KLINE_ADDRESS);
-			ircsnprintf(msge, sizeof(msge), "User is %s (%s)",
-			           (lp->expire_at ? "banned" : "permanently banned"),
-			           lp->reason);
-			return exit_client(cptr, cptr, &me, msge);
 
+			if (HIDE_BAN_REASON && IsRegistered(cptr))
+				ircsnprintf(msge, sizeof(msge), "User is %s",
+						   (lp->expire_at ? "banned" : "permanently banned"));
+			else
+				ircsnprintf(msge, sizeof(msge), "User is %s (%s)",
+						   (lp->expire_at ? "banned" : "permanently banned"),
+						   lp->reason);
+
+			return exit_client(cptr, cptr, &me, msge);
 		}
 	}
 	if (lp->type & TKL_ZAP)
 	{
 		ircstp->is_ref++;
-		ircsnprintf(msge, sizeof(msge), "Z:lined (%s)",lp->reason);
+		if (HIDE_BAN_REASON && IsRegistered(cptr))
+			strlcpy(msge, sizeof(msge), "Z:lined");
+		else
+			ircsnprintf(msge, sizeof(msge), "Z:lined (%s)",lp->reason);
 		return exit_client(cptr, cptr, &me, msge);
 	}
 

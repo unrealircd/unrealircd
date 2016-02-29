@@ -1227,6 +1227,8 @@ int stats_set(aClient *sptr, char *para)
 	if (uhallow)
 		sendto_one(sptr, ":%s %i %s :allow-userhost-change: %s", me.name, RPL_TEXT,
 			sptr->name, uhallow);
+	sendto_one(sptr, ":%s %i %s :hide-ban-reason: %d", me.name, RPL_TEXT,
+	    sptr->name, HIDE_BAN_REASON);
 	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT, 
 		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
 	sendto_one(sptr, ":%s %i %s :channel-command-prefix: %s", me.name, RPL_TEXT, sptr->name, CHANCMDPFX ? CHANCMDPFX : "`");
