@@ -1525,7 +1525,17 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sptr->user->virthost = strdup(virthost);
 		}
 		if (ip && (*ip != '*'))
-			sptr->ip = strdup(decode_ip(ip));
+		{
+			char *ipstring = decode_ip(ip);
+			if (!ipstring)
+			{
+				sendto_ops("USER with invalid IP (%s) (%s) -- "
+				           "IP must be base64 encoded binary representation of either IPv4 or IPv6",
+				           sptr->name, ip);
+				return exit_client(sptr, sptr, &me, "USER with invalid IP");
+			}
+			sptr->ip = strdup(ipstring);
+		}
 	}
 
 	hash_check_watch(sptr, RPL_LOGON);	/* Uglier hack */
