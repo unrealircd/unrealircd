@@ -70,6 +70,19 @@ For support you have two choices:
 * Forums: https://forums.unrealircd.org/
 * IRC: irc.unrealircd.org / #unreal-support
 
+==[ CHANGES BETWEEN 4.0.1 AND 4.0.2 ]==
+The 4.0.2 release comes with the following new features:
+* Ability to hide quit messages from *LINEd users (set::hide-ban-reason)
+
+Major issues fixed:
+* None
+
+Minor issues fixed:
+* Logging to syslog was broken
+* OS X: Update ./Config to use Homebrew OpenSSL by default
+* Allow shunned users to ping the server
+* Don't show UID to client in case of a SVSMODE
+
 ==[ CHANGES BETWEEN 4.0.0 AND 4.0.1 ]==
 The 4.0.1 release comes with the following minor improvements:
 * The blacklist module now supports %ip (=banned IP) in blacklist::reason.
