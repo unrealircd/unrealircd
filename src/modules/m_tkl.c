@@ -1233,7 +1233,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 	{
 		ircstp->is_ref++;
 		if (HIDE_BAN_REASON && IsRegistered(cptr))
-			strlcpy(msge, sizeof(msge), "Z:lined");
+			strlcpy(msge, "Z:lined", sizeof(msge));
 		else
 			ircsnprintf(msge, sizeof(msge), "Z:lined (%s)",lp->reason);
 		return exit_client(cptr, cptr, &me, msge);
