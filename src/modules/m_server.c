@@ -204,8 +204,8 @@ void _send_server_message(aClient *sptr)
 
 	if (1) /* SupportVL(sptr)) -- always send like 3.2.x for now. */
 	{
-		sendto_one(sptr, "SERVER %s 1 :U%d-%s %s",
-			me.name, UnrealProtocol, serveropts, me.info);
+		sendto_one(sptr, "SERVER %s 1 :U%d-%s%s-%s %s",
+			me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.id, me.info);
 	} else {
 		sendto_one(sptr, "SERVER %s 1 :%s",
 			me.name, me.info);
@@ -467,40 +467,41 @@ CMD_FUNC(m_server)
 			
 		/* OK, let us check in the data now now */
 		hop = atol(parv[2]);
-		strlcpy(info, parv[parc - 1], REALLEN + 61);
+		strlcpy(info, parv[parc - 1], sizeof(info));
 		strlcpy(cptr->name, servername, sizeof(cptr->name));
 		cptr->hopcount = hop;
 		/* Add ban server stuff */
 		if (SupportVL(cptr))
 		{
+			char tmp[REALLEN + 61];
+			inf = protocol = flags = num = NULL;
+			strlcpy(tmp, info, sizeof(tmp)); /* work on a copy */
+
 			/* we also have a fail safe incase they say they are sending
 			 * VL stuff and don't -- codemastr
 			 */
-			inf = NULL;
-			protocol = NULL;
-			flags = NULL;
-			num = NULL;
-			protocol = (char *)strtok((char *)info, "-");
+
+			protocol = strtok(tmp, "-");
 			if (protocol)
-				flags = (char *)strtok((char *)NULL, "-");
+				flags = strtok(NULL, "-");
 			if (flags)
-				num = (char *)strtok((char *)NULL, " ");
+				num = strtok(NULL, " ");
 			if (num)
-				inf = (char *)strtok((char *)NULL, "");
+				inf = strtok(NULL, "");
 			if (inf)
 			{
 				int ret;
 				
-				strlcpy(cptr->info, inf[0] ? inf : me.name, sizeof(cptr->info)); /* set real description */
+				strlcpy(cptr->info, inf[0] ? inf : "server", sizeof(cptr->info)); /* set real description */
 				
 				ret = _check_deny_version(cptr, NULL, atoi(protocol), flags);
 				if (ret < 0)
 					return ret;
 			} else {
-				strlcpy(cptr->info, info[0] ? info : me.name, sizeof(cptr->info));
+				strlcpy(cptr->info, info[0] ? info : "server", sizeof(cptr->info));
 			}
 		} else {
-				strlcpy(cptr->info, info[0] ? info : me.name, sizeof(cptr->info));
+			strlcpy(cptr->info, info[0] ? info : "server", sizeof(cptr->info));
 		}
 
 		for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next)
@@ -586,7 +587,7 @@ CMD_FUNC(m_server_remote)
 	}
 	/* OK, let us check in the data now now */
 	hop = atol(parv[2]);
-	strlcpy(info, parv[parc - 1], REALLEN + 61);
+	strlcpy(info, parv[parc - 1], sizeof(info));
 	if (!cptr->serv->conf)
 	{
 		sendto_realops("Lost conf for %s!!, dropping link", cptr->name);
