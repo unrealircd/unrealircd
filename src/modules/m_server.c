@@ -1,6 +1,6 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/out.c
- *   (C) 2004 The UnrealIRCd Team
+ *   IRC - Internet Relay Chat, src/modules/m_server.c
+ *   (C) 2004-present The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -19,25 +19,8 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "proto.h"
-#include "channel.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
-#include "h.h"
-#include "version.h"
+
+#include "unrealircd.h"
 
 void send_channel_modes(aClient *cptr, aChannel *chptr);
 void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
