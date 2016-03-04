@@ -7204,13 +7204,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					case 'b':
 					case 'e':
 					case 'I':
-					case 'O':
-					case 'A':
-					case 'z':
-					case 'l':
 					case 'k':
-					case 'L':
-						config_error("%s:%i: set::modes-on-join contains +%c",
+					case 'l':
+						config_error("%s:%i: set::modes-on-join may not contain +%c",
 							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *c);
 						errors++;
 						break;
@@ -7219,7 +7215,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			set_channelmodes(cep->ce_vardata, &temp, 1);
 			if (temp.mode & MODE_SECRET && temp.mode & MODE_PRIVATE)
 			{
-				config_error("%s:%i: set::modes-on-join has +s and +p",
+				config_error("%s:%i: set::modes-on-join has both +s and +p",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
