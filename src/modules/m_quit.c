@@ -79,51 +79,53 @@ MOD_UNLOAD(m_quit)
 */
 CMD_FUNC(m_quit)
 {
-	char *ocomment = (parc > 1 && parv[1]) ? parv[1] : sptr->name;
-	static char comment[TOPICLEN + 1];
+	char *comment = (parc > 1 && parv[1]) ? parv[1] : sptr->name;
+	static char commentbuf[TOPICLEN + 1];
 	Membership *lp;
 
 	if (!IsServer(cptr) && IsPerson(sptr))
 	{
 		int n;
-		char *s = comment;
 		Hook *tmphook;
+
 		if (STATIC_QUIT)
 			return exit_client(cptr, sptr, sptr, STATIC_QUIT);
+
 		if (IsVirus(sptr))
 			return exit_client(cptr, sptr, sptr, "Client exited");
 
-		if (!prefix_quit || strcmp(prefix_quit, "no"))
-			s = ircsnprintf(comment, sizeof(comment), "%s ",
-		    		BadPtr(prefix_quit) ? "Quit:" : prefix_quit);
-
-		n = dospamfilter(sptr, ocomment, SPAMF_QUIT, NULL, 0, NULL);
+		n = dospamfilter(sptr, comment, SPAMF_QUIT, NULL, 0, NULL);
 		if (n == FLUSH_BUFFER)
 			return n;
 		if (n < 0)
-			ocomment = sptr->name;
+			comment = sptr->name;
 		
 		if (!ValidatePermissionsForPath("immune:antispamtimer",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
-			if (sptr->local->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
-				ocomment = sptr->name;
-
-                for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT]; tmphook; tmphook = tmphook->next)
 		{
-                	ocomment = (*(tmphook->func.pcharfunc))(sptr, ocomment);
-                        if (!ocomment)
-			{			
-				ocomment = sptr->name;
-                                break;
-                        }
-                }
+			if (sptr->local->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+				comment = sptr->name;
+		}
 
-		strncpy(s, ocomment, TOPICLEN - (s - comment));
-		comment[TOPICLEN] = '\0';
-		return exit_client(cptr, sptr, sptr, comment);
+		for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT]; tmphook; tmphook = tmphook->next)
+		{
+			comment = (*(tmphook->func.pcharfunc))(sptr, comment);
+			if (!comment)
+			{			
+				comment = sptr->name;
+				break;
+			}
+		}
+
+		if (PREFIX_QUIT)
+			snprintf(commentbuf, sizeof(commentbuf), "%s: %s", PREFIX_QUIT, comment);
+		else
+			strlcpy(commentbuf, comment, sizeof(commentbuf));
+
+		return exit_client(cptr, sptr, sptr, commentbuf);
 	}
 	else
 	{
-		return exit_client(cptr, sptr, sptr, ocomment);
+		/* Remote quits and non-person quits always use their original comment */
+		return exit_client(cptr, sptr, sptr, comment);
 	}
 }
-

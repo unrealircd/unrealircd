@@ -1416,6 +1416,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->x_server_key_pem = strdup(tmp);
 	if (!ipv6_capable())
 		DISABLE_IPV6 = 1;
+	i->network.x_prefix_quit = strdup("Quit");
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -6844,10 +6845,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.hide_ban_reason = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
 		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
-			if (*cep->ce_vardata == '0')
-			{
-				safestrdup(tempiConf.network.x_prefix_quit, "");
-			}
+			if (!strcmp(cep->ce_vardata, "0") || !strcmp(cep->ce_vardata, "no"))
+				safefree(tempiConf.network.x_prefix_quit);
 			else
 				safestrdup(tempiConf.network.x_prefix_quit, cep->ce_vardata);
 		}

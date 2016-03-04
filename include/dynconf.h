@@ -188,7 +188,7 @@ extern MODVAR int ipv6_disabled;
 #define STATS_SERVER			iConf.network.x_stats_server
 #define SASL_SERVER			iConf.network.x_sasl_server
 #define iNAH				iConf.network.x_inah
-#define prefix_quit			iConf.network.x_prefix_quit
+#define PREFIX_QUIT			iConf.network.x_prefix_quit
 #define SSL_SERVER_CERT_PEM		iConf.x_server_cert_pem
 #define SSL_SERVER_KEY_PEM		iConf.x_server_key_pem
 
