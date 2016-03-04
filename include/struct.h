@@ -322,7 +322,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
  * -DuffJ
  */
 
-#define SNO_DEFOPER "+kscfvGqo"
+#define SNO_DEFOPER "+kscfvGqob"
 #define SNO_DEFUSER "+ks"
 
 #define SEND_UMODES (SendUmodes)

@@ -20,6 +20,15 @@
 #include "unrealircd.h"
 #include "res.h"
 
+ModuleHeader MOD_HEADER(blacklist)
+= {
+	"blacklist",
+	"4.0",
+	"Check connecting users against DNS Blacklists",
+	"3.2-b8-1",
+	NULL
+};
+
 /* In this module and the config syntax I tried to 'abstract' things
  * a little, so things could later be extended if we ever want
  * to introduce another blacklist type (other than DNSBL).
@@ -70,16 +79,6 @@ struct _bluser {
 	int refcnt;
 };
 
-/* Module header */
-ModuleHeader MOD_HEADER(blacklist)
-= {
-	"blacklist",
-	"4.0",
-	"Check connecting users against DNS Blacklists",
-	"3.2-b8-1",
-	NULL 
-};
-
 /* Global variables */
 ModDataInfo *blacklist_md = NULL;
 Blacklist *conf_blacklist = NULL;
@@ -100,6 +99,8 @@ void blacklist_free_bluser_if_able(BLUser *bl);
 
 #define SetBLUser(x, y)	do { moddata_client(x, blacklist_md).ptr = y; } while(0)
 #define BLUSER(x)	((BLUser *)moddata_client(x, blacklist_md).ptr)
+
+long SNO_BLACKLIST = 0L;
 
 MOD_TEST(blacklist)
 {
@@ -131,6 +132,8 @@ MOD_INIT(blacklist)
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, blacklist_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_UNKUSER_QUIT, 0, blacklist_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, blacklist_rehash);
+
+	SnomaskAdd(modinfo->handle, 'b', 1, umode_allow_opers, &SNO_BLACKLIST);
 
 	return MOD_SUCCESS;
 }
@@ -635,7 +638,7 @@ void blacklist_hit(aClient *acptr, Blacklist *bl, int reply)
 		snprintf(buf, sizeof(buf), "[Blacklist] IP %s matches blacklist %s (%s/reply=%d)",
 			GetIP(acptr), bl->name, bl->backend->dns->name, reply);
 	
-	sendto_realops("%s", buf);
+	sendto_snomask(SNO_BLACKLIST, "%s", buf);
 	ircd_log(LOG_KILL, "%s", buf);
 
 	name[0] = "ip";
