@@ -61,6 +61,7 @@ struct zConfiguration {
 	unsigned ident_check:1;
 	unsigned fail_oper_warn:1;
 	unsigned show_connect_info:1;
+	unsigned no_connect_ssl_info:1;
 	unsigned dont_resolve:1;
 	unsigned use_ban_version:1;
 	unsigned mkpasswd_for_everyone:1;
@@ -170,6 +171,7 @@ extern MODVAR int ipv6_disabled;
 #define IDENT_CHECK			iConf.ident_check
 #define FAILOPER_WARN			iConf.fail_oper_warn
 #define SHOWCONNECTINFO			iConf.show_connect_info
+#define NOCONNECTSSLINFO		iConf.no_connect_ssl_info
 #define OPER_ONLY_STATS			iConf.oper_only_stats
 #define ANTI_SPAM_QUIT_MSG_TIME		iConf.anti_spam_quit_message_time
 #ifdef HAVE_RAND_EGD
@@ -349,6 +351,7 @@ struct SetCheck {
 	unsigned has_options_fail_oper_warn:1;
 	unsigned has_options_dont_resolve:1;
 	unsigned has_options_show_connect_info:1;
+	unsigned has_options_no_connect_ssl_info:1;
 	unsigned has_options_mkpasswd_for_everyone:1;
 	unsigned has_options_allow_insane_bans:1;
 	unsigned has_options_allow_part_if_shunned:1;
