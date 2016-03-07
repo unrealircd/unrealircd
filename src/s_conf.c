@@ -5310,12 +5310,6 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			}
 			if (!strcmp(cep->ce_varname, "mask"))
 			{
-				if (has_mask)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "except throttle::mask");
-					continue;
-				}
 				has_mask = 1;
 			}
 			else
