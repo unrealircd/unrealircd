@@ -1393,6 +1393,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->spamfilter_detectslow_warn = 250;
 	i->spamfilter_detectslow_fatal = 500;
 	i->spamfilter_stop_on_first_match = 1;
+	i->maxchannelsperuser = 10;
 	i->maxdccallow = 10;
 	i->channel_command_prefix = strdup("`!.");
 	i->check_target_nick_bans = 1;
@@ -2176,8 +2177,6 @@ int	config_post_test()
 		Error("listen {} block is missing");
 	if (!settings.has_kline_address)
 		Error("set::kline-address is missing");
-	if (!settings.has_maxchannelsperuser)
-		Error("set::maxchannelsperuser is missing");
 	if (!settings.has_default_server)
 		Error("set::default-server is missing");
 	if (!settings.has_network_name)
