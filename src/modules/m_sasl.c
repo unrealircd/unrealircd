@@ -238,8 +238,16 @@ CMD_FUNC(m_authenticate)
 		agent_p = find_client(sptr->local->sasl_agent, NULL);
 
 	if (agent_p == NULL)
-		sendto_server(NULL, 0, 0, ":%s SASL %s %s S %s",
-		    me.name, SASL_SERVER, encode_puid(sptr), parv[1]);
+	{
+		char *certfp = moddata_client_get(sptr, "certfp");
+
+		if (certfp)
+			sendto_server(NULL, 0, 0, ":%s SASL %s %s S %s %s",
+			    me.name, SASL_SERVER, encode_puid(sptr), parv[1], certfp);
+		else
+			sendto_server(NULL, 0, 0, ":%s SASL %s %s S %s",
+			    me.name, SASL_SERVER, encode_puid(sptr), parv[1]);
+	}
 	else
 		sendto_server(NULL, 0, 0, ":%s SASL %s %s C %s",
 		    me.name, AGENT_SID(agent_p), encode_puid(sptr), parv[1]);
