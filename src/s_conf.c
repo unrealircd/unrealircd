@@ -2178,8 +2178,6 @@ int	config_post_test()
 		Error("set::kline-address is missing");
 	if (!settings.has_maxchannelsperuser)
 		Error("set::maxchannelsperuser is missing");
-	if (!settings.has_services_server)
-		Error("set::services-server is missing");
 	if (!settings.has_default_server)
 		Error("set::default-server is missing");
 	if (!settings.has_network_name)
