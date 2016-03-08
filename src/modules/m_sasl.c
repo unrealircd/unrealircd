@@ -239,7 +239,11 @@ CMD_FUNC(m_authenticate)
 
 	if (agent_p == NULL)
 	{
+		char *addr = BadPtr(sptr->ip) ? "0" : sptr->ip;
 		char *certfp = moddata_client_get(sptr, "certfp");
+
+		sendto_server(NULL, 0, 0, ":%s SASL %s %s H %s %s",
+		    me.name, SASL_SERVER, encode_puid(sptr), addr, addr);
 
 		if (certfp)
 			sendto_server(NULL, 0, 0, ":%s SASL %s %s S %s %s",
