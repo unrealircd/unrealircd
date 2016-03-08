@@ -1414,6 +1414,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->x_server_cert_pem = strdup(tmp);
 	snprintf(tmp, sizeof(tmp), "%s/ssl/server.key.pem", CONFDIR);
 	i->x_server_key_pem = strdup(tmp);
+	i->network.x_hidden_host = strdup("hidden");
 	if (!ipv6_capable())
 		DISABLE_IPV6 = 1;
 	i->network.x_prefix_quit = strdup("Quit");
@@ -2185,8 +2186,6 @@ int	config_post_test()
 		Error("set::network-name is missing");
 	if (!settings.has_help_channel)
 		Error("set::help-channel is missing");
-	if (!settings.has_hiddenhost_prefix)
-		Error("set::hiddenhost-prefix is missing");
 
 	for (h = Hooks[HOOKTYPE_CONFIGPOSTTEST]; h; h = h->next)
 	{
