@@ -318,7 +318,9 @@ void fd_fork()
 				if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
 					continue;
 					
+#ifdef DEBUGMODE
 				ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
+#endif
 			}
 		}
 	}
@@ -342,8 +344,10 @@ void fd_refresh(int fd)
 		EV_SET(&kqueue_prepared[fd], (uintptr_t) fd, (short) EVFILT_READ, fde->read_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
 		if (kevent(kqueue_fd, &kqueue_prepared[fd], 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
 		{
+#ifdef DEBUGMODE
 			if (ERRNO != P_EWOULDBLOCK && ERRNO != P_EAGAIN)
 				ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
+#endif
 		}
 	}
 
@@ -352,8 +356,10 @@ void fd_refresh(int fd)
 		EV_SET(&kqueue_prepared[fd+MAXCONNECTIONS], (uintptr_t) fd, (short) EVFILT_WRITE, fde->write_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
 		if (kevent(kqueue_fd, &kqueue_prepared[fd+MAXCONNECTIONS], 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
 		{
+#ifdef DEBUGMODE
 			if (ERRNO != P_EWOULDBLOCK && ERRNO != P_EAGAIN)
 				ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
+#endif
 		}
 	}
 
