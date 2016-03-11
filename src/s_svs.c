@@ -161,6 +161,7 @@ void strrangetok(char *in, char *out, char tok, short first, short last) {
 	out[j] = 0;
 }			
 
+/* m_alias is a special type of command, it has an extra argument 'cmd'. */
 static int recursive_alias = 0;
 int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd)
 {

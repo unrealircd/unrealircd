@@ -8329,7 +8329,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 	if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
 		safestrdup(alias->nick, alias->alias);
 	}
-	CommandAdd(NULL, alias->alias, m_alias, 1, M_USER|M_ALIAS);
+	CommandAdd(NULL, alias->alias, (void *)m_alias, 1, M_USER|M_ALIAS);
 	
 	AddListItem(alias, conf_alias);
 	return 0;

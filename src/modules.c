@@ -974,7 +974,7 @@ int	Module_Depend_Resolve(Module *p, char *path)
  * I do not consider this sensitive information, but just in case
  * I stripped the version string for non-admins (eg: normal users). -- Syzop
  */
-int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_module)
 {
 	Module *mi;
 	int i;

@@ -762,3 +762,17 @@ extern int has_channel_mode(aChannel *chptr, char mode);
 extern void start_listeners(void);
 extern void buildvarstring(char *inbuf, char *outbuf, size_t len, char *name[], char *value[]);
 extern void reinit_ssl(aClient *);
+extern int m_error(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_info(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_summon(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_users(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_version(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_dalinfo(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_credits(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_license(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_module(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd); /* special! */
+extern int m_rehash(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_die(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int m_restart(aClient *cptr, aClient *sptr, int parc, char *parv[]);
