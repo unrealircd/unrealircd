@@ -245,7 +245,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 	sprintf(file, "unrealircd.%d.core", getpid());
 	fd = fopen(file, "w");
 	GlobalMemoryStatus(&memStats);
-	fprintf(fd, "Generated at %s\n%s (%d.%d.%d)\n%s[%s%s%s] (%s)\n"
+	fprintf(fd, "Generated at %s\n%s (%d.%d.%d)\n%s[%s%s%s] (%s) on %s\n"
 		    "-----------------\nMemory Information:\n"
 		    "\tPhysical: (Available:%ldMB/Total:%ldMB)\n"
 		    "\tVirtual: (Available:%ldMB/Total:%ldMB)\n"
@@ -255,7 +255,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 		     asctime(gmtime(&timet)), OSName, VerInfo.dwMajorVersion,
 		     VerInfo.dwMinorVersion, VerInfo.dwBuildNumber, IRCDTOTALVERSION,
 		     serveropts, extraflags ? extraflags : "", tainted ? "3" : "",
-		     buildid, memStats.dwAvailPhys/1048576, memStats.dwTotalPhys/1048576, 
+		     buildid, me.name, memStats.dwAvailPhys/1048576, memStats.dwTotalPhys/1048576,
 		     memStats.dwAvailVirtual/1048576, memStats.dwTotalVirtual/1048576, 
 		     GetException(e->ExceptionRecord->ExceptionCode), backupbuf, 
 		     GetRegisters(e->ContextRecord), StackTrace(e));

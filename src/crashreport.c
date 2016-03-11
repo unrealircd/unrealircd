@@ -623,7 +623,10 @@ void report_crash(void)
 		
 		if (crashreport_send(fname))
 		{
-			MessageBox(NULL, "The crash report has been sent to the UnrealIRCd developers. Thanks a lot for helping to make UnrealIRCd a better product!",
+			MessageBox(NULL, "The crash report has been sent to the UnrealIRCd developers. "
+			                 "If you have any additional information (like details surrounding "
+			                 "the crash) then please e-mail syzop@unrealircd.org, such "
+			                 "information is most welcome. Thanks!",
 			           "UnrealIRCd crash report sent", MB_ICONINFORMATION|MB_OK);
 		}
 	}
