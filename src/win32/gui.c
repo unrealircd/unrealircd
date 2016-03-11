@@ -1081,7 +1081,7 @@ void win_error()
 		               "3.2.x configuration detected",
 		               MB_YESNO|MB_ICONQUESTION) == IDNO)
 		{
-			 return 0;
+			 return;
 		}
 		else 
 		{
