@@ -1,4 +1,4 @@
-UnrealIRCd 4.0.1 Release Notes
+UnrealIRCd 4.0.2 Release Notes
 ===============================
 
 UnrealIRCd 4 is here!
@@ -73,13 +73,14 @@ For support you have two choices:
 ==[ CHANGES BETWEEN 4.0.1 AND 4.0.2 ]==
 The 4.0.2 release comes with the following new features:
 * Ability to hide quit messages from *LINEd users (set::hide-ban-reason)
-* Blacklist hits are now send to new snomask +b rather than all ircops
+* Blacklist hits are now sent to new snomask +b rather than all ircops
 
 Major issues fixed:
 * None
 
 Minor issues fixed:
 * prefix-quit was not working
+* FreeBSD: fix kevent bug flood in error log
 * Incorrect server description in /LINKS
 * Logging to syslog was broken
 * OS X: Update ./Config to use Homebrew OpenSSL by default
