@@ -119,8 +119,8 @@ int n, wasaway = 0;
 	}
 #endif
         /* Marking as away */
-        if (strlen(awy2) > (size_t)TOPICLEN)
-                awy2[TOPICLEN] = '\0';
+        if (strlen(awy2) > (size_t)AWAYLEN)
+                awy2[AWAYLEN] = '\0';
 
         if (away)
                 if (strcmp(away, parv[1]) == 0)
