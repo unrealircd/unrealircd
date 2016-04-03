@@ -1415,7 +1415,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->x_server_cert_pem = strdup(tmp);
 	snprintf(tmp, sizeof(tmp), "%s/ssl/server.key.pem", CONFDIR);
 	i->x_server_key_pem = strdup(tmp);
-	i->network.x_hidden_host = strdup("hidden");
+	i->network.x_hidden_host = strdup("Clk");
 	if (!ipv6_capable())
 		DISABLE_IPV6 = 1;
 	i->network.x_prefix_quit = strdup("Quit");
