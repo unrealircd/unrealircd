@@ -6306,6 +6306,12 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				{
 					if (cepp->ce_vardata || cepp->ce_entries)
 						has_incoming_mask = 1;
+					else
+					if (config_is_blankorempty(cepp, "link::incoming"))
+					{
+						errors++;
+						continue;
+					}
 				}
 			}
 		}
@@ -6316,11 +6322,21 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!strcmp(cepp->ce_varname, "bind-ip"))
 				{
+					if (config_is_blankorempty(cepp, "link::outgoing"))
+					{
+						errors++;
+						continue;
+					}
 					config_detect_duplicate(&has_outgoing_bind_ip, cepp, &errors);
 					// todo: ipv4 vs ipv6
 				}
 				else if (!strcmp(cepp->ce_varname, "hostname"))
 				{
+					if (config_is_blankorempty(cepp, "link::outgoing"))
+					{
+						errors++;
+						continue;
+					}
 					config_detect_duplicate(&has_outgoing_hostname, cepp, &errors);
 					if (strchr(cepp->ce_vardata, '*') || strchr(cepp->ce_vardata, '?'))
 					{
@@ -6331,6 +6347,11 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "port"))
 				{
+					if (config_is_blankorempty(cepp, "link::outgoing"))
+					{
+						errors++;
+						continue;
+					}
 					config_detect_duplicate(&has_outgoing_port, cepp, &errors);
 				}
 				else if (!strcmp(cepp->ce_varname, "options"))
@@ -6378,22 +6399,47 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "hub"))
 		{
+			if (config_is_blankorempty(cep, "link"))
+			{
+				errors++;
+				continue;
+			}
 			config_detect_duplicate(&has_hub, cep, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "leaf"))
 		{
+			if (config_is_blankorempty(cep, "link"))
+			{
+				errors++;
+				continue;
+			}
 			config_detect_duplicate(&has_leaf, cep, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "leaf-depth") || !strcmp(cep->ce_varname, "leafdepth"))
 		{
+			if (config_is_blankorempty(cep, "link"))
+			{
+				errors++;
+				continue;
+			}
 			config_detect_duplicate(&has_leaf_depth, cep, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
+			if (config_is_blankorempty(cep, "link"))
+			{
+				errors++;
+				continue;
+			}
 			config_detect_duplicate(&has_class, cep, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "ciphers"))
 		{
+			if (config_is_blankorempty(cep, "link"))
+			{
+				errors++;
+				continue;
+			}
 			config_detect_duplicate(&has_ciphers, cep, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "options"))
