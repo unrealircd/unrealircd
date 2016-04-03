@@ -104,7 +104,7 @@ LIBCURL_LIB=/LIBPATH:"$(LIBCURL_LIB_DIR)"
 !ENDIF
 !ENDIF
 
-SSLLIBS=ssleay32.lib libeay32.lib
+SSLLIBS=libcrypto-37.lib libssl-38.lib libtls-10.lib
 !IFDEF OPENSSL_INC_DIR
 OPENSSL_INC=/I "$(OPENSSL_INC_DIR)"
 !ENDIF
