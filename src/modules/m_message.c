@@ -426,7 +426,7 @@ int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 		}
 
 		/* If nick@server -and- the @server portion was set::services-server then send a special message */
-		if (!acptr)
+		if (!acptr && SERVICES_NAME)
 		{
 			char *server = index(nick, '@');
 			if (server && strncasecmp(server + 1, SERVICES_NAME, strlen(SERVICES_NAME)) == 0)

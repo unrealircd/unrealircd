@@ -1534,7 +1534,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 * if passwd given and if NickServ is online.
 		 * - by taz, modified by Wizzu
 		 */
-		if (sptr->local->passwd && (nsptr = find_person(NickServ, NULL)))
+		if (sptr->local->passwd && SERVICES_NAME && (nsptr = find_person(NickServ, NULL)))
 		{
 			int do_identify = 1;
 			Hook *h;

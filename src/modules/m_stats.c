@@ -1142,8 +1142,11 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, ircnetwork);
 	sendto_one(sptr, ":%s %i %s :default-server: %s", me.name, RPL_TEXT,
 	    sptr->name, defserv);
-	sendto_one(sptr, ":%s %i %s :services-server: %s", me.name, RPL_TEXT,
-	    sptr->name, SERVICES_NAME);
+	if (SERVICES_NAME)
+	{
+		sendto_one(sptr, ":%s %i %s :services-server: %s", me.name, RPL_TEXT,
+		    sptr->name, SERVICES_NAME);
+	}
 	if (STATS_SERVER)
 	{
 		sendto_one(sptr, ":%s %i %s :stats-server: %s", me.name, RPL_TEXT,

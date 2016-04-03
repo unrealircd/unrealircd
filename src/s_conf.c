@@ -1393,6 +1393,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->spamfilter_detectslow_warn = 250;
 	i->spamfilter_detectslow_fatal = 500;
 	i->spamfilter_stop_on_first_match = 1;
+	i->maxchannelsperuser = 10;
 	i->maxdccallow = 10;
 	i->channel_command_prefix = strdup("`!.");
 	i->check_target_nick_bans = 1;
@@ -1414,6 +1415,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->x_server_cert_pem = strdup(tmp);
 	snprintf(tmp, sizeof(tmp), "%s/ssl/server.key.pem", CONFDIR);
 	i->x_server_key_pem = strdup(tmp);
+	i->network.x_hidden_host = strdup("hidden");
 	if (!ipv6_capable())
 		DISABLE_IPV6 = 1;
 	i->network.x_prefix_quit = strdup("Quit");
@@ -2175,18 +2177,12 @@ int	config_post_test()
 		Error("listen {} block is missing");
 	if (!settings.has_kline_address)
 		Error("set::kline-address is missing");
-	if (!settings.has_maxchannelsperuser)
-		Error("set::maxchannelsperuser is missing");
-	if (!settings.has_services_server)
-		Error("set::services-server is missing");
 	if (!settings.has_default_server)
 		Error("set::default-server is missing");
 	if (!settings.has_network_name)
 		Error("set::network-name is missing");
 	if (!settings.has_help_channel)
 		Error("set::help-channel is missing");
-	if (!settings.has_hiddenhost_prefix)
-		Error("set::hiddenhost-prefix is missing");
 
 	for (h = Hooks[HOOKTYPE_CONFIGPOSTTEST]; h; h = h->next)
 	{
