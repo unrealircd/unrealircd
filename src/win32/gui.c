@@ -194,8 +194,9 @@ int CloseUnreal(HWND hWnd)
 		 return 0;
 	else 
 	{
-		 DestroyWindow(hWnd);
-		 exit(0);
+		DestroyWindow(hWnd);
+		TerminateProcess(GetCurrentProcess(), 0);
+		exit(0); /* in case previous fails (possible?) */
 	}
 }
 
