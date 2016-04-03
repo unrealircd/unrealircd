@@ -277,7 +277,7 @@ CONF:
 ./UnrealIRCd.exe: $(OBJ_FILES) SRC/win32/WIN32.RES
         $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/win32/WIN32.RES /MAP
 	-@erase src\win32\win32.res
-	$(MT) -manifest UnrealIRCd.exe.manifest -outputresource:UnrealIRCd.exe;1
+	$(MT) -manifest src\win32\UnrealIRCd.exe.manifest -outputresource:UnrealIRCd.exe;1
 !IFNDEF DEBUGEXTRA
  @echo Standard version built 
 !ELSE

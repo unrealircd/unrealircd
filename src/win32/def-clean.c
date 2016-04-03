@@ -25,6 +25,8 @@ int main(int argc, char *argv[]) {
 
 			if (!strncmp(symbol, "\t_real@", 7))
 				continue;
+			if (!strncmp(symbol, "\t_xmm@", 6))
+				continue;
 
 			fprintf(fdout, "%s\r\n", symbol);	
 		
