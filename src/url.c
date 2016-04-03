@@ -115,8 +115,6 @@ static void set_curl_ssl_options(CURL *curl)
 {
 	char buf[512];
 	
-	if (USE_EGD)
-		curl_easy_setopt(curl, CURLOPT_EGDSOCKET, EGD_PATH);
 	curl_easy_setopt(curl, CURLOPT_SSLCERT, SSL_SERVER_CERT_PEM);
 	if (SSLKeyPasswd)
 		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, SSLKeyPasswd);

@@ -1216,8 +1216,6 @@ int stats_set(aClient *sptr, char *para)
 	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT, 
 		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
 	sendto_one(sptr, ":%s %i %s :channel-command-prefix: %s", me.name, RPL_TEXT, sptr->name, CHANCMDPFX ? CHANCMDPFX : "`");
-	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
-		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
 	sendto_one(sptr, ":%s %i %s :ssl::certificate: %s", me.name, RPL_TEXT,
 		sptr->name, SSL_SERVER_CERT_PEM);
 	sendto_one(sptr, ":%s %i %s :ssl::key: %s", me.name, RPL_TEXT,

@@ -1344,7 +1344,6 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->channel_command_prefix);
 	safefree(i->oper_snomask);
 	safefree(i->user_snomask);
-	safefree(i->egd_path);
 	safefree(i->static_quit);
 	safefree(i->x_server_cert_pem);
 	safefree(i->x_server_key_pem);
@@ -7083,12 +7082,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "egd")) {
-					tempiConf.use_egd = 1;
-					if (cepp->ce_vardata)
-						tempiConf.egd_path = strdup(cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "server-cipher-list"))
+				if (!strcmp(cepp->ce_varname, "server-cipher-list"))
 				{
 					safestrdup(tempiConf.x_server_cipher_list, cepp->ce_vardata);
 				}
@@ -7974,10 +7968,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "egd")) {
-					CheckDuplicate(cep, ssl_egd, "ssl::egd");
-				}
-				else if (!strcmp(cepp->ce_varname, "renegotiate-timeout"))
+				if (!strcmp(cepp->ce_varname, "renegotiate-timeout"))
 				{
 					CheckDuplicate(cep, renegotiate_timeout, "ssl::renegotiate-timeout");
 				}
