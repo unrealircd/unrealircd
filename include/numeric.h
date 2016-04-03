@@ -389,5 +389,6 @@
 #define ERR_SASLTOOLONG         905
 #define ERR_SASLABORTED         906
 #define ERR_SASLALREADY         907
+#define RPL_SASLMECHS           908
 
 #define ERR_NUMERICERR       999

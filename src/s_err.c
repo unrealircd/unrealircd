@@ -960,7 +960,7 @@ static char *replies[] = {
 /* 905 ERR_SASLTOOLONG */       ":%s 905 %s :SASL message too long",
 /* 906 ERR_SASLABORTED */       ":%s 906 %s :SASL authentication aborted",
 /* 907 ERR_SASLALREADY */       ":%s 907 %s :You have already completed SASL authentication",
-/* 908 */ NULL,
+/* 908 RPL_SASLMECHS */         ":%s 908 %s %s :are available SASL mechanisms",
 /* 909 */ NULL,
 /* 910 */ NULL,
 /* 911 */ NULL,
