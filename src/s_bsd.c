@@ -1440,12 +1440,16 @@ void finish_auth(aClient *acptr)
 	parse_client_queued(acptr);
 }
 
+/** Returns 4 if 'str' is a valid IPv4 address
+ * and 6 if 'str' is a valid IPv6 IP address.
+ * Zero (0) is returned in any other case (eg: hostname).
+ */
 int is_valid_ip(char *str)
 {
 	char scratch[64];
 	
 	if (inet_pton(AF_INET, str, scratch) == 1)
-		return 1; /* IPv4 */
+		return 4; /* IPv4 */
 	
 	if (inet_pton(AF_INET6, str, scratch) == 1)
 		return 6; /* IPv6 */
@@ -1478,15 +1482,19 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	 * If we dont know the IP# for this host and itis a hostname and
 	 * not a ip# string, then try and find the appropriate host record.
 	 */
-	 if (!aconf->connect_ip)
-	 {
-	 	if (is_valid_ip(aconf->outgoing.hostname))
+	if (!aconf->connect_ip)
+	{
+		if (is_valid_ip(aconf->outgoing.hostname))
 		{
 			/* link::outgoing::hostname is an IP address. No need to resolve host. */
 			aconf->connect_ip = strdup(aconf->outgoing.hostname);
 		} else
 		{
 			/* It's a hostname, let the resolver look it up. */
+			int ipv4_explicit_bind = 0;
+
+			if (aconf->outgoing.bind_ip && (is_valid_ip(aconf->outgoing.bind_ip) == 4))
+				ipv4_explicit_bind = 1;
 			
 			/* We need this 'aconf->refcount++' or else there's a race condition between
 			 * starting resolving the host and the result of the resolver (we could
@@ -1494,7 +1502,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 			 * -- Syzop, bug #0003689.
 			 */
 			aconf->refcount++;
-			unrealdns_gethostbyname_link(aconf->outgoing.hostname, aconf);
+			unrealdns_gethostbyname_link(aconf->outgoing.hostname, aconf, ipv4_explicit_bind);
 			return -2;
 		}
 	}

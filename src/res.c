@@ -266,7 +266,7 @@ struct hostent *unrealdns_doclient(aClient *cptr)
 
 /** Resolve a name to an IP, for a link block.
  */
-void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf)
+void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf, int ipv4_only)
 {
 	DNSReq *r;
 
@@ -274,7 +274,7 @@ void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf)
 	r = MyMallocEx(sizeof(DNSReq));
 	r->linkblock = conf;
 	r->name = strdup(name);
-	if (!DISABLE_IPV6)
+	if (!DISABLE_IPV6 && !ipv4_only)
 	{
 		/* We try an IPv6 lookup first, and if that fails we try IPv4. */
 		r->ipv6 = 1;

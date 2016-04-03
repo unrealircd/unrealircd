@@ -688,7 +688,7 @@ extern MODVAR aTKline *tklines[TKLISTLEN];
 extern char *cmdname_by_spamftarget(int target);
 extern void unrealdns_delreq_bycptr(aClient *cptr);
 extern void sendtxtnumeric(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));;
-extern void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf);
+extern void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf, int ipv4_only);
 extern void unrealdns_delasyncconnects(void);
 extern int is_autojoin_chan(char *chname);
 extern void unreal_free_hostent(struct hostent *he);
