@@ -56,13 +56,16 @@ typedef BOOL (WINAPI *MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD dwPid, HANDLE hF
 __inline char *StackTrace(EXCEPTION_POINTERS *e) 
 {
 	static char buffer[5000];
-	char curmodule[32];
+	char curmodule[256];
 	DWORD symOptions, dwDisp, frame;
 	HANDLE hProcess = GetCurrentProcess();
 	IMAGEHLP_SYMBOL *pSym = MyMallocEx(sizeof(IMAGEHLP_SYMBOL)+500);
 	IMAGEHLP_LINE pLine;
 	IMAGEHLP_MODULE pMod;
 	STACKFRAME Stack;
+	CONTEXT context;
+
+	memcpy(&context, e->ContextRecord, sizeof(CONTEXT));
 
 	/* Load the stack information */
 	memset(&Stack, 0, sizeof(Stack));
@@ -80,15 +83,12 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 	/* Initialize symbol retrieval system */
 	SymInitialize(hProcess, NULL, TRUE);
 	SymSetOptions(SYMOPT_LOAD_LINES|SYMOPT_UNDNAME);
-	bzero(pSym, sizeof(IMAGEHLP_SYMBOL)+500);
 	pSym->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
 	pSym->MaxNameLength = 500;
-	bzero(&pLine, sizeof(IMAGEHLP_LINE));
-	pLine.SizeOfStruct = sizeof(IMAGEHLP_LINE);
-	bzero(&pMod, sizeof(IMAGEHLP_MODULE));
-	pMod.SizeOfStruct = sizeof(IMAGEHLP_MODULE);
 
 	/* Retrieve the first module name */
+	bzero(&pMod, sizeof(IMAGEHLP_MODULE));
+	pMod.SizeOfStruct = sizeof(IMAGEHLP_MODULE);
 	SymGetModuleInfo(hProcess, Stack.AddrPC.Offset, &pMod);
 	strcpy(curmodule, pMod.ModuleName);
 	sprintf(buffer, "\tModule: %s\n", pMod.ModuleName);
@@ -98,8 +98,11 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 	{
 		char buf[500];
 		if (!StackWalk(IMAGE_FILE_MACHINE_I386, GetCurrentProcess(), GetCurrentThread(),
-			&Stack, NULL, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL))
+			&Stack, &context, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL))
 			break;
+
+		bzero(&pMod, sizeof(IMAGEHLP_MODULE));
+		pMod.SizeOfStruct = sizeof(IMAGEHLP_MODULE);
 		SymGetModuleInfo(hProcess, Stack.AddrPC.Offset, &pMod);
 		if (strcmp(curmodule, pMod.ModuleName)) 
 		{
@@ -107,12 +110,16 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 			sprintf(buf, "\tModule: %s\n", pMod.ModuleName);
 			strcat(buffer, buf);
 		}
+
+		bzero(&pLine, sizeof(IMAGEHLP_LINE));
+		pLine.SizeOfStruct = sizeof(IMAGEHLP_LINE);
 		SymGetLineFromAddr(hProcess, Stack.AddrPC.Offset, &dwDisp, &pLine);
 		SymGetSymFromAddr(hProcess, Stack.AddrPC.Offset, &dwDisp, pSym);
 		sprintf(buf, "\t\t#%d %s:%d: %s\n", frame, pLine.FileName, pLine.LineNumber, 
 		        pSym->Name);
 		strcat(buffer, buf);
 	}
+	strcat(buffer, "End of Stack trace\n");
 	return buffer;
 
 }
