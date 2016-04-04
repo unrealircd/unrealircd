@@ -2307,8 +2307,8 @@ char *sock_strerror(int error)
 	int stop = sizeof(WSAErrors)/sizeof(WSAErrors[0])-1;
 	int mid;
 	
-	if (!error) /* strerror compatibility */
-		return NULL;
+	if (!error)
+		return "No error";
 
 	if (error < WSABASEERR) /* Just a regular error code */
 		return strerror(error);
