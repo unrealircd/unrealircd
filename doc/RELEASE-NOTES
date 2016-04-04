@@ -1,5 +1,5 @@
-UnrealIRCd 4.0.2 Release Notes
-===============================
+UnrealIRCd 4.0.3-rc1 Release Notes
+===================================
 
 UnrealIRCd 4 is here!
 
@@ -69,6 +69,19 @@ https://www.unrealircd.org/docs/FAQ
 For support you have two choices:
 * Forums: https://forums.unrealircd.org/
 * IRC: irc.unrealircd.org / #unreal-support
+
+==[ CHANGES BETWEEN 4.0.2 AND 4.0.3 ]==
+Major issues fixed:
+* Crash on Windows on failed outgoing server connect
+* Crash if you had a link { } block with invalid syntax
+
+Minor issues fixed:
+* Windows: Remote includes did not support https
+
+Other:
+* Windows version compiled with Visual Studio 2012 rather than a mix
+* Windows version now using LibreSSL
+* Crash reporter produces more useful reports (important for us)
 
 ==[ CHANGES BETWEEN 4.0.1 AND 4.0.2 ]==
 The 4.0.2 release comes with the following new features:
