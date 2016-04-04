@@ -234,7 +234,7 @@ int crash_report_backtrace(FILE *reportfd, char *coredump)
 		fprintf(reportfd, " %s\n", buf);
 	}
 	n = pclose(fd);
-	
+
 	fprintf(reportfd, "END OF BACKTRACE\n");
 
 	if (WEXITSTATUS(n) == 127)
@@ -316,25 +316,13 @@ int corefile_vs_binary_mismatch(char *coredump)
 #endif
 }
 
-#ifndef _WIN32
-int attach_tar(FILE *fdo, char *coredump)
+int attach_file(FILE *fdi, FILE *fdo)
 {
-	FILE *fdi;
-	char cmd[512];
 	char binbuf[60];
 	char printbuf[100];
 	size_t n, total = 0;
 
-	printf("Please wait...\n"); // May take a couple of seconds
-	snprintf(cmd, sizeof(cmd), "tar c %s/unrealircd %s %s 2>/dev/null|(bzip2 || gzip) 2>/dev/null",
-		BINDIR, coredump, MODULESDIR);
-
-	fdi = popen(cmd, "r");
-	if (!fdi)
-		return 0;
-
-	fprintf(fdo, "\n*** ATTACHMENT: crashbug.tar.bz2 ****\n");
-
+	fprintf(fdo, "\n*** ATTACHMENT ****\n");
 	while((n = fread(binbuf, 1, sizeof(binbuf), fdi)) > 0)
 	{
 		b64_encode(binbuf, n, printbuf, sizeof(printbuf));
@@ -343,13 +331,42 @@ int attach_tar(FILE *fdo, char *coredump)
 		total += strlen(printbuf);
 
 		if (total > 9500000)
-			break; /* Safety limit */
+			return 0; /* Safety limit */
 	}
+
 	fprintf(fdo, "*** END OF ATTACHMENT ***\n");
+	return 1;
+}
+
+int attach_coredump(FILE *fdo, char *coredump)
+{
+	FILE *fdi;
+	char fname[512];
+
+#ifndef _WIN32
+	/* On *NIX we create a .tar.bz2 / .tar.gz (may take a couple of seconds) */
+	printf("Please wait...\n");
+	snprintf(fname, sizeof(fname), "tar c %s/unrealircd %s %s 2>/dev/null|(bzip2 || gzip) 2>/dev/null",
+		BINDIR, coredump, MODULESDIR);
+
+	fdi = popen(fname, "r");
+#else
+	/* On Windows we attach de .mdmp, the small minidump file */
+	strlcpy(fname, coredump, sizeof(fname));
+	if (strlen(fname) > 5)
+		fname[strlen(fname)-5] = '\0'; /* cut off the '.core' part */
+	strlcat(fname, ".mdmp", sizeof(fname)); /* and add '.mdmp' */
+	fprintf(fdo, "Windows MINIDUMP: %s\n", fname);
+	fdi = fopen(fname, "rb");
+#endif
+	if (!fdi)
+		return 0;
+
+	attach_file(fdi, fdo);
+
 	fclose(fdi);
 	return 1;
 }
-#endif
 
 char *generate_crash_report(char *coredump)
 {
@@ -380,9 +397,7 @@ char *generate_crash_report(char *coredump)
 	
 	crash_report_backtrace(reportfd, coredump);
 
-#ifndef _WIN32
-	attach_tar(reportfd, coredump);
-#endif
+	attach_coredump(reportfd, coredump);
 
 	fclose(reportfd);
 
