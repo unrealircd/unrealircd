@@ -1621,7 +1621,8 @@ int connect_inet(ConfigItem_link *aconf, aClient *cptr)
 	{
 		if (!unreal_bind(cptr->fd, bindip, 0, IsIPV6(cptr)))
 		{
-			report_baderror("error binding to local port for %s:%s", cptr);
+			report_baderror("Error binding to local port for %s:%s -- "
+			                "Your link::outgoing::bind-ip is probably incorrect.", cptr);
 			return 0;
 		}
 	}
