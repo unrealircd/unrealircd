@@ -286,7 +286,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 				ExInfo.ExceptionPointers = e;
 				ExInfo.ClientPointers = 0;
 
-				if (pDump(GetCurrentProcess(), GetCurrentProcessId(), hDump, MiniDumpNormal, &ExInfo, NULL, NULL))
+				if (pDump(GetCurrentProcess(), GetCurrentProcessId(), hDump, MiniDumpWithIndirectlyReferencedMemory, &ExInfo, NULL, NULL))
 				{
 					sprintf(text, "UnrealIRCd has encountered a fatal error. Debugging information has been dumped to %s and %s.", file, minidumpf);
 				}
@@ -300,6 +300,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 				ExInfo.ExceptionPointers = e;
 				ExInfo.ClientPointers = 0;
 
+				pDump(GetCurrentProcess(), GetCurrentProcessId(), hDump, MiniDumpWithPrivateReadWriteMemory, &ExInfo, NULL, NULL);
 				CloseHandle(hDump);
 			}
 		}
