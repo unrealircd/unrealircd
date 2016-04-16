@@ -72,6 +72,7 @@ For support you have two choices:
 
 ==[ CHANGES BETWEEN 4.0.2 AND 4.0.3 ]==
 Major issues fixed:
+* Crash on RPING command (IRCOp-only!)
 * Crash on Windows on failed outgoing server connect
 * Crash if you had a link { } block with invalid syntax
 
