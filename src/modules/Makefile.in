@@ -41,7 +41,7 @@ R_MODULES= \
 	 m_away.so m_svsnoop.so m_svsnick.so \
 	 m_chgname.so m_kill.so \
 	 m_lag.so m_message.so m_oper.so m_pingpong.so \
-	 m_quit.so m_rping.so m_sendumode.so m_sqline.so \
+	 m_quit.so m_sendumode.so m_sqline.so \
 	 m_tsctl.so m_unsqline.so m_whois.so \
 	 m_tkl.so m_vhost.so m_cycle.so m_svsjoin.so m_svspart.so \
 	 m_svswatch.so m_svssilence.so m_sendsno.so m_svssno.so \
@@ -104,10 +104,6 @@ m_pingpong.so: m_pingpong.c $(INCLUDES)
 m_quit.so: m_quit.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_quit.so m_quit.c
-
-m_rping.so: m_rping.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_rping.so m_rping.c
 
 m_sendumode.so: m_sendumode.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
