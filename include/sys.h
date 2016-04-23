@@ -109,6 +109,18 @@ extern	char	*rindex(char *, char);
 #define VOIDSIG void		/* whether signal() returns int of void */
 #endif
 
+#ifndef _WIN32
+#ifdef HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
+#ifndef WEXITSTATUS
+#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
+#endif
+#ifndef WIFEXITED
+#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
+#endif
+#endif
+
 #ifdef _SOLARIS
 #define OPT_TYPE char		/* opt type for get/setsockopt */
 #else
