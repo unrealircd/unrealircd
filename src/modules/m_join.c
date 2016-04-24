@@ -448,7 +448,11 @@ CMD_FUNC(_do_join)
 								get_client_name(sptr, 1), name);
 						}
 						if (d->reason)
-							sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, sptr->name, name, d->reason);
+							/* It stands out more when a user gets a notice (especially where a notice causes an irc client to play a sound byte)
+							 * and is easier to differentiate between any other "plaintext" is dumped to the clients status window  - sketchni
+							 */
+							sendnotice(sptr, "*** Can not join %s: %s", name, d->reason);
+							//sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, sptr->name, name, d->reason);
 						if (d->redirect)
 						{
 							sendnotice(sptr, "*** Redirecting you to %s", d->redirect);
