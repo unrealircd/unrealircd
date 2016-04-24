@@ -1,5 +1,5 @@
-UnrealIRCd 4.0.3 Release Notes
-===============================
+UnrealIRCd 4.0.3.1 Release Notes
+=================================
 
 UnrealIRCd 4 is here!
 
@@ -69,6 +69,11 @@ https://www.unrealircd.org/docs/FAQ
 For support you have two choices:
 * Forums: https://forums.unrealircd.org/
 * IRC: irc.unrealircd.org / #unreal-support
+
+==[ CHANGES BETWEEN 4.0.3 AND 4.0.3.1 ]==
+* Fix compile problem on FreeBSD & OpenBSD
+Note: there is no 4.0.3.1 release for Windows since there were no
+      changes for the Windows version.
 
 ==[ CHANGES BETWEEN 4.0.2 AND 4.0.3 ]==
 Major issues fixed:
