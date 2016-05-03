@@ -188,7 +188,7 @@ CMD_FUNC(m_version)
 		    tainted ? "3" : "",
 		    (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? MYOSNAME : "*"), UnrealProtocol);
 		if (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
-			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, OPENSSL_VERSION_TEXT);
+			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, SSLeay_version(SSLEAY_VERSION));
 #ifdef USE_LIBCURL
 		if (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, curl_version());
