@@ -6963,6 +6963,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "show-connect-info")) {
 					tempiConf.show_connect_info = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "no-connect-ssl-info")) {
+					tempiConf.no_connect_ssl_info = 1;
+				}
 				else if (!strcmp(cepp->ce_varname, "dont-resolve")) {
 					tempiConf.dont_resolve = 1;
 				}
@@ -7716,6 +7719,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "show-connect-info")) {
 					CheckDuplicate(cepp, options_show_connect_info, "options::show-connect-info");
+				}
+				else if (!strcmp(cepp->ce_varname, "no-connect-ssl-info")) {
+					CheckDuplicate(cepp, options_no_connect_ssl_info, "options::no-connect-ssl-info");
 				}
 				else if (!strcmp(cepp->ce_varname, "dont-resolve")) {
 					CheckDuplicate(cepp, options_dont_resolve, "options::dont-resolve");

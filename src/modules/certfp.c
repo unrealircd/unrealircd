@@ -123,7 +123,7 @@ int certfp_connect(aClient *acptr)
 	{
 		char *fp = moddata_client_get(acptr, "certfp");
 	
-		if (fp)
+		if (fp && !iConf.no_connect_ssl_info)
 			sendnotice(acptr, "*** Your SSL fingerprint is %s", fp);
 	}
 

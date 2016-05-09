@@ -1237,6 +1237,8 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, FAILOPER_WARN);
 	sendto_one(sptr, ":%s %i %s :options::show-connect-info: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWCONNECTINFO);
+	sendto_one(sptr, ":%s %i %s :options::no-connect-ssl-info: %d", me.name, RPL_TEXT,
+	    sptr->name, NOCONNECTSSLINFO);
 	sendto_one(sptr, ":%s %i %s :options::dont-resolve: %d", me.name, RPL_TEXT,
 	    sptr->name, DONT_RESOLVE);
 	sendto_one(sptr, ":%s %i %s :options::mkpasswd-for-everyone: %d", me.name, RPL_TEXT,

@@ -1413,7 +1413,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		if (sptr->flags & FLAGS_SSL)
 		{
-			if (sptr->local->ssl)
+			if (sptr->local->ssl && !iConf.no_connect_ssl_info)
 			{
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** You are connected to %s with %s",
