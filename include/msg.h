@@ -144,7 +144,7 @@
 #define MSG_VHOST 	"VHOST"
 #define MSG_BOTMOTD 	"BOTMOTD"
 #define MSG_REMGLINE	"REMGLINE"	/* remove g-line */
-#define MSG_HTM		"HTM"
+
 #define MSG_UMODE2	"UMODE2"
 #define MSG_DCCDENY	"DCCDENY"
 #define MSG_UNDCCDENY   "UNDCCDENY"

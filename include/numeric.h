@@ -125,7 +125,7 @@
 
 #define ERR_NONONREG	     486
 #define ERR_NOTFORUSERS	    487
-#define ERR_HTMDISABLED		 488
+
 #define ERR_SECUREONLYCHAN   489
 #define ERR_NOSWEAR	     490
 #define ERR_NOOPERHOST       491
