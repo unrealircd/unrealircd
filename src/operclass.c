@@ -348,6 +348,8 @@ OperPermission ValidatePermissionsForPath(char* path, aClient *sptr, aClient *vi
 		if (ce_operClass)
 		{
 			oc = ce_operClass->classStruct;
+		} else {
+			break; /* parent not found */
 		}
 	}
 	OperClass_freePath(operPath);
