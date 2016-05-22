@@ -62,17 +62,17 @@ OperClassValidator* OperClassAddValidator(Module *module, char* pathStr, OperCla
 	node = rootEvalNode;
 
 	while (path)
-        {
-                nextNode = OperClass_findPathNodeForIdentifier(path->identifier,node->children);
-                if (!nextNode)
-                {
+	{
+		nextNode = OperClass_findPathNodeForIdentifier(path->identifier,node->children);
+		if (!nextNode)
+		{
 			nextNode = MyMallocEx(sizeof(OperClass_PathNode));
 			nextNode->identifier = strdup(path->identifier);
 			AddListItem(nextNode,node->children);
-                }
-                node = nextNode;
+		}
+		node = nextNode;
 		path = path->next;
-        }
+	}
 
 	callbackNode = MyMallocEx(sizeof(OperClass_CallbackNode));
 	callbackNode->callback = callback;
@@ -81,16 +81,16 @@ OperClassValidator* OperClassAddValidator(Module *module, char* pathStr, OperCla
 
 	validator = MyMallocEx(sizeof(OperClassValidator));
 	validator->node = callbackNode;	
-        validator->owner = module;
+	validator->owner = module;
 
 	if (module)
-        {
-                ModuleObject *mobj = MyMallocEx(sizeof(ModuleObject));
-                mobj->object.validator = validator;
-                mobj->type = MOBJ_VALIDATOR;
-                AddListItem(mobj, module->objects);
-                module->errorcode = MODERR_NOERROR;
-        }
+	{
+		ModuleObject *mobj = MyMallocEx(sizeof(ModuleObject));
+		mobj->object.validator = validator;
+		mobj->type = MOBJ_VALIDATOR;
+		AddListItem(mobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
+	}
 
 	OperClass_freePath(path);
 
@@ -100,19 +100,19 @@ OperClassValidator* OperClassAddValidator(Module *module, char* pathStr, OperCla
 void OperClassValidatorDel(OperClassValidator* validator)
 {
 	if (validator->owner)
-        {
-                ModuleObject *mdobj;
-                for (mdobj = validator->owner->objects; mdobj; mdobj = mdobj->next)
-                {
-                        if ((mdobj->type == MOBJ_VALIDATOR) && (mdobj->object.validator == validator))
-                        {
-                                DelListItem(mdobj, validator->owner->objects);
-                                MyFree(mdobj);
-                                break;
-                        }
-                }
-                validator->owner = NULL;
-        }
+	{
+		ModuleObject *mdobj;
+		for (mdobj = validator->owner->objects; mdobj; mdobj = mdobj->next)
+		{
+			if ((mdobj->type == MOBJ_VALIDATOR) && (mdobj->object.validator == validator))
+			{
+				DelListItem(mdobj, validator->owner->objects);
+				MyFree(mdobj);
+				break;
+			}
+		}
+		validator->owner = NULL;
+	}
 	
 	/* Technically, the below leaks memory if you don't re-register
 	 * another validator at same path, but it is cheaper than walking
@@ -126,16 +126,16 @@ void OperClassValidatorDel(OperClassValidator* validator)
 OperClassACLPath* OperClass_parsePath(char* path)
 {
 	char* pathCopy = strdup(path);
-        OperClassACLPath* pathHead = NULL;
-        OperClassACLPath* tmpPath;
-        char *str = strtok(pathCopy,":");
-        while (str)
-        {
-                tmpPath = MyMallocEx(sizeof(OperClassACLPath));
-                tmpPath->identifier = strdup(str);
-                AddListItem(tmpPath,pathHead);
+	OperClassACLPath* pathHead = NULL;
+	OperClassACLPath* tmpPath;
+	char *str = strtok(pathCopy,":");
+	while (str)
+	{
+		tmpPath = MyMallocEx(sizeof(OperClassACLPath));
+		tmpPath->identifier = strdup(str);
+		AddListItem(tmpPath,pathHead);
 		str = strtok(NULL,":");
-        }
+	}
 
 	while (pathHead->next)
 	{
@@ -148,7 +148,7 @@ OperClassACLPath* OperClass_parsePath(char* path)
 	pathHead->prev = NULL;	
 
 	MyFree(pathCopy);
-        return pathHead;
+	return pathHead;
 }
 
 void OperClass_freePath(OperClassACLPath* path)
@@ -165,14 +165,14 @@ void OperClass_freePath(OperClassACLPath* path)
 
 OperClassACL* OperClass_FindACL(OperClassACL* acl, char* name)
 {
-        for (;acl;acl = acl->next)
-        {
-                if (!strcmp(acl->name,name))
-                { 
-                        return acl;
-                }
-        }       
-        return NULL;
+	for (;acl;acl = acl->next)
+	{
+		if (!strcmp(acl->name,name))
+		{ 
+			return acl;
+		}
+	}
+	return NULL;
 }
 
 OperClass_PathNode* OperClass_findPathNodeForIdentifier(char* identifier, OperClass_PathNode *head)
@@ -230,74 +230,74 @@ unsigned char OperClass_evaluateACLEntry(OperClassACLEntry* entry, OperClassACLP
 
 OperPermission ValidatePermissionsForPathEx(OperClassACL* acl, OperClassACLPath* path, OperClassCheckParams* params)
 {
-        /** Evaluate into ACL struct as deep as possible **/
+	/** Evaluate into ACL struct as deep as possible **/
 	OperClassACLPath *basePath = path;
-        OperClassACL* tmp;
-        OperClassACLEntry* entry;
-        unsigned char allow = 0;
-        unsigned char deny = 0;
+	OperClassACL* tmp;
+	OperClassACLEntry* entry;
+	unsigned char allow = 0;
+	unsigned char deny = 0;
 	unsigned char aclNotFound = 0;
 
 	path = path->next; /* Avoid first level since we have resolved it */
-        while (path && acl->acls)
-        {
-                tmp = OperClass_FindACL(acl->acls,path->identifier);
-                if (!tmp)
-                {
+	while (path && acl->acls)
+	{
+		tmp = OperClass_FindACL(acl->acls,path->identifier);
+		if (!tmp)
+		{
 			aclNotFound = 1;
-                        break;
-                }
-                path = path->next;
-                acl = tmp;
-        }
+			break;
+		}
+		path = path->next;
+		acl = tmp;
+	}
 	/** If node does not exist, but most specific one has other ACLs, deny **/
 	if (acl->acls && aclNotFound)
 	{
 		return OPER_DENY;
 	}
 
-        /** If node exists for this but has no ACL entries, allow **/
-        if (!acl->entries)
-        {
-                return OPER_ALLOW;
-        }
-        /** Process entries **/
-        for (entry = acl->entries; entry; entry = entry->next)
-        {
-        	unsigned char result;
-                /* Short circuit if we already have valid block */
-                if (entry->type == OPERCLASSENTRY_ALLOW && allow)
-                        continue;
-                if (entry->type == OPERCLASSENTRY_DENY && deny)
-                        continue;
+	/** If node exists for this but has no ACL entries, allow **/
+	if (!acl->entries)
+	{
+		return OPER_ALLOW;
+	}
+	/** Process entries **/
+	for (entry = acl->entries; entry; entry = entry->next)
+	{
+		unsigned char result;
+		/* Short circuit if we already have valid block */
+		if (entry->type == OPERCLASSENTRY_ALLOW && allow)
+			continue;
+		if (entry->type == OPERCLASSENTRY_DENY && deny)
+			continue;
 
-                result = OperClass_evaluateACLEntry(entry,basePath,params);
-                if (entry->type == OPERCLASSENTRY_ALLOW)
-                {
-                        allow = result;
-                }
+		result = OperClass_evaluateACLEntry(entry,basePath,params);
+		if (entry->type == OPERCLASSENTRY_ALLOW)
+		{
+			allow = result;
+		}
 		else
 		{
-                	deny = result;
+			deny = result;
 		}
-        }
+	}
 
-        /** We only permit if an allow matched AND no deny matched **/
-        if (allow && !deny)
-        {
-                return OPER_ALLOW;
-        }
+	/** We only permit if an allow matched AND no deny matched **/
+	if (allow && !deny)
+	{
+		return OPER_ALLOW;
+	}
 
-        return OPER_DENY;
+	return OPER_DENY;
 }
 
 OperPermission ValidatePermissionsForPath(char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra)
 {
 	ConfigItem_oper *ce_oper;
-        ConfigItem_operclass *ce_operClass;
-        OperClass *oc = NULL;
-        OperClassACLPath *operPath;
-        OperClassACL *acl;
+	ConfigItem_operclass *ce_operClass;
+	OperClass *oc = NULL;
+	OperClassACLPath *operPath;
+	OperClassACL *acl;
 
 	if (!sptr)
 		return OPER_DENY;
@@ -309,47 +309,47 @@ OperPermission ValidatePermissionsForPath(char* path, aClient *sptr, aClient *vi
 	if (!IsOper(sptr))
 		return OPER_DENY;
 
-        ce_oper = Find_oper(sptr->user->operlogin);
+	ce_oper = Find_oper(sptr->user->operlogin);
 	if (!ce_oper)
 	{
 		return OPER_DENY;
 	}
 	
 	ce_operClass = Find_operclass(ce_oper->operclass);
-        if (!ce_operClass)
-        {
+	if (!ce_operClass)
+	{
 		return OPER_DENY;
-        }
+	}
 
-        oc = ce_operClass->classStruct;
-        operPath = OperClass_parsePath(path);
-        while (oc && operPath)
-        {
-                OperClassACL* acl = OperClass_FindACL(oc->acls,operPath->identifier);
-                if (acl)
-                {
-                	OperPermission perm;
+	oc = ce_operClass->classStruct;
+	operPath = OperClass_parsePath(path);
+	while (oc && operPath)
+	{
+		OperClassACL* acl = OperClass_FindACL(oc->acls,operPath->identifier);
+		if (acl)
+		{
+			OperPermission perm;
 			OperClassCheckParams *params = MyMallocEx(sizeof(OperClassCheckParams));
-        		params->sptr = sptr;
-        		params->victim = victim;
-        		params->channel = channel;
-        		params->extra = extra;
+			params->sptr = sptr;
+			params->victim = victim;
+			params->channel = channel;
+			params->extra = extra;
 			
-                        perm = ValidatePermissionsForPathEx(acl, operPath, params);
+			perm = ValidatePermissionsForPathEx(acl, operPath, params);
 			OperClass_freePath(operPath);
 			MyFree(params);
 			return perm;
-                }
-                if (!oc->ISA)
-                {
-                        break;
-                }
-                ce_operClass = Find_operclass(oc->ISA);
+		}
+		if (!oc->ISA)
+		{
+			break;
+		}
+		ce_operClass = Find_operclass(oc->ISA);
 		if (ce_operClass)
 		{
 			oc = ce_operClass->classStruct;
 		}
-        }
+	}
 	OperClass_freePath(operPath);
-        return OPER_DENY;
+	return OPER_DENY;
 }
