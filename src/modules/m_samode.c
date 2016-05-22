@@ -62,20 +62,21 @@ CMD_FUNC(m_samode)
 {
 	aChannel *chptr;
 
-	if (parc > 2)
-	{
-		chptr = find_channel(parv[1], NullChn);
-		if (chptr == NullChn)
-			return 0;
-	}
-	else
+	if (parc <= 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, sptr->name, "SAMODE");
 		return 0;
 	}
 
-	if (!ValidatePermissionsForPath("samode",sptr,NULL,chptr,NULL))
+	chptr = find_channel(parv[1], NULL);
+	if (!chptr)
+	{
+		sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, sptr->name, parv[1]);
+		return 0;
+	}
+
+	if (!ValidatePermissionsForPath("samode", sptr, NULL, chptr, NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
