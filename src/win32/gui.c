@@ -561,6 +561,13 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				return FALSE;
 			}
 
+			if (!loop.ircd_booted)
+			{
+				MessageBox(NULL, "UnrealIRCd not booted due to configuration errors. "
+				                 "Check other window for error details. Then close that window, "
+				                 "fix the errors and start UnrealIRCd again.");
+				return FALSE;
+			}
 			switch(LOWORD(wParam)) 
 			{
 				case IDM_STATUS:
