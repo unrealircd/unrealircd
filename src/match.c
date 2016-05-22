@@ -640,12 +640,7 @@ int match_user(char *rmask, aClient *acptr, int options)
 		p = strchr(p ? p : mask, '@');
 		if (p)
 		{
-			char *client_username;
-			
-			if (options & MATCH_USE_IDENT)
-				client_username = acptr->username;
-			else
-				client_username = (acptr->user && *acptr->user->username) ? acptr->user->username : acptr->username;
+			char *client_username = (acptr->user && *acptr->user->username) ? acptr->user->username : acptr->username;
 
 			*p++ = '\0';
 			if (!*p || !*mask)

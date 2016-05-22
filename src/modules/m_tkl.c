@@ -1119,7 +1119,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 			
 			snprintf(uhost, sizeof(uhost), "%s@%s", lp->usermask, lp->hostmask);
 
-			if (match_user(uhost, cptr, MATCH_CHECK_REAL|MATCH_USE_IDENT))
+			if (match_user(uhost, cptr, MATCH_CHECK_REAL))
 			{
 				/* Found match. Now check for exception... */
 				banned = 1;
@@ -1135,7 +1135,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 						excepts->type != lp->type))
 						continue;
 					
-					if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL|MATCH_USE_IDENT))
+					if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL))
 					{
 						banned = 0; /* exempt by except block */
 						break;
@@ -1247,7 +1247,7 @@ int  _find_shun(aClient *cptr)
 		
 		snprintf(uhost, sizeof(uhost), "%s@%s", lp->usermask, lp->hostmask);
 
-		if (match_user(uhost, cptr, MATCH_CHECK_REAL|MATCH_USE_IDENT))
+		if (match_user(uhost, cptr, MATCH_CHECK_REAL))
 		{
 			/* Found match. Now check for exception... */
 			banned = 1;
@@ -1258,7 +1258,7 @@ int  _find_shun(aClient *cptr)
 					excepts->type != lp->type))
 					continue;
 				
-				if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL|MATCH_USE_IDENT))
+				if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL))
 				{
 					banned = 0; /* exempt by except block */
 					break;
@@ -1415,7 +1415,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 	{
 		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != TKL_NICK)
 			continue;
-		if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL|MATCH_USE_IDENT))
+		if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL))
 			return NULL; /* exempt */
 	}
 
@@ -1443,7 +1443,7 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 
 	for (lp = tklines[tkl_hash('z')]; lp; lp = lp->next)
 	{
-		if ((lp->type & TKL_ZAP) && match_user(lp->hostmask, cptr, MATCH_CHECK_IP|MATCH_USE_IDENT))
+		if ((lp->type & TKL_ZAP) && match_user(lp->hostmask, cptr, MATCH_CHECK_IP))
 		{
 			for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
 				/* This used to be:
@@ -1454,7 +1454,7 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 				 */
 				if (excepts->flag.type != CONF_EXCEPT_BAN)
 					continue;
-				if (match_user(excepts->mask, cptr, MATCH_CHECK_IP|MATCH_USE_IDENT))
+				if (match_user(excepts->mask, cptr, MATCH_CHECK_IP))
 					return -1; /* exempt */
 			}
 			for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
