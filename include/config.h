@@ -251,7 +251,7 @@
  * to IRC_USER/IRC_GROUP when those are defined.
  *
  * The directory to chroot to is simply DPATH (which is set via ./Config).
- * (This may effect the PATH locations above, though you can symlink it)
+ * (This may affect the PATH locations above, though you can symlink it)
  *
  * If you want this, simple change this to '#define CHROOTDIR' and also
  * look at IRC_USER/IRC_GROUP a few lines below.

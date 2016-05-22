@@ -43,9 +43,6 @@ extern void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, 
 extern void sendto_realops(char *pattern, ...) __attribute__((format(printf,1,2)));
 extern void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...) __attribute__((format(printf,3,4))); 
 
-/* fdlist.c */
-extern EVENT(lcf_check);
-extern EVENT(htm_calc);
 /* ircd.c */
 extern EVENT(garbage_collect);
 extern EVENT(loop_event);

@@ -64,8 +64,7 @@ MOD_UNLOAD(m_list)
 }
 
 /* Originally from bahamut, modified a bit for Unreal by codemastr
- * also Opers can now see +s channels and can still use /list while
- * HTM is active -- codemastr */
+ * also Opers can now see +s channels -- codemastr */
 
 /*
  * parv[1] = channel
