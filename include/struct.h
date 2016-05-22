@@ -849,18 +849,9 @@ struct Client {
 	aClient *srvptr;	/* Server introducing this.  May be &me */
 	short status;		/* client type */
 	ModData moddata[MODDATA_MAX_CLIENT]; /* for modules */
-	/*
-	   ** The following fields are allocated only for local clients
-	   ** (directly connected to *this* server with a socket.
-	   ** The first of them *MUST* be the "count"--it is the field
-	   ** to which the allocation is tied to! *Never* refer to
-	   ** these fields, if (from != self).
-	 */
 	int  count;		/* Amount of data in buffer */
-
 	struct list_head lclient_node;	/* for local client list (lclient_list) */
 	struct list_head special_node;	/* for special lists (server || unknown || oper) */
-	
 	char *ip; /* IP of user or server */
 };
 
