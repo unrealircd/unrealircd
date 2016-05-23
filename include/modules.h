@@ -849,7 +849,7 @@ int hooktype_silenced(aClient *cptr, aClient *sptr, aClient *to, int notice);
 int hooktype_post_server_connect(aClient *sptr);
 int hooktype_rawpacket_in(aClient *sptr, char *readbuf, int *length);
 int hooktype_local_nickpass(aClient *sptr, aClient *nickserv);
-int hooktype_packet(aClient *from, aClient *to, char **msg, int length);
+int hooktype_packet(aClient *from, aClient *to, char **msg, int *length);
 int hooktype_handshake(aClient *sptr);
 int hooktype_away(aClient *sptr, char *reason);
 int hooktype_invite(aClient *from, aClient *to, aChannel *chptr);
