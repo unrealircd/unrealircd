@@ -3241,6 +3241,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::motd");
 				continue;
 			}
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
 			config_test_openfile(cep, O_RDONLY, 0, "files::motd", 0, 1);
 			has_motd = 1;
 		}
@@ -3253,6 +3254,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::shortmotd");
 				continue;
 			}
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
 			config_test_openfile(cep, O_RDONLY, 0, "files::shortmotd", 0, 1);
 			has_smotd = 1;
 		}
@@ -3265,6 +3267,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::rules");
 				continue;
 			}
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
 			config_test_openfile(cep, O_RDONLY, 0, "files::rules", 0, 1);
 			has_rules = 1;
 		}
@@ -3277,6 +3280,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::botmotd");
 				continue;
 			}
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
 			config_test_openfile(cep, O_RDONLY, 0, "files::botmotd", 0, 1);
 			has_botmotd = 1;
 		}
@@ -3289,6 +3293,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::opermotd");
 				continue;
 			}
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
 			config_test_openfile(cep, O_RDONLY, 0, "files::opermotd", 0, 1);
 			has_opermotd = 1;
 		}
@@ -3303,6 +3308,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::svsmotd");
 				continue;
 			}
+			convert_to_absolute_path(&cep->ce_vardata, CONFDIR);
 			/* svsmotd can't be a URL because we have to be able to write to it */
 			config_test_openfile(cep, O_RDONLY, 0, "files::svsmotd", 0, 0);
 			has_svsmotd = 1;
@@ -3316,7 +3322,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::pidfile");
 				continue;
 			}
-
+			convert_to_absolute_path(&cep->ce_vardata, PERMDATADIR);
 			errors += config_test_openfile(cep, O_WRONLY | O_CREAT, 0600, "files::pidfile", 1, 0);
 			has_pidfile = 1;
 		}
@@ -3329,6 +3335,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::tunefile");
 				continue;
 			}
+			convert_to_absolute_path(&cep->ce_vardata, PERMDATADIR);
 			errors += config_test_openfile(cep, O_RDWR | O_CREAT, 0600, "files::tunefile", 1, 0);
 			has_tunefile = 1;
 		}
