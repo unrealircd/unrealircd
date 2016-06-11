@@ -507,6 +507,14 @@ if [ -z "$cc" ] ; then
 else
    BASEPATH=`eval echo $cc` # modified
 fi
+if [ "$BASEPATH" = "$UNREALCWD" ]; then
+	echo ""
+	echo "ERROR: The installation directory cannot be the same as the directory"
+	echo "       containing the source code ($UNREALCWD)."
+	echo " HINT: Usually the directory containing the source is $HOME/unrealircd-4.x.y"
+	echo "       and the installation directory you would need to enter is $HOME/unrealircd"
+	exit 1
+fi
 
 # TODO: For -advanced we could prompt the user.
 BINDIR="$BASEPATH/bin"
