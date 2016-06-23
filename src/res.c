@@ -583,6 +583,7 @@ unsigned int hashv;
 		c->hnext->hprev = c->hprev;
 	
 	MyFree(c->name);
+	MyFree(c->ip);
 	MyFree(c);
 
 	unrealdns_num_cache--;

@@ -178,15 +178,19 @@ CMD_FUNC(m_version)
 {
 	/* Only allow remote VERSIONs if registered -- Syzop */
 	if (!IsPerson(sptr) && !IsServer(cptr))
- 	       send_version(sptr,RPL_ISUPPORT);
+	{
+		send_version(sptr,RPL_ISUPPORT);
+		return 0;
+	}
 
 	if (hunt_server(cptr, sptr, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
-		    sptr->name, version, debugmode, me.name,
-		    serveropts, extraflags ? extraflags : "",
-		    tainted ? "3" : "",
-		    (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? MYOSNAME : "*"), UnrealProtocol);
+		           sptr->name, version, debugmode, me.name,
+		           serveropts, extraflags ? extraflags : "",
+		           tainted ? "3" : "",
+		           (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? MYOSNAME : "*"),
+		           UnrealProtocol);
 		if (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, SSLeay_version(SSLEAY_VERSION));
 #ifdef USE_LIBCURL
