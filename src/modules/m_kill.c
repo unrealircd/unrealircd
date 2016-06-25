@@ -194,7 +194,7 @@ CMD_FUNC(m_kill)
 		    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,
 		    sptr->name, inpath, path);
 
-		ircd_log(LOG_KILL, "KILL (%s) by  %s(%s!%s)",
+		ircd_log(LOG_KILL, "KILL (%s) by %s(%s!%s)",
 			make_nick_user_host(acptr->name, acptr->user->username, GetHost(acptr)),
 			sptr->name, inpath, path);
 
