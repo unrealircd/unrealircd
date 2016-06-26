@@ -1,5 +1,29 @@
-UnrealIRCd 4.0.3.1 Release Notes
-=================================
+UnrealIRCd 4.0.4 Release Notes
+===============================
+
+==[ CHANGES BETWEEN 4.0.4 AND 4.0.3(.1) ]==
+New:
+* Italian /HELPOP translation (help.it.conf)
+* set::options::no-connect-ssl-info to hide SSL-related connect info
+
+Major issues fixed:
+* GLINE/KLINE on usermask@ did not have any effect
+* Crash if you have a listen block with port 0
+* Infinite loop on invalid operclass::parent reference
+
+Minor issues fixed:
+* files { } block only worked with absolute paths
+* delayjoin: hidden users were not always joined on +vhoaq
+* Fix small memory leak
+* Duplicate replies on /VERSION
+* When doing /VERSION on IRC as an IRCOp it showed the compile-time
+  rather than runtime OpenSSL/LibreSSL version
+
+Other changes:
+* Documentation updates
+* Prevent installation in the same directory as the source
+
+==[ UNREALIRCD 4 INTRODUCTION ]==
 
 UnrealIRCd 4 is here!
 
