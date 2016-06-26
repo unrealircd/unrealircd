@@ -4634,9 +4634,9 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			port_range(cep->ce_vardata, &start, &end);
 			if (start == end)
 			{
-				if ((start < 0) || (start > 65535))
+				if ((start < 1) || (start > 65535))
 				{
-					config_error("%s:%i: listen: illegal port (must be 0..65535)",
+					config_error("%s:%i: listen: illegal port (must be 1..65535)",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 					return 1;
 				}
@@ -4657,9 +4657,9 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 						end - start + 1, end - start + 1);
 					return 1;
 				}
-				if ((start < 0) || (start > 65535) || (end < 0) || (end > 65535))
+				if ((start < 1) || (start > 65535) || (end < 1) || (end > 65535))
 				{
-					config_error("%s:%i: listen: illegal port range values must be between 0 and 65535",
+					config_error("%s:%i: listen: illegal port range values must be between 1 and 65535",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 					return 1;
 				}
