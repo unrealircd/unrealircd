@@ -1943,7 +1943,7 @@ void	config_rehash()
 			MyFree(ban_ptr);
 		}
 	}
-	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
+	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = listen_ptr->next)
 	{
 		listen_ptr->flag.temporary = 1;
 	}
@@ -2470,12 +2470,12 @@ int count_oper_sessions(char *name)
 
 ConfigItem_listen *Find_listen(char *ipmask, int port, int ipv6)
 {
-	ConfigItem_listen	*p;
+	ConfigItem_listen *p;
 
 	if (!ipmask)
 		return NULL;
 
-	for (p = conf_listen; p; p = (ConfigItem_listen *) p->next)
+	for (p = conf_listen; p; p = p->next)
 	{
 		if (p->ipv6 != ipv6)
 			continue;
@@ -8143,13 +8143,13 @@ int	_test_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 
 void start_listeners(void)
 {
-	ConfigItem_listen 	*listenptr;
+	ConfigItem_listen *listenptr;
 	int failed = 0, ports_bound = 0;
 	char boundmsg_ipv4[512], boundmsg_ipv6[512];
 	
 	*boundmsg_ipv4 = *boundmsg_ipv6 = '\0';
 
-	for (listenptr = conf_listen; listenptr; listenptr = (ConfigItem_listen *) listenptr->next)
+	for (listenptr = conf_listen; listenptr; listenptr = listenptr->next)
 	{
 		/* Try to bind to any ports that are not yet bound and not marked as temporary */
 		if (!(listenptr->options & LISTENER_BOUND) && !listenptr->flag.temporary)
@@ -9551,7 +9551,7 @@ int ssl_used_in_config_but_unavail(void)
 	if (ctx_server && ctx_client)
 		return 0; /* everything is functional */
 
-	for (listener = conf_listen; listener; listener = (ConfigItem_listen *)listener->next)
+	for (listener = conf_listen; listener; listener = listener->next)
 		if (listener->options & LISTENER_SSL)
 		{
 			config_error("Listen block %s:%d is configured to use SSL, however SSL is unavailable due to an earlier error (certificate/key not loaded?)", listener->ip, listener->port);

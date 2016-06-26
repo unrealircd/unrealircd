@@ -987,8 +987,8 @@ struct _configflag_tld
 
 
 struct _configitem {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 };
 
 struct _configitem_me {
@@ -1083,8 +1083,8 @@ struct _operClassCheckParams
 };
 
 struct _configitem_operclass {
-	ConfigItem	*prev, *next;
-	OperClass	*classStruct;
+	ConfigItem_operclass *prev, *next;
+	OperClass *classStruct;
 };
 
 struct _configitem_oper {
@@ -1132,7 +1132,7 @@ struct _configitem_tld {
 };
 
 struct _configitem_listen {
-	ConfigItem 	*prev, *next;
+	ConfigItem_listen *prev, *next;
 	ConfigFlag 	flag;
 	char		*ip;
 	int		port;
