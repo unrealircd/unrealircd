@@ -190,6 +190,7 @@ void fd_select(time_t delay)
 	memcpy(&work_except_fds, &write_fds, sizeof(fd_set));
 #endif
 
+	memset(&to, 0, sizeof(to));
 	to.tv_sec = delay / 1000;
 	to.tv_usec = (delay % 1000) * 1000;
 
@@ -391,6 +392,7 @@ void fd_select(time_t delay)
 		memset(kqueue_enabled,0,MAXCONNECTIONS*2);
 	}
 
+	memset(&ts, 0, sizeof(ts));
 	ts.tv_sec = delay / 1000;
 	ts.tv_nsec = delay % 1000 * 1000000;
 
@@ -478,6 +480,7 @@ void fd_refresh(int fd)
 	if (op == -1)
 		return;
 
+	memset(&ep_event, 0, sizeof(ep_event));
 	ep_event.events = pflags;
 	ep_event.data.ptr = fde;
 
