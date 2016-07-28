@@ -1,27 +1,10 @@
-UnrealIRCd 4.0.4 Release Notes
+UnrealIRCd 4.0.5 Release Notes
 ===============================
 
-==[ CHANGES BETWEEN 4.0.4 AND 4.0.3(.1) ]==
-New:
-* Italian /HELPOP translation (help.it.conf)
-* set::options::no-connect-ssl-info to hide SSL-related connect info
-
+==[ CHANGES BETWEEN 4.0.4 AND 4.0.5 ]==
 Major issues fixed:
-* GLINE/KLINE on usermask@ did not have any effect
-* Crash if you have a listen block with port 0
-* Infinite loop on invalid operclass::parent reference
-
-Minor issues fixed:
-* files { } block only worked with absolute paths
-* delayjoin: hidden users were not always joined on +vhoaq
-* Fix small memory leak
-* Duplicate replies on /VERSION
-* When doing /VERSION on IRC as an IRCOp it showed the compile-time
-  rather than runtime OpenSSL/LibreSSL version
-
-Other changes:
-* Documentation updates
-* Prevent installation in the same directory as the source
+* Crash issue (read-after-free)
+* Bans on IPv6 cloaked hosts had no effect
 
 ==[ UNREALIRCD 4 INTRODUCTION ]==
 
@@ -93,6 +76,28 @@ https://www.unrealircd.org/docs/FAQ
 For support you have two choices:
 * Forums: https://forums.unrealircd.org/
 * IRC: irc.unrealircd.org / #unreal-support
+
+==[ CHANGES BETWEEN 4.0.4 AND 4.0.3(.1) ]==
+New:
+* Italian /HELPOP translation (help.it.conf)
+* set::options::no-connect-ssl-info to hide SSL-related connect info
+
+Major issues fixed:
+* GLINE/KLINE on usermask@ did not have any effect
+* Crash if you have a listen block with port 0
+* Infinite loop on invalid operclass::parent reference
+
+Minor issues fixed:
+* files { } block only worked with absolute paths
+* delayjoin: hidden users were not always joined on +vhoaq
+* Fix small memory leak
+* Duplicate replies on /VERSION
+* When doing /VERSION on IRC as an IRCOp it showed the compile-time
+  rather than runtime OpenSSL/LibreSSL version
+
+Other changes:
+* Documentation updates
+* Prevent installation in the same directory as the source
 
 ==[ CHANGES BETWEEN 4.0.3 AND 4.0.3.1 ]==
 * Fix compile problem on FreeBSD & OpenBSD
