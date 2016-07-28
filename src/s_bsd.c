@@ -1375,7 +1375,7 @@ void read_packet(int fd, int revents, void *data)
 				return;
 
 		/* flood from unknown connection */
-		if (IsUnknown(cptr) && (DBufLength(&cptr->local->recvQ) > UNKNOWN_FLOOD_AMOUNT))
+		if (IsUnknown(cptr) && (DBufLength(&cptr->local->recvQ) > UNKNOWN_FLOOD_AMOUNT*1024))
 		{
 			sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
 				cptr->local->sockhost);
