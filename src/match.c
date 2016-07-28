@@ -664,7 +664,22 @@ int match_user(char *rmask, aClient *acptr, int options)
 	/* If we get here then we have done checking nick / ident (if it was needed)
 	 * and now need to match the 'host' portion.
 	 */
-	
+
+	/**** Check visible host ****/
+	if (options & MATCH_CHECK_VISIBLE_HOST)
+	{
+		char *hostname = acptr->user ? GetHost(acptr) : (MyClient(acptr) ? acptr->local->sockhost : NULL);
+		if (hostname && (match(hmask, hostname) == 0))
+			return 1; /* MATCH: visible host */
+	}
+
+	/**** Check cloaked host ****/
+	if (options & MATCH_CHECK_CLOAKED_HOST)
+	{
+		if (acptr->user && (match(hmask, acptr->user->cloakedhost) == 0))
+			return 1; /* MATCH: cloaked host */
+	}
+
 	/**** check on IP ****/
 	if (options & MATCH_CHECK_IP)
 	{
@@ -734,22 +749,6 @@ int match_user(char *rmask, aClient *acptr, int options)
 		char *hostname = acptr->user ? acptr->user->realhost : (MyClient(acptr) ? acptr->local->sockhost : NULL);
 		if (hostname && (match(hmask, hostname) == 0))
 			return 1; /* MATCH: hostname match */
-	}
-	
-	/**** Check cloaked host ****/
-	if (options & MATCH_CHECK_CLOAKED_HOST)
-	{
-		if (acptr->user && (match(hmask, acptr->user->cloakedhost) == 0))
-			return 1; /* MATCH: cloaked host */
-	}
-
-	/**** Check visible host ****/
-	// TODO: optimize if real host was checked already and visible host == real host
-	if (options & MATCH_CHECK_VISIBLE_HOST)
-	{
-		char *hostname = acptr->user ? GetHost(acptr) : (MyClient(acptr) ? acptr->local->sockhost : NULL);
-		if (hostname && (match(hmask, hostname) == 0))
-			return 1; /* MATCH: cloaked host */
 	}
 	
 	return 0; /* NOMATCH: nothing of the above matched */

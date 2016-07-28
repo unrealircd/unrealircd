@@ -1437,7 +1437,6 @@ void process_clients(void)
 void finish_auth(aClient *acptr)
 {
 	SetAccess(acptr);
-	parse_client_queued(acptr);
 }
 
 /** Returns 4 if 'str' is a valid IPv4 address
