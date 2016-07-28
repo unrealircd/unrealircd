@@ -5,6 +5,7 @@ UnrealIRCd 4.0.5 Release Notes
 Major issues fixed:
 * Crash issue (read-after-free)
 * Bans on IPv6 cloaked hosts had no effect
+* Prevent flood from unknown connection
 
 ==[ UNREALIRCD 4 INTRODUCTION ]==
 

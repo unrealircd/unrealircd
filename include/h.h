@@ -776,3 +776,4 @@ extern int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *c
 extern int m_rehash(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 extern int m_die(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 extern int m_restart(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern void ban_flooder(aClient *cptr);

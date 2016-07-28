@@ -1374,6 +1374,15 @@ void read_packet(int fd, int revents, void *data)
 			if (parse_client_queued(cptr) == FLUSH_BUFFER)
 				return;
 
+		/* flood from unknown connection */
+		if (IsUnknown(cptr) && (DBufLength(&cptr->local->recvQ) > UNKNOWN_FLOOD_AMOUNT))
+		{
+			sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
+				cptr->local->sockhost);
+			ban_flooder(cptr);
+			return;
+		}
+
 		/* excess flood check */
 		if (IsPerson(cptr) && DBufLength(&cptr->local->recvQ) > get_recvq(cptr))
 		{
