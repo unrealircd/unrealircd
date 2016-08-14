@@ -1,4 +1,6 @@
 # Ignore configure step
+aclocal.m4
+autom4te.cache
 config.log
 conftest.*
 config.settings
@@ -21,6 +23,10 @@ include/setup.h
 
 # Ignore tags file
 tags
+
+# Ignore editor files
+*\#*
+*~
 
 # Ignore SSL Stuff
 server.cert.pem
