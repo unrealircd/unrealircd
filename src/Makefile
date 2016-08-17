@@ -33,14 +33,15 @@ OBJS=timesynch.o res.o s_bsd.o auth.o aln.o channel.o cloak.o crule.o dbuf.o \
 
 SRC=$(OBJS:%.o=%.c)
 
-MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
+MAKEARGS =	"CFLAGS=`for f in ${CFLAGS}; do echo -n \'$${f}\'\ ; done`" 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'LDFLAGS=${LDFLAGS}' 'IRCDMODE=${IRCDMODE}' \
-		'BINDIR=${BINDIR}' 'INSTALL=${INSTALL}' \
+		'RES=${RES}' 'BINDIR=${BINDIR}' 'INSTALL=${INSTALL}' \
 		'INCLUDEDIR=${INCLUDEDIR}' \
-		'MANDIR=${MANDIR}' 'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
-		'RES=${RES}' 'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
+		'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
+		'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
 		'CRYPTOLIB=${CRYPTOLIB}' \
-		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' 'URL=${URL}' \
+		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' \
+		'URL=${URL}'
 
 MY_MAKE = $(MAKE) $(MAKEARGS)
 

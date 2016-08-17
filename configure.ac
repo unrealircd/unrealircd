@@ -486,11 +486,13 @@ AC_ARG_WITH(tmpdir, [AS_HELP_STRING([--with-tmpdir=path],[Specify the directory 
 	[AC_DEFINE_UNQUOTED([TMPDIR], ["$HOME/unrealircd/tmp"], [Define the location of private temporary files])
 		TMPDIR="$HOME/unrealircd/tmp"])
 
-AC_ARG_WITH(datadir, [AS_HELP_STRING([--with-datadir=path],[Specify the directory where permanent data is stored])],
-	[AC_DEFINE_UNQUOTED([PERMDATADIR], ["$withval"], [Define the location of permanent data files])
-		PERMDATADIR="$withval"],
-	[AC_DEFINE_UNQUOTED([DATADIR], ["$HOME/unrealircd/data"], [Define the location of permanent data files])
-		PERMDATADIR="$HOME/unrealircd/data"])
+AC_ARG_WITH([standard-dirs], [AS_HELP_STRING([--with-standard-dirs], [Specify that common directory conventions used by autoconf and unix distributions be used.])],
+	[WITH_FHS="$withval"],
+	[WITH_FHS=no])
+AS_IF([test "x$WITH_FHS" = "xyes"],
+	[pkglocalstatedir='${localstatedir}/${PACKAGE_NAME}'],
+	[pkglocalstatedir='${localstatedir}'])
+AC_SUBST([pkglocalstatedir])
 
 AC_ARG_WITH(docdir, [AS_HELP_STRING([--with-docdir=path],[Specify the directory where documentation is stored])],
 	[AC_DEFINE_UNQUOTED([DOCDIR], ["$withval"], [Define the location of the documentation])

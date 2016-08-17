@@ -243,7 +243,7 @@
 #define	LPATH		LOGDIR"/debug.log"	/* Where the debug file lives, if DEBUGMODE */
 #define VPATH		CONFDIR"/ircd.svsmotd"	/* Services MOTD append. */
 #define BPATH		CONFDIR"/bot.motd"	/* Bot MOTD */
-#define IRCDTUNE 	PERMDATADIR"/ircd.tune"	/* tuning .. */
+#define IRCDTUNE 	PKGLOCALSTATEDIR"/ircd.tune"	/* tuning .. */
 
 /* CHROOTDIR
  *
