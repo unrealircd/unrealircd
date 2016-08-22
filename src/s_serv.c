@@ -244,7 +244,7 @@ int remotecmdfilter(aClient *sptr, int parc, char *parv[])
 	/* same as above, but in case an old server forwards a request to us: we ignore it */
 	if (!MyClient(sptr) && !ValidatePermissionsForPath("server:remote",sptr,NULL,NULL,NULL))
 		return 1; /* STOP (return) */
-	
+
 	return 0; /* Continue */
 }
 
@@ -282,7 +282,7 @@ char **text = unrealinfo;
 	    me.name, RPL_INFO, sptr->name, IRCDTOTALVERSION);
 
 	while (*text)
-		sendto_one(sptr, ":%s %d %s :| %s", 
+		sendto_one(sptr, ":%s %d %s :| %s",
 		    me.name, RPL_INFO, sptr->name, *text++);
 
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
@@ -454,9 +454,9 @@ char *get_client_name2(aClient *acptr, int showports)
 	if (!strrchr(pointer, '.'))
 		return NULL;
 	/*
-	 * This may seem like wack but remind this is only used 
+	 * This may seem like wack but remind this is only used
 	 * in rows of get_client_name2's, so it's perfectly fair
-	 * 
+	 *
 	*/
 	strcpy((char *)strrchr((char *)pointer, '.'), ".0]");
 
@@ -476,7 +476,7 @@ CMD_FUNC(m_summon)
 /*
 ** m_users
 **	parv[1] = servername
-*/ 
+*/
 CMD_FUNC(m_users)
 {
 	/* /users is out of date, just return an error as  required by
@@ -491,7 +491,7 @@ CMD_FUNC(m_users)
 ** --msa
 **
 **	parv[*] = parameters
-*/ 
+*/
 CMD_FUNC(m_error)
 {
 	char *para;
@@ -615,6 +615,7 @@ extern void reinit_resolver(aClient *sptr);
 CMD_FUNC(m_rehash)
 {
 	int x = 0;
+	int glob_numrehash = 0; /* Keep track of amount of servers affected by -global rehashes */
 
 	if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
 	{
@@ -673,7 +674,7 @@ CMD_FUNC(m_rehash)
 		{
 			/* /REHASH -global [options] */
 			aClient *acptr;
-			
+
 			/* Shift parv's to the left */
 			parv[1] = parv[2];
 			parv[2] = NULL;
@@ -783,7 +784,14 @@ CMD_FUNC(m_rehash)
 				me.name, sptr->name);
 			return 0;
 		}
-		sendto_ops("%s is rehashing server config file", sptr->name);
+
+		/* There might be a better way for this */
+		aClient *acptr;
+		list_for_each_entry(acptr, &global_server_list, client_node) {
+			if(!IsULine(acptr)) /* Don't count services */
+				glob_numrehash++;
+		}
+		sendto_ops("%s is rehashing server config file on %d server(s)", sptr->name, glob_numrehash);
 	}
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
@@ -1097,7 +1105,7 @@ void do_read_motd(const char *filename, aMotdFile *themotd)
 			*tmp = '\0';
 		if ((tmp = strchr(line, '\r')))
 			*tmp = '\0';
-		
+
 		if (strlen(line) > 510)
 			line[510] = '\0';
 
@@ -1117,7 +1125,7 @@ void do_read_motd(const char *filename, aMotdFile *themotd)
 		last->next = NULL;
 
 	fclose(fd);
-	
+
 	return;
 }
 
@@ -1193,7 +1201,7 @@ CMD_FUNC(m_die)
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
 		if (IsClient(acptr))
-			sendnotice(acptr, "Server Terminated by %s", 
+			sendnotice(acptr, "Server Terminated by %s",
 				sptr->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, ":%s ERROR :Terminated by %s",
@@ -1270,12 +1278,12 @@ void add_pending_net(aClient *sptr, char *str)
 	{
 		if (!*name)
 			continue;
-		
+
 		srv = MyMallocEx(sizeof(aPendingServer));
 		strlcpy(srv->sid, name, sizeof(srv->sid));
 		AddListItem(srv, net->servers);
 	}
-	
+
 	AddListItem(net, pendingnet);
 }
 
@@ -1283,7 +1291,7 @@ void free_pending_net(aClient *sptr)
 {
 	aPendingNet *net, *net_next;
 	aPendingServer *srv, *srv_next;
-	
+
 	for (net = pendingnet; net; net = net_next)
 	{
 		net_next = net->next;
@@ -1328,7 +1336,7 @@ aClient *find_pending_net_duplicates(aClient *cptr, aClient **srv, char **sid)
 
 	*srv = NULL;
 	*sid = NULL;
-	
+
 	for (net = pendingnet; net; net = net->next)
 	{
 		if (net->sptr != cptr)
@@ -1346,7 +1354,7 @@ aClient *find_pending_net_duplicates(aClient *cptr, aClient **srv, char **sid)
 			}
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -1368,7 +1376,6 @@ aClient *find_non_pending_net_duplicates(aClient *cptr)
 				return acptr; /* Found another (fully CONNECTED) server with identical numeric */
 		}
 	}
-	
+
 	return NULL;
 }
-
