@@ -697,6 +697,9 @@ CMD_FUNC(m_rehash)
 			/* Broadcast it in an inefficient, but backwards compatible way. */
 			list_for_each_entry(acptr, &global_server_list, client_node)
 			{
+				if(!IsULine(acptr)) /* Don't count ulines (services mostly) */
+					glob_numrehash++;
+
 				if (acptr == &me)
 					continue;
 				sendto_one(acptr, ":%s REHASH %s %s",
@@ -704,6 +707,7 @@ CMD_FUNC(m_rehash)
 					acptr->name,
 					parv[1] ? parv[1] : "-all");
 			}
+			sendto_ops("%s is rehashing server config file on %d server(s)", sptr->name, glob_numrehash);
 			/* Don't return, continue, because we need to REHASH ourselves as well. */
 		}
 	}
@@ -785,13 +789,8 @@ CMD_FUNC(m_rehash)
 			return 0;
 		}
 
-		/* There might be a better way for this */
-		aClient *acptr;
-		list_for_each_entry(acptr, &global_server_list, client_node) {
-			if(!IsULine(acptr)) /* Don't count services */
-				glob_numrehash++;
-		}
-		sendto_ops("%s is rehashing server config file on %d server(s)", sptr->name, glob_numrehash);
+		if(!glob_numrehash)
+			sendto_ops("%s is rehashing server config file", sptr->name);
 	}
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
@@ -1379,3 +1378,4 @@ aClient *find_non_pending_net_duplicates(aClient *cptr)
 
 	return NULL;
 }
+
