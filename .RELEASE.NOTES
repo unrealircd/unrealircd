@@ -1,8 +1,8 @@
-Unreal3.2.10.6 Release Notes
+Unreal3.2.10.7 Release Notes
 =============================
 
 ==[ UNREALIRCD 3.2.X IS DEPRECATED ]==
-You are currently viewing the release notes of UnrealIRCd 3.2.10.6.
+You are currently viewing the release notes of UnrealIRCd 3.2.10.7.
 UnrealIRCd 3.2.* will no longer be supported after December 31, 2016.
 You should upgrade to UnrealIRCd 4 before that date.
 See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated
@@ -18,6 +18,10 @@ See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated
 - The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
   SUMMARY of the changes in this release. See the file 'Changes' for a
   complete list of all changes.
+
+==[ .7 RELEASE ]==
+The following issue was fixed in 3.2.10.7:
+- Fix SASL EXTERNAL security issue
 
 ==[ .6 RELEASE ]==
 The following has been addressed in 3.2.10.6:
