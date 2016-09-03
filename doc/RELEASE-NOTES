@@ -1,11 +1,9 @@
-UnrealIRCd 4.0.5 Release Notes
+UnrealIRCd 4.0.6 Release Notes
 ===============================
 
-==[ CHANGES BETWEEN 4.0.4 AND 4.0.5 ]==
+==[ CHANGES BETWEEN 4.0.5 AND 4.0.6 ]==
 Major issues fixed:
-* Crash issue (read-after-free)
-* Bans on IPv6 cloaked hosts had no effect
-* Prevent flood from unknown connection (with bugfix)
+* Fix SASL security issue with AUTHENTICATE
 
 ==[ UNREALIRCD 4 INTRODUCTION ]==
 
