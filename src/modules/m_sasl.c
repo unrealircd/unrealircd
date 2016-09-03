@@ -230,6 +230,12 @@ CMD_FUNC(m_authenticate)
 		return 0;
 	}
 
+	if ((parv[1][0] == ':') || strchr(parv[1], ' '))
+	{
+		sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, "*", "AUTHENTICATE", "Invalid parameter");
+		return 0;
+	}
+
 	if (strlen(parv[1]) > 400)
 	{
 		sendto_one(sptr, err_str(ERR_SASLTOOLONG), me.name, BadPtr(sptr->name) ? "*" : sptr->name);
