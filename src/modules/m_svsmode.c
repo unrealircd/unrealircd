@@ -520,6 +520,11 @@ char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 									    acptr->name,
 									    !isdigit(*acptr->user->svid) ? acptr->user->svid : "*");
 				}
+				else
+				{
+					/* setting deaf */
+					goto setmodex;
+				}
 				break;
 			case 'x':
 				if (what == MODE_DEL)
