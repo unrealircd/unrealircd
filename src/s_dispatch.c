@@ -501,9 +501,6 @@ void fd_select(time_t delay)
 {
 	int num, p, revents, fd;
 	struct epoll_event *epfd;
-#ifndef _WIN32
-#define DEBUG_IOENGINE
-#endif
 #ifdef DEBUG_IOENGINE
 	int read_callbacks = 0, write_callbacks = 0;
 	struct timeval oldt, t;
