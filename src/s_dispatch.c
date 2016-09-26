@@ -347,7 +347,10 @@ void fd_refresh(int fd)
 		{
 #ifdef DEBUGMODE
 			if (ERRNO != P_EWOULDBLOCK && ERRNO != P_EAGAIN)
-				ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
+			{
+				ircd_log(LOG_ERROR, "[BUG?] fd_refresh(): kevent returned %d for fd %d for read callback (%s)",
+				         errno, fd, (fde->read_callback ? "add" : "delete"));
+			}
 #endif
 		}
 	}
@@ -358,8 +361,11 @@ void fd_refresh(int fd)
 		if (kevent(kqueue_fd, &kqueue_prepared[fd+MAXCONNECTIONS], 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
 		{
 #ifdef DEBUGMODE
-			if (ERRNO != P_EWOULDBLOCK && ERRNO != P_EAGAIN)
-				ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
+			if (ERRNO != P_EWOULDBLOCK && ERRNO != P_EAGAIN && fde->write_callback)
+			{
+				ircd_log(LOG_ERROR, "[BUG?] fd_refresh(): kevent returned %d for fd %d for write callback (%s)",
+				         errno, fd, "add" /*(fde->write_callback ? "add" : "delete")*/);
+			}
 #endif
 		}
 	}
