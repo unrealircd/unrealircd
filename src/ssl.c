@@ -298,15 +298,14 @@ SSL_CTX *ctx_server;
 		config_report_ssl_error();
 		goto fail;
 	}
-	if (iConf.ssl_ciphers)
+	if (SSL_CTX_set_cipher_list(ctx_server, iConf.ssl_ciphers) == 0)
 	{
-                if (SSL_CTX_set_cipher_list(ctx_server, iConf.ssl_ciphers) == 0)
-                {
-                    config_warn("Failed to set SSL cipher list for clients");
-                    config_report_ssl_error();
-                    goto fail;
-                }
+		config_warn("Failed to set SSL cipher list for clients");
+		config_report_ssl_error();
+		goto fail;
 	}
+	SSL_CTX_set_options(ctx_server, SSL_OP_CIPHER_SERVER_PREFERENCE);
+
 	if (iConf.trusted_ca_file)
 	{
 		if (!SSL_CTX_load_verify_locations(ctx_server, iConf.trusted_ca_file, NULL))
@@ -478,7 +477,7 @@ int  ssl_handshake(aClient *cptr)
 */
 int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 {
-	char *set_ciphers = NULL;
+	char *set_ciphers = iConf.ssl_ciphers;
 
 	cptr->local->ssl = SSL_new((SSL_CTX *)ctx_client);
 	if (!cptr->local->ssl)
@@ -492,9 +491,7 @@ int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 	SSL_set_connect_state(cptr->local->ssl);
 
 	if (l && l->ciphers)
-		set_ciphers = l->ciphers;
-	else if (iConf.ssl_ciphers)
-		set_ciphers = iConf.ssl_ciphers;
+		set_ciphers = l->ciphers; /* link::ciphers overrides set::ssl::ciphers */
 
 	if (set_ciphers)
 	{

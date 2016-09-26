@@ -1418,6 +1418,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	if (!ipv6_capable())
 		DISABLE_IPV6 = 1;
 	i->network.x_prefix_quit = strdup("Quit");
+	i->ssl_ciphers = strdup("EECDH+CHACHA20 EECDH+AESGCM EECDH+AES AES128-GCM-SHA256 AES256-GCM-SHA384 AES128-SHA256 AES256-SHA256 AES128-SHA AES256-SHA");
+	i->ssl_protocols = SSL_PROTOCOL_ALL;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
