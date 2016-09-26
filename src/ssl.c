@@ -478,6 +478,8 @@ int  ssl_handshake(aClient *cptr)
 */
 int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 {
+	char *set_ciphers = NULL;
+
 	cptr->local->ssl = SSL_new((SSL_CTX *)ctx_client);
 	if (!cptr->local->ssl)
 	{
@@ -488,7 +490,13 @@ int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 /*	set_blocking(cptr->fd); */
 	SSL_set_fd(cptr->local->ssl, cptr->fd);
 	SSL_set_connect_state(cptr->local->ssl);
+
 	if (l && l->ciphers)
+		set_ciphers = l->ciphers;
+	else if (iConf.x_server_cipher_list)
+		set_ciphers = iConf.x_server_cipher_list;
+
+	if (set_ciphers)
 	{
 		if (SSL_set_cipher_list(cptr->local->ssl, l->ciphers) == 0)
 		{
