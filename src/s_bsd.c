@@ -1320,10 +1320,14 @@ void read_packet(int fd, int revents, void *data)
 				case SSL_ERROR_WANT_WRITE:
 					fd_setselect(fd, FD_SELECT_READ, NULL, cptr);
 					fd_setselect(fd, FD_SELECT_WRITE, read_packet, cptr);
+					length = -1;
+					SET_ERRNO(P_EWOULDBLOCK);
 					break;
 				case SSL_ERROR_WANT_READ:
 					fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
 					fd_setselect(fd, FD_SELECT_WRITE, NULL, cptr);
+					length = -1;
+					SET_ERRNO(P_EWOULDBLOCK);
 					break;
 				case SSL_ERROR_SYSCALL:
 					break;
