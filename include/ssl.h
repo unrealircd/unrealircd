@@ -11,3 +11,10 @@ extern	 int ircd_SSL_connect(aClient *acptr, int fd);
 extern	 int SSL_smart_shutdown(SSL *ssl);
 extern	 void ircd_SSL_client_handshake(int, int, void *);
 extern   void SSL_set_nonblocking(SSL *s);
+
+#define SSL_PROTOCOL_TLSV1		0x0001
+#define SSL_PROTOCOL_TLSV1_1	0x0002
+#define SSL_PROTOCOL_TLSV1_2	0x0004
+#define SSL_PROTOCOL_TLSV1_3	0x0008
+
+#define SSL_PROTOCOL_ALL		0xffff

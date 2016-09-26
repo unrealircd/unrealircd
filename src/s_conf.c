@@ -7096,6 +7096,47 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					safestrdup(tempiConf.x_server_cipher_list, cepp->ce_vardata);
 				}
+				else if (!strcmp(cepp->ce_varname, "protocols"))
+				{
+					char copy[512], *p, *name;
+					int option;
+					char modifier;
+
+					strlcpy(copy, cepp->ce_vardata, sizeof(copy));
+					tempiConf.ssl_protocols = 0;
+					for (name = strtoken(&p, copy, ","); name; name = strtoken(&p, NULL, ","))
+					{
+						modifier = '\0';
+						option = 0;
+
+						if ((*name == '+') || (*name == '-'))
+						{
+							modifier = *name;
+							name++;
+						}
+
+						if (!stricmp(name, "All"))
+							option = SSL_PROTOCOL_ALL;
+						else if (!stricmp(name, "TLSv1"))
+							option = SSL_PROTOCOL_TLSV1;
+						else if (!stricmp(name, "TLSv1.1"))
+							option = SSL_PROTOCOL_TLSV1_1;
+						else if (!stricmp(name, "TLSv1.2"))
+							option = SSL_PROTOCOL_TLSV1_2;
+						else if (!stricmp(name, "TLSv1.3"))
+							option = SSL_PROTOCOL_TLSV1_3;
+
+						if (option)
+						{
+							if (modifier == '\0')
+								tempiConf.ssl_protocols = option;
+							else if (modifier == '+')
+								tempiConf.ssl_protocols |= option;
+							else if (modifier == '-')
+								tempiConf.ssl_protocols &= ~option;
+						}
+					}
+				}
 				else if (!strcmp(cepp->ce_varname, "dh"))
 				{
 					safestrdup(tempiConf.x_dh_pem, cepp->ce_vardata);
@@ -7993,6 +8034,60 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					CheckNull(cepp);
 					CheckDuplicate(cep, ssl_server_cipher_list, "ssl::server-cipher-list");
+				}
+				else if (!strcmp(cepp->ce_varname, "protocols"))
+				{
+					char copy[512], *p, *name;
+					int v = 0;
+					int option;
+					char modifier;
+
+					CheckNull(cepp);
+					CheckDuplicate(cep, ssl_protocols, "ssl::protocols");
+					strlcpy(copy, cepp->ce_vardata, sizeof(copy));
+					tempiConf.ssl_protocols = 0;
+					for (name = strtoken(&p, copy, ","); name; name = strtoken(&p, NULL, ","))
+					{
+						modifier = '\0';
+						option = 0;
+
+						if ((*name == '+') || (*name == '-'))
+						{
+							modifier = *name;
+							name++;
+						}
+
+						if (!stricmp(name, "All"))
+							option = SSL_PROTOCOL_ALL;
+						else if (!stricmp(name, "TLSv1"))
+							option = SSL_PROTOCOL_TLSV1;
+						else if (!stricmp(name, "TLSv1.1"))
+							option = SSL_PROTOCOL_TLSV1_1;
+						else if (!stricmp(name, "TLSv1.2"))
+							option = SSL_PROTOCOL_TLSV1_2;
+						else if (!stricmp(name, "TLSv1.3"))
+							option = SSL_PROTOCOL_TLSV1_3;
+						else
+							config_warn("%s:%i: set::ssl::protocols: unknown protocol '%s'. "
+							             "Valid protocols are: TLSv1,TLSv1.1,TLSv1.2",
+							             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, name);
+
+						if (option)
+						{
+							if (modifier == '\0')
+								v = option;
+							else if (modifier == '+')
+								v |= option;
+							else if (modifier == '-')
+								v &= ~option;
+						}
+					}
+					if (v == 0)
+					{
+						config_error("%s:%i: set::ssl::protocols: no protocols enabled. Hint: set at least TLSv1.2",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++;
+					}
 				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
 				{

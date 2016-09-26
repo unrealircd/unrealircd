@@ -229,6 +229,33 @@ static void setup_dh_params(SSL_CTX *ctx)
 	SSL_CTX_set_tmp_dh(ctx, dh);
 }
 
+/** Disable SSL/TLS protocols as set by config */
+void disable_ssl_protocols(SSL_CTX *ctx)
+{
+	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2); /* always disable SSLv2 */
+	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3); /* always disable SSLv3 */
+
+#ifdef SSL_OP_NO_TLSv1
+	if (!(iConf.ssl_protocols & SSL_PROTOCOL_TLSV1))
+		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1);
+#endif
+
+#ifdef SSL_OP_NO_TLSv1_1
+	if (!(iConf.ssl_protocols & SSL_PROTOCOL_TLSV1_1))
+		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1_1);
+#endif
+
+#ifdef SSL_OP_NO_TLSv1_2
+	if (!(iConf.ssl_protocols & SSL_PROTOCOL_TLSV1_2))
+		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1_2);
+#endif
+
+#ifdef SSL_OP_NO_TLSv1_3
+	if (!(iConf.ssl_protocols & SSL_PROTOCOL_TLSV1_3))
+		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1_3);
+#endif
+}
+
 SSL_CTX *init_ctx_server(void)
 {
 SSL_CTX *ctx_server;
@@ -240,9 +267,8 @@ SSL_CTX *ctx_server;
 		config_report_ssl_error();
 		return NULL;
 	}
+	disable_ssl_protocols(ctx_server);
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
-	SSL_CTX_set_options(ctx_server, SSL_OP_NO_SSLv2);
-	SSL_CTX_set_options(ctx_server, SSL_OP_NO_SSLv3);
 	SSL_CTX_set_verify(ctx_server, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE
 			| (iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
 	SSL_CTX_set_session_cache_mode(ctx_server, SSL_SESS_CACHE_OFF);
@@ -317,8 +343,7 @@ SSL_CTX *ctx_client;
 		return NULL;
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
-	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2);
-	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv3);
+	disable_ssl_protocols(ctx_client);
 	SSL_CTX_set_session_cache_mode(ctx_client, SSL_SESS_CACHE_OFF);
 
 	setup_dh_params(ctx_client);

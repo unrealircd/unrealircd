@@ -94,6 +94,7 @@ struct zConfiguration {
 	char *x_server_cert_pem;
 	char *x_server_key_pem;
 	char *x_server_cipher_list;
+	unsigned int ssl_protocols;
 	char *x_dh_pem;
 	char *trusted_ca_file;
 	long ssl_options;
@@ -275,6 +276,7 @@ struct SetCheck {
 	unsigned has_allow_part_if_shunned:1;
 	unsigned has_ssl_egd:1;
 	unsigned has_ssl_server_cipher_list :1;
+	unsigned has_ssl_protocols :1;
 	unsigned has_dns_bind_ip:1;
 	unsigned has_link_bind_ip:1;
 	unsigned has_throttle_period:1;
