@@ -93,7 +93,7 @@ struct zConfiguration {
 	char *static_part;
 	char *x_server_cert_pem;
 	char *x_server_key_pem;
-	char *x_server_cipher_list;
+	char *ssl_ciphers;
 	unsigned int ssl_protocols;
 	char *x_dh_pem;
 	char *trusted_ca_file;

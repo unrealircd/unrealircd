@@ -298,9 +298,9 @@ SSL_CTX *ctx_server;
 		config_report_ssl_error();
 		goto fail;
 	}
-	if (iConf.x_server_cipher_list)
+	if (iConf.ssl_ciphers)
 	{
-                if (SSL_CTX_set_cipher_list(ctx_server, iConf.x_server_cipher_list) == 0)
+                if (SSL_CTX_set_cipher_list(ctx_server, iConf.ssl_ciphers) == 0)
                 {
                     config_warn("Failed to set SSL cipher list for clients");
                     config_report_ssl_error();
@@ -493,8 +493,8 @@ int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 
 	if (l && l->ciphers)
 		set_ciphers = l->ciphers;
-	else if (iConf.x_server_cipher_list)
-		set_ciphers = iConf.x_server_cipher_list;
+	else if (iConf.ssl_ciphers)
+		set_ciphers = iConf.ssl_ciphers;
 
 	if (set_ciphers)
 	{

@@ -1347,7 +1347,7 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->static_quit);
 	safefree(i->x_server_cert_pem);
 	safefree(i->x_server_key_pem);
-	safefree(i->x_server_cipher_list);
+	safefree(i->ssl_ciphers);
 	safefree(i->trusted_ca_file);
 	safefree(i->restrict_usermodes);
 	safefree(i->restrict_channelmodes);
@@ -7092,9 +7092,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "server-cipher-list"))
+				if (!strcmp(cepp->ce_varname, "ciphers") || !strcmp(cepp->ce_varname, "server-cipher-list"))
 				{
-					safestrdup(tempiConf.x_server_cipher_list, cepp->ce_vardata);
+					safestrdup(tempiConf.ssl_ciphers, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "protocols"))
 				{
@@ -8030,10 +8030,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					CheckDuplicate(cep, renegotiate_bytes, "ssl::renegotiate-bytes");
 				}
-				else if (!strcmp(cepp->ce_varname, "server-cipher-list"))
+				else if (!strcmp(cepp->ce_varname, "ciphers") || !strcmp(cepp->ce_varname, "server-cipher-list"))
 				{
 					CheckNull(cepp);
-					CheckDuplicate(cep, ssl_server_cipher_list, "ssl::server-cipher-list");
+					CheckDuplicate(cep, ssl_server_cipher_list, "ssl::ciphers");
 				}
 				else if (!strcmp(cepp->ce_varname, "protocols"))
 				{
