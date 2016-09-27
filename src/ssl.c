@@ -495,11 +495,11 @@ int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 
 	if (set_ciphers)
 	{
-		if (SSL_set_cipher_list(cptr->local->ssl, l->ciphers) == 0)
+		if (SSL_set_cipher_list(cptr->local->ssl, set_ciphers) == 0)
 		{
 			/* We abort */
 			sendto_realops("SSL cipher selecting for %s was unsuccesful (%s)",
-				l->servername, l->ciphers);
+				l->servername, set_ciphers);
 			return -2;
 		}
 	}
