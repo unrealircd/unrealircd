@@ -1345,6 +1345,7 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->oper_snomask);
 	safefree(i->user_snomask);
 	safefree(i->static_quit);
+	safefree(i->x_dh_pem);
 	safefree(i->x_server_cert_pem);
 	safefree(i->x_server_key_pem);
 	safefree(i->ssl_ciphers);
@@ -7141,7 +7142,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "dh"))
 				{
-					safestrdup(tempiConf.x_dh_pem, cepp->ce_vardata);
+					convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
 				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
 				{
