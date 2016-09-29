@@ -252,9 +252,11 @@ pem:	src/ssl.cnf
 	@echo "Generating fingerprint .."
 	$(OPENSSLPATH) x509 -subject -dates -sha256 -fingerprint -noout \
 		-in server.cert.pem
+	@echo "Generating 2048-bit DH parameters"
+	$(OPENSSLPATH) dhparam -out dh.pem 2048
 	@echo "Setting o-rwx & g-rwx for files... "
-	chmod o-rwx server.req.pem server.key.pem server.cert.pem
-	chmod g-rwx server.req.pem server.key.pem server.cert.pem
+	chmod o-rwx server.req.pem server.key.pem server.cert.pem dh.pem
+	chmod g-rwx server.req.pem server.key.pem server.cert.pem dh.pem
 	@echo "Done!. If you want to encrypt the private key, run"
 	@echo "make encpem"
 

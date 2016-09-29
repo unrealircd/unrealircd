@@ -1345,6 +1345,7 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->oper_snomask);
 	safefree(i->user_snomask);
 	safefree(i->static_quit);
+	safefree(i->x_dh_pem);
 	safefree(i->x_server_cert_pem);
 	safefree(i->x_server_key_pem);
 	safefree(i->ssl_ciphers);
@@ -1410,6 +1411,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->nicklen = NICKLEN;
 	i->link_bindip = strdup("*");
 	i->oper_only_stats = strdup("*");
+	snprintf(tmp, sizeof(tmp), "%s/ssl/dh.pem", CONFDIR);
+	i->x_dh_pem = strdup(tmp);
 	snprintf(tmp, sizeof(tmp), "%s/ssl/server.cert.pem", CONFDIR);
 	i->x_server_cert_pem = strdup(tmp);
 	snprintf(tmp, sizeof(tmp), "%s/ssl/server.key.pem", CONFDIR);
@@ -7141,6 +7144,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "dh"))
 				{
+					convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
 					safestrdup(tempiConf.x_dh_pem, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
