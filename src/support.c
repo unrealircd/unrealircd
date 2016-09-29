@@ -1735,10 +1735,6 @@ int unreal_copyfile(const char *src, const char *dest)
 	close(srcfd);
 	close(destfd);
 	unreal_setfilemodtime(dest, mtime);
-#if defined(IRC_USER) && defined(IRC_GROUP)
-	if (!loop.ircd_booted)
-		chown(dest, irc_uid, irc_gid);
-#endif
 	return 1;
 }
 

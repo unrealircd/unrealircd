@@ -595,9 +595,7 @@ openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON); /* reopened now */
 #endif
 #endif /*_WIN32*/
 
-#ifndef CHROOTDIR
 	init_resolver(1);
-#endif
 	return;
 }
 

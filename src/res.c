@@ -188,22 +188,6 @@ int optmask;
 
 void reinit_resolver(aClient *sptr)
 {
-#ifdef CHROOTDIR
-	/* Prevent people from killing their ircd accidently if in CHROOTDIR mode... */
-FILE *fd;
-
-	fd = fopen("/etc/resolv.conf", "r");
-	if (!fd)
-	{
-		sendnotice(sptr, "Rehashing DNS with CHROOTDIR enabled seems a BAD idea since /etc/resolv.conf "
-		                 "is missing in your chroot. This is usually perfectly fine and normal, but "
-		                 "prevents this exact rehash feature from working for obvious technical reasons "
-		                 "(HINT: it is impossible to read the system /etc/resolv.conf since it's outside the chroot).");
-		return;
-	}
-	fclose(fd);
-#endif
-
 	EventDel(unrealdns_timeout_hdl);
 
 	sendto_realops("%s requested reinitalization of resolver!", sptr->name);

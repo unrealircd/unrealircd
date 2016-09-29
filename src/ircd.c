@@ -150,11 +150,6 @@ static int dorehash = 0, dorestart = 0, doreloadcert = 0;
 MODVAR int  booted = FALSE;
 MODVAR TS   lastlucheck = 0;
 
-#ifdef UNREAL_DEBUG
-#undef CHROOTDIR
-#define CHROOT
-#endif
-
 MODVAR TS   NOW;
 #if	defined(PROFIL) && !defined(_WIN32)
 extern etext();
@@ -1020,137 +1015,20 @@ int InitUnrealIRCd(int argc, char *argv[])
 	egid = getegid();
 	timeofday = time(NULL);
 
-#ifndef IRC_USER
-	if (!euid && uid)
-	{
-		fprintf(stderr, "Sorry, a SUID root IRCd without IRC_USER in include/config.h is not supported.\n"
-		                "It would be very dangerous. Go edit include/config.h and set IRC_USER and\n"
-		                "IRC_GROUP to a nonprivileged username and recompile.\n");
-		exit(-1);
-	}
-	if (!euid)
+	if (euid == 0)
 	{
 		fprintf(stderr,
-			"WARNING: You are running UnrealIRCd as root and it is not\n"
-			"         configured to drop priviliges. This is VERY dangerous,\n"
-			"         as any compromise of your UnrealIRCd is the same as\n"
-			"         giving a cracker root SSH access to your box.\n"
-			"         You should either start UnrealIRCd under a different\n"
-			"         account than root, or set IRC_USER in include/config.h\n"
-			"         to a nonprivileged username and recompile.\n");
-		sleep(1); /* just to catch their attention */
+			"WARNING: You are running UnrealIRCd as root. This is VERY DANGEROUS\n"
+			"         as any compromise of your UnrealIRCd will result in full\n"
+			"         privileges to the attacker on the entire machine.\n"
+			"         You should start UnrealIRCd as a different user!!\n");
+		sleep(5); /* just to catch their attention */
 	}
-#endif /* IRC_USER */
 # ifdef	PROFIL
 	(void)monstartup(0, etext);
 	(void)moncontrol(1);
 	(void)signal(SIGUSR1, s_monitor);
 # endif
-#endif
-#if defined(IRC_USER) && defined(IRC_GROUP)
-	if ((int)getuid() == 0) {
-
-		pw = getpwnam(IRC_USER);
-		gr = getgrnam(IRC_GROUP);
-
-		if ((pw == NULL) || (gr == NULL)) {
-			fprintf(stderr, "ERROR: Unable to lookup to specified user (IRC_USER) or group (IRC_GROUP): %s\n", strerror(errno));
-			exit(-1);
-		} else {
-			irc_uid = pw->pw_uid;
-			irc_gid = gr->gr_gid;
-		}
-	}
-#endif
-#ifdef	CHROOTDIR
-	if (chdir(CONFDIR)) {
-		perror("chdir");
-		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", dpath);
-		exit(-1);
-	}
-	if (geteuid() != 0)
-		fprintf(stderr, "WARNING: IRCd compiled with CHROOTDIR but effective user id is not root!? "
-		                "Booting is very likely to fail. You should start the IRCd as root instead.\n");
-	init_resolver(1);
-	{
-		struct stat sb;
-		mode_t umaskold;
-
-		umaskold = umask(0);
-		if (mkdir("dev", S_IRUSR|S_IWUSR|S_IXUSR|S_IXGRP|S_IXOTH) != 0 && errno != EEXIST)
-		{
-			fprintf(stderr, "ERROR: Cannot mkdir dev: %s\n", strerror(errno));
-			exit(5);
-		}
-		if (stat("/dev/urandom", &sb) != 0)
-		{
-			fprintf(stderr, "ERROR: Cannot stat /dev/urandom: %s\n", strerror(errno));
-			exit(5);
-		}
-		if (mknod("dev/urandom", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
-		{
-			fprintf(stderr, "ERROR: Cannot mknod dev/urandom: %s\n", strerror(errno));
-			exit(5);
-		}
-		if (stat("/dev/null", &sb) != 0)
-		{
-			fprintf(stderr, "ERROR: Cannot stat /dev/null: %s\n", strerror(errno));
-			exit(5);
-		}
-		if (mknod("dev/null", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
-		{
-			fprintf(stderr, "ERROR: Cannot mknod dev/null: %s\n", strerror(errno));
-			exit(5);
-		}
-		if (stat("/dev/tty", &sb) != 0)
-		{
-			fprintf(stderr, "ERROR: Cannot stat /dev/tty: %s\n", strerror(errno));
-			exit(5);
-		}
-		if (mknod("dev/tty", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
-		{
-			fprintf(stderr, "ERROR: Cannot mknod dev/tty: %s\n", strerror(errno));
-			exit(5);
-		}
-		umask(umaskold);
-	}
-	if (chroot(CONFDIR)) {
-		(void)fprintf(stderr, "ERROR:  Cannot (chdir/)chroot to directory '%s'\n", dpath);
-		exit(5);
-	}
-#endif	 /*CHROOTDIR*/
-#if !defined(IRC_USER) && !defined(_WIN32)
-	if ((uid != euid) && !euid) {
-		(void)fprintf(stderr,
-		    "ERROR: do not run ircd setuid root. Make it setuid a normal user.\n");
-		exit(-1);
-	}
-#endif
-
-#if defined(IRC_USER) && defined(IRC_GROUP)
-	if ((int)getuid() == 0) {
-		/* NOTE: irc_uid/irc_gid have been looked up earlier, before the chrooting code */
-
-		if ((irc_uid == 0) || (irc_gid == 0)) {
-			(void)fprintf(stderr,
-			    "ERROR: SETUID and SETGID have not been set properly"
-			    "\nPlease read your documentation\n(HINT: IRC_USER and IRC_GROUP in include/config.h cannot be root/wheel)\n");
-			exit(-1);
-		} else {
-			/* run as a specified user */
-			(void)fprintf(stderr, "ircd invoked as root, changing to uid %d (%s) and gid %d (%s)...\n", irc_uid, IRC_USER, irc_gid, IRC_GROUP);
-			if (setgid(irc_gid))
-			{
-				fprintf(stderr, "ERROR: Unable to change group: %s\n", strerror(errno));
-				exit(-1);
-			}
-			if (setuid(irc_uid))
-			{
-				fprintf(stderr, "ERROR: Unable to change userid: %s\n", strerror(errno));
-				exit(-1);
-			}
-		}
-	}
 #endif
 #ifndef _WIN32
 	myargv = argv;
@@ -1362,7 +1240,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 
 	do_version_check();
 
-#if !defined(CHROOTDIR) && !defined(_WIN32)
+#if !defined(_WIN32)
 #ifndef _WIN32
 	mkdir(TMPDIR, S_IRUSR|S_IWUSR|S_IXUSR); /* Create the tmp dir, if it doesn't exist */
  	mkdir(CACHEDIR, S_IRUSR|S_IWUSR|S_IXUSR); /* Create the cache dir, if it doesn't exist */

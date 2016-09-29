@@ -241,32 +241,6 @@
 #define BPATH		CONFDIR"/bot.motd"	/* Bot MOTD */
 #define IRCDTUNE 	PERMDATADIR"/ircd.tune"	/* tuning .. */
 
-/* CHROOTDIR
- *
- * This enables running the IRCd chrooted. Privileges will be dropped later
- * to IRC_USER/IRC_GROUP when those are defined.
- *
- * The directory to chroot to is simply DPATH (which is set via ./Config).
- * (This may affect the PATH locations above, though you can symlink it)
- *
- * If you want this, simple change this to '#define CHROOTDIR' and also
- * look at IRC_USER/IRC_GROUP a few lines below.
- * There's no need for you to create a special chroot environment;
- * UnrealIRCd will do that by itself (Unreal will create /dev/random, 
- * etc. etc.).
- */
-/* #define CHROOTDIR    */
-
-/*
- * IRC_USER
- *
- * If you start the server as root but wish to have it run as another user,
- * define IRC_USER to that user name.
- */
-/* #define IRC_USER  "<user name>" */
-/* #define IRC_GROUP "<group name>" */
-
-
 /* SHOW_INVISIBLE_LUSERS
  *
  * As defined this will show the correct invisible count for anyone who does
@@ -466,10 +440,6 @@
 #define	MYNAME BINDIR "/unrealircd"
 #define	CONFIGFILE CPATH
 #define	IRCD_PIDFILE PIDFILE
-
-#if defined(CHROOTDIR) && !defined(IRC_USER)
-#error "ERROR: It makes no sense to define CHROOTDIR but not IRC_USER and IRC_GROUP! Please define IRC_USER and IRC_GROUP properly as the user/group to change to."
-#endif
 
 #ifdef	__osf__
 #define	OSF

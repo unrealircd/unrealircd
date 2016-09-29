@@ -199,10 +199,6 @@ char *download_file(const char *url, char **error)
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
 	res = curl_easy_perform(curl);
 	fclose(fd);
-#if defined(IRC_USER) && defined(IRC_GROUP)
-	if (!loop.ircd_booted)
-		chown(tmp, irc_uid, irc_gid);
-#endif
 	if (file)
 		free(file);
 	if (res == CURLE_OK)
@@ -252,10 +248,6 @@ static void url_check_multi_handles(void)
 			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char **) &handle);
 			curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
 			fclose(handle->fd);
-#if defined(IRC_USER) && defined(IRC_GROUP)
-			if (!loop.ircd_booted)
-				chown(handle->filename, irc_uid, irc_gid);
-#endif
 
 			if (msg->data.result == CURLE_OK)
 			{
