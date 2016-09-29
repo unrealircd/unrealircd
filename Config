@@ -555,6 +555,9 @@ done
 
 
 echo ""
+echo "If you want, you can manually enter the path to OpenSSL/LibreSSL here."
+echo "In most cases you can leave this blank and it will be detected automatically."
+
 if [ -z "$SSLDIR" ]; then
 	uname|grep -q Darwin
 	if [ "$?" = 0 ]; then
@@ -564,9 +567,6 @@ if [ -z "$SSLDIR" ]; then
 		echo "We are selecting the default homebrew OpenSSL path - but you can"
 		echo "change it to another path if you have installed OpenSSL another way"
 		SSLDIR="/usr/local/opt/openssl/"
-	else
-		echo "If you know the path to OpenSSL on your system, enter it here. If not"
-		echo "leave this blank (in most cases it will be detected automatically)."
 	fi
 fi
 
