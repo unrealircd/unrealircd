@@ -324,6 +324,23 @@ aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 	else return NULL;
 }
 
+/** Return 1 if the bans are identical, taking into account special handling for extbans */
+int identical_ban(char *one, char *two)
+{
+	if ((*one == '~') && (strlen(one) > 3))
+	{
+		/* compare the first 3 characters case-sensitive and if identical then compare
+		 * the remainder of the string case-insensitive.
+		 */
+		if (!strncmp(one, two, 3) && !strcasecmp(one+3, two+3))
+			return 1;
+	} else {
+		if (!mycmp(one, two))
+			return 1;
+	}
+	return 0;
+}
+
 /*
  * add_listmode - Add a listmode (+beI) with the specified banid to
  *                the specified channel.
@@ -347,21 +364,14 @@ int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 	for (ban = *list; ban; ban = ban->next)
 	{
 		len += strlen(ban->banstr);
-		if (MyClient(cptr))
-			if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
-			{
-				sendto_one(cptr, err_str(ERR_BANLISTFULL),
-				    me.name, cptr->name, chptr->chname, banid);
-				return -1;
-			}
-			else
-			{
-			  if (!mycmp(ban->banstr, banid))
-			  	return -1;
-			}
-		else if (!mycmp(ban->banstr, banid))
+		if (MyClient(cptr) && ((len > MAXBANLENGTH) || (++cnt >= MAXBANS)))
+		{
+			sendto_one(cptr, err_str(ERR_BANLISTFULL),
+			    me.name, cptr->name, chptr->chname, banid);
 			return -1;
-
+		}
+		if (identical_ban(ban->banstr, banid))
+			return -1;
 	}
 	ban = make_ban();
 	bzero((char *)ban, sizeof(Ban));
@@ -385,7 +395,7 @@ int del_listmode(Ban **list, aChannel *chptr, char *banid)
 		return -1;
 	for (ban = list; *ban; ban = &((*ban)->next))
 	{
-		if (mycmp(banid, (*ban)->banstr) == 0)
+		if (identical_ban(banid, (*ban)->banstr))
 		{
 			tmp = *ban;
 			*ban = tmp->next;
