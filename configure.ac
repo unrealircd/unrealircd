@@ -19,6 +19,9 @@ if test "x$enable_dynamic_linking" = "x"; then
 	exit 1
 fi
 
+dnl Save CFLAGS, use this when building the libraries like c-ares
+orig_cflags="$CFLAGS"
+
 dnl Calculate the versions. Perhaps the use of expr is a little too extravagant
 # Generation version number (e.g.: X in X.Y.Z)
 UNREAL_VERSION_GENERATION=["4"]
@@ -689,7 +692,7 @@ AS_IF([test "x$with_system_cares" = "xno"],[
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
 dnl NOTE: when changing this here, ALSO change it in extras/curlinstall
 dnl       and in the comment in this file around line 400!
-cares_version="1.10.0"
+cares_version="1.12.0"
 AC_MSG_RESULT(extracting c-ares resolver library)
 cur_dir=`pwd`
 cd extras
@@ -705,7 +708,11 @@ else
 fi
 AC_MSG_RESULT(configuring c-ares library)
 cd c-ares-$cares_version
+save_cflags="$CFLAGS"
+CFLAGS="$orig_cflags"
+export CFLAGS
 ./configure --prefix=$cur_dir/extras/c-ares --disable-shared || exit 1
+CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling c-ares resolver library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing c-ares resolver library)
