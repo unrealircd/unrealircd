@@ -192,11 +192,13 @@ CMD_FUNC(m_version)
 		           (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? MYOSNAME : "*"),
 		           UnrealProtocol);
 		if (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
-			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, SSLeay_version(SSLEAY_VERSION));
+		{
+			sendnotice(sptr, "%s", SSLeay_version(SSLEAY_VERSION));
+			sendnotice(sptr, "%s", pcre2_version());
 #ifdef USE_LIBCURL
-		if (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
-			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, curl_version());
+			sendnotice(sptr, "%s", curl_version());
 #endif
+		}
 		if (MyClient(sptr))
 			send_version(sptr,RPL_ISUPPORT);
 		else

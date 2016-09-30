@@ -2399,3 +2399,12 @@ literal:
 	}
 	*o = '\0';
 }
+
+char *pcre2_version(void)
+{
+	static char buf[256];
+
+	strlcpy(buf, "PCRE2 ", sizeof(buf));
+	pcre2_config(PCRE2_CONFIG_VERSION, buf+6);
+	return buf;
+}

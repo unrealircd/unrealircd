@@ -1285,6 +1285,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
+	fprintf(stderr, "  using %s\n", pcre2_version());
 	fprintf(stderr, "  using %s\n", tre_version());
 	fprintf(stderr, "  using %s\n", SSLeay_version(SSLEAY_VERSION));
 #ifdef USE_LIBCURL
