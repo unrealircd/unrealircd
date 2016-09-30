@@ -1,9 +1,30 @@
-UnrealIRCd 4.0.6 Release Notes
-===============================
+UnrealIRCd 4.0.7-rc1 Release Notes
+===================================
 
-==[ CHANGES BETWEEN 4.0.5 AND 4.0.6 ]==
+==[ CHANGES BETWEEN 4.0.6 AND 4.0.7 ]==
+Improvements:
+* UnrealIRCd now ships with a default ciphersuite list to have more
+  secure SSL/TLS defaults (rather than relying on your OS/Distro).
+  You can still customize ciphersuites through set::ssl::ciphers.
+  Details: https://www.unrealircd.org/docs/SSL_Ciphers_and_protocols
+* set::ssl::protocols allows you to specify which SSL/TLS protocols
+  are permitted. The default is (still): TLSv1,TLSv1.1,TLSv1.2.
+
 Major issues fixed:
-* Fix SASL security issue with AUTHENTICATE
+* FreeBSD: unstable SSL links to other servers
+
+Minor issues fixed:
+* It was impossible to set both +b ~r:xyz and +b ~R:xyz
+
+Removed the following rarely used build-time options:
+* CHROOTDIR: Never worked in 4.0.x anyway. You can use AppArmor,
+  SELinux, FreeBSD jails, etc. as an alternative.
+* IRC_USER/IRC_GROUP: Since this only applies to users installing
+  UnrealIRCd system-wide you should use your system services to do
+  this as well, such as: systemd's User=xx or start-stop-daemon.
+
+Other changes:
+* PCRE2 and c-ares libraries updated to latest versions
 
 ==[ UNREALIRCD 4 INTRODUCTION ]==
 
@@ -75,6 +96,16 @@ https://www.unrealircd.org/docs/FAQ
 For support you have two choices:
 * Forums: https://forums.unrealircd.org/
 * IRC: irc.unrealircd.org / #unreal-support
+
+==[ CHANGES BETWEEN 4.0.5 AND 4.0.6 ]==
+Major issues fixed:
+* Fix SASL security issue with AUTHENTICATE
+
+==[ CHANGES BETWEEN 4.0.4 AND 4.0.5 ]==
+Major issues fixed:
+* Crash issue (read-after-free)
+* Bans on IPv6 cloaked hosts had no effect
+* Prevent flood from unknown connection (with bugfix)
 
 ==[ CHANGES BETWEEN 4.0.4 AND 4.0.3(.1) ]==
 New:
