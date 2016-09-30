@@ -181,7 +181,16 @@ install: all
 	$(INSTALL) -m 0700 -d @DOCDIR@
 	$(INSTALL) -m 0600 doc/Authors doc/coding-guidelines doc/tao.of.irc @DOCDIR@
 	$(INSTALL) -m 0700 -d @CONFDIR@
-	$(INSTALL) -m 0600 doc/conf/*.conf @CONFDIR@
+	$(INSTALL) -m 0600 doc/conf/*.default.conf @CONFDIR@
+	-@if [ ! -f "@CONFDIR@/spamfilter.conf" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/spamfilter.conf @CONFDIR@ ; \
+	fi
+	-@if [ ! -f "@CONFDIR@/badwords.conf" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/badwords.conf @CONFDIR@ ; \
+	fi
+	-@if [ ! -f "@CONFDIR@/dccallow.conf" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/dccallow.conf @CONFDIR@ ; \
+	fi
 	$(INSTALL) -m 0700 -d @CONFDIR@/aliases
 	$(INSTALL) -m 0600 doc/conf/aliases/*.conf @CONFDIR@/aliases
 	$(INSTALL) -m 0700 -d @CONFDIR@/help
