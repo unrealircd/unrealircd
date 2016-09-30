@@ -646,7 +646,7 @@ PKG_CHECK_MODULES([TRE], tre >= 0.7.5)
 
 AS_IF([test "x$with_system_pcre2" = "xno"],[
 dnl REMEMBER TO CHANGE WITH A NEW PCRE2 RELEASE!
-pcre2_version="10.21"
+pcre2_version="10.22"
 AC_MSG_RESULT(extracting PCRE2 regex library)
 cur_dir=`pwd`
 cd extras
