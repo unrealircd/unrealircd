@@ -32,7 +32,7 @@ DLLFUNC int moded_quit(aClient *acptr, char *comment);
 DLLFUNC int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment);
 DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
                              char *modebuf, char *parabuf, time_t sendts, int samode);
-DLLFUNC int moded_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+DLLFUNC char *moded_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
 char *moded_serialize(ModData *m);
 void moded_unserialize(char *str, ModData *m);
 
@@ -77,7 +77,7 @@ MOD_INIT(delayjoin)
     	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_KICK, 0, moded_kick);
     	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, 0, moded_chanmode);
     	HookAdd(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, 0, moded_chanmode);
-    	HookAdd(modinfo->handle, HOOKTYPE_CHANMSG, 0, moded_chanmsg);
+    	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 99999999, moded_prechanmsg);
 
     	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -326,13 +326,13 @@ DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 	return 0;
 }
 
-DLLFUNC int moded_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+DLLFUNC char *moded_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 {
 
 	if ((channel_is_delayed(chptr) || channel_is_post_delayed(chptr)) && (moded_user_invisible(sptr,chptr)))
 		clear_user_invisible_announce(chptr,sptr);
 
-	return 0;
+	return text;
 }
 
 char *moded_serialize(ModData *m)
