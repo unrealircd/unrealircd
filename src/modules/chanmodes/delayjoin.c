@@ -7,11 +7,11 @@
 
 ModuleHeader MOD_HEADER(delayjoin)
   = {
-        "delayjoin",   /* Name of module */
-        "v0.0.1", /* Version */
-        "delayed join (+D,+d)", /* Short description of module */
-        "3.2-b8-1",
-        NULL
+	"delayjoin",   /* Name of module */
+	"v0.0.1", /* Version */
+	"delayed join (+D,+d)", /* Short description of module */
+	"3.2-b8-1",
+	NULL
     };
 
 #define MOD_DATA_STR "delayjoin"
@@ -31,24 +31,28 @@ DLLFUNC int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int 
 DLLFUNC int moded_quit(aClient *acptr, char *comment);
 DLLFUNC int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment);
 DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
-                             char *modebuf, char *parabuf, time_t sendts, int samode);
+                           char *modebuf, char *parabuf, time_t sendts, int samode);
 DLLFUNC char *moded_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
 char *moded_serialize(ModData *m);
 void moded_unserialize(char *str, ModData *m);
 
 MOD_INIT(delayjoin)
 {
-
 	CmodeInfo req;
 	ModDataInfo mreq;
+
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.is_ok = extcmode_default_requirechop;
 	req.flag = 'D';
 	CmodeDelayed = CmodeAdd(modinfo->handle, req, &EXTMODE_DELAYED);
-	req.flag = 'd';
+
+	memset(&req, 0, sizeof(req));
+	req.paracount = 0;
 	req.is_ok = deny_all;
+	req.flag = 'd';
 	CmodePostDelayed = CmodeAdd(modinfo->handle, req, &EXTMODE_POST_DELAYED);
+
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = MOD_DATA_STR;
 	mreq.serialize = moded_serialize;
@@ -56,42 +60,42 @@ MOD_INIT(delayjoin)
 	mreq.sync = 0;
 	mreq.type = MODDATATYPE_MEMBER;
 	if (!ModDataAdd(modinfo->handle, mreq))
-			abort();
+		abort();
 
 	if (!CmodeDelayed || !CmodePostDelayed)
 	{
-			/* I use config_error() here because it's printed to stderr in case of a load
-			 * on cmd line, and to all opers in case of a /rehash.
-			 */
-			config_error("delayjoin: Could not add channel mode '+D' or '+d': %s", ModuleGetErrorStr(modinfo->handle));
-			return MOD_FAILED;
+		/* I use config_error() here because it's printed to stderr in case of a load
+		 * on cmd line, and to all opers in case of a /rehash.
+		 */
+		config_error("delayjoin: Could not add channel mode '+D' or '+d': %s", ModuleGetErrorStr(modinfo->handle));
+		return MOD_FAILED;
 	}
 
-        HookAdd(modinfo->handle, HOOKTYPE_VISIBLE_IN_CHANNEL, 0, moded_check_join);
-        HookAdd(modinfo->handle, HOOKTYPE_JOIN_DATA, 0, moded_join);
-        HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PART, 0, moded_part);
-        HookAdd(modinfo->handle, HOOKTYPE_REMOTE_PART, 0, moded_part);
-    	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, moded_quit);
-    	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, moded_quit);
-    	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_KICK, 0, moded_kick);
-    	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_KICK, 0, moded_kick);
-    	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, 0, moded_chanmode);
-    	HookAdd(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, 0, moded_chanmode);
-    	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 99999999, moded_prechanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_VISIBLE_IN_CHANNEL, 0, moded_check_join);
+	HookAdd(modinfo->handle, HOOKTYPE_JOIN_DATA, 0, moded_join);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PART, 0, moded_part);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_PART, 0, moded_part);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, moded_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, moded_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_KICK, 0, moded_kick);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_KICK, 0, moded_kick);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, 0, moded_chanmode);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, 0, moded_chanmode);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 99999999, moded_prechanmsg);
 
-    	MARK_AS_OFFICIAL_MODULE(modinfo);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-        return MOD_SUCCESS;
+	return MOD_SUCCESS;
 }
 
 MOD_LOAD(delayjoin)
 {
-        return MOD_SUCCESS;
+	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD(delayjoin)
 {
-        return MOD_SUCCESS;
+	return MOD_SUCCESS;
 }
 
 DLLFUNC void set_post_delayed(aChannel *chptr)
@@ -105,7 +109,6 @@ DLLFUNC void clear_post_delayed(aChannel *chptr)
 	chptr->mode.extmode &= ~EXTMODE_POST_DELAYED;
 	sendto_channel_butserv(chptr, &me, ":%s MODE %s -d", me.name, chptr->chname);
 }
-
 
 bool moded_member_invisible(Member* m, aChannel *chptr)
 {
@@ -192,7 +195,6 @@ DLLFUNC void clear_user_invisible(aChannel *chptr, aClient *sptr)
 	{
 		clear_post_delayed(chptr);
 	}
-
 }
 
 DLLFUNC void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
@@ -222,9 +224,6 @@ DLLFUNC void set_user_invisible(aChannel *chptr, aClient *sptr)
 		return;
 
 	md->unserialize(MOD_DATA_INVISIBLE, &moddata_member(m, md));
-
-
-
 }
 
 
@@ -236,18 +235,14 @@ DLLFUNC int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int 
 
 DLLFUNC int moded_check_join(aClient *cptr, aChannel *chptr)
 {
-
 	return channel_is_delayed(chptr) && moded_user_invisible(cptr,chptr);
 }
 
 
 DLLFUNC int moded_join(aClient *cptr, aChannel *chptr)
 {
-
 	if (channel_is_delayed(chptr))
 		set_user_invisible(chptr,cptr);
-
-
 
 	return 0;
 }
@@ -256,6 +251,7 @@ DLLFUNC int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comm
 {
 	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
 		clear_user_invisible(chptr,cptr);
+
 	return 0;
 }
 
@@ -279,12 +275,13 @@ DLLFUNC int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *c
 {
 	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
 		clear_user_invisible(chptr,acptr);
+
 	return 0;
 }
 
 
 DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
-                             char *modebuf, char *parabuf, time_t sendts, int samode)
+                           char *modebuf, char *parabuf, time_t sendts, int samode)
 {
 	// Handle case where we just unset +D but have invisible users
 	if (!channel_is_delayed(chptr) && !channel_is_post_delayed(chptr) && channel_has_invisible_users(chptr))
