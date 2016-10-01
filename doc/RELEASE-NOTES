@@ -9,6 +9,7 @@ Improvements:
   Details: https://www.unrealircd.org/docs/SSL_Ciphers_and_protocols
 * set::ssl::protocols allows you to specify which SSL/TLS protocols
   are permitted. The default is (still): TLSv1,TLSv1.1,TLSv1.2.
+* Windows: remote includes now support IPv6
 
 Major issues fixed:
 * FreeBSD: unstable SSL links to other servers
