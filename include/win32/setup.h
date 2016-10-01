@@ -55,6 +55,10 @@
 #define PREFIX_AQ
 #define LIST_SHOW_MODES
 #ifndef mode_t
+#define GOT_STRCASECMP
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+
 /*
   Needed in s_conf.c for the third argument of open(3p).
 
