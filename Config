@@ -72,7 +72,7 @@ ARG="$ARG--disable-prefixaq "
 fi
 
 ARG="$ARG--with-bindir=$BINDIR "
-ARG="$ARG--with-datadir=$DATADIR "
+ARG="$ARG--localstatedir=$DATADIR "
 ARG="$ARG--with-pidfile=$DATADIR/unrealircd.pid "
 ARG="$ARG--with-confdir=$CONFDIR "
 ARG="$ARG--with-modulesdir=$MODULESDIR "

@@ -3325,7 +3325,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::pidfile");
 				continue;
 			}
-			convert_to_absolute_path(&cep->ce_vardata, PERMDATADIR);
+			convert_to_absolute_path(&cep->ce_vardata, PKGLOCALSTATEDIR);
 			errors += config_test_openfile(cep, O_WRONLY | O_CREAT, 0600, "files::pidfile", 1, 0);
 			has_pidfile = 1;
 		}
@@ -3338,7 +3338,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::tunefile");
 				continue;
 			}
-			convert_to_absolute_path(&cep->ce_vardata, PERMDATADIR);
+			convert_to_absolute_path(&cep->ce_vardata, PKGLOCALSTATEDIR);
 			errors += config_test_openfile(cep, O_RDWR | O_CREAT, 0600, "files::tunefile", 1, 0);
 			has_tunefile = 1;
 		}

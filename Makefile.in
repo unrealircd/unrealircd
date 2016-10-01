@@ -24,6 +24,12 @@ INCLUDEDIR=@UNRLINCDIR@
 NETWORKSDIR=
 FROMDOS=/home/cmunk/bin/4dos
 
+# Wouldn’t need all this if we just switched to automake…
+PACKAGE_NAME=@PACKAGE_NAME@
+prefix=@prefix@
+localstatedir=@localstatedir@
+pkglocalstatedir=@pkglocalstatedir@
+
 # [CHANGEME]
 # Default flags:
 # Change XCFLAGS if you don't like what Config puts there.  Same with
@@ -108,7 +114,8 @@ FD_SETSIZE=@FD_SETSIZE@
 # Where is your openssl binary
 OPENSSLPATH=@OPENSSLPATH@
 
-CFLAGS=-I$(INCLUDEDIR) $(XCFLAGS) @LDFLAGS@ $(FD_SETSIZE)
+CPPFLAGS=@CPPFLAGS@ -I$(INCLUDEDIR) $(FD_SETSIZE) -DPKGLOCALSTATEDIR='"${pkglocalstatedir}"'
+CFLAGS=$(XCFLAGS) $(CPPFLAGS) @LDFLAGS@
 
 SHELL=/bin/sh
 SUBDIRS=src
@@ -120,7 +127,7 @@ TOUCH=@TOUCH@
 RES=
 all:	build
 
-MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
+MAKEARGS =	"CFLAGS=`for f in ${CFLAGS}; do echo -n \'$${f}\'\ ; done`" 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'LDFLAGS=${LDFLAGS}' 'IRCDMODE=${IRCDMODE}' \
 		'RES=${RES}' 'BINDIR=${BINDIR}' 'INSTALL=${INSTALL}' \
 		'INCLUDEDIR=${INCLUDEDIR}' \
