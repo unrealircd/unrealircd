@@ -886,7 +886,7 @@ void module_loadall(void)
 			continue;
 		irc_dlsym(mi->dll, "Mod_Load", fp);
 		/* Call the module_load */
-		if ((*fp)(mi->modinfo) != MOD_SUCCESS)
+		if ((*fp)(&mi->modinfo) != MOD_SUCCESS)
 		{
 			config_status("cannot load module %s", mi->header->name);
 			Module_free(mi);
@@ -1531,7 +1531,7 @@ void	unload_all_modules(void)
 	{
 		irc_dlsym(m->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
-			(*Mod_Unload)(m->modinfo);
+			(*Mod_Unload)(&m->modinfo);
 		remove(m->tmp_file);
 	}
 }
