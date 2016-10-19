@@ -1144,7 +1144,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 			  {
 			      /* Hmmm.. is this warning really still true (and always) ?? */
 			      printf("WARNING: Password truncated to 8 characters due to 'crypt' algorithm. "
-		                 "You are suggested to use the 'md5' algorithm instead.");
+		                 "You are suggested to use the 'bcrypt' algorithm instead.");
 				  p[8] = '\0';
 			  }
 			  if (!(result = Auth_Make(type, p))) {
@@ -1163,20 +1163,20 @@ int InitUnrealIRCd(int argc, char *argv[])
 		  case 's':
 			  (void)printf("sizeof(aClient) == %ld\n",
 			      (long)sizeof(aClient));
+			  (void)printf("sizeof(aLocalClient) == %ld\n",
+			      (long)sizeof(aLocalClient));
+			  (void)printf("sizeof(anUser) == %ld\n",
+			      (long)sizeof(anUser));
 			  (void)printf("sizeof(aChannel) == %ld\n",
 			      (long)sizeof(aChannel));
 			  (void)printf("sizeof(aServer) == %ld\n",
 			      (long)sizeof(aServer));
 			  (void)printf("sizeof(Link) == %ld\n",
 			      (long)sizeof(Link));
-			  (void)printf("sizeof(anUser) == %ld\n",
-			      (long)sizeof(anUser));
 			  (void)printf("sizeof(aTKline) == %ld\n",
 			      (long)sizeof(aTKline));
 			  (void)printf("sizeof(struct ircstatsx) == %ld\n",
 			      (long)sizeof(struct ircstatsx));
-			  (void)printf("aClient remote == %ld\n",
-			      (long)CLIENT_REMOTE_SIZE);
 			  exit(0);
 			  break;
 #ifndef _WIN32
