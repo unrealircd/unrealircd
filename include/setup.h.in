@@ -298,6 +298,9 @@
 /* Define if you want +a/+q prefixes */
 #undef PREFIX_AQ
 
+/* Define the location of private libraries */
+#undef PRIVATELIBDIR
+
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
 #undef PTHREAD_CREATE_JOINABLE

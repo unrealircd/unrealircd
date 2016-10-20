@@ -507,6 +507,15 @@ AC_ARG_WITH(pidfile, [AS_HELP_STRING([--with-pidfile=path],[Specify the path of 
 	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/unrealircd.pid"], [Define the path of the pid file])
 		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"])
 
+LDFLAGS_PRIVATELIBS=""
+AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored])],
+	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$withval"], [Define the location of private libraries])
+		PRIVATELIBDIR="$withval"
+		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"],
+	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$HOME/unrealircd/lib"], [Define the location of private libraries])
+		PRIVATELIBDIR="$HOME/unrealircd/lib"
+		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"])
+
 AC_SUBST(BINDIR)
 AC_SUBST(SCRIPTDIR)
 AC_SUBST(CONFDIR)
@@ -519,6 +528,7 @@ dnl well, Because DATADIR conflicts with the Windows SDK header files.. amazing.
 AC_SUBST(PERMDATADIR)
 AC_SUBST(DOCDIR)
 AC_SUBST(PIDFILE)
+AC_SUBST(LDFLAGS_PRIVATELIBS)
 
 AC_ARG_WITH(fd-setsize, [AS_HELP_STRING([--with-fd-setsize=size], [Specify the max file descriptors to use])],
 	[ac_fd=$withval],
@@ -619,7 +629,7 @@ else
 fi
 AC_MSG_RESULT(configuring TRE regex library)
 cd tre-$tre_version
-./configure --disable-agrep --disable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp || exit 1
+./configure --disable-agrep --enable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp --libdir=$PRIVATELIBDIR || exit 1
 AC_MSG_RESULT(compiling TRE regex library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing TRE regex library)
@@ -628,15 +638,12 @@ TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
 AC_SUBST(TRE_CFLAGS)
 
 TRE_LIBS=
-dnl See c-ares's compilation section for more info on this hack.
-dnl ensure that we're linking against the bundled version of tre
-dnl (we only reach this code if linking against the bundled version is desired).
 AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
-       [TRE_LIBS="`$ac_cv_path_PKGCONFIG --static --libs tre.pc | sed -e ['s,-L\([^ ]*regex[^ ]*lib\)\( .*\)-ltre,\1/libtre.a \2,']`"])
+       [TRE_LIBS="`$ac_cv_path_PKGCONFIG --libs tre.pc`"])
 dnl For when pkg-config isn't available -- or for when pkg-config
 dnl doesn't see the tre.pc file somehow... (#3982)
 AS_IF([test -z "$TRE_LIBS"],
-       [TRE_LIBS="../extras/regexp/lib/libtre.a"])
+       [TRE_LIBS="$PRIVATELIBDIR/libtre.so"])
 AC_SUBST(TRE_LIBS)
 cd $cur_dir
 ],[
@@ -663,7 +670,7 @@ else
 fi
 AC_MSG_RESULT(configuring PCRE2 regex library)
 cd pcre2-$pcre2_version
-./configure --enable-jit --disable-shared --disable-unicode --prefix=$cur_dir/extras/pcre2 || exit 1
+./configure --enable-jit --enable-shared --disable-unicode --prefix=$cur_dir/extras/pcre2 --libdir=$PRIVATELIBDIR || exit 1
 AC_MSG_RESULT(compiling PCRE2 regex library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing PCRE2 regex library)
@@ -676,11 +683,11 @@ dnl See c-ares's compilation section for more info on this hack.
 dnl ensure that we're linking against the bundled version of pcre2
 dnl (we only reach this code if linking against the bundled version is desired).
 AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
-       [PCRE2_LIBS="`$ac_cv_path_PKGCONFIG --static --libs libpcre2-8.pc | sed -e ['s,-L\([^ ]*regex[^ ]*lib\)\( .*\)-lpcre2-8,\1/libpcre2-8.a \2,']`"])
+       [PCRE2_LIBS="`$ac_cv_path_PKGCONFIG --libs libpcre2-8.pc`"])
 dnl For when pkg-config isn't available -- or for when pkg-config
 dnl doesn't see the libpcre2-8.pc file somehow... (#3982)
 AS_IF([test -z "$PCRE2_LIBS"],
-       [PCRE2_LIBS="../extras/pcre2/lib/libpcre2-8.a"])
+       [PCRE2_LIBS="$PRIVATELIBDIR/libpcre2-8.so"])
 AC_SUBST(PCRE2_LIBS)
 cd $cur_dir
 ],[
@@ -711,7 +718,7 @@ cd c-ares-$cares_version
 save_cflags="$CFLAGS"
 CFLAGS="$orig_cflags"
 export CFLAGS
-./configure --prefix=$cur_dir/extras/c-ares --disable-shared || exit 1
+./configure --prefix=$cur_dir/extras/c-ares --libdir=$PRIVATELIBDIR --enable-shared || exit 1
 CFLAGS="$save_cflags"
 AC_MSG_RESULT(compiling c-ares resolver library)
 $ac_cv_prog_MAKER || exit 1
@@ -725,7 +732,7 @@ dnl Set default library parameters for when pkg-config is not available
 dnl Ugly cd'ing out of extras/c-ares-xxx ;)
 dnl Note: must be a full path, not relative path.
 cd ../..
-CARESLIBSALT="`pwd`/extras/c-ares/lib/libcares.a"
+CARESLIBSALT="$PRIVATELIBDIR/libcares.so"
 cd -
 case `uname -s` in
 	*FreeBSD*)
@@ -740,17 +747,16 @@ case `uname -s` in
 esac
 
 dnl Use pkg-config for c-ares libraries, and if not available use defaults
-dnl from above. Also, if pkg-config returns an empty result (ex: on fbsd
-dnl or older versions it might be missing --static) then also use defaults.
+dnl from above (also if pkg-config returns an empty result).
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
 	CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 else
 	CARES_LIBSPRE="$CARES_LIBS"
-	dnl the sed expression forces an absolute path to the .a file to be generated
+	dnl the sed expression forces an absolute path to the .so file to be generated
 	dnl because this is what libtool would do. If this wasn't done and /usr/lib*/libcares.so
 	dnl exists, then unrealircd would still try to link against the system c-ares.
 	dnl The [] quotation is needed because the sed expression has [] in it.
-	[CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --static --libs libcares.pc | sed -e 's,-L\([^ ]\+lib\) -lcares,\1/libcares.a,'`"]
+	[CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --libs libcares.pc | sed -e 's,-L\([^ ]\+lib\) -lcares,\1/libcares.so,'`"]
 	if test "$CARES_LIBS" = "$CARES_LIBSPRE " ; then
 		CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 	fi

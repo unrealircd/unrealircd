@@ -649,6 +649,7 @@ PKG_CONFIG
 TRE_LIBS
 TRE_CFLAGS
 FD_SETSIZE
+LDFLAGS_PRIVATELIBS
 PIDFILE
 DOCDIR
 PERMDATADIR
@@ -737,6 +738,7 @@ with_tmpdir
 with_datadir
 with_docdir
 with_pidfile
+with_privatelibdir
 with_fd_setsize
 enable_prefixaq
 with_showlistmodes
@@ -1416,6 +1418,9 @@ Optional Packages:
   --with-datadir=path     Specify the directory where permanent data is stored
   --with-docdir=path      Specify the directory where documentation is stored
   --with-pidfile=path     Specify the path of the pid file
+  --with-privatelibdir=path
+                          Specify the directory where private libraries are
+                          stored
   --with-fd-setsize=size  Specify the max file descriptors to use
   --with-showlistmodes    Specify whether modes are shown in /list
   --with-topicisnuhost    Display nick!user@host as the topic setter
@@ -6163,6 +6168,29 @@ _ACEOF
 fi
 
 
+LDFLAGS_PRIVATELIBS=""
+
+# Check whether --with-privatelibdir was given.
+if test "${with_privatelibdir+set}" = set; then :
+  withval=$with_privatelibdir;
+cat >>confdefs.h <<_ACEOF
+#define PRIVATELIBDIR "$withval"
+_ACEOF
+
+		PRIVATELIBDIR="$withval"
+		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define PRIVATELIBDIR "$HOME/unrealircd/lib"
+_ACEOF
+
+		PRIVATELIBDIR="$HOME/unrealircd/lib"
+		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+fi
+
+
+
 
 
 
@@ -6726,7 +6754,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: configuring TRE regex library" >&5
 $as_echo "configuring TRE regex library" >&6; }
 cd tre-$tre_version
-./configure --disable-agrep --disable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp || exit 1
+./configure --disable-agrep --enable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp --libdir=$PRIVATELIBDIR || exit 1
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling TRE regex library" >&5
 $as_echo "compiling TRE regex library" >&6; }
 $ac_cv_prog_MAKER || exit 1
@@ -6738,10 +6766,10 @@ TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
 
 TRE_LIBS=
 if test -n "$ac_cv_path_PKGCONFIG"; then :
-  TRE_LIBS="`$ac_cv_path_PKGCONFIG --static --libs tre.pc | sed -e 's,-L\([^ ]*regex[^ ]*lib\)\( .*\)-ltre,\1/libtre.a \2,'`"
+  TRE_LIBS="`$ac_cv_path_PKGCONFIG --libs tre.pc`"
 fi
 if test -z "$TRE_LIBS"; then :
-  TRE_LIBS="../extras/regexp/lib/libtre.a"
+  TRE_LIBS="$PRIVATELIBDIR/libtre.so"
 fi
 
 cd $cur_dir
@@ -6861,7 +6889,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: configuring PCRE2 regex library" >&5
 $as_echo "configuring PCRE2 regex library" >&6; }
 cd pcre2-$pcre2_version
-./configure --enable-jit --disable-shared --disable-unicode --prefix=$cur_dir/extras/pcre2 || exit 1
+./configure --enable-jit --enable-shared --disable-unicode --prefix=$cur_dir/extras/pcre2 --libdir=$PRIVATELIBDIR || exit 1
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling PCRE2 regex library" >&5
 $as_echo "compiling PCRE2 regex library" >&6; }
 $ac_cv_prog_MAKER || exit 1
@@ -6873,10 +6901,10 @@ PCRE2_CFLAGS="-I$cur_dir/extras/pcre2/include"
 
 PCRE2_LIBS=
 if test -n "$ac_cv_path_PKGCONFIG"; then :
-  PCRE2_LIBS="`$ac_cv_path_PKGCONFIG --static --libs libpcre2-8.pc | sed -e 's,-L\([^ ]*regex[^ ]*lib\)\( .*\)-lpcre2-8,\1/libpcre2-8.a \2,'`"
+  PCRE2_LIBS="`$ac_cv_path_PKGCONFIG --libs libpcre2-8.pc`"
 fi
 if test -z "$PCRE2_LIBS"; then :
-  PCRE2_LIBS="../extras/pcre2/lib/libpcre2-8.a"
+  PCRE2_LIBS="$PRIVATELIBDIR/libpcre2-8.so"
 fi
 
 cd $cur_dir
@@ -6999,7 +7027,7 @@ cd c-ares-$cares_version
 save_cflags="$CFLAGS"
 CFLAGS="$orig_cflags"
 export CFLAGS
-./configure --prefix=$cur_dir/extras/c-ares --disable-shared || exit 1
+./configure --prefix=$cur_dir/extras/c-ares --libdir=$PRIVATELIBDIR --enable-shared || exit 1
 CFLAGS="$save_cflags"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling c-ares resolver library" >&5
 $as_echo "compiling c-ares resolver library" >&6; }
@@ -7012,7 +7040,7 @@ CARES_CFLAGS="-I$cur_dir/extras/c-ares/include"
 CARES_LIBS="-L../extras/c-ares/lib"
 
 cd ../..
-CARESLIBSALT="`pwd`/extras/c-ares/lib/libcares.a"
+CARESLIBSALT="$PRIVATELIBDIR/libcares.so"
 cd -
 case `uname -s` in
 	*FreeBSD*)
@@ -7030,7 +7058,7 @@ if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
 	CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 else
 	CARES_LIBSPRE="$CARES_LIBS"
-					CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --static --libs libcares.pc | sed -e 's,-L\([^ ]\+lib\) -lcares,\1/libcares.a,'`"
+					CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --libs libcares.pc | sed -e 's,-L\([^ ]\+lib\) -lcares,\1/libcares.so,'`"
 	if test "$CARES_LIBS" = "$CARES_LIBSPRE " ; then
 		CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 	fi
