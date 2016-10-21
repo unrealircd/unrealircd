@@ -104,25 +104,6 @@ AC_DEFUN([CHECK_LIBCURL],
 ]])
 		])
 
-		AS_IF([test "x`echo $CURLLIBS |grep ares`" != x && test "x$with_system_cares" = "xno"],
-		[
-			dnl Attempt one: Linux sed
-			[XCURLLIBS="`echo "$CURLLIBS"|sed -r 's/[^ ]*ares[^ ]*//g' 2>/dev/null`"]
-			AS_IF([test "x$XCURLLIBS" = "x"],
-			[
-				dnl Attempt two: FreeBSD (and others?) sed
-				[XCURLLIBS="`echo "$CURLLIBS"|sed -E 's/[^ ]*ares[^ ]*//g' 2>/dev/null`"]
-				AS_IF([test x"$XCURLLIBS" = x],
-				[
-					AC_MSG_ERROR([sed appears to be broken. It is needed for a remote includes compile hack.])
-				])
-			])
-			CURLLIBS="$XCURLLIBS"
-
-			IRCDLIBS_CURL_CARES="$CARES_LIBS"
-			CFLAGS_CURL_CARES="$CARES_CFLAGS"
-		])
-		
 		dnl Make sure that linking against cURL works rather than letting the user
 		dnl find out after compiling most of his program. ~ohnobinki
 		IRCDLIBS="$IRCDLIBS $CURLLIBS"
