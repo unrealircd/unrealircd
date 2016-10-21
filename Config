@@ -619,91 +619,50 @@ if [ "$REMOTEINC" = "1" ] ; then
 
 
 	INSTALLCURL="0"
-        if [ "x$CURLDIR" = "x" ]; then
-	        # There is no reason to support this:
-	        if [ -d "/usr/local/include/curl" ]; then
-		    CURLDIR="/usr/local"
-		fi
-	        # Zeroeth, let's act SANE
-	        if [ -d "/usr/include/curl" ]; then
-		    CURLDIR="/usr"
-		fi
-                # First, let's make shell admins happy...
-                if [ -d "/usr/share/unreal-curl" ]; then
-                        CURLDIR="/usr/share/unreal-curl"
-                fi
 
-                GOTASYNC=0
-                if [ "x$CURLDIR" != "x" ]; then
-                    # Check if it's of any use: a curl without async dns (cares) hangs the entire ircd..
-                    # normally this is done in ./configure but now we're forced to do it also here..
-                    if "$CURLDIR"/bin/curl-config --features | grep -q -e AsynchDNS; then
-                        GOTASYNC="1"
-                    fi
-                  if [ "$GOTASYNC" != "1" ]; then
-                          PREVCURLDIR="$CURLDIR"
-                          CURLDIR=""
-                  fi
-                fi
-                
-                # Second, local curl in ~/curl if it exists (only overrides above if above was without AsynchDNS)
-                if [ "$GOTASYNC" != "1" -a -d "$HOME/curl" ]; then
-                        CURLDIR="$HOME/curl"
-                        
-                        # Check if it's recent enough...
-                        # But first, check if curl-config can be trusted at all: it depends
-                        # on 'bc' for some reason and not all systems have that installed!
-                        echo "1+1"|bc 1>/dev/null 2>&1
-                        if [ "$?" = 0 ]; then
-                            "$CURLDIR"/bin/curl-config --checkfor 7.21.0
-                            if [ "$?" != 0 ]; then
-                                    echo ""
-                                    echo "Your self-compiled CURL library in $CURLDIR is slightly outdated."
-                                    echo "This probably means you had the library from a previous installation of UnrealIRCd."
-                                    echo "Because previous versions may be linked to a previous version to c-ares which"
-                                    echo "were not ABI compatible it is highly recommended to remove the version"
-                                    echo "and recompile it. We now have an automatic downloader and installer to compile"
-                                    echo "and install curl for you (in $CURLDIR). You can choose to do so in the question"
-                                    echo "after this one."
-                                    TEST=""
-                                    while [ -z "$TEST" ] ; do
-                                        TEST="Yes"
-                                        echo "Shall I rename $CURLDIR to $CURLDIR.old so it can be rebuild later on?"
-                                        echo $n "[$TEST] -> $c"
-                                        read cc
-                                        if [ -z "$cc" ] ; then
-                                            cc=$TEST
-                                        fi
-                                        case "$cc" in
-                                            [Yy]*)
-                                                rm -rf "$CURLDIR".old
-                                                mv "$CURLDIR" "$CURLDIR".old
-                                                CURLDIR=""
-                                                GOTASYNC=1
-                                                # wow the GOTASYNC=1 is hackish, but we need to prevent the error from later on
-                                                ;;
-                                            [Nn]*)
-                                                echo "Uh, ok... I hope you know what you are doing..."
-                                                echo ""
-                                                ;;
-                                            *)
-                                                echo ""
-                                                echo "You must enter either Yes or No"
-                                                TEST=""
-                                                ;;
-                                        esac
-                                    done
-                            fi
-                        fi
-                fi
-                
-                # Need to output it here, as the HOME check from above may cause this to be no longer relevant.
-                if [ "x$CURLDIR" = "x" -a "$GOTASYNC" != "1" ]; then
-                	echo "Curl library was found in $PREVCURLDIR, but it does not support Asynchronous DNS (not compiled with c-ares)"
-                	echo "so it's of no use to us."
-                fi
-                	
-        fi
+	if [ -d "/usr/local/include/curl" ]; then
+		SUGGESTCURLDIR="/usr/local"
+	fi
+	if [ -d "/usr/include/curl" ]; then
+		SUGGESTCURLDIR="/usr"
+	fi
+
+	GOTASYNC=0
+	if [ "x$SUGGESTCURLDIR" != "x" ]; then
+		# Check if it's of any use: a curl without async dns (cares) hangs the entire ircd..
+		# normally this is done in ./configure but now we're forced to do it also here..
+		if "$SUGGESTCURLDIR"/bin/curl-config --features | grep -q -e AsynchDNS; then
+			GOTASYNC="1"
+		fi
+		if [ "$GOTASYNC" != "1" ]; then
+			SUGGESTCURLDIRBAD="$CURLDIR"
+			SUGGESTCURLDIR=""
+		fi
+	fi
+
+	if [ "$CURLDIR" = "$HOME/curl" -a "x$SUGGESTCURLDIR" != "x" ]; then
+		# I guess some people will complain about this, but if system wide cURL is available
+		# and many people have old defaults then this is much preferred:
+		echo ""
+		echo "WARNING: Your previous (potentially old) setting is to use cURL from $HOME/curl."
+		echo "However, your operating system also provides a working cURL."
+		echo "I am therefore changing the setting to: $SUGGESTCURLDIR"
+		CURLDIR="$SUGGESTCURLDIR"
+	fi
+
+	if [ "x$CURLDIR" = "x" ]; then
+		# Local curl in ~/curl is used if it exists and system has no AsynchDNS
+		if [ "$GOTASYNC" != "1" -a -d "$HOME/curl" ]; then
+			CURLDIR="$HOME/curl"
+		fi
+
+		# Need to output it here, as the HOME check from above may cause this to be no longer relevant.
+		if [ "x$CURLDIR" = "x" -a "$GOTASYNC" != "1" ]; then
+			echo "Curl library was found in $SUGGESTCURLDIRBAD, but it does not support Asynchronous DNS (not compiled with c-ares)"
+			echo "so it's of no use to us as it would stall the IRCd on REHASH."
+		fi
+	fi
+
         if [ "x$CURLDIR" = "x" ]; then
         	# Still empty?
         	TEST=""
