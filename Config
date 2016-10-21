@@ -646,8 +646,8 @@ if [ "$REMOTEINC" = "1" ] ; then
                   fi
                 fi
                 
-                # Second, use the local curl if it exists (overrides above)
-                if [ -d "$HOME/curl" ]; then
+                # Second, local curl in ~/curl if it exists (only overrides above if above was without AsynchDNS)
+                if [ "$GOTASYNC" != "1" -a -d "$HOME/curl" ]; then
                         CURLDIR="$HOME/curl"
                         
                         # Check if it's recent enough...
