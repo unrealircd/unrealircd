@@ -86,12 +86,13 @@ AC_DEFUN([CHECK_LIBCURL],
 		dnl wants bundled c-ares + system libcURL, then we should filter out c-ares
 		dnl flags. _Only_ in that case should we mess with the flags. -- ohnobinki
 
-		AS_IF([test "x$with_system_cares" = "xno" && test "x$HOME/curl" != "x$enable_curl" && test "x/usr/share/unreal-curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ],
+		AS_IF([test "x$has_system_cares" = "xno" && test "x$HOME/curl" != "x$enable_curl" && test "x/usr/share/unreal-curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ],
 		[
 			AC_MSG_ERROR([[
 
   You have decided to build unrealIRCd with libcURL (remote includes) support.
-  However, you have disabled system-installed c-ares support (--with-system-cares).
+  However, you have system-installed c-ares support has either been disabled
+  (--without-system-cares) or is unavailable.
   Because UnrealIRCd will use a bundled copy of c-ares which may be incompatible
   with the system-installed libcURL, this is a bad idea which may result in error
   messages looking like:

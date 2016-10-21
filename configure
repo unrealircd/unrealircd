@@ -8492,7 +8492,7 @@ $as_echo "$as_me: WARNING: CURLLIBS is empty, that probably means that I could n
 fi
 
 
-		if test "x$with_system_cares" = "xno" && test "x$HOME/curl" != "x$enable_curl" && test "x/usr/share/unreal-curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ; then :
+		if test "x$has_system_cares" = "xno" && test "x$HOME/curl" != "x$enable_curl" && test "x/usr/share/unreal-curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ; then :
 
 			as_fn_error $? "
 
