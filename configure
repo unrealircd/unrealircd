@@ -8509,26 +8509,6 @@ fi
 
 fi
 
-		if test "x`echo $CURLLIBS |grep ares`" != x && test "x$with_system_cares" = "xno"; then :
-
-						XCURLLIBS="`echo "$CURLLIBS"|sed -r 's/[^ ]*ares[^ ]*//g' 2>/dev/null`"
-			if test "x$XCURLLIBS" = "x"; then :
-
-								XCURLLIBS="`echo "$CURLLIBS"|sed -E 's/[^ ]*ares[^ ]*//g' 2>/dev/null`"
-				if test x"$XCURLLIBS" = x; then :
-
-					as_fn_error $? "sed appears to be broken. It is needed for a remote includes compile hack." "$LINENO" 5
-
-fi
-
-fi
-			CURLLIBS="$XCURLLIBS"
-
-			IRCDLIBS_CURL_CARES="$CARES_LIBS"
-			CFLAGS_CURL_CARES="$CARES_CFLAGS"
-
-fi
-
 						IRCDLIBS="$IRCDLIBS $CURLLIBS"
 		CFLAGS="$CFLAGS $CURLCFLAG"
 
