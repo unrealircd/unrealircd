@@ -65,11 +65,9 @@ AC_DEFUN([CHECK_LIBCURL],
 		CURLLIBS="`$CURLCONFIG --libs`"
 
 		dnl This test must be this way because of #3981
-		AS_IF([$CURLCONFIG --features | grep -q -e AsynchDNS],
+		AS_IF([$CURLCONFIG --libs | grep -q -e ares],
 			[CURLUSESCARES="1"],
 			[CURLUSESCARES="0"])
-		AS_IF([test "$CURLUSESCARES" = "0"],
-			[AC_MSG_WARN([cURL seems compiled without c-ares support. Your IRCd will possibly stall when REHASHing!])])
 
 		dnl sanity warnings
 		AS_IF([test -z "${CURLLIBS}"],
