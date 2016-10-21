@@ -639,7 +639,7 @@ AC_ARG_WITH(disable-extendedban-stacking, [AS_HELP_STRING([--with-disable-extend
        		[AC_DEFINE([DISABLE_STACKED_EXTBANS], [], [Define to disable extended ban stacking (~q:~c:\#chan, etc)])])])
 AC_ARG_WITH(system-tre, [AS_HELP_STRING([--with-system-tre], [Use the system tre package instead of bundled, discovered using pkg-config])], [], [with_system_tre=no])
 AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--with-system-pcre2], [Use the system pcre2 package instead of bundled, discovered using pkg-config])], [], [with_system_pcre2=no])
-AC_ARG_WITH(system-cares, [AS_HELP_STRING([--with-system-cares], [Use the system c-ares (at least version 1.6.0) package instead of bundled c-ares, discovered using pkg-config])], [], [with_system_cares=no])
+AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled version instead of system c-ares. Normally autodetected via pkg-config.])], [], [with_system_cares=no])
 CHECK_SSL
 AC_ARG_ENABLE(dynamic-linking, [AS_HELP_STRING([--disable-dynamic-linking], [Make the IRCd statically link with shared objects rather than dynamically (noone knows if disabling dynamic linking actually does anything or not)])],
 	[enable_dynamic_linking=$enableval], [enable_dynamic_linking="yes"])
@@ -768,7 +768,12 @@ dnl use pkgconfig for pcre2:
 PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.00)
 ])
 
+dnl Use system c-ares when available, unless --without-system-cares.
+has_system_cares="no"
 AS_IF([test "x$with_system_cares" = "xno"],[
+PKG_CHECK_MODULES([CARES], libcares >= 1.6.0,[],[has_system_cares=yes])])
+
+AS_IF([test "$has_system_cares" != "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
 dnl NOTE: when changing this here, ALSO change it in extras/curlinstall
 dnl       and in the comment in this file around line 400!
@@ -836,9 +841,6 @@ else
 fi
 AC_SUBST(CARES_LIBS)
 cd $cur_dir
-],[
-dnl use pkg-config for system c-ares:
-PKG_CHECK_MODULES([CARES], libcares >= 1.6.0)
 ])
 
 AX_PTHREAD()

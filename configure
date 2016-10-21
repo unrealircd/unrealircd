@@ -1440,9 +1440,8 @@ Optional Packages:
                           discovered using pkg-config
   --with-system-pcre2     Use the system pcre2 package instead of bundled,
                           discovered using pkg-config
-  --with-system-cares     Use the system c-ares (at least version 1.6.0)
-                          package instead of bundled c-ares, discovered using
-                          pkg-config
+  --without-system-cares  Use bundled version instead of system c-ares.
+                          Normally autodetected via pkg-config.
 
 Some influential environment variables:
   CC          C compiler command
@@ -7793,68 +7792,8 @@ fi
 
 fi
 
+has_system_cares="no"
 if test "x$with_system_cares" = "xno"; then :
-
-cares_version="1.12.0"
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting c-ares resolver library" >&5
-$as_echo "extracting c-ares resolver library" >&6; }
-cur_dir=`pwd`
-cd extras
-rm -rf c-ares-$cares_version c-ares
-if test "x$ac_cv_path_GUNZIP" = "x" ; then
-	tar xfz c-ares.tar.gz
-else
-	cp c-ares.tar.gz c-ares.tar.gz.bak
-	gunzip -f c-ares.tar.gz
-	cp c-ares.tar.gz.bak c-ares.tar.gz
-	tar xf c-ares.tar
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: configuring c-ares library" >&5
-$as_echo "configuring c-ares library" >&6; }
-cd c-ares-$cares_version
-save_cflags="$CFLAGS"
-CFLAGS="$orig_cflags"
-export CFLAGS
-./configure --prefix=$cur_dir/extras/c-ares --libdir=$PRIVATELIBDIR --enable-shared || exit 1
-CFLAGS="$save_cflags"
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling c-ares resolver library" >&5
-$as_echo "compiling c-ares resolver library" >&6; }
-$ac_cv_prog_MAKER || exit 1
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: installing c-ares resolver library" >&5
-$as_echo "installing c-ares resolver library" >&6; }
-$ac_cv_prog_MAKER install || exit 1
-CARES_CFLAGS="-I$cur_dir/extras/c-ares/include"
-
-CARES_LIBS="-L../extras/c-ares/lib"
-
-cd ../..
-CARESLIBSALT="$PRIVATELIBDIR/libcares.so"
-cd -
-case `uname -s` in
-	*FreeBSD*)
-		CARESLIBSALT="$CARESLIBSALT"
-		;;
-	*Linux*)
-		CARESLIBSALT="$CARESLIBSALT -lrt"
-		;;
-	*SunOS*)
-		CARESLIBSALT="$CARESLIBSALT -lrt"
-		;;
-esac
-
-if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-	CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
-else
-	CARES_LIBSPRE="$CARES_LIBS"
-					CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --libs libcares.pc | sed -e 's,-L\([^ ]\+lib\) -lcares,\1/libcares.so,'`"
-	if test "$CARES_LIBS" = "$CARES_LIBSPRE " ; then
-		CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
-	fi
-fi
-
-cd $cur_dir
-
-else
 
 
 pkg_failed=no
@@ -7915,31 +7854,11 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$CARES_PKG_ERRORS" >&5
 
-	as_fn_error $? "Package requirements (libcares >= 1.6.0) were not met:
-
-$CARES_PKG_ERRORS
-
-Consider adjusting the PKG_CONFIG_PATH environment variable if you
-installed software in a non-standard prefix.
-
-Alternatively, you may set the environment variables CARES_CFLAGS
-and CARES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details." "$LINENO" 5
+	has_system_cares=yes
 elif test $pkg_failed = untried; then
      	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
-is in your PATH or set the PKG_CONFIG environment variable to the full
-path to pkg-config.
-
-Alternatively, you may set the environment variables CARES_CFLAGS
-and CARES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-
-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
-See \`config.log' for more details" "$LINENO" 5; }
+	has_system_cares=yes
 else
 	CARES_CFLAGS=$pkg_cv_CARES_CFLAGS
 	CARES_LIBS=$pkg_cv_CARES_LIBS
@@ -7947,6 +7866,68 @@ else
 $as_echo "yes" >&6; }
 
 fi
+fi
+
+if test "$has_system_cares" != "no"; then :
+
+cares_version="1.12.0"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting c-ares resolver library" >&5
+$as_echo "extracting c-ares resolver library" >&6; }
+cur_dir=`pwd`
+cd extras
+rm -rf c-ares-$cares_version c-ares
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz c-ares.tar.gz
+else
+	cp c-ares.tar.gz c-ares.tar.gz.bak
+	gunzip -f c-ares.tar.gz
+	cp c-ares.tar.gz.bak c-ares.tar.gz
+	tar xf c-ares.tar
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: configuring c-ares library" >&5
+$as_echo "configuring c-ares library" >&6; }
+cd c-ares-$cares_version
+save_cflags="$CFLAGS"
+CFLAGS="$orig_cflags"
+export CFLAGS
+./configure --prefix=$cur_dir/extras/c-ares --libdir=$PRIVATELIBDIR --enable-shared || exit 1
+CFLAGS="$save_cflags"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling c-ares resolver library" >&5
+$as_echo "compiling c-ares resolver library" >&6; }
+$ac_cv_prog_MAKER || exit 1
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: installing c-ares resolver library" >&5
+$as_echo "installing c-ares resolver library" >&6; }
+$ac_cv_prog_MAKER install || exit 1
+CARES_CFLAGS="-I$cur_dir/extras/c-ares/include"
+
+CARES_LIBS="-L../extras/c-ares/lib"
+
+cd ../..
+CARESLIBSALT="$PRIVATELIBDIR/libcares.so"
+cd -
+case `uname -s` in
+	*FreeBSD*)
+		CARESLIBSALT="$CARESLIBSALT"
+		;;
+	*Linux*)
+		CARESLIBSALT="$CARESLIBSALT -lrt"
+		;;
+	*SunOS*)
+		CARESLIBSALT="$CARESLIBSALT -lrt"
+		;;
+esac
+
+if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
+	CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
+else
+	CARES_LIBSPRE="$CARES_LIBS"
+					CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --libs libcares.pc | sed -e 's,-L\([^ ]\+lib\) -lcares,\1/libcares.so,'`"
+	if test "$CARES_LIBS" = "$CARES_LIBSPRE " ; then
+		CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
+	fi
+fi
+
+cd $cur_dir
 
 fi
 
