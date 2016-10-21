@@ -7855,10 +7855,12 @@ fi
 	echo "$CARES_PKG_ERRORS" >&5
 
 	has_system_cares=yes
+rm "$PRIVATELIBDIR/"libcares*
 elif test $pkg_failed = untried; then
      	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_cares=yes
+rm "$PRIVATELIBDIR/"libcares*
 else
 	CARES_CFLAGS=$pkg_cv_CARES_CFLAGS
 	CARES_LIBS=$pkg_cv_CARES_LIBS

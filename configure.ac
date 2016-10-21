@@ -771,7 +771,8 @@ PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.00)
 dnl Use system c-ares when available, unless --without-system-cares.
 has_system_cares="no"
 AS_IF([test "x$with_system_cares" = "xno"],[
-PKG_CHECK_MODULES([CARES], libcares >= 1.6.0,[],[has_system_cares=yes])])
+PKG_CHECK_MODULES([CARES], libcares >= 1.6.0,[],[has_system_cares=yes
+rm "$PRIVATELIBDIR/"libcares*])])
 
 AS_IF([test "$has_system_cares" != "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
