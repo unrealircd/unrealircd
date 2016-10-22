@@ -533,9 +533,17 @@ int blacklist_start_check(aClient *cptr)
 		abort(); /* hmmm. unless we add some /Blacklist CHECK command. then this needs to be removed */
 	}
 #endif
+
 	for (bl = conf_blacklist; bl; bl = bl->next)
+	{
+		/* Stop processing if client is (being) killed already */
+		if (!BLUSER(cptr))
+			break;
+
+		/* Initiate blacklist requests */
 		if (bl->backend_type == BLACKLIST_BACKEND_DNS)
 			blacklist_dns_request(cptr, bl);
+	}
 	
 	/* Free bluser entry. This only happens if you have no blacklist configured or they fail very early */
 	if (BLUSER(cptr))
