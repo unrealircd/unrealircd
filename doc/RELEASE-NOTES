@@ -3,11 +3,18 @@ UnrealIRCd 4.0.8-rc1 Release Notes
 
 ==[ CHANGES BETWEEN 4.0.7 AND 4.0.8-rc1 ]==
 Improvements:
-* As part of defense-in-depth UnrealIRCd on *NIX now compiles with
-  several hardening options by default to make several type of exploits
-  more difficult and in some cases impossible. Tech: this enables
-  full RELRO (GOT and PLT being read-only), everything compiled as PIE
-  making ASLR possible, stack protector canaries are added, etc.
+* *NIX: As part of defense-in-depth UnrealIRCd now compiles with
+  several hardening options by default. This makes several type of
+  exploits more difficult and in some cases even impossible.
+  Tech: this enables full RELRO (GOT and PLT being read-only),
+  everything compiled as PIE making ASLR possible, stack protector
+  canaries are added, etc.
+* Windows: releases are now signed. If you download the UnrealIRCd
+  installer you will no longer see "Unknown publisher" but rather
+  "Open Source Developer, Bram Matthys". Similarly all the EXE and
+  DLL module files have been signed which should make it easy for
+  anti virus software to see if something is an official UnrealIRCd
+  release file or not.
 
 Major issues fixed:
 * Possible crash if you have several blacklist blocks
