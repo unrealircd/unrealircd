@@ -218,14 +218,15 @@ char *num = NULL;
  */
 void send_proto(aClient *cptr, ConfigItem_link *aconf)
 {
-char buf[1024];
+	char buf[1024];
+	Isupport *prefix = IsupportFind("PREFIX");
 
 	/* First line */
 	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
 
 	/* Second line */
-	snprintf(buf, sizeof(buf), "CHANMODES=%s%s,%s%s,%s%s,%s%s NICKCHARS=%s SID=%s MLOCK TS=%ld EXTSWHOIS",
-		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, langsinuse, me.id, (long)TStime());
+	snprintf(buf, sizeof(buf), "CHANMODES=%s%s,%s%s,%s%s,%s%s PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%ld EXTSWHOIS",
+		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, prefix->value, langsinuse, me.id, (long)TStime());
 
 	sendto_one(cptr, "PROTOCTL %s", buf);
 }
