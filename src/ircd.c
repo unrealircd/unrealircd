@@ -1022,7 +1022,10 @@ int InitUnrealIRCd(int argc, char *argv[])
 			"         as any compromise of your UnrealIRCd will result in full\n"
 			"         privileges to the attacker on the entire machine.\n"
 			"         You should start UnrealIRCd as a different user!!\n");
-		sleep(5); /* just to catch their attention */
+		sleep(1);
+		fprintf(stderr, "\nIn a later version we will refuse starting UnrealIRCd as root, see "
+		                "https://www.unrealircd.org/docs/Do_not_run_as_root\n\n");
+		sleep(10); /* just to catch their attention */
 	}
 # ifdef	PROFIL
 	(void)monstartup(0, etext);
