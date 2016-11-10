@@ -362,12 +362,12 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		acptr = lp->cptr;
-		if (acptr->from == one)
-			continue;	/* ...was the one I should skip
-					   or user not not a channel op */
+		/* skip the one and deaf clients (unless sendanyways is set) */
+		if (acptr->from == one || (IsDeaf(acptr) && !(sendanyways == 1)))
+			continue;
 		if (!prefix)
 			goto good;
-	        if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
+		if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
 			goto good;
 		if ((prefix & PREFIX_VOICE) && (lp->flags & CHFL_VOICE))
 			goto good;
