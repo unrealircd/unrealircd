@@ -1,7 +1,7 @@
-UnrealIRCd 4.0.8-rc1 Release Notes
-===================================
+UnrealIRCd 4.0.8 Release Notes
+===============================
 
-==[ CHANGES BETWEEN 4.0.7 AND 4.0.8-rc1 ]==
+==[ CHANGES BETWEEN 4.0.7 AND 4.0.8 ]==
 Improvements:
 * *NIX: As part of defense-in-depth UnrealIRCd now compiles with
   several hardening options by default. This makes several type of
@@ -20,9 +20,12 @@ Major issues fixed:
 * Possible crash if you have several blacklist blocks
 
 Minor issues fixed:
-* None
+* User mode +d (deaf) did not work
 
 Other changes:
+* We've always printed big warnings when running UnrealIRCd as root.
+  In this version we still do, but in future versions we will simply
+  refuse to boot. https://www.unrealircd.org/docs/Do_not_run_as_root
 * System c-ares is preferred over our own shipped c-ares
 * System cURL is preferred over ~/curl (if it has AsynchDNS)
 * Our shipped libraries are no longer built as static
