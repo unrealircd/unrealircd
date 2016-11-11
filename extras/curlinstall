@@ -9,7 +9,7 @@ if [ ! -f src/parse.c ]; then
 		cd ..
 	else
 		echo "Please run this program from your UnrealIRCd directory"
-		echo "(usually $HOME/Unreal3.2 or something like that)"
+		echo "(usually $HOME/unrealircd-4.0.X or something like that)"
 		exit 1
 	fi
 fi
@@ -80,7 +80,7 @@ fi
 cd "$OUTD" || exit 1
 
 echo "Building and installing libcurl"
-CPPFLAGS="-I$ARESPATH/include" ./configure --prefix=$HOME/curl --disable-shared \
+CPPFLAGS="-I$ARESPATH/include" ./configure --prefix=$HOME/curl --enable-shared \
  --disable-thread --enable-ares=$ARESPATH --disable-ipv6 $SSLFLAG
 cp -R $ARESPATH/lib ares
 make && make install
