@@ -91,6 +91,10 @@ ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 # remove possibly old instances of curl in ~/unrealircd/lib/
 rm -f $LIBDIR/*curl* 1>/dev/null 2>&1
+# Ensure we install curl even if someone does ./Config -quick...
+if [ "x$CURLDIR" = "x$UNREALCWD/extras/curl" ]; then
+	INSTALLCURL=1
+fi
 if [ "x$INSTALLCURL" = "x1" ]; then
 	extras/curlinstall "$LIBDIR" || exit 1
 fi
@@ -700,7 +704,7 @@ if [ "$REMOTEINC" = "1" ] ; then
                     case "$cc" in
                         [Yy]*)
                             INSTALLCURL="1"
-                            CURLDIR="$HOME/curl"
+                            CURLDIR="$UNREALCWD/extras/curl"
                             ;;
                         [Nn]*)
                             INSTALLCURL="0"
