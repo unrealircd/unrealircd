@@ -660,7 +660,7 @@ if [ "$REMOTEINC" = "1" ] ; then
 			CURLDIR="$SUGGESTCURLDIR"
 		else
 			echo ""
-			echo "WARNING: We no longer suggest to use ~/curl nowadays."
+			echo "WARNING: We no longer use $HOME/curl nowadays."
 			echo "Use the automatic download and install feature below."
 			CURLDIR=""
 		fi
@@ -670,9 +670,9 @@ if [ "$REMOTEINC" = "1" ] ; then
 		CURLDIR="$SUGGESTCURLDIR"
 		# NOTE: CURLDIR may still be empty after this
 
-		# Local curl in ~/curl is used if it exists and system has no AsynchDNS
-		if [ "$GOTASYNC" != "1" -a -d "$HOME/curl" ]; then
-			CURLDIR="$HOME/curl"
+		# System curl has no asyncdns, so install our own.
+		if [ "$GOTASYNC" != "1" ]; then
+			CURLDIR=""
 		fi
 
 		# Need to output it here, as the HOME check from above may cause this to be no longer relevant.
@@ -683,10 +683,12 @@ if [ "$REMOTEINC" = "1" ] ; then
 	fi
 
 	# Final check
-	"$CURLDIR/bin/curl-config" --features 2>/dev/null | grep -q -e AsynchDNS
-	if [ "$?" != 0 ]; then
-		echo "Curl from $CURLDIR seems unusable ($CURLDIR/bin/curl-config does not exist)"
-		CURLDIR=""
+	if [ "x$CURLDIR" != "x" ]; then
+		"$CURLDIR/bin/curl-config" --features 2>/dev/null | grep -q -e AsynchDNS
+		if [ "$?" != 0 ]; then
+			echo "Curl from $CURLDIR seems unusable ($CURLDIR/bin/curl-config does not exist)"
+			CURLDIR=""
+		fi
 	fi
 
         if [ "x$CURLDIR" = "x" ]; then
