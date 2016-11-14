@@ -3,7 +3,16 @@ URL="http://www.unrealircd.org/files/curl-latest.tar.gz"
 OUTF="curl-latest.tar.gz"
 OUTD="curl-latest"
 ARESPATH="`pwd`/extras/c-ares"
+UNREALDIR="`pwd`"
 CARESVERSION="1.12.0"
+LIBDIR="$1"
+
+if [ "x$1" = "x" ]; then
+	echo "You should (no longer) run this program directly."
+	echo "It will be invoked by ./Config"
+	exit 1
+fi
+
 if [ ! -f src/parse.c ]; then
 	if [ -f ../src/parse.c ]; then
 		cd ..
@@ -80,8 +89,8 @@ fi
 cd "$OUTD" || exit 1
 
 echo "Building and installing libcurl"
-CPPFLAGS="-I$ARESPATH/include" ./configure --prefix=$HOME/curl --enable-shared \
- --disable-thread --enable-ares=$ARESPATH --disable-ipv6 $SSLFLAG
+CPPFLAGS="-I$ARESPATH/include" ./configure --prefix=$UNREALDIR/extras/curl --libdir=$LIBDIR --enable-shared \
+ --disable-thread --enable-ares=$ARESPATH --disable-ipv6
 cp -R $ARESPATH/lib ares
 make && make install
 

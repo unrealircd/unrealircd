@@ -89,8 +89,10 @@ ARG="$ARG--with-fd-setsize=$MAXCONNECTIONS "
 ARG="$ARG--enable-dynamic-linking "
 ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
+# remove possibly old instances of curl in ~/unrealircd/lib/
+rm -f $LIBDIR/*curl* 1>/dev/null 2>&1
 if [ "x$INSTALLCURL" = "x1" ]; then
-	extras/curlinstall || exit 1
+	extras/curlinstall "$LIBDIR" || exit 1
 fi
 echo $CONF
 $CONF || exit 1
@@ -643,14 +645,21 @@ if [ "$REMOTEINC" = "1" ] ; then
 		fi
 	fi
 
-	if [ "x$CURLDIR" = "x$HOME/curl" -a "x$SUGGESTCURLDIR" != "x" ]; then
-		# I guess some people will complain about this, but if system wide cURL is available
-		# and many people have old defaults then this is much preferred:
-		echo ""
-		echo "WARNING: Your previous (potentially old) setting is to use cURL from $HOME/curl."
-		echo "However, your operating system also provides a working cURL."
-		echo "I am therefore changing the setting to: $SUGGESTCURLDIR"
-		CURLDIR="$SUGGESTCURLDIR"
+	if [ "x$CURLDIR" = "x$HOME/curl" ]; then
+		if [ "x$SUGGESTCURLDIR" != "x" ]; then
+			# I guess some people will complain about this, but if system wide cURL is available
+			# and many people have old defaults then this is much preferred:
+			echo ""
+			echo "WARNING: Your previous (potentially old) setting is to use cURL from $HOME/curl."
+			echo "However, your operating system also provides a working cURL."
+			echo "I am therefore changing the setting to: $SUGGESTCURLDIR"
+			CURLDIR="$SUGGESTCURLDIR"
+		else
+			echo ""
+			echo "WARNING: We no longer suggest to use ~/curl nowadays."
+			echo "Use the automatic download and install feature below."
+			CURLDIR=""
+		fi
 	fi
 
 	if [ "x$CURLDIR" = "x" ]; then
@@ -669,6 +678,13 @@ if [ "$REMOTEINC" = "1" ] ; then
 		fi
 	fi
 
+	# Final check
+	"$CURLDIR/bin/curl-config" --features 2>/dev/null | grep -q -e AsynchDNS
+	if [ "$?" != 0 ]; then
+		echo "Curl from $CURLDIR seems unusable ($CURLDIR/bin/curl-config does not exist)"
+		CURLDIR=""
+	fi
+
         if [ "x$CURLDIR" = "x" ]; then
         	# Still empty?
         	TEST=""
@@ -676,7 +692,6 @@ if [ "$REMOTEINC" = "1" ] ; then
                     TEST="Yes"
                     echo ""
         	    echo "Do you want me to automatically download and install curl for you?"
-        	    echo "(will install in $HOME/curl)"
                     echo $n "[$TEST] -> $c"
                         read cc
                     if [ -z "$cc" ] ; then
