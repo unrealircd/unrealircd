@@ -3,6 +3,7 @@ UnrealIRCd 4.0.8.1 Release Notes
 
 ==[ CHANGES BETWEEN 4.0.8 AND 4.0.8.1 ]==
 * Fix build on FreeBSD with clang / without gcc
+* Self-compiled curl is now handled the same as other libs
 
 ==[ CHANGES BETWEEN 4.0.7 AND 4.0.8 ]==
 Improvements:
