@@ -7524,7 +7524,7 @@ $as_echo "no" >&6; }
 fi
 if test "x$with_system_tre" = "xno"; then :
 
-tre_version="0.8.0"
+tre_version="0.8.0-git"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting TRE regex library" >&5
 $as_echo "extracting TRE regex library" >&6; }
 cur_dir=`pwd`

@@ -685,7 +685,7 @@ export PATH_SEPARATOR
 
 AS_IF([test "x$with_system_tre" = "xno"],[
 dnl REMEMBER TO CHANGE WITH A NEW TRE RELEASE!
-tre_version="0.8.0"
+tre_version="0.8.0-git"
 AC_MSG_RESULT(extracting TRE regex library)
 cur_dir=`pwd`
 cd extras
