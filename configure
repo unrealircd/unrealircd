@@ -7906,7 +7906,7 @@ $as_echo "installing c-ares resolver library" >&6; }
 $ac_cv_prog_MAKER install || exit 1
 CARES_CFLAGS="-I$cur_dir/extras/c-ares/include"
 
-CARES_LIBS="-L../extras/c-ares/lib"
+CARES_LIBS="-L$PRIVATELIBDIR"
 
 cd ../..
 CARESLIBSALT="$PRIVATELIBDIR/libcares.so"

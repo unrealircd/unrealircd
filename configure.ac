@@ -809,7 +809,7 @@ AC_MSG_RESULT(installing c-ares resolver library)
 $ac_cv_prog_MAKER install || exit 1
 CARES_CFLAGS="-I$cur_dir/extras/c-ares/include"
 AC_SUBST(CARES_CFLAGS)
-CARES_LIBS="-L../extras/c-ares/lib"
+CARES_LIBS="-L$PRIVATELIBDIR"
 
 dnl Set default library parameters for when pkg-config is not available
 dnl Ugly cd'ing out of extras/c-ares-xxx ;)
