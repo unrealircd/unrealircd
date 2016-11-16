@@ -1,10 +1,11 @@
-UnrealIRCd 4.0.8.1 Release Notes
+UnrealIRCd 4.0.8.2 Release Notes
 =================================
 
-==[ CHANGES BETWEEN 4.0.8 AND 4.0.8.1 ]==
+==[ CHANGES BETWEEN 4.0.8 AND 4.0.8.2 ]==
 * Fix build on FreeBSD with clang / without gcc
 * If using remote includes and system curl not available then
   install it during ./Config and no longer use /home/xyz/curl.
+* More fixes for self-compiled remote includes
 
 ==[ CHANGES BETWEEN 4.0.7 AND 4.0.8 ]==
 Improvements:
