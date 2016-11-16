@@ -584,10 +584,14 @@ LDFLAGS_PRIVATELIBS=""
 AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored])],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$withval"], [Define the location of private libraries])
 		PRIVATELIBDIR="$withval"
-		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"],
+		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
+		export LDFLAGS],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$HOME/unrealircd/lib"], [Define the location of private libraries])
 		PRIVATELIBDIR="$HOME/unrealircd/lib"
-		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"])
+		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
+		export LDFLAGS])
 
 AC_SUBST(BINDIR)
 AC_SUBST(SCRIPTDIR)
