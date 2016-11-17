@@ -7111,7 +7111,7 @@ fi
 if test "${with_system_cares+set}" = set; then :
   withval=$with_system_cares;
 else
-  with_system_cares=no
+  with_system_cares=yes
 fi
 
 
@@ -7797,7 +7797,7 @@ fi
 fi
 
 has_system_cares="no"
-if test "x$with_system_cares" = "xno"; then :
+if test "x$with_system_cares" = "xyes"; then :
 
 
 pkg_failed=no
@@ -7858,23 +7858,22 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$CARES_PKG_ERRORS" >&5
 
-	has_system_cares=yes
-rm "$PRIVATELIBDIR/"libcares*
+	has_system_cares=no
 elif test $pkg_failed = untried; then
      	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-	has_system_cares=yes
-rm "$PRIVATELIBDIR/"libcares*
+	has_system_cares=no
 else
 	CARES_CFLAGS=$pkg_cv_CARES_CFLAGS
 	CARES_LIBS=$pkg_cv_CARES_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-
+	has_system_cares=yes
+rm -f "$PRIVATELIBDIR/"libcares*
 fi
 fi
 
-if test "$has_system_cares" != "no"; then :
+if test "$has_system_cares" = "no"; then :
 
 cares_version="1.12.0"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting c-ares resolver library" >&5
