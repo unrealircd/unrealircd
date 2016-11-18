@@ -30,7 +30,7 @@ do
 		echo 'CURLDIR=/usr' >>config.settings
 	elif [ "$1" = "local-curl" ]; then
 		echo 'REMOTEINC=1' >>config.settings
-		echo 'CURLDIR=$HOME/extras/curl' >>config.settings
+		echo "CURLDIR=`pwd`/extras/curl" >>config.settings
 	else
 		echo "Unknown option $1"
 		exit 1
