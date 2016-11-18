@@ -6,3 +6,5 @@ script: extras/build-tests/select-config $BUILDCONFIG && ./Config -quick && make
 env:
   - BUILDCONFIG=""
   - BUILDCONFIG="system-cares"
+  - BUILDCONFIG="system-cares system-curl"
+  - BUILDCONFIG="local-curl"
