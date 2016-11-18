@@ -44,6 +44,11 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 
 MY_MAKE = $(MAKE) $(MAKEARGS)
 
+# Flags specific for the ircd binary (and it's object files)...
+# .. but NOT for modules.
+BINCFLAGS=@HARDEN_BINCFLAGS@
+BINLDFLAGS=@HARDEN_BINLDFLAGS@
+
 INCLUDES = ../include/auth.h ../include/channel.h \
 	../include/class.h ../include/common.h ../include/config.h ../include/dbuf.h \
 	../include/dynconf.h ../include/events.h ../include/fdlist.h ../include/h.h \
@@ -64,7 +69,7 @@ custommodule:
 	+cd modules/third; $(MY_MAKE) MODULEFILE=$(MODULEFILE) 'EXLIBS=$(EXLIBS)' custommodule
 
 ircd: $(OBJS)
-	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
+	$(CC) $(CFLAGS) $(BINCFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(BINLDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
 
 mods:
 	@if [ ! -r include ] ; then \
@@ -79,56 +84,60 @@ version.c: version.c.SH
 	$(SHELL) version.c.SH
 
 version.o: version.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c version.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c version.c
 
 parse.o: parse.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c parse.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c parse.c
 
 socket.o: socket.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c socket.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c socket.c
 
 s_dispatch.o: s_dispatch.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_dispatch.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_dispatch.c
 
 dbuf.o: dbuf.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c dbuf.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c dbuf.c
 
 packet.o: packet.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c packet.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c packet.c
 
 aln.o: aln.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c aln.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c aln.c
 
 auth.o: auth.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c auth.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c auth.c
 
 send.o: send.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c send.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c send.c
 
 ssl.o: ssl.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c ssl.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c ssl.c
 
 match.o: match.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c match.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c match.c
 
 modules.o: modules.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c modules.c
+
+mempool.o: mempool.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c mempool.c
 
 support.o: support.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c support.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c support.c
 
 umodes.o: umodes.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c umodes.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c umodes.c
 
 userload.o: userload.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c userload.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c userload.c
 
 uid.o: uid.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c uid.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c uid.c
 
 s_svs.o: s_svs.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_svs.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_svs.c
 events.o: events.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c events.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c events.c
 
 clean:
 	$(RM) -f *.o *.so *~ core ircd version.c; \
@@ -140,115 +149,115 @@ depend:
 	makedepend -I${INCLUDEDIR} ${SRC}
 
 channel.o: channel.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c channel.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c channel.c
 
 ircd.o: ircd.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c ircd.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c ircd.c
 
 list.o: list.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c list.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c list.c
 
 res.o: res.c $(INCLUDES) ../include/res.h
-	$(CC) $(CFLAGS) -c res.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c res.c
 
 timesynch.o: timesynch.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c timesynch.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c timesynch.c
 
 cloak.o: cloak.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c cloak.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c cloak.c
 
 fdlist.o: fdlist.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c fdlist.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c fdlist.c
 
 s_bsd.o: s_bsd.c $(INCLUDES) ../include/res.h
-	$(CC) $(CFLAGS) -c s_bsd.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_bsd.c
 
 s_auth.o: s_auth.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_auth.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_auth.c
 
 s_conf.o: s_conf.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_conf.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_conf.c
 
 s_debug.o: s_debug.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_debug.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_debug.c
 
 s_err.o: s_err.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_err.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_err.c
 
 s_misc.o: s_misc.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_misc.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_misc.c
 
 scache.o: scache.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c scache.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c scache.c
 
 ircsprintf.o: ircsprintf.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c ircsprintf.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c ircsprintf.c
 
 s_user.o: s_user.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_user.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_user.c
 
 charsys.o: charsys.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c charsys.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c charsys.c
 
 s_extra.o: s_extra.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_extra.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_extra.c
 
 s_kline.o: s_kline.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_kline.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_kline.c
 
 s_serv.o: s_serv.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_serv.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_serv.c
 
 s_numeric.o: s_numeric.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_numeric.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c s_numeric.c
 
 whowas.o: whowas.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c whowas.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c whowas.c
 
 hash.o: hash.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c hash.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c hash.c
 
 crule.o: crule.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c crule.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c crule.c
 
 random.o: random.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c random.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c random.c
 
 extcmodes.o: extcmodes.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c extcmodes.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c extcmodes.c
 
 operclass.o: operclass.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c operclass.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c operclass.c
 
 moddata.o: moddata.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c moddata.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c moddata.c
 
 extbans.o: extbans.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c extbans.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c extbans.c
 
 md5.o: md5.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c md5.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c md5.c
 
 api-command.o: api-command.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c api-command.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-command.c
 
 api-isupport.o: api-isupport.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c api-isupport.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-isupport.c
 
 api-clicap.o: api-clicap.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c api-clicap.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-clicap.c
 
 crypt_blowfish.o: crypt_blowfish.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c crypt_blowfish.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c crypt_blowfish.c
 
 updconf.o: updconf.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c updconf.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c updconf.c
 
 crashreport.o: crashreport.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c crashreport.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c crashreport.c
 
 url.o: url.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c url.c
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c url.c
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

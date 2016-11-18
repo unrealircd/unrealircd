@@ -666,6 +666,8 @@ STRTOUL
 EGREP
 GREP
 CPP
+HARDEN_BINLDFLAGS
+HARDEN_BINCFLAGS
 HARDEN_LDFLAGS
 HARDEN_CFLAGS
 MKPASSWDLIBS
@@ -4613,8 +4615,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_ldflags__Werror___fPIE__pie" >&5
 $as_echo "$ax_cv_check_ldflags__Werror___fPIE__pie" >&6; }
 if test x"$ax_cv_check_ldflags__Werror___fPIE__pie" = xyes; then :
-  HARDEN_CFLAGS="$HARDEN_CFLAGS -fPIE"
-      HARDEN_LDFLAGS="$HARDEN_LDFLAGS -pie"
+  HARDEN_BINCFLAGS="-fPIE"
+      HARDEN_BINLDFLAGS="-pie"
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the linker accepts -fPIE -Wl,-pie" >&5
 $as_echo_n "checking whether the linker accepts -fPIE -Wl,-pie... " >&6; }
@@ -4647,8 +4649,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_ldflags__Werror___fPIE__Wl__pie" >&5
 $as_echo "$ax_cv_check_ldflags__Werror___fPIE__Wl__pie" >&6; }
 if test x"$ax_cv_check_ldflags__Werror___fPIE__Wl__pie" = xyes; then :
-  HARDEN_CFLAGS="$HARDEN_CFLAGS -fPIE"
-        HARDEN_LDFLAGS="$HARDEN_LDFLAGS -Wl,-pie"
+  HARDEN_BINCFLAGS="-fPIE"
+        HARDEN_BINLDFLAGS="-Wl,-pie"
 else
   :
 fi
@@ -4749,6 +4751,8 @@ else
 fi
 
 fi
+
+
 
 
 
@@ -8569,7 +8573,7 @@ UNRLINCDIR="`pwd`/include"
 BUILDDIR="`pwd`"
 
 
-ac_config_files="$ac_config_files Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/snomasks/Makefile src/modules/extbans/Makefile src/modules/third/Makefile unrealircd"
+ac_config_files="$ac_config_files Makefile src/Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/snomasks/Makefile src/modules/extbans/Makefile src/modules/third/Makefile unrealircd"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -9263,6 +9267,7 @@ do
   case $ac_config_target in
     "include/setup.h") CONFIG_HEADERS="$CONFIG_HEADERS include/setup.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "src/modules/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/Makefile" ;;
     "src/modules/chanmodes/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/chanmodes/Makefile" ;;
     "src/modules/usermodes/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/usermodes/Makefile" ;;

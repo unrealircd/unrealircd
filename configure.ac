@@ -155,17 +155,19 @@ AS_IF([test x"$hardening" != x"no"], [
   # The linker checks also compile code, so we need to include -fPIE as well.
   check_cc_cxx_flag([-fPIE],
    [check_link_flag([-fPIE -pie],
-     [HARDEN_CFLAGS="$HARDEN_CFLAGS -fPIE"
-      HARDEN_LDFLAGS="$HARDEN_LDFLAGS -pie"],
+     [HARDEN_BINCFLAGS="-fPIE"
+      HARDEN_BINLDFLAGS="-pie"],
      [check_link_flag([-fPIE -Wl,-pie],
-       [HARDEN_CFLAGS="$HARDEN_CFLAGS -fPIE"
-        HARDEN_LDFLAGS="$HARDEN_LDFLAGS -Wl,-pie"])])])
+       [HARDEN_BINCFLAGS="-fPIE"
+        HARDEN_BINLDFLAGS="-Wl,-pie"])])])
 
   check_link_flag([-Wl,-z,relro],
    [HARDEN_LDFLAGS="$HARDEN_LDFLAGS -Wl,-z,relro"
     check_link_flag([-Wl,-z,now], [HARDEN_LDFLAGS="$HARDEN_LDFLAGS -Wl,-z,now"])])])
 AC_SUBST([HARDEN_CFLAGS])
 AC_SUBST([HARDEN_LDFLAGS])
+AC_SUBST([HARDEN_BINCFLAGS])
+AC_SUBST([HARDEN_BINLDFLAGS])
 
 # End of flag tests.
 CC="$saved_CC"
@@ -859,6 +861,7 @@ BUILDDIR="`pwd`"
 AC_SUBST(BUILDDIR)
 
 AC_CONFIG_FILES([Makefile
+	src/Makefile
 	src/modules/Makefile
 	src/modules/chanmodes/Makefile
 	src/modules/usermodes/Makefile
