@@ -49,8 +49,7 @@ do
 		fi
 	elif [ "$1" = "local-curl" ]; then
 		if [ "$OSTYPE" = "linux-gnu" ]; then
-			sudo apt-get remove libcurl4-openssl-dev -qq
-			sudo dpkg --list|grep libcurl
+			sudo apt-get remove libcurl4-openssl-dev libcurl3-gnutls libcurl3 -qq
 		elif [[ "$OSTYPE" == "freebsd"* ]]; then
 			sudo pkg remove -y curl #NOTE: unfortunately this also removes 'git' :D
 		fi
