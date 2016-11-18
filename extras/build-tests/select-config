@@ -27,8 +27,10 @@ do
 	elif [ "$1" = "system-curl" ]; then
 		sudo apt-get install libcurl4-openssl-dev
 		echo 'REMOTEINC=1' >>config.settings
+		echo 'CURLDIR=/usr' >>config.settings
 	elif [ "$1" = "local-curl" ]; then
 		echo 'REMOTEINC=1' >>config.settings
+		echo 'CURLDIR=$HOME/extras/curl' >>config.settings
 	else
 		echo "Unknown option $1"
 		exit 1
