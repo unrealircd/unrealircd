@@ -1,0 +1,37 @@
+#!/bin/bash
+#
+# This is a helper script for travis-ci builds
+# It is not meant to be used by end-users
+#
+
+if [ ! -d extras ]; then
+	echo "This tool is supposed to be run from the source root, so ~/unrealircd-4.0.x or similar"
+	exit 1
+fi
+
+# Take default settings as a starter..
+cp extras/build-tests/configs/default ./config.settings
+
+# Libtool is required for the other options.. (or should we have a no libtool test option?)
+sudo apt-get install libtool -qq
+
+echo "*****************************************************************"
+echo "SELECTED BUILD OPTIONS: $*"
+echo "*****************************************************************"
+
+while [ "$1" ]
+do
+	echo "Processing option $1..."
+	if [ "$1" = "system-cares" ]; then
+		sudo apt-get install libc-ares-dev
+	elif [ "$1" = "system-curl" ]; then
+		sudo apt-get install libcurl4-openssl-dev
+		echo 'REMOTEINC=1' >>config.settings
+	elif [ "$1" = "local-curl" ]; then
+		echo 'REMOTEINC=1' >>config.settings
+	else
+		echo "Unknown option $1"
+		exit 1
+	fi
+	shift
+done
