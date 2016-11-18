@@ -2,4 +2,4 @@ language: c
 compiler:
   - gcc
   - clang
-script: ./Config -quick && make
+script: cp extras/build-tests/configs/default config.settings && ./Config -quick && make
