@@ -22,6 +22,10 @@ fi
 dnl Save CFLAGS, use this when building the libraries like c-ares
 orig_cflags="$CFLAGS"
 
+dnl Save build directory early on (used in our m4 macros too)
+BUILDDIR="`pwd`"
+AC_SUBST(BUILDDIR)
+
 dnl Calculate the versions. Perhaps the use of expr is a little too extravagant
 # Generation version number (e.g.: X in X.Y.Z)
 UNREAL_VERSION_GENERATION=["4"]
@@ -856,9 +860,6 @@ CHECK_LIBCURL
 
 UNRLINCDIR="`pwd`/include"
 AC_SUBST(UNRLINCDIR)
-
-BUILDDIR="`pwd`"
-AC_SUBST(BUILDDIR)
 
 AC_CONFIG_FILES([Makefile
 	src/Makefile

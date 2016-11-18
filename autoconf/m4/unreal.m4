@@ -86,7 +86,7 @@ AC_DEFUN([CHECK_LIBCURL],
 		dnl wants bundled c-ares + system libcURL, then we should filter out c-ares
 		dnl flags. _Only_ in that case should we mess with the flags. -- ohnobinki
 
-		AS_IF([test "x$has_system_cares" = "xno" && test "x$HOME/curl" != "x$enable_curl" && test "x/usr/share/unreal-curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ],
+		AS_IF([test "x$has_system_cares" = "xno" && test "x$BUILDDIR/extras/curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ],
 		[
 			AC_MSG_ERROR([[
 

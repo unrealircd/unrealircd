@@ -624,7 +624,6 @@ ac_includes_default="\
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-BUILDDIR
 UNRLINCDIR
 URL
 PTHREAD_CFLAGS
@@ -688,6 +687,7 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
+BUILDDIR
 target_alias
 host_alias
 build_alias
@@ -2529,6 +2529,9 @@ if test "x$enable_dynamic_linking" = "x"; then
 fi
 
 orig_cflags="$CFLAGS"
+
+BUILDDIR="`pwd`"
+
 
 # Generation version number (e.g.: X in X.Y.Z)
 UNREAL_VERSION_GENERATION="4"
@@ -8499,7 +8502,7 @@ $as_echo "$as_me: WARNING: CURLLIBS is empty, that probably means that I could n
 fi
 
 
-		if test "x$has_system_cares" = "xno" && test "x$HOME/curl" != "x$enable_curl" && test "x/usr/share/unreal-curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ; then :
+		if test "x$has_system_cares" = "xno" && test "x$BUILDDIR/extras/curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ; then :
 
 			as_fn_error $? "
 
@@ -8568,9 +8571,6 @@ rm -f core conftest.err conftest.$ac_objext \
 fi
 
 UNRLINCDIR="`pwd`/include"
-
-
-BUILDDIR="`pwd`"
 
 
 ac_config_files="$ac_config_files Makefile src/Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/snomasks/Makefile src/modules/extbans/Makefile src/modules/third/Makefile unrealircd"
