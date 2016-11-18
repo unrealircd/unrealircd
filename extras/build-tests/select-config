@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This is a helper script for travis-ci builds
+# This is a helper script for travis-ci builds and our own FreeBSD test machine.
 # It is not meant to be used by end-users
 #
 
@@ -12,8 +12,18 @@ fi
 # Take default settings as a starter..
 cp extras/build-tests/configs/default ./config.settings
 
-# Libtool is required for the other options.. (or should we have a no libtool test option?)
-sudo apt-get install libtool -qq
+# Libtool is required for the other options..
+# Also for our FreeBSD machine we have to uninstall some stuff since a clean
+# environment is not guaranteed...
+if [ "$OSTYPE" = "linux-gnu" ]; then
+	sudo apt-get install libtool -qq
+elif [[ "$OSTYPE" == "freebsd"* ]]; then
+	sudo pkg install -y libtool
+	sudo pkg remove -y c-ares
+else
+	echo "OS not correctly detected ($OSTYPE). Aborting."
+	exit 1
+fi
 
 echo "*****************************************************************"
 echo "SELECTED BUILD OPTIONS: $*"
@@ -23,12 +33,26 @@ while [ "$1" ]
 do
 	echo "Processing option $1..."
 	if [ "$1" = "system-cares" ]; then
-		sudo apt-get install libc-ares-dev
+		if [ "$OSTYPE" = "linux-gnu" ]; then
+			sudo apt-get install libc-ares-dev
+		elif [[ "$OSTYPE" == "freebsd"* ]]; then
+			sudo pkg install -y c-ares
+		fi
 	elif [ "$1" = "system-curl" ]; then
-		sudo apt-get install libcurl4-openssl-dev
 		echo 'REMOTEINC=1' >>config.settings
-		echo 'CURLDIR=/usr' >>config.settings
+		if [ "$OSTYPE" = "linux-gnu" ]; then
+			sudo apt-get install libcurl4-openssl-dev
+			echo 'CURLDIR=/usr' >>config.settings
+		elif [[ "$OSTYPE" == "freebsd"* ]]; then
+			sudo pkg install -y curl
+			echo 'CURLDIR=/usr/local' >>config.settings
+		fi
 	elif [ "$1" = "local-curl" ]; then
+		if [ "$OSTYPE" = "linux-gnu" ]; then
+			sudo apt-get remove libcurl4-openssl-dev
+		elif [[ "$OSTYPE" == "freebsd"* ]]; then
+			sudo pkg remove -y curl #NOTE: unfortunately this also removes 'git' :D
+		fi
 		echo 'REMOTEINC=1' >>config.settings
 		echo "CURLDIR=`pwd`/extras/curl" >>config.settings
 	else
