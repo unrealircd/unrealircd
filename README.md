@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/unrealircd/unrealircd.svg?branch=unreal40)](https://travis-ci.org/unrealircd/unrealircd)
+
 ## About UnrealIRCd
 UnrealIRCd is an Open Source IRC Server, serving thousands of networks since 1999. 
 It runs on Linux, OS X and Windows and is currently the most widely deployed IRCd
