@@ -28,7 +28,6 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
-#include <process.h>
 #include <io.h>
 #endif
 #include "types.h"

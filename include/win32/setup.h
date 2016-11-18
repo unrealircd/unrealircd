@@ -58,6 +58,9 @@
 #define GOT_STRCASECMP
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
+#if defined(_MSC_VER) && (_MSC_VER >= 1900)
+ #define HAVE_SNPRINTF
+#endif
 
 /*
   Needed in s_conf.c for the third argument of open(3p).
