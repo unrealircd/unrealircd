@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/unrealircd/unrealircd.svg?branch=unreal40)](https://travis-ci.org/unrealircd/unrealircd)
-[![IRC](https://img.shields.io/badge/IRC-%23unreal--support-brightgreen.svg)](irc://irc.unrealircd.com/unreal-support)
 [![Twitter Follow](https://img.shields.io/twitter/follow/Unreal_IRCd.svg?style=social&label=Follow)](https://twitter.com/Unreal_IRCd)
 
 ## About UnrealIRCd
@@ -54,4 +53,4 @@ We also have a good **FAQ**: http://www.unrealircd.org/docs/FAQ
 * https://www.unrealircd.org - Our main website
 * https://forums.unrealircd.org - Support
 * https://bugs.unrealircd.org - Bug tracker
-* irc://irc.unrealircd.com/unreal-support - IRC support
+* irc://irc.unrealircd.org/unreal-support - IRC support
