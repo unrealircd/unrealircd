@@ -3,3 +3,4 @@ compiler:
   - gcc
   - clang
 script: cp extras/build-tests/configs/default config.settings && ./Config -quick && make
+env: EXTRAPARA="--disable-hardening"
