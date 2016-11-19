@@ -10,7 +10,7 @@ MT=mt
 
 # You are encouraged NOT to set these values here, but instead make a batch file
 # which passes all these arguments to nmake, like:
-# nmake -f makefile.win32 OPENSSL_INC_DIR="c:\dev\openssl" etc etc...
+# nmake -f makefile.win32 LIBRESSL_INC_DIR="c:\dev\libressl" etc etc...
 # Both ways will work, but if you use a batch file it's easier with
 # upgrading UnrealIRCd as you won't have to edit this makefile again.
 
@@ -46,10 +46,12 @@ MT=mt
 ### END REMOTE INCLUDES ##
 
 ####### SSL SUPPORT ######
-#If your OpenSSL library and include files are not in your compiler's
-#default locations, specify the locations here:
-#OPENSSL_INC_DIR="c:\openssl\include"
-#OPENSSL_LIB_DIR="c:\openssl\lib"
+#Use LibreSSL or OpenSSL. Define paths and libraries:
+#LIBRESSL_INC_DIR="c:\dev\libressl\include"
+#LIBRESSL_LIB_DIR="c:\dev\libressl\lib"
+#SSLLIB=libcrypto-38.lib libssl-39.lib libtls-11.lib
+#The version numbers of the 3 libraries in the last line change
+#every libressl release. So be sure to update after any libressl upgrade.
 ######### END SSL ########
 
 ###### _EXTRA_ DEBUGGING #####
@@ -104,12 +106,11 @@ LIBCURL_LIB=/LIBPATH:"$(LIBCURL_LIB_DIR)"
 !ENDIF
 !ENDIF
 
-SSLLIBS=libcrypto-38.lib libssl-39.lib libtls-11.lib
-!IFDEF OPENSSL_INC_DIR
-OPENSSL_INC=/I "$(OPENSSL_INC_DIR)"
+!IFDEF LIBRESSL_INC_DIR
+LIBRESSL_INC=/I "$(LIBRESSL_INC_DIR)"
 !ENDIF
-!IFDEF OPENSSL_LIB_DIR
-OPENSSL_LIB=/LIBPATH:"$(OPENSSL_LIB_DIR)"
+!IFDEF LIBRESSL_LIB_DIR
+LIBRESSL_LIB=/LIBPATH:"$(LIBRESSL_LIB_DIR)"
 !ENDIF
 
 !IFDEF DEBUGEXTRA
@@ -125,19 +126,19 @@ MODDBGCFLAG=/LDd /MD /Zi
 !ENDIF 
 
 FD_SETSIZE=/D FD_SETSIZE=16384
-CFLAGS=$(DBGCFLAG) $(TRE_INC) $(PCRE2_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+CFLAGS=$(DBGCFLAG) $(TRE_INC) $(PCRE2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
  $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
-CFLAGSST=$(DBGCFLAGST) $(TRE_INC) $(PCRE2_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+CFLAGSST=$(DBGCFLAGST) $(TRE_INC) $(PCRE2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
  $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
  dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(CARES_LIB) $(CARESLIB) $(TRE_LIB) $(TRELIB) \
-  $(PCRE2_LIB) $(PCRE2LIB) $(OPENSSL_LIB) $(SSLLIBS) $(LIBCURL_LIB) $(CURLLIB) /def:UnrealIRCd.def /implib:UnrealIRCd.lib \
+  $(PCRE2_LIB) $(PCRE2LIB) $(LIBRESSL_LIB) $(SSLLIB) $(LIBCURL_LIB) $(CURLLIB) /def:UnrealIRCd.def /implib:UnrealIRCd.lib \
  /nologo $(DBGLFLAG) /out:UnrealIRCd.exe
 MODCFLAGS=$(MODDBGCFLAG) $(SSLCFLAGS) $(CURLCFLAGS) /J /Fesrc/modules/ \
- /Fosrc/modules/ /nologo $(TRE_INC) $(PCRE2_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /I ./INCLUDE /D \
+ /Fosrc/modules/ /nologo $(TRE_INC) $(PCRE2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /I ./INCLUDE /D \
  DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
 MODLFLAGS=/link /def:src/modules/module.def UnrealIRCd.lib ws2_32.lib $(TRE_LIB) $(TRELIB) \
- $(PCRE2_LIB) $(PCRE2LIB) $(CARES_LIB) $(OPENSSL_LIB) $(SSLLIBS) \
+ $(PCRE2_LIB) $(PCRE2LIB) $(CARES_LIB) $(LIBRESSL_LIB) $(SSLLIB) \
  $(LIBCURL_LIB) $(CURLLIB)
 
 INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
