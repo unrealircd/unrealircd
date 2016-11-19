@@ -70,8 +70,8 @@ Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ig
 Source: "c:\dev\tre\win32\release\tre.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\pcre2\build\release\pcre2-8.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\c-ares\msvc110\cares\dll-release\cares.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\libressl\x86\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\libressl\x86\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\libressl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\libressl\lib\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 
 #ifdef USE_CURL
@@ -105,20 +105,28 @@ function InitializeSetup(): Boolean;
 begin
 
 	Result := true;
-    if ((not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{2F73A7B2-E50E-39A6-9ABC-EF89E4C62E36}'))
-         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E824E81C-80A4-3DFF-B5F9-4842A9FF5F7F}'))
-         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E7D4E834-93EB-351F-B8FB-82CDAE623003}'))
-         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{3D6AD258-61EA-35F5-812C-B7A02152996E}'))
-         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{BD95A8CD-1D9F-35AD-981A-3E7925026EBB}'))
+// This was for Visual Studio 2012:
+//    if ((not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{2F73A7B2-E50E-39A6-9ABC-EF89E4C62E36}'))
+//         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E824E81C-80A4-3DFF-B5F9-4842A9FF5F7F}'))
+//         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E7D4E834-93EB-351F-B8FB-82CDAE623003}'))
+//         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{3D6AD258-61EA-35F5-812C-B7A02152996E}'))
+//         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{BD95A8CD-1D9F-35AD-981A-3E7925026EBB}'))
+//        ) then
+// This is for Visual Studio 2015:
+    if ((not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{A2563E55-3BEC-3828-8D67-E5E8B9E8B675}')) // Visual C++ 2015 Redistributable 14.0.23026
+         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{8FD71E98-EE44-3844-9DAD-9CB0BBBC603C}')) // Visual C++ 2015 Redistributable 14.0.24210
+         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{BBF2AC74-720C-3CB3-8291-5E34039232FA}')) // Visual C++ 2015 Redistributable 14.0.24215
         ) then
     begin
-      MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2012 to be installed.' #13 +
-             'After you click OK you will be taken to a download page. There, click Download and choose the vcredist_x86 version. Then download and install it.' #13 +
+      MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2015 to be installed.' #13 +
+             'After you click OK you will be taken to a download page.' #13 +
+             '1) Click Download' #13 +
+             '2) Choose the vcredist x86 version (or both).' #13 +
+             '3) Download and install.' #13 +
              'If you are already absolutely sure that you have this package installed then you can skip this step.', mbInformation, MB_OK);
-      ShellExec('open', 'http://www.microsoft.com/en-us/download/details.aspx?id=30679', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
-      MsgBox('Click OK once you have installed the Microsoft Visual C++ Redistributable for Visual Studio 2012 (vcredist_x86) to continue the UnrealIRCd installer', mbInformation, MB_OK);
-
-		end;
+      ShellExec('open', 'https://www.microsoft.com/en-us/download/details.aspx?id=48145', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
+      MsgBox('Click OK once you have installed the Microsoft Visual C++ Redistributable for Visual Studio 2015 (vcredist_x86) to continue the UnrealIRCd installer', mbInformation, MB_OK);
+	end;
 end;
 
 function NextButtonClick(CurPage: Integer): Boolean;
