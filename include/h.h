@@ -718,6 +718,7 @@ extern MODVAR char serveropts[];
 extern MODVAR char *IsupportStrings[];
 extern void finish_auth(aClient *acptr);
 extern void read_packet(int fd, int revents, void *data);
+extern int process_packet(aClient *cptr, char *readbuf, int length, int killsafely);
 extern void sendto_realops_and_log(char *fmt, ...);
 extern int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in);
 extern int ssl_used_in_config_but_unavail(void);

@@ -1291,6 +1291,46 @@ static int parse_client_queued(aClient *cptr)
 	return 0;
 }
 
+int process_packet(aClient *cptr, char *readbuf, int length, int killsafely)
+{
+	dbuf_put(&cptr->local->recvQ, readbuf, length);
+
+	/* parse some of what we have (inducing fakelag, etc) */
+	if (!(DoingDNS(cptr) || DoingAuth(cptr)))
+		if (parse_client_queued(cptr) == FLUSH_BUFFER)
+			return 0;
+
+	/* flood from unknown connection */
+	if (IsUnknown(cptr) && (DBufLength(&cptr->local->recvQ) > UNKNOWN_FLOOD_AMOUNT*1024))
+	{
+		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
+			cptr->local->sockhost);
+		if (!killsafely)
+			ban_flooder(cptr);
+		else
+			dead_link(cptr, "Flood from unknown connection");
+		return 0;
+	}
+
+	/* excess flood check */
+	if (IsPerson(cptr) && DBufLength(&cptr->local->recvQ) > get_recvq(cptr))
+	{
+		sendto_snomask(SNO_FLOOD,
+			"*** Flood -- %s!%s@%s (%d) exceeds %d recvQ",
+			cptr->name[0] ? cptr->name : "*",
+			cptr->user ? cptr->user->username : "*",
+			cptr->user ? cptr->user->realhost : "*",
+			DBufLength(&cptr->local->recvQ), get_recvq(cptr));
+		if (!killsafely)
+			exit_client(cptr, cptr, cptr, "Excess Flood");
+		else
+			dead_link(cptr, "Excess Flood");
+		return 0;
+	}
+
+	return 1;
+}
+
 void read_packet(int fd, int revents, void *data)
 {
 	aClient *cptr = data;
@@ -1300,8 +1340,8 @@ void read_packet(int fd, int revents, void *data)
 
 	SET_ERRNO(0);
 
-        fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
-        fd_setselect(fd, FD_SELECT_WRITE, NULL, cptr);
+	fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
+	fd_setselect(fd, FD_SELECT_WRITE, NULL, cptr);
 
 	while (1)
 	{
@@ -1369,34 +1409,8 @@ void read_packet(int fd, int revents, void *data)
 				return;
 		}
 
-		dbuf_put(&cptr->local->recvQ, readbuf, length);
-
-		/* parse some of what we have (inducing fakelag, etc) */
-		if (!(DoingDNS(cptr) || DoingAuth(cptr)))
-			if (parse_client_queued(cptr) == FLUSH_BUFFER)
-				return;
-
-		/* flood from unknown connection */
-		if (IsUnknown(cptr) && (DBufLength(&cptr->local->recvQ) > UNKNOWN_FLOOD_AMOUNT*1024))
-		{
-			sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
-				cptr->local->sockhost);
-			ban_flooder(cptr);
+		if (!process_packet(cptr, readbuf, length, 0))
 			return;
-		}
-
-		/* excess flood check */
-		if (IsPerson(cptr) && DBufLength(&cptr->local->recvQ) > get_recvq(cptr))
-		{
-			sendto_snomask(SNO_FLOOD,
-			    "*** Flood -- %s!%s@%s (%d) exceeds %d recvQ",
-			    cptr->name[0] ? cptr->name : "*",
-			    cptr->user ? cptr->user->username : "*",
-			    cptr->user ? cptr->user->realhost : "*",
-			    DBufLength(&cptr->local->recvQ), get_recvq(cptr));
-			exit_client(cptr, cptr, cptr, "Excess Flood");
-			return;
-		}
 
 		/* bail on short read! */
 		if (length < sizeof(readbuf))
