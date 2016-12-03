@@ -475,7 +475,7 @@ nickkill2done:
 		}
 	}
 
-	(void)strlcpy(sptr->name, nick, NICKLEN);
+	(void)strlcpy(sptr->name, nick, NICKLEN+1);
 	(void)add_to_client_hash_table(nick, sptr);
 
 	if (IsServer(cptr) && parc > 7)
