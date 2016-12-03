@@ -1,48 +1,10 @@
-UnrealIRCd 4.0.8.4 Release Notes
+UnrealIRCd 4.0.9 Release Notes
 =================================
 
-==[ CHANGES BETWEEN 4.0.8 AND 4.0.8.4 ]==
-* Fix build on FreeBSD with clang / without gcc
-* If using remote includes and system curl not available then
-  install it during ./Config and no longer use /home/xyz/curl.
-* More fixes for self-compiled remote includes
-* Fix build if --with-system-cares is specified explicitly (which
-  is unnecessary anyway, as system c-ares this is auto-detected).
-* More build fixes for older GCC compilers
-
-==[ CHANGES BETWEEN 4.0.7 AND 4.0.8 ]==
-Improvements:
-* *NIX: As part of defense-in-depth UnrealIRCd now compiles with
-  several hardening options by default. This makes several type of
-  exploits more difficult and in some cases even impossible.
-  Tech: this enables full RELRO (GOT and PLT being read-only),
-  everything compiled as PIE making ASLR possible, stack protector
-  canaries are added, etc.
-* Windows: releases are now signed. If you download the UnrealIRCd
-  installer you will no longer see "Unknown publisher" but rather
-  "Open Source Developer, Bram Matthys". Similarly all the EXE and
-  DLL module files have been signed which should make it easy for
-  anti virus software to see if something is an official UnrealIRCd
-  release file or not.
-
-Major issues fixed:
-* Possible crash if you have several blacklist blocks
-
-Minor issues fixed:
-* User mode +d (deaf) did not work
-
-Other changes:
-* We've always printed big warnings when running UnrealIRCd as root.
-  In this version we still do, but in future versions we will simply
-  refuse to boot. https://www.unrealircd.org/docs/Do_not_run_as_root
-* System c-ares is preferred over our own shipped c-ares
-* System cURL is preferred over ~/curl (if it has AsynchDNS)
-* Our shipped libraries are no longer built as static
-* Now that shipped libraries are dynamic they need to be installed
-  somewhere (if used). The default location is ~/unrealircd/lib and
-  can be changed via --with-privatelibdir. (Although, if you are a
-  package builder then you will probably use --with-system-xxx and
-  then private libraries are not used at all)
+==[ CHANGES BETWEEN 4.0.8.4 AND 4.0.9 ]==
+* Fix "ghost" bug which could cause annoyed users and a memory leak
+  in UnrealIRCd. For more information see
+  https://forums.unrealircd.org/viewtopic.php?f=1&t=8625
 
 ==[ UNREALIRCD 4 INTRODUCTION ]==
 
@@ -52,8 +14,6 @@ We have been working hard over the past few years to replace the successful
 3.2.x series with a more modern code base. At the same time we have been
 incorporating requests from our bug tracker, ideas from ourselves and
 many suggestions that came up during the UnrealIRCd survey from Q4 2013.
-After 4 alpha versions, 4 beta's and 6 release candidates we are proud to
-finally present you the first stable release of UnrealIRCd 4.
 
 UnrealIRCd is far more modular and configurable than before. For a brief
 overview of what's new in UnrealIRCd 4 have a look at:
@@ -140,6 +100,49 @@ Removed the following rarely used build-time options:
 
 Other changes:
 * PCRE2 and c-ares libraries updated to latest versions
+
+==[ CHANGES BETWEEN 4.0.8 AND 4.0.8.4 ]==
+* Fix build on FreeBSD with clang / without gcc
+* If using remote includes and system curl not available then
+  install it during ./Config and no longer use /home/xyz/curl.
+* More fixes for self-compiled remote includes
+* Fix build if --with-system-cares is specified explicitly (which
+  is unnecessary anyway, as system c-ares this is auto-detected).
+* More build fixes for older GCC compilers
+
+==[ CHANGES BETWEEN 4.0.7 AND 4.0.8 ]==
+Improvements:
+* *NIX: As part of defense-in-depth UnrealIRCd now compiles with
+  several hardening options by default. This makes several type of
+  exploits more difficult and in some cases even impossible.
+  Tech: this enables full RELRO (GOT and PLT being read-only),
+  everything compiled as PIE making ASLR possible, stack protector
+  canaries are added, etc.
+* Windows: releases are now signed. If you download the UnrealIRCd
+  installer you will no longer see "Unknown publisher" but rather
+  "Open Source Developer, Bram Matthys". Similarly all the EXE and
+  DLL module files have been signed which should make it easy for
+  anti virus software to see if something is an official UnrealIRCd
+  release file or not.
+
+Major issues fixed:
+* Possible crash if you have several blacklist blocks
+
+Minor issues fixed:
+* User mode +d (deaf) did not work
+
+Other changes:
+* We've always printed big warnings when running UnrealIRCd as root.
+  In this version we still do, but in future versions we will simply
+  refuse to boot. https://www.unrealircd.org/docs/Do_not_run_as_root
+* System c-ares is preferred over our own shipped c-ares
+* System cURL is preferred over ~/curl (if it has AsynchDNS)
+* Our shipped libraries are no longer built as static
+* Now that shipped libraries are dynamic they need to be installed
+  somewhere (if used). The default location is ~/unrealircd/lib and
+  can be changed via --with-privatelibdir. (Although, if you are a
+  package builder then you will probably use --with-system-xxx and
+  then private libraries are not used at all)
 
 ==[ CHANGES BETWEEN 4.0.5 AND 4.0.6 ]==
 Major issues fixed:
