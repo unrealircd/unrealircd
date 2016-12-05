@@ -488,15 +488,15 @@ CMD_FUNC(m_sjoin)
 				if (k != 0)
 				{
 					if (modeflags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_VOICE))
-						sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", nick, chptr->chname);
+						sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", acptr->name, chptr->chname);
 					else
 						sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
 							acptr->name, acptr->user->username, GetHost(acptr), chptr->chname);
 				} else
-					sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", nick, chptr->chname);
+					sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", acptr->name, chptr->chname);
 			}
 			sendto_server(cptr, 0, PROTO_SJOIN, ":%s JOIN %s",
-			    nick, chptr->chname);
+			    acptr->name, chptr->chname);
 			CheckStatus('q', CHFL_CHANOWNER);
 			CheckStatus('a', CHFL_CHANPROT);
 			CheckStatus('o', CHFL_CHANOP);
