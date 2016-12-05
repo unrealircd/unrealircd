@@ -467,6 +467,11 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 									    acptr->name,
 									    !isdigit(*acptr->user->svid) ? acptr->user->svid : "*");
 				}
+				else
+				{
+					/* setting deaf */
+					goto setmodex;
+				}
 				break;
 			case 'x':
 				if (what == MODE_DEL)
