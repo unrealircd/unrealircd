@@ -32,17 +32,6 @@ OBJS=timesynch.o res.o s_bsd.o auth.o aln.o channel.o cloak.o crule.o dbuf.o \
 
 SRC=$(OBJS:%.o=%.c)
 
-MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
-		'LDFLAGS=${LDFLAGS}' 'IRCDMODE=${IRCDMODE}' \
-		'BINDIR=${BINDIR}' 'INSTALL=${INSTALL}' \
-		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
-		'MANDIR=${MANDIR}' 'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
-		'RES=${RES}' 'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
-		'CRYPTOLIB=${CRYPTOLIB}' \
-		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' 'URL=${URL}' \
-
-MY_MAKE = $(MAKE) $(MAKEARGS)
-
 INCLUDES = ../include/auth.h ../include/badwords.h ../include/channel.h \
 	../include/class.h ../include/common.h ../include/config.h ../include/dbuf.h \
 	../include/dynconf.h ../include/events.h ../include/fdlist.h ../include/h.h \
@@ -60,7 +49,7 @@ all: build
 build: ircd mods
 
 custommodule:
-	+cd modules; $(MY_MAKE) MODULEFILE=$(MODULEFILE) 'EXLIBS=$(EXLIBS)' custommodule
+	+cd modules; $(MAKE) MODULEFILE=$(MODULEFILE) 'EXLIBS=$(EXLIBS)' custommodule
 
 ircd: $(OBJS)
 	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
@@ -83,7 +72,7 @@ mods:
 	@if [ ! -r modules ] ; then \
 		echo "You havent done cvs update -P -d"; \
 	fi
-	+cd modules; $(MY_MAKE) all
+	+cd modules; $(MAKE) all
 
 version.c: version.c.SH ../Changes
 	$(SHELL) version.c.SH
