@@ -598,7 +598,7 @@ static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
 	for (cm = channel->members; cm; cm = cm->next)
 	{
 		aClient *acptr = cm->cptr;
-		char status[20];
+		char status[32];
 		int cansee;
 		if ((cansee = can_see(sptr, acptr, channel)) & WHO_CANTSEE)
 			continue;
@@ -611,8 +611,8 @@ static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
 static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel, 
 			    Member *cm, char *status, int cansee)
 {
-int i = 0;
-Hook *h;
+	int i = 0;
+	Hook *h;
 
 	if (acptr->user->away)
 		status[i++] = 'G';
@@ -639,20 +639,36 @@ Hook *h;
 		status[i++] = '?';
 
 	if (cm)
-        {
+	{
+		if (SupportNAMESX(sptr))
+		{
 #ifdef PREFIX_AQ
-		if (cm->flags & CHFL_CHANOWNER)
-			status[i++] = '~';
-		else if (cm->flags & CHFL_CHANPROT)
-			status[i++] = '&';
-		else
+			if (cm->flags & CHFL_CHANOWNER)
+				status[i++] = '~';
+			if (cm->flags & CHFL_CHANPROT)
+				status[i++] = '&';
 #endif
-		if (cm->flags & CHFL_CHANOP)
-			status[i++] = '@';
-		else if (cm->flags & CHFL_HALFOP)
-			status[i++] = '%';
-		else if (cm->flags & CHFL_VOICE)
-			status[i++] = '+';
+			if (cm->flags & CHFL_CHANOP)
+				status[i++] = '@';
+			if (cm->flags & CHFL_HALFOP)
+				status[i++] = '%';
+			if (cm->flags & CHFL_VOICE)
+				status[i++] = '+';
+		} else {
+#ifdef PREFIX_AQ
+			if (cm->flags & CHFL_CHANOWNER)
+				status[i++] = '~';
+			else if (cm->flags & CHFL_CHANPROT)
+				status[i++] = '&';
+			else
+#endif
+			if (cm->flags & CHFL_CHANOP)
+				status[i++] = '@';
+			else if (cm->flags & CHFL_HALFOP)
+				status[i++] = '%';
+			else if (cm->flags & CHFL_VOICE)
+				status[i++] = '+';
+		}
 	}
 
 	status[i] = '\0';
