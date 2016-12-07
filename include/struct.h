@@ -188,6 +188,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	MAXKILLS	20
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
 #define IDLEN		10
+#define SIDLEN           3
 #define SWHOISLEN	256
 #define UMODETABLESZ (sizeof(long) * 8)
 /*
