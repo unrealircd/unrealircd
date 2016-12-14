@@ -1670,7 +1670,7 @@ int has_cached_version(const char *url)
 }
 
 /* Used to blow away result of bad copy or cancel file copy */
-inline void cancel_copy(int srcfd, int destfd, const char* dest)
+void cancel_copy(int srcfd, int destfd, const char* dest)
 {
         close(srcfd);
         close(destfd);

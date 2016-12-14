@@ -896,7 +896,7 @@ void module_loadall(void)
 	}
 }
 
-inline int	Module_IsAlreadyChild(Module *parent, Module *child)
+int	Module_IsAlreadyChild(Module *parent, Module *child)
 {
 	ModuleChild *mcp;
 	
@@ -908,7 +908,7 @@ inline int	Module_IsAlreadyChild(Module *parent, Module *child)
 	return 0;
 }
 
-inline void	Module_AddAsChild(Module *parent, Module *child)
+void	Module_AddAsChild(Module *parent, Module *child)
 {
 	ModuleChild	*childp = NULL;
 	

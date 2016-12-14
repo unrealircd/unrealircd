@@ -162,7 +162,7 @@ char *p;
 #endif
 
 
-inline void send_version(aClient* sptr, int reply)
+void send_version(aClient* sptr, int reply)
 {
 	int i;
 	for (i = 0; IsupportStrings[i]; i++)

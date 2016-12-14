@@ -116,7 +116,7 @@ aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters
 	return newcmd;
 }
 
-inline aCommand *find_CommandEx(char *cmd, int (*func)(), int token)
+aCommand *find_CommandEx(char *cmd, int (*func)(), int token)
 {
 	aCommand *p;
 	
