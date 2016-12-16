@@ -1337,6 +1337,7 @@ void read_packet(int fd, int revents, void *data)
 	int length = 0;
 	time_t now = TStime();
 	Hook *h;
+	int processdata;
 
 	SET_ERRNO(0);
 
@@ -1402,14 +1403,15 @@ void read_packet(int fd, int revents, void *data)
 			cptr->local->since = cptr->local->lasttime;
 		cptr->flags &= ~(FLAGS_PINGSENT | FLAGS_NONL);
 
+		processdata = 1;
 		for (h = Hooks[HOOKTYPE_RAWPACKET_IN]; h; h = h->next)
 		{
-			int v = (*(h->func.intfunc))(cptr, readbuf, &length);
-			if (v <= 0)
+			processdata = (*(h->func.intfunc))(cptr, readbuf, &length);
+			if (processdata < 0)
 				return;
 		}
 
-		if (!process_packet(cptr, readbuf, length, 0))
+		if (processdata && !process_packet(cptr, readbuf, length, 0))
 			return;
 
 		/* bail on short read! */
