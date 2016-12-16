@@ -205,6 +205,7 @@ static NameValue ExceptTklFlags[] = {
 /* This MUST be alphabetized */
 static NameValue _SSLFlags[] = {
 	{ SSLFLAG_FAILIFNOCERT, "fail-if-no-clientcert" },
+	{ SSLFLAG_DISABLECLIENTCERT, "no-client-certificate" },
 	{ SSLFLAG_DONOTACCEPTSELFSIGNED, "no-self-signed" },
 	{ SSLFLAG_NOSTARTTLS, "no-starttls" },
 	{ SSLFLAG_VERIFYCERT, "verify-certificate" },

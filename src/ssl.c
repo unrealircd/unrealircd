@@ -269,8 +269,11 @@ SSL_CTX *ctx_server;
 	}
 	disable_ssl_protocols(ctx_server);
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
-	SSL_CTX_set_verify(ctx_server, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE
-			| (iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
+	if (!(iConf.ssl_options & SSLFLAG_DISABLECLIENTCERT))
+	{
+		SSL_CTX_set_verify(ctx_server, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE
+				| (iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
+	}
 	SSL_CTX_set_session_cache_mode(ctx_server, SSL_SESS_CACHE_OFF);
 #ifndef SSL_OP_NO_TICKET
  #error "Your system has an outdated OpenSSL version. Please upgrade OpenSSL."

@@ -828,6 +828,7 @@ extern void unload_all_unused_moddata(void);
 #define SSLFLAG_VERIFYCERT 	0x2
 #define SSLFLAG_DONOTACCEPTSELFSIGNED 0x4
 #define SSLFLAG_NOSTARTTLS	0x8
+#define SSLFLAG_DISABLECLIENTCERT 0x10
 
 struct Client {
 	struct list_head client_node; 	/* for global client list (client_list) */
