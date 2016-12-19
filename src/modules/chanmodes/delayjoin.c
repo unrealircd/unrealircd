@@ -23,7 +23,7 @@ static Cmode *CmodePostDelayed = NULL;
 static Cmode_t EXTMODE_DELAYED;
 static Cmode_t EXTMODE_POST_DELAYED;
 
-DLLFUNC int moded_check_join( aClient *cptr, aChannel *chptr);
+DLLFUNC int visible_in_channel( aClient *cptr, aChannel *chptr);
 DLLFUNC int moded_check_part( aClient *cptr, aChannel *chptr);
 DLLFUNC int moded_join(aClient *cptr, aChannel *chptr);
 DLLFUNC int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
@@ -71,7 +71,7 @@ MOD_INIT(delayjoin)
 		return MOD_FAILED;
 	}
 
-	HookAdd(modinfo->handle, HOOKTYPE_VISIBLE_IN_CHANNEL, 0, moded_check_join);
+	HookAdd(modinfo->handle, HOOKTYPE_VISIBLE_IN_CHANNEL, 0, visible_in_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_JOIN_DATA, 0, moded_join);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PART, 0, moded_part);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_PART, 0, moded_part);
@@ -204,7 +204,7 @@ DLLFUNC void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
 
 	for (i = chptr->members; i; i = i->next)
 	{
-		if (!is_skochanop(i->cptr,chptr) && i->cptr != sptr)
+		if (!is_skochanop(i->cptr,chptr) && i->cptr != sptr && MyConnect(i->cptr))
 			sendto_one(i->cptr,
 			    ":%s!%s@%s JOIN :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
 	}
@@ -233,7 +233,7 @@ DLLFUNC int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int 
 }
 
 
-DLLFUNC int moded_check_join(aClient *cptr, aChannel *chptr)
+DLLFUNC int visible_in_channel(aClient *cptr, aChannel *chptr)
 {
 	return channel_is_delayed(chptr) && moded_user_invisible(cptr,chptr);
 }
@@ -264,7 +264,8 @@ DLLFUNC int moded_quit(aClient *acptr, char *comment)
 	{
 		chptr = membership->chptr;
 		if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
-			clear_user_invisible(chptr,acptr);
+			if (moded_user_invisible(acptr, chptr))
+				clear_user_invisible_announce(chptr,acptr);
 
 	}
 
@@ -274,7 +275,8 @@ DLLFUNC int moded_quit(aClient *acptr, char *comment)
 DLLFUNC int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment)
 {
 	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
-		clear_user_invisible(chptr,acptr);
+		if (moded_user_invisible(acptr, chptr))
+			clear_user_invisible_announce(chptr,acptr);
 
 	return 0;
 }
@@ -305,7 +307,7 @@ DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 				if (moded_user_invisible(user,chptr))
 					clear_user_invisible_announce(chptr,user);
 
-				if (pm.modechar == 'v')
+				if (pm.modechar == 'v' || !MyConnect(user))
 					continue;
 
 				for (i = chptr->members; i; i = i->next)
