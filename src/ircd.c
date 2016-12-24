@@ -1303,7 +1303,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 	init_CommandHash();
 	initwhowas();
 	initstats();
+#ifndef NOREMOVETMP
 	DeleteTempModules();
+#endif
 	booted = FALSE;
 #if !defined(_WIN32) && !defined(_AMIGA) && !defined(OSXTIGER) && DEFAULT_PERMISSIONS != 0
 	/* Hack to stop people from being able to read the config file */
