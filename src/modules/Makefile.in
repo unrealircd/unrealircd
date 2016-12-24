@@ -58,7 +58,8 @@ R_MODULES= \
 	 m_botmotd.so m_lusers.so m_names.so m_svsnolag.so m_addmotd.so \
 	 m_svslusers.so m_starttls.so m_nopost.so m_cap.so \
 	 m_sasl.so m_md.so certfp.so \
-	 ssl_antidos.so webirc.so blacklist.so jointhrottle.so
+	 ssl_antidos.so webirc.so websocket.so \
+	 blacklist.so jointhrottle.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -468,6 +469,10 @@ ssl_antidos.so: ssl_antidos.c $(INCLUDES)
 webirc.so: webirc.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o webirc.so webirc.c
+
+websocket.so: websocket.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o websocket.so websocket.c
 
 blacklist.so: blacklist.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
