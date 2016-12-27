@@ -482,6 +482,7 @@ char *saltstr, *hashstr;
 int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 {
 	extern	char *crypt();
+	char *res;
 
 	if (!as)
 		return 1;
@@ -505,7 +506,8 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			/* If our data is like 1 or none, we just let em through .. */
 			if (!(as->data[0] && as->data[1]))
 				return 1;
-			if (!strcmp(crypt(para, as->data), as->data))
+			res = crypt(para, as->data);
+			if (res && !strcmp(res, as->data))
 				return 2;
 			return -1;
 
