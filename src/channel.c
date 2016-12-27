@@ -1536,3 +1536,41 @@ int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 		return 1;
 	}
 }
+
+int has_common_channels(aClient *c1, aClient *c2)
+{
+	Membership *lp;
+
+	for (lp = c1->user->channel; lp; lp = lp->next)
+	{
+		if (IsMember(c2, lp->chptr) && user_can_see_member(c1, c2, lp->chptr))
+			return 1;
+	}
+	return 0;
+}
+
+/** Returns 1 if user 'user' can see channel member 'target'.
+ * This may return 0 if the user is 'invisible' due to mode +D rules.
+ * NOTE: Membership is unchecked, assumed membership of both.
+ */
+int user_can_see_member(aClient *user, aClient *target, aChannel *chptr)
+{
+	Hook *h;
+	int j = 0;
+
+	if (user == target)
+		return 1;
+
+	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+	{
+		j = (*(h->func.intfunc))(target,chptr);
+		if (j != 0)
+			break;
+	}
+
+	/* We must ensure that user is allowed to "see" target */
+	if (j != 0 && !(is_skochanop(target, chptr) || has_voice(target,chptr)) && !is_skochanop(user, chptr))
+		return 0;
+
+	return 1;
+}

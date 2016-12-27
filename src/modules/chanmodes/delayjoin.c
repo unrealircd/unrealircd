@@ -28,7 +28,6 @@ DLLFUNC int moded_check_part( aClient *cptr, aChannel *chptr);
 DLLFUNC int moded_join(aClient *cptr, aChannel *chptr);
 DLLFUNC int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
 DLLFUNC int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
-DLLFUNC int moded_quit(aClient *acptr, char *comment);
 DLLFUNC int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment);
 DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
                            char *modebuf, char *parabuf, time_t sendts, int samode);
@@ -75,8 +74,6 @@ MOD_INIT(delayjoin)
 	HookAdd(modinfo->handle, HOOKTYPE_JOIN_DATA, 0, moded_join);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PART, 0, moded_part);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_PART, 0, moded_part);
-	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, moded_quit);
-	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, moded_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_KICK, 0, moded_kick);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_KICK, 0, moded_kick);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, 0, moded_chanmode);
@@ -251,23 +248,6 @@ DLLFUNC int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comm
 {
 	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
 		clear_user_invisible(chptr,cptr);
-
-	return 0;
-}
-
-DLLFUNC int moded_quit(aClient *acptr, char *comment)
-{
-	Membership *membership;
-	aChannel *chptr;
-
-	for (membership = acptr->user->channel; membership; membership=membership->next)
-	{
-		chptr = membership->chptr;
-		if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
-			if (moded_user_invisible(acptr, chptr))
-				clear_user_invisible_announce(chptr,acptr);
-
-	}
 
 	return 0;
 }

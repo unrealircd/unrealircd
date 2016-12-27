@@ -67,7 +67,6 @@ static void send_who_reply(aClient *, aClient *, char *, char *, char *);
 static char *first_visible_channel(aClient *, aClient *, int *);
 static int parse_who_options(aClient *, int, char**);
 static void who_sendhelp(aClient *);
-static int has_common_channels(aClient *, aClient *);
 
 #define WF_OPERONLY  0x01 /**< only show opers */
 #define WF_ONCHANNEL 0x02 /**< we're on the channel we're /who'ing */
@@ -859,35 +858,4 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 
 	/* no channels that they can see */
 	return "*";
-}
-
-static int has_common_channels(aClient *c1, aClient *c2)
-{
-	Membership *lp;
-	Hook *h;
-	int j = 0, k = 0;
-
-	for (lp = c1->user->channel; lp; lp = lp->next)
-	{
-		if (IsMember(c2, lp->chptr))
-		{
-			if (c1 == c2)
-				return 1;
-
-			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-							{
-								j = (*(h->func.intfunc))(c2,lp->chptr);
-								if (j != 0)
-									break;
-							}
-
-			/* We must ensure that c1 is allowed to "see" c2 */
-                        if (j != 0 &&
-                        		!(is_skochanop(c2, lp->chptr) || has_voice(c2,lp->chptr)) && !is_skochanop(c1, lp->chptr))
-                                break;
-
-			return 1;
-		}
-	}
-	return 0;
 }

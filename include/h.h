@@ -779,3 +779,5 @@ extern int m_die(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 extern int m_restart(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 extern void ban_flooder(aClient *cptr);
 extern char *pcre2_version(void);
+extern int has_common_channels(aClient *c1, aClient *c2);
+extern int user_can_see_member(aClient *user, aClient *target, aChannel *chptr);

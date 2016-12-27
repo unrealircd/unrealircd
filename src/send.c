@@ -523,18 +523,32 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 	va_end(vl);
 
 	++current_serial;
+
 	if (MyConnect(user))
 		user->local->serial = current_serial;
+
 	if (user->user)
+	{
 		for (channels = user->user->channel; channels; channels = channels->next)
+		{
 			for (users = channels->chptr->members; users; users = users->next)
 			{
 				cptr = users->cptr;
-				if (!MyConnect(cptr) || (cptr->local->serial == current_serial))
-					continue;
+
+				if (!MyConnect(cptr))
+					continue; /* only process local clients */
+
+				if (cptr->local->serial == current_serial)
+					continue; /* message already sent to this client */
+
+				if (!user_can_see_member(cptr, user, channels->chptr))
+					continue; /* the sending user (quit'ing or nick changing) is 'invisible' -- skip */
+
 				cptr->local->serial = current_serial;
 				sendbufto_one(cptr, sendbuf, sendlen);
 			}
+		}
+	}
 
 	if (MyConnect(user))
 		sendbufto_one(user, sendbuf, sendlen);
