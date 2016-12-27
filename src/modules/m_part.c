@@ -66,7 +66,6 @@ CMD_FUNC(m_part)
 	char *comment;
 	int n;
 	Hook *h;
-	int i = 0;
 	
 	if (parc < 2 || parv[1][0] == '\0')
 	{
@@ -155,65 +154,51 @@ CMD_FUNC(m_part)
 		sendto_server(cptr, 0, PROTO_SID, ":%s PART %s :%s",
 			sptr->name, chptr->chname, comment ? comment : "");
 
-		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-			{
-				i = (*(h->func.intfunc))(sptr,chptr);
-				if (i != 0)
-					break;
-			}
 
-
-		if (1)
+		if (invisible_user_in_channel(sptr, chptr))
 		{
-			if ((i != 0) && !(is_skochanop(sptr, chptr) || has_voice(sptr,chptr)))
+			/* Show PART only to chanops and self */
+			if (!comment)
 			{
-				if (!comment)
-				{
-					sendto_chanops_butone(NULL,
-					    chptr, ":%s!%s@%s PART %s",
-					    sptr->name, sptr->user->username, GetHost(sptr),
-					    chptr->chname);
-					if (!is_chan_op(sptr, chptr) && MyClient(sptr))
-						sendto_one(sptr, ":%s!%s@%s PART %s",
-						    sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
-				}
-				else
-				{
-					sendto_chanops_butone(NULL,
-					    chptr,
-					    ":%s!%s@%s PART %s %s",
-					    sptr->name,
-					    sptr->user->username,
-					    GetHost(sptr),
-					    chptr->chname, comment);
-					if (!is_chan_op(cptr, chptr) && MyClient(sptr))
-						sendto_one(sptr,
-						    ":%s!%s@%s PART %s %s",
-						    sptr->name, sptr->user->username, GetHost(sptr),
-						    chptr->chname, comment);
-				}
+				sendto_chanops_butone(NULL,
+					chptr, ":%s!%s@%s PART %s",
+					sptr->name, sptr->user->username, GetHost(sptr),
+					chptr->chname);
+				if (!is_chan_op(sptr, chptr) && MyClient(sptr))
+					sendto_one(sptr, ":%s!%s@%s PART %s",
+						sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
 			}
 			else
 			{
-
-
-				if (!comment)
-
-					sendto_channel_butserv(chptr,
-					    sptr, PARTFMT, sptr->name,
-					    chptr->chname);
-				else
-					sendto_channel_butserv(chptr,
-					    sptr, PARTFMT2, sptr->name,
-					    chptr->chname, comment);
+				sendto_chanops_butone(NULL,
+					chptr,
+					":%s!%s@%s PART %s %s",
+					sptr->name,
+					sptr->user->username,
+					GetHost(sptr),
+					chptr->chname, comment);
+				if (!is_chan_op(cptr, chptr) && MyClient(sptr))
+					sendto_one(sptr,
+						":%s!%s@%s PART %s %s",
+						sptr->name, sptr->user->username, GetHost(sptr),
+						chptr->chname, comment);
 			}
-			if (MyClient(sptr))
-				RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
-			else
-				RunHook4(HOOKTYPE_REMOTE_PART, cptr, sptr, chptr, comment);
-
-			remove_user_from_channel(sptr, chptr);
 		}
+		else
+		{
+			/* Show PART to all users in channel */
+			if (!comment)
+				sendto_channel_butserv(chptr, sptr, PARTFMT, sptr->name, chptr->chname);
+			else
+				sendto_channel_butserv(chptr, sptr, PARTFMT2, sptr->name, chptr->chname, comment);
+		}
+
+		if (MyClient(sptr))
+			RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
+		else
+			RunHook4(HOOKTYPE_REMOTE_PART, cptr, sptr, chptr, comment);
+
+		remove_user_from_channel(sptr, chptr);
 	}
 	return 0;
 }

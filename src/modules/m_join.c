@@ -174,37 +174,28 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 	Hook *h;
 	int i = 0;
 	char *parv[] = { 0, 0 };
-	/*
-	   **  Complete user entry to the new channel (if any)
-	 */
+
 	add_user_to_channel(chptr, sptr, flags);
 
-	/*
-	  ** Check if we should notify users of new join
-	 */
-	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-		{
-			i = (*(h->func.intfunc))(sptr,chptr);
-			if (i != 0)
-				break;
-		}
-
-	/*
-	   ** notify all other users on the new channel
-	 */
-	if (i != 0)
+	if (invisible_user_in_channel(sptr, chptr))
 	{
+		/* Show JOIN to chanops only (and self) */
 		if (MyClient(sptr))
+		{
 			sendto_one(sptr, ":%s!%s@%s JOIN :%s",
 			    sptr->name, sptr->user->username,
 			    GetHost(sptr), chptr->chname);
+		}
 		sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
 		    sptr->name, sptr->user->username,
 		    GetHost(sptr), chptr->chname);
 	}
 	else
+	{
+		/* Show JOIN to everyone */
 		sendto_channel_butserv(chptr, sptr,
 		    ":%s JOIN :%s", sptr->name, chptr->chname);
+	}
 	
 	sendto_server(cptr, 0, PROTO_SJ3, ":%s JOIN :%s", sptr->name, chptr->chname);
 

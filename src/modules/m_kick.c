@@ -282,17 +282,7 @@ CMD_FUNC(m_kick)
 				}
 				if (lp)
 				{
-					int i = 0;
-
-					for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-					{
-						i = (*(h->func.intfunc))(who,chptr);
-						if (i != 0)
-							break;
-					}
-
-					if ((i != 0) &&
-					    !(lp->flags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER|CHFL_HALFOP)))
+					if (invisible_user_in_channel(who, chptr))
 					{
 						/* Send it only to chanops & victim */
 						if (IsPerson(sptr))

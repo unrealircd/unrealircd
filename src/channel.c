@@ -1271,7 +1271,6 @@ void rejoin_leave(aClient *sptr)
 {
 	Membership *tmp;
 	aChannel *chptr;
-	Hook *h;
 	char *comment = "Changing host";
 	int i = 0;
 
@@ -1290,16 +1289,7 @@ void rejoin_leave(aClient *sptr)
 		/* Ok, we will now part/quit/whatever the user, so tag it.. */
 		tmp->flags |= CHFL_REJOINING;
 
-
-		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-			{
-				i = (*(h->func.intfunc))(sptr,chptr);
-				if (i != 0)
-					break;
-			}
-
-		if ((i != 0) &&
-		    !(tmp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_HALFOP|CHFL_VOICE)))
+		if (invisible_user_in_channel(sptr, chptr))
 		{
 			sendto_chanops_butone(sptr, chptr, ":%s!%s@%s PART %s :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname, comment);
 		} else
@@ -1316,7 +1306,6 @@ void rejoin_joinandmode(aClient *sptr)
 	Membership *tmp;
 	aChannel *chptr;
 	int i, j = 0, n, flags;
-	Hook *h;
 	int k = 0;
 	char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
 
@@ -1331,16 +1320,7 @@ void rejoin_joinandmode(aClient *sptr)
 		if (!(flags & CHFL_REJOINING))
 			continue;
 
-		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-		{
-			k = (*(h->func.intfunc))(sptr,chptr);
-			if (k != 0)
-				break;
-		}
-
-
-		if ((k != 0) &&
-		    !(flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_HALFOP|CHFL_VOICE)))
+		if (invisible_user_in_channel(sptr, chptr))
 		{
 			sendto_chanops_butone(sptr, chptr, ":%s!%s@%s JOIN :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
 		} else
@@ -1573,4 +1553,26 @@ int user_can_see_member(aClient *user, aClient *target, aChannel *chptr)
 		return 0;
 
 	return 1;
+}
+
+/** Returns 1 if user 'target' is invisible in channel 'chptr'.
+ * This may return 0 if the user is 'invisible' due to mode +D rules.
+ */
+int invisible_user_in_channel(aClient *target, aChannel *chptr)
+{
+	Hook *h;
+	int j = 0;
+
+	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+	{
+		j = (*(h->func.intfunc))(target,chptr);
+		if (j != 0)
+			break;
+	}
+
+	/* We must ensure that user is allowed to "see" target */
+	if (j != 0 && !(is_skochanop(target, chptr) || has_voice(target,chptr)))
+		return 1;
+
+	return 0;
 }

@@ -95,15 +95,7 @@ static void secureonly_kick_insecure_users(aChannel *chptr)
 		{
 			RunHook5(HOOKTYPE_LOCAL_KICK, &me, &me, cptr, chptr, comment);
 
-			i = 0;
-			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-			{
-				i = (*(h->func.intfunc))(cptr,chptr);
-				if (i != 0)
-					break;
-			}
-
-			if (i != 0 && !(is_skochanop(cptr, chptr) || has_voice(cptr,chptr)))
+			if (invisible_user_in_channel(cptr, chptr))
 			{
 				sendto_chanops_butone(cptr, chptr, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
 				sendto_prefix_one(cptr, &me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);

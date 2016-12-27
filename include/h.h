@@ -781,3 +781,4 @@ extern void ban_flooder(aClient *cptr);
 extern char *pcre2_version(void);
 extern int has_common_channels(aClient *c1, aClient *c2);
 extern int user_can_see_member(aClient *user, aClient *target, aChannel *chptr);
+extern int invisible_user_in_channel(aClient *target, aChannel *chptr);
