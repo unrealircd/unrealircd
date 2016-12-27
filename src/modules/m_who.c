@@ -545,15 +545,8 @@ char has_common_chan = 0;
 			if (IsInvisible(acptr) && !member)
 				break;
 
-			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-			{
-				i = (*(h->func.intfunc))(acptr,channel);
-				if (i != 0)
-					break;
-			}
-
-			if (i != 0 && !(is_skochanop(sptr, channel)) && !(is_skochanop(acptr, channel) || has_voice(acptr,channel)))
-				break;
+			if (!user_can_see_member(sptr, acptr, channel))
+				continue; /* invisible (eg: due to delayjoin) */
 		}
 		else
 		{

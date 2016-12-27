@@ -140,20 +140,8 @@ CMD_FUNC(m_names)
 		if (IsInvisible(acptr) && !member && !ValidatePermissionsForPath("override:see:names:invisible",sptr,acptr,chptr,NULL))
 			continue;
 
-		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-		{
-			i = (*(h->func.intfunc))(cm->cptr,chptr);
-			if (i != 0)
-				break;
-		}
-
-		if (i != 0)
-			if (!is_skochanop(sptr, chptr)
-			    && !has_voice(sptr, chptr))
-				if (!(cm->
-				    flags & (CHFL_CHANOP | CHFL_CHANPROT |
-				    CHFL_CHANOWNER | CHFL_HALFOP)) && acptr != sptr)
-					continue;
+		if (!user_can_see_member(sptr, acptr, chptr))
+			continue; /* invisible (eg: due to delayjoin) */
 
 		if (!SupportNAMESX(sptr))
 		{
