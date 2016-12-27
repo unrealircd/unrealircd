@@ -525,13 +525,13 @@ static void exit_one_client(aClient *sptr, const char *comment)
 
 	if (IsClient(sptr))
 	{
-		sendto_common_channels(sptr, ":%s QUIT :%s",
-		    sptr->name, comment);
-
 		if (!MyClient(sptr))
 		{
 			RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);
 		}
+
+		sendto_common_channels(sptr, ":%s QUIT :%s",
+		    sptr->name, comment);
 
 		/* This hook may or may not be redundant */
 		RunHook(HOOKTYPE_EXIT_ONE_CLIENT, sptr);
