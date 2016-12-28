@@ -992,6 +992,8 @@ int InitUnrealIRCd(int argc, char *argv[])
 	struct rlimit corelim;
 #endif
 
+	timeofday = time(NULL);
+
 	memset(&botmotd, '\0', sizeof(aMotdFile));
 	memset(&rules, '\0', sizeof(aMotdFile));
 	memset(&opermotd, '\0', sizeof(aMotdFile));
@@ -1013,7 +1015,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	euid = geteuid();
 	gid = getgid();
 	egid = getegid();
-	timeofday = time(NULL);
 
 	if (euid == 0)
 	{
