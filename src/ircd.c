@@ -1408,6 +1408,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 		loop.ircd_forked = 1;
 	}
 #endif
+#ifdef _WIN32
+	loop.ircd_forked = 1;
+#endif
 	(void)ircsnprintf(REPORT_DO_DNS, sizeof(REPORT_DO_DNS), ":%s %s", me.name, BREPORT_DO_DNS);
 	(void)ircsnprintf(REPORT_FIN_DNS, sizeof(REPORT_FIN_DNS), ":%s %s", me.name, BREPORT_FIN_DNS);
 	(void)ircsnprintf(REPORT_FIN_DNSC, sizeof(REPORT_FIN_DNSC), ":%s %s", me.name, BREPORT_FIN_DNSC);
