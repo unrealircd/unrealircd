@@ -2272,15 +2272,30 @@ int	config_run()
 		}
 	}
 
-	/* Stage 2: now all the rest */
+	/* Stage 2: now class blocks */
 	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
 	{
 		if (config_verbose > 1)
 			config_status("Running %s", cfptr->cf_filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
-			if (!strcmp(ce->ce_varname, "set"))
-				continue; // skip set block, already done
+			if (!strcmp(ce->ce_varname, "class"))
+			{
+				if (_conf_class(cfptr, ce) < 0)
+					errors++;
+			}
+		}
+	}
+
+	/* Stage 3: now all the rest */
+	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
+	{
+		if (config_verbose > 1)
+			config_status("Running %s", cfptr->cf_filename);
+		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
+		{
+			if (!strcmp(ce->ce_varname, "set") || !strcmp(ce->ce_varname, "class"))
+				continue; // already processed
 
 			if ((cc = config_binary_search(ce->ce_varname))) {
 				if ((cc->conffunc) && (cc->conffunc(cfptr, ce) < 0))
