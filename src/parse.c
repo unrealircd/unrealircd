@@ -501,10 +501,10 @@ static void remove_unknown(aClient *cptr, char *sender)
 	 * Do kill if it came from a server because it means there is a ghost
 	 * user on the other server which needs to be removed. -avalon
 	 */
-	if (!index(sender, '.') && !isdigit(*sender))
+	if ((isdigit(*sender) && strlen(sender) <= SIDLEN) || index(sender, '.'))
+		sendto_one(cptr, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
+		    me.name, sender, sender, cptr->name);
+	else
 		sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
 		    me.name, sender, me.name, sender, cptr->name);
-	else
-		sendto_one(cptr, ":%s SQUIT %s :(Unknown from %s)",
-		    me.name, sender, get_client_name(cptr, FALSE));
 }
