@@ -175,10 +175,10 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 	verify_err = X509_STORE_CTX_get_error(ctx);
 	if (preverify_ok)
 		return 1;
-	if (iConf.ssl_options & SSLFLAG_VERIFYCERT)
+	if (iConf.ssl_options->options & SSLFLAG_VERIFYCERT)
 	{
 		if (verify_err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT)
-			if (!(iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED))
+			if (!(iConf.ssl_options->options & SSLFLAG_DONOTACCEPTSELFSIGNED))
 			{
 				return 1;
 			}
@@ -204,14 +204,16 @@ static void setup_dh_params(SSL_CTX *ctx)
 {
 	DH *dh;
 	BIO *bio;
+	char *dh_file = iConf.ssl_options ? iConf.ssl_options->dh_file : tempiConf.ssl_options->dh_file;
+	/* ^^ because we can be called both before config file initalization or after */
 
-	if (iConf.x_dh_pem == NULL)
+	if (dh_file == NULL)
 		return;
 
-	bio = BIO_new_file(iConf.x_dh_pem, "r");
+	bio = BIO_new_file(dh_file, "r");
 	if (bio == NULL)
 	{
-		config_warn("Failed to load DH parameters %s", iConf.x_dh_pem);
+		config_warn("Failed to load DH parameters %s", dh_file);
 		config_report_ssl_error();
 		return;
 	}
@@ -219,7 +221,7 @@ static void setup_dh_params(SSL_CTX *ctx)
 	dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
 	if (dh == NULL)
 	{
-		config_warn("Failed to use DH parameters %s",	iConf.x_dh_pem);
+		config_warn("Failed to use DH parameters %s", dh_file);
 		config_report_ssl_error();
 		BIO_free(bio);
 		return;
@@ -230,161 +232,147 @@ static void setup_dh_params(SSL_CTX *ctx)
 }
 
 /** Disable SSL/TLS protocols as set by config */
-void disable_ssl_protocols(SSL_CTX *ctx)
+void disable_ssl_protocols(SSL_CTX *ctx, SSLOptions *ssloptions)
 {
 	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2); /* always disable SSLv2 */
 	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3); /* always disable SSLv3 */
 
 #ifdef SSL_OP_NO_TLSv1
-	if (!(iConf.ssl_protocols & SSL_PROTOCOL_TLSV1))
+	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1))
 		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1);
 #endif
 
 #ifdef SSL_OP_NO_TLSv1_1
-	if (!(iConf.ssl_protocols & SSL_PROTOCOL_TLSV1_1))
+	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1_1))
 		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1_1);
 #endif
 
 #ifdef SSL_OP_NO_TLSv1_2
-	if (!(iConf.ssl_protocols & SSL_PROTOCOL_TLSV1_2))
+	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1_2))
 		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1_2);
 #endif
 
 #ifdef SSL_OP_NO_TLSv1_3
-	if (!(iConf.ssl_protocols & SSL_PROTOCOL_TLSV1_3))
+	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1_3))
 		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1_3);
 #endif
 }
 
-SSL_CTX *init_ctx_server(void)
+SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 {
-SSL_CTX *ctx_server;
+	SSL_CTX *ctx;
 
-	ctx_server = SSL_CTX_new(SSLv23_server_method());
-	if (!ctx_server)
+	if (server)
+		ctx = SSL_CTX_new(SSLv23_server_method());
+	else
+		ctx = SSL_CTX_new(SSLv23_client_method());
+
+	if (!ctx)
 	{
 		config_error("Failed to do SSL CTX new");
 		config_report_ssl_error();
 		return NULL;
 	}
-	disable_ssl_protocols(ctx_server);
-	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
-	if (!(iConf.ssl_options & SSLFLAG_DISABLECLIENTCERT))
+	disable_ssl_protocols(ctx, ssloptions);
+	SSL_CTX_set_default_passwd_cb(ctx, ssl_pem_passwd_cb);
+
+	if (server && !(ssloptions->options & SSLFLAG_DISABLECLIENTCERT))
 	{
-		SSL_CTX_set_verify(ctx_server, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE
-				| (iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
+		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE | (ssloptions->options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
 	}
-	SSL_CTX_set_session_cache_mode(ctx_server, SSL_SESS_CACHE_OFF);
+	SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_OFF);
 #ifndef SSL_OP_NO_TICKET
  #error "Your system has an outdated OpenSSL version. Please upgrade OpenSSL."
 #endif
-	SSL_CTX_set_options(ctx_server, SSL_OP_NO_TICKET);
+	SSL_CTX_set_options(ctx, SSL_OP_NO_TICKET);
 
-	setup_dh_params(ctx_server);
+	setup_dh_params(ctx);
 
-	if (SSL_CTX_use_certificate_chain_file(ctx_server, SSL_SERVER_CERT_PEM) <= 0)
+	if (!ssloptions->certificate_file)
 	{
-		config_warn("Failed to load SSL certificate %s", SSL_SERVER_CERT_PEM);
-		config_report_ssl_error();
-		goto fail;
-	}
-	if (SSL_CTX_use_PrivateKey_file(ctx_server, SSL_SERVER_KEY_PEM, SSL_FILETYPE_PEM) <= 0)
-	{
-		config_warn("Failed to load SSL private key %s", SSL_SERVER_KEY_PEM);
+		config_warn("No SSL certificate configured (set::options::ssl::certificate or in a listen block)");
 		config_report_ssl_error();
 		goto fail;
 	}
 
-	if (!SSL_CTX_check_private_key(ctx_server))
+	if (SSL_CTX_use_certificate_chain_file(ctx, ssloptions->certificate_file) <= 0)
+	{
+		config_warn("Failed to load SSL certificate %s", ssloptions->certificate_file);
+		config_report_ssl_error();
+		goto fail;
+	}
+
+	if (!ssloptions->key_file)
+	{
+		config_warn("No SSL key configured (set::options::ssl::key or in a listen block)");
+		config_report_ssl_error();
+		goto fail;
+	}
+
+	if (SSL_CTX_use_PrivateKey_file(ctx, ssloptions->key_file, SSL_FILETYPE_PEM) <= 0)
+	{
+		config_warn("Failed to load SSL private key %s", ssloptions->key_file);
+		config_report_ssl_error();
+		goto fail;
+	}
+
+	if (!SSL_CTX_check_private_key(ctx))
 	{
 		config_warn("Failed to check SSL private key");
 		config_report_ssl_error();
 		goto fail;
 	}
-	if (SSL_CTX_set_cipher_list(ctx_server, iConf.ssl_ciphers) == 0)
+
+	if (SSL_CTX_set_cipher_list(ctx, ssloptions->ciphers) == 0)
 	{
 		config_warn("Failed to set SSL cipher list for clients");
 		config_report_ssl_error();
 		goto fail;
 	}
-	SSL_CTX_set_options(ctx_server, SSL_OP_CIPHER_SERVER_PREFERENCE);
 
-	if (iConf.trusted_ca_file)
+	if (server)
+		SSL_CTX_set_options(ctx, SSL_OP_CIPHER_SERVER_PREFERENCE);
+
+	if (ssloptions->trusted_ca_file)
 	{
-		if (!SSL_CTX_load_verify_locations(ctx_server, iConf.trusted_ca_file, NULL))
+		if (!SSL_CTX_load_verify_locations(ctx, ssloptions->trusted_ca_file, NULL))
 		{
-			config_warn("Failed to load Trusted CA's from %s", iConf.trusted_ca_file);
+			config_warn("Failed to load Trusted CA's from %s", ssloptions->trusted_ca_file);
 			config_report_ssl_error();
 			goto fail;
 		}
 	}
-	
-#if defined(SSL_CTX_set_ecdh_auto)
-	SSL_CTX_set_ecdh_auto(ctx_server, 1);
-#else
-	SSL_CTX_set_tmp_ecdh(ctx_server, EC_KEY_new_by_curve_name(NID_X9_62_prime256v1));
-#endif
-	SSL_CTX_set_options(ctx_server, SSL_OP_SINGLE_ECDH_USE|SSL_OP_SINGLE_DH_USE);
 
-	return ctx_server;
+	if (server)
+	{
+#if defined(SSL_CTX_set_ecdh_auto)
+		SSL_CTX_set_ecdh_auto(ctx, 1);
+#else
+		SSL_CTX_set_tmp_ecdh(ctx, EC_KEY_new_by_curve_name(NID_X9_62_prime256v1));
+#endif
+		SSL_CTX_set_options(ctx, SSL_OP_SINGLE_ECDH_USE|SSL_OP_SINGLE_DH_USE);
+	}
+
+	return ctx;
 fail:
-	SSL_CTX_free(ctx_server);
+	SSL_CTX_free(ctx);
 	return NULL;
 }
 
-
-SSL_CTX *init_ctx_client(void)
+int early_init_ssl(void)
 {
-SSL_CTX *ctx_client;
-
-	ctx_client = SSL_CTX_new(SSLv23_client_method());
-	if (!ctx_client)
-	{
-		config_warn("Failed to do SSL CTX new client");
-		config_report_ssl_error();
-		return NULL;
-	}
-	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
-	disable_ssl_protocols(ctx_client);
-	SSL_CTX_set_session_cache_mode(ctx_client, SSL_SESS_CACHE_OFF);
-
-	setup_dh_params(ctx_client);
-
-	if (SSL_CTX_use_certificate_file(ctx_client, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
-	{
-		config_warn("Failed to load SSL certificate %s (client)", SSL_SERVER_CERT_PEM);
-		config_report_ssl_error();
-		goto fail;
-	}
-	if (SSL_CTX_use_PrivateKey_file(ctx_client, SSL_SERVER_KEY_PEM, SSL_FILETYPE_PEM) <= 0)
-	{
-		config_warn("Failed to load SSL private key %s (client)", SSL_SERVER_KEY_PEM);
-		config_report_ssl_error();
-		goto fail;
-	}
-
-	if (!SSL_CTX_check_private_key(ctx_client))
-	{
-		config_warn("Failed to check SSL private key (client)");
-		config_report_ssl_error();
-		goto fail;
-	}
-	return ctx_client;
-fail:
-	SSL_CTX_free(ctx_client);
-	return NULL;
+	SSL_load_error_strings();
+	SSLeay_add_ssl_algorithms();
+	return 1;
 }
 
 int init_ssl(void)
 {
 	/* SSL preliminaries. We keep the certificate and key with the context. */
-
-	SSL_load_error_strings();
-	SSLeay_add_ssl_algorithms();
-	ctx_server = init_ctx_server();
+	ctx_server = init_ctx(iConf.ssl_options, 1);
 	if (!ctx_server)
 		return 0;
-	ctx_client = init_ctx_client();
+	ctx_client = init_ctx(iConf.ssl_options, 0);
 	if (!ctx_client)
 		return 0;
 	return 1;
@@ -403,7 +391,7 @@ SSL_CTX *tmp;
 		mylog("%s requested a reload of all SSL related data (/rehash -ssl)",
 			acptr->name);
 
-	tmp = init_ctx_server();
+	tmp = init_ctx(iConf.ssl_options, 1);
 	if (!tmp)
 	{
 		config_error("SSL Reload failed.");
@@ -413,9 +401,9 @@ SSL_CTX *tmp;
 	/* free and do it for real */
 	SSL_CTX_free(tmp);
 	SSL_CTX_free(ctx_server);
-	ctx_server = init_ctx_server();
+	ctx_server = init_ctx(iConf.ssl_options, 1);
 	
-	tmp = init_ctx_client();
+	tmp = init_ctx(iConf.ssl_options, 0);
 	if (!tmp)
 	{
 		config_error("SSL Reload partially failed. Server context is reloaded, client context failed");
@@ -425,7 +413,7 @@ SSL_CTX *tmp;
 	/* free and do it for real */
 	SSL_CTX_free(tmp);
 	SSL_CTX_free(ctx_client);
-	ctx_client = init_ctx_client();
+	ctx_client = init_ctx(iConf.ssl_options, 0);
 }
 
 #define CHK_NULL(x) if ((x)==NULL) {\
@@ -467,56 +455,6 @@ int  ssl_handshake(aClient *cptr)
 	return 0;
 
 }
-/* 
-   ssl_client_handshake
-        This will initiate a client SSL_connect
-        
-        -Stskeeps 
-   
-   Return values:
-      -1  = Could not SSL_new
-      -2  = Error doing SSL_connect
-      -3  = Try again 
-*/
-int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
-{
-	char *set_ciphers = iConf.ssl_ciphers;
-
-	cptr->local->ssl = SSL_new((SSL_CTX *)ctx_client);
-	if (!cptr->local->ssl)
-	{
-		sendto_realops("Couldn't SSL_new(ctx_client) on %s",
-			get_client_name(cptr, FALSE));
-		return -1;
-	}
-/*	set_blocking(cptr->fd); */
-	SSL_set_fd(cptr->local->ssl, cptr->fd);
-	SSL_set_connect_state(cptr->local->ssl);
-
-	if (l && l->ciphers)
-		set_ciphers = l->ciphers; /* link::ciphers overrides set::ssl::ciphers */
-
-	if (set_ciphers)
-	{
-		if (SSL_set_cipher_list(cptr->local->ssl, set_ciphers) == 0)
-		{
-			/* We abort */
-			sendto_realops("SSL cipher selecting for %s was unsuccesful (%s)",
-				l->servername, set_ciphers);
-			return -2;
-		}
-	}
-	if (SSL_connect(cptr->local->ssl) <= 0)
-	{
-#if 0
-		sendto_realops("Couldn't SSL_connect");
-		return -2;
-#endif
-	}
-	set_non_blocking(cptr->fd, cptr);
-	cptr->flags |= FLAGS_SSL;
-	return 1;
-}
 
 /* This is a bit homemade to fix IRCd's cleaning madness -- Stskeeps */
 int	SSL_change_fd(SSL *s, int fd)
@@ -526,7 +464,7 @@ int	SSL_change_fd(SSL *s, int fd)
 	return 1;
 }
 
-void	SSL_set_nonblocking(SSL *s)
+void SSL_set_nonblocking(SSL *s)
 {
 	BIO_set_nbio(SSL_get_rbio(s),1);  
 	BIO_set_nbio(SSL_get_wbio(s),1);  
@@ -554,50 +492,55 @@ char *ssl_get_cipher(SSL *ssl)
 void ircd_SSL_client_handshake(int fd, int revents, void *data)
 {
 	aClient *acptr = data;
+	SSL_CTX *ctx = (acptr->serv && acptr->serv->conf && acptr->serv->conf->ssl_ctx) ? acptr->serv->conf->ssl_ctx : ctx_client;
+	SSLOptions *ssloptions = (acptr->serv && acptr->serv->conf && acptr->serv->conf->ssl_options) ? acptr->serv->conf->ssl_options : iConf.ssl_options;
 
-	if (!ctx_client)
+	if (!ctx)
 	{
-		sendto_realops("Could not start SSL client handshake: SSL was not loaded correctly on this server (failed to load cert or key during boot process)");
+		sendto_realops("Could not start SSL client handshake: SSL was not loaded correctly on this server (failed to load cert or key)");
 		return;
 	}
 
-	acptr->local->ssl = SSL_new(ctx_client);
+	acptr->local->ssl = SSL_new(ctx);
 	if (!acptr->local->ssl)
 	{
-		sendto_realops("Failed to SSL_new(ctx_client)");
+		sendto_realops("Failed to SSL_new(ctx)");
 		return;
 	}
+
 	SSL_set_fd(acptr->local->ssl, acptr->fd);
 	SSL_set_connect_state(acptr->local->ssl);
 	SSL_set_nonblocking(acptr->local->ssl);
-        if (iConf.ssl_renegotiate_bytes > 0)
+
+	if (ssloptions->renegotiate_bytes > 0)
 	{
-          BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->local->ssl), iConf.ssl_renegotiate_bytes);
-          BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->local->ssl), iConf.ssl_renegotiate_bytes);
-        }
-        if (iConf.ssl_renegotiate_timeout > 0)
-        {
-          BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->local->ssl), iConf.ssl_renegotiate_timeout);
-          BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->local->ssl), iConf.ssl_renegotiate_timeout);
-        }
+		BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->local->ssl), ssloptions->renegotiate_bytes);
+		BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->local->ssl), ssloptions->renegotiate_bytes);
+	}
+
+	if (ssloptions->renegotiate_timeout > 0)
+	{
+		BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->local->ssl), ssloptions->renegotiate_timeout);
+		BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->local->ssl), ssloptions->renegotiate_timeout);
+	}
 
 	if (acptr->serv && acptr->serv->conf->ciphers)
 	{
-		if (SSL_set_cipher_list(acptr->local->ssl, 
-			acptr->serv->conf->ciphers) == 0)
+		if (SSL_set_cipher_list(acptr->local->ssl, acptr->serv->conf->ciphers) == 0)
 		{
 			/* We abort */
-			sendto_realops("SSL cipher selecting for %s was unsuccesful (%s)",
+			sendto_realops("Could not set ciphers for link %s (%s)",
 				acptr->serv->conf->servername, 
 				acptr->serv->conf->ciphers);
 			return;
 		}
 	}
+
 	acptr->flags |= FLAGS_SSL;
+
 	switch (ircd_SSL_connect(acptr, fd))
 	{
 		case -1:
-		        ircd_log(LOG_ERROR, "%s:%d: called for fd %d/%s", __FILE__, __LINE__, fd, acptr->name);
 			fd_close(fd);
 			acptr->fd = -1;
 			return;

@@ -1102,6 +1102,19 @@ struct _configitem_oper {
 	int maxlogins;
 };
 
+typedef struct _ssloptions SSLOptions;
+struct _ssloptions {
+	char *certificate_file;
+	char *key_file;
+	char *dh_file;
+	char *trusted_ca_file;
+	unsigned int protocols;
+	char *ciphers;
+	long options;
+	int renegotiate_bytes;
+	int renegotiate_timeout;
+};
+
 struct _configitem_mask {
 	ConfigItem_mask *prev, *next;
 	ConfigFlag flag;
@@ -1134,12 +1147,14 @@ struct _configitem_tld {
 
 struct _configitem_listen {
 	ConfigItem_listen *prev, *next;
-	ConfigFlag 	flag;
-	char		*ip;
-	int		port;
-	int		options, clients;
-	int		fd;
-	int     ipv6;
+	ConfigFlag flag;
+	char *ip;
+	int port;
+	int options, clients;
+	int fd;
+	int ipv6;
+	SSL_CTX *ssl_ctx;
+	SSLOptions *ssl_options;
 };
 
 struct _configitem_vhost {
@@ -1176,6 +1191,8 @@ struct _configitem_link {
 	int	refcount; /**< Reference counter (used so we know if the struct may be freed) */
 	time_t hold; /**< For how long the server is "on hold" for outgoing connects (why?) */
 	char *connect_ip; /**< actual IP to use for outgoing connect (filled in after host is resolved) */
+	SSL_CTX *ssl_ctx; /**< SSL Context for outgoing connection (optional) */
+	SSLOptions *ssl_options; /**< SSL Options for outgoing connection (optional) */
 };
 
 struct _configitem_except {

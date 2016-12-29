@@ -115,10 +115,16 @@ static void set_curl_ssl_options(CURL *curl)
 {
 	char buf[512];
 	
-	curl_easy_setopt(curl, CURLOPT_SSLCERT, SSL_SERVER_CERT_PEM);
+#if 0
+	/* This would only be necessary if you use client certificates over HTTPS and such.
+	 * But this information is not known yet since the configuration file has not been
+	 * parsed yet at this point.
+	 */
+	curl_easy_setopt(curl, CURLOPT_SSLCERT, iConf.ssl_options->certificate_file);
 	if (SSLKeyPasswd)
 		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, SSLKeyPasswd);
-	curl_easy_setopt(curl, CURLOPT_SSLKEY, SSL_SERVER_KEY_PEM);
+	curl_easy_setopt(curl, CURLOPT_SSLKEY, iConf.ssl_options->key_file);
+#endif
 
 	snprintf(buf, sizeof(buf), "%s/ssl/curl-ca-bundle.crt", CONFDIR);
 	curl_easy_setopt(curl, CURLOPT_CAINFO, buf);

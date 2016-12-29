@@ -1313,6 +1313,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	(void)chmod(CPATH, DEFAULT_PERMISSIONS);
 #endif
 	init_dynconf();
+	early_init_ssl();
 	/*
 	 * Add default class
 	 */

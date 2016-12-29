@@ -62,16 +62,25 @@ MOD_UNLOAD(m_starttls)
 
 CMD_FUNC(m_starttls)
 {
+	SSL_CTX *ctx;
+	int ssl_options;
+
 	if (!MyConnect(sptr) || !IsUnknown(sptr))
 		return 0;
-	if (!ctx_server) /* or SSL support is not enabled (failed to load cert/keys/..)... */
+
+	ctx = sptr->local->listener->ssl_ctx ? sptr->local->listener->ssl_ctx : ctx_server;
+	ssl_options = sptr->local->listener->ssl_options ? sptr->local->listener->ssl_options->options : iConf.ssl_options->options;
+
+	/* Is SSL support enabled? (may not, if failed to load cert/keys/..) */
+	if (!ctx)
 	{
 		/* Pretend STARTTLS is an unknown command, this is the safest approach */
 		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "STARTTLS");
 		return 0;
 	}
 
-	if (iConf.ssl_options & SSLFLAG_NOSTARTTLS)
+	/* Is STARTTLS disabled? (same response as above) */
+	if (ssl_options & SSLFLAG_NOSTARTTLS)
 	{
 		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "STARTTLS");
 		return 0;
@@ -89,7 +98,7 @@ CMD_FUNC(m_starttls)
 
 	SetSSLStartTLSHandshake(sptr);
 	Debug((DEBUG_DEBUG, "Starting SSL handshake (due to STARTTLS) for %s", sptr->local->sockhost));
-	if ((sptr->local->ssl = SSL_new(ctx_server)) == NULL)
+	if ((sptr->local->ssl = SSL_new(ctx)) == NULL)
 		goto fail;
 	sptr->flags |= FLAGS_SSL;
 	SSL_set_fd(sptr->local->ssl, sptr->fd);

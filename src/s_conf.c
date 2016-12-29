@@ -258,6 +258,11 @@ int charsys_postconftest(void);
 void charsys_finish(void);
 int reloadable_perm_module_unloaded(void);
 
+/* Conf sub-sub-functions */
+void test_sslblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors);
+void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions);
+void free_ssl_options(SSLOptions *ssloptions);
+
 /*
  * Config parser (IRCd)
 */
@@ -319,6 +324,37 @@ void load_includes(void);
 void unload_loaded_includes(void);
 int rehash_internal(aClient *cptr, aClient *sptr, int sig);
 
+/** Return the printable string of a 'cep' location, such as set::something::xyz */
+char *config_var(ConfigEntry *cep)
+{
+	static char buf[256];
+	ConfigEntry *e;
+	char *elem[16];
+	int numel = 0, i;
+
+	if (!cep)
+		return "";
+
+	buf[0] = '\0';
+
+	/* First, walk back to the top */
+	for (e = cep; e; e = e->ce_prevlevel)
+	{
+		elem[numel++] = e->ce_varname;
+		if (numel == 15)
+			break;
+	}
+
+	/* Now construct the xxx::yyy::zzz string */
+	for (i = numel-1; i >= 0; i--)
+	{
+		strlcat(buf, elem[i], sizeof(buf));
+		if (i > 0)
+			strlcat(buf, "::", sizeof(buf));
+	}
+
+	return buf;
+}
 
 void port_range(char *string, int *start, int *end)
 {
@@ -1346,11 +1382,15 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->oper_snomask);
 	safefree(i->user_snomask);
 	safefree(i->static_quit);
-	safefree(i->x_dh_pem);
-	safefree(i->x_server_cert_pem);
-	safefree(i->x_server_key_pem);
-	safefree(i->ssl_ciphers);
-	safefree(i->trusted_ca_file);
+	if (i->ssl_options)
+	{
+		safefree(i->ssl_options->certificate_file);
+		safefree(i->ssl_options->key_file);
+		safefree(i->ssl_options->ciphers);
+		safefree(i->ssl_options->dh_file);
+		safefree(i->ssl_options->trusted_ca_file);
+		safefree(i->ssl_options);
+	}
 	safefree(i->restrict_usermodes);
 	safefree(i->restrict_channelmodes);
 	safefree(i->restrict_extendedbans);
@@ -1412,16 +1452,19 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->nicklen = NICKLEN;
 	i->link_bindip = strdup("*");
 	i->oper_only_stats = strdup("*");
-	snprintf(tmp, sizeof(tmp), "%s/ssl/server.cert.pem", CONFDIR);
-	i->x_server_cert_pem = strdup(tmp);
-	snprintf(tmp, sizeof(tmp), "%s/ssl/server.key.pem", CONFDIR);
-	i->x_server_key_pem = strdup(tmp);
 	i->network.x_hidden_host = strdup("Clk");
 	if (!ipv6_capable())
 		DISABLE_IPV6 = 1;
 	i->network.x_prefix_quit = strdup("Quit");
-	i->ssl_ciphers = strdup("EECDH+CHACHA20 EECDH+AESGCM EECDH+AES AES128-GCM-SHA256 AES256-GCM-SHA384 AES128-SHA256 AES256-SHA256 AES128-SHA AES256-SHA");
-	i->ssl_protocols = SSL_PROTOCOL_ALL;
+
+	/* SSL/TLS options */
+	i->ssl_options = MyMallocEx(sizeof(SSLOptions));
+	snprintf(tmp, sizeof(tmp), "%s/ssl/server.cert.pem", CONFDIR);
+	i->ssl_options->certificate_file = strdup(tmp);
+	snprintf(tmp, sizeof(tmp), "%s/ssl/server.key.pem", CONFDIR);
+	i->ssl_options->key_file = strdup(tmp);
+	i->ssl_options->ciphers = strdup("EECDH+CHACHA20 EECDH+AESGCM EECDH+AES AES128-GCM-SHA256 AES256-GCM-SHA384 AES128-SHA256 AES256-SHA256 AES128-SHA AES256-SHA");
+	i->ssl_options->protocols = SSL_PROTOCOL_ALL;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -2214,12 +2257,31 @@ int	config_run()
 	Hook *h;
 	ConfigItem_allow *allow;
 
+	/* Stage 1: set block first */
 	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
 	{
 		if (config_verbose > 1)
 			config_status("Running %s", cfptr->cf_filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
+			if (!strcmp(ce->ce_varname, "set"))
+			{
+				if (_conf_set(cfptr, ce) < 0)
+					errors++;
+			}
+		}
+	}
+
+	/* Stage 2: now all the rest */
+	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
+	{
+		if (config_verbose > 1)
+			config_status("Running %s", cfptr->cf_filename);
+		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
+		{
+			if (!strcmp(ce->ce_varname, "set"))
+				continue; // skip set block, already done
+
 			if ((cc = config_binary_search(ce->ce_varname))) {
 				if ((cc->conffunc) && (cc->conffunc(cfptr, ce) < 0))
 					errors++;
@@ -2236,6 +2298,7 @@ int	config_run()
 			}
 		}
 	}
+
 	/*
 	 * transfer default values from set::ipv6_clones_mask into
 	 * each individual allow block. If other similar things like
@@ -2245,6 +2308,10 @@ int	config_run()
 	for(allow = conf_allow; allow; allow = (ConfigItem_allow *)allow->next)
 		if(!allow->ipv6_clone_mask)
 			allow->ipv6_clone_mask = tempiConf.default_ipv6_clone_mask;
+
+	/* ^^^ TODO: due to the two-stage model now we can do it in conf_allow again
+	 *     and remove it here.
+	 */
 
 	close_listeners();
 	listen_cleanup();
@@ -4470,6 +4537,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
+	ConfigEntry *sslconfig = NULL;
 	ConfigItem_listen *listen = NULL;
 	char *ip;
 	int start=0, end=0, port, isnew;
@@ -4495,6 +4563,10 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				if ((ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, ARRAY_SIZEOF(_ListenerFlags))))
 					tmpflags |= ofp->flag;
 			}
+		} else
+		if (!strcmp(cep->ce_varname, "ssl-options"))
+		{
+			sslconfig = cep;
 		}
 	}
 	for (port = start; port <= end; port++)
@@ -4520,6 +4592,19 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			if (isnew)
 				AddListItem(listen, conf_listen);
 			listen->flag.temporary = 0;
+
+			if (listen->ssl_ctx)
+			{
+				SSL_CTX_free(listen->ssl_ctx);
+				listen->ssl_ctx = NULL;
+			}
+
+			if (sslconfig)
+			{
+				listen->ssl_options = MyMallocEx(sizeof(SSLOptions));
+				conf_sslblock(conf, sslconfig, listen->ssl_options);
+				listen->ssl_ctx = init_ctx(listen->ssl_options, 1);
+			}
 		}
 
 		/* Then deal with IPv6 (if available/enabled) */
@@ -4545,6 +4630,19 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				if (isnew)
 					AddListItem(listen, conf_listen);
 				listen->flag.temporary = 0;
+
+				if (listen->ssl_ctx)
+				{
+					SSL_CTX_free(listen->ssl_ctx);
+					listen->ssl_ctx = NULL;
+				}
+
+				if (sslconfig)
+				{
+					listen->ssl_options = MyMallocEx(sizeof(SSLOptions));
+					conf_sslblock(conf, sslconfig, listen->ssl_options);
+					listen->ssl_ctx = init_ctx(listen->ssl_options, 1);
+				}
 			}
 		}
 	}
@@ -4603,6 +4701,11 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 			}
+		}
+		else
+		if (!strcmp(cep->ce_varname, "ssl-options"))
+		{
+			test_sslblock(conf, cep, &errors);
 		}
 		else
 		if (!cep->ce_vardata)
@@ -6213,6 +6316,12 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 							link->outgoing.options |= ofp->flag;
 					}
 				}
+				else if (!strcmp(cepp->ce_varname, "ssl-options"))
+				{
+					link->ssl_options = MyMallocEx(sizeof(SSLOptions));
+					conf_sslblock(conf, cepp, link->ssl_options);
+					link->ssl_ctx = init_ctx(link->ssl_options, 0);
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "password"))
@@ -6236,8 +6345,6 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			}
 			link->class->xrefcount++;
 		}
-		else if (!strcmp(cep->ce_varname, "ciphers"))
-			link->ciphers = strdup(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
 			link->options = 0;
@@ -6284,7 +6391,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	int has_incoming = 0, has_incoming_mask = 0, has_outgoing = 0;
 	int has_outgoing_bind_ip = 0, has_outgoing_hostname = 0, has_outgoing_port = 0;
 	int has_outgoing_options = 0, has_hub = 0, has_leaf = 0, has_leaf_depth = 0;
-	int has_password = 0, has_class = 0, has_ciphers = 0, has_options = 0;
+	int has_password = 0, has_class = 0, has_options = 0;
 
 	if (!ce->ce_vardata)
 	{
@@ -6380,6 +6487,17 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 						// TODO: validate more options (?) and use list rather than code here...
 					}
 				}
+				else if (!strcmp(cepp->ce_varname, "ssl-options"))
+				{
+					test_sslblock(conf, cepp, &errors);
+				}
+				else
+				{
+					config_error("%s:%d: Unknown directive '%s'",
+					             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+					             config_var(cepp));
+					errors++;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "password"))
@@ -6441,12 +6559,10 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "ciphers"))
 		{
-			if (config_is_blankorempty(cep, "link"))
-			{
-				errors++;
-				continue;
-			}
-			config_detect_duplicate(&has_ciphers, cep, &errors);
+			config_error("%s:%d: link::ciphers has been moved to link::outgoing::ssl-options::ciphers, "
+			             "see https://www.unrealircd.org/docs/FAQ#link::ciphers_no_longer_works",
+			             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
 		}
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
@@ -6709,10 +6825,244 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
+#define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+#define CheckNullAllowEmpty(x) if ((!(x)->ce_vardata)) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+#define CheckDuplicate(cep, name, display) if (settings.has_##name) { config_warn_duplicate((cep)->ce_fileptr->cf_filename, cep->ce_varlinenum, "set::" display); continue; } else settings.has_##name = 1
+
+void test_sslblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
+{
+	ConfigEntry *cepp, *ceppp;
+	int errors = 0;
+
+	for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+	{
+		if (!strcmp(cepp->ce_varname, "renegotiate-timeout"))
+		{
+		}
+		else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
+		{
+		}
+		else if (!strcmp(cepp->ce_varname, "ciphers") || !strcmp(cepp->ce_varname, "server-cipher-list"))
+		{
+			CheckNull(cepp);
+		}
+		else if (!strcmp(cepp->ce_varname, "protocols"))
+		{
+			char copy[512], *p, *name;
+			int v = 0;
+			int option;
+			char modifier;
+
+			CheckNull(cepp);
+			strlcpy(copy, cepp->ce_vardata, sizeof(copy));
+			for (name = strtoken(&p, copy, ","); name; name = strtoken(&p, NULL, ","))
+			{
+				modifier = '\0';
+				option = 0;
+
+				if ((*name == '+') || (*name == '-'))
+				{
+					modifier = *name;
+					name++;
+				}
+
+				if (!stricmp(name, "All"))
+					option = SSL_PROTOCOL_ALL;
+				else if (!stricmp(name, "TLSv1"))
+					option = SSL_PROTOCOL_TLSV1;
+				else if (!stricmp(name, "TLSv1.1"))
+					option = SSL_PROTOCOL_TLSV1_1;
+				else if (!stricmp(name, "TLSv1.2"))
+					option = SSL_PROTOCOL_TLSV1_2;
+				else if (!stricmp(name, "TLSv1.3"))
+					option = SSL_PROTOCOL_TLSV1_3;
+				else
+					config_warn("%s:%i: %s: unknown protocol '%s'. "
+								 "Valid protocols are: TLSv1,TLSv1.1,TLSv1.2",
+								 cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, config_var(cepp), name);
+
+				if (option)
+				{
+					if (modifier == '\0')
+						v = option;
+					else if (modifier == '+')
+						v |= option;
+					else if (modifier == '-')
+						v &= ~option;
+				}
+			}
+			if (v == 0)
+			{
+				config_error("%s:%i: %s: no protocols enabled. Hint: set at least TLSv1.2",
+					cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, config_var(cepp));
+				errors++;
+			}
+		}
+		else if (!strcmp(cepp->ce_varname, "certificate"))
+		{
+			CheckNull(cepp);
+		}
+		else if (!strcmp(cepp->ce_varname, "dh"))
+		{
+			CheckNull(cepp);
+		}
+		else if (!strcmp(cepp->ce_varname, "key"))
+		{
+			CheckNull(cepp);
+		}
+		else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
+		{
+			CheckNull(cepp);
+		}
+		else if (!strcmp(cepp->ce_varname, "options"))
+		{
+			for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+				if (!config_binary_flags_search(_SSLFlags, ceppp->ce_varname, ARRAY_SIZEOF(_SSLFlags)))
+				{
+					config_error("%s:%i: unknown SSL flag '%s'",
+							 ceppp->ce_fileptr->cf_filename,
+							 ceppp->ce_varlinenum, ceppp->ce_varname);
+					errors ++;
+				}
+		}
+		else
+		{
+			config_error("%s:%i: unknown directive %s",
+				cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+				config_var(cepp));
+			errors++;
+		}
+	}
+
+	*totalerrors += errors;
+}
+
+void free_ssl_options(SSLOptions *ssloptions)
+{
+	if (!ssloptions)
+		return;
+
+	safefree(ssloptions->certificate_file);
+	safefree(ssloptions->key_file);
+	safefree(ssloptions->dh_file);
+	safefree(ssloptions->trusted_ca_file);
+	safefree(ssloptions->ciphers);
+	memset(ssloptions, 0, sizeof(SSLOptions));
+}
+
+void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions)
+{
+	ConfigEntry *cepp, *ceppp;
+	NameValue *ofl;
+
+	/* First, inherit settings from set::options::ssl */
+	if (ssloptions != tempiConf.ssl_options)
+	{
+		safestrdup(ssloptions->certificate_file, tempiConf.ssl_options->certificate_file);
+		safestrdup(ssloptions->key_file, tempiConf.ssl_options->key_file);
+		safestrdup(ssloptions->dh_file, tempiConf.ssl_options->dh_file);
+		safestrdup(ssloptions->trusted_ca_file, tempiConf.ssl_options->trusted_ca_file);
+		ssloptions->protocols = tempiConf.ssl_options->protocols;
+		safestrdup(ssloptions->ciphers, tempiConf.ssl_options->ciphers);
+		ssloptions->options = tempiConf.ssl_options->options;
+		ssloptions->renegotiate_bytes = tempiConf.ssl_options->renegotiate_bytes;
+		ssloptions->renegotiate_timeout = tempiConf.ssl_options->renegotiate_timeout;
+	}
+
+	/* Now process the options */
+	for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+	{
+		if (!strcmp(cepp->ce_varname, "ciphers") || !strcmp(cepp->ce_varname, "server-cipher-list"))
+		{
+			safestrdup(ssloptions->ciphers, cepp->ce_vardata);
+		}
+		else if (!strcmp(cepp->ce_varname, "protocols"))
+		{
+			char copy[512], *p, *name;
+			int option;
+			char modifier;
+
+			strlcpy(copy, cepp->ce_vardata, sizeof(copy));
+			ssloptions->protocols = 0;
+			for (name = strtoken(&p, copy, ","); name; name = strtoken(&p, NULL, ","))
+			{
+				modifier = '\0';
+				option = 0;
+
+				if ((*name == '+') || (*name == '-'))
+				{
+					modifier = *name;
+					name++;
+				}
+
+				if (!stricmp(name, "All"))
+					option = SSL_PROTOCOL_ALL;
+				else if (!stricmp(name, "TLSv1"))
+					option = SSL_PROTOCOL_TLSV1;
+				else if (!stricmp(name, "TLSv1.1"))
+					option = SSL_PROTOCOL_TLSV1_1;
+				else if (!stricmp(name, "TLSv1.2"))
+					option = SSL_PROTOCOL_TLSV1_2;
+				else if (!stricmp(name, "TLSv1.3"))
+					option = SSL_PROTOCOL_TLSV1_3;
+
+				if (option)
+				{
+					if (modifier == '\0')
+						ssloptions->protocols = option;
+					else if (modifier == '+')
+						ssloptions->protocols |= option;
+					else if (modifier == '-')
+						ssloptions->protocols &= ~option;
+				}
+			}
+		}
+		else if (!strcmp(cepp->ce_varname, "dh"))
+		{
+			convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
+		}
+		else if (!strcmp(cepp->ce_varname, "certificate"))
+		{
+			convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
+			safestrdup(ssloptions->certificate_file, cepp->ce_vardata);
+		}
+		else if (!strcmp(cepp->ce_varname, "key"))
+		{
+			convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
+			safestrdup(ssloptions->key_file, cepp->ce_vardata);
+		}
+		else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
+		{
+			convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
+			safestrdup(ssloptions->trusted_ca_file, cepp->ce_vardata);
+		}
+		else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
+		{
+			ssloptions->renegotiate_bytes = config_checkval(cepp->ce_vardata, CFG_SIZE);
+		}
+		else if (!strcmp(cepp->ce_varname, "renegotiate-timeout"))
+		{
+			ssloptions->renegotiate_timeout = config_checkval(cepp->ce_vardata, CFG_TIME);
+		}
+		else if (!strcmp(cepp->ce_varname, "options"))
+		{
+			ssloptions->options = 0;
+			for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+			{
+				ofl = config_binary_flags_search(_SSLFlags, ceppp->ce_varname, ARRAY_SIZEOF(_SSLFlags));
+				if (ofl) /* this should always be true */
+					ssloptions->options |= ofl->flag;
+			}
+			if (ssloptions->options & SSLFLAG_DONOTACCEPTSELFSIGNED)
+				if (!(ssloptions->options & SSLFLAG_VERIFYCERT))
+					ssloptions->options |= SSLFLAG_VERIFYCERT;
+		}
+	}
+}
+
 int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
-	NameValue 	*ofl = NULL;
 	Hook *h;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -7095,94 +7445,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				IsupportSetValue(IsupportFind("NICKLEN"), cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "ciphers") || !strcmp(cepp->ce_varname, "server-cipher-list"))
-				{
-					safestrdup(tempiConf.ssl_ciphers, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "protocols"))
-				{
-					char copy[512], *p, *name;
-					int option;
-					char modifier;
-
-					strlcpy(copy, cepp->ce_vardata, sizeof(copy));
-					tempiConf.ssl_protocols = 0;
-					for (name = strtoken(&p, copy, ","); name; name = strtoken(&p, NULL, ","))
-					{
-						modifier = '\0';
-						option = 0;
-
-						if ((*name == '+') || (*name == '-'))
-						{
-							modifier = *name;
-							name++;
-						}
-
-						if (!stricmp(name, "All"))
-							option = SSL_PROTOCOL_ALL;
-						else if (!stricmp(name, "TLSv1"))
-							option = SSL_PROTOCOL_TLSV1;
-						else if (!stricmp(name, "TLSv1.1"))
-							option = SSL_PROTOCOL_TLSV1_1;
-						else if (!stricmp(name, "TLSv1.2"))
-							option = SSL_PROTOCOL_TLSV1_2;
-						else if (!stricmp(name, "TLSv1.3"))
-							option = SSL_PROTOCOL_TLSV1_3;
-
-						if (option)
-						{
-							if (modifier == '\0')
-								tempiConf.ssl_protocols = option;
-							else if (modifier == '+')
-								tempiConf.ssl_protocols |= option;
-							else if (modifier == '-')
-								tempiConf.ssl_protocols &= ~option;
-						}
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "dh"))
-				{
-					convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
-				}
-				else if (!strcmp(cepp->ce_varname, "certificate"))
-				{
-					convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
-					safestrdup(tempiConf.x_server_cert_pem, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "key"))
-				{
-					convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
-					safestrdup(tempiConf.x_server_key_pem, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
-				{
-					convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
-					safestrdup(tempiConf.trusted_ca_file, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
-				{
-					tempiConf.ssl_renegotiate_bytes = config_checkval(cepp->ce_vardata, CFG_SIZE);
-				}
-				else if (!strcmp(cepp->ce_varname, "renegotiate-timeout"))
-				{
-					tempiConf.ssl_renegotiate_timeout = config_checkval(cepp->ce_vardata, CFG_TIME);
-				}
-				else if (!strcmp(cepp->ce_varname, "options"))
-				{
-					tempiConf.ssl_options = 0;
-					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
-					{
-						ofl = config_binary_flags_search(_SSLFlags, ceppp->ce_varname, ARRAY_SIZEOF(_SSLFlags));
-						if (ofl) /* this should always be true */
-							tempiConf.ssl_options |= ofl->flag;
-					}
-					if (tempiConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED)
-						if (!(tempiConf.ssl_options & SSLFLAG_VERIFYCERT))
-							tempiConf.ssl_options |= SSLFLAG_VERIFYCERT;
-				}
-
-			}
+			/* no need to alloc tempiConf.ssl_options since config_defaults() already ensures it exists */
+			conf_sslblock(conf, cep, tempiConf.ssl_options);
 		}
 		else if (!strcmp(cep->ce_varname, "default-ipv6-clone-mask"))
 		{
@@ -7209,9 +7473,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 	int		tempi;
 	int	    errors = 0;
 	Hook	*h;
-#define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
-#define CheckNullAllowEmpty(x) if ((!(x)->ce_vardata)) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
-#define CheckDuplicate(cep, name, display) if (settings.has_##name) { config_warn_duplicate((cep)->ce_fileptr->cf_filename, cep->ce_varlinenum, "set::" display); continue; } else settings.has_##name = 1
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -8025,114 +8286,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "renegotiate-timeout"))
-				{
-					CheckDuplicate(cep, renegotiate_timeout, "ssl::renegotiate-timeout");
-				}
-				else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
-				{
-					CheckDuplicate(cep, renegotiate_bytes, "ssl::renegotiate-bytes");
-				}
-				else if (!strcmp(cepp->ce_varname, "ciphers") || !strcmp(cepp->ce_varname, "server-cipher-list"))
-				{
-					CheckNull(cepp);
-					CheckDuplicate(cep, ssl_server_cipher_list, "ssl::ciphers");
-				}
-				else if (!strcmp(cepp->ce_varname, "protocols"))
-				{
-					char copy[512], *p, *name;
-					int v = 0;
-					int option;
-					char modifier;
-
-					CheckNull(cepp);
-					CheckDuplicate(cep, ssl_protocols, "ssl::protocols");
-					strlcpy(copy, cepp->ce_vardata, sizeof(copy));
-					tempiConf.ssl_protocols = 0;
-					for (name = strtoken(&p, copy, ","); name; name = strtoken(&p, NULL, ","))
-					{
-						modifier = '\0';
-						option = 0;
-
-						if ((*name == '+') || (*name == '-'))
-						{
-							modifier = *name;
-							name++;
-						}
-
-						if (!stricmp(name, "All"))
-							option = SSL_PROTOCOL_ALL;
-						else if (!stricmp(name, "TLSv1"))
-							option = SSL_PROTOCOL_TLSV1;
-						else if (!stricmp(name, "TLSv1.1"))
-							option = SSL_PROTOCOL_TLSV1_1;
-						else if (!stricmp(name, "TLSv1.2"))
-							option = SSL_PROTOCOL_TLSV1_2;
-						else if (!stricmp(name, "TLSv1.3"))
-							option = SSL_PROTOCOL_TLSV1_3;
-						else
-							config_warn("%s:%i: set::ssl::protocols: unknown protocol '%s'. "
-							             "Valid protocols are: TLSv1,TLSv1.1,TLSv1.2",
-							             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, name);
-
-						if (option)
-						{
-							if (modifier == '\0')
-								v = option;
-							else if (modifier == '+')
-								v |= option;
-							else if (modifier == '-')
-								v &= ~option;
-						}
-					}
-					if (v == 0)
-					{
-						config_error("%s:%i: set::ssl::protocols: no protocols enabled. Hint: set at least TLSv1.2",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "certificate"))
-				{
-					CheckNull(cepp);
-					CheckDuplicate(cep, ssl_certificate, "ssl::certificate");
-				}
-				else if (!strcmp(cepp->ce_varname, "dh"))
-				{
-					CheckNull(cepp);
-					CheckDuplicate(cep, ssl_dh, "ssl::dh");
-				}
-				else if (!strcmp(cepp->ce_varname, "key"))
-				{
-					CheckNull(cepp);
-					CheckDuplicate(cep, ssl_key, "ssl::key");
-				}
-				else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
-				{
-					CheckNull(cepp);
-					CheckDuplicate(cep, ssl_trusted_ca_file, "ssl::trusted-ca-file");
-				}
-				else if (!strcmp(cepp->ce_varname, "options"))
-				{
-					CheckDuplicate(cep, ssl_options, "ssl::options");
-					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
-						if (!config_binary_flags_search(_SSLFlags, ceppp->ce_varname, ARRAY_SIZEOF(_SSLFlags)))
-						{
-							config_error("%s:%i: unknown SSL flag '%s'",
-								     ceppp->ce_fileptr->cf_filename,
-								     ceppp->ce_varlinenum, ceppp->ce_varname);
-							errors ++;
-						}
-				}
-				else
-				{
-					config_error("%s:%i: unknown directive set::ssl::%s",
-						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
-						cepp->ce_varname);
-					errors++;
-				}
-			}
+			test_sslblock(conf, cep, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "default-ipv6-clone-mask"))
 		{
@@ -9312,6 +9466,13 @@ void link_cleanup(ConfigItem_link *link_ptr)
 	safefree(link_ptr->hub);
 	safefree(link_ptr->leaf);
 	safefree(link_ptr->ciphers);
+	if (link_ptr->ssl_ctx)
+	{
+		SSL_CTX_free(link_ptr->ssl_ctx);
+		link_ptr->ssl_ctx = NULL;
+	}
+	if (link_ptr->ssl_options)
+		free_ssl_options(link_ptr->ssl_options);
 }
 
 void delete_linkblock(ConfigItem_link *link_ptr)
@@ -9354,6 +9515,7 @@ void	listen_cleanup()
 		if (listen_ptr->flag.temporary && !listen_ptr->clients)
 		{
 			safefree(listen_ptr->ip);
+			free_ssl_options(listen_ptr->ssl_options);
 			DelListItem(listen_ptr, conf_listen);
 			MyFree(listen_ptr);
 			i++;

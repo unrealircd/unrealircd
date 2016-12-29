@@ -1126,6 +1126,8 @@ ConfigItem_offchans *x;
 	return 0;
 }
 
+#define SafePrint(x)   ((x) ? (x) : "")
+
 int stats_set(aClient *sptr, char *para)
 {
 	char *uhallow;
@@ -1217,15 +1219,15 @@ int stats_set(aClient *sptr, char *para)
 		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
 	sendto_one(sptr, ":%s %i %s :channel-command-prefix: %s", me.name, RPL_TEXT, sptr->name, CHANCMDPFX ? CHANCMDPFX : "`");
 	sendto_one(sptr, ":%s %i %s :ssl::certificate: %s", me.name, RPL_TEXT,
-		sptr->name, SSL_SERVER_CERT_PEM);
+		sptr->name, SafePrint(iConf.ssl_options->certificate_file));
 	sendto_one(sptr, ":%s %i %s :ssl::key: %s", me.name, RPL_TEXT,
-		sptr->name, SSL_SERVER_KEY_PEM);
-	sendto_one(sptr, ":%s %i %s :ssl::trusted-ca-file: %s", me.name, RPL_TEXT, sptr->name,
-	 iConf.trusted_ca_file ? iConf.trusted_ca_file : "<none>");
+		sptr->name, SafePrint(iConf.ssl_options->key_file));
+	sendto_one(sptr, ":%s %i %s :ssl::trusted-ca-file: %s", me.name, RPL_TEXT,
+		sptr->name, SafePrint(iConf.ssl_options->trusted_ca_file));
 	sendto_one(sptr, ":%s %i %s :ssl::options: %s %s %s", me.name, RPL_TEXT, sptr->name,
-		iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "",
-		iConf.ssl_options & SSLFLAG_VERIFYCERT ? "VERIFYCERT" : "",
-		iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED ? "DONOTACCEPTSELFSIGNED" : "");
+		iConf.ssl_options->options & SSLFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "",
+		iConf.ssl_options->options & SSLFLAG_VERIFYCERT ? "VERIFYCERT" : "",
+		iConf.ssl_options->options & SSLFLAG_DONOTACCEPTSELFSIGNED ? "DONOTACCEPTSELFSIGNED" : "");
 
 	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWOPERMOTD);

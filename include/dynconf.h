@@ -91,16 +91,7 @@ struct zConfiguration {
 	char *egd_path;
 	char *static_quit;
 	char *static_part;
-	char *x_server_cert_pem;
-	char *x_server_key_pem;
-	char *ssl_ciphers;
-	unsigned int ssl_protocols;
-	char *x_dh_pem;
-	char *trusted_ca_file;
-	long ssl_options;
-	int ssl_renegotiate_bytes;
-	int ssl_renegotiate_timeout;
-	
+	SSLOptions *ssl_options;
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
 	char *restrict_channelmodes;
@@ -149,6 +140,7 @@ struct zConfiguration {
 
 #ifndef DYNCONF_C
 extern MODVAR aConfiguration iConf;
+extern MODVAR aConfiguration tempiConf;
 extern MODVAR int ipv6_disabled;
 #endif
 
@@ -192,8 +184,6 @@ extern MODVAR int ipv6_disabled;
 #define SASL_SERVER			iConf.network.x_sasl_server
 #define iNAH				iConf.network.x_inah
 #define PREFIX_QUIT			iConf.network.x_prefix_quit
-#define SSL_SERVER_CERT_PEM		iConf.x_server_cert_pem
-#define SSL_SERVER_KEY_PEM		iConf.x_server_key_pem
 
 #define STATIC_QUIT			iConf.static_quit
 #define STATIC_PART			iConf.static_part
@@ -299,13 +289,6 @@ struct SetCheck {
 	unsigned has_egd_path:1;
 	unsigned has_static_quit:1;
 	unsigned has_static_part:1;
-	unsigned has_ssl_certificate:1;
-	unsigned has_ssl_key:1;
-	unsigned has_ssl_trusted_ca_file:1;
-	unsigned has_ssl_options:1;
-	unsigned has_ssl_dh:1;
-	unsigned has_renegotiate_timeout : 1;
-	unsigned has_renegotiate_bytes : 1;
 	unsigned has_allow_userhost_change:1;
 	unsigned has_restrict_usermodes:1;
 	unsigned has_restrict_channelmodes:1;

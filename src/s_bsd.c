@@ -467,6 +467,11 @@ void close_listener(ConfigItem_listen *listener)
 
 	listener->options &= ~LISTENER_BOUND;
 	listener->fd = -1;
+	if (listener->ssl_ctx)
+	{
+		SSL_CTX_free(listener->ssl_ctx);
+		listener->ssl_ctx = NULL;
+	}
 }
 
 void close_listeners(void)
@@ -1174,22 +1179,27 @@ add_con_refuse:
 
 	if ((cptr->options & LISTENER_SSL) && ctx_server)
 	{
-		SetSSLAcceptHandshake(acptr);
-		Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", acptr->local->sockhost));
-		if ((acptr->local->ssl = SSL_new(ctx_server)) == NULL)
+		SSL_CTX *ctx = cptr->ssl_ctx ? cptr->ssl_ctx : ctx_server;
+
+		if (ctx)
 		{
-			goto add_con_refuse;
+			SetSSLAcceptHandshake(acptr);
+			Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", acptr->local->sockhost));
+			if ((acptr->local->ssl = SSL_new(ctx)) == NULL)
+			{
+				goto add_con_refuse;
+			}
+			acptr->flags |= FLAGS_SSL;
+			SSL_set_fd(acptr->local->ssl, fd);
+			SSL_set_nonblocking(acptr->local->ssl);
+			if (!ircd_SSL_accept(acptr, fd)) {
+				Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", acptr->local->sockhost));
+				SSL_set_shutdown(acptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
+				SSL_smart_shutdown(acptr->local->ssl);
+						SSL_free(acptr->local->ssl);
+					goto add_con_refuse;
+			}
 		}
-		acptr->flags |= FLAGS_SSL;
-		SSL_set_fd(acptr->local->ssl, fd);
-		SSL_set_nonblocking(acptr->local->ssl);
-		if (!ircd_SSL_accept(acptr, fd)) {
-			Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", acptr->local->sockhost));
-			SSL_set_shutdown(acptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
-			SSL_smart_shutdown(acptr->local->ssl);
-  	                SSL_free(acptr->local->ssl);
-	  	        goto add_con_refuse;
-	  	}
 	}
 	else
 		start_of_normal_client_handshake(acptr);
