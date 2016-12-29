@@ -937,7 +937,7 @@ struct _configflag
 struct _configflag_except
 {
 	unsigned	temporary : 1;
-	unsigned	type	  : 2;
+	unsigned	type	  : 4;
 };
 
 struct _configflag_ban
@@ -985,6 +985,7 @@ struct _configflag_tld
 #define CONF_EXCEPT_BAN		1
 #define CONF_EXCEPT_TKL		2
 #define CONF_EXCEPT_THROTTLE	3
+#define CONF_EXCEPT_BLACKLIST	4
 
 
 struct _configitem {

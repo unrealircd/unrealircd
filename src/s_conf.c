@@ -5365,6 +5365,20 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 				create_tkl_except(mask->ce_vardata, cepp->ce_varname);
 		}
 	}
+	else if (!strcmp(ce->ce_vardata, "blacklist")) {
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!strcmp(cep->ce_varname, "mask")) {
+				ca = MyMallocEx(sizeof(ConfigItem_except));
+				ca->mask = strdup(cep->ce_vardata);
+				ca->flag.type = CONF_EXCEPT_BLACKLIST;
+				AddListItem(ca, conf_except);
+			}
+			else {
+			}
+		}
+
+	}
 	else {
 		int value;
 		for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
@@ -5569,6 +5583,34 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			config_error("%s:%i: except tkl without type item",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			return 1;
+		}
+		return errors;
+	}
+	else if (!strcmp(ce->ce_vardata, "blacklist")) {
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (config_is_blankorempty(cep, "except blacklist"))
+			{
+				errors++;
+				continue;
+			}
+			if (!strcmp(cep->ce_varname, "mask"))
+			{
+				has_mask = 1;
+			}
+			else
+			{
+				config_error_unknown(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "except blacklist", cep->ce_varname);
+				errors++;
+				continue;
+			}
+		}
+		if (!has_mask)
+		{
+			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				"except blacklist::mask");
+			errors++;
 		}
 		return errors;
 	}
