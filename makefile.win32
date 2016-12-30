@@ -209,6 +209,12 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/WEBSOCKET.DLL \
  SRC/MODULES/BLACKLIST.DLL \
  SRC/MODULES/JOINTHROTTLE.DLL \
+ SRC/MODULES/ANTIRANDOM.DLL \
+ SRC/MODULES/HIDESERVER.DLL \
+ SRC/MODULES/JUMPSERVER.DLL \
+ SRC/MODULES/M_IRCOPS.DLL \
+ SRC/MODULES/M_STAFF.DLL \
+ SRC/MODULES/NOCODES.DLL \
  SRC/MODULES/CHANMODES/CENSOR.DLL \
  SRC/MODULES/CHANMODES/DELAYJOIN.DLL \
  SRC/MODULES/CHANMODES/FLOODPROT.DLL \
@@ -235,6 +241,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/USERMODES/PRIVACY.DLL \
  SRC/MODULES/USERMODES/NOKICK.DLL \
  SRC/MODULES/USERMODES/REGONLYMSG.DLL \
+ SRC/MODULES/USERMODES/PRIVDEAF.DLL \
  SRC/MODULES/SNOMASKS/DCCREJECT.DLL \
  SRC/MODULES/EXTBANS/ACCOUNT.DLL \
  SRC/MODULES/EXTBANS/INCHANNEL.DLL \
@@ -244,7 +251,8 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/EXTBANS/REALNAME.DLL \
  SRC/MODULES/EXTBANS/REGNICK.DLL \
  SRC/MODULES/EXTBANS/OPERCLASS.DLL \
- SRC/MODULES/EXTBANS/CERTFP.DLL
+ SRC/MODULES/EXTBANS/CERTFP.DLL \
+ SRC/MODULES/EXTBANS/TEXTBAN.DLL
 
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
 
@@ -808,6 +816,24 @@ src/modules/m_sasl.dll: src/modules/m_sasl.c $(INCLUDES)
 src/modules/ssl_antidos.dll: src/modules/ssl_antidos.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/ssl_antidos.c $(MODLFLAGS)
 
+src/modules/antirandom.dll: src/modules/antirandom.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/antirandom.c $(MODLFLAGS)
+
+src/modules/hideserver.dll: src/modules/hideserver.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/hideserver.c $(MODLFLAGS)
+
+src/modules/jumpserver.dll: src/modules/jumpserver.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/jumpserver.c $(MODLFLAGS)
+
+src/modules/m_ircops.dll: src/modules/m_ircops.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/m_ircops.c $(MODLFLAGS)
+
+src/modules/m_staff.dll: src/modules/m_staff.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/m_staff.c $(MODLFLAGS)
+
+src/modules/nocodes.dll: src/modules/nocodes.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/nocodes.c $(MODLFLAGS)
+
 src/modules/chanmodes/censor.dll: src/modules/chanmodes/censor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/censor.c $(MODLFLAGS)
 
@@ -886,6 +912,9 @@ src/modules/usermodes/nokick.dll: src/modules/usermodes/nokick.c $(INCLUDES)
 src/modules/usermodes/regonlymsg.dll: src/modules/usermodes/regonlymsg.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/regonlymsg.c $(MODLFLAGS)
 
+src/modules/usermodes/privdeaf.dll: src/modules/usermodes/privdeaf.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/privdeaf.c $(MODLFLAGS)
+
 src/modules/snomasks/dccreject.dll: src/modules/snomasks/dccreject.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/snomasks/ /Fesrc/modules/snomasks/ src/modules/snomasks/dccreject.c $(MODLFLAGS)
 
@@ -915,5 +944,8 @@ src/modules/extbans/operclass.dll: src/modules/extbans/operclass.c $(INCLUDES)
 
 src/modules/extbans/certfp.dll: src/modules/extbans/certfp.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/certfp.c $(MODLFLAGS)
+
+src/modules/extbans/textban.dll: src/modules/extbans/textban.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/textban.c $(MODLFLAGS)
 
 dummy:

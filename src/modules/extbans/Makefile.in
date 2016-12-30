@@ -33,7 +33,7 @@ INCLUDES = ../../include/auth.h ../../include/channel.h \
 
 R_MODULES= \
 	join.so quiet.so nickchange.so inchannel.so realname.so regnick.so \
-	account.so operclass.so certfp.so
+	account.so operclass.so certfp.so textban.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -89,3 +89,7 @@ operclass.so: operclass.c $(INCLUDES)
 certfp.so: certfp.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o certfp.so certfp.c
+
+textban.so: textban.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o textban.so textban.c

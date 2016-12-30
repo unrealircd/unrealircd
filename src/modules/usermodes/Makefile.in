@@ -33,7 +33,7 @@ INCLUDES = ../../include/auth.h ../../include/badwords.h ../../include/channel.h
 
 R_MODULES=\
 	noctcp.so censor.so bot.so showwhois.so nokick.so servicebot.so \
-	privacy.so regonlymsg.so
+	privacy.so regonlymsg.so privdeaf.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -81,3 +81,7 @@ privacy.so: privacy.c $(INCLUDES)
 regonlymsg.so: regonlymsg.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o regonlymsg.so regonlymsg.c
+
+privdeaf.so: privdeaf.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o privdeaf.so privdeaf.c

@@ -59,7 +59,9 @@ R_MODULES= \
 	 m_svslusers.so m_starttls.so m_nopost.so m_cap.so \
 	 m_sasl.so m_md.so certfp.so \
 	 ssl_antidos.so webirc.so websocket.so \
-	 blacklist.so jointhrottle.so
+	 blacklist.so jointhrottle.so \
+	 antirandom.so hideserver.so jumpserver.so \
+	 m_ircops.so m_staff.so nocodes.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -481,6 +483,30 @@ blacklist.so: blacklist.c $(INCLUDES)
 jointhrottle.so: jointhrottle.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o jointhrottle.so jointhrottle.c
+
+antirandom.so: antirandom.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o antirandom.so antirandom.c
+
+hideserver.so: hideserver.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o hideserver.so hideserver.c
+
+jumpserver.so: jumpserver.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o jumpserver.so jumpserver.c
+
+m_ircops.so: m_ircops.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_ircops.so m_ircops.c
+
+m_staff.so: m_staff.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_staff.so m_staff.c
+
+nocodes.so: nocodes.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o nocodes.so nocodes.c
 
 #############################################################################
 # capabilities
