@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <curl/curl.h>
+#include "url.h"
 
 extern char *SSLKeyPasswd;
 
