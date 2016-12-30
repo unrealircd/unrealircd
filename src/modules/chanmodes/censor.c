@@ -538,11 +538,14 @@ int blocked;
 
 char *censor_pre_local_part(aClient *sptr, aChannel *chptr, char *text)
 {
-int blocked;
+	int blocked;
+
+	if (!text)
+		return NULL;
 
 	if (!IsCensored(chptr))
 		return text;
-	
+
 	text = stripbadwords_channel(text, &blocked);
 	return blocked ? NULL : text;
 }
@@ -550,7 +553,7 @@ int blocked;
 /** Is any channel where the user is in +G? */
 static int IsAnyChannelCensored(aClient *sptr)
 {
-Membership *lp;
+	Membership *lp;
 
 	for (lp = sptr->user->channel; lp; lp = lp->next)
 		if (IsCensored(lp->chptr))
@@ -560,10 +563,14 @@ Membership *lp;
 
 char *censor_pre_local_quit(aClient *sptr, char *text)
 {
-int blocked = 0;
+	int blocked = 0;
+
+	if (!text)
+		return NULL;
 
 	if (IsAnyChannelCensored(sptr))
 		text = stripbadwords_channel(text, &blocked);
+
 	return blocked ? NULL : text;
 }
 

@@ -70,18 +70,19 @@ MOD_UNLOAD(regonlyspeak)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC char * regonlyspeak_part_message (aClient* sptr, aChannel *chptr, char* comment)
+DLLFUNC char *regonlyspeak_part_message (aClient *sptr, aChannel *chptr, char *comment)
 {
+	if (!comment)
+		return NULL;
 
 	if (IsRegOnlySpeak(chptr) && !IsLoggedIn(sptr) && !ValidatePermissionsForPath("immune:regonly",sptr,NULL,NULL,NULL))
-				return NULL;
+		return NULL;
 
 	return comment;
 }
 
-DLLFUNC int regonlyspeak_can_send (aClient* cptr, aChannel *chptr, char* message, Membership* lp, int notice)
+DLLFUNC int regonlyspeak_can_send (aClient *cptr, aChannel *chptr, char *message, Membership *lp, int notice)
 {
-
 	if (IsRegOnlySpeak(chptr) && !op_can_override("override:message:regonlyspeak",cptr,chptr,NULL) && !IsLoggedIn(cptr) &&
 		    (!lp
 		    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |

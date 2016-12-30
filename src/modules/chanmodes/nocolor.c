@@ -102,16 +102,19 @@ DLLFUNC char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int
 
 DLLFUNC char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)
 {
-        if (MyClient(sptr) && IsNoColor(chptr) && IsUsingColor(comment))
-                return NULL;
+	if (!comment)
+		return NULL;
 
-        return comment;
+	if (MyClient(sptr) && IsNoColor(chptr) && IsUsingColor(comment))
+		return NULL;
+
+	return comment;
 }
 
 /** Is any channel where the user is in +c? */
 static int IsAnyChannelNoColor(aClient *sptr)
 {
-Membership *lp;
+	Membership *lp;
 
 	for (lp = sptr->user->channel; lp; lp = lp->next)
 		if (IsNoColor(lp->chptr))
@@ -121,8 +124,11 @@ Membership *lp;
 
 DLLFUNC char *nocolor_prelocalquit(aClient *sptr, char *comment)
 {
-        if (MyClient(sptr) && !BadPtr(comment) && IsUsingColor(comment) && IsAnyChannelNoColor(sptr))
-                return NULL;
+	if (!comment)
+		return NULL;
 
-        return comment;
+	if (MyClient(sptr) && !BadPtr(comment) && IsUsingColor(comment) && IsAnyChannelNoColor(sptr))
+		return NULL;
+
+	return comment;
 }

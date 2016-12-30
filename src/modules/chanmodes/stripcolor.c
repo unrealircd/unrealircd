@@ -82,6 +82,9 @@ DLLFUNC char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, 
 
 DLLFUNC char *stripcolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)
 {
+	if (!comment)
+		return NULL;
+
 	if (MyClient(sptr) && IsStripColor(chptr))
 		comment = StripColors(comment);
 
@@ -91,7 +94,7 @@ DLLFUNC char *stripcolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comm
 /** Is any channel where the user is in +S? */
 static int IsAnyChannelStripColor(aClient *sptr)
 {
-Membership *lp;
+	Membership *lp;
 
 	for (lp = sptr->user->channel; lp; lp = lp->next)
 		if (IsStripColor(lp->chptr))
@@ -102,6 +105,9 @@ Membership *lp;
 
 DLLFUNC char *stripcolor_prelocalquit(aClient *sptr, char *comment)
 {
+	if (!comment)
+		return NULL;
+
 	if (MyClient(sptr) && !BadPtr(comment) && IsAnyChannelStripColor(sptr))
 		comment = StripColors(comment);
         
