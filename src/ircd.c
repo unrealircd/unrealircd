@@ -31,6 +31,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <string.h>
 #ifndef _WIN32
 #include <sys/file.h>
 #include <pwd.h>

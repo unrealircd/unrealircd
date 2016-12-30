@@ -18,10 +18,7 @@
  */
 
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "h.h"
+#include "unrealircd.h"
 
 ID_Copyright("(C) 1990 Jarkko Oikarinen");
 

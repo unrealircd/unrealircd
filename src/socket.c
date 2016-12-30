@@ -23,6 +23,7 @@
 #include "sys.h"
 #include "h.h"
 #include <signal.h>
+#include <string.h>
 #include "inet.h"
 #ifndef _WIN32
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
