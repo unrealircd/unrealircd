@@ -142,7 +142,7 @@ int hlength = strlen (haystack);
  * buf is used for the result and max is sizeof(buf).
  * (Internal assumptions: size of 'buf' is 512 characters or more)
  */
-inline int textban_replace(int type, char *badword, char *line, char *buf)
+int textban_replace(int type, char *badword, char *line, char *buf)
 {
 char *replacew;
 char *pold = line, *pnew = buf; /* Pointers to old string and new string */
