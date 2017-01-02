@@ -583,6 +583,22 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 			(void)send(fd, buf, strlen(buf), 0);
 			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, acptr);
 		}
+		if ((n >= 4) && (!strncmp(buf, "USER", 4) || !strncmp(buf, "NICK", 4) || !strncmp(buf, "PASS", 4)))
+		{
+			char buf[512];
+			snprintf(buf, sizeof(buf),
+				"ERROR :NON-SSL command received on SSL-only port. Check your connection settings.\r\n");
+			(void)send(fd, buf, strlen(buf), 0);
+			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, acptr);
+		}
+		if ((n >= 8) && (!strncmp(buf, "PROTOCTL", 8) || !strncmp(buf, "SERVER", 6)))
+		{
+			char buf[512];
+			snprintf(buf, sizeof(buf),
+				"ERROR :NON-SSL command received on SSL-only port. Check your connection settings.\r\n");
+			(void)send(fd, buf, strlen(buf), 0);
+			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, acptr);
+		}
 		if (n > 0)
 			acptr->flags |= FLAGS_NCALL;
 	}
