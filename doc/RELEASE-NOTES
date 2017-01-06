@@ -49,6 +49,7 @@ Major issues fixed:
 * Crash if you had an invalid crypt password in your unrealircd.conf
 * Crash if you did not load the chanmodes/nocolor module or changed
   the order in which modules were loaded
+* Incorrect bans being added during server linking
 
 Minor issues fixed:
 * WHO now supports multi-prefix
