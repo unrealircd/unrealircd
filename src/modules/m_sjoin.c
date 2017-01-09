@@ -138,7 +138,7 @@ CMD_FUNC(m_sjoin)
 	char *s = NULL;
 	aChannel *chptr; /**< Channel */
 	aParv *ap;
-	int pcount, i, invisible;
+	int pcount, i;
 	Hook *h;
 	time_t ts, oldts;
 	unsigned short b=0, c;
@@ -475,37 +475,18 @@ getnick:
 				modeflags = 0;
 			}
 
-			/* Run hooks to decide if we should show this JOIN to all users in
-			 * the channel (invisible=0) or only to chanops (invisible=1).
-			 */
-			invisible = 0;
-			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
-			{
-				invisible = (*(h->func.intfunc))(sptr,chptr);
-				if (invisible != 0)
-					break;
-			}
-
 			if (!IsMember(acptr, chptr))
 			{
 				add_user_to_channel(chptr, acptr, modeflags);
 				RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, acptr, chptr, NULL);
-				if (invisible == 0)
+				if (invisible_user_in_channel(acptr, chptr))
 				{
-					sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", acptr->name, chptr->chname);
+					/* Show JOIN to chanops only */
+					sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
+						acptr->name, acptr->user->username, GetHost(acptr), chptr->chname);
 				} else
 				{
-					/* A module requested to make the join invisible. Only do this if the
-					 * joining user is non-vhoaq. Also, the join is always visible to chanops.
-					 */
-					if (modeflags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_VOICE))
-					{
-						sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", acptr->name, chptr->chname);
-					} else
-					{
-						sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
-							acptr->name, acptr->user->username, GetHost(acptr), chptr->chname);
-					}
+					sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", acptr->name, chptr->chname);
 				}
 			}
 
