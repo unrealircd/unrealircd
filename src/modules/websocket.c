@@ -8,7 +8,7 @@
 #include "unrealircd.h"
 #include <limits.h>
 
-#define WEBSOCKET_VERSION "0.9.0"
+#define WEBSOCKET_VERSION "0.9.1"
 
 ModuleHeader MOD_HEADER(websocket)
   = {
