@@ -175,7 +175,7 @@ int websocket_handle_websocket(aClient *sptr, char *readbuf2, int length2)
  */
 int websocket_packet_in(aClient *sptr, char *readbuf, int *length)
 {
-	if ((sptr->local->receiveM == 0) && (*length > 8) && !strncmp(readbuf, "GET ", 4))
+	if ((sptr->local->receiveM == 0) && !WSU(sptr) && (*length > 8) && !strncmp(readbuf, "GET ", 4))
 	{
 		/* Allocate a new WebSocketUser struct for this session */
 		moddata_client(sptr, websocket_md).ptr = MyMallocEx(sizeof(WebSocketUser));
@@ -226,6 +226,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 		*end_of_request = 1;
 		return 0;
 	}
+
 	/* Note: p *could* point to the NUL byte ('\0') */
 	
 	/* Special handling for GET line itself. */
@@ -235,7 +236,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 		p += 4;
 		v = p; /* SET VALUE */
 		nextptr = NULL; /* set to "we are done" in case next for loop fails */
-		for (; *p; *p++)
+		for (; *p; p++)
 		{
 			if (*p == ' ')
 			{
@@ -299,7 +300,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 			
 			v = p; /* SET VALUE */
 			nextptr = NULL; /* set to "we are done" in case next for loop fails */
-			for (; *p; *p++)
+			for (; *p; p++)
 			{
 				if (*p == '\r')
 				{
@@ -337,6 +338,7 @@ int websocket_handle_handshake(aClient *sptr, char *readbuf, int *length)
 	if (WSU(sptr)->lefttoparse)
 	{
 		int n, maxcopy, nprefix;
+
 		strlcpy(netbuf, WSU(sptr)->lefttoparse, sizeof(netbuf));
 		/* Need to some manual checking here as strlen() can't be safely used
 		 * on readbuf. Same is true for strlncat since it uses strlen().
@@ -346,8 +348,11 @@ int websocket_handle_handshake(aClient *sptr, char *readbuf, int *length)
 		n = *length;
 		if (n > maxcopy)
 			n = maxcopy;
-		memcpy(netbuf+nprefix, readbuf, n); /* SAFE: see checking above */
-		netbuf[n+nprefix] = '\0';
+		if (n > 0)
+		{
+			memcpy(netbuf+nprefix, readbuf, n); /* SAFE: see checking above */
+			netbuf[n+nprefix] = '\0';
+		}
 		
 		safefree(WSU(sptr)->lefttoparse);
  	} else {
@@ -468,12 +473,14 @@ int websocket_handle_packet(aClient *sptr, char *readbuf, int length)
 
 	total_packet_size = len + 2 + 4; /* 2 for header, 4 for mask key, rest for payload */
 
-	if (length < len + 2 + 4)
+	/* Early (minimal) length check */
+	if (length < total_packet_size)
 	{
 		/* WebSocket frame too short */
 		return 0;
 	}
 
+	/* Len=126 is special. It indicates the data length is actually "126 or more" */
 	if (len == 126)
 	{
 		/* Extended payload length (16 bit). For packets of >=126 bytes */
@@ -558,7 +565,7 @@ int websocket_create_frame(int opcode, char **buf, int *len)
 {
 	static char sendbuf[8192];
 	
-	sendbuf[0] = opcode | 0x80; /* text & final */
+	sendbuf[0] = opcode | 0x80; /* opcode & final */
 	
 	if (*len > sizeof(sendbuf) - 8)
 		abort(); /* should never happen (safety) */
