@@ -8,7 +8,7 @@
 #include "unrealircd.h"
 #include <limits.h>
 
-#define WEBSOCKET_VERSION "0.9.1"
+#define WEBSOCKET_VERSION "0.9.2"
 
 ModuleHeader MOD_HEADER(websocket)
   = {
@@ -332,33 +332,34 @@ int websocket_handle_handshake(aClient *sptr, char *readbuf, int *length)
 {
 	char *key, *value;
 	int r, end_of_request;
-	char netbuf[1024]; /* 2*512 */
+	char netbuf[2048];
 	char *lastloc = NULL;
+	int n, maxcopy, nprefix=0;
 
+	/** Frame re-assembling starts here **/
+	*netbuf = '\0';
 	if (WSU(sptr)->lefttoparse)
 	{
-		int n, maxcopy, nprefix;
-
 		strlcpy(netbuf, WSU(sptr)->lefttoparse, sizeof(netbuf));
-		/* Need to some manual checking here as strlen() can't be safely used
-		 * on readbuf. Same is true for strlncat since it uses strlen().
-		 */
 		nprefix = strlen(netbuf);
-		maxcopy = sizeof(netbuf) - nprefix - 1;
-		n = *length;
-		if (n > maxcopy)
-			n = maxcopy;
-		if (n > 0)
-		{
-			memcpy(netbuf+nprefix, readbuf, n); /* SAFE: see checking above */
-			netbuf[n+nprefix] = '\0';
-		}
-		
-		safefree(WSU(sptr)->lefttoparse);
- 	} else {
-		strlcpy(netbuf, readbuf, sizeof(netbuf));
 	}
+	maxcopy = sizeof(netbuf) - nprefix - 1;
+	/* (Need to some manual checking here as strlen() can't be safely used
+	 *  on readbuf. Same is true for strlncat since it uses strlen().)
+	 */
+	n = *length;
+	if (n > maxcopy)
+		n = maxcopy;
+	if (n <= 0)
+	{
+		dead_link(sptr, "Oversized line");
+		return -1;
+	}
+	memcpy(netbuf+nprefix, readbuf, n); /* SAFE: see checking above */
+	netbuf[n+nprefix] = '\0';
+	safefree(WSU(sptr)->lefttoparse);
 
+	/** Now step through the lines.. **/
 	for (r = websocket_handshake_helper(netbuf, strlen(netbuf), &key, &value, &lastloc, &end_of_request);
 	     r;
 	     r = websocket_handshake_helper(NULL, 0, &key, &value, &lastloc, &end_of_request))
