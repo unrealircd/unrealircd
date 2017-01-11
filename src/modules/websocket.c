@@ -8,7 +8,7 @@
 #include "unrealircd.h"
 #include <limits.h>
 
-#define WEBSOCKET_VERSION "0.9.2"
+#define WEBSOCKET_VERSION "0.9.3"
 
 ModuleHeader MOD_HEADER(websocket)
   = {
@@ -533,11 +533,13 @@ int websocket_handle_packet(aClient *sptr, char *readbuf, int length)
 			return -1;
 		
 		case WSOP_PING:
-			websocket_handle_packet_ping(sptr, payload, len);
+			if (websocket_handle_packet_ping(sptr, payload, len) < 0)
+				return -1;
 			return total_packet_size;
 		
 		case WSOP_PONG:
-			websocket_handle_packet_pong(sptr, payload, len);
+			if (websocket_handle_packet_pong(sptr, payload, len) < 0)
+				return -1;
 			return total_packet_size;
 		
 		default:
@@ -550,15 +552,20 @@ int websocket_handle_packet(aClient *sptr, char *readbuf, int length)
 
 int websocket_handle_packet_ping(aClient *sptr, char *buf, int len)
 {
-	/* This is UNTESTED */
+	if (len > 500)
+	{
+		dead_link(sptr, "WebSocket: oversized PING request");
+		return -1;
+	}
 	websocket_send_frame(sptr, WSOP_PONG, buf, len);
-	return -1;
+	sptr->local->since++; /* lag penalty of 1 second */
+	return 0;
 }
 
 int websocket_handle_packet_pong(aClient *sptr, char *buf, int len)
 {
 	/* We don't care */
-	return -1;
+	return 0;
 }
 
 /** Create a frame. Used for OUTGOING data. */
