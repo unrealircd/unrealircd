@@ -1349,6 +1349,13 @@ void read_packet(int fd, int revents, void *data)
 	Hook *h;
 	int processdata;
 
+	/* Don't read from dead sockets */
+	if (IsDead(cptr))
+	{
+		fd_setselect(fd, FD_SELECT_READ, NULL, cptr);
+		return 0;
+	}
+
 	SET_ERRNO(0);
 
 	fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);

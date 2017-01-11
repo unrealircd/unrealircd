@@ -369,6 +369,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		{
 			sendto_one(cptr, rpl_str(ERR_NOTFORUSERS), me.name,
 					from->name, cmptr->cmd);
+			parse_addlag(cptr, bytes);
 			return -1;
 		}
 
@@ -382,6 +383,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		{
 			sendto_one(cptr, rpl_str(ERR_NOPRIVILEGES), 
 					me.name, from->name);
+			parse_addlag(cptr, bytes);
 			return -1;
 		}
 		paramcount = cmptr->parameters;
