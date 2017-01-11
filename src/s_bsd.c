@@ -1353,7 +1353,7 @@ void read_packet(int fd, int revents, void *data)
 	if (IsDead(cptr))
 	{
 		fd_setselect(fd, FD_SELECT_READ, NULL, cptr);
-		return 0;
+		return;
 	}
 
 	SET_ERRNO(0);
