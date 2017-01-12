@@ -84,7 +84,7 @@ CMD_FUNC(m_globops)
 		/* Backward-compatible (3.2.x) */
 		sendto_umode(UMODE_OPER, "from %s: %s", sptr->name, message);
 		sendto_server(cptr, 0, 0, ":%s SENDUMODE o :from %s: %s",
-		    sptr->name, sptr->name, message);
+		    me.name, sptr->name, message);
 	}
 
 	return 0;
