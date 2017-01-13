@@ -1,13 +1,15 @@
-UnrealIRCd 4.0.10-rc2 Release Notes
-====================================
+UnrealIRCd 4.0.10 Release Notes
+================================
 
 ==[ CHANGES BETWEEN 4.0.9 AND 4.0.10 ]==
 Improvements:
 * Added "websocket" module. This provides support for WebSocket (RFC6455),
   allowing JavaScript (internet browsers) to connect directly to IRC
-  without the need of a 'gateway'. This module is experimental and not
+  without the need of a "gateway". This module is experimental and not
   loaded by default. See https://www.unrealircd.org/docs/WebSocket_support
-  for more information. This module was sponsored by Aberrant Software Inc.
+  for more information on the module. For a very crude client example check
+  https://www.unrealircd.org/files/dev/ws/websocket_unrealircd.html
+  This module was sponsored by Aberrant Software Inc.
 
 * UnrealIRCd already has the ability to configure SSL settings via the
   set::ssl block. Now you can also override these settings for a link block
@@ -45,17 +47,18 @@ Improvements:
   * nocodes - Makes chanmode +S/+c also strip/block bold and underline
 
 Major issues fixed:
+* Incorrect bans being added during server linking
 * Compile fixes for Ubuntu 16 LTS / gcc 5.4.x
 * Crash if you had an invalid crypt password in your unrealircd.conf
 * Crash if you did not load the chanmodes/nocolor module or changed
   the order in which modules were loaded
-* Incorrect bans being added during server linking
 
 Minor issues fixed:
-* WHO now supports multi-prefix
-* Delayjoin (channel mode +D) sending QUITs for hidden users & more
-* Date in Windows log file for the first few messages was always 1970.
+* Delayjoin (channel mode +D) sending QUITs for hidden users, double JOIN, ..
 * You no longer need to place 'class' blocks before 'allow' blocks
+* Some error messages were not throttled
+* WHO now supports multi-prefix
+* Date in Windows log file for the first few messages was always 1970.
 
 For services and module coders:
 * Services coders: "SVSMODE Nick +d" will now mark a client as deaf.
@@ -118,18 +121,14 @@ Contact your developer for a new version or ask on our Modules forum where
 someone may be kind enough to convert the module for you if you ask nicely:
 https://forums.unrealircd.org/viewforum.php?f=52
 
-==[ RUNNING A MIXED 3.2.X / 4.X NETWORK ]==
-You can run a mixed 3.2.x <-> 4.x network if you a follow a few simple rules:
-https://www.unrealircd.org/docs/Running_a_mixed_UnrealIRCd_3.2_and_UnrealIRCd_4_network
-
 ==[ END OF THE 3.2.X SERIES ]==
-With the release of UnrealIRCd 4 we are deprecating the previous series.
-All support for the 3.2.x series will stop after December 31, 2016.
+UnrealIRCd 3.2.x is no longer supported after December 31, 2016.
 See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated
 
 ==[ SUPPORT ]==
-Before you seek support, please check our Frequently Asked Questions:
-https://www.unrealircd.org/docs/FAQ
+Before you seek support, please check our documentation and FAQ:
+* https://www.unrealircd.org/docs/Main_Page
+* https://www.unrealircd.org/docs/FAQ
 
 For support you have two choices:
 * Forums: https://forums.unrealircd.org/
