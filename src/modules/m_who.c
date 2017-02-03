@@ -113,10 +113,13 @@ struct {
 /** The /who command: retrieves information from users. */
 CMD_FUNC(m_who)
 {
-aChannel *target_channel;
-char *mask = parv[1];
-char star[] = "*";
-int i = 0;
+	aChannel *target_channel;
+	char *mask = parv[1];
+	char star[] = "*";
+	int i = 0;
+
+	if (!MyClient(sptr))
+		return 0;
 
 	who_flags = 0;
 	memset(&wfl, 0, sizeof(wfl));
