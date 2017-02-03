@@ -282,7 +282,10 @@ long flags = 0; /* cache: membership flags */
 #ifndef TOPIC_NICK_IS_NUHOST
 			nicKlen = strlen(sptr->name);
 #else
-			tnick = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
+			if (IsPerson(sptr))
+				tnick = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
+			else
+				tnick = sptr->name;
 			nicKlen = strlen(tnick);
 #endif
 			if (chptr->topic)
