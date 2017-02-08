@@ -258,6 +258,8 @@ int charsys_postconftest(void);
 void charsys_finish(void);
 int reloadable_perm_module_unloaded(void);
 
+int ssl_tests(void);
+
 /* Conf sub-sub-functions */
 void test_sslblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors);
 void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions);
@@ -312,6 +314,7 @@ MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
 
 MODVAR int need_34_upgrade = 0;
+int have_ssl_listeners = 0;
 
 void add_include(const char *filename, const char *included_from, int included_from_line);
 #ifdef USE_LIBCURL
@@ -1606,6 +1609,24 @@ void upgrade_conf_to_34(void)
 	/* TODO: win32 may require a different error */
 }
 
+/** Reset config tests (before running the config test) */
+void config_test_reset(void)
+{
+	charsys_reset_pretest();
+}
+
+/** Run config test and all post config tests. */
+int config_test_all(void)
+{
+	if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
+	    (charsys_postconftest() < 0) || ssl_used_in_config_but_unavail() ||
+	    reloadable_perm_module_unloaded() || !ssl_tests())
+	{
+		return 0;
+	}
+	return 1;
+}
+
 int	init_conf(char *rootconf, int rehash)
 {
 	char *old_pid_file = NULL;
@@ -1631,9 +1652,8 @@ int	init_conf(char *rootconf, int rehash)
 	add_include(rootconf, "[thin air]", -1);
 	if (load_conf(rootconf, rootconf) > 0)
 	{
-		charsys_reset_pretest();
-		if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
-		    (charsys_postconftest() < 0) || ssl_used_in_config_but_unavail() || reloadable_perm_module_unloaded())
+		config_test_reset();
+		if (!config_test_all())
 		{
 			config_error("IRCd configuration failed to pass testing");
 #ifdef _WIN32
@@ -4717,6 +4737,8 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 					continue;
 				}
+				if (!strcmp(cepp->ce_varname, "ssl"))
+					have_ssl_listeners = 1; /* for ssl config test */
 			}
 		}
 		else
@@ -9886,6 +9908,17 @@ int ssl_used_in_config_but_unavail(void)
 		}
 
 	return (errors ? 1 : 0);
+}
+
+int ssl_tests(void)
+{
+	if (have_ssl_listeners == 0)
+	{
+		config_warn("Your server is not listening on any SSL ports. It is recommended to listen on port 6697.");
+		config_warn("Consider adding this to your unrealircd.conf: listen { ip *; port 6697; options { ssl; }; };");
+	}
+
+	return 1; /* always return success for now */
 }
 
 /** Check if the user attempts to unload (eg: by commenting out) a module
