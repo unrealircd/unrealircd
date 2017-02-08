@@ -315,6 +315,7 @@ int			config_verbose = 0;
 
 MODVAR int need_34_upgrade = 0;
 int have_ssl_listeners = 0;
+char *port_6667_ip = NULL;
 
 void add_include(const char *filename, const char *included_from, int included_from_line);
 #ifdef USE_LIBCURL
@@ -4691,7 +4692,8 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	int errors = 0;
-	char has_ip = 0, has_port = 0, has_options = 0;
+	char has_ip = 0, has_port = 0, has_options = 0, port_6667 = 0;
+	char *ip = NULL;
 
 	if (ce->ce_vardata)
 	{
@@ -4764,6 +4766,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
 				return 1;
 			}
+			ip = cep->ce_vardata;
 		} else
 		if (!strcmp(cep->ce_varname, "host"))
 		{
@@ -4810,6 +4813,9 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 					return 1;
 				}
 			}
+
+			if ((6667 >= start) && (6667 <= end))
+				port_6667 = 1;
 		} else
 		{
 			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
@@ -4832,6 +4838,9 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
+
+	if (port_6667)
+		safestrdup(port_6667_ip, ip);
 
 	requiredstuff.conf_listen = 1;
 	return errors;
@@ -9914,8 +9923,9 @@ int ssl_tests(void)
 {
 	if (have_ssl_listeners == 0)
 	{
-		config_warn("Your server is not listening on any SSL ports. It is recommended to listen on port 6697.");
-		config_warn("Consider adding this to your unrealircd.conf: listen { ip *; port 6697; options { ssl; }; };");
+		config_warn("Your server is not listening on any SSL ports.");
+		config_warn("Add this to your unrealircd.conf: listen { ip %s; port 6697; options { ssl; }; };",
+		            port_6667_ip ? port_6667_ip : "*");
 	}
 
 	return 1; /* always return success for now */
