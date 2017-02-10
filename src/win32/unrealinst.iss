@@ -21,6 +21,8 @@ SolidCompression=true
 MinVersion=5.0
 OutputDir=.
 SourceDir=../../
+UninstallDisplayIcon={app}\UnrealIRCd.exe
+DisableWelcomePage=no
 
 ; !!! Make sure to update SSL validation (WizardForm.TasksList.Checked[9]) if tasks are added/removed !!!
 [Tasks]
