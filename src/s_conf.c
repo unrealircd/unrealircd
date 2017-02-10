@@ -9927,6 +9927,7 @@ int ssl_tests(void)
 		config_warn("Your server is not listening on any SSL ports.");
 		config_warn("Add this to your unrealircd.conf: listen { ip %s; port 6697; options { ssl; }; };",
 		            port_6667_ip ? port_6667_ip : "*");
+		config_warn("See https://www.unrealircd.org/docs/FAQ#Your_server_is_not_listening_on_any_SSL_ports");
 	}
 
 	return 1; /* always return success for now */
