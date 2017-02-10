@@ -183,5 +183,5 @@ int secureonly_specialcheck(aClient *sptr, aChannel *chptr, char *parv[])
 		sendto_one(sptr, err_str(ERR_SECUREONLYCHAN), me.name, sptr->name, chptr->chname);
 		return HOOK_DENY;
 	}
-	return HOOK_ALLOW;
+	return HOOK_CONTINUE;
 }
