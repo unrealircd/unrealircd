@@ -37,6 +37,7 @@ void secureonly_channel_sync (aChannel* chptr, unsigned short merge, unsigned sh
 int secureonly_check_send (aClient *acptr, aChannel* chptr);
 int secureonly_check_secure (aChannel* chptr);
 int secureonly_check_sajoin (aClient *acptr, aChannel* chptr, aClient *sptr);
+int secureonly_specialcheck(aClient *sptr, aChannel *chptr, char *parv[]);
 
 MOD_TEST(sslonly)
 {
@@ -52,7 +53,8 @@ MOD_INIT(sslonly)
 	req.flag = 'z';
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_SSLONLY);
-	
+
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_JOIN, 0, secureonly_specialcheck);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, secureonly_check_join);
 	HookAddVoid(modinfo->handle, HOOKTYPE_CHANNEL_SYNCED, 0, secureonly_channel_sync);
 	HookAdd(modinfo->handle, HOOKTYPE_IS_CHANNEL_SECURE, 0, secureonly_check_secure);
@@ -171,3 +173,15 @@ int secureonly_check_sajoin (aClient *acptr, aChannel* chptr, aClient *sptr)
 	return HOOK_CONTINUE;
 }
 
+/* Special check for +z in set::modes-on-join. Needs to be done early.
+ * Perhaps one day this will be properly handled in the core so this can be removed.
+ */
+int secureonly_specialcheck(aClient *sptr, aChannel *chptr, char *parv[])
+{
+	if ((chptr->users == 0) && (iConf.modes_on_join.extmodes & EXTCMODE_SSLONLY) && !IsSecure(sptr) && !IsOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_SECUREONLYCHAN), me.name, sptr->name, chptr->chname);
+		return HOOK_DENY;
+	}
+	return HOOK_ALLOW;
+}

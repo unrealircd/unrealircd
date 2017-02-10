@@ -180,9 +180,14 @@ void issecure_set(aChannel *chptr, aClient *sptr, int notice)
 
 DLLFUNC int issecure_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[])
 {
-	/* Only care if chan already +zZ and the user joining is insecure (no need to count) */
+	/* Check only if chan already +zZ and the user joining is insecure (no need to count) */
 	if (IsSecureJoin(chptr) && IsSecureChanIndicated(chptr) && !IsSecureConnect(sptr) && !IsULine(sptr))
 		issecure_unset(chptr, sptr, 1);
+
+	/* Special case for +z in modes-on-join and first user creating the channel */
+	if ((chptr->users == 1) && IsSecureJoin(chptr) && !IsSecureChanIndicated(chptr) && !channel_has_insecure_users(chptr))
+		issecure_set(chptr, NULL, 0);
+
 	return 0;
 }
 
