@@ -1639,7 +1639,6 @@ CMD_FUNC(_m_umode)
 		  case ' ':
 		  case '\t':
 			  break;
-		  case 'r':
 		  case 's':
 			  if (what == MODE_DEL) {
 				if (parc >= 4 && sptr->user->snomask) {
