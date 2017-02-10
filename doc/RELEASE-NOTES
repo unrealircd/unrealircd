@@ -1,5 +1,82 @@
-UnrealIRCd 4.0.10 Release Notes
+UnrealIRCd 4.0.11 Release Notes
 ================================
+
+==[ CHANGES BETWEEN 4.0.10 AND 4.0.11 ]==
+Major issues fixed:
+* Fix crash issue that can be triggered by regular users
+* Fix crash if TOPIC_NICK_IS_NUHOST is enabled (rarely enabled)
+* Fix crash if services send an incorrect raw command
+
+Minor issues fixed:
+* Now properly support 'z' when used in set::modes-on-join
+
+Other changes:
+* Show a warning if you don't have any SSL listeners
+
+==[ UNREALIRCD 4 INTRODUCTION ]==
+
+UnrealIRCd 4 is here!
+
+We have been working hard over the past few years to replace the successful
+3.2.x series with a more modern code base. At the same time we have been
+incorporating requests from our bug tracker, ideas from ourselves and
+many suggestions that came up during the UnrealIRCd survey from Q4 2013.
+
+UnrealIRCd is far more modular and configurable than before. For a brief
+overview of what's new in UnrealIRCd 4 have a look at:
+https://www.unrealircd.org/docs/What's_new_in_UnrealIRCd_4
+
+==[ DOCUMENTATION ]==
+All documentation has been moved to our wiki:
+* Documentation: https://www.unrealircd.org/docs/
+* FAQ: https://www.unrealircd.org/docs/FAQ
+
+Be sure not to use any other (older) documentation as it isn't fully
+compatible with UnrealIRCd 4. In particular, do NOT use unreal32docs*html.
+
+==[ UPGRADING FROM 3.2.x ]==
+If you are upgrading from 3.2.x then there are three important things to know:
+
+1) NEW FILE LOCATIONS
+In UnrealIRCd 4 the location of the configuration files and other files have
+been changed. On *NIX the directory where you compile the IRCd from
+(previously 'Unreal3.2.X', now 'unrealircd-4.0.X') is no longer the same as
+the directory where the IRCd will be running from.
+By default the IRCd is installed to /home/yourusername/unrealircd on *NIX
+On Windows UnrealIRCd will install to C:\Program Files (x86\UnrealIRCd 4
+
+The new directory structure is as follows (both on Windows and *NIX):
+conf/      contains all configuration files
+logs/      for log files
+modules/   all modules (.so files on *NIX, .dll files on Windows)
+
+2) CONFIGURATION FILE CHANGES
+There have also been changes in various configuration blocks and settings.
+Don't worry, UnrealIRCd can convert your existing 3.2.x configuration files
+to UnrealIRCd 4 format. There's no need to start from scratch.
+
+Please read https://www.unrealircd.org/docs/Upgrading_from_3.2.x !!
+
+3) THIRD PARTY MODULES
+If you are using 3rd party modules then they will need an update to run on
+UnrealIRCd 4. Due to the many core changes in UnrealIRCd 4 it was simply
+impossible to make 3.2.x modules work out-of-the-box on 4.x.
+Contact your developer for a new version or ask on our Modules forum where
+someone may be kind enough to convert the module for you if you ask nicely:
+https://forums.unrealircd.org/viewforum.php?f=52
+
+==[ END OF THE 3.2.X SERIES ]==
+UnrealIRCd 3.2.x is no longer supported after December 31, 2016.
+See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated
+
+==[ SUPPORT ]==
+Before you seek support, please check our documentation and FAQ:
+* https://www.unrealircd.org/docs/Main_Page
+* https://www.unrealircd.org/docs/FAQ
+
+For support you have two choices:
+* Forums: https://forums.unrealircd.org/
+* IRC: irc.unrealircd.org / #unreal-support
 
 ==[ CHANGES BETWEEN 4.0.9 AND 4.0.10 ]==
 Improvements:
@@ -68,71 +145,6 @@ For services and module coders:
   -1 indicates to stop parsing (return) and 0 indicates don't parse but
   proceed to next packet. If you kill a client in this hook then be
   sure to return -1.
-
-==[ UNREALIRCD 4 INTRODUCTION ]==
-
-UnrealIRCd 4 is here!
-
-We have been working hard over the past few years to replace the successful
-3.2.x series with a more modern code base. At the same time we have been
-incorporating requests from our bug tracker, ideas from ourselves and
-many suggestions that came up during the UnrealIRCd survey from Q4 2013.
-
-UnrealIRCd is far more modular and configurable than before. For a brief
-overview of what's new in UnrealIRCd 4 have a look at:
-https://www.unrealircd.org/docs/What's_new_in_UnrealIRCd_4
-
-==[ DOCUMENTATION ]==
-All documentation has been moved to our wiki:
-* Documentation: https://www.unrealircd.org/docs/
-* FAQ: https://www.unrealircd.org/docs/FAQ
-
-Be sure not to use any other (older) documentation as it isn't fully
-compatible with UnrealIRCd 4. In particular, do NOT use unreal32docs*html.
-
-==[ UPGRADING FROM 3.2.x ]==
-If you are upgrading from 3.2.x then there are three important things to know:
-
-1) NEW FILE LOCATIONS
-In UnrealIRCd 4 the location of the configuration files and other files have
-been changed. On *NIX the directory where you compile the IRCd from
-(previously 'Unreal3.2.X', now 'unrealircd-4.0.X') is no longer the same as
-the directory where the IRCd will be running from.
-By default the IRCd is installed to /home/yourusername/unrealircd on *NIX
-On Windows UnrealIRCd will install to C:\Program Files (x86\UnrealIRCd 4
-
-The new directory structure is as follows (both on Windows and *NIX):
-conf/      contains all configuration files
-logs/      for log files
-modules/   all modules (.so files on *NIX, .dll files on Windows)
-
-2) CONFIGURATION FILE CHANGES
-There have also been changes in various configuration blocks and settings.
-Don't worry, UnrealIRCd can convert your existing 3.2.x configuration files
-to UnrealIRCd 4 format. There's no need to start from scratch.
-
-Please read https://www.unrealircd.org/docs/Upgrading_from_3.2.x !!
-
-3) THIRD PARTY MODULES
-If you are using 3rd party modules then they will need an update to run on
-UnrealIRCd 4. Due to the many core changes in UnrealIRCd 4 it was simply
-impossible to make 3.2.x modules work out-of-the-box on 4.x.
-Contact your developer for a new version or ask on our Modules forum where
-someone may be kind enough to convert the module for you if you ask nicely:
-https://forums.unrealircd.org/viewforum.php?f=52
-
-==[ END OF THE 3.2.X SERIES ]==
-UnrealIRCd 3.2.x is no longer supported after December 31, 2016.
-See https://www.unrealircd.org/docs/UnrealIRCd_3.2.x_deprecated
-
-==[ SUPPORT ]==
-Before you seek support, please check our documentation and FAQ:
-* https://www.unrealircd.org/docs/Main_Page
-* https://www.unrealircd.org/docs/FAQ
-
-For support you have two choices:
-* Forums: https://forums.unrealircd.org/
-* IRC: irc.unrealircd.org / #unreal-support
 
 ==[ CHANGES BETWEEN 4.0.8.4 AND 4.0.9 ]==
 * Fix "ghost" bug which could cause annoyed users and a memory leak
