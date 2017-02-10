@@ -380,9 +380,9 @@ unsigned int alpha, n;
 		ircsnprintf(result, sizeof(result), "%s-%X.", hidden_host, alpha);
 		len = strlen(result) + strlen(p);
 		if (len <= HOSTLEN)
-			strncat(result, p, sizeof(result)-strlen(result)-1);
+			strlcat(result, p, sizeof(result));
 		else
-			strncat(result, p + (len - HOSTLEN), sizeof(result)-strlen(result)-1);
+			strlcat(result, p + (len - HOSTLEN), sizeof(result));
 	} else
 		ircsnprintf(result, sizeof(result),  "%s-%X", hidden_host, alpha);
 

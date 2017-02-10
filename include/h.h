@@ -252,7 +252,6 @@ extern void restart(char *);
 extern void server_reboot(char *);
 extern void terminate(), write_pidfile();
 extern void *MyMallocEx(size_t size);
-extern int advanced_check(char *userhost, int ipstat);
 extern int send_queued(aClient *);
 extern void sendto_connectnotice(aClient *sptr, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *umodes);

@@ -587,7 +587,8 @@ void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, 
 	aCtab *tab;
 	int i;
 
-        if (!(mbuf_size && pbuf_size)) return;
+	if (!(mbuf_size && pbuf_size))
+		return;
 
 	*pbuf = 0;
 	*mbuf++ = '+';
@@ -596,13 +597,15 @@ void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, 
 	{
 		if (modes->mode & tab->mode)
 		{
-			if (!tab->parameters) {
+			if (!tab->parameters)
+			{
 				*mbuf++ = tab->flag;
-				if (!--mbuf_size) {
+				if (!--mbuf_size)
+				{
 					*--mbuf=0;
 					break;
 				}
-                        }
+			}
 		}
 	}
 	for (i=0; i <= Channelmode_highest; i++)
@@ -612,20 +615,19 @@ void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, 
 
 		if (modes->extmodes & Channelmode_Table[i].mode)
 		{
-			if (mbuf_size) {
+			if (mbuf_size)
+			{
 				*mbuf++ = Channelmode_Table[i].flag;
-				if (!--mbuf_size) {
+				if (!--mbuf_size)
+				{
 					*--mbuf=0;
 					break;
 				}
 			}
 			if (Channelmode_Table[i].paracount)
 			{
-				strncat(pbuf, modes->extparams[i], pbuf_size-1);
-				pbuf_size-=strlen(modes->extparams[i]);
-				if (!pbuf_size) break;
-				strncat(pbuf, " ", pbuf_size-1);
-				if (!--pbuf_size) break;
+				strlcat(pbuf, modes->extparams[i], pbuf_size);
+				strlcat(pbuf, " ", pbuf_size);
 			}
 		}
 	}
@@ -2742,7 +2744,6 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		{
 			hname = hp->h_name;
 			strlcpy(fullname, hname, sizeof(fullname));
-			add_local_domain(fullname, HOSTLEN - strlen(fullname));
 			Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, fullname));
 			if (index(aconf->hostname, '@'))
 			{

@@ -1010,13 +1010,13 @@ CMD_FUNC(m_module)
 
 		tmp[0] = '\0';
 		if (mi->flags & MODFLAG_DELAYED)
-			strncat(tmp, "[Unloading] ", sizeof(tmp)-strlen(tmp)-1);
+			strlcat(tmp, "[Unloading] ", sizeof(tmp));
 		if (mi->options & MOD_OPT_PERM_RELOADABLE)
-			strncat(tmp, "[PERM-BUT-RELOADABLE] ", sizeof(tmp)-strlen(tmp)-1);
+			strlcat(tmp, "[PERM-BUT-RELOADABLE] ", sizeof(tmp));
 		if (mi->options & MOD_OPT_PERM)
-			strncat(tmp, "[PERM] ", sizeof(tmp)-strlen(tmp)-1);
+			strlcat(tmp, "[PERM] ", sizeof(tmp));
 		if (!(mi->options & MOD_OPT_OFFICIAL))
-			strncat(tmp, "[3RD] ", sizeof(tmp)-strlen(tmp)-1);
+			strlcat(tmp, "[3RD] ", sizeof(tmp));
 		if (!ValidatePermissionsForPath("server:module",sptr,NULL,NULL,NULL))
 			sendto_one(sptr, ":%s NOTICE %s :*** %s (%s)%s", me.name, sptr->name,
 				mi->header->name, mi->header->description,

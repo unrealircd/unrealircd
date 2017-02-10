@@ -68,8 +68,7 @@ CMD_FUNC(m_ison)
 {
 	char namebuf[USERLEN + HOSTLEN + 4];
 	aClient *acptr;
-	char *s, **pav = parv, *user;
-	int  len;
+	char *s, *user;
 	char *p = NULL;
 
 	if (!MyClient(sptr))
@@ -83,9 +82,8 @@ CMD_FUNC(m_ison)
 	}
 
 	ircsnprintf(buf, sizeof(buf), rpl_str(RPL_ISON), me.name, sptr->name);
-	len = strlen(buf);
 
-	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " "))
+	for (s = strtoken(&p, parv[1], " "); s; s = strtoken(&p, NULL, " "))
 	{
 		if ((user = index(s, '!')))
 			*user++ = '\0';
@@ -98,10 +96,8 @@ CMD_FUNC(m_ison)
 				*--user = '!';
 			}
 
-			(void)strncat(buf, s, sizeof(buf) - (len+1));
-			len += strlen(s);
-			(void)strncat(buf, " ", sizeof(buf) - (len+1));
-			len++;
+			strlcat(buf, s, sizeof(buf));
+			strlcat(buf, " ", sizeof(buf));
 		}
 	}
 
