@@ -1065,7 +1065,9 @@ void win_log(unsigned char *format, ...)
 		FILE *fd = fopen("service.log", "a");
 		if (fd)
 		{
-			fprintf(fd, "%s\n", buf);
+			char timebuf[256];
+			snprintf(timebuf, sizeof(timebuf), "[%s]", myctime(time(NULL)));
+			fprintf(fd, "%s - %s\n", timebuf, buf);
 			fclose(fd);
 		}
 #ifdef _DEBUG
