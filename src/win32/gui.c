@@ -77,7 +77,7 @@ LRESULT CALLBACK FromFileDLG(HWND, UINT, WPARAM, LPARAM);
 
 HBRUSH MainDlgBackground;
 
-extern  void      SocketLoop(void *dummy);
+extern void SocketLoop(void *dummy);
 HINSTANCE hInst;
 NOTIFYICONDATA SysTray;
 void CleanUp(void);
@@ -143,7 +143,7 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	unsigned char string[500];
 
 	if (Message == WM_GETDLGCODE)
-	   return DLGC_WANTALLKEYS;
+		return DLGC_WANTALLKEYS;
 
 	
 	if (Message == WM_CONTEXTMENU) 
@@ -189,8 +189,7 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 int CloseUnreal(HWND hWnd)
 {
-	if (MessageBox(hWnd, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) 
-	    == IDNO)
+	if (MessageBox(hWnd, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
 		 return 0;
 	else 
 	{
@@ -266,14 +265,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	InitDebug();
 
 	if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
-    	{
+	{
 		MessageBox(NULL, "Unable to initialize WinSock", "UnrealIRCD Initalization Error", MB_OK);
 		return FALSE;
 	}
 	hInst = hInstance; 
-    
-    MainDlgBackground = CreateSolidBrush(RGB(75, 134, 238)); /* Background of main dialog */
-    
+
+	MainDlgBackground = CreateSolidBrush(RGB(75, 134, 238)); /* Background of main dialog */
+
 	hWnd = CreateDialog(hInstance, "UnrealIRCd", 0, (DLGPROC)MainDLG); 
 	hwIRCDWnd = hWnd;
 	
@@ -453,10 +452,10 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_LBUTTONDOWN: 
 		{
 			POINT p;
-	         	p.x = LOWORD(lParam);
-		     	p.y = HIWORD(lParam);
+			p.x = LOWORD(lParam);
+			p.y = HIWORD(lParam);
 			if ((p.x >= 93) && (p.x <= 150) && (p.y >= TOOLBAR_START) && (p.y <= TOOLBAR_STOP))
-             		{
+			{
 				ClientToScreen(hDlg,&p);
 				TrackPopupMenu(hRehash,TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
 				return 0;
@@ -666,7 +665,7 @@ LRESULT CALLBACK CreditsDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 }
 
 LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam,
-			    unsigned char *title, unsigned char **s) 
+                            unsigned char *title, unsigned char **s) 
 {
 	HWND hWnd;
 	switch (message) 
@@ -762,7 +761,7 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			unsigned char szText[256];
 			struct stat sb;
 			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT), hTip;
-                        StringCbPrintf(szText, sizeof(szText), "UnrealIRCd Viewer - %s", (unsigned char *)lParam);
+			StringCbPrintf(szText, sizeof(szText), "UnrealIRCd Viewer - %s", (unsigned char *)lParam);
 			SetWindowText(hDlg, szText);
 			lpfnOldWndProc = (FARPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)RESubClassFunc);
 			if ((fd = open((unsigned char *)lParam, _O_RDONLY|_O_BINARY)) != -1) 
@@ -1002,10 +1001,10 @@ HTREEITEM AddItemToTree(HWND hWnd, LPSTR lpszItem, int nLevel, short remap)
 	TreeView_EnsureVisible(hWnd,hPrev);
 	if (nLevel > 1) 
 	{ 
-	        hti = TreeView_GetParent(hWnd, hPrev); 
-        	tvi.mask = TVIF_IMAGE|TVIF_SELECTEDIMAGE; 
-	        tvi.hItem = hti; 
-	        TreeView_SetItem(hWnd, &tvi); 
+		hti = TreeView_GetParent(hWnd, hPrev); 
+		tvi.mask = TVIF_IMAGE|TVIF_SELECTEDIMAGE; 
+		tvi.hItem = hti; 
+		TreeView_SetItem(hWnd, &tvi); 
 	} 
 	return hPrev; 
 }
@@ -1018,7 +1017,7 @@ HTREEITEM AddItemToTree(HWND hWnd, LPSTR lpszItem, int nLevel, short remap)
  */
 void win_map(aClient *server, HWND hwTreeView, short remap)
 {
-        aClient *acptr;
+	aClient *acptr;
 	Link *lp;
 
 /*
@@ -1038,13 +1037,13 @@ FIXME
 /* ugly stuff, but hey it works -- codemastr */
 void win_log(unsigned char *format, ...) 
 {
-        va_list ap;
-        unsigned char buf[2048];
+	va_list ap;
+	unsigned char buf[2048];
 	FILE *fd;
 
-        va_start(ap, format);
+	va_start(ap, format);
 
-        ircvsnprintf(buf, sizeof(buf), format, ap);
+	ircvsnprintf(buf, sizeof(buf), format, ap);
 
 	if (!IsService) 
 	{
@@ -1072,11 +1071,11 @@ void win_log(unsigned char *format, ...)
 #ifdef _DEBUG
 		else
 		{
-		    OutputDebugString(buf);
+			OutputDebugString(buf);
 		}
 #endif
 	}
-        va_end(ap);
+	va_end(ap);
 }
 
 void win_error() 
