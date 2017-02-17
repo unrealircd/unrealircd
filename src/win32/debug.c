@@ -314,7 +314,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 	}
 	else 
 	{
-		FILE *fd = fopen("service.log", "a");
+		FILE *fd = fopen("logs\\service.log", "a");
 
 		if (fd)
 		{

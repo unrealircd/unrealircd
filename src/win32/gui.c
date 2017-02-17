@@ -1062,7 +1062,7 @@ void win_log(unsigned char *format, ...)
 	}
 	else 
 	{
-		FILE *fd = fopen("service.log", "a");
+		FILE *fd = fopen("logs\\service.log", "a");
 		if (fd)
 		{
 			char timebuf[256];
