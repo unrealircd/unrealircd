@@ -1,6 +1,7 @@
 /*
  * Recieve private messages only from SSL/TLS users (User mode +Z)
  * (C) Copyright 2000-.. Bram Matthys (Syzop) and the UnrealIRCd team
+ * Idea from "Stealth" <stealth@x-tab.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
