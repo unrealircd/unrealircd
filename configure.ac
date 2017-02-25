@@ -141,7 +141,7 @@ AC_ARG_ENABLE([hardening],
 HARDEN_CFLAGS=""
 HARDEN_LDFLAGS=""
 
-check_link_flag([-rpath=/bin/], [RPATH_FORMAT="-rpath="], [RPATH_FORMAT="-rpath "])
+check_link_flag([-rpath /bin/], [RPATH_FORMAT="-rpath "], [RPATH_FORMAT="-rpath="])
  
 
 AS_IF([test x"$hardening" != x"no"], [
