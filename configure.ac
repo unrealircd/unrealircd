@@ -14,13 +14,6 @@ AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
 AC_CONFIG_MACRO_DIR([autoconf/m4])
 
-AC_CANONICAL_HOST
-
-AS_CASE([$host],
-       [*-*-darwin*], [CLANG_LD=yes]
-       [CLANG_LD=no]
-     )
-
 if test "x$enable_dynamic_linking" = "x"; then
 	echo "Please use ./Config instead of ./configure"
 	exit 1
@@ -147,6 +140,10 @@ AC_ARG_ENABLE([hardening],
 
 HARDEN_CFLAGS=""
 HARDEN_LDFLAGS=""
+
+check_link_flag([-rpath=/bin/], [RPATH_FORMAT="-rpath="], [RPATH_FORMAT="-rpath "])
+ 
+
 AS_IF([test x"$hardening" != x"no"], [
   check_cc_cxx_flag([-fno-strict-overflow], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fno-strict-overflow"])
 
@@ -592,16 +589,16 @@ AC_ARG_WITH(pidfile, [AS_HELP_STRING([--with-pidfile=path],[Specify the path of 
 		PIDFILE="$withval"],
 	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/unrealircd.pid"], [Define the path of the pid file])
 		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"])
-
+echo "CLANG LD IS NOW : $CLANG_LD"
 LDFLAGS_PRIVATELIBS=""
 AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored])],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$withval"], [Define the location of private libraries])
 		PRIVATELIBDIR="$withval"
 		if test "$CLANG_LD" = "yes"
 		then
-			LDFLAGS_PRIVATELIBS="-Wl,-rpath $PRIVATELIBDIR"
+			LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
 		else
-			LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+			LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
 		fi
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS],
@@ -609,9 +606,10 @@ AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify 
 		PRIVATELIBDIR="$HOME/unrealircd/lib"
 		if test "$CLANG_LD" = "yes"
                 then
-                        LDFLAGS_PRIVATELIBS="-Wl,-rpath $PRIVATELIBDIR"
+                        LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
                 else
-                        LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+                        LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
+
                 fi
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS])
