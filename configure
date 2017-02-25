@@ -7053,7 +7053,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 		PRIVATELIBDIR="$withval"
-		if test "x$CLANG_LD"="xyes" ; then
+		if test "$CLANG_LD"="yes" ; then
 		  LDFLAGS_PRIVATELIBS="-Wl,-rpath $PRIVATELIBDIR"
 		else
 		  LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
@@ -7067,7 +7067,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 		PRIVATELIBDIR="$HOME/unrealircd/lib"
-		if test "x$CLANG_LD"="xyes" ; then
+		if test "$CLANG_LD"="yes" ; then
                   LDFLAGS_PRIVATELIBS="-Wl,-rpath $PRIVATELIBDIR"
                 else
                   LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"

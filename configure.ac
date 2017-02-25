@@ -597,7 +597,7 @@ LDFLAGS_PRIVATELIBS=""
 AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored])],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$withval"], [Define the location of private libraries])
 		PRIVATELIBDIR="$withval"
-		if test "x$CLANG_LD"="xyes" ; then
+		if test "$CLANG_LD"="yes" ; then
 		  LDFLAGS_PRIVATELIBS="-Wl,-rpath $PRIVATELIBDIR"
 		else
 		  LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
@@ -606,7 +606,7 @@ AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify 
 		export LDFLAGS],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$HOME/unrealircd/lib"], [Define the location of private libraries])
 		PRIVATELIBDIR="$HOME/unrealircd/lib"
-		if test "x$CLANG_LD"="xyes" ; then
+		if test "$CLANG_LD"="yes" ; then
                   LDFLAGS_PRIVATELIBS="-Wl,-rpath $PRIVATELIBDIR"
                 else
                   LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
