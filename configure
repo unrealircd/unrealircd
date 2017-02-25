@@ -7000,7 +7000,6 @@ _ACEOF
 		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"
 fi
 
-echo "CLANG LD IS NOW : $CLANG_LD"
 LDFLAGS_PRIVATELIBS=""
 
 # Check whether --with-privatelibdir was given.
@@ -7011,12 +7010,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 		PRIVATELIBDIR="$withval"
-		if test "$CLANG_LD" = "yes"
-		then
-			LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
-		else
-			LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
-		fi
+		LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS
 else
@@ -7026,13 +7020,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 		PRIVATELIBDIR="$HOME/unrealircd/lib"
-		if test "$CLANG_LD" = "yes"
-                then
-                        LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
-                else
-                        LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
-
-                fi
+                LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS
 fi

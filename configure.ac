@@ -589,28 +589,16 @@ AC_ARG_WITH(pidfile, [AS_HELP_STRING([--with-pidfile=path],[Specify the path of 
 		PIDFILE="$withval"],
 	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/unrealircd.pid"], [Define the path of the pid file])
 		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"])
-echo "CLANG LD IS NOW : $CLANG_LD"
 LDFLAGS_PRIVATELIBS=""
 AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored])],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$withval"], [Define the location of private libraries])
 		PRIVATELIBDIR="$withval"
-		if test "$CLANG_LD" = "yes"
-		then
-			LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
-		else
-			LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
-		fi
+		LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$HOME/unrealircd/lib"], [Define the location of private libraries])
 		PRIVATELIBDIR="$HOME/unrealircd/lib"
-		if test "$CLANG_LD" = "yes"
-                then
-                        LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
-                else
-                        LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
-
-                fi
+                LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS])
 
