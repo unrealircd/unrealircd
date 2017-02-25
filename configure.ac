@@ -14,6 +14,13 @@ AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
 AC_CONFIG_MACRO_DIR([autoconf/m4])
 
+AC_CANONICAL_HOST
+
+AS_CASE([$host],
+       [*-*-darwin*], [CLANG_LD=yes]
+       [CLANG_LD=no]
+     )
+
 if test "x$enable_dynamic_linking" = "x"; then
 	echo "Please use ./Config instead of ./configure"
 	exit 1
@@ -590,12 +597,20 @@ LDFLAGS_PRIVATELIBS=""
 AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored])],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$withval"], [Define the location of private libraries])
 		PRIVATELIBDIR="$withval"
-		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+		if test "x$CLANG_LD"="xyes" ; then
+		  LDFLAGS_PRIVATELIBS="-Wl,-rpath $PRIVATELIBDIR"
+		else
+		  LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+		fi
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$HOME/unrealircd/lib"], [Define the location of private libraries])
 		PRIVATELIBDIR="$HOME/unrealircd/lib"
-		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+		if test "x$CLANG_LD"="xyes" ; then
+                  LDFLAGS_PRIVATELIBS="-Wl,-rpath $PRIVATELIBDIR"
+                else
+                  LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+                fi
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS])
 
