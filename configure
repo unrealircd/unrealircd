@@ -648,7 +648,6 @@ PKG_CONFIG
 TRE_LIBS
 TRE_CFLAGS
 FD_SETSIZE
-LDFLAGS_PRIVATELIBS
 PIDFILE
 DOCDIR
 PERMDATADIR
@@ -4007,44 +4006,6 @@ fi
 HARDEN_CFLAGS=""
 HARDEN_LDFLAGS=""
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the linker accepts -rpath /bin" >&5
-$as_echo_n "checking whether the linker accepts -rpath /bin... " >&6; }
-if ${ax_cv_check_ldflags__Werror___rpath__bin+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-  ax_check_save_flags=$LDFLAGS
-  LDFLAGS="$LDFLAGS -Werror  -rpath /bin"
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ax_cv_check_ldflags__Werror___rpath__bin=yes
-else
-  ax_cv_check_ldflags__Werror___rpath__bin=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-  LDFLAGS=$ax_check_save_flags
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_ldflags__Werror___rpath__bin" >&5
-$as_echo "$ax_cv_check_ldflags__Werror___rpath__bin" >&6; }
-if test x"$ax_cv_check_ldflags__Werror___rpath__bin" = xyes; then :
-  RPATH_FORMAT="-rpath "
-else
-  RPATH_FORMAT="-rpath="
-fi
-
-
-
 if test x"$hardening" != x"no"; then :
 
   ac_ext=c
@@ -7000,7 +6961,6 @@ _ACEOF
 		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"
 fi
 
-LDFLAGS_PRIVATELIBS=""
 
 # Check whether --with-privatelibdir was given.
 if test "${with_privatelibdir+set}" = set; then :
@@ -7010,9 +6970,8 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 		PRIVATELIBDIR="$withval"
-		LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
-		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
-		export LDFLAGS
+		LD_RUN_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
+		export LD_RUN_PATH
 else
 
 cat >>confdefs.h <<_ACEOF
@@ -7020,11 +6979,9 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 		PRIVATELIBDIR="$HOME/unrealircd/lib"
-                LDFLAGS_PRIVATELIBS="-Wl,$RPATH_FORMAT$PRIVATELIBDIR"
-		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
-		export LDFLAGS
+		LD_RUN_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
+		export LD_RUN_PATH
 fi
-
 
 
 
