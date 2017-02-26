@@ -590,10 +590,14 @@ AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify 
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$withval"], [Define the location of private libraries])
 		PRIVATELIBDIR="$withval"
 		LD_RUN_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
+		LD_LIBRARY_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
+		export LD_LIBRARY_PATH
 		export LD_RUN_PATH],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$HOME/unrealircd/lib"], [Define the location of private libraries])
 		PRIVATELIBDIR="$HOME/unrealircd/lib"
 		LD_RUN_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
+		LD_LIBRARY_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
+		export LD_LIBRARY_PATH
 		export LD_RUN_PATH])
 
 AC_SUBST(BINDIR)
