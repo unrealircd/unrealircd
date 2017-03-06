@@ -648,6 +648,7 @@ PKG_CONFIG
 TRE_LIBS
 TRE_CFLAGS
 FD_SETSIZE
+LDFLAGS_PRIVATELIBS
 PIDFILE
 DOCDIR
 PERMDATADIR
@@ -4005,7 +4006,6 @@ fi
 
 HARDEN_CFLAGS=""
 HARDEN_LDFLAGS=""
-
 if test x"$hardening" != x"no"; then :
 
   ac_ext=c
@@ -6962,6 +6962,8 @@ _ACEOF
 fi
 
 
+LDFLAGS_PRIVATELIBS=""
+
 # Check whether --with-privatelibdir was given.
 if test "${with_privatelibdir+set}" = set; then :
   withval=$with_privatelibdir;
@@ -6970,10 +6972,9 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 		PRIVATELIBDIR="$withval"
-		LD_RUN_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
-		LD_LIBRARY_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
-		export LD_LIBRARY_PATH
-		export LD_RUN_PATH
+		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
+		export LDFLAGS
 else
 
 cat >>confdefs.h <<_ACEOF
@@ -6981,11 +6982,11 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 		PRIVATELIBDIR="$HOME/unrealircd/lib"
-		LD_RUN_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
-		LD_LIBRARY_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
-		export LD_LIBRARY_PATH
-		export LD_RUN_PATH
+		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
+		export LDFLAGS
 fi
+
 
 
 

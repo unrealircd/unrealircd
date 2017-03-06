@@ -20,9 +20,6 @@ if [ "$OSTYPE" = "linux-gnu" ]; then
 elif [[ "$OSTYPE" == "freebsd"* ]]; then
 	sudo pkg install -y libtool
 	sudo pkg remove -y c-ares
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-	brew install openssl
-	echo 'SSLDIR=/usr/local/opt/openssl/' >>config.settings	
 else
 	echo "OS not correctly detected ($OSTYPE). Aborting."
 	exit 1
@@ -49,9 +46,6 @@ do
 		elif [[ "$OSTYPE" == "freebsd"* ]]; then
 			sudo pkg install -y curl
 			echo 'CURLDIR=/usr/local' >>config.settings
-		elif [[ "$OSTYPE" == "darwin"* ]]; then
-			brew install curl
-			echo 'CURLDIR=/usr' >>config.settings
 		fi
 	elif [ "$1" = "local-curl" ]; then
 		if [ "$OSTYPE" = "linux-gnu" ]; then

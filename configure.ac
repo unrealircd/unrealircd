@@ -140,7 +140,6 @@ AC_ARG_ENABLE([hardening],
 
 HARDEN_CFLAGS=""
 HARDEN_LDFLAGS=""
-
 AS_IF([test x"$hardening" != x"no"], [
   check_cc_cxx_flag([-fno-strict-overflow], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fno-strict-overflow"])
 
@@ -586,19 +585,19 @@ AC_ARG_WITH(pidfile, [AS_HELP_STRING([--with-pidfile=path],[Specify the path of 
 		PIDFILE="$withval"],
 	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/unrealircd.pid"], [Define the path of the pid file])
 		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"])
+
+LDFLAGS_PRIVATELIBS=""
 AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored])],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$withval"], [Define the location of private libraries])
 		PRIVATELIBDIR="$withval"
-		LD_RUN_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
-		LD_LIBRARY_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
-		export LD_LIBRARY_PATH
-		export LD_RUN_PATH],
+		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
+		export LDFLAGS],
 	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$HOME/unrealircd/lib"], [Define the location of private libraries])
 		PRIVATELIBDIR="$HOME/unrealircd/lib"
-		LD_RUN_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
-		LD_LIBRARY_PATH="$LD_RUN_PATH $PRIVATELIBDIR"
-		export LD_LIBRARY_PATH
-		export LD_RUN_PATH])
+		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
+		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
+		export LDFLAGS])
 
 AC_SUBST(BINDIR)
 AC_SUBST(SCRIPTDIR)
@@ -612,6 +611,7 @@ dnl well, Because DATADIR conflicts with the Windows SDK header files.. amazing.
 AC_SUBST(PERMDATADIR)
 AC_SUBST(DOCDIR)
 AC_SUBST(PIDFILE)
+AC_SUBST(LDFLAGS_PRIVATELIBS)
 
 AC_ARG_WITH(fd-setsize, [AS_HELP_STRING([--with-fd-setsize=size], [Specify the max file descriptors to use])],
 	[ac_fd=$withval],
