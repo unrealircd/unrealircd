@@ -396,6 +396,14 @@ void *cmodef_put_param(void *fld_in, char *param)
 		fld = MyMallocEx(sizeof(ChanFloodProt));
 	}
 
+	/* always reset settings (l, a, r) */
+	for (v=0; v < NUMFLD; v++)
+	{
+		fld->l[v] = 0;
+		fld->a[v] = 0;
+		fld->r[v] = 0;
+	}
+
 	/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
 
 	p2 = strchr(xbuf+1, ']');
@@ -517,6 +525,15 @@ void *cmodef_put_param(void *fld_in, char *param)
 	{
 		MyFree(fld);
 		return NULL;
+	}
+	/* if new 'per xxx seconds' is smaller than current 'per' then reset timers/counters (t, c) */
+	if (v < fld->per)
+	{
+		for (v=0; v < NUMFLD; v++)
+		{
+			fld->t[v] = 0;
+			fld->c[v] = 0;
+		}
 	}
 	fld->per = v;
 	
