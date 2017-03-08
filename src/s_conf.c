@@ -1408,6 +1408,7 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->network.x_prefix_quit);
 	safefree(i->network.x_helpchan);
 	safefree(i->network.x_stats_server);
+	safefree(i->network.x_sasl_server);
 	safefree(i->spamfilter_ban_reason);
 	safefree(i->spamfilter_virus_help_channel);
 	safefree(i->spamexcept_line);
