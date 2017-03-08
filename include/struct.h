@@ -1234,12 +1234,14 @@ struct _configitem_deny_channel {
 	ConfigFlag		flag;
 	char			*channel, *reason, *redirect, *class;
 	unsigned char	warn;
+	ConfigItem_mask *mask;
 };
 
 struct _configitem_allow_channel {
 	ConfigItem		*prev, *next;
 	ConfigFlag		flag;
 	char			*channel, *class;
+	ConfigItem_mask *mask;
 };
 
 struct _configitem_allow_dcc {

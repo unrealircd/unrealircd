@@ -2112,6 +2112,7 @@ void	config_rehash()
 		safefree(deny_channel_ptr->reason);
 		safefree(deny_channel_ptr->class);
 		DelListItem(deny_channel_ptr, conf_deny_channel);
+		unreal_delete_masks(deny_channel_ptr->mask);
 		MyFree(deny_channel_ptr);
 	}
 
@@ -2121,6 +2122,7 @@ void	config_rehash()
 		safefree(allow_channel_ptr->channel);
 		safefree(allow_channel_ptr->class);
 		DelListItem(allow_channel_ptr, conf_allow_channel);
+		unreal_delete_masks(allow_channel_ptr->mask);
 		MyFree(allow_channel_ptr);
 	}
 	for (allow_dcc_ptr = conf_allow_dcc; allow_dcc_ptr; allow_dcc_ptr = (ConfigItem_allow_dcc *)next)
@@ -2869,20 +2871,34 @@ ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name)
 
 	for (dchannel = conf_deny_channel; dchannel; dchannel = (ConfigItem_deny_channel *)dchannel->next)
 	{
-		if (!match(dchannel->channel, name) && (dchannel->class ? !strcmp(cptr->local->class->name, dchannel->class) : 1))
-			break;
+		if (!match(dchannel->channel, name))
+		{
+			if (dchannel->class && strcmp(cptr->local->class->name, dchannel->class))
+				continue;
+			if (dchannel->mask && !unreal_mask_match(cptr, dchannel->mask))
+				continue;
+			break; /* MATCH deny channel { } */
+		}
 	}
+
 	if (dchannel)
 	{
+		/* Check exceptions... ('allow channel') */
 		for (achannel = conf_allow_channel; achannel; achannel = (ConfigItem_allow_channel *)achannel->next)
 		{
-			if (!match(achannel->channel, name) && (achannel->class ? !strcmp(cptr->local->class->name, achannel->class) : 1))
-				break;
+			if (!match(achannel->channel, name))
+			{
+				if (achannel->class && strcmp(cptr->local->class->name, achannel->class))
+					continue;
+				if (achannel->mask && !unreal_mask_match(cptr, achannel->mask))
+					continue;
+				break; /* MATCH allow channel { } */
+			}
 		}
 		if (achannel)
-			return NULL;
+			return NULL; /* Matches an 'allow channel' - so not forbidden */
 		else
-			return (dchannel);
+			return dchannel;
 	}
 	return NULL;
 }
@@ -5181,12 +5197,15 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_allow_channel 	*allow = NULL;
 	ConfigEntry 	    	*cep;
 	char *class = NULL;
+	ConfigEntry *mask = NULL;
 
 	/* First, search for ::class, if any */
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "class"))
 			class = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "mask"))
+			mask = cep;
 	}
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -5198,6 +5217,8 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 			safestrdup(allow->channel, cep->ce_vardata);
 			if (class)
 				safestrdup(allow->class, class);
+			if (mask)
+				unreal_add_masks(&allow->mask, mask);
 			AddListItem(allow, conf_allow_channel);
 		}
 	}
@@ -5231,6 +5252,9 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_class = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "mask"))
+		{
 		}
 		else
 		{
@@ -9008,6 +9032,10 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		{
 			safestrdup(deny->class, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "mask"))
+		{
+			unreal_add_masks(&deny->mask, cep);
+		}
 	}
 	AddListItem(deny, conf_deny_channel);
 	return 0;
@@ -9196,6 +9224,9 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 				has_class = 1;
+			}
+			else if (!strcmp(cep->ce_varname, "mask"))
+			{
 			}
 			else
 			{
