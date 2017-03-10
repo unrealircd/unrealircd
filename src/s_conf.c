@@ -7568,6 +7568,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.default_ipv6_clone_mask = atoi(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "hide-list")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "deny-channel"))
+				{
+					tempiConf.hide_list = 1;
+					/* if we would expand this later then change this to a bitmask or struct or whatever */
+				}
+			}
+		}
 		else
 		{
 			int value;
@@ -8426,6 +8436,21 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			{
 				config_warn("%s:%d: set::default-ipv6-clone-mask was given a very small value.",
 					    cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "hide-list")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "deny-channel"))
+				{
+				} else
+				{
+					config_error_unknown(cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum, "set::hide-list",
+						cepp->ce_varname);
+					errors++;
+					continue;
+				}
 			}
 		}
 		else

@@ -331,6 +331,10 @@ void _send_list(aClient *cptr)
 				    && !ValidatePermissionsForPath("override:see:list:secret",cptr,NULL,chptr,NULL))
 					continue;
 
+				/* set::hide-list { deny-channel } */
+				if (!IsOper(cptr) && iConf.hide_list && Find_channel_allowed(cptr, chptr->chname))
+					continue;
+
 				/* Much more readable like this -- codemastr */
 				if ((!lopt->showall))
 				{

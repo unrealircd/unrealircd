@@ -136,6 +136,7 @@ struct zConfiguration {
 	unsigned short default_ipv6_clone_mask;
 	int ping_cookie;
 	int nicklen;
+	int hide_list;
 };
 
 #ifndef DYNCONF_C
