@@ -1097,8 +1097,15 @@ int unreal_mask_match(aClient *acptr, ConfigItem_mask *m)
 {
 	for (; m; m = m->next)
 	{
-		if (match_user(m->mask, acptr, MATCH_CHECK_REAL))
-			return 1;
+		/* With special support for '!' prefix (negative matching like "!192.168.*") */
+		if (m->mask[0] == '!')
+		{
+			if (!match_user(m->mask+1, acptr, MATCH_CHECK_REAL))
+				return 1;
+		} else {
+			if (match_user(m->mask, acptr, MATCH_CHECK_REAL))
+				return 1;
+		}
 	}
 	
 	return 0;
