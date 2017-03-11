@@ -349,6 +349,8 @@ int umode_allow_all(aClient *sptr, int what)
 
 int umode_allow_unset(aClient *sptr, int what)
 {
+	if (!MyClient(sptr))
+		return 1;
 	if (what == MODE_DEL)
 		return 1;
 	return 0;
