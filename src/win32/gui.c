@@ -501,11 +501,14 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
 				}
 
-				AppendMenu(hConfig, MF_STRING, IDM_MOTD, conf_files->motd_file);
-				AppendMenu(hConfig, MF_STRING, IDM_SMOTD, conf_files->smotd_file);
-				AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, conf_files->opermotd_file);
-				AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, conf_files->botmotd_file);
-				AppendMenu(hConfig, MF_STRING, IDM_RULES, conf_files->rules_file);
+				if (conf_files)
+				{
+					AppendMenu(hConfig, MF_STRING, IDM_MOTD, conf_files->motd_file);
+					AppendMenu(hConfig, MF_STRING, IDM_SMOTD, conf_files->smotd_file);
+					AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, conf_files->opermotd_file);
+					AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, conf_files->botmotd_file);
+					AppendMenu(hConfig, MF_STRING, IDM_RULES, conf_files->rules_file);
+				}
 				
 				if (conf_tld) 
 				{
