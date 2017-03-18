@@ -836,6 +836,9 @@ char *_StripControlCodes(unsigned char *text)
 			case 15:
 				/* plain */
 				break;
+			case 29:
+				/* italic */
+				break;
 			default:
 				new_str[i] = *text;
 				i++;

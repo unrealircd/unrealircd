@@ -52,7 +52,7 @@ MOD_UNLOAD(m_dummy)
 static int has_controlcodes(char *p)
 {
 	for (; *p; p++)
-		if ((*p == '\002') || (*p == '\037') || (*p == '\026'))
+		if ((*p == '\002') || (*p == '\037') || (*p == '\026') || (*p == '\035')) /* bold, underline, reverse, italic */
 			return 1;
 	return 0;
 }
