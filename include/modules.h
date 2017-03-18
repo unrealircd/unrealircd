@@ -1042,6 +1042,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define EFUNC_SEND_MODDATA_CHANNEL	50
 #define EFUNC_SEND_MODDATA_MEMBERS	51
 #define EFUNC_BROADCAST_MODDATA_CLIENT	52
+#define EFUNC_MATCH_USER			53
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

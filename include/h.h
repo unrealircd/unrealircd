@@ -122,7 +122,6 @@ extern OperPermission ValidatePermissionsForPath(char *path, aClient *sptr, aCli
 extern void OperClassValidatorDel(OperClassValidator *validator);
 
 extern int AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
-extern int match_user(char *rmask, aClient *acptr, int options);
 extern ConfigItem_ban  *Find_ban_ip(aClient *sptr);
 extern void add_ListItem(ListStruct *, ListStruct **);
 extern void add_ListItemPrio(ListStructPrio *, ListStructPrio **, int);
@@ -614,6 +613,7 @@ extern int __attribute__((warn_unused_result)) do_cmd(aClient *cptr, aClient *sp
 extern void create_snomask(aClient *sptr, anUser *user, char *snomask);
 extern MODVAR char *me_hash;
 extern MODVAR int dontspread;
+
 /* Efuncs */
 extern MODVAR int (*do_join)(aClient *, aClient *, int, char **);
 extern MODVAR void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
@@ -666,8 +666,9 @@ extern MODVAR void (*broadcast_moddata_client)(aClient *acptr);
 extern MODVAR int (*check_banned)(aClient *cptr);
 extern MODVAR void (*introduce_user)(aClient *to, aClient *acptr);
 extern MODVAR int (*check_deny_version)(aClient *cptr, char *version_string, int protocol, char *flags);
-
+extern MODVAR int (*match_user)(char *rmask, aClient *acptr, int options);
 /* /Efuncs */
+
 extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;
 extern MODVAR int max_connection_count;
 extern int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid);

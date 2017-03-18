@@ -131,6 +131,7 @@ void (*send_moddata_client)(aClient *srv, aClient *acptr);
 void (*send_moddata_channel)(aClient *srv, aChannel *chptr);
 void (*send_moddata_members)(aClient *srv);
 void (*broadcast_moddata_client)(aClient *acptr);
+int (*match_user)(char *rmask, aClient *acptr, int options);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -186,7 +187,8 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 50 */	{"send_moddata_channel", (void *)&send_moddata_channel},
 /* 51 */	{"send_moddata_members", (void *)&send_moddata_members},
 /* 52 */	{"broadcast_moddata_client", (void *)&broadcast_moddata_client},
-/* 53 */	{NULL, NULL}
+/* 53 */	{"match_user", (void *)&match_user},
+/* 54 */	{NULL, NULL}
 };
 
 #ifdef UNDERSCORE
