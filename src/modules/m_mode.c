@@ -1765,21 +1765,32 @@ CMD_FUNC(_m_umode)
 	if ((IsHidden(sptr) && !(setflags & UMODE_HIDE)) ||
 	    ((setflags & UMODE_SETHOST) && !IsSetHost(sptr) && IsHidden(sptr)))
 	{
-		safefree(sptr->user->virthost);
-		sptr->user->virthost = strdup(sptr->user->cloakedhost);
 		if (!dontspread)
 			sendto_server(cptr, PROTO_VHP, 0, ":%s SETHOST :%s",
 				sptr->name, sptr->user->virthost);
+
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
 		{
-			/* LOL, this is ugly ;) */
-			sptr->umodes &= ~UMODE_HIDE;
+			/* Damn, this is ugly: we have to restore umodes to old state,
+			 * do the PART and then set umodes to the new modes again.
+			 */
+			long newmodes = sptr->umodes;
+			sptr->umodes = setflags;
 			rejoin_leave(sptr);
+			sptr->umodes = newmodes;
+		}
+
+		safefree(sptr->user->virthost);
+		sptr->user->virthost = strdup(sptr->user->cloakedhost);
+
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+		{
 			sptr->umodes |= UMODE_HIDE;
 			rejoin_joinandmode(sptr);
 			if (MyClient(sptr))
 				sptr->local->since += 7; /* Add fake lag */
 		}
+
 		if (MyClient(sptr))
 			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->virthost);
 	}
