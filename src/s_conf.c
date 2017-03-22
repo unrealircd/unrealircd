@@ -257,6 +257,7 @@ extern void charsys_reset_pretest(void);
 int charsys_postconftest(void);
 void charsys_finish(void);
 int reloadable_perm_module_unloaded(void);
+void special_delayed_unloading(void);
 
 int ssl_tests(void);
 
@@ -1628,6 +1629,9 @@ int config_test_all(void)
 	{
 		return 0;
 	}
+
+	special_delayed_unloading();
+
 	return 1;
 }
 
@@ -9598,6 +9602,7 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 	unload_all_unused_snomasks();
 	unload_all_unused_umodes();
 	unload_all_unused_extcmodes();
+	// unload_all_unused_moddata(); -- this will crash
 	extcmodes_check_for_changes();
 	loop.ircd_rehashing = 0;
 	remote_rehash_client = NULL;
@@ -9996,9 +10001,9 @@ int ssl_tests(void)
  */
 int reloadable_perm_module_unloaded(void)
 {
-Module *m, *m2;
-extern Module *Modules;
-int ret = 0;
+    Module *m, *m2;
+    extern Module *Modules;
+    int ret = 0;
 
 	for (m = Modules; m; m = m->next)
 	{
@@ -10019,5 +10024,34 @@ int ret = 0;
 			}
 		}
 	}
+
 	return ret;
+}
+
+extern int module_has_moddata(Module *mod);
+
+/** Special hack for unloading modules with moddata */
+void special_delayed_unloading(void)
+{
+    Module *m, *m2;
+    extern Module *Modules;
+
+	for (m = Modules; m; m = m->next)
+	{
+	    if ((m->flags & MODFLAG_LOADED) && module_has_moddata(m) && !(m->options & MOD_OPT_PERM) && !(m->options & MOD_OPT_PERM_RELOADABLE))
+		{
+			int found = 0;
+			for (m2 = Modules; m2; m2 = m2->next)
+			{
+				if ((m != m2) && !strcmp(m->header->name, m2->header->name))
+					found = 1;
+			}
+			if (!found)
+			{
+			    config_warn("Delaying module unloading of '%s' due to moddata", m->header->name);
+			    m->flags |= MODFLAG_DELAYED;
+			    EventAddEx(NULL, "e_unload_module_delayed", 5, 1, e_unload_module_delayed, m->header->name);
+			}
+		}
+	}
 }

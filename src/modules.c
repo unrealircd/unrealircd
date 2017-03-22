@@ -867,9 +867,6 @@ vFP Module_SymX(char *name, Module **mptr)
 	return NULL;
 }
 
-
-
-
 void module_loadall(void)
 {
 	iFP	fp;

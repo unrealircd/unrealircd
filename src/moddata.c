@@ -187,7 +187,9 @@ void unload_moddata_commit(ModDataInfo *md)
 			list_for_each_entry(acptr, &lclient_list, lclient_node)
 			{
 				if (md->free && moddata_client(acptr, md).ptr)
-					md->free(moddata_client(acptr, md).ptr);
+				{
+					md->free(&moddata_client(acptr, md));
+				}
 				memset(&moddata_client(acptr, md), 0, sizeof(ModData));
 			}
 			break;
@@ -198,7 +200,7 @@ void unload_moddata_commit(ModDataInfo *md)
 			for (chptr = channel; chptr; chptr=chptr->nextch)
 			{
 				if (md->free && moddata_channel(chptr, md).ptr)
-					md->free(moddata_channel(chptr, md).ptr);
+					md->free(&moddata_channel(chptr, md));
 				memset(&moddata_channel(chptr, md), 0, sizeof(ModData));
 			}
 			break;
@@ -212,7 +214,7 @@ void unload_moddata_commit(ModDataInfo *md)
 				for (m = chptr->members; m; m = m->next)
 				{
 					if (md->free && moddata_member(m, md).ptr)
-						md->free(moddata_member(m, md).ptr);
+						md->free(&moddata_member(m, md));
 					memset(&moddata_member(m, md), 0, sizeof(ModData));
 				}
 			}
@@ -229,7 +231,7 @@ void unload_moddata_commit(ModDataInfo *md)
 				for (m = acptr->user->channel; m; m = m->next)
 				{
 					if (md->free && moddata_membership(m, md).ptr)
-						md->free(moddata_membership(m, md).ptr);
+						md->free(&moddata_membership(m, md));
 					memset(&moddata_membership(m, md), 0, sizeof(ModData));
 				}
 			}
@@ -239,12 +241,12 @@ void unload_moddata_commit(ModDataInfo *md)
 	
 	DelListItem(md, MDInfo);
 	MyFree(md->name);
-	MyFree(MDInfo);
+	MyFree(md);
 }
 
 void ModDataDel(ModDataInfo *md)
 {
-
+	/* Delete the reference to us first */
 	if (md->owner)
 	{
 		ModuleObject *mdobj;
@@ -273,9 +275,8 @@ ModDataInfo *md, *md_next;
 	for (md = MDInfo; md; md = md_next)
 	{
 		md_next = md->next;
-		if (md->owner)
-			abort(); /* shouldn't happen */
-		unload_moddata_commit(md);
+		if (md->unloaded)
+			unload_moddata_commit(md);
 	}
 }
 
@@ -290,6 +291,16 @@ ModDataInfo *md;
 	return NULL;
 }
 
+int module_has_moddata(Module *mod)
+{
+	ModDataInfo *md;
+
+	for (md = MDInfo; md; md = md->next)
+		if (md->owner == mod)
+			return 1;
+
+	return 0;
+}
 
 /** Set ModData for client (via variable name, string value) */
 int moddata_client_set(aClient *acptr, char *varname, char *value)
