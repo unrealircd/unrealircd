@@ -1038,7 +1038,7 @@ char *getpeerip(aClient *acptr, int fd, int *port)
  * The client is added to the linked list of clients but isnt added to any
  * hash tables yuet since it doesnt have a name.
  */
-aClient *add_connection(ConfigItem_listen *cptr, int fd)
+aClient *add_connection(ConfigItem_listen *listener, int fd)
 {
 	aClient *acptr, *acptr2;
 	ConfigItem_ban *bconf;
@@ -1048,8 +1048,8 @@ aClient *add_connection(ConfigItem_listen *cptr, int fd)
 	
 	acptr = make_client(NULL, &me);
 
-	/* If listener (cptr) is IPv6 then mark client (acptr) as IPv6 */
-	if (cptr->ipv6)
+	/* If listener is IPv6 then mark client (acptr) as IPv6 */
+	if (listener->ipv6)
 		SetIPV6(acptr);
 
 	ip = getpeerip(acptr, fd, &port);
@@ -1140,7 +1140,7 @@ add_con_refuse:
 	}
 
 	acptr->fd = fd;
-	acptr->local->listener = cptr;
+	acptr->local->listener = listener;
 	if (acptr->local->listener != NULL)
 		acptr->local->listener->clients++;
 	add_client_to_list(acptr);
@@ -1150,9 +1150,9 @@ add_con_refuse:
 
 	list_add(&acptr->lclient_node, &unknown_list);
 
-	if ((cptr->options & LISTENER_SSL) && ctx_server)
+	if ((listener->options & LISTENER_SSL) && ctx_server)
 	{
-		SSL_CTX *ctx = cptr->ssl_ctx ? cptr->ssl_ctx : ctx_server;
+		SSL_CTX *ctx = listener->ssl_ctx ? listener->ssl_ctx : ctx_server;
 
 		if (ctx)
 		{
