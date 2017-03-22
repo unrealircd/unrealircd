@@ -299,6 +299,28 @@ DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 				}
 
 			}
+			if (pm.what == MODE_DEL && (pm.modechar == 'o' || pm.modechar == 'h' || pm.modechar == 'a' || pm.modechar == 'q' || pm.modechar == 'v'))
+			{
+				Member* i;
+				aClient* user = find_client(pm.param,NULL);
+				if (!user)
+					continue;
+
+				if (moded_user_invisible(user,chptr))
+					clear_user_invisible_announce(chptr,user);
+
+				if (pm.modechar == 'v' || !MyConnect(user))
+					continue;
+
+				for (i = chptr->members; i; i = i->next)
+				{
+					if (i->cptr == user)
+						continue;
+					if (moded_user_invisible(i->cptr,chptr))
+						sendto_one(user,":%s!%s@%s PART :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
+				}
+
+			}
 		}
 	}
 
