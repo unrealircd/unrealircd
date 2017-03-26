@@ -364,10 +364,17 @@ int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 	for (ban = *list; ban; ban = ban->next)
 	{
 		len += strlen(ban->banstr);
-		if (MyClient(cptr) && ((len > MAXBANLENGTH) || (++cnt >= MAXBANS)))
+		/* Check MAXBANLENGTH / MAXBANS only for local clients
+		 * and 'me' (for +b's set during +f).
+		 */
+		if ((MyClient(cptr) || IsMe(cptr)) && ((len > MAXBANLENGTH) || (++cnt >= MAXBANS)))
 		{
-			sendto_one(cptr, err_str(ERR_BANLISTFULL),
-			    me.name, cptr->name, chptr->chname, banid);
+			if (MyClient(cptr))
+			{
+				/* Only send the error to local clients */
+				sendto_one(cptr, err_str(ERR_BANLISTFULL),
+				    me.name, cptr->name, chptr->chname, banid);
+			}
 			return -1;
 		}
 		if (identical_ban(ban->banstr, banid))
