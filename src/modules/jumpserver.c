@@ -33,13 +33,6 @@ ModuleHeader MOD_HEADER(jumpserver)
 	NULL 
     };
 
-#if defined(WIN32) && !defined(USE_SSL)
- /* Cheat to have 1 module for both SSL & non-SSL versions */
- #define USE_SSL
- #undef IsSecure
- #define IsSecure(x) (x->flags & 0x10000000) 
-#endif
-
 /* Jumpserver status struct */
 typedef struct _jss JSS;
 struct _jss
@@ -47,10 +40,8 @@ struct _jss
 	char *reason;
 	char *server;
 	int port;
-#ifdef USE_SSL
  	char *ssl_server;
 	int ssl_port;
-#endif
 };
 
 JSS *jss=NULL; /** JumpServer Status. NULL=disabled. */
@@ -84,13 +75,11 @@ MOD_UNLOAD(jumpserver)
 
 static int do_jumpserver_exit_client(aClient *sptr)
 {
-#ifdef USE_SSL
 	if (IsSecure(sptr) && jss->ssl_server)
 		sendto_one(sptr, rpl_str(RPL_REDIR), me.name,
 			BadPtr(sptr->name) ? "*" : sptr->name,
 			jss->ssl_server, jss->ssl_port);
 	else
-#endif
 		sendto_one(sptr, rpl_str(RPL_REDIR), me.name,
 			BadPtr(sptr->name) ? "*" : sptr->name,
 			jss->server, jss->port);
@@ -127,9 +116,7 @@ void free_jss(void)
 	{
 		ircfree(jss->server);
 		ircfree(jss->reason);
-#ifdef USE_SSL
 		ircfree(jss->ssl_server);
-#endif
 		MyFree(jss);
 		jss = NULL;
 	}
@@ -149,12 +136,10 @@ char logbuf[512];
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-#ifdef USE_SSL
 		if (jss && jss->ssl_server)
 			sendnotice(sptr, "JumpServer is \002ENABLED\002 to %s:%d (SSL: %s:%d) with reason '%s'",
 				jss->server, jss->port, jss->ssl_server, jss->ssl_port, jss->reason);
 		else
-#endif
 		if (jss)
 			sendnotice(sptr, "JumpServer is \002ENABLED\002 to %s:%d with reason '%s'",
 				jss->server, jss->port, jss->reason);
@@ -182,9 +167,7 @@ char logbuf[512];
 	{
 		/* Waah, pretty verbose usage info ;) */
 		sendnotice(sptr, "Use: /JUMPSERVER <server>[:port] <NEW|ALL> <reason>");
-#ifdef USE_SSL
 		sendnotice(sptr, " Or: /JUMPSERVER <server>[:port]/<sslserver>[:port] <NEW|ALL> <reason>");
-#endif
 		sendnotice(sptr, "if 'NEW' is chosen then only new (incoming) connections will be redirected");
 		sendnotice(sptr, "if 'ALL' is chosen then all clients except opers will be redirected immediately (+incoming connections)");
 		sendnotice(sptr, "Example: /JUMPSERVER irc2.test.net NEW This server will be upgraded, please use irc2.test.net for now");
@@ -256,24 +239,20 @@ char logbuf[512];
 	/* Set it */
 	jss->server = strdup(serv);
 	jss->port = port;
-#ifdef USE_SSL
 	if (sslserv)
 	{
 		jss->ssl_server = strdup(sslserv);
 		jss->ssl_port = sslport;
 	}
-#endif
 	jss->reason = strdup(reason);
 
 	/* Broadcast/log */
-#ifdef USE_SSL
 	if (sslserv)
 		snprintf(logbuf, sizeof(logbuf), "%s (%s@%s) added JUMPSERVER redirect for %s to %s:%d [SSL: %s:%d] with reason '%s'",
 			sptr->name, sptr->user->username, sptr->user->realhost,
 			all ? "ALL CLIENTS" : "all new clients",
 			jss->server, jss->port, jss->ssl_server, jss->ssl_port, jss->reason);
 	else
-#endif
 		snprintf(logbuf, sizeof(logbuf), "%s (%s@%s) added JUMPSERVER redirect for %s to %s:%d with reason '%s'",
 			sptr->name, sptr->user->username, sptr->user->realhost,
 			all ? "ALL CLIENTS" : "all new clients",
