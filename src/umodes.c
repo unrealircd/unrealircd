@@ -141,7 +141,7 @@ void make_umodestr(void)
 	*m = '\0';
 }
 
-/* umode_get:
+/* UmodeAdd:
  * Add a usermode with character 'ch', if global is set to 1 the usermode is global
  * (sent to other servers) otherwise it's a local usermode
  */
@@ -177,7 +177,7 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 		Usermode_Table[i].flag = ch;
 		Usermode_Table[i].allowed = allowed;
 		Usermode_Table[i].unset_on_deoper = unset_on_deoper;
-		Debug((DEBUG_DEBUG, "umode_get(%c) returning %04x",
+		Debug((DEBUG_DEBUG, "UmodeAdd(%c) returning %04x",
 			ch, Usermode_Table[i].mode));
 		/* Update usermode table highest */
 		for (j = 0; j < UMODETABLESZ; j++)
@@ -489,4 +489,28 @@ void remove_oper_privileges(aClient *sptr, int broadcast_mode_change)
 		send_umode_out(sptr, sptr, oldumodes);
 	if (MyClient(sptr)) /* only do if it's our client, remote servers will send a SWHOIS cmd */
 		swhois_delete(sptr, "oper", "*", &me, NULL);
+}
+
+/** Return long integer mode for a user mode character (eg: 'x' -> 0x10) */
+long find_user_mode(char flag)
+{
+	int i;
+
+	for (i = 0; i < UMODETABLESZ; i++)
+	{
+		if ((Usermode_Table[i].flag == flag) && !(Usermode_Table[i].unloaded))
+			return Usermode_Table[i].mode;
+	}
+	return 0;
+}
+
+/** Returns 1 if user has this user mode set and 0 if not */
+int has_user_mode(aClient *acptr, char mode)
+{
+	long m = find_user_mode(mode);
+
+	if (acptr->umodes & m)
+		return 1; /* Yes, user has this mode */
+
+	return 0; /* Mode does not exist or not set */
 }

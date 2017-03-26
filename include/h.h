@@ -760,6 +760,8 @@ extern MODVAR aClient *remote_rehash_client;
 extern MODVAR int debugfd;
 extern void convert_to_absolute_path(char **path, char *reldir);
 extern int has_channel_mode(aChannel *chptr, char mode);
+extern int has_user_mode(aClient *acptr, char mode);
+extern long find_user_mode(char mode);
 extern void start_listeners(void);
 extern void buildvarstring(char *inbuf, char *outbuf, size_t len, char *name[], char *value[]);
 extern void reinit_ssl(aClient *);
