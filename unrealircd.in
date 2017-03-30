@@ -51,6 +51,7 @@ if [ "$1" = "start" ] ; then
 	fi
 	# Now check if we need to create a crash report.
 	@BINDIR@/unrealircd -R
+    echo `pidof unrealircd` > $PID_FILE
 elif [ "$1" = "stop" ] ; then
 	echo "Stopping UnrealIRCd"
 	if [ ! -r $PID_FILE ] ; then
@@ -168,7 +169,7 @@ elif [ "$1" = "backtrace" ] ; then
 	echo 'info sharedlibrary'|gdb @BINDIR@/unrealircd $corefile 2>/dev/null|\
 	grep No|grep tmp/|awk '{ print $2 }'|\
 	awk -F '.' "{ system(\"[ -f $modpath/\" \$2 \"/\" \$3 \".so ] && ln -s $modpath/\" \$2 \"/\" \$3 \".so \" \$0 \" || ln -s $modpath/\" \$2 \".so \" \$0) }"
-	
+
 	echo ""
 	echo "=================== START HERE ======================"
 	echo "BACKTRACE:"
