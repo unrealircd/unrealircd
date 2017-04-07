@@ -68,7 +68,11 @@ CMD_FUNC(m_motd)
 		return 0;
 
 	if (hunt_server(cptr, sptr, ":%s MOTD :%s", 1, parc, parv) != HUNTED_ISME)
+	{
+		if (MyClient(sptr))
+			sptr->local->since += 15;
 		return 0;
+	}
 
 	ptr = Find_tld(sptr);
 
@@ -77,7 +81,6 @@ CMD_FUNC(m_motd)
 	else
 		themotd = &motd;
 
-      playmotd:
 	if (themotd == NULL || themotd->lines == NULL)
 	{
 		sendto_one(sptr, err_str(ERR_NOMOTD), me.name, sptr->name);
@@ -85,8 +88,7 @@ CMD_FUNC(m_motd)
 		goto svsmotd;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, sptr->name,
-		   me.name);
+	sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, sptr->name, me.name);
 
 	/* tm_year should be zero only if the struct is zero-ed */
 	if (themotd && themotd->lines && themotd->last_modified.tm_year)
@@ -106,16 +108,16 @@ CMD_FUNC(m_motd)
 	while (motdline)
 	{
 		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
-		    motdline->line);
+			motdline->line);
 		motdline = motdline->next;
 	}
-      svsmotd:
+	svsmotd:
 
 	motdline = svsmotd.lines;
 	while (motdline)
 	{
 		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
-		    motdline->line);
+			motdline->line);
 		motdline = motdline->next;
 	}
 	if (svsnofile == 0)
