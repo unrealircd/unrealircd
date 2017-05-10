@@ -543,6 +543,7 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 		case -1:
 			fd_close(fd);
 			acptr->fd = -1;
+			--OpenFiles;
 			return;
 		case 0: 
 			Debug((DEBUG_DEBUG, "SetSSLConnectHandshake(%s)", get_client_name(acptr, TRUE)));
