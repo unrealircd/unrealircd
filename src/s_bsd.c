@@ -436,6 +436,7 @@ void close_listener(ConfigItem_listen *listener)
 			listener->ipv6 ? "IPv6" : "IPv4",
 			listener->options & LISTENER_SSL ? " (SSL)" : "");
 		fd_close(listener->fd);
+		--OpenFiles;
 	}
 
 	listener->options &= ~LISTENER_BOUND;
