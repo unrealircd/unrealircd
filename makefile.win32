@@ -242,6 +242,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/USERMODES/NOKICK.DLL \
  SRC/MODULES/USERMODES/REGONLYMSG.DLL \
  SRC/MODULES/USERMODES/PRIVDEAF.DLL \
+ SRC/MODULES/USERMODES/SECUREONLYMSG.DLL \
  SRC/MODULES/SNOMASKS/DCCREJECT.DLL \
  SRC/MODULES/EXTBANS/ACCOUNT.DLL \
  SRC/MODULES/EXTBANS/INCHANNEL.DLL \
@@ -914,6 +915,9 @@ src/modules/usermodes/regonlymsg.dll: src/modules/usermodes/regonlymsg.c $(INCLU
 
 src/modules/usermodes/privdeaf.dll: src/modules/usermodes/privdeaf.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/privdeaf.c $(MODLFLAGS)
+
+src/modules/usermodes/secureonlymsg.dll: src/modules/usermodes/secureonlymsg.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/secureonlymsg.c $(MODLFLAGS)
 
 src/modules/snomasks/dccreject.dll: src/modules/snomasks/dccreject.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/snomasks/ /Fesrc/modules/snomasks/ src/modules/snomasks/dccreject.c $(MODLFLAGS)
