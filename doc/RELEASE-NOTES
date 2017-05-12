@@ -37,6 +37,8 @@ Other changes:
   modules (and thus not bugs in our code). We now ask users to unload
   any recently installed 3rd party modules first, see if the crash
   issue persists, and only then submit a crash report to us.
+* UnrealIRCd will now refuse to run as root
+  https://www.unrealircd.org/docs/Do_not_run_as_root
 
 Module coders:
 * Added two functions to search for user modes:

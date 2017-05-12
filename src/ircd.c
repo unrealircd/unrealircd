@@ -1020,14 +1020,16 @@ int InitUnrealIRCd(int argc, char *argv[])
 	if (euid == 0)
 	{
 		fprintf(stderr,
-			"WARNING: You are running UnrealIRCd as root. This is VERY DANGEROUS\n"
-			"         as any compromise of your UnrealIRCd will result in full\n"
-			"         privileges to the attacker on the entire machine.\n"
-			"         You should start UnrealIRCd as a different user!!\n");
-		sleep(1);
-		fprintf(stderr, "\nIn a later version we will refuse starting UnrealIRCd as root, see "
-		                "https://www.unrealircd.org/docs/Do_not_run_as_root\n\n");
-		sleep(10); /* just to catch their attention */
+			"** ERROR **\n"
+			"You attempted to run UnrealIRCd as root. This is VERY DANGEROUS\n"
+			"as any compromise of your UnrealIRCd will result in full\n"
+			"privileges to the attacker on the entire machine.\n"
+			"You MUST start UnrealIRCd as a different user!\n"
+			"\n"
+			"For more information, see:\n"
+			"https://www.unrealircd.org/docs/Do_not_run_as_root\n"
+			"\n");
+		exit(1);
 	}
 # ifdef	PROFIL
 	(void)monstartup(0, etext);
