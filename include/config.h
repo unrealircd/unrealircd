@@ -340,7 +340,7 @@
  * 2004-10-13: 1024 -> 4096
  */
 #ifndef MAXCONNECTIONS
-#define MAXCONNECTIONS	4096
+#define MAXCONNECTIONS	10240
 #endif
 
 /*
