@@ -124,7 +124,7 @@ char **explode(char *str, char *delimiter)
 	return ret;
 }
 
-void crash_report_fix_libs(char *coredump)
+void crash_report_fix_libs(char *coredump, int *thirdpartymods)
 {
 #ifndef _WIN32
 	FILE *fd;
@@ -136,7 +136,7 @@ void crash_report_fix_libs(char *coredump)
 	fd = popen(cmd, "r");
 	if (!fd)
 		return;
-	
+
 	while((fgets(buf, sizeof(buf), fd)))
 	{
 		char *file, *path;
@@ -144,6 +144,9 @@ void crash_report_fix_libs(char *coredump)
 		char **arr;
 
 		stripcrlf(buf);
+
+		if (strstr(buf, ".third."))
+		    *thirdpartymods = 1;
 
 		/* Output we are interested is something like this:
 		 * <many spaces>    No        /home/blabla/unrealircd/tmp/5114DF16.m_kick.so
@@ -368,10 +371,12 @@ int attach_coredump(FILE *fdo, char *coredump)
 	return 1;
 }
 
-char *generate_crash_report(char *coredump)
+char *generate_crash_report(char *coredump, int *thirdpartymods)
 {
 	static char reportfname[512];
 	FILE *reportfd;
+
+	*thirdpartymods = 0;
 
 	if (coredump == NULL)
 		coredump = find_best_coredump();
@@ -393,7 +398,7 @@ char *generate_crash_report(char *coredump)
 	}
 
 	crash_report_header(reportfd, coredump);
-	crash_report_fix_libs(coredump);
+	crash_report_fix_libs(coredump, thirdpartymods);
 	
 	crash_report_backtrace(reportfd, coredump);
 
@@ -583,6 +588,7 @@ static int report_pref = REPORT_ASK;
 void report_crash(void)
 {
 	char *coredump, *fname;
+	int thirdpartymods = 0;
 	int crashed_secs_ago;
 
 	if (!running_interactive() && (report_pref != REPORT_AUTO))
@@ -596,14 +602,28 @@ void report_crash(void)
 	if (crashed_secs_ago > 86400*7)
 		return; /* stop bothering about it after a while */
 
-	fname = generate_crash_report(coredump);
+	fname = generate_crash_report(coredump, &thirdpartymods);
 	
 	if (!fname)
 		return;
-		
+
 #ifndef _WIN32
 	printf("The IRCd has been started now (and is running), but it did crash %d seconds ago.\n", crashed_secs_ago);
 	printf("Crash report generated in: %s\n\n", fname);
+
+	if (thirdpartymods)
+	{
+	    printf("** IMPORTANT **\n"
+               "Your UnrealIRCd crashed and you have 3rd party modules loaded (modules created\n"
+               "by someone other than the UnrealIRCd team). If you installed new 3rd party\n"
+               "module(s) in the past few weeks we suggest to unload these modules and see if\n"
+               "the crash issue dissapears. If so, that module is probably to blame.\n"
+               "If you keep crashing without 3rd party modules then please do report it to\n"
+               "the UnrealIRCd team.\n"
+               "The reason we ask you to do this is because more than 95%% of the crash issues\n"
+               "reported nowadays are caused by 3rd party modules and not by an UnrealIRCd bug.\n"
+               "\n");
+	}
 		
 	if (report_pref == REPORT_NEVER)
 	{
@@ -613,8 +633,9 @@ void report_crash(void)
 	if (report_pref == REPORT_ASK)
 	{
 		char answerbuf[64], *answer;
-		printf("May I send a crash report to the UnrealIRCd developers?\n");
-		printf("Crash reports help us greatly with fixing bugs that affect you and others\n");
+		printf("Shall I send a crash report to the UnrealIRCd developers?\n");
+		if (!thirdpartymods)
+		    printf("Crash reports help us greatly with fixing bugs that affect you and others\n");
 		printf("\n");
 		
 		do
@@ -681,6 +702,7 @@ void report_crash(void)
 		printf("\nThe crash report has been sent to the UnrealIRCd developers. "
 		       "Thanks a lot for helping to make UnrealIRCd a better product!\n\n");
 	}
+
 #else
 	/* Windows */
 	if (MessageBox(NULL, "UnrealIRCd crashed. May I send a report about this to the UnrealIRCd developers? This helps us a lot.",
