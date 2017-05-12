@@ -1,17 +1,47 @@
-UnrealIRCd 4.0.11 Release Notes
+UnrealIRCd 4.0.12 Release Notes
 ================================
 
-==[ CHANGES BETWEEN 4.0.10 AND 4.0.11 ]==
+==[ CHANGES BETWEEN 4.0.11 AND 4.0.12 ]==
+Enhancements:
+* New user mode +Z: Only allow SSL/TLS users to private message you.
+* Ability to hide all channels in /LIST that you cannot join due to
+  deny channel blocks: set { hide-list { deny-channel }; };
+* The optional 'nocodes' module which you can load will make +S/+c
+  also block/strip bold, underline and italic text. (The latter is new)
+* Add support for 'mask' in allow channel { } and deny channel { }
+  and add some support for negative 'mask'. Probably not very useful
+  on most networks with services since bans/AKICK do the same, but:
+  deny channel { channel "#help*"; };
+  allow channel { channel "#help-nolan"; mask !192.168.*; };
+  allow channel { channel "#help-lan"; mask 192.168.*; };
+
 Major issues fixed:
-* Fix crash issue that can be triggered by regular users
-* Fix crash if TOPIC_NICK_IS_NUHOST is enabled (rarely enabled)
-* Fix crash if services send an incorrect raw command
+* Crash issue if a module using ModData was unloading (not reloading)
+* Vhosts were not always correctly synched across servers.
+* The maximum number of clients that a server could accept was decreased
+  by one on every linking attempt if it was both: 1) an outgoing
+  SSL/TLS linking attempt; AND 2) the error was "Connection refused".
 
 Minor issues fixed:
-* Now properly support 'z' when used in set::modes-on-join
+* Adjustments to channel mode +f were not always effective.
+* If you have a vhost set and wish to remove it and change to a cloaked
+  host you can now safely use '/MODE yournick -t'. This feature was
+  rarely used so far and it previously had a bug which caused it to
+  still expose the real host/IP to others. This has been resolved.
+* Channel mode +D (delayjoin): when people are de-oped we now part
+  'hidden' users to avoid a client desynch.
+* Bump lag for remote MOTD requests to avoid flooding.
 
 Other changes:
-* Show a warning if you don't have any SSL listeners
+* More than 95% of the crashes reported to us are due to 3rd party
+  modules (and thus not bugs in our code). We now ask users to unload
+  any recently installed 3rd party modules first, see if the crash
+  issue persists, and only then submit a crash report to us.
+
+Module coders:
+* Added two functions to search for user modes:
+  has_user_mode(acptr, 'i') // returns 1 / 0
+  find_user_mode('i') // returns the user mode (as 'long')
 
 ==[ UNREALIRCD 4 INTRODUCTION ]==
 
@@ -77,6 +107,18 @@ Before you seek support, please check our documentation and FAQ:
 For support you have two choices:
 * Forums: https://forums.unrealircd.org/
 * IRC: irc.unrealircd.org / #unreal-support
+
+==[ CHANGES BETWEEN 4.0.10 AND 4.0.11 ]==
+Major issues fixed:
+* Fix crash issue that can be triggered by regular users
+* Fix crash if TOPIC_NICK_IS_NUHOST is enabled (rarely enabled)
+* Fix crash if services send an incorrect raw command
+
+Minor issues fixed:
+* Now properly support 'z' when used in set::modes-on-join
+
+Other changes:
+* Show a warning if you don't have any SSL listeners
 
 ==[ CHANGES BETWEEN 4.0.9 AND 4.0.10 ]==
 Improvements:
