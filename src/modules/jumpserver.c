@@ -57,6 +57,7 @@ int jumpserver_preconnect(aClient *);
 
 MOD_INIT(jumpserver)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
 	CommandAdd(modinfo->handle, MSG_JUMPSERVER, m_jumpserver, 3, M_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, jumpserver_preconnect);

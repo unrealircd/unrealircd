@@ -87,7 +87,9 @@ char *textban_chanmsg(aClient *, aChannel *, char *, int);
 
 MOD_INIT(textban)
 {
-ExtbanInfo req;
+	ExtbanInfo req;
+
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'T';

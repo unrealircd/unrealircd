@@ -84,6 +84,7 @@ MOD_TEST(hideserver)
 
 MOD_INIT(hideserver)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	SAVE_MODINFO
 	HiddenServers = NULL;
 	InitConf();

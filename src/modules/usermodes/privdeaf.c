@@ -21,6 +21,7 @@ char *privdeaf_checkmsg(aClient *, aClient *, char *, int);
 
 MOD_INIT(privdeaf)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	UmodePrivdeaf = UmodeAdd(modinfo->handle, 'D', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_PRIVDEAF);
 	if (!UmodePrivdeaf)
 	{

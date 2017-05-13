@@ -587,6 +587,7 @@ MOD_TEST(antirandom)
 
 MOD_INIT(antirandom)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	if (!init_stuff())
 	{
 		config_error("antirandom: loading aborted");

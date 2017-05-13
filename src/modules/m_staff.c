@@ -87,6 +87,7 @@ MOD_TEST(m_staff)
 
 MOD_INIT(m_staff)
 {
+    MARK_AS_OFFICIAL_MODULE(modinfo);
 #ifdef USE_LIBCURL
 	memset(&Download, 0, sizeof Download);
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);

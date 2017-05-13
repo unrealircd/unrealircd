@@ -44,6 +44,7 @@ ModuleHeader MOD_HEADER(m_ircops)
 
 MOD_INIT(m_ircops)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	if (CommandExists(MSG_IRCOPS))
 	{
 		config_error("Command " MSG_IRCOPS " already exists");
