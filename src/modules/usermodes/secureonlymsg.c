@@ -60,7 +60,7 @@ MOD_UNLOAD(secureonlymsg)
 
 char *secureonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int notice)
 {
-	if (IsSecureOnlyMsg(target) && !IsServer(sptr) && !IsULine(sptr) && !IsSecure(sptr))
+	if (IsSecureOnlyMsg(target) && !IsServer(sptr) && !IsULine(sptr) && !IsSecureConnect(sptr))
 	{
 		if (ValidatePermissionsForPath("override:message:secureonly",sptr,target,NULL,text))
 			return text; /* TODO: this is actually an override */
@@ -75,7 +75,7 @@ char *secureonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int 
 
 		return NULL; /* Block the message */
 	} else
-	if (IsSecureOnlyMsg(sptr) && !IsSecure(target) && !IsULine(target))
+	if (IsSecureOnlyMsg(sptr) && !IsSecureConnect(target) && !IsULine(target))
 	{
 		if (ValidatePermissionsForPath("override:message:secureonly",sptr,target,NULL,text))
 			return text; /* TODO: this is actually an override */
