@@ -1,5 +1,11 @@
-UnrealIRCd 4.0.12 Release Notes
-================================
+UnrealIRCd 4.0.12.1 Release Notes
+==================================
+
+==[ CHANGES IN THE 4.0.12.1 VERSION ]==
+* Fix new user mode +Z (secureonly) not working properly across
+  server links.
+* Some other minor changes
+* For rest of 4.0.11 to 4.0.12 changes see below:
 
 ==[ CHANGES BETWEEN 4.0.11 AND 4.0.12 ]==
 Enhancements:
