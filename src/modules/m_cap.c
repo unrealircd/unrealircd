@@ -77,7 +77,7 @@ MOD_UNLOAD(m_cap)
 	return MOD_SUCCESS;
 }
 
-static ClientCapability *clicap_find(const char *data, int *negate, int *finished)
+static ClientCapability *clicap_find(const char *data, int *negate, int *finished, int *errors)
 {
 	static char buf[BUFSIZE];
 	static char *p;
@@ -90,6 +90,8 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 	{
 		strlcpy(buf, data, sizeof(buf));
 		p = buf;
+		*finished = 0;
+		*errors = 0;
 	}
 
 	if (*finished)
@@ -123,6 +125,9 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 		*finished = 1;
 	
 	p = s; /* point to next token for next iteration */
+
+	if (!cap)
+		*errors = 1;
 
 	return cap;
 }
@@ -219,12 +224,13 @@ static int cap_ack(aClient *sptr, const char *arg)
 	ClientCapability *cap;
 	int capadd = 0, capdel = 0;
 	int finished = 0, negate;
+	int errors = 0;
 
 	if (BadPtr(arg))
 		return 0;
 
-	for(cap = clicap_find(arg, &negate, &finished); cap;
-	    cap = clicap_find(NULL, &negate, &finished))
+	for(cap = clicap_find(arg, &negate, &finished, &errors); cap;
+	    cap = clicap_find(NULL, &negate, &finished, &errors))
 	{
 		/* sent an ACK for something they havent REQd */
 		if(!CHECKPROTO(sptr, cap->cap))
@@ -292,6 +298,7 @@ static int cap_req(aClient *sptr, const char *arg)
 	int i = 0;
 	int capadd = 0, capdel = 0;
 	int finished = 0, negate;
+	int errors = 0;
 
 	if (!IsRegisteredUser(sptr))
 		sptr->local->proto |= PROTO_CLICAP;
@@ -305,8 +312,8 @@ static int cap_req(aClient *sptr, const char *arg)
 	pbuf[0][0] = '\0';
 	plen = 0;
 
-	for(cap = clicap_find(arg, &negate, &finished); cap;
-	    cap = clicap_find(NULL, &negate, &finished))
+	for(cap = clicap_find(arg, &negate, &finished, &errors); cap;
+	    cap = clicap_find(NULL, &negate, &finished, &errors))
 	{
 		/* filled the first array, but cant send it in case the
 		 * request fails.  one REQ should never fill more than two
@@ -354,7 +361,7 @@ static int cap_req(aClient *sptr, const char *arg)
 		plen += (strlen(cap->name) + 1);
 	}
 
-	if (!finished)
+	if (errors)
 	{
 		sendto_one(sptr, ":%s CAP %s NAK :%s", me.name, BadPtr(sptr->name) ? "*" : sptr->name, arg);
 		return 0;
