@@ -81,7 +81,7 @@ void set_oper_host(aClient *sptr, char *host)
 */
 CMD_FUNC(m_oper)
 {
-	ConfigItem_oper *aconf;
+	ConfigItem_oper *operblock;
 	char *name, *password;
 	int i = 0, j = 0;
 	long old = sptr->umodes & ALL_UMODES; /* old user modes */
@@ -114,7 +114,7 @@ CMD_FUNC(m_oper)
 	name = parv[1];
 	password = (parc > 2) ? parv[2] : "";
 
-	if (!(aconf = Find_oper(name)))
+	if (!(operblock = Find_oper(name)))
 	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, sptr->name);
 		sendto_snomask_global
@@ -126,7 +126,7 @@ CMD_FUNC(m_oper)
 		return 0;
 	}
 
-	if (!unreal_mask_match(sptr, aconf->mask))
+	if (!unreal_mask_match(sptr, operblock->mask))
 	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, sptr->name);
 		sendto_snomask_global
@@ -138,7 +138,7 @@ CMD_FUNC(m_oper)
 		return 0;
 	}
 
-	i = Auth_Check(cptr, aconf->auth, password);
+	i = Auth_Check(cptr, operblock->auth, password);
 	if (i == -1)
 	{
 		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, sptr->name);
@@ -163,24 +163,24 @@ CMD_FUNC(m_oper)
 	 */
 
 	/* Check oper::require_modes */
-	if (aconf->require_modes & ~sptr->umodes)
+	if (operblock->require_modes & ~sptr->umodes)
 	{
 		sendto_one(sptr, ":%s %d %s :You are missing user modes required to OPER", me.name, ERR_NOOPERHOST, sptr->name);
 		sendto_snomask_global
 			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) [lacking modes '%s' in oper::require-modes]",
-			 sptr->name, sptr->user->username, sptr->local->sockhost, get_modestr(aconf->require_modes & ~sptr->umodes));
+			 sptr->name, sptr->user->username, sptr->local->sockhost, get_modestr(operblock->require_modes & ~sptr->umodes));
 		ircd_log(LOG_OPER, "OPER MISSINGMODES (%s) by (%s!%s@%s), needs modes=%s",
 			 name, sptr->name, sptr->user->username, sptr->local->sockhost,
-			 get_modestr(aconf->require_modes & ~sptr->umodes));
+			 get_modestr(operblock->require_modes & ~sptr->umodes));
 		sptr->local->since += 7;
 		return 0;
 	}
 
-	if (aconf->maxlogins && (count_oper_sessions(aconf->name) >= aconf->maxlogins))
+	if (operblock->maxlogins && (count_oper_sessions(operblock->name) >= operblock->maxlogins))
 	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, sptr->name);
 		sendto_one(sptr, ":%s NOTICE %s :Your maximum number of concurrent oper logins has been reached (%d)",
-			me.name, sptr->name, aconf->maxlogins);
+			me.name, sptr->name, operblock->maxlogins);
 		sendto_snomask_global
 			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [maxlogins reached]",
 			sptr->name, sptr->user->username, sptr->local->sockhost, name);
@@ -194,33 +194,33 @@ CMD_FUNC(m_oper)
 
 	/* Store which oper block was used to become IRCOp (for maxlogins and whois) */
 	safefree(sptr->user->operlogin);
-	sptr->user->operlogin = strdup(aconf->name);
+	sptr->user->operlogin = strdup(operblock->name);
 
 	/* Put in the right class */
 	if (sptr->local->class)
 		sptr->local->class->clients--;
-	sptr->local->class = aconf->class;
+	sptr->local->class = operblock->class;
 	sptr->local->class->clients++;
 
 	/* oper::swhois */
-	if (aconf->swhois)
+	if (operblock->swhois)
 	{
 		SWhois *s;
-		for (s = aconf->swhois; s; s = s->next)
+		for (s = operblock->swhois; s; s = s->next)
 			swhois_add(sptr, "oper", -100, s->line, &me, NULL);
 	}
 
 	/* set oper user modes */
 	sptr->umodes |= UMODE_OPER;
-	if (aconf->modes)
-		sptr->umodes |= aconf->modes; /* oper::modes */
+	if (operblock->modes)
+		sptr->umodes |= operblock->modes; /* oper::modes */
 	else
 		sptr->umodes |= OPER_MODES; /* set::modes-on-oper */
 
 	/* oper::vhost */
-	if (aconf->vhost)
+	if (operblock->vhost)
 	{
-		set_oper_host(sptr, aconf->vhost);
+		set_oper_host(sptr, operblock->vhost);
 	} else
 	if (IsHidden(sptr) && !sptr->user->virthost)
 	{
@@ -237,8 +237,8 @@ CMD_FUNC(m_oper)
 		sptr->local->sockhost);
 
 	/* set oper snomasks */
-	if (aconf->snomask)
-		set_snomask(sptr, aconf->snomask); /* oper::snomask */
+	if (operblock->snomask)
+		set_snomask(sptr, operblock->snomask); /* oper::snomask */
 	else
 		set_snomask(sptr, OPER_SNOMASK); /* set::snomask-on-oper */
 
