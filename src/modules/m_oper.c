@@ -176,6 +176,18 @@ CMD_FUNC(m_oper)
 		return 0;
 	}
 
+	if (!Find_operclass(operblock->operclass))
+	{
+		sendnotice(sptr, "ERROR: There is a non-existant oper::operclass specified for your oper block");
+		ircd_log(LOG_ERROR, "OPER MISSINGOPERCLASS (%s) by (%s!%s@%s), oper::operclass does not exist: %s",
+			name, sptr->name, sptr->user->username, sptr->local->sockhost,
+			operblock->operclass);
+		sendto_snomask_global
+			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) [oper::operclass does not exist: '%s']",
+			sptr->name, sptr->user->username, sptr->local->sockhost, operblock->operclass);
+		return 0;
+	}
+
 	if (operblock->maxlogins && (count_oper_sessions(operblock->name) >= operblock->maxlogins))
 	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, sptr->name);
