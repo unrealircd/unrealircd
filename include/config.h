@@ -434,6 +434,11 @@
  */
 #undef EXPERIMENTAL
 
+/* Default SSL/TLS cipherlist.
+ * This can be changed via set::ssl::options::ciphers in the config file.
+ */
+#define UNREALIRCD_DEFAULT_CIPHERS "EECDH+CHACHA20 EECDH+AESGCM EECDH+AES AES128-GCM-SHA256 AES256-GCM-SHA384 AES128-SHA256 AES256-SHA256 AES128-SHA AES256-SHA"
+
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
 #define RULES RPATH

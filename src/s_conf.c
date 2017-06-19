@@ -1473,7 +1473,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ssl_options->key_file = strdup(tmp);
 	snprintf(tmp, sizeof(tmp), "%s/ssl/curl-ca-bundle.crt", CONFDIR);
 	i->ssl_options->trusted_ca_file = strdup(tmp);
-	i->ssl_options->ciphers = strdup("EECDH+CHACHA20 EECDH+AESGCM EECDH+AES AES128-GCM-SHA256 AES256-GCM-SHA384 AES128-SHA256 AES256-SHA256 AES128-SHA AES256-SHA");
+	i->ssl_options->ciphers = strdup(UNREALIRCD_DEFAULT_CIPHERS);
 	i->ssl_options->protocols = SSL_PROTOCOL_ALL;
 }
 

@@ -448,6 +448,8 @@ int getfilesize(char *fname)
 SSL_CTX *crashreport_init_ssl(void)
 {
 	SSL_CTX *ctx_client;
+	X509_VERIFY_PARAM *param = NULL;
+	char buf[512];
 	
 	SSL_load_error_strings();
 	SSLeay_add_ssl_algorithms();
@@ -456,6 +458,24 @@ SSL_CTX *crashreport_init_ssl(void)
 	if (!ctx_client)
 		return NULL;
 	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3);
+
+	/* Verify peer certificate */
+	snprintf(buf, sizeof(buf), "%s/ssl/curl-ca-bundle.crt", CONFDIR);
+	SSL_CTX_load_verify_locations(ctx_client, buf, NULL);
+	SSL_CTX_set_verify(ctx_client, SSL_VERIFY_PEER, NULL);
+
+#if OPENSSL_VERSION_NUMBER > 0x1000200f
+	/* Enable hostname checks. This is only in OpenSSL 1.0.2+ */
+	param = SSL_CTX_get0_param(ctx_client);
+	X509_VERIFY_PARAM_set1_host(param, CRASH_REPORT_HOST, 0);
+#ifdef X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS
+	/* This one requires even a newer version */
+	X509_VERIFY_PARAM_set_hostflags(param, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+#endif
+#endif
+
+	/* Limit ciphers as well */
+	SSL_CTX_set_cipher_list(ctx_client, UNREALIRCD_DEFAULT_CIPHERS);
 
 	return ctx_client;
 }	
