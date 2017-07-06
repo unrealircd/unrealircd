@@ -586,15 +586,19 @@ AC_ARG_WITH(pidfile, [AS_HELP_STRING([--with-pidfile=path],[Specify the path of 
 	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/unrealircd.pid"], [Define the path of the pid file])
 		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"])
 
-LDFLAGS_PRIVATELIBS=""
-AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored])],
-	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$withval"], [Define the location of private libraries])
-		PRIVATELIBDIR="$withval"
-		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
-		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
-		export LDFLAGS],
-	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$HOME/unrealircd/lib"], [Define the location of private libraries])
-		PRIVATELIBDIR="$HOME/unrealircd/lib"
+dnl Ensure that this “feature” can be disabled as it makes it harder to package unrealircd.
+dnl Users have always been able to specify “./configure LDFLAGS=-Wl,-rpath,/path/to/blah”—binki
+AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored. Disable when building a package for a distro])],
+	[],
+	[with_privatelibdir="yes"])
+AS_IF([test "x$with_privatelibdir" = "xno"],
+	[PRIVATELIBDIR=],
+	[test "x$with_privatelibdir" = "xyes"],
+	[PRIVATELIBDIR="$HOME/unrealircd/lib"],
+	[PRIVATELIBDIR="$with_privatelibdir"])
+AS_IF([test "x$PRIVATELIBDIR" = "x"],
+	[LDFLAGS_PRIVATELIBS=""],
+	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$PRIVATELIBDIR"], [Define the location of private libraries])
 		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS])
