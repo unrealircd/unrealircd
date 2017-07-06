@@ -18,6 +18,7 @@ src/modules/usermodes/Makefile
 src/modules/Makefile
 src/modules/third/Makefile
 /Makefile
+/src/Makefile
 /unrealircd
 include/setup.h
 
