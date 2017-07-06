@@ -786,7 +786,7 @@ dnl Use system c-ares when available, unless --without-system-cares.
 has_system_cares="no"
 AS_IF([test "x$with_system_cares" = "xyes"],[
 PKG_CHECK_MODULES([CARES], libcares >= 1.6.0,[has_system_cares=yes
-rm -f "$PRIVATELIBDIR/"libcares*],[has_system_cares=no])])
+AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libcares*])],[has_system_cares=no])])
 
 AS_IF([test "$has_system_cares" = "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
