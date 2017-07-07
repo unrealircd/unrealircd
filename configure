@@ -1427,7 +1427,7 @@ Optional Packages:
   --with-pidfile=path     Specify the path of the pid file
   --with-privatelibdir=path
                           Specify the directory where private libraries are
-                          stored
+                          stored. Disable when building a package for a distro
   --with-fd-setsize=size  Specify the max file descriptors to use
   --with-showlistmodes    Specify whether modes are shown in /list
   --with-topicisnuhost    Display nick!user@host as the topic setter
@@ -6962,31 +6962,33 @@ _ACEOF
 fi
 
 
-LDFLAGS_PRIVATELIBS=""
 
 # Check whether --with-privatelibdir was given.
 if test "${with_privatelibdir+set}" = set; then :
   withval=$with_privatelibdir;
-cat >>confdefs.h <<_ACEOF
-#define PRIVATELIBDIR "$withval"
-_ACEOF
+else
+  with_privatelibdir="yes"
+fi
 
-		PRIVATELIBDIR="$withval"
-		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
-		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
-		export LDFLAGS
+if test "x$with_privatelibdir" = "xno"; then :
+  PRIVATELIBDIR=
+elif test "x$with_privatelibdir" = "xyes"; then :
+  PRIVATELIBDIR="$HOME/unrealircd/lib"
+else
+  PRIVATELIBDIR="$with_privatelibdir"
+fi
+if test "x$PRIVATELIBDIR" = "x"; then :
+  LDFLAGS_PRIVATELIBS=""
 else
 
 cat >>confdefs.h <<_ACEOF
-#define PRIVATELIBDIR "$HOME/unrealircd/lib"
+#define PRIVATELIBDIR "$PRIVATELIBDIR"
 _ACEOF
 
-		PRIVATELIBDIR="$HOME/unrealircd/lib"
 		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS
 fi
-
 
 
 
@@ -7876,7 +7878,9 @@ else
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 	has_system_cares=yes
-rm -f "$PRIVATELIBDIR/"libcares*
+if test "x$PRIVATELIBDIR" != "x"; then :
+  rm -f "$PRIVATELIBDIR/"libcares*
+fi
 fi
 fi
 
