@@ -586,15 +586,19 @@ AC_ARG_WITH(pidfile, [AS_HELP_STRING([--with-pidfile=path],[Specify the path of 
 	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/unrealircd.pid"], [Define the path of the pid file])
 		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"])
 
-LDFLAGS_PRIVATELIBS=""
-AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored])],
-	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$withval"], [Define the location of private libraries])
-		PRIVATELIBDIR="$withval"
-		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
-		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
-		export LDFLAGS],
-	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$HOME/unrealircd/lib"], [Define the location of private libraries])
-		PRIVATELIBDIR="$HOME/unrealircd/lib"
+dnl Ensure that this “feature” can be disabled as it makes it harder to package unrealircd.
+dnl Users have always been able to specify “./configure LDFLAGS=-Wl,-rpath,/path/to/blah”—binki
+AC_ARG_WITH(privatelibdir, [AS_HELP_STRING([--with-privatelibdir=path],[Specify the directory where private libraries are stored. Disable when building a package for a distro])],
+	[],
+	[with_privatelibdir="yes"])
+AS_IF([test "x$with_privatelibdir" = "xno"],
+	[PRIVATELIBDIR=],
+	[test "x$with_privatelibdir" = "xyes"],
+	[PRIVATELIBDIR="$HOME/unrealircd/lib"],
+	[PRIVATELIBDIR="$with_privatelibdir"])
+AS_IF([test "x$PRIVATELIBDIR" = "x"],
+	[LDFLAGS_PRIVATELIBS=""],
+	[AC_DEFINE_UNQUOTED([PRIVATELIBDIR], ["$PRIVATELIBDIR"], [Define the location of private libraries])
 		LDFLAGS_PRIVATELIBS="-Wl,-rpath=$PRIVATELIBDIR"
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS])
@@ -782,7 +786,7 @@ dnl Use system c-ares when available, unless --without-system-cares.
 has_system_cares="no"
 AS_IF([test "x$with_system_cares" = "xyes"],[
 PKG_CHECK_MODULES([CARES], libcares >= 1.6.0,[has_system_cares=yes
-rm -f "$PRIVATELIBDIR/"libcares*],[has_system_cares=no])])
+AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libcares*])],[has_system_cares=no])])
 
 AS_IF([test "$has_system_cares" = "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
