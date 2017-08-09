@@ -52,14 +52,58 @@ MOD_UNLOAD(sts)
 	return MOD_SUCCESS;
 }
 
+SSLOptions *FindSSLOptionsForUser(aClient *acptr)
+{
+	if (!MyConnect(acptr) || !IsSecure(acptr))
+		return NULL;
+
+	/* TODO: different sts-policy depending on SNI */
+
+	if (!iConf.ssl_options)
+		return NULL;
+
+	return iConf.ssl_options;
+}
+
 int sts_capability_visible(aClient *acptr)
 {
-	return 1;
+	SSLOptions *ssl;
+
+	if (!MyConnect(acptr))
+		return 0; /* not needed I guess */
+
+	if (!IsSecure(acptr))
+	{
+		if (iConf.ssl_options && iConf.ssl_options->sts_port)
+			return 1; /* YES, non-SSL user and set::ssl::sts-policy configured */
+		return 0; /* NO, there is no sts-policy */
+	}
+
+	ssl = FindSSLOptionsForUser(acptr);
+
+	if (ssl && ssl->sts_port)
+		return 1;
+
+	return 0;
 }
 
 char *sts_capability_parameter(aClient *acptr)
 {
-	return "port=6697";
+	SSLOptions *ssl;
+	static char buf[256];
+
+	ssl = FindSSLOptionsForUser(acptr);
+	if (!ssl)
+		ssl = iConf.ssl_options; /* default, eg: for non-SSL users */
+
+	if (!ssl)
+		return ""; /* A possible, but rather silly configuration error. */
+
+	snprintf(buf, sizeof(buf), "port=%d,duration=%ld", ssl->sts_port, ssl->sts_duration);
+	if (ssl->sts_preload)
+		strlcat(buf, ",preload", sizeof(buf));
+
+	return buf;
 }
 
 void init_sts(ModuleInfo *modinfo)

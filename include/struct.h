@@ -1116,6 +1116,9 @@ struct _ssloptions {
 	long options;
 	int renegotiate_bytes;
 	int renegotiate_timeout;
+	int sts_port;
+	long sts_duration;
+	int sts_preload;
 };
 
 struct _configitem_mask {

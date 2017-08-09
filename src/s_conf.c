@@ -7137,6 +7137,56 @@ void test_sslblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 					errors ++;
 				}
 		}
+		else if (!strcmp(cepp->ce_varname, "sts-policy"))
+		{
+		    int has_port = 0;
+		    int has_duration = 0;
+			for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+			{
+			    if (!strcmp(ceppp->ce_varname, "port"))
+			    {
+			        int port;
+			        CheckNull(ceppp);
+			        port = atoi(ceppp->ce_vardata);
+			        if ((port < 1) || (port > 65535))
+			        {
+			            config_error("%s:%i: invalid port number specified in sts-policy::port (%d)",
+			                ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, port);
+                        errors++;
+			        }
+			        has_port = 1;
+                }
+			    else if (!strcmp(ceppp->ce_varname, "duration"))
+			    {
+			        long duration;
+			        CheckNull(ceppp);
+			        duration = config_checkval(ceppp->ce_vardata, CFG_TIME);
+			        if (duration < 1)
+			        {
+			            config_error("%s:%i: invalid duration specified in sts-policy::duration (%ld seconds)",
+			                ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, duration);
+                        errors++;
+			        }
+			        has_duration = 1;
+                }
+			    else if (!strcmp(ceppp->ce_varname, "preload"))
+			    {
+			        CheckNull(ceppp);
+                }
+			}
+			if (!has_port)
+			{
+			    config_error("%s:%i: sts-policy block without port",
+			        cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+                errors++;
+			}
+			if (!has_duration)
+			{
+			    config_error("%s:%i: sts-policy block without duration",
+			        cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+                errors++;
+			}
+		}
 		else
 		{
 			config_error("%s:%i: unknown directive %s",
@@ -7180,6 +7230,9 @@ void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions)
 		ssloptions->options = tempiConf.ssl_options->options;
 		ssloptions->renegotiate_bytes = tempiConf.ssl_options->renegotiate_bytes;
 		ssloptions->renegotiate_timeout = tempiConf.ssl_options->renegotiate_timeout;
+		ssloptions->sts_port = tempiConf.ssl_options->sts_port;
+		ssloptions->sts_duration = tempiConf.ssl_options->sts_duration;
+		ssloptions->sts_preload = tempiConf.ssl_options->sts_preload;
 	}
 
 	/* Now process the options */
@@ -7269,6 +7322,22 @@ void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions)
 			if (ssloptions->options & SSLFLAG_DONOTACCEPTSELFSIGNED)
 				if (!(ssloptions->options & SSLFLAG_VERIFYCERT))
 					ssloptions->options |= SSLFLAG_VERIFYCERT;
+		}
+		else if (!strcmp(cepp->ce_varname, "sts-policy"))
+		{
+		    /* We do not inherit ::sts-policy if there is a specific block for this one... */
+			ssloptions->sts_port = 0;
+			ssloptions->sts_duration = 0;
+			ssloptions->sts_preload = 0;
+			for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+			{
+			    if (!strcmp(ceppp->ce_varname, "port"))
+			        ssloptions->sts_port = atoi(ceppp->ce_vardata);
+			    else if (!strcmp(ceppp->ce_varname, "duration"))
+			        ssloptions->sts_duration = config_checkval(ceppp->ce_vardata, CFG_TIME);
+			    else if (!strcmp(ceppp->ce_varname, "preload"))
+			        ssloptions->sts_preload = config_checkval(ceppp->ce_vardata, CFG_YESNO);
+			}
 		}
 	}
 }
