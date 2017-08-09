@@ -2631,7 +2631,7 @@ ConfigItem_sni *Find_sni(char *name)
 
 	for (e = conf_sni; e; e = e->next)
 	{
-        if (!match(name, e->name))
+        if (!match(e->name, name))
             return e;
 	}
 	return NULL;
