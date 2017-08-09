@@ -188,6 +188,19 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 		return 1;
 }
 
+static int ssl_hostname_callback(SSL *ssl, int *unk, void *arg)
+{
+    char *name = (char *)SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
+    ConfigItem_sni *sni;
+
+    if (name && (sni = Find_sni(name)))
+    {
+        SSL_set_SSL_CTX(ssl, sni->ssl_ctx);
+    }
+
+    return SSL_TLSEXT_ERR_OK;
+}
+
 static void mylog(char *fmt, ...)
 {
 va_list vl;
@@ -352,6 +365,11 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 #endif
 		SSL_CTX_set_options(ctx, SSL_OP_SINGLE_ECDH_USE|SSL_OP_SINGLE_DH_USE);
 	}
+
+    if (server)
+    {
+        SSL_CTX_set_tlsext_servername_callback(ctx, ssl_hostname_callback);
+    }
 
 	return ctx;
 fail:

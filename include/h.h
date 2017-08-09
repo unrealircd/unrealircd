@@ -107,6 +107,7 @@ extern ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
 extern ConfigItem_oper		*Find_oper(char *name);
 extern ConfigItem_operclass	*Find_operclass(char *name);
 extern ConfigItem_listen *Find_listen(char *ipmask, int port, int ipv6);
+extern ConfigItem_sni *Find_sni(char *name);
 extern ConfigItem_ulines	*Find_uline(char *host);
 extern ConfigItem_except	*Find_except(aClient *, short type);
 extern ConfigItem_tld		*Find_tld(aClient *cptr);

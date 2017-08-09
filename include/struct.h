@@ -97,6 +97,7 @@ typedef struct _configitem_drpass ConfigItem_drpass;
 typedef struct _configitem_ulines ConfigItem_ulines;
 typedef struct _configitem_tld ConfigItem_tld;
 typedef struct _configitem_listen ConfigItem_listen;
+typedef struct _configitem_sni ConfigItem_sni;
 typedef struct _configitem_allow ConfigItem_allow;
 typedef struct _configflag_allow ConfigFlag_allow;
 typedef struct _configitem_allow_channel ConfigItem_allow_channel;
@@ -1159,6 +1160,14 @@ struct _configitem_listen {
 	SSLOptions *ssl_options;
 };
 
+struct _configitem_sni {
+	ConfigItem_sni *prev, *next;
+	ConfigFlag flag;
+	char *name;
+	SSL_CTX *ssl_ctx;
+	SSLOptions *ssl_options;
+};
+
 struct _configitem_vhost {
 	ConfigItem 	*prev, *next;
 	ConfigFlag 	flag;
@@ -1338,6 +1347,7 @@ struct _configitem_offchans {
 	char chname[CHANNELLEN+1];
 	char *topic;
 };
+
 
 #define HM_HOST 1
 #define HM_IPV4 2

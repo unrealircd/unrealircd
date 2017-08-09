@@ -100,6 +100,7 @@ static int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_offchans		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_spamfilter	(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_sni			(ConfigFile *conf, ConfigEntry *ce);
 
 /*
  * Validation commands
@@ -131,6 +132,7 @@ static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_offchans		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_spamfilter	(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_sni			(ConfigFile *conf, ConfigEntry *ce);
 
 /* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
@@ -154,6 +156,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "oper", 		_conf_oper,		_test_oper	},
 	{ "operclass",		_conf_operclass,	_test_operclass	},
 	{ "set",		_conf_set,		_test_set	},
+	{ "sni",		_conf_sni,		_test_sni	},
 	{ "spamfilter",	_conf_spamfilter,	_test_spamfilter	},
 	{ "tld",		_conf_tld,		_test_tld	},
 	{ "ulines",		_conf_ulines,		_test_ulines	},
@@ -288,6 +291,7 @@ ConfigItem_tld		*conf_tld = NULL;
 ConfigItem_oper		*conf_oper = NULL;
 ConfigItem_operclass	*conf_operclass = NULL;
 ConfigItem_listen	*conf_listen = NULL;
+ConfigItem_sni		*conf_sni = NULL;
 ConfigItem_allow	*conf_allow = NULL;
 ConfigItem_except	*conf_except = NULL;
 ConfigItem_vhost	*conf_vhost = NULL;
@@ -1920,6 +1924,7 @@ void	config_rehash()
 	ConfigItem_alias		*alias_ptr;
 	ConfigItem_help			*help_ptr;
 	ConfigItem_offchans		*of_ptr;
+	ConfigItem_sni			*sni;
 	OperStat 			*os_ptr;
 	ListStruct 	*next, *next2;
 	aTKline *tk, *tk_next;
@@ -2213,6 +2218,17 @@ void	config_rehash()
 		MyFree(of_ptr);
 	}
 	conf_offchans = NULL;
+
+    /* Free sni { } blocks */
+	for (sni = conf_sni; sni; sni = (ConfigItem_sni *)next)
+	{
+	    next = (ListStruct *)sni->next;
+	    SSL_CTX_free(sni->ssl_ctx);
+	    free_ssl_options(sni->ssl_options);
+	    safefree(sni->name);
+	    MyFree(sni);
+	}
+	conf_sni = NULL;
 
 	for (i = 0; i < EXTCMODETABLESZ; i++)
 	{
@@ -2603,6 +2619,24 @@ ConfigItem_listen *Find_listen(char *ipmask, int port, int ipv6)
 
 		if (!match(ipmask, p->ip) && (port == p->port))
 			return (p);
+	}
+	return NULL;
+}
+
+/** Find a SNI match.
+ * @param name The hostname to look for (eg: irc.xyz.com).
+ */
+ConfigItem_sni *Find_sni(char *name)
+{
+	ConfigItem_sni *e;
+
+	if (!name)
+		return NULL;
+
+	for (e = conf_sni; e; e = e->next)
+	{
+        if (!match(name, e->name))
+            return e;
 	}
 	return NULL;
 }
@@ -6206,6 +6240,68 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	}
 
 	return errors;
+}
+
+
+int	_test_sni(ConfigFile *conf, ConfigEntry *ce)
+{
+	int errors = 0;
+	ConfigEntry *cep, *sslconfig = NULL;
+
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: sni block needs a name, eg: sni irc.xyz.com {",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "ssl-options"))
+		{
+			test_sslblock(conf, cep, &errors);
+		} else
+		{
+			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"sni", cep->ce_varname);
+			errors++;
+			continue;
+		}
+	}
+
+	return errors;
+}
+
+int	_conf_sni(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigEntry *sslconfig = NULL;
+	char *name;
+	ConfigItem_sni *sni = NULL;
+
+	name = ce->ce_vardata;
+	if (!name)
+		return 0;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "ssl-options"))
+		{
+			sslconfig = cep;
+		}
+	}
+
+	if (!sslconfig)
+		return 0;
+
+	sni = MyMallocEx(sizeof(ConfigItem_listen));
+	sni->name = strdup(name);
+	sni->ssl_options = MyMallocEx(sizeof(SSLOptions));
+	conf_sslblock(conf, sslconfig, sni->ssl_options);
+	sni->ssl_ctx = init_ctx(sni->ssl_options, 1);
+	AddListItem(sni, conf_sni);
+
+	return 1;
 }
 
 int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
