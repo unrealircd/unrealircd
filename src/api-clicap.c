@@ -54,7 +54,7 @@ ClientCapability *ClientCapabilityFindReal(const char *token)
  * @return Returns the handle to the clicap token if it was found,
  *         otherwise NULL is returned.
  */
-ClientCapability *ClientCapabilityFind(const char *token)
+ClientCapability *ClientCapabilityFind(const char *token, aClient *sptr)
 {
 	ClientCapability *clicap;
 
@@ -62,7 +62,7 @@ ClientCapability *ClientCapabilityFind(const char *token)
 	{
 		if (!stricmp(token, clicap->name))
 		{
-			if (clicap->visible && !clicap->visible())
+			if (clicap->visible && !clicap->visible(sptr))
 				return NULL; /* hidden */
 			return clicap;
 		}
@@ -98,6 +98,7 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapability *clicap_r
 	clicap->cap = clicap_request->cap;
 	clicap->flags = clicap_request->flags;
 	clicap->visible = clicap_request->visible;
+	clicap->parameter = clicap_request->parameter;
 
 	AddListItem(clicap, clicaps);
 

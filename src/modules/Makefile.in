@@ -74,6 +74,7 @@ build: $(MODULES)
 	cd usermodes; $(MAKE) all
 	cd snomasks; $(MAKE) all
 	cd extbans; $(MAKE) all
+	cd cap; $(MAKE) all
 	cd third; $(MAKE) all
 
 #############################################################################
@@ -526,4 +527,5 @@ clean:
 	cd usermodes; $(MAKE) clean
 	cd snomasks; $(MAKE) clean
 	cd extbans; $(MAKE) clean
+	cd cap; $(MAKE) clean
 	cd third; $(MAKE) clean

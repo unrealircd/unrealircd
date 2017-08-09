@@ -268,6 +268,7 @@ CLEAN:
 	-@erase src\modules\usermodes\*.dll >NUL
 	-@erase src\modules\snomasks\*.dll >NUL
 	-@erase src\modules\extbans\*.dll >NUL
+	-@erase src\modules\cap\*.dll >NUL
         -@erase .\*.exe >NUL
 	-@erase UnrealIRCd.lib >NUL
 	-@erase src\modules\*.exp >NUL
@@ -951,5 +952,8 @@ src/modules/extbans/certfp.dll: src/modules/extbans/certfp.c $(INCLUDES)
 
 src/modules/extbans/textban.dll: src/modules/extbans/textban.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/textban.c $(MODLFLAGS)
+
+src/modules/cap/sts.dll: src/modules/cap/sts.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/cap/sts.c $(MODLFLAGS)
 
 dummy:

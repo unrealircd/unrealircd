@@ -293,7 +293,7 @@ static int abort_sasl(aClient *cptr)
 	return 0;
 }
 
-int sasl_capability_visible(void)
+int sasl_capability_visible(aClient *sptr)
 {
 	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
 		return 0;

@@ -77,7 +77,7 @@ MOD_UNLOAD(m_cap)
 	return MOD_SUCCESS;
 }
 
-static ClientCapability *clicap_find(const char *data, int *negate, int *finished, int *errors)
+static ClientCapability *clicap_find(aClient *sptr, const char *data, int *negate, int *finished, int *errors)
 {
 	static char buf[BUFSIZE];
 	static char *p;
@@ -120,11 +120,14 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 	if((s = strchr(p, ' ')))
 		*s++ = '\0';
 
-	cap = ClientCapabilityFind(p);
+	cap = ClientCapabilityFind(p, sptr);
 	if (!s)
 		*finished = 1;
 	
 	p = s; /* point to next token for next iteration */
+
+	if (cap && (cap->flags & CLICAP_FLAGS_ADVERTISE_ONLY))
+	    cap = NULL;
 
 	if (!cap)
 		*errors = 1;
@@ -155,8 +158,15 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 
 	for (cap = clicaps; cap; cap = cap->next)
 	{
-		if (cap->visible && !cap->visible())
+		char name[256];
+
+		if (cap->visible && !cap->visible(sptr))
 			continue; /* hidden */
+
+		if (cap->parameter)
+			snprintf(name, sizeof(name), "%s=%s", cap->name, cap->parameter(sptr));
+		else
+			strlcpy(name, cap->name, sizeof(name));
 
 		if (flags)
 		{
@@ -167,7 +177,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 		}
 
 		/* \r\n\0, possible "-~=", space, " *" */
-		if (buflen + strlen(cap->name) >= BUFSIZE - 10)
+		if (buflen + strlen(name) >= BUFSIZE - 10)
 		{
 			if (buflen != mlen)
 				*(p - 1) = '\0';
@@ -206,7 +216,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 			}
 		}
 
-		curlen = snprintf(p, (capbuf + BUFSIZE) - p, "%s ", cap->name);
+		curlen = snprintf(p, (capbuf + BUFSIZE) - p, "%s ", name);
 		p += curlen;
 		buflen += curlen;
 	}
@@ -229,8 +239,8 @@ static int cap_ack(aClient *sptr, const char *arg)
 	if (BadPtr(arg))
 		return 0;
 
-	for(cap = clicap_find(arg, &negate, &finished, &errors); cap;
-	    cap = clicap_find(NULL, &negate, &finished, &errors))
+	for(cap = clicap_find(sptr, arg, &negate, &finished, &errors); cap;
+	    cap = clicap_find(sptr, NULL, &negate, &finished, &errors))
 	{
 		/* sent an ACK for something they havent REQd */
 		if(!CHECKPROTO(sptr, cap->cap))
@@ -312,8 +322,8 @@ static int cap_req(aClient *sptr, const char *arg)
 	pbuf[0][0] = '\0';
 	plen = 0;
 
-	for(cap = clicap_find(arg, &negate, &finished, &errors); cap;
-	    cap = clicap_find(NULL, &negate, &finished, &errors))
+	for(cap = clicap_find(sptr, arg, &negate, &finished, &errors); cap;
+	    cap = clicap_find(sptr, NULL, &negate, &finished, &errors))
 	{
 		/* filled the first array, but cant send it in case the
 		 * request fails.  one REQ should never fill more than two

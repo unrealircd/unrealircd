@@ -379,13 +379,15 @@ typedef struct _versionflag {
 #define CLICAP_FLAGS_NONE               0x0
 #define CLICAP_FLAGS_STICKY             0x1
 #define CLICAP_FLAGS_CLIACK             0x2
+#define CLICAP_FLAGS_ADVERTISE_ONLY     0x4
 
 typedef struct _clientcapability {
 	struct _clientcapability *prev, *next;
 	char *name;
 	int cap;
 	int flags;
-	int (*visible)(void);
+	int (*visible)(aClient *);
+	char *(*parameter)(aClient *);
 	Module *owner;
 } ClientCapability;
 
@@ -595,7 +597,7 @@ extern void IsupportSetValue(Isupport *isupport, const char *value);
 extern void IsupportDel(Isupport *isupport);
 extern Isupport *IsupportFind(const char *token);
 
-extern ClientCapability *ClientCapabilityFind(const char *token);
+extern ClientCapability *ClientCapabilityFind(const char *token, aClient *sptr);
 extern ClientCapability *ClientCapabilityAdd(Module *module, ClientCapability *clicap_request);
 extern void ClientCapabilityDel(ClientCapability *clicap);
 
