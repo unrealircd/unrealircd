@@ -1395,12 +1395,8 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->static_quit);
 	if (i->ssl_options)
 	{
-		safefree(i->ssl_options->certificate_file);
-		safefree(i->ssl_options->key_file);
-		safefree(i->ssl_options->ciphers);
-		safefree(i->ssl_options->dh_file);
-		safefree(i->ssl_options->trusted_ca_file);
-		safefree(i->ssl_options);
+	    free_ssl_options(i->ssl_options);
+	    i->ssl_options = NULL;
 	}
 	safefree(i->restrict_usermodes);
 	safefree(i->restrict_channelmodes);
@@ -7164,6 +7160,7 @@ void free_ssl_options(SSLOptions *ssloptions)
 	safefree(ssloptions->trusted_ca_file);
 	safefree(ssloptions->ciphers);
 	memset(ssloptions, 0, sizeof(SSLOptions));
+	MyFree(ssloptions);
 }
 
 void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions)
@@ -9721,7 +9718,10 @@ void link_cleanup(ConfigItem_link *link_ptr)
 		link_ptr->ssl_ctx = NULL;
 	}
 	if (link_ptr->ssl_options)
+	{
 		free_ssl_options(link_ptr->ssl_options);
+		link_ptr->ssl_options = NULL;
+    }
 }
 
 void delete_linkblock(ConfigItem_link *link_ptr)
