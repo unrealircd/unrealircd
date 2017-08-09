@@ -430,6 +430,30 @@ int websocket_complete_handshake(aClient *sptr)
 	return 0;
 }
 
+/* Add LF (if needed) to a buffer. Max 4K. */
+void add_lf_if_needed(char **buf, int *len)
+{
+	static char newbuf[4096];
+	char *b = *buf;
+	int l = *len;
+
+	if (l <= 0)
+		return; /* too short */
+
+	if (b[l - 1] == '\n')
+		return; /* already contains \n */
+
+	if (l >= sizeof(newbuf)-2)
+		l = sizeof(newbuf)-2; /* cut-off if necessary */
+
+	memcpy(newbuf, b, l);
+	newbuf[l] = '\n';
+	newbuf[l + 1] = '\0'; /* not necessary, but I like zero termination */
+	l++;
+	*buf = newbuf; /* new buffer */
+	*len = l; /* new length */
+}
+
 /** WebSocket packet handler.
  * For more information on the format, check out page 28 of RFC6455.
  * @returns The number of bytes processed (the size of the frame)
@@ -524,6 +548,7 @@ int websocket_handle_packet(aClient *sptr, char *readbuf, int length)
 		case WSOP_CONTINUATION:
 		case WSOP_TEXT:
 		case WSOP_BINARY:
+			add_lf_if_needed(&payload, &len);
 			if (!process_packet(sptr, payload, len, 1)) /* let UnrealIRCd process this data */
 				return -1; /* fatal error occured (such as flood kill) */
 			return total_packet_size;
@@ -577,6 +602,19 @@ int websocket_create_frame(int opcode, char **buf, int *len)
 	
 	if (*len > sizeof(sendbuf) - 8)
 		abort(); /* should never happen (safety) */
+
+	/* strip LF */
+	if (*len > 0)
+	{
+		if (*(*buf + *len - 1) == '\n')
+			*len = *len - 1;
+	}
+	/* strip CR */
+	if (*len > 0)
+	{
+		if (*(*buf + *len - 1) == '\r')
+			*len = *len - 1;
+	}
 
 	if (*len < 126)
 	{
