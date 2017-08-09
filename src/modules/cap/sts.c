@@ -79,7 +79,10 @@ char *sts_capability_parameter(aClient *acptr)
 	SSLOptions *ssl;
 	static char buf[256];
 
-	ssl = FindSSLOptionsForUser(acptr);
+	if (IsSecure(acptr))
+		ssl = FindSSLOptionsForUser(acptr);
+	else
+		ssl = iConf.ssl_options;
 
 	if (!ssl)
 		return ""; /* This would be odd. */
