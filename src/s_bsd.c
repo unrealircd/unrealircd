@@ -1166,6 +1166,7 @@ add_con_refuse:
 			acptr->flags |= FLAGS_SSL;
 			SSL_set_fd(acptr->local->ssl, fd);
 			SSL_set_nonblocking(acptr->local->ssl);
+			SSL_set_ex_data(acptr->local->ssl, ssl_client_index, acptr);
 			if (!ircd_SSL_accept(acptr, fd)) {
 				Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", acptr->local->sockhost));
 				SSL_set_shutdown(acptr->local->ssl, SSL_RECEIVED_SHUTDOWN);

@@ -901,6 +901,7 @@ struct LocalClient {
 	unsigned char sasl_out;
 	unsigned char sasl_complete;
 	u_short sasl_cookie;
+	char *sni_servername; /**< Servername as sent by client during SNI (otherwise NULL) */
 };
 
 

@@ -40,10 +40,13 @@ SSL_CTX *ctx_client;
 
 char *SSLKeyPasswd;
 
+
 typedef struct {
 	int *size;
 	char **buffer;
 } StreamIO;
+
+MODVAR int ssl_client_index = 0;
 
 #define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
 #ifdef _WIN32
@@ -188,17 +191,31 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 		return 1;
 }
 
+/** get aClient pointerd by SSL pointer */
+aClient *get_client_by_ssl(SSL *ssl)
+{
+    return SSL_get_ex_data(ssl, ssl_client_index);
+}
+
+static void set_client_sni_name(SSL *ssl, char *name)
+{
+	aClient *acptr = get_client_by_ssl(ssl);
+	if (acptr)
+		safestrdup(acptr->local->sni_servername, name);
+}
+
 static int ssl_hostname_callback(SSL *ssl, int *unk, void *arg)
 {
-    char *name = (char *)SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
-    ConfigItem_sni *sni;
+	char *name = (char *)SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
+	ConfigItem_sni *sni;
 
-    if (name && (sni = Find_sni(name)))
-    {
-        SSL_set_SSL_CTX(ssl, sni->ssl_ctx);
-    }
+	if (name && (sni = Find_sni(name)))
+	{
+		SSL_set_SSL_CTX(ssl, sni->ssl_ctx);
+		set_client_sni_name(ssl, name);
+	}
 
-    return SSL_TLSEXT_ERR_OK;
+	return SSL_TLSEXT_ERR_OK;
 }
 
 static void mylog(char *fmt, ...)
@@ -381,6 +398,9 @@ int early_init_ssl(void)
 {
 	SSL_load_error_strings();
 	SSLeay_add_ssl_algorithms();
+
+	/* This is used to track (SSL *) <--> (aClient *) relationships: */
+	ssl_client_index = SSL_get_ex_new_index(0, "ssl_client", NULL, NULL, NULL);
 	return 1;
 }
 
@@ -830,4 +850,32 @@ fail_starttls:
 	acptr->flags &= ~FLAGS_SSL;
 	SetUnknown(acptr);
 	return 0; /* hm. we allow to continue anyway. not sure if we want that. */
+}
+
+/** Find the appropriate SSLOptions structure for a client.
+ * NOTE: The default global SSL options will be returned if not found,
+ *       or NULL if no such options are available (unlikely, but possible?).
+ */
+SSLOptions *FindSSLOptionsForUser(aClient *acptr)
+{
+	ConfigItem_sni *sni;
+	SSLOptions *sslopt = iConf.ssl_options; /* default */
+	
+	if (!MyConnect(acptr) || !IsSecure(acptr))
+		return NULL;
+
+	/* Different sts-policy depending on SNI: */
+	if (acptr->local->sni_servername)
+	{
+		sni = Find_sni(acptr->local->sni_servername);
+		if (sni)
+		{
+			sslopt = sni->ssl_options;
+		}
+		/* It is perfectly possible that 'name' is not found and 'sni' is NULL,
+		 * if a client used a hostname which we do not know about (eg: 'dummy').
+		 */
+	}
+
+	return sslopt;
 }
