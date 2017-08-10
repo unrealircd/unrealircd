@@ -1688,6 +1688,16 @@ void _tkl_synch(aClient *sptr)
 					typ = 'F';
 				if (tk->type & TKL_NICK)
 					typ = 'Q';
+				if ((tk->type & TKL_SPAMF) && (sptr->local->proto & PROTO_TKLEXT2))
+				{
+					sendto_one(sptr, ":%s TKL + %c %s %s %s %li %li %li %s %s :%s", me.name,
+					           typ,
+					           tk->usermask, tk->hostmask, tk->setby,
+					           tk->expire_at, tk->set_at,
+					           tk->ptr.spamf->tkl_duration, tk->ptr.spamf->tkl_reason,
+					           unreal_match_method_valtostr(tk->ptr.spamf->expr->type),
+					           tk->reason);
+				} else
 				if ((tk->type & TKL_SPAMF) && (sptr->local->proto & PROTO_TKLEXT))
 				{
 					sendto_one(sptr, ":%s TKL + %c %s %s %s %li %li %li %s :%s", me.name,
