@@ -1188,3 +1188,12 @@ int swhois_delete(aClient *acptr, char *tag, char *swhois, aClient *from, aClien
 
 	return ret;
 }
+
+/** Is this user using a websocket? (LOCAL USERS ONLY) */
+int IsWebsocket(aClient *acptr)
+{
+	ModDataInfo *md = findmoddata_byname("websocket", MODDATATYPE_CLIENT);
+	if (!md)
+		return 0; /* websocket module not loaded */
+	return (MyConnect(acptr) && moddata_client(acptr, md).ptr) ? 1 : 0;
+}

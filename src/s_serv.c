@@ -642,6 +642,22 @@ CMD_FUNC(m_rehash)
 	if (x != HUNTED_ISME)
 		return 0; /* Now forwarded or server didnt exist */
 
+	if (MyClient(sptr) && IsWebsocket(sptr))
+	{
+		sendnotice(sptr, "Sorry, for technical reasons it is not possible to REHASH "
+		                 "the local server from a WebSocket connection.");
+		/* Issue details:
+		 * websocket_handle_packet -> process_packet -> parse_client_queued ->
+		 * dopacket -> parse -> m_rehash... and then 'websocket' is unloaded so
+		 * we "cannot get back" as that websocket_handle_packet function is gone.
+		 *
+		 * Solution would be either to delay the rehash or to make websocket perm.
+		 * The latter removes all our ability to upgrade the module on the fly
+		 * and the former is rather ugly.. not going to do that hassle now anyway.
+		 */
+		return 0;
+	}
+
 	if (cptr != sptr)
 	{
 #ifndef REMOTE_REHASH

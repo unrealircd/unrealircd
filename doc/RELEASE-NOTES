@@ -14,6 +14,7 @@ Enhancements:
 Major issues fixed:
 * 'simple' spamfilters ended up being 'posix' after server linking.
 * User mode +Z (secureonly) not working properly across server links.
+* REHASH from WebSocket connection would cause a crash (requires oper)
 
 Minor issues fixed:
 * Prevent /OPER for oper blocks with non-existant operclass

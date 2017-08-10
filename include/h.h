@@ -787,3 +787,4 @@ extern int user_can_see_member(aClient *user, aClient *target, aChannel *chptr);
 extern int invisible_user_in_channel(aClient *target, aChannel *chptr);
 extern MODVAR int ssl_client_index;
 extern SSLOptions *FindSSLOptionsForUser(aClient *acptr);
+extern int IsWebsocket(aClient *acptr);
