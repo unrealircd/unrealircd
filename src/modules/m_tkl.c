@@ -379,15 +379,8 @@ int ban_too_broad(char *usermask, char *hostmask)
 	/* Allow things like clone@*, dsfsf@*, etc.. */
 	if (!strchr(usermask, '*') && !strchr(usermask, '?'))
 		return 0;
-	
-	/* STEP 1: Must at least contain 4 non-wildcard/non-dot characters */
-	for (p = hostmask; *p; p++)
-		if (*p != '*' && *p != '.' && *p != '?')
-			cnt++;
 
-	if (cnt >= 4)
-		return 0;
-
+	/* If it's a CIDR, then check /mask first.. */
 	p = strchr(hostmask, '/');
 	if (p)
 	{
@@ -395,13 +388,24 @@ int ban_too_broad(char *usermask, char *hostmask)
 		if (strchr(hostmask, ':'))
 		{
 			if (cidrlen < 48)
-				return 0; /* too broad IPv6 CIDR mask */
+				return 1; /* too broad IPv6 CIDR mask */
 		} else {
 			if (cidrlen < 16)
-				return 0; /* too broad IPv4 CIDR mask */
+				return 1; /* too broad IPv4 CIDR mask */
 		}
 	}
 	
+	/* Must at least contain 4 non-wildcard/non-dot characters.
+	 * This will deal with non-CIDR and hosts, but any correct
+	 * CIDR mask will also pass this test (which is fine).
+	 */
+	for (p = hostmask; *p; p++)
+		if (*p != '*' && *p != '.' && *p != '?')
+			cnt++;
+
+	if (cnt >= 4)
+		return 0;
+
 	return 1;
 }
 

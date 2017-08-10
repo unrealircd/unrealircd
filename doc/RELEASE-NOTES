@@ -18,6 +18,10 @@ Major issues fixed:
 Minor issues fixed:
 * Prevent /OPER for oper blocks with non-existant operclass
 * Bump MAXCONNECTIONS for Windows, allowing you to hold more clients.
+* The 'ban too broad' checking was broken. This permitted glines such
+  as 192.168.0.0/1 being set. Now it rejects CIDR of /15 and lower.
+  To disable this safety measure you can (still) use:
+  set { options { allow-insane-bans; }; };
 
 Other changes:
 * The websocket module now no longer sends \r\n in the websocket
