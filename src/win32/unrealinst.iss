@@ -68,6 +68,7 @@ Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags
 Source: "src\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion
 Source: "src\modules\snomasks\*.dll"; DestDir: "{app}\modules\snomasks"; Flags: ignoreversion
 Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
+Source: "src\modules\cap\*.dll"; DestDir: "{app}\modules\cap"; Flags: ignoreversion
 
 Source: "c:\dev\tre\win32\release\tre.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\pcre2\build\release\pcre2-8.dll"; DestDir: "{app}"; Flags: ignoreversion
