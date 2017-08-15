@@ -1,5 +1,5 @@
-UnrealIRCd 4.0.13-rc1 Release Notes
-==================================
+UnrealIRCd 4.0.13 Release Notes
+================================
 
 ==[ CHANGES BETWEEN 4.0.12 AND 4.0.13 ]==
 Enhancements:
@@ -14,10 +14,11 @@ Enhancements:
 Major issues fixed:
 * 'simple' spamfilters ended up being 'posix' after server linking.
 * User mode +Z (secureonly) not working properly across server links.
-* REHASH from WebSocket connection would cause a crash (requires oper)
+* REHASH from WebSocket connection would cause a crash (requires IRCOp
+  privileges)
 
 Minor issues fixed:
-* Prevent /OPER for oper blocks with non-existant operclass
+* We now prevent /OPER for oper blocks with a non-existant operclass
 * Bump MAXCONNECTIONS for Windows, allowing you to hold more clients.
 * The 'ban too broad' checking was broken. This permitted glines such
   as 192.168.0.0/1 being set. Now it rejects CIDR of /15 and lower.
@@ -31,6 +32,7 @@ Other changes:
 * Mark all shipped modules as official (non-3rd-party)
 * Verify certificate when submitting crash reports
 * Support --without-privatelibdir for packagers
+* CACERT has been removed from curl-ca-bundle
 
 Module coders:
 * CAP API changes:
