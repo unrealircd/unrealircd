@@ -297,7 +297,10 @@ int sasl_capability_visible(aClient *sptr)
 {
 	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
 		return 0;
-	
+
+	if (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY)
+		return 0;
+
 	return 1;
 }
 
