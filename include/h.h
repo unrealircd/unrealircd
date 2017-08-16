@@ -789,3 +789,5 @@ extern int invisible_user_in_channel(aClient *target, aChannel *chptr);
 extern MODVAR int ssl_client_index;
 extern SSLOptions *FindSSLOptionsForUser(aClient *acptr);
 extern int IsWebsocket(aClient *acptr);
+extern PlaintextPolicy plaintextpolicy_strtoval(char *s);
+extern char *plaintextpolicy_valtostr(PlaintextPolicy policy);

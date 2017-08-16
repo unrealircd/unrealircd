@@ -227,11 +227,11 @@ void _send_server_message(aClient *sptr)
  */
 int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out)
 {
-char xerrmsg[256];
-ConfigItem_link *link;
-char *inpath = get_client_name(cptr, TRUE);
-aClient *acptr = NULL, *ocptr = NULL;
-ConfigItem_ban *bconf;
+	char xerrmsg[256];
+	ConfigItem_link *link;
+	char *inpath = get_client_name(cptr, TRUE);
+	aClient *acptr = NULL, *ocptr = NULL;
+	ConfigItem_ban *bconf;
 
 	/* We set the sockhost here so you can have incoming masks based on hostnames.
 	 * Perhaps a bit late to do it here, but does anyone care?
@@ -249,7 +249,6 @@ ConfigItem_ban *bconf;
 		sendto_one(cptr, "ERROR :Missing password");
 		return exit_client(cptr, sptr, &me, "Missing password");
 	}
-
 
 	/* First check if the server is in the list */
 	if (!servername) {
@@ -358,6 +357,11 @@ skip_host_check:
 			("Cancelling link %s, full class",
 				get_client_name(cptr, TRUE));
 		return exit_client(cptr, cptr, &me, "Full class");
+	}
+	if (!IsLocal(cptr) && (iConf.plaintext_policy_server == PLAINTEXT_POLICY_DENY))
+	{
+		sendto_one(cptr, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
+		return exit_client(cptr, sptr, &me, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 	}
 	if (link_out)
 		*link_out = link;
@@ -755,7 +759,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		 * Yeah.. there are still other cases when non-SSL links are fine (eg: local IP
 		 * of the same machine), we won't bother with detecting that. -- Syzop
 		 */
-		if (!IsLocal(cptr))
+		if (!IsLocal(cptr) && (iConf.plaintext_policy_server == PLAINTEXT_POLICY_WARN))
 		{
 			sendto_realops("\002WARNING:\002 This link is unencrypted (non-SSL). We highly recommend to use "
 						   "SSL server linking. See https://www.unrealircd.org/docs/Linking_servers");

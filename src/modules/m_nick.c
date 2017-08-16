@@ -1558,6 +1558,9 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		if (user->snomask)
 			sendto_one(sptr, rpl_str(RPL_SNOMASK),
 				me.name, sptr->name, get_snostr(user->snomask));
+
+		if (!IsSecure(sptr) && (iConf.plaintext_policy_user == PLAINTEXT_POLICY_WARN))
+			sendnotice(sptr, "%s", iConf.plaintext_policy_user_message);
 		
 		/* Make creation time the real 'online since' time, excluding registration time.
 		 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean

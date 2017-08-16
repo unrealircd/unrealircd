@@ -1307,6 +1307,12 @@ int stats_set(aClient *sptr, char *para)
 			sptr->name, SPAMFILTER_EXCEPT);
 	sendto_one(sptr, ":%s %i %s :check-target-nick-bans: %s", me.name, RPL_TEXT,
 		sptr->name, CHECK_TARGET_NICK_BANS ? "yes" : "no");
+	sendto_one(sptr, ":%s %i %s :plaintext-policy::user: %s", me.name, RPL_TEXT,
+		sptr->name, plaintextpolicy_valtostr(iConf.plaintext_policy_user));
+	sendto_one(sptr, ":%s %i %s :plaintext-policy::oper: %s", me.name, RPL_TEXT,
+		sptr->name, plaintextpolicy_valtostr(iConf.plaintext_policy_oper));
+	sendto_one(sptr, ":%s %i %s :plaintext-policy::server: %s", me.name, RPL_TEXT,
+		sptr->name, plaintextpolicy_valtostr(iConf.plaintext_policy_server));
 	RunHook2(HOOKTYPE_STATS, sptr, "S");
 	return 1;
 }

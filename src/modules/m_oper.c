@@ -114,6 +114,19 @@ CMD_FUNC(m_oper)
 	name = parv[1];
 	password = (parc > 2) ? parv[2] : "";
 
+	if (!IsSecure(sptr) && (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_DENY))
+	{
+		/* Reject early */
+		sendnotice(sptr, "%s", iConf.plaintext_policy_oper_message);
+		sendto_snomask_global
+		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) [not using SSL/TLS]",
+		    sptr->name, sptr->user->username, sptr->local->sockhost);
+		ircd_log(LOG_OPER, "OPER NO-SSL/TLS (%s) by (%s!%s@%s)", name, sptr->name,
+			sptr->user->username, sptr->local->sockhost);
+		sptr->local->since += 7;
+		return 0;
+	}
+
 	if (!(operblock = Find_oper(name)))
 	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, sptr->name);
@@ -290,6 +303,15 @@ CMD_FUNC(m_oper)
 		if (do_cmd(cptr, sptr, "JOIN", 3, chans) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
 	}
+
+	if (!IsSecure(sptr) && (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_WARN))
+	{
+		sendnotice(sptr, "%s", iConf.plaintext_policy_oper_message);
+		sendto_snomask_global
+		    (SNO_OPER, "OPER %s [%s] used an insecure (non-SSL) connection to /OPER.",
+		    sptr->name, name);
+	}
+
 
 	return 0;
 }

@@ -719,6 +719,34 @@ char chfl_to_chanmode(int s)
 	/* NOT REACHED */
 }
 
+PlaintextPolicy plaintextpolicy_strtoval(char *s)
+{
+	if (!s)
+		return 0;
+
+	if (!strcmp(s, "allow"))
+		return PLAINTEXT_POLICY_ALLOW;
+
+	if (!strcmp(s, "warn"))
+		return PLAINTEXT_POLICY_WARN;
+
+	if (!strcmp(s, "deny"))
+		return PLAINTEXT_POLICY_DENY;
+
+	return 0;
+}
+
+char *plaintextpolicy_valtostr(PlaintextPolicy policy)
+{
+	if (policy == PLAINTEXT_POLICY_ALLOW)
+		return "allow";
+	if (policy == PLAINTEXT_POLICY_WARN)
+		return "warn";
+	if (policy == PLAINTEXT_POLICY_DENY)
+		return "deny";
+	return "???";
+}
+
 ConfigFile *config_load(char *filename)
 {
 	struct stat sb;
@@ -1475,6 +1503,35 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ssl_options->trusted_ca_file = strdup(tmp);
 	i->ssl_options->ciphers = strdup(UNREALIRCD_DEFAULT_CIPHERS);
 	i->ssl_options->protocols = SSL_PROTOCOL_ALL;
+
+	i->plaintext_policy_user = PLAINTEXT_POLICY_ALLOW;
+	i->plaintext_policy_oper = PLAINTEXT_POLICY_ALLOW;
+	i->plaintext_policy_server = PLAINTEXT_POLICY_WARN; /* effective default since 4.0.0 */
+}
+
+/** Similar to config_setdefaultsettings but this one is applied *AFTER*
+ * the entire configuration has been ran.
+ * NOTE: iConf is thus already populated with (non-default) values. Only overwrite if necessary!
+ */
+void postconf_defaults(void)
+{
+	if (!iConf.plaintext_policy_user_message)
+	{
+		/* The message depends on whether it's reject or warn.. */
+		if (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY)
+			safestrdup(iConf.plaintext_policy_user_message, "Insecure connection. Please reconnect using SSL/TLS.");
+		else if (iConf.plaintext_policy_user == PLAINTEXT_POLICY_WARN)
+			safestrdup(iConf.plaintext_policy_user_message, "WARNING: Insecure connection. Please consider using SSL/TLS.");
+	}
+
+	if (!iConf.plaintext_policy_oper_message)
+	{
+		/* The message depends on whether it's reject or warn.. */
+		if (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_DENY)
+			safestrdup(iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
+		else if (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_WARN)
+			safestrdup(iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
+	}
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -1743,6 +1800,7 @@ int	init_conf(char *rootconf, int rehash)
 	do_weird_shun_stuff();
 	if (!conf_log)
 		make_default_logblock();
+	postconf_defaults();
 	config_status("Configuration loaded without any problems.");
 	return 0;
 }
@@ -2768,6 +2826,12 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 	int  i, ii = 0;
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
+
+	if (!IsSecure(cptr) && (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY))
+	{
+		exit_client(cptr, cptr, &me, iConf.plaintext_policy_user_message);
+		return -5;
+	}
 
 	for (aconf = conf_allow; aconf; aconf = (ConfigItem_allow *) aconf->next)
 	{
@@ -7730,6 +7794,22 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			/* no need to alloc tempiConf.ssl_options since config_defaults() already ensures it exists */
 			conf_sslblock(conf, cep, tempiConf.ssl_options);
 		}
+		else if (!strcmp(cep->ce_varname, "plaintext-policy"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "user"))
+					tempiConf.plaintext_policy_user = plaintextpolicy_strtoval(cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "oper"))
+					tempiConf.plaintext_policy_oper = plaintextpolicy_strtoval(cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "server"))
+					tempiConf.plaintext_policy_server = plaintextpolicy_strtoval(cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "user-message"))
+					safestrdup(tempiConf.plaintext_policy_user_message, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "oper-message"))
+					safestrdup(tempiConf.plaintext_policy_oper_message, cepp->ce_vardata);
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "default-ipv6-clone-mask"))
 		{
 			tempiConf.default_ipv6_clone_mask = atoi(cep->ce_vardata);
@@ -8579,6 +8659,36 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 			test_sslblock(conf, cep, &errors);
+		}
+		else if (!strcmp(cep->ce_varname, "plaintext-policy"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "user") ||
+					!strcmp(cepp->ce_varname, "oper") ||
+					!strcmp(cepp->ce_varname, "server"))
+				{
+					PlaintextPolicy policy;
+					CheckNull(cepp);
+					policy = plaintextpolicy_strtoval(cepp->ce_vardata);
+					if (!policy)
+					{
+						config_error("%s:%i: set::plaintext-policy::%s: needs to be one of: 'allow', 'warn' or 'reject'",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+						errors++;
+					}
+				} else if (!strcmp(cepp->ce_varname, "user-message") ||
+				           !strcmp(cepp->ce_varname, "oper-message"))
+				{
+					CheckNull(cepp);
+				} else {
+					config_error_unknown(cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum, "set::plaintext-policy",
+						cepp->ce_varname);
+					errors++;
+					continue;
+				}
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "default-ipv6-clone-mask"))
 		{
