@@ -1,47 +1,46 @@
-UnrealIRCd 4.0.13 Release Notes
+UnrealIRCd 4.0.14-unreleased Release Notes
 ================================
 
-==[ CHANGES BETWEEN 4.0.12 AND 4.0.13 ]==
+These release notes are work-in-progress.
+
+==[ CHANGES BETWEEN 4.0.13 AND 4.0.14 ]==
 Enhancements:
-* Support for Strict Transport Security (draft/sts).
-  See: https://www.unrealircd.org/docs/SSL/TLS#Strict_Transport_Security
-* Support for Server Name Indication (SNI):
-  See: https://www.unrealircd.org/docs/Sni_block
-* Add conf/modules.optional.conf. This loads all additional modules
-  that are not in modules.default.conf (m_ircops, m_staff, nocodes,
-  textban, hideserver, antirandom and websocket)
+* New set::plaintext-policy configuration settings. This defines what
+  happens to users/ircops/servers that are not using SSL/TLS.
+  The default settings are:
+  set {
+    plaintext-policy {
+      user allow; /* allow any user to connect */
+      oper warn; /* warn on /OPER if not using SSL/TLS */
+      server deny; /* deny servers without SSL/TLS, except localhost */
+    };
+  };
+  You can change each of the three classes to 'allow', 'warn' or 'deny'.
+  See: https://www.unrealircd.org/docs/Set_block#set::plaintext-policy
+
+  Regarding the default choices:
+  * Everyone should use SSL/TLS but to deny (or warn) all non-SSL/TLS
+    users in the default configuration is a step too far right now.
+  * IRCOps have access to sensitive information of many users and should
+    really use an encrypted connection. Hence the default 'warn' action.
+  * Two UnrealIRCd 4.x servers will always link with SSL/TLS (either
+    directly or using STARTTLS), this is the case since version 4.0.0.
+    The only new thing is that we now block INCOMING insecure links.
+    This is only a problem for you if you meet ALL of these 3 conditions:
+    1. You are linking in services or any other non-UnrealIRCd-4.x
+       software; AND
+    2. You are linking from a remote computer (not localhost); AND
+    3. You are not using SSL/TLS for the connection.
+    In such a case you will be unable to link without changes. See:
+    https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS
 
 Major issues fixed:
-* 'simple' spamfilters ended up being 'posix' after server linking.
-* User mode +Z (secureonly) not working properly across server links.
-* REHASH from WebSocket connection would cause a crash (requires IRCOp
-  privileges)
 
 Minor issues fixed:
-* We now prevent /OPER for oper blocks with a non-existant operclass
-* Bump MAXCONNECTIONS for Windows, allowing you to hold more clients.
-* The 'ban too broad' checking was broken. This permitted glines such
-  as 192.168.0.0/1 being set. Now it rejects CIDR of /15 and lower.
-  To disable this safety measure you can (still) use:
-  set { options { allow-insane-bans; }; };
 
 Other changes:
-* The websocket module now no longer sends \r\n in the websocket
-  data and no longer requires it on incoming messages (but you
-  can still send it if you like). Also version bumped to 1.0.0.
-* Mark all shipped modules as official (non-3rd-party)
-* Verify certificate when submitting crash reports
-* Support --without-privatelibdir for packagers
-* CACERT has been removed from curl-ca-bundle
 
 Module coders:
-* CAP API changes:
-  * The cap->visible(void) callback is now cap->visible(aClient *)
-  * There is a new cap->parameter(aClient *) callback function,
-    see the cap/sts module for how it can be used.
-  * Various updates to subfunctions to pass 'sptr' (due to the above),
-    including clicap_find(sptr, ...)
-  * New CLICAP_FLAGS_ADVERTISE_ONLY flag (CAP cannot be REQ'd)
 
 ==[ CHANGES IN OLDER RELEASES ]==
 For changes in previous UnrealIRCd releases see doc/RELEASE-NOTES.old or

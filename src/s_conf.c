@@ -1505,8 +1505,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ssl_options->protocols = SSL_PROTOCOL_ALL;
 
 	i->plaintext_policy_user = PLAINTEXT_POLICY_ALLOW;
-	i->plaintext_policy_oper = PLAINTEXT_POLICY_ALLOW;
-	i->plaintext_policy_server = PLAINTEXT_POLICY_WARN; /* effective default since 4.0.0 */
+	i->plaintext_policy_oper = PLAINTEXT_POLICY_WARN;
+	i->plaintext_policy_server = PLAINTEXT_POLICY_DENY;
 }
 
 /** Similar to config_setdefaultsettings but this one is applied *AFTER*

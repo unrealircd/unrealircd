@@ -361,6 +361,7 @@ skip_host_check:
 	if (!IsLocal(cptr) && (iConf.plaintext_policy_server == PLAINTEXT_POLICY_DENY))
 	{
 		sendto_one(cptr, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
+		sendto_realops("Rejected insecure server. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS");
 		return exit_client(cptr, sptr, &me, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 	}
 	if (link_out)
