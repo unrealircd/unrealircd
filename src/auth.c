@@ -182,6 +182,7 @@ int		Auth_CheckError(ConfigEntry *ce)
 			}
 			break;
 		case AUTHTYPE_SSL_CLIENTCERT:
+			convert_to_absolute_path(&ce->ce_vardata, CONFDIR);
 			if (!(x509_f = fopen(ce->ce_vardata, "r")))
 			{
 				config_error("%s:%i: authentication module failure: AUTHTYPE_SSL_CLIENTCERT: error opening file %s: %s",
