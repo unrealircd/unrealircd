@@ -1620,6 +1620,7 @@ ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
 	config_status("No log { } block found -- using default: errors will be logged to 'ircd.log'");
 
 	ca->file = strdup("ircd.log");
+	convert_to_absolute_path(&ca->file, LOGDIR);
 	ca->flags |= LOG_ERROR;
 	ca->logfd = -1;
 	AddListItem(ca, conf_log);
