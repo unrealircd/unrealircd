@@ -1000,11 +1000,22 @@ void set_non_blocking(int fd, aClient *cptr)
 	return;
 }
 
+/** Returns 1 if using a loopback IP (127.0.0.1) or
+ * using a local IP number on the same machine (effectively the same;
+ * no network traffic travels outside this machine).
+ */
 int is_loopback_ip(char *ip)
 {
+    ConfigItem_listen *e;
+
 	if (!strcmp(ip, "127.0.0.1") || !strcmp(ip, "0:0:0:0:0:0:0:1") || !strcmp(ip, "0:0:0:0:0:ffff:127.0.0.1"))
 		return 1;
 
+    for (e = conf_listen; e; e = e->next)
+    {
+        if ((e->options & LISTENER_BOUND) && !strcmp(ip, e->ip))
+            return 1;
+    }
 	return 0;
 }
 
