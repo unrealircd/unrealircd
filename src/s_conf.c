@@ -6858,6 +6858,13 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
+		else
+		{
+			config_error_unknown(cep->ce_fileptr->cf_filename,
+			    cep->ce_varlinenum, "link", cep->ce_varname);
+			errors++;
+			continue;
+		}
 	}
 
 	if (!has_incoming && !has_outgoing)
