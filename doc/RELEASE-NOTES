@@ -37,6 +37,10 @@ Enhancements:
 Major issues fixed:
 
 Minor issues fixed:
+* If you had a link block named irc1.example.net and did an outgoing
+  connect to this server then the server could introduce himself under
+  a different name, such as irc2.example.net. Not a security issue but
+  this could be rather confusing. Also confused the autoconnect code.
 
 Other changes:
 
