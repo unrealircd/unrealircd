@@ -258,8 +258,25 @@ int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link
 	
 	if (cptr->serv && cptr->serv->conf)
 	{
-		/* We already know what block we are dealing with (outgoing connect!) */
-		/* TODO: validate this comment ^ !! */
+		/* This is an outgoing connect so we already know what link block we are
+		 * dealing with. It's the one in: cptr->serv->conf
+		 */
+
+		/* Actually we still need to double check the servername to avoid confusion. */
+		link = Find_link(servername, cptr);
+
+		if (!link || strcasecmp(link->servername, cptr->serv->conf->servername))
+		{
+			ircsnprintf(xerrmsg, sizeof(xerrmsg), "Outgoing connect from link block '%s' but server "
+				"introduced himself as '%s'. Server name mismatch.",
+				cptr->serv->conf->servername,
+				servername);
+
+			sendto_one(cptr, "ERROR :%s", xerrmsg);
+			sendto_umode(UMODE_OPER, "Outgoing link aborted to %s(%s@%s) (%s) %s",
+				cptr->serv->conf->servername, cptr->username, cptr->local->sockhost, xerrmsg, inpath);
+			return exit_client(cptr, sptr, &me, xerrmsg);
+		}
 		link = cptr->serv->conf;
 		goto skip_host_check;
 	} else {
