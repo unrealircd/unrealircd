@@ -1200,7 +1200,6 @@ struct _configitem_link {
 	char *leaf; /**< Leaf mask */
 	int leaf_depth; /**< Leaf depth */
 	ConfigItem_class *class; /**< Class the server should use */
-	char *ciphers; /**< SSL Ciphers to use */
 	int options; /**< Generic options such as quarantine */
 	/* internal: */
 	int	refcount; /**< Reference counter (used so we know if the struct may be freed) */

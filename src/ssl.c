@@ -557,18 +557,6 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 		BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->local->ssl), ssloptions->renegotiate_timeout);
 	}
 
-	if (acptr->serv && acptr->serv->conf->ciphers)
-	{
-		if (SSL_set_cipher_list(acptr->local->ssl, acptr->serv->conf->ciphers) == 0)
-		{
-			/* We abort */
-			sendto_realops("Could not set ciphers for link %s (%s)",
-				acptr->serv->conf->servername, 
-				acptr->serv->conf->ciphers);
-			return;
-		}
-	}
-
 	acptr->flags |= FLAGS_SSL;
 
 	switch (ircd_SSL_connect(acptr, fd))

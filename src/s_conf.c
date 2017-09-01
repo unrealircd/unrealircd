@@ -9894,7 +9894,6 @@ void link_cleanup(ConfigItem_link *link_ptr)
 	safefree(link_ptr->outgoing.hostname);
 	safefree(link_ptr->hub);
 	safefree(link_ptr->leaf);
-	safefree(link_ptr->ciphers);
 	if (link_ptr->ssl_ctx)
 	{
 		SSL_CTX_free(link_ptr->ssl_ctx);
