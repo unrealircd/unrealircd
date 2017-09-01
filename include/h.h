@@ -791,3 +791,5 @@ extern SSLOptions *FindSSLOptionsForUser(aClient *acptr);
 extern int IsWebsocket(aClient *acptr);
 extern PlaintextPolicy plaintextpolicy_strtoval(char *s);
 extern char *plaintextpolicy_valtostr(PlaintextPolicy policy);
+extern int verify_certificate(aClient *acptr, char *hostname, char **errstr);
+extern char *certificate_name(aClient *acptr);
