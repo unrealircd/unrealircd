@@ -869,9 +869,8 @@ SSLOptions *FindSSLOptionsForUser(aClient *acptr)
 	return sslopt;
 }
 
-/** Verify certificate of client 'acptr' and make sure the certificate
- * is valid for 'hostname'. */
-int verify_certificate(aClient *acptr, char *hostname, char **errstr)
+/** Verify certificate and make sure the certificate is valid for 'hostname'. */
+int verify_certificate(SSL *ssl, char *hostname, char **errstr)
 {
 	static char buf[512];
 	X509 *cert;
@@ -882,7 +881,7 @@ int verify_certificate(aClient *acptr, char *hostname, char **errstr)
 	if (*errstr)
 		*errstr = NULL; /* default */
 
-	if (!IsSecure(acptr))
+	if (!ssl)
 	{
 		strlcpy(buf, "Not using SSL/TLS", sizeof(buf));
 		if (errstr)
@@ -890,7 +889,7 @@ int verify_certificate(aClient *acptr, char *hostname, char **errstr)
 		return 0; /* Cannot verify a non-SSL connection */
 	}
 
-	if (SSL_get_verify_result(acptr->local->ssl) != X509_V_OK)
+	if (SSL_get_verify_result(ssl) != X509_V_OK)
 	{
 		strlcpy(buf, "Certificate is not issued by a trusted Certificate Authority", sizeof(buf));
 		if (errstr)
@@ -899,7 +898,7 @@ int verify_certificate(aClient *acptr, char *hostname, char **errstr)
 	}
 
 	/* Now verify if the name of the certificate matches hostname */
-	cert = SSL_get_peer_certificate(acptr->local->ssl);
+	cert = SSL_get_peer_certificate(ssl);
 
 	if (!cert)
 	{
@@ -927,22 +926,22 @@ int verify_certificate(aClient *acptr, char *hostname, char **errstr)
 
 	/* Certificate is verified but is issued for a different hostname */
 	snprintf(buf, sizeof(buf), "Certificate '%s' is not valid for hostname '%s'",
-		certificate_name(acptr), hostname);
+		certificate_name(ssl), hostname);
 	*errstr = buf;
 	return 0;
 }
 
 /** Grab the certificate name */
-char *certificate_name(aClient *acptr)
+char *certificate_name(SSL *ssl)
 {
 	static char buf[384];
 	X509 *cert;
 	X509_NAME *n;
 
-	if (!IsSecure(acptr))
+	if (!ssl)
 		return NULL;
 
-	cert = SSL_get_peer_certificate(acptr->local->ssl);
+	cert = SSL_get_peer_certificate(ssl);
 	if (!cert)
 		return NULL;
 

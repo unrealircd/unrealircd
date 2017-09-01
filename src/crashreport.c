@@ -489,8 +489,10 @@ int crashreport_send(char *fname)
 	int n;
 	FILE *fd;
 	SSL_CTX *ctx_client;
+	SSL *ssl = NULL;
 	BIO *socket = NULL;
 	int xfr = 0;
+	char *errstr;
 	
 	filesize = getfilesize(fname);
 	if (filesize < 0)
@@ -534,7 +536,21 @@ int crashreport_send(char *fname)
 		printf("ERROR: Could not connect to %s (SSL handshake failed)\n", CRASH_REPORT_HOST);
 		return 0;
 	}
-	
+
+	BIO_get_ssl(socket, &ssl);
+	if (!ssl)
+	{
+		printf("ERROR: Could not get SSL connection from BIO\n");
+		return 0;
+	}
+
+	if (!verify_certificate(ssl, REPORT_HOST, &errstr))
+	{
+		printf("Certificate problem with crash.unrealircd.org: %s\n", errstr);
+		printf("Fatal error. See above.\n");
+		return 0;
+	}
+
 	snprintf(buf, sizeof(buf), "POST /crash.php HTTP/1.1\r\n"
 	                    "User-Agent: UnrealIRCd %s\r\n"
 	                    "Host: %s\r\n"

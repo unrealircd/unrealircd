@@ -335,7 +335,6 @@ skip_host_check:
 
 		if (!IsSSL(cptr))
 		{
-			/* Rare, but better we handle it here or the (other) error will be confusing */
 			sendto_one(cptr,
 				"ERROR :Link '%s' denied (Not using SSL/TLS) %s",
 				servername, inpath);
@@ -344,7 +343,7 @@ skip_host_check:
 			return exit_client(cptr, sptr, &me,
 				"Link denied (Not using SSL/TLS)");
 		}
-		if (!verify_certificate(cptr, link->servername, &errstr))
+		if (!verify_certificate(cptr->local->ssl, link->servername, &errstr))
 		{
 			sendto_one(cptr,
 				"ERROR :Link '%s' denied (Certificate verification failed) %s",
