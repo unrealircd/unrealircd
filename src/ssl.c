@@ -180,11 +180,6 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 		return 1;
 	if (iConf.ssl_options->options & SSLFLAG_VERIFYCERT)
 	{
-		if (verify_err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT)
-			if (!(iConf.ssl_options->options & SSLFLAG_DONOTACCEPTSELFSIGNED))
-			{
-				return 1;
-			}
 		return preverify_ok;
 	}
 	else

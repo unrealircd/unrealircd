@@ -209,7 +209,6 @@ static NameValue ExceptTklFlags[] = {
 static NameValue _SSLFlags[] = {
 	{ SSLFLAG_FAILIFNOCERT, "fail-if-no-clientcert" },
 	{ SSLFLAG_DISABLECLIENTCERT, "no-client-certificate" },
-	{ SSLFLAG_DONOTACCEPTSELFSIGNED, "no-self-signed" },
 	{ SSLFLAG_NOSTARTTLS, "no-starttls" },
 	{ SSLFLAG_VERIFYCERT, "verify-certificate" },
 };
@@ -7391,9 +7390,6 @@ void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions)
 				if (ofl) /* this should always be true */
 					ssloptions->options |= ofl->flag;
 			}
-			if (ssloptions->options & SSLFLAG_DONOTACCEPTSELFSIGNED)
-				if (!(ssloptions->options & SSLFLAG_VERIFYCERT))
-					ssloptions->options |= SSLFLAG_VERIFYCERT;
 		}
 		else if (!strcmp(cepp->ce_varname, "sts-policy"))
 		{
