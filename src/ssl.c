@@ -19,6 +19,8 @@
  */
 
 #include "unrealircd.h"
+#include "openssl_hostname_validation.h"
+
 
 #ifdef _WIN32
 #define IDC_PASS                        1166
@@ -176,14 +178,10 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 	int verify_err = 0;
 
 	verify_err = X509_STORE_CTX_get_error(ctx);
-	if (preverify_ok)
-		return 1;
-	if (iConf.ssl_options->options & SSLFLAG_VERIFYCERT)
-	{
-		return preverify_ok;
-	}
-	else
-		return 1;
+	/* We accept the connection. Certificate verifiction takes
+	 * place elsewhere, such as in _verify_link().
+	 */
+	return 1;
 }
 
 /** get aClient pointerd by SSL pointer */
@@ -303,6 +301,13 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 
 	if (server && !(ssloptions->options & SSLFLAG_DISABLECLIENTCERT))
 	{
+		/* We tell OpenSSL/LibreSSL to verify the certificate and set our callback.
+		 * Our callback will always accept the certificate since actual checking
+		 * will take place elsewhere. Why? Because certificate is (often) delayed
+		 * until after the SSL handshake. Such as in the case of link blocks where
+		 * _verify_link() will take care of it only after we learned what server
+		 * we are dealing with (and if we should verify certificates for that server).
+		 */
 		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE | (ssloptions->options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
 	}
 	SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_OFF);
@@ -522,6 +527,7 @@ char *ssl_get_cipher(SSL *ssl)
 	return buf;
 }
 
+/** Outgoing SSL connect (read: handshake) to another server. */
 void ircd_SSL_client_handshake(int fd, int revents, void *data)
 {
 	aClient *acptr = data;
@@ -861,4 +867,94 @@ SSLOptions *FindSSLOptionsForUser(aClient *acptr)
 	}
 
 	return sslopt;
+}
+
+/** Verify certificate of client 'acptr' and make sure the certificate
+ * is valid for 'hostname'. */
+int verify_certificate(aClient *acptr, char *hostname, char **errstr)
+{
+	static char buf[512];
+	X509 *cert;
+	int n;
+
+	*buf = '\0';
+
+	if (*errstr)
+		*errstr = NULL; /* default */
+
+	if (!IsSecure(acptr))
+	{
+		strlcpy(buf, "Not using SSL/TLS", sizeof(buf));
+		if (errstr)
+			*errstr = buf;
+		return 0; /* Cannot verify a non-SSL connection */
+	}
+
+	if (SSL_get_verify_result(acptr->local->ssl) != X509_V_OK)
+	{
+		strlcpy(buf, "Certificate is not issued by a trusted Certificate Authority", sizeof(buf));
+		if (errstr)
+			*errstr = buf;
+		return 0; /* Certificate verify failed */
+	}
+
+	/* Now verify if the name of the certificate matches hostname */
+	cert = SSL_get_peer_certificate(acptr->local->ssl);
+
+	if (!cert)
+	{
+		strlcpy(buf, "No certificate provided", sizeof(buf));
+		if (errstr)
+			*errstr = buf;
+		return 0;
+	}
+
+#if 1
+	n = validate_hostname(hostname, cert);
+	X509_free(cert);
+	if (n == MatchFound)
+		return 1; /* Hostname matched. All tests passed. */
+#else
+	/* TODO: make autoconf test for X509_check_host() and verify that this code works:
+	 * (When doing that, also disable the openssl_hostname_validation.c/.h code since
+	 *  it would be unused)
+	 */
+	n = X509_check_host(cert, hostname, strlen(hostname), X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS, NULL);
+	X509_free(cert);
+	if (n == 1)
+		return 1; /* Hostname matched. All tests passed. */
+#endif
+
+	/* Certificate is verified but is issued for a different hostname */
+	snprintf(buf, sizeof(buf), "Certificate '%s' is not valid for hostname '%s'",
+		certificate_name(acptr), hostname);
+	*errstr = buf;
+	return 0;
+}
+
+/** Grab the certificate name */
+char *certificate_name(aClient *acptr)
+{
+	static char buf[384];
+	X509 *cert;
+	X509_NAME *n;
+
+	if (!IsSecure(acptr))
+		return NULL;
+
+	cert = SSL_get_peer_certificate(acptr->local->ssl);
+	if (!cert)
+		return NULL;
+
+	n = X509_get_subject_name(cert);
+	if (n)
+	{
+		buf[0] = '\0';
+		X509_NAME_oneline(n, buf, sizeof(buf));
+		X509_free(cert);
+		return buf;
+	} else {
+		X509_free(cert);
+		return NULL;
+	}
 }

@@ -328,6 +328,35 @@ skip_host_check:
 		    "Link denied (Authentication failed)");
 	}
 
+	/* Verify the SSL certificate (if requested) */
+	if (link->verify_certificate)
+	{
+		char *errstr;
+
+		if (!IsSSL(cptr))
+		{
+			/* Rare, but better we handle it here or the (other) error will be confusing */
+			sendto_one(cptr,
+				"ERROR :Link '%s' denied (Not using SSL/TLS) %s",
+				servername, inpath);
+			sendto_umode(UMODE_OPER, "Link denied for '%s' (Not using SSL/TLS and verify-certificate is on) %s",
+				servername, inpath);
+			return exit_client(cptr, sptr, &me,
+				"Link denied (Not using SSL/TLS)");
+		}
+		if (!verify_certificate(cptr, link->servername, &errstr))
+		{
+			sendto_one(cptr,
+				"ERROR :Link '%s' denied (Certificate verification failed) %s",
+				servername, inpath);
+			sendto_umode(UMODE_OPER, "Link denied for '%s' (Certificate verification failed) %s",
+				servername, inpath);
+			sendto_umode(UMODE_OPER, "Reason for certificate verification failure: %s", errstr);
+			return exit_client(cptr, sptr, &me,
+				"Link denied (Certificate verification failed)");
+		}
+	}
+
 	/*
 	 * Third phase, we check that the server does not exist
 	 * already

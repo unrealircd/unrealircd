@@ -210,7 +210,6 @@ static NameValue _SSLFlags[] = {
 	{ SSLFLAG_FAILIFNOCERT, "fail-if-no-clientcert" },
 	{ SSLFLAG_DISABLECLIENTCERT, "no-client-certificate" },
 	{ SSLFLAG_NOSTARTTLS, "no-starttls" },
-	{ SSLFLAG_VERIFYCERT, "verify-certificate" },
 };
 
 struct {
@@ -6621,6 +6620,10 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			}
 			link->class->xrefcount++;
 		}
+		else if (!strcmp(cep->ce_varname, "verify-certificate"))
+		{
+			link->verify_certificate = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
 			link->options = 0;
@@ -6839,6 +6842,14 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			             "see https://www.unrealircd.org/docs/FAQ#link::ciphers_no_longer_works",
 			             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			errors++;
+		}
+		else if (!strcmp(cep->ce_varname, "verify-certificate"))
+		{
+			if (config_is_blankorempty(cep, "link"))
+			{
+				errors++;
+				continue;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "options"))
 		{

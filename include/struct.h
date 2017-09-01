@@ -827,8 +827,6 @@ extern void unload_all_unused_moddata(void);
 #define CONNECT_INSECURE	0x000040
 
 #define SSLFLAG_FAILIFNOCERT 	0x1
-#define SSLFLAG_VERIFYCERT 	0x2
-#define SSLFLAG_DONOTACCEPTSELFSIGNED 0x4
 #define SSLFLAG_NOSTARTTLS	0x8
 #define SSLFLAG_DISABLECLIENTCERT 0x10
 
@@ -1201,6 +1199,7 @@ struct _configitem_link {
 	int leaf_depth; /**< Leaf depth */
 	ConfigItem_class *class; /**< Class the server should use */
 	int options; /**< Generic options such as quarantine */
+	int verify_certificate;
 	/* internal: */
 	int	refcount; /**< Reference counter (used so we know if the struct may be freed) */
 	time_t hold; /**< For how long the server is "on hold" for outgoing connects (why?) */
