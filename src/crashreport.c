@@ -544,7 +544,7 @@ int crashreport_send(char *fname)
 		return 0;
 	}
 
-	if (!verify_certificate(ssl, REPORT_HOST, &errstr))
+	if (!verify_certificate(ssl, CRASH_REPORT_HOST, &errstr))
 	{
 		printf("Certificate problem with crash.unrealircd.org: %s\n", errstr);
 		printf("Fatal error. See above.\n");
