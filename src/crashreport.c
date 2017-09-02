@@ -492,7 +492,7 @@ int crashreport_send(char *fname)
 	SSL *ssl = NULL;
 	BIO *socket = NULL;
 	int xfr = 0;
-	char *errstr;
+	char *errstr = NULL;
 	
 	filesize = getfilesize(fname);
 	if (filesize < 0)

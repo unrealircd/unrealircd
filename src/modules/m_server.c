@@ -331,7 +331,7 @@ skip_host_check:
 	/* Verify the SSL certificate (if requested) */
 	if (link->verify_certificate)
 	{
-		char *errstr;
+		char *errstr = NULL;
 
 		if (!IsSSL(cptr))
 		{

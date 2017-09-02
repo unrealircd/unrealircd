@@ -869,7 +869,12 @@ SSLOptions *FindSSLOptionsForUser(aClient *acptr)
 	return sslopt;
 }
 
-/** Verify certificate and make sure the certificate is valid for 'hostname'. */
+/** Verify certificate and make sure the certificate is valid for 'hostname'.
+ * @param ssl: The SSL structure of the client or server
+ * @param hostname: The hostname we should expect the certificate to be valid for
+ * @param errstr: Error will be stored in here (optional)
+ * @returns Returns 1 on success and 0 on error.
+ */
 int verify_certificate(SSL *ssl, char *hostname, char **errstr)
 {
 	static char buf[512];
@@ -878,7 +883,7 @@ int verify_certificate(SSL *ssl, char *hostname, char **errstr)
 
 	*buf = '\0';
 
-	if (*errstr)
+	if (errstr)
 		*errstr = NULL; /* default */
 
 	if (!ssl)
@@ -927,7 +932,8 @@ int verify_certificate(SSL *ssl, char *hostname, char **errstr)
 	/* Certificate is verified but is issued for a different hostname */
 	snprintf(buf, sizeof(buf), "Certificate '%s' is not valid for hostname '%s'",
 		certificate_name(ssl), hostname);
-	*errstr = buf;
+	if (errstr)
+		*errstr = buf;
 	return 0;
 }
 

@@ -1224,7 +1224,7 @@ int stats_set(aClient *sptr, char *para)
 		sptr->name, SafePrint(iConf.ssl_options->key_file));
 	sendto_one(sptr, ":%s %i %s :ssl::trusted-ca-file: %s", me.name, RPL_TEXT,
 		sptr->name, SafePrint(iConf.ssl_options->trusted_ca_file));
-	sendto_one(sptr, ":%s %i %s :ssl::options: %s %s", me.name, RPL_TEXT, sptr->name,
+	sendto_one(sptr, ":%s %i %s :ssl::options: %s", me.name, RPL_TEXT, sptr->name,
 		iConf.ssl_options->options & SSLFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "");
 	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWOPERMOTD);
