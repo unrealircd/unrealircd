@@ -838,6 +838,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		    cptr->serv->up,
 		    cptr->name, cptr->info);
 
+	send_moddata_client(cptr, &me); /* send moddata of &me (if any, likely minimal) */
 	list_for_each_entry_reverse(acptr, &global_server_list, client_node)
 	{
 		/* acptr->from == acptr for acptr == cptr */
@@ -876,6 +877,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 					cptr->name, acptr->name);
 #endif
 			}
+			send_moddata_client(cptr, acptr); /* send moddata of server 'acptr' (if any, likely minimal) */
 		}
 	}
 

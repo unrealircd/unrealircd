@@ -324,10 +324,10 @@ int moddata_client_set(aClient *acptr, char *varname, char *value)
 		memset(&moddata_client(acptr, md), 0, sizeof(ModData));
 	}
 
-	/* If 'sync' field is set and the user is not in pre-registered state then
-	 * broadcast the new setting.
+	/* If 'sync' field is set and the client is not in pre-registered
+	 * state then broadcast the new setting.
 	 */
-	if (md->sync && IsPerson(acptr))
+	if (md->sync && (IsPerson(acptr) || IsServer(acptr) || IsMe(acptr)))
 		broadcast_md_client_cmd(NULL, &me, acptr, md->name, value);
 
 	return 1;
