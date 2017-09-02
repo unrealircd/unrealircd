@@ -745,6 +745,17 @@ char *plaintextpolicy_valtostr(PlaintextPolicy policy)
 	return "???";
 }
 
+char plaintextpolicy_valtochar(PlaintextPolicy policy)
+{
+	if (policy == PLAINTEXT_POLICY_ALLOW)
+		return 'a';
+	if (policy == PLAINTEXT_POLICY_WARN)
+		return 'w';
+	if (policy == PLAINTEXT_POLICY_DENY)
+		return 'd';
+	return '?';
+}
+
 ConfigFile *config_load(char *filename)
 {
 	struct stat sb;
