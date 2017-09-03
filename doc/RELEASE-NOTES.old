@@ -3,6 +3,48 @@ See doc/RELEASE-NOTES for the latest release notes.
 This file (doc/RELEASE-NOTES.old) contains the release notes
 of OLDER releases for historical purposes.
 
+==[ CHANGES BETWEEN 4.0.12 AND 4.0.13 ]==
+Enhancements:
+* Support for Strict Transport Security (draft/sts).
+  See: https://www.unrealircd.org/docs/SSL/TLS#Strict_Transport_Security
+* Support for Server Name Indication (SNI):
+  See: https://www.unrealircd.org/docs/Sni_block
+* Add conf/modules.optional.conf. This loads all additional modules
+  that are not in modules.default.conf (m_ircops, m_staff, nocodes,
+  textban, hideserver, antirandom and websocket)
+
+Major issues fixed:
+* 'simple' spamfilters ended up being 'posix' after server linking.
+* User mode +Z (secureonly) not working properly across server links.
+* REHASH from WebSocket connection would cause a crash (requires IRCOp
+  privileges)
+
+Minor issues fixed:
+* We now prevent /OPER for oper blocks with a non-existant operclass
+* Bump MAXCONNECTIONS for Windows, allowing you to hold more clients.
+* The 'ban too broad' checking was broken. This permitted glines such
+  as 192.168.0.0/1 being set. Now it rejects CIDR of /15 and lower.
+  To disable this safety measure you can (still) use:
+  set { options { allow-insane-bans; }; };
+
+Other changes:
+* The websocket module now no longer sends \r\n in the websocket
+  data and no longer requires it on incoming messages (but you
+  can still send it if you like). Also version bumped to 1.0.0.
+* Mark all shipped modules as official (non-3rd-party)
+* Verify certificate when submitting crash reports
+* Support --without-privatelibdir for packagers
+* CACERT has been removed from curl-ca-bundle
+
+Module coders:
+* CAP API changes:
+  * The cap->visible(void) callback is now cap->visible(aClient *)
+  * There is a new cap->parameter(aClient *) callback function,
+    see the cap/sts module for how it can be used.
+  * Various updates to subfunctions to pass 'sptr' (due to the above),
+    including clicap_find(sptr, ...)
+  * New CLICAP_FLAGS_ADVERTISE_ONLY flag (CAP cannot be REQ'd)
+
 ==[ CHANGES BETWEEN 4.0.11 AND 4.0.12 ]==
 Enhancements:
 * New user mode +Z: Only allow SSL/TLS users to private message you.
