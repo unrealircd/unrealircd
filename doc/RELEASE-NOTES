@@ -20,6 +20,21 @@ Enhancements:
   If your services do not run on localhost and link without SSL/TLS
   then you may get an error during linking. In such a case check out:
   https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS
+* You can now ask UnrealIRCd to verify certificates of server links by:
+  link irc1.test.net {
+      [..]
+      verify-certificate yes;
+  };
+  This will verify the certificate of the link, making sure it is valid,
+  issued for the specified name (irc1.test.net) and given out by a
+  trusted Certificate Authority (like Let's Encrypt).
+  Obviously, if you use self-signed certificates then you can't use this.
+* Introduce a concept called "link security level". This will rate the
+  security of your network from 0 to 2. Whenever security is degraded
+  due to a new server link UnrealIRCd will print a warning about it.
+  See https://www.unrealircd.org/docs/Link_security
+  This also adds a new command /LINKSECURITY (IRCop-only).
+* The plaintext-policy and link-security is shown in "CAP LS".
 
 Major issues fixed:
 * None
@@ -28,11 +43,17 @@ Minor issues fixed:
 * If you had a link block named irc1.example.net and did an outgoing
   connect to this server then the server could introduce himself under
   a different name, such as irc2.example.net. Not a security issue but
-  this could be rather confusing. Also confused the autoconnect code.
+  this could cause confusing autoconnect attempts to be printed.
+* password::sslclientcert did not accept relative paths
 
 Other changes:
+* The ssl options 'verify-certificate' and 'no-self-signed' have been
+  removed. Use link::verify-certificate instead. It makes no sense to
+  verify certificates or prevent self signed certificates elsewhere
+  such as in vhost or oper, since there is no hostname to match against.
 
 Module coders:
+* You can now attach ModData to server objects as well (including &me).
 
 ==[ CHANGES IN OLDER RELEASES ]==
 For changes in previous UnrealIRCd releases see doc/RELEASE-NOTES.old or
