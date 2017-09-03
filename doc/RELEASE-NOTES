@@ -17,24 +17,12 @@ Enhancements:
   };
   You can change each of the three classes to 'allow', 'warn' or 'deny'.
   See: https://www.unrealircd.org/docs/Set_block#set::plaintext-policy
-
-  Regarding the default choices:
-  * Everyone should use SSL/TLS but to deny (or warn) all non-SSL/TLS
-    users in the default configuration is a step too far right now.
-  * IRCOps have access to sensitive information of many users and should
-    really use an encrypted connection. Hence the default 'warn' action.
-  * Two UnrealIRCd 4.x servers will always link with SSL/TLS (either
-    directly or using STARTTLS), this is the case since version 4.0.0.
-    The only new thing is that we now block INCOMING insecure links.
-    This is only a problem for you if you meet ALL of these 3 conditions:
-    1. You are linking in services or any other non-UnrealIRCd-4.x
-       software; AND
-    2. You are linking from a remote computer (not localhost); AND
-    3. You are not using SSL/TLS for the connection.
-    In such a case you will be unable to link without changes. See:
-    https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS
+  If your services do not run on localhost and link without SSL/TLS
+  then you may get an error during linking. In such a case check out:
+  https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS
 
 Major issues fixed:
+* None
 
 Minor issues fixed:
 * If you had a link block named irc1.example.net and did an outgoing
