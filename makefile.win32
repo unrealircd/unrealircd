@@ -254,7 +254,10 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/EXTBANS/OPERCLASS.DLL \
  SRC/MODULES/EXTBANS/CERTFP.DLL \
  SRC/MODULES/EXTBANS/TEXTBAN.DLL \
- SRC/MODULES/CAP/STS.DLL
+ SRC/MODULES/CAP/STS.DLL \
+ SRC/MODULES/CAP/PLAINTEXT-POLICY.DLL \
+ SRC/MODULES/CAP/LINK-SECURITY.DLL
+
 
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
 
@@ -956,5 +959,11 @@ src/modules/extbans/textban.dll: src/modules/extbans/textban.c $(INCLUDES)
 
 src/modules/cap/sts.dll: src/modules/cap/sts.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/cap/ /Fesrc/modules/cap/ src/modules/cap/sts.c $(MODLFLAGS)
+
+src/modules/cap/plaintext-policy.dll: src/modules/cap/plaintext-policy.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/cap/ /Fesrc/modules/cap/ src/modules/cap/plaintext-policy.c $(MODLFLAGS)
+
+src/modules/cap/link-security.dll: src/modules/cap/link-security.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/cap/ /Fesrc/modules/cap/ src/modules/cap/link-security.c $(MODLFLAGS)
 
 dummy:
