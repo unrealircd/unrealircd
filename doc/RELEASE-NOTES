@@ -45,6 +45,7 @@ Minor issues fixed:
   a different name, such as irc2.example.net. Not a security issue but
   this could cause confusing autoconnect attempts to be printed.
 * password::sslclientcert did not accept relative paths
+* Compile problem with LibreSSL (regarding SSL_CTX_get0_param)
 
 Other changes:
 * The ssl options 'verify-certificate' and 'no-self-signed' have been
