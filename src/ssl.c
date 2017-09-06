@@ -572,6 +572,12 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 		BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->local->ssl), ssloptions->renegotiate_timeout);
 	}
 
+	if (acptr->serv && acptr->serv->conf)
+	{
+		/* Client: set hostname for SNI */
+		SSL_set_tlsext_host_name(acptr->local->ssl, acptr->serv->conf->servername);
+	}
+
 	acptr->flags |= FLAGS_SSL;
 
 	switch (ircd_SSL_connect(acptr, fd))
@@ -829,6 +835,12 @@ int client_starttls(aClient *acptr)
 
 	SSL_set_fd(acptr->local->ssl, acptr->fd);
 	SSL_set_nonblocking(acptr->local->ssl);
+
+	if (acptr->serv && acptr->serv->conf)
+	{
+		/* Client: set hostname for SNI */
+		SSL_set_tlsext_host_name(acptr->local->ssl, acptr->serv->conf->servername);
+	}
 
 	if (ircd_SSL_connect(acptr, acptr->fd) < 0)
 	{
