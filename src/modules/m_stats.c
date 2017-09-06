@@ -1154,6 +1154,11 @@ int stats_set(aClient *sptr, char *para)
 		sendto_one(sptr, ":%s %i %s :stats-server: %s", me.name, RPL_TEXT,
 		    sptr->name, STATS_SERVER);
 	}
+	if (SASL_SERVER)
+	{
+		sendto_one(sptr, ":%s %i %s :sasl-server: %s", me.name, RPL_TEXT,
+		    sptr->name, SASL_SERVER);
+	}
 	sendto_one(sptr, ":%s %i %s :hiddenhost-prefix: %s", me.name, RPL_TEXT,
 	    sptr->name, hidden_host);
 	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.name, RPL_TEXT,
