@@ -7182,9 +7182,17 @@ void test_sslblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 				else if (!stricmp(name, "TLSv1.3"))
 					option = SSL_PROTOCOL_TLSV1_3;
 				else
+				{
+#ifdef SSL_OP_NO_TLSv1_3
+					config_warn("%s:%i: %s: unknown protocol '%s'. "
+								 "Valid protocols are: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
+								 cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, config_var(cepp), name);
+#else
 					config_warn("%s:%i: %s: unknown protocol '%s'. "
 								 "Valid protocols are: TLSv1,TLSv1.1,TLSv1.2",
 								 cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, config_var(cepp), name);
+#endif
+                }
 
 				if (option)
 				{
