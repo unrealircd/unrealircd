@@ -794,3 +794,4 @@ extern char *plaintextpolicy_valtostr(PlaintextPolicy policy);
 extern char plaintextpolicy_valtochar(PlaintextPolicy policy);
 extern int verify_certificate(SSL *ssl, char *hostname, char **errstr);
 extern char *certificate_name(SSL *ssl);
+extern int cipher_check(SSL_CTX *ctx, char **errstr);

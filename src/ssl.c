@@ -284,6 +284,7 @@ void disable_ssl_protocols(SSL_CTX *ctx, SSLOptions *ssloptions)
 SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 {
 	SSL_CTX *ctx;
+	char *errstr = NULL;
 
 	if (server)
 		ctx = SSL_CTX_new(SSLv23_server_method());
@@ -355,7 +356,15 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 
 	if (SSL_CTX_set_cipher_list(ctx, ssloptions->ciphers) == 0)
 	{
-		config_warn("Failed to set SSL cipher list for clients");
+		config_warn("Failed to set SSL cipher list");
+		config_report_ssl_error();
+		goto fail;
+	}
+
+	if (!cipher_check(ctx, &errstr))
+	{
+		config_warn("There is a problem with your SSL/TLS 'ciphers' configuration setting: %s", errstr);
+		config_warn("Remove the ciphers setting from your configuration file to use safer defaults, or change the cipher setting.");
 		config_report_ssl_error();
 		goto fail;
 	}
@@ -962,4 +971,51 @@ char *certificate_name(SSL *ssl)
 		X509_free(cert);
 		return NULL;
 	}
+}
+
+/** Check if any weak ciphers are in use */
+int cipher_check(SSL_CTX *ctx, char **errstr)
+{
+	SSL *ssl;
+	char errbuf[256];
+	int i;
+	const char *cipher;
+
+	*errbuf = '\0'; // safety
+
+	if (errstr)
+		*errstr = errbuf;
+
+	/* there isn't an SSL_CTX_get_cipher_list() unfortunately. */
+	ssl = SSL_new(ctx);
+	if (!ssl)
+	{
+		snprintf(errbuf, sizeof(errbuf), "Could not create SSL structure");
+		return 0;
+	}
+
+	/* Very weak */
+	i = 0;
+	while ((cipher = SSL_get_cipher_list(ssl, i++)))
+	{
+		if (strstr(cipher, "DES-"))
+		{
+			snprintf(errbuf, sizeof(errbuf), "DES is enabled but is a weak cipher");
+			return 0;
+		}
+		if (strstr(cipher, "3DES-"))
+		{
+			snprintf(errbuf, sizeof(errbuf), "3DES is enabled but is a weak cipher");
+			return 0;
+		}
+		if (strstr(cipher, "RC4-"))
+		{
+			snprintf(errbuf, sizeof(errbuf), "RC4 is enabled but is a weak cipher");
+			return 0;
+		}
+	}
+
+	SSL_free(ssl);
+
+	return 1;
 }
