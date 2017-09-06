@@ -56,6 +56,8 @@ Other changes:
   Now you can no longer, since there is no legitimate reason to do so.
 * Update cipher suite to work with TLS 1.3. This ensures you can use
   TLS 1.3 in UnrealIRCd 4.0.14+ when OpenSSL supports it (in the future).
+* Bump MODDATA_MAX_CLIENT from 8 to 12: needed if you have a lot of
+  3rd party modules loaded. Also moved MODDATA_MAX_* to include/config.h
 
 Module coders:
 * You can now attach ModData to server objects as well (including &me).

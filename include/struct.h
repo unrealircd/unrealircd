@@ -520,12 +520,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 
 #define ID(sptr)	(*sptr->id ? sptr->id : sptr->name)
 
-/* Maximum number of moddata objects that may be attached to an object -- maybe move to config.h? */
-#define MODDATA_MAX_CLIENT 8
-#define MODDATA_MAX_CHANNEL 8
-#define MODDATA_MAX_MEMBER 4
-#define MODDATA_MAX_MEMBERSHIP 4
-
 /** Union for moddata objects */
 typedef union _moddata ModData;
 union _moddata

@@ -428,6 +428,15 @@
 /* Use TRE Regex Library (as well) ? */
 #define USE_TRE
 
+/* Maximum number of ModData objects that may be attached to an object */
+/* UnrealIRCd 4.0.0 - 4.0.13:  8, 8, 4, 4
+ * UnrealIRCd 4.0.14+       : 12, 8, 4, 4
+ */
+#define MODDATA_MAX_CLIENT 12
+#define MODDATA_MAX_CHANNEL 8
+#define MODDATA_MAX_MEMBER 4
+#define MODDATA_MAX_MEMBERSHIP 4
+
 /* If EXPERIMENTAL is #define'd then all users will receive a notice about
  * this when they connect, along with a pointer to bugs.unrealircd.org where
  * they can report any problems. This is mainly to help UnrealIRCd development.
