@@ -51,6 +51,11 @@ Other changes:
   removed. Use link::verify-certificate instead. It makes no sense to
   verify certificates or prevent self signed certificates elsewhere
   such as in vhost or oper, since there is no hostname to match against.
+* Weak cipher suites such as 3DES and RC4 are disabled by default but
+  previously you could still enable them through set::ssl::ciphers.
+  Now you can no longer, since there is no legitimate reason to do so.
+* Update cipher suite to work with TLS 1.3. This ensures you can use
+  TLS 1.3 in UnrealIRCd 4.0.14+ when OpenSSL supports it (in the future).
 
 Module coders:
 * You can now attach ModData to server objects as well (including &me).
