@@ -3945,7 +3945,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			{
 				char *p;
 				for (p = cep->ce_vardata; *p; p++)
-					if (strchr("oOaANCrzS", *p))
+					if (strchr("orzS", *p))
 					{
 						config_error("%s:%i: oper::modes may not include mode '%c'",
 							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
@@ -3964,7 +3964,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			{
 				char *p;
 				for (p = cep->ce_vardata; *p; p++)
-					if (strchr("oOaANC", *p))
+					if (strchr("o", *p))
 					{
 						config_warn("%s:%i: oper::require-modes probably shouldn't include mode '%c'",
 							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
@@ -7928,7 +7928,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			CheckDuplicate(cep, modes_on_connect, "modes-on-connect");
 			for (p = cep->ce_vardata; *p; p++)
-				if (strchr("oOaANCrzSgHhqtW", *p))
+				if (strchr("orzSHqtW", *p))
 				{
 					config_error("%s:%i: set::modes-on-connect may not include mode '%c'",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
@@ -7978,7 +7978,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			CheckDuplicate(cep, modes_on_oper, "modes-on-oper");
 			for (p = cep->ce_vardata; *p; p++)
-				if (strchr("oOaANCrzS", *p))
+				if (strchr("orzS", *p))
 				{
 					config_error("%s:%i: set::modes-on-oper may not include mode '%c'",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
