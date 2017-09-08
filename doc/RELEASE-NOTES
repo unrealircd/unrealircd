@@ -41,11 +41,12 @@ Major issues fixed:
 
 Minor issues fixed:
 * If you had a link block named irc1.example.net and did an outgoing
-  connect to this server then the server could introduce himself under
-  a different name, such as irc2.example.net. Not a security issue but
-  this could cause confusing autoconnect attempts to be printed.
+  connect to that server, then the server could introduce himself under
+  a different name, such as irc1.other.net. Not a security issue but
+  this could cause confusing autoconnect attempts.
 * password::sslclientcert did not accept relative paths
 * Compile problem with LibreSSL (regarding SSL_CTX_get0_param)
+* set::modes-on-connect: was refusing certain (old) modes like +N
 
 Other changes:
 * The ssl options 'verify-certificate' and 'no-self-signed' have been
