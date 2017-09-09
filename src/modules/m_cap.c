@@ -170,7 +170,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 
 		if (flags)
 		{
-			if (!CHECKPROTO(sptr, cap->cap))
+			if (!cap->cap || !CHECKPROTO(sptr, cap->cap))
 				continue;
 			else if (clear && cap->flags & CLICAP_FLAGS_STICKY)
 				continue;
