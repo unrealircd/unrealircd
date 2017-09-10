@@ -989,7 +989,7 @@ char *certificate_name(SSL *ssl)
 int cipher_check(SSL_CTX *ctx, char **errstr)
 {
 	SSL *ssl;
-	char errbuf[256];
+	static char errbuf[256];
 	int i;
 	const char *cipher;
 
