@@ -64,6 +64,13 @@ Other changes:
 
 Module coders:
 * You can now attach ModData to server objects as well (including &me).
+* Please do not use UmodeDel, CmdoverrideDel and any other *Del()
+  functions from MOD_UNLOAD. These undocumented functions are unnecessary
+  since 2008 or so. UnrealIRCd takes care of unloading all module objects.
+  It can cause a crash if someone unloads the module in UnrealIRCd 4
+  (more specifically: double free if unloading modules which use ModData).
+  Attempts to use these functions in future UnrealIRCd versions may result
+  in a compile error.
 
 ==[ CHANGES IN OLDER RELEASES ]==
 For changes in previous UnrealIRCd releases see doc/RELEASE-NOTES.old or
