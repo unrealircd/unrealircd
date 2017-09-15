@@ -53,4 +53,4 @@ We also have a good **FAQ**: https://www.unrealircd.org/docs/FAQ
 * https://www.unrealircd.org - Our main website
 * https://forums.unrealircd.org - Support
 * https://bugs.unrealircd.org - Bug tracker
-* irc://irc.unrealircd.org/unreal-support - IRC support
+* ircs://irc.unrealircd.org:6697/unreal-support - IRC support
