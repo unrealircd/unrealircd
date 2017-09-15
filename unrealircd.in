@@ -193,7 +193,7 @@ __EOF__
 	echo "===================  STOP HERE ======================"
 	echo ""
 	echo "Copy the parts between the START HERE and STOP HERE marker"
-	echo "and report it on http://bugs.unrealircd.org/"
+	echo "and report it on https://bugs.unrealircd.org/"
 	echo ""
 	echo 'But before you do, note the following:'
 	echo '1. We do not support modifications of any unrealircd code'

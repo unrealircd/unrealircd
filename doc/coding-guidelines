@@ -6,7 +6,7 @@ Rules about patches & modifications to UnrealIRCd
 2. If new files are made, it must contain proper copyright headers.
 
 3. If you want to submit patches (f.e. if you don't have write access to
-   the repository), then submit them to http://bugs.unrealircd.org/
+   the repository), then submit them to https://bugs.unrealircd.org/
    using "hg export" or "hg diff". Naturally include a clear description
    of what the change does.
 

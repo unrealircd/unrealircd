@@ -157,7 +157,7 @@ CMD_FUNC(m_join)
 int r;
 
 	if (bouncedtimes)
-		sendto_realops("m_join: bouncedtimes=%d??? [please report at http://bugs.unrealircd.org/]", bouncedtimes);
+		sendto_realops("m_join: bouncedtimes=%d??? [please report at https://bugs.unrealircd.org/]", bouncedtimes);
 	bouncedtimes = 0;
 	if (IsServer(sptr))
 		return 0;

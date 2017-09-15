@@ -45,9 +45,9 @@ Run `./unrealircd start` in the directory where you installed UnrealIRCd.
 Start -> All Programs -> UnrealIRCd -> UnrealIRCd
 
 ## Documentation & FAQ
-You can find the **documentation** online at: http://www.unrealircd.org/docs/
+You can find the **documentation** online at: https://www.unrealircd.org/docs/
 
-We also have a good **FAQ**: http://www.unrealircd.org/docs/FAQ
+We also have a good **FAQ**: https://www.unrealircd.org/docs/FAQ
 
 ## Website, support, and other links ##
 * https://www.unrealircd.org - Our main website

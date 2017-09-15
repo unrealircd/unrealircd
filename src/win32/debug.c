@@ -320,7 +320,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 		{
 			fprintf(fd, "UnrealIRCd has encountered a fatal error. Debugging information "
 					"has been dumped to unrealircd.%d.core, please file a bug and upload "
-					"this file to http://bugs.unrealircd.org/.", getpid());
+					"this file to https://bugs.unrealircd.org/.", getpid());
 			fclose(fd);
 		}
 	}

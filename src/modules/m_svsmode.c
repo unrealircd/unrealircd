@@ -451,7 +451,7 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 						sendto_realops(
 							"[BUG] server %s tried to set +H while user not an oper, para=%s/%s, "
 							"umodes=%ld, please fix your services or if you think it's our fault, "
-							"report at http://bugs.unrealircd.org/", sptr->name, parv[1], parv[2], acptr->umodes);
+							"report at https://bugs.unrealircd.org/", sptr->name, parv[1], parv[2], acptr->umodes);
 						break; /* abort! */
 					}
 					IRCstats.operators--;

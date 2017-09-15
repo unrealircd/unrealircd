@@ -1433,7 +1433,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 #ifdef EXPERIMENTAL
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** \2NOTE:\2 This server is running experimental IRC server software (UnrealIRCd %s). If you find any bugs or problems, please report them at http://bugs.unrealircd.org/",
+		    ":%s NOTICE %s :*** \2NOTE:\2 This server is running experimental IRC server software (UnrealIRCd %s). If you find any bugs or problems, please report them at https://bugs.unrealircd.org/",
 		    me.name, sptr->name, VERSIONONLY);
 #endif
 #ifdef HOSTILENAME
