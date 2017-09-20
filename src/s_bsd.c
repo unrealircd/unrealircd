@@ -612,7 +612,7 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, ==0);
 
 	/* Some silly hack to convert 127.0.0.1 and such into 'localhost' */
-	if (IsLocal(cptr))
+	if (!strcmp(GetIP(cptr), "127.0.0.1") || !strcmp(GetIP(cptr), "0:0:0:0:0:0:0:1") || !strcmp(GetIP(cptr), "0:0:0:0:0:ffff:127.0.0.1"))
 	{
 		if (cptr->local->hostp)
 		{
