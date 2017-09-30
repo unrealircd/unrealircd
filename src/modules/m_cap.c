@@ -64,6 +64,11 @@ MOD_INIT(m_cap)
 	c.cap = PROTO_UHNAMES;
 	ClientCapabilityAdd(modinfo->handle, &c);
 
+	memset(&c, 0, sizeof(c));
+	c.name = "cap-notify";
+	c.cap = PROTO_CAP_NOTIFY;
+	ClientCapabilityAdd(modinfo->handle, &c);
+
 	return MOD_SUCCESS;
 }
 
@@ -135,7 +140,7 @@ static ClientCapability *clicap_find(aClient *sptr, const char *data, int *negat
 	return cap;
 }
 
-static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int clear)
+static void clicap_generate(aClient *sptr, const char *subcmd, int flags)
 {
 	ClientCapability *cap;
 	char buf[BUFSIZE];
@@ -187,12 +192,6 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 			buflen = mlen;
 		}
 
-		if (clear)
-		{
-			*p++ = '-';
-			buflen++;
-		}
-
 		curlen = snprintf(p, (capbuf + BUFSIZE) - p, "%s ", name);
 		p += curlen;
 		buflen += curlen;
@@ -204,44 +203,6 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 		*p = '\0';
 
 	sendto_one(sptr, "%s :%s", buf, capbuf);
-}
-
-static int cap_ack(aClient *sptr, const char *arg)
-{
-	ClientCapability *cap;
-	int capadd = 0, capdel = 0;
-	int finished = 0, negate;
-	int errors = 0;
-
-	if (BadPtr(arg))
-		return 0;
-
-	for(cap = clicap_find(sptr, arg, &negate, &finished, &errors); cap;
-	    cap = clicap_find(sptr, NULL, &negate, &finished, &errors))
-	{
-		/* sent an ACK for something they havent REQd */
-		if(!CHECKPROTO(sptr, cap->cap))
-			continue;
-
-		if(negate)
-		{
-			capdel |= cap->cap;
-		}
-		else
-			capadd |= cap->cap;
-	}
-
-	sptr->local->proto |= capadd;
-	sptr->local->proto &= ~capdel;
-	return 0;
-}
-
-static int cap_clear(aClient *sptr, const char *arg)
-{
-	clicap_generate(sptr, "ACK", sptr->local->proto ? sptr->local->proto : -1, 1);
-
-	sptr->local->proto = 0;
-	return 0;
 }
 
 static int cap_end(aClient *sptr, const char *arg)
@@ -259,7 +220,7 @@ static int cap_end(aClient *sptr, const char *arg)
 
 static int cap_list(aClient *sptr, const char *arg)
 {
-	clicap_generate(sptr, "LIST", sptr->local->proto ? sptr->local->proto : -1, 0);
+	clicap_generate(sptr, "LIST", sptr->local->proto ? sptr->local->proto : -1);
 	return 0;
 }
 
@@ -277,7 +238,10 @@ static int cap_ls(aClient *sptr, const char *arg)
 	if (sptr->local->cap_protocol < 300)
 		sptr->local->cap_protocol = 300;
 
-	clicap_generate(sptr, "LS", 0, 0);
+	if (sptr->local->cap_protocol >= 302)
+		sptr->local->proto |= PROTO_CAP_NOTIFY; /* Implicit support (JIT) */
+
+	clicap_generate(sptr, "LS", 0);
 	return 0;
 }
 
@@ -335,6 +299,10 @@ static int cap_req(aClient *sptr, const char *arg)
 		plen += (strlen(cap->name) + 1);
 	}
 
+	/* This one is special */
+	if ((sptr->local->cap_protocol >= 302) && (capdel & PROTO_CAP_NOTIFY))
+		errors++; /* Reject "CAP REQ -cap-notify" */
+
 	if (errors)
 	{
 		sendto_one(sptr, ":%s CAP %s NAK :%s", me.name, BadPtr(sptr->name) ? "*" : sptr->name, arg);
@@ -360,8 +328,6 @@ struct clicap_cmd {
 };
 
 static struct clicap_cmd clicap_cmdtable[] = {
-	{ "ACK",	cap_ack		},
-	{ "CLEAR",	cap_clear	},
 	{ "END",	cap_end		},
 	{ "LIST",	cap_list	},
 	{ "LS",		cap_ls		},

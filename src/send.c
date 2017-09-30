@@ -823,7 +823,7 @@ void sendto_umode(int umodes, char *pattern, ...)
 }
 
 /*
- * sendto_umode
+ * sendto_umode_global
  *
  * Send to specified umode *GLOBALLY* (on all servers)
  */
@@ -993,6 +993,27 @@ void sendto_snomask_normal_global(int snomask, char *pattern, ...)
 	*p = '\0';
 
 	sendto_server(&me, 0, 0, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
+}
+
+/*
+ * send_cap_notify
+ *
+ * Send CAP DEL or CAP NEW to clients supporting this.
+ */
+void send_cap_notify(char *what, char *token)
+{
+	va_list vl;
+	aClient *cptr;
+	char nbuf[1024];
+
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	{
+		if (cptr->local->proto & PROTO_CAP_NOTIFY)
+		{
+			sendto_one(cptr, ":%s CAP %s %s :%s",
+				me.name, (*cptr->name ? cptr->name : "*"), what, token);
+		}
+	}
 }
 
 /*

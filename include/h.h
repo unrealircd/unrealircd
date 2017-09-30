@@ -795,3 +795,6 @@ extern char plaintextpolicy_valtochar(PlaintextPolicy policy);
 extern int verify_certificate(SSL *ssl, char *hostname, char **errstr);
 extern char *certificate_name(SSL *ssl);
 extern int cipher_check(SSL_CTX *ctx, char **errstr);
+extern void clicap_pre_rehash(void);
+extern void clicap_post_rehash(void);
+extern void send_cap_notify(char *what, char *token);

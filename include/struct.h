@@ -334,6 +334,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
 #define PROTO_NOQUIT	0x0001	/* Negotiated NOQUIT protocol */
+#define PROTO_CAP_NOTIFY	0x0002	/* cap-notify capability */
 #define PROTO_SJOIN		0x0004	/* Negotiated SJOIN protocol */
 #define PROTO_NICKv2	0x0008	/* Negotiated NICKv2 protocol */
 #define PROTO_SJOIN2	0x0010	/* Negotiated SJOIN2 protocol */

@@ -124,3 +124,104 @@ void ClientCapabilityDel(ClientCapability *clicap)
 	safefree(clicap->name);
 	MyFree(clicap);
 }
+
+#define MAXCLICAPS 64
+static char *old_caps[MAXCLICAPS]; /**< List of old CAP names - used for /rehash */
+int old_caps_proto[MAXCLICAPS]; /**< List of old CAP protocol values - used for /rehash */
+
+/** Called before REHASH. This saves the list of cap names and protocol values */
+void clicap_pre_rehash(void)
+{
+	ClientCapability *clicap;
+	int i = 0;
+
+	memset(&old_caps, 0, sizeof(old_caps));
+
+	for (clicap = clicaps; clicap; clicap = clicap->next)
+	{
+		if (i == MAXCLICAPS)
+		{
+			ircd_log(LOG_ERROR, "More than %d caps loaded - what???", MAXCLICAPS);
+			break;
+		}
+		old_caps[i] = strdup(clicap->name);
+		old_caps_proto[i] = clicap->cap;
+		i++;
+	}
+}
+
+/** Clear 'proto' protocol for all users */
+void clear_cap_for_users(int proto)
+{
+	aClient *acptr;
+
+	if (proto == 0)
+		return;
+
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	{
+		acptr->local->proto &= ~proto;
+	}
+}
+
+/** Called after REHASH. This will deal with:
+ * 1. Clearing flags for caps that are deleted
+ * 2. Sending any CAP DEL
+ * 3. Sending any CAP NEW
+ */
+void clicap_post_rehash(void)
+{
+	ClientCapability *clicap;
+	char *name;
+	int i;
+	int found;
+
+	if (!loop.ircd_rehashing)
+		return; /* First boot */
+
+	/* Let's deal with CAP DEL first:
+	 * Go through the old caps and see what's missing now.
+	 */
+	for (i = 0; old_caps[i]; i++)
+	{
+		name = old_caps[i];
+		found = 0;
+		for (clicap = clicaps; clicap; clicap = clicap->next)
+		{
+			if (!strcmp(clicap->name, name))
+			{
+				found = 1;
+				break;
+			}
+		}
+		if (!found)
+		{
+			/* Broadcast CAP DEL to local users */
+			send_cap_notify("DEL", name);
+			clear_cap_for_users(old_caps_proto[i]);
+		}
+	}
+
+	/* Now deal with CAP ADD:
+	 * Go through the new caps and see if it was missing from old caps.
+	 */
+	for (clicap = clicaps; clicap; clicap = clicap->next)
+	{
+		name = clicap->name;
+		found = 0;
+		for (i = 0; old_caps[i]; i++)
+		{
+			if (!strcmp(old_caps[i], name))
+			{
+				found = 1;
+				break;
+			}
+		}
+
+		if (!found)
+		{
+			/* Broadcast CAP NEW to local users */
+			send_cap_notify("NEW", name);
+		}
+	}
+}

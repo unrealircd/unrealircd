@@ -1716,6 +1716,7 @@ int	init_conf(char *rootconf, int rehash)
 	bzero(&settings, sizeof(settings));
 	bzero(&requiredstuff, sizeof(requiredstuff));
 	config_setdefaultsettings(&tempiConf);
+	clicap_pre_rehash();
 	/*
 	 * the rootconf must be listed in the conf_include for include
 	 * recursion prevention code and sanity checking code to be
@@ -1812,6 +1813,7 @@ int	init_conf(char *rootconf, int rehash)
 		make_default_logblock();
 	postconf_defaults();
 	config_status("Configuration loaded without any problems.");
+	clicap_post_rehash();
 	return 0;
 }
 
