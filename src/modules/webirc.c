@@ -287,15 +287,32 @@ void webirc_md_free(ModData *md)
 	md->l = 0;
 }
 
-ConfigItem_webirc *Find_webirc(aClient *sptr, WEBIRCType type)
+ConfigItem_webirc *Find_webirc(aClient *sptr, char *password, WEBIRCType type, char **errorstr)
 {
 	ConfigItem_webirc *e;
+	char *error = NULL;
 
 	for (e = conf_webirc; e; e = e->next)
 	{
 		if ((e->type == type) && unreal_mask_match(sptr, e->mask))
-			return e;
+		{
+			if (type == WEBIRC_WEBIRC)
+			{
+				/* Check password */
+				if (Auth_Check(sptr, e->auth, password) == -1)
+					error = "CGI:IRC -- Invalid password";
+				else
+					return e; /* Found matching block, return straight away */
+			} else {
+				return e; /* The WEBIRC_PASS type has no password checking */
+			}
+		}
 	}
+
+	if (error)
+		*errorstr = error; /* Invalid password (this error was delayed) */
+	else
+		*errorstr = "CGI:IRC -- No access"; /* No match found */
 
 	return NULL;
 }
@@ -361,6 +378,7 @@ CMD_FUNC(m_webirc)
 	char *ip, *host, *password;
 	size_t ourlen;
 	ConfigItem_webirc *e;
+	char *error = NULL;
 
 	if ((parc < 5) || BadPtr(parv[4]))
 	{
@@ -373,13 +391,9 @@ CMD_FUNC(m_webirc)
 	ip = parv[4];
 
 	/* Check if allowed host */
-	e = Find_webirc(sptr, WEBIRC_WEBIRC);
+	e = Find_webirc(sptr, password, WEBIRC_WEBIRC, &error);
 	if (!e)
-		return exit_client(cptr, sptr, &me, "CGI:IRC -- No access");
-
-	/* Check password */
-	if (Auth_Check(sptr, e->auth, password) == -1)
-		return exit_client(cptr, sptr, &me, "CGI:IRC -- Invalid password");
+		return exit_client(cptr, sptr, &me, error);
 
 	/* And do our job.. */
 	return dowebirc(cptr, ip, host);
@@ -403,8 +417,9 @@ int webirc_local_pass(aClient *sptr, char *password)
 	{
 		char *ip, *host;
 		ConfigItem_webirc *e;
+		char *error = NULL;
 
-		e = Find_webirc(sptr, WEBIRC_PASS);
+		e = Find_webirc(sptr, NULL, WEBIRC_PASS, &error);
 		if (e)
 		{
 			/* Ok now we got that sorted out, proceed:
