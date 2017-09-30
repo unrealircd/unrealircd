@@ -377,7 +377,6 @@ typedef struct _versionflag {
 } Versionflag;
 
 #define CLICAP_FLAGS_NONE               0x0
-#define CLICAP_FLAGS_CLIACK             0x2
 #define CLICAP_FLAGS_ADVERTISE_ONLY     0x4
 
 typedef struct _clientcapability {

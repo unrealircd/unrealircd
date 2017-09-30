@@ -191,21 +191,6 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 		{
 			*p++ = '-';
 			buflen++;
-
-			if (cap->flags & CLICAP_FLAGS_CLIACK && CHECKPROTO(sptr, cap->cap))
-			{
-				*p++ = '~';
-				buflen++;
-			}
-		}
-		else
-		{
-			if (cap->flags & CLICAP_FLAGS_CLIACK &&
-			    !CHECKPROTO(sptr, cap->cap))
-			{
-				*p++ = '~';
-				buflen++;
-			}
 		}
 
 		curlen = snprintf(p, (capbuf + BUFSIZE) - p, "%s ", name);
@@ -334,12 +319,6 @@ static int cap_req(aClient *sptr, const char *arg)
 		else
 		{
 			capadd |= cap->cap;
-		}
-
-		if (cap->flags & CLICAP_FLAGS_CLIACK)
-		{
-			strcat(pbuf[i], "~");
-			plen++;
 		}
 
 		strcat(pbuf[i], cap->name);
