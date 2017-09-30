@@ -172,8 +172,6 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 		{
 			if (!cap->cap || !CHECKPROTO(sptr, cap->cap))
 				continue;
-			else if (clear && cap->flags & CLICAP_FLAGS_STICKY)
-				continue;
 		}
 
 		/* \r\n\0, possible "-~=", space, " *" */
@@ -202,12 +200,6 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 		}
 		else
 		{
-			if (cap->flags & CLICAP_FLAGS_STICKY)
-			{
-				*p++ = '=';
-				buflen++;
-			}
-
 			if (cap->flags & CLICAP_FLAGS_CLIACK &&
 			    !CHECKPROTO(sptr, cap->cap))
 			{
@@ -248,10 +240,6 @@ static int cap_ack(aClient *sptr, const char *arg)
 
 		if(negate)
 		{
-			/* dont let them ack something sticky off */
-			if(cap->flags & CLICAP_FLAGS_STICKY)
-				continue;
-
 			capdel |= cap->cap;
 		}
 		else
@@ -338,12 +326,6 @@ static int cap_req(aClient *sptr, const char *arg)
 
 		if (negate)
 		{
-			if (cap->flags & CLICAP_FLAGS_STICKY)
-			{
-				finished = 0;
-				break;
-			}
-
 			strcat(pbuf[i], "-");
 			plen++;
 
@@ -351,12 +333,6 @@ static int cap_req(aClient *sptr, const char *arg)
 		}
 		else
 		{
-			if (cap->flags & CLICAP_FLAGS_STICKY)
-			{
-				strcat(pbuf[i], "=");
-				plen++;
-			}
-
 			capadd |= cap->cap;
 		}
 
