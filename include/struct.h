@@ -894,6 +894,7 @@ struct LocalClient {
 	unsigned char sasl_complete;
 	u_short sasl_cookie;
 	char *sni_servername; /**< Servername as sent by client during SNI (otherwise NULL) */
+	int cap_protocol; /**< CAP protocol in use. At least 300 for any CAP capable client. 302 for 3.2, etc.. */
 };
 
 

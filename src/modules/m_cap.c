@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(m_cap)
 	"command /cap", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
-    };
+	};
 
 MOD_INIT(m_cap)
 {
@@ -127,7 +127,7 @@ static ClientCapability *clicap_find(aClient *sptr, const char *data, int *negat
 	p = s; /* point to next token for next iteration */
 
 	if (cap && (cap->flags & CLICAP_FLAGS_ADVERTISE_ONLY))
-	    cap = NULL;
+		cap = NULL;
 
 	if (!cap)
 		*errors = 1;
@@ -268,8 +268,17 @@ static int cap_ls(aClient *sptr, const char *arg)
 	if (!IsRegisteredUser(sptr))
 		sptr->local->proto |= PROTO_CLICAP;
 
-       	clicap_generate(sptr, "LS", 0, 0);
-       	return 0;
+	if (arg)
+		sptr->local->cap_protocol = atoi(arg);
+
+	/* Since the client did a "CAP LS" it apparently supports CAP
+	 * and thus at least protocol version 300.
+	 */
+	if (sptr->local->cap_protocol < 300)
+		sptr->local->cap_protocol = 300;
+
+	clicap_generate(sptr, "LS", 0, 0);
+	return 0;
 }
 
 static int cap_req(aClient *sptr, const char *arg)
