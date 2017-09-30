@@ -381,12 +381,12 @@ typedef struct _versionflag {
 
 typedef struct _clientcapability {
 	struct _clientcapability *prev, *next;
-	char *name;
-	int cap;
-	int flags;
-	int (*visible)(aClient *);
-	char *(*parameter)(aClient *);
-	Module *owner;
+	char *name;                              /**< The name of the CAP */
+	int cap;                                 /**< The acptr->user->proto we should set (if any, can be 0, like for sts) */
+	int flags;                               /**< A flag from CLICAP_FLAGS_* */
+	int (*visible)(aClient *);               /**< Should the capability be visible? Note: parameter may be NULL. [optional] */
+	char *(*parameter)(aClient *);           /**< CAP parameters. Note: parameter may be NULL. [optional] */
+	Module *owner;                           /**< Module introducing this CAP. [internal] */
 } ClientCapability;
 
 struct _irchook {
@@ -596,6 +596,7 @@ extern void IsupportDel(Isupport *isupport);
 extern Isupport *IsupportFind(const char *token);
 
 extern ClientCapability *ClientCapabilityFind(const char *token, aClient *sptr);
+extern ClientCapability *ClientCapabilityFindReal(const char *token);
 extern ClientCapability *ClientCapabilityAdd(Module *module, ClientCapability *clicap_request);
 extern void ClientCapabilityDel(ClientCapability *clicap);
 

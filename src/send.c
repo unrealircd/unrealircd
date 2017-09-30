@@ -1000,18 +1000,39 @@ void sendto_snomask_normal_global(int snomask, char *pattern, ...)
  *
  * Send CAP DEL or CAP NEW to clients supporting this.
  */
-void send_cap_notify(char *what, char *token)
+void send_cap_notify(int add, char *token)
 {
 	va_list vl;
 	aClient *cptr;
 	char nbuf[1024];
+	ClientCapability *clicap = ClientCapabilityFindReal(token);
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 	{
 		if (cptr->local->proto & PROTO_CAP_NOTIFY)
 		{
-			sendto_one(cptr, ":%s CAP %s %s :%s",
-				me.name, (*cptr->name ? cptr->name : "*"), what, token);
+			if (add)
+			{
+				char *args = NULL;
+				if (clicap)
+				{
+					if (clicap->visible && !clicap->visible(cptr))
+						continue; /* invisible CAP, so don't announce it */
+					if (clicap->parameter)
+						args = clicap->parameter(cptr);
+				}
+				if (!args)
+				{
+					sendto_one(cptr, ":%s CAP %s NEW :%s",
+						me.name, (*cptr->name ? cptr->name : "*"), token);
+				} else {
+					sendto_one(cptr, ":%s CAP %s NEW :%s=%s",
+						me.name, (*cptr->name ? cptr->name : "*"), token, args);
+				}
+			} else {
+				sendto_one(cptr, ":%s CAP %s DEL :%s",
+					me.name, (*cptr->name ? cptr->name : "*"), token);
+			}
 		}
 	}
 }

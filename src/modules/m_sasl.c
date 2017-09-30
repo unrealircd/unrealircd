@@ -293,12 +293,15 @@ static int abort_sasl(aClient *cptr)
 	return 0;
 }
 
+/** Is this capability visible?
+ * Note that 'sptr' may be NULL when queried from CAP DEL / CAP NEW
+ */
 int sasl_capability_visible(aClient *sptr)
 {
 	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
 		return 0;
 
-	if (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY)
+	if (sptr && !IsSecure(sptr) && (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY))
 		return 0;
 
 	return 1;
@@ -314,6 +317,30 @@ int sasl_quit(aClient *sptr, char *comment)
 	return abort_sasl(sptr);
 }
 
+int sasl_server_quit(aClient *sptr)
+{
+	if (!SASL_SERVER)
+		return 0;
+
+	/* If the set::sasl-server is gone, let everyone know 'sasl' is no longer available */
+	if (!strcasecmp(sptr->name, SASL_SERVER))
+		send_cap_notify(0, "sasl");
+
+	return 0;
+}
+
+int sasl_server_connect(aClient *sptr)
+{
+	if (!SASL_SERVER)
+		return 0;
+
+	/* If the set::sasl-server is gone, let everyone know 'sasl' is no longer available */
+	if (!strcasecmp(sptr->name, SASL_SERVER))
+		send_cap_notify(1, "sasl");
+
+	return 0;
+}
+
 MOD_INIT(m_sasl)
 {
 	ClientCapability cap;
@@ -326,6 +353,8 @@ MOD_INIT(m_sasl)
 
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, sasl_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, sasl_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, sasl_server_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_POST_SERVER_CONNECT, 0, sasl_server_connect);
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "sasl";

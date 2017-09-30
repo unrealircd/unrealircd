@@ -197,7 +197,7 @@ void clicap_post_rehash(void)
 		if (!found)
 		{
 			/* Broadcast CAP DEL to local users */
-			send_cap_notify("DEL", name);
+			send_cap_notify(0, name);
 			clear_cap_for_users(old_caps_proto[i]);
 		}
 	}
@@ -221,7 +221,7 @@ void clicap_post_rehash(void)
 		if (!found)
 		{
 			/* Broadcast CAP NEW to local users */
-			send_cap_notify("NEW", name);
+			send_cap_notify(1, name);
 		}
 	}
 }

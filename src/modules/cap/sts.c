@@ -52,12 +52,16 @@ MOD_UNLOAD(sts)
 	return MOD_SUCCESS;
 }
 
+/** Check if this capability should be visible.
+ * Note that 'acptr' may be NULL.
+ */
 int sts_capability_visible(aClient *acptr)
 {
 	SSLOptions *ssl;
 
-	if (!MyConnect(acptr))
-		return 0; /* not needed I guess */
+	/* This is possible if queried from the CAP NEW/DEL code */
+	if (acptr == NULL)
+		return (iConf.ssl_options && iConf.ssl_options->sts_port) ? 1 : 0;
 
 	if (!IsSecure(acptr))
 	{
