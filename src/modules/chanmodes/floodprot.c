@@ -220,7 +220,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 			goto invalidsyntax;
 		  xp--;
 		  *xp = ':';
-		  if ((xxi == 0) || (xyi == 0))
+		  if ((xxi <= 0) || (xyi <= 0))
 			  goto invalidsyntax;
 
 		  /* ok, we passed */
@@ -634,7 +634,7 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 		return NULL;
 	  xp--;
 	  *xp = ':';
-	  if ((xxi == 0) || (xyi == 0))
+	  if ((xxi <= 0) || (xyi <= 0))
 		  return NULL;
 
 	  /* ok, we passed */
@@ -977,10 +977,8 @@ ChanFloodProt *chp;
 		return 0;
 	
 	chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
-#ifdef DEBUGMODE
 	if (!chp)
-		abort();
-#endif
+		return 0;
 
 	/* reset joinflood on -i, reset msgflood on -m, etc.. */
 	switch(modechar)
