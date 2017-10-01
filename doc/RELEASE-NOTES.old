@@ -3,6 +3,75 @@ See doc/RELEASE-NOTES for the latest release notes.
 This file (doc/RELEASE-NOTES.old) contains the release notes
 of OLDER releases for historical purposes.
 
+==[ CHANGES BETWEEN 4.0.13 AND 4.0.14 ]==
+Enhancements:
+* New set::plaintext-policy configuration settings. This defines what
+  happens to users/ircops/servers that are not using SSL/TLS.
+  The default settings are:
+  set {
+    plaintext-policy {
+      user allow; /* allow any user to connect */
+      oper warn; /* warn on /OPER if not using SSL/TLS */
+      server deny; /* deny servers without SSL/TLS, except localhost */
+    };
+  };
+  You can change each of the three classes to 'allow', 'warn' or 'deny'.
+  See: https://www.unrealircd.org/docs/Set_block#set::plaintext-policy
+  If your services do not run on localhost and link without SSL/TLS
+  then you may get an error during linking. In such a case check out:
+  https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS
+* You can now ask UnrealIRCd to verify certificates of server links by:
+  link irc1.test.net {
+      [..]
+      verify-certificate yes;
+  };
+  This will verify the certificate of the link, making sure it is valid,
+  issued for the specified name (irc1.test.net) and given out by a
+  trusted Certificate Authority (like Let's Encrypt).
+  Obviously, if you use self-signed certificates then you can't use this.
+* Introduce a concept called "link security level". This will rate the
+  security of your network from 0 to 2. Whenever security is degraded
+  due to a new server link UnrealIRCd will print a warning about it.
+  See https://www.unrealircd.org/docs/Link_security
+  This also adds a new command /LINKSECURITY (IRCop-only).
+* The plaintext-policy and link-security is shown in "CAP LS".
+
+Major issues fixed:
+* None
+
+Minor issues fixed:
+* If you had a link block named irc1.example.net and did an outgoing
+  connect to that server, then the server could introduce himself under
+  a different name, such as irc1.other.net. Not a security issue, since
+  all authentication has to be passed, but this could cause confusing
+  autoconnect attempts.
+* password::sslclientcert did not accept relative paths
+* Compile problem with LibreSSL (regarding SSL_CTX_get0_param)
+* set::modes-on-connect: was refusing certain (old) modes like +N
+
+Other changes:
+* The ssl options 'verify-certificate' and 'no-self-signed' have been
+  removed. Use link::verify-certificate instead. It makes no sense to
+  verify certificates or prevent self signed certificates elsewhere
+  such as in vhost or oper, since there is no hostname to match against.
+* Weak cipher suites such as 3DES and RC4 are disabled by default but
+  previously you could still enable them through set::ssl::ciphers.
+  Now you can no longer, since there is no legitimate reason to do so.
+* Update cipher suite to work with TLS 1.3. This ensures you can use
+  TLS 1.3 in UnrealIRCd 4.0.14+ when OpenSSL supports it (in the future).
+* Bump MODDATA_MAX_CLIENT from 8 to 12: needed if you have a lot of
+  3rd party modules loaded. Also moved MODDATA_MAX_* to include/config.h
+
+Module coders:
+* You can now attach ModData to server objects as well (including &me).
+* Please do not use UmodeDel, CmdoverrideDel and any other *Del()
+  functions from MOD_UNLOAD. These undocumented functions are unnecessary
+  since 2008 or so. UnrealIRCd takes care of unloading all module objects.
+  It can cause a crash if someone unloads the module in UnrealIRCd 4
+  (more specifically: double free if unloading modules which use ModData).
+  Attempts to use these functions in future UnrealIRCd versions may result
+  in a compile error.
+
 ==[ CHANGES BETWEEN 4.0.12 AND 4.0.13 ]==
 Enhancements:
 * Support for Strict Transport Security (draft/sts).
