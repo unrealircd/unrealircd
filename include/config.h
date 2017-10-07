@@ -174,18 +174,6 @@
  */
 #define	SHOW_INVISIBLE_LUSERS
 
-/*
- * NOTE: defining CMDLINE_CONFIG and installing ircd SUID or SGID is a MAJOR
- *       security problem - they can use the "-f" option to read any files
- *       that the 'new' access lets them. Note also that defining this is
- *       a major security hole if your ircd goes down and some other user
- *       starts up the server with a new conf file that has some extra
- *       O-lines.
- *       Naturally, for non-suid/sgid ircds, this setting does not matter,
- *       hence command line parameters are always permitted then.
- */
-#undef	CMDLINE_CONFIG
-
 /** FAKELAG_CONFIGURABLE makes it possible to make certain classes exempted
  * from 'fake lag' (that is, the artificial delay that is added by the ircd
  * to prevent flooding, which causes the messages/commands of the user to

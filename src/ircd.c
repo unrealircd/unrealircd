@@ -1104,14 +1104,10 @@ int InitUnrealIRCd(int argc, char *argv[])
 			  break;
 #ifndef _WIN32
 		  case 'f':
-#ifndef CMDLINE_CONFIG
 		      if ((uid == euid) && (gid == egid))
 			       configfile = strdup(p);
 			  else
 			       printf("ERROR: Command line config with a setuid/setgid ircd is not allowed");
-#else
-			  configfile = strdup(p);
-#endif
 			  convert_to_absolute_path(&configfile, CONFDIR);
 			  break;
 		  case 'h':

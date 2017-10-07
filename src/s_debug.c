@@ -27,9 +27,6 @@
  * Option string.  Must be before #ifdef DEBUGMODE.
  */
 MODVAR char serveropts[] = {
-#ifdef	CMDLINE_CONFIG
-	'C',
-#endif
 #ifdef	DEBUGMODE
 	'D',
 #endif
