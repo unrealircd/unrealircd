@@ -669,6 +669,7 @@ extern MODVAR int (*check_deny_version)(aClient *cptr, char *version_string, int
 extern MODVAR int (*match_user)(char *rmask, aClient *acptr, int options);
 extern MODVAR void (*userhost_save_current)(aClient *sptr);
 extern MODVAR void (*userhost_changed)(aClient *sptr);
+extern MODVAR void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr);
 /* /Efuncs */
 
 extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;

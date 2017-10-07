@@ -479,15 +479,7 @@ getnick:
 			{
 				add_user_to_channel(chptr, acptr, modeflags);
 				RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, acptr, chptr, NULL);
-				if (invisible_user_in_channel(acptr, chptr))
-				{
-					/* Show JOIN to chanops only */
-					sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
-						acptr->name, acptr->user->username, GetHost(acptr), chptr->chname);
-				} else
-				{
-					sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", acptr->name, chptr->chname);
-				}
+				send_join_to_local_users(acptr, chptr);
 			}
 
 			sendto_server(cptr, 0, PROTO_SJOIN, ":%s JOIN %s", acptr->name, chptr->chname);

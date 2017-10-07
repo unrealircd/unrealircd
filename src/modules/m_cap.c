@@ -74,6 +74,11 @@ MOD_INIT(m_cap)
 	c.cap = PROTO_CAP_CHGHOST;
 	ClientCapabilityAdd(modinfo->handle, &c);
 
+	memset(&c, 0, sizeof(c));
+	c.name = "extended-join";
+	c.cap = PROTO_CAP_EXTENDED_JOIN;
+	ClientCapabilityAdd(modinfo->handle, &c);
+
 	return MOD_SUCCESS;
 }
 

@@ -29,6 +29,7 @@ CMD_FUNC(_do_join);
 DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 void _userhost_save_current(aClient *sptr);
 void _userhost_changed(aClient *sptr);
+void _send_join_to_local_users(aClient *sptr, aChannel *chptr);
 
 /* Externs */
 extern MODVAR int spamf_ugly_vchanoverride;
@@ -58,6 +59,7 @@ MOD_TEST(m_join)
 	EfunctionAdd(modinfo->handle, EFUNC_CAN_JOIN, _can_join);
 	EfunctionAddVoid(modinfo->handle, EFUNC_USERHOST_SAVE_CURRENT, _userhost_save_current);
 	EfunctionAddVoid(modinfo->handle, EFUNC_USERHOST_CHANGED, _userhost_changed);
+	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_JOIN_TO_LOCAL_USERS, _send_join_to_local_users);
 
 	return MOD_SUCCESS;
 }
@@ -172,6 +174,43 @@ int r;
 	return r;
 }
 
+/** Send JOIN message for 'sptr' to all users in 'chptr'.
+ * Taking into account that not everyone in chptr should see the JOIN (mode +D)
+ * and taking into account the different types of JOIN (due to CAP extended-join).
+ */
+void _send_join_to_local_users(aClient *sptr, aChannel *chptr)
+{
+	int chanops_only = invisible_user_in_channel(sptr, chptr);
+	Member *lp;
+	aClient *acptr;
+	char joinbuf[512];
+	char exjoinbuf[512];
+
+	ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN :%s",
+		sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
+
+	ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
+		sptr->name, sptr->user->username, GetHost(sptr), chptr->chname,
+		!isdigit(*sptr->user->svid) ? sptr->user->svid : "*",
+		sptr->info);
+
+	for (lp = chptr->members; lp; lp = lp->next)
+	{
+		acptr = lp->cptr;
+
+		if (!MyConnect(acptr))
+			continue; /* only locally connected clients */
+
+		if (chanops_only && !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)) && (sptr != acptr))
+			continue; /* skip non-ops if requested to (used for mode +D), but always send to 'sptr' */
+
+		if (acptr->local->proto & PROTO_CAP_EXTENDED_JOIN)
+			sendbufto_one(acptr, exjoinbuf, 0);
+		else
+			sendbufto_one(acptr, joinbuf, 0);
+	}
+}
+
 /* Routine that actually makes a user join the channel
  * this does no actual checking (banned, etc.) it just adds the user
  */
@@ -183,26 +222,8 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 
 	add_user_to_channel(chptr, sptr, flags);
 
-	if (invisible_user_in_channel(sptr, chptr))
-	{
-		/* Show JOIN to chanops only (and self) */
-		if (MyClient(sptr))
-		{
-			sendto_one(sptr, ":%s!%s@%s JOIN :%s",
-			    sptr->name, sptr->user->username,
-			    GetHost(sptr), chptr->chname);
-		}
-		sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
-		    sptr->name, sptr->user->username,
-		    GetHost(sptr), chptr->chname);
-	}
-	else
-	{
-		/* Show JOIN to everyone */
-		sendto_channel_butserv(chptr, sptr,
-		    ":%s JOIN :%s", sptr->name, chptr->chname);
-	}
-	
+	send_join_to_local_users(sptr, chptr);
+
 	sendto_server(cptr, 0, PROTO_SJ3, ":%s JOIN :%s", sptr->name, chptr->chname);
 
 	/* I _know_ that the "@%s " look a bit wierd
@@ -642,6 +663,7 @@ void _userhost_changed(aClient *sptr)
 			char *modes;
 			char partbuf[512]; /* PART */
 			char joinbuf[512]; /* JOIN */
+			char exjoinbuf[512]; /* JOIN (for CAP extended-join) */
 			char modebuf[512]; /* MODE (if any) */
 			int chanops_only = invisible_user_in_channel(sptr, chptr);
 
@@ -659,6 +681,11 @@ void _userhost_changed(aClient *sptr)
 
 			ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN %s",
 						sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
+
+			ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
+				sptr->name, sptr->user->username, GetHost(sptr), chptr->chname,
+				!isdigit(*sptr->user->svid) ? sptr->user->svid : "*",
+				sptr->info);
 
 			modes = get_chmodes_for_user(sptr, flags);
 			if (modes)
@@ -683,7 +710,12 @@ void _userhost_changed(aClient *sptr)
 				impact++;
 
 				sendbufto_one(acptr, partbuf, 0);
-				sendbufto_one(acptr, joinbuf, 0);
+
+				if (acptr->local->proto & PROTO_CAP_EXTENDED_JOIN)
+					sendbufto_one(acptr, exjoinbuf, 0);
+				else
+					sendbufto_one(acptr, joinbuf, 0);
+
 				if (*modebuf)
 					sendbufto_one(acptr, modebuf, 0);
 			}

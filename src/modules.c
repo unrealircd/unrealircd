@@ -134,6 +134,7 @@ void (*broadcast_moddata_client)(aClient *acptr);
 int (*match_user)(char *rmask, aClient *acptr, int options);
 void (*userhost_changed)(aClient *sptr);
 void (*userhost_save_current)(aClient *sptr);
+void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -192,7 +193,8 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 53 */	{"match_user", (void *)&match_user},
 /* 54 */	{"userhost_save_current", (void *)&userhost_save_current},
 /* 55 */	{"userhost_changed", (void *)&userhost_changed},
-/* 56 */	{NULL, NULL}
+/* 56 */	{"send_join_to_local_users", (void *)&send_join_to_local_users},
+/* 57 */	{NULL, NULL}
 };
 
 #ifdef UNDERSCORE

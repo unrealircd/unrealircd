@@ -198,12 +198,27 @@ DLLFUNC void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
 {
 	Member *i;
 	clear_user_invisible(chptr,sptr);
+	char joinbuf[512];
+	char exjoinbuf[512];
+
+	ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN %s",
+				sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
+
+	ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
+		sptr->name, sptr->user->username, GetHost(sptr), chptr->chname,
+		!isdigit(*sptr->user->svid) ? sptr->user->svid : "*",
+		sptr->info);
 
 	for (i = chptr->members; i; i = i->next)
 	{
-		if (!is_skochanop(i->cptr,chptr) && i->cptr != sptr && MyConnect(i->cptr))
-			sendto_one(i->cptr,
-			    ":%s!%s@%s JOIN :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
+		aClient *acptr = i->cptr;
+		if (!is_skochanop(acptr,chptr) && acptr != sptr && MyConnect(acptr))
+		{
+			if (acptr->local->proto & PROTO_CAP_EXTENDED_JOIN)
+				sendbufto_one(acptr, exjoinbuf, 0);
+			else
+				sendbufto_one(acptr, joinbuf, 0);
+		}
 	}
 }
 
@@ -290,12 +305,24 @@ DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 				if (pm.modechar == 'v' || !MyConnect(user))
 					continue;
 
+				/* Our user 'user' just got ops (oaq) - send the joins for all the users (s)he doesn't know about */
 				for (i = chptr->members; i; i = i->next)
 				{
 					if (i->cptr == user)
 						continue;
 					if (moded_user_invisible(i->cptr,chptr))
-						sendto_one(user,":%s!%s@%s JOIN :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
+					{
+						if (user->local->proto & PROTO_CAP_EXTENDED_JOIN)
+						{
+							sendto_one(user,":%s!%s@%s JOIN %s %s :%s",
+							           i->cptr->name, i->cptr->user->username, GetHost(i->cptr),
+							           chptr->chname,
+							           !isdigit(*i->cptr->user->svid) ? i->cptr->user->svid : "*",
+							           i->cptr->info);
+						} else {
+							sendto_one(user,":%s!%s@%s JOIN :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
+						}
+					}
 				}
 
 			}
@@ -312,6 +339,7 @@ DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 				if (pm.modechar == 'v' || !MyConnect(user))
 					continue;
 
+				/* Our user 'user' just lost ops (oaq) - send the parts for all users (s)he won't see anymore */
 				for (i = chptr->members; i; i = i->next)
 				{
 					if (i->cptr == user)
