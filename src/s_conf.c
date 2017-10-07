@@ -1501,6 +1501,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	if (!ipv6_capable())
 		DISABLE_IPV6 = 1;
 	i->network.x_prefix_quit = strdup("Quit");
+	i->max_unknown_connections_per_ip = 3;
 
 	/* SSL/TLS options */
 	i->ssl_options = MyMallocEx(sizeof(SSLOptions));
@@ -7860,6 +7861,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "max-unknown-connections-per-ip"))
+		{
+			tempiConf.max_unknown_connections_per_ip = atoi(cep->ce_vardata);
+		}
 		else
 		{
 			int value;
@@ -8763,6 +8768,17 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 					continue;
 				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "max-unknown-connections-per-ip")) {
+			int v;
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if (v <= 1)
+			{
+				config_error("%s:%i: set::max-unknown-connections-per-ip: value should be at least 1.",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
 			}
 		}
 		else

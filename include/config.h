@@ -181,18 +181,6 @@
 #define HOW_MANY_FREELINKS_ALLOWED 	200	/* default: 200 */
 
 /*
- * MAXUNKNOWNCONNECTIONSPERIP
-*/
-#define MAXUNKNOWNCONNECTIONSPERIP 3
-
-
-/* Do these work? I dunno... */
-
-/* #undef	VMS		   Should work for IRC client, not server */
-/* #undef	MAIL50		   If you're running VMS 5.0 */
-/* #undef	PCS		   PCS Cadmus MUNIX, use with BSD flag! */
-
-/*
  * NOTE: On some systems, valloc() causes many problems.
  */
 #undef	VALLOC			/* Define this if you have valloc(3) */

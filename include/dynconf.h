@@ -142,6 +142,7 @@ struct zConfiguration {
 	int ping_cookie;
 	int nicklen;
 	int hide_list;
+	int max_unknown_connections_per_ip;
 };
 
 #ifndef DYNCONF_C

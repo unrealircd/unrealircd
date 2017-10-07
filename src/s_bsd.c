@@ -1103,7 +1103,7 @@ add_con_refuse:
 		if (!strcmp(acptr->ip,GetIP(acptr2)))
 		{
 			j++;
-			if (j > MAXUNKNOWNCONNECTIONSPERIP)
+			if (j > iConf.max_unknown_connections_per_ip)
 			{
 				ircsnprintf(zlinebuf, sizeof(zlinebuf),
 					"ERROR :Closing Link: [%s] (Too many unknown connections from your IP)"
