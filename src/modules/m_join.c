@@ -714,13 +714,16 @@ void _userhost_changed(aClient *sptr)
 		}
 	}
 
-	/* A userhost change always generates the following network traffic:
-	 * server to server traffic, CAP "chghost" notifications, and
-	 * possibly PART+JOIN+MODE if force-rejoin had work to do.
-	 * We give the user a penalty so they don't flood...
-	 */
-	if (impact)
-		sptr->local->since += 7; /* Resulted in rejoins and such. */
-	else
-		sptr->local->since += 4; /* No rejoins */
+	if (MyClient(sptr))
+	{
+		/* A userhost change always generates the following network traffic:
+		 * server to server traffic, CAP "chghost" notifications, and
+		 * possibly PART+JOIN+MODE if force-rejoin had work to do.
+		 * We give the user a penalty so they don't flood...
+		 */
+		if (impact)
+			sptr->local->since += 7; /* Resulted in rejoins and such. */
+		else
+			sptr->local->since += 4; /* No rejoins */
+	}
 }
