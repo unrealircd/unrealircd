@@ -4,14 +4,68 @@ UnrealIRCd 4.0.16-devel Release Notes
 ==[ CHANGES BETWEEN 4.0.15 AND 4.0.16 ]==
 
 UnrealIRCd 4.0.16 is not released yet. It is in development.
+These release notes are thus work-in-progress.
 
-==[ CHANGES BETWEEN 4.0.14 AND 4.0.15 ]==
+Enhancements:
+* CAP v3.2 support
+* CAP 'cap-notify': notify users of any CAP changes
+* CAP 'extended-join': show account and gecos in JOIN
+* CAP 'chghost': notify on userhost changes of others
+  Note that if you use set::allow-userhost-change force-rejoin
+  then client which support CAP 'chghost' will not see the
+  PART+JOIN+MODE sequence as it is unnecessary, they already receive
+  a "CHGHOST" message as part of CAP 'chghost' instead.
+* Updated CAP 'sasl' to specification 3.2 (includes mechlist)
+* Automatically discover SASL server if saslmechlist is sent by services
+  and set::sasl-server is not set by the administrator. This should
+  help to get more networks to support SASL automatically (once
+  services start sending this, of course).
+* We now send "CAP DEL sasl" if set::sasl-server squits and an
+  "CAP NEW" message when it returns (to cap-notify and CAPv3.2 clients)
+* You can now have multiple webirc { } blocks with the same mask.
+  This permits multiple blocks like..
+  webirc {
+      mask *;
+      password "....." { sslclientcertfp; };
+  };
+  ..should you need it.
+  In other words: we don't stop matching upon an authentication failure.
+* Move CONNECTTIMEOUT to set::handshake-timeout and document it at
+  https://www.unrealircd.org/docs/Set_block#set::handshake-timeout
+* Move MAXUNKNOWNCONNECTIONSPERIP to set::max-unknown-connections-per-ip
+  https://www.unrealircd.org/docs/Set_block#set::max-unknown-connections-per-ip
+
 Major issues fixed:
-* Fix remotely triggerable crash issue in handshake. This allows a user
-  to crash an UnrealIRCd server, even those with restrictions such as
-  password protected hubs.
-* Fix another remotely triggerable crash issue. This one requires the
-  user to connect, join a channel and have channel operator privileges.
+* None
+
+Minor issues fixed:
+* None
+
+Removed:
+* Various old config.h settings that didn't have any effect
+* A few config.h settings that should never be turned off have been
+  removed altogether (eg: NO_FLOOD_AWAY is now always on)
+* The deprecated and unused commands "CAP CLEAR" and "CAP ACK"
+
+Other changes:
+* None
+
+Module coders:
+* Please use the following procedure in case of an user/host change:
+  userhost_save_current(acptr);
+  /* now do what you need to do: like change username or hostname */
+  userhost_changed(acptr);
+  This function will take care of notifying other clients about
+  the userhost change, such as doing PART+JOIN+MODE if force-rejoin
+  is enabled, and sending :xx CHGHOST user host messages to
+  "CAP chghost" capable clients.
+
+Services coders:
+* If you provide SASL then please send the mechlist like this:
+  MD client your.services.server saslmechlist :EXTERNAL,PLAIN
+* Don't forget to send an EOS (End Of Synch) as part of the handshake,
+  if you are not doing so already:
+  :your.services.server EOS
 
 ==[ CHANGES IN OLDER RELEASES ]==
 For changes in previous UnrealIRCd releases see doc/RELEASE-NOTES.old or

@@ -3,6 +3,14 @@ See doc/RELEASE-NOTES for the latest release notes.
 This file (doc/RELEASE-NOTES.old) contains the release notes
 of OLDER releases for historical purposes.
 
+==[ CHANGES BETWEEN 4.0.14 AND 4.0.15 ]==
+Major issues fixed:
+* Fix remotely triggerable crash issue in handshake. This allows a user
+  to crash an UnrealIRCd server, even those with restrictions such as
+  password protected hubs.
+* Fix another remotely triggerable crash issue. This one requires the
+  user to connect, join a channel and have channel operator privileges.
+
 ==[ CHANGES BETWEEN 4.0.13 AND 4.0.14 ]==
 Enhancements:
 * New set::plaintext-policy configuration settings. This defines what
