@@ -1018,7 +1018,7 @@ void send_cap_notify(int add, char *token)
 				{
 					if (clicap->visible && !clicap->visible(cptr))
 						continue; /* invisible CAP, so don't announce it */
-					if (clicap->parameter)
+					if (clicap->parameter && (cptr->local->cap_protocol >= 302))
 						args = clicap->parameter(cptr);
 				}
 				if (!args)
