@@ -44,11 +44,6 @@
  #else
   #define MYTOKEN_SSL ""
  #endif
- #if !defined(NO_FLOOD_AWAY)
-  #define MYTOKEN_NOFLDAWAY "/NONFA"
- #else
-  #define MYTOKEN_NOFLDAWAY ""
- #endif
  #define MYTOKEN_NEWCHF "/NOCHF"
 
 #ifdef __GNUC__
@@ -64,12 +59,10 @@
 
 #ifdef UNREALCORE
   char our_mod_version[] = BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
-                               MYTOKEN_SSL \
-                               MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF;
+                               MYTOKEN_SSL MYTOKEN_NEWCHF;
   unsigned int our_compiler_version = GCCVER;
 #else
   DLLFUNC char Mod_Version[] = BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
-                               MYTOKEN_SSL \
-                               MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF;
+                               MYTOKEN_SSL MYTOKEN_NEWCHF;
   DLLFUNC unsigned int compiler_version = GCCVER;
 #endif
