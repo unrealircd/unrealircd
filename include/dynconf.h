@@ -143,6 +143,7 @@ struct zConfiguration {
 	int nicklen;
 	int hide_list;
 	int max_unknown_connections_per_ip;
+	long handshake_timeout;
 };
 
 #ifndef DYNCONF_C

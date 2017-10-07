@@ -385,14 +385,6 @@
 #define WRITEWAITDELAY     15	/* Recommended value: 15 */
 
 /*
- * Number of seconds to wait for a connect(2) call to complete.
- * NOTE: this must be at *LEAST* 10.  When a client connects, it has
- * CONNECTTIMEOUT - 10 seconds for its host to respond to an ident lookup
- * query and for a DNS answer to be retrieved.
- */
-#define	CONNECTTIMEOUT	30	/* Recommended value: 60 */
-
-/*
  * Max time from the nickname change that still causes KILL
  * automaticly to switch for the current nick of that user. (seconds)
  */

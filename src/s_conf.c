@@ -1502,6 +1502,7 @@ void config_setdefaultsettings(aConfiguration *i)
 		DISABLE_IPV6 = 1;
 	i->network.x_prefix_quit = strdup("Quit");
 	i->max_unknown_connections_per_ip = 3;
+	i->handshake_timeout = 30;
 
 	/* SSL/TLS options */
 	i->ssl_options = MyMallocEx(sizeof(SSLOptions));
@@ -7865,6 +7866,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.max_unknown_connections_per_ip = atoi(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "handshake-timeout"))
+		{
+			tempiConf.handshake_timeout = config_checkval(cep->ce_vardata, CFG_TIME);
+		}
 		else
 		{
 			int value;
@@ -8774,9 +8779,20 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			int v;
 			CheckNull(cep);
 			v = atoi(cep->ce_vardata);
-			if (v <= 1)
+			if (v < 1)
 			{
 				config_error("%s:%i: set::max-unknown-connections-per-ip: value should be at least 1.",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "handshake-timeout")) {
+			int v;
+			CheckNull(cep);
+			v = config_checkval(cep->ce_vardata, CFG_TIME);
+			if (v < 5)
+			{
+				config_error("%s:%i: set::handshake-timeout: value should be at least 5 seconds.",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
