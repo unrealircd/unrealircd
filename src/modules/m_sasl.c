@@ -332,7 +332,7 @@ int sasl_server_quit(aClient *sptr)
 	return 0;
 }
 
-int sasl_server_connect(aClient *sptr)
+int sasl_server_synched(aClient *sptr)
 {
 	if (!SASL_SERVER)
 		return 0;
@@ -358,7 +358,7 @@ MOD_INIT(m_sasl)
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, sasl_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, sasl_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, sasl_server_quit);
-	HookAdd(modinfo->handle, HOOKTYPE_POST_SERVER_CONNECT, 0, sasl_server_connect);
+	HookAdd(modinfo->handle, HOOKTYPE_SERVER_SYNCHED, 0, sasl_server_synched);
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "sasl";

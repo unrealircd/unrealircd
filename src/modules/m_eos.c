@@ -71,5 +71,6 @@ CMD_FUNC(m_eos)
 #endif
 	sendto_server(cptr, 0, 0, ":%s EOS", sptr->name);
 
+	RunHook(HOOKTYPE_SERVER_SYNCHED, cptr);
 	return 0;
 }
