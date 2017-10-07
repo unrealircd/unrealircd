@@ -1370,7 +1370,7 @@ int stats_class(aClient *sptr, char *para)
 	{
 		sendto_one(sptr, rpl_str(RPL_STATSYLINE),
 			me.name, sptr->name, classes->name, classes->pingfreq, classes->connfreq,
-			classes->maxclients, classes->sendq, classes->recvq ? classes->recvq : CLIENT_FLOOD);
+			classes->maxclients, classes->sendq, classes->recvq ? classes->recvq : DEFAULT_RECVQ);
 #ifdef DEBUGMODE
 		sendnotice(sptr, "class '%s' has clients=%d, xrefcount=%d",
 			classes->name, classes->clients, classes->xrefcount);

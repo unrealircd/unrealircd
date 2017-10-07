@@ -203,7 +203,7 @@
 #endif
 
 /*
- * CLIENT_FLOOD
+ * DEFAULT_RECVQ
  *
  * this controls the number of bytes the server will allow a client to
  * send to the server without processing before disconnecting the client for
@@ -211,7 +211,7 @@
  * NOTE: you can now also set this in class::recvq, if that's not present,
  *       this default value will be used.
  */
-#define	CLIENT_FLOOD	8000
+#define	DEFAULT_RECVQ	8000
 
 /* You can define the nickname of NickServ here (usually "NickServ").
  * This is ONLY used for the ""infamous IDENTIFY feature"", which is:
@@ -422,12 +422,12 @@ error You stuffed up config.h signals
 #endif
 # define stricmp strcasecmp
 # define strnicmp strncasecmp
-#if defined(CLIENT_FLOOD)
-#    if (CLIENT_FLOOD < 512)
-     error CLIENT_FLOOD needs redefining.
+#if defined(DEFAULT_RECVQ)
+#    if (DEFAULT_RECVQ < 512)
+     error DEFAULT_RECVQ needs redefining.
 #    endif
 #else
-     error CLIENT_FLOOD undefined
+     error DEFAULT_RECVQ undefined
 #endif
 #if (NICKNAMEHISTORYLENGTH < 100)
 #  define NICKNAMEHISTORYLENGTH 100
