@@ -36,6 +36,7 @@ void saslmechlist_free(ModData *m);
 char *saslmechlist_serialize(ModData *m);
 void saslmechlist_unserialize(char *str, ModData *m);
 char *sasl_capability_parameter(aClient *acptr);
+int sasl_server_synched(aClient *sptr);
 
 /* Macros */
 #define MSG_AUTHENTICATE "AUTHENTICATE"
@@ -332,10 +333,39 @@ int sasl_server_quit(aClient *sptr)
 	return 0;
 }
 
+void auto_discover_sasl_server(int justlinked)
+{
+	if (!SASL_SERVER && SERVICES_NAME)
+	{
+		aClient *acptr = find_server(SERVICES_NAME, NULL);
+		if (acptr && moddata_client_get(acptr, "saslmechlist"))
+		{
+			/* SASL server found */
+			if (justlinked)
+			{
+				/* Let's send this message only on link and not also on /rehash */
+				sendto_realops("Services server '%s' provides SASL authentication, good! "
+				               "I'm setting set::sasl-server to '%s' internally.",
+				               SERVICES_NAME, SERVICES_NAME);
+				/* We should really get some LOG_INFO or something... I keep abusing LOG_ERROR :) */
+				ircd_log(LOG_ERROR, "Services server '%s' provides SASL authentication, good! "
+				                    "I'm setting set::sasl-server to '%s' internally.",
+				                    SERVICES_NAME, SERVICES_NAME);
+			}
+			safestrdup(SASL_SERVER, SERVICES_NAME);
+			if (justlinked)
+				sasl_server_synched(acptr);
+		}
+	}
+}
+
 int sasl_server_synched(aClient *sptr)
 {
 	if (!SASL_SERVER)
+	{
+		auto_discover_sasl_server(1);
 		return 0;
+	}
 
 	/* If the set::sasl-server is gone, let everyone know 'sasl' is no longer available */
 	if (!strcasecmp(sptr->name, SASL_SERVER))
@@ -381,6 +411,7 @@ MOD_INIT(m_sasl)
 
 MOD_LOAD(m_sasl)
 {
+	auto_discover_sasl_server(0);
 	return MOD_SUCCESS;
 }
 
