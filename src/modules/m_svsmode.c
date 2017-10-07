@@ -387,6 +387,8 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 	if (!(acptr = find_person(parv[1], NULL)))
 		return 0;
 
+	userhost_save_current(acptr);
+
 	/* initialize setflag to be the user's pre-SVSMODE flags */
 	for (i = 0; i <= Usermode_highest; i++)
 		if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
@@ -549,6 +551,8 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 		if (MyClient(acptr) && buf[0] && buf[1])
 			sendto_one(acptr, ":%s MODE %s :%s", sptr->name, acptr->name, buf);
 	}
+
+	userhost_changed(acptr); /* we can safely call this, even if nothing changed */
 
 	VERIFY_OPERCOUNT(acptr, "svsmodeX");
 	return 0;

@@ -1599,6 +1599,8 @@ CMD_FUNC(_m_umode)
 		return 0;
 	}
 
+	userhost_save_current(sptr); /* save host, in case we do any +x/-x or similar */
+
 	/* find flags already set for user */
 	for (i = 0; i <= Usermode_highest; i++)
 		if ((sptr->umodes & Usermode_Table[i].mode))
@@ -1769,28 +1771,12 @@ CMD_FUNC(_m_umode)
 			sendto_server(cptr, PROTO_VHP, 0, ":%s SETHOST :%s",
 				sptr->name, sptr->user->virthost);
 
-		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-		{
-			/* Damn, this is ugly: we have to restore umodes to old state,
-			 * do the PART and then set umodes to the new modes again.
-			 */
-			long newmodes = sptr->umodes;
-			sptr->umodes = oldumodes;
-			rejoin_leave(sptr);
-			sptr->umodes = newmodes;
-		}
-
+		/* Set the vhost */
 		safefree(sptr->user->virthost);
 		sptr->user->virthost = strdup(sptr->user->cloakedhost);
 
-		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-		{
-			sptr->umodes |= UMODE_HIDE;
-			rejoin_joinandmode(sptr);
-			if (MyClient(sptr))
-				sptr->local->since += 7; /* Add fake lag */
-		}
-
+		/* Notify */
+		userhost_changed(sptr);
 		if (MyClient(sptr))
 			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->virthost);
 	}
@@ -1798,22 +1784,15 @@ CMD_FUNC(_m_umode)
 	/* -x */
 	if (!IsHidden(sptr) && (oldumodes & UMODE_HIDE))
 	{
-		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-		{
-			/* LOL, this is ugly ;) */
-			sptr->umodes |= UMODE_HIDE;
-			rejoin_leave(sptr);
-			sptr->umodes &= ~UMODE_HIDE;
-			rejoin_joinandmode(sptr);
-			if (MyClient(sptr))
-				sptr->local->since += 7; /* Add fake lag */
-		}
 		/* (Re)create the cloaked virthost, because it will be used
 		 * for ban-checking... free+recreate here because it could have
 		 * been a vhost for example. -- Syzop
 		 */
 		safefree(sptr->user->virthost);
 		sptr->user->virthost = strdup(sptr->user->cloakedhost);
+
+		/* Notify */
+		userhost_changed(sptr);
 		if (MyClient(sptr))
 			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->realhost);
 	}

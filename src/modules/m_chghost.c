@@ -110,6 +110,9 @@ CMD_FUNC(m_chghost)
 			sendnotice(sptr, "*** /ChgHost Error: requested host is same as current host.");
 			return 0;
 		}
+
+		userhost_save_current(acptr);
+
 		switch (UHOST_ALLOWED)
 		{
 			case UHALLOW_NEVER:
@@ -130,8 +133,7 @@ CMD_FUNC(m_chghost)
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_leave(acptr);
-				/* join sent later when the host has been changed */
+				/* rejoin sent later when the host has been changed */
 				break;
 		}
 				
@@ -158,9 +160,9 @@ CMD_FUNC(m_chghost)
 			acptr->user->virthost = 0;
 		}
 		acptr->user->virthost = strdup(parv[2]);
-		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_joinandmode(acptr);
 		
+		userhost_changed(acptr);
+
 		if (MyClient(acptr))
 			sendto_one(acptr, err_str(RPL_HOSTHIDDEN), me.name, acptr->name, parv[2]);
 		

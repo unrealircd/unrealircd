@@ -65,8 +65,8 @@ void iNAH_host(aClient *sptr, char *host)
 	if (!sptr->user)
 		return;
 
-	if (UHOST_ALLOWED == UHALLOW_REJOIN)
-		rejoin_leave(sptr);
+	userhost_save_current(sptr);
+
 	if (sptr->user->virthost)
 	{
 		MyFree(sptr->user->virthost);
@@ -77,8 +77,7 @@ void iNAH_host(aClient *sptr, char *host)
 		sendto_server(&me, 0, 0, ":%s SETHOST :%s", sptr->name, sptr->user->virthost);
 	sptr->umodes |= UMODE_SETHOST;
 
-	if (UHOST_ALLOWED == UHALLOW_REJOIN)
-		rejoin_joinandmode(sptr);
+	userhost_changed(sptr);
 
 	sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->virthost);
 }

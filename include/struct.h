@@ -357,6 +357,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define PROTO_ACCOUNT_NOTIFY	0x200000	/* client supports account-notify */
 #define PROTO_MLOCK		0x400000	/* server supports MLOCK */
 #define PROTO_EXTSWHOIS 0x800000	/* extended SWHOIS support */
+#define PROTO_CAP_CHGHOST	0x1000000	/* CAP chghost */
 
 /*
  * flags macros.

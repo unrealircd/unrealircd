@@ -109,6 +109,8 @@ CMD_FUNC(m_vhost)
 	{
 		char olduser[USERLEN+1];
 		
+		userhost_save_current(sptr);
+
 		switch (UHOST_ALLOWED)
 		{
 			case UHALLOW_NEVER:
@@ -128,7 +130,6 @@ CMD_FUNC(m_vhost)
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_leave(sptr);
 				/* join sent later when the host has been changed */
 				break;
 		}
@@ -162,8 +163,7 @@ CMD_FUNC(m_vhost)
 		    vhost->virtuser ? olduser : sptr->user->username,
 		    sptr->user->realhost, vhost->virtuser ? vhost->virtuser : "", 
 		    	vhost->virtuser ? "@" : "", vhost->virthost);
-		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_joinandmode(sptr);
+		userhost_changed(sptr);
 		return 0;
 	}
 	if (i == -1)

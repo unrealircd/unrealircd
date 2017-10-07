@@ -69,6 +69,11 @@ MOD_INIT(m_cap)
 	c.cap = PROTO_CAP_NOTIFY;
 	ClientCapabilityAdd(modinfo->handle, &c);
 
+	memset(&c, 0, sizeof(c));
+	c.name = "chghost";
+	c.cap = PROTO_CAP_CHGHOST;
+	ClientCapabilityAdd(modinfo->handle, &c);
+
 	return MOD_SUCCESS;
 }
 

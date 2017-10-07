@@ -128,6 +128,8 @@ CMD_FUNC(m_sethost)
 	}
 
 	{
+		userhost_save_current(sptr);
+
 		switch (UHOST_ALLOWED)
 		{
 			case UHALLOW_NEVER:
@@ -147,7 +149,6 @@ CMD_FUNC(m_sethost)
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_leave(sptr);
 				/* join sent later when the host has been changed */
 				break;
 		}
@@ -165,8 +166,7 @@ CMD_FUNC(m_sethost)
 		/* spread it out */
 		sendto_server(cptr, 0, 0, ":%s SETHOST %s", sptr->name, parv[1]);
 
-		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_joinandmode(sptr);
+		userhost_changed(sptr);
 	}
 
 	if (MyConnect(sptr))

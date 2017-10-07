@@ -113,6 +113,8 @@ CMD_FUNC(m_chgident)
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
+		userhost_save_current(acptr);
+
 		switch (UHOST_ALLOWED)
 		{
 			case UHALLOW_NEVER:
@@ -133,7 +135,6 @@ CMD_FUNC(m_chgident)
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_leave(acptr);
 				/* join sent later when the ident has been changed */
 				break;
 		}
@@ -150,13 +151,11 @@ CMD_FUNC(m_chgident)
 				GetHost(acptr), parv[2]);
 		}
 
-
-
 		sendto_server(cptr, 0, 0, ":%s CHGIDENT %s %s",
 		    sptr->name, acptr->name, parv[2]);
 		ircsnprintf(acptr->user->username, sizeof(acptr->user->username), "%s", parv[2]);
-		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_joinandmode(acptr);
+
+		userhost_changed(acptr);
 		return 0;
 	}
 	else

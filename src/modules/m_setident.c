@@ -155,6 +155,8 @@ CMD_FUNC(m_setident)
 	}
 
 	{
+		userhost_save_current(sptr);
+
 		switch (UHOST_ALLOWED)
 		{
 			case UHALLOW_ALWAYS:
@@ -174,7 +176,7 @@ CMD_FUNC(m_setident)
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_leave(sptr);
+				/* dealt with later */
 				break;
 		}
 
@@ -183,8 +185,7 @@ CMD_FUNC(m_setident)
 		/* spread it out */
 		sendto_server(cptr, 0, 0, ":%s SETIDENT %s", sptr->name, parv[1]);
 
-		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_joinandmode(sptr);
+		userhost_changed(sptr);
 	}
 
 	if (MyConnect(sptr))

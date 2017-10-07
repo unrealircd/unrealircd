@@ -27,7 +27,8 @@ CMD_FUNC(m_join);
 DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
 CMD_FUNC(_do_join);
 DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-#define MAXBOUNCE   5 /** Most sensible */
+void _userhost_save_current(aClient *sptr);
+void _userhost_changed(aClient *sptr);
 
 /* Externs */
 extern MODVAR int spamf_ugly_vchanoverride;
@@ -36,6 +37,8 @@ extern int find_invex(aChannel *chptr, aClient *sptr);
 /* Local vars */
 static int bouncedtimes = 0;
 
+/* Macros */
+#define MAXBOUNCE   5 /** Most sensible */
 #define MSG_JOIN 	"JOIN"	
 
 ModuleHeader MOD_HEADER(m_join)
@@ -53,6 +56,9 @@ MOD_TEST(m_join)
 	EfunctionAddVoid(modinfo->handle, EFUNC_JOIN_CHANNEL, _join_channel);
 	EfunctionAdd(modinfo->handle, EFUNC_DO_JOIN, _do_join);
 	EfunctionAdd(modinfo->handle, EFUNC_CAN_JOIN, _can_join);
+	EfunctionAddVoid(modinfo->handle, EFUNC_USERHOST_SAVE_CURRENT, _userhost_save_current);
+	EfunctionAddVoid(modinfo->handle, EFUNC_USERHOST_CHANGED, _userhost_changed);
+
 	return MOD_SUCCESS;
 }
 
@@ -525,4 +531,196 @@ CMD_FUNC(_do_join)
 	}
 	RET(0)
 #undef RET
+}
+
+/* Additional channel-related functions. I've put it here instead
+ * of the core so it could be upgraded on the fly should it be necessary.
+ */
+
+char *get_chmodes_for_user(aClient *sptr, int flags)
+{
+	static char modebuf[512]; /* returned */
+	char flagbuf[8]; /* For holding "vhoaq" */
+	char *p = flagbuf;
+	char parabuf[512];
+	int n, i;
+
+	if (!flags)
+		return "";
+
+	if (flags & MODE_CHANOWNER)
+		*p++ = 'q';
+	if (flags & MODE_CHANPROT)
+		*p++ = 'a';
+	if (flags & MODE_CHANOP)
+		*p++ = 'o';
+	if (flags & MODE_VOICE)
+		*p++ = 'v';
+	if (flags & MODE_HALFOP)
+		*p++ = 'h';
+	*p = '\0';
+
+	parabuf[0] = '\0';
+
+	n = strlen(flagbuf);
+	if (n)
+	{
+		for (i=0; i < n; i++)
+		{
+			strlcat(parabuf, sptr->name, sizeof(parabuf));
+			if (i < n - 1)
+				strlcat(parabuf, " ", sizeof(parabuf));
+		}
+		/* And we have our mode line! */
+		snprintf(modebuf, sizeof(modebuf), "+%s %s", flagbuf, parabuf);
+		return modebuf;
+	}
+
+	return "";
+}
+
+static char remember_nick[NICKLEN+1];
+static char remember_user[USERLEN+1];
+static char remember_host[HOSTLEN+1];
+
+/** Save current nick/user/host. Used later by userhost_changed(). */
+void _userhost_save_current(aClient *sptr)
+{
+	strlcpy(remember_nick, sptr->name, sizeof(remember_nick));
+	strlcpy(remember_user, sptr->user->username, sizeof(remember_user));
+	strlcpy(remember_host, GetHost(sptr), sizeof(remember_host));
+}
+
+/** User/Host changed for user.
+ * Note that userhost_save_current() needs to be called before this
+ * to save the old username/hostname.
+ * This userhost_changed() function deals with notifying local clients
+ * about the user/host change by sending PART+JOIN+MODE if
+ * set::allow-userhost-change force-rejoin is in use,
+ * and it wills end "CAP chghost" to such capable clients.
+ * It will also deal with bumping fakelag for the user since a user/host
+ * change is costly, doesn't matter if it was self-induced or not.
+ *
+ * Please call this function for any user/host change by doing:
+ * userhost_save_current(acptr);
+ * << change username or hostname here >>
+ * userhost_changed(acptr);
+ */
+void _userhost_changed(aClient *sptr)
+{
+	Membership *channels;
+	aChannel *chptr;
+	Member *lp;
+	aClient *acptr;
+	int i = 0;
+	int impact = 0;
+	char buf[512];
+
+	if (strcmp(remember_nick, sptr->name))
+	{
+		ircd_log(LOG_ERROR, "[BUG] userhost_changed() was called but without calling userhost_save_current() first! Affected user: %s",
+			sptr->name);
+		ircd_log(LOG_ERROR, "Please report above bug on https://bugs.unrealircd.org/");
+		sendto_realops("[BUG] userhost_changed() was called but without calling userhost_save_current() first! Affected user: %s",
+			sptr->name);
+		sendto_realops("Please report above bug on https://bugs.unrealircd.org/");
+		return; /* We cannot safely process this request anymore */
+	}
+
+	/* It's perfectly acceptable to call us even if the userhost didn't change. */
+	if (!strcmp(remember_user, sptr->user->username) && !strcmp(remember_host, GetHost(sptr)))
+		return; /* Nothing to do */
+
+	/* Most of the work is only necessary for set::allow-userhost-change force-rejoin */
+	if (UHOST_ALLOWED == UHALLOW_REJOIN)
+	{
+		/* Walk through all channels of this user.. */
+		for (channels = sptr->user->channel; channels; channels = channels->next)
+		{
+			aChannel *chptr = channels->chptr;
+			int flags = channels->flags;
+			char *modes;
+			char partbuf[512]; /* PART */
+			char joinbuf[512]; /* JOIN */
+			char modebuf[512]; /* MODE (if any) */
+			int chanops_only = invisible_user_in_channel(sptr, chptr);
+
+			modebuf[0] = '\0';
+
+			/* If the user is banned, don't send any rejoins, it would only be annoying */
+			if (is_banned(sptr, chptr, BANCHK_JOIN))
+				continue;
+
+			/* Prepare buffers for PART, JOIN, MODE */
+			ircsnprintf(partbuf, sizeof(partbuf), ":%s!%s@%s PART %s :%s",
+						remember_nick, remember_user, remember_host,
+						chptr->chname,
+						"Changing host");
+
+			ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN %s",
+						sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
+
+			modes = get_chmodes_for_user(sptr, flags);
+			if (modes)
+				ircsnprintf(modebuf, sizeof(modebuf), ":%s MODE %s %s", me.name, chptr->chname, modes);
+
+			for (lp = chptr->members; lp; lp = lp->next)
+			{
+				acptr = lp->cptr;
+
+				if (acptr == sptr)
+					continue; /* skip self */
+
+				if (!MyConnect(acptr))
+					continue; /* only locally connected clients */
+
+				if (chanops_only && !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
+					continue; /* skip non-ops if requested to (used for mode +D) */
+
+				if (acptr->local->proto & PROTO_CAP_CHGHOST)
+					continue; /* we notify 'CAP chghost' users in a different way, so don't send it here. */
+
+				impact++;
+
+				sendbufto_one(acptr, partbuf, 0);
+				sendbufto_one(acptr, joinbuf, 0);
+				if (*modebuf)
+					sendbufto_one(acptr, modebuf, 0);
+			}
+		}
+	}
+
+	/* Now deal with "CAP chghost" clients.
+	 * This only needs to be sent one per "common channel".
+	 * This would normally call sendto_common_channels_local_butone() but the user already
+	 * has the new user/host.. so we do it here..
+	 */
+	ircsnprintf(buf, sizeof(buf), ":%s!%s@%s CHGHOST %s %s",
+	            remember_nick, remember_user, remember_host,
+	            sptr->user->username,
+	            GetHost(sptr));
+	current_serial++;
+	for (channels = sptr->user->channel; channels; channels = channels->next)
+	{
+		for (lp = channels->chptr->members; lp; lp = lp->next)
+		{
+			acptr = lp->cptr;
+			if (MyClient(acptr) && (acptr->local->proto & PROTO_CAP_CHGHOST) &&
+			    (acptr->local->serial != current_serial) && (sptr != acptr))
+			{
+				sendbufto_one(acptr, buf, 0);
+				acptr->local->serial = current_serial;
+			}
+		}
+	}
+
+	/* A userhost change always generates the following network traffic:
+	 * server to server traffic, CAP "chghost" notifications, and
+	 * possibly PART+JOIN+MODE if force-rejoin had work to do.
+	 * We give the user a penalty so they don't flood...
+	 */
+	if (impact)
+		sptr->local->since += 7; /* Resulted in rejoins and such. */
+	else
+		sptr->local->since += 4; /* No rejoins */
 }
