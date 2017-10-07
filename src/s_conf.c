@@ -1466,9 +1466,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ident_read_timeout = 30;
 	i->ident_connect_timeout = 3;
 	i->nick_count = 3; i->nick_period = 60; /* nickflood protection: max 3 per 60s */
-#ifdef NO_FLOOD_AWAY
 	i->away_count = 4; i->away_period = 120; /* awayflood protection: max 4 per 120s */
-#endif
 	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
 	i->modef_default_unsettime = 0;
 	i->modef_max_unsettime = 60; /* 1 hour seems enough :p */
@@ -7650,7 +7648,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.unknown_flood_bantime = config_checkval(cepp->ce_vardata,CFG_TIME);
 				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount"))
 					tempiConf.unknown_flood_amount = atol(cepp->ce_vardata);
-#ifdef NO_FLOOD_AWAY
 				else if (!strcmp(cepp->ce_varname, "away-count"))
 					tempiConf.away_count = atol(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "away-period"))
@@ -7662,7 +7659,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.away_count = cnt;
 					tempiConf.away_period = period;
 				}
-#endif
 				else if (!strcmp(cepp->ce_varname, "nick-flood"))
 				{
 					int cnt, period;
@@ -8314,7 +8310,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount")) {
 					CheckDuplicate(cepp, anti_flood_unknown_flood_amount, "anti-flood::unknown-flood-amount");
 				}
-#ifdef NO_FLOOD_AWAY
 				else if (!strcmp(cepp->ce_varname, "away-count")) {
 					int temp = atol(cepp->ce_vardata);
 					CheckDuplicate(cepp, anti_flood_away_count, "anti-flood::away-count");
@@ -8361,7 +8356,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						errors++;
 					}
 				}
-#endif
 				else if (!strcmp(cepp->ce_varname, "nick-flood"))
 				{
 					int cnt, period;

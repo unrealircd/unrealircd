@@ -469,11 +469,7 @@ static char *replies[] = {
 /* 426 */ NULL,
 /* 427 */ NULL,
 /* 428 */ NULL,
-#ifdef NO_FLOOD_AWAY
 /* 429 ERR_TOOMANYAWAY */ ":%s 429 %s :Too Many aways - Flood Protection activated",
-#else
-/* 429 */ NULL,
-#endif
 /* 430 */ NULL, /* austhex */
 /* 431    ERR_NONICKNAMEGIVEN */ ":%s 431 %s :No nickname given",
 /* 432    ERR_ERRONEUSNICKNAME */ ":%s 432 %s %s :Nickname is unavailable: %s",

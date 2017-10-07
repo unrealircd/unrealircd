@@ -213,12 +213,6 @@
  */
 #define	CLIENT_FLOOD	8000
 
-/* Anti-Flood options
- * NO_FLOOD_AWAY - enables limiting of how frequently a client can set /away
- */
-
-#define NO_FLOOD_AWAY
-
 /* You can define the nickname of NickServ here (usually "NickServ").
  * This is ONLY used for the ""infamous IDENTIFY feature"", which is:
  * whenever a user connects with a server password but there isn't

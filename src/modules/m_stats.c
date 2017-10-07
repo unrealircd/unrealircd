@@ -1281,13 +1281,11 @@ int stats_set(aClient *sptr, char *para)
 			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME));
 	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %ldKB", me.name, RPL_TEXT,
 			sptr->name, UNKNOWN_FLOOD_AMOUNT);
-#ifdef NO_FLOOD_AWAY
 	if (AWAY_PERIOD)
 	{
 		sendto_one(sptr, ":%s %i %s :anti-flood::away-flood: %d per %s", me.name, RPL_TEXT, 
 			sptr->name, AWAY_COUNT, pretty_time_val(AWAY_PERIOD));
 	}
-#endif
 	sendto_one(sptr, ":%s %i %s :anti-flood::nick-flood: %d per %s", me.name, RPL_TEXT, 
 		sptr->name, NICK_COUNT, pretty_time_val(NICK_PERIOD));
 	sendto_one(sptr, ":%s %i %s :ident::connect-timeout: %s", me.name, RPL_TEXT,
