@@ -101,12 +101,6 @@
 #define REMOTEINC_SPECIALCACHE
 
 /*
- * HOSTILENAME - Define this if you want the hostile username patch included,
- *		 it will strip characters that are not 0-9,a-z,A-Z,_,- or .
- */
-#define HOSTILENAME		/* [DO NOT CHANGE!] */
-
-/*
 ** Freelinks garbage collector -Stskeeps
 **
 ** GARBAGE_COLLECT_EVERY - how many seconds between every garbage collect

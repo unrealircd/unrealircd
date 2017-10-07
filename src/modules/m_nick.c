@@ -1154,10 +1154,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	ConfigItem_ban *bconf;
 	char *tmpstr;
 	const char *id;
-#ifdef HOSTILENAME
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
-#endif
 	int  xx;
 	anUser *user = sptr->user;
 	aClient *nsptr;
@@ -1253,13 +1251,10 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			else {
 				*user->username = '~';
 				strlcpy((user->username + 1), temp, sizeof(user->username)-1);
-#ifdef HOSTILENAME
 				noident = 1;
-#endif
 			}
 
 		}
-#ifdef HOSTILENAME
 		/*
 		 * Limit usernames to just 0-9 a-z A-Z _ - and .
 		 * It strips the "bad" chars out, and if nothing is left
@@ -1308,7 +1303,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		}
 		else
 			u1 = NULL;
-#endif
 
 		/*
 		 * following block for the benefit of time-dependent K:-lines
@@ -1436,7 +1430,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		    ":%s NOTICE %s :*** \2NOTE:\2 This server is running experimental IRC server software (UnrealIRCd %s). If you find any bugs or problems, please report them at https://bugs.unrealircd.org/",
 		    me.name, sptr->name, VERSIONONLY);
 #endif
-#ifdef HOSTILENAME
 		/*
 		 * Now send a numeric to the user telling them what, if
 		 * anything, happened.
@@ -1444,7 +1437,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		if (u1)
 			sendto_one(sptr, err_str(ERR_HOSTILENAME), me.name,
 			    sptr->name, olduser, userbad, stripuser);
-#endif
 		if (IsSecure(sptr))
 			sptr->umodes |= UMODE_SECURE;
 	}
