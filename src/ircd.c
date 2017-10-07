@@ -1323,7 +1323,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	default_class =
 	    (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
 	default_class->flag.permanent = 1;
-	default_class->pingfreq = PINGFREQUENCY;
+	default_class->pingfreq = 120;
 	default_class->maxclients = 100;
 	default_class->sendq = MAXSENDQLENGTH;
 	default_class->name = "default";
