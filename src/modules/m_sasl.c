@@ -22,15 +22,6 @@
 
 #include "unrealircd.h"
 
-#define MSG_AUTHENTICATE "AUTHENTICATE"
-
-#define MSG_SASL "SASL"
-
-#define MSG_SVSLOGIN "SVSLOGIN"
-
-/* returns a server identifier given agent_p */
-#define AGENT_SID(agent_p)	(agent_p->user != NULL ? agent_p->user->server : agent_p->name)
-
 ModuleHeader MOD_HEADER(m_sasl)
   = {
 	"m_sasl",
@@ -39,6 +30,18 @@ ModuleHeader MOD_HEADER(m_sasl)
 	"3.2-b8-1",
 	NULL 
     };
+
+/* Forward declarations */
+void saslmechlist_free(ModData *m);
+char *saslmechlist_serialize(ModData *m);
+void saslmechlist_unserialize(char *str, ModData *m);
+char *sasl_capability_parameter(aClient *acptr);
+
+/* Macros */
+#define MSG_AUTHENTICATE "AUTHENTICATE"
+#define MSG_SASL "SASL"
+#define MSG_SVSLOGIN "SVSLOGIN"
+#define AGENT_SID(agent_p)	(agent_p->user != NULL ? agent_p->user->server : agent_p->name)
 
 /*
  * This is a "lightweight" SASL implementation/stack which uses psuedo-identifiers
@@ -344,7 +347,8 @@ int sasl_server_connect(aClient *sptr)
 MOD_INIT(m_sasl)
 {
 	ClientCapability cap;
-	
+	ModDataInfo mreq;
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	CommandAdd(modinfo->handle, MSG_SASL, m_sasl, MAXPARA, M_USER|M_SERVER);
@@ -360,7 +364,17 @@ MOD_INIT(m_sasl)
 	cap.name = "sasl";
 	cap.cap = PROTO_SASL;
 	cap.visible = sasl_capability_visible;
+	cap.parameter = sasl_capability_parameter;
 	ClientCapabilityAdd(modinfo->handle, &cap);
+
+	memset(&mreq, 0, sizeof(mreq));
+	mreq.name = "saslmechlist";
+	mreq.free = saslmechlist_free;
+	mreq.serialize = saslmechlist_serialize;
+	mreq.unserialize = saslmechlist_unserialize;
+	mreq.sync = 1;
+	mreq.type = MODDATATYPE_CLIENT;
+	ModDataAdd(modinfo->handle, mreq);
 
 	return MOD_SUCCESS;
 }
@@ -373,4 +387,38 @@ MOD_LOAD(m_sasl)
 MOD_UNLOAD(m_sasl)
 {
 	return MOD_SUCCESS;
+}
+
+void saslmechlist_free(ModData *m)
+{
+	if (m->str)
+		MyFree(m->str);
+}
+
+char *saslmechlist_serialize(ModData *m)
+{
+	if (!m->str)
+		return NULL;
+	return m->str;
+}
+
+void saslmechlist_unserialize(char *str, ModData *m)
+{
+	if (m->str)
+		MyFree(m->str);
+	m->str = strdup(str);
+}
+
+char *sasl_capability_parameter(aClient *acptr)
+{
+	aClient *server;
+
+	if (SASL_SERVER)
+	{
+		server = find_server(SASL_SERVER, NULL);
+		if (server)
+			return moddata_client_get(server, "saslmechlist"); /* NOTE: could still return NULL */
+	}
+
+	return NULL;
 }
