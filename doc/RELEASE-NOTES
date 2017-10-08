@@ -7,6 +7,9 @@ UnrealIRCd 4.0.16 is not released yet. It is in development.
 These release notes are thus work-in-progress.
 
 Enhancements:
+* There's now an easy method to remove spamfilters:
+  '/SPAMFILTER del' will show a list of spamfilters along
+  with the appropriate command to remove them (by id).
 * CAP v3.2 support.
 * CAP 'cap-notify': notify users of any CAP changes.
 * CAP 'extended-join': show account and gecos in JOIN.
