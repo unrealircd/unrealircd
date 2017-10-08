@@ -142,6 +142,7 @@ struct zConfiguration {
 	int hide_list;
 	int max_unknown_connections_per_ip;
 	long handshake_timeout;
+	int ban_include_username;
 };
 
 #ifndef DYNCONF_C

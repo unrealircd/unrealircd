@@ -7866,6 +7866,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.handshake_timeout = config_checkval(cep->ce_vardata, CFG_TIME);
 		}
+		else if (!strcmp(cep->ce_varname, "ban-include-username"))
+		{
+			tempiConf.ban_include_username = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
 		else
 		{
 			int value;
@@ -8790,6 +8794,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "ban-include-username"))
+		{
+			CheckNull(cep);
 		}
 		else
 		{

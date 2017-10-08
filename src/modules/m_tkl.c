@@ -2293,7 +2293,7 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 		case BAN_ACT_GLINE:
 		case BAN_ACT_GZLINE:
 		{
-			char hostip[128], mo[100], mo2[100];
+			char ip[128], user[USERLEN+1], mo[100], mo2[100];
 			char *tkllayer[9] = {
 				me.name,	/*0  server.name */
 				"+",		/*1  +|- */
@@ -2306,7 +2306,16 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 				NULL		/*8  reason */
 			};
 
-			strlcpy(hostip, GetIP(sptr), sizeof(hostip));
+			strlcpy(ip, GetIP(sptr), sizeof(ip));
+
+			if (iConf.ban_include_username && (action != BAN_ACT_ZLINE) && (action != BAN_ACT_GZLINE))
+			{
+				if (sptr->user)
+					strlcpy(user, sptr->user->username, sizeof(user));
+				else
+					strlcpy(user, "*", sizeof(user));
+				tkllayer[3] = user;
+			}
 
 			if (action == BAN_ACT_KLINE)
 				tkllayer[2] = "k";
@@ -2318,7 +2327,7 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 				tkllayer[2] = "G";
 			else if (action == BAN_ACT_SHUN)
 				tkllayer[2] = "s";
-			tkllayer[4] = hostip;
+			tkllayer[4] = ip;
 			tkllayer[5] = me.name;
 			if (!duration)
 				strlcpy(mo, "0", sizeof(mo)); /* perm */
