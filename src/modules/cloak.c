@@ -26,6 +26,8 @@ static char *cloak_key1 = NULL, *cloak_key2 = NULL, *cloak_key3 = NULL;
 static char cloak_checksum[64];
 static int nokeys = 1;
 
+int CLOAK_IP_ONLY = 0;
+
 #undef KEY1
 #undef KEY2
 #undef KEY3
@@ -33,7 +35,7 @@ static int nokeys = 1;
 #define KEY2 cloak_key2
 #define KEY3 cloak_key3
 
-DLLFUNC char *hidehost(char *host);
+DLLFUNC char *hidehost(aClient *acptr, char *host);
 DLLFUNC char *cloakcsum();
 DLLFUNC int cloak_config_test(ConfigFile *, ConfigEntry *, int, int *);
 DLLFUNC int cloak_config_run(ConfigFile *, ConfigEntry *, int);
@@ -57,7 +59,7 @@ ModuleHeader MOD_HEADER(cloak)
 
 MOD_TEST(cloak)
 {
-	cloak = CallbackAddPCharEx(modinfo->handle, CALLBACKTYPE_CLOAK, hidehost);
+	cloak = CallbackAddPCharEx(modinfo->handle, CALLBACKTYPE_CLOAK_EX, hidehost);
 	if (!cloak)
 	{
 		config_error("cloak: Error while trying to install cloaking callback!");
@@ -117,9 +119,32 @@ char *p;
 
 DLLFUNC int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
-ConfigEntry *cep;
-int keycnt = 0, errors = 0;
-char *keys[3];
+	ConfigEntry *cep;
+	int keycnt = 0, errors = 0;
+	char *keys[3];
+
+	if (type == CONFIG_SET)
+	{
+		/* set::cloak-method */
+		if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "cloak-method"))
+			return 0;
+
+		if (!ce->ce_varname)
+		{
+			config_error("%s:%i: blank set::cloak-method item",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		} else
+		if (strcmp(ce->ce_vardata, "ip") && strcmp(ce->ce_vardata, "host"))
+		{
+			config_error("%s:%i: set::cloak-method: unknown method '%s'. The only supported methods are: 'ip' and 'host'",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+
+		*errs = errors;
+		return errors ? -1 : 1;
+	}
 
 	if (type != CONFIG_CLOAKKEYS)
 		return 0;
@@ -185,6 +210,18 @@ DLLFUNC int cloak_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 ConfigEntry *cep;
 char buf[512], result[16];
 
+	if (type == CONFIG_SET)
+	{
+		/* set::cloak-method */
+		if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "cloak-method"))
+			return 0;
+
+		if (!strcmp(ce->ce_vardata, "ip"))
+			CLOAK_IP_ONLY = 1;
+
+		return 0;
+	}
+
 	if (type != CONFIG_CLOAKKEYS)
 		return 0;
 
@@ -220,9 +257,12 @@ char buf[512], result[16];
 	return 1;
 }
 
-DLLFUNC char *hidehost(char *host)
+DLLFUNC char *hidehost(aClient *acptr, char *host)
 {
-char *p;
+	char *p;
+
+	if (CLOAK_IP_ONLY)
+		host = GetIP(acptr);
 
 	/* IPv6 ? */	
 	if (strchr(host, ':'))
