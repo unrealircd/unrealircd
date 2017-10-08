@@ -322,6 +322,15 @@ static char recursion_trap=0;
 			if (stat(logs->file, &fstats) != -1 && logs->maxsize && fstats.st_size >= logs->maxsize)
 			{
 				char oldlog[512];
+				if (logs->logfd == -1)
+				{
+					/* Try to open, so we can write the 'Max file size reached' message. */
+#ifndef _WIN32
+					logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
+#else
+					logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
+#endif
+				}
 				if (logs->logfd != -1)
 				{
 					write(logs->logfd, "Max file size reached, starting new log file\n", 45);
