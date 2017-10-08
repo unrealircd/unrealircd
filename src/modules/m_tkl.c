@@ -155,6 +155,15 @@ MOD_UNLOAD(m_tkl)
 	return MOD_SUCCESS;
 }
 
+/** Return unique spamfilter id for aTKline */
+char *spamfilter_id(aTKline *tk)
+{
+	static char buf[128];
+
+	snprintf(buf, sizeof(buf), "%p", (void *)tk);
+	return buf;
+}
+
 /*
 ** m_gline (oper function - /TKL takes care of distribution)
 ** /gline [+|-]u@h mask time :reason
@@ -614,6 +623,7 @@ int spamfilter_usage(aClient *sptr)
 {
 	sendnotice(sptr, "Use: /spamfilter [add|del|remove|+|-] [-simple|-regex|-posix] [type] [action] [tkltime] [tklreason] [regex]");
 	sendnotice(sptr, "See '/helpop ?spamfilter' for more information.");
+	sendnotice(sptr, "For an easy way to remove an existing spamfilter, use '/spamfilter del' without additional parameters");
 	return 0;
 }
 
@@ -629,6 +639,68 @@ int spamfilter_new_usage(aClient *cptr, aClient *sptr, char *parv[])
 
 	return spamfilter_usage(cptr);
 } 
+
+/** Delete a spamfilter by ID (the ID can be obtained via '/SPAMFILTER del' */
+int spamfilter_del_by_id(aClient *sptr, char *id)
+{
+	int index;
+	aTKline *tk;
+	int found = 0;
+	char mo[32], mo2[32];
+	char *tkllayer[13] = {
+		me.name,	/*  0 server.name */
+		NULL,		/*  1 +|- */
+		"F",		/*  2 F   */
+		NULL,		/*  3 usermask (targets) */
+		NULL,		/*  4 hostmask (action) */
+		NULL,		/*  5 setby */
+		"0",		/*  6 expire_at */
+		"0",		/*  7 set_at */
+		"",			/*  8 tkl time */
+		"",			/*  9 tkl reason */
+		"",			/* 10 match method */
+		"",			/* 11 regex */
+		NULL
+	};
+
+	for (index = 0; index < TKLISTLEN; index++)
+	{
+		for (tk = tklines[index]; tk; tk = tk->next)
+		{
+			if ((tk->type & (TKL_GLOBAL|TKL_SPAMF)) && !strcmp(spamfilter_id(tk), id))
+			{
+				found = 1;
+				break;
+			}
+		}
+		if (found)
+			break; /* break outer loop */
+	}
+
+	if (!tk)
+	{
+		sendnotice(sptr, "Sorry, no spamfilter found with that ID. Did you run '/spamfilter del' to get the appropriate id?");
+		return 0;
+	}
+
+	/* Spamfilter found. Now fill the tkllayer */
+	tkllayer[1] = "-";
+	tkllayer[3] = spamfilter_target_inttostring(tk->subtype); /* target(s) */
+	mo[0] = banact_valtochar(tk->ptr.spamf->action);
+	mo[1] = '\0';
+	tkllayer[4] = mo; /* action */
+	tkllayer[5] = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
+	tkllayer[8] = "-";
+	tkllayer[9] = "-";
+	tkllayer[10] = unreal_match_method_valtostr(tk->ptr.spamf->expr->type); /* matching type */
+	tkllayer[11] = tk->reason; /* regex */
+	ircsnprintf(mo2, sizeof(mo2), "%li", TStime());
+	tkllayer[7] = mo2; /* deletion time */
+
+	m_tkl(&me, &me, 12, tkllayer);
+
+	return 0;
+}
 
 /** /spamfilter [add|del|remove|+|-] [match-type] [type] [action] [tkltime] [reason] [regex]
  *                   1                    2         3        4        5        6        7
@@ -676,6 +748,22 @@ char *err = NULL;
 		parv[1] = "spamfilter";
 		parv[2] = NULL;
 		return do_cmd(sptr, sptr, "STATS", 2, parv);
+	}
+
+	if ((parc <= 3) && !strcmp(parv[1], "del"))
+	{
+		if (!parv[2])
+		{
+			/* Show STATS with appropriate SPAMFILTER del command */
+			char *parv[5];
+			parv[0] = NULL;
+			parv[1] = "spamfilter";
+			parv[2] = me.name;
+			parv[3] = "del";
+			parv[4] = NULL;
+			return do_cmd(sptr, sptr, "STATS", 4, parv);
+		}
+		return spamfilter_del_by_id(sptr, parv[2]);
 	}
 
 	if ((parc == 7) && (*parv[2] != '-'))
@@ -1661,6 +1749,18 @@ void _tkl_stats(aClient *cptr, int type, char *para)
 					tk->ptr.spamf->tkl_duration, tk->ptr.spamf->tkl_reason,
 					tk->setby,
 					tk->reason);
+				if (para && !strcasecmp(para, "del"))
+				{
+					char *hash = spamfilter_id(tk);
+					if (tk->type & TKL_GLOBAL)
+					{
+						sendtxtnumeric(cptr, "To delete this spamfilter, use /SPAMFILTER del %s", hash);
+						sendtxtnumeric(cptr, "-");
+					} else {
+						sendtxtnumeric(cptr, "This spamfilter is stored in the configuration file and cannot be removed with /SPAMFILTER del");
+						sendtxtnumeric(cptr, "-");
+					}
+				}
 			}
 			if (tk->type & TKL_NICK)
 				sendto_one(cptr, rpl_str(RPL_STATSQLINE), me.name,
@@ -1669,6 +1769,12 @@ void _tkl_stats(aClient *cptr, int type, char *para)
 					curtime - tk->set_at, tk->setby, tk->reason); 
 			}
 		}
+
+	if ((type == (TKL_SPAMF|TKL_GLOBAL)) && (!para || strcasecmp(para, "del")))
+	{
+		/* If requesting spamfilter stats and not spamfilter del, then suggest it. */
+		sendnotice(cptr, "Tip: if you are looking for an easy way to remove a spamfilter, run '/SPAMFILTER del'.");
+	}
 }
 
 void _tkl_synch(aClient *sptr)
