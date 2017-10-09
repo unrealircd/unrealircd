@@ -507,6 +507,12 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 		case AUTHTYPE_PLAINTEXT:
 			if (!para)
 				return -1;
+			if (!strcmp(as->data, "changemeplease") && !strcmp(para, as->data))
+			{
+				sendto_realops("Rejecting default password 'changemeplease'. "
+				               "Please change the password in the configuration file.");
+				return -1;
+			}
 			/* plain text compare */
 			if (!strcmp(para, as->data))
 				return 2;
