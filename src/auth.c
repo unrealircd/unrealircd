@@ -39,17 +39,20 @@
 #include "crypt_blowfish.h"
 
 anAuthStruct MODVAR AuthTypes[] = {
-	{"bcrypt",	AUTHTYPE_BCRYPT},
-	{"plain",	AUTHTYPE_PLAINTEXT},
-	{"plaintext",   AUTHTYPE_PLAINTEXT},
-	{"crypt",	AUTHTYPE_UNIXCRYPT},
-	{"unixcrypt",	AUTHTYPE_UNIXCRYPT},
-	{"md5",	        AUTHTYPE_MD5},
-	{"sha1",	AUTHTYPE_SHA1},
+	{"plain",           AUTHTYPE_PLAINTEXT},
+	{"plaintext",       AUTHTYPE_PLAINTEXT},
+	{"md5",             AUTHTYPE_MD5},
+	{"sha1",            AUTHTYPE_SHA1},
+	{"ripemd160",       AUTHTYPE_RIPEMD160},
+	{"crypt",           AUTHTYPE_UNIXCRYPT},
+	{"unixcrypt",       AUTHTYPE_UNIXCRYPT},
+	{"bcrypt",          AUTHTYPE_BCRYPT},
 	{"sslclientcert",   AUTHTYPE_SSL_CLIENTCERT},
-	{"ripemd160",	AUTHTYPE_RIPEMD160},
+	{"cert",            AUTHTYPE_SSL_CLIENTCERT},
 	{"sslclientcertfp", AUTHTYPE_SSL_CLIENTCERTFP},
-	{NULL,		0}
+	{"certfp",          AUTHTYPE_SSL_CLIENTCERTFP},
+	{"spkifp",          AUTHTYPE_SPKIFP},
+	{NULL,              0}
 };
 
 /* Forward declarations */
@@ -78,6 +81,17 @@ int Auth_AutoDetectHashType(char *hash)
 					return AUTHTYPE_PLAINTEXT; /* not hex and not colon */
 			
 			return AUTHTYPE_SSL_CLIENTCERTFP;
+		}
+
+		if (strlen(hash) == 44)
+		{
+			char *p;
+			char *b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+			for (p = hash; *p; p++)
+				if (!strchr(b64chars, *p))
+					return AUTHTYPE_PLAINTEXT; /* not base64 */
+
+			return AUTHTYPE_SPKIFP;
 		}
 	}
 	
@@ -583,6 +597,19 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				return -1;
 
 			return 2;
+		}
+
+		case AUTHTYPE_SPKIFP:
+		{
+			char *fp = spki_fingerprint(cptr);
+
+			if (!fp)
+				return -1; /* auth failed: not SSL (or other failure) */
+
+			if (strcasecmp(as->data, fp))
+				return -1; /* auth failed: mismatch */
+
+			return 2; /* SUCCESS */
 		}
 	}
 	return -1;

@@ -32,6 +32,7 @@ typedef	struct {
 #define AUTHTYPE_RIPEMD160  5
 #define AUTHTYPE_SSL_CLIENTCERTFP 6
 #define AUTHTYPE_BCRYPT 7
+#define AUTHTYPE_SPKIFP	8
 
 #ifndef HAVE_CRYPT
 #define crypt DES_crypt

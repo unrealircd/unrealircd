@@ -801,3 +801,4 @@ extern void clicap_post_rehash(void);
 extern void send_cap_notify(int add, char *token);
 extern void sendbufto_one(aClient *to, char *msg, unsigned int quick);
 extern MODVAR int current_serial;
+extern char *spki_fingerprint(aClient *acptr);

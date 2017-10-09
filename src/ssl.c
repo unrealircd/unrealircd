@@ -1036,3 +1036,56 @@ int cipher_check(SSL_CTX *ctx, char **errstr)
 
 	return 1;
 }
+
+/** Return the SPKI Fingerprint for a client.
+ *
+ * This is basically the same output as
+ * openssl x509 -noout -in certificate.pem -pubkey | openssl asn1parse -noout -inform pem -out public.key
+ * openssl dgst -sha256 -binary public.key | openssl enc -base64
+ * ( from https://tools.ietf.org/html/draft-ietf-websec-key-pinning-21#appendix-A )
+ */
+char *spki_fingerprint(aClient *cptr)
+{
+	X509 *x509_cert = NULL;
+	unsigned char *der_cert = NULL, *p;
+	int der_cert_len, n;
+	static char retbuf[256];
+	SHA256_CTX ckctx;
+	unsigned char checksum[SHA256_DIGEST_LENGTH];
+
+	if (!MyConnect(cptr) || !cptr->local->ssl)
+		return NULL;
+
+	x509_cert = SSL_get_peer_certificate(cptr->local->ssl);
+
+	if (x509_cert)
+	{
+		memset(retbuf, 0, sizeof(retbuf));
+
+		der_cert_len = i2d_X509_PUBKEY(X509_get_X509_PUBKEY(x509_cert), NULL);
+		if ((der_cert_len > 0) && (der_cert_len < 16384))
+		{
+			der_cert = p = MyMallocEx(der_cert_len);
+			n = i2d_X509_PUBKEY(X509_get_X509_PUBKEY(x509_cert), &p);
+
+			if ((n > 0) && ((p - der_cert) == der_cert_len))
+			{
+				/* The DER encoded SPKI is stored in 'der_cert' with length 'der_cert_len'.
+				 * Now we need to create an SHA256 hash out of it.
+				 */
+				SHA256_Init(&ckctx);
+				SHA256_Update(&ckctx, der_cert, der_cert_len);
+				SHA256_Final(checksum, &ckctx);
+
+				/* And convert the binary to a base64 string... */
+				n = b64_encode(checksum, SHA256_DIGEST_LENGTH, retbuf, sizeof(retbuf));
+				MyFree(der_cert);
+				X509_free(x509_cert);
+				return retbuf; /* SUCCESS */
+			}
+			MyFree(der_cert);
+		}
+		X509_free(x509_cert);
+	}
+	return NULL;
+}
