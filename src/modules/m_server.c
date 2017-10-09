@@ -748,6 +748,62 @@ void _introduce_user(aClient *to, aClient *acptr)
 	}
 }
 
+void tls_link_notification_verify(aClient *acptr, ConfigItem_link *aconf)
+{
+	char *spki_fp;
+	char *ssl_fp;
+	char *errstr = NULL;
+	int verify_ok;
+
+	if (!MyConnect(acptr) || !acptr->local->ssl || !aconf)
+		return;
+
+	if ((aconf->auth->type == AUTHTYPE_SSL_CLIENTCERT) ||
+	    (aconf->auth->type == AUTHTYPE_SSL_CLIENTCERTFP) ||
+	    (aconf->auth->type == AUTHTYPE_SPKIFP))
+	{
+		/* Link verified by certificate or SPKI */
+		return;
+	}
+
+	if (aconf->verify_certificate)
+	{
+		/* Link verified by trust chain */
+		return;
+	}
+
+	ssl_fp = moddata_client_get(acptr, "certfp");
+	spki_fp = spki_fingerprint(acptr);
+	if (!ssl_fp || !spki_fp)
+		return; /* wtf ? */
+
+	if (acptr->serv->features.protocol < 4016)
+		return; /* don't bother for now */
+
+	sendto_realops("You may want to consider verifying this server link.");
+	sendto_realops("More information about this can be found on https://www.unrealircd.org/Link_verification");
+
+	verify_ok = verify_certificate(acptr->local->ssl, aconf->servername, &errstr);
+	if (errstr && strstr(errstr, "not valid for hostname"))
+	{
+		sendto_realops("Unfortunately the certificate of server '%s' has a name mismatch:", acptr->name);
+		sendto_realops("%s", errstr);
+		sendto_realops("This isn't a fatal error but it will prevent you from using verify-certificate yes;");
+	} else
+	if (!verify_ok)
+	{
+		sendto_realops("In short: in the configuration file, change the 'link %s {' block to use this as a password:", acptr->name);
+		sendto_realops("password \"%s\" { spkifp; };", spki_fp);
+		sendto_realops("And follow the instructions on the other side of the link as well (which will be similar, but will use a different hash)");
+	} else
+	{
+		sendto_realops("In short: in the configuration file, add the following to your 'link %s {' block:", acptr->name);
+		sendto_realops("verify-certificate yes;");
+		sendto_realops("Alternatively, you could use SPKI fingerprint verification. Then change the password in the link block to be:");
+		sendto_realops("password \"%s\" { spkifp; };", spki_fp);
+	}
+}
+
 int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
@@ -793,6 +849,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			me.name, inpath, (char *) ssl_get_cipher(cptr->local->ssl));
 		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
 			me.name, inpath, (char *) ssl_get_cipher(cptr->local->ssl));
+		tls_link_notification_verify(cptr, aconf);
 	}
 	else
 	{
