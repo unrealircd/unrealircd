@@ -205,6 +205,30 @@ __EOF__
 	echo '   all the time so your bug might as well be fixed already.'
 	echo ""
 	echo "Thanks!"
+elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
+	cd @TMPDIR@ || exit 1
+	CERT="@CONFDIR@/ssl/server.cert.pem"
+	if [ "$2" != "" ]; then
+		CERT="$2"
+	fi
+	if [ ! -f "$CERT" ]; then
+		echo "Could not open certificate: $CERT"
+		exit 1
+	fi
+	openssl x509 -noout -in "$CERT" -pubkey | openssl asn1parse -noout -inform pem -out tmp.public.key
+	HASH="`openssl dgst -sha256 -binary tmp.public.key | openssl enc -base64`"
+	rm -f tmp.public.key
+	if [ "$HASH" = "" ]; then
+		echo "Sorry, something went wrong when generating the SPKI fingerprint."
+		echo "Is the 'openssl' tool properly installed?"
+		exit 1
+	fi
+	echo "The SPKI fingerprint for certificate $CERT is:"
+	echo "$HASH"
+	echo ""
+	echo "You normally add this password on the other side of the link as:"
+	echo "password \"$HASH\" { spkifp; };"
+	echo ""
 else
-	echo "Usage: unrealircd start|stop|rehash|restart|mkpasswd|version|croncheck|gencloak|reloadtls|upgrade-conf"
+	echo "Usage: unrealircd start|stop|rehash|restart|mkpasswd|version|croncheck|gencloak|reloadtls|spkifp|upgrade-conf"
 fi
