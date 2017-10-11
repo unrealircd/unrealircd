@@ -197,9 +197,10 @@ DLLFUNC void clear_user_invisible(aChannel *chptr, aClient *sptr)
 DLLFUNC void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
 {
 	Member *i;
-	clear_user_invisible(chptr,sptr);
 	char joinbuf[512];
 	char exjoinbuf[512];
+
+	clear_user_invisible(chptr,sptr);
 
 	ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN %s",
 				sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
