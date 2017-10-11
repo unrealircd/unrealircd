@@ -748,6 +748,14 @@ void _userhost_changed(aClient *sptr)
 
 	if (MyClient(sptr))
 	{
+		/* We take the liberty of sending the CHGHOST to the impacted user as
+		 * well. This makes things easy for client coders.
+		 * (Note that this cannot be merged with the for loop from 15 lines up
+		 *  since the user may not be in any channels)
+		 */
+		if (sptr->local->proto & PROTO_CAP_CHGHOST)
+			sendbufto_one(sptr, buf, 0);
+
 		/* A userhost change always generates the following network traffic:
 		 * server to server traffic, CAP "chghost" notifications, and
 		 * possibly PART+JOIN+MODE if force-rejoin had work to do.
