@@ -526,7 +526,8 @@ CMD_FUNC(m_nick)
 	Membership *mp;
 	long lastnick = 0l;
 	int  differ = 1, update_watch = 1;
-	unsigned char newusr = 0, removemoder = 1;
+	unsigned char newusr = 0;
+	unsigned char removemoder = (sptr->umodes & UMODE_REGNICK) ? 1 : 0;
 	Hook *h;
 	int i = 0;
 	char *nickid = (IsPerson(sptr) && *sptr->id) ? sptr->id : NULL;
@@ -1120,6 +1121,10 @@ CMD_FUNC(m_nick)
 		RunHook(HOOKTYPE_REMOTE_CONNECT, sptr);
 	}
 
+	if (removemoder && MyClient(sptr))
+	{
+		sendto_one(sptr, ":%s MODE %s :-r", me.name, sptr->name);
+	}
 	return 0;
 }
 
