@@ -21,10 +21,19 @@ Enhancements:
 * Updated CAP 'sasl' to specification 3.2 (includes mechlist).
 * Automatically discover SASL server if saslmechlist is sent by services
   and set::sasl-server is not set by the administrator. This should
-  help to get more networks to support SASL automatically (once
-  services start sending this, of course).
+  help to get more networks to support SASL automatically (if you
+  run up to date services, of course)
 * We send "CAP DEL sasl" if set::sasl-server squits and a "CAP NEW"
   message when the server returns (to cap-notify and CAPv3.2 clients).
+* Added password::type 'spkifp'. It's similar to 'sslclientcertfp' but
+  is a hash based on the public TLS key rather than the certificate.
+  The benefit of this is that the 'spkifp' can stay the same even if
+  you get a new certificate from Let's Encrypt. Note that 'certbot'
+  does not re-use keys by default so you will get a different spkifp
+  every time. Consider using another (3rd party) client or tell the
+  certbot guys to finally implement --reuse-key at
+  https://github.com/certbot/certbot/issues/3788
+* The command './unrealircd spkifp' will output the SPKI fingerprint
 * You can now have multiple webirc { } blocks with the same mask.
   This permits multiple blocks like..
   webirc {
@@ -37,6 +46,15 @@ Enhancements:
   https://www.unrealircd.org/docs/Set_block#set::handshake-timeout
 * Move MAXUNKNOWNCONNECTIONSPERIP to set::max-unknown-connections-per-ip
   https://www.unrealircd.org/docs/Set_block#set::max-unknown-connections-per-ip
+* Add set { cloak-method ip; }; which will make cloaking only be done
+  on the IP and thus result in an XX.YY.ZZ.IP cloaked host.
+  This so you can have "IP cloaking" without disabling DNS lookups.
+  GLINES on hosts still work and IRCOps (and yourself) can still see
+  the host in /WHOIS.
+* New option set { ban-include-username yes; }; which will make bans
+  placed by spamfilters (and some other systems) to be placed not on *@ip
+  but on user@ip. Note that this won't work for ZLINE/GZLINE since no
+  no ident/username lookups are done in such cases.
 
 Major issues fixed:
 * None
@@ -51,7 +69,13 @@ Removed:
 * The deprecated and unused commands "CAP CLEAR" and "CAP ACK".
 
 Other changes:
-* None
+* When linking servers and not having any certificate validation,
+  UnrealIRCd will give you specific instructions on how to use
+  password::spkifp or verify-certificate. This to fix a possible
+  Man-in-the-Middle attack. Note that you'll only see this message
+  when linking two servers that are 4.0.16+.
+* When a user does a nick change from a registered nick you will
+  now see the user mode -r. Previously this happened invisibly.
 
 Module coders:
 * Please use the following procedure in case of an user/host change:
