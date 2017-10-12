@@ -29,9 +29,9 @@ Enhancements:
   is a hash based on the public TLS key rather than the certificate.
   The benefit of this is that the 'spkifp' can stay the same even if
   you get a new certificate from Let's Encrypt. Note that 'certbot'
-  does not re-use keys by default so you will get a different spkifp
-  every time. Consider using another (3rd party) client or tell the
-  certbot guys to finally implement --reuse-key at
+  does not re-use keys by default so you will still get a different
+  spkifp every 60-90 days. Consider using another (3rd party) client
+  or tell the certbot guys to finally implement --reuse-key at
   https://github.com/certbot/certbot/issues/3788
 * The command './unrealircd spkifp' will output the SPKI fingerprint
 * You can now have multiple webirc { } blocks with the same mask.
