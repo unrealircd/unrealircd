@@ -103,7 +103,7 @@ void init_sts(ModuleInfo *modinfo)
 	ClientCapability cap;
 
 	memset(&cap, 0, sizeof(cap));
-	cap.name = "draft/sts";
+	cap.name = "sts";
 	cap.cap = 0;
 	cap.flags = CLICAP_FLAGS_ADVERTISE_ONLY;
 	cap.visible = sts_capability_visible;
