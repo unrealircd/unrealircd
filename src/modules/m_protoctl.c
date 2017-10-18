@@ -335,6 +335,11 @@ CMD_FUNC(m_protoctl)
 
 			SetEAuth(cptr);
 			make_server(cptr); /* allocate and set cptr->serv */
+			/* Set cptr->name but don't add to hash list. The real work on
+			 * that is done in m_server. We just set it here for display
+			 * purposes of error messages (such as reject due to clock).
+			 */
+			strlcpy(cptr->name, servername, sizeof(cptr->name));
 			if (protocol)
 				cptr->serv->features.protocol = atoi(protocol);
 			if (!IsHandshake(cptr) && aconf) /* Send PASS early... */
