@@ -1272,6 +1272,12 @@ static int parse_client_queued(aClient *cptr)
 	if (DoingAuth(cptr))
 		return 0; /* we delay processing of data until identd has replied */
 
+	if (!IsPerson(cptr) && !IsServer(cptr) && (iConf.handshake_delay > 0) &&
+	    (TStime() - cptr->local->firsttime < iConf.handshake_delay))
+	{
+		return 0; /* we delay processing of data until set::handshake-delay is reached */
+	}
+
 	while (DBufLength(&cptr->local->recvQ) &&
 	    ((cptr->status < STAT_UNKNOWN) || (cptr->local->since - now < 10)))
 	{
