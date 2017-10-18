@@ -83,6 +83,7 @@ Other changes:
   when linking two servers that are 4.0.16+.
 * When a user does a nick change from a registered nick you will
   now see the user mode -r. Previously this happened invisibly.
+* The default oper snomask now includes 'S' (spamfilter notices).
 
 Module coders:
 * Please use the following procedure in case of an user/host change:
