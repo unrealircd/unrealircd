@@ -95,6 +95,8 @@ void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hos
 int blacklist_start_check(aClient *cptr);
 int blacklist_dns_request(aClient *cptr, Blacklist *bl);
 int blacklist_rehash(void);
+int blacklist_rehash_complete(void);
+void blacklist_set_handshake_delay(void);
 void blacklist_free_bluser_if_able(BLUser *bl);
 
 #define SetBLUser(x, y)	do { moddata_client(x, blacklist_md).ptr = y; } while(0)
@@ -132,6 +134,7 @@ MOD_INIT(blacklist)
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, blacklist_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_UNKUSER_QUIT, 0, blacklist_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, blacklist_rehash);
+	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, blacklist_rehash_complete);
 
 	SnomaskAdd(modinfo->handle, 'b', 1, umode_allow_opers, &SNO_BLACKLIST);
 
@@ -141,6 +144,7 @@ MOD_INIT(blacklist)
 /** Called upon module load */
 MOD_LOAD(blacklist)
 {
+	blacklist_set_handshake_delay();
 	return MOD_SUCCESS;
 }
 
@@ -155,6 +159,26 @@ int blacklist_rehash(void)
 {
 	blacklist_free_conf();
 	return 0;
+}
+
+int blacklist_rehash_complete(void)
+{
+	blacklist_set_handshake_delay();
+	return 0;
+}
+
+void blacklist_set_handshake_delay(void)
+{
+	if ((iConf.handshake_delay == -1) && conf_blacklist)
+	{
+		/*
+		Too noisy?
+		config_status("[blacklist] I'm setting set::handshake-delay to 2 seconds. "
+		              "You may wish to set an explicit setting in the configuration file.");
+		config_status("See https://www.unrealircd.org/docs/Set_block#set::handshake-delay");
+		*/
+		iConf.handshake_delay = 2;
+	}
 }
 
 /** Find blacklist { } block */

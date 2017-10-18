@@ -34,6 +34,13 @@ Enhancements:
   or tell the certbot guys to finally implement --reuse-key at
   https://github.com/certbot/certbot/issues/3788
 * The command './unrealircd spkifp' will output the SPKI fingerprint
+* New option set::handshake-delay will delay the handshake (when a
+  user is connecting) up to this amount of time.
+* If you have any blacklist { } block then UnrealIRCd will set an
+  set::handshake-delay of 2 seconds by default. This will allow (most)
+  DNSBL checking to be finished before the user comes online, while
+  still allowing a smooth user experience.
+  If your DNS(BL) is slow then you could raise this setting slightly.
 * You can now have multiple webirc { } blocks with the same mask.
   This permits multiple blocks like..
   webirc {
