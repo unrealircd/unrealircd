@@ -1292,9 +1292,8 @@ int process_packet(aClient *cptr, char *readbuf, int length, int killsafely)
 	dbuf_put(&cptr->local->recvQ, readbuf, length);
 
 	/* parse some of what we have (inducing fakelag, etc) */
-	if (!(DoingDNS(cptr) || DoingAuth(cptr)))
-		if (parse_client_queued(cptr) == FLUSH_BUFFER)
-			return 0;
+	if (parse_client_queued(cptr) == FLUSH_BUFFER)
+		return 0;
 
 	/* flood from unknown connection */
 	if (IsUnknown(cptr) && (DBufLength(&cptr->local->recvQ) > UNKNOWN_FLOOD_AMOUNT*1024))
