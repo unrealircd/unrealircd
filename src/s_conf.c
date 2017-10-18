@@ -1525,6 +1525,9 @@ void config_setdefaultsettings(aConfiguration *i)
  */
 void postconf_defaults(void)
 {
+	Isupport *is;
+	char tmpbuf[512];
+
 	if (!iConf.plaintext_policy_user_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
@@ -1541,6 +1544,13 @@ void postconf_defaults(void)
 			safestrdup(iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
 		else if (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_WARN)
 			safestrdup(iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
+	}
+
+	is = IsupportFind("MAXLIST");
+	if (is)
+	{
+		ircsnprintf(tmpbuf, sizeof(tmpbuf), "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
+		IsupportSetValue(is, tmpbuf);
 	}
 }
 
