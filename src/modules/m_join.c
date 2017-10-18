@@ -688,7 +688,7 @@ void _userhost_changed(aClient *sptr)
 				sptr->info);
 
 			modes = get_chmodes_for_user(sptr, flags);
-			if (modes)
+			if (!BadPtr(modes))
 				ircsnprintf(modebuf, sizeof(modebuf), ":%s MODE %s %s", me.name, chptr->chname, modes);
 
 			for (lp = chptr->members; lp; lp = lp->next)
