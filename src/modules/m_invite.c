@@ -284,5 +284,8 @@ CMD_FUNC(m_invite)
 			acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
 	}
 
+	if (MyClient(sptr))
+		sptr->local->since += 6; /* add extra lag to user issuing the /INVITE */
+
 	return 0;
 }
