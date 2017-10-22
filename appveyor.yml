@@ -2,9 +2,9 @@ version: 4.0.x-devbuild-{build}
 environment:
   matrix:
   - TARGET: "Visual Studio 2012"
-    SHORTNAME "vs2012"
+    SHORTNAME: "vs2012"
   - TARGET: "Visual Studio 2017"
-    SHORTNAME "vs2017"
+    SHORTNAME: "vs2017"
 init:
   - cmd: git config --global core.autocrlf true
 build_script:
