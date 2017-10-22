@@ -1,4 +1,5 @@
 version: 4.0.x-devbuild-{build}
+image: Visual Studio 2017
 environment:
   matrix:
   - TARGET: "Visual Studio 2012"
