@@ -1,4 +1,8 @@
 version: 4.0.x-devbuild-{build}
+environment:
+  matrix:
+  - NAME: "Visual Studio 2012"
+    DIRNAME: "Microsoft Visual Studio 11.0"
 init:
   - cmd: git config --global core.autocrlf true
 build_script:

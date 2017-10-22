@@ -1,7 +1,7 @@
 rem Build script for appveyor
 
-rem Visual Studio 2012
-call "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\vcvarsall.bat" x86
+rem Initialize Visual Studio variables
+call "C:\Program Files (x86)\%DIRNAME%\VC\vcvarsall.bat" x86
 rem Installing tools
 cinst unrar -y
 cinst wget -y
