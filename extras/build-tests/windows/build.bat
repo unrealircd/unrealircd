@@ -21,7 +21,7 @@ unrar x unrealircd-libraries-4.0.8.rar
 cd \projects\unrealircd
 
 rem Now the actual build
-call extras\build-tests\windows\makecmd\%SHORTNAME%.bat
+call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
 
 rem The above command will fail, due to missing symbol file
 rem However the symbol file can only be generated after the above command
@@ -29,7 +29,7 @@ rem So... we create the symbolfile...
 nmake -f makefile.win32 SYMBOLFILE
 
 rem And we re-run the exact same command:
-call extras\build-tests\windows\makecmd\%SHORTNAME%.bat
+call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 rem Convert c:\dev to c:\projects\unrealircd-deps
