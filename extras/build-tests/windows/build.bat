@@ -34,10 +34,10 @@ if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 rem Convert c:\dev to c:\projects\unrealircd-deps
 rem TODO: should use environment variable in innosetup script?
-sed -i "s/c:\\\\dev/c:\\\\projects\\\\unrealircd-deps/gi" src\win32\unrealinst.iss
+sed -i "s/c:\\dev/c:\\projects\\unrealircd-deps/gi" src\win32\unrealinst.iss
 
 rem Build installer file
-"c:\Program Files (x86)\Inno Setup 5\Compil32.exe" /cc src\win32\unrealinst.iss
+"c:\Program Files (x86)\Inno Setup 5\iscc.exe" /Q- src\win32\unrealinst.iss
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 rem Show some proof
