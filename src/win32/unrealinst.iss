@@ -73,8 +73,8 @@ Source: "src\modules\cap\*.dll"; DestDir: "{app}\modules\cap"; Flags: ignorevers
 Source: "c:\dev\tre\win32\release\tre.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\pcre2\build\release\pcre2-8.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\c-ares\msvc110\cares\dll-release\cares.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\libressl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\libressl\lib\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\libressl\x86\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\libressl\x86\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 
 #ifdef USE_CURL
