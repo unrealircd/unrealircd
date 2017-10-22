@@ -3,7 +3,6 @@ environment:
   matrix:
   - TARGET: "Visual Studio 2012"
     SHORTNAME "vs2012"
-  matrix:
   - TARGET: "Visual Studio 2017"
     SHORTNAME "vs2017"
 init:
