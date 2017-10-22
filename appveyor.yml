@@ -1,9 +1,12 @@
 version: 4.0.x-devbuild-{build}
 environment:
   matrix:
-  - NAME: "Visual Studio 2012"
-    DIRNAME: "Microsoft Visual Studio 11.0"
+  - TARGET: "Visual Studio 2012"
+    SHORTNAME "vs2012"
+  matrix:
+  - TARGET: "Visual Studio 2017"
+    SHORTNAME "vs2017"
 init:
   - cmd: git config --global core.autocrlf true
 build_script:
-  - cmd: call extras\\build-tests\\appveyor.build.bat
+  - cmd: call extras\\build-tests\\windows\\build.bat
