@@ -11,7 +11,7 @@ if [ "$1" != "" ]; then
 fi
 
 export MAKE="make -j3"
-export CFLAGS="-O2 -DFAKELAG_CONFIGURABLE"
+export CPPFLAGS="-DFAKELAG_CONFIGURABLE"
 
 extras/build-tests/nix/select-config $BUILDCONFIG
 ./Config -quick
