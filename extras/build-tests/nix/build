@@ -10,9 +10,11 @@ if [ "$1" != "" ]; then
 	BUILDCONFIG="$1"
 fi
 
+export MAKE="make -j3"
+
 extras/build-tests/nix/select-config $BUILDCONFIG
 ./Config -quick
-make -j3
+$MAKE
 yes ''|make pem
 make install
 
