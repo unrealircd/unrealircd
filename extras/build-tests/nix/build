@@ -23,6 +23,15 @@ echo ""
 echo "***********************************************"
 echo "UnrealIRCd build & install successful."
 echo "***********************************************"
+
+if [ "$BUILDCONFIG" = "local-curl" ]; then
+	# We broke the system significantly earlier that build tests
+	# won't work (eg: 'git' is uninstallable). Don't bother
+	# running the tests. I don't expect a 'local-curl' specific
+	# bug anyway.
+	exit 0
+fi
+
 echo ""
 echo ""
 echo "Now running UnrealIRCd test framework..."
