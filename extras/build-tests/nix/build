@@ -12,6 +12,6 @@ fi
 
 extras/build-tests/nix/select-config $BUILDCONFIG
 ./Config -quick
-make
+make -j3
 make install
 extras/build-tests/nix/run-tests
