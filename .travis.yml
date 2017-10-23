@@ -2,7 +2,7 @@ language: c
 compiler:
   - gcc
   - clang
-script: extras/build-tests/select-config $BUILDCONFIG && ./Config -quick && make
+script: extras/build-tests/nix/build $BUILDCONFIG
 env:
   - BUILDCONFIG=""
   - BUILDCONFIG="system-cares"
