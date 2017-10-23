@@ -13,6 +13,7 @@ fi
 extras/build-tests/nix/select-config $BUILDCONFIG
 ./Config -quick
 make -j3
+yes ''|make pem
 make install
 
 set +x
