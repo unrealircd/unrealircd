@@ -180,7 +180,7 @@
  * Common usage for this are: a trusted bot ran by an IRCOp, that you only
  * want to give "flood access" and nothing else, and other such things.
  */
-#undef FAKELAG_CONFIGURABLE
+//#undef FAKELAG_CONFIGURABLE
 
 /*
  * Max amount of internal send buffering when socket is stuck (bytes)
