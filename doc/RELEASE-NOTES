@@ -86,6 +86,10 @@ Other changes:
 * The default oper snomask now includes 'S' (spamfilter notices).
 
 Module coders:
+* API change for HOOKTYPE_PRE_INVITE:
+  (aClient *sptr, aClient *target, aChannel *chptr, int *override)
+  Modules must now send the error message instead of only returning
+  HOOK_DENY. Also check for operoverride and set *override=1.
 * Please use the following procedure in case of an user/host change:
   userhost_save_current(acptr);
   /* now do what you need to do: like change username or hostname */

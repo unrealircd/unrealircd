@@ -34,7 +34,8 @@ Cmode_t EXTCMODE_NOINVITE;
 
 #define IsNoInvite(chptr)    (chptr->mode.extmode & EXTCMODE_NOINVITE)
 
-DLLFUNC int noinvite_check (aClient *sptr, aChannel *chptr);
+DLLFUNC int noinvite_pre_knock(aClient *sptr, aChannel *chptr);
+DLLFUNC int noinvite_pre_invite(aClient *sptr, aClient *acptr, aChannel *chptr, int *override);
 
 MOD_TEST(noinvite)
 {
@@ -51,8 +52,8 @@ MOD_INIT(noinvite)
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOINVITE);
 	
-	HookAdd(modinfo->handle, HOOKTYPE_PRE_KNOCK, 0, noinvite_check);
-	HookAdd(modinfo->handle, HOOKTYPE_PRE_INVITE, 0, noinvite_check);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_KNOCK, 0, noinvite_pre_knock);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_INVITE, 0, noinvite_pre_invite);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -69,7 +70,7 @@ MOD_UNLOAD(noinvite)
 }
 
 
-DLLFUNC int noinvite_check (aClient *sptr, aChannel *chptr)
+DLLFUNC int noinvite_pre_knock(aClient *sptr, aChannel *chptr)
 {
 	if (MyClient(sptr) && IsNoInvite(chptr))
 	{
@@ -78,6 +79,22 @@ DLLFUNC int noinvite_check (aClient *sptr, aChannel *chptr)
 				    sptr->name,
 				    chptr->chname, "The channel does not allow invites (+V)");
 		return HOOK_DENY;
+	}
+
+	return HOOK_CONTINUE;
+}
+
+DLLFUNC int noinvite_pre_invite(aClient *sptr, aClient *acptr, aChannel *chptr, int *override)
+{
+	if (MyClient(sptr) && IsNoInvite(chptr))
+	{
+		if (ValidatePermissionsForPath("override:invite:nopermissions",sptr,NULL,chptr,NULL) && sptr == acptr)
+		{
+			*override = 1;
+		} else {
+			sendto_one(sptr, err_str(ERR_NOINVITE), me.name, sptr->name, chptr->chname);
+			return HOOK_DENY;
+		}
 	}
 
 	return HOOK_CONTINUE;

@@ -108,21 +108,11 @@ CMD_FUNC(m_invite)
 
 	for (h = Hooks[HOOKTYPE_PRE_INVITE]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(sptr,chptr);
-		if (i == HOOK_DENY || i == HOOK_ALLOW)
-			break;
-	}
-
-	if (i == HOOK_DENY && !IsULine(sptr))
-	{
-		if (ValidatePermissionsForPath("override:invite:nopermissions",sptr,NULL,chptr,NULL) && sptr == acptr)
-		{
-			over = 1;
-		} else {
-			sendto_one(sptr, err_str(ERR_NOINVITE),
-			    me.name, sptr->name, parv[2]);
+		i = (*(h->func.intfunc))(sptr,acptr,chptr,&over);
+		if (i == HOOK_DENY)
 			return -1;
-		}
+		if (i == HOOK_ALLOW)
+			break;
 	}
 
 	if (!IsMember(sptr, chptr) && !IsULine(sptr))

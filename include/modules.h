@@ -872,7 +872,7 @@ int hooktype_pre_local_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, c
 int hooktype_pre_remote_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode);
 int hooktype_join_data(aClient *who, aChannel *chptr);
 int hooktype_pre_knock(aClient *sptr, aChannel *chptr);
-int hooktype_pre_invite(aClient *sptr, aChannel *chptr);
+int hooktype_pre_invite(aClient *sptr, aClient *acptr, aChannel *chptr, int *override);
 int hooktype_oper_invite_ban(aClient *sptr, aChannel *chptr);
 int hooktype_view_topic_outside_channel(aClient *sptr, aChannel *chptr);
 int hooktype_chan_permit_nick_change(aClient *sptr, aChannel *chptr);
