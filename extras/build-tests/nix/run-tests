@@ -10,7 +10,7 @@ set -e
 set -x
 
 # Install packages
-sudo apt-get install python -y
+sudo apt-get install python rake -y
 sudo gem install bundler
 
 # Install 'ircfly'
