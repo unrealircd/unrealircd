@@ -14,4 +14,14 @@ extras/build-tests/nix/select-config $BUILDCONFIG
 ./Config -quick
 make -j3
 make install
+
+set +x
+echo ""
+echo "***********************************************"
+echo "UnrealIRCd build & install successful."
+echo "***********************************************"
+echo ""
+echo ""
+echo "Now running UnrealIRCd test framework..."
+set -x
 extras/build-tests/nix/run-tests
