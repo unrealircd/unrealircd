@@ -10,7 +10,7 @@ if [ ! -d extras ]; then
 fi
 
 # Take default settings as a starter..
-cp extras/build-tests/configs/default ./config.settings
+cp extras/build-tests/nix/configs/default ./config.settings
 
 # Libtool is required for the other options..
 # Also for our FreeBSD machine we have to uninstall some stuff since a clean

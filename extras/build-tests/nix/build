@@ -1,7 +1,7 @@
 #!/bin/bash
 BUILDCONFIG="$1"
 
-extras/build-tests/select-config $BUILDCONFIG && \
+extras/build-tests/nix/select-config $BUILDCONFIG && \
 ./Config -quick && \
 make && \
 make install
