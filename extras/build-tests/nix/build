@@ -1,7 +1,17 @@
 #!/bin/bash
-BUILDCONFIG="$1"
 
-extras/build-tests/nix/select-config $BUILDCONFIG && \
-./Config -quick && \
-make && \
+# Exit on any failure:
+set -e
+
+# Verbose:
+set -x
+
+if [ "$1" != "" ]; then
+	BUILDCONFIG="$1"
+fi
+
+extras/build-tests/nix/select-config $BUILDCONFIG
+./Config -quick
+make
 make install
+extras/build-tests/nix/run-tests
