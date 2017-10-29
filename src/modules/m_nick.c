@@ -253,6 +253,12 @@ CMD_FUNC(m_uid)
 	int  differ = 1, update_watch = 1;
 	unsigned char removemoder = 1;
 
+	if (parc < 13)
+	{
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "UID");
+		return 0;
+	}
+
 	if (!IsServer(cptr))
 		strlcpy(nick, parv[1], iConf.nicklen + 1);
 	else
@@ -404,6 +410,23 @@ CMD_FUNC(m_uid)
 			goto nickkill2done;
 		}
 
+		if (acptr->user == NULL)
+		{
+			/* This is a Bad Thing */
+			sendto_umode(UMODE_OPER, "Lost user field for %s in change from %s",
+			    acptr->name, get_client_name(cptr, FALSE));
+			ircstp->is_kill++;
+			sendto_one(acptr, ":%s KILL %s :%s (Lost user field!)",
+			    me.name, acptr->name, me.name);
+			acptr->flags |= FLAGS_KILLED;
+			/* Here's the previous versions' desynch.  If the old one is
+			   messed up, trash the old one and accept the new one.
+			   Remember - at this point there is a new nick coming in!
+			   Handle appropriately. -- Barubary */
+			exit_client(NULL, acptr, &me, "Lost user field");
+			goto nickkill2done;
+		}
+
 		if (parc > 3)
 		{
 			lastnick = atol(parv[3]);
@@ -456,6 +479,8 @@ nickkill2done:
 	{
 		/* A server introducing a new client, change source */
 
+		if (serv == NULL)
+			serv = sptr;
 		sptr = make_client(cptr, serv);
 		strlcpy(sptr->id, parv[6], IDLEN);
 		add_client_to_list(sptr);
@@ -918,6 +943,8 @@ CMD_FUNC(m_nick)
 	{
 		/* A server introducing a new client, change source */
 
+		if (serv == NULL)
+			serv = sptr;
 		sptr = make_client(cptr, serv);
 		add_client_to_list(sptr);
 		if (parc > 2)

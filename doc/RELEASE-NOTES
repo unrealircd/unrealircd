@@ -67,7 +67,11 @@ Major issues fixed:
 * None
 
 Minor issues fixed:
-* None
+* Gracefully handle incorrect server-to-server messages. These no longer
+  cause UnrealIRCd to crash. Note that this does not mean you can now
+  go send random RAW messages from a trusted server connection. Doing so
+  can cause desynchs, KILLs and SQUITs. We just try not to crash anymore.
+* A small memory leak upon 'DNS i' (IRCOp only command)
 
 Removed:
 * Various old config.h settings that didn't have any effect.

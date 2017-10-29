@@ -239,17 +239,8 @@ CMD_FUNC(m_trace)
 	 * and messy when done remotely - Avalon
 	 */
 	if (!ValidatePermissionsForPath("trace",sptr,acptr,NULL,NULL) || !cnt)
-	{
-		if (cnt)
-			return 0;
-		/* let the user have some idea that its at the end of the
-		 * trace
-		 */
-		sendto_one(sptr, rpl_str(RPL_TRACESERVER),
-		    me.name, sptr->name, "0", link_s[me.fd],
-		    link_u[me.fd], me.name, "*", "*", me.name, 0L);
 		return 0;
-	}
+
 	for (cltmp = conf_class; doall && cltmp; cltmp = (ConfigItem_class *) cltmp->next)
 	/*	if (cltmp->clients > 0) */
 			sendto_one(sptr, rpl_str(RPL_TRACECLASS), me.name,

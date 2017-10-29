@@ -409,14 +409,14 @@ void *cmodef_put_param(void *fld_in, char *param)
 	p2 = strchr(xbuf+1, ']');
 	if (!p2)
 	{
-		MyFree(fld);
-		return NULL;
+		memset(fld, 0, sizeof(ChanFloodProt));
+		return fld; /* FAIL */
 	}
 	*p2 = '\0';
 	if (*(p2+1) != ':')
 	{
-		MyFree(fld);
-		return NULL;
+		memset(fld, 0, sizeof(ChanFloodProt));
+		return fld; /* FAIL */
 	}
 	breakit = 0;
 	for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
@@ -435,10 +435,7 @@ void *cmodef_put_param(void *fld_in, char *param)
 		*p = '\0';
 		v = atoi(x);
 		if (v < 1)
-		{
-			MyFree(fld);
-			return NULL;
-		}
+			v = 1;
 		p++;
 		a = '\0';
 		r = 0;
@@ -503,29 +500,26 @@ void *cmodef_put_param(void *fld_in, char *param)
 				/** fld->r[FLD_TEXT] ** not supported */
 				break;
 			default:
-				MyFree(fld);
-				return NULL;
+				/* NOOP */
+				break;
 		}
 	} /* for */
 	/* parse 'per' */
 	p2++;
 	if (*p2 != ':')
 	{
-		MyFree(fld);
-		return NULL;
+		memset(fld, 0, sizeof(ChanFloodProt));
+		return fld; /* FAIL */
 	}
 	p2++;
 	if (!*p2)
 	{
-		MyFree(fld);
-		return NULL;
+		memset(fld, 0, sizeof(ChanFloodProt));
+		return fld; /* FAIL */
 	}
 	v = atoi(p2);
 	if (v < 1)
-	{
-		MyFree(fld);
-		return NULL;
-	}
+		v = 1;
 	/* if new 'per xxx seconds' is smaller than current 'per' then reset timers/counters (t, c) */
 	if (v < fld->per)
 	{
@@ -544,8 +538,8 @@ void *cmodef_put_param(void *fld_in, char *param)
 			breakit=0;
 	if (breakit)
 	{
-		MyFree(fld);
-		return NULL;
+		memset(fld, 0, sizeof(ChanFloodProt));
+		return fld; /* FAIL */
 	}
 
 	return (void *)fld;

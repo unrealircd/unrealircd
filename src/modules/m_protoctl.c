@@ -270,6 +270,9 @@ CMD_FUNC(m_protoctl)
 			if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
 				return exit_client(cptr, cptr, &me, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
 
+			if (*sptr->id)
+				return exit_client(cptr, cptr, &me, "Got PROTOCTL SID twice");
+
 			if ((acptr = hash_find_id(sid, NULL)) != NULL)
 			{
 				sendto_one(sptr, "ERROR :SID %s already exists from %s", acptr->id, acptr->name);

@@ -438,7 +438,7 @@ long config_checkval(char *orig, unsigned short flags) {
 				while (isalpha(*text))
 					text++;
 
-				*sz-- = 0;
+				*sz = 0;
 				while (sz-- > value && *sz) {
 					if (isspace(*sz))
 						*sz = 0;
@@ -454,7 +454,7 @@ long config_checkval(char *orig, unsigned short flags) {
 		}
 		mfactor = 1;
 		sz = text;
-		sz--;
+		sz--; /* -1 because we are PAST the end of the string */
 		while (sz-- > value) {
 			if (isspace(*sz))
 				*sz = 0;
@@ -482,7 +482,7 @@ long config_checkval(char *orig, unsigned short flags) {
 				while (isalpha(*text))
 					text++;
 
-				*sz-- = 0;
+				*sz = 0;
 				while (sz-- > value && *sz) {
 					if (isspace(*sz))
 						*sz = 0;
@@ -498,7 +498,7 @@ long config_checkval(char *orig, unsigned short flags) {
 		}
 		mfactor = 1;
 		sz = text;
-		sz--;
+		sz--; /* -1 because we are PAST the end of the string */
 		while (sz-- > value) {
 			if (isspace(*sz))
 				*sz = 0;

@@ -2038,17 +2038,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				return 0;
 			}
 
-			/* there is something fucked here? */
-			if ((type & TKL_SPAMF) && (parc >= 11))
-			tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
-				expiry_1, setat_1, spamf_tklduration, parv[9], spamf_match_method);
-			else
-			tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
-				expiry_1, setat_1, 0, NULL, 0);
-
-			if (!tk)
-				return 0; /* ERROR on allocate or something else... */
-
+			/* Validate set and expiry time */
 			timeret = asctime(gmtime((TS *)&setat_1));
 			if (!timeret)
 			{
@@ -2062,11 +2052,22 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			{
 				sendto_realops("Invalid TKL entry from %s, expiry time is out of range (%ld) -- not added. Clock on other server incorrect or bogus entry.",
 					sptr->name, (long)expiry_1);
-			return 0;
+				return 0;
 			}
 			strlcpy(gmt2, timeret, sizeof(gmt2));
 			iCstrip(gmt);
 			iCstrip(gmt2);
+
+			/* Actually add the entry */
+			if ((type & TKL_SPAMF) && (parc >= 11))
+			tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
+				expiry_1, setat_1, spamf_tklduration, parv[9], spamf_match_method);
+			else
+			tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
+				expiry_1, setat_1, 0, NULL, 0);
+
+			if (!tk)
+				return 0; /* ERROR on allocate or something else... */
 
 			RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
 
@@ -2222,7 +2223,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				type = TKL_NICK;
 			else if (*parv[2] == 'F')
 			{
-				if (parc < 8)
+				if (parc < 9)
 				{
 					sendto_realops("[BUG] m_tkl called with bogus spamfilter removal request [F], from=%s, parc=%d",
 					               sptr->name, parc);
@@ -2238,7 +2239,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			else if (*parv[2] == 'f')
 			{
-				if (parc < 8)
+				if (parc < 9)
 				{
 					sendto_realops("[BUG] m_tkl called with bogus spamfilter removal request [f], from=%s, parc=%d",
 					               sptr->name, parc);

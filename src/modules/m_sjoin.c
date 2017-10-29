@@ -146,7 +146,7 @@ CMD_FUNC(m_sjoin)
 	long modeflags;
 	char queue_s=0, queue_c=0; /* oh this is soooooo ugly :p */
 	
-	if (IsClient(sptr) || parc < 3 || !IsServer(sptr))
+	if (IsClient(sptr) || parc < 4 || !IsServer(sptr))
 		return 0;
 
 	if (!IsChannelName(parv[2]))
@@ -170,7 +170,7 @@ CMD_FUNC(m_sjoin)
 	}
 	else
 	{
-		if (parv[3][1] == '\0')
+		if (parv[3][0] && (parv[3][1] == '\0'))
 			nomode = 1;
 	}
 
@@ -641,7 +641,7 @@ getnick:
 		    chptr->creationtime);
 
 		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-		    sptr->name, chptr->chname, modebuf, paraback);
+		    sptr->name, chptr->chname, modebuf, parabuf);
 	}
 
 	if (merge && !nomode)
@@ -757,8 +757,8 @@ getnick:
 				if (Channelmode_Table[i].paracount)
 				{
 					char *parax = cm_getparameter(chptr, Channelmode_Table[i].flag);
-					//char *parax = Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam,Channelmode_Table[i].flag));
-					Addit(Channelmode_Table[i].flag, parax);
+					if (parax)
+						Addit(Channelmode_Table[i].flag, parax);
 				} else {
 					Addsingle(Channelmode_Table[i].flag);
 				}

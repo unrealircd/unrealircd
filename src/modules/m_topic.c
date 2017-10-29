@@ -137,6 +137,9 @@ long flags = 0; /* cache: membership flags */
 
 		if (!topic)	/* only asking  for topic  */
 		{
+			if (IsServer(sptr))
+				return 0; /* Servers must maintain state, not ask */
+
 			for (h = Hooks[HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL]; h; h = h->next)
 			{
 				i = (*(h->func.intfunc))(sptr,chptr);

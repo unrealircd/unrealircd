@@ -590,6 +590,12 @@ CMD_FUNC(m_server_remote)
 	char	info[REALLEN + 61];
 	char	*servername = parv[1];
 
+	if (parc < 4 || (!*parv[3]))
+	{
+		sendto_one(sptr, "ERROR :Not enough SERVER parameters");
+		return 0;
+	}
+
 	if ((acptr = find_server(servername, NULL)))
 	{
 		/* Found. Bad. Quit. */

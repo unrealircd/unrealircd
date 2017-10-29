@@ -514,7 +514,9 @@ aMatch *unreal_create_match(MatchType type, char *str, char **error)
 	}
 #endif
 	else {
-		abort(); /* unknown type, how did that happen ? */
+		/* Unknown type, how did that happen ? */
+		unreal_delete_match(m);
+		return NULL;
 	}
 	return m;
 }

@@ -710,16 +710,16 @@ char *param;
 	if (*param == 'i') /* INFORMATION */
 	{
 		struct ares_options inf;
-		struct ares_addr_node *ns = NULL;
+		struct ares_addr_node *serverlist = NULL, *ns;
 		int i;
 		int optmask;
-		
 
 		sendtxtnumeric(sptr, "****** DNS Configuration Information ******");
 		sendtxtnumeric(sptr, " c-ares version: %s",ares_version(NULL));
 		
 		i = 0;
-		for (ares_get_servers(resolver_channel, &ns); ns; ns = ns->next)
+		ares_get_servers(resolver_channel, &serverlist);
+		for (ns = serverlist; ns; ns = ns->next)
 		{
 			char ipbuf[128], *ip;
 			i++;
@@ -727,6 +727,7 @@ char *param;
 			ip = inetntop(ns->family, &ns->addr, ipbuf, sizeof(ipbuf));
 			sendtxtnumeric(sptr, "      server #%d: %s", i, ip ? ip : "<error>");
 		}
+		ares_free_data(serverlist);
 
 		ares_save_options(resolver_channel, &inf, &optmask);
 		if (optmask & ARES_OPT_TIMEOUTMS)

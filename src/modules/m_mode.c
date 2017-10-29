@@ -1258,9 +1258,11 @@ char *morphed;
 		} else {
 			/* add: is the parameter ok? */
 			if (handler->is_ok(cptr, chptr, mode, param, EXCHK_PARAM, what) == FALSE)
-				return paracnt;
+				return paracnt; /* rejected by is_ok */
 
-			morphed =  handler->conv_param(param, cptr);
+			morphed = handler->conv_param(param, cptr);
+			if (!morphed)
+				return paracnt; /* rejected by conv_param */
 
 			/* is it already set at the same value? if so, ignore it. */
 			if (chptr->mode.extmode & handler->mode)
@@ -1378,6 +1380,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce)
 {
 	char *curchr;
+	char *argument;
 	u_int what = MODE_ADD;
 	long modetype = 0;
 	int  paracount = 1;
@@ -1483,14 +1486,18 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 				  break;
 			  }
 
+			if (paracount < parc)
+				argument = parv[paracount]; /* can still be NULL */
+			else
+				argument = NULL;
+
 #ifndef NO_OPEROVERRIDE
 				if (found == 1)
 				{
                           if ((Halfop_mode(modetype) == FALSE) && opermode == 2 && htrig != 1)
                           {
                           	/* YUCK! */
-				if ((foundat.flag == 'h') && !(parc <= paracount) && parv[paracount] &&
-				    (find_person(parv[paracount], NULL) == cptr))
+				if ((foundat.flag == 'h') && argument && (find_person(argument, NULL) == cptr))
 				{
 					/* ircop with halfop doing a -h on himself. no warning. */
 				} else {
@@ -1506,22 +1513,19 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 				}
 #endif /* !NO_OPEROVERRIDE */
 
-			  /* We can afford to send off a param */
-			  if (parc <= paracount)
-			  	parv[paracount] = NULL;
-			  if (parv[paracount] &&
-			      strlen(parv[paracount]) >= MODEBUFLEN)
-			        parv[paracount][MODEBUFLEN-1] = '\0';
+			  /* Not sure how useful this is, but I'll let it stay... */
+			  if (argument && strlen(argument) >= MODEBUFLEN)
+			        argument[MODEBUFLEN-1] = '\0';
 			if (found == 1)
 			{
 			  paracount +=
 			      do_mode_char(chptr, modetype, *curchr,
-			      parv[paracount], what, cptr, pcount, pvar,
+			      argument, what, cptr, pcount, pvar,
 			      bounce, my_access);
 			}
 			else if (found == 2)
 			{
-				paracount += do_extmode_char(chptr, &Channelmode_Table[extm], parv[paracount],
+				paracount += do_extmode_char(chptr, &Channelmode_Table[extm], argument,
 				                             what, cptr, pcount, pvar, bounce);
 			}
 			  break;

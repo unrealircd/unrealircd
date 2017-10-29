@@ -109,9 +109,6 @@ void isupport_init(void)
 	char tmpbuf[512];
 	int i;
 
-	for (i=0; i <= MAXISUPPORTLINES; i++)
-		IsupportStrings[i] = NULL;
-
 	IsupportAdd(NULL, "INVEX", NULL);
 	IsupportAdd(NULL, "EXCEPTS", NULL);
 #ifdef PREFIX_AQ

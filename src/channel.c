@@ -921,7 +921,6 @@ char *trim_str(char *str, int len)
  * NOTES:
  * - A pointer is returned to a static buffer, which is overwritten
  *   on next clean_ban_mask or make_nick_user_host call.
- * - mask is fragged in some cases, this could be bad.
  */
 char *clean_ban_mask(char *mask, int what, aClient *cptr)
 {
@@ -929,6 +928,11 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	char *user;
 	char *host;
 	Extban *p;
+	static char maskbuf[512];
+
+	/* Work on a copy */
+	strlcpy(maskbuf, mask, sizeof(maskbuf));
+	mask = maskbuf;
 
 	cp = index(mask, ' ');
 	if (cp)
