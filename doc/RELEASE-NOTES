@@ -87,6 +87,7 @@ Other changes:
 * When a user does a nick change from a registered nick you will
   now see the user mode -r. Previously this happened invisibly.
 * The default oper snomask now includes 'S' (spamfilter notices).
+* The shipped PCRE2 library has been upgraded to 10.30
 
 Module coders:
 * API change for HOOKTYPE_PRE_INVITE:
