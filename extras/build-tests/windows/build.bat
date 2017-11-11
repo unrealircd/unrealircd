@@ -5,7 +5,7 @@ if "%TARGET%" == "Visual Studio 2012" call "C:\Program Files (x86)\Microsoft Vis
 if "%TARGET%" == "Visual Studio 2017" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
 
 rem Installing tools
-cinst unrar -y
+cinst unzip -y
 cinst wget -y
 cinst innosetup -y
 wget https://www.unrealircd.org/files/dev/win/dlltool.exe
@@ -15,8 +15,8 @@ cd \projects
 mkdir unrealircd-deps
 cd unrealircd-deps
 wget https://www.unrealircd.org/files/dev/win/SetACL.exe
-wget https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-4.0.16.rar
-unrar x unrealircd-libraries-4.0.16.rar >nul
+wget https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-4.0.16.zip
+unzip unrealircd-libraries-4.0.16.zip
 
 cd \projects\unrealircd
 
