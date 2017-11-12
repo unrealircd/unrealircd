@@ -1,9 +1,9 @@
-UnrealIRCd 4.0.16-rc1 Release Notes
+UnrealIRCd 4.0.16 Release Notes
 ================================
 
 ==[ CHANGES BETWEEN 4.0.15 AND 4.0.16 ]==
 
-This is a major release with a lot of new features and changes.
+This is a major release with lots of new features and changes.
 
 Enhancements:
 * There's now an easy method to remove spamfilters:
