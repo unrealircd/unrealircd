@@ -5,6 +5,7 @@ if "%TARGET%" == "Visual Studio 2012" call "C:\Program Files (x86)\Microsoft Vis
 if "%TARGET%" == "Visual Studio 2017" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
 
 rem Installing tools
+cinst unrar -y
 cinst unzip -y
 cinst wget -y
 cinst innosetup -y
