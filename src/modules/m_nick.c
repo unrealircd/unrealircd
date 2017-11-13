@@ -1437,7 +1437,10 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		if (IsHidden(sptr))
 			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, user->virthost);
 
-		if (sptr->flags & FLAGS_SSL)
+		if (IsSecure(sptr))
+			sptr->umodes |= UMODE_SECURE;
+		RunHook(HOOKTYPE_SECURE_CONNECT, sptr);
+		if (IsSecureConnect(sptr))
 		{
 			if (sptr->local->ssl && !iConf.no_connect_ssl_info)
 			{
@@ -1469,8 +1472,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		if (u1)
 			sendto_one(sptr, err_str(ERR_HOSTILENAME), me.name,
 			    sptr->name, olduser, userbad, stripuser);
-		if (IsSecure(sptr))
-			sptr->umodes |= UMODE_SECURE;
 	}
 	else if (IsServer(cptr))
 	{
