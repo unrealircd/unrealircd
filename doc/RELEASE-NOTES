@@ -7,9 +7,10 @@ UnrealIRCd 4.0.17 is work in progress.
 ==[ CHANGES BETWEEN 4.0.16 AND 4.0.17-devel ]==
 
 Other:
-* UnrealIRCd will no longer give +z to users on WEBIRC gateways,
-  unless the WEBIRC gateway gives us some assurance that the
-  client<->webirc gateway connection is also secure (eg: https).
+* UnrealIRCd will no longer give user mode +z to users on WEBIRC
+  gateways using SSL/TLS IRC, unless the WEBIRC gateway gives us
+  some assurance that the client<->webirc gateway connection is
+  also secure (eg: https).
   This is the regular WEBIRC format:
   WEBIRC password gateway hostname ip
   This indicates a secure client connection (NEW):
