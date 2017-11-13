@@ -1416,6 +1416,13 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		IRCstats.unknown--;
 		IRCstats.me_clients++;
+
+		if (IsSecure(sptr))
+		{
+			sptr->umodes |= UMODE_SECURE;
+			RunHook(HOOKTYPE_SECURE_CONNECT, sptr);
+		}
+
 		if (IsHidden(sptr))
 			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [VHOST %s]", nick,
 				user->username, user->realhost, user->virthost);
@@ -1437,9 +1444,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		if (IsHidden(sptr))
 			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, user->virthost);
 
-		if (IsSecure(sptr))
-			sptr->umodes |= UMODE_SECURE;
-		RunHook(HOOKTYPE_SECURE_CONNECT, sptr);
 		if (IsSecureConnect(sptr))
 		{
 			if (sptr->local->ssl && !iConf.no_connect_ssl_info)
