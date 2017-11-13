@@ -56,10 +56,13 @@ int webirc_config_run(ConfigFile *, ConfigEntry *, int);
 void webirc_free_conf(void);
 void delete_webircblock(ConfigItem_webirc *e);
 void webirc_md_free(ModData *md);
+int webirc_secure_connect(aClient *acptr);
 
-#define IsWEBIRC(x)     (moddata_client(x, webirc_md).l)
-#define SetWEBIRC(x)	do { moddata_client(x, webirc_md).l = 1; } while(0)
-#define ClearWEBIRC(x)	do { moddata_client(x, webirc_md).l = 0; } while(0)
+#define IsWEBIRC(x)			(moddata_client(x, webirc_md).l)
+#define IsWEBIRCSecure(x)	(moddata_client(x, webirc_md).l == 2)
+#define ClearWEBIRC(x)		do { moddata_client(x, webirc_md).l = 0; } while(0)
+#define SetWEBIRC(x)		do { moddata_client(x, webirc_md).l = 1; } while(0)
+#define SetWEBIRCSecure(x)	do { moddata_client(x, webirc_md).l = 2; } while(0)
 
 #define MSG_WEBIRC "WEBIRC"
 
@@ -90,6 +93,7 @@ MOD_INIT(webirc)
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, webirc_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_CHECK_INIT, 0, webirc_check_init);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PASS, 0, webirc_local_pass);
+	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, webirc_secure_connect);
 
 	CommandAdd(modinfo->handle, MSG_WEBIRC, m_webirc, MAXPARA, M_UNREGISTERED);
 		
@@ -321,10 +325,11 @@ ConfigItem_webirc *Find_webirc(aClient *sptr, char *password, WEBIRCType type, c
 #define WEBIRC_STRINGLEN  (sizeof(WEBIRC_STRING)-1)
 
 /* Does the CGI:IRC host spoofing work */
-int dowebirc(aClient *cptr, char *ip, char *host)
+int dowebirc(aClient *cptr, char *ip, char *host, char *options)
 {
 	char scratch[64];
 	char *sockhost;
+	int secure = 0;
 
 	if (IsWEBIRC(cptr))
 		return exit_client(cptr, cptr, &me, "Double CGI:IRC request (already identified)");
@@ -365,6 +370,22 @@ int dowebirc(aClient *cptr, char *ip, char *host)
 
 	SetWEBIRC(cptr);
 
+	if (options)
+	{
+		char *name, *p = NULL, *p2;
+		for (name = strtoken(&p, options, " "); name; name = strtoken(&p, NULL, " "))
+		{
+			p2 = strchr(name, '=');
+			if (p2)
+				*p2 = '\0';
+			if (!strcmp(name, "secure") && IsSecure(cptr))
+			{
+				/* The entire [client]--[webirc gw]--[server] chain is secure */
+				SetWEBIRCSecure(cptr);
+			}
+		}
+	}
+
 	/* Check (g)zlines right now; these are normally checked upon accept(),
 	 * but since we know the IP only now after PASS/WEBIRC, we have to check
 	 * here again...
@@ -372,10 +393,10 @@ int dowebirc(aClient *cptr, char *ip, char *host)
 	return check_banned(cptr);
 }
 
-/* WEBIRC <pass> "cgiirc" <hostname> <ip> */
+/* WEBIRC <pass> "cgiirc" <hostname> <ip> [:option1 [option2...]]*/
 CMD_FUNC(m_webirc)
 {
-	char *ip, *host, *password;
+	char *ip, *host, *password, *options;
 	size_t ourlen;
 	ConfigItem_webirc *e;
 	char *error = NULL;
@@ -389,6 +410,7 @@ CMD_FUNC(m_webirc)
 	password = parv[1];
 	host = !DONT_RESOLVE ? parv[3] : parv[4];
 	ip = parv[4];
+	options = parv[5]; /* can be NULL */
 
 	/* Check if allowed host */
 	e = Find_webirc(sptr, password, WEBIRC_WEBIRC, &error);
@@ -396,7 +418,7 @@ CMD_FUNC(m_webirc)
 		return exit_client(cptr, sptr, &me, error);
 
 	/* And do our job.. */
-	return dowebirc(cptr, ip, host);
+	return dowebirc(cptr, ip, host, options);
 }
 
 
@@ -433,10 +455,22 @@ int webirc_local_pass(aClient *sptr, char *password)
 				return exit_client(sptr, sptr, &me, "Invalid CGI:IRC IP received");
 			*host++ = '\0';
 		
-			return dowebirc(sptr, ip, host);
+			return dowebirc(sptr, ip, host, NULL);
 		}
 		/* falltrough if not in webirc block.. */
 	}
 
 	return 0; /* not webirc */
+}
+
+/** Called from register_user() right after setting user +z */
+int webirc_secure_connect(aClient *acptr)
+{
+	/* Remove secure mode (-z) if the WEBIRC gateway did not ensure
+	 * us that their [client]--[webirc gateway] connection is also
+	 * secure (eg: using https)
+	 */
+	if (IsWEBIRC(acptr) && IsSecureConnect(acptr) && !IsWEBIRCSecure(acptr))
+		acptr->umodes &= ~UMODE_SECURE;
+	return 0;
 }

@@ -2,7 +2,21 @@ UnrealIRCd 4.0.17-devel Release Notes
 ================================
 
 You are looking at the git repository (development version).
-UnrealIRCd 4.0.17 is work in progress. There are no release notes yet.
+UnrealIRCd 4.0.17 is work in progress.
+
+==[ CHANGES BETWEEN 4.0.16 AND 4.0.17-devel ]==
+
+Other:
+* UnrealIRCd will no longer give +z to users on WEBIRC gateways,
+  unless the WEBIRC gateway gives us some assurance that the
+  client<->webirc gateway connection is also secure (eg: https).
+  This is the regular WEBIRC format:
+  WEBIRC password gateway hostname ip
+  This indicates a secure client connection (NEW):
+  WEBIRC password gateway hostname ip :secure
+  Naturally, WEBIRC gateways MUST NOT send the "secure" option if
+  the client is using http or some other insecure protocol.
+
 Below are the release notes of previous release:
 
 ==[ CHANGES BETWEEN 4.0.15 AND 4.0.16 ]==
