@@ -22,12 +22,6 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_nick);
-CMD_FUNC(m_uid);
-DLLFUNC int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
-
-#define MSG_NICK 	"NICK"	
-
 ModuleHeader MOD_HEADER(m_nick)
   = {
 	"m_nick",
@@ -36,6 +30,15 @@ ModuleHeader MOD_HEADER(m_nick)
 	"3.2-b8-1",
 	NULL 
     };
+
+#define MSG_NICK 	"NICK"	
+
+/* Forward declarations */
+CMD_FUNC(m_nick);
+CMD_FUNC(m_uid);
+DLLFUNC int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
+int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
+int check_client(aClient *cptr, char *username);
 
 MOD_TEST(m_nick)
 {
@@ -1637,5 +1640,190 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		sptr->local->passwd = NULL;
 	}
 	return 0;
+}
+
+/* This used to initialize the various name strings used to store hostnames.
+ * But nowadays this takes place much earlier (in add_connection?).
+ * It's mainly used for "localhost" and WEBIRC magic only now...
+ */
+int check_init(aClient *cptr, char *sockn, size_t size)
+{
+	strlcpy(sockn, cptr->local->sockhost, HOSTLEN);
+	
+	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, ==0);
+
+	/* Some silly hack to convert 127.0.0.1 and such into 'localhost' */
+	if (!strcmp(GetIP(cptr), "127.0.0.1") || !strcmp(GetIP(cptr), "0:0:0:0:0:0:0:1") || !strcmp(GetIP(cptr), "0:0:0:0:0:ffff:127.0.0.1"))
+	{
+		if (cptr->local->hostp)
+		{
+			unreal_free_hostent(cptr->local->hostp);
+			cptr->local->hostp = NULL;
+		}
+		strlcpy(sockn, "localhost", HOSTLEN);
+	}
+
+	return 0;
+}
+
+/*
+ * Ordinary client access check. Look for conf lines which have the same
+ * status as the flags passed.
+ *  0 = Success
+ * -1 = Access denied
+ * -2 = Bad socket.
+ */
+int check_client(aClient *cptr, char *username)
+{
+	static char sockname[HOSTLEN + 1];
+	struct hostent *hp = NULL;
+	int  i;
+	
+	ClearAccess(cptr);
+	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]", cptr->name, cptr->local->sockhost));
+
+	if (check_init(cptr, sockname, sizeof(sockname)))
+		return -2;
+
+	hp = cptr->local->hostp;
+
+	if ((i = AllowClient(cptr, hp, sockname, username)))
+		return i;
+
+	Debug((DEBUG_DNS, "ch_cl: access ok: %s[%s]", cptr->name, sockname));
+
+	return 0;
+}
+
+int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username)
+{
+	ConfigItem_allow *aconf;
+	char *hname;
+	int  i, ii = 0;
+	static char uhost[HOSTLEN + USERLEN + 3];
+	static char fullname[HOSTLEN + 1];
+
+	if (!IsSecure(cptr) && (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY))
+	{
+		exit_client(cptr, cptr, &me, iConf.plaintext_policy_user_message);
+		return -5;
+	}
+
+	for (aconf = conf_allow; aconf; aconf = (ConfigItem_allow *) aconf->next)
+	{
+		if (!aconf->hostname || !aconf->ip)
+			goto attach;
+		if (aconf->auth && !cptr->local->passwd && aconf->flags.nopasscont)
+			continue;
+		if (aconf->flags.ssl && !IsSecure(cptr))
+			continue;
+		if (hp && hp->h_name)
+		{
+			hname = hp->h_name;
+			strlcpy(fullname, hname, sizeof(fullname));
+			Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, fullname));
+			if (index(aconf->hostname, '@'))
+			{
+				if (aconf->flags.noident)
+					strlcpy(uhost, username, sizeof(uhost));
+				else
+					strlcpy(uhost, cptr->username, sizeof(uhost));
+				strlcat(uhost, "@", sizeof(uhost));
+			}
+			else
+				*uhost = '\0';
+			strlcat(uhost, fullname, sizeof(uhost));
+			if (!match(aconf->hostname, uhost))
+				goto attach;
+		}
+
+		if (index(aconf->ip, '@'))
+		{
+			if (aconf->flags.noident)
+				strlcpy(uhost, username, sizeof(uhost));
+			else
+				strlcpy(uhost, cptr->username, sizeof(uhost));
+			(void)strlcat(uhost, "@", sizeof(uhost));
+		}
+		else
+			*uhost = '\0';
+		strlcat(uhost, sockhost, sizeof(uhost));
+		/* Check the IP */
+		if (match_user(aconf->ip, cptr, MATCH_CHECK_IP))
+			goto attach;
+
+		/* Hmm, localhost is a special case, hp == NULL and sockhost contains
+		 * 'localhost' instead of an ip... -- Syzop. */
+		if (!strcmp(sockhost, "localhost"))
+		{
+			if (index(aconf->hostname, '@'))
+			{
+				if (aconf->flags.noident)
+					strlcpy(uhost, username, sizeof(uhost));
+				else
+					strlcpy(uhost, cptr->username, sizeof(uhost));
+				strlcat(uhost, "@localhost", sizeof(uhost));
+			}
+			else
+				strcpy(uhost, "localhost");
+
+			if (!match(aconf->hostname, uhost))
+				goto attach;
+		}
+
+		continue;
+	      attach:
+/*		if (index(uhost, '@'))  now flag based -- codemastr */
+		if (!aconf->flags.noident)
+			cptr->flags |= FLAGS_DOID;
+		if (!aconf->flags.useip && hp)
+			strlcpy(uhost, fullname, sizeof(uhost));
+		else
+			strlcpy(uhost, sockhost, sizeof(uhost));
+		set_sockhost(cptr, uhost);
+
+		if (aconf->maxperip)
+		{
+			aClient *acptr, *acptr2;
+
+			ii = 1;
+			list_for_each_entry_safe(acptr, acptr2, &lclient_list, lclient_node)
+			{
+				if (!strcmp(GetIP(acptr), GetIP(cptr)))
+				{
+					ii++;
+					if (ii > aconf->maxperip)
+					{
+						exit_client(cptr, cptr, &me,
+							"Too many connections from your IP");
+						return -5;	/* Already got too many with that ip# */
+					}
+				}
+			}
+		}
+		if ((i = Auth_Check(cptr, aconf->auth, cptr->local->passwd)) == -1)
+		{
+			exit_client(cptr, cptr, &me,
+				"Password mismatch");
+			return -5;
+		}
+		if ((i == 2) && (cptr->local->passwd))
+		{
+			MyFree(cptr->local->passwd);
+			cptr->local->passwd = NULL;
+		}
+		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
+		{
+			cptr->local->class = aconf->class;
+			cptr->local->class->clients++;
+		}
+		else
+		{
+			sendto_one(cptr, rpl_str(RPL_REDIR), me.name, cptr->name, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
+			return -3;
+		}
+		return 0;
+	}
+	return -1;
 }
 
