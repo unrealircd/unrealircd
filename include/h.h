@@ -122,7 +122,6 @@ extern ConfigItem_help 	*Find_Help(char *command);
 extern OperPermission ValidatePermissionsForPath(char *path, aClient *sptr, aClient *victim, aChannel *channel, void *extra);
 extern void OperClassValidatorDel(OperClassValidator *validator);
 
-extern int AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
 extern ConfigItem_ban  *Find_ban_ip(aClient *sptr);
 extern void add_ListItem(ListStruct *, ListStruct **);
 extern void add_ListItemPrio(ListStructPrio *, ListStructPrio **, int);
@@ -227,7 +226,6 @@ extern MODVAR int readcalls, udpfd, resfd;
 extern aClient *add_connection(ConfigItem_listen *, int);
 extern int add_listener(aConfItem *);
 extern void add_local_domain(char *, int);
-extern int check_client(aClient *, char *);
 extern int check_server(aClient *, struct hostent *, aConfItem *,
     aConfItem *, int);
 extern int check_server_init(aClient *);

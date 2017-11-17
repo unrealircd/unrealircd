@@ -92,7 +92,6 @@ int readcalls = 0;
 
 int connect_inet(ConfigItem_link *, aClient *);
 void completed_connection(int, int, void *);
-static int check_init(aClient *, char *, size_t);
 void set_sock_opts(int, aClient *, int);
 void set_ipv6_opts(int);
 void close_listener(ConfigItem_listen *listener);
@@ -599,59 +598,6 @@ void write_pidfile(void)
 		    conf_files->pid_file));
 #endif
 #endif
-}
-
-/* This used to initialize the various name strings used to store hostnames.
- * But nowadays this takes place much earlier (in add_connection?).
- * It's mainly used for "localhost" and WEBIRC magic only now...
- */
-static int check_init(aClient *cptr, char *sockn, size_t size)
-{
-	strlcpy(sockn, cptr->local->sockhost, HOSTLEN);
-	
-	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, ==0);
-
-	/* Some silly hack to convert 127.0.0.1 and such into 'localhost' */
-	if (!strcmp(GetIP(cptr), "127.0.0.1") || !strcmp(GetIP(cptr), "0:0:0:0:0:0:0:1") || !strcmp(GetIP(cptr), "0:0:0:0:0:ffff:127.0.0.1"))
-	{
-		if (cptr->local->hostp)
-		{
-			unreal_free_hostent(cptr->local->hostp);
-			cptr->local->hostp = NULL;
-		}
-		strlcpy(sockn, "localhost", HOSTLEN);
-	}
-
-	return 0;
-}
-
-/*
- * Ordinary client access check. Look for conf lines which have the same
- * status as the flags passed.
- *  0 = Success
- * -1 = Access denied
- * -2 = Bad socket.
- */
-int  check_client(aClient *cptr, char *username)
-{
-	static char sockname[HOSTLEN + 1];
-	struct hostent *hp = NULL;
-	int  i;
-	
-	ClearAccess(cptr);
-	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]", cptr->name, cptr->local->sockhost));
-
-	if (check_init(cptr, sockname, sizeof(sockname)))
-		return -2;
-
-	hp = cptr->local->hostp;
-
-	if ((i = AllowClient(cptr, hp, sockname, username)))
-		return i;
-
-	Debug((DEBUG_DNS, "ch_cl: access ok: %s[%s]", cptr->name, sockname));
-
-	return 0;
 }
 
 /** Reject an insecure (outgoing) server link that isn't SSL/TLS.
