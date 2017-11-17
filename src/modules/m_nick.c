@@ -1217,22 +1217,16 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	{
 	        char temp[USERLEN + 1];
 	        
-		if ((i = check_client(sptr, username))) {
-			/* This had return i; before -McSkaf */
-			if (i == -5)
-				return FLUSH_BUFFER;
-
-			sendto_snomask(SNO_CLIENT,
-			    "*** %s from %s.",
-			    i == -3 ? "Too many connections" :
-			    "Unauthorized connection", get_client_host(sptr));
+		if ((i = check_client(sptr, username)))
+		{
 			ircstp->is_ref++;
-			ircsnprintf(mo, sizeof(mo), "This server is full.");
-			return
-			    exit_client(cptr, sptr, &me,
-			    i ==
-			    -3 ? mo :
-			    "You are not authorized to connect to this server");
+			/* Usually the return value of check_client is 0 (allow) or -5 (reject),
+			 * but there are some rare cases where the client is not yet killed,
+			 * so have a generic exit_client() here to be safe.
+			 */
+			if (i != FLUSH_BUFFER)
+				return exit_client(cptr, sptr, &me, "Rejected");
+			return FLUSH_BUFFER;
 		}
 
 		if (sptr->local->hostp)
@@ -1695,6 +1689,10 @@ int check_client(aClient *cptr, char *username)
 	return 0;
 }
 
+/** Allow or reject the client based on allow { } blocks and all other restrictions.
+ * @returns Must return 0 if user is permitted. If the client should be rejected then
+ * use return exit_client(...)
+ */
 int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username)
 {
 	ConfigItem_allow *aconf;
@@ -1705,8 +1703,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 
 	if (!IsSecure(cptr) && (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY))
 	{
-		exit_client(cptr, cptr, &me, iConf.plaintext_policy_user_message);
-		return -5;
+		return exit_client(cptr, cptr, &me, iConf.plaintext_policy_user_message);
 	}
 
 	for (aconf = conf_allow; aconf; aconf = (ConfigItem_allow *) aconf->next)
@@ -1794,18 +1791,16 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 					ii++;
 					if (ii > aconf->maxperip)
 					{
-						exit_client(cptr, cptr, &me,
+						/* Already got too many with that ip# */
+						return exit_client(cptr, cptr, &me,
 							"Too many connections from your IP");
-						return -5;	/* Already got too many with that ip# */
 					}
 				}
 			}
 		}
 		if ((i = Auth_Check(cptr, aconf->auth, cptr->local->passwd)) == -1)
 		{
-			exit_client(cptr, cptr, &me,
-				"Password mismatch");
-			return -5;
+			return exit_client(cptr, cptr, &me, "Password mismatch");
 		}
 		if ((i == 2) && (cptr->local->passwd))
 		{
@@ -1820,10 +1815,9 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		else
 		{
 			sendto_one(cptr, rpl_str(RPL_REDIR), me.name, cptr->name, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
-			return -3;
+			return exit_client(cptr, cptr, &me, "This server is full.");
 		}
 		return 0;
 	}
-	return -1;
+	return exit_client(cptr, cptr, &me, "You are not authorized to connect to this server");
 }
-
