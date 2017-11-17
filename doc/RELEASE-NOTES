@@ -17,6 +17,15 @@ Other:
   WEBIRC password gateway hostname ip :secure
   Naturally, WEBIRC gateways MUST NOT send the "secure" option if
   the client is using http or some other insecure protocol.
+* Way to customize the reject connection messages:
+  set {
+     reject-message {
+          password-mismatch "Password mismatch";
+          too-many-connections "Too many connections from your IP";
+          server-full "This server is full.";
+          unauthorized "You are not authorized to connect to this server";
+      };
+  };
 
 Below are the release notes of previous release:
 

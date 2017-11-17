@@ -144,6 +144,10 @@ struct zConfiguration {
 	long handshake_timeout;
 	long handshake_delay;
 	int ban_include_username;
+	char *reject_message_password_mismatch;
+	char *reject_message_too_many_connections;
+	char *reject_message_server_full;
+	char *reject_message_unauthorized;
 };
 
 #ifndef DYNCONF_C

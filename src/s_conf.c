@@ -1517,6 +1517,11 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->plaintext_policy_user = PLAINTEXT_POLICY_ALLOW;
 	i->plaintext_policy_oper = PLAINTEXT_POLICY_WARN;
 	i->plaintext_policy_server = PLAINTEXT_POLICY_DENY;
+	
+	i->reject_message_password_mismatch = strdup("Password mismatch");
+	i->reject_message_too_many_connections = strdup("Too many connections from your IP");
+	i->reject_message_server_full = strdup("This server is full");
+	i->reject_message_unauthorized = strdup("You are not authorized to connect to this server");
 }
 
 /** Similar to config_setdefaultsettings but this one is applied *AFTER*
@@ -7753,6 +7758,20 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.ban_include_username = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
+		else if (!strcmp(cep->ce_varname, "reject-message"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "password-mismatch"))
+					safestrdup(tempiConf.reject_message_password_mismatch, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "too-many-connections"))
+					safestrdup(tempiConf.reject_message_too_many_connections, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "server-full"))
+					safestrdup(tempiConf.reject_message_server_full, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "unauthorized"))
+					safestrdup(tempiConf.reject_message_unauthorized, cepp->ce_vardata);
+			}
+		}
 		else
 		{
 			int value;
@@ -8693,6 +8712,29 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "ban-include-username"))
 		{
 			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "reject-message"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				CheckNull(cepp);
+				if (!strcmp(cepp->ce_varname, "password-mismatch"))
+					;
+				else if (!strcmp(cepp->ce_varname, "too-many-connections"))
+					;
+				else if (!strcmp(cepp->ce_varname, "server-full"))
+					;
+				else if (!strcmp(cepp->ce_varname, "unauthorized"))
+					;
+				else
+				{
+					config_error_unknown(cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum, "set::reject-message",
+						cepp->ce_varname);
+					errors++;
+					continue;
+				}
+			}
 		}
 		else
 		{

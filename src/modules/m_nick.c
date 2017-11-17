@@ -1792,15 +1792,14 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 					if (ii > aconf->maxperip)
 					{
 						/* Already got too many with that ip# */
-						return exit_client(cptr, cptr, &me,
-							"Too many connections from your IP");
+						return exit_client(cptr, cptr, &me, iConf.reject_message_too_many_connections);
 					}
 				}
 			}
 		}
 		if ((i = Auth_Check(cptr, aconf->auth, cptr->local->passwd)) == -1)
 		{
-			return exit_client(cptr, cptr, &me, "Password mismatch");
+			return exit_client(cptr, cptr, &me, iConf.reject_message_password_mismatch);
 		}
 		if ((i == 2) && (cptr->local->passwd))
 		{
@@ -1815,9 +1814,9 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		else
 		{
 			sendto_one(cptr, rpl_str(RPL_REDIR), me.name, cptr->name, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
-			return exit_client(cptr, cptr, &me, "This server is full.");
+			return exit_client(cptr, cptr, &me, iConf.reject_message_server_full);
 		}
 		return 0;
 	}
-	return exit_client(cptr, cptr, &me, "You are not authorized to connect to this server");
+	return exit_client(cptr, cptr, &me, iConf.reject_message_unauthorized);
 }
