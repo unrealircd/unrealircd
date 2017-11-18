@@ -1069,7 +1069,17 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  retval = 1;
 		  tmpstr = clean_ban_mask(param, what, cptr);
 		  if (BadPtr(tmpstr))
+		  {
+		  	  /* Invalid ban. See if we can send an error about that */
+		  	  if ((param[0] == '~') && MyClient(cptr) && !bounce)
+		  	  {
+		  	  	Extban *p = findmod_by_bantype(param[1]);
+		  	  	if (p && p->is_ok)
+			  	  	p->is_ok(cptr, chptr, param, EXBCHK_PARAM, what, EXBTYPE_BAN);
+			  }
+		  	  
 		      break; /* ignore ban, but eat param */
+		  }
 		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
 		  {
 		      /* extban: check access if needed */
