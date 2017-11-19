@@ -162,9 +162,11 @@ int extban_is_ok_nuh_extban(aClient* sptr, aChannel* chptr, char* para, int chec
 		if (extban_is_ok_recursion)
 			return 0; /* Fail: more than one stacked extban */
 
-		/* We can be sure RESTRICT_EXTENDEDBANS is not *. Else this extended ban wouldn't be happening at all. */
-		if (what == EXBCHK_PARAM && RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("channel:extbans",sptr,NULL,chptr,NULL))
+		if ((checkt == EXBCHK_PARAM) && RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("channel:extbans",sptr,NULL,chptr,NULL))
 		{
+			/* Test if this specific extban has been disabled.
+			 * (We can be sure RESTRICT_EXTENDEDBANS is not *. Else this extended ban wouldn't be happening at all.)
+			 */
 			if (strchr(RESTRICT_EXTENDEDBANS, mask[1]))
 			{
 				sendnotice(sptr, "Setting/removing of extended bantypes '%s' has been disabled.", RESTRICT_EXTENDEDBANS);
