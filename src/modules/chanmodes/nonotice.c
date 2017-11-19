@@ -75,7 +75,7 @@ int nonotice_check_can_send(aClient *cptr, aChannel *chptr, char *msgtext, Membe
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_MSG_NOTICE);
+			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_CHANMSG_NOTICE);
 			if (i != HOOK_CONTINUE)
 				break;
 		}

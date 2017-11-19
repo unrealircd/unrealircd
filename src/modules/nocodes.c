@@ -67,7 +67,7 @@ char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(sptr, chptr, BYPASS_MSG_COLOR);
+			i = (*(h->func.intfunc))(sptr, chptr, BYPASS_CHANMSG_COLOR);
 			if (i != HOOK_CONTINUE)
 				break;
 		}
@@ -83,7 +83,7 @@ char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice
 		{
 			for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 			{
-				i = (*(h->func.intfunc))(sptr, chptr, BYPASS_MSG_COLOR);
+				i = (*(h->func.intfunc))(sptr, chptr, BYPASS_CHANMSG_COLOR);
 				if (i != HOOK_CONTINUE)
 					break;
 			}

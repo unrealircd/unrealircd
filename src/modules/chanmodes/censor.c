@@ -527,7 +527,7 @@ char *censor_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 
 	for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(sptr, chptr, BYPASS_MSG_CENSOR);
+		i = (*(h->func.intfunc))(sptr, chptr, BYPASS_CHANMSG_CENSOR);
 		if (i != HOOK_CONTINUE)
 			break;
 	}

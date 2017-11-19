@@ -710,7 +710,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		 */
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_MSG_EXTERNAL);
+			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_CHANMSG_EXTERNAL);
 			if (i != HOOK_CONTINUE)
 				break;
 		}
@@ -729,7 +729,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		 */
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_MSG_MODERATED);
+			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_CHANMSG_MODERATED);
 			if (i != HOOK_CONTINUE)
 				break;
 		}

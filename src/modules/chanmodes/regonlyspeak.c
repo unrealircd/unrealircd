@@ -83,13 +83,25 @@ DLLFUNC char *regonlyspeak_part_message (aClient *sptr, aChannel *chptr, char *c
 
 DLLFUNC int regonlyspeak_can_send (aClient *cptr, aChannel *chptr, char *message, Membership *lp, int notice)
 {
+	Hook *h;
+	int i;
+
 	if (IsRegOnlySpeak(chptr) && !op_can_override("override:message:regonlyspeak",cptr,chptr,NULL) && !IsLoggedIn(cptr) &&
 		    (!lp
 		    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 		    CHFL_HALFOP | CHFL_CHANPROT))))
-			return CANNOT_SEND_MODREG;
+	{
+		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_CHANMSG_MODERATED);
+			if (i != HOOK_CONTINUE)
+				break;
+		}
+		if (i == HOOK_ALLOW)
+			return HOOK_CONTINUE; /* bypass +M restriction */
+
+		return CANNOT_SEND_MODREG; /* BLOCK message */
+	}
 
 	return HOOK_CONTINUE;
 }
-
-

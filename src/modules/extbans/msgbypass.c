@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER(msgbypass)
 
 /* Forward declarations */
 int extban_msgbypass_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type);
-int msgbypass_can_bypass(aClient *sptr, aChannel *chptr, BypassMessageRestrictionType bypass_type);
+int msgbypass_can_bypass(aClient *sptr, aChannel *chptr, BypassChannelMessageRestrictionType bypass_type);
 int msgbypass_extban_is_ok(aClient* sptr, aChannel* chptr, char* para, int checkt, int what, int what2);
 char *msgbypass_extban_conv_param(char *para);
 
@@ -74,7 +74,7 @@ int extban_msgbypass_is_banned(aClient *sptr, aChannel *chptr, char *banin, int 
 }
 
 /** Can the user bypass restrictions? */
-int msgbypass_can_bypass(aClient *sptr, aChannel *chptr, BypassMessageRestrictionType bypass_type)
+int msgbypass_can_bypass(aClient *sptr, aChannel *chptr, BypassChannelMessageRestrictionType bypass_type)
 {
 	Ban *ban;
 	char *p;
@@ -86,11 +86,11 @@ int msgbypass_can_bypass(aClient *sptr, aChannel *chptr, BypassMessageRestrictio
 			char *type = ban->banstr + 3;
 			char *matchby;
 			
-			if (((bypass_type == BYPASS_MSG_EXTERNAL) && !strncmp(type, "external:", 9)) ||
-			    ((bypass_type == BYPASS_MSG_MODERATED) && !strncmp(type, "moderated:", 10)) ||
-			    ((bypass_type == BYPASS_MSG_COLOR) && !strncmp(type, "color:", 6)) || 
-			    ((bypass_type == BYPASS_MSG_CENSOR) && !strncmp(type, "censor:", 7)) ||
-			    ((bypass_type == BYPASS_MSG_NOTICE) && !strncmp(type, "notice:", 7)))
+			if (((bypass_type == BYPASS_CHANMSG_EXTERNAL) && !strncmp(type, "external:", 9)) ||
+			    ((bypass_type == BYPASS_CHANMSG_MODERATED) && !strncmp(type, "moderated:", 10)) ||
+			    ((bypass_type == BYPASS_CHANMSG_COLOR) && !strncmp(type, "color:", 6)) || 
+			    ((bypass_type == BYPASS_CHANMSG_CENSOR) && !strncmp(type, "censor:", 7)) ||
+			    ((bypass_type == BYPASS_CHANMSG_NOTICE) && !strncmp(type, "notice:", 7)))
 			{
 				matchby = strchr(type, ':');
 				if (!matchby)

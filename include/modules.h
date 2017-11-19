@@ -159,13 +159,13 @@ struct _moddatainfo {
 #define EXCHK_PARAM			2 /* Check parameter and send error if needed */
 
 /* Can bypass message restriction - Types */
-typedef enum BypassMessageRestrictionType {
-	BYPASS_MSG_EXTERNAL = 1,
-	BYPASS_MSG_MODERATED = 2,
-	BYPASS_MSG_COLOR = 3,
-	BYPASS_MSG_CENSOR = 4,
-	BYPASS_MSG_NOTICE = 5,
-} BypassMessageRestrictionType;
+typedef enum BypassChannelMessageRestrictionType {
+	BYPASS_CHANMSG_EXTERNAL = 1,
+	BYPASS_CHANMSG_MODERATED = 2,
+	BYPASS_CHANMSG_COLOR = 3,
+	BYPASS_CHANMSG_CENSOR = 4,
+	BYPASS_CHANMSG_NOTICE = 5,
+} BypassChannelMessageRestrictionType;
 
 #define EXSJ_SAME			0 /* Parameters are the same */
 #define EXSJ_WEWON			1 /* We won! w00t */
@@ -902,7 +902,7 @@ int hooktype_dcc_denied(aClient *sptr, aClient *target, char *realfile, char *di
 int hooktype_server_handshake_out(aClient *sptr);
 int hooktype_server_synched(aClient *sptr);
 int hooktype_secure_connect(aClient *sptr);
-int hooktype_can_bypass_channel_message_restriction(aClient *sptr, aChannel *chptr, BypassMessageRestrictionType bypass_type);
+int hooktype_can_bypass_channel_message_restriction(aClient *sptr, aChannel *chptr, BypassChannelMessageRestrictionType bypass_type);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
