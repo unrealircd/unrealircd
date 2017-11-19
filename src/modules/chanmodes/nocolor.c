@@ -86,18 +86,30 @@ static int IsUsingColor(char *s)
 
 DLLFUNC char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 {
-        if (MyClient(sptr) && IsNoColor(chptr) && IsUsingColor(text))
-        {
-                if (!notice)
-                {
-                        sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-                                   me.name, sptr->name, chptr->chname,
-                                   "Color is not permitted in this channel", chptr->chname);
-                }
+	Hook *h;
+	int i;
 
-                return NULL;
-        }
-        return text;
+	if (MyClient(sptr) && IsNoColor(chptr) && IsUsingColor(text))
+	{
+		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(sptr, chptr, BYPASS_MSG_COLOR);
+			if (i != HOOK_CONTINUE)
+				break;
+		}
+		if (i == HOOK_ALLOW)
+			return text; /* bypass */
+
+		if (!notice)
+		{
+			sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+			           me.name, sptr->name, chptr->chname,
+			           "Color is not permitted in this channel", chptr->chname);
+		}
+		return NULL; /* block */
+	}
+
+	return text;
 }
 
 DLLFUNC char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)

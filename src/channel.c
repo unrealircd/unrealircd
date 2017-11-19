@@ -704,16 +704,38 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	member = IsMember(cptr, chptr);
 
 	if (chptr->mode.mode & MODE_NOPRIVMSGS && !member)
-		return (CANNOT_SEND_NOPRIVMSGS);
+	{
+		/* Channel mode +n. Reject, unless HOOKTYPE_CAN_BYPASS_NO_EXTERNAL_MSGS
+		 * tells otherwise.
+		 */
+		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_MSG_EXTERNAL);
+			if (i != HOOK_CONTINUE)
+				break;
+		}
+		if (i != HOOK_ALLOW)
+			return CANNOT_SEND_NOPRIVMSGS;
+	}
 
 	lp = find_membership_link(cptr->user->channel, chptr);
 	if (chptr->mode.mode & MODE_MODERATED && !op_can_override("override:message:moderated",cptr,chptr,NULL) &&
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
-	    CHFL_HALFOP | CHFL_CHANPROT))))
-	    {
-			return (CANNOT_SEND_MODERATED);
-	    }
+	CHFL_HALFOP | CHFL_CHANPROT))))
+    {
+		/* Channel mode +m. Reject, unless HOOKTYPE_CAN_BYPASS_MODERATED
+		 * tells otherwise.
+		 */
+		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_MSG_MODERATED);
+			if (i != HOOK_CONTINUE)
+				break;
+		}
+		if (i != HOOK_ALLOW)
+			return CANNOT_SEND_MODERATED;
+    }
 
 
 	for (h = Hooks[HOOKTYPE_CAN_SEND]; h; h = h->next)

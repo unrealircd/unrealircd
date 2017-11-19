@@ -22,7 +22,7 @@
 #define MODULES_H
 #include "types.h"
 #define MAXCUSTOMHOOKS  30
-#define MAXHOOKTYPES	100
+#define MAXHOOKTYPES	130
 #define MAXCALLBACKS	30
 #define MAXEFUNCTIONS	60
 #if defined(_WIN32)
@@ -157,6 +157,15 @@ struct _moddatainfo {
 #define EXCHK_ACCESS		0 /* Check access */
 #define EXCHK_ACCESS_ERR	1 /* Check access and send error if needed */
 #define EXCHK_PARAM			2 /* Check parameter and send error if needed */
+
+/* Can bypass message restriction - Types */
+typedef enum BypassMessageRestrictionType {
+	BYPASS_MSG_EXTERNAL = 1,
+	BYPASS_MSG_MODERATED = 2,
+	BYPASS_MSG_COLOR = 3,
+	BYPASS_MSG_CENSOR = 4,
+	BYPASS_MSG_NOTICE = 5,
+} BypassMessageRestrictionType;
 
 #define EXSJ_SAME			0 /* Parameters are the same */
 #define EXSJ_WEWON			1 /* We won! w00t */
@@ -795,6 +804,8 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_SERVER_HANDSHAKE_OUT 88
 #define HOOKTYPE_SERVER_SYNCHED	89
 #define HOOKTYPE_SECURE_CONNECT 90
+#define HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION 91
+
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
  * 2) Add a hook prototype (see below)
@@ -891,6 +902,7 @@ int hooktype_dcc_denied(aClient *sptr, aClient *target, char *realfile, char *di
 int hooktype_server_handshake_out(aClient *sptr);
 int hooktype_server_synched(aClient *sptr);
 int hooktype_secure_connect(aClient *sptr);
+int hooktype_can_bypass_channel_message_restriction(aClient *sptr, aChannel *chptr, BypassMessageRestrictionType bypass_type);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
@@ -985,7 +997,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_DCC_DENIED) && !ValidateHook(hooktype_dcc_denied, func)) || \
         ((hooktype == HOOKTYPE_SERVER_HANDSHAKE_OUT) && !ValidateHook(hooktype_server_handshake_out, func)) || \
         ((hooktype == HOOKTYPE_SERVER_SYNCHED) && !ValidateHook(hooktype_server_synched, func)) || \
-        ((hooktype == HOOKTYPE_SECURE_CONNECT) && !ValidateHook(hooktype_secure_connect, func)) ) \
+        ((hooktype == HOOKTYPE_SECURE_CONNECT) && !ValidateHook(hooktype_secure_connect, func)) || \
+        ((hooktype == HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION) && !ValidateHook(hooktype_can_bypass_channel_message_restriction, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

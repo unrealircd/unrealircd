@@ -74,8 +74,22 @@ MOD_UNLOAD(stripcolor)
 
 DLLFUNC char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 {
+	Hook *h;
+	int i;
+
 	if (MyClient(sptr) && IsStripColor(chptr))
+	{
+		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(sptr, chptr, BYPASS_MSG_COLOR);
+			if (i != HOOK_CONTINUE)
+				break;
+		}
+		if (i == HOOK_ALLOW)
+			return text; /* bypass */
+
 		text = StripColors(text);
+	}
 
 	return text;
 }

@@ -67,9 +67,22 @@ MOD_UNLOAD(nonotice)
 
 int nonotice_check_can_send(aClient *cptr, aChannel *chptr, char *msgtext, Membership *lp, int notice)
 {
+	Hook *h;
+	int i;
+
 	if (notice && IsNoNotice(chptr) &&
 	   (!lp || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANPROT))))
-		return CANNOT_SEND_NONOTICE;
+	{
+		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_MSG_NOTICE);
+			if (i != HOOK_CONTINUE)
+				break;
+		}
+		if (i == HOOK_ALLOW)
+			return HOOK_CONTINUE; /* bypass restriction */
+		return CANNOT_SEND_NONOTICE; /* block notice */
+	}
 
 	return HOOK_CONTINUE;
 }
