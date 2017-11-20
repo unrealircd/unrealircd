@@ -1715,3 +1715,23 @@ const char *our_dlerror(void)
 	return errbuf;
 }
 #endif
+
+/** Check if a module is loaded.
+ * @param name Name of the module (eg: 'floodprot')
+ * @returns 1 if module is loaded, 0 if not.
+ * @notes The name is checked against the module name,
+ *        this can be a problem if two modules have the same name.
+ */
+int is_module_loaded(char *name)
+{
+	Module *mi;
+	for (mi = Modules; mi; mi = mi->next)
+	{
+		if (mi->flags & MODFLAG_DELAYED)
+			continue; /* unloading (delayed) */
+
+		if (!strcasecmp(mi->header->name, name))
+			return 1;
+	}
+	return 0;
+}
