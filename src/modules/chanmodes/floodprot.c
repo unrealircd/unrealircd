@@ -59,23 +59,22 @@ struct SChanFloodProt {
 /* FIXME: note to self: get_param() is not enough for module reloading, need to have an alternative serialize_struct() for like in our case where we want to remember timer settings and all .. (?) */
 
 ModuleInfo *ModInfo = NULL;
-
-Cmode_t EXTMODE_FLOODLIMIT = 0L;
-
 ModDataInfo *mdflood = NULL;
+Cmode_t EXTMODE_FLOODLIMIT = 0L;
+static int timedban_available = 0; /**< Set to 1 if extbans/timedban module is loaded. */
 
 #define IsFloodLimit(x)	((x)->mode.extmode & EXTMODE_FLOODLIMIT)
 
+/* Forward declarations */
+int floodprot_rehash_complete(void);
 void floodprottimer_del(aChannel *chptr, char mflag);
 void floodprottimer_stopchantimers(aChannel *chptr);
-
 static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r);
 static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b);
 static int do_floodprot(aChannel *chptr, int what);
 char *channel_modef_string(ChanFloodProt *x, char *str);
 int  check_for_chan_flood(aClient *sptr, aChannel *chptr);
 void do_floodprot_action(aChannel *chptr, int what, char *text);
-
 int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type, int what);
 void *cmodef_put_param(void *r_in, char *param);
 char *cmodef_get_param(void *r_in);
@@ -133,19 +132,26 @@ MOD_INIT(floodprot)
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, floodprot_join);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_JOIN, 0, floodprot_join);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 0, cmodef_channel_destroy);
+	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, floodprot_rehash_complete);
 	return MOD_SUCCESS;
 }
 
 MOD_LOAD(floodprot)
 {
 	EventAddEx(ModInfo->handle, "modef_event", 10, 0, modef_event, NULL);
+	floodprot_rehash_complete();
 	return MOD_SUCCESS;
 }
-
 
 MOD_UNLOAD(floodprot)
 {
 	return MOD_FAILED;
+}
+
+int floodprot_rehash_complete(void)
+{
+	timedban_available = is_module_loaded("timedban");
+	return 0;
 }
 
 int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int type, int what)
@@ -335,7 +341,8 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 						newf.l[FLD_TEXT] = v;
 						if (a == 'b')
 							newf.a[FLD_TEXT] = a;
-						/** newf.r[FLD_TEXT] ** not supported */
+						if (timedban_available)
+							newf.r[FLD_TEXT] = r;
 						break;
 					default:
 						// fixme: send uknown character thingy?
@@ -497,7 +504,8 @@ void *cmodef_put_param(void *fld_in, char *param)
 				fld->l[FLD_TEXT] = v;
 				if (a == 'b')
 					fld->a[FLD_TEXT] = a;
-				/** fld->r[FLD_TEXT] ** not supported */
+				if (timedban_available)
+					fld->r[FLD_TEXT] = r;
 				break;
 			default:
 				/* NOOP */
@@ -735,7 +743,8 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 					newf.l[FLD_TEXT] = v;
 					if (a == 'b')
 						newf.a[FLD_TEXT] = a;
-					/** newf.r[FLD_TEXT] ** not supported */
+					if (timedban_available)
+						newf.r[FLD_TEXT] = r;
 					break;
 				default:
 					return NULL;
@@ -1063,7 +1072,10 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
 		    c_limit, t_limit);
 		if (banthem)
 		{		/* ban. */
-			sprintf(mask, "*!*@%s", GetHost(sptr));
+			if (timedban_available && (chp->r[FLD_TEXT] > 0))
+				sprintf(mask, "~t:%d:*!*@%s", chp->r[FLD_TEXT], GetHost(sptr));
+			else
+				sprintf(mask, "*!*@%s", GetHost(sptr));
 			if (add_listmode(&chptr->banlist, &me, chptr, mask) == 0)
 			{
 				sendto_server(&me, 0, 0, ":%s MODE %s +b %s 0",
