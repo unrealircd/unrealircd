@@ -27,20 +27,20 @@ CMD_FUNC(m_mode);
 CMD_FUNC(m_mlock);
 DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
 DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
-    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
+                       char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 CMD_FUNC(_m_umode);
 
 /* local: */
 static void bounce_mode(aChannel *, aClient *, int, char **);
 int do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
-    u_int what, aClient *cptr,
-     u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce, long my_access);
+                 u_int what, aClient *cptr,
+                 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce, long my_access);
 int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
                     aClient *cptr, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                     char bounce);
 void make_mode_str(aChannel *chptr, long oldm, Cmode_t oldem, long oldl, int pcount,
-    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
-    size_t mode_buf_size, size_t para_buf_size, char bounce);
+                   char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
+                   size_t mode_buf_size, size_t para_buf_size, char bounce);
 
 static void mode_cutoff(char *s);
 static void mode_cutoff2(aClient *sptr, aChannel *chptr, int *parc_out, char *parv[]);
@@ -87,7 +87,7 @@ MOD_UNLOAD(m_mode)
 
 /*
  * m_mode -- written by binary (garryb@binary.islesfan.net)
- *	Completely rewrote it.  The old mode command was 820 lines of ICKY
+ * Completely rewrote it.  The old mode command was 820 lines of ICKY
  * coding, which is a complete waste, because I wrote it in 570 lines of
  * *decent* coding.  This is also easier to read, change, and fine-tune.  Plus,
  * everything isn't scattered; everything's grouped where it should be.
@@ -232,25 +232,25 @@ CMD_FUNC(m_mode)
 	opermode = 0;
 
 #ifndef NO_OPEROVERRIDE
-        if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
-            && !is_half_op(sptr, chptr) && ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL))
-        {
-                sendts = 0;
-                opermode = 1;
-                goto aftercheck;
-        }
+	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
+	    !is_half_op(sptr, chptr) && ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL))
+	{
+		sendts = 0;
+		opermode = 1;
+		goto aftercheck;
+	}
 
-        if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
-            && is_half_op(sptr, chptr) && ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL))
-        {
-                opermode = 2;
-                goto aftercheck;
-        }
+	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
+	    is_half_op(sptr, chptr) && ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL))
+	{
+		opermode = 2;
+		goto aftercheck;
+	}
 #endif
 
-	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
-	    && !is_half_op(sptr, chptr)
-	    && (cptr == sptr || !ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL)))
+	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
+	    !is_half_op(sptr, chptr) &&
+	    (cptr == sptr || !ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL)))
 	{
 		if (cptr == sptr)
 		{
@@ -266,9 +266,9 @@ CMD_FUNC(m_mode)
 		return 0;
 	}
 
-	if (IsServer(sptr) && (sendts = atol(parv[parc - 1]))
-	    && !IsULine(sptr) && chptr->creationtime
-	    && sendts > chptr->creationtime)
+	if (IsServer(sptr) && (sendts = atol(parv[parc - 1])) &&
+	    !IsULine(sptr) && chptr->creationtime &&
+	    sendts > chptr->creationtime)
 	{
 		if (!(*parv[2] == '&'))	/* & denotes a bounce */
 		{
@@ -285,7 +285,7 @@ CMD_FUNC(m_mode)
 	if (IsServer(sptr) && sendts != -1)
 		parc--;		/* server supplied a time stamp, remove it now */
 
-      aftercheck:
+aftercheck:
 
 	/* This is to prevent excess +<whatever> modes. -- Syzop */
 	if (MyClient(sptr) && parv[2])
@@ -430,8 +430,7 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 	{
 		if (sendts > 0)
 		{
-			if (!chptr->creationtime
-			    || sendts < chptr->creationtime)
+			if (!chptr->creationtime || sendts < chptr->creationtime)
 			{
 				tschange = 1;
 /*
@@ -463,8 +462,7 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 		if (sendts == -1 && chptr->creationtime)
 			sendts = chptr->creationtime;
 	}
-	if (*modebuf == '\0' || (*(modebuf + 1) == '\0' && (*modebuf == '+'
-	    || *modebuf == '-')))
+	if (*modebuf == '\0' || (*(modebuf + 1) == '\0' && (*modebuf == '+' || *modebuf == '-')))
 	{
 		if (tschange || isbounce) {	/* relay bounce time changes */
 			if (chptr->creationtime)
@@ -544,8 +542,8 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
  */
 void make_mode_str(aChannel *chptr, long oldm, Cmode_t oldem, long oldl, int pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
-    size_t mode_buf_size, size_t para_buf_size, char bounce) {
-
+    size_t mode_buf_size, size_t para_buf_size, char bounce)
+{
 	char tmpbuf[MODEBUFLEN+3], *tmpstr;
 	aCtab *tab = &cFlagTab[0];
 	char *x = mode_buf;
@@ -744,8 +742,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	int  notsecure;
 	Hook *h;
 
-	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr)
-	    && !op_can_override("override:mode",cptr,chptr,&modetype) && !samode_in_progress)
+	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr) &&
+	    !op_can_override("override:mode",cptr,chptr,&modetype) && !samode_in_progress)
 	{
 		if (MyClient(cptr) && (modetype == MODE_HALFOP) && (what == MODE_DEL) &&
 		    param && (find_client(param, NULL) == cptr))
@@ -764,9 +762,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				{
 					if (tab->mode == modetype)
 					{
-						sendto_one(cptr,
-						    err_str(ERR_NOTFORHALFOPS), me.name,
-						    cptr->name, tab->flag);
+						sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name,
+							cptr->name, tab->flag);
 						eaten = tab->parameters;
 						break;
 					}
@@ -778,414 +775,420 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	}
 	switch (modetype)
 	{
-	  case MODE_RGSTR:
-		  if (!IsServer(cptr) && !IsULine(cptr))
-		  {
-			sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE), me.name, cptr->name,
-				   chptr->chname);
-			break;
-		  }
-		  goto setmode;
-	  case MODE_SECRET:
-	  case MODE_PRIVATE:
-	  case MODE_MODERATED:
-	  case MODE_TOPICLIMIT:
-	  case MODE_NOPRIVMSGS:
-	  case MODE_INVITEONLY:
-	  	goto setmode;
+		case MODE_RGSTR:
+			if (!IsServer(cptr) && !IsULine(cptr))
+			{
+				sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE), me.name, cptr->name, chptr->chname);
+				break;
+			}
+			goto setmode;
+		case MODE_SECRET:
+		case MODE_PRIVATE:
+		case MODE_MODERATED:
+		case MODE_TOPICLIMIT:
+		case MODE_NOPRIVMSGS:
+		case MODE_INVITEONLY:
+			goto setmode;
 		setmode:
-		  retval = 0;
-		  if (what == MODE_ADD) {
-			  /* +sp bugfix.. (by JK/Luke)*/
-		 	 if (modetype == MODE_SECRET
-			      && (chptr->mode.mode & MODE_PRIVATE))
-				  chptr->mode.mode &= ~MODE_PRIVATE;
-			  if (modetype == MODE_PRIVATE
-			      && (chptr->mode.mode & MODE_SECRET))
-				  chptr->mode.mode &= ~MODE_SECRET;
-			  chptr->mode.mode |= modetype;
-		  }
-		  else
-		  {
-			  chptr->mode.mode &= ~modetype;
-			  RunHook2(HOOKTYPE_MODECHAR_DEL, chptr, (int)modechar);
-		  }
-		  break;
+			retval = 0;
+			if (what == MODE_ADD) {
+				/* +sp bugfix.. (by JK/Luke)*/
+		 	 if ((modetype == MODE_SECRET) && (chptr->mode.mode & MODE_PRIVATE))
+					chptr->mode.mode &= ~MODE_PRIVATE;
+				if ((modetype == MODE_PRIVATE) && (chptr->mode.mode & MODE_SECRET))
+					chptr->mode.mode &= ~MODE_SECRET;
+				chptr->mode.mode |= modetype;
+			}
+			else
+			{
+				chptr->mode.mode &= ~modetype;
+				RunHook2(HOOKTYPE_MODECHAR_DEL, chptr, (int)modechar);
+			}
+			break;
 
 /* do pro-opping here (popping) */
-	  case MODE_CHANOWNER:
-		  REQUIRE_PARAMETER()
-		  if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress)
-		  {
-		  	  if (MyClient(cptr) && !op_can_override("override:mode",cptr,chptr,&modetype))
-		  	  {
-		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
-		  	  	break;
-		  	  }
-			    if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
-			        opermode = 1;
+		case MODE_CHANOWNER:
+			REQUIRE_PARAMETER()
+			if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress)
+			{
+					if (MyClient(cptr) && !op_can_override("override:mode",cptr,chptr,&modetype))
+					{
+						sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
+						break;
+					}
+					if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
+						opermode = 1;
+			}
+		case MODE_CHANPROT:
+			REQUIRE_PARAMETER()
+			/* not uline, not server, not chanowner, not an samode, not -a'ing yourself... */
+			if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress &&
+			    !(param && (what == MODE_DEL) && (find_client(param, NULL) == cptr)))
+			{
+					if (MyClient(cptr) && !op_can_override("override:mode",cptr,chptr,&modetype))
+					{
+						sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
+						break;
+					}
+					if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
+						opermode = 1;
+			}
 
-		  }
-	  case MODE_CHANPROT:
-		  REQUIRE_PARAMETER()
-		  /* not uline, not server, not chanowner, not an samode, not -a'ing yourself... */
-		  if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress &&
-		      !(param && (what == MODE_DEL) && (find_client(param, NULL) == cptr)))
-		  {
-		  	  if (MyClient(cptr) && !op_can_override("override:mode",cptr,chptr,&modetype))
-		  	  {
-		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
-		  	  	break;
-		  	  }
-  				if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
-  				   opermode = 1;
-		  }
 
+		case MODE_HALFOP:
+		case MODE_CHANOP:
+		case MODE_VOICE:
+			REQUIRE_PARAMETER()
+			if (!(who = find_chasing(cptr, param, &chasing)))
+				break;
+			if (!who->user)
+				break;
+			if (!(membership = find_membership_link(who->user->channel, chptr)))
+			{
+				sendto_one(cptr, err_str(ERR_USERNOTINCHANNEL),
+				    me.name, cptr->name, who->name, chptr->chname);
+				break;
+			}
+			member = find_member_link(chptr->members, who);
+			if (!member)
+			{
+				/* should never happen */
+				sendto_realops("crap! find_membership_link && !find_member_link !!. Report to unreal team");
+				break;
+			}
+			/* we make the rules, we bend the rules */
+			if (IsServer(cptr) || IsULine(cptr))
+				goto breaktherules;
 
-	  case MODE_HALFOP:
-	  case MODE_CHANOP:
-	  case MODE_VOICE:
-		  REQUIRE_PARAMETER()
-		  if (!(who = find_chasing(cptr, param, &chasing)))
-			  break;
-		  if (!who->user)
-		  	break;
-   		  /* codemastr: your patch is a good idea here, but look at the
-   		     member->flags stuff longer down. this caused segfaults */
-   		  if (!(membership = find_membership_link(who->user->channel, chptr)))
-		  {
-			  sendto_one(cptr, err_str(ERR_USERNOTINCHANNEL),
-			      me.name, cptr->name, who->name, chptr->chname);
-			  break;
-		  }
-		  member = find_member_link(chptr->members, who);
-		  if (!member)
-		  {
-		  	/* should never happen */
-		  	sendto_realops("crap! find_membership_link && !find_member_link !!. Report to unreal team");
-		  	break;
-		  }
-		  /* we make the rules, we bend the rules */
-		  if (IsServer(cptr) || IsULine(cptr))
-			  goto breaktherules;
+			if (what == MODE_DEL)
+			{
+				int ret = EX_ALLOW;
+				char *badmode = NULL;
 
-		  if (what == MODE_DEL)
-		  {
-		  	int ret = EX_ALLOW;
-		  	char *badmode = NULL;
-
-		  	for (h = Hooks[HOOKTYPE_MODE_DEOP]; h; h = h->next)
-		  	{
-		  		int n = (*(h->func.intfunc))(cptr, member->cptr, chptr, what, modechar, my_access, &badmode);
-		  		if (n == EX_DENY)
-		  			ret = n;
+				for (h = Hooks[HOOKTYPE_MODE_DEOP]; h; h = h->next)
+				{
+					int n = (*(h->func.intfunc))(cptr, member->cptr, chptr, what, modechar, my_access, &badmode);
+					if (n == EX_DENY)
+						ret = n;
 				else if (n == EX_ALWAYS_DENY)
 				{
 					ret = n;
 					break;
 				}
-		  	}
+				}
 
-		  	if (ret == EX_ALWAYS_DENY)
-		  	{
-		  		if (MyClient(cptr) && badmode)
-		  			sendto_one(cptr, "%s", badmode); /* send error message, if any */
+				if (ret == EX_ALWAYS_DENY)
+				{
+					if (MyClient(cptr) && badmode)
+						sendto_one(cptr, "%s", badmode); /* send error message, if any */
 
 				if (MyClient(cptr))
 					break; /* stop processing this mode */
-		  	}
+				}
 
-		  	/* This probably should work but is completely untested (the operoverride stuff, I mean): */
-		  	if (ret == EX_DENY)
-		  	{
-		  		if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
-		  		{
-  					if (badmode)
-  						sendto_one(cptr, "%s", badmode); /* send error message, if any */
-  						break; /* stop processing this mode */
-  				} else {
-  						opermode = 1;
-  				}
-		  	}
-		  }
+				/* This probably should work but is completely untested (the operoverride stuff, I mean): */
+				if (ret == EX_DENY)
+				{
+					if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
+					{
+						if (badmode)
+							sendto_one(cptr, "%s", badmode); /* send error message, if any */
+						break; /* stop processing this mode */
+					} else {
+						opermode = 1;
+					}
+				}
+			}
 
-		  /* This check not only prevents unprivileged users from doing a -q on chanowners,
-		   * it also protects against -o/-h/-v on them.
-		   */
-		  if (is_chanowner(member->cptr, chptr)
-		      && member->cptr != cptr
-		      && !is_chanowner(cptr, chptr) && !IsServer(cptr)
-		      && !IsULine(cptr) && !opermode && !samode_in_progress && (what == MODE_DEL))
-		  {
-			  if (MyClient(cptr))
-			  {
-			  	/* Need this !op_can_override() here again, even with the !opermode
-			  	 * check a few lines up, all due to halfops. -- Syzop
-			  	 */
-  				if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
-  				{
-  					char errbuf[NICKLEN+30];
-  					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", member->cptr->name);
-  					sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
-  					   modechar, errbuf);
-  					break;
-  				}
-			  } else
-			  if (IsOper(cptr))
-			      opermode = 1;
-		  }
+			/* This check not only prevents unprivileged users from doing a -q on chanowners,
+			 * it also protects against -o/-h/-v on them.
+			 */
+			if (is_chanowner(member->cptr, chptr)
+			    && member->cptr != cptr
+			    && !is_chanowner(cptr, chptr) && !IsServer(cptr)
+			    && !IsULine(cptr) && !opermode && !samode_in_progress && (what == MODE_DEL))
+			{
+				if (MyClient(cptr))
+				{
+					/* Need this !op_can_override() here again, even with the !opermode
+					 * check a few lines up, all due to halfops. -- Syzop
+					 */
+					if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
+					{
+						char errbuf[NICKLEN+30];
+						ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", member->cptr->name);
+						sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
+							modechar, errbuf);
+						break;
+					}
+				} else {
+					if (IsOper(cptr))
+						opermode = 1;
+				}
+			}
 
-		  /* This check not only prevents unprivileged users from doing a -a on chanadmins,
-		   * it also protects against -o/-h/-v on them.
-		   */
-		  if (is_chanprot(member->cptr, chptr)
-		      && member->cptr != cptr
-		      && !is_chanowner(cptr, chptr) && !IsServer(cptr) && !opermode && !samode_in_progress
-		      && modetype != MODE_CHANOWNER && (what == MODE_DEL))
-		  {
-			  if (MyClient(cptr))
-			  {
-			  	/* Need this !op_can_override() here again, even with the !opermode
-			  	 * check a few lines up, all due to halfops. -- Syzop
-			  	 */
-			  	if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
-			  	{
-					char errbuf[NICKLEN+30];
-					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", member->cptr->name);
-					sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
-					   modechar, errbuf);
+			/* This check not only prevents unprivileged users from doing a -a on chanadmins,
+			 * it also protects against -o/-h/-v on them.
+			 */
+			if (is_chanprot(member->cptr, chptr)
+			    && member->cptr != cptr
+			    && !is_chanowner(cptr, chptr) && !IsServer(cptr) && !opermode && !samode_in_progress
+			    && modetype != MODE_CHANOWNER && (what == MODE_DEL))
+			{
+				if (MyClient(cptr))
+				{
+					/* Need this !op_can_override() here again, even with the !opermode
+					 * check a few lines up, all due to halfops. -- Syzop
+					 */
+					if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
+					{
+						char errbuf[NICKLEN+30];
+						ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", member->cptr->name);
+						sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
+							 modechar, errbuf);
+						break;
+					}
+				} else {
+					if (IsOper(cptr))
+						opermode = 1;
+				}
+			}
+		breaktherules:
+			tmp = member->flags;
+			if (what == MODE_ADD)
+				member->flags |= modetype;
+			else
+				member->flags &= ~modetype;
+			if ((tmp == member->flags) && (bounce || !IsULine(cptr)))
+				break;
+			/* It's easier to undo the mode here instead of later
+			 * when you call make_mode_str for a bounce string.
+			 * Why set it if it will be instantly removed?
+			 * Besides, pvar keeps a log of it. */
+			if (bounce)
+				member->flags = tmp;
+			if (modetype == MODE_CHANOWNER)
+				tc = 'q';
+			if (modetype == MODE_CHANPROT)
+				tc = 'a';
+			if (modetype == MODE_CHANOP)
+				tc = 'o';
+			if (modetype == MODE_HALFOP)
+				tc = 'h';
+			if (modetype == MODE_VOICE)
+				tc = 'v';
+			/* Make sure membership->flags and member->flags is the same */
+			membership->flags = member->flags;
+			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
+			            "%c%c%s",
+			            (what == MODE_ADD) ? '+' : '-', tc, who->name);
+			(*pcount)++;
+			break;
+		case MODE_LIMIT:
+			if (what == MODE_ADD)
+			{
+				if (!param)
+				{
+					retval = 0;
 					break;
 				}
-			  } else
-			  if (IsOper(cptr))
-			      opermode = 1;
-		  }
-		breaktherules:
-		  tmp = member->flags;
-		  if (what == MODE_ADD)
-			  member->flags |= modetype;
-		  else
-			  member->flags &= ~modetype;
-		  if ((tmp == member->flags) && (bounce || !IsULine(cptr)))
-			  break;
-		  /* It's easier to undo the mode here instead of later
-		   * when you call make_mode_str for a bounce string.
-		   * Why set it if it will be instantly removed?
-		   * Besides, pvar keeps a log of it. */
-		  if (bounce)
-			  member->flags = tmp;
-		  if (modetype == MODE_CHANOWNER)
-			  tc = 'q';
-		  if (modetype == MODE_CHANPROT)
-			  tc = 'a';
-		  if (modetype == MODE_CHANOP)
-			  tc = 'o';
-		  if (modetype == MODE_HALFOP)
-			  tc = 'h';
-		  if (modetype == MODE_VOICE)
-			  tc = 'v';
-		  /* Make sure membership->flags and member->flags is the same */
-		  membership->flags = member->flags;
-		  ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "%c%c%s",
-		      what == MODE_ADD ? '+' : '-', tc, who->name);
-		  (*pcount)++;
-		  break;
-	  case MODE_LIMIT:
-		  if (what == MODE_ADD)
-		  {
-			  if (!param)
-			  {
-				  retval = 0;
-				  break;
-			  }
-			  retval = 1;
-			  tmp = atoi(param);
-			  if (chptr->mode.limit == tmp)
-				  break;
-			  chptr->mode.limit = tmp;
-		  }
-		  else
-		  {
-			  retval = 0;
-			  if (!chptr->mode.limit)
-				  break;
-			  chptr->mode.limit = 0;
-			  RunHook2(HOOKTYPE_MODECHAR_DEL, chptr, (int)modechar);
-		  }
-		  break;
-	  case MODE_KEY:
-		  REQUIRE_PARAMETER()
-		  for (x = 0; x < *pcount; x++)
-		  {
-			  if (pvar[x][1] == 'k')
-			  {	/* don't allow user to change key
+				retval = 1;
+				tmp = atoi(param);
+				if (chptr->mode.limit == tmp)
+					break;
+				chptr->mode.limit = tmp;
+			}
+			else
+			{
+				retval = 0;
+				if (!chptr->mode.limit)
+					break;
+				chptr->mode.limit = 0;
+				RunHook2(HOOKTYPE_MODECHAR_DEL, chptr, (int)modechar);
+			}
+			break;
+		case MODE_KEY:
+			REQUIRE_PARAMETER()
+			for (x = 0; x < *pcount; x++)
+			{
+				if (pvar[x][1] == 'k')
+				{	/* don't allow user to change key
 				 * more than once per command. */
-				  retval = 0;
-				  break;
-			  }
-		  }
-		  if (retval == 0)	/* you can't break a case from loop */
-			  break;
-		  if (what == MODE_ADD)
-		  {
-			  if (!bounce) {	/* don't do the mode at all. */
-				  char *tmp;
-				  if ((tmp = strchr(param, ' ')))
-					*tmp = '\0';
-				  if ((tmp = strchr(param, ':')))
-					*tmp = '\0';
-				  if ((tmp = strchr(param, ',')))
-					*tmp = '\0';
-				  if (*param == '\0')
+					retval = 0;
 					break;
-				  if (strlen(param) > KEYLEN)
-				    param[KEYLEN] = '\0';
-				  if (!strcmp(chptr->mode.key, param))
+				}
+			}
+			if (retval == 0)	/* you can't break a case from loop */
+				break;
+			if (what == MODE_ADD)
+			{
+				if (!bounce) {	/* don't do the mode at all. */
+					char *tmp;
+					if ((tmp = strchr(param, ' ')))
+					*tmp = '\0';
+					if ((tmp = strchr(param, ':')))
+					*tmp = '\0';
+					if ((tmp = strchr(param, ',')))
+					*tmp = '\0';
+					if (*param == '\0')
 					break;
-				  strlcpy(chptr->mode.key, param,
-				      sizeof(chptr->mode.key));
-			  }
-			  tmpstr = param;
-		  }
-		  else
-		  {
-			  if (!*chptr->mode.key)
-				  break;	/* no change */
-			  strlcpy(tmpbuf, chptr->mode.key, sizeof(tmpbuf));
-			  tmpstr = tmpbuf;
-			  if (!bounce)
-				  strcpy(chptr->mode.key, "");
-			  RunHook2(HOOKTYPE_MODECHAR_DEL, chptr, (int)modechar);
-		  }
-		  retval = 1;
+					if (strlen(param) > KEYLEN)
+						param[KEYLEN] = '\0';
+					if (!strcmp(chptr->mode.key, param))
+					break;
+					strlcpy(chptr->mode.key, param, sizeof(chptr->mode.key));
+				}
+				tmpstr = param;
+			}
+			else
+			{
+				if (!*chptr->mode.key)
+					break;	/* no change */
+				strlcpy(tmpbuf, chptr->mode.key, sizeof(tmpbuf));
+				tmpstr = tmpbuf;
+				if (!bounce)
+					strcpy(chptr->mode.key, "");
+				RunHook2(HOOKTYPE_MODECHAR_DEL, chptr, (int)modechar);
+			}
+			retval = 1;
 
-		  ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "%ck%s",
-		      what == MODE_ADD ? '+' : '-', tmpstr);
-		  (*pcount)++;
-		  break;
+			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
+			            "%ck%s",
+			            (what == MODE_ADD) ? '+' : '-', tmpstr);
+			(*pcount)++;
+			break;
 
-	  case MODE_BAN:
-		  REQUIRE_PARAMETER()
-		  retval = 1;
-		  tmpstr = clean_ban_mask(param, what, cptr);
-		  if (BadPtr(tmpstr))
-		  {
-		  	  /* Invalid ban. See if we can send an error about that */
-		  	  if ((param[0] == '~') && MyClient(cptr) && !bounce)
-		  	  {
-		  	  	Extban *p = findmod_by_bantype(param[1]);
-		  	  	if (p && p->is_ok)
-			  	  	p->is_ok(cptr, chptr, param, EXBCHK_PARAM, what, EXBTYPE_BAN);
-			  }
-		  	  
-		      break; /* ignore ban, but eat param */
-		  }
-		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
-		  {
-		      /* extban: check access if needed */
-		      Extban *p = findmod_by_bantype(tmpstr[1]);
-		      if (p && p->is_ok)
-		      {
-			if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_BAN))
-		        {
-		            if (ValidatePermissionsForPath("override:extban",cptr,NULL,chptr,NULL))
-		            {
-		                /* TODO: send operoverride notice */
-  		            } else {
-		                p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_BAN);
-		                break;
-		            }
-		        }
-			if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_PARAM, what, EXBTYPE_BAN))
-		            break;
-		     }
-		  }
-		  /* For bounce, we don't really need to worry whether
-		   * or not it exists on our server.  We'll just always
-		   * bounce it. */
-		  if (!bounce &&
-		      ((what == MODE_ADD && add_listmode(&chptr->banlist, cptr, chptr, tmpstr))
-		      || (what == MODE_DEL && del_listmode(&chptr->banlist, chptr, tmpstr))))
-			  break;	/* already exists */
-		  ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "%cb%s",
-		      what == MODE_ADD ? '+' : '-', tmpstr);
-		  (*pcount)++;
-		  break;
-	  case MODE_EXCEPT:
-		  REQUIRE_PARAMETER()
-		  tmpstr = clean_ban_mask(param, what, cptr);
-		  if (BadPtr(tmpstr))
-		     break; /* ignore except, but eat param */
-		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
-		  {
-		      /* extban: check access if needed */
-		      Extban *p = findmod_by_bantype(tmpstr[1]);
-		      if (p && p->is_ok)
-       		      {
-			 if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
-		         {
-		            if (ValidatePermissionsForPath("override:extban",cptr,NULL,chptr,NULL))
-		            {
-		                /* TODO: send operoverride notice */
-		            } else {
-		                p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_EXCEPT);
-		                break;
-		            }
-		        }
-			if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_PARAM, what, EXBTYPE_EXCEPT))
-		            break;
-		     }
-		  }
-		  /* For bounce, we don't really need to worry whether
-		   * or not it exists on our server.  We'll just always
-		   * bounce it. */
-		  if (!bounce &&
-		      ((what == MODE_ADD && add_listmode(&chptr->exlist, cptr, chptr, tmpstr))
-		      || (what == MODE_DEL && del_listmode(&chptr->exlist, chptr, tmpstr))))
-			  break;	/* already exists */
-		  ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "%ce%s",
-		      what == MODE_ADD ? '+' : '-', tmpstr);
-		  (*pcount)++;
-		  break;
-	  case MODE_INVEX:
-		  REQUIRE_PARAMETER()
-		  tmpstr = clean_ban_mask(param, what, cptr);
-		  if (BadPtr(tmpstr))
-		     break; /* ignore except, but eat param */
-		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
-		  {
-		      /* extban: check access if needed */
-		      Extban *p = findmod_by_bantype(tmpstr[1]);
-		      if (p)
-       		      {
-       		        if (!(p->options & EXTBOPT_INVEX))
-				break; /* this extended ban type does not support INVEX */
+		case MODE_BAN:
+			REQUIRE_PARAMETER()
+			retval = 1;
+			tmpstr = clean_ban_mask(param, what, cptr);
+			if (BadPtr(tmpstr))
+			{
+				/* Invalid ban. See if we can send an error about that */
+				if ((param[0] == '~') && MyClient(cptr) && !bounce)
+				{
+					Extban *p = findmod_by_bantype(param[1]);
+					if (p && p->is_ok)
+						p->is_ok(cptr, chptr, param, EXBCHK_PARAM, what, EXBTYPE_BAN);
+				}
 
-			if (p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
-		        {
-		            if (ValidatePermissionsForPath("override:extban",cptr,NULL,chptr,NULL))
-		            {
-		                /* TODO: send operoverride notice */
-		            } else {
-		                p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_EXCEPT);
-		                break;
-		            }
-		        }
-			if (p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_PARAM, what, EXBTYPE_EXCEPT))
-		            break;
-		     }
-		  }
-		  /* For bounce, we don't really need to worry whether
-		   * or not it exists on our server.  We'll just always
-		   * bounce it. */
-		  if (!bounce &&
-		      ((what == MODE_ADD && add_listmode(&chptr->invexlist, cptr, chptr, tmpstr))
-		      || (what == MODE_DEL && del_listmode(&chptr->invexlist, chptr, tmpstr))))
-			  break;	/* already exists */
-		  ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "%cI%s",
-		      what == MODE_ADD ? '+' : '-', tmpstr);
-		  (*pcount)++;
-		  break;
+				break; /* ignore ban, but eat param */
+			}
+			if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
+			{
+				/* extban: check access if needed */
+				Extban *p = findmod_by_bantype(tmpstr[1]);
+				if (p && p->is_ok)
+				{
+					if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_BAN))
+					{
+						if (ValidatePermissionsForPath("override:extban",cptr,NULL,chptr,NULL))
+						{
+							/* TODO: send operoverride notice */
+						} else {
+							p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_BAN);
+							break;
+						}
+					}
+					if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_PARAM, what, EXBTYPE_BAN))
+						break;
+				}
+			}
+			/* For bounce, we don't really need to worry whether
+			 * or not it exists on our server.  We'll just always
+			 * bounce it. */
+			if (!bounce &&
+			    ((what == MODE_ADD && add_listmode(&chptr->banlist, cptr, chptr, tmpstr))
+			    || (what == MODE_DEL && del_listmode(&chptr->banlist, chptr, tmpstr))))
+			{
+				break;	/* already exists */
+			}
+			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
+			            "%cb%s",
+			            (what == MODE_ADD) ? '+' : '-', tmpstr);
+			(*pcount)++;
+			break;
+		case MODE_EXCEPT:
+			REQUIRE_PARAMETER()
+			tmpstr = clean_ban_mask(param, what, cptr);
+			if (BadPtr(tmpstr))
+				break; /* ignore except, but eat param */
+			if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
+			{
+				/* extban: check access if needed */
+				Extban *p = findmod_by_bantype(tmpstr[1]);
+				if (p && p->is_ok)
+				{
+					if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
+					{
+						if (ValidatePermissionsForPath("override:extban",cptr,NULL,chptr,NULL))
+						{
+							/* TODO: send operoverride notice */
+						} else {
+							p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_EXCEPT);
+							break;
+						}
+					}
+					if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_PARAM, what, EXBTYPE_EXCEPT))
+						break;
+				}
+			}
+			/* For bounce, we don't really need to worry whether
+			 * or not it exists on our server.  We'll just always
+			 * bounce it. */
+			if (!bounce &&
+			    ((what == MODE_ADD && add_listmode(&chptr->exlist, cptr, chptr, tmpstr))
+			    || (what == MODE_DEL && del_listmode(&chptr->exlist, chptr, tmpstr))))
+			{
+				break;	/* already exists */
+			}
+			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
+			            "%ce%s",
+			            (what == MODE_ADD) ? '+' : '-', tmpstr);
+			(*pcount)++;
+			break;
+		case MODE_INVEX:
+			REQUIRE_PARAMETER()
+			tmpstr = clean_ban_mask(param, what, cptr);
+			if (BadPtr(tmpstr))
+				break; /* ignore except, but eat param */
+			if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
+			{
+				/* extban: check access if needed */
+				Extban *p = findmod_by_bantype(tmpstr[1]);
+				if (p)
+				{
+					if (!(p->options & EXTBOPT_INVEX))
+						break; /* this extended ban type does not support INVEX */
+
+					if (p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
+					{
+						if (ValidatePermissionsForPath("override:extban",cptr,NULL,chptr,NULL))
+						{
+							/* TODO: send operoverride notice */
+						} else {
+							p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_EXCEPT);
+							break;
+						}
+					}
+					if (p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_PARAM, what, EXBTYPE_EXCEPT))
+						break;
+				}
+			}
+			/* For bounce, we don't really need to worry whether
+			 * or not it exists on our server.  We'll just always
+			 * bounce it. */
+			if (!bounce &&
+			    ((what == MODE_ADD && add_listmode(&chptr->invexlist, cptr, chptr, tmpstr))
+			    || (what == MODE_DEL && del_listmode(&chptr->invexlist, chptr, tmpstr))))
+			{
+				break;	/* already exists */
+			}
+			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3,
+			            "%cI%s",
+			            (what == MODE_ADD) ? '+' : '-', tmpstr);
+			(*pcount)++;
+			break;
 	}
 	return retval;
 }
@@ -1198,10 +1201,10 @@ int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
                     aClient *cptr, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                     char bounce)
 {
-int paracnt = (what == MODE_ADD) ? handler->paracount : 0;
-char mode = handler->flag;
-int x;
-char *morphed;
+	int paracnt = (what == MODE_ADD) ? handler->paracount : 0;
+	char mode = handler->flag;
+	int x;
+	char *morphed;
 
 	if ((what == MODE_DEL) && handler->unset_with_param)
 		paracnt = 1; /* there's always an exception! */
@@ -1229,7 +1232,9 @@ char *morphed;
 		/* remote user: we only need to check if we need to generate an operoverride msg */
 		if (!IsULine(cptr) && IsPerson(cptr) && op_can_override("override:mode:del",cptr,chptr,handler) &&
 		    (handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS, what) != EX_ALLOW))
+		{
 			opermode = 1; /* override in progress... */
+		}
 	}
 
 	/* Check for multiple changes in 1 command (like +y-y+y 1 2, or +yy 1 2). */
@@ -1393,14 +1398,14 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 	char *argument;
 	u_int what = MODE_ADD;
 	long modetype = 0;
-	int  paracount = 1;
+	int paracount = 1;
 #ifdef DEVELOP
 	char *tmpo = NULL;
 #endif
 	aCtab *tab = &cFlagTab[0];
 	aCtab foundat;
-	int  found = 0;
-	int  sent_mlock_warning = 0;
+	int found = 0;
+	int sent_mlock_warning = 0;
 	unsigned int htrig = 0;
 	long oldm, oldl;
 	int checkrestr = 0, warnrestr = 1;
@@ -1423,47 +1428,37 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 	{
 		switch (*curchr)
 		{
-		  case '+':
-			  what = MODE_ADD;
-			  break;
-		  case '-':
-			  what = MODE_DEL;
-			  break;
-#ifdef DEVELOP
-		  case '^':
-			  tmpo = (char *)ListBits(chptr->mode.mode, 64);
-			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** %s mode is %li (0x%lx) [%s]",
-			      me.name, cptr->name, chptr->chname,
-			      chptr->mode.mode, chptr->mode.mode, tmpo);
-			  MyFree(tmpo);
-			  break;
-#endif
-		  default:
-			  if (MyClient(cptr) && chptr->mode_lock && strchr(chptr->mode_lock, *curchr) != NULL)
-			  {
-				  if (!sent_mlock_warning)
-				  {
-					  sendto_one(cptr, err_str(ERR_MLOCKRESTRICTED), me.name, cptr->name, chptr->chname, *curchr, chptr->mode_lock);
-					  sent_mlock_warning++;
-				  }
-				  continue;
-			  }
-			  found = 0;
-			  tab = &cFlagTab[0];
-			  while ((tab->mode != 0x0) && found == 0)
-			  {
-				  if (tab->flag == *curchr)
-				  {
-					  found = 1;
-					  foundat = *tab;
-				  }
-				  tab++;
-			  }
-			  if (found == 1)
-			  {
-				  modetype = foundat.mode;
-			  } else {
+			case '+':
+				what = MODE_ADD;
+				break;
+			case '-':
+				what = MODE_DEL;
+				break;
+			default:
+				if (MyClient(cptr) && chptr->mode_lock && strchr(chptr->mode_lock, *curchr) != NULL)
+				{
+					if (!sent_mlock_warning)
+					{
+						sendto_one(cptr, err_str(ERR_MLOCKRESTRICTED), me.name, cptr->name, chptr->chname, *curchr, chptr->mode_lock);
+						sent_mlock_warning++;
+					}
+					continue;
+				}
+				found = 0;
+				tab = &cFlagTab[0];
+				while ((tab->mode != 0x0) && found == 0)
+				{
+					if (tab->flag == *curchr)
+					{
+						found = 1;
+						foundat = *tab;
+					}
+					tab++;
+				}
+				if (found == 1)
+				{
+					modetype = foundat.mode;
+				} else {
 					/* Maybe in extmodes */
 					for (extm=0; extm <= Channelmode_highest; extm++)
 					{
@@ -1473,28 +1468,28 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 							break;
 						}
 					}
-			  }
-			  if (found == 0) /* Mode char unknown */
-			  {
-				  if (!MyClient(cptr))
-				      paracount += paracount_for_chanmode_from_server(cptr, what, *curchr);
-				  else
-					  sendto_one(cptr, err_str(ERR_UNKNOWNMODE),
-					     me.name, cptr->name, *curchr);
-				  break;
-			  }
+				}
+				if (found == 0) /* Mode char unknown */
+				{
+					if (!MyClient(cptr))
+					    paracount += paracount_for_chanmode_from_server(cptr, what, *curchr);
+					else
+						sendto_one(cptr, err_str(ERR_UNKNOWNMODE),
+						   me.name, cptr->name, *curchr);
+					break;
+				}
 
-			  if (checkrestr && strchr(RESTRICT_CHANNELMODES, *curchr))
-			  {
-				  if (warnrestr)
-				  {
+				if (checkrestr && strchr(RESTRICT_CHANNELMODES, *curchr))
+				{
+					if (warnrestr)
+					{
 					sendnotice(cptr, "Setting/removing of channelmode(s) '%s' has been disabled.",
 						RESTRICT_CHANNELMODES);
 					warnrestr = 0;
-				  }
-				  paracount += foundat.parameters;
-				  break;
-			  }
+					}
+					paracount += foundat.parameters;
+					break;
+				}
 
 			if (paracount < parc)
 				argument = parv[paracount]; /* can still be NULL */
@@ -1502,67 +1497,68 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 				argument = NULL;
 
 #ifndef NO_OPEROVERRIDE
-				if (found == 1)
-				{
-                          if ((Halfop_mode(modetype) == FALSE) && opermode == 2 && htrig != 1)
-                          {
-                          	/* YUCK! */
-				if ((foundat.flag == 'h') && argument && (find_person(argument, NULL) == cptr))
-				{
-					/* ircop with halfop doing a -h on himself. no warning. */
-				} else {
-					opermode = 0;
-					htrig = 1;
-				}
-                          }
-				}
-				else if (found == 2) {
-					/* Extended mode: all override stuff is in do_extmode_char which will set
-					 * opermode if appropriate. -- Syzop
-					 */
-				}
-#endif /* !NO_OPEROVERRIDE */
-
-			  /* Not sure how useful this is, but I'll let it stay... */
-			  if (argument && strlen(argument) >= MODEBUFLEN)
-			        argument[MODEBUFLEN-1] = '\0';
 			if (found == 1)
 			{
-			  paracount +=
-			      do_mode_char(chptr, modetype, *curchr,
-			      argument, what, cptr, pcount, pvar,
-			      bounce, my_access);
+				if ((Halfop_mode(modetype) == FALSE) && opermode == 2 && htrig != 1)
+				{
+					/* YUCK! */
+					if ((foundat.flag == 'h') && argument && (find_person(argument, NULL) == cptr))
+					{
+						/* ircop with halfop doing a -h on himself. no warning. */
+					} else {
+						opermode = 0;
+						htrig = 1;
+					}
+				}
+			}
+			else if (found == 2) {
+				/* Extended mode: all override stuff is in do_extmode_char which will set
+				 * opermode if appropriate. -- Syzop
+				 */
+			}
+#endif /* !NO_OPEROVERRIDE */
+
+			/* Not sure how useful this is, but I'll let it stay... */
+			if (argument && strlen(argument) >= MODEBUFLEN)
+				argument[MODEBUFLEN-1] = '\0';
+
+			if (found == 1)
+			{
+				paracount += do_mode_char(chptr, modetype, *curchr,
+				                          argument, what, cptr, pcount,
+				                          pvar, bounce, my_access);
 			}
 			else if (found == 2)
 			{
 				paracount += do_extmode_char(chptr, &Channelmode_Table[extm], argument,
 				                             what, cptr, pcount, pvar, bounce);
 			}
-			  break;
+			break;
 		}
 	}
 
 	make_mode_str(chptr, oldm, oldem, oldl, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), bounce);
 
 #ifndef NO_OPEROVERRIDE
-        if (htrig == 1)
-        {
-                /* This is horrible. Just horrible. */
-                if (!((modebuf[0] == '+' || modebuf[0] == '-') && modebuf[1] == '\0'))
-                sendto_snomask(SNO_EYES, "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
-                      cptr->name, cptr->user->username, cptr->user->realhost,
-                      chptr->chname, modebuf, parabuf);
+	if (htrig == 1)
+	{
+		/* This is horrible. Just horrible. */
+		if (!((modebuf[0] == '+' || modebuf[0] == '-') && modebuf[1] == '\0'))
+		{
+			sendto_snomask(SNO_EYES, "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
+			               cptr->name, cptr->user->username, cptr->user->realhost,
+			               chptr->chname, modebuf, parabuf);
+		}
 
 		/* Logging Implementation added by XeRXeS */
 		ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) MODE %s %s %s",
-			cptr->name, cptr->user->username, cptr->user->realhost,
-			chptr->chname, modebuf, parabuf);
+		         cptr->name, cptr->user->username, cptr->user->realhost,
+		         chptr->chname, modebuf, parabuf);
 
-                htrig = 0;
-                opermode = 0; /* stop double override notices... but is this ok??? -- Syzop */
-        }
+		htrig = 0;
+		opermode = 0; /* stop double override notices... but is this ok??? -- Syzop */
+	}
 #endif
-
 }
 
 /*
@@ -1572,7 +1568,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
  */
 CMD_FUNC(_m_umode)
 {
-	int  i;
+	int i;
 	char **p, *m;
 	aClient *acptr;
 	int what, setsnomask = 0;
@@ -1592,8 +1588,10 @@ CMD_FUNC(_m_umode)
 	if (!(acptr = find_person(parv[1], NULL)))
 	{
 		if (MyConnect(sptr))
+		{
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 			    me.name, sptr->name, parv[1]);
+		}
 		return 0;
 	}
 	if (acptr != sptr)
@@ -1643,58 +1641,60 @@ CMD_FUNC(_m_umode)
 		}
 		switch (*m)
 		{
-		  case '+':
-			  what = MODE_ADD;
-			  break;
-		  case '-':
-			  what = MODE_DEL;
-			  break;
-				  /* we may not get these,
-			   * but they shouldnt be in default
-			   */
-		  case ' ':
-		  case '\t':
-			  break;
-		  case 's':
-			  if (what == MODE_DEL) {
-				if (parc >= 4 && sptr->user->snomask) {
-					set_snomask(sptr, parv[3]);
-					if (sptr->user->snomask == 0)
+			case '+':
+				what = MODE_ADD;
+				break;
+			case '-':
+				what = MODE_DEL;
+				break;
+					/* we may not get these,
+				 * but they shouldnt be in default
+				 */
+			case ' ':
+			case '\t':
+				break;
+			case 's':
+				if (what == MODE_DEL)
+				{
+					if (parc >= 4 && sptr->user->snomask)
+					{
+						set_snomask(sptr, parv[3]);
+						if (sptr->user->snomask == 0)
+							goto def;
+						break;
+					} else {
+						set_snomask(sptr, NULL);
 						goto def;
-					break;
+					}
 				}
-				else {
-					set_snomask(sptr, NULL);
+				if (what == MODE_ADD)
+				{
+					if (parc < 4)
+						set_snomask(sptr, IsOper(sptr) ? SNO_DEFOPER : SNO_DEFUSER);
+					else
+						set_snomask(sptr, parv[3]);
 					goto def;
 				}
-			  }
-			  if (what == MODE_ADD) {
-				if (parc < 4)
-					set_snomask(sptr, IsOper(sptr) ? SNO_DEFOPER : SNO_DEFUSER);
-				else
-					set_snomask(sptr, parv[3]);
+			case 'o':
+			case 'O':
+				if(sptr->from->flags & FLAGS_QUARANTINE)
+				{
+					sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", sptr->name, sptr->srvptr->name);
+					sendto_server(NULL, 0, 0, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)", me.name, sptr->name, me.name);
+					return exit_client(cptr, sptr, &me, "Quarantined: no oper privileges allowed");
+				}
+				/* A local user trying to set himself +o/+O is denied here.
+				 * A while later (outside this loop) it is handled as well (and +C, +N, etc too)
+				 * but we need to take care here too because it might cause problems
+				 * that's just asking for bugs! -- Syzop.
+				 */
+				if (MyClient(sptr) && (what == MODE_ADD)) /* Someone setting himself +o? Deny it. */
+					break;
 				goto def;
-			  }
-		  case 'o':
-		  case 'O':
-			  if(sptr->from->flags & FLAGS_QUARANTINE)
-			  {
-				sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", sptr->name, sptr->srvptr->name);
-			    sendto_server(NULL, 0, 0, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)", me.name, sptr->name, me.name);
-			    return exit_client(cptr, sptr, &me, "Quarantined: no oper privileges allowed");
-			  }
-			  /* A local user trying to set himself +o/+O is denied here.
-			   * A while later (outside this loop) it is handled as well (and +C, +N, etc too)
-			   * but we need to take care here too because it might cause problems
-			   * that's just asking for bugs! -- Syzop.
-			   */
-			  if (MyClient(sptr) && (what == MODE_ADD)) /* Someone setting himself +o? Deny it. */
-			    break;
-			  goto def;
-		  case 't':
-		  case 'x':
-			  switch (UHOST_ALLOWED)
-			  {
+			case 't':
+			case 'x':
+				switch (UHOST_ALLOWED)
+				{
 				case UHALLOW_ALWAYS:
 					goto def;
 				case UHALLOW_NEVER:
@@ -1724,33 +1724,31 @@ CMD_FUNC(_m_umode)
 				case UHALLOW_REJOIN:
 					/* Handled later */
 					goto def;
-			  }
-			  break;
-		  default:
+				}
+				break;
+			default:
 			def:
-
-			  for (i = 0; i <= Usermode_highest; i++)
-			  {
-				  if (*m == Usermode_Table[i].flag)
-				  {
-					  if (Usermode_Table[i].allowed)
+				for (i = 0; i <= Usermode_highest; i++)
+				{
+					if (*m == Usermode_Table[i].flag)
+					{
+						if (Usermode_Table[i].allowed)
 						if (!Usermode_Table[i].allowed(sptr,what))
 							break;
-					  if (what == MODE_ADD)
-						  sptr->umodes |= Usermode_Table[i].mode;
-					  else
-						  sptr->umodes &= ~Usermode_Table[i].mode;
-					  break;
-				  }
-			  	  else if (i == Usermode_highest && MyConnect(sptr) && !rpterror)
-  			  	  {
-				  	sendto_one(sptr,
-				      		err_str(ERR_UMODEUNKNOWNFLAG),
-				      		me.name, sptr->name);
-					  rpterror = 1;
-				  }
-			  }
-			  break;
+						if (what == MODE_ADD)
+							sptr->umodes |= Usermode_Table[i].mode;
+						else
+							sptr->umodes &= ~Usermode_Table[i].mode;
+						break;
+					}
+					else if (i == Usermode_highest && MyConnect(sptr) && !rpterror)
+					{
+						sendto_one(sptr, err_str(ERR_UMODEUNKNOWNFLAG),
+						           me.name, sptr->name);
+						rpterror = 1;
+					}
+				}
+				break;
 		} /* switch */
 	} /* for */
 
@@ -1760,12 +1758,11 @@ CMD_FUNC(_m_umode)
 		remove_oper_privileges(sptr, 0);
 	}
 
-	if (MyClient(sptr) && !ValidatePermissionsForPath("override:secure",sptr,NULL,NULL,NULL) &&  (sptr->umodes & UMODE_SECURE)
-			&& !IsSecure(sptr))
-  {
-			sptr->umodes &= ~UMODE_SECURE;
+	if (MyClient(sptr) && !ValidatePermissionsForPath("override:secure",sptr,NULL,NULL,NULL) &&
+	    (sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
+	{
+		sptr->umodes &= ~UMODE_SECURE;
 	}
-
 
 	/* -x translates to -xt (if applicable) */
 	if ((oldumodes & UMODE_HIDE) && !IsHidden(sptr))
@@ -1812,8 +1809,8 @@ CMD_FUNC(_m_umode)
 	}
 	/*
 	 * If I understand what this code is doing correctly...
-	 *   If the user WAS an operator and has now set themselves -o/-O
-	 *   then remove their access, d'oh!
+	 * If the user WAS an operator and has now set themselves -o/-O
+	 * then remove their access, d'oh!
 	 * In order to allow opers to do stuff like go +o, +h, -o and
 	 * remain +h, I moved this code below those checks. It should be
 	 * O.K. The above code just does normal access flag checks. This
