@@ -418,7 +418,7 @@ EVENT(timedban_timeout)
 			nextban = ban->next;
 			if (!strncmp(ban->banstr, "~t:", 3) && timedban_has_ban_expired(ban))
 			{
-				add_send_mode_param(chptr, &me, '-',  'b', ban->banstr);
+				add_send_mode_param(chptr, &me, '-',  'e', ban->banstr);
 				del_listmode(&chptr->exlist, chptr, ban->banstr);
 			}
 		}
@@ -427,7 +427,7 @@ EVENT(timedban_timeout)
 			nextban = ban->next;
 			if (!strncmp(ban->banstr, "~t:", 3) && timedban_has_ban_expired(ban))
 			{
-				add_send_mode_param(chptr, &me, '-',  'b', ban->banstr);
+				add_send_mode_param(chptr, &me, '-',  'I', ban->banstr);
 				del_listmode(&chptr->invexlist, chptr, ban->banstr);
 			}
 		}
