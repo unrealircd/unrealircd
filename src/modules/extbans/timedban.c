@@ -25,14 +25,27 @@
 
 #define TIMEDBAN_VERSION "v1.0"
 
-/* Call timeout event every <this> seconds */
-#define TIMEDBAN_TIMER	5
-
 /* Maximum time (in minutes) for a ban */
 #define TIMEDBAN_MAX_TIME	9999
 
 /* Maximum length of a ban */
 #define MAX_LENGTH 128
+
+/* Split timeout event in <this> amount of iterations */
+#define TIMEDBAN_TIMER_ITERATION_SPLIT 4
+
+/* Call timeout event every <this> seconds.
+ * NOTE: until all channels are processed it takes
+ *       TIMEDBAN_TIMER_ITERATION_SPLIT * TIMEDBAN_TIMER.
+ */
+#define TIMEDBAN_TIMER	2
+
+/* We allow a ban to (potentially) expire slightly before the deadline.
+ * For example with TIMEDBAN_TIMER_ITERATION_SPLIT=4 and TIMEDBAN_TIMER=2
+ * a 1 minute ban would expire at 56-63 seconds, rather than 60-67 seconds.
+ * This is usually preferred.
+ */
+#define TIMEDBAN_TIMER_DELTA ((TIMEDBAN_TIMER_ITERATION_SPLIT*TIMEDBAN_TIMER)/2)
 
 ModuleHeader MOD_HEADER(timedban)
   = {
@@ -359,7 +372,7 @@ TS expire_on;
 	t = atoi(banstr+3);
 	*p = ':'; /* restored.. */
 	
-	expire_on = ban->when + (t * 60);
+	expire_on = ban->when + (t * 60) - TIMEDBAN_TIMER_DELTA;
 	
 	if (expire_on < TStime())
 		return 1;
@@ -372,11 +385,24 @@ static char pbuf[512];
 /** This removes any expired timedbans */
 EVENT(timedban_timeout)
 {
-aChannel *chptr;
-Ban *ban, *nextban;
+	aChannel *chptr;
+	Ban *ban, *nextban;
+	static int current_iteration = 0;
+
+	if (++current_iteration >= TIMEDBAN_TIMER_ITERATION_SPLIT)
+		current_iteration = 0;
 
 	for (chptr = channel; chptr; chptr = chptr->nextch)
 	{
+		/* This is a very quick check, at the cost of it being
+		 * biased since there's always a tendency of more channel
+		 * names to start with one specific letter. But hashing
+		 * is too costly. So we stick with this. It should be
+		 * good enough. Alternative would be some chptr->id value.
+		 */
+		if (((unsigned int)chptr->chname[1] % TIMEDBAN_TIMER_ITERATION_SPLIT) != current_iteration)
+			continue; /* not this time, maybe next */
+
 		*mbuf = *pbuf = '\0';
 		for (ban = chptr->banlist; ban; ban=nextban)
 		{
@@ -385,6 +411,24 @@ Ban *ban, *nextban;
 			{
 				add_send_mode_param(chptr, &me, '-',  'b', ban->banstr);
 				del_listmode(&chptr->banlist, chptr, ban->banstr);
+			}
+		}
+		for (ban = chptr->exlist; ban; ban=nextban)
+		{
+			nextban = ban->next;
+			if (!strncmp(ban->banstr, "~t:", 3) && timedban_has_ban_expired(ban))
+			{
+				add_send_mode_param(chptr, &me, '-',  'b', ban->banstr);
+				del_listmode(&chptr->exlist, chptr, ban->banstr);
+			}
+		}
+		for (ban = chptr->invexlist; ban; ban=nextban)
+		{
+			nextban = ban->next;
+			if (!strncmp(ban->banstr, "~t:", 3) && timedban_has_ban_expired(ban))
+			{
+				add_send_mode_param(chptr, &me, '-',  'b', ban->banstr);
+				del_listmode(&chptr->invexlist, chptr, ban->banstr);
 			}
 		}
 		if (*pbuf)
