@@ -35,6 +35,9 @@ Enhancements:
     * Allows someone to speak through +m for the next 24hrs:
       +e ~t:1440:~m:moderated:*!*@host
     * And any other crazy ideas you can come up with...
+* Timedban support in +f [5t#b2]:10 (set 2 minute ban on text flood).
+  This is only available if the previously mentioned extbans/timedban
+  module is loaded.
 * Ability to customize the reject connection messages:
   set {
      reject-message {
