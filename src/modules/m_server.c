@@ -783,8 +783,11 @@ void tls_link_notification_verify(aClient *acptr, ConfigItem_link *aconf)
 	if (!ssl_fp || !spki_fp)
 		return; /* wtf ? */
 
-	if (acptr->serv->features.protocol < 4016)
-		return; /* don't bother for now */
+	/* Only bother the user if we are linking to UnrealIRCd 4.0.16+,
+	 * since only for these versions we can give precise instructions.
+	 */
+	if (!acptr->serv || acptr->serv->features.protocol < 4016)
+		return;
 
 	sendto_realops("You may want to consider verifying this server link.");
 	sendto_realops("More information about this can be found on https://www.unrealircd.org/Link_verification");
