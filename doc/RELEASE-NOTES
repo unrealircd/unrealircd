@@ -48,6 +48,11 @@ Enhancements:
       };
   };
 
+Major issues fixed:
+* Crash if linking anope with the 'unreal' module from a non-localhost
+  SSL connection. This is rarely done but also acts as a reminder that
+  people should really use the 'unreal4' module in anope (2.0.3+).
+
 Minor issues fixed:
 * set::restrict-extendedbans was not effective for stacked bans
 
