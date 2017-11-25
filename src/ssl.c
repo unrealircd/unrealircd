@@ -743,49 +743,63 @@ int SSL_smart_shutdown(SSL *ssl) {
  */
 static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr)
 {
-    /* don`t alter ERRNO */
-    int errtmp = ERRNO;
-    char *ssl_errstr, *ssl_func;
+	/* don`t alter ERRNO */
+	int errtmp = ERRNO;
+	char *ssl_errstr, *ssl_func;
+	unsigned long additional_errno = ERR_get_error();
+	char additional_info[256];
+	const char *one, *two;
 
-    if (IsDead(sptr))
-    {
+	if (IsDead(sptr))
+	{
 #ifdef DEBUGMODE
-        /* This is quite possible I guess.. especially if we don't pay attention upstream :p */
-        ircd_log(LOG_ERROR, "Warning: fatal_ssl_error() called for already-dead-socket (%d/%s)",
-            sptr->fd, sptr->name);
+		/* This is quite possible I guess.. especially if we don't pay attention upstream :p */
+		ircd_log(LOG_ERROR, "Warning: fatal_ssl_error() called for already-dead-socket (%d/%s)",
+			sptr->fd, sptr->name);
 #endif
-        return -1;
-    }
+		return -1;
+	}
 
-    switch(where) {
-	case SAFE_SSL_READ:
-	    ssl_func = "SSL_read()";
-	    break;
-	case SAFE_SSL_WRITE:
-	    ssl_func = "SSL_write()";
-	    break;
-	case SAFE_SSL_ACCEPT:
-	    ssl_func = "SSL_accept()";
-	    break;
-	case SAFE_SSL_CONNECT:
-	    ssl_func = "SSL_connect()";
-	    break;
-	default:
-	    ssl_func = "undefined SSL func";
-    }
+	switch(where)
+	{
+		case SAFE_SSL_READ:
+			ssl_func = "SSL_read()";
+			break;
+		case SAFE_SSL_WRITE:
+			ssl_func = "SSL_write()";
+			break;
+		case SAFE_SSL_ACCEPT:
+			ssl_func = "SSL_accept()";
+			break;
+		case SAFE_SSL_CONNECT:
+			ssl_func = "SSL_connect()";
+			break;
+		default:
+			ssl_func = "undefined SSL func";
+	}
 
-    ssl_errstr = ssl_error_str(ssl_error, my_errno);
+	/* Fetch additional error information from OpenSSL. This is new as of Nov 2017 (4.0.16+) */
+	one = ERR_func_error_string(additional_errno);
+	two = ERR_reason_error_string(additional_errno);
+	if (one && *one && two && *two)
+	{
+		snprintf(additional_info, sizeof(additional_info), ": %s: %s", one, two);
+	} else {
+		*additional_info = '\0';
+	}
 
-    /* if we reply() something here, we might just trigger another
-     * fatal_ssl_error() call and loop until a stack overflow... 
-     * the client won`t get the ERROR : ... string, but this is
-     * the only way to do it.
-     * IRC protocol wasn`t SSL enabled .. --vejeta
-     */
-    sptr->flags |= FLAGS_DEADSOCKET;
-    sendto_snomask(SNO_JUNK, "Exiting ssl client %s: %s: %s",
-    	get_client_name(sptr, TRUE), ssl_func, ssl_errstr);
-	
+	ssl_errstr = ssl_error_str(ssl_error, my_errno);
+
+	/* if we reply() something here, we might just trigger another
+	 * fatal_ssl_error() call and loop until a stack overflow... 
+	 * the client won`t get the ERROR : ... string, but this is
+	 * the only way to do it.
+	 * IRC protocol wasn`t SSL enabled .. --vejeta
+	 */
+	sptr->flags |= FLAGS_DEADSOCKET;
+	sendto_snomask(SNO_JUNK, "Exiting ssl client %s: %s: %s%s",
+		get_client_name(sptr, TRUE), ssl_func, ssl_errstr, additional_info);
+
 	if (where == SAFE_SSL_CONNECT)
 	{
 		char extra[256];
@@ -797,9 +811,9 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 			         (sptr->serv && sptr->serv->conf) ? sptr->serv->conf->outgoing.port : -1,
 			         sptr->name);
 		}
-		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s%s",
-			get_client_name(sptr, FALSE), ssl_func, ssl_errstr, extra);
-                /* This is a connect() that fails, we don't broadcast that for non-SSL either (noisy) */
+		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s%s%s",
+			get_client_name(sptr, FALSE), ssl_func, ssl_errstr, additional_info, extra);
+		/* This is a connect() that fails, we don't broadcast that for non-SSL either (noisy) */
 	} else
 	if ((IsServer(sptr) || (sptr->serv && sptr->serv->conf)) && (where != SAFE_SSL_WRITE))
 	{
@@ -807,9 +821,10 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 		 * and not writing (since otherwise deliver_it will take care of the error), THEN
 		 * send a closing link error...
 		 */
-		sendto_umode_global(UMODE_OPER, "Lost connection to %s: %s: %d (%s)", get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr);
+		sendto_umode_global(UMODE_OPER, "Lost connection to %s: %s: %d (%s%s)",
+			get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr, additional_info);
 	}
-	
+
 	if (errtmp)
 	{
 		SET_ERRNO(errtmp);
@@ -818,12 +833,12 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 		SET_ERRNO(P_EIO);
 		sptr->local->error_str = strdup(ssl_errstr);
 	}
-	
-    /* deregister I/O notification since we don't care anymore. the actual closing of socket will happen later. */
-    if (sptr->fd >= 0)
-        fd_unnotify(sptr->fd);
-    
-    return -1;
+
+	/* deregister I/O notification since we don't care anymore. the actual closing of socket will happen later. */
+	if (sptr->fd >= 0)
+		fd_unnotify(sptr->fd);
+
+	return -1;
 }
 
 int client_starttls(aClient *acptr)
