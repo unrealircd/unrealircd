@@ -7,6 +7,23 @@ UnrealIRCd 4.0.17 is work in progress.
 ==[ CHANGES BETWEEN 4.0.16 AND 4.0.17-devel ]==
 
 Enhancements:
+* Added UTF8 support in set::allowed-nickchars
+  See https://www.unrealircd.org/docs/Nick_Character_Sets
+  Example: set { allowed-nickchars { latin-utf8; }; };
+  Important remarks:
+  * All your servers must be on UnrealIRCd 4.0.17 (or later)
+  * Most(?) services do not support this, so users using UTF8 nicknames
+    won't be able to register at NickServ.
+  * In set::allowed-nickchars you must either choose an utf8 language
+    or a non-utf8 character set. You cannot combine the two.
+  * You also cannot combine multiple scripts/alphabets, such as:
+    latin, greek, cyrillic and hebrew. You must choose one.
+  * If you are already using set::allowed-nickchars on your network
+    (eg: 'latin1') then be careful when migrating (to eg: 'latin-utf8'):
+    * Your clients may still assume non-UTF8
+    * If users registered nicks with accents or other special characters
+      at NickServ then they may not be able to access their account
+      after the migration to UTF8.
 * Two optional modules. These are not loaded by default. To use them,
   include modules.optional.conf, or add these loadmodule lines:
   loadmodule "extbans/msgbypass";

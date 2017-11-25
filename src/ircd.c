@@ -1182,6 +1182,11 @@ int InitUnrealIRCd(int argc, char *argv[])
 			      (long)sizeof(struct ircstatsx));
 			  exit(0);
 			  break;
+#ifdef DEBUGMODE
+		case 'S':
+			charsys_dump_table(p ? p : "*");
+			exit(0);
+#endif
 #ifndef _WIN32
 		  case 't':
 			  bootopt |= BOOT_TTY;

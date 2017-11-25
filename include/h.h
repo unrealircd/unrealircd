@@ -801,3 +801,4 @@ extern void sendbufto_one(aClient *to, char *msg, unsigned int quick);
 extern MODVAR int current_serial;
 extern char *spki_fingerprint(aClient *acptr);
 extern int is_module_loaded(char *name);
+extern void charsys_dump_table(char *filter);
