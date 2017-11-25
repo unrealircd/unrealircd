@@ -1,0 +1,28 @@
+# AppArmor profile for UnrealIRCd 4.0.16+
+#
+# Note that you may still see some DENIED warnings in logs with
+# operation="chmod". These are harmless and can be safely ignored.
+#
+# Tested on Ubuntu 16.x and 17.x
+#
+# NOTE: you will have to modify the path to executable below
+#       if it's not /home/ircd/unrealircd/bin/unrealircd.
+
+#include <tunables/global>
+
+# Change the pathname of your UnrealIRCd executable here:
+/home/ircd/unrealircd/bin/unrealircd {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  @{HOME}/unrealircd/conf/ r,
+  @{HOME}/unrealircd/conf/** r,
+  @{HOME}/unrealircd/data/ircd.tune rw,
+  @{HOME}/unrealircd/data/unrealircd.pid rw,
+  @{HOME}/unrealircd/lib/*.so* mr,
+  @{HOME}/unrealircd/logs/* rw,
+  @{HOME}/unrealircd/modules/**.so r,
+  @{HOME}/unrealircd/tmp/ r,
+  @{HOME}/unrealircd/tmp/* mrw,
+  @{HOME}/unrealircd/bin/unrealircd mr,
+}
