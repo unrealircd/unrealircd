@@ -626,7 +626,7 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 			(void)send(fd, buf, strlen(buf), 0);
 			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, acptr);
 		}
-		if ((n >= 4) && (!strncmp(buf, "USER", 4) || !strncmp(buf, "NICK", 4) || !strncmp(buf, "PASS", 4)))
+		if ((n >= 4) && (!strncmp(buf, "USER", 4) || !strncmp(buf, "NICK", 4) || !strncmp(buf, "PASS", 4) || !strncmp(buf, "CAP ", 4)))
 		{
 			char buf[512];
 			snprintf(buf, sizeof(buf),
