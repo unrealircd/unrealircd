@@ -7,7 +7,7 @@ UnrealIRCd 4.0.17 is work in progress.
 ==[ CHANGES BETWEEN 4.0.16 AND 4.0.17-devel ]==
 
 Enhancements:
-* Added UTF8 support in set::allowed-nickchars
+* Added experimental UTF8 support in set::allowed-nickchars
   See https://www.unrealircd.org/docs/Nick_Character_Sets
   Example: set { allowed-nickchars { latin-utf8; }; };
   Important remarks:
@@ -24,6 +24,13 @@ Enhancements:
     * If users registered nicks with accents or other special characters
       at NickServ then they may not be able to access their account
       after the migration to UTF8.
+  * There is no CASEMAPPING or "visually identical character"-checking.
+    Just like in the old (non-utf8) charsys this means there is no
+    lower/uppercase checking for allowed-nickchars nicks. So a nick with
+    "O with accent" can be online at the same time as "o with accent".
+    They are treated as two different users.
+    Improved CASEMAPPING and "visually similar character"-checking is
+    part of ongoing research at the IRCv3 working group.
 * Two optional modules. These are not loaded by default. To use them,
   include modules.optional.conf, or add these loadmodule lines:
   loadmodule "extbans/msgbypass";
