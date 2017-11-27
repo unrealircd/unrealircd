@@ -24,7 +24,7 @@
 #define MAXCUSTOMHOOKS  30
 #define MAXHOOKTYPES	130
 #define MAXCALLBACKS	30
-#define MAXEFUNCTIONS	60
+#define MAXEFUNCTIONS	90
 #if defined(_WIN32)
  #define MOD_EXTENSION "dll"
  #define DLLFUNC	_declspec(dllexport)
