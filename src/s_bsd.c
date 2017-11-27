@@ -1409,7 +1409,7 @@ void process_clients(void)
 	do {
 		list_for_each_entry(cptr, &unknown_list, lclient_node)
 			if ((cptr->fd >= 0) && DBufLength(&cptr->local->recvQ))
-				if ((parse_client_queued(cptr) == FLUSH_BUFFER) || !IsUnknown(cptr))
+				if ((parse_client_queued(cptr) == FLUSH_BUFFER) || (cptr->status > STAT_UNKNOWN))
 					break;
 	} while(&cptr->lclient_node != &unknown_list);
 }
