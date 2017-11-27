@@ -152,7 +152,6 @@ ILangList *ilanglist = NULL;
 /* These characters are ALWAYS disallowed... from remote, in
  * multibyte, etc.. even though this might mean a certain
  * (legit) character cannot be used (eg: in chinese GBK).
- * - no breaking space
  * - ! (nick!user seperator)
  * - prefix chars: +, %, @, &, ~
  * - channel chars: #
@@ -161,7 +160,7 @@ ILangList *ilanglist = NULL;
  * [CHANGING THIS WILL CAUSE SECURITY/SYNCH PROBLEMS AND WILL
  *  VIOLATE YOUR ""RIGHT"" ON SUPPORT IMMEDIATELY]
  */
-const char *illegalnickchars = "\xA0!+%@&~#$:'\"?*,.";
+const char *illegalnickchars = "!+%@&~#$:'\"?*,.";
 
 /* Forward declarations */
 int _do_nick_name(char *nick);
