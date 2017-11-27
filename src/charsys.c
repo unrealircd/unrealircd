@@ -996,7 +996,8 @@ void charsys_add_language(char *name)
 	}
 	if (!strcmp(name, "hebrew-utf8"))
 	{
-		/* I had a problem with converting this - TODO!! */
+		/* Supplied by Lion-O */
+		charsys_addmultibyterange(0xd7, 0xd7, 0x90, 0xaa);
 	}
 
 	/* [CHINESE] */
