@@ -29,6 +29,9 @@ Enhancements:
     lower/uppercase checking for allowed-nickchars nicks. So a nick with
     "O with accent" can be online at the same time as "o with accent".
     They are treated as two different users.
+    The identical character looking issue is particular noticeable in
+    cyrillic script where for example cyrillic "A" looks identical to
+    latin "A" and thus can be used to impersonate a user.
     Improved CASEMAPPING and "visually similar character"-checking is
     part of ongoing research at the IRCv3 working group.
 * Two optional modules. These are not loaded by default. To use them,
