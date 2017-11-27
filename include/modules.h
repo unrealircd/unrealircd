@@ -1066,6 +1066,9 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define EFUNC_USERHOST_SAVE_CURRENT	54
 #define EFUNC_USERHOST_CHANGED		55
 #define EFUNC_SEND_JOIN_TO_LOCAL_USERS		56
+#define EFUNC_DO_NICK_NAME			57
+#define EFUNC_DO_REMOTE_NICK_NAME	58
+#define EFUNC_CHARSYS_GET_CURRENT_LANGUAGES	59
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

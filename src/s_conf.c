@@ -252,11 +252,6 @@ extern void unload_all_unused_snomasks(void);
 extern void unload_all_unused_umodes(void);
 extern void unload_all_unused_extcmodes(void);
 
-extern int charsys_test_language(char *name);
-extern void charsys_add_language(char *name);
-extern void charsys_reset_pretest(void);
-int charsys_postconftest(void);
-void charsys_finish(void);
 int reloadable_perm_module_unloaded(void);
 void special_delayed_unloading(void);
 
@@ -1700,14 +1695,13 @@ void upgrade_conf_to_34(void)
 /** Reset config tests (before running the config test) */
 void config_test_reset(void)
 {
-	charsys_reset_pretest();
 }
 
 /** Run config test and all post config tests. */
 int config_test_all(void)
 {
 	if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
-	    (charsys_postconftest() < 0) || ssl_used_in_config_but_unavail() ||
+	    ssl_used_in_config_but_unavail() ||
 	    reloadable_perm_module_unloaded() || !ssl_tests())
 	{
 		return 0;
@@ -1782,7 +1776,6 @@ int	init_conf(char *rootconf, int rehash)
 		}
 		load_includes();
 		Init_all_testing_modules();
-		charsys_reset();
 		if (config_run() < 0)
 		{
 			config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
@@ -1792,7 +1785,6 @@ int	init_conf(char *rootconf, int rehash)
 #endif
 			abort();
 		}
-		charsys_finish();
 		applymeblock();
 		if (old_pid_file && strcmp(old_pid_file, conf_files->pid_file))
 		{
@@ -7405,10 +7397,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			else
 				tempiConf.userhost_allowed = UHALLOW_REJOIN;
 		}
-		else if (!strcmp(cep->ce_varname, "allowed-nickchars")) {
-			for (cepp = cep->ce_entries; cepp; cepp=cepp->ce_next)
-				charsys_add_language(cepp->ce_varname);
-		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
 			safestrdup(tempiConf.channel_command_prefix, cep->ce_vardata);
 		}
@@ -7990,25 +7978,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum);
 				errors++;
 				continue;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "allowed-nickchars")) {
-			if (cep->ce_vardata)
-			{
-				config_error("%s:%i: set::allowed-nickchars: please use 'allowed-nickchars { name; };' "
-				             "and not 'allowed-nickchars name;'",
-				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-				continue;
-			}
-			for (cepp = cep->ce_entries; cepp; cepp=cepp->ce_next)
-			{
-				if (!charsys_test_language(cepp->ce_varname))
-				{
-					config_error("%s:%i: set::allowed-nickchars: Unknown (sub)language '%s'",
-						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cepp->ce_varname);
-					errors++;
-				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {

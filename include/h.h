@@ -168,8 +168,6 @@ extern int add_silence(aClient *, char *, int);
 extern int del_silence(aClient *, char *);
 extern void send_user_joins(aClient *, aClient *);
 extern void clean_channelname(char *);
-extern int do_nick_name(char *);
-extern int do_remote_nick_name(char *);
 extern int can_send(aClient *, aChannel *, char *, int);
 extern long get_access(aClient *, aChannel *);
 extern int is_chan_op(aClient *, aChannel *);
@@ -668,6 +666,9 @@ extern MODVAR int (*match_user)(char *rmask, aClient *acptr, int options);
 extern MODVAR void (*userhost_save_current)(aClient *sptr);
 extern MODVAR void (*userhost_changed)(aClient *sptr);
 extern MODVAR void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr);
+extern MODVAR int (*do_nick_name)(char *nick);
+extern MODVAR int (*do_remote_nick_name)(char *nick);
+extern MODVAR char *(*charsys_get_current_languages)(void);
 /* /Efuncs */
 
 extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;

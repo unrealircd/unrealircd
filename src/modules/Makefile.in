@@ -61,7 +61,8 @@ R_MODULES= \
 	 ssl_antidos.so webirc.so websocket.so \
 	 blacklist.so jointhrottle.so \
 	 antirandom.so hideserver.so jumpserver.so \
-	 m_ircops.so m_staff.so nocodes.so
+	 m_ircops.so m_staff.so nocodes.so \
+	 charsys.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -508,6 +509,10 @@ m_staff.so: m_staff.c $(INCLUDES)
 nocodes.so: nocodes.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o nocodes.so nocodes.c
+
+charsys.so: charsys.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o charsys.so charsys.c
 
 #############################################################################
 # capabilities

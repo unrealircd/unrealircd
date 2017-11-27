@@ -135,6 +135,9 @@ int (*match_user)(char *rmask, aClient *acptr, int options);
 void (*userhost_changed)(aClient *sptr);
 void (*userhost_save_current)(aClient *sptr);
 void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr);
+int (*do_nick_name)(char *nick);
+int (*do_remote_nick_name)(char *nick);
+char *(*charsys_get_current_languages)(void);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -194,7 +197,10 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 54 */	{"userhost_save_current", (void *)&userhost_save_current},
 /* 55 */	{"userhost_changed", (void *)&userhost_changed},
 /* 56 */	{"send_join_to_local_users", (void *)&send_join_to_local_users},
-/* 57 */	{NULL, NULL}
+/* 57 */	{"do_nick_name", (void *)&do_nick_name},
+/* 58 */	{"do_remote_nick_name", (void *)&do_remote_nick_name},
+/* 59 */	{"charsys_get_current_languages", (void *)&charsys_get_current_languages},
+/* 60 */	{NULL, NULL}
 };
 
 #ifdef UNDERSCORE

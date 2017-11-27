@@ -226,7 +226,7 @@ void send_proto(aClient *cptr, ConfigItem_link *aconf)
 
 	/* Second line */
 	snprintf(buf, sizeof(buf), "CHANMODES=%s%s,%s%s,%s%s,%s%s PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%ld EXTSWHOIS",
-		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, prefix->value, langsinuse, me.id, (long)TStime());
+		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, prefix->value, charsys_get_current_languages(), me.id, (long)TStime());
 
 	sendto_one(cptr, "PROTOCTL %s", buf);
 }

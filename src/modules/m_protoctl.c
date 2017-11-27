@@ -254,11 +254,11 @@ CMD_FUNC(m_protoctl)
 			/* Ok, server is either authenticated, or is an outgoing connect...
 			 * We now compare the character sets to see if we should warn opers about any mismatch...
 			 */
-			if (strcmp(s+10, langsinuse))
+			if (strcmp(s+10, charsys_get_current_languages()))
 			{
 				sendto_realops("\002WARNING!!!!\002 Link %s does not have the same set::allowed-nickchars settings (or is "
 							"a different UnrealIRCd version), this MAY cause display issues. Our charset: '%s', theirs: '%s'",
-					get_client_name(cptr, FALSE), langsinuse, s+10);
+					get_client_name(cptr, FALSE), charsys_get_current_languages(), s+10);
 				/* return exit_client(cptr, cptr, &me, "Nick charset mismatch"); */
 			}
 		}

@@ -1049,7 +1049,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 	bzero(&StatsZ, sizeof(StatsZ));
 	setup_signals();
-	charsys_reset();
 
 	memset(&IRCstats, '\0', sizeof(ircstats));
 	IRCstats.servers = 1;
@@ -1182,7 +1181,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 			      (long)sizeof(struct ircstatsx));
 			  exit(0);
 			  break;
-#ifdef DEBUGMODE
+#if 0
 		case 'S':
 			charsys_dump_table(p ? p : "*");
 			exit(0);

@@ -1,6 +1,6 @@
 /*
  * Unreal Internet Relay Chat Daemon, src/charsys.c
- * (C) Copyright 2005 Bram Matthys and The UnrealIRCd Team.
+ * (C) Copyright 2005-2017 Bram Matthys and The UnrealIRCd Team.
  *
  * Character system: This subsystem deals with finding out wheter a
  * character should be allowed or not in nicks (nicks only for now).
@@ -20,29 +20,20 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "macros.h"
-#include "numeric.h"
-#include "msg.h"
-#include "channel.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
-#include "h.h"
-#include "proto.h"
+#include "unrealircd.h"
 
-#ifdef _WIN32
-#include "version.h"
+#ifndef ARRAY_SIZEOF
+ #define ARRAY_SIZEOF(x) (sizeof((x))/sizeof((x)[0]))
 #endif
+
+ModuleHeader MOD_HEADER(charsys)
+= {
+	"charsys",	/* Name of module */
+	"4.0", /* Version */
+	"Character System (set::allowed-nickchars)", /* Short description of module */
+	"3.2-b8-1",
+	NULL 
+};
 
 /* NOTE: it is guaranteed that char is unsigned by compiling options
  *       (-funsigned-char @ gcc, /J @ MSVC)
@@ -158,9 +149,6 @@ struct _ilanglist
 };
 ILangList *ilanglist = NULL;
 
-static int do_nick_name_multibyte(char *nick);
-static int do_nick_name_standard(char *nick);
-
 /* These characters are ALWAYS disallowed... from remote, in
  * multibyte, etc.. even though this might mean a certain
  * (legit) character cannot be used (eg: in chinese GBK).
@@ -175,11 +163,182 @@ static int do_nick_name_standard(char *nick);
  */
 const char *illegalnickchars = "\xA0!+%@&~#$:'\"?*,.";
 
+/* Forward declarations */
+int _do_nick_name(char *nick);
+int _do_remote_nick_name(char *nick);
+static int do_nick_name_multibyte(char *nick);
+static int do_nick_name_standard(char *nick);
+void charsys_reset(void);
+void charsys_reset_pretest(void);
+void charsys_finish(void);
+static void charsys_doadd_language(char *name);
+int charsys_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int charsys_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
+int charsys_config_posttest(int *errs);
+char *_charsys_get_current_languages(void);
+
+MOD_TEST(charsys)
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAdd(modinfo->handle, EFUNC_DO_NICK_NAME, _do_nick_name);
+	EfunctionAdd(modinfo->handle, EFUNC_DO_REMOTE_NICK_NAME, _do_remote_nick_name);
+	EfunctionAddPChar(modinfo->handle, EFUNC_CHARSYS_GET_CURRENT_LANGUAGES, _charsys_get_current_languages);
+	charsys_reset();
+	charsys_reset_pretest();
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, charsys_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, charsys_config_posttest);
+	return MOD_SUCCESS;
+}
+
+MOD_INIT(charsys)
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, charsys_config_run);
+	return MOD_SUCCESS;
+}
+
+/* Is first run when server is 100% ready */
+MOD_LOAD(charsys)
+{
+	charsys_finish();
+	return MOD_SUCCESS;
+}
+
+/* Called when module is unloaded */
+MOD_UNLOAD(charsys)
+{
+	return MOD_SUCCESS;
+}
+
+int charsys_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	int errors = 0;
+	ConfigEntry *cep;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	/* We are only interrested in set::allowed-nickchars... */
+	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "allowed-nickchars"))
+		return 0;
+
+	if (ce->ce_vardata)
+	{
+		config_error("%s:%i: set::allowed-nickchars: please use 'allowed-nickchars { name; };' "
+					 "and not 'allowed-nickchars name;'",
+					 ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		/* Give up immediately. Don't bother the user with any other errors. */
+		errors++;
+		*errs = errors;
+		return -1;
+	}
+
+	for (cep = ce->ce_entries; cep; cep=cep->ce_next)
+	{
+		if (!charsys_test_language(cep->ce_varname))
+		{
+			config_error("%s:%i: set::allowed-nickchars: Unknown (sub)language '%s'",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, cep->ce_varname);
+			errors++;
+		}
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+int charsys_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep;
+
+	if (type != CONFIG_SET)
+		return 0;
+	
+	/* We are only interrested in set::allowed-nickchars... */
+	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "allowed-nickchars"))
+		return 0;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		charsys_add_language(cep->ce_varname);
+
+	return 1;
+}
+
+/** Check if the specified charsets during the TESTING phase can be
+ * premitted without getting into problems.
+ * RETURNS: -1 in case of failure, 1 if ok
+ */
+int charsys_config_posttest(int *errs)
+{
+	int errors = 0;
+	int x=0;
+
+	if ((langav & LANGAV_ASCII) && (langav & LANGAV_GBK))
+	{
+		config_error("ERROR: set::allowed-nickchars specifies incorrect combination "
+		             "of languages: high-ascii languages (such as german, french, etc) "
+		             "cannot be mixed with chinese/..");
+		return -1;
+	}
+	if (langav & LANGAV_LATIN_UTF8)
+		x++;
+	if (langav & LANGAV_GREEK_UTF8)
+		x++;
+	if (langav & LANGAV_CYRILLIC_UTF8)
+		x++;
+	if (langav & LANGAV_HEBREW_UTF8)
+		x++;
+	if (langav & LANGAV_LATIN1)
+		x++;
+	if (langav & LANGAV_LATIN2)
+		x++;
+	if (langav & LANGAV_ISO8859_6)
+		x++;
+	if (langav & LANGAV_ISO8859_7)
+		x++;
+	if (langav & LANGAV_ISO8859_9)
+		x++;
+	if (langav & LANGAV_W1250)
+		x++;
+	if (langav & LANGAV_W1251)
+		x++;
+	if ((langav & LANGAV_LATIN2W1250) && !(langav & LANGAV_LATIN2) && !(langav & LANGAV_W1250))
+	    x++;
+	if (x > 1)
+	{
+		if (langav & LANGAV_LATIN_UTF8)
+		{
+			config_error("ERROR: set::allowed-nickchars: you cannot combine 'latin-utf8' with any other character set");
+			errors++;
+		}
+		if (langav & LANGAV_GREEK_UTF8)
+		{
+			config_error("ERROR: set::allowed-nickchars: you cannot combine 'greek-utf8' with any other character set");
+			errors++;
+		}
+		if (langav & LANGAV_CYRILLIC_UTF8)
+		{
+			config_error("ERROR: set::allowed-nickchars: you cannot combine 'cyrillic-utf8' with any other character set");
+			errors++;
+		}
+		if (langav & LANGAV_HEBREW_UTF8)
+		{
+			config_error("ERROR: set::allowed-nickchars: you cannot combine 'hebrew-utf8' with any other character set");
+			errors++;
+		}
+		config_status("WARNING: set::allowed-nickchars: "
+		            "Mixing of charsets (eg: latin1+latin2) can cause display problems");
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
 /** Called on boot and just before config run */
 void charsys_reset(void)
 {
-int i;
-MBList *m, *m_next;
+	int i;
+	MBList *m, *m_next;
 
 	/* First, reset everything */
 	for (i=0; i < 256; i++)
@@ -207,7 +366,7 @@ void charsys_reset_pretest(void)
 
 static inline void ilang_swap(ILangList *one, ILangList *two)
 {
-char *tmp = one->name;
+	char *tmp = one->name;
 	one->name = two->name;
 	two->name = tmp;
 }
@@ -307,7 +466,7 @@ void charsys_addallowed_range(unsigned char from, unsigned char to)
 		char_atribs[i] |= ALLOWN;
 }
 
-int do_nick_name(char *nick)
+int _do_nick_name(char *nick)
 {
 	if (mblist)
 		return do_nick_name_multibyte(nick);
@@ -384,7 +543,7 @@ int firstmbchar = 0;
  * are not really handled here. They are assumed to have been
  * checked by PROTOCTL NICKCHARS= -- Syzop.
  */
-int do_remote_nick_name(char *nick)
+int _do_remote_nick_name(char *nick)
 {
 char *c;
 
@@ -393,72 +552,6 @@ char *c;
 			return 0;
 
 	return (c - nick);
-}
-
-/** Check if the specified charsets during the TESTING phase can be
- * premitted without getting into problems.
- * RETURNS: -1 in case of failure, 1 if ok
- */
-int charsys_postconftest(void)
-{
-int x=0;
-	if ((langav & LANGAV_ASCII) && (langav & LANGAV_GBK))
-	{
-		config_error("ERROR: set::allowed-nickchars specifies incorrect combination "
-		             "of languages: high-ascii languages (such as german, french, etc) "
-		             "cannot be mixed with chinese/..");
-		return -1;
-	}
-	if (langav & LANGAV_LATIN_UTF8)
-		x++;
-	if (langav & LANGAV_GREEK_UTF8)
-		x++;
-	if (langav & LANGAV_CYRILLIC_UTF8)
-		x++;
-	if (langav & LANGAV_HEBREW_UTF8)
-		x++;
-	if (langav & LANGAV_LATIN1)
-		x++;
-	if (langav & LANGAV_LATIN2)
-		x++;
-	if (langav & LANGAV_ISO8859_6)
-		x++;
-	if (langav & LANGAV_ISO8859_7)
-		x++;
-	if (langav & LANGAV_ISO8859_9)
-		x++;
-	if (langav & LANGAV_W1250)
-		x++;
-	if (langav & LANGAV_W1251)
-		x++;
-	if ((langav & LANGAV_LATIN2W1250) && !(langav & LANGAV_LATIN2) && !(langav & LANGAV_W1250))
-	    x++;
-	if (x > 1)
-	{
-		if (langav & LANGAV_LATIN_UTF8)
-		{
-			config_error("ERROR: set::allowed-nickchars: you cannot combine 'latin-utf8' with any other character set");
-			return -1;
-		}
-		if (langav & LANGAV_GREEK_UTF8)
-		{
-			config_error("ERROR: set::allowed-nickchars: you cannot combine 'greek-utf8' with any other character set");
-			return -1;
-		}
-		if (langav & LANGAV_CYRILLIC_UTF8)
-		{
-			config_error("ERROR: set::allowed-nickchars: you cannot combine 'cyrillic-utf8' with any other character set");
-			return -1;
-		}
-		if (langav & LANGAV_HEBREW_UTF8)
-		{
-			config_error("ERROR: set::allowed-nickchars: you cannot combine 'hebrew-utf8' with any other character set");
-			return -1;
-		}
-		config_status("WARNING: set::allowed-nickchars: "
-		            "Mixing of charsets (eg: latin1+latin2) can cause display problems");
-	}
-	return 1;
 }
 
 static LangList *charsys_find_language(char *name)
@@ -1106,4 +1199,10 @@ void charsys_dump_table(char *filter)
 		charsys_finish();
 		printf("%s;%s;%s\n", charset, charsys_group(langlist[i].setflags), charsys_displaychars());
 	}
+}
+
+/** Get current languages (the 'langsinuse' variable) */
+char *_charsys_get_current_languages(void)
+{
+	return langsinuse;
 }
