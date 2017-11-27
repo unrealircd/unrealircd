@@ -15,4 +15,4 @@ TRE_INC_DIR="c:\projects\unrealircd-deps\tre" ^
 TRELIB="tre.lib" ^
 PCRE2_INC_DIR="c:\projects\unrealircd-deps\pcre2\build" ^
 PCRE2_LIB_DIR="c:\projects\unrealircd-deps\pcre2\build\release" ^
-PCRE2LIB="pcre2-8.lib" %1 %2
+PCRE2LIB="pcre2-8.lib" %*
