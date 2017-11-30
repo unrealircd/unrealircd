@@ -2338,7 +2338,6 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						if (type & TKL_SHUN)
 							tkl_check_local_remove_shun(tk);
 						RunHook5(HOOKTYPE_TKL_DEL, cptr, sptr, tk, parc, parv);
-						tkl_del_line(tk);
 						if (type & TKL_GLOBAL)
 						{
 							if (parc < 8)
@@ -2351,6 +2350,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 								              parv[6], parv[7], reason);
 							}
 						}
+						tkl_del_line(tk);
 						break;
 					}
 				}
