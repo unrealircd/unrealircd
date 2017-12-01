@@ -1,10 +1,10 @@
-UnrealIRCd 4.0.17-devel Release Notes
-================================
+UnrealIRCd 4.0.17-rc1 Release Notes
+====================================
 
-You are looking at the git repository (development version).
-UnrealIRCd 4.0.17 is work in progress.
+NOTE: UnrealIRCd 4.0.17 is work in progress.
+      Please report bugs at https://bugs.unrealircd.org/
 
-==[ CHANGES BETWEEN 4.0.16 AND 4.0.17-devel ]==
+==[ CHANGES BETWEEN 4.0.16 AND 4.0.17-rc1 ]==
 
 Enhancements:
 * Added experimental UTF8 support in set::allowed-nickchars
