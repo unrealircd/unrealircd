@@ -63,7 +63,7 @@ CMD_FUNC(m_protoctl)
 	int  remove = 0;
 #endif
 	int first_protoctl = (GotProtoctl(sptr)) ? 0 : 1; /**< First PROTOCTL we receive? Special ;) */
-	char proto[128], *s;
+	char proto[512], *s;
 /*	static char *dummyblank = "";	Yes, it is kind of ugly */
 
 	if (!MyConnect(sptr))
