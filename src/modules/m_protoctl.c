@@ -251,9 +251,19 @@ CMD_FUNC(m_protoctl)
 		{
 			if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
 				continue;
-			/* Ok, server is either authenticated, or is an outgoing connect...
-			 * We now compare the character sets to see if we should warn opers about any mismatch...
+			/* Ok, server is either authenticated, or is an outgoing connect... */
+			/* Some combinations are fatal because they would lead to mass-kills:
+			 * - use of 'utf8' on our server but not on theirs
 			 */
+			if (strstr(charsys_get_current_languages(), "utf8") && !strstr(s+10, "utf8"))
+			{
+				char buf[512];
+				snprintf(buf, sizeof(buf), "Server %s has utf8 in set::allowed-nickchars but %s does not. Link rejected.",
+					me.name, *sptr->name ? sptr->name : "other side");
+				sendto_realops("\002ERROR\001 %s", buf);
+				return exit_client(cptr, sptr, &me, buf);
+			}
+			/* We compare the character sets to see if we should warn opers about any mismatch... */
 			if (strcmp(s+10, charsys_get_current_languages()))
 			{
 				sendto_realops("\002WARNING!!!!\002 Link %s does not have the same set::allowed-nickchars settings (or is "
