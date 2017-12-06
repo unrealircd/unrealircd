@@ -71,7 +71,7 @@ CmodeInfo req;
 	req.is_ok = permanent_is_ok;
 	CmodeAdd(modinfo->handle, req, &EXTMODE_PERMANENT);
 
-	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 0, permanent_channel_destroy);
+	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, -100000, permanent_channel_destroy);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CHANMODE, 1000000, permanent_chanmode);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CHANMODE, 1000000, permanent_chanmode);
 
