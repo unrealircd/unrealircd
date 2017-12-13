@@ -263,9 +263,7 @@ int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link
 		 */
 
 		/* Actually we still need to double check the servername to avoid confusion. */
-		link = Find_link(servername, cptr);
-
-		if (!link || strcasecmp(link->servername, cptr->serv->conf->servername))
+		if (strcasecmp(servername, cptr->serv->conf->servername))
 		{
 			ircsnprintf(xerrmsg, sizeof(xerrmsg), "Outgoing connect from link block '%s' but server "
 				"introduced himself as '%s'. Server name mismatch.",

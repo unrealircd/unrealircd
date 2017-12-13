@@ -82,6 +82,7 @@ Major issues fixed:
 
 Minor issues fixed:
 * set::restrict-extendedbans was not effective for stacked bans
+* linking problem if only using link::outgoing
 
 Other:
 * UnrealIRCd will no longer give user mode +z to users on WEBIRC
