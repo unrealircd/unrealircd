@@ -1070,7 +1070,7 @@ static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 	ConfigItem_mask *m = MyMallocEx(sizeof(ConfigItem_mask));
 
 	/* Since we allow both mask "xyz"; and mask { abc; def; };... */
-	if (!strcmp(ce->ce_varname, "mask") && ce->ce_vardata)
+	if (ce->ce_vardata)
 		safestrdup(m->mask, ce->ce_vardata);
 	else
 		safestrdup(m->mask, ce->ce_varname);
