@@ -74,6 +74,8 @@ Enhancements:
           unauthorized "You are not authorized to connect to this server";
       };
   };
+* Added optional AppArmor profile in extras/security/apparmor/unrealircd
+  https://www.unrealircd.org/docs/Using_AppArmor_with_UnrealIRCd
 
 Major issues fixed:
 * Crash if linking anope with the 'unreal' module from a non-localhost
@@ -82,7 +84,7 @@ Major issues fixed:
 
 Minor issues fixed:
 * set::restrict-extendedbans was not effective for stacked bans
-* linking problem if only using link::outgoing
+* linking if only using link::outgoing caused a 'server name mismatch'
 
 Other:
 * UnrealIRCd will no longer give user mode +z to users on WEBIRC

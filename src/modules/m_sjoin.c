@@ -442,14 +442,11 @@ getnick:
 
 			/* A person joining */
 
+			/* The user may no longer exist. This can happen in case of a
+			 * SVSKILL traveling in the other direction. Nothing to worry about.
+			 */
 			if (!(acptr = find_person(nick, NULL)))
-			{
-				sendto_snomask
-				    (SNO_JUNK, "Missing user %s in SJOIN for %s from %s (%s)",
-				    nick, chptr->chname, sptr->name,
-				    backupbuf);
 				continue;
-			}
 
 			if (acptr->from != sptr->from)
 			{
