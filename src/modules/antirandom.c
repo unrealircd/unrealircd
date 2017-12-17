@@ -57,12 +57,6 @@ typedef struct {
  #define BAN_ACT_WARN 11
 #endif
 
-typedef struct _dynlist DynList;
-struct _dynlist {
-	DynList *prev, *next;
-	char *entry;
-};
-
 #ifndef _WIN32
 /* You can define regexes here.. the format is:
  * {"<REGEX>", SCORE},
@@ -561,7 +555,7 @@ struct {
 	int convert_to_lowercase;
 	int show_failedconnects;
 	int fullstatus_on_load;
-	DynList *except_hosts;
+	ConfigItem_mask *except_hosts;
 } cfg;
 
 /* Forward declarations */
@@ -635,17 +629,8 @@ static char buf[2048];
 
 static void free_config(void)
 {
-DynList *d, *d_next;
-
-	if (cfg.ban_reason)
-		MyFree(cfg.ban_reason);
-	for (d=cfg.except_hosts; d; d=d_next)
-	{
-		d_next = d->next;
-		MyFree(d->entry);
-		MyFree(d);
-	}
-
+	safefree(cfg.ban_reason);
+	unreal_delete_masks(cfg.except_hosts);
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
@@ -721,8 +706,7 @@ ConfigEntry *cep;
 
 int antirandom_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
-ConfigEntry *cep, *cep2;
-DynList *d;
+	ConfigEntry *cep, *cep2;
 
 	if (type != CONFIG_SET)
 		return 0;
@@ -736,11 +720,7 @@ DynList *d;
 		if (!strcmp(cep->ce_varname, "except-hosts"))
 		{
 			for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
-			{
-				d = MyMallocEx(sizeof(DynList));
-				d->entry = strdup(cep2->ce_varname);
-				AddListItem(d, cfg.except_hosts);
-			}
+				unreal_add_masks(&cfg.except_hosts, cep2);
 		} else
 		if (!strcmp(cep->ce_varname, "threshold"))
 		{
@@ -1128,25 +1108,5 @@ Triples *t, *t_next;
 /** Finds out if the host is on the except list. 1 if yes, 0 if no */
 static int is_except_host(aClient *sptr)
 {
-char *host, *ip;
-DynList *d;
-#ifdef TIMING
-struct timeval tv_alpha, tv_beta;
-
-	gettimeofday(&tv_alpha, NULL);
-#endif
-
-	host = sptr->user ? sptr->user->realhost : "???";
-	ip = GetIP(sptr) ? GetIP(sptr) : "???";
-	
-	for (d=cfg.except_hosts; d; d=d->next)
-		if (!match(d->entry, host) || !match(d->entry, ip))
-			return 1;
-
-#ifdef TIMING
-	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "AntiRandom is_except_host (full search): %ld microseconds",
-		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
-#endif
-	return 0;
+	return unreal_mask_match(sptr, cfg.except_hosts);
 }
