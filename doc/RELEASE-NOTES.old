@@ -3,6 +3,14 @@ See doc/RELEASE-NOTES for the latest release notes.
 This file (doc/RELEASE-NOTES.old) contains the release notes
 of OLDER releases for historical purposes.
 
+==[ CHANGES BETWEEN 4.0.16 AND 4.0.16.1 ]==
+An interim release with a couple of backported fixes:
+* Fix hang in (outgoing) server linking
+* Fix crash when linking anope over SSL from non-localhost
+* '/SPAMFILTER del <id>' did not remove the spamfilter on other servers
+* set::restrict-extendedbans was not always applied (when stacked)
+* Update automated build scripts
+
 ==[ CHANGES BETWEEN 4.0.15 AND 4.0.16 ]==
 
 This is a major release with lots of new features and changes.
