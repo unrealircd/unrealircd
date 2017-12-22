@@ -75,7 +75,7 @@ CMD_FUNC(m_invite)
 {
 	aClient *acptr;
 	aChannel *chptr;
-	short over = 0;
+	int override = 0;
 	int i = 0;
 	Hook *h;
 
@@ -108,7 +108,7 @@ CMD_FUNC(m_invite)
 
 	for (h = Hooks[HOOKTYPE_PRE_INVITE]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(sptr,acptr,chptr,&over);
+		i = (*(h->func.intfunc))(sptr,acptr,chptr,&override);
 		if (i == HOOK_DENY)
 			return -1;
 		if (i == HOOK_ALLOW)
@@ -119,7 +119,7 @@ CMD_FUNC(m_invite)
 	{
 		if (ValidatePermissionsForPath("override:invite:notinchannel",sptr,NULL,chptr,NULL) && sptr == acptr)
 		{
-			over = 1;
+			override = 1;
 		} else {
 			sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
 			    me.name, sptr->name, parv[2]);
@@ -140,7 +140,7 @@ CMD_FUNC(m_invite)
 		{
 			if (ValidatePermissionsForPath("override:invite:nopermissions",sptr,NULL,chptr,NULL) && sptr == acptr)
 			{
-				over = 1;
+				override = 1;
 			} else {
 				sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
 				    me.name, sptr->name, chptr->chname);
@@ -151,7 +151,7 @@ CMD_FUNC(m_invite)
 		{
 			if (ValidatePermissionsForPath("override:invite:nopermissions",sptr,NULL,chptr,NULL) && sptr == acptr)
 			{
-				over = 1;
+				override = 1;
 			} else {
 				sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
 				    me.name, sptr->name, chptr->chname);
@@ -174,7 +174,7 @@ CMD_FUNC(m_invite)
 		if (check_for_target_limit(sptr, acptr, acptr->name))
 			return 0;
 
-		if (!over)
+		if (!override)
 		{
 			sendto_one(sptr, rpl_str(RPL_INVITING), me.name,
 			    sptr->name, acptr->name, chptr->chname);
@@ -187,7 +187,7 @@ CMD_FUNC(m_invite)
 	}
 
 	/* Send OperOverride messages */
-	if (over && MyConnect(acptr))
+	if (override && MyConnect(acptr))
 	{
 		if (is_banned(sptr, chptr, BANCHK_JOIN))
 		{
@@ -236,7 +236,7 @@ CMD_FUNC(m_invite)
 		}
 #ifdef OPEROVERRIDE_VERIFY
 		else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
-		       over = -1;
+		       override = -1;
 #endif
 		else
 			return 0;
@@ -250,13 +250,13 @@ CMD_FUNC(m_invite)
 		    || ValidatePermissionsForPath("override:channel:invite",sptr,NULL,chptr,NULL)
 		    ))
 		{
-			if (over == 1)
+			if (override == 1)
 			{
 				sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 				  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
 				  me.name, chptr->chname, sptr->name);
 			} else
-			if (over == 0)
+			if (override == 0)
 			{
 				sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 				  ":%s NOTICE @%s :%s invited %s into the channel.",
