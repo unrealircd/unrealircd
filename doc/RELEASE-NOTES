@@ -1,12 +1,40 @@
-UnrealIRCd 4.0.17-rc1 Release Notes
-====================================
+UnrealIRCd 4.0.17 Release Notes
+================================
 
-NOTE: UnrealIRCd 4.0.17 is work in progress.
-      Please report bugs at https://bugs.unrealircd.org/
-
-==[ CHANGES BETWEEN 4.0.16 AND 4.0.17-rc1 ]==
+==[ CHANGES BETWEEN 4.0.16 AND 4.0.17 ]==
 
 Enhancements:
+* Two optional modules. These are not loaded by default. To use them,
+  include modules.optional.conf, or add these loadmodule lines:
+  loadmodule "extbans/timedban";
+  loadmodule "extbans/msgbypass";
+  * Timed bans: ~t:duration:mask
+    These are bans that are automatically removed by the server.
+    The duration is in minutes and the mask can be any ban mask.
+    Some examples:
+    * A 5 minute ban on a host:
+      +b ~t:5:*!*@host
+    * A 5 minute quiet ban on a host (unable to speak):
+      +b ~t:5:~q:*!*@host
+    * An invite exception for 1440m/24hrs
+      +I ~t:1440:*!*@host
+    * A temporary exempt ban for a services account
+      +e ~t:1440:~a:Account
+    * Allows someone to speak through +m for the next 24hrs:
+      +e ~t:1440:~m:moderated:*!*@host
+    * And any other crazy ideas you can come up with...
+  * New ban exception ~m:type:mask which allows bypassing of message
+    restrictions. Valid types are: 'external' (bypass +n),
+    moderated (bypass +m/+M), 'filter' (bypass +G),
+    'color' (bypass +S/+c) and 'notice' (bypass +T).
+    Some examples:
+    * Let LAN users bypass +m: +e ~m:moderated:*!*@192.168.*
+    * Let ops in #otherchan bypass +m: +e ~m:moderated:~c:@#otherchan
+    * Make GitHub commit bot bypass +n: +e ~m:external:*!*@ipmask
+    * Allow a services account to use color: +e ~m:color:~a:ColorBot
+* Timedban support in +f [5t#b2]:10 (set 2 minute ban on text flood).
+  This is only available if the previously mentioned extbans/timedban
+  module is loaded.
 * Added experimental UTF8 support in set::allowed-nickchars
   See https://www.unrealircd.org/docs/Nick_Character_Sets
   Example: set { allowed-nickchars { latin-utf8; }; };
@@ -34,37 +62,6 @@ Enhancements:
     latin "A" and thus can be used to impersonate a user.
     Improved CASEMAPPING and "visually similar character"-checking is
     part of ongoing research at the IRCv3 working group.
-* Two optional modules. These are not loaded by default. To use them,
-  include modules.optional.conf, or add these loadmodule lines:
-  loadmodule "extbans/msgbypass";
-  loadmodule "extbans/timedban";
-  * New ban exception ~m:type:mask which allows bypassing of message
-    restrictions. Valid types are: 'external' (bypass +n),
-    moderated (bypass +m/+M), 'filter' (bypass +G),
-    'color' (bypass +S/+c) and 'notice' (bypass +T).
-    Some examples:
-    * Let LAN users bypass +m: +e ~m:moderated:*!*@192.168.*
-    * Let ops in #otherchan bypass +m: +e ~m:moderated:~c:@#otherchan
-    * Make GitHub commit bot bypass +n: +e ~m:external:*!*@ipmask
-    * Allow a services account to use color: +e ~m:color:~a:ColorBot
-  * Timed bans: ~t:duration:mask
-    These are bans that are automatically removed by the server.
-    The duration is in minutes and the mask can be any ban mask.
-    Some examples:
-    * A 5 minute ban on a host:
-      +b ~t:5:*!*@host
-    * A 5 minute quiet ban on a host (unable to speak):
-      +b ~t:5:~q:*!*@host
-    * An invite exception for 1440m/24hrs
-      +I ~t:1440:*!*@host
-    * A temporary exempt ban for a services account
-      +e ~t:1440:~a:Account
-    * Allows someone to speak through +m for the next 24hrs:
-      +e ~t:1440:~m:moderated:*!*@host
-    * And any other crazy ideas you can come up with...
-* Timedban support in +f [5t#b2]:10 (set 2 minute ban on text flood).
-  This is only available if the previously mentioned extbans/timedban
-  module is loaded.
 * Ability to customize the reject connection messages:
   set {
      reject-message {
@@ -75,7 +72,7 @@ Enhancements:
       };
   };
 * Added optional AppArmor profile in extras/security/apparmor/unrealircd
-  https://www.unrealircd.org/docs/Using_AppArmor_with_UnrealIRCd
+  See https://www.unrealircd.org/docs/Using_AppArmor_with_UnrealIRCd
 
 Major issues fixed:
 * Crash when using OperOverride (*NIX only)
