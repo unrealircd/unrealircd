@@ -1,7 +1,7 @@
 UnrealIRCd 4.0.17 Release Notes
 ================================
 
-==[ CHANGES BETWEEN 4.0.16 AND 4.0.17 ]==
+==[ CHANGES BETWEEN 4.0.16.1 AND 4.0.17 ]==
 
 Enhancements:
 * Two optional modules. These are not loaded by default. To use them,
