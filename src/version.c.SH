@@ -4,7 +4,7 @@ echo "Extracting src/version.c..."
 
 #id=`grep '$Id: Changes,v' ../Changes`
 #id=`echo $id |sed 's/.* Changes\,v \(.*\) .* Exp .*/\1/'`
-id="4.0.17"
+id="4.0.18-devel"
 echo "$id"
 
 if test -r version.c
