@@ -3,6 +3,105 @@ See doc/RELEASE-NOTES for the latest release notes.
 This file (doc/RELEASE-NOTES.old) contains the release notes
 of OLDER releases for historical purposes.
 
+==[ CHANGES BETWEEN 4.0.16.1 AND 4.0.17 ]==
+
+Enhancements:
+* Two optional modules. These are not loaded by default. To use them,
+  include modules.optional.conf, or add these loadmodule lines:
+  loadmodule "extbans/timedban";
+  loadmodule "extbans/msgbypass";
+  * Timed bans: ~t:duration:mask
+    These are bans that are automatically removed by the server.
+    The duration is in minutes and the mask can be any ban mask.
+    Some examples:
+    * A 5 minute ban on a host:
+      +b ~t:5:*!*@host
+    * A 5 minute quiet ban on a host (unable to speak):
+      +b ~t:5:~q:*!*@host
+    * An invite exception for 1440m/24hrs
+      +I ~t:1440:*!*@host
+    * A temporary exempt ban for a services account
+      +e ~t:1440:~a:Account
+    * Allows someone to speak through +m for the next 24hrs:
+      +e ~t:1440:~m:moderated:*!*@host
+    * And any other crazy ideas you can come up with...
+  * New ban exception ~m:type:mask which allows bypassing of message
+    restrictions. Valid types are: 'external' (bypass +n),
+    moderated (bypass +m/+M), 'filter' (bypass +G),
+    'color' (bypass +S/+c) and 'notice' (bypass +T).
+    Some examples:
+    * Let LAN users bypass +m: +e ~m:moderated:*!*@192.168.*
+    * Let ops in #otherchan bypass +m: +e ~m:moderated:~c:@#otherchan
+    * Make GitHub commit bot bypass +n: +e ~m:external:*!*@ipmask
+    * Allow a services account to use color: +e ~m:color:~a:ColorBot
+* Timedban support in +f [5t#b2]:10 (set 2 minute ban on text flood).
+  This is only available if the previously mentioned extbans/timedban
+  module is loaded.
+* Added experimental UTF8 support in set::allowed-nickchars
+  See https://www.unrealircd.org/docs/Nick_Character_Sets
+  Example: set { allowed-nickchars { latin-utf8; }; };
+  Important remarks:
+  * All your servers must be on UnrealIRCd 4.0.17 (or later)
+  * Most(?) services do not support this, so users using UTF8 nicknames
+    won't be able to register at NickServ.
+  * In set::allowed-nickchars you must either choose an utf8 language
+    or a non-utf8 character set. You cannot combine the two.
+  * You also cannot combine multiple scripts/alphabets, such as:
+    latin, greek, cyrillic and hebrew. You must choose one.
+  * If you are already using set::allowed-nickchars on your network
+    (eg: 'latin1') then be careful when migrating (to eg: 'latin-utf8'):
+    * Your clients may still assume non-UTF8
+    * If users registered nicks with accents or other special characters
+      at NickServ then they may not be able to access their account
+      after the migration to UTF8.
+  * There is no CASEMAPPING or "visually identical character"-checking.
+    Just like in the old (non-utf8) charsys this means there is no
+    lower/uppercase checking for allowed-nickchars nicks. So a nick with
+    "O with accent" can be online at the same time as "o with accent".
+    They are treated as two different users.
+    The identical character looking issue is particular noticeable in
+    cyrillic script where for example cyrillic "A" looks identical to
+    latin "A" and thus can be used to impersonate a user.
+    Improved CASEMAPPING and "visually similar character"-checking is
+    part of ongoing research at the IRCv3 working group.
+* Ability to customize the reject connection messages:
+  set {
+     reject-message {
+          password-mismatch "Password mismatch";
+          too-many-connections "Too many connections from your IP";
+          server-full "This server is full.";
+          unauthorized "You are not authorized to connect to this server";
+      };
+  };
+* Added optional AppArmor profile in extras/security/apparmor/unrealircd
+  See https://www.unrealircd.org/docs/Using_AppArmor_with_UnrealIRCd
+
+Major issues fixed:
+* Crash when using OperOverride (*NIX only)
+* Crash if linking anope with the 'unreal' module from a non-localhost
+  SSL connection. This is rarely done but also acts as a reminder that
+  people should really use the 'unreal4' module in anope (2.0.3+).
+
+Minor issues fixed:
+* set::restrict-extendedbans was not effective for stacked bans
+* linking if only using link::outgoing caused a 'server name mismatch'
+
+Other:
+* UnrealIRCd will no longer give user mode +z to users on WEBIRC
+  gateways using SSL/TLS IRC, unless the WEBIRC gateway gives us
+  some assurance that the client<->webirc gateway connection is
+  also secure (eg: https).
+  This is the regular WEBIRC format:
+  WEBIRC password gateway hostname ip
+  This indicates a secure client connection (NEW):
+  WEBIRC password gateway hostname ip :secure
+  Naturally, WEBIRC gateways MUST NOT send the "secure" option if
+  the client is using http or some other insecure protocol.
+
+Module coders:
+* New hook HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION
+  https://www.unrealircd.org/docs/Dev:Hook_API#HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION
+
 ==[ CHANGES BETWEEN 4.0.16 AND 4.0.16.1 ]==
 An interim release with a couple of backported fixes:
 * Fix hang in (outgoing) server linking
