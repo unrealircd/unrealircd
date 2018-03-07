@@ -1478,7 +1478,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->check_target_nick_bans = 1;
 	i->maxbans = 60;
 	i->maxbanlength = 2048;
-	i->timesynch_enabled = 1;
+	i->timesynch_enabled = 0;
 	i->timesynch_timeout = 3;
 	i->timesynch_server = strdup("193.67.79.202,129.6.15.29,133.100.11.8"); /* nlnet (EU), NIST (US), Fukuoka university (JP). All open acces, nonotify, nodns. */
 	i->level_on_join = CHFL_CHANOP;
