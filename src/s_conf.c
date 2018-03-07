@@ -1480,7 +1480,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->maxbanlength = 2048;
 	i->timesynch_enabled = 1;
 	i->timesynch_timeout = 3;
-	i->timesynch_server = strdup("193.67.79.202,192.43.244.18,128.250.36.3"); /* nlnet (EU), NIST (US), uni melbourne (AU). All open acces, nonotify, nodns. */
+	i->timesynch_server = strdup("193.67.79.202,129.6.15.29,133.100.11.8"); /* nlnet (EU), NIST (US), Fukuoka university (JP). All open acces, nonotify, nodns. */
 	i->level_on_join = CHFL_CHANOP;
 	i->watch_away_notification = 1;
 	i->new_linking_protocol = 1;
