@@ -1515,22 +1515,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 	if (virthost && umode)
 	{
-		tkllayer[0] = nick;
-		tkllayer[1] = nick;
-		tkllayer[2] = umode;
-		dontspread = 1;
-		do_cmd(cptr, sptr, "MODE", 3, tkllayer);
-		dontspread = 0;
-		if (virthost && *virthost != '*')
-		{
-			if (sptr->user->virthost)
-			{
-				MyFree(sptr->user->virthost);
-				sptr->user->virthost = NULL;
-			}
-			/* Here pig.. yeah you .. -Stskeeps */
-			sptr->user->virthost = strdup(virthost);
-		}
+		/* Set the IP address first */
 		if (ip && (*ip != '*'))
 		{
 			char *ipstring = decode_ip(ip);
@@ -1543,6 +1528,25 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			}
 			sptr->ip = strdup(ipstring);
 		}
+
+		/* For remote clients we recalculate the cloakedhost here because
+		 * it may depend on the IP address (bug #5064).
+		 */
+		make_virthost(sptr, user->realhost, user->cloakedhost, 0);
+		safestrdup(user->virthost, user->cloakedhost);
+
+		/* Set the umodes */
+		tkllayer[0] = nick;
+		tkllayer[1] = nick;
+		tkllayer[2] = umode;
+		tkllayer[3] = NULL;
+		dontspread = 1;
+		do_cmd(cptr, sptr, "MODE", 3, tkllayer);
+		dontspread = 0;
+
+		/* Set the vhost */
+		if (virthost && *virthost != '*')
+			safestrdup(sptr->user->virthost, virthost);
 	}
 
 	hash_check_watch(sptr, RPL_LOGON);	/* Uglier hack */
