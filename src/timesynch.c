@@ -82,17 +82,31 @@ static char tspkt[TSPKTLEN];
 u_int32_t current;
 
 	memset(tspkt, 0, sizeof(tspkt));
-	/* bit 0-1: LI (00)
-	 * bit 2-4: version number (4, which is: 100)
-	 * bit 5-7: client mode (3, which is: 011)
+	/* bit 0-1: leap indicator: clock unsynchronized (3, binary: 11)
+	 * bit 2-4: version number (4, binary: 100)
+	 * bit 5-7: client mode (3, binary: 011)
 	 *
-	 * This comes down to 00100011, which is 0x23
+	 * This comes down to 11100011, which is 0xE3
 	 */
-	tspkt[0] = 0x23;
-	/* rest is zero... */
-	
-	/* Except the current timestamp: */
-	current = htonl((u_int32_t)time(NULL));
+	tspkt[0] = 0xE3;
+
+	/* bits 8-15: stratum */
+	tspkt[1] = 0x0;
+
+	/* bits 16-23: poll (3, meaning 8sec) */
+	tspkt[2] = 0x3;
+
+	/* bits 24-31: precision (-6) */
+	tspkt[3] = 0xFA;
+
+	/* root delay: 1 */
+	tspkt[5] = 0x01;
+
+	/* root dispersion: 1 */
+	tspkt[9] = 0x01;
+
+	/* Current timestamp: */
+	current = htonl((u_int32_t)time(NULL) + (u_int32_t)2208988800);
 	memcpy(tspkt+40, &current, 4);
 
 	/* Our cookie... */
