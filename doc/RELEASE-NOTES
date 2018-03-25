@@ -12,7 +12,9 @@ Major issues fixed:
 * The new optional feature 'set::cloak-method ip' caused identical cloaks
 
 Minor issues fixed:
-* None
+* When using '/REHASH -ssl' or './unrealircd reloadtls' it did not reload
+  the SSL certificate/key if you were using ssl-options in listen, sni or
+  link blocks. In short: it only reloaded the ones from set::ssl until now.
 
 Other:
 * The built-in time synchronization feature is now disabled by default.
