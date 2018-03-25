@@ -68,6 +68,7 @@ extern MODVAR ConfigItem_allow		*conf_allow;
 extern MODVAR ConfigItem_except	*conf_except;
 extern MODVAR ConfigItem_vhost		*conf_vhost;
 extern MODVAR ConfigItem_link		*conf_link;
+extern MODVAR ConfigItem_sni		*conf_sni;
 extern MODVAR ConfigItem_ban		*conf_ban;
 extern MODVAR ConfigItem_deny_dcc	*conf_deny_dcc;
 extern MODVAR ConfigItem_deny_channel  *conf_deny_channel;

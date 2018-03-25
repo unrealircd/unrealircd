@@ -427,7 +427,10 @@ int init_ssl(void)
 
 void reinit_ssl(aClient *acptr)
 {
-SSL_CTX *tmp;
+	SSL_CTX *tmp;
+	ConfigItem_listen *listen;
+	ConfigItem_sni *sni;
+	ConfigItem_link *link;
 
 	if (!acptr)
 		mylog("Reloading all SSL related data (./unrealircd reloadtls)");
@@ -461,6 +464,64 @@ SSL_CTX *tmp;
 	SSL_CTX_free(tmp);
 	SSL_CTX_free(ctx_client);
 	ctx_client = init_ctx(iConf.ssl_options, 0);
+
+	/* listen::ssl-options.... */
+	for (listen = conf_listen; listen; listen = listen->next)
+	{
+		if (listen->ssl_options)
+		{
+			tmp = init_ctx(listen->ssl_options, 1);
+			if (!tmp)
+			{
+				config_error("SSL Reload partially failed. listen::ssl-options error, see above");
+				config_report_ssl_error();
+				return;
+			}
+			/* free and do it for real */
+			SSL_CTX_free(tmp);
+			SSL_CTX_free(listen->ssl_ctx);
+			listen->ssl_ctx = init_ctx(listen->ssl_options, 1);
+		}
+	}
+
+	/* sni::ssl-options.... */
+	for (sni = conf_sni; sni; sni = sni->next)
+	{
+		if (sni->ssl_options)
+		{
+			tmp = init_ctx(sni->ssl_options, 1);
+			if (!tmp)
+			{
+				config_error("SSL Reload partially failed. sni::ssl-options error, see above");
+				config_report_ssl_error();
+				return;
+			}
+			/* free and do it for real */
+			SSL_CTX_free(tmp);
+			SSL_CTX_free(sni->ssl_ctx);
+			sni->ssl_ctx = init_ctx(sni->ssl_options, 1);
+		}
+	}
+
+	/* link::outgoing::ssl-options.... */
+	for (link = conf_link; link; link = link->next)
+	{
+		if (link->ssl_options)
+		{
+			tmp = init_ctx(link->ssl_options, 1);
+			if (!tmp)
+			{
+				config_error("SSL Reload partially failed. link::outgoing::ssl-options error in link %s { }, see above",
+					link->servername);
+				config_report_ssl_error();
+				return;
+			}
+			/* free and do it for real */
+			SSL_CTX_free(tmp);
+			SSL_CTX_free(link->ssl_ctx);
+			link->ssl_ctx = init_ctx(link->ssl_options, 1);
+		}
+	}
 }
 
 #define CHK_NULL(x) if ((x)==NULL) {\
