@@ -27,7 +27,7 @@ Enhancements:
     * And any other crazy ideas you can come up with...
   * New ban exception ~m:type:mask which allows bypassing of message
     restrictions. Valid types are: 'external' (bypass +n),
-    moderated (bypass +m/+M), 'filter' (bypass +G),
+    moderated (bypass +m/+M), 'censor' (bypass +G),
     'color' (bypass +S/+c) and 'notice' (bypass +T).
     Some examples:
     * Let LAN users bypass +m: +e ~m:moderated:*!*@192.168.*
