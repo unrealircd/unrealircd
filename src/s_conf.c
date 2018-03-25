@@ -8067,6 +8067,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckDuplicate(cep, prefix_quit, "prefix-quit");
 		}
 		else if (!strcmp(cep->ce_varname, "hide-ban-reason")) {
+			CheckNull(cep);
 			CheckDuplicate(cep, hide_ban_reason, "hide-ban-reason");
 		}
 		else if (!strcmp(cep->ce_varname, "restrict-usermodes"))
