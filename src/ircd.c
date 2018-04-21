@@ -1408,9 +1408,21 @@ int InitUnrealIRCd(int argc, char *argv[])
 #if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)
 	if (!(bootopt & BOOT_NOFORK))
 	{
-		close_std_descriptors();
-		if (fork())
+		pid_t p;
+		p = fork();
+		if (p < 0)
+		{
+			fprintf(stderr, "Could not create background job. Call to fork() failed: %s\n",
+				strerror(errno));
+			exit(-1);
+		}
+		if (p > 0)
+		{
+			/* Background job created and we are the parent. We can terminate. */
 			exit(0);
+		}
+		/* Background process (child) continues below... */
+		close_std_descriptors();
 		fd_fork();
 		loop.ircd_forked = 1;
 	}
