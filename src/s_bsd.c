@@ -518,7 +518,7 @@ void init_sys(void)
     defined(_POSIX_SOURCE) || defined(SVR4) || defined(SGI) || \
     defined(OSXTIGER) || defined(__QNX__)
 	(void)setsid();
-#else
+#elif !defined(_WIN32)
 	(void)setpgrp(0, (int)getpid());
 #endif
 
