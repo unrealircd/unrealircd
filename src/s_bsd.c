@@ -485,22 +485,23 @@ void init_sys(void)
 			(void)fprintf(stderr, "Fix MAXCONNECTIONS\n");
 			exit(-1);
 		}
-	limit.rlim_cur = limit.rlim_max;	/* make soft limit the max */
-	if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
-	{
+		limit.rlim_cur = limit.rlim_max;	/* make soft limit the max */
+		if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
+		{
 /* HACK: if it's mac os X then don't error... */
 #ifndef OSXTIGER
 #ifndef LONG_LONG_RLIM_T
-		(void)fprintf(stderr, "error setting max fd's to %ld\n",
+			(void)fprintf(stderr, "error setting max fd's to %ld\n",
 #else
-		(void)fprintf(stderr, "error setting max fd's to %lld\n",
+			(void)fprintf(stderr, "error setting max fd's to %lld\n",
 #endif
-		    limit.rlim_cur);
-		exit(-1);
-#endif
+			    limit.rlim_cur);
+			exit(-1);
+#endif // OSXTIGER
+#endif // RLIMIT_FD_MAX
+		}
 	}
-}
-#endif
+
 #ifndef _WIN32
 #ifdef BACKEND_SELECT
 	if (MAXCONNECTIONS > FD_SETSIZE)
@@ -511,44 +512,8 @@ void init_sys(void)
 	}
 #endif
 #endif
-#if defined(PCS) || defined(SVR3)
-char logbuf[BUFSIZ];
 
-(void)setvbuf(stderr, logbuf, _IOLBF, sizeof(logbuf));
-#else
-# if defined(HPUX)
-(void)setvbuf(stderr, NULL, _IOLBF, 0);
-# else
-#  if !defined(_SOLARIS) && !defined(_WIN32)
-(void)setlinebuf(stderr);
-#  endif
-# endif
-#endif
-#ifndef _WIN32
-#ifdef HAVE_SYSLOG
-closelog(); /* temporary close syslog, as we mass close() fd's below... */
-#endif
-
-if (bootopt & BOOT_TTY)		/* debugging is going to a tty */
-	goto init_dgram;
-
-if ((bootopt & BOOT_CONSOLE) || isatty(0))
-{
-#ifndef _AMIGA
-/*		if (fork())
-			exit(0);
-*/
-#endif
-#ifdef TIOCNOTTY
-	if ((fd = open("/dev/tty", O_RDWR)) >= 0)
-	{
-		(void)ioctl(fd, TIOCNOTTY, (char *)NULL);
-#ifndef NOCLOSEFD
-		(void)close(fd);
-#endif
-	}
-#endif
-
+	/* Create new session / set process group */
 #if defined(HPUX) || defined(_SOLARIS) || \
     defined(_POSIX_SOURCE) || defined(SVR4) || defined(SGI) || \
     defined(OSXTIGER) || defined(__QNX__)
@@ -556,25 +521,53 @@ if ((bootopt & BOOT_CONSOLE) || isatty(0))
 #else
 	(void)setpgrp(0, (int)getpid());
 #endif
-#ifndef NOCLOSEFD
-	(void)close(0);		/* fd 0 opened by inetd */
-#endif
-}
-init_dgram:
-#else
-#ifndef NOCLOSEFD
-	close(fileno(stdin));
-	close(fileno(stdout));
-	if (!(bootopt & BOOT_DEBUG))
-	close(fileno(stderr));
-#endif
-#ifdef HAVE_SYSLOG
-openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON); /* reopened now */
-#endif
-#endif /*_WIN32*/
 
 	init_resolver(1);
 	return;
+}
+
+/** Replace a file descriptor (*NIX only).
+ * @param oldfd: the old FD to close and re-use
+ * @param name: descriptive string of the old fd, eg: "stdin".
+ * @param mode: an open() mode, such as O_WRONLY.
+ */
+void replacefd(int oldfd, char *name, int mode)
+{
+#ifndef _WIN32
+	int newfd = open("/dev/null", mode);
+	if (newfd < 0)
+	{
+		fprintf(stderr, "Warning: could not open /dev/null\n");
+		return;
+	}
+	if (oldfd < 0)
+	{
+		fprintf(stderr, "Warning: could not replace %s (invalid fd)\n", name);
+		return;
+	}
+	if (dup2(newfd, oldfd) < 0)
+	{
+		fprintf(stderr, "Warning: could not replace %s (dup2 error)\n", name);
+		return;
+	}
+#endif
+}
+
+/* Mass close standard file descriptors.
+ * We used to really just close them here (or in init_sys() actually),
+ * making the fd's available for other purposes such as internet sockets.
+ * For safety we now dup2() them to /dev/null. This in case someone
+ * accidentally does a fprintf(stderr,..) somewhere in the code or some
+ * library outputs error messages to stderr (such as libc with heap
+ * errors). We don't want any IRC client to receive such a thing!
+ */
+void close_std_descriptors(void)
+{
+#if !defined(_WIN32) && !defined(NOCLOSEFD)
+	replacefd(fileno(stdin), "stdin", O_RDONLY);
+	replacefd(fileno(stdout), "stdout", O_WRONLY);
+	replacefd(fileno(stderr), "stderr", O_WRONLY);
+#endif
 }
 
 void write_pidfile(void)

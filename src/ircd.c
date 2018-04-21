@@ -1408,9 +1408,10 @@ int InitUnrealIRCd(int argc, char *argv[])
 #if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)
 	if (!(bootopt & BOOT_NOFORK))
 	{
+		close_std_descriptors();
 		if (fork())
 			exit(0);
-    fd_fork();
+		fd_fork();
 		loop.ircd_forked = 1;
 	}
 #endif
