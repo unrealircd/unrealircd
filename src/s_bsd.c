@@ -498,9 +498,9 @@ void init_sys(void)
 			    limit.rlim_cur);
 			exit(-1);
 #endif // OSXTIGER
-#endif // RLIMIT_FD_MAX
 		}
 	}
+#endif // RLIMIT_FD_MAX
 
 #ifndef _WIN32
 #ifdef BACKEND_SELECT
