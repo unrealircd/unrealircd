@@ -20,14 +20,6 @@
 
 #include "unrealircd.h"
 
-/*
- * Ultimate uses numerics 386 and 387 for RPL_IRCOPS and RPL_ENDOFIRCOPS,
- * but these numerics are RPL_QLIST and RPL_ENDOFQLIST in UnrealIRCd
- * (numeric conflict). I had to choose other numerics.
- */
-
-#define RPL_IRCOPS        337
-#define RPL_ENDOFIRCOPS   338
 #define MSG_IRCOPS        "IRCOPS"
 #define IsAway(x)         (x)->user->away
 
@@ -123,7 +115,7 @@ static int m_ircops(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			continue;
 
 		sendto_one(sptr, ":%s %d %s :\2%s\2 is %s on %s" "%s",
-			me.name, RPL_IRCOPS, sptr->name,
+			me.name, RPL_TEXT, sptr->name,
 			acptr->name,
 			"an IRC Operator", /* find_otype(acptr->umodes), */
 			acptr->user->server,
@@ -144,8 +136,8 @@ static int m_ircops(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		opers, opers != 1 ? "s" : "",
 		aways);
 
-	sendto_one(sptr, ":%s %d %s :%s", me.name, RPL_IRCOPS, sptr->name, buf);
-	sendto_one(sptr, ":%s %d %s :End of /IRCOPS list", me.name, RPL_ENDOFIRCOPS, sptr->name);
+	sendto_one(sptr, ":%s %d %s :%s", me.name, RPL_TEXT, sptr->name, buf);
+	sendto_one(sptr, ":%s %d %s :End of /IRCOPS list", me.name, RPL_TEXT, sptr->name);
 
 	return 0;
 }
