@@ -48,7 +48,7 @@ extern MODVAR time_t timeofday;
 /* get_recvq is only called in send.c for local connections */
 #define get_recvq(x) ((x)->local->class->recvq ? (x)->local->class->recvq : DEFAULT_RECVQ)
 
-#define CMD_FUNC(x) int __attribute__((warn_unused_result)) (x) (aClient *cptr, aClient *sptr, int parc, char *parv[])
+#define CMD_FUNC(x) int (x) (aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 /*
  * Configuration linked lists
@@ -603,7 +603,7 @@ extern void del_async_connects(void);
 extern void make_extbanstr(void);
 extern void isupport_init(void);
 extern void clicap_init(void);
-extern int __attribute__((warn_unused_result)) do_cmd(aClient *cptr, aClient *sptr, char *cmd, int parc, char *parv[]);
+extern int do_cmd(aClient *cptr, aClient *sptr, char *cmd, int parc, char *parv[]);
 extern void create_snomask(aClient *sptr, anUser *user, char *snomask);
 extern MODVAR char *me_hash;
 extern MODVAR int dontspread;
