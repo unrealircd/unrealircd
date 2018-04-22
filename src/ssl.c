@@ -1074,27 +1074,30 @@ int cipher_check(SSL_CTX *ctx, char **errstr)
 		if (strstr(cipher, "DES-"))
 		{
 			snprintf(errbuf, sizeof(errbuf), "DES is enabled but is a weak cipher");
+			SSL_free(ssl);
 			return 0;
 		}
 		else if (strstr(cipher, "3DES-"))
 		{
 			snprintf(errbuf, sizeof(errbuf), "3DES is enabled but is a weak cipher");
+			SSL_free(ssl);
 			return 0;
 		}
 		else if (strstr(cipher, "RC4-"))
 		{
 			snprintf(errbuf, sizeof(errbuf), "RC4 is enabled but is a weak cipher");
+			SSL_free(ssl);
 			return 0;
 		}
 		else if (strstr(cipher, "NULL-"))
 		{
 			snprintf(errbuf, sizeof(errbuf), "NULL cipher provides no encryption");
+			SSL_free(ssl);
 			return 0;
 		}
 	}
 
 	SSL_free(ssl);
-
 	return 1;
 }
 
