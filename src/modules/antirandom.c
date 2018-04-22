@@ -832,7 +832,7 @@ char **s;
 Triples *e, *last=NULL;
 int cnt=0;
 
-	for (s=triples_txt; *s; *s++)
+	for (s=triples_txt; *s; s++)
 	{
 		cnt++;
 		e = MyMallocEx(sizeof(Triples));
@@ -843,7 +843,7 @@ int cnt=0;
 			return 0;
 		}
 		strcpy(e->two, *s); /* (SAFE) */
-		*s++;
+		s++;
 		if (!*s)
 		{
 			config_error("init_triples: error parsing triples_txt, cnt=%d, got NULL expected param",
