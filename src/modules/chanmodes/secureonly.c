@@ -32,11 +32,11 @@ Cmode_t EXTCMODE_SSLONLY;
 
 #define IsSecureOnly(chptr)    (chptr->mode.extmode & EXTCMODE_SSLONLY)
 
-int secureonly_check_join (aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-void secureonly_channel_sync (aChannel* chptr, unsigned short merge, unsigned short removetheirs, unsigned short nomode);
-int secureonly_check_send (aClient *acptr, aChannel* chptr);
-int secureonly_check_secure (aChannel* chptr);
-int secureonly_check_sajoin (aClient *acptr, aChannel* chptr, aClient *sptr);
+int secureonly_check_join(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
+void secureonly_channel_sync (aChannel* chptr, int merge, int removetheirs, int nomode);
+int secureonly_check_send(aClient *acptr, aChannel* chptr);
+int secureonly_check_secure(aChannel* chptr);
+int secureonly_check_sajoin(aClient *acptr, aChannel* chptr, aClient *sptr);
 int secureonly_specialcheck(aClient *sptr, aChannel *chptr, char *parv[]);
 
 MOD_TEST(sslonly)
@@ -114,7 +114,7 @@ static void secureonly_kick_insecure_users(aChannel *chptr)
 	}
 }
 
-int secureonly_check_join (aClient *sptr, aChannel *chptr, char *key, char *parv[])
+int secureonly_check_join(aClient *sptr, aChannel *chptr, char *key, char *parv[])
 {
 	Link *lp;
 
@@ -134,7 +134,7 @@ int secureonly_check_join (aClient *sptr, aChannel *chptr, char *key, char *parv
 	return 0;
 }
 
-int secureonly_check_secure (aChannel* chptr)
+int secureonly_check_secure(aChannel *chptr)
 {
 	if (IsSecureOnly(chptr))
 	{
@@ -144,7 +144,7 @@ int secureonly_check_secure (aChannel* chptr)
 	return 0;
 }
 
-void secureonly_channel_sync (aChannel* chptr, unsigned short merge, unsigned short removetheirs, unsigned short nomode)
+void secureonly_channel_sync(aChannel *chptr, int merge, int removetheirs, int nomode)
 {
 	if ((!merge && !removetheirs && !nomode) || (merge && !nomode))
 	{
@@ -152,7 +152,7 @@ void secureonly_channel_sync (aChannel* chptr, unsigned short merge, unsigned sh
 	}
 }
 
-int secureonly_check_send (aClient *acptr, aChannel* chptr)
+int secureonly_check_send(aClient *acptr, aChannel *chptr)
 {
 	if (IsSecureOnly(chptr))
 		if (!IsSecure(acptr))
@@ -161,7 +161,7 @@ int secureonly_check_send (aClient *acptr, aChannel* chptr)
 	return HOOK_CONTINUE;
 }
 
-int secureonly_check_sajoin (aClient *acptr, aChannel* chptr, aClient *sptr)
+int secureonly_check_sajoin(aClient *acptr, aChannel *chptr, aClient *sptr)
 {
 	if (IsSecureOnly(chptr) && !IsSecure(acptr))
 	{

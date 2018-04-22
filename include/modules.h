@@ -890,7 +890,7 @@ int hooktype_view_topic_outside_channel(aClient *sptr, aChannel *chptr);
 int hooktype_chan_permit_nick_change(aClient *sptr, aChannel *chptr);
 int hooktype_is_channel_secure(aChannel *chptr);
 int hooktype_can_send_secure(aClient *sptr, aChannel *chptr);
-void hooktype_channel_synced(aChannel *chptr, unsigned short merge, unsigned short removetheirs, unsigned short nomode);
+void hooktype_channel_synced(aChannel *chptr, int merge, int removetheirs, int nomode);
 int hooktype_can_sajoin(aClient *target, aChannel *chptr, aClient *sptr);
 int hooktype_whois(aClient *sptr, aClient *target);
 int hooktype_check_init(aClient *cptr, char *sockname, size_t size);
