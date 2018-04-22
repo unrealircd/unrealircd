@@ -22,6 +22,7 @@ elif [[ "$OSTYPE" == "freebsd"* ]]; then
 	sudo pkg remove -y c-ares
 elif [[ "$OSTYPE" == "darwin"* ]]; then
 	brew update
+	brew install openssl
 else
 	echo "OS not correctly detected ($OSTYPE). Aborting."
 	exit 1
