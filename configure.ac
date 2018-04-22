@@ -59,19 +59,29 @@ CFLAGS="-pipe $CFLAGS"
 fi
 fi
 
-dnl (the gcc flag detection trick is taken from xemacs/Vin Shelton)
-
 dnl UnrealIRCd might not be strict-aliasing safe at this time
-case "`$CC -v --help 2>&1`" in
-	*-fstrict-aliasing* ) CFLAGS="$CFLAGS -fno-strict-aliasing" ;;
-esac
+AC_CACHE_CHECK(if gcc has a working -fno-strict-aliasing, ac_cv_nsa, [
+	save_cflags="$CFLAGS"
+	CFLAGS="$CFLAGS -fno-strict-aliasing"
+	AC_TRY_COMPILE(,, ac_cv_nsa="yes", ac_cv_nsa="no")
+	CFLAGS="$save_cflags"
+])
+if test "$ac_cv_nsa" = "yes"; then
+CFLAGS="$CFLAGS -fno-strict-aliasing"
+fi
 
 dnl Pointer signedness warnings are really a pain and 99.9% of the time
 dnl they are of absolutely no use whatsoever. IMO the person who decided
 dnl to enable this without -Wall should be shot on sight.
-case "`$CC -v --help 2>&1`" in
-	*-Wpointer-sign* ) CFLAGS="$CFLAGS -Wno-pointer-sign" ;;
-esac
+AC_CACHE_CHECK(if gcc has a working -Wno-pointer-sign, ac_cv_nps, [
+	save_cflags="$CFLAGS"
+	CFLAGS="$CFLAGS -Wno-pointer-sign"
+	AC_TRY_COMPILE(,, ac_cv_nps="yes", ac_cv_nps="no")
+	CFLAGS="$save_cflags"
+])
+if test "$ac_cv_nps" = "yes"; then
+CFLAGS="$CFLAGS -Wno-pointer-sign"
+fi
 
 AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(CP,cp)
