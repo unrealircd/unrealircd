@@ -582,18 +582,47 @@ int blacklist_start_check(aClient *cptr)
 
 int blacklist_dns_request(aClient *cptr, Blacklist *d)
 {
-	char buf[256];
-	int e[4];
+	char buf[256], wbuf[128];
+	unsigned int e[8];
 	char *ip = GetIP(cptr);
 	
-	if (!ip || !strchr(ip, '.'))
+	if (!ip)
 		return 0;
-	
+
 	memset(&e, 0, sizeof(e));
-	if (sscanf(ip, "%d.%d.%d.%d", &e[0], &e[1], &e[2], &e[3]) != 4)
-		return 0;
+
+	if (strchr(ip, '.'))
+	{
+		/* IPv4 */
+		if (sscanf(ip, "%u.%u.%u.%u", &e[0], &e[1], &e[2], &e[3]) != 4)
+			return 0;
 	
-	snprintf(buf, sizeof(buf), "%d.%d.%d.%d.%s", e[3], e[2], e[1], e[0], d->backend->dns->name);
+		snprintf(buf, sizeof(buf), "%u.%u.%u.%u.%s", e[3], e[2], e[1], e[0], d->backend->dns->name);
+	} else
+	if (strchr(ip, ':'))
+	{
+		int i, j;
+		/* IPv6 */
+		if (sscanf(ip, "%x:%x:%x:%x:%x:%x:%x:%x",
+		    &e[0], &e[1], &e[2], &e[3], &e[4], &e[5], &e[6], &e[7]) != 8)
+		{
+			return 0;
+		}
+		*buf = '\0';
+		for (i = 7; i >= 0; i--)
+		{
+			snprintf(wbuf, sizeof(wbuf), "%x.%x.%x.%x.",
+				(unsigned int)(e[i] & 0xf),
+				(unsigned int)((e[i] >> 4) & 0xf),
+				(unsigned int)((e[i] >> 8) & 0xf),
+				(unsigned int)((e[i] >> 12) & 0xf),
+				(unsigned int)((e[i] >> 16) & 0xf));
+			strlcat(buf, wbuf, sizeof(buf));
+		}
+		strlcat(buf, d->backend->dns->name, sizeof(buf));
+	}
+	else
+		return 0; /* unknown IP format */
 
 	BLUSER(cptr)->refcnt++; /* one (more) blacklist result remaining */
 	
