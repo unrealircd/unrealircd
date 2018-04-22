@@ -60,7 +60,7 @@ fi
 fi
 
 dnl UnrealIRCd might not be strict-aliasing safe at this time
-AC_CACHE_CHECK(if gcc has a working -fno-strict-aliasing, ac_cv_nsa, [
+AC_CACHE_CHECK(if the compiler has a working -fno-strict-aliasing, ac_cv_nsa, [
 	save_cflags="$CFLAGS"
 	CFLAGS="$CFLAGS -fno-strict-aliasing"
 	AC_TRY_COMPILE(,, ac_cv_nsa="yes", ac_cv_nsa="no")
@@ -73,7 +73,7 @@ fi
 dnl Pointer signedness warnings are really a pain and 99.9% of the time
 dnl they are of absolutely no use whatsoever. IMO the person who decided
 dnl to enable this without -Wall should be shot on sight.
-AC_CACHE_CHECK(if gcc has a working -Wno-pointer-sign, ac_cv_nps, [
+AC_CACHE_CHECK(if the compiler has a working -Wno-pointer-sign, ac_cv_nps, [
 	save_cflags="$CFLAGS"
 	CFLAGS="$CFLAGS -Wno-pointer-sign"
 	AC_TRY_COMPILE(,, ac_cv_nps="yes", ac_cv_nps="no")
@@ -81,6 +81,19 @@ AC_CACHE_CHECK(if gcc has a working -Wno-pointer-sign, ac_cv_nps, [
 ])
 if test "$ac_cv_nps" = "yes"; then
 CFLAGS="$CFLAGS -Wno-pointer-sign"
+fi
+
+dnl This is purely for charsys.c... I like it so we can easily read
+dnl this for non-utf8. We can remove it once we ditch non-utf8 some day
+dnl of course, or decide to ignore me and encode them.
+AC_CACHE_CHECK(if the compiler has a working -Wno-invalid-source-encoding, ac_cv_nps, [
+	save_cflags="$CFLAGS"
+	CFLAGS="$CFLAGS -Wno-invalid-source-encoding"
+	AC_TRY_COMPILE(,, ac_cv_nps="yes", ac_cv_nps="no")
+	CFLAGS="$save_cflags"
+])
+if test "$ac_cv_nps" = "yes"; then
+CFLAGS="$CFLAGS -Wno-invalid-source-encoding"
 fi
 
 AC_PATH_PROG(RM,rm)
