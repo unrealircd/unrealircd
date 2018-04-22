@@ -199,11 +199,13 @@ AC_DEFINE(STATIC_LINKING)
 ])])
 
 hold_cflags=$CFLAGS
+DYNAMIC_LDFLAGS=""
 CFLAGS="$CFLAGS -Wl,-export-dynamic"
 AC_CACHE_CHECK(if we need the -export-dynamic flag, ac_cv_export_dynamic, [
 AC_TRY_LINK(, [int i];, ac_cv_export_dynamic=yes, ac_cv_export_dynamic=no)])
-if test "$ac_cv_export_dynamic" = "no"; then
 CFLAGS=$hold_cflags
+if test "$ac_cv_export_dynamic" = "yes"; then
+	DYNAMIC_LDFLAGS="-Wl,-export-dynamic"
 fi
 
 AC_CACHE_CHECK(for compiler option to produce PIC,ac_cv_pic,[
@@ -244,7 +246,7 @@ if test "$ac_cv_underscore" = "yes"; then
 	AC_DEFINE([UNDERSCORE], [], [Define if your system prepends an underscore to symbols])
 fi
 
-MODULEFLAGS=$ac_cv_pic
+MODULEFLAGS="$ac_cv_pic $DYNAMIC_LDFLAGS"
 dnl DYNAMIC_LINKING is not meant to be defined in include/setup.h, it's 
 dnl defined in the Makefiles using -D. Having it defined globally will
 dnl only cause braindamage and symbol collisions :-D.
@@ -522,6 +524,7 @@ AC_CHECK_FUNCS(syslog,AC_DEFINE([HAVE_SYSLOG], [], [Define if you have syslog]))
 AC_SUBST(STRTOUL)
 AC_SUBST(CRYPTOLIB)
 AC_SUBST(MODULEFLAGS)
+AC_SUBST(DYNAMIC_LDFLAGS)
 AC_ARG_WITH(nick-history, [AS_HELP_STRING([--with-nick-history=length],[Specify the length of the nickname history])],
 	[AC_DEFINE_UNQUOTED([NICKNAMEHISTORYLENGTH], [$withval], [Set to the nickname history length you want])],
 	[AC_DEFINE([NICKNAMEHISTORYLENGTH], [2000], [Set to the nickname history length you want])])

@@ -36,7 +36,7 @@ SRC=$(OBJS:%.o=%.c)
 # Flags specific for the ircd binary (and it's object files)...
 # .. but NOT for modules.
 BINCFLAGS=@HARDEN_BINCFLAGS@
-BINLDFLAGS=@HARDEN_BINLDFLAGS@
+BINLDFLAGS=@DYNAMIC_LDFLAGS@ @HARDEN_BINLDFLAGS@
 
 INCLUDES = ../include/auth.h ../include/channel.h \
 	../include/class.h ../include/common.h ../include/config.h ../include/dbuf.h \

@@ -659,6 +659,7 @@ MODULESDIR
 CONFDIR
 SCRIPTDIR
 BINDIR
+DYNAMIC_LDFLAGS
 MODULEFLAGS
 CRYPTOLIB
 STRTOUL
@@ -6789,6 +6790,7 @@ done
 
 
 
+
 # Check whether --with-nick-history was given.
 if test "${with_nick_history+set}" = set; then :
   withval=$with_nick_history;
@@ -7297,6 +7299,7 @@ fi
 
 
 hold_cflags=$CFLAGS
+DYNAMIC_LDFLAGS=""
 CFLAGS="$CFLAGS -Wl,-export-dynamic"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if we need the -export-dynamic flag" >&5
 $as_echo_n "checking if we need the -export-dynamic flag... " >&6; }
@@ -7325,8 +7328,9 @@ rm -f core conftest.err conftest.$ac_objext \
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_export_dynamic" >&5
 $as_echo "$ac_cv_export_dynamic" >&6; }
-if test "$ac_cv_export_dynamic" = "no"; then
 CFLAGS=$hold_cflags
+if test "$ac_cv_export_dynamic" = "yes"; then
+	DYNAMIC_LDFLAGS="-Wl,-export-dynamic"
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for compiler option to produce PIC" >&5
@@ -7384,7 +7388,7 @@ $as_echo "#define UNDERSCORE /**/" >>confdefs.h
 
 fi
 
-MODULEFLAGS=$ac_cv_pic
+MODULEFLAGS="$ac_cv_pic $DYNAMIC_LDFLAGS"
 
 else
 
