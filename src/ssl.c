@@ -448,10 +448,7 @@ void reinit_ssl(aClient *acptr)
 		config_report_ssl_error();
 		return;
 	}
-	/* free and do it for real */
-	SSL_CTX_free(tmp);
-	SSL_CTX_free(ctx_server);
-	ctx_server = init_ctx(iConf.ssl_options, 1);
+	ctx_server = tmp; /* activate */
 	
 	tmp = init_ctx(iConf.ssl_options, 0);
 	if (!tmp)
@@ -460,10 +457,7 @@ void reinit_ssl(aClient *acptr)
 		config_report_ssl_error();
 		return;
 	}
-	/* free and do it for real */
-	SSL_CTX_free(tmp);
-	SSL_CTX_free(ctx_client);
-	ctx_client = init_ctx(iConf.ssl_options, 0);
+	ctx_client = tmp; /* activate */
 
 	/* listen::ssl-options.... */
 	for (listen = conf_listen; listen; listen = listen->next)
@@ -477,10 +471,7 @@ void reinit_ssl(aClient *acptr)
 				config_report_ssl_error();
 				return;
 			}
-			/* free and do it for real */
-			SSL_CTX_free(tmp);
-			SSL_CTX_free(listen->ssl_ctx);
-			listen->ssl_ctx = init_ctx(listen->ssl_options, 1);
+			listen->ssl_ctx = tmp; /* activate */
 		}
 	}
 
@@ -496,10 +487,7 @@ void reinit_ssl(aClient *acptr)
 				config_report_ssl_error();
 				return;
 			}
-			/* free and do it for real */
-			SSL_CTX_free(tmp);
-			SSL_CTX_free(sni->ssl_ctx);
-			sni->ssl_ctx = init_ctx(sni->ssl_options, 1);
+			sni->ssl_ctx = tmp; /* activate */
 		}
 	}
 
@@ -516,10 +504,7 @@ void reinit_ssl(aClient *acptr)
 				config_report_ssl_error();
 				return;
 			}
-			/* free and do it for real */
-			SSL_CTX_free(tmp);
-			SSL_CTX_free(link->ssl_ctx);
-			link->ssl_ctx = init_ctx(link->ssl_options, 1);
+			link->ssl_ctx = tmp; /* activate */
 		}
 	}
 }
