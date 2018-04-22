@@ -142,7 +142,7 @@ void dcc_wipe_services(void)
 	for (dconf = conf_deny_dcc; dconf; dconf = next)
 	{
 		next = dconf->next;
-		if ((dconf->flag.type2 == CONF_BAN_TYPE_AKILL))
+		if (dconf->flag.type2 == CONF_BAN_TYPE_AKILL)
 		{
 			DelListItem(dconf, conf_deny_dcc);
 			if (dconf->filename)
@@ -333,7 +333,13 @@ static char recursion_trap=0;
 				}
 				if (logs->logfd != -1)
 				{
-					write(logs->logfd, "Max file size reached, starting new log file\n", 45);
+					if (write(logs->logfd, "Max file size reached, starting new log file\n", 45) < 0)
+					{
+						/* We already handle the unable to write to log file case for normal data.
+						 * I think we can get away with not handling this one.
+						 */
+						;
+					}
 					fd_close(logs->logfd);
 				}
 				
@@ -370,7 +376,11 @@ static char recursion_trap=0;
 			/* this shouldn't happen, but lets not waste unnecessary syscalls... */
 			if (logs->logfd == -1)
 				continue;
-			write(logs->logfd, timebuf, strlen(timebuf));
+			if (write(logs->logfd, timebuf, strlen(timebuf)) < 0)
+			{
+				/* Let's ignore any write errors for this one. Next write() will catch it... */
+				;
+			}
 			n = write(logs->logfd, buf, strlen(buf));
 			if (n == strlen(buf))
 			{

@@ -266,7 +266,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 	/* First check if the line contains a terminating \n. If not, don't process it
 	 * as it may have been a cut header.
 	 */
-	for (p; *p; p++)
+	for (; *p; p++)
 	{
 		if (*p == '\n')
 		{
@@ -284,7 +284,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 	
 	p = k;
 	
-	for (p; *p; p++)
+	for (; *p; p++)
 	{
 		if ((*p == '\n') || (*p == '\r'))
 		{

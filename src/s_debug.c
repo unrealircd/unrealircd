@@ -196,7 +196,11 @@ void debug(int level, char *form, ...)
 
 #ifndef _WIN32
 		strlcat(debugbuf, "\n", sizeof(debugbuf));
-		write(debugfd, debugbuf, strlen(debugbuf));
+		if (write(debugfd, debugbuf, strlen(debugbuf)) < 0)
+		{
+			/* Yeah.. what can we do if output isn't working? Outputting an error makes no sense */
+			;
+		}
 #else
 		strlcat(debugbuf, "\r\n", sizeof(debugbuf));
 		OutputDebugString(debugbuf);
