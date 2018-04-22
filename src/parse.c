@@ -240,9 +240,9 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		 */
 		if (*sender && IsServer(cptr))
 		{
-			from = find_client(sender, (aClient *)NULL);
+			from = find_client(sender, NULL);
 			if (!from && index(sender, '@'))
-				from = find_nickserv(sender, (aClient *)NULL);
+				from = find_nickserv(sender, NULL);
 			//para[0] = sender;
 			para[0] = (char *)0xDEADBEEF; /* helps us catch bugs :) -- 2/2 */
 

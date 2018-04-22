@@ -190,7 +190,7 @@ Member	*make_member(void)
 	{
 		for (i = 1; i <= (4072/sizeof(Member)); ++i)		
 		{
-			lp = (Member *)MyMallocEx(sizeof(Member));
+			lp = MyMallocEx(sizeof(Member));
 			lp->cptr = NULL;
 			lp->flags = 0;
 			lp->next = freemember;
@@ -230,7 +230,7 @@ Membership	*make_membership(int local)
 		{
 			for (i = 1; i <= (4072/sizeof(Membership)); i++)
 			{
-				lp = (Membership *)MyMallocEx(sizeof(Membership));
+				lp = MyMallocEx(sizeof(Membership));
 				lp->next = freemembership;
 				freemembership = lp;
 			}
@@ -250,7 +250,7 @@ Membership	*make_membership(int local)
 		{
 			for (i = 1; i <= (4072/sizeof(MembershipL)); i++)		
 			{
-				lp2 = (MembershipL *)MyMalloc(sizeof(MembershipL));
+				lp2 = MyMallocEx(sizeof(MembershipL));
 				lp2->next = (Membership *) freemembershipL;
 				freemembershipL = lp2;
 			}
@@ -300,7 +300,7 @@ void	free_membership(Membership *lp, int local)
 */
 aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 {
-	aClient *who = find_client(user, (aClient *)NULL);
+	aClient *who = find_client(user, NULL);
 
 	if (chasing)
 		*chasing = 0;
@@ -381,7 +381,6 @@ int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 			return -1;
 	}
 	ban = make_ban();
-	bzero((char *)ban, sizeof(Ban));
 	ban->next = *list;
 	ban->banstr = strdup(banid);
 	ban->who = strdup(cptr->name);
@@ -1083,7 +1082,7 @@ aChannel *get_channel(aClient *cptr, char *chname, int flag)
 		len = CHANNELLEN;
 		*(chname + CHANNELLEN) = '\0';
 	}
-	if ((chptr = find_channel(chname, (aChannel *)NULL)))
+	if ((chptr = find_channel(chname, NULL)))
 		return (chptr);
 	if (flag == CREATE)
 	{
@@ -1246,7 +1245,7 @@ void sub1_from_channel(aChannel *chptr)
 			chptr->nextch->prevch = chptr->prevch;
 		(void)del_from_channel_hash_table(chptr->chname, chptr);
 		IRCstats.channels--;
-		MyFree((char *)chptr);
+		MyFree(chptr);
 	}
 }
 

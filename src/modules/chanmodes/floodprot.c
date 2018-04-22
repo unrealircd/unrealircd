@@ -555,8 +555,8 @@ void *cmodef_put_param(void *fld_in, char *param)
 
 char *cmodef_get_param(void *r_in)
 {
-ChanFloodProt *r = (ChanFloodProt *)r_in;
-static char retbuf[512];
+	ChanFloodProt *r = (ChanFloodProt *)r_in;
+	static char retbuf[512];
 
 	if (!r)
 		return NULL;
@@ -787,8 +787,8 @@ void cmodef_free_param(void *r)
 
 void *cmodef_dup_struct(void *r_in)
 {
-ChanFloodProt *r = (ChanFloodProt *)r_in;
-ChanFloodProt *w = (ChanFloodProt *)MyMalloc(sizeof(ChanFloodProt));
+	ChanFloodProt *r = (ChanFloodProt *)r_in;
+	ChanFloodProt *w = MyMallocEx(sizeof(ChanFloodProt));
 
 	memcpy(w, r, sizeof(ChanFloodProt));
 	return (void *)w;
@@ -796,11 +796,10 @@ ChanFloodProt *w = (ChanFloodProt *)MyMalloc(sizeof(ChanFloodProt));
 
 int cmodef_sjoin_check(aChannel *chptr, void *ourx, void *theirx)
 {
-
-ChanFloodProt *our = (ChanFloodProt *)ourx;
-ChanFloodProt *their = (ChanFloodProt *)theirx;
-char *x;
-int i;
+	ChanFloodProt *our = (ChanFloodProt *)ourx;
+	ChanFloodProt *their = (ChanFloodProt *)theirx;
+	char *x;
+	int i;
 
 	if (compare_floodprot_modes(our, their) == 0)
 		return EXSJ_SAME;
@@ -974,7 +973,7 @@ int floodprot_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick)
 
 int floodprot_chanmode_del(aChannel *chptr, int modechar)
 {
-ChanFloodProt *chp;
+	ChanFloodProt *chp;
 
 	if (!IsFloodLimit(chptr))
 		return 0;
@@ -1099,7 +1098,7 @@ RemoveFld *removefld_list = NULL;
 
 RemoveFld *floodprottimer_find(aChannel *chptr, char mflag)
 {
-RemoveFld *e;
+	RemoveFld *e;
 
 	for (e=removefld_list; e; e=e->next)
 	{
@@ -1131,9 +1130,9 @@ void strccat(char *s, char c)
  */
 void floodprottimer_add(aChannel *chptr, char mflag, time_t when)
 {
-RemoveFld *e = NULL;
-unsigned char add=1;
-ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
+	RemoveFld *e = NULL;
+	unsigned char add=1;
+	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
 	if (strchr(chp->timers_running, mflag))
 	{
@@ -1168,8 +1167,8 @@ ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
 void floodprottimer_del(aChannel *chptr, char mflag)
 {
-RemoveFld *e;
-ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
+	RemoveFld *e;
+	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
 	if (chp && !strchr(chp->timers_running, mflag))
 		return; /* nothing to remove.. */
@@ -1193,7 +1192,8 @@ ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
 long get_mode_bitbychar(char m)
 {
-aCtab *tab = &cFlagTab[0];
+	aCtab *tab = &cFlagTab[0];
+
 	while(tab->mode != 0x0)
 	{
 		if (tab->flag == m)
@@ -1258,7 +1258,8 @@ EVENT(modef_event)
 
 void floodprottimer_stopchantimers(aChannel *chptr)
 {
-RemoveFld *e = removefld_list;
+	RemoveFld *e = removefld_list;
+
 	while(e)
 	{
 		if (e->chptr == chptr)
@@ -1272,7 +1273,7 @@ RemoveFld *e = removefld_list;
 
 int do_floodprot(aChannel *chptr, int what)
 {
-ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
+	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
 	if (!chp || !chp->l[what]) /* no +f or not restricted */
 		return 0;
@@ -1302,10 +1303,10 @@ ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
 void do_floodprot_action(aChannel *chptr, int what, char *text)
 {
-char m;
-int mode = 0;
-Cmode_t extmode = 0;
-ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
+	char m;
+	int mode = 0;
+	Cmode_t extmode = 0;
+	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
 	m = chp->a[what];
 	if (!m)

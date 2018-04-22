@@ -172,9 +172,8 @@ void clear_client_hash_table(void)
 
 void clear_channel_hash_table(void)
 {
-	memset((char *)channelTable, '\0', sizeof(aHashEntry) * CH_MAX);
+	memset(channelTable, 0, sizeof(channelTable));
 }
-
 
 /*
  * add_to_client_hash_table

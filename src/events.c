@@ -66,7 +66,7 @@ Event	*EventAddEx(Module *module, char *name, long every, long howmany,
 			module->errorcode = MODERR_INVALID;
 		return NULL;
 	}
-	newevent = (Event *) MyMallocEx(sizeof(Event));
+	newevent = MyMallocEx(sizeof(Event));
 	newevent->name = strdup(name);
 	newevent->howmany = howmany;
 	newevent->every = every;
@@ -77,7 +77,7 @@ Event	*EventAddEx(Module *module, char *name, long every, long howmany,
 	newevent->owner = module;
 	AddListItem(newevent,events);
 	if (module) {
-		ModuleObject *eventobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *eventobj = MyMallocEx(sizeof(ModuleObject));
 		eventobj->object.event = newevent;
 		eventobj->type = MOBJ_EVENT;
 		AddListItem(eventobj, module->objects);

@@ -260,7 +260,7 @@ int webirc_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "webirc"))
 		return 0; /* not interested */
 
-	webirc = (ConfigItem_webirc *) MyMallocEx(sizeof(ConfigItem_webirc));
+	webirc = MyMallocEx(sizeof(ConfigItem_webirc));
 	webirc->type = WEBIRC_WEBIRC; /* default */
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)

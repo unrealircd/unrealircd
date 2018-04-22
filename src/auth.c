@@ -216,7 +216,7 @@ anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce)
 	if (type == -1)
 		type = AUTHTYPE_PLAINTEXT;
 
-	as = (anAuthStruct *) MyMalloc(sizeof(anAuthStruct));
+	as = MyMallocEx(sizeof(anAuthStruct));
 	as->data = strdup(ce->ce_vardata);
 	as->type = type;
 	return as;

@@ -688,7 +688,7 @@ void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
 			mask++;
 	}
 	else
-		mask = (char *)NULL;
+		mask = NULL;
 
 	list_for_each_entry(cptr, &server_list, special_node)
 	{

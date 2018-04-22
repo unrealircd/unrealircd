@@ -78,7 +78,7 @@ CMD_FUNC(m_swhois)
         if (parc < 3)
                 return 0;
 
-        acptr = find_person(parv[1], (aClient *)NULL);
+        acptr = find_person(parv[1], NULL);
         if (!acptr)
                 return 0;
 

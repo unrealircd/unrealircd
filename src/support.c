@@ -120,9 +120,9 @@ char *strerror(int err_no)
 	static char buff[40];
 	char *errp;
 
-	errp = (err_no > sys_nerr ? (char *)NULL : sys_errlist[err_no]);
+	errp = (err_no > sys_nerr ? NULL : sys_errlist[err_no]);
 
-	if (errp == (char *)NULL)
+	if (errp == NULL)
 	{
 		errp = buff;
 		(void)ircsnprintf(buff, sizeof(buff), "Unknown Error %d", err_no);

@@ -342,7 +342,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 ** reduce a string of duplicate list entries to contain only the unique
 ** items.  Unavoidably O(n^2).
 */
-extern char *canonize(char *buffer)
+char *canonize(char *buffer)
 {
 	static char cbuf[2048];
 	char *s, *t, *cp = cbuf;
@@ -662,8 +662,7 @@ int add_silence(aClient *sptr, char *mask, int senderr)
 	lp = make_link();
 	bzero((char *)lp, sizeof(Link));
 	lp->next = sptr->user->silence;
-	lp->value.cp = (char *)MyMalloc(strlen(mask) + 1);
-	(void)strcpy(lp->value.cp, mask);
+	lp->value.cp = strdup(mask);
 	sptr->user->silence = lp;
 	return 0;
 }

@@ -101,7 +101,7 @@ CMD_FUNC(m_names)
 		}
 	}
 
-	chptr = find_channel(para, (aChannel *)NULL);
+	chptr = find_channel(para, NULL);
 
 	if (!chptr || (!ShowChannel(sptr, chptr) && !ValidatePermissionsForPath("override:see:names:secret",sptr,NULL,chptr,NULL)))
 	{

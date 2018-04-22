@@ -247,7 +247,7 @@ aServer *make_server(aClient *cptr)
 
 	if (!serv)
 	{
-		serv = (aServer *)MyMallocEx(sizeof(aServer));
+		serv = MyMallocEx(sizeof(aServer));
 #ifdef	DEBUGMODE
 		servs.inuse++;
 #endif
@@ -345,7 +345,7 @@ void remove_client_from_list(aClient *cptr)
 		safefree(cptr->serv->features.chanmodes[1]);
 		safefree(cptr->serv->features.chanmodes[2]);
 		safefree(cptr->serv->features.chanmodes[3]);
-		MyFree((char *)cptr->serv);
+		MyFree(cptr->serv);
 #ifdef	DEBUGMODE
 		servs.inuse--;
 #endif
@@ -411,7 +411,7 @@ void free_str_list(Link *lp)
 	while (lp)
 	{
 		next = lp->next;
-		MyFree((char *)lp->value.cp);
+		MyFree(lp->value.cp);
 		free_link(lp);
 		lp = next;
 	}
@@ -439,7 +439,7 @@ Link *make_link(void)
 	{
 		for (i = 1; i <= LINKSIZE; i++)
 		{
-			lp = (Link *)MyMalloc(sizeof(Link));
+			lp = MyMallocEx(sizeof(Link));
 			lp->next = freelink;
 			freelink = lp;
 		}
@@ -475,7 +475,7 @@ Ban *make_ban(void)
 {
 	Ban *lp;
 
-	lp = (Ban *) MyMalloc(sizeof(Ban));
+	lp = MyMallocEx(sizeof(Ban));
 #ifdef	DEBUGMODE
 	links.inuse++;
 #endif
@@ -484,28 +484,9 @@ Ban *make_ban(void)
 
 void free_ban(Ban *lp)
 {
-	MyFree((char *)lp);
+	MyFree(lp);
 #ifdef	DEBUGMODE
 	links.inuse--;
-#endif
-}
-
-aClass *make_class(void)
-{
-	aClass *tmp;
-
-	tmp = (aClass *)MyMalloc(sizeof(aClass));
-#ifdef	DEBUGMODE
-	classs.inuse++;
-#endif
-	return tmp;
-}
-
-void free_class(aClass *tmp)
-{
-	MyFree((char *)tmp);
-#ifdef	DEBUGMODE
-	classs.inuse--;
 #endif
 }
 

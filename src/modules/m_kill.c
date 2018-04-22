@@ -103,7 +103,7 @@ CMD_FUNC(m_kill)
 		path[TOPICLEN] = '\0';
 
 	if (MyClient(sptr))
-		user = (char *)canonize(user);
+		user = canonize(user);
 
 	for (p = NULL, nick = strtoken(&p, user, ","); nick;
 	    nick = strtoken(&p, NULL, ","))

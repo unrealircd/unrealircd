@@ -151,8 +151,8 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 #endif
 	if (before)
 	{
-		strlcpy(buf, (char *)beforebuf, size);
-		return (strlen(buf));
+		strlcpy(buf, beforebuf, size);
+		return strlen(buf);
 	}
 #ifndef _WIN32
 	pass = getpass("Password for SSL private key: ");
@@ -164,8 +164,8 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 #endif
 	if (pass)
 	{
-		strlcpy(buf, (char *)pass, size);
-		strlcpy(beforebuf, (char *)pass, sizeof(beforebuf));
+		strlcpy(buf, pass, size);
+		strlcpy(beforebuf, pass, sizeof(beforebuf));
 		before = 1;
 		SSLKeyPasswd = beforebuf;
 		return (strlen(buf));

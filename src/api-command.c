@@ -63,7 +63,7 @@ Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char para
 
 	if (module)
 	{
-		ModuleObject *cmdobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *cmdobj = MyMallocEx(sizeof(ModuleObject));
 		command = MyMallocEx(sizeof(Command));
 		command->cmd = c;
 		command->cmd->owner = module;
@@ -129,7 +129,7 @@ void CommandDel(Command *command) {
 	DelListItem(command->cmd, CommandHash[toupper(*command->cmd->cmd)]);
 	if (command->cmd->owner) {
 		ModuleObject *cmdobj;
-		for (cmdobj = command->cmd->owner->objects; cmdobj; cmdobj = (ModuleObject *)cmdobj->next) {
+		for (cmdobj = command->cmd->owner->objects; cmdobj; cmdobj = cmdobj->next) {
 			if (cmdobj->type == MOBJ_COMMAND && cmdobj->object.command == command) {
 				DelListItem(cmdobj,command->cmd->owner->objects);
 				MyFree(cmdobj);

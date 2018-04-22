@@ -34,8 +34,11 @@ int link_can_join_limitexceeded(aClient *sptr, aChannel *chptr, char *key, char 
 MOD_INIT(link)
 {
 	CmodeInfo req;
+
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM_RELOADABLE, 1);
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+
 	memset(&req, 0, sizeof(req));
 	req.paracount = 1;
 	req.is_ok = cmodeL_is_ok;
@@ -110,12 +113,12 @@ int cmodeL_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type
 
 void *cmodeL_put_param(void *r_in, char *param)
 {
-aModeLEntry *r = (aModeLEntry *)r_in;
+	aModeLEntry *r = (aModeLEntry *)r_in;
 
 	if (!r)
 	{
 		/* Need to create one */
-		r = (aModeLEntry *)MyMallocEx(sizeof(aModeLEntry));
+		r = MyMallocEx(sizeof(aModeLEntry));
 	}
 	strlcpy(r->linked, param, sizeof(r->linked));
 	return (void *)r;
@@ -123,8 +126,8 @@ aModeLEntry *r = (aModeLEntry *)r_in;
 
 char *cmodeL_get_param(void *r_in)
 {
-aModeLEntry *r = (aModeLEntry *)r_in;
-static char retbuf[CHANNELLEN+1];
+	aModeLEntry *r = (aModeLEntry *)r_in;
+	static char retbuf[CHANNELLEN+1];
 
 	if (!r)
 		return NULL;
@@ -138,8 +141,8 @@ static char retbuf[CHANNELLEN+1];
  */
 char *cmodeL_conv_param(char *param_in, aClient *sptr)
 {
-static char buf[CHANNELLEN+1];
-char *p;
+	static char buf[CHANNELLEN+1];
+	char *p;
 		
 	strlcpy(buf, param_in, sizeof(buf));
 	clean_channelname(buf);
@@ -159,8 +162,8 @@ void cmodeL_free_param(void *r)
 
 void *cmodeL_dup_struct(void *r_in)
 {
-aModeLEntry *r = (aModeLEntry *)r_in;
-aModeLEntry *w = (aModeLEntry *)MyMalloc(sizeof(aModeLEntry));
+	aModeLEntry *r = (aModeLEntry *)r_in;
+	aModeLEntry *w = MyMallocEx(sizeof(aModeLEntry));
 
 	memcpy(w, r, sizeof(aModeLEntry));
 	return (void *)w;
@@ -168,8 +171,8 @@ aModeLEntry *w = (aModeLEntry *)MyMalloc(sizeof(aModeLEntry));
 
 int cmodeL_sjoin_check(aChannel *chptr, void *ourx, void *theirx)
 {
-aModeLEntry *our = (aModeLEntry *)ourx;
-aModeLEntry *their = (aModeLEntry *)theirx;
+	aModeLEntry *our = (aModeLEntry *)ourx;
+	aModeLEntry *their = (aModeLEntry *)theirx;
 
 	if (!strcmp(our->linked, their->linked))
 		return EXSJ_SAME;

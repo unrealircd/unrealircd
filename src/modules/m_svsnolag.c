@@ -65,7 +65,7 @@ int do_svsnolag(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 	if (parc < 3)
 		return 0;
 
-	if (!(acptr = find_person(parv[2], (aClient *)NULL)))
+	if (!(acptr = find_person(parv[2], NULL)))
 		return 0;
 
 	if (!MyClient(acptr))

@@ -203,7 +203,7 @@ Isupport *IsupportFind(const char *token)
 Isupport *IsupportAdd(Module *module, const char *token, const char *value)
 {
 	Isupport *isupport;
-	char *c;
+	const char *c;
 
 	if (IsupportFind(token))
 	{
@@ -214,8 +214,8 @@ Isupport *IsupportAdd(Module *module, const char *token, const char *value)
 	/* draft-brocklesby-irc-isupport:
 	 * token = a-zA-Z0-9 and 20 or less characters
 	 * value = ASCII 0x21 - 0x7E
-         */
-	for (c = (char *)token; c && *c; c++)
+	 */
+	for (c = token; c && *c; c++)
 	{
 		if (!isalnum(*c))
 		{
@@ -230,7 +230,7 @@ Isupport *IsupportAdd(Module *module, const char *token, const char *value)
 			module->errorcode = MODERR_INVALID;
 		return NULL;
 	}
-	for (c = (char *)value; c && *c; c++)
+	for (c = value; c && *c; c++)
 	{
 		if (*c < '!' || *c > '~')
 		{
@@ -249,11 +249,11 @@ Isupport *IsupportAdd(Module *module, const char *token, const char *value)
 	make_isupportstrings(); 
 	if (module)
 	{
-                ModuleObject *isupportobj = MyMallocEx(sizeof(ModuleObject));
-                isupportobj->object.isupport = isupport;
-                isupportobj->type = MOBJ_ISUPPORT;
-                AddListItem(isupportobj, module->objects);
-                module->errorcode = MODERR_NOERROR;
+		ModuleObject *isupportobj = MyMallocEx(sizeof(ModuleObject));
+		isupportobj->object.isupport = isupport;
+		isupportobj->type = MOBJ_ISUPPORT;
+		AddListItem(isupportobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
 	}
 	return isupport;
 }

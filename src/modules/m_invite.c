@@ -89,7 +89,7 @@ CMD_FUNC(m_invite)
 		return -1;
 	}
 
-	if (!(acptr = find_person(parv[1], (aClient *)NULL)))
+	if (!(acptr = find_person(parv[1], NULL)))
 	{
 		sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 		    me.name, sptr->name, parv[1]);

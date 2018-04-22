@@ -455,8 +455,7 @@ void close_listeners(void)
 	/* close all 'extra' listening ports we have */
 	for (aconf = conf_listen; aconf != NULL; aconf = aconf_next)
 	{
-		aconf_next = (ConfigItem_listen *) aconf->next;
-
+		aconf_next = aconf->next;
 		if (aconf->flag.temporary)
 			close_listener(aconf);
 	}

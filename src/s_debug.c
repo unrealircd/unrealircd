@@ -127,7 +127,7 @@ void	flag_add(char ch)
 	if (extraflags)
 	{
 		char tmp[2] = { ch, 0 };
-		newextra = (char *)MyMalloc(strlen(extraflags) + 2);
+		newextra = MyMallocEx(strlen(extraflags) + 2);
 		strcpy(newextra, extraflags);
 		strcat(newextra, tmp);
 		MyFree(extraflags);

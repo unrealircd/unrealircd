@@ -142,7 +142,7 @@ int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[
 
 	for (; (nick = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
-		if ((acptr = find_client(nick, (aClient *)NULL)))
+		if ((acptr = find_client(nick, NULL)))
 		{
 			/*
 			   ** Drop to bit bucket if for me...
@@ -179,7 +179,7 @@ int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[
 				sendto_prefix_one(acptr, sptr, ":%s %d %s%s",
 				    sptr->name, numeric, nick, buffer);
 		}
-		else if ((chptr = find_channel(nick, (aChannel *)NULL)))
+		else if ((chptr = find_channel(nick, NULL)))
 			sendto_channel_butone(cptr, sptr, chptr, ":%s %d %s%s",
 			    sptr->name, numeric, chptr->chname, buffer);
 	}

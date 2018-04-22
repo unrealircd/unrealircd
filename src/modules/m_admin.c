@@ -76,8 +76,7 @@ CMD_FUNC(m_admin)
 	sendto_one(sptr, rpl_str(RPL_ADMINME), me.name, sptr->name, me.name);
 
 	/* cycle through the list backwards */
-	for (admin = conf_admin_tail; admin;
-	    admin = (ConfigItem_admin *) admin->prev)
+	for (admin = conf_admin_tail; admin; admin = admin->prev)
 	{
 		if (!admin->next)
 			sendto_one(sptr, rpl_str(RPL_ADMINLOC1),
