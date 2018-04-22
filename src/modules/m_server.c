@@ -1008,68 +1008,106 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	return 0;
 }
 
-static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Member *top, int mask, char flag)
+/** Send MODE +vhoaq list (depending on 'mask' and 'flag') to remote server.
+ * Previously this function was called send_mode_list() when it was dual-function.
+ */
+static void send_channel_modes_members(aClient *cptr, aChannel *chptr, int mask, char flag)
 {
 	Member *lp;
 	char *cp, *name;
-	int  count = 0, send = 0, sent = 0;
+	int  count = 0, send = 0;
 
 	cp = modebuf + strlen(modebuf);
 	if (*parabuf)		/* mode +l or +k xx */
 		count = 1;
-	for (lp = top; lp; lp = lp->next)
+	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		/* 
-		 * Okay, since ban's are stored in their own linked
-		 * list, we won't even bother to check if CHFL_BAN
-		 * is set in the flags. This should work as long
-		 * as only ban-lists are feed in with CHFL_BAN mask.
-		 * However, we still need to typecast... -Donwulff 
-		 */
-		if ((mask == CHFL_BAN) || (mask == CHFL_EXCEPT) || (mask == CHFL_INVEX))
-		{
-/*			if (!(((Ban *)lp)->flags & mask)) continue; */
-			name = ((Ban *) lp)->banstr;
-		}
-		else
-		{
-			if (!(lp->flags & mask))
-				continue;
-			name = lp->cptr->name;
-		}
+		if (!(lp->flags & mask))
+			continue;
+		name = lp->cptr->name;
 		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
 		{
 			if (*parabuf)
-				(void)strlcat(parabuf, " ", sizeof parabuf);
-			(void)strlcat(parabuf, name, sizeof parabuf);
+				strlcat(parabuf, " ", sizeof parabuf);
+			strlcat(parabuf, name, sizeof parabuf);
 			count++;
 			*cp++ = flag;
 			*cp = '\0';
 		}
 		else if (*parabuf)
 			send = 1;
+
 		if (count == RESYNCMODES)
 			send = 1;
+
 		if (send)
 		{
-			/* cptr is always a server! So we send creationtimes */
-			sendmodeto_one(cptr, me.name, chname, modebuf,
-			    parabuf, creationtime);
-			sent = 1;
+			/* cptr is always a server! So we send creationtime */
+			sendmodeto_one(cptr, me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
 			send = 0;
 			*parabuf = '\0';
 			cp = modebuf;
 			*cp++ = '+';
 			if (count != RESYNCMODES)
 			{
-				(void)strlcpy(parabuf, name, sizeof parabuf);
+				strlcpy(parabuf, name, sizeof parabuf);
 				*cp++ = flag;
 			}
 			count = 0;
 			*cp = '\0';
 		}
 	}
-	return sent;
+}
+
+/** Send list modes such as +beI to remote server.
+ * Previously this was combined with +vhoaq stuff in the send_mode_list() function.
+ */
+static void send_channel_modes_list_mode(aClient *cptr, aChannel *chptr, Ban *lp, char flag)
+{
+	char *cp, *name;
+	int count = 0, send = 0;
+
+	cp = modebuf + strlen(modebuf);
+
+	if (*parabuf)		/* mode +l or +k xx */
+		count = 1;
+
+	for (; lp; lp = lp->next)
+	{
+		name = lp->banstr;
+
+		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
+		{
+			if (*parabuf)
+				strlcat(parabuf, " ", sizeof parabuf);
+			strlcat(parabuf, name, sizeof parabuf);
+			count++;
+			*cp++ = flag;
+			*cp = '\0';
+		}
+		else if (*parabuf)
+			send = 1;
+
+		if (count == RESYNCMODES)
+			send = 1;
+
+		if (send)
+		{
+			/* cptr is always a server! So we send creationtime */
+			sendmodeto_one(cptr, me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
+			send = 0;
+			*parabuf = '\0';
+			cp = modebuf;
+			*cp++ = '+';
+			if (count != RESYNCMODES)
+			{
+				strlcpy(parabuf, name, sizeof parabuf);
+				*cp++ = flag;
+			}
+			count = 0;
+			*cp = '\0';
+		}
+	}
 }
 
 /* A little kludge to prevent sending double spaces -- codemastr */
@@ -1085,92 +1123,42 @@ static inline void send_channel_mode(aClient *cptr, char *from, aChannel *chptr)
 			modebuf, chptr->creationtime);
 }
 
-/*
- * send "cptr" a full list of the modes for channel chptr.
+/**  Send "cptr" a full list of the MODEs for channel chptr.
+ * Note that this function is only used for servers lacking SJOIN/SJOIN3.
  */
 void send_channel_modes(aClient *cptr, aChannel *chptr)
 {
-	int  sent;
-/* fixed a bit .. to fit halfops --sts */
 	if (*chptr->chname != '#')
 		return;
 
-	*parabuf = '\0';
-	*modebuf = '\0';
+	/* Send the "property" channel modes like +lks */
+	*modebuf = *parabuf = '\0';
 	channel_modes(cptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
-	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    chptr->members, CHFL_CHANOP, 'o');
-	if (!sent && chptr->creationtime)
-		send_channel_mode(cptr, me.name, chptr);
-	else if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name,
-		    chptr->chname, modebuf, parabuf, chptr->creationtime);
+	send_channel_mode(cptr, me.name, chptr);
 
-	*parabuf = '\0';
-	*modebuf = '+';
+	/* Then send the +qaohv in one go */
+	modebuf[0] = '+';
 	modebuf[1] = '\0';
-
-	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    chptr->members, CHFL_HALFOP, 'h');
-	if (!sent && chptr->creationtime)
-		send_channel_mode(cptr, me.name, chptr);
-	else if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name,
-		    chptr->chname, modebuf, parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    (Member *)chptr->banlist, CHFL_BAN, 'b');
+	parabuf[0] = '\0';
+	send_channel_modes_members(cptr, chptr, CHFL_CHANOWNER, 'q');
+	send_channel_modes_members(cptr, chptr, CHFL_CHANPROT, 'a');
+	send_channel_modes_members(cptr, chptr, CHFL_CHANOP, 'o');
+	send_channel_modes_members(cptr, chptr, CHFL_HALFOP, 'h');
+	send_channel_modes_members(cptr, chptr, CHFL_VOICE, 'v');
+	/* ..including any remainder in the buffer.. */
 	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
+		sendmodeto_one(cptr, me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
 
-	*parabuf = '\0';
-	*modebuf = '+';
+	/* Then send the +beI in one go */
+	modebuf[0] = '+';
 	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    (Member *)chptr->exlist, CHFL_EXCEPT, 'e');
+	parabuf[0] = '\0';
+	send_channel_modes_list_mode(cptr, chptr, chptr->banlist, 'b');
+	send_channel_modes_list_mode(cptr, chptr, chptr->exlist, 'e');
+	send_channel_modes_list_mode(cptr, chptr, chptr->invexlist, 'I');
+	/* ..including any remainder in the buffer.. */
 	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    (Member *)chptr->invexlist, CHFL_INVEX, 'I');
-	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    chptr->members, CHFL_VOICE, 'v');
-	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    chptr->members, CHFL_CHANOWNER, 'q');
-	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    chptr->members, CHFL_CHANPROT, 'a');
-	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
+		sendmodeto_one(cptr, me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
 
 	/* send MLOCK here too... --nenolod */
 	if (CHECKPROTO(cptr, PROTO_MLOCK))
@@ -1196,7 +1184,7 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 	top = channel->banlist;
 	for (lp = top; lp; lp = lp->next)
 	{
-		name = ((Ban *) lp)->banstr;
+		name = lp->banstr;
 
 		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
 		{
@@ -1233,7 +1221,7 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 	top = channel->exlist;
 	for (lp = top; lp; lp = lp->next)
 	{
-		name = ((Ban *) lp)->banstr;
+		name = lp->banstr;
 
 		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
 		{
@@ -1270,7 +1258,7 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 	top = channel->invexlist;
 	for (lp = top; lp; lp = lp->next)
 	{
-		name = ((Ban *) lp)->banstr;
+		name = lp->banstr;
 
 		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
 		{
