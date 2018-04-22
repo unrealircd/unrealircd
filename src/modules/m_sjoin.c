@@ -755,7 +755,9 @@ getnick:
 				{
 					char *parax = cm_getparameter(chptr, Channelmode_Table[i].flag);
 					if (parax)
+					{
 						Addit(Channelmode_Table[i].flag, parax);
+					}
 				} else {
 					Addsingle(Channelmode_Table[i].flag);
 				}
