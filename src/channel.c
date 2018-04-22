@@ -55,21 +55,11 @@ aChannel *channel = NullChn;
 extern char backupbuf[];
 extern ircstats IRCstats;
 
-/* Some forward declarations */
-char *clean_ban_mask(char *, int, aClient *);
-void channel_modes(aClient *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, aChannel *chptr);
-
-void sub1_from_channel(aChannel *);
-
-void clean_channelname(char *);
-void del_invite(aClient *, aChannel *);
-
 /*
  * some buffers for rebuilding channel/nick lists with ,'s
  */
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
 MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
-#include "sjoin.h"
 
 #define MODESYS_LINKOK		/* We do this for a TEST  */
 aCtab cFlagTab[] = {
@@ -93,13 +83,14 @@ aCtab cFlagTab[] = {
 	{0x0, 0x0, 0x0}
 };
 
-
-#define	BADOP_BOUNCE	1
-#define	BADOP_USER	2
-#define	BADOP_SERVER	3
-#define	BADOP_OVERRIDE	4
-
 char cmodestring[512];
+
+/* Some forward declarations */
+char *clean_ban_mask(char *, int, aClient *);
+void channel_modes(aClient *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, aChannel *chptr);
+void sub1_from_channel(aChannel *);
+void clean_channelname(char *);
+void del_invite(aClient *, aChannel *);
 
 inline int op_can_override(char* acl, aClient *sptr,aChannel *channel,void* extra)
 {
