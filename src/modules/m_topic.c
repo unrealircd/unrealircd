@@ -189,15 +189,14 @@ long flags = 0; /* cache: membership flags */
 				if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+5))
 					nicKlen = (NICKLEN+USERLEN+HOSTLEN+5);
 
-				chptr->topic = MyMalloc(topiClen + 1);
+				chptr->topic = MyMallocEx(topiClen + 1);
 				strlcpy(chptr->topic, topic, topiClen + 1);
 
 				if (chptr->topic_nick)
 					MyFree(chptr->topic_nick);
 
-				chptr->topic_nick = MyMalloc(nicKlen + 1);
-				strlcpy(chptr->topic_nick, tnick,
-				    nicKlen + 1);
+				chptr->topic_nick = MyMallocEx(nicKlen + 1);
+				strlcpy(chptr->topic_nick, tnick, nicKlen + 1);
 
 				chptr->topic_time = ttime;
 				RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);
@@ -298,13 +297,13 @@ long flags = 0; /* cache: membership flags */
 				topiClen = TOPICLEN;
 			if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+5))
 				nicKlen = NICKLEN+USERLEN+HOSTLEN+5;
-			chptr->topic = MyMalloc(topiClen + 1);
+			chptr->topic = MyMallocEx(topiClen + 1);
 			strlcpy(chptr->topic, topic, topiClen + 1);
 
 			if (chptr->topic_nick)
 				MyFree(chptr->topic_nick);
 
-			chptr->topic_nick = MyMalloc(nicKlen + 1);
+			chptr->topic_nick = MyMallocEx(nicKlen + 1);
 #ifndef TOPIC_NICK_IS_NUHOST
 			strlcpy(chptr->topic_nick, sptr->name, nicKlen + 1);
 #else

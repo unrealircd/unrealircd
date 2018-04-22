@@ -1314,32 +1314,6 @@ int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
 	return paracnt;
 }
 
-/*
- * ListBits(bitvalue, bitlength);
- * written by Stskeeps
-*/
-#ifdef DEVELOP
-char *ListBits(long bits, long length)
-{
-	char *bitstr, *p;
-	long l, y;
-	y = 1;
-	bitstr = (char *)MyMalloc(length + 1);
-	p = bitstr;
-	for (l = 1; l <= length; l++)
-	{
-		if (bits & y)
-			*p = '1';
-		else
-			*p = '0';
-		p++;
-		y = y + y;
-	}
-	*p = '\0';
-	return (bitstr);
-}
-#endif
-
 /** In 2003 I introduced PROTOCTL CHANMODES= so remote servers (and services)
  * could deal with unknown "parameter eating" channel modes, minimizing desynchs.
  * Now, in 2015, I finally added the code to deal with this. -- Syzop

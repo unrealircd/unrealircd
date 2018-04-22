@@ -782,7 +782,7 @@ ConfigFile *config_load(char *filename)
 		close(fd);
 		return cfptr;
 	}
-	buf = MyMalloc(sb.st_size+1);
+	buf = MyMallocEx(sb.st_size+1);
 	if (buf == NULL)
 	{
 		config_error("Out of memory trying to load \"%s\"\n", filename);
@@ -857,8 +857,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 	ConfigFile	*curcf;
 	ConfigFile	*lastcf;
 
-	lastcf = curcf = MyMalloc(sizeof(ConfigFile));
-	memset(curcf, 0, sizeof(ConfigFile));
+	lastcf = curcf = MyMallocEx(sizeof(ConfigFile));
 	curcf->cf_filename = strdup(filename);
 	lastce = &(curcf->cf_entries);
 	curce = NULL;
@@ -1037,16 +1036,15 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					}
 					else
 					{
-						curce->ce_vardata = MyMalloc(ptr-start+1);
+						curce->ce_vardata = MyMallocEx(ptr-start+1);
 						strlcpy(curce->ce_vardata, start, ptr-start+1);
 						unreal_delquotes(curce->ce_vardata);
 					}
 				}
 				else
 				{
-					curce = MyMalloc(sizeof(ConfigEntry));
-					memset(curce, 0, sizeof(ConfigEntry));
-					curce->ce_varname = MyMalloc((ptr-start)+1);
+					curce = MyMallocEx(sizeof(ConfigEntry));
+					curce->ce_varname = MyMallocEx((ptr-start)+1);
 					strlcpy(curce->ce_varname, start, ptr-start+1);
 					unreal_delquotes(curce->ce_varname);
 					curce->ce_varlinenum = linenumber;
@@ -1105,15 +1103,15 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					}
 					else
 					{
-						curce->ce_vardata = MyMalloc(ptr-start+1);
+						curce->ce_vardata = MyMallocEx(ptr-start+1);
 						strlcpy(curce->ce_vardata, start, ptr-start+1);
 					}
 				}
 				else
 				{
-					curce = MyMalloc(sizeof(ConfigEntry));
+					curce = MyMallocEx(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
-					curce->ce_varname = MyMalloc((ptr-start)+1);
+					curce->ce_varname = MyMallocEx((ptr-start)+1);
 					strlcpy(curce->ce_varname, start, ptr-start+1);
 					curce->ce_varlinenum = linenumber;
 					curce->ce_fileptr = curcf;
@@ -3023,7 +3021,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}
 	if (cPath) {
-		path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+		path = MyMallocEx(strlen(cPath) + strlen(FindData.cFileName)+1);
 		strcpy(path, cPath);
 		strcat(path, FindData.cFileName);
 
@@ -3046,7 +3044,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 	ret = 0;
 	while (FindNextFile(hFind, &FindData) != 0) {
 		if (cPath) {
-			path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+			path = MyMallocEx(strlen(cPath) + strlen(FindData.cFileName)+1);
 			strcpy(path,cPath);
 			strcat(path,FindData.cFileName);
 
@@ -7411,7 +7409,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "restrict-usermodes")) {
 			int i;
-			char *p = MyMalloc(strlen(cep->ce_vardata) + 1), *x = p;
+			char *p = MyMallocEx(strlen(cep->ce_vardata) + 1), *x = p;
 			/* The data should be something like 'Gw' or something,
 			 * but just in case users use '+Gw' then ignore the + (and -).
 			 */
@@ -7423,7 +7421,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "restrict-channelmodes")) {
 			int i;
-			char *p = MyMalloc(strlen(cep->ce_vardata) + 1), *x = p;
+			char *p = MyMallocEx(strlen(cep->ce_vardata) + 1), *x = p;
 			/* The data should be something like 'GL' or something,
 			 * but just in case users use '+GL' then ignore the + (and -).
 			 */

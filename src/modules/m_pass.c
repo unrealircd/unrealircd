@@ -133,7 +133,7 @@ CMD_FUNC(m_pass)
 		MyFree(cptr->local->passwd);
 	if (PassLen > (PASSWDLEN))
 		PassLen = PASSWDLEN;
-	cptr->local->passwd = MyMalloc(PassLen + 1);
+	cptr->local->passwd = MyMallocEx(PassLen + 1);
 	strlcpy(cptr->local->passwd, password, PassLen + 1);
 
 	/* note: the original non-truncated password is supplied as 2nd parameter. */

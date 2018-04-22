@@ -49,7 +49,6 @@ ID_Copyright("(C) Tony Vincell");
 #include <stdio.h>
 #include <string.h>
 #define BadPtr(x) (!(x) || (*(x) == '\0'))
-#define DupString(x,y) do{x=(char *)MyMalloc(strlen(y)+1);(void)strcpy(x,y);}while(0)
 #define mycmp strcasecmp
 #endif
 
@@ -388,7 +387,7 @@ int  crule_parseorexpr(crule_treeptr *orrootp, int *next_tokp, char **ruleptr)
 		if ((errcode == CR_NOERR) && (*next_tokp == CR_OR))
 		{
 			orptr =
-			    (crule_treeptr) MyMalloc(sizeof(crule_treeelem));
+			    (crule_treeptr) MyMallocEx(sizeof(crule_treeelem));
 #ifdef CR_DEBUG
 			(void)fprintf(stderr, "allocating or element at %ld\n", orptr);
 #endif
@@ -442,7 +441,7 @@ int  crule_parseandexpr(crule_treeptr *androotp, int *next_tokp, char **ruleptr)
 		if ((errcode == CR_NOERR) && (*next_tokp == CR_AND))
 		{
 			andptr =
-			    (crule_treeptr) MyMalloc(sizeof(crule_treeelem));
+			    (crule_treeptr) MyMallocEx(sizeof(crule_treeelem));
 #ifdef CR_DEBUG
 			(void)fprintf(stderr, "allocating and element at %ld\n", andptr);
 #endif
@@ -516,7 +515,7 @@ int  crule_parseprimary(crule_treeptr *primrootp, int *next_tokp, char **ruleptr
 			  break;
 		  case CR_NOT:
 			  *insertionp =
-			      (crule_treeptr) MyMalloc(sizeof(crule_treeelem));
+			      (crule_treeptr) MyMallocEx(sizeof(crule_treeelem));
 #ifdef CR_DEBUG
 			  (void)fprintf(stderr,
 			      "allocating primary element at %ld\n",
@@ -570,7 +569,7 @@ int  crule_parsefunction(crule_treeptr *funcrootp, int *next_tokp, char **rulept
 		}
 		if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
 			return (errcode);
-		*funcrootp = (crule_treeptr) MyMalloc(sizeof(crule_treeelem));
+		*funcrootp = (crule_treeptr) MyMallocEx(sizeof(crule_treeelem));
 #ifdef CR_DEBUG
 		(void)fprintf(stderr, "allocating function element at %ld\n",
 		    *funcrootp);
@@ -633,9 +632,8 @@ int  crule_parsearglist(crule_treeptr argrootp, int *next_tokp, char **ruleptr)
 #endif
 			  if (*currarg)
 			  {
-				  DupString(argelemp, currarg);
-				  argrootp->arg[argrootp->numargs++] =
-				      (void *)argelemp;
+				  argelemp = strdup(currarg);
+				  argrootp->arg[argrootp->numargs++] = (void *)argelemp;
 			  }
 			  if (*next_tokp != CR_COMMA)
 				  return (CR_NOERR);

@@ -206,7 +206,7 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 #ifdef UNDERSCORE
 void *obsd_dlsym(void *handle, char *symbol) {
     size_t buflen = strlen(symbol) + 2;
-    char *obsdsymbol = (char*)MyMalloc(buflen);
+    char *obsdsymbol = MyMallocEx(buflen);
     void *symaddr = NULL;
 
     if (obsdsymbol) {
@@ -557,7 +557,7 @@ Module *Module_make(ModuleHeader *header,
 {
 	Module *modp = NULL;
 	
-	modp = (Module *)MyMallocEx(sizeof(Module));
+	modp = MyMallocEx(sizeof(Module));
 	modp->header = header;
 	modp->dll = mod;
 	modp->flags = MODFLAG_NONE;
@@ -923,7 +923,7 @@ void	Module_AddAsChild(Module *parent, Module *child)
 {
 	ModuleChild	*childp = NULL;
 	
-	childp = (ModuleChild *) MyMallocEx(sizeof(ModuleChild));
+	childp = MyMallocEx(sizeof(ModuleChild));
 	childp->child = child;
 	AddListItem(childp, parent->children);
 }
@@ -1331,7 +1331,7 @@ Callback	*CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfun
 {
 	Callback *p;
 	
-	p = (Callback *) MyMallocEx(sizeof(Callback));
+	p = MyMallocEx(sizeof(Callback));
 	if (func)
 		p->func.intfunc = func;
 	if (vfunc)
@@ -1342,7 +1342,7 @@ Callback	*CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfun
 	p->owner = module;
 	AddListItem(p, Callbacks[cbtype]);
 	if (module) {
-		ModuleObject *cbobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *cbobj = MyMallocEx(sizeof(ModuleObject));
 		cbobj->object.callback = p;
 		cbobj->type = MOBJ_CALLBACK;
 		AddListItem(cbobj, module->objects);
@@ -1387,7 +1387,7 @@ Efunction *p;
 		return NULL;
 	}
 	
-	p = (Efunction *) MyMallocEx(sizeof(Efunction));
+	p = MyMallocEx(sizeof(Efunction));
 	if (func)
 		p->func.intfunc = func;
 	if (vfunc)
@@ -1400,7 +1400,7 @@ Efunction *p;
 	p->owner = module;
 	AddListItem(p, Efunctions[eftype]);
 	if (module) {
-		ModuleObject *cbobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *cbobj = MyMallocEx(sizeof(ModuleObject));
 		cbobj->object.efunction = p;
 		cbobj->type = MOBJ_EFUNCTION;
 		AddListItem(cbobj, module->objects);

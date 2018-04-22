@@ -41,8 +41,6 @@ aWhowas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
 aWhowas MODVAR *WHOWASHASH[WW_MAX];
 
 MODVAR int  whowas_next = 0;
-#define AllocCpy(x,y) x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
-#define SafeFree(x) if (x) { MyFree((x)); (x) = NULL; }
 
 void add_history(aClient *cptr, int online)
 {
@@ -52,11 +50,11 @@ void add_history(aClient *cptr, int online)
 
 	if (new->hashv != -1)
 	{
-		SafeFree(new->name);
-		SafeFree(new->hostname);
-		SafeFree(new->virthost);
-		SafeFree(new->realname);
-		SafeFree(new->username);
+		safefree(new->name);
+		safefree(new->hostname);
+		safefree(new->virthost);
+		safefree(new->realname);
+		safefree(new->username);
 		new->servername = NULL;
 
 		if (new->online)
@@ -66,17 +64,15 @@ void add_history(aClient *cptr, int online)
 	new->hashv = hash_whowas_name(cptr->name);
 	new->logoff = TStime();
 	new->umodes = cptr->umodes;
-	AllocCpy(new->name, cptr->name);
-	AllocCpy(new->username, cptr->user->username);
-	AllocCpy(new->hostname, cptr->user->realhost);
+	new->name = strdup(cptr->name);
+	new->username = strdup(cptr->user->username);
+	new->hostname = strdup(cptr->user->realhost);
 	if (cptr->user->virthost)
-	{
-		AllocCpy(new->virthost, cptr->user->virthost);
-	}
+		new->virthost = strdup(cptr->user->virthost);
 	else
 		new->virthost = strdup("");
 	new->servername = cptr->user->server;
-	AllocCpy(new->realname, cptr->info);
+	new->realname = strdup(cptr->info);
 
 	/* Its not string copied, a pointer to the scache hash is copied
 	   -Dianora

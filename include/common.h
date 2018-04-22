@@ -143,8 +143,6 @@ extern char *strtoken(char **, char *, char *);
 #define MIN(a, b)	((a) < (b) ? (a) : (b))
 #endif
 
-#define DupString(x,y) do{int l=strlen(y);x=MyMalloc(l+1);(void)memcpy(x,y, l+1);}while(0)
-
 extern MODVAR u_char tolowertab[], touppertab[];
 
 #if defined(NICK_GB2312) || defined(NICK_GBK) || defined(NICK_GBK_JAP)

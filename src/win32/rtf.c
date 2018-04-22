@@ -80,7 +80,7 @@ DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 	if (!RTFBuf)
 		size = 0;
 
-	buf2 = MyMalloc(size+cb+1);
+	buf2 = MyMallocEx(size+cb+1);
 
 	if (RTFBuf)
 		memcpy(buf2,RTFBuf,size);
@@ -150,7 +150,7 @@ void ColorEmpty(IRCColor **stack)
  */
 DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb) 
 {
-	unsigned char *buffer = malloc(cb*2);
+	unsigned char *buffer = MyMallocEx(cb*2+2);
 	int colors[17], bold = 0, uline = 0, incolor = 0, inbg = 0;
 	int lastwascf = 0, lastwascf0 = 0;
 	int i = 0;

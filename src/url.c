@@ -98,7 +98,7 @@ char *url_getfilename(const char *url)
 			return strdup(start);
 		else
 		{
-			char *file = malloc(c-start+1);
+			char *file = MyMallocEx(c-start+1);
 			strlcpy(file, start, c-start+1);
 			return file;
 		}

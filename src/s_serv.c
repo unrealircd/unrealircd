@@ -23,8 +23,6 @@
 
 /* s_serv.c 2.55 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
-#define AllocCpy(x,y) x  = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
-
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -1116,7 +1114,7 @@ void do_read_motd(const char *filename, aMotdFile *themotd)
 			line[510] = '\0';
 
 		temp = MyMallocEx(sizeof(aMotdLine));
-		AllocCpy(temp->line, line);
+		temp->line = strdup(line);
 
 		if(last)
 			last->next = temp;

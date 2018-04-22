@@ -151,7 +151,7 @@ void	flag_del(char ch)
 	for (newsz = 0, p = extraflags; *p; p++)
 		if (*p != ch)
 			newsz++;
-	newflags = MyMalloc(newsz + 1);
+	newflags = MyMallocEx(newsz + 1);
 	for (p = newflags, op = extraflags; (*op) && (newsz); newsz--, op++)
 		if (*op != ch)
 			*p++ = *op;

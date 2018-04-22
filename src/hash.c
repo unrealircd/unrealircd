@@ -455,7 +455,7 @@ int   add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
 	
 	/* If found NULL (no header for this nick), make one... */
 	if (!anptr) {
-		anptr = (aWatch *)MyMalloc(sizeof(aWatch)+strlen(nick));
+		anptr = (aWatch *)MyMallocEx(sizeof(aWatch)+strlen(nick));
 		anptr->lasttime = timeofday;
 		strcpy(anptr->nick, nick);
 		

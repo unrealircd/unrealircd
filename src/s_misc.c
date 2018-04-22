@@ -831,7 +831,7 @@ regex_t expr;
 		if (errorcode > 0)
 		{
 			errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
-			errtmp = MyMalloc(errorbufsize);
+			errtmp = MyMallocEx(errorbufsize);
 			regerror(errorcode, &expr, errtmp, errorbufsize);
 			strlcpy(errorbuf, errtmp, sizeof(errorbuf));
 			free(errtmp);

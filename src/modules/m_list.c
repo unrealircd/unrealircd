@@ -217,7 +217,7 @@ CMD_FUNC(m_list)
 				  lp = make_link();
 				  lp->next = nolist;
 				  nolist = lp;
-				  DupString(lp->value.cp, name + 1);
+				  lp->value.cp = strdup(name + 1);
 			  }
 			  else if (strchr(name, '*') || strchr(name, '?'))
 			  {
@@ -225,7 +225,7 @@ CMD_FUNC(m_list)
 				  lp = make_link();
 				  lp->next = yeslist;
 				  yeslist = lp;
-				  DupString(lp->value.cp, name);
+				  lp->value.cp = strdup(name);
 			  }
 			  else	/* Just a normal channel */
 			  {
