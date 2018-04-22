@@ -114,7 +114,7 @@ ConfigItem_ban *bconf;
 CMD_FUNC(m_pass)
 {
 	char *password = parc > 1 ? parv[1] : NULL;
-	int  PassLen = 0;
+
 	if (BadPtr(password))
 	{
 		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS),
@@ -128,13 +128,8 @@ CMD_FUNC(m_pass)
 		return 0;
 	}
 
-	PassLen = strlen(password);
-	if (cptr->local->passwd)
-		MyFree(cptr->local->passwd);
-	if (PassLen > (PASSWDLEN))
-		PassLen = PASSWDLEN;
-	cptr->local->passwd = MyMallocEx(PassLen + 1);
-	strlcpy(cptr->local->passwd, password, PassLen + 1);
+	/* Store the password */
+	safestrldup(cptr->local->passwd, password, PASSWDLEN+1);
 
 	/* note: the original non-truncated password is supplied as 2nd parameter. */
 	RunHookReturnInt2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);

@@ -80,8 +80,6 @@ CMD_FUNC(m_topic)
 aChannel *chptr = NullChn;
 char *topic = NULL, *name, *tnick = NULL;
 TS   ttime = 0;
-int  topiClen = 0;
-int  nicKlen = 0;
 int i = 0;
 Hook *h;
 int ismember; /* cache: IsMember() */
@@ -176,29 +174,11 @@ long flags = 0; /* cache: membership flags */
 			 * some services do this in their topic enforcement -- codemastr 
 			 */
 			{
-				/* setting a topic */
-				topiClen = strlen(topic);
-				nicKlen = strlen(tnick);
-
-				if (chptr->topic)
-					MyFree(chptr->topic);
-
-				if (topiClen > (TOPICLEN))
-					topiClen = TOPICLEN;
-
-				if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+5))
-					nicKlen = (NICKLEN+USERLEN+HOSTLEN+5);
-
-				chptr->topic = MyMallocEx(topiClen + 1);
-				strlcpy(chptr->topic, topic, topiClen + 1);
-
-				if (chptr->topic_nick)
-					MyFree(chptr->topic_nick);
-
-				chptr->topic_nick = MyMallocEx(nicKlen + 1);
-				strlcpy(chptr->topic_nick, tnick, nicKlen + 1);
-
+				/* Set the topic */
+				safestrldup(chptr->topic, topic, TOPICLEN+1);
+				safestrldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
 				chptr->topic_time = ttime;
+
 				RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);
 				sendto_server(cptr, PROTO_SID, 0, ":%s TOPIC %s %s %lu :%s",
 				    ID(sptr), chptr->chname, chptr->topic_nick,
@@ -279,36 +259,17 @@ long flags = 0; /* cache: membership flags */
 				}
 				RunHook4(HOOKTYPE_LOCAL_TOPIC, cptr, sptr, chptr, topic);
 			}
-			/* setting a topic */
-			topiClen = strlen(topic);
-#ifndef TOPIC_NICK_IS_NUHOST
-			nicKlen = strlen(sptr->name);
-#else
+
+#ifdef TOPIC_NICK_IS_NUHOST
 			if (IsPerson(sptr))
 				tnick = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
 			else
 				tnick = sptr->name;
-			nicKlen = strlen(tnick);
 #endif
-			if (chptr->topic)
-				MyFree(chptr->topic);
+			/* Set the topic */
+			safestrldup(chptr->topic, topic, TOPICLEN+1);
+			safestrldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
 
-			if (topiClen > (TOPICLEN))
-				topiClen = TOPICLEN;
-			if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+5))
-				nicKlen = NICKLEN+USERLEN+HOSTLEN+5;
-			chptr->topic = MyMallocEx(topiClen + 1);
-			strlcpy(chptr->topic, topic, topiClen + 1);
-
-			if (chptr->topic_nick)
-				MyFree(chptr->topic_nick);
-
-			chptr->topic_nick = MyMallocEx(nicKlen + 1);
-#ifndef TOPIC_NICK_IS_NUHOST
-			strlcpy(chptr->topic_nick, sptr->name, nicKlen + 1);
-#else
-			strlcpy(chptr->topic_nick, tnick, nicKlen + 1);
-#endif
 			RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);
 			if (ttime && IsServer(cptr))
 				chptr->topic_time = ttime;

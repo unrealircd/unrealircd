@@ -97,12 +97,7 @@ char *url_getfilename(const char *url)
 		if (!*c)
 			return strdup(start);
 		else
-		{
-			char *file = MyMallocEx(c-start+1);
-			strlcpy(file, start, c-start+1);
-			return file;
-		}
-		return strdup("-");
+			return strldup(start, c-start+1);
 
 	}
 	return strdup("-");

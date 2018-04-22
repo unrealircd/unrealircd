@@ -409,15 +409,15 @@ extern MODVAR long SNO_SPAMF;
 extern MODVAR long SNO_OPER;
 
 #ifndef HAVE_STRLCPY
-size_t strlcpy(char *dst, const char *src, size_t size);
+extern size_t strlcpy(char *dst, const char *src, size_t size);
 #endif
 #ifndef HAVE_STRLCAT
-size_t strlcat(char *dst, const char *src, size_t size);
+extern size_t strlcat(char *dst, const char *src, size_t size);
 #endif
 #ifndef HAVE_STRLNCAT
-size_t strlncat(char *dst, const char *src, size_t size, size_t n);
+extern size_t strlncat(char *dst, const char *src, size_t size, size_t n);
 #endif
-
+extern char *strldup(const char *src, size_t n);
 
 extern int dopacket(aClient *, char *, int);
 
