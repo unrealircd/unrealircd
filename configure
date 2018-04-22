@@ -759,6 +759,7 @@ with_system_pcre2
 with_system_cares
 enable_ssl
 enable_dynamic_linking
+enable_werror
 enable_libcurl
 '
       ac_precious_vars='build_alias
@@ -1401,6 +1402,7 @@ Optional Features:
                           Make the IRCd statically link with shared objects
                           rather than dynamically (noone knows if disabling
                           dynamic linking actually does anything or not)
+  --enable-werror         Turn compilation warnings into errors (-Werror)
   --enable-libcurl=DIR    enable libcurl (remote include) support
 
 Optional Packages:
@@ -3465,7 +3467,7 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if the compiler has a working -Wno-invalid-source-encoding" >&5
 $as_echo_n "checking if the compiler has a working -Wno-invalid-source-encoding... " >&6; }
-if ${ac_cv_nps+:} false; then :
+if ${ac_cv_nise+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -3483,17 +3485,17 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  ac_cv_nps="yes"
+  ac_cv_nise="yes"
 else
-  ac_cv_nps="no"
+  ac_cv_nise="no"
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 	CFLAGS="$save_cflags"
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_nps" >&5
-$as_echo "$ac_cv_nps" >&6; }
-if test "$ac_cv_nps" = "yes"; then
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_nise" >&5
+$as_echo "$ac_cv_nise" >&6; }
+if test "$ac_cv_nise" = "yes"; then
 CFLAGS="$CFLAGS -Wno-invalid-source-encoding"
 fi
 
@@ -7430,6 +7432,14 @@ $as_echo "#define STATIC_LINKING /**/" >>confdefs.h
 
 fi
 
+# Check whether --enable-werror was given.
+if test "${enable_werror+set}" = set; then :
+  enableval=$enable_werror; ac_cv_werror="$enableval"
+else
+  ac_cv_werror="no"
+fi
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors" >&5
 $as_echo_n "checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors... " >&6; }
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -8672,6 +8682,11 @@ rm -f core conftest.err conftest.$ac_objext \
 fi
 
 UNRLINCDIR="`pwd`/include"
+
+if test "$ac_cv_werror" = "yes" ; then
+	CFLAGS="$CFLAGS -Werror"
+fi
+
 
 
 ac_config_files="$ac_config_files Makefile src/Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/snomasks/Makefile src/modules/extbans/Makefile src/modules/cap/Makefile src/modules/third/Makefile unrealircd"

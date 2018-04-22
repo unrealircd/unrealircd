@@ -86,13 +86,13 @@ fi
 dnl This is purely for charsys.c... I like it so we can easily read
 dnl this for non-utf8. We can remove it once we ditch non-utf8 some day
 dnl of course, or decide to ignore me and encode them.
-AC_CACHE_CHECK(if the compiler has a working -Wno-invalid-source-encoding, ac_cv_nps, [
+AC_CACHE_CHECK(if the compiler has a working -Wno-invalid-source-encoding, ac_cv_nise, [
 	save_cflags="$CFLAGS"
 	CFLAGS="$CFLAGS -Wno-invalid-source-encoding"
-	AC_TRY_COMPILE(,, ac_cv_nps="yes", ac_cv_nps="no")
+	AC_TRY_COMPILE(,, ac_cv_nise="yes", ac_cv_nise="no")
 	CFLAGS="$save_cflags"
 ])
-if test "$ac_cv_nps" = "yes"; then
+if test "$ac_cv_nise" = "yes"; then
 CFLAGS="$CFLAGS -Wno-invalid-source-encoding"
 fi
 
@@ -687,6 +687,12 @@ AS_IF([test $enable_dynamic_linking = "yes"],
 	[AC_ENABLE_DYN],
 	[AC_DEFINE([STATIC_LINKING], [], [Link... statically(?) (defining this macro will probably cause the build tofail)])])
 
+AC_ARG_ENABLE([werror],
+  [AS_HELP_STRING([--enable-werror],
+    [Turn compilation warnings into errors (-Werror)])],
+  [ac_cv_werror="$enableval"],
+  [ac_cv_werror="no"])
+
 AC_MSG_CHECKING([if FD_SETSIZE is large enough to allow $ac_fd file descriptors])
 AC_COMPILE_IFELSE([
 #include <sys/types.h>
@@ -889,6 +895,12 @@ AX_PTHREAD()
 CHECK_LIBCURL
 
 UNRLINCDIR="`pwd`/include"
+
+dnl Moved to the very end to ensure it doesn't affect any libs or tests.
+if test "$ac_cv_werror" = "yes" ; then
+	CFLAGS="$CFLAGS -Werror"
+fi
+
 AC_SUBST(UNRLINCDIR)
 
 AC_CONFIG_FILES([Makefile
