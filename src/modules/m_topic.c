@@ -78,7 +78,7 @@ void topicoverride(aClient *sptr, aChannel *chptr, char *topic)
 CMD_FUNC(m_topic)
 {
 aChannel *chptr = NullChn;
-char *topic = NULL, *name, *tnick = NULL;
+char *topic = NULL, *name, *tnick = sptr->name;
 TS   ttime = 0;
 int i = 0;
 Hook *h;
