@@ -1659,8 +1659,7 @@ extern MODVAR char *gnulicense[];
 #define isexcept void
 
 #include "ssl.h"
-#define EVENT_HASHES EVENT_DRUGS
-#include "events.h"
+
 struct Command {
 	aCommand		*prev, *next;
 	char 			*cmd;

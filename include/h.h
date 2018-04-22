@@ -509,7 +509,6 @@ extern void init_random();
 extern u_char getrandom8();
 extern u_int16_t getrandom16();
 extern u_int32_t getrandom32();
-#define EVENT_DRUGS BASE_VERSION
 extern void ident_failed(aClient *cptr);
 
 extern MODVAR char extchmstr[4][64];
