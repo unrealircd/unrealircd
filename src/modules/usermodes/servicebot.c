@@ -40,7 +40,7 @@ long UMODE_SERVICEBOT = 0L;
 int servicebot_can_kick(aClient *sptr, aClient *target, aChannel *chptr,
                     char *comment, long sptr_flags, long target_flags, char **reject_reason);
 int servicebot_mode_deop(aClient *sptr, aClient *target, aChannel *chptr,
-                    u_int what, char modechar, long my_access, char **reject_reason);
+                    u_int what, int modechar, long my_access, char **reject_reason);
 int servicebot_pre_kill(aClient *sptr, aClient *target, char *reason);
 int servicebot_whois(aClient *sptr, aClient *acptr);
 int servicebot_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr);
@@ -96,7 +96,7 @@ int servicebot_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *c
 }
 
 int servicebot_mode_deop(aClient *sptr, aClient *target, aChannel *chptr,
-                    u_int what, char modechar, long my_access, char **reject_reason)
+                    u_int what, int modechar, long my_access, char **reject_reason)
 {
 	static char errmsg[NICKLEN+256];
 	
@@ -106,7 +106,7 @@ int servicebot_mode_deop(aClient *sptr, aClient *target, aChannel *chptr,
 		snprintf(errmsg2, sizeof(errmsg2), "%s is a Service Bot", target->name);
 		
 		snprintf(errmsg, sizeof(errmsg), err_str(ERR_CANNOTCHANGECHANMODE),
-			me.name, sptr->name, modechar, errmsg2);
+			me.name, sptr->name, (char)modechar, errmsg2);
 		
 		*reject_reason = errmsg;
 		

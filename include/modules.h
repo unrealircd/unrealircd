@@ -895,7 +895,7 @@ int hooktype_can_sajoin(aClient *target, aChannel *chptr, aClient *sptr);
 int hooktype_whois(aClient *sptr, aClient *target);
 int hooktype_check_init(aClient *cptr, char *sockname, size_t size);
 int hooktype_who_status(aClient *sptr, aClient *target, aChannel *chptr, Member *member, char *status, int cansee);
-int hooktype_mode_deop(aClient *sptr, aClient *victim, aChannel *chptr, u_int what, char modechar, long my_access, char **badmode);
+int hooktype_mode_deop(aClient *sptr, aClient *victim, aChannel *chptr, u_int what, int modechar, long my_access, char **badmode);
 int hooktype_pre_kill(aClient *sptr, aClient *victim, char *killpath);
 int hooktype_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr);
 int hooktype_dcc_denied(aClient *sptr, aClient *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
