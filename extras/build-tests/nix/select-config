@@ -20,6 +20,8 @@ if [ "$OSTYPE" = "linux-gnu" ]; then
 elif [[ "$OSTYPE" == "freebsd"* ]]; then
 	sudo pkg install -y libtool
 	sudo pkg remove -y c-ares
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+	brew update
 else
 	echo "OS not correctly detected ($OSTYPE). Aborting."
 	exit 1
@@ -37,6 +39,8 @@ do
 			sudo apt-get install libc-ares-dev -qq
 		elif [[ "$OSTYPE" == "freebsd"* ]]; then
 			sudo pkg install -y c-ares
+		elif [[ "$OSTYPE" == "darwin"* ]]; then
+			echo TODO: Do something useful here...
 		fi
 	elif [ "$1" = "system-curl" ]; then
 		echo 'REMOTEINC=1' >>config.settings
@@ -46,12 +50,16 @@ do
 		elif [[ "$OSTYPE" == "freebsd"* ]]; then
 			sudo pkg install -y curl
 			echo 'CURLDIR=/usr/local' >>config.settings
+		elif [[ "$OSTYPE" == "darwin"* ]]; then
+			echo TODO: Do something useful here...
 		fi
 	elif [ "$1" = "local-curl" ]; then
 		if [ "$OSTYPE" = "linux-gnu" ]; then
 			sudo apt-get remove libcurl4-openssl-dev libcurl3-gnutls libcurl3 -qq
 		elif [[ "$OSTYPE" == "freebsd"* ]]; then
 			sudo pkg remove -y curl #NOTE: unfortunately this also removes 'git' :D
+		elif [[ "$OSTYPE" == "darwin"* ]]; then
+			echo TODO: Do something useful here...
 		fi
 		echo 'REMOTEINC=1' >>config.settings
 		echo "CURLDIR=`pwd`/extras/curl" >>config.settings
