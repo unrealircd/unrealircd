@@ -615,8 +615,7 @@ int blacklist_dns_request(aClient *cptr, Blacklist *d)
 				(unsigned int)(e[i] & 0xf),
 				(unsigned int)((e[i] >> 4) & 0xf),
 				(unsigned int)((e[i] >> 8) & 0xf),
-				(unsigned int)((e[i] >> 12) & 0xf),
-				(unsigned int)((e[i] >> 16) & 0xf));
+				(unsigned int)((e[i] >> 12) & 0xf));
 			strlcat(buf, wbuf, sizeof(buf));
 		}
 		strlcat(buf, d->backend->dns->name, sizeof(buf));
@@ -672,13 +671,16 @@ int dots = 0;
 /* Parse DNS reply.
  * A reply will be an A record in the format x.x.x.<reply>
  */
-int blacklist_parse_reply(struct hostent *he)
+int blacklist_parse_reply(struct hostent *he, int entry)
 {
 	char ipbuf[64];
 	char *p;
 
+	if ((he->h_addrtype != AF_INET) || (he->h_length != 4))
+		return 0;
+
 	*ipbuf = '\0';
-	if (!inet_ntop(AF_INET, he->h_addr_list[0], ipbuf, sizeof(ipbuf)))
+	if (!inet_ntop(AF_INET, he->h_addr_list[entry], ipbuf, sizeof(ipbuf)))
 		return 0;
 	
 	p = strrchr(ipbuf, '.');
@@ -724,6 +726,7 @@ void blacklist_process_result(aClient *acptr, int status, struct hostent *he)
 	char *domain;
 	int reply;
 	int i;
+	int replycnt;
 	
 	if ((status != 0) || (he->h_length != 4) || !he->h_name)
 		return; /* invalid reply */
@@ -735,16 +738,20 @@ void blacklist_process_result(aClient *acptr, int status, struct hostent *he)
 	if (!bl)
 		return; /* possibly just rehashed and the blacklist block is gone now */
 	
-	reply = blacklist_parse_reply(he);
-	
-	for (i = 0; bl->backend->dns->reply[i]; i++)
+	/* walk through all replies for this record... until we have a hit */
+	for (replycnt=0; he->h_addr_list[replycnt]; replycnt++)
 	{
-		if ((bl->backend->dns->reply[i] == -1) ||
-		    ( (bl->backend->dns->type == DNSBL_BITMASK) && (reply & bl->backend->dns->reply[i]) ) ||
-		    ( (bl->backend->dns->type == DNSBL_RECORD) && (bl->backend->dns->reply[i] == reply) ) )
+		reply = blacklist_parse_reply(he, replycnt);
+
+		for (i = 0; bl->backend->dns->reply[i]; i++)
 		{
-			blacklist_hit(acptr, bl, reply);
-			return;
+			if ((bl->backend->dns->reply[i] == -1) ||
+				( (bl->backend->dns->type == DNSBL_BITMASK) && (reply & bl->backend->dns->reply[i]) ) ||
+				( (bl->backend->dns->type == DNSBL_RECORD) && (bl->backend->dns->reply[i] == reply) ) )
+			{
+				blacklist_hit(acptr, bl, reply);
+				return;
+			}
 		}
 	}
 }
