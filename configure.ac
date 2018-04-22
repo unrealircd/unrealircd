@@ -96,6 +96,17 @@ if test "$ac_cv_nise" = "yes"; then
 CFLAGS="$CFLAGS -Wno-invalid-source-encoding"
 fi
 
+dnl Pffff..
+AC_CACHE_CHECK(if the compiler has a working -Wno-format-zero-length, ac_cv_nfzl, [
+	save_cflags="$CFLAGS"
+	CFLAGS="$CFLAGS -Wno-format-zero-length"
+	AC_TRY_COMPILE(,, ac_cv_nfzl="yes", ac_cv_nfzl="no")
+	CFLAGS="$save_cflags"
+])
+if test "$ac_cv_nfzl" = "yes"; then
+CFLAGS="$CFLAGS -Wno-format-zero-length"
+fi
+
 AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(CP,cp)
 AC_PATH_PROG(TOUCH,touch)

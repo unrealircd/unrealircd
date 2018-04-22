@@ -3499,6 +3499,40 @@ if test "$ac_cv_nise" = "yes"; then
 CFLAGS="$CFLAGS -Wno-invalid-source-encoding"
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if the compiler has a working -Wno-format-zero-length" >&5
+$as_echo_n "checking if the compiler has a working -Wno-format-zero-length... " >&6; }
+if ${ac_cv_nfzl+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+	save_cflags="$CFLAGS"
+	CFLAGS="$CFLAGS -Wno-format-zero-length"
+	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_cv_nfzl="yes"
+else
+  ac_cv_nfzl="no"
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+	CFLAGS="$save_cflags"
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_nfzl" >&5
+$as_echo "$ac_cv_nfzl" >&6; }
+if test "$ac_cv_nfzl" = "yes"; then
+CFLAGS="$CFLAGS -Wno-format-zero-length"
+fi
+
 # Extract the first word of "rm", so it can be a program name with args.
 set dummy rm; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
