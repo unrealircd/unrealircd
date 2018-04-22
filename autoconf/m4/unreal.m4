@@ -140,13 +140,13 @@ dnl the following 2 macros are based on CHECK_SSL by Mark Ethan Trostler <trostl
 AC_DEFUN([CHECK_SSL],
 [
 AC_ARG_ENABLE(ssl,
-	[AC_HELP_STRING([--enable-ssl=],[enable ssl will check /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr])],
+	[AC_HELP_STRING([--enable-ssl=],[enable ssl will check /usr/local/opt/openssl /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr])],
 	[],
 	[enable_ssl=no])
 AS_IF([test $enable_ssl != "no"],
 	[ 
 	AC_MSG_CHECKING([for openssl])
-	for dir in $enable_ssl /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr; do
+	for dir in $enable_ssl /usr/local/opt/openssl /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr; do
 		ssldir="$dir"
 		if test -f "$dir/include/openssl/ssl.h"; then
 			AC_MSG_RESULT([found in $ssldir/include/openssl])
