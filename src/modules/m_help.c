@@ -57,16 +57,21 @@ MOD_UNLOAD(m_help)
 #define HDR(str) sendto_one(sptr, ":%s 290 %s :%s", me.name, sptr->name, str);
 #define SND(str) sendto_one(sptr, ":%s 292 %s :%s", me.name, sptr->name, str);
 
-ConfigItem_help *Find_Help(char *command) {
+ConfigItem_help *Find_Help(char *command)
+{
 	ConfigItem_help *help;
-	if (!command) {
-		for (help = conf_help; help; help = (ConfigItem_help *)help->next) {
+
+	if (!command)
+	{
+		for (help = conf_help; help; help = help->next)
+		{
 			if (help->command == NULL)
 				return help;
 		}
 		return NULL;
 	}
-	for (help = conf_help; help; help = (ConfigItem_help *)help->next) {
+	for (help = conf_help; help; help = help->next)
+	{
 		if (help->command == NULL)
 			continue;
 		else if (!stricmp(command,help->command))

@@ -241,7 +241,7 @@ CMD_FUNC(m_trace)
 	if (!ValidatePermissionsForPath("trace",sptr,acptr,NULL,NULL) || !cnt)
 		return 0;
 
-	for (cltmp = conf_class; doall && cltmp; cltmp = (ConfigItem_class *) cltmp->next)
+	for (cltmp = conf_class; doall && cltmp; cltmp = cltmp->next)
 	/*	if (cltmp->clients > 0) */
 			sendto_one(sptr, rpl_str(RPL_TRACECLASS), me.name,
 			    sptr->name, cltmp->name ? cltmp->name : "[noname]", cltmp->clients);

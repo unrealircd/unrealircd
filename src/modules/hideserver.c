@@ -59,15 +59,14 @@ static void InitConf()
 
 static void FreeConf()
 {
-	ConfigItem_ulines	*h;
-	ListStruct		*next;
+	ConfigItem_ulines	*h, *next;
 
 	safefree(Settings.map_deny_message);
 	safefree(Settings.links_deny_message);
 
-	for (h = HiddenServers; h; h = (ConfigItem_ulines *) next)
+	for (h = HiddenServers; h; h = next)
 	{
-		next = (ListStruct *) h->next;
+		next = h->next;
 		DelListItem(h, HiddenServers);
 		MyFree(h->servername);
 		MyFree(h);
@@ -224,7 +223,7 @@ ConfigItem_ulines *FindHiddenServer(char *servername)
 {
 	ConfigItem_ulines *h;
 
-	for (h = HiddenServers; h; h = (ConfigItem_ulines *) h->next)
+	for (h = HiddenServers; h; h = h->next)
 		if (!strcasecmp(servername, h->servername))
 			break;
 

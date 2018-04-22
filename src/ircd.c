@@ -418,7 +418,7 @@ EVENT(try_connections)
 	int  confrq;
 	ConfigItem_class *class;
 
-	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next)
+	for (aconf = conf_link; aconf; aconf = aconf->next)
 	{
 		/* We're only interested in autoconnect blocks that are valid (and ignore temporary link blocks) */
 		if (!(aconf->outgoing.options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
@@ -898,7 +898,7 @@ void fix_timers(void)
 	Debug((DEBUG_DEBUG, "fix_timers(): removed %d throttling item(s)", cnt));
 
 	/* Make sure autoconnect for servers still works (lnk->hold) */
-	for (lnk = conf_link; lnk; lnk = (ConfigItem_link *) lnk->next)
+	for (lnk = conf_link; lnk; lnk = lnk->next)
 	{
 		int t = lnk->class ? lnk->class->connfreq : 90;
 
@@ -1322,8 +1322,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	/*
 	 * Add default class
 	 */
-	default_class =
-	    (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
+	default_class = MyMallocEx(sizeof(ConfigItem_class));
 	default_class->flag.permanent = 1;
 	default_class->pingfreq = 120;
 	default_class->maxclients = 100;

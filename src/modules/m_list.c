@@ -118,9 +118,7 @@ CMD_FUNC(m_list)
 	{
 
 		sendto_one(sptr, rpl_str(RPL_LISTSTART), me.name, sptr->name);
-		lopt = sptr->user->lopt = (LOpts *) MyMalloc(sizeof(LOpts));
-		memset(lopt, '\0', sizeof(LOpts));
-
+		lopt = sptr->user->lopt = MyMallocEx(sizeof(LOpts));
 		lopt->showall = 1;
 
 		if (DBufLength(&cptr->local->sendQ) < 2048)
@@ -146,7 +144,7 @@ CMD_FUNC(m_list)
 	usermax = -1;		/* No maximum */
 
 	for (name = strtoken(&p, parv[1], ","); name && !error;
-	    name = strtoken(&p, (char *)NULL, ","))
+	    name = strtoken(&p, NULL, ","))
 	{
 
 		switch (*name)
@@ -257,8 +255,7 @@ CMD_FUNC(m_list)
 
 	if (doall)
 	{
-		lopt = sptr->user->lopt = (LOpts *) MyMalloc(sizeof(LOpts));
-		memset(lopt, '\0', sizeof(LOpts));
+		lopt = sptr->user->lopt = MyMallocEx(sizeof(LOpts));
 		lopt->usermin = usermin;
 		lopt->usermax = usermax;
 		lopt->topictimemax = topictimemax;
@@ -304,9 +301,9 @@ void _send_list(aClient *cptr)
 	if ((lopt->starthash == 0) && conf_offchans)
 	{
 		ConfigItem_offchans *x;
-		for (x = conf_offchans; x; x = (ConfigItem_offchans *)x->next)
+		for (x = conf_offchans; x; x = x->next)
 		{
-			if (find_channel(x->chname, (aChannel *)NULL))
+			if (find_channel(x->chname, NULL))
 				continue; /* exists, >0 users.. will be sent later */
 			sendto_one(cptr,
 			    rpl_str(RPL_LIST), me.name,
@@ -322,8 +319,7 @@ void _send_list(aClient *cptr)
 	for (hashnum = lopt->starthash; hashnum < CH_MAX; hashnum++)
 	{
 		if (numsend > 0)
-			for (chptr =
-			    (aChannel *)hash_get_chan_bucket(hashnum);
+			for (chptr = hash_get_chan_bucket(hashnum);
 			    chptr; chptr = chptr->hnextch)
 			{
 				if (SecretChannel(chptr)

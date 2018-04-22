@@ -60,11 +60,11 @@ ConfigItem_allow_dcc *a;
 	if (!conf_deny_dcc || !filename)
 		return NULL;
 
-	for (d = conf_deny_dcc; d; d = (ConfigItem_deny_dcc *) d->next)
+	for (d = conf_deny_dcc; d; d = d->next)
 	{
 		if ((d->flag.type == DCCDENY_HARD) && !match(d->filename, filename))
 		{
-			for (a = conf_allow_dcc; a; a = (ConfigItem_allow_dcc *) a->next)
+			for (a = conf_allow_dcc; a; a = a->next)
 			{
 				if ((a->flag.type == DCCDENY_HARD) && !match(a->filename, filename))
 					return NULL;
@@ -86,11 +86,11 @@ ConfigItem_allow_dcc *a;
 	if (!conf_deny_dcc || !filename)
 		return NULL;
 
-	for (d = conf_deny_dcc; d; d = (ConfigItem_deny_dcc *) d->next)
+	for (d = conf_deny_dcc; d; d = d->next)
 	{
 		if ((d->flag.type == DCCDENY_SOFT) && !match(d->filename, filename))
 		{
-			for (a = conf_allow_dcc; a; a = (ConfigItem_allow_dcc *) a->next)
+			for (a = conf_allow_dcc; a; a = a->next)
 			{
 				if ((a->flag.type == DCCDENY_SOFT) && !match(a->filename, filename))
 					return NULL;
@@ -105,7 +105,7 @@ ConfigItem_allow_dcc *a;
 void dcc_sync(aClient *sptr)
 {
 	ConfigItem_deny_dcc *p;
-	for (p = conf_deny_dcc; p; p = (ConfigItem_deny_dcc *) p->next)
+	for (p = conf_deny_dcc; p; p = p->next)
 	{
 		if (p->flag.type2 == CONF_BAN_TYPE_AKILL)
 			sendto_one(sptr, ":%s SVSFLINE + %s :%s", me.name,
@@ -117,7 +117,7 @@ void	DCCdeny_add(char *filename, char *reason, int type, int type2)
 {
 	ConfigItem_deny_dcc *deny = NULL;
 	
-	deny = (ConfigItem_deny_dcc *) MyMallocEx(sizeof(ConfigItem_deny_dcc));
+	deny = MyMallocEx(sizeof(ConfigItem_deny_dcc));
 	deny->filename = strdup(filename);
 	deny->reason = strdup(reason);
 	deny->flag.type = type;
@@ -139,9 +139,9 @@ void dcc_wipe_services(void)
 {
 	ConfigItem_deny_dcc *dconf, *next;
 	
-	for (dconf = conf_deny_dcc; dconf; dconf = (ConfigItem_deny_dcc *) next)
+	for (dconf = conf_deny_dcc; dconf; dconf = next)
 	{
-		next = (ConfigItem_deny_dcc *)dconf->next;
+		next = dconf->next;
 		if ((dconf->flag.type2 == CONF_BAN_TYPE_AKILL))
 		{
 			DelListItem(dconf, conf_deny_dcc);
@@ -309,7 +309,7 @@ static char recursion_trap=0;
 	if (!loop.ircd_forked && (flags & LOG_ERROR))
 		fprintf(stderr, "%s", buf);
 
-	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
+	for (logs = conf_log; logs; logs = logs->next) {
 #ifdef HAVE_SYSLOG
 		if (!stricmp(logs->file, "syslog") && logs->flags & flags) {
 			syslog(LOG_INFO, "%s", buf);

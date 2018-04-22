@@ -87,7 +87,7 @@ int _check_deny_version(aClient *cptr, char *version_string, int protocol, char 
 {
 	ConfigItem_deny_version *vlines;
 	
-	for (vlines = conf_deny_version; vlines; vlines = (ConfigItem_deny_version *) vlines->next)
+	for (vlines = conf_deny_version; vlines; vlines = vlines->next)
 	{
 		if (!match(vlines->mask, cptr->name))
 			break;
@@ -279,7 +279,7 @@ int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link
 		goto skip_host_check;
 	} else {
 		/* Hunt the linkblock down ;) */
-		for(link = conf_link; link; link = (ConfigItem_link *) link->next)
+		for(link = conf_link; link; link = link->next)
 			if (!match(link->servername, servername))
 				break;
 	}
@@ -552,7 +552,7 @@ CMD_FUNC(m_server)
 			strlcpy(cptr->info, info[0] ? info : "server", sizeof(cptr->info));
 		}
 
-		for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next)
+		for (deny = conf_deny_link; deny; deny = deny->next)
 		{
 			if (deny->flag.type == CRULE_ALL && !match(deny->mask, servername)
 				&& crule_eval(deny->rule)) {
@@ -853,9 +853,9 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	{
 		sendto_server(&me, 0, 0, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
 			me.name,
-			me.name, inpath, (char *) ssl_get_cipher(cptr->local->ssl));
+			me.name, inpath, ssl_get_cipher(cptr->local->ssl));
 		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
-			me.name, inpath, (char *) ssl_get_cipher(cptr->local->ssl));
+			me.name, inpath, ssl_get_cipher(cptr->local->ssl));
 		tls_link_notification_verify(cptr, aconf);
 	}
 	else

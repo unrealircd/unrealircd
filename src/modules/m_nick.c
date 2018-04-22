@@ -328,7 +328,7 @@ CMD_FUNC(m_uid)
 	 */
 	if (IsServer(cptr) &&
 	    (parc > 7
-	    && (!(serv = (aClient *)find_server(sptr->name, NULL))
+	    && (!(serv = find_server(sptr->name, NULL))
 	    || serv->from != cptr->from)))
 	{
 		sendto_realops("Cannot find SID for %s (%s)", sptr->name,
@@ -352,10 +352,7 @@ CMD_FUNC(m_uid)
 	{
 		if (IsServer(sptr) && !ishold) /* server introducing new client */
 		{
-			acptrs =
-			    (aClient *)find_server(sptr->user ==
-			    NULL ? (char *)parv[6] : (char *)sptr->user->
-			    server, NULL);
+			acptrs = find_server(sptr->user == NULL ? parv[6] : sptr->user->server, NULL);
 			/* (NEW: no unregistered q:line msgs anymore during linking) */
 			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
 				sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
@@ -648,7 +645,7 @@ CMD_FUNC(m_nick)
 	 */
 	if (IsServer(cptr) &&
 	    (parc > 7
-	    && (!(serv = (aClient *)find_server(parv[6], NULL))
+	    && (!(serv = find_server(parv[6], NULL))
 	    || serv->from != cptr->from)))
 	{
 		sendto_realops("Cannot find server %s (%s)", parv[6],
@@ -697,10 +694,7 @@ CMD_FUNC(m_nick)
 	{
 		if (IsServer(sptr) && !ishold) /* server introducing new client */
 		{
-			acptrs =
-			    (aClient *)find_server(sptr->user ==
-			    NULL ? (char *)parv[6] : (char *)sptr->user->
-			    server, NULL);
+			acptrs = find_server(sptr->user == NULL ? parv[6] : sptr->user->server, NULL);
 			/* (NEW: no unregistered q:line msgs anymore during linking) */
 			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
 				sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
@@ -1478,7 +1472,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	{
 		aClient *acptr;
 
-		if (!(acptr = (aClient *)find_server_quick(user->server)))
+		if (!(acptr = find_server_quick(user->server)))
 		{
 			sendto_ops
 			    ("Bad USER [%s] :%s USER %s %s : No such server",
@@ -1710,7 +1704,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		return exit_client(cptr, cptr, &me, iConf.plaintext_policy_user_message);
 	}
 
-	for (aconf = conf_allow; aconf; aconf = (ConfigItem_allow *) aconf->next)
+	for (aconf = conf_allow; aconf; aconf = aconf->next)
 	{
 		if (!aconf->hostname || !aconf->ip)
 			goto attach;

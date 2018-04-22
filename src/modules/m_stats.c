@@ -320,7 +320,7 @@ static inline int stats_operonly_short(char c)
 static inline int stats_operonly_long(char *s)
 {
 	OperStat *os;
-	for (os = iConf.oper_only_stats_ext; os; os = (OperStat *)os->next)
+	for (os = iConf.oper_only_stats_ext; os; os = os->next)
 	{
 		if (!stricmp(os->flag, s))
 			return 1;
@@ -334,7 +334,7 @@ static inline char *stats_operonly_long_to_short()
 	static char buffer[BUFSIZE+1];
 	int i = 0;
 	OperStat *os;
-	for (os = iConf.oper_only_stats_ext; os; os = (OperStat *)os->next)
+	for (os = iConf.oper_only_stats_ext; os; os = os->next)
 	{
 		struct statstab *stat = stats_search(os->flag);
 		if (!stat)
@@ -451,7 +451,7 @@ CMD_FUNC(m_stats)
 int stats_banversion(aClient *sptr, char *para)
 {
 	ConfigItem_ban *bans;
-	for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next)
+	for (bans = conf_ban; bans; bans = bans->next)
 	{
 		if (bans->flag.type != CONF_BAN_VERSION)
 			continue;
@@ -467,7 +467,7 @@ int stats_links(aClient *sptr, char *para)
 #ifdef DEBUGMODE
 	aClient *acptr;
 #endif
-	for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
+	for (link_p = conf_link; link_p; link_p = link_p->next)
 	{
 		sendto_one(sptr, ":%s 213 %s C - * %s %i %s %s%s%s",
 			me.name, sptr->name, /* user@host no longer shown as we allow multiple and split out/in etc */
@@ -513,7 +513,7 @@ int stats_denylinkall(aClient *sptr, char *para)
 {
 	ConfigItem_deny_link *links;
 
-	for (links = conf_deny_link; links; links = (ConfigItem_deny_link *) links->next) 
+	for (links = conf_deny_link; links; links = links->next)
 	{
 		if (links->flag.type == CRULE_ALL)
 			sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
@@ -539,7 +539,7 @@ int stats_spamfilter(aClient *sptr, char *para)
 int stats_exceptban(aClient *sptr, char *para)
 {
 	ConfigItem_except *excepts;
-	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *) excepts->next)
+	for (excepts = conf_except; excepts; excepts = excepts->next)
 	{
 		if (excepts->flag.type == CONF_EXCEPT_BAN)
 			sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
@@ -554,7 +554,7 @@ int stats_exceptban(aClient *sptr, char *para)
 int stats_allow(aClient *sptr, char *para)
 {
 	ConfigItem_allow *allows;
-	for (allows = conf_allow; allows; allows = (ConfigItem_allow *) allows->next) 
+	for (allows = conf_allow; allows; allows = allows->next)
 		sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
 			sptr->name, allows->ip, allows->hostname, allows->maxperip, 
 			allows->class->name, allows->server ? allows->server 
@@ -589,7 +589,7 @@ int stats_oper(aClient *sptr, char *para)
 	ConfigItem_oper *oper_p;
 	ConfigItem_mask *m;
 
-	for (oper_p = conf_oper; oper_p; oper_p = (ConfigItem_oper *) oper_p->next)
+	for (oper_p = conf_oper; oper_p; oper_p = oper_p->next)
 	{
 		for (m = oper_p->mask; m; m = m->next)
 		{
@@ -620,7 +620,7 @@ int stats_port(aClient *sptr, char *para)
 	int i;
 	ConfigItem_listen *listener;
 
-	for (listener = conf_listen; listener != NULL; listener = (ConfigItem_listen *) listener->next)
+	for (listener = conf_listen; listener != NULL; listener = listener->next)
 	{
 		if (!(listener->options & LISTENER_BOUND))
 			continue;
@@ -760,7 +760,7 @@ int stats_fdtable(aClient *sptr, char *para)
 int stats_uline(aClient *sptr, char *para)
 {
 	ConfigItem_ulines *ulines;
-	for (ulines = conf_ulines; ulines; ulines = (ConfigItem_ulines *) ulines->next)
+	for (ulines = conf_ulines; ulines; ulines = ulines->next)
 		sendto_one(sptr, rpl_str(RPL_STATSULINE), me.name,
 			sptr->name, ulines->servername);
 	return 0;	
@@ -770,7 +770,7 @@ int stats_vhost(aClient *sptr, char *para)
 	ConfigItem_mask *m;
 	ConfigItem_vhost *vhosts;
 
-	for (vhosts = conf_vhost; vhosts; vhosts = (ConfigItem_vhost *) vhosts->next) 
+	for (vhosts = conf_vhost; vhosts; vhosts = vhosts->next)
 	{
 		for (m = vhosts->mask; m; m = m->next)
 		{
@@ -984,7 +984,7 @@ int stats_denylinkauto(aClient *sptr, char *para)
 {
 	ConfigItem_deny_link *links;
 
-	for (links = conf_deny_link; links; links = (ConfigItem_deny_link *) links->next) 
+	for (links = conf_deny_link; links; links = links->next)
 	{
 		if (links->flag.type == CRULE_AUTO)
 			sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
@@ -996,7 +996,7 @@ int stats_denylinkauto(aClient *sptr, char *para)
 int stats_exceptthrottle(aClient *sptr, char *para)
 {
 	ConfigItem_except *excepts;
-	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *) excepts->next)
+	for (excepts = conf_except; excepts; excepts = excepts->next)
 		if (excepts->flag.type == CONF_EXCEPT_THROTTLE)
 			sendto_one(sptr, rpl_str(RPL_STATSELINE),
 				me.name, sptr->name, excepts->mask);
@@ -1010,7 +1010,7 @@ int stats_denydcc(aClient *sptr, char *para)
 	char *filemask, *reason;
 	char a = 0;
 
-	for (denytmp = conf_deny_dcc; denytmp; denytmp = (ConfigItem_deny_dcc *) denytmp->next)
+	for (denytmp = conf_deny_dcc; denytmp; denytmp = denytmp->next)
 	{
 		filemask = BadPtr(denytmp->filename) ? "<NULL>" : denytmp->filename;
 		reason = BadPtr(denytmp->reason) ? "<NULL>" : denytmp->reason;
@@ -1026,7 +1026,7 @@ int stats_denydcc(aClient *sptr, char *para)
 			(denytmp->flag.type == DCCDENY_SOFT) ? 's' : 'h',
 			a, filemask, reason);
 	}
-	for (allowtmp = conf_allow_dcc; allowtmp; allowtmp = (ConfigItem_allow_dcc *) allowtmp->next)
+	for (allowtmp = conf_allow_dcc; allowtmp; allowtmp = allowtmp->next)
 	{
 		filemask = BadPtr(allowtmp->filename) ? "<NULL>" : allowtmp->filename;
 		if (allowtmp->flag.type2 == CONF_BAN_TYPE_CONF)
@@ -1049,8 +1049,10 @@ int stats_kline(aClient *sptr, char *para)
 	ConfigItem_ban *bans;
 	ConfigItem_except *excepts;
 	char type[2];
-  	for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
-		if (bans->flag.type == CONF_BAN_USER) {
+	for (bans = conf_ban; bans; bans = bans->next)
+	{
+		if (bans->flag.type == CONF_BAN_USER)
+		{
 			if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
 				type[0] = 'K';
 			type[1] = '\0';
@@ -1058,7 +1060,8 @@ int stats_kline(aClient *sptr, char *para)
 		 		me.name, sptr->name, type, bans->mask, bans->reason
 				? bans->reason : "<no reason>");
 		}
-		else if (bans->flag.type == CONF_BAN_IP) {
+		else if (bans->flag.type == CONF_BAN_IP)
+		{
 			if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
 				type[0] = 'Z';
 			else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
@@ -1071,7 +1074,7 @@ int stats_kline(aClient *sptr, char *para)
 	}
 	tkl_stats(sptr, TKL_KILL, NULL);
 	tkl_stats(sptr, TKL_ZAP, NULL);
-	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) 
+	for (excepts = conf_except; excepts; excepts = excepts->next)
 	{
 		if (excepts->flag.type == CONF_EXCEPT_BAN)
 			sendto_one(sptr, rpl_str(RPL_STATSKLINE),
@@ -1083,11 +1086,15 @@ int stats_kline(aClient *sptr, char *para)
 int stats_banrealname(aClient *sptr, char *para)
 {
 	ConfigItem_ban *bans;
-	for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
+	for (bans = conf_ban; bans; bans = bans->next)
+	{
 		if (bans->flag.type == CONF_BAN_REALNAME)
+		{
 			sendto_one(sptr, rpl_str(RPL_STATSNLINE),
 				me.name, sptr->name, bans->mask, bans->reason
 				? bans->reason : "<no reason>");
+		}
+	}
 	return 0;
 }
 
@@ -1101,12 +1108,16 @@ int stats_chanrestrict(aClient *sptr, char *para)
 {
 	ConfigItem_deny_channel *dchans;
 	ConfigItem_allow_channel *achans;
-	for (dchans = conf_deny_channel; dchans; dchans = (ConfigItem_deny_channel *) dchans->next) 
+	for (dchans = conf_deny_channel; dchans; dchans = dchans->next)
+	{
 		sendto_one(sptr, ":%s %i %s :deny %s %c %s", me.name, RPL_TEXT, sptr->name,
 			dchans->channel, dchans->warn ? 'w' : '-', dchans->reason);
-  	for (achans = conf_allow_channel; achans; achans = (ConfigItem_allow_channel *) achans->next) 
+	}
+  	for (achans = conf_allow_channel; achans; achans = achans->next)
+  	{
 		sendto_one(sptr, ":%s %i %s :allow %s", me.name, RPL_TEXT, sptr->name,
 			achans->channel);
+	}
 	return 0;
 }
 
@@ -1119,10 +1130,13 @@ int stats_shun(aClient *sptr, char *para)
 /* should this be moved to a seperate stats flag? */
 int stats_officialchannels(aClient *sptr, char *para)
 {
-ConfigItem_offchans *x;
-	for (x = conf_offchans; x; x = (ConfigItem_offchans *)x->next)
+	ConfigItem_offchans *x;
+
+	for (x = conf_offchans; x; x = x->next)
+	{
 		sendto_one(sptr, ":%s %i %s :%s %s",
 			me.name, RPL_TEXT, sptr->name, x->chname, x->topic ? x->topic : "");
+	}
 	return 0;
 }
 
@@ -1318,10 +1332,14 @@ int stats_set(aClient *sptr, char *para)
 int stats_tld(aClient *sptr, char *para)
 {
 	ConfigItem_tld *tld;
-	for (tld = conf_tld; tld; tld = (ConfigItem_tld *) tld->next)
-		sendto_one(sptr, rpl_str(RPL_STATSTLINE), me.name, sptr->name, 
+
+	for (tld = conf_tld; tld; tld = tld->next)
+	{
+		sendto_one(sptr, rpl_str(RPL_STATSTLINE), me.name, sptr->name,
 			tld->mask, tld->motd_file, tld->rules_file ? 
 			tld->rules_file : "none");
+	}
+
 	return 0;
 }
 
@@ -1341,9 +1359,11 @@ int stats_uptime(aClient *sptr, char *para)
 int stats_denyver(aClient *sptr, char *para)
 {
 	ConfigItem_deny_version *versions;
-	for (versions = conf_deny_version; versions; versions = (ConfigItem_deny_version *) versions->next) 
+	for (versions = conf_deny_version; versions; versions = versions->next)
+	{
 		sendto_one(sptr, rpl_str(RPL_STATSVLINE), me.name, sptr->name,
 			versions->version, versions->flags, versions->mask);
+	}
 	return 0;
 }
 
@@ -1351,12 +1371,14 @@ int stats_notlink(aClient *sptr, char *para)
 {
 	ConfigItem_link *link_p;
 
-	for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
+	for (link_p = conf_link; link_p; link_p = link_p->next)
 	{
 		if (!find_server_quick(link_p->servername))
+		{
 			sendto_one(sptr, rpl_str(RPL_STATSXLINE),
 				me.name, sptr->name, link_p->servername,
 				link_p->outgoing.port);
+		}
 	}
 	return 0;
 }
@@ -1364,7 +1386,8 @@ int stats_notlink(aClient *sptr, char *para)
 int stats_class(aClient *sptr, char *para)
 {
 	ConfigItem_class *classes;
-	for (classes = conf_class; classes; classes = (ConfigItem_class *) classes->next) 
+
+	for (classes = conf_class; classes; classes = classes->next)
 	{
 		sendto_one(sptr, rpl_str(RPL_STATSYLINE),
 			me.name, sptr->name, classes->name, classes->pingfreq, classes->connfreq,

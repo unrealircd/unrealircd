@@ -371,7 +371,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					{
 						ConfigItem_log *logs;
 						AppendMenu(hConfig, MF_POPUP|MF_STRING, (UINT)hLogs, "Logs");
-						for (logs = conf_log; logs; logs = (ConfigItem_log *)logs->next) 
+						for (logs = conf_log; logs; logs = logs->next)
 						{
 							AppendMenu(hLogs, MF_STRING, i++, logs->file);
 						}
@@ -380,7 +380,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					if (conf_include) 
 					{
 						ConfigItem_include *inc;
-						for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) 
+						for (inc = conf_include; inc; inc = inc->next)
 						{
 							if (inc->flag.type & INCLUDE_NOTLOADED)
 								continue;
@@ -406,7 +406,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					{
 						ConfigItem_tld *tlds;
 						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-						for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) 
+						for (tlds = conf_tld; tlds; tlds = tlds->next)
 						{
 							if (!tlds->flag.motdptr)
 								AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
@@ -479,7 +479,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				{
 					ConfigItem_log *logs;
 					AppendMenu(hConfig, MF_POPUP|MF_STRING, (UINT)hLogs, "Logs");
-					for (logs = conf_log; logs; logs = (ConfigItem_log *)logs->next) 
+					for (logs = conf_log; logs; logs = logs->next)
 					{
 						AppendMenu(hLogs, MF_STRING, i++, logs->file);
 					}
@@ -489,7 +489,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				if (conf_include) 
 				{
 					ConfigItem_include *inc;
-					for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) 
+					for (inc = conf_include; inc; inc = inc->next)
 					{
 #ifdef USE_LIBCURL
 						if (inc->flag.type & INCLUDE_REMOTE)
@@ -514,7 +514,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				{
 					ConfigItem_tld *tlds;
 					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-					for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) 
+					for (tlds = conf_tld; tlds; tlds = tlds->next)
 					{
 						if (!tlds->flag.motdptr)
 							AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);

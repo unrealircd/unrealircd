@@ -1001,7 +1001,7 @@ struct _configitem_files {
 };
 
 struct _configitem_admin {
-	ConfigItem *prev, *next;
+	ConfigItem_admin *prev, *next;
 	ConfigFlag flag;
 	char	   *line; 
 };
@@ -1009,7 +1009,7 @@ struct _configitem_admin {
 #define CLASS_OPT_NOFAKELAG		0x1
 
 struct _configitem_class {
-	ConfigItem *prev, *next;
+	ConfigItem_class *prev, *next;
 	ConfigFlag flag;
 	char	   *name;
 	int	   pingfreq, connfreq, maxclients, sendq, recvq, clients;
@@ -1027,7 +1027,7 @@ struct _configflag_allow {
 };
 
 struct _configitem_allow {
-	ConfigItem			*prev, *next;
+	ConfigItem_allow	*prev, *next;
 	ConfigFlag			flag;
 	char				*ip, *hostname, *server;
 	anAuthStruct		*auth;	
@@ -1087,7 +1087,7 @@ struct _configitem_operclass {
 };
 
 struct _configitem_oper {
-	ConfigItem *prev, *next;
+	ConfigItem_oper *prev, *next;
 	ConfigFlag flag;
 	char *name, *snomask;
 	SWhois *swhois;
@@ -1128,7 +1128,7 @@ struct _configitem_drpass {
 };
 
 struct _configitem_ulines {
-	ConfigItem       *prev, *next;
+	ConfigItem_ulines  *prev, *next;
 	ConfigFlag 	 flag;
 	char 		 *servername;
 };
@@ -1137,7 +1137,7 @@ struct _configitem_ulines {
 #define TLD_REMOTE	0x2
 
 struct _configitem_tld {
-	ConfigItem 	*prev, *next;
+	ConfigItem_tld 	*prev, *next;
 	ConfigFlag_tld 	flag;
 	char 		*mask, *channel;
 	char 		*motd_file, *rules_file, *smotd_file;
@@ -1167,7 +1167,7 @@ struct _configitem_sni {
 };
 
 struct _configitem_vhost {
-	ConfigItem 	*prev, *next;
+	ConfigItem_vhost 	*prev, *next;
 	ConfigFlag 	flag;
 	ConfigItem_mask *mask;
 	char		*login, *virthost, *virtuser;
@@ -1176,7 +1176,7 @@ struct _configitem_vhost {
 };
 
 struct _configitem_link {
-	ConfigItem	*prev, *next;
+	ConfigItem_link	*prev, *next;
 	ConfigFlag	flag;
 	/* config options: */
 	char *servername; /**< Name of the server ('link <servername> { }') */
@@ -1205,21 +1205,21 @@ struct _configitem_link {
 };
 
 struct _configitem_except {
-	ConfigItem      *prev, *next;
+	ConfigItem_except      *prev, *next;
 	ConfigFlag_except      flag;
 	int type;
 	char		*mask;
 };
 
 struct _configitem_ban {
-	ConfigItem		*prev, *next;
+	ConfigItem_ban	*prev, *next;
 	ConfigFlag_ban	flag;
 	char			*mask, *reason;
 	unsigned short action;
 };
 
 struct _configitem_deny_dcc {
-	ConfigItem		*prev, *next;
+	ConfigItem_deny_dcc		*prev, *next;
 	ConfigFlag_ban		flag;
 	char			*filename, *reason;
 };
@@ -1231,13 +1231,13 @@ struct _configitem_deny_link {
 };
 
 struct _configitem_deny_version {
-	ConfigItem		*prev, *next;
+	ConfigItem_deny_version	*prev, *next;
 	ConfigFlag		flag;
 	char 			*mask, *version, *flags;
 };
 
 struct _configitem_deny_channel {
-	ConfigItem		*prev, *next;
+	ConfigItem_deny_channel		*prev, *next;
 	ConfigFlag		flag;
 	char			*channel, *reason, *redirect, *class;
 	unsigned char	warn;
@@ -1245,20 +1245,20 @@ struct _configitem_deny_channel {
 };
 
 struct _configitem_allow_channel {
-	ConfigItem		*prev, *next;
+	ConfigItem_allow_channel		*prev, *next;
 	ConfigFlag		flag;
 	char			*channel, *class;
 	ConfigItem_mask *mask;
 };
 
 struct _configitem_allow_dcc {
-	ConfigItem		*prev, *next;
+	ConfigItem_allow_dcc		*prev, *next;
 	ConfigFlag_ban	flag;
 	char			*filename;
 };
 
 struct _configitem_log {
-	ConfigItem *prev, *next;
+	ConfigItem_log *prev, *next;
 	ConfigFlag flag;
 	char *file;
 	long maxsize;
@@ -1267,13 +1267,13 @@ struct _configitem_log {
 };
 
 struct _configitem_unknown {
-	ConfigItem *prev, *next;
+	ConfigItem_unknown *prev, *next;
 	ConfigFlag flag;
 	ConfigEntry *ce;
 };
 
 struct _configitem_unknown_ext {
-	ConfigItem *prev, *next;
+	ConfigItem_unknown_ext *prev, *next;
 	ConfigFlag flag;
 	char *ce_varname, *ce_vardata;
 	ConfigFile      *ce_fileptr;
@@ -1287,7 +1287,7 @@ typedef enum {
 } AliasType;
 
 struct _configitem_alias {
-	ConfigItem *prev, *next;
+	ConfigItem_alias *prev, *next;
 	ConfigFlag flag;
 	ConfigItem_alias_format *format;
 	char *alias, *nick;
@@ -1296,7 +1296,7 @@ struct _configitem_alias {
 };
 
 struct _configitem_alias_format {
-	ConfigItem *prev, *next;
+	ConfigItem_alias_format *prev, *next;
 	ConfigFlag flag;
 	char *nick;
 	AliasType type;
@@ -1322,7 +1322,7 @@ struct _configitem_alias_format {
 #define INCLUDE_USED       0x8
 	
 struct _configitem_include {
-	ConfigItem *prev, *next;
+	ConfigItem_include *prev, *next;
 	ConfigFlag_ban flag;
 	char *file;
 #ifdef USE_LIBCURL
@@ -1334,14 +1334,14 @@ struct _configitem_include {
 };
 
 struct _configitem_help {
-	ConfigItem *prev, *next;
+	ConfigItem_help *prev, *next;
 	ConfigFlag flag;
 	char *command;
 	aMotdLine *text;
 };
 
 struct _configitem_offchans {
-	ConfigItem *prev, *next;
+	ConfigItem_offchans *prev, *next;
 	char chname[CHANNELLEN+1];
 	char *topic;
 };

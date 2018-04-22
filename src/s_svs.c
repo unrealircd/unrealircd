@@ -153,9 +153,11 @@ int ret;
 	{
 		ConfigItem_alias_format *format;
 		char *ptr = "";
+
 		if (!(parc < 2 || *parv[1] == '\0'))
 			ptr = parv[1]; 
-		for (format = alias->format; format; format = (ConfigItem_alias_format *)format->next) 
+
+		for (format = alias->format; format; format = format->next)
 		{
 			if (unreal_match(format->expr, ptr))
 			{

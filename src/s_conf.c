@@ -1863,7 +1863,7 @@ int	load_conf(char *filename, const char *original_path)
 	 */
 	counter = 0;
 	my_inc = NULL;
-	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	for (inc = conf_include; inc; inc = inc->next)
 	{
 		/*
 		 * ignore files which were part of a _previous_
@@ -2442,7 +2442,7 @@ int	config_run()
 	 * this stack up here, perhaps this shoul be moved to another
 	 * function.
 	 */
-	for(allow = conf_allow; allow; allow = (ConfigItem_allow *)allow->next)
+	for(allow = conf_allow; allow; allow = allow->next)
 		if(!allow->ipv6_clone_mask)
 			allow->ipv6_clone_mask = tempiConf.default_ipv6_clone_mask;
 
@@ -2591,43 +2591,45 @@ int	config_test()
 
 ConfigItem_deny_dcc	*Find_deny_dcc(char *name)
 {
-	ConfigItem_deny_dcc	*p;
+	ConfigItem_deny_dcc	*e;
 
 	if (!name)
 		return NULL;
 
-	for (p = conf_deny_dcc; p; p = (ConfigItem_deny_dcc *) p->next)
+	for (e = conf_deny_dcc; e; e = e->next)
 	{
-		if (!match(name, p->filename))
-			return (p);
+		if (!match(name, e->filename))
+			return e;
 	}
 	return NULL;
 }
 
-ConfigItem_alias *Find_alias(char *name) {
-	ConfigItem_alias *alias;
-
-	if (!name)
-		return NULL;
-
-	for (alias = conf_alias; alias; alias = (ConfigItem_alias *)alias->next) {
-		if (!stricmp(alias->alias, name))
-			return alias;
-	}
-	return NULL;
-}
-
-ConfigItem_class	*Find_class(char *name)
+ConfigItem_alias *Find_alias(char *name)
 {
-	ConfigItem_class	*p;
+	ConfigItem_alias *e;
 
 	if (!name)
 		return NULL;
 
-	for (p = conf_class; p; p = (ConfigItem_class *) p->next)
+	for (e = conf_alias; e; e = e->next)
 	{
-		if (!strcmp(name, p->name))
-			return (p);
+		if (!stricmp(e->alias, name))
+			return e;
+	}
+	return NULL;
+}
+
+ConfigItem_class *Find_class(char *name)
+{
+	ConfigItem_class *e;
+
+	if (!name)
+		return NULL;
+
+	for (e = conf_class; e; e = e->next)
+	{
+		if (!strcmp(name, e->name))
+			return e;
 	}
 	return NULL;
 }
@@ -2635,29 +2637,30 @@ ConfigItem_class	*Find_class(char *name)
 
 ConfigItem_oper	*Find_oper(char *name)
 {
-	ConfigItem_oper	*p;
+	ConfigItem_oper	*e;
 
 	if (!name)
 		return NULL;
 
-	for (p = conf_oper; p; p = (ConfigItem_oper *) p->next)
+	for (e = conf_oper; e; e = e->next)
 	{
-		if (!strcmp(name, p->name))
-			return (p);
+		if (!strcmp(name, e->name))
+			return e;
 	}
 	return NULL;
 }
 
 ConfigItem_operclass *Find_operclass(char *name)
 {
-	ConfigItem_operclass *p;
+	ConfigItem_operclass *e;
+
 	if (!name)
 		return NULL;
 
-	for (p = conf_operclass; p; p= (ConfigItem_operclass *) p->next)
+	for (e = conf_operclass; e; e = e->next)
 	{
-		if (!strcmp(name,p->classStruct->name))
-			return (p);
+		if (!strcmp(name,e->classStruct->name))
+			return e;
 	}
 	return NULL;
 }
@@ -2678,26 +2681,27 @@ int count_oper_sessions(char *name)
 
 ConfigItem_listen *Find_listen(char *ipmask, int port, int ipv6)
 {
-	ConfigItem_listen *p;
+	ConfigItem_listen *e;
 
 	if (!ipmask)
 		return NULL;
 
-	for (p = conf_listen; p; p = p->next)
+	for (e = conf_listen; e; e = e->next)
 	{
-		if (p->ipv6 != ipv6)
+		if (e->ipv6 != ipv6)
 			continue;
 
-		if (!match(p->ip, ipmask) && (port == p->port))
-			return (p);
+		if (!match(e->ip, ipmask) && (port == e->port))
+			return e;
 
-		if (!match(ipmask, p->ip) && (port == p->port))
-			return (p);
+		if (!match(ipmask, e->ip) && (port == e->port))
+			return e;
 	}
+
 	return NULL;
 }
 
-/** Find a SNI match.
+/** Find an SNI match.
  * @param name The hostname to look for (eg: irc.xyz.com).
  */
 ConfigItem_sni *Find_sni(char *name)
@@ -2715,13 +2719,15 @@ ConfigItem_sni *Find_sni(char *name)
 	return NULL;
 }
 
-ConfigItem_ulines *Find_uline(char *host) {
+ConfigItem_ulines *Find_uline(char *host)
+{
 	ConfigItem_ulines *ulines;
 
 	if (!host)
 		return NULL;
 
-	for(ulines = conf_ulines; ulines; ulines =(ConfigItem_ulines *) ulines->next) {
+	for(ulines = conf_ulines; ulines; ulines = ulines->next)
+	{
 		if (!stricmp(host, ulines->servername))
 			return ulines;
 	}
@@ -2733,7 +2739,7 @@ ConfigItem_except *Find_except(aClient *sptr, short type)
 {
 	ConfigItem_except *excepts;
 
-	for(excepts = conf_except; excepts; excepts =(ConfigItem_except *) excepts->next)
+	for(excepts = conf_except; excepts; excepts = excepts->next)
 	{
 		if (excepts->flag.type == type)
 		{
@@ -2748,7 +2754,7 @@ ConfigItem_tld *Find_tld(aClient *cptr)
 {
 	ConfigItem_tld *tld;
 
-	for (tld = conf_tld; tld; tld = (ConfigItem_tld *) tld->next)
+	for (tld = conf_tld; tld; tld = tld->next)
 	{
 		if (match_user(tld->mask, cptr, MATCH_CHECK_REAL))
 		{
@@ -2768,7 +2774,7 @@ ConfigItem_link *Find_link(char *servername, aClient *acptr)
 {
 	ConfigItem_link	*link;
 
-	for (link = conf_link; link; link = (ConfigItem_link *)link->next)
+	for (link = conf_link; link; link = link->next)
 	{
 		if (!match(link->servername, servername) && unreal_mask_match(acptr, link->incoming.mask))
 		{
@@ -2787,7 +2793,7 @@ ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
 	 * don't need to be searched -- codemastr
 	 */
 
-	for (ban = conf_ban; ban; ban = (ConfigItem_ban *) ban->next)
+	for (ban = conf_ban; ban; ban = ban->next)
 	{
 		if (ban->flag.type == type)
 		{
@@ -2818,7 +2824,7 @@ ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
 	 * don't need to be searched -- codemastr
 	 */
 
-	for (ban = conf_ban; ban; ban = (ConfigItem_ban *) ban->next)
+	for (ban = conf_ban; ban; ban = ban->next)
 	{
 		if ((ban->flag.type == type) && (ban->flag.type2 == type2))
 		{
@@ -2839,13 +2845,16 @@ ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
 	return NULL;
 }
 
-ConfigItem_vhost *Find_vhost(char *name) {
+ConfigItem_vhost *Find_vhost(char *name)
+{
 	ConfigItem_vhost *vhost;
 
-	for (vhost = conf_vhost; vhost; vhost = (ConfigItem_vhost *)vhost->next) {
+	for (vhost = conf_vhost; vhost; vhost = vhost->next)
+	{
 		if (!strcmp(name, vhost->login))
 			return vhost;
 	}
+
 	return NULL;
 }
 
@@ -2856,7 +2865,7 @@ ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name)
 	ConfigItem_deny_channel *dchannel;
 	ConfigItem_allow_channel *achannel;
 
-	for (dchannel = conf_deny_channel; dchannel; dchannel = (ConfigItem_deny_channel *)dchannel->next)
+	for (dchannel = conf_deny_channel; dchannel; dchannel = dchannel->next)
 	{
 		if (!match(dchannel->channel, name))
 		{
@@ -2871,7 +2880,7 @@ ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name)
 	if (dchannel)
 	{
 		/* Check exceptions... ('allow channel') */
-		for (achannel = conf_allow_channel; achannel; achannel = (ConfigItem_allow_channel *)achannel->next)
+		for (achannel = conf_allow_channel; achannel; achannel = achannel->next)
 		{
 			if (!match(achannel->channel, name))
 			{
@@ -6445,7 +6454,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_link *link = NULL;
 	NameValue *ofp;
 
-	link = (ConfigItem_link *) MyMallocEx(sizeof(ConfigItem_link));
+	link = MyMallocEx(sizeof(ConfigItem_link));
 	link->servername = strdup(ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -9722,6 +9731,7 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 static void conf_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key)
 {
 	ConfigItem_include *inc;
+
 	if (!loop.ircd_rehashing)
 		return;
 
@@ -9729,7 +9739,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 	  use inc_key to find the correct include block. This
 	  should be cheaper than using the full URL.
 	 */
-	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	for (inc = conf_include; inc; inc = inc->next)
 	{
 		if ( inc_key != (void *)inc )
 			continue;
@@ -9779,7 +9789,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 #endif
 		}
 	}
-	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	for (inc = conf_include; inc; inc = inc->next)
 	{
 		if (inc->flag.type & INCLUDE_DLQUEUED)
 			return;
@@ -9805,7 +9815,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	loop.rehash_save_cptr = cptr;
 	loop.rehash_save_sptr = sptr;
 	loop.rehash_save_sig = sig;
-	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	for (inc = conf_include; inc; inc = inc->next)
 	{
 		time_t modtime;
 		if (!(inc->flag.type & INCLUDE_REMOTE))
@@ -9911,11 +9921,11 @@ void delete_classblock(ConfigItem_class *class_ptr)
 void	listen_cleanup()
 {
 	int	i = 0;
-	ConfigItem_listen *listen_ptr;
-	ListStruct *next;
-	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)next)
+	ConfigItem_listen *listen_ptr, *next;
+
+	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = next)
 	{
-		next = (ListStruct *)listen_ptr->next;
+		next = listen_ptr->next;
 		if (listen_ptr->flag.temporary && !listen_ptr->clients)
 		{
 			safefree(listen_ptr->ip);
@@ -9925,6 +9935,7 @@ void	listen_cleanup()
 			i++;
 		}
 	}
+
 	if (i)
 		close_listeners();
 }
@@ -9933,7 +9944,8 @@ void	listen_cleanup()
 char *find_remote_include(char *url, char **errorbuf)
 {
 	ConfigItem_include *inc;
-	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+
+	for (inc = conf_include; inc; inc = inc->next)
 	{
 		if (!(inc->flag.type & INCLUDE_NOTLOADED))
 			continue;
@@ -9951,7 +9963,8 @@ char *find_remote_include(char *url, char **errorbuf)
 char *find_loaded_remote_include(char *url)
 {
 	ConfigItem_include *inc;
-	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+
+	for (inc = conf_include; inc; inc = inc->next)
 	{
 		if ((inc->flag.type & INCLUDE_NOTLOADED))
 			continue;
@@ -9960,6 +9973,7 @@ char *find_loaded_remote_include(char *url)
 		if (!stricmp(url, inc->url))
 			return inc->file;
 	}
+
 	return NULL;
 }
 
@@ -10129,7 +10143,7 @@ void unload_notloaded_includes(void)
 
 	for (inc = conf_include; inc; inc = next)
 	{
-		next = (ConfigItem_include *)inc->next;
+		next = inc->next;
 		if ((inc->flag.type & INCLUDE_NOTLOADED) || !(inc->flag.type & INCLUDE_USED))
 		{
 #ifdef USE_LIBCURL
@@ -10163,7 +10177,7 @@ void unload_loaded_includes(void)
 
 	for (inc = conf_include; inc; inc = next)
 	{
-		next = (ConfigItem_include *)inc->next;
+		next = inc->next;
 		if (!(inc->flag.type & INCLUDE_NOTLOADED) || !(inc->flag.type & INCLUDE_USED))
 		{
 #ifdef USE_LIBCURL
@@ -10199,7 +10213,7 @@ void load_includes(void)
 	/* Doing this for all the includes should actually be faster
 	 * than only doing it for includes that are not-loaded
 	 */
-	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	for (inc = conf_include; inc; inc = inc->next)
 		inc->flag.type &= ~INCLUDE_NOTLOADED;
 }
 
@@ -10217,20 +10231,24 @@ int ssl_used_in_config_but_unavail(void)
 		return 0; /* everything is functional */
 
 	for (listener = conf_listen; listener; listener = listener->next)
+	{
 		if (listener->options & LISTENER_SSL)
 		{
 			config_error("Listen block %s:%d is configured to use SSL, however SSL is unavailable due to an earlier error (certificate/key not loaded?)", listener->ip, listener->port);
 			errors++;
 		}
+	}
 
-	for (link = conf_link; link; link = (ConfigItem_link *)link->next)
+	for (link = conf_link; link; link = link->next)
+	{
 		if (link->options & CONNECT_SSL)
 		{
 			config_error("Link block %s is configured to use SSL, however SSL is unavailable due to an earlier error (certificate/key not loaded?)", link->servername);
 			errors++;
 		}
+	}
 
-	return (errors ? 1 : 0);
+	return errors ? 1 : 0;
 }
 
 int ssl_tests(void)

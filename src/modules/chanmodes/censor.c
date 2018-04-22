@@ -68,9 +68,9 @@ MOD_LOAD(censor)
 
 MOD_UNLOAD(censor)
 {
-ConfigItem_badword *badword, *next;
+	ConfigItem_badword *badword, *next;
 
-	for (badword = conf_badword_channel; badword; badword = (ConfigItem_badword *) next)
+	for (badword = conf_badword_channel; badword; badword = next)
 	{
 		next = badword->next;
 		safefree(badword->word);
@@ -442,7 +442,7 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 	buf[0] = '\0';
 	cleaned = 0;
 
-	for (this_word = start_bw; this_word; this_word = (ConfigItem_badword *)this_word->next)
+	for (this_word = start_bw; this_word; this_word = this_word->next)
 	{
 		if (this_word->type & BADW_TYPE_FAST)
 		{
@@ -590,7 +590,7 @@ int stats_badwords(aClient *sptr, char *para)
 {
 	ConfigItem_badword *words;
 
-	for (words = conf_badword_channel; words; words = (ConfigItem_badword *) words->next)
+	for (words = conf_badword_channel; words; words = words->next)
 	{
 		sendto_one(sptr, ":%s %i %s :c %c %s%s%s %s",
 		           me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',

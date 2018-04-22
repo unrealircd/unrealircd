@@ -965,7 +965,7 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 		}
 	}
 
-	nl = (aTKline *) MyMallocEx(sizeof(aTKline));
+	nl = MyMallocEx(sizeof(aTKline));
 
 	nl->type = type;
 	nl->expire_at = expire_at;
@@ -1223,7 +1223,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 				else
 					match_type = CONF_EXCEPT_TKL;
 				
-				for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next)
+				for (excepts = conf_except; excepts; excepts = excepts->next)
 				{
 					if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL && 
 						excepts->type != lp->type))
@@ -1346,7 +1346,7 @@ int  _find_shun(aClient *cptr)
 			/* Found match. Now check for exception... */
 			banned = 1;
 			match_type = CONF_EXCEPT_TKL;
-			for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next)
+			for (excepts = conf_except; excepts; excepts = excepts->next)
 			{
 				if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL && 
 					excepts->type != lp->type))
@@ -1505,7 +1505,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 		return lp;
 	}
 
-	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next)
+	for (excepts = conf_except; excepts; excepts = excepts->next)
 	{
 		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != TKL_NICK)
 			continue;
@@ -1539,7 +1539,7 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 	{
 		if ((lp->type & TKL_ZAP) && match_user(lp->hostmask, cptr, MATCH_CHECK_IP))
 		{
-			for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
+			for (excepts = conf_except; excepts; excepts = excepts->next) {
 				/* This used to be:
 				 * if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
 				 * It now checks for 'except ban', hope this is what most people want,

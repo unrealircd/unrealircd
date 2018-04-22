@@ -95,7 +95,7 @@ CMD_FUNC(m_connect)
 		return 0;
 	}
 
-	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next)
+	for (aconf = conf_link; aconf; aconf = aconf->next)
 		if (!match(parv[1], aconf->servername))
 			break;
 
@@ -118,11 +118,12 @@ CMD_FUNC(m_connect)
 	}
 
 	/* Evaluate deny link */
-	for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) {
+	for (deny = conf_deny_link; deny; deny = deny->next)
+	{
 		if (deny->flag.type == CRULE_ALL && !match(deny->mask, aconf->servername)
-			&& crule_eval(deny->rule)) {
-			sendnotice(sptr,
-				"*** Connect: Disallowed by connection rule");
+			&& crule_eval(deny->rule))
+		{
+			sendnotice(sptr, "*** Connect: Disallowed by connection rule");
 			return 0;
 		}
 	}

@@ -461,7 +461,7 @@ char *get_client_name2(aClient *acptr, int showports)
 	 * in rows of get_client_name2's, so it's perfectly fair
 	 * 
 	*/
-	strcpy((char *)strrchr((char *)pointer, '.'), ".0]");
+	strcpy(strrchr(pointer, '.'), ".0]");
 
 	return pointer;
 }
@@ -582,7 +582,7 @@ void rehash_motdrules()
 ConfigItem_tld *tlds;
 
 	reread_motdsandrules();
-	for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next)
+	for (tlds = conf_tld; tlds; tlds = tlds->next)
 	{
 		/* read_motd() accepts NULL in first arg and acts sanely */
 		read_motd(tlds->motd_file, &tlds->motd);

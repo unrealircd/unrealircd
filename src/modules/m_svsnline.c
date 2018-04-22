@@ -59,20 +59,18 @@ MOD_UNLOAD(m_svsnline)
 
 void wipe_svsnlines(void)
 {
-	ConfigItem_ban *bconf, t;
+	ConfigItem_ban *bconf, *next;
 	
-	for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *) bconf->next)
+	for (bconf = conf_ban; bconf; bconf = next)
 	{
 		if ((bconf->flag.type == CONF_BAN_REALNAME) &&
 			(bconf->flag.type2 == CONF_BAN_TYPE_AKILL))
 		{
-			t.next = (ConfigItem *)DelListItem(bconf, conf_ban);
-			if (bconf->mask)
-				MyFree(bconf->mask);
-			if (bconf->reason)
-				MyFree(bconf->reason);
+			next = bconf->next;
+			DelListItem(bconf, conf_ban);
+			safefree(bconf->mask);
+			safefree(bconf->reason);
 			MyFree(bconf);
-			bconf = &t;
 		}
 	}
 }
@@ -103,7 +101,7 @@ CMD_FUNC(m_svsnline)
 		 
 		  if (!Find_banEx(NULL, parv[3], CONF_BAN_REALNAME, CONF_BAN_TYPE_AKILL))
 		  {
-			bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
+			bconf = MyMallocEx(sizeof(ConfigItem_ban));
 			bconf->flag.type = CONF_BAN_REALNAME;
 			bconf->mask = strdup(parv[3]);
 			bconf->reason = strdup(parv[2]);
@@ -126,7 +124,7 @@ CMD_FUNC(m_svsnline)
 		  if (parc < 3)
 			  return 0;
 		  
-		  for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *)bconf->next)
+		  for (bconf = conf_ban; bconf; bconf = bconf->next)
 		  {
 			if (bconf->flag.type != CONF_BAN_REALNAME)
 				continue;
