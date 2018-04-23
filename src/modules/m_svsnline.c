@@ -63,10 +63,10 @@ void wipe_svsnlines(void)
 	
 	for (bconf = conf_ban; bconf; bconf = next)
 	{
+		next = bconf->next;
 		if ((bconf->flag.type == CONF_BAN_REALNAME) &&
 			(bconf->flag.type2 == CONF_BAN_TYPE_AKILL))
 		{
-			next = bconf->next;
 			DelListItem(bconf, conf_ban);
 			safefree(bconf->mask);
 			safefree(bconf->reason);
