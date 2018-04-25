@@ -13,8 +13,6 @@ set -x
 if [[ "$OSTYPE" == "darwin"* ]]; then
 	brew install git || true
 	brew install python || true
-	brew install rake || true
-	brew install gem || true
 else
 	sudo apt-get install git python rake -y
 	sudo gem install bundler
@@ -25,7 +23,11 @@ git clone https://github.com/unrealircd/ircfly.git
 cd ircfly
 bundle install
 rake build
-sudo rake install
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	rake install
+else
+	sudo rake install
+fi
 cd ..
 
 # Install 'unrealircd-tests'
