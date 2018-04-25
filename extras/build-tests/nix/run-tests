@@ -10,8 +10,15 @@ set -e
 set -x
 
 # Install packages
-sudo apt-get install git python rake -y
-sudo gem install bundler
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	brew install git || true
+	brew install python || true
+	brew install rake || true
+	brew install gem || true
+else
+	sudo apt-get install git python rake -y
+	sudo gem install bundler
+fi
 
 # Install 'ircfly'
 git clone https://github.com/unrealircd/ircfly.git
