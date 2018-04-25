@@ -14,7 +14,7 @@ export MAKE="make -j3"
 export CPPFLAGS="-DFAKELAG_CONFIGURABLE"
 
 extras/build-tests/nix/select-config $BUILDCONFIG
-./Config -quick
+./Config -quick || (tail -n 5000 config.log; echo '*** now tre:'; tail -n 5000 extras/tre-0.8.0-git/config.log; echo '** end of tre config.log **'; exit 1)
 $MAKE
 yes ''|make pem
 make install
