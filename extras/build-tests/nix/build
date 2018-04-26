@@ -7,7 +7,7 @@ set -e
 set -x
 
 if [ "$1" != "" ]; then
-	BUILDCONFIG="$1"
+	BUILDCONFIG="$*"
 fi
 
 export MAKE="make -j3"

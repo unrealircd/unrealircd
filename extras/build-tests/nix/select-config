@@ -9,6 +9,8 @@ if [ ! -d extras ]; then
 	exit 1
 fi
 
+set -x
+
 # Take default settings as a starter..
 cp extras/build-tests/nix/configs/default ./config.settings
 
