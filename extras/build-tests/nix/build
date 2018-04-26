@@ -25,6 +25,8 @@ echo "***********************************************"
 echo "UnrealIRCd build & install successful."
 echo "***********************************************"
 
+ldd ~/unrealircd/bin/unrealircd
+
 if [ "$BUILDCONFIG" = "local-curl" ]; then
 	# We broke the system significantly earlier that build tests
 	# won't work (eg: 'git' is uninstallable). Don't bother
