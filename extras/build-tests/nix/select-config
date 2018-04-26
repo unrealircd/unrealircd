@@ -41,7 +41,7 @@ do
 		elif [[ "$OSTYPE" == "freebsd"* ]]; then
 			sudo pkg install -y c-ares
 		elif [[ "$OSTYPE" == "darwin"* ]]; then
-			echo TODO: Do something useful here...
+			brew install c-ares
 		fi
 	elif [ "$1" = "system-curl" ]; then
 		echo 'REMOTEINC=1' >>config.settings
@@ -52,7 +52,7 @@ do
 			sudo pkg install -y curl
 			echo 'CURLDIR=/usr/local' >>config.settings
 		elif [[ "$OSTYPE" == "darwin"* ]]; then
-			echo TODO: Do something useful here...
+			brew install c-ares curl
 		fi
 	elif [ "$1" = "local-curl" ]; then
 		if [ "$OSTYPE" = "linux-gnu" ]; then
@@ -60,7 +60,7 @@ do
 		elif [[ "$OSTYPE" == "freebsd"* ]]; then
 			sudo pkg remove -y curl #NOTE: unfortunately this also removes 'git' :D
 		elif [[ "$OSTYPE" == "darwin"* ]]; then
-			echo TODO: Do something useful here...
+			echo "No need to remove curl since it's not installed. Or at least I hope so..."
 		fi
 		echo 'REMOTEINC=1' >>config.settings
 		echo "CURLDIR=`pwd`/extras/curl" >>config.settings
