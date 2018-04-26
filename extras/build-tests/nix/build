@@ -25,7 +25,11 @@ echo "***********************************************"
 echo "UnrealIRCd build & install successful."
 echo "***********************************************"
 
-ldd ~/unrealircd/bin/unrealircd
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	otool -L ~/unrealircd/bin/unrealircd
+else
+	ldd ~/unrealircd/bin/unrealircd
+fi
 
 if [ "$BUILDCONFIG" = "local-curl" ]; then
 	# We broke the system significantly earlier that build tests
