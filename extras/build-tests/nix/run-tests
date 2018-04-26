@@ -44,4 +44,8 @@ bin/unrealircd -f irc2.conf
 cd -
 
 # Back in unrealircd-tests, run the tests!
-rake
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	bundle exec rake
+else
+	rake
+fi
