@@ -55,6 +55,7 @@ do
 			echo 'CURLDIR=/usr/local' >>config.settings
 		elif [[ "$OSTYPE" == "darwin"* ]]; then
 			brew install c-ares curl
+			echo 'CURLDIR=/usr/local/opt/curl' >>config.settings
 		fi
 	elif [ "$1" = "local-curl" ]; then
 		if [ "$OSTYPE" = "linux-gnu" ]; then
