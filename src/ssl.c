@@ -386,7 +386,7 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 	{
 		if (ssloptions->ecdh_curves)
 		{
-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
+#ifdef HAS_SSL_CTX_SET1_CURVES_LIST
 			if (!SSL_CTX_set1_curves_list(ctx, ssloptions->ecdh_curves))
 			{
 				config_warn("Failed to set ecdh-curves '%s'. "

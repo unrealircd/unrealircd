@@ -7306,6 +7306,53 @@ $as_echo "not found" >&6; }
 
 fi
 
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SSL_CTX_set1_curves_list in SSL library" >&5
+$as_echo_n "checking for SSL_CTX_set1_curves_list in SSL library... " >&6; }
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <openssl/ssl.h>
+int
+main ()
+{
+SSL_CTX *ctx = NULL; SSL_CTX_set1_curves_list(ctx, "test");
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  has_curves=1
+else
+  has_curves=0
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS="$SAVE_LIBS"
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+if test $has_curves = 1; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+$as_echo "#define HAS_SSL_CTX_SET1_CURVES_LIST /**/" >>confdefs.h
+
+else
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
 # Check whether --enable-dynamic-linking was given.
 if test "${enable_dynamic_linking+set}" = set; then :
   enableval=$enable_dynamic_linking; enable_dynamic_linking=$enableval

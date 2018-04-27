@@ -181,3 +181,23 @@ AS_IF([test $enable_ssl != "no"],
 	fi
 	])
 ])
+
+AC_DEFUN([CHECK_SSL_CTX_SET1_CURVES_LIST],
+[
+AC_MSG_CHECKING([for SSL_CTX_set1_curves_list in SSL library])
+AC_LANG_PUSH(C)
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+AC_TRY_LINK([#include <openssl/ssl.h>],
+	[SSL_CTX *ctx = NULL; SSL_CTX_set1_curves_list(ctx, "test");],
+	has_curves=1,
+	has_curves=0)
+LIBS="$SAVE_LIBS"
+AC_LANG_POP(C)
+if test $has_curves = 1; then
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAS_SSL_CTX_SET1_CURVES_LIST], [], [Define if ssl library has SSL_CTX_set1_curves_list])
+else
+	AC_MSG_RESULT([no])
+fi
+])

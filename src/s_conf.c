@@ -7039,7 +7039,7 @@ void test_sslblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 		else if (!strcmp(cepp->ce_varname, "ecdh-curves"))
 		{
 			CheckNull(cepp);
-#if OPENSSL_VERSION_NUMBER < 0x10002000L
+#ifndef HAS_SSL_CTX_SET1_CURVES_LIST
 			config_error("ecdh-curves specified but your OpenSSL/LibreSSL library does not "
 			             "support setting curves manually by name. Either upgrade to a "
 			             "newer library version or remove the 'ecdh-curves' directive "
