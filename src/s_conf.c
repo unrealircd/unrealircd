@@ -1506,6 +1506,9 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ssl_options->trusted_ca_file = strdup(tmp);
 	i->ssl_options->ciphers = strdup(UNREALIRCD_DEFAULT_CIPHERS);
 	i->ssl_options->protocols = SSL_PROTOCOL_ALL;
+#ifdef HAS_SSL_CTX_SET1_CURVES_LIST
+	i->ssl_options->ecdh_curves = strdup(UNREALIRCD_DEFAULT_ECDH_CURVES);
+#endif
 
 	i->plaintext_policy_user = PLAINTEXT_POLICY_ALLOW;
 	i->plaintext_policy_oper = PLAINTEXT_POLICY_WARN;
@@ -7224,6 +7227,7 @@ void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions)
 		safestrdup(ssloptions->trusted_ca_file, tempiConf.ssl_options->trusted_ca_file);
 		ssloptions->protocols = tempiConf.ssl_options->protocols;
 		safestrdup(ssloptions->ciphers, tempiConf.ssl_options->ciphers);
+		safestrdup(ssloptions->ecdh_curves, tempiConf.ssl_options->ecdh_curves);
 		ssloptions->options = tempiConf.ssl_options->options;
 		ssloptions->renegotiate_bytes = tempiConf.ssl_options->renegotiate_bytes;
 		ssloptions->renegotiate_timeout = tempiConf.ssl_options->renegotiate_timeout;

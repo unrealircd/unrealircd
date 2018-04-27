@@ -389,7 +389,7 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 #ifdef HAS_SSL_CTX_SET1_CURVES_LIST
 			if (!SSL_CTX_set1_curves_list(ctx, ssloptions->ecdh_curves))
 			{
-				config_warn("Failed to set ecdh-curves '%s'. "
+				config_warn("Failed to apply ecdh-curves '%s'. "
 				            "To get a list of supported curves with the "
 				            "appropriate names, run "
 				            "'openssl ecparam -list_curves' on the server. "
@@ -408,7 +408,10 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 			goto fail;
 #endif
 		} else {
-			/* Not specified by user. Set some good default */
+			/* Set some good default (note that usually we don't get here
+			 * because ssloptions->ecdh_curves is typically set, either
+			 * via config_setdefaultsettings or by the user).
+			 */
 #if defined(SSL_CTX_set_ecdh_auto)
 			SSL_CTX_set_ecdh_auto(ctx, 1);
 #elif OPENSSL_VERSION_NUMBER < 0x10100000L
