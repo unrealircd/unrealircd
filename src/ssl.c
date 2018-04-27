@@ -384,11 +384,49 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 
 	if (server)
 	{
-#if defined(SSL_CTX_set_ecdh_auto)
-		SSL_CTX_set_ecdh_auto(ctx, 1);
+		/* Set ECDHE in auto mode and fallback to some default otherwise.
+		 * Fix: in openssl 1.1.0 and later the SSL_CTX_set_ecdh_auto()
+		 * function was removed because it is always enabled. Do not
+		 * fallback to manual setting it to a single cipher!
+		 * The auto mode (or default mode in 1.1.0+) will ensure that the
+		 * highest available curve will be picked (thus: multiple choice).
+		 * We still allow forcing a single specific curve but only if
+		 * the user really wants it (or if it's a really old openssl).
+		 */
+		if (ssloptions->ecdh_curves)
+		{
+#if OPENSSL_VERSION_NUMBER >= 0x10002000L
+			if (!SSL_CTX_set1_curves_list(ctx, ssloptions->ecdh_curves))
+			{
+				config_warn("Failed to set ecdh-curves '%s'. "
+				            "To get a list of supported curves with the "
+				            "appropriate names, run "
+				            "'openssl ecparam -list_curves' on the server. "
+				            "Separate multiple curves by colon, "
+				            "for example: ecdh-curves \"secp521r1:secp384r1\".",
+				            ssloptions->ecdh_curves);
+				config_report_ssl_error();
+				goto fail;
+			}
 #else
-		SSL_CTX_set_tmp_ecdh(ctx, EC_KEY_new_by_curve_name(NID_X9_62_prime256v1));
+			/* We try to avoid this in the config code, but better have
+			 * it here too than be sorry if someone screws up:
+			 */
+			config_warn("ecdh-curves specified but not supported by library -- BAD!");
+			config_report_ssl_error();
+			goto fail;
 #endif
+		} else {
+#if defined(SSL_CTX_set_ecdh_auto)
+			SSL_CTX_set_ecdh_auto(ctx, 1);
+#elif OPENSSL_VERSION_NUMBER < 0x10100000L
+			SSL_CTX_set_tmp_ecdh(ctx, EC_KEY_new_by_curve_name(NID_X9_62_prime256v1));
+#endif
+		}
+		/* We really want the ECDHE/ECDHE to be generated per-session.
+		 * Added in 2015 for safety. Seems OpenSSL was smart enough
+		 * to make this the default in 2016 after a security advisory.
+		 */
 		SSL_CTX_set_options(ctx, SSL_OP_SINGLE_ECDH_USE|SSL_OP_SINGLE_DH_USE);
 	}
 

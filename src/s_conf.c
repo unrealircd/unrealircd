@@ -7036,6 +7036,17 @@ void test_sslblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 		{
 			CheckNull(cepp);
 		}
+		else if (!strcmp(cepp->ce_varname, "ecdh-curves"))
+		{
+			CheckNull(cepp);
+#if OPENSSL_VERSION_NUMBER < 0x10002000L
+			config_error("ecdh-curves specified but your OpenSSL/LibreSSL library does not "
+			             "support setting curves manually by name. Either upgrade to a "
+			             "newer library version or remove the 'ecdh-curves' directive "
+			             "from your configuration file");
+			errors++;
+#endif
+		}
 		else if (!strcmp(cepp->ce_varname, "protocols"))
 		{
 			char copy[512], *p, *name;
@@ -7227,6 +7238,10 @@ void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions)
 		if (!strcmp(cepp->ce_varname, "ciphers") || !strcmp(cepp->ce_varname, "server-cipher-list"))
 		{
 			safestrdup(ssloptions->ciphers, cepp->ce_vardata);
+		} else
+		if (!strcmp(cepp->ce_varname, "ecdh-curves"))
+		{
+			safestrdup(ssloptions->ecdh_curves, cepp->ce_vardata);
 		}
 		else if (!strcmp(cepp->ce_varname, "protocols"))
 		{

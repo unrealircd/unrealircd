@@ -1108,6 +1108,7 @@ struct _ssloptions {
 	char *trusted_ca_file;
 	unsigned int protocols;
 	char *ciphers;
+	char *ecdh_curves;
 	long options;
 	int renegotiate_bytes;
 	int renegotiate_timeout;
