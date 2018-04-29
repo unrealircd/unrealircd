@@ -13,6 +13,9 @@ set -x
 if [[ "$OSTYPE" == "darwin"* ]]; then
 	brew install git || true
 	brew install python || true
+	gem install bundler || true
+	gem install rake || true
+	gem install rspec || true
 else
 	sudo apt-get install git python rake -y
 	sudo gem install bundler
