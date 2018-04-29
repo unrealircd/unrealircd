@@ -22,9 +22,9 @@ fi
 git clone https://github.com/unrealircd/ircfly.git
 cd ircfly
 bundle install
-rake build
+bundle exec rake build
 if [[ "$OSTYPE" == "darwin"* ]]; then
-	rake install
+	bundle exec rake install
 else
 	sudo rake install
 fi
