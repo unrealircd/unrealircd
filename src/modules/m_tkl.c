@@ -811,7 +811,7 @@ char *err = NULL;
 	actionbuf[0] = banact_valtochar(action);
 	actionbuf[1] = '\0';
 
-	if (whattodo == 1)
+	if (whattodo == 0)
 	{
 		/* now check the regex / match field... */
 		m = unreal_create_match(match_type, parv[7], &err);
