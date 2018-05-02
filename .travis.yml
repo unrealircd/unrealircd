@@ -11,9 +11,11 @@ env:
   - BUILDCONFIG="system-cares"
   - BUILDCONFIG="system-cares system-curl"
   - BUILDCONFIG="local-curl"
-  - BUILDCONFIG="libressl-25"
-  - BUILDCONFIG="libressl-26"
-  - BUILDCONFIG="libressl-27"
-  - BUILDCONFIG="openssl-102"
-  - BUILDCONFIG="openssl-110"
-  - BUILDCONFIG="openssl-111"
+matrix:
+  include:
+  - env: BUILDCONFIG="libressl-25"
+  - env: BUILDCONFIG="libressl-26"
+  - env: BUILDCONFIG="libressl-27"
+  - env: BUILDCONFIG="openssl-102"
+  - env: BUILDCONFIG="openssl-110"
+  - env: BUILDCONFIG="openssl-111"
