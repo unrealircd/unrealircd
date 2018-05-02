@@ -4,6 +4,19 @@
 # It is not meant to be used by end-users
 #
 
+function build_ssl {
+	DIR="$2"
+	URL="$1/$2.tar.gz"
+	savewd="$PWD"
+	cd ~
+	wget "$URL" || exit 1
+	tar xzvf $DIR.tar.gz
+	cd "$DIR"
+	(./configure --prefix=$HOME/ssl && make -j2 && make install) || exit 1
+	cd "$savewd"
+	echo "SSLDIR=$HOME/ssl" >>config.settings
+}
+
 if [ ! -d extras ]; then
 	echo "This tool is supposed to be run from the source root, so ~/unrealircd-4.0.x or similar"
 	exit 1
@@ -67,16 +80,18 @@ do
 		fi
 		echo 'REMOTEINC=1' >>config.settings
 		echo "CURLDIR=`pwd`/extras/curl" >>config.settings
+	elif [ "$1" = "libressl-25" ]; then
+		build_ssl https://ftp.openbsd.org/pub/OpenBSD/LibreSSL libressl-2.5.5
+	elif [ "$1" = "libressl-26" ]; then
+		build_ssl https://ftp.openbsd.org/pub/OpenBSD/LibreSSL libressl-2.6.4
 	elif [ "$1" = "libressl-27" ]; then
-		LIBREVER="2.7.2"
-		savewd="$PWD"
-		cd ~
-		wget https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$LIBREVER.tar.gz
-		tar xzvf libressl-$LIBREVER.tar.gz
-		cd libressl-$LIBREVER
-		(./configure --prefix=$HOME/libressl && make -j2 && make install) || exit 1
-		cd "$savewd"
-		echo "SSLDIR=$HOME/libressl" >>config.settings
+		build_ssl https://ftp.openbsd.org/pub/OpenBSD/LibreSSL libressl-2.7.2
+	elif [ "$1" = "openssl-102" ]; then
+		build_ssl https://www.openssl.org/source openssl-1.0.2o
+	elif [ "$1" = "openssl-110" ]; then
+		build_ssl https://www.openssl.org/source openssl-1.1.0h
+	elif [ "$1" = "openssl-111" ]; then
+		build_ssl https://www.openssl.org/source openssl-1.1.1-pre6
 	else
 		echo "Unknown option $1"
 		exit 1
