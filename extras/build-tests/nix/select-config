@@ -68,12 +68,12 @@ do
 		echo 'REMOTEINC=1' >>config.settings
 		echo "CURLDIR=`pwd`/extras/curl" >>config.settings
 	elif [ "$1" = "libressl-27" ]; then
+		LIBREVER="2.7.2"
 		savewd="$PWD"
 		cd ~
-		LIBREVER="2.7.2"
-		wget https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$VER.tar.gz
-		tar xzvf libressl-$VER.tar.gz
-		cd libressl-$VER
+		wget https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$LIBREVER.tar.gz
+		tar xzvf libressl-$LIBREVER.tar.gz
+		cd libressl-$LIBREVER
 		(./configure --prefix=$HOME/libressl && make -j2 && make install) || exit 1
 		cd "$savewd"
 		echo "SSLDIR=$HOME/libressl" >>config.settings
