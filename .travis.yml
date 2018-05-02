@@ -14,16 +14,16 @@ matrix:
   include:
   - os: osx
     compiler: clang
-    BUILDCONFIG=""
+    env: BUILDCONFIG=""
   - os: osx
     compiler: clang
-    BUILDCONFIG="system-cares"
+    env: BUILDCONFIG="system-cares"
   - os: osx
     compiler: clang
-    BUILDCONFIG="system-cares system-curl"
+    env: BUILDCONFIG="system-cares system-curl"
   - os: osx
     compiler: clang
-    BUILDCONFIG="local-curl"
+    env: BUILDCONFIG="local-curl"
   - env: BUILDCONFIG="libressl-25"
   - env: BUILDCONFIG="libressl-26"
   - env: BUILDCONFIG="libressl-27"
