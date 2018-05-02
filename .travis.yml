@@ -11,3 +11,4 @@ env:
   - BUILDCONFIG="system-cares"
   - BUILDCONFIG="system-cares system-curl"
   - BUILDCONFIG="local-curl"
+  - BUILDCONFIG="libressl-27"

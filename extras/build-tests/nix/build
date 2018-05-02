@@ -14,6 +14,12 @@ export MAKE="make -j3"
 export CPPFLAGS="-DFAKELAG_CONFIGURABLE"
 
 extras/build-tests/nix/select-config $BUILDCONFIG
+# Read config.settings, this makes a couple of variables available to us.
+. ./config.settings
+if [ "$SSLDIR" != "" ]; then
+	# In case we build local openssl/libressl
+	export LD_LIBRARY_PATH="$SSLDIR/lib"
+fi
 ./Config -quick || (tail -n 5000 config.log; echo '*** now tre:'; tail -n 5000 extras/tre-0.8.0-git/config.log; echo '** end of tre config.log **'; exit 1)
 $MAKE
 yes ''|make pem
