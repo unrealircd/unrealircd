@@ -1,7 +1,6 @@
 language: c
 os:
 - linux
-- osx
 compiler:
   - gcc
   - clang
@@ -13,6 +12,18 @@ env:
   - BUILDCONFIG="local-curl"
 matrix:
   include:
+  - os: osx
+    compiler: clang
+    BUILDCONFIG=""
+  - os: osx
+    compiler: clang
+    BUILDCONFIG="system-cares"
+  - os: osx
+    compiler: clang
+    BUILDCONFIG="system-cares system-curl"
+  - os: osx
+    compiler: clang
+    BUILDCONFIG="local-curl"
   - env: BUILDCONFIG="libressl-25"
   - env: BUILDCONFIG="libressl-26"
   - env: BUILDCONFIG="libressl-27"
