@@ -2,8 +2,8 @@ language: c
 os:
 - linux
 compiler:
-  - gcc
   - clang
+  - gcc
 script: extras/build-tests/nix/build $BUILDCONFIG
 env:
   - BUILDCONFIG=""
@@ -13,16 +13,12 @@ env:
 matrix:
   include:
   - os: osx
-    compiler: clang
     env: BUILDCONFIG=""
   - os: osx
-    compiler: clang
     env: BUILDCONFIG="system-cares"
   - os: osx
-    compiler: clang
     env: BUILDCONFIG="system-cares system-curl"
   - os: osx
-    compiler: clang
     env: BUILDCONFIG="local-curl"
   - env: BUILDCONFIG="libressl-25"
   - env: BUILDCONFIG="libressl-26"
