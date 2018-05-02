@@ -12,7 +12,8 @@ function build_ssl {
 	wget "$URL" || exit 1
 	tar xzvf $DIR.tar.gz
 	cd "$DIR"
-	(./configure --prefix=$HOME/ssl && make -j2 && make install) || exit 1
+	(./configure --prefix=$HOME/ssl || ./config --prefix=$HOME/ssl) || exit 1
+	(make -j2 && make install) || exit 1
 	cd "$savewd"
 	echo "SSLDIR=$HOME/ssl" >>config.settings
 }
