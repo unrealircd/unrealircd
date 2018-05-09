@@ -1,20 +1,27 @@
 UnrealIRCd 4.0.18-devel Release Notes
 ======================================
 
-UnrealIRCd 4.0.18-devel is work in progress.
-
 ==[ CHANGES BETWEEN 4.0.17 AND 4.0.18 ]==
 
 Enhancements:
-* None
+* Support for checking IPv6 addresses in DNS blacklists
+* For SSL/TLS we now set the default ECDH(E) curves to be
+  X25519:secp521r1:secp384r1:prime256v1 if using a recent version of
+  OpenSSL/LibreSSL. This can be overridden via set::ssl::ecdh-curve.
 
 Major issues fixed:
+* Compile issues on macOS
+* Bug in blacklist module which could have caused false negatives,
+  allowing bad guys in which should have been denied.
 * The new optional feature 'set::cloak-method ip' caused identical cloaks
 
 Minor issues fixed:
 * When using '/REHASH -ssl' or './unrealircd reloadtls' it did not reload
   the SSL certificate/key if you were using ssl-options in listen, sni or
   link blocks. In short: it only reloaded the ones from set::ssl until now.
+* m_ircops sent a conflicting numeric, confusing some clients.
+* Starting UnrealIRCd through a non-interactive(!) ssh session could cause
+  the ssh session to hang.
 
 Other:
 * The built-in time synchronization feature is now disabled by default.
@@ -28,6 +35,12 @@ Other:
   set { timesynch { enabled yes; }; };
   .. but you should really use NTP or similar for system-wide time
   synchronization instead.
+* For developers there's now the --with-werror compile option which will
+  add -Werror.
+* Added a lot more Travis-CI tests: various LibreSSL/OpenSSL versions
+  and also test macOS. This to prevent us from releasing broken stuff.
+* Various code cleanups to get rid of lots of needless casts and to
+  eliminate compiler warnings.
 * Just as a reminder (this change was already in version 4.0.17):
   UnrealIRCd will no longer give user mode +z to users on WEBIRC
   gateways using SSL/TLS IRC, unless the WEBIRC gateway gives us
@@ -41,8 +54,20 @@ Other:
   the client is using http or some other insecure protocol.
 
 Module coders:
+* HOOKTYPE_CHANNEL_SYNCED prototype changed, the 'merge' and 'removetheirs'
+  is now no longer an 'unsigned short' but an 'int' instead.
+* HOOKTYPE_MODE_DEOP prototype changed, the 'modechar' is now no longer
+  a 'char' but an 'int' instead.
+* In addition to safestrdup() there's now also safestrldup() which allows
+  you to specify a maximum allocated length (so including the nul byte).
+  This is used in m_pass.c and m_topic.c.
 * New hook HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION
   https://www.unrealircd.org/docs/Dev:Hook_API#HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION
+
+Future versions:
+* We intend to change the default oper policy from 'warn' to 'deny'
+  later this year. For security, IRC Operators should really use SSL/TLS
+  when connecting to an IRC server!
 
 ==[ CHANGES IN OLDER RELEASES ]==
 For changes in previous UnrealIRCd releases see doc/RELEASE-NOTES.old or
