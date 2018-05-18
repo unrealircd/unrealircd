@@ -17,7 +17,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 	gem install rake || true
 	gem install rspec || true
 else
-	sudo apt-get install git python rake -y
+	sudo apt-get install git python -y
 	sudo gem install bundler
 fi
 
