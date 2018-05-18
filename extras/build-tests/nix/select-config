@@ -32,6 +32,7 @@ cp extras/build-tests/nix/configs/default ./config.settings
 # Also for our FreeBSD machine we have to uninstall some stuff since a clean
 # environment is not guaranteed...
 if [ "$OSTYPE" = "linux-gnu" ]; then
+	sudo apt-get -qq update
 	sudo apt-get install libtool -qq
 elif [[ "$OSTYPE" == "freebsd"* ]]; then
 	sudo pkg install -y libtool
