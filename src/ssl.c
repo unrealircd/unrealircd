@@ -611,11 +611,6 @@ char *ssl_get_cipher(SSL *ssl)
 	strlcpy(buf, SSL_get_version(ssl), sizeof(buf));
 	strlcat(buf, "-", sizeof(buf));
 	strlcat(buf, SSL_get_cipher(ssl), sizeof(buf));
-	c = SSL_get_current_cipher(ssl);
-	SSL_CIPHER_get_bits(c, &bits);
-	strlcat(buf, "-", sizeof(buf));
-	strlcat(buf, my_itoa(bits), sizeof(buf));
-	strlcat(buf, "bits", sizeof(buf));
 
 	return buf;
 }
