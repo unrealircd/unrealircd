@@ -1011,6 +1011,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define CALLBACKTYPE_CLOAK 1
 #define CALLBACKTYPE_CLOAKKEYCSUM 2
 #define CALLBACKTYPE_CLOAK_EX 3
+#define CALLBACKTYPE_BLACKLIST_CHECK 4
 
 /* Efunction types */
 #define EFUNC_DO_JOIN       				1

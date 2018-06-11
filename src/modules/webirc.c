@@ -386,6 +386,10 @@ int dowebirc(aClient *cptr, char *ip, char *host, char *options)
 		}
 	}
 
+	/* blacklist_start_check() */
+	if (RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK] != NULL)
+		RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK]->func.intfunc(cptr);
+
 	/* Check (g)zlines right now; these are normally checked upon accept(),
 	 * but since we know the IP only now after PASS/WEBIRC, we have to check
 	 * here again...
