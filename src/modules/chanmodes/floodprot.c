@@ -1177,6 +1177,7 @@ void floodprottimer_del(aChannel *chptr, char mflag)
 		return;
 
 	DelListItem(e, removefld_list);
+	MyFree(e);
 
 	if (chp)
         {
@@ -1216,13 +1217,14 @@ Cmode_t get_extmode_bitbychar(char m)
 
 EVENT(modef_event)
 {
-	RemoveFld *e = removefld_list;
+	RemoveFld *e, *e_next;
 	time_t now;
 
 	now = TStime();
 	
-	while(e)
+	for (e = removefld_list; e; e = e_next)
 	{
+		e_next = e->next;
 		if (e->when <= now)
 		{
 			/* Remove chanmode... */
@@ -1245,27 +1247,29 @@ EVENT(modef_event)
 			}
 			
 			/* And delete... */
-			e = (RemoveFld *)DelListItem(e, removefld_list);
+			DelListItem(e, removefld_list);
+			MyFree(e);
 		} else {
 #ifdef NEWFLDDBG
 			sendto_realops("modef_event: chan %s mode -%c about %d seconds",
 				e->chptr->chname, e->m, e->when - now);
 #endif
-			e = e->next;
 		}
 	}
 }
 
 void floodprottimer_stopchantimers(aChannel *chptr)
 {
-	RemoveFld *e = removefld_list;
-
-	while(e)
+	RemoveFld *e, *e_next;
+	
+	for (e = removefld_list; e; e = e_next)
 	{
+		e_next = e->next;
 		if (e->chptr == chptr)
-			e = (RemoveFld *)DelListItem(e, removefld_list);
-		else
-			e = e->next;
+		{
+			DelListItem(e, removefld_list);
+			MyFree(e);
+		}
 	}
 }
 
