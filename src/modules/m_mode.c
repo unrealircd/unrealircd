@@ -695,7 +695,7 @@ void make_mode_str(aChannel *chptr, long oldm, Cmode_t oldem, long oldl, int pco
 		chptr->mode.extmode = oldem;
 	}
 	z = strlen(para_buf);
-	if (para_buf[z - 1] == ' ')
+	if ((z > 0) && (para_buf[z - 1] == ' '))
 		para_buf[z - 1] = '\0';
 	*x = '\0';
 	if (*mode_buf == '\0')
