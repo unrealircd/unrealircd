@@ -8,6 +8,9 @@ Enhancements:
 * For SSL/TLS we now set the default ECDH(E) curves to be
   X25519:secp521r1:secp384r1:prime256v1 if using a recent version of
   OpenSSL/LibreSSL. This can be overridden via set::ssl::ecdh-curve.
+* The blacklist module now checks WEBIRC users as well.
+* Add option to require SASL for clients in the allow block:
+  allow { ip *; class clients; maxperip 2; options { require-sasl; }; };
 
 Major issues fixed:
 * Compile issues on macOS
@@ -23,7 +26,7 @@ Minor issues fixed:
 * Starting UnrealIRCd through a non-interactive(!) ssh session could cause
   the ssh session to hang.
 
-Other:
+Other changes:
 * The built-in time synchronization feature is now disabled by default.
   TimeSynch was added back in 2006 when lot's of operating systems did not
   ship with time synchronization turned on by default. Since incorrect time
