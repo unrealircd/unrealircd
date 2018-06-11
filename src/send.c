@@ -75,10 +75,16 @@ int dead_link(aClient *to, char *notice)
 	DBufClear(&to->local->recvQ);
 	DBufClear(&to->local->sendQ);
 
-	if ((to->flags & FLAGS_DEADSOCKET) && to->local->error_str)
+	if (to->flags & FLAGS_DEADSOCKET)
 		return -1; /* already pending to be closed */
 
 	to->flags |= FLAGS_DEADSOCKET;
+
+	/* We may get here because of the 'CPR' in check_deadsockets().
+	 * In which case, we return -1 as well.
+	 */
+	if (to->local->error_str)
+		return -1; /* don't overwrite & don't send multiple times */
 	
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
 		sendto_umode(UMODE_OPER, "Closing link: %s - %s",
