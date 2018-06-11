@@ -1712,6 +1712,8 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			continue;
 		if (aconf->flags.ssl && !IsSecure(cptr))
 			continue;
+		if (aconf->flags.sasl && (!*cptr->user->svid || isdigit(*cptr->user->svid)))
+			continue;
 		if (hp && hp->h_name)
 		{
 			hname = hp->h_name;
