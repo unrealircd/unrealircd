@@ -100,3 +100,9 @@ do
 	fi
 	shift
 done
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	echo "NOTE: Not building with -Werror for now on macOS..."
+else
+	echo 'EXTRAPARA="--enable-werror"' >>config.settings
+fi
