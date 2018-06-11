@@ -130,7 +130,7 @@ const char *inet_ntop(int, const void *, char *, size_t);
 int inet_pton(int af, const char *src, void *dst);
 #endif
 
-MODVAR int  global_count, max_global_count;
+extern MODVAR int  global_count, max_global_count;
 extern char *myctime(time_t);
 extern char *strtoken(char **, char *, char *);
 
@@ -291,7 +291,7 @@ extern int lu_noninv, lu_inv, lu_serv, lu_oper,
     lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv,
     lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
 
-MODVAR TS   now;
+extern MODVAR TS   now;
 
 #ifndef _WIN32
 #if defined(__STDC__)
