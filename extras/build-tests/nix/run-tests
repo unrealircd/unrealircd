@@ -52,8 +52,8 @@ cd -
 # Do cipherscan test
 sleep 2
 cd ../cipherscan
-./cipherscan --no-colors 127.0.0.1:5697
-#./cipherscan --json 127.0.0.1:5597 >.........
+./cipherscan --no-colors 127.0.0.1:5900
+#./cipherscan --json 127.0.0.1:5900 >.........
 sleep 5
 cd -
 
