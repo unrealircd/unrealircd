@@ -384,23 +384,24 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 
 	if (server)
 	{
+#if defined(SSL_CTX_set_ecdh_auto)
+		/* OpenSSL 1.0.x requires us to explicitly turn this on */
+		SSL_CTX_set_ecdh_auto(ctx, 1);
+#elif OPENSSL_VERSION_NUMBER < 0x10100000L
+		/* Even older versions require require setting a fixed curve.
+		 * NOTE: Don't be confused by the <1.1.x check.
+		 * Yes, it must be there. Do not remove it!
+		 */
+		SSL_CTX_set_tmp_ecdh(ctx, EC_KEY_new_by_curve_name(NID_X9_62_prime256v1));
+#else
+		/* If we end up here we don't have SSL_CTX_set_ecdh_auto
+		 * and we are on OpenSSL 1.1.0 or later. We don't need to
+		 * do anything then, since auto ecdh is the default.
+		 */
+#endif
+		/* Let's see if we need to (and can) set specific curves */
 		if (ssloptions->ecdh_curves)
 		{
-#if defined(SSL_CTX_set_ecdh_auto)
-			/* OpenSSL 1.0.x requires us to explicitly turn this on */
-			SSL_CTX_set_ecdh_auto(ctx, 1);
-#elif OPENSSL_VERSION_NUMBER < 0x10100000L
-			/* Even older versions require require setting a fixed curve.
-			 * NOTE: Don't be confused by the <1.1.x check.
-			 * Yes, it must be there. Do not remove it!
-			 */
-			SSL_CTX_set_tmp_ecdh(ctx, EC_KEY_new_by_curve_name(NID_X9_62_prime256v1));
-#else
-			/* If we end up here we don't have SSL_CTX_set_ecdh_auto
-			 * and we are on OpenSSL 1.1.0 or later. We don't need to
-			 * do anything then, since auto ecdh is the default.
-			 */
-#endif
 #ifdef HAS_SSL_CTX_SET1_CURVES_LIST
 			if (!SSL_CTX_set1_curves_list(ctx, ssloptions->ecdh_curves))
 			{
