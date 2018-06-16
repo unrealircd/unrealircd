@@ -33,6 +33,9 @@ else
 fi
 cd ..
 
+# Install 'cipherscan'
+git clone https://github.com/mozilla/cipherscan
+
 # Install 'unrealircd-tests'
 git clone https://github.com/unrealircd/unrealircd-tests.git
 cd unrealircd-tests
@@ -44,6 +47,14 @@ cp ircdconfig/* ~/unrealircd/conf/
 cd ~/unrealircd
 bin/unrealircd -f irc1.conf
 bin/unrealircd -f irc2.conf
+cd -
+
+# Do cipherscan test
+sleep 2
+cd ../cipherscan
+./cipherscan --no-colors 127.0.0.1:5697
+#./cipherscan --json 127.0.0.1:5597 >.........
+sleep 5
 cd -
 
 # Back in unrealircd-tests, run the tests!
