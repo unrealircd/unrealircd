@@ -1,7 +1,12 @@
-UnrealIRCd 4.0.18-rc1 Release Notes
+UnrealIRCd 4.0.18-rc2 Release Notes
 ====================================
 
-==[ CHANGES BETWEEN 4.0.17 AND 4.0.18 ]==
+==[ CHANGES BETWEEN 4.0.18-rc1 AND 4.0.18-rc2 ]==
+
+This addresses one bug introduced by 4.0.18-rc1:
+* Fix for SSL: ECDHE was not working with older OpenSSL versions
+
+==[ CHANGES BETWEEN 4.0.17 AND 4.0.18-rc1 ]==
 
 Enhancements:
 * Support for checking IPv6 addresses in DNS blacklists
@@ -9,7 +14,7 @@ Enhancements:
   X25519:secp521r1:secp384r1:prime256v1 if using a recent version of
   OpenSSL/LibreSSL. This can be overridden via set::ssl::ecdh-curve.
 * The blacklist module now checks WEBIRC users as well.
-* Add option to require SASL for clients in the allow block:
+* You can now require SASL for clients via the allow block:
   allow { ip *; class clients; maxperip 2; options { require-sasl; }; };
 
 Major issues fixed:
@@ -28,7 +33,7 @@ Minor issues fixed:
 
 Other changes:
 * The built-in time synchronization feature is now disabled by default.
-  TimeSynch was added back in 2006 when lot's of operating systems did not
+  TimeSynch was added back in 2006 when lots of operating systems did not
   ship with time synchronization turned on by default. Since incorrect time
   severely breaks IRC networks this was a major problem. Nowadays this is
   completely different with most Linux distro's, OS X, Windows, etc. doing
@@ -68,9 +73,9 @@ Module coders:
   https://www.unrealircd.org/docs/Dev:Hook_API#HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION
 
 Future versions:
-* We intend to change the default oper policy from 'warn' to 'deny'
-  later this year. For security, IRC Operators should really use SSL/TLS
-  when connecting to an IRC server!
+* We intend to change the default plaintext oper policy from 'warn' to 'deny'
+  later this year. This will deny /OPER when used from a non-SSL connection.
+  For security, IRC Operators should really use SSL/TLS!
 
 ==[ CHANGES IN OLDER RELEASES ]==
 For changes in previous UnrealIRCd releases see doc/RELEASE-NOTES.old or

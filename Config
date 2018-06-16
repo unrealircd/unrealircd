@@ -452,7 +452,7 @@ echo ""
 
 if [ -z "$NOCACHE" ] ; then
 	# This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
-	UNREALRELEASES="unrealircd-4.0.17 unrealircd-4.0.17-rc1 unrealircd-4.0.16.1 unrealircd-4.0.16 unrealircd-4.0.15 unrealircd-4.0.14 unrealircd-4.0.14-rc1 unrealircd-4.0.13 unrealircd-4.0.13-rc1 unrealircd-4.0.12.1 unrealircd-4.0.12 unrealircd-4.0.11 unrealircd-4.0.10 unrealircd-4.0.9 unrealircd-4.0.8.4 unrealircd-4.0.8.3 unrealircd-4.0.8.2 unrealircd-4.0.8.1"
+	UNREALRELEASES="unrealircd-4.0.18-rc1 unrealircd-4.0.17 unrealircd-4.0.17-rc1 unrealircd-4.0.16.1 unrealircd-4.0.16 unrealircd-4.0.15 unrealircd-4.0.14 unrealircd-4.0.14-rc1 unrealircd-4.0.13 unrealircd-4.0.13-rc1 unrealircd-4.0.12.1 unrealircd-4.0.12 unrealircd-4.0.11 unrealircd-4.0.10 unrealircd-4.0.9 unrealircd-4.0.8.4 unrealircd-4.0.8.3 unrealircd-4.0.8.2 unrealircd-4.0.8.1"
 	if [ -f "config.settings" ]; then
 		. ./config.settings
 	else
