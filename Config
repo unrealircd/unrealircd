@@ -500,6 +500,15 @@ if [ -z "$NOCACHE" ] ; then
 			done
 		fi
 	fi
+	# If we just imported settings and the curl dir is set to
+	# something like /home/xxx/unrealircd-4.x.y/extras/curl/
+	# (what we call 'local-curl') then remove this setting as
+	# it would refer to the old UnrealIRCd installation.
+	if [ ! -z "$IMPORTEDSETTINGS" ]; then
+		if echo "$CURLDIR"|grep -qi unrealircd; then
+			CURLDIR=""
+		fi
+	fi
 fi
 
 TEST="$BASEPATH"
@@ -624,7 +633,6 @@ if [ "$REMOTEINC" = "1" ] ; then
 		# Reset any previous CURLDIR if it doesn't exist (anymore)
 		CURLDIR=""
 	fi
-
 
 	INSTALLCURL="0"
 	SUGGESTCURLDIR=""
