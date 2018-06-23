@@ -1,12 +1,7 @@
-UnrealIRCd 4.0.18-rc2 Release Notes
-====================================
+UnrealIRCd 4.0.18 Release Notes
+================================
 
-==[ CHANGES BETWEEN 4.0.18-rc1 AND 4.0.18-rc2 ]==
-
-This addresses one bug introduced by 4.0.18-rc1:
-* Fix for SSL: ECDHE was not working with older OpenSSL versions
-
-==[ CHANGES BETWEEN 4.0.17 AND 4.0.18-rc1 ]==
+==[ CHANGES BETWEEN 4.0.17 AND 4.0.18 ]==
 
 Enhancements:
 * Support for checking IPv6 addresses in DNS blacklists
@@ -14,10 +9,19 @@ Enhancements:
   X25519:secp521r1:secp384r1:prime256v1 if using a recent version of
   OpenSSL/LibreSSL. This can be overridden via set::ssl::ecdh-curve.
 * The blacklist module now checks WEBIRC users as well.
-* You can now require SASL for clients via the allow block:
+* You can now require SASL for all clients via the allow block via:
   allow { ip *; class clients; maxperip 2; options { sasl; }; };
+  This can be useful for a special sasl-only server which, for example,
+  only permits proxies and tor clients. In a future release the feature
+  will be made more flexible so it can be used for other purposes
+  as well.
 
 Major issues fixed:
+* A number of (potential) security issues were fixed:
+  * Memory leaks: this could allow an attacker to slowly consume all
+    available memory and ultimately cause UnrealIRCd to crash.
+  * Out of bounds read: in practice this does not seem to be
+    exploitable due to the many restrictions that are imposed.
 * Compile issues on macOS
 * Bug in blacklist module which could have caused false negatives,
   allowing bad guys in which should have been denied.
@@ -30,6 +34,7 @@ Minor issues fixed:
 * m_ircops sent a conflicting numeric, confusing some clients.
 * Starting UnrealIRCd through a non-interactive(!) ssh session could cause
   the ssh session to hang.
+* An upgrade issue with non-system cURL causing compile problems.
 
 Other changes:
 * The built-in time synchronization feature is now disabled by default.
