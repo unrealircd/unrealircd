@@ -15,7 +15,7 @@ Enhancements:
   OpenSSL/LibreSSL. This can be overridden via set::ssl::ecdh-curve.
 * The blacklist module now checks WEBIRC users as well.
 * You can now require SASL for clients via the allow block:
-  allow { ip *; class clients; maxperip 2; options { require-sasl; }; };
+  allow { ip *; class clients; maxperip 2; options { sasl; }; };
 
 Major issues fixed:
 * Compile issues on macOS
