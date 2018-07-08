@@ -110,7 +110,7 @@ fi
 dnl More and more and more....
 AC_CACHE_CHECK(if the compiler has a working -Wno-format-truncation, ac_cv_nft, [
 	save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS -Wno-format-truncation"
+	CFLAGS="$CFLAGS -Wno-format-truncation -Werror"
 	AC_TRY_COMPILE(,, ac_cv_nft="yes", ac_cv_nft="no")
 	CFLAGS="$save_cflags"
 ])

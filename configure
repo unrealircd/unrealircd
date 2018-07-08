@@ -3553,7 +3553,7 @@ if ${ac_cv_nft+:} false; then :
 else
 
 	save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS -Wno-format-truncation"
+	CFLAGS="$CFLAGS -Wno-format-truncation -Werror"
 	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
