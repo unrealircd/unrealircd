@@ -643,6 +643,10 @@ if [ "$REMOTEINC" = "1" ] ; then
 	if [ -d "/usr/include/curl" ]; then
 		SUGGESTCURLDIR="/usr"
 	fi
+	# This one also works for /usr/include/x86_64-linux-gnu and friends:
+	if [ -f "/usr/bin/curl-config" ]; then
+		SUGGESTCURLDIR="/usr"
+	fi
 
 	GOTASYNC=0
 	if [ "x$SUGGESTCURLDIR" != "x" ]; then
