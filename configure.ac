@@ -107,6 +107,17 @@ if test "$ac_cv_nfzl" = "yes"; then
 CFLAGS="$CFLAGS -Wno-format-zero-length"
 fi
 
+dnl More and more and more....
+AC_CACHE_CHECK(if the compiler has a working -Wno-format-truncation, ac_cv_nft, [
+	save_cflags="$CFLAGS"
+	CFLAGS="$CFLAGS -Wno-format-truncation"
+	AC_TRY_COMPILE(,, ac_cv_nft="yes", ac_cv_nft="no")
+	CFLAGS="$save_cflags"
+])
+if test "$ac_cv_nft" = "yes"; then
+CFLAGS="$CFLAGS -Wno-format-truncation"
+fi
+
 AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(CP,cp)
 AC_PATH_PROG(TOUCH,touch)
