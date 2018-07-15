@@ -1,7 +1,32 @@
 UnrealIRCd 4.0.19-dev Release Notes
 ====================================
 
-This version is in development.
+This UnrealIRCd version is still under heavy development.
+See https://bugs.unrealircd.org/roadmap_page.php for release targets.
+
+Enhancements:
+* None
+
+Major issues fixed:
+* None
+
+Minor issues fixed:
+* Remote includes: ./Config didn't properly detect libcurl on Ubuntu 18
+  (and possibly other Linux distributions as well)
+
+Other changes:
+* Windows users may be prompted to install the Visual C++ redistributable
+  package for Visual Studio 2017. This is because we now build on VS 2017
+  instead of VS 2012.
+
+Module coders:
+* Windows: Be aware that we now build with Visual Studio 2017. This means
+  3rd party modules should be compiled with VS 2017 (or VS 2015) as well.
+
+Future versions:
+* We intend to change the default plaintext oper policy from 'warn' to 'deny'
+  later this year. This will deny /OPER when used from a non-SSL connection.
+  For security, IRC Operators should really use SSL/TLS!
 
 ==[ CHANGES IN OLDER RELEASES ]==
 For changes in previous UnrealIRCd releases see doc/RELEASE-NOTES.old or
