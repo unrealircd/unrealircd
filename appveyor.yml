@@ -1,9 +1,6 @@
 version: 4.0.x-devbuild-{build}
 environment:
   matrix:
-  - APPVEYOR_BUILD_WORKER_IMAGE: "Visual Studio 2015"
-    TARGET: "Visual Studio 2012"
-    SHORTNAME: "vs2012"
   - APPVEYOR_BUILD_WORKER_IMAGE: "Visual Studio 2017"
     TARGET: "Visual Studio 2017"
     SHORTNAME: "vs2017"

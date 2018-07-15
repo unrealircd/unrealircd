@@ -16,8 +16,8 @@ cd \projects
 mkdir unrealircd-deps
 cd unrealircd-deps
 wget https://www.unrealircd.org/files/dev/win/SetACL.exe
-wget https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-4.0.16.zip
-unzip unrealircd-libraries-4.0.16.zip
+wget https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-devel.zip
+unzip unrealircd-libraries-devel.zip
 
 cd \projects\unrealircd
 
