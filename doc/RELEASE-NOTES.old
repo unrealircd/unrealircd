@@ -3,6 +3,87 @@ See doc/RELEASE-NOTES for the latest release notes.
 This file (doc/RELEASE-NOTES.old) contains the release notes
 of OLDER releases for historical purposes.
 
+==[ CHANGES BETWEEN 4.0.17 AND 4.0.18 ]==
+
+Enhancements:
+* Support for checking IPv6 addresses in DNS blacklists
+* For SSL/TLS we now set the default ECDH(E) curves to be
+  X25519:secp521r1:secp384r1:prime256v1 if using a recent version of
+  OpenSSL/LibreSSL. This can be overridden via set::ssl::ecdh-curve.
+* The blacklist module now checks WEBIRC users as well.
+* You can now require SASL for all clients via the allow block via:
+  allow { ip *; class clients; maxperip 2; options { sasl; }; };
+  This can be useful for a special sasl-only server which, for example,
+  only permits proxies and tor clients. In a future release the feature
+  will be made more flexible so it can be used for other purposes
+  as well.
+
+Major issues fixed:
+* A number of (potential) security issues were fixed:
+  * Memory leaks: this could allow an attacker to slowly consume all
+    available memory and ultimately cause UnrealIRCd to crash.
+  * Out of bounds read: in practice this does not seem to be
+    exploitable due to the many restrictions that are imposed.
+* Compile issues on macOS
+* Bug in blacklist module which could have caused false negatives,
+  allowing bad guys in which should have been denied.
+* The new optional feature 'set::cloak-method ip' caused identical cloaks
+
+Minor issues fixed:
+* When using '/REHASH -ssl' or './unrealircd reloadtls' it did not reload
+  the SSL certificate/key if you were using ssl-options in listen, sni or
+  link blocks. In short: it only reloaded the ones from set::ssl until now.
+* m_ircops sent a conflicting numeric, confusing some clients.
+* Starting UnrealIRCd through a non-interactive(!) ssh session could cause
+  the ssh session to hang.
+* An upgrade issue with non-system cURL causing compile problems.
+
+Other changes:
+* The built-in time synchronization feature is now disabled by default.
+  TimeSynch was added back in 2006 when lots of operating systems did not
+  ship with time synchronization turned on by default. Since incorrect time
+  severely breaks IRC networks this was a major problem. Nowadays this is
+  completely different with most Linux distro's, OS X, Windows, etc. doing
+  time synchronization out of the box. Since UnrealIRCd's implementation is
+  less precise and lacks authentication it's best left over to the system.
+  You can still re-enable timesynch via:
+  set { timesynch { enabled yes; }; };
+  .. but you should really use NTP or similar for system-wide time
+  synchronization instead.
+* For developers there's now the --with-werror compile option which will
+  add -Werror.
+* Added a lot more Travis-CI tests: various LibreSSL/OpenSSL versions
+  and also test macOS. This to prevent us from releasing broken stuff.
+* Various code cleanups to get rid of lots of needless casts and to
+  eliminate compiler warnings.
+* Just as a reminder (this change was already in version 4.0.17):
+  UnrealIRCd will no longer give user mode +z to users on WEBIRC
+  gateways using SSL/TLS IRC, unless the WEBIRC gateway gives us
+  some assurance that the client<->webirc gateway connection is
+  also secure (eg: https).
+  This is the regular WEBIRC format:
+  WEBIRC password gateway hostname ip
+  This indicates a secure client connection (NEW):
+  WEBIRC password gateway hostname ip :secure
+  Naturally, WEBIRC gateways MUST NOT send the "secure" option if
+  the client is using http or some other insecure protocol.
+
+Module coders:
+* HOOKTYPE_CHANNEL_SYNCED prototype changed, the 'merge' and 'removetheirs'
+  is now no longer an 'unsigned short' but an 'int' instead.
+* HOOKTYPE_MODE_DEOP prototype changed, the 'modechar' is now no longer
+  a 'char' but an 'int' instead.
+* In addition to safestrdup() there's now also safestrldup() which allows
+  you to specify a maximum allocated length (so including the nul byte).
+  This is used in m_pass.c and m_topic.c.
+* New hook HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION
+  https://www.unrealircd.org/docs/Dev:Hook_API#HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION
+
+Future versions:
+* We intend to change the default plaintext oper policy from 'warn' to 'deny'
+  later this year. This will deny /OPER when used from a non-SSL connection.
+  For security, IRC Operators should really use SSL/TLS!
+
 ==[ CHANGES BETWEEN 4.0.16.1 AND 4.0.17 ]==
 
 Enhancements:
