@@ -6,7 +6,7 @@
 
 [Setup]
 AppName=UnrealIRCd 4
-AppVerName=UnrealIRCd 4.0.18
+AppVerName=UnrealIRCd 4.0.18-vs2017
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=https://www.unrealircd.org
 AppSupportURL=https://www.unrealircd.org
@@ -104,31 +104,20 @@ var
 // This is where all starts.
 //*********************************************************************************
 function InitializeSetup(): Boolean;
-
+var
+  major: Cardinal;
 begin
-
 	Result := true;
-// This was for Visual Studio 2012:
-//    if ((not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{2F73A7B2-E50E-39A6-9ABC-EF89E4C62E36}'))
-//         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E824E81C-80A4-3DFF-B5F9-4842A9FF5F7F}'))
-//         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E7D4E834-93EB-351F-B8FB-82CDAE623003}'))
-//         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{3D6AD258-61EA-35F5-812C-B7A02152996E}'))
-//         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{BD95A8CD-1D9F-35AD-981A-3E7925026EBB}'))
-//        ) then
-// This is for Visual Studio 2015:
-    if ((not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{A2563E55-3BEC-3828-8D67-E5E8B9E8B675}')) // Visual C++ 2015 Redistributable 14.0.23026
-         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{8FD71E98-EE44-3844-9DAD-9CB0BBBC603C}')) // Visual C++ 2015 Redistributable 14.0.24210
-         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{BBF2AC74-720C-3CB3-8291-5E34039232FA}')) // Visual C++ 2015 Redistributable 14.0.24215
-        ) then
+  if Not RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x86', 'Major', major) then
     begin
-      MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2015 to be installed.' #13 +
-             'After you click OK you will be taken to a download page.' #13 +
-             '1) Click Download' #13 +
-             '2) Choose the vcredist x86 version (or both).' #13 +
-             '3) Download and install.' #13 +
+      MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2017 to be installed.' #13 +
+             'After you click OK you will be taken to a download page from Microsoft:' #13 +
+             '1) Scroll down to the "Visual Studio 2017" section' #13 +
+             '2) Click on the x86 "vc_redist.x86.exe" to download the installer' #13 +
+             '3) Run the installer.' #13 + #13 +
              'If you are already absolutely sure that you have this package installed then you can skip this step.', mbInformation, MB_OK);
-      ShellExec('open', 'https://www.microsoft.com/en-us/download/details.aspx?id=48145', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
-      MsgBox('Click OK once you have installed the Microsoft Visual C++ Redistributable for Visual Studio 2015 (vcredist_x86) to continue the UnrealIRCd installer', mbInformation, MB_OK);
+      ShellExec('open', 'https://support.microsoft.com/help/2977003/the-latest-supported-visual-c-downloads', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
+      MsgBox('Your browser was launched. After you have installed the Microsoft Visual C++ Redistributable for Visual Studio 2017 (vc_redist.x86.exe), click OK below to continue the UnrealIRCd installer', mbInformation, MB_OK);
 	end;
 end;
 
