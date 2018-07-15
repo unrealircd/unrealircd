@@ -1,7 +1,6 @@
 rem Build script for appveyor
 
 rem Initialize Visual Studio variables
-if "%TARGET%" == "Visual Studio 2012" call "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\vcvarsall.bat" x86
 if "%TARGET%" == "Visual Studio 2017" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
 
 rem Installing tools
