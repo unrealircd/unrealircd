@@ -116,6 +116,7 @@ typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
 typedef struct _configitem_alias ConfigItem_alias;
 typedef struct _configitem_alias_format ConfigItem_alias_format;
 typedef struct _configitem_include ConfigItem_include;
+typedef struct _configitem_blacklist_module ConfigItem_blacklist_module;
 typedef struct _configitem_help ConfigItem_help;
 typedef struct _configitem_offchans ConfigItem_offchans;
 typedef struct liststruct ListStruct;
@@ -1333,6 +1334,11 @@ struct _configitem_include {
 #endif
 	char *included_from;
 	int included_from_line;
+};
+
+struct _configitem_blacklist_module {
+	ConfigItem_blacklist_module *prev, *next;
+	char *name;
 };
 
 struct _configitem_help {

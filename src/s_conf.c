@@ -127,6 +127,7 @@ static int	_test_deny		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_allow_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_blacklist_module	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
@@ -140,6 +141,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "alias",		_conf_alias,		_test_alias	},
 	{ "allow",		_conf_allow,		_test_allow	},
 	{ "ban", 		_conf_ban,		_test_ban	},
+	{ "blacklist-module",	NULL,		 	NULL },
 	{ "class", 		_conf_class,		_test_class	},
 	{ "deny",		_conf_deny,		_test_deny	},
 	{ "drpass",		_conf_drpass,		_test_drpass	},
@@ -299,6 +301,7 @@ ConfigItem_deny_version *conf_deny_version = NULL;
 ConfigItem_log		*conf_log = NULL;
 ConfigItem_alias	*conf_alias = NULL;
 ConfigItem_include	*conf_include = NULL;
+ConfigItem_blacklist_module	*conf_blacklist_module = NULL;
 ConfigItem_help		*conf_help = NULL;
 ConfigItem_offchans	*conf_offchans = NULL;
 
@@ -325,6 +328,7 @@ void unload_notloaded_includes(void);
 void load_includes(void);
 void unload_loaded_includes(void);
 int rehash_internal(aClient *cptr, aClient *sptr, int sig);
+int is_blacklisted_module(char *name);
 
 /** Return the printable string of a 'cep' location, such as set::something::xyz */
 char *config_var(ConfigEntry *cep)
@@ -1713,6 +1717,50 @@ int config_test_all(void)
 	return 1;
 }
 
+/** Process all loadmodule directives in all includes.
+ * This was previously done at the same time as 'include' was called but
+ * that was too early now that we have blacklist-module, so moved here.
+ * @retval 1 on success, 0 on any failed loadmodule directive.
+ */
+int config_loadmodules(void)
+{
+	ConfigFile *cfptr;
+	ConfigEntry *ce;
+	ConfigItem_blacklist_module *blm, *blm_next;
+
+	int fatal_ret = 0, ret;
+
+	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
+	{
+		if (config_verbose > 1)
+			config_status("Testing %s", cfptr->cf_filename);
+		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
+		{
+			if (!strcmp(ce->ce_varname, "loadmodule"))
+			{
+				ret = _conf_loadmodule(cfptr, ce);
+				if (ret < fatal_ret)
+					fatal_ret = ret; /* lowest wins */
+			}
+		}
+	}
+
+	/* Let's free the blacklist-module list here as well */
+	for (blm = conf_blacklist_module; blm; blm = blm_next)
+	{
+		blm_next = blm->next;
+		safefree(blm->name);
+		safefree(blm);
+	}
+	conf_blacklist_module = NULL;
+	/* End of freeing code */
+
+	/* If any loadmodule returned a fatal (-1) error code then we return fail status (0) */
+	if (fatal_ret < 0)
+		return 0; /* FAIL */
+	return 1; /* SUCCESS */
+}
+
 int	init_conf(char *rootconf, int rehash)
 {
 	char *old_pid_file = NULL;
@@ -1737,7 +1785,7 @@ int	init_conf(char *rootconf, int rehash)
 	 * include "unrealircd.conf";
 	 */
 	add_include(rootconf, "[thin air]", -1);
-	if (load_conf(rootconf, rootconf) > 0)
+	if ((load_conf(rootconf, rootconf) > 0) && config_loadmodules())
 	{
 		config_test_reset();
 		if (!config_test_all())
@@ -1849,7 +1897,6 @@ int	load_conf(char *filename, const char *original_path)
 	ConfigEntry 	*ce;
 	ConfigItem_include *inc, *my_inc;
 	int ret;
-	int fatal_ret;
 	int counter;
 
 	if (config_verbose > 0)
@@ -1925,23 +1972,18 @@ int	load_conf(char *filename, const char *original_path)
 			cfptr3 = &cfptr2->cf_next;
 		*cfptr3 = cfptr;
 
+		if (config_verbose > 1)
+			config_status("Loading module blacklist in %s", filename);
+
+		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
+			if (!strcmp(ce->ce_varname, "blacklist-module"))
+				 _test_blacklist_module(cfptr, ce);
+
 		/* Load modules */
 		if (config_verbose > 1)
 			config_status("Loading modules in %s", filename);
-
-		fatal_ret = 0;
-		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
-			if (!strcmp(ce->ce_varname, "loadmodule"))
-			{
-				 ret = _conf_loadmodule(cfptr, ce);
-				 if (ret < fatal_ret)
-				 	fatal_ret = ret; /* lowest wins */
-			}
-		ret = fatal_ret;
 		if (need_34_upgrade)
 			upgrade_conf_to_34();
-		if (ret < 0)
-			return ret;
 
 		/* Load includes */
 		if (config_verbose > 1)
@@ -8804,6 +8846,14 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		// TODO ^: silly win32 wrapping prevents this from being displayed otherwise. PLZ FIX! !
 		/* let it continue to load anyway? */
 	}
+
+	if (is_blacklisted_module(ce->ce_vardata))
+	{
+		/* config_warn("%s:%i: Module '%s' is blacklisted, not loading",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata); */
+		return 1;
+	}
+
 	if ((ret = Module_Create(ce->ce_vardata))) {
 		config_status("%s:%i: loadmodule %s: failed to load: %s",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
@@ -8815,6 +8865,53 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 {
+	return 0;
+}
+
+int	_test_blacklist_module(ConfigFile *conf, ConfigEntry *ce)
+{
+	char *path;
+	ConfigItem_blacklist_module *m;
+
+	if (!ce->ce_vardata)
+	{
+		config_status("%s:%i: blacklist-module: no module name given to blacklist",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+
+	path = Module_TransformPath(ce->ce_vardata);
+
+	/* Is it a good idea to warn about this?
+	 * Yes, the user may have made a typo, thinking (s)he blacklisted something
+	 *      but due to the typo the blacklist-module is not effective.
+	 *  No, the user may have blacklisted a bunch of modules of which not all may
+	 *      be installed at the time.
+	 * Hmmmmmm.
+	 */
+	if (!file_exists(path))
+	{
+		config_warn("%s:%i: blacklist-module for '%s' but module does not exist anyway",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+		/* fallthrough */
+	}
+
+	m = MyMallocEx(sizeof(ConfigItem_blacklist_module));
+	m->name = strdup(ce->ce_vardata);
+	AddListItem(m, conf_blacklist_module);
+
+	return 0;
+}
+
+int is_blacklisted_module(char *name)
+{
+	char *path = Module_TransformPath(name);
+	ConfigItem_blacklist_module *m;
+
+	for (m = conf_blacklist_module; m; m = m->next)
+		if (!stricmp(m->name, name) || !stricmp(m->name, path))
+			return 1;
+
 	return 0;
 }
 

@@ -344,6 +344,31 @@ unsigned int maj, min, plevel;
 		snprintf(buf, buflen, "%d.%d.%d", maj, min, plevel);
 }
 
+/** Transform a loadmodule path like "third/la" to
+ * something like "/home/xyz/unrealircd/modules/third/la.so
+ * (and other tricks)
+ */
+char *Module_TransformPath(char *path_)
+{
+	static char path[1024];
+
+	/* Prefix the module path with MODULESDIR, unless it's an absolute path
+	 * (we check for "/", "\" and things like "C:" to detect absolute paths).
+	 */
+	if ((*path_ != '/') && (*path_ != '\\') && !(*path_ && (path_[1] == ':')))
+	{
+		snprintf(path, sizeof(path), "%s/%s", MODULESDIR, path_);
+	} else {
+		strlcpy(path, path_, sizeof(path));
+	}
+
+	/* Auto-suffix .dll / .so */
+	if (!strstr(path, MODULE_SUFFIX))
+		strlcat(path, MODULE_SUFFIX, sizeof(path));
+
+	return path;
+}
+
 /*
  * Returns an error if insucessful .. yes NULL is OK! 
 */
@@ -361,8 +386,7 @@ char  *Module_Create(char *path_)
 	char    *Mod_Version;
 	unsigned int *compiler_version;
 	static char 	errorbuf[1024];
-	char		path[1024];
-	char 		*tmppath;
+	char 		*path, *tmppath;
 	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
@@ -371,20 +395,8 @@ char  *Module_Create(char *path_)
 	long modsys_ver = 0;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s", path_));
 
-	/* Prefix the module path with MODULESDIR, unless it's an absolute path
-	 * (we check for "/", "\" and things like "C:" to detect absolute paths).
-_	 */
-	if ((*path_ != '/') && (*path_ != '\\') && !(*path_ && (path_[1] == ':')))
-	{
-		snprintf(path, sizeof(path), "%s/%s", MODULESDIR, path_);
-	} else {
-		strlcpy(path, path_, sizeof(path));
-	}
+	path = Module_TransformPath(path_);
 
-	/* auto-suffix .dll / .so */
-	if (!strstr(path, MODULE_SUFFIX))
-		strlcat(path, MODULE_SUFFIX, sizeof(path));
-	
 	tmppath = unreal_mktemp(TMPDIR, unreal_getmodfilename(path));
 	if (!tmppath)
 		return "Unable to create temporary file!";
