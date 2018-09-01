@@ -5,7 +5,11 @@ This UnrealIRCd version is still under heavy development.
 See https://bugs.unrealircd.org/roadmap_page.php for release targets.
 
 Enhancements:
-* None
+* New option to disable a module: blacklist-module "modulename";
+  This will cause any 'loadmodule' lines for that module to be ignored.
+  This is especially useful if you only want to disable a few modules
+  that are (normally) automatically loaded by conf/modules.default.conf.
+  https://www.unrealircd.org/docs/Blacklist-module_directive
 
 Major issues fixed:
 * None
