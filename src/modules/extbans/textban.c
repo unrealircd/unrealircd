@@ -185,8 +185,11 @@ int cleaned = 0;
 			continue;
 		}
 
-		/* Hunt for end of word */
-		for (endw = pold; ((*endw != '\0') && (!iswseperator(*endw))); endw++);
+		/* Hunt for end of word
+		 * Fix for bug #4909: word will be at least 'searchn' long so we can skip
+		 * 'searchn' bytes and avoid stopping half-way the badword.
+		 */
+		for (endw = pold+searchn; ((*endw != '\0') && (!iswseperator(*endw))); endw++);
 
 		if (!(type & TEXTBAN_WORD_RIGHT) && (pold+searchn != endw)) {
 			/* not matched */
