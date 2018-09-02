@@ -1036,19 +1036,22 @@ add_con_refuse:
 
 	j = 1;
 
-	list_for_each_entry(acptr2, &unknown_list, lclient_node)
+	if (!Find_except(acptr, CONF_EXCEPT_THROTTLE))
 	{
-		if (!strcmp(acptr->ip,GetIP(acptr2)))
+		list_for_each_entry(acptr2, &unknown_list, lclient_node)
 		{
-			j++;
-			if (j > iConf.max_unknown_connections_per_ip)
+			if (!strcmp(acptr->ip,GetIP(acptr2)))
 			{
-				ircsnprintf(zlinebuf, sizeof(zlinebuf),
-					"ERROR :Closing Link: [%s] (Too many unknown connections from your IP)"
-					"\r\n",
-					acptr->ip);
-				(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
-				goto add_con_refuse;
+				j++;
+				if (j > iConf.max_unknown_connections_per_ip)
+				{
+					ircsnprintf(zlinebuf, sizeof(zlinebuf),
+						"ERROR :Closing Link: [%s] (Too many unknown connections from your IP)"
+						"\r\n",
+						acptr->ip);
+					(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
+					goto add_con_refuse;
+				}
 			}
 		}
 	}

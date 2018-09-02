@@ -10,6 +10,8 @@ Enhancements:
   This is especially useful if you only want to disable a few modules
   that are (normally) automatically loaded by conf/modules.default.conf.
   https://www.unrealircd.org/docs/Blacklist-module_directive
+* The except throttle { } block now also overrides any limitations from
+  set::max-unknown-connection-per-ip. Useful for WEBIRC/cgiirc gateways.
 * The following extban modules are not new but are now enabled by default:
   extbans/textban, extbans/timedban and extbans/msgbypass.
   In case you don't like them, use blacklist-module as mentioned above.
