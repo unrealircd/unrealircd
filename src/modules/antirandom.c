@@ -556,6 +556,7 @@ struct {
 	int show_failedconnects;
 	int fullstatus_on_load;
 	ConfigItem_mask *except_hosts;
+	int except_webirc;
 } cfg;
 
 /* Forward declarations */
@@ -588,10 +589,13 @@ MOD_INIT(antirandom)
 		free_stuff();
 		return MOD_FAILED;
 	}
-	cfg.fullstatus_on_load = 1; /* default */
-	cfg.convert_to_lowercase = 1; /* default */
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, antirandom_preconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, antirandom_config_run);
+
+	/* Some default values: */
+	cfg.fullstatus_on_load = 1;
+	cfg.convert_to_lowercase = 1;
+	cfg.except_webirc = 1;
 
 	return MOD_SUCCESS;
 }
@@ -657,6 +661,19 @@ ConfigEntry *cep;
 		if (!strcmp(cep->ce_varname, "except-hosts"))
 		{
 		} else
+		if (!strcmp(cep->ce_varname, "except-webirc"))
+		{
+			/* This should normally be UNDER the generic 'set::antirandom::%s with no value'
+			 * stuff but I put it here because people may think it's a hostlist and then
+			 * the error can be a tad confusing. -- Syzop
+			 */
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: set::antirandom::except-webirc should be 'yes' or 'no'",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		} else
 		if (!cep->ce_vardata)
 		{
 			config_error("%s:%i: set::antirandom::%s with no value",
@@ -721,6 +738,10 @@ int antirandom_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		{
 			for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
 				unreal_add_masks(&cfg.except_hosts, cep2);
+		} else
+		if (!strcmp(cep->ce_varname, "except-webirc"))
+		{
+			cfg.except_webirc = config_checkval(cep->ce_vardata, CFG_YESNO);
 		} else
 		if (!strcmp(cep->ce_varname, "threshold"))
 		{
@@ -1108,5 +1129,12 @@ Triples *t, *t_next;
 /** Finds out if the host is on the except list. 1 if yes, 0 if no */
 static int is_except_host(aClient *sptr)
 {
+	if (cfg.except_webirc)
+	{
+		char *val = moddata_client_get(sptr, "webirc");
+		if (val && (atoi(val)>0))
+			return 1;
+	}
+
 	return unreal_mask_match(sptr, cfg.except_hosts);
 }

@@ -41,6 +41,10 @@ Enhancements:
     * Make GitHub commit bot bypass +n: +e ~m:external:*!*@ipmask
     * Allow a services account to use color: +e ~m:color:~a:ColorBot
   * Timedban support in +f [5t#b2]:10 (set 2 minute ban on text flood).
+* AntiRandom: The module will now (by default) exempt WEBIRC gateways
+  from antirandom checking because they frequently cause false positives.
+  This new behavior can be disabled via:
+  set { antirandom { except-webirc no; }; };
 
 Major issues fixed:
 * Potential crash issue when concurrently checking DNSBL for the WEBIRC
