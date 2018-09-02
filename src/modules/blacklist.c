@@ -558,11 +558,6 @@ int blacklist_start_check(aClient *cptr)
 		SetBLUser(cptr, MyMallocEx(sizeof(BLUser)));
 		BLUSER(cptr)->cptr = cptr;
 	}
-#ifdef DEBUGMODE
-	else {
-		abort(); /* hmmm. unless we add some /Blacklist CHECK command. then this needs to be removed */
-	}
-#endif
 
 	for (bl = conf_blacklist; bl; bl = bl->next)
 	{

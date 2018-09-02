@@ -43,7 +43,8 @@ Enhancements:
   * Timedban support in +f [5t#b2]:10 (set 2 minute ban on text flood).
 
 Major issues fixed:
-* None
+* Potential crash issue when concurrently checking DNSBL for the WEBIRC
+  gateway and the spoofed host.
 
 Minor issues fixed:
 * Remote includes: ./Config didn't properly detect libcurl on Ubuntu 18
