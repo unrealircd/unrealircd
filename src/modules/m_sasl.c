@@ -305,7 +305,7 @@ int sasl_capability_visible(aClient *sptr)
 	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
 		return 0;
 
-	if (sptr && !IsSecure(sptr) && (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY))
+	if (sptr && !IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY))
 		return 0;
 
 	return 1;

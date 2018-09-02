@@ -46,6 +46,9 @@ Major issues fixed:
 Minor issues fixed:
 * Remote includes: ./Config didn't properly detect libcurl on Ubuntu 18
   (and possibly other Linux distributions as well)
+* Localhost connections are considered secure, so these can be used even
+  if you have a plaintext-policy of 'deny' or 'warn'. (This was already
+  the case for servers, but now also for users and opers)
 
 Other changes:
 * Windows users may be prompted to install the Visual C++ redistributable

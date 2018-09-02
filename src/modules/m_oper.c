@@ -114,7 +114,7 @@ CMD_FUNC(m_oper)
 	name = parv[1];
 	password = (parc > 2) ? parv[2] : "";
 
-	if (!IsSecure(sptr) && (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_DENY))
+	if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_DENY))
 	{
 		/* Reject early */
 		sendnotice(sptr, "%s", iConf.plaintext_policy_oper_message);
@@ -304,7 +304,7 @@ CMD_FUNC(m_oper)
 			return FLUSH_BUFFER;
 	}
 
-	if (!IsSecure(sptr) && (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_WARN))
+	if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_WARN))
 	{
 		sendnotice(sptr, "%s", iConf.plaintext_policy_oper_message);
 		sendto_snomask_global
