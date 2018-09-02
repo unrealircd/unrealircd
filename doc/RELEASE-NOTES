@@ -10,6 +10,35 @@ Enhancements:
   This is especially useful if you only want to disable a few modules
   that are (normally) automatically loaded by conf/modules.default.conf.
   https://www.unrealircd.org/docs/Blacklist-module_directive
+* The following extban modules are not new but are now enabled by default:
+  extbans/textban, extbans/timedban and extbans/msgbypass.
+  In case you don't like them, use blacklist-module as mentioned above.
+  Just as a reminder, they provide the following functionality:
+  * TextBan: +b ~T:block:*badword* to block sentences with 'badword'
+  * Timed bans: ~t:duration:mask
+    These are bans that are automatically removed by the server.
+    The duration is in minutes and the mask can be any ban mask.
+    Some examples:
+    * A 5 minute ban on a host:
+      +b ~t:5:*!*@host
+    * A 5 minute quiet ban on a host (unable to speak):
+      +b ~t:5:~q:*!*@host
+    * An invite exception for 24 hours (1440 minutes):
+      +I ~t:1440:*!*@host
+    * A temporary exempt ban for a services account:
+      +e ~t:1440:~a:Account
+    * Allows someone to speak through +m for the next 24hrs:
+      +e ~t:1440:~m:moderated:*!*@host
+    * And any other crazy ideas you can come up with...
+  * Ban exception ~m:type:mask to allow bypassing of message restrictions.
+    Valid types are: 'external' (bypass +n), moderated (bypass +m/+M),
+    'censor' (bypass +G), 'color' (bypass +S/+c) and 'notice' (bypass +T).
+    Some examples:
+    * Let LAN users bypass +m: +e ~m:moderated:*!*@192.168.*
+    * Let ops in #otherchan bypass +m: +e ~m:moderated:~c:@#otherchan
+    * Make GitHub commit bot bypass +n: +e ~m:external:*!*@ipmask
+    * Allow a services account to use color: +e ~m:color:~a:ColorBot
+  * Timedban support in +f [5t#b2]:10 (set 2 minute ban on text flood).
 
 Major issues fixed:
 * None
