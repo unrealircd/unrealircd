@@ -82,8 +82,10 @@ static BanActTable banacttable[] = {
 	{ BAN_ACT_GZLINE,	'Z',	"gzline" },
 	{ BAN_ACT_BLOCK,	'b',	"block" },
 	{ BAN_ACT_DCCBLOCK,	'd',	"dccblock" },
-	{ BAN_ACT_VIRUSCHAN,'v',	"viruschan" },
+	{ BAN_ACT_VIRUSCHAN,	'v',	"viruschan" },
 	{ BAN_ACT_WARN,		'w',	"warn" },
+	{ BAN_ACT_SOFT_KLINE,	'I',	"soft-kline" },
+	{ BAN_ACT_SOFT_GLINE,	'G',	"soft-gline" },
 	{ 0, 0, 0 }
 };
 

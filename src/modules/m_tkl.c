@@ -2473,8 +2473,10 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			SetShunned(sptr);
 			break;
 		case BAN_ACT_SHUN:
+		case BAN_ACT_SOFT_KLINE:
 		case BAN_ACT_KLINE:
 		case BAN_ACT_ZLINE:
+		case BAN_ACT_SOFT_GLINE:
 		case BAN_ACT_GLINE:
 		case BAN_ACT_GZLINE:
 		{
@@ -2502,13 +2504,30 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 				tkllayer[3] = user;
 			}
 
-			if (action == BAN_ACT_KLINE)
+			/* For soft bans we need to prefix the % in the username */
+			if ((action == BAN_ACT_SOFT_KLINE) || (action == BAN_ACT_SOFT_GLINE))
+			{
+				char tmp[USERLEN+2];
+				snprintf(tmp, sizeof(tmp), "%%%s", tkllayer[3]);
+				if (strlen(tmp) > USERLEN)
+				{
+					/* Due to the added %-prefix the username may now be oversized.
+					 * We'll replace the last character with an asterisk then.
+					 */
+					tmp[USERLEN-1] = '*';
+					tmp[USERLEN] = '\0';
+				}
+				strlcpy(user, tmp, sizeof(user));
+				tkllayer[3] = user;
+			}
+
+			if ((action == BAN_ACT_KLINE) || (action == BAN_ACT_SOFT_KLINE))
 				tkllayer[2] = "k";
 			else if (action == BAN_ACT_ZLINE)
 				tkllayer[2] = "z";
 			else if (action == BAN_ACT_GZLINE)
 				tkllayer[2] = "Z";
-			else if (action == BAN_ACT_GLINE)
+			else if ((action == BAN_ACT_GLINE) || (action == BAN_ACT_SOFT_GLINE))
 				tkllayer[2] = "G";
 			else if (action == BAN_ACT_SHUN)
 				tkllayer[2] = "s";

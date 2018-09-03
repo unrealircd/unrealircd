@@ -969,8 +969,10 @@ struct _configflag_tld
 /* Ban actions. These must be ordered by severity (!) */
 #define BAN_ACT_GZLINE		1100
 #define BAN_ACT_GLINE		1000
+#define BAN_ACT_SOFT_GLINE	 950
 #define BAN_ACT_ZLINE		 900
 #define BAN_ACT_KLINE		 800
+#define BAN_ACT_SOFT_KLINE	 850
 #define BAN_ACT_SHUN		 700
 #define BAN_ACT_KILL		 600
 #define BAN_ACT_TEMPSHUN	 500
