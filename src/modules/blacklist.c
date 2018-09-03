@@ -90,7 +90,6 @@ void blacklist_free_conf(void);
 void delete_blacklist_block(Blacklist *e);
 void blacklist_md_free(ModData *md);
 int blacklist_handshake(aClient *cptr);
-int blacklist_quit(aClient *cptr, char *comment);
 void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hostent *he);
 int blacklist_start_check(aClient *cptr);
 int blacklist_dns_request(aClient *cptr, Blacklist *bl);
@@ -133,8 +132,6 @@ MOD_INIT(blacklist)
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, blacklist_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, blacklist_handshake);
-	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, blacklist_quit);
-	HookAdd(modinfo->handle, HOOKTYPE_UNKUSER_QUIT, 0, blacklist_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, blacklist_rehash);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, blacklist_rehash_complete);
 
@@ -535,8 +532,12 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 void blacklist_md_free(ModData *md)
 {
-	/* we have nothing to free actually, but we must set to zero */
-	md->l = 0;
+	BLUser *bl = md->ptr;
+
+	/* Mark bl->cptr as dead. Free the struct, if able. */
+	blacklist_free_bluser_if_able(bl);
+
+	md->ptr = NULL;
 }
 
 int blacklist_handshake(aClient *cptr)
@@ -570,10 +571,6 @@ int blacklist_start_check(aClient *cptr)
 			blacklist_dns_request(cptr, bl);
 	}
 	
-	/* Free bluser entry. This only happens if you have no blacklist configured or they fail very early */
-	if (BLUSER(cptr))
-		blacklist_free_bluser_if_able(BLUSER(cptr));
-
 	return 0;
 }
 
@@ -642,12 +639,12 @@ int blacklist_quit(aClient *cptr, char *comment)
 
 void blacklist_free_bluser_if_able(BLUser *bl)
 {
+	if (bl->cptr)
+		bl->cptr = NULL;
+
 	if (bl->refcnt > 0)
 		return; /* unable, still have DNS requests/replies in-flight */
 
-	if (bl->cptr)
-		SetBLUser(bl->cptr, NULL);
-	
 	MyFree(bl);
 }
 
@@ -757,13 +754,20 @@ void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hos
 {
 	BLUser *blu = (BLUser *)arg;
 	aClient *acptr = blu->cptr;
-	
+
 	blu->refcnt--; /* one less outstanding DNS request remaining */
-	blacklist_free_bluser_if_able(blu);
+
+	/* If we are the last to resolve something and the client is gone
+	 * already then free the struct.
+	 */
+	if ((blu->refcnt == 0) && !acptr)
+		blacklist_free_bluser_if_able(blu);
+
 	blu = NULL;
 
 	if (!acptr)
 		return; /* Client left already */
+	/* ^^ note: do not merge this with the other 'if' a few lines up (refcnt!) */
 
 	blacklist_process_result(acptr, status, he);
 }
