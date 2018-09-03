@@ -58,7 +58,7 @@ aTKline *_tkl_del_line(aTKline *tkl);
 static void _tkl_check_local_remove_shun(aTKline *tmp);
 aTKline *_tkl_expire(aTKline * tmp);
 EVENT(_tkl_check_expire);
-int _find_tkline_match(aClient *cptr, int xx);
+int _find_tkline_match(aClient *cptr, int skip_soft);
 int _find_shun(aClient *cptr);
 int _find_spamfilter_user(aClient *sptr, int flags);
 aTKline *_find_qline(aClient *cptr, char *nick, int *ishold);
@@ -1199,7 +1199,7 @@ EVENT(_tkl_check_expire)
  * @retval <0 if client is banned (user is killed, don't touch 'cptr' anymore),
  *         otherwise the client is not banned (either no match or on an exception list).
  */
-int  _find_tkline_match(aClient *cptr, int xx)
+int  _find_tkline_match(aClient *cptr, int skip_soft)
 {
 	aTKline *lp;
 	char msge[1024];
@@ -1220,7 +1220,10 @@ int  _find_tkline_match(aClient *cptr, int xx)
 			
 			if ((lp->type & TKL_SHUN) || (lp->type & TKL_SPAMF) || (lp->type & TKL_NICK))
 				continue;
-			
+
+			if (skip_soft && (lp->subtype & TKL_SUBTYPE_SOFT))
+				continue;
+
 			snprintf(uhost, sizeof(uhost), "%s@%s", lp->usermask, lp->hostmask);
 
 			if (match_user(uhost, cptr, MATCH_CHECK_REAL))
@@ -1271,7 +1274,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 			return 1; /* user is authenticated via SASL, thus exempt. */
 	}
 
-	if ((lp->type & TKL_KILL) && (xx != 2))
+	if (lp->type & TKL_KILL)
 	{
 		if (lp->type & TKL_GLOBAL)
 		{

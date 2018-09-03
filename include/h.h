@@ -625,7 +625,7 @@ extern MODVAR aTKline *(*tkl_del_line)(aTKline *tkl);
 extern MODVAR void (*tkl_check_local_remove_shun)(aTKline *tmp);
 extern MODVAR aTKline *(*tkl_expire)(aTKline * tmp);
 extern MODVAR EVENT((*tkl_check_expire));
-extern MODVAR int (*find_tkline_match)(aClient *cptr, int xx);
+extern MODVAR int (*find_tkline_match)(aClient *cptr, int skip_soft);
 extern MODVAR int (*find_shun)(aClient *cptr);
 extern MODVAR int (*find_spamfilter_user)(aClient *sptr, int flags);
 extern MODVAR aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
