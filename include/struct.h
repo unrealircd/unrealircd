@@ -748,10 +748,13 @@ struct _spamfilter {
 	TS tkl_duration;
 };
 
+#define TKL_SUBTYPE_NONE	0x0000
+#define TKL_SUBTYPE_SOFT	0x0001 /* (require SASL) */
+
 struct t_kline {
 	aTKline *prev, *next;
 	int type;
-	unsigned short subtype; /* subtype (currently spamfilter only), see SPAMF_* */
+	unsigned short subtype; /* subtype: for spamfilter see SPAMF_*, otherwise TKL_SUBTYPE_* */
 	union {
 		Spamfilter *spamf;
 	} ptr;
