@@ -96,7 +96,7 @@ aTKline *(*tkl_del_line)(aTKline *tkl);
 void (*tkl_check_local_remove_shun)(aTKline *tmp);
 aTKline *(*tkl_expire)(aTKline * tmp);
 EVENT((*tkl_check_expire));
-int (*find_tkline_match)(aClient *cptr, int xx);
+int (*find_tkline_match)(aClient *cptr, int skip_soft);
 int (*find_shun)(aClient *cptr);
 int(*find_spamfilter_user)(aClient *sptr, int flags);
 aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);

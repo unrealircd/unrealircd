@@ -1,5 +1,5 @@
 /*
- * Blacklist support (currently just DNS Blacklists) 
+ * Blacklist support (currently only DNS Blacklists)
  * (C) Copyright 2015-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -77,6 +77,11 @@ typedef struct _bluser BLUser;
 struct _bluser {
 	aClient *cptr;
 	int refcnt;
+	/* The following save_* fields are used by softbans: */
+	int save_action;
+	long save_tkltime;
+	char *save_opernotice;
+	char *save_reason;
 };
 
 /* Global variables */
@@ -90,6 +95,7 @@ void blacklist_free_conf(void);
 void delete_blacklist_block(Blacklist *e);
 void blacklist_md_free(ModData *md);
 int blacklist_handshake(aClient *cptr);
+int blacklist_preconnect(aClient *sptr);
 void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hostent *he);
 int blacklist_start_check(aClient *cptr);
 int blacklist_dns_request(aClient *cptr, Blacklist *bl);
@@ -132,6 +138,7 @@ MOD_INIT(blacklist)
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, blacklist_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, blacklist_handshake);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, blacklist_preconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, blacklist_rehash);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, blacklist_rehash_complete);
 
@@ -637,6 +644,14 @@ int blacklist_quit(aClient *cptr, char *comment)
 	return 0;
 }
 
+/** Free the BLUSER() struct, if we are able to do so.
+ * This should only be called if the underlying client is dead or dyeing
+ * and not earlier.
+ * Reasons why we 'are not able' are: refcnt is non-zero, that is:
+ * there is still an outstanding resolver request (eg: slow blacklist).
+ * In that case, no worries, we will be called again after that request
+ * is finished.
+ */
 void blacklist_free_bluser_if_able(BLUser *bl)
 {
 	if (bl->cptr)
@@ -645,6 +660,8 @@ void blacklist_free_bluser_if_able(BLUser *bl)
 	if (bl->refcnt > 0)
 		return; /* unable, still have DNS requests/replies in-flight */
 
+	safefree(bl->save_opernotice);
+	safefree(bl->save_reason);
 	MyFree(bl);
 }
 
@@ -684,23 +701,33 @@ int blacklist_parse_reply(struct hostent *he, int entry)
 	return atoi(p+1);
 }
 
+/** Take the actual ban action.
+ * Called from blacklist_hit() and for immediate bans and
+ * from blacklist_preconnect() for softbans that need to be delayed
+ * as to give the user the opportunity to do SASL Authentication.
+ */
+int blacklist_action(aClient *acptr, char *opernotice, int ban_action, char *ban_reason, long ban_time)
+{
+	sendto_snomask(SNO_BLACKLIST, "%s", opernotice);
+	ircd_log(LOG_KILL, "%s", opernotice);
+	return place_host_ban(acptr, ban_action, ban_reason, ban_time);
+}
+
 void blacklist_hit(aClient *acptr, Blacklist *bl, int reply)
 {
-	char buf[512];
+	char opernotice[512], banbuf[512];
 	char *name[4], *value[4];
+	BLUser *blu = BLUSER(acptr);
 
-	if (find_tkline_match(acptr, 0) < 0)
+	if (find_tkline_match(acptr, 1) < 0)
 		return; /* already klined/glined. Don't send the warning from below. */
 
 	if (IsPerson(acptr))
-		snprintf(buf, sizeof(buf), "[Blacklist] IP %s (%s) matches blacklist %s (%s/reply=%d)",
+		snprintf(opernotice, sizeof(opernotice), "[Blacklist] IP %s (%s) matches blacklist %s (%s/reply=%d)",
 			GetIP(acptr), acptr->name, bl->name, bl->backend->dns->name, reply);
 	else
-		snprintf(buf, sizeof(buf), "[Blacklist] IP %s matches blacklist %s (%s/reply=%d)",
+		snprintf(opernotice, sizeof(opernotice), "[Blacklist] IP %s matches blacklist %s (%s/reply=%d)",
 			GetIP(acptr), bl->name, bl->backend->dns->name, reply);
-	
-	sendto_snomask(SNO_BLACKLIST, "%s", buf);
-	ircd_log(LOG_KILL, "%s", buf);
 
 	name[0] = "ip";
 	value[0] = GetIP(acptr);
@@ -709,9 +736,19 @@ void blacklist_hit(aClient *acptr, Blacklist *bl, int reply)
 	name[2] = NULL;
 	value[2] = NULL;
 
-	buildvarstring(bl->reason, buf, sizeof(buf), name, value);
-	
-	place_host_ban(acptr, bl->action, buf, bl->ban_time);
+	buildvarstring(bl->reason, banbuf, sizeof(banbuf), name, value);
+
+	if (IsSoftBanAction(bl->action) && blu)
+	{
+		/* For soft bans, delay the action until later (so user can do SASL auth) */
+		blu->save_action = bl->action;
+		blu->save_tkltime = bl->ban_time;
+		safestrdup(blu->save_opernotice, opernotice);
+		safestrdup(blu->save_reason, banbuf);
+	} else {
+		/* Otherwise, execute the action immediately */
+		blacklist_action(acptr, opernotice, bl->action, banbuf, bl->ban_time);
+	}
 }
 
 void blacklist_process_result(aClient *acptr, int status, struct hostent *he)
@@ -770,4 +807,18 @@ void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hos
 	/* ^^ note: do not merge this with the other 'if' a few lines up (refcnt!) */
 
 	blacklist_process_result(acptr, status, he);
+}
+
+int blacklist_preconnect(aClient *acptr)
+{
+	BLUser *blu = BLUSER(acptr);
+
+	if (!blu || !blu->save_action)
+		return 0;
+
+	/* There was a pending softban... has the user authenticated via SASL by now? */
+	if (acptr->user && *acptr->user->svid && !isdigit(*acptr->user->svid))
+		return 0; /* yup, so the softban does not apply. */
+
+	return blacklist_action(acptr, blu->save_opernotice, blu->save_action, blu->save_reason, blu->save_tkltime);
 }

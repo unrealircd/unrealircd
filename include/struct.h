@@ -980,7 +980,7 @@ struct _configflag_tld
 #define BAN_ACT_DCCBLOCK	 300
 #define BAN_ACT_BLOCK		 200
 #define BAN_ACT_WARN		 100
-
+#define IsSoftBanAction(x)   ((x == BAN_ACT_SOFT_GLINE) || (x == BAN_ACT_SOFT_KLINE))
 
 #define CRULE_ALL		0
 #define CRULE_AUTO		1

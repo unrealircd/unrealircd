@@ -1270,7 +1270,7 @@ int  _find_tkline_match(aClient *cptr, int skip_soft)
 	if (banned && (lp->subtype & TKL_SUBTYPE_SOFT))
 	{
 		/* Soft ban... */
-		if (*cptr->user->svid && !isdigit(*cptr->user->svid))
+		if (cptr->user && *cptr->user->svid && !isdigit(*cptr->user->svid))
 			return 1; /* user is authenticated via SASL, thus exempt. */
 	}
 
