@@ -482,9 +482,9 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	/* Check if it's a softban */
 	if (*mask == '%')
 	{
-		if (!strchr("kG", *type))
+		if (!strchr("kGs", *type))
 		{
-			sendnotice(sptr, "The %% prefix (soft ban) is only available for KLINE and GLINE."
+			sendnotice(sptr, "The %% prefix (soft ban) is only available for KLINE, GLINE and SHUN."
 			                 "For technical reasons this will not work for (G)ZLINE.");
 			return 0;
 		}
@@ -1228,36 +1228,41 @@ int  _find_tkline_match(aClient *cptr, int skip_soft)
 
 			if (match_user(uhost, cptr, MATCH_CHECK_REAL))
 			{
-				/* Found match. Now check for exception... */
-				banned = 1;
+				/* If hard-ban, or soft-ban&unauthenticated.. */
+				if (!(lp->subtype & TKL_SUBTYPE_SOFT) ||
+				    ((lp->subtype & TKL_SUBTYPE_SOFT) && !IsLoggedIn(cptr)))
+				{
+					/* Found match. Now check for exception... */
+					banned = 1;
 
-				if (((lp->type & TKL_KILL) || (lp->type & TKL_ZAP)) && !(lp->type & TKL_GLOBAL))
-					match_type = CONF_EXCEPT_BAN;
-				else
-					match_type = CONF_EXCEPT_TKL;
-				
-				for (excepts = conf_except; excepts; excepts = excepts->next)
-				{
-					if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL && 
-						excepts->type != lp->type))
-						continue;
+					if (((lp->type & TKL_KILL) || (lp->type & TKL_ZAP)) && !(lp->type & TKL_GLOBAL))
+						match_type = CONF_EXCEPT_BAN;
+					else
+						match_type = CONF_EXCEPT_TKL;
 					
-					if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL))
+					for (excepts = conf_except; excepts; excepts = excepts->next)
 					{
-						banned = 0; /* exempt by except block */
-						break;
+						if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL &&
+							excepts->type != lp->type))
+							continue;
+
+						if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL))
+						{
+							banned = 0; /* exempt by except block */
+							break;
+						}
 					}
-				}
-				for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
-				{
-					if (hook->func.intfunc(cptr, lp) > 0)
+					for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
 					{
-						banned = 0; /* exempt by hook */
-						break;
+						if (hook->func.intfunc(cptr, lp) > 0)
+						{
+							banned = 0; /* exempt by hook */
+							break;
+						}
 					}
+					if (banned)
+						break;
 				}
-				if (banned)
-					break;
 			}
 		}
 		if (banned)
@@ -1266,13 +1271,6 @@ int  _find_tkline_match(aClient *cptr, int skip_soft)
 
 	if (!banned)
 		return 1;
-	
-	if (banned && (lp->subtype & TKL_SUBTYPE_SOFT))
-	{
-		/* Soft ban... */
-		if (cptr->user && *cptr->user->svid && !isdigit(*cptr->user->svid))
-			return 1; /* user is authenticated via SASL, thus exempt. */
-	}
 
 	if (lp->type & TKL_KILL)
 	{
@@ -1363,31 +1361,36 @@ int  _find_shun(aClient *cptr)
 
 		if (match_user(uhost, cptr, MATCH_CHECK_REAL))
 		{
-			/* Found match. Now check for exception... */
-			banned = 1;
-			match_type = CONF_EXCEPT_TKL;
-			for (excepts = conf_except; excepts; excepts = excepts->next)
+			/* If hard-ban, or soft-ban&unauthenticated.. */
+			if (!(lp->subtype & TKL_SUBTYPE_SOFT) ||
+			    ((lp->subtype & TKL_SUBTYPE_SOFT) && !IsLoggedIn(cptr)))
 			{
-				if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL && 
-					excepts->type != lp->type))
-					continue;
-				
-				if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL))
+				/* Found match. Now check for exception... */
+				banned = 1;
+				match_type = CONF_EXCEPT_TKL;
+				for (excepts = conf_except; excepts; excepts = excepts->next)
 				{
-					banned = 0; /* exempt by except block */
-					break;
+					if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL &&
+						excepts->type != lp->type))
+						continue;
+
+					if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL))
+					{
+						banned = 0; /* exempt by except block */
+						break;
+					}
 				}
-			}
-			for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
-			{
-				if (hook->func.intfunc(cptr, lp) > 0)
+				for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
 				{
-					banned = 0; /* exempt by hook */
-					break;
+					if (hook->func.intfunc(cptr, lp) > 0)
+					{
+						banned = 0; /* exempt by hook */
+						break;
+					}
 				}
+				if (banned)
+					break;
 			}
-			if (banned)
-				break;
 		}
 	}
 

@@ -817,7 +817,7 @@ int blacklist_preconnect(aClient *acptr)
 		return 0;
 
 	/* There was a pending softban... has the user authenticated via SASL by now? */
-	if (acptr->user && *acptr->user->svid && !isdigit(*acptr->user->svid))
+	if (IsLoggedIn(acptr))
 		return 0; /* yup, so the softban does not apply. */
 
 	return blacklist_action(acptr, blu->save_opernotice, blu->save_action, blu->save_reason, blu->save_tkltime);
