@@ -61,14 +61,15 @@ MOD_UNLOAD(m_setname)
 */ 
 CMD_FUNC(m_setname)
 {
-    int xx;
-    char tmpinfo[REALLEN + 1];
-    char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
+	int xx;
+	char tmpinfo[REALLEN + 1];
+	char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
+	ConfigItem_ban *bconf;
 
- 	if ((parc < 2) || BadPtr(parv[1]))
- 	{
- 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "SETNAME");
- 		return 0;
+	if ((parc < 2) || BadPtr(parv[1]))
+	{
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "SETNAME");
+		return 0;
 	}
 
 	if (strlen(parv[1]) > REALLEN)
@@ -81,29 +82,33 @@ CMD_FUNC(m_setname)
 		return 0;
 	}
 
-    /* set temp info for spamfilter check*/
-    strcpy(tmpinfo, sptr->info);
-    /* set the new name before we check, but don't send to servers unless it is ok */
-    strcpy(sptr->info, parv[1]);
-    spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
-    xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
-    if (xx < 0)
-    {
-        if (xx != FLUSH_BUFFER)
-            strcpy(sptr->info, tmpinfo); /* restore (if client wasn't killed already, that is) */
-        return xx;
-    }
+	/* set temp info for spamfilter check*/
+	strcpy(tmpinfo, sptr->info);
+	/* set the new name before we check, but don't send to servers unless it is ok */
+	strcpy(sptr->info, parv[1]);
+	spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
+	xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
+	if (xx < 0)
+	{
+		if (xx != FLUSH_BUFFER)
+			strcpy(sptr->info, tmpinfo); /* restore (if client wasn't killed already, that is) */
+		return xx;
+	}
 
-	/* Check for n:lines here too */
-	if (!ValidatePermissionsForPath("immune:namecheck",sptr,NULL,NULL,NULL) && Find_ban(NULL, sptr->info, CONF_BAN_REALNAME))
-		return exit_client(cptr, sptr, &me,
-		                   "Your GECOS (real name) is banned from this server");
+	/* Check for realname bans here too */
+	if (!ValidatePermissionsForPath("immune:realnameban",sptr,NULL,NULL,NULL) &&
+	    ((bconf = Find_ban(NULL, sptr->info, CONF_BAN_REALNAME))))
+	{
+		return banned_client(sptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
+	}
 
 	sendto_server(cptr, 0, 0, ":%s SETNAME :%s", sptr->name, parv[1]);
 
 	if (MyConnect(sptr))
+	{
 		sendnotice(sptr, "Your \"real name\" is now set to be %s - you have to set it manually to undo it",
-			parv[1]);
+		           parv[1]);
+	}
 
 	return 0;
 }

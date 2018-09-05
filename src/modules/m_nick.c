@@ -353,9 +353,9 @@ CMD_FUNC(m_uid)
 		if (IsServer(sptr) && !ishold) /* server introducing new client */
 		{
 			acptrs = find_server(sptr->user == NULL ? parv[6] : sptr->user->server, NULL);
-			/* (NEW: no unregistered q:line msgs anymore during linking) */
+			/* (NEW: no unregistered Q-Line msgs anymore during linking) */
 			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
-				sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
+				sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
 				    (*sptr->name != 0
 				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
 				    acptrs ? acptrs->name : "unknown server");
@@ -363,7 +363,7 @@ CMD_FUNC(m_uid)
 		
 		if (IsServer(cptr) && IsPerson(sptr) && !ishold) /* remote user changing nick */
 		{
-			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
+			sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
 				sptr->name, sptr->srvptr ? sptr->srvptr->name : "<unknown>");
 		}
 	}
@@ -695,9 +695,9 @@ CMD_FUNC(m_nick)
 		if (IsServer(sptr) && !ishold) /* server introducing new client */
 		{
 			acptrs = find_server(sptr->user == NULL ? parv[6] : sptr->user->server, NULL);
-			/* (NEW: no unregistered q:line msgs anymore during linking) */
+			/* (NEW: no unregistered Q-Line msgs anymore during linking) */
 			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
-				sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
+				sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
 				    (*sptr->name != 0
 				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
 				    acptrs ? acptrs->name : "unknown server");
@@ -705,7 +705,7 @@ CMD_FUNC(m_nick)
 		
 		if (IsServer(cptr) && IsPerson(sptr) && !ishold) /* remote user changing nick */
 		{
-			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
+			sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
 				sptr->name, sptr->srvptr ? sptr->srvptr->name : "<unknown>");
 		}
 
@@ -1331,38 +1331,19 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		if ((bconf = Find_ban(sptr, NULL, CONF_BAN_USER)))
 		{
 			ircstp->is_ref++;
-			sendto_one(cptr,
-			    ":%s %d %s :*** You are not welcome on this server (%s)"
-			    " Email %s for more information.",
-			    me.name, ERR_YOUREBANNEDCREEP,
-			    cptr->name, bconf->reason ? bconf->reason : "",
-			    KLINE_ADDRESS);
-			return exit_client(cptr, cptr, cptr, "You are banned");
+			return banned_client(sptr, "K-Lined", bconf->reason?bconf->reason:"", 0, 0);
 		}
 		/* Check ban realname { } blocks */
 		if ((bconf = Find_ban(NULL, sptr->info, CONF_BAN_REALNAME)))
 		{
 			ircstp->is_ref++;
-			sendto_one(cptr,
-			    ":%s %d %s :*** Your GECOS (real name) is not allowed on this server (%s)"
-			    " Please change it and reconnect",
-			    me.name, ERR_YOUREBANNEDCREEP,
-			    cptr->name, bconf->reason ? bconf->reason : "");
-
-			return exit_client(cptr, sptr, &me,
-			    "Your GECOS (real name) is banned from this server");
+			return banned_client(sptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
 		}
 		/* Check require sasl { } blocks */
 		if (!IsLoggedIn(sptr) && (bconf = Find_ban(sptr, NULL, CONF_BAN_UNAUTHENTICATED)))
 		{
 			ircstp->is_ref++;
-			sendto_one(cptr,
-			    ":%s %d %s :*** You are not welcome on this server (%s)"
-			    " Email %s for more information.",
-			    me.name, ERR_YOUREBANNEDCREEP,
-			    cptr->name, bconf->reason ? bconf->reason : "",
-			    KLINE_ADDRESS);
-			return exit_client(cptr, cptr, cptr, "You are banned");
+			return banned_client(sptr, "Require-SASL", bconf->reason?bconf->reason:"", 0, 0);
 		}
 		tkl_check_expire(NULL);
 		/* Check G/Z lines before shuns -- kill before quite -- codemastr */

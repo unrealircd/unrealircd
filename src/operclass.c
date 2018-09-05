@@ -302,7 +302,7 @@ OperPermission ValidatePermissionsForPath(char* path, aClient *sptr, aClient *vi
 	if (!sptr)
 		return OPER_DENY;
 
-	/* Trust Servers, U:Lines and remote opers */
+	/* Trust Servers, U-Lines and remote opers */
 	if (IsServer(sptr) || IsULine(sptr) || (IsOper(sptr) && !MyClient(sptr)))
 		return OPER_ALLOW;
 

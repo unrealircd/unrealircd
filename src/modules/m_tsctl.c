@@ -173,11 +173,11 @@ CMD_FUNC(m_tsctl)
 
 			timediff = atol(parv[2]);
 			timediff = timediff - time(NULL);
-			ircd_log(LOG_ERROR, "TSCTL: U:line %s set time to be %li (timediff: %li, was %li)",
+			ircd_log(LOG_ERROR, "TSCTL: U-Line %s set time to be %li (timediff: %li, was %li)",
 				 sptr->name, atol(parv[2]), timediff, TSoffset);
 			TSoffset = timediff;
 			sendto_ops
-			    ("TS Control - U:line set time to be %li (timediff: %li)",
+			    ("TS Control - U-Line set time to be %li (timediff: %li)",
 			    atol(parv[2]), timediff);
 			sendto_server(cptr, 0, 0, ":%s TSCTL svstime %li",
 			    sptr->name, atol(parv[2]));

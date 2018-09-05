@@ -83,6 +83,9 @@ Other changes:
 * Windows users may be prompted to install the Visual C++ redistributable
   package for Visual Studio 2017. This is because we now build on VS 2017
   instead of VS 2012.
+* We now use standard formatted messages for all K-Lines, G-Lines and
+  any other bans that will cause the user to be disconnected.
+  For technical details see the banned_client() function.
 
 Module coders:
 * Windows: Be aware that we now build with Visual Studio 2017. This means

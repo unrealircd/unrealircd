@@ -62,8 +62,7 @@ int _find_tkline_match(aClient *cptr, int skip_soft);
 int _find_shun(aClient *cptr);
 int _find_spamfilter_user(aClient *sptr, int flags);
 aTKline *_find_qline(aClient *cptr, char *nick, int *ishold);
-int _find_tkline_match_zap(aClient *cptr);
-int _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk);
+aTKline *_find_tkline_match_zap(aClient *cptr);
 void _tkl_stats(aClient *cptr, int type, char *para);
 void _tkl_synch(aClient *sptr);
 int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
@@ -113,8 +112,7 @@ MOD_TEST(m_tkl)
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_SHUN, _find_shun);
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_SPAMFILTER_USER, _find_spamfilter_user);
 	EfunctionAddPVoid(modinfo->handle, EFUNC_FIND_QLINE, TO_PVOIDFUNC(_find_qline));
-	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKLINE_MATCH_ZAP, _find_tkline_match_zap);
-	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKLINE_MATCH_ZAP_EX, _find_tkline_match_zap_ex);
+	EfunctionAddPVoid(modinfo->handle, EFUNC_FIND_TKLINE_MATCH_ZAP, TO_PVOIDFUNC(_find_tkline_match_zap));
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_STATS, _tkl_stats);
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_SYNCH, _tkl_synch);
 	EfunctionAdd(modinfo->handle, EFUNC_M_TKL, _m_tkl);
@@ -1129,24 +1127,24 @@ aTKline *_tkl_expire(aTKline * tmp)
 	if (tmp->type & TKL_GLOBAL)
 	{
 		if (tmp->type & TKL_KILL)
-			strlcpy(whattype, "G:Line", sizeof(whattype));
+			strlcpy(whattype, "G-Line", sizeof(whattype));
 		else if (tmp->type & TKL_ZAP)
-			strlcpy(whattype, "Global Z:Line", sizeof(whattype));
+			strlcpy(whattype, "Global Z-Line", sizeof(whattype));
 		else if (tmp->type & TKL_SHUN)
 			strlcpy(whattype, "Shun", sizeof(whattype));
 		else if (tmp->type & TKL_NICK)
-			strlcpy(whattype, "Global Q:line", sizeof(whattype));
+			strlcpy(whattype, "Global Q-Line", sizeof(whattype));
 	}
 	else
 	{
 		if (tmp->type & TKL_KILL)
-			strlcpy(whattype, "K:Line", sizeof(whattype));
+			strlcpy(whattype, "K-Line", sizeof(whattype));
 		else if (tmp->type & TKL_ZAP)
-			strlcpy(whattype, "Z:Line", sizeof(whattype));
+			strlcpy(whattype, "Z-Line", sizeof(whattype));
 		else if (tmp->type & TKL_SHUN)
 			strlcpy(whattype, "Local Shun", sizeof(whattype));
 		else if (tmp->type & TKL_NICK)
-			strlcpy(whattype, "Q:line", sizeof(whattype));
+			strlcpy(whattype, "Q-Line", sizeof(whattype));
 	}
 	if (!(tmp->type & TKL_NICK))
 	{
@@ -1159,7 +1157,7 @@ aTKline *_tkl_expire(aTKline * tmp)
 		    whattype, tmp->usermask, tmp->hostmask, tmp->setby, tmp->reason,
 		    TStime() - tmp->set_at);
 	}
-	else if (!(*tmp->usermask == 'H')) /* Q:line but not a hold */
+	else if (!(*tmp->usermask == 'H')) /* Q-Line but not a hold */
 	{
 		sendto_snomask(SNO_TKL,
 			"*** Expiring %s (%s) made by %s (Reason: %s) set %li seconds ago",
@@ -1202,7 +1200,6 @@ EVENT(_tkl_check_expire)
 int  _find_tkline_match(aClient *cptr, int skip_soft)
 {
 	aTKline *lp;
-	char msge[1024];
 	int	banned = 0;
 	ConfigItem_except *excepts;
 	int match_type = 0;
@@ -1274,58 +1271,16 @@ int  _find_tkline_match(aClient *cptr, int skip_soft)
 
 	if (lp->type & TKL_KILL)
 	{
+		ircstp->is_ref++;
 		if (lp->type & TKL_GLOBAL)
-		{
-			ircstp->is_ref++;
-			if (GLINE_ADDRESS)
-				sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s). Email %s for more information.",
-				           me.name, cptr->name,
-				           (lp->expire_at ? "banned" : "permanently banned"),
-				           ircnetwork, lp->reason, GLINE_ADDRESS);
-			else
-				sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s)",
-				           me.name, cptr->name,
-				           (lp->expire_at ? "banned" : "permanently banned"),
-				           ircnetwork, lp->reason);
-
-			if (HIDE_BAN_REASON && IsRegistered(cptr))
-				ircsnprintf(msge, sizeof(msge), "User has been %s from %s",
-							(lp->expire_at ? "banned" : "permanently banned"),
-							ircnetwork);
-			else
-				ircsnprintf(msge, sizeof(msge), "User has been %s from %s (%s)",
-							(lp->expire_at ? "banned" : "permanently banned"),
-							ircnetwork, lp->reason);
-
-			return exit_client(cptr, cptr, &me, msge);
-		}
+			return banned_client(cptr, "G-Lined", lp->reason, 1, 0);
 		else
-		{
-			ircstp->is_ref++;
-			sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s). Email %s for more information.",
-			           me.name, cptr->name,
-			           (lp->expire_at ? "banned" : "permanently banned"),
-			           me.name, lp->reason, KLINE_ADDRESS);
-
-			if (HIDE_BAN_REASON && IsRegistered(cptr))
-				ircsnprintf(msge, sizeof(msge), "User is %s",
-						   (lp->expire_at ? "banned" : "permanently banned"));
-			else
-				ircsnprintf(msge, sizeof(msge), "User is %s (%s)",
-						   (lp->expire_at ? "banned" : "permanently banned"),
-						   lp->reason);
-
-			return exit_client(cptr, cptr, &me, msge);
-		}
+			return banned_client(cptr, "K-Lined", lp->reason, 0, 0);
 	}
 	if (lp->type & TKL_ZAP)
 	{
 		ircstp->is_ref++;
-		if (HIDE_BAN_REASON && IsRegistered(cptr))
-			strlcpy(msge, "Z:lined", sizeof(msge));
-		else
-			ircsnprintf(msge, sizeof(msge), "Z:lined (%s)",lp->reason);
-		return exit_client(cptr, cptr, &me, msge);
+		return banned_client(cptr, "Z-Lined", lp->reason, (lp->type & TKL_GLOBAL)?1:0, 0);
 	}
 
 	return 3;
@@ -1540,25 +1495,20 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 }
 
 
-/** Check if specified user matches a (G)ZLINE. If so, kill the user.
- * This is the extended version which returns the tkline that matched.
- * @retval 1 if matched (user is killed, don't touch 'cptr' anymore),
- *         or -1 if not matched.
+/** Find matching (G)ZLINE, if any.
+ * Note: function prototype changed as per UnrealIRCd 4.0.19.
+ * @retval The (G)Z-Line that matched, or NULL if no such ban was found.
  */
-int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
+aTKline *_find_tkline_match_zap(aClient *cptr)
 {
 	aTKline *lp;
 	char *cip;
 	TS   nowtime;
-	char msge[1024];
 	ConfigItem_except *excepts;
 	Hook *hook;
 
-	if (rettk)
-		*rettk = NULL;
-	
 	if (IsServer(cptr) || IsMe(cptr))
-		return -1;
+		return NULL;
 
 	nowtime = TStime();
 	cip = GetIP(cptr);
@@ -1577,33 +1527,17 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 				if (excepts->flag.type != CONF_EXCEPT_BAN)
 					continue;
 				if (match_user(excepts->mask, cptr, MATCH_CHECK_IP))
-					return -1; /* exempt */
+					return NULL; /* exempt */
 			}
 			for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
 				if (hook->func.intfunc(cptr, lp) > 0)
-					return -1; /* exempt */
+					return NULL; /* exempt */
 
-			ircstp->is_ref++;
-			ircsnprintf(msge, sizeof(msge),
-				"ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",
-				cptr->ip, lp->reason);
-			strlcpy(zlinebuf, msge, sizeof zlinebuf);
-			if (rettk)
-				*rettk = lp;
-			return (1);
+			return lp;
 		}
 	}
-	return -1;
-}
 
-/** Check if user matches a (G)ZLINE. If so, kill the user.
- * This is the simplified version.
- * @retval 1 if matched (user is killed, don't touch 'cptr' anymore),
- *         or -1 if not matched.
- */
-int  _find_tkline_match_zap(aClient *cptr)
-{
-	return _find_tkline_match_zap_ex(cptr, NULL);
+	return NULL;
 }
 
 #define BY_MASK 0x1
@@ -1885,28 +1819,28 @@ char *tkl_type_string(aTKline *tk)
 	switch (tk->type)
 	{
 		case TKL_KILL:
-			strlcat(txt, "K:Line", sizeof(txt));
+			strlcat(txt, "K-Line", sizeof(txt));
 			break;
 		case TKL_ZAP:
-			strlcat(txt, "Z:Line", sizeof(txt));
+			strlcat(txt, "Z-Line", sizeof(txt));
 			break;
 		case TKL_KILL | TKL_GLOBAL:
-			strlcat(txt, "G:Line", sizeof(txt));
+			strlcat(txt, "G-Line", sizeof(txt));
 			break;
 		case TKL_ZAP | TKL_GLOBAL:
-			strlcat(txt, "Global Z:line", sizeof(txt));
+			strlcat(txt, "Global Z-Line", sizeof(txt));
 			break;
 		case TKL_SHUN | TKL_GLOBAL:
 			strlcat(txt, "Shun", sizeof(txt));
 			break;
 		case TKL_NICK | TKL_GLOBAL:
-			strlcat(txt, "Global Q:line", sizeof(txt));
+			strlcat(txt, "Global Q-Line", sizeof(txt));
 			break;
 		case TKL_NICK:
-			strlcat(txt, "Q:line", sizeof(txt));
+			strlcat(txt, "Q-Line", sizeof(txt));
 			break;
 		default:
-			strlcat(txt, "Unknown *:Line", sizeof(txt));
+			strlcat(txt, "Unknown *-Line", sizeof(txt));
 	}
 
 	return txt;
@@ -2067,7 +2001,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					}
 				}
 			}
-			/* *:Line already exists! */
+			/* *Line already exists! */
 			if (found == 1)
 			{
 				/* SYZTAG: TODO: check for tklreason/tklduration differences */
@@ -2202,7 +2136,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					spamfilter_check_users(tk);
 			} else {
 				char buf[512];
-				char *tkl_type_str = tkl_type_string(tk); /* eg: "K:Line" */
+				char *tkl_type_str = tkl_type_string(tk); /* eg: "K-Line" */
 
 				if (expiry_1 != 0)
 				{
@@ -2382,7 +2316,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					/* So... do we have a match? Then we start the removal process: */
 					if (match)
 					{
-						char *tkl_type_str = tkl_type_string(tk); /* eg: "K:Line" */
+						char *tkl_type_str = tkl_type_string(tk); /* eg: "K-Line" */
 
 						strlcpy(gmt, asctime(gmtime((TS *)&tk->set_at)), sizeof(gmt));
 						iCstrip(gmt);

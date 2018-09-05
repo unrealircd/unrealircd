@@ -714,10 +714,10 @@ struct Server {
 
 
 /* tkl:
- *   TKL_KILL|TKL_GLOBAL 	= Global K:Line (G:Line)
- *   TKL_ZAP|TKL_GLOBAL		= Global Z:Line (ZLINE)
- *   TKL_KILL			= Timed local K:Line
- *   TKL_ZAP			= Local Z:Line
+ *   TKL_KILL|TKL_GLOBAL 	= Global K-Line (GLINELine)
+ *   TKL_ZAP|TKL_GLOBAL		= Global Z-Line (ZLINE)
+ *   TKL_KILL			= Local K-Line
+ *   TKL_ZAP			= Local Z-Line
  */
 #define TKL_KILL	0x0001
 #define TKL_ZAP		0x0002
@@ -1787,6 +1787,8 @@ typedef enum {
 	PLAINTEXT_POLICY_WARN=2,
 	PLAINTEXT_POLICY_DENY=3
 } PlaintextPolicy;
+
+#define NO_EXIT_CLIENT	99
 
 #endif /* __struct_include__ */
 

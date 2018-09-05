@@ -1206,3 +1206,77 @@ int IsWebsocket(aClient *acptr)
 		return 0; /* websocket module not loaded */
 	return (MyConnect(acptr) && moddata_client(acptr, md).ptr) ? 1 : 0;
 }
+
+extern void send_raw_direct(aClient *user, char *pattern, ...);
+
+/** Generic function to inform the user he/she has been banned.
+ * @param acptr   The affected client.
+ * @param bantype The ban type, such as: "K-Lined", "G-Lined" or "realname".
+ * @param reason  The specified reason.
+ * @param global  Whether the ban is global (1) or for this server only (0)
+ * @param noexit  Set this to NO_EXIT_CLIENT to make us not call exit_client().
+ *                This is really only needed from the accept code, do not
+ *                use it anywhere else. No really, never.
+ *
+ * @notes This function will call exit_client() appropriately.
+ * @retval Usually FLUSH_BUFFER. In any case: do not touch 'acptr' after
+ *         calling this function!
+ */
+int banned_client(aClient *acptr, char *bantype, char *reason, int global, int noexit)
+{
+	char buf[512], contactbuf[512];
+
+	if (!MyConnect(acptr))
+		abort(); /* hmm... or be more flexible? */
+
+	if (1)
+	{
+		snprintf(contactbuf, sizeof(contactbuf), "Email %s for more information.",
+		         (global && GLINE_ADDRESS) ? GLINE_ADDRESS : KLINE_ADDRESS);
+	}
+
+	snprintf(buf, sizeof(buf), "You are not welcome on this %s. %s: %s. %s",
+		 global ? "network" : "server",
+		 bantype,
+		 reason,
+		 contactbuf);
+
+	/* This is a bit extensive but we will send both a YOUAREBANNEDCREEP
+	 * and a notice to the user.
+	 * The YOUAREBANNEDCREEP will be helpful for the client since it makes
+	 * clear the user should not quickly reconnect, as (s)he is banned.
+	 * The notice still needs to be there because it stands out well
+	 * at most IRC clients.
+	 */
+	if (noexit != NO_EXIT_CLIENT)
+	{
+		sendto_one(acptr,":%s %d %s :%s",
+			   me.name, ERR_YOUREBANNEDCREEP,
+			   (*acptr->name ? acptr->name : "*"),
+			   buf);
+		sendnotice(acptr, "%s", buf);
+	} else {
+		send_raw_direct(acptr, ":%s %d %s :%s",
+		         me.name, ERR_YOUREBANNEDCREEP,
+		         (*acptr->name ? acptr->name : "*"),
+		         buf);
+		send_raw_direct(acptr, ":%s NOTICE %s :%s",
+		         me.name, (*acptr->name ? acptr->name : "*"), buf);
+	}
+
+	/* The final message in the ERROR is shorter. */
+	if (HIDE_BAN_REASON && IsRegistered(acptr))
+		snprintf(buf, sizeof(buf), "Banned (%s)", bantype);
+	else
+		snprintf(buf, sizeof(buf), "Banned (%s): %s", bantype, reason);
+
+	if (noexit != NO_EXIT_CLIENT)
+	{
+		return exit_client(acptr, acptr, acptr, buf);
+	} else {
+		/* Special handling for direct Z-line code */
+		send_raw_direct(acptr, "ERROR :Closing Link: [%s] (%s)",
+		           acptr->ip, buf);
+		return 0;
+	}
+}

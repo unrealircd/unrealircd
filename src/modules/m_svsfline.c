@@ -59,8 +59,8 @@ CMD_FUNC(m_svsfline)
 
 	switch (*parv[1])
 	{
-		  /* Allow non-U:lines to send ONLY SVSFLINE +, but don't send it out
-		   * unless it is from a U:line -- codemastr */
+		  /* Allow non-U-Lines to send ONLY SVSFLINE +, but don't send it out
+		   * unless it is from a U-Line -- codemastr */
 	  case '+':
 	  {
 		  if (parc < 4)

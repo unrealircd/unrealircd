@@ -814,11 +814,8 @@ CMD_FUNC(m_rehash)
 /*
 ** m_restart
 **
-** parv[1] - password *OR* reason if no X:line
-** parv[2] - reason for restart (optional & only if X:line exists)
-**
-** The password is only valid if there is a matching X line in the
-** config file. If it is not,  then it becomes the
+** parv[1] - password *OR* reason if no drpass { } block exists
+** parv[2] - reason for restart (optional & only if drpass block exists)
 */
 CMD_FUNC(m_restart)
 {

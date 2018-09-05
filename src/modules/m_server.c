@@ -688,8 +688,8 @@ CMD_FUNC(m_server_remote)
 	acptr->serv->up = find_or_add(acptr->srvptr->name);
 	SetServer(acptr);
 	ircd_log(LOG_SERVER, "SERVER %s (from %s)", acptr->name, acptr->srvptr->name);
-	/* Taken from bahamut makes it so all servers behind a U:lined
-	 * server are also U:lined, very helpful if HIDE_ULINES is on
+	/* Taken from bahamut makes it so all servers behind a U-Lined
+	 * server are also U-Lined, very helpful if HIDE_ULINES is on
 	 */
 	if (IsULine(sptr)
 	    || (Find_uline(acptr->name)))

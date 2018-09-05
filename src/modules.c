@@ -100,14 +100,13 @@ int (*find_tkline_match)(aClient *cptr, int skip_soft);
 int (*find_shun)(aClient *cptr);
 int(*find_spamfilter_user)(aClient *sptr, int flags);
 aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
-int  (*find_tkline_match_zap)(aClient *cptr);
+aTKline *(*find_tkline_match_zap)(aClient *cptr);
 void (*tkl_stats)(aClient *cptr, int type, char *para);
 void (*tkl_synch)(aClient *sptr);
 int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
 int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
-int  (*find_tkline_match_zap_ex)(aClient *cptr, aTKline **rettk);
 void (*send_list)(aClient *cptr);
 unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
@@ -166,11 +165,11 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 23 */	{"place_host_ban", (void *)&place_host_ban},
 /* 24 */	{"dospamfilter", (void *)&dospamfilter},
 /* 25 */	{"dospamfilter_viruschan", (void *)&dospamfilter_viruschan},
-/* 26 */	{"find_tkline_match_zap_ex", (void *)&find_tkline_match_zap_ex},
+/* 26 */	{NULL, NULL},
 /* 27 */	{"send_list", (void *)&send_list},
-/* 28 */	{NULL,NULL},
-/* 29 */	{NULL,NULL},
-/* 30 */	{NULL,NULL},
+/* 28 */	{NULL, NULL},
+/* 29 */	{NULL, NULL},
+/* 30 */	{NULL, NULL},
 /* 31 */	{"StripColors", (void *)&StripColors},
 /* 32 */	{"StripControlCodes", (void *)&StripControlCodes},
 /* 33 */	{"spamfilter_build_user_string", (void *)&spamfilter_build_user_string},

@@ -68,6 +68,7 @@ MOD_UNLOAD(m_chgname)
 CMD_FUNC(m_chgname)
 {
 	aClient *acptr;
+	ConfigItem_ban *bconf;
 
 	if (!ValidatePermissionsForPath("client:name",sptr,NULL,NULL,NULL))
 	{
@@ -98,16 +99,7 @@ CMD_FUNC(m_chgname)
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
-		/* set the realname first to make n:line checking work */
-		ircsnprintf(acptr->info, sizeof(acptr->info), "%s", parv[2]);
-		/* only check for n:lines if the person who's name is being changed is not an oper */
-		if (!ValidatePermissionsForPath("immune:realnameban",acptr,NULL,NULL,NULL) && Find_ban(NULL, acptr->info, CONF_BAN_REALNAME)) {
-			int xx;
-			xx =
-			   exit_client(cptr, sptr, &me,
-			   "Your GECOS (real name) is banned from this server");
-			return xx;
-		}
+		/* Let's log this first */
 		if (!IsULine(sptr))
 		{
 			sendto_snomask(SNO_EYES,
@@ -121,6 +113,18 @@ CMD_FUNC(m_chgname)
 				GetHost(acptr), parv[2]);
 		}
 
+		/* set the realname to make ban checking work */
+		ircsnprintf(acptr->info, sizeof(acptr->info), "%s", parv[2]);
+
+		/* only check for realname bans if the person who's name is being changed is NOT an oper */
+		if (!ValidatePermissionsForPath("immune:realnameban",acptr,NULL,NULL,NULL) &&
+		    ((bconf = Find_ban(NULL, acptr->info, CONF_BAN_REALNAME))))
+		{
+			int xx = banned_client(acptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
+			if (sptr == acptr)
+				return xx; /* we just killed ourselves */
+			return 0;
+		}
 
 		sendto_server(cptr, 0, 0, ":%s CHGNAME %s :%s",
 		    sptr->name, acptr->name, parv[2]);

@@ -992,6 +992,7 @@ aClient *add_connection(ConfigItem_listen *listener, int fd)
 {
 	aClient *acptr, *acptr2;
 	ConfigItem_ban *bconf;
+	aTKline *tk;
 	int i, j;
 	char *ip;
 	int port = 0;
@@ -1026,6 +1027,7 @@ add_con_refuse:
 	set_sockhost(acptr, ip);
 	acptr->ip = strdup(ip);
 	acptr->local->port = port;
+	acptr->fd = fd;
 
 	/* Tag loopback connections as FLAGS_LOCAL */
 	if (is_loopback_ip(acptr->ip))
@@ -1060,19 +1062,14 @@ add_con_refuse:
 	{
 		if (bconf)
 		{
-			ircsnprintf(zlinebuf, sizeof(zlinebuf),
-				"ERROR :Closing Link: [%s] (You are not welcome on "
-				"this server: %s. Email %s for more information.)\r\n",
-				acptr->ip,
-				bconf->reason ? bconf->reason : "no reason",
-				KLINE_ADDRESS);
-			(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
+			banned_client(acptr, "K-Lined", bconf->reason ? bconf->reason : "no reason", 0, NO_EXIT_CLIENT);
 			goto add_con_refuse;
 		}
 	}
-	else if (find_tkline_match_zap(acptr) != -1)
+	else if ((tk = find_tkline_match_zap(acptr)))
 	{
-		(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
+		ircstp->is_ref++;
+		banned_client(acptr, "Z-Lined", tk->reason, (tk->type & TKL_GLOBAL)?1:0, NO_EXIT_CLIENT);
 		goto add_con_refuse;
 	}
 	else
@@ -1092,7 +1089,6 @@ add_con_refuse:
 			add_throttling_bucket(acptr);
 	}
 
-	acptr->fd = fd;
 	acptr->local->listener = listener;
 	if (acptr->local->listener != NULL)
 		acptr->local->listener->clients++;

@@ -552,7 +552,7 @@ size_t n = strlen(f);
  * 0:			block
  * <0:			immediately return with this value (could be FLUSH_BUFFER)
  * HISTORY:
- * F:Line stuff by _Jozeph_ added by Stskeeps with comments.
+ * Dcc ban stuff by _Jozeph_ added by Stskeeps with comments.
  * moved and various improvements by Syzop.
  */
 static int check_dcc(aClient *sptr, char *target, aClient *targetcli, char *text)

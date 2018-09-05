@@ -1446,3 +1446,30 @@ va_list vl;
 	vsendto_one(to, realpattern, vl);
 	va_end(vl);
 }
+
+/** Send raw data directly to socket, bypassing everything.
+ * Looks like an interesting function to call? NO! STOP!
+ * Don't use this function. It may only be used by the initial
+ * Z-Line check via the codepath to banned_client().
+ * YOU SHOULD NEVER USE THIS FUNCTION.
+ * If you want to send raw data (without formatting) to a client
+ * then have a look at sendbufto_one() instead.
+ *
+ * Side-effects:
+ * Too many to list here. Only in the early accept code the
+ * "if's" and side-effects are under control.
+ *
+ * By the way, did I already mention that you SHOULD NOT USE THIS
+ * FUNCTION? ;)
+ */
+void send_raw_direct(aClient *user, char *pattern, ...)
+{
+	va_list vl;
+	int sendlen;
+
+	*sendbuf = '\0';
+	va_start(vl, pattern);
+	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
+	va_end(vl);
+	send(user->fd, sendbuf, sendlen, 0);
+}
