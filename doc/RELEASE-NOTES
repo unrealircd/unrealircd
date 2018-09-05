@@ -10,11 +10,27 @@ Enhancements:
   This is especially useful if you only want to disable a few modules
   that are (normally) automatically loaded by conf/modules.default.conf.
   https://www.unrealircd.org/docs/Blacklist-module_directive
-* The except throttle { } block now also overrides any limitations from
-  set::max-unknown-connection-per-ip. Useful for WEBIRC/cgiirc gateways.
+* Next two new features have to do with SASL. More information on SASL
+  in general can be found at https://www.unrealircd.org/docs/SASL
+* New "soft kline" and "soft gline". These will not be applied to users
+  that are authenticated to services using SASL.
+  These are just GLINE/KLINE's but prefixed with a percent sign:
+  Example: /GLINE %*@10.* 0 Only SASL allowed from here
+* New "soft" ban actions for spamfilter, blacklist, antirandom, etc.
+  Actions such as "soft-kline" and "soft-kill" will only be applied to
+  unauthenticated users. Users who are authenticated to services (SASL)
+  are exempt from the corresponding spamfilter/blacklist/antirandom/..
+  See https://www.unrealircd.org/docs/Actions for the full action list.
+* WARNING: before using any global soft bans (such as soft gline or
+  any spamfilter with soft-xx actions) your IRC network should only
+  consist of servers running UnrealIRCd 4.0.19 or later.
+  If one or more servers on your network is below that version then such
+  bans are not effective network-wide and/or will not be properly
+  propagated to other servers. There won't be havoc, but the bans simply
+  won't be effective on the rest of the network.
 * The following extban modules are not new but are now enabled by default:
   extbans/textban, extbans/timedban and extbans/msgbypass.
-  In case you don't like them, use blacklist-module as mentioned above.
+  In case you don't like them, use blacklist-module as mentioned earlier.
   Just as a reminder, they provide the following functionality:
   * TextBan: +b ~T:block:*badword* to block sentences with 'badword'
   * Timed bans: ~t:duration:mask
@@ -45,6 +61,8 @@ Enhancements:
   from antirandom checking because they frequently cause false positives.
   This new behavior can be disabled via:
   set { antirandom { except-webirc no; }; };
+* The except throttle { } block now also overrides any limitations from
+  set::max-unknown-connection-per-ip. Useful for WEBIRC/cgiirc gateways.
 
 Major issues fixed:
 * Potential crash issue when concurrently checking DNSBL for the WEBIRC
