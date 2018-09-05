@@ -865,7 +865,12 @@ int	ban_version(aClient *sptr, char *text)
 		text[len-1] = '\0'; /* remove CTCP REPLY terminator (ASCII 1) */
 
 	if ((ban = Find_ban(NULL, text, CONF_BAN_VERSION)))
+	{
+		if (IsSoftBanAction(ban->action) && IsLoggedIn(sptr))
+			return 0; /* we are exempt */
+
 		return place_host_ban(sptr, ban->action, ban->reason, BAN_VERSION_TKL_TIME);
+	}
 
 	return 0;
 }

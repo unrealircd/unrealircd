@@ -2467,6 +2467,15 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
  */
 int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 {
+	/* If this is a soft action and the user is logged in, then the ban does not apply.
+	 * NOTE: Actually in such a case it would be better if place_host_ban() would not
+	 * be called at all. Or at least, since the caller should not take any action
+	 * (eg: the message should be delivered, the user may connect, etc..)
+	 * So this is more like secondary protection in case the caller forgets...
+	 */
+	if (IsSoftBanAction(action) && IsLoggedIn(sptr))
+		return 0;
+
 	switch(action)
 	{
 		case BAN_ACT_TEMPSHUN:
@@ -2478,15 +2487,16 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 				reason);
 			SetShunned(sptr);
 			break;
-		case BAN_ACT_SHUN:
-		case BAN_ACT_SOFT_KLINE:
-		case BAN_ACT_KLINE:
-		case BAN_ACT_ZLINE:
-		case BAN_ACT_SOFT_GLINE:
-		case BAN_ACT_GLINE:
 		case BAN_ACT_GZLINE:
+		case BAN_ACT_GLINE:
+		case BAN_ACT_SOFT_GLINE:
+		case BAN_ACT_ZLINE:
+		case BAN_ACT_KLINE:
+		case BAN_ACT_SOFT_KLINE:
+		case BAN_ACT_SHUN:
+		case BAN_ACT_SOFT_SHUN:
 		{
-			char ip[128], user[USERLEN+1], mo[100], mo2[100];
+			char ip[128], user[USERLEN+3], mo[100], mo2[100];
 			char *tkllayer[9] = {
 				me.name,	/*0  server.name */
 				"+",		/*1  +|- */
@@ -2511,18 +2521,10 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			}
 
 			/* For soft bans we need to prefix the % in the username */
-			if ((action == BAN_ACT_SOFT_KLINE) || (action == BAN_ACT_SOFT_GLINE))
+			if (IsSoftBanAction(action))
 			{
-				char tmp[USERLEN+2];
+				char tmp[USERLEN+3];
 				snprintf(tmp, sizeof(tmp), "%%%s", tkllayer[3]);
-				if (strlen(tmp) > USERLEN)
-				{
-					/* Due to the added %-prefix the username may now be oversized.
-					 * We'll replace the last character with an asterisk then.
-					 */
-					tmp[USERLEN-1] = '*';
-					tmp[USERLEN] = '\0';
-				}
 				strlcpy(user, tmp, sizeof(user));
 				tkllayer[3] = user;
 			}
@@ -2535,7 +2537,7 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 				tkllayer[2] = "Z";
 			else if ((action == BAN_ACT_GLINE) || (action == BAN_ACT_SOFT_GLINE))
 				tkllayer[2] = "G";
-			else if (action == BAN_ACT_SHUN)
+			else if ((action == BAN_ACT_SHUN) || (action == BAN_ACT_SOFT_SHUN))
 				tkllayer[2] = "s";
 			tkllayer[4] = ip;
 			tkllayer[5] = me.name;
@@ -2548,7 +2550,7 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			tkllayer[7] = mo2;
 			tkllayer[8] = reason;
 			m_tkl(&me, &me, 9, tkllayer);
-			if (action == BAN_ACT_SHUN)
+			if ((action == BAN_ACT_SHUN) || (action == BAN_ACT_SOFT_SHUN))
 			{
 				find_shun(sptr);
 				return -1;
@@ -2699,6 +2701,12 @@ long ms_past;
 		if ((flags & SPAMFLAG_NOWARN) && (tk->ptr.spamf->action == BAN_ACT_WARN))
 			continue;
 
+		/* If the action is 'soft' (for non-logged in users only) then
+		 * don't bother running the spamfilter if the user is logged in.
+		 */
+		if (IsSoftBanAction(tk->ptr.spamf->action) && IsLoggedIn(sptr))
+			continue;
+
 #ifdef SPAMFILTER_DETECTSLOW
 		memset(&rnow, 0, sizeof(rnow));
 		memset(&rprev, 0, sizeof(rnow));
@@ -2779,7 +2787,7 @@ long ms_past;
 
 	/* Spamfilter matched, take action: */
 
-	if (tk->ptr.spamf->action == BAN_ACT_BLOCK)
+	if ((tk->ptr.spamf->action == BAN_ACT_BLOCK) || (tk->ptr.spamf->action == BAN_ACT_SOFT_BLOCK))
 	{
 		switch(type)
 		{
@@ -2818,7 +2826,7 @@ long ms_past;
 		}
 		return -1;
 	} else
-	if (tk->ptr.spamf->action == BAN_ACT_WARN)
+	if ((tk->ptr.spamf->action == BAN_ACT_WARN) || (tk->ptr.spamf->action == BAN_ACT_SOFT_WARN))
 	{
 		if ((type != SPAMF_USER) && (type != SPAMF_QUIT))
 			sendto_one(sptr, rpl_str(RPL_SPAMCMDFWD),
@@ -2826,7 +2834,7 @@ long ms_past;
 				unreal_decodespace(tk->ptr.spamf->tkl_reason));
 		return 0;
 	} else
-	if (tk->ptr.spamf->action == BAN_ACT_DCCBLOCK)
+	if ((tk->ptr.spamf->action == BAN_ACT_DCCBLOCK) || (tk->ptr.spamf->action == BAN_ACT_SOFT_DCCBLOCK))
 	{
 		if (type == SPAMF_DCC)
 		{
@@ -2837,7 +2845,7 @@ long ms_past;
 		}
 		return -1;
 	} else
-	if (tk->ptr.spamf->action == BAN_ACT_VIRUSCHAN)
+	if ((tk->ptr.spamf->action == BAN_ACT_VIRUSCHAN) || (tk->ptr.spamf->action == BAN_ACT_SOFT_VIRUSCHAN))
 	{
 		if (IsVirus(sptr)) /* Already tagged */
 			return 0;

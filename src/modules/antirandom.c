@@ -569,7 +569,7 @@ int antirandom_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int antirandom_config_run(ConfigFile *, ConfigEntry *, int);
 int antirandom_config_posttest(int *);
 int antirandom_preconnect(aClient *sptr);
-static int is_except_host(aClient *sptr);
+static int is_exempt(aClient *sptr);
 
 MOD_TEST(antirandom)
 {
@@ -1055,7 +1055,7 @@ void check_all_users(void)
 	{
 		if (IsPerson(acptr))
 		{
-			if (is_except_host(acptr))
+			if (is_exempt(acptr))
 				continue;
 
 			score = get_spam_score(acptr);
@@ -1077,7 +1077,7 @@ int antirandom_preconnect(aClient *sptr)
 {
 int score;
 
-	if (!is_except_host(sptr))
+	if (!is_exempt(sptr))
 	{
 		score = get_spam_score(sptr);
 		if (score > cfg.threshold)
@@ -1126,9 +1126,10 @@ Triples *t, *t_next;
 	triples = NULL;
 }
 
-/** Finds out if the host is on the except list. 1 if yes, 0 if no */
-static int is_except_host(aClient *sptr)
+/** Is this user exempt from antirandom interventions? */
+static int is_exempt(aClient *sptr)
 {
+	/* WEBIRC gateway and exempt? */
 	if (cfg.except_webirc)
 	{
 		char *val = moddata_client_get(sptr, "webirc");
@@ -1136,5 +1137,10 @@ static int is_except_host(aClient *sptr)
 			return 1;
 	}
 
+	/* Soft ban and logged in? */
+	if (IsSoftBanAction(cfg.ban_action) && IsLoggedIn(sptr))
+		return 1;
+
+	/* On except host? */
 	return unreal_mask_match(sptr, cfg.except_hosts);
 }

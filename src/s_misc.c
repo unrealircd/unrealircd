@@ -74,18 +74,25 @@ typedef struct {
 
 static BanActTable banacttable[] = {
 	{ BAN_ACT_KILL,		'K',	"kill" },
+	{ BAN_ACT_SOFT_KILL,	'i',	"soft-kill" },
 	{ BAN_ACT_TEMPSHUN,	'S',	"tempshun" },
+	{ BAN_ACT_SOFT_TEMPSHUN,'T',	"soft-tempshun" },
 	{ BAN_ACT_SHUN,		's',	"shun" },
+	{ BAN_ACT_SOFT_SHUN,	'H',	"soft-shun" },
 	{ BAN_ACT_KLINE,	'k',	"kline" },
+	{ BAN_ACT_SOFT_KLINE,	'I',	"soft-kline" },
 	{ BAN_ACT_ZLINE,	'z',	"zline" },
 	{ BAN_ACT_GLINE,	'g',	"gline" },
+	{ BAN_ACT_SOFT_GLINE,	'G',	"soft-gline" },
 	{ BAN_ACT_GZLINE,	'Z',	"gzline" },
 	{ BAN_ACT_BLOCK,	'b',	"block" },
+	{ BAN_ACT_SOFT_BLOCK,	'B',	"soft-block" },
 	{ BAN_ACT_DCCBLOCK,	'd',	"dccblock" },
+	{ BAN_ACT_SOFT_DCCBLOCK,'D',	"soft-dccblock" },
 	{ BAN_ACT_VIRUSCHAN,	'v',	"viruschan" },
+	{ BAN_ACT_SOFT_VIRUSCHAN,'V',	"soft-viruschan" },
 	{ BAN_ACT_WARN,		'w',	"warn" },
-	{ BAN_ACT_SOFT_KLINE,	'I',	"soft-kline" },
-	{ BAN_ACT_SOFT_GLINE,	'G',	"soft-gline" },
+	{ BAN_ACT_SOFT_WARN,	'W',	"soft-warn" },
 	{ 0, 0, 0 }
 };
 

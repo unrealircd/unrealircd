@@ -974,13 +974,24 @@ struct _configflag_tld
 #define BAN_ACT_KLINE		 800
 #define BAN_ACT_SOFT_KLINE	 850
 #define BAN_ACT_SHUN		 700
+#define BAN_ACT_SOFT_SHUN	 650
 #define BAN_ACT_KILL		 600
+#define BAN_ACT_SOFT_KILL	 550
 #define BAN_ACT_TEMPSHUN	 500
+#define BAN_ACT_SOFT_TEMPSHUN	 450
 #define BAN_ACT_VIRUSCHAN	 400
+#define BAN_ACT_SOFT_VIRUSCHAN	 350
 #define BAN_ACT_DCCBLOCK	 300
+#define BAN_ACT_SOFT_DCCBLOCK	 250
 #define BAN_ACT_BLOCK		 200
+#define BAN_ACT_SOFT_BLOCK	 150
 #define BAN_ACT_WARN		 100
-#define IsSoftBanAction(x)   ((x == BAN_ACT_SOFT_GLINE) || (x == BAN_ACT_SOFT_KLINE))
+#define BAN_ACT_SOFT_WARN	  50
+#define IsSoftBanAction(x)   ((x == BAN_ACT_SOFT_GLINE) || (x == BAN_ACT_SOFT_KLINE) || \
+                              (x == BAN_ACT_SOFT_SHUN) || (x == BAN_ACT_SOFT_KILL) || \
+                              (x == BAN_ACT_SOFT_TEMPSHUN) || (x == BAN_ACT_SOFT_VIRUSCHAN) || \
+                              (x == BAN_ACT_SOFT_DCCBLOCK) || (x == BAN_ACT_SOFT_BLOCK) || \
+                              (x == BAN_ACT_SOFT_WARN))
 
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
