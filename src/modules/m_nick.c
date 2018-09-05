@@ -1327,9 +1327,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		else
 			u1 = NULL;
 
-		/*
-		 * following block for the benefit of time-dependent K:-lines
-		 */
+		/* Check ban user { } blocks (K-lines in conf) */
 		if ((bconf = Find_ban(sptr, NULL, CONF_BAN_USER)))
 		{
 			ircstp->is_ref++;
@@ -1341,6 +1339,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			    KLINE_ADDRESS);
 			return exit_client(cptr, cptr, cptr, "You are banned");
 		}
+		/* Check ban realname { } blocks */
 		if ((bconf = Find_ban(NULL, sptr->info, CONF_BAN_REALNAME)))
 		{
 			ircstp->is_ref++;
@@ -1352,6 +1351,18 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 			return exit_client(cptr, sptr, &me,
 			    "Your GECOS (real name) is banned from this server");
+		}
+		/* Check require sasl { } blocks */
+		if (!IsLoggedIn(sptr) && (bconf = Find_ban(sptr, NULL, CONF_BAN_UNAUTHENTICATED)))
+		{
+			ircstp->is_ref++;
+			sendto_one(cptr,
+			    ":%s %d %s :*** You are not welcome on this server (%s)"
+			    " Email %s for more information.",
+			    me.name, ERR_YOUREBANNEDCREEP,
+			    cptr->name, bconf->reason ? bconf->reason : "",
+			    KLINE_ADDRESS);
+			return exit_client(cptr, cptr, cptr, "You are banned");
 		}
 		tkl_check_expire(NULL);
 		/* Check G/Z lines before shuns -- kill before quite -- codemastr */

@@ -92,6 +92,8 @@ static int	_conf_deny_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_link		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_version	(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_require		(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_require_sasl	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_allow_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
@@ -122,6 +124,7 @@ static int	_test_except		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_vhost		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_link		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_ban		(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_require		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_set		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_deny		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
@@ -157,6 +160,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "official-channels", 		_conf_offchans,		_test_offchans	},
 	{ "oper", 		_conf_oper,		_test_oper	},
 	{ "operclass",		_conf_operclass,	_test_operclass	},
+	{ "require", 		_conf_require,		_test_require	},
 	{ "set",		_conf_set,		_test_set	},
 	{ "sni",		_conf_sni,		_test_sni	},
 	{ "spamfilter",	_conf_spamfilter,	_test_spamfilter	},
@@ -7059,6 +7063,141 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%d: ban::action specified even though type is not 'version'",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	return errors;
+}
+
+int _conf_require(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigItem_ban *ca;
+	Hook *h;
+
+	ca = MyMallocEx(sizeof(ConfigItem_ban));
+	if (!strcmp(ce->ce_vardata, "sasl"))
+	{
+		ca->flag.type = CONF_BAN_UNAUTHENTICATED;
+	}
+	else {
+		int value;
+		free(ca); /* ca isn't used, modules have their own list. */
+		for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+		{
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_REQUIRE);
+			if (value == 1)
+				break;
+		}
+		return 0;
+	}
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "mask"))
+		{
+			ca->mask = strdup(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "reason"))
+			ca->reason = strdup(cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "action"))
+			ca ->action = banact_stringtoval(cep->ce_vardata);
+	}
+	AddListItem(ca, conf_ban);
+	return 0;
+}
+
+int _test_require(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	int errors = 0;
+	Hook *h;
+	char type = 0;
+	char has_mask = 0, has_action = 0, has_reason = 0;
+
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: require without type, did you mean 'require sasl'?",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return 1;
+	}
+	if (!strcmp(ce->ce_vardata, "sasl"))
+	{}
+	else
+	{
+		int used = 0;
+		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
+		{
+			int value, errs = 0;
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+			    && !(h->owner->options & MOD_OPT_PERM))
+				continue;
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_REQUIRE, &errs);
+			if (value == 2)
+				used = 1;
+			if (value == 1)
+			{
+				used = 1;
+				break;
+			}
+			if (value == -1)
+			{
+				used = 1;
+				errors += errs;
+				break;
+			}
+			if (value == -2)
+			{
+				used = 1;
+				errors += errs;
+			}
+		}
+		if (!used) {
+			config_error("%s:%i: unknown require type '%s'",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				ce->ce_vardata);
+			return 1;
+		}
+		return errors;
+	}
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (config_is_blankorempty(cep, "require"))
+		{
+			errors++;
+			continue;
+		}
+		if (!strcmp(cep->ce_varname, "mask"))
+		{
+			if (has_mask)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "require::mask");
+				continue;
+			}
+			has_mask = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "reason"))
+		{
+			if (has_reason)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "require::reason");
+				continue;
+			}
+			has_reason = 1;
+		}
+	}
+
+	if (!has_mask)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"require::mask");
+		errors++;
+	}
+	if (!has_reason)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"require::reason");
 		errors++;
 	}
 	return errors;

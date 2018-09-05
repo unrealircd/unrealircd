@@ -10,8 +10,12 @@ Enhancements:
   This is especially useful if you only want to disable a few modules
   that are (normally) automatically loaded by conf/modules.default.conf.
   https://www.unrealircd.org/docs/Blacklist-module_directive
-* Next two new features have to do with SASL. More information on SASL
+* Next three new features have to do with SASL. More information on SASL
   in general can be found at https://www.unrealircd.org/docs/SASL
+* A new require sasl { } block which allows you to force users on the
+  specified hostmask to use SASL. Any unauthenticated users matching
+  the specified hostmask are are rejected.
+  See https://www.unrealircd.org/docs/Require_sasl_block
 * New "soft kline" and "soft gline". These will not be applied to users
   that are authenticated to services using SASL.
   These are just GLINE/KLINE's but prefixed with a percent sign:

@@ -955,12 +955,13 @@ struct _configflag_tld
 	unsigned	rulesptr  : 1;
 };
 
-#define CONF_BAN_NICK		1
-#define CONF_BAN_IP		2
-#define CONF_BAN_SERVER		3
-#define CONF_BAN_USER   	4
-#define CONF_BAN_REALNAME 	5
-#define CONF_BAN_VERSION        6
+#define CONF_BAN_NICK            1
+#define CONF_BAN_IP              2
+#define CONF_BAN_SERVER          3
+#define CONF_BAN_USER            4
+#define CONF_BAN_REALNAME        5
+#define CONF_BAN_VERSION         6
+#define CONF_BAN_UNAUTHENTICATED 7
 
 #define CONF_BAN_TYPE_CONF	0
 #define CONF_BAN_TYPE_AKILL	1

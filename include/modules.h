@@ -1090,6 +1090,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define CONFIG_ALLOW 6
 #define CONFIG_CLOAKKEYS 7
 #define CONFIG_SET_ANTI_FLOOD 8
+#define CONFIG_REQUIRE 9
 
 #define MOD_HEADER(name) Mod_Header
 #define MOD_TEST(name) DLLFUNC int Mod_Test(ModuleInfo *modinfo)
