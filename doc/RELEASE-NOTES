@@ -1,9 +1,6 @@
 UnrealIRCd 4.0.19-dev Release Notes
 ====================================
 
-This UnrealIRCd version is still under heavy development.
-See https://bugs.unrealircd.org/roadmap_page.php for release targets.
-
 Enhancements:
 * New option to disable a module: blacklist-module "modulename";
   This will cause any 'loadmodule' lines for that module to be ignored.
@@ -65,19 +62,18 @@ Enhancements:
   from antirandom checking because they frequently cause false positives.
   This new behavior can be disabled via:
   set { antirandom { except-webirc no; }; };
-* The except throttle { } block now also overrides any limitations from
-  set::max-unknown-connection-per-ip. Useful for WEBIRC/cgiirc gateways.
+* Server linking attempts and errors are now also put in the log file.
 
 Major issues fixed:
-* Potential crash issue when concurrently checking DNSBL for the WEBIRC
-  gateway and the spoofed host.
+* Blacklist: Potential crash issue when concurrently checking DNSBL
+  for the WEBIRC gateway and the spoofed host.
+* Blacklist: In case of multiple blacklists the 2nd/3rd/.. were not
+  always checked properly.
 
 Minor issues fixed:
 * Remote includes: ./Config didn't properly detect libcurl on Ubuntu 18
   (and possibly other Linux distributions as well)
-* Localhost connections are considered secure, so these can be used even
-  if you have a plaintext-policy of 'deny' or 'warn'. (This was already
-  the case for servers, but now also for users and opers)
+* Timeouts during server linking attempts were not displayed.
 
 Other changes:
 * Windows users may be prompted to install the Visual C++ redistributable
@@ -86,6 +82,11 @@ Other changes:
 * We now use standard formatted messages for all K-Lines, G-Lines and
   any other bans that will cause the user to be disconnected.
   For technical details see the banned_client() function.
+* The except throttle { } block now also overrides any limitations from
+  set::max-unknown-connection-per-ip. Useful for WEBIRC/cgiirc gateways.
+* Localhost connections are considered secure, so these can be used even
+  if you have a plaintext-policy of 'deny' or 'warn'. (This was already
+  the case for servers, but now also for users and opers)
 
 Module coders:
 * Windows: Be aware that we now build with Visual Studio 2017. This means
