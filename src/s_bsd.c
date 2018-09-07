@@ -290,7 +290,7 @@ static void listener_accept(int listener_fd, int revents, void *data)
 		ircstp->is_ref++;
 		if (last_allinuse < TStime() - 15)
 		{
-			sendto_realops("All connections in use. ([@%s/%u])", listener->ip, listener->port);
+			sendto_ops_and_log("All connections in use. ([@%s/%u])", listener->ip, listener->port);
 			last_allinuse = TStime();
 		}
 
@@ -340,7 +340,7 @@ int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 
 	if (++OpenFiles >= MAXCLIENTS)
 	{
-		sendto_ops("No more connections allowed (%s)", listener->ip);
+		sendto_ops_and_log("No more connections allowed (%s)", listener->ip);
 		fd_close(listener->fd);
 		listener->fd = -1;
 		--OpenFiles;
@@ -612,7 +612,7 @@ void start_server_handshake(aClient *cptr)
 	if (!aconf)
 	{
 		/* Should be impossible. */
-		sendto_ops("Lost configuration for %s in start_server_handshake()", get_client_name(cptr, FALSE));
+		sendto_ops_and_log("Lost configuration for %s in start_server_handshake()", get_client_name(cptr, FALSE));
 		return;
 	}
 
@@ -663,7 +663,7 @@ void completed_connection(int fd, int revents, void *data)
 
 	if (!aconf)
 	{
-		sendto_ops("Lost configuration for %s", get_client_name(cptr, FALSE));
+		sendto_ops_and_log("Lost configuration for %s", get_client_name(cptr, FALSE));
 		return;
 	}
 
@@ -1336,8 +1336,12 @@ void read_packet(int fd, int revents, void *data)
 				return;
 
 			if (IsServer(cptr) || cptr->serv) /* server or outgoing connection */
+			{
 				sendto_umode_global(UMODE_OPER, "Lost connection to %s: Read error",
-				    get_client_name(cptr, FALSE));
+					get_client_name(cptr, FALSE));
+				ircd_log(LOG_ERROR, "Lost connection to %s: Read error",
+					get_client_name(cptr, FALSE));
+			}
 
 			exit_client(cptr, cptr, cptr, "Read error");
 			return;
@@ -1577,7 +1581,7 @@ int connect_inet(ConfigItem_link *aconf, aClient *cptr)
 	}
 	if (++OpenFiles >= MAXCLIENTS)
 	{
-		sendto_realops("No more connections allowed (%s)", cptr->name);
+		sendto_ops_and_log("No more connections allowed (%s)", cptr->name);
 		return 0;
 	}
 

@@ -290,6 +290,7 @@ extern void sendto_snomask_normal(int snomask, char *pattern, ...) __attribute__
 extern void sendto_snomask_normal_global(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern void sendnotice(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps, const char *format, ...) __attribute__((format(printf, 4,5)));
+extern void sendto_ops_and_log(char *pattern, ...) __attribute__((format(printf,1,2)));
 
 extern MODVAR int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);

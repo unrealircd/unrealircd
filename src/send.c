@@ -1473,3 +1473,18 @@ void send_raw_direct(aClient *user, char *pattern, ...)
 	va_end(vl);
 	(void)send(user->fd, sendbuf, sendlen, 0);
 }
+
+/** Send a message to all locally connected IRCOps and log the error.
+ */
+void sendto_ops_and_log(char *pattern, ...)
+{
+	va_list vl;
+	char buf[1024];
+
+	va_start(vl, pattern);
+	ircvsnprintf(buf, sizeof(buf), pattern, vl);
+	va_end(vl);
+
+	ircd_log(LOG_ERROR, "%s", buf);
+	sendto_umode(UMODE_OPER, "%s", buf);
+}

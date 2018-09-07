@@ -190,7 +190,7 @@ void reinit_resolver(aClient *sptr)
 {
 	EventDel(unrealdns_timeout_hdl);
 
-	sendto_realops("%s requested reinitalization of resolver!", sptr->name);
+	sendto_ops_and_log("%s requested reinitalization of resolver!", sptr->name);
 	sendto_realops("Destroying resolver channel, along with all currently pending queries...");
 	ares_destroy(resolver_channel);
 	sendto_realops("Initializing resolver again...");
@@ -411,7 +411,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 		}
 
 		/* fatal error while resolving */
-		sendto_realops("Unable to resolve hostname '%s', when trying to connect to server %s.",
+		sendto_ops_and_log("Unable to resolve hostname '%s', when trying to connect to server %s.",
 			r->name, r->linkblock->servername);
 		r->linkblock->refcount--;
 		unrealdns_freeandremovereq(r);
@@ -423,7 +423,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	    !(ip = inetntop(r->ipv6 ? AF_INET6 : AF_INET, he->h_addr_list[0], ipbuf, sizeof(ipbuf))))
 	{
 		/* Illegal response -- fatal */
-		sendto_realops("Unable to resolve hostname '%s', when trying to connect to server %s.",
+		sendto_ops_and_log("Unable to resolve hostname '%s', when trying to connect to server %s.",
 			r->name, r->linkblock->servername);
 		unrealdns_freeandremovereq(r);
 		return;
@@ -438,17 +438,17 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	switch ((n = connect_server(r->linkblock, r->cptr, he2)))
 	{
 		case 0:
-			sendto_realops("Connecting to %s[%s].", r->linkblock->servername, ip);
+			sendto_ops_and_log("Connecting to server %s[%s].", r->linkblock->servername, ip);
 			break;
 		case -1:
-			sendto_realops("Couldn't connect to %s[%s].", r->linkblock->servername, ip);
+			sendto_ops_and_log("Couldn't connect to server %s[%s].", r->linkblock->servername, ip);
 			break;
 		case -2:
 			/* Should not happen since he is not NULL */
-			sendto_realops("Hostname %s is unknown for server %s (!?).", r->linkblock->outgoing.hostname, r->linkblock->servername);
+			sendto_ops_and_log("Hostname %s is unknown for server %s (!?).", r->linkblock->outgoing.hostname, r->linkblock->servername);
 			break;
 		default:
-			sendto_realops("Connection to %s failed: %s", r->linkblock->servername, STRERROR(n));
+			sendto_ops_and_log("Connection to server %s failed: %s", r->linkblock->servername, STRERROR(n));
 	}
 	
 	unrealdns_freeandremovereq(r);
