@@ -519,7 +519,7 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 					 * Also, check to make sure user->cloakedhost exists at all.
 					 * This so we won't crash in weird cases like non-conformant servers.
 					 */
-					if (acptr->user->virthost && acptr->user->cloakedhost && strcasecmp(acptr->user->cloakedhost, GetHost(acptr)))
+					if (acptr->user->virthost && *acptr->user->cloakedhost && strcasecmp(acptr->user->cloakedhost, GetHost(acptr)))
 					{
 						/* Make the change effective: */
 						safestrdup(acptr->user->virthost, acptr->user->cloakedhost);
