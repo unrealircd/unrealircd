@@ -508,6 +508,29 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 							acptr->user->virthost);
 				}
 				goto setmodex;
+			case 't':
+				/* We support -t nowadays, which means we remove the vhost and set the cloaked host
+				 * (note that +t is a NOOP, that code is in +x)
+				 */
+				if (what == MODE_DEL)
+				{
+					/* First, check if there's a change at all. Perhaps it's a -t on someone
+					 * with no virthost or virthost being cloakedhost?
+					 * Also, check to make sure user->cloakedhost exists at all.
+					 * This so we won't crash in weird cases like non-conformant servers.
+					 */
+					if (acptr->user->virthost && acptr->user->cloakedhost && strcasecmp(acptr->user->cloakedhost, GetHost(acptr)))
+					{
+						/* Make the change effective: */
+						safestrdup(acptr->user->virthost, acptr->user->cloakedhost);
+						/* And broadcast the change to VHP servers */
+						if (MyClient(acptr))
+							sendto_server(NULL, PROTO_VHP, 0, ":%s SETHOST :%s", acptr->name,
+								acptr->user->virthost);
+					}
+					goto setmodex;
+				}
+				break;
 			case 'z':
 				/* Setting and unsetting user mode 'z' remotely is not supported */
 				break;
