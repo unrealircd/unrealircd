@@ -87,8 +87,8 @@ int dead_link(aClient *to, char *notice)
 		return -1; /* don't overwrite & don't send multiple times */
 	
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
-		sendto_umode(UMODE_OPER, "Closing link: %s - %s",
-			notice, get_client_name(to, FALSE));
+		sendto_ops_and_log("Link to server %s (%s) closed: %s",
+			to->name, to->ip?to->ip:"<no-ip>", notice);
 	Debug((DEBUG_ERROR, "dead_link: %s - %s", notice, get_client_name(to, FALSE)));
 	to->local->error_str = strdup(notice);
 	return -1;
