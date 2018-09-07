@@ -544,6 +544,13 @@ EVENT(check_unknowns)
 	{
 		if (cptr->local->firsttime && ((TStime() - cptr->local->firsttime) > iConf.handshake_timeout))
 		{
+			if (cptr->serv && *cptr->serv->by)
+			{
+				/* If this is a handshake timeout to an outgoing server then notify ops & log it */
+				sendto_ops_and_log("Connection handshake timeout while connecting to server '%s' (%s)",
+					cptr->name, cptr->ip?cptr->ip:"<unknown ip>");
+			}
+
 			(void)exit_client(cptr, cptr, &me, "Registration Timeout");
 			continue;
 		}
