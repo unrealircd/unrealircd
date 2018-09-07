@@ -1471,5 +1471,5 @@ void send_raw_direct(aClient *user, char *pattern, ...)
 	va_start(vl, pattern);
 	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
 	va_end(vl);
-	send(user->fd, sendbuf, sendlen, 0);
+	(void)send(user->fd, sendbuf, sendlen, 0);
 }
