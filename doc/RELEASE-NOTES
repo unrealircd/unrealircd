@@ -1,4 +1,4 @@
-UnrealIRCd 4.0.19-dev Release Notes
+UnrealIRCd 4.0.19-rc1 Release Notes
 ====================================
 
 Enhancements:
@@ -67,8 +67,8 @@ Enhancements:
 Major issues fixed:
 * Blacklist: Potential crash issue when concurrently checking DNSBL
   for the WEBIRC gateway and the spoofed host.
-* Blacklist: In case of multiple blacklists the 2nd/3rd/.. were not
-  always checked properly.
+* Blacklist: In case of multiple blacklists the 2nd/3rd/.. blacklists
+  were not always checked properly.
 
 Minor issues fixed:
 * Remote includes: ./Config didn't properly detect libcurl on Ubuntu 18
