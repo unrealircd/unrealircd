@@ -1,6 +1,9 @@
 UnrealIRCd 4.0.19-rc1 Release Notes
 ====================================
 
+This is the first release candidate for UnrealIRCd 4.0.19. Please help
+test this release and report all bugs to https://bugs.unrealircd.org/
+
 Enhancements:
 * New option to disable a module: blacklist-module "modulename";
   This will cause any 'loadmodule' lines for that module to be ignored.
