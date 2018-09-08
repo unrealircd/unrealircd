@@ -25,13 +25,10 @@ Enhancements:
   unauthenticated users. Users who are authenticated to services (SASL)
   are exempt from the corresponding spamfilter/blacklist/antirandom/..
   See https://www.unrealircd.org/docs/Actions for the full action list.
-* WARNING: before using any global soft bans (such as soft gline or
-  any spamfilter with soft-xx actions) your IRC network should only
-  consist of servers running UnrealIRCd 4.0.19 or later.
-  If one or more servers on your network is below that version then such
-  bans are not effective network-wide and/or will not be properly
-  propagated to other servers. There won't be havoc, but the bans simply
-  won't be effective on the rest of the network.
+* WARNING: If your network also contains UnrealIRCd servers below v4.0.19
+  then it is not recommended to use global soft bans (such as soft gline
+  or any spamfilter with soft-xx actions). There won't be havoc, but the
+  bans won't be effective on parts of the network.
 * The following extban modules are not new but are now enabled by default:
   extbans/textban, extbans/timedban and extbans/msgbypass.
   In case you don't like them, use blacklist-module as mentioned earlier.
