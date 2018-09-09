@@ -201,7 +201,7 @@ void _send_join_to_local_users(aClient *sptr, aChannel *chptr)
 		if (!MyConnect(acptr))
 			continue; /* only locally connected clients */
 
-		if (chanops_only && !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)) && (sptr != acptr))
+		if (chanops_only && !(lp->flags & (CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)) && (sptr != acptr))
 			continue; /* skip non-ops if requested to (used for mode +D), but always send to 'sptr' */
 
 		if (acptr->local->proto & PROTO_CAP_EXTENDED_JOIN)
