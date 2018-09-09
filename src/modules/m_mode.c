@@ -1547,6 +1547,7 @@ CMD_FUNC(_m_umode)
 	aClient *acptr;
 	int what, setsnomask = 0;
 	long oldumodes = 0;
+	int oldsnomasks = 0;
 	/* (small note: keep 'what' as an int. -- Syzop). */
 	short rpterror = 0, umode_restrict_err = 0, chk_restrict = 0, modex_err = 0;
 
@@ -1591,6 +1592,10 @@ CMD_FUNC(_m_umode)
 	for (i = 0; i <= Usermode_highest; i++)
 		if ((sptr->umodes & Usermode_Table[i].mode))
 			oldumodes |= Usermode_Table[i].mode;
+
+	for (i = 0; i <= Snomask_highest; i++)
+		if ((sptr->user->snomask & Snomask_Table[i].mode))
+			oldsnomasks |= Snomask_Table[i].mode;
 
 	if (RESTRICT_USERMODES && MyClient(sptr) && !ValidatePermissionsForPath("self:restrictedumodes",sptr,NULL,NULL,NULL))
 		chk_restrict = 1;
@@ -1729,7 +1734,51 @@ CMD_FUNC(_m_umode)
 	/* Don't let non-ircops set ircop-only modes or snomasks */
 	if (!ValidatePermissionsForPath("self:restrictedumodes",sptr,NULL,NULL,NULL))
 	{
-		remove_oper_privileges(sptr, 0);
+		if ((oldumodes & UMODE_OPER) && IsOper(sptr))
+		{
+			/* User is an oper but does not have the self:restrictedumodes capability.
+			 * This only happens for heavily restricted IRCOps.
+			 * Fixes bug https://bugs.unrealircd.org/view.php?id=5130
+			 */
+			int i;
+
+			/* MODES */
+			for (i = 0; i <= Usermode_highest; i++)
+			{
+				if (!Usermode_Table[i].flag)
+					continue;
+				if (Usermode_Table[i].unset_on_deoper)
+				{
+					/* This is an oper mode. Is it set now and wasn't earlier?
+					 * then it needs to be stripped, as setting it is not
+					 * permitted.
+					 */
+					long m = Usermode_Table[i].mode;
+					if ((sptr->umodes & m) && !(oldumodes & m))
+						sptr->umodes &= ~Usermode_Table[i].mode; /* remove */
+				}
+			}
+
+			/* SNOMASKS */
+			for (i = 0; i <= Snomask_highest; i++)
+			{
+				if (!Snomask_Table[i].flag)
+					continue;
+				if (Snomask_Table[i].unset_on_deoper)
+				{
+					/* This is an oper snomask. Is it set now and wasn't earlier?
+					 * then it needs to be stripped, as setting it is not
+					 * permitted.
+					 */
+					int sno = Snomask_Table[i].mode;
+					if ((sptr->user->snomask & sno) && !(oldsnomasks & sno))
+						sptr->user->snomask &= ~Snomask_Table[i].mode; /* remove */
+				}
+			}
+		} else {
+			/* User isn't an ircop at all. The solution is simple: */
+			remove_oper_privileges(sptr, 0);
+		}
 	}
 
 	if (MyClient(sptr) && !ValidatePermissionsForPath("override:secure",sptr,NULL,NULL,NULL) &&
