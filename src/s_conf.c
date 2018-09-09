@@ -4980,8 +4980,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 					allow->flags.useip = 1;
 				else if (!strcmp(cepp->ce_varname, "ssl"))
 					allow->flags.ssl = 1;
-				else if (!strcmp(cepp->ce_varname, "sasl"))
-					allow->flags.sasl = 1;
 				else if (!strcmp(cepp->ce_varname, "nopasscont"))
 					allow->flags.nopasscont = 1;
 			}
@@ -5182,7 +5180,14 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "ssl"))
 				{}
 				else if (!strcmp(cepp->ce_varname, "sasl"))
-				{}
+				{
+					config_error("%s:%d: The option allow::options::sasl no longer exists. "
+					             "Please use a require sasl { } block instead, which "
+					             "is more flexible and provides the same functionality. See "
+					             "https://www.unrealircd.org/docs/Require_sasl_block",
+					             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+					errors++;
+				}
 				else if (!strcmp(cepp->ce_varname, "nopasscont"))
 				{}
 				else

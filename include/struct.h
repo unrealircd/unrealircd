@@ -1042,7 +1042,6 @@ struct _configflag_allow {
 	unsigned	useip :1;
 	unsigned	ssl :1;
 	unsigned	nopasscont :1;
-	unsigned	sasl :1;
 };
 
 struct _configitem_allow {

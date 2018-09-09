@@ -75,6 +75,10 @@ Minor issues fixed:
   (and possibly other Linux distributions as well)
 * Timeouts during server linking attempts were not displayed.
 
+Removed:
+* allow::options::sasl has been removed. Use the new and more flexible
+  require sasl { } block instead.
+
 Other changes:
 * Windows users may be prompted to install the Visual C++ redistributable
   package for Visual Studio 2017. This is because we now build on VS 2017
