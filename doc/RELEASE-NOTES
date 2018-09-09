@@ -74,6 +74,8 @@ Minor issues fixed:
 * Remote includes: ./Config didn't properly detect libcurl on Ubuntu 18
   (and possibly other Linux distributions as well)
 * Timeouts during server linking attempts were not displayed.
+* Delayjoin: Halfops did not see JOIN's when channel mode +D was set.
+* IRCOps with minimal privileges lost their user modes on MODE change.
 
 Removed:
 * allow::options::sasl has been removed. Use the new and more flexible
