@@ -234,6 +234,16 @@ CMD_FUNC(m_invite)
 				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 
 		}
+		else if (has_channel_mode(chptr, 'z'))
+		{
+			sendto_snomask_global(SNO_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +z).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+			/* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding SSL-Only)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+		}
 #ifdef OPEROVERRIDE_VERIFY
 		else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
 		       override = -1;
