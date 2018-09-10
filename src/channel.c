@@ -1048,7 +1048,7 @@ void clean_channelname(char *cn)
 		 * or some such.
 		 *   --Wizzu
 		 */
-		if (*ch < 33 || *ch == ',' || *ch == ':' || *ch == 160)
+		if (*ch < 33 || *ch == ',' || *ch == ':')
 		{
 			*ch = '\0';
 			return;
