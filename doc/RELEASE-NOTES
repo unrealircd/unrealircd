@@ -76,6 +76,8 @@ Minor issues fixed:
 * Timeouts during server linking attempts were not displayed.
 * Delayjoin: Halfops did not see JOIN's when channel mode +D was set.
 * IRCOps with minimal privileges lost their user modes on MODE change.
+* IRCOps could not override channel mode +z (when not using SSL/TLS)
+* Channel names sometimes truncated if using accents or special chars.
 
 Removed:
 * allow::options::sasl has been removed. Use the new and more flexible
