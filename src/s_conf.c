@@ -2805,7 +2805,7 @@ ConfigItem_tld *Find_tld(aClient *cptr)
 	{
 		if (match_user(tld->mask, cptr, MATCH_CHECK_REAL))
 		{
-			if ((tld->options & TLD_SSL) && !IsSecure(cptr))
+			if ((tld->options & TLD_SSL) && !IsSecureConnect(cptr))
 				continue;
 			if ((tld->options & TLD_REMOTE) && MyClient(cptr))
 				continue;
