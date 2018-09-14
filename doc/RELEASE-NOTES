@@ -95,6 +95,7 @@ Other changes:
 * Localhost connections are considered secure, so these can be used even
   if you have a plaintext-policy of 'deny' or 'warn'. (This was already
   the case for servers, but now also for users and opers)
+* Allow slashes in vhost/chghost/sethost/.. (but not through DNS)
 
 Module coders:
 * Windows: Be aware that we now build with Visual Studio 2017. This means
