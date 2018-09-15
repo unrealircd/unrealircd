@@ -839,6 +839,12 @@ char *_StripControlCodes(unsigned char *text)
 			case 29:
 				/* italic */
 				break;
+			case 30:
+				/* strikethrough */
+				break;
+			case 17:
+				/* monospace */
+				break;
 			default:
 				new_str[i] = *text;
 				i++;
