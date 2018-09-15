@@ -208,6 +208,12 @@ void _send_join_to_local_users(aClient *sptr, aChannel *chptr)
 			sendbufto_one(acptr, exjoinbuf, 0);
 		else
 			sendbufto_one(acptr, joinbuf, 0);
+
+		if (sptr->user->away && (acptr->local->proto & PROTO_AWAY_NOTIFY))
+		{
+			sendto_one(acptr, ":%s!%s@%s AWAY :%s",
+			           sptr->name, sptr->user->username, GetHost(sptr), sptr->user->away);
+		}
 	}
 }
 
