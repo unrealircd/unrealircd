@@ -248,6 +248,9 @@ int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int pa
 	if (acptr && MyConnect(acptr) && !IsMe(acptr) && !IsPerson(acptr) && !IsServer(acptr))
 		acptr = NULL;
 
+	if (acptr == NULL)
+		acptr = find_server_quick_search(parv[server]);
+
 	if (!acptr)
 	{
 		sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name, sptr->name, parv[server]);

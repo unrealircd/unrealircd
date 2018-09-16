@@ -189,6 +189,7 @@ extern aClient *find_nickserv(char *, aClient *);
 extern aClient *find_person(char *, aClient *);
 extern aClient *find_server(char *, aClient *);
 extern aClient *find_server_quickx(char *, aClient *);
+extern aClient *find_server_quick_search(char *);
 extern aClient *find_service(char *, aClient *);
 #define find_server_quick(x) find_server_quickx(x, NULL)
 extern char *find_or_add(char *);
