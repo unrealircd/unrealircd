@@ -45,12 +45,6 @@ if [ "$BUILDCONFIG" = "local-curl" ]; then
 	exit 0
 fi
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-	# 'rake' doesn't work. have to figure that one out..
-	echo "Not running test on OS X for now"
-	exit 0
-fi
-
 echo ""
 echo ""
 echo "Now running UnrealIRCd test framework..."
