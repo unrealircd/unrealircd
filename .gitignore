@@ -1,3 +1,6 @@
+._.DS_Store
+.DS_Store
+
 # Ignore configure step
 aclocal.m4
 autom4te.cache
