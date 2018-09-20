@@ -1513,6 +1513,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	snprintf(tmp, sizeof(tmp), "%s/ssl/curl-ca-bundle.crt", CONFDIR);
 	i->ssl_options->trusted_ca_file = strdup(tmp);
 	i->ssl_options->ciphers = strdup(UNREALIRCD_DEFAULT_CIPHERS);
+	i->ssl_options->ciphersuites = strdup(UNREALIRCD_DEFAULT_CIPHERSUITES);
 	i->ssl_options->protocols = SSL_PROTOCOL_ALL;
 #ifdef HAS_SSL_CTX_SET1_CURVES_LIST
 	i->ssl_options->ecdh_curves = strdup(UNREALIRCD_DEFAULT_ECDH_CURVES);
@@ -7229,6 +7230,10 @@ void test_sslblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 		{
 			CheckNull(cepp);
 		}
+		else if (!strcmp(cepp->ce_varname, "ciphersuites"))
+		{
+			CheckNull(cepp);
+		}
 		else if (!strcmp(cepp->ce_varname, "ecdh-curves"))
 		{
 			CheckNull(cepp);
@@ -7399,6 +7404,7 @@ void free_ssl_options(SSLOptions *ssloptions)
 	safefree(ssloptions->dh_file);
 	safefree(ssloptions->trusted_ca_file);
 	safefree(ssloptions->ciphers);
+	safefree(ssloptions->ciphersuites);
 	memset(ssloptions, 0, sizeof(SSLOptions));
 	MyFree(ssloptions);
 }
@@ -7417,6 +7423,7 @@ void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions)
 		safestrdup(ssloptions->trusted_ca_file, tempiConf.ssl_options->trusted_ca_file);
 		ssloptions->protocols = tempiConf.ssl_options->protocols;
 		safestrdup(ssloptions->ciphers, tempiConf.ssl_options->ciphers);
+		safestrdup(ssloptions->ciphersuites, tempiConf.ssl_options->ciphersuites);
 		safestrdup(ssloptions->ecdh_curves, tempiConf.ssl_options->ecdh_curves);
 		ssloptions->options = tempiConf.ssl_options->options;
 		ssloptions->renegotiate_bytes = tempiConf.ssl_options->renegotiate_bytes;
@@ -7432,8 +7439,12 @@ void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions)
 		if (!strcmp(cepp->ce_varname, "ciphers") || !strcmp(cepp->ce_varname, "server-cipher-list"))
 		{
 			safestrdup(ssloptions->ciphers, cepp->ce_vardata);
-		} else
-		if (!strcmp(cepp->ce_varname, "ecdh-curves"))
+		}
+		else if (!strcmp(cepp->ce_varname, "ciphersuites"))
+		{
+			safestrdup(ssloptions->ciphersuites, cepp->ce_vardata);
+		}
+		else if (!strcmp(cepp->ce_varname, "ecdh-curves"))
 		{
 			safestrdup(ssloptions->ecdh_curves, cepp->ce_vardata);
 		}

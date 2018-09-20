@@ -361,6 +361,15 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 		goto fail;
 	}
 
+#ifdef SSL_OP_NO_TLSv1_3
+	if (SSL_CTX_set_ciphersuites(ctx, ssloptions->ciphersuites) == 0)
+	{
+		config_warn("Failed to set SSL ciphersuites list");
+		config_report_ssl_error();
+		goto fail;
+	}
+#endif
+
 	if (!cipher_check(ctx, &errstr))
 	{
 		config_warn("There is a problem with your SSL/TLS 'ciphers' configuration setting: %s", errstr);
