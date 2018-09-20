@@ -1446,7 +1446,7 @@ Efunction *p, *q;
 	return NULL;
 }
 
-Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
+Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, iFP function)
 {
 	aCommand *p;
 	Cmdoverride *ovr;
@@ -1469,6 +1469,7 @@ Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
 	ovr = MyMallocEx(sizeof(Cmdoverride));
 	ovr->func = function;
 	ovr->owner = module; /* TODO: module objects */
+	ovr->priority = priority;
 	if (module)
 	{
 		ModuleObject *cmdoverobj = MyMallocEx(sizeof(ModuleObject));
@@ -1480,7 +1481,7 @@ Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
 	ovr->command = p;
 	if (!p->overriders)
 		p->overridetail = ovr;
-	AddListItem(ovr, p->overriders);
+	AddListItemPrio(ovr, p->overriders, ovr->priority);
 	if (p->friend)
 	{
 		if (!p->friend->overriders)
@@ -1488,6 +1489,11 @@ Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
 		AddListItem(ovr, p->friend->overriders);
 	}
 	return ovr;
+}
+
+Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
+{
+	return CmdoverrideAddEx(module, name, 0, function);
 }
 
 void CmdoverrideDel(Cmdoverride *cmd)

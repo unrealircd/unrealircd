@@ -1704,6 +1704,7 @@ struct Command {
 
 struct _cmdoverride {
 	Cmdoverride		*prev, *next;
+	int			priority;
 	Module			*owner;
 	aCommand		*command;
 	int			(*func)();
