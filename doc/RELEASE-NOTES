@@ -63,6 +63,12 @@ Enhancements:
   This new behavior can be disabled via:
   set { antirandom { except-webirc no; }; };
 * Server linking attempts and errors are now also put in the log file.
+* A new module that provides WHOX support, an enhanced and more standard
+  version of WHO (NOTE: the command is still "WHO").
+  This allows, among other things, the client to request additional
+  information, such as which services account each channel member is using.
+  The module is currently experimental. To use it, add this to your conf:
+  loadmodule "m_whox";
 
 Major issues fixed:
 * Blacklist: Potential crash issue when concurrently checking DNSBL
@@ -78,6 +84,10 @@ Minor issues fixed:
 * IRCOps with minimal privileges lost their user modes on MODE change.
 * IRCOps could not override channel mode +z (when not using SSL/TLS)
 * Channel names sometimes truncated if using accents or special chars.
+* TLSv1.3 ciphersuite setting was changed to reflect OpenSSL's behavior.
+  There is now set::ssl::ciphersuites, specifically for TLSv1.3.
+  Note that the default is perfectly fine so at this point in time it
+  shouldn't need any adjustment (but the option is there...).
 
 Removed:
 * allow::options::sasl has been removed. Use the new and more flexible
