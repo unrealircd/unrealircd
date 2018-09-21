@@ -74,6 +74,8 @@ MOD_INIT(timedban)
 {
 ExtbanInfo extban;
 
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+
 	memset(&extban, 0, sizeof(ExtbanInfo));
 	extban.flag = 't';
 	extban.options |= EXTBOPT_ACTMODIFIER; /* not really, but ours shouldn't be stacked from group 1 */

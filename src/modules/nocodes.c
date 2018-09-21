@@ -35,6 +35,8 @@ char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice
 
 MOD_INIT(nocodes)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, nocodes_pre_chanmsg);
 	return MOD_SUCCESS;
 }
