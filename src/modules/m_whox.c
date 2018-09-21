@@ -683,7 +683,7 @@ do_who(aClient *source_p, aClient *target_p, aChannel *chptr, struct who_format 
 	{
 		Membership *lp;
 
-		if (lp = find_membership_link(target_p->user->channel, chptr))
+		if ((lp = find_membership_link(target_p->user->channel, chptr)))
 		{
 			if (!(fmt->fields || SupportNAMESX(source_p)))
 			{
