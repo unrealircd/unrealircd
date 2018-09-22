@@ -7,68 +7,9 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_whox);
-static int override_who(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
-/* Place includes here */
 #define MSG_WHO 	"WHO"
 
-ModuleHeader MOD_HEADER(m_whox)
-  = {
-	"m_whox",	/* Name of module */
-	"4.0", /* Version */
-	"command /who", /* Short description of module */
-	"3.2-b8-1",
-	NULL 
-    };
-
-/* This is called on module init, before Server Ready */
-MOD_INIT(m_whox)
-{
-	//CommandAdd(modinfo->handle, MSG_WHO, m_whox, MAXPARA, M_USER);
-	MARK_AS_OFFICIAL_MODULE(modinfo);
-	IsupportAdd(NULL, "WHOX", NULL);
-	return MOD_SUCCESS;
-}
-
-/* Is first run when server is 100% ready */
-MOD_LOAD(m_whox)
-{
-	CmdoverrideAddEx(modinfo->handle, "WHO", 9999999, override_who);
-	return MOD_SUCCESS;
-}
-
-
-/* Called when module is unloaded */
-MOD_UNLOAD(m_whox)
-{
-	Isupport *hunted = IsupportFind("WHOX");
-
-	if (hunted)
-		IsupportDel(hunted);
-
-	return MOD_SUCCESS;
-}
-
-/* Temporary glue until this module becomes the new m_who */
-static int override_who(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	/* We are always last (and we need to be), thanks to our cmdoverride priority */
-	return m_whox(cptr, sptr, parc, parv);
-}
-
 #define FLAGS_MARK	0x400000 /* marked client (was hybnotice) */
-
-#define SetMark(x) ((x)->flags |= FLAGS_MARK)
-#define ClearMark(x) ((x)->flags &= ~FLAGS_MARK)
-#define IsMarked(x) ((x)->flags & FLAGS_MARK)
-
-#define EmptyString(x) ((x) == NULL || *(x) == '\0')
-#define CheckEmpty(x) EmptyString(x) ? "" : x
-
-#define HasField(x, y) ((x)->fields & (y))
-#define IsMatch(x, y) ((x)->matchsel & (y))
-
 
 #define FIELD_CHANNEL	0x0001
 #define FIELD_HOP	0x0002
@@ -101,6 +42,13 @@ static int override_who(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc
 #define WHO_ADD 1
 #define WHO_DEL 2
 
+#define SetMark(x) ((x)->flags |= FLAGS_MARK)
+#define ClearMark(x) ((x)->flags &= ~FLAGS_MARK)
+#define IsMarked(x) ((x)->flags & FLAGS_MARK)
+
+#define HasField(x, y) ((x)->fields & (y))
+#define IsMatch(x, y) ((x)->matchsel & (y))
+
 struct who_format
 {
 	int fields;
@@ -110,17 +58,58 @@ struct who_format
 	const char *querytype;
 };
 
+CMD_FUNC(m_whox);
 static void who_global(aClient *source_p, char *mask, int operspy, struct who_format *fmt);
 static void do_who(aClient *source_p, aClient *target_p, aChannel *chptr, struct who_format *fmt);
 static void do_who_on_channel(aClient *source_p, aChannel *chptr,
-	int member, int operspy, struct who_format *fmt);
+                              int member, int operspy, struct who_format *fmt);
+static int override_who(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]);
+
+ModuleHeader MOD_HEADER(m_whox)
+  = {
+	"m_whox",
+	"4.0",
+	"command /who",
+	"3.2-b8-1",
+	NULL
+    };
+
+MOD_INIT(m_whox)
+{
+	//CommandAdd(modinfo->handle, MSG_WHO, m_whox, MAXPARA, M_USER);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	IsupportAdd(NULL, "WHOX", NULL);
+	return MOD_SUCCESS;
+}
+
+MOD_LOAD(m_whox)
+{
+	CmdoverrideAddEx(modinfo->handle, "WHO", 9999999, override_who);
+	return MOD_SUCCESS;
+}
+
+MOD_UNLOAD(m_whox)
+{
+	Isupport *hunted = IsupportFind("WHOX");
+
+	if (hunted)
+		IsupportDel(hunted);
+
+	return MOD_SUCCESS;
+}
+
+/* Temporary glue until this module becomes the new m_who */
+static int override_who(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+	/* We are always last (and we need to be), thanks to our cmdoverride priority */
+	return m_whox(cptr, sptr, parc, parv);
+}
 
 /*
 ** m_whox
 **	parv[1] = nickname mask list
 **	parv[2] = additional selection flag and format options
 */
-
 CMD_FUNC(m_whox)
 {
 	static time_t last_used = 0;
@@ -158,6 +147,7 @@ CMD_FUNC(m_whox)
 	{
 		p = parv[2];
 		while (((ch = *(p++))) && (ch != '%') && (ch != ','))
+		{
 			switch (ch)
 			{
 				case 'o': fmt.matchsel |= WMATCH_OPER; continue;
@@ -170,6 +160,7 @@ CMD_FUNC(m_whox)
 				case 'a': fmt.matchsel |= WMATCH_ACCOUNT; continue;
 				case 'm': fmt.matchsel |= WMATCH_MODES; continue;
 			}
+		}
 	}
 
 	if ((parc > 2) && (s = strchr(parv[2], '%')) != NULL)
@@ -202,7 +193,7 @@ CMD_FUNC(m_whox)
 					break;
 			}
 		}
-		if (EmptyString(fmt.querytype) || (strlen(fmt.querytype) > 3))
+		if (BadPtr(fmt.querytype) || (strlen(fmt.querytype) > 3))
 			fmt.querytype = "0";
 	}
 
@@ -225,12 +216,12 @@ CMD_FUNC(m_whox)
 	}
 
 	if ((ValidatePermissionsForPath("override:see:who:secret",sptr,NULL,NULL,NULL) ||
-		ValidatePermissionsForPath("override:see:whois",sptr,NULL,NULL,NULL)) && (*mask == '!'))
+	     ValidatePermissionsForPath("override:see:whois",sptr,NULL,NULL,NULL)) && (*mask == '!'))
 	{
 		mask++;
 		operspy = 1;
 
-		if (EmptyString(mask))
+		if (BadPtr(mask))
 		{
 			sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, parv[1]);
 			return 0;
@@ -268,11 +259,13 @@ CMD_FUNC(m_whox)
 				umodes = &fmt.noumodes;
 
 			for (i = 0; i <= Usermode_highest; i++)
+			{
 				if (*s == Usermode_Table[i].flag)
 				{
 					*umodes |= Usermode_Table[i].mode;
 					break;
 				}
+			}
 			s++;
 		}
 
@@ -293,9 +286,11 @@ CMD_FUNC(m_whox)
 		if ((chptr = find_channel(parv[1] + operspy, NULL)) != NULL)
 		{
 			if (operspy)
+			{
 				sendto_snomask_global(SNO_EYES, "*** %s (%s@%s) did a /who on %s",
 					sptr->name, sptr->user->username, GetHost(sptr),
 					chptr->chname);
+			}
 
 			if (IsMember(sptr, chptr) || operspy)
 				do_who_on_channel(sptr, chptr, 1, operspy, &fmt);
@@ -348,7 +343,9 @@ CMD_FUNC(m_whox)
 
 	if (ValidatePermissionsForPath("override:see:who:secret",sptr,NULL,NULL,NULL) ||
                 ValidatePermissionsForPath("override:see:whois",sptr,NULL,NULL,NULL))
+	{
 		operspy = 1;
+	}
 
 	/* '/who 0' for a global list.  this forces clients to actually
 	 * request a full list.  I presume its because of too many typos
@@ -372,8 +369,7 @@ CMD_FUNC(m_whox)
  * output	- 1 if match, 0 if no match
  * side effects	- NONE
  */
-static int
-do_match(aClient *source_p, aClient *target_p, char *mask, struct who_format *fmt)
+static int do_match(aClient *source_p, aClient *target_p, char *mask, struct who_format *fmt)
 {
 	if (mask == NULL)
 		return 1;
@@ -386,7 +382,9 @@ do_match(aClient *source_p, aClient *target_p, char *mask, struct who_format *fm
 		(!match(mask, target_p->user->realhost) ||
 		(target_p->ip &&
 		!match(mask, target_p->ip))))))
+	{
 		return 1;
+	}
 
 	/* match nick */
 	if (IsMatch(fmt, WMATCH_NICK) && !match(mask, target_p->name))
@@ -404,28 +402,33 @@ do_match(aClient *source_p, aClient *target_p, char *mask, struct who_format *fm
 	if (IsMatch(fmt, WMATCH_HOST) && (!match(mask, GetHost(target_p)) ||
 		(IsOper(source_p) && (!match(mask, target_p->user->realhost) ||
 		(target_p->ip && !match(mask, target_p->ip))))))
+	{
 		return 1;
+	}
 
 	/* match realname */
 	if (IsMatch(fmt, WMATCH_INFO) && !match(mask, target_p->info))
 		return 1;
 
 	/* match ip address */
-	if (IsMatch(fmt, WMATCH_IP) && IsOper(source_p) && target_p->ip &&
-		!match(mask, target_p->ip))
+	if (IsMatch(fmt, WMATCH_IP) && IsOper(source_p) && target_p->ip && !match(mask, target_p->ip))
 		return 1;
 
 	/* match account */
-	if (IsMatch(fmt, WMATCH_ACCOUNT) && !EmptyString(target_p->user->svid) &&
+	if (IsMatch(fmt, WMATCH_ACCOUNT) && !BadPtr(target_p->user->svid) &&
 		!isdigit(*target_p->user->svid) && !match(mask, target_p->user->svid))
+	{
 		return 1;
+	}
 
 	/* match usermodes */
 	if (IsMatch(fmt, WMATCH_MODES) &&
 		((target_p->umodes & fmt->umodes) &&
 		!(target_p->umodes & fmt->noumodes) &&
 		(!(target_p->umodes & UMODE_HIDEOPER) || IsOper(source_p))))
+	{
 		return 1;
+	}
 
 	return 0;
 }
@@ -442,8 +445,7 @@ do_match(aClient *source_p, aClient *target_p, char *mask, struct who_format *fm
  *			  marks matched clients.
  */
 
-static void
-who_common_channel(aClient *source_p, aChannel *chptr,
+static void who_common_channel(aClient *source_p, aChannel *chptr,
 	char *mask, int *maxmatches, struct who_format *fmt)
 {
 	Member *cm = chptr->members;
@@ -499,8 +501,7 @@ who_common_channel(aClient *source_p, aChannel *chptr,
  *			  and will be left cleared on return
  */
 
-static void
-who_global(aClient *source_p, char *mask, int operspy, struct who_format *fmt)
+static void who_global(aClient *source_p, char *mask, int operspy, struct who_format *fmt)
 {
 	aClient *target_p;
 	int maxmatches = WHOLIMIT ? WHOLIMIT : 100;
@@ -562,8 +563,7 @@ who_global(aClient *source_p, char *mask, int operspy, struct who_format *fmt)
  * side effects		- do a who on given channel
  */
 
-static void
-do_who_on_channel(aClient *source_p, aChannel *chptr,
+static void do_who_on_channel(aClient *source_p, aChannel *chptr,
 	int member, int operspy, struct who_format *fmt)
 {
 	Member *cm = chptr->members;
@@ -605,8 +605,7 @@ do_who_on_channel(aClient *source_p, aChannel *chptr,
  *			  this allows detecting overflow
  */
 
-static void
-append_format(char *buf, size_t bufsize, size_t *pos, const char *fmt, ...)
+static void append_format(char *buf, size_t bufsize, size_t *pos, const char *fmt, ...)
 {
 	size_t max, result;
 	va_list ap;
@@ -628,8 +627,7 @@ append_format(char *buf, size_t bufsize, size_t *pos, const char *fmt, ...)
  * Side Effects		- none
  */
 
-static int
-show_ip(aClient *source_p, aClient *target_p)
+static int show_ip(aClient *source_p, aClient *target_p)
 {
 	if (IsServer(target_p))
 		return 0;
@@ -652,8 +650,7 @@ show_ip(aClient *source_p, aClient *target_p)
  * side effects - do a who on given person
  */
 
-static void
-do_who(aClient *source_p, aClient *target_p, aChannel *chptr, struct who_format *fmt)
+static void do_who(aClient *source_p, aClient *target_p, aChannel *chptr, struct who_format *fmt)
 {
 	char status[20];
 	char str[510 + 1];
@@ -728,12 +725,13 @@ do_who(aClient *source_p, aClient *target_p, aChannel *chptr, struct who_format 
 	status[i] = '\0';
  
 	if (fmt->fields == 0)
+	{
 		sendto_one(source_p, getreply(RPL_WHOREPLY), me.name,
 			source_p->name, chptr ? chptr->chname : "*",
 			target_p->user->username, GetHost(target_p),
 			hide ? "*" : target_p->user->server,
 			target_p->name, status, hide ? 0 : target_p->hopcount, target_p->info);
-	else
+	} else
 	{
 		str[0] = '\0';
 		pos = 0;
