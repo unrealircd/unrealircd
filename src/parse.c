@@ -155,7 +155,7 @@ void ban_flooder(aClient *cptr)
 /*
  * This routine adds fake lag if needed.
  */
-void parse_addlag(aClient *cptr, int cmdbytes)
+static void parse_addlag(aClient *cptr, int cmdbytes)
 {
 	if (!IsServer(cptr) && !IsNoFakeLag(cptr) &&
 #ifdef FAKELAG_CONFIGURABLE
