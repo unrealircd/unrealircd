@@ -277,7 +277,11 @@ CMD_FUNC(m_whox)
 		}
 
 		if (!IsOper(sptr))
-			*umodes = *umodes & UMODE_OPER; /* these are usermodes regular users may search for. just oper now. */
+		{
+			/* these are usermodes regular users may search for. just oper now. */
+			fmt.umodes &= UMODE_OPER;
+			fmt.noumodes &= UMODE_OPER;
+		}
 	}
 
 	/* '/who #some_channel' */
