@@ -675,7 +675,7 @@ int spamfilter_del_by_id(aClient *sptr, char *id)
 	{
 		for (tk = tklines[index]; tk; tk = tk->next)
 		{
-			if ((tk->type & (TKL_GLOBAL|TKL_SPAMF)) && !strcmp(spamfilter_id(tk), id))
+			if (((tk->type & (TKL_GLOBAL|TKL_SPAMF)) == (TKL_GLOBAL|TKL_SPAMF)) && !strcmp(spamfilter_id(tk), id))
 			{
 				found = 1;
 				break;
