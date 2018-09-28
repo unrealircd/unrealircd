@@ -24,7 +24,7 @@ CMD_FUNC(noinvite);
 ModuleHeader MOD_HEADER(noinvite)
   = {
 	"chanmodes/noinvite",
-	"4.0",
+	"4.2",
 	"Channel Mode +V",
 	"3.2-b8-1",
 	NULL 

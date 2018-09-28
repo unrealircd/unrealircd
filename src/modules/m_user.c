@@ -29,7 +29,7 @@ DLLFUNC CMD_FUNC(m_user);
 ModuleHeader MOD_HEADER(m_user)
   = {
 	"m_user",
-	"4.0",
+	"4.2",
 	"command /user", 
 	"3.2-b8-1",
 	NULL 

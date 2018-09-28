@@ -29,7 +29,7 @@ CMD_FUNC(m_lusers);
 ModuleHeader MOD_HEADER(m_lusers)
   = {
 	"m_lusers",
-	"4.0",
+	"4.2",
 	"command /lusers", 
 	"3.2-b8-1",
 	NULL 

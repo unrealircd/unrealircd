@@ -27,7 +27,7 @@ CMD_FUNC(m_vhost);
 ModuleHeader MOD_HEADER(m_vhost)
   = {
 	"vhost",	/* Name of module */
-	"4.0", /* Version */
+	"4.2", /* Version */
 	"command /vhost", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

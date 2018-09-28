@@ -27,7 +27,7 @@ CMD_FUNC(m_unsqline);
 ModuleHeader MOD_HEADER(m_unsqline)
   = {
 	"unsqline",	/* Name of module */
-	"4.0", /* Version */
+	"4.2", /* Version */
 	"command /unsqline", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

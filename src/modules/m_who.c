@@ -33,7 +33,7 @@ CMD_FUNC(m_who);
 ModuleHeader MOD_HEADER(m_who)
   = {
 	"who",	/* Name of module */
-	"4.0", /* Version */
+	"4.2", /* Version */
 	"command /who", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

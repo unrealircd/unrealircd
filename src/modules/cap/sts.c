@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER(sts)
   = {
 	"sts",
-	"4.0",
+	"4.2",
 	"Strict Transport Security CAP", 
 	"3.2-b8-1",
 	NULL 

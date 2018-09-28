@@ -29,7 +29,7 @@ CMD_FUNC(m_squit);
 ModuleHeader MOD_HEADER(m_squit)
   = {
 	"m_squit",
-	"4.0",
+	"4.2",
 	"command /squit", 
 	"3.2-b8-1",
 	NULL 

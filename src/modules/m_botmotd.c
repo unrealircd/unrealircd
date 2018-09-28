@@ -29,7 +29,7 @@ CMD_FUNC(m_botmotd);
 ModuleHeader MOD_HEADER(m_botmotd)
   = {
 	"m_botmotd",
-	"4.0",
+	"4.2",
 	"command /botmotd", 
 	"3.2-b8-1",
 	NULL 

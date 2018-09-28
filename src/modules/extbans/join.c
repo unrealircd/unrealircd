@@ -21,7 +21,7 @@
 ModuleHeader MOD_HEADER(join)
 = {
 	"chanmodes/extbans/join",
-	"4.0",
+	"4.2",
 	"Extban ~j - prevent join only",
 	"3.2-b8-1",
 	NULL 

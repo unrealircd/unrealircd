@@ -29,7 +29,7 @@ CMD_FUNC(m_svsfline);
 ModuleHeader MOD_HEADER(m_svsfline)
   = {
 	"m_svsfline",
-	"4.0",
+	"4.2",
 	"command /svsfline", 
 	"3.2-b8-1",
 	NULL 

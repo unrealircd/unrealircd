@@ -22,7 +22,7 @@
 ModuleHeader MOD_HEADER(sslonly)
   = {
 	"chanmodes/sslonly",
-	"4.0",
+	"4.2",
 	"Channel Mode +z",
 	"3.2-b8-1",
 	NULL 

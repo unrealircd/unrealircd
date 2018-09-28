@@ -31,7 +31,7 @@ CMD_FUNC(m_mkpasswd);
 ModuleHeader MOD_HEADER(m_mkpasswd)
   = {
 	"m_mkpasswd",
-	"4.0",
+	"4.2",
 	"command /mkpasswd", 
 	"3.2-b8-1",
 	NULL 

@@ -29,7 +29,7 @@ CMD_FUNC(m_silence);
 ModuleHeader MOD_HEADER(m_silence)
   = {
 	"m_silence",
-	"4.0",
+	"4.2",
 	"command /silence", 
 	"3.2-b8-1",
 	NULL 

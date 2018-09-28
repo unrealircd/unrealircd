@@ -29,7 +29,7 @@ CMD_FUNC(m_links);
 ModuleHeader MOD_HEADER(m_links)
   = {
 	"m_links",
-	"4.0",
+	"4.2",
 	"command /links", 
 	"3.2-b8-1",
 	NULL 

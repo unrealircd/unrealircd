@@ -27,7 +27,7 @@ CMD_FUNC(m_time);
 ModuleHeader MOD_HEADER(m_time)
   = {
 	"time",	/* Name of module */
-	"4.0", /* Version */
+	"4.2", /* Version */
 	"command /time", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

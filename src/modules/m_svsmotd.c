@@ -31,7 +31,7 @@ CMD_FUNC(m_svsmotd);
 ModuleHeader MOD_HEADER(m_svsmotd)
   = {
 	"m_svsmotd",
-	"4.0",
+	"4.2",
 	"command /svsmotd", 
 	"3.2-b8-1",
 	NULL 

@@ -29,7 +29,7 @@ CMD_FUNC(m_locops);
 ModuleHeader MOD_HEADER(m_locops)
   = {
 	"m_locops",
-	"4.0",
+	"4.2",
 	"command /locops", 
 	"3.2-b8-1",
 	NULL 

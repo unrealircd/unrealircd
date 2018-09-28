@@ -23,7 +23,7 @@
 ModuleHeader MOD_HEADER(nonickchange)
   = {
 	"chanmodes/nonickchange",
-	"4.0",
+	"4.2",
 	"Channel Mode +N",
 	"3.2-b8-1",
 	NULL 

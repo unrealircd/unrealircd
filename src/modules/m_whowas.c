@@ -29,7 +29,7 @@ CMD_FUNC(m_whowas);
 ModuleHeader MOD_HEADER(m_whowas)
   = {
 	"m_whowas",
-	"4.0",
+	"4.2",
 	"command /whowas", 
 	"3.2-b8-1",
 	NULL 

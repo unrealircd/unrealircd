@@ -22,7 +22,7 @@
 ModuleHeader MOD_HEADER(permanent)
   = {
 	"chanmodes/permanent",
-	"4.0",
+	"4.2",
 	"Permanent channel mode (+P)", 
 	"3.2-b8-1",
 	NULL 

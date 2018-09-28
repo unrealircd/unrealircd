@@ -29,7 +29,7 @@ CMD_FUNC(m_globops);
 ModuleHeader MOD_HEADER(m_globops)
   = {
 	"m_globops",
-	"4.0",
+	"4.2",
 	"command /globops", 
 	"3.2-b8-1",
 	NULL 

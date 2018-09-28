@@ -29,7 +29,7 @@ CMD_FUNC(m_map);
 ModuleHeader MOD_HEADER(m_map)
   = {
 	"m_map",
-	"4.0",
+	"4.2",
 	"command /map", 
 	"3.2-b8-1",
 	NULL 

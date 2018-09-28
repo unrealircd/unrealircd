@@ -13,7 +13,7 @@ CMD_FUNC(m_mdex);
 ModuleHeader MOD_HEADER(m_mdex)
   = {
 	"m_mdex",
-	"4.0",
+	"4.2",
 	"Command /MDEX",
 	"3.2-b8-1",
 	NULL 

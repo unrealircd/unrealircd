@@ -11,7 +11,7 @@
 ModuleHeader MOD_HEADER(m_md)
   = {
 	"m_md",
-	"4.0",
+	"4.2",
 	"command /MD (S2S only)",
 	"3.2-b8-1",
 	NULL 

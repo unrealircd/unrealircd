@@ -32,7 +32,7 @@ CMD_FUNC(m_svsnoop);
 ModuleHeader MOD_HEADER(m_svsnoop)
   = {
 	"m_svsnoop",
-	"4.0",
+	"4.2",
 	"command /svsnoop", 
 	"3.2-b8-1",
 	NULL

@@ -21,7 +21,7 @@
 ModuleHeader MOD_HEADER(certfp)
 = {
 	"extbans/certfp",
-	"4.0",
+	"4.2",
 	"ExtBan ~S - Ban/exempt by SHA256 SSL certificate fingerprint",
 	"3.2-b8-1",
 	NULL 

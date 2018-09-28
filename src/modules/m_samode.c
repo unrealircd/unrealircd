@@ -29,7 +29,7 @@ CMD_FUNC(m_samode);
 ModuleHeader MOD_HEADER(m_samode)
   = {
 	"m_samode",
-	"4.0",
+	"4.2",
 	"command /samode", 
 	"3.2-b8-1",
 	NULL 

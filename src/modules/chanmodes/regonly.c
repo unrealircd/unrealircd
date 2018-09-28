@@ -23,7 +23,7 @@
 ModuleHeader MOD_HEADER(regonly)
   = {
 	"chanmodes/regonly",
-	"4.0",
+	"4.2",
 	"Channel Mode +R",
 	"3.2-b8-1",
 	NULL 

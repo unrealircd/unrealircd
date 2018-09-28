@@ -37,7 +37,7 @@ int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice);
 ModuleHeader MOD_HEADER(m_message)
   = {
 	"message",	/* Name of module */
-	"4.0", /* Version */
+	"4.2", /* Version */
 	"private message and notice", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

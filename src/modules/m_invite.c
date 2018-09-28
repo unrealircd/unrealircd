@@ -29,7 +29,7 @@ CMD_FUNC(m_invite);
 ModuleHeader MOD_HEADER(m_invite)
   = {
 	"m_invite",
-	"4.0",
+	"4.2",
 	"command /invite", 
 	"3.2-b8-1",
 	NULL 

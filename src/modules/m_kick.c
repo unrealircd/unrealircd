@@ -29,7 +29,7 @@ CMD_FUNC(m_kick);
 ModuleHeader MOD_HEADER(m_kick)
   = {
 	"m_kick",
-	"4.0",
+	"4.2",
 	"command /kick", 
 	"3.2-b8-1",
 	NULL 

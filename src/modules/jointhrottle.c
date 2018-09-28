@@ -30,7 +30,7 @@
 ModuleHeader MOD_HEADER(jointhrottle)
   = {
 	"jointhrottle",
-	"4.0",
+	"4.2",
 	"Join flood protection (set::anti-flood::join-flood)",
 	"3.2-b8-1",
 	NULL,

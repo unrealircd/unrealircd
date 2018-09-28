@@ -29,7 +29,7 @@ CMD_FUNC(m_topic);
 ModuleHeader MOD_HEADER(m_topic)
   = {
 	"m_topic",
-	"4.0",
+	"4.2",
 	"command /topic", 
 	"3.2-b8-1",
 	NULL 

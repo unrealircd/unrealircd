@@ -31,7 +31,7 @@ CMD_FUNC(m_svsnline);
 ModuleHeader MOD_HEADER(m_svsnline)
   = {
 	"svsnline",	/* Name of module */
-	"4.0", /* Version */
+	"4.2", /* Version */
 	"command /svsnline", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

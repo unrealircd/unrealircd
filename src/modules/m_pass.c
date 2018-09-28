@@ -30,7 +30,7 @@ extern MODVAR char zlinebuf[BUFSIZE];
 ModuleHeader MOD_HEADER(m_pass)
   = {
 	"m_pass",
-	"4.0",
+	"4.2",
 	"command /pass", 
 	"3.2-b8-1",
 	NULL 

@@ -9,7 +9,7 @@
 ModuleHeader MOD_HEADER(censor)
   = {
 	"usermodes/censor",
-	"4.0",
+	"4.2",
 	"User Mode +G",
 	"3.2-b8-1",
 	NULL,

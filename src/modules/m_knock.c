@@ -29,7 +29,7 @@ CMD_FUNC(m_knock);
 ModuleHeader MOD_HEADER(m_knock)
   = {
 	"m_knock",
-	"4.0",
+	"4.2",
 	"command /knock", 
 	"3.2-b8-1",
 	NULL 

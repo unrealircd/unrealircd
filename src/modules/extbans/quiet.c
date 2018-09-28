@@ -21,7 +21,7 @@
 ModuleHeader MOD_HEADER(quiet)
 = {
 	"chanmodes/extbans/quiet",
-	"4.0",
+	"4.2",
 	"ExtBan ~q - prevent messages only (quiet)",
 	"3.2-b8-1",
 	NULL 

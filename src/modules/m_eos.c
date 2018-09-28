@@ -29,7 +29,7 @@ CMD_FUNC(m_eos);
 ModuleHeader MOD_HEADER(m_eos)
   = {
 	"m_eos",
-	"4.0",
+	"4.2",
 	"command /eos", 
 	"3.2-b8-1",
 	NULL 

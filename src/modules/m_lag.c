@@ -28,7 +28,7 @@ CMD_FUNC(m_lag);
 ModuleHeader MOD_HEADER(m_lag)
   = {
 	"lag",	/* Name of module */
-	"4.0", /* Version */
+	"4.2", /* Version */
 	"command /lag", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

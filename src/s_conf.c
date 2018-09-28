@@ -1687,7 +1687,7 @@ void upgrade_conf_to_34(void)
 		config_error("In next screen you will be prompted to automatically upgrade the configuration file(s).");
 	else
 	{
-		config_error("We offer a configuration file converter to convert 3.2.x conf's to 4.0, however this "
+		config_error("We offer a configuration file converter to convert 3.2.x conf's to 4.x, however this "
 		             "is not available when running as a service. If you want to use it, make UnrealIRCd "
 		             "run in GUI mode by running 'unreal uninstall'. Then start UnrealIRCd.exe and when "
 		             "it prompts you to convert the configuration click 'Yes'. Check if UnrealIRCd boots properly. "
@@ -1695,7 +1695,7 @@ void upgrade_conf_to_34(void)
 		             "as a service again."); /* TODO: make this unnecessary :D */
 	}
 #else
-	config_error("To upgrade it to the new 4.0 format, run: ./unrealircd upgrade-conf");
+	config_error("To upgrade it to the new 4.x format, run: ./unrealircd upgrade-conf");
 #endif
 
 	config_error("******************************************************************");

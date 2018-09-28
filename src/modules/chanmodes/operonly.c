@@ -24,7 +24,7 @@ CMD_FUNC(operonly);
 ModuleHeader MOD_HEADER(operonly)
   = {
 	"chanmodes/operonly",
-	"4.0",
+	"4.2",
 	"Channel Mode +O",
 	"3.2-b8-1",
 	NULL 

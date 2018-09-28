@@ -29,7 +29,7 @@ CMD_FUNC(m_addmotd);
 ModuleHeader MOD_HEADER(m_addmotd)
   = {
 	"m_addmotd",
-	"4.0",
+	"4.2",
 	"command /addmotd", 
 	"3.2-b8-1",
 	NULL 

@@ -29,7 +29,7 @@ CMD_FUNC(m_dccdeny);
 ModuleHeader MOD_HEADER(m_dccdeny)
   = {
 	"m_dccdeny",
-	"4.0",
+	"4.2",
 	"command /dccdeny", 
 	"3.2-b8-1",
 	NULL 

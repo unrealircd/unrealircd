@@ -30,7 +30,7 @@ void _send_list(aClient *cptr);
 ModuleHeader MOD_HEADER(m_list)
   = {
 	"m_list",
-	"4.0",
+	"4.2",
 	"command /list", 
 	"3.2-b8-1",
 	NULL 

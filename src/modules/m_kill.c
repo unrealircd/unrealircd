@@ -29,7 +29,7 @@ static char buf[BUFSIZE], buf2[BUFSIZE];
 ModuleHeader MOD_HEADER(m_kill)
   = {
 	"kill",	/* Name of module */
-	"4.0", /* Version */
+	"4.2", /* Version */
 	"command /kill", /* Short description of module */
 	"3.2-b8-1",
 	NULL

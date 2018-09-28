@@ -27,7 +27,7 @@ CMD_FUNC(m_cycle);
 ModuleHeader MOD_HEADER(m_cycle)
   = {
 	"cycle",	/* Name of module */
-	"4.0", /* Version */
+	"4.2", /* Version */
 	"command /cycle", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

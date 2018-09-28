@@ -29,7 +29,7 @@ CMD_FUNC(m_umode2);
 ModuleHeader MOD_HEADER(m_umode2)
   = {
 	"m_umode2",
-	"4.0",
+	"4.2",
 	"command /umode2", 
 	"3.2-b8-1",
 	NULL 

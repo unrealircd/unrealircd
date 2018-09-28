@@ -45,7 +45,7 @@ static int bouncedtimes = 0;
 ModuleHeader MOD_HEADER(m_join)
   = {
 	"m_join",
-	"4.0",
+	"4.2",
 	"command /join", 
 	"3.2-b8-1",
 	NULL 

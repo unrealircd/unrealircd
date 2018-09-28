@@ -29,7 +29,7 @@ CMD_FUNC(m_netinfo);
 ModuleHeader MOD_HEADER(m_netinfo)
   = {
 	"m_netinfo",
-	"4.0",
+	"4.2",
 	"command /netinfo", 
 	"3.2-b8-1",
 	NULL 

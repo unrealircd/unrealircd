@@ -68,7 +68,7 @@ static int override_who(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc
 ModuleHeader MOD_HEADER(m_whox)
   = {
 	"m_whox",
-	"4.0",
+	"4.2",
 	"command /who",
 	"3.2-b8-1",
 	NULL
