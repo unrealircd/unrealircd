@@ -1,8 +1,22 @@
-UnrealIRCd 4.0.19-rc2 Release Notes
-====================================
+UnrealIRCd 4.2.0 Release Notes
+===============================
 
-This is the second release candidate for UnrealIRCd 4.0.19. Please help
-test this release and report all bugs to https://bugs.unrealircd.org/
+There have been so many changes in this and last few 4.0.x versions,
+it justifies calling this new release "UnrealIRCd 4.2.0".
+
+Marking the beginning of the 4.2 series, this release introduces features
+such as "soft klines" and "soft actions". A significant number of optional
+modules are now loaded as default, including timed channel bans and
+textbans. Also, a lot more smaller changes are included in this release,
+such as fixes for TLSv1.3 and experimental WHOX support.
+See further down for a full list of changes.
+
+NOTE: Version 4.2.0 is the direct successor to 4.0.18. There will be
+      no further 4.0.x releases (in particular there will be no 4.0.19).
+
+Upgrade advice: if you are conservative about upgrades then feel free to
+wait for 4.2.1. Other than some blacklist fixes there are no major bugs
+fixed. This release is mostly about new features + some minor fixes.
 
 Enhancements:
 * New option to disable a module: blacklist-module "modulename";
@@ -25,7 +39,7 @@ Enhancements:
   unauthenticated users. Users who are authenticated to services (SASL)
   are exempt from the corresponding spamfilter/blacklist/antirandom/..
   See https://www.unrealircd.org/docs/Actions for the full action list.
-* WARNING: If your network also contains UnrealIRCd servers below v4.0.19
+* WARNING: If your network also contains UnrealIRCd servers below v4.2.0
   then it is not recommended to use global soft bans (such as soft gline
   or any spamfilter with soft-xx actions). There won't be havoc, but the
   bans won't be effective on parts of the network.

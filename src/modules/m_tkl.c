@@ -1496,7 +1496,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 
 
 /** Find matching (G)ZLINE, if any.
- * Note: function prototype changed as per UnrealIRCd 4.0.19.
+ * Note: function prototype changed as per UnrealIRCd 4.2.0.
  * @retval The (G)Z-Line that matched, or NULL if no such ban was found.
  */
 aTKline *_find_tkline_match_zap(aClient *cptr)
