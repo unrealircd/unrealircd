@@ -1,5 +1,5 @@
 /*
- * Configuration file updater - upgrade from 3.2.x to 4.0
+ * Configuration file updater - upgrade from 3.2.x to 4.x
  * (C) Copyright 2015 Bram Matthys and the UnrealIRCd team
  *
  * License: GPLv2
@@ -445,11 +445,11 @@ int upgrade_link_block(ConfigEntry *ce)
 		{
 			/* Prompt user ? */
 			config_warn("Link block '%s' has a different connect/receive password. "
-			            "This is no longer supported in UnrealIRCd 4.0",
+			            "This is no longer supported in UnrealIRCd 4.x",
 			            ce->ce_vardata);
 			
 			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
-			         "\tpassword \"%s\"; /* WARNING: password changed due to 4.0 upgrade */\n",
+			         "\tpassword \"%s\"; /* WARNING: password changed due to 4.x upgrade */\n",
 			         options_autoconnect ? password_connect : password_receive);
 		} else
 		{
@@ -864,7 +864,7 @@ int upgrade_allow_block(ConfigEntry *ce)
 	else
 	{
 		/* very rare case -- let's bet on IP */
-		snprintf(comment, sizeof(comment), "/* CHANGED BY 3.2.x TO 4.0 CONF UPGRADE!! Was: ip %s; hostname %s; */\n", ip, hostname);
+		snprintf(comment, sizeof(comment), "/* CHANGED BY 3.2.x TO 4.x CONF UPGRADE!! Was: ip %s; hostname %s; */\n", ip, hostname);
 		hostname = NULL;
 	}
 
@@ -881,11 +881,11 @@ int upgrade_allow_block(ConfigEntry *ce)
 
 	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tclass %s;\n", class);
 	
-	/* maxperip: optional in 3.2.x, mandatory in 4.0 */
+	/* maxperip: optional in 3.2.x, mandatory in 4.x */
 	if (maxperip)
 		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tmaxperip %s;\n", maxperip);
 	else
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tmaxperip 3; /* CHANGED BY 3.2.x TO 4.0 CONF UPGRADE! */\n");
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tmaxperip 3; /* CHANGED BY 3.2.x TO 4.x CONF UPGRADE! */\n");
 	
 	if (ipv6_clone_mask)
 		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tipv6-clone-mask %s;\n", ipv6_clone_mask);
@@ -1167,7 +1167,7 @@ int upgrade_oper_block(ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "operclass"))
-			return 0; /* already 4.0 conf */
+			return 0; /* already 4.x conf */
 		else if (!strcmp(cep->ce_varname, "flags"))
 		{
 			if (cep->ce_vardata) /* short options (flag letters) */
@@ -1662,7 +1662,7 @@ void update_conf(void)
 	char *mainconf = configfile;
 	int upgraded_files = 0;
 
-	config_status("Attempting to upgrade '%s' (and all it's included files) from UnrealIRCd 3.2.x to UnrealIRCd 4.0...", configfile);
+	config_status("Attempting to upgrade '%s' (and all it's included files) from UnrealIRCd 3.2.x to UnrealIRCd 4.x...", configfile);
 	
 	strlcpy(me.name, "<server>", sizeof(me.name));
 	memset(&upgrade, 0, sizeof(upgrade));

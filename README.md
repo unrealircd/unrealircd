@@ -1,5 +1,5 @@
-[![Build Status - *NIX](https://travis-ci.org/unrealircd/unrealircd.svg?branch=unreal40)](https://travis-ci.org/unrealircd/unrealircd)
-[![Build Status - Windows](https://ci.appveyor.com/api/projects/status/9kgectl2mfyia0s5/branch/unreal40?svg=true)](https://ci.appveyor.com/project/syzop/unrealircd/branch/unreal40)
+[![Build Status - *NIX](https://travis-ci.org/unrealircd/unrealircd.svg?branch=unreal42)](https://travis-ci.org/unrealircd/unrealircd)
+[![Build Status - Windows](https://ci.appveyor.com/api/projects/status/9kgectl2mfyia0s5/branch/unreal42?svg=true)](https://ci.appveyor.com/project/syzop/unrealircd/branch/unreal42)
 [![Twitter Follow](https://img.shields.io/twitter/follow/Unreal_IRCd.svg?style=social&label=Follow)](https://twitter.com/Unreal_IRCd)
 
 ## About UnrealIRCd

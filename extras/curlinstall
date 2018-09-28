@@ -18,7 +18,7 @@ if [ ! -f src/parse.c ]; then
 		cd ..
 	else
 		echo "Please run this program from your UnrealIRCd directory"
-		echo "(usually $HOME/unrealircd-4.0.X or something like that)"
+		echo "(usually $HOME/unrealircd-4.2.X or something like that)"
 		exit 1
 	fi
 fi

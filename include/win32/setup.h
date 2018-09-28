@@ -81,13 +81,13 @@
 #define UNREAL_VERSION_GENERATION 4
 
 /* Major version number (e.g.: 2 for Unreal3.2*) */
-#define UNREAL_VERSION_MAJOR 0
+#define UNREAL_VERSION_MAJOR 2
 
 /* Minor version number (e.g.: 1 for Unreal3.2.1) */
-#define UNREAL_VERSION_MINOR 19
+#define UNREAL_VERSION_MINOR 0
 
 /* Version suffix such as a beta marker or release candidate marker. (e.g.:
    -rcX for unrealircd-3.2.9-rcX) */
-#define UNREAL_VERSION_SUFFIX "-rc2"
+#define UNREAL_VERSION_SUFFIX ""
 
 #endif

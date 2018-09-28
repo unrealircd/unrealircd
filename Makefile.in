@@ -244,7 +244,7 @@ install: all
 	@echo '* To start/stop UnrealIRCd run: @SCRIPTDIR@/unrealircd"'
 	@echo ''
 	@echo '* Consult the documentation online at:'
-	@echo '  * https://www.unrealircd.org/docs/UnrealIRCd_4_documentation'
+	@echo '  * https://www.unrealircd.org/docs/'
 	@echo '  * https://www.unrealircd.org/docs/FAQ'
 	@echo '* You may also wish to install a cron job to ensure UnrealIRCd is always running:'
 	@echo '  * https://www.unrealircd.org/docs/Cron_job'

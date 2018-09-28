@@ -19,7 +19,7 @@ function build_ssl {
 }
 
 if [ ! -d extras ]; then
-	echo "This tool is supposed to be run from the source root, so ~/unrealircd-4.0.x or similar"
+	echo "This tool is supposed to be run from the source root, so ~/unrealircd-4.2.x or similar"
 	exit 1
 fi
 
