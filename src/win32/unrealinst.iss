@@ -43,6 +43,7 @@ Source: ".CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";Flags: ign
 Source: "doc\RELEASE-NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
 
 Source: "doc\conf\*.default.conf"; DestDir: "{app}\conf"; Flags: ignoreversion
+Source: "doc\conf\*.optional.conf"; DestDir: "{app}\conf"; Flags: ignoreversion
 Source: "doc\conf\spamfilter.conf"; DestDir: "{app}\conf"; Flags: onlyifdoesntexist
 Source: "doc\conf\badwords.conf"; DestDir: "{app}\conf"; Flags: onlyifdoesntexist
 Source: "doc\conf\dccallow.conf"; DestDir: "{app}\conf"; Flags: onlyifdoesntexist
