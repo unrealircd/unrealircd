@@ -1,7 +1,7 @@
 UnrealIRCd 4.2.0 Release Notes
 ===============================
 
-There have been so many changes in this and last few 4.0.x versions,
+There have been so many changes in this and the last few 4.0.x versions,
 it justifies calling this new release "UnrealIRCd 4.2.0".
 
 Marking the beginning of the 4.2 series, this release introduces features
@@ -13,6 +13,7 @@ See further down for a full list of changes.
 
 NOTE: Version 4.2.0 is the direct successor to 4.0.18. There will be
       no further 4.0.x releases (in particular there will be no 4.0.19).
+      https://www.unrealircd.org/docs/FAQ#Questions_about_the_new_4.2.x_series
 
 Upgrade advice: if you are conservative about upgrades then feel free to
 wait for 4.2.1. Other than some blacklist fixes there are no major bugs
@@ -102,6 +103,7 @@ Minor issues fixed:
   There is now set::ssl::ciphersuites, specifically for TLSv1.3.
   Note that the default is perfectly fine so at this point in time it
   shouldn't need any adjustment (but the option is there...).
+* Windows: conf\modules.optional.conf was missing.
 
 Removed:
 * allow::options::sasl has been removed. Use the new and more flexible
