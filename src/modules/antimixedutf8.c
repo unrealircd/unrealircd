@@ -157,7 +157,10 @@ static int override_msg(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc
 		} /* no else here!! */
 
 		if ((cfg.ban_action == BAN_ACT_BLOCK) ||
-		    ((cfg.ban_action == BAN_ACT_SOFT_BLOCK) && !IsLoggedIn(sptr)))
+#ifdef BAN_ACT_SOFT_BLOCK
+		    ((cfg.ban_action == BAN_ACT_SOFT_BLOCK) && !IsLoggedIn(sptr))
+#endif
+		    )
 		{
 			sendnotice(sptr, "%s", cfg.ban_reason);
 			return 0;
