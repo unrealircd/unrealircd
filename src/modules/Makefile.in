@@ -62,7 +62,7 @@ R_MODULES= \
 	 blacklist.so jointhrottle.so \
 	 antirandom.so hideserver.so jumpserver.so \
 	 m_ircops.so m_staff.so nocodes.so \
-	 charsys.so
+	 charsys.so antimixedutf8.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -517,6 +517,10 @@ nocodes.so: nocodes.c $(INCLUDES)
 charsys.so: charsys.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o charsys.so charsys.c
+
+antimixedutf8.so: antimixedutf8.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o antimixedutf8.so antimixedutf8.c
 
 #############################################################################
 # capabilities

@@ -218,6 +218,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_STAFF.DLL \
  SRC/MODULES/NOCODES.DLL \
  SRC/MODULES/CHARSYS.DLL \
+ SRC/MODULES/ANTIMIXEDUTF8.DLL \
  SRC/MODULES/CHANMODES/CENSOR.DLL \
  SRC/MODULES/CHANMODES/DELAYJOIN.DLL \
  SRC/MODULES/CHANMODES/FLOODPROT.DLL \
@@ -846,6 +847,9 @@ src/modules/nocodes.dll: src/modules/nocodes.c $(INCLUDES)
 
 src/modules/charsys.dll: src/modules/charsys.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/charsys.c $(MODLFLAGS)
+
+src/modules/antimixedutf8.dll: src/modules/antimixedutf8.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/antimixedutf8.c $(MODLFLAGS)
 
 src/modules/chanmodes/censor.dll: src/modules/chanmodes/censor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/censor.c $(MODLFLAGS)
