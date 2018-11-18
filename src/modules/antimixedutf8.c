@@ -191,9 +191,9 @@ static int override_msg(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc
 				GetIP(sptr), score);
 		} /* no else here!! */
 
-		if ((cfg.ban_action == BAN_ACT_BLOCK) ||
+		if ((cfg.ban_action == BAN_ACT_BLOCK)
 #ifdef BAN_ACT_SOFT_BLOCK
-		    ((cfg.ban_action == BAN_ACT_SOFT_BLOCK) && !IsLoggedIn(sptr))
+		    || ((cfg.ban_action == BAN_ACT_SOFT_BLOCK) && !IsLoggedIn(sptr))
 #endif
 		    )
 		{
