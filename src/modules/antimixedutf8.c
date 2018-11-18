@@ -248,7 +248,7 @@ static void init_config(void)
 {
 	memset(&cfg, 0, sizeof(cfg));
 	/* Default values */
-	cfg.score = 5;
+	cfg.score = 10;
 	cfg.ban_reason = strdup("Possible mixed character spam");
 	cfg.ban_action = BAN_ACT_BLOCK;
 	cfg.ban_time = 60 * 60 * 4; /* irrelevant for block, but some default for others */
