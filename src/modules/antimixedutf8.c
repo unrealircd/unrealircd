@@ -1,6 +1,6 @@
 /*
  * Anti mixed UTF8 - a filter written by Bram Matthys ("Syzop").
- * Thanks to PeGaSuS for bringing the spam to my attention and testing.
+ * Thanks to Mr_Smoke for bringing the spam to my attention and PeGaSuS (The_Myth) for testing.
  *
  * ==[ ABOUT ]==
  * This module will detect and stop spam containing of characters of
