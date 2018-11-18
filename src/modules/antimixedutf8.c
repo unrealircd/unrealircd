@@ -1,7 +1,8 @@
 /*
  * Anti mixed UTF8 - a filter written by Bram Matthys ("Syzop").
  * Reported by Mr_Smoke in https://bugs.unrealircd.org/view.php?id=5163
- * Tested by PeGaSuS (The_Myth) with some of the most used spam lines
+ * Tested by PeGaSuS (The_Myth) with some of the most used spam lines.
+ * Help with testing and fixing Cyrillic from 'i' <info@servx.org>
  *
  * ==[ ABOUT ]==
  * This module will detect and stop spam containing of characters of
@@ -62,8 +63,9 @@ static void init_config(void);
 DLLFUNC int antimixedutf8_config_test(ConfigFile *, ConfigEntry *, int, int *);
 DLLFUNC int antimixedutf8_config_run(ConfigFile *, ConfigEntry *, int);
 
-#define SCRIPT_LATIN		0
-#define SCRIPT_CYRILLIC		1
+#define SCRIPT_UNDEFINED	0
+#define SCRIPT_LATIN		1
+#define SCRIPT_CYRILLIC		2
 
 /**** the detection algorithm follows first, the module/config code is at the end ****/
 
@@ -84,46 +86,77 @@ int detect_script(const char *t)
 	 * be enhanced later.
 	 */
 
-	if (t[0] == 0xd0)
+	if ((t[0] == 0xd0) && (t[1] >= 0x80) && (t[1] <= 0xbf))
+		return SCRIPT_CYRILLIC;
+	else if ((t[0] == 0xd1) && (t[1] >= 0x80) && (t[1] <= 0xbf))
+		return SCRIPT_CYRILLIC;
+	else if ((t[0] == 0xd2) && (t[1] >= 0x80) && (t[1] <= 0xbf))
+		return SCRIPT_CYRILLIC;
+	else if ((t[0] == 0xd3) && (t[1] >= 0x80) && (t[1] <= 0xbf))
+		return SCRIPT_CYRILLIC;
+
+	if ((t[0] >= 'a') && (t[0] <= 'z'))
+		return SCRIPT_LATIN;
+	if ((t[0] >= 'A') && (t[0] <= 'Z'))
+		return SCRIPT_LATIN;
+
+	return SCRIPT_UNDEFINED;
+}
+
+/** Returns length of an (UTF8) character. May return <1 for error conditions.
+ * Made by i <info@servx.org>
+ */
+static int utf8_charlen(const char *str)
+{
+	struct { char mask; char val; } t[4] =
+	{ { 0x80, 0x00 }, { 0xE0, 0xC0 }, { 0xF0, 0xE0 }, { 0xF8, 0xF0 } };
+	unsigned k, j;
+
+	for (k = 0; k < 4; k++)
 	{
-		if ((t[1] == 0x81) || (t[1] >= 0x90) && (t[1] <= 0xbf))
+		if ((*str & t[k].mask) == t[k].val)
 		{
-			return SCRIPT_CYRILLIC;
-		}
-	} else
-	if (t[0] == 0xd1)
-	{
-		if (((t[1] >= 0x80) && (t[1] <= 0x8f)) ||
-		    ((t[1] >= 0x80) && (t[1] <= 0x8f)))
-		{
-			return SCRIPT_CYRILLIC;
+			if (4 < k + 1)
+				return -1;
+			for (j = 0; j < k; j++)
+			{
+				if ((*(++str) & 0xC0) != 0x80)
+					return -1;
+			}
+			return k + 1;
 		}
 	}
-	return SCRIPT_LATIN;
+	return 1;
 }
 
 int lookalikespam_score(const char *text)
 {
 	const char *p;
-	int last_script = SCRIPT_LATIN;
+	int last_script = SCRIPT_UNDEFINED;
 	int current_script;
 	int points = 0;
 	int last_character_was_word_separator = 0;
-	
+	int skip = 0;
+
 	for (p = text; *p; p++)
 	{
 		current_script = detect_script(p);
-		if (current_script != last_script)
-		{
-			/* A script change = 1 point */
-			points++;
 
-			/* Give an additional point if the script change happened
-			 * within the same word, as that would be rather unusual
-			 * in normal cases.
-			 */
-			if (!last_character_was_word_separator)
+		if (current_script != SCRIPT_UNDEFINED)
+		{
+			if ((current_script != last_script) && (last_script != SCRIPT_UNDEFINED))
+			{
+				/* A script change = 1 point */
 				points++;
+
+				/* Give an additional point if the script change happened
+				 * within the same word, as that would be rather unusual
+				 * in normal cases.
+				 */
+				if (!last_character_was_word_separator)
+					points++;
+			}
+			last_script = current_script;
 		}
 
 		if (strchr("., ", *p))
@@ -131,7 +164,9 @@ int lookalikespam_score(const char *text)
 		else
 			last_character_was_word_separator = 0;
 
-		last_script = current_script;
+		skip = utf8_charlen(p);
+		if (skip > 1)
+			p += skip - 1;
 	}
 
 	return points;
