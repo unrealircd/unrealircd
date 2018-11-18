@@ -1,6 +1,7 @@
 /*
  * Anti mixed UTF8 - a filter written by Bram Matthys ("Syzop").
- * Thanks to PeGaSuS for bringing the spam to my attention and testing.
+ * Reported by Mr_Smoke in https://bugs.unrealircd.org/view.php?id=5163
+ * Tested by PeGaSuS (The_Myth) with some of the most used spam lines
  *
  * ==[ ABOUT ]==
  * This module will detect and stop spam containing of characters of
