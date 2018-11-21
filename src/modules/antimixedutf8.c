@@ -11,10 +11,10 @@
  * This unusual behavior can be detected easily and action can be taken.
  *
  * ==[ MODULE LOADING AND CONFIGURATION ]==
- * loadmodule "third/antimixedutf8";
+ * loadmodule "antimixedutf8";
  * set {
  *         antimixedutf8 {
- *                 score 5;
+ *                 score 10;
  *                 ban-action block;
  *                 ban-reason "Possible mixed character spam";
  *                 ban-time 4h; // For other types
