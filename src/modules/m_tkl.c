@@ -2382,30 +2382,26 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
-/* execute_ban_action, a tkl helper. (Syzop/2003)
- * PARAMETERS:
- * sptr:     the client which is affected
- * action:   type of ban (BAN_ACT*)
- * reason:   ban reason
- * duration: duration of ban in seconds
- * WHAT IT DOES:
- * This function will shun/kline/gline/zline the user.
- * If the action field is 0 (BAN_ACT_KILL) the user is
- * just killed (and the time parameter is ignored).
- * ASSUMES:
- * This function assumes that sptr is locally connected.
- * RETURN VALUE:
- * -1 in case of block/tempshun, FLUSH_BUFFER in case of
- * kill/zline/gline/etc.. (you should NOT read from 'sptr'
- * after you got FLUSH_BUFFER!!!)
+/** Take an action on the user, such as banning or killing.
+ * @author Bram Matthys (Syzop), 2003-present
+ * @param sptr     The client which is affected.
+ * @param action   The type of ban (one of BAN_ACT_*).
+ * @param reason   The ban reason.
+ * @param duration The ban duration in seconds.
+ * @note This function assumes that sptr is a locally connected user.
+ * @retval -1 in case of block/tempshun.
+ * @retval -5 in case of kill/zline/gline/etc (-5 = FLUSH_BUFFER).
+ *            one should no longer read from 'sptr' as the client
+ *            has been freed.
+ * @retval 0  no action is taken, the user is exempted.
  */
 int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 {
 	/* If this is a soft action and the user is logged in, then the ban does not apply.
 	 * NOTE: Actually in such a case it would be better if place_host_ban() would not
-	 * be called at all. Or at least, since the caller should not take any action
+	 * be called at all. Or at least, the caller should not take any action
 	 * (eg: the message should be delivered, the user may connect, etc..)
-	 * So this is more like secondary protection in case the caller forgets...
+	 * The following is more like secondary protection in case the caller forgets...
 	 */
 	if (IsSoftBanAction(action) && IsLoggedIn(sptr))
 		return 0;
@@ -2491,6 +2487,7 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			} else
 				return find_tkline_match(sptr, 0);
 		}
+		case BAN_ACT_SOFT_KILL:
 		case BAN_ACT_KILL:
 		default:
 			return exit_client(sptr, sptr, sptr, reason);
