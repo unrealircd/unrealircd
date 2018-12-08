@@ -1529,8 +1529,8 @@ void CmdoverrideDel(Cmdoverride *cmd)
 
 int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	if (ovr->prev)
-		return ovr->prev->func(ovr->prev, cptr, sptr, parc, parv);
+	if (ovr->next)
+		return ovr->next->func(ovr->next, cptr, sptr, parc, parv);
 	return ovr->command->func(cptr, sptr, parc, parv);
 }
 
