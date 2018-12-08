@@ -419,7 +419,7 @@ int del_listmode(Ban **list, aChannel *chptr, char *banid)
  */
 inline Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
 {
-	return is_banned_with_nick(sptr, chptr, type, sptr->name);
+	return is_banned_with_nick(sptr, chptr, type, NULL);
 }
 
 /** ban_check_mask - Checks if the user matches the specified n!u@h mask -or- run an extended ban.
@@ -459,31 +459,63 @@ inline int ban_check_mask(aClient *sptr, aChannel *chptr, char *banstr, int type
  * @param sptr   Client to check (can be remote client)
  * @param chptr  Channel to check
  * @param type   Type of ban to check for (BANCHK_*)
- * @param nick   Nick of the user
+ * @param nick   Nick of the user (or NULL, to default to sptr->name)
  * @returns      A pointer to the ban struct if banned, otherwise NULL.
  */
 Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 {
-	Ban *tmp, *tmp2;
+	Ban *ban, *ex;
+	char savednick[NICKLEN+1];
+
+	/* It's not really doable to pass 'nick' to all the ban layers,
+	 * including extbans (with stacking) and so on. Or at least not
+	 * without breaking several module API's.
+	 * So, instead, we temporarily set 'sptr->name' to 'nick' and
+	 * restore it to the orginal value at the end of this function.
+	 * This is possible because all these layers never send a message
+	 * to 'sptr' and only indicate success/failure.
+	 * Note that all this ONLY happens if is_banned_with_nick() is called
+	 * with a non-NULL nick. That doesn't happen much. In UnrealIRCd
+	 * only in case of '/NICK newnick'. This fixes #5165.
+	 */
+	if (nick)
+	{
+		strlcpy(savednick, sptr->name, sizeof(savednick));
+		strlcpy(sptr->name, nick, sizeof(sptr->name));
+	}
 
 	/* We check +b first, if a +b is found we then see if there is a +e.
 	 * If a +e was found we return NULL, if not, we return the ban.
 	 */
-	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
-	{
-		if (!ban_check_mask(sptr, chptr, tmp->banstr, type, 0))
-			continue;
 
-		/* Ban found, now check for +e */
-		for (tmp2 = chptr->exlist; tmp2; tmp2 = tmp2->next)
-		{
-			if (ban_check_mask(sptr, chptr, tmp2->banstr, type, 0))
-				return NULL; /* except matched */
-		}
-		break; /* ban found and not on except */
+	for (ban = chptr->banlist; ban; ban = ban->next)
+	{
+		if (ban_check_mask(sptr, chptr, ban->banstr, type, 0))
+			break;
 	}
 
-	return (tmp);
+	if (ban)
+	{
+		/* Ban found, now check for +e */
+		for (ex = chptr->exlist; ex; ex = ex->next)
+		{
+			if (ban_check_mask(sptr, chptr, ex->banstr, type, 0))
+			{
+				/* except matched */
+				ban = NULL;
+				break;
+			}
+		}
+		/* user is not on except, 'ban' stays non-NULL. */
+	}
+
+	if (nick)
+	{
+		/* Restore the nick */
+		strlcpy(sptr->name, savednick, sizeof(sptr->name));
+	}
+
+	return ban;
 }
 
 /*
