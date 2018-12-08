@@ -940,6 +940,14 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					lastce = &(cursection->ce_entries);
 				for(;*lastce;lastce = &((*lastce)->ce_next))
 					continue;
+				if (*(ptr+1) != ';')
+				{
+					/* Simulate closing ; so you can get away with } instead of ugly }; */
+					*lastce = curce;
+					lastce = &(curce->ce_next);
+					curce->ce_fileposend = (ptr - confdata);
+					curce = NULL;
+				}
 				break;
 			case '#':
 				ptr++;
