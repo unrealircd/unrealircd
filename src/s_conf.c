@@ -963,27 +963,14 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				else if (*(ptr+1) == '*')
 				{
 					int commentstart = linenumber;
-					int commentlevel = 1;
 
 					for(ptr+=2;*ptr;ptr++)
 					{
-						if ((*ptr == '/') && (*(ptr+1) == '*'))
+						if ((*ptr == '*') && (*(ptr+1) == '/'))
 						{
-							commentlevel++;
 							ptr++;
-						}
-
-						else if ((*ptr == '*') && (*(ptr+1) == '/'))
-						{
-							commentlevel--;
-							ptr++;
-						}
-
-						else if (*ptr == '\n')
-							linenumber++;
-
-						if (!commentlevel)
 							break;
+						}
 					}
 					if (!*ptr)
 					{
@@ -1074,6 +1061,8 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				{
 					config_status("%s:%i Ignoring extra end comment\n",
 						filename, linenumber);
+					config_status("WARNING: Starting with UnrealIRCd 4.2.1 a /*-style comment stops as soon as the first */ is encountered. "
+					              "See https://www.unrealircd.org/docs/FAQ#Nesting_comments for more information.");
 					ptr++;
 					break;
 				}
