@@ -519,27 +519,6 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 }
 
 /*
- * Checks if the "user" IRC is banned, used by +mu.
- */
-static int is_irc_banned(aChannel *chptr)
-{
-	Ban *tmp;
-	/* Check for this user, ident/host are "illegal" on purpose */
-	char *check = "IRC!\001@\001";
-	
-	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
-		if (match(tmp->banstr, check) == 0)
-		{
-			/* Ban found, now check for +e */
-			for (tmp = chptr->exlist; tmp; tmp = tmp->next)
-				if (match(tmp->banstr, check) == 0)
-					return 0; /* In exception list */
-			return 1;
-		}
-	return 0;
-}
-
-/*
  * adds a user to a channel by adding another link to the channels member
  * chain.
  */
