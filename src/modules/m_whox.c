@@ -84,7 +84,7 @@ MOD_INIT(m_whox)
 
 MOD_LOAD(m_whox)
 {
-	CmdoverrideAddEx(modinfo->handle, "WHO", 9999999, override_who);
+	CmdoverrideAddEx(modinfo->handle, "WHO", 0, override_who);
 	return MOD_SUCCESS;
 }
 
