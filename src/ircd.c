@@ -1137,7 +1137,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 			  type = Auth_FindType(NULL, p);
 			  if (type == -1)
 			  {
-			      type = AUTHTYPE_BCRYPT;
+			      type = AUTHTYPE_ARGON2;
 			  } else {
 			      p = *++argv;
 			      argc--;
@@ -1155,7 +1155,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 			  {
 			      /* Hmmm.. is this warning really still true (and always) ?? */
 			      printf("WARNING: Password truncated to 8 characters due to 'crypt' algorithm. "
-		                 "You are suggested to use the 'bcrypt' algorithm instead.");
+		                 "You are suggested to use the 'argon2' algorithm instead.");
 				  p[8] = '\0';
 			  }
 			  if (!(result = Auth_Make(type, p))) {

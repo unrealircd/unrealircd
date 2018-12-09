@@ -701,6 +701,7 @@ AC_ARG_WITH(disable-extendedban-stacking, [AS_HELP_STRING([--with-disable-extend
        		[AC_DEFINE([DISABLE_STACKED_EXTBANS], [], [Define to disable extended ban stacking (~q:~c:\#chan, etc)])])])
 AC_ARG_WITH(system-tre, [AS_HELP_STRING([--with-system-tre], [Use the system tre package instead of bundled, discovered using pkg-config])], [], [with_system_tre=no])
 AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--with-system-pcre2], [Use the system pcre2 package instead of bundled, discovered using pkg-config])], [], [with_system_pcre2=no])
+AC_ARG_WITH(system-argon2, [AS_HELP_STRING([--without-system-argon2], [Use bundled version instead of system argon2 library. Normally autodetected via pkg-config])], [], [with_system_argon2=yes])
 AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled version instead of system c-ares. Normally autodetected via pkg-config.])], [], [with_system_cares=yes])
 CHECK_SSL
 CHECK_SSL_CTX_SET1_CURVES_LIST
@@ -835,6 +836,41 @@ cd $cur_dir
 ],[
 dnl use pkgconfig for pcre2:
 PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.00)
+])
+
+AS_IF([test "x$with_system_argon2" = "xno"],[
+dnl REMEMBER TO CHANGE WITH A NEW ARGON2 RELEASE!
+argon2_version="20181209"
+AC_MSG_RESULT(extracting Argon2 library)
+cur_dir=`pwd`
+cd extras
+dnl remove old argon2 directory to force a recompile...
+dnl and remove its installation prefix just to clean things up.
+rm -rf argon2-$argon2_version argon2
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz argon2-$argon2_version.tar.gz
+else
+	cp argon2-$argon2_version.tar.gz argon2-$argon2_version.tar.gz.bak
+	gunzip -f argon2-$argon2_version.tar.gz
+	cp argon2-$argon2_version.tar.gz.bak argon2-$argon2_version.tar.gz
+	tar xf argon2-$argon2_version.tar
+fi
+AC_MSG_RESULT(compiling Argon2 library)
+cd argon2-$argon2_version
+$ac_cv_prog_MAKER || exit 1
+AC_MSG_RESULT(installing Argon2 library)
+$ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 || exit 1
+# We need to manually copy the libs to PRIVATELIBDIR because
+# there is no way to tell make install in libargon2 to do so.
+cp -av $cur_dir/extras/argon2/lib/* $PRIVATELIBDIR/
+ARGON2_CFLAGS="-I$cur_dir/extras/argon2/include"
+AC_SUBST(ARGON2_CFLAGS)
+ARGON2_LIBS="-L$PRIVATELIBDIR -largon2 -lrt -ldl"
+AC_SUBST(ARGON2_LIBS)
+cd $cur_dir
+],[
+dnl use pkgconfig for argon2:
+PKG_CHECK_MODULES([ARGON2], libargon2 >= 0)
 ])
 
 dnl Use system c-ares when available, unless --without-system-cares.

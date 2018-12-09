@@ -73,6 +73,7 @@ Source: "src\modules\cap\*.dll"; DestDir: "{app}\modules\cap"; Flags: ignorevers
 
 Source: "c:\dev\tre\win32\release\tre.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\pcre2\bin\pcre*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\argon2\vs2015\build\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\c-ares\msvc\cares\dll-release\cares.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\libressl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\libressl\bin\*.dll"; DestDir: "{app}"; Flags: ignoreversion

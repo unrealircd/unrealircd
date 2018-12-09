@@ -19,6 +19,7 @@
 
 #include "unrealircd.h"
 #include "crypt_blowfish.h"
+#include <argon2.h>
 
 anAuthStruct MODVAR AuthTypes[] = {
 	{"plain",           AUTHTYPE_PLAINTEXT},
@@ -34,6 +35,7 @@ anAuthStruct MODVAR AuthTypes[] = {
 	{"sslclientcertfp", AUTHTYPE_SSL_CLIENTCERTFP},
 	{"certfp",          AUTHTYPE_SSL_CLIENTCERTFP},
 	{"spkifp",          AUTHTYPE_SPKIFP},
+	{"argon2",          AUTHTYPE_ARGON2},
 	{NULL,              0}
 };
 
@@ -82,6 +84,9 @@ int Auth_AutoDetectHashType(char *hash)
 	
 	if (!strncmp(hash, "$2a$", 4) || !strncmp(hash, "$2b$", 4) || !strncmp(hash, "$2y$", 4))
 		return AUTHTYPE_BCRYPT;
+
+	if (!strncmp(hash, "$argon2", 7))
+		return AUTHTYPE_ARGON2;
 
 	/* Now handle UnrealIRCd-style password hashes.. */
 	if (parsepass(hash, &saltstr, &hashstr) == 0)
@@ -270,6 +275,31 @@ int max;
 	*salt = saltbuf;
 	*hash = hashbuf;
 	return 1;
+}
+
+static int authcheck_argon2(aClient *cptr, anAuthStruct *as, char *para)
+{
+	argon2_type hashtype;
+
+	if (!para)
+		return -1;
+
+	/* Find out the hashtype. Why do we need to do this, why is this
+	 * not in the library or irrelevant by using some generic function?
+	 */
+	if (!strncmp(as->data, "$argon2id", 9))
+		hashtype = Argon2_id;
+	else if (!strncmp(as->data, "$argon2i", 8))
+		hashtype = Argon2_i;
+	else if (!strncmp(as->data, "$argon2d", 8))
+		hashtype = Argon2_d;
+	else
+		return -1; /* unknown argon2 type */
+
+	if (argon2_verify(as->data, para, strlen(para), hashtype) == ARGON2_OK)
+		return 2; /* MATCH */
+
+	return -1; /* NO MATCH or error */
 }
 
 static int authcheck_bcrypt(aClient *cptr, anAuthStruct *as, char *para)
@@ -500,6 +530,9 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				return 2;
 			return -1;
 
+		case AUTHTYPE_ARGON2:
+			return authcheck_argon2(cptr, as, para);
+
 		case AUTHTYPE_BCRYPT:
 			return authcheck_bcrypt(cptr, as, para);
 
@@ -601,6 +634,44 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 		}
 	}
 	return -1;
+}
+
+#define UNREALIRCD_ARGON2_DEFAULT_TIME_COST             3
+#define UNREALIRCD_ARGON2_DEFAULT_MEMORY_COST           8192
+#define UNREALIRCD_ARGON2_DEFAULT_PARALLELISM_COST      2
+#define UNREALIRCD_ARGON2_DEFAULT_HASH_LENGTH           32
+#define UNREALIRCD_ARGON2_DEFAULT_SALT_LENGTH           (128/8)
+
+static char *mkpass_argon2(char *para)
+{
+	static char buf[512];
+	char salt[UNREALIRCD_ARGON2_DEFAULT_SALT_LENGTH];
+	int ret, i;
+
+	if (!para)
+		return NULL;
+
+	/* Initialize salt */
+	for (i=0; i < sizeof(salt); i++)
+		salt[i] = getrandom8();
+
+	*buf = '\0';
+
+	ret = argon2id_hash_encoded(UNREALIRCD_ARGON2_DEFAULT_TIME_COST,
+	                            UNREALIRCD_ARGON2_DEFAULT_MEMORY_COST,
+	                            UNREALIRCD_ARGON2_DEFAULT_PARALLELISM_COST,
+	                            para,
+	                            strlen(para),
+	                            salt,
+	                            sizeof(salt),
+	                            UNREALIRCD_ARGON2_DEFAULT_HASH_LENGTH,
+	                            buf,
+	                            sizeof(buf));
+
+	if (ret != ARGON2_OK)
+		return NULL; /* internal error */
+
+	return buf;
 }
 
 static char *mkpass_bcrypt(char *para)
@@ -800,6 +871,9 @@ char	*Auth_Make(short type, char *para)
 	{
 		case AUTHTYPE_PLAINTEXT:
 			return (para);
+
+		case AUTHTYPE_ARGON2:
+			return mkpass_argon2(para);
 
 		case AUTHTYPE_BCRYPT:
 			return mkpass_bcrypt(para);

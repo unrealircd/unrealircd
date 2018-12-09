@@ -103,7 +103,7 @@ CMD_FUNC(m_mkpasswd)
 	{
 	    /* TODO: is this still a valid warning ? */
 		sendnotice(sptr, "WARNING: Password truncated to 8 characters due to 'crypt' algorithm. "
-		                 "You are suggested to use the 'md5' algorithm instead.");
+		                 "You are suggested to use the 'argon2' algorithm instead.");
 		parv[2][8] = '\0';
 	}
 
