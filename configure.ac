@@ -838,7 +838,13 @@ dnl use pkgconfig for pcre2:
 PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.00)
 ])
 
-AS_IF([test "x$with_system_argon2" = "xno"],[
+dnl Use system argon2 when available, unless --without-system-argon2
+has_system_argon2="no"
+AS_IF([test "x$with_system_argon2" = "xyes"],[
+PKG_CHECK_MODULES([ARGON2], [libargon2],[has_system_argon2=yes
+AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libargon2*])],[has_system_argon2=no])])
+
+AS_IF([test "$has_system_argon2" = "no"],[
 dnl REMEMBER TO CHANGE WITH A NEW ARGON2 RELEASE!
 argon2_version="20181209"
 AC_MSG_RESULT(extracting Argon2 library)
@@ -868,9 +874,6 @@ AC_SUBST(ARGON2_CFLAGS)
 ARGON2_LIBS="-L$PRIVATELIBDIR -largon2 -lrt -ldl"
 AC_SUBST(ARGON2_LIBS)
 cd $cur_dir
-],[
-dnl use pkgconfig for argon2:
-PKG_CHECK_MODULES([ARGON2], libargon2 >= 0)
 ])
 
 dnl Use system c-ares when available, unless --without-system-cares.
