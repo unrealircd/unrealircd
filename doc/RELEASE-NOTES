@@ -26,8 +26,12 @@ Minor issues fixed:
   unless (s)he has +hoaq in the channel. This was broken since 4.0.0.
   This feature can be disabled via set { check-target-nick-bans no; };
 
-Removed:
-* None
+Deprecated:
+* The authentication types 'md5', 'sha1' and 'ripemd160' have been
+  deprecated because they can be cracked at high speeds. They still
+  work, but a warning will be shown on boot and on rehash.
+  Please use 'bcrypt' or (even better) the new 'argon2' type instead:
+  "./unrealircd mkpasswd argon2" or "/mkpasswd argon2 passwd" on IRC.
 
 Other changes:
 * A /* comment in the configuration file is now terminated at the

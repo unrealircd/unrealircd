@@ -202,7 +202,34 @@ int		Auth_CheckError(ConfigEntry *ce)
 			break;
 		default: ;
 	}
-	
+
+	if ((type == AUTHTYPE_MD5) || (type == AUTHTYPE_SHA1) || (type == AUTHTYPE_RIPEMD160))
+	{
+		config_warn("%s:%i: Deprecated authentication type. "
+		            "Consider using the more secure auth-type 'argon2' instead. "
+		            "See https://www.unrealircd.org/docs/Authentication_types for the complete list.",
+		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		/* do not return, not an error. */
+	}
+
+	/* Unix crypt is a bit more complicated: most types are outright 'bad',
+	 * while other types have reasonable security similar to 'bcrypt'.
+	 * To be honest these people should probably use 'argon2' since it's
+	 * a lot better. Then again, warning about this when it's still such
+	 * a common hashing method (now, in 2018) may be a bit overzealous.
+	 * So: not warning about crypt types $5/$6 which use SHA256/SHA512
+	 * with normally at least 5000 rounds (unless deliberately weakened
+	 * by the user).
+	 */
+	if ((type == AUTHTYPE_UNIXCRYPT) && strncmp(ce->ce_vardata, "$5", 2) &&
+	    strncmp(ce->ce_vardata, "$6", 2) && !strstr(ce->ce_vardata, "$rounds"))
+	{
+		config_warn("%s:%i: Using simple crypt for authentication is not recommended. "
+		            "Consider using the more secure auth-type 'argon2' instead. "
+		            "See https://www.unrealircd.org/docs/Authentication_types for the complete list.",
+                            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		/* do not return, not an error. */
+	}
 	if ((type == AUTHTYPE_PLAINTEXT) && (strlen(ce->ce_vardata) > PASSWDLEN))
 	{
 		config_error("%s:%i: passwords length may not exceed %d",
@@ -705,172 +732,12 @@ static char *mkpass_bcrypt(char *para)
 	return buf;
 }
 
-static char *mkpass_md5(char *para)
-{
-static char buf[128];
-char result1[16+REALSALTLEN];
-char result2[16];
-char saltstr[REALSALTLEN]; /* b64 encoded printable string*/
-char saltraw[RAWSALTLEN];  /* raw binary */
-char xresult[64];
-int i;
-
-	if (!para) return NULL;
-
-	/* generate a random salt... */
-	for (i=0; i < RAWSALTLEN; i++)
-		saltraw[i] = getrandom8();
-
-	i = b64_encode(saltraw, RAWSALTLEN, saltstr, REALSALTLEN);
-	if (!i) return NULL;
-
-	/* b64(MD5(MD5(<pass>)+salt))
-	 *         ^^^^^^^^^^^
-	 *           step 1
-	 *     ^^^^^^^^^^^^^^^^^^^^^
-	 *     step 2
-	 * ^^^^^^^^^^^^^^^^^^^^^^^^^^
-	 * step 3
-	 */
-
-	/* STEP 1 */
-	DoMD5(result1, para, strlen(para));
-
-	/* STEP 2 */
-	/* add salt to result */
-	memcpy(result1+16, saltraw, RAWSALTLEN);
-	/* Then hash it all together */
-	DoMD5(result2, result1, RAWSALTLEN+16);
-	
-	/* STEP 3 */
-	/* Then base64 encode it all together.. */
-	i = b64_encode(result2, sizeof(result2), xresult, sizeof(xresult));
-	if (!i) return NULL;
-
-	/* Good.. now create the whole string:
-	 * $<saltb64d>$<totalhashb64d>
-	 */
-	ircsnprintf(buf, sizeof(buf), "$%s$%s", saltstr, xresult);
-	return buf;
-}
-
-static char *mkpass_sha1(char *para)
-{
-static char buf[128];
-char result1[20+REALSALTLEN];
-char result2[20];
-char saltstr[REALSALTLEN]; /* b64 encoded printable string*/
-char saltraw[RAWSALTLEN];  /* raw binary */
-char xresult[64];
-SHA_CTX hash;
-int i;
-
-	if (!para) return NULL;
-
-	/* generate a random salt... */
-	for (i=0; i < RAWSALTLEN; i++)
-		saltraw[i] = getrandom8();
-
-	i = b64_encode(saltraw, RAWSALTLEN, saltstr, REALSALTLEN);
-	if (!i) return NULL;
-
-	/* b64(SHA1(SHA1(<pass>)+salt))
-	 *         ^^^^^^^^^^^
-	 *           step 1
-	 *     ^^^^^^^^^^^^^^^^^^^^^
-	 *     step 2
-	 * ^^^^^^^^^^^^^^^^^^^^^^^^^^
-	 * step 3
-	 */
-
-	/* STEP 1 */
-	SHA1_Init(&hash);
-	SHA1_Update(&hash, para, strlen(para));
-	SHA1_Final(result1, &hash);
-
-	/* STEP 2 */
-	/* add salt to result */
-	memcpy(result1+20, saltraw, RAWSALTLEN);
-	/* Then hash it all together */
-	SHA1_Init(&hash);
-	SHA1_Update(&hash, result1, RAWSALTLEN+20);
-	SHA1_Final(result2, &hash);
-
-	/* STEP 3 */
-	/* Then base64 encode it all together.. */
-	i = b64_encode(result2, sizeof(result2), xresult, sizeof(xresult));
-	if (!i) return NULL;
-
-	/* Good.. now create the whole string:
-	 * $<saltb64d>$<totalhashb64d>
-	 */
-	ircsnprintf(buf, sizeof(buf), "$%s$%s", saltstr, xresult);
-	return buf;
-}
-
-static char *mkpass_ripemd160(char *para)
-{
-static char buf[128];
-char result1[20+REALSALTLEN];
-char result2[20];
-char saltstr[REALSALTLEN]; /* b64 encoded printable string*/
-char saltraw[RAWSALTLEN];  /* raw binary */
-char xresult[64];
-RIPEMD160_CTX hash;
-int i;
-
-	if (!para) return NULL;
-
-	/* generate a random salt... */
-	for (i=0; i < RAWSALTLEN; i++)
-		saltraw[i] = getrandom8();
-
-	i = b64_encode(saltraw, RAWSALTLEN, saltstr, REALSALTLEN);
-	if (!i) return NULL;
-
-	/* b64(RIPEMD160(RIPEMD160(<pass>)+salt))
-	 *         ^^^^^^^^^^^
-	 *           step 1
-	 *     ^^^^^^^^^^^^^^^^^^^^^
-	 *     step 2
-	 * ^^^^^^^^^^^^^^^^^^^^^^^^^^
-	 * step 3
-	 */
-
-	/* STEP 1 */
-	RIPEMD160_Init(&hash);
-	RIPEMD160_Update(&hash, para, strlen(para));
-	RIPEMD160_Final(result1, &hash);
-
-	/* STEP 2 */
-	/* add salt to result */
-	memcpy(result1+20, saltraw, RAWSALTLEN);
-	/* Then hash it all together */
-	RIPEMD160_Init(&hash);
-	RIPEMD160_Update(&hash, result1, RAWSALTLEN+20);
-	RIPEMD160_Final(result2, &hash);
-
-	/* STEP 3 */
-	/* Then base64 encode it all together.. */
-	i = b64_encode(result2, sizeof(result2), xresult, sizeof(xresult));
-	if (!i) return NULL;
-
-	/* Good.. now create the whole string:
-	 * $<saltb64d>$<totalhashb64d>
-	 */
-	ircsnprintf(buf, sizeof(buf), "$%s$%s", saltstr, xresult);
-	return buf;
-}
-
 char	*Auth_Make(short type, char *para)
 {
-	char	salt[3];
-	extern	char *crypt();
-
 	switch (type)
 	{
 		case AUTHTYPE_PLAINTEXT:
-			return (para);
+			return para;
 
 		case AUTHTYPE_ARGON2:
 			return mkpass_argon2(para);
@@ -878,27 +745,7 @@ char	*Auth_Make(short type, char *para)
 		case AUTHTYPE_BCRYPT:
 			return mkpass_bcrypt(para);
 
-		case AUTHTYPE_UNIXCRYPT:
-			if (!para)
-				return NULL;
-			/* If our data is like 1 or none, we just let em through .. */
-			if (!(para[0] && para[1]))
-				return NULL;
-			snprintf(salt, sizeof(salt), "%02X", (unsigned int)getrandom8());
-			return(crypt(para, salt));
-
-		case AUTHTYPE_MD5:
-			return mkpass_md5(para);
-
-		case AUTHTYPE_SHA1:
-			return mkpass_sha1(para);
-
-		case AUTHTYPE_RIPEMD160:
-			return mkpass_ripemd160(para);
-
 		default:
-			return (NULL);
+			return NULL;
 	}
-
 }
-

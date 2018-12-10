@@ -1159,7 +1159,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 				  p[8] = '\0';
 			  }
 			  if (!(result = Auth_Make(type, p))) {
-				  printf("Authentication failed\n");
+				  printf("Failed to generate password. Deprecated method? Try 'argon2' instead.\n");
 				  exit(0);
 			  }
 			  printf("Encrypted password is: %s\n", result);

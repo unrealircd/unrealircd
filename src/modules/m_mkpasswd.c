@@ -99,12 +99,13 @@ CMD_FUNC(m_mkpasswd)
 		return 0;
 	}
 
-	if ((type == AUTHTYPE_UNIXCRYPT) && (strlen(parv[2]) > 8))
+	if ((type == AUTHTYPE_MD5) || (type == AUTHTYPE_SHA1) ||
+	    (type == AUTHTYPE_RIPEMD160) || (type == AUTHTYPE_UNIXCRYPT))
 	{
-	    /* TODO: is this still a valid warning ? */
-		sendnotice(sptr, "WARNING: Password truncated to 8 characters due to 'crypt' algorithm. "
-		                 "You are suggested to use the 'argon2' algorithm instead.");
-		parv[2][8] = '\0';
+		sendnotice(sptr, "ERROR: Deprecated authentication type '%s'. Use 'argon2' instead. "
+		           "See https://www.unrealircd.org/docs/Authentication_types for the complete list.",
+		           parv[1]);
+		return 0;
 	}
 
 	if (!(result = Auth_Make(type, parv[2])))
@@ -114,6 +115,7 @@ CMD_FUNC(m_mkpasswd)
 				me.name, sptr->name, parv[1]);
 		return 0;
 	}
+
 	sendnotice(sptr, "*** Authentication phrase (method=%s, para=%s) is: %s",
 		parv[1], parv[2], result);
 
