@@ -871,7 +871,7 @@ $ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 || exit 1
 cp -av $cur_dir/extras/argon2/lib/* $PRIVATELIBDIR/
 ARGON2_CFLAGS="-I$cur_dir/extras/argon2/include"
 AC_SUBST(ARGON2_CFLAGS)
-ARGON2_LIBS="-L$PRIVATELIBDIR -largon2 -lrt -ldl"
+ARGON2_LIBS="-L$PRIVATELIBDIR -largon2"
 AC_SUBST(ARGON2_LIBS)
 cd $cur_dir
 ])
