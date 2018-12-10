@@ -18,5 +18,4 @@ PCRE2_LIB_DIR="c:\projects\unrealircd-deps\pcre2\lib" ^
 PCRE2LIB="pcre2-8.lib" ^
 ARGON2_LIB_DIR="c:\projects\unrealircd-deps\argon2\vs2015\build" ^
 ARGON2_INC_DIR="c:\projects\unrealircd-deps\argon2\include" ^
-ARGON2LIB="Argon2RefDll.lib" ^
-%*
+ARGON2LIB="Argon2RefDll.lib" %*
