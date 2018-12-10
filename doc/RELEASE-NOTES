@@ -1,135 +1,47 @@
 UnrealIRCd 4.2.1-dev Release Notes
 ===============================
 
-There have been so many changes in this and the last few 4.0.x versions,
-it justifies calling this new release "UnrealIRCd 4.2.0".
+UnrealIRCd 4.2.0 turned out to be very stable. This 4.2.1 version
+therefore contains only minor changes and feature enhancements.
 
-Marking the beginning of the 4.2 series, this release introduces features
-such as "soft klines" and "soft actions". A significant number of optional
-modules are now loaded as default, including timed channel bans and
-textbans. Also, a lot more smaller changes are included in this release,
-such as fixes for TLSv1.3 and experimental WHOX support.
-See further down for a full list of changes.
+If you missed the 4.2.0 release, then consider looking at the previous
+release announcement, since it introduced a lot new features:
+https://forums.unrealircd.org/viewtopic.php?f=1&t=8843
 
-NOTE: Version 4.2.0 is the direct successor to 4.0.18. There will be
-      no further 4.0.x releases (in particular there will be no 4.0.19).
-      https://www.unrealircd.org/docs/FAQ#Questions_about_the_new_4.2.x_series
-
-Upgrade advice: if you are conservative about upgrades then feel free to
-wait for 4.2.1. Other than some blacklist fixes there are no major bugs
-fixed. This release is mostly about new features + some minor fixes.
+Note: there will be no further 4.0.x releases, as 4.2.x is simply the
+successor to 4.0.x. If you missed that announcement, then have a look at:
+https://www.unrealircd.org/docs/FAQ#Questions_about_the_new_4.2.x_series
 
 Enhancements:
-* New option to disable a module: blacklist-module "modulename";
-  This will cause any 'loadmodule' lines for that module to be ignored.
-  This is especially useful if you only want to disable a few modules
-  that are (normally) automatically loaded by conf/modules.default.conf.
-  https://www.unrealircd.org/docs/Blacklist-module_directive
-* Next three new features have to do with SASL. More information on SASL
-  in general can be found at https://www.unrealircd.org/docs/SASL
-* A new require sasl { } block which allows you to force users on the
-  specified hostmask to use SASL. Any unauthenticated users matching
-  the specified hostmask are are rejected.
-  See https://www.unrealircd.org/docs/Require_sasl_block
-* New "soft kline" and "soft gline". These will not be applied to users
-  that are authenticated to services using SASL.
-  These are just GLINE/KLINE's but prefixed with a percent sign:
-  Example: /GLINE %*@10.* 0 Only SASL allowed from here
-* New "soft" ban actions for spamfilter, blacklist, antirandom, etc.
-  Actions such as "soft-kline" and "soft-kill" will only be applied to
-  unauthenticated users. Users who are authenticated to services (SASL)
-  are exempt from the corresponding spamfilter/blacklist/antirandom/..
-  See https://www.unrealircd.org/docs/Actions for the full action list.
-* WARNING: If your network also contains UnrealIRCd servers below v4.2.0
-  then it is not recommended to use global soft bans (such as soft gline
-  or any spamfilter with soft-xx actions). There won't be havoc, but the
-  bans won't be effective on parts of the network.
-* The following extban modules are not new but are now enabled by default:
-  extbans/textban, extbans/timedban and extbans/msgbypass.
-  In case you don't like them, use blacklist-module as mentioned earlier.
-  Just as a reminder, they provide the following functionality:
-  * TextBan: +b ~T:block:*badword* to block sentences with 'badword'
-  * Timed bans: ~t:duration:mask
-    These are bans that are automatically removed by the server.
-    The duration is in minutes and the mask can be any ban mask.
-    Some examples:
-    * A 5 minute ban on a host:
-      +b ~t:5:*!*@host
-    * A 5 minute quiet ban on a host (unable to speak):
-      +b ~t:5:~q:*!*@host
-    * An invite exception for 24 hours (1440 minutes):
-      +I ~t:1440:*!*@host
-    * A temporary exempt ban for a services account:
-      +e ~t:1440:~a:Account
-    * Allows someone to speak through +m for the next 24hrs:
-      +e ~t:1440:~m:moderated:*!*@host
-    * And any other crazy ideas you can come up with...
-  * Ban exception ~m:type:mask to allow bypassing of message restrictions.
-    Valid types are: 'external' (bypass +n), moderated (bypass +m/+M),
-    'censor' (bypass +G), 'color' (bypass +S/+c) and 'notice' (bypass +T).
-    Some examples:
-    * Let LAN users bypass +m: +e ~m:moderated:*!*@192.168.*
-    * Let ops in #otherchan bypass +m: +e ~m:moderated:~c:@#otherchan
-    * Make GitHub commit bot bypass +n: +e ~m:external:*!*@ipmask
-    * Allow a services account to use color: +e ~m:color:~a:ColorBot
-  * Timedban support in +f [5t#b2]:10 (set 2 minute ban on text flood).
-* AntiRandom: The module will now (by default) exempt WEBIRC gateways
-  from antirandom checking because they frequently cause false positives.
-  This new behavior can be disabled via:
-  set { antirandom { except-webirc no; }; };
-* Server linking attempts and errors are now also put in the log file.
-* A new module that provides WHOX support, an enhanced and more standard
-  version of WHO (NOTE: the command is still "WHO").
-  This allows, among other things, the client to request additional
-  information, such as which services account each channel member is using.
-  The module is currently experimental. To use it, add this to your conf:
-  loadmodule "m_whox";
+* Support for Argon2 hashed passwords. 
+* New optional module 'antimixedutf8' to combat mixed UTF8 character spam
+  (also called freenode spam) that has been plaguing networks.
+  See: https://www.unrealircd.org/docs/Set_block#set::antimixedutf8
 
 Major issues fixed:
-* Blacklist: Potential crash issue when concurrently checking DNSBL
-  for the WEBIRC gateway and the spoofed host.
-* Blacklist: In case of multiple blacklists the 2nd/3rd/.. blacklists
-  were not always checked properly.
+* None
 
 Minor issues fixed:
-* Remote includes: ./Config didn't properly detect libcurl on Ubuntu 18
-  (and possibly other Linux distributions as well)
-* Timeouts during server linking attempts were not displayed.
-* Delayjoin: Halfops did not see JOIN's when channel mode +D was set.
-* IRCOps with minimal privileges lost their user modes on MODE change.
-* IRCOps could not override channel mode +z (when not using SSL/TLS)
-* Channel names sometimes truncated if using accents or special chars.
-* TLSv1.3 ciphersuite setting was changed to reflect OpenSSL's behavior.
-  There is now set::ssl::ciphersuites, specifically for TLSv1.3.
-  Note that the default is perfectly fine so at this point in time it
-  shouldn't need any adjustment (but the option is there...).
-* Windows: conf\modules.optional.conf was missing.
+* By default a user shouldn't be allowed to change to a banned nick,
+  unless (s)he has +hoaq in the channel. This was broken since 4.0.0.
+  This feature can be disabled via set { check-target-nick-bans no; };
 
 Removed:
-* allow::options::sasl has been removed. Use the new and more flexible
-  require sasl { } block instead.
+* None
 
 Other changes:
-* Windows users may be prompted to install the Visual C++ redistributable
-  package for Visual Studio 2017. This is because we now build on VS 2017
-  instead of VS 2012.
-* We now use standard formatted messages for all K-Lines, G-Lines and
-  any other bans that will cause the user to be disconnected.
-  For technical details see the banned_client() function.
-* The except throttle { } block now also overrides any limitations from
-  set::max-unknown-connection-per-ip. Useful for WEBIRC/cgiirc gateways.
-* Localhost connections are considered secure, so these can be used even
-  if you have a plaintext-policy of 'deny' or 'warn'. (This was already
-  the case for servers, but now also for users and opers)
-* Allow slashes in vhost/chghost/sethost/.. (but not through DNS)
+* A /* comment in the configuration file is now terminated at the
+  first occurance of */, instead of two /* /* requiring two */ */.
+  See https://www.unrealircd.org/docs/FAQ#Nesting_comments
+* In the configuration file you can now use } instead of };
+  Both forms are accepted. There's no need to change if you don't like it.
 
 Module coders:
-* Windows: Be aware that we now build with Visual Studio 2017. This means
-  3rd party modules should be compiled with VS 2017 (or VS 2015) as well.
+* Priorities in command overrides were reversed (was added in 4.2.0).
 
 Future versions:
 * We intend to change the default plaintext oper policy from 'warn' to 'deny'
-  later this year. This will deny /OPER when used from a non-SSL connection.
+  in the year 2019. This will deny /OPER when used from a non-SSL connection.
   For security, IRC Operators should really use SSL/TLS!
 
 ==[ CHANGES IN OLDER RELEASES ]==
