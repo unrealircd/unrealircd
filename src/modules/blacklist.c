@@ -76,6 +76,7 @@ struct _blacklist {
 typedef struct _bluser BLUser;
 struct _bluser {
 	aClient *cptr;
+	int is_ipv6;
 	int refcnt;
 	/* The following save_* fields are used by softbans: */
 	int save_action;
@@ -604,6 +605,7 @@ int blacklist_dns_request(aClient *cptr, Blacklist *d)
 	{
 		int i, j;
 		/* IPv6 */
+		BLUSER(cptr)->is_ipv6 = 1;
 		if (sscanf(ip, "%x:%x:%x:%x:%x:%x:%x:%x",
 		    &e[0], &e[1], &e[2], &e[3], &e[4], &e[5], &e[6], &e[7]) != 8)
 		{
@@ -665,15 +667,20 @@ void blacklist_free_bluser_if_able(BLUser *bl)
 	MyFree(bl);
 }
 
-char *getdnsblname(char *p)
+char *getdnsblname(char *p, aClient *cptr)
 {
 int dots = 0;
-
+	int dots_count;
+	if(!cptr) return NULL;
+	if(BLUSER(cptr)->is_ipv6)
+		dots_count = 32;
+	else
+		dots_count = 4;
 	for (; *p; p++)
 		if (*p == '.')
 		{
 			dots++;
-			if (dots == 4)
+			if (dots == dots_count)
 				return p+1;
 		}
 	return NULL;
@@ -762,7 +769,7 @@ void blacklist_process_result(aClient *acptr, int status, struct hostent *he)
 	if ((status != 0) || (he->h_length != 4) || !he->h_name)
 		return; /* invalid reply */
 	
-	domain = getdnsblname(he->h_name);
+	domain = getdnsblname(he->h_name, acptr);
 	if (!domain)
 		return; /* odd */
 	bl = blacklist_find_block_by_dns(domain);
