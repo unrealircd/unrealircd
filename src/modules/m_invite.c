@@ -117,7 +117,7 @@ CMD_FUNC(m_invite)
 
 	if (!IsMember(sptr, chptr) && !IsULine(sptr))
 	{
-		if (ValidatePermissionsForPath("override:invite:notinchannel",sptr,NULL,chptr,NULL) && sptr == acptr)
+		if (ValidatePermissionsForPath("channel:override:invite:notinchannel",sptr,NULL,chptr,NULL) && sptr == acptr)
 		{
 			override = 1;
 		} else {
@@ -138,7 +138,7 @@ CMD_FUNC(m_invite)
 	{
 		if (!is_chan_op(sptr, chptr) && !IsULine(sptr))
 		{
-			if (ValidatePermissionsForPath("override:invite:nopermissions",sptr,NULL,chptr,NULL) && sptr == acptr)
+			if (ValidatePermissionsForPath("channel:override:invite:invite-only",sptr,NULL,chptr,NULL) && sptr == acptr)
 			{
 				override = 1;
 			} else {
@@ -149,7 +149,7 @@ CMD_FUNC(m_invite)
 		}
 		else if (!IsMember(sptr, chptr) && !IsULine(sptr))
 		{
-			if (ValidatePermissionsForPath("override:invite:nopermissions",sptr,NULL,chptr,NULL) && sptr == acptr)
+			if (ValidatePermissionsForPath("channel:override:invite:invite-only",sptr,NULL,chptr,NULL) && sptr == acptr)
 			{
 				override = 1;
 			} else {
@@ -162,7 +162,7 @@ CMD_FUNC(m_invite)
 
 	if (SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
 	    !strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN) &&
-	    !is_chan_op(sptr, chptr) && !ValidatePermissionsForPath("immune:viruscheck",sptr,NULL,NULL,NULL))
+	    !is_chan_op(sptr, chptr) && !ValidatePermissionsForPath("immune:server-ban:viruschan",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
 			me.name, sptr->name, chptr->chname);
@@ -257,7 +257,7 @@ CMD_FUNC(m_invite)
 		if (IsPerson(sptr) 
 		    && (is_chan_op(sptr, chptr)
 		    || IsULine(sptr)
-		    || ValidatePermissionsForPath("override:channel:invite",sptr,NULL,chptr,NULL)
+		    || ValidatePermissionsForPath("channel:override:invite:self",sptr,NULL,chptr,NULL)
 		    ))
 		{
 			if (override == 1)

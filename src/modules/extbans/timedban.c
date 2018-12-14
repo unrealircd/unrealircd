@@ -237,7 +237,7 @@ int generic_ban_is_ok(aClient *sptr, aChannel *chptr, char *mask, int checkt, in
 		/* This portion is copied from clean_ban_mask() */
 		if (mask[1] && (mask[2] == ':') &&
 		    RESTRICT_EXTENDEDBANS && MyClient(sptr) &&
-		    !ValidatePermissionsForPath("channel:extbans",sptr,NULL,NULL,NULL))
+		    !ValidatePermissionsForPath("immune:restrict-extendedbans",sptr,NULL,NULL,NULL))
 		{
 			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
 			{
@@ -259,7 +259,7 @@ int generic_ban_is_ok(aClient *sptr, aChannel *chptr, char *mask, int checkt, in
 		if (checkt == EXBCHK_ACCESS)
 		{
 			if (p && p->is_ok && !p->is_ok(sptr, chptr, mask, EXBCHK_ACCESS, what, what2) &&
-			    !ValidatePermissionsForPath("override:extban",sptr,NULL,chptr,NULL))
+			    !ValidatePermissionsForPath("channel:override:mode:extban",sptr,NULL,chptr,NULL))
 			{
 				return 0; /* REJECT */
 			}
@@ -267,7 +267,7 @@ int generic_ban_is_ok(aClient *sptr, aChannel *chptr, char *mask, int checkt, in
 		if (checkt == EXBCHK_ACCESS_ERR)
 		{
 			if (p && p->is_ok && !p->is_ok(sptr, chptr, mask, EXBCHK_ACCESS, what, what2) &&
-			    !ValidatePermissionsForPath("override:extban",sptr,NULL,chptr,NULL))
+			    !ValidatePermissionsForPath("channel:override:mode:extban",sptr,NULL,chptr,NULL))
 			{
 				p->is_ok(sptr, chptr, mask, EXBCHK_ACCESS_ERR, what, what2);
 				return 0; /* REJECT */

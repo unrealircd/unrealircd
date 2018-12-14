@@ -101,7 +101,7 @@ int n, wasaway = 0;
     if (n < 0)
         return n;
 
-	if (MyClient(sptr) && AWAY_PERIOD && !ValidatePermissionsForPath("immune:awayflood",sptr,NULL,NULL,NULL))
+	if (MyClient(sptr) && AWAY_PERIOD && !ValidatePermissionsForPath("immune:away-flood",sptr,NULL,NULL,NULL))
 	{
 		if ((sptr->user->flood.away_t + AWAY_PERIOD) <= timeofday)
 		{

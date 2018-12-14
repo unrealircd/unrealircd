@@ -64,7 +64,7 @@ CMD_FUNC(m_chghost)
 {
 	aClient *acptr;
 
-	if (MyClient(sptr) && !ValidatePermissionsForPath("client:host",sptr,NULL,NULL,NULL))
+	if (MyClient(sptr) && !ValidatePermissionsForPath("client:set:host",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;

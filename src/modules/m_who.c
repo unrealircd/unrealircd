@@ -587,7 +587,7 @@ char has_common_chan = 0;
 static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
 {
 	Member *cm = channel->members;
-	if (IsMember(sptr, channel) || ValidatePermissionsForPath("override:see:who:onchannel",sptr,NULL,channel,NULL))
+	if (IsMember(sptr, channel) || ValidatePermissionsForPath("channel:see:who:onchannel",sptr,NULL,channel,NULL))
 		who_flags |= WF_ONCHANNEL;
 
 	for (cm = channel->members; cm; cm = cm->next)
@@ -765,7 +765,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 		host = GetHost(acptr);
 					
 
-	if (IsULine(acptr) && !IsOper(sptr) && !ValidatePermissionsForPath("map:ulines",sptr,acptr,NULL,NULL) && HIDE_ULINES)
+	if (IsULine(acptr) && !IsOper(sptr) && !ValidatePermissionsForPath("server:info:map:ulines",sptr,acptr,NULL,NULL) && HIDE_ULINES)
 	        sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,
         	     channel,       /* channel name */
 	             acptr->user->username, /* user name */
@@ -833,7 +833,7 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 		if (ret == EX_DENY)
 			showchannel = 0;
 		
-		if (!showchannel && (ValidatePermissionsForPath("override:see:who:secret",sptr,NULL,chptr,NULL) || ValidatePermissionsForPath("override:see:whois",sptr,NULL,chptr,NULL)))
+		if (!showchannel && (ValidatePermissionsForPath("channel:see:who:secret",sptr,NULL,chptr,NULL) || ValidatePermissionsForPath("channel:see:whois",sptr,NULL,chptr,NULL)))
 		{
 			showchannel = 1; /* OperOverride */
 			operoverride = 1;

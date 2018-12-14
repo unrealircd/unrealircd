@@ -319,6 +319,7 @@ MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
 
 MODVAR int need_34_upgrade = 0;
+int need_operclass_permissions_upgrade = 0;
 int have_ssl_listeners = 0;
 char *port_6667_ip = NULL;
 
@@ -1905,6 +1906,7 @@ int	load_conf(char *filename, const char *original_path)
 		config_status("Loading config file %s ..", filename);
 
 	need_34_upgrade = 0;
+	need_operclass_permissions_upgrade = 0;
 
 	/*
 	 * Check if we're accidentally including a file a second
@@ -3584,7 +3586,7 @@ int	_conf_operclass(ConfigFile *conf, ConfigEntry *ce)
 		{
 			operClass->classStruct->ISA = strdup(cep->ce_vardata);
 		}
-		else if (!strcmp(cep->ce_varname, "privileges"))
+		else if (!strcmp(cep->ce_varname, "permissions"))
 		{
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
@@ -3598,11 +3600,28 @@ int	_conf_operclass(ConfigFile *conf, ConfigEntry *ce)
 	return 1;
 }
 
+void new_permissions_system(ConfigFile *conf, ConfigEntry *ce)
+{
+	if (need_operclass_permissions_upgrade)
+		return; /* error already shown */
+
+	config_error("%s:%i: UnrealIRCd 4.2.1 and higher have a new operclass permissions system.",
+	             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+	config_error("Please see https://www.unrealircd.org/docs/FAQ#New_operclass_permissions");
+	config_error("(additional errors regarding this are suppressed)");
+	/*
+	config_error("First of all, operclass::privileges has been renamed to operclass::permissions.");
+	config_error("However, the permissions themselves have also been changed. You cannot simply "
+	             "rename 'privileges' to 'permissions' and be done with it! ");
+	config_error("See https://www.unrealircd.org/docs/Operclass_permissions for the new list of permissions.");
+	config_error("Or just use the default operclasses from operclass.default.conf, then no need to change anything."); */
+	need_operclass_permissions_upgrade = 1;
+}
+
 int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 {
-	char has_privileges = 0, has_parent = 0;
+	char has_permissions = 0, has_parent = 0;
 	ConfigEntry *cep;
-	ConfigEntry *cepp;
 	NameValue *ofp;
 	int	errors = 0;
 
@@ -3631,28 +3650,39 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 			has_parent = 1;
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "privileges"))
+		if (!strcmp(cep->ce_varname, "permissions"))
 		{
-			if (has_privileges)
+			if (has_permissions)
 			{
 				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum, "oper::privileges");
+				cep->ce_varlinenum, "oper::permissions");
 				continue;
 			}
-			has_privileges = 1;
+			has_permissions = 1;
 			continue;
+		}
+		if (!strcmp(cep->ce_varname, "privileges"))
+		{
+			new_permissions_system(conf, cep);
+			errors++;
+			return errors;
 		}
 		/* Regular variables */
 		if (!cep->ce_entries)
 		{
-			if (!strcmp(cep->ce_varname, "privileges") && !cep->ce_vardata)
+			if (!strcmp(cep->ce_varname, "permissions") && !cep->ce_vardata)
 			{
 				config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					"operclass::parent");
 				errors++;
 				continue;
+			} else
+			if (!strcmp(cep->ce_varname, "permissions"))
+			{
+				new_permissions_system(conf, cep);
+				errors++;
+				return errors;
 			}
-
 			else
 			{
 				config_error_unknown(cep->ce_fileptr->cf_filename,
@@ -3665,8 +3695,14 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 		/* Sections */
 		else
 		{
-			/* No that's not a typo, if it isn't privileges, we explode */
-			if (strcmp(cep->ce_varname, "privileges"))
+			/* No the second 'strcmp' is not a typo, if it isn't permissions, we explode */
+			if (!strcmp(cep->ce_varname, "privileges"))
+			{
+				new_permissions_system(conf, cep);
+				errors++;
+				return errors;
+			} else
+			if (strcmp(cep->ce_varname, "permissions"))
 			{
 				config_error_unknown(cep->ce_fileptr->cf_filename,
 					cep->ce_varlinenum, "operclass", cep->ce_varname);
@@ -3676,10 +3712,10 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	if (!has_privileges)
+	if (!has_permissions)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"oper::privileges");
+			"oper::permissions");
 		errors++;
 	}
 

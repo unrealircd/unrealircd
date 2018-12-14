@@ -190,7 +190,7 @@ CMD_FUNC(m_whois)
 				if (ret == EX_DENY)
 					showchannel = 0;
 				
-				if (!showchannel && (ValidatePermissionsForPath("override:see:whois",sptr,NULL,chptr,NULL)))
+				if (!showchannel && (ValidatePermissionsForPath("channel:see:whois",sptr,NULL,chptr,NULL)))
 				{
 					showchannel = 1; /* OperOverride */
 					operoverride = 1;

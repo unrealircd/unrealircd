@@ -126,7 +126,7 @@ CMD_FUNC(m_part)
 			continue;
 		}
 
-		if (!ValidatePermissionsForPath("immune:banpartmsg",sptr,NULL,chptr,NULL) && !is_chanownprotop(sptr, chptr)) {
+		if (!ValidatePermissionsForPath("channel:override:banpartmsg",sptr,NULL,chptr,NULL) && !is_chanownprotop(sptr, chptr)) {
 			/* Banned? No comment allowed ;) */
 			if (comment && is_banned(sptr, chptr, BANCHK_MSG))
 				comment = NULL;

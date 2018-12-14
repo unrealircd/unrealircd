@@ -720,7 +720,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	}
 
 	lp = find_membership_link(cptr->user->channel, chptr);
-	if (chptr->mode.mode & MODE_MODERATED && !op_can_override("override:message:moderated",cptr,chptr,NULL) &&
+	if (chptr->mode.mode & MODE_MODERATED && !op_can_override("channel:override:message:moderated",cptr,chptr,NULL) &&
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	CHFL_HALFOP | CHFL_CHANPROT))))
@@ -750,7 +750,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		return i;
 
 	/* Makes opers able to talk thru bans -Stskeeps suggested by The_Cat */
-	if (op_can_override("override:message:ban",cptr,chptr,NULL))
+	if (op_can_override("channel:override:message:ban",cptr,chptr,NULL))
 		return 0;
 
 	if ((!lp
@@ -974,7 +974,7 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	/* Extended ban? */
 	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
 	{
-		if (RESTRICT_EXTENDEDBANS && MyClient(cptr) && !ValidatePermissionsForPath("channel:extbans",cptr,NULL,NULL,NULL))
+		if (RESTRICT_EXTENDEDBANS && MyClient(cptr) && !ValidatePermissionsForPath("immune:restrict-extendedbans",cptr,NULL,NULL,NULL))
 		{
 			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
 			{

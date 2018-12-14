@@ -161,7 +161,7 @@ void parse_addlag(aClient *cptr, int cmdbytes)
 #ifdef FAKELAG_CONFIGURABLE
 		!(cptr->local->class && (cptr->local->class->options & CLASS_OPT_NOFAKELAG)) && 
 #endif
-	!ValidatePermissionsForPath("privacy:fakelag",cptr,NULL,NULL,NULL))
+	!ValidatePermissionsForPath("immune:lag",cptr,NULL,NULL,NULL))
 	{
 		cptr->local->since += (1 + cmdbytes/90);
 	}		

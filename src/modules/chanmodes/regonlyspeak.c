@@ -75,7 +75,7 @@ DLLFUNC char *regonlyspeak_part_message (aClient *sptr, aChannel *chptr, char *c
 	if (!comment)
 		return NULL;
 
-	if (IsRegOnlySpeak(chptr) && !IsLoggedIn(sptr) && !ValidatePermissionsForPath("immune:regonly",sptr,NULL,NULL,NULL))
+	if (IsRegOnlySpeak(chptr) && !IsLoggedIn(sptr) && !ValidatePermissionsForPath("channel:override:message:regonlyspeak",sptr,NULL,NULL,NULL))
 		return NULL;
 
 	return comment;
@@ -86,7 +86,7 @@ DLLFUNC int regonlyspeak_can_send (aClient *cptr, aChannel *chptr, char *message
 	Hook *h;
 	int i;
 
-	if (IsRegOnlySpeak(chptr) && !op_can_override("override:message:regonlyspeak",cptr,chptr,NULL) && !IsLoggedIn(cptr) &&
+	if (IsRegOnlySpeak(chptr) && !op_can_override("channel:override:message:regonlyspeak",cptr,chptr,NULL) && !IsLoggedIn(cptr) &&
 		    (!lp
 		    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 		    CHFL_HALFOP | CHFL_CHANPROT))))

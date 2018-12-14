@@ -66,7 +66,7 @@ CMD_FUNC(m_chgident)
 	char *s;
 	int legalident = 1;
 
-	if (!ValidatePermissionsForPath("client:ident",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("client:set:ident",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;

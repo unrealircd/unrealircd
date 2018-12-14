@@ -215,8 +215,8 @@ CMD_FUNC(m_whox)
 		return 0;
 	}
 
-	if ((ValidatePermissionsForPath("override:see:who:secret",sptr,NULL,NULL,NULL) ||
-	     ValidatePermissionsForPath("override:see:whois",sptr,NULL,NULL,NULL)) && (*mask == '!'))
+	if ((ValidatePermissionsForPath("channel:see:who:secret",sptr,NULL,NULL,NULL) ||
+	     ValidatePermissionsForPath("channel:see:whois",sptr,NULL,NULL,NULL)) && (*mask == '!'))
 	{
 		mask++;
 		operspy = 1;
@@ -341,8 +341,8 @@ CMD_FUNC(m_whox)
 		return 0;
 	}
 
-	if (ValidatePermissionsForPath("override:see:who:secret",sptr,NULL,NULL,NULL) ||
-                ValidatePermissionsForPath("override:see:whois",sptr,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("channel:see:who:secret",sptr,NULL,NULL,NULL) ||
+                ValidatePermissionsForPath("channel:see:whois",sptr,NULL,NULL,NULL))
 	{
 		operspy = 1;
 	}

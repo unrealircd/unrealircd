@@ -571,7 +571,7 @@ CMD_FUNC(m_nick)
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
 
-	if (MyConnect(sptr) && sptr->user && !ValidatePermissionsForPath("immune:limits",sptr,NULL,NULL,NULL))
+	if (MyConnect(sptr) && sptr->user && !ValidatePermissionsForPath("immune:nick-flood",sptr,NULL,NULL,NULL))
 	{
 		if ((sptr->user->flood.nick_c >= NICK_COUNT) && 
 		    (TStime() - sptr->user->flood.nick_t < NICK_PERIOD))
@@ -718,7 +718,7 @@ CMD_FUNC(m_nick)
 				    nick, tklban->reason);
 				return 0;
 			}
-			if (!ValidatePermissionsForPath("override:nick:qline",sptr,NULL,NULL,nick))
+			if (!ValidatePermissionsForPath("immune:server-ban:ban-nick",sptr,NULL,NULL,nick))
 			{
 				sptr->local->since += 4; /* lag them up */
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
@@ -758,7 +758,7 @@ CMD_FUNC(m_nick)
 		return exit_client(cptr, sptr, &me, "Nick/Server collision");
 	}
 
-	if (MyClient(cptr) && ValidatePermissionsForPath("override:nick:flood",sptr,NULL,NULL,NULL))
+	if (MyClient(cptr) && !ValidatePermissionsForPath("immune:nick-flood",sptr,NULL,NULL,NULL))
 		cptr->local->since += 3;	/* Nick-flood prot. -Donwulff */
 
 	if (!(acptr = find_client(nick, NULL)))

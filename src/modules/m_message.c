@@ -276,7 +276,7 @@ int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 				
 				if (prefix)
 				{
-					if (MyClient(sptr) && !op_can_override("override:message:prefix",sptr,chptr,NULL))
+					if (MyClient(sptr) && !op_can_override("channel:override:message:prefix",sptr,chptr,NULL))
 					{
 						Membership *lp = find_membership_link(sptr->user->channel, chptr);
 						/* Check if user is allowed to send. RULES:
@@ -390,7 +390,7 @@ int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 		/* Message to $servermask */
 		if (*nick == '$')
 		{
-			if (!ValidatePermissionsForPath("notice:global", sptr, NULL, NULL, NULL))
+			if (!ValidatePermissionsForPath("chat:notice:global", sptr, NULL, NULL, NULL))
 			{
 				/* Apparently no other IRCd does this, but I think it's confusing not to
 				 * send an error message, especially with our new privilege system.

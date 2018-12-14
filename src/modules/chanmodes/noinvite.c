@@ -88,7 +88,7 @@ DLLFUNC int noinvite_pre_invite(aClient *sptr, aClient *acptr, aChannel *chptr, 
 {
 	if (MyClient(sptr) && IsNoInvite(chptr))
 	{
-		if (ValidatePermissionsForPath("override:invite:nopermissions",sptr,NULL,chptr,NULL) && sptr == acptr)
+		if (ValidatePermissionsForPath("channel:override:invite:noinvite",sptr,NULL,chptr,NULL) && sptr == acptr)
 		{
 			*override = 1;
 		} else {

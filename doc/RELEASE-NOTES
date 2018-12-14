@@ -18,6 +18,22 @@ Enhancements:
   (also called freenode spam) that has been plaguing networks.
   See: https://www.unrealircd.org/docs/Set_block#set::antimixedutf8
 
+Configuration changes:
+* The operclass privileges have been redone. Since there were 50+ changes
+  to the 100+ privileges it makes little sense to list the changes here.
+  If, like 99% of the users, you use default operclasses such as "globop"
+  and "admin-with-override" then you don't need to do anything.
+  However, if you have custom operclass { } blocks then the privileges
+  will have to be redone. For more information on the conversion process,
+  see https://www.unrealircd.org/docs/FAQ#New_operclass_permissions
+  For the new list of permissions, with much better naming and grouping:
+  https://www.unrealircd.org/docs/Operclass_permissions
+* In the configuration file you can now use } instead of };
+  Both forms are accepted. There's no need to change if you don't like it.
+* A /* comment in the configuration file is now terminated at the
+  first occurance of */, instead of two /* /* requiring two */ */.
+  See https://www.unrealircd.org/docs/FAQ#Nesting_comments
+
 Major issues fixed:
 * None
 
@@ -32,13 +48,6 @@ Deprecated:
   work, but a warning will be shown on boot and on rehash.
   Please use 'bcrypt' or (even better) the new 'argon2' type instead:
   "./unrealircd mkpasswd argon2" or "/mkpasswd argon2 passwd" on IRC.
-
-Other changes:
-* A /* comment in the configuration file is now terminated at the
-  first occurance of */, instead of two /* /* requiring two */ */.
-  See https://www.unrealircd.org/docs/FAQ#Nesting_comments
-* In the configuration file you can now use } instead of };
-  Both forms are accepted. There's no need to change if you don't like it.
 
 Module coders:
 * Priorities in command overrides were reversed (was added in 4.2.0).
