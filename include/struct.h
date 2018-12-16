@@ -1534,6 +1534,7 @@ struct DSlink {
 	} value;
 };
 #define AddListItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
+#define AppendListItem(item,list) append_ListItem((ListStruct *)item, (ListStruct **)&list)
 #define DelListItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
 
 #define AddListItemPrio(item,list,prio) add_ListItemPrio((ListStructPrio *)item, (ListStructPrio **)&list, prio)

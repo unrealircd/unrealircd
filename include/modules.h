@@ -805,6 +805,9 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_SERVER_SYNCHED	89
 #define HOOKTYPE_SECURE_CONNECT 90
 #define HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION 91
+#define HOOKTYPE_REQUIRE_SASL 92
+#define HOOKTYPE_SASL_CONTINUATION 93
+#define HOOKTYPE_SASL_RESULT 94
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -903,6 +906,9 @@ int hooktype_server_handshake_out(aClient *sptr);
 int hooktype_server_synched(aClient *sptr);
 int hooktype_secure_connect(aClient *sptr);
 int hooktype_can_bypass_channel_message_restriction(aClient *sptr, aChannel *chptr, BypassChannelMessageRestrictionType bypass_type);
+int hooktype_require_sasl(aClient *sptr, char *reason);
+int hooktype_sasl_continuation(aClient *sptr, char *buf);
+int hooktype_sasl_result(aClient *sptr, int success);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
@@ -998,7 +1004,10 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_SERVER_HANDSHAKE_OUT) && !ValidateHook(hooktype_server_handshake_out, func)) || \
         ((hooktype == HOOKTYPE_SERVER_SYNCHED) && !ValidateHook(hooktype_server_synched, func)) || \
         ((hooktype == HOOKTYPE_SECURE_CONNECT) && !ValidateHook(hooktype_secure_connect, func)) || \
-        ((hooktype == HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION) && !ValidateHook(hooktype_can_bypass_channel_message_restriction, func)) ) \
+        ((hooktype == HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION) && !ValidateHook(hooktype_can_bypass_channel_message_restriction, func)) || \
+        ((hooktype == HOOKTYPE_REQUIRE_SASL) && !ValidateHook(hooktype_require_sasl, func)) || \
+        ((hooktype == HOOKTYPE_SASL_CONTINUATION) && !ValidateHook(hooktype_sasl_continuation, func)) || \
+        ((hooktype == HOOKTYPE_SASL_RESULT) && !ValidateHook(hooktype_sasl_result, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

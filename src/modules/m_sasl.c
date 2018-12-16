@@ -189,18 +189,24 @@ CMD_FUNC(m_sasl)
 			strlcpy(target_p->local->sasl_agent, sptr->name, sizeof(target_p->local->sasl_agent));
 
 		if (*parv[3] == 'C')
+		{
+			RunHookReturnInt2(HOOKTYPE_SASL_CONTINUATION, target_p, parv[4], !=0);
 			sendto_one(target_p, "AUTHENTICATE %s", parv[4]);
+		}
 		else if (*parv[3] == 'D')
 		{
+			*target_p->local->sasl_agent = '\0';
 			if (*parv[4] == 'F')
+			{
+				RunHookReturnInt2(HOOKTYPE_SASL_RESULT, target_p, 0, !=0);
 				sendto_one(target_p, err_str(ERR_SASLFAIL), me.name, BadPtr(target_p->name) ? "*" : target_p->name);
+			}
 			else if (*parv[4] == 'S')
 			{
 				target_p->local->sasl_complete++;
+				RunHookReturnInt2(HOOKTYPE_SASL_RESULT, target_p, 1, !=0);
 				sendto_one(target_p, err_str(RPL_SASLSUCCESS), me.name, BadPtr(target_p->name) ? "*" : target_p->name);
 			}
-
-			*target_p->local->sasl_agent = '\0';
 		}
 		else if (*parv[3] == 'M')
 			sendto_one(target_p, err_str(RPL_SASLMECHS), me.name, BadPtr(target_p->name) ? "*" : target_p->name, parv[4]);

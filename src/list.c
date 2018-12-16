@@ -538,6 +538,23 @@ void add_ListItem(ListStruct *item, ListStruct **list) {
 	*list = item;
 }
 
+/* (note that if you end up using this, you should probably
+ *  use a circular linked list instead)
+ */
+void append_ListItem(ListStruct *item, ListStruct **list) {
+	ListStruct *l;
+
+	if (!*list)
+	{
+		*list = item;
+		return;
+	}
+
+	for (l = *list; l->next; l = l->next);
+	l->next = item;
+	item->prev = l;
+}
+
 ListStruct *del_ListItem(ListStruct *item, ListStruct **list) {
 	ListStruct *l, *ret;
 

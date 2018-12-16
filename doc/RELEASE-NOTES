@@ -17,6 +17,13 @@ Enhancements:
 * New optional module 'antimixedutf8' to combat mixed UTF8 character spam
   (also called freenode spam) that has been plaguing networks.
   See: https://www.unrealircd.org/docs/Set_block#set::antimixedutf8
+* Authentication prompt for non-SASL users:
+  We previously introduced the "require sasl" block which allows you to
+  force users from certain IP addresses to authenticate with their nickname
+  and password via SASL. We now offer a new experimental module called
+  'saslemulation' which will help non-SASL users by showing a notice and
+  asking them to authenticate to their account via /AUTH <user>:<pass>.
+  See https://www.unrealircd.org/docs/Set_block#set::sasl-emulation
 
 Configuration changes:
 * The operclass privileges have been redone. Since there were 50+ changes

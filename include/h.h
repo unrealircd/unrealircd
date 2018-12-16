@@ -125,6 +125,7 @@ extern void OperClassValidatorDel(OperClassValidator *validator);
 
 extern ConfigItem_ban  *Find_ban_ip(aClient *sptr);
 extern void add_ListItem(ListStruct *, ListStruct **);
+extern void append_ListItem(ListStruct *item, ListStruct **list);
 extern void add_ListItemPrio(ListStructPrio *, ListStructPrio **, int);
 extern ListStruct *del_ListItem(ListStruct *, ListStruct **);
 extern aClient *find_match_server(char *mask);

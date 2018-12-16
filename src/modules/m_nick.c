@@ -1343,6 +1343,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		if (!IsLoggedIn(sptr) && (bconf = Find_ban(sptr, NULL, CONF_BAN_UNAUTHENTICATED)))
 		{
 			ircstp->is_ref++;
+			RunHookReturnInt2(HOOKTYPE_REQUIRE_SASL, sptr, bconf->reason, !=0);
 			return banned_client(sptr, "Require-SASL", bconf->reason?bconf->reason:"", 0, 0);
 		}
 		tkl_check_expire(NULL);
