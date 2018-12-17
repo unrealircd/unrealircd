@@ -1,5 +1,5 @@
 /*
- * SASL emulation: SASL authentication for clients that don't support SASL
+ * Auth prompt: SASL authentication for clients that don't support SASL
  * (C) Copyright 2018 Bram Matthys ("Syzop") and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,9 +19,9 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(saslemulation)
+ModuleHeader MOD_HEADER(authprompt)
 = {
-	"saslemulation",
+	"authprompt",
 	"1.0",
 	"SASL authentication for clients that don't support SASL",
 	"3.2-b8-1",
@@ -41,71 +41,71 @@ struct {
 	MultiLine *fail_message;
 } cfg;
 
-/** SASL Emulation User */
-typedef struct _seuser SEUser;
-struct _seuser {
+/** User struct */
+typedef struct _apuser APUser;
+struct _apuser {
 	char *authmsg;
 };
 
 /* Global variables */
-ModDataInfo *saslemulation_md = NULL;
+ModDataInfo *authprompt_md = NULL;
 
 /* Forward declarations */
 static void free_config(void);
 static void init_config(void);
 static void config_postdefaults(void);
-DLLFUNC int saslemulation_config_test(ConfigFile *, ConfigEntry *, int, int *);
-DLLFUNC int saslemulation_config_run(ConfigFile *, ConfigEntry *, int);
-DLLFUNC int saslemulation_require_sasl(aClient *acptr, char *reason);
-DLLFUNC int saslemulation_sasl_continuation(aClient *acptr, char *buf);
-DLLFUNC int saslemulation_sasl_result(aClient *acptr, int success);
+DLLFUNC int authprompt_config_test(ConfigFile *, ConfigEntry *, int, int *);
+DLLFUNC int authprompt_config_run(ConfigFile *, ConfigEntry *, int);
+DLLFUNC int authprompt_require_sasl(aClient *acptr, char *reason);
+DLLFUNC int authprompt_sasl_continuation(aClient *acptr, char *buf);
+DLLFUNC int authprompt_sasl_result(aClient *acptr, int success);
 CMD_FUNC(m_auth);
-void saslemulation_md_free(ModData *md);
+void authprompt_md_free(ModData *md);
 
 /* Some macros */
-#define SetSEUser(x, y) do { moddata_client(x, saslemulation_md).ptr = y; } while(0)
-#define SEUSER(x)       ((SEUser *)moddata_client(x, saslemulation_md).ptr)
+#define SetAPUser(x, y) do { moddata_client(x, authprompt_md).ptr = y; } while(0)
+#define SEUSER(x)       ((APUser *)moddata_client(x, authprompt_md).ptr)
 #define AGENT_SID(agent_p)      (agent_p->user != NULL ? agent_p->user->server : agent_p->name)
 
-MOD_TEST(saslemulation)
+MOD_TEST(authprompt)
 {
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, saslemulation_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, authprompt_config_test);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(saslemulation)
+MOD_INIT(authprompt)
 {
 	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	memset(&mreq, 0, sizeof(mreq));
-	mreq.name = "saslemulation";
+	mreq.name = "authprompt";
 	mreq.type = MODDATATYPE_CLIENT;
-	mreq.free = saslemulation_md_free;
-	saslemulation_md = ModDataAdd(modinfo->handle, mreq);
-	if (!saslemulation_md)
+	mreq.free = authprompt_md_free;
+	authprompt_md = ModDataAdd(modinfo->handle, mreq);
+	if (!authprompt_md)
 	{
-		config_error("could not register saslemulation moddata");
+		config_error("could not register authprompt moddata");
 		return MOD_FAILED;
 	}
 
 	init_config();
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, saslemulation_config_run);
-	HookAdd(modinfo->handle, HOOKTYPE_REQUIRE_SASL, 0, saslemulation_require_sasl);
-	HookAdd(modinfo->handle, HOOKTYPE_SASL_CONTINUATION, 0, saslemulation_sasl_continuation);
-	HookAdd(modinfo->handle, HOOKTYPE_SASL_RESULT, 0, saslemulation_sasl_result);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, authprompt_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_REQUIRE_SASL, 0, authprompt_require_sasl);
+	HookAdd(modinfo->handle, HOOKTYPE_SASL_CONTINUATION, 0, authprompt_sasl_continuation);
+	HookAdd(modinfo->handle, HOOKTYPE_SASL_RESULT, 0, authprompt_sasl_result);
 	CommandAdd(modinfo->handle, "AUTH", m_auth, 1, M_UNREGISTERED);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(saslemulation)
+MOD_LOAD(authprompt)
 {
 	config_postdefaults();
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(saslemulation)
+MOD_UNLOAD(authprompt)
 {
 	free_config();
 	return MOD_SUCCESS;
@@ -150,7 +150,7 @@ static void free_config(void)
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
-DLLFUNC int saslemulation_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+DLLFUNC int authprompt_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 	ConfigEntry *cep;
@@ -158,21 +158,21 @@ DLLFUNC int saslemulation_config_test(ConfigFile *cf, ConfigEntry *ce, int type,
 	if (type != CONFIG_SET)
 		return 0;
 
-	/* We are only interrested in set::saslemulation... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "sasl-emulation"))
+	/* We are only interrested in set::authentication-prompt... */
+	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "authentication-prompt"))
 		return 0;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("%s:%i: blank set::saslemulation item",
+			config_error("%s:%i: blank set::authentication-prompt item",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			errors++;
 		} else
 		if (!cep->ce_vardata)
 		{
-			config_error("%s:%i: set::saslemulation::%s with no value",
+			config_error("%s:%i: set::authentication-prompt::%s with no value",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++;
 		} else
@@ -182,8 +182,11 @@ DLLFUNC int saslemulation_config_test(ConfigFile *cf, ConfigEntry *ce, int type,
 		if (!strcmp(cep->ce_varname, "message"))
 		{
 		} else
+		if (!strcmp(cep->ce_varname, "fail-message"))
 		{
-			config_error("%s:%i: unknown directive set::saslemulation::%s",
+		} else
+		{
+			config_error("%s:%i: unknown directive set::authentication-prompt::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++;
 		}
@@ -192,15 +195,15 @@ DLLFUNC int saslemulation_config_test(ConfigFile *cf, ConfigEntry *ce, int type,
 	return errors ? -1 : 1;
 }
 
-DLLFUNC int saslemulation_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+DLLFUNC int authprompt_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 
 	if (type != CONFIG_SET)
 		return 0;
 
-	/* We are only interrested in set::saslemulation... */
-	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "sasl-emulation"))
+	/* We are only interrested in set::authentication-prompt... */
+	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "authentication-prompt"))
 		return 0;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -221,9 +224,9 @@ DLLFUNC int saslemulation_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
-void saslemulation_md_free(ModData *md)
+void authprompt_md_free(ModData *md)
 {
-	SEUser *se = md->ptr;
+	APUser *se = md->ptr;
 
 	if (se)
 	{
@@ -324,7 +327,7 @@ void send_first_auth(aClient *sptr)
 		sendto_one(acptr, ":%s SASL %s %s S %s",
 		    me.name, SASL_SERVER, encode_puid(sptr), "PLAIN");
 
-	/* The rest is sent from saslemulation_sasl_continuation() */
+	/* The rest is sent from authprompt_sasl_continuation() */
 
 	sptr->local->sasl_out++;
 }
@@ -385,27 +388,27 @@ void send_multinotice(aClient *sptr, MultiLine *m)
 		sendnotice(sptr, "%s", m->line);
 }
 
-DLLFUNC int saslemulation_require_sasl(aClient *sptr, char *reason)
+DLLFUNC int authprompt_require_sasl(aClient *sptr, char *reason)
 {
-	/* If the client did SASL then we (saslemulation) will not kick in */
+	/* If the client did SASL then we (authprompt) will not kick in */
 	if (CHECKPROTO(sptr, PROTO_SASL))
 		return 0;
 
 	/* Allocate, and therefore indicate, that we are going to handle SASL for this user */
 	if (!SEUSER(sptr))
-		SetSEUser(sptr, MyMallocEx(sizeof(SEUser)));
+		SetAPUser(sptr, MyMallocEx(sizeof(APUser)));
 
-	/* Display the require sasl::reason */
+	/* Display the require authentication::reason */
 	if (reason)
 		sendnotice(sptr, "%s", reason);
 
-	/* Display set::saslemulation::message */
+	/* Display set::authentication-prompt::message */
 	send_multinotice(sptr, cfg.message);
 
 	return 1;
 }
 
-DLLFUNC int saslemulation_sasl_continuation(aClient *sptr, char *buf)
+DLLFUNC int authprompt_sasl_continuation(aClient *sptr, char *buf)
 {
 	/* If it's not for us (eg: user is doing real SASL) then return 0. */
 	if (!SEUSER(sptr) || !SEUSER(sptr)->authmsg)
@@ -424,7 +427,7 @@ DLLFUNC int saslemulation_sasl_continuation(aClient *sptr, char *buf)
 	return 1; /* inhibit displaying of message */
 }
 
-DLLFUNC int saslemulation_sasl_result(aClient *sptr, int success)
+DLLFUNC int authprompt_sasl_result(aClient *sptr, int success)
 {
 	/* If it's not for us (eg: user is doing real SASL) then return 0. */
 	if (!SEUSER(sptr))

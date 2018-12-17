@@ -5216,9 +5216,9 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "sasl"))
 				{
 					config_error("%s:%d: The option allow::options::sasl no longer exists. "
-					             "Please use a require sasl { } block instead, which "
+					             "Please use a require authentication { } block instead, which "
 					             "is more flexible and provides the same functionality. See "
-					             "https://www.unrealircd.org/docs/Require_sasl_block",
+					             "https://www.unrealircd.org/docs/Require_authentication_block",
 					             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 					errors++;
 				}
@@ -7114,7 +7114,7 @@ int _conf_require(ConfigFile *conf, ConfigEntry *ce)
 	Hook *h;
 
 	ca = MyMallocEx(sizeof(ConfigItem_ban));
-	if (!strcmp(ce->ce_vardata, "sasl"))
+	if (!strcmp(ce->ce_vardata, "authentication") || !strcmp(ce->ce_vardata, "sasl"))
 	{
 		ca->flag.type = CONF_BAN_UNAUTHENTICATED;
 	}
@@ -7154,12 +7154,17 @@ int _test_require(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!ce->ce_vardata)
 	{
-		config_error("%s:%i: require without type, did you mean 'require sasl'?",
+		config_error("%s:%i: require without type, did you mean 'require authentication'?",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
-	if (!strcmp(ce->ce_vardata, "sasl"))
+	if (!strcmp(ce->ce_vardata, "authentication"))
 	{}
+	if (!strcmp(ce->ce_vardata, "sasl"))
+	{
+		config_warn("%s:%i: the 'require sasl' block is now called 'required authentication'",
+		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+	}
 	else
 	{
 		int used = 0;

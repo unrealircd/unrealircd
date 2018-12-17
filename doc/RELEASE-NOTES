@@ -1,11 +1,13 @@
 UnrealIRCd 4.2.1-dev Release Notes
 ===============================
 
-UnrealIRCd 4.2.0 turned out to be very stable. This 4.2.1 version
-therefore contains only minor changes and feature enhancements.
+This version enhances support for authentication, also for clients that
+do not support SASL. Other new features are a new module to combat
+mixed UTF8 character spam, a rewrite of the operclass privileges and
+more secure password hashing.
 
 If you missed the 4.2.0 release, then consider looking at the previous
-release announcement, since it introduced a lot new features:
+release announcement as well, since it introduced a lot of new features:
 https://forums.unrealircd.org/viewtopic.php?f=1&t=8843
 
 Note: there will be no further 4.0.x releases, as 4.2.x is simply the
@@ -13,19 +15,20 @@ successor to 4.0.x. If you missed that announcement, then have a look at:
 https://www.unrealircd.org/docs/FAQ#Questions_about_the_new_4.2.x_series
 
 Enhancements:
-* Support for Argon2 hashed passwords. 
+* Support for authentication prompt:
+  With the require authentication { } block you can force users on specified
+  IP addresses or hostnames to authenticate themselves with their nickname
+  and password via SASL. We now offer a new experimental module called
+  'authprompt' which will help non-SASL users by showing a notice and
+  asking them to authenticate to their account via /AUTH <user>:<pass>.
+  See https://www.unrealircd.org/docs/Set_block#set::authentication-prompt
 * New optional module 'antimixedutf8' to combat mixed UTF8 character spam
   (also called freenode spam) that has been plaguing networks.
   See: https://www.unrealircd.org/docs/Set_block#set::antimixedutf8
-* Support for authentication prompt (SASL emulation):
-  We previously introduced the "require sasl" block which allows you to
-  force users from certain IP addresses to authenticate with their nickname
-  and password via SASL. We now offer a new experimental module called
-  'saslemulation' which will help non-SASL users by showing a notice and
-  asking them to authenticate to their account via /AUTH <user>:<pass>.
-  See https://www.unrealircd.org/docs/Set_block#set::sasl-emulation
+* Support for Argon2 hashed passwords.
 
 Configuration changes:
+* The require sasl { } block is now called require authentication { }
 * The operclass privileges have been redone. Since there were 50+ changes
   to the 100+ privileges it makes little sense to list the changes here.
   If, like 99% of the users, you use default operclasses such as "globop"
