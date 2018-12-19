@@ -975,6 +975,10 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 
 					for(ptr+=2;*ptr;ptr++)
 					{
+						if (*ptr == '\n')
+						{
+							linenumber++;
+						} else
 						if ((*ptr == '*') && (*(ptr+1) == '/'))
 						{
 							ptr++;
