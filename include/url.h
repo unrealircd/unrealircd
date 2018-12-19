@@ -3,6 +3,7 @@
 #include "types.h"
 
 int MODFUNC url_is_valid(const char *);
+extern const char *displayurl(const char *url);
 char MODFUNC *url_getfilename(const char *url);
 char MODFUNC *download_file(const char *, char **);
 void MODFUNC download_file_async(const char *, time_t, vFP, void *callback_data);

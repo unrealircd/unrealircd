@@ -181,13 +181,13 @@ char *file, *filename;
 		char *error;
 
 		if (config_verbose > 0)
-			config_status("Downloading %s", Download.url);
+			config_status("Downloading %s", displayurl(Download.url));
 
 		if (!(file = download_file(ce->ce_vardata, &error)))
 		{
 			config_error("%s:%i: test: error downloading '%s': %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				ce->ce_vardata, error);
+				displayurl(ce->ce_vardata), error);
 			return -1;
 		}
 
@@ -211,7 +211,7 @@ char *file, *filename;
 	}
 
 	if (config_verbose > 0)
-		config_status("Downloading %s", Download.url);
+		config_status("Downloading %s", displayurl(Download.url));
 
 	Download.in_progress = 1;
 	download_file_async(Download.url, sb.st_ctime, download_staff_file_complete, NULL);
@@ -228,7 +228,7 @@ static void download_staff_file_complete(char *url, char *file, char *errorbuf, 
 		if (!file)
 		{
 			config_error("Error downloading %s: %s",
-				url, errorbuf);
+				displayurl(url), errorbuf);
 			return;
 		}
 

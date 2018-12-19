@@ -1031,11 +1031,11 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 #ifdef REMOTEINC_SPECIALCACHE
 		if(has_cached_version(url))
 		{
-			config_warn("Error downloading MOTD file from \"%s\": %s -- using cached version instead.", url, errorbuf);
+			config_warn("Error downloading MOTD file from \"%s\": %s -- using cached version instead.", displayurl(url), errorbuf);
 			filename = unreal_mkcache(url);
 		} else {
 #endif
-			config_error("Error downloading MOTD file from \"%s\": %s", url, errorbuf);
+			config_error("Error downloading MOTD file from \"%s\": %s", displayurl(url), errorbuf);
 
 			/* remove reference to this chunk of memory about to be freed. */
 			motd_download->themotd->motd_download = NULL;
