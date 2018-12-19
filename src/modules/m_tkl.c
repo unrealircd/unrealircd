@@ -1269,6 +1269,8 @@ int  _find_tkline_match(aClient *cptr, int skip_soft)
 	if (!banned)
 		return 1;
 
+	RunHookReturnInt2(HOOKTYPE_FIND_TKLINE_MATCH, cptr, lp, !=99);
+
 	if (lp->type & TKL_KILL)
 	{
 		ircstp->is_ref++;
@@ -2405,6 +2407,8 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 	 */
 	if (IsSoftBanAction(action) && IsLoggedIn(sptr))
 		return 0;
+
+	RunHookReturnInt4(HOOKTYPE_PLACE_HOST_BAN, sptr, action, reason, duration, !=99);
 
 	switch(action)
 	{

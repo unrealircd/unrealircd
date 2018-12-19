@@ -54,11 +54,14 @@ ModDataInfo *authprompt_md = NULL;
 static void free_config(void);
 static void init_config(void);
 static void config_postdefaults(void);
-DLLFUNC int authprompt_config_test(ConfigFile *, ConfigEntry *, int, int *);
-DLLFUNC int authprompt_config_run(ConfigFile *, ConfigEntry *, int);
-DLLFUNC int authprompt_require_sasl(aClient *acptr, char *reason);
-DLLFUNC int authprompt_sasl_continuation(aClient *acptr, char *buf);
-DLLFUNC int authprompt_sasl_result(aClient *acptr, int success);
+int authprompt_config_test(ConfigFile *, ConfigEntry *, int, int *);
+int authprompt_config_run(ConfigFile *, ConfigEntry *, int);
+int authprompt_require_sasl(aClient *acptr, char *reason);
+int authprompt_sasl_continuation(aClient *acptr, char *buf);
+int authprompt_sasl_result(aClient *acptr, int success);
+int authprompt_place_host_ban(aClient *sptr, int action, char *reason, long duration);
+int authprompt_find_tkline_match(aClient *sptr, aTKline *tk);
+int authprompt_pre_connect(aClient *sptr);
 CMD_FUNC(m_auth);
 void authprompt_md_free(ModData *md);
 
@@ -95,6 +98,13 @@ MOD_INIT(authprompt)
 	HookAdd(modinfo->handle, HOOKTYPE_REQUIRE_SASL, 0, authprompt_require_sasl);
 	HookAdd(modinfo->handle, HOOKTYPE_SASL_CONTINUATION, 0, authprompt_sasl_continuation);
 	HookAdd(modinfo->handle, HOOKTYPE_SASL_RESULT, 0, authprompt_sasl_result);
+	HookAdd(modinfo->handle, HOOKTYPE_PLACE_HOST_BAN, 0, authprompt_place_host_ban);
+	HookAdd(modinfo->handle, HOOKTYPE_FIND_TKLINE_MATCH, 0, authprompt_find_tkline_match);
+	/* For HOOKTYPE_PRE_LOCAL_CONNECT we want a low priority, so we are called last.
+	 * This gives hooks like the one from the blacklist module (pending softban)
+	 * a chance to be handled first.
+	 */
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, -1000000, authprompt_pre_connect);
 	CommandAdd(modinfo->handle, "AUTH", m_auth, 1, M_UNREGISTERED);
 	return MOD_SUCCESS;
 }
@@ -150,7 +160,7 @@ static void free_config(void)
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
-DLLFUNC int authprompt_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int authprompt_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 	ConfigEntry *cep;
@@ -195,7 +205,7 @@ DLLFUNC int authprompt_config_test(ConfigFile *cf, ConfigEntry *ce, int type, in
 	return errors ? -1 : 1;
 }
 
-DLLFUNC int authprompt_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+int authprompt_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 
@@ -388,27 +398,87 @@ void send_multinotice(aClient *sptr, MultiLine *m)
 		sendnotice(sptr, "%s", m->line);
 }
 
-DLLFUNC int authprompt_require_sasl(aClient *sptr, char *reason)
+void authprompt_tag_as_auth_required(aClient *sptr)
+{
+	/* Allocate, and therefore indicate, that we are going to handle SASL for this user */
+	if (!SEUSER(sptr))
+		SetAPUser(sptr, MyMallocEx(sizeof(APUser)));
+}
+
+void authprompt_send_auth_required_message(aClient *sptr)
+{
+	/* Display set::authentication-prompt::message */
+	send_multinotice(sptr, cfg.message);
+}
+
+int authprompt_require_sasl(aClient *sptr, char *reason)
 {
 	/* If the client did SASL then we (authprompt) will not kick in */
 	if (CHECKPROTO(sptr, PROTO_SASL))
 		return 0;
 
-	/* Allocate, and therefore indicate, that we are going to handle SASL for this user */
-	if (!SEUSER(sptr))
-		SetAPUser(sptr, MyMallocEx(sizeof(APUser)));
+	authprompt_tag_as_auth_required(sptr);
 
 	/* Display the require authentication::reason */
 	if (reason)
 		sendnotice(sptr, "%s", reason);
 
-	/* Display set::authentication-prompt::message */
-	send_multinotice(sptr, cfg.message);
+	authprompt_send_auth_required_message(sptr);
 
 	return 1;
 }
 
-DLLFUNC int authprompt_sasl_continuation(aClient *sptr, char *buf)
+/* Called upon "place a host ban on this user" (eg: spamfilter, blacklist, ..) */
+int authprompt_place_host_ban(aClient *sptr, int action, char *reason, long duration)
+{
+	/* If it's a soft-xx action and the user is not logged in
+	 * and the user is not yet online, then we will handle this user.
+	 */
+	if (IsSoftBanAction(action) && !IsLoggedIn(sptr) && !IsPerson(sptr))
+	{
+		/* Send ban reason */
+		if (reason)
+			sendnotice(sptr, "%s", reason);
+
+		/* And tag the user */
+		authprompt_tag_as_auth_required(sptr);
+		return 0; /* pretend user is exempt */
+	}
+	return 99; /* no action taken, proceed normally */
+}
+
+/** Called upon "check for KLINE/GLINE" */
+int authprompt_find_tkline_match(aClient *sptr, aTKline *tk)
+{
+	/* If it's a soft-xx action and the user is not logged in
+	 * and the user is not yet online, then we will handle this user.
+	 */
+	if ((tk->subtype & TKL_SUBTYPE_SOFT) && !IsLoggedIn(sptr) && !IsPerson(sptr))
+	{
+		/* Send ban reason */
+		if (tk->reason)
+			sendnotice(sptr, "%s", tk->reason);
+
+		/* And tag the user */
+		authprompt_tag_as_auth_required(sptr);
+		return 0; /* pretend user is exempt */
+	}
+	return 99; /* no action taken, proceed normally */
+}
+
+int authprompt_pre_connect(aClient *sptr)
+{
+	/* If the user is tagged as auth required and not logged in, then.. */
+	if (SEUSER(sptr) && !IsLoggedIn(sptr))
+	{
+		authprompt_send_auth_required_message(sptr);
+		return -1; /* do not process register_user() */
+	}
+
+	return 0; /* no action taken, proceed normally */
+}
+
+int authprompt_sasl_continuation(aClient *sptr, char *buf)
 {
 	/* If it's not for us (eg: user is doing real SASL) then return 0. */
 	if (!SEUSER(sptr) || !SEUSER(sptr)->authmsg)
@@ -427,7 +497,7 @@ DLLFUNC int authprompt_sasl_continuation(aClient *sptr, char *buf)
 	return 1; /* inhibit displaying of message */
 }
 
-DLLFUNC int authprompt_sasl_result(aClient *sptr, int success)
+int authprompt_sasl_result(aClient *sptr, int success)
 {
 	/* If it's not for us (eg: user is doing real SASL) then return 0. */
 	if (!SEUSER(sptr))

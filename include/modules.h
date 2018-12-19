@@ -671,6 +671,16 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
   if (retval retchk) return retval; \
  } \
 }
+#define RunHookReturnInt4(hooktype,a,b,c,d,retchk) \
+{ \
+ int retval; \
+ Hook *h; \
+ for (h = Hooks[hooktype]; h; h = h->next) \
+ { \
+  retval = (*(h->func.intfunc))(a,b,c,d); \
+  if (retval retchk) return retval; \
+ } \
+}
 
 #define RunHookReturnVoid(hooktype,x,ret) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) if((*(h->func.intfunc))(x) ret) return; } while(0)
 #define RunHook2(hooktype,x,y) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(x,y); } while(0)
@@ -808,6 +818,8 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_REQUIRE_SASL 92
 #define HOOKTYPE_SASL_CONTINUATION 93
 #define HOOKTYPE_SASL_RESULT 94
+#define HOOKTYPE_PLACE_HOST_BAN 95
+#define HOOKTYPE_FIND_TKLINE_MATCH 96
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -909,6 +921,8 @@ int hooktype_can_bypass_channel_message_restriction(aClient *sptr, aChannel *chp
 int hooktype_require_sasl(aClient *sptr, char *reason);
 int hooktype_sasl_continuation(aClient *sptr, char *buf);
 int hooktype_sasl_result(aClient *sptr, int success);
+int hooktype_place_host_ban(aClient *sptr, int action, char *reason, long duration);
+int hooktype_find_tkline_match(aClient *sptr, aTKline *tk);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
@@ -1007,7 +1021,9 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION) && !ValidateHook(hooktype_can_bypass_channel_message_restriction, func)) || \
         ((hooktype == HOOKTYPE_REQUIRE_SASL) && !ValidateHook(hooktype_require_sasl, func)) || \
         ((hooktype == HOOKTYPE_SASL_CONTINUATION) && !ValidateHook(hooktype_sasl_continuation, func)) || \
-        ((hooktype == HOOKTYPE_SASL_RESULT) && !ValidateHook(hooktype_sasl_result, func)) ) \
+        ((hooktype == HOOKTYPE_SASL_RESULT) && !ValidateHook(hooktype_sasl_result, func)) || \
+        ((hooktype == HOOKTYPE_PLACE_HOST_BAN) && !ValidateHook(hooktype_place_host_ban, func)) || \
+        ((hooktype == HOOKTYPE_FIND_TKLINE_MATCH) && !ValidateHook(hooktype_find_tkline_match, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
