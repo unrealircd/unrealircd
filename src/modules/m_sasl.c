@@ -198,6 +198,7 @@ CMD_FUNC(m_sasl)
 			*target_p->local->sasl_agent = '\0';
 			if (*parv[4] == 'F')
 			{
+				target_p->local->since += 7; /* bump fakelag due to failed authentication attempt */
 				RunHookReturnInt2(HOOKTYPE_SASL_RESULT, target_p, 0, !=0);
 				sendto_one(target_p, err_str(ERR_SASLFAIL), me.name, BadPtr(target_p->name) ? "*" : target_p->name);
 			}
