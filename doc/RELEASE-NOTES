@@ -51,6 +51,8 @@ Minor issues fixed:
 * By default a user shouldn't be allowed to change to a banned nick,
   unless (s)he has +hoaq in the channel. This was broken since 4.0.0.
   This feature can be disabled via set { check-target-nick-bans no; };
+* Rehash error messages sent to opers regarding remote includes now no
+  longer include authentication information (replaced with ***:***).
 
 Deprecated:
 * The authentication types 'md5', 'sha1' and 'ripemd160' have been
