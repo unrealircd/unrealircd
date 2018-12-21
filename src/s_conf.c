@@ -7166,7 +7166,7 @@ int _test_require(ConfigFile *conf, ConfigEntry *ce)
 	{}
 	if (!strcmp(ce->ce_vardata, "sasl"))
 	{
-		config_warn("%s:%i: the 'require sasl' block is now called 'required authentication'",
+		config_warn("%s:%i: the 'require sasl' block is now called 'require authentication'",
 		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 	}
 	else
