@@ -140,7 +140,7 @@ static void config_postdefaults(void)
 	if (!cfg.message)
 	{
 		addmultiline(&cfg.message, "The server requires clients from this IP address to authenticate with a registered nickname and password.");
-		addmultiline(&cfg.message, "Please reconnect using SASL, or authenticate now by typing: /AUTH nick:password");
+		addmultiline(&cfg.message, "Please reconnect using SASL, or authenticate now by typing: /QUOTE AUTH nick:password");
 	}
 	if (!cfg.fail_message)
 	{
