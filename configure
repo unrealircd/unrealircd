@@ -7925,7 +7925,7 @@ fi
 
 if test "x$with_system_pcre2" = "xno"; then :
 
-pcre2_version="10.30"
+pcre2_version="10.32"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting PCRE2 regex library" >&5
 $as_echo "extracting PCRE2 regex library" >&6; }
 cur_dir=`pwd`
@@ -8252,7 +8252,7 @@ fi
 
 if test "$has_system_cares" = "no"; then :
 
-cares_version="1.13.0"
+cares_version="1.15.0"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting c-ares resolver library" >&5
 $as_echo "extracting c-ares resolver library" >&6; }
 cur_dir=`pwd`
