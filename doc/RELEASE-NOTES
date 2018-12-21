@@ -1,5 +1,5 @@
-UnrealIRCd 4.2.1-dev Release Notes
-===============================
+UnrealIRCd 4.2.1-rc1 Release Notes
+===================================
 
 This version enhances support for authentication, also for clients that
 do not support SASL. Other new features are a new module to combat
