@@ -46,7 +46,7 @@ Configuration changes:
   See https://www.unrealircd.org/docs/FAQ#Nesting_comments
 
 Major issues fixed:
-* None
+* The blacklist module did not act on IPv6 users listed in DNSBLs.
 
 Minor issues fixed:
 * By default a user shouldn't be allowed to change to a banned nick,
