@@ -666,7 +666,10 @@ static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_fo
 
 	if (IsARegNick(acptr))
 		status[i++] = 'r';
- 
+
+	if (IsSecureConnect(acptr))
+		status[i++] = 's';
+
 	for (h = Hooks[HOOKTYPE_WHO_STATUS]; h; h = h->next)
 	{
 		int ret = (*(h->func.intfunc))(sptr, acptr, NULL, NULL, status, 0);

@@ -26,6 +26,7 @@ Enhancements:
   (also called freenode spam) that has been plaguing networks.
   See: https://www.unrealircd.org/docs/Set_block#set::antimixedutf8
 * Support for Argon2 hashed passwords.
+* Indicate 's' in WHO reply flags if the user is secure (SSL/TLS).
 
 Configuration changes:
 * The require sasl { } block is now called require authentication { }

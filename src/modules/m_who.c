@@ -617,6 +617,9 @@ static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel,
 	if (IsARegNick(acptr))
 		status[i++] = 'r';
 
+	if (IsSecureConnect(acptr))
+		status[i++] = 's';
+
 	for (h = Hooks[HOOKTYPE_WHO_STATUS]; h; h = h->next)
 	{
 		int ret = (*(h->func.intfunc))(sptr, acptr, channel, cm, status, cansee);
