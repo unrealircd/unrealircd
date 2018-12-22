@@ -1,31 +1,34 @@
 UnrealIRCd 4.2.1-rc1 Release Notes
 ===================================
 
-This version enhances support for authentication, also for clients that
-do not support SASL. Other new features are a new module to combat
-mixed UTF8 character spam, a rewrite of the operclass privileges and
-more secure password hashing.
+This is the release candidate for UnrealIRCd 4.2.1. You can help us with
+testing this release so we can release a 4.2.1 stable later this year.
+
+This version enhances support for authentication for clients that do not
+support SASL. Also new is a module to combat mixed UTF8 character spam,
+a rewrite of the operclass privileges and more secure password hashing.
 
 If you missed the 4.2.0 release, then consider looking at the previous
 release announcement as well, since it introduced a lot of new features:
 https://forums.unrealircd.org/viewtopic.php?f=1&t=8843
 
-Note: there will be no further 4.0.x releases, as 4.2.x is simply the
-successor to 4.0.x. If you missed that announcement, then have a look at:
+NOTE: There will be no further 4.0.x releases. Current stable is 4.2.x.
 https://www.unrealircd.org/docs/FAQ#Questions_about_the_new_4.2.x_series
 
 Enhancements:
 * Support for authentication prompt:
-  With the require authentication { } block you can force users on specified
-  IP addresses or hostnames to authenticate themselves with their nickname
-  and password via SASL. We now offer a new experimental module called
-  'authprompt' which will help non-SASL users by showing a notice and
-  asking them to authenticate to their account via /AUTH <user>:<pass>.
-  See https://www.unrealircd.org/docs/Set_block#set::authentication-prompt
+  Since 4.2.0 you can require specific users to authenticate themselves with
+  their nickname and password via SASL. We now offer a new experimental
+  module called 'authprompt' which will help non-SASL users by showing a
+  notice and asking them to authenticate to their account using the command
+  /AUTH <user>:<pass>. See the new authentication article on the wiki for
+  an overview: https://www.unrealircd.org/docs/Authentication and also
+  https://www.unrealircd.org/docs/Set_block#set::authentication-prompt
 * New optional module 'antimixedutf8' to combat mixed UTF8 character spam
   (also called freenode spam) that has been plaguing networks.
   See: https://www.unrealircd.org/docs/Set_block#set::antimixedutf8
-* Support for Argon2 hashed passwords.
+* Support for Argon2 password hashing, which is more resilient against
+  brute force cracking.
 * Indicate 's' in WHO reply flags if the user is secure (SSL/TLS).
 
 Configuration changes:
@@ -42,7 +45,7 @@ Configuration changes:
 * In the configuration file you can now use } instead of };
   Both forms are accepted. There's no need to change if you don't like it.
 * A /* comment in the configuration file is now terminated at the
-  first occurance of */, instead of two /* /* requiring two */ */.
+  first occurrence of */, instead of two /* /* requiring two */ */.
   See https://www.unrealircd.org/docs/FAQ#Nesting_comments
 
 Major issues fixed:
@@ -59,8 +62,8 @@ Deprecated:
 * The authentication types 'md5', 'sha1' and 'ripemd160' have been
   deprecated because they can be cracked at high speeds. They still
   work, but a warning will be shown on boot and on rehash.
-  Please use 'bcrypt' or (even better) the new 'argon2' type instead:
-  "./unrealircd mkpasswd argon2" or "/mkpasswd argon2 passwd" on IRC.
+  Please use the new 'argon2' type instead. Type /MKPASSWD argon2 passwd
+  on IRC, or "./unrealircd mkpasswd argon2" on the command line.
 
 Module coders:
 * Priorities in command overrides were reversed (was added in 4.2.0).
