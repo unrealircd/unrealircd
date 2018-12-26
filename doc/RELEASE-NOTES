@@ -1,8 +1,5 @@
-UnrealIRCd 4.2.1-rc1 Release Notes
-===================================
-
-This is the release candidate for UnrealIRCd 4.2.1. You can help us with
-testing this release so we can release a 4.2.1 stable later this year.
+UnrealIRCd 4.2.1 Release Notes
+===============================
 
 This version enhances support for authentication for clients that do not
 support SASL. Also new is a module to combat mixed UTF8 character spam,
