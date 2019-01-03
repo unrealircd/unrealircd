@@ -1,6 +1,11 @@
-UnrealIRCd 4.2.1 Release Notes
-===============================
+UnrealIRCd 4.2.1.1 Release Notes
+=================================
 
+=[ UnrealIRCd 4.2.1.1 ]=
+This 4.2.1.1 version includes a compile fix for Debian. The rest of the
+release notes are about 4.2.1:
+
+=[ UnrealIRCd 4.2.1 ]=
 This version enhances support for authentication for clients that do not
 support SASL. Also new is a module to combat mixed UTF8 character spam,
 a rewrite of the operclass privileges and more secure password hashing.
