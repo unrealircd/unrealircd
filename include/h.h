@@ -505,6 +505,7 @@ extern time_t rfc2time(char *s);
 extern char *rfctime(time_t t, char *buf);
 extern void *MyMallocEx(size_t size);
 extern MODFUNC char  *ssl_get_cipher(SSL *ssl);
+extern SSLOptions *get_ssl_options_for_client(aClient *acptr);
 extern long config_checkval(char *value, unsigned short flags);
 extern void config_status(char *format, ...) __attribute__((format(printf,1,2)));
 extern void init_random();

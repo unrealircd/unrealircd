@@ -625,12 +625,26 @@ char *ssl_get_cipher(SSL *ssl)
 	return buf;
 }
 
+/** Get the applicable ::ssl-options block for this local client,
+ * which may be defined in the link block, listen block, or set block.
+ */
+SSLOptions *get_ssl_options_for_client(aClient *acptr)
+{
+	if (!acptr->local)
+		return NULL;
+	if (acptr->serv && acptr->serv->conf && acptr->serv->conf->ssl_options)
+		return acptr->serv->conf->ssl_options;
+	if (acptr->local && acptr->local->listener && acptr->local->listener->ssl_options)
+		return acptr->local->listener->ssl_options;
+	return iConf.ssl_options;
+}
+
 /** Outgoing SSL connect (read: handshake) to another server. */
 void ircd_SSL_client_handshake(int fd, int revents, void *data)
 {
 	aClient *acptr = data;
 	SSL_CTX *ctx = (acptr->serv && acptr->serv->conf && acptr->serv->conf->ssl_ctx) ? acptr->serv->conf->ssl_ctx : ctx_client;
-	SSLOptions *ssloptions = (acptr->serv && acptr->serv->conf && acptr->serv->conf->ssl_options) ? acptr->serv->conf->ssl_options : iConf.ssl_options;
+	SSLOptions *ssloptions = get_ssl_options_for_client(acptr);
 
 	if (!ctx)
 	{
