@@ -64,3 +64,6 @@ do
 	$OPENSSL s_client -connect 127.0.0.1:5900 -cipher $cipher &&
 	fail "UnrealIRCd allowed us to connect with cipher $cipher, BAD!"
 done
+
+echo "TLS tests ended"
+exit 0
