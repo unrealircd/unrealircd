@@ -1,0 +1,66 @@
+#!/bin/bash
+# We assume we are executed from extras/tests/tls
+
+function fail()
+{
+	echo "TLS TEST ERROR: $*"
+	exit 1
+}
+
+CIPHERSCAN="cipherscan"
+OPENSSL="openssl"
+if [ -x /home/travis/build/unrealircd/unrealircd/cipherscan/cipherscan ]; then
+	CIPHERSCAN="/home/travis/build/unrealircd/unrealircd/cipherscan/cipherscan"
+	OPENSSL="/home/travis/build/unrealircd/unrealircd/cipherscan/openssl"
+fi
+
+$CIPHERSCAN --help >/dev/null || exit 1
+
+
+# This is the basic cipherscan test.
+# It compares the output against a reference .txt file and alarms us if there
+# are any changes. These changes may not always be harmful, but at least we
+# will get warned on any possible changes.
+$CIPHERSCAN --no-colors 127.0.0.1:5900|grep -vF '.....' >cipherscan.test.txt
+
+# Now check if profile matches, if so.. everything is ok.
+# We have 1 or more baseline profiles
+# And you can optionally add profile-specific, eg openssl-102.txt
+FAILED=1
+for f in cipherscan_profiles/baseline*txt $BUILDCONFIG.txt
+do
+	diff -uab $f cipherscan.test.txt 1>/dev/null 2>&1
+	if [ "$?" -eq 0 ]; then
+		FAILED=0
+		echo "Cipherscsan profile $f matched."
+		break
+	fi
+done
+
+if [ "$FAILED" -eq 1 ]; then
+	echo "*** Differences found between cipherscan scan and expected output ***"
+	if [ -f cipherscan_profiles/$BUILDCONFIG.txt ]; then
+		COMPARE_PROFILE="cipherscan_profiles/$BUILDCONFIG.txt"
+	else
+		COMPARE_PROFILE="cipherscan_profiles/baseline.txt"
+	fi
+	echo "== EXPECTED OUTPUT ($COMPARE_PROFILE) =="
+	cat $COMPARE_PROFILE
+	echo
+	echo "== ACTUAL TEST OUTPUT =="
+	cat cipherscan.test.txt
+	echo
+	echo "== DIFF =="
+	diff -uab $COMPARE_PROFILE cipherscan.test.txt
+	echo
+	echo "cipherscan test failed."
+	exit 1
+fi
+
+# This checks for a couple of old ciphers that should never work:
+for cipher in 3DES RC4
+do
+	echo "Testing cipher $cipher (MUST FAIL!).."
+	$OPENSSL s_client -connect 127.0.0.1:5900 -cipher $cipher &&
+	fail "UnrealIRCd allowed us to connect with cipher $cipher, BAD!"
+done

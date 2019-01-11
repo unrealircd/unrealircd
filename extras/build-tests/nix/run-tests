@@ -51,7 +51,7 @@ cd -
 
 # Do cipherscan test
 sleep 2
-cd ../extras/build-tests/nix
+cd ../extras/tests/tls
 ./tls-tests
 cd -
 
