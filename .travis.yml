@@ -20,9 +20,9 @@ matrix:
     env: BUILDCONFIG="system-cares system-curl"
   - os: osx
     env: BUILDCONFIG="local-curl"
-  - env: BUILDCONFIG="libressl-25"
-  - env: BUILDCONFIG="libressl-26"
   - env: BUILDCONFIG="libressl-27"
+  - env: BUILDCONFIG="libressl-28"
+  - env: BUILDCONFIG="libressl-29"
   - env: BUILDCONFIG="openssl-102"
   - env: BUILDCONFIG="openssl-110"
   - env: BUILDCONFIG="openssl-111"
