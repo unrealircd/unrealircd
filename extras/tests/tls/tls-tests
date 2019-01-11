@@ -27,12 +27,12 @@ $CIPHERSCAN --no-colors 127.0.0.1:5900|grep -vF '.....' >cipherscan.test.txt
 # We have 1 or more baseline profiles
 # And you can optionally add profile-specific, eg openssl-102.txt
 FAILED=1
-for f in cipherscan_profiles/baseline*txt $BUILDCONFIG.txt
+for f in cipherscan_profiles/baseline*txt cipherscan_profiles/$BUILDCONFIG.txt
 do
 	diff -uab $f cipherscan.test.txt 1>/dev/null 2>&1
 	if [ "$?" -eq 0 ]; then
 		FAILED=0
-		echo "Cipherscsan profile $f matched."
+		echo "Cipherscan profile $f matched."
 		break
 	fi
 done
@@ -55,15 +55,27 @@ if [ "$FAILED" -eq 1 ]; then
 	echo
 	echo "cipherscan test failed."
 	exit 1
+else
+	echo "*** Cipherscan output was good ***"
+	cat cipherscan.test.txt
 fi
 
 # This checks for a couple of old ciphers that should never work:
 for cipher in 3DES RC4
 do
 	echo "Testing cipher $cipher (MUST FAIL!).."
-	$OPENSSL s_client -connect 127.0.0.1:5900 -cipher $cipher &&
+	(echo QUIT|$OPENSSL s_client -connect 127.0.0.1:5900 -cipher $cipher) &&
 	fail "UnrealIRCd allowed us to connect with cipher $cipher, BAD!"
 done
 
-echo "TLS tests ended"
+# This checks older SSL/TLS versions that should not work:
+for protocol in ssl2 ssl3
+do
+	echo "Testing protocol $protocol (MUST FAIL!).."
+	(echo QUIT|$OPENSSL s_client -connect 127.0.0.1:5900 -$protocol) &&
+	fail "UnrealIRCd allowed us to connect with protocol $protocol, BAD!"
+done
+
+echo
+echo "TLS tests ended (no issues)."
 exit 0
