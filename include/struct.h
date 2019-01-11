@@ -1785,10 +1785,10 @@ int throttle_can_connect(aClient *);
 #define MATCH_USE_IDENT             0x0100
 
 typedef enum {
-	PLAINTEXT_POLICY_ALLOW=1,
-	PLAINTEXT_POLICY_WARN=2,
-	PLAINTEXT_POLICY_DENY=3
-} PlaintextPolicy;
+	POLICY_ALLOW=1,
+	POLICY_WARN=2,
+	POLICY_DENY=3
+} Policy;
 
 #define NO_EXIT_CLIENT	99
 

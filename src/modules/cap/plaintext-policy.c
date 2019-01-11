@@ -57,9 +57,9 @@ char *plaintext_policy_capability_parameter(aClient *acptr)
 	static char buf[128];
 	
 	snprintf(buf, sizeof(buf), "user=%s,oper=%s,server=%s",
-             plaintextpolicy_valtostr(iConf.plaintext_policy_user),
-             plaintextpolicy_valtostr(iConf.plaintext_policy_oper),
-             plaintextpolicy_valtostr(iConf.plaintext_policy_server));
+             policy_valtostr(iConf.plaintext_policy_user),
+             policy_valtostr(iConf.plaintext_policy_oper),
+             policy_valtostr(iConf.plaintext_policy_server));
 	return buf;
 }
 

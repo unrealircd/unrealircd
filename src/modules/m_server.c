@@ -400,7 +400,7 @@ skip_host_check:
 				get_client_name(cptr, TRUE));
 		return exit_client(cptr, cptr, &me, "Full class");
 	}
-	if (!IsLocal(cptr) && (iConf.plaintext_policy_server == PLAINTEXT_POLICY_DENY) && !IsSecure(cptr))
+	if (!IsLocal(cptr) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(cptr))
 	{
 		sendto_one(cptr, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 		sendto_ops_and_log("Rejected insecure server %s. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS", cptr->name);
@@ -867,7 +867,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		 * Yeah.. there are still other cases when non-SSL links are fine (eg: local IP
 		 * of the same machine), we won't bother with detecting that. -- Syzop
 		 */
-		if (!IsLocal(cptr) && (iConf.plaintext_policy_server == PLAINTEXT_POLICY_WARN))
+		if (!IsLocal(cptr) && (iConf.plaintext_policy_server == POLICY_WARN))
 		{
 			sendto_realops("\002WARNING:\002 This link is unencrypted (non-SSL). We highly recommend to use "
 						   "SSL server linking. See https://www.unrealircd.org/docs/Linking_servers");

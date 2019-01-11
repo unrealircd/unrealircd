@@ -92,11 +92,11 @@ struct zConfiguration {
 	char *static_quit;
 	char *static_part;
 	SSLOptions *ssl_options;
-	PlaintextPolicy plaintext_policy_user;
+	Policy plaintext_policy_user;
 	char *plaintext_policy_user_message;
-	PlaintextPolicy plaintext_policy_oper;
+	Policy plaintext_policy_oper;
 	char *plaintext_policy_oper_message;
-	PlaintextPolicy plaintext_policy_server;
+	Policy plaintext_policy_server;
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
 	char *restrict_channelmodes;

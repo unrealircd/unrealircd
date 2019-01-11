@@ -721,41 +721,41 @@ char chfl_to_chanmode(int s)
 	/* NOT REACHED */
 }
 
-PlaintextPolicy plaintextpolicy_strtoval(char *s)
+Policy policy_strtoval(char *s)
 {
 	if (!s)
 		return 0;
 
 	if (!strcmp(s, "allow"))
-		return PLAINTEXT_POLICY_ALLOW;
+		return POLICY_ALLOW;
 
 	if (!strcmp(s, "warn"))
-		return PLAINTEXT_POLICY_WARN;
+		return POLICY_WARN;
 
 	if (!strcmp(s, "deny"))
-		return PLAINTEXT_POLICY_DENY;
+		return POLICY_DENY;
 
 	return 0;
 }
 
-char *plaintextpolicy_valtostr(PlaintextPolicy policy)
+char *policy_valtostr(Policy policy)
 {
-	if (policy == PLAINTEXT_POLICY_ALLOW)
+	if (policy == POLICY_ALLOW)
 		return "allow";
-	if (policy == PLAINTEXT_POLICY_WARN)
+	if (policy == POLICY_WARN)
 		return "warn";
-	if (policy == PLAINTEXT_POLICY_DENY)
+	if (policy == POLICY_DENY)
 		return "deny";
 	return "???";
 }
 
-char plaintextpolicy_valtochar(PlaintextPolicy policy)
+char policy_valtochar(Policy policy)
 {
-	if (policy == PLAINTEXT_POLICY_ALLOW)
+	if (policy == POLICY_ALLOW)
 		return 'a';
-	if (policy == PLAINTEXT_POLICY_WARN)
+	if (policy == POLICY_WARN)
 		return 'w';
-	if (policy == PLAINTEXT_POLICY_DENY)
+	if (policy == POLICY_DENY)
 		return 'd';
 	return '?';
 }
@@ -1521,9 +1521,9 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ssl_options->ecdh_curves = strdup(UNREALIRCD_DEFAULT_ECDH_CURVES);
 #endif
 
-	i->plaintext_policy_user = PLAINTEXT_POLICY_ALLOW;
-	i->plaintext_policy_oper = PLAINTEXT_POLICY_WARN;
-	i->plaintext_policy_server = PLAINTEXT_POLICY_DENY;
+	i->plaintext_policy_user = POLICY_ALLOW;
+	i->plaintext_policy_oper = POLICY_WARN;
+	i->plaintext_policy_server = POLICY_DENY;
 	
 	i->reject_message_password_mismatch = strdup("Password mismatch");
 	i->reject_message_too_many_connections = strdup("Too many connections from your IP");
@@ -1543,18 +1543,18 @@ void postconf_defaults(void)
 	if (!iConf.plaintext_policy_user_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
-		if (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY)
+		if (iConf.plaintext_policy_user == POLICY_DENY)
 			safestrdup(iConf.plaintext_policy_user_message, "Insecure connection. Please reconnect using SSL/TLS.");
-		else if (iConf.plaintext_policy_user == PLAINTEXT_POLICY_WARN)
+		else if (iConf.plaintext_policy_user == POLICY_WARN)
 			safestrdup(iConf.plaintext_policy_user_message, "WARNING: Insecure connection. Please consider using SSL/TLS.");
 	}
 
 	if (!iConf.plaintext_policy_oper_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
-		if (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_DENY)
+		if (iConf.plaintext_policy_oper == POLICY_DENY)
 			safestrdup(iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
-		else if (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_WARN)
+		else if (iConf.plaintext_policy_oper == POLICY_WARN)
 			safestrdup(iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
 	}
 
@@ -7974,11 +7974,11 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!strcmp(cepp->ce_varname, "user"))
-					tempiConf.plaintext_policy_user = plaintextpolicy_strtoval(cepp->ce_vardata);
+					tempiConf.plaintext_policy_user = policy_strtoval(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "oper"))
-					tempiConf.plaintext_policy_oper = plaintextpolicy_strtoval(cepp->ce_vardata);
+					tempiConf.plaintext_policy_oper = policy_strtoval(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "server"))
-					tempiConf.plaintext_policy_server = plaintextpolicy_strtoval(cepp->ce_vardata);
+					tempiConf.plaintext_policy_server = policy_strtoval(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "user-message"))
 					safestrdup(tempiConf.plaintext_policy_user_message, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "oper-message"))
@@ -8853,9 +8853,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					!strcmp(cepp->ce_varname, "oper") ||
 					!strcmp(cepp->ce_varname, "server"))
 				{
-					PlaintextPolicy policy;
+					Policy policy;
 					CheckNull(cepp);
-					policy = plaintextpolicy_strtoval(cepp->ce_vardata);
+					policy = policy_strtoval(cepp->ce_vardata);
 					if (!policy)
 					{
 						config_error("%s:%i: set::plaintext-policy::%s: needs to be one of: 'allow', 'warn' or 'reject'",
