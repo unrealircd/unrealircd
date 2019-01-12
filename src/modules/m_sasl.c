@@ -312,7 +312,18 @@ int sasl_capability_visible(aClient *sptr)
 	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
 		return 0;
 
+	/* Don't advertise 'sasl' capability if we are going to reject the
+	 * user anyway due to set::plaintext-policy. This way the client
+	 * won't attempt SASL authentication and thus it prevents the client
+	 * from sending the password unencrypted (in case of method PLAIN).
+	 */
 	if (sptr && !IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_user == POLICY_DENY))
+		return 0;
+
+	/* Similarly, don't advertise when we are going to reject the user
+	 * due to set::outdated-tls-policy.
+	 */
+	if (IsSecure(sptr) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(sptr))
 		return 0;
 
 	return 1;

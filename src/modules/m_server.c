@@ -406,6 +406,12 @@ skip_host_check:
 		sendto_ops_and_log("Rejected insecure server %s. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS", cptr->name);
 		return exit_client(cptr, sptr, &me, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 	}
+	if (IsSecure(cptr) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(cptr))
+	{
+		sendto_one(cptr, "ERROR :Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
+		sendto_ops_and_log("Rejected server %s using outdated %s. See https://www.unrealircd.org/docs/FAQ#server-outdated-tls", ssl_get_cipher(cptr->local->ssl), cptr->name);
+		return exit_client(cptr, sptr, &me, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
+	}
 	if (link_out)
 		*link_out = link;
 	return 0;
@@ -870,7 +876,12 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		if (!IsLocal(cptr) && (iConf.plaintext_policy_server == POLICY_WARN))
 		{
 			sendto_realops("\002WARNING:\002 This link is unencrypted (non-SSL). We highly recommend to use "
-						   "SSL server linking. See https://www.unrealircd.org/docs/Linking_servers");
+			               "SSL/TLS for server linking. See https://www.unrealircd.org/docs/Linking_servers");
+		}
+		if (IsSecure(cptr) && (iConf.outdated_tls_policy_server == POLICY_WARN) && outdated_tls_client(cptr))
+		{
+			sendto_realops("\002WARNING:\002 This link is using an outdated SSL/TLS protocol or cipher (%s).",
+			               ssl_get_cipher(cptr->local->ssl));
 		}
 	}
 	(void)add_to_client_hash_table(cptr->name, cptr);

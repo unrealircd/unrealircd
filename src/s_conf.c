@@ -1520,11 +1520,21 @@ void config_setdefaultsettings(aConfiguration *i)
 #ifdef HAS_SSL_CTX_SET1_CURVES_LIST
 	i->ssl_options->ecdh_curves = strdup(UNREALIRCD_DEFAULT_ECDH_CURVES);
 #endif
+	i->ssl_options->outdated_protocols = strdup("TLSv1,TLSv1.1");
+	/* the following may look strange but "AES*" matches all
+	 * AES ciphersuites that do not have Forward Secrecy.
+	 * Any decent client using AES will use ECDHE-xx-AES.
+	 */
+	i->ssl_options->outdated_ciphers = strdup("AES*");
 
 	i->plaintext_policy_user = POLICY_ALLOW;
 	i->plaintext_policy_oper = POLICY_WARN;
 	i->plaintext_policy_server = POLICY_DENY;
-	
+
+	i->outdated_tls_policy_user = POLICY_WARN;
+	i->outdated_tls_policy_oper = POLICY_WARN;
+	i->outdated_tls_policy_server = POLICY_WARN;
+
 	i->reject_message_password_mismatch = strdup("Password mismatch");
 	i->reject_message_too_many_connections = strdup("Too many connections from your IP");
 	i->reject_message_server_full = strdup("This server is full");
@@ -1556,6 +1566,24 @@ void postconf_defaults(void)
 			safestrdup(iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
 		else if (iConf.plaintext_policy_oper == POLICY_WARN)
 			safestrdup(iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
+	}
+
+	if (!iConf.outdated_tls_policy_user_message)
+	{
+		/* The message depends on whether it's reject or warn.. */
+		if (iConf.outdated_tls_policy_user == POLICY_DENY)
+			safestrdup(iConf.outdated_tls_policy_user_message, "Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+		else if (iConf.outdated_tls_policy_user == POLICY_WARN)
+			safestrdup(iConf.outdated_tls_policy_user_message, "WARNING: Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+	}
+
+	if (!iConf.outdated_tls_policy_oper_message)
+	{
+		/* The message depends on whether it's reject or warn.. */
+		if (iConf.outdated_tls_policy_oper == POLICY_DENY)
+			safestrdup(iConf.outdated_tls_policy_oper_message, "Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+		else if (iConf.outdated_tls_policy_oper == POLICY_WARN)
+			safestrdup(iConf.outdated_tls_policy_oper_message, "WARNING: Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 	}
 
 	is = IsupportFind("MAXLIST");
@@ -7985,6 +8013,22 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					safestrdup(tempiConf.plaintext_policy_oper_message, cepp->ce_vardata);
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "outdated-tls-policy"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "user"))
+					tempiConf.outdated_tls_policy_user = policy_strtoval(cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "oper"))
+					tempiConf.outdated_tls_policy_oper = policy_strtoval(cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "server"))
+					tempiConf.outdated_tls_policy_server = policy_strtoval(cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "user-message"))
+					safestrdup(tempiConf.outdated_tls_policy_user_message, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "oper-message"))
+					safestrdup(tempiConf.outdated_tls_policy_oper_message, cepp->ce_vardata);
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "default-ipv6-clone-mask"))
 		{
 			tempiConf.default_ipv6_clone_mask = atoi(cep->ce_vardata);
@@ -8869,6 +8913,36 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				} else {
 					config_error_unknown(cepp->ce_fileptr->cf_filename,
 						cepp->ce_varlinenum, "set::plaintext-policy",
+						cepp->ce_varname);
+					errors++;
+					continue;
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "outdated-tls-policy"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "user") ||
+					!strcmp(cepp->ce_varname, "oper") ||
+					!strcmp(cepp->ce_varname, "server"))
+				{
+					Policy policy;
+					CheckNull(cepp);
+					policy = policy_strtoval(cepp->ce_vardata);
+					if (!policy)
+					{
+						config_error("%s:%i: set::outdated-tls-policy::%s: needs to be one of: 'allow', 'warn' or 'reject'",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+						errors++;
+					}
+				} else if (!strcmp(cepp->ce_varname, "user-message") ||
+				           !strcmp(cepp->ce_varname, "oper-message"))
+				{
+					CheckNull(cepp);
+				} else {
+					config_error_unknown(cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum, "set::outdated-tls-policy",
 						cepp->ce_varname);
 					errors++;
 					continue;

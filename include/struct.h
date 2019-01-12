@@ -1128,6 +1128,8 @@ struct _ssloptions {
 	char *ciphers;
 	char *ciphersuites;
 	char *ecdh_curves;
+	char *outdated_protocols;
+	char *outdated_ciphers;
 	long options;
 	int renegotiate_bytes;
 	int renegotiate_timeout;

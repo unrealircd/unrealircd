@@ -1325,6 +1325,12 @@ int stats_set(aClient *sptr, char *para)
 		sptr->name, policy_valtostr(iConf.plaintext_policy_oper));
 	sendto_one(sptr, ":%s %i %s :plaintext-policy::server: %s", me.name, RPL_TEXT,
 		sptr->name, policy_valtostr(iConf.plaintext_policy_server));
+	sendto_one(sptr, ":%s %i %s :outdated-tls-policy::user: %s", me.name, RPL_TEXT,
+		sptr->name, policy_valtostr(iConf.outdated_tls_policy_user));
+	sendto_one(sptr, ":%s %i %s :outdated-tls-policy::oper: %s", me.name, RPL_TEXT,
+		sptr->name, policy_valtostr(iConf.outdated_tls_policy_oper));
+	sendto_one(sptr, ":%s %i %s :outdated-tls-policy::server: %s", me.name, RPL_TEXT,
+		sptr->name, policy_valtostr(iConf.outdated_tls_policy_server));
 	RunHook2(HOOKTYPE_STATS, sptr, "S");
 	return 1;
 }

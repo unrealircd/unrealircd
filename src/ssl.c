@@ -1210,3 +1210,52 @@ char *spki_fingerprint(aClient *cptr)
 	}
 	return NULL;
 }
+
+/** Returns 1 if the client is using an outdated protocol or cipher, 0 otherwise */
+int outdated_tls_client(aClient *acptr)
+{
+	SSLOptions *ssloptions = get_ssl_options_for_client(acptr);
+	char buf[1024], *name, *p;
+	const char *client_protocol = SSL_get_version(acptr->local->ssl);
+	const char *client_ciphersuite = SSL_get_cipher(acptr->local->ssl);
+	int bad = 0;
+
+	if (!ssloptions)
+		return 0; /* odd.. */
+
+	strlcpy(buf, ssloptions->outdated_protocols, sizeof(buf));
+	for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
+	{
+		if (!_match(name, client_protocol))
+			 return 1; /* outdated protocol */
+	}
+
+	strlcpy(buf, ssloptions->outdated_ciphers, sizeof(buf));
+	for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
+	{
+		if (!_match(name, client_ciphersuite))
+			return 1; /* outdated cipher */
+	}
+
+	return 0; /* OK, not outdated */
+}
+
+char *outdated_tls_client_build_string(char *pattern, aClient *acptr)
+{
+	static char buf[512];
+	const char *name[3], *value[3];
+	const char *str;
+
+	str = SSL_get_version(acptr->local->ssl);
+	name[0] = "protocol";
+	value[0] = str ? str : "???";
+
+	str = SSL_get_cipher(acptr->local->ssl);
+	name[1] = "cipher";
+	value[1] = str ? str : "???";
+
+	name[2] = value[2] = NULL;
+
+	buildvarstring(pattern, buf, sizeof(buf), name, value);
+	return buf;
+}

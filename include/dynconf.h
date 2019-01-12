@@ -97,6 +97,11 @@ struct zConfiguration {
 	Policy plaintext_policy_oper;
 	char *plaintext_policy_oper_message;
 	Policy plaintext_policy_server;
+	Policy outdated_tls_policy_user;
+	char *outdated_tls_policy_user_message;
+	Policy outdated_tls_policy_oper;
+	char *outdated_tls_policy_oper_message;
+	Policy outdated_tls_policy_server;
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
 	char *restrict_channelmodes;

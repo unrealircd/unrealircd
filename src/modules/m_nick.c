@@ -1578,6 +1578,9 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_user == POLICY_WARN))
 			sendnotice(sptr, "%s", iConf.plaintext_policy_user_message);
+
+		if (IsSecure(sptr) && (iConf.outdated_tls_policy_user == POLICY_WARN) && outdated_tls_client(sptr))
+			sendnotice(sptr, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, sptr));
 		
 		/* Make creation time the real 'online since' time, excluding registration time.
 		 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean
@@ -1695,6 +1698,12 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 	if (!IsSecure(cptr) && !IsLocal(cptr) && (iConf.plaintext_policy_user == POLICY_DENY))
 	{
 		return exit_client(cptr, cptr, &me, iConf.plaintext_policy_user_message);
+	}
+
+	if (IsSecure(cptr) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(cptr))
+	{
+		char *msg = outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, cptr);
+		return exit_client(cptr, cptr, &me, msg);
 	}
 
 	for (aconf = conf_allow; aconf; aconf = aconf->next)

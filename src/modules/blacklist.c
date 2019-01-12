@@ -723,7 +723,7 @@ int blacklist_action(aClient *acptr, char *opernotice, int ban_action, char *ban
 void blacklist_hit(aClient *acptr, Blacklist *bl, int reply)
 {
 	char opernotice[512], banbuf[512];
-	char *name[4], *value[4];
+	const char *name[4], *value[4];
 	BLUser *blu = BLUSER(acptr);
 
 	if (find_tkline_match(acptr, 1) < 0)
