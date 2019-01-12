@@ -1525,7 +1525,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	 * AES ciphersuites that do not have Forward Secrecy.
 	 * Any decent client using AES will use ECDHE-xx-AES.
 	 */
-	i->ssl_options->outdated_ciphers = strdup("AES*");
+	i->ssl_options->outdated_ciphers = strdup("AES*,RC4*,DES*");
 
 	i->plaintext_policy_user = POLICY_ALLOW;
 	i->plaintext_policy_oper = POLICY_WARN;
