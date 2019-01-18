@@ -18,7 +18,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 	gem install rspec || true
 else
 	sudo apt-get install git python rake -y
-	# should be in image.... sudo gem install bundler -v '1.17.3'
+	sudo gem install bundler -v "~>1.0"
 fi
 
 # Install 'ircfly'
