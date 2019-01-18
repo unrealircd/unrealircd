@@ -18,13 +18,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 	gem install rspec || true
 else
 	sudo apt-get install git python rake -y
-
-	echo ARGH
-	ruby --version
-	gem --version
-	gem update --system
-	echo END OF ARGH
-
 	gem install bundler -v "~>1.0"
 fi
 
