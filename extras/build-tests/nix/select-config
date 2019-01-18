@@ -4,16 +4,22 @@
 # It is not meant to be used by end-users
 #
 
+function fail()
+{
+	echo "select-config failed: $*"
+	exit 1
+}
+
 function build_ssl {
 	DIR="$2"
 	URL="$1/$2.tar.gz"
 	savewd="$PWD"
 	cd ~
 	wget "$URL" || exit 1
-	tar xzvf $DIR.tar.gz
+	tar xzf $DIR.tar.gz
 	cd "$DIR"
-	(./configure --prefix=$HOME/ssl || ./config --prefix=$HOME/ssl -fPIC) || exit 1
-	(make -j2 && make install) || exit 1
+	(./configure --prefix=$HOME/ssl 1>/dev/null 2>&1 || ./config --prefix=$HOME/ssl -fPIC 1>/dev/null 2>&1 ) || fail "build_ssl: configure/config failed"
+	(make -j2 1>/dev/null 2>&1 && make install 1>/dev/null 2>&1) || fail "build_ssl: make failed"
 	cd "$savewd"
 	echo "SSLDIR=$HOME/ssl" >>config.settings
 }

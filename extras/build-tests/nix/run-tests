@@ -22,7 +22,7 @@ else
 fi
 
 # Install 'ircfly'
-git clone https://github.com/unrealircd/ircfly.git
+git clone -q https://github.com/unrealircd/ircfly.git
 cd ircfly
 bundle install
 bundle exec rake build
@@ -34,10 +34,10 @@ fi
 cd ..
 
 # Install 'cipherscan'
-git clone https://github.com/mozilla/cipherscan
+git clone -q https://github.com/mozilla/cipherscan
 
 # Install 'unrealircd-tests'
-git clone https://github.com/unrealircd/unrealircd-tests.git
+git clone -q https://github.com/unrealircd/unrealircd-tests.git
 cd unrealircd-tests
 bundle install
 mv config.yaml.example config.yaml
