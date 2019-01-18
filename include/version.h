@@ -56,7 +56,7 @@
  */
 #define UNREAL_VERSION_TIME         201818
 
-#define UnrealProtocol 		4201
+#define UnrealProtocol 		4202
 #define PATCH1  		macro_to_str(UNREAL_VERSION_GENERATION)
 #define PATCH2  		"." macro_to_str(UNREAL_VERSION_MAJOR)
 #define PATCH3  		"." macro_to_str(UNREAL_VERSION_MINOR)

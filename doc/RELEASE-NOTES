@@ -1,74 +1,17 @@
-UnrealIRCd 4.2.1.1 Release Notes
+UnrealIRCd 4.2.2-dev Release Notes
 =================================
 
-=[ UnrealIRCd 4.2.1.1 ]=
-This 4.2.1.1 version includes a compile fix for Debian. The rest of the
-release notes are about 4.2.1:
-
-=[ UnrealIRCd 4.2.1 ]=
-This version enhances support for authentication for clients that do not
-support SASL. Also new is a module to combat mixed UTF8 character spam,
-a rewrite of the operclass privileges and more secure password hashing.
-
-If you missed the 4.2.0 release, then consider looking at the previous
-release announcement as well, since it introduced a lot of new features:
-https://forums.unrealircd.org/viewtopic.php?f=1&t=8843
-
-NOTE: There will be no further 4.0.x releases. Current stable is 4.2.x.
-https://www.unrealircd.org/docs/FAQ#Questions_about_the_new_4.2.x_series
+<<TODO>>
 
 Enhancements:
-* Support for authentication prompt:
-  Since 4.2.0 you can require specific users to authenticate themselves with
-  their nickname and password via SASL. We now offer a new experimental
-  module called 'authprompt' which will help non-SASL users by showing a
-  notice and asking them to authenticate to their account using the command
-  /AUTH <user>:<pass>. See the new authentication article on the wiki for
-  an overview: https://www.unrealircd.org/docs/Authentication and also
-  https://www.unrealircd.org/docs/Set_block#set::authentication-prompt
-* New optional module 'antimixedutf8' to combat mixed UTF8 character spam
-  (also called freenode spam) that has been plaguing networks.
-  See: https://www.unrealircd.org/docs/Set_block#set::antimixedutf8
-* Support for Argon2 password hashing, which is more resilient against
-  brute force cracking.
-* Indicate 's' in WHO reply flags if the user is secure (SSL/TLS).
-
-Configuration changes:
-* The require sasl { } block is now called require authentication { }
-* The operclass privileges have been redone. Since there were 50+ changes
-  to the 100+ privileges it makes little sense to list the changes here.
-  If, like 99% of the users, you use default operclasses such as "globop"
-  and "admin-with-override" then you don't need to do anything.
-  However, if you have custom operclass { } blocks then the privileges
-  will have to be redone. For more information on the conversion process,
-  see https://www.unrealircd.org/docs/FAQ#New_operclass_permissions
-  For the new list of permissions, with much better naming and grouping:
-  https://www.unrealircd.org/docs/Operclass_permissions
-* In the configuration file you can now use } instead of };
-  Both forms are accepted. There's no need to change if you don't like it.
-* A /* comment in the configuration file is now terminated at the
-  first occurrence of */, instead of two /* /* requiring two */ */.
-  See https://www.unrealircd.org/docs/FAQ#Nesting_comments
 
 Major issues fixed:
-* The blacklist module did not act on IPv6 users listed in DNSBLs.
 
 Minor issues fixed:
-* By default a user shouldn't be allowed to change to a banned nick,
-  unless (s)he has +hoaq in the channel. This was broken since 4.0.0.
-  This feature can be disabled via set { check-target-nick-bans no; };
-* Rehash error messages sent to opers regarding remote includes now no
-  longer include authentication information (replaced with ***:***).
 
 Deprecated:
-* The authentication types 'md5', 'sha1' and 'ripemd160' have been
-  deprecated because they can be cracked at high speeds. They still
-  work, but a warning will be shown on boot and on rehash.
-  Please use the new 'argon2' type instead. Type /MKPASSWD argon2 passwd
-  on IRC, or "./unrealircd mkpasswd argon2" on the command line.
 
 Module coders:
-* Priorities in command overrides were reversed (was added in 4.2.0).
 
 Future versions:
 * We intend to change the default plaintext oper policy from 'warn' to 'deny'
