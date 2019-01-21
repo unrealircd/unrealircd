@@ -4706,6 +4706,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	char *ip;
 	int start=0, end=0, port, isnew;
 	int tmpflags =0;
+	Hook *h;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -4731,6 +4732,15 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "ssl-options"))
 		{
 			sslconfig = cep;
+		} else
+		{
+			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+			{
+				int value = (*(h->func.intfunc))(conf, cep, CONFIG_LISTEN);
+				if (value == 1)
+					break;
+			}
+			return 0;
 		}
 	}
 	for (port = start; port <= end; port++)
@@ -4820,6 +4830,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	int errors = 0;
 	char has_ip = 0, has_port = 0, has_options = 0, port_6667 = 0;
 	char *ip = NULL;
+	Hook *h;
 
 	if (ce->ce_vardata)
 	{
@@ -4832,12 +4843,44 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
+		int used_by_module = 0;
+
 		if (!cep->ce_varname)
 		{
 			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				"listen");
 			errors++;
 			continue;
+		}
+
+		/* First, check if a module knows about this listen::something */
+		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
+		{
+			int value, errs = 0;
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+			    && !(h->owner->options & MOD_OPT_PERM))
+			{
+				continue;
+			}
+			value = (*(h->func.intfunc))(conf, cep, CONFIG_LISTEN, &errs);
+			if (value == 2)
+				used_by_module = 1;
+			if (value == 1)
+			{
+				used_by_module = 1;
+				break;
+			}
+			if (value == -1)
+			{
+				used_by_module = 1;
+				errors += errs;
+				break;
+			}
+			if (value == -2)
+			{
+				used_by_module = 1;
+				errors += errs;
+			}
 		}
 		if (!strcmp(cep->ce_varname, "options"))
 		{
@@ -4877,10 +4920,13 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 		else
 		if (!cep->ce_vardata)
 		{
-			config_error_empty(cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum, "listen", cep->ce_varname);
-			errors++;
-			continue;
+			if (!used_by_module)
+			{
+				config_error_empty(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "listen", cep->ce_varname);
+				errors++;
+			}
+			continue; /* always */
 		} else
 		if (!strcmp(cep->ce_varname, "ip"))
 		{
@@ -4944,10 +4990,13 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				port_6667 = 1;
 		} else
 		{
-			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"listen", cep->ce_varname);
-			errors++;
-			continue;
+			if (!used_by_module)
+			{
+				config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					"listen", cep->ce_varname);
+				errors++;
+			}
+			continue; /* always */
 		}
 	}
 	
