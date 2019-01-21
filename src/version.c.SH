@@ -16,6 +16,8 @@ else
 fi
 
 generation=`expr $generation + 1`
+export LANG=C
+export LC_TIME=C
 creation=`date | \
 awk '{if (NF == 6) \
          { print $1 " "  $2 " " $3 " "  $6 " at " $4 " " $5 } \
