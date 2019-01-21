@@ -40,7 +40,7 @@
 #define RPL_WHOSPCRPL	354
 
 #define WHO_ADD 1
-#define WHO_DEL 2
+#define WHO_DEL 0
 
 #define SetMark(x) ((x)->flags |= FLAGS_MARK)
 #define ClearMark(x) ((x)->flags &= ~FLAGS_MARK)
