@@ -129,7 +129,13 @@ void crash_report_fix_libs(char *coredump, int *thirdpartymods)
 #ifndef _WIN32
 	FILE *fd;
 	char cmd[512], buf[1024];
-	
+
+	/* This is needed for this function to work, but we keep it since it's
+	 * useful in general to have the bug report in English as well.
+	 */
+	setenv("LANG", "C", 1);
+	setenv("LC_ALL", "C", 1);
+
 	snprintf(cmd, sizeof(cmd), "echo info sharedlibrary|gdb %s/unrealircd %s 2>&1",
 		BINDIR, coredump);
 
