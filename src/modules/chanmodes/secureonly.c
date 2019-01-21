@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_SSLONLY;
 
 int secureonly_check_join(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 void secureonly_channel_sync (aChannel* chptr, int merge, int removetheirs, int nomode);
-int secureonly_check_send(aClient *acptr, aChannel* chptr);
+int secureonly_send_channel(aClient *acptr, aChannel* chptr);
 int secureonly_check_secure(aChannel* chptr);
 int secureonly_check_sajoin(aClient *acptr, aChannel* chptr, aClient *sptr);
 int secureonly_specialcheck(aClient *sptr, aChannel *chptr, char *parv[]);
@@ -58,7 +58,7 @@ MOD_INIT(sslonly)
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, secureonly_check_join);
 	HookAddVoid(modinfo->handle, HOOKTYPE_CHANNEL_SYNCED, 0, secureonly_channel_sync);
 	HookAdd(modinfo->handle, HOOKTYPE_IS_CHANNEL_SECURE, 0, secureonly_check_secure);
-	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_SECURE, 0, secureonly_check_send);
+	HookAdd(modinfo->handle, HOOKTYPE_SEND_CHANNEL, 0, secureonly_send_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SAJOIN, 0, secureonly_check_sajoin);
 
 
@@ -152,7 +152,7 @@ void secureonly_channel_sync(aChannel *chptr, int merge, int removetheirs, int n
 	}
 }
 
-int secureonly_check_send(aClient *acptr, aChannel *chptr)
+int secureonly_send_channel(aClient *acptr, aChannel *chptr)
 {
 	if (IsSecureOnly(chptr))
 		if (!IsSecure(acptr))

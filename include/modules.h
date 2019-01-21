@@ -801,7 +801,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL 75
 #define HOOKTYPE_CHAN_PERMIT_NICK_CHANGE 76
 #define HOOKTYPE_IS_CHANNEL_SECURE 77
-#define HOOKTYPE_CAN_SEND_SECURE 78
+#define HOOKTYPE_SEND_CHANNEL 78
 #define HOOKTYPE_CHANNEL_SYNCED 79
 #define HOOKTYPE_CAN_SAJOIN 80
 #define HOOKTYPE_WHOIS 81
@@ -1007,7 +1007,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL) && !ValidateHook(hooktype_view_topic_outside_channel, func)) || \
         ((hooktype == HOOKTYPE_CHAN_PERMIT_NICK_CHANGE) && !ValidateHook(hooktype_chan_permit_nick_change, func)) || \
         ((hooktype == HOOKTYPE_IS_CHANNEL_SECURE) && !ValidateHook(hooktype_is_channel_secure, func)) || \
-        ((hooktype == HOOKTYPE_CAN_SEND_SECURE) && !ValidateHook(hooktype_can_send_secure, func)) || \
+        ((hooktype == HOOKTYPE_SEND_CHANNEL) && !ValidateHook(hooktype_can_send_secure, func)) || \
         ((hooktype == HOOKTYPE_CHANNEL_SYNCED) && !ValidateHook(hooktype_channel_synced, func)) || \
         ((hooktype == HOOKTYPE_CAN_SAJOIN) && !ValidateHook(hooktype_can_sajoin, func)) || \
         ((hooktype == HOOKTYPE_WHOIS) && !ValidateHook(hooktype_whois, func)) || \
