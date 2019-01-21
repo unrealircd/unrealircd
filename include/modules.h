@@ -820,6 +820,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_SASL_RESULT 94
 #define HOOKTYPE_PLACE_HOST_BAN 95
 #define HOOKTYPE_FIND_TKLINE_MATCH 96
+#define HOOKTYPE_WELCOME 97
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -923,6 +924,7 @@ int hooktype_sasl_continuation(aClient *sptr, char *buf);
 int hooktype_sasl_result(aClient *sptr, int success);
 int hooktype_place_host_ban(aClient *sptr, int action, char *reason, long duration);
 int hooktype_find_tkline_match(aClient *sptr, aTKline *tk);
+int hooktype_welcome(aClient *sptr, int after_numeric);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
@@ -1023,7 +1025,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_SASL_CONTINUATION) && !ValidateHook(hooktype_sasl_continuation, func)) || \
         ((hooktype == HOOKTYPE_SASL_RESULT) && !ValidateHook(hooktype_sasl_result, func)) || \
         ((hooktype == HOOKTYPE_PLACE_HOST_BAN) && !ValidateHook(hooktype_place_host_ban, func)) || \
-        ((hooktype == HOOKTYPE_FIND_TKLINE_MATCH) && !ValidateHook(hooktype_find_tkline_match, func)) ) \
+        ((hooktype == HOOKTYPE_FIND_TKLINE_MATCH) && !ValidateHook(hooktype_find_tkline_match, func)) || \
+        ((hooktype == HOOKTYPE_WELCOME) && !ValidateHook(hooktype_welcome, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

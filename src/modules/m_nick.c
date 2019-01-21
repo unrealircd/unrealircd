@@ -1413,20 +1413,29 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		else
 			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username,
 				user->realhost);
+		RunHook2(HOOKTYPE_WELCOME, sptr, 0);
 		sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick,
 		    ircnetwork, nick, user->username, user->realhost);
-		/* This is a duplicate of the NOTICE but see below... */
-			sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
-			    me.name, version);
+		RunHook2(HOOKTYPE_WELCOME, sptr, 1);
+		sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
+		    me.name, version);
+		RunHook2(HOOKTYPE_WELCOME, sptr, 2);
 		sendto_one(sptr, rpl_str(RPL_CREATED), me.name, nick, creation);
+		RunHook2(HOOKTYPE_WELCOME, sptr, 3);
 		sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, sptr->name,
 		    me.name, version, umodestring, cmodestring);
+		RunHook2(HOOKTYPE_WELCOME, sptr, 4);
 
 		for (i = 0; IsupportStrings[i]; i++)
 			sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
 
+		RunHook2(HOOKTYPE_WELCOME, sptr, 5);
+
 		if (IsHidden(sptr))
+		{
 			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, user->virthost);
+			RunHook2(HOOKTYPE_WELCOME, sptr, 396);
+		}
 
 		if (IsSecureConnect(sptr))
 		{
@@ -1445,8 +1454,12 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			parv[1] = NULL;
 			do_cmd(sptr, sptr, "LUSERS", 1, parv);
 		}
+
+		RunHook2(HOOKTYPE_WELCOME, sptr, 266);
 		
 		short_motd(sptr);
+
+		RunHook2(HOOKTYPE_WELCOME, sptr, 376);
 
 #ifdef EXPERIMENTAL
 		sendto_one(sptr,
@@ -1592,6 +1605,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 * Otherwise the user could be lagged up already due to all the CAP stuff.
 		 */
 		sptr->local->since = TStime();
+
+		RunHook2(HOOKTYPE_WELCOME, sptr, 999);
 
 		/* NOTE: Code after this 'if (savetkl)' will not be executed for quarantined-
 		 *       virus-users. So be carefull with the order. -- Syzop
