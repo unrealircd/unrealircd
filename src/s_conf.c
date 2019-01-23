@@ -4740,7 +4740,6 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				if (value == 1)
 					break;
 			}
-			return 0;
 		}
 	}
 	for (port = start; port <= end; port++)
