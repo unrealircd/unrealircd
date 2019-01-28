@@ -1539,6 +1539,10 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->reject_message_too_many_connections = strdup("Too many connections from your IP");
 	i->reject_message_server_full = strdup("This server is full");
 	i->reject_message_unauthorized = strdup("You are not authorized to connect to this server");
+
+	i->topic_setter = SETTER_NICK;
+	i->ban_setter = SETTER_NICK;
+	i->ban_setter_sync = 1;
 }
 
 /** Similar to config_setdefaultsettings but this one is applied *AFTER*
@@ -8121,6 +8125,24 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					safestrdup(tempiConf.reject_message_unauthorized, cepp->ce_vardata);
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "topic-setter"))
+		{
+			if (!strcmp(cep->ce_vardata, "nick"))
+				tempiConf.topic_setter = SETTER_NICK;
+			else if (!strcmp(cep->ce_vardata, "nick-user-host"))
+				tempiConf.topic_setter = SETTER_NICK_USER_HOST;
+		}
+		else if (!strcmp(cep->ce_varname, "ban-setter"))
+		{
+			if (!strcmp(cep->ce_vardata, "nick"))
+				tempiConf.ban_setter = SETTER_NICK;
+			else if (!strcmp(cep->ce_vardata, "nick-user-host"))
+				tempiConf.ban_setter = SETTER_NICK_USER_HOST;
+		}
+		else if (!strcmp(cep->ce_varname, "ban-setter-sync") || !strcmp(cep->ce_varname, "ban-setter-synch"))
+		{
+			tempiConf.ban_setter_sync = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
 		else
 		{
 			int value;
@@ -9096,6 +9118,30 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "topic-setter"))
+		{
+			CheckNull(cep);
+			if (strcmp(cep->ce_vardata, "nick") && strcmp(cep->ce_vardata, "nick-user-host"))
+			{
+				config_error("%s:%i: set::topic-setter: value should be 'nick' or 'nick-user-host'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "ban-setter"))
+		{
+			CheckNull(cep);
+			if (strcmp(cep->ce_vardata, "nick") && strcmp(cep->ce_vardata, "nick-user-host"))
+			{
+				config_error("%s:%i: set::ban-setter: value should be 'nick' or 'nick-user-host'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "ban-setter-sync") || !strcmp(cep->ce_varname, "ban-setter-synch"))
+		{
+			CheckNull(cep);
 		}
 		else
 		{

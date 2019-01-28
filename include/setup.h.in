@@ -369,9 +369,6 @@
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #undef TM_IN_SYS_TIME
 
-/* Define if you want nick!user@host shown for the topic setter */
-#undef TOPIC_NICK_IS_NUHOST
-
 /* Define if your system prepends an underscore to symbols */
 #undef UNDERSCORE
 

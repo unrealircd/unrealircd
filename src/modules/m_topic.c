@@ -260,12 +260,13 @@ long flags = 0; /* cache: membership flags */
 				RunHook4(HOOKTYPE_LOCAL_TOPIC, cptr, sptr, chptr, topic);
 			}
 
-#ifdef TOPIC_NICK_IS_NUHOST
-			if (IsPerson(sptr))
+			/* At this point 'tnick' is set to sptr->name.
+			 * If set::topic-setter nick-user-host; is set
+			 * then we update it here to nick!user@host.
+			 */
+			if (IsPerson(sptr) && (iConf.topic_setter = SETTER_NICK_USER_HOST))
 				tnick = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
-			else
-				tnick = sptr->name;
-#endif
+
 			/* Set the topic */
 			safestrldup(chptr->topic, topic, TOPICLEN+1);
 			safestrldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);

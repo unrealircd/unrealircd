@@ -153,6 +153,9 @@ struct zConfiguration {
 	char *reject_message_too_many_connections;
 	char *reject_message_server_full;
 	char *reject_message_unauthorized;
+	int topic_setter;
+	int ban_setter;
+	int ban_setter_sync;
 };
 
 #ifndef DYNCONF_C

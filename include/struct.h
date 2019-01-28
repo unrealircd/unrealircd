@@ -1380,6 +1380,9 @@ struct _configitem_offchans {
 #define HM_IPV4 2
 #define HM_IPV6 3
 
+#define SETTER_NICK 0
+#define SETTER_NICK_USER_HOST 1
+
 /*
  * statistics structures
  */

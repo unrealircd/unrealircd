@@ -681,9 +681,6 @@ AC_ARG_WITH(showlistmodes,
 	[AS_HELP_STRING([--with-showlistmodes], [Specify whether modes are shown in /list])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([LIST_SHOW_MODES], [], [Define if you want modes shown in /list])])])
-AC_ARG_WITH(topicisnuhost, [AS_HELP_STRING([--with-topicisnuhost], [Display nick!user@host as the topic setter])],
-	[AS_IF([test $withval = "yes"],
-		[AC_DEFINE([TOPIC_NICK_IS_NUHOST], [], [Define if you want nick!user@host shown for the topic setter])])])
 AC_ARG_WITH(shunnotices, [AS_HELP_STRING([--with-shunnotices], [Notify a user when he/she is no longer shunned])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([SHUN_NOTICES], [], [Define if you want users to be notified when their shun is removed])])])

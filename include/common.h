@@ -255,24 +255,6 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 #define CHPAR3        "l"
 #define CHPAR4        "psmntir"
 
-
-/* Server-Server PROTOCTL -Stskeeps
- * This is the FIRST line only, please check send_proto() for more. -- Syzop
- * Also take MAXPARA into account !
- */
-#define PROTOCTL_SERVER "NOQUIT" \
-                        " NICKv2" \
-                        " SJOIN" \
-                        " SJOIN2" \
-                        " UMODE2" \
-                        " VL" \
-                        " SJ3" \
-                        " TKLEXT" \
-                        " TKLEXT2" \
-                        " NICKIP" \
-                        " ESVID" \
-                        " SJSBY"
-
 #ifdef _WIN32
 /*
  * Used to display a string to the GUI interface.

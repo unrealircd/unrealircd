@@ -751,7 +751,6 @@ with_privatelibdir
 with_fd_setsize
 enable_prefixaq
 with_showlistmodes
-with_topicisnuhost
 with_shunnotices
 with_no_operoverride
 with_disableusermod
@@ -1451,7 +1450,6 @@ Optional Packages:
                           stored. Disable when building a package for a distro
   --with-fd-setsize=size  Specify the max file descriptors to use
   --with-showlistmodes    Specify whether modes are shown in /list
-  --with-topicisnuhost    Display nick!user@host as the topic setter
   --with-shunnotices      Notify a user when he/she is no longer shunned
   --with-no-operoverride  Disable OperOverride
   --with-disableusermod   Disable /set* and /chg*
@@ -7223,16 +7221,6 @@ if test "${with_showlistmodes+set}" = set; then :
   withval=$with_showlistmodes; if test $withval = "yes"; then :
 
 $as_echo "#define LIST_SHOW_MODES /**/" >>confdefs.h
-
-fi
-fi
-
-
-# Check whether --with-topicisnuhost was given.
-if test "${with_topicisnuhost+set}" = set; then :
-  withval=$with_topicisnuhost; if test $withval = "yes"; then :
-
-$as_echo "#define TOPIC_NICK_IS_NUHOST /**/" >>confdefs.h
 
 fi
 fi

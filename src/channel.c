@@ -411,8 +411,15 @@ int add_listmode_ex(Ban **list, aClient *cptr, aChannel *chptr, char *banid, cha
  */
 int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 {
-	return add_listmode_ex(list, cptr, chptr, banid, cptr->name, TStime());
+	char *setby = cptr->name;
+	char nuhbuf[NICKLEN+USERLEN+HOSTLEN+4];
+
+	if (IsPerson(cptr) && (iConf.ban_setter = SETTER_NICK_USER_HOST))
+		setby = make_nick_user_host_r(nuhbuf, cptr->name, cptr->user->username, GetHost(cptr));
+
+	return add_listmode_ex(list, cptr, chptr, banid, setby, TStime());
 }
+
 /*
  * del_listmode - delete a listmode (+beI) from a channel
  *                that matches the specified banid.
