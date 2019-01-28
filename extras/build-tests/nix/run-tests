@@ -45,6 +45,7 @@ mv config.yaml.example config.yaml
 # Start the IRC servers
 cp ircdconfig/* ~/unrealircd/conf/
 cd ~/unrealircd
+bin/unrealircd -f hub.conf
 bin/unrealircd -f irc1.conf
 bin/unrealircd -f irc2.conf
 cd -
