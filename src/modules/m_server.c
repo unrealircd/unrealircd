@@ -1406,16 +1406,6 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 	return;
 }
 
-char *mystpcpy(char *dst, const char *src)
-{
-	for (; *src; src++)
-		*dst++ = *src;
-	*dst = '\0';
-	return dst;
-}
-
-
-
 /** This will send "cptr" a full list of the modes for channel chptr,
  *
  * Half of it recoded by Syzop: the whole buffering and size checking stuff
@@ -1532,6 +1522,8 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	for (ban = chptr->banlist; ban; ban = ban->next)
 	{
 		p = tbuf;
+		if (SupportSJSBY(cptr))
+			p += add_sjsby(p, ban->who, ban->when);
 		*p++ = '&';
 		p = mystpcpy(p, ban->banstr);
 		*p++ = ' ';
@@ -1553,6 +1545,8 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	for (ban = chptr->exlist; ban; ban = ban->next)
 	{
 		p = tbuf;
+		if (SupportSJSBY(cptr))
+			p += add_sjsby(p, ban->who, ban->when);
 		*p++ = '"';
 		p = mystpcpy(p, ban->banstr);
 		*p++ = ' ';
@@ -1574,6 +1568,8 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	for (ban = chptr->invexlist; ban; ban = ban->next)
 	{
 		p = tbuf;
+		if (SupportSJSBY(cptr))
+			p += add_sjsby(p, ban->who, ban->when);
 		*p++ = '\'';
 		p = mystpcpy(p, ban->banstr);
 		*p++ = ' ';

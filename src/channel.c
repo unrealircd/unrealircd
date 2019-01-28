@@ -332,15 +332,15 @@ int identical_ban(char *one, char *two)
 	return 0;
 }
 
-/*
- * add_listmode - Add a listmode (+beI) with the specified banid to
- *                the specified channel.
+/** Add a listmode (+beI) with the specified banid to
+ *  the specified channel. (Extended version with
+ *  set by nick and set on timestamp)
  */
-
-int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
+int add_listmode_ex(Ban **list, aClient *cptr, aChannel *chptr, char *banid, char *setby, TS seton)
 {
 	Ban *ban;
 	int cnt = 0, len;
+	int do_not_add = 0;
 
 	if (MyClient(cptr))
 		(void)collapse(banid);
@@ -348,9 +348,13 @@ int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 	len = strlen(banid);
 	if (!*list && ((len > MAXBANLENGTH) || (MAXBANS < 1)))
 	{
-		sendto_one(cptr, err_str(ERR_BANLISTFULL),
-			me.name, cptr->name, chptr->chname, banid);
-		return -1;
+		if (MyClient(cptr))
+		{
+			/* Only send the error to local clients */
+			sendto_one(cptr, err_str(ERR_BANLISTFULL),
+				me.name, cptr->name, chptr->chname, banid);
+		}
+		do_not_add = 1;
 	}
 	for (ban = *list; ban; ban = ban->next)
 	{
@@ -366,18 +370,48 @@ int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 				sendto_one(cptr, err_str(ERR_BANLISTFULL),
 				    me.name, cptr->name, chptr->chname, banid);
 			}
-			return -1;
+			do_not_add = 1;
 		}
 		if (identical_ban(ban->banstr, banid))
-			return -1;
+			break; /* update existing ban (potentially) */
 	}
-	ban = make_ban();
-	ban->next = *list;
-	ban->banstr = strdup(banid);
-	ban->who = strdup(cptr->name);
-	ban->when = TStime();
-	*list = ban;
+
+	/* Create a new ban if needed */
+	if (!ban)
+	{
+		if (do_not_add)
+		{
+			/* The banlist is full and trying to add a new ban.
+			 * This is not permitted.
+			 */
+			return -1;
+		}
+		ban = make_ban();
+		ban->next = *list;
+		*list = ban;
+	}
+
+	if ((ban->when > 0) && (seton >= ban->when))
+	{
+		/* Trying to add the same ban while an older version
+		 * or identical version of the ban already exists.
+		 */
+		return -1;
+	}
+
+	/* Update/set if this ban is new or older than existing one */
+	safestrdup(ban->banstr, banid); /* cAsE may differ, use oldest version of it */
+	safestrdup(ban->who, setby);
+	ban->when = seton;
 	return 0;
+}
+
+/** Add a listmode (+beI) with the specified banid to
+ *  the specified channel. (Simplified version)
+ */
+int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
+{
+	return add_listmode_ex(list, cptr, chptr, banid, cptr->name, TStime());
 }
 /*
  * del_listmode - delete a listmode (+beI) from a channel

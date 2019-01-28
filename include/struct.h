@@ -360,7 +360,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define PROTO_EXTSWHOIS 0x800000	/* extended SWHOIS support */
 #define PROTO_CAP_CHGHOST	0x1000000	/* CAP chghost */
 #define PROTO_CAP_EXTENDED_JOIN	0x2000000	/* CAP extended-join */
-
+#define PROTO_SJSBY		0x4000000	/* SJOIN setby information (TS and nick) */
 /*
  * flags macros.
  */
@@ -460,6 +460,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SupportUMODE2(x)	(CHECKPROTO(x, PROTO_UMODE2))
 #define SupportVL(x)		(CHECKPROTO(x, PROTO_VL))
 #define SupportSJ3(x)		(CHECKPROTO(x, PROTO_SJ3))
+#define SupportSJSBY(x)		(CHECKPROTO(x, PROTO_SJSBY))
 #define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
 #define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
 #define SupportTKLEXT2(x)	(CHECKPROTO(x, PROTO_TKLEXT2))
@@ -475,6 +476,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SetUMODE2(x)		((x)->local->proto |= PROTO_UMODE2)
 #define SetVL(x)		((x)->local->proto |= PROTO_VL)
 #define SetSJ3(x)		((x)->local->proto |= PROTO_SJ3)
+#define SetSJSBY(x)		((x)->local->proto |= PROTO_SJSBY)
 #define SetVHP(x)		((x)->local->proto |= PROTO_VHP)
 #define SetTKLEXT(x)	((x)->local->proto |= PROTO_TKLEXT)
 #define SetTKLEXT2(x)	((x)->local->proto |= PROTO_TKLEXT2)

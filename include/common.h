@@ -270,7 +270,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                         " TKLEXT" \
                         " TKLEXT2" \
                         " NICKIP" \
-                        " ESVID"
+                        " ESVID" \
+                        " SJSBY"
 
 #ifdef _WIN32
 /*

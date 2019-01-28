@@ -131,9 +131,11 @@ CMD_FUNC(m_sjoin)
 	char cbuf[1024];
 	char buf[1024];
 	char nick[1024]; /**< nick or ban/invex/exempt being processed */
+	char scratch_buf[1024]; /**< scratch buffer */
 	char prefix[16]; /**< prefix of nick for server to server traffic (eg: @) */
 	char nick_buf[BUFSIZE]; /**< Buffer for server-to-server traffic which will be broadcasted to others (using nick names) */
 	char uid_buf[BUFSIZE];  /**< Buffer for server-to-server traffic which will be broadcasted to others (servers supporting SID/UID) */
+	char uid_sjsby_buf[BUFSIZE];  /**< Buffer for server-to-server traffic which will be broadcasted to others (servers supporting SID/UID and SJSBY) */
 	char sj3_parabuf[BUFSIZE]; /**< Prefix for the above SJOIN buffers (":xxx SJOIN #channel +mode :") */
 	char *s = NULL;
 	aChannel *chptr; /**< Channel */
@@ -353,13 +355,55 @@ CMD_FUNC(m_sjoin)
 
 	snprintf(nick_buf, sizeof nick_buf, ":%s SJOIN %ld %s :", sptr->name, ts, sj3_parabuf);
 	snprintf(uid_buf, sizeof uid_buf, ":%s SJOIN %ld %s :", ID(sptr), ts, sj3_parabuf);
+	snprintf(uid_sjsby_buf, sizeof uid_sjsby_buf, ":%s SJOIN %ld %s :", ID(sptr), ts, sj3_parabuf);
 
 	for (s = strtoken(&saved, cbuf, " "); s; s = strtoken(&saved, NULL, " "))
 	{
+		char *setby = cptr->name; /**< Set by (nick, nick!user@host, or server name) */
+		TS setat = TStime(); /**< Set at timestamp */
+		int sjsby_info = 0; /**< Set to 1 if we receive SJSBY info to alter the above 2 vars */
+
 		c = 0;
 		modeflags = 0;
 		i = 0;
 		tp = s;
+
+		/* UnrealIRCd 4.2.2 and later support "SJSBY" which allows communicating
+		 * setat/setby information for bans, ban exempts and invite exceptions.
+		 */
+		if (SupportSJSBY(cptr) && (*tp == '<'))
+		{
+			/* Special prefix to communicate timestamp and setter:
+			 * "<" + timestamp + "," + nick[!user@host] + ">" + normal SJOIN stuff
+			 * For example: "<12345,nick>&some!nice@ban"
+			 */
+			char *end = strchr(tp, '>'), *p;
+			if (!end)
+			{
+				/* this obviously should never happen */
+				sendto_ops("Malformed SJOIN piece from %s for channel %s: %s",
+					sptr->name, chptr->chname, tp);
+				continue;
+			}
+			*end++ = '\0';
+
+			p = strchr(tp, ',');
+			if (!p)
+			{
+				/* missing setby parameter */
+				sendto_ops("Malformed SJOIN piece from %s for channel %s: %s",
+					sptr->name, chptr->chname, tp);
+				continue;
+			}
+			*p++ = '\0';
+
+			setat = atol(tp+1);
+			setby = p;
+			sjsby_info = 1;
+
+			tp = end; /* the remainder is used for the actual ban/exempt/invex */
+		}
+
 		while (
 		    (*tp == '@') || (*tp == '+') || (*tp == '%')
 		    || (*tp == '*') || (*tp == '~') || (*tp == '&')
@@ -506,7 +550,7 @@ getnick:
 			if (strlen(uid_buf) + strlen(prefix) + IDLEN > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, 0, "%s", uid_buf);
+				sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, PROTO_SJSBY, "%s", uid_buf);
 				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %ld %s :", ID(sptr), ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_buf) + strlen(prefix) + strlen(ID(acptr)) > BUFSIZE - 5)
@@ -518,6 +562,22 @@ getnick:
 				}
 			}
 			sprintf(uid_buf+strlen(uid_buf), "%s%s ", prefix, ID(acptr));
+
+			if (strlen(uid_sjsby_buf) + strlen(prefix) + IDLEN > BUFSIZE - 10)
+			{
+				/* Send what we have and start a new buffer */
+				sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, PROTO_SJSBY, "%s", uid_sjsby_buf);
+				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %ld %s :", ID(sptr), ts, sj3_parabuf);
+				/* Double-check the new buffer is sufficient to concat the data */
+				if (strlen(uid_sjsby_buf) + strlen(prefix) + strlen(ID(acptr)) > BUFSIZE - 5)
+				{
+					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s%s'",
+						uid_sjsby_buf, prefix, ID(acptr));
+					sendto_realops("Oversized SJOIN for %s -- see ircd log", chptr->chname);
+					continue;
+				}
+			}
+			sprintf(uid_sjsby_buf+strlen(uid_sjsby_buf), "%s%s ", prefix, ID(acptr));
 		}
 		else
 		{
@@ -542,21 +602,21 @@ getnick:
 			/* Adding of list modes */
 			if (modeflags & CHFL_BAN)
 			{
-				if (add_listmode(&chptr->banlist, sptr, chptr, nick) != -1)
+				if (add_listmode_ex(&chptr->banlist, sptr, chptr, nick, setby, setat) != -1)
 				{
 					Addit('b', nick);
 				}
 			}
 			if (modeflags & CHFL_EXCEPT)
 			{
-				if (add_listmode(&chptr->exlist, sptr, chptr, nick) != -1)
+				if (add_listmode_ex(&chptr->exlist, sptr, chptr, nick, setby, setat) != -1)
 				{
 					Addit('e', nick);
 				}
 			}
 			if (modeflags & CHFL_INVEX)
 			{
-				if (add_listmode(&chptr->invexlist, sptr, chptr, nick) != -1)
+				if (add_listmode_ex(&chptr->invexlist, sptr, chptr, nick, setby, setat) != -1)
 				{
 					Addit('I', nick);
 				}
@@ -581,7 +641,7 @@ getnick:
 			if (strlen(uid_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, 0, "%s", uid_buf);
+				sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, PROTO_SJSBY, "%s", uid_buf);
 				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %ld %s :", ID(sptr), ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 5)
@@ -593,6 +653,26 @@ getnick:
 				}
 			}
 			sprintf(uid_buf+strlen(uid_buf), "%s%s ", prefix, nick);
+
+			if (sjsby_info)
+				add_sjsby(scratch_buf, setby, setat);
+			strcat(scratch_buf, prefix);
+			strcat(scratch_buf, nick);
+			strcat(scratch_buf, " ");
+			if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 10)
+			{
+				/* Send what we have and start a new buffer */
+				sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID | PROTO_SJSBY, 0, "%s", uid_sjsby_buf);
+				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %ld %s :", ID(sptr), ts, sj3_parabuf);
+				/* Double-check the new buffer is sufficient to concat the data */
+				if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 5)
+				{
+					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s'", uid_sjsby_buf, scratch_buf);
+					sendto_realops("Oversized SJOIN for %s -- see ircd log", chptr->chname);
+					continue;
+				}
+			}
+			strcpy(uid_sjsby_buf+strlen(uid_sjsby_buf), scratch_buf); /* size already checked above */
 		}
 		continue;
 	}
@@ -600,7 +680,8 @@ getnick:
 	/* Send out any possible remainder.. */
 	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3", ts, parabuf, parv[parc - 1]));
 	sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3, PROTO_SID, "%s", nick_buf);
-	sendto_server(cptr, PROTO_SID | PROTO_SJOIN | PROTO_SJ3, 0, "%s", uid_buf);
+	sendto_server(cptr, PROTO_SID | PROTO_SJOIN | PROTO_SJ3, PROTO_SJSBY, "%s", uid_buf);
+	sendto_server(cptr, PROTO_SID | PROTO_SJOIN | PROTO_SJ3 | PROTO_SJSBY, 0, "%s", uid_sjsby_buf);
 
 	if (modebuf[1])
 	{

@@ -1280,3 +1280,38 @@ int banned_client(aClient *acptr, char *bantype, char *reason, int global, int n
 		return 0;
 	}
 }
+
+char *mystpcpy(char *dst, const char *src)
+{
+	for (; *src; src++)
+		*dst++ = *src;
+	*dst = '\0';
+	return dst;
+}
+
+/** Helper function for send_channel_modes_sjoin3() and m_sjoin()
+ * to build the SJSBY prefix which is <seton,setby> to
+ * communicate when the ban was set and by whom.
+ * @param buf   The buffer to write to
+ * @param setby The setter of the "ban"
+ * @param seton The time the "ban" was set
+ * @retval The number of bytes written EXCLUDING the NUL byte,
+ *         so similar to what strlen() would have returned.
+ * @note Caller must ensure that the buffer 'buf' is of sufficient size.
+ */
+size_t add_sjsby(char *buf, char *setby, TS seton)
+{
+	char tbuf[32];
+	char *p = buf;
+
+	snprintf(tbuf, sizeof(tbuf), "%ld", (long)seton);
+
+	*p++ = '<';
+	p = mystpcpy(p, tbuf);
+	*p++ = ',';
+	p = mystpcpy(p, setby);
+	*p++ = '>';
+	*p = '\0';
+
+	return p - buf;
+}
