@@ -24,6 +24,14 @@ Enhancements:
   clients without any error message, this provides a way to warn them and
   give them some time to upgrade their outdated IRC client.
   https://www.unrealircd.org/docs/Set_block#set::outdated-tls-policy
+* The default maximum topic length has been increased from 307 to 360.
+* You can now set more custom limits. The default settings are shown below:
+  set {
+      topic-length 360; /* maximum: 360 */
+      away-length 307; /* maximum: 360 */
+      quit-length 307; /* maximum: 395 */
+      kick-length 307; /* maximum: 360 */
+  };
 
 Major issues fixed:
 * None?
@@ -46,11 +54,14 @@ Removed:
   config option --with-topicisnuhost and a macro TOPIC_NICK_IS_NUHOST.
   These are removed, use set::topic-setter "nick-user-host" instead.
 
-Module coders:
+Module coders / IRC protocol:
 * New hook HOOKTYPE_WELCOME (aClient *acptr, int after_numeric): allows you
   to send a message at very specific places during the initial welcome
   https://www.unrealircd.org/docs/Dev:Hook_API#HOOKTYPE_WELCOME
 * New Isupport functions: IsupportSet, IsupportSetFmt and IsupportDelByName.
+* New "SJSBY" in PROTOCTL, which is used in SJOIN to synch. extra data:
+  https://www.unrealircd.org/docs/Server_protocol:SJOIN_command (at the end)
+* A new 005 token has been added: QUITLEN. Works similar to KICKLEN.
 
 Future versions:
 * We intend to change the default plaintext oper policy from 'warn' to 'deny'

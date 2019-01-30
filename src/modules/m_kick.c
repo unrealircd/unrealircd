@@ -84,8 +84,8 @@ CMD_FUNC(m_kick)
 
 	comment = (BadPtr(parv[3])) ? sptr->name : parv[3];
 
-	if (strlen(comment) > (size_t)TOPICLEN)
-		comment[TOPICLEN] = '\0';
+	if (!BadPtr(parv[3]) && (strlen(comment) > iConf.kick_length))
+		comment[iConf.kick_length] = '\0';
 
 	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{

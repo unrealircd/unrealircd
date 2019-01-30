@@ -125,9 +125,10 @@ void isupport_init(void)
 	IsupportSetFmt(NULL, "WATCH", "%d", MAXWATCH);
 	IsupportSet(NULL, "WALLCHOPS", NULL);
 	IsupportSetFmt(NULL, "MAXTARGETS", "%d", MAXTARGETS);
-	IsupportSetFmt(NULL, "AWAYLEN", "%d", TOPICLEN);
-	IsupportSetFmt(NULL, "KICKLEN", "%d", TOPICLEN);
-	IsupportSetFmt(NULL, "TOPICLEN", "%d", TOPICLEN);
+	IsupportSetFmt(NULL, "AWAYLEN", "%d", iConf.away_length);
+	IsupportSetFmt(NULL, "KICKLEN", "%d", iConf.kick_length);
+	IsupportSetFmt(NULL, "TOPICLEN", "%d", iConf.topic_length);
+	IsupportSetFmt(NULL, "QUITLEN", "%d", iConf.quit_length);
 	IsupportSetFmt(NULL, "CHANNELLEN", "%d", CHANNELLEN);
 	IsupportSetFmt(NULL, "NICKLEN", "%d", iConf.nick_length);
 	IsupportSetFmt(NULL, "MAXNICKLEN", "%d", NICKLEN);

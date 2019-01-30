@@ -144,6 +144,10 @@ struct zConfiguration {
 	unsigned short default_ipv6_clone_mask;
 	int ping_cookie;
 	int nick_length;
+	int topic_length;
+	int kick_length;
+	int quit_length;
+	int away_length;
 	int hide_list;
 	int max_unknown_connections_per_ip;
 	long handshake_timeout;

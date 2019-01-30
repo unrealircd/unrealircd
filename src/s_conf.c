@@ -1496,6 +1496,10 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ping_cookie = 1;
 	i->default_ipv6_clone_mask = 64;
 	i->nick_length = NICKLEN;
+	i->topic_length = 360;
+	i->away_length = 307;
+	i->kick_length = 307;
+	i->quit_length = 307;
 	i->link_bindip = strdup("*");
 	i->oper_only_stats = strdup("*");
 	i->network.x_hidden_host = strdup("Clk");
@@ -1650,6 +1654,20 @@ void postconf_defaults(void)
 		make_default_logblock();
 }
 
+void postconf_fixes(void)
+{
+	/* If set::topic-setter is set to "nick-user-host" then the
+	 * maximum topic length becomes shorter.
+	 */
+	if ((iConf.topic_setter == SETTER_NICK_USER_HOST) &&
+	    (iConf.topic_length > 340))
+	{
+		config_warn("set::topic-length adjusted from %d to 340, which is the maximum because "
+		            "set::topic-setter is set to 'nick-user-host'.", iConf.topic_length);
+		iConf.topic_length = 340;
+	}
+}
+
 /* Needed for set::options::allow-part-if-shunned,
  * we can't just make it M_SHUN and do a ALLOW_PART_IF_SHUNNED in
  * m_part itself because that will also block internal calls (like sapart). -- Syzop
@@ -1676,6 +1694,7 @@ aCommand *cmptr;
 void postconf(void)
 {
 	postconf_defaults();
+	postconf_fixes();
 	do_weird_shun_stuff();
 	isupport_init(); /* for all the 005 values that changed.. */
 }
@@ -8019,6 +8038,22 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			int v = atoi(cep->ce_vardata);
 			tempiConf.nick_length = v;
 		}
+		else if (!strcmp(cep->ce_varname, "topic-length")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.topic_length = v;
+		}
+		else if (!strcmp(cep->ce_varname, "away-length")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.away_length = v;
+		}
+		else if (!strcmp(cep->ce_varname, "kick-length")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.kick_length = v;
+		}
+		else if (!strcmp(cep->ce_varname, "quit-length")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.quit_length = v;
+		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 			/* no need to alloc tempiConf.ssl_options since config_defaults() already ensures it exists */
 			conf_sslblock(conf, cep, tempiConf.ssl_options);
@@ -8930,6 +8965,50 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "topic-length")) {
+			int v;
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > MAXTOPICLEN))
+			{
+				config_error("%s:%i: set::topic-length: value '%d' out of range (should be 1-%d)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, MAXTOPICLEN);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "away-length")) {
+			int v;
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > MAXAWAYLEN))
+			{
+				config_error("%s:%i: set::away-length: value '%d' out of range (should be 1-%d)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, MAXAWAYLEN);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "kick-length")) {
+			int v;
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > MAXKICKLEN))
+			{
+				config_error("%s:%i: set::kick-length: value '%d' out of range (should be 1-%d)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, MAXKICKLEN);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "quit-length")) {
+			int v;
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > MAXQUITLEN))
+			{
+				config_error("%s:%i: set::quit-length: value '%d' out of range (should be 1-%d)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, MAXQUITLEN);
+				errors++;
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 			test_sslblock(conf, cep, &errors);
 		}
@@ -9394,10 +9473,10 @@ int	_test_offchans(ConfigFile *conf, ConfigEntry *ce)
 			}
 			if (!strcmp(cep2->ce_varname, "topic"))
 			{
-				if (strlen(cep2->ce_vardata) > TOPICLEN)
+				if (strlen(cep2->ce_vardata) > MAXTOPICLEN)
 				{
 					config_error("%s:%i: official-channels::%s: topic too long (max %d characters).",
-						cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, TOPICLEN);
+						cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, MAXTOPICLEN);
 					errors++;
 					continue;
 				}

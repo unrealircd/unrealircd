@@ -180,7 +180,10 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	USERLEN		10
 #define	REALLEN	 	50
 #define SVIDLEN		30
-#define	TOPICLEN	307
+#define MAXTOPICLEN	360	/* absolute maximum permitted topic length (above this = potential desynch) */
+#define MAXAWAYLEN	360	/* absolute maximum permitted away length (above this = potential desynch) */
+#define MAXKICKLEN	360	/* absolute maximum kick length (above this = only cutoff danger) */
+#define MAXQUITLEN	395	/* absolute maximum quit length (above this = only cutoff danger) */
 #define	CHANNELLEN	32
 #define	PASSWDLEN 	48	/* was 20, then 32, now 48. */
 #define	KEYLEN		23

@@ -175,7 +175,7 @@ long flags = 0; /* cache: membership flags */
 			 */
 			{
 				/* Set the topic */
-				safestrldup(chptr->topic, topic, TOPICLEN+1);
+				safestrldup(chptr->topic, topic, iConf.topic_length+1);
 				safestrldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
 				chptr->topic_time = ttime;
 
@@ -268,7 +268,7 @@ long flags = 0; /* cache: membership flags */
 				tnick = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
 
 			/* Set the topic */
-			safestrldup(chptr->topic, topic, TOPICLEN+1);
+			safestrldup(chptr->topic, topic, iConf.topic_length+1);
 			safestrldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
 
 			RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);
