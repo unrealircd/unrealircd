@@ -50,6 +50,7 @@ Module coders:
 * New hook HOOKTYPE_WELCOME (aClient *acptr, int after_numeric): allows you
   to send a message at very specific places during the initial welcome
   https://www.unrealircd.org/docs/Dev:Hook_API#HOOKTYPE_WELCOME
+* New Isupport functions: IsupportSet, IsupportSetFmt and IsupportDelByName.
 
 Future versions:
 * We intend to change the default plaintext oper policy from 'warn' to 'deny'
