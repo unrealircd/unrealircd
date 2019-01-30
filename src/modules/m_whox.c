@@ -78,23 +78,18 @@ MOD_INIT(m_whox)
 {
 	//CommandAdd(modinfo->handle, MSG_WHO, m_whox, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	IsupportAdd(NULL, "WHOX", NULL);
 	return MOD_SUCCESS;
 }
 
 MOD_LOAD(m_whox)
 {
 	CmdoverrideAddEx(modinfo->handle, "WHO", 0, override_who);
+	IsupportAdd(modinfo->handle, "WHOX", NULL);
 	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD(m_whox)
 {
-	Isupport *hunted = IsupportFind("WHOX");
-
-	if (hunted)
-		IsupportDel(hunted);
-
 	return MOD_SUCCESS;
 }
 

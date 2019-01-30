@@ -43,114 +43,106 @@ Isupport *Isupports; /* List of ISUPPORT (005) tokens */
 #define MAXISUPPORTLINES 10
 
 MODVAR char *IsupportStrings[MAXISUPPORTLINES+1];
-extern char *cmdstr;
 
-/**
- * Builds isupport token strings.
- * Respects both the 13 token limit and the 512 buffer limit.
+void isupport_add_sorted(Isupport *is);
+void make_isupportstrings(void);
+
+/** Easier way to set a 005 name or name=value.
+ * @param name   Name of the 005 token
+ * @param value  Value of the 005 token (or NULL)
+ * @note  The 'name' 005 token will be overwritten if it already exists.
+ *        The 'value' may be NULL, in which case if there was a value
+ *        it will be unset.
  */
-/* TODO: is all this code really safe? */
-void make_isupportstrings(void)
+void IsupportSet(Module *module, const char *name, const char *value)
 {
-	int i;
-	int bufsize = BUFSIZE-HOSTLEN-NICKLEN-39;
-	int tokcnt = 0, len = 0;
-	Isupport *isupport;
-
-	/* Clear out the old junk */
-	for (i = 0; IsupportStrings[i]; i++)
-	{
-		safefree(IsupportStrings[i]);
-	}
-
-	i = 0;
-	IsupportStrings[i] = MyMallocEx(bufsize);
-	for (isupport = Isupports; isupport; isupport = isupport->next)
-	{
-		int toklen;
-		/* Just a token */
-		if (!isupport->value)
-		{
-			toklen = strlen(isupport->token);
-			if (tokcnt == 13 || bufsize < len+toklen+1)
-			{
-				tokcnt = 0;
-				len = 0;
-				IsupportStrings[++i] = MyMallocEx(bufsize); 
-			}
-			if (IsupportStrings[i][0]) toklen++;
-			ircsnprintf(IsupportStrings[i]+len, bufsize-len, "%s%s", IsupportStrings[i][0]? " ": "", isupport->token);
-			len += toklen;
-			tokcnt++;
-		}
-		else
-		{
-			toklen = strlen(isupport->token)+strlen(isupport->value)+1;
-			if (tokcnt == 13 || bufsize < len+toklen+1) {
-				tokcnt = 0;
-				len = 0;
-				IsupportStrings[++i] = MyMallocEx(bufsize);
-			}
-			if (IsupportStrings[i][0]) toklen++;
-			ircsnprintf(IsupportStrings[i]+len, bufsize-len, "%s%s=%s", IsupportStrings[i][0]? " ": "", isupport->token, isupport->value);
-			len += toklen;
-			tokcnt++;
-		}
-		if (i == MAXISUPPORTLINES)
-			abort(); /* should never happen anyway */
-	}
+	Isupport *is = IsupportFind(name);
+	if (!is)
+		is = IsupportAdd(module, name, value);
+	IsupportSetValue(is, value);
 }
+
+/** Easy way to set a 005 name=value with printf style formatting.
+ * @param name     Name of the 005 token
+ * @param pattern  Value pattern for the 005 token (or NULL)
+ * @param ...      Any variables needed for 'pattern'.
+ * @note  The 'name' 005 token will be overwritten if it already exists.
+ *        The 'pattern' may be NULL, in which case if there was a value
+ *        it will be unset.
+ */
+void IsupportSetFmt(Module *module, const char *name, const char *pattern, ...)
+{
+	const char *value = NULL;
+	char buf[256];
+	va_list vl;
+
+	if (pattern)
+	{
+		va_start(vl, pattern);
+		ircvsnprintf(buf, sizeof(buf), pattern, vl);
+		va_end(vl);
+		value = buf;
+	}
+	IsupportSet(module, name, value);
+}
+
+void IsupportDelByName(const char *name)
+{
+	Isupport *is = IsupportFind(name);
+	if (is)
+		IsupportDel(is);
+}
+
+extern void set_isupport_cmds(void);
+extern void set_isupport_extban(void);
 
 /**
  * Initializes the builtin isupport tokens.
  */
 void isupport_init(void)
 {
-	char tmpbuf[512];
-	int i;
-
-	IsupportAdd(NULL, "INVEX", NULL);
-	IsupportAdd(NULL, "EXCEPTS", NULL);
+	IsupportSet(NULL, "INVEX", NULL);
+	IsupportSet(NULL, "EXCEPTS", NULL);
 #ifdef PREFIX_AQ
-	IsupportAdd(NULL, "STATUSMSG", "~&@%+");
+	IsupportSet(NULL, "STATUSMSG", "~&@%+");
 #else
-	IsupportAdd(NULL, "STATUSMSG", "@%+");
+	IsupportSet(NULL, "STATUSMSG", "@%+");
 #endif
-	IsupportAdd(NULL, "ELIST", "MNUCT");
-	ircsnprintf(tmpbuf, sizeof(tmpbuf), "~,%s", extbanstr);
-	IsupportAdd(NULL, "EXTBAN", tmpbuf);
-	IsupportAdd(NULL, "CASEMAPPING", "ascii");
-	IsupportAdd(NULL, "NETWORK", ircnet005);
-	ircsnprintf(tmpbuf, sizeof(tmpbuf), CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
- 			EXPAR1, EXPAR2, EXPAR3, EXPAR4);
-	IsupportAdd(NULL, "CHANMODES", tmpbuf);
-	IsupportAdd(NULL, "PREFIX", CHPFIX);
-	IsupportAdd(NULL, "CHANTYPES", "#");
-	IsupportAdd(NULL, "MODES", my_itoa(MAXMODEPARAMS));
-	IsupportAdd(NULL, "SILENCE", my_itoa(SILENCE_LIMIT));
+	IsupportSet(NULL, "ELIST", "MNUCT");
+	IsupportSet(NULL, "CASEMAPPING", "ascii");
+	IsupportSet(NULL, "NETWORK", ircnet005);
+	IsupportSetFmt(NULL, "CHANMODES",
+	               CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
+	               EXPAR1, EXPAR2, EXPAR3, EXPAR4);
+	IsupportSet(NULL, "PREFIX", CHPFIX);
+	IsupportSet(NULL, "CHANTYPES", "#");
+	IsupportSetFmt(NULL, "MODES", "%d", MAXMODEPARAMS);
+	IsupportSetFmt(NULL, "SILENCE", "%d", SILENCE_LIMIT);
 	if (WATCH_AWAY_NOTIFICATION)
-		IsupportAdd(NULL, "WATCHOPTS", "A");
-	IsupportAdd(NULL, "WATCH", my_itoa(MAXWATCH));
-	IsupportAdd(NULL, "WALLCHOPS", NULL);
-	IsupportAdd(NULL, "MAXTARGETS", my_itoa(MAXTARGETS));
-	IsupportAdd(NULL, "AWAYLEN", my_itoa(TOPICLEN));
-	IsupportAdd(NULL, "KICKLEN", my_itoa(TOPICLEN));
-	IsupportAdd(NULL, "TOPICLEN", my_itoa(TOPICLEN));
-	IsupportAdd(NULL, "CHANNELLEN", my_itoa(CHANNELLEN));
-	IsupportAdd(NULL, "NICKLEN", my_itoa(iConf.nick_length));
-	IsupportAdd(NULL, "MAXNICKLEN", my_itoa(NICKLEN));
-	ircsnprintf(tmpbuf, sizeof(tmpbuf), "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
-	IsupportAdd(NULL, "MAXLIST", tmpbuf);
-	ircsnprintf(tmpbuf, sizeof(tmpbuf), "#:%d", MAXCHANNELSPERUSER);
-	IsupportAdd(NULL, "CHANLIMIT", tmpbuf);
-	IsupportAdd(NULL, "MAXCHANNELS", my_itoa(MAXCHANNELSPERUSER));
-	IsupportAdd(NULL, "HCN", NULL);
-	IsupportAdd(NULL, "SAFELIST", NULL);
-	IsupportAdd(NULL, "NAMESX", NULL);
+		IsupportSet(NULL, "WATCHOPTS", "A");
+	else
+		IsupportDelByName("WATCHOPTS");
+	IsupportSetFmt(NULL, "WATCH", "%d", MAXWATCH);
+	IsupportSet(NULL, "WALLCHOPS", NULL);
+	IsupportSetFmt(NULL, "MAXTARGETS", "%d", MAXTARGETS);
+	IsupportSetFmt(NULL, "AWAYLEN", "%d", TOPICLEN);
+	IsupportSetFmt(NULL, "KICKLEN", "%d", TOPICLEN);
+	IsupportSetFmt(NULL, "TOPICLEN", "%d", TOPICLEN);
+	IsupportSetFmt(NULL, "CHANNELLEN", "%d", CHANNELLEN);
+	IsupportSetFmt(NULL, "NICKLEN", "%d", iConf.nick_length);
+	IsupportSetFmt(NULL, "MAXNICKLEN", "%d", NICKLEN);
+	IsupportSetFmt(NULL, "MAXLIST", "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
+	IsupportSetFmt(NULL, "CHANLIMIT", "#:%d", MAXCHANNELSPERUSER);
+	IsupportSetFmt(NULL, "MAXCHANNELS", "%d", MAXCHANNELSPERUSER);
+	IsupportSet(NULL, "HCN", NULL);
+	IsupportSet(NULL, "SAFELIST", NULL);
+	IsupportSet(NULL, "NAMESX", NULL);
 	if (UHNAMES_ENABLED)
-		IsupportAdd(NULL, "UHNAMES", NULL);
-	if (cmdstr)
-		IsupportAdd(NULL, "CMDS", cmdstr);
+		IsupportSet(NULL, "UHNAMES", NULL);
+	else
+		IsupportDelByName("UHNAMES");
+	set_isupport_extban(); /* EXTBAN=xyz */
+	set_isupport_cmds(); /* CMDS=xx,xx,xx */
 }
 
 /**
@@ -245,7 +237,7 @@ Isupport *IsupportAdd(Module *module, const char *token, const char *value)
 	isupport->token = strdup(token);
 	if (value)
 		isupport->value = strdup(value);
-	AddListItem(isupport, Isupports);
+	isupport_add_sorted(isupport);
 	make_isupportstrings(); 
 	if (module)
 	{
@@ -271,4 +263,82 @@ void IsupportDel(Isupport *isupport)
 		free(isupport->value);
 	free(isupport);
 	make_isupportstrings();
+}
+
+/**
+ * Builds isupport token strings.
+ * Respects both the 13 token limit and the 512 buffer limit.
+ */
+void make_isupportstrings(void)
+{
+	int i;
+#define ISUPPORTLEN BUFSIZE-HOSTLEN-NICKLEN-39
+	int bufsize = ISUPPORTLEN;
+	int tokcnt = 0, len = 0;
+	Isupport *isupport;
+	char tmp[ISUPPORTLEN];
+
+	/* Free any previous strings */
+	for (i = 0; IsupportStrings[i]; i++)
+		safefree(IsupportStrings[i]);
+
+	i = 0;
+	IsupportStrings[i] = MyMallocEx(bufsize+1);
+
+	for (isupport = Isupports; isupport; isupport = isupport->next)
+	{
+		if (isupport->value)
+			snprintf(tmp, sizeof(tmp), "%s=%s", isupport->token, isupport->value);
+		else
+			strlcpy(tmp, isupport->token, sizeof(tmp));
+
+		tokcnt++;
+		if ((strlen(IsupportStrings[i]) + strlen(tmp) + 1 >= ISUPPORTLEN) || (tokcnt == 13))
+		{
+			/* No room or max tokens reached: start a new buffer */
+			IsupportStrings[++i] = MyMallocEx(bufsize+1);
+			tokcnt = 1;
+			if (i == MAXISUPPORTLINES)
+				abort(); /* should never happen anyway */
+		}
+
+		if (*IsupportStrings[i])
+			strlcat(IsupportStrings[i], " ", ISUPPORTLEN);
+		strlcat(IsupportStrings[i], tmp, ISUPPORTLEN);
+	}
+}
+
+void isupport_add_sorted(Isupport *n)
+{
+	Isupport *e;
+
+	if (!Isupports)
+	{
+		Isupports = n;
+		return;
+	}
+
+	for (e = Isupports; e; e = e->next)
+	{
+		if (strcmp(n->token, e->token) < 0)
+		{
+			/* Insert us before */
+			if (e->prev)
+				e->prev->next = n;
+			else
+				Isupports = n; /* new head */
+			n->prev = e->prev;
+
+			n->next = e;
+			e->prev = n;
+			return;
+		}
+		if (!e->next)
+		{
+			/* Append us at end */
+			e->next = n;
+			n->prev = e;
+			return;
+		}
+	}
 }

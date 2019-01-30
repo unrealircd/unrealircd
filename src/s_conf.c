@@ -1545,14 +1545,28 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ban_setter_sync = 1;
 }
 
+static void make_default_logblock(void)
+{
+ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
+
+	config_status("No log { } block found -- using default: errors will be logged to 'ircd.log'");
+
+	ca->file = strdup("ircd.log");
+	convert_to_absolute_path(&ca->file, LOGDIR);
+	ca->flags |= LOG_ERROR;
+	ca->logfd = -1;
+	AddListItem(ca, conf_log);
+}
+
 /** Similar to config_setdefaultsettings but this one is applied *AFTER*
- * the entire configuration has been ran.
+ * the entire configuration has been ran (sometimes this is the only way it can be done..).
  * NOTE: iConf is thus already populated with (non-default) values. Only overwrite if necessary!
  */
 void postconf_defaults(void)
 {
-	Isupport *is;
 	char tmpbuf[512];
+	aTKline *tk;
+	char *encoded;
 
 	if (!iConf.plaintext_policy_user_message)
 	{
@@ -1590,36 +1604,11 @@ void postconf_defaults(void)
 			safestrdup(iConf.outdated_tls_policy_oper_message, "WARNING: Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 	}
 
-	is = IsupportFind("MAXLIST");
-	if (is)
-	{
-		ircsnprintf(tmpbuf, sizeof(tmpbuf), "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
-		IsupportSetValue(is, tmpbuf);
-	}
-}
-
-/* 1: needed for set::options::allow-part-if-shunned,
- * we can't just make it M_SHUN and do a ALLOW_PART_IF_SHUNNED in
- * m_part itself because that will also block internal calls (like sapart). -- Syzop
- * 2: now also used by spamfilter entries added by config...
- * we got a chicken-and-egg problem here.. antries added without reason or ban-time
- * field should use the config default (set::spamfilter::ban-reason/ban-time) but
- * this isn't (or might not) be known yet when parsing spamfilter entries..
- * so we do a VERY UGLY mass replace here.. unless someone else has a better idea.
- */
-static void do_weird_shun_stuff()
-{
-aCommand *cmptr;
-aTKline *tk;
-char *encoded;
-
-	if ((cmptr = find_Command_simple("PART")))
-	{
-		if (ALLOW_PART_IF_SHUNNED)
-			cmptr->flags |= M_SHUN;
-		else
-			cmptr->flags &= ~M_SHUN;
-	}
+	/* We got a chicken-and-egg problem here.. antries added without reason or ban-time
+	 * field should use the config default (set::spamfilter::ban-reason/ban-time) but
+	 * this isn't (or might not) be known yet when parsing spamfilter entries..
+	 * so we do a VERY UGLY mass replace here.. unless someone else has a better idea.
+	 */
 
 	encoded = unreal_encodespace(SPAMFILTER_BAN_REASON);
 	if (!encoded)
@@ -1656,38 +1645,39 @@ char *encoded;
 				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
 		}
 	}
-	if (loop.ircd_booted) /* only has to be done for rehashes, api-isupport takes care of boot */
+
+	if (!conf_log)
+		make_default_logblock();
+}
+
+/* Needed for set::options::allow-part-if-shunned,
+ * we can't just make it M_SHUN and do a ALLOW_PART_IF_SHUNNED in
+ * m_part itself because that will also block internal calls (like sapart). -- Syzop
+ */
+static void do_weird_shun_stuff()
+{
+aCommand *cmptr;
+
+	if ((cmptr = find_Command_simple("PART")))
 	{
-		if (WATCH_AWAY_NOTIFICATION)
-		{
-			IsupportAdd(NULL, "WATCHOPTS", "A");
-		} else {
-			Isupport *hunted = IsupportFind("WATCHOPTS");
-			if (hunted)
-				IsupportDel(hunted);
-		}
-		if (UHNAMES_ENABLED)
-		{
-			IsupportAdd(NULL, "UHNAMES", NULL);
-		} else {
-			Isupport *hunted = IsupportFind("UHNAMES");
-			if (hunted)
-				IsupportDel(hunted);
-		}
+		if (ALLOW_PART_IF_SHUNNED)
+			cmptr->flags |= M_SHUN;
+		else
+			cmptr->flags &= ~M_SHUN;
 	}
 }
 
-static void make_default_logblock(void)
+/** Various things that are done at the very end after the configuration file
+ * has been read and almost all values have been set. This is to deal with
+ * things like adding a default log { } block if there is none and that kind
+ * of things.
+ * This function is called by init_conf(), both on boot and on rehash.
+ */
+void postconf(void)
 {
-ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
-
-	config_status("No log { } block found -- using default: errors will be logged to 'ircd.log'");
-
-	ca->file = strdup("ircd.log");
-	convert_to_absolute_path(&ca->file, LOGDIR);
-	ca->flags |= LOG_ERROR;
-	ca->logfd = -1;
-	AddListItem(ca, conf_log);
+	postconf_defaults();
+	do_weird_shun_stuff();
+	isupport_init(); /* for all the 005 values that changed.. */
 }
 
 int isanyserverlinked(void)
@@ -1904,10 +1894,7 @@ int	init_conf(char *rootconf, int rehash)
 		module_loadall();
 		RunHook0(HOOKTYPE_REHASH_COMPLETE);
 	}
-	do_weird_shun_stuff();
-	if (!conf_log)
-		make_default_logblock();
-	postconf_defaults();
+	postconf();
 	config_status("Configuration loaded without any problems.");
 	clicap_post_rehash();
 	return 0;
@@ -7715,8 +7702,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "silence-limit")) {
 			tempiConf.silence_limit = atol(cep->ce_vardata);
-			if (loop.ircd_booted)
-				IsupportSetValue(IsupportFind("SILENCE"), cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
 			safestrdup(tempiConf.auto_join_chans, cep->ce_vardata);
@@ -7799,13 +7784,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			tempiConf.maxchannelsperuser = atoi(cep->ce_vardata);
-			if (loop.ircd_booted)
-			{
-				char tmpbuf[512];
-				IsupportSetValue(IsupportFind("MAXCHANNELS"), cep->ce_vardata);
-				ircsnprintf(tmpbuf, sizeof(tmpbuf), "#:%s", cep->ce_vardata);
-				IsupportSetValue(IsupportFind("CHANLIMIT"), tmpbuf);
-			}
 		}
 		else if (!strcmp(cep->ce_varname, "maxdccallow")) {
 			tempiConf.maxdccallow = atoi(cep->ce_vardata);
@@ -7818,8 +7796,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					*cep->ce_vardata='-';
 			}
 			safestrdup(tempiConf.network.x_ircnet005, tmp);
-			if (loop.ircd_booted)
-				IsupportSetValue(IsupportFind("NETWORK"), tmp);
 			cep->ce_vardata = tmp;
 		}
 		else if (!strcmp(cep->ce_varname, "default-server")) {
@@ -8042,8 +8018,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "nick-length")) {
 			int v = atoi(cep->ce_vardata);
 			tempiConf.nick_length = v;
-			if (loop.ircd_booted)
-				IsupportSetValue(IsupportFind("NICKLEN"), cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 			/* no need to alloc tempiConf.ssl_options since config_defaults() already ensures it exists */

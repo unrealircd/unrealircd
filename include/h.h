@@ -517,7 +517,6 @@ extern u_int32_t getrandom32();
 extern void ident_failed(aClient *cptr);
 
 extern MODVAR char extchmstr[4][64];
-extern MODVAR char extbanstr[EXTBANTABLESZ+1];
 
 extern int extcmode_default_requirechop(aClient *, aChannel *, char, char *, int, int);
 extern int extcmode_default_requirehalfop(aClient *, aChannel *, char, char *, int, int);
@@ -605,7 +604,6 @@ extern int del_dccallow(aClient *sptr, aClient *optr);
 extern void delete_linkblock(ConfigItem_link *link_ptr);
 extern void delete_classblock(ConfigItem_class *class_ptr);
 extern void del_async_connects(void);
-extern void make_extbanstr(void);
 extern void isupport_init(void);
 extern void clicap_init(void);
 extern int do_cmd(aClient *cptr, aClient *sptr, char *cmd, int parc, char *parv[]);
@@ -688,7 +686,7 @@ extern MODVAR char *casemapping[2];
 extern MODVAR aTKline *tklines[TKLISTLEN];
 extern char *cmdname_by_spamftarget(int target);
 extern void unrealdns_delreq_bycptr(aClient *cptr);
-extern void sendtxtnumeric(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));;
+extern void sendtxtnumeric(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf, int ipv4_only);
 extern void unrealdns_delasyncconnects(void);
 extern int is_autojoin_chan(char *chname);

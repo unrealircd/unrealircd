@@ -24,8 +24,6 @@
 #include "h.h"
 #include <string.h>
 
-char *cmdstr = NULL;
-
 int CommandExists(char *name)
 {
 	aCommand *p;
@@ -37,6 +35,36 @@ int CommandExists(char *name)
 	}
 
 	return 0;
+}
+
+/** This builds and sets the CMDS=cmd1,cmd2,cmd3,.. string.
+ * We used to do this in a more efficient way on each add/del
+ * but nowadays we can afford to do it in a more simple way..
+ */
+void set_isupport_cmds(void)
+{
+	aCommand *c;
+	int i;
+	char cmdstr[512];
+
+	*cmdstr = '\0';
+	for (i = 0; i < 255; i++)
+	{
+		for (c = CommandHash[i]; c; c = c->next)
+		{
+			if (c->flags & M_ANNOUNCE)
+			{
+				if (*cmdstr)
+				{
+					strlcat(cmdstr, ",", sizeof(cmdstr));
+				}
+				strlcat(cmdstr, c->cmd, sizeof(cmdstr));
+			}
+		}
+	}
+
+	if (*cmdstr)
+		IsupportSet(NULL, "CMDS", cmdstr);
 }
 
 Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char params, int flags)
@@ -75,57 +103,19 @@ Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char para
 	}
 
 	if (flags & M_ANNOUNCE)
-	{
-		char *tmp;
-		if (cmdstr)
-			tmp = MyMallocEx(strlen(cmdstr)+strlen(cmd)+2);
-		else
-			tmp = MyMallocEx(strlen(cmd)+2);
-		if (cmdstr)
-		{
-			strcpy(tmp, cmdstr);
-			strcat(tmp, ",");
-		}
-		strcat(tmp, cmd);
-		if (cmdstr)
-		{
-			IsupportSetValue(IsupportFind("CMDS"), tmp);
-			free(cmdstr);
-		}
-		else
-			IsupportAdd(NULL, "CMDS", tmp);
-		cmdstr = tmp;
-	}
+		set_isupport_cmds();
 
 	return command;
 }
 
 
-void CommandDel(Command *command) {
+void CommandDel(Command *command)
+{
 	Cmdoverride *ovr, *ovrnext;
 
 	if (command->cmd->flags & M_ANNOUNCE)
-	{
-		char *tmp = MyMallocEx(strlen(cmdstr)+1);
-		char *tok;
-		for (tok = strtok(cmdstr, ","); tok; tok = strtok(NULL, ","))
-		{
-			if (!stricmp(tok, command->cmd->cmd))
-				continue;
-			if (tmp)
-				strcat(tmp, ",");
-			strcat(tmp, tok);
-		}
-		free(cmdstr);
-		if (!*tmp)
-		{
-			IsupportDel(IsupportFind("CMDS"));
-			free(tmp);
-			cmdstr = NULL;
-		}
-		else
-			cmdstr = tmp;
-	}
+		set_isupport_cmds();
+
 	DelListItem(command->cmd, CommandHash[toupper(*command->cmd->cmd)]);
 	if (command->cmd->owner) {
 		ModuleObject *cmdobj;
