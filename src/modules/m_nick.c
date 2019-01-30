@@ -263,7 +263,7 @@ CMD_FUNC(m_uid)
 	}
 
 	if (!IsServer(cptr))
-		strlcpy(nick, parv[1], iConf.nicklen + 1);
+		strlcpy(nick, parv[1], iConf.nick_length + 1);
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
 
@@ -567,7 +567,7 @@ CMD_FUNC(m_nick)
 	}
 
 	if (!IsServer(cptr))
-		strlcpy(nick, parv[1], iConf.nicklen + 1);
+		strlcpy(nick, parv[1], iConf.nick_length + 1);
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
 

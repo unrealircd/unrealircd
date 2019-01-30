@@ -1495,7 +1495,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->uhnames = 1;
 	i->ping_cookie = 1;
 	i->default_ipv6_clone_mask = 64;
-	i->nicklen = NICKLEN;
+	i->nick_length = NICKLEN;
 	i->link_bindip = strdup("*");
 	i->oper_only_stats = strdup("*");
 	i->network.x_hidden_host = strdup("Clk");
@@ -8041,7 +8041,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "nick-length")) {
 			int v = atoi(cep->ce_vardata);
-			tempiConf.nicklen = v;
+			tempiConf.nick_length = v;
 			if (loop.ircd_booted)
 				IsupportSetValue(IsupportFind("NICKLEN"), cep->ce_vardata);
 		}
@@ -8946,7 +8946,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "nick-length")) {
 			int v;
-			CheckDuplicate(cep, nicklen, "nick-length");
+			CheckDuplicate(cep, nick_length, "nick-length");
 			CheckNull(cep);
 			v = atoi(cep->ce_vardata);
 			if ((v <= 0) || (v > NICKLEN))

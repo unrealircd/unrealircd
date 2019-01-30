@@ -137,7 +137,7 @@ void isupport_init(void)
 	IsupportAdd(NULL, "KICKLEN", my_itoa(TOPICLEN));
 	IsupportAdd(NULL, "TOPICLEN", my_itoa(TOPICLEN));
 	IsupportAdd(NULL, "CHANNELLEN", my_itoa(CHANNELLEN));
-	IsupportAdd(NULL, "NICKLEN", my_itoa(iConf.nicklen));
+	IsupportAdd(NULL, "NICKLEN", my_itoa(iConf.nick_length));
 	IsupportAdd(NULL, "MAXNICKLEN", my_itoa(NICKLEN));
 	ircsnprintf(tmpbuf, sizeof(tmpbuf), "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
 	IsupportAdd(NULL, "MAXLIST", tmpbuf);

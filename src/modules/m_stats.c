@@ -1193,7 +1193,7 @@ int stats_set(aClient *sptr, char *para)
 	sendto_one(sptr, ":%s %i %s :modes-on-join: %s %s", me.name, RPL_TEXT,
 		sptr->name, modebuf, parabuf);
 	sendto_one(sptr, ":%s %i %s :nick-length: %i", me.name, RPL_TEXT,
-		sptr->name, iConf.nicklen);
+		sptr->name, iConf.nick_length);
 	sendto_one(sptr, ":%s %i %s :snomask-on-oper: %s", me.name, RPL_TEXT,
 	    sptr->name, OPER_SNOMASK);
 	sendto_one(sptr, ":%s %i %s :snomask-on-connect: %s", me.name, RPL_TEXT,
