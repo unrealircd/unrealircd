@@ -37,36 +37,6 @@ int CommandExists(char *name)
 	return 0;
 }
 
-/** This builds and sets the CMDS=cmd1,cmd2,cmd3,.. string.
- * We used to do this in a more efficient way on each add/del
- * but nowadays we can afford to do it in a more simple way..
- */
-void set_isupport_cmds(void)
-{
-	aCommand *c;
-	int i;
-	char cmdstr[512];
-
-	*cmdstr = '\0';
-	for (i = 0; i < 255; i++)
-	{
-		for (c = CommandHash[i]; c; c = c->next)
-		{
-			if (c->flags & M_ANNOUNCE)
-			{
-				if (*cmdstr)
-				{
-					strlcat(cmdstr, ",", sizeof(cmdstr));
-				}
-				strlcat(cmdstr, c->cmd, sizeof(cmdstr));
-			}
-		}
-	}
-
-	if (*cmdstr)
-		IsupportSet(NULL, "CMDS", cmdstr);
-}
-
 Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char params, int flags)
 {
 	Command *command = NULL;
@@ -103,7 +73,11 @@ Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char para
 	}
 
 	if (flags & M_ANNOUNCE)
-		set_isupport_cmds();
+	{
+		config_warn("Command '%s' has M_ANNOUNCE set, but this is no longer "
+		            "supported. Old 3rd party module %s? Check for updates!",
+		            c->cmd, module ? module->header->name : "");
+	}
 
 	return command;
 }
@@ -112,9 +86,6 @@ Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char para
 void CommandDel(Command *command)
 {
 	Cmdoverride *ovr, *ovrnext;
-
-	if (command->cmd->flags & M_ANNOUNCE)
-		set_isupport_cmds();
 
 	DelListItem(command->cmd, CommandHash[toupper(*command->cmd->cmd)]);
 	if (command->cmd->owner) {

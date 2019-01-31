@@ -93,7 +93,6 @@ void IsupportDelByName(const char *name)
 		IsupportDel(is);
 }
 
-extern void set_isupport_cmds(void);
 extern void set_isupport_extban(void);
 
 /**
@@ -143,7 +142,6 @@ void isupport_init(void)
 	else
 		IsupportDelByName("UHNAMES");
 	set_isupport_extban(); /* EXTBAN=xyz */
-	set_isupport_cmds(); /* CMDS=xx,xx,xx */
 }
 
 /**
