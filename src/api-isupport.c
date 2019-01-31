@@ -141,6 +141,7 @@ void isupport_init(void)
 		IsupportSet(NULL, "UHNAMES", NULL);
 	else
 		IsupportDelByName("UHNAMES");
+	IsupportSet(NULL, "DEAF", "d");
 	set_isupport_extban(); /* EXTBAN=xyz */
 }
 
