@@ -231,6 +231,11 @@ CMD_FUNC(m_protoctl)
 			    proto, cptr->name));
 			SetSJ3(cptr);
 		}
+		else if (!strcmp(s, "SJSBY") && iConf.ban_setter_sync)
+		{
+			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
+			SetSJSBY(cptr);
+		}
 		else if (strcmp(s, "TKLEXT") == 0)
 		{
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));

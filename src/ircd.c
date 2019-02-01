@@ -1348,8 +1348,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	load_tunefile();
 	make_umodestr();
 	extcmodes_check_for_changes();
-	make_extbanstr();
-	isupport_init();
 	clicap_init();
 	if (!find_Command_simple("AWAY") /*|| !find_Command_simple("KILL") ||
 		!find_Command_simple("OPER") || !find_Command_simple("PING")*/)

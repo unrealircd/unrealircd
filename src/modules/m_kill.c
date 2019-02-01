@@ -99,8 +99,8 @@ CMD_FUNC(m_kill)
 		return 0;
 	}
 
-	if (strlen(path) > (size_t)TOPICLEN)
-		path[TOPICLEN] = '\0';
+	if (strlen(path) > iConf.quit_length)
+		path[iConf.quit_length] = '\0';
 
 	if (MyClient(sptr))
 		user = canonize(user);

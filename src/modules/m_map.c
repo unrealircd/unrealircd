@@ -37,7 +37,8 @@ ModuleHeader MOD_HEADER(m_map)
 
 MOD_INIT(m_map)
 {
-	CommandAdd(modinfo->handle, MSG_MAP, m_map, MAXPARA, M_USER|M_ANNOUNCE);
+	CommandAdd(modinfo->handle, MSG_MAP, m_map, MAXPARA, M_USER);
+	IsupportAdd(modinfo->handle, "MAP", NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -89,7 +90,7 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		if (acptr->srvptr != server ||
- 		    (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("map:ulines",cptr,NULL,NULL,NULL)))
+ 		    (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL)))
 			continue;
 		acptr->flags |= FLAGS_MAP;
 		cnt++;
@@ -97,7 +98,7 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		if (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("map:ulines",cptr,NULL,NULL,NULL))
+		if (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL))
 			continue;
 		if (acptr->srvptr != server)
 			continue;
@@ -118,7 +119,7 @@ char buf[4];
 aClient *acptr;
 int cnt = 0, hide_ulines;
 
-	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("map:ulines",cptr,NULL,NULL,NULL)) ? 1 : 0;
+	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL)) ? 1 : 0;
 
 	sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, "",
 	    length, server->name, server->serv->users, "");
@@ -164,7 +165,7 @@ CMD_FUNC(m_map)
 	if (longest > 60)
 		longest = 60;
 	longest += 2;
-	if (FLAT_MAP && !ValidatePermissionsForPath("map:real-map",sptr,NULL,NULL,NULL))
+	if (FLAT_MAP && !ValidatePermissionsForPath("server:info:map:real-map",sptr,NULL,NULL,NULL))
 		dump_flat_map(sptr, &me, longest);
 	else
 		dump_map(sptr, &me, "*", 0, longest);

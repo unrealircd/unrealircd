@@ -68,7 +68,7 @@ int nokick_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *comme
 {
 	static char errmsg[NICKLEN+256];
 
-	if (IsNokick(target) && !IsULine(sptr) && MyClient(sptr) && !ValidatePermissionsForPath("override:kick:nokick",sptr,target,chptr,NULL))
+	if (IsNokick(target) && !IsULine(sptr) && MyClient(sptr) && !ValidatePermissionsForPath("channel:override:kick:nokick",sptr,target,chptr,NULL))
 	{
 		ircsnprintf(errmsg, sizeof(errmsg), err_str(ERR_CANNOTDOCOMMAND),
 				   me.name, sptr->name, "KICK",

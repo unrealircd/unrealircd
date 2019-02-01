@@ -602,6 +602,9 @@ extern Isupport *IsupportAdd(Module *module, const char *token, const char *valu
 extern void IsupportSetValue(Isupport *isupport, const char *value);
 extern void IsupportDel(Isupport *isupport);
 extern Isupport *IsupportFind(const char *token);
+extern void IsupportSet(Module *module, const char *name, const char *value);
+extern void IsupportSetFmt(Module *module, const char *name, const char *pattern, ...) __attribute__((format(printf,3,4)));
+extern void IsupportDelByName(const char *name);
 
 extern ClientCapability *ClientCapabilityFind(const char *token, aClient *sptr);
 extern ClientCapability *ClientCapabilityFindReal(const char *token);
@@ -668,6 +671,16 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
  for (h = Hooks[hooktype]; h; h = h->next) \
  { \
   retval = (*(h->func.intfunc))(x,y,z); \
+  if (retval retchk) return retval; \
+ } \
+}
+#define RunHookReturnInt4(hooktype,a,b,c,d,retchk) \
+{ \
+ int retval; \
+ Hook *h; \
+ for (h = Hooks[hooktype]; h; h = h->next) \
+ { \
+  retval = (*(h->func.intfunc))(a,b,c,d); \
   if (retval retchk) return retval; \
  } \
 }
@@ -791,7 +804,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL 75
 #define HOOKTYPE_CHAN_PERMIT_NICK_CHANGE 76
 #define HOOKTYPE_IS_CHANNEL_SECURE 77
-#define HOOKTYPE_CAN_SEND_SECURE 78
+#define HOOKTYPE_SEND_CHANNEL 78
 #define HOOKTYPE_CHANNEL_SYNCED 79
 #define HOOKTYPE_CAN_SAJOIN 80
 #define HOOKTYPE_WHOIS 81
@@ -805,6 +818,12 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_SERVER_SYNCHED	89
 #define HOOKTYPE_SECURE_CONNECT 90
 #define HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION 91
+#define HOOKTYPE_REQUIRE_SASL 92
+#define HOOKTYPE_SASL_CONTINUATION 93
+#define HOOKTYPE_SASL_RESULT 94
+#define HOOKTYPE_PLACE_HOST_BAN 95
+#define HOOKTYPE_FIND_TKLINE_MATCH 96
+#define HOOKTYPE_WELCOME 97
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -903,6 +922,12 @@ int hooktype_server_handshake_out(aClient *sptr);
 int hooktype_server_synched(aClient *sptr);
 int hooktype_secure_connect(aClient *sptr);
 int hooktype_can_bypass_channel_message_restriction(aClient *sptr, aChannel *chptr, BypassChannelMessageRestrictionType bypass_type);
+int hooktype_require_sasl(aClient *sptr, char *reason);
+int hooktype_sasl_continuation(aClient *sptr, char *buf);
+int hooktype_sasl_result(aClient *sptr, int success);
+int hooktype_place_host_ban(aClient *sptr, int action, char *reason, long duration);
+int hooktype_find_tkline_match(aClient *sptr, aTKline *tk);
+int hooktype_welcome(aClient *sptr, int after_numeric);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
@@ -985,7 +1010,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL) && !ValidateHook(hooktype_view_topic_outside_channel, func)) || \
         ((hooktype == HOOKTYPE_CHAN_PERMIT_NICK_CHANGE) && !ValidateHook(hooktype_chan_permit_nick_change, func)) || \
         ((hooktype == HOOKTYPE_IS_CHANNEL_SECURE) && !ValidateHook(hooktype_is_channel_secure, func)) || \
-        ((hooktype == HOOKTYPE_CAN_SEND_SECURE) && !ValidateHook(hooktype_can_send_secure, func)) || \
+        ((hooktype == HOOKTYPE_SEND_CHANNEL) && !ValidateHook(hooktype_can_send_secure, func)) || \
         ((hooktype == HOOKTYPE_CHANNEL_SYNCED) && !ValidateHook(hooktype_channel_synced, func)) || \
         ((hooktype == HOOKTYPE_CAN_SAJOIN) && !ValidateHook(hooktype_can_sajoin, func)) || \
         ((hooktype == HOOKTYPE_WHOIS) && !ValidateHook(hooktype_whois, func)) || \
@@ -998,7 +1023,13 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_SERVER_HANDSHAKE_OUT) && !ValidateHook(hooktype_server_handshake_out, func)) || \
         ((hooktype == HOOKTYPE_SERVER_SYNCHED) && !ValidateHook(hooktype_server_synched, func)) || \
         ((hooktype == HOOKTYPE_SECURE_CONNECT) && !ValidateHook(hooktype_secure_connect, func)) || \
-        ((hooktype == HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION) && !ValidateHook(hooktype_can_bypass_channel_message_restriction, func)) ) \
+        ((hooktype == HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION) && !ValidateHook(hooktype_can_bypass_channel_message_restriction, func)) || \
+        ((hooktype == HOOKTYPE_REQUIRE_SASL) && !ValidateHook(hooktype_require_sasl, func)) || \
+        ((hooktype == HOOKTYPE_SASL_CONTINUATION) && !ValidateHook(hooktype_sasl_continuation, func)) || \
+        ((hooktype == HOOKTYPE_SASL_RESULT) && !ValidateHook(hooktype_sasl_result, func)) || \
+        ((hooktype == HOOKTYPE_PLACE_HOST_BAN) && !ValidateHook(hooktype_place_host_ban, func)) || \
+        ((hooktype == HOOKTYPE_FIND_TKLINE_MATCH) && !ValidateHook(hooktype_find_tkline_match, func)) || \
+        ((hooktype == HOOKTYPE_WELCOME) && !ValidateHook(hooktype_welcome, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
@@ -1092,6 +1123,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define CONFIG_CLOAKKEYS 7
 #define CONFIG_SET_ANTI_FLOOD 8
 #define CONFIG_REQUIRE 9
+#define CONFIG_LISTEN 10
 
 #define MOD_HEADER(name) Mod_Header
 #define MOD_TEST(name) DLLFUNC int Mod_Test(ModuleInfo *modinfo)

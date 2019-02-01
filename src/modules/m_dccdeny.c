@@ -62,7 +62,7 @@ CMD_FUNC(m_dccdeny)
 	if (!MyClient(sptr))
 		return 0;
 
-	if (!ValidatePermissionsForPath("client:dcc",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server-ban:dccdeny",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;

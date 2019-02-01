@@ -78,7 +78,7 @@ CMD_FUNC(m_sajoin)
         }
 
 	/* Is this user disallowed from operating on this victim at all? */
-	if (!IsULine(sptr) && !ValidatePermissionsForPath("sajoin",sptr,acptr,NULL,NULL))
+	if (!IsULine(sptr) && !ValidatePermissionsForPath("sacmd:sajoin",sptr,acptr,NULL,NULL))
 	{
 	 sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 	 return 0;
@@ -119,7 +119,7 @@ CMD_FUNC(m_sajoin)
 			chptr = get_channel(acptr, name, 0);
 
 			/* If this _specific_ channel is not permitted, skip it */
-			if (!IsULine(sptr) && !ValidatePermissionsForPath("sajoin",sptr,acptr,chptr,NULL))
+			if (!IsULine(sptr) && !ValidatePermissionsForPath("sacmd:sajoin",sptr,acptr,chptr,NULL))
         		{
          			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 				continue;

@@ -174,7 +174,7 @@ CMD_FUNC(m_gline)
 {
 	if (IsServer(sptr))
 		return 0;
-	if (!ValidatePermissionsForPath("tkl:gline",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server-ban:gline",sptr,NULL,NULL,NULL))
 
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
@@ -200,7 +200,7 @@ CMD_FUNC(m_gzline)
 	if (IsServer(sptr))
 		return 0;
 
-	if (!ValidatePermissionsForPath("tkl:zline:global",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server-ban:zline:global",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -225,7 +225,7 @@ CMD_FUNC(m_shun)
 	if (IsServer(sptr))
 		return 0;
 
-	if (!ValidatePermissionsForPath("tkl:shun",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server-ban:shun",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -252,7 +252,7 @@ CMD_FUNC(m_tempshun)
 	char *name;
 	int remove = 0;
 
-	if (MyClient(sptr) && (!ValidatePermissionsForPath("tkl:shun:temporary",sptr,NULL,NULL,NULL)))
+	if (MyClient(sptr) && (!ValidatePermissionsForPath("server-ban:shun:temporary",sptr,NULL,NULL,NULL)))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -289,9 +289,9 @@ CMD_FUNC(m_tempshun)
 			if (IsShunned(acptr))
 			{
 				sendnotice(sptr, "User '%s' already shunned", acptr->name);
-			} else if (ValidatePermissionsForPath("immune:shun",acptr,NULL,NULL,NULL))
+			} else if (ValidatePermissionsForPath("immune:server-ban:shun",acptr,NULL,NULL,NULL))
 			{
-				sendnotice(sptr, "You cannot tempshun '%s' because (s)he is an oper with 'immune:shun' privilege", acptr->name);
+				sendnotice(sptr, "You cannot tempshun '%s' because (s)he is an oper with 'immune:server-ban:shun' privilege", acptr->name);
 			} else
 			{
 				SetShunned(acptr);
@@ -323,7 +323,7 @@ CMD_FUNC(m_tkline)
 	if (IsServer(sptr))
 		return 0;
 
-	if (!ValidatePermissionsForPath("tkl:kline:local:add",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server-ban:kline:local:add",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -339,7 +339,7 @@ CMD_FUNC(m_tkline)
 		return do_cmd(sptr, sptr, "STATS", 2, parv);
 	}
 
-	if (!ValidatePermissionsForPath("tkl:kline:remove",sptr,NULL,NULL,NULL) && *parv[1] == '-')
+	if (!ValidatePermissionsForPath("server-ban:kline:remove",sptr,NULL,NULL,NULL) && *parv[1] == '-')
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
@@ -353,7 +353,7 @@ CMD_FUNC(m_tzline)
 	if (IsServer(sptr))
 		return 0;
 
-	if (!ValidatePermissionsForPath("tkl:zline:local:add",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server-ban:zline:local:add",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -743,7 +743,7 @@ char *err = NULL;
 	if (IsServer(sptr))
 		return 0;
 
-	if (!ValidatePermissionsForPath("spamfilter",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server-ban:spamfilter",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
@@ -1269,6 +1269,8 @@ int  _find_tkline_match(aClient *cptr, int skip_soft)
 	if (!banned)
 		return 1;
 
+	RunHookReturnInt2(HOOKTYPE_FIND_TKLINE_MATCH, cptr, lp, !=99);
+
 	if (lp->type & TKL_KILL)
 	{
 		ircstp->is_ref++;
@@ -1302,7 +1304,7 @@ int  _find_shun(aClient *cptr)
 	if (IsShunned(cptr))
 		return 1;
 
-	if (ValidatePermissionsForPath("immune:shun",cptr,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("immune:server-ban:shun",cptr,NULL,NULL,NULL))
 		return 1;
 
 	for (lp = tklines[tkl_hash('s')]; lp; lp = lp->next)
@@ -1385,7 +1387,7 @@ int _find_spamfilter_user(aClient *sptr, int flags)
 {
 char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 
-	if (ValidatePermissionsForPath("immune:spamfilter",sptr,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("immune:server-ban:spamfilter",sptr,NULL,NULL,NULL))
 		return 0;
 
 	spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
@@ -2406,6 +2408,8 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 	if (IsSoftBanAction(action) && IsLoggedIn(sptr))
 		return 0;
 
+	RunHookReturnInt4(HOOKTYPE_PLACE_HOST_BAN, sptr, action, reason, duration, !=99);
+
 	switch(action)
 	{
 		case BAN_ACT_TEMPSHUN:
@@ -2621,7 +2625,7 @@ long ms_past;
 	/* (note: using sptr->user check here instead of IsPerson()
 	 * due to SPAMF_USER where user isn't marked as client/person yet.
 	 */
-	if (!sptr->user || ValidatePermissionsForPath("immune:spamfilter",sptr,NULL,NULL,NULL) || IsULine(sptr))
+	if (!sptr->user || ValidatePermissionsForPath("immune:server-ban:spamfilter",sptr,NULL,NULL,NULL) || IsULine(sptr))
 		return 0;
 
 	for (tk = tklines[tkl_hash('F')]; tk; tk = tk->next)

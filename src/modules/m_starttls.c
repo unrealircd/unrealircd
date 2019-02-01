@@ -40,8 +40,8 @@ MOD_INIT(m_starttls)
 	ClientCapability cap;
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_STARTTLS, m_starttls, MAXPARA, M_UNREGISTERED|M_ANNOUNCE);
-
+	CommandAdd(modinfo->handle, MSG_STARTTLS, m_starttls, MAXPARA, M_UNREGISTERED);
+	/* We don't announce this command in 005, it's meaningless (too late) */
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "tls";
 	cap.cap = PROTO_STARTTLS;

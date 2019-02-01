@@ -3,7 +3,7 @@ rem Build command for Visual Studio 2017
 nmake -f makefile.win32 ^
 LIBRESSL_INC_DIR="c:\projects\unrealircd-deps\libressl\include" ^
 LIBRESSL_LIB_DIR="c:\projects\unrealircd-deps\libressl\lib" ^
-SSLLIB="crypto-43.lib ssl-45.lib" ^
+SSLLIB="crypto-44.lib ssl-46.lib" ^
 USE_REMOTEINC=1 ^
 LIBCURL_INC_DIR="c:\projects\unrealircd-deps\curl-ssl\include" ^
 LIBCURL_LIB_DIR="c:\projects\unrealircd-deps\curl-ssl\builds\libcurl-vc-x86-release-dll-ssl-dll-ipv6-sspi-obj-lib" ^

@@ -101,7 +101,7 @@ int n, wasaway = 0;
     if (n < 0)
         return n;
 
-	if (MyClient(sptr) && AWAY_PERIOD && !ValidatePermissionsForPath("immune:awayflood",sptr,NULL,NULL,NULL))
+	if (MyClient(sptr) && AWAY_PERIOD && !ValidatePermissionsForPath("immune:away-flood",sptr,NULL,NULL,NULL))
 	{
 		if ((sptr->user->flood.away_t + AWAY_PERIOD) <= timeofday)
 		{
@@ -117,8 +117,8 @@ int n, wasaway = 0;
 		}
 	}
         /* Marking as away */
-        if (strlen(awy2) > (size_t)TOPICLEN)
-                awy2[TOPICLEN] = '\0';
+        if (strlen(awy2) > iConf.away_length)
+                awy2[iConf.away_length] = '\0';
 
         if (away)
                 if (strcmp(away, parv[1]) == 0)

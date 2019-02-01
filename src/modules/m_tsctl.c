@@ -63,7 +63,7 @@ CMD_FUNC(m_tsctl)
 {
 	time_t timediff;
 
-	if (!ValidatePermissionsForPath("server:tsctl",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:tsctl:view",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;

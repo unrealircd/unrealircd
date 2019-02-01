@@ -1224,22 +1224,27 @@ extern void send_raw_direct(aClient *user, char *pattern, ...);
  */
 int banned_client(aClient *acptr, char *bantype, char *reason, int global, int noexit)
 {
-	char buf[512], contactbuf[512];
+	char buf[512];
+	char *fmt = global ? iConf.reject_message_gline : iConf.reject_message_kline;
+	const char *vars[6], *values[6];
 
 	if (!MyConnect(acptr))
 		abort(); /* hmm... or be more flexible? */
 
-	if (1)
-	{
-		snprintf(contactbuf, sizeof(contactbuf), "Email %s for more information.",
-		         (global && GLINE_ADDRESS) ? GLINE_ADDRESS : KLINE_ADDRESS);
-	}
-
-	snprintf(buf, sizeof(buf), "You are not welcome on this %s. %s: %s. %s",
-		 global ? "network" : "server",
-		 bantype,
-		 reason,
-		 contactbuf);
+	/* This was: "You are not welcome on this %s. %s: %s. %s" but is now dynamic: */
+	vars[0] = "bantype";
+	values[0] = bantype;
+	vars[1] = "banreason";
+	values[1] = reason;
+	vars[2] = "klineaddr";
+	values[2] = KLINE_ADDRESS;
+	vars[3] = "glineaddr";
+	values[3] = GLINE_ADDRESS ? GLINE_ADDRESS : KLINE_ADDRESS; /* fallback to klineaddr */
+	vars[4] = "ip";
+	values[4] = GetIP(acptr);
+	vars[5] = NULL;
+	values[5] = NULL;
+	buildvarstring(fmt, buf, sizeof(buf), vars, values);
 
 	/* This is a bit extensive but we will send both a YOUAREBANNEDCREEP
 	 * and a notice to the user.
@@ -1279,4 +1284,39 @@ int banned_client(aClient *acptr, char *bantype, char *reason, int global, int n
 		           acptr->ip, buf);
 		return 0;
 	}
+}
+
+char *mystpcpy(char *dst, const char *src)
+{
+	for (; *src; src++)
+		*dst++ = *src;
+	*dst = '\0';
+	return dst;
+}
+
+/** Helper function for send_channel_modes_sjoin3() and m_sjoin()
+ * to build the SJSBY prefix which is <seton,setby> to
+ * communicate when the ban was set and by whom.
+ * @param buf   The buffer to write to
+ * @param setby The setter of the "ban"
+ * @param seton The time the "ban" was set
+ * @retval The number of bytes written EXCLUDING the NUL byte,
+ *         so similar to what strlen() would have returned.
+ * @note Caller must ensure that the buffer 'buf' is of sufficient size.
+ */
+size_t add_sjsby(char *buf, char *setby, TS seton)
+{
+	char tbuf[32];
+	char *p = buf;
+
+	snprintf(tbuf, sizeof(tbuf), "%ld", (long)seton);
+
+	*p++ = '<';
+	p = mystpcpy(p, tbuf);
+	*p++ = ',';
+	p = mystpcpy(p, setby);
+	*p++ = '>';
+	*p = '\0';
+
+	return p - buf;
 }

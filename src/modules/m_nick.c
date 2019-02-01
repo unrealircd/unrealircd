@@ -263,7 +263,7 @@ CMD_FUNC(m_uid)
 	}
 
 	if (!IsServer(cptr))
-		strlcpy(nick, parv[1], iConf.nicklen + 1);
+		strlcpy(nick, parv[1], iConf.nick_length + 1);
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
 
@@ -567,11 +567,11 @@ CMD_FUNC(m_nick)
 	}
 
 	if (!IsServer(cptr))
-		strlcpy(nick, parv[1], iConf.nicklen + 1);
+		strlcpy(nick, parv[1], iConf.nick_length + 1);
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
 
-	if (MyConnect(sptr) && sptr->user && !ValidatePermissionsForPath("immune:limits",sptr,NULL,NULL,NULL))
+	if (MyConnect(sptr) && sptr->user && !ValidatePermissionsForPath("immune:nick-flood",sptr,NULL,NULL,NULL))
 	{
 		if ((sptr->user->flood.nick_c >= NICK_COUNT) && 
 		    (TStime() - sptr->user->flood.nick_t < NICK_PERIOD))
@@ -718,7 +718,7 @@ CMD_FUNC(m_nick)
 				    nick, tklban->reason);
 				return 0;
 			}
-			if (!ValidatePermissionsForPath("override:nick:qline",sptr,NULL,NULL,nick))
+			if (!ValidatePermissionsForPath("immune:server-ban:ban-nick",sptr,NULL,NULL,nick))
 			{
 				sptr->local->since += 4; /* lag them up */
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
@@ -758,7 +758,7 @@ CMD_FUNC(m_nick)
 		return exit_client(cptr, sptr, &me, "Nick/Server collision");
 	}
 
-	if (MyClient(cptr) && ValidatePermissionsForPath("override:nick:flood",sptr,NULL,NULL,NULL))
+	if (MyClient(cptr) && !ValidatePermissionsForPath("immune:nick-flood",sptr,NULL,NULL,NULL))
 		cptr->local->since += 3;	/* Nick-flood prot. -Donwulff */
 
 	if (!(acptr = find_client(nick, NULL)))
@@ -1339,11 +1339,12 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			ircstp->is_ref++;
 			return banned_client(sptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
 		}
-		/* Check require sasl { } blocks */
+		/* Check require authentication { } blocks */
 		if (!IsLoggedIn(sptr) && (bconf = Find_ban(sptr, NULL, CONF_BAN_UNAUTHENTICATED)))
 		{
 			ircstp->is_ref++;
-			return banned_client(sptr, "Require-SASL", bconf->reason?bconf->reason:"", 0, 0);
+			RunHookReturnInt2(HOOKTYPE_REQUIRE_SASL, sptr, bconf->reason, !=0);
+			return banned_client(sptr, "Require-Auth", bconf->reason?bconf->reason:"", 0, 0);
 		}
 		tkl_check_expire(NULL);
 		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
@@ -1412,20 +1413,29 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		else
 			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username,
 				user->realhost);
+		RunHook2(HOOKTYPE_WELCOME, sptr, 0);
 		sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick,
 		    ircnetwork, nick, user->username, user->realhost);
-		/* This is a duplicate of the NOTICE but see below... */
-			sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
-			    me.name, version);
+		RunHook2(HOOKTYPE_WELCOME, sptr, 1);
+		sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
+		    me.name, version);
+		RunHook2(HOOKTYPE_WELCOME, sptr, 2);
 		sendto_one(sptr, rpl_str(RPL_CREATED), me.name, nick, creation);
+		RunHook2(HOOKTYPE_WELCOME, sptr, 3);
 		sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, sptr->name,
 		    me.name, version, umodestring, cmodestring);
+		RunHook2(HOOKTYPE_WELCOME, sptr, 4);
 
 		for (i = 0; IsupportStrings[i]; i++)
 			sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
 
+		RunHook2(HOOKTYPE_WELCOME, sptr, 5);
+
 		if (IsHidden(sptr))
+		{
 			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, user->virthost);
+			RunHook2(HOOKTYPE_WELCOME, sptr, 396);
+		}
 
 		if (IsSecureConnect(sptr))
 		{
@@ -1444,8 +1454,12 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			parv[1] = NULL;
 			do_cmd(sptr, sptr, "LUSERS", 1, parv);
 		}
+
+		RunHook2(HOOKTYPE_WELCOME, sptr, 266);
 		
 		short_motd(sptr);
+
+		RunHook2(HOOKTYPE_WELCOME, sptr, 376);
 
 #ifdef EXPERIMENTAL
 		sendto_one(sptr,
@@ -1575,8 +1589,11 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_one(sptr, rpl_str(RPL_SNOMASK),
 				me.name, sptr->name, get_snostr(user->snomask));
 
-		if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_user == PLAINTEXT_POLICY_WARN))
+		if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_user == POLICY_WARN))
 			sendnotice(sptr, "%s", iConf.plaintext_policy_user_message);
+
+		if (IsSecure(sptr) && (iConf.outdated_tls_policy_user == POLICY_WARN) && outdated_tls_client(sptr))
+			sendnotice(sptr, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, sptr));
 		
 		/* Make creation time the real 'online since' time, excluding registration time.
 		 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean
@@ -1588,6 +1605,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 * Otherwise the user could be lagged up already due to all the CAP stuff.
 		 */
 		sptr->local->since = TStime();
+
+		RunHook2(HOOKTYPE_WELCOME, sptr, 999);
 
 		/* NOTE: Code after this 'if (savetkl)' will not be executed for quarantined-
 		 *       virus-users. So be carefull with the order. -- Syzop
@@ -1691,9 +1710,15 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
 
-	if (!IsSecure(cptr) && !IsLocal(cptr) && (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY))
+	if (!IsSecure(cptr) && !IsLocal(cptr) && (iConf.plaintext_policy_user == POLICY_DENY))
 	{
 		return exit_client(cptr, cptr, &me, iConf.plaintext_policy_user_message);
+	}
+
+	if (IsSecure(cptr) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(cptr))
+	{
+		char *msg = outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, cptr);
+		return exit_client(cptr, cptr, &me, msg);
 	}
 
 	for (aconf = conf_allow; aconf; aconf = aconf->next)

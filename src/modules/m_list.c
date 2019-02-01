@@ -230,7 +230,7 @@ CMD_FUNC(m_list)
 			  else	/* Just a normal channel */
 			  {
 				  chptr = find_channel(name, NullChn);
-				  if (chptr && (ShowChannel(sptr, chptr) || ValidatePermissionsForPath("override:see:list:secret",sptr,NULL,chptr,NULL))) {
+				  if (chptr && (ShowChannel(sptr, chptr) || ValidatePermissionsForPath("channel:see:list:secret",sptr,NULL,chptr,NULL))) {
 #ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';
 					channel_modes(sptr, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), chptr);
@@ -324,7 +324,7 @@ void _send_list(aClient *cptr)
 			{
 				if (SecretChannel(chptr)
 				    && !IsMember(cptr, chptr)
-				    && !ValidatePermissionsForPath("override:see:list:secret",cptr,NULL,chptr,NULL))
+				    && !ValidatePermissionsForPath("channel:see:list:secret",cptr,NULL,chptr,NULL))
 					continue;
 
 				/* set::hide-list { deny-channel } */
@@ -369,7 +369,7 @@ void _send_list(aClient *cptr)
 				else
 					strlcat(modebuf, "]", sizeof modebuf);
 #endif
-				if (!ValidatePermissionsForPath("override:see:list:secret",cptr,NULL,chptr,NULL))
+				if (!ValidatePermissionsForPath("channel:see:list:secret",cptr,NULL,chptr,NULL))
 					sendto_one(cptr,
 					    rpl_str(RPL_LIST), me.name,
 					    cptr->name,

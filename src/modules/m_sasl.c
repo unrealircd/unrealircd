@@ -189,18 +189,25 @@ CMD_FUNC(m_sasl)
 			strlcpy(target_p->local->sasl_agent, sptr->name, sizeof(target_p->local->sasl_agent));
 
 		if (*parv[3] == 'C')
+		{
+			RunHookReturnInt2(HOOKTYPE_SASL_CONTINUATION, target_p, parv[4], !=0);
 			sendto_one(target_p, "AUTHENTICATE %s", parv[4]);
+		}
 		else if (*parv[3] == 'D')
 		{
+			*target_p->local->sasl_agent = '\0';
 			if (*parv[4] == 'F')
+			{
+				target_p->local->since += 7; /* bump fakelag due to failed authentication attempt */
+				RunHookReturnInt2(HOOKTYPE_SASL_RESULT, target_p, 0, !=0);
 				sendto_one(target_p, err_str(ERR_SASLFAIL), me.name, BadPtr(target_p->name) ? "*" : target_p->name);
+			}
 			else if (*parv[4] == 'S')
 			{
 				target_p->local->sasl_complete++;
+				RunHookReturnInt2(HOOKTYPE_SASL_RESULT, target_p, 1, !=0);
 				sendto_one(target_p, err_str(RPL_SASLSUCCESS), me.name, BadPtr(target_p->name) ? "*" : target_p->name);
 			}
-
-			*target_p->local->sasl_agent = '\0';
 		}
 		else if (*parv[3] == 'M')
 			sendto_one(target_p, err_str(RPL_SASLMECHS), me.name, BadPtr(target_p->name) ? "*" : target_p->name, parv[4]);
@@ -305,7 +312,18 @@ int sasl_capability_visible(aClient *sptr)
 	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
 		return 0;
 
-	if (sptr && !IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY))
+	/* Don't advertise 'sasl' capability if we are going to reject the
+	 * user anyway due to set::plaintext-policy. This way the client
+	 * won't attempt SASL authentication and thus it prevents the client
+	 * from sending the password unencrypted (in case of method PLAIN).
+	 */
+	if (sptr && !IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_user == POLICY_DENY))
+		return 0;
+
+	/* Similarly, don't advertise when we are going to reject the user
+	 * due to set::outdated-tls-policy.
+	 */
+	if (IsSecure(sptr) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(sptr))
 		return 0;
 
 	return 1;

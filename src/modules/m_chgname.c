@@ -70,7 +70,7 @@ CMD_FUNC(m_chgname)
 	aClient *acptr;
 	ConfigItem_ban *bconf;
 
-	if (!ValidatePermissionsForPath("client:name",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("client:set:name",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
@@ -117,7 +117,7 @@ CMD_FUNC(m_chgname)
 		ircsnprintf(acptr->info, sizeof(acptr->info), "%s", parv[2]);
 
 		/* only check for realname bans if the person who's name is being changed is NOT an oper */
-		if (!ValidatePermissionsForPath("immune:realnameban",acptr,NULL,NULL,NULL) &&
+		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",acptr,NULL,NULL,NULL) &&
 		    ((bconf = Find_ban(NULL, acptr->info, CONF_BAN_REALNAME))))
 		{
 			int xx = banned_client(acptr, "realname", bconf->reason?bconf->reason:"", 0, 0);

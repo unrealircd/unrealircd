@@ -76,11 +76,9 @@ static int IsACTCP(char *s)
 
 DLLFUNC char *noctcp_preusermsg(aClient *sptr, aClient *acptr, char *text, int notice)
 {
-	if (MyClient(sptr) && IsNoCTCP(acptr) && IsACTCP(text))
+	if (MyClient(sptr) && !notice && IsNoCTCP(acptr) && !IsOper(sptr) && IsACTCP(text))
 	{
-		if (!notice)
-			sendto_one(sptr, err_str(ERR_NOCTCP), me.name, sptr->name, acptr->name);
-
+		sendto_one(sptr, err_str(ERR_NOCTCP), me.name, sptr->name, acptr->name);
 		return NULL;
 	}
 	return text;

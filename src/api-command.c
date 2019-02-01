@@ -24,8 +24,6 @@
 #include "h.h"
 #include <string.h>
 
-char *cmdstr = NULL;
-
 int CommandExists(char *name)
 {
 	aCommand *p;
@@ -76,56 +74,19 @@ Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char para
 
 	if (flags & M_ANNOUNCE)
 	{
-		char *tmp;
-		if (cmdstr)
-			tmp = MyMallocEx(strlen(cmdstr)+strlen(cmd)+2);
-		else
-			tmp = MyMallocEx(strlen(cmd)+2);
-		if (cmdstr)
-		{
-			strcpy(tmp, cmdstr);
-			strcat(tmp, ",");
-		}
-		strcat(tmp, cmd);
-		if (cmdstr)
-		{
-			IsupportSetValue(IsupportFind("CMDS"), tmp);
-			free(cmdstr);
-		}
-		else
-			IsupportAdd(NULL, "CMDS", tmp);
-		cmdstr = tmp;
+		config_warn("Command '%s' has M_ANNOUNCE set, but this is no longer "
+		            "supported. Old 3rd party module %s? Check for updates!",
+		            c->cmd, module ? module->header->name : "");
 	}
 
 	return command;
 }
 
 
-void CommandDel(Command *command) {
+void CommandDel(Command *command)
+{
 	Cmdoverride *ovr, *ovrnext;
 
-	if (command->cmd->flags & M_ANNOUNCE)
-	{
-		char *tmp = MyMallocEx(strlen(cmdstr)+1);
-		char *tok;
-		for (tok = strtok(cmdstr, ","); tok; tok = strtok(NULL, ","))
-		{
-			if (!stricmp(tok, command->cmd->cmd))
-				continue;
-			if (tmp)
-				strcat(tmp, ",");
-			strcat(tmp, tok);
-		}
-		free(cmdstr);
-		if (!*tmp)
-		{
-			IsupportDel(IsupportFind("CMDS"));
-			free(tmp);
-			cmdstr = NULL;
-		}
-		else
-			cmdstr = tmp;
-	}
 	DelListItem(command->cmd, CommandHash[toupper(*command->cmd->cmd)]);
 	if (command->cmd->owner) {
 		ModuleObject *cmdobj;

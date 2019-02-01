@@ -127,7 +127,8 @@ int certificate_verification_active(aClient *acptr)
 		return 1; /* yes, verify-certificate is 'yes' */
 	
 	if ((conf->auth->type == AUTHTYPE_SSL_CLIENTCERT) ||
-	    (conf->auth->type == AUTHTYPE_SSL_CLIENTCERTFP))
+	    (conf->auth->type == AUTHTYPE_SSL_CLIENTCERTFP) ||
+	    (conf->auth->type == AUTHTYPE_SPKIFP))
 	{
 		/* yes, verified by link::password being a
 		 * certificate fingerprint or certificate file.

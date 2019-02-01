@@ -69,6 +69,36 @@ int url_is_valid(const char *string)
 	return (strstr(string, "://") != NULL);
 }
 
+/** A displayable URL for in error messages and such.
+ * This leaves out any authentication information (user:pass)
+ * the URL may contain.
+ */
+const char *displayurl(const char *url)
+{
+	static char buf[512];
+	char *proto, *rest;
+
+	/* protocol://user:pass@host/etc.. */
+	rest = strchr(url, '@');
+
+	if (!rest)
+		return url; /* contains no auth information */
+
+	rest++; /* now points to the rest (remainder) of the URL */
+
+	proto = strstr(url, "://");
+	if (!proto || (proto > rest) || (proto == url))
+		return url; /* incorrectly formatted, just show entire URL. */
+
+	/* funny, we don't ship strlncpy.. */
+	*buf = '\0';
+	strlncat(buf, url, sizeof(buf), proto - url);
+	strlcat(buf, "://***:***@", sizeof(buf));
+	strlcat(buf, rest, sizeof(buf));
+
+	return buf;
+}
+
 /*
  * Returns the filename portion of the URL. The returned string
  * is malloc()'ed and must be freed by the caller. If the specified

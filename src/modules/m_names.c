@@ -103,7 +103,7 @@ CMD_FUNC(m_names)
 
 	chptr = find_channel(para, NULL);
 
-	if (!chptr || (!ShowChannel(sptr, chptr) && !ValidatePermissionsForPath("override:see:names:secret",sptr,NULL,chptr,NULL)))
+	if (!chptr || (!ShowChannel(sptr, chptr) && !ValidatePermissionsForPath("channel:see:names:secret",sptr,NULL,chptr,NULL)))
 	{
 		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
 		    sptr->name, para);
@@ -137,7 +137,7 @@ CMD_FUNC(m_names)
 	for (cm = chptr->members; cm; cm = cm->next)
 	{
 		acptr = cm->cptr;
-		if (IsInvisible(acptr) && !member && !ValidatePermissionsForPath("override:see:names:invisible",sptr,acptr,chptr,NULL))
+		if (IsInvisible(acptr) && !member && !ValidatePermissionsForPath("channel:see:names:invisible",sptr,acptr,chptr,NULL))
 			continue;
 
 		if (!user_can_see_member(sptr, acptr, chptr))

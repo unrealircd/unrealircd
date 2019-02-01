@@ -298,7 +298,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 #endif
 	u_char hash = (tmp * tmp) >> 12;
 
-	if (ValidatePermissionsForPath("immune:limits",sptr,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("immune:target-limit",sptr,NULL,NULL,NULL))
 		return 0;
 	if (sptr->local->targets[0] == hash)
 		return 0;

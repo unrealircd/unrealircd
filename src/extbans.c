@@ -42,12 +42,10 @@
 Extban MODVAR ExtBan_Table[EXTBANTABLESZ]; /* this should be fastest */
 unsigned MODVAR short ExtBan_highest = 0;
 
-char MODVAR extbanstr[EXTBANTABLESZ+1];
-
-void make_extbanstr(void)
+void set_isupport_extban(void)
 {
 	int i;
-	char *m;
+	char extbanstr[EXTBANTABLESZ+1], *m;
 
 	m = extbanstr;
 	for (i = 0; i <= ExtBan_highest; i++)
@@ -56,6 +54,7 @@ void make_extbanstr(void)
 			*m++ = ExtBan_Table[i].flag;
 	}
 	*m = 0;
+	IsupportSetFmt(NULL, "EXTBAN", "~,%s", extbanstr);
 }
 
 Extban *findmod_by_bantype(char c)
@@ -106,12 +105,7 @@ char tmpbuf[512];
 		module->errorcode = MODERR_NOERROR;
 	}
 	ExtBan_highest = slot;
-	if (loop.ircd_booted)
-	{
-		make_extbanstr();
-		ircsnprintf(tmpbuf, sizeof(tmpbuf), "~,%s", extbanstr);
-		IsupportSetValue(IsupportFind("EXTBAN"), tmpbuf);
-	}
+	set_isupport_extban();
 	return &ExtBan_Table[slot];
 }
 
@@ -134,9 +128,7 @@ char tmpbuf[512];
 		}
 	}
 	memset(eb, 0, sizeof(Extban));
-	make_extbanstr();
-	ircsnprintf(tmpbuf, sizeof(tmpbuf), "~,%s", extbanstr);
-	IsupportSetValue(IsupportFind("EXTBAN"), tmpbuf);
+	set_isupport_extban();
 	/* Hmm do we want to go trough all chans and remove the bans?
 	 * I would say 'no' because perhaps we are just reloading,
 	 * and else.. well... screw them?
@@ -162,7 +154,7 @@ int extban_is_ok_nuh_extban(aClient* sptr, aChannel* chptr, char* para, int chec
 		if (extban_is_ok_recursion)
 			return 0; /* Fail: more than one stacked extban */
 
-		if ((checkt == EXBCHK_PARAM) && RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("channel:extbans",sptr,NULL,chptr,NULL))
+		if ((checkt == EXBCHK_PARAM) && RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("immune:restrict-extendedbans",sptr,NULL,chptr,NULL))
 		{
 			/* Test if this specific extban has been disabled.
 			 * (We can be sure RESTRICT_EXTENDEDBANS is not *. Else this extended ban wouldn't be happening at all.)

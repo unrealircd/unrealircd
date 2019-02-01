@@ -319,6 +319,7 @@ MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
 
 MODVAR int need_34_upgrade = 0;
+int need_operclass_permissions_upgrade = 0;
 int have_ssl_listeners = 0;
 char *port_6667_ip = NULL;
 
@@ -720,41 +721,41 @@ char chfl_to_chanmode(int s)
 	/* NOT REACHED */
 }
 
-PlaintextPolicy plaintextpolicy_strtoval(char *s)
+Policy policy_strtoval(char *s)
 {
 	if (!s)
 		return 0;
 
 	if (!strcmp(s, "allow"))
-		return PLAINTEXT_POLICY_ALLOW;
+		return POLICY_ALLOW;
 
 	if (!strcmp(s, "warn"))
-		return PLAINTEXT_POLICY_WARN;
+		return POLICY_WARN;
 
 	if (!strcmp(s, "deny"))
-		return PLAINTEXT_POLICY_DENY;
+		return POLICY_DENY;
 
 	return 0;
 }
 
-char *plaintextpolicy_valtostr(PlaintextPolicy policy)
+char *policy_valtostr(Policy policy)
 {
-	if (policy == PLAINTEXT_POLICY_ALLOW)
+	if (policy == POLICY_ALLOW)
 		return "allow";
-	if (policy == PLAINTEXT_POLICY_WARN)
+	if (policy == POLICY_WARN)
 		return "warn";
-	if (policy == PLAINTEXT_POLICY_DENY)
+	if (policy == POLICY_DENY)
 		return "deny";
 	return "???";
 }
 
-char plaintextpolicy_valtochar(PlaintextPolicy policy)
+char policy_valtochar(Policy policy)
 {
-	if (policy == PLAINTEXT_POLICY_ALLOW)
+	if (policy == POLICY_ALLOW)
 		return 'a';
-	if (policy == PLAINTEXT_POLICY_WARN)
+	if (policy == POLICY_WARN)
 		return 'w';
-	if (policy == PLAINTEXT_POLICY_DENY)
+	if (policy == POLICY_DENY)
 		return 'd';
 	return '?';
 }
@@ -974,6 +975,10 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 
 					for(ptr+=2;*ptr;ptr++)
 					{
+						if (*ptr == '\n')
+						{
+							linenumber++;
+						} else
 						if ((*ptr == '*') && (*(ptr+1) == '/'))
 						{
 							ptr++;
@@ -1490,7 +1495,11 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->uhnames = 1;
 	i->ping_cookie = 1;
 	i->default_ipv6_clone_mask = 64;
-	i->nicklen = NICKLEN;
+	i->nick_length = NICKLEN;
+	i->topic_length = 360;
+	i->away_length = 307;
+	i->kick_length = 307;
+	i->quit_length = 307;
 	i->link_bindip = strdup("*");
 	i->oper_only_stats = strdup("*");
 	i->network.x_hidden_host = strdup("Clk");
@@ -1515,74 +1524,97 @@ void config_setdefaultsettings(aConfiguration *i)
 #ifdef HAS_SSL_CTX_SET1_CURVES_LIST
 	i->ssl_options->ecdh_curves = strdup(UNREALIRCD_DEFAULT_ECDH_CURVES);
 #endif
+	i->ssl_options->outdated_protocols = strdup("TLSv1,TLSv1.1");
+	/* the following may look strange but "AES*" matches all
+	 * AES ciphersuites that do not have Forward Secrecy.
+	 * Any decent client using AES will use ECDHE-xx-AES.
+	 */
+	i->ssl_options->outdated_ciphers = strdup("AES*,RC4*,DES*");
 
-	i->plaintext_policy_user = PLAINTEXT_POLICY_ALLOW;
-	i->plaintext_policy_oper = PLAINTEXT_POLICY_WARN;
-	i->plaintext_policy_server = PLAINTEXT_POLICY_DENY;
-	
+	i->plaintext_policy_user = POLICY_ALLOW;
+	i->plaintext_policy_oper = POLICY_WARN;
+	i->plaintext_policy_server = POLICY_DENY;
+
+	i->outdated_tls_policy_user = POLICY_WARN;
+	i->outdated_tls_policy_oper = POLICY_WARN;
+	i->outdated_tls_policy_server = POLICY_WARN;
+
 	i->reject_message_password_mismatch = strdup("Password mismatch");
 	i->reject_message_too_many_connections = strdup("Too many connections from your IP");
 	i->reject_message_server_full = strdup("This server is full");
 	i->reject_message_unauthorized = strdup("You are not authorized to connect to this server");
+	i->reject_message_kline = strdup("You are not welcome on this server. $bantype: $banreason. Email $klineaddr for more information.");
+	i->reject_message_gline = strdup("You are not welcome on this network. $bantype: $banreason. Email $glineaddr for more information.");
+
+	i->topic_setter = SETTER_NICK;
+	i->ban_setter = SETTER_NICK;
+	i->ban_setter_sync = 1;
+}
+
+static void make_default_logblock(void)
+{
+ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
+
+	config_status("No log { } block found -- using default: errors will be logged to 'ircd.log'");
+
+	ca->file = strdup("ircd.log");
+	convert_to_absolute_path(&ca->file, LOGDIR);
+	ca->flags |= LOG_ERROR;
+	ca->logfd = -1;
+	AddListItem(ca, conf_log);
 }
 
 /** Similar to config_setdefaultsettings but this one is applied *AFTER*
- * the entire configuration has been ran.
+ * the entire configuration has been ran (sometimes this is the only way it can be done..).
  * NOTE: iConf is thus already populated with (non-default) values. Only overwrite if necessary!
  */
 void postconf_defaults(void)
 {
-	Isupport *is;
 	char tmpbuf[512];
+	aTKline *tk;
+	char *encoded;
 
 	if (!iConf.plaintext_policy_user_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
-		if (iConf.plaintext_policy_user == PLAINTEXT_POLICY_DENY)
+		if (iConf.plaintext_policy_user == POLICY_DENY)
 			safestrdup(iConf.plaintext_policy_user_message, "Insecure connection. Please reconnect using SSL/TLS.");
-		else if (iConf.plaintext_policy_user == PLAINTEXT_POLICY_WARN)
+		else if (iConf.plaintext_policy_user == POLICY_WARN)
 			safestrdup(iConf.plaintext_policy_user_message, "WARNING: Insecure connection. Please consider using SSL/TLS.");
 	}
 
 	if (!iConf.plaintext_policy_oper_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
-		if (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_DENY)
+		if (iConf.plaintext_policy_oper == POLICY_DENY)
 			safestrdup(iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
-		else if (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_WARN)
+		else if (iConf.plaintext_policy_oper == POLICY_WARN)
 			safestrdup(iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
 	}
 
-	is = IsupportFind("MAXLIST");
-	if (is)
+	if (!iConf.outdated_tls_policy_user_message)
 	{
-		ircsnprintf(tmpbuf, sizeof(tmpbuf), "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
-		IsupportSetValue(is, tmpbuf);
+		/* The message depends on whether it's reject or warn.. */
+		if (iConf.outdated_tls_policy_user == POLICY_DENY)
+			safestrdup(iConf.outdated_tls_policy_user_message, "Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+		else if (iConf.outdated_tls_policy_user == POLICY_WARN)
+			safestrdup(iConf.outdated_tls_policy_user_message, "WARNING: Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 	}
-}
 
-/* 1: needed for set::options::allow-part-if-shunned,
- * we can't just make it M_SHUN and do a ALLOW_PART_IF_SHUNNED in
- * m_part itself because that will also block internal calls (like sapart). -- Syzop
- * 2: now also used by spamfilter entries added by config...
- * we got a chicken-and-egg problem here.. antries added without reason or ban-time
- * field should use the config default (set::spamfilter::ban-reason/ban-time) but
- * this isn't (or might not) be known yet when parsing spamfilter entries..
- * so we do a VERY UGLY mass replace here.. unless someone else has a better idea.
- */
-static void do_weird_shun_stuff()
-{
-aCommand *cmptr;
-aTKline *tk;
-char *encoded;
-
-	if ((cmptr = find_Command_simple("PART")))
+	if (!iConf.outdated_tls_policy_oper_message)
 	{
-		if (ALLOW_PART_IF_SHUNNED)
-			cmptr->flags |= M_SHUN;
-		else
-			cmptr->flags &= ~M_SHUN;
+		/* The message depends on whether it's reject or warn.. */
+		if (iConf.outdated_tls_policy_oper == POLICY_DENY)
+			safestrdup(iConf.outdated_tls_policy_oper_message, "Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+		else if (iConf.outdated_tls_policy_oper == POLICY_WARN)
+			safestrdup(iConf.outdated_tls_policy_oper_message, "WARNING: Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 	}
+
+	/* We got a chicken-and-egg problem here.. antries added without reason or ban-time
+	 * field should use the config default (set::spamfilter::ban-reason/ban-time) but
+	 * this isn't (or might not) be known yet when parsing spamfilter entries..
+	 * so we do a VERY UGLY mass replace here.. unless someone else has a better idea.
+	 */
 
 	encoded = unreal_encodespace(SPAMFILTER_BAN_REASON);
 	if (!encoded)
@@ -1619,38 +1651,54 @@ char *encoded;
 				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
 		}
 	}
-	if (loop.ircd_booted) /* only has to be done for rehashes, api-isupport takes care of boot */
+
+	if (!conf_log)
+		make_default_logblock();
+}
+
+void postconf_fixes(void)
+{
+	/* If set::topic-setter is set to "nick-user-host" then the
+	 * maximum topic length becomes shorter.
+	 */
+	if ((iConf.topic_setter == SETTER_NICK_USER_HOST) &&
+	    (iConf.topic_length > 340))
 	{
-		if (WATCH_AWAY_NOTIFICATION)
-		{
-			IsupportAdd(NULL, "WATCHOPTS", "A");
-		} else {
-			Isupport *hunted = IsupportFind("WATCHOPTS");
-			if (hunted)
-				IsupportDel(hunted);
-		}
-		if (UHNAMES_ENABLED)
-		{
-			IsupportAdd(NULL, "UHNAMES", NULL);
-		} else {
-			Isupport *hunted = IsupportFind("UHNAMES");
-			if (hunted)
-				IsupportDel(hunted);
-		}
+		config_warn("set::topic-length adjusted from %d to 340, which is the maximum because "
+		            "set::topic-setter is set to 'nick-user-host'.", iConf.topic_length);
+		iConf.topic_length = 340;
 	}
 }
 
-static void make_default_logblock(void)
+/* Needed for set::options::allow-part-if-shunned,
+ * we can't just make it M_SHUN and do a ALLOW_PART_IF_SHUNNED in
+ * m_part itself because that will also block internal calls (like sapart). -- Syzop
+ */
+static void do_weird_shun_stuff()
 {
-ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
+aCommand *cmptr;
 
-	config_status("No log { } block found -- using default: errors will be logged to 'ircd.log'");
+	if ((cmptr = find_Command_simple("PART")))
+	{
+		if (ALLOW_PART_IF_SHUNNED)
+			cmptr->flags |= M_SHUN;
+		else
+			cmptr->flags &= ~M_SHUN;
+	}
+}
 
-	ca->file = strdup("ircd.log");
-	convert_to_absolute_path(&ca->file, LOGDIR);
-	ca->flags |= LOG_ERROR;
-	ca->logfd = -1;
-	AddListItem(ca, conf_log);
+/** Various things that are done at the very end after the configuration file
+ * has been read and almost all values have been set. This is to deal with
+ * things like adding a default log { } block if there is none and that kind
+ * of things.
+ * This function is called by init_conf(), both on boot and on rehash.
+ */
+void postconf(void)
+{
+	postconf_defaults();
+	postconf_fixes();
+	do_weird_shun_stuff();
+	isupport_init(); /* for all the 005 values that changed.. */
 }
 
 int isanyserverlinked(void)
@@ -1867,10 +1915,7 @@ int	init_conf(char *rootconf, int rehash)
 		module_loadall();
 		RunHook0(HOOKTYPE_REHASH_COMPLETE);
 	}
-	do_weird_shun_stuff();
-	if (!conf_log)
-		make_default_logblock();
-	postconf_defaults();
+	postconf();
 	config_status("Configuration loaded without any problems.");
 	clicap_post_rehash();
 	return 0;
@@ -1905,6 +1950,7 @@ int	load_conf(char *filename, const char *original_path)
 		config_status("Loading config file %s ..", filename);
 
 	need_34_upgrade = 0;
+	need_operclass_permissions_upgrade = 0;
 
 	/*
 	 * Check if we're accidentally including a file a second
@@ -3584,7 +3630,7 @@ int	_conf_operclass(ConfigFile *conf, ConfigEntry *ce)
 		{
 			operClass->classStruct->ISA = strdup(cep->ce_vardata);
 		}
-		else if (!strcmp(cep->ce_varname, "privileges"))
+		else if (!strcmp(cep->ce_varname, "permissions"))
 		{
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
@@ -3598,11 +3644,28 @@ int	_conf_operclass(ConfigFile *conf, ConfigEntry *ce)
 	return 1;
 }
 
+void new_permissions_system(ConfigFile *conf, ConfigEntry *ce)
+{
+	if (need_operclass_permissions_upgrade)
+		return; /* error already shown */
+
+	config_error("%s:%i: UnrealIRCd 4.2.1 and higher have a new operclass permissions system.",
+	             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+	config_error("Please see https://www.unrealircd.org/docs/FAQ#New_operclass_permissions");
+	config_error("(additional errors regarding this are suppressed)");
+	/*
+	config_error("First of all, operclass::privileges has been renamed to operclass::permissions.");
+	config_error("However, the permissions themselves have also been changed. You cannot simply "
+	             "rename 'privileges' to 'permissions' and be done with it! ");
+	config_error("See https://www.unrealircd.org/docs/Operclass_permissions for the new list of permissions.");
+	config_error("Or just use the default operclasses from operclass.default.conf, then no need to change anything."); */
+	need_operclass_permissions_upgrade = 1;
+}
+
 int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 {
-	char has_privileges = 0, has_parent = 0;
+	char has_permissions = 0, has_parent = 0;
 	ConfigEntry *cep;
-	ConfigEntry *cepp;
 	NameValue *ofp;
 	int	errors = 0;
 
@@ -3631,28 +3694,39 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 			has_parent = 1;
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "privileges"))
+		if (!strcmp(cep->ce_varname, "permissions"))
 		{
-			if (has_privileges)
+			if (has_permissions)
 			{
 				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum, "oper::privileges");
+				cep->ce_varlinenum, "oper::permissions");
 				continue;
 			}
-			has_privileges = 1;
+			has_permissions = 1;
 			continue;
+		}
+		if (!strcmp(cep->ce_varname, "privileges"))
+		{
+			new_permissions_system(conf, cep);
+			errors++;
+			return errors;
 		}
 		/* Regular variables */
 		if (!cep->ce_entries)
 		{
-			if (!strcmp(cep->ce_varname, "privileges") && !cep->ce_vardata)
+			if (!strcmp(cep->ce_varname, "permissions") && !cep->ce_vardata)
 			{
 				config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					"operclass::parent");
 				errors++;
 				continue;
+			} else
+			if (!strcmp(cep->ce_varname, "permissions"))
+			{
+				new_permissions_system(conf, cep);
+				errors++;
+				return errors;
 			}
-
 			else
 			{
 				config_error_unknown(cep->ce_fileptr->cf_filename,
@@ -3665,8 +3739,14 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 		/* Sections */
 		else
 		{
-			/* No that's not a typo, if it isn't privileges, we explode */
-			if (strcmp(cep->ce_varname, "privileges"))
+			/* No the second 'strcmp' is not a typo, if it isn't permissions, we explode */
+			if (!strcmp(cep->ce_varname, "privileges"))
+			{
+				new_permissions_system(conf, cep);
+				errors++;
+				return errors;
+			} else
+			if (strcmp(cep->ce_varname, "permissions"))
 			{
 				config_error_unknown(cep->ce_fileptr->cf_filename,
 					cep->ce_varlinenum, "operclass", cep->ce_varname);
@@ -3676,10 +3756,10 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	if (!has_privileges)
+	if (!has_permissions)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"oper::privileges");
+			"oper::permissions");
 		errors++;
 	}
 
@@ -4638,6 +4718,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	char *ip;
 	int start=0, end=0, port, isnew;
 	int tmpflags =0;
+	Hook *h;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -4663,6 +4744,14 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "ssl-options"))
 		{
 			sslconfig = cep;
+		} else
+		{
+			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+			{
+				int value = (*(h->func.intfunc))(conf, cep, CONFIG_LISTEN);
+				if (value == 1)
+					break;
+			}
 		}
 	}
 	for (port = start; port <= end; port++)
@@ -4752,6 +4841,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	int errors = 0;
 	char has_ip = 0, has_port = 0, has_options = 0, port_6667 = 0;
 	char *ip = NULL;
+	Hook *h;
 
 	if (ce->ce_vardata)
 	{
@@ -4764,12 +4854,44 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
+		int used_by_module = 0;
+
 		if (!cep->ce_varname)
 		{
 			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				"listen");
 			errors++;
 			continue;
+		}
+
+		/* First, check if a module knows about this listen::something */
+		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
+		{
+			int value, errs = 0;
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+			    && !(h->owner->options & MOD_OPT_PERM))
+			{
+				continue;
+			}
+			value = (*(h->func.intfunc))(conf, cep, CONFIG_LISTEN, &errs);
+			if (value == 2)
+				used_by_module = 1;
+			if (value == 1)
+			{
+				used_by_module = 1;
+				break;
+			}
+			if (value == -1)
+			{
+				used_by_module = 1;
+				errors += errs;
+				break;
+			}
+			if (value == -2)
+			{
+				used_by_module = 1;
+				errors += errs;
+			}
 		}
 		if (!strcmp(cep->ce_varname, "options"))
 		{
@@ -4809,10 +4931,13 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 		else
 		if (!cep->ce_vardata)
 		{
-			config_error_empty(cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum, "listen", cep->ce_varname);
-			errors++;
-			continue;
+			if (!used_by_module)
+			{
+				config_error_empty(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "listen", cep->ce_varname);
+				errors++;
+			}
+			continue; /* always */
 		} else
 		if (!strcmp(cep->ce_varname, "ip"))
 		{
@@ -4876,10 +5001,13 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				port_6667 = 1;
 		} else
 		{
-			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"listen", cep->ce_varname);
-			errors++;
-			continue;
+			if (!used_by_module)
+			{
+				config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					"listen", cep->ce_varname);
+				errors++;
+			}
+			continue; /* always */
 		}
 	}
 	
@@ -5180,9 +5308,9 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "sasl"))
 				{
 					config_error("%s:%d: The option allow::options::sasl no longer exists. "
-					             "Please use a require sasl { } block instead, which "
+					             "Please use a require authentication { } block instead, which "
 					             "is more flexible and provides the same functionality. See "
-					             "https://www.unrealircd.org/docs/Require_sasl_block",
+					             "https://www.unrealircd.org/docs/Require_authentication_block",
 					             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 					errors++;
 				}
@@ -7078,7 +7206,7 @@ int _conf_require(ConfigFile *conf, ConfigEntry *ce)
 	Hook *h;
 
 	ca = MyMallocEx(sizeof(ConfigItem_ban));
-	if (!strcmp(ce->ce_vardata, "sasl"))
+	if (!strcmp(ce->ce_vardata, "authentication") || !strcmp(ce->ce_vardata, "sasl"))
 	{
 		ca->flag.type = CONF_BAN_UNAUTHENTICATED;
 	}
@@ -7118,12 +7246,17 @@ int _test_require(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!ce->ce_vardata)
 	{
-		config_error("%s:%i: require without type, did you mean 'require sasl'?",
+		config_error("%s:%i: require without type, did you mean 'require authentication'?",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
-	if (!strcmp(ce->ce_vardata, "sasl"))
+	if (!strcmp(ce->ce_vardata, "authentication"))
 	{}
+	else if (!strcmp(ce->ce_vardata, "sasl"))
+	{
+		config_warn("%s:%i: the 'require sasl' block is now called 'require authentication'",
+		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+	}
 	else
 	{
 		int used = 0;
@@ -7590,8 +7723,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "silence-limit")) {
 			tempiConf.silence_limit = atol(cep->ce_vardata);
-			if (loop.ircd_booted)
-				IsupportSetValue(IsupportFind("SILENCE"), cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
 			safestrdup(tempiConf.auto_join_chans, cep->ce_vardata);
@@ -7674,13 +7805,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			tempiConf.maxchannelsperuser = atoi(cep->ce_vardata);
-			if (loop.ircd_booted)
-			{
-				char tmpbuf[512];
-				IsupportSetValue(IsupportFind("MAXCHANNELS"), cep->ce_vardata);
-				ircsnprintf(tmpbuf, sizeof(tmpbuf), "#:%s", cep->ce_vardata);
-				IsupportSetValue(IsupportFind("CHANLIMIT"), tmpbuf);
-			}
 		}
 		else if (!strcmp(cep->ce_varname, "maxdccallow")) {
 			tempiConf.maxdccallow = atoi(cep->ce_vardata);
@@ -7693,8 +7817,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					*cep->ce_vardata='-';
 			}
 			safestrdup(tempiConf.network.x_ircnet005, tmp);
-			if (loop.ircd_booted)
-				IsupportSetValue(IsupportFind("NETWORK"), tmp);
 			cep->ce_vardata = tmp;
 		}
 		else if (!strcmp(cep->ce_varname, "default-server")) {
@@ -7916,9 +8038,23 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "nick-length")) {
 			int v = atoi(cep->ce_vardata);
-			tempiConf.nicklen = v;
-			if (loop.ircd_booted)
-				IsupportSetValue(IsupportFind("NICKLEN"), cep->ce_vardata);
+			tempiConf.nick_length = v;
+		}
+		else if (!strcmp(cep->ce_varname, "topic-length")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.topic_length = v;
+		}
+		else if (!strcmp(cep->ce_varname, "away-length")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.away_length = v;
+		}
+		else if (!strcmp(cep->ce_varname, "kick-length")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.kick_length = v;
+		}
+		else if (!strcmp(cep->ce_varname, "quit-length")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.quit_length = v;
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 			/* no need to alloc tempiConf.ssl_options since config_defaults() already ensures it exists */
@@ -7929,15 +8065,31 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!strcmp(cepp->ce_varname, "user"))
-					tempiConf.plaintext_policy_user = plaintextpolicy_strtoval(cepp->ce_vardata);
+					tempiConf.plaintext_policy_user = policy_strtoval(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "oper"))
-					tempiConf.plaintext_policy_oper = plaintextpolicy_strtoval(cepp->ce_vardata);
+					tempiConf.plaintext_policy_oper = policy_strtoval(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "server"))
-					tempiConf.plaintext_policy_server = plaintextpolicy_strtoval(cepp->ce_vardata);
+					tempiConf.plaintext_policy_server = policy_strtoval(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "user-message"))
 					safestrdup(tempiConf.plaintext_policy_user_message, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "oper-message"))
 					safestrdup(tempiConf.plaintext_policy_oper_message, cepp->ce_vardata);
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "outdated-tls-policy"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "user"))
+					tempiConf.outdated_tls_policy_user = policy_strtoval(cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "oper"))
+					tempiConf.outdated_tls_policy_oper = policy_strtoval(cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "server"))
+					tempiConf.outdated_tls_policy_server = policy_strtoval(cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "user-message"))
+					safestrdup(tempiConf.outdated_tls_policy_user_message, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "oper-message"))
+					safestrdup(tempiConf.outdated_tls_policy_oper_message, cepp->ce_vardata);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "default-ipv6-clone-mask"))
@@ -7982,7 +8134,29 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					safestrdup(tempiConf.reject_message_server_full, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "unauthorized"))
 					safestrdup(tempiConf.reject_message_unauthorized, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "kline"))
+					safestrdup(tempiConf.reject_message_kline, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "gline"))
+					safestrdup(tempiConf.reject_message_gline, cepp->ce_vardata);
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "topic-setter"))
+		{
+			if (!strcmp(cep->ce_vardata, "nick"))
+				tempiConf.topic_setter = SETTER_NICK;
+			else if (!strcmp(cep->ce_vardata, "nick-user-host"))
+				tempiConf.topic_setter = SETTER_NICK_USER_HOST;
+		}
+		else if (!strcmp(cep->ce_varname, "ban-setter"))
+		{
+			if (!strcmp(cep->ce_vardata, "nick"))
+				tempiConf.ban_setter = SETTER_NICK;
+			else if (!strcmp(cep->ce_vardata, "nick-user-host"))
+				tempiConf.ban_setter = SETTER_NICK_USER_HOST;
+		}
+		else if (!strcmp(cep->ce_varname, "ban-setter-sync") || !strcmp(cep->ce_varname, "ban-setter-synch"))
+		{
+			tempiConf.ban_setter_sync = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
 		else
 		{
@@ -8787,13 +8961,57 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "nick-length")) {
 			int v;
-			CheckDuplicate(cep, nicklen, "nick-length");
+			CheckDuplicate(cep, nick_length, "nick-length");
 			CheckNull(cep);
 			v = atoi(cep->ce_vardata);
 			if ((v <= 0) || (v > NICKLEN))
 			{
 				config_error("%s:%i: set::nick-length: value '%d' out of range (should be 1-%d)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, NICKLEN);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "topic-length")) {
+			int v;
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > MAXTOPICLEN))
+			{
+				config_error("%s:%i: set::topic-length: value '%d' out of range (should be 1-%d)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, MAXTOPICLEN);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "away-length")) {
+			int v;
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > MAXAWAYLEN))
+			{
+				config_error("%s:%i: set::away-length: value '%d' out of range (should be 1-%d)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, MAXAWAYLEN);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "kick-length")) {
+			int v;
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > MAXKICKLEN))
+			{
+				config_error("%s:%i: set::kick-length: value '%d' out of range (should be 1-%d)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, MAXKICKLEN);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "quit-length")) {
+			int v;
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > MAXQUITLEN))
+			{
+				config_error("%s:%i: set::quit-length: value '%d' out of range (should be 1-%d)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, MAXQUITLEN);
 				errors++;
 			}
 		}
@@ -8808,9 +9026,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					!strcmp(cepp->ce_varname, "oper") ||
 					!strcmp(cepp->ce_varname, "server"))
 				{
-					PlaintextPolicy policy;
+					Policy policy;
 					CheckNull(cepp);
-					policy = plaintextpolicy_strtoval(cepp->ce_vardata);
+					policy = policy_strtoval(cepp->ce_vardata);
 					if (!policy)
 					{
 						config_error("%s:%i: set::plaintext-policy::%s: needs to be one of: 'allow', 'warn' or 'reject'",
@@ -8824,6 +9042,36 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				} else {
 					config_error_unknown(cepp->ce_fileptr->cf_filename,
 						cepp->ce_varlinenum, "set::plaintext-policy",
+						cepp->ce_varname);
+					errors++;
+					continue;
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "outdated-tls-policy"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "user") ||
+					!strcmp(cepp->ce_varname, "oper") ||
+					!strcmp(cepp->ce_varname, "server"))
+				{
+					Policy policy;
+					CheckNull(cepp);
+					policy = policy_strtoval(cepp->ce_vardata);
+					if (!policy)
+					{
+						config_error("%s:%i: set::outdated-tls-policy::%s: needs to be one of: 'allow', 'warn' or 'reject'",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+						errors++;
+					}
+				} else if (!strcmp(cepp->ce_varname, "user-message") ||
+				           !strcmp(cepp->ce_varname, "oper-message"))
+				{
+					CheckNull(cepp);
+				} else {
+					config_error_unknown(cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum, "set::outdated-tls-policy",
 						cepp->ce_varname);
 					errors++;
 					continue;
@@ -8920,6 +9168,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					;
 				else if (!strcmp(cepp->ce_varname, "unauthorized"))
 					;
+				else if (!strcmp(cepp->ce_varname, "kline"))
+					;
+				else if (!strcmp(cepp->ce_varname, "gline"))
+					;
 				else
 				{
 					config_error_unknown(cepp->ce_fileptr->cf_filename,
@@ -8929,6 +9181,30 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "topic-setter"))
+		{
+			CheckNull(cep);
+			if (strcmp(cep->ce_vardata, "nick") && strcmp(cep->ce_vardata, "nick-user-host"))
+			{
+				config_error("%s:%i: set::topic-setter: value should be 'nick' or 'nick-user-host'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "ban-setter"))
+		{
+			CheckNull(cep);
+			if (strcmp(cep->ce_vardata, "nick") && strcmp(cep->ce_vardata, "nick-user-host"))
+			{
+				config_error("%s:%i: set::ban-setter: value should be 'nick' or 'nick-user-host'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "ban-setter-sync") || !strcmp(cep->ce_varname, "ban-setter-synch"))
+		{
+			CheckNull(cep);
 		}
 		else
 		{
@@ -9207,10 +9483,10 @@ int	_test_offchans(ConfigFile *conf, ConfigEntry *ce)
 			}
 			if (!strcmp(cep2->ce_varname, "topic"))
 			{
-				if (strlen(cep2->ce_vardata) > TOPICLEN)
+				if (strlen(cep2->ce_vardata) > MAXTOPICLEN)
 				{
 					config_error("%s:%i: official-channels::%s: topic too long (max %d characters).",
-						cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, TOPICLEN);
+						cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, MAXTOPICLEN);
 					errors++;
 					continue;
 				}
@@ -10264,7 +10540,7 @@ int remote_include(ConfigEntry *ce)
 	{
 		char *error;
 		if (config_verbose > 0)
-			config_status("Downloading %s", url);
+			config_status("Downloading %s", displayurl(url));
 		file = download_file(url, &error);
 		if (!file)
 		{
@@ -10273,14 +10549,14 @@ int remote_include(ConfigEntry *ce)
 			{
 				config_warn("%s:%i: include: error downloading '%s': %s -- using cached version instead.",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					url, error);
+					displayurl(url), error);
 				file = strdup(unreal_mkcache(url));
 				/* Let it pass to load_conf()... */
 			} else {
 #endif
 				config_error("%s:%i: include: error downloading '%s': %s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					 url, error);
+					 displayurl(url), error);
 				return -1;
 #ifdef REMOTEINC_SPECIALCACHE
 			}
@@ -10304,14 +10580,14 @@ int remote_include(ConfigEntry *ce)
 			{
 				config_warn("%s:%i: include: error downloading '%s': %s -- using cached version instead.",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					url, errorbuf);
+					displayurl(url), errorbuf);
 				/* Let it pass to load_conf()... */
 				file = strdup(unreal_mkcache(url));
 			} else {
 #endif
 				config_error("%s:%i: include: error downloading '%s': %s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					url, errorbuf);
+					displayurl(url), errorbuf);
 				return -1;
 #ifdef REMOTEINC_SPECIALCACHE
 			}

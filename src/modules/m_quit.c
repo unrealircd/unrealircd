@@ -60,8 +60,11 @@ MOD_UNLOAD(m_quit)
 CMD_FUNC(m_quit)
 {
 	char *comment = (parc > 1 && parv[1]) ? parv[1] : sptr->name;
-	static char commentbuf[TOPICLEN + 1];
+	static char commentbuf[MAXQUITLEN + 1];
 	Membership *lp;
+
+	if (parv[1] && (strlen(comment) > iConf.quit_length))
+		comment[iConf.quit_length] = '\0';
 
 	if (!IsServer(cptr) && IsPerson(sptr))
 	{
@@ -80,7 +83,7 @@ CMD_FUNC(m_quit)
 		if (n < 0)
 			comment = sptr->name;
 		
-		if (!ValidatePermissionsForPath("immune:antispamtimer",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
+		if (!ValidatePermissionsForPath("immune:anti-spam-quit-message-time",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
 		{
 			if (sptr->local->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 				comment = sptr->name;

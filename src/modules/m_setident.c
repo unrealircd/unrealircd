@@ -76,7 +76,7 @@ CMD_FUNC(m_setident)
 	{
 	  case 0:
 	  case 1:
-		  if (!ValidatePermissionsForPath("self:ident",sptr,NULL,NULL,NULL))
+		  if (!ValidatePermissionsForPath("self:set:ident",sptr,NULL,NULL,NULL))
 		  {
 			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			      sptr->name);

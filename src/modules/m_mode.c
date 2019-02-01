@@ -140,7 +140,7 @@ CMD_FUNC(m_mode)
 
 	if (IsPerson(sptr) && strstr(parv[2], "b") && BadPtr(parv[3]))
 	{
-		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:remotebanlist",sptr,NULL,chptr,NULL))
+		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",sptr,NULL,chptr,NULL))
 			return 0;
 		/* send ban list */
 		for (ban = chptr->banlist; ban; ban = ban->next)
@@ -155,7 +155,7 @@ CMD_FUNC(m_mode)
 
 	if (IsPerson(sptr) && strstr(parv[2], "e") && BadPtr(parv[3]))
 	{
-		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:remotebanlist",sptr,NULL,chptr,NULL))
+		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",sptr,NULL,chptr,NULL))
 			return 0;
 		/* send exban list */
 		for (ban = chptr->exlist; ban; ban = ban->next)
@@ -170,7 +170,7 @@ CMD_FUNC(m_mode)
 
 	if (IsPerson(sptr) && strstr(parv[2], "I") && BadPtr(parv[3]))
 	{
-		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:remoteinvexlist",sptr,NULL,chptr,NULL))
+		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteinvexlist",sptr,NULL,chptr,NULL))
 			return 0;
 		for (ban = chptr->invexlist; ban; ban = ban->next)
 			sendto_one(sptr, rpl_str(RPL_INVEXLIST), me.name,
@@ -183,7 +183,7 @@ CMD_FUNC(m_mode)
 
 	if (IsPerson(sptr) && strstr(parv[2], "q") && BadPtr(parv[3]))
 	{
-		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:remoteownerlist",sptr,NULL,chptr,NULL))
+		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",sptr,NULL,chptr,NULL))
 			return 0;
 		{
 			Member *member;
@@ -207,7 +207,7 @@ CMD_FUNC(m_mode)
 
 	if (IsPerson(sptr) && strstr(parv[2], "a") && BadPtr(parv[3]))
 	{
-		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:remoteownerlist",sptr,NULL,chptr,NULL))
+		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",sptr,NULL,chptr,NULL))
 			return 0;
 		{
 			Member *member;
@@ -233,7 +233,7 @@ CMD_FUNC(m_mode)
 
 #ifndef NO_OPEROVERRIDE
 	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
-	    !is_half_op(sptr, chptr) && ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL))
+	    !is_half_op(sptr, chptr) && ValidatePermissionsForPath("channel:override:mode",sptr,NULL,chptr,NULL))
 	{
 		sendts = 0;
 		opermode = 1;
@@ -241,7 +241,7 @@ CMD_FUNC(m_mode)
 	}
 
 	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
-	    is_half_op(sptr, chptr) && ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL))
+	    is_half_op(sptr, chptr) && ValidatePermissionsForPath("channel:override:mode",sptr,NULL,chptr,NULL))
 	{
 		opermode = 2;
 		goto aftercheck;
@@ -250,7 +250,7 @@ CMD_FUNC(m_mode)
 
 	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
 	    !is_half_op(sptr, chptr) &&
-	    (cptr == sptr || !ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL)))
+	    (cptr == sptr || !ValidatePermissionsForPath("channel:override:mode",sptr,NULL,chptr,NULL)))
 	{
 		if (cptr == sptr)
 		{
@@ -743,7 +743,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	Hook *h;
 
 	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr) &&
-	    !op_can_override("override:mode",cptr,chptr,&modetype) && !samode_in_progress)
+	    !op_can_override("channel:override:mode",cptr,chptr,&modetype) && !samode_in_progress)
 	{
 		if (MyClient(cptr) && (modetype == MODE_HALFOP) && (what == MODE_DEL) &&
 		    param && (find_client(param, NULL) == cptr))
@@ -811,7 +811,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			REQUIRE_PARAMETER()
 			if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress)
 			{
-					if (MyClient(cptr) && !op_can_override("override:mode",cptr,chptr,&modetype))
+					if (MyClient(cptr) && !op_can_override("channel:override:mode",cptr,chptr,&modetype))
 					{
 						sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
 						break;
@@ -825,7 +825,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress &&
 			    !(param && (what == MODE_DEL) && (find_client(param, NULL) == cptr)))
 			{
-					if (MyClient(cptr) && !op_can_override("override:mode",cptr,chptr,&modetype))
+					if (MyClient(cptr) && !op_can_override("channel:override:mode",cptr,chptr,&modetype))
 					{
 						sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
 						break;
@@ -889,7 +889,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				/* This probably should work but is completely untested (the operoverride stuff, I mean): */
 				if (ret == EX_DENY)
 				{
-					if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
+					if (!op_can_override("channel:override:mode:del",cptr,chptr,&modetype))
 					{
 						if (badmode)
 							sendto_one(cptr, "%s", badmode); /* send error message, if any */
@@ -913,7 +913,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					/* Need this !op_can_override() here again, even with the !opermode
 					 * check a few lines up, all due to halfops. -- Syzop
 					 */
-					if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
+					if (!op_can_override("channel:override:mode:del",cptr,chptr,&modetype))
 					{
 						char errbuf[NICKLEN+30];
 						ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", member->cptr->name);
@@ -940,7 +940,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					/* Need this !op_can_override() here again, even with the !opermode
 					 * check a few lines up, all due to halfops. -- Syzop
 					 */
-					if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
+					if (!op_can_override("channel:override:mode:del",cptr,chptr,&modetype))
 					{
 						char errbuf[NICKLEN+30];
 						ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", member->cptr->name);
@@ -1082,7 +1082,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				{
 					if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_BAN))
 					{
-						if (ValidatePermissionsForPath("override:extban",cptr,NULL,chptr,NULL))
+						if (ValidatePermissionsForPath("channel:override:mode:extban",cptr,NULL,chptr,NULL))
 						{
 							/* TODO: send operoverride notice */
 						} else {
@@ -1121,7 +1121,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				{
 					if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
 					{
-						if (ValidatePermissionsForPath("override:extban",cptr,NULL,chptr,NULL))
+						if (ValidatePermissionsForPath("channel:override:mode:extban",cptr,NULL,chptr,NULL))
 						{
 							/* TODO: send operoverride notice */
 						} else {
@@ -1163,7 +1163,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 
 					if (p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
 					{
-						if (ValidatePermissionsForPath("override:extban",cptr,NULL,chptr,NULL))
+						if (ValidatePermissionsForPath("channel:override:mode:extban",cptr,NULL,chptr,NULL))
 						{
 							/* TODO: send operoverride notice */
 						} else {
@@ -1221,7 +1221,7 @@ int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
 	{
 		x = handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS, what);
 		if ((x == EX_ALWAYS_DENY) ||
-		    ((x == EX_DENY) && !op_can_override("override:mode:del",cptr,chptr,handler) && !samode_in_progress))
+		    ((x == EX_DENY) && !op_can_override("channel:override:mode:del",cptr,chptr,handler) && !samode_in_progress))
 		{
 			handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS_ERR, what);
 			return paracnt; /* Denied & error msg sent */
@@ -1230,7 +1230,7 @@ int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
 			opermode = 1; /* override in progress... */
 	} else {
 		/* remote user: we only need to check if we need to generate an operoverride msg */
-		if (!IsULine(cptr) && IsPerson(cptr) && op_can_override("override:mode:del",cptr,chptr,handler) &&
+		if (!IsULine(cptr) && IsPerson(cptr) && op_can_override("channel:override:mode:del",cptr,chptr,handler) &&
 		    (handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS, what) != EX_ALLOW))
 		{
 			opermode = 1; /* override in progress... */
@@ -1392,7 +1392,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 	oldm = chptr->mode.mode;
 	oldl = chptr->mode.limit;
 	oldem = chptr->mode.extmode;
-	if (RESTRICT_CHANNELMODES && !ValidatePermissionsForPath("channel:restrictedmodes",cptr,NULL,chptr,NULL)) /* "cache" this */
+	if (RESTRICT_CHANNELMODES && !ValidatePermissionsForPath("immune:restrict-channelmodes",cptr,NULL,chptr,NULL)) /* "cache" this */
 		checkrestr = 1;
 
 	/* Set access to the status we have */
@@ -1597,7 +1597,7 @@ CMD_FUNC(_m_umode)
 		if ((sptr->user->snomask & Snomask_Table[i].mode))
 			oldsnomasks |= Snomask_Table[i].mode;
 
-	if (RESTRICT_USERMODES && MyClient(sptr) && !ValidatePermissionsForPath("self:restrictedumodes",sptr,NULL,NULL,NULL))
+	if (RESTRICT_USERMODES && MyClient(sptr) && !ValidatePermissionsForPath("immune:restrict-usermodes",sptr,NULL,NULL,NULL))
 		chk_restrict = 1;
 
 	if (MyConnect(sptr))
@@ -1732,11 +1732,11 @@ CMD_FUNC(_m_umode)
 	} /* for */
 
 	/* Don't let non-ircops set ircop-only modes or snomasks */
-	if (!ValidatePermissionsForPath("self:restrictedumodes",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("self:opermodes",sptr,NULL,NULL,NULL))
 	{
 		if ((oldumodes & UMODE_OPER) && IsOper(sptr))
 		{
-			/* User is an oper but does not have the self:restrictedumodes capability.
+			/* User is an oper but does not have the self:opermodes capability.
 			 * This only happens for heavily restricted IRCOps.
 			 * Fixes bug https://bugs.unrealircd.org/view.php?id=5130
 			 */
@@ -1781,11 +1781,8 @@ CMD_FUNC(_m_umode)
 		}
 	}
 
-	if (MyClient(sptr) && !ValidatePermissionsForPath("override:secure",sptr,NULL,NULL,NULL) &&
-	    (sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
-	{
+	if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
 		sptr->umodes &= ~UMODE_SECURE;
-	}
 
 	/* -x translates to -xt (if applicable) */
 	if ((oldumodes & UMODE_HIDE) && !IsHidden(sptr))

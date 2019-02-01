@@ -2359,9 +2359,10 @@ char *sock_strerror(int error)
 }
 #endif
 
-void buildvarstring(char *inbuf, char *outbuf, size_t len, char *name[], char *value[])
+void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *name[], const char *value[])
 {
-	char *i, *o, *p;
+	const char *i, *p;
+	char *o;
 	int left = len - 1;
 	int cnt, found;
 

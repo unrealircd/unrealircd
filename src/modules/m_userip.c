@@ -37,7 +37,8 @@ ModuleHeader MOD_HEADER(m_userip)
 
 MOD_INIT(m_userip)
 {
-	CommandAdd(modinfo->handle, MSG_USERIP, m_userip, 1, M_USER|M_ANNOUNCE);
+	CommandAdd(modinfo->handle, MSG_USERIP, m_userip, 1, M_USER);
+	IsupportAdd(modinfo->handle, "USERIP", NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -99,7 +100,7 @@ CMD_FUNC(m_userip)
 		{
 			if (!(ip = GetIP(acptr)))
 				ip = "<unknown>";
-			if (sptr != acptr && !ValidatePermissionsForPath("client:ip",sptr,acptr,NULL,NULL) && IsHidden(acptr))
+			if (sptr != acptr && !ValidatePermissionsForPath("client:see:ip",sptr,acptr,NULL,NULL) && IsHidden(acptr))
 			{
 				make_virthost(acptr, GetIP(acptr), ipbuf, 0);
 				ip = ipbuf;

@@ -8,7 +8,7 @@ dnl src/win32/unrealinst.iss
 dnl .CHANGES.NEW
 dnl src/version.c.SH
 
-AC_INIT([unrealircd], [4.2.1-dev], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
+AC_INIT([unrealircd], [4.2.2-dev], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -36,7 +36,7 @@ UNREAL_VERSION_MAJOR=["2"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MAJOR], [$UNREAL_VERSION_MAJOR], [Major version number (e.g.: Y for X.Y.Z)])
 
 # Minor version number (e.g.: Z in X.Y.Z)
-UNREAL_VERSION_MINOR=["1"]
+UNREAL_VERSION_MINOR=["2"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor version number (e.g.: Z for X.Y.Z)])
 
 # The version suffix such as a beta marker or release candidate
@@ -681,9 +681,6 @@ AC_ARG_WITH(showlistmodes,
 	[AS_HELP_STRING([--with-showlistmodes], [Specify whether modes are shown in /list])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([LIST_SHOW_MODES], [], [Define if you want modes shown in /list])])])
-AC_ARG_WITH(topicisnuhost, [AS_HELP_STRING([--with-topicisnuhost], [Display nick!user@host as the topic setter])],
-	[AS_IF([test $withval = "yes"],
-		[AC_DEFINE([TOPIC_NICK_IS_NUHOST], [], [Define if you want nick!user@host shown for the topic setter])])])
 AC_ARG_WITH(shunnotices, [AS_HELP_STRING([--with-shunnotices], [Notify a user when he/she is no longer shunned])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([SHUN_NOTICES], [], [Define if you want users to be notified when their shun is removed])])])
@@ -796,7 +793,7 @@ PKG_CHECK_MODULES([TRE], tre >= 0.7.5)
 
 AS_IF([test "x$with_system_pcre2" = "xno"],[
 dnl REMEMBER TO CHANGE WITH A NEW PCRE2 RELEASE!
-pcre2_version="10.30"
+pcre2_version="10.32"
 AC_MSG_RESULT(extracting PCRE2 regex library)
 cur_dir=`pwd`
 cd extras
@@ -841,7 +838,7 @@ PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.00)
 dnl Use system argon2 when available, unless --without-system-argon2
 has_system_argon2="no"
 AS_IF([test "x$with_system_argon2" = "xyes"],[
-PKG_CHECK_MODULES([ARGON2], [libargon2],[has_system_argon2=yes
+PKG_CHECK_MODULES([ARGON2], [libargon2 >= 0~20161029],[has_system_argon2=yes
 AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libargon2*])],[has_system_argon2=no])])
 
 AS_IF([test "$has_system_argon2" = "no"],[
@@ -886,7 +883,7 @@ AS_IF([test "$has_system_cares" = "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
 dnl NOTE: when changing this here, ALSO change it in extras/curlinstall
 dnl       and in the comment in this file around line 400!
-cares_version="1.13.0"
+cares_version="1.15.0"
 AC_MSG_RESULT(extracting c-ares resolver library)
 cur_dir=`pwd`
 cd extras

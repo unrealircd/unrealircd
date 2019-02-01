@@ -116,7 +116,7 @@ long flags = 0; /* cache: membership flags */
 		if (parc > 2 || SecretChannel(chptr))
 		{
 			if (!ismember && !IsServer(sptr)
-			    && !ValidatePermissionsForPath("override:see:list:secret",sptr,NULL,chptr,NULL) && !IsULine(sptr))
+			    && !ValidatePermissionsForPath("channel:see:list:secret",sptr,NULL,chptr,NULL) && !IsULine(sptr))
 			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
 				    me.name, sptr->name, name);
@@ -146,7 +146,7 @@ long flags = 0; /* cache: membership flags */
 			}
 
 			/* If you're not a member, and you can't view outside channel, deny */
-			if ((!ismember && i == HOOK_DENY) || (is_banned(sptr,chptr,BANCHK_JOIN) && !ValidatePermissionsForPath("channel:view",sptr,NULL,chptr,NULL)))
+			if ((!ismember && i == HOOK_DENY) || (is_banned(sptr,chptr,BANCHK_JOIN) && !ValidatePermissionsForPath("channel:see:topic",sptr,NULL,chptr,NULL)))
 			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, sptr->name, name);
 				return 0;
@@ -175,7 +175,7 @@ long flags = 0; /* cache: membership flags */
 			 */
 			{
 				/* Set the topic */
-				safestrldup(chptr->topic, topic, TOPICLEN+1);
+				safestrldup(chptr->topic, topic, iConf.topic_length+1);
 				safestrldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
 				chptr->topic_time = ttime;
 
@@ -192,7 +192,7 @@ long flags = 0; /* cache: membership flags */
 			}
 		}
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
-		    (is_chan_op(sptr, chptr)) || ValidatePermissionsForPath("channel:topic",sptr,NULL,chptr,NULL) 
+		    (is_chan_op(sptr, chptr)) || ValidatePermissionsForPath("channel:override:topic",sptr,NULL,chptr,NULL) 
 		    || is_halfop(sptr, chptr)) && topic)
 		{
 			/* setting a topic */
@@ -202,7 +202,7 @@ long flags = 0; /* cache: membership flags */
 					is_chan_op(sptr, chptr))
 				{
 #ifndef NO_OPEROVERRIDE
-					if (!ValidatePermissionsForPath("override:topic",sptr,NULL,chptr,NULL))
+					if (!ValidatePermissionsForPath("channel:override:topic",sptr,NULL,chptr,NULL))
 					{
 #endif
 					sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
@@ -219,7 +219,7 @@ long flags = 0; /* cache: membership flags */
 			{
 				char buf[512];
 				
-				if (ValidatePermissionsForPath("override:topic",sptr,NULL,chptr,NULL))
+				if (ValidatePermissionsForPath("channel:override:topic",sptr,NULL,chptr,NULL))
 				{
 					topicoverride(sptr, chptr, topic);
 				} else {
@@ -232,7 +232,7 @@ long flags = 0; /* cache: membership flags */
 			{
 				char buf[512];
 				
-				if (ValidatePermissionsForPath("override:topic",sptr,NULL,chptr,NULL))
+				if (ValidatePermissionsForPath("channel:override:topic",sptr,NULL,chptr,NULL))
 				{
 					topicoverride(sptr, chptr, topic);
 				} else {
@@ -260,14 +260,15 @@ long flags = 0; /* cache: membership flags */
 				RunHook4(HOOKTYPE_LOCAL_TOPIC, cptr, sptr, chptr, topic);
 			}
 
-#ifdef TOPIC_NICK_IS_NUHOST
-			if (IsPerson(sptr))
+			/* At this point 'tnick' is set to sptr->name.
+			 * If set::topic-setter nick-user-host; is set
+			 * then we update it here to nick!user@host.
+			 */
+			if (IsPerson(sptr) && (iConf.topic_setter = SETTER_NICK_USER_HOST))
 				tnick = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
-			else
-				tnick = sptr->name;
-#endif
+
 			/* Set the topic */
-			safestrldup(chptr->topic, topic, TOPICLEN+1);
+			safestrldup(chptr->topic, topic, iConf.topic_length+1);
 			safestrldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
 
 			RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);

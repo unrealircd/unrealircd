@@ -114,14 +114,27 @@ CMD_FUNC(m_oper)
 	name = parv[1];
 	password = (parc > 2) ? parv[2] : "";
 
-	if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_DENY))
+	/* set::plaintext-policy::oper 'deny' */
+	if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_oper == POLICY_DENY))
 	{
-		/* Reject early */
 		sendnotice(sptr, "%s", iConf.plaintext_policy_oper_message);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) [not using SSL/TLS]",
 		    sptr->name, sptr->user->username, sptr->local->sockhost);
 		ircd_log(LOG_OPER, "OPER NO-SSL/TLS (%s) by (%s!%s@%s)", name, sptr->name,
+			sptr->user->username, sptr->local->sockhost);
+		sptr->local->since += 7;
+		return 0;
+	}
+
+	/* set::outdated-tls-policy::oper 'deny' */
+	if (IsSecure(sptr) && (iConf.outdated_tls_policy_oper == POLICY_DENY) && outdated_tls_client(sptr))
+	{
+		sendnotice(sptr, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_oper_message, sptr));
+		sendto_snomask_global
+		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) [outdated SSL/TLS protocol or cipher]",
+		    sptr->name, sptr->user->username, sptr->local->sockhost);
+		ircd_log(LOG_OPER, "OPER OUTDATED-SSL/TLS (%s) by (%s!%s@%s)", name, sptr->name,
 			sptr->user->username, sptr->local->sockhost);
 		sptr->local->since += 7;
 		return 0;
@@ -304,7 +317,8 @@ CMD_FUNC(m_oper)
 			return FLUSH_BUFFER;
 	}
 
-	if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_oper == PLAINTEXT_POLICY_WARN))
+	/* set::plaintext-policy::oper 'warn' */
+	if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_oper == POLICY_WARN))
 	{
 		sendnotice(sptr, "%s", iConf.plaintext_policy_oper_message);
 		sendto_snomask_global
@@ -312,6 +326,14 @@ CMD_FUNC(m_oper)
 		    sptr->name, name);
 	}
 
+	/* set::outdated-tls-policy::oper 'warn' */
+	if (IsSecure(sptr) && (iConf.outdated_tls_policy_oper == POLICY_WARN) && outdated_tls_client(sptr))
+	{
+		sendnotice(sptr, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_oper_message, sptr));
+		sendto_snomask_global
+		    (SNO_OPER, "OPER %s [%s] used a connection with an outdated SSL/TLS protocol or cipher to /OPER.",
+		    sptr->name, name);
+	}
 
 	return 0;
 }

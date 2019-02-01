@@ -92,11 +92,16 @@ struct zConfiguration {
 	char *static_quit;
 	char *static_part;
 	SSLOptions *ssl_options;
-	PlaintextPolicy plaintext_policy_user;
+	Policy plaintext_policy_user;
 	char *plaintext_policy_user_message;
-	PlaintextPolicy plaintext_policy_oper;
+	Policy plaintext_policy_oper;
 	char *plaintext_policy_oper_message;
-	PlaintextPolicy plaintext_policy_server;
+	Policy plaintext_policy_server;
+	Policy outdated_tls_policy_user;
+	char *outdated_tls_policy_user_message;
+	Policy outdated_tls_policy_oper;
+	char *outdated_tls_policy_oper_message;
+	Policy outdated_tls_policy_server;
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
 	char *restrict_channelmodes;
@@ -138,7 +143,11 @@ struct zConfiguration {
 	aNetwork network;
 	unsigned short default_ipv6_clone_mask;
 	int ping_cookie;
-	int nicklen;
+	int nick_length;
+	int topic_length;
+	int kick_length;
+	int quit_length;
+	int away_length;
 	int hide_list;
 	int max_unknown_connections_per_ip;
 	long handshake_timeout;
@@ -148,6 +157,11 @@ struct zConfiguration {
 	char *reject_message_too_many_connections;
 	char *reject_message_server_full;
 	char *reject_message_unauthorized;
+	char *reject_message_kline;
+	char *reject_message_gline;
+	int topic_setter;
+	int ban_setter;
+	int ban_setter_sync;
 };
 
 #ifndef DYNCONF_C
@@ -351,7 +365,7 @@ struct SetCheck {
 	unsigned has_options_disable_cap:1;
 	unsigned has_options_disable_ipv6:1;
 	unsigned has_ping_cookie:1;
-	unsigned has_nicklen:1;
+	unsigned has_nick_length:1;
 	unsigned has_hide_ban_reason:1;
 };
 

@@ -400,11 +400,17 @@ skip_host_check:
 				get_client_name(cptr, TRUE));
 		return exit_client(cptr, cptr, &me, "Full class");
 	}
-	if (!IsLocal(cptr) && (iConf.plaintext_policy_server == PLAINTEXT_POLICY_DENY) && !IsSecure(cptr))
+	if (!IsLocal(cptr) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(cptr))
 	{
 		sendto_one(cptr, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 		sendto_ops_and_log("Rejected insecure server %s. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS", cptr->name);
 		return exit_client(cptr, sptr, &me, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
+	}
+	if (IsSecure(cptr) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(cptr))
+	{
+		sendto_one(cptr, "ERROR :Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
+		sendto_ops_and_log("Rejected server %s using outdated %s. See https://www.unrealircd.org/docs/FAQ#server-outdated-tls", ssl_get_cipher(cptr->local->ssl), cptr->name);
+		return exit_client(cptr, sptr, &me, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 	}
 	if (link_out)
 		*link_out = link;
@@ -867,10 +873,15 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		 * Yeah.. there are still other cases when non-SSL links are fine (eg: local IP
 		 * of the same machine), we won't bother with detecting that. -- Syzop
 		 */
-		if (!IsLocal(cptr) && (iConf.plaintext_policy_server == PLAINTEXT_POLICY_WARN))
+		if (!IsLocal(cptr) && (iConf.plaintext_policy_server == POLICY_WARN))
 		{
 			sendto_realops("\002WARNING:\002 This link is unencrypted (non-SSL). We highly recommend to use "
-						   "SSL server linking. See https://www.unrealircd.org/docs/Linking_servers");
+			               "SSL/TLS for server linking. See https://www.unrealircd.org/docs/Linking_servers");
+		}
+		if (IsSecure(cptr) && (iConf.outdated_tls_policy_server == POLICY_WARN) && outdated_tls_client(cptr))
+		{
+			sendto_realops("\002WARNING:\002 This link is using an outdated SSL/TLS protocol or cipher (%s).",
+			               ssl_get_cipher(cptr->local->ssl));
 		}
 	}
 	(void)add_to_client_hash_table(cptr->name, cptr);
@@ -1395,16 +1406,6 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 	return;
 }
 
-char *mystpcpy(char *dst, const char *src)
-{
-	for (; *src; src++)
-		*dst++ = *src;
-	*dst = '\0';
-	return dst;
-}
-
-
-
 /** This will send "cptr" a full list of the modes for channel chptr,
  *
  * Half of it recoded by Syzop: the whole buffering and size checking stuff
@@ -1521,6 +1522,8 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	for (ban = chptr->banlist; ban; ban = ban->next)
 	{
 		p = tbuf;
+		if (SupportSJSBY(cptr))
+			p += add_sjsby(p, ban->who, ban->when);
 		*p++ = '&';
 		p = mystpcpy(p, ban->banstr);
 		*p++ = ' ';
@@ -1542,6 +1545,8 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	for (ban = chptr->exlist; ban; ban = ban->next)
 	{
 		p = tbuf;
+		if (SupportSJSBY(cptr))
+			p += add_sjsby(p, ban->who, ban->when);
 		*p++ = '"';
 		p = mystpcpy(p, ban->banstr);
 		*p++ = ' ';
@@ -1563,6 +1568,8 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	for (ban = chptr->invexlist; ban; ban = ban->next)
 	{
 		p = tbuf;
+		if (SupportSJSBY(cptr))
+			p += add_sjsby(p, ban->who, ban->when);
 		*p++ = '\'';
 		p = mystpcpy(p, ban->banstr);
 		*p++ = ' ';

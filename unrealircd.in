@@ -163,6 +163,11 @@ elif [ "$1" = "backtrace" ] ; then
 		exit 1
 	fi
 
+	# This is needed for the script below and is probably also helpful for the
+	# bug report since you usually want to paste this to the development team.
+	export LANG=C
+	export LC_ALL=C
+
 	# The tmp/*.so files are often already deleted. Here we have some
 	# (ugly) scripting to recreate the tmp/*.so links to the modules *.so files...
 	echo 'info sharedlibrary'|gdb @BINDIR@/unrealircd $corefile 2>/dev/null|\

@@ -390,7 +390,7 @@ good:
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
-			for (h = Hooks[HOOKTYPE_CAN_SEND_SECURE]; h; h = h->next)
+			for (h = Hooks[HOOKTYPE_SEND_CHANNEL]; h; h = h->next)
 			{
 				j = (*(h->func.intfunc))(acptr,chptr);
 				if (j != HOOK_CONTINUE)
@@ -411,7 +411,7 @@ good:
 			if (acptr->from->local->serial != current_serial)
 			{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
-				for (h = Hooks[HOOKTYPE_CAN_SEND_SECURE]; h; h = h->next)
+				for (h = Hooks[HOOKTYPE_SEND_CHANNEL]; h; h = h->next)
 				{
 					j = (*(h->func.intfunc))(acptr,chptr);
 					if (j != HOOK_CONTINUE)
@@ -725,8 +725,8 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 
 	if (MyConnect(from))
 	{
-		cansendlocal = (ValidatePermissionsForPath("notice:local",from,NULL,NULL,NULL)) ? 1 : 0;
-		cansendglobal = (ValidatePermissionsForPath("notice:global",from,NULL,NULL,NULL)) ? 1 : 0;
+		cansendlocal = (ValidatePermissionsForPath("chat:notice:local",from,NULL,NULL,NULL)) ? 1 : 0;
+		cansendglobal = (ValidatePermissionsForPath("chat:notice:global",from,NULL,NULL,NULL)) ? 1 : 0;
 	}
 	else
 		cansendlocal = cansendglobal = 1;

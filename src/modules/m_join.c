@@ -146,7 +146,7 @@ int i=0,j=0;
 
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
-        if (ValidatePermissionsForPath("override:privsecret",sptr,NULL,chptr,NULL) && (chptr->mode.mode & MODE_SECRET ||
+        if (ValidatePermissionsForPath("channel:override:privsecret",sptr,NULL,chptr,NULL) && (chptr->mode.mode & MODE_SECRET ||
             chptr->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(chptr->chname))
                 return (ERR_OPERSPVERIFY);
 #endif
@@ -449,7 +449,7 @@ CMD_FUNC(_do_join)
 			flags =
 			    (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;
 
-			if (!ValidatePermissionsForPath("immune:channellimit",sptr,NULL,NULL,NULL))	/* opers can join unlimited chans */
+			if (!ValidatePermissionsForPath("immune:maxchannelsperuser",sptr,NULL,NULL,NULL))	/* opers can join unlimited chans */
 				if (sptr->user->joined >= MAXCHANNELSPERUSER)
 				{
 					sendto_one(sptr,
@@ -461,7 +461,7 @@ CMD_FUNC(_do_join)
 /* RESTRICTCHAN */
 			if (conf_deny_channel)
 			{
-				if (!ValidatePermissionsForPath("immune:forbiddenchan",sptr,NULL,NULL,NULL))
+				if (!ValidatePermissionsForPath("immune:server-ban:deny-channel",sptr,NULL,NULL,NULL))
 				{
 					ConfigItem_deny_channel *d;
 					if ((d = Find_channel_allowed(cptr, name)))
@@ -486,7 +486,7 @@ CMD_FUNC(_do_join)
 					}
 				}
 			}
-			if (ValidatePermissionsForPath("immune:forbiddenchan",sptr,NULL,NULL,NULL) && (tklban = find_qline(sptr, name, &ishold)))
+			if (ValidatePermissionsForPath("immune:server-ban:deny-channel",sptr,NULL,NULL,NULL) && (tklban = find_qline(sptr, name, &ishold)))
 			{
 				sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, sptr->name, name, tklban->reason);
 				continue;
@@ -494,7 +494,7 @@ CMD_FUNC(_do_join)
 			/* ugly set::spamfilter::virus-help-channel-deny hack.. */
 			if (SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
 			    !strcasecmp(name, SPAMFILTER_VIRUSCHAN) &&
-			    !ValidatePermissionsForPath("immune:viruschan",sptr,NULL,NULL,NULL) && !spamf_ugly_vchanoverride)
+			    !ValidatePermissionsForPath("immune:server-ban:viruschan",sptr,NULL,NULL,NULL) && !spamf_ugly_vchanoverride)
 			{
 				int invited = 0;
 				Link *lp;

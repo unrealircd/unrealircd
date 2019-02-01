@@ -161,7 +161,7 @@ void parse_addlag(aClient *cptr, int cmdbytes)
 #ifdef FAKELAG_CONFIGURABLE
 		!(cptr->local->class && (cptr->local->class->options & CLASS_OPT_NOFAKELAG)) && 
 #endif
-	!ValidatePermissionsForPath("privacy:fakelag",cptr,NULL,NULL,NULL))
+	!ValidatePermissionsForPath("immune:lag",cptr,NULL,NULL,NULL))
 	{
 		cptr->local->since += (1 + cmdbytes/90);
 	}		
@@ -205,12 +205,17 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		return FLUSH_BUFFER;
 	}
 
-	/* this call is a bit obsolete? - takes up CPU */
-	backupbuf[0] = '\0';
+	/* This stores the last executed command in 'backupbuf', useful for debugging crashes */
 	strlcpy(backupbuf, buffer, sizeof(backupbuf));
+
 #if defined(DEBUGMODE) && defined(RAWCMDLOGGING)
 	ircd_log(LOG_ERROR, "<- %s: %s", cptr->name, backupbuf);
 #endif
+
+	/* This poisons unused para elements that code should never access */
+	for (i = 0; i < MAXPARA+2; i++)
+		para[i] = (char *)0xDEADBEEF;
+
 	s = sender;
 	*s = '\0';
 	for (ch = buffer; *ch == ' '; ch++)

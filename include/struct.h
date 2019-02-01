@@ -180,7 +180,10 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	USERLEN		10
 #define	REALLEN	 	50
 #define SVIDLEN		30
-#define	TOPICLEN	307
+#define MAXTOPICLEN	360	/* absolute maximum permitted topic length (above this = potential desynch) */
+#define MAXAWAYLEN	360	/* absolute maximum permitted away length (above this = potential desynch) */
+#define MAXKICKLEN	360	/* absolute maximum kick length (above this = only cutoff danger) */
+#define MAXQUITLEN	395	/* absolute maximum quit length (above this = only cutoff danger) */
 #define	CHANNELLEN	32
 #define	PASSWDLEN 	48	/* was 20, then 32, now 48. */
 #define	KEYLEN		23
@@ -360,7 +363,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define PROTO_EXTSWHOIS 0x800000	/* extended SWHOIS support */
 #define PROTO_CAP_CHGHOST	0x1000000	/* CAP chghost */
 #define PROTO_CAP_EXTENDED_JOIN	0x2000000	/* CAP extended-join */
-
+#define PROTO_SJSBY		0x4000000	/* SJOIN setby information (TS and nick) */
 /*
  * flags macros.
  */
@@ -460,6 +463,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SupportUMODE2(x)	(CHECKPROTO(x, PROTO_UMODE2))
 #define SupportVL(x)		(CHECKPROTO(x, PROTO_VL))
 #define SupportSJ3(x)		(CHECKPROTO(x, PROTO_SJ3))
+#define SupportSJSBY(x)		(CHECKPROTO(x, PROTO_SJSBY))
 #define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
 #define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
 #define SupportTKLEXT2(x)	(CHECKPROTO(x, PROTO_TKLEXT2))
@@ -475,6 +479,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SetUMODE2(x)		((x)->local->proto |= PROTO_UMODE2)
 #define SetVL(x)		((x)->local->proto |= PROTO_VL)
 #define SetSJ3(x)		((x)->local->proto |= PROTO_SJ3)
+#define SetSJSBY(x)		((x)->local->proto |= PROTO_SJSBY)
 #define SetVHP(x)		((x)->local->proto |= PROTO_VHP)
 #define SetTKLEXT(x)	((x)->local->proto |= PROTO_TKLEXT)
 #define SetTKLEXT2(x)	((x)->local->proto |= PROTO_TKLEXT2)
@@ -709,7 +714,7 @@ struct Server {
 #define M_ALIAS			0x0020
 #define M_RESETIDLE		0x0040
 #define M_VIRUS			0x0080
-#define M_ANNOUNCE		0x0100
+#define M_ANNOUNCE		0x0100 /* deprecated! */
 #define M_OPER			0x0200
 
 
@@ -1128,6 +1133,8 @@ struct _ssloptions {
 	char *ciphers;
 	char *ciphersuites;
 	char *ecdh_curves;
+	char *outdated_protocols;
+	char *outdated_ciphers;
 	long options;
 	int renegotiate_bytes;
 	int renegotiate_timeout;
@@ -1376,6 +1383,9 @@ struct _configitem_offchans {
 #define HM_IPV4 2
 #define HM_IPV6 3
 
+#define SETTER_NICK 0
+#define SETTER_NICK_USER_HOST 1
+
 /*
  * statistics structures
  */
@@ -1534,6 +1544,7 @@ struct DSlink {
 	} value;
 };
 #define AddListItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
+#define AppendListItem(item,list) append_ListItem((ListStruct *)item, (ListStruct **)&list)
 #define DelListItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
 
 #define AddListItemPrio(item,list,prio) add_ListItemPrio((ListStructPrio *)item, (ListStructPrio **)&list, prio)
@@ -1784,10 +1795,10 @@ int throttle_can_connect(aClient *);
 #define MATCH_USE_IDENT             0x0100
 
 typedef enum {
-	PLAINTEXT_POLICY_ALLOW=1,
-	PLAINTEXT_POLICY_WARN=2,
-	PLAINTEXT_POLICY_DENY=3
-} PlaintextPolicy;
+	POLICY_ALLOW=1,
+	POLICY_WARN=2,
+	POLICY_DENY=3
+} Policy;
 
 #define NO_EXIT_CLIENT	99
 

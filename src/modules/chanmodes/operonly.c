@@ -73,7 +73,7 @@ MOD_UNLOAD(noctcp)
 
 DLLFUNC int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[])
 {
-	if ((chptr->mode.extmode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly",cptr,NULL,chptr,NULL))
+	if ((chptr->mode.extmode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join",cptr,NULL,chptr,NULL))
 		return ERR_OPERONLY;
 	return 0;
 }
@@ -81,7 +81,7 @@ DLLFUNC int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *par
 DLLFUNC int operonly_check_ban(aClient *cptr, aChannel *chptr)
 {
 	 if ((chptr->mode.extmode & EXTCMODE_OPERONLY) &&
-		    !ValidatePermissionsForPath("override:ban:operonly",cptr,NULL,NULL,NULL))
+		    !ValidatePermissionsForPath("channel:operonly:ban",cptr,NULL,NULL,NULL))
 		 return HOOK_DENY;
 
 	 return HOOK_CONTINUE;
@@ -97,7 +97,7 @@ DLLFUNC int operonly_topic_allow (aClient *sptr, aChannel *chptr)
 
 DLLFUNC int operonly_require_oper(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (!MyClient(cptr) || ValidatePermissionsForPath("channel:operonly",cptr,NULL,chptr,NULL))
+	if (!MyClient(cptr) || ValidatePermissionsForPath("channel:operonly:set",cptr,NULL,chptr,NULL))
 		return EX_ALLOW;
 
 	if (checkt == EXCHK_ACCESS_ERR)

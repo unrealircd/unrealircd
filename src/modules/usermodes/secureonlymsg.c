@@ -62,7 +62,7 @@ char *secureonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int 
 {
 	if (IsSecureOnlyMsg(target) && !IsServer(sptr) && !IsULine(sptr) && !IsSecureConnect(sptr))
 	{
-		if (ValidatePermissionsForPath("override:message:secureonly",sptr,target,NULL,text))
+		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",sptr,target,NULL,text))
 			return text; /* TODO: this is actually an override */
 
 		/* A numeric is preferred to indicate the user cannot message.
@@ -77,7 +77,7 @@ char *secureonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int 
 	} else
 	if (IsSecureOnlyMsg(sptr) && !IsSecureConnect(target) && !IsULine(target))
 	{
-		if (ValidatePermissionsForPath("override:message:secureonly",sptr,target,NULL,text))
+		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",sptr,target,NULL,text))
 			return text; /* TODO: this is actually an override */
 		
 		/* Similar to above but in this case we are +Z and are trying to message

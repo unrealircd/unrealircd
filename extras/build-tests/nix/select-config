@@ -4,16 +4,22 @@
 # It is not meant to be used by end-users
 #
 
+function fail()
+{
+	echo "select-config failed: $*"
+	exit 1
+}
+
 function build_ssl {
 	DIR="$2"
 	URL="$1/$2.tar.gz"
 	savewd="$PWD"
 	cd ~
 	wget "$URL" || exit 1
-	tar xzvf $DIR.tar.gz
+	tar xzf $DIR.tar.gz
 	cd "$DIR"
-	(./configure --prefix=$HOME/ssl || ./config --prefix=$HOME/ssl -fPIC) || exit 1
-	(make -j2 && make install) || exit 1
+	(./configure --prefix=$HOME/ssl 1>/dev/null 2>&1 || ./config --prefix=$HOME/ssl -fPIC 1>/dev/null 2>&1 ) || fail "build_ssl: configure/config failed"
+	(make -j2 1>/dev/null 2>&1 && make install 1>/dev/null 2>&1) || fail "build_ssl: make failed"
 	cd "$savewd"
 	echo "SSLDIR=$HOME/ssl" >>config.settings
 }
@@ -82,18 +88,18 @@ do
 		fi
 		echo 'REMOTEINC=1' >>config.settings
 		echo "CURLDIR=`pwd`/extras/curl" >>config.settings
-	elif [ "$1" = "libressl-25" ]; then
-		build_ssl https://ftp.openbsd.org/pub/OpenBSD/LibreSSL libressl-2.5.5
-	elif [ "$1" = "libressl-26" ]; then
-		build_ssl https://ftp.openbsd.org/pub/OpenBSD/LibreSSL libressl-2.6.4
 	elif [ "$1" = "libressl-27" ]; then
-		build_ssl https://ftp.openbsd.org/pub/OpenBSD/LibreSSL libressl-2.7.2
+		build_ssl https://ftp.openbsd.org/pub/OpenBSD/LibreSSL libressl-2.7.5
+	elif [ "$1" = "libressl-28" ]; then
+		build_ssl https://ftp.openbsd.org/pub/OpenBSD/LibreSSL libressl-2.8.3
+	elif [ "$1" = "libressl-29" ]; then
+		build_ssl https://ftp.openbsd.org/pub/OpenBSD/LibreSSL libressl-2.9.0
 	elif [ "$1" = "openssl-102" ]; then
-		build_ssl https://www.openssl.org/source openssl-1.0.2o
+		build_ssl https://www.openssl.org/source openssl-1.0.2q
 	elif [ "$1" = "openssl-110" ]; then
-		build_ssl https://www.openssl.org/source openssl-1.1.0h
+		build_ssl https://www.openssl.org/source openssl-1.1.0j
 	elif [ "$1" = "openssl-111" ]; then
-		build_ssl https://www.openssl.org/source openssl-1.1.1-pre7
+		build_ssl https://www.openssl.org/source openssl-1.1.1a
 	else
 		echo "Unknown option $1"
 		exit 1

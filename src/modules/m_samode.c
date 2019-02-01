@@ -76,7 +76,7 @@ CMD_FUNC(m_samode)
 		return 0;
 	}
 
-	if (!ValidatePermissionsForPath("samode", sptr, NULL, chptr, NULL))
+	if (!ValidatePermissionsForPath("sacmd:samode", sptr, NULL, chptr, NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;

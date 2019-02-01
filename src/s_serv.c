@@ -219,8 +219,13 @@ void send_proto(aClient *cptr, ConfigItem_link *aconf)
 	char buf[1024];
 	Isupport *prefix = IsupportFind("PREFIX");
 
+	/* CAUTION: If adding a token to an existing PROTOCTL line below,
+	 *          then ensure that MAXPARA is not reached!
+	 */
+
 	/* First line */
-	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+	sendto_one(cptr, "PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID %s",
+	           iConf.ban_setter_sync ? "SJSBY" : "");
 
 	/* Second line */
 	snprintf(buf, sizeof(buf), "CHANMODES=%s%s,%s%s,%s%s,%s%s PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%ld EXTSWHOIS",
@@ -1031,11 +1036,11 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 #ifdef REMOTEINC_SPECIALCACHE
 		if(has_cached_version(url))
 		{
-			config_warn("Error downloading MOTD file from \"%s\": %s -- using cached version instead.", url, errorbuf);
+			config_warn("Error downloading MOTD file from \"%s\": %s -- using cached version instead.", displayurl(url), errorbuf);
 			filename = unreal_mkcache(url);
 		} else {
 #endif
-			config_error("Error downloading MOTD file from \"%s\": %s", url, errorbuf);
+			config_error("Error downloading MOTD file from \"%s\": %s", displayurl(url), errorbuf);
 
 			/* remove reference to this chunk of memory about to be freed. */
 			motd_download->themotd->motd_download = NULL;

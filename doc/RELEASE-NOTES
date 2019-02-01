@@ -1,47 +1,70 @@
-UnrealIRCd 4.2.1-dev Release Notes
-===============================
+UnrealIRCd 4.2.2-dev Release Notes
+=================================
 
-UnrealIRCd 4.2.0 turned out to be very stable. This 4.2.1 version
-therefore contains only minor changes and feature enhancements.
-
-If you missed the 4.2.0 release, then consider looking at the previous
-release announcement, since it introduced a lot new features:
-https://forums.unrealircd.org/viewtopic.php?f=1&t=8843
-
-Note: there will be no further 4.0.x releases, as 4.2.x is simply the
-successor to 4.0.x. If you missed that announcement, then have a look at:
-https://www.unrealircd.org/docs/FAQ#Questions_about_the_new_4.2.x_series
+This is work in progress...
 
 Enhancements:
-* Support for Argon2 hashed passwords. 
-* New optional module 'antimixedutf8' to combat mixed UTF8 character spam
-  (also called freenode spam) that has been plaguing networks.
-  See: https://www.unrealircd.org/docs/Set_block#set::antimixedutf8
+* With "TOPIC #chan" and "MODE #chan +b" (and +e/+I) you can see who set the
+  topic and bans/exempt/invex. The default is to only show the nick of the
+  person who set the item. This can be changed (not the default) by setting:
+  set { topic-setter nick-user-host; };
+  set { ban-setter nick-user-host; };
+* The 'set by' and 'set at' information for +beI lists are now synchronized
+  when servers link. In the past these bans, exempts and invite exceptions
+  would show up as being set by serv.er.name rather than the actual nick.
+  If you want the OLD behavior you can use set { ban-setter-sync no; };
+* The default maximum topic length has been increased from 307 to 360.
+* You can now set more custom limits. The default settings are shown below:
+  set {
+      topic-length 360; /* maximum: 360 */
+      away-length 307; /* maximum: 360 */
+      quit-length 307; /* maximum: 395 */
+      kick-length 307; /* maximum: 360 */
+  };
+* The message sent to users upon *LINE can now be adjusted completely via
+  set::reject-message::kline and set::reject-message::gline.
+  See https://www.unrealircd.org/docs/Set_block#set::reject-message
+* New set::outdated-tls-policy which describes what to do with clients
+  that use outdated SSL/TLS protocols (eg: TLSv1.0) and ciphers.
+  The default settings are to warn in all cases: users connecting,
+  opers /OPER'ing up and servers linking in. The user will see a message
+  telling them to upgrade their IRC client.
+  This should help with migrating such users, since in the future, say one
+  or two years from now, we would want to change the default to only allow
+  TSLv1.2+ with ciphers that provide Forward Secrecy. Instead of rejecting
+  clients without any error message, this provides a way to warn them and
+  give them some time to upgrade their outdated IRC client.
+  https://www.unrealircd.org/docs/Set_block#set::outdated-tls-policy
 
 Major issues fixed:
-* None
+* None?
 
 Minor issues fixed:
-* By default a user shouldn't be allowed to change to a banned nick,
-  unless (s)he has +hoaq in the channel. This was broken since 4.0.0.
-  This feature can be disabled via set { check-target-nick-bans no; };
+* The advertised "link-security" was incorrectly downgraded from
+  level 2 to 1 if spkifp was used as an authentication method.
+* In case of a crash, the "./unrealircd backtrace" script was not working
+  correctly in non-English environments, leading to less accurate bug reports.
+
+Changed:
+* The noctcp user mode (+T) will now only block CTCP's and not CTCP REPLIES.
+  Also, IRCOps can bypass user mode +T restrictions.
 
 Deprecated:
-* The authentication types 'md5', 'sha1' and 'ripemd160' have been
-  deprecated because they can be cracked at high speeds. They still
-  work, but a warning will be shown on boot and on rehash.
-  Please use 'bcrypt' or (even better) the new 'argon2' type instead:
-  "./unrealircd mkpasswd argon2" or "/mkpasswd argon2 passwd" on IRC.
+* None?
 
-Other changes:
-* A /* comment in the configuration file is now terminated at the
-  first occurance of */, instead of two /* /* requiring two */ */.
-  See https://www.unrealircd.org/docs/FAQ#Nesting_comments
-* In the configuration file you can now use } instead of };
-  Both forms are accepted. There's no need to change if you don't like it.
+Removed:
+* The option to show the topic setter as nick!user@host was previously a
+  config option --with-topicisnuhost and a macro TOPIC_NICK_IS_NUHOST.
+  These are removed, use set::topic-setter "nick-user-host" instead.
 
-Module coders:
-* Priorities in command overrides were reversed (was added in 4.2.0).
+Module coders / IRC protocol:
+* New hook HOOKTYPE_WELCOME (aClient *acptr, int after_numeric): allows you
+  to send a message at very specific places during the initial welcome
+  https://www.unrealircd.org/docs/Dev:Hook_API#HOOKTYPE_WELCOME
+* New Isupport functions: IsupportSet, IsupportSetFmt and IsupportDelByName.
+* New "SJSBY" in PROTOCTL, which is used in SJOIN to synch. extra data:
+  https://www.unrealircd.org/docs/Server_protocol:SJOIN_command (at the end)
+* A new 005 token has been added: QUITLEN. Works similar to KICKLEN.
 
 Future versions:
 * We intend to change the default plaintext oper policy from 'warn' to 'deny'
@@ -50,4 +73,4 @@ Future versions:
 
 ==[ CHANGES IN OLDER RELEASES ]==
 For changes in previous UnrealIRCd releases see doc/RELEASE-NOTES.old or
-https://raw.githubusercontent.com/unrealircd/unrealircd/unreal40/doc/RELEASE-NOTES.old
+https://raw.githubusercontent.com/unrealircd/unrealircd/unreal42/doc/RELEASE-NOTES.old
