@@ -2,7 +2,8 @@
  * based on code from charybdis and ircu.
  * was originally made for tircd and modified to work with u4.
  * - 2018 i <ircd@servx.org>
- * GPLv2
+ * - 2019 Bram Matthys (Syzop) <syzop@vulnscan.org>
+ * License: GPLv2
  */
 
 #include "unrealircd.h"
@@ -56,6 +57,8 @@ struct who_format
 	int umodes;
 	int noumodes;
 	const char *querytype;
+	int show_realhost;
+	int show_ip;
 };
 
 CMD_FUNC(m_whox);
@@ -64,6 +67,7 @@ static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_fo
 static void do_who_on_channel(aClient *sptr, aChannel *chptr,
                               int member, int operspy, struct who_format *fmt);
 static int override_who(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]);
+static int convert_classical_who_request(aClient *sptr, int *parc, char *parv[], char **orig_mask, struct who_format *fmt);
 
 ModuleHeader MOD_HEADER(m_whox)
   = {
@@ -100,15 +104,39 @@ static int override_who(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc
 	return m_whox(cptr, sptr, parc, parv);
 }
 
-/*
-** m_whox
-**	parv[1] = nickname mask list
-**	parv[2] = additional selection flag and format options
-*/
+/** m_whox: standardized "extended" version of WHO.
+ * The good thing about WHOX is that it allows the client to define what
+ * output they want to see. Another good thing is that it is standardized
+ * (ok, actually it isn't... but hey!).
+ * The bad thing is that it's a lot less flexible than the original WHO
+ * we had in UnrealIRCd in 3.2.x and 4.0.x and that the WHOX spec defines
+ * that there are two ways to specify a mask (neither one is logical):
+ * WHO <mask> <flags>
+ * WHO <mask> <flags> <mask2>
+ * In case the latter is present then mask2 overrides the mask
+ * (and the original 'mask' is ignored)
+ * Yes, this indeed damn ugly. It shows (yet again) that they should never
+ * have put the mask before the flags.. what kind of logic was that?
+ * I wonder if the person who invented this also writes C functions like:
+ * int (char *param)func
+ * or types:
+ * cp mode,time=--preserve
+ * or creates configuration files like:
+ * Syzop oper {
+ * 5 maxlogins;
+ * I mean... really...? -- Syzop
+ * So, we will try to abide to the WHOX spec as much as possible but
+ * try to warn our users in case they use the 'original' UnrealIRCd
+ * WHO syntax which was WHO [+-]<flags> <mask>.
+ * Note that we won't catch all cases, but we do our best.
+ * When in doubt, we will assume WHOX so to not break the spec
+ * (which again.. doesn't exist... but hey..)
+ */
 CMD_FUNC(m_whox)
 {
 	static time_t last_used = 0;
 	char *mask;
+	char *orig_mask;
 	char ch; /* Scratch char register */
 	char *p; /* Scratch char pointer */
 	int member;
@@ -119,21 +147,25 @@ CMD_FUNC(m_whox)
 	Membership *lp;
 	aClient *acptr;
 
+	memset(&fmt, 0, sizeof(fmt));
+
 	if (!MyClient(sptr))
 		return 0;
 
-	if ((parc < 2) && (IsPerson(sptr)))
+	if ((parc < 2))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 			me.name, sptr->name, "WHO");
 		return 0;
 	}
 
-	fmt.fields = 0;
-	fmt.matchsel = 0;
-	fmt.umodes = 0;
-	fmt.noumodes = 0;
-	fmt.querytype = NULL;
+	if ((parc > 3) && parv[3])
+		orig_mask = parv[3];
+	else
+		orig_mask = parv[1];
+
+	if (!convert_classical_who_request(sptr, &parc, parv, &orig_mask, &fmt))
+		return -1;
 
 	/* Evaluate the flags now, we consider the second parameter
 	 * as "matchFlags%fieldsToInclude,querytype" */
@@ -154,6 +186,14 @@ CMD_FUNC(m_whox)
 				case 's': fmt.matchsel |= WMATCH_SERVER; continue;
 				case 'a': fmt.matchsel |= WMATCH_ACCOUNT; continue;
 				case 'm': fmt.matchsel |= WMATCH_MODES; continue;
+				case 'R':
+					if (IsOper(sptr))
+						fmt.show_realhost = 1;
+					continue;
+				case 'I':
+					if (IsOper(sptr))
+						fmt.show_ip = 1;
+					continue;
 			}
 		}
 	}
@@ -192,7 +232,7 @@ CMD_FUNC(m_whox)
 			fmt.querytype = "0";
 	}
 
-	strlcpy(maskcopy, parv[1], sizeof maskcopy);
+	strlcpy(maskcopy, orig_mask, sizeof maskcopy);
 	mask = maskcopy;
 
 	collapse(mask);
@@ -258,7 +298,7 @@ CMD_FUNC(m_whox)
 		aChannel *chptr = NULL;
 
 		/* List all users on a given channel */
-		if ((chptr = find_channel(parv[1], NULL)) != NULL)
+		if ((chptr = find_channel(orig_mask, NULL)) != NULL)
 		{
 			if (IsMember(sptr, chptr) || operspy)
 				do_who_on_channel(sptr, chptr, 1, operspy, &fmt);
@@ -305,7 +345,7 @@ CMD_FUNC(m_whox)
 		else
 			do_who(sptr, acptr, NULL, &fmt);
 
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, parv[1]);
+		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, orig_mask);
 		return 0;
 	}
 
@@ -697,9 +737,16 @@ static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_fo
  
 	if (fmt->fields == 0)
 	{
+		char *host;
+		if (fmt->show_realhost)
+			host = acptr->user->realhost;
+		else if (fmt->show_ip)
+			host = GetIP(acptr);
+		else
+			host = GetHost(acptr);
 		sendto_one(sptr, getreply(RPL_WHOREPLY), me.name,
 			sptr->name, chptr ? chptr->chname : "*",
-			acptr->user->username, GetHost(acptr),
+			acptr->user->username, host,
 			hide ? "*" : acptr->user->server,
 			acptr->name, status, hide ? 0 : acptr->hopcount, acptr->info);
 	} else
@@ -764,4 +811,133 @@ static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_fo
  		}
 		sendto_one(sptr, "%s", str);
 	}
+}
+
+/* Yeah, this is fun. Thank you WHOX !!! */
+static int convert_classical_who_request(aClient *sptr, int *parc, char *parv[], char **orig_mask, struct who_format *fmt)
+{
+	char *p;
+	static char pbuf1[256];
+	static char pbuf2[256];
+	int points;
+
+	/* Figure out if the user is doing a 'classical' UnrealIRCd request,
+	 * which can be recognized as follows:
+	 * 1) Always a + or - as 1st character for the 1st parameter.
+	 * 2) Unlikely to have a % (percent sign) in the 2nd parameter
+	 * 3) Unlikely to have a 3rd parameter
+	 * On the other hand WHOX requests are:
+	 * 4) never going to have a '*' or '?' has 2nd parameter
+	 * 5) never going to have a '+' or '-' as 1st character in 2nd parameter
+	 * Additionally, WHOX requests are useless - and thus unlikely -
+	 * to search for a mask mask starting with + or -  except when:
+	 * 6) searching for 'm' (mode)
+	 * 7) or 'r' (info, realname)
+	 * ..for which this would be a meaningful request.
+	 * The end result is that we can do quite some useful heuristics
+	 * except for some corner cases.
+	 */
+	if (((*parv[1] == '+') || (*parv[1] == '-')) &&
+	    (!parv[2] || !strchr(parv[2], '%')) &&
+	    (*parc < 4))
+	{
+		/* Conditions 1-3 of above comment are met, now we deal
+		 * with conditions 4-7.
+		 */
+		if (parv[2] && !strchr(parv[2], '*') && !strchr(parv[2], '?') &&
+		    !strchr(parv[2], '+') && !strchr(parv[2], '-') &&
+		    (strchr(parv[2], 'm') || strchr(parv[2], 'r')))
+		{
+			/* 'WHO +something m" or even
+			 * 'WHO +c #something' (which includes 'm')
+			 * could mean either WHO or WHOX style
+			 */
+		} else {
+			/* If we get here then it's an classical
+			 * UnrealIRCd-style WHO request which has
+			 * the order: WHO <options> <mask>
+			 */
+			char oldrequest[256];
+			snprintf(oldrequest, sizeof(oldrequest), "WHO %s%s%s",
+			         parv[1], parv[2] ? " " : "", parv[2] ? parv[2] : "");
+			if (parv[2])
+			{
+				char *swap = parv[1];
+				parv[1] = parv[2];
+				parv[2] = swap;
+			} else {
+				/* A request like 'WHO +I' or 'WHO +R' */
+				parv[2] = parv[1];
+				parv[1] = "*";
+				parv[3] = NULL;
+				*parc = 3;
+			}
+
+			/* Ok, that was the first step, now we need to convert the
+			 * flags since they have changed a little as well:
+			 * Flag a: user is away                                            << no longer exists
+			 * Flag c <channel>: user is on <channel>                          << no longer exists
+			 * Flag g <gcos/realname>: user has string <gcos> in his/her GCOS  << now called 'r'
+			 * Flag h <host>: user has string <host> in his/her hostname       << no change
+			 * Flag i <ip>: user has string <ip> in his/her IP address         << no change
+			 * Flag m <usermodes>: user has <usermodes> set                    << behavior change
+			 * Flag n <nick>: user has string <nick> in his/her nickname       << no change
+			 * Flag s <server>: user is on server <server>                     << no change
+			 * Flag u <user>: user has string <user> in his/her username       << no change
+			 * Behavior flags:
+			 * Flag M: check for user in channels I am a member of             << no longer exists
+			 * Flag R: show users' real hostnames                              << no change (re-added)
+			 * Flag I: show users' IP addresses                                << no change (re-added)
+			 */
+
+			if (strchr(parv[1], 'a'))
+			{
+				sendnotice(sptr, "WHO request '%s' failed: flag 'a' no longer exists with WHOX.", oldrequest);
+				return 0;
+			}
+			if (strchr(parv[1], 'c'))
+			{
+				sendnotice(sptr, "WHO request '%s' failed: flag 'c' no longer exists with WHOX.", oldrequest);
+				return 0;
+			}
+			for (p = parv[1]; *p; p++)
+			{
+				if (*p == 'g')
+				{
+					*p = 'r';
+					break;
+				}
+			}
+
+			/* "WHO -m xyz" (now: xyz -m) should become "WHO -xyz m"
+			 * Wow, this seems overly complex, but okay...
+			 */
+			points = 0;
+			for (p = parv[2]; *p; p++)
+			{
+				if (*p == '-')
+					points = 1;
+				else if (*p == '+')
+					points = 0;
+				else if (points && (*p == 'm'))
+				{
+					points = 2;
+					break;
+				}
+			}
+			if (points == 2)
+			{
+				snprintf(pbuf1, sizeof(pbuf1), "-%s", parv[1]);
+				parv[1] = pbuf1;
+			}
+
+			if ((*parv[2] == '+') || (*parv[2] == '-'))
+				parv[2] = parv[2]+1; /* strip '+'/'-' prefix, which does not exist in WHOX */
+
+			sendnotice(sptr, "WHO request '%s' changed to match new WHOX syntax: 'WHO %s %s'",
+				oldrequest, parv[1], parv[2]);
+			*orig_mask = parv[1];
+		}
+	}
+	return 1;
 }
