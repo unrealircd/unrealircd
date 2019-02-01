@@ -157,6 +157,8 @@ struct zConfiguration {
 	char *reject_message_too_many_connections;
 	char *reject_message_server_full;
 	char *reject_message_unauthorized;
+	char *reject_message_kline;
+	char *reject_message_gline;
 	int topic_setter;
 	int ban_setter;
 	int ban_setter_sync;

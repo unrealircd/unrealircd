@@ -1543,6 +1543,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->reject_message_too_many_connections = strdup("Too many connections from your IP");
 	i->reject_message_server_full = strdup("This server is full");
 	i->reject_message_unauthorized = strdup("You are not authorized to connect to this server");
+	i->reject_message_kline = strdup("You are not welcome on this server. $bantype: $banreason. Email $klineaddr for more information.");
+	i->reject_message_gline = strdup("You are not welcome on this network. $bantype: $banreason. Email $glineaddr for more information.");
 
 	i->topic_setter = SETTER_NICK;
 	i->ban_setter = SETTER_NICK;
@@ -8132,6 +8134,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					safestrdup(tempiConf.reject_message_server_full, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "unauthorized"))
 					safestrdup(tempiConf.reject_message_unauthorized, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "kline"))
+					safestrdup(tempiConf.reject_message_kline, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "gline"))
+					safestrdup(tempiConf.reject_message_gline, cepp->ce_vardata);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "topic-setter"))
@@ -9161,6 +9167,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "server-full"))
 					;
 				else if (!strcmp(cepp->ce_varname, "unauthorized"))
+					;
+				else if (!strcmp(cepp->ce_varname, "kline"))
+					;
+				else if (!strcmp(cepp->ce_varname, "gline"))
 					;
 				else
 				{

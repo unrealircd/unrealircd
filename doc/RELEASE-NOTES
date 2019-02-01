@@ -13,6 +13,17 @@ Enhancements:
   when servers link. In the past these bans, exempts and invite exceptions
   would show up as being set by serv.er.name rather than the actual nick.
   If you want the OLD behavior you can use set { ban-setter-sync no; };
+* The default maximum topic length has been increased from 307 to 360.
+* You can now set more custom limits. The default settings are shown below:
+  set {
+      topic-length 360; /* maximum: 360 */
+      away-length 307; /* maximum: 360 */
+      quit-length 307; /* maximum: 395 */
+      kick-length 307; /* maximum: 360 */
+  };
+* The message sent to users upon *LINE can now be adjusted completely via
+  set::reject-message::kline and set::reject-message::gline.
+  See https://www.unrealircd.org/docs/Set_block#set::reject-message
 * New set::outdated-tls-policy which describes what to do with clients
   that use outdated SSL/TLS protocols (eg: TLSv1.0) and ciphers.
   The default settings are to warn in all cases: users connecting,
@@ -24,14 +35,6 @@ Enhancements:
   clients without any error message, this provides a way to warn them and
   give them some time to upgrade their outdated IRC client.
   https://www.unrealircd.org/docs/Set_block#set::outdated-tls-policy
-* The default maximum topic length has been increased from 307 to 360.
-* You can now set more custom limits. The default settings are shown below:
-  set {
-      topic-length 360; /* maximum: 360 */
-      away-length 307; /* maximum: 360 */
-      quit-length 307; /* maximum: 395 */
-      kick-length 307; /* maximum: 360 */
-  };
 
 Major issues fixed:
 * None?

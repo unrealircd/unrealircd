@@ -1224,22 +1224,27 @@ extern void send_raw_direct(aClient *user, char *pattern, ...);
  */
 int banned_client(aClient *acptr, char *bantype, char *reason, int global, int noexit)
 {
-	char buf[512], contactbuf[512];
+	char buf[512];
+	char *fmt = global ? iConf.reject_message_gline : iConf.reject_message_kline;
+	const char *vars[6], *values[6];
 
 	if (!MyConnect(acptr))
 		abort(); /* hmm... or be more flexible? */
 
-	if (1)
-	{
-		snprintf(contactbuf, sizeof(contactbuf), "Email %s for more information.",
-		         (global && GLINE_ADDRESS) ? GLINE_ADDRESS : KLINE_ADDRESS);
-	}
-
-	snprintf(buf, sizeof(buf), "You are not welcome on this %s. %s: %s. %s",
-		 global ? "network" : "server",
-		 bantype,
-		 reason,
-		 contactbuf);
+	/* This was: "You are not welcome on this %s. %s: %s. %s" but is now dynamic: */
+	vars[0] = "bantype";
+	values[0] = bantype;
+	vars[1] = "banreason";
+	values[1] = reason;
+	vars[2] = "klineaddr";
+	values[2] = KLINE_ADDRESS;
+	vars[3] = "glineaddr";
+	values[3] = GLINE_ADDRESS ? GLINE_ADDRESS : KLINE_ADDRESS; /* fallback to klineaddr */
+	vars[4] = "ip";
+	values[4] = GetIP(acptr);
+	vars[5] = NULL;
+	values[5] = NULL;
+	buildvarstring(fmt, buf, sizeof(buf), vars, values);
 
 	/* This is a bit extensive but we will send both a YOUAREBANNEDCREEP
 	 * and a notice to the user.
