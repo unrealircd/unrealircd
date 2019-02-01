@@ -618,6 +618,7 @@ CMD_FUNC(blacklist)
 		if (bl->backend_type == BLACKLIST_BACKEND_DNS)
 			blacklist_dns_request(sptr, parv[1], bl);
 	}
+	return 0;
 }
 
 int blacklist_dns_request(aClient *cptr, char *ip, Blacklist *d) // use cptr's IP address if ip == NULL
