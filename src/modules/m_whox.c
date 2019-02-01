@@ -197,30 +197,10 @@ CMD_FUNC(m_whox)
 
 	collapse(mask);
 
-	/* '/who *' */
-	if ((*(mask + 1) == '\0') && (*mask == '*'))
+	if ((ValidatePermissionsForPath("channel:see:who:secret",sptr,NULL,NULL,NULL) &&
+	     ValidatePermissionsForPath("channel:see:whois",sptr,NULL,NULL,NULL)))
 	{
-		if(sptr->user == NULL)
-			return 0;
-
-		if ((lp = sptr->user->channel) != NULL)
-			do_who_on_channel(sptr, lp->chptr, 1, 0, &fmt);
-
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, "*");
-		return 0;
-	}
-
-	if ((ValidatePermissionsForPath("channel:see:who:secret",sptr,NULL,NULL,NULL) ||
-	     ValidatePermissionsForPath("channel:see:whois",sptr,NULL,NULL,NULL)) && (*mask == '!'))
-	{
-		mask++;
 		operspy = 1;
-
-		if (BadPtr(mask))
-		{
-			sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, parv[1]);
-			return 0;
-		}
 	}
 
 	if (fmt.matchsel & WMATCH_MODES)
@@ -278,15 +258,8 @@ CMD_FUNC(m_whox)
 		aChannel *chptr = NULL;
 
 		/* List all users on a given channel */
-		if ((chptr = find_channel(parv[1] + operspy, NULL)) != NULL)
+		if ((chptr = find_channel(parv[1], NULL)) != NULL)
 		{
-			if (operspy)
-			{
-				sendto_snomask_global(SNO_EYES, "*** %s (%s@%s) did a /who on %s",
-					sptr->name, sptr->user->username, GetHost(sptr),
-					chptr->chname);
-			}
-
 			if (IsMember(sptr, chptr) || operspy)
 				do_who_on_channel(sptr, chptr, 1, operspy, &fmt);
 			else if (!SecretChannel(chptr))
