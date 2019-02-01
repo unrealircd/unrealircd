@@ -607,7 +607,7 @@ CMD_FUNC(blacklist)
 		return 0;
 	}
 	
-	if(BLUSER(sptr)->manual){
+	if(BLUSER(sptr) && BLUSER(sptr)->manual){
 		sendnotice(sptr, "[Blacklist] A check is already in progress. Please wait for it to finish.");
 		return 0;
 	}
@@ -839,7 +839,14 @@ void blacklist_miss(aClient *acptr, Blacklist *bl, int reply){
 
 void finish_manual_check(aClient *acptr)
 {
+	if(!acptr)
+		return; /* already disconnected? */
+	
 	BLUser *blu = BLUSER(acptr);
+	
+	if(!blu)
+		return; /* why does it happen? */
+
 	if (blu->refcnt == 0)
 	{
 		if (blu->manual == 1)
@@ -889,14 +896,14 @@ void blacklist_process_result(aClient *acptr, int status, struct hostent *he)
 			{
 				blacklist_hit(acptr, bl, reply);
 				matched = 1;
-				if(!blu->manual)
+				if(!blu || !blu->manual)
 					return; // do not give up with manual scan
 				else
 					blu->manual = 2; // mark the match so we won't display "does not match any blacklist"
 			}
 		}
 	}
-	if(blu->manual && !matched)
+	if(blu && blu->manual && !matched)
 		blacklist_miss(acptr, bl, reply);
 	finish_manual_check(acptr);
 }
