@@ -31,7 +31,7 @@ int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link
 void _send_protoctl_servers(aClient *sptr, int response);
 void _send_server_message(aClient *sptr);
 void _introduce_user(aClient *to, aClient *acptr);
-int _check_deny_version(aClient *cptr, char *version_string, int protocol, char *flags);
+int _check_deny_version(aClient *cptr, char *software, int protocol, char *flags);
 
 static char buf[BUFSIZE];
 
@@ -83,7 +83,7 @@ int m_server_synch(aClient *cptr, ConfigItem_link *conf);
 /** Check deny version { } blocks.
  * NOTE: cptr will always be valid, but all the other values may be NULL or 0 !!!
  */
-int _check_deny_version(aClient *cptr, char *version_string, int protocol, char *flags)
+int _check_deny_version(aClient *cptr, char *software, int protocol, char *flags)
 {
 	ConfigItem_deny_version *vlines;
 	
@@ -851,7 +851,18 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	list_move(&cptr->lclient_node, &lclient_list);
 	list_add(&cptr->special_node, &server_list);
 	if ((Find_uline(cptr->name)))
+	{
+		if (cptr->serv->features.software && !strncmp(cptr->serv->features.software, "UnrealIRCd-", 11))
+		{
+			sendto_realops("\002WARNING:\002 Bad ulines! It seems your server is misconfigured: "
+			               "your ulines { } block is matching an UnrealIRCd server (%s). "
+			               "This is not correct and will cause security issues. "
+			               "ULines should only be added for services! "
+			               "See https://www.unrealircd.org/docs/FAQ#bad-ulines",
+			               cptr->name);
+		}
 		cptr->flags |= FLAGS_ULINE;
+	}
 	(void)find_or_add(cptr->name);
 	if (IsSecure(cptr))
 	{

@@ -121,7 +121,7 @@ void (*broadcast_md_channel)(ModDataInfo *mdi, aChannel *chptr, ModData *md);
 void (*broadcast_md_member)(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md);
 void (*broadcast_md_membership)(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md);
 int (*check_banned)(aClient *cptr);
-int (*check_deny_version)(aClient *cptr, char *version_string, int protocol, char *flags);
+int (*check_deny_version)(aClient *cptr, char *software, int protocol, char *flags);
 void (*broadcast_md_client_cmd)(aClient *except, aClient *sender, aClient *acptr, char *varname, char *value);
 void (*broadcast_md_channel_cmd)(aClient *except, aClient *sender, aChannel *chptr, char *varname, char *value);
 void (*broadcast_md_member_cmd)(aClient *except, aClient *sender, aChannel *chptr, aClient *acptr, char *varname, char *value);

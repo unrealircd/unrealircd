@@ -302,12 +302,12 @@ CMD_FUNC(m_protoctl)
 		}
 		else if ((strncmp(s, "EAUTH=", 6) == 0) && NEW_LINKING_PROTOCOL)
 		{
-			/* Early authorization: EAUTH=servername,protocol,flags,versiontext
+			/* Early authorization: EAUTH=servername,protocol,flags,software
 			 * (Only servername is mandatory, rest is optional)
 			 */
 			int ret;
 			char *p;
-			char *servername = NULL, *protocol = NULL, *flags = NULL, *versiontext = NULL;
+			char *servername = NULL, *protocol = NULL, *flags = NULL, *software = NULL;
 			char buf[512];
 			ConfigItem_link *aconf = NULL;
 
@@ -338,7 +338,7 @@ CMD_FUNC(m_protoctl)
 				flags = strtoken(&p, NULL, ",");
 				if (flags)
 				{
-					versiontext = strtoken(&p, NULL, ",");
+					software = strtoken(&p, NULL, ",");
 				}
 			}
 			
@@ -346,8 +346,8 @@ CMD_FUNC(m_protoctl)
 			if (ret < 0)
 				return ret; /* FLUSH_BUFFER */
 
-			/* note: versiontext, protocol and flags may be NULL */
-			ret = check_deny_version(sptr, versiontext, protocol ? atoi(protocol) : 0, flags);
+			/* note: software, protocol and flags may be NULL */
+			ret = check_deny_version(sptr, software, protocol ? atoi(protocol) : 0, flags);
 			if (ret < 0)
 				return ret; /* FLUSH_BUFFER */
 
@@ -360,6 +360,8 @@ CMD_FUNC(m_protoctl)
 			strlcpy(cptr->name, servername, sizeof(cptr->name));
 			if (protocol)
 				cptr->serv->features.protocol = atoi(protocol);
+			if (software)
+				cptr->serv->features.software = strdup(software);
 			if (!IsHandshake(cptr) && aconf) /* Send PASS early... */
 				sendto_one(sptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		}

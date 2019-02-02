@@ -703,6 +703,7 @@ struct Server {
 	struct {
 		char *chanmodes[4];
 		int protocol;
+		char *software;
 	} features;
 };
 

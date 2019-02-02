@@ -345,6 +345,7 @@ void remove_client_from_list(aClient *cptr)
 		safefree(cptr->serv->features.chanmodes[1]);
 		safefree(cptr->serv->features.chanmodes[2]);
 		safefree(cptr->serv->features.chanmodes[3]);
+		safefree(cptr->serv->features.software);
 		MyFree(cptr->serv);
 #ifdef	DEBUGMODE
 		servs.inuse--;
