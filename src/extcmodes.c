@@ -108,7 +108,7 @@ void extcmodes_check_for_changes(void)
 	
 	IsupportSetValue(isup, chanmodes);
 	
-	if (strcmp(chanmodes, previous_chanmodes))
+	if (*previous_chanmodes && strcmp(chanmodes, previous_chanmodes))
 	{
 		ircd_log(LOG_ERROR, "Channel modes changed at runtime: %s -> %s",
 			previous_chanmodes, chanmodes);
