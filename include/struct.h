@@ -196,6 +196,8 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SIDLEN           3
 #define SWHOISLEN	256
 #define UMODETABLESZ (sizeof(long) * 8)
+#define MAXCCUSERS		20 /* Maximum for set::anti-flood::target-limit::max-concurrent-conversations */
+#define MAXTARGETS		20 /* this will be redesigned in a later commit, placeholder for now */
 /*
  * Watch it - Don't change this unless you also change the ERR_TOOMANYWATCH
  * and PROTOCOL_SUPPORTED settings.
@@ -868,7 +870,7 @@ struct LocalClient {
 	TS   last;		/* last time a RESETIDLE message was received */
 	TS   nexttarget;	/* next time that a new target will be allowed (msg/notice/invite) */
  	TS   nextnick;		/* Time the next nick change will be allowed */
-	u_char targets[MAXTARGETS];	/* hash values of targets */
+	u_char targets[MAXCCUSERS];	/* hash values of targets */
 	char buffer[BUFSIZE];	/* Incoming message buffer */
 	short lastsq;		/* # of 2k blocks when sendqueued called last */
 	dbuf sendQ;		/* Outgoing message queue--if socket full */

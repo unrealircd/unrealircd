@@ -1549,6 +1549,9 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->topic_setter = SETTER_NICK;
 	i->ban_setter = SETTER_NICK;
 	i->ban_setter_sync = 1;
+
+	i->max_concurrent_conversations_users = 10;
+	i->max_concurrent_conversations_new_user_every = 15;
 }
 
 static void make_default_logblock(void)
@@ -7891,6 +7894,20 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.throttle_count = cnt;
 					tempiConf.throttle_period = period;
 				}
+				if (!strcmp(cepp->ce_varname, "max-concurrent-conversations"))
+				{
+					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					{
+						if (!strcmp(ceppp->ce_varname, "users"))
+						{
+							tempiConf.max_concurrent_conversations_users = atoi(ceppp->ce_vardata);
+						} else
+						if (!strcmp(ceppp->ce_varname, "new-user-every"))
+						{
+							tempiConf.max_concurrent_conversations_new_user_every = config_checkval(ceppp->ce_vardata, CFG_TIME);
+						}
+					}
+				}
 				else
 				{
 					for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
@@ -8576,6 +8593,42 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "max-concurrent-conversations"))
+				{
+					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					{
+						CheckNull(ceppp);
+						if (!strcmp(ceppp->ce_varname, "users"))
+						{
+							int v = atoi(ceppp->ce_vardata);
+							if ((v < 1) || (v > MAXCCUSERS))
+							{
+								config_error("%s:%i: set::anti-flood::max-concurrent-conversations::users: "
+								             "value should be between 1 and %d",
+								             ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, MAXCCUSERS);
+								errors++;
+							}
+						} else
+						if (!strcmp(ceppp->ce_varname, "new-user-every"))
+						{
+							long v = config_checkval(ceppp->ce_vardata, CFG_TIME);
+							if ((v < 1) || (v > 120))
+							{
+								config_error("%s:%i: set::anti-flood::max-concurrent-conversations::new-user-every: "
+								             "value should be between 1 and 120 seconds",
+								             ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum);
+								errors++;
+							}
+						} else
+						{
+							config_error_unknownopt(ceppp->ce_fileptr->cf_filename,
+								ceppp->ce_varlinenum, "set::anti-flood",
+								ceppp->ce_varname);
+							errors++;
+						}
+					}
+					continue; /* required here, due to checknull directly below */
+				}
 				CheckNull(cepp);
 				if (!strcmp(cepp->ce_varname, "unknown-flood-bantime"))
 				{

@@ -116,6 +116,8 @@ struct zConfiguration {
 	long away_period;
 	unsigned char nick_count;
 	long nick_period;
+	unsigned char max_concurrent_conversations_users;
+	unsigned char max_concurrent_conversations_new_user_every;
 	int ident_connect_timeout;
 	int ident_read_timeout;
 	long default_bantime;

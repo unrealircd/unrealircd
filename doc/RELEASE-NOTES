@@ -24,6 +24,12 @@ Enhancements:
 * The message sent to users upon *LINE can now be adjusted completely via
   set::reject-message::kline and set::reject-message::gline.
   See https://www.unrealircd.org/docs/Set_block#set::reject-message
+* New set::anti-flood::max-concurrent-conversations which configures the
+  maximum number of conversations a user can have with other users at the
+  same time. Until now this was hardcoded at limiting /MSG and /INVITE to
+  20 different users in a 15 second period. The new default is 10 users,
+  which serves as a protection measure against spambots.
+  See https://www.unrealircd.org/docs/Set_block#maxcc for more details.
 * New set::outdated-tls-policy which describes what to do with clients
   that use outdated SSL/TLS protocols (eg: TLSv1.0) and ciphers.
   The default settings are to warn in all cases: users connecting,

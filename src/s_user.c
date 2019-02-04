@@ -279,60 +279,74 @@ int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int pa
 	return HUNTED_PASS;
 }
 
-/*
-** check_for_target_limit
-**
-** Return Values:
-** True(1) == too many targets are addressed
-** False(0) == ok to send message
-**
-*/
-int  check_for_target_limit(aClient *sptr, void *target, const char *name)
+/** Convert a target pointer to an 8 bit hash, used for target limiting. */
+unsigned char hash_target(void *target)
 {
-#ifndef _WIN32			/* This is not windows compatible */
+	unsigned int v = (unsigned long)target;
+	/* ircu does >> 16 and 8 but since our sizeof(aClient) is
+	 * towards 512 (and hence the alignment), that bit is useless.
+	 * So we do >> 17 and 9.
+	 */
+	return (unsigned char)((v >> 17) ^ (v >> 9));
+}
+
+/** check_for_target_limit
+ * @param sptr   The client.
+ * @param target The target client
+ * @param name   The name of the target client (used in the error message)
+ * @retval Returns 1 if too many targets were addressed (do not send!), 0 if ok to send.
+ */
+int check_for_target_limit(aClient *sptr, void *target, const char *name)
+{
 	u_char *p;
-#ifndef __alpha
-	u_int tmp = ((u_int)(intptr_t)target & 0xffff00) >> 8;
-#else
-	u_int tmp = ((u_long)target & 0xffff00) >> 8;
-#endif
-	u_char hash = (tmp * tmp) >> 12;
+	u_char hash = hash_target(target);
+	int i;
 
 	if (ValidatePermissionsForPath("immune:target-limit",sptr,NULL,NULL,NULL))
 		return 0;
 	if (sptr->local->targets[0] == hash)
 		return 0;
 
-	for (p = sptr->local->targets; p < &sptr->local->targets[MAXTARGETS - 1];)
-		if (*++p == hash)
+	for (i = 1; i < iConf.max_concurrent_conversations_users; i++)
+	{
+		if (sptr->local->targets[i] == hash)
 		{
-			/* move targethash to first position... */
-			memmove(&sptr->local->targets[1], &sptr->local->targets[0],
-			    p - sptr->local->targets);
+			/* Move this target hash to the first position */
+			memmove(&sptr->local->targets[1], &sptr->local->targets[0], i);
 			sptr->local->targets[0] = hash;
 			return 0;
 		}
+	}
+
+	ircd_log(LOG_ERROR, "sptr->local->nexttarget: %ld", sptr->local->nexttarget);
 
 	if (TStime() < sptr->local->nexttarget)
 	{
-		sptr->local->since += TARGET_DELAY; /* lag them up */
-		sptr->local->nexttarget += TARGET_DELAY;
+		/* Target limit reached */
+		sptr->local->nexttarget += 2; /* punish them some more */
+		sptr->local->since += 2; /* lag them up as well */
+
 		sendto_one(sptr, err_str(ERR_TARGETTOOFAST), me.name, sptr->name,
 			name, sptr->local->nexttarget - TStime());
 
 		return 1;
 	}
 
-	if (TStime() > sptr->local->nexttarget + TARGET_DELAY*MAXTARGETS)
+	/* If not set yet or in the very past, then adjust it.
+	 * This is so sptr->local->nexttarget=0 will become sptr->local->nexttarget=currenttime-...
+	 */
+	if (TStime() > sptr->local->nexttarget +
+	    (iConf.max_concurrent_conversations_users * iConf.max_concurrent_conversations_new_user_every))
 	{
-		sptr->local->nexttarget = TStime() - TARGET_DELAY*MAXTARGETS;
+		sptr->local->nexttarget = TStime() - ((iConf.max_concurrent_conversations_users-1) * iConf.max_concurrent_conversations_new_user_every);
 	}
 
 	sptr->local->nexttarget += TARGET_DELAY;
 
-	memmove(&sptr->local->targets[1], &sptr->local->targets[0], MAXTARGETS - 1);
+	/* Add the new target (first move the rest, then add us at position 0 */
+	memmove(&sptr->local->targets[1], &sptr->local->targets[0], iConf.max_concurrent_conversations_users - 1);
 	sptr->local->targets[0] = hash;
-#endif
+
 	return 0;
 }
 

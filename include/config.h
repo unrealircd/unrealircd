@@ -215,14 +215,6 @@
  */
 #define NickServ "NickServ"
 
-/*
- * How many open targets can one nick have for messaging nicks and
- * inviting them?
- */
-
-#define MAXTARGETS		20
-#define TARGET_DELAY		15
-
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
 /* You shouldn't change anything below this line, unless absolutely needed. */
