@@ -94,6 +94,7 @@ void IsupportDelByName(const char *name)
 }
 
 extern void set_isupport_extban(void);
+extern void set_isupport_targmax(void);
 
 /**
  * Initializes the builtin isupport tokens.
@@ -123,7 +124,6 @@ void isupport_init(void)
 		IsupportDelByName("WATCHOPTS");
 	IsupportSetFmt(NULL, "WATCH", "%d", MAXWATCH);
 	IsupportSet(NULL, "WALLCHOPS", NULL);
-	IsupportSetFmt(NULL, "MAXTARGETS", "%d", MAXTARGETS);
 	IsupportSetFmt(NULL, "AWAYLEN", "%d", iConf.away_length);
 	IsupportSetFmt(NULL, "KICKLEN", "%d", iConf.kick_length);
 	IsupportSetFmt(NULL, "TOPICLEN", "%d", iConf.topic_length);
@@ -143,6 +143,7 @@ void isupport_init(void)
 		IsupportDelByName("UHNAMES");
 	IsupportSet(NULL, "DEAF", "d");
 	set_isupport_extban(); /* EXTBAN=xyz */
+	set_isupport_targmax(); /* TARGMAX=... */
 }
 
 /**

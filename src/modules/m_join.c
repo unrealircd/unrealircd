@@ -342,6 +342,8 @@ CMD_FUNC(_do_join)
 	int  i, flags = 0, ishold;
 	char *p = NULL, *p2 = NULL;
 	aTKline *tklban;
+	int ntargets = 0;
+	int maxtargets = max_targets_for_command("JOIN");
 
 #define RET(x) { bouncedtimes--; return x; }
 
@@ -371,6 +373,12 @@ CMD_FUNC(_do_join)
 	for (i = 0, name = strtoken(&p, parv[1], ","); name;
 	    name = strtoken(&p, NULL, ","))
 	{
+		if (MyClient(sptr) && (++ntargets > maxtargets))
+		{
+			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+			    me.name, sptr->name, name, maxtargets, "JOIN");
+			break;
+		}
 		/* pathological case only on longest channel name.
 		   ** If not dealt with here, causes desynced channel ops
 		   ** since ChannelExists() doesn't see the same channel

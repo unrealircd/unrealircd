@@ -447,7 +447,7 @@ static char *replies[] = {
 /* 404    ERR_CANNOTSENDTOCHAN */ ":%s 404 %s %s :%s (%s)",
 /* 405    ERR_TOOMANYCHANNELS */ ":%s 405 %s %s :You have joined too many channels",
 /* 406    ERR_WASNOSUCHNICK */ ":%s 406 %s %s :There was no such nickname",
-/* 407    ERR_TOOMANYTARGETS */ ":%s 407 %s %s :Duplicate recipients. No message delivered",
+/* 407    ERR_TOOMANYTARGETS */ ":%s 407 %s %s :Too many targets. The maximum is %d for %s.",
 /* 408 */ NULL, /* rfc2812, bahamut */
 /* 409    ERR_NOORIGIN */ ":%s 409 %s :No origin specified",
 /* 410    ERR_INVALIDCAPCMD */ ":%s 410 %s %s :Invalid CAP subcommand", 

@@ -74,6 +74,8 @@ CMD_FUNC(m_kick)
 	Membership *lp;
 	Hook *h;
 	int ret;
+	int ntargets = 0;
+	int maxtargets = max_targets_for_command("KICK");
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
@@ -111,6 +113,14 @@ CMD_FUNC(m_kick)
 		for (; (user = strtoken(&p2, parv[2], ",")); parv[2] = NULL)
 		{
 			long who_flags;
+
+			if (MyClient(sptr) && (++ntargets > maxtargets))
+			{
+				sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+				    me.name, sptr->name, user, maxtargets, "KICK");
+				break;
+			}
+
 			if (!(who = find_chasing(sptr, user, &chasing)))
 				continue;	/* No such user left! */
 			if (!who->user)
@@ -316,8 +326,6 @@ CMD_FUNC(m_kick)
 				sendto_one(sptr,
 				    err_str(ERR_USERNOTINCHANNEL),
 				    me.name, sptr->name, user, name);
-			if (MyClient(cptr))
-				break;
 		}		/* loop on parv[2] */
 		if (MyClient(cptr))
 			break;

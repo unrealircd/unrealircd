@@ -167,11 +167,14 @@ int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 	aClient *acptr, *srvptr;
 	char *s;
 	aChannel *chptr;
-	char *nick, *server, *p, *cmd, *p2, *pc, *text, *newcmd;
+	char *nick, *server, *p, *p2, *pc, *text, *newcmd;
 	int  cansend = 0;
 	int  prefix = 0;
 	char pfixchan[CHANNELLEN + 4];
 	int ret;
+	int ntargets = 0;
+	char *cmd = notice ? "NOTICE" : "PRIVMSG";
+	int maxtargets = max_targets_for_command(cmd);
 
 	/*
 	 * Reasons why someone can't send to a channel
@@ -192,7 +195,6 @@ int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 	if (IsHandshake(sptr))
 		return 0;
 
-	cmd = notice ? MSG_NOTICE : MSG_PRIVATE;
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NORECIPIENT),
@@ -211,8 +213,13 @@ int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 		
 	for (p = NULL, nick = strtoken(&p, parv[1], ","); nick; nick = strtoken(&p, NULL, ","))
 	{
+		if (MyClient(sptr) && (++ntargets > maxtargets))
+		{
+			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+			    me.name, sptr->name, nick, maxtargets, cmd);
+			break;
+		}
 		/* The nicks "ircd" and "irc" are special (and reserved) */
-
 		if (!strcasecmp(nick, "ircd") && MyClient(sptr))
 			return 0;
 

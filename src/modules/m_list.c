@@ -80,6 +80,8 @@ CMD_FUNC(m_list)
 	TS   chantimemin, chantimemax;
 	TS   topictimemin, topictimemax;
 	Link *yeslist = NULL, *nolist = NULL;
+	int ntargets = 0;
+	int maxtargets = max_targets_for_command("LIST");
 
 	static char *usage[] = {
 		"   Usage: /LIST <options>",
@@ -146,7 +148,12 @@ CMD_FUNC(m_list)
 	for (name = strtoken(&p, parv[1], ","); name && !error;
 	    name = strtoken(&p, NULL, ","))
 	{
-
+		if (MyClient(sptr) && (++ntargets > maxtargets))
+		{
+			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+			    me.name, sptr->name, name, maxtargets, "LIST");
+			break;
+		}
 		switch (*name)
 		{
 		  case '<':

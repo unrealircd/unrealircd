@@ -70,6 +70,8 @@ CMD_FUNC(m_kill)
 	char *user, *path, *killer, *nick, *p, *s;
 	int  chasing = 0, kcount = 0;
 	Hook *h;
+	int ntargets = 0;
+	int maxtargets = max_targets_for_command("KILL");
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
@@ -108,6 +110,13 @@ CMD_FUNC(m_kill)
 	for (p = NULL, nick = strtoken(&p, user, ","); nick;
 	    nick = strtoken(&p, NULL, ","))
 	{
+		if (MyClient(sptr) && (++ntargets > maxtargets))
+		{
+			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+			    me.name, sptr->name, nick, maxtargets, "KILL");
+			break;
+		}
+
 		acptr = find_person(nick, NULL);
 
 		/* If a local user issued the /KILL then we will "chase" the user.

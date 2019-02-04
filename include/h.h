@@ -803,3 +803,7 @@ extern void close_std_descriptors(void);
 extern int banned_client(aClient *acptr, char *bantype, char *reason, int global, int noexit);
 extern char *mystpcpy(char *dst, const char *src);
 extern size_t add_sjsby(char *buf, char *setby, TS seton);
+extern MaxTarget *findmaxtarget(char *cmd);
+extern void setmaxtargets(char *cmd, int limit);
+extern void freemaxtargets(void);
+extern int max_targets_for_command(char *cmd);

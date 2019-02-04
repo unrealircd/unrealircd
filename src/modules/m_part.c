@@ -66,6 +66,8 @@ CMD_FUNC(m_part)
 	char *comment;
 	int n;
 	Hook *h;
+	int ntargets = 0;
+	int maxtargets = max_targets_for_command("PART");
 	
 	if (parc < 2 || parv[1][0] == '\0')
 	{
@@ -99,6 +101,13 @@ CMD_FUNC(m_part)
 
 	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
+		if (MyClient(sptr) && (++ntargets > maxtargets))
+		{
+			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+			    me.name, sptr->name, name, maxtargets, "PART");
+			break;
+		}
+
 		chptr = get_channel(sptr, name, 0);
 		if (!chptr)
 		{

@@ -96,7 +96,7 @@ CMD_FUNC(m_names)
 			sendto_realops("names abuser %s %s",
 			    get_client_name(sptr, FALSE), para);
 			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
-			    me.name, sptr->name, "NAMES");
+			    me.name, sptr->name, s+1, 1, "NAMES");
 			return 0;
 		}
 	}

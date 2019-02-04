@@ -64,6 +64,8 @@ CMD_FUNC(m_sajoin)
 	aClient *acptr;
 	char jbuf[BUFSIZE];
 	int did_anything = 0;
+	int ntargets = 0;
+	int maxtargets = max_targets_for_command("SAJOIN");
 
 	if (parc < 3) 
         {
@@ -97,6 +99,13 @@ CMD_FUNC(m_sajoin)
 		{
 			aChannel *chptr;
 			Membership *lp;
+
+			if (++ntargets > maxtargets)
+			{
+				sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+				    me.name, sptr->name, name, maxtargets, "SAJOIN");
+				break;
+			}
 
 			if (strlen(name) > CHANNELLEN)
 				name[CHANNELLEN] = 0;

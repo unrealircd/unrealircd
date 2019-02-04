@@ -67,8 +67,10 @@ CMD_FUNC(m_whois)
 	aChannel *chptr;
 	char *nick, *tmp, *name;
 	char *p = NULL;
-	int  found, len, mlen, cnt = 0;
+	int  found, len, mlen;
 	char querybuf[BUFSIZE];
+	int ntargets = 0;
+	int maxtargets = max_targets_for_command("WHOIS");
 
 	if (parc < 2)
 	{
@@ -90,8 +92,12 @@ CMD_FUNC(m_whois)
 	{
 		unsigned char invis, showchannel, member, wilds, hideoper; /* <- these are all boolean-alike */
 
-		if (++cnt > MAXTARGETS)
+		if (MyClient(sptr) && (++ntargets > maxtargets))
+		{
+			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+			    me.name, sptr->name, nick, maxtargets, "WHOIS");
 			break;
+		}
 
 		found = 0;
 		/* We do not support "WHOIS *" */

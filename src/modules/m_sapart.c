@@ -71,6 +71,8 @@ CMD_FUNC(m_sapart)
 	char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
 	char commentx[512];
 	char jbuf[BUFSIZE];
+	int ntargets = 0;
+	int maxtargets = max_targets_for_command("SAPART");
 
 	if (parc < 3)
         {
@@ -99,6 +101,12 @@ CMD_FUNC(m_sapart)
 		for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p,
 			NULL, ","))
 		{
+			if (++ntargets > maxtargets)
+			{
+				sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+				    me.name, sptr->name, name, maxtargets, "SAPART");
+				break;
+			}
 			if (!(chptr = get_channel(acptr, name, 0)))
 			{
 				sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, sptr->name,

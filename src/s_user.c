@@ -681,3 +681,111 @@ int add_silence(aClient *sptr, char *mask, int senderr)
 	return 0;
 }
 
+static MaxTarget *maxtargets = NULL; /**< For set::max-targets-per-command configuration */
+
+static void maxtarget_add_sorted(MaxTarget *n)
+{
+	MaxTarget *e;
+
+	if (!maxtargets)
+	{
+		maxtargets = n;
+		return;
+	}
+
+	for (e = maxtargets; e; e = e->next)
+	{
+		if (strcmp(n->cmd, e->cmd) < 0)
+		{
+			/* Insert us before */
+			if (e->prev)
+				e->prev->next = n;
+			else
+				maxtargets = n; /* new head */
+			n->prev = e->prev;
+
+			n->next = e;
+			e->prev = n;
+			return;
+		}
+		if (!e->next)
+		{
+			/* Append us at end */
+			e->next = n;
+			n->prev = e;
+			return;
+		}
+	}
+}
+
+/** Find a maxtarget structure for a cmd (internal) */
+MaxTarget *findmaxtarget(char *cmd)
+{
+	MaxTarget *m;
+
+	for (m = maxtargets; m; m = m->next)
+		if (!strcasecmp(m->cmd, cmd))
+			return m;
+	return NULL;
+}
+
+/** Set a maximum targets per command restriction */
+void setmaxtargets(char *cmd, int limit)
+{
+	MaxTarget *m = findmaxtarget(cmd);
+	if (!m)
+	{
+		char cmdupper[64], *i, *o;
+		if (strlen(cmd) > 63)
+			cmd[63] = '\0';
+		for (i=cmd,o=cmdupper; *i; i++)
+			*o++ = toupper(*i);
+		*o = '\0';
+		m = MyMallocEx(sizeof(MaxTarget));
+		m->cmd = strdup(cmdupper);
+		maxtarget_add_sorted(m);
+	}
+	m->limit = limit;
+}
+
+/** Free all set::max-targets-per-command configuration (internal) */
+void freemaxtargets(void)
+{
+	MaxTarget *m, *m_next;
+
+	for (m = maxtargets; m; m = m_next)
+	{
+		m_next = m->next;
+		safefree(m->cmd);
+	}
+	maxtargets = NULL;
+}
+
+/** Return the maximum number of targets permitted for a command */
+int max_targets_for_command(char *cmd)
+{
+	MaxTarget *m = findmaxtarget(cmd);
+	if (m)
+		return m->limit;
+	return 1; /* default to 1 */
+}
+
+void set_isupport_targmax(void)
+{
+	char buf[512], tbuf[64];
+	MaxTarget *m;
+
+	*buf = '\0';
+	for (m = maxtargets; m; m = m->next)
+	{
+		if (m->limit == MAXTARGETS_MAX)
+			snprintf(tbuf, sizeof(tbuf), "%s:", m->cmd);
+		else
+			snprintf(tbuf, sizeof(tbuf), "%s:%d", m->cmd, m->limit);
+
+		if (*buf)
+			strlcat(buf, ",", sizeof(buf));
+		strlcat(buf, tbuf, sizeof(buf));
+	}
+	IsupportSet(NULL, "TARGMAX", buf);
+}

@@ -59,26 +59,28 @@ MOD_UNLOAD(m_dccallow)
  */
 CMD_FUNC(m_dccallow)
 {
-Link *lp;
-char *p, *s;
-aClient *acptr;
-int didlist = 0, didhelp = 0, didanything = 0;
-char **ptr;
-static char *dcc_help[] =
-{
-	"/DCCALLOW [<+|->nick[,<+|->nick, ...]] [list] [help]",
-	"You may allow DCCs of files which are otherwise blocked by the IRC server",
-	"by specifying a DCC allow for the user you want to recieve files from.",
-	"For instance, to allow the user Bob to send you file.exe, you would type:",
-	"/DCCALLOW +bob",
-	"and Bob would then be able to send you files. Bob will have to resend the file",
-	"if the server gave him an error message before you added him to your allow list.",
-	"/DCCALLOW -bob",
-	"Will do the exact opposite, removing him from your dcc allow list.",
-	"/dccallow list",
-	"Will list the users currently on your dcc allow list.",
-	NULL
-};
+	Link *lp;
+	char *p, *s;
+	aClient *acptr;
+	int didlist = 0, didhelp = 0, didanything = 0;
+	char **ptr;
+	int ntargets = 0;
+	int maxtargets = max_targets_for_command("WHOIS");
+	static char *dcc_help[] =
+	{
+		"/DCCALLOW [<+|->nick[,<+|->nick, ...]] [list] [help]",
+		"You may allow DCCs of files which are otherwise blocked by the IRC server",
+		"by specifying a DCC allow for the user you want to recieve files from.",
+		"For instance, to allow the user Bob to send you file.exe, you would type:",
+		"/DCCALLOW +bob",
+		"and Bob would then be able to send you files. Bob will have to resend the file",
+		"if the server gave him an error message before you added him to your allow list.",
+		"/DCCALLOW -bob",
+		"Will do the exact opposite, removing him from your dcc allow list.",
+		"/dccallow list",
+		"Will list the users currently on your dcc allow list.",
+		NULL
+	};
 
 	if (!MyClient(sptr))
 		return 0;
@@ -92,6 +94,12 @@ static char *dcc_help[] =
 
 	for (p = NULL, s = strtoken(&p, parv[1], ", "); s; s = strtoken(&p, NULL, ", "))
 	{
+		if (MyClient(sptr) && (++ntargets > maxtargets))
+		{
+			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+			    me.name, sptr->name, s, maxtargets, "DCCALLOW");
+			break;
+		}
 		if (*s == '+')
 		{
 			didanything = 1;

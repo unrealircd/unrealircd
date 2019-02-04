@@ -197,7 +197,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SWHOISLEN	256
 #define UMODETABLESZ (sizeof(long) * 8)
 #define MAXCCUSERS		20 /* Maximum for set::anti-flood::target-limit::max-concurrent-conversations */
-#define MAXTARGETS		20 /* this will be redesigned in a later commit, placeholder for now */
 /*
  * Watch it - Don't change this unless you also change the ERR_TOOMANYWATCH
  * and PROTOCOL_SUPPORTED settings.
@@ -1769,6 +1768,14 @@ void init_throttling_hash();
 struct ThrottlingBucket *find_throttling_bucket(aClient *);
 void add_throttling_bucket(aClient *);
 int throttle_can_connect(aClient *);
+
+typedef struct _maxtargets MaxTarget;
+struct _maxtargets {
+	MaxTarget *prev, *next;
+	char *cmd;
+	int limit;
+};
+#define MAXTARGETS_MAX	1000000 /* used for 'max' */
 
 #define VERIFY_OPERCOUNT(clnt,tag) { if (IRCstats.operators < 0) verify_opercount(clnt,tag); } while(0)
 

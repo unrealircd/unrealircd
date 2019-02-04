@@ -1552,6 +1552,33 @@ void config_setdefaultsettings(aConfiguration *i)
 
 	i->max_concurrent_conversations_users = 10;
 	i->max_concurrent_conversations_new_user_every = 15;
+
+	/* TARGMAX defaults */
+	setmaxtargets("PRIVMSG", 4);
+	setmaxtargets("NOTICE", 1);
+	setmaxtargets("NAMES", 1); // >1 is not supported
+	setmaxtargets("WHOIS", 1);
+	setmaxtargets("WHOWAS", 1); // >1 is not supported
+	setmaxtargets("KICK", 4);
+	setmaxtargets("LIST", MAXTARGETS_MAX);
+	setmaxtargets("JOIN", MAXTARGETS_MAX);
+	setmaxtargets("PART", MAXTARGETS_MAX);
+	setmaxtargets("SAJOIN", MAXTARGETS_MAX);
+	setmaxtargets("SAPART", MAXTARGETS_MAX);
+	setmaxtargets("KILL", MAXTARGETS_MAX);
+	setmaxtargets("DCCALLOW", MAXTARGETS_MAX);
+	/* The following 3 are space-separated (and actually the previous
+	 * mentioned DCCALLOW is both space-and-comma separated).
+	 * It seems most IRCd's don't list space-separated targets list
+	 * in TARGMAX... On the other hand, why not? It says nowhere in
+	 * the TARGMAX specification that it's only for comma-separated
+	 * commands. So let's be nice and consistent and inform the
+	 * clients about the limits for such commands as well:
+	 */
+	 setmaxtargets("USERHOST", MAXTARGETS_MAX); // not configurable
+	 setmaxtargets("USERIP", MAXTARGETS_MAX); // not configurable
+	 setmaxtargets("ISON", MAXTARGETS_MAX); // not configurable
+	 setmaxtargets("WATCH", MAXTARGETS_MAX); // not configurable
 }
 
 static void make_default_logblock(void)
@@ -2403,7 +2430,9 @@ void	config_rehash()
 		if (iConf.modes_on_join.extparams[i])
 			free(iConf.modes_on_join.extparams[i]);
 	}
-	
+
+	freemaxtargets();
+
 	/*
 	  reset conf_files -- should this be in its own function? no, because
 	  it's only used here
@@ -7812,6 +7841,18 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "maxdccallow")) {
 			tempiConf.maxdccallow = atoi(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "max-targets-per-command"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				int v;
+				if (!strcmp(cepp->ce_vardata, "max"))
+					v = MAXTARGETS_MAX;
+				else
+					v = atoi(cepp->ce_vardata);
+				setmaxtargets(cepp->ce_varname, v);
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "network-name")) {
 			char *tmp;
 			safestrdup(tempiConf.network.x_ircnetwork, cep->ce_vardata);
@@ -8432,6 +8473,57 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "maxdccallow")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, maxdccallow, "maxdccallow");
+		}
+		else if (!strcmp(cep->ce_varname, "max-targets-per-command"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				CheckNull(cepp);
+				if (!strcasecmp(cepp->ce_varname, "NAMES") || !strcasecmp(cepp->ce_varname, "WHOWAS"))
+				{
+					if (atoi(cepp->ce_vardata) != 1)
+					{
+						config_error("%s:%i: set::max-targets-per-command::%s: "
+						             "this command is hardcoded at a maximum of 1 "
+						             "and cannot be configured to accept more.",
+						             cepp->ce_fileptr->cf_filename,
+						             cepp->ce_varlinenum,
+						             cepp->ce_varname);
+						errors++;
+					}
+				} else
+				if (!strcasecmp(cepp->ce_varname, "USERHOST") ||
+				    !strcasecmp(cepp->ce_varname, "USERIP") ||
+				    !strcasecmp(cepp->ce_varname, "ISON") ||
+				    !strcasecmp(cepp->ce_varname, "WATCH"))
+				{
+					if (strcmp(cepp->ce_vardata, "max"))
+					{
+						config_error("%s:%i: set::max-targets-per-command::%s: "
+						             "this command is hardcoded at a maximum of 'max' "
+						             "and cannot be changed. This because it is "
+						             "highly discouraged to change it.",
+						             cepp->ce_fileptr->cf_filename,
+						             cepp->ce_varlinenum,
+						             cepp->ce_varname);
+						errors++;
+					}
+				}
+				/* Now check the value syntax in general: */
+				if (strcmp(cepp->ce_vardata, "max")) /* anything other than 'max'.. */
+				{
+					int v = atoi(cepp->ce_vardata);
+					if ((v < 1) || (v > 20))
+					{
+						config_error("%s:%i: set::max-targets-per-command::%s: "
+						             "value should be 1-20 or 'max'",
+						             cepp->ce_fileptr->cf_filename,
+						             cepp->ce_varlinenum,
+						             cepp->ce_varname);
+						errors++;
+					}
+				}
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "network-name")) {
 			char *p;

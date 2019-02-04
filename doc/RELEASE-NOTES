@@ -30,6 +30,14 @@ Enhancements:
   20 different users in a 15 second period. The new default is 10 users,
   which serves as a protection measure against spambots.
   See https://www.unrealircd.org/docs/Set_block#maxcc for more details.
+* New set::max-targets-per-command which configures the maximum number
+  of targets accepted for a command, eg /MSG nick1,nick2,nick3,nick4 hi.
+  Also changed the following defaults (previously hardcoded):
+  * PRIVMSG from 20 to 4 targets, to counter /amsg spam
+  * NOTICE from 20 to 1 target, to counter /anotice spam
+  * KICK from 1 to 4 targets, to make it easier for channel operators
+    to quickly kick a large amount of spambots
+  See https://www.unrealircd.org/docs/Set_block#set::max-targets-per-command
 * New set::outdated-tls-policy which describes what to do with clients
   that use outdated SSL/TLS protocols (eg: TLSv1.0) and ciphers.
   The default settings are to warn in all cases: users connecting,
