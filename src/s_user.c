@@ -341,7 +341,7 @@ int check_for_target_limit(aClient *sptr, void *target, const char *name)
 		sptr->local->nexttarget = TStime() - ((iConf.max_concurrent_conversations_users-1) * iConf.max_concurrent_conversations_new_user_every);
 	}
 
-	sptr->local->nexttarget += TARGET_DELAY;
+	sptr->local->nexttarget += iConf.max_concurrent_conversations_new_user_every;
 
 	/* Add the new target (first move the rest, then add us at position 0 */
 	memmove(&sptr->local->targets[1], &sptr->local->targets[0], iConf.max_concurrent_conversations_users - 1);
