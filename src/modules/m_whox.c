@@ -359,7 +359,7 @@ CMD_FUNC(m_whox)
 	 * request a full list.  I presume its because of too many typos
 	 * with "/who" ;) --fl
 	 */
-	if ((*(mask + 1) == '\0') && (*mask == '0'))
+	if (!strcmp(mask, "0"))
 		who_global(sptr, NULL, 0, &fmt);
 	else
 		who_global(sptr, mask, operspy, &fmt);
