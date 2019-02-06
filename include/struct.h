@@ -680,8 +680,12 @@ struct User {
 	struct {
 		time_t nick_t;
 		unsigned char nick_c;
-		time_t away_t;			/* last time the user set away */
+		time_t away_t;		/* last time the user set away */
 		unsigned char away_c;	/* number of times away has been set */
+		time_t knock_t;		/* last time the user has knocked */
+		unsigned char knock_c;	/* number of times the user knocked */
+		time_t invite_t;	/* last time the user used /invite */
+		unsigned char invite_c;	/* number of times the user used /invite */
 	} flood;
 	TS lastaway;
 };

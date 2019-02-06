@@ -133,6 +133,23 @@ CMD_FUNC(m_knock)
 	if (i == HOOK_DENY)
 		return 0;
 
+	if (MyClient(sptr) && !ValidatePermissionsForPath("immune:knock-flood",sptr,NULL,NULL,NULL))
+	{
+		if ((sptr->user->flood.knock_t + KNOCK_PERIOD) <= timeofday)
+		{
+			sptr->user->flood.knock_c = 0;
+			sptr->user->flood.knock_t = timeofday;
+		}
+		if (sptr->user->flood.knock_c <= KNOCK_COUNT)
+			sptr->user->flood.knock_c++;
+		if (sptr->user->flood.knock_c > KNOCK_COUNT)
+		{
+			sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
+			    me.name, sptr->name, parv[1],
+			    "You are KNOCK flooding");
+			return 0;
+		}
+	}
 
 	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 		":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)", me.name, chptr->chname,

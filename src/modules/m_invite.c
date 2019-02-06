@@ -174,6 +174,22 @@ CMD_FUNC(m_invite)
 		if (check_for_target_limit(sptr, acptr, acptr->name))
 			return 0;
 
+		if (!ValidatePermissionsForPath("immune:invite-flood",sptr,NULL,NULL,NULL))
+		{
+			if ((sptr->user->flood.invite_t + INVITE_PERIOD) <= timeofday)
+			{
+				sptr->user->flood.invite_c = 0;
+				sptr->user->flood.invite_t = timeofday;
+			}
+			if (sptr->user->flood.invite_c <= INVITE_COUNT)
+				sptr->user->flood.invite_c++;
+			if (sptr->user->flood.invite_c > INVITE_COUNT)
+			{
+				sendto_one(sptr, err_str(RPL_TRYAGAIN), me.name, sptr->name, "INVITE");
+				return 0;
+			}
+		}
+
 		if (!override)
 		{
 			sendto_one(sptr, rpl_str(RPL_INVITING), me.name,
@@ -283,9 +299,6 @@ CMD_FUNC(m_invite)
 		sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s", sptr->name,
 			acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
 	}
-
-	if (MyClient(sptr))
-		sptr->local->since += 6; /* add extra lag to user issuing the /INVITE */
 
 	return 0;
 }

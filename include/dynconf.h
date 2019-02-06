@@ -116,6 +116,10 @@ struct zConfiguration {
 	long away_period;
 	unsigned char nick_count;
 	long nick_period;
+	unsigned char invite_count;
+	long invite_period;
+	unsigned char knock_count;
+	long knock_period;
 	unsigned char max_concurrent_conversations_users;
 	unsigned char max_concurrent_conversations_new_user_every;
 	int ident_connect_timeout;
@@ -232,6 +236,10 @@ extern MODVAR int ipv6_disabled;
 #define AWAY_COUNT			iConf.away_count
 #define NICK_PERIOD			iConf.nick_period
 #define NICK_COUNT			iConf.nick_count
+#define KNOCK_PERIOD			iConf.knock_period
+#define KNOCK_COUNT			iConf.knock_count
+#define INVITE_PERIOD			iConf.invite_period
+#define INVITE_COUNT			iConf.invite_count
 
 #define IDENT_CONNECT_TIMEOUT	iConf.ident_connect_timeout
 #define IDENT_READ_TIMEOUT		iConf.ident_read_timeout
@@ -329,6 +337,8 @@ struct SetCheck {
 	unsigned has_anti_flood_away_period:1;
 	unsigned has_anti_flood_nick_flood:1;
 	unsigned has_anti_flood_connect_flood:1;
+	unsigned has_anti_flood_invite_flood:1;
+	unsigned has_anti_flood_knock_flood:1;
 	unsigned has_ident_connect_timeout:1;
 	unsigned has_ident_read_timeout:1;
 	unsigned has_default_bantime:1;

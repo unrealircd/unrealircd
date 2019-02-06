@@ -1,4 +1,4 @@
- /*
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_err.c
  *   Copyright (C) 1992 Darren Reed
  *
@@ -292,7 +292,7 @@ static char *replies[] = {
 /* 260 */  NULL,
 /* 261    RPL_TRACELOG */   ":%s 261 %s File %s %d",
 /* 262 */ NULL, /* rfc2812 */
-/* 263 */ NULL, /* rfc2812 */
+/* 263    RPL_TRYAGAIN */   ":%s 263 %s %s :Flooding detected. Please wait a while and try again.",
 /* 264 */ NULL,
 /* 265    RPL_LOCALUSERS */ ":%s 265 %s %d %d :Current local users %d, max %d",
 /* 266    RPL_GLOBALUSERS */ ":%s 266 %s %d %d :Current global users %d, max %d",

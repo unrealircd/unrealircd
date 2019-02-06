@@ -1468,8 +1468,10 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->oper_snomask = strdup(SNO_DEFOPER);
 	i->ident_read_timeout = 30;
 	i->ident_connect_timeout = 3;
-	i->nick_count = 3; i->nick_period = 60; /* nickflood protection: max 3 per 60s */
-	i->away_count = 4; i->away_period = 120; /* awayflood protection: max 4 per 120s */
+	i->nick_count = 3; i->nick_period = 60; /* NICK flood protection: max 3 per 60s */
+	i->away_count = 4; i->away_period = 120; /* AWAY flood protection: max 4 per 120s */
+	i->invite_count = 4; i->invite_period = 60; /* INVITE flood protection: max 4 per 60s */
+	i->knock_count = 4; i->knock_period = 120; /* KNOCK protection: max 4 per 120s */
 	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
 	i->modef_default_unsettime = 0;
 	i->modef_max_unsettime = 60; /* 1 hour seems enough :p */
@@ -7900,6 +7902,20 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.nick_count = cnt;
 					tempiConf.nick_period = period;
 				}
+				else if (!strcmp(cepp->ce_varname, "away-flood"))
+				{
+					int cnt, period;
+					config_parse_flood(cepp->ce_vardata, &cnt, &period);
+					tempiConf.away_count = cnt;
+					tempiConf.away_period = period;
+				}
+				else if (!strcmp(cepp->ce_varname, "knock-flood"))
+				{
+					int cnt, period;
+					config_parse_flood(cepp->ce_vardata, &cnt, &period);
+					tempiConf.knock_count = cnt;
+					tempiConf.knock_period = period;
+				}
 				else if (!strcmp(cepp->ce_varname, "connect-flood"))
 				{
 					int cnt, period;
@@ -8755,6 +8771,32 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					    (cnt < 1) || (cnt > 255) || (period < 5))
 					{
 						config_error("%s:%i: set::anti-flood::nick-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+						             "count should be 1-255, period should be greater than 4",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++;
+					}
+				}
+				else if (!strcmp(cepp->ce_varname, "invite-flood"))
+				{
+					int cnt, period;
+					CheckDuplicate(cepp, anti_flood_invite_flood, "anti-flood::invite-flood");
+					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
+					    (cnt < 1) || (cnt > 255) || (period < 5))
+					{
+						config_error("%s:%i: set::anti-flood::invite-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+						             "count should be 1-255, period should be greater than 4",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++;
+					}
+				}
+				else if (!strcmp(cepp->ce_varname, "knock-flood"))
+				{
+					int cnt, period;
+					CheckDuplicate(cepp, anti_flood_knock_flood, "anti-flood::knock-flood");
+					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
+					    (cnt < 1) || (cnt > 255) || (period < 5))
+					{
+						config_error("%s:%i: set::anti-flood::knock-flood error. Syntax is '<count>:<period>' (eg 5:60), "
 						             "count should be 1-255, period should be greater than 4",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
