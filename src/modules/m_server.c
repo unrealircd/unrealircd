@@ -852,7 +852,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	list_add(&cptr->special_node, &server_list);
 	if ((Find_uline(cptr->name)))
 	{
-		if (cptr->serv->features.software && !strncmp(cptr->serv->features.software, "UnrealIRCd-", 11))
+		if (cptr->serv && cptr->serv->features.software && !strncmp(cptr->serv->features.software, "UnrealIRCd-", 11))
 		{
 			sendto_realops("\002WARNING:\002 Bad ulines! It seems your server is misconfigured: "
 			               "your ulines { } block is matching an UnrealIRCd server (%s). "
