@@ -318,8 +318,6 @@ int check_for_target_limit(aClient *sptr, void *target, const char *name)
 		}
 	}
 
-	ircd_log(LOG_ERROR, "sptr->local->nexttarget: %ld", sptr->local->nexttarget);
-
 	if (TStime() < sptr->local->nexttarget)
 	{
 		/* Target limit reached */
@@ -788,4 +786,38 @@ void set_isupport_targmax(void)
 		strlcat(buf, tbuf, sizeof(buf));
 	}
 	IsupportSet(NULL, "TARGMAX", buf);
+}
+
+/** Called between config test and config run */
+void set_targmax_defaults(void)
+{
+	/* Free existing... */
+	freemaxtargets();
+
+	/* Set the defaults */
+	setmaxtargets("PRIVMSG", 4);
+	setmaxtargets("NOTICE", 1);
+	setmaxtargets("NAMES", 1); // >1 is not supported
+	setmaxtargets("WHOIS", 1);
+	setmaxtargets("WHOWAS", 1); // >1 is not supported
+	setmaxtargets("KICK", 4);
+	setmaxtargets("LIST", MAXTARGETS_MAX);
+	setmaxtargets("JOIN", MAXTARGETS_MAX);
+	setmaxtargets("PART", MAXTARGETS_MAX);
+	setmaxtargets("SAJOIN", MAXTARGETS_MAX);
+	setmaxtargets("SAPART", MAXTARGETS_MAX);
+	setmaxtargets("KILL", MAXTARGETS_MAX);
+	setmaxtargets("DCCALLOW", MAXTARGETS_MAX);
+	/* The following 3 are space-separated (and actually the previous
+	 * mentioned DCCALLOW is both space-and-comma separated).
+	 * It seems most IRCd's don't list space-separated targets list
+	 * in TARGMAX... On the other hand, why not? It says nowhere in
+	 * the TARGMAX specification that it's only for comma-separated
+	 * commands. So let's be nice and consistent and inform the
+	 * clients about the limits for such commands as well:
+	 */
+	setmaxtargets("USERHOST", MAXTARGETS_MAX); // not configurable
+	setmaxtargets("USERIP", MAXTARGETS_MAX); // not configurable
+	setmaxtargets("ISON", MAXTARGETS_MAX); // not configurable
+	setmaxtargets("WATCH", MAXTARGETS_MAX); // not configurable
 }

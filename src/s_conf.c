@@ -1552,33 +1552,6 @@ void config_setdefaultsettings(aConfiguration *i)
 
 	i->max_concurrent_conversations_users = 10;
 	i->max_concurrent_conversations_new_user_every = 15;
-
-	/* TARGMAX defaults */
-	setmaxtargets("PRIVMSG", 4);
-	setmaxtargets("NOTICE", 1);
-	setmaxtargets("NAMES", 1); // >1 is not supported
-	setmaxtargets("WHOIS", 1);
-	setmaxtargets("WHOWAS", 1); // >1 is not supported
-	setmaxtargets("KICK", 4);
-	setmaxtargets("LIST", MAXTARGETS_MAX);
-	setmaxtargets("JOIN", MAXTARGETS_MAX);
-	setmaxtargets("PART", MAXTARGETS_MAX);
-	setmaxtargets("SAJOIN", MAXTARGETS_MAX);
-	setmaxtargets("SAPART", MAXTARGETS_MAX);
-	setmaxtargets("KILL", MAXTARGETS_MAX);
-	setmaxtargets("DCCALLOW", MAXTARGETS_MAX);
-	/* The following 3 are space-separated (and actually the previous
-	 * mentioned DCCALLOW is both space-and-comma separated).
-	 * It seems most IRCd's don't list space-separated targets list
-	 * in TARGMAX... On the other hand, why not? It says nowhere in
-	 * the TARGMAX specification that it's only for comma-separated
-	 * commands. So let's be nice and consistent and inform the
-	 * clients about the limits for such commands as well:
-	 */
-	 setmaxtargets("USERHOST", MAXTARGETS_MAX); // not configurable
-	 setmaxtargets("USERIP", MAXTARGETS_MAX); // not configurable
-	 setmaxtargets("ISON", MAXTARGETS_MAX); // not configurable
-	 setmaxtargets("WATCH", MAXTARGETS_MAX); // not configurable
 }
 
 static void make_default_logblock(void)
@@ -1884,6 +1857,7 @@ int	init_conf(char *rootconf, int rehash)
 		}
 		callbacks_switchover();
 		efunctions_switchover();
+		set_targmax_defaults();
 		if (rehash)
 		{
 			Hook *h;
@@ -2430,8 +2404,6 @@ void	config_rehash()
 		if (iConf.modes_on_join.extparams[i])
 			free(iConf.modes_on_join.extparams[i]);
 	}
-
-	freemaxtargets();
 
 	/*
 	  reset conf_files -- should this be in its own function? no, because

@@ -807,3 +807,4 @@ extern MaxTarget *findmaxtarget(char *cmd);
 extern void setmaxtargets(char *cmd, int limit);
 extern void freemaxtargets(void);
 extern int max_targets_for_command(char *cmd);
+extern void set_targmax_defaults(void);
