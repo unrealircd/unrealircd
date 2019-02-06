@@ -38,9 +38,10 @@ Enhancements:
   * KICK from 1 to 4 targets, to make it easier for channel operators
     to quickly kick a large amount of spambots
   See https://www.unrealircd.org/docs/Set_block#set::max-targets-per-command
-* Added INVITE and KNOCK flood protection (command rate limiting).
-  set::anti-flood::invite-flood defaults to 4 per 60 seconds.
-  set::anti-flood::knock-flood defaults to 4 per 120 seconds.
+* Added INVITE and KNOCK flood protection (command rate limiting):
+  * set::anti-flood::invite-flood now defaults to 4 per 60 seconds
+    (previously the effective limit was 1 invite per 6 seconds).
+  * set::anti-flood::knock-flood now defaults to 4 per 120 seconds.
 * New set::outdated-tls-policy which describes what to do with clients
   that use outdated SSL/TLS protocols (eg: TLSv1.0) and ciphers.
   The default settings are to warn in all cases: users connecting,
