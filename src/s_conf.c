@@ -7561,6 +7561,8 @@ void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions)
 		safestrdup(ssloptions->ciphers, tempiConf.ssl_options->ciphers);
 		safestrdup(ssloptions->ciphersuites, tempiConf.ssl_options->ciphersuites);
 		safestrdup(ssloptions->ecdh_curves, tempiConf.ssl_options->ecdh_curves);
+		safestrdup(ssloptions->outdated_protocols, tempiConf.ssl_options->outdated_protocols);
+		safestrdup(ssloptions->outdated_ciphers, tempiConf.ssl_options->outdated_ciphers);
 		ssloptions->options = tempiConf.ssl_options->options;
 		ssloptions->renegotiate_bytes = tempiConf.ssl_options->renegotiate_bytes;
 		ssloptions->renegotiate_timeout = tempiConf.ssl_options->renegotiate_timeout;

@@ -1129,6 +1129,11 @@ struct _configitem_oper {
 	int maxlogins;
 };
 
+/** The SSL options that are used in set::ssl and otherblocks::ssl-options.
+ * NOTE: If you add something here then you must also update the
+ *       conf_sslblock() function in s_conf.c to have it inherited
+ *       from set::ssl to the other config blocks!
+ */
 typedef struct _ssloptions SSLOptions;
 struct _ssloptions {
 	char *certificate_file;
