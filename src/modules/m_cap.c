@@ -42,7 +42,7 @@ MOD_INIT(m_cap)
 	ClientCapability c;
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_CAP, m_cap, MAXPARA, M_UNREGISTERED|M_USER);
+	CommandAdd(modinfo->handle, MSG_CAP, m_cap, MAXPARA, M_UNREGISTERED|M_USER|M_NOLAG);
 
 	memset(&c, 0, sizeof(c));
 	c.name = "account-notify";
@@ -353,6 +353,13 @@ static int clicap_cmd_search(const char *command, struct clicap_cmd *entry)
 CMD_FUNC(m_cap)
 {
 	struct clicap_cmd *cmd;
+
+	/* CAP is marked as "no fake lag" because we use custom fake lag rules:
+	 * Only add a 1 second fake lag penalty if this is the XXth command.
+	 * This will speed up connections considerably.
+	 */
+	if (MyConnect(sptr) && (sptr->local->receiveM > 15))
+		cptr->local->since++;
 
 	if (DISABLE_CAP)
 	{
