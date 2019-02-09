@@ -144,6 +144,7 @@ aClient *make_client(aClient *from, aClient *servr)
 	if (!from)
 	{
 		/* Local client */
+		const char *id;
 		
 		cptr->local = MyMallocEx(sizeof(aLocalClient));
 		
@@ -161,6 +162,11 @@ aClient *make_client(aClient *from, aClient *servr)
 
 		dbuf_queue_init(&cptr->local->recvQ);
 		dbuf_queue_init(&cptr->local->sendQ);
+
+		while (hash_find_id((id = uid_get()), NULL) != NULL)
+			;
+		strlcpy(cptr->id, id, sizeof cptr->id);
+		add_to_id_hash_table(cptr->id, cptr);
 	} else {
 		cptr->fd = -256;
 	}

@@ -285,7 +285,7 @@ CMD_FUNC(m_protoctl)
 			if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
 				return exit_client(cptr, cptr, &me, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
 
-			if (*sptr->id)
+			if (*sptr->id && (strlen(sptr->id)==3))
 				return exit_client(cptr, cptr, &me, "Got PROTOCTL SID twice");
 
 			if ((acptr = hash_find_id(sid, NULL)) != NULL)
@@ -296,8 +296,10 @@ CMD_FUNC(m_protoctl)
 				return exit_client(cptr, cptr, &me, "SID collision");
 			}
 
+			if (*sptr->id)
+				del_from_id_hash_table(sptr->id, sptr); /* delete old UID entry (created on connect) */
 			strlcpy(cptr->id, sid, IDLEN);
-			add_to_id_hash_table(cptr->id, cptr);
+			add_to_id_hash_table(cptr->id, cptr); /* add SID */
 			cptr->local->proto |= PROTO_SID;
 		}
 		else if ((strncmp(s, "EAUTH=", 6) == 0) && NEW_LINKING_PROTOCOL)

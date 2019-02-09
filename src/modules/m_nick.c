@@ -1393,11 +1393,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		list_move(&sptr->lclient_node, &lclient_list);
 
-		while (hash_find_id((id = uid_get()), NULL) != NULL)
-			;
-		strlcpy(sptr->id, id, sizeof sptr->id);
-		(void)add_to_id_hash_table(sptr->id, sptr);
-
 		IRCstats.unknown--;
 		IRCstats.me_clients++;
 
