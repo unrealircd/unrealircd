@@ -106,6 +106,9 @@ static const char *encode_puid(aClient *client)
 {
 	static char buf[HOSTLEN + 20];
 
+	if (MyClient(client))
+		return client->id;
+
 	/* create a cookie if necessary (and in case getrandom16 returns 0, then run again) */
 	while (!client->local->sasl_cookie)
 		client->local->sasl_cookie = getrandom16();
@@ -131,8 +134,12 @@ CMD_FUNC(m_svslogin)
 	{
 		aClient *target_p;
 
+		target_p = find_client(parv[2], NULL);
+		if (target_p && !MyConnect(target_p))
+			return 0;
+
 		/* is the PUID valid? */
-		if ((target_p = decode_puid(parv[2])) == NULL)
+		if (!target_p && ((target_p = decode_puid(parv[2])) == NULL))
 			return 0;
 
 		if (target_p->user == NULL)
@@ -175,8 +182,12 @@ CMD_FUNC(m_sasl)
 	{
 		aClient *target_p;
 
+		target_p = find_client(parv[2], NULL);
+		if (target_p && !MyConnect(target_p))
+			return 0;
+
 		/* is the PUID valid? */
-		if ((target_p = decode_puid(parv[2])) == NULL)
+		if (!target_p && ((target_p = decode_puid(parv[2])) == NULL))
 			return 0;
 
 		if (target_p->user == NULL)
@@ -234,12 +245,6 @@ CMD_FUNC(m_authenticate)
 	/* Failing to use CAP REQ for sasl is a protocol violation. */
 	if (!SASL_SERVER || !MyConnect(sptr) || BadPtr(parv[1]) || !CHECKPROTO(sptr, PROTO_SASL))
 		return 0;
-
-	if (sptr->local->sasl_complete)
-	{
-		sendto_one(sptr, err_str(ERR_SASLALREADY), me.name, BadPtr(sptr->name) ? "*" : sptr->name);
-		return 0;
-	}
 
 	if ((parv[1][0] == ':') || strchr(parv[1], ' '))
 	{
@@ -401,7 +406,7 @@ MOD_INIT(m_sasl)
 
 	CommandAdd(modinfo->handle, MSG_SASL, m_sasl, MAXPARA, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_SVSLOGIN, m_svslogin, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, m_authenticate, MAXPARA, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, m_authenticate, MAXPARA, M_UNREGISTERED|M_USER);
 
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, sasl_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, sasl_quit);
