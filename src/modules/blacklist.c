@@ -894,12 +894,14 @@ void blacklist_process_result(aClient *acptr, int status, struct hostent *he)
 				( (bl->backend->dns->type == DNSBL_BITMASK) && (reply & bl->backend->dns->reply[i]) ) ||
 				( (bl->backend->dns->type == DNSBL_RECORD) && (bl->backend->dns->reply[i] == reply) ) )
 			{
-				blacklist_hit(acptr, bl, reply);
 				matched = 1;
-				if(!blu || !blu->manual)
+				if(!blu || !blu->manual) // this could fail if executed after blacklist_hit
+				{
+					blacklist_hit(acptr, bl, reply);
 					return; // do not give up with manual scan
-				else
-					blu->manual = 2; // mark the match so we won't display "does not match any blacklist"
+				}
+				blu->manual = 2; // mark the match so we won't display "does not match any blacklist"
+				blacklist_hit(acptr, bl, reply);
 			}
 		}
 	}
