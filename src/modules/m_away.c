@@ -70,36 +70,40 @@ MOD_UNLOAD(m_away)
 */
 CMD_FUNC(m_away)
 {
-char *away, *awy2 = parv[1];
-int n, wasaway = 0;
+	char *away, *awy2 = parv[1];
+	int n, wasaway = 0;
 
 	if (IsServer(sptr))
 		return 0;
-        away = sptr->user->away;
 
-        if (parc < 2 || !*awy2)
-        {
-                /* Marking as not away */
-                if (away)
-                {
-                        MyFree(away);
-                        sptr->user->away = NULL;
+	away = sptr->user->away;
+
+	if (parc < 2 || !*awy2)
+	{
+		/* Marking as not away */
+		if (away)
+		{
+			MyFree(away);
+			sptr->user->away = NULL;
 			/* Only send this if they were actually away -- codemastr */
-	                sendto_server(cptr, 0, 0, ":%s AWAY", sptr->name);
-	                hash_check_watch(cptr, RPL_NOTAWAY);
+			sendto_server(cptr, 0, 0, ":%s AWAY", sptr->name);
+			hash_check_watch(cptr, RPL_NOTAWAY);
 
 			sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s AWAY", sptr->name);
-                }
-                /* hope this works XX */
-                if (MyConnect(sptr))
-                        sendto_one(sptr, rpl_str(RPL_UNAWAY), me.name, sptr->name);
+		}
+		/* hope this works XX */
+		if (MyConnect(sptr))
+			sendto_one(sptr, rpl_str(RPL_UNAWAY), me.name, sptr->name);
 				RunHook2(HOOKTYPE_AWAY, sptr, NULL);
-                return 0;
-        }
+		return 0;
+	}
 
-    n = dospamfilter(sptr, parv[1], SPAMF_AWAY, NULL, 0, NULL);
-    if (n < 0)
-        return n;
+	if (MyClient(sptr))
+	{
+		n = dospamfilter(sptr, parv[1], SPAMF_AWAY, NULL, 0, NULL);
+			if (n < 0)
+		return n;
+	}
 
 	if (MyClient(sptr) && AWAY_PERIOD && !ValidatePermissionsForPath("immune:away-flood",sptr,NULL,NULL,NULL))
 	{
@@ -116,32 +120,37 @@ int n, wasaway = 0;
 			return 0;
 		}
 	}
-        /* Marking as away */
-        if (strlen(awy2) > iConf.away_length)
-                awy2[iConf.away_length] = '\0';
 
-        if (away)
-                if (strcmp(away, parv[1]) == 0)
-                        return 0;
+	if (strlen(awy2) > iConf.away_length)
+		awy2[iConf.away_length] = '\0';
+
+	if (away)
+	{
+		/* No Change */
+		if (strcmp(away, parv[1]) == 0)
+			return 0;
+	}
+
+	/* Marking as away */
 
 	sptr->user->lastaway = TStime();
 	
-        sendto_server(cptr, 0, 0, ":%s AWAY :%s", sptr->name, awy2);
+	sendto_server(cptr, 0, 0, ":%s AWAY :%s", sptr->name, awy2);
 
 	if (away)
 	{
 		MyFree(away);
 		wasaway = 1;
-        }
+	}
 	
 	away = sptr->user->away = strdup(awy2);
 
-        if (MyConnect(sptr))
-                sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, sptr->name);
+	if (MyConnect(sptr))
+		sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, sptr->name);
 
 	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
 	sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s AWAY :%s", sptr->name, away);
 
 	RunHook2(HOOKTYPE_AWAY, sptr, away);
-        return 0;
+	return 0;
 }
