@@ -2358,15 +2358,16 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						/* Broadcast removal to all other servers */
 						if (type & TKL_GLOBAL)
 						{
-							if (parc < 8)
+							if ((parc > 8) && (type & TKL_SPAMF))
 							{
-								sendto_server(cptr, 0, 0, ":%s TKL %s %s %s%s %s %s",
-									      sptr->name, parv[1], parv[2], (softban?"%":""), parv[3], parv[4], parv[5]);
-							} else {
-								/* spamfilter... */
+								/* Spamfilter... */
 								sendto_server(cptr, 0, 0, ":%s TKL %s %s %s %s %s %s %s :%s",
 									      sptr->name, parv[1], parv[2], parv[3], parv[4], parv[5],
 									      parv[6], parv[7], reason);
+							} else {
+								/* Any other TKL (eg: gline) */
+								sendto_server(cptr, 0, 0, ":%s TKL %s %s %s%s %s %s",
+									      sptr->name, parv[1], parv[2], (softban?"%":""), parv[3], parv[4], parv[5]);
 							}
 						}
 
