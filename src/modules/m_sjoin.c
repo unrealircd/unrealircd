@@ -654,6 +654,7 @@ getnick:
 			}
 			sprintf(uid_buf+strlen(uid_buf), "%s%s ", prefix, nick);
 
+			*scratch_buf = '\0';
 			if (sjsby_info)
 				add_sjsby(scratch_buf, setby, setat);
 			strcat(scratch_buf, prefix);
