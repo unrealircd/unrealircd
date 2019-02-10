@@ -1455,6 +1455,14 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->spamexcept_line);
 	safefree(i->timesynch_server);
 	safefree(i->link_bindip);
+	safefree(i->outdated_tls_policy_user_message);
+	safefree(i->outdated_tls_policy_oper_message);
+	safefree(i->reject_message_password_mismatch);
+	safefree(i->reject_message_too_many_connections);
+	safefree(i->reject_message_server_full);
+	safefree(i->reject_message_unauthorized);
+	safefree(i->reject_message_kline);
+	safefree(i->reject_message_gline);
 }
 
 int	config_test();
@@ -4790,6 +4798,12 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				listen->ssl_ctx = NULL;
 			}
 
+			if (listen->ssl_options)
+			{
+				free_ssl_options(listen->ssl_options);
+				listen->ssl_options = NULL;
+			}
+
 			if (sslconfig)
 			{
 				listen->ssl_options = MyMallocEx(sizeof(SSLOptions));
@@ -4826,6 +4840,12 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				{
 					SSL_CTX_free(listen->ssl_ctx);
 					listen->ssl_ctx = NULL;
+				}
+
+				if (listen->ssl_options)
+				{
+					free_ssl_options(listen->ssl_options);
+					listen->ssl_options = NULL;
 				}
 
 				if (sslconfig)
@@ -7541,6 +7561,9 @@ void free_ssl_options(SSLOptions *ssloptions)
 	safefree(ssloptions->trusted_ca_file);
 	safefree(ssloptions->ciphers);
 	safefree(ssloptions->ciphersuites);
+	safefree(ssloptions->ecdh_curves);
+	safefree(ssloptions->outdated_protocols);
+	safefree(ssloptions->outdated_ciphers);
 	memset(ssloptions, 0, sizeof(SSLOptions));
 	MyFree(ssloptions);
 }

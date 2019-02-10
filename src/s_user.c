@@ -755,6 +755,7 @@ void freemaxtargets(void)
 	{
 		m_next = m->next;
 		safefree(m->cmd);
+		MyFree(m);
 	}
 	maxtargets = NULL;
 }

@@ -224,4 +224,8 @@ void clicap_post_rehash(void)
 			send_cap_notify(1, name);
 		}
 	}
+
+	/* Now free the old caps. */
+	for (i = 0; old_caps[i]; i++)
+		safefree(old_caps[i]);
 }

@@ -135,6 +135,17 @@ static void addmultiline(MultiLine **l, char *line)
 	append_ListItem((ListStruct *)m, (ListStruct **)l);
 }
 
+static void freemultiline(MultiLine *l)
+{
+	MultiLine *l_next;
+	for (; l; l = l_next)
+	{
+		l_next = l->next;
+		safefree(l->line);
+		MyFree(l);
+	}
+}
+
 static void config_postdefaults(void)
 {
 	if (!cfg.message)
@@ -150,13 +161,8 @@ static void config_postdefaults(void)
 
 static void free_config(void)
 {
-	MultiLine *l, *l_next;
-	for (l = cfg.message; l; l = l_next)
-	{
-		l_next = l->next;
-		MyFree(l);
-	}
-	cfg.message = NULL;
+	freemultiline(cfg.message);
+	freemultiline(cfg.fail_message);
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
