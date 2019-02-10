@@ -575,7 +575,10 @@ static void exit_one_client(aClient *sptr, const char *comment)
 
 	/* Remove sptr from the client list */
 	if (*sptr->id)
+	{
 		del_from_id_hash_table(sptr->id, sptr);
+		*sptr->id = '\0';
+	}
 	if (*sptr->name)
 		del_from_client_hash_table(sptr->name, sptr);
 	if (IsRegisteredUser(sptr))

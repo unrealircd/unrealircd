@@ -195,6 +195,14 @@ void free_client(aClient *cptr)
 			
 			MyFree(cptr->local);
 		}
+		if (*cptr->id)
+		{
+			/* This is already del'd in exit_one_client, so we
+			 * only have it here in case a shortcut was taken,
+			 * such as from add_connection() to free_client().
+			 */
+			del_from_id_hash_table(cptr->id, cptr);
+		}
 	}
 	
 	safefree(cptr->ip);
