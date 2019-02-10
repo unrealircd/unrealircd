@@ -82,24 +82,30 @@ CMD_FUNC(m_setname)
 		return 0;
 	}
 
-	/* set temp info for spamfilter check*/
-	strcpy(tmpinfo, sptr->info);
-	/* set the new name before we check, but don't send to servers unless it is ok */
-	strcpy(sptr->info, parv[1]);
-	spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
-	xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
-	if (xx < 0)
+	if (MyClient(sptr))
 	{
-		if (xx != FLUSH_BUFFER)
-			strcpy(sptr->info, tmpinfo); /* restore (if client wasn't killed already, that is) */
-		return xx;
-	}
+		/* set temp info for spamfilter check*/
+		strcpy(tmpinfo, sptr->info);
+		/* set the new name before we check, but don't send to servers unless it is ok */
+		strcpy(sptr->info, parv[1]);
+		spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
+		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
+		if (xx < 0)
+		{
+			if (xx != FLUSH_BUFFER)
+				strcpy(sptr->info, tmpinfo); /* restore (if client wasn't killed already, that is) */
+			return xx;
+		}
 
-	/* Check for realname bans here too */
-	if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",sptr,NULL,NULL,NULL) &&
-	    ((bconf = Find_ban(NULL, sptr->info, CONF_BAN_REALNAME))))
-	{
-		return banned_client(sptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
+		/* Check for realname bans here too */
+		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",sptr,NULL,NULL,NULL) &&
+		    ((bconf = Find_ban(NULL, sptr->info, CONF_BAN_REALNAME))))
+		{
+			return banned_client(sptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
+		}
+	} else {
+		/* remote user */
+		strcpy(sptr->info, parv[1]);
 	}
 
 	sendto_server(cptr, 0, 0, ":%s SETNAME :%s", sptr->name, parv[1]);

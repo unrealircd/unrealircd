@@ -116,14 +116,17 @@ CMD_FUNC(m_chgname)
 		/* set the realname to make ban checking work */
 		ircsnprintf(acptr->info, sizeof(acptr->info), "%s", parv[2]);
 
-		/* only check for realname bans if the person who's name is being changed is NOT an oper */
-		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",acptr,NULL,NULL,NULL) &&
-		    ((bconf = Find_ban(NULL, acptr->info, CONF_BAN_REALNAME))))
+		if (MyClient(acptr))
 		{
-			int xx = banned_client(acptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
-			if (sptr == acptr)
-				return xx; /* we just killed ourselves */
-			return 0;
+			/* only check for realname bans if the person who's name is being changed is NOT an oper */
+			if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",acptr,NULL,NULL,NULL) &&
+			    ((bconf = Find_ban(NULL, acptr->info, CONF_BAN_REALNAME))))
+			{
+				int xx = banned_client(acptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
+				if (sptr == acptr)
+					return xx; /* we just killed ourselves */
+				return 0;
+			}
 		}
 
 		sendto_server(cptr, 0, 0, ":%s CHGNAME %s :%s",
