@@ -271,6 +271,14 @@ aServer *make_server(aClient *cptr)
 		serv->up = NULL;
 		cptr->serv = serv;
 	}
+	if (strlen(cptr->id) > 3)
+	{
+		/* Probably the auto-generated UID for a server that
+		 * still uses the old protocol (without SID).
+		 */
+		del_from_id_hash_table(cptr->id, cptr);
+		*cptr->id = '\0';
+	}
 	return cptr->serv;
 }
 
