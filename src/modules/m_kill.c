@@ -70,7 +70,7 @@ CMD_FUNC(m_kill)
 	char *user, *path, *killer, *nick, *p, *s;
 	int  chasing = 0, kcount = 0;
 	Hook *h;
-	int ntargets = 0;
+	int ntargets = 0, n;
 	int maxtargets = max_targets_for_command("KILL");
 
 	if (parc < 2 || *parv[1] == '\0')
@@ -253,8 +253,9 @@ CMD_FUNC(m_kill)
 		if (MyClient(sptr))
 			RunHook3(HOOKTYPE_LOCAL_KILL, sptr, acptr, parv[2]);
 
-		if (exit_client(cptr, acptr, sptr, buf2) == FLUSH_BUFFER)
-			return FLUSH_BUFFER; /* (return if we killed ourselves) */
+		n = exit_client(cptr, acptr, sptr, buf2);
+		if ((n == FLUSH_BUFFER) && (sptr == acptr))
+			return FLUSH_BUFFER; /* return if we killed ourselves */
 	}
 	return 0;
 }
