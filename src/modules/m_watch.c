@@ -99,6 +99,9 @@ CMD_FUNC(m_watch)
 	int awaynotify = 0;
 	int did_l=0, did_s=0;
 
+	if (!MyClient(sptr))
+		return 0;
+
 	if (parc < 2)
 	{
 		/*

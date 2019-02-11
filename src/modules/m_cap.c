@@ -354,11 +354,14 @@ CMD_FUNC(m_cap)
 {
 	struct clicap_cmd *cmd;
 
+	if (!MyConnect(sptr))
+		return 0;
+
 	/* CAP is marked as "no fake lag" because we use custom fake lag rules:
 	 * Only add a 1 second fake lag penalty if this is the XXth command.
 	 * This will speed up connections considerably.
 	 */
-	if (MyConnect(sptr) && (sptr->local->receiveM > 15))
+	if (sptr->local->receiveM > 15)
 		cptr->local->since++;
 
 	if (DISABLE_CAP)
