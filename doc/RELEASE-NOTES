@@ -1,13 +1,18 @@
-UnrealIRCd 4.2.2-rc1 Release Notes
+UnrealIRCd 4.2.2-rc2 Release Notes
 ===================================
 
-This is the first release candidate for UnrealIRCd 4.2.2. It contains a
+This is the second release candidate for UnrealIRCd 4.2.2. It contains a
 lot of enhancements, in particular with regards to flood controls.
 Users are requested to try this version out and report any issues to the
 bug tracker at https://bugs.unrealircd.org/ so they can be fixed before
 a final 4.2.2 version will come out in March 2019.
 
+This -rc2 version fixes a number of important issues present in -rc1, such
+as a crash bug if ::ssl-options is used, and an issue when syncing channels
+in a mixed version UnrealIRCd network.
+
 Enhancements:
+* Quicker connection handshake for clients which use CAP and/or SASL.
 * With "TOPIC #chan" and "MODE #chan +b" (and +e/+I) you can see who set the
   topic and bans/exempts/invex. The default is to only show the nick of the
   person who set the item. This can be changed (not the default) by setting:
@@ -69,6 +74,11 @@ Minor issues fixed:
   level 2 to 1 if spkifp was used as an authentication method.
 * In case of a crash, the "./unrealircd backtrace" script was not working
   correctly in non-English environments, leading to less accurate bug reports.
+* Various crashes if a server receives incorrect commands from a trusted
+  linked server.
+* A number of memory leaks on REHASH (about 1K).
+* SASL was not working post-registration, eg: when services link back in.
+  This is now fixed in UnrealIRCd, but may require a services update as well.
 
 Changed:
 * The noctcp user mode (+T) will now only block CTCP's and not CTCP REPLIES.
