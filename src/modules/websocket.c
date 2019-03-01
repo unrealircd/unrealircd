@@ -548,9 +548,12 @@ int websocket_handle_packet(aClient *sptr, char *readbuf, int length)
 		case WSOP_CONTINUATION:
 		case WSOP_TEXT:
 		case WSOP_BINARY:
-			add_lf_if_needed(&payload, &len);
-			if (!process_packet(sptr, payload, len, 1)) /* let UnrealIRCd process this data */
-				return -1; /* fatal error occured (such as flood kill) */
+			if (len > 0)
+			{
+				add_lf_if_needed(&payload, &len);
+				if (!process_packet(sptr, payload, len, 1)) /* let UnrealIRCd process this data */
+					return -1; /* fatal error occured (such as flood kill) */
+			}
 			return total_packet_size;
 		
 		case WSOP_CLOSE:
