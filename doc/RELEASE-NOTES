@@ -1,15 +1,11 @@
-UnrealIRCd 4.2.2-rc2 Release Notes
-===================================
+UnrealIRCd 4.2.2 Release Notes
+===============================
 
-This is the second release candidate for UnrealIRCd 4.2.2. It contains a
-lot of enhancements, in particular with regards to flood controls.
-Users are requested to try this version out and report any issues to the
-bug tracker at https://bugs.unrealircd.org/ so they can be fixed before
-a final 4.2.2 version will come out in March 2019.
-
-This -rc2 version fixes a number of important issues present in -rc1, such
-as a crash bug if ::ssl-options is used, and an issue when syncing channels
-in a mixed version UnrealIRCd network.
+This is the stable version of UnrealIRCd 4.2.2. It contains several
+major enhancements, in particular with regards to flood controls.
+It also fixes a crash issue in the websocket module. Note that this
+is module is not loaded by default (only via modules.optional.conf
+or explicitly via a loadmodule "websocket").
 
 Enhancements:
 * Quicker connection handshake for clients which use CAP and/or SASL.
@@ -67,7 +63,7 @@ Enhancements:
   https://www.unrealircd.org/docs/Set_block#set::outdated-tls-policy
 
 Major issues fixed:
-* None
+* Crash issue in the 'websocket' module.
 
 Minor issues fixed:
 * The advertised "link-security" was incorrectly downgraded from
