@@ -890,17 +890,17 @@ static int convert_classical_who_request(aClient *sptr, int *parc, char *parv[],
 			 * Flag I: show users' IP addresses                                << no change (re-added)
 			 */
 
-			if (strchr(parv[1], 'a'))
+			if (strchr(parv[2], 'a'))
 			{
 				sendnotice(sptr, "WHO request '%s' failed: flag 'a' no longer exists with WHOX.", oldrequest);
 				return 0;
 			}
-			if (strchr(parv[1], 'c'))
+			if (strchr(parv[2], 'c'))
 			{
 				sendnotice(sptr, "WHO request '%s' failed: flag 'c' no longer exists with WHOX.", oldrequest);
 				return 0;
 			}
-			for (p = parv[1]; *p; p++)
+			for (p = parv[2]; *p; p++)
 			{
 				if (*p == 'g')
 				{
