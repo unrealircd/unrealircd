@@ -684,6 +684,7 @@ extern char *md5hash(unsigned char *dst, const unsigned char *src, unsigned long
 extern MODVAR char langsinuse[4096];
 extern MODVAR char *casemapping[2];
 extern MODVAR aTKline *tklines[TKLISTLEN];
+extern MODVAR aTKline *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
 extern char *cmdname_by_spamftarget(int target);
 extern void unrealdns_delreq_bycptr(aClient *cptr);
 extern void sendtxtnumeric(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));

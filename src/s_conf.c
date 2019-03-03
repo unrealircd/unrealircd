@@ -2252,18 +2252,16 @@ void	config_rehash()
 	/* Clean up local spamfilter entries... */
 	for (tk = tklines[tkl_hash('f')]; tk; tk = tk_next)
 	{
+		tk_next = tk->next;
 		if (tk->type == TKL_SPAMF)
-			tk_next = tkl_del_line(tk);
-		else /* global spamfilter.. don't touch! */
-			tk_next = tk->next;
+			tkl_del_line(tk);
 	}
 
 	for (tk = tklines[tkl_hash('q')]; tk; tk = tk_next)
 	{
+		tk_next = tk->next;
 		if (tk->type == TKL_NICK)
-			tk_next = tkl_del_line(tk);
-		else
-			tk_next = tk->next;
+			tkl_del_line(tk);
 	}
 
 	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *)next)

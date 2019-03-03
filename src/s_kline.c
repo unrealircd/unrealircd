@@ -41,9 +41,11 @@
 #include "inet.h"
 
 MODVAR aTKline *tklines[TKLISTLEN];
+MODVAR aTKline *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
 int MODVAR spamf_ugly_vchanoverride = 0;
 
 void tkl_init(void)
 {
 	memset(tklines, 0, sizeof(tklines));
+	memset(tklines_ip_hash, 0, sizeof(tklines_ip_hash));
 }

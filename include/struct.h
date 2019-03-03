@@ -1798,7 +1798,9 @@ struct _maxtargets {
 #define BANCHK_MSG		1	/* checking if a ban forbids the person from sending messages */
 #define BANCHK_NICK		2	/* checking if a ban forbids the person from changing his/her nick */
 
-#define TKLISTLEN 26
+#define TKLISTLEN		26
+#define TKLIPHASHLEN1		4
+#define TKLIPHASHLEN2		1021
 
 #define MATCH_CHECK_IP              0x0001
 #define MATCH_CHECK_REAL_HOST       0x0002

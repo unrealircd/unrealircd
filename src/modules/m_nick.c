@@ -1346,7 +1346,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			RunHookReturnInt2(HOOKTYPE_REQUIRE_SASL, sptr, bconf->reason, !=0);
 			return banned_client(sptr, "Require-Auth", bconf->reason?bconf->reason:"", 0, 0);
 		}
-		tkl_check_expire(NULL);
 		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
 		if ((xx = find_tkline_match(sptr, 0)) < 0)
 		{
