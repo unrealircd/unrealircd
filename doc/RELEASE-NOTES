@@ -1,5 +1,9 @@
-UnrealIRCd 4.2.2 Release Notes
-===============================
+UnrealIRCd 4.2.3-dev Release Notes
+===================================
+
+This version is under development.
+
+** below are the release notes of previous version **
 
 This is the stable version of UnrealIRCd 4.2.2. It contains several
 major enhancements, in particular with regards to flood controls.
