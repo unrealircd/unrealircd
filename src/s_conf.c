@@ -7934,6 +7934,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.away_count = cnt;
 					tempiConf.away_period = period;
 				}
+				else if (!strcmp(cepp->ce_varname, "invite-flood"))
+				{
+					int cnt, period;
+					config_parse_flood(cepp->ce_vardata, &cnt, &period);
+					tempiConf.invite_count = cnt;
+					tempiConf.invite_period = period;
+				}
 				else if (!strcmp(cepp->ce_varname, "knock-flood"))
 				{
 					int cnt, period;
