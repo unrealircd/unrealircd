@@ -401,9 +401,6 @@ static char recursion_trap=0;
 
 				write_failure = 1;
 			}
-#ifndef _WIN32
-			fsync(logs->logfd);
-#endif
 		}
 	}
 
