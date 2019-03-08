@@ -211,7 +211,6 @@ __EOF__
 	echo ""
 	echo "Thanks!"
 elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
-	cd @TMPDIR@ || exit 1
 	CERT="@CONFDIR@/ssl/server.cert.pem"
 	if [ "$2" != "" ]; then
 		CERT="$2"
@@ -220,9 +219,9 @@ elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
 		echo "Could not open certificate: $CERT"
 		exit 1
 	fi
-	openssl x509 -noout -in "$CERT" -pubkey | openssl asn1parse -noout -inform pem -out tmp.public.key
-	HASH="`openssl dgst -sha256 -binary tmp.public.key | openssl enc -base64`"
-	rm -f tmp.public.key
+	openssl x509 -noout -in "$CERT" -pubkey | openssl asn1parse -noout -inform pem -out @TMPDIR@/tmp.public.key
+	HASH="`openssl dgst -sha256 -binary @TMPDIR@/tmp.public.key | openssl enc -base64`"
+	rm -f @TMPDIR@/tmp.public.key
 	if [ "$HASH" = "" ]; then
 		echo "Sorry, something went wrong when generating the SPKI fingerprint."
 		echo "Is the 'openssl' tool properly installed?"
