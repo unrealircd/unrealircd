@@ -29,6 +29,7 @@ else
 	# And an attempt to fix things on Travis-CI
 	# (apparently there are mixed python psych .so versions)
 	gem uninstall psych
+	gem update --system
 
 	set -e
 
