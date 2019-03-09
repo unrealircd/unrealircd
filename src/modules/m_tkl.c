@@ -1706,6 +1706,7 @@ aTKline *find_tkline_match_zap_matcher(aClient *cptr, aTKline *tkl)
 
 		return tkl;
 	}
+	return NULL;
 }
 
 /** Find matching (G)ZLINE, if any.
