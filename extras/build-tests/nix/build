@@ -53,6 +53,6 @@ fi
 
 echo ""
 echo ""
-echo "Now running UnrealIRCd test framework..."
-set -x
-extras/build-tests/nix/run-tests
+#echo "Now running UnrealIRCd test framework..."
+#set -x
+#extras/build-tests/nix/run-tests

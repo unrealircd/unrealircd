@@ -18,27 +18,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 	gem install rspec || true
 else
 	sudo apt-get install git python rake -y
-
-	set +e
-
-	echo "VERSIONS:"
-	ruby --version
-	rvm list rubies
-	ls -ald /usr/bin/ruby* /usr/local/bin/ruby*
-	dpkg --list|grep ruby
-	gem --version
-	# And an attempt to fix things on Travis-CI
-	# (apparently there are mixed python psych .so versions)
-	rvm uninstall 2.5.3
-	rvm uninstall 2.4.5
-	#rvm use system
-	rvm alias create default 2.3.8
-	rvm reset
-	rvm alias create default 2.3.8
-	rvm list
-	sudo apt-get install ruby-dev -y
-	set -e
-	gem --version
 	gem install bundler -v "~>1.0"
 fi
 

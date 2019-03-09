@@ -4,7 +4,7 @@ dist: xenial
 compiler:
   - clang
   - gcc
-script: extras/build-tests/nix/run-tests $BUILDCONFIG
+script: extras/build-tests/nix/build $BUILDCONFIG
 env:
   - BUILDCONFIG=""
   - BUILDCONFIG="system-cares"
