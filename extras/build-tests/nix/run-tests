@@ -19,15 +19,18 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
 	sudo apt-get install git python rake -y
 
+	set +e
+
 	echo "VERSIONS:"
 	ruby --version
 	ls -ald /usr/bin/ruby* /usr/local/bin/ruby*
 	dpkg --list|grep ruby
 	gem --version
-
 	# And an attempt to fix things on Travis-CI
 	# (apparently there are mixed python psych .so versions)
 	gem uninstall psych
+
+	set -e
 
 	gem install bundler -v "~>1.0"
 fi
