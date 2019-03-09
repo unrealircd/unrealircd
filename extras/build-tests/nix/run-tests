@@ -31,8 +31,11 @@ else
 	# (apparently there are mixed python psych .so versions)
 	rvm uninstall 2.5.3
 	rvm uninstall 2.4.5
+	rvm use system
+	rvm list
+	apt-get install ruby-dev -y
 	set -e
-
+	gem --version
 	gem install bundler -v "~>1.0"
 fi
 
