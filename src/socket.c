@@ -33,31 +33,31 @@ extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #include <sys/socket.h>
 #endif
 
-/*
-** deliver_it
-**	Attempt to send a sequence of bytes to the connection.
-**	Returns
-**
-**	< 0	Some fatal error occurred, (but not EWOULDBLOCK).
-**		This return is a request to close the socket and
-**		clean up the link.
-**	
-**	>= 0	No real error occurred, returns the number of
-**		bytes actually transferred. EWOULDBLOCK and other
-**		possibly similar conditions should be mapped to
-**		zero return. Upper level routine will have to
-**		decide what to do with those unwritten bytes...
-**
-**	*NOTE*	alarm calls have been preserved, so this should
-**		work equally well whether blocking or non-blocking
-**		mode is used...
-**
-**	*NOTE*	I nuked 'em.  At the load of current ircd servers
-**		you can't run with stuff that blocks. And we don't.
-*/
-int  deliver_it(aClient *cptr, char *str, int len)
+/** Attempt to deliver data to a client.
+ * This function is only called from send_queued() and will deal
+ * with sending to the SSL/TLS or plaintext connection.
+ * @param cptr The client
+ * @param str  The string to send
+ * @param len  The length of the string
+ * @param want_read In case of SSL/TLS it may happen that SSL_write()
+ *                  needs to READ data. If this happens then this
+ *                  function will set *want_read to 1.
+ *                  The upper layer should then call us again when
+ *                  there is data ready to be READ.
+ * @retval <0  Some fatal error occurred, (but not EWOULDBLOCK).
+ *             This return is a request to close the socket and
+ *             clean up the link.
+ * @retval >=0 No real error occurred, returns the number of
+ *             bytes actually transferred. EWOULDBLOCK and other
+ *             possibly similar conditions should be mapped to
+ *             zero return. Upper level routine will have to
+ *             decide what to do with those unwritten bytes...
+ */
+int  deliver_it(aClient *cptr, char *str, int len, int *want_read)
 {
 	int  retval;
+
+	*want_read = 0;
 
 	if (IsDead(cptr) || (!IsServer(cptr) && !IsPerson(cptr)
 	    && !IsHandshake(cptr) 
@@ -81,7 +81,8 @@ int  deliver_it(aClient *cptr, char *str, int len)
 			switch (SSL_get_error(cptr->local->ssl, retval))
 			{
 			case SSL_ERROR_WANT_READ:
-				/* retry later */
+				SET_ERRNO(P_EWOULDBLOCK);
+				*want_read = 1;
 				return 0;
 			case SSL_ERROR_WANT_WRITE:
 				SET_ERRNO(P_EWOULDBLOCK);

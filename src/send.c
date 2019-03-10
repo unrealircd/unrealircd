@@ -94,12 +94,10 @@ int dead_link(aClient *to, char *notice)
 	return -1;
 }
 
-/*
-** write_data_handler
-**	This function is called as a callback when we want to dump
-**	data to a buffer as a function of the eventloop.
-*/
-static void send_queued_write(int fd, int revents, void *data)
+/** This is a callback function from the event loop.
+ * All it does is call send_queued().
+ */
+static void send_queued_cb(int fd, int revents, void *data)
 {
 	aClient *to = data;
 
@@ -109,39 +107,28 @@ static void send_queued_write(int fd, int revents, void *data)
 	send_queued(to);
 }
 
-/*
-** send_queued
-**	This function is called from the main select-loop (or whatever)
-**	when there is a chance the some output would be possible. This
-**	attempts to empty the send queue as far as possible...
-*/
-int  send_queued(aClient *to)
+/** This function is called when queued data might be ready to be
+ * sent to the client. It is called from the event loop and also
+ * a couple of other places (such as when closing the connection).
+ */
+int send_queued(aClient *to)
 {
 	char *msg;
 	int  len, rlen;
 	dbufbuf *block;
+	int want_read;
 
-	/*
-	   ** Once socket is marked dead, we cannot start writing to it,
-	   ** even if the error is removed...
-	 */
+	/* We NEVER write to dead sockets. */
 	if (IsDead(to))
-	{
-		/*
-		   ** Actually, we should *NEVER* get here--something is
-		   ** not working correct if send_queued is called for a
-		   ** dead socket... --msa
-		 */
 		return -1;
-	}
 
 	while (DBufLength(&to->local->sendQ) > 0)
 	{
 		block = container_of(to->local->sendQ.dbuf_list.next, dbufbuf, dbuf_node);
 		len = block->size;
 
-		/* Returns always len > 0 */
-		if ((rlen = deliver_it(to, block->data, len)) < 0)
+		/* Deliver it and check for fatal error.. */
+		if ((rlen = deliver_it(to, block->data, len, &want_read)) < 0)
 		{
 			char buf[256];
 			snprintf(buf, 256, "Write error: %s", STRERROR(ERRNO));
@@ -149,10 +136,26 @@ int  send_queued(aClient *to)
 		}
 		(void)dbuf_delete(&to->local->sendQ, rlen);
 		to->local->lastsq = DBufLength(&to->local->sendQ) / 1024;
+		if (want_read)
+		{
+			/* SSL_write indicated that it cannot write data at this
+			 * time and needs to READ data first. Let's stop talking
+			 * to the user and ask to notify us when there's data
+			 * to read.
+			 */
+			fd_setselect(to->fd, FD_SELECT_READ, send_queued_cb, to);
+			fd_setselect(to->fd, FD_SELECT_WRITE, NULL, to);
+			break;
+		}
+		/* Restore handling of reads towards read_packet(), since
+		 * it may be overwritten in an earlier call to send_queued(),
+		 * to handle reads by send_queued_cb(), see directly above.
+		 */
+		fd_setselect(to->fd, FD_SELECT_READ, read_packet, to);
 		if (rlen < block->size)
 		{
 			/* incomplete write due to EWOULDBLOCK, reschedule */
-			fd_setselect(to->fd, FD_SELECT_WRITE, send_queued_write, to);
+			fd_setselect(to->fd, FD_SELECT_WRITE, send_queued_cb, to);
 			break;
 		}
 	}

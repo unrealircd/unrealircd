@@ -294,7 +294,7 @@ extern void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps
 extern void sendto_ops_and_log(char *pattern, ...) __attribute__((format(printf,1,2)));
 
 extern MODVAR int writecalls, writeb[];
-extern int deliver_it(aClient *, char *, int);
+extern int deliver_it(aClient *cptr, char *str, int len, int *want_read);
 extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
 extern char *canonize(char *buffer);
 extern ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, char *filename);
