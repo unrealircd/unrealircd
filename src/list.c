@@ -379,9 +379,12 @@ void remove_client_from_list(aClient *cptr)
 	else
 		crem.inuse--;
 #endif
-	assert(list_empty(&cptr->client_node));
-	assert(list_empty(&cptr->client_hash));
-	assert(list_empty(&cptr->id_hash));
+	if (!list_empty(&cptr->client_node))
+		abort();
+	if (!list_empty(&cptr->client_hash))
+		abort();
+	if (!list_empty(&cptr->id_hash))
+		abort();
 	(void)free_client(cptr);
 	checklist();
 	numclients--;
