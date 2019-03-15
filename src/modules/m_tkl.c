@@ -1312,6 +1312,7 @@ void _tkl_expire(aTKline * tmp)
 		tkl_check_local_remove_shun(tmp);
 
 	RunHook5(HOOKTYPE_TKL_DEL, NULL, NULL, tmp, 0, NULL);
+	tkl_del_line(tmp);
 }
 
 EVENT(_tkl_check_expire)
