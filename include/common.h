@@ -225,7 +225,7 @@ static char *StsMalloc(size_t size, char *file, long line)
 
 #endif
 
-#define safestrdup(x,y) do { if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y); } while(0)
+#define safestrdup(x,y) do { if (x) MyFree(x); if (!(y)) x = NULL; else x = strdup(y); } while(0)
 #define safestrldup(x,y,sz) do { if (x) MyFree(x); if (!y) x = NULL; else x = strldup(y,sz); } while(0)
 #define safefree(x) do { if (x) MyFree(x); x = NULL; } while(0)
 
