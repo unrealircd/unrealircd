@@ -1,6 +1,6 @@
 /*
  *   IRC - Internet Relay Chat, src/modules/m_protoctl.c
- *   (C) 2004 The UnrealIRCd Team
+ *   (C) 2004- The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -52,207 +52,102 @@ MOD_UNLOAD(m_protoctl)
 	return MOD_SUCCESS;
 }
 
-/*
- * m_protoctl
- *	parv[1+] = Options
+#define MAX_SERVER_TIME_OFFSET 60
+
+/* The PROTOCTL command is used for negotiating capabilities with
+ * directly connected servers.
+ * See https://www.unrealircd.org/docs/Server_protocol:PROTOCTL_command
+ * for all technical documentation, especially if you are a server
+ * or services coder.
  */
 CMD_FUNC(m_protoctl)
 {
 	int  i;
-#ifndef PROTOCTL_MADNESS
-	int  remove = 0;
-#endif
 	int first_protoctl = (GotProtoctl(sptr)) ? 0 : 1; /**< First PROTOCTL we receive? Special ;) */
-	char proto[512], *s;
-/*	static char *dummyblank = "";	Yes, it is kind of ugly */
+	char proto[512];
+	char *name, *value, *p;
 
 	if (!MyConnect(sptr))
-		return 0; /* Remote PROTOCTL's are not supported at this time */
+		return 0; /* Remote PROTOCTL's are not supported */
 
-#ifdef PROTOCTL_MADNESS
-	if (GotProtoctl(sptr))
-	{
-		/*
-		 * But we already GOT a protoctl msg!
-		 */
-		if (!IsServer(sptr))
-			sendto_one(cptr,
-			    "ERROR :Already got a PROTOCTL from you.");
-		return 0;
-	}
-#endif
 	cptr->flags |= FLAGS_PROTOCTL;
-	/* parv[parc - 1] */
+
 	for (i = 1; i < parc; i++)
 	{
 		strlcpy(proto, parv[i], sizeof proto);
-		s = proto;
-#ifndef PROTOCTL_MADNESS
-		if (*s == '-')
+		p = strchr(proto, '=');
+		if (p)
 		{
-			s++;
-			remove = 1;
+			name = proto;
+			*p++ = '\0';
+			value = p;
+		} else {
+			name = proto;
+			value = NULL;
 		}
-		else
-			remove = 0;
-#endif
-/*		equal = (char *)index(proto, '=');
-		if (equal == NULL)
-			options = dummyblank;
-		else
+
+		if (!strcmp(name, "NAMESX"))
 		{
-			options = &equal[1];
-			equal[0] = '\0';
-		}
-*/
-		if (!strcmp(s, "NAMESX"))
-		{
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			SetNAMESX(cptr);
 		}
-		if (!strcmp(s, "UHNAMES") && UHNAMES_ENABLED)
+		else if (!strcmp(name, "UHNAMES") && UHNAMES_ENABLED)
 		{
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			SetUHNAMES(cptr);
 		}
-		else if (strcmp(s, "NOQUIT") == 0)
+		else if (!strcmp(name, "NOQUIT"))
 		{
-#ifndef PROTOCTL_MADNESS
-			if (remove)
-			{
-				ClearNoQuit(cptr);
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
-			    proto, cptr->name));
 			SetNoQuit(cptr);
-
 		}
-		else if (strcmp(s, "SJOIN") == 0)
+		else if (!strcmp(name, "SJOIN"))
 		{
-#ifndef PROTOCTL_MADNESS
-			if (remove)
-			{
-				ClearSJOIN(cptr);
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
-			    proto, cptr->name));
 			SetSJOIN(cptr);
 		}
-		else if (strcmp(s, "SJOIN2") == 0)
+		else if (!strcmp(name, "SJOIN2"))
 		{
-#ifndef PROTOCTL_MADNESS
-			if (remove)
-			{
-				ClearSJOIN2(cptr);
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
-			    proto, cptr->name));
 			SetSJOIN2(cptr);
 		}
-		else if (strcmp(s, "NICKv2") == 0)
+		else if (!strcmp(name, "NICKv2"))
 		{
-#ifndef PROTOCTL_MADNESS
-			if (remove)
-			{
-				ClearNICKv2(cptr);
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
-			    proto, cptr->name));
 			SetNICKv2(cptr);
 		}
-		else if (strcmp(s, "UMODE2") == 0)
+		else if (!strcmp(name, "UMODE2"))
 		{
-#ifndef PROTOCTL_MADNESS
-			if (remove)
-			{
-				ClearUMODE2(cptr);
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR,
-			    "Chose protocol %s for link %s",
-			    proto, cptr->name));
 			SetUMODE2(cptr);
 		}
-		else if (strcmp(s, "VL") == 0)
+		else if (!strcmp(name, "VL"))
 		{
-#ifndef PROTOCTL_MADNESS
-			if (remove)
-			{
-				ClearVL(cptr);
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR,
-			    "Chose protocol %s for link %s",
-			    proto, cptr->name));
 			SetVL(cptr);
 		}
-		else if (strcmp(s, "VHP") == 0)
+		else if (!strcmp(name, "VHP"))
 		{
-#ifndef PROTOCTL_MADNESS
-			if (remove)
-			{
-				ClearVHP(cptr);
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR,
-			    "Chose protocol %s for link %s",
-			    proto, cptr->name));
 			SetVHP(cptr);
 		}
-		else if (strcmp(s, "CLK") == 0)
+		else if (!strcmp(name, "CLK"))
 		{
-			Debug((DEBUG_ERROR,
-			    "Chose protocol %s for link %s",
-			    proto, cptr->name));
 			SetCLK(cptr);
 		}
-		else if (strcmp(s, "SJ3") == 0)
+		else if (!strcmp(name, "SJ3"))
 		{
-#ifndef PROTOCTL_MADNESS
-			if (remove)
-			{
-				ClearSJ3(cptr);
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR,
-			    "Chose protocol %s for link %s",
-			    proto, cptr->name));
 			SetSJ3(cptr);
 		}
-		else if (!strcmp(s, "SJSBY") && iConf.ban_setter_sync)
+		else if (!strcmp(name, "SJSBY") && iConf.ban_setter_sync)
 		{
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			SetSJSBY(cptr);
 		}
-		else if (strcmp(s, "TKLEXT") == 0)
+		else if (!strcmp(name, "TKLEXT"))
 		{
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			SetTKLEXT(cptr);
 		}
-		else if (strcmp(s, "TKLEXT2") == 0)
+		else if (!strcmp(name, "TKLEXT2"))
 		{
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			SetTKLEXT2(cptr);
 			SetTKLEXT(cptr); /* TKLEXT is implied as well. always. */
 		}
-		else if (strcmp(s, "NICKIP") == 0)
+		else if (!strcmp(name, "NICKIP"))
 		{
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			cptr->local->proto |= PROTO_NICKIP;
 		}
-		else if (strncmp(s, "NICKCHARS=", 10) == 0)
+		else if (!strcmp(name, "NICKCHARS") && value)
 		{
 			if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
 				continue;
@@ -260,7 +155,7 @@ CMD_FUNC(m_protoctl)
 			/* Some combinations are fatal because they would lead to mass-kills:
 			 * - use of 'utf8' on our server but not on theirs
 			 */
-			if (strstr(charsys_get_current_languages(), "utf8") && !strstr(s+10, "utf8"))
+			if (strstr(charsys_get_current_languages(), "utf8") && !strstr(value, "utf8"))
 			{
 				char buf[512];
 				snprintf(buf, sizeof(buf), "Server %s has utf8 in set::allowed-nickchars but %s does not. Link rejected.",
@@ -269,24 +164,24 @@ CMD_FUNC(m_protoctl)
 				return exit_client(cptr, sptr, &me, buf);
 			}
 			/* We compare the character sets to see if we should warn opers about any mismatch... */
-			if (strcmp(s+10, charsys_get_current_languages()))
+			if (strcmp(value, charsys_get_current_languages()))
 			{
 				sendto_realops("\002WARNING!!!!\002 Link %s does not have the same set::allowed-nickchars settings (or is "
 							"a different UnrealIRCd version), this MAY cause display issues. Our charset: '%s', theirs: '%s'",
-					get_client_name(cptr, FALSE), charsys_get_current_languages(), s+10);
+					get_client_name(cptr, FALSE), charsys_get_current_languages(), value);
 				/* return exit_client(cptr, cptr, &me, "Nick charset mismatch"); */
 			}
 			if (cptr->serv)
-				safestrdup(cptr->serv->features.nickchars, s+10);
+				safestrdup(cptr->serv->features.nickchars, value);
 
 			/* If this is a runtime change (so post-handshake): */
 			if (IsServer(sptr))
 				broadcast_sinfo(sptr, NULL, cptr);
 		}
-		else if (strncmp(s, "SID=", 4) == 0)
+		else if (!strcmp(name, "SID") && value)
 		{
 			aClient *acptr;
-			char *sid = s + 4;
+			char *sid = value;
 
 			if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
 				return exit_client(cptr, cptr, &me, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
@@ -308,7 +203,7 @@ CMD_FUNC(m_protoctl)
 			add_to_id_hash_table(cptr->id, cptr); /* add SID */
 			cptr->local->proto |= PROTO_SID;
 		}
-		else if ((strncmp(s, "EAUTH=", 6) == 0) && NEW_LINKING_PROTOCOL)
+		else if (!strcmp(name, "EAUTH") && value && NEW_LINKING_PROTOCOL)
 		{
 			/* Early authorization: EAUTH=servername,protocol,flags,software
 			 * (Only servername is mandatory, rest is optional)
@@ -319,7 +214,7 @@ CMD_FUNC(m_protoctl)
 			char buf[512];
 			ConfigItem_link *aconf = NULL;
 
-			strlcpy(buf, s+6, sizeof(buf));
+			strlcpy(buf, value, sizeof(buf));
 			p = strchr(buf, ' ');
 			if (p)
 			{
@@ -373,7 +268,7 @@ CMD_FUNC(m_protoctl)
 			if (!IsHandshake(cptr) && aconf) /* Send PASS early... */
 				sendto_one(sptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		}
-		else if ((strncmp(s, "SERVERS=", 8) == 0) && NEW_LINKING_PROTOCOL)
+		else if (!strcmp(name, "SERVERS") && value && NEW_LINKING_PROTOCOL)
 		{
 			aClient *acptr, *srv;
 			char *sid = NULL;
@@ -389,7 +284,7 @@ CMD_FUNC(m_protoctl)
 			 * Eg: SERVER=001,002,0AB,004,005
 			 */
 
-			add_pending_net(sptr, s+8);
+			add_pending_net(sptr, value);
 
 			acptr = find_non_pending_net_duplicates(sptr);
 			if (acptr)
@@ -413,19 +308,18 @@ CMD_FUNC(m_protoctl)
 			}
 
 			/* Send our PROTOCTL SERVERS= back if this was NOT a response */
-			if (s[8] != '*')
+			if (*value != '*')
 				send_protoctl_servers(sptr, 1);
 		}
-		else if ((strncmp(s, "TS=",3) == 0) && (IsServer(sptr) || IsEAuth(sptr)))
+		else if (!strcmp(name, "TS") && value && (IsServer(sptr) || IsEAuth(sptr)))
 		{
-			long t = atol(s+3);
+			long t = atol(value);
 			char msg[512], linkerr[512];
 			
 			if (t < 10000)
 				continue; /* ignore */
 			
 			*msg = *linkerr = '\0';
-#define MAX_SERVER_TIME_OFFSET 60
 			
 			if ((TStime() - t) > MAX_SERVER_TIME_OFFSET)
 			{
@@ -447,53 +341,34 @@ CMD_FUNC(m_protoctl)
 				return exit_client(sptr, sptr, sptr, linkerr);
 			}
 		}
-		else if ((strcmp(s, "MLOCK")) == 0)
+		else if (!strcmp(name, "MLOCK"))
 		{
-#ifdef PROTOCTL_MADNESS
-			if (remove)
-			{
-				cptr->local->proto &= ~PROTO_MLOCK;
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			cptr->local->proto |= PROTO_MLOCK;
 		}
-		else if ((strncmp(s, "CHANMODES=", 10) == 0) && sptr->serv)
+		else if (!strcmp(name, "CHANMODES") && value && sptr->serv)
 		{
-			parse_chanmodes_protoctl(sptr, s+10);
+			parse_chanmodes_protoctl(sptr, value);
 			/* If this is a runtime change (so post-handshake): */
 			if (IsServer(sptr))
 				broadcast_sinfo(sptr, NULL, cptr);
 		}
-		else if ((strncmp(s, "USERMODES=", 10) == 0) && sptr->serv)
+		else if (!strcmp(name, "USERMODES") && value && sptr->serv)
 		{
-			safestrdup(sptr->serv->features.usermodes, s+10);
+			safestrdup(sptr->serv->features.usermodes, value);
 			/* If this is a runtime change (so post-handshake): */
 			if (IsServer(sptr))
 				broadcast_sinfo(sptr, NULL, cptr);
 		}
-		else if ((strncmp(s, "BOOTED=", 7) == 0) && sptr->serv)
+		else if (!strcmp(name, "BOOTED") && value && sptr->serv)
 		{
-			sptr->serv->boottime = atol(s+7);
+			sptr->serv->boottime = atol(value);
 		}
-		else if (!strcmp(s, "EXTSWHOIS"))
+		else if (!strcmp(name, "EXTSWHOIS"))
 		{
-#ifdef PROTOCTL_MADNESS
-			if (remove)
-			{
-				cptr->local->proto &= ~PROTO_EXTSWHOIS;
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			cptr->local->proto |= PROTO_EXTSWHOIS;
 		}
-
-		/*
-		 * Add other protocol extensions here, with proto
-		 * containing the base option, and options containing
-		 * what it equals, if anything.
+		/* You can add protocol extensions here.
+		 * Use 'name' and 'value' (the latter may be NULL).
 		 *
 		 * DO NOT error or warn on unknown proto; we just don't
 		 * support it.
