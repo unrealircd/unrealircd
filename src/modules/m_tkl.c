@@ -2085,12 +2085,13 @@ char *tkl_type_string(aTKline *tk)
 	return txt;
 }
 
-/*
- * m_tkl:
+/** TKL command: server to server handling of *LINEs and SPAMFILTERs.
  * HISTORY:
  * This was originall called Timed KLines, but today it's
  * used by various *line types eg: zline, gline, gzline, shun,
  * but also by spamfilter etc...
+ * DOCUMENTATION
+ * See (also) https://www.unrealircd.org/docs/Server_protocol:TKL_command
  * USAGE:
  * This routine is used both internally by the ircd (to
  * for example add local klines, zlines, etc) and over the

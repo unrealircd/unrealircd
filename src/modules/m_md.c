@@ -76,6 +76,11 @@ MOD_UNLOAD(m_md)
  *
  * The appropriate module is called to set the data (unserialize) and
  * then the command is broadcasted to all other servers.
+ *
+ * Technical documentation (if writing services) is available at:
+ * https://www.unrealircd.org/docs/Server_protocol:MD_command
+ * Module API documentation (if writing an UnrealIRCd module):
+ * https://www.unrealircd.org/docs/Dev:Module_Storage
  */
 CMD_FUNC(m_md)
 {

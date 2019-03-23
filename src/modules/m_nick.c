@@ -243,6 +243,9 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 **	parv[10] = cloaked host, * if none
 **	parv[11] = ip
 **	parv[12] = info
+**
+** Technical documentation is available at:
+** https://www.unrealircd.org/docs/Server_protocol:UID_command
 */
 CMD_FUNC(m_uid)
 {

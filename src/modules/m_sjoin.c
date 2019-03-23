@@ -78,9 +78,9 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 	return (&pparv);
 }
 
-/*
- * m_sjoin
- * Synchronize channel modes, +beI lists and users (server-to-server command)
+/** SJOIN: Synchronize channel modes, +beI lists and users (server-to-server command)
+ * Extensive technical documentation is available at:
+ * https://www.unrealircd.org/docs/Server_protocol:SJOIN_command
  *
  *  parv[1] = channel timestamp
  *  parv[2] = channel name

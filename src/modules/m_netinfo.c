@@ -52,19 +52,21 @@ MOD_UNLOAD(m_netinfo)
 	return MOD_SUCCESS;
 }
 
-/*
-** m_netinfo
-** by Stskeeps
-**  parv[1] = max global count
-**  parv[2] = time of end sync
-**  parv[3] = unreal protocol using (numeric)
-**  parv[4] = cloak-crc (> u2302)
-**  parv[5] = free(**)
-**  parv[6] = free(**)
-**  parv[7] = free(**)
-**  parv[8] = ircnet
-**/
-
+/** NETINFO: Share configuration settings with directly linked server.
+ * Originally written by Stskeeps
+ *
+ * Technical documentation:
+ * https://www.unrealircd.org/docs/Server_protocol:NETINFO_command
+ *
+ * parv[1] = max global count
+ * parv[2] = time of end sync
+ * parv[3] = unreal protocol using (numeric)
+ * parv[4] = cloak-crc (> u2302)
+ * parv[5] = free(**)
+ * parv[6] = free(**)
+ * parv[7] = free(**)
+ * parv[8] = network name
+ */
 CMD_FUNC(m_netinfo)
 {
 	long 		lmax;

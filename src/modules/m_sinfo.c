@@ -35,6 +35,11 @@ MOD_UNLOAD(sinfo)
 	return MOD_SUCCESS;
 }
 
+/** SINFO server-to-server command.
+ * Technical documentation is available at:
+ * https://www.unrealircd.org/docs/Server_protocol:SINFO_command
+ * ^ contains important remarks regarding when to send it and when not.
+ */
 int sinfo_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char buf[512];
