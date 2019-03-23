@@ -1347,7 +1347,13 @@ int InitUnrealIRCd(int argc, char *argv[])
 	booted = TRUE;
 	load_tunefile();
 	make_umodestr();
+	me.flags = FLAGS_LISTEN;
+	me.fd = -1;
+	SetMe(&me);
+	make_server(&me);
 	extcmodes_check_for_changes();
+	umodes_check_for_changes();
+	charsys_check_for_changes();
 	clicap_init();
 	if (!find_Command_simple("AWAY") /*|| !find_Command_simple("KILL") ||
 		!find_Command_simple("OPER") || !find_Command_simple("PING")*/)
@@ -1379,10 +1385,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 		portnum = PORTNUM;
 	me.local->port = portnum;
 	(void)init_sys();
-	me.flags = FLAGS_LISTEN;
-	me.fd = -1;
-	SetMe(&me);
-	make_server(&me);
 	applymeblock();
 #ifdef HAVE_SYSLOG
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
@@ -1409,7 +1411,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
 	timeofday = time(NULL);
-	me.local->lasttime = me.local->since = me.local->firsttime = TStime();
+	me.local->lasttime = me.local->since = me.local->firsttime = me.serv->boottime = TStime();
+	me.serv->features.protocol = UnrealProtocol;
+	me.serv->features.software = strdup(version);
 	(void)add_to_client_hash_table(me.name, &me);
 	(void)add_to_id_hash_table(me.id, &me);
 	list_add(&me.client_node, &global_server_list);

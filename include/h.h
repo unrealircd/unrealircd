@@ -43,6 +43,8 @@ extern MODVAR struct stats *ircstp;
 extern MODVAR int bootopt;
 extern MODVAR time_t TSoffset;
 extern MODVAR time_t timeofday;
+extern MODVAR char cmodestring[512];
+extern MODVAR char umodestring[UMODETABLESZ+1];
 /* newconf */
 #define get_sendq(x) ((x)->local->class ? (x)->local->class->sendq : MAXSENDQLENGTH)
 /* get_recvq is only called in send.c for local connections */
@@ -491,6 +493,7 @@ extern void      flag_add(char ch);
 extern void      flag_del(char ch);
 extern void init_dynconf(void);
 extern char *pretty_time_val(long);
+extern char *pretty_date(TS t);
 extern int        init_conf(char *filename, int rehash);
 extern void       validate_configuration(void);
 extern void       run_configuration(void);
@@ -669,6 +672,7 @@ extern MODVAR void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr);
 extern MODVAR int (*do_nick_name)(char *nick);
 extern MODVAR int (*do_remote_nick_name)(char *nick);
 extern MODVAR char *(*charsys_get_current_languages)(void);
+extern MODVAR void *(*broadcast_sinfo)(aClient *acptr, aClient *to, aClient *except);
 /* /Efuncs */
 
 extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;
@@ -741,6 +745,7 @@ extern MODVAR BOOL IsService;
 #endif
 extern int match_ip46(char *a, char *b);
 extern void extcmodes_check_for_changes(void);
+extern void umodes_check_for_changes(void);
 extern int config_parse_flood(char *orig, int *times, int *period);
 extern int swhois_add(aClient *acptr, char *tag, int priority, char *swhois, aClient *from, aClient *skip);
 extern int swhois_delete(aClient *acptr, char *tag, char *swhois, aClient *from, aClient *skip);
@@ -809,3 +814,6 @@ extern void setmaxtargets(char *cmd, int limit);
 extern void freemaxtargets(void);
 extern int max_targets_for_command(char *cmd);
 extern void set_targmax_defaults(void);
+extern void parse_chanmodes_protoctl(aClient *sptr, char *str);
+extern void concat_params(char *buf, int len, int parc, char *parv[]);
+extern void charsys_check_for_changes(void);

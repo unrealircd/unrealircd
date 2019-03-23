@@ -696,8 +696,9 @@ struct Server {
 	char 		*up;		/* uplink for this server */
 	char 		by[NICKLEN + 1];
 	ConfigItem_link *conf;
-	TS   		timestamp;		/* Remotely determined connect try time */
-	long		 users;
+	TS   		timestamp;	/* Remotely determined connect try time */
+	long		users;
+	TS		boottime;	/* Startup time of server */
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
@@ -706,9 +707,11 @@ struct Server {
 		unsigned server_sent:1;		/* SERVER message sent to this link? (for outgoing links) */
 	} flags;
 	struct {
+		char *usermodes;
 		char *chanmodes[4];
 		int protocol;
 		char *software;
+		char *nickchars;
 	} features;
 };
 

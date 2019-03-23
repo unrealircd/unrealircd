@@ -216,7 +216,6 @@ char *num = NULL;
  */
 void send_proto(aClient *cptr, ConfigItem_link *aconf)
 {
-	char buf[1024];
 	Isupport *prefix = IsupportFind("PREFIX");
 
 	/* CAUTION: If adding a token to an existing PROTOCTL line below,
@@ -228,10 +227,8 @@ void send_proto(aClient *cptr, ConfigItem_link *aconf)
 	           iConf.ban_setter_sync ? "SJSBY" : "");
 
 	/* Second line */
-	snprintf(buf, sizeof(buf), "CHANMODES=%s%s,%s%s,%s%s,%s%s PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%ld EXTSWHOIS",
-		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, prefix->value, charsys_get_current_languages(), me.id, (long)TStime());
-
-	sendto_one(cptr, "PROTOCTL %s", buf);
+	sendto_one(cptr, "PROTOCTL CHANMODES=%s%s,%s%s,%s%s,%s%s USERMODES=%s BOOTED=%ld PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%ld EXTSWHOIS",
+		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, umodestring, me.local->since, prefix->value, charsys_get_current_languages(), me.id, (long)TStime());
 }
 
 #ifndef IRCDTOTALVERSION
@@ -1384,5 +1381,63 @@ aClient *find_non_pending_net_duplicates(aClient *cptr)
 	}
 	
 	return NULL;
+}
+
+void parse_chanmodes_protoctl(aClient *sptr, char *str)
+{
+	char *modes, *p;
+	char copy[256];
+
+	strlcpy(copy, str, sizeof(copy));
+
+	modes = strtoken(&p, copy, ",");
+	if (modes)
+	{
+		safestrdup(sptr->serv->features.chanmodes[0], modes);
+		modes = strtoken(&p, NULL, ",");
+		if (modes)
+		{
+			safestrdup(sptr->serv->features.chanmodes[1], modes);
+			modes = strtoken(&p, NULL, ",");
+			if (modes)
+			{
+				safestrdup(sptr->serv->features.chanmodes[2], modes);
+				modes = strtoken(&p, NULL, ",");
+				if (modes)
+				{
+					safestrdup(sptr->serv->features.chanmodes[3], modes);
+				}
+			}
+		}
+	}
+}
+
+static char previous_langsinuse[512];
+static int previous_langsinuse_ready = 0;
+
+void charsys_check_for_changes(void)
+{
+	char *langsinuse = charsys_get_current_languages();
+	/* already called by charsys_finish() */
+	safestrdup(me.serv->features.nickchars, langsinuse);
+
+	if (!previous_langsinuse_ready)
+	{
+		previous_langsinuse_ready = 1;
+		strlcpy(previous_langsinuse, langsinuse, sizeof(previous_langsinuse));
+		return; /* not booted yet. then we are done here. */
+	}
+
+	if (strcmp(langsinuse, previous_langsinuse))
+	{
+		ircd_log(LOG_ERROR, "Permitted nick characters changed at runtime: %s -> %s",
+			previous_langsinuse, langsinuse);
+		sendto_realops("Permitted nick characters changed at runtime: %s -> %s",
+			previous_langsinuse, langsinuse);
+		/* Broadcast change to all (locally connected) servers */
+		sendto_server(&me, 0, 0, "PROTOCTL NICKCHARS=%s", langsinuse);
+	}
+
+	strlcpy(previous_langsinuse, langsinuse, sizeof(previous_langsinuse));
 }
 

@@ -141,6 +141,32 @@ void make_umodestr(void)
 	*m = '\0';
 }
 
+static char previous_umodestring[256];
+
+void umodes_check_for_changes(void)
+{
+	make_umodestr();
+	safestrdup(me.serv->features.usermodes, umodestring);
+
+	if (!*previous_umodestring)
+	{
+		strlcpy(previous_umodestring, umodestring, sizeof(previous_umodestring));
+		return; /* not booted yet. then we are done here. */
+	}
+
+	if (*previous_umodestring && strcmp(umodestring, previous_umodestring))
+	{
+		ircd_log(LOG_ERROR, "User modes changed at runtime: %s -> %s",
+			previous_umodestring, umodestring);
+		sendto_realops("User modes changed at runtime: %s -> %s",
+			previous_umodestring, umodestring);
+		/* Broadcast change to all (locally connected) servers */
+		sendto_server(&me, 0, 0, "PROTOCTL USERMODES=%s", umodestring);
+	}
+
+	strlcpy(previous_umodestring, umodestring, sizeof(previous_umodestring));
+}
+
 /* UmodeAdd:
  * Add a usermode with character 'ch', if global is set to 1 the usermode is global
  * (sent to other servers) otherwise it's a local usermode

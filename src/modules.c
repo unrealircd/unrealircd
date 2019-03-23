@@ -137,6 +137,7 @@ void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr);
 int (*do_nick_name)(char *nick);
 int (*do_remote_nick_name)(char *nick);
 char *(*charsys_get_current_languages)(void);
+void *(*broadcast_sinfo)(aClient *acptr, aClient *to, aClient *except);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -199,7 +200,8 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 57 */	{"do_nick_name", (void *)&do_nick_name},
 /* 58 */	{"do_remote_nick_name", (void *)&do_remote_nick_name},
 /* 59 */	{"charsys_get_current_languages", (void *)&charsys_get_current_languages},
-/* 60 */	{NULL, NULL}
+/* 60 */	{"broadcast_sinfo", (void *)&broadcast_sinfo},
+/* 61 */	{NULL, NULL}
 };
 
 #ifdef UNDERSCORE

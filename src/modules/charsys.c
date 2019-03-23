@@ -420,6 +420,7 @@ ILangList *e, *e_next;
 	if (strlen(langsinuse) > 490)
 		abort();
 #endif
+	charsys_check_for_changes();
 }
 
 /** Add a character range to the multibyte list.

@@ -1323,3 +1323,56 @@ size_t add_sjsby(char *buf, char *setby, TS seton)
 
 	return p - buf;
 }
+
+/** Concatenate the entire parameter string.
+ * The function will take care of spaces in the final parameter (if any).
+ * @param buf   The buffer to output in.
+ * @param len   Length of the buffer.
+ * @param parc  Parameter count, ircd style.
+ * @param parv  Parameters, ircd style, so we will start at parv[1].
+ * @example
+ * char buf[512];
+ * concat_params(buf, sizeof(buf), parc, parv);
+ * sendto_server(cptr, 0, 0, ":%s SOMECOMMAND %s", sptr->name, buf);
+ */
+void concat_params(char *buf, int len, int parc, char *parv[])
+{
+	int i;
+
+	*buf = '\0';
+	for (i = 1; i < parc; i++)
+	{
+		char *param = parv[i];
+
+		if (param && !*buf)
+			strlcat(buf, " ", sizeof(buf));
+
+		if (strchr(param, ' '))
+		{
+			/* Last parameter, with : */
+			strlcat(buf, ":", sizeof(buf));
+			strlcat(buf, parv[i], sizeof(buf));
+			break;
+		}
+		strlcat(buf, parv[i], sizeof(buf));
+	}
+}
+
+char *pretty_date(TS t)
+{
+	static char buf[128];
+	struct tm *tm;
+
+	if (!t)
+		time(&t);
+	tm = gmtime(&t);
+	snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d GMT",
+	         1900 + tm->tm_year,
+	         tm->tm_mon + 1,
+	         tm->tm_mday,
+	         tm->tm_hour,
+	         tm->tm_min,
+	         tm->tm_sec);
+
+	return buf;
+}

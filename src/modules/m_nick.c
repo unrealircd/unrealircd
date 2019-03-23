@@ -1173,8 +1173,6 @@ CMD_FUNC(m_nick)
 **	   this is not fair. It should actually request another
 **	   nick from local user or kill him/her...
 */
-extern MODVAR char cmodestring[512];
-extern MODVAR char umodestring[UMODETABLESZ+1];
 
 extern int short_motd(aClient *sptr);
 

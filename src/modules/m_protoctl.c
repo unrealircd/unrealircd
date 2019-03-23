@@ -276,6 +276,12 @@ CMD_FUNC(m_protoctl)
 					get_client_name(cptr, FALSE), charsys_get_current_languages(), s+10);
 				/* return exit_client(cptr, cptr, &me, "Nick charset mismatch"); */
 			}
+			if (cptr->serv)
+				safestrdup(cptr->serv->features.nickchars, s+10);
+
+			/* If this is a runtime change (so post-handshake): */
+			if (IsServer(sptr))
+				broadcast_sinfo(sptr, NULL, cptr);
 		}
 		else if (strncmp(s, "SID=", 4) == 0)
 		{
@@ -455,32 +461,21 @@ CMD_FUNC(m_protoctl)
 		}
 		else if ((strncmp(s, "CHANMODES=", 10) == 0) && sptr->serv)
 		{
-			char *ch = s + 4;
-			char *modes, *p;
-			char copy[256];
-			
-			strlcpy(copy, s+10, sizeof(copy));
-			
-			modes = strtoken(&p, copy, ",");
-			if (modes)
-			{
-				safestrdup(sptr->serv->features.chanmodes[0], modes);
-				modes = strtoken(&p, NULL, ",");
-				if (modes)
-				{
-					safestrdup(sptr->serv->features.chanmodes[1], modes);
-					modes = strtoken(&p, NULL, ",");
-					if (modes)
-					{
-						safestrdup(sptr->serv->features.chanmodes[2], modes);
-						modes = strtoken(&p, NULL, ",");
-						if (modes)
-						{
-							safestrdup(sptr->serv->features.chanmodes[3], modes);
-						}
-					}
-				}
-			}
+			parse_chanmodes_protoctl(sptr, s+10);
+			/* If this is a runtime change (so post-handshake): */
+			if (IsServer(sptr))
+				broadcast_sinfo(sptr, NULL, cptr);
+		}
+		else if ((strncmp(s, "USERMODES=", 10) == 0) && sptr->serv)
+		{
+			safestrdup(sptr->serv->features.usermodes, s+10);
+			/* If this is a runtime change (so post-handshake): */
+			if (IsServer(sptr))
+				broadcast_sinfo(sptr, NULL, cptr);
+		}
+		else if ((strncmp(s, "BOOTED=", 7) == 0) && sptr->serv)
+		{
+			sptr->serv->boottime = atol(s+7);
 		}
 		else if (!strcmp(s, "EXTSWHOIS"))
 		{

@@ -39,8 +39,6 @@
 #include <fcntl.h>
 #include "h.h"
 
-extern char cmodestring[512];
-
 /* Channel parameter to slot# mapping */
 MODVAR unsigned char param_to_slot_mapping[256];
 
@@ -93,12 +91,25 @@ void extcmodes_check_for_changes(void)
 {
 	char chanmodes[256];
 	Isupport *isup;
-	
+
 	make_cmodestr();
 	make_extcmodestr();
-	ircsnprintf(chanmodes, sizeof(chanmodes), CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
-		EXPAR1, EXPAR2, EXPAR3, EXPAR4);
-	
+
+	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR1, EXPAR1);
+	safestrdup(me.serv->features.chanmodes[0], chanmodes);
+	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR2, EXPAR2);
+	safestrdup(me.serv->features.chanmodes[1], chanmodes);
+	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR3, EXPAR3);
+	safestrdup(me.serv->features.chanmodes[2], chanmodes);
+	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR4, EXPAR4);
+	safestrdup(me.serv->features.chanmodes[3], chanmodes);
+
+	ircsnprintf(chanmodes, sizeof(chanmodes), "%s,%s,%s,%s",
+	            me.serv->features.chanmodes[0],
+	            me.serv->features.chanmodes[1],
+	            me.serv->features.chanmodes[2],
+	            me.serv->features.chanmodes[3]);
+
 	isup = IsupportFind("CHANMODES");
 	if (!isup)
 	{

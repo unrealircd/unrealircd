@@ -22,6 +22,7 @@
 
 #include "unrealircd.h"
 
+/* Forward declarations */
 void send_channel_modes(aClient *cptr, aChannel *chptr);
 void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
 void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
@@ -32,9 +33,10 @@ void _send_protoctl_servers(aClient *sptr, int response);
 void _send_server_message(aClient *sptr);
 void _introduce_user(aClient *to, aClient *acptr);
 int _check_deny_version(aClient *cptr, char *software, int protocol, char *flags);
+void _broadcast_sinfo(aClient *acptr, aClient *to, aClient *except);
 
+/* Global variables */
 static char buf[BUFSIZE];
-
 
 #define MSG_SERVER 	"SERVER"	
 
@@ -55,6 +57,7 @@ MOD_TEST(m_server)
 	EfunctionAdd(modinfo->handle, EFUNC_VERIFY_LINK, _verify_link);
 	EfunctionAddVoid(modinfo->handle, EFUNC_INTRODUCE_USER, _introduce_user);
 	EfunctionAdd(modinfo->handle, EFUNC_CHECK_DENY_VERSION, _check_deny_version);
+	EfunctionAddVoid(modinfo->handle, EFUNC_BROADCAST_SINFO, _broadcast_sinfo);
 	return MOD_SUCCESS;
 }
 
@@ -815,6 +818,49 @@ void tls_link_notification_verify(aClient *acptr, ConfigItem_link *aconf)
 	}
 }
 
+#define SafeStr(x)    ((x && *(x)) ? (x) : "*")
+
+/** Broadcast SINFO.
+ * @param cptr   The server to send the information about.
+ * @param to     The server to send the information TO (NULL for broadcast).
+ * @param except The direction NOT to send to.
+ * This function takes into account that the server may not
+ * provide all of the detailed info. If any information is
+ * absent we will send 0 for numbers and * for NULL strings.
+ */
+void _broadcast_sinfo(aClient *acptr, aClient *to, aClient *except)
+{
+	char chanmodes[128], buf[512];
+
+	if (acptr->serv->features.chanmodes[0])
+	{
+		snprintf(chanmodes, sizeof(chanmodes), "%s,%s,%s,%s",
+			 acptr->serv->features.chanmodes[0],
+			 acptr->serv->features.chanmodes[1],
+			 acptr->serv->features.chanmodes[2],
+			 acptr->serv->features.chanmodes[3]);
+	} else {
+		strlcpy(chanmodes, "*", sizeof(chanmodes));
+	}
+
+	snprintf(buf, sizeof(buf), "%ld %d %s %s %s :%s",
+		      acptr->serv->boottime,
+		      acptr->serv->features.protocol,
+		      SafeStr(acptr->serv->features.usermodes),
+		      chanmodes,
+		      SafeStr(acptr->serv->features.nickchars),
+		      SafeStr(acptr->serv->features.software));
+
+	if (to)
+	{
+		/* Targetted to one server */
+		sendto_one(to, ":%s SINFO %s", acptr->name, buf);
+	} else {
+		/* Broadcast (except one side...) */
+		sendto_server(except, 0, 0, ":%s SINFO %s", acptr->name, buf);
+	}
+}
+
 int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
@@ -912,6 +958,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	cptr->local->class = cptr->serv->conf->class;
 	RunHook(HOOKTYPE_SERVER_CONNECT, cptr);
 
+	/* Broadcast new server to the rest of the network */
 	if (*cptr->id)
 	{
 		sendto_server(cptr, PROTO_SID, 0, ":%s SID %s 2 %s :%s",
@@ -922,7 +969,12 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		    cptr->serv->up,
 		    cptr->name, cptr->info);
 
-	send_moddata_client(cptr, &me); /* send moddata of &me (if any, likely minimal) */
+	/* Broadcast the just-linked-in featureset to other servers on our side */
+	broadcast_sinfo(cptr, NULL, cptr);
+
+	/* Send moddata of &me (if any, likely minimal) */
+	send_moddata_client(cptr, &me);
+
 	list_for_each_entry_reverse(acptr, &global_server_list, client_node)
 	{
 		/* acptr->from == acptr for acptr == cptr */
@@ -961,6 +1013,8 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 					cptr->name, acptr->name);
 #endif
 			}
+			/* Send SINFO of our servers to their side */
+			broadcast_sinfo(acptr, cptr, NULL);
 			send_moddata_client(cptr, acptr); /* send moddata of server 'acptr' (if any, likely minimal) */
 		}
 	}

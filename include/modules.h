@@ -1101,6 +1101,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define EFUNC_DO_NICK_NAME			57
 #define EFUNC_DO_REMOTE_NICK_NAME	58
 #define EFUNC_CHARSYS_GET_CURRENT_LANGUAGES	59
+#define EFUNC_BROADCAST_SINFO		60
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

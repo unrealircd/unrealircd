@@ -62,7 +62,7 @@ R_MODULES= \
 	 blacklist.so jointhrottle.so \
 	 antirandom.so hideserver.so jumpserver.so \
 	 m_ircops.so m_staff.so nocodes.so \
-	 charsys.so antimixedutf8.so authprompt.so
+	 charsys.so antimixedutf8.so authprompt.so m_sinfo.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -525,6 +525,10 @@ antimixedutf8.so: antimixedutf8.c $(INCLUDES)
 authprompt.so: authprompt.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o authprompt.so authprompt.c
+
+m_sinfo.so: m_sinfo.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sinfo.so m_sinfo.c
 
 #############################################################################
 # capabilities
