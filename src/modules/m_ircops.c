@@ -23,7 +23,7 @@
 #define MSG_IRCOPS        "IRCOPS"
 #define IsAway(x)         (x)->user->away
 
-static int m_ircops(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_ircops);
 
 ModuleHeader MOD_HEADER(m_ircops)
   = {
@@ -99,7 +99,7 @@ MOD_UNLOAD(m_ircops)
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-static int m_ircops(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_ircops)
 {
 	aClient *acptr;
 	char buf[512];

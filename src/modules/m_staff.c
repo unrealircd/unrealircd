@@ -43,7 +43,7 @@
 
 /* Forward declarations */
 static void unload_motd_file(aMotdFile *list);
-static int m_staff(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(m_staff);
 static int cb_rehashflag(aClient *cptr, aClient *sptr, char *flag);
 static int cb_test(ConfigFile *, ConfigEntry *, int, int *);
 static int cb_conf(ConfigFile *, ConfigEntry *, int);
@@ -87,7 +87,7 @@ MOD_TEST(m_staff)
 
 MOD_INIT(m_staff)
 {
-    MARK_AS_OFFICIAL_MODULE(modinfo);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 #ifdef USE_LIBCURL
 	memset(&Download, 0, sizeof Download);
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
@@ -160,9 +160,9 @@ static void remove_staff_file()
 
 static int download_staff_file(ConfigEntry *ce)
 {
-int ret = 0;
-struct stat	sb;
-char *file, *filename;
+	int ret = 0;
+	struct stat sb;
+	char *file, *filename;
 
 	if (Download.in_progress)
 		return 0;
@@ -251,9 +251,9 @@ static void download_staff_file_complete(char *url, char *file, char *errorbuf, 
 
 static void unload_motd_file(aMotdFile *list)
 {
-aMotdLine *old, *new;
+	aMotdLine *old, *new;
 
-new = list->lines;
+	new = list->lines;
 
 	if (!list)
 		return;
@@ -291,9 +291,9 @@ new = list->lines;
 
 static int cb_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
-int errors = 0;
+	int errors = 0;
 #ifdef USE_LIBCURL
-char *file = NULL, *filename = NULL;
+	char *file = NULL, *filename = NULL;
 #endif
 
 	if (type == CONFIG_SET)
@@ -385,10 +385,10 @@ static int cb_rehashflag(aClient *cptr, aClient *sptr, char *flag)
 }
 
 /** The routine that actual does the /STAFF command */
-int m_staff(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_staff)
 {
-aMotdFile *temp;
-aMotdLine *aLine;
+	aMotdFile *temp;
+	aMotdLine *aLine;
 
 	if (!IsPerson(sptr))
 		return -1;

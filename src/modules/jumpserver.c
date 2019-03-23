@@ -19,11 +19,6 @@
 
 #include "unrealircd.h"
 
-int m_jumpserver(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
-#define MSG_JUMPSERVER 	"JUMPSERVER"
-#define TOK_JUMPSERVER 	NULL
-
 ModuleHeader MOD_HEADER(jumpserver)
   = {
 	"jumpserver",
@@ -32,6 +27,13 @@ ModuleHeader MOD_HEADER(jumpserver)
 	"3.2-b8-1",
 	NULL 
     };
+
+/* Defines */
+#define MSG_JUMPSERVER 	"JUMPSERVER"
+
+/* Forward declarations */
+CMD_FUNC(m_jumpserver);
+int jumpserver_preconnect(aClient *);
 
 /* Jumpserver status struct */
 typedef struct _jss JSS;
@@ -44,16 +46,7 @@ struct _jss
 	int ssl_port;
 };
 
-JSS *jss=NULL; /** JumpServer Status. NULL=disabled. */
-
-int jumpserver_preconnect(aClient *);
-
-#ifndef ircstrdup
-#define ircstrdup(x,y) do { if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y); } while(0)
-#endif
-#ifndef ircfree
-#define ircfree(x) do { if (x) MyFree(x); x = NULL; } while(0)
-#endif
+JSS *jss=NULL; /**< JumpServer Status. NULL=disabled. */
 
 MOD_INIT(jumpserver)
 {
@@ -115,19 +108,19 @@ void free_jss(void)
 {
 	if (jss)
 	{
-		ircfree(jss->server);
-		ircfree(jss->reason);
-		ircfree(jss->ssl_server);
+		safefree(jss->server);
+		safefree(jss->reason);
+		safefree(jss->ssl_server);
 		MyFree(jss);
 		jss = NULL;
 	}
 }
 
-int m_jumpserver(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_jumpserver)
 {
-char *serv, *sslserv=NULL, *reason, *p, *p2;
-int all=0, port=6667, sslport=6697;
-char logbuf[512];
+	char *serv, *sslserv=NULL, *reason, *p, *p2;
+	int all=0, port=6667, sslport=6697;
+	char logbuf[512];
 
 	if (!IsOper(sptr))
 	{

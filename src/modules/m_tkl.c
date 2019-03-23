@@ -65,7 +65,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold);
 aTKline *_find_tkline_match_zap(aClient *cptr);
 void _tkl_stats(aClient *cptr, int type, char *para);
 void _tkl_synch(aClient *sptr);
-int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(_m_tkl);
 int _place_host_ban(aClient *sptr, int action, char *reason, long duration);
 int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 int _dospamfilter_viruschan(aClient *sptr, aTKline *tk, int type);
@@ -2114,7 +2114,7 @@ char *tkl_type_string(aTKline *tk)
  * [B] match-type must be one of: regex, simple, posix.
  * [C] Could be a regex or a regular string with wildcards, depending on [B]
  */
-int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(_m_tkl)
 {
 	aTKline *tk;
 	int  type;
