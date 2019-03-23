@@ -34,9 +34,9 @@ Cmode_t EXTCMODE_STRIPCOLOR;
 
 #define IsStripColor(chptr)    (chptr->mode.extmode & EXTCMODE_STRIPCOLOR)
 
-DLLFUNC char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
-DLLFUNC char *stripcolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
-DLLFUNC char *stripcolor_prelocalquit(aClient *sptr, char *comment);
+char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *stripcolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
+char *stripcolor_prelocalquit(aClient *sptr, char *comment);
 
 MOD_TEST(stripcolor)
 {
@@ -72,7 +72,7 @@ MOD_UNLOAD(stripcolor)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 {
 	Hook *h;
 	int i;
@@ -94,7 +94,7 @@ DLLFUNC char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, 
 	return text;
 }
 
-DLLFUNC char *stripcolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)
+char *stripcolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)
 {
 	if (!comment)
 		return NULL;
@@ -117,7 +117,7 @@ static int IsAnyChannelStripColor(aClient *sptr)
 }
 
 
-DLLFUNC char *stripcolor_prelocalquit(aClient *sptr, char *comment)
+char *stripcolor_prelocalquit(aClient *sptr, char *comment)
 {
 	if (!comment)
 		return NULL;

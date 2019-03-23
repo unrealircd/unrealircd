@@ -24,9 +24,9 @@
 
 /* Forward declarations */
 CMD_FUNC(m_join);
-DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
+void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
 CMD_FUNC(_do_join);
-DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
+int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 void _userhost_save_current(aClient *sptr);
 void _userhost_changed(aClient *sptr);
 void _send_join_to_local_users(aClient *sptr, aChannel *chptr);
@@ -87,7 +87,7 @@ MOD_UNLOAD(m_join)
  * (eg: bans at the end), so don't change it unless you have a good reason
  * to do so -- Syzop.
  */
-DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[])
+int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[])
 {
 Link *lp;
 Ban *banned;
@@ -220,7 +220,7 @@ void _send_join_to_local_users(aClient *sptr, aChannel *chptr)
 /* Routine that actually makes a user join the channel
  * this does no actual checking (banned, etc.) it just adds the user
  */
-DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
+void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 {
 	Hook *h;
 	int i = 0;

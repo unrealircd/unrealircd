@@ -34,8 +34,8 @@ static char errMsg[2048];
 
 #define IsRegOnlySpeak(chptr)    (chptr->mode.extmode & EXTCMODE_REGONLYSPEAK)
 
-DLLFUNC int regonlyspeak_can_send (aClient* cptr, aChannel *chptr, char* message, Membership* lp, int notice);
-DLLFUNC char * regonlyspeak_part_message (aClient* sptr, aChannel *chptr, char* comment);
+int regonlyspeak_can_send (aClient* cptr, aChannel *chptr, char* message, Membership* lp, int notice);
+char * regonlyspeak_part_message (aClient* sptr, aChannel *chptr, char* comment);
 
 MOD_TEST(regonlyspeak)
 {
@@ -70,7 +70,7 @@ MOD_UNLOAD(regonlyspeak)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC char *regonlyspeak_part_message (aClient *sptr, aChannel *chptr, char *comment)
+char *regonlyspeak_part_message (aClient *sptr, aChannel *chptr, char *comment)
 {
 	if (!comment)
 		return NULL;
@@ -81,7 +81,7 @@ DLLFUNC char *regonlyspeak_part_message (aClient *sptr, aChannel *chptr, char *c
 	return comment;
 }
 
-DLLFUNC int regonlyspeak_can_send (aClient *cptr, aChannel *chptr, char *message, Membership *lp, int notice)
+int regonlyspeak_can_send (aClient *cptr, aChannel *chptr, char *message, Membership *lp, int notice)
 {
 	Hook *h;
 	int i;

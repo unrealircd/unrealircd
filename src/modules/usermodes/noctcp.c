@@ -34,7 +34,7 @@ long UMODE_NOCTCP = 0L;
 
 #define IsNoCTCP(cptr)    (cptr->umodes & UMODE_NOCTCP)
 
-DLLFUNC char *noctcp_preusermsg(aClient *sptr, aClient *acptr, char *text, int notice);
+char *noctcp_preusermsg(aClient *sptr, aClient *acptr, char *text, int notice);
 
 MOD_TEST(noctcp)
 {
@@ -74,7 +74,7 @@ static int IsACTCP(char *s)
 	return 0;
 }
 
-DLLFUNC char *noctcp_preusermsg(aClient *sptr, aClient *acptr, char *text, int notice)
+char *noctcp_preusermsg(aClient *sptr, aClient *acptr, char *text, int notice)
 {
 	if (MyClient(sptr) && !notice && IsNoCTCP(acptr) && !IsOper(sptr) && IsACTCP(text))
 	{

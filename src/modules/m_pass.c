@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER(m_pass)
     };
 
 /* Forward declarations */
-DLLFUNC int _check_banned(aClient *cptr);
+int _check_banned(aClient *cptr);
 
 MOD_TEST(m_pass)
 {
@@ -67,7 +67,7 @@ MOD_UNLOAD(m_pass)
 }
 
 /** Handles zlines/gzlines/throttling/unknown connections */
-DLLFUNC int _check_banned(aClient *cptr)
+int _check_banned(aClient *cptr)
 {
 	aTKline *tk;
 	aClient *acptr;

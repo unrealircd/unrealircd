@@ -35,11 +35,11 @@ int CLOAK_IP_ONLY = 0;
 #define KEY2 cloak_key2
 #define KEY3 cloak_key3
 
-DLLFUNC char *hidehost(aClient *acptr, char *host);
-DLLFUNC char *cloakcsum();
-DLLFUNC int cloak_config_test(ConfigFile *, ConfigEntry *, int, int *);
-DLLFUNC int cloak_config_run(ConfigFile *, ConfigEntry *, int);
-DLLFUNC int cloak_config_posttest(int *);
+char *hidehost(aClient *acptr, char *host);
+char *cloakcsum();
+int cloak_config_test(ConfigFile *, ConfigEntry *, int, int *);
+int cloak_config_run(ConfigFile *, ConfigEntry *, int);
+int cloak_config_posttest(int *);
 
 static char *hidehost_ipv4(char *host);
 static char *hidehost_ipv6(char *host);
@@ -117,7 +117,7 @@ char *p;
 }
 
 
-DLLFUNC int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	ConfigEntry *cep;
 	int keycnt = 0, errors = 0;
@@ -191,7 +191,7 @@ DLLFUNC int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 	return errors ? -1 : 1;
 }
 
-DLLFUNC int cloak_config_posttest(int *errs)
+int cloak_config_posttest(int *errs)
 {
 int errors = 0;
 
@@ -205,7 +205,7 @@ int errors = 0;
 	return errors ? -1 : 1;
 }
 
-DLLFUNC int cloak_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+int cloak_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 ConfigEntry *cep;
 char buf[512], result[16];
@@ -257,7 +257,7 @@ char buf[512], result[16];
 	return 1;
 }
 
-DLLFUNC char *hidehost(aClient *acptr, char *host)
+char *hidehost(aClient *acptr, char *host)
 {
 	char *p;
 
@@ -279,7 +279,7 @@ DLLFUNC char *hidehost(aClient *acptr, char *host)
 	return hidehost_normalhost(host);
 }
 
-DLLFUNC char *cloakcsum()
+char *cloakcsum()
 {
 	return cloak_checksum;
 }

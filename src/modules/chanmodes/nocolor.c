@@ -34,9 +34,9 @@ Cmode_t EXTCMODE_NOCOLOR;
 
 #define IsNoColor(chptr)    (chptr->mode.extmode & EXTCMODE_NOCOLOR)
 
-DLLFUNC char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
-DLLFUNC char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
-DLLFUNC char *nocolor_prelocalquit(aClient *sptr, char *comment);
+char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
+char *nocolor_prelocalquit(aClient *sptr, char *comment);
 
 MOD_TEST(nocolor)
 {
@@ -84,7 +84,7 @@ static int IsUsingColor(char *s)
         return 0;
 }
 
-DLLFUNC char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 {
 	Hook *h;
 	int i;
@@ -112,7 +112,7 @@ DLLFUNC char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int
 	return text;
 }
 
-DLLFUNC char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)
+char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)
 {
 	if (!comment)
 		return NULL;
@@ -134,7 +134,7 @@ static int IsAnyChannelNoColor(aClient *sptr)
 	return 0;
 }
 
-DLLFUNC char *nocolor_prelocalquit(aClient *sptr, char *comment)
+char *nocolor_prelocalquit(aClient *sptr, char *comment)
 {
 	if (!comment)
 		return NULL;

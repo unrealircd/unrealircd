@@ -25,8 +25,8 @@
 /* Forward declarations */
 CMD_FUNC(m_mode);
 CMD_FUNC(m_mlock);
-DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
-DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
+void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
+void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
                        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 CMD_FUNC(_m_umode);
 
@@ -406,7 +406,7 @@ static void bounce_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[])
  *	User or server is authorized to do the mode.  This takes care of
  * setting the mode and relaying it to other users and servers.
  */
-DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode)
+void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode)
 {
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
@@ -1365,7 +1365,7 @@ int paracount_for_chanmode_from_server(aClient *acptr, u_int what, char mode)
 /* set_mode
  *	written by binary
  */
-DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
+void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce)
 {
 	char *curchr;

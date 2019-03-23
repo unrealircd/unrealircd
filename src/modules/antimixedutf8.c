@@ -60,8 +60,8 @@ struct {
 
 static void free_config(void);
 static void init_config(void);
-DLLFUNC int antimixedutf8_config_test(ConfigFile *, ConfigEntry *, int, int *);
-DLLFUNC int antimixedutf8_config_run(ConfigFile *, ConfigEntry *, int);
+int antimixedutf8_config_test(ConfigFile *, ConfigEntry *, int, int *);
+int antimixedutf8_config_run(ConfigFile *, ConfigEntry *, int);
 
 #define SCRIPT_UNDEFINED	0
 #define SCRIPT_LATIN		1
@@ -260,7 +260,7 @@ static void free_config(void)
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
-DLLFUNC int antimixedutf8_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int antimixedutf8_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 	ConfigEntry *cep;
@@ -321,7 +321,7 @@ DLLFUNC int antimixedutf8_config_test(ConfigFile *cf, ConfigEntry *ce, int type,
 	return errors ? -1 : 1;
 }
 
-DLLFUNC int antimixedutf8_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+int antimixedutf8_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 

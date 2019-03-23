@@ -24,8 +24,8 @@ char *censor_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 char *censor_pre_local_part(aClient *sptr, aChannel *chptr, char *text);
 char *censor_pre_local_quit(aClient *sptr, char *text);
 
-DLLFUNC int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
-DLLFUNC int censor_config_run(ConfigFile *, ConfigEntry *, int);
+int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
+int censor_config_run(ConfigFile *, ConfigEntry *, int);
 
 ModuleInfo *ModInfo = NULL;
 
@@ -83,7 +83,7 @@ MOD_UNLOAD(censor)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 	ConfigEntry *cep;
@@ -203,7 +203,7 @@ DLLFUNC int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 }
 
 
-DLLFUNC int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep, *word = NULL;
 	ConfigItem_badword *ca;

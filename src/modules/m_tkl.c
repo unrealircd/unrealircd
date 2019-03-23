@@ -48,7 +48,7 @@ CMD_FUNC(m_gzline);
 CMD_FUNC(m_tkline);
 CMD_FUNC(m_tzline);
 CMD_FUNC(m_spamfilter);
-DLLFUNC int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type);
+int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type);
 
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
@@ -468,7 +468,7 @@ int ban_too_broad(char *usermask, char *hostmask)
 ** parv[3] = reason
 */
 
-DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type)
+int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type)
 {
 	TS secs;
 	int  whattodo = 0;	/* 0 = add  1 = del */

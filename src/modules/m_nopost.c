@@ -47,8 +47,8 @@ struct {
 
 static void free_config(void);
 static void init_config(void);
-DLLFUNC int m_nopost_config_test(ConfigFile *, ConfigEntry *, int, int *);
-DLLFUNC int m_nopost_config_run(ConfigFile *, ConfigEntry *, int);
+int m_nopost_config_test(ConfigFile *, ConfigEntry *, int, int *);
+int m_nopost_config_run(ConfigFile *, ConfigEntry *, int);
 static int is_except_host(aClient *sptr);
 
 MOD_TEST(m_nopost)
@@ -103,7 +103,7 @@ DynList *d, *d_next;
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
-DLLFUNC int m_nopost_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int m_nopost_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 int errors = 0;
 ConfigEntry *cep;
@@ -157,7 +157,7 @@ ConfigEntry *cep;
 	return errors ? -1 : 1;
 }
 
-DLLFUNC int m_nopost_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+int m_nopost_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 ConfigEntry *cep, *cep2;
 DynList *d;

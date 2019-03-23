@@ -34,8 +34,8 @@ Cmode_t EXTCMODE_NOINVITE;
 
 #define IsNoInvite(chptr)    (chptr->mode.extmode & EXTCMODE_NOINVITE)
 
-DLLFUNC int noinvite_pre_knock(aClient *sptr, aChannel *chptr);
-DLLFUNC int noinvite_pre_invite(aClient *sptr, aClient *acptr, aChannel *chptr, int *override);
+int noinvite_pre_knock(aClient *sptr, aChannel *chptr);
+int noinvite_pre_invite(aClient *sptr, aClient *acptr, aChannel *chptr, int *override);
 
 MOD_TEST(noinvite)
 {
@@ -70,7 +70,7 @@ MOD_UNLOAD(noinvite)
 }
 
 
-DLLFUNC int noinvite_pre_knock(aClient *sptr, aChannel *chptr)
+int noinvite_pre_knock(aClient *sptr, aChannel *chptr)
 {
 	if (MyClient(sptr) && IsNoInvite(chptr))
 	{
@@ -84,7 +84,7 @@ DLLFUNC int noinvite_pre_knock(aClient *sptr, aChannel *chptr)
 	return HOOK_CONTINUE;
 }
 
-DLLFUNC int noinvite_pre_invite(aClient *sptr, aClient *acptr, aChannel *chptr, int *override)
+int noinvite_pre_invite(aClient *sptr, aClient *acptr, aChannel *chptr, int *override)
 {
 	if (MyClient(sptr) && IsNoInvite(chptr))
 	{

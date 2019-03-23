@@ -32,9 +32,9 @@ Cmode_t EXTCMODE_NOKNOCK;
 
 #define IsNoKnock(chptr)    (chptr->mode.extmode & EXTCMODE_NOKNOCK)
 
-DLLFUNC int noknock_check (aClient *sptr, aChannel *chptr);
-DLLFUNC int noknock_mode_allow(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
-DLLFUNC int noknock_mode_del (aChannel *chptr, int modeChar);
+int noknock_check (aClient *sptr, aChannel *chptr);
+int noknock_mode_allow(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
+int noknock_mode_del (aChannel *chptr, int modeChar);
 
 MOD_TEST(noknock)
 {
@@ -70,7 +70,7 @@ MOD_UNLOAD(noctcp)
 }
 
 
-DLLFUNC int noknock_check (aClient *sptr, aChannel *chptr)
+int noknock_check (aClient *sptr, aChannel *chptr)
 {
 	if (MyClient(sptr) && IsNoKnock(chptr))
 	{
@@ -83,7 +83,7 @@ DLLFUNC int noknock_check (aClient *sptr, aChannel *chptr)
 	return HOOK_CONTINUE;
 }
 
-DLLFUNC int noknock_mode_del (aChannel *chptr, int modeChar)
+int noknock_mode_del (aChannel *chptr, int modeChar)
 {
 	// Remove noknock when we're removing invite only
 	if (modeChar == 'i')
@@ -92,7 +92,7 @@ DLLFUNC int noknock_mode_del (aChannel *chptr, int modeChar)
 	return 0;
 }
 
-DLLFUNC int noknock_mode_allow(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
+int noknock_mode_allow(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
 
 	if (!(chptr->mode.mode & MODE_INVITEONLY))

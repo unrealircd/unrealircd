@@ -22,8 +22,8 @@ long UMODE_CENSOR = 0L;
 
 char *censor_pre_usermsg(aClient *sptr, aClient *target, char *text, int notice);
 
-DLLFUNC int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
-DLLFUNC int censor_config_run(ConfigFile *, ConfigEntry *, int);
+int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
+int censor_config_run(ConfigFile *, ConfigEntry *, int);
 
 ModuleInfo *ModInfo = NULL;
 
@@ -75,7 +75,7 @@ ConfigItem_badword *badword, *next;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 	ConfigEntry *cep;
@@ -185,7 +185,7 @@ DLLFUNC int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 }
 
 
-DLLFUNC int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep, *word = NULL;
 	ConfigItem_badword *ca;

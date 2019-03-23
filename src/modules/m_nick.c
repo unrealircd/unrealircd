@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER(m_nick)
 /* Forward declarations */
 CMD_FUNC(m_nick);
 CMD_FUNC(m_uid);
-DLLFUNC int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
+int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
 int check_client(aClient *cptr, char *username);
 

@@ -23,15 +23,15 @@ static Cmode *CmodePostDelayed = NULL;
 static Cmode_t EXTMODE_DELAYED;
 static Cmode_t EXTMODE_POST_DELAYED;
 
-DLLFUNC int visible_in_channel( aClient *cptr, aChannel *chptr);
-DLLFUNC int moded_check_part( aClient *cptr, aChannel *chptr);
-DLLFUNC int moded_join(aClient *cptr, aChannel *chptr);
-DLLFUNC int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
-DLLFUNC int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
-DLLFUNC int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment);
-DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
+int visible_in_channel( aClient *cptr, aChannel *chptr);
+int moded_check_part( aClient *cptr, aChannel *chptr);
+int moded_join(aClient *cptr, aChannel *chptr);
+int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
+int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
+int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment);
+int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
                            char *modebuf, char *parabuf, time_t sendts, int samode);
-DLLFUNC char *moded_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *moded_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
 char *moded_serialize(ModData *m);
 void moded_unserialize(char *str, ModData *m);
 
@@ -95,13 +95,13 @@ MOD_UNLOAD(delayjoin)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC void set_post_delayed(aChannel *chptr)
+void set_post_delayed(aChannel *chptr)
 {
 	chptr->mode.extmode |= EXTMODE_POST_DELAYED;
 	sendto_channel_butserv(chptr, &me, ":%s MODE %s +d", me.name, chptr->chname);
 }
 
-DLLFUNC void clear_post_delayed(aChannel *chptr)
+void clear_post_delayed(aChannel *chptr)
 {
 	chptr->mode.extmode &= ~EXTMODE_POST_DELAYED;
 	sendto_channel_butserv(chptr, &me, ":%s MODE %s -d", me.name, chptr->chname);
@@ -130,7 +130,7 @@ bool moded_user_invisible(aClient *cptr, aChannel *chptr)
 	return moded_member_invisible(find_member_link(chptr->members, cptr),chptr);
 }
 
-DLLFUNC bool channel_has_invisible_users(aChannel *chptr)
+bool channel_has_invisible_users(aChannel *chptr)
 {
 	Member* i;
 	for (i = chptr->members; i; i = i->next)
@@ -143,21 +143,21 @@ DLLFUNC bool channel_has_invisible_users(aChannel *chptr)
 	return false;
 }
 
-DLLFUNC bool channel_is_post_delayed(aChannel *chptr)
+bool channel_is_post_delayed(aChannel *chptr)
 {
 	if (chptr->mode.extmode & EXTMODE_POST_DELAYED)
 		return true;
 	return false;
 }
 
-DLLFUNC bool channel_is_delayed(aChannel *chptr)
+bool channel_is_delayed(aChannel *chptr)
 {
 	if (chptr->mode.extmode & EXTMODE_DELAYED)
 		return true;
 	return false;
 }
 
-DLLFUNC void clear_user_invisible(aChannel *chptr, aClient *sptr)
+void clear_user_invisible(aChannel *chptr, aClient *sptr)
 {
 	Member *i;
 	ModDataInfo *md;
@@ -194,7 +194,7 @@ DLLFUNC void clear_user_invisible(aChannel *chptr, aClient *sptr)
 	}
 }
 
-DLLFUNC void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
+void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
 {
 	Member *i;
 	char joinbuf[512];
@@ -223,7 +223,7 @@ DLLFUNC void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
 	}
 }
 
-DLLFUNC void set_user_invisible(aChannel *chptr, aClient *sptr)
+void set_user_invisible(aChannel *chptr, aClient *sptr)
 {
 	Member *m = find_member_link(chptr->members,sptr);
 	ModDataInfo *md;
@@ -240,19 +240,19 @@ DLLFUNC void set_user_invisible(aChannel *chptr, aClient *sptr)
 }
 
 
-DLLFUNC int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
+int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
 	return EX_ALWAYS_DENY;
 }
 
 
-DLLFUNC int visible_in_channel(aClient *cptr, aChannel *chptr)
+int visible_in_channel(aClient *cptr, aChannel *chptr)
 {
 	return channel_is_delayed(chptr) && moded_user_invisible(cptr,chptr);
 }
 
 
-DLLFUNC int moded_join(aClient *cptr, aChannel *chptr)
+int moded_join(aClient *cptr, aChannel *chptr)
 {
 	if (channel_is_delayed(chptr))
 		set_user_invisible(chptr,cptr);
@@ -260,7 +260,7 @@ DLLFUNC int moded_join(aClient *cptr, aChannel *chptr)
 	return 0;
 }
 
-DLLFUNC int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment)
+int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment)
 {
 	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
 		clear_user_invisible(chptr,cptr);
@@ -268,7 +268,7 @@ DLLFUNC int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comm
 	return 0;
 }
 
-DLLFUNC int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment)
+int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment)
 {
 	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
 		if (moded_user_invisible(acptr, chptr))
@@ -278,7 +278,7 @@ DLLFUNC int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *c
 }
 
 
-DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
+int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
                            char *modebuf, char *parabuf, time_t sendts, int samode)
 {
 	// Handle case where we just unset +D but have invisible users
@@ -356,7 +356,7 @@ DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 	return 0;
 }
 
-DLLFUNC char *moded_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *moded_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 {
 
 	if ((channel_is_delayed(chptr) || channel_is_post_delayed(chptr)) && (moded_user_invisible(sptr,chptr)))

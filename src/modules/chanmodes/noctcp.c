@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_NOCTCP;
 
 #define IsNoCTCP(chptr)    (chptr->mode.extmode & EXTCMODE_NOCTCP)
 
-DLLFUNC char *noctcp_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *noctcp_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
 
 MOD_TEST(noctcp)
 {
@@ -78,7 +78,7 @@ static int IsACTCP(char *s)
 	return 0;
 }
 
-DLLFUNC char *noctcp_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *noctcp_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 {
 	if (MyClient(sptr) && IsNoCTCP(chptr) && IsACTCP(text))
 	{

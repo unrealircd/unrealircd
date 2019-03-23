@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-DLLFUNC CMD_FUNC(m_user);
+CMD_FUNC(m_user);
 
 #define MSG_USER 	"USER"	
 
@@ -62,7 +62,7 @@ MOD_UNLOAD(m_user)
 ** NOTE: Be advised that multiple USER messages are possible,
 **       hence, always check if a certain struct is already allocated... -- Syzop
 */
-DLLFUNC CMD_FUNC(m_user)
+CMD_FUNC(m_user)
 {
 #define	UFLAGS	(UMODE_INVISIBLE|UMODE_WALLOP|UMODE_SERVNOTICE)
 	char *username, *host, *server, *realname, *umodex = NULL, *virthost =

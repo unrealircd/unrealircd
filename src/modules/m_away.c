@@ -28,7 +28,7 @@ CMD_FUNC(m_away);
 
 #define MSG_AWAY 	"AWAY"	
 
-DLLFUNC ModuleHeader MOD_HEADER(m_away)
+ModuleHeader MOD_HEADER(m_away)
   = {
 	"m_away",
 	"4.2",
