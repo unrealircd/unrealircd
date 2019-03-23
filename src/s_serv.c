@@ -1277,6 +1277,8 @@ void add_pending_net(aClient *sptr, char *str)
 	net->sptr = sptr;
 
 	/* Fill in */
+	if (*str == '*')
+		str++;
 	for (name = strtoken(&p, str, ","); name; name = strtoken(&p, NULL, ","))
 	{
 		if (!*name)
