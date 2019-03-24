@@ -1345,16 +1345,16 @@ void concat_params(char *buf, int len, int parc, char *parv[])
 		char *param = parv[i];
 
 		if (param && !*buf)
-			strlcat(buf, " ", sizeof(buf));
+			strlcat(buf, " ", len);
 
 		if (strchr(param, ' '))
 		{
 			/* Last parameter, with : */
-			strlcat(buf, ":", sizeof(buf));
-			strlcat(buf, parv[i], sizeof(buf));
+			strlcat(buf, ":", len);
+			strlcat(buf, parv[i], len);
 			break;
 		}
-		strlcat(buf, parv[i], sizeof(buf));
+		strlcat(buf, parv[i], len);
 	}
 }
 
