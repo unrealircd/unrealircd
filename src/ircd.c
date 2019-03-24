@@ -998,7 +998,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	union pstun pstats;
 #endif
 	int  portarg = 0;
-#ifdef  FORCE_CORE
+#ifdef HAVE_SETRLIMIT
 	struct rlimit corelim;
 #endif
 
@@ -1074,10 +1074,10 @@ int InitUnrealIRCd(int argc, char *argv[])
 	extcmode_init();
 	init_random(); /* needs to be done very early!! */
 	clear_scache_hash_table();
-#ifdef FORCE_CORE
+#ifdef HAVE_SETRLIMIT
+	/* Make it so we can dump core */
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
-	if (setrlimit(RLIMIT_CORE, &corelim))
-		printf("unlimit core size failed; errno = %d\n", errno);
+	setrlimit(RLIMIT_CORE, &corelim);
 #endif
 	/*
 	 * ** All command line parameters have the syntax "-fstring"

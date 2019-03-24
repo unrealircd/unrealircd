@@ -456,12 +456,6 @@ error You stuffed up config.h signals
 #if defined(SOL20) || defined(SOL25) || defined(SOL26) || defined(SOL27)
 #define _SOLARIS
 #endif
-/*
- * Cleaup for WIN32 platform.
- */
-#ifdef _WIN32
-# undef FORCE_CORE
-#endif
 #ifdef NEED_BCMP
 #define bcmp memcmp
 #endif

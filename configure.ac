@@ -463,26 +463,7 @@ if test "$ac_cv_varlen_arrays" = "yes" ; then
 	AC_DEFINE([HAVE_C99_VARLEN_ARRAY], [], [Define if you have a compiler with C99 variable length array support])
 fi
 
-dnl This check doesn't need to be in ./configure, we can
-dnl write the sourcecode to actually handle the return value
-dnl of setrlimit if necessary... -- ohnobinki
-AC_CACHE_CHECK([if we can set the core size to unlimited], [ac_cv_force_core], [
-AC_TRY_RUN([
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-int main() {
-struct rlimit corelim;
-corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
-if (setrlimit(RLIMIT_CORE, &corelim))
-exit(1);
-exit(0);
-}
-],ac_cv_force_core=yes,ac_cv_force_core=no)
-])
-if test "$ac_cv_force_core" = "yes"; then
-	AC_DEFINE([FORCE_CORE], [], [Define if you can set the core size to unlimited])
-fi
+AC_CHECK_FUNCS([setrlimit])
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gettimeofday],
 	[AC_DEFINE([GETTIMEOFDAY], [], [Define if you have gettimeofday])],

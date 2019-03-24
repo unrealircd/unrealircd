@@ -6442,51 +6442,17 @@ $as_echo "#define HAVE_C99_VARLEN_ARRAY /**/" >>confdefs.h
 
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if we can set the core size to unlimited" >&5
-$as_echo_n "checking if we can set the core size to unlimited... " >&6; }
-if ${ac_cv_force_core+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-if test "$cross_compiling" = yes; then :
-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "cannot run test program while cross compiling
-See \`config.log' for more details" "$LINENO" 5; }
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-int main() {
-struct rlimit corelim;
-corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
-if (setrlimit(RLIMIT_CORE, &corelim))
-exit(1);
-exit(0);
-}
-
+for ac_func in setrlimit
+do :
+  ac_fn_c_check_func "$LINENO" "setrlimit" "ac_cv_func_setrlimit"
+if test "x$ac_cv_func_setrlimit" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SETRLIMIT 1
 _ACEOF
-if ac_fn_c_try_run "$LINENO"; then :
-  ac_cv_force_core=yes
-else
-  ac_cv_force_core=no
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_force_core" >&5
-$as_echo "$ac_cv_force_core" >&6; }
-if test "$ac_cv_force_core" = "yes"; then
+done
 
-$as_echo "#define FORCE_CORE /**/" >>confdefs.h
-
-fi
 for ac_func in vprintf
 do :
   ac_fn_c_check_func "$LINENO" "vprintf" "ac_cv_func_vprintf"
