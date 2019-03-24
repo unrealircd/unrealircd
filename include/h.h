@@ -51,6 +51,7 @@ extern MODVAR char umodestring[UMODETABLESZ+1];
 #define get_recvq(x) ((x)->local->class->recvq ? (x)->local->class->recvq : DEFAULT_RECVQ)
 
 #define CMD_FUNC(x) int (x) (aClient *cptr, aClient *sptr, int parc, char *parv[])
+#define CMD_OVERRIDE_FUNC(x) int (x)(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 /*
  * Configuration linked lists

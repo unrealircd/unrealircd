@@ -1448,7 +1448,7 @@ Efunction *p, *q;
 	return NULL;
 }
 
-Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, iFP function)
+Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc function)
 {
 	aCommand *p;
 	Cmdoverride *ovr;
@@ -1493,7 +1493,7 @@ Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, iFP func
 	return ovr;
 }
 
-Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
+Cmdoverride *CmdoverrideAdd(Module *module, char *name, OverrideCmdFunc function)
 {
 	return CmdoverrideAddEx(module, name, 0, function);
 }

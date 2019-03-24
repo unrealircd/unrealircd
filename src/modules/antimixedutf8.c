@@ -172,7 +172,7 @@ int lookalikespam_score(const char *text)
 	return points;
 }
 
-static int override_msg(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_OVERRIDE_FUNC(override_msg)
 {
 	int score, ret;
 	

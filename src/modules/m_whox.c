@@ -66,7 +66,7 @@ static void who_global(aClient *sptr, char *mask, int operspy, struct who_format
 static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_format *fmt);
 static void do_who_on_channel(aClient *sptr, aChannel *chptr,
                               int member, int operspy, struct who_format *fmt);
-static int override_who(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_OVERRIDE_FUNC(override_who);
 static int convert_classical_who_request(aClient *sptr, int *parc, char *parv[], char **orig_mask, struct who_format *fmt);
 
 ModuleHeader MOD_HEADER(m_whox)
@@ -98,7 +98,7 @@ MOD_UNLOAD(m_whox)
 }
 
 /* Temporary glue until this module becomes the new m_who */
-static int override_who(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_OVERRIDE_FUNC(override_who)
 {
 	/* We are always last (and we need to be), thanks to our cmdoverride priority */
 	return m_whox(cptr, sptr, parc, parv);

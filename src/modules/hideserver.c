@@ -24,8 +24,8 @@
 
 #include "unrealircd.h"
 
-static int override_map(Cmdoverride *, aClient *, aClient *, int, char *[]);
-static int override_links(Cmdoverride *, aClient *, aClient *, int, char *[]);
+CMD_OVERRIDE_FUNC(override_map);
+CMD_OVERRIDE_FUNC(override_links);
 static int cb_test(ConfigFile *, ConfigEntry *, int, int *);
 static int cb_conf(ConfigFile *, ConfigEntry *, int);
 
@@ -334,7 +334,7 @@ int cnt = 0, hide_ulines;
 **
 **      parv[1] = server mask
 **/
-static int override_map(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_OVERRIDE_FUNC(override_map)
 {
 	aClient *acptr;
 	int  longest = strlen(me.name);
@@ -377,7 +377,7 @@ static int override_map(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc
 	return 0;
 }
 
-static int override_links(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_OVERRIDE_FUNC(override_links)
 {
 	aClient *acptr;
 	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;

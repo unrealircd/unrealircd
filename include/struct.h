@@ -799,6 +799,7 @@ extern MODVAR ircstats IRCstats;
 
 typedef int (*CmdFunc)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 typedef int (*AliasCmdFunc)(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd);
+typedef int (*OverrideCmdFunc)(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #include "modules.h"
 
@@ -1737,7 +1738,7 @@ struct _cmdoverride {
 	int			priority;
 	Module			*owner;
 	aCommand		*command;
-	int			(*func)();
+	OverrideCmdFunc		func;
 };
 
 struct ThrottlingBucket

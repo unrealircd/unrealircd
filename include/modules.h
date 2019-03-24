@@ -715,8 +715,8 @@ extern Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned cha
 extern Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned char params, int flags);
 extern void CommandDel(Command *command);
 extern int CommandExists(char *name);
-extern Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, int (*func)(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]));
-extern Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, int (*func)(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]));
+extern Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, OverrideCmdFunc func);
+extern Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc func);
 extern void CmdoverrideDel(Cmdoverride *ovr);
 extern int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
