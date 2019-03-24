@@ -75,7 +75,7 @@ int sinfo_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	sptr->serv->features.protocol = atoi(parv[2]);
 
 	if (!strcmp(parv[3], "*"))
-		safefree(parv[3]);
+		safefree(sptr->serv->features.usermodes);
 	else
 		safestrdup(sptr->serv->features.usermodes, parv[3]);
 
