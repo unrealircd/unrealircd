@@ -462,9 +462,9 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 #else
 	then = clock();
 	if (cmptr->flags & M_ALIAS)
-		retval = (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
-	else 
 	{
+		retval = (*cmptr->aliasfunc) (cptr, from, i, para, cmptr->cmd);
+	} else {
 		if (!cmptr->overriders)
 			retval = (*cmptr->func) (cptr, from, i, para);
 		else

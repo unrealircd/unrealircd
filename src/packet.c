@@ -101,19 +101,16 @@ void	init_CommandHash(void)
 #endif
 }
 
-aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, int flags)
+aCommand *add_Command_backend(char *cmd)
 {
-	aCommand *newcmd = MyMallocEx(sizeof(aCommand));
-	
-	newcmd->cmd = (char *) strdup(cmd);
-	newcmd->parameters = (parameters > MAXPARA) ? MAXPARA : parameters;
-	newcmd->func = func;
-	newcmd->flags = flags;
-	
-	/* Add in hash with hash value = first byte */
-	AddListItem(newcmd, CommandHash[toupper(*cmd)]);
+	aCommand *c = MyMallocEx(sizeof(aCommand));
 
-	return newcmd;
+	c->cmd = strdup(cmd);
+
+	/* Add in hash with hash value = first byte */
+	AddListItem(c, CommandHash[toupper(*cmd)]);
+
+	return c;
 }
 
 aCommand *find_CommandEx(char *cmd, int (*func)(), int token)

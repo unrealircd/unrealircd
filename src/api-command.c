@@ -37,7 +37,7 @@ int CommandExists(char *name)
 	return 0;
 }
 
-Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char params, int flags)
+Command *CommandAddInternal(Module *module, char *cmd, CmdFunc func, AliasCmdFunc aliasfunc, unsigned char params, int flags)
 {
 	Command *command = NULL;
 	aCommand *c;
@@ -57,7 +57,11 @@ Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char para
 		return NULL;
 	}
 	
-	c = add_Command_backend(cmd, func, params, flags);
+	c = add_Command_backend(cmd);
+	c->parameters = (params > MAXPARA) ? MAXPARA : params;
+	c->flags = flags;
+	c->func = func;
+	c->aliasfunc = aliasfunc;
 
 	if (module)
 	{
@@ -82,6 +86,26 @@ Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char para
 	return command;
 }
 
+Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned char params, int flags)
+{
+	if (flags & M_ALIAS)
+	{
+		config_error("Command '%s' used CommandAdd() to add a command alias, "
+		             "but should have used AliasAdd() instead. "
+		             "Old 3rd party module %s? Check for updates!",
+		             cmd,
+		             module ? module->header->name : "");
+		return NULL;
+	}
+	return CommandAddInternal(module, cmd, func, NULL, params, flags);
+}
+
+Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned char params, int flags)
+{
+	if (!(flags & M_ALIAS))
+		flags |= M_ALIAS;
+	return CommandAddInternal(module, cmd, NULL, aliasfunc, params, flags);
+}
 
 void CommandDel(Command *command)
 {

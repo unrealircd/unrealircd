@@ -797,6 +797,9 @@ typedef struct ircstatsx {
 
 extern MODVAR ircstats IRCstats;
 
+typedef int (*CmdFunc)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+typedef int (*AliasCmdFunc)(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd);
+
 #include "modules.h"
 
 extern MODVAR Umode *Usermode_Table;
@@ -1713,7 +1716,8 @@ extern MODVAR char *gnulicense[];
 struct Command {
 	aCommand		*prev, *next;
 	char 			*cmd;
-	int			(*func) ();
+	CmdFunc			func;
+	AliasCmdFunc		aliasfunc;
 	int			flags;
 	unsigned int    	count;
 	unsigned		parameters : 5;

@@ -439,7 +439,7 @@ extern char *inetntop(int af, const void *in, char *local_dummy, size_t the_size
 */
 extern MODVAR aCommand *CommandHash[256];
 extern void	init_CommandHash(void);
-extern aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, int flags);
+extern aCommand *add_Command_backend(char *cmd);
 extern void	add_Command(char *cmd, int (*func)(), unsigned char parameters);
 extern void	add_Command_to_list(aCommand *item, aCommand **list);
 extern aCommand *del_Command_from_list(aCommand *item, aCommand **list);
