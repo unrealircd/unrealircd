@@ -452,9 +452,9 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 
 #ifndef DEBUGMODE
 	if (cmptr->flags & M_ALIAS)
-		return (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
-	else
 	{
+		return (*cmptr->aliasfunc) (cptr, from, i, para, cmptr->cmd);
+	} else {
 		if (!cmptr->overriders)
 			return (*cmptr->func) (cptr, from, i, para);
 		return (*cmptr->overridetail->func) (cmptr->overridetail, cptr, from, i, para);
