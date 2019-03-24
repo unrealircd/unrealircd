@@ -107,27 +107,36 @@ Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned ch
 	return CommandAddInternal(module, cmd, NULL, aliasfunc, params, flags);
 }
 
-void CommandDel(Command *command)
+void CommandDelX(Command *command, aCommand *cmd)
 {
 	Cmdoverride *ovr, *ovrnext;
 
-	DelListItem(command->cmd, CommandHash[toupper(*command->cmd->cmd)]);
-	if (command->cmd->owner) {
+	DelListItem(cmd, CommandHash[toupper(*cmd->cmd)]);
+	if (command && cmd->owner)
+	{
 		ModuleObject *cmdobj;
-		for (cmdobj = command->cmd->owner->objects; cmdobj; cmdobj = cmdobj->next) {
-			if (cmdobj->type == MOBJ_COMMAND && cmdobj->object.command == command) {
-				DelListItem(cmdobj,command->cmd->owner->objects);
+		for (cmdobj = cmd->owner->objects; cmdobj; cmdobj = cmdobj->next)
+		{
+			if (cmdobj->type == MOBJ_COMMAND && cmdobj->object.command == command)
+			{
+				DelListItem(cmdobj,cmd->owner->objects);
 				MyFree(cmdobj);
 				break;
 			}
 		}
 	}
-	for (ovr = command->cmd->overriders; ovr; ovr = ovrnext)
+	for (ovr = cmd->overriders; ovr; ovr = ovrnext)
 	{
 		ovrnext = ovr->next;
 		CmdoverrideDel(ovr);
 	}
-	MyFree(command->cmd->cmd);
-	MyFree(command->cmd);
-	MyFree(command);
+	MyFree(cmd->cmd);
+	MyFree(cmd);
+	if (command)
+		MyFree(command);
+}
+
+void CommandDel(Command *command)
+{
+	return CommandDelX(command, command->cmd);
 }

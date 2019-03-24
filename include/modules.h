@@ -714,6 +714,7 @@ extern Efunction	*EfunctionDel(Efunction *cb);
 extern Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned char params, int flags);
 extern Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned char params, int flags);
 extern void CommandDel(Command *command);
+extern void CommandDelX(Command *command, aCommand *cmd);
 extern int CommandExists(char *name);
 extern Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, OverrideCmdFunc func);
 extern Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc func);

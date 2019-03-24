@@ -435,17 +435,10 @@ extern int checkprotoflags(aClient *, int, char *, int);
 
 extern char *inetntop(int af, const void *in, char *local_dummy, size_t the_size);
 
-/*
- * CommandHash -Stskeeps
-*/
+/* Internal command stuff - not for modules */
 extern MODVAR aCommand *CommandHash[256];
-extern void	init_CommandHash(void);
+extern void init_CommandHash(void);
 extern aCommand *add_Command_backend(char *cmd);
-extern void	add_Command(char *cmd, int (*func)(), unsigned char parameters);
-extern void	add_Command_to_list(aCommand *item, aCommand **list);
-extern aCommand *del_Command_from_list(aCommand *item, aCommand **list);
-extern int	del_Command(char *cmd, int (*func)());
-extern void    add_CommandX(char *cmd, int (*func)(), unsigned char parameters, int flags);
 
 /* CRULE */
 char *crule_parse(char *);

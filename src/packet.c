@@ -125,31 +125,6 @@ aCommand *find_CommandEx(char *cmd, int (*func)(), int token)
 	
 }
 
-int del_Command(char *cmd, int (*func)())
-{
-	aCommand *p;
-	int	i = 0;
-	p = find_CommandEx(cmd, func, 0);
-	if (!p)
-		i--;
-	else
-	{
-		Cmdoverride *ovr, *ovrnext;
-		DelListItem(p, CommandHash[toupper(*cmd)]);
-		for (ovr = p->overriders; ovr; ovr = ovrnext)
-		{
-			ovrnext = ovr->next;
-			CmdoverrideDel(ovr);
-		}
-
-		if (p->cmd)
-			MyFree(p->cmd);
-		MyFree(p);
-	}
-	return i;	
-
-}
-
 static inline aCommand *find_Cmd(char *cmd, int flags)
 {
 	aCommand *p;

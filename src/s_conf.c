@@ -2345,7 +2345,7 @@ void	config_rehash()
 		next = (ListStruct *)alias_ptr->next;
 		safefree(alias_ptr->nick);
 		if (cmptr)
-			del_Command(alias_ptr->alias, cmptr->func);
+			CommandDelX(NULL, cmptr);
 		safefree(alias_ptr->alias);
 		if (alias_ptr->format && (alias_ptr->type == ALIAS_COMMAND)) {
 			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) next2)
@@ -9702,7 +9702,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 	aCommand *cmptr;
 
 	if ((cmptr = find_Command(ce->ce_vardata, 0, M_ALIAS)))
-		del_Command(ce->ce_vardata, cmptr->func);
+		CommandDelX(NULL, cmptr);
 	if (find_Command_simple(ce->ce_vardata))
 	{
 		config_warn("%s:%i: Alias '%s' would conflict with command (or server token) '%s', alias not added.",
