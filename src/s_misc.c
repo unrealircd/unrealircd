@@ -1344,7 +1344,10 @@ void concat_params(char *buf, int len, int parc, char *parv[])
 	{
 		char *param = parv[i];
 
-		if (param && !*buf)
+		if (!param)
+			break;
+
+		if (!*buf)
 			strlcat(buf, " ", len);
 
 		if (strchr(param, ' '))

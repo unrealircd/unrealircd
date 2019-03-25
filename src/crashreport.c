@@ -373,7 +373,11 @@ int attach_coredump(FILE *fdo, char *coredump)
 
 	attach_file(fdi, fdo);
 
+#ifndef _WIN32
+	pclose(fdi);
+#else
 	fclose(fdi);
+#endif
 	return 1;
 }
 

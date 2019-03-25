@@ -549,7 +549,7 @@ char has_common_chan = 0;
 				break;
 
 			if (!user_can_see_member(sptr, acptr, channel))
-				continue; /* invisible (eg: due to delayjoin) */
+				break; /* invisible (eg: due to delayjoin) */
 		}
 		else
 		{

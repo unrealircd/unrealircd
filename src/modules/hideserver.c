@@ -135,14 +135,6 @@ static int cb_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 						}
 					}
 				}
-				else if (!cep->ce_varname)
-				{
-					config_error("%s:%i: blank %s item",
-						cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, ce->ce_varname);
-					errors++;
-					continue;
-				}
 				else if (!cep->ce_vardata)
 				{
 					config_error("%s:%i: %s::%s without value",

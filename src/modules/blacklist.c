@@ -333,7 +333,7 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 							cepp->ce_varlinenum, "blacklist::dns::name");
 					}
 					has_dns_name = 1;
-				}
+				} else
 				if (!strcmp(cepp->ce_varname, "type"))
 				{
 					if (has_dns_type)

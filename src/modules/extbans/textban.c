@@ -459,7 +459,7 @@ struct timeval tv_alpha, tv_beta;
 					parse_word(p+7, &word, &type);
 					if (textban_replace(type, word, filtered, tmp))
 					{
-						strcpy(filtered, tmp);
+						strlcpy(filtered, tmp, sizeof(filtered));
 						cleaned = 1;
 					}
 				}

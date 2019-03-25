@@ -116,8 +116,6 @@ static int utf8_charlen(const char *str)
 	{
 		if ((*str & t[k].mask) == t[k].val)
 		{
-			if (4 < k + 1)
-				return -1;
 			for (j = 0; j < k; j++)
 			{
 				if ((*(++str) & 0xC0) != 0x80)

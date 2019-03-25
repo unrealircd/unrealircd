@@ -253,10 +253,10 @@ static void unload_motd_file(aMotdFile *list)
 {
 	aMotdLine *old, *new;
 
-	new = list->lines;
-
 	if (!list)
 		return;
+
+	new = list->lines;
 
 	if (!new)
 		return;
@@ -266,7 +266,7 @@ static void unload_motd_file(aMotdFile *list)
 		old = new->next;
 		MyFree(new->line);
 		MyFree(new);
-		new  = old;
+		new = old;
 	}
 }
 

@@ -1392,11 +1392,12 @@ Callback *CallbackDel(Callback *cb)
 
 Efunction	*EfunctionAddMain(Module *module, int eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
 {
-Efunction *p;
+	Efunction *p;
 
 	if (!module || !(module->options & MOD_OPT_OFFICIAL))
 	{
-		module->errorcode = MODERR_INVALID;
+		if (module)
+			module->errorcode = MODERR_INVALID;
 		return NULL;
 	}
 	
