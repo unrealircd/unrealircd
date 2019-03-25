@@ -3689,7 +3689,7 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 			}
 			has_parent = 1;
 			continue;
-		}
+		} else
 		if (!strcmp(cep->ce_varname, "permissions"))
 		{
 			if (has_permissions)
@@ -3700,55 +3700,18 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 			}
 			has_permissions = 1;
 			continue;
-		}
+		} else
 		if (!strcmp(cep->ce_varname, "privileges"))
 		{
 			new_permissions_system(conf, cep);
 			errors++;
 			return errors;
-		}
-		/* Regular variables */
-		if (!cep->ce_entries)
+		} else
 		{
-			if (!strcmp(cep->ce_varname, "permissions") && !cep->ce_vardata)
-			{
-				config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-					"operclass::parent");
-				errors++;
-				continue;
-			} else
-			if (!strcmp(cep->ce_varname, "permissions"))
-			{
-				new_permissions_system(conf, cep);
-				errors++;
-				return errors;
-			}
-			else
-			{
-				config_error_unknown(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "operclass", cep->ce_varname);
-				errors++;
-				continue;
-			}
-		}
-
-		/* Sections */
-		else
-		{
-			/* No the second 'strcmp' is not a typo, if it isn't permissions, we explode */
-			if (!strcmp(cep->ce_varname, "privileges"))
-			{
-				new_permissions_system(conf, cep);
-				errors++;
-				return errors;
-			} else
-			if (strcmp(cep->ce_varname, "permissions"))
-			{
-				config_error_unknown(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "operclass", cep->ce_varname);
-				errors++;
-				continue;
-			}
+			config_error_unknown(cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, "operclass", cep->ce_varname);
+			errors++;
+			continue;
 		}
 	}
 
