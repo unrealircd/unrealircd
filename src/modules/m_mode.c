@@ -480,6 +480,7 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *par
 	if (opermode == 1)
 	{
 		if (modebuf[1])
+		{
 			sendto_snomask(SNO_EYES,
 			    "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
 			    sptr->name, sptr->user->username, sptr->user->realhost,
@@ -489,6 +490,7 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *par
 			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) MODE %s %s %s",
 				sptr->name, sptr->user->username, sptr->user->realhost,
 				chptr->chname, modebuf, parabuf);
+		}
 
 		sendts = 0;
 	}

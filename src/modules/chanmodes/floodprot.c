@@ -1492,5 +1492,5 @@ int floodprot_stats(aClient *sptr, char *flag)
 			sptr->name, (unsigned short)MODEF_DEFAULT_UNSETTIME);
 	sendto_one(sptr, ":%s %i %s :modef-max-unsettime: %hd", me.name, RPL_TEXT,
 			sptr->name, (unsigned short)MODEF_MAX_UNSETTIME);
-
+	return 0;
 }
