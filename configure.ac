@@ -646,10 +646,10 @@ AC_SUBST(DOCDIR)
 AC_SUBST(PIDFILE)
 AC_SUBST(LDFLAGS_PRIVATELIBS)
 
-AC_ARG_WITH(fd-setsize, [AS_HELP_STRING([--with-fd-setsize=size], [Specify the max file descriptors to use])],
+AC_ARG_WITH(maxconnections, [AS_HELP_STRING([--with-maxconnections=size], [Specify the max file descriptors to use])],
 	[ac_fd=$withval],
-	[ac_fd=1024])
-AC_DEFINE_UNQUOTED([MAXCONNECTIONS], [$ac_fd], [Set to the max connections you want])
+	[ac_fd=0])
+AC_DEFINE_UNQUOTED([MAXCONNECTIONS_REQUEST], [$ac_fd], [Set to the maximum number of connections you want])
 
 AC_ARG_ENABLE([prefixaq],
 	[AS_HELP_STRING([--disable-prefixaq],[Disable chanadmin (+a) and chanowner (+q) prefixes])],

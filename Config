@@ -70,6 +70,9 @@ fi
 if [ "$PREFIXAQ" != "1" ]; then
 ARG="$ARG--disable-prefixaq "
 fi
+if [ "$MAXCONNECTIONS_REQUEST" != "auto" ]; then
+	ARG="$ARG--with-maxconnections=$MAXCONNECTIONS_REQUEST "
+fi
 
 ARG="$ARG--with-bindir=$BINDIR "
 ARG="$ARG--with-datadir=$DATADIR "
@@ -85,7 +88,6 @@ ARG="$ARG--with-scriptdir=$BASEPATH "
 ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
 ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
 ARG="$ARG--with-permissions=$DEFPERM "
-ARG="$ARG--with-fd-setsize=$MAXCONNECTIONS "
 ARG="$ARG--enable-dynamic-linking "
 ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
@@ -362,7 +364,7 @@ DEFPERM="0600"
 SSLDIR=""
 NICKNAMEHISTORYLENGTH="2000"
 MAXSENDQLENGTH="3000000"
-MAXCONNECTIONS="1024"
+MAXCONNECTIONS_REQUEST="auto"
 REMOTEINC=""
 CURLDIR=""
 PREFIXAQ="1"
@@ -833,25 +835,34 @@ done
 echo ""
 TEST=""
 while [ -z "$TEST" ] ; do
-    TEST="$MAXCONNECTIONS"
-    echo ""
-    echo "How many file descriptors (or sockets) can the IRCd use?"
-    echo $n "[$TEST] -> $c"
+	TEST="$MAXCONNECTIONS_REQUEST"
+	echo ""
+	echo "What is the maximum number of sockets (and file descriptors) that"
+	echo "UnrealIRCd may use?"
+	echo "It is recommended to leave this at the default setting 'auto',"
+	echo "which at present results in a limit of up to 8192, depending on"
+	echo "the system. When you boot UnrealIRCd later you will always see"
+	echo "the effective limit."
+	echo $n "[$TEST] -> $c"
 	read cc
-    if [ -z "$cc" ] ; then
-	MAXCONNECTIONS=$TEST
-	break
-    fi
-    case "$cc" in
-	[1-9][0-9][0-9]*)
-	    MAXCONNECTIONS="$cc"
-	    ;;
-	*)
-	    echo ""
-	    echo "You must to enter a number greater than or equal to 100"
-	    TEST=""
-	    ;;
-    esac
+	if [ -z "$cc" ] ; then
+		MAXCONNECTIONS_REQUEST=$TEST
+		break
+	fi
+	case "$cc" in
+		auto)
+			MAXCONNECTIONS_REQUEST="$cc"
+			;;
+		[1-9][0-9][0-9]*)
+			MAXCONNECTIONS_REQUEST="$cc"
+			;;
+		*)
+			echo ""
+			echo "You must to enter a number greater than or equal to 100."
+			echo "Or enter 'auto' to leave it at automatic, which is recommended."
+			TEST=""
+			;;
+	esac
 done
 if [ -n "$ADVANCED" ] ; then
 	RUN_ADVANCED
@@ -882,7 +893,7 @@ TMPDIR="$TMPDIR"
 LIBDIR="$LIBDIR"
 PREFIXAQ="$PREFIXAQ"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
-MAXCONNECTIONS="$MAXCONNECTIONS"
+MAXCONNECTIONS_REQUEST="$MAXCONNECTIONS_REQUEST"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
 DEFPERM="$DEFPERM"
 SSLDIR="$SSLDIR"

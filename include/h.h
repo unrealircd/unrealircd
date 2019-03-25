@@ -239,6 +239,7 @@ extern void get_my_name(aClient *, char *, int);
 extern int get_sockerr(aClient *);
 extern int inetport(ConfigItem_listen *, char *, int, int);
 extern void init_sys();
+extern void check_user_limit(void);
 extern void init_modef();
 extern int verify_hostname(char *name);
 
@@ -811,3 +812,4 @@ extern void set_targmax_defaults(void);
 extern void parse_chanmodes_protoctl(aClient *sptr, char *str);
 extern void concat_params(char *buf, int len, int parc, char *parv[]);
 extern void charsys_check_for_changes(void);
+extern int maxclients;

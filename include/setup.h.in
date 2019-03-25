@@ -214,8 +214,8 @@
 /* Define to <malloc.h> you need malloc.h. */
 #undef MALLOCH
 
-/* Set to the max connections you want */
-#undef MAXCONNECTIONS
+/* Set to the maximum number of connections you want */
+#undef MAXCONNECTIONS_REQUEST
 
 /* Set to the max sendq you want */
 #undef MAXSENDQLENGTH

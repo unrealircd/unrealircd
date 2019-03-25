@@ -90,7 +90,7 @@ void start_auth(aClient *cptr)
 		ident_failed(cptr);
 		return;
 	}
-	if (++OpenFiles >= (MAXCONNECTIONS - 2))
+	if (++OpenFiles >= maxclients+1)
 	{
 		sendto_ops("Can't allocate fd, too many connections.");
 		fd_close(cptr->local->authfd);

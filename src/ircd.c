@@ -1311,7 +1311,10 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifdef USE_LIBCURL
 	fprintf(stderr, "  using %s\n", curl_version());
 #endif
+	check_user_limit();
 	fprintf(stderr, "\n");
+	fprintf(stderr, "This server can handle %d concurrent sockets (%d clients + %d reserve)\n\n",
+		maxclients+CLIENTS_RESERVE, maxclients, CLIENTS_RESERVE);
 #endif
 	clear_client_hash_table();
 	clear_channel_hash_table();

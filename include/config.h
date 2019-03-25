@@ -234,8 +234,36 @@
  *
  * 2004-10-13: 1024 -> 4096
  */
-#ifndef MAXCONNECTIONS
-#define MAXCONNECTIONS	10240
+#ifdef _WIN32
+ #define MAXCONNECTIONS	10240
+#else
+ /* Non-Windows: */
+ #if (!defined(MAXCONNECTIONS_REQUEST) || (MAXCONNECTIONS_REQUEST < 1)) && \
+      (defined(HAVE_POLL) || defined(HAVE_EPOLL) || defined(HAVE_KQUEUE))
+  /* Have poll/epoll/kqueue and either no --with-maxconnections or
+   * --with-maxconnections=0, either of which indicates 'automatic' mode.
+   * At the time of writing we will try a limit of 8192.
+   * It will automatically be lowered at boottime if we can only use
+   * 4096, 2048 or 1024. No problem.
+   */
+  #define MAXCONNECTIONS 8192
+ #elif defined(MAXCONNECTIONS_REQUEST) && (MAXCONNECTIONS_REQUEST >= 1)
+  /* --with-maxconnections=something */
+  #define MAXCONNECTIONS MAXCONNECTIONS_REQUEST
+ #else
+  /* Automatic mode, but we only have select(). Bummer... */
+  #define MAXCONNECTIONS 1024
+ #endif
+#endif
+
+/* Number of file descriptors reserved for non-incoming-clients.
+ * One of which may be used by auth, the rest are really reserved.
+ * They can be used for outgoing server links, listeners, logging, etc.
+ */
+#if MAXCONNECTIONS > 1024
+ #define CLIENTS_RESERVE 8
+#else
+ #define CLIENTS_RESERVE 4
 #endif
 
 /*
@@ -407,11 +435,6 @@ error You stuffed up config.h signals
 #ifdef	POSIX_SIGNALS
 #define	HAVE_RELIABLE_SIGNALS
 #endif
-/*
- * safety margin so we can always have one spare fd, for motd/authd or
- * whatever else.  -4 allows "safety" margin of 1 and space reserved.
- */
-#define	MAXCLIENTS	(MAXCONNECTIONS-4)
 #ifdef HAVECURSES
 # define DOCURSES
 #else

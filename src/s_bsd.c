@@ -285,7 +285,7 @@ static void listener_accept(int listener_fd, int revents, void *data)
 	set_sock_opts(cli_fd, NULL, listener->ipv6);
 	set_non_blocking(cli_fd, NULL);
 
-	if ((++OpenFiles >= MAXCLIENTS) || (cli_fd >= MAXCLIENTS))
+	if ((++OpenFiles >= maxclients) || (cli_fd >= maxclients))
 	{
 		ircstp->is_ref++;
 		if (last_allinuse < TStime() - 15)
@@ -338,7 +338,7 @@ int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 		return -1;
 	}
 
-	if (++OpenFiles >= MAXCLIENTS)
+	if (++OpenFiles >= maxclients)
 	{
 		sendto_ops_and_log("No more connections allowed (%s)", listener->ip);
 		fd_close(listener->fd);
@@ -461,43 +461,48 @@ void close_listeners(void)
 	}
 }
 
-/*
- * init_sys
- */
-void init_sys(void)
+int maxclients = 1024 - CLIENTS_RESERVE;
+
+void check_user_limit(void)
 {
-	int  fd, i;
 #ifdef RLIMIT_FD_MAX
 	struct rlimit limit;
+	long m;
 
 	if (!getrlimit(RLIMIT_FD_MAX, &limit))
 	{
 		if (limit.rlim_max < MAXCONNECTIONS)
+			m = limit.rlim_max;
+		else
+			m = MAXCONNECTIONS;
+
+		/* Adjust soft limit (if necessary, which is often the case) */
+		if (m != limit.rlim_cur)
 		{
-			(void)fprintf(stderr, "The OS enforces a limit on max open files\n");
-#ifndef LONG_LONG_RLIM_T
-			(void)fprintf(stderr, "Hard Limit: %ld MAXCONNECTIONS: %d\n",
-#else
-			(void)fprintf(stderr, "Hard Limit: %lld MAXCONNECTIONS: %d\n",
-#endif
-			    limit.rlim_max, MAXCONNECTIONS);
-			(void)fprintf(stderr, "Fix MAXCONNECTIONS\n");
-			exit(-1);
-		}
-		limit.rlim_cur = limit.rlim_max;	/* make soft limit the max */
-		if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
-		{
-/* HACK: if it's mac os X then don't error... */
+			limit.rlim_cur = limit.rlim_max = m;
+			if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
+			{
+				/* HACK: if it's mac os X then don't error... */
 #ifndef OSXTIGER
-#ifndef LONG_LONG_RLIM_T
-			(void)fprintf(stderr, "error setting max fd's to %ld\n",
-#else
-			(void)fprintf(stderr, "error setting max fd's to %lld\n",
-#endif
-			    limit.rlim_cur);
-			exit(-1);
+				fprintf(stderr, "error setting maximum number of open files to %ld\n",
+					(long)limit.rlim_cur);
+				exit(-1);
 #endif // OSXTIGER
+			}
 		}
+		/* This can only happen if it is due to resource limits (./Config already rejects <100) */
+		if (m < 100)
+		{
+			fprintf(stderr, "\nERROR: Your OS has a limit placed on this account.\n"
+			                "This machine only allows UnrealIRCd to handle a maximum of %ld open connections/files, which is VERY LOW.\n"
+			                "Please check with your system administrator to bump this limit.\n"
+			                "The recommended ulimit -n setting is at least 1024 and "
+			                "preferably 4096.\n"
+			                "Note that this error is often seen on small web shells that are not meant for running IRC servers.\n",
+			                m);
+			exit(-1);
+		}
+		maxclients = m - CLIENTS_RESERVE;
 	}
 #endif // RLIMIT_FD_MAX
 
@@ -506,12 +511,16 @@ void init_sys(void)
 	if (MAXCONNECTIONS > FD_SETSIZE)
 	{
 		fprintf(stderr, "MAXCONNECTIONS (%d) is higher than FD_SETSIZE (%d)\n", MAXCONNECTIONS, FD_SETSIZE);
-		fprintf(stderr, "You might need to recompile the IRCd, or if you're running Linux, read the release notes\n");
+		fprintf(stderr, "You should not see this error on Linux or FreeBSD\n");
+		fprintf(stderr, "You might need to recompile the IRCd and answer a lower value to the MAXCONNECTIONS question in ./Config\n");
 		exit(-1);
 	}
 #endif
 #endif
+}
 
+void init_sys(void)
+{
 	/* Create new session / set process group */
 #if defined(HPUX) || defined(_SOLARIS) || \
     defined(_POSIX_SOURCE) || defined(SVR4) || defined(SGI) || \
@@ -1579,7 +1588,7 @@ int connect_inet(ConfigItem_link *aconf, aClient *cptr)
 		report_baderror("opening stream socket to server %s:%s", cptr);
 		return 0;
 	}
-	if (++OpenFiles >= MAXCLIENTS)
+	if (++OpenFiles >= maxclients)
 	{
 		sendto_ops_and_log("No more connections allowed (%s)", cptr->name);
 		return 0;

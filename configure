@@ -748,7 +748,7 @@ with_datadir
 with_docdir
 with_pidfile
 with_privatelibdir
-with_fd_setsize
+with_maxconnections
 enable_prefixaq
 with_showlistmodes
 with_shunnotices
@@ -1448,7 +1448,8 @@ Optional Packages:
   --with-privatelibdir=path
                           Specify the directory where private libraries are
                           stored. Disable when building a package for a distro
-  --with-fd-setsize=size  Specify the max file descriptors to use
+  --with-maxconnections=size
+                          Specify the max file descriptors to use
   --with-showlistmodes    Specify whether modes are shown in /list
   --with-shunnotices      Notify a user when he/she is no longer shunned
   --with-no-operoverride  Disable OperOverride
@@ -7155,16 +7156,16 @@ fi
 
 
 
-# Check whether --with-fd-setsize was given.
-if test "${with_fd_setsize+set}" = set; then :
-  withval=$with_fd_setsize; ac_fd=$withval
+# Check whether --with-maxconnections was given.
+if test "${with_maxconnections+set}" = set; then :
+  withval=$with_maxconnections; ac_fd=$withval
 else
-  ac_fd=1024
+  ac_fd=0
 fi
 
 
 cat >>confdefs.h <<_ACEOF
-#define MAXCONNECTIONS $ac_fd
+#define MAXCONNECTIONS_REQUEST $ac_fd
 _ACEOF
 
 
