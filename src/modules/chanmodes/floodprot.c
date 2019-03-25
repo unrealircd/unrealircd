@@ -25,6 +25,15 @@ ModuleHeader MOD_HEADER(floodprot)
 
 #define NUMFLD	6 /* 6 flood types */
 
+/** Configuration settings */
+struct {
+	unsigned char modef_default_unsettime;
+	unsigned char modef_max_unsettime;
+} cfg;
+
+#define MODEF_DEFAULT_UNSETTIME		cfg.modef_default_unsettime
+#define MODEF_MAX_UNSETTIME		cfg.modef_max_unsettime
+
 typedef struct SChanFloodProt ChanFloodProt;
 typedef struct SRemoveFld RemoveFld;
 
@@ -66,7 +75,10 @@ static int timedban_available = 0; /**< Set to 1 if extbans/timedban module is l
 #define IsFloodLimit(x)	((x)->mode.extmode & EXTMODE_FLOODLIMIT)
 
 /* Forward declarations */
+static void init_config(void);
 int floodprot_rehash_complete(void);
+int floodprot_config_test(ConfigFile *, ConfigEntry *, int, int *);
+int floodprot_config_run(ConfigFile *, ConfigEntry *, int);
 void floodprottimer_del(aChannel *chptr, char mflag);
 void floodprottimer_stopchantimers(aChannel *chptr);
 static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r);
@@ -92,6 +104,13 @@ int floodprot_local_nickchange(aClient *sptr, char *oldnick);
 int floodprot_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick);
 int floodprot_chanmode_del(aChannel *chptr, int m);
 void userfld_free(ModData *md);
+int floodprot_stats(aClient *sptr, char *flag);
+
+MOD_TEST(floodprot)
+{
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, floodprot_config_test);
+	return MOD_SUCCESS;
+}
 
 MOD_INIT(floodprot)
 {
@@ -115,6 +134,8 @@ MOD_INIT(floodprot)
 	creq.sjoin_check = cmodef_sjoin_check;
 	CmodeAdd(modinfo->handle, creq, &EXTMODE_FLOODLIMIT);
 
+	init_config();
+
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "floodprot";
 	mreq.type = MODDATATYPE_MEMBERSHIP;
@@ -122,7 +143,8 @@ MOD_INIT(floodprot)
 	mdflood = ModDataAdd(modinfo->handle, mreq);
 	if (!mdflood)
 	        abort();
-	
+
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, floodprot_config_run);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, floodprot_pre_chanmsg);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANMSG, 0, floodprot_post_chanmsg);
 	HookAdd(modinfo->handle, HOOKTYPE_KNOCK, 0, floodprot_knock);
@@ -133,6 +155,7 @@ MOD_INIT(floodprot)
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_JOIN, 0, floodprot_join);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 0, cmodef_channel_destroy);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, floodprot_rehash_complete);
+	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, floodprot_stats);
 	return MOD_SUCCESS;
 }
 
@@ -152,6 +175,91 @@ int floodprot_rehash_complete(void)
 {
 	timedban_available = is_module_loaded("timedban");
 	return 0;
+}
+
+static void init_config(void)
+{
+	/* This sets some default values */
+	memset(&cfg, 0, sizeof(cfg));
+	cfg.modef_default_unsettime = 0;
+	cfg.modef_max_unsettime = 60; /* 1 hour seems enough :p */
+}
+
+int floodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	int errors = 0;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	if (!strcmp(ce->ce_varname, "modef-default-unsettime"))
+	{
+		int v;
+
+		if (!ce->ce_vardata)
+		{
+			config_error_empty(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				"set", ce->ce_varname);
+			errors++;
+		} else {
+			v = atoi(ce->ce_vardata);
+			if ((v <= 0) || (v > 255))
+			{
+				config_error("%s:%i: set::modef-default-unsettime: value '%d' out of range (should be 1-255)",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, v);
+				errors++;
+			}
+		}
+	} else
+	if (!strcmp(ce->ce_varname, "modef-max-unsettime"))
+	{
+		int v;
+
+		if (!ce->ce_vardata)
+		{
+			config_error_empty(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				"set", ce->ce_varname);
+			errors++;
+		} else {
+			v = atoi(ce->ce_vardata);
+			if ((v <= 0) || (v > 255))
+			{
+				config_error("%s:%i: set::modef-max-unsettime: value '%d' out of range (should be 1-255)",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, v);
+				errors++;
+			}
+		}
+	} else
+	{
+		/* Not handled by us */
+		return 0;
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+int floodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	if (type != CONFIG_SET)
+		return 0;
+
+	if (!strcmp(ce->ce_varname, "modef-default-unsettime"))
+	{
+		int v = atoi(ce->ce_vardata);
+		cfg.modef_default_unsettime = (unsigned char)v;
+	} else
+	if (!strcmp(ce->ce_varname, "modef-max-unsettime"))
+	{
+		int v = atoi(ce->ce_vardata);
+		cfg.modef_max_unsettime = (unsigned char)v;
+	} else
+	{
+		/* Not handled by us */
+		return 0;
+	}
+
+	return 1;
 }
 
 int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int type, int what)
@@ -1368,4 +1476,13 @@ static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
 void userfld_free(ModData *md)
 {
 	MyFree(md->ptr);
+}
+
+int floodprot_stats(aClient *sptr, char *flag)
+{
+	sendto_one(sptr, ":%s %i %s :modef-default-unsettime: %hd", me.name, RPL_TEXT,
+			sptr->name, (unsigned short)MODEF_DEFAULT_UNSETTIME);
+	sendto_one(sptr, ":%s %i %s :modef-max-unsettime: %hd", me.name, RPL_TEXT,
+			sptr->name, (unsigned short)MODEF_MAX_UNSETTIME);
+
 }

@@ -1476,8 +1476,6 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->invite_count = 4; i->invite_period = 60; /* INVITE flood protection: max 4 per 60s */
 	i->knock_count = 4; i->knock_period = 120; /* KNOCK protection: max 4 per 120s */
 	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
-	i->modef_default_unsettime = 0;
-	i->modef_max_unsettime = 60; /* 1 hour seems enough :p */
 	i->ban_version_tkl_time = 86400; /* 1d */
 	i->spamfilter_ban_time = 86400; /* 1d */
 	i->spamfilter_ban_reason = strdup("Spam/advertising");
@@ -7966,14 +7964,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.ban_version_tkl_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
-		else if (!strcmp(cep->ce_varname, "modef-default-unsettime")) {
-			int v = atoi(cep->ce_vardata);
-			tempiConf.modef_default_unsettime = (unsigned char)v;
-		}
-		else if (!strcmp(cep->ce_varname, "modef-max-unsettime")) {
-			int v = atoi(cep->ce_vardata);
-			tempiConf.modef_max_unsettime = (unsigned char)v;
-		}
 		else if (!strcmp(cep->ce_varname, "nick-length")) {
 			int v = atoi(cep->ce_vardata);
 			tempiConf.nick_length = v;
@@ -8973,30 +8963,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			{
 				config_error("%s:%i: set::ban-version-tkl-time: value '%ld' out of range",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, x);
-				errors++;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "modef-default-unsettime")) {
-			int v;
-			CheckDuplicate(cep, modef_default_unsettime, "modef-default-unsettime");
-			CheckNull(cep);
-			v = atoi(cep->ce_vardata);
-			if ((v <= 0) || (v > 255))
-			{
-				config_error("%s:%i: set::modef-default-unsettime: value '%d' out of range (should be 1-255)",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v);
-				errors++;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "modef-max-unsettime")) {
-			int v;
-			CheckDuplicate(cep, modef_max_unsettime, "modef-max-unsettime");
-			CheckNull(cep);
-			v = atoi(cep->ce_vardata);
-			if ((v <= 0) || (v > 255))
-			{
-				config_error("%s:%i: set::modef-max-unsettime: value '%d' out of range (should be 1-255)",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v);
 				errors++;
 			}
 		}
