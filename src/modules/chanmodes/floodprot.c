@@ -1,6 +1,7 @@
 /*
  * Channel Mode +f
- * (C) Copyright 2005-2014 Bram Matthys and The UnrealIRCd team.
+ * (C) Copyright 2005-2019 Bram Matthys and The UnrealIRCd team.
+ * License: GPLv2
  */
 
 #include "unrealircd.h"
@@ -29,10 +30,12 @@ ModuleHeader MOD_HEADER(floodprot)
 struct {
 	unsigned char modef_default_unsettime;
 	unsigned char modef_max_unsettime;
+	long modef_boot_delay;
 } cfg;
 
 #define MODEF_DEFAULT_UNSETTIME		cfg.modef_default_unsettime
 #define MODEF_MAX_UNSETTIME		cfg.modef_max_unsettime
+#define MODEF_BOOT_DELAY		cfg.modef_boot_delay
 
 typedef struct SChanFloodProt ChanFloodProt;
 typedef struct SRemoveFld RemoveFld;
@@ -183,6 +186,7 @@ static void init_config(void)
 	memset(&cfg, 0, sizeof(cfg));
 	cfg.modef_default_unsettime = 0;
 	cfg.modef_max_unsettime = 60; /* 1 hour seems enough :p */
+	cfg.modef_boot_delay = 75;
 }
 
 int floodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -194,15 +198,13 @@ int floodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	if (!strcmp(ce->ce_varname, "modef-default-unsettime"))
 	{
-		int v;
-
 		if (!ce->ce_vardata)
 		{
 			config_error_empty(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				"set", ce->ce_varname);
 			errors++;
 		} else {
-			v = atoi(ce->ce_vardata);
+			int v = atoi(ce->ce_vardata);
 			if ((v <= 0) || (v > 255))
 			{
 				config_error("%s:%i: set::modef-default-unsettime: value '%d' out of range (should be 1-255)",
@@ -213,18 +215,33 @@ int floodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	} else
 	if (!strcmp(ce->ce_varname, "modef-max-unsettime"))
 	{
-		int v;
-
 		if (!ce->ce_vardata)
 		{
 			config_error_empty(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				"set", ce->ce_varname);
 			errors++;
 		} else {
-			v = atoi(ce->ce_vardata);
+			int v = atoi(ce->ce_vardata);
 			if ((v <= 0) || (v > 255))
 			{
 				config_error("%s:%i: set::modef-max-unsettime: value '%d' out of range (should be 1-255)",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, v);
+				errors++;
+			}
+		}
+	} else
+	if (!strcmp(ce->ce_varname, "modef-boot-delay"))
+	{
+		if (!ce->ce_vardata)
+		{
+			config_error_empty(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				"set", ce->ce_varname);
+			errors++;
+		} else {
+			long v = config_checkval(ce->ce_vardata, CFG_TIME);
+			if ((v < 0) || (v > 600))
+			{
+				config_error("%s:%i: set::modef-boot-delay: value '%ld' out of range (should be 0-600)",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, v);
 				errors++;
 			}
@@ -245,19 +262,13 @@ int floodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		return 0;
 
 	if (!strcmp(ce->ce_varname, "modef-default-unsettime"))
-	{
-		int v = atoi(ce->ce_vardata);
-		cfg.modef_default_unsettime = (unsigned char)v;
-	} else
-	if (!strcmp(ce->ce_varname, "modef-max-unsettime"))
-	{
-		int v = atoi(ce->ce_vardata);
-		cfg.modef_max_unsettime = (unsigned char)v;
-	} else
-	{
-		/* Not handled by us */
-		return 0;
-	}
+		cfg.modef_default_unsettime = (unsigned char)atoi(ce->ce_vardata);
+	else if (!strcmp(ce->ce_varname, "modef-max-unsettime"))
+		cfg.modef_max_unsettime = (unsigned char)atoi(ce->ce_vardata);
+	else if (!strcmp(ce->ce_varname, "modef-boot-delay"))
+		cfg.modef_boot_delay = config_checkval(ce->ce_vardata, CFG_TIME);
+	else
+		return 0; /* not handled by us */
 
 	return 1;
 }
@@ -928,13 +939,19 @@ int floodprot_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[])
 	/* I'll explain this only once:
 	 * 1. if channel is +f
 	 * 2. local client OR synced server
-	 * 3. then, increase floodcounter
-	 * 4. if we reached the limit AND only if source was a local client.. do the action (+i).
-	 * Nr 4 is done because otherwise you would have a noticeflood with 'joinflood detected'
+	 * 3. server uptime more than XX seconds (if this information is available)
+	 * 4. is not a uline
+	 * 5. then, increase floodcounter
+	 * 6. if we reached the limit AND only if source was a local client.. do the action (+i).
+	 * Nr 6 is done because otherwise you would have a noticeflood with 'joinflood detected'
 	 * from all servers.
 	 */
-	if (IsFloodLimit(chptr) && (MyClient(sptr) || sptr->srvptr->serv->flags.synced) && 
-	    !IsULine(sptr) && do_floodprot(chptr, FLD_JOIN) && MyClient(sptr))
+	if (IsFloodLimit(chptr) &&
+	    (MyClient(sptr) || sptr->srvptr->serv->flags.synced) &&
+	    (sptr->srvptr->serv->boottime && (TStime() - sptr->srvptr->serv->boottime >= MODEF_BOOT_DELAY)) &&
+	    !IsULine(sptr) &&
+	    do_floodprot(chptr, FLD_JOIN) &&
+	    MyClient(sptr))
 	{
 		do_floodprot_action(chptr, FLD_JOIN, "join");
 	}
@@ -1031,15 +1048,6 @@ int floodprot_post_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notic
 
 	return 0;
 }
-
-#if 0
-int floodprot_remotejoin(aClient *cptr, aClient *acptr, aChannel *chptr, char *parv[])
-{
-	if (IsFloodLimit(chptr) && acptr->serv->flags.synced && !IsULine(acptr)) /* hope that's correctly copied? acptr/cptr fun */
-		do_floodprot(chptr, FLD_JOIN);
-	return 0;
-}
-#endif
 
 int floodprot_knock(aClient *sptr, aChannel *chptr)
 {
