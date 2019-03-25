@@ -270,25 +270,6 @@ static void unload_motd_file(aMotdFile *list)
 	}
 }
 
-#define CHECK_EMPTY(ce, parent) \
-		if (!(ce)->ce_varname) \
-		{ \
-			config_error("%s:%i: blank %s item", \
-				(ce)->ce_fileptr->cf_filename, \
-				(ce)->ce_varlinenum, (parent)->ce_varname); \
-			errors++; \
-			continue; \
-		} \
-		if (!(ce)->ce_vardata) \
-		{ \
-			config_error("%s:%i: %s::%s without value", \
-				(ce)->ce_fileptr->cf_filename, \
-				(ce)->ce_varlinenum, \
-				(parent)->ce_varname, (ce)->ce_varname); \
-			errors++; \
-			continue; \
-		}
-
 static int cb_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;

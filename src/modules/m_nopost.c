@@ -117,12 +117,6 @@ ConfigEntry *cep;
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error("%s:%i: blank set::nopost item",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
-		} else
 		if (!strcmp(cep->ce_varname, "except-hosts"))
 		{
 		} else

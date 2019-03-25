@@ -180,12 +180,6 @@ int authprompt_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error("%s:%i: blank set::authentication-prompt item",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
-		} else
 		if (!cep->ce_vardata)
 		{
 			config_error("%s:%i: set::authentication-prompt::%s with no value",

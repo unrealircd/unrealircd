@@ -242,7 +242,7 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (type != CONFIG_MAIN)
 		return 0;
 	
-	if (!ce || !ce->ce_varname)
+	if (!ce)
 		return 0;
 	
 	if (strcmp(ce->ce_varname, "blacklist"))
@@ -259,12 +259,6 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	/* Now actually go parse the blacklist { } block */
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum, "blacklist");
-			errors++;
-			continue;
-		}
 		if (!strcmp(cep->ce_varname, "dns"))
 		{
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
@@ -280,7 +274,7 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 						errors++;
 						continue;
 					}
-					if (!cepp->ce_vardata && !(cepp->ce_entries && cepp->ce_entries->ce_varname))
+					if (!cepp->ce_vardata && !cepp->ce_entries)
 					{
 						config_error_blank(cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, "blacklist::dns::reply");
 						errors++;

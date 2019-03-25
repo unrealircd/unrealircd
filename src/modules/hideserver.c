@@ -124,16 +124,7 @@ static int cb_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			{
 				if (!strcmp(cep->ce_varname, "hide"))
 				{
-					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-					{
-						if (!cepp->ce_varname)
-						{
-							config_error("%s:%i: blank hideserver::hide item",
-								cepp->ce_fileptr->cf_filename,
-								cepp->ce_varlinenum);
-							errors++;
-						}
-					}
+					/* No checking needed */
 				}
 				else if (!cep->ce_vardata)
 				{

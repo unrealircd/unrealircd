@@ -1390,11 +1390,6 @@ void config_progress(char *format, ...)
 
 int config_is_blankorempty(ConfigEntry *cep, const char *block)
 {
-	if (!cep->ce_varname)
-	{
-		config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum, block);
-		return 1;
-	}
 	if (!cep->ce_vardata)
 	{
 		config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum, block,
@@ -2625,13 +2620,6 @@ int	config_test()
 			config_status("Testing %s", cfptr->cf_filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
-			if (!ce->ce_varname)
-			{
-				config_error("%s:%i: %s:%i: null ce->ce_varname",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					__FILE__, __LINE__);
-				return -1;
-			}
 			if ((cc = config_binary_search(ce->ce_varname))) {
 				if (cc->testfunc)
 					errors += (cc->testfunc(cfptr, ce));
@@ -3213,9 +3201,9 @@ int	_test_admin(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
+		if (strlen(cep->ce_varname) > 500)
 		{
-			config_error("%s:%i: blank admin item",
+			config_error("%s:%i: oversized data in admin block",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum);
 			errors++;
@@ -3691,13 +3679,6 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"operclass");
-			errors++;
-			continue;
-		}
 		if (!strcmp(cep->ce_varname, "parent"))
 		{
 			if (has_parent)
@@ -3879,13 +3860,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"oper");
-			errors++;
-			continue;
-		}
 		/* Regular variables */
 		if (!cep->ce_entries)
 		{
@@ -4447,17 +4421,10 @@ int	_conf_ulines(ConfigFile *conf, ConfigEntry *ce)
 int	_test_ulines(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
-	int 	    errors = 0;
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-	{
-		if (!cep->ce_varname)
-		{
-			config_error_blank(cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum, "ulines");
-			errors++;
-			continue;
-		}
-	}
+	int errors = 0;
+
+	/* No check needed */
+
 	return errors;
 }
 
@@ -4525,13 +4492,6 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"tld");
-			errors++;
-			continue;
-		}
 		if (!cep->ce_vardata && strcmp(cep->ce_varname, "options"))
 		{
 			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
@@ -4680,12 +4640,6 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 
 			for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
 			{
-				if (!cep2->ce_varname)
-				{
-					config_error_blank(cep2->ce_fileptr->cf_filename,
-						cep2->ce_varlinenum, "tld::options");
-					continue;
-				}
 				if (strcmp(cep2->ce_varname, "ssl") &&
 					strcmp(cep2->ce_varname, "remote"))
 				{
@@ -4883,14 +4837,6 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		int used_by_module = 0;
 
-		if (!cep->ce_varname)
-		{
-			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"listen");
-			errors++;
-			continue;
-		}
-
 		/* First, check if a module knows about this listen::something */
 		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
 		{
@@ -4932,13 +4878,6 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				NameValue *ofp;
-				if (!cepp->ce_varname)
-				{
-					config_error_blank(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "listen::options");
-					errors++;
-					continue;
-				}
 				if (!(ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, ARRAY_SIZEOF(_ListenerFlags))))
 				{
 					config_error_unknownopt(cepp->ce_fileptr->cf_filename,
@@ -5734,13 +5673,6 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
-			if (!cep->ce_varname)
-			{
-				config_error_blank(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "except tkl");
-				errors++;
-				continue;
-			}
 			if (!strcmp(cep->ce_varname, "mask"))
 			{
 				if (!cep->ce_vardata)
@@ -5980,13 +5912,6 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error_blank(cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum, "vhost");
-			errors++;
-			continue;
-		}
 		if (!strcmp(cep->ce_varname, "vhost"))
 		{
 			char *at, *tmp, *host;
@@ -6211,13 +6136,6 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"spamfilter");
-			errors++;
-			continue;
-		}
 		if (!strcmp(cep->ce_varname, "target"))
 		{
 			if (has_target)
@@ -6240,14 +6158,6 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
-					if (!cepp->ce_varname)
-					{
-						config_error_blank(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum,
-							"spamfilter::target");
-						errors++;
-						continue;
-					}
 					if (!spamfilter_getconftargets(cepp->ce_varname))
 					{
 						config_error("%s:%i: unknown spamfiler target type '%s'",
@@ -6509,10 +6419,10 @@ int _test_help(ConfigFile *conf, ConfigEntry *ce) {
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
+		if (strlen(cep->ce_varname) > 500)
 		{
-			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"help");
+			config_error("%s:%i: oversized help item",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			errors++;
 			continue;
 		}
@@ -6574,13 +6484,6 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"log");
-			errors++;
-			continue;
-		}
 		if (!strcmp(cep->ce_varname, "flags"))
 		{
 			if (has_flags)
@@ -6599,13 +6502,6 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			}
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				if (!cepp->ce_varname)
-				{
-					config_error_blank(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "log::flags");
-					errors++;
-					continue;
-				}
 				if (!config_binary_flags_search(_LogFlags, cepp->ce_varname, ARRAY_SIZEOF(_LogFlags)))
 				{
 					config_error_unknownflag(cepp->ce_fileptr->cf_filename,
@@ -8261,13 +8157,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error_blank(cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum, "set");
-			errors++;
-			continue;
-		}
 		if (!strcmp(cep->ce_varname, "kline-address")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, kline_address, "kline-address");
@@ -8469,13 +8358,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else
 			{
+				/* TODO: check the entries for existence?
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
-					if (!cepp->ce_varname)
-						config_error("%s:%i: blank set::oper-only-stats item",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum);
-				}
+				} */
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {

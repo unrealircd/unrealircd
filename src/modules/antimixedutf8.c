@@ -272,12 +272,6 @@ int antimixedutf8_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error("%s:%i: blank set::antimixedutf8 item",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
-		} else
 		if (!cep->ce_vardata)
 		{
 			config_error("%s:%i: set::antimixedutf8::%s with no value",

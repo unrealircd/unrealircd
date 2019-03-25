@@ -151,7 +151,7 @@ int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (type != CONFIG_MAIN)
 		return 0;
 	
-	if (!ce || !ce->ce_varname)
+	if (!ce)
 		return 0;
 	
 	if (!strcmp(ce->ce_varname, "cgiirc"))
@@ -170,12 +170,6 @@ int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	/* Now actually go parse the webirc { } block */
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-		{
-			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum, "webirc");
-			errors++;
-			continue;
-		}
 		if (!cep->ce_vardata)
 		{
 			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,

@@ -262,9 +262,7 @@ int upgrade_me_block(ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-			continue; /* impossible? */
-		else if (!strcmp(cep->ce_varname, "sid"))
+		if (!strcmp(cep->ce_varname, "sid"))
 			return 0; /* no upgrade needed */
 		else if (!cep->ce_vardata)
 		{
@@ -330,9 +328,7 @@ int upgrade_link_block(ConfigEntry *ce)
 	/* ripped from test_link */
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-			continue; /* impossible? */
-		else if (!strcmp(cep->ce_varname, "incoming") || !strcmp(cep->ce_varname, "outgoing"))
+		if (!strcmp(cep->ce_varname, "incoming") || !strcmp(cep->ce_varname, "outgoing"))
 			return 0; /* no upgrade needed */
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
@@ -505,7 +501,7 @@ int upgrade_from_subblock(ConfigEntry *ce)
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname || !cep->ce_vardata)
+		if (!cep->ce_vardata)
 			continue;
 		else if (!strcmp(cep->ce_varname, "userhost"))
 		{
@@ -657,9 +653,7 @@ int upgrade_spamfilter_block(ConfigEntry *ce)
 		
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-			continue; /* impossible? */
-		else if (!strcmp(cep->ce_varname, "match") || !strcmp(cep->ce_varname, "match-type"))
+		if (!strcmp(cep->ce_varname, "match") || !strcmp(cep->ce_varname, "match-type"))
 			return 0; /* no upgrade needed */
 		else if (!strcmp(cep->ce_varname, "target"))
 		{
@@ -774,9 +768,7 @@ int upgrade_allow_block(ConfigEntry *ce)
 		
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-			continue; /* impossible? */
-		else if (!strcmp(cep->ce_varname, "options"))
+		if (!strcmp(cep->ce_varname, "options"))
 		{
 			if (cep->ce_vardata)
 			{
@@ -1053,9 +1045,7 @@ int upgrade_cgiirc_block(ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
-			continue; /* impossible? */
-		else if (!cep->ce_vardata)
+		if (!cep->ce_vardata)
 		{
 			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				"cgiirc", cep->ce_varname);
