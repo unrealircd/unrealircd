@@ -169,7 +169,7 @@ int  dbuf_getmsg(dbuf *dyn, char *buf)
 			}
 			else switch (phase)
 			{
-				case 0: phase = 1;
+				case 0: phase = 1; /* FALLTHROUGH */
 				case 1: if (line_bytes++ < BUFSIZE - 2)
 						*buf++ = c;
 					break;

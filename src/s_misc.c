@@ -114,7 +114,7 @@ SpamfilterTargetTable spamfiltertargettable[] = {
 	{ SPAMF_USER,		'u',	"user",				"NICK" },
 	{ SPAMF_AWAY,		'a',	"away",				"AWAY" },
 	{ SPAMF_TOPIC,		't',	"topic",			"TOPIC" },
-	{ 0, 0, 0 }
+	{ 0, 0, 0, 0 }
 };
 
 

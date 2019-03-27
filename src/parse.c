@@ -69,7 +69,7 @@ aClient *find_client(char *name, aClient *cptr)
 	return hash_find_client(name, NULL);
 }
 
-aClient inline *find_nickserv(char *name, aClient *cptr)
+aClient *find_nickserv(char *name, aClient *cptr)
 {
 	if (name)
 		cptr = hash_find_nickserver(name, cptr);
@@ -91,7 +91,7 @@ aClient inline *find_nickserv(char *name, aClient *cptr)
 **	the old. 'name' is now assumed to be a null terminated
 **	string.
 */
-aClient inline *find_server(char *name, aClient *cptr)
+aClient *find_server(char *name, aClient *cptr)
 {
 	if (name)
 	{
@@ -105,7 +105,7 @@ aClient inline *find_server(char *name, aClient *cptr)
 }
 
 
-aClient inline *find_name(char *name, aClient *cptr)
+aClient *find_name(char *name, aClient *cptr)
 {
 	aClient *c2ptr = cptr;
 

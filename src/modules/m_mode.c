@@ -821,6 +821,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
 						opermode = 1;
 			}
+			goto process_listmode;
 		case MODE_CHANPROT:
 			REQUIRE_PARAMETER()
 			/* not uline, not server, not chanowner, not an samode, not -a'ing yourself... */
@@ -835,12 +836,13 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
 						opermode = 1;
 			}
-
+			goto process_listmode;
 
 		case MODE_HALFOP:
 		case MODE_CHANOP:
 		case MODE_VOICE:
 			REQUIRE_PARAMETER()
+process_listmode:
 			if (!(who = find_chasing(cptr, param, &chasing)))
 				break;
 			if (!who->user)
@@ -1656,6 +1658,7 @@ CMD_FUNC(_m_umode)
 						set_snomask(sptr, parv[3]);
 					goto def;
 				}
+				break;
 			case 'o':
 			case 'O':
 				if(sptr->from->flags & FLAGS_QUARANTINE)

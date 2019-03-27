@@ -32,6 +32,7 @@ ModuleHeader MOD_HEADER(m_chghost)
 	"4.2", /* Version */
 	"/chghost", /* Short description of module */
 	"3.2-b8-1",
+	NULL
     };
 
 MOD_INIT(m_chghost)

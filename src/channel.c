@@ -80,7 +80,7 @@ aCtab cFlagTab[] = {
 	{MODE_BAN, 'b', 1, 1},
 	{MODE_EXCEPT, 'e', 1, 1},	/* exception ban */
 	{MODE_INVEX, 'I', 1, 1},	/* invite-only exception */
-	{0x0, 0x0, 0x0}
+	{0x0, 0x0, 0x0, 0x0}
 };
 
 char cmodestring[512];

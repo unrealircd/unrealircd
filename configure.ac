@@ -45,79 +45,6 @@ AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor versi
 UNREAL_VERSION_SUFFIX=["-dev"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_SUFFIX], ["$UNREAL_VERSION_SUFFIX"], [Version suffix such as a beta marker or release candidate marker. (e.g.: -rcX for unrealircd-3.2.9-rcX)])
 
-AC_PROG_CC
-if test "$ac_cv_prog_gcc" = "yes"; then
-CFLAGS="$CFLAGS -funsigned-char"
-AC_CACHE_CHECK(if gcc has a working -pipe, ac_cv_pipe, [
-	save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS -pipe"
-	AC_TRY_COMPILE(,, ac_cv_pipe="yes", ac_cv_pipe="no")
-	CFLAGS="$save_cflags"
-])
-if test "$ac_cv_pipe" = "yes"; then
-CFLAGS="-pipe $CFLAGS"
-fi
-fi
-
-dnl UnrealIRCd might not be strict-aliasing safe at this time
-AC_CACHE_CHECK(if the compiler has a working -fno-strict-aliasing, ac_cv_nsa, [
-	save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS -fno-strict-aliasing"
-	AC_TRY_COMPILE(,, ac_cv_nsa="yes", ac_cv_nsa="no")
-	CFLAGS="$save_cflags"
-])
-if test "$ac_cv_nsa" = "yes"; then
-CFLAGS="$CFLAGS -fno-strict-aliasing"
-fi
-
-dnl Pointer signedness warnings are really a pain and 99.9% of the time
-dnl they are of absolutely no use whatsoever. IMO the person who decided
-dnl to enable this without -Wall should be shot on sight.
-AC_CACHE_CHECK(if the compiler has a working -Wno-pointer-sign, ac_cv_nps, [
-	save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS -Wno-pointer-sign"
-	AC_TRY_COMPILE(,, ac_cv_nps="yes", ac_cv_nps="no")
-	CFLAGS="$save_cflags"
-])
-if test "$ac_cv_nps" = "yes"; then
-CFLAGS="$CFLAGS -Wno-pointer-sign"
-fi
-
-dnl This is purely for charsys.c... I like it so we can easily read
-dnl this for non-utf8. We can remove it once we ditch non-utf8 some day
-dnl of course, or decide to ignore me and encode them.
-AC_CACHE_CHECK(if the compiler has a working -Wno-invalid-source-encoding, ac_cv_nise, [
-	save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS -Wno-invalid-source-encoding"
-	AC_TRY_COMPILE(,, ac_cv_nise="yes", ac_cv_nise="no")
-	CFLAGS="$save_cflags"
-])
-if test "$ac_cv_nise" = "yes"; then
-CFLAGS="$CFLAGS -Wno-invalid-source-encoding"
-fi
-
-dnl Pffff..
-AC_CACHE_CHECK(if the compiler has a working -Wno-format-zero-length, ac_cv_nfzl, [
-	save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS -Wno-format-zero-length"
-	AC_TRY_COMPILE(,, ac_cv_nfzl="yes", ac_cv_nfzl="no")
-	CFLAGS="$save_cflags"
-])
-if test "$ac_cv_nfzl" = "yes"; then
-CFLAGS="$CFLAGS -Wno-format-zero-length"
-fi
-
-dnl More and more and more....
-AC_CACHE_CHECK(if the compiler has a working -Wno-format-truncation, ac_cv_nft, [
-	save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS -Wno-format-truncation -Werror"
-	AC_TRY_COMPILE(,, ac_cv_nft="yes", ac_cv_nft="no")
-	CFLAGS="$save_cflags"
-])
-if test "$ac_cv_nft" = "yes"; then
-CFLAGS="$CFLAGS -Wno-format-truncation"
-fi
-
 AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(CP,cp)
 AC_PATH_PROG(TOUCH,touch)
@@ -223,6 +150,68 @@ CC="$saved_CC"
 CXX="$saved_CXX"
 LD="$saved_LD"
 dnl HARDENING END
+
+dnl UnrealIRCd might not be strict-aliasing safe at this time
+check_cc_cxx_flag([-fno-strict-aliasing], [CFLAGS="$CFLAGS -fno-strict-aliasing"])
+
+dnl Previously -funsigned-char was in a config check. It would always
+dnl be enabled with gcc and clang. We now unconditionally enable it,
+dnl skipping the check. This will cause an error if someone uses a
+dnl non-gcc/non-clang compiler that does not support -funsigned-char
+dnl which is good. After all, we really depend on it.
+dnl UnrealIRCd should never be compiled without char being unsigned.
+CFLAGS="$CFLAGS -funsigned-char"
+
+dnl Compiler -W checks...
+
+dnl We should be able to turn this on unconditionally:
+CFLAGS="$CFLAGS -Wall"
+
+dnl More warnings (if the compiler supports it):
+check_cc_cxx_flag([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
+check_cc_cxx_flag([-Waggregate-return], [CFLAGS="$CFLAGS -Waggregate-return"])
+dnl The following few are more experimental, if they have false positives we'll have
+dnl to disable them:
+dnl Can't use this, too bad: check_cc_cxx_flag([-Wlogical-op], [CFLAGS="$CFLAGS -Wlogical-op"])
+check_cc_cxx_flag([-Wduplicated-cond], [CFLAGS="$CFLAGS -Wduplicated-cond"])
+check_cc_cxx_flag([-Wduplicated-branches], [CFLAGS="$CFLAGS -Wduplicated-branches"])
+
+dnl And now to filter out certain warnings:
+
+dnl Pointer signedness warnings are really a pain and 99.9% of the time
+dnl they are of absolutely no use whatsoever. IMO the person who decided
+dnl to enable this without -Wall should be shot on sight.
+check_cc_cxx_flag([-Wno-pointer-sign], [CFLAGS="$CFLAGS -Wno-pointer-sign"])
+
+dnl This is purely for charsys.c... I like it so we can easily read
+dnl this for non-utf8. We can remove it once we ditch non-utf8 some day
+dnl of course, or decide to ignore me and encode them.
+check_cc_cxx_flag([-Wno-invalid-source-encoding], [CFLAGS="$CFLAGS -Wno-invalid-source-encoding"])
+
+check_cc_cxx_flag([-Wno-format-zero-length], [CFLAGS="$CFLAGS -Wno-format-zero-length"])
+
+check_cc_cxx_flag([-Wno-format-truncation], [CFLAGS="$CFLAGS -Wno-format-truncation"])
+
+dnl While it can be useful to occasionally to compile with warnings about
+dnl unused variables and parameters, we often 'think ahead' when coding things
+dnl so they may be useless now but not later. Similarly, for variables, we
+dnl don't always care about a variable that may still be present in a build
+dnl without DEBUGMODE. Unused variables are optimized out anyway.
+check_cc_cxx_flag([-Wno-unused], [CFLAGS="$CFLAGS -Wno-unused"])
+check_cc_cxx_flag([-Wno-unused-parameter], [CFLAGS="$CFLAGS -Wno-unused-parameter"])
+
+dnl We use this and this warning is meaningless since 'char' is always unsigned
+dnl in UnrealIRCd compiles (-funsigned-char).
+check_cc_cxx_flag([-Wno-char-subscripts], [CFLAGS="$CFLAGS -Wno-char-subscripts"])
+
+check_cc_cxx_flag([-Wno-sign-compare], [CFLAGS="$CFLAGS -Wno-sign-compare"])
+
+dnl This one fails with ircstrdup(var, staticstring)
+dnl Shame we have to turn it off completely...
+check_cc_cxx_flag([-Wno-address], [CFLAGS="$CFLAGS -Wno-address"])
+
+dnl End of -W... compiler checks.
+
 
 dnl module checking based on Hyb7's module checking code
 AC_DEFUN([AC_ENABLE_DYN],

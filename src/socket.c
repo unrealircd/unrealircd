@@ -92,6 +92,7 @@ int  deliver_it(aClient *cptr, char *str, int len, int *want_read)
 			case SSL_ERROR_SSL:
 				if (ERRNO == P_EAGAIN)
 					break;
+				/* FALLTHROUGH */
 			default:
 				return -1; /* hm.. why was this 0?? we have an error! */
 			}

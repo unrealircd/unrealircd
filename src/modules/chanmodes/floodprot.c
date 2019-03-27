@@ -502,7 +502,7 @@ invalidsyntax:
 		return EX_DENY;
 	}
 
-	/* falltrough -- should not be used */
+	/* fallthrough -- should not be used */
 	return EX_DENY;
 }
 

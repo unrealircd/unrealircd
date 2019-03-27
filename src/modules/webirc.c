@@ -474,7 +474,7 @@ int webirc_local_pass(aClient *sptr, char *password)
 		
 			return dowebirc(sptr, ip, host, NULL);
 		}
-		/* falltrough if not in webirc block.. */
+		/* fallthrough if not in webirc block.. */
 	}
 
 	return 0; /* not webirc */

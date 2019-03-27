@@ -107,7 +107,7 @@ int cmodeL_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type
 		return EX_ALLOW;
 	}
 
-	/* falltrough -- should not be used */
+	/* fallthrough -- should not be used */
 	return EX_DENY;
 }
 

@@ -1341,7 +1341,7 @@ void read_packet(int fd, int revents, void *data)
 
 		if (length <= 0)
 		{
-			if (length < 0 && (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN || ERRNO == P_EINTR))
+			if (length < 0 && ((ERRNO == P_EWOULDBLOCK) || (ERRNO == P_EAGAIN) || (ERRNO == P_EINTR)))
 				return;
 
 			if (IsServer(cptr) || cptr->serv) /* server or outgoing connection */
