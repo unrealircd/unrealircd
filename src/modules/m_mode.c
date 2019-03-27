@@ -1366,6 +1366,33 @@ int paracount_for_chanmode_from_server(aClient *acptr, u_int what, char mode)
 	return 0;
 }
 
+/** Quick way to find out parameter count for a channel mode.
+ * Only for LOCAL mode requests. For remote modes use
+ * paracount_for_chanmode_from_server() instead.
+ */
+int paracount_for_chanmode(u_int what, char mode)
+{
+	if (me.serv->features.chanmodes[0] && strchr(me.serv->features.chanmodes[0], mode))
+		return 1; /* 1 parameter for set, 1 parameter for unset */
+
+	if (me.serv->features.chanmodes[1] && strchr(me.serv->features.chanmodes[1], mode))
+		return 1; /* 1 parameter for set, 1 parameter for unset */
+
+	if (me.serv->features.chanmodes[2] && strchr(me.serv->features.chanmodes[2], mode))
+		return (what == MODE_ADD) ? 1 : 0; /* 1 parameter for set, no parameter for unset */
+
+	if (me.serv->features.chanmodes[3] && strchr(me.serv->features.chanmodes[3], mode))
+		return 0; /* no parameter for set, no parameter for unset */
+
+	/* Not found: */
+
+	/* Some additional backward compatability for +j for really old servers.. Hmm.. too nice */
+	if ((what == MODE_ADD) && (mode == 'j'))
+		return 1;
+
+	return 0;
+}
+
 /* set_mode
  *	written by binary
  */
@@ -1450,10 +1477,9 @@ void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pc
 				if (found == 0) /* Mode char unknown */
 				{
 					if (!MyClient(cptr))
-					    paracount += paracount_for_chanmode_from_server(cptr, what, *curchr);
+						paracount += paracount_for_chanmode_from_server(cptr, what, *curchr);
 					else
-						sendto_one(cptr, err_str(ERR_UNKNOWNMODE),
-						   me.name, cptr->name, *curchr);
+						sendto_one(cptr, err_str(ERR_UNKNOWNMODE), me.name, cptr->name, *curchr);
 					break;
 				}
 
@@ -1461,59 +1487,59 @@ void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pc
 				{
 					if (warnrestr)
 					{
-					sendnotice(cptr, "Setting/removing of channelmode(s) '%s' has been disabled.",
-						RESTRICT_CHANNELMODES);
-					warnrestr = 0;
+						sendnotice(cptr, "Setting/removing of channelmode(s) '%s' has been disabled.",
+							RESTRICT_CHANNELMODES);
+						warnrestr = 0;
 					}
-					paracount += foundat.parameters;
+					paracount += paracount_for_chanmode(what, *curchr);
 					break;
 				}
 
-			if (paracount < parc)
-				argument = parv[paracount]; /* can still be NULL */
-			else
-				argument = NULL;
+				if (paracount < parc)
+					argument = parv[paracount]; /* can still be NULL */
+				else
+					argument = NULL;
 
 #ifndef NO_OPEROVERRIDE
-			if (found == 1)
-			{
-				if ((Halfop_mode(modetype) == FALSE) && opermode == 2 && htrig != 1)
+				if (found == 1)
 				{
-					/* YUCK! */
-					if ((foundat.flag == 'h') && argument && (find_person(argument, NULL) == cptr))
+					if ((Halfop_mode(modetype) == FALSE) && opermode == 2 && htrig != 1)
 					{
-						/* ircop with halfop doing a -h on himself. no warning. */
-					} else {
-						opermode = 0;
-						htrig = 1;
+						/* YUCK! */
+						if ((foundat.flag == 'h') && argument && (find_person(argument, NULL) == cptr))
+						{
+							/* ircop with halfop doing a -h on himself. no warning. */
+						} else {
+							opermode = 0;
+							htrig = 1;
+						}
 					}
 				}
-			}
-			else if (found == 2) {
-				/* Extended mode: all override stuff is in do_extmode_char which will set
-				 * opermode if appropriate. -- Syzop
-				 */
-			}
+				else if (found == 2) {
+					/* Extended mode: all override stuff is in do_extmode_char which will set
+					 * opermode if appropriate. -- Syzop
+					 */
+				}
 #endif /* !NO_OPEROVERRIDE */
 
-			/* Not sure how useful this is, but I'll let it stay... */
-			if (argument && strlen(argument) >= MODEBUFLEN)
-				argument[MODEBUFLEN-1] = '\0';
+				/* Not sure how useful this is, but I'll let it stay... */
+				if (argument && strlen(argument) >= MODEBUFLEN)
+					argument[MODEBUFLEN-1] = '\0';
 
-			if (found == 1)
-			{
-				paracount += do_mode_char(chptr, modetype, *curchr,
-				                          argument, what, cptr, pcount,
-				                          pvar, bounce, my_access);
-			}
-			else if (found == 2)
-			{
-				paracount += do_extmode_char(chptr, &Channelmode_Table[extm], argument,
-				                             what, cptr, pcount, pvar, bounce);
-			}
-			break;
-		}
-	}
+				if (found == 1)
+				{
+					paracount += do_mode_char(chptr, modetype, *curchr,
+								  argument, what, cptr, pcount,
+								  pvar, bounce, my_access);
+				}
+				else if (found == 2)
+				{
+					paracount += do_extmode_char(chptr, &Channelmode_Table[extm], argument,
+								     what, cptr, pcount, pvar, bounce);
+				}
+				break;
+		} /* switch(*curchr) */
+	} /* for loop through mode letters */
 
 	make_mode_str(chptr, oldm, oldem, oldl, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), bounce);
 

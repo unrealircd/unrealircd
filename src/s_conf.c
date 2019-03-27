@@ -4645,7 +4645,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cepp;
 	ConfigEntry *sslconfig = NULL;
 	ConfigItem_listen *listen = NULL;
-	char *ip;
+	char *ip = NULL;
 	int start=0, end=0, port, isnew;
 	int tmpflags =0;
 	Hook *h;
