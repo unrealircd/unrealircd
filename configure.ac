@@ -218,6 +218,9 @@ check_cc_cxx_flag([-Wchar-subscripts], [CFLAGS="$CFLAGS -Wno-char-subscripts"])
 
 check_cc_cxx_flag([-Wsign-compare], [CFLAGS="$CFLAGS -Wno-sign-compare"])
 
+dnl Don't warn about empty body, we use this, eg via Debug(()) or in if's.
+check_cc_cxx_flag([-Wempty-body], [CFLAGS="$CFLAGS -Wno-empty-body"])
+
 dnl This one fails with ircstrdup(var, staticstring)
 dnl Shame we have to turn it off completely...
 check_cc_cxx_flag([-Waddress], [CFLAGS="$CFLAGS -Wno-address"])
