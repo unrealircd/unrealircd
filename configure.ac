@@ -177,38 +177,50 @@ check_cc_cxx_flag([-Wduplicated-cond], [CFLAGS="$CFLAGS -Wduplicated-cond"])
 check_cc_cxx_flag([-Wduplicated-branches], [CFLAGS="$CFLAGS -Wduplicated-branches"])
 
 dnl And now to filter out certain warnings:
+dnl [!] NOTE REGARDING THE check_cc_cxx_flag used by these:
+dnl We check for the -Woption even though we are going to use -Wno-option.
+dnl This is due to the following (odd) gcc behavior:
+dnl "When an unrecognized warning option is requested (e.g.,
+dnl  -Wunknown-warning), GCC emits a diagnostic stating that the option is not
+dnl  recognized.  However, if the -Wno- form is used, the behavior is slightly
+dnl  different: no diagnostic is produced for -Wno-unknown-warning unless
+dnl  other diagnostics are being produced.  This allows the use of new -Wno-
+dnl  options with old compilers, but if something goes wrong, the compiler
+dnl  warns that an unrecognized option is present."
+dnl Since we don't want to use any unrecognized -Wno-option, we test for
+dnl -Woption instead.
 
 dnl Pointer signedness warnings are really a pain and 99.9% of the time
 dnl they are of absolutely no use whatsoever. IMO the person who decided
 dnl to enable this without -Wall should be shot on sight.
-check_cc_cxx_flag([-Wno-pointer-sign], [CFLAGS="$CFLAGS -Wno-pointer-sign"])
+check_cc_cxx_flag([-Wpointer-sign], [CFLAGS="$CFLAGS -Wno-pointer-sign"])
 
 dnl This is purely for charsys.c... I like it so we can easily read
 dnl this for non-utf8. We can remove it once we ditch non-utf8 some day
 dnl of course, or decide to ignore me and encode them.
-check_cc_cxx_flag([-Wno-invalid-source-encoding], [CFLAGS="$CFLAGS -Wno-invalid-source-encoding"])
+check_cc_cxx_flag([-Winvalid-source-encoding], [CFLAGS="$CFLAGS -Wno-invalid-source-encoding"])
 
-check_cc_cxx_flag([-Wno-format-zero-length], [CFLAGS="$CFLAGS -Wno-format-zero-length"])
+check_cc_cxx_flag([-Wformat-zero-length], [CFLAGS="$CFLAGS -Wno-format-zero-length"])
 
-check_cc_cxx_flag([-Wno-format-truncation], [CFLAGS="$CFLAGS -Wno-format-truncation"])
+check_cc_cxx_flag([-Wformat-truncation], [CFLAGS="$CFLAGS -Wno-format-truncation"])
 
 dnl While it can be useful to occasionally to compile with warnings about
 dnl unused variables and parameters, we often 'think ahead' when coding things
 dnl so they may be useless now but not later. Similarly, for variables, we
 dnl don't always care about a variable that may still be present in a build
 dnl without DEBUGMODE. Unused variables are optimized out anyway.
-check_cc_cxx_flag([-Wno-unused], [CFLAGS="$CFLAGS -Wno-unused"])
-check_cc_cxx_flag([-Wno-unused-parameter], [CFLAGS="$CFLAGS -Wno-unused-parameter"])
+check_cc_cxx_flag([-Wunused], [CFLAGS="$CFLAGS -Wno-unused"])
+check_cc_cxx_flag([-Wunused-parameter], [CFLAGS="$CFLAGS -Wno-unused-parameter"])
 
 dnl We use this and this warning is meaningless since 'char' is always unsigned
 dnl in UnrealIRCd compiles (-funsigned-char).
-check_cc_cxx_flag([-Wno-char-subscripts], [CFLAGS="$CFLAGS -Wno-char-subscripts"])
+check_cc_cxx_flag([-Wchar-subscripts], [CFLAGS="$CFLAGS -Wno-char-subscripts"])
 
-check_cc_cxx_flag([-Wno-sign-compare], [CFLAGS="$CFLAGS -Wno-sign-compare"])
+check_cc_cxx_flag([-Wsign-compare], [CFLAGS="$CFLAGS -Wno-sign-compare"])
 
 dnl This one fails with ircstrdup(var, staticstring)
 dnl Shame we have to turn it off completely...
-check_cc_cxx_flag([-Wno-address], [CFLAGS="$CFLAGS -Wno-address"])
+check_cc_cxx_flag([-Waddress], [CFLAGS="$CFLAGS -Wno-address"])
 
 dnl End of -W... compiler checks.
 
