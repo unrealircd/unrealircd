@@ -845,6 +845,13 @@ char *err = NULL;
 		return spamfilter_new_usage(cptr,sptr,parv);
 	}
 
+	if ((whattodo == 0) && (match_type == MATCH_TRE_REGEX))
+	{
+		sendnotice(sptr, "ERROR: Spamfilter type 'posix' is DEPRECATED. You must use type 'regex' instead.");
+		sendnotice(sptr, "See https://www.unrealircd.org/docs/FAQ#spamfilter-posix-deprecated");
+		return 0;
+	}
+
 	targets = spamfilter_gettargets(parv[3], sptr);
 	if (!targets)
 		return spamfilter_usage(sptr);

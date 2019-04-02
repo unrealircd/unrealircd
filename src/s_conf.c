@@ -6209,6 +6209,13 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}
+			if (match_type == MATCH_TRE_REGEX)
+			{
+				config_warn("%s:%i: this spamfilter uses match-type 'posix' which is DEPRECATED. "
+				             "You should switch over to match-type 'regex' instead. "
+				             "See https://www.unrealircd.org/docs/FAQ#spamfilter-posix-deprecated",
+				             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			}
 			has_match_type = 1;
 		}
 		else
