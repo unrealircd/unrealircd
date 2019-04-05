@@ -46,27 +46,8 @@ ModuleHeader MOD_HEADER(antirandom)
  #define MAX(x,y) ((x) > (y) ? (x) : (y))
 #endif
 
-#ifndef _WIN32
-typedef struct {
-    char *regex;
-    int score;
-} ScoreTable;
-#endif
-
 #ifndef BAN_ACT_WARN
  #define BAN_ACT_WARN 11
-#endif
-
-#ifndef _WIN32
-/* You can define regexes here.. the format is:
- * {"<REGEX>", SCORE},
- */
-ScoreTable regex_scores[] = {
-	/* These have all been moved to internal digit/vowel/consonant checks.
-	 * But I've left the regex ability here, in case someone else uses it.
-	 */
-	{NULL, 0}
-};
 #endif
 
 /* "<char1><char2>" followed by "<rest>" */
@@ -513,19 +494,6 @@ static char *triples_txt[] = {
 	NULL, NULL
 };
 
-#ifndef _WIN32
-/* Used for parsed sregexes */
-typedef struct _regexlist RegexList;
-struct _regexlist {
-	RegexList *next;
-	regex_t regex;
-#ifdef DEBUGMODE
-	char *regextxt;
-#endif
-	int score;
-};
-#endif
-
 /* Used for parsed triples: */
 #define TRIPLES_REST_SIZE	32
 typedef struct _triples Triples;
@@ -535,9 +503,6 @@ struct _triples {
 	char rest[TRIPLES_REST_SIZE];
 };
 
-#ifndef _WIN32
-RegexList *sregexes = NULL;
-#endif
 Triples *triples = NULL;
 
 struct {
@@ -561,7 +526,6 @@ struct {
 
 /* Forward declarations */
 static int init_stuff(void);
-static int init_sregexes(void);
 static int init_triples(void);
 static void free_stuff(void);
 static void free_config(void);
@@ -619,8 +583,8 @@ MOD_UNLOAD(antirandom)
 /* Sends a message to all (local) opers AND logs to the ircdlog (as LOG_ERROR) */
 static void multi_log(char *fmt, ...)
 {
-va_list vl;
-static char buf[2048];
+	va_list vl;
+	static char buf[2048];
 
 	va_start(vl, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, vl);
@@ -640,8 +604,8 @@ static void free_config(void)
 
 int antirandom_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
-int errors = 0;
-ConfigEntry *cep;
+	int errors = 0;
+	ConfigEntry *cep;
 
 	if (type != CONFIG_SET)
 		return 0;
@@ -775,7 +739,7 @@ int antirandom_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 int antirandom_config_posttest(int *errs)
 {
-int errors = 0;
+	int errors = 0;
 
 	if (!req.threshold) { config_error("set::antirandom::threshold missing"); errors++; }
 	if (!req.ban_action) { config_error("set::antirandom::ban-action missing"); errors++; }
@@ -788,64 +752,17 @@ int errors = 0;
 
 static int init_stuff(void)
 {
-	if (!init_sregexes() || !init_triples())
+	if (!init_triples())
 		return 0;
-	return 1;
-}
-
-/** Initializes the sregexes regex list */
-static int init_sregexes(void)
-{
-#ifndef _WIN32
-ScoreTable *s = &regex_scores[0];
-RegexList *e, *last=NULL;
-int cnt=0, n;
-char *res;
-
-	for (s=&regex_scores[0]; s->regex; s++)
-	{
-		cnt++;
-		e = MyMallocEx(sizeof(RegexList));
-		/* validate regex */
-		res = unreal_checkregex(s->regex, 0, 1);
-		if (res)
-		{
-			config_error("init_sregexes: sregexes_txt contains invalid regex (nr %d): %s",
-				cnt, res);
-			return 0;
-		}
-		/* parse regex here (should go fine, checked above) */
-		n = regcomp(&e->regex, s->regex, REG_ICASE|REG_EXTENDED);
-		if (n)
-		{
-			/* should never happen (yes I'm too lazy to get the errormsg) */
-			config_error("init_sregexes: weird regcomp() failure: item=%d, errorcode=%d, aborting...",
-				cnt, n);
-			return 0;
-		}
-#ifdef DEBUGMODE
-		e->regextxt = strdup(s->regex);
-#endif
-
-		e->score = s->score;
-
-		/* Append at end of list (to keep it in order, not importent yet, but..) */
-		if (last)
-			last->next = e;
-		else
-			sregexes = e; /*(head)*/
-		last = e;
-	}
-#endif
 	return 1;
 }
 
 /** Initializes the triples list. */
 static int init_triples(void)
 {
-char **s;
-Triples *e, *last=NULL;
-int cnt=0;
+	char **s;
+	Triples *e, *last=NULL;
+	int cnt=0;
 
 	for (s=triples_txt; *s; s++)
 	{
@@ -886,32 +803,16 @@ int cnt=0;
 /** Run the actual tests over this string.
  * There are 3 tests:
  * - weird chars (not used)
- * - sregexes (easy stuff)
+ * - sregexes (not used)
  * - triples (three-letter combinations)
  */
 static int internal_getscore(char *str)
 {
-#ifndef _WIN32
-RegexList *r;
-#endif
-Triples *t;
-register char *s;
-int score = 0;
-int highest_vowels=0, highest_consonants=0, highest_digits=0;
-int vowels=0, consonants=0, digits=0;
-
-#ifndef _WIN32
-	for (r=sregexes; r; r=r->next)
-	{
-		if (!regexec(&r->regex, str, 0, NULL, 0))
-		{
-			score += r->score; /* note: in the draft this returns the # of occurances, not 1 */
-#ifdef DEBUGMODE
-			multi_log("score@'%s': MATCH for '%s'", str, r->regextxt);
-#endif
-		}
-	}
-#endif
+	Triples *t;
+	register char *s;
+	int score = 0;
+	int highest_vowels=0, highest_consonants=0, highest_digits=0;
+	int vowels=0, consonants=0, digits=0;
 
 	/* Fast digit/consonant/vowel checks... */
 	for (s=str; *s; s++)
@@ -982,7 +883,7 @@ int vowels=0, consonants=0, digits=0;
 
 void strtolower_safe(char *dst, char *src, int size)
 {
-int i;
+	int i;
 
 	if (!size)
 		return; /* size of 0 is unworkable */
@@ -1001,13 +902,13 @@ int i;
  */
 static int get_spam_score(aClient *sptr)
 {
-char *nick = sptr->name;
-char *user = sptr->user->username;
-char *gecos = sptr->info;
-char nbuf[NICKLEN+1], ubuf[USERLEN+1], rbuf[REALLEN+1];
-int nscore, uscore, gscore, score;
+	char *nick = sptr->name;
+	char *user = sptr->user->username;
+	char *gecos = sptr->info;
+	char nbuf[NICKLEN+1], ubuf[USERLEN+1], rbuf[REALLEN+1];
+	int nscore, uscore, gscore, score;
 #ifdef TIMING
-struct timeval tv_alpha, tv_beta;
+	struct timeval tv_alpha, tv_beta;
 
 	gettimeofday(&tv_alpha, NULL);
 #endif
@@ -1069,7 +970,7 @@ void check_all_users(void)
 
 int antirandom_preconnect(aClient *sptr)
 {
-int score;
+	int score;
 
 	if (!is_exempt(sptr))
 	{
@@ -1093,24 +994,7 @@ int score;
 
 static void free_stuff(void)
 {
-#ifndef _WIN32
-RegexList *r, *r_next;
-#endif
-Triples *t, *t_next;
-
-#ifndef _WIN32
-	for (r=sregexes; r; r=r_next)
-	{
-		r_next = r->next;
-		regfree(&r->regex);
-#ifdef DEBUGMODE
-		if (r->regextxt)
-			MyFree(r->regextxt);
-#endif
-		MyFree(r);
-	}
-	sregexes = NULL;
-#endif
+	Triples *t, *t_next;
 
 	for (t=triples; t; t=t_next)
 	{
