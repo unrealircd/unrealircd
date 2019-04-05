@@ -19,7 +19,7 @@
 
 CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
 
-INCLUDES = ../../include/auth.h ../../include/badwords.h ../../include/channel.h \
+INCLUDES = ../../include/auth.h ../../include/channel.h \
 	../../include/class.h ../../include/common.h ../../include/config.h ../../include/dbuf.h \
 	../../include/dynconf.h ../../include/fdlist.h ../../include/h.h \
 	../../include/hash.h ../../include/inet.h ../../include/ircsprintf.h \

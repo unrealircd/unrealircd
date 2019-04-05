@@ -22,7 +22,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#include "badwords.h"
 #ifdef _WIN32
 #include "version.h"
 #endif

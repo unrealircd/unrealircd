@@ -756,6 +756,7 @@ with_no_operoverride
 with_disableusermod
 with_operoverride_verify
 with_disable_extendedban_stacking
+with_tre
 with_system_tre
 with_system_pcre2
 with_system_argon2
@@ -1458,6 +1459,7 @@ Optional Packages:
                           Require opers to invite themselves to +s/+p channels
   --with-disable-extendedban-stacking
                           Disable extended ban stacking
+  --without-tre           Do not use the old deprecated TRE regex library
   --with-system-tre       Use the system tre package instead of bundled,
                           discovered using pkg-config
   --with-system-pcre2     Use the system pcre2 package instead of bundled,
@@ -8450,6 +8452,14 @@ fi
 fi
 
 
+# Check whether --with-tre was given.
+if test "${with_tre+set}" = set; then :
+  withval=$with_tre; with_tre=no
+else
+  with_tre=yes
+fi
+
+
 # Check whether --with-system-tre was given.
 if test "${with_system_tre+set}" = set; then :
   withval=$with_system_tre;
@@ -8830,6 +8840,65 @@ done
 
 export PATH_SEPARATOR
 
+if test "x$with_tre" = "xyes"; then :
+
+
+$as_echo "#define USE_TRE /**/" >>confdefs.h
+
+
+fi
+
+if test "x$with_system_tre" = "xno"; then :
+
+  if test "x$with_tre" = "xyes"; then :
+
+    compile_tre="yes"
+
+fi
+
+fi
+
+if test "x$compile_tre" = "xyes"; then :
+
+tre_version="0.8.0-git"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting TRE regex library" >&5
+$as_echo "extracting TRE regex library" >&6; }
+cur_dir=`pwd`
+cd extras
+rm -rf tre-$tre_version regexp
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz tre.tar.gz
+else
+	cp tre.tar.gz tre.tar.gz.bak
+	gunzip -f tre.tar.gz
+	cp tre.tar.gz.bak tre.tar.gz
+	tar xf tre.tar
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: configuring TRE regex library" >&5
+$as_echo "configuring TRE regex library" >&6; }
+cd tre-$tre_version
+./configure --disable-agrep --enable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp --libdir=$PRIVATELIBDIR || exit 1
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling TRE regex library" >&5
+$as_echo "compiling TRE regex library" >&6; }
+$ac_cv_prog_MAKER || exit 1
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: installing TRE regex library" >&5
+$as_echo "installing TRE regex library" >&6; }
+$ac_cv_prog_MAKER install || exit 1
+TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
+
+
+TRE_LIBS=
+if test -n "$ac_cv_path_PKGCONFIG"; then :
+  TRE_LIBS="`$ac_cv_path_PKGCONFIG --libs tre.pc`"
+fi
+if test -z "$TRE_LIBS"; then :
+  TRE_LIBS="$PRIVATELIBDIR/libtre.so"
+fi
+
+cd $cur_dir
+
+fi
+
 
 
 
@@ -8950,46 +9019,7 @@ $as_echo "no" >&6; }
 		PKG_CONFIG=""
 	fi
 fi
-if test "x$with_system_tre" = "xno"; then :
-
-tre_version="0.8.0-git"
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting TRE regex library" >&5
-$as_echo "extracting TRE regex library" >&6; }
-cur_dir=`pwd`
-cd extras
-rm -rf tre-$tre_version regexp
-if test "x$ac_cv_path_GUNZIP" = "x" ; then
-	tar xfz tre.tar.gz
-else
-	cp tre.tar.gz tre.tar.gz.bak
-	gunzip -f tre.tar.gz
-	cp tre.tar.gz.bak tre.tar.gz
-	tar xf tre.tar
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: configuring TRE regex library" >&5
-$as_echo "configuring TRE regex library" >&6; }
-cd tre-$tre_version
-./configure --disable-agrep --enable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp --libdir=$PRIVATELIBDIR || exit 1
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling TRE regex library" >&5
-$as_echo "compiling TRE regex library" >&6; }
-$ac_cv_prog_MAKER || exit 1
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: installing TRE regex library" >&5
-$as_echo "installing TRE regex library" >&6; }
-$ac_cv_prog_MAKER install || exit 1
-TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
-
-
-TRE_LIBS=
-if test -n "$ac_cv_path_PKGCONFIG"; then :
-  TRE_LIBS="`$ac_cv_path_PKGCONFIG --libs tre.pc`"
-fi
-if test -z "$TRE_LIBS"; then :
-  TRE_LIBS="$PRIVATELIBDIR/libtre.so"
-fi
-
-cd $cur_dir
-
-else
+if test "x$with_system_tre" = "xyes"; then :
 
 
 pkg_failed=no

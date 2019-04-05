@@ -811,56 +811,6 @@ int valid_host(char *host)
 	return 1;
 }
 
-/** Checks if the specified regex (or fast badwords) is valid.
- * returns NULL in case of success [!],
- * pointer to buffer with error message otherwise
- * if check_broadness is 1, the function will attempt to determine
- * if the given regex string is too broad (i.e. matches everything)
- */
-char *unreal_checkregex(char *s, int fastsupport, int check_broadness)
-{
-int errorcode, errorbufsize, regex=0;
-char *errtmp, *tmp;
-static char errorbuf[512];
-regex_t expr;
-
-	if (fastsupport)
-	{
-		for (tmp = s; *tmp; tmp++) {
-			if (!isalnum(*tmp) && !(*tmp >= 128)) {
-				if ((s == tmp) && (*tmp == '*'))
-					continue;
-				if ((*(tmp + 1) == '\0') && (*tmp == '*'))
-					continue;
-				regex = 1;
-				break;
-			}
-		}
-	}
-	if (!fastsupport || regex)
-	{
-		errorcode = regcomp(&expr, s, REG_ICASE|REG_EXTENDED);
-		if (errorcode > 0)
-		{
-			errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
-			errtmp = MyMallocEx(errorbufsize);
-			regerror(errorcode, &expr, errtmp, errorbufsize);
-			strlcpy(errorbuf, errtmp, sizeof(errorbuf));
-			free(errtmp);
-			regfree(&expr);
-			return errorbuf;
-		}
-		if (check_broadness && !regexec(&expr, "", 0, NULL, 0))
-		{
-			strlcpy(errorbuf, "Regular expression is too broad", sizeof(errorbuf));
-			regfree(&expr);
-			return errorbuf;
-		}
-		regfree(&expr);
-	}
-	return NULL;
-}
-
 /*|| BAN ACTION ROUTINES FOLLOW ||*/
 
 /** Converts a banaction string (eg: "kill") to an integer value (eg: BAN_ACT_KILL) */

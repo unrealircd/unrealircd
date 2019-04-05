@@ -80,11 +80,11 @@ link.so: link.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o link.so link.c
 
-censor.so: censor.c $(INCLUDES) ../../include/badwords.h
+censor.so: censor.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o censor.so censor.c
 
-delayjoin.so: delayjoin.c $(INCLUDES) ../../include/badwords.h
+delayjoin.so: delayjoin.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o delayjoin.so delayjoin.c
 

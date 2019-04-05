@@ -73,12 +73,8 @@ MOD_UNLOAD(censor)
 	for (badword = conf_badword_channel; badword; badword = next)
 	{
 		next = badword->next;
-		safefree(badword->word);
-		if (badword->replace)
-			safefree(badword->replace);
-		regfree(&badword->expr);
 		DelListItem(badword, conf_badword_channel);
-		MyFree(badword);
+		badword_config_free(badword);
 	}
 	return MOD_SUCCESS;
 }
@@ -133,7 +129,7 @@ int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				continue;
 			}
 			has_word = 1;
-			if ((errbuf = unreal_checkregex(cep->ce_vardata,1,1)))
+			if ((errbuf = badword_config_check_regex(cep->ce_vardata,1,1)))
 			{
 				config_error("%s:%i: badword::%s contains an invalid regex: %s",
 					cep->ce_fileptr->cf_filename,
@@ -207,10 +203,6 @@ int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep, *word = NULL;
 	ConfigItem_badword *ca;
-	char *tmp;
-	short regex = 0;
-	int regflags = 0;
-	int ast_l = 0, ast_r = 0;
 
 	if (type != CONFIG_MAIN)
 		return 0;
@@ -223,7 +215,6 @@ int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	ca = MyMallocEx(sizeof(ConfigItem_badword));
 	ca->action = BADWORD_REPLACE;
-	regflags = REG_ICASE|REG_EXTENDED;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -232,57 +223,20 @@ int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 			if (!strcmp(cep->ce_vardata, "block"))
 			{
 				ca->action = BADWORD_BLOCK;
-				/* If it is set to just block, then we don't need to worry about
-				 * replacements 
-				 */
-				regflags |= REG_NOSUB;
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "replace"))
 		{
 			safestrdup(ca->replace, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "word"))
+		} else
+		if (!strcmp(cep->ce_varname, "word"))
+		{
 			word = cep;
-	}
-	/* The fast badwords routine can do: "blah" "*blah" "blah*" and "*blah*",
-	 * in all other cases use regex.
-	 */
-	for (tmp = word->ce_vardata; *tmp; tmp++) {
-		if (!isalnum(*tmp) && !(*tmp >= 128)) {
-			if ((word->ce_vardata == tmp) && (*tmp == '*')) {
-				ast_l = 1; /* Asterisk at the left */
-				continue;
-			}
-			if ((*(tmp + 1) == '\0') && (*tmp == '*')) {
-				ast_r = 1; /* Asterisk at the right */
-				continue;
-			}
-			regex = 1;
-			break;
 		}
 	}
-	if (regex)
-	{
-		ca->type = BADW_TYPE_REGEX;
-		safestrdup(ca->word, word->ce_vardata);
-		regcomp(&ca->expr, ca->word, regflags);
-	}
-	else
-	{
-		char *tmpw;
-		ca->type = BADW_TYPE_FAST;
-		ca->word = tmpw = MyMallocEx(strlen(word->ce_vardata) - ast_l - ast_r + 1);
-		/* Copy except for asterisks */
-		for (tmp = word->ce_vardata; *tmp; tmp++)
-			if (*tmp != '*')
-				*tmpw++ = *tmp;
-		*tmpw = '\0';
-		if (ast_l)
-			ca->type |= BADW_TYPE_FAST_L;
-		if (ast_r)
-			ca->type |= BADW_TYPE_FAST_R;
-	}
+
+	badword_config_process(ca, word->ce_vardata);
+
 	if (!strcmp(ce->ce_vardata, "channel"))
 		AddListItem(ca, conf_badword_channel);
 	else if (!strcmp(ce->ce_vardata, "all"))
@@ -292,223 +246,6 @@ int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	}
 
 	return 1;
-}
-
-static inline int fast_badword_match(ConfigItem_badword *badword, char *line)
-{
- 	char *p;
-	int bwlen = strlen(badword->word);
-	if ((badword->type & BADW_TYPE_FAST_L) && (badword->type & BADW_TYPE_FAST_R))
-		return (our_strcasestr(line, badword->word) ? 1 : 0);
-
-	p = line;
-	while((p = our_strcasestr(p, badword->word)))
-	{
-		if (!(badword->type & BADW_TYPE_FAST_L))
-		{
-			if ((p != line) && !iswseperator(*(p - 1))) /* aaBLA but no *BLA */
-				goto next;
-		}
-		if (!(badword->type & BADW_TYPE_FAST_R))
-		{
-			if (!iswseperator(*(p + bwlen)))  /* BLAaa but no BLA* */
-				goto next;
-		}
-		/* Looks like it matched */
-		return 1;
-next:
-		p += bwlen;
-	}
-	return 0;
-}
-/* fast_badword_replace:
- * a fast replace routine written by Syzop used for replacing badwords.
- * searches in line for huntw and replaces it with replacew,
- * buf is used for the result and max is sizeof(buf).
- * (Internal assumptions: max > 0 AND max > strlen(line)+1)
- */
-static inline int fast_badword_replace(ConfigItem_badword *badword, char *line, char *buf, int max)
-{
-/* Some aliases ;P */
-char *replacew = badword->replace ? badword->replace : REPLACEWORD;
-char *pold = line, *pnew = buf; /* Pointers to old string and new string */
-char *poldx = line;
-int replacen = -1; /* Only calculated if needed. w00t! saves us a few nanosecs? lol */
-int searchn = -1;
-char *startw, *endw;
-char *c_eol = buf + max - 1; /* Cached end of (new) line */
-int run = 1;
-int cleaned = 0;
-
-	Debug((DEBUG_NOTICE, "replacing %s -> %s in '%s'", badword->word, replacew, line));
-
-	while(run) {
-		pold = our_strcasestr(pold, badword->word);
-		if (!pold)
-			break;
-		if (replacen == -1)
-			replacen = strlen(replacew);
-		if (searchn == -1)
-			searchn = strlen(badword->word);
-		/* Hunt for start of word */
- 		if (pold > line) {
-			for (startw = pold; (!iswseperator(*startw) && (startw != line)); startw--);
-			if (iswseperator(*startw))
-				startw++; /* Don't point at the space/seperator but at the word! */
-		} else {
-			startw = pold;
-		}
-
-		if (!(badword->type & BADW_TYPE_FAST_L) && (pold != startw)) {
-			/* not matched */
-			pold++;
-			continue;
-		}
-
-		/* Hunt for end of word */
-		for (endw = pold; ((*endw != '\0') && (!iswseperator(*endw))); endw++);
-
-		if (!(badword->type & BADW_TYPE_FAST_R) && (pold+searchn != endw)) {
-			/* not matched */
-			pold++;
-			continue;
-		}
-
-		cleaned = 1; /* still too soon? Syzop/20050227 */
-
-		/* Do we have any not-copied-yet data? */
-		if (poldx != startw) {
-			int tmp_n = startw - poldx;
-			if (pnew + tmp_n >= c_eol) {
-				/* Partial copy and return... */
-				memcpy(pnew, poldx, c_eol - pnew);
-				*c_eol = '\0';
-				return 1;
-			}
-
-			memcpy(pnew, poldx, tmp_n);
-			pnew += tmp_n;
-		}
-		/* Now update the word in buf (pnew is now something like startw-in-new-buffer */
-
-		if (replacen) {
-			if ((pnew + replacen) >= c_eol) {
-				/* Partial copy and return... */
-				memcpy(pnew, replacew, c_eol - pnew);
-				*c_eol = '\0';
-				return 1;
-			}
-			memcpy(pnew, replacew, replacen);
-			pnew += replacen;
-		}
-		poldx = pold = endw;
-	}
-	/* Copy the last part */
-	if (*poldx) {
-		strncpy(pnew, poldx, c_eol - pnew);
-		*(c_eol) = '\0';
-	} else {
-		*pnew = '\0';
-	}
-	return cleaned;
-}
-
-/*
- * Returns a string, which has been filtered by the words loaded via
- * the loadbadwords() function.  It's primary use is to filter swearing
- * in both private and public messages
- */
-
-char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
-{
-	regmatch_t pmatch[MAX_MATCH];
-	static char cleanstr[4096];
-	char buf[4096];
-	char *ptr;
-	int  matchlen, m, stringlen, cleaned;
-	ConfigItem_badword *this_word;
-	
-	*blocked = 0;
-
-	if (!start_bw)
-		return str;
-
-	/*
-	 * work on a copy
-	 */
-	stringlen = strlcpy(cleanstr, StripControlCodes(str), sizeof cleanstr);
-	memset(&pmatch, 0, sizeof pmatch);
-	matchlen = 0;
-	buf[0] = '\0';
-	cleaned = 0;
-
-	for (this_word = start_bw; this_word; this_word = this_word->next)
-	{
-		if (this_word->type & BADW_TYPE_FAST)
-		{
-			if (this_word->action == BADWORD_BLOCK)
-			{
-				if (fast_badword_match(this_word, cleanstr))
-				{
-					*blocked = 1;
-					return NULL;
-				}
-			}
-			else
-			{
-				int n;
-				/* fast_badword_replace() does size checking so we can use 512 here instead of 4096 */
-				n = fast_badword_replace(this_word, cleanstr, buf, 512);
-				if (!cleaned && n)
-					cleaned = n;
-				strcpy(cleanstr, buf);
-				memset(buf, 0, sizeof(buf)); /* regexp likes this somehow */
-			}
-		} else
-		if (this_word->type & BADW_TYPE_REGEX)
-		{
-			if (this_word->action == BADWORD_BLOCK)
-			{
-				if (!regexec(&this_word->expr, cleanstr, 0, NULL, 0))
-				{
-					*blocked = 1;
-					return NULL;
-				}
-			}
-			else
-			{
-				ptr = cleanstr; /* set pointer to start of string */
-				while (regexec(&this_word->expr, ptr, MAX_MATCH, pmatch,0) != REG_NOMATCH)
-				{
-					if (pmatch[0].rm_so == -1)
-						break;
-					m = pmatch[0].rm_eo - pmatch[0].rm_so;
-					if (m == 0)
-						break; /* anti-loop */
-					cleaned = 1;
-					matchlen += m;
-					strlncat(buf, ptr, sizeof buf, pmatch[0].rm_so);
-					if (this_word->replace)
-						strlcat(buf, this_word->replace, sizeof buf); 
-					else
-						strlcat(buf, REPLACEWORD, sizeof buf);
-					ptr += pmatch[0].rm_eo;	/* Set pointer after the match pos */
-					memset(&pmatch, 0, sizeof(pmatch));
-				}
-
-				/* All the better to eat you with! */
-				strlcat(buf, ptr, sizeof buf);	
-				memcpy(cleanstr, buf, sizeof cleanstr);
-				memset(buf, 0, sizeof(buf));
-				if (matchlen == stringlen)
-					break;
-			}
-		}
-	}
-
-	cleanstr[511] = '\0'; /* cutoff, just to be sure */
-
-	return (cleaned) ? cleanstr : str;
 }
 
 char *stripbadwords_channel(char *str, int *blocked)

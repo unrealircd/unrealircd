@@ -681,6 +681,7 @@ AC_ARG_WITH(operoverride-verify, [AS_HELP_STRING([--with-operoverride-verify], [
 AC_ARG_WITH(disable-extendedban-stacking, [AS_HELP_STRING([--with-disable-extendedban-stacking], [Disable extended ban stacking])],
        [AS_IF([test $withval = "yes"],
        		[AC_DEFINE([DISABLE_STACKED_EXTBANS], [], [Define to disable extended ban stacking (~q:~c:\#chan, etc)])])])
+AC_ARG_WITH(tre, [AS_HELP_STRING([--without-tre], [Do not use the old deprecated TRE regex library])], [with_tre=no], [with_tre=yes])
 AC_ARG_WITH(system-tre, [AS_HELP_STRING([--with-system-tre], [Use the system tre package instead of bundled, discovered using pkg-config])], [], [with_system_tre=no])
 AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--with-system-pcre2], [Use the system pcre2 package instead of bundled, discovered using pkg-config])], [], [with_system_pcre2=no])
 AC_ARG_WITH(system-argon2, [AS_HELP_STRING([--without-system-argon2], [Use bundled version instead of system argon2 library. Normally autodetected via pkg-config])], [], [with_system_argon2=yes])
@@ -735,7 +736,17 @@ dnl fail on certain solaris boxes. We might as
 dnl well set it here.
 export PATH_SEPARATOR
 
+AS_IF([test "x$with_tre" = "xyes"],[
+	AC_DEFINE([USE_TRE], [], [Use the old deprecated TRE regex library])
+])
+
 AS_IF([test "x$with_system_tre" = "xno"],[
+  AS_IF([test "x$with_tre" = "xyes"],[
+    compile_tre="yes"
+  ])
+])
+
+AS_IF([test "x$compile_tre" = "xyes"],[
 dnl REMEMBER TO CHANGE WITH A NEW TRE RELEASE!
 tre_version="0.8.0-git"
 AC_MSG_RESULT(extracting TRE regex library)
@@ -771,7 +782,9 @@ AS_IF([test -z "$TRE_LIBS"],
        [TRE_LIBS="$PRIVATELIBDIR/libtre.so"])
 AC_SUBST(TRE_LIBS)
 cd $cur_dir
-],[
+])
+
+AS_IF([test "x$with_system_tre" = "xyes"],[
 dnl use pkgconfig for tre:
 PKG_CHECK_MODULES([TRE], tre >= 0.7.5)
 ])

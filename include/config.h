@@ -315,9 +315,6 @@
 #define SPAMFILTER_DETECTSLOW
 #endif
 
-/* Use TRE Regex Library (as well) ? */
-#define USE_TRE
-
 /* Maximum number of ModData objects that may be attached to an object */
 /* UnrealIRCd 4.0.0 - 4.0.13:  8, 8, 4, 4
  * UnrealIRCd 4.0.14+       : 12, 8, 4, 4

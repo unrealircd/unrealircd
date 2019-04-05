@@ -59,7 +59,9 @@
 # endif
 #endif
 #include "auth.h" 
+#ifdef USE_TRE
 #include "tre/regex.h"
+#endif
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include "pcre2.h"
 
@@ -602,9 +604,7 @@ struct aloopStruct {
 typedef enum {
 	MATCH_SIMPLE=1, /**< Simple pattern with * and ? */
 	MATCH_PCRE_REGEX=2, /**< PCRE2 Perl-like regex (new) */
-#ifdef USE_TRE
 	MATCH_TRE_REGEX=3, /**< TRE POSIX regex (old, unreal3.2.x) */
-#endif
 } MatchType;
 
 /** Match struct, which allows various matching styles, see MATCH_* */
@@ -1830,6 +1830,36 @@ typedef enum {
 } Policy;
 
 #define NO_EXIT_CLIENT	99
+
+/*-- badwords --*/
+
+#define MAX_MATCH       1
+#define MAX_WORDLEN	64
+
+#define PATTERN		"\\w*%s\\w*"
+#define REPLACEWORD	"<censored>"
+
+#define BADW_TYPE_INVALID 0x0
+#define BADW_TYPE_FAST    0x1
+#define BADW_TYPE_FAST_L  0x2
+#define BADW_TYPE_FAST_R  0x4
+#define BADW_TYPE_REGEX   0x8
+
+#define BADWORD_REPLACE 1
+#define BADWORD_BLOCK 2
+
+typedef struct _configitem_badword ConfigItem_badword;
+
+struct _configitem_badword {
+	ConfigItem_badword      *prev, *next;
+	ConfigFlag	flag;
+	char		*word, *replace;
+	unsigned short	type;
+	char		action;
+	pcre2_code	*pcre2_expr;
+};
+
+/*-- end of badwords --*/
 
 #endif /* __struct_include__ */
 

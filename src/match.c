@@ -581,3 +581,388 @@ char *unreal_match_method_valtostr(int val)
 	
 	return "unknown";
 }
+
+/* It is unfortunately that we have 2 matching/replace systems.
+ * However, the above is for spamfilter matching and stuff
+ * and below is for matching on WORDS, which does specific things
+ * like replacement on word boundaries etc.
+ * Moved here from the censor channel and user mode module
+ * (previously was present in both modules, code duplication)
+ */
+int fast_badword_match(ConfigItem_badword *badword, char *line)
+{
+	char *p;
+	int bwlen = strlen(badword->word);
+	if ((badword->type & BADW_TYPE_FAST_L) && (badword->type & BADW_TYPE_FAST_R))
+		return (our_strcasestr(line, badword->word) ? 1 : 0);
+
+	p = line;
+	while((p = our_strcasestr(p, badword->word)))
+	{
+		if (!(badword->type & BADW_TYPE_FAST_L))
+		{
+			if ((p != line) && !iswseperator(*(p - 1))) /* aaBLA but no *BLA */
+				goto next;
+		}
+		if (!(badword->type & BADW_TYPE_FAST_R))
+		{
+			if (!iswseperator(*(p + bwlen)))  /* BLAaa but no BLA* */
+				goto next;
+		}
+		/* Looks like it matched */
+		return 1;
+next:
+		p += bwlen;
+	}
+	return 0;
+}
+
+/* fast_badword_replace:
+ * A fast replace routine written by Syzop used for replacing badwords.
+ * This searches in line for the bad word and replaces it.
+ * buf is used for the result and max is sizeof(buf).
+ * Assumptions[!]: max > 0 AND max > strlen(line)+1
+ */
+int fast_badword_replace(ConfigItem_badword *badword, char *line, char *buf, int max)
+{
+	/* Some aliases ;P */
+	char *replacew = badword->replace ? badword->replace : REPLACEWORD;
+	char *pold = line, *pnew = buf; /* Pointers to old string and new string */
+	char *poldx = line;
+	int replacen = -1; /* Only calculated if needed. w00t! saves us a few nanosecs? lol */
+	int searchn = -1;
+	char *startw, *endw;
+	char *c_eol = buf + max - 1; /* Cached end of (new) line */
+	int run = 1;
+	int cleaned = 0;
+
+	Debug((DEBUG_NOTICE, "replacing %s -> %s in '%s'", badword->word, replacew, line));
+
+	while(run) {
+		pold = our_strcasestr(pold, badword->word);
+		if (!pold)
+			break;
+		if (replacen == -1)
+			replacen = strlen(replacew);
+		if (searchn == -1)
+			searchn = strlen(badword->word);
+		/* Hunt for start of word */
+		if (pold > line) {
+			for (startw = pold; (!iswseperator(*startw) && (startw != line)); startw--);
+			if (iswseperator(*startw))
+				startw++; /* Don't point at the space/seperator but at the word! */
+		} else {
+			startw = pold;
+		}
+
+		if (!(badword->type & BADW_TYPE_FAST_L) && (pold != startw)) {
+			/* not matched */
+			pold++;
+			continue;
+		}
+
+		/* Hunt for end of word
+		 * Fix for bug #4909: word will be at least 'searchn' long so we can skip
+		 * 'searchn' bytes and avoid stopping half-way the badword.
+		 */
+		for (endw = pold+searchn; ((*endw != '\0') && (!iswseperator(*endw))); endw++);
+
+		if (!(badword->type & BADW_TYPE_FAST_R) && (pold+searchn != endw)) {
+			/* not matched */
+			pold++;
+			continue;
+		}
+
+		cleaned = 1; /* still too soon? Syzop/20050227 */
+
+		/* Do we have any not-copied-yet data? */
+		if (poldx != startw) {
+			int tmp_n = startw - poldx;
+			if (pnew + tmp_n >= c_eol) {
+				/* Partial copy and return... */
+				memcpy(pnew, poldx, c_eol - pnew);
+				*c_eol = '\0';
+				return 1;
+			}
+
+			memcpy(pnew, poldx, tmp_n);
+			pnew += tmp_n;
+		}
+		/* Now update the word in buf (pnew is now something like startw-in-new-buffer */
+
+		if (replacen) {
+			if ((pnew + replacen) >= c_eol) {
+				/* Partial copy and return... */
+				memcpy(pnew, replacew, c_eol - pnew);
+				*c_eol = '\0';
+				return 1;
+			}
+			memcpy(pnew, replacew, replacen);
+			pnew += replacen;
+		}
+		poldx = pold = endw;
+	}
+	/* Copy the last part */
+	if (*poldx) {
+		strncpy(pnew, poldx, c_eol - pnew);
+		*(c_eol) = '\0';
+	} else {
+		*pnew = '\0';
+	}
+	return cleaned;
+}
+
+/*
+ * Returns a string, which has been filtered by the words loaded via
+ * the loadbadwords() function.  It's primary use is to filter swearing
+ * in both private and public messages
+ */
+char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
+{
+	static char cleanstr[4096];
+	char buf[4096];
+	char *ptr;
+	int matchlen, m, stringlen, cleaned;
+	ConfigItem_badword *this_word;
+
+	*blocked = 0;
+
+	if (!start_bw)
+		return str;
+
+	/*
+	 * work on a copy
+	 */
+	stringlen = strlcpy(cleanstr, StripControlCodes(str), sizeof cleanstr);
+	matchlen = 0;
+	buf[0] = '\0';
+	cleaned = 0;
+
+	for (this_word = start_bw; this_word; this_word = this_word->next)
+	{
+		if (this_word->type & BADW_TYPE_FAST)
+		{
+			if (this_word->action == BADWORD_BLOCK)
+			{
+				if (fast_badword_match(this_word, cleanstr))
+				{
+					*blocked = 1;
+					return NULL;
+				}
+			}
+			else
+			{
+				int n;
+				/* fast_badword_replace() does size checking so we can use 512 here instead of 4096 */
+				n = fast_badword_replace(this_word, cleanstr, buf, 512);
+				if (!cleaned && n)
+					cleaned = n;
+				strcpy(cleanstr, buf);
+				memset(buf, 0, sizeof(buf)); /* regexp likes this somehow */
+			}
+		} else
+		if (this_word->type & BADW_TYPE_REGEX)
+		{
+			if (this_word->action == BADWORD_BLOCK)
+			{
+				pcre2_match_data *md = pcre2_match_data_create(9, NULL);
+				int ret;
+
+				ret = pcre2_match(this_word->pcre2_expr, cleanstr, PCRE2_ZERO_TERMINATED, 0, 0, md, NULL); /* run the regex */
+				pcre2_match_data_free(md); /* yeah, we never use it. unfortunately argument must be non-NULL for pcre2_match() */
+				if (ret > 0)
+				{
+					*blocked = 1;
+					return NULL;
+				}
+			}
+			else
+			{
+				pcre2_match_data *md;
+				int ret;
+				PCRE2_SIZE *dd;
+				int start, end;
+
+				ptr = cleanstr; /* set pointer to start of string */
+				while(1) {
+					md = pcre2_match_data_create(9, NULL);
+					/* ^^ we need to free 'md' in ALL circumstances.
+					 * remember this if you break or continue in this loop!
+					 */
+					ret = pcre2_match(this_word->pcre2_expr, ptr, PCRE2_ZERO_TERMINATED, 0, 0, md, NULL); /* run the regex */
+					if (ret > 0)
+					{
+						ircd_log(LOG_ERROR, "pcre2_get_ovector_count: %d", pcre2_get_ovector_count(md));
+						dd = pcre2_get_ovector_pointer(md);
+						start = (int)dd[0];
+						end = (int)dd[1];
+						if ((start < 0) || (end < 0) || (start > strlen(ptr)) || (end > strlen(ptr)+1))
+						{
+							ircd_log(LOG_ERROR, "pcre2_match() returned an ovector with OOB start/end: %d/%d, str (%d): '%s'",
+								(int)start, (int)end, (int)strlen(ptr), ptr);
+							abort();
+						}
+						m = end - start;
+						if (m == 0)
+						{
+							pcre2_match_data_free(md);
+							break; /* anti-loop */
+						}
+						cleaned = 1;
+						matchlen += m;
+						strlncat(buf, ptr, sizeof buf, start);
+						if (this_word->replace)
+							strlcat(buf, this_word->replace, sizeof buf); 
+						else
+							strlcat(buf, REPLACEWORD, sizeof buf);
+						ptr += end; /* Set pointer after the match pos */
+						pcre2_match_data_free(md);
+						continue; /* next! */
+					}
+					pcre2_match_data_free(md);
+					break; /* NOMATCH: we are done! */
+				}
+				/* All the better to eat you with! */
+				strlcat(buf, ptr, sizeof buf);	
+				memcpy(cleanstr, buf, sizeof cleanstr);
+				memset(buf, 0, sizeof(buf));
+				if (matchlen == stringlen)
+					break;
+			}
+		}
+	}
+
+	cleanstr[511] = '\0'; /* cutoff, just to be sure */
+
+	return (cleaned) ? cleanstr : str;
+}
+
+/** Checks if the specified regex (or fast badwords) is valid.
+ * returns NULL in case of success [!],
+ * pointer to buffer with error message otherwise
+ * if check_broadness is 1, the function will attempt to determine
+ * if the given regex string is too broad (i.e. matches everything)
+ */
+char *badword_config_check_regex(char *str, int fastsupport, int check_broadness)
+{
+	int errorcode, errorbufsize, regex=0;
+	char *errtmp, *tmp;
+	static char errorbuf[512];
+
+	if (fastsupport)
+	{
+		for (tmp = str; *tmp; tmp++) {
+			if (!isalnum(*tmp) && !(*tmp >= 128)) {
+				if ((str == tmp) && (*tmp == '*'))
+					continue;
+				if ((*(tmp + 1) == '\0') && (*tmp == '*'))
+					continue;
+				regex = 1;
+				break;
+			}
+		}
+	}
+	if (!fastsupport || regex)
+	{
+		int errorcode = 0;
+		PCRE2_SIZE erroroffset = 0;
+		pcre2_code *expr;
+		int options = 0;
+		char buf2[512];
+
+		options = PCRE2_CASELESS|PCRE2_NEVER_UTF|PCRE2_NEVER_UCP;
+
+		expr = pcre2_compile(str, PCRE2_ZERO_TERMINATED, options, &errorcode, &erroroffset, NULL);
+		if (expr == NULL)
+		{
+			pcre2_get_error_message(errorcode, buf2, sizeof(buf2));
+			if (erroroffset > 0)
+				snprintf(errorbuf, sizeof(errorbuf), "%s (at character #%d)", buf2, (int)erroroffset);
+			else
+				strlcpy(errorbuf, buf2, sizeof(errorbuf));
+			return errorbuf;
+		}
+		pcre2_code_free(expr);
+	}
+	return NULL;
+}
+
+int badword_config_process(ConfigItem_badword *ca, char *str)
+{
+	char *tmp;
+	short regex = 0;
+	int regflags = 0;
+	int ast_l = 0, ast_r = 0;
+
+	/* The fast badwords routine can do: "blah" "*blah" "blah*" and "*blah*",
+	 * in all other cases use regex.
+	 */
+	for (tmp = str; *tmp; tmp++) {
+		if (!isalnum(*tmp) && !(*tmp >= 128)) {
+			if ((str == tmp) && (*tmp == '*')) {
+				ast_l = 1; /* Asterisk at the left */
+				continue;
+			}
+			if ((*(tmp + 1) == '\0') && (*tmp == '*')) {
+				ast_r = 1; /* Asterisk at the right */
+				continue;
+			}
+			regex = 1;
+			break;
+		}
+	}
+	if (regex)
+	{
+		int errorcode = 0;
+		PCRE2_SIZE erroroffset = 0;
+		int options = 0;
+		char buf2[512];
+
+		ca->type = BADW_TYPE_REGEX;
+		safestrdup(ca->word, str);
+
+		options = PCRE2_CASELESS|PCRE2_NEVER_UTF|PCRE2_NEVER_UCP;
+
+		ca->pcre2_expr = pcre2_compile(str, PCRE2_ZERO_TERMINATED, options, &errorcode, &erroroffset, NULL);
+		if (ca->pcre2_expr == NULL)
+		{
+			/* This cannot happen since badword_config_check_regex()
+			 * should be called from config_test on each regex.
+			 */
+			config_error("badword_config_process(): failed to compile regex '%s', this is impossible!", str);
+			abort();
+		}
+		pcre2_jit_compile(ca->pcre2_expr, PCRE2_JIT_COMPLETE);
+	}
+	else
+	{
+		char *tmpw;
+		ca->type = BADW_TYPE_FAST;
+		ca->word = tmpw = MyMallocEx(strlen(str) - ast_l - ast_r + 1);
+		/* Copy except for asterisks */
+		for (tmp = str; *tmp; tmp++)
+			if (*tmp != '*')
+				*tmpw++ = *tmp;
+		*tmpw = '\0';
+		if (ast_l)
+			ca->type |= BADW_TYPE_FAST_L;
+		if (ast_r)
+			ca->type |= BADW_TYPE_FAST_R;
+	}
+
+	return 1;
+}
+
+/** Frees a ConfigItem_badword item.
+ * Note that it does NOT remove from the list, you need
+ * to do this BEFORE calling this function.
+ */
+void badword_config_free(ConfigItem_badword *e)
+{
+	safefree(e->word);
+	if (e->replace)
+		safefree(e->replace);
+	if (e->pcre2_expr)
+		pcre2_code_free(e->pcre2_expr);
+	MyFree(e);
+}

@@ -136,7 +136,6 @@ int hlength = strlen (haystack);
 
 #define TEXTBAN_WORD_LEFT	0x1
 #define TEXTBAN_WORD_RIGHT	0x2
-#define TEXTBAN_WORD_STRIP	0x4
 
 /* textban_replace:
  * a fast replace routine written by Syzop used for replacing.
@@ -155,14 +154,8 @@ char *startw, *endw;
 char *c_eol = buf + 510 - 1; /* Cached end of (new) line */
 int cleaned = 0;
 
-	if (type & TEXTBAN_WORD_STRIP)
-	{
-		replacew = "";
-		replacen = 0;
-	} else {
-		replacew = CENSORWORD;
-		replacen = sizeof(CENSORWORD)-1;
-	}
+	replacew = CENSORWORD;
+	replacen = sizeof(CENSORWORD)-1;
 
 	while (1) {
 		pold = my_strcasestr(pold, badword);
