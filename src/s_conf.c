@@ -2655,9 +2655,19 @@ int	config_test()
 
 				}
 				if (!used)
-					config_status("%s:%i: unknown directive %s",
+				{
+					config_error("%s:%i: unknown directive %s",
 						ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 						ce->ce_varname);
+					errors++;
+					if (strchr(ce->ce_varname, ':'))
+					{
+						config_error("You cannot use :: in a directive, you have to write them out. "
+						             "For example 'set::anti-flood::nick-flood 3:60' needs to be written as: "
+						             "set { anti-flood { nick-flood 3:60; } }");
+						config_error("See also https://www.unrealircd.org/docs/Set_block#Syntax_used_in_this_documentation");
+					}
+				}
 			}
 		}
 	}
