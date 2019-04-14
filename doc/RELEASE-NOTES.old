@@ -3,6 +3,159 @@ See doc/RELEASE-NOTES for the latest release notes.
 This file (doc/RELEASE-NOTES.old) contains the release notes
 of OLDER releases for historical purposes.
 
+==[ CHANGES BETWEEN 4.2.2 AND 4.2.1.1 ]==
+
+This is the stable version of UnrealIRCd 4.2.2. It contains several
+major enhancements, in particular with regards to flood controls.
+It also fixes a crash issue in the websocket module. Note that this
+is module is not loaded by default (only via modules.optional.conf
+or explicitly via a loadmodule "websocket").
+
+Enhancements:
+* Quicker connection handshake for clients which use CAP and/or SASL.
+* With "TOPIC #chan" and "MODE #chan +b" (and +e/+I) you can see who set the
+  topic and bans/exempts/invex. The default is to only show the nick of the
+  person who set the item. This can be changed (not the default) by setting:
+  set { topic-setter nick-user-host; };
+  set { ban-setter nick-user-host; };
+* The 'set by' and 'set at' information for +beI lists are now synchronized
+  when servers link. You still see the MODE originating from the server,
+  however when the banlist is queried you will now be able to see the
+  original nick and time of the bansetter rather than serv.er.name.
+  If you want the OLD behavior you can use set { ban-setter-sync no; };
+* The default maximum topic length has been increased from 307 to 360.
+* You can now set more custom limits. The default settings are shown below:
+  set {
+      topic-length 360; /* maximum: 360 */
+      away-length 307; /* maximum: 360 */
+      quit-length 307; /* maximum: 395 */
+      kick-length 307; /* maximum: 360 */
+  };
+* The message sent to users upon *LINE can now be adjusted completely via
+  set::reject-message::kline and set::reject-message::gline.
+  See https://www.unrealircd.org/docs/Set_block#set::reject-message
+* New set::anti-flood::max-concurrent-conversations which configures the
+  maximum number of conversations a user can have with other users at the
+  same time. Until now this was hardcoded at limiting /MSG and /INVITE to
+  20 different users in a 15 second period. The new default is 10 users,
+  which serves as a protection measure against spambots.
+  See https://www.unrealircd.org/docs/Set_block#maxcc for more details.
+* New set::max-targets-per-command which configures the maximum number
+  of targets accepted for a command, eg /MSG nick1,nick2,nick3,nick4 hi.
+  Also changed the following defaults (previously hardcoded):
+  * PRIVMSG from 20 to 4 targets, to counter /amsg spam
+  * NOTICE from 20 to 1 target, to counter /anotice spam
+  * KICK from 1 to 4 targets, to make it easier for channel operators
+    to quickly kick a large amount of spambots
+  See https://www.unrealircd.org/docs/Set_block#set::max-targets-per-command
+  Technical: the 005 token TARGMAX= is used to communicate this information
+  and the old MAXTARGETS= token has been removed.
+* Added INVITE and KNOCK flood protection (command rate limiting):
+  * set::anti-flood::invite-flood now defaults to 4 per 60 seconds
+    (previously the effective limit was 1 invite per 6 seconds).
+  * set::anti-flood::knock-flood now defaults to 4 per 120 seconds.
+* New set::outdated-tls-policy which describes what to do with clients
+  that use outdated SSL/TLS protocols (eg: TLSv1.0) and ciphers.
+  The default settings are to warn in all cases: users connecting,
+  opers /OPER'ing up and servers linking in. The user will see a message
+  telling them to upgrade their IRC client.
+  This should help with migrating such users, since in the future, say one
+  or two years from now, we would want to change the default to only allow
+  TSLv1.2+ with ciphers that provide Forward Secrecy. Instead of rejecting
+  clients without any error message, this provides a way to warn them and
+  give them some time to upgrade their outdated IRC client.
+  https://www.unrealircd.org/docs/Set_block#set::outdated-tls-policy
+
+Major issues fixed:
+* Crash issue in the 'websocket' module.
+
+Minor issues fixed:
+* The advertised "link-security" was incorrectly downgraded from
+  level 2 to 1 if spkifp was used as an authentication method.
+* In case of a crash, the "./unrealircd backtrace" script was not working
+  correctly in non-English environments, leading to less accurate bug reports.
+* Various crashes if a server receives incorrect commands from a trusted
+  linked server.
+* A number of memory leaks on REHASH (about 1K).
+* SASL was not working post-registration, eg: when services link back in.
+  This is now fixed in UnrealIRCd, but may require a services update as well.
+
+Changed:
+* The noctcp user mode (+T) will now only block CTCP's and not CTCP REPLIES.
+  Also, IRCOps can bypass user mode +T restrictions.
+* UnrealIRCd will warn if your ulines { } are matching UnrealIRCd servers.
+* The m_whox module now contains various features that m_who already had.
+  Also, m_whox will try to convert classic UnrealIRCd WHO requests such as
+  "WHO +i 127.0.0.1" to whox style "WHO 127.0.0.1 i". Unfortunately, auto-
+  converting WHO requests this is not always possible. When in doubt the
+  WHOX syntax is assumed. Users are thus (still) encouraged to use the
+  whox style when m_whox is loaded.
+
+Deprecated:
+* None?
+
+Removed:
+* The option to show the topic setter as nick!user@host was previously a
+  config option --with-topicisnuhost and a macro TOPIC_NICK_IS_NUHOST.
+  These are removed, use set::topic-setter "nick-user-host" instead.
+
+Module coders:
+* New hook HOOKTYPE_WELCOME (aClient *acptr, int after_numeric): allows you
+  to send a message at very specific places during the initial welcome
+  https://www.unrealircd.org/docs/Dev:Hook_API#HOOKTYPE_WELCOME
+* New Isupport functions: IsupportSet, IsupportSetFmt and IsupportDelByName.
+* The M_ANNOUNCE flag in the command add functions should no longer be used
+  as the CMDS= 005 token is removed. Please update your module.
+* New "SJSBY" in PROTOCTL, which is used in SJOIN to sync extra data. See
+  https://www.unrealircd.org/docs/Server_protocol:SJOIN_command at the end.
+* For a command with 2 arguments, eg "PRIVMSG #a :txt", parv[1] is "#a",
+  parv[2] is "txt" and parv[3] is NULL. Any arguments beyond that, such as
+  parv[4] should not be accessed. To help module coders with detecting such
+  bugs we now poison unused parv[] elements that should never be accessed.
+  Note that without this poison your code will also crash, now it just
+  crashes more consistently.
+
+IRC protocol:
+This section is intended for client coders and people interested in IRC
+protocol technicalities:
+* Many changes in the tokens used in numeric 005 (RPL_ISUPPORT):
+  * Removed CMDS= because this was an unnecessary abstraction and it was
+    not picked up by any other IRCd.
+  * The tokens KNOCK MAP USERIP have been added (moved from CMDS=..)
+  * STARTTLS is no longer advertised in 005 since doing so would be too
+    late. Also, STARTTLS is not the preferred method of using SSL/TLS.
+  * Added TARGMAX= to communicate set::max-targets-per-command limits.
+  * Removed the MAXTARGETS= token because TARGMAX= replaces it.
+  * Added DEAF=d to signal what user mode is used for "deaf"
+  * Added QUITLEN to communicate the set::quit-length setting (after all,
+    why communicate length for KICK but not for QUIT?)
+  * The 005 tokens are now sorted alphabetically
+* When hitting the TARGMAX limit (set::max-targets-per-command), for
+  example with "/MSG k001,k002,k003,k004,k005 hi", you will see:
+  :server 407 me k005 :Too many targets. The maximum is 4 for PRIVMSG.
+* When hitting the set::anti-flood::max-concurrent-conversations limit
+  (so not per command, but per time frame), you will see:
+  :server 439 me k011 :Message target change too fast. Please wait 7 seconds
+* When hitting the set::anti-flood::invite-flood limit you will get:
+  :server 263 me INVITE :Flooding detected. Please wait a while and try again.
+* When hitting the set::anti-flood::knock-flood limit you will get:
+  :server 480 me :Cannot knock on #channel (You are KNOCK flooding)
+* Not a protocol change. But when a server returns from a netsplit and
+  syncs modes such as: :server MODE #chan +b this!is@an.old.ban
+  Then later on you can query the banlist (MODE #chan b) and you may see
+  the actual original setter and timestamp of the ban. So if a user wishes
+  to see the banlist then IRC clients are encouraged to actively query
+  the banlist before displaying it. Fortunately most clients do this.
+* If the set::topic-setter or set::ban-setter are set to nick-user-host
+  then the "added by" field in numerics that show these entries will
+  contain nick!user@host instead of nick, eg:
+  :server 367 me #channel this!is@some.ban bansetter!user@some.host 1549461765
+
+Future versions:
+* We intend to change the default plaintext oper policy from 'warn' to 'deny'
+  in the year 2019. This will deny /OPER when used from a non-SSL connection.
+  For security, IRC Operators should really use SSL/TLS!
+
 ==[ CHANGES BETWEEN 4.2.1 AND 4.2.1.1 ]==
 
 The 4.2.1.1 version includes a compile fix for Debian.
