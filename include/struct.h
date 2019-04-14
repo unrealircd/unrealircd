@@ -1561,12 +1561,65 @@ struct DSlink {
 		char *cp;
 	} value;
 };
-#define AddListItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
-#define AppendListItem(item,list) append_ListItem((ListStruct *)item, (ListStruct **)&list)
-#define DelListItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
+#ifndef _WIN32
+ #define CHECK_LIST_ENTRY(list)		if (offsetof(typeof(*list),prev) != offsetof(ListStruct,prev)) \
+					{ \
+						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->prev must be 1st struct member)", __FILE__, __LINE__); \
+						abort(); \
+					} \
+					if (offsetof(typeof(*list),next) != offsetof(ListStruct,next)) \
+					{ \
+						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->next must be 2nd struct member))", __FILE__, __LINE__); \
+						abort(); \
+					}
+#else
+ #define CHECK_LIST_ENTRY(list)		/* not available on Windows, typeof() not reliable */
+#endif
 
-#define AddListItemPrio(item,list,prio) add_ListItemPrio((ListStructPrio *)item, (ListStructPrio **)&list, prio)
-#define DelListItemPrio(item,list,prio) del_ListItem((ListStruct *)item, (ListStruct **)&list)
+#define AddListItem(item,list)		do { \
+						CHECK_LIST_ENTRY(list) \
+						add_ListItem((ListStruct *)item, (ListStruct **)&list); \
+					} while(0)
+
+#define AppendListItem(item,list)	do { \
+						CHECK_LIST_ENTRY(list) \
+						append_ListItem((ListStruct *)item, (ListStruct **)&list); \
+					} while(0)
+
+#define DelListItem(item,list)		do { \
+						CHECK_LIST_ENTRY(list) \
+						del_ListItem((ListStruct *)item, (ListStruct **)&list); \
+					} while(0)
+
+#ifndef _WIN32
+ #define CHECK_PRIO_LIST_ENTRY(list)	if (offsetof(typeof(*list),prev) != offsetof(ListStructPrio,prev)) \
+					{ \
+						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->prev must be 1st struct member)", __FILE__, __LINE__); \
+						abort(); \
+					} \
+					if (offsetof(typeof(*list),next) != offsetof(ListStructPrio,next)) \
+					{ \
+						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->next must be 2nd struct member))", __FILE__, __LINE__); \
+						abort(); \
+					} \
+					if (offsetof(typeof(*list),priority) != offsetof(ListStructPrio,priority)) \
+					{ \
+						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->priority must be 3rd struct member))", __FILE__, __LINE__); \
+						abort(); \
+					}
+#else
+ #define CHECK_PRIO_LIST_ENTRY(list)	/* not available on Windows, typeof() not reliable */
+#endif
+
+#define AddListItemPrio(item,list,prio)	do { \
+						CHECK_PRIO_LIST_ENTRY(list); \
+						add_ListItemPrio((ListStructPrio *)item, (ListStructPrio **)&list, prio); \
+					} while(0)
+
+#define DelListItemPrio(item,list,prio)	do { \
+						CHECK_PRIO_LIST_ENTRY(list); \
+						del_ListItem((ListStruct *)item, (ListStruct **)&list); \
+					} while(0)
 
 struct liststruct {
 	ListStruct *prev, *next;
