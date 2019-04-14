@@ -187,6 +187,7 @@ install: all
 	-@if [ ! -f "@CONFDIR@/spamfilter.conf" ] ; then \
 		$(INSTALL) -m 0600 doc/conf/spamfilter.conf @CONFDIR@ ; \
 	fi
+	-@extras/patches/patch_spamfilter_conf "@CONFDIR@"
 	-@if [ ! -f "@CONFDIR@/badwords.conf" ] ; then \
 		$(INSTALL) -m 0600 doc/conf/badwords.conf @CONFDIR@ ; \
 	fi
