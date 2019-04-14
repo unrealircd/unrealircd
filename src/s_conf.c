@@ -6302,6 +6302,14 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 		need_34_upgrade = 1;
 	}
 
+	if (match && !strcmp(match, "^LOL! //echo -a \\$\\(\\$decode\\(.+,m\\),[0-9]\\)$"))
+	{
+		config_warn("*** IMPORTANT ***");
+		config_warn("You have old examples in your spamfilter.conf. "
+		             "We suggest you to edit this file and replace the examples.");
+		config_warn("Please read https://www.unrealircd.org/docs/FAQ#old-spamfilter-conf !!!");
+		config_warn("*****************");
+	}
 	return errors;
 }
 
