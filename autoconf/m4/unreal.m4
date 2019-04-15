@@ -169,9 +169,11 @@ AS_IF([test $enable_ssl != "no"],
 		AC_MSG_RESULT(not found)
 		echo ""
 		echo "Apparently you do not have both the openssl binary and openssl development libraries installed."
-		echo "Please install the needed binaries and libraries."
-		echo "The package is often called 'openssl-dev', 'openssl-devel' or 'libssl-dev'"
-		echo "After doing so re-run ./Config"
+		echo "The following packages are required:"
+		echo "1) The library package is often called 'openssl-dev', 'openssl-devel' or 'libssl-dev'"
+		echo "2) The binary package is usually called 'openssl'."
+		echo "NOTE: you or your system administrator needs to install the library AND the binary package."
+		echo "After doing so, simply re-run ./Config"
 		exit 1
 	else
 		CRYPTOLIB="-lssl -lcrypto";

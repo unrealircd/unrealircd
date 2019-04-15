@@ -49,6 +49,18 @@ AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(CP,cp)
 AC_PATH_PROG(TOUCH,touch)
 AC_PATH_PROG(OPENSSLPATH,openssl)
+AS_IF([test x"$OPENSSLPATH" = "x"],
+[
+echo ""
+echo "Apparently you do not have both the openssl binary and openssl development libraries installed."
+echo "The following packages are required:"
+echo "1) The library package is often called 'openssl-dev', 'openssl-devel' or 'libssl-dev'"
+echo "2) The binary package is usually called 'openssl'."
+echo "NOTE: you or your system administrator needs to install the library AND the binary package."
+echo "After doing so, simply re-run ./Config"
+exit 1
+])
+
 AC_PATH_PROG(INSTALL,install)
 AC_CHECK_PROG(MAKER, gmake, gmake, make)
 AC_PATH_PROG(GMAKE,gmake)
