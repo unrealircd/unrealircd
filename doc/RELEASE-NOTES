@@ -1,12 +1,51 @@
-UnrealIRCd 4.2.3-dev Release Notes
+UnrealIRCd 4.2.3-rc1 Release Notes
 ===================================
 
-This version is under active development.
+This is the first release candidate for UnrealIRCd 4.2.3. You can help us
+with testing this release so we can release a 4.2.3 stable version in May.
+If you find any issues, please report them at https://bugs.unrealircd.org/
 
-This version comes with some exciting new features but also contains an
-important change with regards to old spamfilters (-> Deprecated).
+This version adds new modules to combat drones, it bumps the default
+concurrent user limit, and UnrealIRCd can now easily deal with 1 million
+*LINE's placed on *@IP without any noticeable performance impact.
+
+There is also one important change with regards to old style 'posix'
+spamfilters (see under "Deprecated"), these will raise a warning but
+will continue to work for now.
 
 Enhancements:
+* New optional modules 'reputation' and 'connthrottle' to fight drones:
+  * The 'reputation' module will learn what users (IP addresses) are
+    frequently seen on your server and classify these as "known IP's".
+    For every 5 minutes that someone is connected, the IP address receives
+    +1 point. IP's with registered users receive +2 points per 5 minutes.
+    An IRCOp can /WHOIS a user to view this "reputation score".
+    The "/REPUTATION nick" and "/REPUTATION ip" commands are also available.
+    Note that the reputation score is capped at a maximum of 10000 and
+    entries expire if the IP has not been seen online for 30 days (or
+    even sooner for very low reputation scores).
+  * The 'connthrottle' module puts users in one of these two groups:
+    * "known users" with IP addresses that have been online before on
+      your network for some time. By default: 2+ hours past 30 days.
+    * "new users" who have not been seen online before (or too short).
+    Users in the "known users" group can connect without any limitation.
+    Similarly, users who authenticate to services using SASL can also
+    always get in. However, "new users" can be limited, for example
+    at a maximum rate of 20 "new users" per minute.
+    The end result and goal is that in case of a drone attack, 99% of
+    your regular users can still connect as usual. This, while drones
+    and other unknown IP's are limited at, for example, 20 per minute.
+    By limiting the connection rate for drones and other unknown users
+    the damage is limited. It also gives IRCOps a chance to react and
+    take additional countermeasures, if possible.
+  * The modules are not loaded by default. If you want to use them,
+    then have a look at their example configuration in the file
+    conf/modules.optional.conf
+  * The reputation module needs to be running for some time before it
+    contains a meaningful database of "known users". Therefore the
+    connthrottle module will be disabled until the reputation module
+    has gathered sufficient data. This defaults to 1 week.
+  * Full documentation: https://www.unrealircd.org/docs/Connthrottle
 * On *NIX we now default to 'auto' mode to discover MAXCONNECTIONS.
   On systems that support it this means UnrealIRCd supports up to 8192
   connections by default. It automatically falls back to a lower value
@@ -70,7 +109,7 @@ Module coders / Developers:
   you should always have pointers to prev and next at the beginning of
   your struct (and in that order!), otherwise you risk memory corruption.
   Because this is an easy mistake to make we will now abort() we detect
-  such an error in AddListItem or DelListItem (on *NIX).
+  such an error at runtime in AddListItem or DelListItem (on *NIX).
 
 IRC protocol:
 * Many things changed in previous release (4.2.2).
