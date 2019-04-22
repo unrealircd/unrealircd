@@ -426,8 +426,8 @@ struct _irccallback {
  * for things like do_join, join_channel, etc.
  * The difference between callbacks and efunctions are:
  * - efunctions are mandatory, while callbacks can be optional (depends!)
- * - efunctions are ment for internal usage, so 3rd party modules are not allowed
- *   to add them.
+ * - efunctions are meant for internal usage, so 3rd party modules are
+ *   not allowed to add them.
  * - all efunctions are declared as function pointers in modules.c
  */
 struct _ircefunction {
@@ -1045,6 +1045,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define CALLBACKTYPE_CLOAKKEYCSUM 2
 #define CALLBACKTYPE_CLOAK_EX 3
 #define CALLBACKTYPE_BLACKLIST_CHECK 4
+#define CALLBACKTYPE_REPUTATION_STARTTIME 5
 
 /* Efunction types */
 #define EFUNC_DO_JOIN       				1

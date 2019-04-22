@@ -62,7 +62,8 @@ R_MODULES= \
 	 blacklist.so jointhrottle.so \
 	 antirandom.so hideserver.so jumpserver.so \
 	 m_ircops.so m_staff.so nocodes.so \
-	 charsys.so antimixedutf8.so authprompt.so m_sinfo.so
+	 charsys.so antimixedutf8.so authprompt.so m_sinfo.so \
+	 reputation.so connthrottle.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -529,6 +530,14 @@ authprompt.so: authprompt.c $(INCLUDES)
 m_sinfo.so: m_sinfo.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_sinfo.so m_sinfo.c
+
+reputation.so: reputation.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o reputation.so reputation.c
+
+connthrottle.so: connthrottle.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o connthrottle.so connthrottle.c
 
 #############################################################################
 # capabilities

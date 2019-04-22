@@ -233,6 +233,8 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/ANTIMIXEDUTF8.DLL \
  SRC/MODULES/AUTHPROMPT.DLL \
  SRC/MODULES/M_SINFO.DLL \
+ SRC/MODULES/REPUTATION.DLL \
+ SRC/MODULES/CONNTHROTTLE.DLL \
  SRC/MODULES/CHANMODES/CENSOR.DLL \
  SRC/MODULES/CHANMODES/DELAYJOIN.DLL \
  SRC/MODULES/CHANMODES/FLOODPROT.DLL \
@@ -870,6 +872,12 @@ src/modules/authprompt.dll: src/modules/authprompt.c $(INCLUDES)
 
 src/modules/m_sinfo.dll: src/modules/m_sinfo.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_sinfo.c $(MODLFLAGS)
+
+src/modules/reputation.dll: src/modules/reputation.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/reputation.c $(MODLFLAGS)
+
+src/modules/connthrottle.dll: src/modules/connthrottle.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/connthrottle.c $(MODLFLAGS)
 
 src/modules/chanmodes/censor.dll: src/modules/chanmodes/censor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/censor.c $(MODLFLAGS)
