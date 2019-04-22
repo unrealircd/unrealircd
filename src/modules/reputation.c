@@ -521,7 +521,7 @@ int reputation_pre_lconnect(aClient *sptr)
 	 * server to server traffic, see the reputation_server_cmd function.
 	 */
 	ReputationEntry *e = find_reputation_entry(GetIP(sptr));
-	sendto_server(NULL, 0, 0, ":%s REPUTATION %s %hd", me.name, GetIP(sptr), e ? e->score : 0);
+	sendto_server(NULL, 0, 0, ":%s REPUTATION %s %d", me.name, GetIP(sptr), e ? (int)e->score : 0);
 
 	return 0;
 }
