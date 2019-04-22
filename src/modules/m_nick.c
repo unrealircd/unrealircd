@@ -511,7 +511,8 @@ nickkill2done:
 		/* XXX: we need to split this out into register_remote_user() or something. */
 		parv[3] = nick;
 		parv[6] = sptr->name;
-		do_cmd(cptr, sptr, "USER", parc - 3, &parv[3]);
+		if (do_cmd(cptr, sptr, "USER", parc - 3, &parv[3]) == FLUSH_BUFFER)
+			return FLUSH_BUFFER;
 		if (GotNetInfo(cptr) && !IsULine(sptr))
 			sendto_fconnectnotice(sptr, 0, NULL);
 	}
@@ -1136,7 +1137,8 @@ CMD_FUNC(m_nick)
 	if (IsServer(cptr) && parc > 7)
 	{
 		parv[3] = nick;
-		do_cmd(cptr, sptr, "USER", parc - 3, &parv[3]);
+		if (do_cmd(cptr, sptr, "USER", parc - 3, &parv[3]) == FLUSH_BUFFER)
+			return FLUSH_BUFFER;
 		if (GotNetInfo(cptr) && !IsULine(sptr))
 			sendto_fconnectnotice(sptr, 0, NULL);
 	}
@@ -1447,7 +1449,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			char *parv[2];
 			parv[0] = sptr->name;
 			parv[1] = NULL;
-			do_cmd(sptr, sptr, "LUSERS", 1, parv);
+			if (do_cmd(sptr, sptr, "LUSERS", 1, parv) == FLUSH_BUFFER)
+				return FLUSH_BUFFER;
 		}
 
 		RunHook2(HOOKTYPE_WELCOME, sptr, 266);
@@ -1618,7 +1621,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				tlds->channel,
 				NULL
 			};
-			do_cmd(sptr, sptr, "JOIN", 3, chans);
+			if (do_cmd(sptr, sptr, "JOIN", 3, chans) == FLUSH_BUFFER)
+				return FLUSH_BUFFER;
 		}
 		else if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
 		{
@@ -1627,7 +1631,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				AUTO_JOIN_CHANS,
 				NULL
 			};
-			do_cmd(sptr, sptr, "JOIN", 3, chans);
+			if (do_cmd(sptr, sptr, "JOIN", 3, chans) == FLUSH_BUFFER)
+				return FLUSH_BUFFER;
 		}
 		/* NOTE: If you add something here.. be sure to check the 'if (savetkl)' note above */
 	}
