@@ -6,18 +6,15 @@ if "%TARGET%" == "Visual Studio 2017" call "C:\Program Files (x86)\Microsoft Vis
 rem Installing tools
 cinst unrar -y
 cinst unzip -y
-cinst wget -y
 cinst innosetup -y
-wget https://www.unrealircd.org/files/dev/win/dlltool.exe
+curl -fsS -o dlltool.exe https://www.unrealircd.org/files/dev/win/dlltool.exe
 
 rem Installing UnrealIRCd dependencies
-echo on
-echo boinggggg
 cd \projects
 mkdir unrealircd-deps
 cd unrealircd-deps
-wget https://www.unrealircd.org/files/dev/win/SetACL.exe
-wget https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-devel.zip
+curl -fsS -o SetACL.exe https://www.unrealircd.org/files/dev/win/SetACL.exe
+curl -fsS -o unrealircd-libraries-devel.zip https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-devel.zip
 unzip unrealircd-libraries-devel.zip
 
 cd \projects\unrealircd
