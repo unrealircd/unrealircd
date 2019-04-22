@@ -11,6 +11,8 @@ cinst innosetup -y
 wget https://www.unrealircd.org/files/dev/win/dlltool.exe
 
 rem Installing UnrealIRCd dependencies
+echo on
+echo boinggggg
 cd \projects
 mkdir unrealircd-deps
 cd unrealircd-deps
