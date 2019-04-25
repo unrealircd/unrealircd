@@ -21,7 +21,7 @@
 
 #undef TEST
 
-#define BENCHMARK
+#undef BENCHMARK
 /* Benchmark results (2GHz Xeon Skylake, compiled with -O2, Linux):
  * 10k random IP's with various expire times:
  * - load db:  23 ms
@@ -323,7 +323,7 @@ void load_db(void)
 	fd = fopen(cfg.database, "r");
 	if (!fd)
 	{
-		config_error("WARNING: Could not open/read database '%s': %s", cfg.database, strerror(ERRNO));
+		config_warn("WARNING: Could not open/read database '%s': %s", cfg.database, strerror(ERRNO));
 		return;
 	}
 	
