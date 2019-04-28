@@ -83,7 +83,7 @@ static void init_config(void)
 {
 	memset(&cfg, 0, sizeof(cfg));
 	/* Default values */
-	cfg.ban_reason = strdup("HTTP command from IRC connection (ATTACK?)");
+	cfg.ban_reason = strdup("HTTP command from IRC connection");
 	cfg.ban_action = BAN_ACT_KILL;
 	cfg.ban_time = 60 * 60 * 4;
 }
@@ -216,14 +216,12 @@ CMD_FUNC(m_nopost)
 {
 	if (MyConnect(sptr) && !is_except_host(sptr))
 	{
-		/* We send a message to the ircops if the action is KILL, because otherwise
-		 * you won't even notice it. This is not necessary for *LINE/SHUN/etc as
-		 * ircops see them being added.
+		/* BAN_ACT_KILL requires special handling because otherwise it would
+		 * not be seen at all.
 		 */
 		if (cfg.ban_action == BAN_ACT_KILL)
 		{
-			sendto_realops("[m_nopost] Killed connection from %s", GetIP(sptr));
-			ircd_log(LOG_CLIENT, "[m_nopost] Killed connection from %s", GetIP(sptr));
+			sendto_snomask(SNO_JUNK, "[m_nopost] Killed HTTP connection from %s", GetIP(sptr));
 		}
 		return place_host_ban(sptr, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
 	}
