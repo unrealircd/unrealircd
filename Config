@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Config script for UnrealIRCd
-# (C) 2001-2016 The UnrealIRCd Team
+# (C) 2001-2019 The UnrealIRCd Team
 #
 # This configure script is free software; the UnrealIRCd Team gives 
 # unlimited permission to copy, distribute and modify as long as the
@@ -454,7 +454,7 @@ echo ""
 
 if [ -z "$NOCACHE" ] ; then
 	# This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
-	UNREALRELEASES="unrealircd-4.2.2 unrealircd-4.2.2-rc2 unrealircd-4.2.2-rc1 unrealircd-4.2.1.1 unrealircd-4.2.1 unrealircd-4.2.1-rc1 unrealircd-4.2.0 unrealircd-4.0.19-rc2 unrealircd-4.0.19-rc1 unrealircd-4.0.18 unrealircd-4.0.18-rc2 unrealircd-4.0.18-rc1 unrealircd-4.0.17 unrealircd-4.0.17-rc1 unrealircd-4.0.16.1 unrealircd-4.0.16 unrealircd-4.0.15 unrealircd-4.0.14 unrealircd-4.0.14-rc1 unrealircd-4.0.13 unrealircd-4.0.13-rc1 unrealircd-4.0.12.1 unrealircd-4.0.12 unrealircd-4.0.11"
+	UNREALRELEASES="unrealircd-4.2.3-rc1 unrealircd-4.2.2 unrealircd-4.2.2-rc2 unrealircd-4.2.2-rc1 unrealircd-4.2.1.1 unrealircd-4.2.1 unrealircd-4.2.1-rc1 unrealircd-4.2.0 unrealircd-4.0.19-rc2 unrealircd-4.0.19-rc1 unrealircd-4.0.18 unrealircd-4.0.18-rc2 unrealircd-4.0.18-rc1 unrealircd-4.0.17 unrealircd-4.0.17-rc1 unrealircd-4.0.16.1 unrealircd-4.0.16 unrealircd-4.0.15 unrealircd-4.0.14 unrealircd-4.0.14-rc1 unrealircd-4.0.13 unrealircd-4.0.13-rc1 unrealircd-4.0.12.1 unrealircd-4.0.12"
 	if [ -f "config.settings" ]; then
 		. ./config.settings
 	else

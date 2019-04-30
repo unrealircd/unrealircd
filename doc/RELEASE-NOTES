@@ -1,13 +1,9 @@
-UnrealIRCd 4.2.3-rc1 Release Notes
-===================================
+UnrealIRCd 4.2.3 Release Notes
+===============================
 
-This is the first release candidate for UnrealIRCd 4.2.3. You can help us
-with testing this release so we can release a 4.2.3 stable version in May.
-If you find any issues, please report them at https://bugs.unrealircd.org/
-
-This version adds new modules to combat drones, it bumps the default
-concurrent user limit, and UnrealIRCd can now easily deal with 1 million
-*LINE's placed on *@IP without any noticeable performance impact.
+This UnrealIRCd release adds new modules to combat drones, it bumps the
+default concurrent user limit, and UnrealIRCd can now easily deal with
+1 million *LINE's placed on *@IP without any noticeable performance impact.
 
 There is also one important change with regards to old style 'posix'
 spamfilters (see under "Deprecated"), these will raise a warning but
@@ -83,7 +79,7 @@ Deprecated:
   https://www.unrealircd.org/docs/FAQ#old-spamfilter-conf
 
 Major issues fixed:
-* None?
+* None
 
 Minor issues fixed:
 * Changing the set::anti-flood::invite-flood setting had no effect.
