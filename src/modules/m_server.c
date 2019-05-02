@@ -320,11 +320,42 @@ skip_host_check:
 	/* Now for checking passwords */
 	if (Auth_Check(cptr, link->auth, cptr->local->passwd) == -1)
 	{
+		/* Let's help admins a bit with a good error message in case
+		 * they mix different authentication systems (plaintext password
+		 * vs an "TLS Auth type" like spkifp/sslclientcert/sslclientcertfp).
+		 * The 'if' statement below is a bit complex but it consists of 2 things:
+		 * 1. Check if our side expects a plaintext password but we did not receive one
+		 * 2. Check if our side expects a non-plaintext password but we did receive one
+		 */
+		if (((link->auth->type == AUTHTYPE_PLAINTEXT) && cptr->local->passwd && !strcmp(cptr->local->passwd, "*")) ||
+		    ((link->auth->type != AUTHTYPE_PLAINTEXT) && cptr->local->passwd && strcmp(cptr->local->passwd, "*")))
+		{
+			sendto_ops_and_log("Link denied for '%s' (Authentication failed due to different password types on both sides of the link) %s",
+				servername, inpath);
+			sendto_ops_and_log("Read https://www.unrealircd.org/docs/FAQ#auth-fail-mixed for more information");
+		} else
+		if (link->auth->type == AUTHTYPE_SPKIFP)
+		{
+			sendto_ops_and_log("Link denied for '%s' (Authentication failed [spkifp mismatch]) %s",
+				servername, inpath);
+		} else
+		if (link->auth->type == AUTHTYPE_SSL_CLIENTCERT)
+		{
+			sendto_ops_and_log("Link denied for '%s' (Authentication failed [sslclientcert mismatch]) %s",
+				servername, inpath);
+		} else
+		if (link->auth->type == AUTHTYPE_SSL_CLIENTCERTFP)
+		{
+			sendto_ops_and_log("Link denied for '%s' (Authentication failed [sslclientcertfp mismatch]) %s",
+				servername, inpath);
+		} else
+		{
+			sendto_ops_and_log("Link denied for '%s' (Authentication failed [Bad password?]) %s",
+				servername, inpath);
+		}
 		sendto_one(cptr,
 		    "ERROR :Link '%s' denied (Authentication failed) %s",
 		    servername, inpath);
-		sendto_ops_and_log("Link denied for '%s' (Authentication failed [Bad password?]) %s",
-			servername, inpath);
 		return exit_client(cptr, sptr, &me,
 		    "Link denied (Authentication failed)");
 	}
