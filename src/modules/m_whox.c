@@ -827,7 +827,7 @@ static int convert_classical_who_request(aClient *sptr, int *parc, char *parv[],
 	 * 2) Unlikely to have a % (percent sign) in the 2nd parameter
 	 * 3) Unlikely to have a 3rd parameter
 	 * On the other hand WHOX requests are:
-	 * 4) never going to have a '*' or '?' has 2nd parameter
+	 * 4) never going to have a '*', '?' or '.' as 2nd parameter
 	 * 5) never going to have a '+' or '-' as 1st character in 2nd parameter
 	 * Additionally, WHOX requests are useless - and thus unlikely -
 	 * to search for a mask mask starting with + or -  except when:
@@ -844,7 +844,9 @@ static int convert_classical_who_request(aClient *sptr, int *parc, char *parv[],
 		/* Conditions 1-3 of above comment are met, now we deal
 		 * with conditions 4-7.
 		 */
-		if (parv[2] && !strchr(parv[2], '*') && !strchr(parv[2], '?') &&
+		if (parv[2] &&
+		    !strchr(parv[2], '*') && !strchr(parv[2], '?') &&
+		    !strchr(parv[2], '.') &&
 		    !strchr(parv[2], '+') && !strchr(parv[2], '-') &&
 		    (strchr(parv[2], 'm') || strchr(parv[2], 'r')))
 		{
