@@ -347,7 +347,7 @@ static struct clicap_cmd clicap_cmdtable[] = {
 
 static int clicap_cmd_search(const char *command, struct clicap_cmd *entry)
 {
-	return strcmp(command, entry->cmd);
+	return strcasecmp(command, entry->cmd);
 }
 
 CMD_FUNC(m_cap)
