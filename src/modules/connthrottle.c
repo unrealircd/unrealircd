@@ -498,6 +498,8 @@ int ct_lconnect(aClient *sptr)
 
 int ct_rconnect(aClient *sptr)
 {
+	int score;
+
 	if (sptr->srvptr && !IsSynched(sptr->srvptr))
 		return 0; /* Netmerge: skip */
 
@@ -516,6 +518,10 @@ int ct_rconnect(aClient *sptr)
 		return 0;
 	}
 #endif
+
+	score = GetReputation(sptr);
+	if (score >= cfg.minimum_reputation_score)
+		return 0; /* sufficient reputation: "known-user" */
 
 	bump_connect_counter(0);
 
