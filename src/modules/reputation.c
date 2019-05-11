@@ -107,7 +107,7 @@ void config_setdefaults(void);
 CMD_FUNC(reputation_cmd);
 CMD_FUNC(reputationunperm);
 int reputation_whois(aClient *sptr, aClient *acptr);
-int reputation_handshake(aClient *sptr);
+int reputation_set_on_connect(aClient *sptr);
 int reputation_pre_lconnect(aClient *sptr);
 int reputation_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int reputation_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
@@ -154,8 +154,9 @@ MOD_INIT(reputation)
 	config_setdefaults();
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, reputation_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, reputation_whois);
-	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, reputation_handshake);
+	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, reputation_set_on_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 2000000000, reputation_pre_lconnect); /* (prio: last) */
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, -1000000000, reputation_set_on_connect); /* (prio: near-first) */
 	CommandAdd(ModInf.handle, "REPUTATION", reputation_cmd, MAXPARA, M_USER|M_SERVER);
 	CommandAdd(ModInf.handle, "REPUTATIONUNPERM", reputationunperm, MAXPARA, M_USER|M_SERVER);
 	return MOD_SUCCESS;
@@ -495,10 +496,12 @@ ReputationEntry *find_reputation_entry(char *ip)
 	return NULL;
 }
 
-/** Called when the user connects (very early, just after the
- * TCP/IP connection has been established, before any data).
+/** Called when the user connects.
+ * Locally: very early, just after the TCP/IP connection has
+ * been established, before any data.
+ * Remote user: early in the HOOKTYPE_REMOTE_CONNECT hook.
  */
-int reputation_handshake(aClient *acptr)
+int reputation_set_on_connect(aClient *acptr)
 {
 	char *ip = acptr->ip;
 	ReputationEntry *e;
@@ -511,6 +514,7 @@ int reputation_handshake(aClient *acptr)
 			Reputation(acptr) = e->score; /* SET MODDATA */
 		}
 	}
+
 	return 0;
 }
 
