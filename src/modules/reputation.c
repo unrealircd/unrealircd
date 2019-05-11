@@ -17,7 +17,7 @@
 
 #include "unrealircd.h"
 
-#define REPUTATION_VERSION "1.0.1"
+#define REPUTATION_VERSION "1.2"
 
 #undef TEST
 
