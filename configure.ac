@@ -8,7 +8,7 @@ dnl src/win32/unrealinst.iss
 dnl .CHANGES.NEW
 dnl src/version.c.SH
 
-AC_INIT([unrealircd], [4.2.3], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
+AC_INIT([unrealircd], [5.0.0-dev], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -28,21 +28,21 @@ AC_SUBST(BUILDDIR)
 
 dnl Calculate the versions. Perhaps the use of expr is a little too extravagant
 # Generation version number (e.g.: X in X.Y.Z)
-UNREAL_VERSION_GENERATION=["4"]
+UNREAL_VERSION_GENERATION=["5"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_GENERATION], [$UNREAL_VERSION_GENERATION], [Generation version number (e.g.: X for X.Y.Z)])
 
 # Major version number (e.g.: Y in X.Y.Z)
-UNREAL_VERSION_MAJOR=["2"]
+UNREAL_VERSION_MAJOR=["0"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MAJOR], [$UNREAL_VERSION_MAJOR], [Major version number (e.g.: Y for X.Y.Z)])
 
 # Minor version number (e.g.: Z in X.Y.Z)
-UNREAL_VERSION_MINOR=["3"]
+UNREAL_VERSION_MINOR=["0"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor version number (e.g.: Z for X.Y.Z)])
 
 # The version suffix such as a beta marker or release candidate
 # marker. (e.g.: -rcX for unrealircd-3.2.9-rcX). This macro is a
 # string instead of an integer because it contains arbitrary data.
-UNREAL_VERSION_SUFFIX=[""]
+UNREAL_VERSION_SUFFIX=["-dev"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_SUFFIX], ["$UNREAL_VERSION_SUFFIX"], [Version suffix such as a beta marker or release candidate marker. (e.g.: -rcX for unrealircd-3.2.9-rcX)])
 
 AC_PATH_PROG(RM,rm)
