@@ -625,6 +625,7 @@ ac_includes_default="\
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 UNRLINCDIR
+IRCDLIBS
 URL
 PTHREAD_CFLAGS
 PTHREAD_LIBS
@@ -673,7 +674,6 @@ HARDEN_BINCFLAGS
 HARDEN_LDFLAGS
 HARDEN_CFLAGS
 MKPASSWDLIBS
-IRCDLIBS
 OBJEXT
 EXEEXT
 ac_ct_CC
@@ -764,6 +764,7 @@ with_system_cares
 enable_ssl
 enable_dynamic_linking
 enable_werror
+enable_asan
 enable_libcurl
 '
       ac_precious_vars='build_alias
@@ -1421,6 +1422,8 @@ Optional Features:
                           rather than dynamically (noone knows if disabling
                           dynamic linking actually does anything or not)
   --enable-werror         Turn compilation warnings into errors (-Werror)
+  --disable-asan          Disable address sanitizer and other debugging
+                          options
   --enable-libcurl=DIR    enable libcurl (remote include) support
 
 Optional Packages:
@@ -3968,7 +3971,6 @@ if test "x$ac_cv_lib_crypto_RAND_egd" = xyes; then :
 $as_echo "#define HAVE_RAND_EGD 1" >>confdefs.h
 
 fi
-
 
 
 
@@ -8773,6 +8775,15 @@ else
 fi
 
 
+
+# Check whether --enable-asan was given.
+if test "${enable_asan+set}" = set; then :
+  enableval=$enable_asan; ac_cv_asan="no"
+else
+  ac_cv_asan="yes"
+fi
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors" >&5
 $as_echo_n "checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors... " >&6; }
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -10152,6 +10163,13 @@ UNRLINCDIR="`pwd`/include"
 if test "$ac_cv_werror" = "yes" ; then
 	CFLAGS="$CFLAGS -Werror"
 fi
+
+if test "$ac_cv_asan" = "yes" ; then
+	CFLAGS="$CFLAGS -O0 -fno-inline -fsanitize=address -fno-omit-frame-pointer -DNOCLOSEFD"
+	IRCDLIBS="-fsanitize=address $IRCDLIBS"
+fi
+
+
 
 
 

@@ -85,7 +85,6 @@ AC_CHECK_LIB(nsl, inet_ntoa,
 AC_CHECK_LIB(crypto, RAND_egd,
 		AC_DEFINE(HAVE_RAND_EGD, 1, [Define if the libcrypto has RAND_egd]))
 
-AC_SUBST(IRCDLIBS)
 AC_SUBST(MKPASSWDLIBS)
 
 dnl HARDENING START
@@ -712,6 +711,18 @@ AC_ARG_ENABLE([werror],
   [ac_cv_werror="$enableval"],
   [ac_cv_werror="no"])
 
+dnl AC_ARG_ENABLE([asan],
+dnl   [AS_HELP_STRING([--enable-asan],
+dnl     [Enable address sanitizer and other debugging options, not recommended for production servers!])],
+dnl   [ac_cv_asan="$enableval"],
+dnl   [ac_cv_asan="no"])
+
+AC_ARG_ENABLE([asan],
+  [AS_HELP_STRING([--disable-asan],
+    [Disable address sanitizer and other debugging options])],
+  [ac_cv_asan="no"],
+  [ac_cv_asan="yes"])
+
 AC_MSG_CHECKING([if FD_SETSIZE is large enough to allow $ac_fd file descriptors])
 AC_COMPILE_IFELSE([
 #include <sys/types.h>
@@ -969,6 +980,14 @@ dnl Moved to the very end to ensure it doesn't affect any libs or tests.
 if test "$ac_cv_werror" = "yes" ; then
 	CFLAGS="$CFLAGS -Werror"
 fi
+
+dnl Address sanitizer build
+if test "$ac_cv_asan" = "yes" ; then
+	CFLAGS="$CFLAGS -O0 -fno-inline -fsanitize=address -fno-omit-frame-pointer -DNOCLOSEFD"
+	IRCDLIBS="-fsanitize=address $IRCDLIBS"
+fi
+
+AC_SUBST(IRCDLIBS)
 
 AC_SUBST(UNRLINCDIR)
 
