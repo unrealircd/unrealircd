@@ -350,7 +350,7 @@ CMD_FUNC(m_auth)
 
 	if (!SEUSER(sptr))
 	{
-		if (CHECKPROTO(sptr, PROTO_SASL))
+		if (HasCapability(sptr, "sasl"))
 			sendnotice(sptr, "ERROR: Cannot use /AUTH when your client is doing SASL.");
 		else
 			sendnotice(sptr, "ERROR: /AUTH authentication request received before authentication prompt (too early!)");
@@ -414,7 +414,7 @@ void authprompt_send_auth_required_message(aClient *sptr)
 int authprompt_require_sasl(aClient *sptr, char *reason)
 {
 	/* If the client did SASL then we (authprompt) will not kick in */
-	if (CHECKPROTO(sptr, PROTO_SASL))
+	if (HasCapability(sptr, "sasl"))
 		return 0;
 
 	authprompt_tag_as_auth_required(sptr);

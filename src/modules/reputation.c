@@ -854,10 +854,11 @@ CMD_FUNC(reputation_server_cmd)
 CMD_FUNC(reputation_cmd)
 {
 	if (MyClient(sptr))
-		return reputation_user_cmd(cptr, sptr, parc, parv);
+		return reputation_user_cmd(cptr, sptr, recv_mtags, parc, parv);
 
 	if (IsServer(sptr))
-		return reputation_server_cmd(cptr, sptr, parc, parv);
+		return reputation_server_cmd(cptr, sptr, recv_mtags, parc, parv);
+
 	return 0;
 }
 

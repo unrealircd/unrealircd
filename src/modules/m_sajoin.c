@@ -164,12 +164,14 @@ CMD_FUNC(m_sajoin)
 				while ((lp = acptr->user->channel))
 				{
 					chptr = lp->chptr;
-					sendto_channel_butserv(chptr, acptr,
-					    ":%s PART %s :%s", acptr->name, chptr->chname,
-					    "Left all channels");
+					sendto_channel(chptr, acptr, NULL, 0, 0, SEND_LOCAL, NULL,
+					               ":%s PART %s :%s",
+					               acptr->name, chptr->chname, "Left all channels");
 					if (MyConnect(acptr))
+					{
 						RunHook4(HOOKTYPE_LOCAL_PART, acptr, acptr, chptr,
 							 "Left all channels");
+					}
 					remove_user_from_channel(acptr, chptr);
 				}
 				sendto_server(acptr, 0, 0, ":%s JOIN 0", acptr->name);

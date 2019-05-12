@@ -167,33 +167,238 @@ void parse_addlag(aClient *cptr, int cmdbytes)
 	}		
 }
 
+/** Unescape a message tag (name or value).
+ * @param in  The input string
+ * @param out The output string for writing
+ * @notes No size checking, so ensure that the output buffer
+ *        is at least as long as the input buffer.
+ */
+void message_tag_unescape(char *in, char *out)
+{
+	for (; *in; in++)
+	{
+		if (*in == '\\')
+		{
+			in++;
+			if (*in == ':')
+				*out++ = ';';  /* \: to ; */
+			else if (*in == 's')
+				*out++ = ' ';  /* \s to SPACE */
+			else if (*in == 'r')
+				*out++ = '\r'; /* \r to CR */
+			else if (*in == 'n')
+				*out++ = '\n'; /* \n to LF */
+			else
+				*out++ = *in; /* all rest is as-is */
+			continue;
+		}
+		*out++ = *in;
+	}
+	*out = '\0';
+}
+
+/** Escape a message tag (name or value).
+ * @param in  The input string
+ * @param out The output string for writing
+ * @notes No size checking, so ensure that the output buffer
+ *        is at least twice as long as the input buffer + 1.
+ */
+void message_tag_escape(char *in, char *out)
+{
+	for (; *in; in++)
+	{
+		if (*in == ';')
+		{
+			*out++ = '\\';
+			*out++ = ':';
+		} else
+		if (*in == ' ')
+		{
+			*out++ = '\\';
+			*out++ = 's';
+		} else
+		if (*in == '\\')
+		{
+			*out++ = '\\';
+			*out++ = '\\';
+		} else
+		if (*in == '\r')
+		{
+			*out++ = '\\';
+			*out++ = 'r';
+		} else
+		if (*in == '\n')
+		{
+			*out++ = '\\';
+			*out++ = 'n';
+		} else
+		{
+			*out++ = *in;
+		}
+	}
+	*out = '\0';
+}
+
+/** Incoming filter for message tags */
+int message_tag_ok(aClient *cptr, char *name, char *value)
+{
+	MessageTagHandler *m;
+
+	if (IsServer(cptr) || IsServer(cptr->from))
+		return 1; /* assume upstream filtered already */
+
+	m = MessageTagHandlerFind(name);
+	if (!m)
+		return 0;
+
+	if (m->is_ok(cptr, name, value))
+		return 1;
+
+	return 0;
+}
+
+/* TODO: modularize, efunc */
+void parse_message_tags(aClient *cptr, char **str, MessageTag **mtag_list)
+{
+	char *remainder;
+	char *element, *p, *x;
+	static char name[8192], value[8192];
+	MessageTag *m;
+
+	remainder = strchr(*str, ' ');
+	if (!remainder)
+	{
+		/* A message with only message tags (or starting with @ anyway).
+		 * This is useless. So we make it point to the NUL byte,
+		 * aka: empty message.
+		 */
+		for (; **str; *str += 1);
+		return;
+	}
+
+	*remainder = '\0';
+
+	/* Now actually parse the tags: */
+	for (element = strtoken(&p, *str+1, ";"); element; element = strtoken(&p, NULL, ";"))
+	{
+		/* Element has style: 'name=value', or it could be just 'name' */
+		x = strchr(element, '=');
+		if (x)
+		{
+			*x++ = '\0';
+			message_tag_unescape(x, value);
+		}
+		message_tag_unescape(element, name);
+
+		/* For now, we just add the message tag.
+		 * In a real implementation we would actually apply some filtering.
+		 */
+		if (message_tag_ok(cptr, name, value))
+		{
+			m = MyMallocEx(sizeof(MessageTag));
+			m->name = strdup(name);
+			m->value = BadPtr(value) ? NULL : strdup(value);
+			AddListItem(m, *mtag_list);
+		}
+	}
+
+	*str = remainder + 1;
+}
+
+/** Outgoing filter for tags */
+int client_accepts_tag(const char *token, aClient *acptr)
+{
+	// FIXME: we blindly send to servers right now
+	// but we need to take into account older servers !!!
+	if (!acptr || IsServer(acptr) || !MyConnect(acptr))
+		return 1;
+
+	if (!HasCapability(acptr, "message-tags"))
+		return 0; /* easy :) */
+
+	// TODO: move to message tag API ;)
+	if (!strcmp(token, "msgid"))
+		return 1;
+
+	if (!strcmp(token, "account") && HasCapability(acptr, "account-tag"))
+		return 1;
+
+	if (!strcmp(token, "time") && HasCapability(acptr, "server-time"))
+		return 1;
+
+	return 0;
+}
+
+/** Return the message tag string (without @) of the message tag linked list.
+ * Taking into account the restrictions that 'acptr' may have.
+ * @returns A string (static buffer) or NULL if no tags at all (!)
+ */
+char *mtags_to_string(MessageTag *m, aClient *acptr)
+{
+	static char buf[4096], name[8192], value[8192];
+	char tbuf[512];
+
+	if (!m)
+		return NULL;
+
+	*buf = '\0';
+	for (; m; m = m->next)
+	{
+		if (!client_accepts_tag(m->name, acptr))
+			continue;
+		if (m->value)
+		{
+			message_tag_escape(m->name, name);
+			message_tag_escape(m->value, value);
+			snprintf(tbuf, sizeof(tbuf), "%s=%s;", name, value);
+		} else {
+			message_tag_escape(m->name, name);
+			snprintf(tbuf, sizeof(tbuf), "%s;", name);
+		}
+		strlcat(buf, tbuf, sizeof(buf));
+	}
+
+	if (!*buf)
+		return NULL;
+
+	/* Strip off the final semicolon */
+	buf[strlen(buf)-1] = '\0';
+
+	return buf;
+}
+
+int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *bufend);
+
 /*
  * parse a buffer.
  *
- * NOTE: parse() should not be called recusively by any other fucntions!
+ * NOTE: parse() cannot not be called recusively by any other functions!
  */
-int  parse(aClient *cptr, char *buffer, char *bufend)
+int parse(aClient *cptr, char *buffer, char *bufend)
 {
 	Hook *h;
 	int buf_len = 0;
 	aClient *from = cptr;
-	char *ch, *s;
-	int  len, i, numeric = 0, paramcount;
+	char *ch;
+	int i, ret;
 #ifdef DEBUGMODE
 	time_t then, ticks;
 	int  retval;
 #endif
 	aCommand *cmptr = NULL;
+	MessageTag *mtags = NULL;
 
-	for(h = Hooks[HOOKTYPE_PACKET]; h; h = h->next) {
+	for (h = Hooks[HOOKTYPE_PACKET]; h; h = h->next)
+	{
 		buf_len = (int)(bufend - buffer);
-		(*(h->func.intfunc))(from, &me, &buffer, &buf_len);
+		(*(h->func.intfunc))(from, &me, NULL, &buffer, &buf_len);
 		if(!buffer) return 0;
 		bufend = buffer + buf_len;
 	}
 
 	Debug((DEBUG_ERROR, "Parsing: %s (from %s)", buffer,
 	    (*cptr->name ? cptr->name : "*")));
+
 	if (IsDead(cptr))
 		return 0;
 
@@ -216,12 +421,57 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	for (i = 0; i < MAXPARA+2; i++)
 		para[i] = (char *)0xDEADBEEF;
 
-	s = sender;
-	*s = '\0';
+	/* First, skip any whitespace */
 	for (ch = buffer; *ch == ' '; ch++)
 		;
+
+	/* Now, parse message tags, if any */
+	if (*ch == '@')
+	{
+		parse_message_tags(cptr, &ch, &mtags);
+		/* Skip whitespace again */
+		for (; *ch == ' '; ch++)
+			;
+	}
+
+	ret = parse2(cptr, &from, mtags, ch, bufend);
+	if (ret == FLUSH_BUFFER)
+		RunHook3(HOOKTYPE_POST_COMMAND, NULL, mtags, ch);
+	else
+		RunHook3(HOOKTYPE_POST_COMMAND, from, mtags, ch);
+
+	return ret;
+}
+
+int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *bufend)
+{
+	aClient *from = cptr;
+	char *s;
+	int len, i, numeric = 0, paramcount;
+#ifdef DEBUGMODE
+	time_t then, ticks;
+	int retval;
+#endif
+	aCommand *cmptr = NULL;
+
+	*fromptr = cptr; /* The default, unless a source is specified (and permitted) */
+
+	s = sender;
+	*s = '\0';
+
+	/* The remaining part should never be more than 510 bytes
+	 * (that is 512 minus CR LF, as specified in RFC1459 section 2.3).
+	 * If it is too long, then we cut it off here.
+	 */
+	if (ch + 510 < bufend)
+	{
+		bufend = ch + 510;
+		*bufend = '\0';
+	}
+
 	//para[0] = from->name;
 	para[0] = (char *)0xDEADBEEF; /* helps us catch bugs :) -- 1/2 */
+
 	if (*ch == ':' || *ch == '@')
 	{
 		/*
@@ -260,9 +510,6 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 
 			if (!from)
 			{
-				Debug((DEBUG_ERROR,
-				    "Unknown prefix (%s)(%s) from (%s)",
-				    sender, buffer, cptr->name));
 				ircstp->is_unpf++;
 				remove_unknown(cptr, sender);
 				return -1;
@@ -270,15 +517,15 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			if (from->from != cptr)
 			{
 				ircstp->is_wrdi++;
-				Debug((DEBUG_ERROR,
-				    "Message (%s) coming from (%s)",
-				    buffer, cptr->name));
 				return cancel_clients(cptr, from, ch);
 			}
+			*fromptr = from; /* Update source client */
 		}
 		while (*ch == ' ')
 			ch++;
 	}
+
+	RunHook3(HOOKTYPE_PRE_COMMAND, from, mtags, ch);
 
 	if (*ch == '\0')
 	{
@@ -351,7 +598,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			if (IsShunned(cptr))
 				return -1;
 				
-			if (buffer[0] != '\0')
+			if (ch[0] != '\0')
 			{
 				if (IsPerson(from))
 					sendto_one(from,
@@ -445,7 +692,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	}
 	para[++i] = NULL;
 	if (cmptr == NULL)
-		return (do_numeric(numeric, cptr, from, i, para));
+		return (do_numeric(numeric, cptr, from, mtags, i, para));
 	cmptr->count++;
 	if (IsRegisteredUser(cptr) && (cmptr->flags & M_RESETIDLE))
 		cptr->local->last = TStime();
@@ -453,22 +700,22 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 #ifndef DEBUGMODE
 	if (cmptr->flags & M_ALIAS)
 	{
-		return (*cmptr->aliasfunc) (cptr, from, i, para, cmptr->cmd);
+		return (*cmptr->aliasfunc) (cptr, from, mtags, i, para, cmptr->cmd);
 	} else {
 		if (!cmptr->overriders)
-			return (*cmptr->func) (cptr, from, i, para);
-		return (*cmptr->overridetail->func) (cmptr->overridetail, cptr, from, i, para);
+			return (*cmptr->func) (cptr, from, mtags, i, para);
+		return (*cmptr->overridetail->func) (cmptr->overridetail, cptr, from, mtags, i, para);
 	}
 #else
 	then = clock();
 	if (cmptr->flags & M_ALIAS)
 	{
-		retval = (*cmptr->aliasfunc) (cptr, from, i, para, cmptr->cmd);
+		retval = (*cmptr->aliasfunc) (cptr, from, mtags, i, para, cmptr->cmd);
 	} else {
 		if (!cmptr->overriders)
-			retval = (*cmptr->func) (cptr, from, i, para);
+			retval = (*cmptr->func) (cptr, from, mtags, i, para);
 		else
-			retval = (*cmptr->overridetail->func) (cmptr->overridetail, cptr, from, i, para);
+			retval = (*cmptr->overridetail->func) (cmptr->overridetail, cptr, from, mtags, i, para);
 	}
 	if (retval != FLUSH_BUFFER)
 	{

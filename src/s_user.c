@@ -233,7 +233,7 @@ aClient *next_client(aClient *next, char *ch)
 ** complex and no longer understandable. It also was responsible
 ** for mysterious issues and crashes. Hence rewritten.
 */
-int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int parc, char *parv[])
+int hunt_server(aClient *cptr, aClient *sptr, MessageTag *mtags, char *command, int server, int parc, char *parv[])
 {
 	aClient *acptr;
 	char *saved;
@@ -270,9 +270,21 @@ int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int pa
 	saved = parv[server];
 	parv[server] = acptr->name;
 
-	sendto_one(acptr, command, sptr->name,
-	    parv[1], parv[2], parv[3], parv[4],
-	    parv[5], parv[6], parv[7], parv[8]);
+	if (mtags)
+	{
+		char *str = mtags_to_string(mtags, acptr);
+		char newcommand[512];
+		/* Update the format string */
+		snprintf(newcommand, sizeof(newcommand), "@%%s %s", command);
+		/* And do the sendto_one() */
+		sendto_one(acptr, newcommand, str, sptr->name,
+		    parv[1], parv[2], parv[3], parv[4],
+		    parv[5], parv[6], parv[7], parv[8]);
+	} else {
+		sendto_one(acptr, command, sptr->name,
+		    parv[1], parv[2], parv[3], parv[4],
+		    parv[5], parv[6], parv[7], parv[8]);
+	}
 
 	parv[server] = saved;
 
@@ -821,4 +833,20 @@ void set_targmax_defaults(void)
 	setmaxtargets("USERIP", MAXTARGETS_MAX); // not configurable
 	setmaxtargets("ISON", MAXTARGETS_MAX); // not configurable
 	setmaxtargets("WATCH", MAXTARGETS_MAX); // not configurable
+}
+
+/** Can register_user() be called?
+ * In other words:
+ * - we have a NICK
+ * - we have a USER
+ * - there is no client capability negotiation in progress
+ * - the nospoof cookie has been received (if enabled)
+ */
+int user_ready_for_register(aClient *sptr)
+{
+#define PROTO_CLICAP 0x1000000
+// TEST: FIXME
+	if (sptr->user && *sptr->user->username && sptr->name[0] && !CHECKPROTO(sptr, PROTO_CLICAP) && IsNotSpoof(sptr))
+		return 1;
+	return 0;
 }

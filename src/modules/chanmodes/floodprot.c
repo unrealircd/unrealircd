@@ -1195,11 +1195,11 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
 			{
 				sendto_server(&me, 0, 0, ":%s MODE %s +b %s 0",
 				    me.name, chptr->chname, mask);
-				sendto_channel_butserv(chptr, &me,
+				sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL,
 				    ":%s MODE %s +b %s", me.name, chptr->chname, mask);
 			} /* else.. ban list is full */
 		}
-		sendto_channel_butserv(chptr, &me,
+		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL,
 		    ":%s KICK %s %s :%s", me.name,
 		    chptr->chname, sptr->name, comment);
 		sendto_server(NULL, 0, 0, ":%s KICK %s %s :%s",
@@ -1357,7 +1357,9 @@ EVENT(modef_event)
 			    (extmode && (e->chptr->mode.extmode & extmode)))
 			{
 				sendto_server(&me, 0, 0, ":%s MODE %s -%c 0", me.name, e->chptr->chname, e->m);
-				sendto_channel_butserv(e->chptr, &me, ":%s MODE %s -%c", me.name, e->chptr->chname, e->m);
+				sendto_channel(e->chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL,
+				               ":%s MODE %s -%c",
+				               me.name, e->chptr->chname, e->m);
 				e->chptr->mode.mode &= ~mode;
 				e->chptr->mode.extmode &= ~extmode;
 			}
@@ -1447,11 +1449,11 @@ void do_floodprot_action(aChannel *chptr, int what, char *text)
 		ircsnprintf(comment, sizeof(comment), "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
 			text, chp->l[what], chp->per, m);
 		ircsnprintf(target, sizeof(target), "%%%s", chptr->chname);
-		sendto_channelprefix_butone(NULL, &me, chptr,
-			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-			":%s NOTICE %s :%s", me.name, target, comment);
+		sendto_channel(chptr, &me, NULL, PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		               0, SEND_ALL, NULL,
+		               ":%s NOTICE %s :%s", me.name, target, comment);
 		sendto_server(&me, 0, 0, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
-		sendto_channel_butserv(chptr, &me, ":%s MODE %s +%c", me.name, chptr->chname, m);
+		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s +%c", me.name, chptr->chname, m);
 		chptr->mode.mode |= mode;
 		chptr->mode.extmode |= extmode;
 		if (chp->r[what]) /* Add remove-chanmode timer... */

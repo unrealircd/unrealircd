@@ -257,6 +257,7 @@ extern void add_entropy_configfile(struct stat *st, char *buf);
 extern void unload_all_unused_snomasks(void);
 extern void unload_all_unused_umodes(void);
 extern void unload_all_unused_extcmodes(void);
+extern void unload_all_unused_caps(void);
 
 int reloadable_perm_module_unloaded(void);
 void special_delayed_unloading(void);
@@ -10448,6 +10449,7 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 	unload_all_unused_snomasks();
 	unload_all_unused_umodes();
 	unload_all_unused_extcmodes();
+	unload_all_unused_caps();
 	// unload_all_unused_moddata(); -- this will crash
 	extcmodes_check_for_changes();
 	umodes_check_for_changes();

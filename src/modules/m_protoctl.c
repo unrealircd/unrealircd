@@ -88,11 +88,11 @@ CMD_FUNC(m_protoctl)
 
 		if (!strcmp(name, "NAMESX"))
 		{
-			SetNAMESX(cptr);
+			SetCapability(cptr, "multi-prefix");
 		}
 		else if (!strcmp(name, "UHNAMES") && UHNAMES_ENABLED)
 		{
-			SetUHNAMES(cptr);
+			SetCapability(cptr, "userhost-in-names");
 		}
 		else if (!strcmp(name, "NOQUIT"))
 		{

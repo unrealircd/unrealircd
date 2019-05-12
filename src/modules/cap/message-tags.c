@@ -1,6 +1,9 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/modules/m_time.c
- *   (C) 2004 The UnrealIRCd Team
+ *   IRC - Internet Relay Chat, src/modules/message-tags.c
+ *   (C) 2019 Syzop & The UnrealIRCd Team
+ *
+ *   See file AUTHORS in IRC package for additional names of
+ *   the programmers.
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,50 +22,35 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_time);
-
-/* Place includes here */
-#define MSG_TIME	"TIME"
-
-ModuleHeader MOD_HEADER(m_time)
+ModuleHeader MOD_HEADER(message-tags)
   = {
-	"time",	/* Name of module */
-	"4.2", /* Version */
-	"command /time", /* Short description of module */
+	"message-tags",
+	"4.2",
+	"Message tags CAP", 
 	"3.2-b8-1",
 	NULL 
-    };
+	};
 
+long CAP_MESSAGE_TAGS = 0L;
 
-/* This is called on module init, before Server Ready */
-MOD_INIT(m_time)
+MOD_INIT(message-tags)
 {
-	CommandAdd(modinfo->handle, MSG_TIME, m_time, MAXPARA, M_USER);
+	ClientCapabilityInfo cap;
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	memset(&cap, 0, sizeof(cap));
+	cap.name = "message-tags";
+	ClientCapabilityAdd(modinfo->handle, &cap, &CAP_MESSAGE_TAGS);
 	return MOD_SUCCESS;
 }
 
-/* Is first run when server is 100% ready */
-MOD_LOAD(m_time)
+MOD_LOAD(message-tags)
 {
 	return MOD_SUCCESS;
 }
 
-
-/* Called when module is unloaded */
-MOD_UNLOAD(m_time)
+MOD_UNLOAD(message-tags)
 {
 	return MOD_SUCCESS;
-}
-
-/*
-** m_time
-**	parv[1] = servername
-*/
-CMD_FUNC(m_time)
-{
-	if (hunt_server(cptr, sptr, recv_mtags, ":%s TIME :%s", 1, parc, parv) == HUNTED_ISME)
-		sendto_one(sptr, rpl_str(RPL_TIME), me.name, sptr->name, me.name,
-		    date((long)0));
-	return 0;
 }

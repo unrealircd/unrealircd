@@ -46,7 +46,7 @@ static char buffer[1024];
 **	sending back a neat error message -- big danger of creating
 **	a ping pong error message...
 */
-int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[])
+int do_numeric(int numeric, aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[])
 {
 	aClient *acptr;
 	aChannel *chptr;
@@ -166,22 +166,24 @@ int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[
 				   if (numeric==ERR_NOTONCHANNEL) return 0;
 				 */
 
-				sendto_prefix_one(acptr, sptr, ":%s %d %s%s",
+				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
 				    sptr->name, numeric, nick, buffer);
 			}
 			else if (IsServer(acptr) && acptr->from != cptr)
-				sendto_prefix_one(acptr, sptr, ":%s %d %s%s",
+				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
 				    sptr->name, numeric, nick, buffer);
 		}
 		else if ((acptr = find_server_quick(nick)))
 		{
 			if (!IsMe(acptr) && acptr->from != cptr)
-				sendto_prefix_one(acptr, sptr, ":%s %d %s%s",
+				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
 				    sptr->name, numeric, nick, buffer);
 		}
 		else if ((chptr = find_channel(nick, NULL)))
-			sendto_channel_butone(cptr, sptr, chptr, ":%s %d %s%s",
-			    sptr->name, numeric, chptr->chname, buffer);
+		{
+			sendto_channel(chptr, sptr, sptr, 0, 0, SEND_ALL, recv_mtags,
+			               ":%s %d %s%s", sptr->name, numeric, chptr->chname, buffer);
+		}
 	}
 	return 0;
 }

@@ -72,9 +72,6 @@
 #define vsnprintf unrl_vsnprintf
 #endif
 
-extern MODVAR int sendanyways;
-
-
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
 typedef struct t_kline aTKline;
@@ -137,6 +134,7 @@ typedef struct Server aServer;
 typedef struct SLink Link;
 typedef struct SBan Ban;
 typedef struct SMode Mode;
+typedef struct _message_tag MessageTag;
 typedef struct ListOptions LOpts;
 typedef struct Motd aMotdFile; /* represents a whole MOTD, including remote MOTD support info */
 typedef struct MotdItem aMotdLine; /* one line of a MOTD stored as a linked list */
@@ -191,6 +189,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	KEYLEN		23
 #define LINKLEN		32
 #define	BUFSIZE		512	/* WARNING: *DONT* CHANGE THIS!!!! */
+#define READBUFSIZE	8192	/* for the read buffer */
 #define	MAXRECIPIENTS 	20
 #define	MAXKILLS	20
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
@@ -199,6 +198,11 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SWHOISLEN	256
 #define UMODETABLESZ (sizeof(long) * 8)
 #define MAXCCUSERS		20 /* Maximum for set::anti-flood::target-limit::max-concurrent-conversations */
+/** The length of a 'msgid' tag. 22 alphanumeric characters provide
+ * slightly more than 128 bits of randomness (62^22 > 2^128).
+ * See mtag_generate_msgid() in s_misc.c for more information.
+ */
+#define MSGIDLEN	22
 /*
  * Watch it - Don't change this unless you also change the ERR_TOOMANYWATCH
  * and PROTOCOL_SUPPORTED settings.
@@ -340,33 +344,35 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
-#define PROTO_NOQUIT	0x0001	/* Negotiated NOQUIT protocol */
-#define PROTO_CAP_NOTIFY	0x0002	/* cap-notify capability */
-#define PROTO_SJOIN		0x0004	/* Negotiated SJOIN protocol */
-#define PROTO_NICKv2	0x0008	/* Negotiated NICKv2 protocol */
-#define PROTO_SJOIN2	0x0010	/* Negotiated SJOIN2 protocol */
-#define PROTO_UMODE2	0x0020	/* Negotiated UMODE2 protocol */
-#define PROTO_TKLEXT2	0x0040	/* TKL extension 2: 11 parameters instead of 8 or 10 */
-#define PROTO_INVITENOTIFY	0x0080	/* client supports invite-notify */
-#define PROTO_VL		0x0100	/* Negotiated VL protocol */
-#define PROTO_SJ3		0x0200	/* Negotiated SJ3 protocol */
-#define PROTO_VHP		0x0400	/* Send hostnames in NICKv2 even if not sethosted */
-#define PROTO_SID	0x0800	/* SID/UID mode */
-#define PROTO_TKLEXT	0x1000	/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
-#define PROTO_NICKIP	0x2000  /* Send IP addresses in the NICK command */
-#define PROTO_NAMESX	0x4000  /* Send all rights in NAMES output */
-#define PROTO_CLK		0x8000	/* Send cloaked host in the NICK command (regardless of +x/-x) */
-#define PROTO_UHNAMES	0x10000  /* Send n!u@h in NAMES */
-#define PROTO_CLICAP	0x20000  /* client capability negotiation in process */
-#define PROTO_STARTTLS	0x40000	 /* client supports STARTTLS */
-#define PROTO_SASL	0x80000  /* client is doing SASL */
-#define PROTO_AWAY_NOTIFY	0x100000	/* client supports away-notify */
-#define PROTO_ACCOUNT_NOTIFY	0x200000	/* client supports account-notify */
-#define PROTO_MLOCK		0x400000	/* server supports MLOCK */
+/* PROTO_*: Server protocol extensions (acptr->local->proto).
+ * Note that client protocol extensions have been moved
+ * to the ClientCapability API which uses acptr->local->caps.
+ */
+#define PROTO_NOQUIT	0x0001		/* Negotiated NOQUIT protocol */
+#define PROTO_SJOIN	0x0004		/* Negotiated SJOIN protocol */
+#define PROTO_NICKv2	0x0008		/* Negotiated NICKv2 protocol */
+#define PROTO_SJOIN2	0x0010		/* Negotiated SJOIN2 protocol */
+#define PROTO_UMODE2	0x0020		/* Negotiated UMODE2 protocol */
+#define PROTO_TKLEXT2	0x0040		/* TKL extension 2: 11 parameters instead of 8 or 10 */
+#define PROTO_VL	0x0100		/* Negotiated VL protocol */
+#define PROTO_SJ3	0x0200		/* Negotiated SJ3 protocol */
+#define PROTO_VHP	0x0400		/* Send hostnames in NICKv2 even if not sethosted */
+#define PROTO_SID	0x0800		/* SID/UID mode */
+#define PROTO_TKLEXT	0x1000		/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
+#define PROTO_NICKIP	0x2000  	/* Send IP addresses in the NICK command */
+#define PROTO_CLK	0x8000		/* Send cloaked host in the NICK command (regardless of +x/-x) */
+#define PROTO_MLOCK	0x400000	/* server supports MLOCK */
 #define PROTO_EXTSWHOIS 0x800000	/* extended SWHOIS support */
-#define PROTO_CAP_CHGHOST	0x1000000	/* CAP chghost */
-#define PROTO_CAP_EXTENDED_JOIN	0x2000000	/* CAP extended-join */
-#define PROTO_SJSBY		0x4000000	/* SJOIN setby information (TS and nick) */
+#define PROTO_SJSBY	0x4000000	/* SJOIN setby information (TS and nick) */
+
+/* For client capabilities: */
+/** HasCapabilityFast() checks for a token if you know exactly which bit to check */
+#define HasCapabilityFast(cptr, val) ((cptr)->local->caps & (val))
+/** HasCapability() checks for a token by name and is slightly slower */
+#define HasCapability(cptr, token) ((cptr)->local->caps & ClientCapabilityBit(token))
+#define SetCapabilityFast(cptr, val)  do { (cptr)->local->caps |= (val); } while(0)
+#define ClearCapabilityFast(cptr, val)  do { (cptr)->local->caps &= ~(val); } while(0)
+
 /*
  * flags macros.
  */
@@ -470,9 +476,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
 #define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
 #define SupportTKLEXT2(x)	(CHECKPROTO(x, PROTO_TKLEXT2))
-#define SupportNAMESX(x)	(CHECKPROTO(x, PROTO_NAMESX))
 #define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
-#define SupportUHNAMES(x)	(CHECKPROTO(x, PROTO_UHNAMES))
 #define SupportSID(x)		(CHECKPROTO(x, PROTO_SID))
 
 #define SetSJOIN(x)		((x)->local->proto |= PROTO_SJOIN)
@@ -486,9 +490,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SetVHP(x)		((x)->local->proto |= PROTO_VHP)
 #define SetTKLEXT(x)	((x)->local->proto |= PROTO_TKLEXT)
 #define SetTKLEXT2(x)	((x)->local->proto |= PROTO_TKLEXT2)
-#define SetNAMESX(x)	((x)->local->proto |= PROTO_NAMESX)
 #define SetCLK(x)		((x)->local->proto |= PROTO_CLK)
-#define SetUHNAMES(x)	((x)->local->proto |= PROTO_UHNAMES)
 
 #define ClearSJOIN(x)		((x)->local->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->local->proto &= ~PROTO_NOQUIT)
@@ -797,9 +799,9 @@ typedef struct ircstatsx {
 
 extern MODVAR ircstats IRCstats;
 
-typedef int (*CmdFunc)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-typedef int (*AliasCmdFunc)(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd);
-typedef int (*OverrideCmdFunc)(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]);
+typedef int (*CmdFunc)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
+typedef int (*AliasCmdFunc)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
+typedef int (*OverrideCmdFunc)(Cmdoverride *ovr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
 
 #include "modules.h"
 
@@ -887,6 +889,7 @@ struct LocalClient {
 	dbuf recvQ;		/* Hold for data incoming yet to be parsed */
 	u_int32_t nospoof;	/* Anti-spoofing random number */
 	int proto;		/* ProtoCtl options */
+	long caps;		/* Client capabilities */
 	long sendM;		/* Statistics: protocol messages send */
 	long sendK;		/* Statistics: total k-bytes send */
 	long receiveM;		/* Statistics: protocol messages received */
@@ -923,6 +926,12 @@ struct LocalClient {
 
 #define	CLIENT_LOCAL_SIZE sizeof(aClient)
 #define	CLIENT_REMOTE_SIZE offsetof(aClient,count)
+
+struct _message_tag {
+	MessageTag *prev, *next;
+	char *name;
+	char *value;
+};
 
 /*
  * conf2 stuff -stskeeps
@@ -1760,9 +1769,6 @@ extern MODVAR char *gnulicense[];
 #define	FLUSH_BUFFER	-2
 #define	COMMA		","
 
-#define PARTFMT		":%s PART %s"
-#define PARTFMT2	":%s PART %s :%s"
-
 #define isexcept void
 
 #include "ssl.h"
@@ -1913,6 +1919,12 @@ struct _configitem_badword {
 };
 
 /*-- end of badwords --*/
+
+/* Flags for 'sendflags' in 'sendto_channel' */
+#define SEND_LOCAL	0x1
+#define SEND_REMOTE	0x2
+#define SEND_ALL	(SEND_LOCAL|SEND_REMOTE)
+#define SKIP_DEAF	0x4
 
 #endif /* __struct_include__ */
 

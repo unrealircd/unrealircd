@@ -435,7 +435,7 @@ EVENT(timedban_timeout)
 		}
 		if (*pbuf)
 		{
-			sendto_channel_butserv(chptr, &me, ":%s MODE %s %s %s", me.name, chptr->chname, mbuf, pbuf);
+			sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s %s %s", me.name, chptr->chname, mbuf, pbuf);
 			sendto_server(NULL, 0, 0, ":%s MODE %s %s %s 0", me.name, chptr->chname, mbuf, pbuf);
 			*pbuf = 0;
 		}
@@ -481,7 +481,7 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
 		send = 1;
 
 	if (send) {
-		sendto_channel_butserv(chptr, &me, ":%s MODE %s %s %s", me.name, chptr->chname, mbuf, pbuf);
+		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s %s %s", me.name, chptr->chname, mbuf, pbuf);
 		sendto_server(NULL, 0, 0, ":%s MODE %s %s %s 0", me.name, chptr->chname, mbuf, pbuf);
 		send = 0;
 		*pbuf = 0;

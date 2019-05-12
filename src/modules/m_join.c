@@ -25,7 +25,7 @@
 /* Forward declarations */
 CMD_FUNC(m_join);
 void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
-CMD_FUNC(_do_join);
+int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 void _userhost_save_current(aClient *sptr);
 void _userhost_changed(aClient *sptr);
@@ -185,6 +185,8 @@ void _send_join_to_local_users(aClient *sptr, aChannel *chptr)
 	aClient *acptr;
 	char joinbuf[512];
 	char exjoinbuf[512];
+	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
+	long CAP_AWAY_NOTIFY = ClientCapabilityBit("away-notify");
 
 	ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN :%s",
 		sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
@@ -204,12 +206,12 @@ void _send_join_to_local_users(aClient *sptr, aChannel *chptr)
 		if (chanops_only && !(lp->flags & (CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)) && (sptr != acptr))
 			continue; /* skip non-ops if requested to (used for mode +D), but always send to 'sptr' */
 
-		if (acptr->local->proto & PROTO_CAP_EXTENDED_JOIN)
+		if (HasCapabilityFast(acptr, CAP_EXTENDED_JOIN))
 			sendbufto_one(acptr, exjoinbuf, 0);
 		else
 			sendbufto_one(acptr, joinbuf, 0);
 
-		if (sptr->user->away && (acptr->local->proto & PROTO_AWAY_NOTIFY))
+		if (sptr->user->away && HasCapabilityFast(acptr, CAP_AWAY_NOTIFY))
 		{
 			sendto_one(acptr, ":%s!%s@%s AWAY :%s",
 			           sptr->name, sptr->user->username, GetHost(sptr), sptr->user->away);
@@ -318,7 +320,7 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 
 		parv[0] = sptr->name;
 		parv[1] = chptr->chname;
-		(void)do_cmd(cptr, sptr, "NAMES", 2, parv);
+		(void)do_cmd(cptr, sptr, NULL, "NAMES", 2, parv);
 
 		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
 	} else {
@@ -333,7 +335,7 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
  * increased every time we enter this loop and decreased anytime we leave the
  * loop. So be carefull not to use a simple 'return' after bouncedtimes++. -- Syzop
  */
-CMD_FUNC(_do_join)
+int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char jbuf[BUFSIZE];
 	Membership *lp;
@@ -430,9 +432,9 @@ CMD_FUNC(_do_join)
 			while ((lp = sptr->user->channel))
 			{
 				chptr = lp->chptr;
-				sendto_channel_butserv(chptr, sptr,
-				    PARTFMT2, sptr->name, chptr->chname,
-				    "Left all channels");
+				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+				               ":%s PART %s :%s",
+				               sptr->name, chptr->chname, "Left all channels");
 				if (MyConnect(sptr))
 					RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, "Left all channels");
 				remove_user_from_channel(sptr, chptr);
@@ -650,6 +652,8 @@ void _userhost_changed(aClient *sptr)
 	int i = 0;
 	int impact = 0;
 	char buf[512];
+	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
+	long CAP_CHGHOST = ClientCapabilityBit("chghost");
 
 	if (strcmp(remember_nick, sptr->name))
 	{
@@ -718,14 +722,14 @@ void _userhost_changed(aClient *sptr)
 				if (chanops_only && !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
 					continue; /* skip non-ops if requested to (used for mode +D) */
 
-				if (acptr->local->proto & PROTO_CAP_CHGHOST)
+				if (HasCapabilityFast(acptr, CAP_CHGHOST))
 					continue; /* we notify 'CAP chghost' users in a different way, so don't send it here. */
 
 				impact++;
 
 				sendbufto_one(acptr, partbuf, 0);
 
-				if (acptr->local->proto & PROTO_CAP_EXTENDED_JOIN)
+				if (HasCapabilityFast(acptr, CAP_EXTENDED_JOIN))
 					sendbufto_one(acptr, exjoinbuf, 0);
 				else
 					sendbufto_one(acptr, joinbuf, 0);
@@ -751,7 +755,7 @@ void _userhost_changed(aClient *sptr)
 		for (lp = channels->chptr->members; lp; lp = lp->next)
 		{
 			acptr = lp->cptr;
-			if (MyClient(acptr) && (acptr->local->proto & PROTO_CAP_CHGHOST) &&
+			if (MyClient(acptr) && HasCapabilityFast(acptr, CAP_CHGHOST) &&
 			    (acptr->local->serial != current_serial) && (sptr != acptr))
 			{
 				sendbufto_one(acptr, buf, 0);
@@ -767,7 +771,7 @@ void _userhost_changed(aClient *sptr)
 		 * (Note that this cannot be merged with the for loop from 15 lines up
 		 *  since the user may not be in any channels)
 		 */
-		if (sptr->local->proto & PROTO_CAP_CHGHOST)
+		if (HasCapabilityFast(sptr, CAP_CHGHOST))
 			sendbufto_one(sptr, buf, 0);
 
 		/* A userhost change always generates the following network traffic:

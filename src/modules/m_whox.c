@@ -101,7 +101,7 @@ MOD_UNLOAD(m_whox)
 CMD_OVERRIDE_FUNC(override_who)
 {
 	/* We are always last (and we need to be), thanks to our cmdoverride priority */
-	return m_whox(cptr, sptr, parc, parv);
+	return m_whox(cptr, sptr, recv_mtags, parc, parv);
 }
 
 /** m_whox: standardized "extended" version of WHO.
@@ -697,7 +697,7 @@ static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_fo
 
 		if ((lp = find_membership_link(acptr->user->channel, chptr)))
 		{
-			if (!(fmt->fields || SupportNAMESX(sptr)))
+			if (!(fmt->fields || HasCapability(sptr, "multi-prefix")))
 			{
 				/* Standard NAMES reply */
 #ifdef PREFIX_AQ
@@ -716,7 +716,7 @@ static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_fo
 			}
 			else
 			{
-				/* NAMES reply with all rights included (NAMESX) */
+				/* NAMES reply with all rights included (multi-prefix / NAMESX) */
 #ifdef PREFIX_AQ
 				if (lp->flags & CHFL_CHANOWNER)
 					status[i++] = '~';

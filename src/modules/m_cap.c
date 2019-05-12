@@ -37,47 +37,61 @@ ModuleHeader MOD_HEADER(m_cap)
 	NULL 
 	};
 
+/* Forward declarations */
+int cap_never_visible(aClient *acptr);
+
+/* Variables */
+long CAP_IN_PROGRESS = 0L;
+long CAP_ACCOUNT_NOTIFY = 0L;
+long CAP_AWAY_NOTIFY = 0L;
+long CAP_MULTI_PREFIX = 0L;
+long CAP_USERHOST_IN_NAMES = 0L;
+long CAP_NOTIFY = 0L;
+long CAP_CHGHOST = 0L;
+long CAP_EXTENDED_JOIN = 0L;
+
 MOD_INIT(m_cap)
 {
-	ClientCapability c;
+	ClientCapabilityInfo c;
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, MSG_CAP, m_cap, MAXPARA, M_UNREGISTERED|M_USER|M_NOLAG);
 
+	/* This first cap is special, in the sense that it is hidden
+	 * and indicates a cap exchange is in progress.
+	 */
+	memset(&c, 0, sizeof(c));
+	c.name = "cap";
+	c.visible = cap_never_visible;
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_IN_PROGRESS);
+
 	memset(&c, 0, sizeof(c));
 	c.name = "account-notify";
-	c.cap = PROTO_ACCOUNT_NOTIFY;
-	ClientCapabilityAdd(modinfo->handle, &c);
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_ACCOUNT_NOTIFY);
 	
 	memset(&c, 0, sizeof(c));
 	c.name = "away-notify";
-	c.cap = PROTO_AWAY_NOTIFY;
-	ClientCapabilityAdd(modinfo->handle, &c);
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_AWAY_NOTIFY);
 
 	memset(&c, 0, sizeof(c));
 	c.name = "multi-prefix";
-	c.cap = PROTO_NAMESX;
-	ClientCapabilityAdd(modinfo->handle, &c);
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_MULTI_PREFIX);
 
 	memset(&c, 0, sizeof(c));
 	c.name = "userhost-in-names";
-	c.cap = PROTO_UHNAMES;
-	ClientCapabilityAdd(modinfo->handle, &c);
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_USERHOST_IN_NAMES);
 
 	memset(&c, 0, sizeof(c));
 	c.name = "cap-notify";
-	c.cap = PROTO_CAP_NOTIFY;
-	ClientCapabilityAdd(modinfo->handle, &c);
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_NOTIFY);
 
 	memset(&c, 0, sizeof(c));
 	c.name = "chghost";
-	c.cap = PROTO_CAP_CHGHOST;
-	ClientCapabilityAdd(modinfo->handle, &c);
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_CHGHOST);
 
 	memset(&c, 0, sizeof(c));
 	c.name = "extended-join";
-	c.cap = PROTO_CAP_EXTENDED_JOIN;
-	ClientCapabilityAdd(modinfo->handle, &c);
+	ClientCapabilityAdd(modinfo->handle, &c, &CAP_EXTENDED_JOIN);
 
 	return MOD_SUCCESS;
 }
@@ -221,7 +235,7 @@ static int cap_end(aClient *sptr, const char *arg)
 	if (IsRegisteredUser(sptr))
 		return 0;
 
-	sptr->local->proto &= ~PROTO_CLICAP;
+	ClearCapabilityFast(sptr, CAP_IN_PROGRESS);
 
 	if (*sptr->name && sptr->user && *sptr->user->username && IsNotSpoof(sptr))
 		return register_user(sptr, sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
@@ -231,14 +245,14 @@ static int cap_end(aClient *sptr, const char *arg)
 
 static int cap_list(aClient *sptr, const char *arg)
 {
-	clicap_generate(sptr, "LIST", sptr->local->proto ? sptr->local->proto : -1);
+	clicap_generate(sptr, "LIST", sptr->local->caps ? sptr->local->caps : -1);
 	return 0;
 }
 
 static int cap_ls(aClient *sptr, const char *arg)
 {
 	if (!IsRegisteredUser(sptr))
-		sptr->local->proto |= PROTO_CLICAP;
+		SetCapabilityFast(sptr, CAP_IN_PROGRESS);
 
 	if (arg)
 		sptr->local->cap_protocol = atoi(arg);
@@ -250,7 +264,7 @@ static int cap_ls(aClient *sptr, const char *arg)
 		sptr->local->cap_protocol = 300;
 
 	if (sptr->local->cap_protocol >= 302)
-		sptr->local->proto |= PROTO_CAP_NOTIFY; /* Implicit support (JIT) */
+		SetCapabilityFast(sptr, CAP_NOTIFY); /* Implicit support (JIT) */
 
 	clicap_generate(sptr, "LS", 0);
 	return 0;
@@ -268,7 +282,7 @@ static int cap_req(aClient *sptr, const char *arg)
 	int errors = 0;
 
 	if (!IsRegisteredUser(sptr))
-		sptr->local->proto |= PROTO_CLICAP;
+		SetCapabilityFast(sptr, CAP_IN_PROGRESS);
 
 	if (BadPtr(arg))
 		return 0;
@@ -311,7 +325,7 @@ static int cap_req(aClient *sptr, const char *arg)
 	}
 
 	/* This one is special */
-	if ((sptr->local->cap_protocol >= 302) && (capdel & PROTO_CAP_NOTIFY))
+	if ((sptr->local->cap_protocol >= 302) && (capdel & CAP_NOTIFY))
 		errors++; /* Reject "CAP REQ -cap-notify" */
 
 	if (errors)
@@ -328,8 +342,8 @@ static int cap_req(aClient *sptr, const char *arg)
 	else
 		sendto_one(sptr, "%s :%s", buf, pbuf[0]);
 
-	sptr->local->proto |= capadd;
-	sptr->local->proto &= ~capdel;
+	sptr->local->caps |= capadd;
+	sptr->local->caps &= ~capdel;
 	return 0;
 }
 
@@ -348,6 +362,11 @@ static struct clicap_cmd clicap_cmdtable[] = {
 static int clicap_cmd_search(const char *command, struct clicap_cmd *entry)
 {
 	return strcasecmp(command, entry->cmd);
+}
+
+int cap_never_visible(aClient *acptr)
+{
+	return 0;
 }
 
 CMD_FUNC(m_cap)

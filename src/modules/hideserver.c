@@ -326,7 +326,7 @@ CMD_OVERRIDE_FUNC(override_map)
 		parv[1] = "*";
 	
 	if (IsOper(sptr))
-		return CallCmdoverride(ovr, cptr, sptr, parc, parv);
+		return CallCmdoverride(ovr, cptr, sptr, recv_mtags, parc, parv);
 
 	if (Settings.disable_map)
 	{
@@ -366,7 +366,7 @@ CMD_OVERRIDE_FUNC(override_links)
 	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;
 
 	if (IsOper(sptr))
-		return CallCmdoverride(ovr, cptr, sptr, parc, parv);
+		return CallCmdoverride(ovr, cptr, sptr, recv_mtags, parc, parv);
 
 	if (Settings.disable_links)
 	{

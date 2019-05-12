@@ -190,7 +190,7 @@ CMD_FUNC(m_gline)
 		parv[0] = NULL;
 		parv[1] = "gline";
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, "STATS", 2, parv);
+		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
 	}
 
 	return m_tkl_line(cptr, sptr, parc, parv, "G");
@@ -215,7 +215,7 @@ CMD_FUNC(m_gzline)
 		parv[0] = NULL;
 		parv[1] = "gline"; /* (there's no /STATS gzline, it's included in /STATS gline output) */
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, "STATS", 2, parv);
+		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
 	}
 
 	return m_tkl_line(cptr, sptr, parc, parv, "Z");
@@ -240,7 +240,7 @@ CMD_FUNC(m_shun)
 		parv[0] = NULL;
 		parv[1] = "shun";
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, "STATS", 2, parv);
+		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
 	}
 
 	return m_tkl_line(cptr, sptr, parc, parv, "s");
@@ -338,7 +338,7 @@ CMD_FUNC(m_tkline)
 		parv[0] = NULL;
 		parv[1] = "kline";
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, "STATS", 2, parv);
+		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
 	}
 
 	if (!ValidatePermissionsForPath("server-ban:kline:remove",sptr,NULL,NULL,NULL) && *parv[1] == '-')
@@ -402,7 +402,7 @@ CMD_FUNC(m_tzline)
 		parv[0] = NULL;
 		parv[1] = "kline"; /* (there's no /STATS zline, it's included in /STATS kline output) */
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, "STATS", 2, parv);
+		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
 	}
 
 	if ((parc > 1) && !BadPtr(parv[1]) && !strcasecmp(parv[1], "-stats"))
@@ -657,12 +657,12 @@ int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type
 		}
 		
 		/* call the tkl layer .. */
-		m_tkl(&me, &me, 9, tkllayer);
+		m_tkl(&me, &me, NULL, 9, tkllayer);
 	}
 	else
 	{
 		/* call the tkl layer .. */
-		m_tkl(&me, &me, 6, tkllayer);
+		m_tkl(&me, &me, NULL, 6, tkllayer);
 
 	}
 	return 0;
@@ -746,7 +746,7 @@ int spamfilter_del_by_id(aClient *sptr, char *id)
 	ircsnprintf(mo2, sizeof(mo2), "%li", TStime());
 	tkllayer[7] = mo2; /* deletion time */
 
-	m_tkl(&me, &me, 12, tkllayer);
+	m_tkl(&me, &me, NULL, 12, tkllayer);
 
 	return 0;
 }
@@ -796,7 +796,7 @@ char *err = NULL;
 		parv[0] = NULL;
 		parv[1] = "spamfilter";
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, "STATS", 2, parv);
+		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
 	}
 
 	if ((parc <= 3) && !strcmp(parv[1], "del"))
@@ -810,7 +810,7 @@ char *err = NULL;
 			parv[2] = me.name;
 			parv[3] = "del";
 			parv[4] = NULL;
-			return do_cmd(sptr, sptr, "STATS", 4, parv);
+			return do_cmd(sptr, sptr, recv_mtags, "STATS", 4, parv);
 		}
 		return spamfilter_del_by_id(sptr, parv[2]);
 	}
@@ -924,7 +924,7 @@ char *err = NULL;
 		tkllayer[7] = mo2;
 	}
 	
-	m_tkl(&me, &me, 12, tkllayer);
+	m_tkl(&me, &me, NULL, 12, tkllayer);
 
 	return 0;
 }
@@ -2730,7 +2730,7 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			tkllayer[6] = mo;
 			tkllayer[7] = mo2;
 			tkllayer[8] = reason;
-			m_tkl(&me, &me, 9, tkllayer);
+			m_tkl(&me, &me, NULL, 9, tkllayer);
 			if ((action == BAN_ACT_SHUN) || (action == BAN_ACT_SOFT_SHUN))
 			{
 				find_shun(sptr);
@@ -2814,7 +2814,7 @@ int ret;
 
 	/* RECURSIVE CAUTION in case we ever add blacklisted chans */
 	spamf_ugly_vchanoverride = 1;
-	ret = do_cmd(sptr, sptr, "JOIN", 2, xparv);
+	ret = do_cmd(sptr, sptr, NULL, "JOIN", 2, xparv);
 	spamf_ugly_vchanoverride = 0;
 
 	if (ret == FLUSH_BUFFER)
@@ -2830,8 +2830,9 @@ int ret;
 		ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s matched filter '%s' [%s] [%s]",
 			sptr->name, tk->reason, cmdname_by_spamftarget(type),
 			unreal_decodespace(tk->ptr.spamf->tkl_reason));
-		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-			":%s NOTICE %s :%s", me.name, chbuf, buf);
+		sendto_channel(chptr, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		               0, SEND_ALL|SKIP_DEAF, NULL,
+		               ":%s NOTICE %s :%s", me.name, chbuf, buf);
 	}
 	SetVirus(sptr);
 	return 0;

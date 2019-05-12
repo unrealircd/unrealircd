@@ -109,8 +109,8 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 else {\
 	sendto_server(cptr, 0, PROTO_SJOIN, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
 		modebuf, parabuf, chptr->creationtime); \
-	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
-		modebuf, parabuf);\
+	sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL, \
+	               ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf); \
 	strcpy(parabuf,param);\
 	/* modebuf[0] should stay what it was ('+' or '-') */ \
 	modebuf[1] = mode;\
@@ -239,8 +239,9 @@ CMD_FUNC(m_sjoin)
 			    ":%s MODE %s %s %s %lu",
 			    sptr->name, chptr->chname, modebuf, parabuf,
 			    chptr->creationtime);
-			sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-			    sptr->name, chptr->chname, modebuf, parabuf);
+			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+			               ":%s MODE %s %s %s",
+			               sptr->name, chptr->chname, modebuf, parabuf);
 
 		}
 		/* remove bans */
@@ -319,9 +320,9 @@ CMD_FUNC(m_sjoin)
 			    ":%s MODE %s %s %s %lu",
 			    sptr->name, chptr->chname,
 			    modebuf, parabuf, chptr->creationtime);
-			sendto_channel_butserv(chptr,
-			    sptr, ":%s MODE %s %s %s",
-			    sptr->name, chptr->chname, modebuf, parabuf);
+			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+			               ":%s MODE %s %s %s",
+			               sptr->name, chptr->chname, modebuf, parabuf);
 
 		}
 
@@ -691,8 +692,9 @@ getnick:
 		    ":%s MODE %s %s %s %lu",
 		    sptr->name, chptr->chname, modebuf, parabuf,
 		    chptr->creationtime);
-		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-		    sptr->name, chptr->chname, modebuf, parabuf);
+		sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+		               ":%s MODE %s %s %s",
+		               sptr->name, chptr->chname, modebuf, parabuf);
 	}
 	
 	if (!merge && !removetheirs && !nomode)
@@ -719,8 +721,9 @@ getnick:
 		    sptr->name, chptr->chname, modebuf, paraback,
 		    chptr->creationtime);
 
-		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-		    sptr->name, chptr->chname, modebuf, parabuf);
+		sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+		               ":%s MODE %s %s %s",
+		               sptr->name, chptr->chname, modebuf, parabuf);
 	}
 
 	if (merge && !nomode)
@@ -928,8 +931,9 @@ getnick:
 			    ":%s MODE %s %s %s %lu",
 			    sptr->name, chptr->chname, modebuf, parabuf,
 			    chptr->creationtime);
-			sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-			    sptr->name, chptr->chname, modebuf, parabuf);
+			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+			               ":%s MODE %s %s %s",
+			               sptr->name, chptr->chname, modebuf, parabuf);
 		}
 
 		/* free the oldmode.* crap :( */
@@ -945,7 +949,7 @@ getnick:
 	/* we should be synched by now, */
 	if ((oldts != -1) && (oldts != chptr->creationtime))
 	{
-		sendto_channel_butserv(chptr, &me,
+		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL,
 			":%s NOTICE %s :*** TS for %s changed from %ld to %ld",
 			me.name, chptr->chname, chptr->chname,
 			oldts, chptr->creationtime);

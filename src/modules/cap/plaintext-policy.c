@@ -65,12 +65,11 @@ char *plaintext_policy_capability_parameter(aClient *acptr)
 
 void init_plaintext_policy(ModuleInfo *modinfo)
 {
-	ClientCapability cap;
+	ClientCapabilityInfo cap;
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "unrealircd.org/plaintext-policy";
-	cap.cap = 0;
 	cap.flags = CLICAP_FLAGS_ADVERTISE_ONLY;
 	cap.parameter = plaintext_policy_capability_parameter;
-	ClientCapabilityAdd(modinfo->handle, &cap);
+	ClientCapabilityAdd(modinfo->handle, &cap, NULL);
 }

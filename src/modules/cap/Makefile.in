@@ -32,7 +32,8 @@ INCLUDES = ../../include/auth.h ../../include/channel.h \
 	../../include/version.h ../../include/whowas.h
 
 R_MODULES=\
-	sts.so plaintext-policy.so link-security.so
+	sts.so plaintext-policy.so link-security.so message-tags.so batch.so \
+	labeled-response.so server-time.so account-tag.so msgid.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -61,3 +62,26 @@ link-security.so: link-security.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o link-security.so link-security.c
 
+message-tags.so: message-tags.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o message-tags.so message-tags.c
+
+batch.so: batch.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o batch.so batch.c
+
+labeled-response.so: labeled-response.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o labeled-response.so labeled-response.c
+
+server-time.so: server-time.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o server-time.so server-time.c
+
+account-tag.so: account-tag.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o account-tag.so account-tag.c
+
+msgid.so: msgid.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o msgid.so msgid.c

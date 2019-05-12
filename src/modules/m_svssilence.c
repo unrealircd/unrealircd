@@ -96,7 +96,7 @@ CMD_FUNC(m_svssilence)
 			(c != '-' && !add_silence(acptr, cp, 0)))
 		{
 			if (mine)
-				sendto_prefix_one(acptr, acptr, ":%s SILENCE %c%s", sptr->name, c, cp);
+				sendto_prefix_one(acptr, acptr, NULL, ":%s SILENCE %c%s", sptr->name, c, cp);
 		}
 	}
 	return 0;

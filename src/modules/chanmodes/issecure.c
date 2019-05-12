@@ -141,12 +141,12 @@ void issecure_unset(aChannel *chptr, aClient *sptr, int notice)
 
 	if (notice)
 	{
-		sendto_channel_butserv(chptr, &me, ":%s NOTICE %s :User '%s' joined and is not connected through SSL, setting channel -Z (insecure)",
+		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s NOTICE %s :User '%s' joined and is not connected through SSL, setting channel -Z (insecure)",
 			me.name, chptr->chname, sptr->name);
 	}
 		
 	chptr->mode.extmode &= ~EXTCMODE_ISSECURE;
-	sendto_channel_butserv(chptr, &me, ":%s MODE %s -Z", me.name, chptr->chname);
+	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s -Z", me.name, chptr->chname);
 }
 
 
@@ -162,16 +162,20 @@ void issecure_set(aChannel *chptr, aClient *sptr, int notice)
 		/* note that we have to skip 'sptr', since when this call is being made
 		 * he is still considered a member of this channel.
 		 */
-		sendto_channel_butserv_butone(chptr, &me, sptr, ":%s NOTICE %s :Now all users in the channel are connected through SSL, setting channel +Z (secure)",
-			me.name, chptr->chname);
+		sendto_channel(chptr, &me, sptr, 0, 0, SEND_LOCAL, NULL,
+		               ":%s NOTICE %s :Now all users in the channel are connected through SSL, setting channel +Z (secure)",
+		               me.name, chptr->chname);
 	} else if (notice)
 	{
 		/* note the missing word 'now' in next line */
-		sendto_channel_butserv(chptr, &me, ":%s NOTICE %s :All users in the channel are connected through SSL, setting channel +Z (secure)",
-			me.name, chptr->chname);
+		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL,
+		               ":%s NOTICE %s :All users in the channel are connected through SSL, setting channel +Z (secure)",
+		               me.name, chptr->chname);
 	}
 	chptr->mode.extmode |= EXTCMODE_ISSECURE;
-	sendto_channel_butserv_butone(chptr, &me, sptr, ":%s MODE %s +Z", me.name, chptr->chname);
+	sendto_channel(chptr, &me, sptr, 0, 0, SEND_LOCAL, NULL,
+	               ":%s MODE %s +Z",
+	               me.name, chptr->chname);
 }
 
 /* Note: the routines below (notably the 'if's) are written with speed in mind,

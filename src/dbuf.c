@@ -170,12 +170,12 @@ int  dbuf_getmsg(dbuf *dyn, char *buf)
 			else switch (phase)
 			{
 				case 0: phase = 1; /* FALLTHROUGH */
-				case 1: if (line_bytes++ < BUFSIZE - 2)
+				case 1: if (line_bytes++ < READBUFSIZE - 2)
 						*buf++ = c;
 					break;
 				case 2: *buf = '\0';
 					dbuf_delete(dyn, line_bytes + empty_bytes);
-					return MIN(line_bytes, BUFSIZE - 2);
+					return MIN(line_bytes, READBUFSIZE - 2);
 			}
 		}
 	}
@@ -191,5 +191,5 @@ int  dbuf_getmsg(dbuf *dyn, char *buf)
 
 	/* Remove what is now unnecessary */
 	dbuf_delete(dyn, line_bytes + empty_bytes);
-	return MIN(line_bytes, BUFSIZE - 2);
+	return MIN(line_bytes, READBUFSIZE - 2);
 }

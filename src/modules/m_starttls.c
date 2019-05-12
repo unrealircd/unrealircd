@@ -35,17 +35,17 @@ ModuleHeader MOD_HEADER(m_starttls)
 	NULL 
     };
 
+long CLICAP_STARTTLS;
+
 MOD_INIT(m_starttls)
 {
-	ClientCapability cap;
+	ClientCapabilityInfo cap;
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, MSG_STARTTLS, m_starttls, MAXPARA, M_UNREGISTERED);
-	/* We don't announce this command in 005, it's meaningless (too late) */
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "tls";
-	cap.cap = PROTO_STARTTLS;
-	ClientCapabilityAdd(modinfo->handle, &cap);
+	ClientCapabilityAdd(modinfo->handle, &cap, &CLICAP_STARTTLS);
 
 	return MOD_SUCCESS;
 }

@@ -22,7 +22,7 @@
 #define MODULES_H
 #include "types.h"
 #define MAXCUSTOMHOOKS  30
-#define MAXHOOKTYPES	130
+#define MAXHOOKTYPES	150
 #define MAXCALLBACKS	30
 #define MAXEFUNCTIONS	90
 #if defined(_WIN32)
@@ -112,6 +112,7 @@ typedef enum ModuleObjectType {
 	MOBJ_MODDATA = 14,
 	MOBJ_VALIDATOR = 15,
 	MOBJ_CLICAP = 16,
+	MOBJ_MTAG = 17,
 } ModuleObjectType;
 
 typedef struct {
@@ -385,18 +386,54 @@ typedef struct _versionflag {
 	ModuleChild *parents;
 } Versionflag;
 
+/* This type needs a forward declaration: */
+typedef struct _messagetaghandler MessageTagHandler;
+
 #define CLICAP_FLAGS_NONE               0x0
 #define CLICAP_FLAGS_ADVERTISE_ONLY     0x4
 
 typedef struct _clientcapability {
 	struct _clientcapability *prev, *next;
 	char *name;                              /**< The name of the CAP */
-	int cap;                                 /**< The acptr->user->proto we should set (if any, can be 0, like for sts) */
+	long cap;                                /**< The acptr->user->proto we should set (if any, can be 0, like for sts) */
 	int flags;                               /**< A flag from CLICAP_FLAGS_* */
 	int (*visible)(aClient *);               /**< Should the capability be visible? Note: parameter may be NULL. [optional] */
 	char *(*parameter)(aClient *);           /**< CAP parameters. Note: parameter may be NULL. [optional] */
-	Module *owner;                           /**< Module introducing this CAP. [internal] */
+	MessageTagHandler *mtag_handler;         /**< For reverse dependency */
+	Module *owner;                           /**< Module introducing this CAP. */
+        char unloaded;                           /**< Internal flag to indicate module is being unloaded */
 } ClientCapability;
+
+typedef struct {
+	char *name;
+	int flags;
+	int (*visible)(aClient *);
+	char *(*parameter)(aClient *);
+} ClientCapabilityInfo;
+
+#define MTAG_HANDLER_FLAGS_NONE			0x0
+#define MTAG_HANDLER_FLAGS_NO_CAP_NEEDED	0x1
+
+/** Message Tag Handler */
+struct _messagetaghandler {
+	MessageTagHandler *prev, *next;
+	char *name;                                 /**< The name of the message-tag */
+	int flags;                                  /**< A flag of MTAG_HANDLER_FLAGS_* */
+	int (*is_ok)(aClient *, char *, char *);    /**< Verify syntax and access rights */
+	Module *owner;                              /**< Module introducing this CAP. */
+	ClientCapability *clicap_handler;           /**< Client capability handler associated with this */
+        char unloaded;                              /**< Internal flag to indicate module is being unloaded */
+};
+
+/** The struct used to register a message tag handler.
+ * For documentation, see the MessageTagHandler struct.
+ */
+typedef struct {
+	char *name;
+	int flags;
+	int (*is_ok)(aClient *, char *, char *);
+	ClientCapability *clicap_handler;
+} MessageTagHandlerInfo;
 
 struct _irchook {
 	Hook *prev, *next;
@@ -476,6 +513,7 @@ typedef struct _ModuleObject {
 		ModDataInfo *moddata;
 		OperClassValidator *validator;
 		ClientCapability *clicap;
+		MessageTagHandler *mtag;
 	} object;
 } ModuleObject;
 
@@ -608,8 +646,12 @@ extern void IsupportDelByName(const char *name);
 
 extern ClientCapability *ClientCapabilityFind(const char *token, aClient *sptr);
 extern ClientCapability *ClientCapabilityFindReal(const char *token);
-extern ClientCapability *ClientCapabilityAdd(Module *module, ClientCapability *clicap_request);
+extern ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clicap_request, long *cap);
 extern void ClientCapabilityDel(ClientCapability *clicap);
+
+extern MessageTagHandler *MessageTagHandlerFind(const char *token);
+extern MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *mreq);
+extern void MessageTagHandlerDel(MessageTagHandler *m);
 
 #ifndef GCC_TYPECHECKING
 #define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL)
@@ -719,7 +761,7 @@ extern int CommandExists(char *name);
 extern Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, OverrideCmdFunc func);
 extern Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc func);
 extern void CmdoverrideDel(Cmdoverride *ovr);
-extern int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
 
 extern void moddata_free_client(aClient *acptr);
 extern void moddata_free_channel(aChannel *chptr);
@@ -826,6 +868,8 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_PLACE_HOST_BAN 95
 #define HOOKTYPE_FIND_TKLINE_MATCH 96
 #define HOOKTYPE_WELCOME 97
+#define HOOKTYPE_PRE_COMMAND 98
+#define HOOKTYPE_POST_COMMAND 99
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -884,7 +928,7 @@ int hooktype_silenced(aClient *cptr, aClient *sptr, aClient *to, int notice);
 int hooktype_post_server_connect(aClient *sptr);
 int hooktype_rawpacket_in(aClient *sptr, char *readbuf, int *length);
 int hooktype_local_nickpass(aClient *sptr, aClient *nickserv);
-int hooktype_packet(aClient *from, aClient *to, char **msg, int *length);
+int hooktype_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int *length);
 int hooktype_handshake(aClient *sptr);
 int hooktype_away(aClient *sptr, char *reason);
 int hooktype_invite(aClient *from, aClient *to, aChannel *chptr);
@@ -930,6 +974,8 @@ int hooktype_sasl_result(aClient *sptr, int success);
 int hooktype_place_host_ban(aClient *sptr, int action, char *reason, long duration);
 int hooktype_find_tkline_match(aClient *sptr, aTKline *tk);
 int hooktype_welcome(aClient *sptr, int after_numeric);
+int hooktype_pre_command(aClient *from, MessageTag *mtags, char *buf);
+int hooktype_post_command(aClient *from, MessageTag *mtags, char *buf);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
@@ -1031,7 +1077,9 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_SASL_RESULT) && !ValidateHook(hooktype_sasl_result, func)) || \
         ((hooktype == HOOKTYPE_PLACE_HOST_BAN) && !ValidateHook(hooktype_place_host_ban, func)) || \
         ((hooktype == HOOKTYPE_FIND_TKLINE_MATCH) && !ValidateHook(hooktype_find_tkline_match, func)) || \
-        ((hooktype == HOOKTYPE_WELCOME) && !ValidateHook(hooktype_welcome, func)) ) \
+        ((hooktype == HOOKTYPE_WELCOME) && !ValidateHook(hooktype_welcome, func)) || \
+        ((hooktype == HOOKTYPE_PRE_COMMAND) && !ValidateHook(hooktype_pre_command, func)) || \
+        ((hooktype == HOOKTYPE_POST_COMMAND) && !ValidateHook(hooktype_post_command, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

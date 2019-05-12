@@ -200,3 +200,24 @@ MEMORYSTATUS mstat;
 
 	/* NOTE: addtional entropy is added by add_entropy_* function(s) */
 }
+
+/** Generate an alphanumeric string (eg: XzHe5G).
+ * @param buf      The buffer
+ * @param numbytes The number of random bytes.
+ * @notes Note that numbytes+1 bytes are written to buf.
+ *        In other words, numbytes does NOT include the NUL byte.
+ */
+void gen_random_alnum(char *buf, int numbytes)
+{
+	for (; numbytes > 0; numbytes--)
+	{
+		unsigned char v = getrandom8() % (26+26+10);
+		if (v < 26)
+			*buf++ = 'a'+v;
+		else if (v < 52)
+			*buf++ = 'A'+(v-26);
+		else
+			*buf++ = '0'+(v-52);
+	}
+	*buf = '\0';
+}

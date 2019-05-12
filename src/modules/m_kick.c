@@ -292,25 +292,27 @@ CMD_FUNC(m_kick)
 				}
 				if (lp)
 				{
+					// TODO: mtag handling in sendto_channel, sendto_prefix_one and sendto_channel
+					// so 3 cases
 					if (invisible_user_in_channel(who, chptr))
 					{
 						/* Send it only to chanops & victim */
-						if (IsPerson(sptr))
-							sendto_chanops_butone(who, chptr, ":%s!%s@%s KICK %s %s :%s",
-								sptr->name, sptr->user->username, GetHost(sptr),
-								chptr->chname, who->name, comment);
-						else
-							sendto_chanops_butone(who, chptr, ":%s KICK %s %s :%s",
-								sptr->name, chptr->chname, who->name, comment);
-						
+						sendto_channel(chptr, sptr, who,
+						               CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT, 0,
+						               SEND_LOCAL, NULL,
+						               ":%s KICK %s %s :%s",
+						               sptr->name, chptr->chname, who->name, comment);
+
 						if (MyClient(who))
-							sendto_prefix_one(who, sptr, ":%s KICK %s %s :%s",
+						{
+							sendto_prefix_one(who, sptr, NULL, ":%s KICK %s %s :%s",
 								sptr->name, chptr->chname, who->name, comment);
+						}
 					} else {
 						/* NORMAL */
-						sendto_channel_butserv(chptr,
-						    sptr, ":%s KICK %s %s :%s",
-						    sptr->name, chptr->chname, who->name, comment);
+						sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+						               ":%s KICK %s %s :%s",
+						               sptr->name, chptr->chname, who->name, comment);
 					}
 				}
 				sendto_server(cptr, PROTO_SID, 0, ":%s KICK %s %s :%s",

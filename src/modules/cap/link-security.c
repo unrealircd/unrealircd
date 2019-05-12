@@ -73,14 +73,13 @@ MOD_INIT(link_security)
 
 MOD_LOAD(link_security)
 {
-	ClientCapability cap;
+	ClientCapabilityInfo cap;
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "unrealircd.org/link-security";
-	cap.cap = 0;
 	cap.flags = CLICAP_FLAGS_ADVERTISE_ONLY;
 	cap.parameter = link_security_capability_parameter;
-	ClientCapabilityAdd(modinfo->handle, &cap);
+	ClientCapabilityAdd(modinfo->handle, &cap, NULL);
 
 	EventAddEx(modinfo->handle, "checklinksec", 2, 0, checklinksec, NULL);
 	checklinksec(NULL);

@@ -75,7 +75,7 @@ int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 int ct_pre_lconnect(aClient *sptr);
 int ct_lconnect(aClient *);
 int ct_rconnect(aClient *);
-int ct_throttle(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+CMD_FUNC(ct_throttle);
 void rehash_dump_settings(void);
 void rehash_read_settings(void);
 EVENT(connthrottle_evt);
@@ -538,7 +538,7 @@ static void ct_throttle_usage(aClient *sptr)
 	sendnotice(sptr, "NOTE: All commands only affect this server. Remote servers are not affected.");
 }
 
-int ct_throttle(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(ct_throttle)
 {
 	if (!IsOper(sptr))
 	{

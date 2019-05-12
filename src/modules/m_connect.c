@@ -77,7 +77,7 @@ CMD_FUNC(m_connect)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
-	if (hunt_server(cptr, sptr, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
+	if (hunt_server(cptr, sptr, recv_mtags, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
 		return 0;
 
 	if (parc < 2 || *parv[1] == '\0')

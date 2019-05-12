@@ -186,9 +186,9 @@ long flags = 0; /* cache: membership flags */
 				sendto_server(cptr, 0, PROTO_SID, ":%s TOPIC %s %s %lu :%s",
 				    sptr->name, chptr->chname, chptr->topic_nick,
 				    chptr->topic_time, chptr->topic);
-				sendto_channel_butserv(chptr, sptr,
-				    ":%s TOPIC %s :%s", sptr->name,
-				    chptr->chname, chptr->topic);
+				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+				               ":%s TOPIC %s :%s",
+				               sptr->name, chptr->chname, chptr->topic);
 			}
 		}
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
@@ -279,13 +279,15 @@ long flags = 0; /* cache: membership flags */
 			sendto_server(cptr, 0, 0, ":%s TOPIC %s %s %lu :%s",
 			    sptr->name, chptr->chname, chptr->topic_nick,
 			    chptr->topic_time, chptr->topic);
-			sendto_channel_butserv(chptr, sptr,
-			    ":%s TOPIC %s :%s", sptr->name, chptr->chname,
-			    chptr->topic);
+			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+			               ":%s TOPIC %s :%s",
+			               sptr->name, chptr->chname, chptr->topic);
 		}
 		else
+		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
 			    me.name, sptr->name, chptr->chname);
+		}
 	}
 	return 0;
 }

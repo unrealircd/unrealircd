@@ -81,7 +81,7 @@ CMD_FUNC(m_whois)
 
 	if (parc > 2)
 	{
-		if (hunt_server(cptr, sptr, ":%s WHOIS %s :%s", 1, parc, parv) != HUNTED_ISME)
+		if (hunt_server(cptr, sptr, recv_mtags, ":%s WHOIS %s :%s", 1, parc, parv) != HUNTED_ISME)
 			return 0;
 		parv[1] = parv[2];
 	}
@@ -240,7 +240,7 @@ CMD_FUNC(m_whois)
 					}
 
 					access = get_access(acptr, chptr);
-					if (!MyClient(sptr) || !SupportNAMESX(sptr))
+					if (!MyClient(sptr) || !HasCapability(sptr, "multi-prefix"))
 					{
 #ifdef PREFIX_AQ
 						if (access & CHFL_CHANOWNER)

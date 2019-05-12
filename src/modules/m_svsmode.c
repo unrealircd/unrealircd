@@ -344,9 +344,11 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	/* only send message if modes have changed */
-	if (*parabuf) {
-		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname, 
-			modebuf, parabuf);
+	if (*parabuf)
+	{
+		sendto_channel(chptr, sptr, sptr, 0, 0, SEND_LOCAL, NULL,
+		               ":%s MODE %s %s %s",
+		               sptr->name, chptr->chname,  modebuf, parabuf);
 		sendto_server(NULL, 0, 0, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
 
 		/* Activate this hook just like m_mode.c */
@@ -465,7 +467,7 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 				if (parv[3])
 				{
 					strlcpy(acptr->user->svid, parv[3], sizeof(acptr->user->svid));
-					sendto_common_channels_local_butone(acptr, PROTO_ACCOUNT_NOTIFY, ":%s ACCOUNT %s",
+					sendto_common_channels_local_butone(acptr, ClientCapabilityBit("account-notify"), ":%s ACCOUNT %s",
 									    acptr->name,
 									    !isdigit(*acptr->user->svid) ? acptr->user->svid : "*");
 				}
@@ -610,7 +612,8 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
 	
 	if (!modes) modes = modebuf;
 	
-	if (!modebuf[0]) {
+	if (!modebuf[0])
+	{
 		modes = modebuf;
 		*modes++ = what;
 		*modes = 0;
@@ -618,12 +621,14 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
 		*parabuf = 0;
 		count = 0;
 	}
-	if (lastwhat != what) {
+	if (lastwhat != what)
+	{
 		*modes++ = what;
 		*modes = 0;
 		lastwhat = what;
 	}
-	if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN) {
+	if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN)
+	{
 		if (*parabuf) 
 			strcat(parabuf, " ");
 		strcat(parabuf, param);
@@ -637,16 +642,19 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
 	if (count == MAXMODEPARAMS)
 		send = 1;
 
-	if (send) {
-		sendto_channel_butserv(chptr, from, ":%s MODE %s %s %s",
-			from->name, chptr->chname, modebuf, parabuf);
+	if (send)
+	{
+		sendto_channel(chptr, from, from, 0, 0, SEND_LOCAL, NULL,
+		               ":%s MODE %s %s %s",
+		               from->name, chptr->chname, modebuf, parabuf);
 		sendto_server(NULL, 0, 0, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
 		send = 0;
 		*parabuf = 0;
 		modes = modebuf;
 		*modes++ = what;
 		lastwhat = what;
-		if (count != MAXMODEPARAMS) {
+		if (count != MAXMODEPARAMS)
+		{
 			strcpy(parabuf, param);
 			*modes++ = mode;
 			count = 1;

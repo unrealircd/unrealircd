@@ -210,7 +210,7 @@ CMD_FUNC(m_kill)
 		/* Victim gets a little notification (s)he is about to die */
 		if (MyConnect(acptr))
 		{
-			sendto_prefix_one(acptr, sptr, ":%s KILL %s :%s!%s",
+			sendto_prefix_one(acptr, sptr, NULL, ":%s KILL %s :%s!%s",
 			    sptr->name, acptr->name, inpath, path);
 		}
 

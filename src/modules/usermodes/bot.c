@@ -92,7 +92,7 @@ int bot_umode_change(aClient *sptr, long oldmode, long newmode)
 		char *parv[2];
 		parv[0] = sptr->name;
 		parv[1] = NULL;
-		(void)do_cmd(sptr, sptr, "BOTMOTD", 1, parv);
+		(void)do_cmd(sptr, sptr, NULL, "BOTMOTD", 1, parv);
 	}
 
 	return 0;

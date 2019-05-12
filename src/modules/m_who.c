@@ -638,7 +638,7 @@ static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel,
 
 	if (cm)
 	{
-		if (SupportNAMESX(sptr))
+		if (HasCapability(sptr, "multi-prefix"))
 		{
 #ifdef PREFIX_AQ
 			if (cm->flags & CHFL_CHANOWNER)

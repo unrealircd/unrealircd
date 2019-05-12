@@ -44,7 +44,7 @@ typedef struct _websocketuser WebSocketUser;
 #define WSOP_PONG         0x0a
 
 /* Forward declarations */
-int websocket_packet_out(aClient *from, aClient *to, char **msg, int *length);
+int websocket_packet_out(aClient *from, aClient *to, aClient *intended_to, char **msg, int *length);
 int websocket_packet_in(aClient *sptr, char *readbuf, int *length);
 void websocket_mdata_free(ModData *m);
 int websocket_handle_packet(aClient *sptr, char *readbuf, int length);
@@ -111,7 +111,7 @@ void websocket_mdata_free(ModData *m)
 /** Outgoing packet hook.
  * This transforms the output to be Websocket-compliant, if necessary.
  */
-int websocket_packet_out(aClient *from, aClient *to, char **msg, int *length)
+int websocket_packet_out(aClient *from, aClient *to, aClient *intended_to, char **msg, int *length)
 {
 	if (MyConnect(to) && WSU(to) && WSU(to)->handshake_completed)
 	{

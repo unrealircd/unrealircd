@@ -613,7 +613,7 @@ CMD_FUNC(m_server)
 	}
 	else
 	{
-		return m_server_remote(cptr, sptr, parc, parv);
+		return m_server_remote(cptr, sptr, recv_mtags, parc, parv);
 	}
 	return 0;
 }

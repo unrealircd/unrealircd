@@ -44,6 +44,7 @@ ClientCapability *ClientCapabilityFindReal(const char *token)
 		if (!stricmp(token, clicap->name))
 			return clicap;
 	}
+
 	return NULL;
 }
 
@@ -70,37 +71,119 @@ ClientCapability *ClientCapabilityFind(const char *token, aClient *sptr)
 	return NULL;
 }
 
+/** Find the bit that will be set if 'token' is enabled */
+long ClientCapabilityBit(const char *token)
+{
+	ClientCapability *clicap = ClientCapabilityFindReal(token);
+
+#ifdef DEBUGMODE
+	if (!clicap)
+	{
+		ircd_log(LOG_ERROR, "WARNING: ClientCapabilityBit(): unknown token '%s'", token);
+	}
+#endif
+
+	return clicap ? clicap->cap : 0L;
+}
+
+void SetCapability(aClient *acptr, const char *token)
+{
+	acptr->local->caps |= ClientCapabilityBit(token);
+}
+
+void ClearCapability(aClient *acptr, const char *token)
+{
+	acptr->local->caps &= ~(ClientCapabilityBit(token));
+}
+
+long clicap_allocate_cap(void)
+{
+	long v = 1;
+	ClientCapability *clicap;
+
+	for (v=1; v < 2147483648; v = v * 2)
+	{
+		unsigned char found = 0;
+		for (clicap = clicaps; clicap; clicap = clicap->next)
+		{
+			if (clicap->cap == v)
+			{
+				found = 1;
+				break;
+			}
+		}
+		if (!found)
+			return v; /* free bit found */
+	}
+
+	return 0;
+}
+
 /**
  * Adds a new clicap token.
  *
  * @param module The module which owns this token.
- * @param token  The name of the token to create.
- * @param value  The value of the token (NULL indicates no value).
+ * @param clicap_request The details of the requested token, handlers, etc.
+ * @param cap The assigned capability bit.
  * @return Returns the handle to the new token if successful, otherwise NULL.
  *         The module's error code contains specific information about the
  *         error.
  */
-ClientCapability *ClientCapabilityAdd(Module *module, ClientCapability *clicap_request)
+ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clicap_request, long *cap)
 {
 	ClientCapability *clicap;
-	char *c;
 
-	if (ClientCapabilityFindReal(clicap_request->name))
+	if (cap)
+		*cap = 0; /* Initialize early */
+
+	clicap = ClientCapabilityFindReal(clicap_request->name);
+	if (clicap)
 	{
-		if (module)
-			module->errorcode = MODERR_EXISTS;
-		return NULL;
-	}
+		if (clicap->unloaded)
+		{
+			clicap->unloaded = 0;
+		} else {
+			if (module)
+				module->errorcode = MODERR_EXISTS;
+			return NULL;
+		}
+	} else {
+		long v = 0;
 
-	clicap = MyMallocEx(sizeof(ClientCapability));
+		/* Allocate a bit, but only if the module needs it.
+		 * (some clicaps are advertise-only and never gets set,
+		 *  hence they don't need a bit allocated to them)
+		 */
+		if (cap != NULL)
+		{
+			v = clicap_allocate_cap();
+			if (v == 0)
+			{
+				sendto_realops("ClientCapabilityAdd: out of space!!!");
+				ircd_log(LOG_ERROR, "ClientCapabilityAdd: out of space!!!");
+				if (module)
+					module->errorcode = MODERR_NOSPACE;
+				return NULL;
+			}
+		}
+		/* New client capability */
+		clicap = MyMallocEx(sizeof(ClientCapability));
+		clicap->name = strdup(clicap_request->name);
+		clicap->cap = v;
+	}
+	/* Add or update the following fields: */
 	clicap->owner = module;
-	clicap->name = strdup(clicap_request->name);
-	clicap->cap = clicap_request->cap;
 	clicap->flags = clicap_request->flags;
 	clicap->visible = clicap_request->visible;
 	clicap->parameter = clicap_request->parameter;
 
 	AddListItem(clicap, clicaps);
+
+	if (clicap->cap && !cap)
+		abort(); /* module API call error */
+
+	if (cap)
+		*cap = clicap->cap;
 
 	if (module)
 	{
@@ -110,9 +193,40 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapability *clicap_r
 		AddListItem(clicapobj, module->objects);
 		module->errorcode = MODERR_NOERROR;
 	}
+
 	return clicap;
 }
 
+void unload_clicap_commit(ClientCapability *clicap)
+{
+	long bit = clicap->cap;
+
+	/* This is an unusual operation, I think we should log it. */
+	ircd_log(LOG_ERROR, "Unloading client capability '%s'", clicap->name);
+	sendto_realops("Unloading client capability '%s'", clicap->name);
+
+	/* NOTE: Stripping the CAP from local clients is done
+	 * in clicap_post_rehash(), so not here.
+	 */
+
+	/* A message tag handler may depend on us, remove it */
+	/* NOTE: This assumes there is a 0:1 or 1:1 relationship between
+	 *       the two, but in theory there could be multiple message tags
+	 *       introduced by 1 capability. Ah well, we'll cross that
+	 *       bridge when we come to it ;)
+	 */
+	if (clicap->mtag_handler)
+	{
+		// FIXME: now it becomes unrestricted, BAD BAD BAD -- what to do?
+		// set some flags ?
+		clicap->mtag_handler->clicap_handler = NULL;
+	}
+
+	/* Destroy the capability */
+	DelListItem(clicap, clicaps);
+	safefree(clicap->name);
+	MyFree(clicap);
+}
 /**
  * Removes the specified clicap token.
  *
@@ -120,9 +234,35 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapability *clicap_r
  */
 void ClientCapabilityDel(ClientCapability *clicap)
 {
-	DelListItem(clicap, clicaps);
-	safefree(clicap->name);
-	MyFree(clicap);
+	if (loop.ircd_rehashing)
+		clicap->unloaded = 1;
+	else
+		unload_clicap_commit(clicap);
+
+	if (clicap->owner)
+	{
+		ModuleObject *mobj;
+		for (mobj = clicap->owner->objects; mobj; mobj = mobj->next) {
+			if (mobj->type == MOBJ_CLICAP && mobj->object.clicap == clicap) {
+				DelListItem(mobj, clicap->owner->objects);
+				MyFree(mobj);
+				break;
+			}
+		}
+		clicap->owner = NULL;
+	}
+}
+
+void unload_all_unused_caps(void)
+{
+	ClientCapability *clicap, *clicap_next;
+
+	for (clicap = clicaps; clicap; clicap = clicap->next)
+	{
+		clicap_next = clicap->next;
+		if (clicap->unloaded)
+			unload_clicap_commit(clicap);
+	}
 }
 
 #define MAXCLICAPS 64
@@ -151,16 +291,20 @@ void clicap_pre_rehash(void)
 }
 
 /** Clear 'proto' protocol for all users */
-void clear_cap_for_users(int proto)
+void clear_cap_for_users(long cap)
 {
 	aClient *acptr;
 
-	if (proto == 0)
+	if (cap == 0)
 		return;
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		acptr->local->proto &= ~proto;
+		acptr->local->caps &= ~cap;
+	}
+	list_for_each_entry(acptr, &unknown_list, lclient_node)
+	{
+		acptr->local->caps &= ~cap;
 	}
 }
 

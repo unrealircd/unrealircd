@@ -78,7 +78,7 @@ CMD_FUNC(m_lag)
 		    me.name, sptr->name, "LAG");
 		return 0;
 	}
-	if (hunt_server(cptr, sptr, ":%s LAG :%s", 1, parc, parv) == HUNTED_NOSUCH)
+	if (hunt_server(cptr, sptr, recv_mtags, ":%s LAG :%s", 1, parc, parv) == HUNTED_NOSUCH)
 	{
 		return 0;
 	}

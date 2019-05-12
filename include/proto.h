@@ -39,9 +39,7 @@ extern void clear_scache_hash_table(void);
 
 /* send.c */
 extern void sendto_one(aClient *, char *, ...) __attribute__((format(printf,2,3)));
-extern void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...) __attribute__((format(printf,3,4)));
 extern void sendto_realops(char *pattern, ...) __attribute__((format(printf,1,2)));
-extern void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...) __attribute__((format(printf,3,4))); 
 
 /* ircd.c */
 extern EVENT(garbage_collect);

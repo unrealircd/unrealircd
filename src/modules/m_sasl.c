@@ -44,6 +44,9 @@ int sasl_server_synched(aClient *sptr);
 #define MSG_SVSLOGIN "SVSLOGIN"
 #define AGENT_SID(agent_p)	(agent_p->user != NULL ? agent_p->user->server : agent_p->name)
 
+/* Variables */
+long CAP_SASL = 0L;
+
 /*
  * This is a "lightweight" SASL implementation/stack which uses psuedo-identifiers
  * to identify connecting clients.  In Unreal 3.3, we should use real identifiers
@@ -243,7 +246,7 @@ CMD_FUNC(m_authenticate)
 	aClient *agent_p = NULL;
 
 	/* Failing to use CAP REQ for sasl is a protocol violation. */
-	if (!SASL_SERVER || !MyConnect(sptr) || BadPtr(parv[1]) || !CHECKPROTO(sptr, PROTO_SASL))
+	if (!SASL_SERVER || !MyConnect(sptr) || BadPtr(parv[1]) || !HasCapability(sptr, "sasl"))
 		return 0;
 
 	if ((parv[1][0] == ':') || strchr(parv[1], ' '))
@@ -399,7 +402,7 @@ int sasl_server_synched(aClient *sptr)
 
 MOD_INIT(m_sasl)
 {
-	ClientCapability cap;
+	ClientCapabilityInfo cap;
 	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -415,10 +418,9 @@ MOD_INIT(m_sasl)
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "sasl";
-	cap.cap = PROTO_SASL;
 	cap.visible = sasl_capability_visible;
 	cap.parameter = sasl_capability_parameter;
-	ClientCapabilityAdd(modinfo->handle, &cap);
+	ClientCapabilityAdd(modinfo->handle, &cap, &CAP_SASL);
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "saslmechlist";

@@ -100,13 +100,12 @@ char *sts_capability_parameter(aClient *acptr)
 
 void init_sts(ModuleInfo *modinfo)
 {
-	ClientCapability cap;
+	ClientCapabilityInfo cap;
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "sts";
-	cap.cap = 0;
 	cap.flags = CLICAP_FLAGS_ADVERTISE_ONLY;
 	cap.visible = sts_capability_visible;
 	cap.parameter = sts_capability_parameter;
-	ClientCapabilityAdd(modinfo->handle, &cap);
+	ClientCapabilityAdd(modinfo->handle, &cap, NULL);
 }

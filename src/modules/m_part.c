@@ -169,37 +169,46 @@ CMD_FUNC(m_part)
 			/* Show PART only to chanops and self */
 			if (!comment)
 			{
-				sendto_chanops_butone(NULL,
-					chptr, ":%s!%s@%s PART %s",
-					sptr->name, sptr->user->username, GetHost(sptr),
-					chptr->chname);
-				if (!is_chan_op(sptr, chptr) && MyClient(sptr))
+				sendto_channel(chptr, sptr, sptr,
+					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT, 0,
+					       SEND_LOCAL, NULL,
+					       ":%s PART %s",
+					       sptr->name, chptr->chname);
+				if (MyClient(sptr))
+				{
 					sendto_one(sptr, ":%s!%s@%s PART %s",
 						sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
+				}
 			}
 			else
 			{
-				sendto_chanops_butone(NULL,
-					chptr,
-					":%s!%s@%s PART %s %s",
-					sptr->name,
-					sptr->user->username,
-					GetHost(sptr),
-					chptr->chname, comment);
-				if (!is_chan_op(cptr, chptr) && MyClient(sptr))
+				sendto_channel(chptr, sptr, sptr,
+					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT, 0,
+					       SEND_LOCAL, NULL,
+					       ":%s PART %s %s",
+					       sptr->name, chptr->chname, comment);
+				if (MyClient(sptr))
+				{
 					sendto_one(sptr,
 						":%s!%s@%s PART %s %s",
 						sptr->name, sptr->user->username, GetHost(sptr),
 						chptr->chname, comment);
+				}
 			}
 		}
 		else
 		{
 			/* Show PART to all users in channel */
 			if (!comment)
-				sendto_channel_butserv(chptr, sptr, PARTFMT, sptr->name, chptr->chname);
-			else
-				sendto_channel_butserv(chptr, sptr, PARTFMT2, sptr->name, chptr->chname, comment);
+			{
+				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+				               ":%s PART %s",
+				               sptr->name, chptr->chname);
+			} else {
+				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+				               ":%s PART %s :%s",
+				               sptr->name, chptr->chname, comment);
+			}
 		}
 
 		if (MyClient(sptr))

@@ -66,9 +66,12 @@ CMD_FUNC(m_trace)
 	int  cnt = 0, wilds, dow;
 	time_t now;
 
+	// XXX: FIXME: This would be one of those asynch/multi-server
+	// commands that cannot be handled by labeled-response!
+	// set some kind of flag? or?
 
 	if (parc > 2)
-		if (hunt_server(cptr, sptr, ":%s TRACE %s :%s", 2, parc, parv))
+		if (hunt_server(cptr, sptr, NULL, ":%s TRACE %s :%s", 2, parc, parv))
 			return 0;
 
 	if (parc > 1)
@@ -93,7 +96,7 @@ CMD_FUNC(m_trace)
 		}
 	}
 
-	switch (hunt_server(cptr, sptr, ":%s TRACE :%s", 1, parc, parv))
+	switch (hunt_server(cptr, sptr, NULL, ":%s TRACE :%s", 1, parc, parv))
 	{
 	  case HUNTED_PASS:	/* note: gets here only if parv[1] exists */
 	  {

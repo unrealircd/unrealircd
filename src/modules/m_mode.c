@@ -109,11 +109,11 @@ CMD_FUNC(m_mode)
 			chptr = find_channel(parv[1], NullChn);
 			if (chptr == NullChn)
 			{
-				return m_umode(cptr, sptr, parc, parv);
+				return m_umode(cptr, sptr, recv_mtags, parc, parv);
 			}
 		}
 		else
-			return m_umode(cptr, sptr, parc, parv);
+			return m_umode(cptr, sptr, recv_mtags, parc, parv);
 	}
 	else
 	{
@@ -507,8 +507,9 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *par
 		sendts = 0;
 	}
 
-	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-	    sptr->name, chptr->chname, modebuf, parabuf);
+	sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+	               ":%s MODE %s %s %s",
+	               sptr->name, chptr->chname, modebuf, parabuf);
 
 	if (IsServer(sptr) && sendts != -1)
 	{

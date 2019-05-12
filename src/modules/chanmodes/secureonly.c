@@ -95,17 +95,22 @@ static void secureonly_kick_insecure_users(aChannel *chptr)
 		cptr = member->cptr;
 		if (MyClient(cptr) && !IsSecureConnect(cptr) && !IsULine(cptr))
 		{
+			int prefix = 0;
 			RunHook5(HOOKTYPE_LOCAL_KICK, &me, &me, cptr, chptr, comment);
 
 			if (invisible_user_in_channel(cptr, chptr))
 			{
-				sendto_chanops_butone(cptr, chptr, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
-				sendto_prefix_one(cptr, &me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+				/* Send only to chanops */
+				prefix = CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT;
 			}
-			else
-			{
-				sendto_channel_butserv(chptr, &me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
-			}
+
+			sendto_channel(chptr, &me, cptr,
+				       prefix, 0,
+				       SEND_LOCAL, NULL,
+				       ":%s KICK %s %s :%s",
+				       me.name, chptr->chname, cptr->name, comment);
+
+			sendto_prefix_one(cptr, &me, NULL, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
 
 			sendto_server(&me, 0, 0, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
 

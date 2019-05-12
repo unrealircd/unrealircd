@@ -64,7 +64,7 @@ void strrangetok(char *in, char *out, char tok, short first, short last) {
 
 /* m_alias is a special type of command, it has an extra argument 'cmd'. */
 static int recursive_alias = 0;
-int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd)
+int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd)
 {
 ConfigItem_alias *alias;
 aClient *acptr;
@@ -137,10 +137,10 @@ int ret;
 			{
 				if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
 					return ret;
-				sendto_channelprefix_butone(sptr,
-				    sptr, chptr, PREFIX_ALL,
-                                    ":%s PRIVMSG %s :%s", sptr->name,
-				    chptr->chname, parv[1]);
+				sendto_channel(chptr, sptr, sptr,
+				               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, NULL,
+				               ":%s PRIVMSG %s :%s",
+				               sptr->name, chptr->chname, parv[1]);
 				return 0;
 			}
 		}
@@ -271,10 +271,10 @@ int ret;
 						{
 							if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
 								return ret;
-							sendto_channelprefix_butone(sptr,
-							    sptr, chptr, PREFIX_ALL,
-			                                    ":%s PRIVMSG %s :%s", sptr->name,
-							    chptr->chname, parv[1]);
+							sendto_channel(chptr, sptr, sptr,
+							               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, NULL,
+							               ":%s PRIVMSG %s :%s",
+							               sptr->name, chptr->chname, parv[1]);
 							return 0;
 						}
 					}

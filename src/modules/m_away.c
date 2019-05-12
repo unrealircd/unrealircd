@@ -89,7 +89,8 @@ CMD_FUNC(m_away)
 			sendto_server(cptr, 0, 0, ":%s AWAY", sptr->name);
 			hash_check_watch(cptr, RPL_NOTAWAY);
 
-			sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s AWAY", sptr->name);
+			sendto_common_channels_local_butone(sptr, ClientCapabilityBit("away-notify"),
+			                                    ":%s AWAY", sptr->name);
 		}
 		/* hope this works XX */
 		if (MyConnect(sptr))
@@ -149,7 +150,8 @@ CMD_FUNC(m_away)
 		sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, sptr->name);
 
 	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
-	sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s AWAY :%s", sptr->name, away);
+	sendto_common_channels_local_butone(sptr, ClientCapabilityBit("away-notify"),
+	                                    ":%s AWAY :%s", sptr->name, away);
 
 	RunHook2(HOOKTYPE_AWAY, sptr, away);
 	return 0;

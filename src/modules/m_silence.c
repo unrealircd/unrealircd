@@ -100,7 +100,7 @@ CMD_FUNC(m_silence)
 		if ((c == '-' && !del_silence(sptr, cp)) ||
 		    (c != '-' && !add_silence(sptr, cp, 1)))
 		{
-			sendto_prefix_one(sptr, sptr, ":%s SILENCE %c%s",
+			sendto_prefix_one(sptr, sptr, NULL, ":%s SILENCE %c%s",
 			    sptr->name, c, cp);
 			if (c == '-')
 				sendto_server(NULL, 0, 0, ":%s SILENCE * -%s",

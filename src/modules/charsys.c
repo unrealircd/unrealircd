@@ -536,7 +536,10 @@ int firstmbchar = 0;
 			return 0;
 	}
 	if (firstmbchar)
+	{
 		ch--;
+		len--;
+	}
 	*ch = '\0';
 	return len;
 }

@@ -86,7 +86,7 @@ int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *
 void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
 void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-int (*m_umode)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+int (*m_umode)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
 int (*register_user)(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
@@ -103,7 +103,7 @@ aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
 aTKline *(*find_tkline_match_zap)(aClient *cptr);
 void (*tkl_stats)(aClient *cptr, int type, char *para);
 void (*tkl_synch)(aClient *sptr);
-int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+int (*m_tkl)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
 int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
 int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
@@ -669,6 +669,9 @@ void FreeModObj(ModuleObject *obj, Module *m)
 	else if (obj->type == MOBJ_CLICAP) {
 		ClientCapabilityDel(obj->object.clicap);
 	}
+	else if (obj->type == MOBJ_MTAG) {
+		MessageTagHandlerDel(obj->object.mtag);
+	}
 }
 
 void Unload_all_loaded_modules(void)
@@ -1015,10 +1018,10 @@ CMD_FUNC(m_module)
 	if (MyClient(sptr) && !IsOper(sptr) && all)
 		sptr->local->since += 7; /* Lag them up. Big list. */
 
-	if ((parc > 2) && (hunt_server(cptr, sptr, ":%s MODULE %s :%s", 2, parc, parv) != HUNTED_ISME))
+	if ((parc > 2) && (hunt_server(cptr, sptr, recv_mtags, ":%s MODULE %s :%s", 2, parc, parv) != HUNTED_ISME))
 		return 0;
 
-	if ((parc == 2) && (parv[1][0] != '-') && (hunt_server(cptr, sptr, ":%s MODULE :%s", 1, parc, parv) != HUNTED_ISME))
+	if ((parc == 2) && (parv[1][0] != '-') && (hunt_server(cptr, sptr, recv_mtags, ":%s MODULE :%s", 1, parc, parv) != HUNTED_ISME))
 		return 0;
 
 	if (all)
@@ -1530,11 +1533,11 @@ void CmdoverrideDel(Cmdoverride *cmd)
 	MyFree(cmd);
 }
 
-int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
+int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[])
 {
 	if (ovr->next)
-		return ovr->next->func(ovr->next, cptr, sptr, parc, parv);
-	return ovr->command->func(cptr, sptr, parc, parv);
+		return ovr->next->func(ovr->next, cptr, sptr, mtags, parc, parv);
+	return ovr->command->func(cptr, sptr, mtags, parc, parv);
 }
 
 EVENT(e_unload_module_delayed)

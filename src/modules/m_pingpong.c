@@ -136,7 +136,7 @@ CMD_FUNC(m_nospoof)
 		sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 			   me.name, sptr->name);
 
-	if (sptr->user && *sptr->user->username && sptr->name[0] && !CHECKPROTO(sptr, PROTO_CLICAP))
+	if (user_ready_for_register(sptr))
 		return register_user(cptr, sptr, sptr->name,
 		    sptr->user->username, NULL, NULL, NULL);
 	return 0;
@@ -158,7 +158,7 @@ CMD_FUNC(m_pong)
 	char *origin, *destination;
 
 	if (!IsRegistered(cptr))
-		return m_nospoof(cptr, sptr, parc, parv);
+		return m_nospoof(cptr, sptr, recv_mtags, parc, parv);
 
 	if (parc < 2 || *parv[1] == '\0')
 	{

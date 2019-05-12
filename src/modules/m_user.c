@@ -172,7 +172,7 @@ CMD_FUNC(m_user)
 
 	strlcpy(sptr->info, realname, sizeof(sptr->info));
 	if (*sptr->name &&
-		(IsServer(cptr) || (IsNotSpoof(sptr) && !CHECKPROTO(sptr, PROTO_CLICAP)))
+		(IsServer(cptr) || user_ready_for_register(cptr))
            )
 		/* NICK and no-spoof already received, now we have USER... */
 	{

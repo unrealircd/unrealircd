@@ -28,7 +28,7 @@ int	ban_version(aClient *sptr, char *text);
 
 CMD_FUNC(m_private);
 CMD_FUNC(m_notice);
-int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice);
+int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice);
 
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
@@ -162,7 +162,7 @@ int ret;
 ** rev argv 6/91
 **
 */
-int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
+int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice)
 {
 	aClient *acptr, *srvptr;
 	char *s;
@@ -346,8 +346,12 @@ int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 			if (!cansend)
 			{
 				Hook *tmphook;
+				MessageTag *mtags = NULL;
+				int sendflags = SEND_ALL;
 
-				sendanyways = (strchr(CHANCMDPFX,parv[2][0]) ? 1 : 0);
+				if (!strchr(CHANCMDPFX,parv[2][0]))
+					sendflags |= SKIP_DEAF;
+
 				text = parv[2];
 
 				if (MyClient(sptr))
@@ -366,14 +370,17 @@ int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 				if (!text)
 					continue;
 
-				sendto_channelprefix_butone(cptr,
-				    sptr, chptr,
-				    prefix,
-				    notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
-				    sptr->name, nick, text);
+				mtag_add_or_inherit_msgid(recv_mtags, &mtags);
+				mtag_add_or_inherit_account(recv_mtags, &mtags, sptr);
+				mtag_add_or_inherit_time(recv_mtags, &mtags);
+				sendto_channel(chptr, sptr, sptr,
+				               prefix, 0, sendflags, mtags,
+				               notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
+				               sptr->name, nick, text);
+				free_mtags(mtags);
 
-				sendanyways = 0;
 				RunHook4(HOOKTYPE_CHANMSG, sptr, chptr, text, notice);
+
 				continue;
 			}
 			else
@@ -457,7 +464,7 @@ int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 */
 CMD_FUNC(m_private)
 {
-	return m_message(cptr, sptr, parc, parv, 0);
+	return m_message(cptr, sptr, recv_mtags, parc, parv, 0);
 }
 
 /*
@@ -467,7 +474,7 @@ CMD_FUNC(m_private)
 */
 CMD_FUNC(m_notice)
 {
-	return m_message(cptr, sptr, parc, parv, 1);
+	return m_message(cptr, sptr, recv_mtags, parc, parv, 1);
 }
 
 /***********************************************************************

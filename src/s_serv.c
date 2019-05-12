@@ -181,7 +181,7 @@ CMD_FUNC(m_version)
 		return 0;
 	}
 
-	if (hunt_server(cptr, sptr, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(cptr, sptr, recv_mtags, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
 		           sptr->name, version, debugmode, me.name,
@@ -327,7 +327,7 @@ CMD_FUNC(m_info)
 	if (remotecmdfilter(sptr, parc, parv))
 		return 0;
 
-	if (hunt_server(cptr, sptr, ":%s INFO :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(cptr, sptr, recv_mtags, ":%s INFO :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		m_info_send(sptr);
 	}
@@ -346,7 +346,7 @@ CMD_FUNC(m_dalinfo)
 	if (remotecmdfilter(sptr, parc, parv))
 		return 0;
 
-	if (hunt_server(cptr, sptr, ":%s DALINFO :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(cptr, sptr, recv_mtags, ":%s DALINFO :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
@@ -375,7 +375,7 @@ CMD_FUNC(m_license)
 	if (remotecmdfilter(sptr, parc, parv))
 		return 0;
 
-	if (hunt_server(cptr, sptr, ":%s LICENSE :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(cptr, sptr, recv_mtags, ":%s LICENSE :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
@@ -399,7 +399,7 @@ CMD_FUNC(m_credits)
 	if (remotecmdfilter(sptr, parc, parv))
 		return 0;
 
-	if (hunt_server(cptr, sptr, ":%s CREDITS :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(cptr, sptr, recv_mtags, ":%s CREDITS :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
@@ -637,12 +637,15 @@ CMD_FUNC(m_rehash)
 		if (parv[1] && (parv[1][0] == '-'))
 			x = HUNTED_ISME;
 		else
-			x = hunt_server(cptr, sptr, ":%s REHASH :%s", 1, parc, parv);
+			x = hunt_server(cptr, sptr, recv_mtags, ":%s REHASH :%s", 1, parc, parv);
 	} else {
 		if (!_match("-glob*", parv[1])) /* This is really ugly... hack to make /rehash -global -something work */
+		{
 			x = HUNTED_ISME;
-		else
-			x = hunt_server(cptr, sptr, ":%s REHASH %s :%s", 1, parc, parv);
+		} else {
+			x = hunt_server(cptr, sptr, NULL, ":%s REHASH %s :%s", 1, parc, parv);
+			// XXX: FIXME: labeled-response can't handle this, multiple servers.
+		}
 	}
 	if (x != HUNTED_ISME)
 		return 0; /* Now forwarded or server didnt exist */

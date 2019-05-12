@@ -77,7 +77,7 @@ CMD_FUNC(m_whowas)
 	if (parc > 2)
 		max = atoi(parv[2]);
 	if (parc > 3)
-		if (hunt_server(cptr, sptr, ":%s WHOWAS %s %s :%s", 3, parc, parv))
+		if (hunt_server(cptr, sptr, recv_mtags, ":%s WHOWAS %s %s :%s", 3, parc, parv))
 			return 0;
 
 	if (!MyConnect(sptr) && (max > 20))

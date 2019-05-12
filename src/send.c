@@ -51,11 +51,10 @@ static char tcmd[2048];
 static char ccmd[2048];
 static char xcmd[2048];
 
-void vsendto_prefix_one(struct Client *to, struct Client *from,
+void vsendto_prefix_one(struct Client *to, struct Client *from, MessageTag *mtags,
     const char *pattern, va_list vl);
 
 MODVAR int  current_serial;
-MODVAR int  sendanyways = 0;
 /*
 ** dead_link
 **	An error has been detected. The link *must* be closed,
@@ -185,21 +184,30 @@ void vsendto_one(aClient *to, const char *pattern, va_list vl)
 }
 
 
-/* sendbufto_one:
- * to: the client to which the buffer should be send
- * msg: the message
- * quick: normally set to 0, see later.
- * NOTES:
- * - neither to or msg can be NULL
- * - if quick is set to 0, the length is calculated, the string is cutoff
- *   at 510 bytes if needed, and \r\n is added if needed.
- *   if quick is >0 it is assumed the message has \r\n and 'quick' is used
- *   as length. Of course you should be very careful with that.
+/** Send a line buffer to the client.
+ * This function is used (usually indirectly) for pretty much all
+ * cases where a line needs to be sent to a client.
+ * @param to    The client to which the buffer should be send.
+ * @param msg   The message.
+ * @param quick Normally set to 0, see the notes.
+ * @notes
+ * - Neither 'to' or 'msg' may be NULL.
+ * - If quick is set to 0 then the length is calculated,
+ *   the string is cut off at 510 bytes if needed, and
+ *   CR+LF is added if needed.
+ *   If quick is >0 then it is assumed the message already
+ *   is within boundaries and passed all safety checks and
+ *   contains CR+LF at the end. This if, for example, used in
+ *   channel broadcasts to save some CPU cycles. It is NOT
+ *   recommended as normal usage since you need to be very
+ *   careful to take everything into account, including side-
+ *   effects not mentioned here.
  */
 void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 {
-	int  len;
+	int len;
 	Hook *h;
+	aClient *intended_to = to;
 	
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", msg, to->name));
 
@@ -220,37 +228,59 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 		return;
 	}
 
+	/* Unless 'quick' is set, we do some safety checks,
+	 * cut the string off at the appropriate place and add
+	 * CR+LF if needed (nearly always).
+	 */
 	if (!quick)
 	{
-		len = strlen(msg);
-		if (!len || (msg[len - 1] != '\n'))
+		char *p = msg;
+		if (*msg == '@')
+		{
+			/* The message includes one or more message tags:
+			 * Spec-wise the rules allow about 8K for message tags
+			 * and then 512 bytes for the remainder of the message.
+			 * Since we do not allow user tags and only permit a
+			 * limited set of tags we can have our own limits for
+			 * the outgoing messages that we generate: a maximum of
+			 * 500 bytes for message tags and 512 for the remainder.
+			 * These limits will never be hit unless there is a bug
+			 * somewhere.
+			 */
+			p = strchr(msg+1, ' ');
+			if (!p)
+			{
+				ircd_log(LOG_ERROR, "[BUG] sendbufto_one(): Malformed message: %s",
+					msg);
+				return;
+			}
+			if (p - msg > 500)
+			{
+				ircd_log(LOG_ERROR, "[BUG] sendbufto_one(): Spec-wise legal, but massively oversized message-tag (len %d)",
+				         (int)(p - msg));
+				return;
+			}
+			p++; /* skip space character */
+		}
+		len = strlen(p);
+		if (!len || (p[len - 1] != '\n'))
 		{
 			if (len > 510)
 				len = 510;
-			msg[len++] = '\r';
-			msg[len++] = '\n';
-			msg[len] = '\0';
+			p[len++] = '\r';
+			p[len++] = '\n';
+			p[len] = '\0';
 		}
-	} else
+		len = strlen(msg); /* (note: we could use pointer jugling to avoid a strlen here) */
+	} else {
 		len = quick;
+	}
 
-	if (len > 512)
+	if (len >= 1024)
 	{
-		ircd_log(LOG_ERROR, "sendbufto_one: len=%u, quick=%u", len, quick);
+		ircd_log(LOG_ERROR, "sendbufto_one: len=%d, quick=%u", len, quick);
 		abort();
 	}
-
-#if defined(DEBUGMODE) && defined(RAWCMDLOGGING)
-	{
-		char copy[512], *p;
-		strlcpy(copy, msg, len > sizeof(copy) ? sizeof(copy) : len); 
-		p = strchr(copy, '\n');
-		if (p) *p = '\0';
-		p = strchr(copy, '\r');
-		if (p) *p = '\0';
-		ircd_log(LOG_ERROR, "-> %s: %s", to->name, copy);
-	}
-#endif
 
 	if (IsMe(to))
 	{
@@ -263,10 +293,26 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 		sendto_ops("%s", tmp_msg); /* recursion? */
 		return;
 	}
-        for(h = Hooks[HOOKTYPE_PACKET]; h; h = h->next) {
-		(*(h->func.intfunc))(&me, to, &msg, &len);
-		if(!msg) return;
+
+	for (h = Hooks[HOOKTYPE_PACKET]; h; h = h->next)
+	{
+		(*(h->func.intfunc))(&me, to, intended_to, &msg, &len);
+		if (!msg)
+			return;
 	}
+
+#if defined(DEBUGMODE) && defined(RAWCMDLOGGING)
+	{
+		char copy[512], *p;
+		strlcpy(copy, msg, len > sizeof(copy) ? sizeof(copy) : len);
+		p = strchr(copy, '\n');
+		if (p) *p = '\0';
+		p = strchr(copy, '\r');
+		if (p) *p = '\0';
+		ircd_log(LOG_ERROR, "-> %s: %s", to->name, copy);
+	}
+#endif
+
 	if (DBufLength(&to->local->sendQ) > get_sendq(to))
 	{
 		if (IsServer(to))
@@ -284,6 +330,7 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 	 * because it counts messages even if queued, but bytes
 	 * only really sent. Queued bytes get updated in SendQueued.
 	 */
+	// FIXME: something is wrong here, I think we do double counts, either in message or in traffic, I forgot.. CHECK !!!!
 	to->local->sendM += 1;
 	me.local->sendM += 1;
 
@@ -291,75 +338,28 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 		send_queued(to);
 }
 
-void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
-    char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-	int  i;
-
-	++current_serial;
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-		/* skip the one and deaf clients (unless sendanyways is set) */
-		if (acptr->from == one || (IsDeaf(acptr) && !(sendanyways == 1)))
-			continue;
-		if (MyConnect(acptr))	/* (It is always a client) */
-			vsendto_prefix_one(acptr, from, pattern, vl);
-		else if (acptr->from->local->serial != current_serial)
-		{
-			acptr->from->local->serial = current_serial;
-			/*
-			 * Burst messages comes here..
-			 */
-			va_start(vl, pattern);
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			va_end(vl);
-		}
-	}
-}
-
-void sendto_channel_butone_with_capability(aClient *one, unsigned int cap,
-	aClient *from, aChannel *chptr, char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-	int  i;
-
-	++current_serial;
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-		/* skip the one and deaf clients (unless sendanyways is set) */
-		if (acptr->from == one || (IsDeaf(acptr) && !(sendanyways == 1)))
-			continue;
-		if (!CHECKPROTO(acptr, cap))
-			continue;
-		if (MyConnect(acptr))	/* (It is always a client) */
-		{
-			va_start(vl, pattern);
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			va_end(vl);
-		}
-		else if (acptr->from->local->serial != current_serial)
-		{
-			acptr->from->local->serial = current_serial;
-			/*
-			 * Burst messages comes here..
-			 */
-			va_start(vl, pattern);
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			va_end(vl);
-		}
-	}
-}
-
-void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
-	int	prefix,
-    char *pattern, ...)
+/** A single function to send data to a channel.
+ * Previously there were 6, now there is 1. This means there
+ * are likely some parameters that you will pass as NULL or 0
+ * but at least we can all use one single function.
+ * @param chptr       The channel to send to
+ * @param from        The source of the message
+ * @param skip        The client to skip (can be NULL)
+ * @param prefix      Any combination of PREFIX_* (can be 0 for all)
+ * @param clicap      Client capability the recipient should have
+ *                    (this only works for local clients, we will
+ *                     always send the message to remote clients and
+ *                     assume the server there will handle it)
+ * @param sendremote  Send message to remote users/servers
+ * @param senddeaf    Send message to 'deaf' clients
+ * @param mtags       The message tags to attach to this message
+ * @param pattern     The pattern (eg: ":%s PRIVMSG %s :%s")
+ * @param ...         The parameters for the pattern.
+ */
+void sendto_channel(aChannel *chptr, aClient *from, aClient *skip,
+                    int prefix, long clicap, int sendflags,
+                    MessageTag *mtags,
+                    char *pattern, ...)
 {
 	va_list vl;
 	Member *lp;
@@ -371,9 +371,14 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		acptr = lp->cptr;
-		/* skip the one and deaf clients (unless sendanyways is set) */
-		if (acptr->from == one || (IsDeaf(acptr) && !(sendanyways == 1)))
+
+		/* Skip sending to 'skip' */
+		if ((acptr == skip) || (acptr->from == skip))
 			continue;
+		/* Don't send to deaf clients (unless 'senddeaf' is set) */
+		if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
+			continue;
+		/* Now deal with 'prefix' (if non-zero) */
 		if (!prefix)
 			goto good;
 		if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
@@ -390,75 +395,38 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 #endif
 		continue;
 good:
-		if (MyConnect(acptr) && IsRegisteredUser(acptr))
-		{
-#ifdef SECURECHANMSGSONLYGOTOSECURE
-			for (h = Hooks[HOOKTYPE_SEND_CHANNEL]; h; h = h->next)
-			{
-				j = (*(h->func.intfunc))(acptr,chptr);
-				if (j != HOOK_CONTINUE)
-					break;
-			}
+		/* Now deal with 'clicap' (if non-zero) */
+		if (clicap && MyClient(acptr) && !HasCapabilityFast(acptr, clicap))
+			continue;
 
-			if (j != HOOK_CONTINUE)
-				continue;
-#endif
-			va_start(vl, pattern);
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			va_end(vl);
+		if (MyClient(acptr))
+		{
+			/* Local client */
+			if (sendflags & SEND_LOCAL)
+			{
+				va_start(vl, pattern);
+				vsendto_prefix_one(acptr, from, mtags, pattern, vl);
+				va_end(vl);
+			}
 		}
 		else
 		{
-			/* Now check whether a message has been sent to this
-			 * remote link already */
-			if (acptr->from->local->serial != current_serial)
+			/* Remote client */
+			if (sendflags & SEND_REMOTE)
 			{
-#ifdef SECURECHANMSGSONLYGOTOSECURE
-				for (h = Hooks[HOOKTYPE_SEND_CHANNEL]; h; h = h->next)
+				/* Message already sent to remote link? */
+				if (acptr->from->local->serial != current_serial)
 				{
-					j = (*(h->func.intfunc))(acptr,chptr);
-					if (j != HOOK_CONTINUE)
-						break;
+					va_start(vl, pattern);
+					vsendto_prefix_one(acptr, from, mtags, pattern, vl);
+					va_end(vl);
+
+					acptr->from->local->serial = current_serial;
 				}
-
-				if (j != HOOK_CONTINUE)
-					continue;
-#endif
-				va_start(vl, pattern);
-				vsendto_prefix_one(acptr, from, pattern, vl);
-				va_end(vl);
-
-				acptr->from->local->serial = current_serial;
 			}
 		}
 	}
 }
-
-/*
-   sendto_chanops_butone -Stskeeps
-*/
-
-void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-		if (acptr == one || !(lp->flags & (CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
-			continue;	/* ...was the one I should skip
-					   or user not not a channel op */
-		if (MyConnect(acptr) && IsRegisteredUser(acptr))
-		{
-			va_start(vl, pattern);
-			vsendto_one(acptr, pattern, vl);
-			va_end(vl);
-		}
-	}
-}
-
 
 /*
  * sendto_server
@@ -571,7 +539,7 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
  * Sends a message to all people on local server who are
  * in same channel with user and have the specified capability.
  */
-void sendto_common_channels_local_butone(aClient *user, int cap, char *pattern, ...)
+void sendto_common_channels_local_butone(aClient *user, long clicap, char *pattern, ...)
 {
 	va_list vl;
 
@@ -596,7 +564,7 @@ void sendto_common_channels_local_butone(aClient *user, int cap, char *pattern, 
 			{
 				cptr = users->cptr;
 				if (!MyConnect(cptr) || (cptr->local->serial == current_serial) ||
-				    !CHECKPROTO(cptr, cap))
+				    !HasCapabilityFast(cptr, clicap))
 					continue;
 				cptr->local->serial = current_serial;
 				sendbufto_one(cptr, sendbuf, sendlen);
@@ -604,55 +572,6 @@ void sendto_common_channels_local_butone(aClient *user, int cap, char *pattern, 
 	}
 
 	return;
-}
-
-/*
- * sendto_channel_butserv
- *
- * Send a message to all members of a channel that are connected to this
- * server.
- */
-
-void sendto_channel_butserv(aChannel *chptr, aClient *from, char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-	int sendlen;
-
-	/* We now create the buffer _before_ we send it to the clients. Rather than
-	 * rebuilding the buffer 1000 times for a 1000 local-users channel. -- Syzop
-	 */
-	*sendbuf = '\0';
-	va_start(vl, pattern);
-	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, from, pattern, vl);
-	va_end(vl);
-
-	for (lp = chptr->members; lp; lp = lp->next)
-		if (MyConnect(acptr = lp->cptr))
-			sendbufto_one(acptr, sendbuf, sendlen);
-
-	return;
-}
-
-void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one, char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		if (lp->cptr == one)
-			continue;
-
-		if (MyConnect(acptr = lp->cptr))
-		{
-			va_start(vl, pattern);
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			va_end(vl);
-		}
-	}
 }
 
 /*
@@ -754,7 +673,7 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 			if (!IsMe(cptr) && (cptr != one) && IsRegisteredUser(cptr) && match_it(cptr, mask, what))
 			{
 				va_start(vl, pattern);
-				vsendto_prefix_one(cptr, from, pattern, vl);
+				vsendto_prefix_one(cptr, from, NULL, pattern, vl);
 				va_end(vl);
 			}
 		}
@@ -777,7 +696,7 @@ void sendto_all_butone(aClient *one, aClient *from, char *pattern, ...)
 		if (!IsMe(cptr) && one != cptr)
 		{
 			va_start(vl, pattern);
-			vsendto_prefix_one(cptr, from, pattern, vl);
+			vsendto_prefix_one(cptr, from, NULL, pattern, vl);
 			va_end(vl);
 		}
 
@@ -1015,10 +934,11 @@ void send_cap_notify(int add, char *token)
 	aClient *cptr;
 	char nbuf[1024];
 	ClientCapability *clicap = ClientCapabilityFindReal(token);
+	long CAP_NOTIFY = ClientCapabilityBit("cap-notify");
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 	{
-		if (cptr->local->proto & PROTO_CAP_NOTIFY)
+		if (HasCapabilityFast(cptr, CAP_NOTIFY))
 		{
 			if (add)
 			{
@@ -1093,7 +1013,7 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 		cptr->from->local->serial = current_serial;
 
 		va_start(vl, pattern);
-		vsendto_prefix_one(cptr->from, from, pattern, vl);
+		vsendto_prefix_one(cptr->from, from, NULL, pattern, vl);
 		va_end(vl);
 	}
 }
@@ -1123,7 +1043,7 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 		cptr->from->local->serial = current_serial;
 
 		va_start(vl, pattern);
-		vsendto_prefix_one(cptr->from, from, pattern, vl);
+		vsendto_prefix_one(cptr->from, from, NULL, pattern, vl);
 		va_end(vl);
 	}
 }
@@ -1151,7 +1071,7 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
 		cptr->from->local->serial = current_serial;
 
 		va_start(vl, pattern);
-		vsendto_prefix_one(cptr->from, from, pattern, vl);
+		vsendto_prefix_one(cptr->from, from, NULL, pattern, vl);
 		va_end(vl);
 	}
 }
@@ -1165,9 +1085,14 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
  */
 static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *from, const char *pattern, va_list vl)
 {
-int len;
+	int len;
 
-	if (from && from->user)
+	/* This expands the ":%s " part of the pattern
+	 * into ":nick!user@host ".
+	 * In case of a non-person (server) it doesn't do
+	 * anything since no expansion is needed.
+	 */
+	if (from && from->user && !strncmp(pattern, ":%s ", 4))
 	{
 		va_arg(vl, char *); /* eat first parameter */
 
@@ -1190,30 +1115,39 @@ int len;
 				strcat(buf, host);
 			}
 		}
-
-		/* Assuming 'pattern' always starts with ":%s ..." */
-		if (!strcmp(&pattern[3], "%s"))
-			strcpy(buf + strlen(buf), va_arg(vl, char *)); /* This can speed things up by 30% -- Syzop */
-		else
-			ircvsnprintf(buf + strlen(buf), buflen - strlen(buf), &pattern[3], vl);
+		/* Now build the remaining string */
+		ircvsnprintf(buf + strlen(buf), buflen - strlen(buf), &pattern[3], vl);
 	}
 	else
+	{
 		ircvsnprintf(buf, buflen, pattern, vl);
+	}
 
 	len = strlen(buf);
 	ADD_CRLF(buf, len);
 	return len;
 }
 
-void vsendto_prefix_one(struct Client *to, struct Client *from,
-    const char *pattern, va_list vl)
+void vsendto_prefix_one(struct Client *to, struct Client *from, MessageTag *mtags,
+                        const char *pattern, va_list vl)
 {
+	char *mtags_str = mtags_to_string(mtags, to);
+	static char sendbuf2[4096];
+
 	if (to && from && MyClient(to) && from->user)
 		vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, from, pattern, vl);
 	else
 		ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);
 
-	sendbufto_one(to, sendbuf, 0);
+	if (BadPtr(mtags_str))
+	{
+		/* Simple message without message tags */
+		sendbufto_one(to, sendbuf, 0);
+	} else {
+		/* Message tags need to be prepended */
+		snprintf(sendbuf2, sizeof(sendbuf2), "@%s %s", mtags_str, sendbuf);
+		sendbufto_one(to, sendbuf2, 0);
+	}
 }
 
 /*
@@ -1226,11 +1160,11 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
  * -avalon
  */
 
-void sendto_prefix_one(aClient *to, aClient *from, const char *pattern, ...)
+void sendto_prefix_one(aClient *to, aClient *from, MessageTag *mtags, const char *pattern, ...)
 {
 	va_list vl;
 	va_start(vl, pattern);
-	vsendto_prefix_one(to, from, pattern, vl);
+	vsendto_prefix_one(to, from, mtags, pattern, vl);
 	va_end(vl);
 }
 
@@ -1417,7 +1351,7 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 void	sendto_message_one(aClient *to, aClient *from, char *sender,
 			char *cmd, char *nick, char *msg)
 {
-        sendto_prefix_one(to, from, ":%s %s %s :%s",
+        sendto_prefix_one(to, from, NULL, ":%s %s %s :%s",
                          CHECKPROTO(to->from, PROTO_SID) ? ID(from) : from->name, cmd, nick, msg);
 }
 

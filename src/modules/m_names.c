@@ -66,7 +66,8 @@ static char buf[BUFSIZE];
 #define TRUNCATED_NAMES 64
 CMD_FUNC(m_names)
 {
-	int uhnames = (MyConnect(sptr) && SupportUHNAMES(sptr)); // cache UHNAMES support
+	int multiprefix = (MyConnect(sptr) && HasCapability(sptr, "multi-prefix"));
+	int uhnames = (MyConnect(sptr) && HasCapability(sptr, "userhost-in-names")); // cache UHNAMES support
 	int bufLen = NICKLEN + (!uhnames ? 0 : (1 + USERLEN + 1 + HOSTLEN));
 	int  mlen = strlen(me.name) + bufLen + 7;
 	aChannel *chptr;
@@ -143,7 +144,7 @@ CMD_FUNC(m_names)
 		if (!user_can_see_member(sptr, acptr, chptr))
 			continue; /* invisible (eg: due to delayjoin) */
 
-		if (!SupportNAMESX(sptr))
+		if (!multiprefix)
 		{
 			/* Standard NAMES reply */
 #ifdef PREFIX_AQ
@@ -160,7 +161,7 @@ CMD_FUNC(m_names)
 			else if (cm->flags & CHFL_VOICE)
 				buf[idx++] = '+';
 		} else {
-			/* NAMES reply with all rights included (NAMESX) */
+			/* NAMES reply with all rights included (multi-prefix / NAMESX) */
 #ifdef PREFIX_AQ
 			if (cm->flags & CHFL_CHANOWNER)
 				buf[idx++] = '~';

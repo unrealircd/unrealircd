@@ -50,8 +50,8 @@ extern MODVAR char umodestring[UMODETABLESZ+1];
 /* get_recvq is only called in send.c for local connections */
 #define get_recvq(x) ((x)->local->class->recvq ? (x)->local->class->recvq : DEFAULT_RECVQ)
 
-#define CMD_FUNC(x) int (x) (aClient *cptr, aClient *sptr, int parc, char *parv[])
-#define CMD_OVERRIDE_FUNC(x) int (x)(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
+#define CMD_FUNC(x) int (x) (aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+#define CMD_OVERRIDE_FUNC(x) int (x)(Cmdoverride *ovr, aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[])
 
 /*
  * Configuration linked lists
@@ -266,17 +266,12 @@ extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
 #define PREFIX_OP	0x4
 #define PREFIX_ADMIN	0x08
 #define PREFIX_OWNER	0x10
-extern void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
-    int prefix, char *pattern, ...) __attribute__((format(printf,5,6)));
-extern void sendto_channel_butone(aClient *, aClient *, aChannel *,
-                                  char *, ...) __attribute__((format(printf,4,5)));
-void sendto_channel_butone_with_capability(aClient *one, unsigned int cap,
-        aClient *from, aChannel *chptr, char *pattern, ...) __attribute__((format(printf,5,6)));
-extern void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one,
-                                          char *pattern, ...) __attribute__((format(printf,4,5)));
+extern void sendto_channel(aChannel *chptr, aClient *from, aClient *skip,
+                           int prefix, long clicap, int sendflags,
+                           MessageTag *mtags,
+                           char *pattern, ...) __attribute__((format(printf,8,9)));
 extern void sendto_common_channels(aClient *, char *, ...) __attribute__((format(printf,2,3)));
-extern void sendto_common_channels_local_butone(aClient *, int, char *, ...) __attribute__((format(printf,3,4)));
-extern void sendto_channel_butserv(aChannel *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
+extern void sendto_common_channels_local_butone(aClient *, long, char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_match_servs(aChannel *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_match_butone(aClient *, aClient *, char *, int,
     char *pattern, ...) __attribute__((format(printf,5,6)));
@@ -284,7 +279,7 @@ extern void sendto_all_butone(aClient *, aClient *, char *, ...) __attribute__((
 extern void sendto_ops(char *, ...) __attribute__((format(printf,1,2)));
 extern void sendto_ops_butone(aClient *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_ops_butme(aClient *, char *, ...) __attribute__((format(printf,2,3)));
-extern void sendto_prefix_one(aClient *, aClient *, const char *, ...) __attribute__((format(printf,3,4)));
+extern void sendto_prefix_one(aClient *, aClient *, MessageTag *, const char *, ...) __attribute__((format(printf,4,5)));
 extern void sendto_opers(char *, ...) __attribute__((format(printf,1,2)));
 extern void sendto_umode(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_umode_global(int, char *, ...) __attribute__((format(printf,2,3)));
@@ -315,8 +310,8 @@ extern char *make_nick_user_host(char *, char *, char *);
 extern char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host);
 extern char *make_user_host(char *, char *);
 extern int parse(aClient *, char *, char *);
-extern int do_numeric(int, aClient *, aClient *, int, char **);
-extern int hunt_server(aClient *, aClient *, char *, int, int, char **);
+extern int do_numeric(int, aClient *, aClient *, MessageTag *, int, char **);
+extern int hunt_server(aClient *, aClient *, MessageTag *, char *, int, int, char **);
 extern aClient *next_client(aClient *, char *);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
@@ -512,6 +507,7 @@ extern void init_random();
 extern u_char getrandom8();
 extern u_int16_t getrandom16();
 extern u_int32_t getrandom32();
+extern void gen_random_alnum(char *buf, int numbytes);
 extern void ident_failed(aClient *cptr);
 
 extern MODVAR char extchmstr[4][64];
@@ -603,7 +599,7 @@ extern void delete_classblock(ConfigItem_class *class_ptr);
 extern void del_async_connects(void);
 extern void isupport_init(void);
 extern void clicap_init(void);
-extern int do_cmd(aClient *cptr, aClient *sptr, char *cmd, int parc, char *parv[]);
+extern int do_cmd(aClient *cptr, aClient *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[]);
 extern void create_snomask(aClient *sptr, anUser *user, char *snomask);
 extern MODVAR char *me_hash;
 extern MODVAR int dontspread;
@@ -615,7 +611,7 @@ extern MODVAR int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, cha
 extern MODVAR void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
 extern MODVAR void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-extern MODVAR int (*m_umode)(aClient *, aClient *, int, char **);
+extern MODVAR int (*m_umode)(aClient *, aClient *, MessageTag *, int, char **);
 extern MODVAR int (*register_user)(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 extern MODVAR int (*tkl_hash)(unsigned int c);
 extern MODVAR char (*tkl_typetochar)(int type);
@@ -632,7 +628,7 @@ extern MODVAR aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
 extern MODVAR aTKline *(*find_tkline_match_zap)(aClient *cptr);
 extern MODVAR void (*tkl_stats)(aClient *cptr, int type, char *para);
 extern MODVAR void (*tkl_synch)(aClient *sptr);
-extern MODVAR int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern MODVAR int (*m_tkl)(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[]);
 extern MODVAR int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
 extern MODVAR int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 extern MODVAR int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
@@ -764,20 +760,20 @@ extern long find_user_mode(char mode);
 extern void start_listeners(void);
 extern void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *name[], const char *value[]);
 extern void reinit_ssl(aClient *);
-extern int m_error(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_info(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_summon(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_users(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_version(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_dalinfo(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_credits(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_license(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_module(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd); /* special! */
-extern int m_rehash(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_die(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-extern int m_restart(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern CMD_FUNC(m_error);
+extern CMD_FUNC(m_dns);
+extern CMD_FUNC(m_info);
+extern CMD_FUNC(m_summon);
+extern CMD_FUNC(m_users);
+extern CMD_FUNC(m_version);
+extern CMD_FUNC(m_dalinfo);
+extern CMD_FUNC(m_credits);
+extern CMD_FUNC(m_license);
+extern CMD_FUNC(m_module);
+extern CMD_FUNC(m_rehash);
+extern CMD_FUNC(m_die);
+extern CMD_FUNC(m_restart);
+extern int m_alias(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], char *cmd); /* special! */
 extern void ban_flooder(aClient *cptr);
 extern char *pcre2_version(void);
 extern int has_common_channels(aClient *c1, aClient *c2);
@@ -818,3 +814,13 @@ extern char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked
 extern int badword_config_process(ConfigItem_badword *ca, char *str);
 extern void badword_config_free(ConfigItem_badword *ca);
 extern char *badword_config_check_regex(char *s, int fastsupport, int check_broadness);
+extern char *mtags_to_string(MessageTag *m, aClient *acptr);
+extern long ClientCapabilityBit(const char *token);
+extern int user_ready_for_register(aClient *sptr);
+extern void SetCapability(aClient *acptr, const char *token);
+extern void ClearCapability(aClient *acptr, const char *token);
+extern MessageTag *mtag_generate_msgid(void);
+extern void free_mtags(MessageTag *m);
+extern void mtag_add_or_inherit_msgid(MessageTag *recv_mtags, MessageTag **mtag_list);
+extern void mtag_add_or_inherit_account(MessageTag *recv_mtags, MessageTag **mtag_list, aClient *acptr);
+extern void mtag_add_or_inherit_time(MessageTag *recv_mtags, MessageTag **mtag_list);

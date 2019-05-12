@@ -98,13 +98,13 @@ MOD_UNLOAD(delayjoin)
 void set_post_delayed(aChannel *chptr)
 {
 	chptr->mode.extmode |= EXTMODE_POST_DELAYED;
-	sendto_channel_butserv(chptr, &me, ":%s MODE %s +d", me.name, chptr->chname);
+	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s +d", me.name, chptr->chname);
 }
 
 void clear_post_delayed(aChannel *chptr)
 {
 	chptr->mode.extmode &= ~EXTMODE_POST_DELAYED;
-	sendto_channel_butserv(chptr, &me, ":%s MODE %s -d", me.name, chptr->chname);
+	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s -d", me.name, chptr->chname);
 }
 
 bool moded_member_invisible(Member* m, aChannel *chptr)
@@ -199,6 +199,7 @@ void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
 	Member *i;
 	char joinbuf[512];
 	char exjoinbuf[512];
+	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
 
 	clear_user_invisible(chptr,sptr);
 
@@ -215,7 +216,7 @@ void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
 		aClient *acptr = i->cptr;
 		if (!is_skochanop(acptr,chptr) && acptr != sptr && MyConnect(acptr))
 		{
-			if (acptr->local->proto & PROTO_CAP_EXTENDED_JOIN)
+			if (HasCapabilityFast(acptr, CAP_EXTENDED_JOIN))
 				sendbufto_one(acptr, exjoinbuf, 0);
 			else
 				sendbufto_one(acptr, joinbuf, 0);
@@ -281,6 +282,8 @@ int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, ch
 int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
                            char *modebuf, char *parabuf, time_t sendts, int samode)
 {
+	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
+
 	// Handle case where we just unset +D but have invisible users
 	if (!channel_is_delayed(chptr) && !channel_is_post_delayed(chptr) && channel_has_invisible_users(chptr))
 		set_post_delayed(chptr);
@@ -313,7 +316,7 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 						continue;
 					if (moded_user_invisible(i->cptr,chptr))
 					{
-						if (user->local->proto & PROTO_CAP_EXTENDED_JOIN)
+						if (HasCapabilityFast(user, CAP_EXTENDED_JOIN))
 						{
 							sendto_one(user,":%s!%s@%s JOIN %s %s :%s",
 							           i->cptr->name, i->cptr->user->username, GetHost(i->cptr),

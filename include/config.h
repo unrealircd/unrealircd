@@ -68,12 +68,6 @@
 # define MODULE_SUFFIX	".dll"
 #endif
 
-/* 
- * If channel mode is +z, only send to secure links & people
- *
- */
-#undef SECURECHANMSGSONLYGOTOSECURE
-
 /* If you want to support chinese and/or japanese nicks */
 #undef NICK_GB2312
 #undef NICK_GBK

@@ -511,7 +511,7 @@ nickkill2done:
 		/* XXX: we need to split this out into register_remote_user() or something. */
 		parv[3] = nick;
 		parv[6] = sptr->name;
-		if (do_cmd(cptr, sptr, "USER", parc - 3, &parv[3]) == FLUSH_BUFFER)
+		if (do_cmd(cptr, sptr, recv_mtags, "USER", parc - 3, &parv[3]) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
 		if (GotNetInfo(cptr) && !IsULine(sptr))
 			sendto_fconnectnotice(sptr, 0, NULL);
@@ -1092,7 +1092,7 @@ CMD_FUNC(m_nick)
 		}
 		/* This had to be copied here to avoid problems.. */
 		strlcpy(sptr->name, nick, sizeof(sptr->name));
-		if (sptr->user && *sptr->user->username && IsNotSpoof(sptr) && !CHECKPROTO(sptr, PROTO_CLICAP))
+		if (user_ready_for_register(sptr))
 		{
 			/*
 			   ** USER already received, now we have NICK.
@@ -1137,7 +1137,7 @@ CMD_FUNC(m_nick)
 	if (IsServer(cptr) && parc > 7)
 	{
 		parv[3] = nick;
-		if (do_cmd(cptr, sptr, "USER", parc - 3, &parv[3]) == FLUSH_BUFFER)
+		if (do_cmd(cptr, sptr, recv_mtags, "USER", parc - 3, &parv[3]) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
 		if (GotNetInfo(cptr) && !IsULine(sptr))
 			sendto_fconnectnotice(sptr, 0, NULL);
@@ -1449,7 +1449,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			char *parv[2];
 			parv[0] = sptr->name;
 			parv[1] = NULL;
-			if (do_cmd(sptr, sptr, "LUSERS", 1, parv) == FLUSH_BUFFER)
+			if (do_cmd(sptr, sptr, NULL, "LUSERS", 1, parv) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
 		}
 
@@ -1539,7 +1539,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		tkllayer[2] = umode;
 		tkllayer[3] = NULL;
 		dontspread = 1;
-		do_cmd(cptr, sptr, "MODE", 3, tkllayer);
+		do_cmd(cptr, sptr, NULL, "MODE", 3, tkllayer);
 		dontspread = 0;
 
 		/* Set the vhost */
@@ -1621,7 +1621,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				tlds->channel,
 				NULL
 			};
-			if (do_cmd(sptr, sptr, "JOIN", 3, chans) == FLUSH_BUFFER)
+			if (do_cmd(sptr, sptr, NULL, "JOIN", 3, chans) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
 		}
 		else if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
@@ -1631,7 +1631,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				AUTO_JOIN_CHANS,
 				NULL
 			};
-			if (do_cmd(sptr, sptr, "JOIN", 3, chans) == FLUSH_BUFFER)
+			if (do_cmd(sptr, sptr, NULL, "JOIN", 3, chans) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
 		}
 		/* NOTE: If you add something here.. be sure to check the 'if (savetkl)' note above */

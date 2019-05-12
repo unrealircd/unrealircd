@@ -151,10 +151,12 @@ CMD_FUNC(m_knock)
 		}
 	}
 
-	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-		":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)", me.name, chptr->chname,
-		sptr->name, sptr->user->username, GetHost(sptr),
-		parv[2] ? parv[2] : "no reason specified");
+	sendto_channel(chptr, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+	               0, SEND_ALL, NULL,
+	               ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)",
+	               me.name, chptr->chname,
+	               sptr->name, sptr->user->username, GetHost(sptr),
+	               parv[2] ? parv[2] : "no reason specified");
 
 	sendnotice(sptr, "Knocked on %s", chptr->chname);
 

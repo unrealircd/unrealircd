@@ -60,7 +60,7 @@ CMD_FUNC(m_botmotd)
 	aMotdLine *motdline;
 	ConfigItem_tld *tld;
 
-	if (hunt_server(cptr, sptr, ":%s BOTMOTD :%s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(cptr, sptr, recv_mtags, ":%s BOTMOTD :%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
 
 	if (!IsPerson(sptr))

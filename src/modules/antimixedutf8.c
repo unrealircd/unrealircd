@@ -177,7 +177,7 @@ CMD_OVERRIDE_FUNC(override_msg)
 	if (!MyClient(sptr) || (parc < 3) || BadPtr(parv[2]))
 	{
 		/* Short circuit for: remote clients or insufficient parameters */
-		return CallCmdoverride(ovr, cptr, sptr, parc, parv);
+		return CallCmdoverride(ovr, cptr, sptr, recv_mtags, parc, parv);
 	}
 
 	score = lookalikespam_score(StripControlCodes(parv[2]));
@@ -205,7 +205,7 @@ CMD_OVERRIDE_FUNC(override_msg)
 		}
 	}
 
-	return CallCmdoverride(ovr, cptr, sptr, parc, parv);
+	return CallCmdoverride(ovr, cptr, sptr, recv_mtags, parc, parv);
 }
 
 /*** rest is module and config stuff ****/
