@@ -9,9 +9,15 @@ function fail()
 
 CIPHERSCAN="cipherscan"
 OPENSSL="openssl"
-if [ -x /home/travis/build/unrealircd/unrealircd/cipherscan/cipherscan ]; then
+if [ -x ~/cipherscan ]; then
+	CIPHERSCAN="$HOME/cipherscan/cipherscan"
+	OPENSSL="$HOME/cipherscan/openssl"
+elif [ -x /home/travis/build/unrealircd/unrealircd/cipherscan/cipherscan ]; then
 	CIPHERSCAN="/home/travis/build/unrealircd/unrealircd/cipherscan/cipherscan"
 	OPENSSL="/home/travis/build/unrealircd/unrealircd/cipherscan/openssl"
+elif [ -x ../../../cipherscan/ ]; then
+	CIPHERSCAN="`readlink -f ../../../cipherscan/cipherscan`"
+	OPENSSL="`readlink -f ../../../cipherscan/openssl`"
 fi
 
 $CIPHERSCAN --help >/dev/null || exit 1

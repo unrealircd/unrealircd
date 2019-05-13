@@ -9,7 +9,14 @@ set -e
 # Verbose:
 set -x
 
+# Kill old instances
+killall -9 unrealircd || true
+# Remove old junk
+rm -rf cipherscan/ unrealircd-tests/
+
 # Install packages
+### XXX: commented out
+if [ 0 = 1 ]; then
 if [[ "$OSTYPE" == "darwin"* ]]; then
 	brew install git || true
 	brew install python || true
@@ -32,14 +39,17 @@ else
 	sudo rake install
 fi
 cd ..
+fi
+# XXX: end of commented out
 
-# Install 'cipherscan'
-git clone -q https://github.com/mozilla/cipherscan
+if [ ! -d ~/cipherscan ]; then
+	# Install 'cipherscan'
+	git clone -q https://github.com/mozilla/cipherscan
+fi
 
 # Install 'unrealircd-tests'
-git clone -q https://github.com/unrealircd/unrealircd-tests.git
+git clone -q git@github-unrealircd-tests:syzop/unrealircd-tests.git
 cd unrealircd-tests
-bundle install
 mv config.yaml.example config.yaml
 
 # Start the IRC servers
