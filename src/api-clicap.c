@@ -320,8 +320,6 @@ void clicap_post_rehash(void)
 	int i;
 	int found;
 
-	return 0; // FIXME FIXME
-
 	if (!loop.ircd_rehashing)
 		return; /* First boot */
 
