@@ -63,7 +63,8 @@ R_MODULES= \
 	 antirandom.so hideserver.so jumpserver.so \
 	 m_ircops.so m_staff.so nocodes.so \
 	 charsys.so antimixedutf8.so authprompt.so m_sinfo.so \
-	 reputation.so connthrottle.so
+	 reputation.so connthrottle.so \
+	 m_storetkl.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -538,6 +539,10 @@ reputation.so: reputation.c $(INCLUDES)
 connthrottle.so: connthrottle.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o connthrottle.so connthrottle.c
+
+m_storetkl.so: m_storetkl.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_storetkl.so m_storetkl.c
 
 #############################################################################
 # capabilities
