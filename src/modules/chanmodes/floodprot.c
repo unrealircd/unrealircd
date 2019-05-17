@@ -176,7 +176,7 @@ MOD_UNLOAD(floodprot)
 
 int floodprot_rehash_complete(void)
 {
-	timedban_available = is_module_loaded("timedban");
+	timedban_available = is_module_loaded("extbans/timedban");
 	return 0;
 }
 

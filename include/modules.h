@@ -550,6 +550,7 @@ struct _Module
 	unsigned char options;
 	unsigned char errorcode;
 	char *tmp_file;
+	char *relpath;
 	unsigned long mod_sys_version;
 	unsigned int compiler_version;
 };

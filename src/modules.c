@@ -370,6 +370,27 @@ char *Module_TransformPath(char *path_)
 	return path;
 }
 
+/** This function is the inverse of Module_TransformPath() */
+char *Module_GetRelPath(char *fullpath)
+{
+	static char buf[512];
+	char prefix[512];
+	char *s = fullpath;
+
+	/* Strip the prefix */
+	snprintf(prefix, sizeof(prefix), "%s/", MODULESDIR);
+	if (!strncasecmp(fullpath, prefix, strlen(prefix)))
+		s += strlen(prefix);
+	strlcpy(buf, s, sizeof(buf));
+
+	/* Strip the suffix */
+	s = strstr(buf, MODULE_SUFFIX);
+	if (s)
+		*s = '\0';
+
+	return buf;
+}
+
 /*
  * Returns an error if insucessful .. yes NULL is OK! 
 */
@@ -489,6 +510,7 @@ char  *Module_Create(char *path_)
 		mod->tmp_file = strdup(tmppath);
 		mod->mod_sys_version = modsys_ver;
 		mod->compiler_version = compiler_version ? *compiler_version : 0;
+		mod->relpath = strdup(Module_GetRelPath(path));
 
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
 		if (!Mod_Init)
@@ -1746,7 +1768,7 @@ const char *our_dlerror(void)
 #endif
 
 /** Check if a module is loaded.
- * @param name Name of the module (eg: 'floodprot')
+ * @param name Name of the module by relative path (eg: 'extbans/timedban')
  * @returns 1 if module is loaded, 0 if not.
  * @notes The name is checked against the module name,
  *        this can be a problem if two modules have the same name.
@@ -1759,7 +1781,7 @@ int is_module_loaded(char *name)
 		if (mi->flags & MODFLAG_DELAYED)
 			continue; /* unloading (delayed) */
 
-		if (!strcasecmp(mi->header->name, name))
+		if (!strcasecmp(mi->relpath, name))
 			return 1;
 	}
 	return 0;
