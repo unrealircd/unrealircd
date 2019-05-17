@@ -313,6 +313,7 @@ ConfigItem_offchans	*conf_offchans = NULL;
 MODVAR aConfiguration		iConf;
 MODVAR aConfiguration		tempiConf;
 MODVAR ConfigFile		*conf = NULL;
+NameValueList *config_defines = NULL; /**< List of $define's, only valid during configuration reading */
 MODVAR int ipv6_disabled = 0;
 MODVAR aClient *remote_rehash_client = NULL;
 
@@ -853,19 +854,435 @@ void unreal_delquotes(char *i)
 	*o = '\0';
 }
 
-/* This is the internal parser, made by Chris Behrens & Fred Jacobs */
+#define PREPROCESSOR_ERROR 0
+#define PREPROCESSOR_DEFINE 1
+#define PREPROCESSOR_IF 2
+#define PREPROCESSOR_ENDIF 3
+// TODO: support $else and $elseif or $else if as well? is very similar logic
+//       after all...
+
+void skip_whitespace(char **p)
+{
+	for (; **p == ' ' || **p == '\t'; *p = *p + 1);
+}
+
+int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, ConditionalConfig **cc_out)
+{
+	char *p=statement, *name;
+	int negative = 0;
+	ConditionalConfig *cc;
+
+	/* Currently we support only 4 things:
+	 * $XYZ == "something"
+	 * $XYZ != "something"
+	 * module-loaded("something")
+	 * !module-loaded("something")
+	 * defined($XYZ)
+	 * !defined($XYZ)
+	 * We do not support && or || or anything else at this time.
+	 */
+	skip_whitespace(&p);
+	if (*p == '$')
+		p++;
+	if (*p == '!')
+	{
+		negative = 1;
+		p++;
+		skip_whitespace(&p);
+	}
+
+	/* Now comes the keyword or a variable name */
+	if (!strncmp(p, "module-loaded", 13))
+	{
+		p += 13;
+		skip_whitespace(&p);
+		if (*p != '(')
+		{
+			config_error("%s:%i: expected '(' for module-loaded(...",
+				filename, linenumber);
+			return PREPROCESSOR_ERROR;
+		}
+		p++;
+		skip_whitespace(&p);
+		if (*p == '"')
+			p++;
+		name = p;
+		for (; *p && (*p != ')' && *p != '"'); p++);
+		if (!*p)
+		{
+			config_error("%s:%i: invalid if statement (termination error): %s",
+				filename, linenumber, statement);
+			return PREPROCESSOR_ERROR;
+		}
+		*p = '\0';
+		cc = MyMallocEx(sizeof(ConditionalConfig));
+		cc->condition = IF_MODULE;
+		cc->negative = negative;
+		cc->name = strdup(name);
+		*cc_out = cc;
+		return PREPROCESSOR_IF;
+	} else
+	if (!strncmp(p, "defined", 7))
+	{
+		p += 7;
+		skip_whitespace(&p);
+		if (*p != '(')
+		{
+			config_error("%s:%i: expected '(' for defined(...",
+				filename, linenumber);
+			return PREPROCESSOR_ERROR;
+		}
+		p++;
+		skip_whitespace(&p);
+		if (*p == '"')
+			p++;
+		name = p;
+		for (; *p && (*p != ')' && *p != '"'); p++);
+		if (!*p)
+		{
+			config_error("%s:%i: invalid if statement (termination error): %s",
+				filename, linenumber, statement);
+			return PREPROCESSOR_ERROR;
+		}
+		*p = '\0';
+		cc = MyMallocEx(sizeof(ConditionalConfig));
+		cc->condition = IF_DEFINED;
+		cc->negative = negative;
+		cc->name = strdup(name);
+		*cc_out = cc;
+		return PREPROCESSOR_IF;
+	} else
+	{
+		char *name_terminate, *name2;
+		// Should be one of:
+		// XYZ == "something"
+		// $XYZ == "something"
+		// XYZ != "something"
+		// $XYZ != "something"
+		// Anything else is an error.
+		if (*p == '$')
+			p++;
+		/* variable name starts now */
+		name = p;
+		for (; *p && (*p != ' ' && *p != '\t' && *p != '=' && *p != '!'); p++);
+		if (!*p)
+		{
+			config_error("%s:%i: invalid if statement (termination error): %s",
+				filename, linenumber, statement);
+			return PREPROCESSOR_ERROR;
+		}
+		name_terminate = p;
+		skip_whitespace(&p);
+		if (!strncmp(p, "==", 2))
+		{
+			negative = 0;
+		} else
+		if (!strncmp(p, "!=", 2))
+		{
+			negative = 1;
+		} else
+		{
+			*name_terminate = '\0';
+			config_error("%s:%i: $if: expected == or != after '%s'",
+				filename, linenumber, name);
+			return PREPROCESSOR_ERROR;
+		}
+		p += 2;
+		*name_terminate = '\0';
+		skip_whitespace(&p);
+		if (*p != '"')
+		{
+			config_error("%s:%i: $if: expected double quotes, missing \" perhaps?",
+				filename, linenumber);
+			return PREPROCESSOR_ERROR;
+		}
+		p++;
+		name2 = p;
+		for (; *p && *p != '"'; p++);
+		if (!*p)
+		{
+			config_error("%s:%i: invalid if statement, missing \" at end perhaps?",
+				filename, linenumber);
+			return PREPROCESSOR_ERROR;
+		}
+		*p = '\0';
+		cc = MyMallocEx(sizeof(ConditionalConfig));
+		cc->condition = IF_VALUE;
+		cc->negative = negative;
+		cc->name = strdup(name);
+		cc->opt = strdup(name2);
+		*cc_out = cc;
+		return PREPROCESSOR_IF;
+	}
+
+	config_error("%s:%i: Error while evaluating '$if' statement '%s'",
+		filename, linenumber, statement);
+	return PREPROCESSOR_ERROR;
+}
+
+int evaluate_preprocessor_define(char *statement, char *filename, int linenumber)
+{
+	char *p = statement;
+	char *name, *name_terminator;
+	char *value;
+
+	skip_whitespace(&p);
+	name = p;
+	for (; *p && *p != ' ' && *p != '\t'; p++);
+	if (!*p)
+	{
+		config_error("%s:%i: invalid $define statement",
+			filename, linenumber);
+		return PREPROCESSOR_ERROR;
+	}
+	name_terminator = p;
+	skip_whitespace(&p);
+	if (*p != '"')
+	{
+		config_error("%s:%i: $define: expected double quotes, missing \" perhaps?",
+			filename, linenumber);
+		return PREPROCESSOR_ERROR;
+	}
+	p++;
+	value = p;
+	for (; *p && *p != '"'; p++);
+	if (!*p)
+	{
+		config_error("%s:%i: invalid $define statement, missing \" at end perhaps?",
+			filename, linenumber);
+		return PREPROCESSOR_ERROR;
+	}
+
+	*p = '\0';
+	*name_terminator = '\0';
+
+	NameValueList *d = MyMallocEx(sizeof(NameValueList));
+	d->name = strdup(name);
+	d->value = strdup(value);
+	AddListItem(d, config_defines);
+	return PREPROCESSOR_DEFINE;
+}
+
+int evaluate_preprocessor(char *start, char *end, char *filename, int linenumber, ConditionalConfig **cc)
+{
+	char buf[512];
+	int n, max;
+
+	*cc = NULL;
+
+	max = end - start + 1;
+	if (max > sizeof(buf))
+		max = sizeof(buf);
+	strlcpy(buf, start, max);
+
+	if (!strncmp(buf, "$define", 7))
+		return evaluate_preprocessor_define(buf+7, filename, linenumber);
+	else if (!strncmp(buf, "$if ", 4))
+		return evaluate_preprocessor_if(buf+4, filename, linenumber, cc);
+	else if (!strcmp(buf, "$endif"))
+		return PREPROCESSOR_ENDIF;
+
+	config_error("%s:%i: Unknown preprocessor directive: %s", filename, linenumber, buf);
+	return PREPROCESSOR_ERROR; /* ??? */
+}
+
+/** Free a ConditionalConfig entry.
+ * NOTE: be sure to do a DelListItem() before calling this, if necessary.
+ */
+void preprocessor_cc_free_entry(ConditionalConfig *cc)
+{
+	safefree(cc->name);
+	safefree(cc->opt);
+	MyFree(cc);
+}
+
+/** Free ConditionalConfig entries in a linked list that
+ * are equal or above 'level'. This happens during an $endif.
+ */
+void preprocessor_cc_free_level(ConditionalConfig **cc_list, int level)
+{
+	ConditionalConfig *cc, *cc_next;
+	for (cc = *cc_list; cc; cc = cc_next)
+	{
+		cc_next = cc->next;
+		if (cc->priority >= level)
+		{
+			DelListItem(cc, *cc_list);
+			preprocessor_cc_free_entry(cc);
+		}
+	}
+}
+
+/** Duplicates a linked list of ConditionalConfig entries */
+void preprocessor_cc_duplicate_list(ConditionalConfig *r, ConditionalConfig **out)
+{
+	ConditionalConfig *cc;
+
+	*out = NULL;
+	for (; r; r = r->next)
+	{
+		cc = MyMallocEx(sizeof(ConditionalConfig));
+		safestrdup(cc->name, r->name);
+		safestrdup(cc->opt, r->opt);
+		cc->priority = r->priority;
+		cc->condition = r->condition;
+		cc->negative = r->negative;
+		AddListItem(cc, *out);
+	}
+}
+
+void preprocessor_cc_free_list(ConditionalConfig *cc)
+{
+	ConditionalConfig *cc_next;
+
+	for (; cc; cc = cc_next)
+	{
+		cc_next = cc->next;
+		safefree(cc->name);
+		safefree(cc->opt);
+		MyFree(cc);
+	}
+}
+
+void free_config_entry(ConfigEntry *ce)
+{
+	/* free ConditionalConfig */
+	if (ce->ce_cond)
+		preprocessor_cc_free_list(ce->ce_cond);
+
+	/* free ConfigEntry */
+	safefree(ce->ce_varname);
+	safefree(ce->ce_vardata);
+	MyFree(ce);
+}
+
+NameValueList *find_config_define(const char *name)
+{
+	NameValueList *n;
+
+	for (n = config_defines; n; n = n->next)
+		if (!strcasecmp(n->name, name))
+			return n;
+	return NULL;
+}
+
+/** Resolve a preprocessor condition to true (=default) or false */
+int preprocessor_resolve_if(ConditionalConfig *cc)
+{
+	int result = 0;
+
+	if (!cc)
+		return 1;
+
+	if (cc->condition == IF_MODULE)
+	{
+		if (is_module_loaded(cc->name))
+		{
+			result = 1;
+		}
+	} else
+	if (cc->condition == IF_DEFINED)
+	{
+		NameValueList *d = find_config_define(cc->name);
+		if (d)
+		{
+			result = 1;
+		}
+	} else
+	if (cc->condition == IF_VALUE)
+	{
+		NameValueList *d = find_config_define(cc->name);
+		if (d && !strcasecmp(d->value, cc->opt))
+		{
+			result = 1;
+		}
+	} else
+	{
+		config_status("WARNING: unhandled $if type!!");
+	}
+
+	if (cc->negative)
+		result = result ? 0 : 1;
+
+	return result;
+}
+
+void preprocessor_resolve_conditionals_helper(ConfigEntry **ce_list, int phase)
+{
+	ConfigEntry *ce, *ce_next, *ce_prev;
+	ConfigEntry *cep, *cep_next, *cep_prev;
+
+	ce_prev = NULL;
+	for (ce = *ce_list; ce; ce = ce_next)
+	{
+		ce_next = ce->ce_next;
+		/* This is for an $if before a block start */
+		if (!preprocessor_resolve_if(ce->ce_cond))
+		{
+			/* Delete this entry */
+			if (ce == *ce_list)
+			{
+				/* we are head, so new head */
+				*ce_list = ce->ce_next; /* can be NULL now */
+			} else {
+				/* non-head */
+				ce_prev->ce_next = ce->ce_next; /* can be NULL now */
+			}
+			// FIXME: this entry may have ce->ce_entries as well, right?
+			// if so, we must free those too or we have a memory leak !
+			free_config_entry(ce);
+			continue;
+		}
+
+		cep_prev = NULL;
+		for (cep = ce->ce_entries; cep; cep = cep_next)
+		{
+			cep_next = cep->ce_next;
+			if (!preprocessor_resolve_if(cep->ce_cond))
+			{
+				/* Delete this entry */
+				if (cep == ce->ce_entries)
+				{
+					/* we are head, so new head */
+					ce->ce_entries = cep->ce_next; /* can be NULL now */
+				} else {
+					/* non-head */
+					ce_prev->ce_next = cep->ce_next;
+				}
+				free_config_entry(cep);
+				continue;
+			}
+			preprocessor_resolve_conditionals_helper(&cep, phase);
+			cep_prev = cep;
+		}
+		ce_prev = ce;
+	}
+}
+void preprocessor_resolve_conditionals(int phase)
+{
+	ConfigFile *cfptr;
+
+	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
+		preprocessor_resolve_conditionals_helper(&cfptr->cf_entries, phase);
+}
+
+/* This is the internal parser, made by Chris Behrens & Fred Jacobs <2005.
+ * Enhanced (or mutilated) by Bram Matthys over the years (2015-2019).
+ */
 static ConfigFile *config_parse(char *filename, char *confdata)
 {
 	char		*ptr;
 	char		*start;
 	int		linenumber = 1;
 	int errors = 0;
+	int n;
 	ConfigEntry	*curce;
 	ConfigEntry	**lastce;
 	ConfigEntry	*cursection;
-
 	ConfigFile	*curcf;
 	ConfigFile	*lastcf;
+	int preprocessor_level = 0;
+	ConditionalConfig *cc, *cc_list = NULL;
 
 	lastcf = curcf = MyMallocEx(sizeof(ConfigFile));
 	curcf->cf_filename = strdup(filename);
@@ -1060,6 +1477,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					curce->ce_fileptr = curcf;
 					curce->ce_prevlevel = cursection;
 					curce->ce_fileposstart = (start - confdata);
+					preprocessor_cc_duplicate_list(cc_list, &curce->ce_cond);
 				}
 				break;
 			case '\n':
@@ -1070,10 +1488,50 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 			case '=':
 			case '\r':
 				break;
+			case '$':
+				/* preprocessor thingy */
+				start = ptr;
+				for (;*ptr; ptr++)
+				{
+					if (*ptr == '\n')
+						break;
+				}
+				if (!*ptr)
+				{
+					// TODO/FIXME: is it safe to scratch next and allow this ? then we must never ever do ptr++ ! or goto breakout in such a case, really.
+					config_error("%s:%i: preprocessor entry $... did not end well. Missing newline at end of file?", filename, linenumber);
+					errors++;
+					break;
+				}
+				cc = NULL;
+				n = evaluate_preprocessor(start, ptr, filename, linenumber, &cc);
+				if (n == PREPROCESSOR_IF)
+				{
+					preprocessor_level++;
+					cc->priority = preprocessor_level;
+					AddListItem(cc, cc_list);
+				} else
+				if (n == PREPROCESSOR_ENDIF)
+				{
+					if (preprocessor_level == 0)
+					{
+						config_error("%s:%i: $endif unexpected. There was no preciding unclosed $if.",
+							filename, linenumber);
+						errors++;
+					}
+					preprocessor_cc_free_level(&cc_list, preprocessor_level);
+					preprocessor_level--;
+				} else
+				if (n == PREPROCESSOR_ERROR)
+				{
+					errors++;
+					goto breakout;
+				}
+				break;
 			default:
 				if ((*ptr == '*') && (*(ptr+1) == '/'))
 				{
-					config_status("%s:%i Ignoring extra end comment\n",
+					config_status("%s:%i: Ignoring extra end comment\n",
 						filename, linenumber);
 					config_status("WARNING: Starting with UnrealIRCd 4.2.1 a /*-style comment stops as soon as the first */ is encountered. "
 					              "See https://www.unrealircd.org/docs/FAQ#Nesting_comments for more information.");
@@ -1128,6 +1586,9 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					curce->ce_fileptr = curcf;
 					curce->ce_prevlevel = cursection;
 					curce->ce_fileposstart = (start - confdata);
+					if (curce->ce_cond)
+						abort(); // hmm this can be reached? FIXME!
+					preprocessor_cc_duplicate_list(cc_list, &curce->ce_cond);
 				}
 				if ((*ptr == ';') || (*ptr == '\n'))
 					ptr--;
@@ -1136,7 +1597,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 		if (!*ptr) /* This IS possible. -- Syzop */
 			break;
 	} /* for */
-
+breakout:
 	if (curce)
 	{
 		config_error("%s: End of file reached but directive or block at line %i did not end properly. "
@@ -1729,6 +2190,20 @@ void applymeblock(void)
 		strlcpy(me.id, conf_me->sid, sizeof(me.id));
 }
 
+/** Frees the list of config_defines, so all $define's */
+void free_config_defines(void)
+{
+	NameValueList *e, *e_next;
+	for (e = config_defines; e; e = e_next)
+	{
+		e_next = e->next;
+		safefree(e->name);
+		safefree(e->value);
+		MyFree(e);
+	}
+	config_defines = NULL;
+}
+
 void upgrade_conf_to_34(void)
 {
 	config_error("******************************************************************");
@@ -1833,6 +2308,7 @@ int	init_conf(char *rootconf, int rehash)
 	bzero(&requiredstuff, sizeof(requiredstuff));
 	config_setdefaultsettings(&tempiConf);
 	clicap_pre_rehash();
+	free_config_defines();
 	/*
 	 * the rootconf must be listed in the conf_include for include
 	 * recursion prevention code and sanity checking code to be
@@ -1844,6 +2320,7 @@ int	init_conf(char *rootconf, int rehash)
 	add_include(rootconf, "[thin air]", -1);
 	if ((load_conf(rootconf, rootconf) > 0) && config_loadmodules())
 	{
+		preprocessor_resolve_conditionals(2);
 		config_test_reset();
 		if (!config_test_all())
 		{

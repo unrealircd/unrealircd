@@ -78,6 +78,7 @@ typedef struct t_kline aTKline;
 typedef struct _spamfilter Spamfilter;
 typedef struct _spamexcept SpamExcept;
 /* New Config Stuff */
+typedef struct _conditionalconfig ConditionalConfig;
 typedef struct _configentry ConfigEntry;
 typedef struct _configfile ConfigFile;
 typedef struct _configflag ConfigFlag;
@@ -933,12 +934,29 @@ struct _message_tag {
 	char *value;
 };
 
+typedef struct _name_value_list NameValueList;
+struct _name_value_list {
+	NameValueList *prev, *next;
+	char *name;
+	char *value;
+};
+
 /*
  * conf2 stuff -stskeeps
 */
 
-/* Config flags */
- 
+typedef enum ConfigIfCondition { IF_DEFINED=1, IF_VALUE=2, IF_MODULE=3} ConfigIfCondition;
+
+struct _conditionalconfig
+{
+	ConditionalConfig *prev, *next;
+	int priority; /**< Preprocessor level. Starts with 1, then 2, 3, .. */
+	ConfigIfCondition condition; /**< See ConfigIfCondition, one of: IF_* */
+	int negative; /**< For ! conditions */
+	char *name; /**< Name of the variable or module */
+	char *opt; /**< Only for IF_VALUE */
+};
+
 struct _configfile
 {
         char            *cf_filename;
@@ -952,6 +970,7 @@ struct _configentry
         int 	 	ce_varlinenum, ce_fileposstart, ce_fileposend, ce_sectlinenum;
         char 		*ce_varname, *ce_vardata;
         ConfigEntry     *ce_entries, *ce_prevlevel, *ce_next;
+        ConditionalConfig *ce_cond;
 };
 
 struct _configflag 
