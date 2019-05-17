@@ -132,6 +132,7 @@ long clicap_allocate_cap(void)
 ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clicap_request, long *cap)
 {
 	ClientCapability *clicap;
+	int exists = 0;
 
 	if (cap)
 		*cap = 0; /* Initialize early */
@@ -139,6 +140,7 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 	clicap = ClientCapabilityFindReal(clicap_request->name);
 	if (clicap)
 	{
+		exists = 1;
 		if (clicap->unloaded)
 		{
 			clicap->unloaded = 0;
@@ -177,7 +179,8 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 	clicap->visible = clicap_request->visible;
 	clicap->parameter = clicap_request->parameter;
 
-	AddListItem(clicap, clicaps);
+	if (!exists)
+		AddListItem(clicap, clicaps);
 
 	if (clicap->cap && !cap)
 		abort(); /* module API call error */
