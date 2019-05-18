@@ -1050,16 +1050,14 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					}
 					else
 					{
-						curce->ce_vardata = MyMallocEx(ptr-start+1);
-						strlcpy(curce->ce_vardata, start, ptr-start+1);
+						safestrldup(curce->ce_vardata, start, ptr-start+1);
 						unreal_delquotes(curce->ce_vardata);
 					}
 				}
 				else
 				{
 					curce = MyMallocEx(sizeof(ConfigEntry));
-					curce->ce_varname = MyMallocEx((ptr-start)+1);
-					strlcpy(curce->ce_varname, start, ptr-start+1);
+					safestrldup(curce->ce_varname, start, ptr-start+1);
 					unreal_delquotes(curce->ce_varname);
 					curce->ce_varlinenum = linenumber;
 					curce->ce_fileptr = curcf;
@@ -1157,16 +1155,14 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					}
 					else
 					{
-						curce->ce_vardata = MyMallocEx(ptr-start+1);
-						strlcpy(curce->ce_vardata, start, ptr-start+1);
+						safestrldup(curce->ce_vardata, start, ptr-start+1);
 					}
 				}
 				else
 				{
 					curce = MyMallocEx(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
-					curce->ce_varname = MyMallocEx((ptr-start)+1);
-					strlcpy(curce->ce_varname, start, ptr-start+1);
+					safestrldup(curce->ce_varname, start, ptr-start+1);
 					curce->ce_varlinenum = linenumber;
 					curce->ce_fileptr = curcf;
 					curce->ce_prevlevel = cursection;
