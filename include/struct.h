@@ -941,6 +941,21 @@ struct _name_value_list {
 	char *value;
 };
 
+/* conf preprocessor */
+// FIXME: make these enums ? 
+#define PREPROCESSOR_ERROR 0
+#define PREPROCESSOR_DEFINE 1
+#define PREPROCESSOR_IF 2
+#define PREPROCESSOR_ENDIF 3
+// TODO: support $else and $elseif or $else if as well? is very similar logic
+//       after all...
+
+// FIXME: make these enums ?
+#define PREPROCESSOR_PHASE_INITIAL	1
+#define PREPROCESSOR_PHASE_MODULE	2
+
+
+
 /*
  * conf2 stuff -stskeeps
 */

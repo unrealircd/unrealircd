@@ -53,6 +53,14 @@ extern MODVAR char umodestring[UMODETABLESZ+1];
 #define CMD_FUNC(x) int (x) (aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[])
 #define CMD_OVERRIDE_FUNC(x) int (x)(Cmdoverride *ovr, aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[])
 
+/* Configuration preprocessor */
+extern int parse_preprocessor_item(char *start, char *end, char *filename, int linenumber, ConditionalConfig **cc);
+extern void preprocessor_cc_duplicate_list(ConditionalConfig *r, ConditionalConfig **out);
+extern void preprocessor_cc_free_level(ConditionalConfig **cc_list, int level);
+extern void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, int phase);
+extern void preprocessor_resolve_conditionals_all(int phase);
+extern void free_config_defines(void);
+
 /*
  * Configuration linked lists
 */
