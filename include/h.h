@@ -60,6 +60,7 @@ extern void preprocessor_cc_free_level(ConditionalConfig **cc_list, int level);
 extern void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, int phase);
 extern void preprocessor_resolve_conditionals_all(int phase);
 extern void free_config_defines(void);
+extern void preprocessor_replace_defines(char **item);
 
 /*
  * Configuration linked lists

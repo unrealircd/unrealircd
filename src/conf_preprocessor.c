@@ -9,11 +9,16 @@
 
 extern ConfigFile *conf;
 
-NameValueList *config_defines = NULL; /**< List of $define's, only valid during configuration reading */
+NameValueList *config_defines = NULL; /**< List of @defines, only valid during configuration reading */
 
 void skip_whitespace(char **p)
 {
 	for (; **p == ' ' || **p == '\t'; *p = *p + 1);
+}
+
+void read_until(char **p, char *stopchars)
+{
+	for (; **p && !strchr(stopchars, **p); *p = *p + 1);
 }
 
 int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, ConditionalConfig **cc_out)
@@ -32,7 +37,7 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 	 * We do not support && or || or anything else at this time.
 	 */
 	skip_whitespace(&p);
-	if (*p == '$')
+	if (*p == '@')
 		p++;
 	if (*p == '!')
 	{
@@ -57,7 +62,7 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 		if (*p == '"')
 			p++;
 		name = p;
-		for (; *p && (*p != ')' && *p != '"'); p++);
+		read_until(&p, ")\"");
 		if (!*p)
 		{
 			config_error("%s:%i: invalid if statement (termination error): %s",
@@ -87,7 +92,7 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 		if (*p == '"')
 			p++;
 		name = p;
-		for (; *p && (*p != ')' && *p != '"'); p++);
+		read_until(&p, ")\"");
 		if (!*p)
 		{
 			config_error("%s:%i: invalid if statement (termination error): %s",
@@ -105,16 +110,19 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 	{
 		char *name_terminate, *name2;
 		// Should be one of:
-		// XYZ == "something"
 		// $XYZ == "something"
-		// XYZ != "something"
 		// $XYZ != "something"
 		// Anything else is an error.
-		if (*p == '$')
-			p++;
+		if (*p != '$')
+		{
+			config_error("%s:%i: invalid @if statement. Either an unknown function, or did you mean $VARNAME?: %s",
+				filename, linenumber, statement);
+			return PREPROCESSOR_ERROR;
+		}
+		p++;
 		/* variable name starts now */
 		name = p;
-		for (; *p && (*p != ' ' && *p != '\t' && *p != '=' && *p != '!'); p++);
+		read_until(&p, " \t=!");
 		if (!*p)
 		{
 			config_error("%s:%i: invalid if statement (termination error): %s",
@@ -133,7 +141,7 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 		} else
 		{
 			*name_terminate = '\0';
-			config_error("%s:%i: $if: expected == or != after '%s'",
+			config_error("%s:%i: @if: expected == or != after '%s'",
 				filename, linenumber, name);
 			return PREPROCESSOR_ERROR;
 		}
@@ -142,16 +150,16 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 		skip_whitespace(&p);
 		if (*p != '"')
 		{
-			config_error("%s:%i: $if: expected double quotes, missing \" perhaps?",
+			config_error("%s:%i: @if: expected double quotes, missing \" perhaps?",
 				filename, linenumber);
 			return PREPROCESSOR_ERROR;
 		}
 		p++;
 		name2 = p;
-		for (; *p && *p != '"'; p++);
+		read_until(&p, "\"");
 		if (!*p)
 		{
-			config_error("%s:%i: invalid if statement, missing \" at end perhaps?",
+			config_error("%s:%i: invalid @if statement, missing \" at end perhaps?",
 				filename, linenumber);
 			return PREPROCESSOR_ERROR;
 		}
@@ -165,7 +173,7 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 		return PREPROCESSOR_IF;
 	}
 
-	config_error("%s:%i: Error while evaluating '$if' statement '%s'",
+	config_error("%s:%i: Error while evaluating '@if' statement '%s'",
 		filename, linenumber, statement);
 	return PREPROCESSOR_ERROR;
 }
@@ -178,10 +186,10 @@ int evaluate_preprocessor_define(char *statement, char *filename, int linenumber
 
 	skip_whitespace(&p);
 	name = p;
-	for (; *p && *p != ' ' && *p != '\t'; p++);
+	read_until(&p, " \t");
 	if (!*p)
 	{
-		config_error("%s:%i: invalid $define statement",
+		config_error("%s:%i: invalid @define statement",
 			filename, linenumber);
 		return PREPROCESSOR_ERROR;
 	}
@@ -189,16 +197,16 @@ int evaluate_preprocessor_define(char *statement, char *filename, int linenumber
 	skip_whitespace(&p);
 	if (*p != '"')
 	{
-		config_error("%s:%i: $define: expected double quotes, missing \" perhaps?",
+		config_error("%s:%i: @define: expected double quotes, missing \" perhaps?",
 			filename, linenumber);
 		return PREPROCESSOR_ERROR;
 	}
 	p++;
 	value = p;
-	for (; *p && *p != '"'; p++);
+	read_until(&p, "\"");
 	if (!*p)
 	{
-		config_error("%s:%i: invalid $define statement, missing \" at end perhaps?",
+		config_error("%s:%i: invalid @define statement, missing \" at end perhaps?",
 			filename, linenumber);
 		return PREPROCESSOR_ERROR;
 	}
@@ -225,11 +233,11 @@ int parse_preprocessor_item(char *start, char *end, char *filename, int linenumb
 		max = sizeof(buf);
 	strlcpy(buf, start, max);
 
-	if (!strncmp(buf, "$define", 7))
+	if (!strncmp(buf, "@define", 7))
 		return evaluate_preprocessor_define(buf+7, filename, linenumber);
-	else if (!strncmp(buf, "$if ", 4))
+	else if (!strncmp(buf, "@if ", 4))
 		return evaluate_preprocessor_if(buf+4, filename, linenumber, cc);
-	else if (!strcmp(buf, "$endif"))
+	else if (!strcmp(buf, "@endif"))
 		return PREPROCESSOR_ENDIF;
 
 	config_error("%s:%i: Unknown preprocessor directive: %s", filename, linenumber, buf);
@@ -247,7 +255,7 @@ void preprocessor_cc_free_entry(ConditionalConfig *cc)
 }
 
 /** Free ConditionalConfig entries in a linked list that
- * are equal or above 'level'. This happens during an $endif.
+ * are equal or above 'level'. This happens during an @endif.
  */
 void preprocessor_cc_free_level(ConditionalConfig **cc_list, int level)
 {
@@ -327,7 +335,7 @@ int preprocessor_resolve_if(ConditionalConfig *cc, int phase)
 	if (cc->condition == IF_MODULE)
 	{
 		if (phase == PREPROCESSOR_PHASE_INITIAL)
-			return 1; /* we cannot handle $if module-loaded() yet.. */
+			return 1; /* we cannot handle @if module-loaded() yet.. */
 		if (is_module_loaded(cc->name))
 		{
 			result = 1;
@@ -350,7 +358,7 @@ int preprocessor_resolve_if(ConditionalConfig *cc, int phase)
 		}
 	} else
 	{
-		config_status("[BUG] unhandled $if type!!");
+		config_status("[BUG] unhandled @if type!!");
 	}
 
 	if (cc->negative)
@@ -368,7 +376,7 @@ void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, int phase)
 	for (ce = *ce_list; ce; ce = ce_next)
 	{
 		ce_next = ce->ce_next;
-		/* This is for an $if before a block start */
+		/* This is for an @if before a block start */
 		if (!preprocessor_resolve_if(ce->ce_cond, phase))
 		{
 			/* Delete this entry */
@@ -419,7 +427,7 @@ void preprocessor_resolve_conditionals_all(int phase)
 		preprocessor_resolve_conditionals_ce(&cfptr->cf_entries, phase);
 }
 
-/** Frees the list of config_defines, so all $define's */
+/** Frees the list of config_defines, so all @defines */
 void free_config_defines(void)
 {
 	NameValueList *e, *e_next;
@@ -433,3 +441,69 @@ void free_config_defines(void)
 	config_defines = NULL;
 }
 
+/** Return value of defined value */
+char *get_config_define(char *name)
+{
+	NameValueList *e;
+
+	for (e = config_defines; e; e = e->next)
+	{
+		if (!strcasecmp(e->name, name))
+			return e->value;
+	}
+
+	return NULL;
+}
+
+void preprocessor_replace_defines(char **item)
+{
+	NameValueList *e;
+	static char buf[4096];
+	char varname[512];
+	const char *i, *varstart, *varend;
+	char *o;
+	int n = sizeof(buf)-2;
+	int limit;
+	char *value;
+
+	if (!strchr(*item, '$'))
+		return; /* quick return in 99% of the cases */
+
+	o = buf;
+	for (i = *item; *i; i++)
+	{
+		if (*i != '$')
+		{
+			*o++ = *i;
+			if (--n == 0)
+				break;
+			continue;
+		}
+
+		/* $ encountered: */
+		varstart = i;
+		i++;
+		for (; *i && (isalnum(*i) || strchr("_", *i)); i++);
+		varend = i;
+		i--;
+		limit = varend - varstart + 1;
+		if (limit > sizeof(varname))
+			limit = sizeof(varname);
+		strlcpy(varname, varstart, limit);
+		value = get_config_define(varname+1);
+		if (!value)
+			value = varname; /* not found? then use varname, including the '$' */
+		limit = strlen(value) + 1;
+		if (limit > n)
+			limit = n;
+		strlcpy(o, value, limit);
+		o += limit - 1;
+		n -= limit;
+		if (n == 0)
+			break; /* no output buffer left */
+		if (*varend == 0)
+			break; /* no input buffer left */
+	}
+	*o = '\0';
+	safestrdup(*item, buf);
+}

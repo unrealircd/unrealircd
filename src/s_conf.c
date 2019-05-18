@@ -1051,6 +1051,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					else
 					{
 						safestrldup(curce->ce_vardata, start, ptr-start+1);
+						preprocessor_replace_defines(&curce->ce_vardata);
 						unreal_delquotes(curce->ce_vardata);
 					}
 				}
@@ -1058,6 +1059,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				{
 					curce = MyMallocEx(sizeof(ConfigEntry));
 					safestrldup(curce->ce_varname, start, ptr-start+1);
+					preprocessor_replace_defines(&curce->ce_varname);
 					unreal_delquotes(curce->ce_varname);
 					curce->ce_varlinenum = linenumber;
 					curce->ce_fileptr = curcf;
@@ -1074,8 +1076,8 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 			case '=':
 			case '\r':
 				break;
-			case '$':
-				/* Preprocessor item, such as $if, $define, etc. */
+			case '@':
+				/* Preprocessor item, such as @if, @define, etc. */
 				start = ptr;
 				for (;*ptr; ptr++)
 				{
@@ -1094,7 +1096,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				{
 					if (preprocessor_level == 0)
 					{
-						config_error("%s:%i: $endif unexpected. There was no preciding unclosed $if.",
+						config_error("%s:%i: @endif unexpected. There was no preciding unclosed @if.",
 							filename, linenumber);
 						errors++;
 					}
@@ -1156,6 +1158,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					else
 					{
 						safestrldup(curce->ce_vardata, start, ptr-start+1);
+						preprocessor_replace_defines(&curce->ce_vardata);
 					}
 				}
 				else
@@ -1163,6 +1166,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					curce = MyMallocEx(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
 					safestrldup(curce->ce_varname, start, ptr-start+1);
+					preprocessor_replace_defines(&curce->ce_varname);
 					curce->ce_varlinenum = linenumber;
 					curce->ce_fileptr = curcf;
 					curce->ce_prevlevel = cursection;
