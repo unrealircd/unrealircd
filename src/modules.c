@@ -77,6 +77,7 @@ Module *Module_make(ModuleHeader *header,
 typedef struct {
 	char *name;
 	void **funcptr;
+	void *deffunc;
 } EfunctionsList;
 
 /* Efuncs */
@@ -140,68 +141,68 @@ char *(*charsys_get_current_languages)(void);
 void *(*broadcast_sinfo)(aClient *acptr, aClient *to, aClient *except);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
-/* 00 */	{NULL, NULL},
-/* 01 */	{"do_join", (void *)&do_join},
-/* 02 */	{"join_channel", (void *)&join_channel},
-/* 03 */	{"can_join", (void *)&can_join},
-/* 04 */	{"do_mode", (void *)&do_mode},
-/* 05 */	{"set_mode", (void *)&set_mode},
-/* 06 */	{"m_umode", (void *)&m_umode},
-/* 07 */	{"register_user", (void *)&register_user},
-/* 08 */	{"tkl_hash", (void *)&tkl_hash},
-/* 09 */	{"tkl_typetochar", (void *)&tkl_typetochar},
-/* 10 */	{"tkl_add_line", (void *)&tkl_add_line},
-/* 11 */	{"tkl_del_line", (void *)&tkl_del_line},
-/* 12 */	{"tkl_check_local_remove_shun", (void *)&tkl_check_local_remove_shun},
-/* 13 */	{"tkl_expire", (void *)&tkl_expire},
-/* 14 */	{"tkl_check_expire", (void *)&tkl_check_expire},
-/* 15 */	{"find_tkline_match", (void *)&find_tkline_match},
-/* 16 */	{"find_shun", (void *)&find_shun},
-/* 17 */	{"find_spamfilter_user", (void *)&find_spamfilter_user},
-/* 18 */	{"find_qline", (void *)&find_qline},
-/* 19 */	{"find_tkline_match_zap", (void *)&find_tkline_match_zap},
-/* 20 */	{"tkl_stats", (void *)&tkl_stats},
-/* 21 */	{"tkl_synch", (void *)&tkl_synch},
-/* 22 */	{"m_tkl", (void *)&m_tkl},
-/* 23 */	{"place_host_ban", (void *)&place_host_ban},
-/* 24 */	{"dospamfilter", (void *)&dospamfilter},
-/* 25 */	{"dospamfilter_viruschan", (void *)&dospamfilter_viruschan},
-/* 26 */	{NULL, NULL},
-/* 27 */	{"send_list", (void *)&send_list},
-/* 28 */	{NULL, NULL},
-/* 29 */	{NULL, NULL},
-/* 30 */	{NULL, NULL},
-/* 31 */	{"StripColors", (void *)&StripColors},
-/* 32 */	{"StripControlCodes", (void *)&StripControlCodes},
-/* 33 */	{"spamfilter_build_user_string", (void *)&spamfilter_build_user_string},
-/* 34 */	{"is_silenced", (void *)&is_silenced},
-/* 35 */	{"send_protoctl_servers", (void *)&send_protoctl_servers},
-/* 36 */	{"verify_link", (void *)&verify_link},
-/* 37 */	{"send_server_message", (void *)&send_server_message},
-/* 38 */	{"broadcast_md_client", (void *)&broadcast_md_client},
-/* 39 */	{"broadcast_md_channel", (void *)&broadcast_md_channel},
-/* 40 */	{"broadcast_md_member", (void *)&broadcast_md_member}, 
-/* 41 */	{"broadcast_md_membership", (void *)&broadcast_md_membership},
-/* 42 */	{"check_banned", (void *)&check_banned},
-/* 43 */	{"introduce_user", (void *)&introduce_user},
-/* 44 */	{"check_deny_version", (void *)&check_deny_version},
-/* 45 */	{"broadcast_md_client_cmd", (void *)&broadcast_md_client_cmd},
-/* 46 */	{"broadcast_md_channel_cmd", (void *)&broadcast_md_channel_cmd},
-/* 47 */	{"broadcast_md_member_cmd", (void *)&broadcast_md_member_cmd},
-/* 48 */	{"broadcast_md_membership_cmd", (void *)&broadcast_md_membership_cmd},
-/* 49 */	{"send_moddata_client", (void *)&send_moddata_client},
-/* 50 */	{"send_moddata_channel", (void *)&send_moddata_channel},
-/* 51 */	{"send_moddata_members", (void *)&send_moddata_members},
-/* 52 */	{"broadcast_moddata_client", (void *)&broadcast_moddata_client},
-/* 53 */	{"match_user", (void *)&match_user},
-/* 54 */	{"userhost_save_current", (void *)&userhost_save_current},
-/* 55 */	{"userhost_changed", (void *)&userhost_changed},
-/* 56 */	{"send_join_to_local_users", (void *)&send_join_to_local_users},
-/* 57 */	{"do_nick_name", (void *)&do_nick_name},
-/* 58 */	{"do_remote_nick_name", (void *)&do_remote_nick_name},
-/* 59 */	{"charsys_get_current_languages", (void *)&charsys_get_current_languages},
-/* 60 */	{"broadcast_sinfo", (void *)&broadcast_sinfo},
-/* 61 */	{NULL, NULL}
+/* 00 */	{NULL, NULL, NULL},
+/* 01 */	{"do_join", (void *)&do_join, NULL},
+/* 02 */	{"join_channel", (void *)&join_channel, NULL},
+/* 03 */	{"can_join", (void *)&can_join, NULL},
+/* 04 */	{"do_mode", (void *)&do_mode, NULL},
+/* 05 */	{"set_mode", (void *)&set_mode, NULL},
+/* 06 */	{"m_umode", (void *)&m_umode, NULL},
+/* 07 */	{"register_user", (void *)&register_user, NULL},
+/* 08 */	{"tkl_hash", (void *)&tkl_hash, NULL},
+/* 09 */	{"tkl_typetochar", (void *)&tkl_typetochar, NULL},
+/* 10 */	{"tkl_add_line", (void *)&tkl_add_line, NULL},
+/* 11 */	{"tkl_del_line", (void *)&tkl_del_line, NULL},
+/* 12 */	{"tkl_check_local_remove_shun", (void *)&tkl_check_local_remove_shun, NULL},
+/* 13 */	{"tkl_expire", (void *)&tkl_expire, NULL},
+/* 14 */	{"tkl_check_expire", (void *)&tkl_check_expire, NULL},
+/* 15 */	{"find_tkline_match", (void *)&find_tkline_match, NULL},
+/* 16 */	{"find_shun", (void *)&find_shun, NULL},
+/* 17 */	{"find_spamfilter_user", (void *)&find_spamfilter_user, NULL},
+/* 18 */	{"find_qline", (void *)&find_qline, NULL},
+/* 19 */	{"find_tkline_match_zap", (void *)&find_tkline_match_zap, NULL},
+/* 20 */	{"tkl_stats", (void *)&tkl_stats, NULL},
+/* 21 */	{"tkl_synch", (void *)&tkl_synch, NULL},
+/* 22 */	{"m_tkl", (void *)&m_tkl, NULL},
+/* 23 */	{"place_host_ban", (void *)&place_host_ban, NULL},
+/* 24 */	{"dospamfilter", (void *)&dospamfilter, NULL},
+/* 25 */	{"dospamfilter_viruschan", (void *)&dospamfilter_viruschan, NULL},
+/* 26 */	{NULL, NULL, NULL},
+/* 27 */	{"send_list", (void *)&send_list, NULL},
+/* 28 */	{NULL, NULL, NULL},
+/* 29 */	{NULL, NULL, NULL},
+/* 30 */	{NULL, NULL, NULL},
+/* 31 */	{"StripColors", (void *)&StripColors, NULL},
+/* 32 */	{"StripControlCodes", (void *)&StripControlCodes, NULL},
+/* 33 */	{"spamfilter_build_user_string", (void *)&spamfilter_build_user_string, NULL},
+/* 34 */	{"is_silenced", (void *)&is_silenced, NULL},
+/* 35 */	{"send_protoctl_servers", (void *)&send_protoctl_servers, NULL},
+/* 36 */	{"verify_link", (void *)&verify_link, NULL},
+/* 37 */	{"send_server_message", (void *)&send_server_message, NULL},
+/* 38 */	{"broadcast_md_client", (void *)&broadcast_md_client, NULL},
+/* 39 */	{"broadcast_md_channel", (void *)&broadcast_md_channel, NULL},
+/* 40 */	{"broadcast_md_member", (void *)&broadcast_md_member, NULL}, 
+/* 41 */	{"broadcast_md_membership", (void *)&broadcast_md_membership, NULL},
+/* 42 */	{"check_banned", (void *)&check_banned, NULL},
+/* 43 */	{"introduce_user", (void *)&introduce_user, NULL},
+/* 44 */	{"check_deny_version", (void *)&check_deny_version, NULL},
+/* 45 */	{"broadcast_md_client_cmd", (void *)&broadcast_md_client_cmd, NULL},
+/* 46 */	{"broadcast_md_channel_cmd", (void *)&broadcast_md_channel_cmd, NULL},
+/* 47 */	{"broadcast_md_member_cmd", (void *)&broadcast_md_member_cmd, NULL},
+/* 48 */	{"broadcast_md_membership_cmd", (void *)&broadcast_md_membership_cmd, NULL},
+/* 49 */	{"send_moddata_client", (void *)&send_moddata_client, NULL},
+/* 50 */	{"send_moddata_channel", (void *)&send_moddata_channel, NULL},
+/* 51 */	{"send_moddata_members", (void *)&send_moddata_members, NULL},
+/* 52 */	{"broadcast_moddata_client", (void *)&broadcast_moddata_client, NULL},
+/* 53 */	{"match_user", (void *)&match_user, NULL},
+/* 54 */	{"userhost_save_current", (void *)&userhost_save_current, NULL},
+/* 55 */	{"userhost_changed", (void *)&userhost_changed, NULL},
+/* 56 */	{"send_join_to_local_users", (void *)&send_join_to_local_users, NULL},
+/* 57 */	{"do_nick_name", (void *)&do_nick_name, NULL},
+/* 58 */	{"do_remote_nick_name", (void *)&do_remote_nick_name, NULL},
+/* 59 */	{"charsys_get_current_languages", (void *)&charsys_get_current_languages, NULL},
+/* 60 */	{"broadcast_sinfo", (void *)&broadcast_sinfo, NULL},
+/* 61 */	{NULL, NULL, NULL},
 };
 
 #ifdef UNDERSCORE
@@ -1714,7 +1715,7 @@ int i, n, errors=0;
 				config_error("[--efunction errors truncated to prevent flooding--]");
 				break;
 			}
-			if (n < 1)
+			if ((n < 1) && !efunction_table[i].deffunc)
 			{
 				config_error("ERROR: efunction '%s' not found, you probably did not "
 				             "load all required modules! (hint: see modules.default.conf)",
@@ -1742,14 +1743,24 @@ int i;
 	 */
 
 	for (i=0; i < MAXEFUNCTIONS; i++)
+	{
+		int found = 0;
 		for (e = Efunctions[i]; e; e = e->next)
-			if (!e->willberemoved)
-			{
-				*efunction_table[i].funcptr = e->func.voidfunc;  /* This is the new one. */
-				if (!(e->owner->options & MOD_OPT_PERM))
-					e->willberemoved = 1;
-				break;
-			}
+		{
+			if (e->willberemoved)
+				continue;
+			*efunction_table[i].funcptr = e->func.voidfunc;  /* This is the new one. */
+			if (!(e->owner->options & MOD_OPT_PERM))
+				e->willberemoved = 1;
+			found = 1;
+			break;
+		}
+		if (!found)
+		{
+			if (efunction_table[i].deffunc)
+				*efunction_table[i].funcptr = efunction_table[i].deffunc;
+		}
+	}
 }
 
 #ifdef _WIN32
