@@ -998,7 +998,6 @@ AC_CONFIG_FILES([Makefile
 	src/modules/usermodes/Makefile
 	src/modules/snomasks/Makefile
 	src/modules/extbans/Makefile
-	src/modules/cap/Makefile
 	src/modules/third/Makefile
 	unrealircd])
 AC_OUTPUT

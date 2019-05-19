@@ -214,7 +214,8 @@ install: all
 	$(INSTALL) -m 0700 -d @MODULESDIR@/extbans
 	$(INSTALL) -m 0700 src/modules/extbans/*.so @MODULESDIR@/extbans
 	$(INSTALL) -m 0700 -d @MODULESDIR@/cap
-	$(INSTALL) -m 0700 src/modules/cap/*.so @MODULESDIR@/cap
+	# delete modules/cap directory, to avoid confusing with U4 to U5 upgrades:
+	rm -rf @MODULESDIR@/cap
 	$(INSTALL) -m 0700 -d @MODULESDIR@/third
 	@#Ugly stuff to detect 0 files in this directory:
 	@+for f in src/modules/third/*.so; do \

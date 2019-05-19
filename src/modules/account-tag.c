@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/cap/account-tag.c
+ *   IRC - Internet Relay Chat, src/modules/account-tag.c
  *   (C) 2019 Syzop & The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of

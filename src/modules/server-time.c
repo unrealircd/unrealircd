@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/cap/server-time.c
+ *   IRC - Internet Relay Chat, src/modules/server-time.c
  *   (C) 2019 Syzop & The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of

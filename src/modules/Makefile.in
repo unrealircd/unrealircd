@@ -35,36 +35,39 @@ INCLUDES = ../include/auth.h ../include/channel.h \
 	../include/version.h ../include/whowas.h
 
 R_MODULES= \
-	 m_sethost.so m_chghost.so m_chgident.so m_setname.so \
-	 m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
-	 m_svsmotd.so m_svsnline.so m_who.so m_whox.so m_mkpasswd.so \
-	 m_away.so m_svsnoop.so m_svsnick.so \
-	 m_chgname.so m_kill.so \
-	 m_lag.so m_message.so m_oper.so m_pingpong.so \
-	 m_quit.so m_sendumode.so m_sqline.so \
-	 m_tsctl.so m_unsqline.so m_whois.so \
-	 m_tkl.so m_vhost.so m_cycle.so m_svsjoin.so m_svspart.so \
-	 m_svswatch.so m_svssilence.so m_sendsno.so m_svssno.so \
-	 m_sajoin.so m_sapart.so m_samode.so m_kick.so m_topic.so \
-	 m_invite.so m_list.so m_time.so m_svskill.so m_sjoin.so \
-	 m_pass.so m_userhost.so m_ison.so m_silence.so m_knock.so \
-	 m_umode2.so m_squit.so m_protoctl.so m_addomotd.so \
-	 m_wallops.so m_admin.so m_globops.so m_locops.so \
-	 m_trace.so m_netinfo.so m_links.so m_help.so m_rules.so \
-	 m_close.so m_map.so m_eos.so m_server.so m_stats.so \
-	 m_svsfline.so m_dccdeny.so m_undccdeny.so m_whowas.so \
-	 m_connect.so m_dccallow.so m_userip.so m_nick.so m_user.so \
-	 m_mode.so m_watch.so m_part.so m_join.so m_motd.so m_opermotd.so \
-	 m_botmotd.so m_lusers.so m_names.so m_svsnolag.so m_addmotd.so \
-	 m_svslusers.so m_starttls.so m_nopost.so m_cap.so \
-	 m_sasl.so m_md.so certfp.so \
-	 ssl_antidos.so webirc.so websocket.so \
-	 blacklist.so jointhrottle.so \
-	 antirandom.so hideserver.so jumpserver.so \
-	 m_ircops.so m_staff.so nocodes.so \
-	 charsys.so antimixedutf8.so authprompt.so m_sinfo.so \
-	 reputation.so connthrottle.so \
-	 m_storetkl.so
+	m_sethost.so m_chghost.so m_chgident.so m_setname.so \
+	m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
+	m_svsmotd.so m_svsnline.so m_who.so m_whox.so m_mkpasswd.so \
+	m_away.so m_svsnoop.so m_svsnick.so \
+	m_chgname.so m_kill.so \
+	m_lag.so m_message.so m_oper.so m_pingpong.so \
+	m_quit.so m_sendumode.so m_sqline.so \
+	m_tsctl.so m_unsqline.so m_whois.so \
+	m_tkl.so m_vhost.so m_cycle.so m_svsjoin.so m_svspart.so \
+	m_svswatch.so m_svssilence.so m_sendsno.so m_svssno.so \
+	m_sajoin.so m_sapart.so m_samode.so m_kick.so m_topic.so \
+	m_invite.so m_list.so m_time.so m_svskill.so m_sjoin.so \
+	m_pass.so m_userhost.so m_ison.so m_silence.so m_knock.so \
+	m_umode2.so m_squit.so m_protoctl.so m_addomotd.so \
+	m_wallops.so m_admin.so m_globops.so m_locops.so \
+	m_trace.so m_netinfo.so m_links.so m_help.so m_rules.so \
+	m_close.so m_map.so m_eos.so m_server.so m_stats.so \
+	m_svsfline.so m_dccdeny.so m_undccdeny.so m_whowas.so \
+	m_connect.so m_dccallow.so m_userip.so m_nick.so m_user.so \
+	m_mode.so m_watch.so m_part.so m_join.so m_motd.so m_opermotd.so \
+	m_botmotd.so m_lusers.so m_names.so m_svsnolag.so m_addmotd.so \
+	m_svslusers.so m_starttls.so m_nopost.so m_cap.so \
+	m_sasl.so m_md.so certfp.so \
+	ssl_antidos.so webirc.so websocket.so \
+	blacklist.so jointhrottle.so \
+	antirandom.so hideserver.so jumpserver.so \
+	m_ircops.so m_staff.so nocodes.so \
+	charsys.so antimixedutf8.so authprompt.so m_sinfo.so \
+	reputation.so connthrottle.so \
+	m_storetkl.so \
+	message-tags.so batch.so \
+	account-tag.so labeled-response.so link-security.so \
+	message-ids.so plaintext-policy.so server-time.so sts.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -77,7 +80,6 @@ build: $(MODULES)
 	cd usermodes; $(MAKE) all
 	cd snomasks; $(MAKE) all
 	cd extbans; $(MAKE) all
-	cd cap; $(MAKE) all
 	cd third; $(MAKE) all
 
 #############################################################################
@@ -544,6 +546,42 @@ m_storetkl.so: m_storetkl.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_storetkl.so m_storetkl.c
 
+message-tags.so: message-tags.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o message-tags.so message-tags.c
+
+batch.so: batch.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o batch.so batch.c
+
+account-tag.so: account-tag.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o account-tag.so account-tag.c
+
+labeled-response.so: labeled-response.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o labeled-response.so labeled-response.c
+
+link-security.so: link-security.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o link-security.so link-security.c
+
+message-ids.so: message-ids.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o message-ids.so message-ids.c
+
+plaintext-policy.so: plaintext-policy.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o plaintext-policy.so plaintext-policy.c
+
+server-time.so: server-time.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o server-time.so server-time.c
+
+sts.so: sts.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o sts.so sts.c
+
 #############################################################################
 # capabilities
 #############################################################################
@@ -562,5 +600,4 @@ clean:
 	cd usermodes; $(MAKE) clean
 	cd snomasks; $(MAKE) clean
 	cd extbans; $(MAKE) clean
-	cd cap; $(MAKE) clean
 	cd third; $(MAKE) clean

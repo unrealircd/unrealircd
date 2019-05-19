@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/cap/msgid.c
+ *   IRC - Internet Relay Chat, src/modules/message-ids.c
  *   (C) 2019 Syzop & The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
@@ -22,9 +22,9 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(msgid)
+ModuleHeader MOD_HEADER(message-ids)
   = {
-	"msgid",
+	"message-ids",
 	"4.2",
 	"msgid CAP",
 	"3.2-b8-1",
@@ -37,7 +37,7 @@ long CAP_ACCOUNT_TAG = 0L;
 int msgid_mtag_is_ok(aClient *acptr, char *name, char *value);
 void mtag_add_or_inherit_msgid(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list);
 
-MOD_INIT(msgid)
+MOD_INIT(message-ids)
 {
 	ClientCapabilityInfo cap;
 	ClientCapability *c;
@@ -56,12 +56,12 @@ MOD_INIT(msgid)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(msgid)
+MOD_LOAD(message-ids)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(msgid)
+MOD_UNLOAD(message-ids)
 {
 	return MOD_SUCCESS;
 }
