@@ -35,6 +35,7 @@ ModuleHeader MOD_HEADER(account-tag)
 long CAP_ACCOUNT_TAG = 0L;
 
 int account_tag_mtag_is_ok(aClient *acptr, char *name, char *value);
+void mtag_add_or_inherit_account(aClient *acptr, MessageTag *recv_mtags, MessageTag **mtag_list);
 
 MOD_INIT(account-tag)
 {
@@ -53,6 +54,8 @@ MOD_INIT(account-tag)
 	mtag.is_ok = account_tag_mtag_is_ok;
 	mtag.clicap_handler = c;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
+
+	HookAddVoid(modinfo->handle, HOOKTYPE_NEW_MESSAGE, 0, mtag_add_or_inherit_account);
 
 	return MOD_SUCCESS;
 }
@@ -80,4 +83,22 @@ int account_tag_mtag_is_ok(aClient *acptr, char *name, char *value)
 	return 0;
 }
 
-// TODO: move from m_message (and elsewhere?) to here, some hook call or something
+void mtag_add_or_inherit_account(aClient *acptr, MessageTag *recv_mtags, MessageTag **mtag_list)
+{
+	MessageTag *m = find_mtag(recv_mtags, "account");
+	if (m)
+	{
+		m = duplicate_mtag(m);
+	} else
+	{
+		if (acptr && acptr->user &&
+		    (*acptr->user->svid != '*') && !isdigit(*acptr->user->svid))
+		{
+			m = MyMallocEx(sizeof(MessageTag));
+			m->name = strdup("account");
+			m->value = strdup(acptr->user->svid);
+		}
+	}
+	if (m)
+		AddListItem(m, *mtag_list);
+}

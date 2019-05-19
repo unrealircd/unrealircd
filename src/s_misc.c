@@ -1330,31 +1330,6 @@ char *pretty_date(TS t)
 	return buf;
 }
 
-/** Generate a msgid.
- * @returns a MessageTag struct that you can use directly.
- * @notes
- * Apparently there has been some discussion on what method to use to
- * generate msgid's. I am not going to list them here. Just saying that
- * they have been considered and we chose to go for a string that contains
- * 128+ bits of randomness, which has an extremely low chance of colissions.
- * Or, to quote wikipedia on the birthday attack problem:
- * "For comparison, 10^-18 to 10^-15 is the uncorrectable bit error rate
- *  of a typical hard disk. In theory, hashes or UUIDs being 128 bits,
- *  should stay within that range until about 820 billion outputs"
- * For reference, 10^-15 is 0.000000000000001%
- * The main reasons for this choice are: that it is extremely simple,
- * the chance of making a mistake in an otherwise complex implementation
- * is nullified and we don't risk "leaking" any details.
- */
-MessageTag *mtag_generate_msgid(void)
-{
-	MessageTag *m = MyMallocEx(sizeof(MessageTag));
-	m->name = strdup("msgid");
-	m->value = MyMallocEx(MSGIDLEN+1);
-	gen_random_alnum(m->value, MSGIDLEN);
-	return m;
-}
-
 /** Find a particular message-tag in the 'mtags' list */
 MessageTag *find_mtag(MessageTag *mtags, const char *token)
 {
@@ -1389,62 +1364,13 @@ MessageTag *duplicate_mtag(MessageTag *mtag)
 	return m;
 }
 
-void mtag_add_or_inherit_msgid(MessageTag *recv_mtags, MessageTag **mtag_list)
+/** New message. Either really brand new, or inherited from other servers.
+ * This function calls modules so they can add tags tags such as:
+ * msgid, time and account.
+ */
+void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list)
 {
-	MessageTag *m = find_mtag(recv_mtags, "msgid");
-	if (m)
-		m = duplicate_mtag(m);
-	else
-		m = mtag_generate_msgid();
-	AddListItem(m, *mtag_list);
-}
-
-void mtag_add_or_inherit_account(MessageTag *recv_mtags, MessageTag **mtag_list, aClient *acptr)
-{
-	MessageTag *m = find_mtag(recv_mtags, "account");
-	if (m)
-	{
-		m = duplicate_mtag(m);
-	} else
-	{
-		if (acptr && acptr->user &&
-		    (*acptr->user->svid != '*') && !isdigit(*acptr->user->svid))
-		{
-			m = MyMallocEx(sizeof(MessageTag));
-			m->name = strdup("account");
-			m->value = strdup(acptr->user->svid);
-		}
-	}
-	if (m)
-		AddListItem(m, *mtag_list);
-}
-
-void mtag_add_or_inherit_time(MessageTag *recv_mtags, MessageTag **mtag_list)
-{
-	MessageTag *m = find_mtag(recv_mtags, "time");
-	if (m)
-	{
-		m = duplicate_mtag(m);
-	} else
-	{
-		struct timeval t;
-		struct tm *tm;
-		char buf[64];
-
-		gettimeofday(&t, NULL);
-		tm = gmtime(&t.tv_sec);
-		snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
-			tm->tm_year + 1900,
-			tm->tm_mon + 1,
-			tm->tm_mday,
-			tm->tm_hour,
-			tm->tm_min,
-			tm->tm_sec,
-			(int)(t.tv_usec / 1000));
-
-		m = MyMallocEx(sizeof(MessageTag));
-		m->name = strdup("time");
-		m->value = strdup(buf);
-	}
-	AddListItem(m, *mtag_list);
+	Hook *h;
+	for (h = Hooks[HOOKTYPE_NEW_MESSAGE]; h; h = h->next)
+		(*(h->func.voidfunc))(sender, recv_mtags, mtag_list);
 }

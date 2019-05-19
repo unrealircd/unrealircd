@@ -370,9 +370,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 				if (!text)
 					continue;
 
-				mtag_add_or_inherit_msgid(recv_mtags, &mtags);
-				mtag_add_or_inherit_account(recv_mtags, &mtags, sptr);
-				mtag_add_or_inherit_time(recv_mtags, &mtags);
+				new_message(sptr, recv_mtags, &mtags);
 				sendto_channel(chptr, sptr, sptr,
 				               prefix, 0, sendflags, mtags,
 				               notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",

@@ -35,6 +35,7 @@ ModuleHeader MOD_HEADER(server-time)
 long CAP_SERVER_TIME = 0L;
 
 int server_time_mtag_is_ok(aClient *acptr, char *name, char *value);
+void mtag_add_or_inherit_time(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list);
 
 MOD_INIT(server-time)
 {
@@ -53,6 +54,8 @@ MOD_INIT(server-time)
 	mtag.is_ok = server_time_mtag_is_ok;
 	mtag.clicap_handler = c;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
+
+	HookAddVoid(modinfo->handle, HOOKTYPE_NEW_MESSAGE, 0, mtag_add_or_inherit_time);
 
 	return MOD_SUCCESS;
 }
@@ -80,4 +83,32 @@ int server_time_mtag_is_ok(aClient *acptr, char *name, char *value)
 	return 0;
 }
 
-// TODO: move from m_message (and elsewhere?) to here, some hook call or something
+void mtag_add_or_inherit_time(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list)
+{
+	MessageTag *m = find_mtag(recv_mtags, "time");
+	if (m)
+	{
+		m = duplicate_mtag(m);
+	} else
+	{
+		struct timeval t;
+		struct tm *tm;
+		char buf[64];
+
+		gettimeofday(&t, NULL);
+		tm = gmtime(&t.tv_sec);
+		snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
+			tm->tm_year + 1900,
+			tm->tm_mon + 1,
+			tm->tm_mday,
+			tm->tm_hour,
+			tm->tm_min,
+			tm->tm_sec,
+			(int)(t.tv_usec / 1000));
+
+		m = MyMallocEx(sizeof(MessageTag));
+		m->name = strdup("time");
+		m->value = strdup(buf);
+	}
+	AddListItem(m, *mtag_list);
+}
