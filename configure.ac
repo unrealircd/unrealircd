@@ -5,7 +5,7 @@ dnl appropriately:
 dnl
 dnl include/win32/setup.h
 dnl src/win32/unrealinst.iss
-dnl .CHANGES.NEW
+dnl doc/Config.header
 dnl src/version.c.SH
 
 AC_INIT([unrealircd], [5.0.0-dev], [https://bugs.unrealircd.org/], [], [https://unrealircd.org/])

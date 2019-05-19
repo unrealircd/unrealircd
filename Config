@@ -435,8 +435,8 @@ fi
 
 clear
 
-    if [ -f ".CHANGES.NEW" -a -z "$NOINTRO" ] ; then
-        more .CHANGES.NEW
+    if [ -f "doc/Config.header" -a -z "$NOINTRO" ] ; then
+        more doc/Config.header
         echo $n "[Enter to continue]"
         read cc
         clear
