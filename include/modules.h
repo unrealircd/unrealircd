@@ -462,7 +462,7 @@ struct _irccallback {
 /* Definition of an efunction: a MANDATORY Extern Function (in a module),
  * for things like do_join, join_channel, etc.
  * The difference between callbacks and efunctions are:
- * - efunctions are mandatory, while callbacks can be optional (depends!)
+ * - efunctions are (usually) mandatory, while callbacks can be optional
  * - efunctions are meant for internal usage, so 3rd party modules are
  *   not allowed to add them.
  * - all efunctions are declared as function pointers in modules.c
@@ -1157,6 +1157,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define EFUNC_DO_REMOTE_NICK_NAME	58
 #define EFUNC_CHARSYS_GET_CURRENT_LANGUAGES	59
 #define EFUNC_BROADCAST_SINFO		60
+#define EFUNC_PARSE_MESSAGE_TAGS	61
+#define EFUNC_MTAGS_TO_STRING		62
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

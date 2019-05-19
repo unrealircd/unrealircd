@@ -1374,3 +1374,22 @@ void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list
 	for (h = Hooks[HOOKTYPE_NEW_MESSAGE]; h; h = h->next)
 		(*(h->func.voidfunc))(sender, recv_mtags, mtag_list);
 }
+
+/** Default handler for parse_message_tags().
+ * This is only used if the 'mtags' module is NOT loaded,
+ * which would be quite unusual, but possible.
+ */
+void parse_message_tags_default_handler(aClient *cptr, char **str, MessageTag **mtag_list)
+{
+	/* Just skip everything until the space character */
+	for (; **str && **str != ' '; *str = *str + 1);
+}
+
+/** Default handler for mtags_to_string().
+ * This is only used if the 'mtags' module is NOT loaded,
+ * which would be quite unusual, but possible.
+ */
+char *mtags_to_string_default_handler(MessageTag *m, aClient *acptr)
+{
+	return NULL;
+}

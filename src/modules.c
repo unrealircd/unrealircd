@@ -138,7 +138,11 @@ void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr);
 int (*do_nick_name)(char *nick);
 int (*do_remote_nick_name)(char *nick);
 char *(*charsys_get_current_languages)(void);
-void *(*broadcast_sinfo)(aClient *acptr, aClient *to, aClient *except);
+void (*broadcast_sinfo)(aClient *acptr, aClient *to, aClient *except);
+void (*parse_message_tags)(aClient *cptr, char **str, MessageTag **mtag_list);
+extern void parse_message_tags_default_handler(aClient *cptr, char **str, MessageTag **mtag_list);
+char *(*mtags_to_string)(MessageTag *m, aClient *acptr);
+extern char *mtags_to_string_default_handler(MessageTag *m, aClient *acptr);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL, NULL},
@@ -202,7 +206,9 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 58 */	{"do_remote_nick_name", (void *)&do_remote_nick_name, NULL},
 /* 59 */	{"charsys_get_current_languages", (void *)&charsys_get_current_languages, NULL},
 /* 60 */	{"broadcast_sinfo", (void *)&broadcast_sinfo, NULL},
-/* 61 */	{NULL, NULL, NULL},
+/* 61 */	{"parse_message_tags", (void *)&parse_message_tags, &parse_message_tags_default_handler},
+/* 62 */	{"mtags_to_string", (void *)&mtags_to_string, &mtags_to_string_default_handler},
+/* 63 */	{NULL, NULL, NULL},
 };
 
 #ifdef UNDERSCORE

@@ -671,7 +671,9 @@ extern MODVAR void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr);
 extern MODVAR int (*do_nick_name)(char *nick);
 extern MODVAR int (*do_remote_nick_name)(char *nick);
 extern MODVAR char *(*charsys_get_current_languages)(void);
-extern MODVAR void *(*broadcast_sinfo)(aClient *acptr, aClient *to, aClient *except);
+extern MODVAR void (*broadcast_sinfo)(aClient *acptr, aClient *to, aClient *except);
+extern MODVAR void (*parse_message_tags)(aClient *cptr, char **str, MessageTag **mtag_list);
+extern MODVAR char *(*mtags_to_string)(MessageTag *m, aClient *acptr);
 /* /Efuncs */
 
 extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;
@@ -823,7 +825,6 @@ extern char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked
 extern int badword_config_process(ConfigItem_badword *ca, char *str);
 extern void badword_config_free(ConfigItem_badword *ca);
 extern char *badword_config_check_regex(char *s, int fastsupport, int check_broadness);
-extern char *mtags_to_string(MessageTag *m, aClient *acptr);
 extern long ClientCapabilityBit(const char *token);
 extern int user_ready_for_register(aClient *sptr);
 extern void SetCapability(aClient *acptr, const char *token);
