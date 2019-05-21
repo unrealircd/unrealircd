@@ -84,7 +84,7 @@ typedef struct {
 int (*do_join)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
 int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
+void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
 void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 int (*m_umode)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);

@@ -131,7 +131,7 @@ CMD_FUNC(m_connect)
 	/* Notify all operators about remote connect requests */
 	if (!MyClient(cptr))
 	{
-		sendto_server(&me, 0, 0,
+		sendto_server(&me, 0, 0, NULL,
 		    ":%s GLOBOPS :Remote CONNECT %s %s from %s",
 		    me.name, parv[1], parv[2] ? parv[2] : "",
 		    get_client_name(sptr, FALSE));

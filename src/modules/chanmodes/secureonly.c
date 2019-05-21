@@ -96,6 +96,8 @@ static void secureonly_kick_insecure_users(aChannel *chptr)
 		if (MyClient(cptr) && !IsSecureConnect(cptr) && !IsULine(cptr))
 		{
 			int prefix = 0;
+			MessageTag *mtags = NULL;
+
 			RunHook5(HOOKTYPE_LOCAL_KICK, &me, &me, cptr, chptr, comment);
 
 			if (invisible_user_in_channel(cptr, chptr))
@@ -104,15 +106,19 @@ static void secureonly_kick_insecure_users(aChannel *chptr)
 				prefix = CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT;
 			}
 
+			new_message(&me, NULL, &mtags);
+
 			sendto_channel(chptr, &me, cptr,
 				       prefix, 0,
-				       SEND_LOCAL, NULL,
+				       SEND_LOCAL, mtags,
 				       ":%s KICK %s %s :%s",
 				       me.name, chptr->chname, cptr->name, comment);
 
-			sendto_prefix_one(cptr, &me, NULL, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+			sendto_prefix_one(cptr, &me, mtags, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
 
-			sendto_server(&me, 0, 0, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+			sendto_server(&me, 0, 0, mtags, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+
+			free_mtags(mtags);
 
 			remove_user_from_channel(cptr, chptr);
 		}

@@ -300,8 +300,7 @@ CMD_FUNC(m_tempshun)
 				ircsnprintf(buf, sizeof(buf), "Temporary shun added on user %s (%s@%s) by %s [%s]",
 					acptr->name, acptr->user->username, acptr->user->realhost,
 					sptr->name, comment);
-				sendto_snomask(SNO_TKL, "%s", buf);
-				sendto_server(NULL, 0, 0, ":%s SENDSNO G :%s", me.name, buf);
+				sendto_snomask_global(SNO_TKL, "%s", buf);
 			}
 		} else {
 			if (!IsShunned(acptr))
@@ -312,8 +311,7 @@ CMD_FUNC(m_tempshun)
 				ircsnprintf(buf, sizeof(buf), "Removed temporary shun on user %s (%s@%s) by %s",
 					acptr->name, acptr->user->username, acptr->user->realhost,
 					sptr->name);
-				sendto_snomask(SNO_TKL, "%s", buf);
-				sendto_server(NULL, 0, 0, ":%s SENDSNO G :%s", me.name, buf);
+				sendto_snomask_global(SNO_TKL, "%s", buf);
 			}
 		}
 	}
@@ -1606,8 +1604,7 @@ aClient *acptr;
 				"user", spamfilter_user,
 				unreal_decodespace(tk->ptr.spamf->tkl_reason));
 
-			sendto_snomask(SNO_SPAMF, "%s", buf);
-			sendto_server(NULL, 0, 0, ":%s SENDSNO S :%s", me.name, buf);
+			sendto_snomask_global(SNO_SPAMF, "%s", buf);
 			ircd_log(LOG_SPAMFILTER, "%s", buf);
 			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, acptr, spamfilter_user, spamfilter_user, SPAMF_USER, NULL, tk);
 			matches++;
@@ -2312,7 +2309,7 @@ CMD_FUNC(_m_tkl)
 						 * spamfilter entries are permanent (no expire time), the only stuff
 						 * that can differ for non-opt is the 'setby' and 'setat' field...
 						 */
-						sendto_server(cptr, PROTO_TKLEXT, 0,
+						sendto_server(cptr, PROTO_TKLEXT, 0, NULL,
 							":%s TKL %s %s %s %s %s %ld %ld %ld %s :%s", sptr->name,
 							parv[1], parv[2], parv[3], parv[4],
 							tk->setby, tk->expire_at, tk->set_at, tk->ptr.spamf->tkl_duration,
@@ -2320,7 +2317,7 @@ CMD_FUNC(_m_tkl)
 					} 
 					else if (type & TKL_GLOBAL)
 					{
-						sendto_server(cptr, 0, 0,
+						sendto_server(cptr, 0, 0, NULL,
 							":%s TKL %s %s %s%s %s %s %ld %ld :%s", sptr->name,
 							parv[1], parv[2], (softban?"%":""), parv[3], parv[4],
 							tk->setby, tk->expire_at, tk->set_at, tk->reason);
@@ -2425,7 +2422,7 @@ CMD_FUNC(_m_tkl)
 				if ((parc == 12) && (type & TKL_SPAMF))
 				{
 					/* Oooooh.. so many flavours ! */
-					sendto_server(cptr, PROTO_TKLEXT2, 0,
+					sendto_server(cptr, PROTO_TKLEXT2, 0, NULL,
 						":%s TKL %s %s %s %s %s %s %s %s %s %s :%s", sptr->name,
 						parv[1], parv[2], parv[3], parv[4], parv[5],
 						parv[6], parv[7], parv[8], parv[9], parv[10], parv[11]);
@@ -2435,11 +2432,11 @@ CMD_FUNC(_m_tkl)
 					 */
 					if (tk->ptr.spamf->expr->type == MATCH_TRE_REGEX)
 					{
-						sendto_server(cptr, PROTO_TKLEXT, PROTO_TKLEXT2,
+						sendto_server(cptr, PROTO_TKLEXT, PROTO_TKLEXT2, NULL,
 							":%s TKL %s %s %s %s %s %s %s %s %s :%s", sptr->name,
 							parv[1], parv[2], parv[3], parv[4], parv[5],
 							parv[6], parv[7], parv[8], parv[9], parv[11]);
-						sendto_server(cptr, 0, PROTO_TKLEXT,
+						sendto_server(cptr, 0, PROTO_TKLEXT, NULL,
 							":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
 							parv[1], parv[2], parv[3], parv[4], parv[5],
 							parv[6], parv[7], parv[11]);
@@ -2455,16 +2452,16 @@ CMD_FUNC(_m_tkl)
 				} else
 				if ((parc == 11) && (type & TKL_SPAMF))
 				{
-					sendto_server(cptr, PROTO_TKLEXT, 0,
+					sendto_server(cptr, PROTO_TKLEXT, 0, NULL,
 						":%s TKL %s %s %s %s %s %s %s %s %s :%s", sptr->name,
 						parv[1], parv[2], parv[3], parv[4], parv[5],
 						parv[6], parv[7], parv[8], parv[9], parv[10]);
-					sendto_server(cptr, 0, PROTO_TKLEXT,
+					sendto_server(cptr, 0, PROTO_TKLEXT, NULL,
 						":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
 						parv[1], parv[2], parv[3], parv[4], parv[5],
 						parv[6], parv[7], parv[10]);
 				} else {
-					sendto_server(cptr, 0, 0,
+					sendto_server(cptr, 0, 0, NULL,
 						":%s TKL %s %s %s%s %s %s %s %s :%s", sptr->name,
 						parv[1], parv[2], (softban?"%":""), parv[3], parv[4], parv[5],
 						parv[6], parv[7], parv[8]);
@@ -2607,12 +2604,12 @@ CMD_FUNC(_m_tkl)
 							if ((parc > 8) && (type & TKL_SPAMF))
 							{
 								/* Spamfilter... */
-								sendto_server(cptr, 0, 0, ":%s TKL %s %s %s %s %s %s %s :%s",
+								sendto_server(cptr, 0, 0, NULL, ":%s TKL %s %s %s %s %s %s %s :%s",
 									      sptr->name, parv[1], parv[2], parv[3], parv[4], parv[5],
 									      parv[6], parv[7], reason);
 							} else {
 								/* Any other TKL (eg: gline) */
-								sendto_server(cptr, 0, 0, ":%s TKL %s %s %s%s %s %s",
+								sendto_server(cptr, 0, 0, NULL, ":%s TKL %s %s %s%s %s %s",
 									      sptr->name, parv[1], parv[2], (softban?"%":""), parv[3], parv[4], parv[5]);
 							}
 						}
@@ -2826,13 +2823,16 @@ int ret;
 	chptr = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
 	if (chptr)
 	{
+		MessageTag *mtags = NULL;
 		ircsnprintf(chbuf, sizeof(chbuf), "@%s", chptr->chname);
 		ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s matched filter '%s' [%s] [%s]",
 			sptr->name, tk->reason, cmdname_by_spamftarget(type),
 			unreal_decodespace(tk->ptr.spamf->tkl_reason));
+		new_message(&me, NULL, &mtags);
 		sendto_channel(chptr, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-		               0, SEND_ALL|SKIP_DEAF, NULL,
+		               0, SEND_ALL|SKIP_DEAF, mtags,
 		               ":%s NOTICE %s :%s", me.name, chbuf, buf);
+		free_mtags(mtags);
 	}
 	SetVirus(sptr);
 	return 0;
@@ -2941,8 +2941,7 @@ long ms_past;
 				cmdname_by_spamftarget(type), targetbuf, str,
 				unreal_decodespace(tk->ptr.spamf->tkl_reason));
 
-			sendto_snomask(SNO_SPAMF, "%s", buf);
-			sendto_server(NULL, 0, 0, ":%s SENDSNO S :%s", me.name, buf);
+			sendto_snomask_global(SNO_SPAMF, "%s", buf);
 			ircd_log(LOG_SPAMFILTER, "%s", buf);
 			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, sptr, str, str_in, type, target, tk);
 
@@ -2996,7 +2995,7 @@ long ms_past;
 					/* free away & broadcast the unset */
 					MyFree(sptr->user->away);
 					sptr->user->away = NULL;
-					sendto_server(sptr, 0, 0, ":%s AWAY", sptr->name);
+					sendto_server(sptr, 0, 0, NULL, ":%s AWAY", sptr->name);
 				}
 				break;
 			case SPAMF_TOPIC:

@@ -183,16 +183,16 @@ CMD_FUNC(m_setident)
 		/* get it in */
 		ircsnprintf(sptr->user->username, sizeof(sptr->user->username), "%s", vident);
 		/* spread it out */
-		sendto_server(cptr, 0, 0, ":%s SETIDENT %s", sptr->name, parv[1]);
+		sendto_server(cptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name, parv[1]);
 
 		userhost_changed(sptr);
 	}
 
 	if (MyConnect(sptr))
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :Your nick!user@host-mask is now (%s!%s@%s) - To disable ident set change it manually by /setident'ing again",
-		    me.name, sptr->name, sptr->name, sptr->user->username, GetHost(sptr));
+		sendnotice(sptr,
+		    "Your nick!user@host-mask is now (%s!%s@%s) - To disable ident set change it manually by /setident'ing again",
+		    sptr->name, sptr->user->username, GetHost(sptr));
 	}
 	return 0;
 }

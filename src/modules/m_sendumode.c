@@ -69,6 +69,7 @@ MOD_UNLOAD(m_sendumode)
 */
 CMD_FUNC(m_sendumode)
 {
+	MessageTag *mtags = NULL;
 	char *message;
 	char *p;
 	int i;
@@ -85,7 +86,9 @@ CMD_FUNC(m_sendumode)
 		return 0;
 	}
 
-	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0,
+	new_message(sptr, recv_mtags, &mtags);
+
+	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0, mtags,
 	    ":%s SENDUMODE %s :%s", sptr->name, parv[1], message);
 
 	for (p = parv[1]; *p; p++)
@@ -104,9 +107,12 @@ CMD_FUNC(m_sendumode)
 
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{
+		// FIXME: SEND WITH mtags HERE !!!!
 	    if (acptr->umodes & umode_s)
 			sendto_one(acptr, ":%s NOTICE %s :%s", sptr->name, acptr->name, message);
 	}
+
+	free_mtags(mtags);
 
 	return 0;
 }

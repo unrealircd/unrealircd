@@ -98,9 +98,9 @@ CMD_FUNC(m_svsmotd)
                   return 0;
         }
         if (parv[2])
-                sendto_server(cptr, 0, 0, ":%s SVSMOTD %s :%s", sptr->name, parv[1], parv[2]);
+                sendto_server(cptr, 0, 0, NULL, ":%s SVSMOTD %s :%s", sptr->name, parv[1], parv[2]);
         else
-                sendto_server(cptr, 0, 0, ":%s SVSMOTD %s", sptr->name, parv[1]);
+                sendto_server(cptr, 0, 0, NULL, ":%s SVSMOTD %s", sptr->name, parv[1]);
 
         if (conf == NULL)
         {

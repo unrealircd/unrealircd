@@ -104,7 +104,7 @@ int sinfo_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	/* Broadcast to 'the other side' of the net */
 	concat_params(buf, sizeof(buf), parc, parv);
-	sendto_server(cptr, 0, 0, ":%s SINFO %s", sptr->name, buf);
+	sendto_server(cptr, 0, 0, NULL, ":%s SINFO %s", sptr->name, buf);
 
 	return 0;
 }

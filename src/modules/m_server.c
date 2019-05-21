@@ -745,13 +745,13 @@ CMD_FUNC(m_server_remote)
 
 	if (*acptr->id)
 	{
-		sendto_server(cptr, PROTO_SID, 0, ":%s SID %s %d %s :%s",
+		sendto_server(cptr, PROTO_SID, 0, NULL, ":%s SID %s %d %s :%s",
 			    acptr->srvptr->id, acptr->name, hop + 1, acptr->id, acptr->info);
-		sendto_server(cptr, 0, PROTO_SID, ":%s SERVER %s %d :%s",
+		sendto_server(cptr, 0, PROTO_SID, NULL, ":%s SERVER %s %d :%s",
 				acptr->srvptr->name,
 				acptr->name, hop + 1, acptr->info);
 	} else {
-		sendto_server(cptr, 0, 0, ":%s SERVER %s %d :%s",
+		sendto_server(cptr, 0, 0, NULL, ":%s SERVER %s %d :%s",
 				acptr->srvptr->name,
 				acptr->name, hop + 1, acptr->info);
 	}
@@ -888,7 +888,7 @@ void _broadcast_sinfo(aClient *acptr, aClient *to, aClient *except)
 		sendto_one(to, ":%s SINFO %s", acptr->name, buf);
 	} else {
 		/* Broadcast (except one side...) */
-		sendto_server(except, 0, 0, ":%s SINFO %s", acptr->name, buf);
+		sendto_server(except, 0, 0, NULL, ":%s SINFO %s", acptr->name, buf);
 	}
 }
 
@@ -943,7 +943,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	(void)find_or_add(cptr->name);
 	if (IsSecure(cptr))
 	{
-		sendto_server(&me, 0, 0, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
+		sendto_server(&me, 0, 0, NULL, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
 			me.name,
 			me.name, inpath, ssl_get_cipher(cptr->local->ssl));
 		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
@@ -952,7 +952,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	}
 	else
 	{
-		sendto_server(&me, 0, 0, ":%s SMO o :(\2link\2) Link %s -> %s established",
+		sendto_server(&me, 0, 0, NULL, ":%s SMO o :(\2link\2) Link %s -> %s established",
 			me.name,
 			me.name, inpath);
 		sendto_realops("(\2link\2) Link %s -> %s established",
@@ -992,11 +992,11 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	/* Broadcast new server to the rest of the network */
 	if (*cptr->id)
 	{
-		sendto_server(cptr, PROTO_SID, 0, ":%s SID %s 2 %s :%s",
+		sendto_server(cptr, PROTO_SID, 0, NULL, ":%s SID %s 2 %s :%s",
 			    cptr->srvptr->id, cptr->name, cptr->id, cptr->info);
 	}
 
-	sendto_server(cptr, 0, *cptr->id ? PROTO_SID : 0, ":%s SERVER %s 2 :%s",
+	sendto_server(cptr, 0, *cptr->id ? PROTO_SID : 0, NULL, ":%s SERVER %s 2 :%s",
 		    cptr->serv->up,
 		    cptr->name, cptr->info);
 

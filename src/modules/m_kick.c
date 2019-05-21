@@ -76,6 +76,7 @@ CMD_FUNC(m_kick)
 	int ret;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("KICK");
+	MessageTag *mtags;
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
@@ -290,35 +291,37 @@ CMD_FUNC(m_kick)
 				} else {
 					RunHook5(HOOKTYPE_REMOTE_KICK, cptr, sptr, who, chptr, comment);
 				}
+				mtags = NULL;
+				new_message(sptr, NULL, &mtags);
+				/* The same message is actually sent at 5 places below (though max 4 at most) */
 				if (lp)
 				{
-					// TODO: mtag handling in sendto_channel, sendto_prefix_one and sendto_channel
-					// so 3 cases
 					if (invisible_user_in_channel(who, chptr))
 					{
 						/* Send it only to chanops & victim */
 						sendto_channel(chptr, sptr, who,
 						               CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT, 0,
-						               SEND_LOCAL, NULL,
+						               SEND_LOCAL, mtags,
 						               ":%s KICK %s %s :%s",
 						               sptr->name, chptr->chname, who->name, comment);
 
 						if (MyClient(who))
 						{
-							sendto_prefix_one(who, sptr, NULL, ":%s KICK %s %s :%s",
+							sendto_prefix_one(who, sptr, mtags, ":%s KICK %s %s :%s",
 								sptr->name, chptr->chname, who->name, comment);
 						}
 					} else {
 						/* NORMAL */
-						sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+						sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 						               ":%s KICK %s %s :%s",
 						               sptr->name, chptr->chname, who->name, comment);
 					}
 				}
-				sendto_server(cptr, PROTO_SID, 0, ":%s KICK %s %s :%s",
+				sendto_server(cptr, PROTO_SID, 0, mtags, ":%s KICK %s %s :%s",
 				    ID(sptr), chptr->chname, ID(who), comment);
-				sendto_server(cptr, 0, PROTO_SID, ":%s KICK %s %s :%s",
+				sendto_server(cptr, 0, PROTO_SID, mtags, ":%s KICK %s %s :%s",
 				    sptr->name, chptr->chname, who->name, comment);
+				free_mtags(mtags);
 				if (lp)
 				{
 					remove_user_from_channel(who, chptr);

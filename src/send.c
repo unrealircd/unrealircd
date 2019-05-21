@@ -449,11 +449,11 @@ good:
  * what we had going on here.
  * - kaniini
  */
-void
-sendto_server(aClient *one, unsigned long caps,
-	unsigned long nocaps, const char *format, ...)
+void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, const char *format, ...)
 {
 	aClient *cptr;
+
+	// FIXME: TODO: do something with the mtags :D :D
 
 	/* noone to send to.. */
 	if (list_empty(&server_list))
@@ -638,7 +638,7 @@ void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
  * either by user hostname or user servername.
  */
 void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
-    char *pattern, ...)
+    MessageTag *mtags, char *pattern, ...)
 {
 	va_list vl;
 	int  i;
@@ -662,7 +662,7 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 		ircvsnprintf(buf, sizeof(buf), pattern, vl);
 		va_end(vl);
 
-		sendto_server(one, 0, 0, "%s", buf);
+		sendto_server(one, 0, 0, mtags, "%s", buf);
 	}
 
 	/* To local clients... */
@@ -673,7 +673,7 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 			if (!IsMe(cptr) && (cptr != one) && IsRegisteredUser(cptr) && match_it(cptr, mask, what))
 			{
 				va_start(vl, pattern);
-				vsendto_prefix_one(cptr, from, NULL, pattern, vl);
+				vsendto_prefix_one(cptr, from, mtags, pattern, vl);
 				va_end(vl);
 			}
 		}
@@ -859,7 +859,7 @@ void sendto_snomask_global(int snomask, char *pattern, ...)
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
 		if (cptr->user->snomask & snomask)
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+			sendnotice(cptr, "%s", nbuf);
 	}
 
 	/* Build snomasks-to-send-to buffer */
@@ -869,7 +869,7 @@ void sendto_snomask_global(int snomask, char *pattern, ...)
 			*p++ = Snomask_Table[i].flag;
 	*p = '\0';
 
-	sendto_server(&me, 0, 0, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
+	sendto_server(&me, 0, 0, NULL, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
 }
 
 /** Send to specified snomask - local.
@@ -911,7 +911,7 @@ void sendto_snomask_normal_global(int snomask, char *pattern, ...)
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 		if (IsPerson(cptr) && (cptr->user->snomask & snomask))
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+			sendnotice(cptr, "%s", nbuf);
 
 	/* Build snomasks-to-send-to buffer */
 	snobuf[0] = '\0';
@@ -920,7 +920,7 @@ void sendto_snomask_normal_global(int snomask, char *pattern, ...)
 			*p++ = Snomask_Table[i].flag;
 	*p = '\0';
 
-	sendto_server(&me, 0, 0, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
+	sendto_server(&me, 0, 0, NULL, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
 }
 
 /*

@@ -59,41 +59,58 @@ CMD_FUNC(m_svsfline)
 
 	switch (*parv[1])
 	{
-		  /* Allow non-U-Lines to send ONLY SVSFLINE +, but don't send it out
-		   * unless it is from a U-Line -- codemastr */
-	  case '+':
-	  {
-		  if (parc < 4)
-			  return 0;
-		  if (!Find_deny_dcc(parv[2]))
-			  DCCdeny_add(parv[2], parv[3], DCCDENY_HARD, CONF_BAN_TYPE_AKILL);
-		  if (IsULine(sptr))
-			  sendto_server(cptr, 0, 0, ":%s SVSFLINE + %s :%s",
-			      sptr->name, parv[2], parv[3]);
-		  break;
-	  }
-	  case '-':
-	  {
-		  ConfigItem_deny_dcc *deny;
-		  if (!IsULine(sptr))
-			  return 0;
-		  if (parc < 3)
-			  return 0;
-		  if (!(deny = Find_deny_dcc(parv[2])))
-			break;
-		  DCCdeny_del(deny);
-		  sendto_server(cptr, 0, 0, ":%s SVSFLINE %s", sptr->name, parv[2]);
-		  break;
-	  }
-	  case '*':
-	  {
-		  if (!IsULine(sptr))
-			  return 0;
-		  dcc_wipe_services();
-		  sendto_server(cptr, 0, 0, ":%s SVSFLINE *", sptr->name);
-		  break;
-	  }
+		/* Allow non-U-Lines to send ONLY SVSFLINE +, but don't send it out
+		 * unless it is from a U-Line -- codemastr
+		 */
+		case '+':
+		{
+			if (parc < 4)
+				return 0;
 
+			if (!Find_deny_dcc(parv[2]))
+				DCCdeny_add(parv[2], parv[3], DCCDENY_HARD, CONF_BAN_TYPE_AKILL);
+
+			if (IsULine(sptr))
+			{
+				sendto_server(cptr, 0, 0, NULL, ":%s SVSFLINE + %s :%s",
+				    sptr->name, parv[2], parv[3]);
+			}
+
+			break;
+		}
+
+		case '-':
+		{
+			ConfigItem_deny_dcc *deny;
+
+			if (!IsULine(sptr))
+				return 0;
+
+			if (parc < 3)
+				return 0;
+
+			if (!(deny = Find_deny_dcc(parv[2])))
+				break;
+
+			DCCdeny_del(deny);
+
+			sendto_server(cptr, 0, 0, NULL, ":%s SVSFLINE %s", sptr->name, parv[2]);
+
+			break;
+		}
+
+		case '*':
+		{
+			if (!IsULine(sptr))
+				return 0;
+
+			dcc_wipe_services();
+
+			sendto_server(cptr, 0, 0, NULL, ":%s SVSFLINE *", sptr->name);
+
+			break;
+		}
 	}
+
 	return 0;
 }

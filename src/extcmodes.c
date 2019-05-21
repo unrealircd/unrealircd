@@ -126,7 +126,7 @@ void extcmodes_check_for_changes(void)
 		sendto_realops("Channel modes changed at runtime: %s -> %s",
 			previous_chanmodes, chanmodes);
 		/* Broadcast change to all (locally connected) servers */
-		sendto_server(&me, 0, 0, "PROTOCTL CHANMODES=%s", chanmodes);
+		sendto_server(&me, 0, 0, NULL, "PROTOCTL CHANMODES=%s", chanmodes);
 	}
 
 	strlcpy(previous_chanmodes, chanmodes, sizeof(previous_chanmodes));
@@ -251,7 +251,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 
 void unload_extcmode_commit(Cmode *cmode)
 {
-aChannel *chptr;
+	aChannel *chptr;
 
 	if (!cmode)
 		return;	
@@ -263,17 +263,25 @@ aChannel *chptr;
 		abort();
 	}
 
+	/* Unset channel mode and send MODE -<char> to other servers */
 	for (chptr = channel; chptr; chptr = chptr->nextch)
+	{
 		if (chptr->mode.extmode && cmode->mode)
 		{
-			/* Unset channel mode and send MODE -<char> to other servers */
-			sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL,
+			MessageTag *mtags = NULL;
+
+			new_message(&me, NULL, &mtags);
+			sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 			               ":%s MODE %s -%c",
 			               me.name, chptr->chname, cmode->flag);
-			sendto_server(NULL, 0, 0, ":%s MODE %s -%c 0",
+			sendto_server(NULL, 0, 0, mtags,
+				":%s MODE %s -%c 0",
 				me.name, chptr->chname, cmode->flag);
+			free_mtags(mtags);
+
 			chptr->mode.extmode &= ~cmode->mode;
-		}	
+		}
+	}
 
 	cmode->flag = '\0';
 }

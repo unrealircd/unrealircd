@@ -138,15 +138,22 @@ Member *member;
 void issecure_unset(aChannel *chptr, aClient *sptr, int notice)
 {
 	Hook *h;
+	MessageTag *mtags;
 
 	if (notice)
 	{
-		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s NOTICE %s :User '%s' joined and is not connected through SSL, setting channel -Z (insecure)",
+		mtags = NULL;
+		new_message(&me, NULL, &mtags);
+		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s NOTICE %s :User '%s' joined and is not connected through SSL, setting channel -Z (insecure)",
 			me.name, chptr->chname, sptr->name);
+		free_mtags(mtags);
 	}
 		
 	chptr->mode.extmode &= ~EXTCMODE_ISSECURE;
-	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s -Z", me.name, chptr->chname);
+	mtags = NULL;
+	new_message(&me, NULL, &mtags);
+	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s -Z", me.name, chptr->chname);
+	free_mtags(mtags);
 }
 
 
@@ -157,6 +164,10 @@ void issecure_unset(aChannel *chptr, aClient *sptr, int notice)
  */
 void issecure_set(aChannel *chptr, aClient *sptr, int notice)
 {
+	MessageTag *mtags;
+
+	mtags = NULL;
+	new_message(&me, NULL, &mtags);
 	if (notice && sptr)
 	{
 		/* note that we have to skip 'sptr', since when this call is being made
@@ -172,10 +183,16 @@ void issecure_set(aChannel *chptr, aClient *sptr, int notice)
 		               ":%s NOTICE %s :All users in the channel are connected through SSL, setting channel +Z (secure)",
 		               me.name, chptr->chname);
 	}
+	free_mtags(mtags);
+
 	chptr->mode.extmode |= EXTCMODE_ISSECURE;
-	sendto_channel(chptr, &me, sptr, 0, 0, SEND_LOCAL, NULL,
+
+	mtags = NULL;
+	new_message(&me, NULL, &mtags);
+	sendto_channel(chptr, &me, sptr, 0, 0, SEND_LOCAL, mtags,
 	               ":%s MODE %s +Z",
 	               me.name, chptr->chname);
+	free_mtags(mtags);
 }
 
 /* Note: the routines below (notably the 'if's) are written with speed in mind,

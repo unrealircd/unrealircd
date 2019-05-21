@@ -61,9 +61,10 @@ MOD_UNLOAD(m_svskill)
 */
 CMD_FUNC(m_svskill)
 {
+	MessageTag *mtags = NULL;
 	aClient *acptr;
-	/* this is very wierd ? */
 	char *comment = "SVS Killed";
+	int n;
 
 	if (parc < 2)
 		return -1;
@@ -78,10 +79,12 @@ CMD_FUNC(m_svskill)
 	if (!(acptr = find_person(parv[1], NULL)))
 		return 0;
 
-	sendto_server(cptr, 0, 0, ":%s SVSKILL %s :%s", sptr->name, parv[1], comment);
-
+	/* for new_message() we use acptr here, makes sense for the exit_client, right? */
+	new_message(acptr, recv_mtags, &mtags);
+	sendto_server(cptr, 0, 0, mtags, ":%s SVSKILL %s :%s", sptr->name, parv[1], comment);
 	acptr->flags |= FLAGS_KILLED;
-
-	return exit_client(cptr, acptr, sptr, comment);
+	// FIXME: use exit_client2 once it properly deals with mtags
+	n = exit_client(cptr, acptr, sptr, comment);
+	free_mtags(mtags);
+	return n;
 }
-

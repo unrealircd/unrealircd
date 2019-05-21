@@ -68,6 +68,7 @@ CMD_FUNC(m_knock)
 	aChannel *chptr;
 	Hook *h;
 	int i = 0;
+	MessageTag *mtags = NULL;
 
 	if (IsServer(sptr))
 		return 0;
@@ -151,12 +152,14 @@ CMD_FUNC(m_knock)
 		}
 	}
 
+	new_message(&me, NULL, &mtags);
 	sendto_channel(chptr, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-	               0, SEND_ALL, NULL,
+	               0, SEND_ALL, mtags,
 	               ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)",
 	               me.name, chptr->chname,
 	               sptr->name, sptr->user->username, GetHost(sptr),
 	               parv[2] ? parv[2] : "no reason specified");
+	free_mtags(mtags);
 
 	sendnotice(sptr, "Knocked on %s", chptr->chname);
 

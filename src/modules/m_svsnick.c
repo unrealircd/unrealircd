@@ -63,6 +63,7 @@ CMD_FUNC(m_svsnick)
 {
 	aClient *acptr;
 	aClient *ocptr; /* Other client */
+	MessageTag *mtags = NULL;
 
 	if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return -1; /* This looks like an error anyway -Studded */
@@ -91,11 +92,16 @@ CMD_FUNC(m_svsnick)
 	if (acptr != ocptr)
 		acptr->umodes &= ~UMODE_REGNICK;
 	acptr->lastnick = atol(parv[3]);
-	sendto_common_channels(acptr, ":%s NICK :%s", acptr->name, parv[2]);
-	add_history(acptr, 1);
-	sendto_server(NULL, 0, 0, ":%s NICK %s :%ld", acptr->name, parv[2], atol(parv[3]));
 
-	(void)del_from_client_hash_table(acptr->name, acptr);
+	/* no 'recv_mtags' here, we do not inherit from SVSNICK */
+	new_message(acptr, NULL, &mtags);
+	// TODO: FIXME: common channels with mtags !!!!
+	sendto_common_channels(acptr, ":%s NICK :%s", acptr->name, parv[2]);
+	sendto_server(NULL, 0, 0, mtags, ":%s NICK %s :%ld", acptr->name, parv[2], atol(parv[3]));
+	free_mtags(mtags);
+
+	add_history(acptr, 1);
+	del_from_client_hash_table(acptr->name, acptr);
 	hash_check_watch(acptr, RPL_LOGOFF);
 
 	sendto_snomask(SNO_NICKCHANGE,

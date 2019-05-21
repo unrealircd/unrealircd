@@ -110,6 +110,8 @@ CMD_FUNC(m_kill)
 	for (p = NULL, nick = strtoken(&p, user, ","); nick;
 	    nick = strtoken(&p, NULL, ","))
 	{
+		MessageTag *mtags = NULL;
+
 		if (MyClient(sptr) && (++ntargets > maxtargets))
 		{
 			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
@@ -207,6 +209,8 @@ CMD_FUNC(m_kill)
 			make_nick_user_host(acptr->name, acptr->user->username, GetHost(acptr)),
 			sptr->name, inpath, path);
 
+		new_message(sptr, recv_mtags, &mtags);
+
 		/* Victim gets a little notification (s)he is about to die */
 		if (MyConnect(acptr))
 		{
@@ -227,9 +231,9 @@ CMD_FUNC(m_kill)
 			/* Kill from one server to another (we may be src, victim or something in-between) */
 
 			/* Broadcast it to other SID and non-SID servers (may be a NOOP, obviously) */
-			sendto_server(cptr, PROTO_SID, 0, ":%s KILL %s :%s!%s",
+			sendto_server(cptr, PROTO_SID, 0, mtags, ":%s KILL %s :%s!%s",
 			    sptr->name, ID(acptr), inpath, path);
-			sendto_server(cptr, 0, PROTO_SID, ":%s KILL %s :%s!%s",
+			sendto_server(cptr, 0, PROTO_SID, mtags, ":%s KILL %s :%s!%s",
 			    sptr->name, acptr->name, inpath, path);
 
 			/* Don't send a QUIT for this */
@@ -253,7 +257,11 @@ CMD_FUNC(m_kill)
 		if (MyClient(sptr))
 			RunHook3(HOOKTYPE_LOCAL_KILL, sptr, acptr, parv[2]);
 
+		// FIXME: these need 'mtags' !!!! exit_client2 function needs updates!!
 		n = exit_client(cptr, acptr, sptr, buf2);
+
+		free_mtags(mtags);
+
 		if ((n == FLUSH_BUFFER) && (sptr == acptr))
 			return FLUSH_BUFFER; /* return if we killed ourselves */
 	}

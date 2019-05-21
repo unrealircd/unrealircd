@@ -86,12 +86,12 @@ CMD_FUNC(m_sdesc)
 
 	ircsnprintf(sptr->srvptr->info, sizeof(sptr->srvptr->info), "%s", parv[1]);
 
-	sendto_server(cptr, 0, 0, ":%s SDESC :%s", sptr->name, parv[1]);
+	sendto_server(cptr, 0, 0, NULL, ":%s SDESC :%s", sptr->name, parv[1]);
 
 	if (MyConnect(sptr))
-		sendto_one(sptr,
-			":%s NOTICE %s :Your \"server description\" is now set to be %s - you have to set it manually to undo it",
-			me.name, sptr->name, parv[1]);
+		sendnotice(sptr,
+			"Your \"server description\" is now set to be %s - you have to set it manually to undo it",
+			parv[1]);
 
 	sendto_ops("Server description for %s is now '%s' changed by %s",
 		sptr->srvptr->name, sptr->srvptr->info, sptr->name);

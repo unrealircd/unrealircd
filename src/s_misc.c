@@ -588,28 +588,20 @@ static void exit_one_client(aClient *sptr, const char *comment)
 	remove_client_from_list(sptr);
 }
 
-/*
-** exit_client
-**	This is old "m_bye". Name  changed, because this is not a
-**	protocol function, but a general server utility function.
-**
-**	This function exits a client of *any* type (user, server, etc)
-**	from this server. Also, this generates all necessary prototol
-**	messages that this exit may cause.
-**
-**   1) If the client is a local client, then this implicitly
-**	exits all other clients depending on this connection (e.g.
-**	remote clients having 'from'-field that points to this.
-**
-**   2) If the client is a remote client, then only this is exited.
-**
-** For convenience, this function returns a suitable value for
-** m_funtion return value:
-**
-**	FLUSH_BUFFER	if (cptr == sptr)
-**	0		if (cptr != sptr)
-*/
-int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
+/* Exit this IRC client, and all the dependents if this is a server.
+ *
+ * For convenience, this function returns a suitable value for
+ * m_funtion return value:
+ *	FLUSH_BUFFER	if (cptr == sptr)
+ *	0		if (cptr != sptr)
+ */
+int exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
+{
+	return exit_client2(cptr, sptr, from, NULL, comment);
+}
+
+/** See exit_client() */
+int exit_client2(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mtags, char *comment)
 {
 	time_t on_for;
 	ConfigItem_listen *listen_conf;
@@ -740,10 +732,13 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 	}
 	else if (IsClient(sptr) && !(sptr->flags & FLAGS_KILLED))
 	{
-		sendto_server(cptr, PROTO_SID, 0,
+		MessageTag *mtags = NULL;
+		new_message(sptr, recv_mtags, &mtags);
+		sendto_server(cptr, PROTO_SID, 0, mtags,
 			":%s QUIT :%s", ID(sptr), comment);
-		sendto_server(cptr, 0, PROTO_SID,
+		sendto_server(cptr, 0, PROTO_SID, mtags,
 			":%s QUIT :%s", sptr->name, comment);
+		free_mtags(mtags);
 	}
 
 	/*
@@ -1107,10 +1102,10 @@ int swhois_add(aClient *acptr, char *tag, int priority, char *swhois, aClient *f
 	s->priority = priority;
 	AddListItemPrio(s, acptr->user->swhois, s->priority);
 	
-	sendto_server(skip, 0, PROTO_EXTSWHOIS, ":%s SWHOIS %s :%s",
+	sendto_server(skip, 0, PROTO_EXTSWHOIS, NULL, ":%s SWHOIS %s :%s",
 		from->name, acptr->name, swhois);
 
-	sendto_server(skip, PROTO_EXTSWHOIS, 0, ":%s SWHOIS %s + %s %d :%s",
+	sendto_server(skip, PROTO_EXTSWHOIS, 0, NULL, ":%s SWHOIS %s + %s %d :%s",
 		from->name, acptr->name, tag, priority, swhois);
 
 	return 0;
@@ -1138,10 +1133,10 @@ int swhois_delete(aClient *acptr, char *tag, char *swhois, aClient *from, aClien
 			MyFree(s->setby);
 			MyFree(s);
 
-			sendto_server(skip, 0, PROTO_EXTSWHOIS, ":%s SWHOIS %s :",
+			sendto_server(skip, 0, PROTO_EXTSWHOIS, NULL, ":%s SWHOIS %s :",
 				from->name, acptr->name);
 
-			sendto_server(skip, PROTO_EXTSWHOIS, 0, ":%s SWHOIS %s - %s %d :%s",
+			sendto_server(skip, PROTO_EXTSWHOIS, 0, NULL, ":%s SWHOIS %s - %s %d :%s",
 				from->name, acptr->name, tag, 0, swhois);
 			
 			ret = 0;
@@ -1283,7 +1278,7 @@ size_t add_sjsby(char *buf, char *setby, TS seton)
  * @example
  * char buf[512];
  * concat_params(buf, sizeof(buf), parc, parv);
- * sendto_server(cptr, 0, 0, ":%s SOMECOMMAND %s", sptr->name, buf);
+ * sendto_server(cptr, 0, 0, recv_mtags, ":%s SOMECOMMAND %s", sptr->name, buf);
  */
 void concat_params(char *buf, int len, int parc, char *parv[])
 {

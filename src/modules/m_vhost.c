@@ -138,14 +138,13 @@ CMD_FUNC(m_vhost)
 		{
 			strcpy(olduser, sptr->user->username);
 			strlcpy(sptr->user->username, vhost->virtuser, USERLEN);
-			sendto_server(cptr, 0, 0, ":%s SETIDENT %s", sptr->name,
+			sendto_server(cptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name,
 			    sptr->user->username);
 		}
 		sptr->umodes |= UMODE_HIDE;
 		sptr->umodes |= UMODE_SETHOST;
-		sendto_server(cptr, 0, 0, ":%s SETHOST %s", sptr->name, sptr->user->virthost);
-		sendto_one(sptr, ":%s MODE %s :+tx",
-		    sptr->name, sptr->name);
+		sendto_server(cptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, sptr->user->virthost);
+		sendto_one(sptr, ":%s MODE %s :+tx", sptr->name, sptr->name);
 		if (vhost->swhois)
 		{
 			SWhois *s;

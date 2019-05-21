@@ -66,9 +66,9 @@ void strrangetok(char *in, char *out, char tok, short first, short last) {
 static int recursive_alias = 0;
 int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd)
 {
-ConfigItem_alias *alias;
-aClient *acptr;
-int ret;
+	ConfigItem_alias *alias;
+	aClient *acptr;
+	int ret;
 
 	if (!(alias = Find_alias(cmd))) 
 	{
@@ -137,10 +137,12 @@ int ret;
 			{
 				if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
 					return ret;
+				new_message(sptr, NULL, &mtags);
 				sendto_channel(chptr, sptr, sptr,
-				               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, NULL,
+				               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
 				               ":%s PRIVMSG %s :%s",
 				               sptr->name, chptr->chname, parv[1]);
+				free_mtags(mtags);
 				return 0;
 			}
 		}
@@ -271,10 +273,12 @@ int ret;
 						{
 							if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
 								return ret;
+							new_message(sptr, NULL, &mtags);
 							sendto_channel(chptr, sptr, sptr,
-							               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, NULL,
+							               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
 							               ":%s PRIVMSG %s :%s",
 							               sptr->name, chptr->chname, parv[1]);
+							free_mtags(mtags);
 							return 0;
 						}
 					}

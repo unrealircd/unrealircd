@@ -232,15 +232,16 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 
 	send_join_to_local_users(sptr, chptr);
 
-	sendto_server(cptr, 0, PROTO_SJ3, ":%s JOIN :%s", sptr->name, chptr->chname);
+	// FIXME: mtags in the following 4+ !!!! callers as well.
+	sendto_server(cptr, 0, PROTO_SJ3, NULL, ":%s JOIN :%s", sptr->name, chptr->chname);
 
 	/* I _know_ that the "@%s " look a bit wierd
 	   with the space and all .. but its to get around
 	   a SJOIN bug --stskeeps */
-	sendto_server(cptr, PROTO_SID | PROTO_SJ3, 0, ":%s SJOIN %li %s :%s%s ",
+	sendto_server(cptr, PROTO_SID | PROTO_SJ3, 0, NULL, ":%s SJOIN %li %s :%s%s ",
 		me.id, chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), ID(sptr));
-	sendto_server(cptr, PROTO_SJ3, PROTO_SID, ":%s SJOIN %li %s :%s%s ",
+	sendto_server(cptr, PROTO_SJ3, PROTO_SID, NULL, ":%s SJOIN %li %s :%s%s ",
 		me.name, chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
 
@@ -254,7 +255,7 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 		if (chptr->creationtime == 0)
 		{
 			chptr->creationtime = TStime();
-			sendto_server(cptr, 0, 0, ":%s MODE %s + %lu",
+			sendto_server(cptr, 0, 0, NULL, ":%s MODE %s + %lu",
 			    me.name, chptr->chname, chptr->creationtime);
 		}
 		del_invite(sptr, chptr);
@@ -264,14 +265,14 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 			if ((flags & CHFL_CHANOWNER) || (flags & CHFL_CHANPROT))
 			{
 				/* +ao / +qo for when PREFIX_AQ is off */
-				sendto_server(cptr, 0, PROTO_SJ3, ":%s MODE %s +o%c %s %s %lu",
+				sendto_server(cptr, 0, PROTO_SJ3, NULL, ":%s MODE %s +o%c %s %s %lu",
 				    me.name,
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name, sptr->name,
 				    chptr->creationtime);
 			} else {
 #endif
 				/* +v/+h/+o (and +a/+q if PREFIX_AQ is on) */
-				sendto_server(cptr, 0, PROTO_SJ3, ":%s MODE %s +%c %s %lu",
+				sendto_server(cptr, 0, PROTO_SJ3, NULL, ":%s MODE %s +%c %s %lu",
 				    me.name,
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name,
 				    chptr->creationtime);
@@ -313,7 +314,8 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 			*modebuf = *parabuf = 0;
 			channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
 			/* This should probably be in the SJOIN stuff */
-			sendto_server(&me, 0, 0, ":%s MODE %s %s %s %lu",
+			// FIXME: mtags!
+			sendto_server(&me, 0, 0, NULL, ":%s MODE %s %s %s %lu",
 			    me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
 			sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
 		}
@@ -431,15 +433,21 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			while ((lp = sptr->user->channel))
 			{
+				MessageTag *mtags = NULL;
 				chptr = lp->chptr;
+
+				/* NOTE: this will cause the PART 0 to have different msgid's across servers */
+				new_message(sptr, NULL, &mtags);
 				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
 				               ":%s PART %s :%s",
 				               sptr->name, chptr->chname, "Left all channels");
+				free_mtags(mtags);
+
 				if (MyConnect(sptr))
 					RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, "Left all channels");
 				remove_user_from_channel(sptr, chptr);
 			}
-			sendto_server(cptr, 0, 0, ":%s JOIN 0", sptr->name);
+			sendto_server(cptr, 0, 0, NULL, ":%s JOIN 0", sptr->name);
 			continue;
 		}
 

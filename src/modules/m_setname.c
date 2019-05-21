@@ -108,7 +108,7 @@ CMD_FUNC(m_setname)
 		strcpy(sptr->info, parv[1]);
 	}
 
-	sendto_server(cptr, 0, 0, ":%s SETNAME :%s", sptr->name, parv[1]);
+	sendto_server(cptr, 0, 0, NULL, ":%s SETNAME :%s", sptr->name, parv[1]);
 
 	if (MyConnect(sptr))
 	{

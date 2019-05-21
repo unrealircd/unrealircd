@@ -22,10 +22,12 @@
 
 #include "unrealircd.h"
 
+/* FIXME: all sendto_server()'s and related need to be audited for mtags support !!!! */
+
 /* Forward declarations */
 CMD_FUNC(m_mode);
 CMD_FUNC(m_mlock);
-void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
+void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode);
 void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
                        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 CMD_FUNC(_m_umode);
@@ -297,7 +299,7 @@ aftercheck:
 	/* Filter out the unprivileged FIRST. *
 	 * Now, we can actually do the mode.  */
 
-	(void)do_mode(chptr, cptr, sptr, parc - 2, parv + 2, sendts, 0);
+	(void)do_mode(chptr, cptr, sptr, recv_mtags, parc - 2, parv + 2, sendts, 0);
 	/* After this don't touch 'chptr' anymore, as permanent module may have destroyed the channel */
 	opermode = 0; /* Important since sometimes forgotten. -- Syzop */
 	return 0;
@@ -406,11 +408,12 @@ static void bounce_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[])
  *	User or server is authorized to do the mode.  This takes care of
  * setting the mode and relaying it to other users and servers.
  */
-void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode)
+void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode)
 {
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
 	char tschange = 0, isbounce = 0;	/* fwd'ing bounce */
+	MessageTag *mtags = NULL;
 
 	if (**parv == '&')
 		isbounce = 1;
@@ -466,11 +469,11 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *par
 	{
 		if (tschange || isbounce) {	/* relay bounce time changes */
 			if (chptr->creationtime)
-				sendto_server(cptr, 0, 0, ":%s MODE %s %s+ %lu",
+				sendto_server(cptr, 0, 0, NULL, ":%s MODE %s %s+ %lu",
 				    me.name, chptr->chname, isbounce ? "&" : "",
 				    chptr->creationtime);
 			else
-				sendto_server(cptr, 0, 0, ":%s MODE %s %s+",
+				sendto_server(cptr, 0, 0, NULL, ":%s MODE %s %s+",
 				    me.name, chptr->chname, isbounce ? "&" : "");
 		return;		/* nothing to send */
 		}
@@ -507,25 +510,27 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *par
 		sendts = 0;
 	}
 
-	sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+	new_message(sptr, recv_mtags, &mtags);
+	sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 	               ":%s MODE %s %s %s",
 	               sptr->name, chptr->chname, modebuf, parabuf);
+	free_mtags(mtags);
 
 	if (IsServer(sptr) && sendts != -1)
 	{
-		sendto_server(cptr, 0, 0,
+		sendto_server(cptr, 0, 0, NULL,
 		              ":%s MODE %s %s%s %s %lu",
 		              sptr->name, chptr->chname, isbounce ? "&" : "", modebuf, parabuf, sendts);
 	} else
 	if (samode && IsMe(sptr))
 	{
 		/* SAMODE is a special case: always send a TS of 0 (omitting TS==desynch) */
-		sendto_server(cptr, 0, 0,
+		sendto_server(cptr, 0, 0, NULL,
 		              ":%s MODE %s %s %s 0",
 		              sptr->name, chptr->chname, modebuf, parabuf);
 	} else
 	{
-		sendto_server(cptr, 0, 0,
+		sendto_server(cptr, 0, 0, NULL,
 		              ":%s MODE %s %s%s %s",
 		              sptr->name, chptr->chname, isbounce ? "&" : "", modebuf, parabuf);
 		/* tell them it's not a timestamp, in case the last param
@@ -1691,7 +1696,7 @@ CMD_FUNC(_m_umode)
 				if(sptr->from->flags & FLAGS_QUARANTINE)
 				{
 					sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", sptr->name, sptr->srvptr->name);
-					sendto_server(NULL, 0, 0, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)", me.name, sptr->name, me.name);
+					sendto_server(NULL, 0, 0, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)", me.name, sptr->name, me.name);
 					return exit_client(cptr, sptr, &me, "Quarantined: no oper privileges allowed");
 				}
 				/* A local user trying to set himself +o/+O is denied here.
@@ -1831,7 +1836,7 @@ CMD_FUNC(_m_umode)
 	    ((oldumodes & UMODE_SETHOST) && !IsSetHost(sptr) && IsHidden(sptr)))
 	{
 		if (!dontspread)
-			sendto_server(cptr, PROTO_VHP, 0, ":%s SETHOST :%s",
+			sendto_server(cptr, PROTO_VHP, 0, NULL, ":%s SETHOST :%s",
 				sptr->name, sptr->user->virthost);
 
 		/* Set the vhost */

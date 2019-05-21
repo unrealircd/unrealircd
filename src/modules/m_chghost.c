@@ -153,7 +153,7 @@ CMD_FUNC(m_chghost)
                   
 		acptr->umodes |= UMODE_HIDE;
 		acptr->umodes |= UMODE_SETHOST;
-		sendto_server(cptr, 0, 0, ":%s CHGHOST %s %s",
+		sendto_server(cptr, 0, 0, NULL, ":%s CHGHOST %s %s",
 		    sptr->name, acptr->name, parv[2]);
 		if (acptr->user->virthost)
 		{

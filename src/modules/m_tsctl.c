@@ -119,7 +119,7 @@ CMD_FUNC(m_tsctl)
 				  sendto_ops
 				      ("TS Control - %s set TStime() to be diffed +%li",
 				      sptr->name, timediff);
-				  sendto_server(&me, 0, 0,
+				  sendto_server(&me, 0, 0, NULL,
 				      ":%s GLOBOPS :TS Control - %s set TStime to be diffed +%li",
 				      me.name, sptr->name, timediff);
 				  break;
@@ -131,7 +131,7 @@ CMD_FUNC(m_tsctl)
 				  sendto_ops
 				      ("TS Control - %s set TStime() to be diffed -%li",
 				      sptr->name, timediff);
-				  sendto_server(&me, 0, 0,
+				  sendto_server(&me, 0, 0, NULL,
 				      ":%s GLOBOPS :TS Control - %s set TStime to be diffed -%li",
 				      me.name, sptr->name, timediff);
 				  break;
@@ -152,8 +152,7 @@ CMD_FUNC(m_tsctl)
 			    ":%s NOTICE %s :*** Server=%s TStime=%li time()=%li TSoffset=%li",
 			    me.name, sptr->name, me.name, TStime(), time(NULL),
 			    TSoffset);
-			sendto_server(cptr, 0, 0, ":%s TSCTL alltime",
-			    sptr->name);
+			sendto_server(cptr, 0, 0, NULL, ":%s TSCTL alltime", sptr->name);
 			return 0;
 
 		}
@@ -179,7 +178,7 @@ CMD_FUNC(m_tsctl)
 			sendto_ops
 			    ("TS Control - U-Line set time to be %li (timediff: %li)",
 			    atol(parv[2]), timediff);
-			sendto_server(cptr, 0, 0, ":%s TSCTL svstime %li",
+			sendto_server(cptr, 0, 0, NULL, ":%s TSCTL svstime %li",
 			    sptr->name, atol(parv[2]));
 			return 0;
 		}

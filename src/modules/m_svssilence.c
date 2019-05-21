@@ -74,7 +74,7 @@ CMD_FUNC(m_svssilence)
 	if (parc < 3 || BadPtr(parv[2]) || !(acptr = find_person(parv[1], NULL)))
 		return 0;
 	
-	sendto_server(sptr, 0, 0, ":%s SVSSILENCE %s :%s", sptr->name, parv[1], parv[2]);
+	sendto_server(sptr, 0, 0, NULL, ":%s SVSSILENCE %s :%s", sptr->name, parv[1], parv[2]);
 
 	mine = MyClient(acptr) ? 1 : 0;
 

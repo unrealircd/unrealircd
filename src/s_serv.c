@@ -516,19 +516,9 @@ CMD_FUNC(m_error)
 		return 0;
 	}
 
-	if (cptr == sptr)
-	{
-		sendto_umode_global(UMODE_OPER, "ERROR from %s -- %s",
-		    get_client_name(cptr, FALSE), para);
-	}
-	else
-	{
-		sendto_server(&me, 0, 0,
-		    ":%s GLOBOPS :ERROR from %s via %s -- %s", me.name,
-		    sptr->name, get_client_name(cptr, FALSE), para);
-		sendto_ops("ERROR :from %s via %s -- %s", sptr->name,
-		    get_client_name(cptr, FALSE), para);
-	}
+	sendto_umode_global(UMODE_OPER, "ERROR from %s -- %s",
+	    get_client_name(cptr, FALSE), para);
+
 	return 0;
 }
 
@@ -680,12 +670,9 @@ CMD_FUNC(m_rehash)
 					me.name, sptr->name);
 				return 0;
 			}
-			sendto_server(&me, 0, 0,
+			sendto_umode_global(UMODE_OPER,
 			    ":%s GLOBOPS :%s is remotely rehashing server config file",
 			    me.name, sptr->name);
-			sendto_ops
-			    ("%s is remotely rehashing server config file",
-			    sptr->name);
 			remote_rehash_client = sptr;
 			reread_motdsandrules();
 			return rehash(cptr, sptr,
@@ -763,24 +750,20 @@ CMD_FUNC(m_rehash)
 			}
 			if (!_match("-o*motd", parv[1]))
 			{
-				sendto_ops
-				    ("%sRehashing OperMOTD on request of %s",
-				    cptr != sptr ? "Remotely " : "",
-				    sptr->name);
 				if (cptr != sptr)
-					sendto_server(&me, 0, 0, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.name, sptr->name);
+					sendto_umode_global(UMODE_OPER, "Remotely rehashing OPERMOTD on request of %s", sptr->name);
+				else
+					sendto_ops("Rehashing OPERMOTD on request of %s", sptr->name);
 				read_motd(conf_files->opermotd_file, &opermotd);
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
 			if (!_match("-b*motd", parv[1]))
 			{
-				sendto_ops
-				    ("%sRehashing BotMOTD on request of %s",
-				    cptr != sptr ? "Remotely " : "",
-				    sptr->name);
 				if (cptr != sptr)
-					sendto_server(&me, 0, 0, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.name, sptr->name);
+					sendto_umode_global(UMODE_OPER, "Remotely rehashing BOTMOTD on request of %s", sptr->name);
+				else
+					sendto_ops("Rehashing BOTMOTD on request of %s", sptr->name);
 				read_motd(conf_files->botmotd_file, &botmotd);
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
@@ -788,12 +771,10 @@ CMD_FUNC(m_rehash)
 			if (!strnicmp("-motd", parv[1], 5)
 			    || !strnicmp("-rules", parv[1], 6))
 			{
-				sendto_ops
-				    ("%sRehashing all MOTDs and RULES on request of %s",
-				    cptr != sptr ? "Remotely " : "",
-				    sptr->name);
 				if (cptr != sptr)
-					sendto_server(&me, 0, 0, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.name, sptr->name);
+					sendto_umode_global(UMODE_OPER, "Remotely rehasing all MOTDs and RULES on request of %s", sptr->name);
+				else
+					sendto_ops("Rehashing all MOTDs and RULES on request of %s", sptr->name);
 				rehash_motdrules();
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
@@ -1445,7 +1426,7 @@ void charsys_check_for_changes(void)
 		sendto_realops("Permitted nick characters changed at runtime: %s -> %s",
 			previous_langsinuse, langsinuse);
 		/* Broadcast change to all (locally connected) servers */
-		sendto_server(&me, 0, 0, "PROTOCTL NICKCHARS=%s", langsinuse);
+		sendto_server(&me, 0, 0, NULL, "PROTOCTL NICKCHARS=%s", langsinuse);
 	}
 
 	strlcpy(previous_langsinuse, langsinuse, sizeof(previous_langsinuse));

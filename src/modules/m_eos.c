@@ -69,7 +69,7 @@ CMD_FUNC(m_eos)
 	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: got sync from %s (path:%s)", sptr->name, cptr->name);
 	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: broadcasting it back to everyone except route from %s", cptr->name);
 #endif
-	sendto_server(cptr, 0, 0, ":%s EOS", sptr->name);
+	sendto_server(cptr, 0, 0, NULL, ":%s EOS", sptr->name);
 
 	RunHook(HOOKTYPE_SERVER_SYNCHED, cptr);
 	return 0;

@@ -97,14 +97,24 @@ MOD_UNLOAD(delayjoin)
 
 void set_post_delayed(aChannel *chptr)
 {
+	MessageTag *mtags = NULL;
+
 	chptr->mode.extmode |= EXTMODE_POST_DELAYED;
-	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s +d", me.name, chptr->chname);
+
+	new_message(&me, NULL, &mtags);
+	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +d", me.name, chptr->chname);
+	free_mtags(mtags);
 }
 
 void clear_post_delayed(aChannel *chptr)
 {
+	MessageTag *mtags = NULL;
+
 	chptr->mode.extmode &= ~EXTMODE_POST_DELAYED;
-	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s -d", me.name, chptr->chname);
+
+	new_message(&me, NULL, &mtags);
+	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s -d", me.name, chptr->chname);
+	free_mtags(mtags);
 }
 
 bool moded_member_invisible(Member* m, aChannel *chptr)

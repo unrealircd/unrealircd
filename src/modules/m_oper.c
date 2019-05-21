@@ -66,7 +66,7 @@ void set_oper_host(aClient *sptr, char *host)
 	{
 	        *p++ = '\0';
 		strlcpy(sptr->user->username, uhost, sizeof(sptr->user->username));
-		sendto_server(NULL, 0, 0, ":%s SETIDENT %s",
+		sendto_server(NULL, 0, 0, NULL, ":%s SETIDENT %s",
 		    sptr->name, sptr->user->username);
 	        host = p;
 	}

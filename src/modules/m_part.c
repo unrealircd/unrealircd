@@ -101,6 +101,8 @@ CMD_FUNC(m_part)
 
 	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
+		MessageTag *mtags = NULL;
+
 		if (MyClient(sptr) && (++ntargets > maxtargets))
 		{
 			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
@@ -157,12 +159,14 @@ CMD_FUNC(m_part)
 			}
 		}
 
-		/* Send to other servers... */
-		sendto_server(cptr, PROTO_SID, 0, ":%s PART %s :%s",
-			ID(sptr), chptr->chname, comment ? comment : "");
-		sendto_server(cptr, 0, PROTO_SID, ":%s PART %s :%s",
-			sptr->name, chptr->chname, comment ? comment : "");
+		/* Create a new message, this one is actually used by 8 calls (though at most 4 max) */
+		new_message(sptr, NULL, &mtags);
 
+		/* Send to other servers... */
+		sendto_server(cptr, PROTO_SID, 0, mtags, ":%s PART %s :%s",
+			ID(sptr), chptr->chname, comment ? comment : "");
+		sendto_server(cptr, 0, PROTO_SID, mtags, ":%s PART %s :%s",
+			sptr->name, chptr->chname, comment ? comment : "");
 
 		if (invisible_user_in_channel(sptr, chptr))
 		{
@@ -171,11 +175,12 @@ CMD_FUNC(m_part)
 			{
 				sendto_channel(chptr, sptr, sptr,
 					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT, 0,
-					       SEND_LOCAL, NULL,
+					       SEND_LOCAL, mtags,
 					       ":%s PART %s",
 					       sptr->name, chptr->chname);
 				if (MyClient(sptr))
 				{
+					// FIXME: send mtag to client via this sendto_one !!!
 					sendto_one(sptr, ":%s!%s@%s PART %s",
 						sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
 				}
@@ -184,11 +189,12 @@ CMD_FUNC(m_part)
 			{
 				sendto_channel(chptr, sptr, sptr,
 					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT, 0,
-					       SEND_LOCAL, NULL,
+					       SEND_LOCAL, mtags,
 					       ":%s PART %s %s",
 					       sptr->name, chptr->chname, comment);
 				if (MyClient(sptr))
 				{
+					// FIXME: send mtag to client via this sendto_one !!!
 					sendto_one(sptr,
 						":%s!%s@%s PART %s %s",
 						sptr->name, sptr->user->username, GetHost(sptr),
@@ -201,15 +207,17 @@ CMD_FUNC(m_part)
 			/* Show PART to all users in channel */
 			if (!comment)
 			{
-				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s PART %s",
 				               sptr->name, chptr->chname);
 			} else {
-				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s PART %s :%s",
 				               sptr->name, chptr->chname, comment);
 			}
 		}
+
+		free_mtags(mtags);
 
 		if (MyClient(sptr))
 			RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);

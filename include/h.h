@@ -282,8 +282,8 @@ extern void sendto_channel(aChannel *chptr, aClient *from, aClient *skip,
 extern void sendto_common_channels(aClient *, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_common_channels_local_butone(aClient *, long, char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_match_servs(aChannel *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
-extern void sendto_match_butone(aClient *, aClient *, char *, int,
-    char *pattern, ...) __attribute__((format(printf,5,6)));
+extern void sendto_match_butone(aClient *, aClient *, char *, int, MessageTag *,
+    char *pattern, ...) __attribute__((format(printf,6,7)));
 extern void sendto_all_butone(aClient *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_ops(char *, ...) __attribute__((format(printf,1,2)));
 extern void sendto_ops_butone(aClient *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
@@ -298,7 +298,7 @@ extern void sendto_snomask_global(int snomask, char *pattern, ...) __attribute__
 extern void sendto_snomask_normal(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern void sendto_snomask_normal_global(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern void sendnotice(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));
-extern void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps, const char *format, ...) __attribute__((format(printf, 4,5)));
+extern void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, const char *format, ...) __attribute__((format(printf, 5, 6)));
 extern void sendto_ops_and_log(char *pattern, ...) __attribute__((format(printf,1,2)));
 
 extern MODVAR int writecalls, writeb[];
@@ -313,6 +313,7 @@ extern char *get_client_name(aClient *, int);
 extern char *get_client_host(aClient *);
 extern char *myctime(time_t), *date(time_t);
 extern int exit_client(aClient *, aClient *, aClient *, char *);
+extern int exit_client2(aClient *, aClient *, aClient *, MessageTag *, char *);
 extern void initstats(), tstats(aClient *, char *);
 extern char *check_string(char *);
 extern char *make_nick_user_host(char *, char *, char *);
@@ -617,7 +618,7 @@ extern MODVAR int dontspread;
 extern MODVAR int (*do_join)(aClient *, aClient *, int, char **);
 extern MODVAR void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
 extern MODVAR int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-extern MODVAR void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
+extern MODVAR void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
 extern MODVAR void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 extern MODVAR int (*m_umode)(aClient *, aClient *, MessageTag *, int, char **);

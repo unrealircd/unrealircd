@@ -77,13 +77,14 @@ void topicoverride(aClient *sptr, aChannel *chptr, char *topic)
 */
 CMD_FUNC(m_topic)
 {
-aChannel *chptr = NullChn;
-char *topic = NULL, *name, *tnick = sptr->name;
-TS   ttime = 0;
-int i = 0;
-Hook *h;
-int ismember; /* cache: IsMember() */
-long flags = 0; /* cache: membership flags */
+	aChannel *chptr = NullChn;
+	char *topic = NULL, *name, *tnick = sptr->name;
+	TS   ttime = 0;
+	int i = 0;
+	Hook *h;
+	int ismember; /* cache: IsMember() */
+	long flags = 0; /* cache: membership flags */
+	MessageTag *mtags = NULL;
 
 	if (parc < 2)
 	{
@@ -180,15 +181,17 @@ long flags = 0; /* cache: membership flags */
 				chptr->topic_time = ttime;
 
 				RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);
-				sendto_server(cptr, PROTO_SID, 0, ":%s TOPIC %s %s %lu :%s",
+				new_message(sptr, recv_mtags, &mtags);
+				sendto_server(cptr, PROTO_SID, 0, mtags, ":%s TOPIC %s %s %lu :%s",
 				    ID(sptr), chptr->chname, chptr->topic_nick,
 				    chptr->topic_time, chptr->topic);
-				sendto_server(cptr, 0, PROTO_SID, ":%s TOPIC %s %s %lu :%s",
+				sendto_server(cptr, 0, PROTO_SID, mtags, ":%s TOPIC %s %s %lu :%s",
 				    sptr->name, chptr->chname, chptr->topic_nick,
 				    chptr->topic_time, chptr->topic);
-				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s TOPIC %s :%s",
 				               sptr->name, chptr->chname, chptr->topic);
+				free_mtags(mtags);
 			}
 		}
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
@@ -276,12 +279,15 @@ long flags = 0; /* cache: membership flags */
 				chptr->topic_time = ttime;
 			else
 				chptr->topic_time = TStime();
-			sendto_server(cptr, 0, 0, ":%s TOPIC %s %s %lu :%s",
+
+			new_message(sptr, recv_mtags, &mtags);
+			sendto_server(cptr, 0, 0, mtags, ":%s TOPIC %s %s %lu :%s",
 			    sptr->name, chptr->chname, chptr->topic_nick,
 			    chptr->topic_time, chptr->topic);
-			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
+			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 			               ":%s TOPIC %s :%s",
 			               sptr->name, chptr->chname, chptr->topic);
+			free_mtags(mtags);
 		}
 		else
 		{

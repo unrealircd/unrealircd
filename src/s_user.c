@@ -74,7 +74,7 @@ void iNAH_host(aClient *sptr, char *host)
 	}
 	sptr->user->virthost = strdup(host);
 	if (MyConnect(sptr))
-		sendto_server(&me, 0, 0, ":%s SETHOST :%s", sptr->name, sptr->user->virthost);
+		sendto_server(&me, 0, 0, NULL, ":%s SETHOST :%s", sptr->name, sptr->user->virthost);
 	sptr->umodes |= UMODE_SETHOST;
 
 	userhost_changed(sptr);

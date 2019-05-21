@@ -585,13 +585,12 @@ int check_ping(aClient *cptr)
 		)
 	{
 		if (IsServer(cptr) || IsConnecting(cptr) ||
-			IsHandshake(cptr)
-			|| IsSSLConnectHandshake(cptr)
-			) {
+		    IsHandshake(cptr) || IsSSLConnectHandshake(cptr))
+		{
 			sendto_ops_and_log
 				("No response from %s, closing link",
 				get_client_name(cptr, FALSE));
-			sendto_server(&me, 0, 0,
+			sendto_server(&me, 0, 0, NULL,
 				":%s GLOBOPS :No response from %s, closing link",
 				me.name, get_client_name(cptr,
 				FALSE));

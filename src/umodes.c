@@ -161,7 +161,7 @@ void umodes_check_for_changes(void)
 		sendto_realops("User modes changed at runtime: %s -> %s",
 			previous_umodestring, umodestring);
 		/* Broadcast change to all (locally connected) servers */
-		sendto_server(&me, 0, 0, "PROTOCTL USERMODES=%s", umodestring);
+		sendto_server(&me, 0, 0, NULL, "PROTOCTL USERMODES=%s", umodestring);
 	}
 
 	strlcpy(previous_umodestring, umodestring, sizeof(previous_umodestring));

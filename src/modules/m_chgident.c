@@ -151,7 +151,7 @@ CMD_FUNC(m_chgident)
 				GetHost(acptr), parv[2]);
 		}
 
-		sendto_server(cptr, 0, 0, ":%s CHGIDENT %s %s",
+		sendto_server(cptr, 0, 0, NULL, ":%s CHGIDENT %s %s",
 		    sptr->name, acptr->name, parv[2]);
 		ircsnprintf(acptr->user->username, sizeof(acptr->user->username), "%s", parv[2]);
 

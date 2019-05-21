@@ -72,6 +72,7 @@ CMD_FUNC(m_away)
 {
 	char *away, *awy2 = parv[1];
 	int n, wasaway = 0;
+	MessageTag *mtags = NULL;
 
 	if (IsServer(sptr))
 		return 0;
@@ -85,14 +86,14 @@ CMD_FUNC(m_away)
 		{
 			MyFree(away);
 			sptr->user->away = NULL;
-			/* Only send this if they were actually away -- codemastr */
-			sendto_server(cptr, 0, 0, ":%s AWAY", sptr->name);
-			hash_check_watch(cptr, RPL_NOTAWAY);
 
-			sendto_common_channels_local_butone(sptr, ClientCapabilityBit("away-notify"),
-			                                    ":%s AWAY", sptr->name);
+			new_message(sptr, recv_mtags, &mtags);
+			sendto_server(cptr, 0, 0, mtags, ":%s AWAY", sptr->name);
+			hash_check_watch(cptr, RPL_NOTAWAY);
+			sendto_common_channels_local_butone(sptr, ClientCapabilityBit("away-notify"), ":%s AWAY", sptr->name);
+			free_mtags(mtags);
 		}
-		/* hope this works XX */
+
 		if (MyConnect(sptr))
 			sendto_one(sptr, rpl_str(RPL_UNAWAY), me.name, sptr->name);
 				RunHook2(HOOKTYPE_AWAY, sptr, NULL);
@@ -136,7 +137,9 @@ CMD_FUNC(m_away)
 
 	sptr->user->lastaway = TStime();
 	
-	sendto_server(cptr, 0, 0, ":%s AWAY :%s", sptr->name, awy2);
+	new_message(sptr, recv_mtags, &mtags);
+
+	sendto_server(cptr, 0, 0, mtags, ":%s AWAY :%s", sptr->name, awy2);
 
 	if (away)
 	{
@@ -150,8 +153,8 @@ CMD_FUNC(m_away)
 		sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, sptr->name);
 
 	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
-	sendto_common_channels_local_butone(sptr, ClientCapabilityBit("away-notify"),
-	                                    ":%s AWAY :%s", sptr->name, away);
+	sendto_common_channels_local_butone(sptr, ClientCapabilityBit("away-notify"), ":%s AWAY :%s", sptr->name, away);
+	free_mtags(mtags);
 
 	RunHook2(HOOKTYPE_AWAY, sptr, away);
 	return 0;

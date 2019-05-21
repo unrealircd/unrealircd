@@ -346,10 +346,14 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* only send message if modes have changed */
 	if (*parabuf)
 	{
-		sendto_channel(chptr, sptr, sptr, 0, 0, SEND_LOCAL, NULL,
+		MessageTag *mtags = NULL;
+		/* NOTE: cannot use 'recv_mtag' here because MODE could be rewrapped. Not ideal :( */
+		new_message(sptr, NULL, &mtags);
+		sendto_channel(chptr, sptr, sptr, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
 		               sptr->name, chptr->chname,  modebuf, parabuf);
-		sendto_server(NULL, 0, 0, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
+		free_mtags(mtags);
 
 		/* Activate this hook just like m_mode.c */
 		RunHook7(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, ts, 0);
@@ -506,7 +510,7 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 					 * the idea behind it :P. -- Syzop
 					 */
 					if (MyClient(acptr) && !strcasecmp(acptr->user->virthost, acptr->user->cloakedhost))
-						sendto_server(NULL, PROTO_VHP, 0, ":%s SETHOST :%s", acptr->name,
+						sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", acptr->name,
 							acptr->user->virthost);
 				}
 				goto setmodex;
@@ -527,7 +531,7 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 						safestrdup(acptr->user->virthost, acptr->user->cloakedhost);
 						/* And broadcast the change to VHP servers */
 						if (MyClient(acptr))
-							sendto_server(NULL, PROTO_VHP, 0, ":%s SETHOST :%s", acptr->name,
+							sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", acptr->name,
 								acptr->user->virthost);
 					}
 					goto setmodex;
@@ -555,11 +559,11 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 		} /*switch*/
 
 	if (parc > 3)
-		sendto_server(cptr, 0, 0, ":%s %s %s %s %s",
+		sendto_server(cptr, 0, 0, NULL, ":%s %s %s %s %s",
 		    sptr->name, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2], parv[3]);
 	else
-		sendto_server(cptr, 0, 0,  ":%s %s %s %s",
+		sendto_server(cptr, 0, 0, NULL, ":%s %s %s %s",
 		    sptr->name, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2]);
 
@@ -644,10 +648,14 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
 
 	if (send)
 	{
-		sendto_channel(chptr, from, from, 0, 0, SEND_LOCAL, NULL,
+		MessageTag *mtags = NULL;
+		/* NOTE: cannot use 'recv_mtag' here because MODE could be rewrapped. Not ideal :( */
+		new_message(from, NULL, &mtags);
+		sendto_channel(chptr, from, from, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
 		               from->name, chptr->chname, modebuf, parabuf);
-		sendto_server(NULL, 0, 0, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
+		free_mtags(mtags);
 		send = 0;
 		*parabuf = 0;
 		modes = modebuf;

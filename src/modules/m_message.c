@@ -402,6 +402,8 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 		/* Message to $servermask */
 		if (*nick == '$')
 		{
+			MessageTag *mtags = NULL;
+
 			if (!ValidatePermissionsForPath("chat:notice:global", sptr, NULL, NULL, NULL))
 			{
 				/* Apparently no other IRCd does this, but I think it's confusing not to
@@ -411,11 +413,14 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 				continue;
 			}
+			new_message(sptr, recv_mtags, &mtags);
 			sendto_match_butone(IsServer(cptr) ? cptr : NULL,
 			    sptr, nick + 1,
 			    (*nick == '#') ? MATCH_HOST :
 			    MATCH_SERVER,
+			    mtags,
 			    ":%s %s %s :%s", sptr->name, cmd, nick, parv[2]);
+			free_mtags(mtags);
 			continue;
 		}
 

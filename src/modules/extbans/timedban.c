@@ -435,8 +435,11 @@ EVENT(timedban_timeout)
 		}
 		if (*pbuf)
 		{
-			sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s %s %s", me.name, chptr->chname, mbuf, pbuf);
-			sendto_server(NULL, 0, 0, ":%s MODE %s %s %s 0", me.name, chptr->chname, mbuf, pbuf);
+			MessageTag *mtags = NULL;
+			new_message(&me, NULL, &mtags);
+			sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s %s %s", me.name, chptr->chname, mbuf, pbuf);
+			sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s 0", me.name, chptr->chname, mbuf, pbuf);
+			free_mtags(mtags);
 			*pbuf = 0;
 		}
 	}
@@ -480,21 +483,27 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
 	if (count == MAXMODEPARAMS)
 		send = 1;
 
-	if (send) {
-		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s %s %s", me.name, chptr->chname, mbuf, pbuf);
-		sendto_server(NULL, 0, 0, ":%s MODE %s %s %s 0", me.name, chptr->chname, mbuf, pbuf);
+	if (send)
+	{
+		MessageTag *mtags = NULL;
+
+		new_message(&me, NULL, &mtags);
+		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s %s %s", me.name, chptr->chname, mbuf, pbuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s 0", me.name, chptr->chname, mbuf, pbuf);
+		free_mtags(mtags);
 		send = 0;
 		*pbuf = 0;
 		modes = mbuf;
 		*modes++ = what;
 		lastwhat = what;
-		if (count != MAXMODEPARAMS) {
+		if (count != MAXMODEPARAMS)
+		{
 			strlcpy(pbuf, param, sizeof(pbuf));
 			*modes++ = mode;
 			count = 1;
-		}
-		else 
+		} else {
 			count = 0;
+		}
 		*modes = 0;
 	}
 }

@@ -1351,7 +1351,7 @@ void set_channel_mlock(aClient *cptr, aClient *sptr, aChannel *chptr, const char
 
 	if (propagate)
 	{
-		sendto_server(cptr,0, 0, ":%s MLOCK %lu %s :%s",
+		sendto_server(cptr, 0, 0, NULL, ":%s MLOCK %lu %s :%s",
 			      cptr->name, chptr->creationtime, chptr->chname,
 			      BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
 	}

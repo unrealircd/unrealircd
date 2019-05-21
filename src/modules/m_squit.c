@@ -147,7 +147,7 @@ CMD_FUNC(m_squit)
 			sendto_ops
 			    ("%s tried to do a fake kill using SQUIT (%s (%s))",
 			    sptr->name, acptr->name, comment);
-			sendto_server(&me, 0, 0,
+			sendto_server(&me, 0, 0, NULL,
 			    ":%s GLOBOPS :%s tried to fake kill using SQUIT (%s (%s))",
 			    me.name, sptr->name, acptr->name, comment);
 			return 0;

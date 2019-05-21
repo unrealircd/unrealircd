@@ -107,7 +107,7 @@ CMD_FUNC(m_netinfo)
 		sendto_realops
 		    ("Possible negative TS split at link %s (%li - %li = %li)%s",
 		    cptr->name, (xx), (endsync), (xx - endsync), emsg);
-		sendto_server(&me, 0, 0,
+		sendto_server(&me, 0, 0, NULL,
 		    ":%s SMO o :\2(sync)\2 Possible negative TS split at link %s (%li - %li = %li)%s",
 		    me.name, cptr->name, (xx), (endsync), (xx - endsync), emsg);
 	}
@@ -116,7 +116,7 @@ CMD_FUNC(m_netinfo)
 	    cptr->name, me.name, (TStime() - endsync), sptr->local->receiveK,
 	    sptr->local->receiveB, sptr->local->sendK, sptr->local->sendB);
 
-	sendto_server(&me, 0, 0,
+	sendto_server(&me, 0, 0, NULL,
 	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
 	    me.name, cptr->name, me.name, (TStime() - endsync), sptr->local->receiveK,
 	    sptr->local->receiveB, sptr->local->sendK, sptr->local->sendB);
@@ -125,7 +125,7 @@ CMD_FUNC(m_netinfo)
 	{
 		sendto_realops("Network name mismatch from link %s (%s != %s)",
 		    cptr->name, parv[8], ircnetwork);
-		sendto_server(&me, 0, 0,
+		sendto_server(&me, 0, 0, NULL,
 		    ":%s SMO o :\2(sync)\2 Network name mismatch from link %s (%s != %s)",
 		    me.name, cptr->name, parv[8], ircnetwork);
 	}
@@ -135,7 +135,7 @@ CMD_FUNC(m_netinfo)
 		sendto_realops
 		    ("Link %s is running Protocol u%li while we are running %d!",
 		    cptr->name, protocol, UnrealProtocol);
-		sendto_server(&me, 0, 0,
+		sendto_server(&me, 0, 0, NULL,
 		    ":%s SMO o :\2(sync)\2 Link %s is running u%li while %s is running %d!",
 		    me.name, cptr->name, protocol, me.name, UnrealProtocol);
 

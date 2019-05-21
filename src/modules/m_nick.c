@@ -140,36 +140,47 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 		/* non-cptr case... only necessary if nick-changing. */
 		if (new)
 		{
+			MessageTag *mtags = NULL;
+
+			new_message(new, NULL, &mtags);
+
 			/* non-cptr side knows this user by their old nick name */
-			sendto_server(cptr, PROTO_SID, 0,
+			sendto_server(cptr, PROTO_SID, 0, mtags,
 				":%s KILL %s :%s (%s)",
 				me.name, ID(new), me.name, comment);
 
-			sendto_server(cptr, 0, PROTO_SID,
+			sendto_server(cptr, 0, PROTO_SID, mtags,
 				":%s KILL %s :%s (%s)",
 				me.name, new->name, me.name, comment);
 			
 			/* Exit the client */
 			ircstp->is_kill++;
 			new->flags |= FLAGS_KILLED;
+			// FIXME: once exit_client2 supports 'mtags' change this:
 			(void)exit_client(NULL, new, &me, comment);
+
+			free_mtags(mtags);
 		}
 	}
 	
 	if ((type == NICKCOL_EQUAL) || (type == NICKCOL_NEW_WON))
 	{
+		MessageTag *mtags = NULL;
+
+		new_message(existing, NULL, &mtags);
+
 		/* Now let's kill 'existing' */
-		sendto_server(NULL, PROTO_SID, 0,
+		sendto_server(NULL, PROTO_SID, 0, mtags,
 			":%s KILL %s :%s (%s)",
 			me.name, ID(existing), me.name, comment);
 		
 #ifndef ASSUME_NICK_IN_FLIGHT
 		/* This is not ideal on non-SID servers, may kill the wrong person. */
-		sendto_server(NULL, 0, PROTO_SID,
+		sendto_server(NULL, 0, PROTO_SID, mtags,
 			":%s KILL %s :%s (%s)",
 			 me.name, existing->name, me.name, comment);
 #else
-		sendto_server(cptr, 0, PROTO_SID,
+		sendto_server(cptr, 0, PROTO_SID, mtags,
 			":%s KILL %s :%s (%s)",
 			 me.name, existing->name, me.name, comment);
 #endif
@@ -181,7 +192,10 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 		/* Exit the client */
 		ircstp->is_kill++;
 		existing->flags |= FLAGS_KILLED;
+		// FIXME: change to exit_client2 with mtags
 		(void)exit_client(NULL, existing, &me, comment);
+
+		free_mtags(mtags);
 	}
 	
 #ifndef ASSUME_NICK_IN_FLIGHT
@@ -289,8 +303,14 @@ CMD_FUNC(m_uid)
 			    me.name, parv[1], me.name, parv[1],
 			    nick, cptr->name);
 			if (sptr != cptr)
-			{	/* bad nick change */
-				sendto_server(cptr, 0, 0,
+			{
+				/* bad nick change */
+				MessageTag *mtags = NULL;
+				int n;
+
+				new_message(sptr, NULL, &mtags);
+
+				sendto_server(cptr, 0, 0, mtags,
 				    ":%s KILL %s :%s (%s <- %s!%s@%s)",
 				    me.name, sptr->name, me.name,
 				    get_client_name(cptr, FALSE),
@@ -299,7 +319,12 @@ CMD_FUNC(m_uid)
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
 				sptr->flags |= FLAGS_KILLED;
-				return exit_client(cptr, sptr, &me, "BadNick");
+				// FIXME: change exit_client with mtags
+				n = exit_client(cptr, sptr, &me, "BadNick");
+
+				free_mtags(mtags);
+
+				return n;
 			}
 		}
 		return 0;
@@ -607,8 +632,14 @@ CMD_FUNC(m_nick)
 			    me.name, parv[1], me.name, parv[1],
 			    nick, cptr->name);
 			if (sptr != cptr)
-			{	/* bad nick change */
-				sendto_server(cptr, 0, 0,
+			{
+				/* bad nick change */
+				MessageTag *mtags = NULL;
+				int n;
+
+				new_message(sptr, NULL, &mtags);
+
+				sendto_server(cptr, 0, 0, mtags,
 				    ":%s KILL %s :%s (%s <- %s!%s@%s)",
 				    me.name, sptr->name, me.name,
 				    get_client_name(cptr, FALSE),
@@ -617,7 +648,12 @@ CMD_FUNC(m_nick)
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
 				sptr->flags |= FLAGS_KILLED;
-				return exit_client(cptr, sptr, &me, "BadNick");
+				// FIXME: use exit_client2 with mtags
+				n = exit_client(cptr, sptr, &me, "BadNick");
+
+				free_mtags(mtags);
+
+				return n;
 			}
 		}
 		return 0;
@@ -965,6 +1001,8 @@ CMD_FUNC(m_nick)
 	}
 	else if (sptr->name[0] && IsPerson(sptr))
 	{
+		MessageTag *mtags = NULL;
+
 		/*
 		   ** If the client belongs to me, then check to see
 		   ** if client is currently on any channels where it
@@ -1045,11 +1083,14 @@ CMD_FUNC(m_nick)
 			sptr->lastnick = TStime();
 		}
 		add_history(sptr, 1);
-		sendto_server(cptr, PROTO_SID, 0, ":%s NICK %s %ld",
+		new_message(sptr, recv_mtags, &mtags);
+		sendto_server(cptr, PROTO_SID, 0, mtags, ":%s NICK %s %ld",
 		    ID(sptr), nick, sptr->lastnick);
-		sendto_server(cptr, 0, PROTO_SID, ":%s NICK %s %ld",
+		sendto_server(cptr, 0, PROTO_SID, mtags, ":%s NICK %s %ld",
 		    sptr->name, nick, sptr->lastnick);
+		// FIXME: sendto common with mtags!
 		sendto_common_channels(sptr, ":%s NICK :%s", sptr->name, nick);
+		free_mtags(mtags);
 		if (removemoder)
 			sptr->umodes &= ~UMODE_REGNICK;
 	}

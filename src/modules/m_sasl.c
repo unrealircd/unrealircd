@@ -161,7 +161,7 @@ CMD_FUNC(m_svslogin)
 	}
 
 	/* not for us; propagate. */
-	sendto_server(cptr, 0, 0, ":%s SVSLOGIN %s %s %s",
+	sendto_server(cptr, 0, 0, NULL, ":%s SVSLOGIN %s %s %s",
 	    sptr->name, parv[1], parv[2], parv[3]);
 
 	return 0;
@@ -230,7 +230,7 @@ CMD_FUNC(m_sasl)
 	}
 
 	/* not for us; propagate. */
-	sendto_server(cptr, 0, 0, ":%s SASL %s %s %c %s %s",
+	sendto_server(cptr, 0, 0, NULL, ":%s SASL %s %s %c %s %s",
 	    sptr->name, parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
 
 	return 0;
@@ -269,18 +269,18 @@ CMD_FUNC(m_authenticate)
 		char *addr = BadPtr(sptr->ip) ? "0" : sptr->ip;
 		char *certfp = moddata_client_get(sptr, "certfp");
 
-		sendto_server(NULL, 0, 0, ":%s SASL %s %s H %s %s",
+		sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s H %s %s",
 		    me.name, SASL_SERVER, encode_puid(sptr), addr, addr);
 
 		if (certfp)
-			sendto_server(NULL, 0, 0, ":%s SASL %s %s S %s %s",
+			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s %s",
 			    me.name, SASL_SERVER, encode_puid(sptr), parv[1], certfp);
 		else
-			sendto_server(NULL, 0, 0, ":%s SASL %s %s S %s",
+			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s",
 			    me.name, SASL_SERVER, encode_puid(sptr), parv[1]);
 	}
 	else
-		sendto_server(NULL, 0, 0, ":%s SASL %s %s C %s",
+		sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s C %s",
 		    me.name, AGENT_SID(agent_p), encode_puid(sptr), parv[1]);
 
 	sptr->local->sasl_out++;
@@ -302,13 +302,13 @@ static int abort_sasl(aClient *cptr)
 
 		if (agent_p != NULL)
 		{
-			sendto_server(NULL, 0, 0, ":%s SASL %s %s D A",
+			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s D A",
 			    me.name, AGENT_SID(agent_p), encode_puid(cptr));
 			return 0;
 		}
 	}
 
-	sendto_server(NULL, 0, 0, ":%s SASL * %s D A", me.name, encode_puid(cptr));
+	sendto_server(NULL, 0, 0, NULL, ":%s SASL * %s D A", me.name, encode_puid(cptr));
 	return 0;
 }
 

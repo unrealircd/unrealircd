@@ -161,6 +161,7 @@ CMD_FUNC(m_sajoin)
 			if (*name == '0' && !atoi(name))
 			{
 				did_anything = 1;
+				// FIXME: SAJOIN and mtags, handle in the same way as m_join
 				while ((lp = acptr->user->channel))
 				{
 					chptr = lp->chptr;
@@ -174,7 +175,7 @@ CMD_FUNC(m_sajoin)
 					}
 					remove_user_from_channel(acptr, chptr);
 				}
-				sendto_server(acptr, 0, 0, ":%s JOIN 0", acptr->name);
+				sendto_server(acptr, 0, 0, NULL, ":%s JOIN 0", acptr->name);
 				strcpy(jbuf, "0");
 				continue;
 			}
@@ -206,7 +207,7 @@ CMD_FUNC(m_sajoin)
 			sendnotice(acptr, "*** You were forced to join %s", jbuf);
 			sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, acptr->name,
 				       jbuf);
-			sendto_server(&me, 0, 0, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
+			sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
 					   me.name, sptr->name, acptr->name, jbuf);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",

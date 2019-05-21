@@ -62,10 +62,11 @@ MOD_UNLOAD(m_sendsno)
 */
 CMD_FUNC(m_sendsno)
 {
-char *sno, *msg, *p;
-long snomask = 0;
-int i;
-aClient *acptr;
+	MessageTag *mtags = NULL;
+	char *sno, *msg, *p;
+	long snomask = 0;
+	int i;
+	aClient *acptr;
 
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
@@ -75,8 +76,10 @@ aClient *acptr;
 	sno = parv[1];
 	msg = parv[2];
 
+	new_message(sptr, recv_mtags, &mtags);
+
 	/* Forward to others... */
-	sendto_server(cptr, 0, 0, ":%s SENDSNO %s :%s", sptr->name, parv[1], parv[2]);
+	sendto_server(cptr, 0, 0, mtags, ":%s SENDSNO %s :%s", sptr->name, parv[1], parv[2]);
 
 	for (p = sno; *p; p++)
 	{
@@ -92,9 +95,12 @@ aClient *acptr;
 
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{
+		// FIXME: send with mtags here !!!!
 		if (acptr->user->snomask & snomask)
 			sendto_one(acptr, ":%s NOTICE %s :%s", sptr->name, acptr->name, msg);
 	}
+
+	free_mtags(mtags);
 
 	return 0;
 }

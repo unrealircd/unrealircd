@@ -276,20 +276,24 @@ CMD_FUNC(m_invite)
 		    || ValidatePermissionsForPath("channel:override:invite:self",sptr,NULL,chptr,NULL)
 		    ))
 		{
+			MessageTag *mtags = NULL;
+
+			new_message(&me, NULL, &mtags);
 			if (override == 1)
 			{
 				sendto_channel(chptr, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-				               0, SEND_ALL, NULL,
+				               0, SEND_ALL, mtags,
 				               ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
 				               me.name, chptr->chname, sptr->name);
 			} else
 			if (override == 0)
 			{
 				sendto_channel(chptr, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-				               0, SEND_ALL, NULL,
+				               0, SEND_ALL, mtags,
 				               ":%s NOTICE @%s :%s invited %s into the channel.",
 				               me.name, chptr->chname, sptr->name, acptr->name);
 			}
+			free_mtags(mtags);
 
 			add_invite(sptr, acptr, chptr);
 		}

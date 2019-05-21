@@ -1181,29 +1181,37 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
 
 	if ((userfld->nmsg) > c_limit)
 	{
-		char comment[1024], mask[1024];
-		sprintf(comment,
-		    "Flooding (Limit is %i lines per %i seconds)",
-		    c_limit, t_limit);
+		char comment[256], mask[256];
+		MessageTag *mtags;
+
+		snprintf(comment, sizeof(comment), "Flooding (Limit is %i lines per %i seconds)",
+			c_limit, t_limit);
+
 		if (banthem)
 		{		/* ban. */
 			if (timedban_available && (chp->r[FLD_TEXT] > 0))
-				sprintf(mask, "~t:%d:*!*@%s", chp->r[FLD_TEXT], GetHost(sptr));
+				snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", chp->r[FLD_TEXT], GetHost(sptr));
 			else
-				sprintf(mask, "*!*@%s", GetHost(sptr));
+				snprintf(mask, sizeof(mask), "*!*@%s", GetHost(sptr));
 			if (add_listmode(&chptr->banlist, &me, chptr, mask) == 0)
 			{
-				sendto_server(&me, 0, 0, ":%s MODE %s +b %s 0",
+				mtags = NULL;
+				new_message(&me, NULL, &mtags);
+				sendto_server(&me, 0, 0, mtags, ":%s MODE %s +b %s 0",
 				    me.name, chptr->chname, mask);
-				sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL,
+				sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 				    ":%s MODE %s +b %s", me.name, chptr->chname, mask);
+				free_mtags(mtags);
 			} /* else.. ban list is full */
 		}
-		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL,
+		mtags = NULL;
+		new_message(&me, NULL, &mtags);
+		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 		    ":%s KICK %s %s :%s", me.name,
 		    chptr->chname, sptr->name, comment);
-		sendto_server(NULL, 0, 0, ":%s KICK %s %s :%s",
+		sendto_server(NULL, 0, 0, mtags, ":%s KICK %s %s :%s",
 		   me.name, chptr->chname, sptr->name, comment);
+		free_mtags(mtags);
 		remove_user_from_channel(sptr, chptr);
 		return 1;
 	}
@@ -1356,10 +1364,15 @@ EVENT(modef_event)
 			if ((mode && (e->chptr->mode.mode & mode)) ||
 			    (extmode && (e->chptr->mode.extmode & extmode)))
 			{
-				sendto_server(&me, 0, 0, ":%s MODE %s -%c 0", me.name, e->chptr->chname, e->m);
-				sendto_channel(e->chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL,
+				MessageTag *mtags = NULL;
+
+				new_message(&me, NULL, &mtags);
+				sendto_server(&me, 0, 0, mtags, ":%s MODE %s -%c 0", me.name, e->chptr->chname, e->m);
+				sendto_channel(e->chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s MODE %s -%c",
 				               me.name, e->chptr->chname, e->m);
+				free_mtags(mtags);
+
 				e->chptr->mode.mode &= ~mode;
 				e->chptr->mode.extmode &= ~extmode;
 			}
@@ -1446,17 +1459,32 @@ void do_floodprot_action(aChannel *chptr, int what, char *text)
             !(extmode && (chptr->mode.extmode & extmode)))
 	{
 		char comment[512], target[CHANNELLEN + 8];
+		MessageTag *mtags;
+
+		/* First the notice to the chanops */
+		mtags = NULL;
+		new_message(&me, NULL, &mtags);
 		ircsnprintf(comment, sizeof(comment), "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
 			text, chp->l[what], chp->per, m);
 		ircsnprintf(target, sizeof(target), "%%%s", chptr->chname);
 		sendto_channel(chptr, &me, NULL, PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-		               0, SEND_ALL, NULL,
+		               0, SEND_ALL, mtags,
 		               ":%s NOTICE %s :%s", me.name, target, comment);
-		sendto_server(&me, 0, 0, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
-		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL, ":%s MODE %s +%c", me.name, chptr->chname, m);
+		free_mtags(mtags);
+
+		/* Then the MODE broadcast */
+		mtags = NULL;
+		new_message(&me, NULL, &mtags);
+		sendto_server(&me, 0, 0, mtags, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
+		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +%c", me.name, chptr->chname, m);
+		free_mtags(mtags);
+
+		/* Actually set the mode internally */
 		chptr->mode.mode |= mode;
 		chptr->mode.extmode |= extmode;
-		if (chp->r[what]) /* Add remove-chanmode timer... */
+
+		/* Add remove-chanmode timer */
+		if (chp->r[what])
 		{
 			floodprottimer_add(chptr, m, TStime() + ((long)chp->r[what] * 60) - 5);
 			/* (since the floodprot timer event is called every 10s, we do -5 here so the accurancy will

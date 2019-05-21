@@ -108,7 +108,9 @@ CMD_FUNC(m_quit)
 	}
 	else
 	{
-		/* Remote quits and non-person quits always use their original comment */
-		return exit_client(cptr, sptr, sptr, comment);
+		/* Remote quits and non-person quits always use their original comment.
+		 * Also pass recv_mtags so to keep the msgid and such.
+		 */
+		return exit_client2(cptr, sptr, sptr, recv_mtags, comment);
 	}
 }

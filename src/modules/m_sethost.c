@@ -164,7 +164,7 @@ CMD_FUNC(m_sethost)
 		}
 		sptr->user->virthost = strdup(vhost);
 		/* spread it out */
-		sendto_server(cptr, 0, 0, ":%s SETHOST %s", sptr->name, parv[1]);
+		sendto_server(cptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, parv[1]);
 
 		userhost_changed(sptr);
 	}
@@ -173,9 +173,9 @@ CMD_FUNC(m_sethost)
 	{
 		sendto_one(sptr, ":%s MODE %s :+xt", sptr->name, sptr->name);
 		sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, vhost);
-		sendto_one(sptr,
-		    ":%s NOTICE %s :Your nick!user@host-mask is now (%s!%s@%s) - To disable it type /mode %s -x",
-		    me.name, sptr->name, sptr->name, sptr->user->username, vhost,
+		sendnotice(sptr, 
+		    "Your nick!user@host-mask is now (%s!%s@%s) - To disable it type /mode %s -x",
+		     sptr->name, sptr->user->username, vhost,
 		    sptr->name);
 	}
 	return 0;

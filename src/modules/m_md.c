@@ -216,16 +216,16 @@ void _broadcast_md_client_cmd(aClient *except, aClient *sender, aClient *acptr, 
 {
 	if (value)
 	{
-		sendto_server(except, PROTO_SID, 0, ":%s MD %s %s %s :%s",
+		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s %s :%s",
 			sender->name, "client", ID(acptr), varname, value);
-		sendto_server(except, 0, PROTO_SID, ":%s MD %s %s %s :%s",
+		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s %s :%s",
 			sender->name, "client", acptr->name, varname, value);
 	}
 	else
 	{
-		sendto_server(except, PROTO_SID, 0, ":%s MD %s %s %s",
+		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s %s",
 			sender->name, "client", ID(acptr), varname);
-		sendto_server(except, 0, PROTO_SID, ":%s MD %s %s %s",
+		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s %s",
 			sender->name, "client", acptr->name, varname);
 	}
 }
@@ -233,10 +233,10 @@ void _broadcast_md_client_cmd(aClient *except, aClient *sender, aClient *acptr, 
 void _broadcast_md_channel_cmd(aClient *except, aClient *sender, aChannel *chptr, char *varname, char *value)
 {
 	if (value)
-		sendto_server(except, 0, 0, ":%s MD %s %s %s :%s",
+		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s :%s",
 			sender->name, "channel", chptr->chname, varname, value);
 	else
-		sendto_server(except, 0, 0, ":%s MD %s %s %s",
+		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s",
 			sender->name, "channel", chptr->chname, varname);
 }
 
@@ -244,16 +244,16 @@ void _broadcast_md_member_cmd(aClient *except, aClient *sender, aChannel *chptr,
 {
 	if (value)
 	{
-		sendto_server(except, PROTO_SID, 0, ":%s MD %s %s:%s %s :%s",
+		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s :%s",
 			sender->name, "member", chptr->chname, ID(acptr), varname, value);
-		sendto_server(except, 0, PROTO_SID, ":%s MD %s %s:%s %s :%s",
+		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s :%s",
 			sender->name, "member", chptr->chname, acptr->name, varname, value);
 	}
 	else
 	{
-		sendto_server(except, PROTO_SID, 0, ":%s MD %s %s:%s %s",
+		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s",
 			sender->name, "member", chptr->chname, ID(acptr), varname);
-		sendto_server(except, 0, PROTO_SID, ":%s MD %s %s:%s %s",
+		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s",
 			sender->name, "member", chptr->chname, acptr->name, varname);
 	}
 }
@@ -262,16 +262,16 @@ void _broadcast_md_membership_cmd(aClient *except, aClient *sender, aClient *acp
 {
 	if (value)
 	{
-		sendto_server(except, PROTO_SID, 0, ":%s MD %s %s:%s %s :%s",
+		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s :%s",
 			sender->name, "membership", ID(acptr), chptr->chname, varname, value);
-		sendto_server(except, 0, PROTO_SID, ":%s MD %s %s:%s %s :%s",
+		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s :%s",
 			sender->name, "membership", acptr->name, chptr->chname, varname, value);
 	}
 	else
 	{
-		sendto_server(except, PROTO_SID, 0, ":%s MD %s %s:%s %s",
+		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s",
 			sender->name, "membership", ID(acptr), chptr->chname, varname);
-		sendto_server(except, 0, PROTO_SID, ":%s MD %s %s:%s %s",
+		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s",
 			sender->name, "membership", acptr->name, chptr->chname, varname);
 	}
 }
