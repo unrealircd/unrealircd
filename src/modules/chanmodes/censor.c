@@ -328,8 +328,7 @@ int stats_badwords(aClient *sptr, char *para)
 
 	for (words = conf_badword_channel; words; words = words->next)
 	{
-		sendto_one(sptr, ":%s %i %s :c %c %s%s%s %s",
-		           me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
+		sendtxtnumeric(sptr, "c %c %s%s%s %s", words->type & BADW_TYPE_REGEX ? 'R' : 'F',
 		           (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
 		           (words->type & BADW_TYPE_FAST_R) ? "*" : "",
 		           words->action == BADWORD_REPLACE ? (words->replace ? words->replace : "<censored>") : "");

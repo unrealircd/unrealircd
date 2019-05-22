@@ -129,7 +129,7 @@ CMD_FUNC(m_who)
 		i = parse_who_options(sptr, parc - 1, parv + 1);
 		if (i < 0)
 		{
-			sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, mask);
+			sendnumeric(sptr, RPL_ENDOFWHO, mask);
 			return 0;
 		}
 	}
@@ -147,14 +147,14 @@ CMD_FUNC(m_who)
 	if (*mask == '\0')
 	{
 		/* no mask given */
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, "*");
+		sendnumeric(sptr, RPL_ENDOFWHO, "*");
 		return 0;
 	}
 
 	if ((target_channel = find_channel(mask, NULL)) != NULL)
 	{
 		do_channel_who(sptr, target_channel, mask);
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, mask);
+		sendnumeric(sptr, RPL_ENDOFWHO, mask);
 		return 0;
 	}
 
@@ -162,13 +162,13 @@ CMD_FUNC(m_who)
 	    (target_channel = find_channel(wfl.channel, NULL)) != NULL)
 	{
 		do_channel_who(sptr, target_channel, mask);
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, mask);
+		sendnumeric(sptr, RPL_ENDOFWHO, mask);
 		return 0;
 	}
 	else
 	{
 		do_other_who(sptr, mask);
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, mask);
+		sendnumeric(sptr, RPL_ENDOFWHO, mask);
 		return 0;
 	}
 
@@ -237,7 +237,7 @@ static void who_sendhelp(aClient *sptr)
 		s = who_help;
 
 	for (; *s; s++)
-		sendto_one(sptr, getreply(RPL_LISTSYNTAX), me.name, sptr->name, *s);
+		sendnumeric(sptr, RPL_LISTSYNTAX, *s);
 }
 
 #define WHO_ADD 1
@@ -769,7 +769,8 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 					
 
 	if (IsULine(acptr) && !IsOper(sptr) && !ValidatePermissionsForPath("server:info:map:ulines",sptr,acptr,NULL,NULL) && HIDE_ULINES)
-	        sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,
+	{
+	        sendnumeric(sptr, RPL_WHOREPLY,
         	     channel,       /* channel name */
 	             acptr->user->username, /* user name */
         	     host,		    /* hostname */
@@ -780,8 +781,8 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 	             acptr->info            /* realname */
              	);
 
-	else
-		sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,      
+	} else {
+		sendnumeric(sptr, RPL_WHOREPLY,
 		     channel,       /* channel name */
 		     acptr->user->username,      /* user name */
 		     host,		         /* hostname */
@@ -791,6 +792,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 		     flat ? 0 : acptr->hopcount, /* hops */ 
 		     acptr->info                 /* realname */
 		     );
+	}
 	free(stat);
 }
 

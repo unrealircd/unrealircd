@@ -1515,9 +1515,7 @@ void userfld_free(ModData *md)
 
 int floodprot_stats(aClient *sptr, char *flag)
 {
-	sendto_one(sptr, ":%s %i %s :modef-default-unsettime: %hd", me.name, RPL_TEXT,
-			sptr->name, (unsigned short)MODEF_DEFAULT_UNSETTIME);
-	sendto_one(sptr, ":%s %i %s :modef-max-unsettime: %hd", me.name, RPL_TEXT,
-			sptr->name, (unsigned short)MODEF_MAX_UNSETTIME);
+	sendtxtnumeric(sptr, "modef-default-unsettime: %hd", (unsigned short)MODEF_DEFAULT_UNSETTIME);
+	sendtxtnumeric(sptr, "modef-max-unsettime: %hd", (unsigned short)MODEF_MAX_UNSETTIME);
 	return 0;
 }

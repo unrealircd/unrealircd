@@ -305,7 +305,7 @@ CMD_FUNC(m_whox)
 				do_who_on_channel(sptr, chptr, 0, operspy, &fmt);
 		}
 
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, mask);
+		sendnumeric(sptr, RPL_ENDOFWHO, mask);
 		return 0;
 	}
 
@@ -344,7 +344,7 @@ CMD_FUNC(m_whox)
 		else
 			do_who(sptr, acptr, NULL, &fmt);
 
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, orig_mask);
+		sendnumeric(sptr, RPL_ENDOFWHO, orig_mask);
 		return 0;
 	}
 
@@ -363,7 +363,7 @@ CMD_FUNC(m_whox)
 	else
 		who_global(sptr, mask, operspy, &fmt);
 
-	sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name, mask);
+	sendnumeric(sptr, RPL_ENDOFWHO, mask);
 
 	return 0;
 }
@@ -743,8 +743,8 @@ static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_fo
 			host = GetIP(acptr);
 		else
 			host = GetHost(acptr);
-		sendto_one(sptr, getreply(RPL_WHOREPLY), me.name,
-			sptr->name, chptr ? chptr->chname : "*",
+		sendnumeric(sptr, RPL_WHOREPLY,
+			chptr ? chptr->chname : "*",
 			acptr->user->username, host,
 			hide ? "*" : acptr->user->server,
 			acptr->name, status, hide ? 0 : acptr->hopcount, acptr->info);

@@ -337,8 +337,7 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 static int cb_stats(aClient *sptr, char *flag)
 {
 	if (*flag == 'S')
-		sendto_one(sptr, ":%s %i %s :staff-file: %s",
-			me.name, RPL_TEXT, sptr->name, STAFF_FILE);
+		sendtxtnumeric(sptr, "staff-file: %s", STAFF_FILE);
 
 	return 0;
 }
