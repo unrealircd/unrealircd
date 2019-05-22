@@ -418,7 +418,8 @@ static int do_match(aClient *sptr, aClient *acptr, char *mask, struct who_format
 		return 1;
 
 	/* match ip address */
-	if (IsMatch(fmt, WMATCH_IP) && IsOper(sptr) && acptr->ip && !match(mask, acptr->ip))
+	if (IsMatch(fmt, WMATCH_IP) && IsOper(sptr) && acptr->ip &&
+		match_user(mask, acptr, MATCH_CHECK_IP))
 		return 1;
 
 	/* match account */
