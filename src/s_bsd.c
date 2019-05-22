@@ -1498,9 +1498,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 		int errtmp = ERRNO;
 		report_error("Connect to host %s failed: %s", cptr);
 		if (by && IsPerson(by) && !MyClient(by))
-			sendto_one(by,
-			    ":%s NOTICE %s :*** Connect to host %s failed.",
-			    me.name, by->name, cptr->name);
+			sendnotice(by, "*** Connect to host %s failed.", cptr->name);
 		fd_close(cptr->fd);
 		--OpenFiles;
 		cptr->fd = -2;

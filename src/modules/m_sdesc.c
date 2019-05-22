@@ -76,9 +76,8 @@ CMD_FUNC(m_sdesc)
 	{
 		if (MyConnect(sptr))
 		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SDESC Error: \"Server info\" may maximum be %i characters of length",
-			    me.name, sptr->name, REALLEN);
+			sendnotice(sptr, "*** /SDESC Error: \"Server info\" may maximum be %i characters of length",
+				REALLEN);
 			return 0;
 		}
 		parv[1][REALLEN] = '\0';

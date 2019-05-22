@@ -89,7 +89,6 @@ CMD_FUNC(m_dccdeny)
 		return 0;
 	}
 	else
-		sendto_one(sptr, "NOTICE %s :*** %s already has a dccdeny", sptr->name,
-		    parv[1]);
+		sendnotice(sptr, "*** %s already has a dccdeny", parv[1]);
 	return 0;
 }

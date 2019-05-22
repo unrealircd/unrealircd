@@ -75,99 +75,76 @@ CMD_FUNC(m_sethost)
 	else
 		vhost = parv[1];
 
-	/* bad bad bad boys .. ;p */
-	if (vhost == NULL)
+	if (BadPtr(vhost))
 	{	
 		if (MyConnect(sptr))
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Syntax: /SetHost <new host>",
-			    me.name, sptr->name);
-		}
+			sendnotice(sptr, "*** Syntax: /SetHost <new host>");
 		return 0;
 	}
 
-	if (strlen(parv[1]) < 1)
-	{
-		if (MyConnect(sptr))
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetHost Error: Atleast write SOMETHING that makes sense (':' string)",
-			    me.name, sptr->name);
-		return 0;
-	}
-	/* too large huh? */
 	if (strlen(parv[1]) > (HOSTLEN))
 	{
-		/* ignore us as well if we're not a child of 3k */
 		if (MyConnect(sptr))
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetHost Error: Hostnames are limited to %i characters.",
-			    me.name, sptr->name, HOSTLEN);
+			sendnotice(sptr, "*** /SetHost Error: Hostnames are limited to %i characters.", HOSTLEN);
 		return 0;
 	}
 
 	if (!valid_host(vhost))
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /SetHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
-		    me.name, sptr->name);
+		sendnotice(sptr, "*** /SetHost Error: A hostname may only contain a-z, A-Z, 0-9, '-' & '.'.");
 		return 0;
 	}
 	if (vhost[0] == ':')
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** A hostname cannot start with ':'", me.name, sptr->name);
+		sendnotice(sptr, "*** A hostname cannot start with ':'");
 		return 0;
 	}
 
 	if (MyClient(sptr) && !strcmp(GetHost(sptr), vhost))
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /SetHost Error: requested host is same as current host.",
-		    me.name, sptr->name);
+		sendnotice(sptr, "/SetHost Error: requested host is same as current host.");
 		return 0;
 	}
 
+	userhost_save_current(sptr);
+
+	switch (UHOST_ALLOWED)
 	{
-		userhost_save_current(sptr);
-
-		switch (UHOST_ALLOWED)
-		{
-			case UHALLOW_NEVER:
-				if (MyClient(sptr))
-				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /SetHost is disabled", me.name, sptr->name);
-					return 0;
-				}
-				break;
-			case UHALLOW_ALWAYS:
-				break;
-			case UHALLOW_NOCHANS:
-				if (MyClient(sptr) && sptr->user->joined)
-				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /SetHost can not be used while you are on a channel", me.name, sptr->name);
-					return 0;
-				}
-				break;
-			case UHALLOW_REJOIN:
-				/* join sent later when the host has been changed */
-				break;
-		}
-
-		/* hide it */
-		sptr->umodes |= UMODE_HIDE;
-		sptr->umodes |= UMODE_SETHOST;
-		/* get it in */
-		if (sptr->user->virthost)
-		{
-			MyFree(sptr->user->virthost);
-			sptr->user->virthost = NULL;
-		}
-		sptr->user->virthost = strdup(vhost);
-		/* spread it out */
-		sendto_server(cptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, parv[1]);
-
-		userhost_changed(sptr);
+		case UHALLOW_NEVER:
+			if (MyClient(sptr))
+			{
+				sendnotice(sptr, "*** /SetHost is disabled");
+				return 0;
+			}
+			break;
+		case UHALLOW_ALWAYS:
+			break;
+		case UHALLOW_NOCHANS:
+			if (MyClient(sptr) && sptr->user->joined)
+			{
+				sendnotice(sptr, "*** /SetHost can not be used while you are on a channel");
+				return 0;
+			}
+			break;
+		case UHALLOW_REJOIN:
+			/* join sent later when the host has been changed */
+			break;
 	}
+
+	/* hide it */
+	sptr->umodes |= UMODE_HIDE;
+	sptr->umodes |= UMODE_SETHOST;
+	/* get it in */
+	if (sptr->user->virthost)
+	{
+		MyFree(sptr->user->virthost);
+		sptr->user->virthost = NULL;
+	}
+	sptr->user->virthost = strdup(vhost);
+	/* spread it out */
+	sendto_server(cptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, parv[1]);
+
+	userhost_changed(sptr);
 
 	if (MyConnect(sptr))
 	{

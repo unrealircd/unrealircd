@@ -1252,7 +1252,7 @@ void config_error(char *format, ...)
 	ircd_log(LOG_ERROR, "config error: %s", buffer);
 	sendto_realops("error: %s", buffer);
 	if (remote_rehash_client)
-		sendto_one(remote_rehash_client, ":%s NOTICE %s :error: %s", me.name, remote_rehash_client->name, buffer);
+		sendnotice(remote_rehash_client, "error: %s", buffer);
 	/* We cannot live with this */
 	config_error_flag = 1;
 }
@@ -1315,7 +1315,7 @@ void config_status(char *format, ...)
 	ircd_log(LOG_ERROR, "%s", buffer);
 	sendto_realops("%s", buffer);
 	if (remote_rehash_client)
-		sendto_one(remote_rehash_client, ":%s NOTICE %s :%s", me.name, remote_rehash_client->name, buffer);
+		sendnotice(remote_rehash_client, "%s", buffer);
 }
 
 void config_warn(char *format, ...)
@@ -1336,7 +1336,7 @@ void config_warn(char *format, ...)
 	ircd_log(LOG_ERROR, "[warning] %s", buffer);
 	sendto_realops("[warning] %s", buffer);
 	if (remote_rehash_client)
-		sendto_one(remote_rehash_client, ":%s NOTICE %s :[warning] %s", me.name, remote_rehash_client->name, buffer);
+		sendnotice(remote_rehash_client, "[warning] %s", buffer);
 }
 
 void config_warn_duplicate(const char *filename, int line, const char *entry)
@@ -10444,8 +10444,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	if (loop.ircd_rehashing)
 	{
 		if (!sig)
-			sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
-				me.name, sptr->name);
+			sendnotice(sptr, "A rehash is already in progress");
 		return 0;
 	}
 

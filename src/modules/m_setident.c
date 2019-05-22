@@ -103,34 +103,17 @@ CMD_FUNC(m_setident)
 	else
 		vident = parv[1];
 
-	/* bad bad bad boys .. ;p */
-	if (vident == NULL)
+	if (BadPtr(vident))
 	{
 		if (MyConnect(sptr))
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Syntax: /SetIdent <new ident>",
-			    me.name, sptr->name);
-		}
+			sendnotice(sptr, "*** Syntax: /SetIdent <new ident>");
 		return 1;
 	}
-	if (strlen(parv[1]) < 1)
-	{
-		if (MyConnect(sptr))
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetIdent Error: Atleast write SOMETHING that makes sense (':' string)",
-			    me.name, sptr->name);
-		return 0;
-	}
 
-	/* too large huh? */
 	if (strlen(vident) > (USERLEN))
 	{
-		/* ignore us as well if we're not a child of 3k */
 		if (MyConnect(sptr))
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetIdent Error: Usernames are limited to %i characters.",
-			    me.name, sptr->name, USERLEN);
+			sendnotice(sptr, "*** /SetIdent Error: Usernames are limited to %i characters.", USERLEN);
 		return 0;
 	}
 
@@ -148,45 +131,41 @@ CMD_FUNC(m_setident)
 
 	if (legalident == 0)
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /SetIdent Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.' - Please only use them",
-		    me.name, sptr->name);
+		sendnotice(sptr, "*** /SetIdent Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.'.");
 		return 0;
 	}
 
+	userhost_save_current(sptr);
+
+	switch (UHOST_ALLOWED)
 	{
-		userhost_save_current(sptr);
-
-		switch (UHOST_ALLOWED)
-		{
-			case UHALLOW_ALWAYS:
-				break;
-			case UHALLOW_NEVER:
-				if (MyClient(sptr))
-				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent is disabled", me.name, sptr->name);
-					return 0;
-				}
-				break;
-			case UHALLOW_NOCHANS:
-				if (MyClient(sptr) && sptr->user->joined)
-				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent can not be used while you are on a channel", me.name, sptr->name);
-					return 0;
-				}
-				break;
-			case UHALLOW_REJOIN:
-				/* dealt with later */
-				break;
-		}
-
-		/* get it in */
-		ircsnprintf(sptr->user->username, sizeof(sptr->user->username), "%s", vident);
-		/* spread it out */
-		sendto_server(cptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name, parv[1]);
-
-		userhost_changed(sptr);
+		case UHALLOW_ALWAYS:
+			break;
+		case UHALLOW_NEVER:
+			if (MyClient(sptr))
+			{
+				sendnotice(sptr, "*** /SetIdent is disabled");
+				return 0;
+			}
+			break;
+		case UHALLOW_NOCHANS:
+			if (MyClient(sptr) && sptr->user->joined)
+			{
+				sendnotice(sptr, "*** /SetIdent can not be used while you are on a channel");
+				return 0;
+			}
+			break;
+		case UHALLOW_REJOIN:
+			/* dealt with later */
+			break;
 	}
+
+	/* get it in */
+	ircsnprintf(sptr->user->username, sizeof(sptr->user->username), "%s", vident);
+	/* spread it out */
+	sendto_server(cptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name, parv[1]);
+
+	userhost_changed(sptr);
 
 	if (MyConnect(sptr))
 	{

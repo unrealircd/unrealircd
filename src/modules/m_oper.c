@@ -217,8 +217,8 @@ CMD_FUNC(m_oper)
 	if (operblock->maxlogins && (count_oper_sessions(operblock->name) >= operblock->maxlogins))
 	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, sptr->name);
-		sendto_one(sptr, ":%s NOTICE %s :Your maximum number of concurrent oper logins has been reached (%d)",
-			me.name, sptr->name, operblock->maxlogins);
+		sendnotice(sptr, "Your maximum number of concurrent oper logins has been reached (%d)",
+			operblock->maxlogins);
 		sendto_snomask_global
 			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [maxlogins reached]",
 			sptr->name, sptr->user->username, sptr->local->sockhost, name);

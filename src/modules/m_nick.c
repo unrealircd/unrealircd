@@ -1108,21 +1108,6 @@ CMD_FUNC(m_nick)
 			sendto_one(sptr, "PING :%X", sptr->local->nospoof);
 		}
 
-#ifdef CONTACT_EMAIL
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** If you need assistance with a"
-		    " connection problem, please email " CONTACT_EMAIL
-		    " with the name and version of the client you are"
-		    " using, and the server you tried to connect to: %s",
-		    me.name, nick, me.name);
-#endif /* CONTACT_EMAIL */
-#ifdef CONTACT_URL
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** If you need assistance with"
-		    " connecting to this server, %s, please refer to: "
-		    CONTACT_URL, me.name, nick, me.name);
-#endif /* CONTACT_URL */
-
 		/* Copy password to the passwd field if it's given after NICK
 		 * - originally by taz, modified by Wizzu
 		 */
@@ -1479,10 +1464,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		{
 			if (sptr->local->ssl && !iConf.no_connect_ssl_info)
 			{
-				sendto_one(sptr,
-				    ":%s NOTICE %s :*** You are connected to %s with %s",
-				    me.name, sptr->name, me.name,
-				    ssl_get_cipher(sptr->local->ssl));
+				sendnotice(sptr, "*** You are connected to %s with %s",
+					me.name, ssl_get_cipher(sptr->local->ssl));
 			}
 		}
 		
@@ -1501,9 +1484,10 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		RunHook2(HOOKTYPE_WELCOME, sptr, 376);
 
 #ifdef EXPERIMENTAL
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** \2NOTE:\2 This server is running experimental IRC server software (UnrealIRCd %s). If you find any bugs or problems, please report them at https://bugs.unrealircd.org/",
-		    me.name, sptr->name, VERSIONONLY);
+		sendnotice(sptr,
+			"*** \2NOTE:\2 This server is running experimental IRC server software (UnrealIRCd %s). "
+			"If you find any bugs or problems, please report them at https://bugs.unrealircd.org/",
+			VERSIONONLY);
 #endif
 		/*
 		 * Now send a numeric to the user telling them what, if

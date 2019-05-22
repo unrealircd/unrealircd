@@ -626,8 +626,7 @@ int stats_port(aClient *sptr, char *para)
 			continue;
 		if ((listener->options & LISTENER_SERVERSONLY) && !ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL))
 			continue;
-		sendto_one(sptr, ":%s NOTICE %s :*** Listener on %s:%i (%s): has %i client(s), options: %s %s",
-		           me.name, sptr->name,
+		sendnotice(sptr, "*** Listener on %s:%i (%s): has %i client(s), options: %s %s",
 		           listener->ip,
 		           listener->port,
 		           listener->ipv6 ? "IPv6" : "IPv4",
@@ -1518,8 +1517,8 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 	list_for_each_entry(acptr, &client_list, client_node)
 	{
 		if (IsServer(acptr))
-			sendto_one(sptr, ":%s NOTICE %s :Server %s is %s",
-				me.name, sptr->name, acptr->name, acptr->serv->flags.synced ? "SYNCED" : "NOT SYNCED!!");
+			sendnotice(sptr, "Server %s is %s",
+				acptr->name, acptr->serv->flags.synced ? "SYNCED" : "NOT SYNCED!!");
 	}
 #endif
 	return 0;

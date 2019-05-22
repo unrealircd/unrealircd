@@ -86,11 +86,11 @@ CMD_FUNC(m_undccdeny)
 		    parv[1]);
 		DCCdeny_del(p);
 		return 1;
+	} else
+	{
+		sendnotice(sptr, "*** Unable to find a temp dccdeny matching %s", parv[1]);
 	}
-	else
-		sendto_one(sptr,
-		    "NOTICE %s :*** Unable to find a temp dccdeny matching %s",
-		    sptr->name, parv[1]);
+
 	return 0;
 
 }

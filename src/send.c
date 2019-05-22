@@ -836,7 +836,7 @@ void sendto_snomask(int snomask, char *pattern, ...)
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
 		if (cptr->user->snomask & snomask)
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+			sendnotice(cptr, "%s", nbuf);
 	}
 }
 
@@ -890,7 +890,7 @@ void sendto_snomask_normal(int snomask, char *pattern, ...)
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 		if (IsPerson(cptr) && (cptr->user->snomask & snomask))
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+			sendnotice(cptr, "%s", nbuf);
 }
 
 /** Send to specified snomask - global.
@@ -1234,7 +1234,7 @@ void sendto_connectnotice(aClient *acptr, int disconnect, char *comment)
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
 		if (cptr->user->snomask & SNO_CLIENT)
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, connect);
+			sendnotice(cptr, "%s", connect);
 	}
 }
 
@@ -1265,7 +1265,7 @@ void sendto_fconnectnotice(aClient *acptr, int disconnect, char *comment)
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
 		if (cptr->user->snomask & SNO_FCLIENT)
-			sendto_one(cptr, ":%s NOTICE %s :%s", acptr->user->server, cptr->name, connect);
+			sendnotice(cptr, ":%s NOTICE %s :%s", acptr->user->server, cptr->name, connect);
 	}
 }
 

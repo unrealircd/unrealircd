@@ -83,8 +83,7 @@ CMD_FUNC(m_lag)
 		return 0;
 	}
 
-	sendto_one(sptr, ":%s NOTICE %s :Lag reply -- %s %s %li",
-	    me.name, sptr->name, me.name, parv[1], TStime());
+	sendnotice(sptr, "Lag reply -- %s %s %li", me.name, parv[1], TStime());
 
 	return 0;
 }

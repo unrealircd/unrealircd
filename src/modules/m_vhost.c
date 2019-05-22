@@ -87,9 +87,7 @@ CMD_FUNC(m_vhost)
 		    login, sptr->name,
 		    sptr->user->username,
 		    sptr->user->realhost);
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
-		    me.name, sptr->name, login);
+		sendnotice(sptr, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
 		return 0;
 	}
 	
@@ -98,9 +96,7 @@ CMD_FUNC(m_vhost)
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - host does not match",
 		    login, sptr->name, sptr->user->username, sptr->user->realhost);
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** No vHost lines available for your host",
-		    me.name, sptr->name);
+		sendnotice(sptr, "*** No vHost lines available for your host");
 		return 0;
 	}
 
@@ -116,7 +112,7 @@ CMD_FUNC(m_vhost)
 			case UHALLOW_NEVER:
 				if (MyClient(sptr))
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /vhost is disabled", me.name, sptr->name);
+					sendnotice(sptr, "*** /vhost is disabled");
 					return 0;
 				}
 				break;
@@ -125,7 +121,7 @@ CMD_FUNC(m_vhost)
 			case UHALLOW_NOCHANS:
 				if (MyClient(sptr) && sptr->user->joined)
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /vhost can not be used while you are on a channel", me.name, sptr->name);
+					sendnotice(sptr, "*** /vhost can not be used while you are on a channel");
 					return 0;
 				}
 				break;
@@ -152,10 +148,10 @@ CMD_FUNC(m_vhost)
 				swhois_add(sptr, "vhost", -100, s->line, &me, NULL);
 		}
 		sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, vhost->virthost);
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Your vhost is now %s%s%s",
-		    me.name, sptr->name, vhost->virtuser ? vhost->virtuser : "", 
-			vhost->virtuser ? "@" : "", vhost->virthost);
+		sendnotice(sptr, "*** Your vhost is now %s%s%s",
+			vhost->virtuser ? vhost->virtuser : "",
+			vhost->virtuser ? "@" : "",
+			vhost->virthost);
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s%s%s",
 		    login, sptr->name,
@@ -172,9 +168,7 @@ CMD_FUNC(m_vhost)
 		    login, sptr->name,
 		    sptr->user->username,
 		    sptr->user->realhost);
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
-		    me.name, sptr->name, login);
+		sendnotice(sptr, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
 		return 0;
 	}
 	/* Belay that order, Lt. (upon -2)*/

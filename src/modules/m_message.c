@@ -593,9 +593,8 @@ int size_string, ret;
 
 	if (sptr->flags & FLAGS_DCCBLOCK)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** You are blocked from sending files as you have tried to "
-		                 "send a forbidden file - reconnect to regain ability to send",
-			me.name, sptr->name);
+		sendnotice(sptr, "*** You are blocked from sending files as you have tried to "
+		                 "send a forbidden file - reconnect to regain ability to send");
 		return 0;
 	}
 	for (; *ctcp == ' '; ctcp++); /* skip leading spaces */
@@ -626,8 +625,7 @@ int size_string, ret;
 		    ":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
 		    me.name, RPL_TEXT,
 		    sptr->name, displayfile, target, fl->reason);
-		sendto_one(sptr, ":%s NOTICE %s :*** You have been blocked from sending files, reconnect to regain permission to send files",
-			me.name, sptr->name);
+		sendnotice(sptr, "*** You have been blocked from sending files, reconnect to regain permission to send files");
 		sptr->flags |= FLAGS_DCCBLOCK;
 
 		RunHook5(HOOKTYPE_DCC_DENIED, sptr, target, realfile, displayfile, fl);

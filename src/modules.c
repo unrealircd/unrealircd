@@ -1074,11 +1074,11 @@ CMD_FUNC(m_module)
 		if (!(mi->options & MOD_OPT_OFFICIAL))
 			strlcat(tmp, "[3RD] ", sizeof(tmp));
 		if (!ValidatePermissionsForPath("server:module",sptr,NULL,NULL,NULL))
-			sendto_one(sptr, ":%s NOTICE %s :*** %s (%s)%s", me.name, sptr->name,
+			sendnotice(sptr, "*** %s (%s)%s",
 				mi->header->name, mi->header->description,
 				mi->options & MOD_OPT_OFFICIAL ? "" : " [3RD]");
 		else
-			sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s) %s", me.name, sptr->name,
+			sendnotice(sptr, "*** %s - %s (%s) %s",
 				mi->header->name, mi->header->version, mi->header->description, tmp);
 	}
 
@@ -1097,12 +1097,12 @@ CMD_FUNC(m_module)
 		p += strlen(p);
 		if (p > tmp + 380)
 		{
-			sendto_one(sptr, ":%s NOTICE %s :Hooks: %s", me.name, sptr->name, tmp);
+			sendnotice(sptr, "Hooks: %s", tmp);
 			tmp[0] = '\0';
 			p = tmp;
 		}
 	}
-	sendto_one(sptr, ":%s NOTICE %s :Hooks: %s ", me.name, sptr->name, tmp);
+	sendnotice(sptr, "Hooks: %s ", tmp);
 
 	tmp[0] = '\0';
 	p = tmp;
@@ -1115,13 +1115,13 @@ CMD_FUNC(m_module)
 				p += strlen(p);
 				if (p > tmp+380)
 				{
-					sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.name, sptr->name, tmp);
+					sendnotice(sptr, "Override: %s", tmp);
 					tmp[0] = '\0';
 					p = tmp;
 				}
 			}
 	}
-	sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.name, sptr->name, tmp);
+	sendnotice(sptr, "Override: %s", tmp);
 
 #ifdef DEBUGMODE
 	sendnotice(sptr, "Efunctions dump:");

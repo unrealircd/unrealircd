@@ -666,8 +666,7 @@ CMD_FUNC(m_rehash)
 		{
 			if (loop.ircd_rehashing)
 			{
-				sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
-					me.name, sptr->name);
+				sendnotice(sptr, "A rehash is already in progress");
 				return 0;
 			}
 			sendto_umode_global(UMODE_OPER,
@@ -787,8 +786,7 @@ CMD_FUNC(m_rehash)
 	{
 		if (loop.ircd_rehashing)
 		{
-			sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
-				me.name, sptr->name);
+			sendnotice(sptr, "A rehash is already in progress");
 			return 0;
 		}
 		sendto_ops("%s is rehashing server config file", sptr->name);

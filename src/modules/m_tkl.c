@@ -506,13 +506,12 @@ int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type
 
 	if (strchr(mask, '!'))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :[error] Cannot have '!' in masks.", me.name, sptr->name);
+		sendnotice(sptr, "[error] Cannot have '!' in masks.");
 		return 0;
 	}
 	if (*mask == ':')
 	{
-		sendto_one(sptr, ":%s NOTICE %s :[error] Mask cannot start with a ':'.", me.name,
-			sptr->name);
+		sendnotice(sptr, "[error] Mask cannot start with a ':'.");
 		return 0;
 	}
 	if (strchr(mask, ' '))
@@ -648,9 +647,7 @@ int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type
 		t = gmtime(&i);
 		if (!t)
 		{
-			sendto_one(sptr,
-				":%s NOTICE %s :*** [error] The time you specified is out of range",
-				me.name, sptr->name);
+			sendnotice(sptr, "*** [error] The time you specified is out of range");
 			return 0;
 		}
 		
@@ -833,7 +830,7 @@ char *err = NULL;
 		whattodo = 1;
 	else
 	{
-		sendto_one(sptr, ":%s NOTICE %s :1st parameter invalid", me.name, sptr->name);
+		sendnotice(sptr, "1st parameter invalid");
 		return spamfilter_usage(sptr);
 	}
 
@@ -859,7 +856,7 @@ char *err = NULL;
 	action = banact_stringtoval(parv[4]);
 	if (!action)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :Invalid 'action' field (%s)", me.name, sptr->name, parv[4]);
+		sendnotice(sptr, "Invalid 'action' field (%s)", parv[4]);
 		return spamfilter_usage(sptr);
 	}
 	actionbuf[0] = banact_valtochar(action);
@@ -871,8 +868,7 @@ char *err = NULL;
 		m = unreal_create_match(match_type, parv[7], &err);
 		if (!m)
 		{
-			sendto_one(sptr, ":%s NOTICE %s :Error in regex '%s': %s",
-				me.name, sptr->name, parv[7], err);
+			sendnotice(sptr, "Error in regex '%s': %s", parv[7], err);
 			return 0;
 		}
 		unreal_delete_match(m);

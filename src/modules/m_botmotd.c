@@ -76,18 +76,16 @@ CMD_FUNC(m_botmotd)
 
 	if (!motdline)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :BOTMOTD File not found",
-		    me.name, sptr->name);
+		sendnotice(sptr, "BOTMOTD File not found");
 		return 0;
 	}
-	sendto_one(sptr, ":%s NOTICE %s :- %s Bot Message of the Day - ",
-	    me.name, sptr->name, me.name);
+	sendnotice(sptr, "- %s Bot Message of the Day - ", me.name);
 
 	while (motdline)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :- %s", me.name, sptr->name, motdline->line);
+		sendnotice(sptr, "- %s", motdline->line);
 		motdline = motdline->next;
 	}
-	sendto_one(sptr, ":%s NOTICE %s :End of /BOTMOTD command.", me.name, sptr->name);
+	sendnotice(sptr, "End of /BOTMOTD command.");
 	return 0;
 }

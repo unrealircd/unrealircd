@@ -86,27 +86,10 @@ CMD_FUNC(m_tsctl)
 			    return 0;
 			}
 
-			if (!parv[2] || !parv[3])
+			if (BadPtr(parv[2]) || BadPtr(parv[3]) || (*parv[2] != '+') || (*parv[2] != '-'))
 			{
-				sendto_one(sptr,
-				    ":%s NOTICE %s :*** TSCTL OFFSET: /tsctl offset <+|-> <time>",
-				    me.name, sptr->name);
+				sendnotice(sptr, "*** TSCTL OFFSET: /tsctl offset <+|-> <time>");
 				return 0;
-			}
-			if (*parv[2] == '\0' || *parv[3] == '\0')
-			{
-				sendto_one(sptr,
-				    ":%s NOTICE %s :*** TSCTL OFFSET: /tsctl offset <+|-> <time>",
-				    me.name, sptr->name);
-				return 0;
-			}
-			if (!(*parv[2] == '+' || *parv[2] == '-'))
-			{
-				sendto_one(sptr,
-				    ":%s NOTICE %s :*** TSCTL OFFSET: /tsctl offset <+|-> <time>",
-				    me.name, sptr->name);
-				return 0;
-
 			}
 
 			switch (*parv[2])
@@ -140,18 +123,14 @@ CMD_FUNC(m_tsctl)
 		}
 		if (stricmp(parv[1], "time") == 0)
 		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** TStime=%li time()=%li TSoffset=%li",
-			    me.name, sptr->name, TStime(), time(NULL),
-			    TSoffset);
+			sendnotice(sptr, "*** TStime=%li time()=%li TSoffset=%li",
+				TStime(), time(NULL), TSoffset);
 			return 0;
 		}
 		if (stricmp(parv[1], "alltime") == 0)
 		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Server=%s TStime=%li time()=%li TSoffset=%li",
-			    me.name, sptr->name, me.name, TStime(), time(NULL),
-			    TSoffset);
+			sendnotice(sptr, "*** Server=%s TStime=%li time()=%li TSoffset=%li",
+				me.name, TStime(), time(NULL), TSoffset);
 			sendto_server(cptr, 0, 0, NULL, ":%s TSCTL alltime", sptr->name);
 			return 0;
 

@@ -80,22 +80,18 @@ CMD_FUNC(m_mkpasswd)
 
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Syntax: /mkpasswd <authmethod> :parameter",
-			me.name, sptr->name);
+		sendnotice(sptr, "*** Syntax: /mkpasswd <authmethod> :parameter");
 		return 0;
 	}
 	/* Don't want to take any risk ;p. -- Syzop */
 	if (strlen(parv[2]) > 64)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Your parameter (text-to-hash) is too long.",
-			me.name, sptr->name);
+		sendnotice(sptr, "*** Your parameter (text-to-hash) is too long.");
 		return 0;
 	}
 	if ((type = Auth_FindType(NULL, parv[1])) == -1)
 	{
-		sendto_one(sptr, 
-			":%s NOTICE %s :*** %s is not an enabled authentication method",
-				me.name, sptr->name, parv[1]);
+		sendnotice(sptr, "*** %s is not an enabled authentication method", parv[1]);
 		return 0;
 	}
 
@@ -110,9 +106,7 @@ CMD_FUNC(m_mkpasswd)
 
 	if (!(result = Auth_Make(type, parv[2])))
 	{
-		sendto_one(sptr, 
-			":%s NOTICE %s :*** Authentication method %s failed",
-				me.name, sptr->name, parv[1]);
+		sendnotice(sptr, "*** Authentication method %s failed", parv[1]);
 		return 0;
 	}
 

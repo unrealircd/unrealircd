@@ -379,8 +379,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 				      (*p == 'm') || (*p == 'n') || (*p == 't')))
 				{
 					if (MyClient(sptr) && *p && (warnings++ < 3))
-						sendto_one(sptr, ":%s NOTICE %s :warning: channelmode +f: floodtype '%c' unknown, ignored.",
-							me.name, sptr->name, *p);
+						sendnotice(sptr, "warning: channelmode +f: floodtype '%c' unknown, ignored.", *p);
 					continue; /* continue instead of break for forward compatability. */
 				}
 				c = *p;
