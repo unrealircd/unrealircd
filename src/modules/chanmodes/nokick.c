@@ -73,9 +73,9 @@ int nokick_check (aClient* sptr, aClient* who, aChannel *chptr, char* comment, l
 
 	if (MyClient(sptr) && IsNoKick(chptr))
 	{
-		ircsnprintf(errmsg, sizeof(errmsg), err_str(ERR_CANNOTDOCOMMAND),
-				   me.name, sptr->name, "KICK",
-				   "channel is +Q");
+		ircsnprintf(errmsg, sizeof(errmsg), ":%s %d %s %s :%s",
+		            me.name, ERR_CANNOTDOCOMMAND, sptr->name,
+		            "KICK", "channel is +Q");
 		*reject_reason = errmsg;
 		return EX_DENY; /* Deny, but let opers override if necessary. */
 	}

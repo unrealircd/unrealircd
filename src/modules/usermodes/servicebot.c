@@ -84,7 +84,8 @@ int servicebot_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *c
 		char errmsg2[NICKLEN+32];
 		snprintf(errmsg2, sizeof(errmsg2), "%s is a Service Bot", target->name);
 		
-		snprintf(errmsg, sizeof(errmsg), err_str(ERR_CANNOTDOCOMMAND), me.name, sptr->name, "KICK", errmsg2);
+		snprintf(errmsg, sizeof(errmsg), ":%s %d %s %s :%s",
+		         me.name, ERR_CANNOTDOCOMMAND, sptr->name, "KICK", errmsg2);
 
 		*reject_reason = errmsg;
 
@@ -101,11 +102,8 @@ int servicebot_mode_deop(aClient *sptr, aClient *target, aChannel *chptr,
 	
 	if (IsServiceBot(target) && MyClient(sptr) && !ValidatePermissionsForPath("services:servicebot:deop",sptr,target,chptr,NULL) && (what == MODE_DEL))
 	{
-		char errmsg2[NICKLEN+32];
-		snprintf(errmsg2, sizeof(errmsg2), "%s is a Service Bot", target->name);
-		
-		snprintf(errmsg, sizeof(errmsg), err_str(ERR_CANNOTCHANGECHANMODE),
-			me.name, sptr->name, (char)modechar, errmsg2);
+		snprintf(errmsg, sizeof(errmsg), ":%s %d %s %c :%s is a Service Bot",
+			me.name, ERR_CANNOTCHANGECHANMODE, sptr->name, (char)modechar, target->name);
 		
 		*reject_reason = errmsg;
 		
