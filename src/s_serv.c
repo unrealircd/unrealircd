@@ -183,8 +183,7 @@ CMD_FUNC(m_version)
 
 	if (hunt_server(cptr, sptr, recv_mtags, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
 	{
-		sendnumeric(sptr, RPL_VERSION, me.name,
-		           sptr->name, version, debugmode, me.name,
+		sendnumeric(sptr, RPL_VERSION, version, debugmode, me.name,
 		           serveropts, extraflags ? extraflags : "",
 		           tainted ? "3" : "",
 		           (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? MYOSNAME : "*"),
@@ -313,7 +312,7 @@ char **text = unrealinfo;
 	    sptr->name, myctime(me.local->firsttime));
 	sendto_one(sptr, ":%s %d %s :ReleaseID (%s)", me.name, RPL_INFO,
 	    sptr->name, buildid);
-	sendnumeric(sptr, RPL_ENDOFINFO, me.name, sptr->name);
+	sendnumeric(sptr, RPL_ENDOFINFO);
 }
 
 /*
@@ -349,16 +348,15 @@ CMD_FUNC(m_dalinfo)
 	if (hunt_server(cptr, sptr, recv_mtags, ":%s DALINFO :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
-			sendnumeric(sptr, RPL_INFO,
-			    me.name, sptr->name, *text++);
+			sendnumeric(sptr, RPL_INFO, *text++);
 
-		sendnumeric(sptr, RPL_INFO, me.name, sptr->name, "");
+		sendnumeric(sptr, RPL_INFO, "");
 		sendto_one(sptr,
 		    ":%s %d %s :Birth Date: %s, compile # %s",
 		    me.name, RPL_INFO, sptr->name, creation, generation);
 		sendto_one(sptr, ":%s %d %s :On-line since %s",
 		    me.name, RPL_INFO, sptr->name, myctime(me.local->firsttime));
-		sendnumeric(sptr, RPL_ENDOFINFO, me.name, sptr->name);
+		sendnumeric(sptr, RPL_ENDOFINFO);
 	}
 
 	return 0;
@@ -378,11 +376,10 @@ CMD_FUNC(m_license)
 	if (hunt_server(cptr, sptr, recv_mtags, ":%s LICENSE :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
-			sendnumeric(sptr, RPL_INFO,
-			    me.name, sptr->name, *text++);
+			sendnumeric(sptr, RPL_INFO, *text++);
 
-		sendnumeric(sptr, RPL_INFO, me.name, sptr->name, "");
-		sendnumeric(sptr, RPL_ENDOFINFO, me.name, sptr->name);
+		sendnumeric(sptr, RPL_INFO, "");
+		sendnumeric(sptr, RPL_ENDOFINFO);
 	}
 
 	return 0;
@@ -402,16 +399,15 @@ CMD_FUNC(m_credits)
 	if (hunt_server(cptr, sptr, recv_mtags, ":%s CREDITS :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
-			sendnumeric(sptr, RPL_INFO,
-			    me.name, sptr->name, *text++);
+			sendnumeric(sptr, RPL_INFO, *text++);
 
-		sendnumeric(sptr, RPL_INFO, me.name, sptr->name, "");
+		sendnumeric(sptr, RPL_INFO, "");
 		sendto_one(sptr,
 		    ":%s %d %s :Birth Date: %s, compile # %s",
 		    me.name, RPL_INFO, sptr->name, creation, generation);
 		sendto_one(sptr, ":%s %d %s :On-line since %s",
 		    me.name, RPL_INFO, sptr->name, myctime(me.local->firsttime));
-		sendnumeric(sptr, RPL_ENDOFINFO, me.name, sptr->name);
+		sendnumeric(sptr, RPL_ENDOFINFO);
 	}
 
 	return 0;
@@ -473,7 +469,7 @@ CMD_FUNC(m_summon)
 {
 	/* /summon is old and out dated, we just return an error as
 	 * required by RFC1459 -- codemastr
-	 */ sendnumeric(sptr, ERR_SUMMONDISABLED, me.name, sptr->name);
+	 */ sendnumeric(sptr, ERR_SUMMONDISABLED);
 	return 0;
 }
 /*
@@ -484,7 +480,7 @@ CMD_FUNC(m_users)
 {
 	/* /users is out of date, just return an error as  required by
 	 * RFC1459 -- codemastr
-	 */ sendnumeric(sptr, ERR_USERSDISABLED, me.name, sptr->name);
+	 */ sendnumeric(sptr, ERR_USERSDISABLED);
 	return 0;
 }
 
@@ -616,7 +612,7 @@ CMD_FUNC(m_rehash)
 
 	if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -659,7 +655,7 @@ CMD_FUNC(m_rehash)
 	if (cptr != sptr)
 	{
 #ifndef REMOTE_REHASH
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 #endif
 		if (parv[2] == NULL)
@@ -697,7 +693,7 @@ CMD_FUNC(m_rehash)
 			 */
 			if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
 			{
-				sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+				sendnumeric(sptr, ERR_NOPRIVILEGES);
 				sendnotice(sptr, "'/REHASH -global' requires you to have server::rehash permissions");
 				return 0;
 			}
@@ -725,7 +721,7 @@ CMD_FUNC(m_rehash)
 
 		if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
 		{
-			sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+			sendnumeric(sptr, ERR_NOPRIVILEGES);
 			return 0;
 		}
 
@@ -794,7 +790,7 @@ CMD_FUNC(m_rehash)
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
 	if (cptr == sptr)
-		sendnumeric(sptr, RPL_REHASHING, me.name, sptr->name, configfile);
+		sendnumeric(sptr, RPL_REHASHING, configfile);
 	x = rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 	reread_motdsandrules();
 	return x;
@@ -815,7 +811,7 @@ char *reason = parv[1];
 	/* Check permissions */
 	if (!ValidatePermissionsForPath("server:restart",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -824,7 +820,7 @@ char *reason = parv[1];
 	{
 		if (conf_drpass)
 		{
-			sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "RESTART");
+			sendnumeric(sptr, ERR_NEEDMOREPARAMS, "RESTART");
 			return 0;
 		}
 	} else
@@ -837,7 +833,7 @@ char *reason = parv[1];
 			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
 			if (ret == -1)
 			{
-				sendnumeric(sptr, ERR_PASSWDMISMATCH, me.name, sptr->name);
+				sendnumeric(sptr, ERR_PASSWDMISMATCH);
 				return 0;
 			}
 			if (ret < 1)
@@ -897,13 +893,13 @@ int short_motd(aClient *sptr)
 
        if (!themotd->lines)
        {
-               sendnumeric(sptr, ERR_NOMOTD, me.name, sptr->name);
+               sendnumeric(sptr, ERR_NOMOTD);
                return 0;
        }
        if (themotd->last_modified.tm_year)
        {
 	       tm = &themotd->last_modified; /* for readability */
-               sendnumeric(sptr, RPL_MOTDSTART, me.name, sptr->name,
+               sendnumeric(sptr, RPL_MOTDSTART,
                    me.name);
                sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d", me.name,
                    RPL_MOTD, sptr->name, tm->tm_mday, tm->tm_mon + 1,
@@ -911,9 +907,9 @@ int short_motd(aClient *sptr)
        }
        if (is_short)
        {
-               sendnumeric(sptr, RPL_MOTD, me.name, sptr->name,
+               sendnumeric(sptr, RPL_MOTD,
                        "This is the short MOTD. To view the complete MOTD type /motd");
-               sendnumeric(sptr, RPL_MOTD, me.name, sptr->name, "");
+               sendnumeric(sptr, RPL_MOTD, "");
        }
 
        motdline = NULL;
@@ -921,11 +917,11 @@ int short_motd(aClient *sptr)
 	       motdline = themotd->lines;
        while (motdline)
        {
-               sendnumeric(sptr, RPL_MOTD, me.name, sptr->name,
+               sendnumeric(sptr, RPL_MOTD,
                    motdline->line);
                motdline = motdline->next;
        }
-       sendnumeric(sptr, RPL_ENDOFMOTD, me.name, sptr->name);
+       sendnumeric(sptr, RPL_ENDOFMOTD);
        return 0;
 }
 
@@ -1160,7 +1156,7 @@ CMD_FUNC(m_die)
 
 	if (!ValidatePermissionsForPath("server:die",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -1168,15 +1164,13 @@ CMD_FUNC(m_die)
 	{
 		if (parc < 2)	/* And if so, require a password :) */
 		{
-			sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name,
-			    sptr->name, "DIE");
+			sendnumeric(sptr, ERR_NEEDMOREPARAMS, "DIE");
 			return 0;
 		}
 		i = Auth_Check(cptr, conf_drpass->dieauth, parv[1]);
 		if (i == -1)
 		{
-			sendnumeric(sptr, ERR_PASSWDMISMATCH, me.name,
-			    sptr->name);
+			sendnumeric(sptr, ERR_PASSWDMISMATCH);
 			return 0;
 		}
 		if (i < 1)

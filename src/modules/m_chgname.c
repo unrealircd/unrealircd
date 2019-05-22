@@ -72,14 +72,14 @@ CMD_FUNC(m_chgname)
 
 	if (!ValidatePermissionsForPath("client:set:name",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
 	{
-		sendnumeric(sptr, ERR_DISABLED, me.name, sptr->name, "CHGNAME",
+		sendnumeric(sptr, ERR_DISABLED, "CHGNAME",
 			"This command is disabled on this server");
 		return 0;
 	}
@@ -87,7 +87,7 @@ CMD_FUNC(m_chgname)
 
 	if ((parc < 3) || !*parv[2])
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "CHGNAME");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CHGNAME");
 		return 0;
 	}
 
@@ -135,7 +135,7 @@ CMD_FUNC(m_chgname)
 	}
 	else
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name,
+		sendnumeric(sptr, ERR_NOSUCHNICK,
 		    parv[1]);
 		return 0;
 	}

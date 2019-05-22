@@ -67,7 +67,7 @@ static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2, int awayno
 	{
 		if (awaynotify && acptr->user->away)
 		{
-			sendnumeric(cptr, RPL_NOWISAWAY, me.name, cptr->name,
+			sendnumeric(cptr, RPL_NOWISAWAY,
 			    acptr->name, acptr->user->username,
 			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
 			    realhost, acptr->user->lastaway);
@@ -132,7 +132,7 @@ CMD_FUNC(m_watch)
 			{
 				if (sptr->local->watches >= MAXWATCH)
 				{
-					sendnumeric(sptr, ERR_TOOMANYWATCH, me.name, cptr->name, s + 1);
+					sendnumeric(sptr, ERR_TOOMANYWATCH, s + 1);
 					continue;
 				}
 
@@ -190,8 +190,7 @@ CMD_FUNC(m_watch)
 				for (lp = anptr->watch, count = 1;
 				    (lp = lp->next); count++)
 					;
-			sendnumeric(sptr, RPL_WATCHSTAT, me.name,
-			    sptr->name, sptr->local->watches, count);
+			sendnumeric(sptr, RPL_WATCHSTAT, sptr->local->watches, count);
 
 			/*
 			 * Send a list of everybody in their WATCH list. Be careful
@@ -199,8 +198,7 @@ CMD_FUNC(m_watch)
 			 */
 			if ((lp = sptr->local->watch) == NULL)
 			{
-				sendnumeric(sptr, RPL_ENDOFWATCHLIST,
-				    me.name, sptr->name, *s);
+				sendnumeric(sptr, RPL_ENDOFWATCHLIST, *s);
 				continue;
 			}
 			*buf = '\0';
@@ -213,8 +211,7 @@ CMD_FUNC(m_watch)
 				if (count + strlen(lp->value.wptr->nick) + 1 >
 				    BUFSIZE - 2)
 				{
-					sendnumeric(sptr, RPL_WATCHLIST,
-					    me.name, sptr->name, buf);
+					sendnumeric(sptr, RPL_WATCHLIST, buf);
 					*buf = '\0';
 					count =
 					    strlen(sptr->name) + strlen(me.name) +
@@ -224,11 +221,9 @@ CMD_FUNC(m_watch)
 				strcat(buf, lp->value.wptr->nick);
 				count += (strlen(lp->value.wptr->nick) + 1);
 			}
-			sendnumeric(sptr, RPL_WATCHLIST, me.name,
-			    sptr->name, buf);
+			sendnumeric(sptr, RPL_WATCHLIST, buf);
 
-			sendnumeric(sptr, RPL_ENDOFWATCHLIST, me.name,
-			    sptr->name, *s);
+			sendnumeric(sptr, RPL_ENDOFWATCHLIST, *s);
 			continue;
 		}
 
@@ -248,8 +243,7 @@ CMD_FUNC(m_watch)
 				if ((acptr =
 				    find_person(lp->value.wptr->nick, NULL)))
 				{
-					sendnumeric(sptr, RPL_NOWON,
-					    me.name, sptr->name, acptr->name,
+					sendnumeric(sptr, RPL_NOWON, acptr->name,
 					    acptr->user->username,
 					    IsHidden(acptr) ? acptr->user->
 					    virthost : acptr->user->realhost,
@@ -261,14 +255,12 @@ CMD_FUNC(m_watch)
 				 */
 				else if (isupper(*s))
 					sendnumeric(sptr, RPL_NOWOFF,
-					    me.name, sptr->name,
 					    lp->value.wptr->nick, "*", "*",
 					    lp->value.wptr->lasttime);
 				lp = lp->next;
 			}
 
-			sendnumeric(sptr, RPL_ENDOFWATCHLIST, me.name,
-			    sptr->name, *s);
+			sendnumeric(sptr, RPL_ENDOFWATCHLIST, *s);
 
 			continue;
 		}

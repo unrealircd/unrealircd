@@ -258,7 +258,7 @@ int n;
 	    ((n = counttextbans(chptr)) >= MAX_EXTBANT_PER_CHAN))
 	{
 		/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
-		sendnumeric(sptr, ERR_BANLISTFULL, me.name, sptr->name, chptr->chname, para);
+		sendnumeric(sptr, ERR_BANLISTFULL, chptr->chname, para);
 		sendnotice(sptr, "Too many textbans for this channel");
 		return 0;
 	}
@@ -440,8 +440,7 @@ struct timeval tv_alpha, tv_beta;
 				{
 					if (!_match(p+6, filtered))
 					{
-						sendnumeric(sptr, ERR_CANNOTSENDTOCHAN,
-							me.name, sptr->name, chptr->chname,
+						sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
 							"Message blocked due to a text ban", chptr->chname);
 						return NULL;
 					}

@@ -191,7 +191,7 @@ int secureonly_specialcheck(aClient *sptr, aChannel *chptr, char *parv[])
 {
 	if ((chptr->users == 0) && (iConf.modes_on_join.extmodes & EXTCMODE_SSLONLY) && !IsSecure(sptr) && !IsOper(sptr))
 	{
-		sendnumeric(sptr, ERR_SECUREONLYCHAN, me.name, sptr->name, chptr->chname);
+		sendnumeric(sptr, ERR_SECUREONLYCHAN, chptr->chname);
 		return HOOK_DENY;
 	}
 	return HOOK_CONTINUE;

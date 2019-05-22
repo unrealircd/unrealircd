@@ -87,11 +87,11 @@ CMD_FUNC(m_trace)
 			if (strcasecmp(tname, me.name))
 			{
 				sendnotice(sptr, "You can only /TRACE local servers as a locop");
-				sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+				sendnumeric(sptr, ERR_NOPRIVILEGES);
 				return 0;
 			}
 		} else {
-			sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+			sendnumeric(sptr, ERR_NOPRIVILEGES);
 			return 0;
 		}
 	}
@@ -103,7 +103,7 @@ CMD_FUNC(m_trace)
 		  aClient *ac2ptr;
 
 		  ac2ptr = find_client(tname, NULL);
-		  sendnumeric(sptr, RPL_TRACELINK, me.name, sptr->name,
+		  sendnumeric(sptr, RPL_TRACELINK,
 		      version, debugmode, tname, ac2ptr->from->name);
 		  return 0;
 	  }
@@ -158,20 +158,17 @@ CMD_FUNC(m_trace)
 		switch (acptr->status)
 		{
 		  case STAT_CONNECTING:
-			  sendnumeric(sptr, RPL_TRACECONNECTING,
-			      me.name, sptr->name, class, name);
+			  sendnumeric(sptr, RPL_TRACECONNECTING, class, name);
 			  cnt++;
 			  break;
 		  case STAT_HANDSHAKE:
-			  sendnumeric(sptr, RPL_TRACEHANDSHAKE, me.name,
-			      sptr->name, class, name);
+			  sendnumeric(sptr, RPL_TRACEHANDSHAKE, class, name);
 			  cnt++;
 			  break;
 		  case STAT_ME:
 			  break;
 		  case STAT_UNKNOWN:
-			  sendnumeric(sptr, RPL_TRACEUNKNOWN,
-			      me.name, sptr->name, class, name);
+			  sendnumeric(sptr, RPL_TRACEUNKNOWN, class, name);
 			  cnt++;
 			  break;
 		  case STAT_CLIENT:
@@ -182,12 +179,12 @@ CMD_FUNC(m_trace)
 			      (!IsInvisible(acptr) && ValidatePermissionsForPath("client:see:trace",sptr,acptr,NULL,NULL)))
 			  {
 				  if (ValidatePermissionsForPath("client:see:trace",sptr,acptr,NULL,NULL) || ValidatePermissionsForPath("client:see:trace:invisible-users",sptr,acptr,NULL,NULL))
-					  sendnumeric(sptr, RPL_TRACEOPERATOR, me.name, sptr->name,
+					  sendnumeric(sptr, RPL_TRACEOPERATOR,
 					      class, acptr->name,
 					      GetHost(acptr),
 					      now - acptr->local->lasttime);
 				  else
-					  sendnumeric(sptr, RPL_TRACEUSER, me.name, sptr->name,
+					  sendnumeric(sptr, RPL_TRACEUSER,
 					      class, acptr->name,
 					      acptr->user->realhost,
 					      now - acptr->local->lasttime);
@@ -196,40 +193,34 @@ CMD_FUNC(m_trace)
 			  break;
 		  case STAT_SERVER:
 			  if (acptr->serv->user)
-				  sendnumeric(sptr, RPL_TRACESERVER,
-				      me.name, sptr->name, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
+				  sendnumeric(sptr, RPL_TRACESERVER, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
 				      acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, acptr->serv->by,
 				      acptr->serv->user->username,
 				      acptr->serv->user->realhost,
 				      now - acptr->local->lasttime);
 			  else
-				  sendnumeric(sptr, RPL_TRACESERVER,
-				      me.name, sptr->name, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
+				  sendnumeric(sptr, RPL_TRACESERVER, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
 				      acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, *(acptr->serv->by) ?
 				      acptr->serv->by : "*", "*", me.name,
 				      now - acptr->local->lasttime);
 			  cnt++;
 			  break;
 		  case STAT_LOG:
-			  sendnumeric(sptr, RPL_TRACELOG, me.name,
-			      sptr->name, LOGFILE, acptr->local->port);
+			  sendnumeric(sptr, RPL_TRACELOG, LOGFILE, acptr->local->port);
 			  cnt++;
 			  break;
 #ifdef USE_SSL
 		  case STAT_SSL_CONNECT_HANDSHAKE:
-		  	sendnumeric(sptr, RPL_TRACENEWTYPE, me.name,
-		  	 sptr->name, "SSL-Connect-Handshake", name); 
+		  	sendnumeric(sptr, RPL_TRACENEWTYPE, "SSL-Connect-Handshake", name); 
 			cnt++;
 			break;
 		  case STAT_SSL_ACCEPT_HANDSHAKE:
-		  	sendnumeric(sptr, RPL_TRACENEWTYPE, me.name,
-		  	 sptr->name, "SSL-Accept-Handshake", name); 
+		  	sendnumeric(sptr, RPL_TRACENEWTYPE, "SSL-Accept-Handshake", name); 
 			cnt++;
 			break;
 #endif
 		  default:	/* ...we actually shouldn't come here... --msa */
-			  sendnumeric(sptr, RPL_TRACENEWTYPE, me.name,
-			      sptr->name, "<newtype>", name);
+			  sendnumeric(sptr, RPL_TRACENEWTYPE, "<newtype>", name);
 			  cnt++;
 			  break;
 		}
@@ -243,7 +234,6 @@ CMD_FUNC(m_trace)
 
 	for (cltmp = conf_class; doall && cltmp; cltmp = cltmp->next)
 	/*	if (cltmp->clients > 0) */
-			sendnumeric(sptr, RPL_TRACECLASS, me.name,
-			    sptr->name, cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
+			sendnumeric(sptr, RPL_TRACECLASS, cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
 	return 0;
 }

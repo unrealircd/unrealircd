@@ -63,20 +63,20 @@ CMD_FUNC(m_undccdeny)
 
 	if (!ValidatePermissionsForPath("server-ban:dccdeny",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name,
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    "UNDCCDENY");
 		return 0;
 	}
 
 	if (BadPtr(parv[1]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name,
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    "UNDCCDENY");
 		return 0;
 	}

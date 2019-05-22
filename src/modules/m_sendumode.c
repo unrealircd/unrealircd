@@ -81,8 +81,7 @@ CMD_FUNC(m_sendumode)
 
 	if (parc < 3)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "SENDUMODE");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SENDUMODE");
 		return 0;
 	}
 

@@ -69,13 +69,12 @@ CMD_FUNC(m_addomotd)
 
 	if (!ValidatePermissionsForPath("server:addomotd",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "ADDOMOTD");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "ADDOMOTD");
 		return 0;
 	}
 	conf = fopen(conf_files->opermotd_file, "a");

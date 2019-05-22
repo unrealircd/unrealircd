@@ -95,7 +95,7 @@ CMD_FUNC(m_away)
 		}
 
 		if (MyConnect(sptr))
-			sendnumeric(sptr, RPL_UNAWAY, me.name, sptr->name);
+			sendnumeric(sptr, RPL_UNAWAY);
 				RunHook2(HOOKTYPE_AWAY, sptr, NULL);
 		return 0;
 	}
@@ -118,7 +118,7 @@ CMD_FUNC(m_away)
 			sptr->user->flood.away_c++;
 		if (sptr->user->flood.away_c > AWAY_COUNT)
 		{
-			sendnumeric(sptr, ERR_TOOMANYAWAY, me.name, sptr->name);
+			sendnumeric(sptr, ERR_TOOMANYAWAY);
 			return 0;
 		}
 	}
@@ -150,7 +150,7 @@ CMD_FUNC(m_away)
 	away = sptr->user->away = strdup(awy2);
 
 	if (MyConnect(sptr))
-		sendnumeric(sptr, RPL_NOWAWAY, me.name, sptr->name);
+		sendnumeric(sptr, RPL_NOWAWAY);
 
 	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
 	sendto_common_channels_local_butone(sptr, ClientCapabilityBit("away-notify"), ":%s AWAY :%s", sptr->name, away);

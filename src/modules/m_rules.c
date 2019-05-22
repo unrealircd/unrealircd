@@ -75,19 +75,19 @@ CMD_FUNC(m_rules)
 
 	if (temp == NULL)
 	{
-		sendnumeric(sptr, ERR_NORULES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NORULES);
 		return 0;
 
 	}
 
-	sendnumeric(sptr, RPL_RULESSTART, me.name, sptr->name, me.name);
+	sendnumeric(sptr, RPL_RULESSTART, me.name);
 
 	while (temp)
 	{
-		sendnumeric(sptr, RPL_RULES, me.name, sptr->name,
+		sendnumeric(sptr, RPL_RULES,
 		    temp->line);
 		temp = temp->next;
 	}
-	sendnumeric(sptr, RPL_ENDOFRULES, me.name, sptr->name);
+	sendnumeric(sptr, RPL_ENDOFRULES);
 	return 0;
 }

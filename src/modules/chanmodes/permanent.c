@@ -43,7 +43,7 @@ static int permanent_is_ok(aClient *cptr, aChannel *chptr, char mode, char *para
 	if (!IsOper(cptr))
 	{
 		if (checkt == EXCHK_ACCESS_ERR)
-			sendnumeric(cptr, ERR_NOPRIVILEGES, me.name, cptr->name);
+			sendnumeric(cptr, ERR_NOPRIVILEGES);
 
 		return EX_DENY;
 	}

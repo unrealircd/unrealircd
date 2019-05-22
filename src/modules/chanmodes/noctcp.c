@@ -84,8 +84,7 @@ char *noctcp_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 	{
 		if (!notice)
 		{
-			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN,
-				   me.name, sptr->name, chptr->chname,
+			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
 				   "CTCPs are not permitted in this channel", chptr->chname);
 		}
 

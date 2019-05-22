@@ -1388,7 +1388,9 @@ va_list vl;
 void sendnumeric(aClient *to, int numeric, ...)
 {
 	va_list vl;
-	char *pattern = rpl_str(numeric);
+	char pattern[512];
+
+	snprintf(pattern, sizeof(pattern), ":%s %.3d %s :%s", me.name, numeric, to->name[0] ? to->name : "*", rpl_str(numeric));
 
 	va_start(vl, numeric);
 	vsendto_one(to, pattern, vl);

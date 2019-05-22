@@ -69,20 +69,20 @@ CMD_FUNC(m_sajoin)
 
 	if (parc < 3) 
         {
-         sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "SAJOIN");     
+         sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SAJOIN");     
          return 0;
         }
 
 	if (!(acptr = find_person(parv[1], NULL)))
         {
-                sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, parv[1]);
+                sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
                 return 0;
         }
 
 	/* Is this user disallowed from operating on this victim at all? */
 	if (!IsULine(sptr) && !ValidatePermissionsForPath("sacmd:sajoin",sptr,acptr,NULL,NULL))
 	{
-	 sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+	 sendnumeric(sptr, ERR_NOPRIVILEGES);
 	 return 0;
 	}
 
@@ -102,8 +102,7 @@ CMD_FUNC(m_sajoin)
 
 			if (++ntargets > maxtargets)
 			{
-				sendnumeric(sptr, ERR_TOOMANYTARGETS,
-				    me.name, sptr->name, name, maxtargets, "SAJOIN");
+				sendnumeric(sptr, ERR_TOOMANYTARGETS, name, maxtargets, "SAJOIN");
 				break;
 			}
 
@@ -119,7 +118,7 @@ CMD_FUNC(m_sajoin)
 			}
 			if (*name == '0' || !IsChannelName(name))
 			{
-				sendnumeric(sptr, ERR_NOSUCHCHANNEL, me.name, sptr->name, name);
+				sendnumeric(sptr, ERR_NOSUCHCHANNEL, name);
 				continue;
 			}
 
@@ -128,13 +127,13 @@ CMD_FUNC(m_sajoin)
 			/* If this _specific_ channel is not permitted, skip it */
 			if (!IsULine(sptr) && !ValidatePermissionsForPath("sacmd:sajoin",sptr,acptr,chptr,NULL))
         		{
-         			sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+         			sendnumeric(sptr, ERR_NOPRIVILEGES);
 				continue;
 		        }
 
 			if (!parted && chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
 			{
-				sendnumeric(sptr, ERR_USERONCHANNEL, me.name, sptr->name, 
+				sendnumeric(sptr, ERR_USERONCHANNEL, 
 					   parv[1], name);
 				continue;
 			}

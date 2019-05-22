@@ -64,20 +64,18 @@ CMD_FUNC(m_svsmotd)
 
         if (!IsULine(sptr))
         {
-                sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+                sendnumeric(sptr, ERR_NOPRIVILEGES);
                 return 0;
         }
         if (parc < 2)
         {
-                sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-                    me.name, sptr->name, "SVSMOTD");
+                sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SVSMOTD");
                 return 0;
         }
 
         if ((*parv[1] != '!') && parc < 3)
         {
-                sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-                    me.name, sptr->name, "SVSMOTD");
+                sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SVSMOTD");
                 return 0;
         }
 

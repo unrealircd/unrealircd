@@ -119,8 +119,7 @@ int servicebot_pre_kill(aClient *sptr, aClient *target, char *reason)
 {
 	if (IsServiceBot(target) && !(ValidatePermissionsForPath("services:servicebot:kill",sptr,target,NULL,NULL) || IsULine(sptr)))
 	{
-		sendnumeric(sptr, ERR_KILLDENY, me.name,
-			sptr->name, target->name);
+		sendnumeric(sptr, ERR_KILLDENY, target->name);
 		return EX_ALWAYS_DENY;
 	}
 	return EX_ALLOW;

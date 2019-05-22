@@ -80,8 +80,7 @@ CMD_FUNC(m_kick)
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "KICK");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "KICK");
 		return 0;
 	}
 
@@ -96,8 +95,7 @@ CMD_FUNC(m_kick)
 		chptr = get_channel(sptr, name, !CREATE);
 		if (!chptr)
 		{
-			sendnumeric(sptr, ERR_NOSUCHCHANNEL,
-			    me.name, sptr->name, name);
+			sendnumeric(sptr, ERR_NOSUCHCHANNEL, name);
 			continue;
 		}
 		/* Store "sptr" access flags */
@@ -106,8 +104,7 @@ CMD_FUNC(m_kick)
 		if (!IsServer(cptr) && !IsULine(sptr) && !op_can_override("channel:override:kick:no-ops",sptr,chptr,NULL)
 		    && !(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP))
 		{
-			sendnumeric(sptr, ERR_CHANOPRIVSNEEDED,
-			    me.name, sptr->name, chptr->chname);
+			sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
 			continue;
 		}
 
@@ -117,8 +114,7 @@ CMD_FUNC(m_kick)
 
 			if (MyClient(sptr) && (++ntargets > maxtargets))
 			{
-				sendnumeric(sptr, ERR_TOOMANYTARGETS,
-				    me.name, sptr->name, user, maxtargets, "KICK");
+				sendnumeric(sptr, ERR_TOOMANYTARGETS, user, maxtargets, "KICK");
 				break;
 			}
 
@@ -238,8 +234,7 @@ CMD_FUNC(m_kick)
 						else
 							ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", 
 								   who->name);
-						sendnumeric(sptr, ERR_CANNOTDOCOMMAND,
-							   me.name, sptr->name, "KICK",
+						sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "KICK",
 							   errbuf);
 						goto deny;
 					}	/* chanprot/chanowner */
@@ -251,8 +246,7 @@ CMD_FUNC(m_kick)
 				{
 					char errbuf[NICKLEN+30];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel operator", who->name);
-					sendnumeric(sptr, ERR_CANNOTDOCOMMAND,
-						   me.name, sptr->name, "KICK",
+					sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "KICK",
 						   errbuf);
 					goto deny;
 				}
@@ -263,8 +257,7 @@ CMD_FUNC(m_kick)
 				{
 					char errbuf[NICKLEN+15];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a halfop", who->name);
-					sendnumeric(sptr, ERR_CANNOTDOCOMMAND,
-						   me.name, sptr->name, "KICK",
+					sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "KICK",
 						   errbuf);
 					goto deny;
 				}	/* halfop */
@@ -328,7 +321,7 @@ CMD_FUNC(m_kick)
 				}
 			}
 			else if (MyClient(sptr))
-				sendnumeric(sptr, ERR_USERNOTINCHANNEL, me.name, sptr->name, user, name);
+				sendnumeric(sptr, ERR_USERNOTINCHANNEL, user, name);
 		}		/* loop on parv[2] */
 		if (MyClient(cptr))
 			break;

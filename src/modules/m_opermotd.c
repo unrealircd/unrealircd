@@ -62,7 +62,7 @@ CMD_FUNC(m_opermotd)
 
 	if (!ValidatePermissionsForPath("server:opermotd",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -76,19 +76,19 @@ CMD_FUNC(m_opermotd)
 
 	if (!motdline)
 	{
-		sendnumeric(sptr, ERR_NOOPERMOTD, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOOPERMOTD);
 		return 0;
 	}
-	sendnumeric(sptr, RPL_MOTDSTART, me.name, sptr->name, me.name);
-	sendnumeric(sptr, RPL_MOTD, me.name, sptr->name,
+	sendnumeric(sptr, RPL_MOTDSTART, me.name);
+	sendnumeric(sptr, RPL_MOTD,
 	    "IRC Operator Message of the Day");
 
 	while (motdline)
 	{
-		sendnumeric(sptr, RPL_MOTD, me.name, sptr->name,
+		sendnumeric(sptr, RPL_MOTD,
 			   motdline->line);
 		motdline = motdline->next;
 	}
-	sendnumeric(sptr, RPL_ENDOFMOTD, me.name, sptr->name);
+	sendnumeric(sptr, RPL_ENDOFMOTD);
 	return 0;
 }

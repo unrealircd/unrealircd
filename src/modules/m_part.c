@@ -71,8 +71,7 @@ CMD_FUNC(m_part)
 	
 	if (parc < 2 || parv[1][0] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "PART");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "PART");
 		return 0;
 	}
 
@@ -105,16 +104,14 @@ CMD_FUNC(m_part)
 
 		if (MyClient(sptr) && (++ntargets > maxtargets))
 		{
-			sendnumeric(sptr, ERR_TOOMANYTARGETS,
-			    me.name, sptr->name, name, maxtargets, "PART");
+			sendnumeric(sptr, ERR_TOOMANYTARGETS, name, maxtargets, "PART");
 			break;
 		}
 
 		chptr = get_channel(sptr, name, 0);
 		if (!chptr)
 		{
-			sendnumeric(sptr, ERR_NOSUCHCHANNEL,
-			    me.name, sptr->name, name);
+			sendnumeric(sptr, ERR_NOSUCHCHANNEL, name);
 			continue;
 		}
 
@@ -131,7 +128,7 @@ CMD_FUNC(m_part)
 			   ** so check for remote client or not --Run
 			 */
 			if (MyClient(sptr))
-				sendnumeric(sptr, ERR_NOTONCHANNEL, me.name, sptr->name, name);
+				sendnumeric(sptr, ERR_NOTONCHANNEL, name);
 			continue;
 		}
 

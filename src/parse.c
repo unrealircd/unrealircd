@@ -419,8 +419,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *
 		/* If you're a user, and this command does not permit users or opers, deny */
 		if ((flags & M_USER) && !(cmptr->flags & M_USER) && !(cmptr->flags & M_OPER))
 		{
-			sendnumeric(cptr, ERR_NOTFORUSERS, me.name,
-					from->name, cmptr->cmd);
+			sendnumeric(cptr, ERR_NOTFORUSERS, cmptr->cmd);
 			parse_addlag(cptr, bytes);
 			return -1;
 		}
@@ -433,8 +432,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *
 		/* If you're a user, but not an operator, and this requires operators, deny */
 		if ((cmptr->flags & M_OPER) && (flags & M_USER) && !(flags & M_OPER))
 		{
-			sendnumeric(cptr, ERR_NOPRIVILEGES, 
-					me.name, from->name);
+			sendnumeric(cptr, ERR_NOPRIVILEGES);
 			parse_addlag(cptr, bytes);
 			return -1;
 		}

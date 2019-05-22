@@ -80,7 +80,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 	/* If it isn't an ALIAS_COMMAND, we require a paramter ... We check ALIAS_COMMAND LATER */
 	if (alias->type != ALIAS_COMMAND && (parc < 2 || *parv[1] == '\0'))
 	{
-		sendnumeric(sptr, ERR_NOTEXTTOSEND, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOTEXTTOSEND);
 		return -1;
 	}
 
@@ -94,8 +94,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 				alias->nick, SERVICES_NAME, parv[1]);
 		}
 		else
-			sendnumeric(sptr, ERR_SERVICESDOWN, me.name,
-				sptr->name, alias->nick);
+			sendnumeric(sptr, ERR_SERVICESDOWN, alias->nick);
 	}
 	else if (alias->type == ALIAS_STATS) 
 	{
@@ -107,8 +106,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 				alias->nick, STATS_SERVER, parv[1]);
 		}
 		else
-			sendnumeric(sptr, ERR_SERVICESDOWN, me.name,
-				sptr->name, alias->nick);
+			sendnumeric(sptr, ERR_SERVICESDOWN, alias->nick);
 	}
 	else if (alias->type == ALIAS_NORMAL) 
 	{
@@ -125,8 +123,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 					alias->nick, parv[1]);
 		}
 		else
-			sendnumeric(sptr, ERR_NOSUCHNICK, me.name,
-				sptr->name, alias->nick);
+			sendnumeric(sptr, ERR_NOSUCHNICK, alias->nick);
 	}
 	else if (alias->type == ALIAS_CHANNEL)
 	{
@@ -146,7 +143,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 				return 0;
 			}
 		}
-		sendnumeric(sptr, ERR_CANNOTDOCOMMAND, me.name, sptr->name,
+		sendnumeric(sptr, ERR_CANNOTDOCOMMAND,
 				cmd, "You may not use this command at this time");
 	}
 	else if (alias->type == ALIAS_COMMAND) 
@@ -218,7 +215,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 				/* Now check to make sure we have something to send */
 				if (strlen(output) == 0)
 				{
-					sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, cmd);
+					sendnumeric(sptr, ERR_NEEDMOREPARAMS, cmd);
 					return -1;
 				}
 				
@@ -231,8 +228,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 						sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", sptr->name,
 							format->nick, SERVICES_NAME, output);
 					} else
-						sendnumeric(sptr, ERR_SERVICESDOWN, me.name,
-							sptr->name, format->nick);
+						sendnumeric(sptr, ERR_SERVICESDOWN, format->nick);
 				}
 				else if (format->type == ALIAS_STATS) 
 				{
@@ -243,8 +239,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 						sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", sptr->name,
 							format->nick, STATS_SERVER, output);
 					} else
-						sendnumeric(sptr, ERR_SERVICESDOWN, me.name,
-							sptr->name, format->nick);
+						sendnumeric(sptr, ERR_SERVICESDOWN, format->nick);
 				}
 				else if (format->type == ALIAS_NORMAL) 
 				{
@@ -261,8 +256,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 								format->nick, output);
 					}
 					else
-						sendnumeric(sptr, ERR_NOSUCHNICK, me.name,
-							sptr->name, format->nick);
+						sendnumeric(sptr, ERR_NOSUCHNICK, format->nick);
 				}
 				else if (format->type == ALIAS_CHANNEL)
 				{
@@ -282,8 +276,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 							return 0;
 						}
 					}
-					sendnumeric(sptr, ERR_CANNOTDOCOMMAND, me.name,
-						 sptr->name, cmd, 
+					sendnumeric(sptr, ERR_CANNOTDOCOMMAND, cmd, 
 						"You may not use this command at this time");
 				}
 				else if (format->type == ALIAS_REAL)
@@ -295,7 +288,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 
 					if (recursive_alias)
 					{
-						sendnumeric(sptr, ERR_CANNOTDOCOMMAND, me.name, sptr->name, cmd, "You may not use this command at this time -- recursion");
+						sendnumeric(sptr, ERR_CANNOTDOCOMMAND, cmd, "You may not use this command at this time -- recursion");
 						return -1;
 					}
 

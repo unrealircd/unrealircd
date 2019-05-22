@@ -65,8 +65,7 @@ CMD_FUNC(m_sethost)
 
 	if (MyClient(sptr) && !ValidatePermissionsForPath("self:set:host",sptr,NULL,NULL,NULL))
 	{
-  		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
-	        sptr->name);
+  		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -149,7 +148,7 @@ CMD_FUNC(m_sethost)
 	if (MyConnect(sptr))
 	{
 		sendto_one(sptr, ":%s MODE %s :+xt", sptr->name, sptr->name);
-		sendnumeric(sptr, RPL_HOSTHIDDEN, me.name, sptr->name, vhost);
+		sendnumeric(sptr, RPL_HOSTHIDDEN, vhost);
 		sendnotice(sptr, 
 		    "Your nick!user@host-mask is now (%s!%s@%s) - To disable it type /mode %s -x",
 		     sptr->name, sptr->user->username, vhost,

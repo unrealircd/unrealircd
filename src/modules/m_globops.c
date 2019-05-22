@@ -63,14 +63,13 @@ CMD_FUNC(m_globops)
 
 	if (BadPtr(message))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "GLOBOPS");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "GLOBOPS");
 		return 0;
 	}
 
 	if (MyClient(sptr) && !ValidatePermissionsForPath("chat:globops",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 

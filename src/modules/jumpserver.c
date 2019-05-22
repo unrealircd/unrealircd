@@ -70,13 +70,9 @@ MOD_UNLOAD(jumpserver)
 static int do_jumpserver_exit_client(aClient *sptr)
 {
 	if (IsSecure(sptr) && jss->ssl_server)
-		sendnumeric(sptr, RPL_REDIR, me.name,
-			BadPtr(sptr->name) ? "*" : sptr->name,
-			jss->ssl_server, jss->ssl_port);
+		sendnumeric(sptr, RPL_REDIR, jss->ssl_server, jss->ssl_port);
 	else
-		sendnumeric(sptr, RPL_REDIR, me.name,
-			BadPtr(sptr->name) ? "*" : sptr->name,
-			jss->server, jss->port);
+		sendnumeric(sptr, RPL_REDIR, jss->server, jss->port);
  	return exit_client(sptr, sptr, sptr, jss->reason);
 }
 
@@ -124,7 +120,7 @@ CMD_FUNC(m_jumpserver)
 
 	if (!IsOper(sptr))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 

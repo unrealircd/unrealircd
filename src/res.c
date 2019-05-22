@@ -670,7 +670,7 @@ char *param;
 
 	if (!ValidatePermissionsForPath("server:dns",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 

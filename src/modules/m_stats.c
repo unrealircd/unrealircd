@@ -196,94 +196,94 @@ static inline char *stats_combine_parv(char *p1, char *p2)
 
 static inline void stats_help(aClient *sptr)
 {
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name, "/Stats flags:");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP, "/Stats flags:");
+	sendnumeric(sptr, RPL_STATSHELP,
 		"B - banversion - Send the ban version list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"b - badword - Send the badwords list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"C - link - Send the link block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"d - denylinkauto - Send the deny link (auto) block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"D - denylinkall - Send the deny link (all) block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"e - exceptthrottle - Send the except throttle block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"E - exceptban - Send the except ban and except tkl block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"f - spamfilter - Send the spamfilter list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"F - denydcc - Send the deny dcc and allow dcc block lists");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"G - gline - Send the gline and gzline list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"   m Return glines matching/not matching the specified mask");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"   r Return glines with a reason matching/not matching the specified reason");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"   s Return glines set by/not set by clients matching the specified name");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"I - allow - Send the allow block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"j - officialchans - Send the offical channels list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"K - kline - Send the ban user/ban ip/except ban block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"l - linkinfo - Send link information");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"L - linkinfoall - Send all link information");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"M - command - Send list of how many times each command was used");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"n - banrealname - Send the ban realname block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"O - oper - Send the oper block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"P - port - Send information about ports");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"q - bannick - Send the ban nick block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"Q - sqline - Send the global qline list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"r - chanrestrict - Send the channel deny/allow block list");
 #ifdef DEBUGMODE
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"R - usage - Send usage information");
 #endif
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"S - set - Send the set block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"s - shun - Send the shun list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"   m Return shuns matching/not matching the specified mask");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"   r Return shuns with a reason matching/not matching the specified reason");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"   s Return shuns set by/not set by clients matching the specified name");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"t - tld - Send the tld block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"T - traffic - Send traffic information");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"u - uptime - Send the server uptime and connection count");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"U - uline - Send the ulines block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"v - denyver - Send the deny version block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"V - vhost - Send the vhost block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"W - fdtable - Send the FD table listing");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"X - notlink - Send the list of servers that are not current linked");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"Y - class - Send the class block list");
-	sendnumeric(sptr, RPL_STATSHELP, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSHELP,
 		"Z - mem - Send memory usage information");
 }
 
@@ -363,7 +363,7 @@ CMD_FUNC(m_stats)
 	if (parc < 2 || !*parv[1])
 	{
 		stats_help(sptr);
-		sendnumeric(sptr, RPL_ENDOFSTATS, me.name, sptr->name, '*');
+		sendnumeric(sptr, RPL_ENDOFSTATS, '*');
 		return 0;
 	}
 
@@ -372,7 +372,7 @@ CMD_FUNC(m_stats)
 	{
 		if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL) && stats_operonly_short(parv[1][0]))
 		{
-			sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);	
+			sendnumeric(sptr, ERR_NOPRIVILEGES);	
 			return 0;
 		}	
 		/* Old style, we can use a binary search here */
@@ -382,7 +382,7 @@ CMD_FUNC(m_stats)
 	{
 		if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL) && stats_operonly_long(parv[1]))
 		{
-			sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);	
+			sendnumeric(sptr, ERR_NOPRIVILEGES);	
 			return 0;
 		}
 		/* New style, search the hard way */
@@ -395,7 +395,7 @@ CMD_FUNC(m_stats)
 		{
 			if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL) && stats_operonly_long(stat->longflag))
 			{
-				sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+				sendnumeric(sptr, ERR_NOPRIVILEGES);
 				return 0;
 			}
 		}
@@ -404,7 +404,7 @@ CMD_FUNC(m_stats)
 		{
 			if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL) && stats_operonly_short(stat->flag))
 			{
-				sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);	
+				sendnumeric(sptr, ERR_NOPRIVILEGES);	
 				return 0;
 			}
 		}
@@ -431,7 +431,7 @@ CMD_FUNC(m_stats)
 		}
 		else
 			stat->func(sptr, NULL);
-		sendnumeric(sptr, RPL_ENDOFSTATS, me.name, sptr->name, stat->flag);
+		sendnumeric(sptr, RPL_ENDOFSTATS, stat->flag);
 		if (!IsULine(sptr))
 			sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
 				stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
@@ -442,7 +442,7 @@ CMD_FUNC(m_stats)
 	else
 	{
 		stats_help(sptr);
-		sendnumeric(sptr, RPL_ENDOFSTATS, me.name, sptr->name, '*');
+		sendnumeric(sptr, RPL_ENDOFSTATS, '*');
 		return 0;
 	}
 	return 0;
@@ -455,7 +455,7 @@ int stats_banversion(aClient *sptr, char *para)
 	{
 		if (bans->flag.type != CONF_BAN_VERSION)
 			continue;
-		sendnumeric(sptr, RPL_STATSBANVER, me.name, sptr->name,
+		sendnumeric(sptr, RPL_STATSBANVER,
 			bans->mask, bans->reason ? bans->reason : "No Reason");
 	}
 	return 0;
@@ -516,7 +516,7 @@ int stats_denylinkall(aClient *sptr, char *para)
 	for (links = conf_deny_link; links; links = links->next)
 	{
 		if (links->flag.type == CRULE_ALL)
-			sendnumeric(sptr, RPL_STATSDLINE, me.name, sptr->name,
+			sendnumeric(sptr, RPL_STATSDLINE,
 			'D', links->mask, links->prettyrule);
 	}
 	return 0;
@@ -542,11 +542,9 @@ int stats_exceptban(aClient *sptr, char *para)
 	for (excepts = conf_except; excepts; excepts = excepts->next)
 	{
 		if (excepts->flag.type == CONF_EXCEPT_BAN)
-			sendnumeric(sptr, RPL_STATSKLINE, me.name,
-				sptr->name, "E", excepts->mask, "");
+			sendnumeric(sptr, RPL_STATSKLINE, "E", excepts->mask, "");
 		else if (excepts->flag.type == CONF_EXCEPT_TKL)
-			sendnumeric(sptr, RPL_STATSEXCEPTTKL, me.name,
-				sptr->name, tkl_typetochar(excepts->type), excepts->mask);
+			sendnumeric(sptr, RPL_STATSEXCEPTTKL, tkl_typetochar(excepts->type), excepts->mask);
 	}
 	return 0;
 }
@@ -555,8 +553,7 @@ int stats_allow(aClient *sptr, char *para)
 {
 	ConfigItem_allow *allows;
 	for (allows = conf_allow; allows; allows = allows->next)
-		sendnumeric(sptr, RPL_STATSILINE, me.name,
-			sptr->name, allows->ip, allows->hostname, allows->maxperip, 
+		sendnumeric(sptr, RPL_STATSILINE, allows->ip, allows->hostname, allows->maxperip, 
 			allows->class->name, allows->server ? allows->server 
 			: defserv, allows->port ? allows->port : 6667);
 	return 0;
@@ -570,12 +567,10 @@ int stats_command(aClient *sptr, char *para)
 		for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
 			if (mptr->count)
 #ifndef DEBUGMODE
-			sendnumeric(sptr, RPL_STATSCOMMANDS,
-				me.name, sptr->name, mptr->cmd,
+			sendnumeric(sptr, RPL_STATSCOMMANDS, mptr->cmd,
 				mptr->count, mptr->bytes);
 #else
-			sendnumeric(sptr, RPL_STATSCOMMANDS,
-				me.name, sptr->name, mptr->cmd,
+			sendnumeric(sptr, RPL_STATSCOMMANDS, mptr->cmd,
 				mptr->count, mptr->bytes,
 				mptr->lticks, mptr->lticks / CLOCKS_PER_SEC,
 				mptr->rticks, mptr->rticks / CLOCKS_PER_SEC);
@@ -593,8 +588,7 @@ int stats_oper(aClient *sptr, char *para)
 	{
 		for (m = oper_p->mask; m; m = m->next)
 		{
-	  		sendnumeric(sptr, RPL_STATSOLINE,
-	  			me.name, sptr->name, 
+	  		sendnumeric(sptr, RPL_STATSOLINE, 
 	  			'O', m->mask, oper_p->name,
 	  			"-",
 	  			oper_p->class->name? oper_p->class->name : "");
@@ -760,8 +754,7 @@ int stats_uline(aClient *sptr, char *para)
 {
 	ConfigItem_ulines *ulines;
 	for (ulines = conf_ulines; ulines; ulines = ulines->next)
-		sendnumeric(sptr, RPL_STATSULINE, me.name,
-			sptr->name, ulines->servername);
+		sendnumeric(sptr, RPL_STATSULINE, ulines->servername);
 	return 0;	
 }
 int stats_vhost(aClient *sptr, char *para)
@@ -827,7 +820,7 @@ int stats_mem(aClient *sptr, char *para)
 
 	if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -986,7 +979,7 @@ int stats_denylinkauto(aClient *sptr, char *para)
 	for (links = conf_deny_link; links; links = links->next)
 	{
 		if (links->flag.type == CRULE_AUTO)
-			sendnumeric(sptr, RPL_STATSDLINE, me.name, sptr->name,
+			sendnumeric(sptr, RPL_STATSDLINE,
 			'd', links->mask, links->prettyrule);
 	}
 	return 0;
@@ -997,8 +990,7 @@ int stats_exceptthrottle(aClient *sptr, char *para)
 	ConfigItem_except *excepts;
 	for (excepts = conf_except; excepts; excepts = excepts->next)
 		if (excepts->flag.type == CONF_EXCEPT_THROTTLE)
-			sendnumeric(sptr, RPL_STATSELINE,
-				me.name, sptr->name, excepts->mask);
+			sendnumeric(sptr, RPL_STATSELINE, excepts->mask);
 	return 0;
 }
 
@@ -1055,8 +1047,7 @@ int stats_kline(aClient *sptr, char *para)
 			if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
 				type[0] = 'K';
 			type[1] = '\0';
-			sendnumeric(sptr, RPL_STATSKLINE,
-		 		me.name, sptr->name, type, bans->mask, bans->reason
+			sendnumeric(sptr, RPL_STATSKLINE, type, bans->mask, bans->reason
 				? bans->reason : "<no reason>");
 		}
 		else if (bans->flag.type == CONF_BAN_IP)
@@ -1066,8 +1057,7 @@ int stats_kline(aClient *sptr, char *para)
 			else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 				type[0] = 'z';
 			type[1] = '\0';
-			sendnumeric(sptr, RPL_STATSKLINE,
-				me.name, sptr->name, type, bans->mask, bans->reason 
+			sendnumeric(sptr, RPL_STATSKLINE, type, bans->mask, bans->reason 
 				? bans->reason : "<no reason>");
 		}
 	}
@@ -1076,8 +1066,7 @@ int stats_kline(aClient *sptr, char *para)
 	for (excepts = conf_except; excepts; excepts = excepts->next)
 	{
 		if (excepts->flag.type == CONF_EXCEPT_BAN)
-			sendnumeric(sptr, RPL_STATSKLINE,
-				me.name, sptr->name, "E", excepts->mask, "");
+			sendnumeric(sptr, RPL_STATSKLINE, "E", excepts->mask, "");
 	}
 	return 0;
 }
@@ -1089,8 +1078,7 @@ int stats_banrealname(aClient *sptr, char *para)
 	{
 		if (bans->flag.type == CONF_BAN_REALNAME)
 		{
-			sendnumeric(sptr, RPL_STATSNLINE,
-				me.name, sptr->name, bans->mask, bans->reason
+			sendnumeric(sptr, RPL_STATSNLINE, bans->mask, bans->reason
 				? bans->reason : "<no reason>");
 		}
 	}
@@ -1147,7 +1135,7 @@ int stats_set(aClient *sptr, char *para)
 
 	if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -1336,7 +1324,7 @@ int stats_tld(aClient *sptr, char *para)
 
 	for (tld = conf_tld; tld; tld = tld->next)
 	{
-		sendnumeric(sptr, RPL_STATSTLINE, me.name, sptr->name,
+		sendnumeric(sptr, RPL_STATSTLINE,
 			tld->mask, tld->motd_file, tld->rules_file ? 
 			tld->rules_file : "none");
 	}
@@ -1349,10 +1337,10 @@ int stats_uptime(aClient *sptr, char *para)
 	time_t tmpnow;
 
 	tmpnow = TStime() - me.local->since;
-	sendnumeric(sptr, RPL_STATSUPTIME, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSUPTIME,
 	    tmpnow / 86400, (tmpnow / 3600) % 24, (tmpnow / 60) % 60,
 	    tmpnow % 60);
-	sendnumeric(sptr, RPL_STATSCONN, me.name, sptr->name,
+	sendnumeric(sptr, RPL_STATSCONN,
 	    max_connection_count, IRCstats.me_max);
 	return 0;
 }
@@ -1362,7 +1350,7 @@ int stats_denyver(aClient *sptr, char *para)
 	ConfigItem_deny_version *versions;
 	for (versions = conf_deny_version; versions; versions = versions->next)
 	{
-		sendnumeric(sptr, RPL_STATSVLINE, me.name, sptr->name,
+		sendnumeric(sptr, RPL_STATSVLINE,
 			versions->version, versions->flags, versions->mask);
 	}
 	return 0;
@@ -1376,8 +1364,7 @@ int stats_notlink(aClient *sptr, char *para)
 	{
 		if (!find_server_quick(link_p->servername))
 		{
-			sendnumeric(sptr, RPL_STATSXLINE,
-				me.name, sptr->name, link_p->servername,
+			sendnumeric(sptr, RPL_STATSXLINE, link_p->servername,
 				link_p->outgoing.port);
 		}
 	}
@@ -1390,8 +1377,7 @@ int stats_class(aClient *sptr, char *para)
 
 	for (classes = conf_class; classes; classes = classes->next)
 	{
-		sendnumeric(sptr, RPL_STATSYLINE,
-			me.name, sptr->name, classes->name, classes->pingfreq, classes->connfreq,
+		sendnumeric(sptr, RPL_STATSYLINE, classes->name, classes->pingfreq, classes->connfreq,
 			classes->maxclients, classes->sendq, classes->recvq ? classes->recvq : DEFAULT_RECVQ);
 #ifdef DEBUGMODE
 		sendnotice(sptr, "class '%s' has clients=%d, xrefcount=%d",

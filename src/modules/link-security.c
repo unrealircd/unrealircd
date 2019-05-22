@@ -244,7 +244,7 @@ CMD_FUNC(m_linksecurity)
 	
 	if (!IsOper(sptr))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 	

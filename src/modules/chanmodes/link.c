@@ -74,7 +74,7 @@ int cmodeL_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type
 		if (IsPerson(sptr) && is_chanowner(sptr, chptr))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-			sendnumeric(sptr, ERR_CHANOWNPRIVNEEDED, me.name, sptr->name, chptr->chname);
+			sendnumeric(sptr, ERR_CHANOWNPRIVNEEDED, chptr->chname);
 		return EX_DENY;
 	} else
 	if (type == EXCHK_PARAM)
@@ -87,7 +87,7 @@ int cmodeL_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type
 		if (!IsChannelName(para))
 		{
 			if (MyClient(sptr))
-				sendnumeric(sptr, ERR_NOSUCHCHANNEL, me.name, sptr->name, para);
+				sendnumeric(sptr, ERR_NOSUCHCHANNEL, para);
 			return EX_DENY;
 		}
 		
@@ -99,8 +99,7 @@ int cmodeL_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type
 		if (find_channel(buf, NULL) == chptr)
 		{
 			if (MyClient(sptr))
-				sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE,
-				           me.name, sptr->name, 'L',
+				sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'L',
 				           "a channel cannot be linked to itself");
 			return EX_DENY;
 		}
@@ -189,7 +188,7 @@ int link_can_join_limitexceeded(aClient *sptr, aChannel *chptr, char *key, char 
 		char *linked = cm_getparameter(chptr, 'L');
 		if (!linked)
 		        return 0; /* uh-huh? +L but not found. */
-		sendnumeric(sptr, ERR_LINKCHANNEL, me.name, sptr->name, chptr->chname, linked);
+		sendnumeric(sptr, ERR_LINKCHANNEL, chptr->chname, linked);
 		parv[0] = sptr->name;
 		parv[1] = linked;
 		do_join(sptr, sptr, 2, parv);

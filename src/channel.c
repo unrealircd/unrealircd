@@ -304,8 +304,7 @@ aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 	}
 	if (!(who = get_history(user, (long)KILLCHASETIMELIMIT)))
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK,
-		    me.name, sptr->name, user);
+		sendnumeric(sptr, ERR_NOSUCHNICK, user);
 		return NULL;
 	}
 	if (chasing)
@@ -351,8 +350,7 @@ int add_listmode_ex(Ban **list, aClient *cptr, aChannel *chptr, char *banid, cha
 		if (MyClient(cptr))
 		{
 			/* Only send the error to local clients */
-			sendnumeric(cptr, ERR_BANLISTFULL,
-				me.name, cptr->name, chptr->chname, banid);
+			sendnumeric(cptr, ERR_BANLISTFULL, chptr->chname, banid);
 		}
 		do_not_add = 1;
 	}
@@ -367,8 +365,7 @@ int add_listmode_ex(Ban **list, aClient *cptr, aChannel *chptr, char *banid, cha
 			if (MyClient(cptr))
 			{
 				/* Only send the error to local clients */
-				sendnumeric(cptr, ERR_BANLISTFULL,
-				    me.name, cptr->name, chptr->chname, banid);
+				sendnumeric(cptr, ERR_BANLISTFULL, chptr->chname, banid);
 			}
 			do_not_add = 1;
 		}

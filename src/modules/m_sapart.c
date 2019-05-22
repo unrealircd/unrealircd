@@ -77,20 +77,20 @@ CMD_FUNC(m_sapart)
 
 	if (parc < 3)
         {
-                sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "SAPART");
+                sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SAPART");
                 return 0;
         }
 
         if (!(acptr = find_person(parv[1], NULL)))
         {
-                sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, parv[1]);
+                sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
                 return 0;
         }
 
 	/* See if we can operate on this vicim/this command */
 	if (!ValidatePermissionsForPath("sacmd:sapart",sptr,acptr,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -104,13 +104,12 @@ CMD_FUNC(m_sapart)
 		{
 			if (++ntargets > maxtargets)
 			{
-				sendnumeric(sptr, ERR_TOOMANYTARGETS,
-				    me.name, sptr->name, name, maxtargets, "SAPART");
+				sendnumeric(sptr, ERR_TOOMANYTARGETS, name, maxtargets, "SAPART");
 				break;
 			}
 			if (!(chptr = get_channel(acptr, name, 0)))
 			{
-				sendnumeric(sptr, ERR_NOSUCHCHANNEL, me.name, sptr->name,
+				sendnumeric(sptr, ERR_NOSUCHCHANNEL,
 					name);
 				continue;
 			}
@@ -118,13 +117,13 @@ CMD_FUNC(m_sapart)
 			/* Validate oper can do this on chan/victim */
 			if (!IsULine(sptr) && !ValidatePermissionsForPath("sacmd:sapart",sptr,acptr,chptr,NULL))
         		{
-                		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+                		sendnumeric(sptr, ERR_NOPRIVILEGES);
 				continue;
         		}
 	
 			if (!(lp = find_membership_link(acptr->user->channel, chptr)))
 			{
-				sendnumeric(sptr, ERR_USERNOTINCHANNEL, me.name, sptr->name,
+				sendnumeric(sptr, ERR_USERNOTINCHANNEL,
 					parv[1], name);
 				continue;
 			}

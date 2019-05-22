@@ -84,8 +84,7 @@ CMD_FUNC(m_user)
 	if (parc < 5 || *parv[1] == '\0' || *parv[2] == '\0' ||
 	    *parv[3] == '\0' || *parv[4] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "USER");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "USER");
 		if (IsServer(cptr))
 			sendto_ops("bad USER param count for %s from %s",
 			    sptr->name, get_client_name(cptr, FALSE));
@@ -150,8 +149,7 @@ CMD_FUNC(m_user)
 
 	if (!IsUnknown(sptr))
 	{
-		sendnumeric(sptr, ERR_ALREADYREGISTRED,
-		    me.name, sptr->name);
+		sendnumeric(sptr, ERR_ALREADYREGISTRED);
 		return 0;
 	}
 

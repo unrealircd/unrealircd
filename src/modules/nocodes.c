@@ -92,8 +92,7 @@ char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice
 			if (i == HOOK_ALLOW)
 				return text; /* bypass */
 
-			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN,
-				me.name, sptr->name, chptr->chname,
+			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
 				"Control codes (bold/underline/reverse) are not permitted in this channel",
 				chptr->chname);
 			return NULL;

@@ -68,12 +68,11 @@ CMD_FUNC(m_admin)
 
 	if (!conf_admin_tail)
 	{
-		sendnumeric(sptr, ERR_NOADMININFO,
-		    me.name, sptr->name, me.name);
+		sendnumeric(sptr, ERR_NOADMININFO, me.name);
 		return 0;
 	}
 
-	sendnumeric(sptr, RPL_ADMINME, me.name, sptr->name, me.name);
+	sendnumeric(sptr, RPL_ADMINME, me.name);
 
 	/* cycle through the list backwards */
 	for (admin = conf_admin_tail; admin; admin = admin->prev)
@@ -85,8 +84,7 @@ CMD_FUNC(m_admin)
 			sendnumeric(sptr, RPL_ADMINLOC2,
 			    me.name, sptr->name, admin->line);
 		else
-			sendnumeric(sptr, RPL_ADMINEMAIL,
-			    me.name, sptr->name, admin->line);
+			sendnumeric(sptr, RPL_ADMINEMAIL, admin->line);
 	}
 	return 0;
 }

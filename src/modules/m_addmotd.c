@@ -69,13 +69,12 @@ CMD_FUNC(m_addmotd)
 
 	if (!ValidatePermissionsForPath("server:addmotd",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "ADDMOTD");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "ADDMOTD");
 		return 0;
 	}
 	conf = fopen(MOTD, "a");

@@ -280,7 +280,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 		if (IsPerson(sptr) && is_chan_op(sptr, chptr))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-			sendnumeric(sptr, ERR_NOTFORHALFOPS, me.name, sptr->name, 'f');
+			sendnumeric(sptr, ERR_NOTFORHALFOPS, 'f');
 		return EX_DENY;
 	} else
 	if (type == EXCHK_PARAM)
@@ -389,8 +389,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 				{
 					if (MyClient(sptr))
 					{
-						sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE,
-							   me.name, sptr->name, 
+						sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 
 							   'f', "value should be from 1-999");
 						goto invalidsyntax;
 					} else
@@ -478,8 +477,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 			if ((v < 1) || (v > 999)) /* 'per' out of range */
 			{
 				if (MyClient(sptr))
-					sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 
-						   me.name, sptr->name, 'f', 
+					sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'f', 
 						   "time range should be 1-999");
 				goto invalidsyntax;
 			}
@@ -497,7 +495,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 		
 		return EX_ALLOW;
 invalidsyntax:
-		sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, me.name, sptr->name, 'f', "Invalid syntax for MODE +f"); /* FIXME */
+		sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'f', "Invalid syntax for MODE +f"); /* FIXME */
 		return EX_DENY;
 	}
 

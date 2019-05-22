@@ -67,14 +67,14 @@ CMD_FUNC(m_chghost)
 
 	if (MyClient(sptr) && !ValidatePermissionsForPath("client:set:host",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
 	{
-		sendnumeric(sptr, ERR_DISABLED, me.name, sptr->name, "CHGHOST",
+		sendnumeric(sptr, ERR_DISABLED, "CHGHOST",
 			"This command is disabled on this server");
 		return 0;
 	}
@@ -82,7 +82,7 @@ CMD_FUNC(m_chghost)
 
 	if ((parc < 3) || !*parv[2])
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "CHGHOST");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CHGHOST");
 		return 0;
 	}
 
@@ -119,7 +119,7 @@ CMD_FUNC(m_chghost)
 			case UHALLOW_NEVER:
 				if (MyClient(sptr))
 				{
-					sendnumeric(sptr, ERR_DISABLED, me.name, sptr->name, "CHGHOST",
+					sendnumeric(sptr, ERR_DISABLED, "CHGHOST",
 						"This command is disabled on this server");
 					return 0;
 				}
@@ -165,13 +165,13 @@ CMD_FUNC(m_chghost)
 		userhost_changed(acptr);
 
 		if (MyClient(acptr))
-			sendnumeric(acptr, RPL_HOSTHIDDEN, me.name, acptr->name, parv[2]);
+			sendnumeric(acptr, RPL_HOSTHIDDEN, parv[2]);
 		
 		return 0;
 	}
 	else
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name,
+		sendnumeric(sptr, ERR_NOSUCHNICK,
 		    parv[1]);
 		return 0;
 	}

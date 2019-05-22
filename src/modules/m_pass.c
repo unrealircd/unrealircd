@@ -110,14 +110,12 @@ CMD_FUNC(m_pass)
 
 	if (BadPtr(password))
 	{
-		sendnumeric(cptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "PASS");
+		sendnumeric(cptr, ERR_NEEDMOREPARAMS, "PASS");
 		return 0;
 	}
 	if (!MyConnect(sptr) || (!IsUnknown(cptr) && !IsHandshake(cptr)))
 	{
-		sendnumeric(cptr, ERR_ALREADYREGISTRED,
-		    me.name, sptr->name);
+		sendnumeric(cptr, ERR_ALREADYREGISTRED);
 		return 0;
 	}
 

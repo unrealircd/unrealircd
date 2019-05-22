@@ -91,8 +91,7 @@ CMD_FUNC(m_oper)
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "OPER");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "OPER");
 		return 0;
 	}
 
@@ -105,8 +104,7 @@ CMD_FUNC(m_oper)
 
 	if (IsOper(sptr))
 	{
-		sendnumeric(sptr, RPL_YOUREOPER,
-		    me.name, sptr->name);
+		sendnumeric(sptr, RPL_YOUREOPER);
 		// TODO: de-confuse this ? ;)
 		return 0;
 	}
@@ -142,7 +140,7 @@ CMD_FUNC(m_oper)
 
 	if (!(operblock = Find_oper(name)))
 	{
-		sendnumeric(sptr, ERR_NOOPERHOST, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOOPERHOST);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) [unknown oper]",
 		    sptr->name, sptr->user->username, sptr->local->sockhost);
@@ -154,7 +152,7 @@ CMD_FUNC(m_oper)
 
 	if (!unreal_mask_match(sptr, operblock->mask))
 	{
-		sendnumeric(sptr, ERR_NOOPERHOST, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOOPERHOST);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [host doesnt match]",
 		    sptr->name, sptr->user->username, sptr->local->sockhost, name);
@@ -167,7 +165,7 @@ CMD_FUNC(m_oper)
 	i = Auth_Check(cptr, operblock->auth, password);
 	if (i == -1)
 	{
-		sendnumeric(sptr, ERR_PASSWDMISMATCH, me.name, sptr->name);
+		sendnumeric(sptr, ERR_PASSWDMISMATCH);
 		if (FAILOPER_WARN)
 			sendnotice(sptr,
 			    "*** Your attempt has been logged.");
@@ -216,7 +214,7 @@ CMD_FUNC(m_oper)
 
 	if (operblock->maxlogins && (count_oper_sessions(operblock->name) >= operblock->maxlogins))
 	{
-		sendnumeric(sptr, ERR_NOOPERHOST, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOOPERHOST);
 		sendnotice(sptr, "Your maximum number of concurrent oper logins has been reached (%d)",
 			operblock->maxlogins);
 		sendto_snomask_global
@@ -288,14 +286,13 @@ CMD_FUNC(m_oper)
 	}
 	
 	send_umode_out(cptr, sptr, old);
-	sendnumeric(sptr, RPL_SNOMASK,
-		me.name, sptr->name, get_sno_str(sptr));
+	sendnumeric(sptr, RPL_SNOMASK, get_sno_str(sptr));
 
 	list_add(&sptr->special_node, &oper_list);
 
 	RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 1);
 
-	sendnumeric(sptr, RPL_YOUREOPER, me.name, sptr->name);
+	sendnumeric(sptr, RPL_YOUREOPER);
 
 	/* Update statistics */
 	if (IsInvisible(sptr) && !(old & UMODE_INVISIBLE))

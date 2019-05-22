@@ -77,10 +77,8 @@ CMD_FUNC(m_silence)
 			if (acptr != sptr)
 				return 0;
 			for (lp = acptr->user->silence; lp; lp = lp->next)
-				sendnumeric(sptr, RPL_SILELIST, me.name,
-				    sptr->name, acptr->name, lp->value.cp);
-			sendnumeric(sptr, RPL_ENDOFSILELIST, me.name,
-			    acptr->name);
+				sendnumeric(sptr, RPL_SILELIST, acptr->name, lp->value.cp);
+			sendnumeric(sptr, RPL_ENDOFSILELIST);
 			return 0;
 		}
 		cp = parv[1];
@@ -90,8 +88,7 @@ CMD_FUNC(m_silence)
 		else if (!(index(cp, '@') || index(cp, '.') ||
 		    index(cp, '!') || index(cp, '*')))
 		{
-			sendnumeric(sptr, ERR_NOSUCHNICK, me.name,
-			    sptr->name, parv[1]);
+			sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
 			return -1;
 		}
 		else
@@ -109,7 +106,7 @@ CMD_FUNC(m_silence)
 	}
 	else if (parc < 3 || *parv[2] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name,
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    "SILENCE");
 		return -1;
 	}
@@ -131,7 +128,7 @@ CMD_FUNC(m_silence)
 	}
 	else
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, parv[1]);
+		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
 		return -1;
 	}
 	return 0;

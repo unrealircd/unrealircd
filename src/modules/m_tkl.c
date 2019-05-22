@@ -179,8 +179,7 @@ CMD_FUNC(m_gline)
 	if (!ValidatePermissionsForPath("server-ban:gline",sptr,NULL,NULL,NULL))
 
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
-		sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -204,8 +203,7 @@ CMD_FUNC(m_gzline)
 
 	if (!ValidatePermissionsForPath("server-ban:zline:global",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
-		sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -229,8 +227,7 @@ CMD_FUNC(m_shun)
 
 	if (!ValidatePermissionsForPath("server-ban:shun",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
-		sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -256,13 +253,12 @@ CMD_FUNC(m_tempshun)
 
 	if (MyClient(sptr) && (!ValidatePermissionsForPath("server-ban:shun:temporary",sptr,NULL,NULL,NULL)))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
-		sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "TEMPSHUN");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "TEMPSHUN");
 		return 0;
 	}
 	if (parv[1][0] == '+')
@@ -277,7 +273,7 @@ CMD_FUNC(m_tempshun)
 	acptr = find_person(name, NULL);
 	if (!acptr)
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, name);
+		sendnumeric(sptr, ERR_NOSUCHNICK, name);
 		return 0;
 	}
 	if (!MyClient(acptr))
@@ -325,8 +321,7 @@ CMD_FUNC(m_tkline)
 
 	if (!ValidatePermissionsForPath("server-ban:kline:local:add",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
-		sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -341,7 +336,7 @@ CMD_FUNC(m_tkline)
 
 	if (!ValidatePermissionsForPath("server-ban:kline:remove",sptr,NULL,NULL,NULL) && *parv[1] == '-')
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -389,8 +384,7 @@ CMD_FUNC(m_tzline)
 
 	if (!ValidatePermissionsForPath("server-ban:zline:local:add",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
-		sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -597,7 +591,7 @@ int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type
 		}
 		else
 		{
-			sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, mask);
+			sendnumeric(sptr, ERR_NOSUCHNICK, mask);
 			return 0;
 		}
 	}	
@@ -781,7 +775,7 @@ char *err = NULL;
 
 	if (!ValidatePermissionsForPath("server-ban:spamfilter",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -1852,8 +1846,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type == (TKL_KILL | TKL_GLOBAL))
 	{
-		sendnumeric(cptr, RPL_STATSGLINE, me.name,
-			   cptr->name, 'G',
+		sendnumeric(cptr, RPL_STATSGLINE, 'G',
 			   (tk->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 			   tk->usermask, tk->hostmask,
 			   (tk->expire_at != 0) ? (tk->expire_at - TStime()) : 0,
@@ -1861,8 +1854,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type == (TKL_ZAP | TKL_GLOBAL))
 	{
-		sendnumeric(cptr, RPL_STATSGLINE, me.name,
-			   cptr->name, 'Z',
+		sendnumeric(cptr, RPL_STATSGLINE, 'Z',
 			   (tk->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 			   tk->usermask, tk->hostmask,
 			   (tk->expire_at != 0) ? (tk->expire_at - TStime()) : 0,
@@ -1870,8 +1862,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type == (TKL_SHUN | TKL_GLOBAL))
 	{
-		sendnumeric(cptr, RPL_STATSGLINE, me.name,
-			   cptr->name, 's',
+		sendnumeric(cptr, RPL_STATSGLINE, 's',
 			   (tk->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 			   tk->usermask, tk->hostmask,
 			   (tk->expire_at != 0) ? (tk->expire_at - TStime()) : 0,
@@ -1879,8 +1870,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type == (TKL_KILL))
 	{
-		sendnumeric(cptr, RPL_STATSGLINE, me.name,
-			   cptr->name, 'K',
+		sendnumeric(cptr, RPL_STATSGLINE, 'K',
 			   (tk->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 			   tk->usermask, tk->hostmask,
 			   (tk->expire_at != 0) ? (tk->expire_at - TStime()) : 0,
@@ -1888,8 +1878,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type == (TKL_ZAP))
 	{
-		sendnumeric(cptr, RPL_STATSGLINE, me.name,
-			   cptr->name, 'z',
+		sendnumeric(cptr, RPL_STATSGLINE, 'z',
 			   (tk->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 			   tk->usermask, tk->hostmask,
 			   (tk->expire_at != 0) ? (tk->expire_at - TStime()) : 0,
@@ -1897,8 +1886,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type & TKL_SPAMF)
 	{
-		sendnumeric(cptr, RPL_STATSSPAMF, me.name,
-			cptr->name,
+		sendnumeric(cptr, RPL_STATSSPAMF,
 			(tk->type & TKL_GLOBAL) ? 'F' : 'f',
 			unreal_match_method_valtostr(tk->ptr.spamf->expr->type),
 			spamfilter_target_inttostring(tk->subtype),
@@ -1923,8 +1911,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type & TKL_NICK)
 	{
-		sendnumeric(cptr, RPL_STATSQLINE, me.name,
-			cptr->name, (tk->type & TKL_GLOBAL) ? 'Q' : 'q',
+		sendnumeric(cptr, RPL_STATSQLINE, (tk->type & TKL_GLOBAL) ? 'Q' : 'q',
 			tk->hostmask, (tk->expire_at != 0) ? (tk->expire_at - TStime()) : 0,
 			TStime() - tk->set_at, tk->setby, tk->reason);
 	}
@@ -3007,8 +2994,7 @@ long ms_past;
 	if ((tk->ptr.spamf->action == BAN_ACT_WARN) || (tk->ptr.spamf->action == BAN_ACT_SOFT_WARN))
 	{
 		if ((type != SPAMF_USER) && (type != SPAMF_QUIT))
-			sendnumeric(sptr, RPL_SPAMCMDFWD,
-				me.name, sptr->name, cmdname_by_spamftarget(type),
+			sendnumeric(sptr, RPL_SPAMCMDFWD, cmdname_by_spamftarget(type),
 				unreal_decodespace(tk->ptr.spamf->tkl_reason));
 		return 0;
 	} else

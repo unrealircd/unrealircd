@@ -74,8 +74,7 @@ CMD_FUNC(m_whois)
 
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NONICKNAMEGIVEN,
-		    me.name, sptr->name);
+		sendnumeric(sptr, ERR_NONICKNAMEGIVEN);
 		return 0;
 	}
 
@@ -94,8 +93,7 @@ CMD_FUNC(m_whois)
 
 		if (MyClient(sptr) && (++ntargets > maxtargets))
 		{
-			sendnumeric(sptr, ERR_TOOMANYTARGETS,
-			    me.name, sptr->name, nick, maxtargets, "WHOIS");
+			sendnumeric(sptr, ERR_TOOMANYTARGETS, nick, maxtargets, "WHOIS");
 			break;
 		}
 
@@ -132,8 +130,7 @@ CMD_FUNC(m_whois)
 			if (IsHideOper(acptr) && (acptr != sptr) && !IsOper(sptr))
 				hideoper = 1;
 
-			sendnumeric(sptr, RPL_WHOISUSER, me.name,
-			    sptr->name, name,
+			sendnumeric(sptr, RPL_WHOISUSER, name,
 			    acptr->user->username,
 			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,
 			    acptr->info);
@@ -144,20 +141,18 @@ CMD_FUNC(m_whois)
 				strlcpy(sno, get_sno_str(acptr), sizeof(sno));
 				
 				/* send the target user's modes */
-				sendnumeric(sptr, RPL_WHOISMODES,
-				    me.name, sptr->name, name,
+				sendnumeric(sptr, RPL_WHOISMODES, name,
 				    get_mode_str(acptr), sno[1] == 0 ? "" : sno);
 			}
 			if ((acptr == sptr) || IsOper(sptr))
 			{
-				sendnumeric(sptr, RPL_WHOISHOST,
-				    me.name, sptr->name, acptr->name,
+				sendnumeric(sptr, RPL_WHOISHOST, acptr->name,
 					(MyConnect(acptr) && strcmp(acptr->username, "unknown")) ? acptr->username : "*",
 					acptr->user->realhost, acptr->ip ? acptr->ip : "");
 			}
 
 			if (IsARegNick(acptr))
-				sendnumeric(sptr, RPL_WHOISREGNICK, me.name, sptr->name, name);
+				sendnumeric(sptr, RPL_WHOISREGNICK, name);
 			
 			found = 1;
 			mlen = strlen(me.name) + strlen(sptr->name) + 10 + strlen(name);
@@ -281,16 +276,14 @@ CMD_FUNC(m_whois)
 			}
 
 			if (buf[0] != '\0')
-				sendnumeric(sptr, RPL_WHOISCHANNELS, me.name, sptr->name, name, buf); 
+				sendnumeric(sptr, RPL_WHOISCHANNELS, name, buf); 
 
                         if (!(IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES))
-				sendnumeric(sptr, RPL_WHOISSERVER,
-				    me.name, sptr->name, name, acptr->user->server,
+				sendnumeric(sptr, RPL_WHOISSERVER, name, acptr->user->server,
 				    acptr->srvptr ? acptr->srvptr->info : "*Not On This Net*");
 
 			if (acptr->user->away)
-				sendnumeric(sptr, RPL_AWAY, me.name,
-				    sptr->name, name, acptr->user->away);
+				sendnumeric(sptr, RPL_AWAY, name, acptr->user->away);
 
 			if (IsOper(acptr) && !hideoper)
 			{
@@ -315,12 +308,12 @@ CMD_FUNC(m_whois)
 						    operclass);
 					}
 					else
-						sendnumeric(sptr, RPL_WHOISOPERATOR, me.name, sptr->name, name, buf);
+						sendnumeric(sptr, RPL_WHOISOPERATOR, name, buf);
 				}
 			}
 
 			if (acptr->umodes & UMODE_SECURE)
-				sendnumeric(sptr, RPL_WHOISSECURE, me.name, sptr->name, name,
+				sendnumeric(sptr, RPL_WHOISSECURE, name,
 					"is using a Secure Connection");
 			
 			RunHook2(HOOKTYPE_WHOIS, sptr, acptr);
@@ -340,7 +333,7 @@ CMD_FUNC(m_whois)
 			 * not a legacy timestamp.  --nenolod
 			 */
 			if (!isdigit(*acptr->user->svid))
-				sendnumeric(sptr, RPL_WHOISLOGGEDIN, me.name, sptr->name, name, acptr->user->svid);
+				sendnumeric(sptr, RPL_WHOISLOGGEDIN, name, acptr->user->svid);
 
 			/*
 			 * Umode +I hides an oper's idle time from regular users.
@@ -348,16 +341,14 @@ CMD_FUNC(m_whois)
 			 */
 			if (MyConnect(acptr) && (IsOper(sptr) || !(acptr->umodes & UMODE_HIDLE)))
 			{
-				sendnumeric(sptr, RPL_WHOISIDLE,
-				    me.name, sptr->name, name,
+				sendnumeric(sptr, RPL_WHOISIDLE, name,
 				    TStime() - acptr->local->last, acptr->local->firsttime);
 			}
 		}
 		if (!found)
-			sendnumeric(sptr, ERR_NOSUCHNICK,
-			    me.name, sptr->name, nick);
+			sendnumeric(sptr, ERR_NOSUCHNICK, nick);
 	}
-	sendnumeric(sptr, RPL_ENDOFWHOIS, me.name, sptr->name, querybuf);
+	sendnumeric(sptr, RPL_ENDOFWHOIS, querybuf);
 
 	return 0;
 }

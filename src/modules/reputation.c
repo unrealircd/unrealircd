@@ -660,7 +660,7 @@ CMD_FUNC(reputationunperm)
 {
 	if (!IsOper(sptr))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -692,7 +692,7 @@ CMD_FUNC(reputation_user_cmd)
 
 	if (!IsOper(sptr))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 	
@@ -721,7 +721,7 @@ CMD_FUNC(reputation_user_cmd)
 		aClient *acptr = find_person(parv[1], NULL);
 		if (!acptr)
 		{
-			sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, parv[1]);
+			sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
 			return 0;
 		}
 		ip = acptr->ip;
@@ -785,7 +785,7 @@ CMD_FUNC(reputation_server_cmd)
 	/* :server REPUTATION <ip> <score> */
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "REPUTATION");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "REPUTATION");
 		return 0;
 	}
 	

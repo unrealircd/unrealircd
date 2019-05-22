@@ -70,7 +70,7 @@ CMD_FUNC(m_ping)
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NOORIGIN, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOORIGIN);
 		return 0;
 	}
 	origin = parv[1];
@@ -94,8 +94,7 @@ CMD_FUNC(m_ping)
 			sendto_one(acptr, ":%s PING %s :%s", sptr->name, origin, destination);
 		else
 		{
-			sendnumeric(sptr, ERR_NOSUCHSERVER,
-			    me.name, sptr->name, destination);
+			sendnumeric(sptr, ERR_NOSUCHSERVER, destination);
 			return 0;
 		}
 	}
@@ -162,7 +161,7 @@ CMD_FUNC(m_pong)
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NOORIGIN, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOORIGIN);
 		return 0;
 	}
 
@@ -182,8 +181,7 @@ CMD_FUNC(m_pong)
 		{
 			if (!IsServer(cptr) && !IsServer(acptr))
 			{
-				sendnumeric(sptr, ERR_NOSUCHSERVER,
-				    me.name, sptr->name, destination);
+				sendnumeric(sptr, ERR_NOSUCHSERVER, destination);
 				return 0;
 			}
 			else
@@ -192,8 +190,7 @@ CMD_FUNC(m_pong)
 		}
 		else
 		{
-			sendnumeric(sptr, ERR_NOSUCHSERVER,
-			    me.name, sptr->name, destination);
+			sendnumeric(sptr, ERR_NOSUCHSERVER, destination);
 			return 0;
 		}
 	}

@@ -65,7 +65,7 @@ CMD_FUNC(m_squit)
 
 	if (!ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
@@ -120,14 +120,13 @@ CMD_FUNC(m_squit)
 	 */
 	if (!acptr)
 	{
-		sendnumeric(sptr, ERR_NOSUCHSERVER,
-		    me.name, sptr->name, server);
+		sendnumeric(sptr, ERR_NOSUCHSERVER, server);
 		return 0;
 	}
 	if (MyClient(sptr) && ((!ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && !MyConnect(acptr)) ||
 	    (!ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL) && MyConnect(acptr))))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 	/*

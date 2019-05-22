@@ -62,13 +62,13 @@ CMD_FUNC(m_sdesc)
 {
 	if (!ValidatePermissionsForPath("server:description",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 	
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "SDESC");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SDESC");
 		return 0;
 	}
 

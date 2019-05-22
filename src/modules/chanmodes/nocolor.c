@@ -102,8 +102,7 @@ char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 
 		if (!notice)
 		{
-			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN,
-			           me.name, sptr->name, chptr->chname,
+			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
 			           "Color is not permitted in this channel", chptr->chname);
 		}
 		return NULL; /* block */

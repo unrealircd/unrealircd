@@ -69,12 +69,12 @@ CMD_FUNC(m_connect)
 	if (!IsServer(sptr) && MyConnect(sptr) && !ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && parc > 3)
 	{			/* Only allow LocOps to make */
 		/* local CONNECTS --SRB      */
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 	if (!IsServer(sptr) && MyClient(sptr) && !ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL) && parc <= 3)
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 	if (hunt_server(cptr, sptr, recv_mtags, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
@@ -82,8 +82,7 @@ CMD_FUNC(m_connect)
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "CONNECT");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CONNECT");
 		return -1;
 	}
 

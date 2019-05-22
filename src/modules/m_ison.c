@@ -76,8 +76,7 @@ CMD_FUNC(m_ison)
 
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "ISON");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "ISON");
 		return 0;
 	}
 

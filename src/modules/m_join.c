@@ -283,10 +283,8 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 
 		if (chptr->topic)
 		{
-			sendnumeric(sptr, RPL_TOPIC,
-			    me.name, sptr->name, chptr->chname, chptr->topic);
-			sendnumeric(sptr, RPL_TOPICWHOTIME, me.name,
-			    sptr->name, chptr->chname, chptr->topic_nick,
+			sendnumeric(sptr, RPL_TOPIC, chptr->chname, chptr->topic);
+			sendnumeric(sptr, RPL_TOPICWHOTIME, chptr->chname, chptr->topic_nick,
 			    chptr->topic_time);
 		}
 		
@@ -352,8 +350,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "JOIN");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "JOIN");
 		return 0;
 	}
 	bouncedtimes++;
@@ -378,8 +375,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		if (MyClient(sptr) && (++ntargets > maxtargets))
 		{
-			sendnumeric(sptr, ERR_TOOMANYTARGETS,
-			    me.name, sptr->name, name, maxtargets, "JOIN");
+			sendnumeric(sptr, ERR_TOOMANYTARGETS, name, maxtargets, "JOIN");
 			break;
 		}
 		/* pathological case only on longest channel name.
@@ -403,7 +399,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		else if (!IsChannelName(name))
 		{
 			if (MyClient(sptr))
-				sendnumeric(sptr, ERR_NOSUCHCHANNEL, me.name, sptr->name, name);
+				sendnumeric(sptr, ERR_NOSUCHCHANNEL, name);
 			continue;
 		}
 		if (*jbuf)
@@ -469,8 +465,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (!ValidatePermissionsForPath("immune:maxchannelsperuser",sptr,NULL,NULL,NULL))	/* opers can join unlimited chans */
 				if (sptr->user->joined >= MAXCHANNELSPERUSER)
 				{
-					sendnumeric(sptr, ERR_TOOMANYCHANNELS,
-					    me.name, sptr->name, name);
+					sendnumeric(sptr, ERR_TOOMANYCHANNELS, name);
 					RET(0)
 				}
 /* RESTRICTCHAN */
@@ -487,7 +482,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 								get_client_name(sptr, 1), name);
 						}
 						if (d->reason)
-							sendnumeric(sptr, ERR_FORBIDDENCHANNEL, me.name, sptr->name, name, d->reason);
+							sendnumeric(sptr, ERR_FORBIDDENCHANNEL, name, d->reason);
 						if (d->redirect)
 						{
 							sendnotice(sptr, "*** Redirecting you to %s", d->redirect);
@@ -503,7 +498,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			if (ValidatePermissionsForPath("immune:server-ban:deny-channel",sptr,NULL,NULL,NULL) && (tklban = find_qline(sptr, name, &ishold)))
 			{
-				sendnumeric(sptr, ERR_FORBIDDENCHANNEL, me.name, sptr->name, name, tklban->reason);
+				sendnumeric(sptr, ERR_FORBIDDENCHANNEL, name, tklban->reason);
 				continue;
 			}
 			/* ugly set::spamfilter::virus-help-channel-deny hack.. */

@@ -67,7 +67,7 @@ int sinfo_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if ((parc < 6) || BadPtr(parv[6]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "SINFO");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SINFO");
 		return 0;
 	}
 
@@ -116,7 +116,7 @@ int sinfo_user(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!IsOper(sptr))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 

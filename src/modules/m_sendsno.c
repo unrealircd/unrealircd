@@ -70,7 +70,7 @@ CMD_FUNC(m_sendsno)
 
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "SENDSNO");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SENDSNO");
 		return 0;
 	}
 	sno = parv[1];

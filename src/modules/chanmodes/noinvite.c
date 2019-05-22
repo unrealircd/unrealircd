@@ -75,8 +75,6 @@ int noinvite_pre_knock(aClient *sptr, aChannel *chptr)
 	if (MyClient(sptr) && IsNoInvite(chptr))
 	{
 		sendnumeric(sptr, ERR_CANNOTKNOCK,
-				    me.name,
-				    sptr->name,
 				    chptr->chname, "The channel does not allow invites (+V)");
 		return HOOK_DENY;
 	}
@@ -92,7 +90,7 @@ int noinvite_pre_invite(aClient *sptr, aClient *acptr, aChannel *chptr, int *ove
 		{
 			*override = 1;
 		} else {
-			sendnumeric(sptr, ERR_NOINVITE, me.name, sptr->name, chptr->chname);
+			sendnumeric(sptr, ERR_NOINVITE, chptr->chname);
 			return HOOK_DENY;
 		}
 	}

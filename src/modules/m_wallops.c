@@ -63,14 +63,13 @@ CMD_FUNC(m_wallops)
 
 	if (BadPtr(message))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    me.name, sptr->name, "WALLOPS");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "WALLOPS");
 		return 0;
 	}
 
 	if (!ValidatePermissionsForPath("chat:wallops",sptr,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 

@@ -122,8 +122,7 @@ int ret;
 		
 		if (!notice && MyConnect(sptr) &&
 		    acptr->user && acptr->user->away)
-			sendnumeric(sptr, RPL_AWAY,
-			    me.name, sptr->name, acptr->name,
+			sendnumeric(sptr, RPL_AWAY, acptr->name,
 			    acptr->user->away);
 
 		if (MyClient(sptr))
@@ -197,14 +196,13 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NORECIPIENT,
-		    me.name, sptr->name, cmd);
+		sendnumeric(sptr, ERR_NORECIPIENT, cmd);
 		return -1;
 	}
 
 	if (parc < 3 || *parv[2] == '\0')
 	{
-		sendnumeric(sptr, ERR_NOTEXTTOSEND, me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOTEXTTOSEND);
 		return -1;
 	}
 
@@ -215,8 +213,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 	{
 		if (MyClient(sptr) && (++ntargets > maxtargets))
 		{
-			sendnumeric(sptr, ERR_TOOMANYTARGETS,
-			    me.name, sptr->name, nick, maxtargets, cmd);
+			sendnumeric(sptr, ERR_TOOMANYTARGETS, nick, maxtargets, cmd);
 			break;
 		}
 		/* The nicks "ircd" and "irc" are special (and reserved) */
@@ -292,15 +289,13 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 						 */
 						if (!lp || !(lp->flags & (CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
 						{
-							sendnumeric(sptr, ERR_CHANOPRIVSNEEDED,
-								me.name, sptr->name, chptr->chname);
+							sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
 							return 0;
 						}
 						if (!(prefix & PREFIX_OP) && ((prefix & PREFIX_OWNER) || (prefix & PREFIX_ADMIN)) &&
 						    !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
 						{
-							sendnumeric(sptr, ERR_CHANOPRIVSNEEDED,
-								me.name, sptr->name, chptr->chname);
+							sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
 							return 0;
 						}
 					}
@@ -385,16 +380,14 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 			if (MyClient(sptr))
 			{
 				if (!notice || (cansend == 8)) /* privmsg or 'cannot send notice'... */
-					sendnumeric(sptr, ERR_CANNOTSENDTOCHAN,
-					    me.name, sptr->name, chptr->chname,
+					sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
 					    err_cantsend[cansend - 1], p2);
 			}
 			continue;
 		}
 		else if (p2)
 		{
-			sendnumeric(sptr, ERR_NOSUCHNICK, me.name,
-			    sptr->name, p2);
+			sendnumeric(sptr, ERR_NOSUCHNICK, p2);
 			continue;
 		}
 
@@ -410,7 +403,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 				 * send an error message, especially with our new privilege system.
 				 * Error message could be more descriptive perhaps.
 				 */
-				sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
+				sendnumeric(sptr, ERR_NOPRIVILEGES);
 				continue;
 			}
 			new_message(sptr, recv_mtags, &mtags);
@@ -448,13 +441,13 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 			char *server = index(nick, '@');
 			if (server && strncasecmp(server + 1, SERVICES_NAME, strlen(SERVICES_NAME)) == 0)
 			{
-				sendnumeric(sptr, ERR_SERVICESDOWN, me.name, sptr->name, nick);
+				sendnumeric(sptr, ERR_SERVICESDOWN, nick);
 				continue;
 			}
 		}
 
 		/* nothing, nada, not anything found */
-		sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, nick);
+		sendnumeric(sptr, ERR_NOSUCHNICK, nick);
 		continue;
 	}
 	return 0;

@@ -96,8 +96,7 @@ CMD_FUNC(m_dccallow)
 	{
 		if (MyClient(sptr) && (++ntargets > maxtargets))
 		{
-			sendnumeric(sptr, ERR_TOOMANYTARGETS,
-			    me.name, sptr->name, s, maxtargets, "DCCALLOW");
+			sendnumeric(sptr, ERR_TOOMANYTARGETS, s, maxtargets, "DCCALLOW");
 			break;
 		}
 		if (*s == '+')
@@ -113,7 +112,7 @@ CMD_FUNC(m_dccallow)
 			
 			if (!acptr)
 			{
-				sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, s);
+				sendnumeric(sptr, ERR_NOSUCHNICK, s);
 				continue;
 			}
 			add_dccallow(sptr, acptr);
@@ -129,7 +128,7 @@ CMD_FUNC(m_dccallow)
 				continue;
 			if (!acptr)
 			{
-				sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, s);
+				sendnumeric(sptr, ERR_NOSUCHNICK, s);
 				continue;
 			}
 			del_dccallow(sptr, acptr);
@@ -148,14 +147,14 @@ CMD_FUNC(m_dccallow)
 					lp->value.cptr->user->username,
 					GetHost(lp->value.cptr));
 			}
-			sendnumeric(sptr, RPL_ENDOFDCCLIST, me.name, sptr->name, s);
+			sendnumeric(sptr, RPL_ENDOFDCCLIST, s);
 		} else
 		if (!didhelp && !myncmp(s, "help", 4))
 		{
 			didanything = didhelp = 1;
 			for(ptr = dcc_help; *ptr; ptr++)
 				sendto_one(sptr, ":%s %d %s :%s", me.name, RPL_DCCINFO, sptr->name, *ptr);
-			sendnumeric(sptr, RPL_ENDOFDCCLIST, me.name, sptr->name, s);
+			sendnumeric(sptr, RPL_ENDOFDCCLIST, s);
 		}
 	}
 	if (!didanything)
