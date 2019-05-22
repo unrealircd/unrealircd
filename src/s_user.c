@@ -79,7 +79,7 @@ void iNAH_host(aClient *sptr, char *host)
 
 	userhost_changed(sptr);
 
-	sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->virthost);
+	sendnumeric(sptr, RPL_HOSTHIDDEN, me.name, sptr->name, sptr->user->virthost);
 }
 
 long set_usermode(char *umode)
@@ -250,7 +250,7 @@ int hunt_server(aClient *cptr, aClient *sptr, MessageTag *mtags, char *command, 
 
 	if (!acptr)
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name, sptr->name, parv[server]);
+		sendnumeric(sptr, ERR_NOSUCHSERVER, me.name, sptr->name, parv[server]);
 		return HUNTED_NOSUCH;
 	}
 	
@@ -260,7 +260,7 @@ int hunt_server(aClient *cptr, aClient *sptr, MessageTag *mtags, char *command, 
 	/* Never send the message back from where it came from */
 	if (acptr->from == sptr->from)
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name, sptr->name, parv[server]);
+		sendnumeric(sptr, ERR_NOSUCHSERVER, me.name, sptr->name, parv[server]);
 		return HUNTED_NOSUCH;
 	}
 
@@ -336,7 +336,7 @@ int check_for_target_limit(aClient *sptr, void *target, const char *name)
 		sptr->local->nexttarget += 2; /* punish them some more */
 		sptr->local->since += 2; /* lag them up as well */
 
-		sendto_one(sptr, err_str(ERR_TARGETTOOFAST), me.name, sptr->name,
+		sendnumeric(sptr, ERR_TARGETTOOFAST, me.name, sptr->name,
 			name, sptr->local->nexttarget - TStime());
 
 		return 1;
@@ -672,7 +672,7 @@ int add_silence(aClient *sptr, char *mask, int senderr)
 			if ((strlen(lp->value.cp) > MAXSILELENGTH) || (++cnt >= SILENCE_LIMIT))
 			{
 				if (senderr)
-					sendto_one(sptr, err_str(ERR_SILELISTFULL), me.name, sptr->name, mask);
+					sendnumeric(sptr, ERR_SILELISTFULL, me.name, sptr->name, mask);
 				return -1;
 			}
 			else

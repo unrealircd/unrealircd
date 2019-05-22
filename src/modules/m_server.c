@@ -487,7 +487,7 @@ CMD_FUNC(m_server)
 	/* Ignore it  */
 	if (IsPerson(sptr))
 	{
-		sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
+		sendnumeric(cptr, ERR_ALREADYREGISTRED,
 		    me.name, sptr->name);
 		sendnotice(cptr,
 		    "*** Sorry, but your IRC program doesn't appear to support changing servers.");

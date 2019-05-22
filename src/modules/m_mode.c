@@ -119,7 +119,7 @@ CMD_FUNC(m_mode)
 	}
 	else
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    me.name, sptr->name, "MODE");
 		return 0;
 	}
@@ -133,9 +133,9 @@ CMD_FUNC(m_mode)
 
 		modebuf[1] = '\0';
 		channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
-		sendto_one(sptr, rpl_str(RPL_CHANNELMODEIS), me.name, sptr->name,
+		sendnumeric(sptr, RPL_CHANNELMODEIS, me.name, sptr->name,
 		    chptr->chname, modebuf, parabuf);
-		sendto_one(sptr, rpl_str(RPL_CREATIONTIME), me.name, sptr->name,
+		sendnumeric(sptr, RPL_CREATIONTIME, me.name, sptr->name,
 		    chptr->chname, chptr->creationtime);
 		return 0;
 	}
@@ -146,11 +146,10 @@ CMD_FUNC(m_mode)
 			return 0;
 		/* send ban list */
 		for (ban = chptr->banlist; ban; ban = ban->next)
-			sendto_one(sptr, rpl_str(RPL_BANLIST), me.name,
+			sendnumeric(sptr, RPL_BANLIST, me.name,
 			    sptr->name, chptr->chname, ban->banstr,
 			    ban->who, ban->when);
-		sendto_one(cptr,
-		    rpl_str(RPL_ENDOFBANLIST), me.name, sptr->name,
+		sendnumeric(cptr, RPL_ENDOFBANLIST, me.name, sptr->name,
 		    chptr->chname);
 		return 0;
 	}
@@ -161,11 +160,10 @@ CMD_FUNC(m_mode)
 			return 0;
 		/* send exban list */
 		for (ban = chptr->exlist; ban; ban = ban->next)
-			sendto_one(sptr, rpl_str(RPL_EXLIST), me.name,
+			sendnumeric(sptr, RPL_EXLIST, me.name,
 			    sptr->name, chptr->chname, ban->banstr,
 			    ban->who, ban->when);
-		sendto_one(cptr,
-		    rpl_str(RPL_ENDOFEXLIST), me.name, sptr->name,
+		sendnumeric(cptr, RPL_ENDOFEXLIST, me.name, sptr->name,
 		    chptr->chname);
 		return 0;
 	}
@@ -175,10 +173,10 @@ CMD_FUNC(m_mode)
 		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteinvexlist",sptr,NULL,chptr,NULL))
 			return 0;
 		for (ban = chptr->invexlist; ban; ban = ban->next)
-			sendto_one(sptr, rpl_str(RPL_INVEXLIST), me.name,
+			sendnumeric(sptr, RPL_INVEXLIST, me.name,
 			    sptr->name, chptr->chname, ban->banstr,
 			    ban->who, ban->when);
-		sendto_one(sptr, rpl_str(RPL_ENDOFINVEXLIST), me.name,
+		sendnumeric(sptr, RPL_ENDOFINVEXLIST, me.name,
 		    sptr->name, chptr->chname);
 		return 0;
 	}
@@ -196,12 +194,11 @@ CMD_FUNC(m_mode)
 			for (member = chptr->members; member; member = member->next)
 			{
 				if (is_chanowner(member->cptr, chptr))
-					sendto_one(sptr, rpl_str(RPL_QLIST),
+					sendnumeric(sptr, RPL_QLIST,
 					    me.name, sptr->name, chptr->chname,
 					    member->cptr->name);
 			}
-			sendto_one(cptr,
-			    rpl_str(RPL_ENDOFQLIST), me.name, sptr->name,
+			sendnumeric(cptr, RPL_ENDOFQLIST, me.name, sptr->name,
 			    chptr->chname);
 			return 0;
 		}
@@ -220,12 +217,11 @@ CMD_FUNC(m_mode)
 			for (member = chptr->members; member; member = member->next)
 			{
 				if (is_chanprot(member->cptr, chptr))
-					sendto_one(sptr, rpl_str(RPL_ALIST),
+					sendnumeric(sptr, RPL_ALIST,
 					    me.name, sptr->name, chptr->chname,
 					    member->cptr->name);
 			}
-			sendto_one(cptr,
-			    rpl_str(RPL_ENDOFALIST), me.name, sptr->name,
+			sendnumeric(cptr, RPL_ENDOFALIST, me.name, sptr->name,
 			    chptr->chname);
 			return 0;
 		}
@@ -256,7 +252,7 @@ CMD_FUNC(m_mode)
 	{
 		if (cptr == sptr)
 		{
-			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+			sendnumeric(sptr, ERR_CHANOPRIVSNEEDED,
 			    me.name, sptr->name, chptr->chname);
 			return 0;
 		}
@@ -770,7 +766,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				{
 					if (tab->mode == modetype)
 					{
-						sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name,
+						sendnumeric(cptr, ERR_NOTFORHALFOPS, me.name,
 							cptr->name, tab->flag);
 						eaten = tab->parameters;
 						break;
@@ -786,7 +782,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		case MODE_RGSTR:
 			if (!IsServer(cptr) && !IsULine(cptr))
 			{
-				sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE), me.name, cptr->name, chptr->chname);
+				sendnumeric(cptr, ERR_ONLYSERVERSCANCHANGE, me.name, cptr->name, chptr->chname);
 				break;
 			}
 			goto setmode;
@@ -821,7 +817,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			{
 					if (MyClient(cptr) && !op_can_override("channel:override:mode",cptr,chptr,&modetype))
 					{
-						sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
+						sendnumeric(cptr, ERR_CHANOWNPRIVNEEDED, me.name, cptr->name, chptr->chname);
 						break;
 					}
 					if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
@@ -836,7 +832,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			{
 					if (MyClient(cptr) && !op_can_override("channel:override:mode",cptr,chptr,&modetype))
 					{
-						sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
+						sendnumeric(cptr, ERR_CHANOWNPRIVNEEDED, me.name, cptr->name, chptr->chname);
 						break;
 					}
 					if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
@@ -855,7 +851,7 @@ process_listmode:
 				break;
 			if (!(membership = find_membership_link(who->user->channel, chptr)))
 			{
-				sendto_one(cptr, err_str(ERR_USERNOTINCHANNEL),
+				sendnumeric(cptr, ERR_USERNOTINCHANNEL,
 				    me.name, cptr->name, who->name, chptr->chname);
 				break;
 			}
@@ -927,7 +923,7 @@ process_listmode:
 					{
 						char errbuf[NICKLEN+30];
 						ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", member->cptr->name);
-						sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
+						sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE, me.name, cptr->name,
 							modechar, errbuf);
 						break;
 					}
@@ -954,7 +950,7 @@ process_listmode:
 					{
 						char errbuf[NICKLEN+30];
 						ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", member->cptr->name);
-						sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
+						sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE, me.name, cptr->name,
 							 modechar, errbuf);
 						break;
 					}
@@ -1450,7 +1446,7 @@ void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pc
 				{
 					if (!sent_mlock_warning)
 					{
-						sendto_one(cptr, err_str(ERR_MLOCKRESTRICTED), me.name, cptr->name, chptr->chname, *curchr, chptr->mode_lock);
+						sendnumeric(cptr, ERR_MLOCKRESTRICTED, me.name, cptr->name, chptr->chname, *curchr, chptr->mode_lock);
 						sent_mlock_warning++;
 					}
 					continue;
@@ -1485,7 +1481,7 @@ void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pc
 					if (!MyClient(cptr))
 						paracount += paracount_for_chanmode_from_server(cptr, what, *curchr);
 					else
-						sendto_one(cptr, err_str(ERR_UNKNOWNMODE), me.name, cptr->name, *curchr);
+						sendnumeric(cptr, ERR_UNKNOWNMODE, me.name, cptr->name, *curchr);
 					break;
 				}
 
@@ -1591,7 +1587,7 @@ CMD_FUNC(_m_umode)
 
 	if (parc < 2)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    me.name, sptr->name, "MODE");
 		return 0;
 	}
@@ -1600,25 +1596,23 @@ CMD_FUNC(_m_umode)
 	{
 		if (MyConnect(sptr))
 		{
-			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
+			sendnumeric(sptr, ERR_NOSUCHNICK,
 			    me.name, sptr->name, parv[1]);
 		}
 		return 0;
 	}
 	if (acptr != sptr)
 	{
-		sendto_one(sptr, err_str(ERR_USERSDONTMATCH),
+		sendnumeric(sptr, ERR_USERSDONTMATCH,
 			me.name, sptr->name);
 		return 0;
 	}
 
 	if (parc < 3)
 	{
-		sendto_one(sptr, rpl_str(RPL_UMODEIS),
-		    me.name, sptr->name, get_mode_str(sptr));
+		sendnumeric(sptr, RPL_UMODEIS, me.name, sptr->name, get_mode_str(sptr));
 		if (sptr->user->snomask)
-			sendto_one(sptr, rpl_str(RPL_SNOMASK),
-				me.name, sptr->name, get_sno_str(sptr));
+			sendnumeric(sptr, RPL_SNOMASK, me.name, sptr->name, get_sno_str(sptr));
 		return 0;
 	}
 
@@ -1759,7 +1753,7 @@ CMD_FUNC(_m_umode)
 					}
 					else if (i == Usermode_highest && MyConnect(sptr) && !rpterror)
 					{
-						sendto_one(sptr, err_str(ERR_UMODEUNKNOWNFLAG),
+						sendnumeric(sptr, ERR_UMODEUNKNOWNFLAG,
 						           me.name, sptr->name);
 						rpterror = 1;
 					}
@@ -1846,7 +1840,7 @@ CMD_FUNC(_m_umode)
 		/* Notify */
 		userhost_changed(sptr);
 		if (MyClient(sptr))
-			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->virthost);
+			sendnumeric(sptr, RPL_HOSTHIDDEN, me.name, sptr->name, sptr->user->virthost);
 	}
 
 	/* -x */
@@ -1862,7 +1856,7 @@ CMD_FUNC(_m_umode)
 		/* Notify */
 		userhost_changed(sptr);
 		if (MyClient(sptr))
-			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->realhost);
+			sendnumeric(sptr, RPL_HOSTHIDDEN, me.name, sptr->name, sptr->user->realhost);
 	}
 	/*
 	 * If I understand what this code is doing correctly...
@@ -1918,8 +1912,7 @@ CMD_FUNC(_m_umode)
 		send_umode_out(cptr, sptr, oldumodes);
 
 	if (MyConnect(sptr) && setsnomask != sptr->user->snomask)
-		sendto_one(sptr, rpl_str(RPL_SNOMASK),
-			me.name, sptr->name, get_sno_str(sptr));
+		sendnumeric(sptr, RPL_SNOMASK, me.name, sptr->name, get_sno_str(sptr));
 
 	return 0;
 }

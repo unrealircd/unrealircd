@@ -78,7 +78,7 @@ CMD_FUNC(m_setident)
 	  case 1:
 		  if (!ValidatePermissionsForPath("self:set:ident",sptr,NULL,NULL,NULL))
 		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			  sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
 			      sptr->name);
 			  return 0;
 		  }
@@ -86,7 +86,7 @@ CMD_FUNC(m_setident)
 	  case 2:
 		  if (MyConnect(sptr))
 		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			  sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
 			      sptr->name);
 			  return 0;
 		  }

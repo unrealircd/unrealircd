@@ -101,7 +101,7 @@ int operonly_require_oper(aClient *cptr, aChannel *chptr, char mode, char *para,
 		return EX_ALLOW;
 
 	if (checkt == EXCHK_ACCESS_ERR)
-		sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE),
+		sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE,
 		           me.name, cptr->name, 'O', "You are not an IRC operator");
 
 	return EX_DENY;

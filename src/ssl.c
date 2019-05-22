@@ -973,7 +973,7 @@ int client_starttls(aClient *acptr)
 	return 0;
 fail_starttls:
 	/* Failure */
-	sendto_one(acptr, err_str(ERR_STARTTLS), me.name, !BadPtr(acptr->name) ? acptr->name : "*", "STARTTLS failed");
+	sendnumeric(acptr, ERR_STARTTLS, me.name, !BadPtr(acptr->name) ? acptr->name : "*", "STARTTLS failed");
 	acptr->local->ssl = NULL;
 	acptr->flags &= ~FLAGS_SSL;
 	SetUnknown(acptr);

@@ -77,9 +77,9 @@ CMD_FUNC(m_silence)
 			if (acptr != sptr)
 				return 0;
 			for (lp = acptr->user->silence; lp; lp = lp->next)
-				sendto_one(sptr, rpl_str(RPL_SILELIST), me.name,
+				sendnumeric(sptr, RPL_SILELIST, me.name,
 				    sptr->name, acptr->name, lp->value.cp);
-			sendto_one(sptr, rpl_str(RPL_ENDOFSILELIST), me.name,
+			sendnumeric(sptr, RPL_ENDOFSILELIST, me.name,
 			    acptr->name);
 			return 0;
 		}
@@ -90,7 +90,7 @@ CMD_FUNC(m_silence)
 		else if (!(index(cp, '@') || index(cp, '.') ||
 		    index(cp, '!') || index(cp, '*')))
 		{
-			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
+			sendnumeric(sptr, ERR_NOSUCHNICK, me.name,
 			    sptr->name, parv[1]);
 			return -1;
 		}
@@ -109,7 +109,7 @@ CMD_FUNC(m_silence)
 	}
 	else if (parc < 3 || *parv[2] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name,
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name,
 		    "SILENCE");
 		return -1;
 	}
@@ -131,7 +131,7 @@ CMD_FUNC(m_silence)
 	}
 	else
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, parv[1]);
+		sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, parv[1]);
 		return -1;
 	}
 	return 0;

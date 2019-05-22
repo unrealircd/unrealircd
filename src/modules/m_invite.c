@@ -59,10 +59,10 @@ int send_invite_list(aClient *sptr)
 
 	for (inv = sptr->user->invited; inv; inv = inv->next)
 	{
-		sendto_one(sptr, rpl_str(RPL_INVITELIST), me.name, sptr->name,
+		sendnumeric(sptr, RPL_INVITELIST, me.name, sptr->name,
 			   inv->value.chptr->chname);	
 	}
-	sendto_one(sptr, rpl_str(RPL_ENDOFINVITELIST), me.name, sptr->name);
+	sendnumeric(sptr, RPL_ENDOFINVITELIST, me.name, sptr->name);
 	return 0;
 }
 
@@ -84,14 +84,14 @@ CMD_FUNC(m_invite)
 	
 	if (parc < 3 || *parv[1] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    me.name, sptr->name, "INVITE");
 		return -1;
 	}
 
 	if (!(acptr = find_person(parv[1], NULL)))
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK),
+		sendnumeric(sptr, ERR_NOSUCHNICK,
 		    me.name, sptr->name, parv[1]);
 		return -1;
 	}
@@ -101,7 +101,7 @@ CMD_FUNC(m_invite)
 
 	if (!(chptr = find_channel(parv[2], NULL)))
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
+		sendnumeric(sptr, ERR_NOSUCHCHANNEL,
 		    me.name, sptr->name, parv[2]);
 		return -1;
 	}
@@ -121,7 +121,7 @@ CMD_FUNC(m_invite)
 		{
 			override = 1;
 		} else {
-			sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
+			sendnumeric(sptr, ERR_NOTONCHANNEL,
 			    me.name, sptr->name, parv[2]);
 			return -1;
 		}
@@ -129,7 +129,7 @@ CMD_FUNC(m_invite)
 
 	if (IsMember(acptr, chptr))
 	{
-		sendto_one(sptr, err_str(ERR_USERONCHANNEL),
+		sendnumeric(sptr, ERR_USERONCHANNEL,
 		    me.name, sptr->name, parv[1], parv[2]);
 		return 0;
 	}
@@ -142,7 +142,7 @@ CMD_FUNC(m_invite)
 			{
 				override = 1;
 			} else {
-				sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+				sendnumeric(sptr, ERR_CHANOPRIVSNEEDED,
 				    me.name, sptr->name, chptr->chname);
 				return -1;
 			}
@@ -153,7 +153,7 @@ CMD_FUNC(m_invite)
 			{
 				override = 1;
 			} else {
-				sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+				sendnumeric(sptr, ERR_CHANOPRIVSNEEDED,
 				    me.name, sptr->name, chptr->chname);
 				return -1;
 			}
@@ -164,7 +164,7 @@ CMD_FUNC(m_invite)
 	    !strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN) &&
 	    !is_chan_op(sptr, chptr) && !ValidatePermissionsForPath("immune:server-ban:viruschan",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+		sendnumeric(sptr, ERR_CHANOPRIVSNEEDED,
 			me.name, sptr->name, chptr->chname);
 		return -1;
 	}
@@ -185,18 +185,18 @@ CMD_FUNC(m_invite)
 				sptr->user->flood.invite_c++;
 			if (sptr->user->flood.invite_c > INVITE_COUNT)
 			{
-				sendto_one(sptr, err_str(RPL_TRYAGAIN), me.name, sptr->name, "INVITE");
+				sendnumeric(sptr, RPL_TRYAGAIN, me.name, sptr->name, "INVITE");
 				return 0;
 			}
 		}
 
 		if (!override)
 		{
-			sendto_one(sptr, rpl_str(RPL_INVITING), me.name,
+			sendnumeric(sptr, RPL_INVITING, me.name,
 			    sptr->name, acptr->name, chptr->chname);
 			if (acptr->user->away)
 			{
-				sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
+				sendnumeric(sptr, RPL_AWAY, me.name,
 				    sptr->name, acptr->name, acptr->user->away);
 			}
 		}

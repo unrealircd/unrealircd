@@ -70,8 +70,7 @@ int nokick_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *comme
 
 	if (IsNokick(target) && !IsULine(sptr) && MyClient(sptr) && !ValidatePermissionsForPath("channel:override:kick:nokick",sptr,target,chptr,NULL))
 	{
-		ircsnprintf(errmsg, sizeof(errmsg), err_str(ERR_CANNOTDOCOMMAND),
-				   me.name, sptr->name, "KICK",
+		ircsnprintf(errmsg, sizeof(errmsg), err_str(ERR_CANNOTDOCOMMAND), me.name, sptr->name, "KICK",
 				   "user is unkickable (user mode +q)");
 
 		*reject_reason = errmsg;

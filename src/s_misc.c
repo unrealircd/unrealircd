@@ -296,7 +296,7 @@ int  check_registered_user(aClient *sptr)
 {
 	if (!IsRegisteredUser(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "*");
+		sendnumeric(sptr, ERR_NOTREGISTERED, me.name, "*");
 		return -1;
 	}
 	return 0;
@@ -311,7 +311,7 @@ int  check_registered(aClient *sptr)
 {
 	if (!IsRegistered(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "*");
+		sendnumeric(sptr, ERR_NOTREGISTERED, me.name, "*");
 		return -1;
 	}
 	return 0;

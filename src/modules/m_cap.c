@@ -387,15 +387,15 @@ CMD_FUNC(m_cap)
 	{
 		/* I know nothing! */
 		if (IsPerson(sptr))
-			sendto_one(sptr, err_str(ERR_UNKNOWNCOMMAND), me.name, sptr->name, "CAP");
+			sendnumeric(sptr, ERR_UNKNOWNCOMMAND, me.name, sptr->name, "CAP");
 		else
-			sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "CAP");
+			sendnumeric(sptr, ERR_NOTREGISTERED, me.name, "CAP");
 		return 0;
 	}
 
 	if (parc < 2)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 			   me.name, BadPtr(sptr->name) ? "*" : sptr->name,
 			   "CAP");
 
@@ -406,7 +406,7 @@ CMD_FUNC(m_cap)
 			   sizeof(clicap_cmdtable) / sizeof(struct clicap_cmd),
 			   sizeof(struct clicap_cmd), (bqcmp) clicap_cmd_search)))
 	{
-		sendto_one(sptr, err_str(ERR_INVALIDCAPCMD),
+		sendnumeric(sptr, ERR_INVALIDCAPCMD,
 			   me.name, BadPtr(sptr->name) ? "*" : sptr->name,
 			   parv[1]);
 

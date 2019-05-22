@@ -64,7 +64,7 @@ char *regonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int not
 		if (ValidatePermissionsForPath("client:override:message:regonlymsg",sptr,target,NULL,text))
 			return text; /* TODO: this is actually an override */
 
-		sendto_one(sptr, err_str(ERR_NONONREG), me.name, sptr->name, target->name);
+		sendnumeric(sptr, ERR_NONONREG, me.name, sptr->name, target->name);
 
 		return NULL; /* Block the message */
 	}

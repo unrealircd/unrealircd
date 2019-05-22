@@ -68,24 +68,24 @@ CMD_FUNC(m_admin)
 
 	if (!conf_admin_tail)
 	{
-		sendto_one(sptr, err_str(ERR_NOADMININFO),
+		sendnumeric(sptr, ERR_NOADMININFO,
 		    me.name, sptr->name, me.name);
 		return 0;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_ADMINME), me.name, sptr->name, me.name);
+	sendnumeric(sptr, RPL_ADMINME, me.name, sptr->name, me.name);
 
 	/* cycle through the list backwards */
 	for (admin = conf_admin_tail; admin; admin = admin->prev)
 	{
 		if (!admin->next)
-			sendto_one(sptr, rpl_str(RPL_ADMINLOC1),
+			sendnumeric(sptr, RPL_ADMINLOC1,
 			    me.name, sptr->name, admin->line);
 		else if (!admin->next->next)
-			sendto_one(sptr, rpl_str(RPL_ADMINLOC2),
+			sendnumeric(sptr, RPL_ADMINLOC2,
 			    me.name, sptr->name, admin->line);
 		else
-			sendto_one(sptr, rpl_str(RPL_ADMINEMAIL),
+			sendnumeric(sptr, RPL_ADMINEMAIL,
 			    me.name, sptr->name, admin->line);
 	}
 	return 0;

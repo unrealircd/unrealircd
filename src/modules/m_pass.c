@@ -110,13 +110,13 @@ CMD_FUNC(m_pass)
 
 	if (BadPtr(password))
 	{
-		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(cptr, ERR_NEEDMOREPARAMS,
 		    me.name, sptr->name, "PASS");
 		return 0;
 	}
 	if (!MyConnect(sptr) || (!IsUnknown(cptr) && !IsHandshake(cptr)))
 	{
-		sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
+		sendnumeric(cptr, ERR_ALREADYREGISTRED,
 		    me.name, sptr->name);
 		return 0;
 	}

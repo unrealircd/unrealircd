@@ -75,7 +75,7 @@ CMD_FUNC(m_knock)
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    me.name, sptr->name, "KNOCK");
 		return -1;
 	}
@@ -86,7 +86,7 @@ CMD_FUNC(m_knock)
 	/* bugfix for /knock PRv Please? */
 	if (*parv[1] != '#')
 	{
-		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
+		sendnumeric(sptr, ERR_CANNOTKNOCK,
 		    me.name,
 		    sptr->name,
 		    parv[1], "Remember to use a # prefix in channel name");
@@ -95,7 +95,7 @@ CMD_FUNC(m_knock)
 	}
 	if (!(chptr = find_channel(parv[1], NullChn)))
 	{
-		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
+		sendnumeric(sptr, ERR_CANNOTKNOCK,
 		    me.name, sptr->name, parv[1], "Channel does not exist!");
 		return 0;
 	}
@@ -103,7 +103,7 @@ CMD_FUNC(m_knock)
 	/* IsMember bugfix by codemastr */
 	if (IsMember(sptr, chptr) == 1)
 	{
-		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
+		sendnumeric(sptr, ERR_CANNOTKNOCK,
 		    me.name,
 		    sptr->name, chptr->chname, "You're already there!");
 		return 0;
@@ -111,7 +111,7 @@ CMD_FUNC(m_knock)
 
 	if (!(chptr->mode.mode & MODE_INVITEONLY))
 	{
-		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
+		sendnumeric(sptr, ERR_CANNOTKNOCK,
 		    me.name,
 		    sptr->name, chptr->chname, "Channel is not invite only!");
 		return 0;
@@ -119,7 +119,7 @@ CMD_FUNC(m_knock)
 
 	if (is_banned(sptr, chptr, BANCHK_JOIN))
 	{
-		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
+		sendnumeric(sptr, ERR_CANNOTKNOCK,
 		    me.name, sptr->name, chptr->chname, "You're banned!");
 		return 0;
 	}
@@ -145,7 +145,7 @@ CMD_FUNC(m_knock)
 			sptr->user->flood.knock_c++;
 		if (sptr->user->flood.knock_c > KNOCK_COUNT)
 		{
-			sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
+			sendnumeric(sptr, ERR_CANNOTKNOCK,
 			    me.name, sptr->name, parv[1],
 			    "You are KNOCK flooding");
 			return 0;

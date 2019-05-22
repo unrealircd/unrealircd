@@ -68,7 +68,7 @@ CMD_FUNC(m_userhost)
 
 	if (parc < 2)
 	{
-		sendto_one(sptr, rpl_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    me.name, sptr->name, "USERHOST");
 		return 0;
 	}
@@ -107,7 +107,7 @@ CMD_FUNC(m_userhost)
 		cn = p;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_USERHOST), me.name, sptr->name,
+	sendnumeric(sptr, RPL_USERHOST, me.name, sptr->name,
 	    response[0], response[1], response[2], response[3], response[4]);
 
 	return 0;

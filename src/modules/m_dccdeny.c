@@ -64,20 +64,20 @@ CMD_FUNC(m_dccdeny)
 
 	if (!ValidatePermissionsForPath("server-ban:dccdeny",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
 		return 0;
 	}
 	/* fixup --Stskeeps */
 	if (parc < 2)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name,
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name,
 		    "DCCDENY");
 		return 0;
 	}
 	
 	if (BadPtr(parv[2]))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name,
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name,
 		    "DCCDENY");
 		return 0;
 	}

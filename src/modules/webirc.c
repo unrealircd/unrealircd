@@ -420,7 +420,7 @@ CMD_FUNC(m_webirc)
 
 	if ((parc < 5) || BadPtr(parv[4]))
 	{
-		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS), me.name, "*", "WEBIRC");
+		sendnumeric(cptr, ERR_NEEDMOREPARAMS, me.name, "*", "WEBIRC");
 		return -1;
 	}
 

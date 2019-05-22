@@ -88,7 +88,7 @@ CMD_FUNC(m_topic)
 
 	if (parc < 2)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    me.name, sptr->name, "TOPIC");
 		return 0;
 	}
@@ -105,7 +105,7 @@ CMD_FUNC(m_topic)
 				    (SNO_JUNK,"Remote TOPIC for unknown channel %s (%s)",
 				    parv[1], backupbuf);
 			}
-			sendto_one(sptr, rpl_str(ERR_NOSUCHCHANNEL),
+			sendnumeric(sptr, ERR_NOSUCHCHANNEL,
 			    me.name, sptr->name, name);
 			return 0;
 		}
@@ -119,7 +119,7 @@ CMD_FUNC(m_topic)
 			if (!ismember && !IsServer(sptr)
 			    && !ValidatePermissionsForPath("channel:see:list:secret",sptr,NULL,chptr,NULL) && !IsULine(sptr))
 			{
-				sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
+				sendnumeric(sptr, ERR_NOTONCHANNEL,
 				    me.name, sptr->name, name);
 				return 0;
 			}
@@ -149,21 +149,19 @@ CMD_FUNC(m_topic)
 			/* If you're not a member, and you can't view outside channel, deny */
 			if ((!ismember && i == HOOK_DENY) || (is_banned(sptr,chptr,BANCHK_JOIN) && !ValidatePermissionsForPath("channel:see:topic",sptr,NULL,chptr,NULL)))
 			{
-				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, sptr->name, name);
+				sendnumeric(sptr, ERR_NOTONCHANNEL, me.name, sptr->name, name);
 				return 0;
 			}
 
 			if (!chptr->topic)
-				sendto_one(sptr, rpl_str(RPL_NOTOPIC),
+				sendnumeric(sptr, RPL_NOTOPIC,
 				    me.name, sptr->name, chptr->chname);
 			else
 			{
-				sendto_one(sptr, rpl_str(RPL_TOPIC),
+				sendnumeric(sptr, RPL_TOPIC,
 				    me.name, sptr->name,
 				    chptr->chname, chptr->topic);
-				sendto_one(sptr,
-				    rpl_str(RPL_TOPICWHOTIME), me.name,
-				    sptr->name, chptr->chname,
+				sendnumeric(sptr, RPL_TOPICWHOTIME, me.name, sptr->name, chptr->chname,
 				    chptr->topic_nick, chptr->topic_time);
 			}
 		}
@@ -208,7 +206,7 @@ CMD_FUNC(m_topic)
 					if (!ValidatePermissionsForPath("channel:override:topic",sptr,NULL,chptr,NULL))
 					{
 #endif
-					sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+					sendnumeric(sptr, ERR_CHANOPRIVSNEEDED,
 					    me.name, sptr->name, chptr->chname);
 					return 0;
 #ifndef NO_OPEROVERRIDE
@@ -227,7 +225,7 @@ CMD_FUNC(m_topic)
 					topicoverride(sptr, chptr, topic);
 				} else {
 					ircsnprintf(buf, sizeof(buf), "You cannot change the topic on %s while being banned", chptr->chname);
-					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, sptr->name, "TOPIC",  buf);
+					sendnumeric(sptr, ERR_CANNOTDOCOMMAND, me.name, sptr->name, "TOPIC",  buf);
 					return -1;
 				}
 			} else
@@ -241,7 +239,7 @@ CMD_FUNC(m_topic)
 				} else {
 					/* With +m and -t, only voice and higher may change the topic */
 					ircsnprintf(buf, sizeof(buf), "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", chptr->chname);
-					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, sptr->name, "TOPIC",  buf);
+					sendnumeric(sptr, ERR_CANNOTDOCOMMAND, me.name, sptr->name, "TOPIC",  buf);
 					return -1;
 				}
 			}
@@ -291,7 +289,7 @@ CMD_FUNC(m_topic)
 		}
 		else
 		{
-			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+			sendnumeric(sptr, ERR_CHANOPRIVSNEEDED,
 			    me.name, sptr->name, chptr->chname);
 		}
 	}

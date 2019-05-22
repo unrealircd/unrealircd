@@ -68,7 +68,7 @@ CMD_FUNC(m_setname)
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "SETNAME");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "SETNAME");
 		return 0;
 	}
 

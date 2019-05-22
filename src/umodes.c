@@ -348,7 +348,7 @@ void SnomaskDel(Snomask *sno)
 			oldsno = cptr->user->snomask;
 			cptr->user->snomask &= ~sno->mode;
 			if (oldsno != cptr->user->snomask)
-				sendto_one(cptr, rpl_str(RPL_SNOMASK), me.name,
+				sendnumeric(cptr, RPL_SNOMASK, me.name,
 					cptr->name, get_snostr(cptr->user->snomask));
 		}
 
@@ -458,7 +458,7 @@ void unload_all_unused_snomasks(void)
 		oldsno = cptr->user->snomask;
 		cptr->user->snomask &= ~(removed_sno);
 		if (oldsno != cptr->user->snomask)
-			sendto_one(cptr, rpl_str(RPL_SNOMASK), me.name,
+			sendnumeric(cptr, RPL_SNOMASK, me.name,
 				cptr->name, get_snostr(cptr->user->snomask));
 	}
 }

@@ -66,7 +66,7 @@ CMD_FUNC(m_vhost)
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "VHOST");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "VHOST");
 		return 0;
 
 	}
@@ -147,7 +147,7 @@ CMD_FUNC(m_vhost)
 			for (s = vhost->swhois; s; s = s->next)
 				swhois_add(sptr, "vhost", -100, s->line, &me, NULL);
 		}
-		sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, vhost->virthost);
+		sendnumeric(sptr, RPL_HOSTHIDDEN, me.name, sptr->name, vhost->virthost);
 		sendnotice(sptr, "*** Your vhost is now %s%s%s",
 			vhost->virtuser ? vhost->virtuser : "",
 			vhost->virtuser ? "@" : "",

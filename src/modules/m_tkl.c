@@ -179,7 +179,7 @@ CMD_FUNC(m_gline)
 	if (!ValidatePermissionsForPath("server-ban:gline",sptr,NULL,NULL,NULL))
 
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
 		sptr->name);
 		return 0;
 	}
@@ -204,7 +204,7 @@ CMD_FUNC(m_gzline)
 
 	if (!ValidatePermissionsForPath("server-ban:zline:global",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
 		sptr->name);
 		return 0;
 	}
@@ -229,7 +229,7 @@ CMD_FUNC(m_shun)
 
 	if (!ValidatePermissionsForPath("server-ban:shun",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
 		sptr->name);
 		return 0;
 	}
@@ -256,13 +256,13 @@ CMD_FUNC(m_tempshun)
 
 	if (MyClient(sptr) && (!ValidatePermissionsForPath("server-ban:shun:temporary",sptr,NULL,NULL,NULL)))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
 		sptr->name);
 		return 0;
 	}
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "TEMPSHUN");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "TEMPSHUN");
 		return 0;
 	}
 	if (parv[1][0] == '+')
@@ -277,7 +277,7 @@ CMD_FUNC(m_tempshun)
 	acptr = find_person(name, NULL);
 	if (!acptr)
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, name);
+		sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, name);
 		return 0;
 	}
 	if (!MyClient(acptr))
@@ -325,7 +325,7 @@ CMD_FUNC(m_tkline)
 
 	if (!ValidatePermissionsForPath("server-ban:kline:local:add",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
 		sptr->name);
 		return 0;
 	}
@@ -341,7 +341,7 @@ CMD_FUNC(m_tkline)
 
 	if (!ValidatePermissionsForPath("server-ban:kline:remove",sptr,NULL,NULL,NULL) && *parv[1] == '-')
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
 		return 0;
 	}
 
@@ -389,7 +389,7 @@ CMD_FUNC(m_tzline)
 
 	if (!ValidatePermissionsForPath("server-ban:zline:local:add",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name,
 		sptr->name);
 		return 0;
 	}
@@ -597,7 +597,7 @@ int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type
 		}
 		else
 		{
-			sendto_one(sptr, rpl_str(ERR_NOSUCHNICK), me.name, sptr->name, mask);
+			sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, mask);
 			return 0;
 		}
 	}	
@@ -781,7 +781,7 @@ char *err = NULL;
 
 	if (!ValidatePermissionsForPath("server-ban:spamfilter",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
 		return 0;
 	}
 
@@ -1852,7 +1852,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type == (TKL_KILL | TKL_GLOBAL))
 	{
-		sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
+		sendnumeric(cptr, RPL_STATSGLINE, me.name,
 			   cptr->name, 'G',
 			   (tk->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 			   tk->usermask, tk->hostmask,
@@ -1861,7 +1861,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type == (TKL_ZAP | TKL_GLOBAL))
 	{
-		sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
+		sendnumeric(cptr, RPL_STATSGLINE, me.name,
 			   cptr->name, 'Z',
 			   (tk->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 			   tk->usermask, tk->hostmask,
@@ -1870,7 +1870,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type == (TKL_SHUN | TKL_GLOBAL))
 	{
-		sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
+		sendnumeric(cptr, RPL_STATSGLINE, me.name,
 			   cptr->name, 's',
 			   (tk->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 			   tk->usermask, tk->hostmask,
@@ -1879,7 +1879,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type == (TKL_KILL))
 	{
-		sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
+		sendnumeric(cptr, RPL_STATSGLINE, me.name,
 			   cptr->name, 'K',
 			   (tk->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 			   tk->usermask, tk->hostmask,
@@ -1888,7 +1888,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type == (TKL_ZAP))
 	{
-		sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
+		sendnumeric(cptr, RPL_STATSGLINE, me.name,
 			   cptr->name, 'z',
 			   (tk->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 			   tk->usermask, tk->hostmask,
@@ -1897,7 +1897,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type & TKL_SPAMF)
 	{
-		sendto_one(cptr, rpl_str(RPL_STATSSPAMF), me.name,
+		sendnumeric(cptr, RPL_STATSSPAMF, me.name,
 			cptr->name,
 			(tk->type & TKL_GLOBAL) ? 'F' : 'f',
 			unreal_match_method_valtostr(tk->ptr.spamf->expr->type),
@@ -1923,7 +1923,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 	}
 	if (tk->type & TKL_NICK)
 	{
-		sendto_one(cptr, rpl_str(RPL_STATSQLINE), me.name,
+		sendnumeric(cptr, RPL_STATSQLINE, me.name,
 			cptr->name, (tk->type & TKL_GLOBAL) ? 'Q' : 'q',
 			tk->hostmask, (tk->expire_at != 0) ? (tk->expire_at - TStime()) : 0,
 			TStime() - tk->set_at, tk->setby, tk->reason);
@@ -3007,7 +3007,7 @@ long ms_past;
 	if ((tk->ptr.spamf->action == BAN_ACT_WARN) || (tk->ptr.spamf->action == BAN_ACT_SOFT_WARN))
 	{
 		if ((type != SPAMF_USER) && (type != SPAMF_QUIT))
-			sendto_one(sptr, rpl_str(RPL_SPAMCMDFWD),
+			sendnumeric(sptr, RPL_SPAMCMDFWD,
 				me.name, sptr->name, cmdname_by_spamftarget(type),
 				unreal_decodespace(tk->ptr.spamf->tkl_reason));
 		return 0;

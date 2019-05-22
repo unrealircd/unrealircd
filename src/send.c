@@ -1384,6 +1384,17 @@ va_list vl;
 	va_end(vl);
 }
 
+/** Send numeric to IRC client */
+void sendnumeric(aClient *to, int numeric, ...)
+{
+	va_list vl;
+	char *pattern = rpl_str(numeric);
+
+	va_start(vl, numeric);
+	vsendto_one(to, pattern, vl);
+	va_end(vl);
+}
+
 /** Send raw data directly to socket, bypassing everything.
  * Looks like an interesting function to call? NO! STOP!
  * Don't use this function. It may only be used by the initial

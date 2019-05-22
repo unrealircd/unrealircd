@@ -75,25 +75,25 @@ CMD_FUNC(m_starttls)
 	if (!ctx)
 	{
 		/* Pretend STARTTLS is an unknown command, this is the safest approach */
-		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "STARTTLS");
+		sendnumeric(sptr, ERR_NOTREGISTERED, me.name, "STARTTLS");
 		return 0;
 	}
 
 	/* Is STARTTLS disabled? (same response as above) */
 	if (ssl_options & SSLFLAG_NOSTARTTLS)
 	{
-		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "STARTTLS");
+		sendnumeric(sptr, ERR_NOTREGISTERED, me.name, "STARTTLS");
 		return 0;
 	}
 
 	if (IsSecure(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_STARTTLS), me.name, !BadPtr(sptr->name) ? sptr->name : "*", "STARTTLS failed. Already using TLS.");
+		sendnumeric(sptr, ERR_STARTTLS, me.name, !BadPtr(sptr->name) ? sptr->name : "*", "STARTTLS failed. Already using TLS.");
 		return 0;
 	}
 
 	dbuf_delete(&sptr->local->recvQ, DBufLength(&sptr->local->recvQ)); /* Clear up any remaining plaintext commands */
-	sendto_one(sptr, rpl_str(RPL_STARTTLS), me.name, !BadPtr(sptr->name) ? sptr->name : "*");
+	sendnumeric(sptr, RPL_STARTTLS, me.name, !BadPtr(sptr->name) ? sptr->name : "*");
 	send_queued(sptr);
 
 	SetSSLStartTLSHandshake(sptr);
@@ -115,7 +115,7 @@ CMD_FUNC(m_starttls)
 	return 0;
 fail:
 	/* Failure */
-	sendto_one(sptr, err_str(ERR_STARTTLS), me.name, !BadPtr(sptr->name) ? sptr->name : "*", "STARTTLS failed");
+	sendnumeric(sptr, ERR_STARTTLS, me.name, !BadPtr(sptr->name) ? sptr->name : "*", "STARTTLS failed");
 	sptr->local->ssl = NULL;
 	sptr->flags &= ~FLAGS_SSL;
 	SetUnknown(sptr);

@@ -70,7 +70,7 @@ CMD_FUNC(m_whowas)
 
 	if (parc < 2)
 	{
-		sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
+		sendnumeric(sptr, ERR_NONICKNAMEGIVEN,
 		    me.name, sptr->name);
 		return 0;
 	}
@@ -93,7 +93,7 @@ CMD_FUNC(m_whowas)
 	{
 		if (!mycmp(nick, temp->name))
 		{
-			sendto_one(sptr, rpl_str(RPL_WHOWASUSER),
+			sendnumeric(sptr, RPL_WHOWASUSER,
 			    me.name, sptr->name, temp->name,
 			    temp->username,
 			    (IsOper(sptr) ? temp->hostname :
@@ -101,7 +101,7 @@ CMD_FUNC(m_whowas)
 			    '\0') ? temp->virthost : temp->hostname),
 			    temp->realname);
                 	if (!((Find_uline(temp->servername)) && !IsOper(sptr) && HIDE_ULINES))
-				sendto_one(sptr, rpl_str(RPL_WHOISSERVER), me.name,
+				sendnumeric(sptr, RPL_WHOISSERVER, me.name,
 				    sptr->name, temp->name, temp->servername,
 				    myctime(temp->logoff));
 			cur++;
@@ -111,9 +111,9 @@ CMD_FUNC(m_whowas)
 			break;
 	}
 	if (!found)
-		sendto_one(sptr, err_str(ERR_WASNOSUCHNICK),
+		sendnumeric(sptr, ERR_WASNOSUCHNICK,
 		    me.name, sptr->name, nick);
 
-	sendto_one(sptr, rpl_str(RPL_ENDOFWHOWAS), me.name, sptr->name, parv[1]);
+	sendnumeric(sptr, RPL_ENDOFWHOWAS, me.name, sptr->name, parv[1]);
 	return 0;
 }

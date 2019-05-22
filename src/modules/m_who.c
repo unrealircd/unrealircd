@@ -715,7 +715,7 @@ matchok:
 				continue;
 			if (WHOLIMIT && !IsOper(sptr) && ++i > WHOLIMIT)
 			{
-				sendto_one(sptr, rpl_str(ERR_WHOLIMEXCEED), me.name, sptr->name, WHOLIMIT);
+				sendnumeric(sptr, ERR_WHOLIMEXCEED, me.name, sptr->name, WHOLIMIT);
 				return;
 			}
 

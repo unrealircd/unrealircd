@@ -275,7 +275,7 @@ char *censor_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 	if (blocked)
 	{
 		if (!notice)
-			sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN,
 				me.name, sptr->name, chptr->chname,
 				"Swearing is not permitted in this channel", chptr->chname);
 		return NULL;

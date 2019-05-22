@@ -75,7 +75,7 @@ CMD_FUNC(m_kill)
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    me.name, sptr->name, "KILL");
 		return 0;
 	}
@@ -90,13 +90,13 @@ CMD_FUNC(m_kill)
 
 	if (!IsServer(cptr) && !ValidatePermissionsForPath("kill:global",sptr,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
 		return 0;
 	}
 
 	if (BadPtr(path))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    me.name, sptr->name, "KILL");
 		return 0;
 	}
@@ -114,7 +114,7 @@ CMD_FUNC(m_kill)
 
 		if (MyClient(sptr) && (++ntargets > maxtargets))
 		{
-			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+			sendnumeric(sptr, ERR_TOOMANYTARGETS,
 			    me.name, sptr->name, nick, maxtargets, "KILL");
 			break;
 		}
@@ -134,7 +134,7 @@ CMD_FUNC(m_kill)
 
 		if (!acptr)
 		{
-			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, nick);
+			sendnumeric(sptr, ERR_NOSUCHNICK, me.name, sptr->name, nick);
 			continue;
 		}
 
@@ -142,7 +142,7 @@ CMD_FUNC(m_kill)
 		    || (MyConnect(acptr) && MyClient(cptr)
 		    && !ValidatePermissionsForPath("kill:local",sptr,acptr,NULL,NULL)))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+			sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
 			continue;
 		}
 

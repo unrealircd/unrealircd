@@ -154,7 +154,7 @@ CMD_FUNC(m_whox)
 
 	if ((parc < 2))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 			me.name, sptr->name, "WHO");
 		return 0;
 	}

@@ -75,7 +75,7 @@ CMD_FUNC(m_userip)
 		
 	if (parc < 2)
 	{
-		sendto_one(sptr, rpl_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    me.name, sptr->name, "USERIP");
 		return 0;
 	}
@@ -120,7 +120,7 @@ CMD_FUNC(m_userip)
 		cn = p;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_USERIP), me.name, sptr->name,
+	sendnumeric(sptr, RPL_USERIP, me.name, sptr->name,
 	    response[0], response[1], response[2], response[3], response[4]);
 
 	return 0;

@@ -389,7 +389,7 @@ int extcmode_default_requirechop(aClient *cptr, aChannel *chptr, char mode, char
 	if (IsPerson(cptr) && is_chan_op(cptr, chptr))
 		return EX_ALLOW;
 	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name, cptr->name, mode);
+		sendnumeric(cptr, ERR_NOTFORHALFOPS, me.name, cptr->name, mode);
 	return EX_DENY;
 }
 

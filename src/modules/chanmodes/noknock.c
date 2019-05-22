@@ -74,7 +74,7 @@ int noknock_check (aClient *sptr, aChannel *chptr)
 {
 	if (MyClient(sptr) && IsNoKnock(chptr))
 	{
-		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
+		sendnumeric(sptr, ERR_CANNOTKNOCK,
 				    me.name,
 				    sptr->name, chptr->chname, "No knocks are allowed! (+K)");
 		return HOOK_DENY;
@@ -97,7 +97,7 @@ int noknock_mode_allow(aClient *cptr, aChannel *chptr, char mode, char *para, in
 
 	if (!(chptr->mode.mode & MODE_INVITEONLY))
 	{
-		sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE),
+		sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE,
 						me.name, cptr->name, 'K', "+i must be set");
 		return EX_DENY;
 	}

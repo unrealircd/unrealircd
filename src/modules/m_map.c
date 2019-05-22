@@ -67,11 +67,11 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 	*p = '\0';
 
 	if (prompt_length > 60)
-		sendto_one(cptr, rpl_str(RPL_MAPMORE), me.name, cptr->name,
+		sendnumeric(cptr, RPL_MAPMORE, me.name, cptr->name,
 		    prompt, length, server->name);
 	else
 	{
-		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,
+		sendnumeric(cptr, RPL_MAP, me.name, cptr->name, prompt,
 		    length, server->name, server->serv->users, IsOper(cptr) ? server->id : "");
 		cnt = 0;
 	}
@@ -121,7 +121,7 @@ int cnt = 0, hide_ulines;
 
 	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL)) ? 1 : 0;
 
-	sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, "",
+	sendnumeric(cptr, RPL_MAP, me.name, cptr->name, "",
 	    length, server->name, server->serv->users, "");
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
@@ -138,7 +138,7 @@ int cnt = 0, hide_ulines;
 			continue;
 		if (--cnt == 0)
 			*buf = '`';
-		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, buf,
+		sendnumeric(cptr, RPL_MAP, me.name, cptr->name, buf,
 		    length-2, acptr->name, acptr->serv->users, "");
 	}
 }
@@ -169,7 +169,7 @@ CMD_FUNC(m_map)
 		dump_flat_map(sptr, &me, longest);
 	else
 		dump_map(sptr, &me, "*", 0, longest);
-	sendto_one(sptr, rpl_str(RPL_MAPEND), me.name, sptr->name);
+	sendnumeric(sptr, RPL_MAPEND, me.name, sptr->name);
 
 	return 0;
 }

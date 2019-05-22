@@ -83,12 +83,12 @@ CMD_FUNC(m_motd)
 
 	if (themotd == NULL || themotd->lines == NULL)
 	{
-		sendto_one(sptr, err_str(ERR_NOMOTD), me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOMOTD, me.name, sptr->name);
 		svsnofile = 1;
 		goto svsmotd;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, sptr->name, me.name);
+	sendnumeric(sptr, RPL_MOTDSTART, me.name, sptr->name, me.name);
 
 	/* tm_year should be zero only if the struct is zero-ed */
 	if (themotd && themotd->lines && themotd->last_modified.tm_year)
@@ -107,7 +107,7 @@ CMD_FUNC(m_motd)
 		motdline = themotd->lines;
 	while (motdline)
 	{
-		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
+		sendnumeric(sptr, RPL_MOTD, me.name, sptr->name,
 			motdline->line);
 		motdline = motdline->next;
 	}
@@ -116,11 +116,11 @@ CMD_FUNC(m_motd)
 	motdline = svsmotd.lines;
 	while (motdline)
 	{
-		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
+		sendnumeric(sptr, RPL_MOTD, me.name, sptr->name,
 			motdline->line);
 		motdline = motdline->next;
 	}
 	if (svsnofile == 0)
-		sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, sptr->name);
+		sendnumeric(sptr, RPL_ENDOFMOTD, me.name, sptr->name);
 	return 0;
 }

@@ -62,7 +62,7 @@ MOD_UNLOAD(m_time)
 CMD_FUNC(m_time)
 {
 	if (hunt_server(cptr, sptr, recv_mtags, ":%s TIME :%s", 1, parc, parv) == HUNTED_ISME)
-		sendto_one(sptr, rpl_str(RPL_TIME), me.name, sptr->name, me.name,
+		sendnumeric(sptr, RPL_TIME, me.name, sptr->name, me.name,
 		    date((long)0));
 	return 0;
 }

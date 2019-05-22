@@ -67,21 +67,21 @@ static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2, int awayno
 	{
 		if (awaynotify && acptr->user->away)
 		{
-			sendto_one(cptr, rpl_str(RPL_NOWISAWAY), me.name, cptr->name,
+			sendnumeric(cptr, RPL_NOWISAWAY, me.name, cptr->name,
 			    acptr->name, acptr->user->username,
 			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
 			    realhost, acptr->user->lastaway);
 			return;
 		}
 		
-		sendto_one(cptr, rpl_str(rpl1), me.name, cptr->name,
+		sendnumeric(cptr, rpl1, me.name, cptr->name,
 		    acptr->name, acptr->user->username,
 		    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
 		    realhost, acptr->lastnick);
 	}
 	else
 	{
-		sendto_one(cptr, rpl_str(rpl2), me.name, cptr->name,
+		sendnumeric(cptr, rpl2, me.name, cptr->name,
 		    name, "*", "*", 0L);
 	}
 }
@@ -132,10 +132,7 @@ CMD_FUNC(m_watch)
 			{
 				if (sptr->local->watches >= MAXWATCH)
 				{
-					sendto_one(sptr,
-					    err_str(ERR_TOOMANYWATCH), me.name,
-					    cptr->name, s + 1);
-
+					sendnumeric(sptr, ERR_TOOMANYWATCH, me.name, cptr->name, s + 1);
 					continue;
 				}
 
@@ -193,7 +190,7 @@ CMD_FUNC(m_watch)
 				for (lp = anptr->watch, count = 1;
 				    (lp = lp->next); count++)
 					;
-			sendto_one(sptr, rpl_str(RPL_WATCHSTAT), me.name,
+			sendnumeric(sptr, RPL_WATCHSTAT, me.name,
 			    sptr->name, sptr->local->watches, count);
 
 			/*
@@ -202,7 +199,7 @@ CMD_FUNC(m_watch)
 			 */
 			if ((lp = sptr->local->watch) == NULL)
 			{
-				sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST),
+				sendnumeric(sptr, RPL_ENDOFWATCHLIST,
 				    me.name, sptr->name, *s);
 				continue;
 			}
@@ -216,7 +213,7 @@ CMD_FUNC(m_watch)
 				if (count + strlen(lp->value.wptr->nick) + 1 >
 				    BUFSIZE - 2)
 				{
-					sendto_one(sptr, rpl_str(RPL_WATCHLIST),
+					sendnumeric(sptr, RPL_WATCHLIST,
 					    me.name, sptr->name, buf);
 					*buf = '\0';
 					count =
@@ -227,10 +224,10 @@ CMD_FUNC(m_watch)
 				strcat(buf, lp->value.wptr->nick);
 				count += (strlen(lp->value.wptr->nick) + 1);
 			}
-			sendto_one(sptr, rpl_str(RPL_WATCHLIST), me.name,
+			sendnumeric(sptr, RPL_WATCHLIST, me.name,
 			    sptr->name, buf);
 
-			sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST), me.name,
+			sendnumeric(sptr, RPL_ENDOFWATCHLIST, me.name,
 			    sptr->name, *s);
 			continue;
 		}
@@ -251,7 +248,7 @@ CMD_FUNC(m_watch)
 				if ((acptr =
 				    find_person(lp->value.wptr->nick, NULL)))
 				{
-					sendto_one(sptr, rpl_str(RPL_NOWON),
+					sendnumeric(sptr, RPL_NOWON,
 					    me.name, sptr->name, acptr->name,
 					    acptr->user->username,
 					    IsHidden(acptr) ? acptr->user->
@@ -263,14 +260,14 @@ CMD_FUNC(m_watch)
 				 * 'L' (full list wanted).
 				 */
 				else if (isupper(*s))
-					sendto_one(sptr, rpl_str(RPL_NOWOFF),
+					sendnumeric(sptr, RPL_NOWOFF,
 					    me.name, sptr->name,
 					    lp->value.wptr->nick, "*", "*",
 					    lp->value.wptr->lasttime);
 				lp = lp->next;
 			}
 
-			sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST), me.name,
+			sendnumeric(sptr, RPL_ENDOFWATCHLIST, me.name,
 			    sptr->name, *s);
 
 			continue;

@@ -63,15 +63,15 @@ CMD_FUNC(m_links)
 		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL))
 			continue;
 		if (flat)
-			sendto_one(sptr, rpl_str(RPL_LINKS),
+			sendnumeric(sptr, RPL_LINKS,
 			    me.name, sptr->name, acptr->name, me.name,
 			    1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 		else
-			sendto_one(sptr, rpl_str(RPL_LINKS),
+			sendnumeric(sptr, RPL_LINKS,
 			    me.name, sptr->name, acptr->name, acptr->serv->up,
 			    acptr->hopcount, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 	}
 
-	sendto_one(sptr, rpl_str(RPL_ENDOFLINKS), me.name, sptr->name, "*");
+	sendnumeric(sptr, RPL_ENDOFLINKS, me.name, sptr->name, "*");
 	return 0;
 }

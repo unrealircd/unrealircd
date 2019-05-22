@@ -227,11 +227,11 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 	*p = '\0';
 
 	if (prompt_length > 60)
-		sendto_one(cptr, rpl_str(RPL_MAPMORE), me.name, cptr->name,
+		sendnumeric(cptr, RPL_MAPMORE, me.name, cptr->name,
 		    prompt, length, server->name);
 	else
 	{
-		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,
+		sendnumeric(cptr, RPL_MAP, me.name, cptr->name, prompt,
 		    length, server->name, server->serv->users, IsOper(cptr) ? server->id : "");
 		cnt = 0;
 	}
@@ -285,7 +285,7 @@ int cnt = 0, hide_ulines;
 
 	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL)) ? 1 : 0;
 
-	sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, "",
+	sendnumeric(cptr, RPL_MAP, me.name, cptr->name, "",
 	    length, server->name, server->serv->users, "");
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
@@ -306,7 +306,7 @@ int cnt = 0, hide_ulines;
 			break;
 		if (--cnt == 0)
 			*buf = '`';
-		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, buf,
+		sendnumeric(cptr, RPL_MAP, me.name, cptr->name, buf,
 		    length-2, acptr->name, acptr->serv->users, "");
 	}
 }
@@ -333,7 +333,7 @@ CMD_OVERRIDE_FUNC(override_map)
 		if (Settings.map_deny_message)
 			sendnotice(sptr, "%s", Settings.map_deny_message);
 		else
-			sendto_one(sptr, rpl_str(RPL_MAPEND), me.name, sptr->name);
+			sendnumeric(sptr, RPL_MAPEND, me.name, sptr->name);
 
 		return 0;
 	}
@@ -355,7 +355,7 @@ CMD_OVERRIDE_FUNC(override_map)
 	else
 		dump_map(sptr, &me, "*", 0, longest);
 
-	sendto_one(sptr, rpl_str(RPL_MAPEND), me.name, sptr->name);
+	sendnumeric(sptr, RPL_MAPEND, me.name, sptr->name);
 
 	return 0;
 }
@@ -373,7 +373,7 @@ CMD_OVERRIDE_FUNC(override_links)
 		if (Settings.links_deny_message)
 			sendnotice(sptr, "%s", Settings.links_deny_message);
 		else
-			sendto_one(sptr, rpl_str(RPL_ENDOFLINKS), me.name, sptr->name, "*");
+			sendnumeric(sptr, RPL_ENDOFLINKS, me.name, sptr->name, "*");
 
 		return 0;
 	}
@@ -386,15 +386,15 @@ CMD_OVERRIDE_FUNC(override_links)
 		if (FindHiddenServer(acptr->name))
 			continue;
 		if (flat)
-			sendto_one(sptr, rpl_str(RPL_LINKS),
+			sendnumeric(sptr, RPL_LINKS,
 			    me.name, sptr->name, acptr->name, me.name,
 			    1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 		else
-			sendto_one(sptr, rpl_str(RPL_LINKS),
+			sendnumeric(sptr, RPL_LINKS,
 			    me.name, sptr->name, acptr->name, acptr->serv->up,
 			    acptr->hopcount, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 	}
 
-	sendto_one(sptr, rpl_str(RPL_ENDOFLINKS), me.name, sptr->name, "*");
+	sendnumeric(sptr, RPL_ENDOFLINKS, me.name, sptr->name, "*");
 	return 0;
 }

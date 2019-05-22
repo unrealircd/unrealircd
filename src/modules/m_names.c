@@ -83,7 +83,7 @@ CMD_FUNC(m_names)
 
 	if (parc < 2 || !MyConnect(sptr))
 	{
-		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
+		sendnumeric(sptr, RPL_ENDOFNAMES, me.name,
 		    sptr->name, "*");
 		return 0;
 	}
@@ -96,7 +96,7 @@ CMD_FUNC(m_names)
 				para[TRUNCATED_NAMES] = '\0';
 			sendto_realops("names abuser %s %s",
 			    get_client_name(sptr, FALSE), para);
-			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+			sendnumeric(sptr, ERR_TOOMANYTARGETS,
 			    me.name, sptr->name, s+1, 1, "NAMES");
 			return 0;
 		}
@@ -106,7 +106,7 @@ CMD_FUNC(m_names)
 
 	if (!chptr || (!ShowChannel(sptr, chptr) && !ValidatePermissionsForPath("channel:see:names:secret",sptr,NULL,chptr,NULL)))
 	{
-		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
+		sendnumeric(sptr, RPL_ENDOFNAMES, me.name,
 		    sptr->name, para);
 		return 0;
 	}
@@ -194,7 +194,7 @@ CMD_FUNC(m_names)
 		flag = 1;
 		if (mlen + idx + bufLen > BUFSIZE - 7)
 		{
-			sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name,
+			sendnumeric(sptr, RPL_NAMREPLY, me.name,
 			    sptr->name, buf);
 			idx = spos;
 			flag = 0;
@@ -202,9 +202,9 @@ CMD_FUNC(m_names)
 	}
 
 	if (flag)
-		sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name, sptr->name, buf);
+		sendnumeric(sptr, RPL_NAMREPLY, me.name, sptr->name, buf);
 
-	sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name, sptr->name, para);
+	sendnumeric(sptr, RPL_ENDOFNAMES, me.name, sptr->name, para);
 
 	return 0;
 

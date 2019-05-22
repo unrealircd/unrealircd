@@ -84,8 +84,7 @@ int servicebot_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *c
 		char errmsg2[NICKLEN+32];
 		snprintf(errmsg2, sizeof(errmsg2), "%s is a Service Bot", target->name);
 		
-		snprintf(errmsg, sizeof(errmsg), err_str(ERR_CANNOTDOCOMMAND),
-				   me.name, sptr->name, "KICK", errmsg2);
+		snprintf(errmsg, sizeof(errmsg), err_str(ERR_CANNOTDOCOMMAND), me.name, sptr->name, "KICK", errmsg2);
 
 		*reject_reason = errmsg;
 
@@ -120,7 +119,7 @@ int servicebot_pre_kill(aClient *sptr, aClient *target, char *reason)
 {
 	if (IsServiceBot(target) && !(ValidatePermissionsForPath("services:servicebot:kill",sptr,target,NULL,NULL) || IsULine(sptr)))
 	{
-		sendto_one(sptr, err_str(ERR_KILLDENY), me.name,
+		sendnumeric(sptr, ERR_KILLDENY, me.name,
 			sptr->name, target->name);
 		return EX_ALWAYS_DENY;
 	}

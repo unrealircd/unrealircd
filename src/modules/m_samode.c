@@ -64,7 +64,7 @@ CMD_FUNC(m_samode)
 
 	if (parc <= 2)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 		    me.name, sptr->name, "SAMODE");
 		return 0;
 	}
@@ -72,13 +72,13 @@ CMD_FUNC(m_samode)
 	chptr = find_channel(parv[1], NULL);
 	if (!chptr)
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, sptr->name, parv[1]);
+		sendnumeric(sptr, ERR_NOSUCHCHANNEL, me.name, sptr->name, parv[1]);
 		return 0;
 	}
 
 	if (!ValidatePermissionsForPath("sacmd:samode", sptr, NULL, chptr, NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
 		return 0;
 	}
 

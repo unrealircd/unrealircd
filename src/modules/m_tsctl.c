@@ -65,7 +65,7 @@ CMD_FUNC(m_tsctl)
 
 	if (!ValidatePermissionsForPath("server:tsctl:view",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
 		return 0;
 	}
 
@@ -73,7 +73,7 @@ CMD_FUNC(m_tsctl)
 	{
 		if (*parv[1] == '\0')
 		{
-			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+			sendnumeric(sptr, ERR_NEEDMOREPARAMS,
 			    me.name, sptr->name, "TSCTL");
 			return 0;
 		}
@@ -82,7 +82,7 @@ CMD_FUNC(m_tsctl)
 		{
 			if (!ValidatePermissionsForPath("server:tsctl:set",sptr,NULL,NULL,NULL))
                         {
-			    sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+			    sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
 			    return 0;
 			}
 
@@ -139,13 +139,13 @@ CMD_FUNC(m_tsctl)
 		{
 			if (!IsULine(sptr))
 			{
-				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+				if (MyClient(sptr)) sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
 				return 0;
 			}
 
 			if (!parv[2] || *parv[2] == '\0')
 			{
-				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "TSCTL");
+				if (MyClient(sptr)) sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "TSCTL");
 				return 0;
 			}
 
@@ -168,7 +168,7 @@ CMD_FUNC(m_tsctl)
 	}
 
 	//default: no parameter was entered
-	sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "TSCTL");
+	sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "TSCTL");
 
 	return 0;
 }

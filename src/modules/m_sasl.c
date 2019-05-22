@@ -150,7 +150,7 @@ CMD_FUNC(m_svslogin)
 
 		strlcpy(target_p->user->svid, parv[3], sizeof(target_p->user->svid));
 
-		sendto_one(target_p, err_str(RPL_LOGGEDIN), me.name,
+		sendnumeric(target_p, RPL_LOGGEDIN, me.name,
 			   BadPtr(target_p->name) ? "*" : target_p->name,
 			   BadPtr(target_p->name) ? "*" : target_p->name,
 			   BadPtr(target_p->user->username) ? "*" : target_p->user->username,
@@ -214,17 +214,17 @@ CMD_FUNC(m_sasl)
 			{
 				target_p->local->since += 7; /* bump fakelag due to failed authentication attempt */
 				RunHookReturnInt2(HOOKTYPE_SASL_RESULT, target_p, 0, !=0);
-				sendto_one(target_p, err_str(ERR_SASLFAIL), me.name, BadPtr(target_p->name) ? "*" : target_p->name);
+				sendnumeric(target_p, ERR_SASLFAIL, me.name, BadPtr(target_p->name) ? "*" : target_p->name);
 			}
 			else if (*parv[4] == 'S')
 			{
 				target_p->local->sasl_complete++;
 				RunHookReturnInt2(HOOKTYPE_SASL_RESULT, target_p, 1, !=0);
-				sendto_one(target_p, err_str(RPL_SASLSUCCESS), me.name, BadPtr(target_p->name) ? "*" : target_p->name);
+				sendnumeric(target_p, RPL_SASLSUCCESS, me.name, BadPtr(target_p->name) ? "*" : target_p->name);
 			}
 		}
 		else if (*parv[3] == 'M')
-			sendto_one(target_p, err_str(RPL_SASLMECHS), me.name, BadPtr(target_p->name) ? "*" : target_p->name, parv[4]);
+			sendnumeric(target_p, RPL_SASLMECHS, me.name, BadPtr(target_p->name) ? "*" : target_p->name, parv[4]);
 
 		return 0;
 	}
@@ -251,13 +251,13 @@ CMD_FUNC(m_authenticate)
 
 	if ((parv[1][0] == ':') || strchr(parv[1], ' '))
 	{
-		sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, "*", "AUTHENTICATE", "Invalid parameter");
+		sendnumeric(sptr, ERR_CANNOTDOCOMMAND, me.name, "*", "AUTHENTICATE", "Invalid parameter");
 		return 0;
 	}
 
 	if (strlen(parv[1]) > 400)
 	{
-		sendto_one(sptr, err_str(ERR_SASLTOOLONG), me.name, BadPtr(sptr->name) ? "*" : sptr->name);
+		sendnumeric(sptr, ERR_SASLTOOLONG, me.name, BadPtr(sptr->name) ? "*" : sptr->name);
 		return 0;
 	}
 
@@ -294,7 +294,7 @@ static int abort_sasl(aClient *cptr)
 		return 0;
 
 	cptr->local->sasl_out = cptr->local->sasl_complete = 0;
-	sendto_one(cptr, err_str(ERR_SASLABORTED), me.name, BadPtr(cptr->name) ? "*" : cptr->name);
+	sendnumeric(cptr, ERR_SASLABORTED, me.name, BadPtr(cptr->name) ? "*" : cptr->name);
 
 	if (*cptr->local->sasl_agent)
 	{

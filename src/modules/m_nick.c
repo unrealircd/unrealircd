@@ -275,7 +275,7 @@ CMD_FUNC(m_uid)
 
 	if (parc < 13)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "UID");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, me.name, sptr->name, "UID");
 		return 0;
 	}
 
@@ -291,7 +291,7 @@ CMD_FUNC(m_uid)
 	 */
 	if (IsServer(cptr) && !do_remote_nick_name(nick))
 	{
-		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
+		sendnumeric(sptr, ERR_ERRONEUSNICKNAME,
 		    me.name, sptr->name, parv[1], "Illegal characters");
 
 		if (IsServer(cptr))
@@ -371,7 +371,7 @@ CMD_FUNC(m_uid)
 	 */
 	if (!stricmp("ircd", nick) || !stricmp("irc", nick))
 	{
-		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
+		sendnumeric(sptr, ERR_ERRONEUSNICKNAME, me.name,
 		    sptr->name, nick,
 		    "Reserved for internal IRCd purposes");
 		return 0;
@@ -590,7 +590,7 @@ CMD_FUNC(m_nick)
 	 */
 	if (parc < 2)
 	{
-		sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
+		sendnumeric(sptr, ERR_NONICKNAMEGIVEN,
 		    me.name, sptr->name);
 		return 0;
 	}
@@ -606,7 +606,7 @@ CMD_FUNC(m_nick)
 		    (TStime() - sptr->user->flood.nick_t < NICK_PERIOD))
 		{
 			/* Throttle... */
-			sendto_one(sptr, err_str(ERR_NCHANGETOOFAST), me.name, sptr->name, nick,
+			sendnumeric(sptr, ERR_NCHANGETOOFAST, me.name, sptr->name, nick,
 				(int)(NICK_PERIOD - (TStime() - sptr->user->flood.nick_t)));
 			return 0;
 		}
@@ -620,7 +620,7 @@ CMD_FUNC(m_nick)
 	if ((IsServer(cptr) && !do_remote_nick_name(nick)) ||
 	    (!IsServer(cptr) && !do_nick_name(nick)))
 	{
-		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
+		sendnumeric(sptr, ERR_ERRONEUSNICKNAME,
 		    me.name, sptr->name, parv[1], "Illegal characters");
 
 		if (IsServer(cptr))
@@ -704,7 +704,7 @@ CMD_FUNC(m_nick)
 	{
 		if (MyConnect(sptr))
 		{
-			sendto_one(sptr, err_str(ERR_NICKNAMEINUSE), me.name,
+			sendnumeric(sptr, ERR_NICKNAMEINUSE, me.name,
 			    *sptr->name ? sptr->name : "*", nick);
 			return 0;	/* NICK message ignored */
 		}
@@ -717,7 +717,7 @@ CMD_FUNC(m_nick)
 	 */
 	if (!stricmp("ircd", nick) || !stricmp("irc", nick))
 	{
-		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
+		sendnumeric(sptr, ERR_ERRONEUSNICKNAME, me.name,
 		    *sptr->name ? sptr->name : "*", nick,
 		    "Reserved for internal IRCd purposes");
 		return 0;
@@ -753,7 +753,7 @@ CMD_FUNC(m_nick)
 		{
 			if (ishold)
 			{
-				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
+				sendnumeric(sptr, ERR_ERRONEUSNICKNAME,
 				    me.name, *sptr->name ? sptr->name : "*",
 				    nick, tklban->reason);
 				return 0;
@@ -761,7 +761,7 @@ CMD_FUNC(m_nick)
 			if (!ValidatePermissionsForPath("immune:server-ban:ban-nick",sptr,NULL,NULL,nick))
 			{
 				sptr->local->since += 4; /* lag them up */
-				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
+				sendnumeric(sptr, ERR_ERRONEUSNICKNAME,
 				    me.name, *sptr->name ? sptr->name : "*",
 				    nick, tklban->reason);
 				sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
@@ -871,7 +871,7 @@ CMD_FUNC(m_nick)
 		   ** NICK is coming from local client connection. Just
 		   ** send error reply and ignore the command.
 		 */
-		sendto_one(sptr, err_str(ERR_NICKNAMEINUSE),
+		sendnumeric(sptr, ERR_NICKNAMEINUSE,
 		    me.name, *sptr->name ? sptr->name : "*", nick);
 		return 0;	/* NICK message ignored */
 	}
@@ -1016,9 +1016,7 @@ CMD_FUNC(m_nick)
 			{
 				if (!is_skochanop(sptr, mp->chptr) && is_banned(sptr, mp->chptr, BANCHK_NICK))
 				{
-					sendto_one(sptr,
-					    err_str(ERR_BANNICKCHANGE),
-					    me.name, sptr->name,
+					sendnumeric(sptr, ERR_BANNICKCHANGE, me.name, sptr->name,
 					    mp->chptr->chname);
 					return 0;
 				}
@@ -1040,9 +1038,7 @@ CMD_FUNC(m_nick)
 
 				if (i == HOOK_DENY)
 				{
-					sendto_one(sptr,
-					    err_str(ERR_NONICKCHANGE),
-					    me.name, sptr->name,
+					sendnumeric(sptr, ERR_NONICKCHANGE, me.name, sptr->name,
 					    mp->chptr->chname);
 					return 0;
 				}
@@ -1437,26 +1433,26 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username,
 				user->realhost);
 		RunHook2(HOOKTYPE_WELCOME, sptr, 0);
-		sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick,
+		sendnumeric(sptr, RPL_WELCOME, me.name, nick,
 		    ircnetwork, nick, user->username, user->realhost);
 		RunHook2(HOOKTYPE_WELCOME, sptr, 1);
-		sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
+		sendnumeric(sptr, RPL_YOURHOST, me.name, nick,
 		    me.name, version);
 		RunHook2(HOOKTYPE_WELCOME, sptr, 2);
-		sendto_one(sptr, rpl_str(RPL_CREATED), me.name, nick, creation);
+		sendnumeric(sptr, RPL_CREATED, me.name, nick, creation);
 		RunHook2(HOOKTYPE_WELCOME, sptr, 3);
-		sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, sptr->name,
+		sendnumeric(sptr, RPL_MYINFO, me.name, sptr->name,
 		    me.name, version, umodestring, cmodestring);
 		RunHook2(HOOKTYPE_WELCOME, sptr, 4);
 
 		for (i = 0; IsupportStrings[i]; i++)
-			sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
+			sendnumeric(sptr, RPL_ISUPPORT, me.name, nick, IsupportStrings[i]);
 
 		RunHook2(HOOKTYPE_WELCOME, sptr, 5);
 
 		if (IsHidden(sptr))
 		{
-			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, user->virthost);
+			sendnumeric(sptr, RPL_HOSTHIDDEN, me.name, sptr->name, user->virthost);
 			RunHook2(HOOKTYPE_WELCOME, sptr, 396);
 		}
 
@@ -1494,7 +1490,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 * anything, happened.
 		 */
 		if (u1)
-			sendto_one(sptr, err_str(ERR_HOSTILENAME), me.name,
+			sendnumeric(sptr, ERR_HOSTILENAME, me.name,
 			    sptr->name, olduser, userbad, stripuser);
 	}
 	else if (IsServer(cptr))
@@ -1609,7 +1605,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
 			    cptr->name, buf);
 		if (user->snomask)
-			sendto_one(sptr, rpl_str(RPL_SNOMASK),
+			sendnumeric(sptr, RPL_SNOMASK,
 				me.name, sptr->name, get_snostr(user->snomask));
 
 		if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_user == POLICY_WARN))
@@ -1853,7 +1849,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		}
 		else
 		{
-			sendto_one(cptr, rpl_str(RPL_REDIR), me.name, cptr->name, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
+			sendnumeric(cptr, RPL_REDIR, me.name, cptr->name, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
 			return exit_client(cptr, cptr, &me, iConf.reject_message_server_full);
 		}
 		return 0;

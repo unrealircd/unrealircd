@@ -63,19 +63,19 @@ CMD_FUNC(m_close)
 
 	if (!ValidatePermissionsForPath("server:close",sptr,NULL,NULL,NULL))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
 		return 0;
 	}
 
 	list_for_each_entry_safe(acptr, acptr2, &unknown_list, lclient_node)
 	{
-		sendto_one(sptr, rpl_str(RPL_CLOSING), me.name, sptr->name,
+		sendnumeric(sptr, RPL_CLOSING, me.name, sptr->name,
 		    get_client_name(acptr, TRUE), acptr->status);
 		(void)exit_client(acptr, acptr, acptr, "Oper Closing");
 		closed++;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_CLOSEEND), me.name, sptr->name, closed);
+	sendnumeric(sptr, RPL_CLOSEEND, me.name, sptr->name, closed);
 	sendto_realops("%s!%s@%s closed %d unknown connections", sptr->name,
 	    sptr->user->username, GetHost(sptr), closed);
 	IRCstats.unknown = 0;

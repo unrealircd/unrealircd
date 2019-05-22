@@ -247,7 +247,7 @@ int blocked;
 		if (blocked)
 		{
 			if (!notice)
-				sendto_one(sptr, rpl_str(ERR_NOSWEAR),  me.name, sptr->name, target->name);
+				sendnumeric(sptr, ERR_NOSWEAR,  me.name, sptr->name, target->name);
 			return NULL;
 		}
 	}

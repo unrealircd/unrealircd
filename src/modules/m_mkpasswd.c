@@ -65,7 +65,7 @@ CMD_FUNC(m_mkpasswd)
 
 	if (!MKPASSWD_FOR_EVERYONE && !IsOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendnumeric(sptr, ERR_NOPRIVILEGES, me.name, sptr->name);
 		return -1;
 	}
 	if (!IsOper(sptr))

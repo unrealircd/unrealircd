@@ -183,7 +183,7 @@ int cnt = 0;
 
 	if (cnt >= MAXDCCALLOW)
 	{
-		sendto_one(sptr, err_str(ERR_TOOMANYDCC), me.name, sptr->name,
+		sendnumeric(sptr, ERR_TOOMANYDCC, me.name, sptr->name,
 			optr->name, MAXDCCALLOW);
 		return 0;
 	}
@@ -200,7 +200,7 @@ int cnt = 0;
 	lp->next = optr->user->dccallow;
 	optr->user->dccallow = lp;
 	
-	sendto_one(sptr, rpl_str(RPL_DCCSTATUS), me.name, sptr->name, optr->name, "added to");
+	sendnumeric(sptr, RPL_DCCSTATUS, me.name, sptr->name, optr->name, "added to");
 	return 0;
 }
 
@@ -246,7 +246,7 @@ int found = 0;
 		sendto_realops("[BUG!] %s was in dccallowme list of %s but not in dccallowrem list!",
 			optr->name, sptr->name);
 
-	sendto_one(sptr, rpl_str(RPL_DCCSTATUS), me.name, sptr->name, optr->name, "removed from");
+	sendnumeric(sptr, RPL_DCCSTATUS, me.name, sptr->name, optr->name, "removed from");
 
 	return 0;
 }
@@ -267,12 +267,12 @@ int  channel_canjoin(aClient *sptr, char *name)
 	p = Find_channel_allowed(sptr, name);
 	if (p)
 	{
-		sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, sptr->name, name, p->reason);
+		sendnumeric(sptr, ERR_FORBIDDENCHANNEL, me.name, sptr->name, name, p->reason);
 		return 0;
 	}
 	if ((tklban = find_qline(sptr, name, &ishold)))
 	{
-		sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, sptr->name, name, tklban->reason);
+		sendnumeric(sptr, ERR_FORBIDDENCHANNEL, me.name, sptr->name, name, tklban->reason);
 		return 0;
 	}
 	return 1;
