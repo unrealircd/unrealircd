@@ -189,7 +189,7 @@ CMD_FUNC(m_oper)
 	/* Check oper::require_modes */
 	if (operblock->require_modes & ~sptr->umodes)
 	{
-		sendto_one(sptr, ":%s %d %s :You are missing user modes required to OPER", me.name, ERR_NOOPERHOST, sptr->name);
+		sendnumericfmt(sptr, ERR_NOOPERHOST, "You are missing user modes required to OPER");
 		sendto_snomask_global
 			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) [lacking modes '%s' in oper::require-modes]",
 			 sptr->name, sptr->user->username, sptr->local->sockhost, get_modestr(operblock->require_modes & ~sptr->umodes));

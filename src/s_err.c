@@ -509,7 +509,7 @@ static char *replies[] = {
 /* 462    ERR_ALREADYREGISTRED */ ":You may not reregister",
 /* 463    ERR_NOPERMFORHOST */ ":Your host isn't among the privileged",
 /* 464    ERR_PASSWDMISMATCH */ ":Password Incorrect",
-/* 465    ERR_YOUREBANNEDCREEP */	":You are banned from this server.  Mail %s for more information",
+/* 465    ERR_YOUREBANNEDCREEP */	":%s",
 /* 466 */ NULL, /* rfc1459 */
 /* 467    ERR_KEYSET */ "%s :Channel key already set",
 /* 468    ERR_ONLYSERVERSCANCHANGE */ "%s :Only servers can change that mode",

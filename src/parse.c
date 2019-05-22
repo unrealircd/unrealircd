@@ -390,8 +390,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *
 			   ** of notices -- Syzop.
 			 */
 			if (!IsRegistered(cptr) && stricmp(ch, "NOTICE")) {
-				sendto_one(from, ":%s %d %s :You have not registered",
-				    me.name, ERR_NOTREGISTERED, ch);
+				sendnumericfmt(from, ERR_NOTREGISTERED, "You have not registered");
 				parse_addlag(cptr, bytes);
 				return -1;
 			}

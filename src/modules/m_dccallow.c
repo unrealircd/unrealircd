@@ -136,14 +136,12 @@ CMD_FUNC(m_dccallow)
 		if (!didlist && !myncmp(s, "list", 4))
 		{
 			didanything = didlist = 1;
-			sendto_one(sptr, ":%s %d %s :The following users are on your dcc allow list:",
-				me.name, RPL_DCCINFO, sptr->name);
+			sendnumericfmt(sptr, RPL_DCCINFO, "The following users are on your dcc allow list:");
 			for(lp = sptr->user->dccallow; lp; lp = lp->next)
 			{
 				if (lp->flags == DCC_LINK_REMOTE)
 					continue;
-				sendto_one(sptr, ":%s %d %s :%s (%s@%s)", me.name,
-					RPL_DCCLIST, sptr->name, lp->value.cptr->name,
+				sendnumericfmt(sptr, RPL_DCCLIST, "%s (%s@%s)", lp->value.cptr->name,
 					lp->value.cptr->user->username,
 					GetHost(lp->value.cptr));
 			}
@@ -153,7 +151,7 @@ CMD_FUNC(m_dccallow)
 		{
 			didanything = didhelp = 1;
 			for(ptr = dcc_help; *ptr; ptr++)
-				sendto_one(sptr, ":%s %d %s :%s", me.name, RPL_DCCINFO, sptr->name, *ptr);
+				sendnumericfmt(sptr, RPL_DCCINFO, "%s", *ptr);
 			sendnumeric(sptr, RPL_ENDOFDCCLIST, s);
 		}
 	}

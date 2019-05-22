@@ -280,38 +280,26 @@ void m_info_send(aClient *sptr)
 {
 char **text = unrealinfo;
 
-	sendto_one(sptr, ":%s %d %s :========== %s ==========",
-	    me.name, RPL_INFO, sptr->name, IRCDTOTALVERSION);
+	sendnumericfmt(sptr, RPL_INFO, "========== %s ==========", IRCDTOTALVERSION);
 
 	while (*text)
-		sendto_one(sptr, ":%s %d %s :| %s", 
-		    me.name, RPL_INFO, sptr->name, *text++);
+		sendnumericfmt(sptr, RPL_INFO, "| %s", *text++);
 
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| DALnet Credits - Type /DalInfo",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCd-style server",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please report them at:",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|  https://bugs.unrealircd.org/",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr,
-	    ":%s %d %s :| UnrealIRCd Homepage: https://www.unrealircd.org",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr,
-	    ":%s %d %s :============================================", me.name,
-	    RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :Birth Date: %s, compile # %s", me.name,
-	    RPL_INFO, sptr->name, creation, generation);
-	sendto_one(sptr, ":%s %d %s :On-line since %s", me.name, RPL_INFO,
-	    sptr->name, myctime(me.local->firsttime));
-	sendto_one(sptr, ":%s %d %s :ReleaseID (%s)", me.name, RPL_INFO,
-	    sptr->name, buildid);
+	sendnumericfmt(sptr, RPL_INFO, "|");
+	sendnumericfmt(sptr, RPL_INFO, "|");
+	sendnumericfmt(sptr, RPL_INFO, "| Credits - Type /Credits");
+	sendnumericfmt(sptr, RPL_INFO, "| DALnet Credits - Type /DalInfo");
+	sendnumericfmt(sptr, RPL_INFO, "|");
+	sendnumericfmt(sptr, RPL_INFO, "| This is an UnrealIRCd-style server");
+	sendnumericfmt(sptr, RPL_INFO, "| If you find any bugs, please report them at:");
+	sendnumericfmt(sptr, RPL_INFO, "|  https://bugs.unrealircd.org/");
+	sendnumericfmt(sptr,
+	    RPL_INFO, "| UnrealIRCd Homepage: https://www.unrealircd.org");
+	sendnumericfmt(sptr,
+	    RPL_INFO, "============================================");
+	sendnumericfmt(sptr, RPL_INFO, "Birth Date: %s, compile # %s", creation, generation);
+	sendnumericfmt(sptr, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
+	sendnumericfmt(sptr, RPL_INFO, "ReleaseID (%s)", buildid);
 	sendnumeric(sptr, RPL_ENDOFINFO);
 }
 
@@ -351,11 +339,9 @@ CMD_FUNC(m_dalinfo)
 			sendnumeric(sptr, RPL_INFO, *text++);
 
 		sendnumeric(sptr, RPL_INFO, "");
-		sendto_one(sptr,
-		    ":%s %d %s :Birth Date: %s, compile # %s",
-		    me.name, RPL_INFO, sptr->name, creation, generation);
-		sendto_one(sptr, ":%s %d %s :On-line since %s",
-		    me.name, RPL_INFO, sptr->name, myctime(me.local->firsttime));
+		sendnumericfmt(sptr,
+		    RPL_INFO, "Birth Date: %s, compile # %s", creation, generation);
+		sendnumericfmt(sptr, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
 		sendnumeric(sptr, RPL_ENDOFINFO);
 	}
 
@@ -402,11 +388,9 @@ CMD_FUNC(m_credits)
 			sendnumeric(sptr, RPL_INFO, *text++);
 
 		sendnumeric(sptr, RPL_INFO, "");
-		sendto_one(sptr,
-		    ":%s %d %s :Birth Date: %s, compile # %s",
-		    me.name, RPL_INFO, sptr->name, creation, generation);
-		sendto_one(sptr, ":%s %d %s :On-line since %s",
-		    me.name, RPL_INFO, sptr->name, myctime(me.local->firsttime));
+		sendnumericfmt(sptr,
+		    RPL_INFO, "Birth Date: %s, compile # %s", creation, generation);
+		sendnumericfmt(sptr, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
 		sendnumeric(sptr, RPL_ENDOFINFO);
 	}
 
@@ -899,16 +883,13 @@ int short_motd(aClient *sptr)
        if (themotd->last_modified.tm_year)
        {
 	       tm = &themotd->last_modified; /* for readability */
-               sendnumeric(sptr, RPL_MOTDSTART,
-                   me.name);
-               sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d", me.name,
-                   RPL_MOTD, sptr->name, tm->tm_mday, tm->tm_mon + 1,
+               sendnumeric(sptr, RPL_MOTDSTART, me.name);
+               sendnumericfmt(sptr, RPL_MOTD, "- %d/%d/%d %d:%02d", tm->tm_mday, tm->tm_mon + 1,
                    1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
        }
        if (is_short)
        {
-               sendnumeric(sptr, RPL_MOTD,
-                       "This is the short MOTD. To view the complete MOTD type /motd");
+               sendnumeric(sptr, RPL_MOTD, "This is the short MOTD. To view the complete MOTD type /motd");
                sendnumeric(sptr, RPL_MOTD, "");
        }
 
@@ -917,8 +898,7 @@ int short_motd(aClient *sptr)
 	       motdline = themotd->lines;
        while (motdline)
        {
-               sendnumeric(sptr, RPL_MOTD,
-                   motdline->line);
+               sendnumeric(sptr, RPL_MOTD, motdline->line);
                motdline = motdline->next;
        }
        sendnumeric(sptr, RPL_ENDOFMOTD);

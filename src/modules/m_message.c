@@ -614,10 +614,8 @@ int size_string, ret;
 	if ((fl = dcc_isforbidden(sptr, realfile)))
 	{
 		char *displayfile = dcc_displayfile(realfile);
-		sendto_one(sptr,
-		    ":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
-		    me.name, RPL_TEXT,
-		    sptr->name, displayfile, target, fl->reason);
+		sendnumericfmt(sptr,
+		    RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, target, fl->reason);
 		sendnotice(sptr, "*** You have been blocked from sending files, reconnect to regain permission to send files");
 		sptr->flags |= FLAGS_DCCBLOCK;
 
@@ -630,10 +628,8 @@ int size_string, ret;
 	if (!targetcli && ((fl = dcc_isdiscouraged(sptr, realfile))))
 	{
 		char *displayfile = dcc_displayfile(realfile);
-		sendto_one(sptr,
-		    ":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
-		    me.name, RPL_TEXT,
-		    sptr->name, displayfile, target, fl->reason);
+		sendnumericfmt(sptr,
+		    RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, target, fl->reason);
 		return 0; /* block */
 	}
 	return 1; /* allowed */
@@ -686,9 +682,8 @@ int size_string;
 		if (!on_dccallow_list(to, from))
 		{
 			char *displayfile = dcc_displayfile(realfile);
-			sendto_one(from,
-				":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
-				me.name, RPL_TEXT, from->name, displayfile, to->name, fl->reason);
+			sendnumericfmt(from,
+				RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, to->name, fl->reason);
 			sendnotice(from, "User %s is currently not accepting DCC SENDs with such a filename/filetype from you. "
 				"Your file %s was not sent.", to->name, displayfile);
 			sendnotice(to, "%s (%s@%s) tried to DCC SEND you a file named '%s', the request has been blocked.",

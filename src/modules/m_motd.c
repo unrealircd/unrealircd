@@ -93,9 +93,7 @@ CMD_FUNC(m_motd)
 	/* tm_year should be zero only if the struct is zero-ed */
 	if (themotd && themotd->lines && themotd->last_modified.tm_year)
 	{
-		sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d",
-			me.name, RPL_MOTD, sptr->name,
-			themotd->last_modified.tm_mday,
+		sendnumericfmt(sptr, RPL_MOTD, "- %d/%d/%d %d:%02d", themotd->last_modified.tm_mday,
 			themotd->last_modified.tm_mon + 1,
 			themotd->last_modified.tm_year + 1900,
 			themotd->last_modified.tm_hour,

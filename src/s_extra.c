@@ -224,8 +224,7 @@ int found = 0;
 	}
 	if (!found)
 	{
-		sendto_one(sptr, ":%s %d %s :%s is not in your DCC allow list",
-			me.name, RPL_DCCINFO, sptr->name, optr->name);
+		sendnumericfmt(sptr, RPL_DCCINFO, "%s is not in your DCC allow list", optr->name);
 		return 0;
 	}
 	

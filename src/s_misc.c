@@ -1203,10 +1203,7 @@ int banned_client(aClient *acptr, char *bantype, char *reason, int global, int n
 	 */
 	if (noexit != NO_EXIT_CLIENT)
 	{
-		sendto_one(acptr,":%s %d %s :%s",
-			   me.name, ERR_YOUREBANNEDCREEP,
-			   (*acptr->name ? acptr->name : "*"),
-			   buf);
+		sendnumeric(acptr, ERR_YOUREBANNEDCREEP, buf);
 		sendnotice(acptr, "%s", buf);
 	} else {
 		send_raw_direct(acptr, ":%s %d %s :%s",

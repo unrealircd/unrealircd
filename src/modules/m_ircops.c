@@ -136,8 +136,8 @@ CMD_FUNC(m_ircops)
 		opers, opers != 1 ? "s" : "",
 		aways);
 
-	sendto_one(sptr, ":%s %d %s :%s", me.name, RPL_TEXT, sptr->name, buf);
-	sendto_one(sptr, ":%s %d %s :End of /IRCOPS list", me.name, RPL_TEXT, sptr->name);
+	sendnumericfmt(sptr, RPL_TEXT, "%s", buf);
+	sendnumericfmt(sptr, RPL_TEXT, "End of /IRCOPS list");
 
 	return 0;
 }
