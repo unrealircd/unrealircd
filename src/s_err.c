@@ -278,7 +278,7 @@ static char *replies[] = {
 /* 246 */ NULL, /* rfc2812 */
 /* 247    RPL_STATSXLINE */ "X %s %d",
 /* 248    RPL_STATSULINE */ "U %s",
-/* 249 */ NULL, /* hybrid */
+/* 249    RPL_STATSDEBUG */ ":%s",
 /* 250    RPL_STATSCONN */ ":Highest connection count: %d (%d clients)",
 /* 251    RPL_LUSERCLIENT */ ":There are %d users and %d invisible on %d servers",
 /* 252    RPL_LUSEROP */   "%d :operator(s) online",

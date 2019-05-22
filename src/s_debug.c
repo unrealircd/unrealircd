@@ -246,25 +246,23 @@ void send_usage(aClient *cptr, char *nick)
 	if (secs == 0)
 		secs = 1;
 
-	sendto_one(cptr,
-	    ":%s %d %s :CPU Secs %ld:%ld User %ld:%ld System %ld:%ld",
-	    me.name, RPL_STATSDEBUG, nick, secs / 60, secs % 60,
+	sendnumericfmt(cptr, RPL_STATSDEBUG,
+	    "CPU Secs %ld:%ld User %ld:%ld System %ld:%ld",
+	    secs / 60, secs % 60,
 	    rus.ru_utime.tv_sec / 60, rus.ru_utime.tv_sec % 60,
 	    rus.ru_stime.tv_sec / 60, rus.ru_stime.tv_sec % 60);
-	sendto_one(cptr, ":%s %d %s :RSS %ld ShMem %ld Data %ld Stack %ld",
-	    me.name, RPL_STATSDEBUG, nick, rus.ru_maxrss,
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "RSS %ld ShMem %ld Data %ld Stack %ld",
+	    rus.ru_maxrss,
 	    rus.ru_ixrss / (rup * hzz), rus.ru_idrss / (rup * hzz),
 	    rus.ru_isrss / (rup * hzz));
-	sendto_one(cptr, ":%s %d %s :Swaps %ld Reclaims %ld Faults %ld",
-	    me.name, RPL_STATSDEBUG, nick, rus.ru_nswap,
-	    rus.ru_minflt, rus.ru_majflt);
-	sendto_one(cptr, ":%s %d %s :Block in %ld out %ld",
-	    me.name, RPL_STATSDEBUG, nick, rus.ru_inblock, rus.ru_oublock);
-	sendto_one(cptr, ":%s %d %s :Msg Rcv %ld Send %ld",
-	    me.name, RPL_STATSDEBUG, nick, rus.ru_msgrcv, rus.ru_msgsnd);
-	sendto_one(cptr, ":%s %d %s :Signals %ld Context Vol. %ld Invol %ld",
-	    me.name, RPL_STATSDEBUG, nick, rus.ru_nsignals,
-	    rus.ru_nvcsw, rus.ru_nivcsw);
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "Swaps %ld Reclaims %ld Faults %ld",
+	    rus.ru_nswap, rus.ru_minflt, rus.ru_majflt);
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "Block in %ld out %ld",
+	    rus.ru_inblock, rus.ru_oublock);
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "Msg Rcv %ld Send %ld",
+	    rus.ru_msgrcv, rus.ru_msgsnd);
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "Signals %ld Context Vol. %ld Invol %ld",
+	    rus.ru_nsignals, rus.ru_nvcsw, rus.ru_nivcsw);
 #else
 # ifdef TIMES_2
 	struct tms tmsbuf;
@@ -287,15 +285,14 @@ void send_usage(aClient *cptr, char *nick)
 
 	if (times(&tmsbuf) == -1)
 	{
-		sendto_one(cptr, ":%s %d %s :times(2) error: %s.",
-		    me.name, RPL_STATSDEBUG, nick, STRERROR(ERRNO));
+		sendnumericfmt(cptr, RPL_STATSDEBUG, "times(2) error: %s.", STRERROR(ERRNO));
 		return;
 	}
 	secs = tmsbuf.tms_utime + tmsbuf.tms_stime;
 
-	sendto_one(cptr,
-	    ":%s %d %s :CPU Secs %d:%d User %d:%d System %d:%d",
-	    me.name, RPL_STATSDEBUG, nick, mins, secs, umin, usec, smin, ssec);
+	sendnumericfmt(cptr, RPL_STATSDEBUG,
+	    "CPU Secs %d:%d User %d:%d System %d:%d",
+	    mins, secs, umin, usec, smin, ssec);
 # endif
 #endif
 	return;

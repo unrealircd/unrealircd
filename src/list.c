@@ -523,37 +523,36 @@ void send_listinfo(aClient *cptr, char *name)
 {
 	int  inuse = 0, mem = 0, tmp = 0;
 
-	sendto_one(cptr, ":%s %d %s :Local: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, inuse += cloc.inuse,
-	    tmp = cloc.inuse * CLIENT_LOCAL_SIZE);
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "Local: inuse: %d(%d)",
+		inuse += cloc.inuse,
+		tmp = cloc.inuse * CLIENT_LOCAL_SIZE);
 	mem += tmp;
-	sendto_one(cptr, ":%s %d %s :Remote: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name,
-	    crem.inuse, tmp = crem.inuse * CLIENT_REMOTE_SIZE);
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "Remote: inuse: %d(%d)",
+		crem.inuse, tmp = crem.inuse * CLIENT_REMOTE_SIZE);
 	mem += tmp;
 	inuse += crem.inuse;
-	sendto_one(cptr, ":%s %d %s :Users: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, users.inuse,
-	    tmp = users.inuse * sizeof(anUser));
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "Users: inuse: %d(%d)",
+		users.inuse,
+		tmp = users.inuse * sizeof(anUser));
 	mem += tmp;
 	inuse += users.inuse,
-	    sendto_one(cptr, ":%s %d %s :Servs: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, servs.inuse,
-	    tmp = servs.inuse * sizeof(aServer));
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "Servs: inuse: %d(%d)",
+		servs.inuse,
+		tmp = servs.inuse * sizeof(aServer));
 	mem += tmp;
 	inuse += servs.inuse,
-	    sendto_one(cptr, ":%s %d %s :Links: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, links.inuse,
-	    tmp = links.inuse * sizeof(Link));
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "Links: inuse: %d(%d)",
+		links.inuse,
+		tmp = links.inuse * sizeof(Link));
 	mem += tmp;
 	inuse += links.inuse,
-	    sendto_one(cptr, ":%s %d %s :Classes: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, classs.inuse,
-	    tmp = classs.inuse * sizeof(aClass));
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "Classes: inuse: %d(%d)",
+		classs.inuse,
+		tmp = classs.inuse * sizeof(aClass));
 	mem += tmp;
 	inuse += aconfs.inuse,
-	    sendto_one(cptr, ":%s %d %s :Totals: inuse %d %d",
-	    me.name, RPL_STATSDEBUG, name, inuse, mem);
+	sendnumericfmt(cptr, RPL_STATSDEBUG, "Totals: inuse %d %d",
+		inuse, mem);
 }
 
 #endif

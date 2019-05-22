@@ -426,8 +426,7 @@ int stats_links(aClient *sptr, char *para)
 #endif
 	for (link_p = conf_link; link_p; link_p = link_p->next)
 	{
-		sendto_one(sptr, ":%s 213 %s C - * %s %i %s %s%s%s",
-			me.name, sptr->name, /* user@host no longer shown as we allow multiple and split out/in etc */
+		sendnumericfmt(sptr, RPL_STATSCLINE, "C - * %s %i %s %s%s%s",
 			link_p->servername,
 			link_p->outgoing.port,
 			link_p->class->name,
@@ -439,12 +438,10 @@ int stats_links(aClient *sptr, char *para)
 			link_p->servername, link_p, link_p->refcount);
 #endif
 		if (link_p->hub)
-			sendto_one(sptr, ":%s 244 %s H %s * %s",
-				me.name, sptr->name, link_p->hub,
-				link_p->servername);
+			sendnumericfmt(sptr, RPL_STATSHLINE, "H %s * %s",
+				link_p->hub, link_p->servername);
 		else if (link_p->leaf)
-			sendto_one(sptr, ":%s 241 %s L %s * %s %d",
-				me.name, sptr->name,
+			sendnumericfmt(sptr, RPL_STATSLLINE, "L %s * %s %d",
 				link_p->leaf, link_p->servername, link_p->leaf_depth);
 		// TODO: send incoming allow list? (for opers only)
 	}
@@ -657,32 +654,21 @@ int stats_traffic(aClient *sptr, char *para)
 			sp->is_ni++;
 	}
 
-	sendto_one(sptr, ":%s %d %s :accepts %u refused %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_ac, sp->is_ref);
-	sendto_one(sptr, ":%s %d %s :unknown commands %u prefixes %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_unco, sp->is_unpf);
-	sendto_one(sptr, ":%s %d %s :nick collisions %u unknown closes %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_kill, sp->is_ni);
-	sendto_one(sptr, ":%s %d %s :wrong direction %u empty %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_wrdi, sp->is_empt);
-	sendto_one(sptr, ":%s %d %s :numerics seen %u mode fakes %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_num, sp->is_fake);
-	sendto_one(sptr, ":%s %d %s :auth successes %u fails %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_asuc, sp->is_abad);
-	sendto_one(sptr, ":%s %d %s :local connections %u udp packets %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_loc, sp->is_udp);
-	sendto_one(sptr, ":%s %d %s :Client Server",
-	    me.name, RPL_STATSDEBUG, sptr->name);
-	sendto_one(sptr, ":%s %d %s :connected %u %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_cl, sp->is_sv);
-	sendto_one(sptr, ":%s %d %s :bytes sent %ld.%huK %ld.%huK",
-	    me.name, RPL_STATSDEBUG, sptr->name,
-	    sp->is_cks, sp->is_cbs, sp->is_sks, sp->is_sbs);
-	sendto_one(sptr, ":%s %d %s :bytes recv %ld.%huK %ld.%huK",
-	    me.name, RPL_STATSDEBUG, sptr->name,
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "accepts %u refused %u", sp->is_ac, sp->is_ref);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "unknown commands %u prefixes %u", sp->is_unco, sp->is_unpf);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "nick collisions %u unknown closes %u", sp->is_kill, sp->is_ni);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "wrong direction %u empty %u", sp->is_wrdi, sp->is_empt);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "numerics seen %u mode fakes %u", sp->is_num, sp->is_fake);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "auth successes %u fails %u", sp->is_asuc, sp->is_abad);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "local connections %u udp packets %u", sp->is_loc, sp->is_udp);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Client Server");
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "connected %u %u", sp->is_cl, sp->is_sv);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "bytes sent %ld.%huK %ld.%huK",
+		sp->is_cks, sp->is_cbs, sp->is_sks, sp->is_sbs);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "bytes recv %ld.%huK %ld.%huK",
 	    sp->is_ckr, sp->is_cbr, sp->is_skr, sp->is_sbr);
-	sendto_one(sptr, ":%s %d %s :time connected %ld %ld",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_cti, sp->is_sti);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "time connected %ld %ld",
+	    sp->is_cti, sp->is_sti);
 
 	return 0;
 }
@@ -698,9 +684,8 @@ int stats_fdtable(aClient *sptr, char *para)
 		if (!fde->is_open)
 			continue;
 
-		sendto_one(sptr,
-			":%s %d %s :fd %3d, desc '%s', read-hdl %p, write-hdl %p, cbdata %p",
-			me.name, RPL_STATSDEBUG, sptr->name,
+		sendnumericfmt(sptr, RPL_STATSDEBUG,
+			"fd %3d, desc '%s', read-hdl %p, write-hdl %p, cbdata %p",
 			fde->fd, fde->desc, fde->read_callback, fde->write_callback, fde->data);
 	}
 
@@ -846,56 +831,53 @@ int stats_mem(aClient *sptr, char *para)
 		}
 	}
 
-	sendto_one(sptr, ":%s %d %s :Client Local %d(%ld) Remote %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, lc, lcm, rc, rcm);
-	sendto_one(sptr, ":%s %d %s :Users %d(%ld) Invites %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, us, (long)(us * sizeof(anUser)),
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Client Local %d(%ld) Remote %d(%ld)",
+	    lc, lcm, rc, rcm);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Users %d(%ld) Invites %d(%ld)",
+	    us, (long)(us * sizeof(anUser)),
 	    usi, (long)(usi * sizeof(Link)));
-	sendto_one(sptr, ":%s %d %s :User channels %d(%ld) Aways %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, usc, (long)(usc * sizeof(Link)), aw, awm);
-	sendto_one(sptr, ":%s %d %s :WATCH headers %d(%ld) entries %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, wlh, wlhm, wle, (long)(wle * sizeof(Link)));
-	sendto_one(sptr, ":%s %d %s :Attached confs %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, lcc, (long)(lcc * sizeof(Link)));
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "User channels %d(%ld) Aways %d(%ld)",
+	    usc, (long)(usc * sizeof(Link)), aw, awm);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "WATCH headers %d(%ld) entries %d(%ld)",
+	    wlh, wlhm, wle, (long)(wle * sizeof(Link)));
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Attached confs %d(%ld)",
+	    lcc, (long)(lcc * sizeof(Link)));
 
 	totcl = lcm + rcm + us * sizeof(anUser) + usc * sizeof(Link) + awm;
 	totcl += lcc * sizeof(Link) + usi * sizeof(Link) + wlhm;
 	totcl += wle * sizeof(Link);
 
-	sendto_one(sptr, ":%s %d %s :Conflines %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, co, com);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Conflines %d(%ld)", co, com);
 
-	sendto_one(sptr, ":%s %d %s :Classes %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, StatsZ.classes, StatsZ.classesmem);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Classes %d(%ld)",
+		StatsZ.classes, StatsZ.classesmem);
 
-	sendto_one(sptr, ":%s %d %s :Channels %d(%ld) Bans %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, ch, chm, chb, chbm);
-	sendto_one(sptr, ":%s %d %s :Channel members %d(%ld) invite %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, chu, (long)(chu * sizeof(Link)),
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Channels %d(%ld) Bans %d(%ld)",
+	    ch, chm, chb, chbm);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Channel members %d(%ld) invite %d(%ld)",
+	    chu, (long)(chu * sizeof(Link)),
 	    chi, (long)(chi * sizeof(Link)));
 
 	totch = chm + chbm + chu * sizeof(Link) + chi * sizeof(Link);
 
-	sendto_one(sptr, ":%s %d %s :Whowas users %d(%ld) away %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, 
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Whowas users %d(%ld) away %d(%ld)",
 	    wwu, (long)(wwu * sizeof(anUser)),
 	    wwa, wwam);
-	sendto_one(sptr, ":%s %d %s :Whowas array %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, NICKNAMEHISTORYLENGTH, wwm);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Whowas array %d(%ld)",
+	    NICKNAMEHISTORYLENGTH, wwm);
 
 	totww = wwu * sizeof(anUser) + wwam + wwm;
 
-	sendto_one(sptr,
-	    ":%s %d %s :Hash: client %d(%ld) chan %d(%ld) watch %d(%ld)", me.name,
-	    RPL_STATSDEBUG, sptr->name, U_MAX,
+	sendnumericfmt(sptr, RPL_STATSDEBUG,
+	    "Hash: client %d(%ld) chan %d(%ld) watch %d(%ld)",
+	    U_MAX,
 	    (long)(sizeof(aHashEntry) * U_MAX), CH_MAX,
 	    (long)(sizeof(aHashEntry) * CH_MAX), WATCHHASHSIZE,
 	    (long)(sizeof(aWatch *) * WATCHHASHSIZE));
 
 	for (link = freelink; link; link = link->next)
 		fl++;
-	sendto_one(sptr, ":%s %d %s :Link blocks free %d(%ld) total %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name,
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Link blocks free %d(%ld) total %d(%ld)",
 	    fl, (long)(fl * sizeof(Link)),
 	    flinks, (long)(flinks * sizeof(Link)));
 
@@ -908,22 +890,21 @@ int stats_mem(aClient *sptr, char *para)
 	tot += sizeof(aHashEntry) * CH_MAX;
 	tot += sizeof(aWatch *) * WATCHHASHSIZE;
 
-	sendto_one(sptr, ":%s %d %s :Total: ww %ld ch %ld cl %ld co %ld db %ld",
-	    me.name, RPL_STATSDEBUG, sptr->name, totww, totch, totcl, com, db);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "Total: ww %ld ch %ld cl %ld co %ld db %ld",
+	    totww, totch, totcl, com, db);
 #if !defined(_WIN32) && !defined(_AMIGA)
 #ifdef __alpha
-	sendto_one(sptr, ":%s %d %s :TOTAL: %d sbrk(0)-etext: %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, tot,
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "TOTAL: %d sbrk(0)-etext: %u",
+	    tot,
 	    (u_int)sbrk((size_t)0) - (u_int)sbrk0);
 #else
-	sendto_one(sptr, ":%s %d %s :TOTAL: %ld sbrk(0)-etext: %lu",
-	    me.name, RPL_STATSDEBUG, sptr->name, tot,
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "TOTAL: %ld sbrk(0)-etext: %lu",
+	    tot,
 	    (u_long)sbrk((size_t)0) - (u_long)sbrk0);
 
 #endif
 #else
-	sendto_one(sptr, ":%s %d %s :TOTAL: %lu",
-	    me.name, RPL_STATSDEBUG, sptr->name, tot);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "TOTAL: %lu", tot);
 #endif
 	return 0;
 }
@@ -1283,13 +1264,11 @@ int stats_linkinfoall(aClient *sptr, char *para)
 int stats_linkinfoint(aClient *sptr, char *para, int all)
 {
 #ifndef DEBUGMODE
-	static char Sformat[] =
-	    ":%s %d %s SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle";
-	static char Lformat[] = ":%s %d %s %s%s %u %u %u %u %u %u :%u";
+	static char Sformat[] = "SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle";
+	static char Lformat[] = "%s%s %u %u %u %u %u %u :%u";
 #else
-	static char Sformat[] =
-	    ":%s %d %s SendQ SendM SendBytes RcveM RcveBytes Open_since CPU :Idle";
-	static char Lformat[] = ":%s %d %s %s%s %u %u %u %u %u %u %s";
+	static char Sformat[] = "SendQ SendM SendBytes RcveM RcveBytes Open_since CPU :Idle";
+	static char Lformat[] = "%s%s %u %u %u %u %u %u %s";
 	char pbuf[96];		/* Should be enough for to ints */
 #endif
 	int remote = 0;
@@ -1315,7 +1294,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 	}
 	else
 		para = me.name;
-	sendto_one(sptr, Sformat, me.name, RPL_STATSLINKINFO, sptr->name);
+	sendnumericfmt(sptr, RPL_STATSLINKINFO, "%s", Sformat);
 	if (!MyClient(sptr))
 	{
 		remote = 1;
@@ -1344,8 +1323,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 #endif
 		if (ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL))
 		{
-			sendto_one(sptr, Lformat, me.name,
-				RPL_STATSLINKINFO, sptr->name, 
+			sendnumericfmt(sptr, RPL_STATSLINKINFO, Lformat,
 				all ?
 				(get_client_name2(acptr, showports)) :
 				(get_client_name(acptr, FALSE)),
@@ -1363,8 +1341,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 #endif
 		}
 		else if (!strchr(acptr->name, '.'))
-			sendto_one(sptr, Lformat, me.name,
-				RPL_STATSLINKINFO, sptr->name,
+			sendnumericfmt(sptr, RPL_STATSLINKINFO, Lformat,
 				IsHidden(acptr) ? acptr->name :
 				all ?	/* Potvin - PreZ */
 				get_client_name2(acptr, showports) :

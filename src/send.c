@@ -1397,6 +1397,19 @@ void sendnumeric(aClient *to, int numeric, ...)
 	va_end(vl);
 }
 
+/** Send numeric to IRC client */
+void sendnumericfmt(aClient *to, int numeric, char *pattern, ...)
+{
+	va_list vl;
+	char realpattern[512];
+
+	snprintf(realpattern, sizeof(realpattern), ":%s %.3d %s %s", me.name, numeric, to->name[0] ? to->name : "*", pattern);
+
+	va_start(vl, pattern);
+	vsendto_one(to, realpattern, vl);
+	va_end(vl);
+}
+
 /** Send raw data directly to socket, bypassing everything.
  * Looks like an interesting function to call? NO! STOP!
  * Don't use this function. It may only be used by the initial
