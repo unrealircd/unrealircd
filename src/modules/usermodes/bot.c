@@ -21,8 +21,6 @@
 
 #define IsBot(cptr)    (cptr->umodes & UMODE_BOT)
 
-#define WHOIS_BOT_STRING ":%s 335 %s %s :is a \2Bot\2 on %s"
-
 /* Module header */
 ModuleHeader MOD_HEADER(bot)
   = {
@@ -71,7 +69,7 @@ MOD_UNLOAD(bot)
 int bot_whois(aClient *sptr, aClient *acptr)
 {
 	if (IsBot(acptr))
-		sendto_one(sptr, WHOIS_BOT_STRING, me.name, sptr->name, acptr->name, ircnetwork);
+		sendnumeric(sptr, RPL_WHOISBOT, acptr->name, ircnetwork);
 
 	return 0;
 }

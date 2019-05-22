@@ -1011,10 +1011,7 @@ CMD_FUNC(m_nick)
 				}
 				if (CHECK_TARGET_NICK_BANS && !is_skochanop(sptr, mp->chptr) && is_banned_with_nick(sptr, mp->chptr, BANCHK_NICK, nick))
 				{
-					sendto_one(sptr,
-					    ":%s 437 %s %s :Cannot change to a nickname banned on channel",
-					    me.name, sptr->name,
-					    mp->chptr->chname);
+					sendnumeric(sptr, ERR_BANNICKCHANGE, mp->chptr->chname);
 					return 0;
 				}
 

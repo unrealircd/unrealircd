@@ -60,6 +60,7 @@
 #define ERR_NOTEXTTOSEND     412
 #define ERR_NOTOPLEVEL       413
 #define ERR_WILDTOPLEVEL     414
+#define ERR_TOOMANYMATCHES   416
 
 #define ERR_UNKNOWNCOMMAND   421
 #define	ERR_NOMOTD           422
@@ -315,6 +316,7 @@
 #define RPL_SILELIST         271
 #define RPL_ENDOFSILELIST    272
 #define RPL_STATSDLINE       275
+#define RPL_WHOISCERTFP      276
 
 #define RPL_HELPHDR	     290
 #define RPL_HELPOP	     291

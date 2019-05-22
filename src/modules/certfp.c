@@ -135,7 +135,7 @@ int certfp_whois(aClient *sptr, aClient *acptr)
 	char *fp = moddata_client_get(acptr, "certfp");
 	
 	if (fp)
-		sendto_one(sptr, WHOISCERTFP_STRING, me.name, sptr->name, acptr->name, fp);
+		sendnumeric(sptr, RPL_WHOISCERTFP, acptr->name, fp);
 	return 0;
 }
 

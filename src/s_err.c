@@ -305,7 +305,7 @@ static char *replies[] = {
 /* 273 */ NULL, /* aircd */
 /* 274 */ NULL, /* ircnet */
 /* 275    RPL_STATSDLINE */ "%c %s %s",
-/* 276 */ NULL, /* hybrid */
+/* 276    RPL_WHOISCERTFP */ "%s :has client certificate fingerprint %s",
 /* 277 */ NULL, /* hybrid */
 /* 278 */ NULL, /* hybrid */
 /* 279 */ NULL,
@@ -456,7 +456,7 @@ static char *replies[] = {
 /* 413    ERR_NOTOPLEVEL */ "%s :No toplevel domain specified",
 /* 414    ERR_WILDTOPLEVEL */ "%s :Wildcard in toplevel Domain",
 /* 415 */ NULL, /* rfc2812 */
-/* 416 */ NULL, /* ircnet, ircu */
+/* 416    ERR_TOOMANYMATCHES */ "%s :%s",
 /* 417 */ NULL,
 /* 418 */ NULL,
 /* 419 */ NULL, /* aircd */

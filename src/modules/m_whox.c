@@ -554,7 +554,7 @@ static void who_global(aClient *sptr, char *mask, int operspy, struct who_format
 	}
 
 	if (maxmatches <= 0)
-		sendto_one(sptr, ":%s 416 %s %s :output too large, truncated", me.name, sptr->name, "WHO"); /* ERR_TOOMANYMATCHES */
+		sendnumeric(sptr, ERR_TOOMANYMATCHES, "WHO", "output too large, truncated");
 }
 
 /*
