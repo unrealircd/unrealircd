@@ -42,7 +42,11 @@ ModuleHeader MOD_HEADER(m_who)
 /* This is called on module init, before Server Ready */
 MOD_INIT(m_who)
 {
-	CommandAdd(modinfo->handle, MSG_WHO, m_who, MAXPARA, M_USER);
+	if (!CommandAdd(modinfo->handle, MSG_WHO, m_who, MAXPARA, M_USER))
+	{
+		config_warn("You cannot load both the m_whox and m_who module. You should ONLY load the m_whox module.");
+		return MOD_FAILED;
+	}
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
