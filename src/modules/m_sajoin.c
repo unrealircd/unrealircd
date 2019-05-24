@@ -94,8 +94,7 @@ CMD_FUNC(m_sajoin)
 		*jbuf = 0;
 
 		/* Now works like m_join */
-		for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p,
-		     NULL, ","))
+		for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
 		{
 			aChannel *chptr;
 			Membership *lp;
@@ -149,6 +148,7 @@ CMD_FUNC(m_sajoin)
 		*jbuf = 0;
 		for (name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
 		{
+			MessageTag *mtags = NULL;
 			int flags;
 			aChannel *chptr;
 			Membership *lp;
@@ -157,22 +157,24 @@ CMD_FUNC(m_sajoin)
 
 			if (*name == '0' && !atoi(name))
 			{
+				/* Rewritten so to generate a PART for each channel to servers,
+				 * so the same msgid is used for each part on all servers. -- Syzop
+				 */
 				did_anything = 1;
-				// FIXME: SAJOIN and mtags, handle in the same way as m_join
 				while ((lp = acptr->user->channel))
 				{
+					MessageTag *mtags = NULL;
 					chptr = lp->chptr;
+
+					new_message(acptr, NULL, &mtags);
 					sendto_channel(chptr, acptr, NULL, 0, 0, SEND_LOCAL, NULL,
 					               ":%s PART %s :%s",
 					               acptr->name, chptr->chname, "Left all channels");
+					sendto_server(cptr, 0, 0, mtags, ":%s PART %s :Left all channels", acptr->name, chptr->chname);
 					if (MyConnect(acptr))
-					{
-						RunHook4(HOOKTYPE_LOCAL_PART, acptr, acptr, chptr,
-							 "Left all channels");
-					}
+						RunHook4(HOOKTYPE_LOCAL_PART, acptr, acptr, chptr, "Left all channels");
 					remove_user_from_channel(acptr, chptr);
 				}
-				sendto_server(acptr, 0, 0, NULL, ":%s JOIN 0", acptr->name);
 				strcpy(jbuf, "0");
 				continue;
 			}
@@ -192,7 +194,14 @@ CMD_FUNC(m_sajoin)
 			if (i == HOOK_DENY)
 				continue; /* process next channel */
 
-			join_channel(chptr, acptr, acptr, flags);
+			/* Generate a new message without inheritance.
+			 * We can do this because we are the server that
+			 * will send a JOIN for each channel due to this loop.
+			 * Each with their own unique msgid.
+			 */
+			new_message(acptr, NULL, &mtags);
+			join_channel(chptr, acptr, acptr, mtags, flags);
+			free_mtags(mtags);
 			did_anything = 1;
 			if (*jbuf)
 				strlcat(jbuf, ",", sizeof jbuf);

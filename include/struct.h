@@ -199,11 +199,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SWHOISLEN	256
 #define UMODETABLESZ (sizeof(long) * 8)
 #define MAXCCUSERS		20 /* Maximum for set::anti-flood::target-limit::max-concurrent-conversations */
-/** The length of a 'msgid' tag. 22 alphanumeric characters provide
- * slightly more than 128 bits of randomness (62^22 > 2^128).
- * See mtag_generate_msgid() in s_misc.c for more information.
- */
-#define MSGIDLEN	22
 /*
  * Watch it - Don't change this unless you also change the ERR_TOOMANYWATCH
  * and PROTOCOL_SUPPORTED settings.

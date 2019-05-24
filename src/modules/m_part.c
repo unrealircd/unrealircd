@@ -155,7 +155,7 @@ CMD_FUNC(m_part)
 		}
 
 		/* Create a new message, this one is actually used by 8 calls (though at most 4 max) */
-		new_message(sptr, NULL, &mtags);
+		new_message_special(sptr, recv_mtags, &mtags, ":%s PART %s", sptr->name, chptr->chname);
 
 		/* Send to other servers... */
 		sendto_server(cptr, PROTO_SID, 0, mtags, ":%s PART %s :%s",

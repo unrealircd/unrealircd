@@ -82,7 +82,7 @@ typedef struct {
 
 /* Efuncs */
 int (*do_join)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
+void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int flags);
 int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
 void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
@@ -134,7 +134,7 @@ void (*broadcast_moddata_client)(aClient *acptr);
 int (*match_user)(char *rmask, aClient *acptr, int options);
 void (*userhost_changed)(aClient *sptr);
 void (*userhost_save_current)(aClient *sptr);
-void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr);
+void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr, MessageTag *mtags);
 int (*do_nick_name)(char *nick);
 int (*do_remote_nick_name)(char *nick);
 char *(*charsys_get_current_languages)(void);

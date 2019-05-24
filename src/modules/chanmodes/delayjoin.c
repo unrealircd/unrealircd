@@ -326,16 +326,19 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 						continue;
 					if (moded_user_invisible(i->cptr,chptr))
 					{
+						MessageTag *mtags = NULL;
+						new_message(i->cptr, NULL, &mtags);
 						if (HasCapabilityFast(user, CAP_EXTENDED_JOIN))
 						{
-							sendto_one(user,NULL, ":%s!%s@%s JOIN %s %s :%s",
+							sendto_one(user, mtags, ":%s!%s@%s JOIN %s %s :%s",
 							           i->cptr->name, i->cptr->user->username, GetHost(i->cptr),
 							           chptr->chname,
 							           !isdigit(*i->cptr->user->svid) ? i->cptr->user->svid : "*",
 							           i->cptr->info);
 						} else {
-							sendto_one(user,NULL, ":%s!%s@%s JOIN :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
+							sendto_one(user, mtags, ":%s!%s@%s JOIN :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
 						}
+						free_mtags(mtags);
 					}
 				}
 
@@ -359,7 +362,12 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 					if (i->cptr == user)
 						continue;
 					if (moded_user_invisible(i->cptr,chptr))
-						sendto_one(user,NULL, ":%s!%s@%s PART :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
+					{
+						MessageTag *mtags = NULL;
+						new_message(i->cptr, NULL, &mtags);
+						sendto_one(user, mtags, ":%s!%s@%s PART :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
+						free_mtags(mtags);
+					}
 				}
 
 			}

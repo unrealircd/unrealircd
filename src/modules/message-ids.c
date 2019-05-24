@@ -31,11 +31,19 @@ ModuleHeader MOD_HEADER(message-ids)
 	NULL 
 	};
 
+/** The length of a standard 'msgid' tag (note that special
+ * msgid tags will be longer).
+ * The 22 alphanumeric characters provide slightly more
+ * than 128 bits of randomness (62^22 > 2^128).
+ * See mtag_add_or_inherit_msgid() for more information.
+ */
+#define MSGIDLEN	22
+
 /* Variables */
 long CAP_ACCOUNT_TAG = 0L;
 
 int msgid_mtag_is_ok(aClient *acptr, char *name, char *value);
-void mtag_add_or_inherit_msgid(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list);
+void mtag_add_or_inherit_msgid(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 
 MOD_INIT(message-ids)
 {
@@ -105,12 +113,46 @@ MessageTag *mtag_generate_msgid(void)
 }
 
 
-void mtag_add_or_inherit_msgid(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list)
+void mtag_add_or_inherit_msgid(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
 {
 	MessageTag *m = find_mtag(recv_mtags, "msgid");
 	if (m)
 		m = duplicate_mtag(m);
 	else
 		m = mtag_generate_msgid();
+
+	if (signature && !strchr(m->value, '-'))
+	{
+		/* Special case:
+		 * Some commands will receive a single msgid from
+		 * a remote server for multiple events.
+		 * Take for example SJOIN which may contain 5 joins,
+		 * 3 bans setting, 2 invites, and setting a few modes.
+		 * This way we can still generate unique msgid's
+		 * for such sub-events. It is a hash of the subevent
+		 * concatenated to the existing msgid.
+		 * The hash is the first half of a SHA256 hash, then
+		 * base64'd, and with the == suffix removed.
+		 *
+		 * The !strchr(m->value, '-') in the if above
+		 * ensures that we never do more stacking,
+		 * although theoretically that could be necessary,
+		 * in which case we should reconsider.
+		 * For now this fixes some PART issue.
+		 */
+		SHA256_CTX hash;
+		char binaryhash[SHA256_DIGEST_LENGTH];
+		char b64hash[SHA256_DIGEST_LENGTH*2+1];
+		char newbuf[256];
+		memset(&binaryhash, 0, sizeof(binaryhash));
+		memset(&b64hash, 0, sizeof(b64hash));
+		SHA256_Init(&hash);
+		SHA256_Update(&hash, signature, strlen(signature));
+		SHA256_Final(binaryhash, &hash);
+		b64_encode(binaryhash, sizeof(binaryhash)/2, b64hash, sizeof(b64hash));
+		b64hash[22] = '\0'; /* cut off at '=' */
+		snprintf(newbuf, sizeof(newbuf), "%s-%s", m->value, b64hash);
+		safestrdup(m->value, newbuf);
+	}
 	AddListItem(m, *mtag_list);
 }

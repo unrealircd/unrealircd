@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(server-time)
 long CAP_SERVER_TIME = 0L;
 
 int server_time_mtag_is_ok(aClient *acptr, char *name, char *value);
-void mtag_add_or_inherit_time(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list);
+void mtag_add_or_inherit_time(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 
 MOD_INIT(server-time)
 {
@@ -83,7 +83,7 @@ int server_time_mtag_is_ok(aClient *acptr, char *name, char *value)
 	return 0;
 }
 
-void mtag_add_or_inherit_time(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list)
+void mtag_add_or_inherit_time(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
 {
 	MessageTag *m = find_mtag(recv_mtags, "time");
 	if (m)

@@ -37,7 +37,7 @@
 #endif
 #include <string.h>
 
-void vsendto_one(aClient *to, const char *pattern, va_list vl);
+void vsendto_one(aClient *to, MessageTag *mtags, const char *pattern, va_list vl);
 void sendbufto_one(aClient *to, char *msg, unsigned int quick);
 static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *from, const char *pattern, va_list vl);
 
@@ -47,6 +47,7 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *fr
 #define NEWLINE	"\r\n"
 
 static char sendbuf[2048];
+static char sendbuf2[4096];
 static char tcmd[2048];
 static char ccmd[2048];
 static char xcmd[2048];
@@ -173,14 +174,25 @@ void sendto_one(aClient *to, MessageTag *mtags, char *pattern, ...)
 {
 	va_list vl;
 	va_start(vl, pattern);
-	vsendto_one(to, pattern, vl);
+	vsendto_one(to, mtags, pattern, vl);
 	va_end(vl);
 }
 
-void vsendto_one(aClient *to, const char *pattern, va_list vl)
+void vsendto_one(aClient *to, MessageTag *mtags, const char *pattern, va_list vl)
 {
+	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
+
 	ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);
-	sendbufto_one(to, sendbuf, 0);
+
+	if (BadPtr(mtags_str))
+	{
+		/* Simple message without message tags */
+		sendbufto_one(to, sendbuf, 0);
+	} else {
+		/* Message tags need to be prepended */
+		snprintf(sendbuf2, sizeof(sendbuf2), "@%s %s", mtags_str, sendbuf);
+		sendbufto_one(to, sendbuf2, 0);
+	}
 }
 
 
@@ -453,8 +465,6 @@ void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps, Messa
 {
 	aClient *cptr;
 
-	// FIXME: TODO: do something with the mtags :D :D
-
 	/* noone to send to.. */
 	if (list_empty(&server_list))
 		return;
@@ -473,7 +483,7 @@ void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps, Messa
 			continue;
 
 		va_start(vl, format);
-		vsendto_one(cptr, format, vl);
+		vsendto_one(cptr, mtags, format, vl);
 		va_end(vl);
 	}
 }
@@ -626,7 +636,7 @@ void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
 			continue;
 
 		va_start(vl, format);
-		vsendto_one(cptr, format, vl);
+		vsendto_one(cptr, NULL, format, vl);
 		va_end(vl);
 	}
 }
@@ -721,7 +731,7 @@ void sendto_ops(char *pattern, ...)
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
+			vsendto_one(cptr, NULL, nbuf, vl);
 			va_end(vl);
 		}
 }
@@ -745,7 +755,7 @@ void sendto_umode(int umodes, char *pattern, ...)
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
+			vsendto_one(cptr, NULL, nbuf, vl);
 			va_end(vl);
 		}
 }
@@ -785,14 +795,14 @@ void sendto_umode_global(int umodes, char *pattern, ...)
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
+			vsendto_one(cptr, NULL, nbuf, vl);
 			va_end(vl);
 		} else
 		if (IsServer(cptr) && *modestr)
 		{
 			snprintf(nbuf, sizeof(nbuf), ":%s SENDUMODE %s :%s", me.name, modestr, pattern);
 			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
+			vsendto_one(cptr, NULL, nbuf, vl);
 			va_end(vl);
 		}
 	}
@@ -813,7 +823,7 @@ void sendto_umode_raw(int umodes, char *pattern, ...)
 		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
 		{
 			va_start(vl, pattern);
-			vsendto_one(cptr, pattern, vl);
+			vsendto_one(cptr, NULL, pattern, vl);
 			va_end(vl);
 		}
 }
@@ -985,7 +995,7 @@ void sendto_opers(char *pattern, ...)
 		(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 		va_start(vl, pattern);
-		vsendto_one(cptr, nbuf, vl);
+		vsendto_one(cptr, NULL, nbuf, vl);
 		va_end(vl);
 	}
 }
@@ -1131,8 +1141,7 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *fr
 void vsendto_prefix_one(struct Client *to, struct Client *from, MessageTag *mtags,
                         const char *pattern, va_list vl)
 {
-	char *mtags_str = mtags_to_string(mtags, to);
-	static char sendbuf2[4096];
+	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
 
 	if (to && from && MyClient(to) && from->user)
 		vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, from, pattern, vl);
@@ -1186,7 +1195,7 @@ void sendto_realops(char *pattern, ...)
 		(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 		va_start(vl, pattern);
-		vsendto_one(cptr, nbuf, vl);
+		vsendto_one(cptr, NULL, nbuf, vl);
 		va_end(vl);
 	}
 }
@@ -1368,7 +1377,7 @@ char *name = *to->name ? to->name : "*";
 	ircsnprintf(realpattern, sizeof(realpattern), ":%s NOTICE %s :%s", me.name, name, pattern);
 
 	va_start(vl, pattern);
-	vsendto_one(to, realpattern, vl);
+	vsendto_one(to, NULL, realpattern, vl);
 	va_end(vl);
 }
 
@@ -1380,7 +1389,7 @@ va_list vl;
 	ircsnprintf(realpattern, sizeof(realpattern), ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
 
 	va_start(vl, pattern);
-	vsendto_one(to, realpattern, vl);
+	vsendto_one(to, NULL, realpattern, vl);
 	va_end(vl);
 }
 
@@ -1393,7 +1402,7 @@ void sendnumeric(aClient *to, int numeric, ...)
 	snprintf(pattern, sizeof(pattern), ":%s %.3d %s %s", me.name, numeric, to->name[0] ? to->name : "*", rpl_str(numeric));
 
 	va_start(vl, numeric);
-	vsendto_one(to, pattern, vl);
+	vsendto_one(to, NULL, pattern, vl);
 	va_end(vl);
 }
 
@@ -1406,7 +1415,7 @@ void sendnumericfmt(aClient *to, int numeric, char *pattern, ...)
 	snprintf(realpattern, sizeof(realpattern), ":%s %.3d %s %s", me.name, numeric, to->name[0] ? to->name : "*", pattern);
 
 	va_start(vl, pattern);
-	vsendto_one(to, realpattern, vl);
+	vsendto_one(to, NULL, realpattern, vl);
 	va_end(vl);
 }
 

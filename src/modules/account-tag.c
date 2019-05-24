@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(account-tag)
 long CAP_ACCOUNT_TAG = 0L;
 
 int account_tag_mtag_is_ok(aClient *acptr, char *name, char *value);
-void mtag_add_or_inherit_account(aClient *acptr, MessageTag *recv_mtags, MessageTag **mtag_list);
+void mtag_add_or_inherit_account(aClient *acptr, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 
 MOD_INIT(account-tag)
 {
@@ -83,7 +83,7 @@ int account_tag_mtag_is_ok(aClient *acptr, char *name, char *value)
 	return 0;
 }
 
-void mtag_add_or_inherit_account(aClient *acptr, MessageTag *recv_mtags, MessageTag **mtag_list)
+void mtag_add_or_inherit_account(aClient *acptr, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
 {
 	MessageTag *m = find_mtag(recv_mtags, "account");
 	if (m)

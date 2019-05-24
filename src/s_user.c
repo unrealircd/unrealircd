@@ -277,11 +277,11 @@ int hunt_server(aClient *cptr, aClient *sptr, MessageTag *mtags, char *command, 
 		/* Update the format string */
 		snprintf(newcommand, sizeof(newcommand), "@%%s %s", command);
 		/* And do the sendto_one() */
-		sendto_one(acptr, NULL, newcommand, str, sptr->name,
+		sendto_one(acptr, mtags, newcommand, str, sptr->name,
 		    parv[1], parv[2], parv[3], parv[4],
 		    parv[5], parv[6], parv[7], parv[8]);
 	} else {
-		sendto_one(acptr, NULL, command, sptr->name,
+		sendto_one(acptr, mtags, command, sptr->name,
 		    parv[1], parv[2], parv[3], parv[4],
 		    parv[5], parv[6], parv[7], parv[8]);
 	}

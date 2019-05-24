@@ -978,7 +978,7 @@ int hooktype_find_tkline_match(aClient *sptr, aTKline *tk);
 int hooktype_welcome(aClient *sptr, int after_numeric);
 int hooktype_pre_command(aClient *from, MessageTag *mtags, char *buf);
 int hooktype_post_command(aClient *from, MessageTag *mtags, char *buf);
-void hooktype_new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list);
+void hooktype_new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))

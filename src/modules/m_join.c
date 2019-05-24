@@ -24,12 +24,12 @@
 
 /* Forward declarations */
 CMD_FUNC(m_join);
-void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
+void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int flags);
 int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 void _userhost_save_current(aClient *sptr);
 void _userhost_changed(aClient *sptr);
-void _send_join_to_local_users(aClient *sptr, aChannel *chptr);
+void _send_join_to_local_users(aClient *sptr, aChannel *chptr, MessageTag *mtags);
 
 /* Externs */
 extern MODVAR int spamf_ugly_vchanoverride;
@@ -159,18 +159,26 @@ int i=0,j=0;
 ** m_join
 **	parv[1] = channel
 **	parv[2] = channel password (key)
+**
+** Due to message tags, remote servers should only send 1 channel
+** per JOIN. Or even better, use SJOIN instead.
+** Otherwise we cannot use unique msgid's and such.
+** UnrealIRCd 4 and probably UnrealIRCd 3.2.something already do
+** this, so this comment is mostly for services coders, I guess.
 */
 CMD_FUNC(m_join)
 {
-int r;
+	int r;
 
 	if (bouncedtimes)
 		sendto_realops("m_join: bouncedtimes=%d??? [please report at https://bugs.unrealircd.org/]", bouncedtimes);
+
 	bouncedtimes = 0;
 	if (IsServer(sptr))
 		return 0;
 	r = do_join(cptr, sptr, parc, parv);
 	bouncedtimes = 0;
+
 	return r;
 }
 
@@ -178,7 +186,7 @@ int r;
  * Taking into account that not everyone in chptr should see the JOIN (mode +D)
  * and taking into account the different types of JOIN (due to CAP extended-join).
  */
-void _send_join_to_local_users(aClient *sptr, aChannel *chptr)
+void _send_join_to_local_users(aClient *sptr, aChannel *chptr, MessageTag *mtags)
 {
 	int chanops_only = invisible_user_in_channel(sptr, chptr);
 	Member *lp;
@@ -207,14 +215,17 @@ void _send_join_to_local_users(aClient *sptr, aChannel *chptr)
 			continue; /* skip non-ops if requested to (used for mode +D), but always send to 'sptr' */
 
 		if (HasCapabilityFast(acptr, CAP_EXTENDED_JOIN))
-			sendbufto_one(acptr, exjoinbuf, 0);
+			sendto_one(acptr, mtags, "%s", exjoinbuf);
 		else
-			sendbufto_one(acptr, joinbuf, 0);
+			sendto_one(acptr, mtags, "%s", joinbuf);
 
 		if (sptr->user->away && HasCapabilityFast(acptr, CAP_AWAY_NOTIFY))
 		{
-			sendto_one(acptr, NULL, ":%s!%s@%s AWAY :%s",
+			MessageTag *mtags_away = NULL;
+			new_message(sptr, NULL, &mtags_away);
+			sendto_one(acptr, mtags_away, ":%s!%s@%s AWAY :%s",
 			           sptr->name, sptr->user->username, GetHost(sptr), sptr->user->away);
+			free_mtags(mtags_away);
 		}
 	}
 }
@@ -222,26 +233,33 @@ void _send_join_to_local_users(aClient *sptr, aChannel *chptr)
 /* Routine that actually makes a user join the channel
  * this does no actual checking (banned, etc.) it just adds the user
  */
-void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
+void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int flags)
 {
+	MessageTag *mtags = NULL; /** Message tags to send to local users (sender is :user) */
+	MessageTag *mtags_sjoin = NULL; /* Message tags to send to remote servers for SJOIN (sender is :me.name) */
 	Hook *h;
 	int i = 0;
 	char *parv[] = { 0, 0 };
 
+	/* Same way as in SJOIN */
+	new_message_special(sptr, recv_mtags, &mtags, ":%s JOIN %s", sptr->name, chptr->chname);
+
+	new_message(&me, recv_mtags, &mtags_sjoin);
+
 	add_user_to_channel(chptr, sptr, flags);
 
-	send_join_to_local_users(sptr, chptr);
+	send_join_to_local_users(sptr, chptr, mtags);
 
-	// FIXME: mtags in the following 4+ !!!! callers as well.
-	sendto_server(cptr, 0, PROTO_SJ3, NULL, ":%s JOIN :%s", sptr->name, chptr->chname);
+	/* old non-SJOINv3 servers */
+	sendto_server(cptr, 0, PROTO_SJ3, mtags, ":%s JOIN :%s", sptr->name, chptr->chname);
 
 	/* I _know_ that the "@%s " look a bit wierd
 	   with the space and all .. but its to get around
 	   a SJOIN bug --stskeeps */
-	sendto_server(cptr, PROTO_SID | PROTO_SJ3, 0, NULL, ":%s SJOIN %li %s :%s%s ",
+	sendto_server(cptr, PROTO_SID | PROTO_SJ3, 0, mtags_sjoin, ":%s SJOIN %li %s :%s%s ",
 		me.id, chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), ID(sptr));
-	sendto_server(cptr, PROTO_SJ3, PROTO_SID, NULL, ":%s SJOIN %li %s :%s%s ",
+	sendto_server(cptr, PROTO_SJ3, PROTO_SID, mtags_sjoin, ":%s SJOIN %li %s :%s%s ",
 		me.name, chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
 
@@ -261,6 +279,10 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 		del_invite(sptr, chptr);
 		if (flags && !(flags & CHFL_DEOPPED))
 		{
+			/* We could generate mtags here but this is only for
+			 * old non-SJ3 servers, so we don't bother since they
+			 * won't support mtags anyway.
+			 */
 #ifndef PREFIX_AQ
 			if ((flags & CHFL_CHANOWNER) || (flags & CHFL_CHANPROT))
 			{
@@ -296,6 +318,8 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 		    (MODES_ON_JOIN || iConf.modes_on_join.extmodes))
 		{
 			int i;
+			MessageTag *mtags_mode = NULL;
+
 			chptr->mode.extmode =  iConf.modes_on_join.extmodes;
 			/* Param fun */
 			for (i = 0; i <= Channelmode_highest; i++)
@@ -311,20 +335,24 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 			*modebuf = *parabuf = 0;
 			channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
 			/* This should probably be in the SJOIN stuff */
-			// FIXME: mtags!
-			sendto_server(&me, 0, 0, NULL, ":%s MODE %s %s %s %lu",
+			new_message_special(&me, recv_mtags, &mtags_mode, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
+			sendto_server(&me, 0, 0, mtags_mode, ":%s MODE %s %s %s %lu",
 			    me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
-			sendto_one(sptr, NULL, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
+			sendto_one(sptr, mtags_mode, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
+			free_mtags(mtags_mode);
 		}
 
 		parv[0] = sptr->name;
 		parv[1] = chptr->chname;
 		(void)do_cmd(cptr, sptr, NULL, "NAMES", 2, parv);
 
-		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
+		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr, chptr, parv);
 	} else {
-		RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, parv); /* (rarely used) */
+		RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, parv);
 	}
+
+	free_mtags(mtags);
+	free_mtags(mtags_sjoin);
 }
 
 /** User request to join a channel.
@@ -420,29 +448,33 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	    key = (key) ? strtoken(&p2, NULL, ",") : NULL,
 	    name = strtoken(&p, NULL, ","))
 	{
+		MessageTag *mtags = NULL;
+
 		/*
 		   ** JOIN 0 sends out a part for all channels a user
 		   ** has joined.
 		 */
 		if (*name == '0' && !atoi(name))
 		{
+			/* Rewritten so to generate a PART for each channel to servers,
+			 * so the same msgid is used for each part on all servers. -- Syzop
+			 */
 			while ((lp = sptr->user->channel))
 			{
 				MessageTag *mtags = NULL;
 				chptr = lp->chptr;
 
-				/* NOTE: this will cause the PART 0 to have different msgid's across servers */
 				new_message(sptr, NULL, &mtags);
 				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
 				               ":%s PART %s :%s",
 				               sptr->name, chptr->chname, "Left all channels");
+				sendto_server(cptr, 0, 0, mtags, ":%s PART %s :Left all channels", sptr->name, chptr->chname);
 				free_mtags(mtags);
 
 				if (MyConnect(sptr))
 					RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, "Left all channels");
 				remove_user_from_channel(sptr, chptr);
 			}
-			sendto_server(cptr, 0, 0, NULL, ":%s JOIN 0", sptr->name);
 			continue;
 		}
 
@@ -564,7 +596,19 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 		}
 
-		join_channel(chptr, cptr, sptr, flags);
+		/* Generate a new message without inheritance.
+		 * We can do this because remote joins don't follow this code path,
+		 * or are highly discouraged to anyway.
+		 * Remote servers use SJOIN and never reach this function.
+		 * Locally we do follow this code path with JOIN and then generating
+		 * a new_message() here is exactly what we want:
+		 * Each "JOIN #a,#b,#c" gets processed individually in this loop
+		 * and is sent by join_channel() as a SJOIN for #a, then SJOIN for #b,
+		 * and so on, each with their own unique msgid and such.
+		 */
+		new_message(sptr, NULL, &mtags);
+		join_channel(chptr, cptr, sptr, mtags, flags);
+		free_mtags(mtags);
 	}
 	RET(0)
 #undef RET
@@ -727,15 +771,19 @@ void _userhost_changed(aClient *sptr)
 
 				impact++;
 
-				sendbufto_one(acptr, partbuf, 0);
+				/* FIXME: if a client does not have the "chghost" cap then
+				 * here we will not generate a proper new message, probably
+				 * needs to be fixed... I skipped doing it for now.
+				 */
+				sendto_one(acptr, NULL, "%s", partbuf);
 
 				if (HasCapabilityFast(acptr, CAP_EXTENDED_JOIN))
-					sendbufto_one(acptr, exjoinbuf, 0);
+					sendto_one(acptr, NULL, "%s", exjoinbuf);
 				else
-					sendbufto_one(acptr, joinbuf, 0);
+					sendto_one(acptr, NULL, "%s", joinbuf);
 
 				if (*modebuf)
-					sendbufto_one(acptr, modebuf, 0);
+					sendto_one(acptr, NULL, "%s", modebuf);
 			}
 		}
 	}
@@ -758,7 +806,8 @@ void _userhost_changed(aClient *sptr)
 			if (MyClient(acptr) && HasCapabilityFast(acptr, CAP_CHGHOST) &&
 			    (acptr->local->serial != current_serial) && (sptr != acptr))
 			{
-				sendbufto_one(acptr, buf, 0);
+				/* FIXME: send mtag */
+				sendto_one(acptr, NULL, "%s", buf);
 				acptr->local->serial = current_serial;
 			}
 		}
@@ -772,7 +821,7 @@ void _userhost_changed(aClient *sptr)
 		 *  since the user may not be in any channels)
 		 */
 		if (HasCapabilityFast(sptr, CAP_CHGHOST))
-			sendbufto_one(sptr, buf, 0);
+			sendto_one(sptr, NULL, "%s", buf);
 
 		/* A userhost change always generates the following network traffic:
 		 * server to server traffic, CAP "chghost" notifications, and

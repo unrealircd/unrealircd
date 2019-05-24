@@ -618,7 +618,7 @@ extern MODVAR int dontspread;
 
 /* Efuncs */
 extern MODVAR int (*do_join)(aClient *, aClient *, int, char **);
-extern MODVAR void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
+extern MODVAR void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int flags);
 extern MODVAR int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 extern MODVAR void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
 extern MODVAR void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
@@ -670,7 +670,7 @@ extern MODVAR int (*check_deny_version)(aClient *cptr, char *software, int proto
 extern MODVAR int (*match_user)(char *rmask, aClient *acptr, int options);
 extern MODVAR void (*userhost_save_current)(aClient *sptr);
 extern MODVAR void (*userhost_changed)(aClient *sptr);
-extern MODVAR void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr);
+extern MODVAR void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr, MessageTag *mtags);
 extern MODVAR int (*do_nick_name)(char *nick);
 extern MODVAR int (*do_remote_nick_name)(char *nick);
 extern MODVAR char *(*charsys_get_current_languages)(void);
@@ -833,6 +833,7 @@ extern int user_ready_for_register(aClient *sptr);
 extern void SetCapability(aClient *acptr, const char *token);
 extern void ClearCapability(aClient *acptr, const char *token);
 extern void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list);
+extern void new_message_special(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *pattern, ...) __attribute__((format(printf,4,5)));
 extern MessageTag *find_mtag(MessageTag *mtags, const char *token);
 extern MessageTag *duplicate_mtag(MessageTag *mtag);
 extern void free_mtags(MessageTag *m);

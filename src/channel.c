@@ -933,10 +933,10 @@ int  DoesOp(char *modebuf)
 	return 0;
 }
 
+/* This function is only used for non-SJOIN servers. So don't bother with mtags support.. */
 int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, TS creationtime)
 {
-	if ((IsServer(cptr) && DoesOp(mode) && creationtime) ||
-	    IsULine(cptr))
+	if ((IsServer(cptr) && DoesOp(mode) && creationtime) || IsULine(cptr))
 		sendto_one(cptr, NULL, ":%s MODE %s %s %s %lu", from,
 		    name, mode, param, creationtime);
 	else
@@ -1289,6 +1289,7 @@ void sub1_from_channel(aChannel *chptr)
 	}
 }
 
+/* This function is only used for non-SJOIN servers. So don't bother with mtags support.. */
 void send_user_joins(aClient *cptr, aClient *user)
 {
 	Membership *lp;

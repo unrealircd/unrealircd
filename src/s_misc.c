@@ -1364,7 +1364,31 @@ void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list
 {
 	Hook *h;
 	for (h = Hooks[HOOKTYPE_NEW_MESSAGE]; h; h = h->next)
-		(*(h->func.voidfunc))(sender, recv_mtags, mtag_list);
+		(*(h->func.voidfunc))(sender, recv_mtags, mtag_list, NULL);
+}
+
+/** New message - SPECIAL edition. Either really brand new, or inherited
+ * from other servers.
+ * This function calls modules so they can add tags tags such as:
+ * msgid, time and account.
+ * This special version deals in a special way with msgid in particular.
+ * TODO: document
+ * The pattern and vararg create a 'signature', this is normally
+ * identical to the message that is sent to clients (end-users).
+ * For example ":xyz JOIN #chan".
+ */
+void new_message_special(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *pattern, ...)
+{
+	Hook *h;
+	va_list vl;
+	char buf[512];
+
+	va_start(vl, pattern);
+	ircvsnprintf(buf, sizeof(buf), pattern, vl);
+	va_end(vl);
+
+	for (h = Hooks[HOOKTYPE_NEW_MESSAGE]; h; h = h->next)
+		(*(h->func.voidfunc))(sender, recv_mtags, mtag_list, buf);
 }
 
 /** Default handler for parse_message_tags().

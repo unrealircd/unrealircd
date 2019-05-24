@@ -1114,6 +1114,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 
 /** Send MODE +vhoaq list (depending on 'mask' and 'flag') to remote server.
  * Previously this function was called send_mode_list() when it was dual-function.
+ * (only for old severs lacking SJOIN/SJ3
  */
 static void send_channel_modes_members(aClient *cptr, aChannel *chptr, int mask, char flag)
 {
@@ -1165,6 +1166,7 @@ static void send_channel_modes_members(aClient *cptr, aChannel *chptr, int mask,
 
 /** Send list modes such as +beI to remote server.
  * Previously this was combined with +vhoaq stuff in the send_mode_list() function.
+ * (only for old severs lacking SJOIN/SJ3
  */
 static void send_channel_modes_list_mode(aClient *cptr, aChannel *chptr, Ban *lp, char flag)
 {
@@ -1214,7 +1216,7 @@ static void send_channel_modes_list_mode(aClient *cptr, aChannel *chptr, Ban *lp
 	}
 }
 
-/* A little kludge to prevent sending double spaces -- codemastr */
+/* (only for old severs lacking SJOIN/SJ3 */
 static inline void send_channel_mode(aClient *cptr, char *from, aChannel *chptr)
 {
 	if (*parabuf)
@@ -1273,7 +1275,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	}
 }
 
-
+/* (only for old severs lacking SJ3) */
 static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel *channel)
 {
 	Ban *top;
@@ -1402,11 +1404,10 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 
 /* 
  * This will send "cptr" a full list of the modes for channel chptr,
+ * NOTE: this is only for old servers who do not support SJ3.
  */
-
 void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 {
-
 	Member *members;
 	Member *lp;
 	char *name;
@@ -1509,6 +1510,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
  */
 void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 {
+	MessageTag *mtags = NULL;
 	Member *members;
 	Member *lp;
 	Ban *ban;
@@ -1538,6 +1540,13 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	if (!(*parabuf))
 		nopara = 1;
 
+	/* Generate a new message (including msgid).
+	 * Due to the way SJOIN works, we will use the same msgid for
+	 * multiple SJOIN messages to servers. Rest assured that clients
+	 * will never see these duplicate msgid's though. They
+	 * will see a 'special' version instead with a suffix.
+	 */
+	new_message(&me, NULL, &mtags);
 
 	if (nomode && nopara)
 	{
@@ -1605,7 +1614,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, NULL, "%s", buf);
+			sendto_one(cptr, mtags, "%s", buf);
 			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
@@ -1628,7 +1637,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, NULL, "%s", buf);
+			sendto_one(cptr, mtags, "%s", buf);
 			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
@@ -1651,7 +1660,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, NULL, "%s", buf);
+			sendto_one(cptr, mtags, "%s", buf);
 			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
@@ -1674,7 +1683,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, NULL, "%s", buf);
+			sendto_one(cptr, mtags, "%s", buf);
 			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
@@ -1684,5 +1693,5 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	}
 
 	if (buf[prebuflen] || !sent)
-		sendto_one(cptr, NULL, "%s", buf);
+		sendto_one(cptr, mtags, "%s", buf);
 }
