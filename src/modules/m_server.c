@@ -175,7 +175,7 @@ void _send_protoctl_servers(aClient *sptr, int response)
 	if (!NEW_LINKING_PROTOCOL)
 		return;
 
-	sendto_one(sptr, "PROTOCTL EAUTH=%s,%d,%s%s,%s",
+	sendto_one(sptr, NULL, "PROTOCTL EAUTH=%s,%d,%s%s,%s",
 		me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", version);
 		
 	ircsnprintf(buf, sizeof(buf), "PROTOCTL SERVERS=%s", response ? "*" : "");
@@ -192,7 +192,7 @@ void _send_protoctl_servers(aClient *sptr, int response)
 	if (buf[strlen(buf)-1] == ',')
 		buf[strlen(buf)-1] = '\0';
 
-	sendto_one(sptr, "%s", buf);
+	sendto_one(sptr, NULL, "%s", buf);
 }
 
 void _send_server_message(aClient *sptr)
@@ -207,10 +207,10 @@ void _send_server_message(aClient *sptr)
 
 	if (1) /* SupportVL(sptr)) -- always send like 3.2.x for now. */
 	{
-		sendto_one(sptr, "SERVER %s 1 :U%d-%s%s-%s %s",
+		sendto_one(sptr, NULL, "SERVER %s 1 :U%d-%s%s-%s %s",
 			me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.id, me.info);
 	} else {
-		sendto_one(sptr, "SERVER %s 1 :%s",
+		sendto_one(sptr, NULL, "SERVER %s 1 :%s",
 			me.name, me.info);
 	}
 
@@ -249,7 +249,7 @@ int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link
 
 	if (!cptr->local->passwd)
 	{
-		sendto_one(cptr, "ERROR :Missing password");
+		sendto_one(cptr, NULL, "ERROR :Missing password");
 		return exit_client(cptr, sptr, &me, "Missing password");
 	}
 
@@ -273,7 +273,7 @@ int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link
 				cptr->serv->conf->servername,
 				servername);
 
-			sendto_one(cptr, "ERROR :%s", xerrmsg);
+			sendto_one(cptr, NULL, "ERROR :%s", xerrmsg);
 			sendto_ops_and_log("Outgoing link aborted to %s(%s@%s) (%s) %s",
 				cptr->serv->conf->servername, cptr->username, cptr->local->sockhost, xerrmsg, inpath);
 			return exit_client(cptr, sptr, &me, xerrmsg);
@@ -306,7 +306,7 @@ int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link
 		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Server is in link block but link::incoming::mask didn't match");
 errlink:
 		/* Send the "simple" error msg to the server */
-		sendto_one(cptr,
+		sendto_one(cptr, NULL,
 		    "ERROR :Link denied (No link block found named '%s' or link::incoming::mask did not match your IP %s) %s",
 		    servername, GetIP(cptr), inpath);
 		/* And send the "verbose" error msg only to locally connected ircops */
@@ -353,7 +353,7 @@ skip_host_check:
 			sendto_ops_and_log("Link denied for '%s' (Authentication failed [Bad password?]) %s",
 				servername, inpath);
 		}
-		sendto_one(cptr,
+		sendto_one(cptr, NULL,
 		    "ERROR :Link '%s' denied (Authentication failed) %s",
 		    servername, inpath);
 		return exit_client(cptr, sptr, &me,
@@ -367,7 +367,7 @@ skip_host_check:
 
 		if (!IsSSL(cptr))
 		{
-			sendto_one(cptr,
+			sendto_one(cptr, NULL,
 				"ERROR :Link '%s' denied (Not using SSL/TLS) %s",
 				servername, inpath);
 			sendto_ops_and_log("Link denied for '%s' (Not using SSL/TLS and verify-certificate is on) %s",
@@ -377,7 +377,7 @@ skip_host_check:
 		}
 		if (!verify_certificate(cptr->local->ssl, link->servername, &errstr))
 		{
-			sendto_one(cptr,
+			sendto_one(cptr, NULL,
 				"ERROR :Link '%s' denied (Certificate verification failed) %s",
 				servername, inpath);
 			sendto_ops_and_log("Link denied for '%s' (Certificate verification failed) %s",
@@ -400,7 +400,7 @@ skip_host_check:
 		{
 			sendto_ops_and_log("Link %s rejected, server trying to link with my name (%s)",
 				get_client_name(sptr, TRUE), me.name);
-			sendto_one(sptr, "ERROR: Server %s exists (it's me!)", me.name);
+			sendto_one(sptr, NULL, "ERROR: Server %s exists (it's me!)", me.name);
 			return exit_client(sptr, sptr, sptr, "Server Exists");
 		}
 
@@ -409,7 +409,7 @@ skip_host_check:
 		    (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
 		acptr =
 		    (cptr->local->firsttime > acptr->local->firsttime) ? cptr : acptr;
-		sendto_one(acptr,
+		sendto_one(acptr, NULL,
 		    "ERROR :Server %s already exists from %s",
 		    servername,
 		    (ocptr->from ? ocptr->from->name : "<nobody>"));
@@ -425,7 +425,7 @@ skip_host_check:
 		sendto_ops_and_log
 			("Cancelling link %s, banned server",
 			get_client_name(cptr, TRUE));
-		sendto_one(cptr, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
+		sendto_one(cptr, NULL, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
 		return exit_client(cptr, cptr, &me, "Banned server");
 	}
 	if (link->class->clients + 1 > link->class->maxclients)
@@ -436,13 +436,13 @@ skip_host_check:
 	}
 	if (!IsLocal(cptr) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(cptr))
 	{
-		sendto_one(cptr, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
+		sendto_one(cptr, NULL, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 		sendto_ops_and_log("Rejected insecure server %s. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS", cptr->name);
 		return exit_client(cptr, sptr, &me, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 	}
 	if (IsSecure(cptr) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(cptr))
 	{
-		sendto_one(cptr, "ERROR :Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
+		sendto_one(cptr, NULL, "ERROR :Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 		sendto_ops_and_log("Rejected server %s using outdated %s. See https://www.unrealircd.org/docs/FAQ#server-outdated-tls", ssl_get_cipher(cptr->local->ssl), cptr->name);
 		return exit_client(cptr, sptr, &me, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 	}
@@ -499,7 +499,7 @@ CMD_FUNC(m_server)
 	 */
 	if (parc < 4 || (!*parv[3]))
 	{
-		sendto_one(sptr, "ERROR :Not enough SERVER parameters");
+		sendto_one(sptr, NULL, "ERROR :Not enough SERVER parameters");
 		return exit_client(cptr, sptr, &me, 
 			"Not enough parameters");		
 	}
@@ -525,7 +525,7 @@ CMD_FUNC(m_server)
 			break;
 	if (*ch || !index(servername, '.'))
 	{
-		sendto_one(sptr, "ERROR :Bogus server name (%s)", servername);
+		sendto_one(sptr, NULL, "ERROR :Bogus server name (%s)", servername);
 		sendto_snomask
 		    (SNO_JUNK,
 		    "WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
@@ -536,7 +536,7 @@ CMD_FUNC(m_server)
 
 	if ((IsUnknown(cptr) || IsHandshake(cptr)) && !cptr->local->passwd)
 	{
-		sendto_one(sptr, "ERROR :Missing password");
+		sendto_one(sptr, NULL, "ERROR :Missing password");
 		return exit_client(cptr, sptr, &me, "Missing password");
 	}
 
@@ -628,7 +628,7 @@ CMD_FUNC(m_server_remote)
 
 	if (parc < 4 || (!*parv[3]))
 	{
-		sendto_one(sptr, "ERROR :Not enough SERVER parameters");
+		sendto_one(sptr, NULL, "ERROR :Not enough SERVER parameters");
 		return 0;
 	}
 
@@ -640,7 +640,7 @@ CMD_FUNC(m_server_remote)
 		{
 			sendto_ops_and_log("Link %s rejected, server trying to link with my name (%s)",
 				get_client_name(sptr, TRUE), me.name);
-			sendto_one(sptr, "ERROR: Server %s exists (it's me!)", me.name);
+			sendto_one(sptr, NULL, "ERROR: Server %s exists (it's me!)", me.name);
 			return exit_client(sptr, sptr, sptr, "Server Exists");
 		}
 
@@ -649,7 +649,7 @@ CMD_FUNC(m_server_remote)
 		    (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
 		acptr =
 		    (cptr->local->firsttime > acptr->local->firsttime) ? cptr : acptr;
-		sendto_one(acptr,
+		sendto_one(acptr, NULL,
 		    "ERROR :Server %s already exists from %s",
 		    servername,
 		    (ocptr->from ? ocptr->from->name : "<nobody>"));
@@ -673,7 +673,7 @@ CMD_FUNC(m_server_remote)
 	{
 		sendto_ops_and_log("Cancelling link %s, banned server %s",
 			get_client_name(cptr, TRUE), servername);
-		sendto_one(cptr, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
+		sendto_one(cptr, NULL, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
 		return exit_client(cptr, cptr, &me, "Brought in banned server");
 	}
 	/* OK, let us check in the data now now */
@@ -768,7 +768,7 @@ void _introduce_user(aClient *to, aClient *acptr)
 	send_moddata_client(to, acptr);
 
 	if (acptr->user->away)
-		sendto_one(to, ":%s AWAY :%s", CHECKPROTO(to, PROTO_SID) ? ID(acptr) : acptr->name,
+		sendto_one(to, NULL, ":%s AWAY :%s", CHECKPROTO(to, PROTO_SID) ? ID(acptr) : acptr->name,
 			acptr->user->away);
 
 	if (acptr->user->swhois)
@@ -778,11 +778,11 @@ void _introduce_user(aClient *to, aClient *acptr)
 		{
 			if (CHECKPROTO(to, PROTO_EXTSWHOIS))
 			{
-				sendto_one(to, ":%s SWHOIS %s + %s %d :%s",
+				sendto_one(to, NULL, ":%s SWHOIS %s + %s %d :%s",
 					me.name, acptr->name, s->setby, s->priority, s->line);
 			} else
 			{
-				sendto_one(to, ":%s SWHOIS %s :%s",
+				sendto_one(to, NULL, ":%s SWHOIS %s :%s",
 					me.name, acptr->name, s->line);
 			}
 		}
@@ -884,7 +884,7 @@ void _broadcast_sinfo(aClient *acptr, aClient *to, aClient *except)
 	if (to)
 	{
 		/* Targetted to one server */
-		sendto_one(to, ":%s SINFO %s", acptr->name, buf);
+		sendto_one(to, NULL, ":%s SINFO %s", acptr->name, buf);
 	} else {
 		/* Broadcast (except one side...) */
 		sendto_server(except, 0, 0, NULL, ":%s SINFO %s", acptr->name, buf);
@@ -911,7 +911,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		 * their stuff and now send our stuff back.
 		 */
 		if (!IsEAuth(cptr)) /* if eauth'd then we already sent the passwd */
-			sendto_one(cptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
+			sendto_one(cptr, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 
 		send_proto(cptr, aconf);
 		send_server_message(cptr);
@@ -1015,13 +1015,13 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		{
 			if (SupportSID(cptr) && *acptr->id)
 			{
-				sendto_one(cptr, ":%s SID %s %d %s :%s",
+				sendto_one(cptr, NULL, ":%s SID %s %d %s :%s",
 				    acptr->srvptr->id,
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->id, acptr->info);
 			}
 			else
-				sendto_one(cptr, ":%s SERVER %s %d :%s",
+				sendto_one(cptr, NULL, ":%s SERVER %s %d :%s",
 				    acptr->serv->up,
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->info);
@@ -1037,7 +1037,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			 */
 			if (acptr->serv->flags.synced)
 			{
-				sendto_one(cptr, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name);
+				sendto_one(cptr, NULL, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name);
 #ifdef DEBUGMODE
 				ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to uplink '%s' with src %s...",
 					cptr->name, acptr->name);
@@ -1080,7 +1080,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			else
 				send_channel_modes_sjoin3(cptr, chptr);
 			if (chptr->topic_time)
-				sendto_one(cptr,
+				sendto_one(cptr, NULL,
 				    "TOPIC %s %s %lu :%s",
 				    chptr->chname, chptr->topic_nick,
 				    (long)chptr->topic_time, chptr->topic);
@@ -1097,13 +1097,13 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	/* send out SVSFLINEs */
 	dcc_sync(cptr);
 
-	sendto_one(cptr, "NETINFO %i %li %i %s 0 0 0 :%s",
+	sendto_one(cptr, NULL, "NETINFO %i %li %i %s 0 0 0 :%s",
 	    IRCstats.global_max, TStime(), UnrealProtocol,
 	    CLOAK_KEYCRC,
 	    ircnetwork);
 
 	/* Send EOS (End Of Sync) to the just linked server... */
-	sendto_one(cptr, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name);
+	sendto_one(cptr, NULL, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name);
 #ifdef DEBUGMODE
 	ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to justlinked '%s' with src ME...",
 			cptr->name);
@@ -1218,11 +1218,11 @@ static void send_channel_modes_list_mode(aClient *cptr, aChannel *chptr, Ban *lp
 static inline void send_channel_mode(aClient *cptr, char *from, aChannel *chptr)
 {
 	if (*parabuf)
-		sendto_one(cptr, ":%s MODE %s %s %s %lu", from,
+		sendto_one(cptr, NULL, ":%s MODE %s %s %s %lu", from,
 			chptr->chname,
 			modebuf, parabuf, chptr->creationtime);
 	else
-		sendto_one(cptr, ":%s MODE %s %s %lu", from,
+		sendto_one(cptr, NULL, ":%s MODE %s %s %lu", from,
 			chptr->chname,
 			modebuf, chptr->creationtime);
 }
@@ -1267,7 +1267,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	/* send MLOCK here too... --nenolod */
 	if (CHECKPROTO(cptr, PROTO_MLOCK))
 	{
-		sendto_one(cptr, "MLOCK %lu %s :%s",
+		sendto_one(cptr, NULL, "MLOCK %lu %s :%s",
 			   chptr->creationtime, chptr->chname,
 			   BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
 	}
@@ -1306,7 +1306,7 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 		if (send)
 		{
 			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, "MODE %s %s %s %lu",
+			sendto_one(cptr, NULL, "MODE %s %s %s %lu",
 			    chname, modebuf, parabuf, creationtime);
 			sent = 1;
 			send = 0;
@@ -1343,7 +1343,7 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 		if (send)
 		{
 			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, "MODE %s %s %s %lu",
+			sendto_one(cptr, NULL, "MODE %s %s %s %lu",
 			    chname, modebuf, parabuf, creationtime);
 			sent = 1;
 			send = 0;
@@ -1380,7 +1380,7 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 		if (send)
 		{
 			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, "MODE %s %s %s %lu",
+			sendto_one(cptr, NULL, "MODE %s %s %s %lu",
 			    chname, modebuf, parabuf, creationtime);
 			sent = 1;
 			send = 0;
@@ -1470,7 +1470,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 			*bufptr++ = '\0';
 			if (bufptr[-1] == ' ')
 				bufptr[-1] = '\0';
-			sendto_one(cptr, "%s", buf);
+			sendto_one(cptr, NULL, "%s", buf);
 
 			ircsnprintf(buf, sizeof(buf), "SJOIN %ld %s %s %s :",
 			    chptr->creationtime, chptr->chname, modebuf,
@@ -1485,7 +1485,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 		*bufptr++ = '\0';
 		if (bufptr[-1] == ' ')
 			bufptr[-1] = '\0';
-		sendto_one(cptr, "%s", buf);
+		sendto_one(cptr, NULL, "%s", buf);
 	}
 	/* Then we'll send the ban-list */
 
@@ -1495,7 +1495,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 	send_ban_list(cptr, chptr->chname, chptr->creationtime, chptr);
 
 	if (modebuf[1] || *parabuf)
-		sendto_one(cptr, "MODE %s %s %s %lu",
+		sendto_one(cptr, NULL, "MODE %s %s %s %lu",
 		    chptr->chname, modebuf, parabuf, chptr->creationtime);
 
 	return;
@@ -1605,7 +1605,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, "%s", buf);
+			sendto_one(cptr, NULL, "%s", buf);
 			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
@@ -1628,7 +1628,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, "%s", buf);
+			sendto_one(cptr, NULL, "%s", buf);
 			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
@@ -1651,7 +1651,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, "%s", buf);
+			sendto_one(cptr, NULL, "%s", buf);
 			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
@@ -1674,7 +1674,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
 			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, "%s", buf);
+			sendto_one(cptr, NULL, "%s", buf);
 			sent++;
 			bufptr = buf + prebuflen;
 			*bufptr = '\0';
@@ -1684,5 +1684,5 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	}
 
 	if (buf[prebuflen] || !sent)
-		sendto_one(cptr, "%s", buf);
+		sendto_one(cptr, NULL, "%s", buf);
 }

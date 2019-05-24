@@ -378,18 +378,18 @@ CMD_FUNC(m_staff)
 
 	if (!staff.lines)
 	{
-		sendto_one(sptr, RPL_NOSTAFF, me.name, sptr->name);
+		sendto_one(sptr, NULL, RPL_NOSTAFF, me.name, sptr->name);
 		return 0;
 	}
 
-	sendto_one(sptr, RPL_STAFFSTART, me.name, sptr->name, ircnetwork);
+	sendto_one(sptr, NULL, RPL_STAFFSTART, me.name, sptr->name, ircnetwork);
 
 	temp = &staff;
 
 	for (aLine = temp->lines; aLine; aLine = aLine->next)
-		sendto_one(sptr, RPL_STAFF, me.name, sptr->name, aLine->line);
+		sendto_one(sptr, NULL, RPL_STAFF, me.name, sptr->name, aLine->line);
 
-	sendto_one(sptr, RPL_ENDOFSTAFF, me.name, sptr->name);
+	sendto_one(sptr, NULL, RPL_ENDOFSTAFF, me.name, sptr->name);
 
 	return 0;
 }

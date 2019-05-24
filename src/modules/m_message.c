@@ -502,7 +502,7 @@ int _is_silenced(aClient *sptr, aClient *acptr)
 		{
 			if (!MyConnect(sptr))
 			{
-				sendto_one(sptr->from, ":%s SILENCE %s :%s",
+				sendto_one(sptr->from, NULL, ":%s SILENCE %s :%s",
 				    acptr->name, sptr->name, lp->value.cp);
 				lp->flags = 1;
 			}

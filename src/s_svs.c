@@ -72,7 +72,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 
 	if (!(alias = Find_alias(cmd))) 
 	{
-		sendto_one(sptr, ":%s %d %s %s :Unknown command",
+		sendto_one(sptr, NULL, ":%s %d %s %s :Unknown command",
 			me.name, ERR_UNKNOWNCOMMAND, sptr->name, cmd);
 		return 0;
 	}
@@ -90,7 +90,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 		{
 			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
 				return ret;
-			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", sptr->name,
+			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 				alias->nick, SERVICES_NAME, parv[1]);
 		}
 		else
@@ -102,7 +102,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 		{
 			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
 				return ret;
-			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", sptr->name,
+			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 				alias->nick, STATS_SERVER, parv[1]);
 		}
 		else
@@ -115,11 +115,11 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
 				return ret;
 			if (MyClient(acptr))
-				sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
+				sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
 					sptr->user->username, GetHost(sptr),
 					alias->nick, parv[1]);
 			else
-				sendto_one(acptr, ":%s PRIVMSG %s :%s", sptr->name,
+				sendto_one(acptr, NULL, ":%s PRIVMSG %s :%s", sptr->name,
 					alias->nick, parv[1]);
 		}
 		else
@@ -225,7 +225,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 					{
 						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
 							return ret;
-						sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", sptr->name,
+						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 							format->nick, SERVICES_NAME, output);
 					} else
 						sendnumeric(sptr, ERR_SERVICESDOWN, format->nick);
@@ -236,7 +236,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 					{
 						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
 							return ret;
-						sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", sptr->name,
+						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 							format->nick, STATS_SERVER, output);
 					} else
 						sendnumeric(sptr, ERR_SERVICESDOWN, format->nick);
@@ -248,11 +248,11 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
 							return ret;
 						if (MyClient(acptr))
-							sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
+							sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
 							sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
 							format->nick, output);
 						else
-							sendto_one(acptr, ":%s PRIVMSG %s :%s", sptr->name,
+							sendto_one(acptr, NULL, ":%s PRIVMSG %s :%s", sptr->name,
 								format->nick, output);
 					}
 					else

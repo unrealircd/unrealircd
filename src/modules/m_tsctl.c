@@ -162,7 +162,7 @@ CMD_FUNC(m_tsctl)
 		}
 		
 		//default: no command was recognized
-		sendto_one(sptr, "Invalid syntax for /TSCTL\n");
+		sendto_one(sptr, NULL, "Invalid syntax for /TSCTL\n");
                 return 0;
 	}
 

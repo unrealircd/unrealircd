@@ -88,10 +88,10 @@ CMD_FUNC(m_svsjoin)
 	else
 	{
 		if (parc == 3)
-			sendto_one(acptr, ":%s SVSJOIN %s %s", sptr->name,
+			sendto_one(acptr, NULL, ":%s SVSJOIN %s %s", sptr->name,
 			    parv[1], parv[2]);
 		else
-			sendto_one(acptr, ":%s SVSJOIN %s %s %s", sptr->name,
+			sendto_one(acptr, NULL, ":%s SVSJOIN %s %s %s", sptr->name,
 				parv[1], parv[2], parv[3]);
 	}
 

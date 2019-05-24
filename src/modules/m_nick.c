@@ -117,12 +117,12 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 		if (CHECKPROTO(cptr, PROTO_SID) && !BadPtr(newid))
 		{
 			/* SID server can kill 'new' by ID */
-			sendto_one(cptr, ":%s KILL %s :%s (%s)",
+			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s)",
 				me.name, newid, me.name, comment);
 		} else {
 #ifndef ASSUME_NICK_IN_FLIGHT
 			/* cptr is not SID-capable or user has no UID */
-			sendto_one(cptr, ":%s KILL %s :%s (%s)",
+			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s)",
 				me.name, newnick, me.name, comment);
 
 			if (type == NICKCOL_EXISTING_WON)
@@ -233,7 +233,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 					*p++ = '~';
 				*p = '\0';
 				
-				sendto_one(cptr, ":%s SJOIN %ld %s + :%s%s",
+				sendto_one(cptr, NULL, ":%s SJOIN %ld %s + :%s%s",
 					me.name, lp->chptr->creationtime, lp->chptr->chname,
 					flags, existing->name);
 			}
@@ -298,7 +298,7 @@ CMD_FUNC(m_uid)
 			ircstp->is_kill++;
 			sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
 			    parv[1], sptr->name, get_client_name(cptr, FALSE));
-			sendto_one(cptr, ":%s KILL %s :%s (%s <- %s[%s])",
+			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
 			    me.name, parv[1], me.name, parv[1],
 			    nick, cptr->name);
 			if (sptr != cptr)
@@ -335,7 +335,7 @@ CMD_FUNC(m_uid)
 	{
 		ircstp->is_kill++;
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(cptr, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
+		sendto_one(cptr, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
 			me.name, parv[1], me.name);
 		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
 			parv[1], sptr->name);
@@ -410,7 +410,7 @@ CMD_FUNC(m_uid)
 		    sptr->name, acptr->from->name,
 		    get_client_name(cptr, FALSE));
 		ircstp->is_kill++;
-		sendto_one(cptr, ":%s KILL %s :%s (%s <- %s)",
+		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s)",
 		    me.name, sptr->name, me.name, acptr->from->name,
 		    /* NOTE: Cannot use get_client_name
 		       ** twice here, it returns static
@@ -442,7 +442,7 @@ CMD_FUNC(m_uid)
 			sendto_umode(UMODE_OPER, "Lost user field for %s in change from %s",
 			    acptr->name, get_client_name(cptr, FALSE));
 			ircstp->is_kill++;
-			sendto_one(acptr, ":%s KILL %s :%s (Lost user field!)",
+			sendto_one(acptr, NULL, ":%s KILL %s :%s (Lost user field!)",
 			    me.name, acptr->name, me.name);
 			acptr->flags |= FLAGS_KILLED;
 			/* Here's the previous versions' desynch.  If the old one is
@@ -624,7 +624,7 @@ CMD_FUNC(m_nick)
 			ircstp->is_kill++;
 			sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
 			    parv[1], sptr->name, get_client_name(cptr, FALSE));
-			sendto_one(cptr, ":%s KILL %s :%s (%s <- %s[%s])",
+			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
 			    me.name, parv[1], me.name, parv[1],
 			    nick, cptr->name);
 			if (sptr != cptr)
@@ -661,7 +661,7 @@ CMD_FUNC(m_nick)
 	{
 		ircstp->is_kill++;
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(cptr, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
+		sendto_one(cptr, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
 			me.name, parv[1], me.name);
 		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
 			parv[1], sptr->name);
@@ -776,7 +776,7 @@ CMD_FUNC(m_nick)
 		    sptr->name, acptr->from->name,
 		    get_client_name(cptr, FALSE));
 		ircstp->is_kill++;
-		sendto_one(cptr, ":%s KILL %s :%s (%s <- %s)",
+		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s)",
 		    me.name, sptr->name, me.name, acptr->from->name,
 		    /* NOTE: Cannot use get_client_name
 		       ** twice here, it returns static
@@ -816,7 +816,7 @@ CMD_FUNC(m_nick)
 		sendto_umode(UMODE_OPER, "Lost user field for %s in change from %s",
 		    acptr->name, get_client_name(cptr, FALSE));
 		ircstp->is_kill++;
-		sendto_one(acptr, ":%s KILL %s :%s (Lost user field!)",
+		sendto_one(acptr, NULL, ":%s KILL %s :%s (Lost user field!)",
 		    me.name, acptr->name, me.name);
 		acptr->flags |= FLAGS_KILLED;
 		/* Here's the previous versions' desynch.  If the old one is
@@ -1087,7 +1087,7 @@ CMD_FUNC(m_nick)
 			 */
 			sptr->local->nospoof = getrandom32();
 
-			sendto_one(sptr, "PING :%X", sptr->local->nospoof);
+			sendto_one(sptr, NULL, "PING :%X", sptr->local->nospoof);
 		}
 
 		/* Copy password to the passwd field if it's given after NICK
@@ -1111,7 +1111,7 @@ CMD_FUNC(m_nick)
 			   ** --must test this and exit m_nick too!!!
 			 */
 			if (!iConf.ping_cookie && USE_BAN_VERSION && MyConnect(sptr))
-				sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
+				sendto_one(sptr, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 					me.name, nick);
 
 			sptr->lastnick = TStime();	/* Always local client */
@@ -1160,7 +1160,7 @@ CMD_FUNC(m_nick)
 
 	if (removemoder && MyClient(sptr))
 	{
-		sendto_one(sptr, ":%s MODE %s :-r", me.name, sptr->name);
+		sendto_one(sptr, NULL, ":%s MODE %s :-r", me.name, sptr->name);
 	}
 	return 0;
 }
@@ -1487,7 +1487,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_ops
 			    ("Bad USER [%s] :%s USER %s %s : No such server",
 			    cptr->name, nick, user->username, user->server);
-			sendto_one(cptr, ":%s KILL %s :%s (No such server: %s)",
+			sendto_one(cptr, NULL, ":%s KILL %s :%s (No such server: %s)",
 			    me.name, sptr->name, me.name, user->server);
 			sptr->flags |= FLAGS_KILLED;
 			return exit_client(sptr, sptr, &me,
@@ -1498,7 +1498,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_ops("Bad User [%s] :%s USER %s %s, != %s[%s]",
 			    cptr->name, nick, user->username, user->server,
 			    acptr->name, acptr->from->name);
-			sendto_one(cptr, ":%s KILL %s :%s (%s != %s[%s])",
+			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s != %s[%s])",
 			    me.name, sptr->name, me.name, user->server,
 			    acptr->from->name, acptr->from->local->sockhost);
 			sptr->flags |= FLAGS_KILLED;
@@ -1582,12 +1582,12 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				}
 			}
 			if (do_identify)
-				sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
+				sendto_one(nsptr, NULL, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 				    sptr->name,
 				    NickServ, SERVICES_NAME, sptr->local->passwd);
 		}
 		if (buf[0] != '\0' && buf[1] != '\0')
-			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
+			sendto_one(cptr, NULL, ":%s MODE %s :%s", cptr->name,
 			    cptr->name, buf);
 		if (user->snomask)
 			sendnumeric(sptr, RPL_SNOMASK, get_snostr(user->snomask));

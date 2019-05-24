@@ -277,11 +277,11 @@ int hunt_server(aClient *cptr, aClient *sptr, MessageTag *mtags, char *command, 
 		/* Update the format string */
 		snprintf(newcommand, sizeof(newcommand), "@%%s %s", command);
 		/* And do the sendto_one() */
-		sendto_one(acptr, newcommand, str, sptr->name,
+		sendto_one(acptr, NULL, newcommand, str, sptr->name,
 		    parv[1], parv[2], parv[3], parv[4],
 		    parv[5], parv[6], parv[7], parv[8]);
 	} else {
-		sendto_one(acptr, command, sptr->name,
+		sendto_one(acptr, NULL, command, sptr->name,
 		    parv[1], parv[2], parv[3], parv[4],
 		    parv[5], parv[6], parv[7], parv[8]);
 	}
@@ -596,7 +596,7 @@ void send_umode(aClient *cptr, aClient *sptr, long old, long sendmask, char *umo
 	}
 	*m = '\0';
 	if (*umode_buf && cptr)
-		sendto_one(cptr, ":%s MODE %s :%s", sptr->name,
+		sendto_one(cptr, NULL, ":%s MODE %s :%s", sptr->name,
 		    sptr->name, umode_buf);
 }
 
@@ -613,7 +613,7 @@ void send_umode_out(aClient *cptr, aClient *sptr, long old)
 	{
 		if ((acptr != cptr) && (acptr != sptr) && *buf)
 		{
-			sendto_one(acptr, ":%s UMODE2 %s",
+			sendto_one(acptr, NULL, ":%s UMODE2 %s",
 				    sptr->name,
 				    buf);
 		}
@@ -633,7 +633,7 @@ void send_umode_out_nickv2(aClient *cptr, aClient *sptr, long old)
 	{
 		if (!SupportNICKv2(acptr) && (acptr != cptr)
 		    && (acptr != sptr) && *buf)
-			sendto_one(acptr, ":%s MODE %s :%s", sptr->name,
+			sendto_one(acptr, NULL, ":%s MODE %s :%s", sptr->name,
 			    sptr->name, buf);
 	}
 

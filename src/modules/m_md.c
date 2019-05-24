@@ -322,7 +322,7 @@ void _send_moddata_client(aClient *srv, aClient *acptr)
 		{
 			char *value = mdi->serialize(&moddata_client(acptr, mdi));
 			if (value)
-				sendto_one(srv, ":%s MD %s %s %s :%s",
+				sendto_one(srv, NULL, ":%s MD %s %s %s :%s",
 					me.name, "client", user, mdi->name, value);
 		}
 	}
@@ -339,7 +339,7 @@ void _send_moddata_channel(aClient *srv, aChannel *chptr)
 		{
 			char *value = mdi->serialize(&moddata_channel(chptr, mdi));
 			if (value)
-				sendto_one(srv, ":%s MD %s %s %s :%s",
+				sendto_one(srv, NULL, ":%s MD %s %s %s :%s",
 					me.name, "channel", chptr->chname, mdi->name, value);
 		}
 	}
@@ -367,7 +367,7 @@ void _send_moddata_members(aClient *srv)
 				{
 					char *value = mdi->serialize(&moddata_member(m, mdi));
 					if (value)
-						sendto_one(srv, ":%s MD %s %s:%s %s :%s",
+						sendto_one(srv, NULL, ":%s MD %s %s:%s %s :%s",
 							me.name, "member", chptr->chname, user, mdi->name, value);
 				}
 			}
@@ -393,7 +393,7 @@ void _send_moddata_members(aClient *srv)
 				{
 					char *value = mdi->serialize(&moddata_membership(m, mdi));
 					if (value)
-						sendto_one(srv, ":%s MD %s %s:%s %s :%s",
+						sendto_one(srv, NULL, ":%s MD %s %s:%s %s :%s",
 							me.name, "membership", user, m->chptr->chname, mdi->name, value);
 				}
 			}

@@ -53,7 +53,7 @@ void ident_failed(aClient *cptr)
 	}
 	cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
 	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
-		sendto_one(cptr, "%s", REPORT_FAIL_ID);
+		sendto_one(cptr, NULL, "%s", REPORT_FAIL_ID);
 	if (!DoingDNS(cptr))
 		finish_auth(cptr);
 }
@@ -100,7 +100,7 @@ void start_auth(aClient *cptr)
 	}
 
 	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
-		sendto_one(cptr, "%s", REPORT_DO_ID);
+		sendto_one(cptr, NULL, "%s", REPORT_DO_ID);
 
 	set_sock_opts(cptr->local->authfd, cptr, IsIPV6(cptr));
 	set_non_blocking(cptr->local->authfd, cptr);
@@ -228,7 +228,7 @@ static void read_authports(int fd, int revents, void *userdata)
 		Debug((DEBUG_INFO, "ident reply: [%s]", cptr->local->buffer));
 
 	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
-		sendto_one(cptr, "%s", REPORT_FIN_ID);
+		sendto_one(cptr, NULL, "%s", REPORT_FIN_ID);
 
 	if (!locp || !remp || !*ruser)
 	{

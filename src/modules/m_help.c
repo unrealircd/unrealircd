@@ -54,8 +54,8 @@ MOD_UNLOAD(m_help)
 	return MOD_SUCCESS;
 }
 
-#define HDR(str) sendto_one(sptr, ":%s 290 %s :%s", me.name, sptr->name, str);
-#define SND(str) sendto_one(sptr, ":%s 292 %s :%s", me.name, sptr->name, str);
+#define HDR(str) sendto_one(sptr, NULL, ":%s 290 %s :%s", me.name, sptr->name, str);
+#define SND(str) sendto_one(sptr, NULL, ":%s 292 %s :%s", me.name, sptr->name, str);
 
 ConfigItem_help *Find_Help(char *command)
 {
@@ -108,14 +108,14 @@ int  parse_help(aClient *sptr, char *name, char *help)
 		SND(" -");
 		SND("   We're sorry, we don't have help available for the command you requested.");
 		SND(" -");
-		sendto_one(sptr,":%s 292 %s : ***** Go to %s if you have any further questions *****",
+		sendto_one(sptr,NULL, ":%s 292 %s : ***** Go to %s if you have any further questions *****",
 		    me.name, sptr->name, helpchan);
 		SND(" -");
 		return 0;
 	}
 	text = helpitem->text;
 	SND(" -");
-	sendto_one(sptr,":%s 290 %s :***** %s *****",
+	sendto_one(sptr,NULL, ":%s 290 %s :***** %s *****",
 	    me.name, sptr->name, helpitem->command);
 	SND(" -");
 	while (text) {

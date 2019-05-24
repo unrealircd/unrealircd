@@ -108,7 +108,7 @@ CMD_FUNC(m_sendumode)
 	{
 		// FIXME: SEND WITH mtags HERE !!!!
 	    if (acptr->umodes & umode_s)
-			sendto_one(acptr, ":%s NOTICE %s :%s", sptr->name, acptr->name, message);
+			sendto_one(acptr, NULL, ":%s NOTICE %s :%s", sptr->name, acptr->name, message);
 	}
 
 	free_mtags(mtags);

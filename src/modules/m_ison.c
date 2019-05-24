@@ -100,6 +100,6 @@ CMD_FUNC(m_ison)
 		}
 	}
 
-	sendto_one(sptr, "%s", buf);
+	sendto_one(sptr, NULL, "%s", buf);
 	return 0;
 }

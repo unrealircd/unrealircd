@@ -179,7 +179,7 @@ CMD_FUNC(m_sapart)
 	{
 		if (comment)
 		{
-			sendto_one(acptr, ":%s SAPART %s %s :%s", sptr->name,
+			sendto_one(acptr, NULL, ":%s SAPART %s %s :%s", sptr->name,
 			    parv[1], parv[2], comment);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
@@ -187,7 +187,7 @@ CMD_FUNC(m_sapart)
 		}
 		else
 		{
-			sendto_one(acptr, ":%s SAPART %s %s", sptr->name, parv[1],
+			sendto_one(acptr, NULL, ":%s SAPART %s %s", sptr->name, parv[1],
 				   parv[2]);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",

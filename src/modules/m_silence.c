@@ -122,7 +122,7 @@ CMD_FUNC(m_silence)
 		{
 			(void)add_silence(sptr, parv[2], 1);
 			if (!MyClient(acptr))
-				sendto_one(acptr, ":%s SILENCE %s :%s",
+				sendto_one(acptr, NULL, ":%s SILENCE %s :%s",
 				    sptr->name, parv[1], parv[2]);
 		}
 	}

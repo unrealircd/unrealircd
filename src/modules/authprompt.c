@@ -327,14 +327,14 @@ void send_first_auth(aClient *sptr)
 		return;
 	}
 
-	sendto_one(acptr, ":%s SASL %s %s H %s %s",
+	sendto_one(acptr, NULL, ":%s SASL %s %s H %s %s",
 	    me.name, SASL_SERVER, encode_puid(sptr), addr, addr);
 
 	if (certfp)
-		sendto_one(acptr, ":%s SASL %s %s S %s %s",
+		sendto_one(acptr, NULL, ":%s SASL %s %s S %s %s",
 		    me.name, SASL_SERVER, encode_puid(sptr), "PLAIN", certfp);
 	else
-		sendto_one(acptr, ":%s SASL %s %s S %s",
+		sendto_one(acptr, NULL, ":%s SASL %s %s S %s",
 		    me.name, SASL_SERVER, encode_puid(sptr), "PLAIN");
 
 	/* The rest is sent from authprompt_sasl_continuation() */
@@ -489,7 +489,7 @@ int authprompt_sasl_continuation(aClient *sptr, char *buf)
 		aClient *agent = find_client(sptr->local->sasl_agent, NULL);
 		if (agent)
 		{
-			sendto_one(agent, ":%s SASL %s %s C %s",
+			sendto_one(agent, NULL, ":%s SASL %s %s C %s",
 				me.name, AGENT_SID(agent), encode_puid(sptr), SEUSER(sptr)->authmsg);
 		}
 		SEUSER(sptr)->authmsg = NULL;

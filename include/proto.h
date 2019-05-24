@@ -38,7 +38,7 @@ extern char *collapse(char *pattern);
 extern void clear_scache_hash_table(void);
 
 /* send.c */
-extern void sendto_one(aClient *, char *, ...) __attribute__((format(printf,2,3)));
+extern void sendto_one(aClient *, MessageTag *mtags, char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_realops(char *pattern, ...) __attribute__((format(printf,1,2)));
 
 /* ircd.c */

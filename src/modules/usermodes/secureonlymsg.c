@@ -70,7 +70,7 @@ char *secureonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int 
 		 * general "cannot send message" numeric (similar to the generic
 		 * ERR_CANNOTSENDTOCHAN for channel messaging).
 		 */
-		sendto_one(sptr, ":%s 492 %s :Cannot send to user %s (You must be connected via SSL/TLS to message this user)",
+		sendto_one(sptr, NULL, ":%s 492 %s :Cannot send to user %s (You must be connected via SSL/TLS to message this user)",
 			me.name, sptr->name, target->name);
 
 		return NULL; /* Block the message */
@@ -85,7 +85,7 @@ char *secureonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int 
 		 * make sense since they could never message back to us. Better block the
 		 * message than leave the user confused.
 		 */
-		sendto_one(sptr, ":%s 492 %s :Cannot send to user %s (You have user mode +Z set but are not connected via SSL/TLS)",
+		sendto_one(sptr, NULL, ":%s 492 %s :Cannot send to user %s (You have user mode +Z set but are not connected via SSL/TLS)",
 			me.name, sptr->name, target->name);
 	}
 

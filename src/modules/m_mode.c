@@ -248,7 +248,7 @@ CMD_FUNC(m_mode)
 			sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
 			return 0;
 		}
-		sendto_one(cptr, ":%s MODE %s -oh %s %s 0",
+		sendto_one(cptr, NULL, ":%s MODE %s -oh %s %s 0",
 		    me.name, chptr->chname, sptr->name, sptr->name);
 		/* Tell the other server that the user is
 		 * de-opped.  Fix op desyncs. */
@@ -383,10 +383,10 @@ static void bounce_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[])
 	set_mode(chptr, cptr, parc, parv, &pcount, pvar, 1);
 
 	if (chptr->creationtime)
-		sendto_one(cptr, ":%s MODE %s &%s %s %lu", me.name,
+		sendto_one(cptr, NULL, ":%s MODE %s &%s %s %lu", me.name,
 		    chptr->chname, modebuf, parabuf, chptr->creationtime);
 	else
-		sendto_one(cptr, ":%s MODE %s &%s %s", me.name, chptr->chname,
+		sendto_one(cptr, NULL, ":%s MODE %s &%s %s", me.name, chptr->chname,
 		    modebuf, parabuf);
 
 	/* the '&' denotes a bounce so servers won't bounce a bounce */
@@ -446,7 +446,7 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 			{
 				/* theirs is wrong but we let it pass anyway */
 				sendts = chptr->creationtime;
-				sendto_one(cptr, ":%s MODE %s + %lu", me.name,
+				sendto_one(cptr, NULL, ":%s MODE %s + %lu", me.name,
 				    chptr->chname, chptr->creationtime);
 			}
 		}
@@ -876,7 +876,7 @@ process_listmode:
 				if (ret == EX_ALWAYS_DENY)
 				{
 					if (MyClient(cptr) && badmode)
-						sendto_one(cptr, "%s", badmode); /* send error message, if any */
+						sendto_one(cptr, NULL, "%s", badmode); /* send error message, if any */
 
 				if (MyClient(cptr))
 					break; /* stop processing this mode */
@@ -888,7 +888,7 @@ process_listmode:
 					if (!op_can_override("channel:override:mode:del",cptr,chptr,&modetype))
 					{
 						if (badmode)
-							sendto_one(cptr, "%s", badmode); /* send error message, if any */
+							sendto_one(cptr, NULL, "%s", badmode); /* send error message, if any */
 						break; /* stop processing this mode */
 					} else {
 						opermode = 1;

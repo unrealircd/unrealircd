@@ -91,7 +91,7 @@ CMD_FUNC(m_ping)
 		if (MyClient(sptr))
 			origin = sptr->name; /* Make sure origin is not spoofed */
 		if ((acptr = find_server_quick(destination)) && (acptr != &me))
-			sendto_one(acptr, ":%s PING %s :%s", sptr->name, origin, destination);
+			sendto_one(acptr, NULL, ":%s PING %s :%s", sptr->name, origin, destination);
 		else
 		{
 			sendnumeric(sptr, ERR_NOSUCHSERVER, destination);
@@ -99,7 +99,7 @@ CMD_FUNC(m_ping)
 		}
 	}
 	else
-		sendto_one(sptr, ":%s PONG %s :%s", me.name,
+		sendto_one(sptr, NULL, ":%s PONG %s :%s", me.name,
 		    (destination) ? destination : me.name, origin);
 	return 0;
 }
@@ -132,7 +132,7 @@ CMD_FUNC(m_nospoof)
 	}
 	sptr->local->nospoof = 0;
 	if (USE_BAN_VERSION && MyConnect(sptr))
-		sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
+		sendto_one(sptr, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 			   me.name, sptr->name);
 
 	if (user_ready_for_register(sptr))
@@ -141,7 +141,7 @@ CMD_FUNC(m_nospoof)
 	return 0;
       temp:
 	/* Homer compatibility */
-	sendto_one(cptr, ":%X!nospoof@%s PRIVMSG %s :\1VERSION\1",
+	sendto_one(cptr, NULL, ":%X!nospoof@%s PRIVMSG %s :\1VERSION\1",
 	    cptr->local->nospoof, me.name, cptr->name);
 	return 0;
 }
@@ -185,7 +185,7 @@ CMD_FUNC(m_pong)
 				return 0;
 			}
 			else
-				sendto_one(acptr, ":%s PONG %s %s",
+				sendto_one(acptr, NULL, ":%s PONG %s %s",
 				    sptr->name, origin, destination);
 		}
 		else

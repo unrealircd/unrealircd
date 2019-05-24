@@ -328,13 +328,13 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 					{
 						if (HasCapabilityFast(user, CAP_EXTENDED_JOIN))
 						{
-							sendto_one(user,":%s!%s@%s JOIN %s %s :%s",
+							sendto_one(user,NULL, ":%s!%s@%s JOIN %s %s :%s",
 							           i->cptr->name, i->cptr->user->username, GetHost(i->cptr),
 							           chptr->chname,
 							           !isdigit(*i->cptr->user->svid) ? i->cptr->user->svid : "*",
 							           i->cptr->info);
 						} else {
-							sendto_one(user,":%s!%s@%s JOIN :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
+							sendto_one(user,NULL, ":%s!%s@%s JOIN :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
 						}
 					}
 				}
@@ -359,7 +359,7 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 					if (i->cptr == user)
 						continue;
 					if (moded_user_invisible(i->cptr,chptr))
-						sendto_one(user,":%s!%s@%s PART :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
+						sendto_one(user,NULL, ":%s!%s@%s PART :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
 				}
 
 			}

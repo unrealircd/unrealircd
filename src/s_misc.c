@@ -415,7 +415,7 @@ int found;
 			{
 				if((*lpp)->flags == DCC_LINK_ME)
 				{
-					sendto_one(acptr, ":%s %d %s :%s has been removed from "
+					sendto_one(acptr, NULL, ":%s %d %s :%s has been removed from "
 						"your DCC allow list for signing off",
 						me.name, RPL_DCCINFO, acptr->name, sptr->name);
 				}
@@ -458,7 +458,7 @@ recurse_send_quits(aClient *cptr, aClient *sptr, aClient *from, aClient *to,
 			if (acptr->srvptr != sptr)
 				continue;
 
-			sendto_one(to, ":%s QUIT :%s", acptr->name, splitstr);
+			sendto_one(to, NULL, ":%s QUIT :%s", acptr->name, splitstr);
 		}
 	}
 
@@ -471,7 +471,7 @@ recurse_send_quits(aClient *cptr, aClient *sptr, aClient *from, aClient *to,
 	}
 
 	if ((cptr == sptr && to != from) || !CHECKPROTO(to, PROTO_NOQUIT))
-		sendto_one(to, "SQUIT %s :%s", sptr->name, comment);
+		sendto_one(to, NULL, "SQUIT %s :%s", sptr->name, comment);
 }
 
 /*
@@ -681,12 +681,12 @@ int exit_client2(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_m
 		if (sptr->fd >= 0 && !IsConnecting(sptr))
 		{
 			if (cptr != NULL && sptr != cptr)
-				sendto_one(sptr,
+				sendto_one(sptr, NULL,
 				    "ERROR :Closing Link: %s %s (%s)",
 				    get_client_name(sptr, FALSE), cptr->name,
 				    comment);
 			else
-				sendto_one(sptr, "ERROR :Closing Link: %s (%s)",
+				sendto_one(sptr, NULL, "ERROR :Closing Link: %s (%s)",
 				    get_client_name(sptr, FALSE), comment);
 		}
 		/*

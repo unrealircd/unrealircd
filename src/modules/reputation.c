@@ -809,7 +809,7 @@ CMD_FUNC(reputation_server_cmd)
 		/* We have a higher score, inform the cptr direction about it.
 		 * This will prefix the score with a * so servers will never reply to it.
 		 */
-		sendto_one(cptr, ":%s REPUTATION %s *%d", me.name, parv[1], e->score);
+		sendto_one(cptr, NULL, ":%s REPUTATION %s *%d", me.name, parv[1], e->score);
 #ifdef DEBUGMODE
 		ircd_log(LOG_ERROR, "[reputation] Score for '%s' from %s is %d, but we have %d, sending back %d",
 			ip, sptr->name, score, e->score, e->score);
@@ -872,7 +872,7 @@ int reputation_whois(aClient *sptr, aClient *acptr)
 	
 	if (reputation > 0)
 	{
-		sendto_one(sptr, ":%s %d %s %s :is using an IP with a reputation score of %d",
+		sendto_one(sptr, NULL, ":%s %d %s %s :is using an IP with a reputation score of %d",
 			me.name, RPL_WHOISSPECIAL, sptr->name,
 			acptr->name, reputation);
 	}

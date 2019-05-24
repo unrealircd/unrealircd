@@ -208,7 +208,7 @@ CMD_FUNC(m_whois)
 					long access;
 					if (len + strlen(chptr->chname) > (size_t)BUFSIZE - 4 - mlen)
 					{
-						sendto_one(sptr,
+						sendto_one(sptr, NULL,
 						    ":%s %d %s %s :%s",
 						    me.name,
 						    RPL_WHOISCHANNELS,
@@ -301,7 +301,7 @@ CMD_FUNC(m_whois)
 						ConfigItem_oper *oper = Find_oper(acptr->user->operlogin);
 						if (oper && oper->operclass)
 							operclass = oper->operclass;
-						sendto_one(sptr,
+						sendto_one(sptr, NULL,
 						    ":%s 313 %s %s :is %s (%s) [%s]", me.name,
 						    sptr->name, name, buf,
 						    acptr->user->operlogin ? acptr->user->operlogin : "unknown",
@@ -323,7 +323,7 @@ CMD_FUNC(m_whois)
 				SWhois *s;
 				
 				for (s = acptr->user->swhois; s; s = s->next)
-					sendto_one(sptr, ":%s %d %s %s :%s",
+					sendto_one(sptr, NULL, ":%s %d %s %s :%s",
 					    me.name, RPL_WHOISSPECIAL, sptr->name,
 					    name, s->line);
 			}

@@ -222,11 +222,11 @@ void send_proto(aClient *cptr, ConfigItem_link *aconf)
 	 */
 
 	/* First line */
-	sendto_one(cptr, "PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID %s",
+	sendto_one(cptr, NULL, "PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID %s",
 	           iConf.ban_setter_sync ? "SJSBY" : "");
 
 	/* Second line */
-	sendto_one(cptr, "PROTOCTL CHANMODES=%s%s,%s%s,%s%s,%s%s USERMODES=%s BOOTED=%ld PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%ld EXTSWHOIS",
+	sendto_one(cptr, NULL, "PROTOCTL CHANMODES=%s%s,%s%s,%s%s,%s%s USERMODES=%s BOOTED=%ld PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%ld EXTSWHOIS",
 		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, umodestring, me.local->since, prefix->value, charsys_get_current_languages(), me.id, (long)TStime());
 }
 
@@ -691,7 +691,7 @@ CMD_FUNC(m_rehash)
 			{
 				if (acptr == &me)
 					continue;
-				sendto_one(acptr, ":%s REHASH %s %s",
+				sendto_one(acptr, NULL, ":%s REHASH %s %s",
 					sptr->name,
 					acptr->name,
 					parv[1] ? parv[1] : "-all");
@@ -832,7 +832,7 @@ char *reason = parv[1];
 		if (IsClient(acptr))
 			sendnotice(acptr, "Server Restarted by %s", sptr->name);
 		else if (IsServer(acptr))
-			sendto_one(acptr, ":%s ERROR :Restarted by %s: %s",
+			sendto_one(acptr, NULL, ":%s ERROR :Restarted by %s: %s",
 			    me.name, get_client_name(sptr, TRUE), reason ? reason : "No reason");
 	}
 
@@ -1168,7 +1168,7 @@ CMD_FUNC(m_die)
 			sendnotice(acptr, "Server Terminated by %s", 
 				sptr->name);
 		else if (IsServer(acptr))
-			sendto_one(acptr, ":%s ERROR :Terminated by %s",
+			sendto_one(acptr, NULL, ":%s ERROR :Terminated by %s",
 			    me.name, get_client_name(sptr, TRUE));
 	}
 
@@ -1191,7 +1191,7 @@ int  localdie(void)
 		if (IsClient(acptr))
 			sendnotice(acptr, "Server Terminated by local console");
 		else if (IsServer(acptr))
-			sendto_one(acptr,
+			sendto_one(acptr, NULL,
 			    ":%s ERROR :Terminated by local console", me.name);
 	}
 	(void)s_die();

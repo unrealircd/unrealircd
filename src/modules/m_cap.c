@@ -181,7 +181,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags)
 
 	if (flags == -1)
 	{
-		sendto_one(sptr, "%s :", buf);
+		sendto_one(sptr, NULL, "%s :", buf);
 		return;
 	}
 
@@ -212,7 +212,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags)
 			else
 				*p = '\0';
 
-			sendto_one(sptr, "%s * :%s", buf, capbuf);
+			sendto_one(sptr, NULL, "%s * :%s", buf, capbuf);
 			p = capbuf;
 			buflen = mlen;
 		}
@@ -227,7 +227,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags)
 	else
 		*p = '\0';
 
-	sendto_one(sptr, "%s :%s", buf, capbuf);
+	sendto_one(sptr, NULL, "%s :%s", buf, capbuf);
 }
 
 static int cap_end(aClient *sptr, const char *arg)
@@ -330,17 +330,17 @@ static int cap_req(aClient *sptr, const char *arg)
 
 	if (errors)
 	{
-		sendto_one(sptr, ":%s CAP %s NAK :%s", me.name, BadPtr(sptr->name) ? "*" : sptr->name, arg);
+		sendto_one(sptr, NULL, ":%s CAP %s NAK :%s", me.name, BadPtr(sptr->name) ? "*" : sptr->name, arg);
 		return 0;
 	}
 
 	if (i)
 	{
-		sendto_one(sptr, "%s * :%s", buf, pbuf[0]);
-		sendto_one(sptr, "%s :%s", buf, pbuf[1]);
+		sendto_one(sptr, NULL, "%s * :%s", buf, pbuf[0]);
+		sendto_one(sptr, NULL, "%s :%s", buf, pbuf[1]);
 	}
 	else
-		sendto_one(sptr, "%s :%s", buf, pbuf[0]);
+		sendto_one(sptr, NULL, "%s :%s", buf, pbuf[0]);
 
 	sptr->local->caps |= capadd;
 	sptr->local->caps &= ~capdel;

@@ -213,7 +213,7 @@ void _send_join_to_local_users(aClient *sptr, aChannel *chptr)
 
 		if (sptr->user->away && HasCapabilityFast(acptr, CAP_AWAY_NOTIFY))
 		{
-			sendto_one(acptr, ":%s!%s@%s AWAY :%s",
+			sendto_one(acptr, NULL, ":%s!%s@%s AWAY :%s",
 			           sptr->name, sptr->user->username, GetHost(sptr), sptr->user->away);
 		}
 	}
@@ -314,7 +314,7 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 			// FIXME: mtags!
 			sendto_server(&me, 0, 0, NULL, ":%s MODE %s %s %s %lu",
 			    me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
-			sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
+			sendto_one(sptr, NULL, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
 		}
 
 		parv[0] = sptr->name;

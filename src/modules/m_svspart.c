@@ -81,10 +81,10 @@ CMD_FUNC(m_svspart)
 	else
 	{
 		if (comment)
-			sendto_one(acptr, ":%s SVSPART %s %s :%s", sptr->name,
+			sendto_one(acptr, NULL, ":%s SVSPART %s %s :%s", sptr->name,
 			    parv[1], parv[2], parv[3]);
 		else
-			sendto_one(acptr, ":%s SVSPART %s %s", sptr->name,
+			sendto_one(acptr, NULL, ":%s SVSPART %s %s", sptr->name,
 			    parv[1], parv[2]);
 	}
 

@@ -114,7 +114,7 @@ CMD_FUNC(m_ircops)
 		if (!IsOper(sptr) && IsHideOper(acptr))
 			continue;
 
-		sendto_one(sptr, ":%s %d %s :\2%s\2 is %s on %s" "%s",
+		sendto_one(sptr, NULL, ":%s %d %s :\2%s\2 is %s on %s" "%s",
 			me.name, RPL_TEXT, sptr->name,
 			acptr->name,
 			"an IRC Operator", /* find_otype(acptr->umodes), */

@@ -169,7 +169,7 @@ int send_queued(aClient *to)
 /*
  *  send message to single client
  */
-void sendto_one(aClient *to, char *pattern, ...)
+void sendto_one(aClient *to, MessageTag *mtags, char *pattern, ...)
 {
 	va_list vl;
 	va_start(vl, pattern);
@@ -952,14 +952,14 @@ void send_cap_notify(int add, char *token)
 				}
 				if (!args)
 				{
-					sendto_one(cptr, ":%s CAP %s NEW :%s",
+					sendto_one(cptr, NULL, ":%s CAP %s NEW :%s",
 						me.name, (*cptr->name ? cptr->name : "*"), token);
 				} else {
-					sendto_one(cptr, ":%s CAP %s NEW :%s=%s",
+					sendto_one(cptr, NULL, ":%s CAP %s NEW :%s=%s",
 						me.name, (*cptr->name ? cptr->name : "*"), token, args);
 				}
 			} else {
-				sendto_one(cptr, ":%s CAP %s DEL :%s",
+				sendto_one(cptr, NULL, ":%s CAP %s DEL :%s",
 					me.name, (*cptr->name ? cptr->name : "*"), token);
 			}
 		}
@@ -1324,7 +1324,7 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 
 	if (CHECKPROTO(cptr, PROTO_SID) && *sptr->id)
 	{
-		sendto_one(cptr,
+		sendto_one(cptr, NULL,
 			":%s UID %s %d %ld %s %s %s %s %s %s %s %s :%s",
 			sptr->srvptr->id, sptr->name, sptr->hopcount, sptr->lastnick,
 			sptr->user->username, sptr->user->realhost, sptr->id,
@@ -1333,7 +1333,7 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 		return;
 	}
 
-	sendto_one(cptr,
+	sendto_one(cptr, NULL,
 		    "NICK %s %d %d %s %s %s %s %s %s %s%s%s%s:%s",
 		    sptr->name,
 		    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 

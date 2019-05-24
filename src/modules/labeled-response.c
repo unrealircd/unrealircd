@@ -188,16 +188,16 @@ int lr_post_command(aClient *from, MessageTag *mtags, char *buf)
 			/* Start the batch now (only to be terminated right after) */
 			// XXX: if this changes in the spec, then send something
 			//      different for the 0-replies-case.
-			sendto_one(from, "%s", gen_start_batch());
+			sendto_one(from, NULL, "%s", gen_start_batch());
 		}
 
 		/* End the batch */
 		savedptr = currentcmd.client;
 		currentcmd.client = NULL;
 		if (MyConnect(savedptr))
-			sendto_one(from, ":%s BATCH -%s", me.name, currentcmd.batch);
+			sendto_one(from, NULL, ":%s BATCH -%s", me.name, currentcmd.batch);
 		else
-			sendto_one(from, ":%s BATCH %s -%s", me.name, savedptr->name, currentcmd.batch);
+			sendto_one(from, NULL, ":%s BATCH %s -%s", me.name, savedptr->name, currentcmd.batch);
 	}
 	memset(&currentcmd, 0, sizeof(currentcmd));
 	return 0;
@@ -221,8 +221,9 @@ int lr_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int 
 				 * but doing so is not possible since we are in the sending code ;)
 				 */
 				char *batchstr = gen_start_batch();
-				snprintf(packet, sizeof(packet), "%s\r\n"
-				                                 "@batch=%s %s",
+				snprintf(packet, sizeof(packet),
+				         "%s\r\n"
+				         "@batch=%s %s",
 				         batchstr,
 				         currentcmd.batch,
 				         *msg);

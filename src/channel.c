@@ -937,10 +937,10 @@ int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *par
 {
 	if ((IsServer(cptr) && DoesOp(mode) && creationtime) ||
 	    IsULine(cptr))
-		sendto_one(cptr, ":%s MODE %s %s %s %lu", from,
+		sendto_one(cptr, NULL, ":%s MODE %s %s %s %lu", from,
 		    name, mode, param, creationtime);
 	else
-		sendto_one(cptr, ":%s MODE %s %s %s", from, name, mode, param);
+		sendto_one(cptr, NULL, ":%s MODE %s %s %s", from, name, mode, param);
 
 	return 0;
 }
@@ -1313,7 +1313,7 @@ void send_user_joins(aClient *cptr, aClient *user)
 			if (cnt)
 			{
 				buf[len - 1] = '\0';
-				sendto_one(cptr, "%s", buf);
+				sendto_one(cptr, NULL, "%s", buf);
 			}
 			snprintf(buf, sizeof buf, ":%s JOIN ", user->name);
 			len = strlen(buf);
@@ -1329,7 +1329,7 @@ void send_user_joins(aClient *cptr, aClient *user)
 		}
 	}
 	if (*buf && cnt)
-		sendto_one(cptr, "%s", buf);
+		sendto_one(cptr, NULL, "%s", buf);
 
 	return;
 }

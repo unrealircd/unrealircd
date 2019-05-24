@@ -278,7 +278,7 @@ CMD_FUNC(m_tempshun)
 	}
 	if (!MyClient(acptr))
 	{
-		sendto_one(acptr->from, ":%s TEMPSHUN %s :%s",
+		sendto_one(acptr->from, NULL, ":%s TEMPSHUN %s :%s",
 			sptr->name, parv[1], comment);
 	} else {
 		char buf[1024];
@@ -1977,7 +1977,7 @@ void tkl_synch_send_entry(aClient *sptr, aTKline *tkl)
 			typ = 'Q';
 		if ((tkl->type & TKL_SPAMF) && (sptr->local->proto & PROTO_TKLEXT2))
 		{
-			sendto_one(sptr, ":%s TKL + %c %s %s %s %li %li %li %s %s :%s", me.name,
+			sendto_one(sptr, NULL, ":%s TKL + %c %s %s %s %li %li %li %s %s :%s", me.name,
 				   typ,
 				   tkl->usermask, tkl->hostmask, tkl->setby,
 				   tkl->expire_at, tkl->set_at,
@@ -1987,7 +1987,7 @@ void tkl_synch_send_entry(aClient *sptr, aTKline *tkl)
 		} else
 		if ((tkl->type & TKL_SPAMF) && (sptr->local->proto & PROTO_TKLEXT))
 		{
-			sendto_one(sptr, ":%s TKL + %c %s %s %s %li %li %li %s :%s", me.name,
+			sendto_one(sptr, NULL, ":%s TKL + %c %s %s %s %li %li %li %s :%s", me.name,
 				   typ,
 				   tkl->usermask, tkl->hostmask, tkl->setby,
 				   tkl->expire_at, tkl->set_at,
@@ -1996,7 +1996,7 @@ void tkl_synch_send_entry(aClient *sptr, aTKline *tkl)
 		} else
 		{
 			/* All other types (non-spamfilter)... */
-			sendto_one(sptr, ":%s TKL + %c %s%s %s %s %li %li :%s", me.name,
+			sendto_one(sptr, NULL, ":%s TKL + %c %s%s %s %s %li %li :%s", me.name,
 				   typ,
 				   (tkl->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 				   *tkl->usermask ? tkl->usermask : "*", tkl->hostmask, tkl->setby,
@@ -2963,7 +2963,7 @@ long ms_past;
 				break;
 			case SPAMF_CHANMSG:
 			case SPAMF_CHANNOTICE:
-				sendto_one(sptr, ":%s 404 %s %s :Message blocked: %s",
+				sendto_one(sptr, NULL, ":%s 404 %s %s :Message blocked: %s",
 					me.name, sptr->name, target,
 					unreal_decodespace(tk->ptr.spamf->tkl_reason));
 				break;

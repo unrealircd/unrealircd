@@ -804,7 +804,7 @@ static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_fo
 				sendto_snomask(SNO_JUNK, "*** WHOX overflow while sending information about %s to %s", acptr->name, sptr->name);
 			warned = 1;
  		}
-		sendto_one(sptr, "%s", str);
+		sendto_one(sptr, NULL, "%s", str);
 	}
 }
 

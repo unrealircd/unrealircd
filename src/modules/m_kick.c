@@ -154,7 +154,7 @@ CMD_FUNC(m_kick)
 				if (ret == EX_ALWAYS_DENY)
 				{
 					if (MyClient(sptr) && badkick)
-						sendto_one(sptr, "%s", badkick); /* send error, if any */
+						sendto_one(sptr, NULL, "%s", badkick); /* send error, if any */
 
 					if (MyClient(sptr))
 						continue; /* reject the kick (note: we never block remote kicks) */
@@ -176,7 +176,7 @@ CMD_FUNC(m_kick)
 					} else {
 						/* Not an oper overriding */
 						if (MyClient(sptr) && badkick)
-							sendto_one(sptr, "%s", badkick); /* send error, if any */
+							sendto_one(sptr, NULL, "%s", badkick); /* send error, if any */
 
 						continue; /* reject the kick */
 					}

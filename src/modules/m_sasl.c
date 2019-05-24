@@ -204,7 +204,7 @@ CMD_FUNC(m_sasl)
 		if (*parv[3] == 'C')
 		{
 			RunHookReturnInt2(HOOKTYPE_SASL_CONTINUATION, target_p, parv[4], !=0);
-			sendto_one(target_p, "AUTHENTICATE %s", parv[4]);
+			sendto_one(target_p, NULL, "AUTHENTICATE %s", parv[4]);
 		}
 		else if (*parv[3] == 'D')
 		{

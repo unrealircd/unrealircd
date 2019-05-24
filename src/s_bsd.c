@@ -622,7 +622,7 @@ void start_server_handshake(aClient *cptr)
 
 	RunHook(HOOKTYPE_SERVER_HANDSHAKE_OUT, cptr);
 
-	sendto_one(cptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
+	sendto_one(cptr, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 
 	send_protoctl_servers(cptr, 0);
 	send_proto(cptr, aconf);
@@ -636,7 +636,7 @@ void start_server_handshake(aClient *cptr)
 		 */
 
 		/* Use this nasty hack, to make 3.2.9<->pre-3.2.9 linking work */
-		sendto_one(cptr, "__PANGPANG__");
+		sendto_one(cptr, NULL, "__PANGPANG__");
 	} else {
 		send_server_message(cptr);
 	}
@@ -673,7 +673,7 @@ void completed_connection(int fd, int revents, void *data)
 
 	if (!cptr->local->ssl && !(aconf->outgoing.options & CONNECT_INSECURE))
 	{
-		sendto_one(cptr, "STARTTLS");
+		sendto_one(cptr, NULL, "STARTTLS");
 	} else
 	{
 		start_server_handshake(cptr);
@@ -1146,7 +1146,7 @@ struct hostent *he;
 	if (!DONT_RESOLVE)
 	{
 		if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->local->listener))
-			sendto_one(acptr, "%s", REPORT_DO_DNS);
+			sendto_one(acptr, NULL, "%s", REPORT_DO_DNS);
 		dns_special_flag = 1;
 		he = unrealdns_doclient(acptr);
 		dns_special_flag = 0;
@@ -1162,7 +1162,7 @@ struct hostent *he;
 			/* Host was in our cache */
 			acptr->local->hostp = he;
 			if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->local->listener))
-				sendto_one(acptr, "%s", REPORT_FIN_DNSC);
+				sendto_one(acptr, NULL, "%s", REPORT_FIN_DNSC);
 		}
 	}
 
@@ -1176,7 +1176,7 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 	ClearDNS(acptr);
 	acptr->local->hostp = he;
 	if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->local->listener))
-		sendto_one(acptr, "%s", acptr->local->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
+		sendto_one(acptr, NULL, "%s", acptr->local->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 
 	if (!dns_special_flag && !DoingAuth(acptr))
 		finish_auth(acptr);

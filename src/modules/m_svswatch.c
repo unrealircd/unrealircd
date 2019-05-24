@@ -75,7 +75,7 @@ CMD_FUNC(m_svswatch)
 		(void)do_cmd(acptr, acptr, NULL, "WATCH", 2, parv);
 	}
 	else
-		sendto_one(acptr, ":%s SVSWATCH %s :%s", sptr->name, parv[1], parv[2]);
+		sendto_one(acptr, NULL, ":%s SVSWATCH %s :%s", sptr->name, parv[1], parv[2]);
 
 	return 0;
 }

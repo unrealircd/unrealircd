@@ -400,7 +400,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *
 			if (ch[0] != '\0')
 			{
 				if (IsPerson(from))
-					sendto_one(from,
+					sendto_one(from, NULL,
 					    ":%s %d %s %s :Unknown command",
 					    me.name, ERR_UNKNOWNCOMMAND,
 					    from->name, ch);
@@ -553,9 +553,9 @@ static void remove_unknown(aClient *cptr, char *sender)
 	 * user on the other server which needs to be removed. -avalon
 	 */
 	if ((isdigit(*sender) && strlen(sender) <= SIDLEN) || index(sender, '.'))
-		sendto_one(cptr, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
+		sendto_one(cptr, NULL, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
 		    me.name, sender, sender, cptr->name);
 	else
-		sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
+		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s(?) <- %s)",
 		    me.name, sender, me.name, sender, cptr->name);
 }

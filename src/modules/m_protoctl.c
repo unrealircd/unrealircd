@@ -191,7 +191,7 @@ CMD_FUNC(m_protoctl)
 
 			if ((acptr = hash_find_id(sid, NULL)) != NULL)
 			{
-				sendto_one(sptr, "ERROR :SID %s already exists from %s", acptr->id, acptr->name);
+				sendto_one(sptr, NULL, "ERROR :SID %s already exists from %s", acptr->id, acptr->name);
 				sendto_snomask(SNO_SNOTICE, "Link %s rejected - SID %s already exists from %s",
 						get_client_name(cptr, FALSE), acptr->id, acptr->name);
 				return exit_client(cptr, cptr, &me, "SID collision");
@@ -225,7 +225,7 @@ CMD_FUNC(m_protoctl)
 			servername = strtoken(&p, buf, ",");
 			if (!servername || (strlen(servername) > HOSTLEN) || !index(servername, '.'))
 			{
-				sendto_one(sptr, "ERROR :Bogus server name in EAUTH (%s)", servername ? servername : "");
+				sendto_one(sptr, NULL, "ERROR :Bogus server name in EAUTH (%s)", servername ? servername : "");
 				sendto_snomask
 				    (SNO_JUNK,
 				    "WARNING: Bogus server name (%s) from %s in EAUTH (maybe just a fishy client)",
@@ -266,7 +266,7 @@ CMD_FUNC(m_protoctl)
 			if (software)
 				cptr->serv->features.software = strdup(software);
 			if (!IsHandshake(cptr) && aconf) /* Send PASS early... */
-				sendto_one(sptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
+				sendto_one(sptr, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		}
 		else if (!strcmp(name, "SERVERS") && value && NEW_LINKING_PROTOCOL)
 		{
@@ -289,7 +289,7 @@ CMD_FUNC(m_protoctl)
 			acptr = find_non_pending_net_duplicates(sptr);
 			if (acptr)
 			{
-				sendto_one(sptr, "ERROR :Server with SID %s (%s) already exists",
+				sendto_one(sptr, NULL, "ERROR :Server with SID %s (%s) already exists",
 					acptr->id, acptr->name);
 				sendto_realops("Link %s cancelled, server with SID %s (%s) already exists",
 					get_client_name(acptr, TRUE), acptr->id, acptr->name);
@@ -299,7 +299,7 @@ CMD_FUNC(m_protoctl)
 			acptr = find_pending_net_duplicates(sptr, &srv, &sid);
 			if (acptr)
 			{
-				sendto_one(sptr, "ERROR :Server with SID %s is being introduced by another server as well. "
+				sendto_one(sptr, NULL, "ERROR :Server with SID %s is being introduced by another server as well. "
 				                 "Just wait a moment for it to synchronize...", sid);
 				sendto_realops("Link %s cancelled, server would introduce server with SID %s, which "
 				               "server %s is also about to introduce. Just wait a moment for it to synchronize...",

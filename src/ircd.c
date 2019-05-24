@@ -614,7 +614,7 @@ int check_ping(aClient *cptr)
 		 * not nice but does the job
 		 */
 		cptr->local->lasttime = TStime() - ping;
-		sendto_one(cptr, "PING :%s", me.name);
+		sendto_one(cptr, NULL, "PING :%s", me.name);
 	}
 
 	return 0;

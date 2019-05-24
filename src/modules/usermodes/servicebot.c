@@ -128,7 +128,7 @@ int servicebot_whois(aClient *sptr, aClient *acptr)
 	int hideoper = (IsHideOper(acptr) && (sptr != acptr) && !IsOper(sptr)) ? 1 : 0;
 
 	if (IsServiceBot(acptr) && !hideoper)
-		sendto_one(sptr, WHOIS_SERVICE_STRING, me.name, sptr->name, acptr->name);
+		sendto_one(sptr, NULL, WHOIS_SERVICE_STRING, me.name, sptr->name, acptr->name);
 
 	return 0;
 }

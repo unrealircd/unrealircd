@@ -213,7 +213,7 @@ CMD_FUNC(m_sajoin)
 	}
 	else
 	{
-		sendto_one(acptr, ":%s SAJOIN %s %s", sptr->name, parv[1], parv[2]);
+		sendto_one(acptr, NULL, ":%s SAJOIN %s %s", sptr->name, parv[1], parv[2]);
 
 		/* Logging function added by XeRXeS */
 		ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",

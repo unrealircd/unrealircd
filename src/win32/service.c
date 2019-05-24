@@ -75,7 +75,7 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode)
 			if (IsClient(acptr))
 				sendnotice(acptr, "Server Terminating.");
 			else if (IsServer(acptr))
-				sendto_one(acptr, ":%s ERROR :Terminated", me.name);
+				sendto_one(acptr, NULL, ":%s ERROR :Terminated", me.name);
 		} */
 		unload_all_modules();
 /*		for (i = LastSlot; i >= 0; i--)

@@ -516,7 +516,7 @@ getnick:
 					continue;
 				}
 			
-				sendto_one(sptr,
+				sendto_one(sptr, NULL,
 				    ":%s KICK %s %s :Fake direction",
 				    me.name, chptr->chname,
 				    acptr->name);
