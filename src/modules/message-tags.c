@@ -88,6 +88,8 @@ void message_tag_unescape(char *in, char *out)
 				*out++ = '\r'; /* \r to CR */
 			else if (*in == 'n')
 				*out++ = '\n'; /* \n to LF */
+			else if (*in == '\0')
+				break; /* unfinished escaping (\) */
 			else
 				*out++ = *in; /* all rest is as-is */
 			continue;
