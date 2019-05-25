@@ -180,6 +180,8 @@ void _parse_message_tags(aClient *cptr, char **str, MessageTag **mtag_list)
 	/* Now actually parse the tags: */
 	for (element = strtoken(&p, *str+1, ";"); element; element = strtoken(&p, NULL, ";"))
 	{
+		*name = *value = '\0';
+
 		/* Element has style: 'name=value', or it could be just 'name' */
 		x = strchr(element, '=');
 		if (x)
