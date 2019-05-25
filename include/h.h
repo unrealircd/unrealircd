@@ -321,7 +321,7 @@ extern char *check_string(char *);
 extern char *make_nick_user_host(char *, char *, char *);
 extern char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host);
 extern char *make_user_host(char *, char *);
-extern int parse(aClient *, char *, char *);
+extern int parse(aClient *cptr, char *buffer, int length);
 extern int do_numeric(int, aClient *, aClient *, MessageTag *, int, char **);
 extern int hunt_server(aClient *, aClient *, MessageTag *, char *, int, int, char **);
 extern aClient *next_client(aClient *, char *);

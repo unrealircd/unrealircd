@@ -143,6 +143,7 @@ int  dbuf_getmsg(dbuf *dyn, char *buf)
 	int line_bytes = 0, empty_bytes = 0, phase = 0;
 	unsigned int idx;
 	char c;
+	char *p = buf;
 
 	/*
 	 * Phase 0: "empty" characters before the line
@@ -171,23 +172,26 @@ int  dbuf_getmsg(dbuf *dyn, char *buf)
 			{
 				case 0: phase = 1; /* FALLTHROUGH */
 				case 1: if (line_bytes++ < READBUFSIZE - 2)
-						*buf++ = c;
+						*p++ = c;
 					break;
-				case 2: *buf = '\0';
+				case 2: *p = '\0';
 					dbuf_delete(dyn, line_bytes + empty_bytes);
 					return MIN(line_bytes, READBUFSIZE - 2);
 			}
 		}
 	}
 
-	/*
-	 * Now, if we haven't reached phase 2, ignore all line bytes
-	 * that we have read, since this is a partial line case.
-	 */
 	if (phase != 2)
+	{
+		/* If we have not reached phase 2 then this is not
+		 * not a complete line and it is invalid (return 0).
+		 */
 		line_bytes = 0;
-	else
 		*buf = '\0';
+	} else {
+		/* Zero terminate the string */
+		*p = '\0';
+	}
 
 	/* Remove what is now unnecessary */
 	dbuf_delete(dyn, line_bytes + empty_bytes);

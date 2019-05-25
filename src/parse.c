@@ -167,14 +167,14 @@ void parse_addlag(aClient *cptr, int cmdbytes)
 	}		
 }
 
-int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *bufend);
+int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, int length);
 
 /*
  * parse a buffer.
  *
  * NOTE: parse() cannot not be called recusively by any other functions!
  */
-int parse(aClient *cptr, char *buffer, char *bufend)
+int parse(aClient *cptr, char *buffer, int length)
 {
 	Hook *h;
 	int buf_len = 0;
@@ -190,10 +190,8 @@ int parse(aClient *cptr, char *buffer, char *bufend)
 
 	for (h = Hooks[HOOKTYPE_PACKET]; h; h = h->next)
 	{
-		buf_len = (int)(bufend - buffer);
-		(*(h->func.intfunc))(from, &me, NULL, &buffer, &buf_len);
+		(*(h->func.intfunc))(from, &me, NULL, &buffer, &length);
 		if(!buffer) return 0;
-		bufend = buffer + buf_len;
 	}
 
 	Debug((DEBUG_ERROR, "Parsing: %s (from %s)", buffer,
@@ -234,7 +232,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
 			;
 	}
 
-	ret = parse2(cptr, &from, mtags, ch, bufend);
+	ret = parse2(cptr, &from, mtags, ch, length);
 	if (ret == FLUSH_BUFFER)
 		RunHook3(HOOKTYPE_POST_COMMAND, NULL, mtags, ch);
 	else
@@ -243,7 +241,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
 	return ret;
 }
 
-int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *bufend)
+int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, int length)
 {
 	aClient *from = cptr;
 	char *s;
@@ -263,10 +261,10 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *
 	 * (that is 512 minus CR LF, as specified in RFC1459 section 2.3).
 	 * If it is too long, then we cut it off here.
 	 */
-	if (ch + 510 < bufend)
+	if (length > 510)
 	{
-		bufend = ch + 510;
-		*bufend = '\0';
+		length = 510;
+		ch[length] = '\0';
 	}
 
 	//para[0] = from->name;
@@ -358,7 +356,6 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *
 	else
 	{
 		int flags = 0;
-		int bytes = bufend - ch;
 		if (s)
 			*s++ = '\0';
 		if (!IsRegistered(from))
@@ -391,7 +388,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *
 			 */
 			if (!IsRegistered(cptr) && stricmp(ch, "NOTICE")) {
 				sendnumericfmt(from, ERR_NOTREGISTERED, "You have not registered");
-				parse_addlag(cptr, bytes);
+				parse_addlag(cptr, length);
 				return -1;
 			}
 			if (IsShunned(cptr))
@@ -406,7 +403,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *
 					    from->name, ch);
 				Debug((DEBUG_ERROR, "Unknown (%s) from %s",
 				    ch, get_client_name(cptr, TRUE)));
-				parse_addlag(cptr, bytes);
+				parse_addlag(cptr, length);
 			}
 			ircstp->is_unco++;
 			return (-1);
@@ -419,7 +416,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *
 		if ((flags & M_USER) && !(cmptr->flags & M_USER) && !(cmptr->flags & M_OPER))
 		{
 			sendnumeric(cptr, ERR_NOTFORUSERS, cmptr->cmd);
-			parse_addlag(cptr, bytes);
+			parse_addlag(cptr, length);
 			return -1;
 		}
 
@@ -432,13 +429,13 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch, char *
 		if ((cmptr->flags & M_OPER) && (flags & M_USER) && !(flags & M_OPER))
 		{
 			sendnumeric(cptr, ERR_NOPRIVILEGES);
-			parse_addlag(cptr, bytes);
+			parse_addlag(cptr, length);
 			return -1;
 		}
 		paramcount = cmptr->parameters;
-		cmptr->bytes += bytes;
+		cmptr->bytes += length;
 		if (!(cmptr->flags & M_NOLAG))
-			parse_addlag(cptr, bytes);
+			parse_addlag(cptr, length);
 	}
 	/*
 	   ** Must the following loop really be so devious? On

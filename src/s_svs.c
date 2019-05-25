@@ -293,7 +293,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 					}
 
 					recursive_alias = 1;
-					ret = parse(sptr, mybuf, mybuf+strlen(mybuf));
+					ret = parse(sptr, mybuf, strlen(mybuf));
 					recursive_alias = 0;
 
 					return ret;

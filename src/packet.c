@@ -62,7 +62,7 @@ int  dopacket(aClient *cptr, char *buffer, int length)
 	me.local->receiveM += 1;	/* Update messages received */
 	cptr->local->receiveM += 1;
 
-	return parse(cptr, buffer, buffer + length);
+	return parse(cptr, buffer, length);
 }
 
 void	init_CommandHash(void)
