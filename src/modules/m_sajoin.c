@@ -67,26 +67,41 @@ CMD_FUNC(m_sajoin)
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("SAJOIN");
 
-	if (parc < 3) 
-        {
-         sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SAJOIN");     
-         return 0;
-        }
+	if (parc < 3)
+	{
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SAJOIN");
+		return 0;
+	}
 
 	if (!(acptr = find_person(parv[1], NULL)))
-        {
-                sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
-                return 0;
-        }
+	{
+		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
+		return 0;
+	}
 
 	/* Is this user disallowed from operating on this victim at all? */
 	if (!IsULine(sptr) && !ValidatePermissionsForPath("sacmd:sajoin",sptr,acptr,NULL,NULL))
 	{
-	 sendnumeric(sptr, ERR_NOPRIVILEGES);
-	 return 0;
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		return 0;
 	}
 
-	if (MyClient(acptr))
+	/* If it's not for our client, then simply pass on the message... */
+	if (!MyClient(acptr))
+	{
+		sendto_one(acptr, NULL, ":%s SAJOIN %s %s", sptr->name, parv[1], parv[2]);
+
+		/* Logging function added by XeRXeS */
+		ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
+			sptr->name, parv[1], parv[2]);
+
+		return 0;
+	}
+
+	/* FIXME: can't this just use do_join() or something with a parameter to bypass some checks??
+	 * This duplicate code is damn ugly.
+	 */
+
 	{
 		char *name, *p = NULL;
 		int i, parted = 0;
@@ -125,15 +140,14 @@ CMD_FUNC(m_sajoin)
 
 			/* If this _specific_ channel is not permitted, skip it */
 			if (!IsULine(sptr) && !ValidatePermissionsForPath("sacmd:sajoin",sptr,acptr,chptr,NULL))
-        		{
-         			sendnumeric(sptr, ERR_NOPRIVILEGES);
+			{
+				sendnumeric(sptr, ERR_NOPRIVILEGES);
 				continue;
-		        }
+			}
 
 			if (!parted && chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
 			{
-				sendnumeric(sptr, ERR_USERONCHANNEL, 
-					   parv[1], name);
+				sendnumeric(sptr, ERR_USERONCHANNEL, parv[1], name);
 				continue;
 			}
 			if (*jbuf)
@@ -214,22 +228,12 @@ CMD_FUNC(m_sajoin)
 			sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, acptr->name,
 				       jbuf);
 			sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
-					   me.name, sptr->name, acptr->name, jbuf);
+			              me.name, sptr->name, acptr->name, jbuf);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
 				sptr->name, parv[1], jbuf);
 		}
 	}
-	else
-	{
-		sendto_one(acptr, NULL, ":%s SAJOIN %s %s", sptr->name, parv[1], parv[2]);
-
-		/* Logging function added by XeRXeS */
-		ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-			sptr->name, parv[1], parv[2]);
-	}
 
 	return 0;
 }
-
-
