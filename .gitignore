@@ -6,7 +6,6 @@ conftest.*
 config.settings
 extras/pcre2*
 extras/c-ares*
-extras/regexp*
 config.status
 extras/ircdcron/ircd.cron
 extras/ircdcron/ircdchk
