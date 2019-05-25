@@ -828,17 +828,17 @@ char *err = NULL;
 		return spamfilter_usage(sptr);
 	}
 
-	match_type = unreal_match_method_strtoval(parv[2]+1);
-	if (!match_type)
-	{
-		return spamfilter_new_usage(cptr,sptr,parv);
-	}
-
-	if ((whattodo == 0) && (match_type == MATCH_TRE_REGEX))
+	if ((whattodo == 0) && !strcasecmp(parv[2]+1, "posix"))
 	{
 		sendnotice(sptr, "ERROR: Spamfilter type 'posix' is DEPRECATED. You must use type 'regex' instead.");
 		sendnotice(sptr, "See https://www.unrealircd.org/docs/FAQ#spamfilter-posix-deprecated");
 		return 0;
+	}
+
+	match_type = unreal_match_method_strtoval(parv[2]+1);
+	if (!match_type)
+	{
+		return spamfilter_new_usage(cptr,sptr,parv);
 	}
 
 	targets = spamfilter_gettargets(parv[3], sptr);
@@ -1070,8 +1070,8 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 	aMatch *m = NULL;
 
 	/* Pre-allocate etc check for spamfilters that fail to compile.
-	 * This could happen if for example TRE supports a feature on server X, but not
-	 * on server Y!
+	 * This could happen if for example the regex engine supports
+	 * a feature on server X, but not * on server Y.
 	 */
 	if (type & TKL_SPAMF)
 	{
@@ -2108,7 +2108,7 @@ CMD_FUNC(_m_tkl)
 	int  found = 0;
 	char gmt[256], gmt2[256];
 	TS   expiry_1, setat_1, spamf_tklduration = 0;
-	MatchType spamf_match_method = MATCH_TRE_REGEX; /* (if unspecified, default to this) */
+	MatchType spamf_match_method = MATCH_PCRE_REGEX; /* default */
 	char *reason = NULL, *timeret;
 	int softban = 0;
 	aTKline *head;
@@ -2186,6 +2186,13 @@ CMD_FUNC(_m_tkl)
 				if (parc >= 12)
 				{
 					reason = parv[11];
+					if (!strcasecmp(parv[10], "posix"))
+					{
+						sendto_realops("Ignoring spamfilter from %s. Spamfilter is of type 'posix' (TRE) which "
+							       "is not supported in UnrealIRCd 5. Suggestion: upgrade the other server.",
+							       sptr->name);
+						return 0;
+					}
 					spamf_match_method = unreal_match_method_strtoval(parv[10]);
 					if (spamf_match_method == 0)
 					{
@@ -2194,15 +2201,12 @@ CMD_FUNC(_m_tkl)
 						return 0;
 					}
 				} else {
+					/* Actually this only happens for 3.2.x or lower */
 					reason = parv[10];
-#ifdef USE_TRE
-					spamf_match_method = MATCH_TRE_REGEX;
-#else
-					sendto_realops("Ignoring spamfilter from %s. Spamfilter is of type 'posix' (TRE) and this "
-					               "build was compiled without TRE support. Suggestion: upgrade the other server",
+					sendto_realops("Ignoring spamfilter from %s. Spamfilter is of type 'posix' (TRE) which "
+					               "is not supported in UnrealIRCd 5. Suggestion: upgrade the other server.",
 					               sptr->name);
 					return 0;
-#endif
 				}
 				spamf_tklduration = config_checkval(parv[8], CFG_TIME); /* was: atol(parv[8]); */
 			}
@@ -2410,27 +2414,12 @@ CMD_FUNC(_m_tkl)
 						parv[1], parv[2], parv[3], parv[4], parv[5],
 						parv[6], parv[7], parv[8], parv[9], parv[10], parv[11]);
 
-					/* Also send to old TKLEXT and even older non-TKLEXT..
-					 * ..but only if spam filter is of type 'posix', not cause any trouble..
-					 */
-					if (tk->ptr.spamf->expr->type == MATCH_TRE_REGEX)
+					/* Print out a warning if any 3.2.x servers linked (TKLEXT but no TKLEXT2) */
+					if (mixed_network())
 					{
-						sendto_server(cptr, PROTO_TKLEXT, PROTO_TKLEXT2, NULL,
-							":%s TKL %s %s %s %s %s %s %s %s %s :%s", sptr->name,
-							parv[1], parv[2], parv[3], parv[4], parv[5],
-							parv[6], parv[7], parv[8], parv[9], parv[11]);
-						sendto_server(cptr, 0, PROTO_TKLEXT, NULL,
-							":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
-							parv[1], parv[2], parv[3], parv[4], parv[5],
-							parv[6], parv[7], parv[11]);
-					} else {
-						/* Print out a warning if any 3.2.x servers linked (TKLEXT but no TKLEXT2) */
-						if (mixed_network())
-						{
-							sendto_realops("WARNING: Spamfilter '%s' added of type '%s' and 3.2.x servers are linked. "
-								       "Spamfilter will not execute on non-UnrealIRCd-4 servers.",
-								       parv[11] , parv[10]);
-						}
+						sendto_realops("WARNING: Spamfilter '%s' added of type '%s' and 3.2.x servers are linked. "
+							       "Spamfilter will not execute on non-UnrealIRCd-4 servers.",
+							       parv[11] , parv[10]);
 					}
 				} else
 				if ((parc == 11) && (type & TKL_SPAMF))

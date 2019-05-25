@@ -8,7 +8,6 @@ extras/pcre2*
 extras/c-ares*
 extras/regexp*
 config.status
-extras/tre*
 extras/ircdcron/ircd.cron
 extras/ircdcron/ircdchk
 src/modules/snomasks/Makefile

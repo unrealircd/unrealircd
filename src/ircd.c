@@ -1305,9 +1305,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
 	fprintf(stderr, "  using %s\n", pcre2_version());
-#ifdef USE_TRE
-	fprintf(stderr, "  using %s\n", tre_version());
-#endif
 	fprintf(stderr, "  using %s\n", SSLeay_version(SSLEAY_VERSION));
 #ifdef USE_LIBCURL
 	fprintf(stderr, "  using %s\n", curl_version());

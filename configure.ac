@@ -692,8 +692,6 @@ AC_ARG_WITH(operoverride-verify, [AS_HELP_STRING([--with-operoverride-verify], [
 AC_ARG_WITH(disable-extendedban-stacking, [AS_HELP_STRING([--with-disable-extendedban-stacking], [Disable extended ban stacking])],
        [AS_IF([test $withval = "yes"],
        		[AC_DEFINE([DISABLE_STACKED_EXTBANS], [], [Define to disable extended ban stacking (~q:~c:\#chan, etc)])])])
-AC_ARG_WITH(tre, [AS_HELP_STRING([--without-tre], [Do not use the old deprecated TRE regex library])], [with_tre=no], [with_tre=yes])
-AC_ARG_WITH(system-tre, [AS_HELP_STRING([--with-system-tre], [Use the system tre package instead of bundled, discovered using pkg-config])], [], [with_system_tre=no])
 AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--with-system-pcre2], [Use the system pcre2 package instead of bundled, discovered using pkg-config])], [], [with_system_pcre2=no])
 AC_ARG_WITH(system-argon2, [AS_HELP_STRING([--without-system-argon2], [Use bundled version instead of system argon2 library. Normally autodetected via pkg-config])], [], [with_system_argon2=yes])
 AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled version instead of system c-ares. Normally autodetected via pkg-config.])], [], [with_system_cares=yes])
@@ -758,59 +756,6 @@ dnl c-ares needs PATH_SEPARATOR set or it will
 dnl fail on certain solaris boxes. We might as
 dnl well set it here.
 export PATH_SEPARATOR
-
-AS_IF([test "x$with_tre" = "xyes"],[
-	AC_DEFINE([USE_TRE], [], [Use the old deprecated TRE regex library])
-])
-
-AS_IF([test "x$with_system_tre" = "xno"],[
-  AS_IF([test "x$with_tre" = "xyes"],[
-    compile_tre="yes"
-  ])
-])
-
-AS_IF([test "x$compile_tre" = "xyes"],[
-dnl REMEMBER TO CHANGE WITH A NEW TRE RELEASE!
-tre_version="0.8.0-git"
-AC_MSG_RESULT(extracting TRE regex library)
-cur_dir=`pwd`
-cd extras
-dnl remove old tre directory to force a recompile...
-dnl and remove its installation prefix just to clean things up.
-rm -rf tre-$tre_version rege[]xp
-if test "x$ac_cv_path_GUNZIP" = "x" ; then
-	tar xfz tre.tar.gz
-else
-	cp tre.tar.gz tre.tar.gz.bak
-	gunzip -f tre.tar.gz
-	cp tre.tar.gz.bak tre.tar.gz
-	tar xf tre.tar
-fi
-AC_MSG_RESULT(configuring TRE regex library)
-cd tre-$tre_version
-./configure --disable-agrep --enable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp --libdir=$PRIVATELIBDIR || exit 1
-AC_MSG_RESULT(compiling TRE regex library)
-$ac_cv_prog_MAKER || exit 1
-AC_MSG_RESULT(installing TRE regex library)
-$ac_cv_prog_MAKER install || exit 1
-TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
-AC_SUBST(TRE_CFLAGS)
-
-TRE_LIBS=
-AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
-       [TRE_LIBS="`$ac_cv_path_PKGCONFIG --libs tre.pc`"])
-dnl For when pkg-config isn't available -- or for when pkg-config
-dnl doesn't see the tre.pc file somehow... (#3982)
-AS_IF([test -z "$TRE_LIBS"],
-       [TRE_LIBS="$PRIVATELIBDIR/libtre.so"])
-AC_SUBST(TRE_LIBS)
-cd $cur_dir
-])
-
-AS_IF([test "x$with_system_tre" = "xyes"],[
-dnl use pkgconfig for tre:
-PKG_CHECK_MODULES([TRE], tre >= 0.7.5)
-])
 
 AS_IF([test "x$with_system_pcre2" = "xno"],[
 dnl REMEMBER TO CHANGE WITH A NEW PCRE2 RELEASE!

@@ -14,11 +14,6 @@ MT=mt
 # Both ways will work, but if you use a batch file it's easier with
 # upgrading UnrealIRCd as you won't have to edit this makefile again.
 
-### TRE ###
-#TRE_LIB_DIR="C:\dev\tre\win32\release"
-#TRE_INC_DIR="C:\dev\tre"
-#TRELIB="tre.lib"
-
 ### PCRE2 ###
 #PCRE2_LIB_DIR="C:\dev\pcre2\build\release"
 #PCRE2_INC_DIR="C:\dev\pcre2"
@@ -85,13 +80,6 @@ CARES_INC=/I "$(CARES_INC_DIR)"
 CARES_LIB=/LIBPATH:"$(CARES_LIB_DIR)"
 !ENDIF
 
-!IFDEF TRE_INC_DIR
-TRE_INC=/I "$(TRE_INC_DIR)"
-!ENDIF
-!IFDEF TRE_LIB_DIR
-TRE_LIB=/LIBPATH:"$(TRE_LIB_DIR)"
-!ENDIF
-
 !IFDEF PCRE2_INC_DIR
 PCRE2_INC=/I "$(PCRE2_INC_DIR)"
 !ENDIF
@@ -138,18 +126,18 @@ MODDBGCFLAG=/LDd /MD /Zi
 !ENDIF 
 
 FD_SETSIZE=/D FD_SETSIZE=16384
-CFLAGS=$(DBGCFLAG) $(TRE_INC) $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+CFLAGS=$(DBGCFLAG) $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
  $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
-CFLAGSST=$(DBGCFLAGST) $(TRE_INC) $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+CFLAGSST=$(DBGCFLAGST) $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
  $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
- dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(CARES_LIB) $(CARESLIB) $(TRE_LIB) $(TRELIB) \
+ dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(CARES_LIB) $(CARESLIB) \
   $(PCRE2_LIB) $(PCRE2LIB) $(ARGON2_LIB) $(ARGON2LIB) $(LIBRESSL_LIB) $(SSLLIB) $(LIBCURL_LIB) $(CURLLIB) /def:UnrealIRCd.def /implib:UnrealIRCd.lib \
  /nologo $(DBGLFLAG) /out:UnrealIRCd.exe
 MODCFLAGS=$(MODDBGCFLAG) $(SSLCFLAGS) $(CURLCFLAGS) /J /Fesrc/modules/ \
- /Fosrc/modules/ /nologo $(TRE_INC) $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /I ./INCLUDE /D \
+ /Fosrc/modules/ /nologo $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /I ./INCLUDE /D \
  DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
-MODLFLAGS=/link /def:src/modules/module.def UnrealIRCd.lib ws2_32.lib $(TRE_LIB) $(TRELIB) \
+MODLFLAGS=/link /def:src/modules/module.def UnrealIRCd.lib ws2_32.lib \
  $(PCRE2_LIB) $(PCRE2LIB) $(ARGON2_LIB) $(ARGON2LIB) $(CARES_LIB) $(LIBRESSL_LIB) $(SSLLIB) \
  $(LIBCURL_LIB) $(CURLLIB)
 

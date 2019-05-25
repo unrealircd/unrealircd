@@ -6260,6 +6260,15 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "spamfilter::match-type");
 				continue;
 			}
+			if (!strcasecmp(cep->ce_vardata, "posix"))
+			{
+				config_error("%s:%i: this spamfilter uses match-type 'posix' which is no longer supported. "
+				             "You must switch over to match-type 'regex' instead. "
+				             "See https://www.unrealircd.org/docs/FAQ#spamfilter-posix-deprecated",
+				             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				errors++;
+				return errors; /* return now, otherwise there will be issues */
+			}
 			match_type = unreal_match_method_strtoval(cep->ce_vardata);
 			if (match_type == 0)
 			{
@@ -6269,22 +6278,6 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				             cep->ce_vardata);
 				errors++;
 				continue;
-			}
-			if (match_type == MATCH_TRE_REGEX)
-			{
-#ifdef USE_TRE
-				config_warn("%s:%i: this spamfilter uses match-type 'posix' which is DEPRECATED. "
-				             "You should switch over to match-type 'regex' instead. "
-				             "See https://www.unrealircd.org/docs/FAQ#spamfilter-posix-deprecated",
-				             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-#else
-				config_error("%s:%i: this spamfilter uses match-type 'posix' which is no longer supported. "
-				             "You must switch over to match-type 'regex' instead. "
-				             "See https://www.unrealircd.org/docs/FAQ#spamfilter-posix-deprecated",
-				             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-				errors++;
-				return errors; /* return now, otherwise there will be issues */
-#endif
 			}
 			has_match_type = 1;
 		}

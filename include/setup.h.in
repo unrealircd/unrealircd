@@ -392,9 +392,6 @@
    support */
 #undef USE_LIBCURL
 
-/* Use the old deprecated TRE regex library */
-#undef USE_TRE
-
 /* Define if you are compiling unrealircd on Sun's (or Oracle's?) Solaris */
 #undef _SOLARIS
 

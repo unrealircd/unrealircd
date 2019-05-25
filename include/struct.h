@@ -59,9 +59,6 @@
 # endif
 #endif
 #include "auth.h" 
-#ifdef USE_TRE
-#include "tre/regex.h"
-#endif
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include "pcre2.h"
 
@@ -602,7 +599,6 @@ struct aloopStruct {
 typedef enum {
 	MATCH_SIMPLE=1, /**< Simple pattern with * and ? */
 	MATCH_PCRE_REGEX=2, /**< PCRE2 Perl-like regex (new) */
-	MATCH_TRE_REGEX=3, /**< TRE POSIX regex (old, unreal3.2.x) */
 } MatchType;
 
 /** Match struct, which allows various matching styles, see MATCH_* */
@@ -610,10 +606,7 @@ typedef struct _match {
 	char *str; /**< Text of the glob/regex/whatever. Always set. */
 	MatchType type;
 	union {
-		pcre2_code *pcre2_expr; /**< PCRE2 Perl-like Regex (New) */
-#ifdef USE_TRE
-		regex_t *tre_expr; /**< TRE POSIX Regex (Old) */
-#endif
+		pcre2_code *pcre2_expr; /**< PCRE2 Perl-like Regex */
 	} ext;
 } aMatch;
 

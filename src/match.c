@@ -433,16 +433,6 @@ int match(const char *mask, const char *name) {
 void unreal_delete_match(aMatch *m)
 {
 	safefree(m->str);
-#ifdef USE_TRE
-	if (m->type == MATCH_TRE_REGEX)
-	{
-		if (m->ext.tre_expr)
-		{
-			regfree(m->ext.tre_expr);
-			MyFree(m->ext.tre_expr);
-		}
-	}
-#endif
 	if (m->type == MATCH_PCRE_REGEX)
 	{
 		if (m->ext.pcre2_expr)
@@ -492,27 +482,6 @@ aMatch *unreal_create_match(MatchType type, char *str, char **error)
 		pcre2_jit_compile(m->ext.pcre2_expr, PCRE2_JIT_COMPLETE);
 		return m;
 	}
-#ifdef USE_TRE
-	else if (m->type == MATCH_TRE_REGEX)
-	{
-		int errorcode;
-		
-		m->ext.tre_expr = MyMallocEx(sizeof(regex_t));
-		errorcode = regcomp(m->ext.tre_expr, str, REG_ICASE|REG_EXTENDED|REG_NOSUB);
-		if (errorcode > 0)
-		{
-			int errorbufsize = 512;
-			char *errtmp = MyMallocEx(errorbufsize);
-			regerror(errorcode, m->ext.tre_expr, errtmp, errorbufsize);
-			strlcpy(errorbuf, errtmp, sizeof(errorbuf));
-			MyFree(errtmp);
-			if (error)
-				*error = errorbuf;
-			unreal_delete_match(m);
-			return NULL;
-		}
-	}
-#endif
 	else {
 		/* Unknown type, how did that happen ? */
 		unreal_delete_match(m);
@@ -547,15 +516,6 @@ int unreal_match(aMatch *m, char *str)
 		return 0; /* NO MATCH */
 	}
 
-#ifdef USE_TRE
-	if (m->type == MATCH_TRE_REGEX)
-	{
-		if (regexec(m->ext.tre_expr, str, 0, NULL, 0) == 0)
-			return 1;
-		return 0;
-	}
-#endif
-
 	return 0;
 }
 
@@ -563,8 +523,6 @@ int unreal_match_method_strtoval(char *str)
 {
 	if (!strcmp(str, "regex") || !strcmp(str, "pcre"))
 		return MATCH_PCRE_REGEX;
-	if (!strcmp(str, "posix") || !strcmp(str, "tre"))
-		return MATCH_TRE_REGEX;
 	if (!strcmp(str, "simple") || !strcmp(str, "glob"))
 		return MATCH_SIMPLE;
 	return 0;
@@ -574,8 +532,6 @@ char *unreal_match_method_valtostr(int val)
 {
 	if (val == MATCH_PCRE_REGEX)
 		return "regex";
-	if (val == MATCH_TRE_REGEX)
-		return "posix";
 	if (val == MATCH_SIMPLE)
 		return "simple";
 	

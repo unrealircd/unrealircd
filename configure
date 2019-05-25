@@ -643,13 +643,11 @@ CARES_LIBS
 CARES_CFLAGS
 ARGON2_LIBS
 ARGON2_CFLAGS
-PCRE2_LIBS
-PCRE2_CFLAGS
 PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
-TRE_LIBS
-TRE_CFLAGS
+PCRE2_LIBS
+PCRE2_CFLAGS
 FD_SETSIZE
 LDFLAGS_PRIVATELIBS
 PIDFILE
@@ -756,8 +754,6 @@ with_no_operoverride
 with_disableusermod
 with_operoverride_verify
 with_disable_extendedban_stacking
-with_tre
-with_system_tre
 with_system_pcre2
 with_system_argon2
 with_system_cares
@@ -779,8 +775,6 @@ CPP
 PKG_CONFIG
 PKG_CONFIG_PATH
 PKG_CONFIG_LIBDIR
-TRE_CFLAGS
-TRE_LIBS
 PCRE2_CFLAGS
 PCRE2_LIBS
 ARGON2_CFLAGS
@@ -1462,9 +1456,6 @@ Optional Packages:
                           Require opers to invite themselves to +s/+p channels
   --with-disable-extendedban-stacking
                           Disable extended ban stacking
-  --without-tre           Do not use the old deprecated TRE regex library
-  --with-system-tre       Use the system tre package instead of bundled,
-                          discovered using pkg-config
   --with-system-pcre2     Use the system pcre2 package instead of bundled,
                           discovered using pkg-config
   --without-system-argon2 Use bundled version instead of system argon2
@@ -1486,8 +1477,6 @@ Some influential environment variables:
               directories to add to pkg-config's search path
   PKG_CONFIG_LIBDIR
               path overriding pkg-config's built-in search path
-  TRE_CFLAGS  C compiler flags for TRE, overriding pkg-config
-  TRE_LIBS    linker flags for TRE, overriding pkg-config
   PCRE2_CFLAGS
               C compiler flags for PCRE2, overriding pkg-config
   PCRE2_LIBS  linker flags for PCRE2, overriding pkg-config
@@ -8467,22 +8456,6 @@ fi
 fi
 
 
-# Check whether --with-tre was given.
-if test "${with_tre+set}" = set; then :
-  withval=$with_tre; with_tre=no
-else
-  with_tre=yes
-fi
-
-
-# Check whether --with-system-tre was given.
-if test "${with_system_tre+set}" = set; then :
-  withval=$with_system_tre;
-else
-  with_system_tre=no
-fi
-
-
 # Check whether --with-system-pcre2 was given.
 if test "${with_system_pcre2+set}" = set; then :
   withval=$with_system_pcre2;
@@ -8866,65 +8839,6 @@ done
 
 export PATH_SEPARATOR
 
-if test "x$with_tre" = "xyes"; then :
-
-
-$as_echo "#define USE_TRE /**/" >>confdefs.h
-
-
-fi
-
-if test "x$with_system_tre" = "xno"; then :
-
-  if test "x$with_tre" = "xyes"; then :
-
-    compile_tre="yes"
-
-fi
-
-fi
-
-if test "x$compile_tre" = "xyes"; then :
-
-tre_version="0.8.0-git"
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting TRE regex library" >&5
-$as_echo "extracting TRE regex library" >&6; }
-cur_dir=`pwd`
-cd extras
-rm -rf tre-$tre_version regexp
-if test "x$ac_cv_path_GUNZIP" = "x" ; then
-	tar xfz tre.tar.gz
-else
-	cp tre.tar.gz tre.tar.gz.bak
-	gunzip -f tre.tar.gz
-	cp tre.tar.gz.bak tre.tar.gz
-	tar xf tre.tar
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: configuring TRE regex library" >&5
-$as_echo "configuring TRE regex library" >&6; }
-cd tre-$tre_version
-./configure --disable-agrep --enable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp --libdir=$PRIVATELIBDIR || exit 1
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling TRE regex library" >&5
-$as_echo "compiling TRE regex library" >&6; }
-$ac_cv_prog_MAKER || exit 1
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: installing TRE regex library" >&5
-$as_echo "installing TRE regex library" >&6; }
-$ac_cv_prog_MAKER install || exit 1
-TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
-
-
-TRE_LIBS=
-if test -n "$ac_cv_path_PKGCONFIG"; then :
-  TRE_LIBS="`$ac_cv_path_PKGCONFIG --libs tre.pc`"
-fi
-if test -z "$TRE_LIBS"; then :
-  TRE_LIBS="$PRIVATELIBDIR/libtre.so"
-fi
-
-cd $cur_dir
-
-fi
-
 
 
 
@@ -9045,102 +8959,6 @@ $as_echo "no" >&6; }
 		PKG_CONFIG=""
 	fi
 fi
-if test "x$with_system_tre" = "xyes"; then :
-
-
-pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for TRE" >&5
-$as_echo_n "checking for TRE... " >&6; }
-
-if test -n "$TRE_CFLAGS"; then
-    pkg_cv_TRE_CFLAGS="$TRE_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"tre >= 0.7.5\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "tre >= 0.7.5") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_TRE_CFLAGS=`$PKG_CONFIG --cflags "tre >= 0.7.5" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$TRE_LIBS"; then
-    pkg_cv_TRE_LIBS="$TRE_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"tre >= 0.7.5\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "tre >= 0.7.5") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_TRE_LIBS=`$PKG_CONFIG --libs "tre >= 0.7.5" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        TRE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "tre >= 0.7.5" 2>&1`
-        else
-	        TRE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "tre >= 0.7.5" 2>&1`
-        fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$TRE_PKG_ERRORS" >&5
-
-	as_fn_error $? "Package requirements (tre >= 0.7.5) were not met:
-
-$TRE_PKG_ERRORS
-
-Consider adjusting the PKG_CONFIG_PATH environment variable if you
-installed software in a non-standard prefix.
-
-Alternatively, you may set the environment variables TRE_CFLAGS
-and TRE_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details." "$LINENO" 5
-elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
-is in your PATH or set the PKG_CONFIG environment variable to the full
-path to pkg-config.
-
-Alternatively, you may set the environment variables TRE_CFLAGS
-and TRE_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-
-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
-See \`config.log' for more details" "$LINENO" 5; }
-else
-	TRE_CFLAGS=$pkg_cv_TRE_CFLAGS
-	TRE_LIBS=$pkg_cv_TRE_LIBS
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-
-fi
-
-fi
-
 if test "x$with_system_pcre2" = "xno"; then :
 
 pcre2_version="10.32"

@@ -20,7 +20,7 @@ if [ "$SSLDIR" != "" ]; then
 	# In case we build local openssl/libressl
 	export LD_LIBRARY_PATH="$SSLDIR/lib"
 fi
-./Config -quick || (tail -n 5000 config.log; echo '*** now tre:'; tail -n 5000 extras/tre-0.8.0-git/config.log; echo '** end of tre config.log **'; exit 1)
+./Config -quick || (tail -n 5000 config.log; exit 1)
 $MAKE
 yes ''|make pem
 make install
