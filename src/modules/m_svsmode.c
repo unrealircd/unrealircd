@@ -22,6 +22,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/* FIXME: this one needs a lot more mtag work !! with _special... */
+
 #include "unrealircd.h"
 
 void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param);
