@@ -72,6 +72,7 @@ MOD_INIT(labeled-response)
 	mtag.name = "label";
 	mtag.is_ok = labeled_response_mtag_is_ok;
 	mtag.clicap_handler = c;
+	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_COMMAND, 2000000000, lr_pre_command);
 	HookAdd(modinfo->handle, HOOKTYPE_POST_COMMAND, -2000000000, lr_post_command);
@@ -95,7 +96,7 @@ int lr_pre_command(aClient *from, MessageTag *mtags, char *buf)
 
 	for (; mtags; mtags = mtags->next)
 	{
-		if (!strcmp(mtags->name, "draft/label") || !strcmp(mtags->name, "label"))
+		if ((!strcmp(mtags->name, "draft/label") || !strcmp(mtags->name, "label")) && mtags->value)
 		{
 			if (!strcmp(mtags->name, "draft/label"))
 				currentcmd.version = -1;
@@ -254,7 +255,9 @@ int labeled_response_mtag_is_ok(aClient *acptr, char *name, char *value)
 	if (IsServer(acptr))
 		return 1;
 
-	// FIXME: allow from clients, but do some length and syntax checking!!
+	/* Do some basic sanity checking for non-servers */
+	if (value && strlen(value) <= 64)
+		return 1;
 
 	return 0;
 }
