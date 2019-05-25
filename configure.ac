@@ -97,13 +97,9 @@ LD="$flag_wrap $LD"
 
 # We use the same hardening flags for C and C++.  We must check that each flag
 # is supported by both compilers.
-AC_DEFUN([check_cc_cxx_flag],
+AC_DEFUN([check_cc_flag],
  [AC_LANG_PUSH(C)
-  AX_CHECK_COMPILE_FLAG([$1],
-   [AC_LANG_PUSH(C)
-    AX_CHECK_COMPILE_FLAG([$1], [$2], [$3], [-Werror $4])
-    AC_LANG_POP(C)],
-   [$3], [-Werror $4])
+  AX_CHECK_COMPILE_FLAG([$1], [$2], [$3], [-Werror $4])
   AC_LANG_POP(C)])
 
 AC_DEFUN([check_link_flag],
@@ -118,23 +114,23 @@ AC_ARG_ENABLE([hardening],
 HARDEN_CFLAGS=""
 HARDEN_LDFLAGS=""
 AS_IF([test x"$hardening" != x"no"], [
-  check_cc_cxx_flag([-fno-strict-overflow], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fno-strict-overflow"])
+  check_cc_flag([-fno-strict-overflow], [HARDEN_CFLAGS="$HARDEN_CFLAGS -fno-strict-overflow"])
 
   # This one will likely succeed, even on platforms where it does nothing.
-  check_cc_cxx_flag([-D_FORTIFY_SOURCE=2], [HARDEN_CFLAGS="$HARDEN_CFLAGS -D_FORTIFY_SOURCE=2"])
+  check_cc_flag([-D_FORTIFY_SOURCE=2], [HARDEN_CFLAGS="$HARDEN_CFLAGS -D_FORTIFY_SOURCE=2"])
 
-  check_cc_cxx_flag([-fstack-protector-all],
+  check_cc_flag([-fstack-protector-all],
    [check_link_flag([-fstack-protector-all],
      [HARDEN_CFLAGS="$HARDEN_CFLAGS -fstack-protector-all"
-      check_cc_cxx_flag([-Wstack-protector], [HARDEN_CFLAGS="$HARDEN_CFLAGS -Wstack-protector"],
+      check_cc_flag([-Wstack-protector], [HARDEN_CFLAGS="$HARDEN_CFLAGS -Wstack-protector"],
         [], [-fstack-protector-all])
-      check_cc_cxx_flag([--param ssp-buffer-size=1], [HARDEN_CFLAGS="$HARDEN_CFLAGS --param ssp-buffer-size=1"],
+      check_cc_flag([--param ssp-buffer-size=1], [HARDEN_CFLAGS="$HARDEN_CFLAGS --param ssp-buffer-size=1"],
         [], [-fstack-protector-all])])])
 
   # At the link step, we might want -pie (GCC) or -Wl,-pie (Clang on OS X)
   #
   # The linker checks also compile code, so we need to include -fPIE as well.
-  check_cc_cxx_flag([-fPIE],
+  check_cc_flag([-fPIE],
    [check_link_flag([-fPIE -pie],
      [HARDEN_BINCFLAGS="-fPIE"
       HARDEN_BINLDFLAGS="-pie"],
@@ -157,7 +153,7 @@ LD="$saved_LD"
 dnl HARDENING END
 
 dnl UnrealIRCd might not be strict-aliasing safe at this time
-check_cc_cxx_flag([-fno-strict-aliasing], [CFLAGS="$CFLAGS -fno-strict-aliasing"])
+check_cc_flag([-fno-strict-aliasing], [CFLAGS="$CFLAGS -fno-strict-aliasing"])
 
 dnl Previously -funsigned-char was in a config check. It would always
 dnl be enabled with gcc and clang. We now unconditionally enable it,
@@ -173,16 +169,16 @@ dnl We should be able to turn this on unconditionally:
 CFLAGS="$CFLAGS -Wall"
 
 dnl More warnings (if the compiler supports it):
-check_cc_cxx_flag([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
-check_cc_cxx_flag([-Waggregate-return], [CFLAGS="$CFLAGS -Waggregate-return"])
+check_cc_flag([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
+check_cc_flag([-Waggregate-return], [CFLAGS="$CFLAGS -Waggregate-return"])
 dnl The following few are more experimental, if they have false positives we'll have
 dnl to disable them:
-dnl Can't use this, too bad: check_cc_cxx_flag([-Wlogical-op], [CFLAGS="$CFLAGS -Wlogical-op"])
-check_cc_cxx_flag([-Wduplicated-cond], [CFLAGS="$CFLAGS -Wduplicated-cond"])
-check_cc_cxx_flag([-Wduplicated-branches], [CFLAGS="$CFLAGS -Wduplicated-branches"])
+dnl Can't use this, too bad: check_cc_flag([-Wlogical-op], [CFLAGS="$CFLAGS -Wlogical-op"])
+check_cc_flag([-Wduplicated-cond], [CFLAGS="$CFLAGS -Wduplicated-cond"])
+check_cc_flag([-Wduplicated-branches], [CFLAGS="$CFLAGS -Wduplicated-branches"])
 
 dnl And now to filter out certain warnings:
-dnl [!] NOTE REGARDING THE check_cc_cxx_flag used by these:
+dnl [!] NOTE REGARDING THE check_cc_flag used by these:
 dnl We check for the -Woption even though we are going to use -Wno-option.
 dnl This is due to the following (odd) gcc behavior:
 dnl "When an unrecognized warning option is requested (e.g.,
@@ -198,37 +194,37 @@ dnl -Woption instead.
 dnl Pointer signedness warnings are really a pain and 99.9% of the time
 dnl they are of absolutely no use whatsoever. IMO the person who decided
 dnl to enable this without -Wall should be shot on sight.
-check_cc_cxx_flag([-Wpointer-sign], [CFLAGS="$CFLAGS -Wno-pointer-sign"])
+check_cc_flag([-Wpointer-sign], [CFLAGS="$CFLAGS -Wno-pointer-sign"])
 
 dnl This is purely for charsys.c... I like it so we can easily read
 dnl this for non-utf8. We can remove it once we ditch non-utf8 some day
 dnl of course, or decide to ignore me and encode them.
-check_cc_cxx_flag([-Winvalid-source-encoding], [CFLAGS="$CFLAGS -Wno-invalid-source-encoding"])
+check_cc_flag([-Winvalid-source-encoding], [CFLAGS="$CFLAGS -Wno-invalid-source-encoding"])
 
-check_cc_cxx_flag([-Wformat-zero-length], [CFLAGS="$CFLAGS -Wno-format-zero-length"])
+check_cc_flag([-Wformat-zero-length], [CFLAGS="$CFLAGS -Wno-format-zero-length"])
 
-check_cc_cxx_flag([-Wformat-truncation], [CFLAGS="$CFLAGS -Wno-format-truncation"])
+check_cc_flag([-Wformat-truncation], [CFLAGS="$CFLAGS -Wno-format-truncation"])
 
 dnl While it can be useful to occasionally to compile with warnings about
 dnl unused variables and parameters, we often 'think ahead' when coding things
 dnl so they may be useless now but not later. Similarly, for variables, we
 dnl don't always care about a variable that may still be present in a build
 dnl without DEBUGMODE. Unused variables are optimized out anyway.
-check_cc_cxx_flag([-Wunused], [CFLAGS="$CFLAGS -Wno-unused"])
-check_cc_cxx_flag([-Wunused-parameter], [CFLAGS="$CFLAGS -Wno-unused-parameter"])
+check_cc_flag([-Wunused], [CFLAGS="$CFLAGS -Wno-unused"])
+check_cc_flag([-Wunused-parameter], [CFLAGS="$CFLAGS -Wno-unused-parameter"])
 
 dnl We use this and this warning is meaningless since 'char' is always unsigned
 dnl in UnrealIRCd compiles (-funsigned-char).
-check_cc_cxx_flag([-Wchar-subscripts], [CFLAGS="$CFLAGS -Wno-char-subscripts"])
+check_cc_flag([-Wchar-subscripts], [CFLAGS="$CFLAGS -Wno-char-subscripts"])
 
-check_cc_cxx_flag([-Wsign-compare], [CFLAGS="$CFLAGS -Wno-sign-compare"])
+check_cc_flag([-Wsign-compare], [CFLAGS="$CFLAGS -Wno-sign-compare"])
 
 dnl Don't warn about empty body, we use this, eg via Debug(()) or in if's.
-check_cc_cxx_flag([-Wempty-body], [CFLAGS="$CFLAGS -Wno-empty-body"])
+check_cc_flag([-Wempty-body], [CFLAGS="$CFLAGS -Wno-empty-body"])
 
 dnl This one fails with ircstrdup(var, staticstring)
 dnl Shame we have to turn it off completely...
-check_cc_cxx_flag([-Waddress], [CFLAGS="$CFLAGS -Wno-address"])
+check_cc_flag([-Waddress], [CFLAGS="$CFLAGS -Wno-address"])
 
 dnl End of -W... compiler checks.
 
