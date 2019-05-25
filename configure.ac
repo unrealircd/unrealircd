@@ -70,22 +70,16 @@ AC_PATH_PROG(PKGCONFIG, pkg-config)
 dnl Checks for libraries.
 AC_CHECK_LIB(descrypt, crypt,
 	[AC_DEFINE([HAVE_CRYPT], [], [Define if you have crypt])
-		IRCDLIBS="$IRCDLIBS-ldescrypt "
-		MKPASSWDLIBS="-ldescrypt"],
+		IRCDLIBS="$IRCDLIBS-ldescrypt "],
 	[AC_CHECK_LIB(crypt, crypt,
 		[AC_DEFINE([HAVE_CRYPT], [], [Define if you have crypt])
-			IRCDLIBS="$IRCDLIBS-lcrypt "
-			MKPASSWDLIBS="-lcrypt"])])
+			IRCDLIBS="$IRCDLIBS-lcrypt "])])
 AC_CHECK_LIB(socket, socket,
 	[IRCDLIBS="$IRCDLIBS-lsocket "
 		SOCKLIB="-lsocket"])
 AC_CHECK_LIB(nsl, inet_ntoa,
 	[IRCDLIBS="$IRCDLIBS-lnsl "
 		INETLIB="-lnsl"])
-AC_CHECK_LIB(crypto, RAND_egd,
-		AC_DEFINE(HAVE_RAND_EGD, 1, [Define if the libcrypto has RAND_egd]))
-
-AC_SUBST(MKPASSWDLIBS)
 
 dnl HARDENING START
 dnl This is taken from https://github.com/kmcallister/autoharden
@@ -464,19 +458,6 @@ AC_CHECK_FUNCS(inet_pton,
 	AC_DEFINE([HAVE_INET_PTON], [], [Define if you have inet_pton]))
 AC_CHECK_FUNCS(inet_ntop,
 	AC_DEFINE([HAVE_INET_NTOP], [], [Define if you have inet_ntop]))
-dnl Check if it supports C99 style variable length arrays
-AC_CACHE_CHECK([if C99 variable length arrays are supported], [ac_cv_varlen_arrays], [
-AC_TRY_COMPILE(,[
-int main() {
-int i = 5;
-int a[i];
-a[0] = 1;
-return 0;
-}], ac_cv_varlen_arrays=yes, ac_cv_varlen_arrays=no)
-])
-if test "$ac_cv_varlen_arrays" = "yes" ; then
-	AC_DEFINE([HAVE_C99_VARLEN_ARRAY], [], [Define if you have a compiler with C99 variable length array support])
-fi
 
 AC_CHECK_FUNCS([setrlimit])
 AC_FUNC_VPRINTF

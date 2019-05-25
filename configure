@@ -671,7 +671,6 @@ HARDEN_BINLDFLAGS
 HARDEN_BINCFLAGS
 HARDEN_LDFLAGS
 HARDEN_CFLAGS
-MKPASSWDLIBS
 OBJEXT
 EXEEXT
 ac_ct_CC
@@ -3789,7 +3788,6 @@ if test "x$ac_cv_lib_descrypt_crypt" = xyes; then :
 $as_echo "#define HAVE_CRYPT /**/" >>confdefs.h
 
 		IRCDLIBS="$IRCDLIBS-ldescrypt "
-		MKPASSWDLIBS="-ldescrypt"
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for crypt in -lcrypt" >&5
 $as_echo_n "checking for crypt in -lcrypt... " >&6; }
@@ -3832,7 +3830,6 @@ if test "x$ac_cv_lib_crypt_crypt" = xyes; then :
 $as_echo "#define HAVE_CRYPT /**/" >>confdefs.h
 
 			IRCDLIBS="$IRCDLIBS-lcrypt "
-			MKPASSWDLIBS="-lcrypt"
 fi
 
 fi
@@ -3918,50 +3915,6 @@ if test "x$ac_cv_lib_nsl_inet_ntoa" = xyes; then :
   IRCDLIBS="$IRCDLIBS-lnsl "
 		INETLIB="-lnsl"
 fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for RAND_egd in -lcrypto" >&5
-$as_echo_n "checking for RAND_egd in -lcrypto... " >&6; }
-if ${ac_cv_lib_crypto_RAND_egd+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcrypto  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char RAND_egd ();
-int
-main ()
-{
-return RAND_egd ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_crypto_RAND_egd=yes
-else
-  ac_cv_lib_crypto_RAND_egd=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_crypto_RAND_egd" >&5
-$as_echo "$ac_cv_lib_crypto_RAND_egd" >&6; }
-if test "x$ac_cv_lib_crypto_RAND_egd" = xyes; then :
-
-$as_echo "#define HAVE_RAND_EGD 1" >>confdefs.h
-
-fi
-
-
 
 
 # We want to check for compiler flag support, but there is no way to make
@@ -7617,44 +7570,6 @@ $as_echo "#define HAVE_INET_NTOP /**/" >>confdefs.h
 fi
 done
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if C99 variable length arrays are supported" >&5
-$as_echo_n "checking if C99 variable length arrays are supported... " >&6; }
-if ${ac_cv_varlen_arrays+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main ()
-{
-
-int main() {
-int i = 5;
-int a[i];
-a[0] = 1;
-return 0;
-}
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  ac_cv_varlen_arrays=yes
-else
-  ac_cv_varlen_arrays=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_varlen_arrays" >&5
-$as_echo "$ac_cv_varlen_arrays" >&6; }
-if test "$ac_cv_varlen_arrays" = "yes" ; then
-
-$as_echo "#define HAVE_C99_VARLEN_ARRAY /**/" >>confdefs.h
-
-fi
 
 for ac_func in setrlimit
 do :

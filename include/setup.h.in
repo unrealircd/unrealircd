@@ -52,9 +52,6 @@
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
-/* Define if you have a compiler with C99 variable length array support */
-#undef HAVE_C99_VARLEN_ARRAY
-
 /* Define if you have crypt */
 #undef HAVE_CRYPT
 
@@ -126,9 +123,6 @@
 
 /* Have PTHREAD_PRIO_INHERIT. */
 #undef HAVE_PTHREAD_PRIO_INHERIT
-
-/* Define if the libcrypto has RAND_egd */
-#undef HAVE_RAND_EGD
 
 /* Define if you have setproctitle */
 #undef HAVE_SETPROCTITLE
