@@ -692,7 +692,7 @@ AC_ARG_WITH(operoverride-verify, [AS_HELP_STRING([--with-operoverride-verify], [
 AC_ARG_WITH(disable-extendedban-stacking, [AS_HELP_STRING([--with-disable-extendedban-stacking], [Disable extended ban stacking])],
        [AS_IF([test $withval = "yes"],
        		[AC_DEFINE([DISABLE_STACKED_EXTBANS], [], [Define to disable extended ban stacking (~q:~c:\#chan, etc)])])])
-AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--with-system-pcre2], [Use the system pcre2 package instead of bundled, discovered using pkg-config])], [], [with_system_pcre2=no])
+AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--without-system-pcre2], [Use the system pcre2 package instead of bundled, discovered using pkg-config])], [], [with_system_pcre2=yes])
 AC_ARG_WITH(system-argon2, [AS_HELP_STRING([--without-system-argon2], [Use bundled version instead of system argon2 library. Normally autodetected via pkg-config])], [], [with_system_argon2=yes])
 AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled version instead of system c-ares. Normally autodetected via pkg-config.])], [], [with_system_cares=yes])
 CHECK_SSL
@@ -757,7 +757,13 @@ dnl fail on certain solaris boxes. We might as
 dnl well set it here.
 export PATH_SEPARATOR
 
-AS_IF([test "x$with_system_pcre2" = "xno"],[
+dnl Use system pcre2 when available, unless --without-system-pcre2.
+has_system_pcre2="no"
+AS_IF([test "x$with_system_pcre2" = "xyes"],[
+PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.00,[has_system_pcre2=yes
+AS_IF([test "x$PRIVATELIBDIR" != "x"], [rm -f "$PRIVATELIBDIR/"libpcre2*])],[has_system_pcre2=no])])
+
+AS_IF([test "$has_system_pcre2" = "no"], [
 dnl REMEMBER TO CHANGE WITH A NEW PCRE2 RELEASE!
 pcre2_version="10.32"
 AC_MSG_RESULT(extracting PCRE2 regex library)
@@ -783,7 +789,6 @@ AC_MSG_RESULT(installing PCRE2 regex library)
 $ac_cv_prog_MAKER install || exit 1
 PCRE2_CFLAGS="-I$cur_dir/extras/pcre2/include"
 AC_SUBST(PCRE2_CFLAGS)
-
 PCRE2_LIBS=
 dnl See c-ares's compilation section for more info on this hack.
 dnl ensure that we're linking against the bundled version of pcre2
@@ -796,9 +801,6 @@ AS_IF([test -z "$PCRE2_LIBS"],
        [PCRE2_LIBS="$PRIVATELIBDIR/libpcre2-8.so"])
 AC_SUBST(PCRE2_LIBS)
 cd $cur_dir
-],[
-dnl use pkgconfig for pcre2:
-PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.00)
 ])
 
 dnl Use system argon2 when available, unless --without-system-argon2
