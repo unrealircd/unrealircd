@@ -83,8 +83,7 @@ CMD_FUNC(m_svskill)
 	new_message(acptr, recv_mtags, &mtags);
 	sendto_server(cptr, 0, 0, mtags, ":%s SVSKILL %s :%s", sptr->name, parv[1], comment);
 	acptr->flags |= FLAGS_KILLED;
-	// FIXME: use exit_client2 once it properly deals with mtags
-	n = exit_client(cptr, acptr, sptr, NULL, comment);
+	n = exit_client(cptr, acptr, sptr, mtags, comment);
 	free_mtags(mtags);
 	return n;
 }

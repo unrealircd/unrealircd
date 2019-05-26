@@ -443,7 +443,7 @@ int found;
  *    - kaniini
  */
 static void recurse_send_quits(aClient *cptr, aClient *sptr, aClient *from, aClient *to,
-                               const char *comment, const char *splitstr)
+                               MessageTag *mtags, const char *comment, const char *splitstr)
 {
 	aClient *acptr, *next;
 
@@ -466,11 +466,11 @@ static void recurse_send_quits(aClient *cptr, aClient *sptr, aClient *from, aCli
 		if (acptr->srvptr != sptr)
 			continue;
 
-		recurse_send_quits(cptr, acptr, from, to, comment, splitstr);
+		recurse_send_quits(cptr, acptr, from, to, mtags, comment, splitstr);
 	}
 
 	if ((cptr == sptr && to != from) || !CHECKPROTO(to, PROTO_NOQUIT))
-		sendto_one(to, NULL, "SQUIT %s :%s", sptr->name, comment);
+		sendto_one(to, mtags, "SQUIT %s :%s", sptr->name, comment);
 }
 
 /*
@@ -511,7 +511,7 @@ static void remove_dependents(aClient *sptr, aClient *from, MessageTag *mtags, c
 	aClient *acptr;
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
-		recurse_send_quits(sptr, sptr, from, acptr, comment, splitstr);
+		recurse_send_quits(sptr, sptr, from, acptr, mtags, comment, splitstr);
 
 	recurse_remove_clients(sptr, mtags, splitstr);
 }
@@ -597,6 +597,17 @@ int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mt
 {
 	time_t on_for;
 	ConfigItem_listen *listen_conf;
+	MessageTag *mtags_generated = NULL;
+
+	/* We replace 'recv_mtags' here with a newly
+	 * generated id if 'recv_mtags' is NULL or is
+	 * non-NULL and contains no msgid etc.
+	 * This saves us from doing a new_message()
+	 * prior to the exit_client() call at around
+	 * 100+ places elsewhere in the code.
+	 */
+	new_message(sptr, recv_mtags, &mtags_generated);
+	recv_mtags = mtags_generated;
 
 	if (MyConnect(sptr))
 	{
@@ -728,10 +739,11 @@ int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mt
 		sendto_server(cptr, 0, PROTO_SID, recv_mtags, ":%s QUIT :%s", sptr->name, comment);
 	}
 
-	/*
-	 * Finally, clear out the server we lost itself
-	 */
+	/* Finally, the client/server itself exits.. */
 	exit_one_client(sptr, recv_mtags, comment);
+
+	free_mtags(mtags_generated);
+
 	return cptr == sptr ? FLUSH_BUFFER : 0;
 }
 

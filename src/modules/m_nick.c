@@ -156,8 +156,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 			/* Exit the client */
 			ircstp->is_kill++;
 			new->flags |= FLAGS_KILLED;
-			// FIXME: once exit_client2 supports 'mtags' change this:
-			(void)exit_client(NULL, new, &me, NULL, comment);
+			(void)exit_client(NULL, new, &me, mtags, comment);
 
 			free_mtags(mtags);
 		}
@@ -192,8 +191,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 		/* Exit the client */
 		ircstp->is_kill++;
 		existing->flags |= FLAGS_KILLED;
-		// FIXME: change to exit_client2 with mtags
-		(void)exit_client(NULL, existing, &me, NULL, comment);
+		(void)exit_client(NULL, existing, &me, mtags, comment);
 
 		free_mtags(mtags);
 	}
@@ -318,8 +316,7 @@ CMD_FUNC(m_uid)
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
 				sptr->flags |= FLAGS_KILLED;
-				// FIXME: change exit_client with mtags
-				n = exit_client(cptr, sptr, &me, NULL, "BadNick");
+				n = exit_client(cptr, sptr, &me, mtags, "BadNick");
 
 				free_mtags(mtags);
 
@@ -644,8 +641,7 @@ CMD_FUNC(m_nick)
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
 				sptr->flags |= FLAGS_KILLED;
-				// FIXME: use exit_client2 with mtags
-				n = exit_client(cptr, sptr, &me, NULL, "BadNick");
+				n = exit_client(cptr, sptr, &me, mtags, "BadNick");
 
 				free_mtags(mtags);
 

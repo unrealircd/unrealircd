@@ -105,8 +105,7 @@ CMD_FUNC(m_kill)
 	if (MyClient(sptr))
 		user = canonize(user);
 
-	for (p = NULL, nick = strtoken(&p, user, ","); nick;
-	    nick = strtoken(&p, NULL, ","))
+	for (p = NULL, nick = strtoken(&p, user, ","); nick; nick = strtoken(&p, NULL, ","))
 	{
 		MessageTag *mtags = NULL;
 
@@ -254,8 +253,7 @@ CMD_FUNC(m_kill)
 		if (MyClient(sptr))
 			RunHook3(HOOKTYPE_LOCAL_KILL, sptr, acptr, parv[2]);
 
-		// FIXME: these need 'mtags' !!!! exit_client2 function needs updates!!
-		n = exit_client(cptr, acptr, sptr, NULL, buf2);
+		n = exit_client(cptr, acptr, sptr, mtags, buf2);
 
 		free_mtags(mtags);
 

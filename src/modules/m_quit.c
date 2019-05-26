@@ -72,10 +72,10 @@ CMD_FUNC(m_quit)
 		Hook *tmphook;
 
 		if (STATIC_QUIT)
-			return exit_client(cptr, sptr, sptr, NULL, STATIC_QUIT);
+			return exit_client(cptr, sptr, sptr, recv_mtags, STATIC_QUIT);
 
 		if (IsVirus(sptr))
-			return exit_client(cptr, sptr, sptr, NULL, "Client exited");
+			return exit_client(cptr, sptr, sptr, recv_mtags, "Client exited");
 
 		n = dospamfilter(sptr, comment, SPAMF_QUIT, NULL, 0, NULL);
 		if (n == FLUSH_BUFFER)
@@ -104,7 +104,7 @@ CMD_FUNC(m_quit)
 		else
 			strlcpy(commentbuf, comment, sizeof(commentbuf));
 
-		return exit_client(cptr, sptr, sptr, NULL, commentbuf);
+		return exit_client(cptr, sptr, sptr, recv_mtags, commentbuf);
 	}
 	else
 	{
