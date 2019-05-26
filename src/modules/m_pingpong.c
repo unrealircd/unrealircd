@@ -135,7 +135,7 @@ CMD_FUNC(m_nospoof)
 		sendto_one(sptr, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 			   me.name, sptr->name);
 
-	if (user_ready_for_register(sptr))
+	if (is_handshake_finished(sptr))
 		return register_user(cptr, sptr, sptr->name,
 		    sptr->user->username, NULL, NULL, NULL);
 	return 0;

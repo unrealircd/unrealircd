@@ -38,6 +38,7 @@ ModuleHeader MOD_HEADER(m_cap)
 	};
 
 /* Forward declarations */
+int cap_is_handshake_finished(aClient *acptr);
 int cap_never_visible(aClient *acptr);
 
 /* Variables */
@@ -92,6 +93,8 @@ MOD_INIT(m_cap)
 	memset(&c, 0, sizeof(c));
 	c.name = "extended-join";
 	ClientCapabilityAdd(modinfo->handle, &c, &CAP_EXTENDED_JOIN);
+
+	HookAdd(modinfo->handle, HOOKTYPE_IS_HANDSHAKE_FINISHED, 0, cap_is_handshake_finished);
 
 	return MOD_SUCCESS;
 }
@@ -367,6 +370,15 @@ static int clicap_cmd_search(const char *command, struct clicap_cmd *entry)
 int cap_never_visible(aClient *acptr)
 {
 	return 0;
+}
+
+/** Is our handshake done? */
+int cap_is_handshake_finished(aClient *acptr)
+{
+	if (HasCapabilityFast(acptr, CAP_IN_PROGRESS))
+		return 0; /* We are in CAP LS stage, waiting for a CAP END */
+
+	return 1;
 }
 
 CMD_FUNC(m_cap)

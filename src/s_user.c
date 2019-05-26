@@ -835,18 +835,27 @@ void set_targmax_defaults(void)
 	setmaxtargets("WATCH", MAXTARGETS_MAX); // not configurable
 }
 
-/** Can register_user() be called?
- * In other words:
- * - we have a NICK
- * - we have a USER
- * - there is no client capability negotiation in progress
- * - the nospoof cookie has been received (if enabled)
+/** Is the user handshake finished and can register_user() be called?
+ * This checks things like: do we have a NICK, USER, nospoof,
+ * and any other things modules may add:
+ * eg: the cap module checks if client capability negotiation
+ * is in progress
  */
-int user_ready_for_register(aClient *sptr)
+int is_handshake_finished(aClient *sptr)
 {
-#define PROTO_CLICAP 0x1000000
-// TEST: FIXME
-	if (sptr->user && *sptr->user->username && sptr->name[0] && !CHECKPROTO(sptr, PROTO_CLICAP) && IsNotSpoof(sptr))
+	Hook *h;
+	int n;
+
+	for (h = Hooks[HOOKTYPE_IS_HANDSHAKE_FINISHED]; h; h = h->next)
+	{
+		n = (*(h->func.intfunc))(sptr);
+		if (n == 0)
+			return 0; /* We can stop already */
+	}
+
+	/* I figured these can be here, in the core: */
+	if (sptr->user && *sptr->user->username && sptr->name[0] && IsNotSpoof(sptr))
 		return 1;
+
 	return 0;
 }

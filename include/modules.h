@@ -872,6 +872,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_PRE_COMMAND 98
 #define HOOKTYPE_POST_COMMAND 99
 #define HOOKTYPE_NEW_MESSAGE 100
+#define HOOKTYPE_IS_HANDSHAKE_FINISHED 101
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -979,6 +980,7 @@ int hooktype_welcome(aClient *sptr, int after_numeric);
 int hooktype_pre_command(aClient *from, MessageTag *mtags, char *buf);
 int hooktype_post_command(aClient *from, MessageTag *mtags, char *buf);
 void hooktype_new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
+int hooktype_is_handshake_finished(aClient *acptr);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
@@ -1083,7 +1085,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_WELCOME) && !ValidateHook(hooktype_welcome, func)) || \
         ((hooktype == HOOKTYPE_PRE_COMMAND) && !ValidateHook(hooktype_pre_command, func)) || \
         ((hooktype == HOOKTYPE_POST_COMMAND) && !ValidateHook(hooktype_post_command, func)) || \
-        ((hooktype == HOOKTYPE_NEW_MESSAGE) && !ValidateHook(hooktype_new_message, func)) ) \
+        ((hooktype == HOOKTYPE_NEW_MESSAGE) && !ValidateHook(hooktype_new_message, func)) || \
+        ((hooktype == HOOKTYPE_IS_HANDSHAKE_FINISHED) && !ValidateHook(hooktype_is_handshake_finished, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 

@@ -1095,7 +1095,7 @@ CMD_FUNC(m_nick)
 		}
 		/* This had to be copied here to avoid problems.. */
 		strlcpy(sptr->name, nick, sizeof(sptr->name));
-		if (user_ready_for_register(sptr))
+		if (is_handshake_finished(sptr))
 		{
 			/*
 			   ** USER already received, now we have NICK.

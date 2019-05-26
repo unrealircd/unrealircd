@@ -829,7 +829,7 @@ extern int badword_config_process(ConfigItem_badword *ca, char *str);
 extern void badword_config_free(ConfigItem_badword *ca);
 extern char *badword_config_check_regex(char *s, int fastsupport, int check_broadness);
 extern long ClientCapabilityBit(const char *token);
-extern int user_ready_for_register(aClient *sptr);
+extern int is_handshake_finished(aClient *sptr);
 extern void SetCapability(aClient *acptr, const char *token);
 extern void ClearCapability(aClient *acptr, const char *token);
 extern void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list);

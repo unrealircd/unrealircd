@@ -169,7 +169,7 @@ CMD_FUNC(m_user)
 
 	strlcpy(sptr->info, realname, sizeof(sptr->info));
 	if (*sptr->name &&
-		(IsServer(cptr) || user_ready_for_register(cptr))
+		(IsServer(cptr) || is_handshake_finished(cptr))
            )
 		/* NICK and no-spoof already received, now we have USER... */
 	{
