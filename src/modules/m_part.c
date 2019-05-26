@@ -175,8 +175,7 @@ CMD_FUNC(m_part)
 					       sptr->name, chptr->chname);
 				if (MyClient(sptr))
 				{
-					// FIXME: send mtag to client via this sendto_one !!!
-					sendto_one(sptr, NULL, ":%s!%s@%s PART %s",
+					sendto_one(sptr, mtags, ":%s!%s@%s PART %s",
 						sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
 				}
 			}
@@ -189,8 +188,7 @@ CMD_FUNC(m_part)
 					       sptr->name, chptr->chname, comment);
 				if (MyClient(sptr))
 				{
-					// FIXME: send mtag to client via this sendto_one !!!
-					sendto_one(sptr, NULL,
+					sendto_one(sptr, mtags,
 						":%s!%s@%s PART %s %s",
 						sptr->name, sptr->user->username, GetHost(sptr),
 						chptr->chname, comment);

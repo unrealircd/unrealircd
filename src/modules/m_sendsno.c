@@ -95,9 +95,8 @@ CMD_FUNC(m_sendsno)
 
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{
-		// FIXME: send with mtags here !!!!
 		if (acptr->user->snomask & snomask)
-			sendto_one(acptr, NULL, ":%s NOTICE %s :%s", sptr->name, acptr->name, msg);
+			sendto_one(acptr, mtags, ":%s NOTICE %s :%s", sptr->name, acptr->name, msg);
 	}
 
 	free_mtags(mtags);
