@@ -90,7 +90,8 @@ CMD_FUNC(m_away)
 			new_message(sptr, recv_mtags, &mtags);
 			sendto_server(cptr, 0, 0, mtags, ":%s AWAY", sptr->name);
 			hash_check_watch(cptr, RPL_NOTAWAY);
-			sendto_common_channels_local_butone(sptr, ClientCapabilityBit("away-notify"), ":%s AWAY", sptr->name);
+			sendto_local_common_channels(sptr, sptr, ClientCapabilityBit("away-notify"), mtags,
+			                             ":%s AWAY", sptr->name);
 			free_mtags(mtags);
 		}
 
@@ -153,7 +154,9 @@ CMD_FUNC(m_away)
 		sendnumeric(sptr, RPL_NOWAWAY);
 
 	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
-	sendto_common_channels_local_butone(sptr, ClientCapabilityBit("away-notify"), ":%s AWAY :%s", sptr->name, away);
+	sendto_local_common_channels(sptr, sptr,
+	                             ClientCapabilityBit("away-notify"), mtags,
+	                             ":%s AWAY :%s", sptr->name, away);
 	free_mtags(mtags);
 
 	RunHook2(HOOKTYPE_AWAY, sptr, away);

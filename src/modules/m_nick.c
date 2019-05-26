@@ -1070,8 +1070,7 @@ CMD_FUNC(m_nick)
 		    ID(sptr), nick, sptr->lastnick);
 		sendto_server(cptr, 0, PROTO_SID, mtags, ":%s NICK %s %ld",
 		    sptr->name, nick, sptr->lastnick);
-		// FIXME: sendto common with mtags!
-		sendto_common_channels(sptr, ":%s NICK :%s", sptr->name, nick);
+		sendto_local_common_channels(sptr, NULL, 0, mtags, ":%s NICK :%s", sptr->name, nick);
 		free_mtags(mtags);
 		if (removemoder)
 			sptr->umodes &= ~UMODE_REGNICK;

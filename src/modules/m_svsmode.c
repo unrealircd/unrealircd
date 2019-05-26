@@ -373,7 +373,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
  *
  * show_change can be 0 (for svsmode) or 1 (for svs2mode).
  */
-int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_change)
+int do_svsmode(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], int show_change)
 {
 	int i;
 	char *m;
@@ -472,10 +472,15 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
 			case 'd':
 				if (parv[3])
 				{
+					MessageTag *mtags = NULL;
 					strlcpy(acptr->user->svid, parv[3], sizeof(acptr->user->svid));
-					sendto_common_channels_local_butone(acptr, ClientCapabilityBit("account-notify"), ":%s ACCOUNT %s",
-									    acptr->name,
-									    !isdigit(*acptr->user->svid) ? acptr->user->svid : "*");
+					new_message(acptr, recv_mtags, &mtags);
+					sendto_local_common_channels(acptr, acptr,
+					                             ClientCapabilityBit("account-notify"), mtags,
+					                             ":%s ACCOUNT %s",
+					                             acptr->name,
+					                             !isdigit(*acptr->user->svid) ? acptr->user->svid : "*");
+					free_mtags(mtags);
 				}
 				else
 				{
@@ -597,7 +602,7 @@ int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_c
  */
 CMD_FUNC(m_svsmode)
 {
-	return do_svsmode(cptr, sptr, parc, parv, 0);
+	return do_svsmode(cptr, sptr, recv_mtags, parc, parv, 0);
 }
 
 /*
@@ -608,7 +613,7 @@ CMD_FUNC(m_svsmode)
  */
 CMD_FUNC(m_svs2mode)
 {
-	return do_svsmode(cptr, sptr, parc, parv, 1);
+	return do_svsmode(cptr, sptr, recv_mtags, parc, parv, 1);
 }
 
 void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param) {

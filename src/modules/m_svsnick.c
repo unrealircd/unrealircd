@@ -93,10 +93,9 @@ CMD_FUNC(m_svsnick)
 		acptr->umodes &= ~UMODE_REGNICK;
 	acptr->lastnick = atol(parv[3]);
 
-	/* no 'recv_mtags' here, we do not inherit from SVSNICK */
+	/* no 'recv_mtags' here, we do not inherit from SVSNICK but generate a new NICK event */
 	new_message(acptr, NULL, &mtags);
-	// TODO: FIXME: common channels with mtags !!!!
-	sendto_common_channels(acptr, ":%s NICK :%s", acptr->name, parv[2]);
+	sendto_local_common_channels(acptr, NULL, 0, mtags, ":%s NICK :%s", acptr->name, parv[2]);
 	sendto_server(NULL, 0, 0, mtags, ":%s NICK %s :%ld", acptr->name, parv[2], atol(parv[3]));
 	free_mtags(mtags);
 

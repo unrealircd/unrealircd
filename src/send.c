@@ -362,7 +362,7 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
  *                    (this only works for local clients, we will
  *                     always send the message to remote clients and
  *                     assume the server there will handle it)
- * @param sendremote  Send message to remote users/servers
+ * @param sendflags   Determines whether to send the message to local/remote users
  * @param senddeaf    Send message to 'deaf' clients
  * @param mtags       The message tags to attach to this message
  * @param pattern     The pattern (eg: ":%s PRIVMSG %s :%s")
@@ -488,31 +488,33 @@ void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps, Messa
 	}
 }
 
-/*
- * sendto_common_channels()
- *
- * Sends a message to all people (including user) on local server who are
- * in same channel with user.
+/** Send a message to all local users on all channels where
+ * the user 'user' is on.
+ * This is used for events such as a nick change and quit.
+ * @param user        The user and source of the message.
+ * @param skip        The client to skip (can be NULL)
+ * @param clicap      Client capability the recipient should have
+ *                    (this only works for local clients, we will
+ *                     always send the message to remote clients and
+ *                     assume the server there will handle it)
+ * @param mtags       The message tags to attach to this message.
+ * @param pattern     The pattern (eg: ":%s NICK %s").
+ * @param ...         The parameters for the pattern.
  */
-void sendto_common_channels(aClient *user, char *pattern, ...)
+void sendto_local_common_channels(aClient *user, aClient *skip, long clicap, MessageTag *mtags, char *pattern, ...)
 {
 	va_list vl;
-
 	Membership *channels;
 	Member *users;
 	aClient *cptr;
-	int sendlen;
 
 	/* We now create the buffer _before_ we send it to the clients. -- Syzop */
 	*sendbuf = '\0';
 	va_start(vl, pattern);
-	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
+	vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
 	va_end(vl);
 
 	++current_serial;
-
-	if (MyConnect(user))
-		user->local->serial = current_serial;
 
 	if (user->user)
 	{
@@ -528,60 +530,20 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 				if (cptr->local->serial == current_serial)
 					continue; /* message already sent to this client */
 
+				if (clicap && !HasCapabilityFast(cptr, clicap))
+					continue; /* client does not have the specified capability */
+
+				if (cptr == skip)
+					continue; /* the one to skip */
+
 				if (!user_can_see_member(cptr, user, channels->chptr))
 					continue; /* the sending user (quit'ing or nick changing) is 'invisible' -- skip */
 
 				cptr->local->serial = current_serial;
-				sendbufto_one(cptr, sendbuf, sendlen);
+				sendto_one(cptr, mtags, "%s", sendbuf);
 			}
 		}
 	}
-
-	if (MyConnect(user))
-		sendbufto_one(user, sendbuf, sendlen);
-
-	return;
-}
-
-/*
- * sendto_common_channels_local_butone()
- *
- * Sends a message to all people on local server who are
- * in same channel with user and have the specified capability.
- */
-void sendto_common_channels_local_butone(aClient *user, long clicap, char *pattern, ...)
-{
-	va_list vl;
-
-	Membership *channels;
-	Member *users;
-	aClient *cptr;
-	int sendlen;
-
-	/* We now create the buffer _before_ we send it to the clients. -- Syzop */
-	*sendbuf = '\0';
-	va_start(vl, pattern);
-	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
-	va_end(vl);
-
-	++current_serial;
-	if (MyConnect(user))
-		user->local->serial = current_serial;
-	if (user->user)
-	{
-		for (channels = user->user->channel; channels; channels = channels->next)
-			for (users = channels->chptr->members; users; users = users->next)
-			{
-				cptr = users->cptr;
-				if (!MyConnect(cptr) || (cptr->local->serial == current_serial) ||
-				    !HasCapabilityFast(cptr, clicap))
-					continue;
-				cptr->local->serial = current_serial;
-				sendbufto_one(cptr, sendbuf, sendlen);
-			}
-	}
-
-	return;
 }
 
 /*

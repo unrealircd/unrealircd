@@ -539,8 +539,8 @@ static void exit_one_client(aClient *sptr, const char *comment)
 			RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);
 		}
 
-		sendto_common_channels(sptr, ":%s QUIT :%s",
-		    sptr->name, comment);
+		// FIXME: mtags
+		sendto_local_common_channels(sptr, NULL, 0, NULL, ":%s QUIT :%s", sptr->name, comment);
 
 		/* This hook may or may not be redundant */
 		RunHook(HOOKTYPE_EXIT_ONE_CLIENT, sptr);
