@@ -222,8 +222,9 @@ void send_proto(aClient *cptr, ConfigItem_link *aconf)
 	 */
 
 	/* First line */
-	sendto_one(cptr, NULL, "PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID %s",
-	           iConf.ban_setter_sync ? "SJSBY" : "");
+	sendto_one(cptr, NULL, "PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID %s %s",
+	           iConf.ban_setter_sync ? "SJSBY" : "",
+	           ClientCapabilityFindReal("message-tags") ? "MTAGS" : "");
 
 	/* Second line */
 	sendto_one(cptr, NULL, "PROTOCTL CHANMODES=%s%s,%s%s,%s%s,%s%s USERMODES=%s BOOTED=%ld PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%ld EXTSWHOIS",

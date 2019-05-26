@@ -244,6 +244,10 @@ char *_mtags_to_string(MessageTag *m, aClient *acptr)
 	if (!m)
 		return NULL;
 
+	/* Remote servers need to indicate support via PROTOCTL MTAGS */
+	if (acptr->from && IsServer(acptr->from) && !SupportMTAGS(acptr->from))
+		return NULL;
+
 	*buf = '\0';
 	for (; m; m = m->next)
 	{

@@ -341,22 +341,23 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
  * Note that client protocol extensions have been moved
  * to the ClientCapability API which uses acptr->local->caps.
  */
-#define PROTO_NOQUIT	0x0001		/* Negotiated NOQUIT protocol */
-#define PROTO_SJOIN	0x0004		/* Negotiated SJOIN protocol */
-#define PROTO_NICKv2	0x0008		/* Negotiated NICKv2 protocol */
-#define PROTO_SJOIN2	0x0010		/* Negotiated SJOIN2 protocol */
-#define PROTO_UMODE2	0x0020		/* Negotiated UMODE2 protocol */
-#define PROTO_TKLEXT2	0x0040		/* TKL extension 2: 11 parameters instead of 8 or 10 */
-#define PROTO_VL	0x0100		/* Negotiated VL protocol */
-#define PROTO_SJ3	0x0200		/* Negotiated SJ3 protocol */
-#define PROTO_VHP	0x0400		/* Send hostnames in NICKv2 even if not sethosted */
-#define PROTO_SID	0x0800		/* SID/UID mode */
-#define PROTO_TKLEXT	0x1000		/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
-#define PROTO_NICKIP	0x2000  	/* Send IP addresses in the NICK command */
-#define PROTO_CLK	0x8000		/* Send cloaked host in the NICK command (regardless of +x/-x) */
-#define PROTO_MLOCK	0x400000	/* server supports MLOCK */
-#define PROTO_EXTSWHOIS 0x800000	/* extended SWHOIS support */
-#define PROTO_SJSBY	0x4000000	/* SJOIN setby information (TS and nick) */
+#define PROTO_NOQUIT	0x000001	/* Negotiated NOQUIT protocol */
+#define PROTO_SJOIN	0x000002	/* Negotiated SJOIN protocol */
+#define PROTO_NICKv2	0x000004	/* Negotiated NICKv2 protocol */
+#define PROTO_SJOIN2	0x000008	/* Negotiated SJOIN2 protocol */
+#define PROTO_UMODE2	0x000010	/* Negotiated UMODE2 protocol */
+#define PROTO_TKLEXT2	0x000020	/* TKL extension 2: 11 parameters instead of 8 or 10 */
+#define PROTO_VL	0x000040	/* Negotiated VL protocol */
+#define PROTO_SJ3	0x000080	/* Negotiated SJ3 protocol */
+#define PROTO_VHP	0x000100	/* Send hostnames in NICKv2 even if not sethosted */
+#define PROTO_SID	0x000200	/* SID/UID mode */
+#define PROTO_TKLEXT	0x000400	/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
+#define PROTO_NICKIP	0x000800	/* Send IP addresses in the NICK command */
+#define PROTO_CLK	0x001000	/* Send cloaked host in the NICK command (regardless of +x/-x) */
+#define PROTO_MLOCK	0x002000	/* server supports MLOCK */
+#define PROTO_EXTSWHOIS 0x004000	/* extended SWHOIS support */
+#define PROTO_SJSBY	0x008000	/* SJOIN setby information (TS and nick) */
+#define PROTO_MTAGS	0x010000	/* Support message tags and big buffers */
 
 /* For client capabilities: */
 /** HasCapabilityFast() checks for a token if you know exactly which bit to check */
@@ -471,6 +472,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SupportTKLEXT2(x)	(CHECKPROTO(x, PROTO_TKLEXT2))
 #define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
 #define SupportSID(x)		(CHECKPROTO(x, PROTO_SID))
+#define SupportMTAGS(x)		(CHECKPROTO(x, PROTO_MTAGS))
 
 #define SetSJOIN(x)		((x)->local->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->local->proto |= PROTO_NOQUIT)
@@ -484,6 +486,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SetTKLEXT(x)	((x)->local->proto |= PROTO_TKLEXT)
 #define SetTKLEXT2(x)	((x)->local->proto |= PROTO_TKLEXT2)
 #define SetCLK(x)		((x)->local->proto |= PROTO_CLK)
+#define SetMTAGS(x)		((x)->local->proto |= PROTO_MTAGS)
 
 #define ClearSJOIN(x)		((x)->local->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->local->proto &= ~PROTO_NOQUIT)

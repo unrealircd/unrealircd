@@ -147,6 +147,10 @@ CMD_FUNC(m_protoctl)
 		{
 			cptr->local->proto |= PROTO_NICKIP;
 		}
+		else if (!strcmp(name, "MTAGS"))
+		{
+			SetMTAGS(cptr);
+		}
 		else if (!strcmp(name, "NICKCHARS") && value)
 		{
 			if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
