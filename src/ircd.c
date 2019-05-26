@@ -497,12 +497,12 @@ int check_tkls(aClient *cptr)
 				snprintf(banbuf, sizeof(banbuf), "User has been banned (%s)", bconf->reason);
 			else
 				snprintf(banbuf, sizeof(banbuf), "Banned (%s)", bconf->reason);
-			(void)exit_client(cptr, cptr, &me, banbuf);
+			(void)exit_client(cptr, cptr, &me, NULL, banbuf);
 		} else {
 			if (IsPerson(cptr))
-				(void)exit_client(cptr, cptr, &me, "User has been banned");
+				(void)exit_client(cptr, cptr, &me, NULL, "User has been banned");
 			else
-				(void)exit_client(cptr, cptr, &me, "Banned");
+				(void)exit_client(cptr, cptr, &me, NULL, "Banned");
 		}
 		return 0; /* stop processing this user, as (s)he is dead now. */
 	}
@@ -551,7 +551,7 @@ EVENT(check_unknowns)
 					cptr->name, cptr->ip?cptr->ip:"<unknown ip>");
 			}
 
-			(void)exit_client(cptr, cptr, &me, "Registration Timeout");
+			(void)exit_client(cptr, cptr, &me, NULL, "Registration Timeout");
 			continue;
 		}
 		if (DoingAuth(cptr) && ((TStime() - cptr->local->firsttime) > IDENT_CONNECT_TIMEOUT))
@@ -600,7 +600,7 @@ int check_ping(aClient *cptr)
 				TStime(), cptr->local->since, ping));
 		(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %ld seconds",
 			(long) (TStime() - cptr->local->lasttime));
-		return exit_client(cptr, cptr, &me, scratch);
+		return exit_client(cptr, cptr, &me, NULL, scratch);
 	}
 	else if (IsRegistered(cptr) &&
 		((cptr->flags & FLAGS_PINGSENT) == 0)) {
@@ -659,7 +659,7 @@ EVENT(check_deadsockets)
 			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->fd, cptr->name);
 #endif
 			cptr->flags &= ~FLAGS_DEADSOCKET; /* CPR. So we send the error. */
-			(void)exit_client(cptr, cptr, &me, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
+			(void)exit_client(cptr, cptr, &me, NULL, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
 			continue;
 		}
 	}
@@ -672,7 +672,7 @@ EVENT(check_deadsockets)
 			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->fd, cptr->name);
 #endif
 			cptr->flags &= ~FLAGS_DEADSOCKET; /* CPR. So we send the error. */
-			(void)exit_client(cptr, cptr, &me, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
+			(void)exit_client(cptr, cptr, &me, NULL, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
 			continue;
 		}
 	}

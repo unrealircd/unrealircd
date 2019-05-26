@@ -71,7 +71,7 @@ CMD_FUNC(m_close)
 	{
 		sendnumeric(sptr, RPL_CLOSING,
 		    get_client_name(acptr, TRUE), acptr->status);
-		(void)exit_client(acptr, acptr, acptr, "Oper Closing");
+		(void)exit_client(acptr, acptr, acptr, NULL, "Oper Closing");
 		closed++;
 	}
 

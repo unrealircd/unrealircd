@@ -2710,7 +2710,7 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 		case BAN_ACT_SOFT_KILL:
 		case BAN_ACT_KILL:
 		default:
-			return exit_client(sptr, sptr, sptr, reason);
+			return exit_client(sptr, sptr, sptr, NULL, reason);
 	}
 	return -1;
 }

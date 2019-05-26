@@ -157,7 +157,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 			ircstp->is_kill++;
 			new->flags |= FLAGS_KILLED;
 			// FIXME: once exit_client2 supports 'mtags' change this:
-			(void)exit_client(NULL, new, &me, comment);
+			(void)exit_client(NULL, new, &me, NULL, comment);
 
 			free_mtags(mtags);
 		}
@@ -193,7 +193,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 		ircstp->is_kill++;
 		existing->flags |= FLAGS_KILLED;
 		// FIXME: change to exit_client2 with mtags
-		(void)exit_client(NULL, existing, &me, comment);
+		(void)exit_client(NULL, existing, &me, NULL, comment);
 
 		free_mtags(mtags);
 	}
@@ -319,7 +319,7 @@ CMD_FUNC(m_uid)
 				    cptr->name);
 				sptr->flags |= FLAGS_KILLED;
 				// FIXME: change exit_client with mtags
-				n = exit_client(cptr, sptr, &me, "BadNick");
+				n = exit_client(cptr, sptr, &me, NULL, "BadNick");
 
 				free_mtags(mtags);
 
@@ -419,7 +419,7 @@ CMD_FUNC(m_uid)
 		     */
 		    get_client_name(cptr, FALSE));
 		sptr->flags |= FLAGS_KILLED;
-		return exit_client(cptr, sptr, &me, "Nick/Server collision");
+		return exit_client(cptr, sptr, &me, NULL, "Nick/Server collision");
 	}
 
 	if ((acptr = find_client(nick, NULL)) != NULL)
@@ -432,7 +432,7 @@ CMD_FUNC(m_uid)
 		if (MyConnect(acptr) && IsUnknown(acptr))
 		{
 			acptr->flags |= FLAGS_KILLED;
-			exit_client(NULL, acptr, &me, "Overridden");
+			exit_client(NULL, acptr, &me, NULL, "Overridden");
 			goto nickkill2done;
 		}
 
@@ -449,7 +449,7 @@ CMD_FUNC(m_uid)
 			   messed up, trash the old one and accept the new one.
 			   Remember - at this point there is a new nick coming in!
 			   Handle appropriately. -- Barubary */
-			exit_client(NULL, acptr, &me, "Lost user field");
+			exit_client(NULL, acptr, &me, NULL, "Lost user field");
 			goto nickkill2done;
 		}
 
@@ -645,7 +645,7 @@ CMD_FUNC(m_nick)
 				    cptr->name);
 				sptr->flags |= FLAGS_KILLED;
 				// FIXME: use exit_client2 with mtags
-				n = exit_client(cptr, sptr, &me, "BadNick");
+				n = exit_client(cptr, sptr, &me, NULL, "BadNick");
 
 				free_mtags(mtags);
 
@@ -785,7 +785,7 @@ CMD_FUNC(m_nick)
 		     */
 		    get_client_name(cptr, FALSE));
 		sptr->flags |= FLAGS_KILLED;
-		return exit_client(cptr, sptr, &me, "Nick/Server collision");
+		return exit_client(cptr, sptr, &me, NULL, "Nick/Server collision");
 	}
 
 	if (MyClient(cptr) && !ValidatePermissionsForPath("immune:nick-flood",sptr,NULL,NULL,NULL))
@@ -806,7 +806,7 @@ CMD_FUNC(m_nick)
 		if (acptr == cptr)
 			return 0;
 		acptr->flags |= FLAGS_KILLED;
-		exit_client(NULL, acptr, &me, "Overridden");
+		exit_client(NULL, acptr, &me, NULL, "Overridden");
 		goto nickkilldone;
 	}
 	/* A sanity check in the user field... */
@@ -823,7 +823,7 @@ CMD_FUNC(m_nick)
 		   messed up, trash the old one and accept the new one.
 		   Remember - at this point there is a new nick coming in!
 		   Handle appropriately. -- Barubary */
-		exit_client(NULL, acptr, &me, "Lost user field");
+		exit_client(NULL, acptr, &me, NULL, "Lost user field");
 		goto nickkilldone;
 	}
 	/*
@@ -1229,7 +1229,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			 * so have a generic exit_client() here to be safe.
 			 */
 			if (i != FLUSH_BUFFER)
-				return exit_client(cptr, sptr, &me, "Rejected");
+				return exit_client(cptr, sptr, &me, NULL, "Rejected");
 			return FLUSH_BUFFER;
 		}
 
@@ -1326,7 +1326,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		{
 			if (stripuser[0] == '\0')
 			{
-				return exit_client(cptr, cptr, cptr, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
+				return exit_client(cptr, cptr, cptr, NULL, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
 			}
 
 			strlcpy(olduser, user->username + noident, USERLEN+1);
@@ -1489,7 +1489,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_one(cptr, NULL, ":%s KILL %s :%s (No such server: %s)",
 			    me.name, sptr->name, me.name, user->server);
 			sptr->flags |= FLAGS_KILLED;
-			return exit_client(sptr, sptr, &me,
+			return exit_client(sptr, sptr, &me, NULL,
 			    "USER without prefix(2.8) or wrong prefix");
 		}
 		else if (acptr->from != sptr->from)
@@ -1501,7 +1501,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			    me.name, sptr->name, me.name, user->server,
 			    acptr->from->name, acptr->from->local->sockhost);
 			sptr->flags |= FLAGS_KILLED;
-			return exit_client(sptr, sptr, &me,
+			return exit_client(sptr, sptr, &me, NULL,
 			    "USER server wrong direction");
 		}
 		else
@@ -1527,7 +1527,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				sendto_ops("USER with invalid IP (%s) (%s) -- "
 				           "IP must be base64 encoded binary representation of either IPv4 or IPv6",
 				           sptr->name, ip);
-				return exit_client(sptr, sptr, &me, "USER with invalid IP");
+				return exit_client(sptr, sptr, &me, NULL, "USER with invalid IP");
 			}
 			sptr->ip = strdup(ipstring);
 		}
@@ -1716,13 +1716,13 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 
 	if (!IsSecure(cptr) && !IsLocal(cptr) && (iConf.plaintext_policy_user == POLICY_DENY))
 	{
-		return exit_client(cptr, cptr, &me, iConf.plaintext_policy_user_message);
+		return exit_client(cptr, cptr, &me, NULL, iConf.plaintext_policy_user_message);
 	}
 
 	if (IsSecure(cptr) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(cptr))
 	{
 		char *msg = outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, cptr);
-		return exit_client(cptr, cptr, &me, msg);
+		return exit_client(cptr, cptr, &me, NULL, msg);
 	}
 
 	for (aconf = conf_allow; aconf; aconf = aconf->next)
@@ -1811,14 +1811,14 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 					if (ii > aconf->maxperip)
 					{
 						/* Already got too many with that ip# */
-						return exit_client(cptr, cptr, &me, iConf.reject_message_too_many_connections);
+						return exit_client(cptr, cptr, &me, NULL, iConf.reject_message_too_many_connections);
 					}
 				}
 			}
 		}
 		if ((i = Auth_Check(cptr, aconf->auth, cptr->local->passwd)) == -1)
 		{
-			return exit_client(cptr, cptr, &me, iConf.reject_message_password_mismatch);
+			return exit_client(cptr, cptr, &me, NULL, iConf.reject_message_password_mismatch);
 		}
 		if ((i == 2) && (cptr->local->passwd))
 		{
@@ -1833,9 +1833,9 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		else
 		{
 			sendnumeric(cptr, RPL_REDIR, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
-			return exit_client(cptr, cptr, &me, iConf.reject_message_server_full);
+			return exit_client(cptr, cptr, &me, NULL, iConf.reject_message_server_full);
 		}
 		return 0;
 	}
-	return exit_client(cptr, cptr, &me, iConf.reject_message_unauthorized);
+	return exit_client(cptr, cptr, &me, NULL, iConf.reject_message_unauthorized);
 }

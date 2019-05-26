@@ -345,7 +345,7 @@ int dowebirc(aClient *cptr, char *ip, char *host, char *options)
 	int secure = 0;
 
 	if (IsWEBIRC(cptr))
-		return exit_client(cptr, cptr, &me, "Double CGI:IRC request (already identified)");
+		return exit_client(cptr, cptr, &me, NULL, "Double CGI:IRC request (already identified)");
 
 	if (host && !strcmp(ip, host))
 		host = NULL; /* host did not resolve, make it NULL */
@@ -356,7 +356,7 @@ int dowebirc(aClient *cptr, char *ip, char *host, char *options)
 	    (inet_pton(AF_INET6, ip, scratch) != 1))
 	{
 		/* then we have an invalid IP */
-		return exit_client(cptr, cptr, &me, "Invalid IP address");
+		return exit_client(cptr, cptr, &me, NULL, "Invalid IP address");
 	}
 
 	/* STEP 2: Update GetIP() */
@@ -432,7 +432,7 @@ CMD_FUNC(m_webirc)
 	/* Check if allowed host */
 	e = Find_webirc(sptr, password, WEBIRC_WEBIRC, &error);
 	if (!e)
-		return exit_client(cptr, sptr, &me, error);
+		return exit_client(cptr, sptr, &me, NULL, error);
 
 	/* And do our job.. */
 	return dowebirc(cptr, ip, host, options);
@@ -469,7 +469,7 @@ int webirc_local_pass(aClient *sptr, char *password)
 			ip = password + WEBIRC_STRINGLEN;
 			host = strchr(ip, '_');
 			if (!host)
-				return exit_client(sptr, sptr, &me, "Invalid CGI:IRC IP received");
+				return exit_client(sptr, sptr, &me, NULL, "Invalid CGI:IRC IP received");
 			*host++ = '\0';
 		
 			return dowebirc(sptr, ip, host, NULL);

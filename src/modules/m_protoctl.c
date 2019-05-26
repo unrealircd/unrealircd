@@ -161,7 +161,7 @@ CMD_FUNC(m_protoctl)
 				snprintf(buf, sizeof(buf), "Server %s has utf8 in set::allowed-nickchars but %s does not. Link rejected.",
 					me.name, *sptr->name ? sptr->name : "other side");
 				sendto_realops("\002ERROR\001 %s", buf);
-				return exit_client(cptr, sptr, &me, buf);
+				return exit_client(cptr, sptr, &me, NULL, buf);
 			}
 			/* We compare the character sets to see if we should warn opers about any mismatch... */
 			if (strcmp(value, charsys_get_current_languages()))
@@ -169,7 +169,7 @@ CMD_FUNC(m_protoctl)
 				sendto_realops("\002WARNING!!!!\002 Link %s does not have the same set::allowed-nickchars settings (or is "
 							"a different UnrealIRCd version), this MAY cause display issues. Our charset: '%s', theirs: '%s'",
 					get_client_name(cptr, FALSE), charsys_get_current_languages(), value);
-				/* return exit_client(cptr, cptr, &me, "Nick charset mismatch"); */
+				/* return exit_client(cptr, cptr, &me, NULL, "Nick charset mismatch"); */
 			}
 			if (cptr->serv)
 				safestrdup(cptr->serv->features.nickchars, value);
@@ -184,17 +184,17 @@ CMD_FUNC(m_protoctl)
 			char *sid = value;
 
 			if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
-				return exit_client(cptr, cptr, &me, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
+				return exit_client(cptr, cptr, &me, NULL, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
 
 			if (*sptr->id && (strlen(sptr->id)==3))
-				return exit_client(cptr, cptr, &me, "Got PROTOCTL SID twice");
+				return exit_client(cptr, cptr, &me, NULL, "Got PROTOCTL SID twice");
 
 			if ((acptr = hash_find_id(sid, NULL)) != NULL)
 			{
 				sendto_one(sptr, NULL, "ERROR :SID %s already exists from %s", acptr->id, acptr->name);
 				sendto_snomask(SNO_SNOTICE, "Link %s rejected - SID %s already exists from %s",
 						get_client_name(cptr, FALSE), acptr->id, acptr->name);
-				return exit_client(cptr, cptr, &me, "SID collision");
+				return exit_client(cptr, cptr, &me, NULL, "SID collision");
 			}
 
 			if (*sptr->id)
@@ -231,7 +231,7 @@ CMD_FUNC(m_protoctl)
 				    "WARNING: Bogus server name (%s) from %s in EAUTH (maybe just a fishy client)",
 				    servername ? servername : "", get_client_name(cptr, TRUE));
 
-				return exit_client(cptr, sptr, &me, "Bogus server name");
+				return exit_client(cptr, sptr, &me, NULL, "Bogus server name");
 			}
 			
 			
@@ -293,7 +293,7 @@ CMD_FUNC(m_protoctl)
 					acptr->id, acptr->name);
 				sendto_realops("Link %s cancelled, server with SID %s (%s) already exists",
 					get_client_name(acptr, TRUE), acptr->id, acptr->name);
-				return exit_client(sptr, sptr, sptr, "Server Exists (or non-unique me::sid)");
+				return exit_client(sptr, sptr, sptr, NULL, "Server Exists (or non-unique me::sid)");
 			}
 			
 			acptr = find_pending_net_duplicates(sptr, &srv, &sid);
@@ -304,7 +304,7 @@ CMD_FUNC(m_protoctl)
 				sendto_realops("Link %s cancelled, server would introduce server with SID %s, which "
 				               "server %s is also about to introduce. Just wait a moment for it to synchronize...",
 				               get_client_name(acptr, TRUE), sid, get_client_name(srv, TRUE));
-				return exit_client(sptr, sptr, sptr, "Server Exists (just wait a moment)");
+				return exit_client(sptr, sptr, sptr, NULL, "Server Exists (just wait a moment)");
 			}
 
 			/* Send our PROTOCTL SERVERS= back if this was NOT a response */
@@ -338,7 +338,7 @@ CMD_FUNC(m_protoctl)
 			{
 				sendto_realops("%s", msg);
 				ircd_log(LOG_ERROR, "%s", msg);
-				return exit_client(sptr, sptr, sptr, linkerr);
+				return exit_client(sptr, sptr, sptr, NULL, linkerr);
 			}
 		}
 		else if (!strcmp(name, "MLOCK"))

@@ -75,7 +75,7 @@ CMD_FUNC(m_user)
 
 	if (MyConnect(sptr) && (sptr->local->listener->options & LISTENER_SERVERSONLY))
 	{
-		return exit_client(cptr, sptr, sptr,
+		return exit_client(cptr, sptr, sptr, NULL,
 		    "This port is for servers only");
 	}
 

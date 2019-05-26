@@ -164,5 +164,5 @@ CMD_FUNC(m_squit)
 		acptr->flags |= FLAGS_SQUIT;
 	}
 
-	return exit_client(cptr, acptr, sptr, comment);
+	return exit_client(cptr, acptr, sptr, NULL, comment);
 }

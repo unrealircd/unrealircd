@@ -56,7 +56,7 @@ int sinfo_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		 * failure to do so will lead to potential desyncs or other major
 		 * issues.
 		 */
-		return exit_client(cptr, sptr, &me, "Protocol error: you cannot send SINFO about yourself");
+		return exit_client(cptr, sptr, &me, NULL, "Protocol error: you cannot send SINFO about yourself");
 	}
 
 	/* :SID SINFO up_since protocol umodes chanmodes nickchars :software name

@@ -88,7 +88,7 @@ int _check_banned(aClient *cptr)
 		{
 			ircsnprintf(zlinebuf, BUFSIZE, "Throttled: Reconnecting too fast - Email %s for more information.",
 					KLINE_ADDRESS);
-			return exit_client(cptr, cptr, &me, zlinebuf);
+			return exit_client(cptr, cptr, &me, NULL, zlinebuf);
 		}
 		else if (val == 1)
 			add_throttling_bucket(cptr);

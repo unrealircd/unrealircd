@@ -429,7 +429,7 @@ int ct_pre_lconnect(aClient *sptr)
 			sendto_realops("[ConnThrottle] For more information see https://www.unrealircd.org/docs/ConnThrottle");
 			ucounter.throttling_banner_displayed = 1;
 		}
-		return exit_client(sptr, sptr, &me, cfg.reason);
+		return exit_client(sptr, sptr, &me, NULL, cfg.reason);
 	}
 
 	return 0;

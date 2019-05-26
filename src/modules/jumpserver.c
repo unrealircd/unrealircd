@@ -70,10 +70,10 @@ MOD_UNLOAD(jumpserver)
 static int do_jumpserver_exit_client(aClient *sptr)
 {
 	if (IsSecure(sptr) && jss->ssl_server)
-		sendnumeric(sptr, RPL_REDIR, jss->ssl_server, jss->ssl_port);
+		sendnumeric(sptr, RPL_REDIR, jss->ssl_server, NULL, jss->ssl_port);
 	else
 		sendnumeric(sptr, RPL_REDIR, jss->server, jss->port);
- 	return exit_client(sptr, sptr, sptr, jss->reason);
+	return exit_client(sptr, sptr, sptr, NULL, jss->reason);
 }
 
 static void redirect_all_clients(void)

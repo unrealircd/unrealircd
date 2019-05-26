@@ -531,7 +531,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch)
 static int cancel_clients(aClient *cptr, aClient *sptr, char *cmd)
 {
 	if (IsServer(cptr) || IsServer(sptr) || IsMe(sptr)) return 0;
-	return exit_client(cptr, cptr, &me, "Fake prefix");
+	return exit_client(cptr, cptr, &me, NULL, "Fake prefix");
 }
 
 static void remove_unknown(aClient *cptr, char *sender)
