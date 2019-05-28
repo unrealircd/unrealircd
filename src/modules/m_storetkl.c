@@ -1,5 +1,5 @@
 /*
- * Stores TKLines (G:Lines etc) inside a .db file for persistency
+ * Stores active TKLines (G:Lines etc) inside a .db file for persistency
  * (C) Copyright 2019 Gottem and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -94,7 +94,7 @@ unsigned backport_tkl1000; // Stored .db might still work with flags instead of 
 ModuleHeader MOD_HEADER(m_storetkl) = {
 	"m_storetkl",
 	"v1.10",
-	"Store TKL entries persistently across IRCd restarts",
+	"Stores active TKL entries persistently/across IRCd restarts",
 	"3.2-b8-1",
 	NULL
 };
