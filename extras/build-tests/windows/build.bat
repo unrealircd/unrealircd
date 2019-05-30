@@ -1,7 +1,12 @@
 rem Build script for appveyor
 
+rem Temporarily hardcoded:
+set TARGET="Visual Studio 2019"
+set SHORTNAME="vs2017"
+
 rem Initialize Visual Studio variables
 if "%TARGET%" == "Visual Studio 2017" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+if "%TARGET%" == "Visual Studio 2019" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
 
 rem Installing tools
 rem cinst unrar -y
