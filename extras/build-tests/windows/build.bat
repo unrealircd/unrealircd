@@ -1,4 +1,4 @@
-rem Build script for appveyor
+echo on
 
 rem Temporarily hardcoded:
 set TARGET="Visual Studio 2019"
