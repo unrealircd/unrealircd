@@ -25,7 +25,7 @@ ARG=" "
 if [ -z "$BINDIR" -o -z "$DATADIR" -o -z "$CONFDIR" -o -z "$MODULESDIR" -o -z "$LOGDIR" -o -z "$CACHEDIR" -o -z "$DOCDIR" -o -z "$TMPDIR" -o -z "$PRIVATELIBDIR" ]; then
 	echo "Sorry './Config -quick' cannot be used because your 'config.settings'"
 	echo "file either does not exist or is from an old UnrealIRCd version"
-	echo "(older than version 4.0.8)."
+	echo "(older than UnrealIRCd 5.0.0)."
 	echo ""
 	echo "Please run './Config' without -quick and answer all questions."
 	echo ""
