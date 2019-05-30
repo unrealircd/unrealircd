@@ -9,6 +9,7 @@ if "%TARGET%" == "Visual Studio 2017" call "C:\Program Files (x86)\Microsoft Vis
 if "%TARGET%" == "Visual Studio 2019" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
 
 rem Installing tools
+rem only for appveyor:
 rem cinst unrar -y
 rem cinst unzip -y
 rem cinst innosetup -y
@@ -22,7 +23,8 @@ curl -fsS -o SetACL.exe https://www.unrealircd.org/files/dev/win/SetACL.exe
 curl -fsS -o unrealircd-libraries-devel.zip https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-devel.zip
 unzip unrealircd-libraries-devel.zip
 
-cd \projects\unrealircd
+rem for appveyor: cd \projects\unrealircd
+cd \users\user\worker\unreal5-w10\build
 
 rem Now the actual build
 call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
@@ -50,5 +52,5 @@ dir unrealircd-dev-build.exe
 sha256sum unrealircd-dev-build.exe
 
 rem Upload artifact
-appveyor PushArtifact unrealircd-dev-build.exe
-if %ERRORLEVEL% NEQ 0 EXIT /B 1
+rem appveyor PushArtifact unrealircd-dev-build.exe
+rem if %ERRORLEVEL% NEQ 0 EXIT /B 1
