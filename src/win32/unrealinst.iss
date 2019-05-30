@@ -39,7 +39,6 @@ Name: "fixperm"; Description: "Make UnrealIRCd folder writable by current user";
 [Files]
 Source: "UnrealIRCd.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "UnrealIRCd.pdb"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";Flags: ignoreversion
 Source: "doc\RELEASE-NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
 
 Source: "doc\conf\*.default.conf"; DestDir: "{app}\conf"; Flags: ignoreversion
