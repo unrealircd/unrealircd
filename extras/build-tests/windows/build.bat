@@ -4,9 +4,9 @@ rem Initialize Visual Studio variables
 if "%TARGET%" == "Visual Studio 2017" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
 
 rem Installing tools
-cinst unrar -y
-cinst unzip -y
-cinst innosetup -y
+rem cinst unrar -y
+rem cinst unzip -y
+rem cinst innosetup -y
 curl -fsS -o dlltool.exe https://www.unrealircd.org/files/dev/win/dlltool.exe
 
 rem Installing UnrealIRCd dependencies
