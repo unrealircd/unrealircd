@@ -1,8 +1,8 @@
 echo on
 
 rem Temporarily hardcoded:
-set TARGET="Visual Studio 2019"
-set SHORTNAME="vs2017"
+set TARGET=Visual Studio 2019
+set SHORTNAME=vs2017
 
 rem Initialize Visual Studio variables
 if "%TARGET%" == "Visual Studio 2017" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
