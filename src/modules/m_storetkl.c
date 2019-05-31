@@ -89,7 +89,10 @@ struct cfgstruct {
 	char *database;
 };
 static struct cfgstruct cfg;
-unsigned backport_tkl1000; // Stored .db might still work with flags instead of actual values (will be corrected on next write)
+
+// Stored .db might still work with flags instead of actual values (will be corrected on next write)
+// This backport stuff will eventually be removed ;]
+unsigned backport_tkl1000;
 
 ModuleHeader MOD_HEADER(m_storetkl) = {
 	"m_storetkl",
@@ -217,6 +220,7 @@ int writeDB(void) {
 	aTKline *tkl;
 	char *tkltype = NULL;
 	char usermask_subtype[256]; // Might need to prefix something to usermask
+	uint64_t expire_at, set_at, spamf_tkl_duration; // To prevent 32 vs 64 bit incompatibilies regarding the TS data type(def)
 
 	// Write to a tempfile first, then rename it if everything succeeded
 	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", cfg.database);
@@ -262,14 +266,19 @@ int writeDB(void) {
 			W_SAFE(write_str(fd, tkl->hostmask)); // Host mask (action for spamfilter, like 'block')
 			W_SAFE(write_str(fd, tkl->reason)); // Ban reason (TKL time for spamfilters, in case of a gline action)
 			W_SAFE(write_str(fd, tkl->setby));
-			W_SAFE(write_data(fd, &tkl->expire_at, sizeof(tkl->expire_at)));
-			W_SAFE(write_data(fd, &tkl->set_at, sizeof(tkl->set_at)));
+
+			expire_at = tkl->expire_at;
+			set_at = tkl->set_at;
+			W_SAFE(write_data(fd, &expire_at, sizeof(expire_at)));
+			W_SAFE(write_data(fd, &set_at, sizeof(set_at)));
 
 			if(tkl->ptr.spamf) {
 				W_SAFE(write_str(fd, "SPAMF")); // Write a string so we know to expect more when reading the DB
 				W_SAFE(write_data(fd, &tkl->ptr.spamf->action, sizeof(tkl->ptr.spamf->action))); // Unsigned short (block, GZ:Line, etc; also refer to BAN_ACT_*)
 				W_SAFE(write_str(fd, tkl->ptr.spamf->tkl_reason));
-				W_SAFE(write_data(fd, &tkl->ptr.spamf->tkl_duration, sizeof(tkl->ptr.spamf->tkl_duration)));
+
+				spamf_tkl_duration = tkl->ptr.spamf->tkl_duration;
+				W_SAFE(write_data(fd, &spamf_tkl_duration, sizeof(spamf_tkl_duration)));
 				W_SAFE(write_str(fd, tkl->ptr.spamf->expr->str)); // Actual expression/regex/etc
 
 				// Expression type (simple/PCRE), see also enum MatchType
@@ -298,15 +307,18 @@ int readDB(void) {
 	uint64_t i;
 	uint64_t tklcount = 0;
 	size_t tklcount_tkl1000 = 0;
-	unsigned num = 0;
-	unsigned rewrite = 0;
+	uint64_t num = 0;
+	uint64_t rewrite = 0;
 	unsigned version;
 
+	// Variables for all TKL types
 	char *tkltype = NULL;
 	char *usermask = NULL;
 	char *hostmask = NULL;
 	char *reason = NULL;
 	char *setby = NULL;
+
+	// Some stuff related to spamfilters
 	char *spamf_check = NULL;
 	char *spamf_matchtype = NULL;
 
@@ -346,7 +358,8 @@ int readDB(void) {
 		setby = NULL;
 		char tklflag;
 		tkltype = NULL;
-		TS expire_at, set_at;
+		uint64_t expire_at, set_at;
+		TS expire_at_tkl1000, set_at_tkl1000;
 		char setTime[100], expTime[100], spamfTime[100];
 
 		// Some stuff related to spamfilters
@@ -354,7 +367,8 @@ int readDB(void) {
 		int spamf = 0;
 		unsigned short spamf_action;
 		char *spamf_tkl_reason = NULL;
-		TS spamf_tkl_duration;
+		TS spamf_tkl_duration_tkl1000;
+		uint64_t spamf_tkl_duration;
 		char *spamf_expr = NULL;
 		MatchType matchtype;
 		spamf_matchtype = NULL;
@@ -395,14 +409,31 @@ int readDB(void) {
 		R_SAFE(read_str(fd, &hostmask));
 		R_SAFE(read_str(fd, &reason));
 		R_SAFE(read_str(fd, &setby));
-		R_SAFE(read_data(fd, &expire_at, sizeof(expire_at)));
-		R_SAFE(read_data(fd, &set_at, sizeof(set_at)));
+
+		if(backport_tkl1000) {
+			R_SAFE(read_data(fd, &expire_at_tkl1000, sizeof(expire_at_tkl1000)));
+			R_SAFE(read_data(fd, &set_at_tkl1000, sizeof(set_at_tkl1000)));
+			expire_at = expire_at_tkl1000;
+			set_at = set_at_tkl1000;
+		}
+		else {
+			R_SAFE(read_data(fd, &expire_at, sizeof(expire_at)));
+			R_SAFE(read_data(fd, &set_at, sizeof(set_at)));
+		}
+
 		R_SAFE(read_str(fd, &spamf_check));
 		if(!strcmp(spamf_check, "SPAMF")) {
 			spamf = 1;
 			R_SAFE(read_data(fd, &spamf_action, sizeof(spamf_action)));
 			R_SAFE(read_str(fd, &spamf_tkl_reason));
-			R_SAFE(read_data(fd, &spamf_tkl_duration, sizeof(spamf_tkl_duration)));
+
+			if(backport_tkl1000) {
+				R_SAFE(read_data(fd, &spamf_tkl_duration_tkl1000, sizeof(spamf_tkl_duration_tkl1000)));
+				spamf_tkl_duration = spamf_tkl_duration_tkl1000;
+			}
+			else
+				R_SAFE(read_data(fd, &spamf_tkl_duration, sizeof(spamf_tkl_duration)));
+
 			R_SAFE(read_str(fd, &spamf_expr));
 			if(backport_tkl1000) {
 				R_SAFE(read_data(fd, &matchtype, sizeof(matchtype)));
@@ -485,13 +516,13 @@ int readDB(void) {
 	close(fd);
 
 	if(num) {
-		ircd_log(LOG_ERROR, "[storetkl] Re-added %d X:Lines", num);
-		sendto_realops("[storetkl] Re-added %d X:Lines", num); // Probably won't be seen ever, but just in case ;]
+		ircd_log(LOG_ERROR, "[storetkl] Re-added %li X:Lines", num);
+		sendto_realops("[storetkl] Re-added %li X:Lines", num); // Probably won't be seen ever, but just in case ;]
 	}
 
 	if(rewrite) {
-		ircd_log(LOG_ERROR, "[storetkl] Rewriting DB file due to %d skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : ""));
-		sendto_realops("[storetkl] Rewriting DB file due to %d skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : "")); // Probably won't be seen ever, but just in case ;]
+		ircd_log(LOG_ERROR, "[storetkl] Rewriting DB file due to %li skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : ""));
+		sendto_realops("[storetkl] Rewriting DB file due to %li skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : "")); // Probably won't be seen ever, but just in case ;]
 		return writeDB();
 	}
 
