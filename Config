@@ -22,10 +22,10 @@
 RUN_CONFIGURE () {
 ARG=" "
 
-if [ -z "$BINDIR" -o -z "$DATADIR" -o -z "$CONFDIR" -o -z "$MODULESDIR" -o -z "$LOGDIR" -o -z "$CACHEDIR" -o -z "$DOCDIR" -o -z "$TMPDIR" -o -z "$LIBDIR" ]; then
+if [ -z "$BINDIR" -o -z "$DATADIR" -o -z "$CONFDIR" -o -z "$MODULESDIR" -o -z "$LOGDIR" -o -z "$CACHEDIR" -o -z "$DOCDIR" -o -z "$TMPDIR" -o -z "$PRIVATELIBDIR" ]; then
 	echo "Sorry './Config -quick' cannot be used because your 'config.settings'"
 	echo "file either does not exist or is from an old UnrealIRCd version"
-	echo "(older than version 4.0.8)."
+	echo "(older than UnrealIRCd 5.0.0)."
 	echo ""
 	echo "Please run './Config' without -quick and answer all questions."
 	echo ""
@@ -34,7 +34,7 @@ fi
 
 
 mkdir -p $TMPDIR
-mkdir -p $LIBDIR
+mkdir -p $PRIVATELIBDIR
 
 # Do this even if we're not in advanced mode
 if [ "$SHOWLISTMODES" = "1" ] ; then
@@ -84,7 +84,7 @@ ARG="$ARG--with-logdir=$LOGDIR "
 ARG="$ARG--with-cachedir=$CACHEDIR "
 ARG="$ARG--with-docdir=$DOCDIR "
 ARG="$ARG--with-tmpdir=$TMPDIR "
-ARG="$ARG--with-privatelibdir=$LIBDIR "
+ARG="$ARG--with-privatelibdir=$PRIVATELIBDIR "
 ARG="$ARG--with-scriptdir=$BASEPATH "
 ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
 ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
@@ -93,13 +93,13 @@ ARG="$ARG--enable-dynamic-linking "
 ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 # remove possibly old instances of curl in ~/unrealircd/lib/
-rm -f $LIBDIR/*curl* 1>/dev/null 2>&1
+rm -f $PRIVATELIBDIR/*curl* 1>/dev/null 2>&1
 # Ensure we install curl even if someone does ./Config -quick...
 if [ "x$CURLDIR" = "x$UNREALCWD/extras/curl" ]; then
 	INSTALLCURL=1
 fi
 if [ "x$INSTALLCURL" = "x1" ]; then
-	extras/curlinstall "$LIBDIR" || exit 1
+	extras/curlinstall "$PRIVATELIBDIR" || exit 1
 fi
 echo $CONF
 $CONF || exit 1
@@ -547,7 +547,7 @@ LOGDIR="$BASEPATH/logs"
 CACHEDIR="$BASEPATH/cache"
 DOCDIR="$BASEPATH/doc"
 TMPDIR="$BASEPATH/tmp"
-LIBDIR="$BASEPATH/lib"
+PRIVATELIBDIR="$BASEPATH/lib"
 
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -894,7 +894,7 @@ LOGDIR="$LOGDIR"
 CACHEDIR="$CACHEDIR"
 DOCDIR="$DOCDIR"
 TMPDIR="$TMPDIR"
-LIBDIR="$LIBDIR"
+PRIVATELIBDIR="$PRIVATELIBDIR"
 PREFIXAQ="$PREFIXAQ"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
 MAXCONNECTIONS_REQUEST="$MAXCONNECTIONS_REQUEST"

@@ -10,10 +10,18 @@ if [ "$1" != "" ]; then
 	BUILDCONFIG="$*"
 fi
 
-export MAKE="make -j3"
+if [[ "$OSTYPE" == "freebsd"* ]]; then
+	export MAKE="gmake -j3"
+else
+	export MAKE="make -j3"
+fi
+
 export CPPFLAGS="-DFAKELAG_CONFIGURABLE"
 
-extras/build-tests/nix/select-config $BUILDCONFIG
+# !! skipped for now: extras/build-tests/nix/select-config $BUILDCONFIG !!
+# !! temporary use this:
+cp extras/build-tests/nix/configs/default ./config.settings
+
 # Read config.settings, this makes a couple of variables available to us.
 . ./config.settings
 if [ "$SSLDIR" != "" ]; then

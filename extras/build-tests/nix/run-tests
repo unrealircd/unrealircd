@@ -61,10 +61,12 @@ bin/unrealircd -f irc2.conf
 cd -
 
 # Do cipherscan test
-sleep 2
-cd ../extras/tests/tls
-./tls-tests
-cd -
+if [[ "$OSTYPE" != "freebsd"* ]]; then
+	sleep 2
+	cd ../extras/tests/tls
+	./tls-tests
+	cd -
+fi
 
 # Back in unrealircd-tests, run the tests!
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -72,3 +74,5 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
 	rake
 fi
+
+killall -15 unrealircd || true

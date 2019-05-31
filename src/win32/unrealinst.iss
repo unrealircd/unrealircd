@@ -39,7 +39,6 @@ Name: "fixperm"; Description: "Make UnrealIRCd folder writable by current user";
 [Files]
 Source: "UnrealIRCd.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "UnrealIRCd.pdb"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";Flags: ignoreversion
 Source: "doc\RELEASE-NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
 
 Source: "doc\conf\*.default.conf"; DestDir: "{app}\conf"; Flags: ignoreversion
@@ -69,7 +68,6 @@ Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags
 Source: "src\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion
 Source: "src\modules\snomasks\*.dll"; DestDir: "{app}\modules\snomasks"; Flags: ignoreversion
 Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
-Source: "src\modules\cap\*.dll"; DestDir: "{app}\modules\cap"; Flags: ignoreversion
 
 Source: "c:\dev\pcre2\bin\pcre*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\argon2\vs2015\build\*.dll"; DestDir: "{app}"; Flags: ignoreversion
