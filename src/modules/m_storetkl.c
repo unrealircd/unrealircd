@@ -45,7 +45,7 @@
 	do { \
 		if((x)) { \
 			close(fd); \
-			config_warn("[storetkl] Read error from the persistent storage file '%s' (possible corruption)", cfg.database); \
+			config_warn("[storetkl] Read error from the persistent storage file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
 			FreeTKLRead(); \
 			return -1; \
 		} \
@@ -55,7 +55,7 @@
 	do { \
 		if((x)) { \
 			close(fd); \
-			config_warn("[storetkl] Write error from the persistent storage file '%s' (DATABASE NOT SAVED)", cfg.database); \
+			config_warn("[storetkl] Write error from the persistent storage tempfile '%s': %s (DATABASE NOT SAVED)", tmpfname, strerror(errno)); \
 			return -1; \
 		} \
 	} while(0)
@@ -74,9 +74,10 @@ void setcfg(void);
 void freecfg(void);
 int storetkl_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int storetkl_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
-EVENT(writeDB_evt);
-int writeDB(void);
-int readDB(void);
+EVENT(write_tkldb_evt);
+int write_tkldb(void);
+int write_tkline(int fd, const char *tmpfname, aTKline *tkl);
+int read_tkldb(void);
 static inline int read_data(int fd, void *buf, size_t len);
 static inline int write_data(int fd, void *buf, size_t len);
 static int write_str(int fd, char *x);
@@ -125,7 +126,8 @@ MOD_INIT(m_storetkl) {
 		mreq.sync = 0;
 		storetkl_md = ModDataAdd(modinfo->handle, mreq);
 		IsMDErr(storetkl_md, m_storetkl, modinfo);
-		readDB();
+		if(read_tkldb() != 0)
+			return MOD_FAILED;
 		moddata_client((&me), storetkl_md).i = 1;
 	}
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, storetkl_configrun);
@@ -133,7 +135,7 @@ MOD_INIT(m_storetkl) {
 }
 
 MOD_LOAD(m_storetkl) {
-	EventAddEx(modinfo->handle, "storetkl_writedb", TKL_DB_SAVE_EVERY, 0, writeDB_evt, NULL);
+	EventAddEx(modinfo->handle, "storetkl_write_tkldb", TKL_DB_SAVE_EVERY, 0, write_tkldb_evt, NULL);
 	if(ModuleGetError(modinfo->handle) != MODERR_NOERROR) {
 		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(m_storetkl).name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
@@ -142,7 +144,7 @@ MOD_LOAD(m_storetkl) {
 }
 
 MOD_UNLOAD(m_storetkl) {
-	writeDB();
+	write_tkldb();
 	freecfg();
 	return MOD_SUCCESS;
 }
@@ -208,30 +210,36 @@ int storetkl_configrun(ConfigFile *cf, ConfigEntry *ce, int type) {
 	return 1;
 }
 
-EVENT(writeDB_evt) {
-	writeDB();
+EVENT(write_tkldb_evt) {
+	write_tkldb();
 }
 
-int writeDB(void) {
+int write_tkldb(void) {
 	char tmpfname[512];
 	int fd;
 	uint64_t tklcount;
-	int index;
+	int index, index2;
+	int err;
 	aTKline *tkl;
-	char *tkltype = NULL;
-	char usermask_subtype[256]; // Might need to prefix something to usermask
-	uint64_t expire_at, set_at, spamf_tkl_duration; // To prevent 32 vs 64 bit incompatibilies regarding the TS data type(def)
 
 	// Write to a tempfile first, then rename it if everything succeeded
 	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", cfg.database);
 	OpenFile(fd, tmpfname, O_CREAT | O_WRONLY | O_TRUNC);
 	if(fd == -1) {
-		config_warn("[storetkl] Unable to open the persistent storage file '%s' for writing: %s", cfg.database, strerror(errno));
+		config_warn("[storetkl] Unable to open the persistent storage tempfile '%s' for writing: %s", tmpfname, strerror(errno));
 		return -1;
 	}
 
 	W_SAFE(write_data(fd, &tkl_db_version, sizeof(tkl_db_version)));
 	tklcount = 0;
+
+	// *@IP Z:Lines have a special hash thingy
+	for(index = 0; index < TKLIPHASHLEN1; index++) {
+		for(index2 = 0; index2 < TKLIPHASHLEN2; index2++) {
+			for(tkl = tklines_ip_hash[index][index2]; tkl; tkl = tkl->next)
+				tklcount++;
+		}
+	}
 	for(index = 0; index < TKLISTLEN; index++) {
 		for(tkl = tklines[index]; tkl; tkl = tkl->next) {
 			// Local spamfilter means it was added through the conf or is built-in, so let's not even write those
@@ -240,58 +248,25 @@ int writeDB(void) {
 			tklcount++;
 		}
 	}
-
 	W_SAFE(write_data(fd, &tklcount, sizeof(tklcount)));
-	tkltype = malloc(sizeof(char) * 2); // No need to keep reallocating it in a loop
-	tkltype[1] = '\0';
-	for(index = 0; index < TKLISTLEN; index++) {
-		for(tkl = tklines[index]; tkl; tkl = tkl->next) {
-			// Since we can't just write 'tkl' in its entirety, we have to get the relevant variables instead
-			// These will be used to reconstruct the proper internal m_tkl() call ;]
-			if((tkl->type & TKL_SPAMF) && !(tkl->type & TKL_GLOBAL)) // Also need to skip this here
-				continue;
-			tkltype[0] = tkl_typetochar(tkl->type);
 
-			W_SAFE(write_str(fd, tkltype)); // TKL char
-			W_SAFE(write_data(fd, &tkl->subtype, sizeof(tkl->subtype))); // Unsigned short (only used for spamfilters/softbans but set to 0 for everything else regardless)
-
-			// Might be a softban
-			if(!tkl->ptr.spamf && (tkl->subtype & TKL_SUBTYPE_SOFT)) {
-				snprintf(usermask_subtype, sizeof(usermask_subtype), "%%%s", tkl->usermask);
-				W_SAFE(write_str(fd, usermask_subtype)); // User mask (targets for spamfilter, like 'cp'), includes % for softbans
-			}
-			else
-				W_SAFE(write_str(fd, tkl->usermask));
-
-			W_SAFE(write_str(fd, tkl->hostmask)); // Host mask (action for spamfilter, like 'block')
-			W_SAFE(write_str(fd, tkl->reason)); // Ban reason (TKL time for spamfilters, in case of a gline action)
-			W_SAFE(write_str(fd, tkl->setby));
-
-			expire_at = tkl->expire_at;
-			set_at = tkl->set_at;
-			W_SAFE(write_data(fd, &expire_at, sizeof(expire_at)));
-			W_SAFE(write_data(fd, &set_at, sizeof(set_at)));
-
-			if(tkl->ptr.spamf) {
-				W_SAFE(write_str(fd, "SPAMF")); // Write a string so we know to expect more when reading the DB
-				W_SAFE(write_data(fd, &tkl->ptr.spamf->action, sizeof(tkl->ptr.spamf->action))); // Unsigned short (block, GZ:Line, etc; also refer to BAN_ACT_*)
-				W_SAFE(write_str(fd, tkl->ptr.spamf->tkl_reason));
-
-				spamf_tkl_duration = tkl->ptr.spamf->tkl_duration;
-				W_SAFE(write_data(fd, &spamf_tkl_duration, sizeof(spamf_tkl_duration)));
-				W_SAFE(write_str(fd, tkl->ptr.spamf->expr->str)); // Actual expression/regex/etc
-
-				// Expression type (simple/PCRE), see also enum MatchType
-				if(tkl->ptr.spamf->expr->type == MATCH_PCRE_REGEX)
-					W_SAFE(write_str(fd, "regex"));
-				else
-					W_SAFE(write_str(fd, "simple"));
-			}
-			else
-				W_SAFE(write_str(fd, "NOSPAMF"));
+	err = 0;
+	for(index = 0; !err && index < TKLIPHASHLEN1; index++) {
+		for(index2 = 0; !err && index2 < TKLIPHASHLEN2; index2++) {
+			for(tkl = tklines_ip_hash[index][index2]; !err && tkl; tkl = tkl->next)
+				err = write_tkline(fd, tmpfname, tkl);
 		}
 	}
-	MyFree(tkltype);
+	for(index = 0; !err && index < TKLISTLEN; index++) {
+		for(tkl = tklines[index]; !err && tkl; tkl = tkl->next) {
+			// Local spamfilter means it was added through the conf or is built-in, so let's not even write those
+			if((tkl->type & TKL_SPAMF) && !(tkl->type & TKL_GLOBAL)) // Also need to skip this here
+				continue;
+			err = write_tkline(fd, tmpfname, tkl);
+		}
+	}
+	if(err != 0)
+		return -1;
 
 	// Everything seems to have gone well, attempt to rename the tempfile
 	close(fd);
@@ -302,7 +277,56 @@ int writeDB(void) {
 	return 0;
 }
 
-int readDB(void) {
+int write_tkline(int fd, const char *tmpfname, aTKline *tkl) {
+	// Since we can't just write 'tkl' in its entirety, we have to get the relevant variables instead
+	// These will be used to reconstruct the proper internal m_tkl() call ;]
+	char tkltype[2];
+	char usermask_subtype[256]; // Might need to prefix something to usermask
+	uint64_t expire_at, set_at, spamf_tkl_duration; // To prevent 32 vs 64 bit incompatibilies regarding the TS data type(def)
+
+	tkltype[0] = tkl_typetochar(tkl->type);
+	tkltype[1] = '\0';
+	W_SAFE(write_str(fd, tkltype)); // TKL char
+	W_SAFE(write_data(fd, &tkl->subtype, sizeof(tkl->subtype))); // Unsigned short (only used for spamfilters/softbans but set to 0 for everything else regardless)
+
+	// Might be a softban
+	if(!tkl->ptr.spamf && (tkl->subtype & TKL_SUBTYPE_SOFT)) {
+		snprintf(usermask_subtype, sizeof(usermask_subtype), "%%%s", tkl->usermask);
+		W_SAFE(write_str(fd, usermask_subtype)); // User mask (targets for spamfilter, like 'cpnNPqdatu'), includes % for softbans
+	}
+	else
+		W_SAFE(write_str(fd, tkl->usermask));
+
+	W_SAFE(write_str(fd, tkl->hostmask)); // Host mask (action for spamfilter, like 'block')
+	W_SAFE(write_str(fd, tkl->reason)); // Ban reason (TKL time for spamfilters, in case of a gline action)
+	W_SAFE(write_str(fd, tkl->setby));
+
+	expire_at = tkl->expire_at;
+	set_at = tkl->set_at;
+	W_SAFE(write_data(fd, &expire_at, sizeof(expire_at)));
+	W_SAFE(write_data(fd, &set_at, sizeof(set_at)));
+
+	if(tkl->ptr.spamf) {
+		W_SAFE(write_str(fd, "SPAMF")); // Write a string so we know to expect more when reading the DB
+		W_SAFE(write_data(fd, &tkl->ptr.spamf->action, sizeof(tkl->ptr.spamf->action))); // Unsigned short (block, GZ:Line, etc; also refer to BAN_ACT_*)
+		W_SAFE(write_str(fd, tkl->ptr.spamf->tkl_reason));
+
+		spamf_tkl_duration = tkl->ptr.spamf->tkl_duration;
+		W_SAFE(write_data(fd, &spamf_tkl_duration, sizeof(spamf_tkl_duration)));
+		W_SAFE(write_str(fd, tkl->ptr.spamf->expr->str)); // Actual expression/regex/etc
+
+		// Expression type (simple/PCRE), see also enum MatchType
+		if(tkl->ptr.spamf->expr->type == MATCH_PCRE_REGEX)
+			W_SAFE(write_str(fd, "regex"));
+		else
+			W_SAFE(write_str(fd, "simple"));
+	}
+	else
+		W_SAFE(write_str(fd, "NOSPAMF"));
+	return 0;
+}
+
+int read_tkldb(void) {
 	int fd;
 	uint64_t i;
 	uint64_t tklcount = 0;
@@ -333,7 +357,7 @@ int readDB(void) {
 
 	R_SAFE(read_data(fd, &version, sizeof(version)));
 	if(version > tkl_db_version) { // Older DBs should still work with newer versions of this module
-		config_warn("[storetkl] File '%s' has a wrong database version: expected it to be <= %u but got %u instead", cfg.database, tkl_db_version, version);
+		config_warn("[storetkl] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, tkl_db_version, version);
 		close(fd);
 		return -1;
 	}
@@ -523,7 +547,7 @@ int readDB(void) {
 	if(rewrite) {
 		ircd_log(LOG_ERROR, "[storetkl] Rewriting DB file due to %li skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : ""));
 		sendto_realops("[storetkl] Rewriting DB file due to %li skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : "")); // Probably won't be seen ever, but just in case ;]
-		return writeDB();
+		return write_tkldb();
 	}
 
 	return 0;
