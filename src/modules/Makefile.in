@@ -64,7 +64,7 @@ R_MODULES= \
 	m_ircops.so m_staff.so nocodes.so \
 	charsys.so antimixedutf8.so authprompt.so m_sinfo.so \
 	reputation.so connthrottle.so \
-	m_storetkl.so \
+	tkldb.so \
 	message-tags.so batch.so \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so
@@ -542,9 +542,9 @@ connthrottle.so: connthrottle.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o connthrottle.so connthrottle.c
 
-m_storetkl.so: m_storetkl.c $(INCLUDES)
+tkldb.so: tkldb.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_storetkl.so m_storetkl.c
+		-o tkldb.so tkldb.c
 
 message-tags.so: message-tags.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

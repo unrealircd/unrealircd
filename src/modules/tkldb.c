@@ -45,7 +45,7 @@
 	do { \
 		if((x)) { \
 			close(fd); \
-			config_warn("[storetkl] Read error from the persistent storage file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
+			config_warn("[tkldb] Read error from the persistent storage file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
 			FreeTKLRead(); \
 			return -1; \
 		} \
@@ -55,7 +55,7 @@
 	do { \
 		if((x)) { \
 			close(fd); \
-			config_warn("[storetkl] Write error from the persistent storage tempfile '%s': %s (DATABASE NOT SAVED)", tmpfname, strerror(errno)); \
+			config_warn("[tkldb] Write error from the persistent storage tempfile '%s': %s (DATABASE NOT SAVED)", tmpfname, strerror(errno)); \
 			return -1; \
 		} \
 	} while(0)
@@ -69,11 +69,11 @@
 	} while(0)
 
 // Forward declarations
-void storetkl_moddata_free(ModData *md);
+void tkldb_moddata_free(ModData *md);
 void setcfg(void);
 void freecfg(void);
-int storetkl_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
-int storetkl_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
+int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int tkldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 EVENT(write_tkldb_evt);
 int write_tkldb(void);
 int write_tkline(int fd, const char *tmpfname, aTKline *tkl);
@@ -84,7 +84,7 @@ static int write_str(int fd, char *x);
 static int read_str(int fd, char **x);
 
 // Globals
-static ModDataInfo *storetkl_md;
+static ModDataInfo *tkldb_md;
 static unsigned tkl_db_version = TKL_DB_VERSION;
 struct cfgstruct {
 	char *database;
@@ -95,61 +95,61 @@ static struct cfgstruct cfg;
 // This backport stuff will eventually be removed ;]
 unsigned backport_tkl1000;
 
-ModuleHeader MOD_HEADER(m_storetkl) = {
-	"m_storetkl",
+ModuleHeader MOD_HEADER(tkldb) = {
+	"tkldb",
 	"v1.10",
 	"Stores active TKL entries persistently/across IRCd restarts",
 	"3.2-b8-1",
 	NULL
 };
 
-MOD_TEST(m_storetkl) {
+MOD_TEST(tkldb) {
 	memset(&cfg, 0, sizeof(cfg));
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, storetkl_configtest);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkldb_configtest);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(m_storetkl) {
+MOD_INIT(tkldb) {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	// MOD_INIT is also called on rehash, so we gotta make sure to not re-add TKLines every time
 	// There might be a cleaner way to do this though (i.e. without moddata) :D
 	setcfg();
-	if(!(storetkl_md = findmoddata_byname("storetkl_inited", MODDATATYPE_CLIENT))) {
+	if(!(tkldb_md = findmoddata_byname("tkldb_inited", MODDATATYPE_CLIENT))) {
 		ModDataInfo mreq;
 		memset(&mreq, 0, sizeof(mreq));
 		mreq.type = MODDATATYPE_CLIENT;
-		mreq.name = "storetkl_inited";
-		mreq.free = storetkl_moddata_free;
+		mreq.name = "tkldb_inited";
+		mreq.free = tkldb_moddata_free;
 		mreq.serialize = NULL;
 		mreq.unserialize = NULL;
 		mreq.sync = 0;
-		storetkl_md = ModDataAdd(modinfo->handle, mreq);
-		IsMDErr(storetkl_md, m_storetkl, modinfo);
+		tkldb_md = ModDataAdd(modinfo->handle, mreq);
+		IsMDErr(tkldb_md, tkldb, modinfo);
 		if(read_tkldb() != 0)
 			return MOD_FAILED;
-		moddata_client((&me), storetkl_md).i = 1;
+		moddata_client((&me), tkldb_md).i = 1;
 	}
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, storetkl_configrun);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkldb_configrun);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_storetkl) {
-	EventAddEx(modinfo->handle, "storetkl_write_tkldb", TKL_DB_SAVE_EVERY, 0, write_tkldb_evt, NULL);
+MOD_LOAD(tkldb) {
+	EventAddEx(modinfo->handle, "tkldb_write_tkldb", TKL_DB_SAVE_EVERY, 0, write_tkldb_evt, NULL);
 	if(ModuleGetError(modinfo->handle) != MODERR_NOERROR) {
-		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(m_storetkl).name, ModuleGetErrorStr(modinfo->handle));
+		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(tkldb).name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_storetkl) {
+MOD_UNLOAD(tkldb) {
 	write_tkldb();
 	freecfg();
 	return MOD_SUCCESS;
 }
 
-void storetkl_moddata_free(ModData *md) {
+void tkldb_moddata_free(ModData *md) {
 	if(md->i)
 		md->i = 0;
 }
@@ -164,20 +164,20 @@ void freecfg(void) {
 	MyFree(cfg.database);
 }
 
-int storetkl_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
+int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
 	int errors = 0;
 	ConfigEntry *cep;
 
-	// We are only interested in set::storetkl::database
+	// We are only interested in set::tkldb::database
 	if(type != CONFIG_SET)
 		return 0;
 
-	if(!ce || strcmp(ce->ce_varname, "storetkl"))
+	if(!ce || strcmp(ce->ce_varname, "tkldb"))
 		return 0;
 
 	for(cep = ce->ce_entries; cep; cep = cep->ce_next) {
 		if(!cep->ce_vardata) {
-			config_error("%s:%i: blank set::storetkl::%s without value", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			config_error("%s:%i: blank set::tkldb::%s without value", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++;
 			continue;
 		}
@@ -185,7 +185,7 @@ int storetkl_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
 			convert_to_absolute_path(&cep->ce_vardata, PERMDATADIR);
 			continue;
 		}
-		config_error("%s:%i: unknown directive set::storetkl::%s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+		config_error("%s:%i: unknown directive set::tkldb::%s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 		errors++;
 	}
 
@@ -193,14 +193,14 @@ int storetkl_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
 	return errors ? -1 : 1;
 }
 
-int storetkl_configrun(ConfigFile *cf, ConfigEntry *ce, int type) {
+int tkldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type) {
 	ConfigEntry *cep;
 
-	// We are only interested in set::storetkl::database
+	// We are only interested in set::tkldb::database
 	if(type != CONFIG_SET)
 		return 0;
 
-	if(!ce || strcmp(ce->ce_varname, "storetkl"))
+	if(!ce || strcmp(ce->ce_varname, "tkldb"))
 		return 0;
 
 	for(cep = ce->ce_entries; cep; cep = cep->ce_next) {
@@ -226,7 +226,7 @@ int write_tkldb(void) {
 	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", cfg.database);
 	OpenFile(fd, tmpfname, O_CREAT | O_WRONLY | O_TRUNC);
 	if(fd == -1) {
-		config_warn("[storetkl] Unable to open the persistent storage tempfile '%s' for writing: %s", tmpfname, strerror(errno));
+		config_warn("[tkldb] Unable to open the persistent storage tempfile '%s' for writing: %s", tmpfname, strerror(errno));
 		return -1;
 	}
 
@@ -271,7 +271,7 @@ int write_tkldb(void) {
 	// Everything seems to have gone well, attempt to rename the tempfile
 	close(fd);
 	if(rename(tmpfname, cfg.database) < 0) {
-		config_warn("[storetkl] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
+		config_warn("[tkldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
 		return -1;
 	}
 	return 0;
@@ -346,18 +346,18 @@ int read_tkldb(void) {
 	char *spamf_check = NULL;
 	char *spamf_matchtype = NULL;
 
-	ircd_log(LOG_ERROR, "[storetkl] Reading stored X:Lines from '%s'", cfg.database);
-	sendto_realops("[storetkl] Reading stored X:Lines from '%s'", cfg.database); // Probably won't be seen ever, but just in case ;]
+	ircd_log(LOG_ERROR, "[tkldb] Reading stored X:Lines from '%s'", cfg.database);
+	sendto_realops("[tkldb] Reading stored X:Lines from '%s'", cfg.database); // Probably won't be seen ever, but just in case ;]
 	OpenFile(fd, cfg.database, O_RDONLY);
 	if(fd == -1) {
 		if(errno != ENOENT)
-			config_warn("[storetkl] Unable to open the persistent storage file '%s' for reading: %s", cfg.database, strerror(errno));
+			config_warn("[tkldb] Unable to open the persistent storage file '%s' for reading: %s", cfg.database, strerror(errno));
 		return -1;
 	}
 
 	R_SAFE(read_data(fd, &version, sizeof(version)));
 	if(version > tkl_db_version) { // Older DBs should still work with newer versions of this module
-		config_warn("[storetkl] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, tkl_db_version, version);
+		config_warn("[tkldb] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, tkl_db_version, version);
 		close(fd);
 		return -1;
 	}
@@ -478,8 +478,8 @@ int read_tkldb(void) {
 
 		// Should probably not re-add if it should be expired to begin with
 		if(expire_at != 0 && expire_at <= TStime()) {
-			ircd_log(LOG_ERROR, "[storetkl] Not re-adding %c:Line '%s@%s' [%s] because it should be expired", tklflag, usermask, hostmask, reason);
-			sendto_realops("[storetkl] Not re-adding %c:Line '%s@%s' [%s] because it should be expired", tklflag, usermask, hostmask, reason); // Probably won't be seen ever, but just in case ;]
+			ircd_log(LOG_ERROR, "[tkldb] Not re-adding %c:Line '%s@%s' [%s] because it should be expired", tklflag, usermask, hostmask, reason);
+			sendto_realops("[tkldb] Not re-adding %c:Line '%s@%s' [%s] because it should be expired", tklflag, usermask, hostmask, reason); // Probably won't be seen ever, but just in case ;]
 			rewrite++;
 			FreeTKLRead();
 			continue;
@@ -540,13 +540,13 @@ int read_tkldb(void) {
 	close(fd);
 
 	if(num) {
-		ircd_log(LOG_ERROR, "[storetkl] Re-added %li X:Lines", num);
-		sendto_realops("[storetkl] Re-added %li X:Lines", num); // Probably won't be seen ever, but just in case ;]
+		ircd_log(LOG_ERROR, "[tkldb] Re-added %li X:Lines", num);
+		sendto_realops("[tkldb] Re-added %li X:Lines", num); // Probably won't be seen ever, but just in case ;]
 	}
 
 	if(rewrite) {
-		ircd_log(LOG_ERROR, "[storetkl] Rewriting DB file due to %li skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : ""));
-		sendto_realops("[storetkl] Rewriting DB file due to %li skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : "")); // Probably won't be seen ever, but just in case ;]
+		ircd_log(LOG_ERROR, "[tkldb] Rewriting DB file due to %li skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : ""));
+		sendto_realops("[tkldb] Rewriting DB file due to %li skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : "")); // Probably won't be seen ever, but just in case ;]
 		return write_tkldb();
 	}
 

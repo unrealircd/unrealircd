@@ -267,7 +267,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/CAP/STS.DLL \
  SRC/MODULES/CAP/PLAINTEXT-POLICY.DLL \
  SRC/MODULES/CAP/LINK-SECURITY.DLL \
- SRC/MODULES/M_STORETKL.DLL
+ SRC/MODULES/TKLDB.DLL
 
 
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
@@ -1018,7 +1018,7 @@ src/modules/server-time.dll: src/modules/server-time.c $(INCLUDES)
 src/modules/sts.dll: src/modules/sts.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/sts.c $(MODLFLAGS)
 
-src/modules/m_storetkl.dll: src/modules/m_storetkl.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/m_storetkl.c $(MODLFLAGS)
+src/modules/tkldb.dll: src/modules/tkldb.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/tkldb.c $(MODLFLAGS)
 
 dummy:
