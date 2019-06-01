@@ -32,13 +32,13 @@
 #define FreeTKLRead() \
  	do { \
 		/* Some of these might be NULL */ \
-		if (tkltype) MyFree(tkltype); \
-		if (usermask) MyFree(usermask); \
-		if (hostmask) MyFree(hostmask); \
-		if (reason) MyFree(reason); \
-		if (setby) MyFree(setby); \
-		if (spamf_check) MyFree(spamf_check); \
-		if (spamf_matchtype) MyFree(spamf_matchtype); \
+		safefree(tkltype); \
+		safefree(usermask); \
+		safefree(hostmask); \
+		safefree(reason); \
+		safefree(setby); \
+		safefree(spamf_check); \
+		safefree(spamf_matchtype); \
 	} while(0)
 
 #define R_SAFE(x) \
@@ -468,8 +468,8 @@ int read_tkldb(void)
 		if (backport_tkl1000)
 		{
 			R_SAFE(read_data(fd, &type, sizeof(type)));
-			tkltype = malloc(sizeof(char) * 2);
 			tklflag = tkl_typetochar(type);
+			tkltype = MyMallocEx(2);
 			tkltype[0] = tklflag;
 			tkltype[1] = '\0';
 		}
@@ -638,7 +638,7 @@ static int write_str(int fd, char *x)
 		return 0;
 	if (len)
 	{
-		if (write_data(fd, x, sizeof(char) * len))
+		if (write_data(fd, x, len))
 			return 0;
 	}
 	return 1;
@@ -650,24 +650,24 @@ static int read_str(int fd, char **x)
 	size_t len_tkl1000; // len used to be of type size_t, but this has portability problems
 	size_t size;
 
+	*x = NULL;
+
 	if (backport_tkl1000)
 	{
 		if (!read_data(fd, &len_tkl1000, sizeof(len_tkl1000)))
 			return 0;
 		len = len_tkl1000;
-	}
-	else {
+	} else
+	{
 		if (!read_data(fd, &len, sizeof(len)))
 			return 0;
 	}
-	if (!len)
-	{
-		*x = NULL;
-		return 1;
-	}
 
-	size = sizeof(char) * len;
-	*x = (char *)MyMalloc(size + sizeof(char));
+	if (!len)
+		return 1;
+
+	size = len;
+	*x = MyMallocEx(size + 1);
 	if (read_data(fd, *x, size))
 	{
 		MyFree(*x);
