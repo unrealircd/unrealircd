@@ -32,18 +32,18 @@
 #define FreeTKLRead() \
  	do { \
 		/* Some of these might be NULL */ \
-		if(tkltype) MyFree(tkltype); \
-		if(usermask) MyFree(usermask); \
-		if(hostmask) MyFree(hostmask); \
-		if(reason) MyFree(reason); \
-		if(setby) MyFree(setby); \
-		if(spamf_check) MyFree(spamf_check); \
-		if(spamf_matchtype) MyFree(spamf_matchtype); \
+		if (tkltype) MyFree(tkltype); \
+		if (usermask) MyFree(usermask); \
+		if (hostmask) MyFree(hostmask); \
+		if (reason) MyFree(reason); \
+		if (setby) MyFree(setby); \
+		if (spamf_check) MyFree(spamf_check); \
+		if (spamf_matchtype) MyFree(spamf_matchtype); \
 	} while(0)
 
 #define R_SAFE(x) \
 	do { \
-		if(!(x)) { \
+		if (!(x)) { \
 			close(fd); \
 			config_warn("[tkldb] Read error from the persistent storage file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
 			FreeTKLRead(); \
@@ -53,7 +53,7 @@
 
 #define W_SAFE(x) \
 	do { \
-		if(!(x)) { \
+		if (!(x)) { \
 			close(fd); \
 			config_warn("[tkldb] Write error from the persistent storage tempfile '%s': %s (DATABASE NOT SAVED)", tmpfname, strerror(errno)); \
 			return 0; \
@@ -62,7 +62,7 @@
 
 #define IsMDErr(x, y, z) \
 	do { \
-		if(!(x)) { \
+		if (!(x)) { \
 			config_error("A critical error occurred when registering ModData for %s: %s", MOD_HEADER(y).name, ModuleGetErrorStr((z)->handle)); \
 			return MOD_FAILED; \
 		} \
@@ -103,19 +103,22 @@ ModuleHeader MOD_HEADER(tkldb) = {
 	NULL
 };
 
-MOD_TEST(tkldb) {
+MOD_TEST(tkldb)
+{
 	memset(&cfg, 0, sizeof(cfg));
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkldb_configtest);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(tkldb) {
+MOD_INIT(tkldb)
+{
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	// MOD_INIT is also called on rehash, so we gotta make sure to not re-add TKLines every time
 	// There might be a cleaner way to do this though (i.e. without moddata) :D
 	setcfg();
-	if(!(tkldb_md = findmoddata_byname("tkldb_inited", MODDATATYPE_CLIENT))) {
+	if (!(tkldb_md = findmoddata_byname("tkldb_inited", MODDATATYPE_CLIENT)))
+	{
 		ModDataInfo mreq;
 		memset(&mreq, 0, sizeof(mreq));
 		mreq.type = MODDATATYPE_CLIENT;
@@ -134,54 +137,62 @@ MOD_INIT(tkldb) {
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(tkldb) {
+MOD_LOAD(tkldb)
+{
 	EventAddEx(modinfo->handle, "tkldb_write_tkldb", TKL_DB_SAVE_EVERY, 0, write_tkldb_evt, NULL);
-	if(ModuleGetError(modinfo->handle) != MODERR_NOERROR) {
+	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
+	{
 		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(tkldb).name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(tkldb) {
+MOD_UNLOAD(tkldb)
+{
 	write_tkldb();
 	freecfg();
 	return MOD_SUCCESS;
 }
 
-void tkldb_moddata_free(ModData *md) {
-	if(md->i)
+void tkldb_moddata_free(ModData *md)
+{
+	if (md->i)
 		md->i = 0;
 }
 
-void setcfg(void) {
+void setcfg(void)
+{
 	// Default: data/tkl.db
 	cfg.database = strdup("tkl.db");
 	convert_to_absolute_path(&cfg.database, PERMDATADIR);
 }
 
-void freecfg(void) {
+void freecfg(void)
+{
 	MyFree(cfg.database);
 }
 
-int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
+int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
 	int errors = 0;
 	ConfigEntry *cep;
 
 	// We are only interested in set::tkldb::database
-	if(type != CONFIG_SET)
+	if (type != CONFIG_SET)
 		return 0;
 
-	if(!ce || strcmp(ce->ce_varname, "tkldb"))
+	if (!ce || strcmp(ce->ce_varname, "tkldb"))
 		return 0;
 
-	for(cep = ce->ce_entries; cep; cep = cep->ce_next) {
-		if(!cep->ce_vardata) {
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_vardata) {
 			config_error("%s:%i: blank set::tkldb::%s without value", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++;
 			continue;
 		}
-		if(!strcmp(cep->ce_varname, "database")) {
+		if (!strcmp(cep->ce_varname, "database")) {
 			convert_to_absolute_path(&cep->ce_vardata, PERMDATADIR);
 			continue;
 		}
@@ -193,28 +204,32 @@ int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
 	return errors ? -1 : 1;
 }
 
-int tkldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type) {
+int tkldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
+{
 	ConfigEntry *cep;
 
 	// We are only interested in set::tkldb::database
-	if(type != CONFIG_SET)
+	if (type != CONFIG_SET)
 		return 0;
 
-	if(!ce || strcmp(ce->ce_varname, "tkldb"))
+	if (!ce || strcmp(ce->ce_varname, "tkldb"))
 		return 0;
 
-	for(cep = ce->ce_entries; cep; cep = cep->ce_next) {
-		if(!strcmp(cep->ce_varname, "database"))
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "database"))
 			safestrdup(cfg.database, cep->ce_vardata);
 	}
 	return 1;
 }
 
-EVENT(write_tkldb_evt) {
+EVENT(write_tkldb_evt)
+{
 	write_tkldb();
 }
 
-int write_tkldb(void) {
+int write_tkldb(void)
+{
 	char tmpfname[512];
 	int fd;
 	uint64_t tklcount;
@@ -225,59 +240,76 @@ int write_tkldb(void) {
 	// Write to a tempfile first, then rename it if everything succeeded
 	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", cfg.database);
 	OpenFile(fd, tmpfname, O_CREAT | O_WRONLY | O_TRUNC);
-	if(fd < 0) {
+	if (fd < 0)
+	{
 		config_warn("[tkldb] Unable to open the persistent storage tempfile '%s' for writing: %s", tmpfname, strerror(errno));
 		return 0;
 	}
 
 	W_SAFE(write_data(fd, &tkl_db_version, sizeof(tkl_db_version)));
+
+	// Count the tkl's
 	tklcount = 0;
 
-	// *@IP Z:Lines have a special hash thingy
-	for(index = 0; index < TKLIPHASHLEN1; index++) {
-		for(index2 = 0; index2 < TKLIPHASHLEN2; index2++) {
-			for(tkl = tklines_ip_hash[index][index2]; tkl; tkl = tkl->next)
+	// First the ones in the hash table
+	for (index = 0; index < TKLIPHASHLEN1; index++)
+	{
+		for (index2 = 0; index2 < TKLIPHASHLEN2; index2++)
+		{
+			for (tkl = tklines_ip_hash[index][index2]; tkl; tkl = tkl->next)
 				tklcount++;
 		}
 	}
-	for(index = 0; index < TKLISTLEN; index++) {
-		for(tkl = tklines[index]; tkl; tkl = tkl->next) {
+	// Then the regular tkl's
+	for (index = 0; index < TKLISTLEN; index++)
+	{
+		for (tkl = tklines[index]; tkl; tkl = tkl->next)
+		{
 			// Local spamfilter means it was added through the conf or is built-in, so let's not even write those
-			if((tkl->type & TKL_SPAMF) && !(tkl->type & TKL_GLOBAL))
+			if ((tkl->type & TKL_SPAMF) && !(tkl->type & TKL_GLOBAL))
 				continue;
 			tklcount++;
 		}
 	}
 	W_SAFE(write_data(fd, &tklcount, sizeof(tklcount)));
 
+	// Now write the actual tkl's
 	err = 0;
-	for(index = 0; !err && index < TKLIPHASHLEN1; index++) {
-		for(index2 = 0; !err && index2 < TKLIPHASHLEN2; index2++) {
-			for(tkl = tklines_ip_hash[index][index2]; !err && tkl; tkl = tkl->next)
+	// First the ones in the hash table
+	for (index = 0; !err && index < TKLIPHASHLEN1; index++)
+	{
+		for (index2 = 0; !err && index2 < TKLIPHASHLEN2; index2++)
+		{
+			for (tkl = tklines_ip_hash[index][index2]; !err && tkl; tkl = tkl->next)
 				err = write_tkline(fd, tmpfname, tkl);
 		}
 	}
-	for(index = 0; !err && index < TKLISTLEN; index++) {
-		for(tkl = tklines[index]; !err && tkl; tkl = tkl->next) {
+	// Then the regular tkl's
+	for (index = 0; !err && index < TKLISTLEN; index++)
+	{
+		for (tkl = tklines[index]; !err && tkl; tkl = tkl->next)
+		{
 			// Local spamfilter means it was added through the conf or is built-in, so let's not even write those
-			if((tkl->type & TKL_SPAMF) && !(tkl->type & TKL_GLOBAL)) // Also need to skip this here
+			if ((tkl->type & TKL_SPAMF) && !(tkl->type & TKL_GLOBAL)) // Also need to skip this here
 				continue;
 			err = write_tkline(fd, tmpfname, tkl);
 		}
 	}
-	if(err != 0)
+	if (err != 0)
 		return 0;
 
 	// Everything seems to have gone well, attempt to rename the tempfile
 	close(fd);
-	if(rename(tmpfname, cfg.database) < 0) {
+	if (rename(tmpfname, cfg.database) < 0)
+	{
 		config_warn("[tkldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
 		return 0;
 	}
 	return 1;
 }
 
-int write_tkline(int fd, const char *tmpfname, aTKline *tkl) {
+int write_tkline(int fd, const char *tmpfname, aTKline *tkl)
+{
 	// Since we can't just write 'tkl' in its entirety, we have to get the relevant variables instead
 	// These will be used to reconstruct the proper internal m_tkl() call ;]
 	char tkltype[2];
@@ -290,12 +322,14 @@ int write_tkline(int fd, const char *tmpfname, aTKline *tkl) {
 	W_SAFE(write_data(fd, &tkl->subtype, sizeof(tkl->subtype))); // Unsigned short (only used for spamfilters/softbans but set to 0 for everything else regardless)
 
 	// Might be a softban
-	if(!tkl->ptr.spamf && (tkl->subtype & TKL_SUBTYPE_SOFT)) {
+	if (!tkl->ptr.spamf && (tkl->subtype & TKL_SUBTYPE_SOFT))
+	{
 		snprintf(usermask_subtype, sizeof(usermask_subtype), "%%%s", tkl->usermask);
 		W_SAFE(write_str(fd, usermask_subtype)); // User mask (targets for spamfilter, like 'cpnNPqdatu'), includes % for softbans
-	}
-	else
+	} else
+	{
 		W_SAFE(write_str(fd, tkl->usermask));
+	}
 
 	W_SAFE(write_str(fd, tkl->hostmask)); // Host mask (action for spamfilter, like 'block')
 	W_SAFE(write_str(fd, tkl->reason)); // Ban reason (TKL time for spamfilters, in case of a gline action)
@@ -306,7 +340,8 @@ int write_tkline(int fd, const char *tmpfname, aTKline *tkl) {
 	W_SAFE(write_data(fd, &expire_at, sizeof(expire_at)));
 	W_SAFE(write_data(fd, &set_at, sizeof(set_at)));
 
-	if(tkl->ptr.spamf) {
+	if (tkl->ptr.spamf)
+	{
 		W_SAFE(write_str(fd, "SPAMF")); // Write a string so we know to expect more when reading the DB
 		W_SAFE(write_data(fd, &tkl->ptr.spamf->action, sizeof(tkl->ptr.spamf->action))); // Unsigned short (block, GZ:Line, etc; also refer to BAN_ACT_*)
 		W_SAFE(write_str(fd, tkl->ptr.spamf->tkl_reason));
@@ -316,17 +351,19 @@ int write_tkline(int fd, const char *tmpfname, aTKline *tkl) {
 		W_SAFE(write_str(fd, tkl->ptr.spamf->expr->str)); // Actual expression/regex/etc
 
 		// Expression type (simple/PCRE), see also enum MatchType
-		if(tkl->ptr.spamf->expr->type == MATCH_PCRE_REGEX)
+		if (tkl->ptr.spamf->expr->type == MATCH_PCRE_REGEX)
 			W_SAFE(write_str(fd, "regex"));
 		else
 			W_SAFE(write_str(fd, "simple"));
-	}
-	else
+	} else
+	{
 		W_SAFE(write_str(fd, "NOSPAMF"));
+	}
 	return 1;
 }
 
-int read_tkldb(void) {
+int read_tkldb(void)
+{
 	int fd;
 	uint64_t i;
 	uint64_t tklcount = 0;
@@ -349,7 +386,8 @@ int read_tkldb(void) {
 	ircd_log(LOG_ERROR, "[tkldb] Reading stored X:Lines from '%s'", cfg.database);
 	sendto_realops("[tkldb] Reading stored X:Lines from '%s'", cfg.database); // Probably won't be seen ever, but just in case ;]
 	OpenFile(fd, cfg.database, O_RDONLY);
-	if(fd < 0) {
+	if (fd < 0)
+	{
 		if (errno == ENOENT)
 		{
 			/* Database does not exist. Could be first boot */
@@ -362,21 +400,26 @@ int read_tkldb(void) {
 	}
 
 	R_SAFE(read_data(fd, &version, sizeof(version)));
-	if(version > tkl_db_version) { // Older DBs should still work with newer versions of this module
+	if (version > tkl_db_version)
+	{
+		// Older DBs should still work with newer versions of this module
 		config_warn("[tkldb] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, tkl_db_version, version);
 		close(fd);
 		return 0;
 	}
 
 	backport_tkl1000 = (version <= 1000 ? 1 : 0);
-	if(backport_tkl1000) {
+	if (backport_tkl1000)
+	{
 		R_SAFE(read_data(fd, &tklcount_tkl1000, sizeof(tklcount_tkl1000)));
 		tklcount = tklcount_tkl1000;
-	}
-	else
+	} else
+	{
 		R_SAFE(read_data(fd, &tklcount, sizeof(tklcount)));
+	}
 
-	for(i = 1; i <= tklcount; i++) {
+	for (i = 1; i <= tklcount; i++)
+	{
 		int type;
 		unsigned short subtype;
 		int parc = 0;
@@ -422,7 +465,8 @@ int read_tkldb(void) {
 			NULL, // 12: Some functions rely on the post-last entry being NULL =]
 		};
 
-		if(backport_tkl1000) {
+		if (backport_tkl1000)
+		{
 			R_SAFE(read_data(fd, &type, sizeof(type)));
 			tkltype = malloc(sizeof(char) * 2);
 			tklflag = tkl_typetochar(type);
@@ -440,7 +484,8 @@ int read_tkldb(void) {
 		R_SAFE(read_str(fd, &reason));
 		R_SAFE(read_str(fd, &setby));
 
-		if(backport_tkl1000) {
+		if (backport_tkl1000)
+		{
 			R_SAFE(read_data(fd, &expire_at_tkl1000, sizeof(expire_at_tkl1000)));
 			R_SAFE(read_data(fd, &set_at_tkl1000, sizeof(set_at_tkl1000)));
 			expire_at = expire_at_tkl1000;
@@ -452,22 +497,25 @@ int read_tkldb(void) {
 		}
 
 		R_SAFE(read_str(fd, &spamf_check));
-		if(!strcmp(spamf_check, "SPAMF")) {
+		if (!strcmp(spamf_check, "SPAMF"))
+		{
 			spamf = 1;
 			R_SAFE(read_data(fd, &spamf_action, sizeof(spamf_action)));
 			R_SAFE(read_str(fd, &spamf_tkl_reason));
 
-			if(backport_tkl1000) {
+			if (backport_tkl1000)
+			{
 				R_SAFE(read_data(fd, &spamf_tkl_duration_tkl1000, sizeof(spamf_tkl_duration_tkl1000)));
 				spamf_tkl_duration = spamf_tkl_duration_tkl1000;
-			}
-			else
+			} else {
 				R_SAFE(read_data(fd, &spamf_tkl_duration, sizeof(spamf_tkl_duration)));
+			}
 
 			R_SAFE(read_str(fd, &spamf_expr));
-			if(backport_tkl1000) {
+			if (backport_tkl1000)
+			{
 				R_SAFE(read_data(fd, &matchtype, sizeof(matchtype)));
-				if(matchtype == MATCH_PCRE_REGEX)
+				if (matchtype == MATCH_PCRE_REGEX)
 					spamf_matchtype = strdup("regex");
 				else
 					spamf_matchtype = strdup("simple");
@@ -475,7 +523,7 @@ int read_tkldb(void) {
 			else {
 				// We have better compatibility by just using the strings, since its MATCH_* counterpart might just change in value someday
 				R_SAFE(read_str(fd, &spamf_matchtype));
-				if(!strcmp(spamf_matchtype, "regex"))
+				if (!strcmp(spamf_matchtype, "regex"))
 					matchtype = MATCH_PCRE_REGEX;
 				else
 					matchtype = MATCH_SIMPLE;
@@ -483,7 +531,8 @@ int read_tkldb(void) {
 		}
 
 		// Should probably not re-add if it should be expired to begin with
-		if(expire_at != 0 && expire_at <= TStime()) {
+		if (expire_at != 0 && expire_at <= TStime())
+		{
 			ircd_log(LOG_ERROR, "[tkldb] Not re-adding %c:Line '%s@%s' [%s] because it should be expired", tklflag, usermask, hostmask, reason);
 			sendto_realops("[tkldb] Not re-adding %c:Line '%s@%s' [%s] because it should be expired", tklflag, usermask, hostmask, reason); // Probably won't be seen ever, but just in case ;]
 			rewrite++;
@@ -494,7 +543,7 @@ int read_tkldb(void) {
 		ircsnprintf(setTime, sizeof(setTime), "%li", set_at);
 		ircsnprintf(expTime, sizeof(expTime), "%li", expire_at);
 
-		if(spamf && tklflag == 'f') // Just in case someone modifies the DB to contain local spamfilters, as well as for v1000
+		if (spamf && tklflag == 'f') // Just in case someone modifies the DB to contain local spamfilters, as well as for v1000
 			doadd = 0;
 
 		// Build TKL args
@@ -508,19 +557,23 @@ int read_tkldb(void) {
 		tkllayer[7] = setTime;
 		tkllayer[8] = reason;
 
-		if(spamf) {
+		if (spamf)
+		{
 			parc = 12;
 			// Make sure this particular TKLine isn't already active somehow
-			for(tkl = tklines[tkl_hash(tklflag)]; doadd && tkl; tkl = tkl->next) {
+			for (tkl = tklines[tkl_hash(tklflag)]; doadd && tkl; tkl = tkl->next)
+			{
 				// We can assume it's the same spamfilter if all of the following match: spamfilter expression, targets, TKL reason, action, matchtype and TKL duration
-				if(!strcmp(tkl->ptr.spamf->expr->str, spamf_expr) && !strcmp(tkl->usermask, usermask) && !strcmp(tkl->ptr.spamf->tkl_reason, spamf_tkl_reason) &&
-					tkl->ptr.spamf->action == spamf_action && tkl->ptr.spamf->expr->type == matchtype && tkl->ptr.spamf->tkl_duration == spamf_tkl_duration) {
+				if (!strcmp(tkl->ptr.spamf->expr->str, spamf_expr) && !strcmp(tkl->usermask, usermask) && !strcmp(tkl->ptr.spamf->tkl_reason, spamf_tkl_reason) &&
+					tkl->ptr.spamf->action == spamf_action && tkl->ptr.spamf->expr->type == matchtype && tkl->ptr.spamf->tkl_duration == spamf_tkl_duration)
+				{
 					doadd = 0;
 					break;
 				}
 			}
 
-			if(doadd) {
+			if (doadd)
+			{
 				ircsnprintf(spamfTime, sizeof(spamfTime), "%li", spamf_tkl_duration);
 				tkllayer[8] = spamfTime;
 				tkllayer[9] = spamf_tkl_reason;
@@ -529,15 +582,18 @@ int read_tkldb(void) {
 			}
 		}
 		else {
-			for(tkl = tklines[tkl_hash(tklflag)]; tkl; tkl = tkl->next) {
-				if(!strcmp(tkl->usermask, usermask) && !strcmp(tkl->hostmask, hostmask) && !strcmp(tkl->reason, reason) && tkl->expire_at == expire_at) {
+			for (tkl = tklines[tkl_hash(tklflag)]; tkl; tkl = tkl->next)
+			{
+				if (!strcmp(tkl->usermask, usermask) && !strcmp(tkl->hostmask, hostmask) && !strcmp(tkl->reason, reason) && tkl->expire_at == expire_at)
+				{
 					doadd = 0;
 					break;
 				}
 			}
 		}
 
-		if(doadd) {
+		if (doadd)
+		{
 			m_tkl(&me, &me, NULL, parc, tkllayer);
 			num++;
 		}
@@ -545,12 +601,14 @@ int read_tkldb(void) {
 	}
 	close(fd);
 
-	if(num) {
+	if (num)
+	{
 		ircd_log(LOG_ERROR, "[tkldb] Re-added %li X:Lines", num);
 		sendto_realops("[tkldb] Re-added %li X:Lines", num); // Probably won't be seen ever, but just in case ;]
 	}
 
-	if(rewrite) {
+	if (rewrite)
+	{
 		ircd_log(LOG_ERROR, "[tkldb] Rewriting DB file due to %li skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : ""));
 		sendto_realops("[tkldb] Rewriting DB file due to %li skipped/expired X:Line%s", rewrite, (rewrite > 1 ? "s" : "")); // Probably won't be seen ever, but just in case ;]
 		return write_tkldb();
@@ -559,35 +617,41 @@ int read_tkldb(void) {
 	return 1;
 }
 
-static inline int read_data(int fd, void *buf, size_t len) {
-	if((size_t)read(fd, buf, len) < len)
+static inline int read_data(int fd, void *buf, size_t len)
+{
+	if ((size_t)read(fd, buf, len) < len)
 		return 0;
 	return 1;
 }
 
-static inline int write_data(int fd, void *buf, size_t len) {
-	if((size_t)write(fd, buf, len) < len)
+static inline int write_data(int fd, void *buf, size_t len)
+{
+	if ((size_t)write(fd, buf, len) < len)
 		return 0;
 	return 1;
 }
 
-static int write_str(int fd, char *x) {
+static int write_str(int fd, char *x)
+{
 	uint64_t len = (x ? strlen(x) : 0);
-	if(write_data(fd, &len, sizeof(len)))
+	if (write_data(fd, &len, sizeof(len)))
 		return 0;
-	if(len) {
-		if(write_data(fd, x, sizeof(char) * len))
+	if (len)
+	{
+		if (write_data(fd, x, sizeof(char) * len))
 			return 0;
 	}
 	return 1;
 }
 
-static int read_str(int fd, char **x) {
+static int read_str(int fd, char **x)
+{
 	uint64_t len;
 	size_t len_tkl1000; // len used to be of type size_t, but this has portability problems
 	size_t size;
 
-	if (backport_tkl1000) {
+	if (backport_tkl1000)
+	{
 		if (!read_data(fd, &len_tkl1000, sizeof(len_tkl1000)))
 			return 0;
 		len = len_tkl1000;
@@ -596,14 +660,16 @@ static int read_str(int fd, char **x) {
 		if (!read_data(fd, &len, sizeof(len)))
 			return 0;
 	}
-	if(!len) {
+	if (!len)
+	{
 		*x = NULL;
 		return 1;
 	}
 
 	size = sizeof(char) * len;
 	*x = (char *)MyMalloc(size + sizeof(char));
-	if(read_data(fd, *x, size)) {
+	if (read_data(fd, *x, size))
+	{
 		MyFree(*x);
 		*x = NULL;
 		return 0;
