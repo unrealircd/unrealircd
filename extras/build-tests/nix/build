@@ -16,7 +16,7 @@ else
 	export MAKE="make -j3"
 fi
 
-export CPPFLAGS="-DFAKELAG_CONFIGURABLE"
+export CPPFLAGS="-DFAKELAG_CONFIGURABLE -DNOREMOVETMP"
 
 # !! skipped for now: extras/build-tests/nix/select-config $BUILDCONFIG !!
 # !! temporary use this:
