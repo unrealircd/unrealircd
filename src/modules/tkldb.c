@@ -43,20 +43,20 @@
 
 #define R_SAFE(x) \
 	do { \
-		if((x)) { \
+		if(!(x)) { \
 			close(fd); \
 			config_warn("[tkldb] Read error from the persistent storage file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
 			FreeTKLRead(); \
-			return -1; \
+			return 0; \
 		} \
 	} while(0)
 
 #define W_SAFE(x) \
 	do { \
-		if((x)) { \
+		if(!(x)) { \
 			close(fd); \
 			config_warn("[tkldb] Write error from the persistent storage tempfile '%s': %s (DATABASE NOT SAVED)", tmpfname, strerror(errno)); \
-			return -1; \
+			return 0; \
 		} \
 	} while(0)
 
@@ -126,7 +126,7 @@ MOD_INIT(tkldb) {
 		mreq.sync = 0;
 		tkldb_md = ModDataAdd(modinfo->handle, mreq);
 		IsMDErr(tkldb_md, tkldb, modinfo);
-		if(read_tkldb() != 0)
+		if (!read_tkldb())
 			return MOD_FAILED;
 		moddata_client((&me), tkldb_md).i = 1;
 	}
@@ -225,9 +225,9 @@ int write_tkldb(void) {
 	// Write to a tempfile first, then rename it if everything succeeded
 	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", cfg.database);
 	OpenFile(fd, tmpfname, O_CREAT | O_WRONLY | O_TRUNC);
-	if(fd == -1) {
+	if(fd < 0) {
 		config_warn("[tkldb] Unable to open the persistent storage tempfile '%s' for writing: %s", tmpfname, strerror(errno));
-		return -1;
+		return 0;
 	}
 
 	W_SAFE(write_data(fd, &tkl_db_version, sizeof(tkl_db_version)));
@@ -266,15 +266,15 @@ int write_tkldb(void) {
 		}
 	}
 	if(err != 0)
-		return -1;
+		return 0;
 
 	// Everything seems to have gone well, attempt to rename the tempfile
 	close(fd);
 	if(rename(tmpfname, cfg.database) < 0) {
 		config_warn("[tkldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
-		return -1;
+		return 0;
 	}
-	return 0;
+	return 1;
 }
 
 int write_tkline(int fd, const char *tmpfname, aTKline *tkl) {
@@ -323,7 +323,7 @@ int write_tkline(int fd, const char *tmpfname, aTKline *tkl) {
 	}
 	else
 		W_SAFE(write_str(fd, "NOSPAMF"));
-	return 0;
+	return 1;
 }
 
 int read_tkldb(void) {
@@ -349,17 +349,23 @@ int read_tkldb(void) {
 	ircd_log(LOG_ERROR, "[tkldb] Reading stored X:Lines from '%s'", cfg.database);
 	sendto_realops("[tkldb] Reading stored X:Lines from '%s'", cfg.database); // Probably won't be seen ever, but just in case ;]
 	OpenFile(fd, cfg.database, O_RDONLY);
-	if(fd == -1) {
-		if(errno != ENOENT)
+	if(fd < 0) {
+		if (errno == ENOENT)
+		{
+			/* Database does not exist. Could be first boot */
+			config_warn("[tkldb] No database present at '%s', will start a new one", cfg.database);
+			return 1;
+		} else {
 			config_warn("[tkldb] Unable to open the persistent storage file '%s' for reading: %s", cfg.database, strerror(errno));
-		return -1;
+			return 0;
+		}
 	}
 
 	R_SAFE(read_data(fd, &version, sizeof(version)));
 	if(version > tkl_db_version) { // Older DBs should still work with newer versions of this module
 		config_warn("[tkldb] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, tkl_db_version, version);
 		close(fd);
-		return -1;
+		return 0;
 	}
 
 	backport_tkl1000 = (version <= 1000 ? 1 : 0);
@@ -550,48 +556,49 @@ int read_tkldb(void) {
 		return write_tkldb();
 	}
 
-	return 0;
+	return 1;
 }
 
 static inline int read_data(int fd, void *buf, size_t len) {
 	if((size_t)read(fd, buf, len) < len)
-		return -1;
-	return 0;
+		return 0;
+	return 1;
 }
 
 static inline int write_data(int fd, void *buf, size_t len) {
 	if((size_t)write(fd, buf, len) < len)
-		return -1;
-	return 0;
+		return 0;
+	return 1;
 }
 
 static int write_str(int fd, char *x) {
 	uint64_t len = (x ? strlen(x) : 0);
 	if(write_data(fd, &len, sizeof(len)))
-		return -1;
+		return 0;
 	if(len) {
 		if(write_data(fd, x, sizeof(char) * len))
-			return -1;
+			return 0;
 	}
-	return 0;
+	return 1;
 }
 
 static int read_str(int fd, char **x) {
 	uint64_t len;
 	size_t len_tkl1000; // len used to be of type size_t, but this has portability problems
 	size_t size;
-	if(backport_tkl1000) {
-		if(read_data(fd, &len_tkl1000, sizeof(len_tkl1000)))
-			return -1;
+
+	if (backport_tkl1000) {
+		if (!read_data(fd, &len_tkl1000, sizeof(len_tkl1000)))
+			return 0;
 		len = len_tkl1000;
 	}
 	else {
-		if(read_data(fd, &len, sizeof(len)))
-			return -1;
+		if (!read_data(fd, &len, sizeof(len)))
+			return 0;
 	}
 	if(!len) {
 		*x = NULL;
-		return 0;
+		return 1;
 	}
 
 	size = sizeof(char) * len;
@@ -599,7 +606,7 @@ static int read_str(int fd, char **x) {
 	if(read_data(fd, *x, size)) {
 		MyFree(*x);
 		*x = NULL;
-		return -1;
+		return 0;
 	}
 	(*x)[len] = 0;
 	return 0;
