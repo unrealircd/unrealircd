@@ -14,34 +14,6 @@ killall -9 unrealircd || true
 # Remove old junk
 rm -rf cipherscan/ unrealircd-tests/
 
-# Install packages
-### XXX: commented out
-if [ 0 = 1 ]; then
-if [[ "$OSTYPE" == "darwin"* ]]; then
-	brew install git || true
-	brew install python || true
-	gem install bundler || true
-	gem install rake || true
-	gem install rspec || true
-else
-	sudo apt-get install git python rake -y
-	gem install bundler -v "~>1.0"
-fi
-
-# Install 'ircfly'
-git clone -q https://github.com/unrealircd/ircfly.git
-cd ircfly
-bundle install
-bundle exec rake build
-if [[ "$OSTYPE" == "darwin"* ]]; then
-	bundle exec rake install
-else
-	sudo rake install
-fi
-cd ..
-fi
-# XXX: end of commented out
-
 if [ ! -d ~/cipherscan ]; then
 	# Install 'cipherscan'
 	git clone -q https://github.com/mozilla/cipherscan
@@ -50,29 +22,16 @@ fi
 # Install 'unrealircd-tests'
 git clone -q git@github-unrealircd-tests:syzop/unrealircd-tests.git
 cd unrealircd-tests
-mv config.yaml.example config.yaml
 
-# Start the IRC servers
-cp ircdconfig/* ~/unrealircd/conf/
-cd ~/unrealircd
-bin/unrealircd -f hub.conf
-bin/unrealircd -f irc1.conf
-bin/unrealircd -f irc2.conf
-cd -
+# Run the test framework
+./run || exit 1
 
-# Do cipherscan test
+# Do cipherscan test at the end
 if [[ "$OSTYPE" != "freebsd"* ]]; then
 	sleep 2
 	cd ../extras/tests/tls
 	./tls-tests
 	cd -
-fi
-
-# Back in unrealircd-tests, run the tests!
-if [[ "$OSTYPE" == "darwin"* ]]; then
-	bundle exec rake
-else
-	rake
 fi
 
 killall -15 unrealircd || true
