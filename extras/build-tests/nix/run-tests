@@ -3,14 +3,6 @@
 # This script fires up a two-server IRC network and runs the test framework
 #
 
-if [[ "$OSTYPE" == "freebsd"* ]]; then
-	# Workaround for strange FBSD 12 issue:
-	# if using -P20 tests randomly fail with
-	# class variables missing. -P2 seems to
-	# work, but -P1 is the safest option:
-	export MAXPARALLEL=1
-fi
-
 # Exit on error:
 set -e
 
