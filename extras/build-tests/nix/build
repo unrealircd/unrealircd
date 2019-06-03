@@ -11,9 +11,9 @@ if [ "$1" != "" ]; then
 fi
 
 if [[ "$OSTYPE" == "freebsd"* ]]; then
-	export MAKE="gmake -j3"
+	export MAKE="gmake -j4"
 else
-	export MAKE="make -j3"
+	export MAKE="make -j4"
 fi
 
 export CPPFLAGS="-DFAKELAG_CONFIGURABLE -DNOREMOVETMP"
