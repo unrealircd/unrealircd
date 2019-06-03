@@ -27,7 +27,7 @@ $CIPHERSCAN --help >/dev/null || exit 1
 # It compares the output against a reference .txt file and alarms us if there
 # are any changes. These changes may not always be harmful, but at least we
 # will get warned on any possible changes.
-$CIPHERSCAN --no-colors 127.0.0.1:5900|grep -vF '.....' >cipherscan.test.txt
+$CIPHERSCAN --no-colors 127.0.0.1:5901|grep -vF '.....' >cipherscan.test.txt
 
 # Now check if profile matches, if so.. everything is ok.
 # We have 1 or more baseline profiles
@@ -70,7 +70,7 @@ fi
 for cipher in 3DES RC4
 do
 	echo "Testing cipher $cipher (MUST FAIL!).."
-	(echo QUIT|$OPENSSL s_client -connect 127.0.0.1:5900 -cipher $cipher) &&
+	(echo QUIT|$OPENSSL s_client -connect 127.0.0.1:5901 -cipher $cipher) &&
 	fail "UnrealIRCd allowed us to connect with cipher $cipher, BAD!"
 done
 
@@ -78,7 +78,7 @@ done
 for protocol in ssl2 ssl3
 do
 	echo "Testing protocol $protocol (MUST FAIL!).."
-	(echo QUIT|$OPENSSL s_client -connect 127.0.0.1:5900 -$protocol) &&
+	(echo QUIT|$OPENSSL s_client -connect 127.0.0.1:5901 -$protocol) &&
 	fail "UnrealIRCd allowed us to connect with protocol $protocol, BAD!"
 done
 
