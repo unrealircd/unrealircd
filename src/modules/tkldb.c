@@ -85,7 +85,7 @@ static int read_str(int fd, char **x);
 
 // Globals
 static ModDataInfo *tkldb_md;
-static uint64_t tkl_db_version = TKL_DB_VERSION;
+static uint32_t tkl_db_version = TKL_DB_VERSION;
 struct cfgstruct {
 	char *database;
 
@@ -373,7 +373,7 @@ int read_tkldb(void)
 	size_t tklcount_tkl1000 = 0;
 	uint64_t added = 0;
 	uint64_t skipped = 0;
-	uint64_t version;
+	uint32_t version;
 
 	// Variables for all TKL types
 	// Some of them need to be declared and NULL initialised early due to the macro FreeTKLRead() being used by R_SAFE() on error
