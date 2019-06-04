@@ -279,7 +279,7 @@ int write_tkldb(void)
 		for (index2 = 0; index2 < TKLIPHASHLEN2; index2++)
 		{
 			for (tkl = tklines_ip_hash[index][index2]; tkl; tkl = tkl->next) {
-				if(!write_tkline(fd, tmpfname, tkl)) // write_tkline() closes the fd on errors itself
+				if (!write_tkline(fd, tmpfname, tkl)) // write_tkline() closes the fd on errors itself
 					return 0;
 			}
 		}
@@ -292,13 +292,13 @@ int write_tkldb(void)
 			// Local spamfilter means it was added through the conf or is built-in, so let's not even write those
 			if ((tkl->type & TKL_SPAMF) && !(tkl->type & TKL_GLOBAL)) // Also need to skip this here
 				continue;
-			if(!write_tkline(fd, tmpfname, tkl))
+			if (!write_tkline(fd, tmpfname, tkl))
 				return 0;
 		}
 	}
 
 	// Everything seems to have gone well, attempt to close and rename the tempfile
-	if(close(fd) < 0)
+	if (close(fd) < 0)
 	{
 		config_warn("[tkldb] Got an error when trying to close the persistent storage file '%s' (possible corruption occurred, DATABASE NOT SAVED): %s", cfg.database, strerror(errno));
 		return 0;
@@ -408,7 +408,7 @@ int read_tkldb(void)
 	{
 		// Older DBs should still work with newer versions of this module
 		config_warn("[tkldb] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, tkl_db_version, version);
-		if(close(fd) < 0)
+		if (close(fd) < 0)
 			config_warn("[tkldb] Got an error when trying to close the persistent storage file '%s' (possible corruption occurred): %s", cfg.database, strerror(errno));
 		return 0;
 	}
@@ -617,7 +617,7 @@ int read_tkldb(void)
 	}
 
 	// No need to return from the function at this point, as all *-Lines have been successfully retrieved anyways =]
-	if(close(fd) < 0)
+	if (close(fd) < 0)
 		config_warn("[tkldb] Got an error when trying to close the persistent storage file '%s' (possible corruption occurred): %s", cfg.database, strerror(errno));
 
 	if (added || expired)
