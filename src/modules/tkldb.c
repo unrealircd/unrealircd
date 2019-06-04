@@ -85,13 +85,13 @@ static int read_str(int fd, char **x);
 
 // Globals
 static ModDataInfo *tkldb_md;
-static unsigned tkl_db_version = TKL_DB_VERSION;
+static uint64_t tkl_db_version = TKL_DB_VERSION;
 struct cfgstruct {
 	char *database;
 
 	// Stored .db might still work with flags instead of actual values (will be corrected on next write)
 	// This backport stuff will eventually be removed ;]
-	unsigned backport_tkl1000;
+	unsigned int backport_tkl1000;
 };
 static struct cfgstruct cfg;
 
@@ -373,7 +373,7 @@ int read_tkldb(void)
 	size_t tklcount_tkl1000 = 0;
 	uint64_t added = 0;
 	uint64_t skipped = 0;
-	unsigned version;
+	uint64_t version;
 
 	// Variables for all TKL types
 	// Some of them need to be declared and NULL initialised early due to the macro FreeTKLRead() being used by R_SAFE() on error
