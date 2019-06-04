@@ -168,6 +168,8 @@ CMD_FUNC(m_user)
 		strlcpy(sptr->user->svid, sstamp, sizeof(sptr->user->svid));
 
 	strlcpy(sptr->info, realname, sizeof(sptr->info));
+	strlcpy(sptr->user->username, username, USERLEN + 1);
+
 	if (*sptr->name &&
 		(IsServer(cptr) || is_handshake_finished(cptr))
            )
@@ -182,8 +184,6 @@ CMD_FUNC(m_user)
 		    register_user(cptr, sptr, sptr->name, username, umodex,
 		    virthost,ip));
 	}
-	else
-		strlcpy(sptr->user->username, username, USERLEN + 1);
 
 	return 0;
 }
