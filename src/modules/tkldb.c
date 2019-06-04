@@ -371,9 +371,9 @@ int read_tkldb(void)
 	uint64_t i;
 	uint64_t tklcount = 0;
 	size_t tklcount_tkl1000 = 0;
-	uint64_t added = 0;
-	uint64_t skipped = 0;
 	uint32_t version;
+	int added = 0;
+	int expired = 0;
 
 	// Variables for all TKL types
 	// Some of them need to be declared and NULL initialised early due to the macro FreeTKLRead() being used by R_SAFE() on error
@@ -544,12 +544,14 @@ int read_tkldb(void)
 			}
 		}
 
-		// Should probably not re-add if it should be expired to begin with
+		// Don't add the TKL if it's expired
 		if (expire_at != 0 && expire_at <= TStime())
 		{
-			ircd_log(LOG_ERROR, "[tkldb] Not re-adding %c:Line '%s@%s' [%s] because it should be expired", tklflag, usermask, hostmask, reason);
-			sendto_realops("[tkldb] Not re-adding %c:Line '%s@%s' [%s] because it should be expired", tklflag, usermask, hostmask, reason); // Probably won't be seen ever, but just in case ;]
-			skipped++;
+#ifdef DEBUGMODE
+			ircd_log(LOG_ERROR, "[tkldb] Not re-adding expired %c:Line '%s@%s' [%s]", tklflag, usermask, hostmask, reason);
+			sendto_realops("[tkldb] Not re-adding expired %c:Line '%s@%s' [%s]", tklflag, usermask, hostmask, reason); // Probably won't be seen ever, but just in case ;]
+#endif
+			expired++;
 			FreeTKLRead();
 			continue;
 		}
@@ -618,10 +620,10 @@ int read_tkldb(void)
 	if(close(fd) < 0)
 		config_warn("[tkldb] Got an error when trying to close the persistent storage file '%s' (possible corruption occurred): %s", cfg.database, strerror(errno));
 
-	if (added || skipped)
+	if (added || expired)
 	{
-		ircd_log(LOG_ERROR, "[tkldb] Re-added %li and skipped %li *-Lines", added, skipped);
-		sendto_realops("[tkldb] Re-added %li and skipped %li *-Lines", added, skipped); // Probably won't be seen ever, but just in case ;]
+		ircd_log(LOG_ERROR, "[tkldb] Re-added %d *-Lines (skipped %d expired)", added, expired);
+		sendto_realops("[tkldb] Re-added %d *-Lines (skipped %d expired)", added, expired); // Probably won't be seen ever, but just in case ;]
 	}
 	return 1;
 }
