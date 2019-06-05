@@ -130,7 +130,14 @@ MOD_INIT(tkldb)
 		tkldb_md = ModDataAdd(modinfo->handle, mreq);
 		IsMDErr(tkldb_md, tkldb, modinfo);
 		if (!read_tkldb())
-			return MOD_FAILED;
+		{
+			char fname[512];
+			snprintf(fname, sizeof(fname), "%s.corrupt", cfg.database);
+			if (rename(cfg.database, fname) == 0)
+				config_warn("[tkldb] Existing database renamed to %s and starting a new one...", fname);
+			else
+				config_warn("[tkldb] Failed to rename database from %s to %s: %s", cfg.database, fname, strerror(errno));
+		}
 		moddata_client((&me), tkldb_md).i = 1;
 	}
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkldb_configrun);
