@@ -20,10 +20,18 @@
 #include "unrealircd.h"
 
 #define TKL_DB_VERSION 1100
-#define TKL_DB_SAVE_EVERY 893
+#define TKL_DB_SAVE_EVERY 299
 
 #ifdef DEBUGMODE
  #define BENCHMARK
+/* Benchmark results (2GHz Xeon Skylake, compiled with -O2, Linux):
+ * 100,000 zlines:
+ * - load db: 510 ms
+ * - save db:  72 ms
+ * Thus, saving does not take much time and can be done by a timer
+ * which executes every 5 minutes.
+ * Of course, exact figures will depend on the machine.
+ */
 #endif
 
 #define FreeTKLRead() \
