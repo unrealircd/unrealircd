@@ -22,6 +22,10 @@
 #define TKL_DB_VERSION 1100
 #define TKL_DB_SAVE_EVERY 893
 
+#ifdef DEBUGMODE
+ #define BENCHMARK
+#endif
+
 // Some macros
 #ifndef _WIN32
 	#define OpenFile(fd, file, flags) fd = open(file, flags, S_IRUSR | S_IWUSR)
@@ -243,6 +247,11 @@ int write_tkldb(void)
 	uint64_t tklcount;
 	int index, index2;
 	aTKline *tkl;
+#ifdef BENCHMARK
+	struct timeval tv_alpha, tv_beta;
+
+	gettimeofday(&tv_alpha, NULL);
+#endif
 
 	// Write to a tempfile first, then rename it if everything succeeded
 	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", cfg.database);
@@ -315,6 +324,11 @@ int write_tkldb(void)
 		config_warn("[tkldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
 		return 0;
 	}
+#ifdef BENCHMARK
+	gettimeofday(&tv_beta, NULL);
+	config_status("[tkldb] Benchmark: SAVE DB: %ld microseconds",
+		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
+#endif
 	return 1;
 }
 
@@ -394,8 +408,15 @@ int read_tkldb(void)
 	char *spamf_check = NULL;
 	char *spamf_matchtype = NULL;
 
+#ifdef BENCHMARK
+	struct timeval tv_alpha, tv_beta;
+
+	gettimeofday(&tv_alpha, NULL);
+#endif
+
 	ircd_log(LOG_ERROR, "[tkldb] Reading stored *-Lines from '%s'", cfg.database);
 	sendto_realops("[tkldb] Reading stored *-Lines from '%s'", cfg.database); // Probably won't be seen ever, but just in case ;]
+
 	OpenFile(fd, cfg.database, O_RDONLY);
 	if (fd < 0)
 	{
@@ -632,6 +653,11 @@ int read_tkldb(void)
 		ircd_log(LOG_ERROR, "[tkldb] Re-added %d *-Lines (skipped %d expired)", added, expired);
 		sendto_realops("[tkldb] Re-added %d *-Lines (skipped %d expired)", added, expired); // Probably won't be seen ever, but just in case ;]
 	}
+#ifdef BENCHMARK
+	gettimeofday(&tv_beta, NULL);
+	ircd_log(LOG_ERROR, "[tkldb] Benchmark: LOAD DB: %ld microseconds",
+		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
+#endif
 	return 1;
 }
 
