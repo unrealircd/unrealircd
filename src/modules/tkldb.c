@@ -26,13 +26,6 @@
  #define BENCHMARK
 #endif
 
-// Some macros
-#ifndef _WIN32
-	#define OpenFile(fd, file, flags) fd = open(file, flags, S_IRUSR | S_IWUSR)
-#else
-	#define OpenFile(fd, file, flags) fd = open(file, flags, S_IREAD | S_IWRITE)
-#endif
-
 #define FreeTKLRead() \
  	do { \
 		/* Some of these might be NULL */ \
@@ -49,7 +42,7 @@
 	do { \
 		if (!(x)) { \
 			config_warn("[tkldb] Read error from the persistent storage file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
-			close(fd); \
+			fclose(fd); \
 			FreeTKLRead(); \
 			return 0; \
 		} \
@@ -59,7 +52,7 @@
 	do { \
 		if (!(x)) { \
 			config_warn("[tkldb] Write error from the persistent storage tempfile '%s': %s (DATABASE NOT SAVED)", tmpfname, strerror(errno)); \
-			close(fd); \
+			fclose(fd); \
 			return 0; \
 		} \
 	} while(0)
@@ -80,12 +73,12 @@ int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int tkldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 EVENT(write_tkldb_evt);
 int write_tkldb(void);
-int write_tkline(int fd, const char *tmpfname, aTKline *tkl);
+int write_tkline(FILE *fd, const char *tmpfname, aTKline *tkl);
 int read_tkldb(void);
-static inline int read_data(int fd, void *buf, size_t len);
-static inline int write_data(int fd, void *buf, size_t len);
-static int write_str(int fd, char *x);
-static int read_str(int fd, char **x);
+static inline int read_data(FILE *fd, void *buf, size_t len);
+static inline int write_data(FILE *fd, void *buf, size_t len);
+static int write_str(FILE *fd, char *x);
+static int read_str(FILE *fd, char **x);
 
 // Globals
 static ModDataInfo *tkldb_md;
@@ -243,7 +236,7 @@ EVENT(write_tkldb_evt)
 int write_tkldb(void)
 {
 	char tmpfname[512];
-	int fd;
+	FILE *fd;
 	uint64_t tklcount;
 	int index, index2;
 	aTKline *tkl;
@@ -255,8 +248,8 @@ int write_tkldb(void)
 
 	// Write to a tempfile first, then rename it if everything succeeded
 	snprintf(tmpfname, sizeof(tmpfname), "%s.tmp", cfg.database);
-	OpenFile(fd, tmpfname, O_CREAT | O_WRONLY | O_TRUNC);
-	if (fd < 0)
+	fd = fopen(tmpfname, "wb");
+	if (!fd)
 	{
 		config_warn("[tkldb] Unable to open the persistent storage tempfile '%s' for writing: %s", tmpfname, strerror(errno));
 		return 0;
@@ -314,7 +307,7 @@ int write_tkldb(void)
 	}
 
 	// Everything seems to have gone well, attempt to close and rename the tempfile
-	if (close(fd) < 0)
+	if (fclose(fd) != 0)
 	{
 		config_warn("[tkldb] Got an error when trying to close the persistent storage file '%s' (possible corruption occurred, DATABASE NOT SAVED): %s", cfg.database, strerror(errno));
 		return 0;
@@ -332,7 +325,7 @@ int write_tkldb(void)
 	return 1;
 }
 
-int write_tkline(int fd, const char *tmpfname, aTKline *tkl)
+int write_tkline(FILE *fd, const char *tmpfname, aTKline *tkl)
 {
 	// Since we can't just write 'tkl' in its entirety, we have to get the relevant variables instead
 	// These will be used to reconstruct the proper internal m_tkl() call ;]
@@ -388,7 +381,7 @@ int write_tkline(int fd, const char *tmpfname, aTKline *tkl)
 
 int read_tkldb(void)
 {
-	int fd;
+	FILE *fd;
 	uint64_t i;
 	uint64_t tklcount = 0;
 	size_t tklcount_tkl1000 = 0;
@@ -417,8 +410,8 @@ int read_tkldb(void)
 	ircd_log(LOG_ERROR, "[tkldb] Reading stored *-Lines from '%s'", cfg.database);
 	sendto_realops("[tkldb] Reading stored *-Lines from '%s'", cfg.database); // Probably won't be seen ever, but just in case ;]
 
-	OpenFile(fd, cfg.database, O_RDONLY);
-	if (fd < 0)
+	fd = fopen(cfg.database, "rb");
+	if (!fd)
 	{
 		if (errno == ENOENT)
 		{
@@ -436,7 +429,7 @@ int read_tkldb(void)
 	{
 		// Older DBs should still work with newer versions of this module
 		config_warn("[tkldb] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, tkl_db_version, version);
-		if (close(fd) < 0)
+		if (fclose(fd) != 0)
 			config_warn("[tkldb] Got an error when trying to close the persistent storage file '%s' (possible corruption occurred): %s", cfg.database, strerror(errno));
 		return 0;
 	}
@@ -644,9 +637,7 @@ int read_tkldb(void)
 		FreeTKLRead();
 	}
 
-	// No need to return from the function at this point, as all *-Lines have been successfully retrieved anyways =]
-	if (close(fd) < 0)
-		config_warn("[tkldb] Got an error when trying to close the persistent storage file '%s' (possible corruption occurred): %s", cfg.database, strerror(errno));
+	fclose(fd);
 
 	if (added || expired)
 	{
@@ -661,21 +652,21 @@ int read_tkldb(void)
 	return 1;
 }
 
-static inline int read_data(int fd, void *buf, size_t len)
+static inline int read_data(FILE *fd, void *buf, size_t len)
 {
-	if ((size_t)read(fd, buf, len) < len)
+	if (fread(buf, 1, len, fd) < len)
 		return 0;
 	return 1;
 }
 
-static inline int write_data(int fd, void *buf, size_t len)
+static inline int write_data(FILE *fd, void *buf, size_t len)
 {
-	if ((size_t)write(fd, buf, len) < len)
+	if (fwrite(buf, 1, len, fd) < len)
 		return 0;
 	return 1;
 }
 
-static int write_str(int fd, char *x)
+static int write_str(FILE *fd, char *x)
 {
 	uint64_t len = (x ? strlen(x) : 0);
 	if (!write_data(fd, &len, sizeof(len)))
@@ -688,7 +679,7 @@ static int write_str(int fd, char *x)
 	return 1;
 }
 
-static int read_str(int fd, char **x)
+static int read_str(FILE *fd, char **x)
 {
 	uint64_t len;
 	size_t len_tkl1000; // len used to be of type size_t, but this has portability problems when writing to/reading from binary files
