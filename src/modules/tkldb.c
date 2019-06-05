@@ -337,14 +337,13 @@ int write_tkline(FILE *fd, const char *tmpfname, aTKline *tkl)
 {
 	// Since we can't just write 'tkl' in its entirety, we have to get the relevant variables instead
 	// These will be used to reconstruct the proper internal m_tkl() call ;]
-	char tkltype[2];
+	char tkltype;
 	char usermask_subtype[256]; // Might need to prefix something to usermask
 	char spamf_action; // Storing the action not as unsigned short, but as char is more reliable for the future
 	uint64_t expire_at, set_at, spamf_tkl_duration; // To prevent 32 vs 64 bit incompatibilies regarding the TS data type(def)
 
-	tkltype[0] = tkl_typetochar(tkl->type);
-	tkltype[1] = '\0';
-	W_SAFE(write_str(fd, tkltype)); // TKL char
+	tkltype = tkl_typetochar(tkl->type);
+	W_SAFE(write_data(fd, &tkltype, sizeof(tkltype))); // TKL char
 
 	// Might be a softban
 	if (!tkl->ptr.spamf && (tkl->subtype & TKL_SUBTYPE_SOFT))
@@ -510,8 +509,11 @@ int read_tkldb(void)
 			R_SAFE(read_data(fd, &subtype, sizeof(subtype))); // Subtype is kinda redundant so we're not using it past v1000 anymore
 		}
 		else {
-			R_SAFE(read_str(fd, &tkltype)); // No need for tkl_typetochar() on read anymore
-			tklflag = tkltype[0];
+			// No need for tkl_typetochar() on read anymore
+			R_SAFE(read_data(fd, &tklflag, sizeof(tklflag)));
+			tkltype = MyMallocEx(2);
+			tkltype[0] = tklflag;
+			tkltype[1] = '\0';
 		}
 
 		R_SAFE(read_str(fd, &usermask));
@@ -676,7 +678,7 @@ static inline int write_data(FILE *fd, void *buf, size_t len)
 
 static int write_str(FILE *fd, char *x)
 {
-	uint64_t len = (x ? strlen(x) : 0);
+	uint16_t len = (x ? strlen(x) : 0);
 	if (!write_data(fd, &len, sizeof(len)))
 		return 0;
 	if (len)
@@ -689,7 +691,7 @@ static int write_str(FILE *fd, char *x)
 
 static int read_str(FILE *fd, char **x)
 {
-	uint64_t len;
+	uint16_t len;
 	size_t len_tkl1000; // len used to be of type size_t, but this has portability problems when writing to/reading from binary files
 	size_t size;
 
