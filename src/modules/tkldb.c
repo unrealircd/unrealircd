@@ -282,9 +282,14 @@ int write_tkldb(void)
 	{
 		for (tkl = tklines[index]; tkl; tkl = tkl->next)
 		{
-			// Local spamfilter means it was added through the conf or is built-in, so let's not even write those
-			if ((tkl->type & TKL_SPAMF) && !(tkl->type & TKL_GLOBAL))
-				continue;
+			if(!(tkl->type & TKL_GLOBAL))
+			{
+				/* Local spamfilter means it was added through a .conf file or is built-in,
+				** local "nick ban" (Q:Line) means it was added using a ban nick {} block in a .conf
+				*/
+				if ((tkl->type & TKL_SPAMF) || (tkl->type & TKL_NICK))
+					continue;
+			}
 			tklcount++;
 		}
 	}
@@ -591,7 +596,8 @@ int read_tkldb(void)
 		ircsnprintf(setTime, sizeof(setTime), "%li", set_at);
 		ircsnprintf(expTime, sizeof(expTime), "%li", expire_at);
 
-		if (spamf && tklflag == 'f') // Just in case someone modifies the DB to contain local spamfilters, as well as for v1000
+		// v1000 still stored local Q-Lines and spamfilters, but those are either added through a .conf or already built-in
+		if (tklflag == 'q' || (spamf && tklflag == 'f'))
 			doadd = 0;
 
 		// Build TKL args
