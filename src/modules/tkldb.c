@@ -395,6 +395,7 @@ int read_tkldb(void)
 	uint32_t version;
 	int added = 0;
 	int expired = 0;
+	char c;
 
 	// Variables for all TKL types
 	// Some of them need to be declared and NULL initialised early due to the macro FreeTKLRead() being used by R_SAFE() on error
@@ -647,6 +648,12 @@ int read_tkldb(void)
 		FreeTKLRead();
 	}
 
+	/* If everything went fine, then reading a single byte should cause an EOF error */
+	if (fread(&c, 1, 1, fd) == 1)
+	{
+		ircd_log(LOG_ERROR, "[warning] [tkldb] Database possibly corrupt. Extra data found at end of DB file.");
+		sendto_realops("[warning] [tkldb] Database possibly corrupt. Extra data found at end of DB file.");
+	}
 	fclose(fd);
 
 	if (added || expired)
