@@ -1,5 +1,5 @@
 /*
- * Stores active *-Lines (G:Lines etc) inside a .db file for persistency
+ * Stores active *-Lines (G-Lines etc) inside a .db file for persistency
  * (C) Copyright 2019 Gottem and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -285,7 +285,7 @@ int write_tkldb(void)
 			if(!(tkl->type & TKL_GLOBAL))
 			{
 				/* Local spamfilter means it was added through a .conf file or is built-in,
-				** local "nick ban" (Q:Line) means it was added using a ban nick {} block in a .conf
+				** local "nick ban" (Q-Line) means it was added using a ban nick {} block in a .conf
 				*/
 				if ((tkl->type & TKL_SPAMF) || (tkl->type & TKL_NICK))
 					continue;
@@ -361,7 +361,7 @@ int write_tkline(FILE *fd, const char *tmpfname, aTKline *tkl)
 	}
 
 	W_SAFE(write_str(fd, tkl->hostmask)); // Host mask (action for spamfilter, like 'block')
-	W_SAFE(write_str(fd, tkl->reason)); // Ban reason (TKL time for spamfilters, in case of a gline action)
+	W_SAFE(write_str(fd, tkl->reason)); // Ban reason (TKL time for spamfilters, in case of *-Line actions)
 	W_SAFE(write_str(fd, tkl->setby));
 
 	expire_at = tkl->expire_at;
@@ -372,7 +372,7 @@ int write_tkline(FILE *fd, const char *tmpfname, aTKline *tkl)
 	if (tkl->ptr.spamf)
 	{
 		W_SAFE(write_str(fd, "SPAMF")); // Write a string so we know to expect more when reading the DB
-		spamf_action = banact_valtochar(tkl->ptr.spamf->action); // Block, GZ:Line, etc; also refer to BAN_ACT_*
+		spamf_action = banact_valtochar(tkl->ptr.spamf->action); // Block, GZ-Line, etc; also refer to BAN_ACT_*
 		W_SAFE(write_data(fd, &spamf_action, sizeof(spamf_action)));
 		W_SAFE(write_str(fd, tkl->ptr.spamf->tkl_reason));
 		spamf_tkl_duration = tkl->ptr.spamf->tkl_duration;
@@ -498,7 +498,7 @@ int read_tkldb(void)
 			NULL, // 5: Set by who
 			NULL, // 6: Expiration time
 			NULL, // 7: Set-at time
-			NULL, // 8: Reason (TKL time for spamfilters in case of a gline action etc)
+			NULL, // 8: Reason (TKL time for spamfilters, in case of *-Line actions)
 			NULL, // 9: Spamfilter only: TKL reason (w/ underscores and all)
 			NULL, // 10: Spamfilter only: Match type (simple/regex)
 			NULL, // 11: Spamfilter only: Match string/regex
@@ -585,8 +585,8 @@ int read_tkldb(void)
 		if (expire_at != 0 && expire_at <= TStime())
 		{
 #ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "[tkldb] Not re-adding expired %c:Line '%s@%s' [%s]", tklflag, usermask, hostmask, reason);
-			sendto_realops("[tkldb] Not re-adding expired %c:Line '%s@%s' [%s]", tklflag, usermask, hostmask, reason); // Probably won't be seen ever, but just in case ;]
+			ircd_log(LOG_ERROR, "[tkldb] Not re-adding expired %c:-Line '%s@%s' [%s]", tklflag, usermask, hostmask, reason);
+			sendto_realops("[tkldb] Not re-adding expired %c-Line '%s@%s' [%s]", tklflag, usermask, hostmask, reason); // Probably won't be seen ever, but just in case ;]
 #endif
 			expired++;
 			FreeTKLRead();
@@ -614,7 +614,7 @@ int read_tkldb(void)
 		if (spamf)
 		{
 			parc = 12;
-			// Make sure this particular TKLine isn't already active somehow
+			// Make sure this particular *-Line isn't already active somehow
 			for (tkl = tklines[tkl_hash(tklflag)]; doadd && tkl; tkl = tkl->next)
 			{
 				// We can assume it's the same spamfilter if all of the following match: spamfilter expression, targets, TKL reason, action, matchtype and TKL duration
