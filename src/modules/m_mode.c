@@ -102,7 +102,6 @@ CMD_FUNC(m_mode)
 	Ban *ban;
 	aChannel *chptr;
 
-
 	/* Now, try to find the channel in question */
 	if (parc > 1)
 	{
@@ -499,31 +498,33 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 	}
 
 	new_message(sptr, recv_mtags, &mtags);
+
 	sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 	               ":%s MODE %s %s %s",
 	               sptr->name, chptr->chname, modebuf, parabuf);
-	free_mtags(mtags);
 
 	if (IsServer(sptr) && sendts != -1)
 	{
-		sendto_server(cptr, 0, 0, NULL,
+		sendto_server(cptr, 0, 0, mtags,
 		              ":%s MODE %s %s%s %s %lu",
 		              sptr->name, chptr->chname, isbounce ? "&" : "", modebuf, parabuf, sendts);
 	} else
 	if (samode && IsMe(sptr))
 	{
 		/* SAMODE is a special case: always send a TS of 0 (omitting TS==desynch) */
-		sendto_server(cptr, 0, 0, NULL,
+		sendto_server(cptr, 0, 0, mtags,
 		              ":%s MODE %s %s %s 0",
 		              sptr->name, chptr->chname, modebuf, parabuf);
 	} else
 	{
-		sendto_server(cptr, 0, 0, NULL,
+		sendto_server(cptr, 0, 0, mtags,
 		              ":%s MODE %s %s%s %s",
 		              sptr->name, chptr->chname, isbounce ? "&" : "", modebuf, parabuf);
 		/* tell them it's not a timestamp, in case the last param
 		   ** is a number. */
 	}
+
+	free_mtags(mtags);
 
 	if (MyConnect(sptr))
 		RunHook7(HOOKTYPE_LOCAL_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
