@@ -60,7 +60,6 @@
 #include <stdio.h>
 #include <signal.h>
 #include <fcntl.h>
-#include "sock.h"		/* If FD_ZERO isn't define up to this point,  */
 #include <string.h>
 #ifndef _WIN32
 #include <netinet/tcp.h>
