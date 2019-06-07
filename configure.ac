@@ -698,23 +698,6 @@ AC_ARG_ENABLE([asan],
   [ac_cv_asan="no"],
   [ac_cv_asan="yes"])
 
-AC_MSG_CHECKING([if FD_SETSIZE is large enough to allow $ac_fd file descriptors])
-AC_COMPILE_IFELSE([
-#include <sys/types.h>
-#include <sys/time.h>
-int main() {
-#if FD_SETSIZE < $ac_fd
-#error FD_SETSIZE is smaller than $ac_fd
-#endif
-exit(0);
-}
-], AC_MSG_RESULT([yes]), [
-# must be passed on the commandline to avoid a ``warning, you redefined something''
-FD_SETSIZE="-DFD_SETSIZE=$ac_fd"
-AC_MSG_RESULT(no)
-])
-AC_SUBST([FD_SETSIZE])
-
 case `uname -s` in
 	*SunOS*|*solaris*)
 		AC_DEFINE([_SOLARIS], [], [Define if you are compiling unrealircd on Sun's (or Oracle's?) Solaris])

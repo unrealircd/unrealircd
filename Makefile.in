@@ -97,18 +97,10 @@ URL=@URL@
 # STRTOUL=	strtoul.o
 STRTOUL=@STRTOUL@
 
-# [CHANGEME]
-# If you get crashes around a specific number of clients, and that
-# client load comes close or a little over the system-defined value of
-# FD_SETSIZE, override it here and see what happens. You may override
-# the system FD_SETSIZE by setting the FD_SETSIZE Makefile variable to
-# -DFD_SETSIZE=<some number>.
-FD_SETSIZE=@FD_SETSIZE@
-
 # Where is your openssl binary
 OPENSSLPATH=@OPENSSLPATH@
 
-CFLAGS=-I$(INCLUDEDIR) $(XCFLAGS) $(FD_SETSIZE)
+CFLAGS=-I$(INCLUDEDIR) $(XCFLAGS)
 LDFLAGS=@LDFLAGS_PRIVATELIBS@ @HARDEN_LDFLAGS@
 
 SHELL=/bin/sh
