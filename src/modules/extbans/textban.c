@@ -83,7 +83,7 @@ ModuleHeader MOD_HEADER(textban)
 char *extban_modeT_conv_param(char *para_in);
 int extban_modeT_is_banned(aClient *sptr, aChannel *chptr, char *ban, int type);
 int extban_modeT_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what, int what2);
-char *textban_chanmsg(aClient *, aChannel *, char *, int);
+char *textban_chanmsg(aClient *, aChannel *, MessageTag *, char *, int);
 
 MOD_INIT(textban)
 {
@@ -383,7 +383,7 @@ char *o = buf;
 #endif
 
 /* Channel message callback */
-char *textban_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *textban_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
 {
 static char filtered[512]; /* temp buffer */
 Ban *ban;

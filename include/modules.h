@@ -728,13 +728,14 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
  } \
 }
 
-#define RunHookReturnVoid(hooktype,x,ret) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) if((*(h->func.intfunc))(x) ret) return; } while(0)
-#define RunHook2(hooktype,x,y) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(x,y); } while(0)
-#define RunHook3(hooktype,a,b,c) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c); } while(0)
-#define RunHook4(hooktype,a,b,c,d) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c,d); } while(0)
-#define RunHook5(hooktype,a,b,c,d,e) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c,d,e); } while(0)
-#define RunHook6(hooktype,a,b,c,d,e,f) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c,d,e,f); } while(0)
-#define RunHook7(hooktype,a,b,c,d,e,f,g) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c,d,e,f,g); } while(0)
+#define RunHookReturnVoid(hooktype,x,ret) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) if((*(hook->func.intfunc))(x) ret) return; } while(0)
+#define RunHook2(hooktype,x,y) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(x,y); } while(0)
+#define RunHook3(hooktype,a,b,c) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c); } while(0)
+#define RunHook4(hooktype,a,b,c,d) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c,d); } while(0)
+#define RunHook5(hooktype,a,b,c,d,e) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c,d,e); } while(0)
+#define RunHook6(hooktype,a,b,c,d,e,f) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c,d,e,f); } while(0)
+#define RunHook7(hooktype,a,b,c,d,e,f,g) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c,d,e,f,g); } while(0)
+#define RunHook8(hooktype,a,b,c,d,e,f,g,h) do { Hook *hook; for (hook = Hooks[hooktype]; hook; hook = hook->next) (*(hook->func.intfunc))(a,b,c,d,e,f,g,h); } while(0)
 
 #define CallbackAdd(cbtype, func) CallbackAddMain(NULL, cbtype, func, NULL, NULL)
 #define CallbackAddEx(module, cbtype, func) CallbackAddMain(module, cbtype, func, NULL, NULL)
@@ -898,7 +899,7 @@ int hooktype_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *par
 int hooktype_configtest(ConfigFile *cfptr, ConfigEntry *ce, int section, int *errors);
 int hooktype_configrun(ConfigFile *cfptr, ConfigEntry *ce, int section);
 int hooktype_usermsg(aClient *sptr, aClient *to, char *text, int notice);
-int hooktype_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+int hooktype_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
 int hooktype_local_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
 int hooktype_local_kick(aClient *cptr, aClient *sptr, aClient *victim, aChannel *chptr, char *comment);
 int hooktype_local_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode);
@@ -940,7 +941,7 @@ int hooktype_can_send(aClient *sptr, aChannel *chptr, char *text, Membership *me
 int hooktype_can_kick(aClient *sptr, aClient *victim, aChannel *chptr, char *comment, long sptr_flags, long victim_flags, char **error);
 int hooktype_free_client(aClient *acptr);
 int hooktype_free_user(anUser *user, aClient *acptr);
-char *hooktype_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *hooktype_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
 char *hooktype_pre_usermsg(aClient *sptr, aClient *to, char *text, int notice);
 int hooktype_knock(aClient *sptr, aChannel *chptr);
 int hooktype_modechar_del(aChannel *chptr, int modechar);
@@ -948,8 +949,8 @@ int hooktype_modechar_add(aChannel *chptr, int modechar);
 int hooktype_exit_one_client(aClient *sptr);
 int hooktype_can_join_limitexceeded(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 int hooktype_visible_in_channel(aClient *sptr, aChannel *chptr);
-int hooktype_pre_local_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_pre_remote_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_pre_local_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_pre_remote_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
 int hooktype_join_data(aClient *who, aChannel *chptr);
 int hooktype_pre_knock(aClient *sptr, aChannel *chptr);
 int hooktype_pre_invite(aClient *sptr, aClient *acptr, aChannel *chptr, int *override);

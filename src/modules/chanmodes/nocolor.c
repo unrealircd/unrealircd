@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_NOCOLOR;
 
 #define IsNoColor(chptr)    (chptr->mode.extmode & EXTCMODE_NOCOLOR)
 
-char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
 char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
 char *nocolor_prelocalquit(aClient *sptr, char *comment);
 
@@ -84,7 +84,7 @@ static int IsUsingColor(char *s)
         return 0;
 }
 
-char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	Hook *h;
 	int i;

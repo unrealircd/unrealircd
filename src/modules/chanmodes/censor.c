@@ -20,7 +20,7 @@ Cmode_t EXTMODE_CENSOR = 0L;
 
 #define IsCensored(x) ((x)->mode.extmode & EXTMODE_CENSOR)
 
-char *censor_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *censor_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
 char *censor_pre_local_part(aClient *sptr, aChannel *chptr, char *text);
 char *censor_pre_local_quit(aClient *sptr, char *text);
 
@@ -253,7 +253,7 @@ char *stripbadwords_channel(char *str, int *blocked)
 	return stripbadwords(str, conf_badword_channel, blocked);
 }
 
-char *censor_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *censor_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	int blocked;
 	Hook *h;

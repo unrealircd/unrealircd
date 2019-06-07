@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER(nocodes)
 	NULL 
 };
 
-char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
 
 MOD_INIT(nocodes)
 {
@@ -59,7 +59,7 @@ static int has_controlcodes(char *p)
 	return 0;
 }
 
-char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	static char retbuf[4096];
 	Hook *h;

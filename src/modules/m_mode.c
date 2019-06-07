@@ -402,6 +402,10 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 	char tschange = 0, isbounce = 0;	/* fwd'ing bounce */
 	MessageTag *mtags = NULL;
 
+	new_message(sptr, recv_mtags, &mtags);
+
+	/* IMPORTANT: if you return, don't forget to free mtags!! */
+
 	if (**parv == '&')
 		isbounce = 1;
 
@@ -411,10 +415,9 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 	samode_in_progress = 0;
 
 	if (MyConnect(sptr))
-			RunHook7(HOOKTYPE_PRE_LOCAL_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
-		else
-			RunHook7(HOOKTYPE_PRE_REMOTE_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
-
+		RunHook8(HOOKTYPE_PRE_LOCAL_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
+	else
+		RunHook8(HOOKTYPE_PRE_REMOTE_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
 
 	if (IsServer(sptr))
 	{
@@ -423,11 +426,6 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 			if (!chptr->creationtime || sendts < chptr->creationtime)
 			{
 				tschange = 1;
-/*
-				if (chptr->creationtime != 0)
-					sendto_snomask(SNO_EYES, "*** TS fix for %s - %lu(ours) %lu(theirs)",
-					chptr->chname, chptr->creationtime, sendts);
-					*/
 				chptr->creationtime = sendts;
 				if (sendts < 750000)
 				{
@@ -452,19 +450,26 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 		if (sendts == -1 && chptr->creationtime)
 			sendts = chptr->creationtime;
 	}
+
 	if (*modebuf == '\0' || (*(modebuf + 1) == '\0' && (*modebuf == '+' || *modebuf == '-')))
 	{
-		if (tschange || isbounce) {	/* relay bounce time changes */
+		if (tschange || isbounce)
+		{
+			/* relay bounce time changes */
 			if (chptr->creationtime)
+			{
 				sendto_server(cptr, 0, 0, NULL, ":%s MODE %s %s+ %lu",
 				    me.name, chptr->chname, isbounce ? "&" : "",
 				    chptr->creationtime);
-			else
+			} else {
 				sendto_server(cptr, 0, 0, NULL, ":%s MODE %s %s+",
 				    me.name, chptr->chname, isbounce ? "&" : "");
-		return;		/* nothing to send */
+			}
+			free_mtags(mtags);
+			return; /* nothing to send */
 		}
 	}
+
 	/* opermode for twimodesystem --sts */
 #ifndef NO_OPEROVERRIDE
 	if (opermode == 1)
@@ -488,7 +493,11 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 
 	/* Should stop null modes */
 	if (*(modebuf + 1) == '\0')
+	{
+		free_mtags(mtags);
 		return;
+	}
+
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
 		sendto_umode_global(UMODE_OPER, "%s used SAMODE %s (%s%s%s)",
@@ -496,8 +505,6 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 		sptr = &me;
 		sendts = 0;
 	}
-
-	new_message(sptr, recv_mtags, &mtags);
 
 	sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 	               ":%s MODE %s %s %s",
@@ -524,13 +531,15 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 		   ** is a number. */
 	}
 
-	free_mtags(mtags);
-
 	if (MyConnect(sptr))
 		RunHook7(HOOKTYPE_LOCAL_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
 	else
 		RunHook7(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
-	/* After this, don't touch 'chptr' anymore! As permanent module may destroy the channel. */
+
+	/* After this, don't touch 'chptr' anymore! As permanent module may have destroyed the channel. */
+
+	free_mtags(mtags);
+
 }
 /* make_mode_str -- written by binary
  *	Reconstructs the mode string, to make it look clean.  mode_buf will

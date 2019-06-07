@@ -100,8 +100,8 @@ int cmodef_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
 int floodprot_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
 EVENT(modef_event);
 int cmodef_channel_destroy(aChannel *chptr, int *should_destroy);
-char *floodprot_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
-int floodprot_post_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *floodprot_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
+int floodprot_post_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
 int floodprot_knock(aClient *sptr, aChannel *chptr);
 int floodprot_local_nickchange(aClient *sptr, char *oldnick);
 int floodprot_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick);
@@ -1020,14 +1020,14 @@ char *channel_modef_string(ChanFloodProt *x, char *retbuf)
 	return retbuf;
 }
 
-char *floodprot_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *floodprot_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	if (MyClient(sptr) && (check_for_chan_flood(sptr, chptr) == 1))
 		return NULL; /* don't send it */
 	return text;
 }
 
-int floodprot_post_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+int floodprot_post_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	if (!IsFloodLimit(chptr) || is_skochanop(sptr, chptr) || IsULine(sptr))
 		return 0;

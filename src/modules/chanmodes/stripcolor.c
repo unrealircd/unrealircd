@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_STRIPCOLOR;
 
 #define IsStripColor(chptr)    (chptr->mode.extmode & EXTCMODE_STRIPCOLOR)
 
-char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
 char *stripcolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
 char *stripcolor_prelocalquit(aClient *sptr, char *comment);
 
@@ -72,7 +72,7 @@ MOD_UNLOAD(stripcolor)
 	return MOD_SUCCESS;
 }
 
-char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	Hook *h;
 	int i;

@@ -356,23 +356,28 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 						return ret;
 				}
 
+				new_message(sptr, recv_mtags, &mtags);
+
 				for (tmphook = Hooks[HOOKTYPE_PRE_CHANMSG]; tmphook; tmphook = tmphook->next) {
-					text = (*(tmphook->func.pcharfunc))(sptr, chptr, text, notice);
+					text = (*(tmphook->func.pcharfunc))(sptr, chptr, mtags, text, notice);
 					if (!text)
 						break;
 				}
 				
 				if (!text)
+				{
+					free_mtags(mtags);
 					continue;
+				}
 
-				new_message(sptr, recv_mtags, &mtags);
 				sendto_channel(chptr, sptr, sptr,
 				               prefix, 0, sendflags, mtags,
 				               notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
 				               sptr->name, nick, text);
-				free_mtags(mtags);
 
-				RunHook4(HOOKTYPE_CHANMSG, sptr, chptr, text, notice);
+				RunHook5(HOOKTYPE_CHANMSG, sptr, chptr, mtags, text, notice);
+
+				free_mtags(mtags);
 
 				continue;
 			}

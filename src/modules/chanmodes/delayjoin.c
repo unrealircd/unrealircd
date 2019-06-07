@@ -29,8 +29,8 @@ int moded_join(aClient *cptr, aChannel *chptr);
 int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
 int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
 int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
-                           char *modebuf, char *parabuf, time_t sendts, int samode);
-char *moded_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+                   MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+char *moded_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
 char *moded_serialize(ModData *m);
 void moded_unserialize(char *str, ModData *m);
 
@@ -201,9 +201,10 @@ void clear_user_invisible(aChannel *chptr, aClient *sptr)
 	}
 }
 
-void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
+void clear_user_invisible_announce(aChannel *chptr, aClient *sptr, MessageTag *recv_mtags)
 {
 	Member *i;
+	MessageTag *mtags = NULL;
 	char joinbuf[512];
 	char exjoinbuf[512];
 	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
@@ -218,17 +219,19 @@ void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
 		!isdigit(*sptr->user->svid) ? sptr->user->svid : "*",
 		sptr->info);
 
+	new_message_special(sptr, recv_mtags, &mtags, ":%s JOIN %s", sptr->name, chptr->chname);
 	for (i = chptr->members; i; i = i->next)
 	{
 		aClient *acptr = i->cptr;
 		if (!is_skochanop(acptr,chptr) && acptr != sptr && MyConnect(acptr))
 		{
 			if (HasCapabilityFast(acptr, CAP_EXTENDED_JOIN))
-				sendbufto_one(acptr, exjoinbuf, 0);
+				sendto_one(acptr, mtags, "%s", exjoinbuf);
 			else
-				sendbufto_one(acptr, joinbuf, 0);
+				sendto_one(acptr, mtags, "%s", joinbuf);
 		}
 	}
+	free_mtags(mtags);
 }
 
 void set_user_invisible(aChannel *chptr, aClient *sptr)
@@ -277,7 +280,7 @@ int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment)
 }
 
 int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
-                           char *modebuf, char *parabuf, time_t sendts, int samode)
+                   MessageTag *recv_mtags, char *modebuf, char *parabuf, time_t sendts, int samode)
 {
 	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
 
@@ -301,7 +304,7 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 					continue;
 
 				if (moded_user_invisible(user,chptr))
-					clear_user_invisible_announce(chptr,user);
+					clear_user_invisible_announce(chptr, user, recv_mtags);
 
 				if (pm.modechar == 'v' || !MyConnect(user))
 					continue;
@@ -314,7 +317,7 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 					if (moded_user_invisible(i->cptr,chptr))
 					{
 						MessageTag *mtags = NULL;
-						new_message(i->cptr, NULL, &mtags);
+						new_message_special(i->cptr, recv_mtags, &mtags, ":%s JOIN %s", i->cptr->name, chptr->chname);
 						if (HasCapabilityFast(user, CAP_EXTENDED_JOIN))
 						{
 							sendto_one(user, mtags, ":%s!%s@%s JOIN %s %s :%s",
@@ -338,7 +341,7 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 					continue;
 
 				if (moded_user_invisible(user,chptr))
-					clear_user_invisible_announce(chptr,user);
+					clear_user_invisible_announce(chptr, user, recv_mtags);
 
 				if (pm.modechar == 'v' || !MyConnect(user))
 					continue;
@@ -351,7 +354,7 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 					if (moded_user_invisible(i->cptr,chptr))
 					{
 						MessageTag *mtags = NULL;
-						new_message(i->cptr, NULL, &mtags);
+						new_message_special(i->cptr, recv_mtags, &mtags, ":%s PART %s", i->cptr->name, chptr->chname);
 						sendto_one(user, mtags, ":%s!%s@%s PART :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
 						free_mtags(mtags);
 					}
@@ -364,11 +367,11 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 	return 0;
 }
 
-char *moded_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *moded_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
 {
 
 	if ((channel_is_delayed(chptr) || channel_is_post_delayed(chptr)) && (moded_user_invisible(sptr,chptr)))
-		clear_user_invisible_announce(chptr,sptr);
+		clear_user_invisible_announce(chptr, sptr, mtags);
 
 	return text;
 }
