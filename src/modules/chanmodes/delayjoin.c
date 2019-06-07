@@ -28,7 +28,6 @@ int moded_check_part( aClient *cptr, aChannel *chptr);
 int moded_join(aClient *cptr, aChannel *chptr);
 int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
 int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
-int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment);
 int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
                            char *modebuf, char *parabuf, time_t sendts, int samode);
 char *moded_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
@@ -74,8 +73,6 @@ MOD_INIT(delayjoin)
 	HookAdd(modinfo->handle, HOOKTYPE_JOIN_DATA, 0, moded_join);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PART, 0, moded_part);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_PART, 0, moded_part);
-	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_KICK, 0, moded_kick);
-	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_KICK, 0, moded_kick);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, 0, moded_chanmode);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, 0, moded_chanmode);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 99999999, moded_prechanmsg);
@@ -278,16 +275,6 @@ int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment)
 
 	return 0;
 }
-
-int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment)
-{
-	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
-		if (moded_user_invisible(acptr, chptr))
-			clear_user_invisible_announce(chptr,acptr);
-
-	return 0;
-}
-
 
 int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
                            char *modebuf, char *parabuf, time_t sendts, int samode)
