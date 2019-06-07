@@ -426,7 +426,14 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 			ret = can_privmsg(cptr, sptr, acptr, notice, &text, &newcmd);
 			if (ret == CANPRIVMSG_SEND)
 			{
-				sendto_message_one(acptr, sptr, sptr->name, newcmd, (MyClient(acptr) ? acptr->name : nick), text);
+				MessageTag *mtags = NULL;
+				new_message(sptr, recv_mtags, &mtags);
+				sendto_prefix_one(acptr, sptr, mtags, ":%s %s %s :%s",
+				                  CHECKPROTO(sptr->from, PROTO_SID) ? ID(sptr) : sptr->name,
+				                  newcmd,
+				                  (MyClient(acptr) ? acptr->name : nick),
+				                  text);
+				free_mtags(mtags);
 				continue;
 			} else
 			if (ret == CANPRIVMSG_CONTINUE)

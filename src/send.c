@@ -1319,13 +1319,6 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 	return;
 }
 
-void	sendto_message_one(aClient *to, aClient *from, char *sender,
-			char *cmd, char *nick, char *msg)
-{
-        sendto_prefix_one(to, from, NULL, ":%s %s %s :%s",
-                         CHECKPROTO(to->from, PROTO_SID) ? ID(from) : from->name, cmd, nick, msg);
-}
-
 /* sidenote: sendnotice() and sendtxtnumeric() assume no client or server
  * has a % in their nick, which is a safe assumption since % is illegal.
  */
