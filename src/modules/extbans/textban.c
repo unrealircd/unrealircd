@@ -119,19 +119,24 @@ MOD_UNLOAD(textban)
 }
 
 #if defined(CENSORFEATURE) || defined(STRIPFEATURE)
-static char *my_strcasestr(char *haystack, char *needle) {
-int i;
-int nlength = strlen (needle);
-int hlength = strlen (haystack);
+static char *my_strcasestr(char *haystack, char *needle)
+{
+	int i;
+	int nlength = strlen (needle);
+	int hlength = strlen (haystack);
 
-	if (nlength > hlength) return NULL;
-	if (hlength <= 0) return NULL;
-	if (nlength <= 0) return haystack;
-	for (i = 0; i <= (hlength - nlength); i++) {
+	if (nlength > hlength)
+		return NULL;
+	if (hlength <= 0)
+		return NULL;
+	if (nlength <= 0)
+		return haystack;
+	for (i = 0; i <= (hlength - nlength); i++)
+	{
 		if (strncasecmp (haystack + i, needle, nlength) == 0)
 			return haystack + i;
 	}
-  return NULL; /* not found */
+	return NULL; /* not found */
 }
 
 #define TEXTBAN_WORD_LEFT	0x1
@@ -145,26 +150,28 @@ int hlength = strlen (haystack);
  */
 int textban_replace(int type, char *badword, char *line, char *buf)
 {
-char *replacew;
-char *pold = line, *pnew = buf; /* Pointers to old string and new string */
-char *poldx = line;
-int replacen;
-int searchn = -1;
-char *startw, *endw;
-char *c_eol = buf + 510 - 1; /* Cached end of (new) line */
-int cleaned = 0;
+	char *replacew;
+	char *pold = line, *pnew = buf; /* Pointers to old string and new string */
+	char *poldx = line;
+	int replacen;
+	int searchn = -1;
+	char *startw, *endw;
+	char *c_eol = buf + 510 - 1; /* Cached end of (new) line */
+	int cleaned = 0;
 
 	replacew = CENSORWORD;
 	replacen = sizeof(CENSORWORD)-1;
 
-	while (1) {
+	while (1)
+	{
 		pold = my_strcasestr(pold, badword);
 		if (!pold)
 			break;
 		if (searchn == -1)
 			searchn = strlen(badword);
 		/* Hunt for start of word */
- 		if (pold > line) {
+ 		if (pold > line)
+ 		{
 			for (startw = pold; (!iswseperator(*startw) && (startw != line)); startw--);
 			if (iswseperator(*startw))
 				startw++; /* Don't point at the space/seperator but at the word! */
@@ -172,7 +179,8 @@ int cleaned = 0;
 			startw = pold;
 		}
 
-		if (!(type & TEXTBAN_WORD_LEFT) && (pold != startw)) {
+		if (!(type & TEXTBAN_WORD_LEFT) && (pold != startw))
+		{
 			/* not matched */
 			pold++;
 			continue;
@@ -184,7 +192,8 @@ int cleaned = 0;
 		 */
 		for (endw = pold+searchn; ((*endw != '\0') && (!iswseperator(*endw))); endw++);
 
-		if (!(type & TEXTBAN_WORD_RIGHT) && (pold+searchn != endw)) {
+		if (!(type & TEXTBAN_WORD_RIGHT) && (pold+searchn != endw))
+		{
 			/* not matched */
 			pold++;
 			continue;
@@ -193,9 +202,11 @@ int cleaned = 0;
 		cleaned = 1; /* still too soon? Syzop/20050227 */
 		
 		/* Do we have any not-copied-yet data? */
-		if (poldx != startw) {
+		if (poldx != startw)
+		{
 			int tmp_n = startw - poldx;
-			if (pnew + tmp_n >= c_eol) {
+			if (pnew + tmp_n >= c_eol)
+			{
 				/* Partial copy and return... */
 				memcpy(pnew, poldx, c_eol - pnew);
 				*c_eol = '\0';
@@ -207,8 +218,10 @@ int cleaned = 0;
 		}
 		/* Now update the word in buf (pnew is now something like startw-in-new-buffer */
 
-		if (replacen) {
-			if ((pnew + replacen) >= c_eol) {
+		if (replacen)
+		{
+			if ((pnew + replacen) >= c_eol)
+			{
 				/* Partial copy and return... */
 				memcpy(pnew, replacew, c_eol - pnew);
 				*c_eol = '\0';
@@ -220,7 +233,8 @@ int cleaned = 0;
 		poldx = pold = endw;
 	}
 	/* Copy the last part */
-	if (*poldx) {
+	if (*poldx)
+	{
 		strncpy(pnew, poldx, c_eol - pnew);
 		*(c_eol) = '\0';
 	} else {
@@ -232,8 +246,8 @@ int cleaned = 0;
 
 unsigned int counttextbans(aChannel *chptr)
 {
-Ban *ban;
-unsigned int cnt = 0;
+	Ban *ban;
+	unsigned int cnt = 0;
 
 	for (ban = chptr->banlist; ban; ban=ban->next)
 		if ((ban->banstr[0] == '~') && (ban->banstr[1] == 'T') && (ban->banstr[2] == ':'))
@@ -247,7 +261,7 @@ unsigned int cnt = 0;
 
 int extban_modeT_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what, int what2)
 {
-int n;
+	int n;
 
 	if ((what == MODE_ADD) && (what2 == EXBTYPE_EXCEPT) && MyClient(sptr))
 		return 0; /* except is not supported */
@@ -268,11 +282,11 @@ int n;
 /** Ban callbacks */
 char *extban_modeT_conv_param(char *para_in)
 {
-static char retbuf[MAX_LENGTH+1];
-char para[MAX_LENGTH+1], *action, *text, *p;
+	static char retbuf[MAX_LENGTH+1];
+	char para[MAX_LENGTH+1], *action, *text, *p;
 #ifdef UHOSTFEATURE
-char *uhost;
-int ap = 0;
+	char *uhost;
+	int ap = 0;
 #endif
 
 	strlcpy(para, para_in+3, sizeof(para)); /* work on a copy (and truncate it) */
@@ -334,10 +348,14 @@ int ap = 0;
 
 	/* check the string.. */
 	for (p=text; *p; p++)
+	{
 		if ((*p == '\003') || (*p == '\002') || 
 		    (*p == '\037') || (*p == '\026') ||
 		    (*p == ' '))
+		{
 			return NULL; /* codes not permitted, would be confusing since they are stripped */
+		}
+	}
 
 	/* Rebuild the string.. */
 #ifdef UHOSTFEATURE
@@ -357,11 +375,11 @@ int extban_modeT_is_banned(aClient *sptr, aChannel *chptr, char *ban, int type)
 #ifdef CENSORFEATURE
 void parse_word(const char *s, char **word, int *type)
 {
-static char buf[512];
-const char *tmp;
-int len;
-int tpe = 0;
-char *o = buf;
+	static char buf[512];
+	const char *tmp;
+	int len;
+	int tpe = 0;
+	char *o = buf;
 
 	for (tmp = s; *tmp; tmp++)
 	{
@@ -385,18 +403,18 @@ char *o = buf;
 /* Channel message callback */
 char *textban_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
 {
-static char filtered[512]; /* temp buffer */
-Ban *ban;
-long fl;
-int done=0, cleaned=0;
-char *p;
+	static char filtered[512]; /* temp buffer */
+	Ban *ban;
+	long fl;
+	int done=0, cleaned=0;
+	char *p;
 #ifdef UHOSTFEATURE
-char buf[512], uhost[USERLEN + HOSTLEN + 16];
+	char buf[512], uhost[USERLEN + HOSTLEN + 16];
 #endif
-char tmp[1024], *word;
-int type;
+	char tmp[1024], *word;
+	int type;
 #ifdef BENCHMARK
-struct timeval tv_alpha, tv_beta;
+	struct timeval tv_alpha, tv_beta;
 
 	gettimeofday(&tv_alpha, NULL);
 #endif
