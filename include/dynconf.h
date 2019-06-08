@@ -139,9 +139,6 @@ struct zConfiguration {
 	int spamfilter_stop_on_first_match;
 	int maxbans;
 	int maxbanlength;
-	int timesynch_enabled;
-	int timesynch_timeout;
-	char *timesynch_server;
 	int watch_away_notification;
 	int uhnames;
 	aNetwork network;
@@ -272,10 +269,6 @@ extern MODVAR int ipv6_disabled;
 
 #define MAXBANS		iConf.maxbans
 #define MAXBANLENGTH	iConf.maxbanlength
-
-#define TIMESYNCH	iConf.timesynch_enabled
-#define TIMESYNCH_TIMEOUT	iConf.timesynch_timeout
-#define TIMESYNCH_SERVER	iConf.timesynch_server
 
 #define WATCH_AWAY_NOTIFICATION	iConf.watch_away_notification
 

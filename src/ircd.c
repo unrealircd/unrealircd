@@ -817,7 +817,6 @@ static void do_version_check()
 
 extern time_t TSoffset;
 
-extern int unreal_time_synch(int timeout);
 extern void applymeblock(void);
 
 extern MODVAR Event *events;
@@ -1458,14 +1457,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
 
-	if (TIMESYNCH)
-	{
-		if (!unreal_time_synch(TIMESYNCH_TIMEOUT))
-			ircd_log(LOG_ERROR, "TIME SYNCH: Unable to synchronize time: %s. "
-			                    "This means UnrealIRCd was unable to synchronize the IRCd clock to a known good time source. "
-			                    "As long as the server owner keeps the server clock synchronized through NTP, everything will be fine.",
-				unreal_time_synch_error());
-	}
 	fix_timers(); /* Fix timers AFTER reading tune file AND timesynch */
 	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
@@ -1523,7 +1514,7 @@ void SocketLoop(void *dummy)
 			               "even more serious and can cause clients to freeze, channels to be "
 			               "taken over, and other issues.");
 			sendto_realops("Please be sure your clock is always synchronized before "
-			               "the IRCd is started or use the built-in timesynch feature.");
+			               "the IRCd is started!");
 			sendto_realops("[TimeShift] Resetting a few timers to prevent IRCd freeze!");
 			fix_timers();
 		} else
@@ -1540,7 +1531,7 @@ void SocketLoop(void *dummy)
 			               "Time being adjusted (either by TSCTL or by resetting the clock) "
 			               "more than a few seconds forward/backward can lead to serious issues.");
 			sendto_realops("Please be sure your clock is always synchronized before "
-			               "the IRCd is started or use the built-in timesynch feature.");
+			               "the IRCd is started!");
 			sendto_realops("[TimeShift] Resetting some timers!");
 			fix_timers();
 		}
