@@ -20,11 +20,6 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_tsctl);
-
-/* Place includes here */
-#define MSG_TSCTL       "TSCTL"
-
 ModuleHeader MOD_HEADER(m_tsctl)
   = {
 	"tsctl",	/* Name of module */
@@ -34,142 +29,46 @@ ModuleHeader MOD_HEADER(m_tsctl)
 	NULL 
     };
 
-/* This is called on module init, before Server Ready */
+CMD_FUNC(m_tsctl);
+
 MOD_INIT(m_tsctl)
 {
-	CommandAdd(modinfo->handle, MSG_TSCTL, m_tsctl, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, "TSCTL", m_tsctl, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-/* Is first run when server is 100% ready */
 MOD_LOAD(m_tsctl)
 {
 	return MOD_SUCCESS;
 }
 
-/* Called when module is unloaded */
 MOD_UNLOAD(m_tsctl)
 {
 	return MOD_SUCCESS;
 }
 
-/*
-** m_tsctl - Stskeeps
-**      parv[1] = command
-**      parv[2] = options
-*/
 CMD_FUNC(m_tsctl)
 {
-	time_t timediff;
-
 	if (!ValidatePermissionsForPath("server:tsctl:view",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
-	if (parv[1])
+	if (MyClient(sptr) && (!parv[1] || stricmp(parv[1], "alltime")))
 	{
-		if (*parv[1] == '\0')
-		{
-			sendnumeric(sptr, ERR_NEEDMOREPARAMS, "TSCTL");
-			return 0;
-		}
-
-		if (stricmp(parv[1], "offset") == 0)
-		{
-			if (!ValidatePermissionsForPath("server:tsctl:set",sptr,NULL,NULL,NULL))
-                        {
-			    sendnumeric(sptr, ERR_NOPRIVILEGES);
-			    return 0;
-			}
-
-			if (BadPtr(parv[2]) || BadPtr(parv[3]) || (*parv[2] != '+') || (*parv[2] != '-'))
-			{
-				sendnotice(sptr, "*** TSCTL OFFSET: /tsctl offset <+|-> <time>");
-				return 0;
-			}
-
-			switch (*parv[2])
-			{
-			  case '+':
-				  timediff = atol(parv[3]);
-				  ircd_log(LOG_ERROR, "TSCTL: Time offset changed by %s to +%li (was %li)",
-				      sptr->name, timediff, TSoffset);
-				  TSoffset = timediff;
-				  sendto_ops
-				      ("TS Control - %s set TStime() to be diffed +%li",
-				      sptr->name, timediff);
-				  sendto_server(&me, 0, 0, NULL,
-				      ":%s GLOBOPS :TS Control - %s set TStime to be diffed +%li",
-				      me.name, sptr->name, timediff);
-				  break;
-			  case '-':
-				  timediff = atol(parv[3]);
-				  ircd_log(LOG_ERROR, "TSCTL: Time offset changed by %s to -%li (was %li)",
-				      sptr->name, timediff, TSoffset);
-				  TSoffset = -timediff;
-				  sendto_ops
-				      ("TS Control - %s set TStime() to be diffed -%li",
-				      sptr->name, timediff);
-				  sendto_server(&me, 0, 0, NULL,
-				      ":%s GLOBOPS :TS Control - %s set TStime to be diffed -%li",
-				      me.name, sptr->name, timediff);
-				  break;
-			}
-			return 0;
-		}
-		if (stricmp(parv[1], "time") == 0)
-		{
-			sendnotice(sptr, "*** TStime=%li time()=%li TSoffset=%li",
-				TStime(), time(NULL), TSoffset);
-			return 0;
-		}
-		if (stricmp(parv[1], "alltime") == 0)
-		{
-			sendnotice(sptr, "*** Server=%s TStime=%li time()=%li TSoffset=%li",
-				me.name, TStime(), time(NULL), TSoffset);
-			sendto_server(cptr, 0, 0, NULL, ":%s TSCTL alltime", sptr->name);
-			return 0;
-
-		}
-		if (stricmp(parv[1], "svstime") == 0)
-		{
-			if (!IsULine(sptr))
-			{
-				if (MyClient(sptr)) sendnumeric(sptr, ERR_NOPRIVILEGES);
-				return 0;
-			}
-
-			if (!parv[2] || *parv[2] == '\0')
-			{
-				if (MyClient(sptr)) sendnumeric(sptr, ERR_NEEDMOREPARAMS, "TSCTL");
-				return 0;
-			}
-
-			timediff = atol(parv[2]);
-			timediff = timediff - time(NULL);
-			ircd_log(LOG_ERROR, "TSCTL: U-Line %s set time to be %li (timediff: %li, was %li)",
-				 sptr->name, atol(parv[2]), timediff, TSoffset);
-			TSoffset = timediff;
-			sendto_ops
-			    ("TS Control - U-Line set time to be %li (timediff: %li)",
-			    atol(parv[2]), timediff);
-			sendto_server(cptr, 0, 0, NULL, ":%s TSCTL svstime %li",
-			    sptr->name, atol(parv[2]));
-			return 0;
-		}
-		
-		//default: no command was recognized
-		sendto_one(sptr, NULL, "Invalid syntax for /TSCTL\n");
-                return 0;
+		sendnotice(sptr, "/TSCTL now shows the time on all servers. You can now longer MODIFY the time.");
+		parv[1] = "alltime";
 	}
 
-	//default: no parameter was entered
-	sendnumeric(sptr, ERR_NEEDMOREPARAMS, "TSCTL");
+	if (parv[1] && !stricmp(parv[1], "alltime"))
+	{
+		sendnotice(sptr, "*** Server=%s TStime=%li",
+			me.name, TStime());
+		sendto_server(cptr, 0, 0, NULL, ":%s TSCTL alltime", sptr->name);
+		return 0;
+	}
 
 	return 0;
 }
-
-

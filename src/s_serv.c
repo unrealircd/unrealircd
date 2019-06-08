@@ -526,7 +526,7 @@ EVENT(save_tunefile)
 #endif
 		return;
 	}
-	fprintf(tunefile, "%li\n", TSoffset);
+	fprintf(tunefile, "0\n");
 	fprintf(tunefile, "%d\n", IRCstats.me_max);
 	fclose(tunefile);
 }
@@ -543,7 +543,6 @@ void load_tunefile(void)
 	if (!fgets(buf, sizeof(buf), tunefile))
 	    fprintf(stderr, "Warning: error while reading the timestamp offset from the tunefile%s%s\n",
 		errno? ": ": "", errno? strerror(errno): "");
-	TSoffset = atol(buf);
 
 	if (!fgets(buf, sizeof(buf), tunefile))
 	    fprintf(stderr, "Warning: error while reading the peak user count from the tunefile%s%s\n",

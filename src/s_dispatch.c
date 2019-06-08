@@ -576,7 +576,7 @@ void fd_select(time_t delay)
 		if (((read_callbacks + write_callbacks) % 100) == 0)
 		{
 			/* every 100 events.. set the internal clock so we don't screw up under extreme load */
-			timeofday = time(NULL) + TSoffset;
+			timeofday = time(NULL);
 		}
 #endif
 	}

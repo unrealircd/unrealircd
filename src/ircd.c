@@ -70,7 +70,6 @@ ID_Notes("2.48 3/9/94");
 #ifdef __FreeBSD__
 char *malloc_options = "h" MALLOC_FLAGS_EXTRA;
 #endif
-time_t TSoffset = 0;
 
 #ifndef _WIN32
 extern char unreallogo[];
@@ -815,8 +814,6 @@ static void do_version_check()
 	}
 }
 
-extern time_t TSoffset;
-
 extern void applymeblock(void);
 
 extern MODVAR Event *events;
@@ -1498,7 +1495,7 @@ void SocketLoop(void *dummy)
 #define NEGATIVE_SHIFT_WARN	-15
 #define POSITIVE_SHIFT_WARN	20
 
-		timeofday = time(NULL) + TSoffset;
+		timeofday = time(NULL);
 		if (oldtimeofday == 0)
 			oldtimeofday = timeofday; /* pretend everything is ok the first time.. */
 		if (mytdiff(timeofday, oldtimeofday) < NEGATIVE_SHIFT_WARN) {
@@ -1572,7 +1569,7 @@ void SocketLoop(void *dummy)
 
 		process_clients();
 
-		timeofday = time(NULL) + TSoffset;
+		timeofday = time(NULL);
 
 		/*
 		 * Debug((DEBUG_DEBUG, "Got message(s)"));

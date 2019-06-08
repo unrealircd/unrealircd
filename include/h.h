@@ -41,7 +41,6 @@ extern MODVAR aClient me;
 extern MODVAR aChannel *channel;
 extern MODVAR struct stats *ircstp;
 extern MODVAR int bootopt;
-extern MODVAR time_t TSoffset;
 extern MODVAR time_t timeofday;
 extern MODVAR char cmodestring[512];
 extern MODVAR char umodestring[UMODETABLESZ+1];
