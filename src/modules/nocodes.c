@@ -41,12 +41,12 @@ MOD_INIT(nocodes)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_dummy)
+MOD_LOAD(nocodes)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_dummy)
+MOD_UNLOAD(nocodes)
 {
 	return MOD_SUCCESS;
 }
