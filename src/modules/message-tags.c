@@ -216,9 +216,6 @@ int client_accepts_tag(const char *token, aClient *acptr)
 	if (!acptr || IsServer(acptr) || !MyConnect(acptr))
 		return 1;
 
-	if (!HasCapability(acptr, "message-tags"))
-		return 0; /* easy :) */
-
 	// TODO: move to message tag API ;)
 	if (!strcmp(token, "msgid"))
 		return 1;
