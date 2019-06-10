@@ -303,7 +303,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	FLAGS_LOCAL      0x0800	/* set for local clients */
 #define	FLAGS_GOTID      0x1000	/* successful ident lookup achieved */
 #define	FLAGS_DOID       0x2000	/* I-lines say must use ident return */
-#define	FLAGS_NONL       0x4000	/* No \n in buffer */
 #define FLAGS_NCALL      0x8000 /* Next call (don't ask...) */
 #define FLAGS_ULINE      0x10000	/* User/server is considered U-lined */
 #define FLAGS_SQUIT      0x20000	/* Server has been /squit by an oper */
@@ -427,7 +426,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS); Debug((DEBUG_DEBUG, "SetAccess(%s)", (x)->name))
 #define SetOutgoing(x)		do { x->flags |= FLAGS_OUTGOING; } while(0)
 #define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
-#define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
 #define IsDCCNotice(x)		((x)->flags & FLAGS_DCCNOTICE)
 #define SetDCCNotice(x)		do { x->flags |= FLAGS_DCCNOTICE; } while(0)
 #define SetRegNick(x)		((x)->umodes & UMODE_REGNICK)

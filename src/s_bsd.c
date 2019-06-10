@@ -1353,7 +1353,8 @@ void read_packet(int fd, int revents, void *data)
 		cptr->local->lasttime = now;
 		if (cptr->local->lasttime > cptr->local->since)
 			cptr->local->since = cptr->local->lasttime;
-		cptr->flags &= ~(FLAGS_PINGSENT | FLAGS_NONL);
+		/* FIXME: Is this correct? I have my doubts. */
+		cptr->flags &= ~FLAGS_PINGSENT;
 
 		processdata = 1;
 		for (h = Hooks[HOOKTYPE_RAWPACKET_IN]; h; h = h->next)
