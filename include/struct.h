@@ -288,43 +288,34 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define IsSynched(x)	(x->serv->flags.synced)
 #define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
 
-/* client->flags (32 bits): 28 used, 4 free */
-#define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
-#define	FLAGS_DEADSOCKET 0x0002	/* Local socket is dead--Exiting soon */
-#define	FLAGS_KILLED     0x0004	/* Prevents "QUIT" from being sent for this */
-#define FLAGS_IPV6       0x0008 /* For quick checking */
-#define FLAGS_OUTGOING   0x0010 /* outgoing connection, do not touch cptr->listener->clients */
-#define	FLAGS_CLOSING    0x0020	/* set when closing to suppress errors */
-#define	FLAGS_LISTEN     0x0040	/* used to mark clients which we listen() on */
-#define	FLAGS_DOINGDNS	 0x0100	/* client is waiting for a DNS response */
-#define	FLAGS_AUTH       0x0200	/* client is waiting on rfc931 response */
-#define	FLAGS_WRAUTH	 0x0400	/* set if we havent writen to ident server */
-#define	FLAGS_LOCAL      0x0800	/* set for local clients */
-#define	FLAGS_GOTID      0x1000	/* successful ident lookup achieved */
-#define	FLAGS_DOID       0x2000	/* I-lines say must use ident return */
-#define FLAGS_NCALL      0x8000 /* Next call (don't ask...) */
-#define FLAGS_ULINE      0x10000	/* User/server is considered U-lined */
-#define FLAGS_SQUIT      0x20000	/* Server has been /squit by an oper */
-#define FLAGS_PROTOCTL   0x40000	/* Received a PROTOCTL message */
-#define FLAGS_PING       0x80000
-#define FLAGS_EAUTH      0x100000
-#define FLAGS_NETINFO    0x200000
-//0x400000 was hybnotice
-#define FLAGS_QUARANTINE 0x800000
-//0x1000000 unused (was ziplinks)
-#define FLAGS_DCCNOTICE  0x2000000 /* Has the user seen a notice on how to use DCCALLOW already? */
-#define FLAGS_SHUNNED    0x4000000
-#define FLAGS_VIRUS      0x8000000 /* tagged by spamfilter */
-#define FLAGS_SSL        0x10000000
-#define FLAGS_NOFAKELAG  0x20000000 /* Exception from fake lag */
-#define FLAGS_DCCBLOCK   0x40000000 /* Block all DCC send requests */
-#define FLAGS_MAP        0x80000000	/* Show this entry in /map */
-/* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
-
-/* Dec 26th, 1997 - having a go at
- * splitting flags into flags and umodes
- * -DuffJ
- */
+/* client->flags */
+#define	FLAGS_PINGSENT   0x00000001	/* Unreplied ping sent */
+#define	FLAGS_DEADSOCKET 0x00000002	/* Local socket is dead--Exiting soon */
+#define	FLAGS_KILLED     0x00000004	/* Prevents "QUIT" from being sent for this */
+#define FLAGS_IPV6       0x00000008	/* For quick checking */
+#define FLAGS_OUTGOING   0x00000010	/* Outgoing connection, do not touch cptr->listener->clients */
+#define	FLAGS_CLOSING    0x00000020	/* Set when closing to suppress errors */
+#define	FLAGS_LISTEN     0x00000040	/* Used to mark clients which we listen() on */
+#define	FLAGS_DOINGDNS	 0x00000080	/* Client is waiting for a DNS response */
+#define	FLAGS_AUTH       0x00000100	/* Client is waiting on rfc931 response */
+#define	FLAGS_WRAUTH	 0x00000200	/* Set if we havent writen to ident server */
+#define	FLAGS_LOCAL      0x00000400	/* Set for local clients */
+#define	FLAGS_GOTID      0x00000800	/* Successful ident lookup achieved */
+#define	FLAGS_DOID       0x00001000	/* Allow block { } says we should do an ident check */
+#define FLAGS_NCALL      0x00002000	/* Next call (don't ask...) */
+#define FLAGS_ULINE      0x00004000	/* User/server is considered U-lined */
+#define FLAGS_SQUIT      0x00008000	/* Server has been /SQUIT by an oper */
+#define FLAGS_PROTOCTL   0x00010000	/* Received a PROTOCTL message */
+#define FLAGS_EAUTH      0x00020000	/* Server authenticated via PROTOCTL EAUTH */
+#define FLAGS_NETINFO    0x00040000	/* Received a NETINFO message */
+#define FLAGS_QUARANTINE 0x00080000	/* Quarantined server */
+#define FLAGS_DCCNOTICE  0x00100000	/* Has the user seen a notice on how to use DCCALLOW already? */
+#define FLAGS_SHUNNED    0x00200000	/* Connection is shunned */
+#define FLAGS_VIRUS      0x00400000	/* Tagged by spamfilter */
+#define FLAGS_SSL        0x00800000	/* Connection is using SSL/TLS */
+#define FLAGS_NOFAKELAG  0x01000000	/* Exemption from fake lag */
+#define FLAGS_DCCBLOCK   0x02000000	/* Block all DCC send requests */
+#define FLAGS_MAP        0x04000000	/* Show this entry in /MAP */
 
 #define SNO_DEFOPER "+kscfvGqobS"
 #define SNO_DEFUSER "+ks"
