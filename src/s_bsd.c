@@ -1416,7 +1416,6 @@ void process_clients(void)
 /* When auth is finished, go back and parse all prior input. */
 void finish_auth(aClient *acptr)
 {
-	SetAccess(acptr);
 }
 
 /** Returns 4 if 'str' is a valid IPv4 address

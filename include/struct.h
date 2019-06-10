@@ -296,7 +296,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define FLAGS_OUTGOING   0x0010 /* outgoing connection, do not touch cptr->listener->clients */
 #define	FLAGS_CLOSING    0x0020	/* set when closing to suppress errors */
 #define	FLAGS_LISTEN     0x0040	/* used to mark clients which we listen() on */
-#define	FLAGS_CHKACCESS  0x0080	/* ok to check clients access if set */
 #define	FLAGS_DOINGDNS	 0x0100	/* client is waiting for a DNS response */
 #define	FLAGS_AUTH       0x0200	/* client is waiting on rfc931 response */
 #define	FLAGS_WRAUTH	 0x0400	/* set if we havent writen to ident server */
@@ -383,7 +382,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	SendWallops(x)		(!IsMe(x) && IsPerson(x) && ((x)->umodes & UMODE_WALLOP))
 #define	SendServNotice(x)	(((x)->user) && ((x)->user->snomask & SNO_SNOTICE))
 #define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
-// #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
 #define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
 #define	IsDead(x)		((x)->flags & FLAGS_DEADSOCKET)
 #define GotProtoctl(x)		((x)->flags & FLAGS_PROTOCTL)
@@ -423,7 +421,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	SetWallops(x)  		((x)->umodes |= UMODE_WALLOP)
 #define	SetDNS(x)		((x)->flags |= FLAGS_DOINGDNS)
 #define	DoingDNS(x)		((x)->flags & FLAGS_DOINGDNS)
-#define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS); Debug((DEBUG_DEBUG, "SetAccess(%s)", (x)->name))
 #define SetOutgoing(x)		do { x->flags |= FLAGS_OUTGOING; } while(0)
 #define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
 #define IsDCCNotice(x)		((x)->flags & FLAGS_DCCNOTICE)
@@ -441,7 +438,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	ClearWallops(x)		((x)->umodes &= ~UMODE_WALLOP)
 #define	ClearDNS(x)		((x)->flags &= ~FLAGS_DOINGDNS)
 #define	ClearAuth(x)		((x)->flags &= ~FLAGS_AUTH)
-#define	ClearAccess(x)		((x)->flags &= ~FLAGS_CHKACCESS)
 #define ClearHidden(x)          ((x)->umodes &= ~UMODE_HIDE)
 #define ClearHideOper(x)    ((x)->umodes &= ~UMODE_HIDEOPER)
 

@@ -1682,7 +1682,6 @@ int check_client(aClient *cptr, char *username)
 	struct hostent *hp = NULL;
 	int  i;
 	
-	ClearAccess(cptr);
 	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]", cptr->name, cptr->local->sockhost));
 
 	if (check_init(cptr, sockname, sizeof(sockname)))
