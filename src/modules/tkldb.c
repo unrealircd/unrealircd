@@ -311,9 +311,12 @@ int write_tkldb(void)
 	{
 		for (tkl = tklines[index]; tkl; tkl = tkl->next)
 		{
-			// Local spamfilter means it was added through the conf or is built-in, so let's not even write those
-			if ((tkl->type & TKL_SPAMF) && !(tkl->type & TKL_GLOBAL)) // Also need to skip this here
-				continue;
+			// Also need to skip certain *-Lines here
+			if(!(tkl->type & TKL_GLOBAL))
+			{
+				if ((tkl->type & TKL_SPAMF) || (tkl->type & TKL_NICK))
+					continue;
+			}
 			if (!write_tkline(fd, tmpfname, tkl))
 				return 0;
 		}
@@ -581,6 +584,13 @@ int read_tkldb(void)
 			}
 		}
 
+		// v1000 still stored local Q-Lines and spamfilters, but those are either added through a .conf or already built-in
+		if (strchr("qf", tklflag))
+		{
+			FreeTKLRead();
+			continue;
+		}
+
 		// Don't add the TKL if it's expired
 		if (expire_at != 0 && expire_at <= TStime())
 		{
@@ -595,10 +605,6 @@ int read_tkldb(void)
 
 		ircsnprintf(setTime, sizeof(setTime), "%li", set_at);
 		ircsnprintf(expTime, sizeof(expTime), "%li", expire_at);
-
-		// v1000 still stored local Q-Lines and spamfilters, but those are either added through a .conf or already built-in
-		if (tklflag == 'q' || (spamf && tklflag == 'f'))
-			doadd = 0;
 
 		// Build TKL args
 		// All of these except [8] are the same for all (only odd one is spamfilter)
@@ -615,7 +621,7 @@ int read_tkldb(void)
 		{
 			parc = 12;
 			// Make sure this particular *-Line isn't already active somehow
-			for (tkl = tklines[tkl_hash(tklflag)]; doadd && tkl; tkl = tkl->next)
+			for (tkl = tklines[tkl_hash(tklflag)]; tkl; tkl = tkl->next)
 			{
 				// We can assume it's the same spamfilter if all of the following match: spamfilter expression, targets, TKL reason, action, matchtype and TKL duration
 				if (!strcmp(tkl->ptr.spamf->expr->str, spamf_expr) && !strcmp(tkl->usermask, usermask) && !strcmp(tkl->ptr.spamf->tkl_reason, spamf_tkl_reason) &&
