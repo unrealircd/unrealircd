@@ -22,7 +22,8 @@ Simply download the UnrealIRCd Windows version from www.unrealircd.org
 Alternatively you can compile UnrealIRCd for Windows yourself. However this is not straightforward and thus not recommended.
 
 #### *BSD/Linux/macOS
-Do the following steps as a regular user, [do NOT run as root](https://www.unrealircd.org/docs/Do_not_run_as_root).
+Do the following steps under a separate account for running UnrealIRCd,
+[do NOT run as root](https://www.unrealircd.org/docs/Do_not_run_as_root).
 
 ### Step 1: Compile the IRCd
 
