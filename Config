@@ -434,6 +434,14 @@ if [ -n "$CLEAN" ] ; then
 	rm -f config.cache
 fi
 
+if [ "`id -u`" = "0" ]; then
+	echo "ERROR: You cannot build or run UnrealIRCd as root"
+	echo ""
+	echo "Please create a separate account for building and running UnrealIRCd."
+	echo "See https://www.unrealircd.org/docs/Do_not_run_as_root"
+	exit
+fi
+
 clear
 
     if [ -f "doc/Config.header" -a -z "$NOINTRO" ] ; then
