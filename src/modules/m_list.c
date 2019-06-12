@@ -48,7 +48,7 @@ MOD_TEST(m_list)
 MOD_INIT(m_list)
 {
 	CommandAdd(modinfo->handle, MSG_LIST, m_list, MAXPARA, M_USER);
-	EventAddEx(modinfo->handle, "send_queued_list_data", 1, 0, send_queued_list_data, NULL);
+	EventAdd(modinfo->handle, "send_queued_list_data", 1, 0, send_queued_list_data, NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

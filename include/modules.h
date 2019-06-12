@@ -638,9 +638,7 @@ extern MODVAR Callback *Callbacks[MAXCALLBACKS], *RCallbacks[MAXCALLBACKS];
 extern MODVAR Efunction *Efunctions[MAXEFUNCTIONS];
 extern MODVAR ClientCapability *clicaps;
 
-#define EventAdd(name, every, howmany, event, data) EventAddEx(NULL, name, every, howmany, event, data)
-extern Event   *EventAddEx(Module *, char *name, long every, long howmany,
-                  vFP event, void *data);
+extern Event   *EventAdd(Module *, char *name, long every, long howmany, vFP event, void *data);
 extern Event   *EventDel(Event *event);
 extern Event   *EventMarkDel(Event *event);
 extern Event   *EventFind(char *name);

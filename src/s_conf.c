@@ -10917,7 +10917,7 @@ void special_delayed_unloading(void)
 			{
 			    config_warn("Delaying module unloading of '%s' due to moddata", m->header->name);
 			    m->flags |= MODFLAG_DELAYED;
-			    EventAddEx(NULL, "e_unload_module_delayed", 5, 1, e_unload_module_delayed, m->header->name);
+			    EventAdd(NULL, "e_unload_module_delayed", 5, 1, e_unload_module_delayed, m->header->name);
 			}
 		}
 	}

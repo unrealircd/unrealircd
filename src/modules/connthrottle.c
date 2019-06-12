@@ -113,7 +113,7 @@ MOD_INIT(connthrottle)
 MOD_LOAD(connthrottle)
 {
 	rehash_read_settings();
-	EventAddEx(modinfo->handle, "connthrottle_evt", 1, 0, connthrottle_evt, NULL);
+	EventAdd(modinfo->handle, "connthrottle_evt", 1, 0, connthrottle_evt, NULL);
 	return MOD_SUCCESS;
 }
 

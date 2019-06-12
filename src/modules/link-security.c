@@ -81,7 +81,7 @@ MOD_LOAD(link_security)
 	cap.parameter = link_security_capability_parameter;
 	ClientCapabilityAdd(modinfo->handle, &cap, NULL);
 
-	EventAddEx(modinfo->handle, "checklinksec", 2, 0, checklinksec, NULL);
+	EventAdd(modinfo->handle, "checklinksec", 2, 0, checklinksec, NULL);
 	checklinksec(NULL);
 	return MOD_SUCCESS;
 }

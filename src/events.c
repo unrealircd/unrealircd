@@ -56,7 +56,7 @@ void	UnlockEventSystem(void)
 }
 
 
-Event	*EventAddEx(Module *module, char *name, long every, long howmany,
+Event	*EventAdd(Module *module, char *name, long every, long howmany,
 		  vFP event, void *data)
 {
 	Event *newevent;
@@ -208,14 +208,14 @@ void	SetupEvents(void)
 	LockEventSystem();
 
 	/* Start events */
-	EventAddEx(NULL, "tunefile", 300, 0, save_tunefile, NULL);
-	EventAddEx(NULL, "garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
-	EventAddEx(NULL, "loop", 0, 0, loop_event, NULL);
-	EventAddEx(NULL, "unrealdns_removeoldrecords", 15, 0, unrealdns_removeoldrecords, NULL);
-	EventAddEx(NULL, "check_pings", 1, 0, check_pings, NULL);
-	EventAddEx(NULL, "check_deadsockets", 1, 0, check_deadsockets, NULL);
-	EventAddEx(NULL, "check_unknowns", 1, 0, check_unknowns, NULL);
-	EventAddEx(NULL, "try_connections", 2, 0, try_connections, NULL);
+	EventAdd(NULL, "tunefile", 300, 0, save_tunefile, NULL);
+	EventAdd(NULL, "garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
+	EventAdd(NULL, "loop", 0, 0, loop_event, NULL);
+	EventAdd(NULL, "unrealdns_removeoldrecords", 15, 0, unrealdns_removeoldrecords, NULL);
+	EventAdd(NULL, "check_pings", 1, 0, check_pings, NULL);
+	EventAdd(NULL, "check_deadsockets", 1, 0, check_deadsockets, NULL);
+	EventAdd(NULL, "check_unknowns", 1, 0, check_unknowns, NULL);
+	EventAdd(NULL, "try_connections", 2, 0, try_connections, NULL);
 
 	UnlockEventSystem();
 }

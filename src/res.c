@@ -183,7 +183,7 @@ int optmask;
 	}
 
 	ares_set_socket_callback(resolver_channel, unrealdns_sock_create_cb, NULL);
-	unrealdns_timeout_hdl = EventAddEx(NULL, "unrealdns_timeout", 0, 0, unrealdns_timeout, NULL);
+	unrealdns_timeout_hdl = EventAdd(NULL, "unrealdns_timeout", 0, 0, unrealdns_timeout, NULL);
 }
 
 void reinit_resolver(aClient *sptr)

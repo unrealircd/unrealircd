@@ -382,7 +382,7 @@ void url_init(void)
 	multihandle = curl_multi_init();
 
 	curl_multi_setopt(multihandle, CURLMOPT_SOCKETFUNCTION, url_socket_cb);
-	curl_socket_timeout_hdl = EventAddEx(NULL, "curl_socket_timeout", 1, 0, curl_socket_timeout, NULL);
+	curl_socket_timeout_hdl = EventAdd(NULL, "curl_socket_timeout", 1, 0, curl_socket_timeout, NULL);
 }
 
 /*

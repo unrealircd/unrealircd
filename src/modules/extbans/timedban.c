@@ -91,7 +91,7 @@ ExtbanInfo extban;
 		return MOD_FAILED;
 	}
                 
-	EventAddEx(modinfo->handle, "timedban_timeout", TIMEDBAN_TIMER, 0, timedban_timeout, NULL);
+	EventAdd(modinfo->handle, "timedban_timeout", TIMEDBAN_TIMER, 0, timedban_timeout, NULL);
 
 	return MOD_SUCCESS;
 }

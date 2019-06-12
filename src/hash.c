@@ -737,7 +737,7 @@ long v;
 		if (v > 5)
 			v = 5; /* accuracy, please */
 	}
-	EventAddEx(NULL, "bucketcleaning", v, 0, e_clean_out_throttling_buckets, NULL);
+	EventAdd(NULL, "bucketcleaning", v, 0, e_clean_out_throttling_buckets, NULL);
 }
 
 int	hash_throttling(char *ip)

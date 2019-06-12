@@ -167,9 +167,9 @@ MOD_LOAD(reputation)
 	load_db();
 	if (reputation_starttime == 0)
 		reputation_starttime = TStime();
-	EventAddEx(ModInf.handle, "delete_old_records", DELETE_OLD_EVERY, 0, delete_old_records, NULL);
-	EventAddEx(ModInf.handle, "add_scores", BUMP_SCORE_EVERY, 0, add_scores, NULL);
-	EventAddEx(ModInf.handle, "save_db", SAVE_DB_EVERY, 0, save_db_evt, NULL);
+	EventAdd(ModInf.handle, "delete_old_records", DELETE_OLD_EVERY, 0, delete_old_records, NULL);
+	EventAdd(ModInf.handle, "add_scores", BUMP_SCORE_EVERY, 0, add_scores, NULL);
+	EventAdd(ModInf.handle, "save_db", SAVE_DB_EVERY, 0, save_db_evt, NULL);
 	return MOD_SUCCESS;
 }
 

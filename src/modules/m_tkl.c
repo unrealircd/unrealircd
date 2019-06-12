@@ -145,7 +145,7 @@ MOD_INIT(m_tkl)
 /* Is first run when server is 100% ready */
 MOD_LOAD(m_tkl)
 {
-	EventAddEx(TklModInfo->handle, "tklexpire", 5, 0, tkl_check_expire, NULL);
+	EventAdd(TklModInfo->handle, "tklexpire", 5, 0, tkl_check_expire, NULL);
 	return MOD_SUCCESS;
 }
 

@@ -164,7 +164,7 @@ MOD_INIT(floodprot)
 
 MOD_LOAD(floodprot)
 {
-	EventAddEx(ModInfo->handle, "modef_event", 10, 0, modef_event, NULL);
+	EventAdd(ModInfo->handle, "modef_event", 10, 0, modef_event, NULL);
 	floodprot_rehash_complete();
 	return MOD_SUCCESS;
 }
