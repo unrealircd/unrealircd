@@ -113,6 +113,7 @@ typedef enum ModuleObjectType {
 	MOBJ_VALIDATOR = 15,
 	MOBJ_CLICAP = 16,
 	MOBJ_MTAG = 17,
+	MOBJ_HISTORY_BACKEND = 18,
 } ModuleObjectType;
 
 typedef struct {
@@ -401,7 +402,7 @@ typedef struct _clientcapability {
 	char *(*parameter)(aClient *);           /**< CAP parameters. Note: parameter may be NULL. [optional] */
 	MessageTagHandler *mtag_handler;         /**< For reverse dependency */
 	Module *owner;                           /**< Module introducing this CAP. */
-        char unloaded;                           /**< Internal flag to indicate module is being unloaded */
+	char unloaded;                           /**< Internal flag to indicate module is being unloaded */
 } ClientCapability;
 
 typedef struct {
@@ -422,7 +423,7 @@ struct _messagetaghandler {
 	int (*is_ok)(aClient *, char *, char *);    /**< Verify syntax and access rights */
 	Module *owner;                              /**< Module introducing this CAP. */
 	ClientCapability *clicap_handler;           /**< Client capability handler associated with this */
-        char unloaded;                              /**< Internal flag to indicate module is being unloaded */
+	char unloaded;                              /**< Internal flag to indicate module is being unloaded */
 };
 
 /** The struct used to register a message tag handler.
@@ -434,6 +435,37 @@ typedef struct {
 	int (*is_ok)(aClient *, char *, char *);
 	ClientCapability *clicap_handler;
 } MessageTagHandlerInfo;
+
+/** Filter for history get requests */
+typedef struct _history_filter HistoryFilter;
+struct _history_filter {
+    int last_lines;
+    int last_seconds;
+};
+
+/** History Backend */
+typedef struct _history_backend HistoryBackend;
+struct _history_backend {
+	HistoryBackend *prev, *next;
+	char *name;                                   /**< The name of the history backend (eg: "mem") */
+	int (*history_add)(char *object, MessageTag *mtags, char *line); /**< Add to history */
+	int (*history_del)(char *object, int max_lines, long max_time); /**< Delete history, based on lines/time */
+	int (*history_request)(aClient *acptr, char *object, HistoryFilter *filter);  /**< Request history */
+	int (*history_destroy)(char *object);  /**< Destroy history of this object completely */
+	Module *owner;                                /**< Module introducing this */
+	char unloaded;                                /**< Internal flag to indicate module is being unloaded */
+};
+
+/** The struct used to register a history backend.
+ * For documentation, see the History Backend struct above.
+ */
+typedef struct {
+	char *name;
+	int (*history_add)(char *object, MessageTag *mtags, char *line);
+	int (*history_del)(char *object, int max_lines, long max_time);
+	int (*history_request)(aClient *acptr, char *object, HistoryFilter *filter);
+	int (*history_destroy)(char *object);
+} HistoryBackendInfo;
 
 struct _irchook {
 	Hook *prev, *next;
@@ -514,6 +546,7 @@ typedef struct _ModuleObject {
 		OperClassValidator *validator;
 		ClientCapability *clicap;
 		MessageTagHandler *mtag;
+		HistoryBackend *history_backend;
 	} object;
 } ModuleObject;
 
@@ -653,6 +686,10 @@ extern void ClientCapabilityDel(ClientCapability *clicap);
 extern MessageTagHandler *MessageTagHandlerFind(const char *token);
 extern MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *mreq);
 extern void MessageTagHandlerDel(MessageTagHandler *m);
+
+extern HistoryBackend *HistoryBackendFind(const char *name);
+extern HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq);
+extern void HistoryBackendDel(HistoryBackend *m);
 
 #ifndef GCC_TYPECHECKING
 #define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL)

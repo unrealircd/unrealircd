@@ -35,7 +35,7 @@ R_MODULES= \
 	nocolor.so stripcolor.so issecure.so permanent.so floodprot.so \
 	noctcp.so link.so censor.so delayjoin.so noknock.so noinvite.so operonly.so \
 	nonotice.so regonly.so nonickchange.so nokick.so regonlyspeak.so \
-	secureonly.so
+	secureonly.so history.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -123,3 +123,7 @@ regonlyspeak.so: regonlyspeak.c $(INCLUDES)
 secureonly.so: secureonly.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o secureonly.so secureonly.c
+
+history.so: history.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o history.so history.c

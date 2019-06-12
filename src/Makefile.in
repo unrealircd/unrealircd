@@ -29,7 +29,7 @@ OBJS=res.o s_bsd.o auth.o aln.o channel.o cloak.o crule.o dbuf.o \
 	ssl.o s_user.o scache.o send.o support.o umodes.o \
 	version.o whowas.o random.o extcmodes.o moddata.o uid.o \
 	extbans.o api-isupport.o api-command.o api-clicap.o api-mtag.o \
-	md5.o crypt_blowfish.o updconf.o crashreport.o \
+	api-history-backend.o md5.o crypt_blowfish.o updconf.o crashreport.o \
 	openssl_hostname_validation.o $(URL)
 
 SRC=$(OBJS:%.o=%.c)
@@ -237,6 +237,9 @@ api-clicap.o: api-clicap.c $(INCLUDES)
 
 api-mtag.o: api-mtag.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-mtag.c
+
+api-history-backend.o: api-history-backend.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-history-backend.c
 
 crypt_blowfish.o: crypt_blowfish.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c crypt_blowfish.c

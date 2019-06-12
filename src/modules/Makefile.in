@@ -63,7 +63,7 @@ R_MODULES= \
 	antirandom.so hideserver.so jumpserver.so \
 	m_ircops.so m_staff.so nocodes.so \
 	charsys.so antimixedutf8.so authprompt.so m_sinfo.so \
-	reputation.so connthrottle.so \
+	reputation.so connthrottle.so history_backend_mem.so \
 	tkldb.so \
 	message-tags.so batch.so \
 	account-tag.so labeled-response.so link-security.so \
@@ -541,6 +541,10 @@ reputation.so: reputation.c $(INCLUDES)
 connthrottle.so: connthrottle.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o connthrottle.so connthrottle.c
+
+history_backend_mem.so: history_backend_mem.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o history_backend_mem.so history_backend_mem.c
 
 tkldb.so: tkldb.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

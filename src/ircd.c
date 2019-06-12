@@ -1454,7 +1454,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
 
-	fix_timers(); /* Fix timers AFTER reading tune file AND timesynch */
+	fix_timers();
 	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	init_throttling_hash();

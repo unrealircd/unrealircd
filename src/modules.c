@@ -701,6 +701,14 @@ void FreeModObj(ModuleObject *obj, Module *m)
 	else if (obj->type == MOBJ_MTAG) {
 		MessageTagHandlerDel(obj->object.mtag);
 	}
+	else if (obj->type == MOBJ_HISTORY_BACKEND) {
+		HistoryBackendDel(obj->object.history_backend);
+	}
+	else
+	{
+		ircd_log(LOG_ERROR, "FreeModObj() called for unknown object");
+		abort();
+	}
 }
 
 void Unload_all_loaded_modules(void)

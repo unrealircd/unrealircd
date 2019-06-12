@@ -1408,3 +1408,75 @@ char *mtags_to_string_default_handler(MessageTag *m, aClient *acptr)
 {
 	return NULL;
 }
+
+/** my_timegm: mktime()-like function which will use GMT/UTC.
+ * Strangely enough there is no standard function for this.
+ * On some *NIX OS's timegm() may be available, sometimes only
+ * with the help of certain #define's which we may or may
+ * not do.
+ * Windows provides _mkgmtime().
+ * In the other cases the man pages and basically everyone
+ * suggests to set TZ to empty prior to calling mktime and
+ * restoring it after the call. Whut? How ridiculous is that?
+ */
+time_t my_timegm(struct tm *tm)
+{
+#if HAVE_TIMEGM
+	return timegm(tm);
+#elif defined(_WIN32)
+	return _mkgmtime(tm);
+#else
+	time_t ret;
+	char *tz = NULL;
+
+	safestrdup(tz, getenv("TZ"));
+	setenv("TZ", "", 1);
+	ret = mktime(tm);
+	if (tz)
+	{
+		setenv("TZ", tz, 1);
+		MyFree(tz);
+	} else {
+		unsetenv("TZ");
+	}
+	tzset();
+
+	return ret;
+#endif
+}
+
+/** Convert an ISO 8601 timestamp ('server-time') to UNIX time */
+time_t server_time_to_unix_time(const char *tbuf)
+{
+	struct tm tm;
+	int dontcare = 0;
+	time_t ret;
+
+	if (strlen(tbuf) < 20)
+	{
+		ircd_log(LOG_ERROR, "[BUG] server_time_to_unix_time() failed for short item '%s'", tbuf);
+		return 0;
+	}
+
+	memset(&tm, 0, sizeof(tm));
+	ret = sscanf(tbuf, "%d-%d-%dT%d:%d:%d.%dZ",
+		&tm.tm_year,
+		&tm.tm_mon,
+		&tm.tm_mday,
+		&tm.tm_hour,
+		&tm.tm_min,
+		&tm.tm_sec,
+		&dontcare);
+
+	if (ret != 7)
+	{
+		ircd_log(LOG_ERROR, "[BUG] server_time_to_unix_time() failed for '%s'", tbuf);
+		return 0;
+	}
+
+	tm.tm_year -= 1900;
+	tm.tm_mon -= 1;
+
+	ret = my_timegm(&tm);
+	return ret;
+}
