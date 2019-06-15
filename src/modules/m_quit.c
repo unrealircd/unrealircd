@@ -77,7 +77,7 @@ CMD_FUNC(m_quit)
 		if (IsVirus(sptr))
 			return exit_client(cptr, sptr, sptr, recv_mtags, "Client exited");
 
-		n = dospamfilter(sptr, comment, SPAMF_QUIT, NULL, 0, NULL);
+		n = run_spamfilter(sptr, comment, SPAMF_QUIT, NULL, 0, NULL);
 		if (n == FLUSH_BUFFER)
 			return n;
 		if (n < 0)

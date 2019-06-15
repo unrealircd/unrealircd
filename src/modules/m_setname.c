@@ -89,7 +89,7 @@ CMD_FUNC(m_setname)
 		/* set the new name before we check, but don't send to servers unless it is ok */
 		strcpy(sptr->info, parv[1]);
 		spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
-		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
+		xx = run_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
 		if (xx < 0)
 		{
 			if (xx != FLUSH_BUFFER)

@@ -716,7 +716,7 @@ CMD_FUNC(m_nick)
 	{
 		int xx;
 		spamfilter_build_user_string(spamfilter_user, nick, sptr);
-		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
+		xx = run_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
 		if (xx < 0)
 			return xx;
 	}
@@ -1370,7 +1370,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 *  -- Syzop
 		 */
 		spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
-		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl);
+		xx = run_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl);
 		if ((xx < 0) && (xx != -5))
 			return xx;
 
@@ -1610,7 +1610,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 *       virus-users. So be carefull with the order. -- Syzop
 		 */
 		if (savetkl)
-			return dospamfilter_viruschan(sptr, savetkl, SPAMF_USER); /* [RETURN!] */
+			return join_viruschan(sptr, savetkl, SPAMF_USER); /* [RETURN!] */
 
 		/* Force the user to join the given chans -- codemastr */
 		tlds = Find_tld(sptr);

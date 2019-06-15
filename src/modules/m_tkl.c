@@ -69,8 +69,8 @@ void _tkl_stats(aClient *cptr, int type, char *para);
 void _tkl_synch(aClient *sptr);
 CMD_FUNC(_m_tkl);
 int _place_host_ban(aClient *sptr, int action, char *reason, long duration);
-int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
-int _dospamfilter_viruschan(aClient *sptr, aTKline *tk, int type);
+int _run_spamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
+int _join_viruschan(aClient *sptr, aTKline *tk, int type);
 void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr);
 int _match_user(char *rmask, aClient *acptr, int options);
 int tkl_ip_hash(char *ip);
@@ -123,8 +123,8 @@ MOD_TEST(m_tkl)
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_SYNCH, _tkl_synch);
 	EfunctionAdd(modinfo->handle, EFUNC_M_TKL, _m_tkl);
 	EfunctionAdd(modinfo->handle, EFUNC_PLACE_HOST_BAN, _place_host_ban);
-	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER, _dospamfilter);
-	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER_VIRUSCHAN, _dospamfilter_viruschan);
+	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER, _run_spamfilter);
+	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER_VIRUSCHAN, _join_viruschan);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SPAMFILTER_BUILD_USER_STRING, _spamfilter_build_user_string);
 	EfunctionAdd(modinfo->handle, EFUNC_MATCH_USER, _match_user);
 	return MOD_SUCCESS;
@@ -1570,7 +1570,7 @@ void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr)
  * nick!user@host:realname ban).
  * Written by: Syzop
  * Assumes: only call for clients, possible assume on local clients [?]
- * Return values: see dospamfilter()
+ * Return values: see run_spamfilter()
  */
 int _find_spamfilter_user(aClient *sptr, int flags)
 {
@@ -1580,7 +1580,7 @@ int _find_spamfilter_user(aClient *sptr, int flags)
 		return 0;
 
 	spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
-	return dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, flags, NULL);
+	return run_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, flags, NULL);
 }
 
 int spamfilter_check_users(aTKline *tk)
@@ -2727,7 +2727,7 @@ static int target_is_spamexcept(char *target)
 	return 0;
 }
 
-int _dospamfilter_viruschan(aClient *sptr, aTKline *tk, int type)
+int _join_viruschan(aClient *sptr, aTKline *tk, int type)
 {
 	char *xparv[3], chbuf[CHANNELLEN + 16], buf[2048];
 	aChannel *chptr;
@@ -2767,7 +2767,7 @@ int _dospamfilter_viruschan(aClient *sptr, aTKline *tk, int type)
 	return 0;
 }
 
-/** dospamfilter: executes the spamfilter onto the string.
+/** run_spamfilter: executes the spamfilter onto the string.
  * @param str		The text (eg msg text, notice text, part text, quit text, etc
  * @param type		The spamfilter type (SPAMF_*)
  * @param target	The target as a text string (can be NULL, eg: for away)
@@ -2780,7 +2780,7 @@ int _dospamfilter_viruschan(aClient *sptr, aTKline *tk, int type)
  * (like from m_message, m_part, m_quit, etc).
  */
  
-int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk)
+int _run_spamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk)
 {
 	aTKline *tk;
 	aTKline *winner_tk = NULL;
@@ -2970,7 +2970,7 @@ int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags
 			return -5;
 		}
 
-		dospamfilter_viruschan(sptr, tk, type);
+		join_viruschan(sptr, tk, type);
 		return -5;
 	} else
 		return place_host_ban(sptr, tk->ptr.spamf->action,

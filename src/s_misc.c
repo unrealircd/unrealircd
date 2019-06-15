@@ -963,7 +963,7 @@ static char buf[512], *i, *o;
 	return buf;
 }
 
-/** This is basically only used internally by dospamfilter()... */
+/** This is basically only used internally by run_spamfilter()... */
 char *cmdname_by_spamftarget(int target)
 {
 SpamfilterTargetTable *e;

@@ -103,7 +103,7 @@ CMD_FUNC(m_away)
 
 	if (MyClient(sptr))
 	{
-		n = dospamfilter(sptr, parv[1], SPAMF_AWAY, NULL, 0, NULL);
+		n = run_spamfilter(sptr, parv[1], SPAMF_AWAY, NULL, 0, NULL);
 			if (n < 0)
 		return n;
 	}

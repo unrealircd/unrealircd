@@ -510,7 +510,7 @@ int check_tkls(aClient *cptr)
 		return 0;
 
 	if (loop.do_bancheck_spamf_away && IsPerson(cptr) && cptr->user->away != NULL &&
-		dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
+		run_spamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
 		return 0;
 
 	return 1;
