@@ -1,7 +1,7 @@
 /*
  *   Unreal Internet Relay Chat Daemon, src/modules/m_tkl.c
  *   TKL Commands and TKL Layer
- *   (C) 1999-2006 The UnrealIRCd Team
+ *   (C) 1999-2019 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -749,30 +749,30 @@ int spamfilter_del_by_id(aClient *sptr, char *id)
  */
 CMD_FUNC(m_spamfilter)
 {
-int whattodo = 0;	/* 0 = add  1 = del */
-char mo[32], mo2[32];
-char *tkllayer[13] = {
-	me.name,	/*  0 server.name */
-	NULL,		/*  1 +|- */
-	"F",		/*  2 F   */
-	NULL,		/*  3 usermask (targets) */
-	NULL,		/*  4 hostmask (action) */
-	NULL,		/*  5 setby */
-	"0",		/*  6 expire_at */
-	"0",		/*  7 set_at */
-	"",			/*  8 tkl time */
-	"",			/*  9 tkl reason */
-	"",			/* 10 match method */
-	"",			/* 11 regex */
-	NULL
-};
-int targets = 0, action = 0;
-char targetbuf[64], actionbuf[2];
-char reason[512];
-int n;
-aMatch *m;
-int match_type = 0;
-char *err = NULL;
+	int whattodo = 0;	/* 0 = add  1 = del */
+	char mo[32], mo2[32];
+	char *tkllayer[13] = {
+		me.name,	/*  0 server.name */
+		NULL,		/*  1 +|- */
+		"F",		/*  2 F   */
+		NULL,		/*  3 usermask (targets) */
+		NULL,		/*  4 hostmask (action) */
+		NULL,		/*  5 setby */
+		"0",		/*  6 expire_at */
+		"0",		/*  7 set_at */
+		"",			/*  8 tkl time */
+		"",			/*  9 tkl reason */
+		"",			/* 10 match method */
+		"",			/* 11 regex */
+		NULL
+	};
+	int targets = 0, action = 0;
+	char targetbuf[64], actionbuf[2];
+	char reason[512];
+	int n;
+	aMatch *m;
+	int match_type = 0;
+	char *err = NULL;
 
 	if (IsServer(sptr))
 		return 0;
@@ -1549,7 +1549,7 @@ int _find_shun(aClient *cptr)
 
 char *SpamfilterMagicHost(char *i)
 {
-static char buf[256];
+	static char buf[256];
 
 	if (!strchr(i, ':'))
 		return i;
@@ -1574,7 +1574,7 @@ void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr)
  */
 int _find_spamfilter_user(aClient *sptr, int flags)
 {
-char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
+	char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 
 	if (ValidatePermissionsForPath("immune:server-ban:spamfilter",sptr,NULL,NULL,NULL))
 		return 0;
@@ -2680,7 +2680,7 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
  */
 aTKline *choose_winning_spamfilter(aTKline *one, aTKline *two)
 {
-int n;
+	int n;
 
 	/* First, see if the action field differs... */
 	if (one->ptr.spamf->action != two->ptr.spamf->action)
@@ -2717,7 +2717,7 @@ int n;
  */
 static int target_is_spamexcept(char *target)
 {
-SpamExcept *e;
+	SpamExcept *e;
 
 	for (e = iConf.spamexcept; e; e = e->next)
 	{
@@ -2729,9 +2729,9 @@ SpamExcept *e;
 
 int _dospamfilter_viruschan(aClient *sptr, aTKline *tk, int type)
 {
-char *xparv[3], chbuf[CHANNELLEN + 16], buf[2048];
-aChannel *chptr;
-int ret;
+	char *xparv[3], chbuf[CHANNELLEN + 16], buf[2048];
+	aChannel *chptr;
+	int ret;
 
 	snprintf(buf, sizeof(buf), "0,%s", SPAMFILTER_VIRUSCHAN);
 	xparv[0] = sptr->name;
@@ -2782,13 +2782,13 @@ int ret;
  
 int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk)
 {
-aTKline *tk;
-aTKline *winner_tk = NULL;
-char *str;
-int ret = -1;
+	aTKline *tk;
+	aTKline *winner_tk = NULL;
+	char *str;
+	int ret = -1;
 #ifdef SPAMFILTER_DETECTSLOW
-struct rusage rnow, rprev;
-long ms_past;
+	struct rusage rnow, rprev;
+	long ms_past;
 #endif
 
 	if (rettk)
