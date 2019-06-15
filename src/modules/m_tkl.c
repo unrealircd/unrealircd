@@ -1071,7 +1071,7 @@ aTKline *tkl_find_head(char type, char *hostmask, aTKline *def)
 	index = tkl_ip_hash_type(type);
 	if (index >= 0)
 	{
-		int index2 = tkl_ip_hash(hostmask);
+		index2 = tkl_ip_hash(hostmask);
 		if (index2 >= 0)
 		{
 			/* iterate tklines_ip_hash[index][index2] */
@@ -1158,7 +1158,7 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 	index = tkl_ip_hash_type(tkl_typetochar(type));
 	if (index >= 0)
 	{
-		int index2 = tkl_ip_hash(tkl->hostmask);
+		index2 = tkl_ip_hash(tkl->hostmask);
 		if (index2 >= 0)
 		{
 			AddListItem(tkl, tklines_ip_hash[index][index2]);
@@ -1182,7 +1182,7 @@ void _tkl_del_line(aTKline *tkl)
 	index = tkl_ip_hash_type(tkl_typetochar(tkl->type));
 	if (index >= 0)
 	{
-		int index2 = tkl_ip_hash(tkl->hostmask);
+		index2 = tkl_ip_hash(tkl->hostmask);
 		if (index2 >= 0)
 		{
 			DelListItem(tkl, tklines_ip_hash[index][index2]);
@@ -1215,9 +1215,10 @@ void _tkl_del_line(aTKline *tkl)
  * tkl_check_local_remove_shun:
  * removes shun from currently connected users affected by tmp.
  */
+// TODO / FIXME: audit this function, it looks crazy
 void _tkl_check_local_remove_shun(aTKline *tmp)
 {
-	long i1, i;
+	long i;
 	char *chost, *cname, *cip;
 	int is_ip;
 	aClient *acptr;
@@ -1225,7 +1226,7 @@ void _tkl_check_local_remove_shun(aTKline *tmp)
 	aTKline *tk;
 	int keep_shun;
 
-	for (i1 = 0; i1 <= 5; i1++)
+	for (i = 0; i <= 5; i++)
 	{
 		list_for_each_entry(acptr, &lclient_list, lclient_node)
 			if (MyClient(acptr) && IsShunned(acptr))
@@ -1481,9 +1482,7 @@ int _find_tkline_match(aClient *cptr, int skip_soft)
 int _find_shun(aClient *cptr)
 {
 	aTKline *lp;
-	char *chost, *cname, *cip;
 	ConfigItem_except *excepts;
-	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 	int match_type = 0;
 	Hook *hook;
 	int banned = 0;
@@ -1586,12 +1585,13 @@ char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 
 int spamfilter_check_users(aTKline *tk)
 {
-char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
-char buf[1024];
-int i, matches = 0;
-aClient *acptr;
+	char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
+	char buf[1024];
+	int matches = 0;
+	aClient *acptr;
 
 	list_for_each_entry_reverse(acptr, &lclient_list, lclient_node)
+	{
 		if (MyClient(acptr))
 		{
 			spamfilter_build_user_string(spamfilter_user, acptr->name, acptr);
@@ -1610,6 +1610,7 @@ aClient *acptr;
 			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, acptr, spamfilter_user, spamfilter_user, SPAMF_USER, NULL, tk);
 			matches++;
 		}
+	}
 
 	return matches;
 }
@@ -1975,38 +1976,39 @@ void _tkl_stats(aClient *cptr, int type, char *para)
 
 void tkl_synch_send_entry(aClient *sptr, aTKline *tkl)
 {
-	char typ = 0;
+	char typ;
 
-	if (tkl->type & TKL_GLOBAL)
+	if (!(tkl->type & TKL_GLOBAL))
+		return; /* nothing to sync */
+
+	typ = tkl_typetochar(tkl->type);
+
+	if ((tkl->type & TKL_SPAMF) && (sptr->local->proto & PROTO_TKLEXT2))
 	{
-		char typ = tkl_typetochar(tkl->type);
-		if ((tkl->type & TKL_SPAMF) && (sptr->local->proto & PROTO_TKLEXT2))
-		{
-			sendto_one(sptr, NULL, ":%s TKL + %c %s %s %s %li %li %li %s %s :%s", me.name,
-				   typ,
-				   tkl->usermask, tkl->hostmask, tkl->setby,
-				   tkl->expire_at, tkl->set_at,
-				   tkl->ptr.spamf->tkl_duration, tkl->ptr.spamf->tkl_reason,
-				   unreal_match_method_valtostr(tkl->ptr.spamf->expr->type),
-				   tkl->reason);
-		} else
-		if ((tkl->type & TKL_SPAMF) && (sptr->local->proto & PROTO_TKLEXT))
-		{
-			sendto_one(sptr, NULL, ":%s TKL + %c %s %s %s %li %li %li %s :%s", me.name,
-				   typ,
-				   tkl->usermask, tkl->hostmask, tkl->setby,
-				   tkl->expire_at, tkl->set_at,
-				   tkl->ptr.spamf->tkl_duration, tkl->ptr.spamf->tkl_reason,
-				   tkl->reason);
-		} else
-		{
-			/* All other types (non-spamfilter)... */
-			sendto_one(sptr, NULL, ":%s TKL + %c %s%s %s %s %li %li :%s", me.name,
-				   typ,
-				   (tkl->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
-				   *tkl->usermask ? tkl->usermask : "*", tkl->hostmask, tkl->setby,
-				   tkl->expire_at, tkl->set_at, tkl->reason);
-		}
+		sendto_one(sptr, NULL, ":%s TKL + %c %s %s %s %li %li %li %s %s :%s", me.name,
+			   typ,
+			   tkl->usermask, tkl->hostmask, tkl->setby,
+			   tkl->expire_at, tkl->set_at,
+			   tkl->ptr.spamf->tkl_duration, tkl->ptr.spamf->tkl_reason,
+			   unreal_match_method_valtostr(tkl->ptr.spamf->expr->type),
+			   tkl->reason);
+	} else
+	if ((tkl->type & TKL_SPAMF) && (sptr->local->proto & PROTO_TKLEXT))
+	{
+		sendto_one(sptr, NULL, ":%s TKL + %c %s %s %s %li %li %li %s :%s", me.name,
+			   typ,
+			   tkl->usermask, tkl->hostmask, tkl->setby,
+			   tkl->expire_at, tkl->set_at,
+			   tkl->ptr.spamf->tkl_duration, tkl->ptr.spamf->tkl_reason,
+			   tkl->reason);
+	} else
+	{
+		/* All other types (non-spamfilter)... */
+		sendto_one(sptr, NULL, ":%s TKL + %c %s%s %s %s %li %li :%s", me.name,
+			   typ,
+			   (tkl->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
+			   *tkl->usermask ? tkl->usermask : "*", tkl->hostmask, tkl->setby,
+			   tkl->expire_at, tkl->set_at, tkl->reason);
 	}
 }
 
@@ -2123,14 +2125,11 @@ CMD_FUNC(m_tkl_add)
 {
 	aTKline *tk;
 	int type;
-	int found = 0;
 	char gmt[256], gmt2[256];
 	TS expiry_1, setat_1, spamf_tklduration = 0;
 	MatchType spamf_match_method = MATCH_PCRE_REGEX; /* default */
 	char *reason = NULL, *timeret;
 	int softban = 0;
-	aTKline *head;
-	char *tkl_type_str;
 
 	/* we rely on servers to be failsafe.. */
 	if (!IsServer(sptr) && !IsMe(sptr))
@@ -2171,7 +2170,6 @@ CMD_FUNC(m_tkl_add)
 		return 0;
 	}
 
-	found = 0;
 	if ((type & TKL_SPAMF) && (parc >= 11))
 	{
 		if (parc >= 12)
@@ -2408,13 +2406,9 @@ CMD_FUNC(m_tkl_del)
 {
 	aTKline *tk;
 	int type;
-	int found = 0;
-	char gmt[256], gmt2[256];
-	TS expiry_1, setat_1, spamf_tklduration = 0;
-	MatchType spamf_match_method = MATCH_PCRE_REGEX; /* default */
+	char gmt[256];
 	char *reason = NULL, *timeret;
 	int softban = 0;
-	aTKline *head;
 	char *tkl_type_str;
 
 	if (!IsServer(sptr) && !IsMe(sptr))
