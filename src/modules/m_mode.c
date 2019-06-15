@@ -993,12 +993,7 @@ process_listmode:
 		case MODE_LIMIT:
 			if (what == MODE_ADD)
 			{
-				if (!param)
-				{
-					retval = 0;
-					break;
-				}
-				retval = 1;
+				REQUIRE_PARAMETER()
 				tmp = atoi(param);
 				if (chptr->mode.limit == tmp)
 					break;
@@ -1271,10 +1266,10 @@ int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
 				ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "-%c%s",
 					handler->flag, cm_getparameter(chptr, handler->flag));
 				(*pcount)++;
-			} else
-			{
-				/* Normal extended channel mode: deleteing is just -X, no parameter */
-				ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "-%c", handler->flag);
+			} else {
+				/* Normal extended channel mode: deleting is just -X, no parameter.
+				 * Nothing needs to be done here.
+				 */
 			}
 		} else {
 			/* add: is the parameter ok? */
@@ -1295,8 +1290,8 @@ int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
 				if (now && requested && !strcmp(now, requested))
 					return paracnt; /* ignore... */
 			}
-				ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "+%c%s",
-					handler->flag, handler->conv_param(param, cptr));
+			ircsnprintf(pvar[*pcount], MODEBUFLEN + 3, "+%c%s",
+				handler->flag, handler->conv_param(param, cptr));
 			(*pcount)++;
 			param = morphed; /* set param to converted parameter. */
 		}
@@ -1361,10 +1356,6 @@ int paracount_for_chanmode_from_server(aClient *acptr, u_int what, char mode)
 		mode,
 		acptr->name);
 
-	/* Some additional backward compatability for +j for really old servers.. Hmm.. too nice */
-	if ((what == MODE_ADD) && (mode == 'j'))
-		return 1;
-
 	return 0;
 }
 
@@ -1387,11 +1378,6 @@ int paracount_for_chanmode(u_int what, char mode)
 		return 0; /* no parameter for set, no parameter for unset */
 
 	/* Not found: */
-
-	/* Some additional backward compatability for +j for really old servers.. Hmm.. too nice */
-	if ((what == MODE_ADD) && (mode == 'j'))
-		return 1;
-
 	return 0;
 }
 
