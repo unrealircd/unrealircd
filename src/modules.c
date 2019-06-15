@@ -92,6 +92,7 @@ int (*register_user)(aClient *cptr, aClient *sptr, char *nick, char *username, c
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
 int (*tkl_chartotype)(char c);
+char *(*tkl_type_string)(aTKline *tk);
 aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
     TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type, int soft);
 aTKline *(*tkl_del_line)(aTKline *tkl);
@@ -210,7 +211,8 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 61 */	{"parse_message_tags", (void *)&parse_message_tags, &parse_message_tags_default_handler},
 /* 62 */	{"mtags_to_string", (void *)&mtags_to_string, &mtags_to_string_default_handler},
 /* 63 */	{"tkl_chartotype", (void *)&tkl_chartotype, NULL},
-/* 64 */	{NULL, NULL, NULL},
+/* 64 */	{"tkl_type_string", (void *)&tkl_type_string, NULL},
+/* 65 */	{NULL, NULL, NULL},
 };
 
 #ifdef UNDERSCORE

@@ -629,6 +629,7 @@ extern MODVAR int (*register_user)(aClient *cptr, aClient *sptr, char *nick, cha
 extern MODVAR int (*tkl_hash)(unsigned int c);
 extern MODVAR char (*tkl_typetochar)(int type);
 extern MODVAR int (*tkl_chartotype)(char c);
+extern MODVAR char *(*tkl_type_string)(aTKline *tk);
 extern MODVAR aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
                   TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type, int soft);
 extern MODVAR aTKline *(*tkl_del_line)(aTKline *tkl);

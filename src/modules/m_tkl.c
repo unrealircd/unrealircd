@@ -53,6 +53,7 @@ int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type)
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
+char *_tkl_type_string(aTKline *tk);
 aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby,
     TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type, int soft);
 void _tkl_del_line(aTKline *tkl);
@@ -107,6 +108,7 @@ MOD_TEST(m_tkl)
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_HASH, _tkl_hash);
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_TYPETOCHAR, TO_INTFUNC(_tkl_typetochar));
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_CHARTOTYPE, TO_INTFUNC(_tkl_chartotype));
+	EfunctionAddPChar(modinfo->handle, EFUNC_TKL_TYPE_STRING, _tkl_type_string);
 	EfunctionAddPVoid(modinfo->handle, EFUNC_TKL_ADD_LINE, TO_PVOIDFUNC(_tkl_add_line));
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_DEL_LINE, _tkl_del_line);
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN, _tkl_check_local_remove_shun);
@@ -2033,7 +2035,7 @@ void _tkl_synch(aClient *sptr)
 }
 
 /** Show TKL type as a string (used when adding/removing) */
-char *tkl_type_string(aTKline *tk)
+char *_tkl_type_string(aTKline *tk)
 {
 	static char txt[256];
 
