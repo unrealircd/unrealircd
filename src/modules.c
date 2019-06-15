@@ -94,7 +94,7 @@ char (*tkl_typetochar)(int type);
 int (*tkl_chartotype)(char c);
 char *(*tkl_type_string)(aTKline *tk);
 aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
-    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type, int soft);
+    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type, int soft, int flags);
 aTKline *(*tkl_del_line)(aTKline *tkl);
 void (*tkl_check_local_remove_shun)(aTKline *tmp);
 aTKline *(*tkl_expire)(aTKline * tmp);

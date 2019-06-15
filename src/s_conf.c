@@ -6967,36 +6967,69 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 
 int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 {
-
 	ConfigEntry *cep;
 	ConfigItem_ban *ca;
 	Hook *h;
 
 	ca = MyMallocEx(sizeof(ConfigItem_ban));
-	if (!strcmp(ce->ce_vardata, "nick"))
+	if (!strcmp(ce->ce_vardata, "nick") ||
+	    !strcmp(ce->ce_vardata, "user") ||
+	    !strcmp(ce->ce_vardata, "ip"))
 	{
-		aTKline *nl = MyMallocEx(sizeof(aTKline));
-		nl->type = TKL_NICK;
+		int type;
+		char *usermask = NULL;
+		char *hostmask = NULL;
+		char *reason = NULL;
+
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
 			if (!strcmp(cep->ce_varname, "mask"))
-				nl->hostmask = strdup(cep->ce_vardata);
-			else if (!strcmp(cep->ce_varname, "reason"))
-				nl->reason = strdup(cep->ce_vardata);
+			{
+				char buf[512], *p;
+				strlcpy(buf, cep->ce_vardata, sizeof(buf));
+				p = strchr(buf, '@');
+				if (p)
+				{
+					*p++ = '\0';
+					usermask = strdup(buf);
+					hostmask = strdup(p);
+				} else {
+					hostmask = strdup(cep->ce_vardata);
+				}
+			} else
+			if (!strcmp(cep->ce_varname, "reason"))
+			{
+				reason = strdup(cep->ce_vardata);
+			}
 		}
-		strcpy(nl->usermask, "*");
-		AddListItem(nl, tklines[tkl_hash('q')]);
+		if (!usermask)
+			usermask = strdup("*");
+		if (!reason)
+			reason = strdup("-");
+
+		if (!strcmp(ce->ce_vardata, "nick"))
+			type = TKL_NICK;
+		else if (!strcmp(ce->ce_vardata, "user"))
+			type = TKL_KILL;
+		else if (!strcmp(ce->ce_vardata, "ip"))
+			type = TKL_ZAP;
+		else
+			abort(); /* impossible */
+
+		tkl_add_line(type, usermask, hostmask, reason, "-config-", 0, TStime(), 0, NULL, 0, 0, TKL_FLAG_CONFIG);
+		safefree(usermask);
+		safefree(hostmask);
+		safefree(reason);
 		free(ca);
 		return 0;
 	}
-	else if (!strcmp(ce->ce_vardata, "ip"))
-		ca->flag.type = CONF_BAN_IP;
+	else if (!strcmp(ce->ce_vardata, "realname"))
+	{
+		/* We could convert this to a spamfilter 'u' with type 'simple' */
+		ca->flag.type = CONF_BAN_REALNAME;
+	}
 	else if (!strcmp(ce->ce_vardata, "server"))
 		ca->flag.type = CONF_BAN_SERVER;
-	else if (!strcmp(ce->ce_vardata, "user"))
-		ca->flag.type = CONF_BAN_USER;
-	else if (!strcmp(ce->ce_vardata, "realname"))
-		ca->flag.type = CONF_BAN_REALNAME;
 	else if (!strcmp(ce->ce_vardata, "version"))
 	{
 		ca->flag.type = CONF_BAN_VERSION;

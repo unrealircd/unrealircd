@@ -55,7 +55,7 @@ char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
 char *_tkl_type_string(aTKline *tk);
 aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby,
-    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type, int soft);
+    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type, int soft, int flags);
 void _tkl_del_line(aTKline *tkl);
 static void _tkl_check_local_remove_shun(aTKline *tmp);
 void _tkl_expire(aTKline * tmp);
@@ -1096,7 +1096,9 @@ aTKline *tkl_find_head(char type, char *hostmask, aTKline *def)
 */
 
 aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby,
-                       TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type, int soft)
+                       TS expire_at, TS set_at,
+                       TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type,
+                       int soft, int flags)
 {
 	aTKline *tkl;
 	int index, index2;
@@ -1121,6 +1123,7 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 	tkl = MyMallocEx(sizeof(aTKline));
 
 	tkl->type = type;
+	tkl->flags = flags;
 	tkl->expire_at = expire_at;
 	tkl->set_at = set_at;
 	strlcpy(tkl->usermask, usermask, sizeof(tkl->usermask));
@@ -2306,11 +2309,11 @@ CMD_FUNC(m_tkl_add)
 	{
 		tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
 				  expiry_1, setat_1, spamf_tklduration, parv[9],
-				  spamf_match_method, 0);
+				  spamf_match_method, 0, 0);
 	} else {
 		tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
 				  expiry_1, setat_1, 0, NULL,
-				  0, softban);
+				  0, softban, 0);
 	}
 
 	if (!tk)
@@ -2450,7 +2453,10 @@ CMD_FUNC(m_tkl_del)
 
 	tk = find_tkline(type, softban, parv[3], parv[4], reason);
 	if (!tk)
-		return 0; /* Entry not find. TODO: print something if MyClient()? */
+		return 0; /* Item not found */
+
+	if (tk->flags & TKL_FLAG_CONFIG)
+		return 0; /* Item is in the configuration file (persistent) */
 
 	tkl_type_str = tkl_type_string(tk); /* eg: "K-Line" */
 	timeret = short_date(tk->set_at);
