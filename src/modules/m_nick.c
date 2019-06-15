@@ -1333,12 +1333,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		else
 			u1 = NULL;
 
-		/* Check ban user { } blocks (K-lines in conf) */
-		if ((bconf = Find_ban(sptr, NULL, CONF_BAN_USER)))
-		{
-			ircstp->is_ref++;
-			return banned_client(sptr, "K-Lined", bconf->reason?bconf->reason:"", 0, 0);
-		}
 		/* Check ban realname { } blocks */
 		if ((bconf = Find_ban(NULL, sptr->info, CONF_BAN_REALNAME)))
 		{

@@ -970,32 +970,11 @@ int stats_denydcc(aClient *sptr, char *para)
 
 int stats_kline(aClient *sptr, char *para)
 {
-	ConfigItem_ban *bans;
 	ConfigItem_except *excepts;
-	char type[2];
-	for (bans = conf_ban; bans; bans = bans->next)
-	{
-		if (bans->flag.type == CONF_BAN_USER)
-		{
-			if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
-				type[0] = 'K';
-			type[1] = '\0';
-			sendnumeric(sptr, RPL_STATSKLINE, type, bans->mask, bans->reason
-				? bans->reason : "<no reason>");
-		}
-		else if (bans->flag.type == CONF_BAN_IP)
-		{
-			if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
-				type[0] = 'Z';
-			else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
-				type[0] = 'z';
-			type[1] = '\0';
-			sendnumeric(sptr, RPL_STATSKLINE, type, bans->mask, bans->reason 
-				? bans->reason : "<no reason>");
-		}
-	}
+
 	tkl_stats(sptr, TKL_KILL, NULL);
 	tkl_stats(sptr, TKL_ZAP, NULL);
+
 	for (excepts = conf_except; excepts; excepts = excepts->next)
 	{
 		if (excepts->flag.type == CONF_EXCEPT_BAN)

@@ -73,11 +73,7 @@ int _check_banned(aClient *cptr)
 	aClient *acptr;
 	ConfigItem_ban *bconf;
 
-	if ((bconf = Find_ban(cptr, NULL, CONF_BAN_IP)))
-	{
-		return banned_client(cptr, "K-Lined", bconf->reason ? bconf->reason : "", 0, 0);
-	}
-	else if ((tk = find_tkline_match_zap(cptr)))
+	if ((tk = find_tkline_match_zap(cptr)))
 	{
 		return banned_client(cptr, "Z-Lined", tk->reason, (tk->type & TKL_GLOBAL)?1:0, 0);
 	}

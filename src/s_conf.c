@@ -2949,8 +2949,12 @@ ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
 				if (match_user(ban->mask, sptr, MATCH_CHECK_REAL))
 				{
 					/* Person got a exception */
-					if ((type == CONF_BAN_USER || type == CONF_BAN_IP)
-					    && Find_except(sptr, CONF_EXCEPT_BAN))
+					// FIXME: this code is for the transition
+					// it should not be called blindly like
+					// we do now, since it would allow bypassing
+					// of even qlines and such..
+					// contact Syzop when in doubt :D
+					if (Find_except(sptr, CONF_EXCEPT_BAN))
 						return NULL;
 					return ban;
 				}

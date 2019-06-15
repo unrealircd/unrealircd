@@ -1061,15 +1061,8 @@ add_con_refuse:
 		}
 	}
 
-	if ((bconf = Find_ban(acptr, acptr->ip, CONF_BAN_IP)))
-	{
-		if (bconf)
-		{
-			banned_client(acptr, "K-Lined", bconf->reason ? bconf->reason : "no reason", 0, NO_EXIT_CLIENT);
-			goto add_con_refuse;
-		}
-	}
-	else if ((tk = find_tkline_match_zap(acptr)))
+	// FIXME: can't we use check_banned() and then pass the NO_EXIT_CLIENT flag? compare!!
+	if ((tk = find_tkline_match_zap(acptr)))
 	{
 		ircstp->is_ref++;
 		banned_client(acptr, "Z-Lined", tk->reason, (tk->type & TKL_GLOBAL)?1:0, NO_EXIT_CLIENT);

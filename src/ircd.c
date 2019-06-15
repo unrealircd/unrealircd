@@ -465,18 +465,10 @@ int check_tkls(aClient *cptr)
 
 	if (IsPerson(cptr))
 	{
-		/* Check ban user { } and ban realname { } */
-
-		bconf = Find_ban(cptr, NULL, CONF_BAN_USER);
-		if (bconf)
-			killflag++;
-		else if (!ValidatePermissionsForPath("immune",cptr,NULL,NULL,NULL) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
+		/* Check ban realname { } */
+		if (!ValidatePermissionsForPath("immune",cptr,NULL,NULL,NULL) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
 			killflag++;
 	}
-
-	/* If still no match, check ban ip { } */
-	if (!killflag && (bconf = Find_ban(cptr, NULL, CONF_BAN_IP)))
-		killflag++;
 
 	/* If user is meant to be killed, take action: */
 	if (killflag)
