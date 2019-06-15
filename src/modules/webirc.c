@@ -407,7 +407,7 @@ int dowebirc(aClient *cptr, char *ip, char *host, char *options)
 	 * but since we know the IP only now after PASS/WEBIRC, we have to check
 	 * here again...
 	 */
-	return check_banned(cptr);
+	return check_banned(cptr, 0);
 }
 
 /* WEBIRC <pass> "cgiirc" <hostname> <ip> [:option1 [option2...]]*/

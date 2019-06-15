@@ -23,7 +23,6 @@
 #include "unrealircd.h"
 
 CMD_FUNC(m_pass);
-extern MODVAR char zlinebuf[BUFSIZE];
 
 #define MSG_PASS 	"PASS"	
 
@@ -37,7 +36,7 @@ ModuleHeader MOD_HEADER(m_pass)
     };
 
 /* Forward declarations */
-int _check_banned(aClient *cptr);
+int _check_banned(aClient *cptr, int exitflags);
 
 MOD_TEST(m_pass)
 {
@@ -67,24 +66,37 @@ MOD_UNLOAD(m_pass)
 }
 
 /** Handles zlines/gzlines/throttling/unknown connections */
-int _check_banned(aClient *cptr)
+int _check_banned(aClient *cptr, int exitflags)
 {
 	aTKline *tk;
-	aClient *acptr;
 	ConfigItem_ban *bconf;
 
 	if ((tk = find_tkline_match_zap(cptr)))
 	{
-		return banned_client(cptr, "Z-Lined", tk->reason, (tk->type & TKL_GLOBAL)?1:0, 0);
+		return banned_client(cptr, "Z-Lined", tk->reason, (tk->type & TKL_GLOBAL)?1:0, exitflags);
 	}
 	else
 	{
 		int val;
+		char zlinebuf[512];
+
 		if (!(val = throttle_can_connect(cptr)))
 		{
-			ircsnprintf(zlinebuf, BUFSIZE, "Throttled: Reconnecting too fast - Email %s for more information.",
-					KLINE_ADDRESS);
-			return exit_client(cptr, cptr, &me, NULL, zlinebuf);
+			if (exitflags & NO_EXIT_CLIENT)
+			{
+				ircsnprintf(zlinebuf, sizeof(zlinebuf),
+					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) - "
+					"Email %s for more information.\r\n",
+					cptr->ip, KLINE_ADDRESS);
+				(void)send(cptr->fd, zlinebuf, strlen(zlinebuf), 0);
+				return FLUSH_BUFFER;
+			} else {
+				ircsnprintf(zlinebuf, sizeof(zlinebuf),
+				            "Throttled: Reconnecting too fast - "
+				            "Email %s for more information.",
+				            KLINE_ADDRESS);
+				return exit_client(cptr, cptr, &me, NULL, zlinebuf);
+			}
 		}
 		else if (val == 1)
 			add_throttling_bucket(cptr);

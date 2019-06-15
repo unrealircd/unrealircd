@@ -1017,7 +1017,7 @@ aClient *add_connection(ConfigItem_listen *listener, int fd)
 		{
 			report_error("Failed to accept new client %s :%s", acptr);
 		}
-add_con_refuse:
+refuse_client:
 			ircstp->is_ref++;
 			acptr->fd = -2;
 			free_client(acptr);
@@ -1055,35 +1055,14 @@ add_con_refuse:
 						"\r\n",
 						acptr->ip);
 					(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
-					goto add_con_refuse;
+					goto refuse_client;
 				}
 			}
 		}
 	}
 
-	// FIXME: can't we use check_banned() and then pass the NO_EXIT_CLIENT flag? compare!!
-	if ((tk = find_tkline_match_zap(acptr)))
-	{
-		ircstp->is_ref++;
-		banned_client(acptr, "Z-Lined", tk->reason, (tk->type & TKL_GLOBAL)?1:0, NO_EXIT_CLIENT);
-		goto add_con_refuse;
-	}
-	else
-	{
-		int val;
-		if (!(val = throttle_can_connect(acptr)))
-		{
-			ircsnprintf(zlinebuf, sizeof(zlinebuf),
-				"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
-					"Email %s for more information.\r\n",
-					acptr->ip,
-					KLINE_ADDRESS);
-			(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
-			goto add_con_refuse;
-		}
-		else if (val == 1)
-			add_throttling_bucket(acptr);
-	}
+	if (check_banned(acptr, NO_EXIT_CLIENT) < 0)
+		goto refuse_client;
 
 	acptr->local->listener = listener;
 	if (acptr->local->listener != NULL)
@@ -1105,7 +1084,7 @@ add_con_refuse:
 			Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", acptr->local->sockhost));
 			if ((acptr->local->ssl = SSL_new(ctx)) == NULL)
 			{
-				goto add_con_refuse;
+				goto refuse_client;
 			}
 			acptr->flags |= FLAGS_SSL;
 			SSL_set_fd(acptr->local->ssl, fd);
@@ -1116,7 +1095,7 @@ add_con_refuse:
 				SSL_set_shutdown(acptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
 				SSL_smart_shutdown(acptr->local->ssl);
 						SSL_free(acptr->local->ssl);
-					goto add_con_refuse;
+					goto refuse_client;
 			}
 		}
 	}
