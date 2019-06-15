@@ -267,19 +267,6 @@ int reputation_config_posttest(int *errs)
 	return errors ? -1 : 1;
 }
 
-/** Cut off string on first occurance of CR or LF */
-void stripcrlf(char *buf)
-{
-	for (; *buf; buf++)
-	{
-		if ((*buf == '\n') || (*buf == '\r'))
-		{
-			*buf = '\0';
-			return;
-		}
-	}
-}
-
 /** Parse database header and set variables appropriately */
 int parse_db_header(char *buf)
 {

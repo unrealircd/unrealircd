@@ -265,14 +265,17 @@ time_t	atime(char *xtime)
 	return ((D * 86400) + (H * 3600) + (M * 60) + S);		
 }
 
-void iCstrip(char *line)
+/** Cut string off at the first occurance of CR or LF */
+void stripcrlf(char *c)
 {
-	char *c;
-
-	if ((c = strchr(line, '\n')))
-		*c = '\0';
-	if ((c = strchr(line, '\r')))
-		*c = '\0';
+	for (; *c; c++)
+	{
+		if ((*c == '\n') || (*c == '\r'))
+		{
+			*c = '\0';
+			return;
+		}
+	}
 }
 
 /*

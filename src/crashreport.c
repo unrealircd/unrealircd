@@ -90,18 +90,6 @@ char *find_best_coredump(void)
 	return NULL; /* none found */
 }
 
-void stripcrlf(char *p)
-{
-	for (; *p; p++)
-	{
-		if ((*p == '\r') || (*p == '\n'))
-		{
-			*p = '\0';
-			return;
-		}
-	}
-}
-
 #define EL_AR_MAX MAXPARA
 char **explode(char *str, char *delimiter)
 {

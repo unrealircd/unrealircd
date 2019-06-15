@@ -123,7 +123,7 @@ SpamfilterTargetTable spamfiltertargettable[] = {
  */
 struct stats ircst, *ircstp = &ircst;
 
-char *date(time_t clock)
+char *long_date(time_t clock)
 {
 	static char buf[80], plus;
 	struct tm *lt, *gm;
@@ -158,6 +158,27 @@ char *date(time_t clock)
 	return buf;
 }
 
+/** Convert timestamp to a short date, a la: Wed Jun 30 21:49:08 1993
+ * @returns A short date string, or NULL if the timestamp is invalid
+ * (out of range)
+ */
+char *short_date(time_t ts)
+{
+	struct tm *t = gmtime(&ts);
+	static char buf[256];
+	char *timestr;
+
+	if (!t)
+		return NULL;
+
+	timestr = asctime(t);
+	if (!timestr)
+		return NULL;
+
+	strlcpy(buf, timestr, sizeof(buf));
+	stripcrlf(buf);
+	return buf;
+}
 
 char *convert_time (time_t ltime)
 {
@@ -173,10 +194,9 @@ char *convert_time (time_t ltime)
 	hours = ltime % 24;
 	days = (ltime - hours) / 24;
 	ircsnprintf(buffer, sizeof(buffer), "%ludays %luhours %luminutes %lusecs",
-days, hours, minutes, seconds);
+		days, hours, minutes, seconds);
 	return buffer;
 }
-
 
 /*
  *  Fixes a string so that the first white space found becomes an end of
