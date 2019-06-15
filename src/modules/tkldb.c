@@ -274,7 +274,12 @@ int write_tkldb(void)
 		for (index2 = 0; index2 < TKLIPHASHLEN2; index2++)
 		{
 			for (tkl = tklines_ip_hash[index][index2]; tkl; tkl = tkl->next)
+			{
+				/* Local added via .conf file? */
+				if (tkl->flags & TKL_FLAG_CONFIG)
+					continue;
 				tklcount++;
+			}
 		}
 	}
 	// Then the regular *-Lines
@@ -284,10 +289,16 @@ int write_tkldb(void)
 		{
 			if(!(tkl->type & TKL_GLOBAL))
 			{
+				/* Local added via .conf file? */
+				if (tkl->flags & TKL_FLAG_CONFIG)
+					continue;
+				// FIXME: make in the core that local spamfilters get the TKL_FLAG_CONFIG too
+				// so the next couple of lines can be removed !!!
+
 				/* Local spamfilter means it was added through a .conf file or is built-in,
 				** local "nick ban" (Q-Line) means it was added using a ban nick {} block in a .conf
 				*/
-				if ((tkl->type & TKL_SPAMF) || (tkl->type & TKL_NICK))
+				if ((tkl->type & TKL_SPAMF))
 					continue;
 			}
 			tklcount++;
@@ -300,7 +311,10 @@ int write_tkldb(void)
 	{
 		for (index2 = 0; index2 < TKLIPHASHLEN2; index2++)
 		{
-			for (tkl = tklines_ip_hash[index][index2]; tkl; tkl = tkl->next) {
+			for (tkl = tklines_ip_hash[index][index2]; tkl; tkl = tkl->next)
+			{
+				if (tkl->flags & TKL_FLAG_CONFIG)
+					continue;
 				if (!write_tkline(fd, tmpfname, tkl)) // write_tkline() closes the fd on errors itself
 					return 0;
 			}
@@ -314,6 +328,9 @@ int write_tkldb(void)
 			// Also need to skip certain *-Lines here
 			if(!(tkl->type & TKL_GLOBAL))
 			{
+				if (tkl->flags & TKL_FLAG_CONFIG)
+					continue;
+				// FIXME: make in the core that local spamfilters get... see previous comment 50 lines up
 				if ((tkl->type & TKL_SPAMF) || (tkl->type & TKL_NICK))
 					continue;
 			}
