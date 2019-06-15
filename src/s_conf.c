@@ -93,7 +93,6 @@ static int	_conf_deny_link		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_version	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_require		(ConfigFile *conf, ConfigEntry *ce);
-static int	_conf_require_sasl	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_allow_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
@@ -7198,17 +7197,15 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 int _conf_require(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
-	ConfigItem_ban *ca;
 	Hook *h;
+	char *usermask = NULL;
+	char *hostmask = NULL;
+	char *reason = NULL;
 
-	ca = MyMallocEx(sizeof(ConfigItem_ban));
-	if (!strcmp(ce->ce_vardata, "authentication") || !strcmp(ce->ce_vardata, "sasl"))
+	if (strcmp(ce->ce_vardata, "authentication") && strcmp(ce->ce_vardata, "sasl"))
 	{
-		ca->flag.type = CONF_BAN_UNAUTHENTICATED;
-	}
-	else {
+		/* Some other block... run modules... */
 		int value;
-		free(ca); /* ca isn't used, modules have their own list. */
 		for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 		{
 			value = (*(h->func.intfunc))(conf,ce,CONFIG_REQUIRE);
@@ -7217,18 +7214,37 @@ int _conf_require(ConfigFile *conf, ConfigEntry *ce)
 		}
 		return 0;
 	}
+
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "mask"))
 		{
-			ca->mask = strdup(cep->ce_vardata);
+			char buf[512], *p;
+			strlcpy(buf, cep->ce_vardata, sizeof(buf));
+			p = strchr(buf, '@');
+			if (p)
+			{
+				*p++ = '\0';
+				usermask = strdup(buf);
+				hostmask = strdup(p);
+			} else {
+				hostmask = strdup(cep->ce_vardata);
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "reason"))
-			ca->reason = strdup(cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "action"))
-			ca ->action = banact_stringtoval(cep->ce_vardata);
+			reason = strdup(cep->ce_vardata);
 	}
-	AddListItem(ca, conf_ban);
+
+	if (!usermask)
+		usermask = strdup("*");
+
+	if (!reason)
+		reason = strdup("-");
+
+	tkl_add_line(TKL_KILL, usermask, hostmask, reason, "-config-", 0, TStime(), 0, NULL, 0, 1, TKL_FLAG_CONFIG);
+	safefree(usermask);
+	safefree(hostmask);
+	safefree(reason);
 	return 0;
 }
 

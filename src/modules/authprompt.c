@@ -420,7 +420,7 @@ int authprompt_require_sasl(aClient *sptr, char *reason)
 	authprompt_tag_as_auth_required(sptr);
 
 	/* Display the require authentication::reason */
-	if (reason)
+	if (reason && strcmp(reason, "-") && strcmp(reason, "*"))
 		sendnotice(sptr, "%s", reason);
 
 	authprompt_send_auth_required_message(sptr);

@@ -1339,13 +1339,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			ircstp->is_ref++;
 			return banned_client(sptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
 		}
-		/* Check require authentication { } blocks */
-		if (!IsLoggedIn(sptr) && (bconf = Find_ban(sptr, NULL, CONF_BAN_UNAUTHENTICATED)))
-		{
-			ircstp->is_ref++;
-			RunHookReturnInt2(HOOKTYPE_REQUIRE_SASL, sptr, bconf->reason, !=0);
-			return banned_client(sptr, "Require-Auth", bconf->reason?bconf->reason:"", 0, 0);
-		}
 		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
 		if ((xx = find_tkline_match(sptr, 0)) < 0)
 		{
