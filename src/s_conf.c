@@ -156,13 +156,13 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "loadmodule",		NULL,		 	_test_loadmodule},
 	{ "log",		_conf_log,		_test_log	},
 	{ "me", 		_conf_me,		_test_me	},
-	{ "official-channels", 		_conf_offchans,		_test_offchans	},
+	{ "official-channels", 	_conf_offchans,		_test_offchans	},
 	{ "oper", 		_conf_oper,		_test_oper	},
 	{ "operclass",		_conf_operclass,	_test_operclass	},
 	{ "require", 		_conf_require,		_test_require	},
 	{ "set",		_conf_set,		_test_set	},
 	{ "sni",		_conf_sni,		_test_sni	},
-	{ "spamfilter",	_conf_spamfilter,	_test_spamfilter	},
+	{ "spamfilter",		_conf_spamfilter,	_test_spamfilter	},
 	{ "tld",		_conf_tld,		_test_tld	},
 	{ "ulines",		_conf_ulines,		_test_ulines	},
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
@@ -1668,6 +1668,8 @@ void postconf_defaults(void)
 	encoded = unreal_encodespace(SPAMFILTER_BAN_REASON);
 	if (!encoded)
 		abort(); /* hack to trace 'impossible' bug... */
+	// FIXME: remove this stuff with ~server~, why not just use -config-
+	//        which is more meaningful.
 	for (tk = tklines[tkl_hash('q')]; tk; tk = tk->next)
 	{
 		if (tk->type != TKL_NICK)
@@ -2120,6 +2122,41 @@ int	load_conf(char *filename, const char *original_path)
 	}
 }
 
+/** Remove all TKL's that were added by the config file(s).
+ * This is done after config passed testing and right before
+ * adding the (new) entries.
+ */
+void remove_config_tkls(void)
+{
+	aTKline *tk, *tk_next;
+	int index, index2;
+
+	/* IP hashed TKL list */
+	for (index = 0; index < TKLIPHASHLEN1; index++)
+	{
+		for (index2 = 0; index2 < TKLIPHASHLEN2; index2++)
+		{
+			for (tk = tklines_ip_hash[index][index2]; tk; tk = tk_next)
+			{
+				tk_next = tk->next;
+				if (tk->flags & TKL_FLAG_CONFIG)
+					tkl_del_line(tk);
+			}
+		}
+	}
+
+	/* Generic TKL list */
+	for (index = 0; index < TKLISTLEN; index++)
+	{
+		for (tk = tklines[index]; tk; tk = tk_next)
+		{
+			tk_next = tk->next;
+			if (tk->flags & TKL_FLAG_CONFIG)
+				tkl_del_line(tk);
+		}
+	}
+}
+
 void	config_rehash()
 {
 	ConfigItem_oper			*oper_ptr;
@@ -2146,7 +2183,6 @@ void	config_rehash()
 	ConfigItem_sni			*sni;
 	OperStat 			*os_ptr;
 	ListStruct 	*next, *next2;
-	aTKline *tk, *tk_next;
 	SpamExcept *spamex_ptr;
 	int i;
 
@@ -2289,20 +2325,7 @@ void	config_rehash()
 		MyFree(vhost_ptr);
 	}
 
-	/* Clean up local spamfilter entries... */
-	for (tk = tklines[tkl_hash('f')]; tk; tk = tk_next)
-	{
-		tk_next = tk->next;
-		if (tk->type == TKL_SPAMF)
-			tkl_del_line(tk);
-	}
-
-	for (tk = tklines[tkl_hash('q')]; tk; tk = tk_next)
-	{
-		tk_next = tk->next;
-		if (tk->type == TKL_NICK)
-			tkl_del_line(tk);
-	}
+	remove_config_tkls();
 
 	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *)next)
 	{
@@ -6123,6 +6146,7 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	nl->type = TKL_SPAMF;
+	nl->flags = TKL_FLAG_CONFIG;
 	nl->expire_at = 0;
 	nl->set_at = TStime();
 
@@ -7028,7 +7052,6 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else if (!strcmp(ce->ce_vardata, "realname"))
 	{
-		/* We could convert this to a spamfilter 'u' with type 'simple' */
 		ca->flag.type = CONF_BAN_REALNAME;
 	}
 	else if (!strcmp(ce->ce_vardata, "server"))
