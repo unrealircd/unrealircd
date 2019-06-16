@@ -59,6 +59,7 @@ HistoryBackend *HistoryBackendFind(const char *name)
 HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 {
 	HistoryBackend *m;
+	int exists = 0;
 
 	if (!mreq->history_add || !mreq->history_del || !mreq->history_request || !mreq->history_destroy)
 	{
@@ -70,6 +71,7 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 	m = HistoryBackendFind(mreq->name);
 	if (m)
 	{
+		exists = 1;
 		if (m->unloaded)
 		{
 			m->unloaded = 0;
@@ -91,7 +93,8 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 	m->history_request = mreq->history_request;
 	m->history_destroy = mreq->history_destroy;
 
-	AddListItem(m, historybackends);
+	if (!exists)
+		AddListItem(m, historybackends);
 
 	if (module)
 	{
