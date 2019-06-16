@@ -148,6 +148,11 @@ else
 echo "SSL certificate exists in $CONFDIR/ssl/server.cert.pem, no need to regenerate."
 fi
 fi
+
+# Silently force a 'make clean' as otherwise part (or whole) of the
+# compiled source could be using different settings than the user
+# just requested when re-running ./Config.
+make clean 1>/dev/null 2>&1
 }
 
 RUN_ADVANCED () {
