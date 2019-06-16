@@ -735,11 +735,12 @@ struct Server {
 /* Other flags only for function calls: */
 #define SPAMFLAG_NOWARN		0x0001
 
+/** Spamfilter sub-struct of TKL entry */
 struct _spamfilter {
-	unsigned short action; /* see BAN_ACT* */
-	aMatch *expr;
-	char *tkl_reason; /* spamfilter reason field [escaped by unreal_encodespace()!] */
-	TS tkl_duration;
+	unsigned short action; /**< Ban action, see BAN_ACT* */
+	aMatch *expr; /**< Spamfilter matcher */
+	char *tkl_reason; /**< Reason to use for bans placed by this spamfilter, escaped by unreal_encodespace(). */
+	TS tkl_duration; /**< Duration of bans placed by this spamfilter */
 };
 
 #define TKL_SUBTYPE_NONE	0x0000
@@ -747,24 +748,30 @@ struct _spamfilter {
 
 #define TKL_FLAG_CONFIG		0x0001 /* Entry from configuration file. Cannot be removed by using commands. */
 
+/** A TKL entry, such as a KLINE, GLINE, Spamfilter, QLINE, Exception, .. */
 struct t_kline {
 	aTKline *prev, *next;
-	int type;
-	unsigned short subtype; /* subtype: for spamfilter see SPAMF_*, otherwise TKL_SUBTYPE_* */
-	unsigned short flags;
+	unsigned int type; /**< TKL type. One of TKL_*, such as TKL_KILL|TKL_GLOBAL for gline */
+	unsigned short subtype; /* TKL subtype. For spamfilter one of SPAMF_*, otherwise TKL_SUBTYPE_* */
+	unsigned short flags; /**< One of TKL_FLAG_*, such as TKL_FLAG_CONFIG */
 	union {
 		Spamfilter *spamf;
 	} ptr;
-	char usermask[USERLEN + 3];
-	char *hostmask, *reason, *setby;
-	TS expire_at, set_at;
+	char usermask[USERLEN + 3]; /**< User mask [different for spamfilter] */
+	char *hostmask; /**< Host mask [different for spamfilter] */
+	char *reason; /**< Reason [different for spamfilter] */
+	char *setby; /**< By who was this entry added */
+	TS expire_at; /**< When this entry will expire */
+	TS set_at; /**< When this entry was added */
 };
 
+/** A spamfilter except entry */
 struct _spamexcept {
 	SpamExcept *prev, *next;
 	char name[1];
 };
 
+/** IRC Statistics, used for /LUSERS */
 typedef struct ircstatsx {
 	int  clients;		/* total */
 	int  invisible;		/* invisible */
@@ -778,6 +785,7 @@ typedef struct ircstatsx {
 	int  global_max;	/* global max */
 } ircstats;
 
+/** The /LUSERS stats information */
 extern MODVAR ircstats IRCstats;
 
 typedef int (*CmdFunc)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
