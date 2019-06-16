@@ -42,6 +42,8 @@
 #endif
 
 /* Forward declarations */
+int tkl_config_test_spamfilter(ConfigFile *, ConfigEntry *, int, int *);
+int tkl_config_run_spamfilter(ConfigFile *, ConfigEntry *, int);
 CMD_FUNC(m_gline);
 CMD_FUNC(m_shun);
 CMD_FUNC(m_tempshun);
@@ -91,6 +93,7 @@ ModuleHeader MOD_HEADER(m_tkl)
 MOD_TEST(m_tkl)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_spamfilter);
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_HASH, _tkl_hash);
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_TYPETOCHAR, TO_INTFUNC(_tkl_typetochar));
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_CHARTOTYPE, TO_INTFUNC(_tkl_chartotype));
@@ -117,6 +120,7 @@ MOD_TEST(m_tkl)
 MOD_INIT(m_tkl)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamfilter);
 	CommandAdd(modinfo->handle, "GLINE", m_gline, 3, M_OPER);
 	CommandAdd(modinfo->handle, "SHUN", m_shun, 3, M_OPER);
 	CommandAdd(modinfo->handle, "TEMPSHUN", m_tempshun, 2, M_OPER);
@@ -138,6 +142,303 @@ MOD_LOAD(m_tkl)
 MOD_UNLOAD(m_tkl)
 {
 	return MOD_SUCCESS;
+}
+
+/** Test a spamfilter { } block in the configuration file */
+int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	ConfigEntry *cep, *cepp;
+	int errors = 0;
+	char *match = NULL, *reason = NULL;
+	char has_target = 0, has_match = 0, has_action = 0, has_reason = 0, has_bantime = 0, has_match_type = 0;
+	int match_type = 0;
+
+	/* We are only interested in spamfilter { } blocks */
+	if ((type != CONFIG_MAIN) || strcmp(ce->ce_varname, "spamfilter"))
+		return 0;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "target"))
+		{
+			if (has_target)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "spamfilter::target");
+				continue;
+			}
+			has_target = 1;
+			if (cep->ce_vardata)
+			{
+				if (!spamfilter_getconftargets(cep->ce_vardata))
+				{
+					config_error("%s:%i: unknown spamfiler target type '%s'",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+					errors++;
+				}
+			}
+			else if (cep->ce_entries)
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (!spamfilter_getconftargets(cepp->ce_varname))
+					{
+						config_error("%s:%i: unknown spamfiler target type '%s'",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum, cepp->ce_varname);
+						errors++;
+					}
+				}
+			}
+			else
+			{
+				config_error_empty(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "spamfilter", cep->ce_varname);
+				errors++;
+			}
+			continue;
+		}
+		if (!cep->ce_vardata)
+		{
+			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"spamfilter", cep->ce_varname);
+			errors++;
+			continue;
+		}
+		if (!strcmp(cep->ce_varname, "reason"))
+		{
+			if (has_reason)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "spamfilter::reason");
+				continue;
+			}
+			has_reason = 1;
+			reason = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "match"))
+		{
+			if (has_match)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "spamfilter::match");
+				continue;
+			}
+			has_match = 1;
+			match = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "action"))
+		{
+			if (has_action)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "spamfilter::action");
+				continue;
+			}
+			has_action = 1;
+			if (!banact_stringtoval(cep->ce_vardata))
+			{
+				config_error("%s:%i: spamfilter::action has unknown action type '%s'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "ban-time"))
+		{
+			if (has_bantime)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "spamfilter::ban-time");
+				continue;
+			}
+			has_bantime = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "match-type"))
+		{
+			if (has_match_type)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "spamfilter::match-type");
+				continue;
+			}
+			if (!strcasecmp(cep->ce_vardata, "posix"))
+			{
+				config_error("%s:%i: this spamfilter uses match-type 'posix' which is no longer supported. "
+				             "You must switch over to match-type 'regex' instead. "
+				             "See https://www.unrealircd.org/docs/FAQ#spamfilter-posix-deprecated",
+				             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				errors++;
+				*errs = errors;
+				return -1; /* return now, otherwise there will be issues */
+			}
+			match_type = unreal_match_method_strtoval(cep->ce_vardata);
+			if (match_type == 0)
+			{
+				config_error("%s:%i: spamfilter::match-type: unknown match type '%s', "
+				             "should be one of: 'simple', 'regex' or 'posix'",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				             cep->ce_vardata);
+				errors++;
+				continue;
+			}
+			has_match_type = 1;
+		}
+		else
+		{
+			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"spamfilter", cep->ce_varname);
+			errors++;
+			continue;
+		}
+	}
+
+	if (match && match_type)
+	{
+		aMatch *m;
+		char *err;
+
+		m = unreal_create_match(match_type, match, &err);
+		if (!m)
+		{
+			config_error("%s:%i: spamfilter::match contains an invalid regex: %s",
+				ce->ce_fileptr->cf_filename,
+				ce->ce_varlinenum,
+				err);
+			errors++;
+		} else
+		{
+			unreal_delete_match(m);
+		}
+	}
+
+	if (!has_match)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"spamfilter::match");
+		errors++;
+	}
+	if (!has_target)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"spamfilter::target");
+		errors++;
+	}
+	if (!has_action)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"spamfilter::action");
+		errors++;
+	}
+	if (match && reason && (strlen(match) + strlen(reason) > 505))
+	{
+		config_error("%s:%i: spamfilter block problem: match + reason field are together over 505 bytes, "
+		             "please choose a shorter regex or reason",
+		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	if (!has_match_type)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"spamfilter::match-type");
+		errors++;
+	}
+
+	if (!has_match_type && !has_match && has_action && has_target)
+	{
+		need_34_upgrade = 1;
+	}
+
+	if (match && !strcmp(match, "^LOL! //echo -a \\$\\(\\$decode\\(.+,m\\),[0-9]\\)$"))
+	{
+		config_warn("*** IMPORTANT ***");
+		config_warn("You have old examples in your spamfilter.conf. "
+		             "We suggest you to edit this file and replace the examples.");
+		config_warn("Please read https://www.unrealircd.org/docs/FAQ#old-spamfilter-conf !!!");
+		config_warn("*****************");
+	}
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+/** Process a spamfilter { } block in the configuration file */
+int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep;
+	ConfigEntry *cepp;
+	aTKline *tk;
+	char *word = NULL, *reason = NULL, *bantime = NULL;
+	int action = 0, target = 0;
+	char has_reason = 0, has_bantime = 0;
+	int match_type = 0;
+
+	/* We are only interested in spamfilter { } blocks */
+	if ((type != CONFIG_MAIN) || strcmp(ce->ce_varname, "spamfilter"))
+		return 0;
+
+	tk = MyMallocEx(sizeof(aTKline));
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "match"))
+		{
+			tk->reason = strdup(cep->ce_vardata);
+
+			word = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "target"))
+		{
+			if (cep->ce_vardata)
+				target = spamfilter_getconftargets(cep->ce_vardata);
+			else
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+					target |= spamfilter_getconftargets(cepp->ce_varname);
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "action"))
+		{
+			action = banact_stringtoval(cep->ce_vardata);
+			tk->hostmask = strdup(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "reason"))
+		{
+			has_reason = 1;
+			reason = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "ban-time"))
+		{
+			has_bantime = 1;
+			bantime = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "match-type"))
+		{
+			match_type = unreal_match_method_strtoval(cep->ce_vardata);
+		}
+	}
+	tk->type = TKL_SPAMF;
+	tk->flags = TKL_FLAG_CONFIG;
+	tk->expire_at = 0;
+	tk->set_at = TStime();
+
+	strlcpy(tk->usermask, spamfilter_target_inttostring(target), sizeof(tk->usermask));
+	tk->subtype = target;
+
+	tk->setby = BadPtr(me.name) ? NULL : strdup(me.name); /* Hmm! */
+	tk->ptr.spamf = MyMallocEx(sizeof(Spamfilter));
+	tk->ptr.spamf->expr = unreal_create_match(match_type, word, NULL);
+	tk->ptr.spamf->action = action;
+
+	if (has_reason && reason)
+		tk->ptr.spamf->tkl_reason = strdup(unreal_encodespace(reason));
+	else
+		tk->ptr.spamf->tkl_reason = strdup("<internally added by ircd>");
+
+	if (has_bantime)
+		tk->ptr.spamf->tkl_duration = config_checkval(bantime, CFG_TIME);
+	else
+		tk->ptr.spamf->tkl_duration = (SPAMFILTER_BAN_TIME ? SPAMFILTER_BAN_TIME : 86400);
+
+	AddListItem(tk, tklines[tkl_hash('f')]);
+	return 1;
 }
 
 /** Return unique spamfilter id for aTKline */
