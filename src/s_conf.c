@@ -6711,58 +6711,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	Hook *h;
 
 	ca = MyMallocEx(sizeof(ConfigItem_ban));
-	if (!strcmp(ce->ce_vardata, "nick") ||
-	    !strcmp(ce->ce_vardata, "user") ||
-	    !strcmp(ce->ce_vardata, "ip"))
-	{
-		int type;
-		char *usermask = NULL;
-		char *hostmask = NULL;
-		char *reason = NULL;
-
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		{
-			if (!strcmp(cep->ce_varname, "mask"))
-			{
-				char buf[512], *p;
-				strlcpy(buf, cep->ce_vardata, sizeof(buf));
-				p = strchr(buf, '@');
-				if (p)
-				{
-					*p++ = '\0';
-					usermask = strdup(buf);
-					hostmask = strdup(p);
-				} else {
-					hostmask = strdup(cep->ce_vardata);
-				}
-			} else
-			if (!strcmp(cep->ce_varname, "reason"))
-			{
-				reason = strdup(cep->ce_vardata);
-			}
-		}
-		if (!usermask)
-			usermask = strdup("*");
-		if (!reason)
-			reason = strdup("-");
-
-		if (!strcmp(ce->ce_vardata, "nick"))
-			type = TKL_NICK;
-		else if (!strcmp(ce->ce_vardata, "user"))
-			type = TKL_KILL;
-		else if (!strcmp(ce->ce_vardata, "ip"))
-			type = TKL_ZAP;
-		else
-			abort(); /* impossible */
-
-		tkl_add_line(type, usermask, hostmask, reason, "-config-", 0, TStime(), 0, NULL, 0, 0, TKL_FLAG_CONFIG);
-		safefree(usermask);
-		safefree(hostmask);
-		safefree(reason);
-		free(ca);
-		return 0;
-	}
-	else if (!strcmp(ce->ce_vardata, "realname"))
+	if (!strcmp(ce->ce_vardata, "realname"))
 	{
 		ca->flag.type = CONF_BAN_REALNAME;
 	}
@@ -6813,13 +6762,7 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
-	if (!strcmp(ce->ce_vardata, "nick"))
-	{}
-	else if (!strcmp(ce->ce_vardata, "ip"))
-	{}
 	else if (!strcmp(ce->ce_vardata, "server"))
-	{}
-	else if (!strcmp(ce->ce_vardata, "user"))
 	{}
 	else if (!strcmp(ce->ce_vardata, "realname"))
 	{}

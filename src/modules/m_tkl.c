@@ -44,6 +44,8 @@
 /* Forward declarations */
 int tkl_config_test_spamfilter(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_spamfilter(ConfigFile *, ConfigEntry *, int);
+int tkl_config_test_ban(ConfigFile *, ConfigEntry *, int, int *);
+int tkl_config_run_ban(ConfigFile *, ConfigEntry *, int);
 CMD_FUNC(m_gline);
 CMD_FUNC(m_shun);
 CMD_FUNC(m_tempshun);
@@ -94,6 +96,7 @@ MOD_TEST(m_tkl)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_spamfilter);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_ban);
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_HASH, _tkl_hash);
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_TYPETOCHAR, TO_INTFUNC(_tkl_typetochar));
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_CHARTOTYPE, TO_INTFUNC(_tkl_chartotype));
@@ -121,6 +124,7 @@ MOD_INIT(m_tkl)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamfilter);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_ban);
 	CommandAdd(modinfo->handle, "GLINE", m_gline, 3, M_OPER);
 	CommandAdd(modinfo->handle, "SHUN", m_shun, 3, M_OPER);
 	CommandAdd(modinfo->handle, "TEMPSHUN", m_tempshun, 2, M_OPER);
@@ -438,6 +442,141 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 		tk->ptr.spamf->tkl_duration = (SPAMFILTER_BAN_TIME ? SPAMFILTER_BAN_TIME : 86400);
 
 	AddListItem(tk, tklines[tkl_hash('f')]);
+	return 1;
+}
+
+/** Test a ban { } block in the configuration file */
+int tkl_config_test_ban(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	ConfigEntry *cep;
+	int errors = 0;
+	char has_mask = 0, has_reason = 0;
+
+	/* We are only interested in ban { } blocks */
+	if (type != CONFIG_BAN)
+		return 0;
+
+	if (strcmp(ce->ce_vardata, "nick") && strcmp(ce->ce_vardata, "user") &&
+	    strcmp(ce->ce_vardata, "ip"))
+	{
+		return 0;
+	}
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (config_is_blankorempty(cep, "ban"))
+		{
+			errors++;
+			continue;
+		}
+		if (!strcmp(cep->ce_varname, "mask"))
+		{
+			if (has_mask)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "ban::mask");
+				continue;
+			}
+			has_mask = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "reason"))
+		{
+			if (has_reason)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "ban::reason");
+				continue;
+			}
+			has_reason = 1;
+		}
+		else
+		{
+			config_error("%s:%i: unknown directive ban %s::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				ce->ce_vardata,
+				cep->ce_varname);
+			errors++;
+		}
+	}
+
+	if (!has_mask)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"ban::mask");
+		errors++;
+	}
+
+	if (!has_reason)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"ban::reason");
+		errors++;
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+/** Process a ban { } block in the configuration file */
+int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
+{
+	ConfigEntry *cep;
+	char *usermask = NULL;
+	char *hostmask = NULL;
+	char *reason = NULL;
+	int tkltype;
+
+	/* We are only interested in ban { } blocks */
+	if (configtype != CONFIG_BAN)
+		return 0;
+
+	if (strcmp(ce->ce_vardata, "nick") && strcmp(ce->ce_vardata, "user") &&
+	    strcmp(ce->ce_vardata, "ip"))
+	{
+		return 0;
+	}
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "mask"))
+		{
+			char buf[512], *p;
+			strlcpy(buf, cep->ce_vardata, sizeof(buf));
+			p = strchr(buf, '@');
+			if (p)
+			{
+				*p++ = '\0';
+				usermask = strdup(buf);
+				hostmask = strdup(p);
+			} else {
+				hostmask = strdup(cep->ce_vardata);
+			}
+		} else
+		if (!strcmp(cep->ce_varname, "reason"))
+		{
+			reason = strdup(cep->ce_vardata);
+		}
+	}
+
+	if (!usermask)
+		usermask = strdup("*");
+
+	if (!reason)
+		reason = strdup("-");
+
+	if (!strcmp(ce->ce_vardata, "nick"))
+		tkltype = TKL_NICK;
+	else if (!strcmp(ce->ce_vardata, "user"))
+		tkltype = TKL_KILL;
+	else if (!strcmp(ce->ce_vardata, "ip"))
+		tkltype = TKL_ZAP;
+	else
+		abort(); /* impossible */
+
+	tkl_add_line(tkltype, usermask, hostmask, reason, "-config-", 0, TStime(), 0, NULL, 0, 0, TKL_FLAG_CONFIG);
+	safefree(usermask);
+	safefree(hostmask);
+	safefree(reason);
 	return 1;
 }
 
