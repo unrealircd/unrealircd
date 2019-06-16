@@ -956,6 +956,8 @@ char _tkl_typetochar(int type)
 			return 'F';
 		if (type & TKL_NICK)
 			return 'Q';
+		if (type & TKL_EXCEPT)
+			return 'E';
 	} else {
 		if (type & TKL_KILL)
 			return 'k';
@@ -965,6 +967,8 @@ char _tkl_typetochar(int type)
 			return 'f';
 		if (type & TKL_NICK)
 			return 'q';
+		if (type & TKL_EXCEPT)
+			return 'e';
 	}
 	sendto_realops("[BUG]: tkl_typetochar(): unknown type 0x%x !!!", type);
 	ircd_log(LOG_ERROR, "[BUG] tkl_typetochar(): unknown type 0x%x !!!", type);
@@ -996,6 +1000,10 @@ int _tkl_chartotype(char c)
 			return TKL_SPAMF;
 		case 'q':
 			return TKL_NICK;
+		case 'E':
+			return TKL_EXCEPT|TKL_GLOBAL;
+		case 'e':
+			return TKL_EXCEPT;
 		default:
 			return 0;
 	}
@@ -1051,6 +1059,8 @@ int tkl_ip_hash_type(char type)
 		return 1;
 	else if (type == 'k')
 		return 2;
+	else if ((type == 'e') || (type == 'E'))
+		return 3;
 	else
 		return -1;
 }
@@ -1377,7 +1387,7 @@ int find_tkline_match_matcher(aClient *cptr, int skip_soft, aTKline *tkl)
 	int match_type = 0;
 	Hook *hook;
 
-	if ((tkl->type & TKL_SHUN) || (tkl->type & TKL_SPAMF) || (tkl->type & TKL_NICK))
+	if ((tkl->type & TKL_SHUN) || (tkl->type & TKL_SPAMF) || (tkl->type & TKL_NICK) || (tkl->type & TKL_EXCEPT))
 		return 0;
 
 	if (skip_soft && (tkl->subtype & TKL_SUBTYPE_SOFT))
@@ -2124,6 +2134,12 @@ char *_tkl_type_string(aTKline *tk)
 		case TKL_SPAMF | TKL_GLOBAL:
 			strlcat(txt, "Spamfilter", sizeof(txt));
 			break;
+		case TKL_EXCEPT:
+			strlcat(txt, "Local Exception", sizeof(txt));
+			break;
+		case TKL_EXCEPT | TKL_GLOBAL:
+			strlcat(txt, "Exception", sizeof(txt));
+			break;
 		default:
 			strlcat(txt, "Unknown *-Line", sizeof(txt));
 	}
@@ -2154,6 +2170,10 @@ aTKline *find_tkline(int type, int softban, char *usermask, char *hostmask, char
 				{
 					return tk;
 				}
+			} else
+			if (type & TKL_EXCEPT)
+			{
+				/* skip? */
 			} else /* all other types... */
 			if (!stricmp(tk->hostmask, hostmask) && !stricmp(tk->usermask, usermask))
 			{

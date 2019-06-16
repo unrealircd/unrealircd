@@ -719,6 +719,7 @@ struct Server {
 #define TKL_QUIET	0x0010
 #define TKL_SPAMF	0x0020
 #define TKL_NICK	0x0040
+#define TKL_EXCEPT	0x0080
 
 #define SPAMF_CHANMSG		0x0001 /* c */
 #define SPAMF_USERMSG		0x0002 /* p */
