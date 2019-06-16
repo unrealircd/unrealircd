@@ -94,11 +94,9 @@ char (*tkl_typetochar)(int type);
 int (*tkl_chartotype)(char c);
 char *(*tkl_type_string)(aTKline *tk);
 aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
-    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type, int soft, int flags);
+    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType spamf_match_type, int soft, int flags);
 aTKline *(*tkl_del_line)(aTKline *tkl);
 void (*tkl_check_local_remove_shun)(aTKline *tmp);
-aTKline *(*tkl_expire)(aTKline * tmp);
-EVENT((*tkl_check_expire));
 int (*find_tkline_match)(aClient *cptr, int skip_soft);
 int (*find_shun)(aClient *cptr);
 int(*find_spamfilter_user)(aClient *sptr, int flags);
@@ -160,8 +158,8 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 10 */	{"tkl_add_line", (void *)&tkl_add_line, NULL},
 /* 11 */	{"tkl_del_line", (void *)&tkl_del_line, NULL},
 /* 12 */	{"tkl_check_local_remove_shun", (void *)&tkl_check_local_remove_shun, NULL},
-/* 13 */	{"tkl_expire", (void *)&tkl_expire, NULL},
-/* 14 */	{"tkl_check_expire", (void *)&tkl_check_expire, NULL},
+/* 13 */	{NULL, NULL, NULL},
+/* 14 */	{NULL, NULL, NULL},
 /* 15 */	{"find_tkline_match", (void *)&find_tkline_match, NULL},
 /* 16 */	{"find_shun", (void *)&find_shun, NULL},
 /* 17 */	{"find_spamfilter_user", (void *)&find_spamfilter_user, NULL},

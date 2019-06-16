@@ -631,11 +631,9 @@ extern MODVAR char (*tkl_typetochar)(int type);
 extern MODVAR int (*tkl_chartotype)(char c);
 extern MODVAR char *(*tkl_type_string)(aTKline *tk);
 extern MODVAR aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
-                  TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type, int soft, int flags);
+                  TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType spamf_match_type, int soft, int flags);
 extern MODVAR aTKline *(*tkl_del_line)(aTKline *tkl);
 extern MODVAR void (*tkl_check_local_remove_shun)(aTKline *tmp);
-extern MODVAR aTKline *(*tkl_expire)(aTKline * tmp);
-extern MODVAR EVENT((*tkl_check_expire));
 extern MODVAR int (*find_tkline_match)(aClient *cptr, int skip_soft);
 extern MODVAR int (*find_shun)(aClient *cptr);
 extern MODVAR int (*find_spamfilter_user)(aClient *sptr, int flags);
