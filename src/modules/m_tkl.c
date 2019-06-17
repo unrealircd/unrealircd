@@ -3053,6 +3053,9 @@ CMD_FUNC(_m_tkl)
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
 		return 0;
 
+	if (parc < 2)
+		return 0;
+
 	switch (*parv[1])
 	{
 		case '+':
