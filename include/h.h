@@ -186,12 +186,12 @@ extern long get_access(aClient *, aChannel *);
 extern int is_chan_op(aClient *, aChannel *);
 extern int has_voice(aClient *, aChannel *);
 extern int is_chanowner(aClient *, aChannel *);
-extern int ban_check_mask(aClient *, aChannel *, char *, int, int);
+extern int ban_check_mask(aClient *, aChannel *, char *, int, char *, int);
 extern int extban_is_ok_nuh_extban(aClient *, aChannel *, char *, int, int, int);
 extern char *extban_conv_param_nuh_or_extban(char *);
 extern char *extban_conv_param_nuh(char *);
-extern Ban *is_banned(aClient *, aChannel *, int);
-extern Ban *is_banned_with_nick(aClient *, aChannel *, int, char *);
+extern Ban *is_banned(aClient *, aChannel *, int, char *);
+extern Ban *is_banned_with_nick(aClient *, aChannel *, int, char *, char *);
 extern int parse_help(aClient *, char *, char *);
 
 extern void ircd_log(int, char *, ...) __attribute__((format(printf,2,3)));

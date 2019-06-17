@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER(account)
 
 /* Forward declarations */
 char *extban_account_conv_param(char *para);
-int extban_account_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type);
+int extban_account_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char *msg);
 
 /** Called upon module init */
 MOD_INIT(account)
@@ -78,7 +78,7 @@ char *extban_account_conv_param(char *para)
 	return retbuf;
 }
 
-int extban_account_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type)
+int extban_account_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char *msg)
 {
 	char *ban = banin+3;
 

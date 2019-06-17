@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER(regnick)
 
 /* Forward declarations */
 char *extban_regnick_conv_param(char *para);
-int extban_regnick_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type);
+int extban_regnick_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char *msg);
 
 /** Called upon module init */
 MOD_INIT(regnick)
@@ -77,7 +77,7 @@ char *extban_regnick_conv_param(char *para)
 	return retbuf;
 }
 
-int extban_regnick_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type)
+int extban_regnick_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char *msg)
 {
 	char *ban = banin+3;
 

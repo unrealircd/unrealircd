@@ -195,7 +195,7 @@ CMD_FUNC(m_invite)
 	/* Send OperOverride messages */
 	if (override && MyConnect(acptr))
 	{
-		if (is_banned(sptr, chptr, BANCHK_JOIN))
+		if (is_banned(sptr, chptr, BANCHK_JOIN, NULL))
 		{
 			sendto_snomask_global(SNO_EYES,
 			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",

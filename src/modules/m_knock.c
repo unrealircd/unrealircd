@@ -109,7 +109,7 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	if (is_banned(sptr, chptr, BANCHK_JOIN))
+	if (is_banned(sptr, chptr, BANCHK_JOIN, NULL))
 	{
 		sendnumeric(sptr, ERR_CANNOTKNOCK, chptr->chname, "You're banned!");
 		return 0;

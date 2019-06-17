@@ -144,7 +144,7 @@ CMD_FUNC(m_topic)
 			}
 
 			/* If you're not a member, and you can't view outside channel, deny */
-			if ((!ismember && i == HOOK_DENY) || (is_banned(sptr,chptr,BANCHK_JOIN) && !ValidatePermissionsForPath("channel:see:topic",sptr,NULL,chptr,NULL)))
+			if ((!ismember && i == HOOK_DENY) || (is_banned(sptr,chptr,BANCHK_JOIN,NULL) && !ValidatePermissionsForPath("channel:see:topic",sptr,NULL,chptr,NULL)))
 			{
 				sendnumeric(sptr, ERR_NOTONCHANNEL, name);
 				return 0;
@@ -210,7 +210,7 @@ CMD_FUNC(m_topic)
 #endif
 				}
 			} else
-			if (MyClient(sptr) && !is_chan_op(sptr, chptr) && !is_halfop(sptr, chptr) && is_banned(sptr, chptr, BANCHK_MSG))
+			if (MyClient(sptr) && !is_chan_op(sptr, chptr) && !is_halfop(sptr, chptr) && is_banned(sptr, chptr, BANCHK_MSG, NULL))
 			{
 				char buf[512];
 				

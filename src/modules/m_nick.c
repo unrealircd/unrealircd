@@ -999,13 +999,13 @@ CMD_FUNC(m_nick)
 		{
 			for (mp = sptr->user->channel; mp; mp = mp->next)
 			{
-				if (!is_skochanop(sptr, mp->chptr) && is_banned(sptr, mp->chptr, BANCHK_NICK))
+				if (!is_skochanop(sptr, mp->chptr) && is_banned(sptr, mp->chptr, BANCHK_NICK, NULL))
 				{
 					sendnumeric(sptr, ERR_BANNICKCHANGE,
 					    mp->chptr->chname);
 					return 0;
 				}
-				if (CHECK_TARGET_NICK_BANS && !is_skochanop(sptr, mp->chptr) && is_banned_with_nick(sptr, mp->chptr, BANCHK_NICK, nick))
+				if (CHECK_TARGET_NICK_BANS && !is_skochanop(sptr, mp->chptr) && is_banned_with_nick(sptr, mp->chptr, BANCHK_NICK, nick, NULL))
 				{
 					sendnumeric(sptr, ERR_BANNICKCHANGE, mp->chptr->chname);
 					return 0;

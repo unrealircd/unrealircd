@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER(inchannel)
 /* Forward declarations */
 int extban_inchannel_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what, int what2);
 char *extban_inchannel_conv_param(char *para);
-int extban_inchannel_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type);
+int extban_inchannel_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char *msg);
 
 /** Called upon module init */
 MOD_INIT(inchannel)
@@ -135,7 +135,7 @@ static int extban_inchannel_compareflags(char symbol, int flags)
 	return 0;
 }
 
-int extban_inchannel_is_banned(aClient *sptr, aChannel *chptr, char *ban, int type)
+int extban_inchannel_is_banned(aClient *sptr, aChannel *chptr, char *ban, int type, char *msg)
 {
 	Membership *lp;
 	char *p = ban+3, symbol = '\0';

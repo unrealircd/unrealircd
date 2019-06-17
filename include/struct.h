@@ -1874,6 +1874,7 @@ struct _maxtargets {
 #define BANCHK_JOIN		0	/* checking if a ban forbids the person from joining */
 #define BANCHK_MSG		1	/* checking if a ban forbids the person from sending messages */
 #define BANCHK_NICK		2	/* checking if a ban forbids the person from changing his/her nick */
+#define BANCHK_LEAVE_MSG	3	/* checking if a ban forbids the person from leaving a message in PART or QUIT */
 
 #define TKLISTLEN		26
 #define TKLIPHASHLEN1		4
