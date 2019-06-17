@@ -909,6 +909,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_POST_COMMAND 99
 #define HOOKTYPE_NEW_MESSAGE 100
 #define HOOKTYPE_IS_HANDSHAKE_FINISHED 101
+#define HOOKTYPE_PRE_LOCAL_QUIT_CHAN 102
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -1017,6 +1018,7 @@ int hooktype_pre_command(aClient *from, MessageTag *mtags, char *buf);
 int hooktype_post_command(aClient *from, MessageTag *mtags, char *buf);
 void hooktype_new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 int hooktype_is_handshake_finished(aClient *acptr);
+char *hooktype_pre_local_quit_chan(aClient *sptr, aChannel *chptr, char *comment);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))

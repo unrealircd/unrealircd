@@ -61,7 +61,6 @@ CMD_FUNC(m_quit)
 {
 	char *comment = (parc > 1 && parv[1]) ? parv[1] : sptr->name;
 	static char commentbuf[MAXQUITLEN + 1];
-	Membership *lp;
 
 	if (parv[1] && (strlen(comment) > iConf.quit_length))
 		comment[iConf.quit_length] = '\0';
@@ -70,6 +69,7 @@ CMD_FUNC(m_quit)
 	{
 		int n;
 		Hook *tmphook;
+		Membership *lp, *lp_next;
 
 		if (STATIC_QUIT)
 			return exit_client(cptr, sptr, sptr, recv_mtags, STATIC_QUIT);
@@ -87,6 +87,43 @@ CMD_FUNC(m_quit)
 		{
 			if (sptr->local->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 				comment = sptr->name;
+		}
+
+		if (iConf.part_instead_of_quit_on_comment_change)
+		{
+			Membership *lp;
+			char *newcomment;
+			aChannel *chptr;
+
+			for (lp = sptr->user->channel; lp; lp = lp_next)
+			{
+				chptr = lp->chptr;
+				newcomment = comment;
+				lp_next = lp->next;
+
+				for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT_CHAN]; tmphook; tmphook = tmphook->next)
+				{
+					newcomment = (*(tmphook->func.pcharfunc))(sptr, chptr, comment);
+					if (!newcomment)
+						break;
+				}
+
+				if (comment != newcomment)
+				{
+					char *parx[4];
+					int ret;
+
+					parx[0] = NULL;
+					parx[1] = chptr->chname;
+					parx[2] = newcomment;
+					parx[3] = NULL;
+
+					ret = do_cmd(cptr, sptr, recv_mtags, "PART", newcomment ? 3 : 2, parx);
+					/* This would be unusual, but possible (somewhere in the future perhaps): */
+					if (ret == FLUSH_BUFFER)
+						return ret;
+				}
+			}
 		}
 
 		for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT]; tmphook; tmphook = tmphook->next)

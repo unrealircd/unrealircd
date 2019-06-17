@@ -7880,6 +7880,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.ban_setter_sync = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
+		else if (!strcmp(cep->ce_varname, "part-instead-of-quit-on-comment-change"))
+		{
+			tempiConf.part_instead_of_quit_on_comment_change = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
 		else
 		{
 			int value;
@@ -8983,6 +8987,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "ban-setter-sync") || !strcmp(cep->ce_varname, "ban-setter-synch"))
+		{
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "part-instead-of-quit-on-comment-change"))
 		{
 			CheckNull(cep);
 		}

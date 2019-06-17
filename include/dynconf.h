@@ -163,6 +163,7 @@ struct zConfiguration {
 	int topic_setter;
 	int ban_setter;
 	int ban_setter_sync;
+	int part_instead_of_quit_on_comment_change;
 };
 
 #ifndef DYNCONF_C

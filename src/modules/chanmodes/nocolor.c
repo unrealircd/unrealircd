@@ -56,6 +56,7 @@ CmodeInfo req;
 	
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, nocolor_prechanmsg);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, nocolor_prelocalpart);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT_CHAN, 0, nocolor_prelocalpart);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, nocolor_prelocalquit);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
