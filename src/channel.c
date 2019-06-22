@@ -453,12 +453,14 @@ int del_listmode(Ban **list, aChannel *chptr, char *banid)
  * @param chptr  Channel to check
  * @param type   Type of ban to check for (BANCHK_*)
  * @param msg    Message, only for some BANCHK_* types, otherwise NULL
+ * @param errmsg Error message returned, could be NULL (which does not
+ *               indicate absence of an error).
  * @returns      A pointer to the ban struct if banned, otherwise NULL.
  * @comments     Simple wrapper for is_banned_with_nick()
  */
-inline Ban *is_banned(aClient *sptr, aChannel *chptr, int type, char *msg)
+inline Ban *is_banned(aClient *sptr, aChannel *chptr, int type, char **msg, char **errmsg)
 {
-	return is_banned_with_nick(sptr, chptr, type, NULL, msg);
+	return is_banned_with_nick(sptr, chptr, type, NULL, msg, errmsg);
 }
 
 /** ban_check_mask - Checks if the user matches the specified n!u@h mask -or- run an extended ban.
@@ -467,12 +469,13 @@ inline Ban *is_banned(aClient *sptr, aChannel *chptr, int type, char *msg)
  * @param banstr       Mask string to check user
  * @param type         Type of ban to check for (BANCHK_*)
  * @param msg          Message, only for some BANCHK_* types, otherwise NULL.
+ * @param errmsg       Error message, could be NULL
  * @param no_extbans   0 to check extbans, nonzero to disable extban checking.
  * @returns            Nonzero if the mask/extban succeeds. Zero if it doesn't.
  * @comments           This is basically extracting the mask and extban check from is_banned_with_nick, but with being a bit more strict in what an extban is.
  *                     Strange things could happen if this is called outside standard ban checking.
  */
-inline int ban_check_mask(aClient *sptr, aChannel *chptr, char *banstr, int type, char *msg, int no_extbans)
+inline int ban_check_mask(aClient *sptr, aChannel *chptr, char *banstr, int type, char **msg, char **errmsg, int no_extbans)
 {
 	Extban *extban = NULL;
 	if (!no_extbans && banstr[0] == '~' && banstr[1] != '\0' && banstr[2] == ':')
@@ -485,7 +488,7 @@ inline int ban_check_mask(aClient *sptr, aChannel *chptr, char *banstr, int type
 		}
 		else
 		{
-			return extban->is_banned(sptr, chptr, banstr, type, msg);
+			return extban->is_banned(sptr, chptr, banstr, type, msg, errmsg);
 		}
 	}
 	else
@@ -503,7 +506,7 @@ inline int ban_check_mask(aClient *sptr, aChannel *chptr, char *banstr, int type
  * @param msg    Message, only for some BANCHK_* types, otherwise NULL
  * @returns      A pointer to the ban struct if banned, otherwise NULL.
  */
-Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick, char *msg)
+Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick, char **msg, char **errmsg)
 {
 	Ban *ban, *ex;
 	char savednick[NICKLEN+1];
@@ -531,7 +534,7 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick, c
 
 	for (ban = chptr->banlist; ban; ban = ban->next)
 	{
-		if (ban_check_mask(sptr, chptr, ban->banstr, type, msg, 0))
+		if (ban_check_mask(sptr, chptr, ban->banstr, type, msg, errmsg, 0))
 			break;
 	}
 
@@ -540,7 +543,7 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick, c
 		/* Ban found, now check for +e */
 		for (ex = chptr->exlist; ex; ex = ex->next)
 		{
-			if (ban_check_mask(sptr, chptr, ex->banstr, type, msg, 0))
+			if (ban_check_mask(sptr, chptr, ex->banstr, type, msg, errmsg, 0))
 			{
 				/* except matched */
 				ban = NULL;
@@ -729,7 +732,7 @@ int  is_chanprot(aClient *cptr, aChannel *chptr)
 	return 0;
 }
 
-int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
+int can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice)
 {
 	Membership *lp;
 	int  member, i = 0;
@@ -797,7 +800,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	if ((!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))) && MyClient(cptr)
-	    && is_banned(cptr, chptr, BANCHK_MSG, msgtext))
+	    && is_banned(cptr, chptr, BANCHK_MSG, msgtext, errmsg))
 		return (CANNOT_SEND_BAN);
 
 	return 0;
@@ -1077,7 +1080,7 @@ int find_invex(aChannel *chptr, aClient *sptr)
 	Ban *inv;
 
 	for (inv = chptr->invexlist; inv; inv = inv->next)
-		if (ban_check_mask(sptr, chptr, inv->banstr, BANCHK_JOIN, NULL, 0))
+		if (ban_check_mask(sptr, chptr, inv->banstr, BANCHK_JOIN, NULL, NULL, 0))
 			return 1;
 
 	return 0;

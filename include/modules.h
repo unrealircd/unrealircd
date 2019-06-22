@@ -363,9 +363,10 @@ typedef struct {
 	 * aChannel *: the channel
 	 * para: the ban entry
 	 * int: a value of BANCHK_* (see struct.h)
-	 * char *: optionally a message (for some BANCHK_ types)
+	 * char **: optionally a message, can be NULL!! (for some BANCHK_ types)
+	 * char **: optionally for setting an error message, can be NULL!!
 	 */
-	int			(*is_banned)(aClient *, aChannel *, char *, int, char *);
+	int			(*is_banned)(aClient *sptr, aChannel *chptr, char *para, int checktype, char **msg, char **errormsg);
 } Extban;
 
 typedef struct {
@@ -373,7 +374,7 @@ typedef struct {
 	ExtbanOptions options;
 	int			(*is_ok)(aClient *, aChannel *, char *para, int, int, int);
 	char *			(*conv_param)(char *);
-	int			(*is_banned)(aClient *, aChannel *, char *, int, char *);
+	int			(*is_banned)(aClient *, aChannel *, char *, int, char **, char **);
 } ExtbanInfo;
 
 

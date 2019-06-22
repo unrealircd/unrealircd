@@ -81,9 +81,9 @@ ModuleHeader MOD_HEADER(textban)
 
 /* Forward declarations */
 char *extban_modeT_conv_param(char *para_in);
-int extban_modeT_is_banned(aClient *sptr, aChannel *chptr, char *ban, int type, char *msg);
+int extban_modeT_is_banned(aClient *sptr, aChannel *chptr, char *ban, int type, char **msg, char **errmsg);
 int extban_modeT_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what, int what2);
-char *textban_chanmsg(aClient *, aChannel *, MessageTag *, char *, int);
+void parse_word(const char *s, char **word, int *type);
 
 MOD_INIT(textban)
 {
@@ -96,14 +96,12 @@ MOD_INIT(textban)
 	req.conv_param = extban_modeT_conv_param;
 	req.is_banned = extban_modeT_is_banned;
 	req.is_ok = extban_modeT_is_ok;
-	
+
 	if (!ExtbanAdd(modinfo->handle, req))
 	{
 		config_error("textban module: adding extban ~T failed! module NOT loaded");
 		return MOD_FAILED;
 	}
-
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, textban_chanmsg);
 
 	return MOD_SUCCESS;
 }
@@ -200,7 +198,7 @@ int textban_replace(int type, char *badword, char *line, char *buf)
 		}
 
 		cleaned = 1; /* still too soon? Syzop/20050227 */
-		
+
 		/* Do we have any not-copied-yet data? */
 		if (poldx != startw)
 		{
@@ -307,7 +305,7 @@ char *extban_modeT_conv_param(char *para_in)
 		return NULL;
 	*text++ = '\0';
 	uhost = para;
-	
+
 	for (p = uhost; *p; p++)
 	{
 		if (*p == '@')
@@ -327,7 +325,7 @@ char *extban_modeT_conv_param(char *para_in)
 		return NULL; /* empty text */
 	action = para;
 #endif
-	
+
 	/* ~T:<action>:<text> */
 	if (!strcasecmp(action, "block"))
 		action = "block"; /* ok */
@@ -366,11 +364,92 @@ char *extban_modeT_conv_param(char *para_in)
 	return retbuf;
 }
 
-int extban_modeT_is_banned(aClient *sptr, aChannel *chptr, char *ban, int type, char *msg)
+int extban_modeT_is_banned(aClient *sptr, aChannel *chptr, char *ban, int checktype, char **msg, char **errmsg)
 {
-	/* Never banned here */
-	// TODO: convert to new system ;)
-	return 0;
+	static char filtered[512]; /* temp buffer */
+	long fl;
+	int cleaned=0;
+	char *p;
+#ifdef UHOSTFEATURE
+	char buf[512], uhost[USERLEN + HOSTLEN + 16];
+#endif
+	char tmp[1024], *word;
+	int type;
+#ifdef BENCHMARK
+	struct timeval tv_alpha, tv_beta;
+
+	gettimeofday(&tv_alpha, NULL);
+#endif
+
+	/* We only filter on BANCHK_MSG, and we can only filter on non-NULL text of course */
+	if ((checktype != BANCHK_MSG) || (msg == NULL) || (*msg == NULL))
+		return 0;
+
+	filtered[0] = '\0'; /* NOT needed, but... :P */
+
+#ifdef UHOSTFEATURE
+	ircsprintf(uhost, "%s@%s", sptr->user->username, GetHost(sptr));
+#endif
+	strlcpy(filtered, StripControlCodes(*msg), sizeof(filtered));
+
+	p = ban + 3;
+#ifdef UHOSTFEATURE
+	/* First.. deal with userhost... */
+	strcpy(buf, p);
+	p = strchr(buf, ':');
+	if (!p)
+		return 0; /* invalid format */
+	*p++ = '\0';
+
+	if (!_match(buf, uhost))
+#else
+	if (1)
+#endif
+	{
+		if (!strncasecmp(p, "block:", 6))
+		{
+			if (!_match(p+6, filtered))
+			{
+				sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
+					"Message blocked due to a text ban", chptr->chname);
+				return 1; /* BLOCK */
+			}
+		}
+#ifdef CENSORFEATURE
+		else if (!strncasecmp(p, "censor:", 7))
+		{
+			parse_word(p+7, &word, &type);
+			if (textban_replace(type, word, filtered, tmp))
+			{
+				strlcpy(filtered, tmp, sizeof(filtered));
+				cleaned = 1;
+			}
+		}
+#endif
+	}
+
+#ifdef BENCHMARK
+	gettimeofday(&tv_beta, NULL);
+	ircd_log(LOG_ERROR, "TextBan Timing: %ld microseconds (%s / %s / %d)",
+		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec),
+		sptr->name, chptr->chname, strlen(*msg));
+#endif
+
+	if (cleaned)
+	{
+		/* check for null string */
+		char *p;
+		for (p = filtered; *p; p++)
+		{
+			if (*p != ' ')
+			{
+				*msg = filtered;
+				return 0; /* allow through, but filtered */
+			}
+		}
+		return 1; /* nothing but spaces found.. */
+	}
+	return 0; /* nothing blocked */
 }
 
 #ifdef CENSORFEATURE
@@ -395,106 +474,8 @@ void parse_word(const char *s, char **word, int *type)
 		}
 	}
 	*o = '\0';
-	
+
 	*word = buf;
 	*type = tpe;
 }
 #endif
-
-/* Channel message callback */
-char *textban_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
-{
-	static char filtered[512]; /* temp buffer */
-	Ban *ban;
-	long fl;
-	int done=0, cleaned=0;
-	char *p;
-#ifdef UHOSTFEATURE
-	char buf[512], uhost[USERLEN + HOSTLEN + 16];
-#endif
-	char tmp[1024], *word;
-	int type;
-#ifdef BENCHMARK
-	struct timeval tv_alpha, tv_beta;
-
-	gettimeofday(&tv_alpha, NULL);
-#endif
-
-	if (!MyClient(sptr))
-		return text; /* Remote and servers are not affected */
-
-	fl = get_access(sptr, chptr);
-	if (fl & (CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER))
-		return text; /* halfop or higher */
-
-	filtered[0] = '\0'; /* NOT needed, but... :P */
-
-#ifdef UHOSTFEATURE
-	ircsprintf(uhost, "%s@%s", sptr->user->username, GetHost(sptr));
-#endif
-
-	for (ban = chptr->banlist; ban; ban=ban->next)
-	{
-		if ((ban->banstr[0] == '~') && (ban->banstr[1] == 'T') && (ban->banstr[2] == ':'))
-		{
-			if (!done)
-			{
-				/* Prepare the text [done here, to avoid useless CPU time] */
-				strlcpy(filtered, StripControlCodes(text), sizeof(filtered));
-				done = 1;
-			}
-			p = ban->banstr + 3;
-#ifdef UHOSTFEATURE
-			/* First.. deal with userhost... */
-			strcpy(buf, p);
-			p = strchr(buf, ':');
-			if (!p) continue;
-			*p++ = '\0';
-			if (!_match(buf, uhost))
-#else
-			if (1)
-#endif
-			{
-				if (!strncasecmp(p, "block:", 6))
-				{
-					if (!_match(p+6, filtered))
-					{
-						sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
-							"Message blocked due to a text ban", chptr->chname);
-						return NULL;
-					}
-				}
-#ifdef CENSORFEATURE
-				else if (!strncasecmp(p, "censor:", 7))
-				{
-					parse_word(p+7, &word, &type);
-					if (textban_replace(type, word, filtered, tmp))
-					{
-						strlcpy(filtered, tmp, sizeof(filtered));
-						cleaned = 1;
-					}
-				}
-#endif
-			}
-		}
-	}
-
-#ifdef BENCHMARK
-	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "TextBan Timing: %ld microseconds (%s / %s / %d)",
-		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec),
-		sptr->name, chptr->chname, strlen(text));
-#endif
-
-	if (cleaned)
-	{
-		/* check for null string */
-		char *p;
-		for (p = filtered; *p; p++)
-			if (*p != ' ')
-				return filtered;
-		return NULL; /* nothing but spaces found.. */
-	}
-	else
-		return text;
-}

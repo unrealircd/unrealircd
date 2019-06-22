@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER(msgbypass)
 };
 
 /* Forward declarations */
-int extban_msgbypass_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char *msg);
+int extban_msgbypass_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg);
 int msgbypass_can_bypass(aClient *sptr, aChannel *chptr, BypassChannelMessageRestrictionType bypass_type);
 int msgbypass_extban_is_ok(aClient* sptr, aChannel* chptr, char* para, int checkt, int what, int what2);
 char *msgbypass_extban_conv_param(char *para);
@@ -68,7 +68,7 @@ MOD_UNLOAD(msgbypass)
 }
 
 /** Is the user banned? No, never by us anyway. */
-int extban_msgbypass_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char *msg)
+int extban_msgbypass_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg)
 {
 	return 0; /* not banned by us */
 }
@@ -97,7 +97,7 @@ int msgbypass_can_bypass(aClient *sptr, aChannel *chptr, BypassChannelMessageRes
 					continue;
 				matchby++;
 				
-				if (ban_check_mask(sptr, chptr, matchby, BANCHK_MSG, NULL, 0))
+				if (ban_check_mask(sptr, chptr, matchby, BANCHK_MSG, NULL, NULL, 0))
 					return HOOK_ALLOW; /* Yes, user may bypass */
 			}
 		}

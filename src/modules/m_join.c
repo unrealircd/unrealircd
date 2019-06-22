@@ -109,7 +109,7 @@ int i=0,j=0;
 	}
 
 	/* See if we can evade this ban */
-	banned = is_banned(sptr, chptr, BANCHK_JOIN, NULL);
+	banned = is_banned(sptr, chptr, BANCHK_JOIN, NULL, NULL);
 	if (banned && j == HOOK_DENY)
 		return (ERR_BANNEDFROMCHAN);
 
@@ -732,7 +732,7 @@ void _userhost_changed(aClient *sptr)
 			modebuf[0] = '\0';
 
 			/* If the user is banned, don't send any rejoins, it would only be annoying */
-			if (is_banned(sptr, chptr, BANCHK_JOIN, NULL))
+			if (is_banned(sptr, chptr, BANCHK_JOIN, NULL, NULL))
 				continue;
 
 			/* Prepare buffers for PART, JOIN, MODE */

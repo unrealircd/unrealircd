@@ -130,7 +130,7 @@ void unban_user(aClient *sptr, aChannel *chptr, aClient *acptr, char chmode)
 		{
 			if (extban->options & EXTBOPT_CHSVSMODE) 
 			{
-				if (extban->is_banned(acptr, chptr, ban->banstr, BANCHK_JOIN, NULL))
+				if (extban->is_banned(acptr, chptr, ban->banstr, BANCHK_JOIN, NULL, NULL))
 				{
 					add_send_mode_param(chptr, acptr, '-', chmode, ban->banstr);
 					del_listmode(banlist, chptr, ban->banstr);

@@ -130,7 +130,9 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 		aChannel *chptr;
 		if ((chptr = find_channel(alias->nick, NULL)))
 		{
-			if (!can_send(sptr, chptr, parv[1], 0))
+			char *msg = parv[1];
+			char *errmsg = NULL;
+			if (!can_send(sptr, chptr, &msg, &errmsg, 0))
 			{
 				if (alias->spamfilter && (ret = run_spamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
 					return ret;
@@ -263,7 +265,9 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 					aChannel *chptr;
 					if ((chptr = find_channel(format->nick, NULL)))
 					{
-						if (!can_send(sptr, chptr, output, 0))
+						char *msg = output;
+						char *errmsg = NULL;
+						if (!can_send(sptr, chptr, &msg, &errmsg, 0))
 						{
 							if (alias->spamfilter && (ret = run_spamfilter(sptr, output, SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
 								return ret;

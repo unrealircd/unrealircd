@@ -59,7 +59,7 @@ ModuleHeader MOD_HEADER(timedban)
 /* Forward declarations */
 char *timedban_extban_conv_param(char *para_in);
 int timedban_extban_is_ok(aClient* sptr, aChannel* chptr, char* para_in, int checkt, int what, int what2);
-int timedban_is_banned(aClient *sptr, aChannel *chptr, char *ban, int chktype, char *msg);
+int timedban_is_banned(aClient *sptr, aChannel *chptr, char *ban, int chktype, char **msg, char **errmsg);
 void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param);
 char *timedban_chanmsg(aClient *, aClient *, aChannel *, char *, int);
 
@@ -345,7 +345,7 @@ int timedban_extban_is_ok(aClient* sptr, aChannel* chptr, char* para_in, int che
 }
 
 /** Check if the user is currently banned */
-int timedban_is_banned(aClient *sptr, aChannel *chptr, char *ban, int chktype, char *msg)
+int timedban_is_banned(aClient *sptr, aChannel *chptr, char *ban, int chktype, char **msg, char **errmsg)
 {
 	if (strncmp(ban, "~t:", 3))
 		return 0; /* not for us */
@@ -354,7 +354,7 @@ int timedban_is_banned(aClient *sptr, aChannel *chptr, char *ban, int chktype, c
 		return 0; /* invalid fmt */
 	ban++;
 
-	return ban_check_mask(sptr, chptr, ban, chktype, msg, 0);
+	return ban_check_mask(sptr, chptr, ban, chktype, msg, errmsg, 0);
 }
 
 /** Helper to check if the ban has been expired */

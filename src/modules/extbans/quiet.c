@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER(quiet)
 };
 
 /* Forward declarations */
-int extban_quiet_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char *msg);
+int extban_quiet_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
 MOD_INIT(quiet)
@@ -64,7 +64,7 @@ MOD_UNLOAD(quiet)
 }
 
 /** This ban that affects messages/notices only */
-int extban_quiet_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char *msg)
+int extban_quiet_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg)
 {
 	char *sub_ban;
 
@@ -73,5 +73,5 @@ int extban_quiet_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type
 
 	sub_ban = banin + 3;
 
-	return ban_check_mask(sptr, chptr, sub_ban, type, msg, 0);
+	return ban_check_mask(sptr, chptr, sub_ban, type, msg, errmsg, 0);
 }

@@ -166,7 +166,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 	aClient *acptr, *srvptr;
 	char *s;
 	aChannel *chptr;
-	char *nick, *server, *p, *p2, *pc, *text, *newcmd;
+	char *nick, *server, *p, *p2, *pc, *text, *errmsg, *newcmd;
 	int  cansend = 0;
 	int  prefix = 0;
 	char pfixchan[CHANNELLEN + 4];
@@ -336,8 +336,9 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 				continue;
 			}
 			
-			cansend =
-			    !IsULine(sptr) ? can_send(sptr, chptr, parv[2], notice) : 0;
+			text = parv[2];
+			errmsg = NULL;
+			cansend = !IsULine(sptr) ? can_send(sptr, chptr, &text, &errmsg, notice) : 0;
 			if (!cansend)
 			{
 				Hook *tmphook;
