@@ -154,12 +154,8 @@ CMD_FUNC(m_user)
 
 	if (!IsServer(cptr))
 	{
+		/* set::modes-on-connect */
 		sptr->umodes |= CONN_MODES;
-		if (CONNECT_SNOMASK)
-		{
-			sptr->umodes |= UMODE_SERVNOTICE;
-			create_snomask(sptr, sptr->user, CONNECT_SNOMASK);
-		}
 	}
 
 	sptr->user->server = me_hash;

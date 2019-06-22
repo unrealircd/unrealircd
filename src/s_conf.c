@@ -1470,7 +1470,6 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->oper_only_stats);
 	safefree(i->channel_command_prefix);
 	safefree(i->oper_snomask);
-	safefree(i->user_snomask);
 	safefree(i->static_quit);
 	if (i->ssl_options)
 	{
@@ -7395,9 +7394,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
 			safestrdup(tempiConf.oper_snomask, cep->ce_vardata);
 		}
-		else if (!strcmp(cep->ce_varname, "snomask-on-connect")) {
-			safestrdup(tempiConf.user_snomask, cep->ce_vardata);
-		}
 		else if (!strcmp(cep->ce_varname, "level-on-join")) {
 			tempiConf.level_on_join = channellevel_to_int(cep->ce_vardata);
 		}
@@ -8008,10 +8004,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, snomask_on_oper, "snomask-on-oper");
-		}
-		else if (!strcmp(cep->ce_varname, "snomask-on-connect")) {
-			CheckNull(cep);
-			CheckDuplicate(cep, snomask_on_connect, "snomask-on-connect");
 		}
 		else if (!strcmp(cep->ce_varname, "level-on-join")) {
 			char *p;

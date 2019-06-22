@@ -1076,7 +1076,6 @@ int stats_set(aClient *sptr, char *para)
 	sendtxtnumeric(sptr, "modes-on-join: %s %s", modebuf, parabuf);
 	sendtxtnumeric(sptr, "nick-length: %i", iConf.nick_length);
 	sendtxtnumeric(sptr, "snomask-on-oper: %s", OPER_SNOMASK);
-	sendtxtnumeric(sptr, "snomask-on-connect: %s", CONNECT_SNOMASK ? CONNECT_SNOMASK : "+");
 	if (OPER_ONLY_STATS)
 	{
 		char *longflags = stats_operonly_long_to_short();
