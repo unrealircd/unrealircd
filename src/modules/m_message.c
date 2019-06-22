@@ -29,6 +29,7 @@ int	ban_version(aClient *sptr, char *text);
 CMD_FUNC(m_private);
 CMD_FUNC(m_notice);
 int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice);
+int _can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice);
 
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
@@ -49,6 +50,7 @@ MOD_TEST(m_message)
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCONTROLCODES, _StripControlCodes);
 	EfunctionAdd(modinfo->handle, EFUNC_IS_SILENCED, _is_silenced);
+	EfunctionAdd(modinfo->handle, EFUNC_CAN_SEND, _can_send);
 	return MOD_SUCCESS;
 }
 
@@ -879,4 +881,96 @@ int	ban_version(aClient *sptr, char *text)
 	}
 
 	return 0;
+}
+
+/** Can user send a message to this channel?
+ * @param cptr    The client
+ * @param chptr   The channel
+ * @param msgtext The message to send (MAY be changed, even if user is allowed to send)
+ * @param errmsg  The error message (will be filled in)
+ * @param notice  If it's a NOTICE then this is set to 1. Set to 0 for PRIVMSG.
+ * @returns Returns 1 if the user is allowed to send, otherwise 0.
+ * (note that this behavior was reversed in UnrealIRCd versions <5.x.
+ */
+int _can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice)
+{
+	Membership *lp;
+	int  member, i = 0;
+	Hook *h;
+
+	if (!MyClient(cptr))
+		return 1;
+
+	*errmsg = NULL;
+
+	member = IsMember(cptr, chptr);
+
+	if (chptr->mode.mode & MODE_NOPRIVMSGS && !member)
+	{
+		/* Channel does not accept external messages (+n).
+		 * Reject, unless HOOKTYPE_CAN_BYPASS_NO_EXTERNAL_MSGS tells otherwise.
+		 */
+		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_CHANMSG_EXTERNAL);
+			if (i != HOOK_CONTINUE)
+				break;
+		}
+		if (i != HOOK_ALLOW)
+		{
+			*errmsg = "No external channel messages";
+			return 0;
+		}
+	}
+
+	lp = find_membership_link(cptr->user->channel, chptr);
+	if (chptr->mode.mode & MODE_MODERATED &&
+	    !op_can_override("channel:override:message:moderated",cptr,chptr,NULL) &&
+	    (!lp /* FIXME: UGLY */
+	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER | CHFL_HALFOP | CHFL_CHANPROT))))
+	{
+		/* Channel is moderated (+m).
+		 * Reject, unless HOOKTYPE_CAN_BYPASS_MODERATED tells otherwise.
+		 */
+		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_CHANMSG_MODERATED);
+			if (i != HOOK_CONTINUE)
+				break;
+		}
+		if (i != HOOK_ALLOW)
+		{
+			*errmsg = "You need voice (+v)";
+			return 0;
+		}
+	}
+
+	/* Modules can plug in as well */
+	for (h = Hooks[HOOKTYPE_CAN_SEND]; h; h = h->next)
+	{
+		i = (*(h->func.intfunc))(cptr, chptr, lp, &msgtext, &errmsg, notice);
+		if (i != HOOK_CONTINUE)
+			break;
+	}
+	if (i != HOOK_CONTINUE)
+		return 0;
+
+	/* Now we are going to check bans */
+
+	/* ..but first: exempt ircops */
+	if (op_can_override("channel:override:message:ban",cptr,chptr,NULL))
+		return 0;
+
+	if ((!lp
+	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
+	    CHFL_HALFOP | CHFL_CHANPROT))) && MyClient(cptr)
+	    && is_banned(cptr, chptr, BANCHK_MSG, msgtext, errmsg))
+	{
+		/* Modules can set 'errmsg', otherwise we default to this: */
+		if (!*errmsg)
+			*errmsg = "You are banned";
+		return 0;
+	}
+
+	return 1;
 }

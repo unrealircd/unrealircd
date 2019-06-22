@@ -1204,6 +1204,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define EFUNC_MTAGS_TO_STRING		62
 #define EFUNC_TKL_CHARTOTYPE		63
 #define EFUNC_TKL_TYPE_STRING		64
+#define EFUNC_CAN_SEND			65
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

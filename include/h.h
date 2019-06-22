@@ -181,7 +181,6 @@ extern int add_silence(aClient *, char *, int);
 extern int del_silence(aClient *, char *);
 extern void send_user_joins(aClient *, aClient *);
 extern void clean_channelname(char *);
-extern int can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice);
 extern long get_access(aClient *, aChannel *);
 extern int is_chan_op(aClient *, aChannel *);
 extern int has_voice(aClient *, aChannel *);
@@ -678,6 +677,7 @@ extern MODVAR char *(*charsys_get_current_languages)(void);
 extern MODVAR void (*broadcast_sinfo)(aClient *acptr, aClient *to, aClient *except);
 extern MODVAR void (*parse_message_tags)(aClient *cptr, char **str, MessageTag **mtag_list);
 extern MODVAR char *(*mtags_to_string)(MessageTag *m, aClient *acptr);
+extern MODVAR int (*can_send)(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice);
 /* /Efuncs */
 
 extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;

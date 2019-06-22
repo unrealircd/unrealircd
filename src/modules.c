@@ -143,6 +143,7 @@ void (*parse_message_tags)(aClient *cptr, char **str, MessageTag **mtag_list);
 extern void parse_message_tags_default_handler(aClient *cptr, char **str, MessageTag **mtag_list);
 char *(*mtags_to_string)(MessageTag *m, aClient *acptr);
 extern char *mtags_to_string_default_handler(MessageTag *m, aClient *acptr);
+int (*can_send)(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL, NULL},
@@ -210,7 +211,8 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 62 */	{"mtags_to_string", (void *)&mtags_to_string, &mtags_to_string_default_handler},
 /* 63 */	{"tkl_chartotype", (void *)&tkl_chartotype, NULL},
 /* 64 */	{"tkl_type_string", (void *)&tkl_type_string, NULL},
-/* 65 */	{NULL, NULL, NULL},
+/* 65 */	{"can_send", (void *)&can_send, NULL},
+/* 66 */	{NULL, NULL, NULL},
 };
 
 #ifdef UNDERSCORE
