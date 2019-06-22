@@ -163,9 +163,11 @@ char *p;
 void send_version(aClient* sptr, int reply)
 {
 	int i;
+
 	for (i = 0; IsupportStrings[i]; i++)
-                        sendnumeric(sptr, reply, me.name, sptr->name,
-                                   IsupportStrings[i]);
+	{
+		sendnumeric(sptr, reply, IsupportStrings[i]);
+	}
 }
 
 /*
