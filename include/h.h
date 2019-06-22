@@ -182,9 +182,21 @@ extern int del_silence(aClient *, char *);
 extern void send_user_joins(aClient *, aClient *);
 extern void clean_channelname(char *);
 extern long get_access(aClient *, aChannel *);
-extern int is_chan_op(aClient *, aChannel *);
-extern int has_voice(aClient *, aChannel *);
-extern int is_chanowner(aClient *, aChannel *);
+#ifdef PREFIX_AQ
+ #define CHFL_CHANOP_OR_HIGHER (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER)
+ #define CHFL_HALFOP_OR_HIGHER (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_HALFOP)
+#else
+ #define CHFL_CHANOP_OR_HIGHER (CHFL_CHANOP)
+ #define CHFL_HALFOP_OR_HIGHER (CHFL_CHANOP|CHFL_HALFOP)
+#endif
+
+#define is_chan_op(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANOP_OR_HIGHER)
+#define is_skochanop(cptr,chptr) (get_access(cptr,chptr) & CHFL_HALFOP_OR_HIGHER)
+#define has_voice(cptr,chptr) (get_access(cptr,chptr) & CHFL_VOICE)
+#define is_halfop is_half_op
+#define is_half_op(cptr,chptr) (get_access(cptr,chptr) & CHFL_HALFOP)
+#define is_chanowner(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANOWNER)
+#define is_chanprot(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANPROT)
 extern int ban_check_mask(aClient *, aChannel *, char *, int, char **, char **, int);
 extern int extban_is_ok_nuh_extban(aClient *, aChannel *, char *, int, int, int);
 extern char *extban_conv_param_nuh_or_extban(char *);
@@ -471,8 +483,6 @@ extern int		Auth_Check(aClient *cptr, anAuthStruct *as, char *para);
 extern char   		*Auth_Make(short type, char *para);
 extern int   		Auth_CheckError(ConfigEntry *ce);
 
-extern int is_chanownprotop(aClient *cptr, aChannel *chptr);
-extern int is_skochanop(aClient *cptr, aChannel *chptr);
 extern char *make_virthost(aClient *sptr, char *curr, char *new, int mode);
 extern int  channel_canjoin(aClient *sptr, char *name);
 extern char *collapse(char *pattern);

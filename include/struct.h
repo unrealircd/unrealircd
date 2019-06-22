@@ -1704,7 +1704,6 @@ struct liststructprio {
 #define MODE_RGSTR		0x8000
 #define MODE_INVEX		0x8000000
 
-#define is_halfop is_half_op
 /*
  * mode flags which take another parameter (With PARAmeterS)
  */

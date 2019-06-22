@@ -71,8 +71,10 @@ int nonickchange_check (aClient *sptr, aChannel *chptr)
 {
 	if (!IsOper(sptr) && !IsULine(sptr)
 		&& IsNoNickChange(chptr)
-		&& !is_chanownprotop(sptr, chptr))
+		&& !is_chan_op(sptr, chptr))
+	{
 		return HOOK_DENY;
+	}
 
 	return HOOK_ALLOW;
 }

@@ -25,8 +25,6 @@
 /* channel.c */
 extern int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, TS creationtime);
 extern void make_cmodestr(void);
-extern int  is_halfop(aClient *cptr, aChannel *chptr);
-extern int  is_chanprot(aClient *cptr, aChannel *chptr);
 
 /* lusers.c */
 extern void init_ircstats(void);
