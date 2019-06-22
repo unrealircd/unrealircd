@@ -60,7 +60,7 @@ MOD_UNLOAD(m_kick)
 */
 
 #ifdef PREFIX_AQ
-#define CHFL_ISOP (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)
+#define CHFL_ISOP (CHFL_CHANOWNER|CHFL_CHANADMIN|CHFL_CHANOP)
 #else
 #define CHFL_ISOP (CHFL_CHANOP)
 #endif
@@ -207,7 +207,7 @@ CMD_FUNC(m_kick)
 
 				}				
 				/* victim is +a or +q, we are not +q */
-				if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANPROT))
+				if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANADMIN))
 					 && !(sptr_flags & CHFL_CHANOWNER)) {
 					if (sptr == who)
 						goto attack; /* kicking self == ok */
@@ -237,7 +237,7 @@ CMD_FUNC(m_kick)
 						sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "KICK",
 							   errbuf);
 						goto deny;
-					}	/* chanprot/chanowner */
+					}	/* chanadmin/chanowner */
 				}
 				
 				/* victim is +o, we are +h [operoverride is already taken care of 2 blocks above] */
@@ -293,7 +293,7 @@ CMD_FUNC(m_kick)
 					{
 						/* Send it only to chanops & victim */
 						sendto_channel(chptr, sptr, who,
-						               CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT, 0,
+						               CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
 						               SEND_LOCAL, mtags,
 						               ":%s KICK %s %s :%s",
 						               sptr->name, chptr->chname, who->name, comment);

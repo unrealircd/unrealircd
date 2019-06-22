@@ -147,7 +147,7 @@ CMD_FUNC(m_names)
 #ifdef PREFIX_AQ
 			if (cm->flags & CHFL_CHANOWNER)
 				buf[idx++] = '~';
-			else if (cm->flags & CHFL_CHANPROT)
+			else if (cm->flags & CHFL_CHANADMIN)
 				buf[idx++] = '&';
 			else
 #endif
@@ -162,7 +162,7 @@ CMD_FUNC(m_names)
 #ifdef PREFIX_AQ
 			if (cm->flags & CHFL_CHANOWNER)
 				buf[idx++] = '~';
-			if (cm->flags & CHFL_CHANPROT)
+			if (cm->flags & CHFL_CHANADMIN)
 				buf[idx++] = '&';
 #endif
 			if (cm->flags & CHFL_CHANOP)

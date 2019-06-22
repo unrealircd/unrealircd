@@ -119,13 +119,13 @@ static int extban_inchannel_compareflags(char symbol, int flags)
 	int require=0;
 
 	if (symbol == '+')
-		require = CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER;
+		require = CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER;
 	else if (symbol == '%')
-		require = CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER;
+		require = CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER;
 	else if (symbol == '@')
-		require = CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER;
+		require = CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER;
 	else if (symbol == '&')
-		require = CHFL_CHANPROT|CHFL_CHANOWNER;
+		require = CHFL_CHANADMIN|CHFL_CHANOWNER;
 	else if (symbol == '~')
 		require = CHFL_CHANOWNER;
 

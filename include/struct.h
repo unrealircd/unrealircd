@@ -1674,15 +1674,15 @@ struct liststructprio {
 #define	CHFL_ZOMBIE     0x0010	/* Kicked from channel */
 /* Bans are stored in separate linked list, so phase this out? */
 #define	CHFL_BAN     	0x0020	/* ban channel flag */
-#define CHFL_CHANOWNER 	0x0040	/* channel owner */
-#define CHFL_CHANPROT  	0x0080	/* chan op protection */
+#define CHFL_CHANOWNER 	0x0040	/* channel owner (+q) */
+#define CHFL_CHANADMIN  	0x0080	/* channel admin (+a) */
 #define CHFL_HALFOP	0x0100	/* halfop */
 #define CHFL_EXCEPT	0x0200	/* phase this out ? +e */
 #define CHFL_INVEX	0x0400  /* invite exception */
 
 #define CHFL_REJOINING	0x8000  /* used internally by rejoin_* */
 
-#define	CHFL_OVERLAP    (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_VOICE|CHFL_HALFOP)
+#define	CHFL_OVERLAP    (CHFL_CHANOWNER|CHFL_CHANADMIN|CHFL_CHANOP|CHFL_VOICE|CHFL_HALFOP)
 
 /* Channel macros */
 
@@ -1693,7 +1693,7 @@ struct liststructprio {
 #define	MODE_MODERATED  	0x0010
 #define	MODE_TOPICLIMIT 	0x0020
 #define MODE_CHANOWNER		0x0040
-#define MODE_CHANPROT		0x0080
+#define MODE_CHANADMIN		0x0080
 #define	MODE_HALFOP		0x0100
 #define MODE_EXCEPT		0x0200
 #define	MODE_BAN		0x0400
@@ -1707,7 +1707,7 @@ struct liststructprio {
 /*
  * mode flags which take another parameter (With PARAmeterS)
  */
-#define	MODE_WPARAS (MODE_HALFOP|MODE_CHANOP|MODE_VOICE|MODE_CHANOWNER|MODE_CHANPROT|MODE_BAN|MODE_KEY|MODE_LIMIT|MODE_EXCEPT|MODE_INVEX)
+#define	MODE_WPARAS (MODE_HALFOP|MODE_CHANOP|MODE_VOICE|MODE_CHANOWNER|MODE_CHANADMIN|MODE_BAN|MODE_KEY|MODE_LIMIT|MODE_EXCEPT|MODE_INVEX)
 /*
  * Undefined here, these are used in conjunction with the above modes in
  * the source.

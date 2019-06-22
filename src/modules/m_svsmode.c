@@ -215,12 +215,12 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			case 'a': {
 				Member *cm;
 				for (cm = chptr->members; cm; cm = cm->next) {
-					if (cm->flags & CHFL_CHANPROT) {
+					if (cm->flags & CHFL_CHANADMIN) {
 						Membership *mb;
 						mb = find_membership_link(cm->cptr->user->channel,
 							chptr);
 						add_send_mode_param(chptr, sptr, '-', 'a', cm->cptr->name);
-						cm->flags &= ~CHFL_CHANPROT;
+						cm->flags &= ~CHFL_CHANADMIN;
 						if (mb)
 							mb->flags = cm->flags;
 					}

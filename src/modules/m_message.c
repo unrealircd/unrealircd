@@ -273,13 +273,13 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 						 * Need at least voice (+) in order to send to +,% or @
 						 * Need at least ops (@) in order to send to & or ~
 						 */
-						if (!lp || !(lp->flags & (CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
+						if (!lp || !(lp->flags & (CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
 						{
 							sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
 							return 0;
 						}
 						if (!(prefix & PREFIX_OP) && ((prefix & PREFIX_OWNER) || (prefix & PREFIX_ADMIN)) &&
-						    !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
+						    !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
 						{
 							sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
 							return 0;
@@ -927,7 +927,7 @@ int _can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int
 	if (chptr->mode.mode & MODE_MODERATED &&
 	    !op_can_override("channel:override:message:moderated",cptr,chptr,NULL) &&
 	    (!lp /* FIXME: UGLY */
-	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER | CHFL_HALFOP | CHFL_CHANPROT))))
+	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER | CHFL_HALFOP | CHFL_CHANADMIN))))
 	{
 		/* Channel is moderated (+m).
 		 * Reject, unless HOOKTYPE_CAN_BYPASS_MODERATED tells otherwise.
@@ -976,7 +976,7 @@ int _can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int
 
 	if ((!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
-	    CHFL_HALFOP | CHFL_CHANPROT))) && MyClient(cptr)
+	    CHFL_HALFOP | CHFL_CHANADMIN))) && MyClient(cptr)
 	    && is_banned(cptr, chptr, BANCHK_MSG, msgtext, errmsg))
 	{
 		/* Modules can set 'errmsg', otherwise we default to this: */

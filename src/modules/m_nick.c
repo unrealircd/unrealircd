@@ -227,7 +227,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 					*p++ = '%';
 				if (lp->flags & MODE_CHANOWNER)
 					*p++ = '*';
-				if (lp->flags & MODE_CHANPROT)
+				if (lp->flags & MODE_CHANADMIN)
 					*p++ = '~';
 				*p = '\0';
 				

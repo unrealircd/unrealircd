@@ -698,7 +698,7 @@ static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_fo
 #ifdef PREFIX_AQ
 				if (lp->flags & CHFL_CHANOWNER)
 					status[i++] = '~';
-				else if (lp->flags & CHFL_CHANPROT)
+				else if (lp->flags & CHFL_CHANADMIN)
 					status[i++] = '&';
 				else
 #endif
@@ -715,7 +715,7 @@ static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_fo
 #ifdef PREFIX_AQ
 				if (lp->flags & CHFL_CHANOWNER)
 					status[i++] = '~';
-				if (lp->flags & CHFL_CHANPROT)
+				if (lp->flags & CHFL_CHANADMIN)
 					status[i++] = '&';
 #endif
 				if (lp->flags & CHFL_CHANOP)

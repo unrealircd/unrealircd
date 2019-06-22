@@ -306,9 +306,9 @@ CMD_FUNC(m_sjoin)
 				lp->flags &= ~MODE_CHANOWNER;
 				Addit('q', lp->cptr->name);
 			}
-			if (lp->flags & MODE_CHANPROT)
+			if (lp->flags & MODE_CHANADMIN)
 			{
-				lp->flags &= ~MODE_CHANPROT;
+				lp->flags &= ~MODE_CHANADMIN;
 				Addit('a', lp->cptr->name);
 			}
 			if (lp->flags & MODE_CHANOP)
@@ -448,7 +448,7 @@ CMD_FUNC(m_sjoin)
 				  modeflags |= CHFL_CHANOWNER;
 				  break;
 			  case '~':
-				  modeflags |= CHFL_CHANPROT;
+				  modeflags |= CHFL_CHANADMIN;
 				  break;
 			  case '&':
 				  modeflags = CHFL_BAN;
@@ -480,7 +480,7 @@ getnick:
 			/* multiple options possible at the same time */
 			if (modeflags & CHFL_CHANOWNER)
 				*p++ = '*';
-			if (modeflags & CHFL_CHANPROT)
+			if (modeflags & CHFL_CHANADMIN)
 				*p++ = '~';
 			if (modeflags & CHFL_CHANOP)
 				*p++ = '@';
@@ -557,7 +557,7 @@ getnick:
 			sendto_server(cptr, 0, PROTO_SJOIN, NULL, ":%s JOIN %s", acptr->name, chptr->chname);
 
 			CheckStatus('q', CHFL_CHANOWNER);
-			CheckStatus('a', CHFL_CHANPROT);
+			CheckStatus('a', CHFL_CHANADMIN);
 			CheckStatus('o', CHFL_CHANOP);
 			CheckStatus('h', CHFL_HALFOP);
 			CheckStatus('v', CHFL_VOICE);

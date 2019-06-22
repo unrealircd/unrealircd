@@ -169,7 +169,7 @@ CMD_FUNC(m_part)
 			if (!comment)
 			{
 				sendto_channel(chptr, sptr, sptr,
-					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT, 0,
+					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s",
 					       sptr->name, chptr->chname);
@@ -182,7 +182,7 @@ CMD_FUNC(m_part)
 			else
 			{
 				sendto_channel(chptr, sptr, sptr,
-					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT, 0,
+					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s %s",
 					       sptr->name, chptr->chname, comment);

@@ -103,7 +103,7 @@ static void secureonly_kick_insecure_users(aChannel *chptr)
 			if (invisible_user_in_channel(cptr, chptr))
 			{
 				/* Send only to chanops */
-				prefix = CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT;
+				prefix = CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN;
 			}
 
 			new_message(&me, NULL, &mtags);

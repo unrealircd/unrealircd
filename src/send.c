@@ -400,7 +400,7 @@ void sendto_channel(aChannel *chptr, aClient *from, aClient *skip,
 		if ((prefix & PREFIX_OP) && (lp->flags & CHFL_CHANOP))
 			goto good;
 #ifdef PREFIX_AQ
-		if ((prefix & PREFIX_ADMIN) && (lp->flags & CHFL_CHANPROT))
+		if ((prefix & PREFIX_ADMIN) && (lp->flags & CHFL_CHANADMIN))
 			goto good;
 		if ((prefix & PREFIX_OWNER) && (lp->flags & CHFL_CHANOWNER))
 			goto good;

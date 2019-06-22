@@ -1246,7 +1246,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	modebuf[1] = '\0';
 	parabuf[0] = '\0';
 	send_channel_modes_members(cptr, chptr, CHFL_CHANOWNER, 'q');
-	send_channel_modes_members(cptr, chptr, CHFL_CHANPROT, 'a');
+	send_channel_modes_members(cptr, chptr, CHFL_CHANADMIN, 'a');
 	send_channel_modes_members(cptr, chptr, CHFL_CHANOP, 'o');
 	send_channel_modes_members(cptr, chptr, CHFL_HALFOP, 'h');
 	send_channel_modes_members(cptr, chptr, CHFL_VOICE, 'v');
@@ -1453,7 +1453,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 			*bufptr++ = '%';
 		if (lp->flags & MODE_CHANOWNER)
 			*bufptr++ = '*';
-		if (lp->flags & MODE_CHANPROT)
+		if (lp->flags & MODE_CHANADMIN)
 			*bufptr++ = '~';
 
 
@@ -1602,7 +1602,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 			*p++ = '%';
 		if (lp->flags & MODE_CHANOWNER)
 			*p++ = '*';
-		if (lp->flags & MODE_CHANPROT)
+		if (lp->flags & MODE_CHANADMIN)
 			*p++ = '~';
 
 		p = mystpcpy(p, CHECKPROTO(cptr, PROTO_SID) ? ID(lp->cptr) : lp->cptr->name);

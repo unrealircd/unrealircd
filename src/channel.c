@@ -75,7 +75,7 @@ aCtab cFlagTab[] = {
 	{MODE_INVITEONLY, 'i', 1, 0},
 	{MODE_KEY, 'k', 1, 1},
 	{MODE_RGSTR, 'r', 0, 0},
-	{MODE_CHANPROT, 'a', 0, 1},
+	{MODE_CHANADMIN, 'a', 0, 1},
 	{MODE_CHANOWNER, 'q', 0, 1},
 	{MODE_BAN, 'b', 1, 1},
 	{MODE_EXCEPT, 'e', 1, 1},	/* exception ban */

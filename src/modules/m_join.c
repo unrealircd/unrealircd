@@ -211,7 +211,7 @@ void _send_join_to_local_users(aClient *sptr, aChannel *chptr, MessageTag *mtags
 		if (!MyConnect(acptr))
 			continue; /* only locally connected clients */
 
-		if (chanops_only && !(lp->flags & (CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)) && (sptr != acptr))
+		if (chanops_only && !(lp->flags & (CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)) && (sptr != acptr))
 			continue; /* skip non-ops if requested to (used for mode +D), but always send to 'sptr' */
 
 		if (HasCapabilityFast(acptr, CAP_EXTENDED_JOIN))
@@ -284,7 +284,7 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *re
 			 * won't support mtags anyway.
 			 */
 #ifndef PREFIX_AQ
-			if ((flags & CHFL_CHANOWNER) || (flags & CHFL_CHANPROT))
+			if ((flags & CHFL_CHANOWNER) || (flags & CHFL_CHANADMIN))
 			{
 				/* +ao / +qo for when PREFIX_AQ is off */
 				sendto_server(cptr, 0, PROTO_SJ3, NULL, ":%s MODE %s +o%c %s %s %lu",
@@ -631,7 +631,7 @@ char *get_chmodes_for_user(aClient *sptr, int flags)
 
 	if (flags & MODE_CHANOWNER)
 		*p++ = 'q';
-	if (flags & MODE_CHANPROT)
+	if (flags & MODE_CHANADMIN)
 		*p++ = 'a';
 	if (flags & MODE_CHANOP)
 		*p++ = 'o';
@@ -763,7 +763,7 @@ void _userhost_changed(aClient *sptr)
 				if (!MyConnect(acptr))
 					continue; /* only locally connected clients */
 
-				if (chanops_only && !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
+				if (chanops_only && !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
 					continue; /* skip non-ops if requested to (used for mode +D) */
 
 				if (HasCapabilityFast(acptr, CAP_CHGHOST))

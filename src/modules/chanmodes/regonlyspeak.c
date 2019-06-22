@@ -89,7 +89,7 @@ int regonlyspeak_can_send(aClient *cptr, aChannel *chptr, Membership *lp, char *
 	if (IsRegOnlySpeak(chptr) && !op_can_override("channel:override:message:regonlyspeak",cptr,chptr,NULL) && !IsLoggedIn(cptr) &&
 		    (!lp
 		    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
-		    CHFL_HALFOP | CHFL_CHANPROT))))
+		    CHFL_HALFOP | CHFL_CHANADMIN))))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{

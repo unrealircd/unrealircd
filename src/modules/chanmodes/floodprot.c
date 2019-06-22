@@ -1061,7 +1061,7 @@ Membership *mp;
 	{
 		aChannel *chptr = mp->chptr;
 		if (chptr && IsFloodLimit(chptr) &&
-		    !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT)) &&
+		    !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANADMIN)) &&
 		    do_floodprot(chptr, FLD_NICK) && MyClient(sptr))
 		{
 			do_floodprot_action(chptr, FLD_NICK, "nick");

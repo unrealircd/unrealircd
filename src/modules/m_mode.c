@@ -209,7 +209,7 @@ CMD_FUNC(m_mode)
 			 */
 			for (member = chptr->members; member; member = member->next)
 			{
-				if (is_chanprot(member->cptr, chptr))
+				if (is_chanadmin(member->cptr, chptr))
 					sendnumeric(sptr, RPL_ALIST, chptr->chname,
 					    member->cptr->name);
 			}
@@ -725,7 +725,7 @@ void make_mode_str(aChannel *chptr, long oldm, Cmode_t oldem, long oldl, int pco
 #define REQUIRE_PARAMETER() { if (!param || *pcount >= MAXMODEPARAMS) { retval = 0; break; } retval = 1; }
 
 #ifdef PREFIX_AQ
-#define is_xchanop(x) ((x & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER)))
+#define is_xchanop(x) ((x & (CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER)))
 #else
 #define is_xchanop(x) ((x & CHFL_CHANOP))
 #endif
@@ -825,7 +825,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 						opermode = 1;
 			}
 			goto process_listmode;
-		case MODE_CHANPROT:
+		case MODE_CHANADMIN:
 			REQUIRE_PARAMETER()
 			/* not uline, not server, not chanowner, not an samode, not -a'ing yourself... */
 			if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress &&
@@ -936,7 +936,7 @@ process_listmode:
 			/* This check not only prevents unprivileged users from doing a -a on chanadmins,
 			 * it also protects against -o/-h/-v on them.
 			 */
-			if (is_chanprot(member->cptr, chptr)
+			if (is_chanadmin(member->cptr, chptr)
 			    && member->cptr != cptr
 			    && !is_chanowner(cptr, chptr) && !IsServer(cptr) && !opermode && !samode_in_progress
 			    && modetype != MODE_CHANOWNER && (what == MODE_DEL))
@@ -975,7 +975,7 @@ process_listmode:
 				member->flags = tmp;
 			if (modetype == MODE_CHANOWNER)
 				tc = 'q';
-			if (modetype == MODE_CHANPROT)
+			if (modetype == MODE_CHANADMIN)
 				tc = 'a';
 			if (modetype == MODE_CHANOP)
 				tc = 'o';

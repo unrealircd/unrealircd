@@ -653,9 +653,9 @@ int channellevel_to_int(char *s)
 		return CHFL_CHANOP;
 	if (!strcmp(s, "protect") || !strcmp(s, "chanprot"))
 #ifdef PREFIX_AQ
-		return CHFL_CHANPROT;
+		return CHFL_CHANADMIN;
 #else
-		return CHFL_CHANOP|CHFL_CHANPROT;
+		return CHFL_CHANOP|CHFL_CHANADMIN;
 #endif
 	if (!strcmp(s, "owner") || !strcmp(s, "chanowner"))
 #ifdef PREFIX_AQ
@@ -680,7 +680,7 @@ char *chfl_to_sjoin_symbol(int s)
 			return "%";
 		case CHFL_CHANOP:
 			return "@";
-		case CHFL_CHANPROT:
+		case CHFL_CHANADMIN:
 #ifdef PREFIX_AQ
 			return "~";
 #else
@@ -709,7 +709,7 @@ char chfl_to_chanmode(int s)
 			return 'h';
 		case CHFL_CHANOP:
 			return 'o';
-		case CHFL_CHANPROT:
+		case CHFL_CHANADMIN:
 			return 'a';
 		case CHFL_CHANOWNER:
 			return 'q';

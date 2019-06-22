@@ -240,7 +240,7 @@ CMD_FUNC(m_whois)
 #ifdef PREFIX_AQ
 						if (access & CHFL_CHANOWNER)
 							*(buf + len++) = '~';
-						else if (access & CHFL_CHANPROT)
+						else if (access & CHFL_CHANADMIN)
 							*(buf + len++) = '&';
 						else
 #endif
@@ -256,7 +256,7 @@ CMD_FUNC(m_whois)
 #ifdef PREFIX_AQ
 						if (access & CHFL_CHANOWNER)
 							*(buf + len++) = '~';
-						if (access & CHFL_CHANPROT)
+						if (access & CHFL_CHANADMIN)
 							*(buf + len++) = '&';
 #endif
 						if (access & CHFL_CHANOP)

@@ -71,7 +71,7 @@ int nonotice_check_can_send(aClient *cptr, aChannel *chptr, Membership *lp, char
 	int i;
 
 	if (notice && IsNoNotice(chptr) &&
-	   (!lp || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANPROT))))
+	   (!lp || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANADMIN))))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{

@@ -647,7 +647,7 @@ static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel,
 #ifdef PREFIX_AQ
 			if (cm->flags & CHFL_CHANOWNER)
 				status[i++] = '~';
-			if (cm->flags & CHFL_CHANPROT)
+			if (cm->flags & CHFL_CHANADMIN)
 				status[i++] = '&';
 #endif
 			if (cm->flags & CHFL_CHANOP)
@@ -660,7 +660,7 @@ static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel,
 #ifdef PREFIX_AQ
 			if (cm->flags & CHFL_CHANOWNER)
 				status[i++] = '~';
-			else if (cm->flags & CHFL_CHANPROT)
+			else if (cm->flags & CHFL_CHANADMIN)
 				status[i++] = '&';
 			else
 #endif
