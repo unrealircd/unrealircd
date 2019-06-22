@@ -111,7 +111,7 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDEOPER);
 	UmodeAdd(NULL, 't', UMODE_GLOBAL, 0, umode_allow_unset, &UMODE_SETHOST);
 	UmodeAdd(NULL, 'I', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDLE);
-	SnomaskAdd(NULL, 'k', 0, umode_allow_all, &SNO_KILLS);
+	SnomaskAdd(NULL, 'k', 0, umode_allow_opers, &SNO_KILLS);
 	SnomaskAdd(NULL, 'c', 1, umode_allow_opers, &SNO_CLIENT);
 	SnomaskAdd(NULL, 'f', 1, umode_allow_opers, &SNO_FLOOD);
 	SnomaskAdd(NULL, 'F', 1, umode_allow_opers, &SNO_FCLIENT);
