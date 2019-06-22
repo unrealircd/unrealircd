@@ -65,7 +65,6 @@ Efunction	*Efunctions[MAXEFUNCTIONS];	/* Efunction objects (used for rehashing) 
 MODVAR Module          *Modules = NULL;
 MODVAR Versionflag     *Versionflags = NULL;
 
-int     Module_Depend_Resolve(Module *p, char *path);
 Module *Module_make(ModuleHeader *header, 
 #ifdef _WIN32
        HMODULE mod
@@ -283,15 +282,6 @@ void DeleteTempModules(void)
 	}
 	FindClose(hFile);
 #endif	
-}
-
-void Module_Init(void)
-{
-	bzero(Hooks, sizeof(Hooks));
-	bzero(Hooktypes, sizeof(Hooktypes));
-	bzero(Callbacks, sizeof(Callback));
-	bzero(RCallbacks, sizeof(Callback));
-	bzero(Efunctions, sizeof(Efunction));
 }
 
 Module *Module_Find(char *name)
@@ -540,11 +530,6 @@ char  *Module_Create(char *path_)
 		{
 			Module_free(mod);
 			return ("Unable to locate Mod_Load"); 
-		}
-		if (Module_Depend_Resolve(mod, path) == -1)
-		{
-			Module_free(mod);
-			return ("Dependancy problem");
 		}
 		irc_dlsym(Mod, "Mod_Handle", Mod_Handle);
 		if (Mod_Handle)
@@ -873,69 +858,6 @@ int Module_Unload(char *name)
 	return 1;
 }
 
-vFP Module_SymEx(
-#ifdef _WIN32
-	HMODULE mod
-#else
-	void *mod
-#endif
-	, char *name)
-{
-	vFP	fp;
-
-	if (!name)
-		return NULL;
-	
-	irc_dlsym(mod, name, fp);
-	if (fp)
-		return (fp);
-	return NULL;
-}
-
-vFP Module_Sym(char *name)
-{
-	vFP	fp;
-	Module *mi;
-	
-	if (!name)
-		return NULL;
-
-	/* Run through all modules and check for symbols */
-	for (mi = Modules; mi; mi = mi->next)
-	{
-		if (!(mi->flags & MODFLAG_TESTING) || (mi->flags & MODFLAG_DELAYED))
-			continue;
-		irc_dlsym(mi->dll, name, fp);
-		if (fp)
-			return (fp);
-	}
-	return NULL;
-}
-
-vFP Module_SymX(char *name, Module **mptr)
-{
-	vFP	fp;
-	Module *mi;
-	
-	if (!name)
-		return NULL;
-	
-	/* Run through all modules and check for symbols */
-	for (mi = Modules; mi; mi = mi->next)
-	{
-		if (!(mi->flags & MODFLAG_TESTING) || (mi->flags & MODFLAG_DELAYED))
-			continue;
-		irc_dlsym(mi->dll, name, fp);
-		if (fp)
-		{
-			*mptr = mi;
-			return (fp);
-		}
-	}
-	*mptr = NULL;
-	return NULL;
-}
-
 void module_loadall(void)
 {
 	iFP	fp;
@@ -983,54 +905,6 @@ void	Module_AddAsChild(Module *parent, Module *child)
 	childp = MyMallocEx(sizeof(ModuleChild));
 	childp->child = child;
 	AddListItem(childp, parent->children);
-}
-
-int	Module_Depend_Resolve(Module *p, char *path)
-{
-	Mod_SymbolDepTable *d = p->header->symdep;
-	Module		   *parental = NULL;
-	
-	if (d == NULL)
-		return 0;
-	while (d->pointer)
-	{
-		if ((*(d->pointer) = Module_SymEx(p->dll, d->symbol)))
-		{
-			d++;
-			continue;
-		}
-		*(d->pointer) = Module_SymX(d->symbol, &parental);
-		if (!*(d->pointer))
-		{
-			/* If >= 3.2.3 */
-			if (p->mod_sys_version >= 0x32300)
-			{
-				char tmppath[PATH_MAX], curpath[PATH_MAX];
-
-				unreal_getpathname(path, curpath);
-				snprintf(tmppath, PATH_MAX, "%s/%s.%s", curpath, d->module,
-					MOD_EXTENSION);
-				config_progress("Unable to resolve symbol %s, attempting to load %s to find it", d->symbol, tmppath);
-				Module_Create(tmppath);
-			}
-			else
-			{
-				config_progress("Unable to resolve symbol %s, attempting to load %s to find it", d->symbol, d->module);
-				Module_Create(d->module);
-			}
-			*(d->pointer) = Module_SymX(d->symbol, &parental);
-			if (!*(d->pointer)) {
-				config_progress("module dependancy error: cannot resolve symbol %s",
-					d->symbol);
-				return -1;
-			}
-			
-		}
-		if (!Module_IsAlreadyChild(parental, p))
-			Module_AddAsChild(parental, p);
-		d++;	
-	}
-	return 0;
 }
 
 /* m_module.

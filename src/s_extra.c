@@ -250,38 +250,11 @@ int found = 0;
 	return 0;
 }
 
-/* restrict channel stuff */
-
-int  channel_canjoin(aClient *sptr, char *name)
-{
-	ConfigItem_deny_channel *p;
-	aTKline *tklban;
-	int ishold;
-	if (!ValidatePermissionsForPath("immune:server-ban:deny-channel",sptr,NULL,NULL,name))
-		return 1;
-	if (IsULine(sptr))
-		return 1;
-	if (!conf_deny_channel)
-		return 1;
-	p = Find_channel_allowed(sptr, name);
-	if (p)
-	{
-		sendnumeric(sptr, ERR_FORBIDDENCHANNEL, name, p->reason);
-		return 0;
-	}
-	if ((tklban = find_qline(sptr, name, &ishold)))
-	{
-		sendnumeric(sptr, ERR_FORBIDDENCHANNEL, name, tklban->reason);
-		return 0;
-	}
-	return 1;
-}
-
 /* irc logs.. */
 void ircd_log(int flags, char *format, ...)
 {
-static int last_log_file_warning = 0;
-static char recursion_trap=0;
+	static int last_log_file_warning = 0;
+	static char recursion_trap=0;
 
 	va_list ap;
 	ConfigItem_log *logs;

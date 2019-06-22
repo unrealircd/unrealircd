@@ -48,7 +48,6 @@
 #endif
 
 void send_umode_out(aClient *, aClient *, long);
-void send_umode_out_nickv2(aClient *, aClient *, long);
 void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
 void create_snomask(aClient *, anUser *, char *);
@@ -177,36 +176,6 @@ long set_usermode(char *umode)
 **		note:	it is guaranteed that parv[1]..parv[parc-1] are all
 **			non-NULL pointers.
 */
-
-/*
-** next_client
-**	Local function to find the next matching client. The search
-**	can be continued from the specified client entry. Normal
-**	usage loop is:
-**
-**	for (x = client; x = next_client(x,mask); x = x->next)
-**		HandleMatchingClient;
-**
-*/
-aClient *next_client(aClient *next, char *ch)
-{
-	aClient *tmp = next;
-
-	next = find_client(ch, tmp);
-	if (tmp && list_empty(&next->client_node))
-		return NULL;
-	if (next != tmp)
-		return next;
-
-	tmp = next;
-	list_for_each_entry(next, &next->client_node, client_node)
-	{
-		if (!match(ch, next->name) || !match(next->name, ch))
-			break;
-	}
-
-	return next;
-}
 
 /*
 ** hunt_server
@@ -622,27 +591,6 @@ void send_umode_out(aClient *cptr, aClient *sptr, long old)
 	if (cptr && MyClient(cptr))
 		send_umode(cptr, sptr, old, ALL_UMODES, buf);
 }
-
-void send_umode_out_nickv2(aClient *cptr, aClient *sptr, long old)
-{
-	aClient *acptr;
-
-	send_umode(NULL, sptr, old, SEND_UMODES, buf);
-
-	list_for_each_entry(acptr, &server_list, special_node)
-	{
-		if (!SupportNICKv2(acptr) && (acptr != cptr)
-		    && (acptr != sptr) && *buf)
-			sendto_one(acptr, NULL, ":%s MODE %s :%s", sptr->name,
-			    sptr->name, buf);
-	}
-
-	if (cptr && MyClient(cptr))
-		send_umode(cptr, sptr, old, ALL_UMODES, buf);
-}
-
-
-
 
 int  del_silence(aClient *sptr, char *mask)
 {

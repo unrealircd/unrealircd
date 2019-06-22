@@ -195,7 +195,7 @@ CMD_FUNC(m_kill)
 		   **    have changed the target because of the nickname change.
 		 */
 
-		sendto_snomask_normal(SNO_KILLS,
+		sendto_snomask(SNO_KILLS,
 		    "*** Received KILL message for %s!%s@%s from %s Path: %s!%s",
 		    acptr->name, acptr->user->username,
 		    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,

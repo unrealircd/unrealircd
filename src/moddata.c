@@ -45,11 +45,6 @@
 
 MODVAR ModDataInfo *MDInfo = NULL;
 
-void moddata_init(void)
-{
-	/* all zero already? */
-}
-
 ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 {
 	short i = 0, j = 0;
@@ -134,6 +129,7 @@ ModDataInfo *md;
 	memset(acptr->moddata, 0, sizeof(acptr->moddata));
 }
 
+// FIXME: this is never called
 void moddata_free_channel(aChannel *chptr)
 {
 ModDataInfo *md;

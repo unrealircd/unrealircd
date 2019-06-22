@@ -73,7 +73,7 @@ CMD_FUNC(m_squit)
 	{
 		server = parv[1];
 
-		acptr = find_server_quickx(server, NULL);
+		acptr = find_server_quick(server);
 		if (acptr && IsMe(acptr))
 		{
 			acptr = cptr;

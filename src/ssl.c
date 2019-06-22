@@ -563,48 +563,6 @@ void reinit_ssl(aClient *acptr)
 	return 0;\
 	}
 
-int  ssl_handshake(aClient *cptr)
-{
-#ifdef NO_CERTCHECKING
-	char *str;
-#endif
-
-	if (!ctx_server)
-	{
-		sendto_realops("Could not start SSL handshake: SSL was not loaded correctly on this server (failed to load cert or key during boot process)");
-		return -1;
-	}
-
-	cptr->local->ssl = SSL_new(ctx_server);
-	CHK_NULL(cptr->local->ssl);
-	SSL_set_fd(cptr->local->ssl, cptr->fd);
-	set_non_blocking(cptr->fd, cptr);
-	/* 
-	 *  if necessary, SSL_write() will negotiate a TLS/SSL session, if not already explicitly
-	 *  performed by SSL_connect() or SSL_accept(). If the peer requests a
-	 *  re-negotiation, it will be performed transparently during the SSL_write() operation.
-	 *    The behaviour of SSL_write() depends on the underlying BIO. 
-	 *   
-	 */
-	if (!ircd_SSL_accept(cptr, cptr->fd)) {
-		SSL_set_shutdown(cptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
-		SSL_smart_shutdown(cptr->local->ssl);
-		SSL_free(cptr->local->ssl);
-		cptr->local->ssl = NULL;
-		return -1;
-	}
-	return 0;
-
-}
-
-/* This is a bit homemade to fix IRCd's cleaning madness -- Stskeeps */
-int	SSL_change_fd(SSL *s, int fd)
-{
-	BIO_set_fd(SSL_get_rbio(s), fd, BIO_NOCLOSE);
-	BIO_set_fd(SSL_get_wbio(s), fd, BIO_NOCLOSE);
-	return 1;
-}
-
 void SSL_set_nonblocking(SSL *s)
 {
 	BIO_set_nbio(SSL_get_rbio(s),1);  

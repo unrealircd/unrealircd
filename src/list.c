@@ -404,21 +404,6 @@ void add_client_to_list(aClient *cptr)
 	list_add(&cptr->client_node, &client_list);
 }
 
-/*
- * Look for ptr in the linked listed pointed to by link.
- */
-Link *find_user_link(Link *lp, aClient *ptr)
-{
-	if (ptr)
-		while (lp)
-		{
-			if (lp->value.cptr == ptr)
-				return (lp);
-			lp = lp->next;
-		}
-	return NULL;
-}
-
 /* Based on find_str_link() from bahamut -- codemastr */
 int find_str_match_link(Link *lp, char *charptr)
 {
@@ -517,45 +502,6 @@ void free_ban(Ban *lp)
 	links.inuse--;
 #endif
 }
-
-#ifdef	DEBUGMODE
-void send_listinfo(aClient *cptr, char *name)
-{
-	int  inuse = 0, mem = 0, tmp = 0;
-
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "Local: inuse: %d(%d)",
-		inuse += cloc.inuse,
-		tmp = cloc.inuse * CLIENT_LOCAL_SIZE);
-	mem += tmp;
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "Remote: inuse: %d(%d)",
-		crem.inuse, tmp = crem.inuse * CLIENT_REMOTE_SIZE);
-	mem += tmp;
-	inuse += crem.inuse;
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "Users: inuse: %d(%d)",
-		users.inuse,
-		tmp = users.inuse * sizeof(anUser));
-	mem += tmp;
-	inuse += users.inuse,
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "Servs: inuse: %d(%d)",
-		servs.inuse,
-		tmp = servs.inuse * sizeof(aServer));
-	mem += tmp;
-	inuse += servs.inuse,
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "Links: inuse: %d(%d)",
-		links.inuse,
-		tmp = links.inuse * sizeof(Link));
-	mem += tmp;
-	inuse += links.inuse,
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "Classes: inuse: %d(%d)",
-		classs.inuse,
-		tmp = classs.inuse * sizeof(aClass));
-	mem += tmp;
-	inuse += aconfs.inuse,
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "Totals: inuse %d %d",
-		inuse, mem);
-}
-
-#endif
 
 void add_ListItem(ListStruct *item, ListStruct **list) {
 	item->next = *list;

@@ -139,7 +139,6 @@ extern void add_ListItem(ListStruct *, ListStruct **);
 extern void append_ListItem(ListStruct *item, ListStruct **list);
 extern void add_ListItemPrio(ListStructPrio *, ListStructPrio **, int);
 extern ListStruct *del_ListItem(ListStruct *, ListStruct **);
-extern aClient *find_match_server(char *mask);
 extern MODVAR LoopStruct loop;
 extern int del_banid(aChannel *chptr, char *banid);
 extern int del_exbanid(aChannel *chptr, char *banid);
@@ -211,9 +210,8 @@ extern aClient *find_name(char *, aClient *);
 extern aClient *find_nickserv(char *, aClient *);
 extern aClient *find_person(char *, aClient *);
 extern aClient *find_server(char *, aClient *);
-extern aClient *find_server_quickx(char *, aClient *);
 extern aClient *find_service(char *, aClient *);
-#define find_server_quick(x) find_server_quickx(x, NULL)
+#define find_server_quick(x) find_server(x, NULL)
 extern char *find_or_add(char *);
 extern int attach_conf(aClient *, aConfItem *);
 extern void inittoken();
@@ -228,7 +226,6 @@ extern char *strerror(int);
 extern MODFUNC char *sock_strerror(int);
 #endif
 extern int dgets(int, char *, int);
-extern char *inetntoa(char *);
 
 #ifndef HAVE_SNPRINTF
 extern int snprintf (char *str, size_t count, const char *fmt, ...);
@@ -303,11 +300,8 @@ extern void sendto_prefix_one(aClient *, aClient *, MessageTag *, const char *, 
 extern void sendto_opers(char *, ...) __attribute__((format(printf,1,2)));
 extern void sendto_umode(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_umode_global(int, char *, ...) __attribute__((format(printf,2,3)));
-extern void sendto_umode_raw(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_snomask(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern void sendto_snomask_global(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
-extern void sendto_snomask_normal(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
-extern void sendto_snomask_normal_global(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern void sendnotice(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern void sendnumeric(aClient *to, int numeric, ...);
 extern void sendnumericfmt(aClient *to, int numeric, char *pattern, ...) __attribute__((format(printf,3,4)));
@@ -336,7 +330,6 @@ extern char *make_user_host(char *, char *);
 extern int parse(aClient *cptr, char *buffer, int length);
 extern int do_numeric(int, aClient *, aClient *, MessageTag *, int, char **);
 extern int hunt_server(aClient *, aClient *, MessageTag *, char *, int, int, char **);
-extern aClient *next_client(aClient *, char *);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
 #define UMODE_GLOBAL 1
@@ -360,7 +353,6 @@ extern Ban *make_ban();
 extern anUser *make_user(aClient *);
 extern aServer *make_server();
 extern aClient *make_client(aClient *, aClient *);
-extern Link *find_user_link(Link *, aClient *);
 extern Member *find_channel_link(Member *, aChannel *);
 extern char *pretty_mask(char *);
 extern void add_client_to_list(aClient *);
@@ -513,7 +505,6 @@ extern void rehash_motdrules();
 extern void read_motd(const char *filename, aMotdFile *motd); /* s_serv.c */
 extern void send_proto(aClient *, ConfigItem_link *);
 extern void unload_all_modules(void);
-extern int set_blocking(int fd);
 extern void set_sock_opts(int fd, aClient *cptr, int ipv6);
 extern void stripcrlf(char *line);
 extern time_t rfc2time(char *s);

@@ -21,7 +21,7 @@
 
 CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
 
-OBJS=res.o s_bsd.o auth.o aln.o channel.o cloak.o crule.o dbuf.o \
+OBJS=res.o s_bsd.o auth.o channel.o cloak.o crule.o dbuf.o \
 	events.o fdlist.o hash.o ircd.o ircsprintf.o list.o \
 	match.o modules.o packet.o parse.o s_auth.o mempool.o operclass.o \
 	conf_preprocessor.o s_conf.o s_debug.o s_dispatch.o s_err.o s_extra.o s_kline.o \
@@ -91,9 +91,6 @@ dbuf.o: dbuf.c $(INCLUDES)
 
 packet.o: packet.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c packet.c
-
-aln.o: aln.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c aln.c
 
 auth.o: auth.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c auth.c

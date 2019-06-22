@@ -1221,7 +1221,7 @@ static void config_entry_free(ConfigEntry *ceptr)
 	}
 }
 
-ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name)
+ConfigEntry *config_find_entry(ConfigEntry *ce, char *name)
 {
 	ConfigEntry *cep;
 

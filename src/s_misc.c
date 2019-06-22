@@ -180,24 +180,6 @@ char *short_date(time_t ts)
 	return buf;
 }
 
-char *convert_time (time_t ltime)
-{
-	unsigned long days = 0,hours = 0,minutes = 0,seconds = 0;
-	static char buffer[40];
-
-
-	*buffer = '\0';
-	seconds = ltime % 60;
-	ltime = (ltime - seconds) / 60;
-	minutes = ltime%60;
-	ltime = (ltime - minutes) / 60;
-	hours = ltime % 24;
-	days = (ltime - hours) / 24;
-	ircsnprintf(buffer, sizeof(buffer), "%ludays %luhours %luminutes %lusecs",
-		days, hours, minutes, seconds);
-	return buffer;
-}
-
 /*
  *  Fixes a string so that the first white space found becomes an end of
  * string marker (`\-`).  returns the 'fixed' string or "*" if the string
@@ -274,67 +256,19 @@ char *make_nick_user_host(char *nick, char *name, char *host)
 }
 
 
-/**
- ** myctime()
- **   This is like standard ctime()-function, but it zaps away
- **   the newline from the end of that string. Also, it takes
- **   the time value as parameter, instead of pointer to it.
- **   Note that it is necessary to copy the string to alternate
- **   buffer (who knows how ctime() implements it, maybe it statically
- **   has newline there and never 'refreshes' it -- zapping that
- **   might break things in other places...)
- **
- **/
-
+/** Similar to ctime() but without a potential newline and
+ * also takes a time_t value rather than a pointer.
+ */
 char *myctime(time_t value)
 {
 	static char buf[28];
 	char *p;
 
-	(void)strlcpy(buf, ctime(&value), sizeof buf);
+	strlcpy(buf, ctime(&value), sizeof buf);
 	if ((p = (char *)index(buf, '\n')) != NULL)
 		*p = '\0';
 
 	return buf;
-}
-
-/*
-** check_registered_user is used to cancel message, if the
-** originator is a server or not registered yet. In other
-** words, passing this test, *MUST* guarantee that the
-** sptr->user exists (not checked after this--let there
-** be coredumps to catch bugs... this is intentional --msa ;)
-**
-** There is this nagging feeling... should this NOT_REGISTERED
-** error really be sent to remote users? This happening means
-** that remote servers have this user registered, althout this
-** one has it not... Not really users fault... Perhaps this
-** error message should be restricted to local clients and some
-** other thing generated for remotes...
-*/
-int  check_registered_user(aClient *sptr)
-{
-	if (!IsRegisteredUser(sptr))
-	{
-		sendnumeric(sptr, ERR_NOTREGISTERED);
-		return -1;
-	}
-	return 0;
-}
-
-/*
-** check_registered user cancels message, if 'x' is not
-** registered (e.g. we don't know yet whether a server
-** or user)
-*/
-int  check_registered(aClient *sptr)
-{
-	if (!IsRegistered(sptr))
-	{
-		sendnumeric(sptr, ERR_NOTREGISTERED);
-		return -1;
-	}
-	return 0;
 }
 
 /*
@@ -1011,6 +945,7 @@ char *getcloak(aClient *sptr)
 	return sptr->user->cloakedhost;
 }
 
+// FIXME: should detect <U5 ;)
 int mixed_network(void)
 {
 	aClient *acptr;

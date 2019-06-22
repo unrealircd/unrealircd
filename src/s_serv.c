@@ -505,15 +505,6 @@ CMD_FUNC(m_error)
 	return 0;
 }
 
-Link *helpign = NULL;
-
-/* Now just empty ignore-list, in future reload dynamic help.
- * Move out to help.c -Donwulff */
-void reset_help(void)
-{
-	free_str_list(helpign);
-}
-
 EVENT(save_tunefile)
 {
 	FILE *tunefile;
@@ -1201,27 +1192,6 @@ int  localdie(void)
 }
 
 #endif
-
-aClient *find_match_server(char *mask)
-{
-	aClient *acptr;
-
-	if (BadPtr(mask))
-		return NULL;
-
-	collapse(mask);
-
-	list_for_each_entry(acptr, &client_list, client_node)
-	{
-		if (!IsServer(acptr) && !IsMe(acptr))
-			continue;
-		if (!match(mask, acptr->name))
-			break;
-		continue;
-	}
-
-	return acptr;
-}
 
 aPendingNet *pendingnet = NULL;
 

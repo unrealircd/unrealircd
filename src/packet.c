@@ -113,18 +113,6 @@ aCommand *add_Command_backend(char *cmd)
 	return c;
 }
 
-aCommand *find_CommandEx(char *cmd, int (*func)(), int token)
-{
-	aCommand *p;
-	
-	for (p = CommandHash[toupper(*cmd)]; p; p = p->next)
-		if (!stricmp(p->cmd, cmd) && p->func == func)
-			return p;
-
-	return NULL;
-	
-}
-
 static inline aCommand *find_Cmd(char *cmd, int flags)
 {
 	aCommand *p;

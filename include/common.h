@@ -229,8 +229,6 @@ static char *StsMalloc(size_t size, char *file, long line)
 #define safestrldup(x,y,sz) do { if (x) MyFree(x); if (!y) x = NULL; else x = strldup(y,sz); } while(0)
 #define safefree(x) do { if (x) MyFree(x); x = NULL; } while(0)
 
-extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
-
 /*
  * Protocol support text.  DO NO CHANGE THIS unless you know what
  * you are doing.

@@ -108,25 +108,6 @@ extern void url_init(void);
 
 time_t highesttimeofday=0, oldtimeofday=0, lasthighwarn=0;
 
-
-void save_stats(void)
-{
-	FILE *stats = fopen("ircd.stats", "w");
-	if (!stats)
-		return;
-	fprintf(stats, "%i\n", IRCstats.clients);
-	fprintf(stats, "%i\n", IRCstats.invisible);
-	fprintf(stats, "%i\n", IRCstats.servers);
-	fprintf(stats, "%i\n", IRCstats.operators);
-	fprintf(stats, "%i\n", IRCstats.unknown);
-	fprintf(stats, "%i\n", IRCstats.me_clients);
-	fprintf(stats, "%i\n", IRCstats.me_servers);
-	fprintf(stats, "%i\n", IRCstats.me_max);
-	fprintf(stats, "%i\n", IRCstats.global_max);
-	fclose(stats);
-}
-
-
 void server_reboot(char *);
 void restart(char *);
 static void open_debugfile(), setup_signals();

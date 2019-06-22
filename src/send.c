@@ -569,41 +569,6 @@ static int match_it(one, mask, what)
 }
 
 /*
- * sendto_match_servs
- *
- * send to all servers which match the mask at the end of a channel name
- * (if there is a mask present) or to all if no mask.
- */
-void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	char *mask;
-
-	if (chptr)
-	{
-		if (*chptr->chname == '&')
-			return;
-		if ((mask = (char *)rindex(chptr->chname, ':')))
-			mask++;
-	}
-	else
-		mask = NULL;
-
-	list_for_each_entry(cptr, &server_list, special_node)
-	{
-		if (cptr == from)
-			continue;
-		if (!BadPtr(mask) && IsServer(cptr) && match(mask, cptr->name))
-			continue;
-
-		va_start(vl, format);
-		vsendto_one(cptr, NULL, format, vl);
-		va_end(vl);
-	}
-}
-
-/*
  * sendto_match_butone
  *
  * Send to all clients which match the mask in a way defined on 'what';
@@ -650,29 +615,6 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 			}
 		}
 	}
-}
-
-/*
- * sendto_all_butone.
- *
- * Send a message to all connections except 'one'. The basic wall type
- * message generator.
- */
-
-void sendto_all_butone(aClient *one, aClient *from, char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
-		if (!IsMe(cptr) && one != cptr)
-		{
-			va_start(vl, pattern);
-			vsendto_prefix_one(cptr, from, NULL, pattern, vl);
-			va_end(vl);
-		}
-
-	return;
 }
 
 /*
@@ -770,26 +712,6 @@ void sendto_umode_global(int umodes, char *pattern, ...)
 	}
 }
 
-/*
- * sendto_umode_raw
- *
- *  Send to specified umode , raw, not a notice
- */
-void sendto_umode_raw(int umodes, char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
-		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
-		{
-			va_start(vl, pattern);
-			vsendto_one(cptr, NULL, pattern, vl);
-			va_end(vl);
-		}
-}
-
 /** Send to specified snomask - local / operonly.
  * @param snomask Snomask to send to (can be a bitmask [AND])
  * @param pattern printf-style pattern, followed by parameters.
@@ -844,57 +766,6 @@ void sendto_snomask_global(int snomask, char *pattern, ...)
 	sendto_server(&me, 0, 0, NULL, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
 }
 
-/** Send to specified snomask - local.
- * @param snomask Snomask to send to (can be a bitmask [AND])
- * @param pattern printf-style pattern, followed by parameters.
- * This function also delivers to non-opers w/the snomask if needed.
- */
-void sendto_snomask_normal(int snomask, char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[2048];
-
-	va_start(vl, pattern);
-	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
-	va_end(vl);
-
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
-		if (IsPerson(cptr) && (cptr->user->snomask & snomask))
-			sendnotice(cptr, "%s", nbuf);
-}
-
-/** Send to specified snomask - global.
- * @param snomask Snomask to send to (can be a bitmask [AND])
- * @param pattern printf-style pattern, followed by parameters
- * This function also delivers to non-opers w/the snomask if needed.
- */
-void sendto_snomask_normal_global(int snomask, char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[2048], snobuf[32], *p;
-
-	va_start(vl, pattern);
-	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
-	va_end(vl);
-
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
-		if (IsPerson(cptr) && (cptr->user->snomask & snomask))
-			sendnotice(cptr, "%s", nbuf);
-
-	/* Build snomasks-to-send-to buffer */
-	snobuf[0] = '\0';
-	for (i = 0, p=snobuf; i<= Snomask_highest; i++)
-		if (snomask & Snomask_Table[i].mode)
-			*p++ = Snomask_Table[i].flag;
-	*p = '\0';
-
-	sendto_server(&me, 0, 0, NULL, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
-}
-
 /*
  * send_cap_notify
  *
@@ -938,30 +809,6 @@ void send_cap_notify(int add, char *token)
 	}
 }
 
-/*
- * sendto_opers
- *
- *	Send to *local* ops only. (all +O or +o people)
- */
-void sendto_opers(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[1024];
-
-	list_for_each_entry(cptr, &oper_list, special_node)
-	{
-		(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Oper -- ",
-		    me.name, cptr->name);
-		(void)strlcat(nbuf, pattern, sizeof nbuf);
-
-		va_start(vl, pattern);
-		vsendto_one(cptr, NULL, nbuf, vl);
-		va_end(vl);
-	}
-}
-
 /* ** sendto_ops_butone
 **	Send message to all operators.
 ** one - client not to send message to
@@ -982,64 +829,6 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 			continue;
 		if (cptr->from == one)
 			continue;	/* ...was the one I should skip */
-		cptr->from->local->serial = current_serial;
-
-		va_start(vl, pattern);
-		vsendto_prefix_one(cptr->from, from, NULL, pattern, vl);
-		va_end(vl);
-	}
-}
-
-/*
-** sendto_ops_butone
-**	Send message to all operators regardless of whether they are +w or
-**	not..
-** one - client not to send message to
-** from- client which message is from *NEVER* NULL!!
-*/
-void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-
-	++current_serial;
-	list_for_each_entry(cptr, &client_list, client_node)
-	{
-		if (!IsOper(cptr))
-			continue;
-		if (cptr->from->local->serial == current_serial)	/* sent message along it already ? */
-			continue;
-		if (cptr->from == one)
-			continue;	/* ...was the one I should skip */
-		cptr->from->local->serial = current_serial;
-
-		va_start(vl, pattern);
-		vsendto_prefix_one(cptr->from, from, NULL, pattern, vl);
-		va_end(vl);
-	}
-}
-
-/*
-** sendto_ops_butme
-**	Send message to all operators except local ones
-** from- client which message is from *NEVER* NULL!!
-*/
-void sendto_ops_butme(aClient *from, char *pattern, ...)
-{
-	va_list vl;
-	int  i;
-	aClient *cptr;
-
-	++current_serial;
-	list_for_each_entry(cptr, &client_list, client_node)
-	{
-		if (!SendWallops(cptr))
-			continue;
-		if (cptr->from->local->serial == current_serial)	/* sent message along it already ? */
-			continue;
-		if (!strcmp(cptr->user->server, me.name))	/* a locop */
-			continue;
 		cptr->from->local->serial = current_serial;
 
 		va_start(vl, pattern);
