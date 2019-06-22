@@ -410,8 +410,8 @@ int extban_modeT_is_banned(aClient *sptr, aChannel *chptr, char *ban, int checkt
 		{
 			if (!_match(p+6, filtered))
 			{
-				sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
-					"Message blocked due to a text ban", chptr->chname);
+				if (errmsg)
+					*errmsg = "Message blocked due to a text ban";
 				return 1; /* BLOCK */
 			}
 		}

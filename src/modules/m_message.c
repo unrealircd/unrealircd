@@ -58,7 +58,7 @@ MOD_INIT(m_message)
 	CommandAdd(modinfo->handle, MSG_PRIVATE, m_private, 2, M_USER|M_SERVER|M_RESETIDLE|M_VIRUS);
 	CommandAdd(modinfo->handle, MSG_NOTICE, m_notice, 2, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	return MOD_SUCCESS;	
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
@@ -119,7 +119,7 @@ int ret;
 	if (!is_silenced(sptr, acptr))
 	{
 		Hook *tmphook;
-		
+
 		if (!notice && MyConnect(sptr) &&
 		    acptr->user && acptr->user->away)
 			sendnumeric(sptr, RPL_AWAY, acptr->name,
@@ -139,9 +139,9 @@ int ret;
 		}
 		if (!*text)
 			return CANPRIVMSG_CONTINUE;
-		
+
 		RunHook4(HOOKTYPE_USERMSG, sptr, acptr, *text, notice);
-		
+
 		return CANPRIVMSG_SEND;
 	} else {
 		/* Silenced */
@@ -174,6 +174,9 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 	int ntargets = 0;
 	char *cmd = notice ? "NOTICE" : "PRIVMSG";
 	int maxtargets = max_targets_for_command(cmd);
+	Hook *h;
+	MessageTag *mtags;
+	int sendflags;
 
 	/*
 	 * Reasons why someone can't send to a channel
@@ -208,7 +211,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 
 	if (MyConnect(sptr))
 		parv[1] = (char *)canonize(parv[1]);
-		
+
 	for (p = NULL, nick = strtoken(&p, parv[1], ","); nick; nick = strtoken(&p, NULL, ","))
 	{
 		if (MyClient(sptr) && (++ntargets > maxtargets))
@@ -231,10 +234,10 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 				return ban_version(sptr, parv[2] + 8);
 			return 0;
 		}
-		
+
 		p2 = strchr(nick, '#');
 		prefix = 0;
-		
+
 		/* Message to channel */
 		if (p2 && (chptr = find_channel(p2, NullChn)))
 		{
@@ -277,7 +280,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 						  break;	/* ignore it :P */
 					}
 				}
-				
+
 				if (prefix)
 				{
 					if (MyClient(sptr) && !op_can_override("channel:override:message:prefix",sptr,chptr,NULL))
@@ -321,7 +324,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 					nick = pfixchan;
 				}
 			}
-			
+
 			if (MyClient(sptr) && (*parv[2] == 1))
 			{
 				ret = check_dcc(sptr, chptr->chname, NULL, parv[2]);
@@ -330,65 +333,68 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 				if (ret == 0)
 					continue;
 			}
+
 			if (IsVirus(sptr) && strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN))
 			{
 				sendnotice(sptr, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
 				continue;
 			}
-			
+
 			text = parv[2];
 			errmsg = NULL;
-			cansend = !IsULine(sptr) ? can_send(sptr, chptr, &text, &errmsg, notice) : 0;
-			if (!cansend)
+			if (MyClient(sptr) && !IsULine(sptr))
 			{
-				Hook *tmphook;
-				MessageTag *mtags = NULL;
-				int sendflags = SEND_ALL;
-
-				if (!strchr(CHANCMDPFX,parv[2][0]))
-					sendflags |= SKIP_DEAF;
-
-				text = parv[2];
-
-				if (MyClient(sptr))
+				int cansend = can_send(sptr, chptr, &text, &errmsg, notice);
+				if (cansend != 0)
 				{
-					ret = run_spamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname, 0, NULL);
-					if (ret < 0)
-						return ret;
+					if (!notice || (cansend == 8))
+					{
+						/* Send error message */
+						// TODO: move all the cansend shit to *errmsg ? if possible? 
+						sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname, errmsg ? errmsg : err_cantsend[cansend - 1], p2);
+					}
+					continue; /* skip */
 				}
-
-				new_message(sptr, recv_mtags, &mtags);
-
-				for (tmphook = Hooks[HOOKTYPE_PRE_CHANMSG]; tmphook; tmphook = tmphook->next) {
-					text = (*(tmphook->func.pcharfunc))(sptr, chptr, mtags, text, notice);
-					if (!text)
-						break;
-				}
-				
-				if (!text)
-				{
-					free_mtags(mtags);
-					continue;
-				}
-
-				sendto_channel(chptr, sptr, sptr,
-				               prefix, 0, sendflags, mtags,
-				               notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
-				               sptr->name, nick, text);
-
-				RunHook5(HOOKTYPE_CHANMSG, sptr, chptr, mtags, text, notice);
-
-				free_mtags(mtags);
-
-				continue;
 			}
-			else
+			mtags = NULL;
+			sendflags = SEND_ALL;
+
+			if (!strchr(CHANCMDPFX,parv[2][0]))
+				sendflags |= SKIP_DEAF;
+
+			text = parv[2];
+
 			if (MyClient(sptr))
 			{
-				if (!notice || (cansend == 8)) /* privmsg or 'cannot send notice'... */
-					sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
-					    err_cantsend[cansend - 1], p2);
+				ret = run_spamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname, 0, NULL);
+				if (ret < 0)
+					return ret;
 			}
+
+			new_message(sptr, recv_mtags, &mtags);
+
+			for (h = Hooks[HOOKTYPE_PRE_CHANMSG]; h; h = h->next)
+			{
+				text = (*(h->func.pcharfunc))(sptr, chptr, mtags, text, notice);
+				if (!text)
+					break;
+			}
+
+			if (!text)
+			{
+				free_mtags(mtags);
+				continue;
+			}
+
+			sendto_channel(chptr, sptr, sptr,
+				       prefix, 0, sendflags, mtags,
+				       notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
+				       sptr->name, nick, text);
+
+			RunHook5(HOOKTYPE_CHANMSG, sptr, chptr, mtags, text, notice);
+
+			free_mtags(mtags);
+
 			continue;
 		}
 		else if (p2)
@@ -503,7 +509,7 @@ int _is_silenced(aClient *sptr, aClient *acptr)
 {
 	Link *lp;
 	static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
-	
+
 	if (!acptr->user || !sptr->user || !(lp = acptr->user->silence))
 		return 0;
 
@@ -561,7 +567,6 @@ size_t n = strlen(f);
 			*o++ = *i;
 	*o = '\0';
 	return buf;
-	
 }
 
 /** Checks if a DCC is allowed.
@@ -709,7 +714,6 @@ int size_string;
 				sendnotice(to, "If you trust %s, and want him/her to send you this file, you may obtain "
 					"more information on using the dccallow system by typing '/DCCALLOW HELP'", from->name);
 			}
-	
 			return 0;
 		}
 	}
@@ -875,7 +879,7 @@ char *_StripControlCodes(unsigned char *text)
 }
 
 int	ban_version(aClient *sptr, char *text)
-{	
+{
 	int len;
 	ConfigItem_ban *ban;
 
