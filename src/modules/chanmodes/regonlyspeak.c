@@ -34,8 +34,8 @@ static char errMsg[2048];
 
 #define IsRegOnlySpeak(chptr)    (chptr->mode.extmode & EXTCMODE_REGONLYSPEAK)
 
-int regonlyspeak_can_send (aClient* cptr, aChannel *chptr, char* message, Membership* lp, int notice);
-char * regonlyspeak_part_message (aClient* sptr, aChannel *chptr, char* comment);
+int regonlyspeak_can_send(aClient *cptr, aChannel *chptr, Membership *lp, char **msg, char **errmsg, int notice);
+char *regonlyspeak_part_message (aClient* sptr, aChannel *chptr, char* comment);
 
 MOD_TEST(regonlyspeak)
 {
@@ -81,7 +81,7 @@ char *regonlyspeak_part_message (aClient *sptr, aChannel *chptr, char *comment)
 	return comment;
 }
 
-int regonlyspeak_can_send (aClient *cptr, aChannel *chptr, char *message, Membership *lp, int notice)
+int regonlyspeak_can_send(aClient *cptr, aChannel *chptr, Membership *lp, char **msg, char **errmsg, int notice)
 {
 	Hook *h;
 	int i;
@@ -100,7 +100,8 @@ int regonlyspeak_can_send (aClient *cptr, aChannel *chptr, char *message, Member
 		if (i == HOOK_ALLOW)
 			return HOOK_CONTINUE; /* bypass +M restriction */
 
-		return CANNOT_SEND_MODREG; /* BLOCK message */
+		*errmsg = "You must have a registered nick (+r) to talk on this channel";
+		return HOOK_DENY; /* BLOCK message */
 	}
 
 	return HOOK_CONTINUE;

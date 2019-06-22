@@ -149,12 +149,14 @@ static int list_length(Link *lp)
 Member	*find_member_link(Member *lp, aClient *ptr)
 {
 	if (ptr)
+	{
 		while (lp)
 		{
 			if (lp->cptr == ptr)
 				return (lp);
 			lp = lp->next;
-		}	
+		}
+	}
 	return NULL;
 }
 
@@ -179,7 +181,7 @@ Member	*make_member(void)
 
 	if (freemember == NULL)
 	{
-		for (i = 1; i <= (4072/sizeof(Member)); ++i)		
+		for (i = 1; i <= (4072/sizeof(Member)); ++i)
 		{
 			lp = MyMallocEx(sizeof(Member));
 			lp->cptr = NULL;
@@ -239,7 +241,7 @@ Membership	*make_membership(int local)
 	{
 		if (freemembershipL == NULL)
 		{
-			for (i = 1; i <= (4072/sizeof(MembershipL)); i++)		
+			for (i = 1; i <= (4072/sizeof(MembershipL)); i++)
 			{
 				lp2 = MyMallocEx(sizeof(MembershipL));
 				lp2->next = (Membership *) freemembershipL;
@@ -343,7 +345,7 @@ int add_listmode_ex(Ban **list, aClient *cptr, aChannel *chptr, char *banid, cha
 
 	if (MyClient(cptr))
 		(void)collapse(banid);
-	
+
 	len = strlen(banid);
 	if (!*list && ((len > MAXBANLENGTH) || (MAXBANS < 1)))
 	{
@@ -693,9 +695,10 @@ int  is_chanowner(aClient *cptr, aChannel *chptr)
 	return 0;
 }
 
-int is_chanownprotop(aClient *cptr, aChannel *chptr) {
+int is_chanownprotop(aClient *cptr, aChannel *chptr)
+{
 	Membership *lp;
-		
+
 	if (IsServer(cptr))
 		return 1;
 	if (chptr)
@@ -705,9 +708,10 @@ int is_chanownprotop(aClient *cptr, aChannel *chptr) {
 	return 0;
 }
 
-int is_skochanop(aClient *cptr, aChannel *chptr) {
+int is_skochanop(aClient *cptr, aChannel *chptr)
+{
 	Membership *lp;
-		
+
 	if (IsServer(cptr))
 		return 1;
 	if (chptr)
@@ -732,26 +736,34 @@ int  is_chanprot(aClient *cptr, aChannel *chptr)
 	return 0;
 }
 
+// FIXME: move to m_message and efunc !!
+
+/** Can user send a message to this channel?
+ * @param cptr    The client
+ * @param chptr   The channel
+ * @param msgtext The message to send (MAY be changed, even if user is allowed to send)
+ * @param errmsg  The error message (will be filled in)
+ * @param notice  If it's a NOTICE then this is set to 1. Set to 0 for PRIVMSG.
+ * @returns Returns 1 if the user is allowed to send, otherwise 0.
+ * (note that this behavior was reversed in UnrealIRCd versions <5.x.
+ */
 int can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice)
 {
 	Membership *lp;
 	int  member, i = 0;
 	Hook *h;
-	/* 
-	 * #0000053 by |savage|, speedup 
-	*/
-	
+
 	if (!MyClient(cptr))
-	{
-		return 0;
-	}
+		return 1;
+
+	*errmsg = NULL;
 
 	member = IsMember(cptr, chptr);
 
 	if (chptr->mode.mode & MODE_NOPRIVMSGS && !member)
 	{
-		/* Channel mode +n. Reject, unless HOOKTYPE_CAN_BYPASS_NO_EXTERNAL_MSGS
-		 * tells otherwise.
+		/* Channel does not accept external messages (+n).
+		 * Reject, unless HOOKTYPE_CAN_BYPASS_NO_EXTERNAL_MSGS tells otherwise.
 		 */
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
@@ -760,17 +772,20 @@ int can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int 
 				break;
 		}
 		if (i != HOOK_ALLOW)
-			return CANNOT_SEND_NOPRIVMSGS;
+		{
+			*errmsg = "No external channel messages";
+			return 0;
+		}
 	}
 
 	lp = find_membership_link(cptr->user->channel, chptr);
-	if (chptr->mode.mode & MODE_MODERATED && !op_can_override("channel:override:message:moderated",cptr,chptr,NULL) &&
-	    (!lp
-	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
-	CHFL_HALFOP | CHFL_CHANPROT))))
-    {
-		/* Channel mode +m. Reject, unless HOOKTYPE_CAN_BYPASS_MODERATED
-		 * tells otherwise.
+	if (chptr->mode.mode & MODE_MODERATED &&
+	    !op_can_override("channel:override:message:moderated",cptr,chptr,NULL) &&
+	    (!lp /* FIXME: UGLY */
+	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER | CHFL_HALFOP | CHFL_CHANPROT))))
+	{
+		/* Channel is moderated (+m).
+		 * Reject, unless HOOKTYPE_CAN_BYPASS_MODERATED tells otherwise.
 		 */
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
@@ -779,21 +794,25 @@ int can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int 
 				break;
 		}
 		if (i != HOOK_ALLOW)
-			return CANNOT_SEND_MODERATED;
-    }
+		{
+			*errmsg = "You need voice (+v)";
+			return 0;
+		}
+	}
 
-
+	/* Modules can plug in as well */
 	for (h = Hooks[HOOKTYPE_CAN_SEND]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(cptr,chptr,msgtext,lp,notice);
+		i = (*(h->func.intfunc))(cptr, chptr, lp, &msgtext, &errmsg, notice);
 		if (i != HOOK_CONTINUE)
 			break;
 	}
-
 	if (i != HOOK_CONTINUE)
-		return i;
+		return 0;
 
-	/* Makes opers able to talk thru bans -Stskeeps suggested by The_Cat */
+	/* Now we are going to check bans */
+
+	/* ..but first: exempt ircops */
 	if (op_can_override("channel:override:message:ban",cptr,chptr,NULL))
 		return 0;
 
@@ -801,9 +820,14 @@ int can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int 
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))) && MyClient(cptr)
 	    && is_banned(cptr, chptr, BANCHK_MSG, msgtext, errmsg))
-		return (CANNOT_SEND_BAN);
+	{
+		/* Modules can set 'errmsg', otherwise we default to this: */
+		if (!*errmsg)
+			*errmsg = "You are banned";
+		return 0;
+	}
 
-	return 0;
+	return 1;
 }
 
 /** Returns 1 if channel has this channel mode set and 0 if not */
@@ -834,7 +858,7 @@ int has_channel_mode(aChannel *chptr, char mode)
 	/* Special handling for +k (needed??) */
 	if (chptr->mode.key[0] && (mode == 'k'))
 		return 1;
-		
+
 	return 0; /* Not found */
 }
 

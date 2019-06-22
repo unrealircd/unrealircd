@@ -178,25 +178,6 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 	MessageTag *mtags;
 	int sendflags;
 
-	/*
-	 * Reasons why someone can't send to a channel
-	 * Note: a few have been moved to modules now, but don't just blindly delete them!! as we use the array index ;p
-	 */
-	static char *err_cantsend[] = {
-		"You need voice (+v)",
-		"No external channel messages",
-		"Color is not permitted in this channel <<NOLONGERUSED>>",
-		"You are banned",
-		"CTCPs are not permitted in this channel <<NOLONGERUSED>>",
-		"You must have a registered nick (+r) to talk on this channel",
-		"Swearing is not permitted in this channel",
-		"NOTICEs are not permitted in this channel",
-		NULL
-	};
-
-	if (IsHandshake(sptr))
-		return 0;
-
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendnumeric(sptr, ERR_NORECIPIENT, cmd);
@@ -344,14 +325,13 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 			errmsg = NULL;
 			if (MyClient(sptr) && !IsULine(sptr))
 			{
-				int cansend = can_send(sptr, chptr, &text, &errmsg, notice);
-				if (cansend != 0)
+				if (!can_send(sptr, chptr, &text, &errmsg, notice))
 				{
-					if (!notice || (cansend == 8))
+					if (!notice)
 					{
 						/* Send error message */
-						// TODO: move all the cansend shit to *errmsg ? if possible? 
-						sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname, errmsg ? errmsg : err_cantsend[cansend - 1], p2);
+						// TODO: move all the cansend shit to *errmsg ? if possible?
+						sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname, errmsg, p2);
 					}
 					continue; /* skip */
 				}

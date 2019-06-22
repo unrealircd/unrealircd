@@ -975,7 +975,7 @@ int hooktype_handshake(aClient *sptr);
 int hooktype_away(aClient *sptr, char *reason);
 int hooktype_invite(aClient *from, aClient *to, aChannel *chptr);
 int hooktype_can_join(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-int hooktype_can_send(aClient *sptr, aChannel *chptr, char *text, Membership *member, int notice);
+int hooktype_can_send(aClient *sptr, aChannel *chptr, Membership *member, char **text, char **errmsg, int notice);
 int hooktype_can_kick(aClient *sptr, aClient *victim, aChannel *chptr, char *comment, long sptr_flags, long victim_flags, char **error);
 int hooktype_free_client(aClient *acptr);
 int hooktype_free_user(anUser *user, aClient *acptr);
