@@ -1,7 +1,8 @@
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, src/packet.c
- *   Copyright (C) 1990  Jarkko Oikarinen and
- *                       University of Oulu, Computing Center
+ *   Copyright (C) 1988-1990 Jarkko Oikarinen and
+ *                 University of Oulu, Computing Center
+ *   Copyright (C) 1999-present UnrealIRCd team
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,15 +19,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "msg.h"
-#include "h.h"
-#include <string.h>
-ID_Copyright
-    ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
-ID_Notes("2.12 1/30/94");
+#include "unrealircd.h"
 
 aCommand	*CommandHash[256]; /* one per letter */
 

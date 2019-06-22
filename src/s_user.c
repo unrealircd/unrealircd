@@ -23,29 +23,7 @@
 
 /* s_user.c 2.74 2/8/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
-#include "macros.h"
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "channel.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
-#include "h.h"
-#include "proto.h"
-
-#ifdef _WIN32
-#include "version.h"
-#endif
+#include "unrealircd.h"
 
 void send_umode_out(aClient *, aClient *, long);
 void send_umode(aClient *, aClient *, long, long, char *);

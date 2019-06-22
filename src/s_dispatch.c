@@ -17,9 +17,11 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "setup.h"
-#include "config.h"
+#include "unrealircd.h"
 
+/* Some specials here, for this file.. */
+
+/* Do we even support this, poll on Windows? */
 #ifdef BACKEND_POLL
 #ifndef _WIN32
 # include <poll.h>
@@ -32,34 +34,13 @@
 #ifdef _WIN32
 #include <WinSock2.h>
 #endif
-
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "res.h"
-#include "numeric.h"
-#include "version.h"
 #ifndef _WIN32
-#include <sys/socket.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
-#include <sys/resource.h>
-#else
-#include <io.h>
 #endif
 #if defined(_SOLARIS)
 #include <sys/filio.h>
 #endif
-#include "inet.h"
-#include <stdio.h>
-#include <signal.h>
-#include <fcntl.h>
-
-#include <string.h>
-#include "proto.h"
-                        /* define it (BSD4.2 needs this) */
-#include "h.h"
-#include "fdlist.h"
 
 /***************************************************************************************
  * Backend-independent functions.  fd_setselect() and friends                          *

@@ -17,15 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <string.h>
-#include <limits.h>
-#include "numeric.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "hash.h"
-#include "h.h"
-#include "proto.h"
+#include "unrealircd.h"
 
 ID_Copyright("(C) 1991 Darren Reed");
 ID_Notes("2.10 7/3/93");

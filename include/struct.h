@@ -233,6 +233,9 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 
 #define	elementsof(x) (sizeof(x)/sizeof(x[0]))
 
+/* Calculate the size of an array */
+#define ARRAY_SIZEOF(x) (sizeof((x))/sizeof((x)[0]))
+
 /*
 ** flags for bootup options (command line flags)
 */

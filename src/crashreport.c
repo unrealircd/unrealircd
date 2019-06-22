@@ -3,13 +3,13 @@
  *
  * GPLv2
  */
+
 #include "unrealircd.h"
 #ifndef _WIN32
 #include <dirent.h>
 #else
 extern void StartUnrealAgain(void);
 #endif
-
 #include "version.h"
 
 extern char *getosname(void);

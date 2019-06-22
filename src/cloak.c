@@ -15,17 +15,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "ircsprintf.h"
-#include "channel.h"
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
-#include "h.h"
+#include "unrealircd.h"
 
 /* mode = 0, just use strlcpy, 1 = Realloc new and return new pointer */
 char *make_virthost(aClient *sptr, char *curr, char *new, int mode)

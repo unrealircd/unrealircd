@@ -1,4 +1,3 @@
-
 /************************************************************************
 *   IRC - Internet Relay Chat, src/whowas.c
 *   Copyright (C) 1990 Markku Savela
@@ -18,15 +17,7 @@
 *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "h.h"
-#include "hash.h"
-#include "proto.h"
-#include "msg.h"
-#include <string.h>
+#include "unrealircd.h"
 
 /* externally defined functions */
 unsigned int hash_whowas_name(char *);	/* defined in hash.c */

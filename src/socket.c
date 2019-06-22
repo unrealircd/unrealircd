@@ -18,20 +18,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "h.h"
-#include <signal.h>
-#include <string.h>
-#include "inet.h"
-#ifndef _WIN32
-extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
-#endif
-#include <sys/types.h>
-#ifndef _WIN32
-#include <sys/socket.h>
-#endif
+#include "unrealircd.h"
 
 /** Attempt to deliver data to a client.
  * This function is only called from send_queued() and will deal

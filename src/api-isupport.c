@@ -18,26 +18,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * $Id$
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "channel.h"
-#include "version.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-#include <fcntl.h>
-#include "h.h"
-#include "proto.h"
+#include "unrealircd.h"
 
 Isupport *Isupports; /* List of ISUPPORT (005) tokens */
 #define MAXISUPPORTLINES 10

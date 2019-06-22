@@ -1,67 +1,32 @@
 /* Unreal Internet Relay Chat Daemon, src/channel.c
- *   Copyright (C) 1990 Jarkko Oikarinen and
- *                      University of Oulu, Co Center
+ * (C) Copyright 1990 Jarkko Oikarinen and
+ *                    University of Oulu, Co Center
+ * (C) Copyright 1999-present The UnrealIRCd team
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 1, or (at your option)
- *   any later version.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 1, or (at your option)
+ * any later version.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
- * 23 Jun 1999
- * Changing unsigned int modes to long
- * --- Sts - 28 May 1999
-    Incorporated twilight mode system
-*/
-/* -- Jto -- 09 Jul 1990
- * Bug fix
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* -- Jto -- 03 Jun 1990
- * Moved m_channel() and related functions from s_msg.c to here
- * Many changes to start changing into string channels...
- */
-
-/* -- Jto -- 24 May 1990
- * Moved is_full() from list.c
- */
-
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "channel.h"
-#include "msg.h"		/* For TOK_*** and MSG_*** strings  */
-#include "hash.h"		/* For CHANNELHASHSIZE */
-#include "h.h"
-#include "proto.h"
-#include "modules.h"
-#include <string.h>
-
-ID_Copyright
-    ("(C) 1990 University of Oulu, Computing Center and Jarkko Oikarinen");
+#include "unrealircd.h"
 
 long opermode = 0;
 aChannel *channel = NullChn;
-extern char backupbuf[];
-extern ircstats IRCstats;
 
-/*
- * some buffers for rebuilding channel/nick lists with ,'s
- */
+/* some buffers for rebuilding channel/nick lists with comma's */
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
 MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
-#define MODESYS_LINKOK		/* We do this for a TEST  */
 aCtab cFlagTab[] = {
 	{MODE_LIMIT, 'l', 1, 1},
 	{MODE_VOICE, 'v', 1, 1},

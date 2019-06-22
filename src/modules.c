@@ -18,43 +18,24 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * $Id$
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "channel.h"
-#include "version.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
+#define UNREALCORE
+#include "unrealircd.h"
 #ifdef _WIN32
-#include <io.h>
 #define RTLD_NOW 0
-const char *our_dlerror(void);
 #elif defined(HPUX)
 #include <dl.h>
 #define RTLD_NOW BIND_IMMEDIATE
 #else
 #include <dlfcn.h>
 #endif
-#include <fcntl.h>
 #ifndef _WIN32
 #include <dirent.h>
 #endif
-#include "h.h"
-#include "proto.h"
 #ifndef RTLD_NOW
 #define RTLD_NOW RTLD_LAZY
 #endif
-#define UNREALCORE
 #include "modversion.h"
 
 Hook	   	*Hooks[MAXHOOKTYPES];

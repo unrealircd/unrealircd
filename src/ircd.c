@@ -1,7 +1,7 @@
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, src/ircd.c
- *   Copyright (C) 1990 Jarkko Oikarinen and
- *                      University of Oulu, Computing Center
+ *   Copyright (C) 1989-1990 Jarkko Oikarinen and
+ *                 University of Oulu, Computing Center
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,55 +18,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* ircd.c	2.48 3/9/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
+#include "unrealircd.h"
 
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "mempool.h"
-#include <sys/stat.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <string.h>
-#ifndef _WIN32
-#include <sys/file.h>
-#include <pwd.h>
-#include <grp.h>
-#include <sys/time.h>
-#else
-#include <io.h>
-#include <direct.h>
-#endif
-#ifdef HPUX
-#define _KERNEL			/* HPUX has the world's worst headers... */
-#endif
-#ifndef _WIN32
-#include <sys/resource.h>
-#endif
-#ifdef HPUX
-#undef _KERNEL
-#endif
-#include <errno.h>
-#ifdef HAVE_PSSTRINGS
-#include <sys/exec.h>
-#endif
-#ifdef HAVE_PSTAT
-#include <sys/pstat.h>
-#endif
-#include "h.h"
-#include "fdlist.h"
-#include "version.h"
-#include "proto.h"
-#ifdef USE_LIBCURL
-#include <curl/curl.h>
-#endif
-ID_Copyright
-    ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
-ID_Notes("2.48 3/9/94");
 #ifdef __FreeBSD__
 char *malloc_options = "h" MALLOC_FLAGS_EXTRA;
 #endif

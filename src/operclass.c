@@ -1,21 +1,9 @@
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "proto.h"
-#include "channel.h"
-#include "version.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
-#include "h.h"
+/** Oper classes code.
+ * (C) Copyright 2015-present tmcarthur and the UnrealIRCd team
+ * License: GPLv2
+ */
+
+#include "unrealircd.h"
 
 typedef struct _operClass_PathNode OperClass_PathNode;
 typedef struct _operClass_CallbackNode OperClass_CallbackNode;

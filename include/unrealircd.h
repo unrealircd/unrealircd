@@ -3,25 +3,36 @@
  * (that is publicly exposed anyway).
  */
 #include "config.h"
+#include <assert.h>
+#ifdef USE_LIBCURL
+ #include <curl/curl.h>
+#endif
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
 #include "msg.h"
+#include "mempool.h"
 #include "proto.h"
 #include "inet.h"
 #include "channel.h"
 #include <time.h>
 #include <sys/stat.h>
+#include <utime.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef GLOBH
+ #include <glob.h>
+#endif
 #ifdef _WIN32
-#include <io.h>
-#include <sys/timeb.h>
+ #include <io.h>
+ #include <sys/timeb.h>
+ #undef GLOBH
+#else
+ #include <sys/resource.h>
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef _WIN32
+#include "url.h"
 #include "version.h"
-#endif

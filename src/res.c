@@ -18,32 +18,13 @@
  *
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "proto.h"
-#include "channel.h"
-#include "version.h"
+#include "unrealircd.h"
+#include <res.h>
 
 #if !defined(UNREAL_VERSION_TIME)
  #error "YOU MUST RUN ./Config WHENEVER YOU ARE UPGRADING UNREAL!!!!"
 #endif
 
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include "inet.h"
-#include <fcntl.h>
-#include "h.h"
-
-#include <res.h>
 
 /* Prevent crashes due to invalid prototype/ABI.
  * And force the use of at least the version shipped with Unreal

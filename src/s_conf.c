@@ -17,37 +17,8 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "struct.h"
-#include "url.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "channel.h"
-#include "macros.h"
-#include <fcntl.h>
-#ifndef _WIN32
-#include <sys/socket.h>
-#include <sys/wait.h>
-#else
-#include <io.h>
-#endif
-#include <sys/stat.h>
-#ifdef __hpux
-#include "inet.h"
-#endif
-#if defined(PCS) || defined(AIX) || defined(SVR3)
-#include <time.h>
-#endif
-#include <string.h>
-#ifdef GLOBH
-#include <glob.h>
-#endif
-#include "h.h"
-#include "inet.h"
-#include "proto.h"
-#ifdef _WIN32
-#undef GLOBH
-#endif
+
+#include "unrealircd.h"
 
 /*
  * Some typedefs..

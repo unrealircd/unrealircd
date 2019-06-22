@@ -23,26 +23,7 @@
 
 /* s_serv.c 2.55 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "channel.h"
-#include "version.h"
-#include <sys/stat.h>
-#include <fcntl.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <time.h>
-#include "h.h"
-#include "proto.h"
-#include <string.h>
-#ifdef USE_LIBCURL
-#include "url.h"
-#include <curl/curl.h>
-#endif
+#include "unrealircd.h"
 #ifndef _WIN32
 /* for uname(), is POSIX so should be OK... */
 #include <sys/utsname.h>

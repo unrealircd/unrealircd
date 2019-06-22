@@ -17,24 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "version.h"
-#include "inet.h"
-#ifndef _WIN32
-#include <sys/socket.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#else
-#include <io.h>
-#endif
-#include <fcntl.h>
-#include "h.h"
-#include "res.h"
-#include "proto.h"
-#include <string.h>
+#include "unrealircd.h"
 
 static void send_authports(int fd, int revents, void *data);
 static void read_authports(int fd, int revents, void *data);

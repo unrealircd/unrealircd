@@ -20,22 +20,7 @@
 
 /* send.c 2.32 2/28/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
-/* -- Jto -- 16 Jun 1990
- * Added Armin's PRIVMSG patches...
- */
-
-#include "struct.h"
-#include "numeric.h"
-#include "common.h"
-#include "sys.h"
-#include "h.h"
-#include "msg.h"
-#include <stdarg.h>
-#include <stdio.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <string.h>
+#include "unrealircd.h"
 
 void vsendto_one(aClient *to, MessageTag *mtags, const char *pattern, va_list vl);
 void sendbufto_one(aClient *to, char *msg, unsigned int quick);
@@ -1094,7 +1079,7 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 	}
 
 	sendto_one(cptr, NULL,
-		    "NICK %s %d %d %s %s %s %s %s %s %s%s%s%s:%s",
+		    "NICK %s %d %ld %s %s %s %s %s %s %s%s%s%s:%s",
 		    sptr->name,
 		    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
 		    sptr->user->realhost, sptr->srvptr->name,

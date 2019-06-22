@@ -36,14 +36,7 @@
  * \version $Id: mempool.c 1967 2013-05-08 14:33:22Z michael $
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "h.h"
-#include "proto.h"
-#include "numeric.h"
-#include "mempool.h"
-#include <assert.h>
+#include "unrealircd.h"
 
 /** Returns floor(log2(u64)).  If u64 is 0, (incorrectly) returns 0. */
 static int

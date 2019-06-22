@@ -17,24 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "h.h"
-#include "config.h"
-#include "fdlist.h"
-#include "proto.h"
-#include <sys/stat.h>
-#ifdef  UNISTDH
-#include <unistd.h>
-#endif
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
+#include "unrealircd.h"
 
 /* new FD management code, based on mowgli.eventloop from atheme, hammered into Unreal by
  * me, nenolod.

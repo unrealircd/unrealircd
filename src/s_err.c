@@ -17,12 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "struct.h"
-#include "numeric.h"
-#include "common.h"
-
-/* "s_err.c	1.12 11/1/93 (C) 1992 Darren Reed */
-/* Redone to be similar to bahamut's s_err.c -- codemastr */
+#include "unrealircd.h"
 
 static char *replies[] = {
 /* 000 */ NULL,
@@ -1047,9 +1042,10 @@ static char *replies[] = {
 /* 1000 */ NULL,
 };
 
-char *getreply(int numeric) {
-   	if((numeric<0 || numeric>999) || !replies[numeric])
-	  return(replies[ERR_NUMERICERR]);
+char *getreply(int numeric)
+{
+	if ((numeric < 0) || (numeric > 999) || !replies[numeric])
+		return replies[ERR_NUMERICERR];
 	else
-          return(replies[numeric]);
+		return replies[numeric];
 }

@@ -18,36 +18,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* -- Jto -- 20 Jun 1990
- * extern void free() fixed as suggested by
- * gruner@informatik.tu-muenchen.de
- */
+#include "unrealircd.h"
 
-/* -- Jto -- 03 Jun 1990
- * Added chname initialization...
- */
-
-/* -- Jto -- 24 May 1990
- * Moved is_full() to channel.c
- */
-
-/* -- Jto -- 10 May 1990
- * Added #include <sys.h>
- * Changed memset(xx,0,yy) into bzero(xx,yy)
- */
-
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "h.h"
-#include "proto.h"
-#include "numeric.h"
-#ifdef	DBMALLOC
-#include "malloc.h"
-#endif
-#include "mempool.h"
-#include <assert.h>
-#include <string.h>
 void free_link(Link *);
 Link *make_link();
 extern ircstats IRCstats;

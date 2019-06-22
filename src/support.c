@@ -19,26 +19,7 @@
 
 /* support.c 2.21 4/13/94 1990, 1991 Armin Gruner; 1992, 1993 Darren Reed */
 
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "version.h"
-#include "h.h"
-#include "inet.h"
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <limits.h>
-#ifdef _WIN32
-#include <io.h>
-#else
-extern uid_t irc_uid;
-extern gid_t irc_gid;
-#include <sys/socket.h>
-#include <string.h>
-#include <utime.h>
-extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
-#endif
+#include "unrealircd.h"
 
 extern void outofmemory();
 

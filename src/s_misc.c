@@ -1,4 +1,3 @@
-
 /*
  *   Unreal Internet Relay Chat Daemon, src/s_misc.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
@@ -22,33 +21,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _WIN32
-#include <sys/time.h>
-#endif
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <assert.h>
-#if !defined(ULTRIX) && !defined(SGI) && \
-    !defined(__convex__) && !defined(_WIN32)
-# include <sys/param.h>
-#endif
-#if defined(PCS) || defined(AIX) || defined(SVR3)
-# include <time.h>
-#endif
-#ifdef HPUX
-#include <unistd.h>
-#endif
-#ifdef _WIN32
-# include <io.h>
-#endif
-#include "h.h"
-#include "proto.h"
-#include "channel.h"
-#include <string.h>
+#include "unrealircd.h"
 
 extern ircstats IRCstats;
 extern char	*me_hash;

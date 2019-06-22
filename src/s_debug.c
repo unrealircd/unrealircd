@@ -20,30 +20,20 @@
 
 /* s_debug.c 2.30 1/3/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
-#include "struct.h"
-#include <string.h>
-#include "proto.h"
-/*
- * Option string.  Must be before #ifdef DEBUGMODE.
- */
+#include "unrealircd.h"
+
 MODVAR char serveropts[] = {
 #ifdef	DEBUGMODE
 	'D',
 #endif
-	/* FDLIST is always compiled in now.  Well, my replacement to it
-	 * is anyway.  --nenolod
-	 */
+	/* FDLIST (always) */
 	'F',
-	/*
-	 * Marks that the ircd is ``compiled as'' a hub.
-	 * Now always defined as it's impossible to build unrealircd
-	 * without hub support AFAIK. (#0003891) --binki
-	 */
+	/* Hub (always) */
 	'h',
 #ifdef	SHOW_INVISIBLE_LUSERS
 	'i',
 #endif
-	/* NOSPOOF is always compiled in now. --nenolod */
+	/* NOSPOOF (always) */
 	'n',
 #ifdef	VALLOC
 	'V',
@@ -74,50 +64,6 @@ MODVAR char serveropts[] = {
 };
 
 char *extraflags = NULL;
-
-#include "numeric.h"
-#include "common.h"
-#include "sys.h"
-#include "whowas.h"
-#include "hash.h"
-#ifndef _WIN32
-#include <sys/file.h>
-#endif
-#ifdef HPUX
-#include <fcntl.h>
-#endif
-#if !defined(ULTRIX) && !defined(SGI) && \
-    !defined(__convex__) && !defined(_WIN32)
-# include <sys/param.h>
-#endif
-#ifdef HPUX
-# include <sys/syscall.h>
-# define getrusage(a,b) syscall(SYS_GETRUSAGE, a, b)
-#endif
-#ifdef GETRUSAGE_2
-# ifdef _SOLARIS
-#  include <sys/time.h>
-#  ifdef RUSAGEH
-#   include <sys/rusage.h>
-#  endif
-# endif
-# include <sys/resource.h>
-#else
-#  ifdef TIMES_2
-#   include <sys/times.h>
-#  endif
-#endif
-#ifdef PCS
-# include <time.h>
-#endif
-#ifdef HPUX
-#include <unistd.h>
-#endif
-#include "h.h"
-
-#ifndef ssize_t
-#define ssize_t unsigned int
-#endif
 
 MODVAR int debugfd = 2;
 

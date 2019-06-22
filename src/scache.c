@@ -1,13 +1,7 @@
 
 /* $Id$ */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "h.h"
-#include "proto.h"
-#include <string.h>
+#include "unrealircd.h"
 
 static int hash(char *);	/*
 

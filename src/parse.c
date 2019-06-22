@@ -24,11 +24,7 @@
 
 /* parse.c 2.33 1/30/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
-#include <string.h>
-#include "struct.h"
-#include "common.h"
-
-#undef RAWDEBUG
+#include "unrealircd.h"
 
 char backupbuf[8192];
 

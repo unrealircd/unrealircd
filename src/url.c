@@ -18,15 +18,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <string.h>
-#include <stdio.h>
-#include <struct.h>
-#include "proto.h"
-#include "h.h"
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <curl/curl.h>
-#include "url.h"
+#include "unrealircd.h"
 
 extern char *SSLKeyPasswd;
 

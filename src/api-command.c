@@ -17,12 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "msg.h"
-#include "h.h"
-#include <string.h>
+#include "unrealircd.h"
 
 int CommandExists(char *name)
 {

@@ -21,7 +21,6 @@
 #include "unrealircd.h"
 #include "openssl_hostname_validation.h"
 
-
 #ifdef _WIN32
 #define IDC_PASS                        1166
 extern HINSTANCE hInst;
