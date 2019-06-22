@@ -948,18 +948,31 @@ int _can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int
 	/* Modules can plug in as well */
 	for (h = Hooks[HOOKTYPE_CAN_SEND]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(cptr, chptr, lp, &msgtext, &errmsg, notice);
+		i = (*(h->func.intfunc))(cptr, chptr, lp, msgtext, errmsg, notice);
 		if (i != HOOK_CONTINUE)
+		{
+#ifdef DEBUGMODE
+			if (!*errmsg)
+			{
+				ircd_log(LOG_ERROR, "Module %s did not set errmsg!!!", h->owner->header->name);
+				abort();
+			}
+#endif
 			break;
+		}
 	}
 	if (i != HOOK_CONTINUE)
+	{
+		if (!*errmsg)
+			*errmsg = "You are banned";
 		return 0;
+	}
 
 	/* Now we are going to check bans */
 
 	/* ..but first: exempt ircops */
 	if (op_can_override("channel:override:message:ban",cptr,chptr,NULL))
-		return 0;
+		return 1;
 
 	if ((!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
