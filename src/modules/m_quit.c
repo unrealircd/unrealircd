@@ -108,6 +108,8 @@ CMD_FUNC(m_quit)
 						break;
 				}
 
+				if (newcomment && is_banned(sptr, chptr, BANCHK_LEAVE_MSG, &newcomment, NULL))
+					newcomment = NULL;
 				if (comment != newcomment)
 				{
 					char *parx[4];

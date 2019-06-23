@@ -136,6 +136,8 @@ CMD_FUNC(m_part)
 			/* Banned? No comment allowed ;) */
 			if (comment && is_banned(sptr, chptr, BANCHK_MSG, &comment, NULL))
 				comment = NULL;
+			if (comment && is_banned(sptr, chptr, BANCHK_LEAVE_MSG, &comment, NULL))
+				comment = NULL;
 			/* Same for +m */
 			if ((chptr->mode.mode & MODE_MODERATED) && comment &&
 				 !has_voice(sptr, chptr) && !is_halfop(sptr, chptr))
