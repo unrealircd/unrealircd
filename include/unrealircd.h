@@ -4,9 +4,6 @@
  */
 #include "config.h"
 #include <assert.h>
-#ifdef USE_LIBCURL
- #include <curl/curl.h>
-#endif
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -18,7 +15,6 @@
 #include "channel.h"
 #include <time.h>
 #include <sys/stat.h>
-#include <utime.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,8 +27,13 @@
  #undef GLOBH
 #else
  #include <sys/resource.h>
+ #include <utime.h>
 #endif
 #include <fcntl.h>
+#include <signal.h>
 #include "h.h"
 #include "url.h"
 #include "version.h"
+#ifdef USE_LIBCURL
+ #include <curl/curl.h>
+#endif

@@ -667,6 +667,10 @@ extern int	Module_free(Module *mod);
 extern void *obsd_dlsym(void *handle, char *symbol);
 #endif
 
+#ifdef _WIN32
+extern const char *our_dlerror(void);
+#endif
+
 extern Versionflag *VersionflagAdd(Module *module, char flag);
 extern void VersionflagDel(Versionflag *vflag, Module *module);
 
