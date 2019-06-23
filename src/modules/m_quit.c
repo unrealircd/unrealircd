@@ -89,7 +89,7 @@ CMD_FUNC(m_quit)
 				comment = sptr->name;
 		}
 
-		if (iConf.part_instead_of_quit_on_comment_change)
+		if (iConf.part_instead_of_quit_on_comment_change && MyClient(sptr))
 		{
 			Membership *lp;
 			char *newcomment;
@@ -110,6 +110,8 @@ CMD_FUNC(m_quit)
 
 				if (newcomment && is_banned(sptr, chptr, BANCHK_LEAVE_MSG, &newcomment, NULL))
 					newcomment = NULL;
+
+				/* Comment changed? Then PART the user before we do the QUIT. */
 				if (comment != newcomment)
 				{
 					char *parx[4];
