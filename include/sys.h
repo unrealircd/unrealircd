@@ -238,7 +238,7 @@ typedef unsigned __int32 uint32_t;
  * It's silly but this works:
  */
 #ifdef _WIN32
- #define abort(x)  do { char *crash = NULL; *crash = 'x'; } while(0)
+ #define abort()  do { char *crash = NULL; *crash = 'x'; } while(0)
 #endif
 
 #endif /* __sys_include__ */
