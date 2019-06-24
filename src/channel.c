@@ -598,7 +598,7 @@ void remove_user_from_channel(aClient *sptr, aChannel *chptr)
 long get_access(aClient *cptr, aChannel *chptr)
 {
 	Membership *lp;
-	if (chptr)
+	if (chptr && IsPerson(cptr))
 		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			return lp->flags;
 	return 0;
