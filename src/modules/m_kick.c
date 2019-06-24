@@ -285,7 +285,7 @@ CMD_FUNC(m_kick)
 					RunHook5(HOOKTYPE_REMOTE_KICK, cptr, sptr, who, chptr, comment);
 				}
 				mtags = NULL;
-				new_message(sptr, NULL, &mtags);
+				new_message_special(sptr, recv_mtags, &mtags, ":%s KICK %s %s", sptr->name, chptr->chname, who->name);
 				/* The same message is actually sent at 5 places below (though max 4 at most) */
 				if (lp)
 				{
