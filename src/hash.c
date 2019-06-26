@@ -256,7 +256,7 @@ void siphash_generate_key(char *k)
 
 static struct list_head clientTable[NICK_HASH_TABLE_SIZE];
 static struct list_head idTable[NICK_HASH_TABLE_SIZE];
-static aHashEntry channelTable[CHAN_HASH_TABLE_SIZE];
+static aChannel *channelTable[CHAN_HASH_TABLE_SIZE];
 static aWatch *watchTable[WATCH_HASH_TABLE_SIZE];
 
 static char siphashkey_nick[16];
@@ -362,10 +362,8 @@ int add_to_channel_hash_table(char *name, aChannel *chptr)
 	unsigned int hashv;
 
 	hashv = hash_channel_name(name);
-	chptr->hnextch = (aChannel *)channelTable[hashv].list;
-	channelTable[hashv].list = (void *)chptr;
-	channelTable[hashv].links++;
-	channelTable[hashv].hits++;
+	chptr->hnextch = channelTable[hashv];
+	channelTable[hashv] = chptr;
 	return 0;
 }
 /*
@@ -394,33 +392,26 @@ int del_from_id_hash_table(char *name, aClient *cptr)
 /*
  * del_from_channel_hash_table
  */
-int del_from_channel_hash_table(char *name, aChannel *chptr)
+void del_from_channel_hash_table(char *name, aChannel *chptr)
 {
 	aChannel *tmp, *prev = NULL;
 	unsigned int hashv;
 
 	hashv = hash_channel_name(name);
-	for (tmp = (aChannel *)channelTable[hashv].list; tmp;
-	    tmp = tmp->hnextch)
+	for (tmp = channelTable[hashv]; tmp; tmp = tmp->hnextch)
 	{
 		if (tmp == chptr)
 		{
 			if (prev)
 				prev->hnextch = tmp->hnextch;
 			else
-				channelTable[hashv].list = (void *)tmp->hnextch;
+				channelTable[hashv] = tmp->hnextch;
 			tmp->hnextch = NULL;
-			if (channelTable[hashv].links > 0)
-			{
-				channelTable[hashv].links--;
-				return 1;
-			}
-			else
-				return -1;
+			return; /* DONE */
 		}
 		prev = tmp;
 	}
-	return 0;
+	return; /* NOTFOUND */
 }
 
 /*
@@ -435,10 +426,10 @@ aClient *hash_find_client(const char *name, aClient *cptr)
 	list_for_each_entry(tmp, &clientTable[hashv], client_hash)
 	{
 		if (smycmp(name, tmp->name) == 0)
-			return (tmp);
+			return tmp;
 	}
 
-	return (cptr);
+	return cptr;
 }
 
 aClient *hash_find_id(const char *name, aClient *cptr)
@@ -450,10 +441,10 @@ aClient *hash_find_id(const char *name, aClient *cptr)
 	list_for_each_entry(tmp, &idTable[hashv], id_hash)
 	{
 		if (smycmp(name, tmp->id) == 0)
-			return (tmp);
+			return tmp;
 	}
 
-	return (cptr);
+	return cptr;
 }
 
 /*
@@ -499,11 +490,11 @@ aClient *hash_find_server(const char *server, aClient *cptr)
 			continue;
 		if (smycmp(server, tmp->name) == 0)
 		{
-			return (tmp);
+			return tmp;
 		}
 	}
 
-	return (cptr);
+	return cptr;
 }
 
 /** Find a client by name.
@@ -571,16 +562,14 @@ aChannel *hash_find_channel(char *name, aChannel *chptr)
 {
 	unsigned int hashv;
 	aChannel *tmp;
-	aHashEntry *tmp3;
 
 	hashv = hash_channel_name(name);
-	tmp3 = &channelTable[hashv];
 
-	for (tmp = (aChannel *)tmp3->list; tmp; tmp = tmp->hnextch)
+	for (tmp = channelTable[hashv]; tmp; tmp = tmp->hnextch)
+	{
 		if (smycmp(name, tmp->chname) == 0)
-		{
-			return (tmp);
-		}
+			return tmp;
+	}
 	return chptr;
 }
 
@@ -588,7 +577,7 @@ aChannel *hash_get_chan_bucket(uint64_t hashv)
 {
 	if (hashv > CHAN_HASH_TABLE_SIZE)
 		return NULL;
-	return (aChannel *)channelTable[hashv].list;
+	return channelTable[hashv];
 }
 
 void  count_watch_memory(int *count, u_long *memory)

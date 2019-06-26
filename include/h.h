@@ -379,7 +379,7 @@ extern int del_from_client_hash_table(char *, aClient *);
 extern int add_to_id_hash_table(char *, aClient *);
 extern int del_from_id_hash_table(char *, aClient *);
 extern int add_to_channel_hash_table(char *, aChannel *);
-extern int del_from_channel_hash_table(char *, aChannel *);
+extern void del_from_channel_hash_table(char *, aChannel *);
 extern int add_to_watch_hash_table(char *, aClient *, int);
 extern int del_from_watch_hash_table(char *, aClient *);
 extern int hash_check_watch(aClient *, int);
