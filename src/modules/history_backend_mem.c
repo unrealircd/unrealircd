@@ -20,6 +20,11 @@ ModuleHeader MOD_HEADER(history_backend_mem)
 	NULL 
 };
 
+/* Defines */
+#define OBJECTLEN	((NICKLEN > CHANNELLEN) ? NICKLEN : CHANNELLEN)
+#define HISTORY_BACKEND_MEM_HASH_TABLE_SIZE 1019
+
+/* Definitions (structs, etc.) */
 typedef struct _historylogline HistoryLogLine;
 struct _historylogline {
 	HistoryLogLine *prev, *next;
@@ -28,7 +33,6 @@ struct _historylogline {
 	char line[1];
 };
 
-#define OBJECTLEN	((NICKLEN > CHANNELLEN) ? NICKLEN : CHANNELLEN)
 typedef struct _historyloglineobject HistoryLogObject;
 struct _historyloglineobject {
 	HistoryLogObject *prev, *next;
@@ -39,9 +43,11 @@ struct _historyloglineobject {
 	char name[OBJECTLEN+1];
 };
 
-#define HISTORYLOGHASHTBLSZ 1019
-HistoryLogObject *history_hash_table[HISTORYLOGHASHTBLSZ];
+/* Global variables */
+static char siphashkey_history_backend_mem[16];
+HistoryLogObject *history_hash_table[HISTORY_BACKEND_MEM_HASH_TABLE_SIZE];
 
+/* Forward declarations */
 int hbm_history_add(char *object, MessageTag *mtags, char *line);
 int hbm_history_del(char *object, int max_lines, long max_time);
 int hbm_history_request(aClient *acptr, char *object, HistoryFilter *filter);
@@ -52,6 +58,10 @@ MOD_INIT(history_backend_mem)
 	HistoryBackendInfo hbi;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
+
+	memset(&history_hash_table, 0, sizeof(history_hash_table));
+	siphash_generate_key(siphashkey_history_backend_mem);
 
 	memset(&hbi, 0, sizeof(hbi));
 	hbi.name = "mem";
@@ -75,10 +85,9 @@ MOD_UNLOAD(history_backend_mem)
 	return MOD_SUCCESS;
 }
 
-int hbm_hash(char *object)
+u_int64_t hbm_hash(char *object)
 {
-	/* TODO: hashing */
-	return 0;
+	return siphash_nocase(object, siphashkey_history_backend_mem) % HISTORY_BACKEND_MEM_HASH_TABLE_SIZE;
 }
 
 HistoryLogObject *hbm_find_object(char *object)
