@@ -743,7 +743,6 @@ static void do_version_check()
 extern void applymeblock(void);
 
 extern MODVAR Event *events;
-extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_SIZE+1];
 
 /** This functions resets a couple of timers and does other things that
  * are absolutely cruicial when the clock is adjusted - particularly
@@ -815,7 +814,7 @@ void fix_timers(void)
 	 * sonner than we should.
 	 */
 	cnt = 0;
-	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
+	for (i = 0; i < THROTTLING_HASH_TABLE_SIZE; i++)
 	{
 		for (thr = ThrottlingHash[i]; thr; thr = thr->next)
 		{
@@ -1383,7 +1382,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	fix_timers();
 	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
-	init_throttling_hash();
+	init_throttling();
 	loop.ircd_booted = 1;
 #if defined(HAVE_SETPROCTITLE)
 	setproctitle("%s", me.name);

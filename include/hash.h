@@ -26,17 +26,13 @@
 #define CHAN_HASH_TABLE_SIZE 32768
 #define WATCH_HASH_TABLE_SIZE 32768
 #define WHOWAS_HASH_TABLE_SIZE 32768
+#define THROTTLING_HASH_TABLE_SIZE 8192
 
 typedef struct hashentry {
 	int  hits;
 	int  links;
 	void *list;
 } aHashEntry;
-
-/*
- * Throttling
-*/
-#define THROTTLING_HASH_SIZE	1019 /* prime number */
 
 #define NullChn ((aChannel *)0)
 

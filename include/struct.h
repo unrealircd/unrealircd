@@ -1852,10 +1852,10 @@ struct PendingNet {
 	aPendingServer *servers; /**< The list of servers connected to the client */
 };
 
-void init_throttling_hash();
-struct ThrottlingBucket *find_throttling_bucket(aClient *);
-void add_throttling_bucket(aClient *);
-int throttle_can_connect(aClient *);
+extern void init_throttling();
+extern struct ThrottlingBucket *find_throttling_bucket(aClient *);
+extern void add_throttling_bucket(aClient *);
+extern int throttle_can_connect(aClient *);
 
 typedef struct _maxtargets MaxTarget;
 struct _maxtargets {

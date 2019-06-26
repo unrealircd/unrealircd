@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-/* Next #define's, the siphash() and siphash_nocase() functions are based
+/* Next #define's, the siphash_raw() and siphash_nocase() functions are based
  * on the SipHash reference C implementation to which the following applies:
  * Copyright (c) 2012-2016 Jean-Philippe Aumasson
  *  <jeanphilippe.aumasson@gmail.com>
@@ -86,19 +86,23 @@
         v2 = ROTL(v2, 32);                                                     \
     } while (0)
 
-/** Generic hash function in UnrealIRCd.
- * @param str   The string to hash (NUL-terminated)
+/** Generic hash function in UnrealIRCd - raw version.
+ * Note that you probably want siphash() or siphash_nocase() instead.
+ * @param in    The data to hash
+ * @param inlen The length of the data
  * @param k     The key to use for hashing (16 bytes, not NUL terminated)
  * @returns Hash result as a 64 bit unsigned integer.
  * @notes The key (k) should be random and must stay the same for
  *        as long as you use the function for your specific hash table.
  *        Simply use the following on boot: siphash_generate_key(k);
+ *
+ *        This siphash_raw() version is meant for non-strings,
+ *        such as raw IP address structs and such.
  */
-uint64_t siphash(const char *in, const char *k)
+uint64_t siphash_raw(const char *in, size_t inlen, const char *k)
 {
     uint64_t hash;
     char *out = (char*) &hash;
-    size_t inlen = strlen(in);
     uint64_t v0 = 0x736f6d6570736575ULL;
     uint64_t v1 = 0x646f72616e646f6dULL;
     uint64_t v2 = 0x6c7967656e657261ULL;
@@ -224,6 +228,22 @@ uint64_t siphash_nocase(const char *in, const char *k)
     return hash;
 }
 
+/* End of imported code */
+
+/** Generic hash function in UnrealIRCd.
+ * @param str   The string to hash (NUL-terminated)
+ * @param k     The key to use for hashing (16 bytes, not NUL terminated)
+ * @returns Hash result as a 64 bit unsigned integer.
+ * @notes The key (k) should be random and must stay the same for
+ *        as long as you use the function for your specific hash table.
+ *        Simply use the following on boot: siphash_generate_key(k);
+ */
+uint64_t siphash(const char *in, const char *k)
+{
+    size_t inlen = strlen(in);
+
+    return siphash_raw(in, inlen, k);
+}
 /** Generate a key that is used by siphash() and siphash_nocase().
  * @param k   The key, this must be a char array of size 16.
  */
@@ -243,6 +263,7 @@ static char siphashkey_nick[16];
 static char siphashkey_chan[16];
 static char siphashkey_watch[16];
 static char siphashkey_whowas[16];
+static char siphashkey_throttling[16];
 
 extern char unreallogo[];
 
@@ -255,6 +276,7 @@ void init_hash(void)
 	siphash_generate_key(siphashkey_chan);
 	siphash_generate_key(siphashkey_watch);
 	siphash_generate_key(siphashkey_whowas);
+	siphash_generate_key(siphashkey_throttling);
 
 	for (i = 0; i < NICK_HASH_TABLE_SIZE; i++)
 		INIT_LIST_HEAD(&clientTable[i]);
@@ -264,6 +286,12 @@ void init_hash(void)
 
 	memset(channelTable, 0, sizeof(channelTable));
 	memset(watchTable, 0, sizeof(watchTable));
+
+	bzero(ThrottlingHash, sizeof(ThrottlingHash));
+	/* do not call init_throttling() here, as
+	 * config file has not been read yet.
+	 * The hash table is ready, anyway.
+	 */
 
 	if (strcmp(BASE_VERSION, &unreallogo[337]))
 		loop.tainted = 1;
@@ -861,20 +889,20 @@ int   hash_del_watch_list(aClient *cptr)
 	return 0;
 }
 
-/*
- * Throttling
- * -by Stskeeps
-*/
+/* Throttling - originally by Stskeeps */
 
-struct	MODVAR ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
+/* Note that we call this set::anti-flood::connect-flood nowadays */
 
-void	init_throttling_hash()
+struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
+
+void init_throttling()
 {
-long v;
-	bzero(ThrottlingHash, sizeof(ThrottlingHash));	
+	long v;
+
 	if (!THROTTLING_PERIOD)
+	{
 		v = 120;
-	else
+	} else
 	{
 		v = THROTTLING_PERIOD/2;
 		if (v > 5)
@@ -883,12 +911,12 @@ long v;
 	EventAdd(NULL, "bucketcleaning", v, 0, e_clean_out_throttling_buckets, NULL);
 }
 
-int	hash_throttling(char *ip)
+u_int64_t hash_throttling(char *ip)
 {
-	return hash_client_name(ip) %THROTTLING_HASH_SIZE; // TODO: improve/fix ;)
+	return siphash(ip, siphashkey_throttling) % THROTTLING_HASH_TABLE_SIZE;
 }
 
-struct	ThrottlingBucket *find_throttling_bucket(aClient *acptr)
+struct ThrottlingBucket *find_throttling_bucket(aClient *acptr)
 {
 	int hash = 0;
 	struct ThrottlingBucket *p;
@@ -909,7 +937,7 @@ EVENT(e_clean_out_throttling_buckets)
 	int	i;
 	static time_t t = 0;
 		
-	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
+	for (i = 0; i < THROTTLING_HASH_TABLE_SIZE; i++)
 	{
 		for (n = ThrottlingHash[i]; n; n = n_next)
 		{
@@ -952,9 +980,9 @@ EVENT(e_clean_out_throttling_buckets)
 
 void add_throttling_bucket(aClient *acptr)
 {
-	int	hash;
-	struct	ThrottlingBucket	*n;
-	
+	int hash;
+	struct ThrottlingBucket *n;
+
 	n = MyMallocEx(sizeof(struct ThrottlingBucket));	
 	n->next = n->prev = NULL; 
 	n->ip = strdup(acptr->ip);
@@ -965,13 +993,13 @@ void add_throttling_bucket(aClient *acptr)
 	return;
 }
 
-/** Checks wether the user is connect-flooding.
+/** Checks whether the user is connect-flooding.
  * @retval 0 Denied, throttled.
  * @retval 1 Allowed, but known in the list.
  * @retval 2 Allowed, not in list or is an exception.
  * @see add_connection()
  */
-int	throttle_can_connect(aClient *sptr)
+int throttle_can_connect(aClient *sptr)
 {
 	struct ThrottlingBucket *b;
 

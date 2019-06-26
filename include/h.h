@@ -369,6 +369,7 @@ extern time_t expire_cache(time_t);
 extern void del_queries(char *);
 
 extern uint64_t siphash(const char *in, const char *k);
+extern uint64_t siphash_raw(const char *in, size_t len, const char *k);
 extern uint64_t siphash_nocase(const char *in, const char *k);
 extern void siphash_generate_key(char *k);
 extern void init_hash(void);
@@ -390,6 +391,7 @@ extern aClient *hash_find_client(const char *, aClient *);
 extern aClient *hash_find_id(const char *, aClient *);
 extern aClient *hash_find_nickatserver(const char *, aClient *);
 extern aClient *hash_find_server(const char *, aClient *);
+extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
 extern char *find_by_aln(char *);
 extern char *convert2aln(int);
 extern int convertfromaln(char *);
