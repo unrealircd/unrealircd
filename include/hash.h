@@ -22,10 +22,10 @@
 #ifndef	__hash_include__
 #define __hash_include__
 
-#define NICK_HASH_TABLE_SIZE 16384
-#define CHAN_HASH_TABLE_SIZE 16384
-#define WATCH_HASH_TABLE_SIZE 16384
-#define WHOWAS_HASH_TABLE_SIZE 16384
+#define NICK_HASH_TABLE_SIZE 32768
+#define CHAN_HASH_TABLE_SIZE 32768
+#define WATCH_HASH_TABLE_SIZE 32768
+#define WHOWAS_HASH_TABLE_SIZE 32768
 
 typedef struct hashentry {
 	int  hits;
@@ -33,17 +33,10 @@ typedef struct hashentry {
 	void *list;
 } aHashEntry;
 
-/* Taner had BITS_PER_COL 4 BITS_PER_COL_MASK 0xF - Dianora */
-
-#define BITS_PER_COL 3
-#define BITS_PER_COL_MASK 0x7
-#define MAX_SUB     (1<<BITS_PER_COL)
-
 /*
  * Throttling
 */
 #define THROTTLING_HASH_SIZE	1019 /* prime number */
-
 
 #define NullChn ((aChannel *)0)
 
