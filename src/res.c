@@ -39,7 +39,7 @@ void unrealdns_cb_iptoname(void *arg, int status, int timeouts, struct hostent *
 void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct hostent *he);
 void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct hostent *he);
 void unrealdns_delasyncconnects(void);
-static unsigned int unrealdns_haship(char *ip);
+static uint64_t unrealdns_hash_ip(const char *ip);
 static void unrealdns_addtocache(char *name, char *ip);
 static char *unrealdns_findcache_ip(char *ip);
 struct hostent *unreal_create_hostent(char *name, char *ip);
@@ -61,6 +61,8 @@ static DNSCache *cache_list = NULL; /**< Linked list of cache */
 static DNSCache *cache_hashtbl[DNS_HASH_SIZE]; /**< Hash table of cache */
 
 static unsigned int unrealdns_num_cache = 0; /**< # of cache entries in memory */
+
+static char siphashkey_dns_ip[16];
 
 static void unrealdns_io_cb(int fd, int revents, void *data)
 {
@@ -119,9 +121,9 @@ static Event *unrealdns_timeout_hdl = NULL;
 
 void init_resolver(int firsttime)
 {
-struct ares_options options;
-int n, v, k;
-int optmask;
+	struct ares_options options;
+	int n, v, k;
+	int optmask;
 
 	if (requests)
 		abort(); /* should never happen */
@@ -130,6 +132,7 @@ int optmask;
 	{
 		memset(&cache_hashtbl, 0, sizeof(cache_hashtbl));
 		memset(&dnsstats, 0, sizeof(dnsstats));
+		siphash_generate_key(siphashkey_dns_ip);
 		ares_library_init(ARES_LIB_INIT_ALL);
 	}
 
@@ -436,11 +439,9 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	/* DONE */
 }
 
-static unsigned int unrealdns_haship(char *ip)
+static uint64_t unrealdns_hash_ip(const char *ip)
 {
-	extern unsigned hash_client_name(const char *nname);
-
-	return hash_client_name(ip) % DNS_HASH_SIZE; /* TODO: improve I guess ;D */
+        return siphash(ip, siphashkey_dns_ip) % DNS_HASH_SIZE;
 }
 
 static void unrealdns_addtocache(char *name, char *ip)
@@ -450,7 +451,7 @@ static void unrealdns_addtocache(char *name, char *ip)
 
 	dnsstats.cache_adds++;
 
-	hashv = unrealdns_haship(ip);
+	hashv = unrealdns_hash_ip(ip);
 
 	/* Check first if it is already present in the cache.
 	 * This is possible, when 2 clients connect at the same time.
@@ -500,7 +501,7 @@ static char *unrealdns_findcache_ip(char *ip)
 	unsigned int hashv;
 	DNSCache *c;
 
-	hashv = unrealdns_haship(ip);
+	hashv = unrealdns_hash_ip(ip);
 	
 	for (c = cache_hashtbl[hashv]; c; c = c->hnext)
 		if (!strcmp(ip, c->ip))
@@ -538,7 +539,7 @@ unsigned int hashv;
 		c->hprev->hnext = c->hnext;
 	else {
 		/* new hash HEAD */
-		hashv = unrealdns_haship(c->ip);
+		hashv = unrealdns_hash_ip(c->ip);
 		if (cache_hashtbl[hashv] != c)
 			abort(); /* impossible */
 		cache_hashtbl[hashv] = c->hnext;

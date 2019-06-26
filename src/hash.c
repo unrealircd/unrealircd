@@ -224,6 +224,9 @@ uint64_t siphash_nocase(const char *in, const char *k)
     return hash;
 }
 
+/** Generate a key that is used by siphash() and siphash_nocase().
+ * @param k   The key, this must be a char array of size 16.
+ */
 void siphash_generate_key(char *k)
 {
 	int i;
