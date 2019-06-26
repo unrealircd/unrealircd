@@ -292,7 +292,6 @@ chacha_encrypt_bytes(chacha_ctx *x,const u8 *m,u8 *c,u32 bytes)
 #define BLOCKSZ	64
 #define RSBUFSZ	(16*BLOCKSZ)
 static int rs_initialized;
-static pid_t rs_stir_pid;
 static chacha_ctx rs;		/* chacha context for random keystream */
 static u_char rs_buf[RSBUFSZ];	/* keystream blocks */
 static size_t rs_have;		/* valid bytes at end of rs_buf */
@@ -335,10 +334,7 @@ static void _rs_stir(void)
 
 static inline void _rs_stir_if_needed(size_t len)
 {
-	pid_t pid = getpid();
-
-	if (rs_count <= len || !rs_initialized || rs_stir_pid != pid) {
-		rs_stir_pid = pid;
+	if (rs_count <= len || !rs_initialized) {
 		_rs_stir();
 	} else
 		rs_count -= len;
