@@ -1,4 +1,4 @@
-
+#if 0
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, include/sock.h
  *   Copyright (C) 1990 Jarkko Oikarinen and
@@ -78,4 +78,5 @@
 
 #ifdef RCVTIMEO
 #define SO_RCVTIMEO     0x1006	/* receive timeout */
+#endif
 #endif
