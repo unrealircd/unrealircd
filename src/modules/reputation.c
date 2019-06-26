@@ -64,20 +64,25 @@ ModuleHeader MOD_HEADER(reputation)
 	NULL 
     };
 
+/* Defines */
+
 #define MAXEXPIRES 10
 
 #define REPUTATION_SCORE_CAP 10000
 
 #define UPDATE_SCORE_MARGIN 1
 
+#define REPUTATION_HASH_TABLE_SIZE 2048
+
 #define Reputation(acptr)	moddata_client(acptr, reputation_md).l
+
+/* Definitions (structs, etc.) */
 
 struct cfgstruct {
 	int expire_score[MAXEXPIRES];
 	long expire_time[MAXEXPIRES];
 	char *database;
 };
-static struct cfgstruct cfg;
 
 typedef struct reputationentry ReputationEntry;
 
@@ -89,11 +94,14 @@ struct reputationentry {
 	char ip[1]; /*< ip address */
 };
 
+/* Global variables */
+
+static struct cfgstruct cfg; /**< Current configuration */
 long reputation_starttime = 0;
 long reputation_writtentime = 0;
 
-#define REPUTATION_HASH_SIZE 1327
-static ReputationEntry *ReputationHashTable[REPUTATION_HASH_SIZE];
+static ReputationEntry *ReputationHashTable[REPUTATION_HASH_TABLE_SIZE];
+static char siphashkey_reputation[16];
 
 static ModuleInfo ModInf;
 
@@ -112,8 +120,7 @@ int reputation_pre_lconnect(aClient *sptr);
 int reputation_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int reputation_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 int reputation_config_posttest(int *errs);
-unsigned long hash_djb2(char *str);
-int hash_reputation_entry(char *ip);
+static uint64_t hash_reputation_entry(char *ip);
 void add_reputation_entry(ReputationEntry *e);
 EVENT(delete_old_records);
 EVENT(add_scores);
@@ -139,6 +146,7 @@ MOD_INIT(reputation)
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
 	memset(&ReputationHashTable, 0, sizeof(ReputationHashTable));
+	siphash_generate_key(siphashkey_reputation);
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "reputation";
@@ -404,7 +412,7 @@ void save_db(void)
 	if (fprintf(fd, "REPDB 1 %ld %ld\n", reputation_starttime, TStime()) < 0)
 		goto write_fail;
 
-	for (i = 0; i < REPUTATION_HASH_SIZE; i++)
+	for (i = 0; i < REPUTATION_HASH_TABLE_SIZE; i++)
 	{
 		for (e = ReputationHashTable[i]; e; e = e->next)
 		{
@@ -445,23 +453,9 @@ write_fail:
 	return;
 }
 
-/* One of DJB2's hashing algorithm. Modified to use tolower(). */
-unsigned long hash_djb2(char *str)
+static uint64_t hash_reputation_entry(char *ip)
 {
-	unsigned long hash = 5381;
-	int c;
-
-	while ((c = *str++))
-		hash = ((hash << 5) + hash) + tolower(c); /* hash * 33 + c */
-
-	return hash;
-}
-
-int hash_reputation_entry(char *ip)
-{
-	unsigned long alpha, beta, result;
-
-	return hash_djb2(ip) % REPUTATION_HASH_SIZE;
+	return siphash(ip, siphashkey_reputation) % REPUTATION_HASH_TABLE_SIZE;
 }
 
 void add_reputation_entry(ReputationEntry *e)
@@ -613,7 +607,7 @@ EVENT(delete_old_records)
 	gettimeofday(&tv_alpha, NULL);
 #endif
 	
-	for (i = 0; i < REPUTATION_HASH_SIZE; i++)
+	for (i = 0; i < REPUTATION_HASH_TABLE_SIZE; i++)
 	{
 		for (e = ReputationHashTable[i]; e; e = e_next)
 		{
@@ -665,7 +659,7 @@ int count_reputation_records(void)
 	ReputationEntry *e;
 	int total = 0;
 
-	for (i = 0; i < REPUTATION_HASH_SIZE; i++)
+	for (i = 0; i < REPUTATION_HASH_TABLE_SIZE; i++)
 		for (e = ReputationHashTable[i]; e; e = e->next)
 			total++;
 
