@@ -22,11 +22,6 @@
  */
 
 #include "unrealircd.h"
-// FIXME: move this to unrealircd.h and add the config test
-#ifdef HAVE_SYS_RANDOM_H
-# include <sys/random.h>
-#endif
-
 
 #ifndef HAVE_ARC4RANDOM
 
