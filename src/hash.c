@@ -475,6 +475,64 @@ aClient *hash_find_server(const char *server, aClient *cptr)
 	return (cptr);
 }
 
+/** Find a client by name.
+ * @param name   The name to search for (eg: "nick" or "irc.example.net")
+ * @param cptr   The client that is searching for this name
+ * @notes If 'cptr' is a server or NULL, then we also check
+ *        the ID table, otherwise not.
+ */
+aClient *find_client(char *name, aClient *cptr)
+{
+	if (cptr == NULL || IsServer(cptr))
+	{
+		aClient *acptr;
+
+		if ((acptr = hash_find_id(name, NULL)) != NULL)
+			return acptr;
+	}
+
+	return hash_find_client(name, NULL);
+}
+
+/** Find a server by name.
+ * @param name   The server name to search for (eg: 'irc.example.net'
+ *               or '001')
+ * @param cptr   The client searching for the name.
+ * @notes If 'cptr' is a server or NULL, then we also check
+ *        the ID table, otherwise not.
+ */
+aClient *find_server(char *name, aClient *cptr)
+{
+	if (name)
+	{
+		aClient *acptr;
+
+		if ((acptr = find_client(name, NULL)) != NULL && (IsServer(acptr) || IsMe(acptr)))
+			return acptr;
+	}
+
+	return NULL;
+}
+
+/** Find a person.
+ * @param name   The name to search for (eg: "nick" or "001ABCDEFG")
+ * @param cptr   The client that is searching for this name
+ * @notes If 'cptr' is a server or NULL, then we also check
+ *        the ID table, otherwise not.
+ */
+aClient *find_person(char *name, aClient *cptr)
+{
+	aClient *c2ptr;
+
+	c2ptr = find_client(name, cptr);
+
+	if (c2ptr && IsClient(c2ptr) && c2ptr->user)
+		return c2ptr;
+
+	return NULL;
+}
+
+
 /*
  * hash_find_channel
  */

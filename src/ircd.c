@@ -365,7 +365,7 @@ EVENT(try_connections)
 		confrq = class->connfreq;
 		aconf->hold = TStime() + confrq;
 
-		cptr = find_name(aconf->servername, NULL);
+		cptr = find_client(aconf->servername, NULL);
 		if (cptr)
 			continue; /* Server already connected (or connecting) */
 

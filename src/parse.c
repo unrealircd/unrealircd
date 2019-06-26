@@ -44,102 +44,6 @@ static char *para[MAXPARA + 2];
 static char sender[HOSTLEN + 1];
 static int cancel_clients(aClient *, aClient *, char *);
 static void remove_unknown(aClient *, char *);
-/*
-**  Find a client (server or user) by name.
-**
-**  *Note*
-**	Semantics of this function has been changed from
-**	the old. 'name' is now assumed to be a null terminated
-**	string and the search is the for server and user.
-*/
-aClient *find_client(char *name, aClient *cptr)
-{
-	if (cptr == NULL || IsServer(cptr))
-	{
-		aClient *acptr;
-
-		if ((acptr = hash_find_id(name, NULL)) != NULL)
-			return acptr;
-	}
-
-	return hash_find_client(name, NULL);
-}
-
-aClient *find_nickserv(char *name, aClient *cptr)
-{
-	if (name)
-		cptr = hash_find_nickatserver(name, cptr);
-
-	return cptr;
-}
-
-
-/*
-**  Find server by name.
-**
-**	This implementation assumes that server and user names
-**	are unique, no user can have a server name and vice versa.
-**	One should maintain separate lists for users and servers,
-**	if this restriction is removed.
-**
-**  *Note*
-**	Semantics of this function has been changed from
-**	the old. 'name' is now assumed to be a null terminated
-**	string.
-*/
-aClient *find_server(char *name, aClient *cptr)
-{
-	if (name)
-	{
-		aClient *acptr;
-
-		if ((acptr = find_client(name, NULL)) != NULL && (IsServer(acptr) || IsMe(acptr)))
-			return acptr;
-	}
-
-	return NULL;
-}
-
-
-aClient *find_name(char *name, aClient *cptr)
-{
-	aClient *c2ptr = cptr;
-
-	if (!collapse(name))
-		return c2ptr;
-
-	if ((c2ptr = hash_find_server(name, cptr)))
-		return (c2ptr);
-	if (!index(name, '*'))
-		return c2ptr;
-	list_for_each_entry(c2ptr, &client_list, client_node)
-	{
-		if (!IsServer(c2ptr) && !IsMe(c2ptr))
-			continue;
-		if (match(name, c2ptr->name) == 0)
-			break;
-		if (index(c2ptr->name, '*'))
-			if (match(c2ptr->name, name) == 0)
-				break;
-	}
-	return (c2ptr ? c2ptr : cptr);
-}
-
-/*
-**  Find person by (nick)name.
-*/
-aClient *find_person(char *name, aClient *cptr)
-{
-	aClient *c2ptr;
-
-	c2ptr = find_client(name, cptr);
-
-	if (c2ptr && IsClient(c2ptr) && c2ptr->user)
-		return c2ptr;
-
-	return NULL;
-}
-
 
 void ban_flooder(aClient *cptr)
 {
@@ -292,7 +196,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch)
 		{
 			from = find_client(sender, NULL);
 			if (!from && index(sender, '@'))
-				from = find_nickserv(sender, NULL);
+				from = hash_find_nickatserver(sender, NULL);
 			//para[0] = sender;
 			para[0] = (char *)0xDEADBEEF; /* helps us catch bugs :) -- 2/2 */
 
