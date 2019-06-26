@@ -222,7 +222,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 		prefix = 0;
 
 		/* Message to channel */
-		if (p2 && (chptr = find_channel(p2, NullChn)))
+		if (p2 && (chptr = find_channel(p2, NULL)))
 		{
 			if (p2 != nick)
 			{

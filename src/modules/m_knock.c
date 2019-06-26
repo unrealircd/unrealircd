@@ -90,7 +90,7 @@ CMD_FUNC(m_knock)
 
 		return 0;
 	}
-	if (!(chptr = find_channel(parv[1], NullChn)))
+	if (!(chptr = find_channel(parv[1], NULL)))
 	{
 		sendnumeric(sptr, ERR_CANNOTKNOCK, parv[1], "Channel does not exist!");
 		return 0;

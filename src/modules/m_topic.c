@@ -79,7 +79,7 @@ void topicoverride(aClient *sptr, aChannel *chptr, char *topic)
  */
 CMD_FUNC(m_topic)
 {
-	aChannel *chptr = NullChn;
+	aChannel *chptr = NULL;
 	char *topic = NULL, *name, *tnick = sptr->name;
 	char *errmsg = NULL;
 	TS   ttime = 0;
@@ -97,7 +97,7 @@ CMD_FUNC(m_topic)
 
 	name = parv[1];
 
-	chptr = find_channel(parv[1], NullChn);
+	chptr = find_channel(parv[1], NULL);
 	if (!chptr)
 	{
 		sendnumeric(sptr, ERR_NOSUCHCHANNEL, name);

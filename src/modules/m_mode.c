@@ -107,8 +107,8 @@ CMD_FUNC(m_mode)
 	{
 		if (*parv[1] == '#')
 		{
-			chptr = find_channel(parv[1], NullChn);
-			if (chptr == NullChn)
+			chptr = find_channel(parv[1], NULL);
+			if (!chptr)
 			{
 				return m_umode(cptr, sptr, recv_mtags, parc, parv);
 			}
@@ -1910,8 +1910,8 @@ CMD_FUNC(m_mlock)
 	chants = (TS) atol(parv[1]);
 
 	/* Now, try to find the channel in question */
-	chptr = find_channel(parv[2], NullChn);
-	if (chptr == NULL)
+	chptr = find_channel(parv[2], NULL);
+	if (!chptr)
 		return 0;
 
 	/* Senders' Channel TS is higher, drop it. */

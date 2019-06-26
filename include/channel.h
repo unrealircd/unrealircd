@@ -26,9 +26,7 @@
 
 #define	MODEBUFLEN	200
 
-#define NullChn	((aChannel *)0)
-
-#define ChannelExists(n)	(find_channel(n, NullChn) != NullChn)
+#define ChannelExists(n)	(find_channel(n, NULL))
 
 #define IsULine(sptr)	(sptr->flags & FLAGS_ULINE)
 

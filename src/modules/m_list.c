@@ -232,7 +232,7 @@ CMD_FUNC(m_list)
 			  }
 			  else	/* Just a normal channel */
 			  {
-				  chptr = find_channel(name, NullChn);
+				  chptr = find_channel(name, NULL);
 				  if (chptr && (ShowChannel(sptr, chptr) || ValidatePermissionsForPath("channel:see:list:secret",sptr,NULL,chptr,NULL))) {
 #ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';

@@ -21,7 +21,7 @@
 #include "unrealircd.h"
 
 long opermode = 0;
-aChannel *channel = NullChn;
+aChannel *channel = NULL;
 
 /* some buffers for rebuilding channel/nick lists with comma's */
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
