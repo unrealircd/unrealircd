@@ -46,7 +46,7 @@ Cmode_t EXTMODE_HISTORY = 0L;
  */
 #define HISTORY_SPREAD	16
 #define HISTORY_MAX_OFF_SECS	128
-#define HISTORY_CLEAN_PER_LOOP	(CH_MAX/HISTORY_SPREAD)
+#define HISTORY_CLEAN_PER_LOOP	(CHAN_HASH_TABLE_SIZE/HISTORY_SPREAD)
 #define HISTORY_TIMER_EVERY	(HISTORY_MAX_OFF_SECS/HISTORY_SPREAD)
 
 /* Forward declarations */
@@ -538,7 +538,7 @@ EVENT(history_clean)
 			}
 		}
 		hashnum++;
-		if (hashnum >= CH_MAX)
+		if (hashnum >= CHAN_HASH_TABLE_SIZE)
 			hashnum = 0;
 	} while(loopcnt++ < HISTORY_CLEAN_PER_LOOP);
 }

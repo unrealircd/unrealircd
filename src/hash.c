@@ -19,160 +19,279 @@
 
 #include "unrealircd.h"
 
-ID_Copyright("(C) 1991 Darren Reed");
-ID_Notes("2.10 7/3/93");
-
-static struct list_head clientTable[U_MAX];
-static struct list_head idTable[U_MAX];
-static aHashEntry channelTable[CH_MAX];
-
-/*
- * look in whowas.c for the missing ...[WW_MAX]; entry - Dianora */
-/*
- * Hashing.
- * 
- * The server uses a chained hash table to provide quick and efficient
- * hash table mantainence (providing the hash function works evenly
- * over the input range).  The hash table is thus not susceptible to
- * problems of filling all the buckets or the need to rehash. It is
- * expected that the hash table would look somehting like this during
- * use: +-----+    +-----+    +-----+   +-----+ 
- *   ---| 224 |----| 225 |----| 226 |---| 227 |--- 
- *      +-----+    +-----+    +-----+   +-----+ 
- *         |          |          | 
- *      +-----+    +-----+    +-----+ 
- *      |  A  |    |  C  |    |  D  | 
- *      +-----+    +-----+    +-----+ 
- *         | 
- *      +-----+ 
- *      |  B  | 
- *      +-----+
- * 
- * A - GOPbot, B - chang, C - hanuaway, D - *.mu.OZ.AU
- * 
- * The order shown above is just one instant of the server.  Each time a
- * lookup is made on an entry in the hash table and it is found, the
- * entry is moved to the top of the chain.
- * 
- * ^^^^^^^^^^^^^^^^ **** Not anymore - Dianora
- * 
+/* Next #define's, the siphash() and siphash_nocase() functions are based
+ * on the SipHash reference C implementation to which the following applies:
+ * Copyright (c) 2012-2016 Jean-Philippe Aumasson
+ *  <jeanphilippe.aumasson@gmail.com>
+ * Copyright (c) 2012-2014 Daniel J. Bernstein <djb@cr.yp.to>
+ * Further enhancements were made by:
+ * Copyright (c) 2017 Salvatore Sanfilippo <antirez@gmail.com>
+ * To the extent possible under law, the author(s) have dedicated all copyright
+ * and related and neighboring rights to this software to the public domain
+ * worldwide. This software is distributed without any warranty.
+ * You should have received a copy of the CC0 Public Domain Dedication along
+ * with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+ *
+ * In addition to above, Bram Matthys (Syzop), did some minor enhancements,
+ * such as dropping the uint8_t stuff (in UnrealIRCd char is always unsigned)
+ * and getting rid of the length argument.
+ *
+ * The end result are simple functions for API end-users and we encourage
+ * everyone to use these two hash functions everywhere in UnrealIRCd.
  */
-/* Take equal propotions from the size of int on all arcitechtures */
-#define BITS_IN_int             ( sizeof(int) * CHAR_BIT )
-#define THREE_QUARTERS          ((int) ((BITS_IN_int * 3) / 4))
-#define ONE_EIGHTH              ((int) (BITS_IN_int / 8))
-#define HIGH_BITS               ( ~((unsigned int)(~0) >> ONE_EIGHTH ))
 
-unsigned int hash_nn_name(const char *hname)
-{
-	unsigned int hash_value, i;
+#define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
 
-	for (hash_value = 0; *hname; ++hname)
-	{
-		/* Shift hash-value by one eights of int for adding every letter */
-		hash_value = (hash_value << ONE_EIGHTH) + tolower(*hname);
-		/* If the next shift would cause an overflow... */
-		if ((i = hash_value & HIGH_BITS) != 0)
-			/* Then wrap the upper quarter of bits back to the value */
-			hash_value = (hash_value ^
-			    (i >> THREE_QUARTERS)) & ~HIGH_BITS;
-	}
+#define U32TO8_LE(p, v)                                                        \
+    (p)[0] = (char)((v));                                                   \
+    (p)[1] = (char)((v) >> 8);                                              \
+    (p)[2] = (char)((v) >> 16);                                             \
+    (p)[3] = (char)((v) >> 24);
 
-	return (hash_value);
-}
+#define U64TO8_LE(p, v)                                                        \
+    U32TO8_LE((p), (uint32_t)((v)));                                           \
+    U32TO8_LE((p) + 4, (uint32_t)((v) >> 32));
 
+#define U8TO64_LE(p)                                                           \
+    (((uint64_t)((p)[0])) | ((uint64_t)((p)[1]) << 8) |                        \
+     ((uint64_t)((p)[2]) << 16) | ((uint64_t)((p)[3]) << 24) |                 \
+     ((uint64_t)((p)[4]) << 32) | ((uint64_t)((p)[5]) << 40) |                 \
+     ((uint64_t)((p)[6]) << 48) | ((uint64_t)((p)[7]) << 56))
 
-unsigned hash_nick_name(const char *nname)
-{
-	unsigned hash = 0;
-	int  hash2 = 0;
-	int  ret;
-	char lower;
+#define U8TO64_LE_NOCASE(p)                                                    \
+    (((uint64_t)(tolower((p)[0]))) |                                           \
+     ((uint64_t)(tolower((p)[1])) << 8) |                                      \
+     ((uint64_t)(tolower((p)[2])) << 16) |                                     \
+     ((uint64_t)(tolower((p)[3])) << 24) |                                     \
+     ((uint64_t)(tolower((p)[4])) << 32) |                                              \
+     ((uint64_t)(tolower((p)[5])) << 40) |                                              \
+     ((uint64_t)(tolower((p)[6])) << 48) |                                              \
+     ((uint64_t)(tolower((p)[7])) << 56))
 
-	while (*nname)
-	{
-		lower = tolower(*nname);
-		hash = (hash << 1) + lower;
-		hash2 = (hash2 >> 1) + lower;
-		nname++;
-	}
-	ret = ((hash & U_MAX_INITIAL_MASK) << BITS_PER_COL) +
-	    (hash2 & BITS_PER_COL_MASK);
-	return ret;
-}
-/*
- * hash_channel_name
- * 
- * calculate a hash value on at most the first 30 characters of the
- * channel name. Most names are short than this or dissimilar in this
- * range. There is little or no point hashing on a full channel name
- * which maybe 255 chars long.
+#define SIPROUND                                                               \
+    do {                                                                       \
+        v0 += v1;                                                              \
+        v1 = ROTL(v1, 13);                                                     \
+        v1 ^= v0;                                                              \
+        v0 = ROTL(v0, 32);                                                     \
+        v2 += v3;                                                              \
+        v3 = ROTL(v3, 16);                                                     \
+        v3 ^= v2;                                                              \
+        v0 += v3;                                                              \
+        v3 = ROTL(v3, 21);                                                     \
+        v3 ^= v0;                                                              \
+        v2 += v1;                                                              \
+        v1 = ROTL(v1, 17);                                                     \
+        v1 ^= v2;                                                              \
+        v2 = ROTL(v2, 32);                                                     \
+    } while (0)
+
+/** Generic hash function in UnrealIRCd.
+ * @param str   The string to hash (NUL-terminated)
+ * @param k     The key to use for hashing (16 bytes, not NUL terminated)
+ * @returns Hash result as a 64 bit unsigned integer.
+ * @notes The key (k) should be random and must stay the same for
+ *        as long as you use the function for your specific hash table.
+ *        Simply use the following on boot: siphash_generate_key(k);
  */
-unsigned int  hash_channel_name(char *name)
+uint64_t siphash(const char *in, const char *k)
 {
-	unsigned char *hname = (unsigned char *)name;
-	unsigned int hash = 0;
-	int  hash2 = 0;
-	char lower;
-	int  i = 30;
+    uint64_t hash;
+    char *out = (char*) &hash;
+    size_t inlen = strlen(in);
+    uint64_t v0 = 0x736f6d6570736575ULL;
+    uint64_t v1 = 0x646f72616e646f6dULL;
+    uint64_t v2 = 0x6c7967656e657261ULL;
+    uint64_t v3 = 0x7465646279746573ULL;
+    uint64_t k0 = U8TO64_LE(k);
+    uint64_t k1 = U8TO64_LE(k + 8);
+    uint64_t m;
+    const char *end = in + inlen - (inlen % sizeof(uint64_t));
+    const int left = inlen & 7;
+    uint64_t b = ((uint64_t)inlen) << 56;
+    v3 ^= k1;
+    v2 ^= k0;
+    v1 ^= k1;
+    v0 ^= k0;
 
-	while (*hname && --i)
-	{
-		lower = tolower(*hname);
-		hash = (hash << 1) + lower;
-		hash2 = (hash2 >> 1) + lower;
-		hname++;
-	}
-	return ((hash & CH_MAX_INITIAL_MASK) << BITS_PER_COL) +
-	    (hash2 & BITS_PER_COL_MASK);
+    for (; in != end; in += 8) {
+        m = U8TO64_LE(in);
+        v3 ^= m;
+
+        SIPROUND;
+        SIPROUND;
+
+        v0 ^= m;
+    }
+
+    switch (left) {
+    case 7: b |= ((uint64_t)in[6]) << 48; /* fallthrough */
+    case 6: b |= ((uint64_t)in[5]) << 40; /* fallthrough */
+    case 5: b |= ((uint64_t)in[4]) << 32; /* fallthrough */
+    case 4: b |= ((uint64_t)in[3]) << 24; /* fallthrough */
+    case 3: b |= ((uint64_t)in[2]) << 16; /* fallthrough */
+    case 2: b |= ((uint64_t)in[1]) << 8;  /* fallthrough */
+    case 1: b |= ((uint64_t)in[0]); break;
+    case 0: break;
+    }
+
+    v3 ^= b;
+
+    SIPROUND;
+    SIPROUND;
+
+    v0 ^= b;
+    v2 ^= 0xff;
+
+    SIPROUND;
+    SIPROUND;
+    SIPROUND;
+    SIPROUND;
+
+    b = v0 ^ v1 ^ v2 ^ v3;
+    U64TO8_LE(out, b);
+
+    return hash;
 }
 
-unsigned int hash_whowas_name(char *name)
-{
-	unsigned char *nname = (unsigned char *)name;
-	unsigned int hash = 0;
-	int  hash2 = 0;
-	int  ret;
-	char lower;
-
-	while (*nname)
-	{
-		lower = tolower(*nname);
-		hash = (hash << 1) + lower;
-		hash2 = (hash2 >> 1) + lower;
-		nname++;
-	}
-	ret = ((hash & WW_MAX_INITIAL_MASK) << BITS_PER_COL) +
-	    (hash2 & BITS_PER_COL_MASK);
-	return ret;
-}
-/*
- * clear_*_hash_table
- * 
- * Nullify the hashtable and its contents so it is completely empty.
+/** Generic hash function in UnrealIRCd - case insensitive.
+ * This deals with IRC case-insensitive matches, which is
+ * what you need for things like nicks and channels.
+ * @param str   The string to hash (NUL-terminated)
+ * @param k     The key to use for hashing (16 bytes, not NUL terminated)
+ * @returns Hash result as a 64 bit unsigned integer.
+ * @notes The key (k) should be random and must stay the same for
+ *        as long as you use the function for your specific hash table.
+ *        Simply use the following on boot: siphash_generate_key(k);
  */
-void clear_client_hash_table(void)
+uint64_t siphash_nocase(const char *in, const char *k)
+{
+    uint64_t hash;
+    char *out = (char*) &hash;
+    size_t inlen = strlen(in);
+    uint64_t v0 = 0x736f6d6570736575ULL;
+    uint64_t v1 = 0x646f72616e646f6dULL;
+    uint64_t v2 = 0x6c7967656e657261ULL;
+    uint64_t v3 = 0x7465646279746573ULL;
+    uint64_t k0 = U8TO64_LE(k);
+    uint64_t k1 = U8TO64_LE(k + 8);
+    uint64_t m;
+    const char *end = in + inlen - (inlen % sizeof(uint64_t));
+    const int left = inlen & 7;
+    uint64_t b = ((uint64_t)inlen) << 56;
+    v3 ^= k1;
+    v2 ^= k0;
+    v1 ^= k1;
+    v0 ^= k0;
+
+    for (; in != end; in += 8) {
+        m = U8TO64_LE_NOCASE(in);
+        v3 ^= m;
+
+        SIPROUND;
+        SIPROUND;
+
+        v0 ^= m;
+    }
+
+    switch (left) {
+    case 7: b |= ((uint64_t)tolower(in[6])) << 48; /* fallthrough */
+    case 6: b |= ((uint64_t)tolower(in[5])) << 40; /* fallthrough */
+    case 5: b |= ((uint64_t)tolower(in[4])) << 32; /* fallthrough */
+    case 4: b |= ((uint64_t)tolower(in[3])) << 24; /* fallthrough */
+    case 3: b |= ((uint64_t)tolower(in[2])) << 16; /* fallthrough */
+    case 2: b |= ((uint64_t)tolower(in[1])) << 8;  /* fallthrough */
+    case 1: b |= ((uint64_t)tolower(in[0])); break;
+    case 0: break;
+    }
+
+    v3 ^= b;
+
+    SIPROUND;
+    SIPROUND;
+
+    v0 ^= b;
+    v2 ^= 0xff;
+
+    SIPROUND;
+    SIPROUND;
+    SIPROUND;
+    SIPROUND;
+
+    b = v0 ^ v1 ^ v2 ^ v3;
+    U64TO8_LE(out, b);
+
+    return hash;
+}
+
+void siphash_generate_key(char *k)
+{
+	int i;
+	for (i = 0; i < 16; i++)
+		k[i] = getrandom8();
+}
+
+static struct list_head clientTable[NICK_HASH_TABLE_SIZE];
+static struct list_head idTable[NICK_HASH_TABLE_SIZE];
+static aHashEntry channelTable[CHAN_HASH_TABLE_SIZE];
+static aWatch *watchTable[WATCH_HASH_TABLE_SIZE];
+
+static char siphashkey_nick[16];
+static char siphashkey_chan[16];
+static char siphashkey_watch[16];
+static char siphashkey_whowas[16];
+
+extern char unreallogo[];
+
+/** Initialize all hash tables */
+void init_hash(void)
 {
 	int i;
 
-	for (i = 0; i < U_MAX; i++)
+	siphash_generate_key(siphashkey_nick);
+	siphash_generate_key(siphashkey_chan);
+	siphash_generate_key(siphashkey_watch);
+	siphash_generate_key(siphashkey_whowas);
+
+	for (i = 0; i < NICK_HASH_TABLE_SIZE; i++)
 		INIT_LIST_HEAD(&clientTable[i]);
 
-	for (i = 0; i < U_MAX; i++)
+	for (i = 0; i < NICK_HASH_TABLE_SIZE; i++)
 		INIT_LIST_HEAD(&idTable[i]);
+
+	memset(channelTable, 0, sizeof(channelTable));
+	memset(watchTable, 0, sizeof(watchTable));
+
+	if (strcmp(BASE_VERSION, &unreallogo[337]))
+		loop.tainted = 1;
 }
 
-void clear_channel_hash_table(void)
+uint64_t hash_nick_name(const char *name)
 {
-	memset(channelTable, 0, sizeof(channelTable));
+	return siphash_nocase(name, siphashkey_nick) % NICK_HASH_TABLE_SIZE;
+}
+
+uint64_t hash_channel_name(const char *name)
+{
+	return siphash_nocase(name, siphashkey_chan) % CHAN_HASH_TABLE_SIZE;
+}
+
+uint64_t hash_watch_nick_name(const char *name)
+{
+	return siphash_nocase(name, siphashkey_watch) % WATCH_HASH_TABLE_SIZE;
+}
+
+uint64_t hash_whowas_name(const char *name)
+{
+	return siphash_nocase(name, siphashkey_whowas) % WHOWAS_HASH_TABLE_SIZE;
 }
 
 /*
  * add_to_client_hash_table
  */
-int  add_to_client_hash_table(char *name, aClient *cptr)
+int add_to_client_hash_table(char *name, aClient *cptr)
 {
-	unsigned int  hashv;
+	unsigned int hashv;
 	/*
 	 * If you see this, you have probably found your way to why changing the 
 	 * base version made the IRCd become weird. This has been the case in all
@@ -196,9 +315,9 @@ int  add_to_client_hash_table(char *name, aClient *cptr)
 /*
  * add_to_client_hash_table
  */
-int  add_to_id_hash_table(char *name, aClient *cptr)
+int add_to_id_hash_table(char *name, aClient *cptr)
 {
-	unsigned int  hashv;
+	unsigned int hashv;
 	hashv = hash_nick_name(name);
 	list_add(&cptr->id_hash, &idTable[hashv]);
 	return 0;
@@ -207,9 +326,9 @@ int  add_to_id_hash_table(char *name, aClient *cptr)
 /*
  * add_to_channel_hash_table
  */
-int  add_to_channel_hash_table(char *name, aChannel *chptr)
+int add_to_channel_hash_table(char *name, aChannel *chptr)
 {
-	unsigned int  hashv;
+	unsigned int hashv;
 
 	hashv = hash_channel_name(name);
 	chptr->hnextch = (aChannel *)channelTable[hashv].list;
@@ -221,7 +340,7 @@ int  add_to_channel_hash_table(char *name, aChannel *chptr)
 /*
  * del_from_client_hash_table
  */
-int  del_from_client_hash_table(char *name, aClient *cptr)
+int del_from_client_hash_table(char *name, aClient *cptr)
 {
 	if (!list_empty(&cptr->client_hash))
 		list_del(&cptr->client_hash);
@@ -231,7 +350,7 @@ int  del_from_client_hash_table(char *name, aClient *cptr)
 	return 0;
 }
 
-int  del_from_id_hash_table(char *name, aClient *cptr)
+int del_from_id_hash_table(char *name, aClient *cptr)
 {
 	if (!list_empty(&cptr->id_hash))
 		list_del(&cptr->id_hash);
@@ -244,10 +363,10 @@ int  del_from_id_hash_table(char *name, aClient *cptr)
 /*
  * del_from_channel_hash_table
  */
-int  del_from_channel_hash_table(char *name, aChannel *chptr)
+int del_from_channel_hash_table(char *name, aChannel *chptr)
 {
 	aChannel *tmp, *prev = NULL;
-	unsigned int  hashv;
+	unsigned int hashv;
 
 	hashv = hash_channel_name(name);
 	for (tmp = (aChannel *)channelTable[hashv].list; tmp;
@@ -279,7 +398,7 @@ int  del_from_channel_hash_table(char *name, aChannel *chptr)
 aClient *hash_find_client(const char *name, aClient *cptr)
 {
 	aClient *tmp;
-	unsigned int  hashv;
+	unsigned int hashv;
 
 	hashv = hash_nick_name(name);
 	list_for_each_entry(tmp, &clientTable[hashv], client_hash)
@@ -294,7 +413,7 @@ aClient *hash_find_client(const char *name, aClient *cptr)
 aClient *hash_find_id(const char *name, aClient *cptr)
 {
 	aClient *tmp;
-	unsigned int  hashv;
+	unsigned int hashv;
 
 	hashv = hash_nick_name(name);
 	list_for_each_entry(tmp, &idTable[hashv], id_hash)
@@ -340,7 +459,7 @@ aClient *hash_find_nickserver(const char *str, aClient *cptr)
 aClient *hash_find_server(const char *server, aClient *cptr)
 {
 	aClient *tmp;
-	unsigned int  hashv;
+	unsigned int hashv;
 
 	hashv = hash_nick_name(server);
 	list_for_each_entry(tmp, &clientTable[hashv], client_hash)
@@ -361,7 +480,7 @@ aClient *hash_find_server(const char *server, aClient *cptr)
  */
 aChannel *hash_find_channel(char *name, aChannel *chptr)
 {
-	unsigned int  hashv;
+	unsigned int hashv;
 	aChannel *tmp;
 	aHashEntry *tmp3;
 
@@ -375,70 +494,43 @@ aChannel *hash_find_channel(char *name, aChannel *chptr)
 		}
 	return chptr;
 }
-aChannel *hash_get_chan_bucket(unsigned int hashv)
+
+aChannel *hash_get_chan_bucket(uint64_t hashv)
 {
-	if (hashv > CH_MAX)
+	if (hashv > CHAN_HASH_TABLE_SIZE)
 		return NULL;
 	return (aChannel *)channelTable[hashv].list;
 }
 
-/*
- * Rough figure of the datastructures for notify:
- *
- * NOTIFY HASH      cptr1
- *   |                |- nick1
- * nick1-|- cptr1     |- nick2
- *   |   |- cptr2                cptr3
- *   |   |- cptr3   cptr2          |- nick1
- *   |                |- nick1
- * nick2-|- cptr2     |- nick2
- *       |- cptr1
- *
- * add-to-notify-hash-table:
- * del-from-notify-hash-table:
- * hash-del-notify-list:
- * hash-check-notify:
- * hash-get-notify:
- */
-
-static   aWatch  *watchTable[WATCHHASHSIZE];
-
 void  count_watch_memory(int *count, u_long *memory)
 {
-	int   i = WATCHHASHSIZE;
-	aWatch  *anptr;
-	
-	
-	while (i--) {
+	int i = WATCH_HASH_TABLE_SIZE;
+	aWatch *anptr;
+
+	while (i--)
+	{
 		anptr = watchTable[i];
-		while (anptr) {
+		while (anptr)
+		{
 			(*count)++;
 			(*memory) += sizeof(aWatch)+strlen(anptr->nick);
 			anptr = anptr->hnext;
 		}
 	}
 }
-extern char unreallogo[];
-void  clear_watch_hash_table(void)
-{
-	   memset((char *)watchTable, '\0', sizeof(watchTable));
-	   if (strcmp(BASE_VERSION, &unreallogo[337]))
-		loop.tainted = 1;
-}
-
 
 /*
  * add_to_watch_hash_table
  */
-int   add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
+int add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
 {
-	unsigned int   hashv;
+	unsigned int hashv;
 	aWatch  *anptr;
 	Link  *lp;
 	
 	
 	/* Get the right bucket... */
-	hashv = hash_nick_name(nick)%WATCHHASHSIZE;
+	hashv = hash_watch_nick_name(nick);
 	
 	/* Find the right nick (header) in the bucket, or NULL... */
 	if ((anptr = (aWatch *)watchTable[hashv]))
@@ -483,9 +575,9 @@ int   add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
 /*
  *  hash_check_watch
  */
-int   hash_check_watch(aClient *cptr, int reply)
+int hash_check_watch(aClient *cptr, int reply)
 {
-	unsigned int   hashv;
+	unsigned int hashv;
 	aWatch  *anptr;
 	Link  *lp;
 	int awaynotify = 0;
@@ -495,7 +587,7 @@ int   hash_check_watch(aClient *cptr, int reply)
 	
 	
 	/* Get us the right bucket */
-	hashv = hash_nick_name(cptr->name)%WATCHHASHSIZE;
+	hashv = hash_watch_nick_name(cptr->name);
 	
 	/* Find the right header in this bucket */
 	if ((anptr = (aWatch *)watchTable[hashv]))
@@ -548,16 +640,15 @@ int   hash_check_watch(aClient *cptr, int reply)
 /*
  * hash_get_watch
  */
-aWatch  *hash_get_watch(char *name)
+aWatch  *hash_get_watch(char *nick)
 {
-	unsigned int   hashv;
+	unsigned int hashv;
 	aWatch  *anptr;
 	
-	
-	hashv = hash_nick_name(name)%WATCHHASHSIZE;
+	hashv = hash_watch_nick_name(nick);
 	
 	if ((anptr = (aWatch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, name))
+	  while (anptr && mycmp(anptr->nick, nick))
 		 anptr = anptr->hnext;
 	
 	return anptr;
@@ -566,15 +657,14 @@ aWatch  *hash_get_watch(char *name)
 /*
  * del_from_watch_hash_table
  */
-int   del_from_watch_hash_table(char *nick, aClient *cptr)
+int del_from_watch_hash_table(char *nick, aClient *cptr)
 {
-	unsigned int   hashv;
+	unsigned int hashv;
 	aWatch  *anptr, *nlast = NULL;
 	Link  *lp, *last = NULL;
-	
-	
+
 	/* Get the bucket for this nick... */
-	hashv = hash_nick_name(nick)%WATCHHASHSIZE;
+	hashv = hash_watch_nick_name(nick);
 	
 	/* Find the right header, maintaining last-link pointer... */
 	if ((anptr = (aWatch *)watchTable[hashv]))
@@ -683,7 +773,7 @@ int   hash_del_watch_list(aClient *cptr)
 			if (!anptr->watch) {
 				aWatch  *np2, *nl;
 				
-				hashv = hash_nick_name(anptr->nick)%WATCHHASHSIZE;
+				hashv = hash_watch_nick_name(anptr->nick);
 				
 				nl = NULL;
 				np2 = watchTable[hashv];

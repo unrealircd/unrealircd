@@ -870,10 +870,11 @@ int stats_mem(aClient *sptr, char *para)
 
 	sendnumericfmt(sptr, RPL_STATSDEBUG,
 	    "Hash: client %d(%ld) chan %d(%ld) watch %d(%ld)",
-	    U_MAX,
-	    (long)(sizeof(aHashEntry) * U_MAX), CH_MAX,
-	    (long)(sizeof(aHashEntry) * CH_MAX), WATCHHASHSIZE,
-	    (long)(sizeof(aWatch *) * WATCHHASHSIZE));
+	    NICK_HASH_TABLE_SIZE,
+	    (long)(sizeof(aHashEntry) * NICK_HASH_TABLE_SIZE),
+	    CHAN_HASH_TABLE_SIZE,
+	    (long)(sizeof(aHashEntry) * CHAN_HASH_TABLE_SIZE), WATCH_HASH_TABLE_SIZE,
+	    (long)(sizeof(aWatch *) * WATCH_HASH_TABLE_SIZE));
 
 	for (link = freelink; link; link = link->next)
 		fl++;
@@ -886,9 +887,9 @@ int stats_mem(aClient *sptr, char *para)
 
 	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
 	tot += fl * sizeof(Link);
-	tot += sizeof(aHashEntry) * U_MAX;
-	tot += sizeof(aHashEntry) * CH_MAX;
-	tot += sizeof(aWatch *) * WATCHHASHSIZE;
+	tot += sizeof(aHashEntry) * NICK_HASH_TABLE_SIZE;
+	tot += sizeof(aHashEntry) * CHAN_HASH_TABLE_SIZE;
+	tot += sizeof(aWatch *) * WATCH_HASH_TABLE_SIZE;
 
 	sendnumericfmt(sptr, RPL_STATSDEBUG, "Total: ww %ld ch %ld cl %ld co %ld db %ld",
 	    totww, totch, totcl, com, db);

@@ -925,6 +925,8 @@ int InitUnrealIRCd(int argc, char *argv[])
 
 	timeofday = time(NULL);
 
+	init_random(); /* needs to be done very early!! */
+
 	memset(&botmotd, '\0', sizeof(aMotdFile));
 	memset(&rules, '\0', sizeof(aMotdFile));
 	memset(&opermotd, '\0', sizeof(aMotdFile));
@@ -933,6 +935,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 	memset(&svsmotd, '\0', sizeof(aMotdFile));
 	memset(&me, 0, sizeof(me));
 	me.local = MyMallocEx(sizeof(aLocalClient));
+	bzero(&loop, sizeof(loop));
+
+	init_hash();
 
 	SetupEvents();
 
@@ -993,7 +998,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	tkl_init();
 	umode_init();
 	extcmode_init();
-	init_random(); /* needs to be done very early!! */
 	clear_scache_hash_table();
 #ifdef HAVE_SETRLIMIT
 	/* Make it so we can dump core */
@@ -1236,10 +1240,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 	fprintf(stderr, "This server can handle %d concurrent sockets (%d clients + %d reserve)\n\n",
 		maxclients+CLIENTS_RESERVE, maxclients, CLIENTS_RESERVE);
 #endif
-	clear_client_hash_table();
-	clear_channel_hash_table();
-	clear_watch_hash_table();
-	bzero(&loop, sizeof(loop));
 	init_CommandHash();
 	initwhowas();
 	initstats();

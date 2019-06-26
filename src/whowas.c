@@ -19,8 +19,9 @@
 
 #include "unrealircd.h"
 
-/* externally defined functions */
-unsigned int hash_whowas_name(char *);	/* defined in hash.c */
+// FIXME: move this to m_whowas,
+// Consider making add_history an efunc? Or via a hook?
+// Some users may not want to load m_whowas at all.
 
 /* internally defined function */
 static void add_whowas_to_clist(aWhowas **, aWhowas *);
@@ -29,9 +30,9 @@ static void add_whowas_to_list(aWhowas **, aWhowas *);
 static void del_whowas_from_list(aWhowas **, aWhowas *);
 
 aWhowas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
-aWhowas MODVAR *WHOWASHASH[WW_MAX];
+aWhowas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
 
-MODVAR int  whowas_next = 0;
+MODVAR int whowas_next = 0;
 
 void add_history(aClient *cptr, int online)
 {
@@ -144,7 +145,7 @@ void initwhowas()
 		bzero((char *)&WHOWAS[i], sizeof(aWhowas));
 		WHOWAS[i].hashv = -1;
 	}
-	for (i = 0; i < WW_MAX; i++)
+	for (i = 0; i < WHOWAS_HASH_TABLE_SIZE; i++)
 		WHOWASHASH[i] = NULL;
 }
 
@@ -176,7 +177,6 @@ static void add_whowas_to_list(aWhowas ** bucket, aWhowas * whowas)
 
 static void del_whowas_from_list(aWhowas ** bucket, aWhowas * whowas)
 {
-
 	if (whowas->prev)
 		whowas->prev->next = whowas->next;
 	else

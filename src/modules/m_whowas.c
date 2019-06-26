@@ -53,9 +53,8 @@ MOD_UNLOAD(m_whowas)
 }
 
 /* externally defined functions */
-extern unsigned int hash_whowas_name(char *);
-extern MODVAR aWhowas WHOWAS[NICKNAMEHISTORYLENGTH];
-extern MODVAR aWhowas *WHOWASHASH[WW_MAX];
+extern aWhowas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
+extern aWhowas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
 
 /*
 ** m_whowas

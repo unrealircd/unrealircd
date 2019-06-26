@@ -22,6 +22,11 @@
 #ifndef	__hash_include__
 #define __hash_include__
 
+#define NICK_HASH_TABLE_SIZE 16384
+#define CHAN_HASH_TABLE_SIZE 16384
+#define WATCH_HASH_TABLE_SIZE 16384
+#define WHOWAS_HASH_TABLE_SIZE 16384
+
 typedef struct hashentry {
 	int  hits;
 	int  links;
@@ -33,32 +38,6 @@ typedef struct hashentry {
 #define BITS_PER_COL 3
 #define BITS_PER_COL_MASK 0x7
 #define MAX_SUB     (1<<BITS_PER_COL)
-
-/* Client hash table 
- * used in hash.c 
- */
-
-#define U_MAX_INITIAL 2048
-#define U_MAX_INITIAL_MASK (U_MAX_INITIAL-1)
-#define U_MAX (U_MAX_INITIAL*MAX_SUB)
-
-/* Channel hash table 
- * used in hash.c 
- */
-
-#define CH_MAX_INITIAL  2048
-#define CH_MAX_INITIAL_MASK (CH_MAX_INITIAL-1)
-#define CH_MAX (CH_MAX_INITIAL*MAX_SUB)
-
-/* Who was hash table 
- * used in whowas.c 
- */
-
-#define WW_MAX_INITIAL  16
-#define WW_MAX_INITIAL_MASK (WW_MAX_INITIAL-1)
-#define WW_MAX (WW_MAX_INITIAL*MAX_SUB)
-
-#define WATCHHASHSIZE  10007	/* prime number  */
 
 /*
  * Throttling

@@ -294,8 +294,8 @@ void _send_list(aClient *cptr)
 	 * and record that number as the number to start next time send_list
 	 * is called for this user. So, this function will almost always send
 	 * back more lines than specified by numsend (though not by much,
-	 * assuming CH_MAX is was well picked). So be conservative in your choice
-	 * of numsend. -Rak
+	 * assuming the hashing algorithm works well). Be conservative in your
+	 * choice of numsend. -Rak
 	 */	
 
 	/* Begin of /list? then send official channels. */
@@ -315,7 +315,7 @@ void _send_list(aClient *cptr)
 		}
 	}
 
-	for (hashnum = lopt->starthash; hashnum < CH_MAX; hashnum++)
+	for (hashnum = lopt->starthash; hashnum < CHAN_HASH_TABLE_SIZE; hashnum++)
 	{
 		if (numsend > 0)
 			for (chptr = hash_get_chan_bucket(hashnum);
@@ -394,7 +394,7 @@ void _send_list(aClient *cptr)
 	}
 
 	/* All done */
-	if (hashnum == CH_MAX)
+	if (hashnum == CHAN_HASH_TABLE_SIZE)
 	{
 		sendnumeric(cptr, RPL_LISTEND);
 		free_str_list(cptr->user->lopt->yeslist);
