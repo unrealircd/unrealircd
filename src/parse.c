@@ -68,7 +68,7 @@ aClient *find_client(char *name, aClient *cptr)
 aClient *find_nickserv(char *name, aClient *cptr)
 {
 	if (name)
-		cptr = hash_find_nickserver(name, cptr);
+		cptr = hash_find_nickatserver(name, cptr);
 
 	return cptr;
 }

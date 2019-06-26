@@ -412,7 +412,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 		}
 
 		/* nickname addressed? */
-		acptr = hash_find_nickserver(nick, NULL);
+		acptr = hash_find_nickatserver(nick, NULL);
 		if (acptr)
 		{
 			text = parv[2];

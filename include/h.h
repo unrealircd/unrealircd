@@ -388,7 +388,7 @@ extern aWatch *hash_get_watch(char *);
 extern aChannel *hash_get_chan_bucket(uint64_t);
 extern aClient *hash_find_client(const char *, aClient *);
 extern aClient *hash_find_id(const char *, aClient *);
-extern aClient *hash_find_nickserver(const char *, aClient *);
+extern aClient *hash_find_nickatserver(const char *, aClient *);
 extern aClient *hash_find_server(const char *, aClient *);
 extern char *find_by_aln(char *);
 extern char *convert2aln(int);

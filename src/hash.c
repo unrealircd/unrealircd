@@ -266,7 +266,7 @@ void init_hash(void)
 		loop.tainted = 1;
 }
 
-uint64_t hash_nick_name(const char *name)
+uint64_t hash_client_name(const char *name)
 {
 	return siphash_nocase(name, siphashkey_nick) % NICK_HASH_TABLE_SIZE;
 }
@@ -307,7 +307,7 @@ int add_to_client_hash_table(char *name, aClient *cptr)
 	*/
 	if (loop.tainted)
 		return 0;
-	hashv = hash_nick_name(name);
+	hashv = hash_client_name(name);
 	list_add(&cptr->client_hash, &clientTable[hashv]);
 	return 0;
 }
@@ -318,7 +318,7 @@ int add_to_client_hash_table(char *name, aClient *cptr)
 int add_to_id_hash_table(char *name, aClient *cptr)
 {
 	unsigned int hashv;
-	hashv = hash_nick_name(name);
+	hashv = hash_client_name(name);
 	list_add(&cptr->id_hash, &idTable[hashv]);
 	return 0;
 }
@@ -400,7 +400,7 @@ aClient *hash_find_client(const char *name, aClient *cptr)
 	aClient *tmp;
 	unsigned int hashv;
 
-	hashv = hash_nick_name(name);
+	hashv = hash_client_name(name);
 	list_for_each_entry(tmp, &clientTable[hashv], client_hash)
 	{
 		if (smycmp(name, tmp->name) == 0)
@@ -415,7 +415,7 @@ aClient *hash_find_id(const char *name, aClient *cptr)
 	aClient *tmp;
 	unsigned int hashv;
 
-	hashv = hash_nick_name(name);
+	hashv = hash_client_name(name);
 	list_for_each_entry(tmp, &idTable[hashv], id_hash)
 	{
 		if (smycmp(name, tmp->id) == 0)
@@ -426,9 +426,9 @@ aClient *hash_find_id(const char *name, aClient *cptr)
 }
 
 /*
- * hash_find_nickserver
+ * hash_find_nickatserver
  */
-aClient *hash_find_nickserver(const char *str, aClient *cptr)
+aClient *hash_find_nickatserver(const char *str, aClient *cptr)
 {
 	char *serv;
 	char nick[NICKLEN+HOSTLEN+1];
@@ -461,7 +461,7 @@ aClient *hash_find_server(const char *server, aClient *cptr)
 	aClient *tmp;
 	unsigned int hashv;
 
-	hashv = hash_nick_name(server);
+	hashv = hash_client_name(server);
 	list_for_each_entry(tmp, &clientTable[hashv], client_hash)
 	{
 		if (!IsServer(tmp) && !IsMe(tmp))
@@ -824,7 +824,7 @@ long v;
 
 int	hash_throttling(char *ip)
 {
-	return hash_nick_name(ip) %THROTTLING_HASH_SIZE; // TODO: improve/fix ;)
+	return hash_client_name(ip) %THROTTLING_HASH_SIZE; // TODO: improve/fix ;)
 }
 
 struct	ThrottlingBucket *find_throttling_bucket(aClient *acptr)

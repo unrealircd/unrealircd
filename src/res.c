@@ -438,9 +438,9 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 
 static unsigned int unrealdns_haship(char *ip)
 {
-	extern unsigned hash_nick_name(const char *nname);
+	extern unsigned hash_client_name(const char *nname);
 
-	return hash_nick_name(ip) % DNS_HASH_SIZE; /* TODO: improve I guess ;D */
+	return hash_client_name(ip) % DNS_HASH_SIZE; /* TODO: improve I guess ;D */
 }
 
 static void unrealdns_addtocache(char *name, char *ip)
