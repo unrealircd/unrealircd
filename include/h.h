@@ -368,6 +368,13 @@ extern time_t timeout_query_list(time_t);
 extern time_t expire_cache(time_t);
 extern void del_queries(char *);
 
+/* Hash stuff */
+#define NICK_HASH_TABLE_SIZE 32768
+#define CHAN_HASH_TABLE_SIZE 32768
+#define WATCH_HASH_TABLE_SIZE 32768
+#define WHOWAS_HASH_TABLE_SIZE 32768
+#define THROTTLING_HASH_TABLE_SIZE 8192
+#define find_channel hash_find_channel
 extern uint64_t siphash(const char *in, const char *k);
 extern uint64_t siphash_raw(const char *in, size_t len, const char *k);
 extern uint64_t siphash_nocase(const char *in, const char *k);
@@ -390,8 +397,10 @@ extern aChannel *hash_get_chan_bucket(uint64_t);
 extern aClient *hash_find_client(const char *, aClient *);
 extern aClient *hash_find_id(const char *, aClient *);
 extern aClient *hash_find_nickatserver(const char *, aClient *);
+extern aChannel *hash_find_channel(char *name, aChannel *chptr);
 extern aClient *hash_find_server(const char *, aClient *);
 extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
+
 extern char *find_by_aln(char *);
 extern char *convert2aln(int);
 extern int convertfromaln(char *);

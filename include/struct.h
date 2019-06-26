@@ -41,7 +41,6 @@
 #include <openssl/ripemd.h>
 #include "common.h"
 #include "sys.h"
-#include "hash.h"
 #include <stdio.h>
 #include <sys/types.h>
 #ifndef _WIN32

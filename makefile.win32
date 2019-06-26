@@ -420,7 +420,7 @@ src/s_numeric.obj: src/s_numeric.c $(INCLUDES) ./include/dbuf.h
 src/whowas.obj: src/whowas.c $(INCLUDES) ./include/dbuf.h ./include/whowas.h
         $(CC) $(CFLAGS) src/whowas.c
 
-src/hash.obj: src/hash.c $(INCLUDES) ./include/hash.h
+src/hash.obj: src/hash.c $(INCLUDES)
         $(CC) $(CFLAGS) src/hash.c
 
 src/crule.obj: src/crule.c $(INCLUDES)
