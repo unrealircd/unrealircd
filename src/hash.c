@@ -900,7 +900,7 @@ void init_throttling()
 	EventAdd(NULL, "bucketcleaning", v, 0, e_clean_out_throttling_buckets, NULL);
 }
 
-u_int64_t hash_throttling(char *ip)
+uint64_t hash_throttling(char *ip)
 {
 	return siphash(ip, siphashkey_throttling) % THROTTLING_HASH_TABLE_SIZE;
 }

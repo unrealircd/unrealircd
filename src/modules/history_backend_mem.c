@@ -85,7 +85,7 @@ MOD_UNLOAD(history_backend_mem)
 	return MOD_SUCCESS;
 }
 
-u_int64_t hbm_hash(char *object)
+uint64_t hbm_hash(char *object)
 {
 	return siphash_nocase(object, siphashkey_history_backend_mem) % HISTORY_BACKEND_MEM_HASH_TABLE_SIZE;
 }
