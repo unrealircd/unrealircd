@@ -522,8 +522,8 @@ extern long config_checkval(char *value, unsigned short flags);
 extern void config_status(char *format, ...) __attribute__((format(printf,1,2)));
 extern void init_random();
 extern u_char getrandom8();
-extern u_int16_t getrandom16();
-extern u_int32_t getrandom32();
+extern uint16_t getrandom16();
+extern uint32_t getrandom32();
 extern void gen_random_alnum(char *buf, int numbytes);
 extern void ident_failed(aClient *cptr);
 

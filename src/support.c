@@ -1809,7 +1809,7 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size)
 	 */
 	char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], *tp;
 	struct { int base, len; } best, cur;
-	u_int32_t words[IN6ADDRSZ / INT16SZ];
+	uint32_t words[IN6ADDRSZ / INT16SZ];
 	int i;
 
 	/*

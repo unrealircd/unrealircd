@@ -147,10 +147,6 @@ typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
 
-#ifdef NEED_U_INT32_T
-typedef unsigned int u_int32_t;	/* XXX Hope this works! */
-#endif
-
 typedef enum OperClassEntryType { OPERCLASSENTRY_ALLOW=1, OPERCLASSENTRY_DENY=2} OperClassEntryType;
 
 typedef enum OperPermission { OPER_ALLOW=1, OPER_DENY=0} OperPermission;
@@ -879,7 +875,7 @@ struct LocalClient {
 	short lastsq;		/* # of 2k blocks when sendqueued called last */
 	dbuf sendQ;		/* Outgoing message queue--if socket full */
 	dbuf recvQ;		/* Hold for data incoming yet to be parsed */
-	u_int32_t nospoof;	/* Anti-spoofing random number */
+	uint32_t nospoof;	/* Anti-spoofing random number */
 	int proto;		/* ProtoCtl options */
 	long caps;		/* Client capabilities */
 	long sendM;		/* Statistics: protocol messages send */

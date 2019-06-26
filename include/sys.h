@@ -163,13 +163,7 @@ extern char OSName[256];
 #ifdef DEBUGMODE
 #endif
 
-#ifdef _WIN32
-typedef unsigned short u_int16_t;
-typedef unsigned __int64 uint64_t;
-typedef unsigned __int32 uint32_t;
-#endif
-
-# define MYDUMMY_SIZE 128
+#define MYDUMMY_SIZE 128
 
 /*
  * Socket, File, and Error portability macros

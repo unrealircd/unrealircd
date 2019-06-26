@@ -376,7 +376,7 @@ static inline void _rs_random_buf(void *_buf, size_t n)
 	}
 }
 
-static inline void _rs_random_u32(u_int32_t *val)
+static inline void _rs_random_u32(uint32_t *val)
 {
 	_rs_stir_if_needed(sizeof(*val));
 	if (rs_have < sizeof(*val))
@@ -470,9 +470,9 @@ void init_random()
 	/* NOTE: addtional entropy is added by add_entropy_* function(s) */
 }
 
-u_int32_t arc4random(void)
+uint32_t arc4random(void)
 {
-	u_int32_t val;
+	uint32_t val;
 
 	_rs_random_u32(&val);
 	return val;
@@ -485,13 +485,13 @@ u_char getrandom8()
 }
 
 /** Get 16 bits (2 bytes) of randomness */
-u_int16_t getrandom16()
+uint16_t getrandom16()
 {
 	return arc4random() & 0xffff;
 }
 
 /** Get 32 bits (4 bytes) of randomness */
-u_int32_t getrandom32()
+uint32_t getrandom32()
 {
 	return arc4random();
 }

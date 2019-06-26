@@ -312,7 +312,7 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 	char ipv6 = r->ipv6;
 	int i;
 	struct hostent *he2;
-	u_int32_t ipv4_addr = 0;
+	uint32_t ipv4_addr = 0;
 
 	if (!acptr)
 		goto bad;
