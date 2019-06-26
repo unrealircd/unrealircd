@@ -426,29 +426,6 @@ void add_entropy_configfile(struct stat *st, char *buf)
 	arc4_addrandom(&mdbuf, sizeof(mdbuf));
 }
 
-u_int32_t arc4random(void)
-{
-	u_int32_t val;
-
-	_rs_random_u32(&val);
-	return val;
-}
-
-u_char getrandom8()
-{
-	return arc4random() & 0xff;
-}
-
-u_int16_t getrandom16()
-{
-	return arc4random() & 0xffff;
-}
-
-u_int32_t getrandom32()
-{
-	return arc4random();
-}
-
 /*
  * init_random, written by Syzop.
  * This function tries to initialize the arc4 random number generator securely.
@@ -483,7 +460,6 @@ void init_random()
 		Debug((DEBUG_INFO, "init_random: read from /dev/urandom returned %d", n));
 		close(fd);
 	}
-	/* TODO: more!?? */
 #else
 	_ftime(&rdat.nowt);
 	GlobalMemoryStatus (&rdat.mstat);
@@ -492,6 +468,32 @@ void init_random()
 	arc4_addrandom(&rdat, sizeof(rdat));
 
 	/* NOTE: addtional entropy is added by add_entropy_* function(s) */
+}
+
+u_int32_t arc4random(void)
+{
+	u_int32_t val;
+
+	_rs_random_u32(&val);
+	return val;
+}
+
+/** Get 8 bits (1 byte) of randomness */
+u_char getrandom8()
+{
+	return arc4random() & 0xff;
+}
+
+/** Get 16 bits (2 bytes) of randomness */
+u_int16_t getrandom16()
+{
+	return arc4random() & 0xffff;
+}
+
+/** Get 32 bits (4 bytes) of randomness */
+u_int32_t getrandom32()
+{
+	return arc4random();
 }
 
 /** Generate an alphanumeric string (eg: XzHe5G).
