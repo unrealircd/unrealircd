@@ -341,7 +341,7 @@ int moddata_localvar_set(char *varname, char *value)
 {
 	ModDataInfo *md;
 
-	md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
+	md = findmoddata_byname(varname, MODDATATYPE_LOCALVAR);
 
 	if (!md)
 		return 0;
@@ -366,7 +366,7 @@ int moddata_globalvar_set(char *varname, char *value)
 {
 	ModDataInfo *md;
 
-	md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
+	md = findmoddata_byname(varname, MODDATATYPE_GLOBALVAR);
 
 	if (!md)
 		return 0;
