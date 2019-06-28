@@ -122,11 +122,11 @@ MOD_INIT(tkldb)
 	// MOD_INIT is also called on rehash, so we gotta make sure to not re-add *-Lines every time
 	// There might be a cleaner way to do this though (i.e. without moddata) :D
 	setcfg();
-	if (!(tkldb_md = findmoddata_byname("tkldb_inited", MODDATATYPE_CLIENT)))
+	if (!(tkldb_md = findmoddata_byname("tkldb_inited", MODDATATYPE_LOCALVAR)))
 	{
 		ModDataInfo mreq;
 		memset(&mreq, 0, sizeof(mreq));
-		mreq.type = MODDATATYPE_CLIENT;
+		mreq.type = MODDATATYPE_LOCALVAR;
 		mreq.name = "tkldb_inited";
 		mreq.free = tkldb_moddata_free;
 		mreq.serialize = NULL;
@@ -143,7 +143,7 @@ MOD_INIT(tkldb)
 			else
 				config_warn("[tkldb] Failed to rename database from %s to %s: %s", cfg.database, fname, strerror(errno));
 		}
-		moddata_client((&me), tkldb_md).i = 1;
+		moddata_localvar(tkldb_md).i = 1;
 	}
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkldb_configrun);
 	return MOD_SUCCESS;
