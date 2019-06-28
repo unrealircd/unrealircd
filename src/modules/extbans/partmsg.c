@@ -28,8 +28,6 @@ ModuleHeader MOD_HEADER(partmsg)
 	NULL 
 };
 
-char *partmsg_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
-char *partmsg_prelocalquit(aClient *sptr, char *comment);
 int extban_partmsg_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 MOD_INIT(partmsg)
