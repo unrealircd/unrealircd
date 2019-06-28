@@ -6,7 +6,6 @@
 
 #include "unrealircd.h"
 
-
 ModuleHeader MOD_HEADER(floodprot)
   = {
 	"chanmodes/floodprot",
@@ -70,10 +69,11 @@ struct SChanFloodProt {
 
 /* FIXME: note to self: get_param() is not enough for module reloading, need to have an alternative serialize_struct() for like in our case where we want to remember timer settings and all .. (?) */
 
-ModuleInfo *ModInfo = NULL;
+/* Global variables */
 ModDataInfo *mdflood = NULL;
 Cmode_t EXTMODE_FLOODLIMIT = 0L;
 static int timedban_available = 0; /**< Set to 1 if extbans/timedban module is loaded. */
+RemoveFld *removefld_list = NULL;
 
 #define IsFloodLimit(x)	((x)->mode.extmode & EXTMODE_FLOODLIMIT)
 
@@ -108,11 +108,31 @@ int floodprot_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick);
 int floodprot_chanmode_del(aChannel *chptr, int m);
 void userfld_free(ModData *md);
 int floodprot_stats(aClient *sptr, char *flag);
+void floodprot_free_removefld_list(ModData *m);
 
 MOD_TEST(floodprot)
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, floodprot_config_test);
 	return MOD_SUCCESS;
+}
+
+void persistent_rehash_settings(ModuleInfo *modinfo)
+{
+	ModDataInfo *m;
+
+	m = findmoddata_byname("floodprot_removefld_list", MODDATATYPE_LOCALVAR);
+	if (m)
+	{
+		removefld_list = moddata_localvar(m).ptr;
+	} else {
+		ModDataInfo mreq;
+		memset(&mreq, 0, sizeof(mreq));
+		mreq.type = MODDATATYPE_LOCALVAR;
+		mreq.name = "floodprot_removefld_list";
+		mreq.free = floodprot_free_removefld_list;
+		m = ModDataAdd(modinfo->handle, mreq);
+		moddata_localvar(m).ptr = removefld_list;
+	}
 }
 
 MOD_INIT(floodprot)
@@ -121,8 +141,6 @@ MOD_INIT(floodprot)
 	ModDataInfo mreq;
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
-	ModInfo = modinfo;
 
 	memset(&creq, 0, sizeof(creq));
 	creq.paracount = 1;
@@ -138,6 +156,8 @@ MOD_INIT(floodprot)
 	CmodeAdd(modinfo->handle, creq, &EXTMODE_FLOODLIMIT);
 
 	init_config();
+
+	persistent_rehash_settings(modinfo);
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "floodprot";
@@ -164,14 +184,18 @@ MOD_INIT(floodprot)
 
 MOD_LOAD(floodprot)
 {
-	EventAdd(ModInfo->handle, "modef_event", 10, 0, modef_event, NULL);
+	EventAdd(modinfo->handle, "modef_event", 10, 0, modef_event, NULL);
 	floodprot_rehash_complete();
 	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD(floodprot)
 {
-	return MOD_FAILED;
+	ModDataInfo *m;
+
+	m = findmoddata_byname("floodprot_removefld_list", MODDATATYPE_LOCALVAR);
+	moddata_localvar(m).ptr = removefld_list;
+	return MOD_SUCCESS;
 }
 
 int floodprot_rehash_complete(void)
@@ -1215,8 +1239,6 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
 	return 0;
 }
 
-RemoveFld *removefld_list = NULL;
-
 RemoveFld *floodprottimer_find(aChannel *chptr, char mflag)
 {
 	RemoveFld *e;
@@ -1401,8 +1423,6 @@ void floodprottimer_stopchantimers(aChannel *chptr)
 	}
 }
 
-
-
 int do_floodprot(aChannel *chptr, int what)
 {
 	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
@@ -1518,4 +1538,16 @@ int floodprot_stats(aClient *sptr, char *flag)
 	sendtxtnumeric(sptr, "modef-default-unsettime: %hd", (unsigned short)MODEF_DEFAULT_UNSETTIME);
 	sendtxtnumeric(sptr, "modef-max-unsettime: %hd", (unsigned short)MODEF_MAX_UNSETTIME);
 	return 0;
+}
+
+/** Admin unloading the floodprot module for good. Bad. */
+void floodprot_free_removefld_list(ModData *m)
+{
+	RemoveFld *e, *e_next;
+
+	for (e=removefld_list; e; e=e_next)
+	{
+		e_next = e->next;
+		MyFree(e);
+	}
 }
