@@ -238,31 +238,62 @@ void unload_extcmode_commit(Cmode *cmode)
 
 	if (!cmode)
 		return;	
-	if (cmode->paracount == 1)
-	{
-		/* If we don't do this, we will crash anyway.. but then with severe corruption / suckyness */
-		ircd_log(LOG_ERROR, "FATAL ERROR: ChannelMode module for chanmode +%c is misbehaving: "
-		                    "all chanmode modules with parameters should be tagged PERManent.", cmode->flag);
-		abort();
-	}
 
-	/* Unset channel mode and send MODE -<char> to other servers */
-	for (chptr = channel; chptr; chptr = chptr->nextch)
+	/* Unset channel mode and send MODE to everyone */
+
+	if (cmode->paracount == 0)
 	{
-		if (chptr->mode.extmode && cmode->mode)
+		/* Paramless mode, easy */
+		for (chptr = channel; chptr; chptr = chptr->nextch)
 		{
-			MessageTag *mtags = NULL;
+			if (chptr->mode.extmode && cmode->mode)
+			{
+				MessageTag *mtags = NULL;
 
-			new_message(&me, NULL, &mtags);
-			sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-			               ":%s MODE %s -%c",
-			               me.name, chptr->chname, cmode->flag);
-			sendto_server(NULL, 0, 0, mtags,
-				":%s MODE %s -%c 0",
-				me.name, chptr->chname, cmode->flag);
-			free_mtags(mtags);
+				new_message(&me, NULL, &mtags);
+				sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+					       ":%s MODE %s -%c",
+					       me.name, chptr->chname, cmode->flag);
+				sendto_server(NULL, 0, 0, mtags,
+					":%s MODE %s -%c 0",
+					me.name, chptr->chname, cmode->flag);
+				free_mtags(mtags);
 
-			chptr->mode.extmode &= ~cmode->mode;
+				chptr->mode.extmode &= ~cmode->mode;
+			}
+		}
+	} else
+	{
+		/* Parameter mode, more complicated */
+		for (chptr = channel; chptr; chptr = chptr->nextch)
+		{
+			if (chptr->mode.extmode && cmode->mode)
+			{
+				MessageTag *mtags = NULL;
+
+				new_message(&me, NULL, &mtags);
+				if (cmode->unset_with_param)
+				{
+					char *param = cmode->get_param(GETPARASTRUCT(chptr, cmode->flag));
+					sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+						       ":%s MODE %s -%c %s",
+						       me.name, chptr->chname, cmode->flag, param);
+					sendto_server(NULL, 0, 0, mtags,
+						":%s MODE %s -%c %s 0",
+						me.name, chptr->chname, cmode->flag, param);
+				} else {
+					sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+						       ":%s MODE %s -%c",
+						       me.name, chptr->chname, cmode->flag);
+					sendto_server(NULL, 0, 0, mtags,
+						":%s MODE %s -%c 0",
+						me.name, chptr->chname, cmode->flag);
+				}
+				free_mtags(mtags);
+
+				cmode->free_param(GETPARASTRUCT(chptr, cmode->flag));
+				chptr->mode.extmode &= ~cmode->mode;
+			}
 		}
 	}
 
