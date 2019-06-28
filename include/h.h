@@ -828,8 +828,6 @@ extern void sendbufto_one(aClient *to, char *msg, unsigned int quick);
 extern MODVAR int current_serial;
 extern char *spki_fingerprint(aClient *acptr);
 extern int is_module_loaded(char *name);
-extern int module_load_variable(ModuleInfo *modinfo, char *varname, void **var, void (*free_variable)(ModData *m));
-extern void module_save_variable(ModuleInfo *modinfo, char *varname, void *var);
 extern void close_std_descriptors(void);
 extern int banned_client(aClient *acptr, char *bantype, char *reason, int global, int noexit);
 extern char *mystpcpy(char *dst, const char *src);

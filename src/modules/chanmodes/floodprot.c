@@ -138,7 +138,7 @@ MOD_INIT(floodprot)
 
 	init_config();
 
-	module_load_variable(modinfo, "removefld_list", (void **)&removefld_list, floodprot_free_removefld_list);
+	LoadPersistentPointer(modinfo, removefld_list, floodprot_free_removefld_list);
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "floodprot";
@@ -172,7 +172,7 @@ MOD_LOAD(floodprot)
 
 MOD_UNLOAD(floodprot)
 {
-	module_save_variable(modinfo, "removefld_list", removefld_list);
+	SavePersistentPointer(modinfo, removefld_list);
 	return MOD_SUCCESS;
 }
 

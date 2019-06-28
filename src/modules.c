@@ -1675,11 +1675,17 @@ int is_module_loaded(char *name)
 	return 0;
 }
 
-int module_load_variable(ModuleInfo *modinfo, char *varshortname, void **var, void (*free_variable)(ModData *m))
+static char *mod_var_name(ModuleInfo *modinfo, char *varshortname)
+{
+	static char fullname[512];
+	snprintf(fullname, sizeof(fullname), "%s:%s", modinfo->handle->header->name, varshortname);
+	return fullname;
+}
+
+int LoadPersistentPointerX(ModuleInfo *modinfo, char *varshortname, void **var, void (*free_variable)(ModData *m))
 {
 	ModDataInfo *m;
-	char fullname[512];
-	snprintf(fullname, sizeof(fullname), "%s:%s", modinfo->handle->header->name, varshortname);
+	char *fullname = mod_var_name(modinfo, varshortname);
 
 	m = findmoddata_byname(fullname, MODDATATYPE_LOCALVAR);
 	if (m)
@@ -1698,12 +1704,73 @@ int module_load_variable(ModuleInfo *modinfo, char *varshortname, void **var, vo
 	}
 }
 
-void module_save_variable(ModuleInfo *modinfo, char *varshortname, void *var)
+void SavePersistentPointerX(ModuleInfo *modinfo, char *varshortname, void *var)
 {
 	ModDataInfo *m;
-	char fullname[512];
-	snprintf(fullname, sizeof(fullname), "%s:%s", modinfo->handle->header->name, varshortname);
+	char *fullname = mod_var_name(modinfo, varshortname);
 
 	m = findmoddata_byname(fullname, MODDATATYPE_LOCALVAR);
 	moddata_localvar(m).ptr = var;
+}
+
+int LoadPersistentIntX(ModuleInfo *modinfo, char *varshortname, int *var)
+{
+	ModDataInfo *m;
+	char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCALVAR);
+	if (m)
+	{
+		*var = moddata_localvar(m).i;
+		return 1;
+	} else {
+		ModDataInfo mreq;
+		memset(&mreq, 0, sizeof(mreq));
+		mreq.type = MODDATATYPE_LOCALVAR;
+		mreq.name = fullname;
+		mreq.free = NULL;
+		m = ModDataAdd(modinfo->handle, mreq);
+		moddata_localvar(m).i = 0;
+		return 0;
+	}
+}
+
+void SavePersistentIntX(ModuleInfo *modinfo, char *varshortname, int var)
+{
+	ModDataInfo *m;
+	char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCALVAR);
+	moddata_localvar(m).i = var;
+}
+
+int LoadPersistentLongX(ModuleInfo *modinfo, char *varshortname, long *var)
+{
+	ModDataInfo *m;
+	char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCALVAR);
+	if (m)
+	{
+		*var = moddata_localvar(m).l;
+		return 1;
+	} else {
+		ModDataInfo mreq;
+		memset(&mreq, 0, sizeof(mreq));
+		mreq.type = MODDATATYPE_LOCALVAR;
+		mreq.name = fullname;
+		mreq.free = NULL;
+		m = ModDataAdd(modinfo->handle, mreq);
+		moddata_localvar(m).l = 0;
+		return 0;
+	}
+}
+
+void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long var)
+{
+	ModDataInfo *m;
+	char *fullname = mod_var_name(modinfo, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCALVAR);
+	moddata_localvar(m).l = var;
 }
