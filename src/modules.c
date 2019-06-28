@@ -701,7 +701,7 @@ void Unload_all_loaded_modules(void)
 		irc_dlsym(mi->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
 		{
-			ret = (*Mod_Unload)(mi->modinfo);
+			ret = (*Mod_Unload)(&mi->modinfo);
 			if (ret == MOD_DELAY)
 			{
 				mi->flags |= MODFLAG_DELAYED;
