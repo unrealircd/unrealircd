@@ -124,6 +124,8 @@ extern void parse_message_tags_default_handler(aClient *cptr, char **str, Messag
 char *(*mtags_to_string)(MessageTag *m, aClient *acptr);
 extern char *mtags_to_string_default_handler(MessageTag *m, aClient *acptr);
 int (*can_send)(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice);
+void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
+void (*broadcast_md_globalvar_cmd)(aClient *except, aClient *sender, char *varname, char *value);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL, NULL},
@@ -192,7 +194,9 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 63 */	{"tkl_chartotype", (void *)&tkl_chartotype, NULL},
 /* 64 */	{"tkl_type_string", (void *)&tkl_type_string, NULL},
 /* 65 */	{"can_send", (void *)&can_send, NULL},
-/* 66 */	{NULL, NULL, NULL},
+/* 66 */	{"broadcast_md_globalvar", (void *)&broadcast_md_globalvar, NULL},
+/* 67 */	{"broadcast_md_globalvar_cmd", (void *)&broadcast_md_globalvar_cmd, NULL},
+/* 68 */	{NULL, NULL, NULL},
 };
 
 #ifdef UNDERSCORE

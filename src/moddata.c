@@ -24,6 +24,9 @@
 
 MODVAR ModDataInfo *MDInfo = NULL;
 
+MODVAR ModData localvar_moddata[MODDATA_MAX_LOCALVAR];
+MODVAR ModData globalvar_moddata[MODDATA_MAX_GLOBALVAR];
+
 ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 {
 	short i = 0, j = 0;
@@ -57,7 +60,9 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 		}
 
 	/* Now check if we are within bounds (if we really have a free slot available) */
-	if (((req.type == MODDATATYPE_CLIENT) && (slotav >= MODDATA_MAX_CLIENT)) ||
+	if (((req.type == MODDATATYPE_LOCALVAR) && (slotav >= MODDATA_MAX_LOCALVAR)) ||
+	    ((req.type == MODDATATYPE_GLOBALVAR) && (slotav >= MODDATA_MAX_GLOBALVAR)) ||
+	    ((req.type == MODDATATYPE_CLIENT) && (slotav >= MODDATA_MAX_CLIENT)) ||
 	    ((req.type == MODDATATYPE_CHANNEL) && (slotav >= MODDATA_MAX_CHANNEL)) ||
 	    ((req.type == MODDATATYPE_MEMBER) && (slotav >= MODDATA_MAX_MEMBER)) ||
 	    ((req.type == MODDATATYPE_MEMBERSHIP) && (slotav >= MODDATA_MAX_MEMBERSHIP)))
@@ -156,6 +161,16 @@ void unload_moddata_commit(ModDataInfo *md)
 {
 	switch(md->type)
 	{
+		case MODDATATYPE_LOCALVAR:
+			if (md->free && moddata_localvar(md).ptr)
+				md->free(&moddata_localvar(md));
+			memset(&moddata_localvar(md), 0, sizeof(ModData));
+			break;
+		case MODDATATYPE_GLOBALVAR:
+			if (md->free && moddata_globalvar(md).ptr)
+				md->free(&moddata_globalvar(md));
+			memset(&moddata_globalvar(md), 0, sizeof(ModData));
+			break;
 		case MODDATATYPE_CLIENT:
 		{
 			aClient *acptr;
@@ -319,6 +334,59 @@ char *moddata_client_get(aClient *acptr, char *varname)
 		return NULL;
 
 	return md->serialize(&moddata_client(acptr, md)); /* can be NULL */
+}
+
+/** Set localvar or globalvar moddata (via variable name, string value) */
+int moddata_localvar_set(char *varname, char *value)
+{
+	ModDataInfo *md;
+
+	md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
+
+	if (!md)
+		return 0;
+
+	if (value)
+	{
+		/* SET */
+		md->unserialize(value, &moddata_localvar(md));
+	}
+	else
+	{
+		/* UNSET */
+		md->free(&moddata_localvar(md));
+		memset(&moddata_localvar(md), 0, sizeof(ModData));
+	}
+
+	return 1;
+}
+
+/** Set globalvar or globalvar moddata (via variable name, string value) */
+int moddata_globalvar_set(char *varname, char *value)
+{
+	ModDataInfo *md;
+
+	md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
+
+	if (!md)
+		return 0;
+
+	if (value)
+	{
+		/* SET */
+		md->unserialize(value, &moddata_globalvar(md));
+	}
+	else
+	{
+		/* UNSET */
+		md->free(&moddata_globalvar(md));
+		memset(&moddata_globalvar(md), 0, sizeof(ModData));
+	}
+
+	if (md->sync)
+		broadcast_md_globalvar_cmd(NULL, &me, md->name, value);
+
+	return 1;
 }
 
 /* The rest of the MD related functions, the send/receive functions,

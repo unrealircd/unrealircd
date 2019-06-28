@@ -134,7 +134,7 @@ typedef struct {
         Module *owner; /**< Module that owns this snomask */
 } Snomask;
 
-typedef enum ModDataType { MODDATATYPE_CLIENT=1, MODDATATYPE_CHANNEL=2, MODDATATYPE_MEMBER=3, MODDATATYPE_MEMBERSHIP=4 } ModDataType;
+typedef enum ModDataType { MODDATATYPE_LOCALVAR=1, MODDATATYPE_GLOBALVAR=2, MODDATATYPE_CLIENT=3, MODDATATYPE_CHANNEL=4, MODDATATYPE_MEMBER=5, MODDATATYPE_MEMBERSHIP=6 } ModDataType;
 
 typedef struct _moddatainfo ModDataInfo;
 
@@ -155,6 +155,8 @@ struct _moddatainfo {
 #define moddata_channel(chptr, md)   chptr->moddata[md->slot]
 #define moddata_member(m, md)        m->moddata[md->slot]
 #define moddata_membership(m, md)    m->moddata[md->slot]
+#define moddata_localvar(md)         localvar_moddata[md->slot]
+#define moddata_globalvar(md)        globalvar_moddata[md->slot]
 
 #define EXCHK_ACCESS		0 /* Check access */
 #define EXCHK_ACCESS_ERR	1 /* Check access and send error if needed */
@@ -1209,6 +1211,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define EFUNC_TKL_CHARTOTYPE		63
 #define EFUNC_TKL_TYPE_STRING		64
 #define EFUNC_CAN_SEND			65
+#define EFUNC_BROADCAST_MD_GLOBALVAR	66
+#define EFUNC_BROADCAST_MD_GLOBALVAR_CMD	67
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

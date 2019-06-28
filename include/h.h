@@ -39,6 +39,8 @@ extern MODVAR Membership *freemembership;
 extern MODVAR MembershipL *freemembershipL;
 extern MODVAR aClient me;
 extern MODVAR aChannel *channel;
+extern MODVAR ModData localvar_moddata[MODDATA_MAX_LOCALVAR];
+extern MODVAR ModData globalvar_moddata[MODDATA_MAX_GLOBALVAR];
 extern MODVAR struct stats *ircstp;
 extern MODVAR int bootopt;
 extern MODVAR time_t timeofday;
@@ -692,6 +694,8 @@ extern MODVAR void (*broadcast_sinfo)(aClient *acptr, aClient *to, aClient *exce
 extern MODVAR void (*parse_message_tags)(aClient *cptr, char **str, MessageTag **mtag_list);
 extern MODVAR char *(*mtags_to_string)(MessageTag *m, aClient *acptr);
 extern MODVAR int (*can_send)(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice);
+extern MODVAR void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
+extern MODVAR void (*broadcast_md_globalvar_cmd)(aClient *except, aClient *sender, char *varname, char *value);
 /* /Efuncs */
 
 extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;
