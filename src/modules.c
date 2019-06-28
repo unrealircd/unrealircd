@@ -1674,3 +1674,36 @@ int is_module_loaded(char *name)
 	}
 	return 0;
 }
+
+int module_load_variable(ModuleInfo *modinfo, char *varshortname, void **var, void (*free_variable)(ModData *m))
+{
+	ModDataInfo *m;
+	char fullname[512];
+	snprintf(fullname, sizeof(fullname), "%s:%s", modinfo->handle->header->name, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCALVAR);
+	if (m)
+	{
+		*var = moddata_localvar(m).ptr;
+		return 1;
+	} else {
+		ModDataInfo mreq;
+		memset(&mreq, 0, sizeof(mreq));
+		mreq.type = MODDATATYPE_LOCALVAR;
+		mreq.name = fullname;
+		mreq.free = free_variable;
+		m = ModDataAdd(modinfo->handle, mreq);
+		moddata_localvar(m).ptr = NULL;
+		return 0;
+	}
+}
+
+void module_save_variable(ModuleInfo *modinfo, char *varshortname, void *var)
+{
+	ModDataInfo *m;
+	char fullname[512];
+	snprintf(fullname, sizeof(fullname), "%s:%s", modinfo->handle->header->name, varshortname);
+
+	m = findmoddata_byname(fullname, MODDATATYPE_LOCALVAR);
+	moddata_localvar(m).ptr = var;
+}

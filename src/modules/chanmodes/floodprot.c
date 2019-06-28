@@ -116,25 +116,6 @@ MOD_TEST(floodprot)
 	return MOD_SUCCESS;
 }
 
-void persistent_rehash_settings(ModuleInfo *modinfo)
-{
-	ModDataInfo *m;
-
-	m = findmoddata_byname("floodprot_removefld_list", MODDATATYPE_LOCALVAR);
-	if (m)
-	{
-		removefld_list = moddata_localvar(m).ptr;
-	} else {
-		ModDataInfo mreq;
-		memset(&mreq, 0, sizeof(mreq));
-		mreq.type = MODDATATYPE_LOCALVAR;
-		mreq.name = "floodprot_removefld_list";
-		mreq.free = floodprot_free_removefld_list;
-		m = ModDataAdd(modinfo->handle, mreq);
-		moddata_localvar(m).ptr = removefld_list;
-	}
-}
-
 MOD_INIT(floodprot)
 {
 	CmodeInfo creq;
@@ -157,7 +138,7 @@ MOD_INIT(floodprot)
 
 	init_config();
 
-	persistent_rehash_settings(modinfo);
+	module_load_variable(modinfo, "removefld_list", (void **)&removefld_list, floodprot_free_removefld_list);
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "floodprot";
@@ -191,10 +172,7 @@ MOD_LOAD(floodprot)
 
 MOD_UNLOAD(floodprot)
 {
-	ModDataInfo *m;
-
-	m = findmoddata_byname("floodprot_removefld_list", MODDATATYPE_LOCALVAR);
-	moddata_localvar(m).ptr = removefld_list;
+	module_save_variable(modinfo, "removefld_list", removefld_list);
 	return MOD_SUCCESS;
 }
 
