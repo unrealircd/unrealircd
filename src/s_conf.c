@@ -1469,7 +1469,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->unknown_flood_amount = 4;
 	i->unknown_flood_bantime = 600;
 	i->oper_snomask = strdup(SNO_DEFOPER);
-	i->ident_read_timeout = 30;
+	i->ident_read_timeout = 15;
 	i->ident_connect_timeout = 3;
 	i->nick_count = 3; i->nick_period = 60; /* NICK flood protection: max 3 per 60s */
 	i->away_count = 4; i->away_period = 120; /* AWAY flood protection: max 4 per 120s */
