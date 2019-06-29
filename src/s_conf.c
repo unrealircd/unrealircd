@@ -1544,7 +1544,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ssl_options->outdated_ciphers = strdup("AES*,RC4*,DES*");
 
 	i->plaintext_policy_user = POLICY_ALLOW;
-	i->plaintext_policy_oper = POLICY_WARN;
+	i->plaintext_policy_oper = POLICY_DENY;
 	i->plaintext_policy_server = POLICY_DENY;
 
 	i->outdated_tls_policy_user = POLICY_WARN;
