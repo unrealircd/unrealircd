@@ -9,9 +9,10 @@ Some explanation.
 
 Enhancements:
 * Improve link error messages
-* Enhance WHOX to WHO auto-conversion for +s serv.er.name
+* Enhance WHOX to WHO auto-conversion for "WHO +s serv.er.name"
 
 Major issues fixed:
+* The Windows version only accepted very few clients.
 
 Minor issues fixed:
 * The Windows version should warn and not error if using old-style regex.
