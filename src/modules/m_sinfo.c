@@ -20,6 +20,8 @@ CMD_FUNC(m_sinfo);
 
 MOD_INIT(sinfo)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+
 	CommandAdd(modinfo->handle, "SINFO", m_sinfo, MAXPARA, M_USER|M_SERVER);
 
 	return MOD_SUCCESS;
