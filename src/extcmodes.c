@@ -141,6 +141,15 @@ void extcmode_para_addslot(Cmode *c, int slot)
 	param_to_slot_mapping[c->flag] = slot;
 }
 
+/* Update letter->slot mapping and slot->handler mapping */
+void extcmode_para_delslot(Cmode *c, int slot)
+{
+	if ((slot < 0) || (slot > MAXPARAMMODES))
+		abort();
+	ParamTable[slot] = NULL;
+	param_to_slot_mapping[c->flag] = 0;
+}
+
 Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 {
 	short i = 0, j = 0;
@@ -298,6 +307,7 @@ void unload_extcmode_commit(Cmode *cmode)
 	}
 
 	cmode->flag = '\0';
+	extcmode_para_delslot(cmode, cmode->slot);
 }
 
 void CmodeDel(Cmode *cmode)
