@@ -415,3 +415,19 @@ int extcmode_default_requirehalfop(aClient *cptr, aChannel *chptr, char mode, ch
 	return EX_DENY;
 }
 
+int module_has_extcmode_param_mode(Module *mod)
+{
+	int i;
+
+	while (i < EXTCMODETABLESZ)
+	{
+		if ((Channelmode_Table[i].flag) &&
+		    (Channelmode_Table[i].owner == mod) &&
+		    (Channelmode_Table[i].paracount))
+		{
+			return 1;
+		}
+		i++;
+	}
+	return 0;
+}

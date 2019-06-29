@@ -1774,3 +1774,36 @@ void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long var)
 	m = findmoddata_byname(fullname, MODDATATYPE_LOCALVAR);
 	moddata_localvar(m).l = var;
 }
+
+extern int module_has_moddata(Module *mod);
+extern int module_has_extcmode_param_mode(Module *mod);
+
+/** Special hack for unloading modules with moddata and parameter extcmodes */
+void special_delayed_unloading(void)
+{
+	Module *m, *m2;
+	extern Module *Modules;
+
+	for (m = Modules; m; m = m->next)
+	{
+		if (!(m->flags & MODFLAG_LOADED))
+			continue;
+		if ((m->options & MOD_OPT_PERM) || (m->options & MOD_OPT_PERM_RELOADABLE))
+			continue;
+		if (module_has_moddata(m) || module_has_extcmode_param_mode(m))
+		{
+			int found = 0;
+			for (m2 = Modules; m2; m2 = m2->next)
+			{
+				if ((m != m2) && !strcmp(m->header->name, m2->header->name))
+					found = 1;
+			}
+			if (!found)
+			{
+			    config_warn("Delaying module unloading of '%s' a few seconds...", m->header->name);
+			    m->flags |= MODFLAG_DELAYED;
+			    EventAdd(NULL, "e_unload_module_delayed", 5, 1, e_unload_module_delayed, m->header->name);
+			}
+		}
+	}
+}

@@ -861,3 +861,4 @@ extern int history_add(char *object, MessageTag *mtags, char *line);
 extern int history_request(aClient *acptr, char *object, HistoryFilter *filter);
 extern int history_del(char *object, int max_lines, long max_time);
 extern int history_destroy(char *object);
+extern void special_delayed_unloading(void);
