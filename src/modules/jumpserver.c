@@ -34,6 +34,7 @@ ModuleHeader MOD_HEADER(jumpserver)
 /* Forward declarations */
 CMD_FUNC(m_jumpserver);
 int jumpserver_preconnect(aClient *);
+void jumpserver_free_jss(ModData *m);
 
 /* Jumpserver status struct */
 typedef struct _jss JSS;
@@ -51,7 +52,7 @@ JSS *jss=NULL; /**< JumpServer Status. NULL=disabled. */
 MOD_INIT(jumpserver)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
+	LoadPersistentPointer(modinfo, jss, jumpserver_free_jss);
 	CommandAdd(modinfo->handle, MSG_JUMPSERVER, m_jumpserver, 3, M_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, jumpserver_preconnect);
 	return MOD_SUCCESS;
@@ -64,6 +65,7 @@ MOD_LOAD(jumpserver)
 
 MOD_UNLOAD(jumpserver)
 {
+	SavePersistentPointer(modinfo, jss);
 	return MOD_SUCCESS;
 }
 
@@ -110,6 +112,11 @@ void free_jss(void)
 		MyFree(jss);
 		jss = NULL;
 	}
+}
+
+void jumpserver_free_jss(ModData *m)
+{
+	free_jss();
 }
 
 CMD_FUNC(m_jumpserver)
