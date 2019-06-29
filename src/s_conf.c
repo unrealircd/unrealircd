@@ -1548,8 +1548,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->plaintext_policy_server = POLICY_DENY;
 
 	i->outdated_tls_policy_user = POLICY_WARN;
-	i->outdated_tls_policy_oper = POLICY_WARN;
-	i->outdated_tls_policy_server = POLICY_WARN;
+	i->outdated_tls_policy_oper = POLICY_DENY;
+	i->outdated_tls_policy_server = POLICY_DENY;
 
 	i->reject_message_password_mismatch = strdup("Password mismatch");
 	i->reject_message_too_many_connections = strdup("Too many connections from your IP");
