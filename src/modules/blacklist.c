@@ -125,6 +125,11 @@ MOD_INIT(blacklist)
 	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	/* This module needs to be permanent.
+	 * Not because of UnrealIRCd restrictions,
+	 * but because we use c-ares callbacks and the address
+	 * of those functions will change if we REHASH.
+	 */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
 	
 	memset(&mreq, 0, sizeof(mreq));
