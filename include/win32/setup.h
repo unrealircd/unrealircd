@@ -54,6 +54,7 @@
 #define NEED_U_INT32_T
 #define PREFIX_AQ
 #define LIST_SHOW_MODES
+#define USE_TRE
 #ifndef mode_t
 #define GOT_STRCASECMP
 #define strcasecmp _stricmp

@@ -14,6 +14,7 @@ Enhancements:
 Major issues fixed:
 
 Minor issues fixed:
+* The Windows version should warn and not error if using old-style regex.
 * The 'connthrottle' module incorrectly allowed 0 unknown users in when
   it was throttling, rather than the set rate.
 * The 'reputation' module did not show scores for remote users in /WHOIS,
