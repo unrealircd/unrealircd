@@ -100,6 +100,8 @@ struct cfgstruct {
 };
 static struct cfgstruct cfg;
 
+static int tkls_loaded = 0;
+
 ModuleHeader MOD_HEADER(tkldb) = {
 	"tkldb",
 	"v1.10",
@@ -119,21 +121,15 @@ MOD_INIT(tkldb)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	// MOD_INIT is also called on rehash, so we gotta make sure to not re-add *-Lines every time
-	// There might be a cleaner way to do this though (i.e. without moddata) :D
+	LoadPersistentInt(modinfo, tkls_loaded);
+
 	setcfg();
-	if (!(tkldb_md = findmoddata_byname("tkldb_inited", MODDATATYPE_LOCALVAR)))
+
+	if (!tkls_loaded)
 	{
-		ModDataInfo mreq;
-		memset(&mreq, 0, sizeof(mreq));
-		mreq.type = MODDATATYPE_LOCALVAR;
-		mreq.name = "tkldb_inited";
-		mreq.free = tkldb_moddata_free;
-		mreq.serialize = NULL;
-		mreq.unserialize = NULL;
-		mreq.sync = 0;
-		tkldb_md = ModDataAdd(modinfo->handle, mreq);
-		IsMDErr(tkldb_md, tkldb, modinfo);
+		/* If this is the first time that our module is loaded, then
+		 * read the TKL DB and add all *-Lines.
+		 */
 		if (!read_tkldb())
 		{
 			char fname[512];
@@ -143,7 +139,7 @@ MOD_INIT(tkldb)
 			else
 				config_warn("[tkldb] Failed to rename database from %s to %s: %s", cfg.database, fname, strerror(errno));
 		}
-		moddata_localvar(tkldb_md).i = 1;
+		tkls_loaded = 1;
 	}
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkldb_configrun);
 	return MOD_SUCCESS;
@@ -164,6 +160,7 @@ MOD_UNLOAD(tkldb)
 {
 	write_tkldb();
 	freecfg();
+	SavePersistentInt(modinfo, tkls_loaded);
 	return MOD_SUCCESS;
 }
 

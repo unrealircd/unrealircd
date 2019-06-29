@@ -822,12 +822,12 @@ extern void SavePersistentPointerX(ModuleInfo *modinfo, char *varshortname, void
 #define SavePersistentPointer(modinfo, var) SavePersistentPointerX(modinfo, #var, var)
 
 extern int LoadPersistentIntX(ModuleInfo *modinfo, char *varshortname, int *var);
-#define LoadPersistentInt(modinfo, var) LoadPersistentIntX(modinfo, #var, (void **)&var)
+#define LoadPersistentInt(modinfo, var) LoadPersistentIntX(modinfo, #var, &var)
 extern void SavePersistentIntX(ModuleInfo *modinfo, char *varshortname, int var);
 #define SavePersistentInt(modinfo, var) SavePersistentIntX(modinfo, #var, var)
 
 extern int LoadPersistentLongX(ModuleInfo *modinfo, char *varshortname, long *var);
-#define LoadPersistentLong(modinfo, var) LoadPersistentIntX(modinfo, #var, (void **)&var)
+#define LoadPersistentLong(modinfo, var) LoadPersistentIntX(modinfo, #var, &var)
 extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long var);
 #define SavePersistentLong(modinfo, var) SavePersistentLongX(modinfo, #var, var)
 
