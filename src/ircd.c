@@ -402,6 +402,18 @@ EVENT(garbage_collect)
 		loop.do_garbage_collect = 0;
 }
 
+EVENT(deprecated_notice)
+{
+	/* Send a warning to opers currently online every week after June 1, 2020 */
+	if (TStime() > 1590962400)
+	{
+		char *msg = "[WARNING] UnrealIRCd 4.x is no longer supported after December 31, 2020. "
+		            "See https://www.unrealircd.org/docs/UnrealIRCd_4_EOL";
+		sendto_realops("%s", msg);
+		ircd_log(LOG_ERROR, "%s", msg);
+	}
+}
+
 /*
 ** try_connections
 **
@@ -1385,6 +1397,12 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "Dynamic configuration initialized.. booting IRCd.\n");
 #endif
+	/* Warn about this starting March 1, 2020 */
+	if (time(NULL) > 1583017200)
+	{
+		fprintf(stderr, "WARNING: UnrealIRCd 4.x is no longer supported after December 31, 2020.\n"
+		                "See https://www.unrealircd.org/docs/UnrealIRCd_4_EOL\n");
+	}
 	open_debugfile();
 	if (portnum < 0)
 		portnum = PORTNUM;

@@ -388,6 +388,22 @@ else
         n="-n"
 fi
 
+date|grep 2019 1>/dev/null 2>&1
+if [ "$?" -ne 0 ]; then
+	echo "*** WARNING ***"
+	echo "UnrealIRCd 4.x will no longer be supported after December 31, 2020."
+	echo "You should upgrade to UnrealIRCd 5 before that date."
+	echo "See https://www.unrealircd.org/docs/UnrealIRCd_4_EOL"
+	echo $n . $c
+	sleep 1
+	echo $n . $c
+	sleep 1
+	echo $n . $c
+	echo ""
+	sleep 1
+	echo "Press ENTER to continue"
+	read xyz
+fi
 
 #parse arguments
 NOCACHE=""

@@ -6,7 +6,7 @@
 
 [Setup]
 AppName=UnrealIRCd 4
-AppVerName=UnrealIRCd 4.2.3
+AppVerName=UnrealIRCd 4.2.4
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=https://www.unrealircd.org
 AppSupportURL=https://www.unrealircd.org
@@ -109,6 +109,18 @@ function InitializeSetup(): Boolean;
 var
   major: Cardinal;
 begin
+	d := StrToInt(GetDateTimeString('yyyymm',#0,#0));
+	if (d > 201912) then
+	begin
+		MsgBox('You are installing the old UnrealIRCd 4.x stable series. This branch will receive security fixes only until December 31, 2020. ' +
+		       'After that date, all support for the UnrealIRCd 4.x series will stop. ' +
+		       'Please consider upgrading to UnrealIRCd 5. See https://www.unrealircd.org/docs/UnrealIRCd_4_EOL', mbInformation, MB_OK);
+		if (d > 201903) then
+		begin
+			ShellExec('open', 'https://www.unrealircd.org/docs/UnrealIRCd_4_EOL', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
+		end;
+	end;
+
 	Result := true;
   if Not RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x86', 'Major', major) then
     begin

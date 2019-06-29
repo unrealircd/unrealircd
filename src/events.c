@@ -46,6 +46,7 @@ ID_Copyright("(C) Carsten Munk 2001");
 MODVAR Event *events = NULL;
 
 extern EVENT(unrealdns_removeoldrecords);
+extern EVENT(deprecated_notice);
 
 void	LockEventSystem(void)
 {
@@ -213,6 +214,7 @@ void	SetupEvents(void)
 	EventAddEx(NULL, "garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
 	EventAddEx(NULL, "loop", 0, 0, loop_event, NULL);
 	EventAddEx(NULL, "unrealdns_removeoldrecords", 15, 0, unrealdns_removeoldrecords, NULL);
+	EventAddEx(NULL, "deprecated_notice", (86400*7)-(3600*8), 0, deprecated_notice, NULL);
 	EventAddEx(NULL, "check_pings", 1, 0, check_pings, NULL);
 	EventAddEx(NULL, "check_deadsockets", 1, 0, check_deadsockets, NULL);
 	EventAddEx(NULL, "check_unknowns", 1, 0, check_unknowns, NULL);
