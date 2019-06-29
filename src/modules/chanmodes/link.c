@@ -35,8 +35,6 @@ MOD_INIT(link)
 {
 	CmodeInfo req;
 
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM_RELOADABLE, 1);
-
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	memset(&req, 0, sizeof(req));
