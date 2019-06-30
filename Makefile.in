@@ -246,19 +246,17 @@ install: all
 		echo 'Again, be sure to change to the @SCRIPTDIR@ directory!' ; \
 	fi
 
-### TODO: all the stuff below ;) ###
 pem:	extras/ssl.cnf
-	@echo "Generating certificate request .. "
+	@echo "Generating server key..."
+	$(OPENSSLPATH) ecparam -out server.key.pem -name secp384r1 -genkey
+	@echo "Generating certificate request..."
 	$(OPENSSLPATH) req -new \
               -config extras/ssl.cnf -sha256 -out server.req.pem \
-              -keyout server.key.pem -nodes
-	@echo "Generating self-signed certificate .. "
+              -key server.key.pem -nodes
+	@echo "Generating self-signed certificate..."
 	$(OPENSSLPATH) req -x509 -days 3650 -sha256 -in server.req.pem \
                -key server.key.pem -out server.cert.pem
-	@echo "Generating fingerprint .."
-	$(OPENSSLPATH) x509 -subject -dates -sha256 -fingerprint -noout \
-		-in server.cert.pem
-	@echo "Setting o-rwx & g-rwx for files... "
+	@echo "Setting permissions on server.*.pem files..."
 	chmod o-rwx server.req.pem server.key.pem server.cert.pem
 	chmod g-rwx server.req.pem server.key.pem server.cert.pem
 
