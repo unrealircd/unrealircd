@@ -33,7 +33,6 @@ Name: "installservice/startboot"; Description: "S&tart UnrealIRCd when Windows s
 Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive unchecked
 Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; Flags: unchecked; MinVersion: 0,5.0;
 Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL options:";
-Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL options:"; Flags: unchecked;
 Name: "fixperm"; Description: "Make UnrealIRCd folder writable by current user";
 
 [Files]
@@ -60,7 +59,6 @@ Source: "doc\conf\aliases\*"; DestDir: "{app}\conf\aliases"; Flags: ignoreversio
 Source: "unrealsvc.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
 
 Source: "src\win32\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
-Source: "src\win32\encpem.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "src\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
@@ -120,32 +118,6 @@ begin
 	end;
 end;
 
-function NextButtonClick(CurPage: Integer): Boolean;
-
-var
-  hWnd: Integer;
-  ResultCode: Integer;
-  ResultXP: boolean;
-  Result2003: boolean;
-  Res: Integer;
-begin
-
-  Result := true;
-  ResultXP := true;
-  Result2003 := true;
-
-  // Prevent the user from selecting both 'Install as service' and 'Encrypt SSL certificate'
-  if CurPage = wpSelectTasks then
-  begin
-    if IsTaskSelected('enccert') and IsTaskSelected('installservice') then
-    begin
-      MsgBox('When running UnrealIRCd as a service there is no way to enter the password for an encrypted SSL certificate, therefore you cannot combine the two. Please deselect one of the options.', mbError, MB_OK);
-      Result := False
-    end
-  end;
-
-end;
-
 procedure CurStepChanged(CurStep: TSetupStep);
 
 var
@@ -197,7 +169,6 @@ end;
 Name: "{group}\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
 Name: "{group}\Make Certificate"; Filename: "{app}\makecert.bat"; WorkingDir: "{app}"
-Name: "{group}\Encrypt Certificate"; Filename: "{app}\encpem.bat"; WorkingDir: "{app}"
 Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/UnrealIRCd_4_documentation"; WorkingDir: "{app}"
 Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"; Tasks: quicklaunchicon
@@ -212,7 +183,6 @@ Filename: "{app}\unrealsvc.exe"; Parameters: "config startup manual"; Flags: run
 Filename: "{app}\unrealsvc.exe"; Parameters: "config startup auto"; Flags: runminimized nowait; Tasks: installservice/startboot
 Filename: "{app}\unrealsvc.exe"; Parameters: "config crashrestart 2"; Flags: runminimized nowait; Tasks: installservice/crashrestart
 Filename: "{app}\makecert.bat"; Tasks: makecert; Flags: postinstall;
-Filename: "{app}\encpem.bat"; WorkingDir: "{app}"; Tasks: enccert; Flags: postinstall;
 
 [UninstallRun]
 Filename: "{app}\unrealsvc.exe"; Parameters: "uninstall"; Flags: runminimized; RunOnceID: "DelService"; Tasks: installservice
