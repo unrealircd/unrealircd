@@ -247,10 +247,10 @@ install: all
 	fi
 
 ### TODO: all the stuff below ;) ###
-pem:	src/ssl.cnf
+pem:	extras/ssl.cnf
 	@echo "Generating certificate request .. "
 	$(OPENSSLPATH) req -new \
-              -config src/ssl.cnf -sha256 -out server.req.pem \
+              -config extras/ssl.cnf -sha256 -out server.req.pem \
               -keyout server.key.pem -nodes
 	@echo "Generating self-signed certificate .. "
 	$(OPENSSLPATH) req -x509 -days 3650 -sha256 -in server.req.pem \

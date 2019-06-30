@@ -59,7 +59,7 @@ Source: "doc\conf\aliases\*"; DestDir: "{app}\conf\aliases"; Flags: ignoreversio
 Source: "unrealsvc.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
 
 Source: "src\win32\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
-Source: "src\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "extras\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
 Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags: ignoreversion
