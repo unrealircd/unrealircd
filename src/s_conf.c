@@ -6222,10 +6222,12 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 			if (match_type == MATCH_TRE_REGEX)
 			{
 #ifdef USE_TRE
+#ifndef _WIN32
 				config_warn("%s:%i: this spamfilter uses match-type 'posix' which is DEPRECATED. "
 				             "You should switch over to match-type 'regex' instead. "
 				             "See https://www.unrealircd.org/docs/FAQ#spamfilter-posix-deprecated",
 				             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+#endif
 #else
 				config_error("%s:%i: this spamfilter uses match-type 'posix' which is no longer supported. "
 				             "You must switch over to match-type 'regex' instead. "
@@ -6302,6 +6304,7 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 		need_34_upgrade = 1;
 	}
 
+#ifndef _WIN32
 	if (match && !strcmp(match, "^LOL! //echo -a \\$\\(\\$decode\\(.+,m\\),[0-9]\\)$"))
 	{
 		config_warn("*** IMPORTANT ***");
@@ -6310,6 +6313,7 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 		config_warn("Please read https://www.unrealircd.org/docs/FAQ#old-spamfilter-conf !!!");
 		config_warn("*****************");
 	}
+#endif
 	return errors;
 }
 

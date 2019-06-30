@@ -440,6 +440,12 @@ write_fail:
 	/* Everything went fine. We rename our temporary file to the existing
 	 * DB file (will overwrite), which is more or less an atomic operation.
 	 */
+#ifdef _WIN32
+	/* Exception: on Windows it cannot be atomic, as rename() fails to
+	 * overwrite existing files. Great.
+	 */
+	unlink(cfg.database);
+#endif
 	if (rename(tmpfname, cfg.database) < 0)
 	{
 		config_error("ERROR renaming '%s' to '%s': %s -- DATABASE *NOT* SAVED!!!",
