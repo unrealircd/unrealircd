@@ -275,7 +275,7 @@ CMD_FUNC(m_uid)
 	 * For remote clients, do a quick check by using do_remote_nick_name(),
 	 * if this returned false then reject and kill it. -- Syzop
 	 */
-	if (IsServer(cptr) && !do_remote_nick_name(nick))
+	if (IsServer(cptr) && (!do_remote_nick_name(nick) || !*nick))
 	{
 		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
 		    me.name, sptr->name, parv[1], "Illegal characters");
@@ -593,7 +593,8 @@ CMD_FUNC(m_nick)
 	 * if this returned false then reject and kill it. -- Syzop
 	 */
 	if ((IsServer(cptr) && !do_remote_nick_name(nick)) ||
-	    (!IsServer(cptr) && !do_nick_name(nick)))
+	    (!IsServer(cptr) && !do_nick_name(nick)) ||
+	    !*nick)
 	{
 		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
 		    me.name, sptr->name, parv[1], "Illegal characters");

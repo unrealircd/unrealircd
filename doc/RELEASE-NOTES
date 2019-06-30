@@ -1,27 +1,38 @@
 UnrealIRCd 4.2.4 Release Notes
 ===============================
 
-!!! FIXME !!! WORK IN PROGRESS !!!
+This release fixes a crash issue if UnrealIRCd is configured to use utf8 or
+chinese character sets in set::allowed-nickchars.  This is not the default.
+We don't expect many users to run their IRCd with this enabled, as the utf8
+support was tagged as experimental and the chinese/gbk implementation is
+incomplete.
 
-Some introduction.
-
-Some explanation.
+In addition to the bug fix from above, this release also contains a number
+of other fixes and enhancements.  In particular there were some Windows
+fixes and the reputation and connthrottle modules are now working better.
 
 Enhancements:
-* Improve link error messages
+* Improve server linking error messages
 * Enhance WHOX to WHO auto-conversion for "WHO +s serv.er.name"
 
 Major issues fixed:
+* A crash issue if using utf8 or chinese in set::allowed-nickchars.
 * The Windows version only accepted very few clients.
+* The Windows version should warn and not error if using old-style regex.
+* The Windows version did not save the reputation database.
 
 Minor issues fixed:
-* The Windows version should warn and not error if using old-style regex.
 * The 'connthrottle' module incorrectly allowed 0 unknown users in when
   it was throttling, rather than the set rate.
 * The 'reputation' module did not show scores for remote users in /WHOIS,
   only after 5 minutes had passed.
+* Some users may have experienced a "Registration Timeout" error when
+  connecting. This happened because their ident server accepted the TCP/IP
+  connection but after that failed to respond to the ident request. We
+  have now lowered set::ident::read-timeout to 15 seconds to fix this.
 * If successfully logged in using SASL then avoid an "You are already
   logged in" error message that could happen due to PASS forwarding.
+  The message was harmless, but annoying in some setups.
 
 Module coders / Developers:
 * If you are debugging or developing modules then we encourage you to
