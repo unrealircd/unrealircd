@@ -427,7 +427,7 @@ int extcmode_default_requirehalfop(aClient *cptr, aChannel *chptr, char mode, ch
 
 int module_has_extcmode_param_mode(Module *mod)
 {
-	int i;
+	int i = 0;
 
 	while (i < EXTCMODETABLESZ)
 	{
