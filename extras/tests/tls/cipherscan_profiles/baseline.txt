@@ -1,20 +1,14 @@
 Target: 127.0.0.1:5901
 
-prio  ciphersuite                  protocols              pfs                 curves
-1     ECDHE-RSA-AES256-GCM-SHA384  TLSv1.2                ECDH,P-521,521bits  secp521r1,secp384r1,prime256v1
-2     ECDHE-RSA-AES128-GCM-SHA256  TLSv1.2                ECDH,P-521,521bits  secp521r1,secp384r1,prime256v1
-3     ECDHE-RSA-AES256-SHA384      TLSv1.2                ECDH,P-521,521bits  secp521r1,secp384r1,prime256v1
-4     ECDHE-RSA-AES128-SHA256      TLSv1.2                ECDH,P-521,521bits  secp521r1,secp384r1,prime256v1
-5     ECDHE-RSA-AES256-SHA         TLSv1,TLSv1.1,TLSv1.2  ECDH,P-521,521bits  secp521r1,secp384r1,prime256v1
-6     ECDHE-RSA-AES128-SHA         TLSv1,TLSv1.1,TLSv1.2  ECDH,P-521,521bits  secp521r1,secp384r1,prime256v1
-7     AES256-GCM-SHA384            TLSv1.2                None                None
-8     AES128-GCM-SHA256            TLSv1.2                None                None
-9     AES256-SHA256                TLSv1.2                None                None
-10    AES128-SHA256                TLSv1.2                None                None
-11    AES256-SHA                   TLSv1,TLSv1.1,TLSv1.2  None                None
-12    AES128-SHA                   TLSv1,TLSv1.1,TLSv1.2  None                None
+prio  ciphersuite                    protocols              pfs                 curves
+1     ECDHE-ECDSA-AES256-GCM-SHA384  TLSv1.2                ECDH,P-521,521bits  secp521r1,secp384r1
+2     ECDHE-ECDSA-AES128-GCM-SHA256  TLSv1.2                ECDH,P-521,521bits  secp521r1,secp384r1
+3     ECDHE-ECDSA-AES256-SHA384      TLSv1.2                ECDH,P-521,521bits  secp521r1,secp384r1
+4     ECDHE-ECDSA-AES128-SHA256      TLSv1.2                ECDH,P-521,521bits  secp521r1,secp384r1
+5     ECDHE-ECDSA-AES256-SHA         TLSv1,TLSv1.1,TLSv1.2  ECDH,P-521,521bits  secp521r1,secp384r1
+6     ECDHE-ECDSA-AES128-SHA         TLSv1,TLSv1.1,TLSv1.2  ECDH,P-521,521bits  secp521r1,secp384r1
 
-Certificate: untrusted, 4096 bits, sha256WithRSAEncryption signature
+Certificate: untrusted, 384 bits, ecdsa-with-SHA256 signature
 TLS ticket lifetime hint: None
 NPN protocols: None
 OCSP stapling: not supported
