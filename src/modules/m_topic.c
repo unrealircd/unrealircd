@@ -188,74 +188,81 @@ CMD_FUNC(m_topic)
 		return 0;
 	}
 
-	/* Topic change requested, check permissions */
-
-	/* +t and not +hoaq ? */
-	if ((chptr->mode.mode & MODE_TOPICLIMIT) &&
-	    !is_skochanop(sptr, chptr) && !IsULine(sptr) && !IsServer(sptr))
+	/* Topic change. Either locally (check permissions!) or remote, check permissions: */
+	if (IsPerson(sptr))
 	{
-		if (MyClient(sptr) && !ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
+		char *newtopic = NULL;
+
+		/* +t and not +hoaq ? */
+		if ((chptr->mode.mode & MODE_TOPICLIMIT) &&
+		    !is_skochanop(sptr, chptr) && !IsULine(sptr) && !IsServer(sptr))
 		{
-			sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
-			return 0;
-		}
-		topicoverride(sptr, chptr, topic);
-	}
-
-	/* -t and banned? */
-	if (!(chptr->mode.mode & MODE_TOPICLIMIT) &&
-	    !is_skochanop(sptr, chptr) && is_banned(sptr, chptr, BANCHK_MSG, &topic, &errmsg))
-	{
-		char buf[512];
-
-		if (MyClient(sptr) && !ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
-		{
-			ircsnprintf(buf, sizeof(buf), "You cannot change the topic on %s while being banned", chptr->chname);
-			sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
-			return -1;
-		}
-		topicoverride(sptr, chptr, topic);
-	}
-
-	/* -t, +m, and not +vhoaq */
-	if (((flags&CHFL_OVERLAP) == 0) && (chptr->mode.mode & MODE_MODERATED))
-	{
-		char buf[512];
-
-		if (MyClient(sptr) && ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
-		{
-			topicoverride(sptr, chptr, topic);
-		} else {
-			/* With +m and -t, only voice and higher may change the topic */
-			ircsnprintf(buf, sizeof(buf), "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", chptr->chname);
-			sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
-			return -1;
-		}
-	}
-
-	/* For local users, run spamfilters and hooks.. */
-	if (MyClient(sptr))
-	{
-		Hook *tmphook;
-		int n;
-
-		if ((n = run_spamfilter(sptr, topic, SPAMF_TOPIC, chptr->chname, 0, NULL)) < 0)
-			return n;
-
-		for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {
-			topic = (*(tmphook->func.pcharfunc))(sptr, chptr, topic);
-			if (!topic)
+			if (MyClient(sptr) && !ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
+			{
+				sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
 				return 0;
+			}
+			topicoverride(sptr, chptr, topic);
 		}
-		RunHook4(HOOKTYPE_LOCAL_TOPIC, cptr, sptr, chptr, topic);
-	}
 
-	/* At this point 'tnick' is set to sptr->name.
-	 * If set::topic-setter nick-user-host; is set
-	 * then we update it here to nick!user@host.
-	 */
-	if (IsPerson(sptr) && (iConf.topic_setter == SETTER_NICK_USER_HOST))
-		tnick = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
+		/* -t and banned? */
+		newtopic = topic;
+		if (!(chptr->mode.mode & MODE_TOPICLIMIT) &&
+		    !is_skochanop(sptr, chptr) && is_banned(sptr, chptr, BANCHK_MSG, &newtopic, &errmsg))
+		{
+			char buf[512];
+
+			if (MyClient(sptr) && !ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
+			{
+				ircsnprintf(buf, sizeof(buf), "You cannot change the topic on %s while being banned", chptr->chname);
+				sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
+				return -1;
+			}
+			topicoverride(sptr, chptr, topic);
+		}
+		if (MyClient(sptr) && newtopic)
+			topic = newtopic; /* process is_banned() changes of topic (eg: text replacement), but only for local clients */
+
+		/* -t, +m, and not +vhoaq */
+		if (((flags&CHFL_OVERLAP) == 0) && (chptr->mode.mode & MODE_MODERATED))
+		{
+			char buf[512];
+
+			if (MyClient(sptr) && ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
+			{
+				topicoverride(sptr, chptr, topic);
+			} else {
+				/* With +m and -t, only voice and higher may change the topic */
+				ircsnprintf(buf, sizeof(buf), "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", chptr->chname);
+				sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
+				return -1;
+			}
+		}
+
+		/* For local users, run spamfilters and hooks.. */
+		if (MyClient(sptr))
+		{
+			Hook *tmphook;
+			int n;
+
+			if ((n = run_spamfilter(sptr, topic, SPAMF_TOPIC, chptr->chname, 0, NULL)) < 0)
+				return n;
+
+			for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {
+				topic = (*(tmphook->func.pcharfunc))(sptr, chptr, topic);
+				if (!topic)
+					return 0;
+			}
+			RunHook4(HOOKTYPE_LOCAL_TOPIC, cptr, sptr, chptr, topic);
+		}
+
+		/* At this point 'tnick' is set to sptr->name.
+		 * If set::topic-setter nick-user-host; is set
+		 * then we update it here to nick!user@host.
+		 */
+		if (iConf.topic_setter == SETTER_NICK_USER_HOST)
+			tnick = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
+	}
 
 	/* Set the topic */
 	safestrldup(chptr->topic, topic, iConf.topic_length+1);
