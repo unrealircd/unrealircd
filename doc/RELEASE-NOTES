@@ -1,6 +1,14 @@
-UnrealIRCd 4.2.4 Release Notes
-===============================
+UnrealIRCd 4.2.4.1 Release Notes
+=================================
 
+This version, 4.2.4.1, fixes an issue with Debian 10. On Debian 10 the
+list of permitted SSL/TLS protocols was ignored (set::ssl::protocols).
+Other than that, set::ssl::outdated-protocols and set::ssl::outdated-ciphers
+are now configurable (rarely needed, though).
+
+Below are the release notes of previous release, 4.2.4.
+
+==[ 4.2.4 release notes ]==
 This release fixes a crash issue if UnrealIRCd is configured to use utf8 or
 chinese character sets in set::allowed-nickchars.  This is not the default.
 We don't expect many users to run their IRCd with this enabled, as the utf8
