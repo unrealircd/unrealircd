@@ -212,6 +212,7 @@ dnl don't always care about a variable that may still be present in a build
 dnl without DEBUGMODE. Unused variables are optimized out anyway.
 check_cc_flag([-Wunused], [CFLAGS="$CFLAGS -Wno-unused"])
 check_cc_flag([-Wunused-parameter], [CFLAGS="$CFLAGS -Wno-unused-parameter"])
+check_cc_flag([-Wunused-parameter], [CFLAGS="$CFLAGS -Wno-unused-but-set-parameter"])
 
 dnl We use this and this warning is meaningless since 'char' is always unsigned
 dnl in UnrealIRCd compiles (-funsigned-char).
