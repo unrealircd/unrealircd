@@ -318,8 +318,12 @@ static void _rs_stir(void)
 		_rs_init(rnd, sizeof(rnd));
 	} else
 		_rs_rekey(rnd, sizeof(rnd));
+#ifdef HAVE_EXPLICIT_BZERO
 	explicit_bzero(rnd, sizeof(rnd));
-
+#else
+	/* Not terribly important in this case */
+	memset(rnd, 0, sizeof(rnd));
+#endif
 	/* invalidate rs_buf */
 	rs_have = 0;
 	memset(rs_buf, 0, RSBUFSZ);

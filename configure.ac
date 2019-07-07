@@ -519,9 +519,11 @@ AC_CHECK_FUNCS(strtok,,AC_DEFINE([NEED_STRTOK], [], [Define if you need the strt
 AC_CHECK_FUNCS(strerror,,AC_DEFINE([NEED_STRERROR], [], [Define if you need the strerror function.]))
 AC_CHECK_FUNCS(index,,AC_DEFINE([NOINDEX], [], [Define if you do not have the index function.]))
 AC_CHECK_FUNCS(strtoul,,STRTOUL="strtoul.o")
+dnl TODO: we don't use bcopy and bcmp right? 
 AC_CHECK_FUNCS(bcopy,,AC_DEFINE([NEED_BCOPY], [], [Define if you don't have bcopy]))
 AC_CHECK_FUNCS(bcmp,,AC_DEFINE([NEED_BCMP], [], [Define if you don't have bcmp]))
 AC_CHECK_FUNCS(bzero,,AC_DEFINE([NEED_BZERO], [], [Define if you need bzero]))
+AC_CHECK_FUNCS(explicit_bzero,AC_DEFINE([HAVE_EXPLICIT_BZERO], [], [Define if you have explicit_bzero]))
 AC_CHECK_FUNCS(strcasecmp,AC_DEFINE([GOT_STRCASECMP], [], [Define if you have strcasecmp]))
 save_libs="$LIBS"
 LIBS="$LIBS $SOCKLIB $INETLIB"
