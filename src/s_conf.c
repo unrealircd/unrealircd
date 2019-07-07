@@ -7338,7 +7338,7 @@ void test_sslblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 								 "Valid protocols are: TLSv1,TLSv1.1,TLSv1.2",
 								 cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, config_var(cepp), name);
 #endif
-                }
+		                }
 
 				if (option)
 				{
@@ -7370,6 +7370,45 @@ void test_sslblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 			CheckNull(cepp);
 		}
 		else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
+		{
+			CheckNull(cepp);
+		}
+		else if (!strcmp(cepp->ce_varname, "outdated-protocols"))
+		{
+			char copy[512], *p, *name;
+			int v = 0;
+			int option;
+			char modifier;
+
+			CheckNull(cepp);
+			strlcpy(copy, cepp->ce_vardata, sizeof(copy));
+			for (name = strtoken(&p, copy, ","); name; name = strtoken(&p, NULL, ","))
+			{
+				if (!stricmp(name, "All"))
+					;
+				else if (!stricmp(name, "TLSv1"))
+					;
+				else if (!stricmp(name, "TLSv1.1"))
+					;
+				else if (!stricmp(name, "TLSv1.2"))
+					;
+				else if (!stricmp(name, "TLSv1.3"))
+					;
+				else
+				{
+#ifdef SSL_OP_NO_TLSv1_3
+					config_warn("%s:%i: %s: unknown protocol '%s'. "
+								 "Valid protocols are: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
+								 cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, config_var(cepp), name);
+#else
+					config_warn("%s:%i: %s: unknown protocol '%s'. "
+								 "Valid protocols are: TLSv1,TLSv1.1,TLSv1.2",
+								 cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, config_var(cepp), name);
+#endif
+		                }
+			}
+		}
+		else if (!strcmp(cepp->ce_varname, "outdated-ciphers"))
 		{
 			CheckNull(cepp);
 		}
@@ -7564,6 +7603,14 @@ void conf_sslblock(ConfigFile *conf, ConfigEntry *cep, SSLOptions *ssloptions)
 		{
 			convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
 			safestrdup(ssloptions->trusted_ca_file, cepp->ce_vardata);
+		}
+		else if (!strcmp(cepp->ce_varname, "outdated-protocols"))
+		{
+			safestrdup(ssloptions->outdated_protocols, cepp->ce_vardata);
+		}
+		else if (!strcmp(cepp->ce_varname, "outdated-ciphers"))
+		{
+			safestrdup(ssloptions->outdated_ciphers, cepp->ce_vardata);
 		}
 		else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
 		{
