@@ -256,6 +256,10 @@ static void setup_dh_params(SSL_CTX *ctx)
 /** Disable SSL/TLS protocols as set by config */
 void disable_ssl_protocols(SSL_CTX *ctx, SSLOptions *ssloptions)
 {
+#ifdef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
+	/* First, we need a starting point... */
+	SSL_CTX_set_min_proto_version(ctx, TLS1_VERSION);
+#endif
 	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2); /* always disable SSLv2 */
 	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3); /* always disable SSLv3 */
 
