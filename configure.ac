@@ -699,6 +699,7 @@ AC_ARG_WITH(system-argon2, [AS_HELP_STRING([--without-system-argon2], [Use bundl
 AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled version instead of system c-ares. Normally autodetected via pkg-config.])], [], [with_system_cares=yes])
 CHECK_SSL
 CHECK_SSL_CTX_SET1_CURVES_LIST
+CHECK_SSL_CTX_SET_MIN_PROTO_VERSION
 AC_ARG_ENABLE(dynamic-linking, [AS_HELP_STRING([--disable-dynamic-linking], [Make the IRCd statically link with shared objects rather than dynamically (noone knows if disabling dynamic linking actually does anything or not)])],
 	[enable_dynamic_linking=$enableval], [enable_dynamic_linking="yes"])
 AS_IF([test $enable_dynamic_linking = "yes"],

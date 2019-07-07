@@ -43,6 +43,9 @@
 /* Define if ssl library has SSL_CTX_set1_curves_list */
 #undef HAS_SSL_CTX_SET1_CURVES_LIST
 
+/* Define if ssl library has SSL_CTX_set_min_proto_version */
+#undef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
+
 /* Define to 1 if you have the `bcmp' function. */
 #undef HAVE_BCMP
 

@@ -192,13 +192,33 @@ SAVE_LIBS="$LIBS"
 LIBS="$LIBS $CRYPTOLIB"
 AC_TRY_LINK([#include <openssl/ssl.h>],
 	[SSL_CTX *ctx = NULL; SSL_CTX_set1_curves_list(ctx, "test");],
-	has_curves=1,
-	has_curves=0)
+	has_function=1,
+	has_function=0)
 LIBS="$SAVE_LIBS"
 AC_LANG_POP(C)
-if test $has_curves = 1; then
+if test $has_function = 1; then
 	AC_MSG_RESULT([yes])
 	AC_DEFINE([HAS_SSL_CTX_SET1_CURVES_LIST], [], [Define if ssl library has SSL_CTX_set1_curves_list])
+else
+	AC_MSG_RESULT([no])
+fi
+])
+
+AC_DEFUN([CHECK_SSL_CTX_SET_MIN_PROTO_VERSION],
+[
+AC_MSG_CHECKING([for SSL_CTX_set_min_proto_version in SSL library])
+AC_LANG_PUSH(C)
+SAVE_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTOLIB"
+AC_TRY_LINK([#include <openssl/ssl.h>],
+	[SSL_CTX *ctx = NULL; SSL_CTX_set_min_proto_version(ctx, TLS1_VERSION);],
+	has_function=1,
+	has_function=0)
+LIBS="$SAVE_LIBS"
+AC_LANG_POP(C)
+if test $has_function = 1; then
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAS_SSL_CTX_SET_MIN_PROTO_VERSION], [], [Define if ssl library has SSL_CTX_set_min_proto_version])
 else
 	AC_MSG_RESULT([no])
 fi
