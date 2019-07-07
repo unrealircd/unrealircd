@@ -212,7 +212,7 @@ dnl don't always care about a variable that may still be present in a build
 dnl without DEBUGMODE. Unused variables are optimized out anyway.
 check_cc_flag([-Wunused], [CFLAGS="$CFLAGS -Wno-unused"])
 check_cc_flag([-Wunused-parameter], [CFLAGS="$CFLAGS -Wno-unused-parameter"])
-check_cc_flag([-Wunused-parameter], [CFLAGS="$CFLAGS -Wno-unused-but-set-parameter"])
+check_cc_flag([-Wunused-but-set-parameter], [CFLAGS="$CFLAGS -Wno-unused-but-set-parameter"])
 
 dnl We use this and this warning is meaningless since 'char' is always unsigned
 dnl in UnrealIRCd compiles (-funsigned-char).
@@ -226,6 +226,9 @@ check_cc_flag([-Wempty-body], [CFLAGS="$CFLAGS -Wno-empty-body"])
 dnl This one fails with ircstrdup(var, staticstring)
 dnl Shame we have to turn it off completely...
 check_cc_flag([-Waddress], [CFLAGS="$CFLAGS -Wno-address"])
+
+dnl This one breaks our TO_INTFUNC() that is used in m_tkl for tkl_typetochar
+check_cc_flag([-Wcast-function-type], [CFLAGS="$CFLAGS -Wno-cast-function-type"])
 
 dnl End of -W... compiler checks.
 
