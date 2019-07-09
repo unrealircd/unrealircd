@@ -258,9 +258,35 @@ static int setup_dh_params(SSL_CTX *ctx)
 /** Disable SSL/TLS protocols as set by config */
 void disable_ssl_protocols(SSL_CTX *ctx, SSLOptions *ssloptions)
 {
+	/* OpenSSL has two mechanisms for protocol version control:
+	 *
+	 * The old way, which is most flexible, is to use:
+	 * SSL_CTX_set_options(... SSL_OP_NO_<version>) which allows
+	 * you to disable each and every specific SSL/TLS version.
+	 *
+	 * And the new way, which only allows setting a
+	 * minimum and maximum protocol version, using:
+	 * SSL_CTX_set_min_proto_version(... <version>)
+	 * SSL_CTX_set_max_proto_version(....<version>)
+	 *
+	 * We prefer the old way, but because OpenSSL 1.0.1 and
+	 * OS's like Debian use system-wide options we are also
+	 * forced to use the new way... or at least to set a
+	 * minimum protocol version to begin with.
+	 */
 #ifdef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
-	/* First, we need a starting point... */
-	SSL_CTX_set_min_proto_version(ctx, TLS1_VERSION);
+	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1) &&
+	    !(ssloptions->protocols & SSL_PROTOCOL_TLSV1_1))
+	{
+		SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION);
+	} else
+	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1))
+	{
+		SSL_CTX_set_min_proto_version(ctx, TLS1_1_VERSION);
+	} else
+	{
+		SSL_CTX_set_min_proto_version(ctx, TLS1_VERSION);
+	}
 #endif
 	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2); /* always disable SSLv2 */
 	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3); /* always disable SSLv3 */
