@@ -84,39 +84,40 @@ LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
  */
 char *ssl_error_str(int err, int my_errno)
 {
-static char ssl_errbuf[256];
+	static char ssl_errbuf[256];
+	char *ssl_errstr = NULL;
 
-     char *ssl_errstr = NULL;
-     switch(err) {
-    	case SSL_ERROR_NONE:
-	    ssl_errstr = "SSL: No error";
-	    break;
-	case SSL_ERROR_SSL:
-	    ssl_errstr = "Internal OpenSSL error or protocol error";
-	    break;
-	case SSL_ERROR_WANT_READ:
-	    ssl_errstr = "OpenSSL functions requested a read()";
-	    break;
-	case SSL_ERROR_WANT_WRITE:
-	    ssl_errstr = "OpenSSL functions requested a write()";
-	    break;
-	case SSL_ERROR_WANT_X509_LOOKUP:
-	    ssl_errstr = "OpenSSL requested a X509 lookup which didn't arrive";
-	    break;
-	case SSL_ERROR_SYSCALL:
-		snprintf(ssl_errbuf, sizeof(ssl_errbuf), "%s", STRERROR(my_errno));
-		ssl_errstr = ssl_errbuf;
-	    break;
-	case SSL_ERROR_ZERO_RETURN:
-	    ssl_errstr = "Underlying socket operation returned zero";
-	    break;
-	case SSL_ERROR_WANT_CONNECT:
-	    ssl_errstr = "OpenSSL functions wanted a connect()";
-	    break;
-	default:
-	    ssl_errstr = "Unknown OpenSSL error (huh?)";
-     }
-     return ssl_errstr;
+	switch(err)
+	{
+		case SSL_ERROR_NONE:
+			ssl_errstr = "SSL: No error";
+			break;
+		case SSL_ERROR_SSL:
+			ssl_errstr = "Internal OpenSSL error or protocol error";
+			break;
+		case SSL_ERROR_WANT_READ:
+			ssl_errstr = "OpenSSL functions requested a read()";
+			break;
+		case SSL_ERROR_WANT_WRITE:
+			ssl_errstr = "OpenSSL functions requested a write()";
+			break;
+		case SSL_ERROR_WANT_X509_LOOKUP:
+			ssl_errstr = "OpenSSL requested a X509 lookup which didn't arrive";
+			break;
+		case SSL_ERROR_SYSCALL:
+			snprintf(ssl_errbuf, sizeof(ssl_errbuf), "%s", STRERROR(my_errno));
+			ssl_errstr = ssl_errbuf;
+			break;
+		case SSL_ERROR_ZERO_RETURN:
+			ssl_errstr = "Underlying socket operation returned zero";
+			break;
+		case SSL_ERROR_WANT_CONNECT:
+			ssl_errstr = "OpenSSL functions wanted a connect()";
+			break;
+		default:
+			ssl_errstr = "Unknown OpenSSL error (huh?)";
+	}
+	return ssl_errstr;
 }
 
 /** Write official OpenSSL error string to ircd log / sendto_realops, using config_status.
@@ -186,7 +187,7 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 /** get aClient pointerd by SSL pointer */
 aClient *get_client_by_ssl(SSL *ssl)
 {
-    return SSL_get_ex_data(ssl, ssl_client_index);
+	return SSL_get_ex_data(ssl, ssl_client_index);
 }
 
 static void set_client_sni_name(SSL *ssl, char *name)
@@ -445,10 +446,10 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 		SSL_CTX_set_options(ctx, SSL_OP_SINGLE_ECDH_USE|SSL_OP_SINGLE_DH_USE);
 	}
 
-    if (server)
-    {
-        SSL_CTX_set_tlsext_servername_callback(ctx, ssl_hostname_callback);
-    }
+	if (server)
+	{
+		SSL_CTX_set_tlsext_servername_callback(ctx, ssl_hostname_callback);
+	}
 
 	return ctx;
 fail:
@@ -562,16 +563,10 @@ void reinit_ssl(aClient *acptr)
 	}
 }
 
-#define CHK_NULL(x) if ((x)==NULL) {\
-        sendto_snomask(SNO_JUNK, "Lost connection to %s:Error in SSL", \
-                     get_client_name(cptr, TRUE)); \
-	return 0;\
-	}
-
 void SSL_set_nonblocking(SSL *s)
 {
-	BIO_set_nbio(SSL_get_rbio(s),1);  
-	BIO_set_nbio(SSL_get_wbio(s),1);  
+	BIO_set_nbio(SSL_get_rbio(s),1);
+	BIO_set_nbio(SSL_get_wbio(s),1);
 }
 
 char *ssl_get_cipher(SSL *ssl)
@@ -672,9 +667,9 @@ static void ircd_SSL_accept_retry(int fd, int revents, void *data)
 	ircd_SSL_accept(acptr, fd);
 }
 
-int ircd_SSL_accept(aClient *acptr, int fd) {
-
-    int ssl_err;
+int ircd_SSL_accept(aClient *acptr, int fd)
+{
+	int ssl_err;
 
 #ifdef MSG_PEEK
 	if (!(acptr->flags & FLAGS_NCALL))
@@ -712,9 +707,9 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 			acptr->flags |= FLAGS_NCALL;
 	}
 #endif
-    if ((ssl_err = SSL_accept(acptr->local->ssl)) <= 0)
-    {
-		switch(ssl_err = SSL_get_error(acptr->local->ssl, ssl_err))
+	if ((ssl_err = SSL_accept(acptr->local->ssl)) <= 0)
+	{
+		switch (ssl_err = SSL_get_error(acptr->local->ssl, ssl_err))
 		{
 			case SSL_ERROR_SYSCALL:
 				if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
@@ -737,9 +732,9 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 		return -1;
 	}
 
-    start_of_normal_client_handshake(acptr);
+	start_of_normal_client_handshake(acptr);
 
-    return 1;
+	return 1;
 }
 
 static void ircd_SSL_connect_retry(int fd, int revents, void *data)
@@ -748,55 +743,57 @@ static void ircd_SSL_connect_retry(int fd, int revents, void *data)
 	ircd_SSL_connect(acptr, fd);
 }
 
-int ircd_SSL_connect(aClient *acptr, int fd) {
+int ircd_SSL_connect(aClient *acptr, int fd)
+{
+	int ssl_err;
 
-    int ssl_err;
-    if((ssl_err = SSL_connect(acptr->local->ssl)) <= 0)
-    {
-	ssl_err = SSL_get_error(acptr->local->ssl, ssl_err);
-	switch(ssl_err)
+	if ((ssl_err = SSL_connect(acptr->local->ssl)) <= 0)
 	{
-	    case SSL_ERROR_SYSCALL:
-		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
+		ssl_err = SSL_get_error(acptr->local->ssl, ssl_err);
+		switch(ssl_err)
 		{
-			/* Hmmm. This implementation is different than in ircd_SSL_accept().
-			 * One of them must be wrong -- better check! (TODO)
-			 */
-			fd_setselect(fd, FD_SELECT_READ|FD_SELECT_WRITE, ircd_SSL_connect_retry, acptr);
-			return 0;
+			case SSL_ERROR_SYSCALL:
+				if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
+				{
+					/* Hmmm. This implementation is different than in ircd_SSL_accept().
+					 * One of them must be wrong -- better check! (TODO)
+					 */
+					fd_setselect(fd, FD_SELECT_READ|FD_SELECT_WRITE, ircd_SSL_connect_retry, acptr);
+					return 0;
+				}
+				return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, ERRNO, acptr);
+			case SSL_ERROR_WANT_READ:
+				fd_setselect(fd, FD_SELECT_READ, ircd_SSL_connect_retry, acptr);
+				fd_setselect(fd, FD_SELECT_WRITE, NULL, acptr);
+				return 0;
+			case SSL_ERROR_WANT_WRITE:
+				fd_setselect(fd, FD_SELECT_READ, NULL, acptr);
+				fd_setselect(fd, FD_SELECT_WRITE, ircd_SSL_connect_retry, acptr);
+				return 0;
+			default:
+				return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, ERRNO, acptr);
 		}
-		return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, ERRNO, acptr);
-	    case SSL_ERROR_WANT_READ:
-		fd_setselect(fd, FD_SELECT_READ, ircd_SSL_connect_retry, acptr);
-		fd_setselect(fd, FD_SELECT_WRITE, NULL, acptr);
-		return 0;
-	    case SSL_ERROR_WANT_WRITE:
-		fd_setselect(fd, FD_SELECT_READ, NULL, acptr);
-		fd_setselect(fd, FD_SELECT_WRITE, ircd_SSL_connect_retry, acptr);
-		return 0;
-	    default:
-		return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, ERRNO, acptr);
+		/* NOTREACHED */
+		return -1;
 	}
-	/* NOTREACHED */
-	return -1;
-    }
 
-    fd_setselect(fd, FD_SELECT_READ | FD_SELECT_WRITE, NULL, acptr);
-    completed_connection(fd, FD_SELECT_READ | FD_SELECT_WRITE, acptr);
+	fd_setselect(fd, FD_SELECT_READ | FD_SELECT_WRITE, NULL, acptr);
+	completed_connection(fd, FD_SELECT_READ | FD_SELECT_WRITE, acptr);
 
-    return 1;
+	return 1;
 }
 
-int SSL_smart_shutdown(SSL *ssl) {
-    char i;
-    int rc;
-    rc = 0;
-    for(i = 0; i < 4; i++) {
-	if((rc = SSL_shutdown(ssl)))
-	    break;
-    }
+int SSL_smart_shutdown(SSL *ssl)
+{
+	char i;
+	int rc = 0;
 
-    return rc;
+	for(i = 0; i < 4; i++)
+	{
+		if ((rc = SSL_shutdown(ssl)))
+			break;
+	}
+	return rc;
 }
 
 /**
