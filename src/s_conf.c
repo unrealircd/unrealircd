@@ -1773,7 +1773,6 @@ void config_test_reset(void)
 int config_test_all(void)
 {
 	if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
-	    ssl_used_in_config_but_unavail() ||
 	    reloadable_perm_module_unloaded() || !ssl_tests())
 	{
 		return 0;
@@ -10514,40 +10513,6 @@ void load_includes(void)
 	 */
 	for (inc = conf_include; inc; inc = inc->next)
 		inc->flag.type &= ~INCLUDE_NOTLOADED;
-}
-
-/** Check if an important SSL option is used in config. Only checks link and listen at this time.
- * This will generate a warning on boot & REHASH.
- * If booting, the IRCd will stop.
- */
-int ssl_used_in_config_but_unavail(void)
-{
-	int errors = 0;
-	ConfigItem_link *link;
-	ConfigItem_listen *listener;
-
-	if (ctx_server && ctx_client)
-		return 0; /* everything is functional */
-
-	for (listener = conf_listen; listener; listener = listener->next)
-	{
-		if (listener->options & LISTENER_SSL)
-		{
-			config_error("Listen block %s:%d is configured to use SSL, however SSL is unavailable due to an earlier error (certificate/key not loaded?)", listener->ip, listener->port);
-			errors++;
-		}
-	}
-
-	for (link = conf_link; link; link = link->next)
-	{
-		if (link->options & CONNECT_SSL)
-		{
-			config_error("Link block %s is configured to use SSL, however SSL is unavailable due to an earlier error (certificate/key not loaded?)", link->servername);
-			errors++;
-		}
-	}
-
-	return errors ? 1 : 0;
 }
 
 int ssl_tests(void)

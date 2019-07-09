@@ -1289,15 +1289,11 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 	if (!init_ssl())
 	{
-		config_warn("Failed to load SSL (see error above), proceeding without SSL support...");
-		if (ssl_used_in_config_but_unavail())
-		{
-			config_error("IRCd failed to start");
+		config_error("Failed to load SSL/TLS (see errors above). UnrealIRCd can not start.");
 #ifdef _WIN32
-			win_error(); /* display error dialog box */
+		win_error(); /* display error dialog box */
 #endif
-			exit(9);
-		}
+		exit(9);
 	}
 #ifndef _WIN32
 	fprintf(stderr, "Dynamic configuration initialized.. booting IRCd.\n");

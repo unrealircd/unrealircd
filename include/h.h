@@ -748,7 +748,6 @@ extern void read_packet(int fd, int revents, void *data);
 extern int process_packet(aClient *cptr, char *readbuf, int length, int killsafely);
 extern void sendto_realops_and_log(char *fmt, ...);
 extern int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in);
-extern int ssl_used_in_config_but_unavail(void);
 extern void config_report_ssl_error(void);
 extern int dead_link(aClient *to, char *notice);
 extern aMatch *unreal_create_match(MatchType type, char *str, char **error);

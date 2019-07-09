@@ -222,7 +222,7 @@ static char buf[2048];
 	ircd_log(LOG_ERROR, "%s", buf);
 }
 
-static void setup_dh_params(SSL_CTX *ctx)
+static int setup_dh_params(SSL_CTX *ctx)
 {
 	DH *dh;
 	BIO *bio;
@@ -230,27 +230,28 @@ static void setup_dh_params(SSL_CTX *ctx)
 	/* ^^ because we can be called both before config file initalization or after */
 
 	if (dh_file == NULL)
-		return;
+		return 1;
 
 	bio = BIO_new_file(dh_file, "r");
 	if (bio == NULL)
 	{
-		config_warn("Failed to load DH parameters %s", dh_file);
+		config_error("Failed to load DH parameters %s", dh_file);
 		config_report_ssl_error();
-		return;
+		return 0;
 	}
 
 	dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
 	if (dh == NULL)
 	{
-		config_warn("Failed to use DH parameters %s", dh_file);
+		config_error("Failed to use DH parameters %s", dh_file);
 		config_report_ssl_error();
 		BIO_free(bio);
-		return;
+		return 0;
 	}
 
 	BIO_free(bio);
 	SSL_CTX_set_tmp_dh(ctx, dh);
+	return 1;
 }
 
 /** Disable SSL/TLS protocols as set by config */
@@ -320,46 +321,47 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 #endif
 	SSL_CTX_set_options(ctx, SSL_OP_NO_TICKET);
 
-	setup_dh_params(ctx);
+	if (!setup_dh_params(ctx))
+		goto fail;
 
 	if (!ssloptions->certificate_file)
 	{
-		config_warn("No SSL certificate configured (set::options::ssl::certificate or in a listen block)");
+		config_error("No SSL certificate configured (set::options::ssl::certificate or in a listen block)");
 		config_report_ssl_error();
 		goto fail;
 	}
 
 	if (SSL_CTX_use_certificate_chain_file(ctx, ssloptions->certificate_file) <= 0)
 	{
-		config_warn("Failed to load SSL certificate %s", ssloptions->certificate_file);
+		config_error("Failed to load SSL certificate %s", ssloptions->certificate_file);
 		config_report_ssl_error();
 		goto fail;
 	}
 
 	if (!ssloptions->key_file)
 	{
-		config_warn("No SSL key configured (set::options::ssl::key or in a listen block)");
+		config_error("No SSL key configured (set::options::ssl::key or in a listen block)");
 		config_report_ssl_error();
 		goto fail;
 	}
 
 	if (SSL_CTX_use_PrivateKey_file(ctx, ssloptions->key_file, SSL_FILETYPE_PEM) <= 0)
 	{
-		config_warn("Failed to load SSL private key %s", ssloptions->key_file);
+		config_error("Failed to load SSL private key %s", ssloptions->key_file);
 		config_report_ssl_error();
 		goto fail;
 	}
 
 	if (!SSL_CTX_check_private_key(ctx))
 	{
-		config_warn("Failed to check SSL private key");
+		config_error("Failed to check SSL private key");
 		config_report_ssl_error();
 		goto fail;
 	}
 
 	if (SSL_CTX_set_cipher_list(ctx, ssloptions->ciphers) == 0)
 	{
-		config_warn("Failed to set SSL cipher list");
+		config_error("Failed to set SSL cipher list");
 		config_report_ssl_error();
 		goto fail;
 	}
@@ -367,7 +369,7 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 #ifdef SSL_OP_NO_TLSv1_3
 	if (SSL_CTX_set_ciphersuites(ctx, ssloptions->ciphersuites) == 0)
 	{
-		config_warn("Failed to set SSL ciphersuites list");
+		config_error("Failed to set SSL ciphersuites list");
 		config_report_ssl_error();
 		goto fail;
 	}
@@ -375,8 +377,8 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 
 	if (!cipher_check(ctx, &errstr))
 	{
-		config_warn("There is a problem with your SSL/TLS 'ciphers' configuration setting: %s", errstr);
-		config_warn("Remove the ciphers setting from your configuration file to use safer defaults, or change the cipher setting.");
+		config_error("There is a problem with your SSL/TLS 'ciphers' configuration setting: %s", errstr);
+		config_error("Remove the ciphers setting from your configuration file to use safer defaults, or change the cipher setting.");
 		config_report_ssl_error();
 		goto fail;
 	}
@@ -388,7 +390,7 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 	{
 		if (!SSL_CTX_load_verify_locations(ctx, ssloptions->trusted_ca_file, NULL))
 		{
-			config_warn("Failed to load Trusted CA's from %s", ssloptions->trusted_ca_file);
+			config_error("Failed to load Trusted CA's from %s", ssloptions->trusted_ca_file);
 			config_report_ssl_error();
 			goto fail;
 		}
@@ -417,13 +419,13 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 #ifdef HAS_SSL_CTX_SET1_CURVES_LIST
 			if (!SSL_CTX_set1_curves_list(ctx, ssloptions->ecdh_curves))
 			{
-				config_warn("Failed to apply ecdh-curves '%s'. "
-				            "To get a list of supported curves with the "
-				            "appropriate names, run "
-				            "'openssl ecparam -list_curves' on the server. "
-				            "Separate multiple curves by colon, "
-				            "for example: ecdh-curves \"secp521r1:secp384r1\".",
-				            ssloptions->ecdh_curves);
+				config_error("Failed to apply ecdh-curves '%s'. "
+				             "To get a list of supported curves with the "
+				             "appropriate names, run "
+				             "'openssl ecparam -list_curves' on the server. "
+				             "Separate multiple curves by colon, "
+				             "for example: ecdh-curves \"secp521r1:secp384r1\".",
+				             ssloptions->ecdh_curves);
 				config_report_ssl_error();
 				goto fail;
 			}
@@ -431,7 +433,7 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 			/* We try to avoid this in the config code, but better have
 			 * it here too than be sorry if someone screws up:
 			 */
-			config_warn("ecdh-curves specified but not supported by library -- BAD!");
+			config_error("ecdh-curves specified but not supported by library -- BAD!");
 			config_report_ssl_error();
 			goto fail;
 #endif
