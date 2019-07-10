@@ -145,7 +145,7 @@ AC_ARG_ENABLE(ssl,
 	[enable_ssl=no])
 AS_IF([test $enable_ssl != "no"],
 	[ 
-	AC_MSG_CHECKING([for openssl])
+	AC_MSG_CHECKING([for OpenSSL])
 	for dir in $enable_ssl /usr/local/opt/openssl /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr; do
 		ssldir="$dir"
 		if test -f "$dir/include/openssl/ssl.h"; then
@@ -180,6 +180,32 @@ AS_IF([test $enable_ssl != "no"],
 		if test ! "$ssldir" = "/usr" ; then
 			LDFLAGS="$LDFLAGS -L$ssldir/lib";
 		fi
+		dnl linking require -ldl?
+		AC_MSG_CHECKING([OpenSSL linking with -ldl])
+		SAVE_LIBS="$LIBS"
+		LIBS="$LIBS -lcrypto -ldl"
+		AC_TRY_LINK([#include <openssl/err.h>], [ERR_clear_error();],
+		[
+			AC_MSG_RESULT(yes)
+			LIBS="$SAVE_LIBS -ldl"
+		],
+		[
+			AC_MSG_RESULT(no)
+
+			dnl linking require both -ldl and -lpthread?
+			AC_MSG_CHECKING([OpenSSL linking with -ldl and -lpthread])
+			LIBS="$SAVE_LIBS -lcrypto -ldl -lpthread"
+			AC_TRY_LINK([#include <openssl/err.h>], [ERR_clear_error();],
+			[
+				AC_MSG_RESULT(yes)
+				LIBS="$SAVE_LIBS -ldl -lpthread"
+			],
+			[
+				AC_MSG_RESULT(no)
+				LIBS="$SAVE_LIBS"
+			])
+		])
+
 	fi
 	])
 ])
