@@ -706,7 +706,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -817,7 +816,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1070,15 +1068,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1216,7 +1205,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1369,7 +1358,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -7545,8 +7533,8 @@ fi
 
 if test $enable_ssl != "no"; then :
 
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for openssl" >&5
-$as_echo_n "checking for openssl... " >&6; }
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for OpenSSL" >&5
+$as_echo_n "checking for OpenSSL... " >&6; }
 	for dir in $enable_ssl /usr/local/opt/openssl /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr; do
 		ssldir="$dir"
 		if test -f "$dir/include/openssl/ssl.h"; then
@@ -7584,6 +7572,66 @@ $as_echo "not found" >&6; }
 		if test ! "$ssldir" = "/usr" ; then
 			LDFLAGS="$LDFLAGS -L$ssldir/lib";
 		fi
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: checking OpenSSL linking with -ldl" >&5
+$as_echo_n "checking OpenSSL linking with -ldl... " >&6; }
+		SAVE_LIBS="$LIBS"
+		LIBS="$LIBS -lcrypto -ldl"
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <openssl/err.h>
+int
+main ()
+{
+ERR_clear_error();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+			LIBS="$SAVE_LIBS -ldl"
+
+else
+
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+						{ $as_echo "$as_me:${as_lineno-$LINENO}: checking OpenSSL linking with -ldl and -lpthread" >&5
+$as_echo_n "checking OpenSSL linking with -ldl and -lpthread... " >&6; }
+			LIBS="$SAVE_LIBS -lcrypto -ldl -lpthread"
+			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <openssl/err.h>
+int
+main ()
+{
+ERR_clear_error();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+				LIBS="$SAVE_LIBS -ldl -lpthread"
+
+else
+
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+				LIBS="$SAVE_LIBS"
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
 	fi
 
 fi
@@ -8038,8 +8086,8 @@ if test "x$with_system_pcre2" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for PCRE2" >&5
-$as_echo_n "checking for PCRE2... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libpcre2-8 >= 10.00" >&5
+$as_echo_n "checking for libpcre2-8 >= 10.00... " >&6; }
 
 if test -n "$PCRE2_CFLAGS"; then
     pkg_cv_PCRE2_CFLAGS="$PCRE2_CFLAGS"
@@ -8079,7 +8127,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -8097,7 +8145,7 @@ fi
 
 	has_system_pcre2=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_pcre2=no
 else
@@ -8157,8 +8205,8 @@ if test "x$with_system_argon2" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARGON2" >&5
-$as_echo_n "checking for ARGON2... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libargon2 >= 0~20161029" >&5
+$as_echo_n "checking for libargon2 >= 0~20161029... " >&6; }
 
 if test -n "$ARGON2_CFLAGS"; then
     pkg_cv_ARGON2_CFLAGS="$ARGON2_CFLAGS"
@@ -8198,7 +8246,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -8216,7 +8264,7 @@ fi
 
 	has_system_argon2=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_argon2=no
 else
@@ -8270,8 +8318,8 @@ if test "x$with_system_cares" = "xyes"; then :
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for CARES" >&5
-$as_echo_n "checking for CARES... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libcares >= 1.6.0" >&5
+$as_echo_n "checking for libcares >= 1.6.0... " >&6; }
 
 if test -n "$CARES_CFLAGS"; then
     pkg_cv_CARES_CFLAGS="$CARES_CFLAGS"
@@ -8311,7 +8359,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -8329,7 +8377,7 @@ fi
 
 	has_system_cares=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	has_system_cares=no
 else
