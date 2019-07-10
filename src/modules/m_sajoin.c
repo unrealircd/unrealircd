@@ -63,6 +63,9 @@ CMD_FUNC(m_sajoin)
 {
 	aClient *acptr;
 	char jbuf[BUFSIZE];
+	char mode = '\0';
+	char sjmode = '\0';
+	char *mode_args[3];
 	int did_anything = 0;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("SAJOIN");
@@ -120,10 +123,44 @@ CMD_FUNC(m_sajoin)
 				break;
 			}
 
+			switch (name[0])
+			{
+#ifdef PREFIX_AQ
+				case '~':
+					mode = 'q';
+					sjmode = '~';
+					++name;
+					break;
+				case '&':
+					mode = 'a';
+					sjmode = '&';
+					++name;
+					break;
+#endif
+				case '@':
+					mode = 'o';
+					sjmode = '@';
+					++name;
+					break;
+				case '%':
+					mode = 'h';
+					sjmode = '%';
+					++name;
+					break;
+				case '+':
+					mode = 'v';
+					sjmode = '+';
+					++name;
+					break;
+				default:
+					mode = sjmode = '\0'; /* make sure sjmode is 0. */
+					break;
+			}
+
 			if (strlen(name) > CHANNELLEN)
 				name[CHANNELLEN] = 0;
 			clean_channelname(name);
-			if (*name == '0' && !atoi(name))
+			if (*name == '0' && !atoi(name) && !sjmode)
 			{
 				(void)strcpy(jbuf, "0");
 				i = 1;
@@ -169,7 +206,7 @@ CMD_FUNC(m_sajoin)
 			Hook *h;
 			int i = 0;
 
-			if (*name == '0' && !atoi(name))
+			if (*name == '0' && !atoi(name) && !sjmode)
 			{
 				/* Rewritten so to generate a PART for each channel to servers,
 				 * so the same msgid is used for each part on all servers. -- Syzop
@@ -216,6 +253,19 @@ CMD_FUNC(m_sajoin)
 			 */
 			new_message(acptr, NULL, &mtags);
 			join_channel(chptr, acptr, acptr, mtags, flags);
+			if (sjmode)
+			{
+				opermode = 0;
+				sajoinmode = 1;
+				mode_args[0] = (char*)malloc(2);
+				mode_args[0][0] = mode;
+				mode_args[0][1] = '\0';
+				mode_args[1] = acptr->name;
+				mode_args[2] = 0;
+				(void)do_mode(chptr, &me, acptr, NULL, 3, mode_args, 0, 1);
+				sajoinmode = 0;
+				free(mode_args[0]);
+			}
 			free_mtags(mtags);
 			did_anything = 1;
 			if (*jbuf)
@@ -225,14 +275,25 @@ CMD_FUNC(m_sajoin)
 		
 		if (did_anything)
 		{
-			sendnotice(acptr, "*** You were forced to join %s", jbuf);
-			sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, acptr->name,
-				       jbuf);
-			sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
-			              me.name, sptr->name, acptr->name, jbuf);
-			/* Logging function added by XeRXeS */
-			ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-				sptr->name, parv[1], jbuf);
+			if (!sjmode)
+			{
+				sendnotice(acptr, "*** You were forced to join %s", jbuf);
+				sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, acptr->name, jbuf);
+				sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
+					me.name, sptr->name, acptr->name, jbuf);
+				/* Logging function added by XeRXeS */
+				ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
+					sptr->name, parv[1], jbuf);
+			}
+			else
+			{
+				sendnotice(acptr, "*** You were forced to join %s with '%c'", jbuf, sjmode);
+				sendto_realops("%s used SAJOIN to make %s join %c%s", sptr->name, acptr->name, sjmode, jbuf);
+				sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAJOIN to make %s join %c%s",
+					me.name, sptr->name, acptr->name, sjmode, jbuf);
+				ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %c%s",
+					sptr->name, parv[1], sjmode, jbuf);
+			}
 		}
 	}
 

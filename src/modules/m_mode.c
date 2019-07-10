@@ -500,8 +500,10 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
-		sendto_umode_global(UMODE_OPER, "%s used SAMODE %s (%s%s%s)",
-			sptr->name, chptr->chname, modebuf, *parabuf ? " " : "", parabuf);
+		if (!sajoinmode)
+			sendto_umode_global(UMODE_OPER, "%s used SAMODE %s (%s%s%s)",
+				sptr->name, chptr->chname, modebuf, *parabuf ? " " : "", parabuf);
+
 		sptr = &me;
 		sendts = 0;
 	}

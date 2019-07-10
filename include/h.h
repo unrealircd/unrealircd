@@ -598,6 +598,7 @@ extern MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 extern int op_can_override(char* acl, aClient *sptr,aChannel *channel,void* extra);
 extern aClient *find_chasing(aClient *sptr, char *user, int *chasing);
 extern MODVAR long opermode;
+extern MODVAR long sajoinmode;
 extern void add_user_to_channel(aChannel *chptr, aClient *who, int flags);
 extern int add_banid(aClient *, aChannel *, char *);
 extern int add_exbanid(aClient *cptr, aChannel *chptr, char *banid);
