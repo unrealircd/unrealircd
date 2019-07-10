@@ -10519,13 +10519,14 @@ int ssl_tests(void)
 {
 	if (have_ssl_listeners == 0)
 	{
-		config_warn("Your server is not listening on any SSL ports.");
-		config_warn("Add this to your unrealircd.conf: listen { ip %s; port 6697; options { ssl; }; };",
+		config_error("Your server is not listening on any SSL ports.");
+		config_status("Add this to your unrealircd.conf: listen { ip %s; port 6697; options { ssl; }; };",
 		            port_6667_ip ? port_6667_ip : "*");
-		config_warn("See https://www.unrealircd.org/docs/FAQ#Your_server_is_not_listening_on_any_SSL_ports");
+		config_status("See https://www.unrealircd.org/docs/FAQ#Your_server_is_not_listening_on_any_SSL_ports");
+		return 0;
 	}
 
-	return 1; /* always return success for now */
+	return 1;
 }
 
 /** Check if the user attempts to unload (eg: by commenting out) a module
