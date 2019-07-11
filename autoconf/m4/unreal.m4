@@ -183,29 +183,28 @@ AS_IF([test $enable_ssl != "no"],
 		dnl linking require -ldl?
 		AC_MSG_CHECKING([OpenSSL linking with -ldl])
 		SAVE_LIBS="$LIBS"
-		LIBS="$LIBS -lcrypto -ldl"
+		LIBS="$LIBS $CRYPTOLIB -ldl"
 		AC_TRY_LINK([#include <openssl/err.h>], [ERR_clear_error();],
 		[
 			AC_MSG_RESULT(yes)
-			LIBS="$SAVE_LIBS -ldl"
+			CRYPTOLIB="$CRYPTOLIB -ldl"
 		],
 		[
 			AC_MSG_RESULT(no)
 
 			dnl linking require both -ldl and -lpthread?
 			AC_MSG_CHECKING([OpenSSL linking with -ldl and -lpthread])
-			LIBS="$SAVE_LIBS -lcrypto -ldl -lpthread"
+			LIBS="$SAVE_LIBS $CRYPTOLIB -ldl -lpthread"
 			AC_TRY_LINK([#include <openssl/err.h>], [ERR_clear_error();],
 			[
 				AC_MSG_RESULT(yes)
-				LIBS="$SAVE_LIBS -ldl -lpthread"
+				CRYPTOLIB="$CRYPTOLIB -ldl -lpthread"
 			],
 			[
 				AC_MSG_RESULT(no)
-				LIBS="$SAVE_LIBS"
 			])
 		])
-
+		LIBS="$SAVE_LIBS"
 	fi
 	])
 ])

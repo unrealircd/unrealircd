@@ -7575,7 +7575,7 @@ $as_echo "not found" >&6; }
 				{ $as_echo "$as_me:${as_lineno-$LINENO}: checking OpenSSL linking with -ldl" >&5
 $as_echo_n "checking OpenSSL linking with -ldl... " >&6; }
 		SAVE_LIBS="$LIBS"
-		LIBS="$LIBS -lcrypto -ldl"
+		LIBS="$LIBS $CRYPTOLIB -ldl"
 		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <openssl/err.h>
@@ -7591,7 +7591,7 @@ if ac_fn_c_try_link "$LINENO"; then :
 
 			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-			LIBS="$SAVE_LIBS -ldl"
+			CRYPTOLIB="$CRYPTOLIB -ldl"
 
 else
 
@@ -7600,7 +7600,7 @@ $as_echo "no" >&6; }
 
 						{ $as_echo "$as_me:${as_lineno-$LINENO}: checking OpenSSL linking with -ldl and -lpthread" >&5
 $as_echo_n "checking OpenSSL linking with -ldl and -lpthread... " >&6; }
-			LIBS="$SAVE_LIBS -lcrypto -ldl -lpthread"
+			LIBS="$SAVE_LIBS $CRYPTOLIB -ldl -lpthread"
 			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <openssl/err.h>
@@ -7616,13 +7616,12 @@ if ac_fn_c_try_link "$LINENO"; then :
 
 				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-				LIBS="$SAVE_LIBS -ldl -lpthread"
+				CRYPTOLIB="$CRYPTOLIB -ldl -lpthread"
 
 else
 
 				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-				LIBS="$SAVE_LIBS"
 
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -7631,7 +7630,7 @@ rm -f core conftest.err conftest.$ac_objext \
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-
+		LIBS="$SAVE_LIBS"
 	fi
 
 fi
