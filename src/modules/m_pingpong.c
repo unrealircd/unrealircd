@@ -169,6 +169,7 @@ CMD_FUNC(m_pong)
 	destination = parv[2];
 	cptr->flags &= ~FLAGS_PINGSENT;
 	sptr->flags &= ~FLAGS_PINGSENT;
+	ClearPingWarning(cptr);
 
 	/* Remote pongs for clients? uhh... */
 	if (MyClient(sptr) || !IsRegistered(sptr))

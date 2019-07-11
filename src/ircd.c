@@ -535,11 +535,22 @@ int check_ping(aClient *cptr)
 		 * it is still alive.
 		 */
 		cptr->flags |= FLAGS_PINGSENT;
+
+		ClearPingWarning(cptr);
 		/*
 		 * not nice but does the job
 		 */
 		cptr->local->lasttime = TStime() - ping;
 		sendto_one(cptr, NULL, "PING :%s", me.name);
+	}
+	else if (!IsPingWarning(cptr) && PINGWARNING > 0 &&
+		(IsServer(cptr) || IsHandshake(cptr) || IsConnecting(cptr) ||
+		IsSSLConnectHandshake(cptr)) &&
+		(TStime() - cptr->local->lasttime) >= (ping + PINGWARNING))
+	{
+		SetPingWarning(cptr);
+		sendto_realops("Warning, no response from %s in %d seconds",
+			get_client_name(cptr, FALSE), PINGWARNING);
 	}
 
 	return 0;

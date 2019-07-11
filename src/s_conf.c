@@ -1506,6 +1506,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->new_linking_protocol = 1;
 	i->uhnames = 1;
 	i->ping_cookie = 1;
+	i->ping_warning = 15; /* default ping warning notices 15 seconds */
 	i->default_ipv6_clone_mask = 64;
 	i->nick_length = NICKLEN;
 	i->topic_length = 360;
@@ -7466,6 +7467,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			tempiConf.maxchannelsperuser = atoi(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "ping-warning")) {
+			tempiConf.ping_warning = atoi(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "maxdccallow")) {
 			tempiConf.maxdccallow = atoi(cep->ce_vardata);
 		}
@@ -8083,6 +8087,20 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			if (tempi < 1)
 			{
 				config_error("%s:%i: set::maxchannelsperuser must be > 0",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "ping-warning")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, ping_warning, "ping-warning");
+			tempi = atoi(cep->ce_vardata);
+			/* it is pointless to allow setting higher than 170 */
+			if (tempi > 170)
+			{
+				config_error("%s:%i: set::ping-warning must be < 170",
 					cep->ce_fileptr->cf_filename,
 					cep->ce_varlinenum);
 				errors++;

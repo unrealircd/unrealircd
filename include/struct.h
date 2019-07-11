@@ -314,6 +314,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define FLAGS_NOFAKELAG  0x01000000	/* Exemption from fake lag */
 #define FLAGS_DCCBLOCK   0x02000000	/* Block all DCC send requests */
 #define FLAGS_MAP        0x04000000	/* Show this entry in /MAP */
+#define FLAGS_PINGWARN	 0x08000000	/* Server ping warning */
 
 #define SNO_DEFOPER "+kscfvGqobS"
 #define SNO_DEFUSER "+ks"
@@ -432,6 +433,10 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 
 #define SetIPV6(x)			do { x->flags |= FLAGS_IPV6; } while(0)
 #define IsIPV6(x)			((x)->flags & FLAGS_IPV6)
+
+#define SetPingWarning(x)	((x)->flags |= FLAGS_PINGWARN)
+#define IsPingWarning(x)	((x)->flags & FLAGS_PINGWARN)
+#define ClearPingWarning(x)	((x)->flags &= ~FLAGS_PINGWARN)
 /*
  * ProtoCtl options
  */

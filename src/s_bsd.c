@@ -1296,6 +1296,8 @@ void read_packet(int fd, int revents, void *data)
 		/* FIXME: Is this correct? I have my doubts. */
 		cptr->flags &= ~FLAGS_PINGSENT;
 
+		ClearPingWarning(cptr);
+
 		processdata = 1;
 		for (h = Hooks[HOOKTYPE_RAWPACKET_IN]; h; h = h->next)
 		{

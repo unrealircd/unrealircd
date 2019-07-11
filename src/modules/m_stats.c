@@ -1124,6 +1124,7 @@ int stats_set(aClient *sptr, char *para)
 	sendtxtnumeric(sptr, "options::allow-insane-bans: %d", ALLOW_INSANE_BANS);
 	sendtxtnumeric(sptr, "options::allow-part-if-shunned: %d", ALLOW_PART_IF_SHUNNED);
 	sendtxtnumeric(sptr, "maxchannelsperuser: %i", MAXCHANNELSPERUSER);
+	sendtxtnumeric(sptr, "ping-warning: %i seconds", PINGWARNING);
 	sendtxtnumeric(sptr, "auto-join: %s", AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
 	sendtxtnumeric(sptr, "oper-auto-join: %s", OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
 	sendtxtnumeric(sptr, "static-quit: %s", STATIC_QUIT ? STATIC_QUIT : "<none>");	

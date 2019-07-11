@@ -84,6 +84,7 @@ struct zConfiguration {
 	char *oper_auto_join_chans;
 	char *oper_only_stats;
 	OperStat *oper_only_stats_ext;
+	int  ping_warning;
 	int  maxchannelsperuser;
 	int  maxdccallow;
 	int  anti_spam_quit_message_time;
@@ -180,6 +181,7 @@ extern MODVAR int ipv6_disabled;
 #define HIDE_ULINES			iConf.hide_ulines
 #define FLAT_MAP			iConf.flat_map
 #define ALLOW_CHATOPS			iConf.allow_chatops
+#define PINGWARNING			iConf.ping_warning
 #define MAXCHANNELSPERUSER		iConf.maxchannelsperuser
 #define MAXDCCALLOW			iConf.maxdccallow
 #define DONT_RESOLVE			iConf.dont_resolve
@@ -304,6 +306,7 @@ struct SetCheck {
 	unsigned has_watch_away_notification:1;
 	unsigned has_uhnames:1;
 	unsigned has_oper_only_stats:1;
+	unsigned has_ping_warning:1;
 	unsigned has_maxchannelsperuser:1;
 	unsigned has_maxdccallow:1;
 	unsigned has_anti_spam_quit_message_time:1;
