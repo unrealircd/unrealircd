@@ -7571,6 +7571,9 @@ $as_echo "not found" >&6; }
 		CRYPTOLIB="-lssl -lcrypto";
 		if test ! "$ssldir" = "/usr" ; then
 			LDFLAGS="$LDFLAGS -L$ssldir/lib";
+						if test -f "$ssldir/bin/openssl"; then
+			    OPENSSLPATH="$ssldir/bin/openssl";
+			fi
 		fi
 				{ $as_echo "$as_me:${as_lineno-$LINENO}: checking OpenSSL linking with -ldl" >&5
 $as_echo_n "checking OpenSSL linking with -ldl... " >&6; }

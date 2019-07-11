@@ -179,6 +179,10 @@ AS_IF([test $enable_ssl != "no"],
 		CRYPTOLIB="-lssl -lcrypto";
 		if test ! "$ssldir" = "/usr" ; then
 			LDFLAGS="$LDFLAGS -L$ssldir/lib";
+			dnl check if binary path exists
+			if test -f "$ssldir/bin/openssl"; then
+			    OPENSSLPATH="$ssldir/bin/openssl";
+			fi
 		fi
 		dnl linking require -ldl?
 		AC_MSG_CHECKING([OpenSSL linking with -ldl])
