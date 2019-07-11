@@ -167,10 +167,11 @@ CMD_FUNC(m_version)
 	if (hunt_server(cptr, sptr, recv_mtags, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		sendnumeric(sptr, RPL_VERSION, version, debugmode, me.name,
-		           serveropts, extraflags ? extraflags : "",
-		           tainted ? "3" : "",
-		           (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? MYOSNAME : "*"),
-		           UnrealProtocol);
+			    (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? serveropts : "0"),
+			    extraflags ? extraflags : "",
+			    tainted ? "3" : "",
+			    (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? MYOSNAME : "*"),
+			    UnrealProtocol);
 		if (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
 		{
 			sendnotice(sptr, "%s", SSLeay_version(SSLEAY_VERSION));
