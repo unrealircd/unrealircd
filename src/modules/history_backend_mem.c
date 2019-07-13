@@ -229,8 +229,6 @@ void hbm_send_line(aClient *acptr, HistoryLogLine *l, char *batchid)
 {
 	static char sendbuf[8192];
 
-	// TODO: if client supports batch, it may be nice to
-	// put it in a log playback batch :)
 	if (HasCapability(acptr, "server-time"))
 	{
 		if (BadPtr(batchid))
