@@ -277,7 +277,9 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/PLAINTEXT-POLICY.DLL \
  SRC/MODULES/SERVER-TIME.DLL \
  SRC/MODULES/STS.DLL \
- SRC/MODULES/TKLDB.DLL
+ SRC/MODULES/TKLDB.DLL \
+ SRC/MODULES/HISTORY_BACKEND_MEM.DLL \
+ SRC/MODULES/HISTORY_BACKEND_NULL.DLL
 
 
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
@@ -1038,5 +1040,11 @@ src/modules/sts.dll: src/modules/sts.c $(INCLUDES)
 
 src/modules/tkldb.dll: src/modules/tkldb.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/tkldb.c $(MODLFLAGS)
+
+src/modules/history_backend_mem.dll: src/modules/history_backend_mem.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/history_backend_mem.c $(MODLFLAGS)
+
+src/modules/history_backend_null.dll: src/modules/history_backend_null.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/history_backend_null.c $(MODLFLAGS)
 
 dummy:
