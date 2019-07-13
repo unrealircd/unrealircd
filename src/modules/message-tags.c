@@ -226,6 +226,9 @@ int client_accepts_tag(const char *token, aClient *acptr)
 	if (!strcmp(token, "time") && HasCapability(acptr, "server-time"))
 		return 1;
 
+	if (!strcmp(token, "batch") && HasCapability(acptr, "batch"))
+		return 1;
+
 	return 0;
 }
 

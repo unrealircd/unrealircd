@@ -191,6 +191,8 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SWHOISLEN	256
 #define UMODETABLESZ (sizeof(long) * 8)
 #define MAXCCUSERS		20 /* Maximum for set::anti-flood::target-limit::max-concurrent-conversations */
+#define BATCHLEN	22
+
 /*
  * Watch it - Don't change this unless you also change the ERR_TOOMANYWATCH
  * and PROTOCOL_SUPPORTED settings.

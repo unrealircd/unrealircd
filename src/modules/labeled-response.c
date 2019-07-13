@@ -36,8 +36,6 @@ int lr_pre_command(aClient *from, MessageTag *mtags, char *buf);
 int lr_post_command(aClient *from, MessageTag *mtags, char *buf);
 int lr_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int *len);
 
-#define BATCHLEN 8
-
 /* Our special version assumes that remote servers always handle it */
 #define SupportBatch(x)		(MyConnect(x) ? HasCapability((x), "batch") : 1)
 
@@ -123,22 +121,6 @@ char *labeled_response_message_tag(int version)
 		return "label";
 	else
 		return "draft/label";
-}
-
-void generate_batch_id(char *str)
-{
-	int i, v;
-	for (i = 0; i < BATCHLEN; i++)
-	{
-		v = getrandom8() % (26+26+10);
-		if (v < 26)
-			*str++ = 'a'+v;
-		else if (v < 52)
-			*str++ = 'A'+(v-26);
-		else
-			*str++ = '0'+(v-52);
-	}
-	*str = '\0';
 }
 
 char *gen_start_batch(void)

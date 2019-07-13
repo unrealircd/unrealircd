@@ -225,7 +225,7 @@ int hbm_history_add(char *object, MessageTag *mtags, char *line)
 	return 0;
 }
 
-void hbm_send_line(aClient *acptr, HistoryLogLine *l)
+void hbm_send_line(aClient *acptr, HistoryLogLine *l, char *batchid)
 {
 	static char sendbuf[8192];
 
@@ -233,7 +233,18 @@ void hbm_send_line(aClient *acptr, HistoryLogLine *l)
 	// put it in a log playback batch :)
 	if (HasCapability(acptr, "server-time"))
 	{
-		sendto_one(acptr, l->mtags, "%s", l->line);
+		if (BadPtr(batchid))
+		{
+			sendto_one(acptr, l->mtags, "%s", l->line);
+		} else {
+			MessageTag *m = MyMallocEx(sizeof(MessageTag));
+			m->name = "batch";
+			m->value = batchid;
+			AddListItem(m, l->mtags);
+			sendto_one(acptr, l->mtags, "%s", l->line);
+			DelListItem(m, l->mtags);
+			MyFree(m);
+		}
 	} else {
 		/* without server-time, log playback is a bit annoying, so skip it? */
 	}
@@ -243,13 +254,26 @@ int hbm_history_request(aClient *acptr, char *object, HistoryFilter *filter)
 {
 	HistoryLogObject *h = hbm_find_object(object);
 	HistoryLogLine *l;
+	char batch[BATCHLEN+1];
 
 	if (!h)
 		return 0;
 
-	for (l = h->head; l; l = l->next)
-		hbm_send_line(acptr, l);
+	batch[0] = '\0';
 
+	if (HasCapability(acptr, "batch"))
+	{
+		/* Start a new batch */
+		generate_batch_id(batch);
+		sendto_one(acptr, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, object);
+	}
+
+	for (l = h->head; l; l = l->next)
+		hbm_send_line(acptr, l, batch);
+
+	/* End of batch */
+	if (*batch)
+		sendto_one(acptr, NULL, ":%s BATCH -%s", me.name, batch);
 	return 1;
 }
 

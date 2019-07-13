@@ -1337,6 +1337,14 @@ char *mtags_to_string_default_handler(MessageTag *m, aClient *acptr)
 	return NULL;
 }
 
+/** Generate a BATCH id.
+ * This can be used in a :serv BATCH +%s ... message
+ */
+void generate_batch_id(char *str)
+{
+	gen_random_alnum(str, BATCHLEN);
+}
+
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.
  * On some *NIX OS's timegm() may be available, sometimes only

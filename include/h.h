@@ -853,6 +853,7 @@ extern void SetCapability(aClient *acptr, const char *token);
 extern void ClearCapability(aClient *acptr, const char *token);
 extern void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list);
 extern void new_message_special(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *pattern, ...) __attribute__((format(printf,4,5)));
+extern void generate_batch_id(char *str);
 extern MessageTag *find_mtag(MessageTag *mtags, const char *token);
 extern MessageTag *duplicate_mtag(MessageTag *mtag);
 extern void free_mtags(MessageTag *m);
