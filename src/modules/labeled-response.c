@@ -198,6 +198,8 @@ int lr_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int 
 		{
 			/* Add the label */
 			// XXX: TODO: this currently assumes 0 tags already exist, BAD !!!!
+			// XXX: TODO: it also does not take into account nested batches,
+			//            ending up with a batch=xxx batch=yyy in one message, BAD !!!!
 			if (currentcmd.responses == 0)
 			{
 				/* Start the batch now, normally this would be a sendto_one()
