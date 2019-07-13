@@ -52,6 +52,8 @@ typedef struct _OperStat {
 	char *flag;
 } OperStat;
 
+typedef enum BroadcastChannelMessagesOption { BROADCAST_CHANNEL_MESSAGES_AUTO=1, BROADCAST_CHANNEL_MESSAGES_ALWAYS=2, BROADCAST_CHANNEL_MESSAGES_NEVER=3 } BroadcastChannelMessagesOption;
+
 typedef struct zConfiguration aConfiguration;
 struct zConfiguration {
 	unsigned som:1;
@@ -164,6 +166,7 @@ struct zConfiguration {
 	int ban_setter;
 	int ban_setter_sync;
 	int part_instead_of_quit_on_comment_change;
+	BroadcastChannelMessagesOption broadcast_channel_messages;
 };
 
 #ifndef DYNCONF_C

@@ -1522,6 +1522,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->max_unknown_connections_per_ip = 3;
 	i->handshake_timeout = 30;
 	i->handshake_delay = -1;
+	i->broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_AUTO;
 
 	/* SSL/TLS options */
 	i->ssl_options = MyMallocEx(sizeof(SSLOptions));
@@ -7853,6 +7854,15 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.part_instead_of_quit_on_comment_change = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
+		else if (!strcmp(cep->ce_varname, "broadcast-channel-messages"))
+		{
+			if (!strcmp(cep->ce_varname, "auto"))
+				tempiConf.broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_AUTO;
+			else if (!strcmp(cep->ce_varname, "always"))
+				tempiConf.broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_ALWAYS;
+			else if (!strcmp(cep->ce_varname, "never"))
+				tempiConf.broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_NEVER;
+		}
 		else
 		{
 			int value;
@@ -8972,6 +8982,18 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "part-instead-of-quit-on-comment-change"))
 		{
 			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "broadcast-channel-messages"))
+		{
+			CheckNull(cep);
+			if (strcmp(cep->ce_varname, "auto") &&
+			    strcmp(cep->ce_varname, "always") &&
+			    strcmp(cep->ce_varname, "never"))
+			{
+				config_error("%s:%i: set::broadcast-channel-messages: value should be 'auto', 'always' or 'never'",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 		else
 		{

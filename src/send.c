@@ -423,6 +423,31 @@ good:
 			}
 		}
 	}
+
+	if (sendflags & SEND_REMOTE)
+	{
+		/* For the remaining uplinks that we have not sent a message to yet...
+		 * broadcast-channel-messages=never: don't send it to them
+		 * broadcast-channel-messages=always: always send it to them
+		 * broadcast-channel-messages=auto: send it to them if the channel is set +H (history)
+		 */
+
+		if ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_ALWAYS) ||
+		    ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_AUTO) && has_channel_mode(chptr, 'H')))
+		{
+			list_for_each_entry(acptr, &server_list, special_node)
+			{
+				if (acptr->from->local->serial != current_serial)
+				{
+					va_start(vl, pattern);
+					vsendto_prefix_one(acptr, from, mtags, pattern, vl);
+					va_end(vl);
+
+					acptr->from->local->serial = current_serial;
+				}
+			}
+		}
+	}
 }
 
 /*
