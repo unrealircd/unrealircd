@@ -136,7 +136,7 @@ void hbm_duplicate_mtags(HistoryLogLine *l, MessageTag *m)
 	for (; m; m = m->next)
 	{
 		n = duplicate_mtag(m);
-		AddListItem(n, l->mtags);
+		AppendListItem(n, l->mtags);
 	}
 	n = find_mtag(l->mtags, "time");
 	if (!n)
