@@ -138,7 +138,7 @@ void hbm_duplicate_mtags(HistoryLogLine *l, MessageTag *m)
 		n = duplicate_mtag(m);
 		AddListItem(n, l->mtags);
 	}
-	n = find_mtag(m, "time");
+	n = find_mtag(l->mtags, "time");
 	if (!n)
 	{
 		/* This is duplicate code from src/modules/server-time.c
