@@ -375,6 +375,9 @@ void sendto_channel(aChannel *chptr, aClient *from, aClient *skip,
 		/* Don't send to deaf clients (unless 'senddeaf' is set) */
 		if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
 			continue;
+		/* Don't send to NOCTCP clients */
+		if (has_user_mode(acptr, 'T') && (sendflags & SKIP_CTCP))
+			continue;
 		/* Now deal with 'prefix' (if non-zero) */
 		if (!prefix)
 			goto good;

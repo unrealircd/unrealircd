@@ -344,6 +344,9 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 			if (!strchr(CHANCMDPFX,parv[2][0]))
 				sendflags |= SKIP_DEAF;
 
+			if ((*parv[2] == '\001') && strncmp(&parv[2][1], "ACTION ", 7))
+				sendflags |= SKIP_CTCP;
+
 			text = parv[2];
 
 			if (MyClient(sptr))

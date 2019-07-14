@@ -1940,6 +1940,7 @@ struct _configitem_badword {
 #define SEND_REMOTE	0x2
 #define SEND_ALL	(SEND_LOCAL|SEND_REMOTE)
 #define SKIP_DEAF	0x4
+#define SKIP_CTCP	0x8
 
 #endif /* __struct_include__ */
 
