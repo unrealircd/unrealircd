@@ -203,6 +203,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_MOTD.DLL SRC/MODULES/M_OPERMOTD.DLL SRC/MODULES/M_BOTMOTD.DLL \
  SRC/MODULES/M_LUSERS.DLL SRC/MODULES/M_NAMES.DLL SRC/MODULES/M_SVSNOLAG.DLL \
  SRC/MODULES/M_STARTTLS.DLL \
+ SRC/MODULES/WEBREDIR.DLL \
  SRC/MODULES/M_CAP.DLL \
  SRC/MODULES/M_SASL.DLL \
  SRC/MODULES/SSL_ANTIDOS.DLL \
@@ -834,6 +835,9 @@ src/modules/m_svsnolag.dll: src/modules/m_svsnolag.c $(INCLUDES)
 
 src/modules/m_starttls.dll: src/modules/m_starttls.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_starttls.c $(MODLFLAGS)
+
+src/modules/webredir.dll: src/modules/webredir.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/webredir.c $(MODLFLAGS)
 
 src/modules/m_cap.dll: src/modules/m_cap.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_cap.c $(MODLFLAGS)

@@ -56,7 +56,7 @@ R_MODULES= \
 	m_connect.so m_dccallow.so m_userip.so m_nick.so m_user.so \
 	m_mode.so m_watch.so m_part.so m_join.so m_motd.so m_opermotd.so \
 	m_botmotd.so m_lusers.so m_names.so m_svsnolag.so m_addmotd.so \
-	m_svslusers.so m_starttls.so m_cap.so \
+	m_svslusers.so m_starttls.so webredir.so m_cap.so \
 	m_sasl.so m_md.so certfp.so \
 	ssl_antidos.so webirc.so websocket.so \
 	blacklist.so jointhrottle.so \
@@ -453,6 +453,10 @@ m_svsnolag.so: m_svsnolag.c $(INCLUDES)
 m_starttls.so: m_starttls.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_starttls.so m_starttls.c
+
+webredir.so: webredir.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o webredir.so webredir.c
 
 m_cap.so: m_cap.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
