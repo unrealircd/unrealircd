@@ -21,10 +21,6 @@
 
 #define GetReputation(acptr) (moddata_client_get(acptr, "reputation") ? atoi(moddata_client_get(acptr, "reputation")) : 0)
 
-struct cfgstruct {
-	int command_count;
-};
-
 typedef struct restrictedcmd RestrictedCmd;
 struct restrictedcmd {
 	RestrictedCmd *prev, *next;
@@ -54,7 +50,6 @@ CMD_OVERRIDE_FUNC(cmdrestrict_override);
 
 // Globals
 static ModuleInfo ModInf;
-static struct cfgstruct cfg;
 RestrictedCmd *RestrictedCmdList = NULL;
 CmdMap conf_cmdmaps[] = {
 	{ "invite", "INVITE" },
@@ -78,7 +73,6 @@ ModuleHeader MOD_HEADER(cmdrestrict) = {
 MOD_TEST(cmdrestrict)
 {
 	memcpy(&ModInf, modinfo, modinfo->size);
-	memset(&cfg, 0, sizeof(cfg));
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cmdrestrict_configtest);
 	return MOD_SUCCESS;
 }
