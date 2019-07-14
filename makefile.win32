@@ -279,7 +279,8 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/STS.DLL \
  SRC/MODULES/TKLDB.DLL \
  SRC/MODULES/HISTORY_BACKEND_MEM.DLL \
- SRC/MODULES/HISTORY_BACKEND_NULL.DLL
+ SRC/MODULES/HISTORY_BACKEND_NULL.DLL \
+ SRC/MODULES/CMDRESTRICT.DLL
 
 
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
@@ -1043,5 +1044,8 @@ src/modules/history_backend_mem.dll: src/modules/history_backend_mem.c $(INCLUDE
 
 src/modules/history_backend_null.dll: src/modules/history_backend_null.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/history_backend_null.c $(MODLFLAGS)
+
+src/modules/cmdrestrict.dll: src/modules/cmdrestrict.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/cmdrestrict.c $(MODLFLAGS)
 
 dummy:
