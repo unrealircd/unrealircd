@@ -78,9 +78,8 @@ MOD_UNLOAD(webredir)
 static void init_config(void)
 {
 	memset(&cfg, 0, sizeof(cfg));
-	/* Default values */
-	cfg.url = strdup("https://unrealircd.org");
 }
+
 static void free_config(void)
 {
 	if (cfg.url)
@@ -92,6 +91,7 @@ static void free_config(void)
 int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
+	int has_url = 0;
 	ConfigEntry *cep;
 
 	if (type != CONFIG_SET)
@@ -111,6 +111,20 @@ int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		}
 		else if (!strcmp(cep->ce_varname, "url"))
 		{
+			if (cep->ce_vardata && (!*cep->ce_vardata || strchr(cep->ce_vardata, ' ')))
+			{
+				config_error("%s:%i: set::webredir::%s with empty value",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				errors++;
+			}
+
+			if (has_url)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "set::webredir::url");
+				continue;
+			}
+			has_url = 1;
 		}
 		else
 		{
@@ -119,6 +133,14 @@ int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			errors++;
 		}
 	}
+
+	if (!has_url)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"set::webredir::url");
+		errors++;
+	}
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
