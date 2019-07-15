@@ -1,5 +1,6 @@
 /*
  * webredir UnrealIRCd module
+ * (C) Copyright 2019 i <info@servx.org> and the UnrealIRCd team
  *
  * This module will 301-redirect any clients issuing GET's/POST's during pre-connect stage.
  *
@@ -35,14 +36,18 @@ struct {
 	char *url;
 } cfg;
 
+static int nowebredir = 1;
+
 static void free_config(void);
 static void init_config(void);
+int webredir_config_posttest(int *errs);
 int webredir_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int webredir_config_run(ConfigFile *, ConfigEntry *, int);
 
 MOD_TEST(webredir)
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, webredir_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, webredir_config_posttest);
 	return MOD_SUCCESS;
 }
 
@@ -88,6 +93,20 @@ static void free_config(void)
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
+int webredir_config_posttest(int *errs)
+{
+	int errors = 0;
+
+	if (nowebredir)
+	{
+		config_error("set::webredir is missing!");
+		errors++;
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
 int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
@@ -96,11 +115,12 @@ int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::webredir... */
 	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "webredir"))
 		return 0;
-	
+
+	nowebredir = 0;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_vardata)
