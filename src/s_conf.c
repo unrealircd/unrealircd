@@ -1464,7 +1464,6 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->link_bindip);
 	safefree(i->outdated_tls_policy_user_message);
 	safefree(i->outdated_tls_policy_oper_message);
-	safefree(i->reject_message_password_mismatch);
 	safefree(i->reject_message_too_many_connections);
 	safefree(i->reject_message_server_full);
 	safefree(i->reject_message_unauthorized);
@@ -1553,7 +1552,6 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->outdated_tls_policy_oper = POLICY_DENY;
 	i->outdated_tls_policy_server = POLICY_DENY;
 
-	i->reject_message_password_mismatch = strdup("Password mismatch");
 	i->reject_message_too_many_connections = strdup("Too many connections from your IP");
 	i->reject_message_server_full = strdup("This server is full");
 	i->reject_message_unauthorized = strdup("You are not authorized to connect to this server");
@@ -5084,8 +5082,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 					allow->flags.useip = 1;
 				else if (!strcmp(cepp->ce_varname, "ssl"))
 					allow->flags.ssl = 1;
-				else if (!strcmp(cepp->ce_varname, "nopasscont"))
-					allow->flags.nopasscont = 1;
 			}
 		}
 	}
@@ -5292,8 +5288,6 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 					             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 					errors++;
 				}
-				else if (!strcmp(cepp->ce_varname, "nopasscont"))
-				{}
 				else
 				{
 					config_error_unknownopt(cepp->ce_fileptr->cf_filename,
@@ -7818,9 +7812,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				if (!strcmp(cepp->ce_varname, "password-mismatch"))
-					safestrdup(tempiConf.reject_message_password_mismatch, cepp->ce_vardata);
-				else if (!strcmp(cepp->ce_varname, "too-many-connections"))
+				if (!strcmp(cepp->ce_varname, "too-many-connections"))
 					safestrdup(tempiConf.reject_message_too_many_connections, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "server-full"))
 					safestrdup(tempiConf.reject_message_server_full, cepp->ce_vardata);

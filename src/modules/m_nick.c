@@ -1711,7 +1711,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 	{
 		if (!aconf->hostname || !aconf->ip)
 			goto attach;
-		if (aconf->auth && !cptr->local->passwd && aconf->flags.nopasscont)
+		if (aconf->auth && !cptr->local->passwd)
 			continue;
 		if (aconf->flags.ssl && !IsSecure(cptr))
 			continue;
@@ -1800,7 +1800,8 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		}
 		if ((i = Auth_Check(cptr, aconf->auth, cptr->local->passwd)) == -1)
 		{
-			return exit_client(cptr, cptr, &me, NULL, iConf.reject_message_password_mismatch);
+			/* Always do continue if password was wrong. */
+			continue;
 		}
 		if ((i == 2) && (cptr->local->passwd))
 		{
