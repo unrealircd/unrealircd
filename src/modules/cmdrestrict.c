@@ -1,5 +1,5 @@
 /*
- * Restrict specific commands until people have been connected for a certain amount of time
+ * Restrict specific commands unless certain conditions have been met
  * (C) Copyright 2019 Gottem and the UnrealIRCd team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -38,7 +38,7 @@ typedef struct {
 } CmdMap;
 
 // Forward declarations
-char *find_cmd_by_conftag(char *conftag);
+char *find_cmd_byconftag(char *conftag);
 RestrictedCmd *find_restrictions_bycmd(char *cmd);
 RestrictedCmd *find_restrictions_byconftag(char *conftag);
 int cmdrestrict_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
@@ -52,9 +52,7 @@ CMD_OVERRIDE_FUNC(cmdrestrict_override);
 static ModuleInfo ModInf;
 RestrictedCmd *RestrictedCmdList = NULL;
 CmdMap conf_cmdmaps[] = {
-	{ "invite", "INVITE" },
-	{ "knock", "KNOCK" },
-	{ "list", "LIST" },
+	// These are special cases in which we can't override the command, so they are handled through hooks instead
 	{ "channel-message", "PRIVMSG" },
 	{ "channel-notice", "NOTICE" },
 	{ "private-message", "PRIVMSG" },
@@ -65,7 +63,7 @@ CmdMap conf_cmdmaps[] = {
 ModuleHeader MOD_HEADER(cmdrestrict) = {
 	"cmdrestrict",
 	"v1.0",
-	"Restrict specific commands until certain conditions have been met",
+	"Restrict specific commands unless certain conditions have been met",
 	"3.2-b8-1",
 	NULL
 };
@@ -113,7 +111,7 @@ MOD_UNLOAD(cmdrestrict)
 	return MOD_SUCCESS;
 }
 
-char *find_cmd_by_conftag(char *conftag) {
+char *find_cmd_byconftag(char *conftag) {
 	CmdMap *cmap;
 	for (cmap = conf_cmdmaps; cmap->conftag; cmap++)
 	{
@@ -127,7 +125,7 @@ RestrictedCmd *find_restrictions_bycmd(char *cmd) {
 	RestrictedCmd *rcmd;
 	for (rcmd = RestrictedCmdList; rcmd; rcmd = rcmd->next)
 	{
-		if (!strcmp(rcmd->cmd, cmd))
+		if (!stricmp(rcmd->cmd, cmd))
 			return rcmd;
 	}
 	return NULL;
@@ -137,7 +135,7 @@ RestrictedCmd *find_restrictions_byconftag(char *conftag) {
 	RestrictedCmd *rcmd;
 	for (rcmd = RestrictedCmdList; rcmd; rcmd = rcmd->next)
 	{
-		if (!strcmp(rcmd->conftag, conftag))
+		if (rcmd->conftag && !strcmp(rcmd->conftag, conftag))
 			return rcmd;
 	}
 	return NULL;
@@ -161,13 +159,6 @@ int cmdrestrict_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!find_cmd_by_conftag(cep->ce_varname))
-		{
-			config_error("%s:%i: unsupported command %s for set::restrict-commands", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
-			errors++;
-			continue;
-		}
-
 		has_restriction = 0;
 		for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
 		{
@@ -228,7 +219,7 @@ int cmdrestrict_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 int cmdrestrict_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep, *cep2;
-	char *cmd;
+	char *cmd, *conftag;
 	RestrictedCmd *rcmd;
 
 	// We are only interested in set::restrict-commands
@@ -240,18 +231,21 @@ int cmdrestrict_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		// Let's do it like this for good measure
-		if (!(cmd = find_cmd_by_conftag(cep->ce_varname)))
-			continue;
+		// May need to switch some stuff around for special cases where the config directive doesn't match the actual command
+		conftag = NULL;
+		if((cmd = find_cmd_byconftag(cep->ce_varname)))
+			conftag = cep->ce_varname;
+		else
+			cmd = cep->ce_varname;
 
-		// Try to add override before allocating the struct so we don't waste memory (should be safe in the configrun stage anyways?)
-		// Also don't override PRIVMSG/NOTICE because those are handled through hooks instead
-		if (strcmp(cmd, "PRIVMSG") && strcmp(cmd, "NOTICE"))
+		// Try to add override before even allocating the struct so we can bail early
+		// Also don't override anything from the conf_cmdmaps[] list because those are handled through hooks instead
+		if (!conftag)
 		{
 			// Let's hope nobody tries to unload the module for PRIVMSG/NOTICE :^)
 			if (!CommandExists(cmd))
 			{
-				config_warn("[cmdrestrict] The specified command isn't properly loaded (meaning we're unable to override it): %s", cmd);
+				config_warn("[cmdrestrict] The specified command isn't (properly) loaded, meaning we're unable to override it: %s", cmd);
 				continue;
 			}
 
@@ -264,7 +258,7 @@ int cmdrestrict_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 
 		rcmd = MyMallocEx(sizeof(RestrictedCmd));
 		rcmd->cmd = strdup(cmd);
-		rcmd->conftag = strdup(cep->ce_varname);
+		rcmd->conftag = (conftag ? strdup(conftag) : NULL);
 		for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
 		{
 			if (!cep2->ce_vardata)
@@ -291,7 +285,7 @@ int cmdrestrict_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 			if (!strcmp(cep2->ce_varname, "disable"))
 			{
 				rcmd->disable = config_checkval(cep2->ce_vardata, CFG_YESNO);
-				continue; // Maybe break instead, since it takes precedence anyways?
+				break; // Using break instead of continue since 'disable' takes precedence anyways
 			}
 		}
 		AddListItem(rcmd, RestrictedCmdList);
@@ -301,21 +295,15 @@ int cmdrestrict_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 }
 
 int cmdrestrict_canbypass(aClient *sptr, RestrictedCmd *rcmd) {
-	int exempt;
-
 	if (!sptr || !rcmd)
 		return 1;
-
-	exempt = 0;
 	if (rcmd->exempt_identified && IsLoggedIn(sptr))
-		exempt = 1;
+		return 1;
 	if (rcmd->exempt_reputation_score > 0 && (GetReputation(sptr)) >= rcmd->exempt_reputation_score)
-		exempt = 1;
-
-	if (!exempt && sptr->local && (TStime() - sptr->local->firsttime) < rcmd->connect_delay)
+		return 1;
+	if (sptr->local && (TStime() - sptr->local->firsttime) < rcmd->connect_delay)
 		return 0;
-
-	return 1;
+	return 1; // Default to yes so we don't drop too many commands
 }
 
 char *cmdrestrict_hook_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
@@ -325,6 +313,9 @@ char *cmdrestrict_hook_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mt
 
 char *cmdrestrict_hook_preusermsg(aClient *sptr, aClient *to, char *text, int notice)
 {
+	// Need a few extra exceptions for user messages only =]
+	if(sptr == to || IsULine(to))
+		return text;
 	return cmdrestrict_hook_wrapper(sptr, text, notice, "user", (notice ? "private-notice" : "private-message"));
 }
 
