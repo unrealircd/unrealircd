@@ -1388,6 +1388,12 @@ time_t server_time_to_unix_time(const char *tbuf)
 	int dontcare = 0;
 	time_t ret;
 
+	if (!tbuf)
+	{
+		ircd_log(LOG_ERROR, "[BUG] server_time_to_unix_time() failed for NULL item. Incorrect S2S traffic?");
+		return 0;
+	}
+
 	if (strlen(tbuf) < 20)
 	{
 		ircd_log(LOG_ERROR, "[BUG] server_time_to_unix_time() failed for short item '%s'", tbuf);
