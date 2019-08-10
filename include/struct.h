@@ -1489,7 +1489,7 @@ struct ListOptions {
 #define EXTCMODETABLESZ 32
 
 /* Number of maximum paramter modes to allow.
- * Don't set it unnecessarily high.. we only use k, l, L, j and f at the moment. (FIXME)
+ * Don't set it unnecessarily high.. we only use k, l, L, j and f at the moment.
  */
 #define MAXPARAMMODES 16
 
