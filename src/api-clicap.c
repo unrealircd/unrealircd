@@ -219,11 +219,7 @@ void unload_clicap_commit(ClientCapability *clicap)
 	 *       bridge when we come to it ;)
 	 */
 	if (clicap->mtag_handler)
-	{
-		// FIXME: now it becomes unrestricted, BAD BAD BAD -- what to do?
-		// set some flags ?
 		clicap->mtag_handler->clicap_handler = NULL;
-	}
 
 	/* Destroy the capability */
 	DelListItem(clicap, clicaps);
