@@ -1,7 +1,20 @@
 /*
  * Channel Mode +f
- * (C) Copyright 2005-2019 Bram Matthys and The UnrealIRCd team.
- * License: GPLv2
+ * (C) Copyright 2019 Syzop and the UnrealIRCd team
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 1, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include "unrealircd.h"
@@ -9,7 +22,7 @@
 ModuleHeader MOD_HEADER(floodprot)
   = {
 	"chanmodes/floodprot",
-	"$Id: floodprot.c,v 1.1.2.3 2006/12/03 22:51:40 syzop Exp $",
+	"$Id: floodprot.c,v 1.2 2019/08/10 syzop Exp $",
 	"Channel Mode +f",
 	"3.2-b8-1",
 	NULL,
@@ -22,8 +35,9 @@ ModuleHeader MOD_HEADER(floodprot)
 #define FLD_MSG		3 /* m */
 #define FLD_NICK	4 /* n */
 #define FLD_TEXT	5 /* t */
+#define FLD_REPEAT	6 /* r */
 
-#define NUMFLD	6 /* 6 flood types */
+#define NUMFLD	7 /* 7 flood types */
 
 /** Configuration settings */
 struct {
@@ -49,13 +63,16 @@ struct SRemoveFld {
 typedef struct UserFld aUserFld;
 struct UserFld {
 	unsigned short nmsg;
+	unsigned short nmsg_repeat;
 	TS   firstmsg;
+	char *lastmsg;
+	char *prevmsg;
 };
 
 /* Maximum timers, iotw: max number of possible actions.
- * Currently this is: CNmMKiR (7)
+ * Currently this is: CNmMKiRd (8)
  */
-#define MAXCHMODEFACTIONS 7
+#define MAXCHMODEFACTIONS 8
 
 struct SChanFloodProt {
 	unsigned short	per; /* setting: per <XX> seconds */
@@ -86,8 +103,10 @@ static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned shor
 static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b);
 static int do_floodprot(aChannel *chptr, int what);
 char *channel_modef_string(ChanFloodProt *x, char *str);
-int  check_for_chan_flood(aClient *sptr, aChannel *chptr);
+int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text);
 void do_floodprot_action(aChannel *chptr, int what, char *text);
+void floodprottimer_add(aChannel *chptr, char mflag, time_t when);
+char *gen_floodprot_msghash(char *text);
 int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type, int what);
 void *cmodef_put_param(void *r_in, char *param);
 char *cmodef_get_param(void *r_in);
@@ -118,7 +137,7 @@ MOD_INIT(floodprot)
 {
 	CmodeInfo creq;
 	ModDataInfo mreq;
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	memset(&creq, 0, sizeof(creq));
@@ -288,9 +307,9 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 		ChanFloodProt newf;
 		int xxi, xyi, xzi, hascolon;
 		char *xp;
-		
+
 		memset(&newf, 0, sizeof(newf));
-		
+
 		/* old +f was like +f 10:5 or +f *10:5
 		 * new is +f [5c,30j,10t#b]:15
 		 * +f 10:5  --> +f [10t]:5
@@ -302,7 +321,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 		  /* like 1:1 and if its less than 3 chars then ahem.. */
 		  if (strlen(param) < 3)
 		  	goto invalidsyntax;
-		  /* may not contain other chars 
+		  /* may not contain other chars
 		     than 0123456789: & NULL */
 		  hascolon = 0;
 		  for (xp = param; *xp; xp++)
@@ -376,7 +395,8 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 				while(isdigit(*p)) { p++; }
 				if ((*p == '\0') ||
 				    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
-				      (*p == 'm') || (*p == 'n') || (*p == 't')))
+				      (*p == 'm') || (*p == 'n') || (*p == 't') ||
+				      (*p == 'r')))
 				{
 					if (MyClient(sptr) && *p && (warnings++ < 3))
 						sendnotice(sptr, "warning: channelmode +f: floodtype '%c' unknown, ignored.", *p);
@@ -389,7 +409,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 				{
 					if (MyClient(sptr))
 					{
-						sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 
+						sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE,
 							   'f', "value should be from 1-999");
 						goto invalidsyntax;
 					} else
@@ -456,10 +476,17 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 						break;
 					case 't':
 						newf.l[FLD_TEXT] = v;
-						if (a == 'b')
+						if (a == 'b' || a == 'd')
 							newf.a[FLD_TEXT] = a;
 						if (timedban_available)
 							newf.r[FLD_TEXT] = r;
+						break;
+					case 'r':
+						newf.l[FLD_REPEAT] = v;
+						if (a == 'd')
+							newf.a[FLD_REPEAT] = a;
+						else
+							newf.a[FLD_REPEAT] = 'b';
 						break;
 					default:
 						goto invalidsyntax;
@@ -476,12 +503,12 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 			if ((v < 1) || (v > 999)) /* 'per' out of range */
 			{
 				if (MyClient(sptr))
-					sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'f', 
+					sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'f',
 						   "time range should be 1-999");
 				goto invalidsyntax;
 			}
 			newf.per = v;
-			
+
 			/* Is anything turned on? (to stop things like '+f []:15' */
 			breakit = 1;
 			for (v=0; v < NUMFLD; v++)
@@ -489,9 +516,9 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 					breakit=0;
 			if (breakit)
 				goto invalidsyntax;
-			
-		} /* if param[0] == '[' */ 
-		
+
+		} /* if param[0] == '[' */
+
 		return EX_ALLOW;
 invalidsyntax:
 		sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'f', "Invalid syntax for MODE +f");
@@ -548,7 +575,8 @@ void *cmodef_put_param(void *fld_in, char *param)
 		while(isdigit(*p)) { p++; }
 		if ((*p == '\0') ||
 		    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
-		      (*p == 'm') || (*p == 'n') || (*p == 't')))
+		      (*p == 'm') || (*p == 'n') || (*p == 't') ||
+		      (*p == 'r')))
 		{
 			/* (unknown type) */
 			continue; /* continue instead of break for forward compatability. */
@@ -617,10 +645,17 @@ void *cmodef_put_param(void *fld_in, char *param)
 				break;
 			case 't':
 				fld->l[FLD_TEXT] = v;
-				if (a == 'b')
+				if (a == 'b' || a == 'd')
 					fld->a[FLD_TEXT] = a;
 				if (timedban_available)
 					fld->r[FLD_TEXT] = r;
+				break;
+			case 'r':
+				fld->l[FLD_REPEAT] = v;
+				if (a == 'd')
+					fld->a[FLD_REPEAT] = a;
+				else
+					fld->a[FLD_REPEAT] = 'b';
 				break;
 			default:
 				/* NOOP */
@@ -653,7 +688,7 @@ void *cmodef_put_param(void *fld_in, char *param)
 		}
 	}
 	fld->per = v;
-	
+
 	/* Is anything turned on? (to stop things like '+f []:15' */
 	breakit = 1;
 	for (v=0; v < NUMFLD; v++)
@@ -694,7 +729,7 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 	int localclient = (!cptr || MyClient(cptr)) ? 1 : 0;
 
 	memset(&newf, 0, sizeof(newf));
-		
+
 	strlcpy(param, param_in, sizeof(param));
 
 	/* old +f was like +f 10:5 or +f *10:5
@@ -708,7 +743,7 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 	  /* like 1:1 and if its less than 3 chars then ahem.. */
 	  if (strlen(param) < 3)
 	  	return NULL;
-	  /* may not contain other chars 
+	  /* may not contain other chars
 	     than 0123456789: & NULL */
 	  hascolon = 0;
 	  for (xp = param; *xp; xp++)
@@ -782,7 +817,8 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 			while(isdigit(*p)) { p++; }
 			if ((*p == '\0') ||
 			    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
-			      (*p == 'm') || (*p == 'n') || (*p == 't')))
+			      (*p == 'm') || (*p == 'n') || (*p == 't') ||
+			      (*p == 'r')))
 			{
 				/* (unknown type) */
 				continue; /* continue instead of break for forward compatability. */
@@ -856,10 +892,17 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 					break;
 				case 't':
 					newf.l[FLD_TEXT] = v;
-					if (a == 'b')
+					if (a == 'b' || a == 'd')
 						newf.a[FLD_TEXT] = a;
 					if (timedban_available)
 						newf.r[FLD_TEXT] = r;
+					break;
+				case 'r':
+					newf.l[FLD_REPEAT] = v;
+					if (a == 'd')
+						newf.a[FLD_REPEAT] = a;
+					else
+						newf.a[FLD_REPEAT] = 'b';
 					break;
 				default:
 					return NULL;
@@ -879,7 +922,7 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 				return NULL;
 		}
 		newf.per = v;
-		
+
 		/* Is anything turned on? (to stop things like '+f []:15' */
 		breakit = 1;
 		for (v=0; v < NUMFLD; v++)
@@ -887,8 +930,8 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 				breakit=0;
 		if (breakit)
 			return NULL;
-		
-	} /* if param[0] == '[' */ 
+
+	} /* if param[0] == '[' */
 
 	channel_modef_string(&newf, retbuf);
 	return retbuf;
@@ -918,7 +961,7 @@ int cmodef_sjoin_check(aChannel *chptr, void *ourx, void *theirx)
 
 	if (compare_floodprot_modes(our, their) == 0)
 		return EXSJ_SAME;
-	
+
 	our->per = MAX(our->per, their->per);
 	for (i=0; i < NUMFLD; i++)
 	{
@@ -926,7 +969,7 @@ int cmodef_sjoin_check(aChannel *chptr, void *ourx, void *theirx)
 		our->a[i] = MAX(our->a[i], their->a[i]);
 		our->r[i] = MAX(our->r[i], their->r[i]);
 	}
-	
+
 	return EXSJ_MERGE;
 }
 
@@ -1011,6 +1054,8 @@ char *channel_modef_string(ChanFloodProt *x, char *retbuf)
 		p = chmodefstrhelper(p, 'n', 'N', x->l[FLD_NICK], x->a[FLD_NICK], x->r[FLD_NICK]);
 	if (x->l[FLD_TEXT])
 		p = chmodefstrhelper(p, 't', '\0', x->l[FLD_TEXT], x->a[FLD_TEXT], x->r[FLD_TEXT]);
+	if (x->l[FLD_REPEAT])
+		p = chmodefstrhelper(p, 'r', '\0', x->l[FLD_REPEAT], x->a[FLD_REPEAT], x->r[FLD_REPEAT]);
 
 	if (*(p - 1) == ',')
 		p--;
@@ -1021,7 +1066,7 @@ char *channel_modef_string(ChanFloodProt *x, char *retbuf)
 
 char *floodprot_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
 {
-	if (MyClient(sptr) && (check_for_chan_flood(sptr, chptr) == 1))
+	if (MyClient(sptr) && (check_for_chan_flood(sptr, chptr, text) == 1))
 		return NULL; /* don't send it */
 	return text;
 }
@@ -1032,10 +1077,10 @@ int floodprot_post_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, ch
 		return 0;
 
 	/* HINT: don't be so stupid to reorder the items in the if's below.. you'll break things -- Syzop. */
-	
+
 	if (do_floodprot(chptr, FLD_MSG) && MyClient(sptr))
 		do_floodprot_action(chptr, FLD_MSG, "msg/notice");
-				
+
 	if ((text[0] == '\001') && strncmp(text+1, "ACTION ", 7) &&
 	    do_floodprot(chptr, FLD_CTCP) && MyClient(sptr))
 	{
@@ -1089,7 +1134,7 @@ int floodprot_chanmode_del(aChannel *chptr, int modechar)
 
 	if (!IsFloodLimit(chptr))
 		return 0;
-	
+
 	chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 	if (!chp)
 		return 0;
@@ -1127,13 +1172,17 @@ int floodprot_chanmode_del(aChannel *chptr, int modechar)
 	return 0;
 }
 
-int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
+int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 {
 	Membership *lp;
 	MembershipL *lp2;
-	int c_limit, t_limit, banthem;
+	int c_limit, t_limit, banthem, dropit;
+	int c_limit_repeat, banthem_repeat, dropit_repeat;
 	ChanFloodProt *chp;
 	aUserFld *userfld;
+	char *msghash;
+	int isfld_text, isfld_repeat;
+	int chk_text, chk_repeat;
 
 	if (ValidatePermissionsForPath("channel:override:flood",sptr,NULL,chptr,NULL) || !IsFloodLimit(chptr) || is_skochanop(sptr, chptr))
 		return 0;
@@ -1142,15 +1191,11 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
 		return 0; /* not in channel */
 
 	lp2 = (MembershipL *) lp;
-	
 	chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
-	if (!chp || !chp->l[FLD_TEXT])
+	if (!chp || !(chp->l[FLD_TEXT] || chp->l[FLD_REPEAT]))
 		return 0;
-	c_limit = chp->l[FLD_TEXT];
-	t_limit = chp->per;
-	banthem = (chp->a[FLD_TEXT] == 'b') ? 1 : 0;
-	
+
 	if (moddata_membership(lp2, mdflood).ptr == NULL)
 	{
 		/* Alloc a new entry if it doesn't exist yet */
@@ -1158,30 +1203,94 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
 	}
 	userfld = (aUserFld *)moddata_membership(lp2, mdflood).ptr;
 
+	isfld_text = isfld_repeat = 0;
+	c_limit = c_limit_repeat = banthem = banthem_repeat = dropit = dropit_repeat = 0;
+	t_limit = chp->per;
+	if ((chk_text = chp->l[FLD_TEXT]))
+	{
+		c_limit = chp->l[FLD_TEXT];
+		banthem = (chp->a[FLD_TEXT] == 'b') ? 1 : 0;
+		dropit = (chp->a[FLD_TEXT] == 'd') ? 1 : 0;
+		Debug((DEBUG_ERROR, "Checking for flood +f (type 'text'): firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
+			userfld->firstmsg, TStime() - userfld->firstmsg, userfld->nmsg + 1,
+			c_limit, t_limit));
+	}
+
+	if ((chk_repeat = chp->l[FLD_REPEAT]))
+	{
+		c_limit_repeat = chp->l[FLD_REPEAT];
+		banthem_repeat = (chp->a[FLD_REPEAT] == 'b') ? 1 : 0;
+		dropit_repeat = (chp->a[FLD_REPEAT] == 'd') ? 1 : 0;
+		Debug((DEBUG_ERROR, "Checking for flood +f (type 'repeat'): firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
+			userfld->firstmsg, TStime() - userfld->firstmsg, userfld->nmsg_repeat + 1,
+			c_limit_repeat, t_limit));
+	}
+
 	/* if current - firstmsgtime >= mode.per, then reset,
 	 * if nummsg > mode.msgs then kick/ban
 	 */
-	Debug((DEBUG_ERROR, "Checking for flood +f: firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
-		userfld->firstmsg, TStime() - userfld->firstmsg, userfld->nmsg + 1,
-		c_limit, t_limit));
 	if ((TStime() - userfld->firstmsg) >= t_limit)
 	{
 		/* reset */
 		userfld->firstmsg = TStime();
 		userfld->nmsg = 1;
+		userfld->nmsg_repeat = 1;
+		if (chk_repeat)
+		{
+			safestrdup(userfld->lastmsg, gen_floodprot_msghash(text));
+			MyFree(userfld->prevmsg);
+			userfld->prevmsg = NULL;
+		}
 		return 0; /* forget about it.. */
 	}
 
-	/* increase msgs */
-	userfld->nmsg++;
+	if (chk_repeat)
+	{
+		// The if() just above should set lastmsg the first time around, but let's be certain =]
+		msghash = gen_floodprot_msghash(text);
+		if (userfld->lastmsg)
+		{
+			if (!strcmp(userfld->lastmsg, msghash) || (userfld->prevmsg && !strcmp(userfld->prevmsg, msghash)))
+			{
+				userfld->nmsg_repeat++;
+				if (userfld->nmsg_repeat > c_limit_repeat)
+					isfld_repeat = 1;
+			}
+			safestrdup(userfld->prevmsg, userfld->lastmsg);
+		}
+		safestrdup(userfld->lastmsg, msghash);
+	}
 
-	if ((userfld->nmsg) > c_limit)
+	if (chk_text)
+	{
+		/* increase msgs */
+		userfld->nmsg++;
+		if (userfld->nmsg > c_limit)
+			isfld_text = 1;
+	}
+
+	if (isfld_text || isfld_repeat)
 	{
 		char comment[256], mask[256];
 		MessageTag *mtags;
 
-		snprintf(comment, sizeof(comment), "Flooding (Limit is %i lines per %i seconds)",
-			c_limit, t_limit);
+		if (isfld_repeat)
+		{
+			banthem = banthem_repeat;
+			dropit = dropit_repeat;
+			snprintf(comment, sizeof(comment), "Flooding (Your last message is too similar to previous ones)");
+		}
+		else if (isfld_text)
+			snprintf(comment, sizeof(comment), "Flooding (Limit is %i lines per %i seconds)", c_limit, t_limit);
+		else // Shouldn't happen, but let's be certain to handle it
+			return 0;
+
+		if (dropit)
+		{
+			// Notify user of not being able to send the message
+			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname, comment, chptr->chname);
+			return 1;
+		}
 
 		if (banthem)
 		{		/* ban. */
@@ -1339,7 +1448,7 @@ EVENT(modef_event)
 	time_t now;
 
 	now = TStime();
-	
+
 	for (e = removefld_list; e; e = e_next)
 	{
 		e_next = e->next;
@@ -1354,7 +1463,7 @@ EVENT(modef_event)
 			mode = get_mode_bitbychar(e->m);
 			if (mode == 0)
 			        extmode = get_extmode_bitbychar(e->m);
-			
+
 			if ((mode && (e->chptr->mode.mode & mode)) ||
 			    (extmode && (e->chptr->mode.extmode & extmode)))
 			{
@@ -1370,7 +1479,7 @@ EVENT(modef_event)
 				e->chptr->mode.mode &= ~mode;
 				e->chptr->mode.extmode &= ~extmode;
 			}
-			
+
 			/* And delete... */
 			DelListItem(e, removefld_list);
 			MyFree(e);
@@ -1386,7 +1495,7 @@ EVENT(modef_event)
 void floodprottimer_stopchantimers(aChannel *chptr)
 {
 	RemoveFld *e, *e_next;
-	
+
 	for (e = removefld_list; e; e = e_next)
 	{
 		e_next = e->next;
@@ -1418,7 +1527,7 @@ int do_floodprot(aChannel *chptr, int what)
 			/*
 			 *XXchp->t[what] = TStime();
 			 *XXchp->c[what] = 1;
-			 * 
+			 *
 			 * BAD.. there are some situations where we might 'miss' a flood
 			 * because of this. The reset has been moved to -i,-m,-N,-C,etc.
 			*/
@@ -1439,15 +1548,21 @@ void do_floodprot_action(aChannel *chptr, int what, char *text)
 	if (!m)
 		return;
 
-        mode = get_mode_bitbychar(m);
-        if (mode == 0)
-                extmode = get_extmode_bitbychar(m);
+	/* For drop action we don't actually have to do anything here, but we still have to prevent Unreal
+	 * from setting chmode +d (which is useless against floods anyways) =]
+	 */
+	if (chp->a[what] == 'd')
+		return;
+
+	mode = get_mode_bitbychar(m);
+	if (mode == 0)
+		extmode = get_extmode_bitbychar(m);
 
 	if (!mode && !extmode)
 		return;
-		
-        if (!(mode && (chptr->mode.mode & mode)) &&
-            !(extmode && (chptr->mode.extmode & extmode)))
+
+	if (!(mode && (chptr->mode.mode & mode)) &&
+		!(extmode && (chptr->mode.extmode & extmode)))
 	{
 		char comment[512], target[CHANNELLEN + 8];
 		MessageTag *mtags;
@@ -1485,6 +1600,60 @@ void do_floodprot_action(aChannel *chptr, int what, char *text)
 	}
 }
 
+char *gen_floodprot_msghash(char *text)
+{
+	int i;
+	int is_ctcp, is_action;
+	char *plaintext;
+	size_t len;
+	SHA256_CTX ckctx;
+	unsigned char binaryhash[SHA256_DIGEST_LENGTH];
+	static char msghash[256];
+
+	is_ctcp = is_action = 0;
+	// Remove any control chars (colours/bold/CTCP/etc) and convert it to lowercase before hashing it
+	if (text[0] == '\001')
+	{
+		if (!strncmp(text + 1, "ACTION ", 7))
+			is_action = 1;
+		else
+			is_ctcp = 1;
+	}
+	plaintext = (char *)StripControlCodes(text);
+	for (i = 0; plaintext[i]; i++)
+	{
+		// Don't need to bother with non-printables and various symbols and numbers
+		if (plaintext[i] > 64)
+			plaintext[i] = tolower(plaintext[i]);
+	}
+	if (is_ctcp || is_action)
+	{
+		// Remove the \001 chars around the message
+		if((len = strlen(plaintext)) && plaintext[len - 1] == '\001')
+			plaintext[len - 1] = '\0';
+		*plaintext++;
+		if(is_action)
+			plaintext += 7;
+	}
+
+	memset(&msghash, 0, sizeof(msghash));
+	if (!(len = strlen(plaintext)))
+	{
+		/* Empty string usually means the message consists of control codes only
+		 * No need to hash this though, which saves a bit of time
+		 */
+		msghash[0] = ' ';
+		return msghash;
+	}
+
+	memset(&binaryhash, 0, sizeof(binaryhash));
+	SHA256_Init(&ckctx);
+	SHA256_Update(&ckctx, plaintext, len);
+	SHA256_Final(binaryhash, &ckctx);
+	b64_encode(binaryhash, SHA256_DIGEST_LENGTH, msghash, sizeof(msghash));
+	return msghash;
+}
+
 // FIXME: REMARK: make sure you can only do a +f/-f once (latest in line wins).
 
 /* Checks if 2 ChanFloodProt modes (chmode +f) are different.
@@ -1504,6 +1673,14 @@ static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
 
 void userfld_free(ModData *md)
 {
+	aUserFld *userfld;
+	if (md->ptr)
+	{
+		// Make sure we don't leak memory :D
+		userfld = md->ptr;
+		MyFree(userfld->lastmsg);
+		MyFree(userfld->prevmsg);
+	}
 	MyFree(md->ptr);
 }
 
