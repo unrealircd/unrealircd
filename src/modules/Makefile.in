@@ -65,6 +65,7 @@ R_MODULES= \
 	charsys.so antimixedutf8.so authprompt.so m_sinfo.so \
 	reputation.so connthrottle.so history_backend_mem.so \
 	history_backend_null.so tkldb.so cmdrestrict.so \
+	rmtkl.so \
 	message-tags.so batch.so \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so
@@ -557,6 +558,10 @@ tkldb.so: tkldb.c $(INCLUDES)
 cmdrestrict.so: cmdrestrict.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o cmdrestrict.so cmdrestrict.c
+
+rmtkl.so: rmtkl.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o rmtkl.so rmtkl.c
 
 message-tags.so: message-tags.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
