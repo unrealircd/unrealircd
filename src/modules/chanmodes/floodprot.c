@@ -67,8 +67,6 @@ struct SChanFloodProt {
 	unsigned char   timers_running[MAXCHMODEFACTIONS+1]; /* if for example a '-m' timer is running then this contains 'm' */
 };
 
-/* FIXME: note to self: get_param() is not enough for module reloading, need to have an alternative serialize_struct() for like in our case where we want to remember timer settings and all .. (?) */
-
 /* Global variables */
 ModDataInfo *mdflood = NULL;
 Cmode_t EXTMODE_FLOODLIMIT = 0L;
@@ -464,7 +462,6 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 							newf.r[FLD_TEXT] = r;
 						break;
 					default:
-						// fixme: send uknown character thingy?
 						goto invalidsyntax;
 				}
 			} /* for */
@@ -497,7 +494,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 		
 		return EX_ALLOW;
 invalidsyntax:
-		sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'f', "Invalid syntax for MODE +f"); /* FIXME */
+		sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'f', "Invalid syntax for MODE +f");
 		return EX_DENY;
 	}
 
@@ -899,7 +896,7 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 
 void cmodef_free_param(void *r)
 {
-	// FIXME: cancel timers just to e sure? or maybe in DEBUGMODE?
+	// TODO: consider cancelling timers just to e sure? or maybe in DEBUGMODE?
 	MyFree(r);
 }
 
@@ -1442,7 +1439,6 @@ void do_floodprot_action(aChannel *chptr, int what, char *text)
 	if (!m)
 		return;
 
-	/* [TODO: add extended channel mode support] */
         mode = get_mode_bitbychar(m);
         if (mode == 0)
                 extmode = get_extmode_bitbychar(m);
