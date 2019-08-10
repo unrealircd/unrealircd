@@ -1284,7 +1284,7 @@ MessageTag *duplicate_mtag(MessageTag *mtag)
 }
 
 /** New message. Either really brand new, or inherited from other servers.
- * This function calls modules so they can add tags tags such as:
+ * This function calls modules so they can add tags, such as:
  * msgid, time and account.
  */
 void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list)
@@ -1296,7 +1296,7 @@ void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list
 
 /** New message - SPECIAL edition. Either really brand new, or inherited
  * from other servers.
- * This function calls modules so they can add tags tags such as:
+ * This function calls modules so they can add tags, such as:
  * msgid, time and account.
  * This special version deals in a special way with msgid in particular.
  * TODO: document
