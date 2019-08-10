@@ -22,8 +22,6 @@
 
 #include "unrealircd.h"
 
-/* FIXME: all sendto_server()'s and related need to be audited for mtags support !!!! */
-
 /* Forward declarations */
 CMD_FUNC(m_mode);
 CMD_FUNC(m_mlock);

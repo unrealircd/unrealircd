@@ -101,10 +101,9 @@ CMD_FUNC(m_sajoin)
 		return 0;
 	}
 
-	/* FIXME: can't this just use do_join() or something with a parameter to bypass some checks??
-	 * This duplicate code is damn ugly.
+	/* Can't this just use do_join() or something with a parameter to bypass some checks?
+	 * This duplicate code is damn ugly. Ah well..
 	 */
-
 	{
 		char *name, *p = NULL;
 		int i, parted = 0;
