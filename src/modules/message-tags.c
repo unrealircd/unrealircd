@@ -193,8 +193,8 @@ void _parse_message_tags(aClient *cptr, char **str, MessageTag **mtag_list)
 		}
 		message_tag_unescape(element, name);
 
-		/* For now, we just add the message tag.
-		 * In a real implementation we would actually apply some filtering.
+		/* Let the message tag handler check if this mtag is
+		 * acceptable. If so, we add it to the list.
 		 */
 		if (message_tag_ok(cptr, name, value))
 		{
@@ -211,22 +211,38 @@ void _parse_message_tags(aClient *cptr, char **str, MessageTag **mtag_list)
 /** Outgoing filter for tags */
 int client_accepts_tag(const char *token, aClient *acptr)
 {
-	// FIXME: we blindly send to servers right now
-	// but we need to take into account older servers !!!
-	if (!acptr || IsServer(acptr) || !MyConnect(acptr))
+	MessageTagHandler *m;
+
+	/* Send all tags to remote links, without checking here.
+	 * Note that mtags_to_string() already prevents sending messages
+	 * with message tags to links without PROTOCTL MTAGS, so we can
+	 * simply always return 1 here, regardless of checking (again).
+	 */
+	if (IsServer(acptr) || !MyConnect(acptr))
 		return 1;
 
-	// TODO: move to message tag API ;)
-	if (!strcmp(token, "msgid"))
+	m = MessageTagHandlerFind(token);
+	if (!m)
+		return 0;
+
+	/* If the client has indicated 'message-tags' support then we can
+	 * send any message tag, regardless of other CAP's.
+	 */
+	if (HasCapability(acptr, "message-tags"))
 		return 1;
 
-	if (!strcmp(token, "account") && HasCapability(acptr, "account-tag"))
-		return 1;
+	/* We continue here if the client did not indicate 'message-tags' support... */
 
-	if (!strcmp(token, "time") && HasCapability(acptr, "server-time"))
-		return 1;
+	/* If 'message-tags' is not indicated, then these cannot be sent as they don't
+	 * have a CAP to enable anyway (eg: msgid):
+	 */
+	if (m->flags & MTAG_HANDLER_FLAGS_NO_CAP_NEEDED)
+		return 0;
 
-	if (!strcmp(token, "batch") && HasCapability(acptr, "batch"))
+	/* Otherwise, check if the capability is set:
+	 * eg 'account-tag' for 'account', 'time' for 'server-time' and so on..
+	 */
+	if (m->clicap_handler && (acptr->local->caps & m->clicap_handler->cap))
 		return 1;
 
 	return 0;
