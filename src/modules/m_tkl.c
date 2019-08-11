@@ -77,8 +77,8 @@ int _run_spamfilter(aClient *sptr, char *str_in, int type, char *target, int fla
 int _join_viruschan(aClient *sptr, aTKline *tk, int type);
 void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr);
 int _match_user(char *rmask, aClient *acptr, int options);
-int tkl_ip_hash(char *ip);
-int tkl_ip_hash_type(char type);
+int _tkl_ip_hash(char *ip);
+int _tkl_ip_hash_type(int type);
 
 /* Externals (only for us :D) */
 extern int MODVAR spamf_ugly_vchanoverride;
@@ -117,6 +117,8 @@ MOD_TEST(m_tkl)
 	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER_VIRUSCHAN, _join_viruschan);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SPAMFILTER_BUILD_USER_STRING, _spamfilter_build_user_string);
 	EfunctionAdd(modinfo->handle, EFUNC_MATCH_USER, _match_user);
+	EfunctionAdd(modinfo->handle, EFUNC_TKL_IP_HASH, _tkl_ip_hash);
+	EfunctionAdd(modinfo->handle, EFUNC_TKL_IP_HASH_TYPE, _tkl_ip_hash_type);
 	return MOD_SUCCESS;
 }
 
@@ -1451,7 +1453,7 @@ int _tkl_chartotype(char c)
 }
 
 /** Used for finding out which element of the tkl_ip hash table is used (primary element) */
-int tkl_ip_hash(char *ip)
+int _tkl_ip_hash(char *ip)
 {
 	char ipbuf[64], *p;
 
@@ -1491,7 +1493,7 @@ int tkl_ip_hash(char *ip)
  * NOTE: Returns -1 for types that are never on the TKL ip hash table, such as spamfilter.
  *       This can be used by the caller as a quick way to find out if the type is supported.
  */
-int tkl_ip_hash_type(char type)
+int _tkl_ip_hash_type(int type)
 {
 	if ((type == 'Z') || (type == 'z'))
 		return 0;

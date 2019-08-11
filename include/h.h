@@ -697,6 +697,8 @@ extern MODVAR char *(*mtags_to_string)(MessageTag *m, aClient *acptr);
 extern MODVAR int (*can_send)(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice);
 extern MODVAR void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 extern MODVAR void (*broadcast_md_globalvar_cmd)(aClient *except, aClient *sender, char *varname, char *value);
+extern MODVAR int (*tkl_ip_hash)(char *ip);
+extern MODVAR int (*tkl_ip_hash_type)(int type);
 /* /Efuncs */
 
 extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;

@@ -126,6 +126,8 @@ extern char *mtags_to_string_default_handler(MessageTag *m, aClient *acptr);
 int (*can_send)(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice);
 void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 void (*broadcast_md_globalvar_cmd)(aClient *except, aClient *sender, char *varname, char *value);
+int (*tkl_ip_hash)(char *ip);
+int (*tkl_ip_hash_type)(int type);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL, NULL},
@@ -196,7 +198,9 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 65 */	{"can_send", (void *)&can_send, NULL},
 /* 66 */	{"broadcast_md_globalvar", (void *)&broadcast_md_globalvar, NULL},
 /* 67 */	{"broadcast_md_globalvar_cmd", (void *)&broadcast_md_globalvar_cmd, NULL},
-/* 68 */	{NULL, NULL, NULL},
+/* 68 */	{"tkl_ip_hash", (void *)&tkl_ip_hash, NULL},
+/* 69 */	{"tkl_ip_hash_type", (void *)&tkl_ip_hash_type, NULL},
+/* 70 */	{NULL, NULL, NULL},
 };
 
 #ifdef UNDERSCORE

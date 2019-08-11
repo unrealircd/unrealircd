@@ -1228,6 +1228,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define EFUNC_CAN_SEND			65
 #define EFUNC_BROADCAST_MD_GLOBALVAR	66
 #define EFUNC_BROADCAST_MD_GLOBALVAR_CMD	67
+#define EFUNC_TKL_IP_HASH		68
+#define EFUNC_TKL_IP_HASH_TYPE		69
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000
