@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, win32/rtf.c
+ *   IRC - Internet Relay Chat, windows/rtf.c
  *   Copyright (C) 2004 Dominick Meglio (codemastr)
  *   
  *   This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 
 #include "sys.h"
 #include <windows.h>
-#include "win32.h"
+#include "win.h"
 #include "common.h"
 #include "struct.h"
 #include "h.h"

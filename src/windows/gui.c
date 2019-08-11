@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, win32/gui.c
+ *   IRC - Internet Relay Chat, windows/gui.c
  *   Copyright (C) 2000-2004 David Flynn (DrBin) & Dominick Meglio (codemastr)
  *   
  *   This program is free software; you can redistribute it and/or modify
@@ -37,7 +37,7 @@
 #include "h.h"
 #include <richedit.h>
 #include <commdlg.h>
-#include "win32.h"
+#include "win.h"
 #include <Strsafe.h>
 
 #define TOOLBAR_START 82

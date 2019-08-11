@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, win32/editor.c
+ *   IRC - Internet Relay Chat, windows/editor.c
  *   Copyright (C) 2004 Dominick Meglio (codemastr)
  *   
  *   This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,7 @@
 #include <commdlg.h>
 #include <stdlib.h>
 #include "resource.h"
-#include "win32.h"
+#include "win.h"
 
 LRESULT CALLBACK GotoDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ColorDLG(HWND, UINT, WPARAM, LPARAM);
