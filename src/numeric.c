@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/s_numeric.c
+ *   Unreal Internet Relay Chat Daemon, src/numeric.c
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
  *   Numerous fixes by Markku Savela

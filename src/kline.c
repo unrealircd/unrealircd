@@ -1,5 +1,5 @@
 /*
- * Unreal Internet Relay Chat Daemon, src/s_kline.c
+ * Unreal Internet Relay Chat Daemon, src/kline.c
  * Small non-modulized stuff for the TKL layer
  * (C) Copyright 1999-2005 The UnrealIRCd Team
  *

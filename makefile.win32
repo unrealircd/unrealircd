@@ -146,19 +146,19 @@ INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/msg.h ./include/setup.h ./include/dynconf.h
 
 EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
- SRC/S_CONF.OBJ SRC/CONF_PREPROCESSOR.OBJ \
+ SRC/CONF.OBJ SRC/CONF_PREPROCESSOR.OBJ \
  SRC/FDLIST.OBJ SRC/DBUF.OBJ  \
  SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
- SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ \
- SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ \
- SRC/S_DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
- SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ \
- SRC/S_SERV.OBJ SRC/S_USER.OBJ \
- SRC/VERSION.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ \
+ SRC/NUMERIC.OBJ SRC/WHOWAS.OBJ \
+ SRC/MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ \
+ SRC/DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
+ SRC/ERR.OBJ SRC/PACKET.OBJ SRC/BSD.OBJ \
+ SRC/SERV.OBJ SRC/USER.OBJ \
+ SRC/VERSION.OBJ SRC/KLINE.OBJ SRC/EXTRA.OBJ SRC/IRCSPRINTF.OBJ \
  SRC/SCACHE.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
- SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/SSL.OBJ \
+ SRC/SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/SSL.OBJ \
  SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MODDATA.OBJ SRC/UID.OBJ SRC/MEMPOOL.OBJ \
- SRC/S_DISPATCH.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
+ SRC/DISPATCH.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
  SRC/API-CLICAP.OBJ SRC/API-MTAG.OBJ SRC/API-HISTORY-BACKEND.OBJ \
  SRC/EXTBANS.OBJ SRC/CRYPT_BLOWFISH.OBJ \
  SRC/OPERCLASS.OBJ SRC/UPDCONF.OBJ SRC/CRASHREPORT.OBJ \
@@ -376,49 +376,49 @@ src/list.obj: src/list.c $(INCLUDES)
 src/res.obj: src/res.c $(INCLUDES)
         $(CC) $(CFLAGS) src/res.c
 
-src/s_bsd.obj: src/s_bsd.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/s_bsd.c
+src/bsd.obj: src/bsd.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/bsd.c
 
-src/s_conf.obj: src/s_conf.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/s_conf.c
+src/conf.obj: src/conf.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/conf.c
 
 src/conf_preprocessor.obj: src/conf_preprocessor.c $(INCLUDES)
         $(CC) $(CFLAGS) src/conf_preprocessor.c
 
-src/s_debug.obj: src/s_debug.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/s_debug.c
+src/debug.obj: src/debug.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/debug.c
 
-src/s_err.obj: src/s_err.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/s_err.c
+src/err.obj: src/err.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/err.c
 
-src/s_kline.obj: src/s_kline.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/s_kline.c
+src/kline.obj: src/kline.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/kline.c
 
-src/s_misc.obj: src/s_misc.c $(INCLUDES) ./include/dbuf.h
-        $(CC) $(CFLAGS) src/s_misc.c
+src/misc.obj: src/misc.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/misc.c
 
 src/scache.obj: src/scache.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/scache.c
 
-src/s_socks.obj: src/s_socks.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/s_socks.c
+src/socks.obj: src/socks.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/socks.c
 
-src/s_svs.obj: src/s_svs.c $(INCLUDES)
-	  $(CC) $(CFLAGS) src/s_svs.c
+src/svs.obj: src/svs.c $(INCLUDES)
+	  $(CC) $(CFLAGS) src/svs.c
 
-src/s_user.obj: src/s_user.c $(INCLUDES) ./include/dbuf.h \
+src/user.obj: src/user.c $(INCLUDES) ./include/dbuf.h \
                 ./include/channel.h ./include/whowas.h
-        $(CC) $(CFLAGS) src/s_user.c
+        $(CC) $(CFLAGS) src/user.c
 
-src/s_extra.obj: src/s_extra.c $(INCLUDES) ./include/dbuf.h \
+src/extra.obj: src/extra.c $(INCLUDES) ./include/dbuf.h \
                 ./include/channel.h ./include/whowas.h
-        $(CC) $(CFLAGS) src/s_extra.c
+        $(CC) $(CFLAGS) src/extra.c
 
-src/s_serv.obj: src/s_serv.c $(INCLUDES) ./include/dbuf.h ./include/whowas.h
-        $(CC) $(CFLAGS) src/s_serv.c
+src/serv.obj: src/serv.c $(INCLUDES) ./include/dbuf.h ./include/whowas.h
+        $(CC) $(CFLAGS) src/serv.c
 
-src/s_numeric.obj: src/s_numeric.c $(INCLUDES) ./include/dbuf.h
-        $(CC) $(CFLAGS) src/s_numeric.c
+src/numeric.obj: src/numeric.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/numeric.c
 
 src/whowas.obj: src/whowas.c $(INCLUDES) ./include/dbuf.h ./include/whowas.h
         $(CC) $(CFLAGS) src/whowas.c
@@ -477,8 +477,8 @@ src/uid.obj: src/uid.c $(INCLUDES)
 src/mempool.obj: src/mempool.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/mempool.c
 
-src/s_dispatch.obj: src/s_dispatch.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/s_dispatch.c
+src/dispatch.obj: src/dispatch.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/dispatch.c
 
 src/md5.obj: src/md5.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/md5.c
@@ -513,8 +513,8 @@ src/crypt_blowfish.obj: src/crypt_blowfish.c $(INCLUDES)
 src/operclass.obj: src/operclass.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/operclass.c
 
-src/s_updconf.obj: src/s_updconf.c $(INCLUDES) ./include/dbuf.h
-        $(CC) $(CFLAGS) src/s_updconf.c
+src/updconf.obj: src/updconf.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/updconf.c
 
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \

@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/s_conf.c
+ *   Unreal Internet Relay Chat Daemon, src/conf.c
  *   (C) 1998-2000 Chris Behrens & Fred Jacobs (comstud, moogle)
  *   (C) 2000-2002 Carsten V. Munk and the UnrealIRCd Team
  *

@@ -1,5 +1,5 @@
 /*
- * UnrealIRCd, src/s_dispatch.c
+ * UnrealIRCd, src/dispatch.c
  * Copyright (c) 2012 William Pitcock <nenolod@dereferenced.org>
  *
  *   This program is free software; you can redistribute it and/or modify
