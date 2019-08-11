@@ -165,7 +165,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/OPENSSL_HOSTNAME_VALIDATION.OBJ $(CURLOBJ)
 
 OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/WINDEBUG.OBJ SRC/RTF.OBJ \
- SRC/EDITOR.OBJ SRC/WINDOWS.OBJ 
+ SRC/EDITOR.OBJ SRC/WIN.OBJ 
 
 DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDENT.DLL \
  SRC/MODULES/M_SETNAME.DLL SRC/MODULES/M_SETHOST.DLL SRC/MODULES/M_CHGIDENT.DLL \
@@ -289,7 +289,7 @@ ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES
 
 CLEAN:
         -@erase src\*.obj >NUL
-        -@erase src\windows.res >NUL
+        -@erase src\win.res >NUL
         -@erase src\version.c >NUL
         -@erase src\windows\*.obj >NUL
 	-@erase src\modules\*.obj >NUL
@@ -315,9 +315,9 @@ CONF:
 
 
 
-./UnrealIRCd.exe: $(OBJ_FILES) src/windows/windows.res
-        $(LINK) $(LFLAGS) $(OBJ_FILES) src/windows/windows.res /MAP
-	-@erase src\windows\windows.res
+./UnrealIRCd.exe: $(OBJ_FILES) src/windows/win.res
+        $(LINK) $(LFLAGS) $(OBJ_FILES) src/windows/win.res /MAP
+	-@erase src\windows\win.res
 	$(MT) -manifest src\windows\UnrealIRCd.exe.manifest -outputresource:UnrealIRCd.exe;1
 !IFNDEF DEBUGEXTRA
  @echo Standard version built 
@@ -432,10 +432,10 @@ src/crule.obj: src/crule.c $(INCLUDES)
 src/gui.obj: src/windows/gui.c $(INCLUDES) ./include/resource.h
         $(CC) $(CFLAGS) src/windows/gui.c
 
-src/rtf.obj: src/windows/rtf.c $(INCLUDES) ./src/windows/windows.h
+src/rtf.obj: src/windows/rtf.c $(INCLUDES) ./src/windows/win.h
 	$(CC) $(CFLAGS) src/windows/rtf.c
 
-src/editor.obj: src/windows/editor.c $(INCLUDES) ./include/resource.h ./src/windows/windows.h
+src/editor.obj: src/windows/editor.c $(INCLUDES) ./include/resource.h ./src/windows/win.h
         $(CC) $(CFLAGS) src/windows/editor.c
 
 src/service.obj: src/windows/service.c $(INCLUDES)
@@ -444,8 +444,8 @@ src/service.obj: src/windows/service.c $(INCLUDES)
 src/windebug.obj: src/windows/windebug.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/windows/windebug.c
 
-src/windows.obj: src/windows/windows.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/windows/windows.c
+src/win.obj: src/windows/win.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/windows/win.c
 
 src/unrealsvc.obj: src/windows/unrealsvc.c $(INCLUDES)
 	$(CC) $(CFLAGSST) src/windows/unrealsvc.c
@@ -516,8 +516,8 @@ src/operclass.obj: src/operclass.c $(INCLUDES) ./include/dbuf.h
 src/updconf.obj: src/updconf.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/updconf.c
 
-src/windows/windows.res: src/windows/wingui.rc
-        $(RC) /l 0x409 /fosrc/windows/windows.res /i ./include /i ./src \
+src/windows/win.res: src/windows/wingui.rc
+        $(RC) /l 0x409 /fosrc/windows/win.res /i ./include /i ./src \
               /d NDEBUG src/windows/wingui.rc
 
 src/windows/unrealsvc.res: src/windows/unrealsvc.rc
