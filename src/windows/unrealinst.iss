@@ -1,4 +1,4 @@
-; UnrealIRCd Win32 Installation Script
+; UnrealIRCd Windows Installation Script
 ; Requires Inno Setup 4.1.6 or later
 
 ; Uncomment the line below to package with libcurl support
@@ -15,7 +15,7 @@ AppMutex=UnrealMutex,Global\UnrealMutex
 DefaultDirName={pf}\UnrealIRCd 5
 DefaultGroupName=UnrealIRCd
 AllowNoIcons=yes
-LicenseFile=src\win32\gplplusssl.rtf
+LicenseFile=src\windows\gplplusssl.rtf
 Compression=lzma
 SolidCompression=true
 MinVersion=5.0
@@ -58,7 +58,7 @@ Source: "doc\conf\aliases\*"; DestDir: "{app}\conf\aliases"; Flags: ignoreversio
 
 Source: "unrealsvc.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
 
-Source: "src\win32\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
+Source: "src\windows\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "extras\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
