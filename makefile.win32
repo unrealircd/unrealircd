@@ -441,8 +441,8 @@ src/editor.obj: src/win32/editor.c $(INCLUDES) ./include/resource.h ./src/win32/
 src/service.obj: src/win32/service.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/win32/service.c
 
-src/windebug.obj: src/win32/debug.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/win32/debug.c
+src/windebug.obj: src/win32/windebug.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/win32/windebug.c
 
 src/win32.obj: src/win32/win32.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/win32/win32.c
