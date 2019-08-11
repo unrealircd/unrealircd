@@ -126,9 +126,9 @@ MODDBGCFLAG=/LDd /MD /Zi
 !ENDIF 
 
 FD_SETSIZE=/D FD_SETSIZE=16384
-CFLAGS=$(DBGCFLAG) $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+CFLAGS=$(DBGCFLAG) $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /Fosrc/ /nologo \
  $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
-CFLAGSST=$(DBGCFLAGST) $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+CFLAGSST=$(DBGCFLAGST) $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /Fosrc/ /nologo \
  $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
  dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(CARES_LIB) $(CARESLIB) \
@@ -165,7 +165,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/OPENSSL_HOSTNAME_VALIDATION.OBJ $(CURLOBJ)
 
 OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/WINDEBUG.OBJ SRC/RTF.OBJ \
- SRC/EDITOR.OBJ SRC/WIN32.OBJ 
+ SRC/EDITOR.OBJ SRC/WINDOWS.OBJ 
 
 DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDENT.DLL \
  SRC/MODULES/M_SETNAME.DLL SRC/MODULES/M_SETHOST.DLL SRC/MODULES/M_CHGIDENT.DLL \
@@ -305,18 +305,18 @@ CLEAN:
 	-@erase src\modules\*.pdb >NUL
 	-@erase src\modules\*.ilk >NUL
 
-./UNREALSVC.EXE: SRC/UNREALSVC.OBJ SRC/WIN32/UNREALSVC.RES
-	$(LINK) $(DBGLFLAGST) advapi32.lib src/unrealsvc.obj src/win32/unrealsvc.res
+./UNREALSVC.EXE: SRC/UNREALSVC.OBJ SRC/WINDOWS/UNREALSVC.RES
+	$(LINK) $(DBGLFLAGST) advapi32.lib src/unrealsvc.obj src/windows/unrealsvc.res
 
 CONF:
 	-@copy include\win32\setup.h include\setup.h >NUL
-	$(CC) src/win32/config.c
+	$(CC) src/windows/config.c
 	-@config.exe
 
 
 
-./UnrealIRCd.exe: $(OBJ_FILES) SRC/win32/WIN32.RES
-        $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/win32/WIN32.RES /MAP
+./UnrealIRCd.exe: $(OBJ_FILES) src/windows/WIN32.RES
+        $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/windows/WIN32.RES /MAP
 	-@erase src\win32\win32.res
 	$(MT) -manifest src\win32\UnrealIRCd.exe.manifest -outputresource:UnrealIRCd.exe;1
 !IFNDEF DEBUGEXTRA
@@ -429,26 +429,26 @@ src/hash.obj: src/hash.c $(INCLUDES)
 src/crule.obj: src/crule.c $(INCLUDES)
         $(CC) $(CFLAGS) src/crule.c
 
-src/gui.obj: src/win32/gui.c $(INCLUDES) ./include/resource.h
-        $(CC) $(CFLAGS) src/win32/gui.c
+src/gui.obj: src/windows/gui.c $(INCLUDES) ./include/resource.h
+        $(CC) $(CFLAGS) src/windows/gui.c
 
-src/rtf.obj: src/win32/rtf.c $(INCLUDES) ./src/win32/win32.h
-	$(CC) $(CFLAGS) src/win32/rtf.c
+src/rtf.obj: src/windows/rtf.c $(INCLUDES) ./src/windows/win32.h
+	$(CC) $(CFLAGS) src/windows/rtf.c
 
-src/editor.obj: src/win32/editor.c $(INCLUDES) ./include/resource.h ./src/win32/win32.h
-        $(CC) $(CFLAGS) src/win32/editor.c
+src/editor.obj: src/windows/editor.c $(INCLUDES) ./include/resource.h ./src/windows/win32.h
+        $(CC) $(CFLAGS) src/windows/editor.c
 
-src/service.obj: src/win32/service.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/win32/service.c
+src/service.obj: src/windows/service.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/windows/service.c
 
-src/windebug.obj: src/win32/windebug.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/win32/windebug.c
+src/windebug.obj: src/windows/windebug.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/windows/windebug.c
 
-src/win32.obj: src/win32/win32.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/win32/win32.c
+src/windows.obj: src/windows/win32.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/windows/win32.c
 
-src/unrealsvc.obj: src/win32/unrealsvc.c $(INCLUDES)
-	$(CC) $(CFLAGSST) src/win32/unrealsvc.c
+src/unrealsvc.obj: src/windows/unrealsvc.c $(INCLUDES)
+	$(CC) $(CFLAGSST) src/windows/unrealsvc.c
 
 src/modules.obj: src/modules.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules.c
@@ -516,13 +516,13 @@ src/operclass.obj: src/operclass.c $(INCLUDES) ./include/dbuf.h
 src/updconf.obj: src/updconf.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/updconf.c
 
-src/win32/win32.res: src/win32/win32gui.rc
-        $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
-              /d NDEBUG src/win32/win32gui.rc
+src/windows/win32.res: src/windows/win32gui.rc
+        $(RC) /l 0x409 /fosrc/windows/win32.res /i ./include /i ./src \
+              /d NDEBUG src/windows/win32gui.rc
 
-src/win32/unrealsvc.res: src/win32/unrealsvc.rc
-        $(RC) /l 0x409 /fosrc/win32/unrealsvc.res /i ./include /i ./src \
-              /d NDEBUG src/win32/unrealsvc.rc
+src/windows/unrealsvc.res: src/windows/unrealsvc.rc
+        $(RC) /l 0x409 /fosrc/windows/unrealsvc.res /i ./include /i ./src \
+              /d NDEBUG src/windows/unrealsvc.rc
 
 ################# Modules #################
 
@@ -531,7 +531,7 @@ CUSTOMMODULE: src/modules/third/$(MODULEFILE).c
 	      /OUT:src/modules/third/$(MODULEFILE).dll $(EXLIBS)
 
 SYMBOLFILE: 
-	$(CC) src/win32/def-clean.c
+	$(CC) src/windows/def-clean.c
 	dlltool --output-def UnrealIRCd.def.in --export-all-symbols $(EXP_OBJ_FILES)
 	def-clean UnrealIRCd.def.in UnrealIRCd.def
 

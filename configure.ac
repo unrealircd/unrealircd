@@ -2,9 +2,8 @@ dnl Process this file with autoconf to produce a configure script.
 
 dnl When updating the version, remember to update the following files
 dnl appropriately:
-dnl
-dnl include/win32/setup.h
-dnl src/win32/unrealinst.iss
+dnl include/windows/setup.h
+dnl src/windows/unrealinst.iss
 dnl doc/Config.header
 dnl src/version.c.SH
 
