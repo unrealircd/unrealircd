@@ -10,7 +10,7 @@ MT=mt
 
 # You are encouraged NOT to set these values here, but instead make a batch file
 # which passes all these arguments to nmake, like:
-# nmake -f makefile.win32 LIBRESSL_INC_DIR="c:\dev\libressl" etc etc...
+# nmake -f makefile.windows LIBRESSL_INC_DIR="c:\dev\libressl" etc etc...
 # Both ways will work, but if you use a batch file it's easier with
 # upgrading UnrealIRCd as you won't have to edit this makefile again.
 
@@ -289,9 +289,9 @@ ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES
 
 CLEAN:
         -@erase src\*.obj >NUL
-        -@erase src\win32.res >NUL
+        -@erase src\windows.res >NUL
         -@erase src\version.c >NUL
-        -@erase src\win32\*.obj >NUL
+        -@erase src\windows\*.obj >NUL
 	-@erase src\modules\*.obj >NUL
 	-@erase src\modules\*.dll >NUL
 	-@erase src\modules\chanmodes\*.dll >NUL
@@ -309,16 +309,16 @@ CLEAN:
 	$(LINK) $(DBGLFLAGST) advapi32.lib src/unrealsvc.obj src/windows/unrealsvc.res
 
 CONF:
-	-@copy include\win32\setup.h include\setup.h >NUL
+	-@copy include\windows\setup.h include\setup.h >NUL
 	$(CC) src/windows/config.c
 	-@config.exe
 
 
 
-./UnrealIRCd.exe: $(OBJ_FILES) src/windows/WIN32.RES
-        $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/windows/WIN32.RES /MAP
-	-@erase src\win32\win32.res
-	$(MT) -manifest src\win32\UnrealIRCd.exe.manifest -outputresource:UnrealIRCd.exe;1
+./UnrealIRCd.exe: $(OBJ_FILES) src/windows/windows.res
+        $(LINK) $(LFLAGS) $(OBJ_FILES) src/windows/windows.res /MAP
+	-@erase src\windows\windows.res
+	$(MT) -manifest src\windows\UnrealIRCd.exe.manifest -outputresource:UnrealIRCd.exe;1
 !IFNDEF DEBUGEXTRA
  @echo Standard version built 
 !ELSE
@@ -432,10 +432,10 @@ src/crule.obj: src/crule.c $(INCLUDES)
 src/gui.obj: src/windows/gui.c $(INCLUDES) ./include/resource.h
         $(CC) $(CFLAGS) src/windows/gui.c
 
-src/rtf.obj: src/windows/rtf.c $(INCLUDES) ./src/windows/win32.h
+src/rtf.obj: src/windows/rtf.c $(INCLUDES) ./src/windows/windows.h
 	$(CC) $(CFLAGS) src/windows/rtf.c
 
-src/editor.obj: src/windows/editor.c $(INCLUDES) ./include/resource.h ./src/windows/win32.h
+src/editor.obj: src/windows/editor.c $(INCLUDES) ./include/resource.h ./src/windows/windows.h
         $(CC) $(CFLAGS) src/windows/editor.c
 
 src/service.obj: src/windows/service.c $(INCLUDES)
@@ -444,8 +444,8 @@ src/service.obj: src/windows/service.c $(INCLUDES)
 src/windebug.obj: src/windows/windebug.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/windows/windebug.c
 
-src/windows.obj: src/windows/win32.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/windows/win32.c
+src/windows.obj: src/windows/windows.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/windows/windows.c
 
 src/unrealsvc.obj: src/windows/unrealsvc.c $(INCLUDES)
 	$(CC) $(CFLAGSST) src/windows/unrealsvc.c
@@ -516,9 +516,9 @@ src/operclass.obj: src/operclass.c $(INCLUDES) ./include/dbuf.h
 src/updconf.obj: src/updconf.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/updconf.c
 
-src/windows/win32.res: src/windows/win32gui.rc
-        $(RC) /l 0x409 /fosrc/windows/win32.res /i ./include /i ./src \
-              /d NDEBUG src/windows/win32gui.rc
+src/windows/windows.res: src/windows/wingui.rc
+        $(RC) /l 0x409 /fosrc/windows/windows.res /i ./include /i ./src \
+              /d NDEBUG src/windows/wingui.rc
 
 src/windows/unrealsvc.res: src/windows/unrealsvc.rc
         $(RC) /l 0x409 /fosrc/windows/unrealsvc.res /i ./include /i ./src \

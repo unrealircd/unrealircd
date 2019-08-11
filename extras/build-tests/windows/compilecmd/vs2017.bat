@@ -1,6 +1,6 @@
 rem Build command for Visual Studio 2017
 
-nmake -f makefile.win32 ^
+nmake -f makefile.windows ^
 LIBRESSL_INC_DIR="c:\projects\unrealircd-deps\libressl\include" ^
 LIBRESSL_LIB_DIR="c:\projects\unrealircd-deps\libressl\lib" ^
 SSLLIB="crypto-44.lib ssl-46.lib" ^

@@ -32,7 +32,7 @@ call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
 rem The above command will fail, due to missing symbol file
 rem However the symbol file can only be generated after the above command
 rem So... we create the symbolfile...
-nmake -f makefile.win32 SYMBOLFILE
+nmake -f makefile.windows SYMBOLFILE
 
 rem And we re-run the exact same command:
 call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
@@ -40,10 +40,10 @@ if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 rem Convert c:\dev to c:\projects\unrealircd-deps
 rem TODO: should use environment variable in innosetup script?
-sed -i "s/c:\\dev/c:\\projects\\unrealircd-deps/gi" src\win32\unrealinst.iss
+sed -i "s/c:\\dev/c:\\projects\\unrealircd-deps/gi" src\windows\unrealinst.iss
 
 rem Build installer file
-"c:\Program Files (x86)\Inno Setup 5\iscc.exe" /Q- src\win32\unrealinst.iss
+"c:\Program Files (x86)\Inno Setup 5\iscc.exe" /Q- src\windows\unrealinst.iss
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 rem Show some proof
