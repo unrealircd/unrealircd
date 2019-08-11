@@ -25,7 +25,7 @@ OBJS=res.o bsd.o auth.o channel.o cloak.o crule.o dbuf.o \
 	events.o fdlist.o hash.o ircd.o ircsprintf.o list.o \
 	match.o modules.o packet.o parse.o mempool.o operclass.o \
 	conf_preprocessor.o conf.o debug.o dispatch.o err.o extra.o kline.o \
-	misc.o numeric.o serv.o svs.o $(STRTOUL) socket.o \
+	misc.o numeric.o serv.o aliases.o $(STRTOUL) socket.o \
 	ssl.o user.o scache.o send.o support.o umodes.o \
 	version.o whowas.o random.o extcmodes.o moddata.o uid.o \
 	extbans.o api-isupport.o api-command.o api-clicap.o api-mtag.o \
@@ -122,8 +122,8 @@ userload.o: userload.c $(INCLUDES)
 uid.o: uid.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c uid.c
 
-svs.o: svs.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c svs.c
+aliases.o: aliases.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c aliases.c
 events.o: events.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c events.c
 
