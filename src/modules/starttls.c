@@ -63,13 +63,13 @@ MOD_UNLOAD(starttls)
 CMD_FUNC(m_starttls)
 {
 	SSL_CTX *ctx;
-	int ssl_options;
+	int tls_options;
 
 	if (!MyConnect(sptr) || !IsUnknown(sptr))
 		return 0;
 
 	ctx = sptr->local->listener->ssl_ctx ? sptr->local->listener->ssl_ctx : ctx_server;
-	ssl_options = sptr->local->listener->ssl_options ? sptr->local->listener->ssl_options->options : iConf.ssl_options->options;
+	tls_options = sptr->local->listener->tls_options ? sptr->local->listener->tls_options->options : iConf.tls_options->options;
 
 	/* Is SSL support enabled? (may not, if failed to load cert/keys/..) */
 	if (!ctx)
@@ -80,7 +80,7 @@ CMD_FUNC(m_starttls)
 	}
 
 	/* Is STARTTLS disabled? (same response as above) */
-	if (ssl_options & SSLFLAG_NOSTARTTLS)
+	if (tls_options & TLSFLAG_NOSTARTTLS)
 	{
 		sendnumeric(sptr, ERR_NOTREGISTERED);
 		return 0;
@@ -96,11 +96,11 @@ CMD_FUNC(m_starttls)
 	sendnumeric(sptr, RPL_STARTTLS);
 	send_queued(sptr);
 
-	SetSSLStartTLSHandshake(sptr);
+	SetStartTLSHandshake(sptr);
 	Debug((DEBUG_DEBUG, "Starting SSL handshake (due to STARTTLS) for %s", sptr->local->sockhost));
 	if ((sptr->local->ssl = SSL_new(ctx)) == NULL)
 		goto fail;
-	sptr->flags |= FLAGS_SSL;
+	sptr->flags |= FLAGS_TLS;
 	SSL_set_fd(sptr->local->ssl, sptr->fd);
 	SSL_set_nonblocking(sptr->local->ssl);
 	if (!ircd_SSL_accept(sptr, sptr->fd)) {
@@ -117,7 +117,7 @@ fail:
 	/* Failure */
 	sendnumeric(sptr, ERR_STARTTLS, "STARTTLS failed");
 	sptr->local->ssl = NULL;
-	sptr->flags &= ~FLAGS_SSL;
+	sptr->flags &= ~FLAGS_TLS;
 	SetUnknown(sptr);
 	return 0;
 }

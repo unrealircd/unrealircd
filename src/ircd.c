@@ -510,7 +510,7 @@ int check_ping(aClient *cptr)
 		)
 	{
 		if (IsServer(cptr) || IsConnecting(cptr) ||
-		    IsHandshake(cptr) || IsSSLConnectHandshake(cptr))
+		    IsHandshake(cptr) || IsTLSConnectHandshake(cptr))
 		{
 			sendto_ops_and_log
 				("No response from %s, closing link",
@@ -520,7 +520,7 @@ int check_ping(aClient *cptr)
 				me.name, get_client_name(cptr,
 				FALSE));
 		}
-		if (IsSSLAcceptHandshake(cptr))
+		if (IsTLSAcceptHandshake(cptr))
 			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->local->sockhost,
 				TStime(), cptr->local->since, ping));
 		(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %ld seconds",
@@ -545,7 +545,7 @@ int check_ping(aClient *cptr)
 	}
 	else if (!IsPingWarning(cptr) && PINGWARNING > 0 &&
 		(IsServer(cptr) || IsHandshake(cptr) || IsConnecting(cptr) ||
-		IsSSLConnectHandshake(cptr)) &&
+		IsTLSConnectHandshake(cptr)) &&
 		(TStime() - cptr->local->lasttime) >= (ping + PINGWARNING))
 	{
 		SetPingWarning(cptr);

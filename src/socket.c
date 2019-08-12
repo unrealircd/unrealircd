@@ -48,7 +48,7 @@ int  deliver_it(aClient *cptr, char *str, int len, int *want_read)
 
 	if (IsDead(cptr) || (!IsServer(cptr) && !IsPerson(cptr)
 	    && !IsHandshake(cptr) 
-	    && !IsSSLHandshake(cptr)
+	    && !IsTLSHandshake(cptr)
  
 	    && !IsUnknown(cptr)))
 	{
@@ -59,7 +59,7 @@ int  deliver_it(aClient *cptr, char *str, int len, int *want_read)
 		return -1;
 	}
 
-	if (IsSSL(cptr) && cptr->local->ssl != NULL)
+	if (IsTLS(cptr) && cptr->local->ssl != NULL)
 	{
 		retval = SSL_write(cptr->local->ssl, str, len);
 

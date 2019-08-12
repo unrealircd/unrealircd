@@ -129,7 +129,7 @@ char *url_getfilename(const char *url)
  * Sets up all of the SSL options necessary to support HTTPS/FTPS
  * transfers.
  */
-static void set_curl_ssl_options(CURL *curl)
+static void set_curl_tls_options(CURL *curl)
 {
 	char buf[512];
 	
@@ -138,13 +138,13 @@ static void set_curl_ssl_options(CURL *curl)
 	 * But this information is not known yet since the configuration file has not been
 	 * parsed yet at this point.
 	 */
-	curl_easy_setopt(curl, CURLOPT_SSLCERT, iConf.ssl_options->certificate_file);
+	curl_easy_setopt(curl, CURLOPT_SSLCERT, iConf.tls_options->certificate_file);
 	if (SSLKeyPasswd)
 		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, SSLKeyPasswd);
-	curl_easy_setopt(curl, CURLOPT_SSLKEY, iConf.ssl_options->key_file);
+	curl_easy_setopt(curl, CURLOPT_SSLKEY, iConf.tls_options->key_file);
 #endif
 
-	snprintf(buf, sizeof(buf), "%s/ssl/curl-ca-bundle.crt", CONFDIR);
+	snprintf(buf, sizeof(buf), "%s/tls/curl-ca-bundle.crt", CONFDIR);
 	curl_easy_setopt(curl, CURLOPT_CAINFO, buf);
 }
 
@@ -218,7 +218,7 @@ char *download_file(const char *url, char **error)
 	 */
 	curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
 
-	set_curl_ssl_options(curl);
+	set_curl_tls_options(curl);
 	bzero(errorbuf, CURL_ERROR_SIZE);
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
 	res = curl_easy_perform(curl);
@@ -430,7 +430,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->fd);
 		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
-		set_curl_ssl_options(curl);
+		set_curl_tls_options(curl);
 		bzero(handle->errorbuf, CURL_ERROR_SIZE);
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
 		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);

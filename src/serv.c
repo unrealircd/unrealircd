@@ -397,12 +397,12 @@ char *get_cptr_status(aClient *acptr)
 			*p++ = 'S';
 		if (acptr->umodes & LISTENER_CLIENTSONLY)
 			*p++ = 'C';
-		if (acptr->umodes & LISTENER_SSL)
+		if (acptr->umodes & LISTENER_TLS)
 			*p++ = 's';
 	}
 	else
 	{
-		if (acptr->flags & FLAGS_SSL)
+		if (acptr->flags & FLAGS_TLS)
 			*p++ = 's';
 	}
 	*p++ = ']';

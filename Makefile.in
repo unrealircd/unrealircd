@@ -193,8 +193,6 @@ install: all
 	$(INSTALL) -m 0600 doc/conf/help/*.conf @CONFDIR@/help
 	$(INSTALL) -m 0700 -d @CONFDIR@/examples
 	$(INSTALL) -m 0600 doc/conf/examples/*.conf @CONFDIR@/examples
-	$(INSTALL) -m 0700 -d @CONFDIR@/ssl
-	$(INSTALL) -m 0600 doc/conf/ssl/curl-ca-bundle.crt @CONFDIR@/ssl
 	$(INSTALL) -m 0700 unrealircd @SCRIPTDIR@
 	$(INSTALL) -m 0700 -d @MODULESDIR@
 	$(INSTALL) -m 0700 src/modules/*.so @MODULESDIR@
@@ -206,6 +204,15 @@ install: all
 	$(INSTALL) -m 0700 src/modules/snomasks/*.so @MODULESDIR@/snomasks
 	$(INSTALL) -m 0700 -d @MODULESDIR@/extbans
 	$(INSTALL) -m 0700 src/modules/extbans/*.so @MODULESDIR@/extbans
+	@#If the conf/ssl directory exists then rename it here to conf/tls
+	@#and add a symlink for backwards compatibility (so that f.e. certbot
+	@#doesn't randomly fail after an upgrade to U5).
+	-@if [ -d "@CONFDIR@/ssl" ] ; then \
+		mv "@CONFDIR@/ssl" "@CONFDIR@/tls" ; \
+		ln -s "@CONFDIR@/tls" "@CONFDIR@/ssl" ; \
+	fi
+	$(INSTALL) -m 0700 -d @CONFDIR@/tls
+	$(INSTALL) -m 0600 doc/conf/ssl/curl-ca-bundle.crt @CONFDIR@/ssl
 	@# delete modules/cap directory, to avoid confusing with U4 to U5 upgrades:
 	rm -rf @MODULESDIR@/cap
 	$(INSTALL) -m 0700 -d @MODULESDIR@/third

@@ -210,11 +210,11 @@ CMD_FUNC(m_trace)
 			  cnt++;
 			  break;
 #ifdef USE_SSL
-		  case STAT_SSL_CONNECT_HANDSHAKE:
+		  case STAT_TLS_CONNECT_HANDSHAKE:
 		  	sendnumeric(sptr, RPL_TRACENEWTYPE, "SSL-Connect-Handshake", name); 
 			cnt++;
 			break;
-		  case STAT_SSL_ACCEPT_HANDSHAKE:
+		  case STAT_TLS_ACCEPT_HANDSHAKE:
 		  	sendnumeric(sptr, RPL_TRACENEWTYPE, "SSL-Accept-Handshake", name); 
 			cnt++;
 			break;

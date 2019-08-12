@@ -365,7 +365,7 @@ skip_host_check:
 	{
 		char *errstr = NULL;
 
-		if (!IsSSL(cptr))
+		if (!IsTLS(cptr))
 		{
 			sendto_one(cptr, NULL,
 				"ERROR :Link '%s' denied (Not using SSL/TLS) %s",

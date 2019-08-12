@@ -57,20 +57,20 @@ MOD_UNLOAD(sts)
  */
 int sts_capability_visible(aClient *acptr)
 {
-	SSLOptions *ssl;
+	TLSOptions *ssl;
 
 	/* This is possible if queried from the CAP NEW/DEL code */
 	if (acptr == NULL)
-		return (iConf.ssl_options && iConf.ssl_options->sts_port) ? 1 : 0;
+		return (iConf.tls_options && iConf.tls_options->sts_port) ? 1 : 0;
 
 	if (!IsSecure(acptr))
 	{
-		if (iConf.ssl_options && iConf.ssl_options->sts_port)
+		if (iConf.tls_options && iConf.tls_options->sts_port)
 			return 1; /* YES, non-SSL user and set::ssl::sts-policy configured */
 		return 0; /* NO, there is no sts-policy */
 	}
 
-	ssl = FindSSLOptionsForUser(acptr);
+	ssl = FindTLSOptionsForUser(acptr);
 
 	if (ssl && ssl->sts_port)
 		return 1;
@@ -80,13 +80,13 @@ int sts_capability_visible(aClient *acptr)
 
 char *sts_capability_parameter(aClient *acptr)
 {
-	SSLOptions *ssl;
+	TLSOptions *ssl;
 	static char buf[256];
 
 	if (IsSecure(acptr))
-		ssl = FindSSLOptionsForUser(acptr);
+		ssl = FindTLSOptionsForUser(acptr);
 	else
-		ssl = iConf.ssl_options;
+		ssl = iConf.tls_options;
 
 	if (!ssl)
 		return ""; /* This would be odd. */

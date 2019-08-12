@@ -432,7 +432,7 @@ void close_listener(ConfigItem_listen *listener)
 		ircd_log(LOG_ERROR, "IRCd no longer listening on %s:%d (%s)%s",
 			listener->ip, listener->port,
 			listener->ipv6 ? "IPv6" : "IPv4",
-			listener->options & LISTENER_SSL ? " (SSL)" : "");
+			listener->options & LISTENER_TLS ? " (SSL)" : "");
 		fd_close(listener->fd);
 		--OpenFiles;
 	}
@@ -753,7 +753,7 @@ void close_connection(aClient *cptr)
 	if (cptr->fd >= 0)
 	{
 		send_queued(cptr);
-		if (IsSSL(cptr) && cptr->local->ssl) {
+		if (IsTLS(cptr) && cptr->local->ssl) {
 			SSL_set_shutdown(cptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
 			SSL_smart_shutdown(cptr->local->ssl);
 			SSL_free(cptr->local->ssl);
@@ -1042,19 +1042,19 @@ refuse_client:
 
 	list_add(&acptr->lclient_node, &unknown_list);
 
-	if ((listener->options & LISTENER_SSL) && ctx_server)
+	if ((listener->options & LISTENER_TLS) && ctx_server)
 	{
 		SSL_CTX *ctx = listener->ssl_ctx ? listener->ssl_ctx : ctx_server;
 
 		if (ctx)
 		{
-			SetSSLAcceptHandshake(acptr);
+			SetTLSAcceptHandshake(acptr);
 			Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", acptr->local->sockhost));
 			if ((acptr->local->ssl = SSL_new(ctx)) == NULL)
 			{
 				goto refuse_client;
 			}
-			acptr->flags |= FLAGS_SSL;
+			acptr->flags |= FLAGS_TLS;
 			SSL_set_fd(acptr->local->ssl, fd);
 			SSL_set_nonblocking(acptr->local->ssl);
 			SSL_set_ex_data(acptr->local->ssl, ssl_client_index, acptr);
@@ -1234,7 +1234,7 @@ void read_packet(int fd, int revents, void *data)
 
 	while (1)
 	{
-		if (IsSSL(cptr) && cptr->local->ssl != NULL)
+		if (IsTLS(cptr) && cptr->local->ssl != NULL)
 		{
 			length = SSL_read(cptr->local->ssl, readbuf, sizeof(readbuf));
 
@@ -1482,9 +1482,9 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	set_sockhost(cptr, aconf->outgoing.hostname);
 	add_client_to_list(cptr);
 
-	if (aconf->outgoing.options & CONNECT_SSL)
+	if (aconf->outgoing.options & CONNECT_TLS)
 	{
-		SetSSLConnectHandshake(cptr);
+		SetTLSConnectHandshake(cptr);
 		fd_setselect(cptr->fd, FD_SELECT_WRITE, ircd_SSL_client_handshake, cptr);
 	}
 	else

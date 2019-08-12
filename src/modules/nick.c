@@ -1426,7 +1426,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		if (IsSecureConnect(sptr))
 		{
-			if (sptr->local->ssl && !iConf.no_connect_ssl_info)
+			if (sptr->local->ssl && !iConf.no_connect_tls_info)
 			{
 				sendnotice(sptr, "*** You are connected to %s with %s",
 					me.name, ssl_get_cipher(sptr->local->ssl));
@@ -1713,7 +1713,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			goto attach;
 		if (aconf->auth && !cptr->local->passwd)
 			continue;
-		if (aconf->flags.ssl && !IsSecure(cptr))
+		if (aconf->flags.tls && !IsSecure(cptr))
 			continue;
 		if (hp && hp->h_name)
 		{

@@ -458,7 +458,7 @@ SSL_CTX *crashreport_init_ssl(void)
 	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3);
 
 	/* Verify peer certificate */
-	snprintf(buf, sizeof(buf), "%s/ssl/curl-ca-bundle.crt", CONFDIR);
+	snprintf(buf, sizeof(buf), "%s/tls/curl-ca-bundle.crt", CONFDIR);
 	SSL_CTX_load_verify_locations(ctx_client, buf, NULL);
 	SSL_CTX_set_verify(ctx_client, SSL_VERIFY_PEER, NULL);
 

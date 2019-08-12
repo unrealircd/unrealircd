@@ -227,7 +227,7 @@ static int setup_dh_params(SSL_CTX *ctx)
 {
 	DH *dh;
 	BIO *bio;
-	char *dh_file = iConf.ssl_options ? iConf.ssl_options->dh_file : tempiConf.ssl_options->dh_file;
+	char *dh_file = iConf.tls_options ? iConf.tls_options->dh_file : tempiConf.tls_options->dh_file;
 	/* ^^ because we can be called both before config file initalization or after */
 
 	if (dh_file == NULL)
@@ -256,7 +256,7 @@ static int setup_dh_params(SSL_CTX *ctx)
 }
 
 /** Disable SSL/TLS protocols as set by config */
-void disable_ssl_protocols(SSL_CTX *ctx, SSLOptions *ssloptions)
+void disable_ssl_protocols(SSL_CTX *ctx, TLSOptions *tlsoptions)
 {
 	/* OpenSSL has two mechanisms for protocol version control:
 	 *
@@ -275,12 +275,12 @@ void disable_ssl_protocols(SSL_CTX *ctx, SSLOptions *ssloptions)
 	 * minimum protocol version to begin with.
 	 */
 #ifdef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
-	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1) &&
-	    !(ssloptions->protocols & SSL_PROTOCOL_TLSV1_1))
+	if (!(tlsoptions->protocols & TLS_PROTOCOL_TLSV1) &&
+	    !(tlsoptions->protocols & TLS_PROTOCOL_TLSV1_1))
 	{
 		SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION);
 	} else
-	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1))
+	if (!(tlsoptions->protocols & TLS_PROTOCOL_TLSV1))
 	{
 		SSL_CTX_set_min_proto_version(ctx, TLS1_1_VERSION);
 	} else
@@ -292,27 +292,27 @@ void disable_ssl_protocols(SSL_CTX *ctx, SSLOptions *ssloptions)
 	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3); /* always disable SSLv3 */
 
 #ifdef SSL_OP_NO_TLSv1
-	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1))
+	if (!(tlsoptions->protocols & TLS_PROTOCOL_TLSV1))
 		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1);
 #endif
 
 #ifdef SSL_OP_NO_TLSv1_1
-	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1_1))
+	if (!(tlsoptions->protocols & TLS_PROTOCOL_TLSV1_1))
 		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1_1);
 #endif
 
 #ifdef SSL_OP_NO_TLSv1_2
-	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1_2))
+	if (!(tlsoptions->protocols & TLS_PROTOCOL_TLSV1_2))
 		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1_2);
 #endif
 
 #ifdef SSL_OP_NO_TLSv1_3
-	if (!(ssloptions->protocols & SSL_PROTOCOL_TLSV1_3))
+	if (!(tlsoptions->protocols & TLS_PROTOCOL_TLSV1_3))
 		SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1_3);
 #endif
 }
 
-SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
+SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 {
 	SSL_CTX *ctx;
 	char *errstr = NULL;
@@ -328,10 +328,10 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 		config_report_ssl_error();
 		return NULL;
 	}
-	disable_ssl_protocols(ctx, ssloptions);
+	disable_ssl_protocols(ctx, tlsoptions);
 	SSL_CTX_set_default_passwd_cb(ctx, ssl_pem_passwd_cb);
 
-	if (server && !(ssloptions->options & SSLFLAG_DISABLECLIENTCERT))
+	if (server && !(tlsoptions->options & TLSFLAG_DISABLECLIENTCERT))
 	{
 		/* We tell OpenSSL/LibreSSL to verify the certificate and set our callback.
 		 * Our callback will always accept the certificate since actual checking
@@ -340,7 +340,7 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 		 * _verify_link() will take care of it only after we learned what server
 		 * we are dealing with (and if we should verify certificates for that server).
 		 */
-		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE | (ssloptions->options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
+		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE | (tlsoptions->options & TLSFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
 	}
 	SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_OFF);
 #ifndef SSL_OP_NO_TICKET
@@ -351,30 +351,30 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 	if (!setup_dh_params(ctx))
 		goto fail;
 
-	if (!ssloptions->certificate_file)
+	if (!tlsoptions->certificate_file)
 	{
 		config_error("No SSL certificate configured (set::options::ssl::certificate or in a listen block)");
 		config_report_ssl_error();
 		goto fail;
 	}
 
-	if (SSL_CTX_use_certificate_chain_file(ctx, ssloptions->certificate_file) <= 0)
+	if (SSL_CTX_use_certificate_chain_file(ctx, tlsoptions->certificate_file) <= 0)
 	{
-		config_error("Failed to load SSL certificate %s", ssloptions->certificate_file);
+		config_error("Failed to load SSL certificate %s", tlsoptions->certificate_file);
 		config_report_ssl_error();
 		goto fail;
 	}
 
-	if (!ssloptions->key_file)
+	if (!tlsoptions->key_file)
 	{
 		config_error("No SSL key configured (set::options::ssl::key or in a listen block)");
 		config_report_ssl_error();
 		goto fail;
 	}
 
-	if (SSL_CTX_use_PrivateKey_file(ctx, ssloptions->key_file, SSL_FILETYPE_PEM) <= 0)
+	if (SSL_CTX_use_PrivateKey_file(ctx, tlsoptions->key_file, SSL_FILETYPE_PEM) <= 0)
 	{
-		config_error("Failed to load SSL private key %s", ssloptions->key_file);
+		config_error("Failed to load SSL private key %s", tlsoptions->key_file);
 		config_report_ssl_error();
 		goto fail;
 	}
@@ -386,7 +386,7 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 		goto fail;
 	}
 
-	if (SSL_CTX_set_cipher_list(ctx, ssloptions->ciphers) == 0)
+	if (SSL_CTX_set_cipher_list(ctx, tlsoptions->ciphers) == 0)
 	{
 		config_error("Failed to set SSL cipher list");
 		config_report_ssl_error();
@@ -394,7 +394,7 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 	}
 
 #ifdef SSL_OP_NO_TLSv1_3
-	if (SSL_CTX_set_ciphersuites(ctx, ssloptions->ciphersuites) == 0)
+	if (SSL_CTX_set_ciphersuites(ctx, tlsoptions->ciphersuites) == 0)
 	{
 		config_error("Failed to set SSL ciphersuites list");
 		config_report_ssl_error();
@@ -413,11 +413,11 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 	if (server)
 		SSL_CTX_set_options(ctx, SSL_OP_CIPHER_SERVER_PREFERENCE);
 
-	if (ssloptions->trusted_ca_file)
+	if (tlsoptions->trusted_ca_file)
 	{
-		if (!SSL_CTX_load_verify_locations(ctx, ssloptions->trusted_ca_file, NULL))
+		if (!SSL_CTX_load_verify_locations(ctx, tlsoptions->trusted_ca_file, NULL))
 		{
-			config_error("Failed to load Trusted CA's from %s", ssloptions->trusted_ca_file);
+			config_error("Failed to load Trusted CA's from %s", tlsoptions->trusted_ca_file);
 			config_report_ssl_error();
 			goto fail;
 		}
@@ -441,10 +441,10 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 		 */
 #endif
 		/* Let's see if we need to (and can) set specific curves */
-		if (ssloptions->ecdh_curves)
+		if (tlsoptions->ecdh_curves)
 		{
 #ifdef HAS_SSL_CTX_SET1_CURVES_LIST
-			if (!SSL_CTX_set1_curves_list(ctx, ssloptions->ecdh_curves))
+			if (!SSL_CTX_set1_curves_list(ctx, tlsoptions->ecdh_curves))
 			{
 				config_error("Failed to apply ecdh-curves '%s'. "
 				             "To get a list of supported curves with the "
@@ -452,7 +452,7 @@ SSL_CTX *init_ctx(SSLOptions *ssloptions, int server)
 				             "'openssl ecparam -list_curves' on the server. "
 				             "Separate multiple curves by colon, "
 				             "for example: ecdh-curves \"secp521r1:secp384r1\".",
-				             ssloptions->ecdh_curves);
+				             tlsoptions->ecdh_curves);
 				config_report_ssl_error();
 				goto fail;
 			}
@@ -496,10 +496,10 @@ int early_init_ssl(void)
 int init_ssl(void)
 {
 	/* SSL preliminaries. We keep the certificate and key with the context. */
-	ctx_server = init_ctx(iConf.ssl_options, 1);
+	ctx_server = init_ctx(iConf.tls_options, 1);
 	if (!ctx_server)
 		return 0;
-	ctx_client = init_ctx(iConf.ssl_options, 0);
+	ctx_client = init_ctx(iConf.tls_options, 0);
 	if (!ctx_client)
 		return 0;
 	return 1;
@@ -521,7 +521,7 @@ void reinit_ssl(aClient *acptr)
 		mylog("%s requested a reload of all SSL related data (/rehash -ssl)",
 			acptr->name);
 
-	tmp = init_ctx(iConf.ssl_options, 1);
+	tmp = init_ctx(iConf.tls_options, 1);
 	if (!tmp)
 	{
 		config_error("SSL Reload failed.");
@@ -530,7 +530,7 @@ void reinit_ssl(aClient *acptr)
 	}
 	ctx_server = tmp; /* activate */
 	
-	tmp = init_ctx(iConf.ssl_options, 0);
+	tmp = init_ctx(iConf.tls_options, 0);
 	if (!tmp)
 	{
 		config_error("SSL Reload partially failed. Server context is reloaded, client context failed");
@@ -542,9 +542,9 @@ void reinit_ssl(aClient *acptr)
 	/* listen::ssl-options.... */
 	for (listen = conf_listen; listen; listen = listen->next)
 	{
-		if (listen->ssl_options)
+		if (listen->tls_options)
 		{
-			tmp = init_ctx(listen->ssl_options, 1);
+			tmp = init_ctx(listen->tls_options, 1);
 			if (!tmp)
 			{
 				config_error("SSL Reload partially failed. listen::ssl-options error, see above");
@@ -558,9 +558,9 @@ void reinit_ssl(aClient *acptr)
 	/* sni::ssl-options.... */
 	for (sni = conf_sni; sni; sni = sni->next)
 	{
-		if (sni->ssl_options)
+		if (sni->tls_options)
 		{
-			tmp = init_ctx(sni->ssl_options, 1);
+			tmp = init_ctx(sni->tls_options, 1);
 			if (!tmp)
 			{
 				config_error("SSL Reload partially failed. sni::ssl-options error, see above");
@@ -574,9 +574,9 @@ void reinit_ssl(aClient *acptr)
 	/* link::outgoing::ssl-options.... */
 	for (link = conf_link; link; link = link->next)
 	{
-		if (link->ssl_options)
+		if (link->tls_options)
 		{
-			tmp = init_ctx(link->ssl_options, 1);
+			tmp = init_ctx(link->tls_options, 1);
 			if (!tmp)
 			{
 				config_error("SSL Reload partially failed. link::outgoing::ssl-options error in link %s { }, see above",
@@ -612,15 +612,15 @@ char *ssl_get_cipher(SSL *ssl)
 /** Get the applicable ::ssl-options block for this local client,
  * which may be defined in the link block, listen block, or set block.
  */
-SSLOptions *get_ssl_options_for_client(aClient *acptr)
+TLSOptions *get_tls_options_for_client(aClient *acptr)
 {
 	if (!acptr->local)
 		return NULL;
-	if (acptr->serv && acptr->serv->conf && acptr->serv->conf->ssl_options)
-		return acptr->serv->conf->ssl_options;
-	if (acptr->local && acptr->local->listener && acptr->local->listener->ssl_options)
-		return acptr->local->listener->ssl_options;
-	return iConf.ssl_options;
+	if (acptr->serv && acptr->serv->conf && acptr->serv->conf->tls_options)
+		return acptr->serv->conf->tls_options;
+	if (acptr->local && acptr->local->listener && acptr->local->listener->tls_options)
+		return acptr->local->listener->tls_options;
+	return iConf.tls_options;
 }
 
 /** Outgoing SSL connect (read: handshake) to another server. */
@@ -628,7 +628,7 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 {
 	aClient *acptr = data;
 	SSL_CTX *ctx = (acptr->serv && acptr->serv->conf && acptr->serv->conf->ssl_ctx) ? acptr->serv->conf->ssl_ctx : ctx_client;
-	SSLOptions *ssloptions = get_ssl_options_for_client(acptr);
+	TLSOptions *tlsoptions = get_tls_options_for_client(acptr);
 
 	if (!ctx)
 	{
@@ -647,16 +647,16 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 	SSL_set_connect_state(acptr->local->ssl);
 	SSL_set_nonblocking(acptr->local->ssl);
 
-	if (ssloptions->renegotiate_bytes > 0)
+	if (tlsoptions->renegotiate_bytes > 0)
 	{
-		BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->local->ssl), ssloptions->renegotiate_bytes);
-		BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->local->ssl), ssloptions->renegotiate_bytes);
+		BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->local->ssl), tlsoptions->renegotiate_bytes);
+		BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->local->ssl), tlsoptions->renegotiate_bytes);
 	}
 
-	if (ssloptions->renegotiate_timeout > 0)
+	if (tlsoptions->renegotiate_timeout > 0)
 	{
-		BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->local->ssl), ssloptions->renegotiate_timeout);
-		BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->local->ssl), ssloptions->renegotiate_timeout);
+		BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->local->ssl), tlsoptions->renegotiate_timeout);
+		BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->local->ssl), tlsoptions->renegotiate_timeout);
 	}
 
 	if (acptr->serv && acptr->serv->conf)
@@ -665,7 +665,7 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 		SSL_set_tlsext_host_name(acptr->local->ssl, acptr->serv->conf->servername);
 	}
 
-	acptr->flags |= FLAGS_SSL;
+	acptr->flags |= FLAGS_TLS;
 
 	switch (ircd_SSL_connect(acptr, fd))
 	{
@@ -675,8 +675,8 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 			--OpenFiles;
 			return;
 		case 0: 
-			Debug((DEBUG_DEBUG, "SetSSLConnectHandshake(%s)", get_client_name(acptr, TRUE)));
-			SetSSLConnectHandshake(acptr);
+			Debug((DEBUG_DEBUG, "SetTLSConnectHandshake(%s)", get_client_name(acptr, TRUE)));
+			SetTLSConnectHandshake(acptr);
 			return;
 		case 1:
 			Debug((DEBUG_DEBUG, "SSL_init_finished should finish this job (%s)", get_client_name(acptr, TRUE)));
@@ -935,7 +935,7 @@ int client_starttls(aClient *acptr)
 	if ((acptr->local->ssl = SSL_new(ctx_client)) == NULL)
 		goto fail_starttls;
 
-	acptr->flags |= FLAGS_SSL;
+	acptr->flags |= FLAGS_TLS;
 
 	SSL_set_fd(acptr->local->ssl, acptr->fd);
 	SSL_set_nonblocking(acptr->local->ssl);
@@ -961,19 +961,19 @@ fail_starttls:
 	/* Failure */
 	sendnumeric(acptr, ERR_STARTTLS, "STARTTLS failed");
 	acptr->local->ssl = NULL;
-	acptr->flags &= ~FLAGS_SSL;
+	acptr->flags &= ~FLAGS_TLS;
 	SetUnknown(acptr);
 	return 0; /* hm. we allow to continue anyway. not sure if we want that. */
 }
 
-/** Find the appropriate SSLOptions structure for a client.
+/** Find the appropriate TLSOptions structure for a client.
  * NOTE: The default global SSL options will be returned if not found,
  *       or NULL if no such options are available (unlikely, but possible?).
  */
-SSLOptions *FindSSLOptionsForUser(aClient *acptr)
+TLSOptions *FindTLSOptionsForUser(aClient *acptr)
 {
 	ConfigItem_sni *sni;
-	SSLOptions *sslopt = iConf.ssl_options; /* default */
+	TLSOptions *sslopt = iConf.tls_options; /* default */
 	
 	if (!MyConnect(acptr) || !IsSecure(acptr))
 		return NULL;
@@ -984,7 +984,7 @@ SSLOptions *FindSSLOptionsForUser(aClient *acptr)
 		sni = Find_sni(acptr->local->sni_servername);
 		if (sni)
 		{
-			sslopt = sni->ssl_options;
+			sslopt = sni->tls_options;
 		}
 		/* It is perfectly possible that 'name' is not found and 'sni' is NULL,
 		 * if a client used a hostname which we do not know about (eg: 'dummy').
@@ -1200,23 +1200,23 @@ char *spki_fingerprint(aClient *cptr)
 /** Returns 1 if the client is using an outdated protocol or cipher, 0 otherwise */
 int outdated_tls_client(aClient *acptr)
 {
-	SSLOptions *ssloptions = get_ssl_options_for_client(acptr);
+	TLSOptions *tlsoptions = get_tls_options_for_client(acptr);
 	char buf[1024], *name, *p;
 	const char *client_protocol = SSL_get_version(acptr->local->ssl);
 	const char *client_ciphersuite = SSL_get_cipher(acptr->local->ssl);
 	int bad = 0;
 
-	if (!ssloptions)
+	if (!tlsoptions)
 		return 0; /* odd.. */
 
-	strlcpy(buf, ssloptions->outdated_protocols, sizeof(buf));
+	strlcpy(buf, tlsoptions->outdated_protocols, sizeof(buf));
 	for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
 	{
 		if (!_match(name, client_protocol))
 			 return 1; /* outdated protocol */
 	}
 
-	strlcpy(buf, ssloptions->outdated_ciphers, sizeof(buf));
+	strlcpy(buf, tlsoptions->outdated_ciphers, sizeof(buf));
 	for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
 	{
 		if (!_match(name, client_ciphersuite))

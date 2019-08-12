@@ -211,7 +211,7 @@ __EOF__
 	echo ""
 	echo "Thanks!"
 elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
-	CERT="@CONFDIR@/ssl/server.cert.pem"
+	CERT="@CONFDIR@/tls/server.cert.pem"
 	if [ "$2" != "" ]; then
 		CERT="$2"
 	fi

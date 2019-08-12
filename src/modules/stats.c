@@ -431,7 +431,7 @@ int stats_links(aClient *sptr, char *para)
 			link_p->outgoing.port,
 			link_p->class->name,
 			(link_p->outgoing.options & CONNECT_AUTO) ? "a" : "",
-			(link_p->outgoing.options & CONNECT_SSL) ? "S" : "",
+			(link_p->outgoing.options & CONNECT_TLS) ? "S" : "",
 			(link_p->flag.temporary == 1) ? "T" : "");
 #ifdef DEBUGMODE
 		sendnotice(sptr, "%s (%p) has refcount %d",
@@ -558,8 +558,8 @@ static char *stats_port_helper(ConfigItem_listen *listener)
 	ircsnprintf(buf, sizeof(buf), "%s%s%s%s",
 	    (listener->options & LISTENER_CLIENTSONLY)? "clientsonly ": "",
 	    (listener->options & LISTENER_SERVERSONLY)? "serversonly ": "",
-	    (listener->options & LISTENER_SSL)?         "ssl ": "",
-	    !(listener->options & LISTENER_SSL)?        "plaintext ": "");
+	    (listener->options & LISTENER_TLS)?         "ssl ": "",
+	    !(listener->options & LISTENER_TLS)?        "plaintext ": "");
 	return buf;
 }
 
@@ -1109,16 +1109,16 @@ int stats_set(aClient *sptr, char *para)
 	sendtxtnumeric(sptr, "hide-ban-reason: %d", HIDE_BAN_REASON);
 	sendtxtnumeric(sptr, "anti-spam-quit-message-time: %s", pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
 	sendtxtnumeric(sptr, "channel-command-prefix: %s", CHANCMDPFX ? CHANCMDPFX : "`");
-	sendtxtnumeric(sptr, "ssl::certificate: %s", SafePrint(iConf.ssl_options->certificate_file));
-	sendtxtnumeric(sptr, "ssl::key: %s", SafePrint(iConf.ssl_options->key_file));
-	sendtxtnumeric(sptr, "ssl::trusted-ca-file: %s", SafePrint(iConf.ssl_options->trusted_ca_file));
-	sendtxtnumeric(sptr, "ssl::options: %s", iConf.ssl_options->options & SSLFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "");
+	sendtxtnumeric(sptr, "ssl::certificate: %s", SafePrint(iConf.tls_options->certificate_file));
+	sendtxtnumeric(sptr, "ssl::key: %s", SafePrint(iConf.tls_options->key_file));
+	sendtxtnumeric(sptr, "ssl::trusted-ca-file: %s", SafePrint(iConf.tls_options->trusted_ca_file));
+	sendtxtnumeric(sptr, "ssl::options: %s", iConf.tls_options->options & TLSFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "");
 	sendtxtnumeric(sptr, "options::show-opermotd: %d", SHOWOPERMOTD);
 	sendtxtnumeric(sptr, "options::hide-ulines: %d", HIDE_ULINES);
 	sendtxtnumeric(sptr, "options::identd-check: %d", IDENT_CHECK);
 	sendtxtnumeric(sptr, "options::fail-oper-warn: %d", FAILOPER_WARN);
 	sendtxtnumeric(sptr, "options::show-connect-info: %d", SHOWCONNECTINFO);
-	sendtxtnumeric(sptr, "options::no-connect-ssl-info: %d", NOCONNECTSSLINFO);
+	sendtxtnumeric(sptr, "options::no-connect-tls-info: %d", NOCONNECTSSLINFO);
 	sendtxtnumeric(sptr, "options::dont-resolve: %d", DONT_RESOLVE);
 	sendtxtnumeric(sptr, "options::mkpasswd-for-everyone: %d", MKPASSWD_FOR_EVERYONE);
 	sendtxtnumeric(sptr, "options::allow-insane-bans: %d", ALLOW_INSANE_BANS);

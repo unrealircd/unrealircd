@@ -105,7 +105,7 @@ echo $CONF
 $CONF || exit 1
 cd "$UNREALCWD"
 if [  "$QUICK" != "1" ] ; then
-if [ ! -f $CONFDIR/ssl/server.cert.pem ]; then
+if [ ! -f $CONFDIR/tls/server.cert.pem -a ! -f $CONFDIR/ssl/server.cert.pem ]; then
 export OPENSSLPATH
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -142,10 +142,10 @@ if [ "$GENCERTIFICATE" = 1 ]; then
 	sleep 1
 else
 	echo "Ok, not generating SSL certificate. Make sure that the certificate and key"
-	echo "are installed in conf/ssl/server.crt.pem and conf/ssl/server.key.pem prior to starting the IRCd."
+	echo "are installed in conf/tls/server.crt.pem and conf/tls/server.key.pem prior to starting the IRCd."
 fi
 else
-echo "SSL certificate exists in $CONFDIR/ssl/server.cert.pem, no need to regenerate."
+echo "SSL certificate already exists in configuration directory, no need to regenerate."
 fi
 fi
 

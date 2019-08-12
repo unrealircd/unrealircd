@@ -247,9 +247,9 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 
 #define	STAT_LOG	-7	/* logfile for -x */
 #define	STAT_CONNECTING	-6
-#define STAT_SSL_STARTTLS_HANDSHAKE -8
-#define STAT_SSL_CONNECT_HANDSHAKE -5
-#define STAT_SSL_ACCEPT_HANDSHAKE -4
+#define STAT_TLS_STARTTLS_HANDSHAKE -8
+#define STAT_TLS_CONNECT_HANDSHAKE -5
+#define STAT_TLS_ACCEPT_HANDSHAKE -4
 #define	STAT_HANDSHAKE	-3
 #define	STAT_ME		-2
 #define	STAT_UNKNOWN	-1
@@ -264,18 +264,18 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	IsConnecting(x)		((x)->status == STAT_CONNECTING)
 #define	IsHandshake(x)		((x)->status == STAT_HANDSHAKE)
 #define	IsMe(x)			((x)->status == STAT_ME)
-#define	IsUnknown(x)		(((x)->status == STAT_UNKNOWN) || ((x)->status == STAT_SSL_STARTTLS_HANDSHAKE))
+#define	IsUnknown(x)		(((x)->status == STAT_UNKNOWN) || ((x)->status == STAT_TLS_STARTTLS_HANDSHAKE))
 #define	IsServer(x)		((x)->status == STAT_SERVER)
 #define	IsClient(x)		((x)->status == STAT_CLIENT)
 #define	IsLog(x)		((x)->status == STAT_LOG)
 
-#define IsSSLStartTLSHandshake(x)	((x)->status == STAT_SSL_STARTTLS_HANDSHAKE)
-#define IsSSLAcceptHandshake(x)	((x)->status == STAT_SSL_ACCEPT_HANDSHAKE)
-#define IsSSLConnectHandshake(x)	((x)->status == STAT_SSL_CONNECT_HANDSHAKE)
-#define IsSSLHandshake(x) (IsSSLAcceptHandshake(x) || IsSSLConnectHandshake(x) | IsSSLStartTLSHandshake(x))
-#define SetSSLStartTLSHandshake(x)	((x)->status = STAT_SSL_STARTTLS_HANDSHAKE)
-#define SetSSLAcceptHandshake(x)	((x)->status = STAT_SSL_ACCEPT_HANDSHAKE)
-#define SetSSLConnectHandshake(x)	((x)->status = STAT_SSL_CONNECT_HANDSHAKE)
+#define IsStartTLSHandshake(x)	((x)->status == STAT_TLS_STARTTLS_HANDSHAKE)
+#define IsTLSAcceptHandshake(x)	((x)->status == STAT_TLS_ACCEPT_HANDSHAKE)
+#define IsTLSConnectHandshake(x)	((x)->status == STAT_TLS_CONNECT_HANDSHAKE)
+#define IsTLSHandshake(x) (IsTLSAcceptHandshake(x) || IsTLSConnectHandshake(x) | IsStartTLSHandshake(x))
+#define SetStartTLSHandshake(x)	((x)->status = STAT_TLS_STARTTLS_HANDSHAKE)
+#define SetTLSAcceptHandshake(x)	((x)->status = STAT_TLS_ACCEPT_HANDSHAKE)
+#define SetTLSConnectHandshake(x)	((x)->status = STAT_TLS_CONNECT_HANDSHAKE)
 
 #define	SetConnecting(x)	((x)->status = STAT_CONNECTING)
 #define	SetHandshake(x)		((x)->status = STAT_HANDSHAKE)
@@ -312,7 +312,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define FLAGS_DCCNOTICE  0x00100000	/* Has the user seen a notice on how to use DCCALLOW already? */
 #define FLAGS_SHUNNED    0x00200000	/* Connection is shunned */
 #define FLAGS_VIRUS      0x00400000	/* Tagged by spamfilter */
-#define FLAGS_SSL        0x00800000	/* Connection is using SSL/TLS */
+#define FLAGS_TLS        0x00800000	/* Connection is using SSL/TLS */
 #define FLAGS_NOFAKELAG  0x01000000	/* Exemption from fake lag */
 #define FLAGS_DCCBLOCK   0x02000000	/* Block all DCC send requests */
 #define FLAGS_MAP        0x04000000	/* Show this entry in /MAP */
@@ -388,7 +388,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define IsVirus(x)			((x)->flags & FLAGS_VIRUS)
 #define SetVirus(x)			((x)->flags |= FLAGS_VIRUS)
 #define ClearVirus(x)		((x)->flags &= ~FLAGS_VIRUS)
-#define IsSecure(x)		((x)->flags & FLAGS_SSL)
+#define IsSecure(x)		((x)->flags & FLAGS_TLS)
 
 /* Fake lag exception */
 #define IsNoFakeLag(x)      ((x)->flags & FLAGS_NOFAKELAG)
@@ -398,7 +398,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
 #define IsSetHost(x)			((x)->umodes & UMODE_SETHOST)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
-#define IsSSL(x)		IsSecure(x)
+#define IsTLS(x)		IsSecure(x)
 #define	IsNotSpoof(x)		((x)->local->nospoof == 0)
 
 #define GetHost(x)			(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
@@ -825,13 +825,13 @@ extern void unload_all_unused_moddata(void);
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002
 #define LISTENER_SERVERSONLY	0x000004
-#define LISTENER_SSL		0x000010
+#define LISTENER_TLS		0x000010
 #define LISTENER_BOUND		0x000020
 #define LISTENER_DEFER_ACCEPT	0x000040
 
 #define IsServersOnlyListener(x)	((x) && ((x)->options & LISTENER_SERVERSONLY))
 
-#define CONNECT_SSL		0x000001
+#define CONNECT_TLS		0x000001
 //0x000002 unused (was ziplinks)
 #define CONNECT_AUTO		0x000004
 #define CONNECT_QUARANTINE	0x000008
@@ -839,9 +839,9 @@ extern void unload_all_unused_moddata(void);
 #define CONNECT_NOHOSTCHECK	0x000020
 #define CONNECT_INSECURE	0x000040
 
-#define SSLFLAG_FAILIFNOCERT 	0x1
-#define SSLFLAG_NOSTARTTLS	0x8
-#define SSLFLAG_DISABLECLIENTCERT 0x10
+#define TLSFLAG_FAILIFNOCERT 	0x1
+#define TLSFLAG_NOSTARTTLS	0x8
+#define TLSFLAG_DISABLECLIENTCERT 0x10
 
 struct Client {
 	struct list_head client_node; 	/* for global client list (client_list) */
@@ -1090,7 +1090,7 @@ struct _configitem_class {
 struct _configflag_allow {
 	unsigned	noident :1;
 	unsigned	useip :1;
-	unsigned	ssl :1;
+	unsigned	tls :1;
 };
 
 struct _configitem_allow {
@@ -1167,13 +1167,13 @@ struct _configitem_oper {
 	int maxlogins;
 };
 
-/** The SSL options that are used in set::ssl and otherblocks::ssl-options.
+/** The SSL/TLS options that are used in set::tls and otherblocks::tls-options.
  * NOTE: If you add something here then you must also update the
- *       conf_sslblock() function in s_conf.c to have it inherited
- *       from set::ssl to the other config blocks!
+ *       conf_tlsblock() function in s_conf.c to have it inherited
+ *       from set::tls to the other config blocks!
  */
-typedef struct _ssloptions SSLOptions;
-struct _ssloptions {
+typedef struct _tlsoptions TLSOptions;
+struct _tlsoptions {
 	char *certificate_file;
 	char *key_file;
 	char *dh_file;
@@ -1209,7 +1209,7 @@ struct _configitem_ulines {
 	char 		 *servername;
 };
 
-#define TLD_SSL		0x1
+#define TLD_TLS		0x1
 #define TLD_REMOTE	0x2
 
 struct _configitem_tld {
@@ -1231,7 +1231,7 @@ struct _configitem_listen {
 	int fd;
 	int ipv6;
 	SSL_CTX *ssl_ctx;
-	SSLOptions *ssl_options;
+	TLSOptions *tls_options;
 };
 
 struct _configitem_sni {
@@ -1239,7 +1239,7 @@ struct _configitem_sni {
 	ConfigFlag flag;
 	char *name;
 	SSL_CTX *ssl_ctx;
-	SSLOptions *ssl_options;
+	TLSOptions *tls_options;
 };
 
 struct _configitem_vhost {
@@ -1263,7 +1263,7 @@ struct _configitem_link {
 		char *bind_ip; /**< Our IP to bind to when doing the connect */
 		char *hostname; /**< Hostname or IP to connect to */
 		int port; /**< Port to connect to */
-		int options; /**< Connect options like ssl or autoconnect */
+		int options; /**< Connect options like tls or autoconnect */
 	} outgoing;
 	anAuthStruct *auth; /**< authentication method (eg: password) */
 	char *hub; /**< Hub mask */
@@ -1277,7 +1277,7 @@ struct _configitem_link {
 	time_t hold; /**< For how long the server is "on hold" for outgoing connects (why?) */
 	char *connect_ip; /**< actual IP to use for outgoing connect (filled in after host is resolved) */
 	SSL_CTX *ssl_ctx; /**< SSL Context for outgoing connection (optional) */
-	SSLOptions *ssl_options; /**< SSL Options for outgoing connection (optional) */
+	TLSOptions *tls_options; /**< SSL Options for outgoing connection (optional) */
 };
 
 struct _configitem_except {
