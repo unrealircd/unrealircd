@@ -595,7 +595,7 @@ void SSL_set_nonblocking(SSL *s)
 	BIO_set_nbio(SSL_get_wbio(s),1);
 }
 
-char *ssl_get_cipher(SSL *ssl)
+char *tls_get_cipher(SSL *ssl)
 {
 	static char buf[256];
 	int bits;

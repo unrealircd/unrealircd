@@ -525,7 +525,7 @@ extern void stripcrlf(char *line);
 extern time_t rfc2time(char *s);
 extern char *rfctime(time_t t, char *buf);
 extern void *MyMallocEx(size_t size);
-extern MODFUNC char  *ssl_get_cipher(SSL *ssl);
+extern MODFUNC char  *tls_get_cipher(SSL *ssl);
 extern TLSOptions *get_tls_options_for_client(aClient *acptr);
 extern int outdated_tls_client(aClient *acptr);
 extern char *outdated_tls_client_build_string(char *pattern, aClient *acptr);

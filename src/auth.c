@@ -30,10 +30,12 @@ anAuthStruct MODVAR AuthTypes[] = {
 	{"crypt",           AUTHTYPE_UNIXCRYPT},
 	{"unixcrypt",       AUTHTYPE_UNIXCRYPT},
 	{"bcrypt",          AUTHTYPE_BCRYPT},
-	{"sslclientcert",   AUTHTYPE_SSL_CLIENTCERT},
-	{"cert",            AUTHTYPE_SSL_CLIENTCERT},
-	{"sslclientcertfp", AUTHTYPE_SSL_CLIENTCERTFP},
-	{"certfp",          AUTHTYPE_SSL_CLIENTCERTFP},
+	{"cert",            AUTHTYPE_TLS_CLIENTCERT},
+	{"sslclientcert",   AUTHTYPE_TLS_CLIENTCERT},
+	{"tlsclientcert",   AUTHTYPE_TLS_CLIENTCERT},
+	{"certfp",          AUTHTYPE_TLS_CLIENTCERTFP},
+	{"sslclientcertfp", AUTHTYPE_TLS_CLIENTCERTFP},
+	{"tlsclientcertfp", AUTHTYPE_TLS_CLIENTCERTFP},
 	{"spkifp",          AUTHTYPE_SPKIFP},
 	{"argon2",          AUTHTYPE_ARGON2},
 	{NULL,              0}
@@ -64,7 +66,7 @@ int Auth_AutoDetectHashType(char *hash)
 				if ((*p != ':') && !strchr(hexchars, *p))
 					return AUTHTYPE_PLAINTEXT; /* not hex and not colon */
 			
-			return AUTHTYPE_SSL_CLIENTCERTFP;
+			return AUTHTYPE_TLS_CLIENTCERTFP;
 		}
 
 		if (strlen(hash) == 44)
@@ -182,11 +184,11 @@ int		Auth_CheckError(ConfigEntry *ce)
 				return -1;
 			}
 			break;
-		case AUTHTYPE_SSL_CLIENTCERT:
+		case AUTHTYPE_TLS_CLIENTCERT:
 			convert_to_absolute_path(&ce->ce_vardata, CONFDIR);
 			if (!(x509_f = fopen(ce->ce_vardata, "r")))
 			{
-				config_error("%s:%i: authentication module failure: AUTHTYPE_SSL_CLIENTCERT: error opening file %s: %s",
+				config_error("%s:%i: authentication module failure: AUTHTYPE_TLS_CLIENTCERT: error opening file %s: %s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata, strerror(errno));
 				return -1;
 			}
@@ -194,7 +196,7 @@ int		Auth_CheckError(ConfigEntry *ce)
 			fclose(x509_f);
 			if (!x509_filecert)
 			{
-				config_error("%s:%i: authentication module failure: AUTHTYPE_SSL_CLIENTCERT: PEM_read_X509 errored in file %s (format error?)",
+				config_error("%s:%i: authentication module failure: AUTHTYPE_TLS_CLIENTCERT: PEM_read_X509 errored in file %s (format error?)",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
 				return -1;
 			}
@@ -583,7 +585,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 		case AUTHTYPE_RIPEMD160:
 			return authcheck_ripemd160(cptr, as, para);
 		
-		case AUTHTYPE_SSL_CLIENTCERT:
+		case AUTHTYPE_TLS_CLIENTCERT:
 		{
 			X509 *x509_clientcert = NULL;
 			X509 *x509_filecert = NULL;
@@ -617,7 +619,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			return 2;	
 		}
 
-		case AUTHTYPE_SSL_CLIENTCERTFP:
+		case AUTHTYPE_TLS_CLIENTCERTFP:
 		{
 			int i, k;
 			char hexcolon[EVP_MAX_MD_SIZE * 3 + 1];

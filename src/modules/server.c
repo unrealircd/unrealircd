@@ -322,7 +322,7 @@ skip_host_check:
 	{
 		/* Let's help admins a bit with a good error message in case
 		 * they mix different authentication systems (plaintext password
-		 * vs an "TLS Auth type" like spkifp/sslclientcert/sslclientcertfp).
+		 * vs an "TLS Auth type" like spkifp/tlsclientcert/tlsclientcertfp).
 		 * The 'if' statement below is a bit complex but it consists of 2 things:
 		 * 1. Check if our side expects a plaintext password but we did not receive one
 		 * 2. Check if our side expects a non-plaintext password but we did receive one
@@ -339,14 +339,14 @@ skip_host_check:
 			sendto_ops_and_log("Link denied for '%s' (Authentication failed [spkifp mismatch]) %s",
 				servername, inpath);
 		} else
-		if (link->auth->type == AUTHTYPE_SSL_CLIENTCERT)
+		if (link->auth->type == AUTHTYPE_TLS_CLIENTCERT)
 		{
-			sendto_ops_and_log("Link denied for '%s' (Authentication failed [sslclientcert mismatch]) %s",
+			sendto_ops_and_log("Link denied for '%s' (Authentication failed [tlsclientcert mismatch]) %s",
 				servername, inpath);
 		} else
-		if (link->auth->type == AUTHTYPE_SSL_CLIENTCERTFP)
+		if (link->auth->type == AUTHTYPE_TLS_CLIENTCERTFP)
 		{
-			sendto_ops_and_log("Link denied for '%s' (Authentication failed [sslclientcertfp mismatch]) %s",
+			sendto_ops_and_log("Link denied for '%s' (Authentication failed [tlsclientcertfp mismatch]) %s",
 				servername, inpath);
 		} else
 		{
@@ -360,7 +360,7 @@ skip_host_check:
 		    "Link denied (Authentication failed)");
 	}
 
-	/* Verify the SSL certificate (if requested) */
+	/* Verify the TLS certificate (if requested) */
 	if (link->verify_certificate)
 	{
 		char *errstr = NULL;
@@ -443,7 +443,7 @@ skip_host_check:
 	if (IsSecure(cptr) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(cptr))
 	{
 		sendto_one(cptr, NULL, "ERROR :Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
-		sendto_ops_and_log("Rejected server %s using outdated %s. See https://www.unrealircd.org/docs/FAQ#server-outdated-tls", ssl_get_cipher(cptr->local->ssl), cptr->name);
+		sendto_ops_and_log("Rejected server %s using outdated %s. See https://www.unrealircd.org/docs/FAQ#server-outdated-tls", tls_get_cipher(cptr->local->ssl), cptr->name);
 		return exit_client(cptr, sptr, &me, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 	}
 	if (link_out)
@@ -791,15 +791,15 @@ void _introduce_user(aClient *to, aClient *acptr)
 void tls_link_notification_verify(aClient *acptr, ConfigItem_link *aconf)
 {
 	char *spki_fp;
-	char *ssl_fp;
+	char *tls_fp;
 	char *errstr = NULL;
 	int verify_ok;
 
 	if (!MyConnect(acptr) || !acptr->local->ssl || !aconf)
 		return;
 
-	if ((aconf->auth->type == AUTHTYPE_SSL_CLIENTCERT) ||
-	    (aconf->auth->type == AUTHTYPE_SSL_CLIENTCERTFP) ||
+	if ((aconf->auth->type == AUTHTYPE_TLS_CLIENTCERT) ||
+	    (aconf->auth->type == AUTHTYPE_TLS_CLIENTCERTFP) ||
 	    (aconf->auth->type == AUTHTYPE_SPKIFP))
 	{
 		/* Link verified by certificate or SPKI */
@@ -812,9 +812,9 @@ void tls_link_notification_verify(aClient *acptr, ConfigItem_link *aconf)
 		return;
 	}
 
-	ssl_fp = moddata_client_get(acptr, "certfp");
+	tls_fp = moddata_client_get(acptr, "certfp");
 	spki_fp = spki_fingerprint(acptr);
-	if (!ssl_fp || !spki_fp)
+	if (!tls_fp || !spki_fp)
 		return; /* wtf ? */
 
 	/* Only bother the user if we are linking to UnrealIRCd 4.0.16+,
@@ -943,9 +943,9 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	{
 		sendto_server(&me, 0, 0, NULL, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
 			me.name,
-			me.name, inpath, ssl_get_cipher(cptr->local->ssl));
+			me.name, inpath, tls_get_cipher(cptr->local->ssl));
 		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
-			me.name, inpath, ssl_get_cipher(cptr->local->ssl));
+			me.name, inpath, tls_get_cipher(cptr->local->ssl));
 		tls_link_notification_verify(cptr, aconf);
 	}
 	else
@@ -955,19 +955,19 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			me.name, inpath);
 		sendto_realops("(\2link\2) Link %s -> %s established",
 			me.name, inpath);
-		/* Print out a warning if linking to a non-SSL server unless it's localhost.
-		 * Yeah.. there are still other cases when non-SSL links are fine (eg: local IP
+		/* Print out a warning if linking to a non-TLS server unless it's localhost.
+		 * Yeah.. there are still other cases when non-TLS links are fine (eg: local IP
 		 * of the same machine), we won't bother with detecting that. -- Syzop
 		 */
 		if (!IsLocal(cptr) && (iConf.plaintext_policy_server == POLICY_WARN))
 		{
-			sendto_realops("\002WARNING:\002 This link is unencrypted (non-SSL). We highly recommend to use "
+			sendto_realops("\002WARNING:\002 This link is unencrypted (not SSL/TLS). We highly recommend to use "
 			               "SSL/TLS for server linking. See https://www.unrealircd.org/docs/Linking_servers");
 		}
 		if (IsSecure(cptr) && (iConf.outdated_tls_policy_server == POLICY_WARN) && outdated_tls_client(cptr))
 		{
 			sendto_realops("\002WARNING:\002 This link is using an outdated SSL/TLS protocol or cipher (%s).",
-			               ssl_get_cipher(cptr->local->ssl));
+			               tls_get_cipher(cptr->local->ssl));
 		}
 	}
 	(void)add_to_client_hash_table(cptr->name, cptr);

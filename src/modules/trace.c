@@ -157,72 +157,79 @@ CMD_FUNC(m_trace)
 		class = acptr->local->class ? acptr->local->class->name : "default";
 		switch (acptr->status)
 		{
-		  case STAT_CONNECTING:
-			  sendnumeric(sptr, RPL_TRACECONNECTING, class, name);
-			  cnt++;
-			  break;
-		  case STAT_HANDSHAKE:
-			  sendnumeric(sptr, RPL_TRACEHANDSHAKE, class, name);
-			  cnt++;
-			  break;
-		  case STAT_ME:
-			  break;
-		  case STAT_UNKNOWN:
-			  sendnumeric(sptr, RPL_TRACEUNKNOWN, class, name);
-			  cnt++;
-			  break;
-		  case STAT_CLIENT:
-			  /* Only opers see users if there is a wildcard
-			   * but anyone can see all the opers.
-			   */
-			  if (ValidatePermissionsForPath("client:see:trace:invisible-users",sptr,acptr,NULL,NULL) ||
-			      (!IsInvisible(acptr) && ValidatePermissionsForPath("client:see:trace",sptr,acptr,NULL,NULL)))
-			  {
-				  if (ValidatePermissionsForPath("client:see:trace",sptr,acptr,NULL,NULL) || ValidatePermissionsForPath("client:see:trace:invisible-users",sptr,acptr,NULL,NULL))
-					  sendnumeric(sptr, RPL_TRACEOPERATOR,
-					      class, acptr->name,
-					      GetHost(acptr),
-					      now - acptr->local->lasttime);
-				  else
-					  sendnumeric(sptr, RPL_TRACEUSER,
-					      class, acptr->name,
-					      acptr->user->realhost,
-					      now - acptr->local->lasttime);
-				  cnt++;
-			  }
-			  break;
-		  case STAT_SERVER:
-			  if (acptr->serv->user)
-				  sendnumeric(sptr, RPL_TRACESERVER, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
-				      acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, acptr->serv->by,
-				      acptr->serv->user->username,
-				      acptr->serv->user->realhost,
-				      now - acptr->local->lasttime);
-			  else
-				  sendnumeric(sptr, RPL_TRACESERVER, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
-				      acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, *(acptr->serv->by) ?
-				      acptr->serv->by : "*", "*", me.name,
-				      now - acptr->local->lasttime);
-			  cnt++;
-			  break;
-		  case STAT_LOG:
-			  sendnumeric(sptr, RPL_TRACELOG, LOGFILE, acptr->local->port);
-			  cnt++;
-			  break;
-#ifdef USE_SSL
-		  case STAT_TLS_CONNECT_HANDSHAKE:
-		  	sendnumeric(sptr, RPL_TRACENEWTYPE, "SSL-Connect-Handshake", name); 
-			cnt++;
-			break;
-		  case STAT_TLS_ACCEPT_HANDSHAKE:
-		  	sendnumeric(sptr, RPL_TRACENEWTYPE, "SSL-Accept-Handshake", name); 
-			cnt++;
-			break;
-#endif
-		  default:	/* ...we actually shouldn't come here... --msa */
-			  sendnumeric(sptr, RPL_TRACENEWTYPE, "<newtype>", name);
-			  cnt++;
-			  break;
+			case STAT_CONNECTING:
+				sendnumeric(sptr, RPL_TRACECONNECTING, class, name);
+				cnt++;
+				break;
+
+			case STAT_HANDSHAKE:
+				sendnumeric(sptr, RPL_TRACEHANDSHAKE, class, name);
+				cnt++;
+				break;
+
+			case STAT_ME:
+				break;
+
+			case STAT_UNKNOWN:
+				sendnumeric(sptr, RPL_TRACEUNKNOWN, class, name);
+				cnt++;
+				break;
+
+			case STAT_CLIENT:
+				/* Only opers see users if there is a wildcard
+				 * but anyone can see all the opers.
+				 */
+				if (ValidatePermissionsForPath("client:see:trace:invisible-users",sptr,acptr,NULL,NULL) ||
+				    (!IsInvisible(acptr) && ValidatePermissionsForPath("client:see:trace",sptr,acptr,NULL,NULL)))
+				{
+					if (ValidatePermissionsForPath("client:see:trace",sptr,acptr,NULL,NULL) || ValidatePermissionsForPath("client:see:trace:invisible-users",sptr,acptr,NULL,NULL))
+						sendnumeric(sptr, RPL_TRACEOPERATOR,
+						    class, acptr->name,
+						    GetHost(acptr),
+						    now - acptr->local->lasttime);
+					else
+						sendnumeric(sptr, RPL_TRACEUSER,
+						    class, acptr->name,
+						    acptr->user->realhost,
+						    now - acptr->local->lasttime);
+					cnt++;
+				}
+				break;
+
+			case STAT_SERVER:
+				if (acptr->serv->user)
+					sendnumeric(sptr, RPL_TRACESERVER, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
+					    acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, acptr->serv->by,
+					    acptr->serv->user->username,
+					    acptr->serv->user->realhost,
+					    now - acptr->local->lasttime);
+				else
+					sendnumeric(sptr, RPL_TRACESERVER, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
+					    acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, *(acptr->serv->by) ?
+					    acptr->serv->by : "*", "*", me.name,
+					    now - acptr->local->lasttime);
+				cnt++;
+				break;
+
+			case STAT_LOG:
+				sendnumeric(sptr, RPL_TRACELOG, LOGFILE, acptr->local->port);
+				cnt++;
+				break;
+
+			case STAT_TLS_CONNECT_HANDSHAKE:
+				sendnumeric(sptr, RPL_TRACENEWTYPE, "TLS-Connect-Handshake", name);
+				cnt++;
+				break;
+
+			case STAT_TLS_ACCEPT_HANDSHAKE:
+				sendnumeric(sptr, RPL_TRACENEWTYPE, "TLS-Accept-Handshake", name);
+				cnt++;
+				break;
+
+			default:	/* ...we actually shouldn't come here... --msa */
+				sendnumeric(sptr, RPL_TRACENEWTYPE, "<newtype>", name);
+				cnt++;
+				break;
 		}
 	}
 	/*

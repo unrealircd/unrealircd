@@ -194,7 +194,7 @@ extern MODVAR int ipv6_disabled;
 #define IDENT_CHECK			iConf.ident_check
 #define FAILOPER_WARN			iConf.fail_oper_warn
 #define SHOWCONNECTINFO			iConf.show_connect_info
-#define NOCONNECTSSLINFO		iConf.no_connect_tls_info
+#define NOCONNECTTLSLINFO		iConf.no_connect_tls_info
 #define OPER_ONLY_STATS			iConf.oper_only_stats
 #define ANTI_SPAM_QUIT_MSG_TIME		iConf.anti_spam_quit_message_time
 #ifdef HAVE_RAND_EGD
@@ -289,9 +289,8 @@ struct SetCheck {
 	unsigned has_dont_resolve:1;
 	unsigned has_mkpasswd_for_everyone:1;
 	unsigned has_allow_part_if_shunned:1;
-	unsigned has_ssl_egd:1;
-	unsigned has_ssl_server_cipher_list :1;
-	unsigned has_ssl_protocols :1;
+	unsigned has_tls_server_cipher_list :1;
+	unsigned has_tls_protocols :1;
 	unsigned has_dns_bind_ip:1;
 	unsigned has_link_bind_ip:1;
 	unsigned has_throttle_period:1;

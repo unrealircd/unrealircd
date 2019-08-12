@@ -6533,8 +6533,8 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			} else {
 				anAuthStruct *auth = Auth_ConvertConf2AuthStruct(cep);
 				/* hm. would be nicer if handled @auth-system I think. ah well.. */
-				if ((auth->type != AUTHTYPE_PLAINTEXT) && (auth->type != AUTHTYPE_SSL_CLIENTCERT) &&
-				    (auth->type != AUTHTYPE_SSL_CLIENTCERTFP) && (auth->type != AUTHTYPE_SPKIFP))
+				if ((auth->type != AUTHTYPE_PLAINTEXT) && (auth->type != AUTHTYPE_TLS_CLIENTCERT) &&
+				    (auth->type != AUTHTYPE_TLS_CLIENTCERTFP) && (auth->type != AUTHTYPE_SPKIFP))
 				{
 					config_error("%s:%i: password in link block should be plaintext OR should be the "
 					             "SSL or SPKI fingerprint of the remote link (=better)",

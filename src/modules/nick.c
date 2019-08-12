@@ -1429,7 +1429,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			if (sptr->local->ssl && !iConf.no_connect_tls_info)
 			{
 				sendnotice(sptr, "*** You are connected to %s with %s",
-					me.name, ssl_get_cipher(sptr->local->ssl));
+					me.name, tls_get_cipher(sptr->local->ssl));
 			}
 		}
 		
