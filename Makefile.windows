@@ -45,14 +45,14 @@ MT=mt
 #
 ### END REMOTE INCLUDES ##
 
-####### SSL SUPPORT ######
+####### SSL/TLS SUPPORT (MANDATORY) ######
 #Use LibreSSL or OpenSSL. Define paths and libraries:
 #LIBRESSL_INC_DIR="c:\dev\libressl\include"
 #LIBRESSL_LIB_DIR="c:\dev\libressl\lib"
 #SSLLIB=libcrypto-38.lib libssl-39.lib libtls-11.lib
 #The version numbers of the 3 libraries in the last line change
 #every libressl release. So be sure to update after any libressl upgrade.
-######### END SSL ########
+######### END SSL/TLS ########
 
 ###### _EXTRA_ DEBUGGING #####
 # We always build releases with debugging information, since otherwise
@@ -156,7 +156,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/SERV.OBJ SRC/USER.OBJ \
  SRC/VERSION.OBJ SRC/KLINE.OBJ SRC/EXTRA.OBJ SRC/IRCSPRINTF.OBJ \
  SRC/SCACHE.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
- SRC/ALIASES.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/SSL.OBJ \
+ SRC/ALIASES.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/TLS.OBJ \
  SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MODDATA.OBJ SRC/UID.OBJ SRC/MEMPOOL.OBJ \
  SRC/DISPATCH.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
  SRC/API-CLICAP.OBJ SRC/API-MTAG.OBJ SRC/API-HISTORY-BACKEND.OBJ \
@@ -504,8 +504,8 @@ src/api-mtag.obj: src/api-mtag.c $(INCLUDES)
 src/api-history-backend.obj: src/api-history-backend.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/api-history-backend.c
 
-src/ssl.obj: src/ssl.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/ssl.c
+src/tls.obj: src/tls.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/tls.c
 
 src/crypt_blowfish.obj: src/crypt_blowfish.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/crypt_blowfish.c

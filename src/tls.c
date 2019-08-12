@@ -1,5 +1,5 @@
 /************************************************************************
- *   Unreal Internet Relay Chat Daemon, src/ssl.c
+ *   Unreal Internet Relay Chat Daemon, src/tls.c
  *      (C) 2000 hq.alert.sk (base)
  *      (C) 2000 Carsten V. Munk <stskeeps@tspre.org> 
  *

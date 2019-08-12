@@ -24,7 +24,7 @@ SourceDir=../../
 UninstallDisplayIcon={app}\UnrealIRCd.exe
 DisableWelcomePage=no
 
-; !!! Make sure to update SSL validation (WizardForm.TasksList.Checked[9]) if tasks are added/removed !!!
+; !!! Make sure to update SSL/TLS validation (WizardForm.TasksList.Checked[9]) if tasks are added/removed !!!
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked
@@ -32,7 +32,7 @@ Name: "installservice"; Description: "Install as a &service (not for beginners)"
 Name: "installservice/startboot"; Description: "S&tart UnrealIRCd when Windows starts"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive unchecked
 Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive unchecked
 Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; Flags: unchecked; MinVersion: 0,5.0;
-Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL options:";
+Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL/TLS options:";
 Name: "fixperm"; Description: "Make UnrealIRCd folder writable by current user";
 
 [Files]
@@ -59,7 +59,7 @@ Source: "doc\conf\aliases\*"; DestDir: "{app}\conf\aliases"; Flags: ignoreversio
 Source: "unrealsvc.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
 
 Source: "src\windows\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
-Source: "extras\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "extras\tls.cnf"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
 Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags: ignoreversion
@@ -75,7 +75,7 @@ Source: "c:\dev\libressl\bin\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 
 #ifdef USE_CURL
-; curl with ssl support
+; curl with SSL/TLS support
 Source: "C:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-ssl-dll-ipv6-sspi-obj-lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "doc\conf\ssl\curl-ca-bundle.crt"; DestDir: "{app}\conf\ssl"; Flags: ignoreversion
 #endif
@@ -85,7 +85,7 @@ Name: "{app}\tmp"
 Name: "{app}\cache"
 Name: "{app}\logs"
 Name: "{app}\conf"
-Name: "{app}\conf\ssl"
+Name: "{app}\conf\tls"
 Name: "{app}\data"
 Name: "{app}\modules\third"
 
@@ -147,14 +147,14 @@ if CurStep = ssPostInstall then
 end;
 
 //*********************************************************************************
-// Checks if ssl cert file exists
+// Checks if SSL/TLS cert file exists
 //*********************************************************************************
 
 procedure CurPageChanged(CurPage: Integer);
 begin
   if (CurPage = wpSelectTasks)then
   begin
-     if FileExists(ExpandConstant('{app}\conf\ssl\server.cert.pem')) then
+     if FileExists(ExpandConstant('{app}\conf\tls\server.cert.pem')) then
      begin
         WizardForm.TasksList.Checked[9]:=false;
      end

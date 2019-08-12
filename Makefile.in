@@ -212,7 +212,7 @@ install: all
 		ln -s "@CONFDIR@/tls" "@CONFDIR@/ssl" ; \
 	fi
 	$(INSTALL) -m 0700 -d @CONFDIR@/tls
-	$(INSTALL) -m 0600 doc/conf/ssl/curl-ca-bundle.crt @CONFDIR@/ssl
+	$(INSTALL) -m 0600 doc/conf/tls/curl-ca-bundle.crt @CONFDIR@/tls
 	@# delete modules/cap directory, to avoid confusing with U4 to U5 upgrades:
 	rm -rf @MODULESDIR@/cap
 	$(INSTALL) -m 0700 -d @MODULESDIR@/third
@@ -224,10 +224,10 @@ install: all
 	$(INSTALL) -m 0700 -d @CACHEDIR@
 	$(INSTALL) -m 0700 -d @PERMDATADIR@
 	$(INSTALL) -m 0700 -d @LOGDIR@
-	-@if [ ! -f "@CONFDIR@/ssl/server.cert.pem" ] ; then \
-		$(INSTALL) -m 0600 server.req.pem @CONFDIR@/ssl ; \
-		$(INSTALL) -m 0600 server.key.pem @CONFDIR@/ssl ; \
-		$(INSTALL) -m 0600 server.cert.pem @CONFDIR@/ssl ; \
+	-@if [ ! -f "@CONFDIR@/tls/server.cert.pem" ] ; then \
+		$(INSTALL) -m 0600 server.req.pem @CONFDIR@/tls ; \
+		$(INSTALL) -m 0600 server.key.pem @CONFDIR@/tls ; \
+		$(INSTALL) -m 0600 server.cert.pem @CONFDIR@/tls ; \
 	fi
 	@echo ''
 	@echo '* UnrealIRCd is now installed.'
@@ -254,12 +254,12 @@ install: all
 		echo 'Again, be sure to change to the @SCRIPTDIR@ directory!' ; \
 	fi
 
-pem:	extras/ssl.cnf
+pem:	extras/tls.cnf
 	@echo "Generating server key..."
 	$(OPENSSLPATH) ecparam -out server.key.pem -name secp384r1 -genkey
 	@echo "Generating certificate request..."
 	$(OPENSSLPATH) req -new \
-              -config extras/ssl.cnf -sha256 -out server.req.pem \
+              -config extras/tls.cnf -sha256 -out server.req.pem \
               -key server.key.pem -nodes
 	@echo "Generating self-signed certificate..."
 	$(OPENSSLPATH) req -x509 -days 3650 -sha256 -in server.req.pem \
