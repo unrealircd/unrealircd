@@ -206,7 +206,7 @@ DLL_FILES=SRC/MODULES/CHGHOST.DLL SRC/MODULES/SDESC.DLL SRC/MODULES/SETIDENT.DLL
  SRC/MODULES/WEBREDIR.DLL \
  SRC/MODULES/CAP.DLL \
  SRC/MODULES/SASL.DLL \
- SRC/MODULES/SSL_ANTIDOS.DLL \
+ SRC/MODULES/TLS_ANTIDOS.DLL \
  SRC/MODULES/MD.DLL \
  SRC/MODULES/CERTFP.DLL \
  SRC/MODULES/CLOAK.DLL \
@@ -843,8 +843,8 @@ src/modules/cap.dll: src/modules/cap.c $(INCLUDES)
 src/modules/sasl.dll: src/modules/sasl.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/sasl.c $(MODLFLAGS)
 
-src/modules/ssl_antidos.dll: src/modules/ssl_antidos.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/ssl_antidos.c $(MODLFLAGS)
+src/modules/tls_antidos.dll: src/modules/tls_antidos.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/tls_antidos.c $(MODLFLAGS)
 
 src/modules/antirandom.dll: src/modules/antirandom.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/antirandom.c $(MODLFLAGS)

@@ -58,7 +58,7 @@ R_MODULES= \
 	botmotd.so lusers.so names.so svsnolag.so addmotd.so \
 	svslusers.so starttls.so webredir.so cap.so \
 	sasl.so md.so certfp.so \
-	ssl_antidos.so webirc.so websocket.so \
+	tls_antidos.so webirc.so websocket.so \
 	blacklist.so jointhrottle.so \
 	antirandom.so hideserver.so jumpserver.so \
 	ircops.so staff.so nocodes.so \
@@ -475,9 +475,9 @@ certfp.so: certfp.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o certfp.so certfp.c
 
-ssl_antidos.so: ssl_antidos.c $(INCLUDES)
+tls_antidos.so: tls_antidos.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o ssl_antidos.so ssl_antidos.c
+		-o tls_antidos.so tls_antidos.c
 
 webirc.so: webirc.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
