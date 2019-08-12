@@ -1,6 +1,6 @@
 # create RSA certs - Server
 
-RANDFILE = ssl.rnd
+RANDFILE = tls.rnd
 
 [ req ]
 # Note: RSA bits is ignored, as we use ECC now

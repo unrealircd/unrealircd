@@ -31,7 +31,7 @@ tags
 server.cert.pem
 server.key.pem
 server.req.pem
-ssl.rnd
+tls.rnd
 
 # Ignores for platform stuff
 .DS_Store
