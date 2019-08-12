@@ -23,7 +23,7 @@ Alternatively you can compile UnrealIRCd for Windows yourself. However this is n
 
 #### *BSD/Linux/macOS
 Do the following steps under a separate account for running UnrealIRCd,
-[do NOT run as root](https://www.unrealircd.org/docs/Do_not_run_as_root).
+[do NOT compile or run as root](https://www.unrealircd.org/docs/Do_not_run_as_root).
 
 ### Step 1: Compile the IRCd
 

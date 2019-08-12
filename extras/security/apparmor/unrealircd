@@ -1,4 +1,4 @@
-# AppArmor profile for UnrealIRCd 4.0.16+
+# AppArmor profile for UnrealIRCd 5
 #
 # Note that you may still see some DENIED warnings in logs with
 # operation="chmod". These are harmless and can be safely ignored.
