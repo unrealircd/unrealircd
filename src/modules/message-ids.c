@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER(message-ids)
   = {
 	"message-ids",
-	"4.2",
+	"5.0",
 	"msgid CAP",
 	"3.2-b8-1",
 	NULL 

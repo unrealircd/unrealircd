@@ -26,28 +26,28 @@ CMD_FUNC(m_undccdeny);
 
 #define MSG_UNDCCDENY 	"UNDCCDENY"	
 
-ModuleHeader MOD_HEADER(m_undccdeny)
+ModuleHeader MOD_HEADER(undccdeny)
   = {
-	"m_undccdeny",
-	"4.2",
+	"undccdeny",
+	"5.0",
 	"command /undccdeny", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_undccdeny)
+MOD_INIT(undccdeny)
 {
 	CommandAdd(modinfo->handle, MSG_UNDCCDENY, m_undccdeny, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_undccdeny)
+MOD_LOAD(undccdeny)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_undccdeny)
+MOD_UNLOAD(undccdeny)
 {
 	return MOD_SUCCESS;
 }

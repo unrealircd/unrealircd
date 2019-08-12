@@ -49,16 +49,16 @@ static int samode_in_progress = 0;
 
 #define MSG_MODE 	"MODE"
 
-ModuleHeader MOD_HEADER(m_mode)
+ModuleHeader MOD_HEADER(mode)
   = {
-	"m_mode",
-	"4.2",
+	"mode",
+	"5.0",
 	"command /mode",
 	"3.2-b8-1",
 	NULL
     };
 
-MOD_TEST(m_mode)
+MOD_TEST(mode)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_DO_MODE, _do_mode);
@@ -67,7 +67,7 @@ MOD_TEST(m_mode)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(m_mode)
+MOD_INIT(mode)
 {
 	CommandAdd(modinfo->handle, MSG_MODE, m_mode, MAXPARA, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_MLOCK, m_mlock, MAXPARA, M_SERVER);
@@ -75,12 +75,12 @@ MOD_INIT(m_mode)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_mode)
+MOD_LOAD(mode)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_mode)
+MOD_UNLOAD(mode)
 {
 	return MOD_SUCCESS;
 }

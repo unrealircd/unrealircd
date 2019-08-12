@@ -8,10 +8,10 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(m_md)
+ModuleHeader MOD_HEADER(md)
   = {
-	"m_md",
-	"4.2",
+	"md",
+	"5.0",
 	"command /MD (S2S only)",
 	"3.2-b8-1",
 	NULL 
@@ -35,7 +35,7 @@ void _broadcast_moddata_client(aClient *acptr);
 
 extern MODVAR ModDataInfo *MDInfo;
 
-MOD_TEST(m_md)
+MOD_TEST(md)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_BROADCAST_MD_CLIENT, _broadcast_md_client);
@@ -55,19 +55,19 @@ MOD_TEST(m_md)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(m_md)
+MOD_INIT(md)
 {
 	CommandAdd(modinfo->handle, "MD", m_md, MAXPARA, M_SERVER);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_md)
+MOD_LOAD(md)
 {
 	return MOD_SUCCESS;
 }
 
 
-MOD_UNLOAD(m_md)
+MOD_UNLOAD(md)
 {
 	return MOD_SUCCESS;
 }

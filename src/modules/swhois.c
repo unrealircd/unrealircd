@@ -28,28 +28,28 @@ CMD_FUNC(m_swhois);
 
 #define MSG_SWHOIS 	"SWHOIS"	
 
-ModuleHeader MOD_HEADER(m_swhois)
+ModuleHeader MOD_HEADER(swhois)
   = {
-	"m_swhois",
-	"4.2",
+	"swhois",
+	"5.0",
 	"command /swhois", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_swhois)
+MOD_INIT(swhois)
 {
 	CommandAdd(modinfo->handle, MSG_SWHOIS, m_swhois, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_swhois)
+MOD_LOAD(swhois)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_swhois)
+MOD_UNLOAD(swhois)
 {
 	return MOD_SUCCESS;
 }

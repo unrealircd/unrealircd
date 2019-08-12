@@ -26,28 +26,28 @@ CMD_FUNC(m_watch);
 
 #define MSG_WATCH 	"WATCH"	
 
-ModuleHeader MOD_HEADER(m_watch)
+ModuleHeader MOD_HEADER(watch)
   = {
-	"m_watch",
-	"4.2",
+	"watch",
+	"5.0",
 	"command /watch", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_watch)
+MOD_INIT(watch)
 {
 	CommandAdd(modinfo->handle, MSG_WATCH, m_watch, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_watch)
+MOD_LOAD(watch)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_watch)
+MOD_UNLOAD(watch)
 {
 	return MOD_SUCCESS;
 }

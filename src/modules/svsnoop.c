@@ -29,28 +29,28 @@ CMD_FUNC(m_svsnoop);
 #define MSG_SVSNOOP 	"SVSNOOP"	
 
 
-ModuleHeader MOD_HEADER(m_svsnoop)
+ModuleHeader MOD_HEADER(svsnoop)
   = {
-	"m_svsnoop",
-	"4.2",
+	"svsnoop",
+	"5.0",
 	"command /svsnoop", 
 	"3.2-b8-1",
 	NULL
     };
 
-MOD_INIT(m_svsnoop)
+MOD_INIT(svsnoop)
 {
 	CommandAdd(modinfo->handle, MSG_SVSNOOP, m_svsnoop, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_svsnoop)
+MOD_LOAD(svsnoop)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_svsnoop)
+MOD_UNLOAD(svsnoop)
 {
 	return MOD_SUCCESS;
 }

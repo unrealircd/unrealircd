@@ -26,28 +26,28 @@ CMD_FUNC(m_setname);
 
 #define MSG_SETNAME 	"SETNAME"	/* setname */
 
-ModuleHeader MOD_HEADER(m_setname)
+ModuleHeader MOD_HEADER(setname)
   = {
 	"setname",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"command /setname", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_setname)
+MOD_INIT(setname)
 {
 	CommandAdd(modinfo->handle, MSG_SETNAME, m_setname, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_setname)
+MOD_LOAD(setname)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_setname)
+MOD_UNLOAD(setname)
 {
 	return MOD_SUCCESS;
 }

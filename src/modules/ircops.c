@@ -25,7 +25,7 @@
 
 CMD_FUNC(m_ircops);
 
-ModuleHeader MOD_HEADER(m_ircops)
+ModuleHeader MOD_HEADER(ircops)
   = {
 	"ircops",
 	"v3.71",
@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER(m_ircops)
 	NULL 
     };
 
-MOD_INIT(m_ircops)
+MOD_INIT(ircops)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	if (CommandExists(MSG_IRCOPS))
@@ -54,12 +54,12 @@ MOD_INIT(m_ircops)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_ircops)
+MOD_LOAD(ircops)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_ircops)
+MOD_UNLOAD(ircops)
 {
 	return MOD_SUCCESS;
 }

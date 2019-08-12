@@ -26,28 +26,28 @@ CMD_FUNC(m_globops);
 
 #define MSG_GLOBOPS 	"GLOBOPS"	
 
-ModuleHeader MOD_HEADER(m_globops)
+ModuleHeader MOD_HEADER(globops)
   = {
-	"m_globops",
-	"4.2",
+	"globops",
+	"5.0",
 	"command /globops", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_globops)
+MOD_INIT(globops)
 {
 	CommandAdd(modinfo->handle, MSG_GLOBOPS, m_globops, 1, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_globops)
+MOD_LOAD(globops)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_globops)
+MOD_UNLOAD(globops)
 {
 	return MOD_SUCCESS;
 }

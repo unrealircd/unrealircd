@@ -27,16 +27,16 @@ CMD_FUNC(m_help);
 #define MSG_HELP 	"HELP"	
 #define MSG_HELPOP	"HELPOP"
 
-ModuleHeader MOD_HEADER(m_help)
+ModuleHeader MOD_HEADER(help)
   = {
-	"m_help",
-	"4.2",
+	"help",
+	"5.0",
 	"command /help", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_help)
+MOD_INIT(help)
 {
 	CommandAdd(modinfo->handle, MSG_HELP, m_help, 1, M_USER);
 	CommandAdd(modinfo->handle, MSG_HELPOP, m_help, 1, M_USER);
@@ -44,12 +44,12 @@ MOD_INIT(m_help)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_help)
+MOD_LOAD(help)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_help)
+MOD_UNLOAD(help)
 {
 	return MOD_SUCCESS;
 }

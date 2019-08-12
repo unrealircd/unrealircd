@@ -26,28 +26,28 @@ CMD_FUNC(m_eos);
 
 #define MSG_EOS 	"EOS"	
 
-ModuleHeader MOD_HEADER(m_eos)
+ModuleHeader MOD_HEADER(eos)
   = {
-	"m_eos",
-	"4.2",
+	"eos",
+	"5.0",
 	"command /eos", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_eos)
+MOD_INIT(eos)
 {
 	CommandAdd(modinfo->handle, MSG_EOS, m_eos, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_eos)
+MOD_LOAD(eos)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_eos)
+MOD_UNLOAD(eos)
 {
 	return MOD_SUCCESS;
 }

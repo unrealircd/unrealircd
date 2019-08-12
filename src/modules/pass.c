@@ -26,10 +26,10 @@ CMD_FUNC(m_pass);
 
 #define MSG_PASS 	"PASS"	
 
-ModuleHeader MOD_HEADER(m_pass)
+ModuleHeader MOD_HEADER(pass)
   = {
-	"m_pass",
-	"4.2",
+	"pass",
+	"5.0",
 	"command /pass", 
 	"3.2-b8-1",
 	NULL 
@@ -38,7 +38,7 @@ ModuleHeader MOD_HEADER(m_pass)
 /* Forward declarations */
 int _check_banned(aClient *cptr, int exitflags);
 
-MOD_TEST(m_pass)
+MOD_TEST(pass)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -47,7 +47,7 @@ MOD_TEST(m_pass)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(m_pass)
+MOD_INIT(pass)
 {
 	CommandAdd(modinfo->handle, MSG_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
 	
@@ -55,12 +55,12 @@ MOD_INIT(m_pass)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_pass)
+MOD_LOAD(pass)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_pass)
+MOD_UNLOAD(pass)
 {
 	return MOD_SUCCESS;
 }

@@ -27,10 +27,10 @@ void _send_list(aClient *cptr);
 
 #define MSG_LIST 	"LIST"	
 
-ModuleHeader MOD_HEADER(m_list)
+ModuleHeader MOD_HEADER(list)
   = {
-	"m_list",
-	"4.2",
+	"list",
+	"5.0",
 	"command /list", 
 	"3.2-b8-1",
 	NULL 
@@ -38,14 +38,14 @@ ModuleHeader MOD_HEADER(m_list)
 
 EVENT(send_queued_list_data);
 
-MOD_TEST(m_list)
+MOD_TEST(list)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_LIST, _send_list);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(m_list)
+MOD_INIT(list)
 {
 	CommandAdd(modinfo->handle, MSG_LIST, m_list, MAXPARA, M_USER);
 	EventAdd(modinfo->handle, "send_queued_list_data", 1, 0, send_queued_list_data, NULL);
@@ -53,12 +53,12 @@ MOD_INIT(m_list)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_list)
+MOD_LOAD(list)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_list)
+MOD_UNLOAD(list)
 {
 	return MOD_SUCCESS;
 }

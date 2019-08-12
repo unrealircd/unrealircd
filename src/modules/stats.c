@@ -26,28 +26,28 @@ CMD_FUNC(m_stats);
 
 #define MSG_STATS 	"STATS"	
 
-ModuleHeader MOD_HEADER(m_stats)
+ModuleHeader MOD_HEADER(stats)
   = {
-	"m_stats",
-	"4.2",
+	"stats",
+	"5.0",
 	"command /stats", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_stats)
+MOD_INIT(stats)
 {
 	CommandAdd(modinfo->handle, MSG_STATS, m_stats, 3, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_stats)
+MOD_LOAD(stats)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_stats)
+MOD_UNLOAD(stats)
 {
 	return MOD_SUCCESS;
 }

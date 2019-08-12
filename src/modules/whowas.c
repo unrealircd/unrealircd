@@ -26,28 +26,28 @@ CMD_FUNC(m_whowas);
 
 #define MSG_WHOWAS 	"WHOWAS"	
 
-ModuleHeader MOD_HEADER(m_whowas)
+ModuleHeader MOD_HEADER(whowas)
   = {
-	"m_whowas",
-	"4.2",
+	"whowas",
+	"5.0",
 	"command /whowas", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_whowas)
+MOD_INIT(whowas)
 {
 	CommandAdd(modinfo->handle, MSG_WHOWAS, m_whowas, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_whowas)
+MOD_LOAD(whowas)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_whowas)
+MOD_UNLOAD(whowas)
 {
 	return MOD_SUCCESS;
 }

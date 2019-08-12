@@ -83,16 +83,16 @@ int _tkl_ip_hash_type(int type);
 /* Externals (only for us :D) */
 extern int MODVAR spamf_ugly_vchanoverride;
 
-ModuleHeader MOD_HEADER(m_tkl)
+ModuleHeader MOD_HEADER(tkl)
 = {
 	"tkl",
-	"4.2",
+	"5.0",
 	"Server ban commands such as /GLINE, /SPAMFILTER, etc.",
 	"3.2-b8-1",
 	NULL 
 };
 
-MOD_TEST(m_tkl)
+MOD_TEST(tkl)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_spamfilter);
@@ -122,7 +122,7 @@ MOD_TEST(m_tkl)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(m_tkl)
+MOD_INIT(tkl)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamfilter);
@@ -139,13 +139,13 @@ MOD_INIT(m_tkl)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_tkl)
+MOD_LOAD(tkl)
 {
 	EventAdd(modinfo->handle, "tklexpire", 5, 0, tkl_check_expire, NULL);
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_tkl)
+MOD_UNLOAD(tkl)
 {
 	return MOD_SUCCESS;
 }

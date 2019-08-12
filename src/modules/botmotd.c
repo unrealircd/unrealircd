@@ -26,28 +26,28 @@ CMD_FUNC(m_botmotd);
 
 #define MSG_BOTMOTD 	"BOTMOTD"	
 
-ModuleHeader MOD_HEADER(m_botmotd)
+ModuleHeader MOD_HEADER(botmotd)
   = {
-	"m_botmotd",
-	"4.2",
+	"botmotd",
+	"5.0",
 	"command /botmotd", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_botmotd)
+MOD_INIT(botmotd)
 {
 	CommandAdd(modinfo->handle, MSG_BOTMOTD, m_botmotd, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_botmotd)
+MOD_LOAD(botmotd)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_botmotd)
+MOD_UNLOAD(botmotd)
 {
 	return MOD_SUCCESS;
 }

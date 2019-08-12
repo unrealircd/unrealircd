@@ -26,28 +26,28 @@ CMD_FUNC(m_silence);
 
 #define MSG_SILENCE 	"SILENCE"	
 
-ModuleHeader MOD_HEADER(m_silence)
+ModuleHeader MOD_HEADER(silence)
   = {
-	"m_silence",
-	"4.2",
+	"silence",
+	"5.0",
 	"command /silence", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_silence)
+MOD_INIT(silence)
 {
 	CommandAdd(modinfo->handle, MSG_SILENCE, m_silence, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_silence)
+MOD_LOAD(silence)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_silence)
+MOD_UNLOAD(silence)
 {
 	return MOD_SUCCESS;
 }

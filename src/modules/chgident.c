@@ -26,28 +26,28 @@
 
 CMD_FUNC(m_chgident);
 
-ModuleHeader MOD_HEADER(m_chgident)
+ModuleHeader MOD_HEADER(chgident)
   = {
 	"chgident",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"/chgident", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_chgident)
+MOD_INIT(chgident)
 {
 	CommandAdd(modinfo->handle, MSG_CHGIDENT, m_chgident, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_chgident)
+MOD_LOAD(chgident)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_chgident)
+MOD_UNLOAD(chgident)
 {
 	return MOD_SUCCESS;
 }

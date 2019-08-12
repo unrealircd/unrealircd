@@ -26,28 +26,28 @@
 
 CMD_FUNC(m_setident);
 
-ModuleHeader MOD_HEADER(m_setident)
+ModuleHeader MOD_HEADER(setident)
   = {
 	"setident",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"/setident", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_setident)
+MOD_INIT(setident)
 {
 	CommandAdd(modinfo->handle, MSG_SETIDENT, m_setident, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_setident)
+MOD_LOAD(setident)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_setident)
+MOD_UNLOAD(setident)
 {
 	return MOD_SUCCESS;
 }

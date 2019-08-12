@@ -26,28 +26,28 @@ CMD_FUNC(m_netinfo);
 
 #define MSG_NETINFO 	"NETINFO"	
 
-ModuleHeader MOD_HEADER(m_netinfo)
+ModuleHeader MOD_HEADER(netinfo)
   = {
-	"m_netinfo",
-	"4.2",
+	"netinfo",
+	"5.0",
 	"command /netinfo", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_netinfo)
+MOD_INIT(netinfo)
 {
 	CommandAdd(modinfo->handle, MSG_NETINFO, m_netinfo, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_netinfo)
+MOD_LOAD(netinfo)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_netinfo)
+MOD_UNLOAD(netinfo)
 {
 	return MOD_SUCCESS;
 }

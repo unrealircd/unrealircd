@@ -26,28 +26,28 @@ CMD_FUNC(m_user);
 
 #define MSG_USER 	"USER"	
 
-ModuleHeader MOD_HEADER(m_user)
+ModuleHeader MOD_HEADER(user)
   = {
-	"m_user",
-	"4.2",
+	"user",
+	"5.0",
 	"command /user", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_user)
+MOD_INIT(user)
 {
 	CommandAdd(modinfo->handle, MSG_USER, m_user, 4, M_USER|M_UNREGISTERED);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_user)
+MOD_LOAD(user)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_user)
+MOD_UNLOAD(user)
 {
 	return MOD_SUCCESS;
 }

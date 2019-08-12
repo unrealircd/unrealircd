@@ -70,7 +70,7 @@ struct {
 } Download;
 #endif
 
-ModuleHeader MOD_HEADER(m_staff)
+ModuleHeader MOD_HEADER(staff)
   = {
 	"staff",
 	"v3.8",
@@ -79,13 +79,13 @@ ModuleHeader MOD_HEADER(m_staff)
 	NULL 
     };
 
-MOD_TEST(m_staff)
+MOD_TEST(staff)
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cb_test);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(m_staff)
+MOD_INIT(staff)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 #ifdef USE_LIBCURL
@@ -104,12 +104,12 @@ MOD_INIT(m_staff)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_staff)
+MOD_LOAD(staff)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_staff)
+MOD_UNLOAD(staff)
 {
 	FreeConf();
 	unload_motd_file(&staff);

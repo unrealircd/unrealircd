@@ -29,7 +29,7 @@
 ModuleHeader MOD_HEADER(charsys)
 = {
 	"charsys",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"Character System (set::allowed-nickchars)", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

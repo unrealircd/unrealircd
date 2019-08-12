@@ -33,16 +33,16 @@ CMD_FUNC(m_svs2mode);
 #define MSG_SVSMODE 	"SVSMODE"	
 #define MSG_SVS2MODE    "SVS2MODE"
 
-ModuleHeader MOD_HEADER(m_svsmode)
+ModuleHeader MOD_HEADER(svsmode)
   = {
-	"m_svsmode",
-	"4.2",
+	"svsmode",
+	"5.0",
 	"command /svsmode and svs2mode", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_svsmode)
+MOD_INIT(svsmode)
 {
 	CommandAdd(modinfo->handle, MSG_SVSMODE, m_svsmode, MAXPARA, M_SERVER|M_USER);
 	CommandAdd(modinfo->handle, MSG_SVS2MODE, m_svs2mode, MAXPARA, M_SERVER|M_USER);
@@ -50,12 +50,12 @@ MOD_INIT(m_svsmode)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_svsmode)
+MOD_LOAD(svsmode)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_svsmode)
+MOD_UNLOAD(svsmode)
 {
 	return MOD_SUCCESS;
 }

@@ -26,28 +26,28 @@ CMD_FUNC(m_links);
 
 #define MSG_LINKS 	"LINKS"	
 
-ModuleHeader MOD_HEADER(m_links)
+ModuleHeader MOD_HEADER(links)
   = {
-	"m_links",
-	"4.2",
+	"links",
+	"5.0",
 	"command /links", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_links)
+MOD_INIT(links)
 {
 	CommandAdd(modinfo->handle, MSG_LINKS, m_links, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_links)
+MOD_LOAD(links)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_links)
+MOD_UNLOAD(links)
 {
 	return MOD_SUCCESS;
 }

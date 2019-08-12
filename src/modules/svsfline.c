@@ -26,28 +26,28 @@ CMD_FUNC(m_svsfline);
 
 #define MSG_SVSFLINE 	"SVSFLINE"	
 
-ModuleHeader MOD_HEADER(m_svsfline)
+ModuleHeader MOD_HEADER(svsfline)
   = {
-	"m_svsfline",
-	"4.2",
+	"svsfline",
+	"5.0",
 	"command /svsfline", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_svsfline)
+MOD_INIT(svsfline)
 {
 	CommandAdd(modinfo->handle, MSG_SVSFLINE, m_svsfline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_svsfline)
+MOD_LOAD(svsfline)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_svsfline)
+MOD_UNLOAD(svsfline)
 {
 	return MOD_SUCCESS;
 }

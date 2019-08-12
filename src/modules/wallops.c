@@ -26,28 +26,28 @@ CMD_FUNC(m_wallops);
 
 #define MSG_WALLOPS 	"WALLOPS"	
 
-ModuleHeader MOD_HEADER(m_wallops)
+ModuleHeader MOD_HEADER(wallops)
   = {
-	"m_wallops",
-	"4.2",
+	"wallops",
+	"5.0",
 	"command /wallops", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_wallops)
+MOD_INIT(wallops)
 {
 	CommandAdd(modinfo->handle, MSG_WALLOPS, m_wallops, 1, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_wallops)
+MOD_LOAD(wallops)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_wallops)
+MOD_UNLOAD(wallops)
 {
 	return MOD_SUCCESS;
 }

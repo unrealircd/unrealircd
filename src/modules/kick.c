@@ -26,28 +26,28 @@ CMD_FUNC(m_kick);
 
 #define MSG_KICK 	"KICK"	
 
-ModuleHeader MOD_HEADER(m_kick)
+ModuleHeader MOD_HEADER(kick)
   = {
-	"m_kick",
-	"4.2",
+	"kick",
+	"5.0",
 	"command /kick", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_kick)
+MOD_INIT(kick)
 {
 	CommandAdd(modinfo->handle, MSG_KICK, m_kick, 3, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_kick)
+MOD_LOAD(kick)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_kick)
+MOD_UNLOAD(kick)
 {
 	return MOD_SUCCESS;
 }

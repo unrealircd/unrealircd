@@ -24,17 +24,17 @@ CMD_FUNC(m_quit);
 
 #define MSG_QUIT        "QUIT"  /* QUIT */
 
-ModuleHeader MOD_HEADER(m_quit)
+ModuleHeader MOD_HEADER(quit)
   = {
 	"quit",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"command /quit", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(m_quit)
+MOD_INIT(quit)
 {
 	CommandAdd(modinfo->handle, MSG_QUIT, m_quit, 1, M_UNREGISTERED|M_USER|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -42,13 +42,13 @@ MOD_INIT(m_quit)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(m_quit)
+MOD_LOAD(quit)
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(m_quit)
+MOD_UNLOAD(quit)
 {
 	return MOD_SUCCESS;
 }

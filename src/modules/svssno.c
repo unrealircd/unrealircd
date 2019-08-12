@@ -28,16 +28,16 @@ CMD_FUNC(m_svs2sno);
 #define MSG_SVSSNO 	"SVSSNO"	
 #define MSG_SVS2SNO 	"SVS2SNO"	
 
-ModuleHeader MOD_HEADER(m_svssno)
+ModuleHeader MOD_HEADER(svssno)
   = {
-	"m_svssno",
-	"4.2",
+	"svssno",
+	"5.0",
 	"command /svssno", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_svssno)
+MOD_INIT(svssno)
 {
 	CommandAdd(modinfo->handle, MSG_SVSSNO, m_svssno, MAXPARA, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_SVS2SNO, m_svs2sno, MAXPARA, M_USER|M_SERVER);
@@ -45,12 +45,12 @@ MOD_INIT(m_svssno)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_svssno)
+MOD_LOAD(svssno)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_svssno)
+MOD_UNLOAD(svssno)
 {
 	return MOD_SUCCESS;
 }

@@ -28,28 +28,28 @@ CMD_FUNC(m_svsmotd);
 
 #define MSG_SVSMOTD 	"SVSMOTD"	
 
-ModuleHeader MOD_HEADER(m_svsmotd)
+ModuleHeader MOD_HEADER(svsmotd)
   = {
-	"m_svsmotd",
-	"4.2",
+	"svsmotd",
+	"5.0",
 	"command /svsmotd", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_svsmotd)
+MOD_INIT(svsmotd)
 {
 	CommandAdd(modinfo->handle, MSG_SVSMOTD, m_svsmotd, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_svsmotd)
+MOD_LOAD(svsmotd)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_svsmotd)
+MOD_UNLOAD(svsmotd)
 {
 	return MOD_SUCCESS;
 }

@@ -26,28 +26,28 @@ CMD_FUNC(m_admin);
 
 #define MSG_ADMIN 	"ADMIN"	
 
-ModuleHeader MOD_HEADER(m_admin)
+ModuleHeader MOD_HEADER(admin)
   = {
-	"m_admin",
-	"4.2",
+	"admin",
+	"5.0",
 	"command /admin", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_admin)
+MOD_INIT(admin)
 {
 	CommandAdd(modinfo->handle, MSG_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_admin)
+MOD_LOAD(admin)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_admin)
+MOD_UNLOAD(admin)
 {
 	return MOD_SUCCESS;
 }

@@ -26,28 +26,28 @@ CMD_FUNC(m_rules);
 
 #define MSG_RULES 	"RULES"	
 
-ModuleHeader MOD_HEADER(m_rules)
+ModuleHeader MOD_HEADER(rules)
   = {
-	"m_rules",
-	"4.2",
+	"rules",
+	"5.0",
 	"command /rules", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_rules)
+MOD_INIT(rules)
 {
 	CommandAdd(modinfo->handle, MSG_RULES, m_rules, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_rules)
+MOD_LOAD(rules)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_rules)
+MOD_UNLOAD(rules)
 {
 	return MOD_SUCCESS;
 }

@@ -30,17 +30,17 @@ CMD_FUNC(m_who);
 /* Place includes here */
 #define MSG_WHO 	"WHO"
 
-ModuleHeader MOD_HEADER(m_who)
+ModuleHeader MOD_HEADER(who)
   = {
 	"who",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"command /who", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(m_who)
+MOD_INIT(who)
 {
 	if (!CommandAdd(modinfo->handle, MSG_WHO, m_who, MAXPARA, M_USER))
 	{
@@ -52,14 +52,14 @@ MOD_INIT(m_who)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(m_who)
+MOD_LOAD(who)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-MOD_UNLOAD(m_who)
+MOD_UNLOAD(who)
 {
 	return MOD_SUCCESS;
 }

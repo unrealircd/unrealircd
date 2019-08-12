@@ -26,28 +26,28 @@ CMD_FUNC(m_samode);
 
 #define MSG_SAMODE 	"SAMODE"	
 
-ModuleHeader MOD_HEADER(m_samode)
+ModuleHeader MOD_HEADER(samode)
   = {
-	"m_samode",
-	"4.2",
+	"samode",
+	"5.0",
 	"command /samode", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_samode)
+MOD_INIT(samode)
 {
 	CommandAdd(modinfo->handle, MSG_SAMODE, m_samode, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_samode)
+MOD_LOAD(samode)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_samode)
+MOD_UNLOAD(samode)
 {
 	return MOD_SUCCESS;
 }

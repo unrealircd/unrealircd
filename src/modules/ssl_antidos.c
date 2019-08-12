@@ -13,7 +13,7 @@
 ModuleHeader MOD_HEADER(ssl_antidos)
   = {
 	"ssl_antidos",
-	"4.2",
+	"5.0",
 	"SSL Renegotiation DoS protection",
 	"3.2-b8-1",
 	NULL 

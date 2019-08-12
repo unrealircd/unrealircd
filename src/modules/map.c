@@ -26,16 +26,16 @@ CMD_FUNC(m_map);
 
 #define MSG_MAP 	"MAP"	
 
-ModuleHeader MOD_HEADER(m_map)
+ModuleHeader MOD_HEADER(map)
   = {
-	"m_map",
-	"4.2",
+	"map",
+	"5.0",
 	"command /map", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_map)
+MOD_INIT(map)
 {
 	CommandAdd(modinfo->handle, MSG_MAP, m_map, MAXPARA, M_USER);
 	IsupportAdd(modinfo->handle, "MAP", NULL);
@@ -43,12 +43,12 @@ MOD_INIT(m_map)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_map)
+MOD_LOAD(map)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_map)
+MOD_UNLOAD(map)
 {
 	return MOD_SUCCESS;
 }

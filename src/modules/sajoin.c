@@ -26,28 +26,28 @@ CMD_FUNC(m_sajoin);
 
 #define MSG_SAJOIN 	"SAJOIN"	
 
-ModuleHeader MOD_HEADER(m_sajoin)
+ModuleHeader MOD_HEADER(sajoin)
   = {
-	"m_sajoin",
-	"4.2",
+	"sajoin",
+	"5.0",
 	"command /sajoin", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_sajoin)
+MOD_INIT(sajoin)
 {
 	CommandAdd(modinfo->handle, MSG_SAJOIN, m_sajoin, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_sajoin)
+MOD_LOAD(sajoin)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_sajoin)
+MOD_UNLOAD(sajoin)
 {
 	return MOD_SUCCESS;
 }

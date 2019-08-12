@@ -26,28 +26,28 @@ CMD_FUNC(m_ison);
 
 #define MSG_ISON 	"ISON"	
 
-ModuleHeader MOD_HEADER(m_ison)
+ModuleHeader MOD_HEADER(ison)
   = {
-	"m_ison",
-	"4.2",
+	"ison",
+	"5.0",
 	"command /ison", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_ison)
+MOD_INIT(ison)
 {
 	CommandAdd(modinfo->handle, MSG_ISON, m_ison, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_ison)
+MOD_LOAD(ison)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_ison)
+MOD_UNLOAD(ison)
 {
 	return MOD_SUCCESS;
 }

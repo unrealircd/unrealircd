@@ -28,28 +28,28 @@ CMD_FUNC(m_svslusers);
 
 #define MSG_SVSLUSERS 	"SVSLUSERS"	
 
-ModuleHeader MOD_HEADER(m_svslusers)
+ModuleHeader MOD_HEADER(svslusers)
   = {
-	"m_svslusers",
-	"4.2",
+	"svslusers",
+	"5.0",
 	"command /svslusers", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_svslusers)
+MOD_INIT(svslusers)
 {
 	CommandAdd(modinfo->handle, MSG_SVSLUSERS, m_svslusers, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_svslusers)
+MOD_LOAD(svslusers)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_svslusers)
+MOD_UNLOAD(svslusers)
 {
 	return MOD_SUCCESS;
 }

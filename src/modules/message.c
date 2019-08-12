@@ -35,16 +35,16 @@ int _can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
 #define MSG_NOTICE      "NOTICE"        /* NOTI */
 
-ModuleHeader MOD_HEADER(m_message)
+ModuleHeader MOD_HEADER(message)
   = {
 	"message",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"private message and notice", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_TEST(m_message)
+MOD_TEST(message)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
@@ -55,7 +55,7 @@ MOD_TEST(m_message)
 }
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(m_message)
+MOD_INIT(message)
 {
 	CommandAdd(modinfo->handle, MSG_PRIVATE, m_private, 2, M_USER|M_SERVER|M_RESETIDLE|M_VIRUS);
 	CommandAdd(modinfo->handle, MSG_NOTICE, m_notice, 2, M_USER|M_SERVER);
@@ -64,13 +64,13 @@ MOD_INIT(m_message)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(m_message)
+MOD_LOAD(message)
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(m_message)
+MOD_UNLOAD(message)
 {
 	return MOD_SUCCESS;
 }

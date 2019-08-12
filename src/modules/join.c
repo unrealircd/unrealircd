@@ -42,16 +42,16 @@ static int bouncedtimes = 0;
 #define MAXBOUNCE   5 /** Most sensible */
 #define MSG_JOIN 	"JOIN"	
 
-ModuleHeader MOD_HEADER(m_join)
+ModuleHeader MOD_HEADER(join)
   = {
-	"m_join",
-	"4.2",
+	"join",
+	"5.0",
 	"command /join", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_TEST(m_join)
+MOD_TEST(join)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_JOIN_CHANNEL, _join_channel);
@@ -64,19 +64,19 @@ MOD_TEST(m_join)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(m_join)
+MOD_INIT(join)
 {
 	CommandAdd(modinfo->handle, MSG_JOIN, m_join, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_join)
+MOD_LOAD(join)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_join)
+MOD_UNLOAD(join)
 {
 	return MOD_SUCCESS;
 }
@@ -171,7 +171,7 @@ CMD_FUNC(m_join)
 	int r;
 
 	if (bouncedtimes)
-		sendto_realops("m_join: bouncedtimes=%d??? [please report at https://bugs.unrealircd.org/]", bouncedtimes);
+		sendto_realops("join: bouncedtimes=%d??? [please report at https://bugs.unrealircd.org/]", bouncedtimes);
 
 	bouncedtimes = 0;
 	if (IsServer(sptr))

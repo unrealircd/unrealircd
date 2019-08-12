@@ -26,17 +26,17 @@ CMD_FUNC(m_sendumode);
 #define MSG_SENDUMODE   "SENDUMODE"
 #define MSG_SMO         "SMO"
 
-ModuleHeader MOD_HEADER(m_sendumode)
+ModuleHeader MOD_HEADER(sendumode)
   = {
 	"sendumode",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"command /sendumode", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(m_sendumode)
+MOD_INIT(sendumode)
 {
 	CommandAdd(modinfo->handle, MSG_SENDUMODE, m_sendumode, MAXPARA, M_SERVER);
 	CommandAdd(modinfo->handle, MSG_SMO, m_sendumode, MAXPARA, M_SERVER);
@@ -45,13 +45,13 @@ MOD_INIT(m_sendumode)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(m_sendumode)
+MOD_LOAD(sendumode)
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(m_sendumode)
+MOD_UNLOAD(sendumode)
 {
 	return MOD_SUCCESS;
 }

@@ -26,28 +26,28 @@ CMD_FUNC(m_userhost);
 
 #define MSG_USERHOST 	"USERHOST"	
 
-ModuleHeader MOD_HEADER(m_userhost)
+ModuleHeader MOD_HEADER(userhost)
   = {
-	"m_userhost",
-	"4.2",
+	"userhost",
+	"5.0",
 	"command /userhost", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_userhost)
+MOD_INIT(userhost)
 {
 	CommandAdd(modinfo->handle, MSG_USERHOST, m_userhost, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_userhost)
+MOD_LOAD(userhost)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_userhost)
+MOD_UNLOAD(userhost)
 {
 	return MOD_SUCCESS;
 }

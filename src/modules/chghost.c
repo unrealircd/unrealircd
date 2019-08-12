@@ -26,29 +26,29 @@
 
 CMD_FUNC(m_chghost);
 
-ModuleHeader MOD_HEADER(m_chghost)
+ModuleHeader MOD_HEADER(chghost)
   = {
 	"chghost",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"/chghost", /* Short description of module */
 	"3.2-b8-1",
 	NULL
     };
 
-MOD_INIT(m_chghost)
+MOD_INIT(chghost)
 {
 	CommandAdd(modinfo->handle, MSG_CHGHOST, m_chghost, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_chghost)
+MOD_LOAD(chghost)
 {
 	return MOD_SUCCESS;
 	
 }
 
-MOD_UNLOAD(m_chghost)
+MOD_UNLOAD(chghost)
 {
 	return MOD_SUCCESS;	
 }

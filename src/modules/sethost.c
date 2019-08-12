@@ -27,28 +27,28 @@ CMD_FUNC(m_sethost);
 /* Place includes here */
 #define MSG_SETHOST 	"SETHOST"	/* sethost */
 
-ModuleHeader MOD_HEADER(m_sethost)
+ModuleHeader MOD_HEADER(sethost)
   = {
 	"sethost",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"command /sethost", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_sethost)
+MOD_INIT(sethost)
 {
 	CommandAdd(modinfo->handle, MSG_SETHOST, m_sethost, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_sethost)
+MOD_LOAD(sethost)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_sethost)
+MOD_UNLOAD(sethost)
 {
 	return MOD_SUCCESS;
 }

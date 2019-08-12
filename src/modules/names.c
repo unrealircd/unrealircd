@@ -26,28 +26,28 @@ CMD_FUNC(m_names);
 
 #define MSG_NAMES 	"NAMES"
 
-ModuleHeader MOD_HEADER(m_names)
+ModuleHeader MOD_HEADER(names)
   = {
-	"m_names",
-	"4.2",
+	"names",
+	"5.0",
 	"command /names", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_names)
+MOD_INIT(names)
 {
 	CommandAdd(modinfo->handle, MSG_NAMES, m_names, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_names)
+MOD_LOAD(names)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_names)
+MOD_UNLOAD(names)
 {
 	return MOD_SUCCESS;
 }

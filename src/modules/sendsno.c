@@ -24,17 +24,17 @@ CMD_FUNC(m_sendsno);
 
 #define MSG_SENDSNO   "SENDSNO"
 
-ModuleHeader MOD_HEADER(m_sendsno)
+ModuleHeader MOD_HEADER(sendsno)
   = {
 	"sendsno",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"command /sendsno", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(m_sendsno)
+MOD_INIT(sendsno)
 {
 	CommandAdd(modinfo->handle, MSG_SENDSNO, m_sendsno, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -42,13 +42,13 @@ MOD_INIT(m_sendsno)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(m_sendsno)
+MOD_LOAD(sendsno)
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(m_sendsno)
+MOD_UNLOAD(sendsno)
 {
 	return MOD_SUCCESS;
 }

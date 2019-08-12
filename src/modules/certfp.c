@@ -14,7 +14,7 @@
 ModuleHeader MOD_HEADER(certfp)
   = {
 	"certfp",
-	"4.2",
+	"5.0",
 	"Certificate fingerprint",
 	"3.2-b8-1",
 	NULL 

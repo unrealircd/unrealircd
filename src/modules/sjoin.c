@@ -26,28 +26,28 @@ CMD_FUNC(m_sjoin);
 
 #define MSG_SJOIN 	"SJOIN"	
 
-ModuleHeader MOD_HEADER(m_sjoin)
+ModuleHeader MOD_HEADER(sjoin)
   = {
-	"m_sjoin",
-	"4.2",
+	"sjoin",
+	"5.0",
 	"command /sjoin", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_sjoin)
+MOD_INIT(sjoin)
 {
 	CommandAdd(modinfo->handle, MSG_SJOIN, m_sjoin, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_sjoin)
+MOD_LOAD(sjoin)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_sjoin)
+MOD_UNLOAD(sjoin)
 {
 	return MOD_SUCCESS;
 }

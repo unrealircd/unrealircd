@@ -28,28 +28,28 @@ CMD_FUNC(m_mkpasswd);
 
 #define MSG_MKPASSWD 	"MKPASSWD"	
 
-ModuleHeader MOD_HEADER(m_mkpasswd)
+ModuleHeader MOD_HEADER(mkpasswd)
   = {
-	"m_mkpasswd",
-	"4.2",
+	"mkpasswd",
+	"5.0",
 	"command /mkpasswd", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_mkpasswd)
+MOD_INIT(mkpasswd)
 {
 	CommandAdd(modinfo->handle, MSG_MKPASSWD, m_mkpasswd, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_mkpasswd)
+MOD_LOAD(mkpasswd)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_mkpasswd)
+MOD_UNLOAD(mkpasswd)
 {
 	return MOD_SUCCESS;
 }

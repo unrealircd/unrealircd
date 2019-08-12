@@ -26,28 +26,28 @@ CMD_FUNC(m_connect);
 
 #define MSG_CONNECT 	"CONNECT"	
 
-ModuleHeader MOD_HEADER(m_connect)
+ModuleHeader MOD_HEADER(connect)
   = {
-	"m_connect",
-	"4.2",
+	"connect",
+	"5.0",
 	"command /connect", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_connect)
+MOD_INIT(connect)
 {
 	CommandAdd(modinfo->handle, MSG_CONNECT, m_connect, MAXPARA, M_USER|M_SERVER); /* hmm.. server.. really? */
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_connect)
+MOD_LOAD(connect)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_connect)
+MOD_UNLOAD(connect)
 {
 	return MOD_SUCCESS;
 }

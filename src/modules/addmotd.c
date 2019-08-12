@@ -26,28 +26,28 @@ CMD_FUNC(m_addmotd);
 
 #define MSG_ADDMOTD 	"ADDMOTD"	
 
-ModuleHeader MOD_HEADER(m_addmotd)
+ModuleHeader MOD_HEADER(addmotd)
   = {
-	"m_addmotd",
-	"4.2",
+	"addmotd",
+	"5.0",
 	"command /addmotd", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_addmotd)
+MOD_INIT(addmotd)
 {
 	CommandAdd(modinfo->handle, MSG_ADDMOTD, m_addmotd, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_addmotd)
+MOD_LOAD(addmotd)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_addmotd)
+MOD_UNLOAD(addmotd)
 {
 	return MOD_SUCCESS;
 }

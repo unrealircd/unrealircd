@@ -26,28 +26,28 @@ CMD_FUNC(m_protoctl);
 
 #define MSG_PROTOCTL 	"PROTOCTL"	
 
-ModuleHeader MOD_HEADER(m_protoctl)
+ModuleHeader MOD_HEADER(protoctl)
   = {
-	"m_protoctl",
-	"4.2",
+	"protoctl",
+	"5.0",
 	"command /protoctl", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_protoctl)
+MOD_INIT(protoctl)
 {
 	CommandAdd(modinfo->handle, MSG_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_protoctl)
+MOD_LOAD(protoctl)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_protoctl)
+MOD_UNLOAD(protoctl)
 {
 	return MOD_SUCCESS;
 }

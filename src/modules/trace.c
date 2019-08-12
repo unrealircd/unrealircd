@@ -26,28 +26,28 @@ CMD_FUNC(m_trace);
 
 #define MSG_TRACE 	"TRACE"	
 
-ModuleHeader MOD_HEADER(m_trace)
+ModuleHeader MOD_HEADER(trace)
   = {
-	"m_trace",
-	"4.2",
+	"trace",
+	"5.0",
 	"command /trace", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_trace)
+MOD_INIT(trace)
 {
 	CommandAdd(modinfo->handle, MSG_TRACE, m_trace, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_trace)
+MOD_LOAD(trace)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_trace)
+MOD_UNLOAD(trace)
 {
 	return MOD_SUCCESS;
 }

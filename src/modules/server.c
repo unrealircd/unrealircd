@@ -40,16 +40,16 @@ static char buf[BUFSIZE];
 
 #define MSG_SERVER 	"SERVER"	
 
-ModuleHeader MOD_HEADER(m_server)
+ModuleHeader MOD_HEADER(server)
   = {
-	"m_server",
-	"4.2",
+	"server",
+	"5.0",
 	"command /server", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_TEST(m_server)
+MOD_TEST(server)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_PROTOCTL_SERVERS, _send_protoctl_servers);
@@ -61,7 +61,7 @@ MOD_TEST(m_server)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(m_server)
+MOD_INIT(server)
 {
 	CommandAdd(modinfo->handle, MSG_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
 	CommandAdd(modinfo->handle, "SID", m_server_remote, MAXPARA, M_SERVER);
@@ -71,12 +71,12 @@ MOD_INIT(m_server)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_server)
+MOD_LOAD(server)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_server)
+MOD_UNLOAD(server)
 {
 	return MOD_SUCCESS;
 }

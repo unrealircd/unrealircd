@@ -26,28 +26,28 @@ CMD_FUNC(m_lusers);
 
 #define MSG_LUSERS 	"LUSERS"	
 
-ModuleHeader MOD_HEADER(m_lusers)
+ModuleHeader MOD_HEADER(lusers)
   = {
-	"m_lusers",
-	"4.2",
+	"lusers",
+	"5.0",
 	"command /lusers", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_lusers)
+MOD_INIT(lusers)
 {
 	CommandAdd(modinfo->handle, MSG_LUSERS, m_lusers, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_lusers)
+MOD_LOAD(lusers)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_lusers)
+MOD_UNLOAD(lusers)
 {
 	return MOD_SUCCESS;
 }

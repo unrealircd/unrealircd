@@ -26,28 +26,28 @@ CMD_FUNC(m_locops);
 
 #define MSG_LOCOPS 	"LOCOPS"	
 
-ModuleHeader MOD_HEADER(m_locops)
+ModuleHeader MOD_HEADER(locops)
   = {
-	"m_locops",
-	"4.2",
+	"locops",
+	"5.0",
 	"command /locops", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_locops)
+MOD_INIT(locops)
 {
 	CommandAdd(modinfo->handle, MSG_LOCOPS, m_locops, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_locops)
+MOD_LOAD(locops)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_locops)
+MOD_UNLOAD(locops)
 {
 	return MOD_SUCCESS;
 }

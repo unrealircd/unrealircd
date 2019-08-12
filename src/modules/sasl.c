@@ -22,10 +22,10 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(m_sasl)
+ModuleHeader MOD_HEADER(sasl)
   = {
-	"m_sasl",
-	"4.2",
+	"sasl",
+	"5.0",
 	"SASL", 
 	"3.2-b8-1",
 	NULL 
@@ -399,7 +399,7 @@ int sasl_server_synched(aClient *sptr)
 	return 0;
 }
 
-MOD_INIT(m_sasl)
+MOD_INIT(sasl)
 {
 	ClientCapabilityInfo cap;
 	ModDataInfo mreq;
@@ -433,13 +433,13 @@ MOD_INIT(m_sasl)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_sasl)
+MOD_LOAD(sasl)
 {
 	auto_discover_sasl_server(0);
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_sasl)
+MOD_UNLOAD(sasl)
 {
 	return MOD_SUCCESS;
 }

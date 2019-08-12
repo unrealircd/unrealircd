@@ -26,28 +26,28 @@ CMD_FUNC(m_dccdeny);
 
 #define MSG_DCCDENY 	"DCCDENY"	
 
-ModuleHeader MOD_HEADER(m_dccdeny)
+ModuleHeader MOD_HEADER(dccdeny)
   = {
-	"m_dccdeny",
-	"4.2",
+	"dccdeny",
+	"5.0",
 	"command /dccdeny", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_dccdeny)
+MOD_INIT(dccdeny)
 {
 	CommandAdd(modinfo->handle, MSG_DCCDENY, m_dccdeny, 2, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_dccdeny)
+MOD_LOAD(dccdeny)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_dccdeny)
+MOD_UNLOAD(dccdeny)
 {
 	return MOD_SUCCESS;
 }

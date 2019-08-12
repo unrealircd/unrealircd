@@ -10,10 +10,10 @@
 
 CMD_FUNC(m_mdex);
 
-ModuleHeader MOD_HEADER(m_mdex)
+ModuleHeader MOD_HEADER(mdex)
   = {
-	"m_mdex",
-	"4.2",
+	"mdex",
+	"5.0",
 	"Command /MDEX",
 	"3.2-b8-1",
 	NULL 
@@ -24,7 +24,7 @@ void mdex_free(ModData *m);
 char *mdex_serialize(ModData *m);
 void mdex_unserialize(char *str, ModData *m);
 
-MOD_INIT(m_mdex)
+MOD_INIT(mdex)
 {
 ModDataInfo mreq;
 
@@ -56,13 +56,13 @@ ModDataInfo mreq;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_mdex)
+MOD_LOAD(mdex)
 {
 	return MOD_SUCCESS;
 }
 
 
-MOD_UNLOAD(m_mdex)
+MOD_UNLOAD(mdex)
 {
 	return MOD_SUCCESS;
 }

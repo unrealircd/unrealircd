@@ -37,7 +37,7 @@ struct _configitem_webirc {
 ModuleHeader MOD_HEADER(webirc)
 = {
 	"webirc",
-	"4.2",
+	"5.0",
 	"WebIRC/CGI:IRC Support",
 	"3.2-b8-1",
 	NULL 

@@ -23,7 +23,7 @@
 ModuleHeader MOD_HEADER(blacklist)
 = {
 	"blacklist",
-	"4.2",
+	"5.0",
 	"Check connecting users against DNS Blacklists",
 	"3.2-b8-1",
 	NULL

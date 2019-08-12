@@ -26,28 +26,28 @@ CMD_FUNC(m_part);
 
 #define MSG_PART 	"PART"	
 
-ModuleHeader MOD_HEADER(m_part)
+ModuleHeader MOD_HEADER(part)
   = {
-	"m_part",
-	"4.2",
+	"part",
+	"5.0",
 	"command /part", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_part)
+MOD_INIT(part)
 {
 	CommandAdd(modinfo->handle, MSG_PART, m_part, 2, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_part)
+MOD_LOAD(part)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_part)
+MOD_UNLOAD(part)
 {
 	return MOD_SUCCESS;
 }

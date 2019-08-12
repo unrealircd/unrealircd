@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER(batch)
   = {
 	"batch",
-	"4.2",
+	"5.0",
 	"Batch CAP", 
 	"3.2-b8-1",
 	NULL 

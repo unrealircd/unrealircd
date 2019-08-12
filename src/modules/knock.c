@@ -26,16 +26,16 @@ CMD_FUNC(m_knock);
 
 #define MSG_KNOCK 	"KNOCK"	
 
-ModuleHeader MOD_HEADER(m_knock)
+ModuleHeader MOD_HEADER(knock)
   = {
-	"m_knock",
-	"4.2",
+	"knock",
+	"5.0",
 	"command /knock", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_knock)
+MOD_INIT(knock)
 {
 	CommandAdd(modinfo->handle, MSG_KNOCK, m_knock, 2, M_USER);
 	IsupportAdd(modinfo->handle, "KNOCK", NULL);
@@ -43,12 +43,12 @@ MOD_INIT(m_knock)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_knock)
+MOD_LOAD(knock)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_knock)
+MOD_UNLOAD(knock)
 {
 	return MOD_SUCCESS;
 }

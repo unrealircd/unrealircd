@@ -68,16 +68,16 @@ static void do_who_on_channel(aClient *sptr, aChannel *chptr,
                               int member, int operspy, struct who_format *fmt);
 static int convert_classical_who_request(aClient *sptr, int *parc, char *parv[], char **orig_mask, struct who_format *fmt);
 
-ModuleHeader MOD_HEADER(m_whox)
+ModuleHeader MOD_HEADER(whox)
   = {
-	"m_whox",
-	"4.2",
+	"whox",
+	"5.0",
 	"command /who",
 	"3.2-b8-1",
 	NULL
     };
 
-MOD_INIT(m_whox)
+MOD_INIT(whox)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	if (!CommandAdd(modinfo->handle, MSG_WHO, m_whox, MAXPARA, M_USER))
@@ -89,12 +89,12 @@ MOD_INIT(m_whox)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_whox)
+MOD_LOAD(whox)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_whox)
+MOD_UNLOAD(whox)
 {
 	return MOD_SUCCESS;
 }

@@ -28,28 +28,28 @@ CMD_FUNC(m_svsnick);
 
 #define MSG_SVSNICK 	"SVSNICK"	
 
-ModuleHeader MOD_HEADER(m_svsnick)
+ModuleHeader MOD_HEADER(svsnick)
   = {
-	"m_svsnick",
-	"4.2",
+	"svsnick",
+	"5.0",
 	"command /svsnick", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_svsnick)
+MOD_INIT(svsnick)
 {
 	CommandAdd(modinfo->handle, MSG_SVSNICK, m_svsnick, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_svsnick)
+MOD_LOAD(svsnick)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_svsnick)
+MOD_UNLOAD(svsnick)
 {
 	return MOD_SUCCESS;
 }

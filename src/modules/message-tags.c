@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER(message-tags)
   = {
 	"message-tags",
-	"4.2",
+	"5.0",
 	"Message tags CAP", 
 	"3.2-b8-1",
 	NULL 

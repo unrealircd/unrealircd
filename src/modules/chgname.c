@@ -25,10 +25,10 @@
 
 CMD_FUNC(m_chgname);
 
-ModuleHeader MOD_HEADER(m_chgname)
+ModuleHeader MOD_HEADER(chgname)
   = {
 	"chgname",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"command /chgname", /* Short description of module */
 	"3.2-b8-1",
 	NULL
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER(m_chgname)
 
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(m_chgname)
+MOD_INIT(chgname)
 {
 	CommandAdd(modinfo->handle, MSG_CHGNAME, m_chgname, 2, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_SVSNAME, m_chgname, 2, M_USER|M_SERVER);
@@ -45,14 +45,14 @@ MOD_INIT(m_chgname)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(m_chgname)
+MOD_LOAD(chgname)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-MOD_UNLOAD(m_chgname)
+MOD_UNLOAD(chgname)
 {
 	return MOD_SUCCESS;
 }

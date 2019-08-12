@@ -26,28 +26,28 @@ CMD_FUNC(m_opermotd);
 
 #define MSG_OPERMOTD 	"OPERMOTD"	
 
-ModuleHeader MOD_HEADER(m_opermotd)
+ModuleHeader MOD_HEADER(opermotd)
   = {
-	"m_opermotd",
-	"4.2",
+	"opermotd",
+	"5.0",
 	"command /opermotd", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_opermotd)
+MOD_INIT(opermotd)
 {
 	CommandAdd(modinfo->handle, MSG_OPERMOTD, m_opermotd, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_opermotd)
+MOD_LOAD(opermotd)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_opermotd)
+MOD_UNLOAD(opermotd)
 {
 	return MOD_SUCCESS;
 }

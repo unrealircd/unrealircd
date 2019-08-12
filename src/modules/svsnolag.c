@@ -27,16 +27,16 @@ CMD_FUNC(m_svs2nolag);
 #define MSG_SVSNOLAG 	"SVSNOLAG"	
 #define MSG_SVS2NOLAG 	"SVS2NOLAG"	
 
-ModuleHeader MOD_HEADER(m_svsnolag)
+ModuleHeader MOD_HEADER(svsnolag)
   = {
-	"m_svsnolag",
-	"4.2",
+	"svsnolag",
+	"5.0",
 	"commands /svsnolag and /svs2nolag", 
 	"3.2-b8-1",
 	NULL
     };
 
-MOD_INIT(m_svsnolag)
+MOD_INIT(svsnolag)
 {
 	CommandAdd(modinfo->handle, MSG_SVSNOLAG, m_svsnolag, MAXPARA, M_SERVER);
 	CommandAdd(modinfo->handle, MSG_SVS2NOLAG, m_svs2nolag, MAXPARA, M_SERVER);
@@ -44,12 +44,12 @@ MOD_INIT(m_svsnolag)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_svsnolag)
+MOD_LOAD(svsnolag)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_svsnolag)
+MOD_UNLOAD(svsnolag)
 {
 	return MOD_SUCCESS;
 }

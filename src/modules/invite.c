@@ -26,28 +26,28 @@ CMD_FUNC(m_invite);
 
 #define MSG_INVITE 	"INVITE"	
 
-ModuleHeader MOD_HEADER(m_invite)
+ModuleHeader MOD_HEADER(invite)
   = {
-	"m_invite",
-	"4.2",
+	"invite",
+	"5.0",
 	"command /invite", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_invite)
+MOD_INIT(invite)
 {
 	CommandAdd(modinfo->handle, MSG_INVITE, m_invite, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_invite)
+MOD_LOAD(invite)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_invite)
+MOD_UNLOAD(invite)
 {
 	return MOD_SUCCESS;
 }

@@ -26,28 +26,28 @@ CMD_FUNC(m_sdesc);
 
 #define MSG_SDESC 	"SDESC"	/* sdesc */
 
-ModuleHeader MOD_HEADER(m_sdesc)
+ModuleHeader MOD_HEADER(sdesc)
   = {
 	"sdesc",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"command /sdesc", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_sdesc)
+MOD_INIT(sdesc)
 {
 	CommandAdd(modinfo->handle, MSG_SDESC, m_sdesc, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_sdesc)
+MOD_LOAD(sdesc)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_sdesc)
+MOD_UNLOAD(sdesc)
 {
 	return MOD_SUCCESS;
 }

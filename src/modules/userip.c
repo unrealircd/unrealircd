@@ -26,16 +26,16 @@ CMD_FUNC(m_userip);
 
 #define MSG_USERIP 	"USERIP"	
 
-ModuleHeader MOD_HEADER(m_userip)
+ModuleHeader MOD_HEADER(userip)
   = {
-	"m_userip",
-	"4.2",
+	"userip",
+	"5.0",
 	"command /userip", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_userip)
+MOD_INIT(userip)
 {
 	CommandAdd(modinfo->handle, MSG_USERIP, m_userip, 1, M_USER);
 	IsupportAdd(modinfo->handle, "USERIP", NULL);
@@ -43,12 +43,12 @@ MOD_INIT(m_userip)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_userip)
+MOD_LOAD(userip)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_userip)
+MOD_UNLOAD(userip)
 {
 	return MOD_SUCCESS;
 }

@@ -25,7 +25,7 @@
 ModuleHeader MOD_HEADER(server-time)
   = {
 	"server-time",
-	"4.2",
+	"5.0",
 	"server-time CAP",
 	"3.2-b8-1",
 	NULL 

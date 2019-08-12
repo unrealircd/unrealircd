@@ -26,28 +26,28 @@ CMD_FUNC(m_squit);
 
 #define MSG_SQUIT 	"SQUIT"	
 
-ModuleHeader MOD_HEADER(m_squit)
+ModuleHeader MOD_HEADER(squit)
   = {
-	"m_squit",
-	"4.2",
+	"squit",
+	"5.0",
 	"command /squit", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_squit)
+MOD_INIT(squit)
 {
 	CommandAdd(modinfo->handle, MSG_SQUIT, m_squit, 2, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_squit)
+MOD_LOAD(squit)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_squit)
+MOD_UNLOAD(squit)
 {
 	return MOD_SUCCESS;
 }

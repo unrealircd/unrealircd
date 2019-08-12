@@ -26,16 +26,16 @@ CMD_FUNC(m_dccallow);
 
 #define MSG_DCCALLOW 	"DCCALLOW"
 
-ModuleHeader MOD_HEADER(m_dccallow)
+ModuleHeader MOD_HEADER(dccallow)
   = {
-	"m_dccallow",
-	"4.2",
+	"dccallow",
+	"5.0",
 	"command /dccallow", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_dccallow)
+MOD_INIT(dccallow)
 {
 	CommandAdd(modinfo->handle, MSG_DCCALLOW, m_dccallow, 1, M_USER);
 	IsupportAdd(modinfo->handle, "USERIP", NULL);
@@ -43,12 +43,12 @@ MOD_INIT(m_dccallow)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_dccallow)
+MOD_LOAD(dccallow)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_dccallow)
+MOD_UNLOAD(dccallow)
 {
 	return MOD_SUCCESS;
 }

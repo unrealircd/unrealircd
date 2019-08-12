@@ -26,28 +26,28 @@ CMD_FUNC(m_close);
 
 #define MSG_CLOSE 	"CLOSE"	
 
-ModuleHeader MOD_HEADER(m_close)
+ModuleHeader MOD_HEADER(close)
   = {
-	"m_close",
-	"4.2",
+	"close",
+	"5.0",
 	"command /close", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_close)
+MOD_INIT(close)
 {
 	CommandAdd(modinfo->handle, MSG_CLOSE, m_close, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_close)
+MOD_LOAD(close)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_close)
+MOD_UNLOAD(close)
 {
 	return MOD_SUCCESS;
 }

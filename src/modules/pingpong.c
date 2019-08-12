@@ -28,16 +28,16 @@ CMD_FUNC(m_nospoof);
 #define MSG_PING        "PING"  /* PING */
 #define MSG_PONG        "PONG"  /* PONG */
 
-ModuleHeader MOD_HEADER(m_pingpong)
+ModuleHeader MOD_HEADER(pingpong)
   = {
 	"pingpong",	/* Name of module */
-	"4.2", /* Version */
+	"5.0", /* Version */
 	"ping, pong and nospoof", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 /* This is called on module init, before Server Ready */
-MOD_INIT(m_pingpong)
+MOD_INIT(pingpong)
 {
 	CommandAdd(modinfo->handle, MSG_PING, m_ping, MAXPARA, M_USER|M_SERVER|M_SHUN);
 	CommandAdd(modinfo->handle, MSG_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN|M_VIRUS);
@@ -46,14 +46,14 @@ MOD_INIT(m_pingpong)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(m_pingpong)
+MOD_LOAD(pingpong)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-MOD_UNLOAD(m_pingpong)
+MOD_UNLOAD(pingpong)
 {
 	return MOD_SUCCESS;
 }

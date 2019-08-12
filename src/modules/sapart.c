@@ -26,28 +26,28 @@ CMD_FUNC(m_sapart);
 
 #define MSG_SAPART 	"SAPART"	
 
-ModuleHeader MOD_HEADER(m_sapart)
+ModuleHeader MOD_HEADER(sapart)
   = {
-	"m_sapart",
-	"4.2",
+	"sapart",
+	"5.0",
 	"command /sapart", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_sapart)
+MOD_INIT(sapart)
 {
 	CommandAdd(modinfo->handle, MSG_SAPART, m_sapart, 3, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_sapart)
+MOD_LOAD(sapart)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_sapart)
+MOD_UNLOAD(sapart)
 {
 	return MOD_SUCCESS;
 }

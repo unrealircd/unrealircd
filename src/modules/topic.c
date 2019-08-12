@@ -26,28 +26,28 @@ CMD_FUNC(m_topic);
 
 #define MSG_TOPIC 	"TOPIC"
 
-ModuleHeader MOD_HEADER(m_topic)
+ModuleHeader MOD_HEADER(topic)
   = {
-	"m_topic",
-	"4.2",
+	"topic",
+	"5.0",
 	"command /topic", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_topic)
+MOD_INIT(topic)
 {
 	CommandAdd(modinfo->handle, MSG_TOPIC, m_topic, 4, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_topic)
+MOD_LOAD(topic)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_topic)
+MOD_UNLOAD(topic)
 {
 	return MOD_SUCCESS;
 }

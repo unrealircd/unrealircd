@@ -28,28 +28,28 @@ CMD_FUNC(m_away);
 
 #define MSG_AWAY 	"AWAY"	
 
-ModuleHeader MOD_HEADER(m_away)
+ModuleHeader MOD_HEADER(away)
   = {
-	"m_away",
-	"4.2",
+	"away",
+	"5.0",
 	"command /away", 
 	"3.2-b8-1",
 	NULL 
     };
 
-MOD_INIT(m_away)
+MOD_INIT(away)
 {
 	CommandAdd(modinfo->handle, MSG_AWAY, m_away, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(m_away)
+MOD_LOAD(away)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(m_away)
+MOD_UNLOAD(away)
 {
 	return MOD_SUCCESS;
 }
