@@ -68,7 +68,8 @@ R_MODULES= \
 	rmtkl.so \
 	message-tags.so batch.so \
 	account-tag.so labeled-response.so link-security.so \
-	message-ids.so plaintext-policy.so server-time.so sts.so
+	message-ids.so plaintext-policy.so server-time.so sts.so \
+	echo-message.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -598,6 +599,10 @@ server-time.so: server-time.c $(INCLUDES)
 sts.so: sts.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o sts.so sts.c
+
+echo-message.so: echo-message.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o echo-message.so echo-message.c
 
 #############################################################################
 # capabilities

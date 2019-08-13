@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/modules/m_message.c
+ *   Unreal Internet Relay Chat Daemon, src/modules/message.c
  *   (C) 2000-2001 Carsten V. Munk and the UnrealIRCd Team
  *   Moved to modules by Fish (Justin Hammond)
  *
@@ -141,8 +141,6 @@ int ret;
 		}
 		if (!*text)
 			return CANPRIVMSG_CONTINUE;
-
-		RunHook4(HOOKTYPE_USERMSG, sptr, acptr, *text, notice);
 
 		return CANPRIVMSG_SEND;
 	} else {
@@ -430,6 +428,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 				                  newcmd,
 				                  (MyClient(acptr) ? acptr->name : nick),
 				                  text);
+				RunHook5(HOOKTYPE_USERMSG, sptr, acptr, mtags, text, notice);
 				free_mtags(mtags);
 				continue;
 			} else
