@@ -81,7 +81,7 @@ MOD_INIT(link)
 	CmodeAdd(modinfo->handle, req, &EXTMODE_LINK);
 
 	memset(&req_extban, 0, sizeof(ExtbanInfo));
-	req_extban.flag = 'L'; // Extended ban character for forwards (~L instead of ~f to keep everything consistent)
+	req_extban.flag = 'f';
 	req_extban.is_ok = extban_link_is_ok;
 	req_extban.conv_param = extban_link_conv_param;
 	req_extban.is_banned = extban_link_is_banned;
@@ -225,10 +225,10 @@ int extban_link_syntax(aClient *sptr, int checkt, char *reason)
 	if (MyClient(sptr) && (checkt == EXBCHK_PARAM))
 	{
 		sendnotice(sptr, "Error when setting ban: %s", reason);
-		sendnotice(sptr, "  Syntax: +b ~L:#channel:mask");
+		sendnotice(sptr, "  Syntax: +b ~f:#channel:mask");
 		sendnotice(sptr, "Examples:");
-		sendnotice(sptr, "  +b ~L:#public:*!*@badisp.org");
-		sendnotice(sptr, "  +b ~L:#public:~c:#badchannel");
+		sendnotice(sptr, "  +b ~f:#public:*!*@badisp.org");
+		sendnotice(sptr, "  +b ~f:#public:~c:#badchannel");
 		sendnotice(sptr, "Multiple channels are not supported");
 		sendnotice(sptr, "Valid masks are nick!user@host or another extban type such as ~a, ~c, ~S, etc");
 	}
@@ -249,7 +249,7 @@ int extban_link_is_ok(aClient *sptr, aChannel *chptr, char *param, int checkt, i
 	if (what2 != EXBTYPE_BAN)
 	{
 		if (checkt == EXBCHK_PARAM)
-			sendnotice(sptr, "Ban type ~L only works with bans (+b) and not with exceptions or invex (+e/+I)");
+			sendnotice(sptr, "Ban type ~f only works with bans (+b) and not with exceptions or invex (+e/+I)");
 		return 0; // Reject
 	}
 
@@ -300,7 +300,7 @@ char *extban_link_conv_param(char *param)
 	if (!newmask || (strlen(newmask) <= 3))
 		return NULL;
 
-	snprintf(retbuf, sizeof(retbuf), "~L:%s:%s", chan, newmask + 3);
+	snprintf(retbuf, sizeof(retbuf), "~f:%s:%s", chan, newmask + 3);
 	return retbuf;
 }
 
@@ -374,7 +374,7 @@ int link_pre_localjoin_cb(aClient *sptr, aChannel *chptr, char *parv[])
 	// Extbans take precedence over +L #channel and other restrictions
 	for(ban = chptr->banlist; ban; ban = ban->next)
 	{
-		if (strncmp(ban->banstr, "~L:", 3))
+		if (strncmp(ban->banstr, "~f:", 3))
 			continue;
 
 		strlcpy(bantmp, ban->banstr + 3, sizeof(bantmp));
@@ -410,7 +410,7 @@ int link_pre_localjoin_cb(aClient *sptr, aChannel *chptr, char *parv[])
 
 	// For a couple of conditions we can use the return value from can_join() =]
 	switch(canjoin) {
-		// Any ban other than our own ~L: extban
+		// Any ban other than our own ~f: extban
 		case ERR_BANNEDFROMCHAN:
 			return link_doforward(sptr, chptr, linked, LINKTYPE_BAN);
 
