@@ -697,7 +697,7 @@ CMD_FUNC(m_rehash)
 				reinit_resolver(sptr);
 				return 0;
 			}
-			if (!_match("-ssl*", parv[1]))
+			if (!_match("-ssl*", parv[1]) || !_match("-tls*", parv[1]))
 			{
 				reinit_ssl(sptr);
 				return 0;
