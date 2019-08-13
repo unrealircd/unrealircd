@@ -374,7 +374,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 				       notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
 				       sptr->name, nick, text);
 
-			RunHook5(HOOKTYPE_CHANMSG, sptr, chptr, mtags, text, notice);
+			RunHook8(HOOKTYPE_CHANMSG, sptr, chptr, sendflags, prefix, nick, mtags, text, notice);
 
 			free_mtags(mtags);
 

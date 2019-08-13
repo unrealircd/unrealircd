@@ -958,7 +958,7 @@ int hooktype_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *par
 int hooktype_configtest(ConfigFile *cfptr, ConfigEntry *ce, int section, int *errors);
 int hooktype_configrun(ConfigFile *cfptr, ConfigEntry *ce, int section);
 int hooktype_usermsg(aClient *sptr, aClient *to, MessageTag *mtags, char *text, int notice);
-int hooktype_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
+int hooktype_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
 int hooktype_local_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
 int hooktype_local_kick(aClient *cptr, aClient *sptr, aClient *victim, aChannel *chptr, char *comment);
 int hooktype_local_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode);

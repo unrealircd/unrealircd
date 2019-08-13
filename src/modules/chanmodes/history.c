@@ -62,7 +62,7 @@ void history_chanmode_free_param(void *r);
 void *history_chanmode_dup_struct(void *r_in);
 int history_chanmode_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
 int history_channel_destroy(aChannel *chptr, int *should_destroy);
-int history_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
+int history_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
 int history_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
 EVENT(history_clean);
 
@@ -469,7 +469,7 @@ int history_channel_destroy(aChannel *chptr, int *should_destroy)
 	return 0;
 }
 
-int history_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
+int history_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
 {
 	char buf[512];
 	char source[64];
@@ -480,6 +480,12 @@ int history_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *tex
 
 	/* Filter out CTCP / CTCP REPLY */
 	if ((*text == '\001') && strncmp(text+1, "ACTION", 6))
+		return 0;
+
+	/* Lazy: if any prefix is addressed (eg: @#channel) then don't record it.
+	 * This so we don't have to check privileges during history playback etc.
+	 */
+	if (prefix)
 		return 0;
 
 	if (IsPerson(sptr))
