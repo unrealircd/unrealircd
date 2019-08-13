@@ -58,7 +58,9 @@ MODVAR char serveropts[] = {
 #ifdef USE_LIBCURL
 	'r',
 #endif
-	'\0', /* Don't change those 3 nuls. -- Syzop */
+	'\0', /* Don't change those nuls. -- Syzop */
+	'\0',
+	'\0',
 	'\0',
 	'\0'
 };
