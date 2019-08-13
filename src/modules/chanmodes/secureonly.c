@@ -19,18 +19,18 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(sslonly)
+ModuleHeader MOD_HEADER(secureonly)
   = {
-	"chanmodes/sslonly",
+	"chanmodes/secureonly",
 	"4.2",
 	"Channel Mode +z",
 	"3.2-b8-1",
 	NULL 
     };
 
-Cmode_t EXTCMODE_SSLONLY;
+Cmode_t EXTCMODE_SECUREONLY;
 
-#define IsSecureOnly(chptr)    (chptr->mode.extmode & EXTCMODE_SSLONLY)
+#define IsSecureOnly(chptr)    (chptr->mode.extmode & EXTCMODE_SECUREONLY)
 
 int secureonly_check_join(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 void secureonly_channel_sync (aChannel* chptr, int merge, int removetheirs, int nomode);
@@ -39,12 +39,12 @@ int secureonly_check_secure(aChannel* chptr);
 int secureonly_check_sajoin(aClient *acptr, aChannel* chptr, aClient *sptr);
 int secureonly_specialcheck(aClient *sptr, aChannel *chptr, char *parv[]);
 
-MOD_TEST(sslonly)
+MOD_TEST(secureonly)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(sslonly)
+MOD_INIT(secureonly)
 {
 	CmodeInfo req;
 
@@ -52,7 +52,7 @@ MOD_INIT(sslonly)
 	req.paracount = 0;
 	req.flag = 'z';
 	req.is_ok = extcmode_default_requirechop;
-	CmodeAdd(modinfo->handle, req, &EXTCMODE_SSLONLY);
+	CmodeAdd(modinfo->handle, req, &EXTCMODE_SECUREONLY);
 
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_JOIN, 0, secureonly_specialcheck);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, secureonly_check_join);
@@ -66,12 +66,12 @@ MOD_INIT(sslonly)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(sslonly)
+MOD_LOAD(secureonly)
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(sslonly)
+MOD_UNLOAD(secureonly)
 {
 	return MOD_SUCCESS;
 }
@@ -176,7 +176,7 @@ int secureonly_check_sajoin(aClient *acptr, aChannel *chptr, aClient *sptr)
 {
 	if (IsSecureOnly(chptr) && !IsSecure(acptr))
 	{
-		sendnotice(sptr, "You cannot SAJOIN %s to %s because the channel is +z and the user is not connected via SSL",
+		sendnotice(sptr, "You cannot SAJOIN %s to %s because the channel is +z and the user is not connected via SSL/TLS",
 			acptr->name, chptr->chname);
 		return HOOK_DENY;
 	}
@@ -189,7 +189,7 @@ int secureonly_check_sajoin(aClient *acptr, aChannel *chptr, aClient *sptr)
  */
 int secureonly_specialcheck(aClient *sptr, aChannel *chptr, char *parv[])
 {
-	if ((chptr->users == 0) && (iConf.modes_on_join.extmodes & EXTCMODE_SSLONLY) && !IsSecure(sptr) && !IsOper(sptr))
+	if ((chptr->users == 0) && (iConf.modes_on_join.extmodes & EXTCMODE_SECUREONLY) && !IsSecure(sptr) && !IsOper(sptr))
 	{
 		sendnumeric(sptr, ERR_SECUREONLYCHAN, chptr->chname);
 		return HOOK_DENY;

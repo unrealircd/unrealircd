@@ -247,7 +247,7 @@ CMD_FUNC(m_invite)
 			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 
 			/* Logging implementation added by XeRXeS */
-			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding SSL-Only)",
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding SSL/TLS-Only)",
 				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 		}
 #ifdef OPEROVERRIDE_VERIFY

@@ -319,7 +319,7 @@ CMD_FUNC(m_oper)
 	{
 		sendnotice(sptr, "%s", iConf.plaintext_policy_oper_message);
 		sendto_snomask_global
-		    (SNO_OPER, "OPER %s [%s] used an insecure (non-SSL) connection to /OPER.",
+		    (SNO_OPER, "OPER %s [%s] used an insecure (non-SSL/TLS) connection to /OPER.",
 		    sptr->name, name);
 	}
 

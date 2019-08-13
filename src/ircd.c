@@ -1296,7 +1296,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	}
 
 #ifndef _WIN32
-	fprintf(stderr, "Initializing SSL..\n");
+	fprintf(stderr, "Initializing TLS..\n");
 #endif
 	if (!init_ssl())
 	{

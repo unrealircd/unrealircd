@@ -528,7 +528,7 @@ static char *replies[] = {
 /* 486    ERR_NONONREG */ ":You must identify to a registered nick to private message %s",
 /* 487    ERR_NOTFORUSERS */ ":%s is a server only command",
 /* 488 */ NULL,
-/* 489    ERR_SECUREONLYCHAN */ "%s :Cannot join channel (SSL is required)",
+/* 489    ERR_SECUREONLYCHAN */ "%s :Cannot join channel (Secure connection is required)",
 /* 490    ERR_NOSWEAR */ ":%s does not accept private messages containing swearing.",
 /* 491    ERR_NOOPERHOST */ ":No O-lines for your host",
 /* 492    ERR_NOCTCP */ ":%s does not accept CTCPs",

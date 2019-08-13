@@ -144,7 +144,7 @@ void issecure_unset(aChannel *chptr, aClient *sptr, int notice)
 	{
 		mtags = NULL;
 		new_message(&me, NULL, &mtags);
-		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s NOTICE %s :User '%s' joined and is not connected through SSL, setting channel -Z (insecure)",
+		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s NOTICE %s :User '%s' joined and is not connected through SSL/TLS, setting channel -Z (insecure)",
 			me.name, chptr->chname, sptr->name);
 		free_mtags(mtags);
 	}
@@ -174,13 +174,13 @@ void issecure_set(aChannel *chptr, aClient *sptr, int notice)
 		 * he is still considered a member of this channel.
 		 */
 		sendto_channel(chptr, &me, sptr, 0, 0, SEND_LOCAL, NULL,
-		               ":%s NOTICE %s :Now all users in the channel are connected through SSL, setting channel +Z (secure)",
+		               ":%s NOTICE %s :Now all users in the channel are connected through SSL/TLS, setting channel +Z (secure)",
 		               me.name, chptr->chname);
 	} else if (notice)
 	{
 		/* note the missing word 'now' in next line */
 		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL,
-		               ":%s NOTICE %s :All users in the channel are connected through SSL, setting channel +Z (secure)",
+		               ":%s NOTICE %s :All users in the channel are connected through SSL/TLS, setting channel +Z (secure)",
 		               me.name, chptr->chname);
 	}
 	free_mtags(mtags);

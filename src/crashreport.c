@@ -500,14 +500,14 @@ int crashreport_send(char *fname)
 	ctx_client = crashreport_init_ssl();
 	if (!ctx_client)
 	{
-		printf("ERROR: SSL initalization failure (I)\n");
+		printf("ERROR: TLS initalization failure (I)\n");
 		return 0;
 	}
 	
 	socket = BIO_new_ssl_connect(ctx_client);
 	if (!socket)
 	{
-		printf("ERROR: SSL initalization failure (II)\n");
+		printf("ERROR: TLS initalization failure (II)\n");
 		return 0;
 	}
 	
@@ -521,14 +521,14 @@ int crashreport_send(char *fname)
 	
 	if (BIO_do_handshake(socket) != 1)
 	{
-		printf("ERROR: Could not connect to %s (SSL handshake failed)\n", CRASH_REPORT_HOST);
+		printf("ERROR: Could not connect to %s (TLS handshake failed)\n", CRASH_REPORT_HOST);
 		return 0;
 	}
 
 	BIO_get_ssl(socket, &ssl);
 	if (!ssl)
 	{
-		printf("ERROR: Could not get SSL connection from BIO\n");
+		printf("ERROR: Could not get TLS connection from BIO\n");
 		return 0;
 	}
 
@@ -586,7 +586,7 @@ int crashreport_send(char *fname)
 
 	BIO_puts(socket, footer);
 
-	do { } while(BIO_should_retry(socket)); /* make sure we are really finished (you never know with SSL) */
+	do { } while(BIO_should_retry(socket)); /* make sure we are really finished (you never know with TLS) */
 
 #ifndef _WIN32
 	printf("\n");

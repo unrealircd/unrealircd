@@ -22,7 +22,7 @@ ModuleHeader MOD_HEADER(certfp)
 = {
 	"extbans/certfp",
 	"4.2",
-	"ExtBan ~S - Ban/exempt by SHA256 SSL certificate fingerprint",
+	"ExtBan ~S - Ban/exempt by SHA256 TLS certificate fingerprint",
 	"3.2-b8-1",
 	NULL 
 };
@@ -116,7 +116,7 @@ int extban_certfp_is_banned(aClient *sptr, aChannel *chptr, char *banin, int typ
 	fp = moddata_client_get(sptr, "certfp");
 
 	if (!fp)
-		return 0; /* not using SSL */
+		return 0; /* not using TLS */
 
 	if (!strcmp(ban, fp))
 		return 1;

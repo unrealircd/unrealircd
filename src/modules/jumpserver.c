@@ -134,7 +134,7 @@ CMD_FUNC(m_jumpserver)
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		if (jss && jss->ssl_server)
-			sendnotice(sptr, "JumpServer is \002ENABLED\002 to %s:%d (SSL: %s:%d) with reason '%s'",
+			sendnotice(sptr, "JumpServer is \002ENABLED\002 to %s:%d (SSL/TLS: %s:%d) with reason '%s'",
 				jss->server, jss->port, jss->ssl_server, jss->ssl_port, jss->reason);
 		else
 		if (jss)
@@ -209,7 +209,7 @@ CMD_FUNC(m_jumpserver)
 			sslport = atoi(p);
 			if ((sslport < 1) || (sslport > 65535))
 			{
-				sendnotice(sptr, "Invalid SSL serverport specified (%d)", sslport);
+				sendnotice(sptr, "Invalid SSL/TLS serverport specified (%d)", sslport);
 				return 0;
 			}
 		}
@@ -245,7 +245,7 @@ CMD_FUNC(m_jumpserver)
 
 	/* Broadcast/log */
 	if (sslserv)
-		snprintf(logbuf, sizeof(logbuf), "%s (%s@%s) added JUMPSERVER redirect for %s to %s:%d [SSL: %s:%d] with reason '%s'",
+		snprintf(logbuf, sizeof(logbuf), "%s (%s@%s) added JUMPSERVER redirect for %s to %s:%d [SSL/TLS: %s:%d] with reason '%s'",
 			sptr->name, sptr->user->username, sptr->user->realhost,
 			all ? "ALL CLIENTS" : "all new clients",
 			jss->server, jss->port, jss->ssl_server, jss->ssl_port, jss->reason);

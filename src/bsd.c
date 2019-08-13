@@ -432,7 +432,7 @@ void close_listener(ConfigItem_listen *listener)
 		ircd_log(LOG_ERROR, "IRCd no longer listening on %s:%d (%s)%s",
 			listener->ip, listener->port,
 			listener->ipv6 ? "IPv6" : "IPv4",
-			listener->options & LISTENER_TLS ? " (SSL)" : "");
+			listener->options & LISTENER_TLS ? " (SSL/TLS)" : "");
 		fd_close(listener->fd);
 		--OpenFiles;
 	}
@@ -601,9 +601,9 @@ void write_pidfile(void)
 void reject_insecure_server(aClient *cptr)
 {
 	sendto_umode(UMODE_OPER, "Could not link with server %s with SSL/TLS enabled. "
-	                         "Please check logs on the other side of the link and make sure the other IRCd "
-	                         "is compiled with SSL support enabled. "
-	                         "If you insist with insecure linking then you can set link::options::outgoing::insecure",
+	                         "Please check logs on the other side of the link. "
+	                         "If you insist with insecure linking then you can set link::options::outgoing::insecure "
+	                         "(NOT recommended!).",
 	                         cptr->name);
 	dead_link(cptr, "Rejected link without SSL/TLS");
 }
@@ -1049,7 +1049,7 @@ refuse_client:
 		if (ctx)
 		{
 			SetTLSAcceptHandshake(acptr);
-			Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", acptr->local->sockhost));
+			Debug((DEBUG_DEBUG, "Starting TLS accept handshake for %s", acptr->local->sockhost));
 			if ((acptr->local->ssl = SSL_new(ctx)) == NULL)
 			{
 				goto refuse_client;
@@ -1058,12 +1058,13 @@ refuse_client:
 			SSL_set_fd(acptr->local->ssl, fd);
 			SSL_set_nonblocking(acptr->local->ssl);
 			SSL_set_ex_data(acptr->local->ssl, ssl_client_index, acptr);
-			if (!ircd_SSL_accept(acptr, fd)) {
-				Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", acptr->local->sockhost));
+			if (!ircd_SSL_accept(acptr, fd))
+			{
+				Debug((DEBUG_DEBUG, "Failed TLS accept handshake in instance 1: %s", acptr->local->sockhost));
 				SSL_set_shutdown(acptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
 				SSL_smart_shutdown(acptr->local->ssl);
-						SSL_free(acptr->local->ssl);
-					goto refuse_client;
+				SSL_free(acptr->local->ssl);
+				goto refuse_client;
 			}
 		}
 	}
@@ -1078,7 +1079,7 @@ void	start_of_normal_client_handshake(aClient *acptr)
 {
 struct hostent *he;
 
-	acptr->status = STAT_UNKNOWN; /* reset, to be sure (SSL handshake has ended) */
+	acptr->status = STAT_UNKNOWN; /* reset, to be sure (TLS handshake has ended) */
 
 	RunHook(HOOKTYPE_HANDSHAKE, acptr);
 
