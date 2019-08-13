@@ -75,6 +75,8 @@ MOD_INIT(labeled-response)
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_COMMAND, 2000000000, lr_pre_command);
 	HookAdd(modinfo->handle, HOOKTYPE_POST_COMMAND, -2000000000, lr_post_command);
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, 0, lr_packet);
+
+	config_warn("The labeled-response module is currently broken / in development !!");
 	return MOD_SUCCESS;
 }
 
