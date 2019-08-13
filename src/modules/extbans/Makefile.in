@@ -32,7 +32,7 @@ INCLUDES = ../../include/auth.h ../../include/channel.h \
 	../../include/version.h ../../include/whowas.h
 
 R_MODULES= \
-	join.so quiet.so nickchange.so inchannel.so realname.so regnick.so \
+	join.so quiet.so nickchange.so inchannel.so realname.so \
 	account.so operclass.so certfp.so textban.so msgbypass.so \
 	timedban.so partmsg.so
 
@@ -74,10 +74,6 @@ inchannel.so: inchannel.c $(INCLUDES)
 realname.so: realname.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o realname.so realname.c
-
-regnick.so: regnick.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o regnick.so regnick.c
 
 account.so: account.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

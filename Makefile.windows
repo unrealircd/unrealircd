@@ -262,7 +262,6 @@ DLL_FILES=SRC/MODULES/CHGHOST.DLL SRC/MODULES/SDESC.DLL SRC/MODULES/SETIDENT.DLL
  SRC/MODULES/EXTBANS/NICKCHANGE.DLL \
  SRC/MODULES/EXTBANS/QUIET.DLL \
  SRC/MODULES/EXTBANS/REALNAME.DLL \
- SRC/MODULES/EXTBANS/REGNICK.DLL \
  SRC/MODULES/EXTBANS/OPERCLASS.DLL \
  SRC/MODULES/EXTBANS/CERTFP.DLL \
  SRC/MODULES/EXTBANS/TEXTBAN.DLL \
@@ -989,9 +988,6 @@ src/modules/extbans/quiet.dll: src/modules/extbans/quiet.c $(INCLUDES)
 
 src/modules/extbans/realname.dll: src/modules/extbans/realname.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/realname.c $(MODLFLAGS)
-
-src/modules/extbans/regnick.dll: src/modules/extbans/regnick.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/regnick.c $(MODLFLAGS)
 
 src/modules/extbans/operclass.dll: src/modules/extbans/operclass.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/operclass.c $(MODLFLAGS)
