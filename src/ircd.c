@@ -549,7 +549,7 @@ int check_ping(aClient *cptr)
 		(TStime() - cptr->local->lasttime) >= (ping + PINGWARNING))
 	{
 		SetPingWarning(cptr);
-		sendto_realops("Warning, no response from %s in %d seconds",
+		sendto_realops("Warning, no response from %s for %d seconds",
 			get_client_name(cptr, FALSE), PINGWARNING);
 	}
 
