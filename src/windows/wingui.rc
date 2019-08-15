@@ -52,9 +52,9 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,134,73,50,14
     LTEXT           "Where to get help:",IDC_STATIC,14,11,60,8
-    LTEXT           "Point your IRC client to irc.unrealircd.org and join #Unreal-Support",IDC_STATIC,14,20,234,9
+    LTEXT           "Point your IRC client to irc.unrealircd.org and join #unreal-support",IDC_STATIC,14,20,234,9
     LTEXT           "Email us at",IDC_STATIC,14,30,37,8
-    CONTROL         "unreal-users@lists.sourceforge.net",IDC_EMAIL,"Button",BS_OWNERDRAW,51,30,110,8
+    CONTROL         "info@unrealircd.org",IDC_EMAIL,"Button",BS_OWNERDRAW,51,30,110,8
     LTEXT           "Or visit us on the web at",IDC_STATIC,14,40,78,8
     CONTROL         "https://www.unrealircd.org",IDC_URL,"Button",BS_OWNERDRAW,93,40,86,8
     LTEXT           "Thank you for choosing UnrealIRCd :)",IDC_STATIC,98,55,121,9
