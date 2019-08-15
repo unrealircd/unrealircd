@@ -28,7 +28,6 @@ ModuleHeader MOD_HEADER(floodprot)
 	NULL,
     };
 
-/* this can be like ~60-90 bytes, therefore it's in a seperate struct */
 #define FLD_CTCP	0 /* c */
 #define FLD_JOIN	1 /* j */
 #define FLD_KNOCK	2 /* k */
@@ -74,14 +73,15 @@ struct UserFld {
  */
 #define MAXCHMODEFACTIONS 8
 
+/** Per-channel flood protection settings and counters */
 struct SChanFloodProt {
-	unsigned short	per; /* setting: per <XX> seconds */
-	time_t			t[NUMFLD]; /* runtime: timers */
-	unsigned short	c[NUMFLD]; /* runtime: counters */
-	unsigned short	l[NUMFLD]; /* setting: limit */
-	unsigned char	a[NUMFLD]; /* setting: action */
-	unsigned char	r[NUMFLD]; /* setting: remove-after <this> minutes */
-	unsigned char   timers_running[MAXCHMODEFACTIONS+1]; /* if for example a '-m' timer is running then this contains 'm' */
+	unsigned short	per; /**< setting: per <XX> seconds */
+	time_t		timer[NUMFLD]; /**< runtime: timers */
+	unsigned short	counter[NUMFLD]; /**< runtime: counters */
+	unsigned short	limit[NUMFLD]; /**< setting: limit */
+	unsigned char	action[NUMFLD]; /**< setting: action */
+	unsigned char	remove_after[NUMFLD]; /**< setting: remove-after <this> minutes */
+	unsigned char   timers_running[MAXCHMODEFACTIONS+1]; /**< if for example a '-m' timer is running then this contains 'm' */
 };
 
 /* Global variables */
@@ -368,10 +368,10 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 			  goto invalidsyntax;
 
 		  /* ok, we passed */
-		  newf.l[FLD_TEXT] = xxi;
+		  newf.limit[FLD_TEXT] = xxi;
 		  newf.per = xyi;
 		  if (xzi == 1)
-		      newf.a[FLD_TEXT] = 'b';
+		      newf.action[FLD_TEXT] = 'b';
 		} else {
 			/* NEW +F */
 			char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
@@ -441,52 +441,52 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 				switch(c)
 				{
 					case 'c':
-						newf.l[FLD_CTCP] = v;
+						newf.limit[FLD_CTCP] = v;
 						if ((a == 'm') || (a == 'M'))
-							newf.a[FLD_CTCP] = a;
+							newf.action[FLD_CTCP] = a;
 						else
-							newf.a[FLD_CTCP] = 'C';
-						newf.r[FLD_CTCP] = r;
+							newf.action[FLD_CTCP] = 'C';
+						newf.remove_after[FLD_CTCP] = r;
 						break;
 					case 'j':
-						newf.l[FLD_JOIN] = v;
+						newf.limit[FLD_JOIN] = v;
 						if (a == 'R')
-							newf.a[FLD_JOIN] = a;
+							newf.action[FLD_JOIN] = a;
 						else
-							newf.a[FLD_JOIN] = 'i';
-						newf.r[FLD_JOIN] = r;
+							newf.action[FLD_JOIN] = 'i';
+						newf.remove_after[FLD_JOIN] = r;
 						break;
 					case 'k':
-						newf.l[FLD_KNOCK] = v;
-						newf.a[FLD_KNOCK] = 'K';
-						newf.r[FLD_KNOCK] = r;
+						newf.limit[FLD_KNOCK] = v;
+						newf.action[FLD_KNOCK] = 'K';
+						newf.remove_after[FLD_KNOCK] = r;
 						break;
 					case 'm':
-						newf.l[FLD_MSG] = v;
+						newf.limit[FLD_MSG] = v;
 						if (a == 'M')
-							newf.a[FLD_MSG] = a;
+							newf.action[FLD_MSG] = a;
 						else
-							newf.a[FLD_MSG] = 'm';
-						newf.r[FLD_MSG] = r;
+							newf.action[FLD_MSG] = 'm';
+						newf.remove_after[FLD_MSG] = r;
 						break;
 					case 'n':
-						newf.l[FLD_NICK] = v;
-						newf.a[FLD_NICK] = 'N';
-						newf.r[FLD_NICK] = r;
+						newf.limit[FLD_NICK] = v;
+						newf.action[FLD_NICK] = 'N';
+						newf.remove_after[FLD_NICK] = r;
 						break;
 					case 't':
-						newf.l[FLD_TEXT] = v;
+						newf.limit[FLD_TEXT] = v;
 						if (a == 'b' || a == 'd')
-							newf.a[FLD_TEXT] = a;
+							newf.action[FLD_TEXT] = a;
 						if (timedban_available)
-							newf.r[FLD_TEXT] = r;
+							newf.remove_after[FLD_TEXT] = r;
 						break;
 					case 'r':
-						newf.l[FLD_REPEAT] = v;
+						newf.limit[FLD_REPEAT] = v;
 						if (a == 'd')
-							newf.a[FLD_REPEAT] = a;
+							newf.action[FLD_REPEAT] = a;
 						else
-							newf.a[FLD_REPEAT] = 'b';
+							newf.action[FLD_REPEAT] = 'b';
 						break;
 					default:
 						goto invalidsyntax;
@@ -512,7 +512,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 			/* Is anything turned on? (to stop things like '+f []:15' */
 			breakit = 1;
 			for (v=0; v < NUMFLD; v++)
-				if (newf.l[v])
+				if (newf.limit[v])
 					breakit=0;
 			if (breakit)
 				goto invalidsyntax;
@@ -548,9 +548,9 @@ void *cmodef_put_param(void *fld_in, char *param)
 	/* always reset settings (l, a, r) */
 	for (v=0; v < NUMFLD; v++)
 	{
-		fld->l[v] = 0;
-		fld->a[v] = 0;
-		fld->r[v] = 0;
+		fld->limit[v] = 0;
+		fld->action[v] = 0;
+		fld->remove_after[v] = 0;
 	}
 
 	/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
@@ -610,52 +610,52 @@ void *cmodef_put_param(void *fld_in, char *param)
 		switch(c)
 		{
 			case 'c':
-				fld->l[FLD_CTCP] = v;
+				fld->limit[FLD_CTCP] = v;
 				if ((a == 'm') || (a == 'M'))
-					fld->a[FLD_CTCP] = a;
+					fld->action[FLD_CTCP] = a;
 				else
-					fld->a[FLD_CTCP] = 'C';
-				fld->r[FLD_CTCP] = r;
+					fld->action[FLD_CTCP] = 'C';
+				fld->remove_after[FLD_CTCP] = r;
 				break;
 			case 'j':
-				fld->l[FLD_JOIN] = v;
+				fld->limit[FLD_JOIN] = v;
 				if (a == 'R')
-					fld->a[FLD_JOIN] = a;
+					fld->action[FLD_JOIN] = a;
 				else
-					fld->a[FLD_JOIN] = 'i';
-				fld->r[FLD_JOIN] = r;
+					fld->action[FLD_JOIN] = 'i';
+				fld->remove_after[FLD_JOIN] = r;
 				break;
 			case 'k':
-				fld->l[FLD_KNOCK] = v;
-				fld->a[FLD_KNOCK] = 'K';
-				fld->r[FLD_KNOCK] = r;
+				fld->limit[FLD_KNOCK] = v;
+				fld->action[FLD_KNOCK] = 'K';
+				fld->remove_after[FLD_KNOCK] = r;
 				break;
 			case 'm':
-				fld->l[FLD_MSG] = v;
+				fld->limit[FLD_MSG] = v;
 				if (a == 'M')
-					fld->a[FLD_MSG] = a;
+					fld->action[FLD_MSG] = a;
 				else
-					fld->a[FLD_MSG] = 'm';
-				fld->r[FLD_MSG] = r;
+					fld->action[FLD_MSG] = 'm';
+				fld->remove_after[FLD_MSG] = r;
 				break;
 			case 'n':
-				fld->l[FLD_NICK] = v;
-				fld->a[FLD_NICK] = 'N';
-				fld->r[FLD_NICK] = r;
+				fld->limit[FLD_NICK] = v;
+				fld->action[FLD_NICK] = 'N';
+				fld->remove_after[FLD_NICK] = r;
 				break;
 			case 't':
-				fld->l[FLD_TEXT] = v;
+				fld->limit[FLD_TEXT] = v;
 				if (a == 'b' || a == 'd')
-					fld->a[FLD_TEXT] = a;
+					fld->action[FLD_TEXT] = a;
 				if (timedban_available)
-					fld->r[FLD_TEXT] = r;
+					fld->remove_after[FLD_TEXT] = r;
 				break;
 			case 'r':
-				fld->l[FLD_REPEAT] = v;
+				fld->limit[FLD_REPEAT] = v;
 				if (a == 'd')
-					fld->a[FLD_REPEAT] = a;
+					fld->action[FLD_REPEAT] = a;
 				else
-					fld->a[FLD_REPEAT] = 'b';
+					fld->action[FLD_REPEAT] = 'b';
 				break;
 			default:
 				/* NOOP */
@@ -683,8 +683,8 @@ void *cmodef_put_param(void *fld_in, char *param)
 	{
 		for (v=0; v < NUMFLD; v++)
 		{
-			fld->t[v] = 0;
-			fld->c[v] = 0;
+			fld->timer[v] = 0;
+			fld->counter[v] = 0;
 		}
 	}
 	fld->per = v;
@@ -692,7 +692,7 @@ void *cmodef_put_param(void *fld_in, char *param)
 	/* Is anything turned on? (to stop things like '+f []:15' */
 	breakit = 1;
 	for (v=0; v < NUMFLD; v++)
-		if (fld->l[v])
+		if (fld->limit[v])
 			breakit=0;
 	if (breakit)
 	{
@@ -790,10 +790,10 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 		  return NULL;
 
 	  /* ok, we passed */
-	  newf.l[FLD_TEXT] = xxi;
+	  newf.limit[FLD_TEXT] = xxi;
 	  newf.per = xyi;
 	  if (xzi == 1)
-	      newf.a[FLD_TEXT] = 'b';
+	      newf.action[FLD_TEXT] = 'b';
 	} else {
 		/* NEW +F */
 		char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
@@ -857,52 +857,52 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 			switch(c)
 			{
 				case 'c':
-					newf.l[FLD_CTCP] = v;
+					newf.limit[FLD_CTCP] = v;
 					if ((a == 'm') || (a == 'M'))
-						newf.a[FLD_CTCP] = a;
+						newf.action[FLD_CTCP] = a;
 					else
-						newf.a[FLD_CTCP] = 'C';
-					newf.r[FLD_CTCP] = r;
+						newf.action[FLD_CTCP] = 'C';
+					newf.remove_after[FLD_CTCP] = r;
 					break;
 				case 'j':
-					newf.l[FLD_JOIN] = v;
+					newf.limit[FLD_JOIN] = v;
 					if (a == 'R')
-						newf.a[FLD_JOIN] = a;
+						newf.action[FLD_JOIN] = a;
 					else
-						newf.a[FLD_JOIN] = 'i';
-					newf.r[FLD_JOIN] = r;
+						newf.action[FLD_JOIN] = 'i';
+					newf.remove_after[FLD_JOIN] = r;
 					break;
 				case 'k':
-					newf.l[FLD_KNOCK] = v;
-					newf.a[FLD_KNOCK] = 'K';
-					newf.r[FLD_KNOCK] = r;
+					newf.limit[FLD_KNOCK] = v;
+					newf.action[FLD_KNOCK] = 'K';
+					newf.remove_after[FLD_KNOCK] = r;
 					break;
 				case 'm':
-					newf.l[FLD_MSG] = v;
+					newf.limit[FLD_MSG] = v;
 					if (a == 'M')
-						newf.a[FLD_MSG] = a;
+						newf.action[FLD_MSG] = a;
 					else
-						newf.a[FLD_MSG] = 'm';
-					newf.r[FLD_MSG] = r;
+						newf.action[FLD_MSG] = 'm';
+					newf.remove_after[FLD_MSG] = r;
 					break;
 				case 'n':
-					newf.l[FLD_NICK] = v;
-					newf.a[FLD_NICK] = 'N';
-					newf.r[FLD_NICK] = r;
+					newf.limit[FLD_NICK] = v;
+					newf.action[FLD_NICK] = 'N';
+					newf.remove_after[FLD_NICK] = r;
 					break;
 				case 't':
-					newf.l[FLD_TEXT] = v;
+					newf.limit[FLD_TEXT] = v;
 					if (a == 'b' || a == 'd')
-						newf.a[FLD_TEXT] = a;
+						newf.action[FLD_TEXT] = a;
 					if (timedban_available)
-						newf.r[FLD_TEXT] = r;
+						newf.remove_after[FLD_TEXT] = r;
 					break;
 				case 'r':
-					newf.l[FLD_REPEAT] = v;
+					newf.limit[FLD_REPEAT] = v;
 					if (a == 'd')
-						newf.a[FLD_REPEAT] = a;
+						newf.action[FLD_REPEAT] = a;
 					else
-						newf.a[FLD_REPEAT] = 'b';
+						newf.action[FLD_REPEAT] = 'b';
 					break;
 				default:
 					return NULL;
@@ -926,7 +926,7 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 		/* Is anything turned on? (to stop things like '+f []:15' */
 		breakit = 1;
 		for (v=0; v < NUMFLD; v++)
-			if (newf.l[v])
+			if (newf.limit[v])
 				breakit=0;
 		if (breakit)
 			return NULL;
@@ -965,9 +965,9 @@ int cmodef_sjoin_check(aChannel *chptr, void *ourx, void *theirx)
 	our->per = MAX(our->per, their->per);
 	for (i=0; i < NUMFLD; i++)
 	{
-		our->l[i] = MAX(our->l[i], their->l[i]);
-		our->a[i] = MAX(our->a[i], their->a[i]);
-		our->r[i] = MAX(our->r[i], their->r[i]);
+		our->limit[i] = MAX(our->limit[i], their->limit[i]);
+		our->action[i] = MAX(our->action[i], their->action[i]);
+		our->remove_after[i] = MAX(our->remove_after[i], their->remove_after[i]);
 	}
 
 	return EXSJ_MERGE;
@@ -1042,20 +1042,20 @@ char *channel_modef_string(ChanFloodProt *x, char *retbuf)
 	*p++ = '[';
 
 	/* (alphabetized) */
-	if (x->l[FLD_CTCP])
-		p = chmodefstrhelper(p, 'c', 'C', x->l[FLD_CTCP], x->a[FLD_CTCP], x->r[FLD_CTCP]);
-	if (x->l[FLD_JOIN])
-		p = chmodefstrhelper(p, 'j', 'i', x->l[FLD_JOIN], x->a[FLD_JOIN], x->r[FLD_JOIN]);
-	if (x->l[FLD_KNOCK])
-		p = chmodefstrhelper(p, 'k', 'K', x->l[FLD_KNOCK], x->a[FLD_KNOCK], x->r[FLD_KNOCK]);
-	if (x->l[FLD_MSG])
-		p = chmodefstrhelper(p, 'm', 'm', x->l[FLD_MSG], x->a[FLD_MSG], x->r[FLD_MSG]);
-	if (x->l[FLD_NICK])
-		p = chmodefstrhelper(p, 'n', 'N', x->l[FLD_NICK], x->a[FLD_NICK], x->r[FLD_NICK]);
-	if (x->l[FLD_TEXT])
-		p = chmodefstrhelper(p, 't', '\0', x->l[FLD_TEXT], x->a[FLD_TEXT], x->r[FLD_TEXT]);
-	if (x->l[FLD_REPEAT])
-		p = chmodefstrhelper(p, 'r', '\0', x->l[FLD_REPEAT], x->a[FLD_REPEAT], x->r[FLD_REPEAT]);
+	if (x->limit[FLD_CTCP])
+		p = chmodefstrhelper(p, 'c', 'C', x->limit[FLD_CTCP], x->action[FLD_CTCP], x->remove_after[FLD_CTCP]);
+	if (x->limit[FLD_JOIN])
+		p = chmodefstrhelper(p, 'j', 'i', x->limit[FLD_JOIN], x->action[FLD_JOIN], x->remove_after[FLD_JOIN]);
+	if (x->limit[FLD_KNOCK])
+		p = chmodefstrhelper(p, 'k', 'K', x->limit[FLD_KNOCK], x->action[FLD_KNOCK], x->remove_after[FLD_KNOCK]);
+	if (x->limit[FLD_MSG])
+		p = chmodefstrhelper(p, 'm', 'm', x->limit[FLD_MSG], x->action[FLD_MSG], x->remove_after[FLD_MSG]);
+	if (x->limit[FLD_NICK])
+		p = chmodefstrhelper(p, 'n', 'N', x->limit[FLD_NICK], x->action[FLD_NICK], x->remove_after[FLD_NICK]);
+	if (x->limit[FLD_TEXT])
+		p = chmodefstrhelper(p, 't', '\0', x->limit[FLD_TEXT], x->action[FLD_TEXT], x->remove_after[FLD_TEXT]);
+	if (x->limit[FLD_REPEAT])
+		p = chmodefstrhelper(p, 'r', '\0', x->limit[FLD_REPEAT], x->action[FLD_REPEAT], x->remove_after[FLD_REPEAT]);
 
 	if (*(p - 1) == ',')
 		p--;
@@ -1143,27 +1143,27 @@ int floodprot_chanmode_del(aChannel *chptr, int modechar)
 	switch(modechar)
 	{
 		case 'C':
-			chp->c[FLD_CTCP] = 0;
+			chp->counter[FLD_CTCP] = 0;
 			break;
 		case 'N':
-			chp->c[FLD_NICK] = 0;
+			chp->counter[FLD_NICK] = 0;
 			break;
 		case 'm':
-			chp->c[FLD_MSG] = 0;
-			chp->c[FLD_CTCP] = 0;
+			chp->counter[FLD_MSG] = 0;
+			chp->counter[FLD_CTCP] = 0;
 			break;
 		case 'K':
-			chp->c[FLD_KNOCK] = 0;
+			chp->counter[FLD_KNOCK] = 0;
 			break;
 		case 'i':
-			chp->c[FLD_JOIN] = 0;
+			chp->counter[FLD_JOIN] = 0;
 			break;
 		case 'M':
-			chp->c[FLD_MSG] = 0;
-			chp->c[FLD_CTCP] = 0;
+			chp->counter[FLD_MSG] = 0;
+			chp->counter[FLD_CTCP] = 0;
 			break;
 		case 'R':
-			chp->c[FLD_JOIN] = 0;
+			chp->counter[FLD_JOIN] = 0;
 			break;
 		default:
 			break;
@@ -1193,7 +1193,7 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 	lp2 = (MembershipL *) lp;
 	chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
-	if (!chp || !(chp->l[FLD_TEXT] || chp->l[FLD_REPEAT]))
+	if (!chp || !(chp->limit[FLD_TEXT] || chp->limit[FLD_REPEAT]))
 		return 0;
 
 	if (moddata_membership(lp2, mdflood).ptr == NULL)
@@ -1206,21 +1206,21 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 	isfld_text = isfld_repeat = 0;
 	c_limit = c_limit_repeat = banthem = banthem_repeat = dropit = dropit_repeat = 0;
 	t_limit = chp->per;
-	if ((chk_text = chp->l[FLD_TEXT]))
+	if ((chk_text = chp->limit[FLD_TEXT]))
 	{
-		c_limit = chp->l[FLD_TEXT];
-		banthem = (chp->a[FLD_TEXT] == 'b') ? 1 : 0;
-		dropit = (chp->a[FLD_TEXT] == 'd') ? 1 : 0;
+		c_limit = chp->limit[FLD_TEXT];
+		banthem = (chp->action[FLD_TEXT] == 'b') ? 1 : 0;
+		dropit = (chp->action[FLD_TEXT] == 'd') ? 1 : 0;
 		Debug((DEBUG_ERROR, "Checking for flood +f (type 'text'): firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
 			userfld->firstmsg, TStime() - userfld->firstmsg, userfld->nmsg + 1,
 			c_limit, t_limit));
 	}
 
-	if ((chk_repeat = chp->l[FLD_REPEAT]))
+	if ((chk_repeat = chp->limit[FLD_REPEAT]))
 	{
-		c_limit_repeat = chp->l[FLD_REPEAT];
-		banthem_repeat = (chp->a[FLD_REPEAT] == 'b') ? 1 : 0;
-		dropit_repeat = (chp->a[FLD_REPEAT] == 'd') ? 1 : 0;
+		c_limit_repeat = chp->limit[FLD_REPEAT];
+		banthem_repeat = (chp->action[FLD_REPEAT] == 'b') ? 1 : 0;
+		dropit_repeat = (chp->action[FLD_REPEAT] == 'd') ? 1 : 0;
 		Debug((DEBUG_ERROR, "Checking for flood +f (type 'repeat'): firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
 			userfld->firstmsg, TStime() - userfld->firstmsg, userfld->nmsg_repeat + 1,
 			c_limit_repeat, t_limit));
@@ -1294,8 +1294,8 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 
 		if (banthem)
 		{		/* ban. */
-			if (timedban_available && (chp->r[FLD_TEXT] > 0))
-				snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", chp->r[FLD_TEXT], GetHost(sptr));
+			if (timedban_available && (chp->remove_after[FLD_TEXT] > 0))
+				snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", chp->remove_after[FLD_TEXT], GetHost(sptr));
 			else
 				snprintf(mask, sizeof(mask), "*!*@%s", GetHost(sptr));
 			if (add_listmode(&chptr->banlist, &me, chptr, mask) == 0)
@@ -1511,22 +1511,22 @@ int do_floodprot(aChannel *chptr, int what)
 {
 	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
-	if (!chp || !chp->l[what]) /* no +f or not restricted */
+	if (!chp || !chp->limit[what]) /* no +f or not restricted */
 		return 0;
-	if (TStime() - chp->t[what] >= chp->per)
+	if (TStime() - chp->timer[what] >= chp->per)
 	{
-		chp->t[what] = TStime();
-		chp->c[what] = 1;
+		chp->timer[what] = TStime();
+		chp->counter[what] = 1;
 	} else
 	{
-		chp->c[what]++;
-		if ((chp->c[what] > chp->l[what]) &&
-		    (TStime() - chp->t[what] < chp->per))
+		chp->counter[what]++;
+		if ((chp->counter[what] > chp->limit[what]) &&
+		    (TStime() - chp->timer[what] < chp->per))
 		{
 			/* reset it too (makes it easier for chanops to handle the situation) */
 			/*
-			 *XXchp->t[what] = TStime();
-			 *XXchp->c[what] = 1;
+			 *XXchp->timer[what] = TStime();
+			 *XXchp->counter[what] = 1;
 			 *
 			 * BAD.. there are some situations where we might 'miss' a flood
 			 * because of this. The reset has been moved to -i,-m,-N,-C,etc.
@@ -1544,14 +1544,14 @@ void do_floodprot_action(aChannel *chptr, int what, char *text)
 	Cmode_t extmode = 0;
 	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
-	m = chp->a[what];
+	m = chp->action[what];
 	if (!m)
 		return;
 
 	/* For drop action we don't actually have to do anything here, but we still have to prevent Unreal
 	 * from setting chmode +d (which is useless against floods anyways) =]
 	 */
-	if (chp->a[what] == 'd')
+	if (chp->action[what] == 'd')
 		return;
 
 	mode = get_mode_bitbychar(m);
@@ -1571,7 +1571,7 @@ void do_floodprot_action(aChannel *chptr, int what, char *text)
 		mtags = NULL;
 		new_message(&me, NULL, &mtags);
 		ircsnprintf(comment, sizeof(comment), "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
-			text, chp->l[what], chp->per, m);
+			text, chp->limit[what], chp->per, m);
 		ircsnprintf(target, sizeof(target), "%%%s", chptr->chname);
 		sendto_channel(chptr, &me, NULL, PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 		               0, SEND_ALL, mtags,
@@ -1590,9 +1590,9 @@ void do_floodprot_action(aChannel *chptr, int what, char *text)
 		chptr->mode.extmode |= extmode;
 
 		/* Add remove-chanmode timer */
-		if (chp->r[what])
+		if (chp->remove_after[what])
 		{
-			floodprottimer_add(chptr, m, TStime() + ((long)chp->r[what] * 60) - 5);
+			floodprottimer_add(chptr, m, TStime() + ((long)chp->remove_after[what] * 60) - 5);
 			/* (since the floodprot timer event is called every 10s, we do -5 here so the accurancy will
 			 *  be -5..+5, without it it would be 0..+10.)
 			 */
@@ -1663,9 +1663,9 @@ char *gen_floodprot_msghash(char *text)
  */
 static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
 {
-	if (memcmp(a->l, b->l, sizeof(a->l)) ||
-	    memcmp(a->a, b->a, sizeof(a->a)) ||
-	    memcmp(a->r, b->r, sizeof(a->r)))
+	if (memcmp(a->limit, b->limit, sizeof(a->limit)) ||
+	    memcmp(a->action, b->action, sizeof(a->action)) ||
+	    memcmp(a->remove_after, b->remove_after, sizeof(a->remove_after)))
 		return 1;
 	else
 		return 0;
