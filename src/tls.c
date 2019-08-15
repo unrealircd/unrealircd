@@ -1185,7 +1185,7 @@ int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 		return 0;
 	}
 
-	public_key = X509_get0_pubkey(cert);
+	public_key = X509_get_pubkey(cert);
 	if (!public_key)
 	{
 		/* Now this is unexpected.. */
@@ -1193,14 +1193,18 @@ int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 		SSL_free(ssl);
 		return 1;
 	}
-	rsa_key = EVP_PKEY_get0_RSA(public_key);
+	rsa_key = EVP_PKEY_get1_RSA(public_key);
 	if (!rsa_key)
 	{
 		/* Not an RSA key, then we are done. */
+		EVP_PKEY_free(public_key);
 		SSL_free(ssl);
 		return 1;
 	}
 	key_length = RSA_size(rsa_key) * 8;
+
+	EVP_PKEY_free(public_key);
+	RSA_free(rsa_key);
 	SSL_free(ssl);
 
 	if (key_length < 2048)
