@@ -2,7 +2,7 @@
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
 <assemblyIdentity
     processorArchitecture="X86"
-    name="UnrealIRCd.UnrealIRCd.4"
+    name="UnrealIRCd.UnrealIRCd.5"
     version="5.0.0.0"
     type="win32"
 />
