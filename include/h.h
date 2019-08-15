@@ -822,7 +822,7 @@ extern char *policy_valtostr(Policy policy);
 extern char policy_valtochar(Policy policy);
 extern int verify_certificate(SSL *ssl, char *hostname, char **errstr);
 extern char *certificate_name(SSL *ssl);
-extern int cipher_check(SSL_CTX *ctx, char **errstr);
+extern void start_of_normal_client_handshake(aClient *acptr);
 extern void clicap_pre_rehash(void);
 extern void clicap_post_rehash(void);
 extern void send_cap_notify(int add, char *token);

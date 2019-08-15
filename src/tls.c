@@ -32,8 +32,9 @@ extern HWND hwIRCDWnd;
 #define SAFE_SSL_ACCEPT 3
 #define SAFE_SSL_CONNECT 4
 
-extern void start_of_normal_client_handshake(aClient *acptr);
 static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr);
+extern int cipher_check(SSL_CTX *ctx, char **errstr);
+extern int certificate_quality_check(SSL_CTX *ctx, char **errstr);
 
 /* The SSL structures */
 SSL_CTX *ctx_server;
@@ -406,6 +407,15 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 	{
 		config_error("There is a problem with your SSL/TLS 'ciphers' configuration setting: %s", errstr);
 		config_error("Remove the ciphers setting from your configuration file to use safer defaults, or change the cipher setting.");
+		config_report_ssl_error();
+		goto fail;
+	}
+
+	if (!certificate_quality_check(ctx, &errstr))
+	{
+		config_error("There is a problem with your SSL/TLS certificate: %s. Please use another certificate/keypair.", errstr);
+		config_error("If you use the standard UnrealIRCd certificates then you can simply run 'make pem' and 'make install' "
+		             "from your UnrealIRCd source directory (eg: ~/unrealircd-5.X.Y/) to create and install new certificates");
 		config_report_ssl_error();
 		goto fail;
 	}
@@ -1141,6 +1151,65 @@ int cipher_check(SSL_CTX *ctx, char **errstr)
 	}
 
 	SSL_free(ssl);
+	return 1;
+}
+
+/** Check if a certificate (or actually: key) is weak */
+int certificate_quality_check(SSL_CTX *ctx, char **errstr)
+{
+	SSL *ssl;
+	X509 *cert;
+	EVP_PKEY *public_key;
+	RSA *rsa_key;
+	int key_length;
+	static char errbuf[256];
+
+	*errbuf = '\0'; // safety
+
+	if (errstr)
+		*errstr = errbuf;
+
+	/* there isn't an SSL_CTX_get_cipher_list() unfortunately. */
+	ssl = SSL_new(ctx);
+	if (!ssl)
+	{
+		snprintf(errbuf, sizeof(errbuf), "Could not create SSL structure");
+		return 0;
+	}
+
+	cert = SSL_get_certificate(ssl);
+	if (!cert)
+	{
+		snprintf(errbuf, sizeof(errbuf), "Could not retrieve SSL/TLS certificate");
+		SSL_free(ssl);
+		return 0;
+	}
+
+	public_key = X509_get0_pubkey(cert);
+	if (!public_key)
+	{
+		/* Now this is unexpected.. */
+		config_warn("certificate_quality_check(): could not check public key !? BUG?");
+		SSL_free(ssl);
+		return 1;
+	}
+	rsa_key = EVP_PKEY_get0_RSA(public_key);
+	if (!rsa_key)
+	{
+		/* Not an RSA key, then we are done. */
+		SSL_free(ssl);
+		return 1;
+	}
+	key_length = RSA_size(rsa_key) * 8;
+	SSL_free(ssl);
+
+	if (key_length < 2048)
+	{
+		snprintf(errbuf, sizeof(errbuf), "Your SSL/TLS certificate key is only %d bits, which is insecure", key_length);
+		*errstr = errbuf;
+		return 0;
+	}
+
 	return 1;
 }
 
