@@ -169,7 +169,7 @@ end;
 Name: "{group}\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
 Name: "{group}\Make Certificate"; Filename: "{app}\makecert.bat"; WorkingDir: "{app}"
-Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/UnrealIRCd_4_documentation"; WorkingDir: "{app}"
+Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/UnrealIRCd_5_documentation"; WorkingDir: "{app}"
 Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"; Tasks: quicklaunchicon
 
