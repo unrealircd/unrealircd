@@ -520,7 +520,7 @@ if [ -z "$NOCACHE" ] ; then
 		fi
 	fi
 	# If we just imported settings and the curl dir is set to
-	# something like /home/xxx/unrealircd-4.x.y/extras/curl/
+	# something like /home/xxx/unrealircd-5.x.y/extras/curl/
 	# (what we call 'local-curl') then remove this setting as
 	# it would refer to the old UnrealIRCd installation.
 	if [ ! -z "$IMPORTEDSETTINGS" ]; then
@@ -546,7 +546,7 @@ if [ "$BASEPATH" = "$UNREALCWD" ]; then
 	echo ""
 	echo "ERROR: The installation directory cannot be the same as the directory"
 	echo "       containing the source code ($UNREALCWD)."
-	echo " HINT: Usually the directory containing the source is $HOME/unrealircd-4.x.y"
+	echo " HINT: Usually the directory containing the source is $HOME/unrealircd-5.x.y"
 	echo "       and the installation directory you would need to enter is $HOME/unrealircd"
 	exit 1
 fi
