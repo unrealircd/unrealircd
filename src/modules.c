@@ -627,9 +627,7 @@ void Init_all_testing_modules(void)
 void FreeModObj(ModuleObject *obj, Module *m)
 {
 	if (obj->type == MOBJ_EVENT) {
-		LockEventSystem();
 		EventDel(obj->object.event);
-		UnlockEventSystem();
 	}
 	else if (obj->type == MOBJ_HOOK) {
 		HookDel(obj->object.hook);

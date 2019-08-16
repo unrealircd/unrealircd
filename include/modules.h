@@ -650,8 +650,6 @@ extern int     EventMod(Event *event, EventInfo *mods);
 extern void    DoEvents(void);
 extern void    EventStatus(aClient *sptr);
 extern void    SetupEvents(void);
-extern void	LockEventSystem(void);
-extern void	UnlockEventSystem(void);
 
 
 extern void    Module_Init(void);

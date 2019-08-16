@@ -24,22 +24,12 @@
 
 ID_Copyright("(C) Carsten Munk 2001");
 
-
 MODVAR Event *events = NULL;
 
 extern EVENT(unrealdns_removeoldrecords);
 
-void	LockEventSystem(void)
-{
-}
-
-void	UnlockEventSystem(void)
-{
-}
-
-
-Event	*EventAdd(Module *module, char *name, long every, long howmany,
-		  vFP event, void *data)
+Event *EventAdd(Module *module, char *name, long every, long howmany,
+                vFP event, void *data)
 {
 	Event *newevent;
 	if (!name || (every < 0) || (howmany < 0) || !event)
@@ -54,11 +44,11 @@ Event	*EventAdd(Module *module, char *name, long every, long howmany,
 	newevent->every = every;
 	newevent->event = event;
 	newevent->data = data;
-	/* We don't want a quick execution */
 	newevent->last = TStime();
 	newevent->owner = module;
 	AddListItem(newevent,events);
-	if (module) {
+	if (module)
+	{
 		ModuleObject *eventobj = MyMallocEx(sizeof(ModuleObject));
 		eventobj->object.event = newevent;
 		eventobj->type = MOBJ_EVENT;
@@ -69,24 +59,29 @@ Event	*EventAdd(Module *module, char *name, long every, long howmany,
 	
 }
 
-Event	*EventMarkDel(Event *event)
+Event *EventMarkDel(Event *event)
 {
 	event->howmany = -1;
 	return event;
 }
 
-Event	*EventDel(Event *event)
+Event *EventDel(Event *event)
 {
 	Event *p, *q;
-	for (p = events; p; p = p->next) {
-		if (p == event) {
+	for (p = events; p; p = p->next)
+	{
+		if (p == event)
+		{
 			q = p->next;
 			MyFree(p->name);
 			DelListItem(p, events);
-			if (p->owner) {
+			if (p->owner)
+			{
 				ModuleObject *eventobjs;
-				for (eventobjs = p->owner->objects; eventobjs; eventobjs = eventobjs->next) {
-					if (eventobjs->type == MOBJ_EVENT && eventobjs->object.event == p) {
+				for (eventobjs = p->owner->objects; eventobjs; eventobjs = eventobjs->next)
+				{
+					if (eventobjs->type == MOBJ_EVENT && eventobjs->object.event == p)
+					{
 						DelListItem(eventobjs, p->owner->objects);
 						MyFree(eventobjs);
 						break;
@@ -100,7 +95,7 @@ Event	*EventDel(Event *event)
 	return NULL;
 }
 
-Event	*EventFind(char *name)
+Event *EventFind(char *name)
 {
 	Event *eventptr;
 
@@ -110,7 +105,8 @@ Event	*EventFind(char *name)
 	return NULL;
 }
 
-int EventMod(Event *event, EventInfo *mods) {
+int EventMod(Event *event, EventInfo *mods)
+{
 	if (!event || !mods)
 	{
 		if (event && event->owner)
@@ -122,7 +118,8 @@ int EventMod(Event *event, EventInfo *mods) {
 		event->every = mods->every;
 	if (mods->flags & EMOD_HOWMANY)
 		event->howmany = mods->howmany;
-	if (mods->flags & EMOD_NAME) {
+	if (mods->flags & EMOD_NAME)
+	{
 		free(event->name);
 		event->name = strdup(mods->name);
 	}
@@ -135,11 +132,7 @@ int EventMod(Event *event, EventInfo *mods) {
 	return 0;
 }
 
-#ifndef _WIN32
-inline void	DoEvents(void)
-#else
 void DoEvents(void)
-#endif
 {
 	Event *eventptr;
 	Event temp;
@@ -167,7 +160,7 @@ freeit:
 	}
 }
 
-void	EventStatus(aClient *sptr)
+void EventStatus(aClient *sptr)
 {
 	Event *eventptr;
 	time_t now = TStime();
@@ -185,10 +178,8 @@ void	EventStatus(aClient *sptr)
 	}
 }
 
-void	SetupEvents(void)
+void SetupEvents(void)
 {
-	LockEventSystem();
-
 	/* Start events */
 	EventAdd(NULL, "tunefile", 300, 0, save_tunefile, NULL);
 	EventAdd(NULL, "garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
@@ -198,6 +189,4 @@ void	SetupEvents(void)
 	EventAdd(NULL, "check_deadsockets", 1, 0, check_deadsockets, NULL);
 	EventAdd(NULL, "check_unknowns", 1, 0, check_unknowns, NULL);
 	EventAdd(NULL, "try_connections", 2, 0, try_connections, NULL);
-
-	UnlockEventSystem();
 }

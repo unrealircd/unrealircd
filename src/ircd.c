@@ -1486,9 +1486,7 @@ void SocketLoop(void *dummy)
 			highesttimeofday = timeofday;
 		}
 		oldtimeofday = timeofday;
-		LockEventSystem();
 		DoEvents();
-		UnlockEventSystem();
 
 		/*
 		 * ** Run through the hashes and check lusers every
