@@ -1,4 +1,4 @@
-/*   m_who.c - Because s_user.c was just crazy.
+/*   src/modules/who_old.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -30,17 +30,17 @@ CMD_FUNC(m_who);
 /* Place includes here */
 #define MSG_WHO 	"WHO"
 
-ModuleHeader MOD_HEADER(who)
+ModuleHeader MOD_HEADER(who_old)
   = {
-	"who",	/* Name of module */
+	"who_old",	/* Name of module */
 	"5.0", /* Version */
-	"command /who", /* Short description of module */
+	"command /who (old version)", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(who)
+MOD_INIT(who_old)
 {
 	if (!CommandAdd(modinfo->handle, MSG_WHO, m_who, MAXPARA, M_USER))
 	{
@@ -52,14 +52,14 @@ MOD_INIT(who)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(who)
+MOD_LOAD(who_old)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-MOD_UNLOAD(who)
+MOD_UNLOAD(who_old)
 {
 	return MOD_SUCCESS;
 }

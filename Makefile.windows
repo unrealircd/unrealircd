@@ -169,7 +169,7 @@ OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/WINDEBUG.OBJ SRC/RTF.
 
 DLL_FILES=SRC/MODULES/CHGHOST.DLL SRC/MODULES/SDESC.DLL SRC/MODULES/SETIDENT.DLL \
  SRC/MODULES/SETNAME.DLL SRC/MODULES/SETHOST.DLL SRC/MODULES/CHGIDENT.DLL \
- SRC/MODULES/SVSMOTD.DLL SRC/MODULES/SVSNLINE.DLL SRC/MODULES/WHO.DLL \
+ SRC/MODULES/SVSMOTD.DLL SRC/MODULES/SVSNLINE.DLL SRC/MODULES/WHO_OLD.DLL \
  SRC/MODULES/WHOX.DLL \
  SRC/MODULES/SWHOIS.DLL SRC/MODULES/SVSMODE.DLL SRC/MODULES/AWAY.DLL \
  SRC/MODULES/SVSNOOP.DLL SRC/MODULES/MKPASSWD.DLL \
@@ -570,8 +570,8 @@ src/modules/swhois.dll: src/modules/swhois.c $(INCLUDES)
 src/modules/svsnline.dll: src/modules/svsnline.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/svsnline.c $(MODLFLAGS)
 
-src/modules/who.dll: src/modules/who.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/who.c $(MODLFLAGS)
+src/modules/who_old.dll: src/modules/who_old.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/who_old.c $(MODLFLAGS)
 
 src/modules/whox.dll: src/modules/whox.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/whox.c $(MODLFLAGS)

@@ -37,7 +37,7 @@ INCLUDES = ../include/auth.h ../include/channel.h \
 R_MODULES= \
 	sethost.so chghost.so chgident.so setname.so \
 	setident.so sdesc.so svsmode.so swhois.so\
-	svsmotd.so svsnline.so who.so whox.so mkpasswd.so \
+	svsmotd.so svsnline.so who_old.so whox.so mkpasswd.so \
 	away.so svsnoop.so svsnick.so \
 	chgname.so kill.so \
 	lag.so message.so oper.so pingpong.so \
@@ -176,9 +176,9 @@ svsnline.so: svsnline.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o svsnline.so svsnline.c
 
-who.so: who.c $(INCLUDES)
+who_old.so: who_old.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		 -o who.so who.c
+		 -o who_old.so who_old.c
 
 whox.so: whox.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
