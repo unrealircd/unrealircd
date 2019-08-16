@@ -26,9 +26,9 @@ OBJS=res.o bsd.o auth.o channel.o cloak.o crule.o dbuf.o \
 	match.o modules.o packet.o parse.o mempool.o operclass.o \
 	conf_preprocessor.o conf.o debug.o dispatch.o err.o extra.o kline.o \
 	misc.o numeric.o serv.o aliases.o $(STRTOUL) socket.o \
-	tls.o user.o scache.o send.o support.o api-umodes.o \
-	version.o whowas.o random.o api-extcmodes.o moddata.o uid.o \
-	api-extbans.o api-isupport.o api-command.o api-clicap.o api-mtag.o \
+	tls.o user.o scache.o send.o support.o api-usermode.o \
+	version.o whowas.o random.o api-channelmode.o moddata.o uid.o \
+	api-extban.o api-isupport.o api-command.o api-clicap.o api-messagetag.o \
 	api-history-backend.o md5.o crypt_blowfish.o updconf.o crashreport.o \
 	openssl_hostname_validation.o $(URL)
 
@@ -113,8 +113,8 @@ mempool.o: mempool.c $(INCLUDES)
 support.o: support.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c support.c
 
-api-umodes.o: api-umodes.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-umodes.c
+api-usermode.o: api-usermode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-usermode.c
 
 userload.o: userload.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c userload.c
@@ -206,8 +206,8 @@ crule.o: crule.c $(INCLUDES)
 random.o: random.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c random.c
 
-api-extcmodes.o: api-extcmodes.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-extcmodes.c
+api-channelmode.o: api-channelmode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-channelmode.c
 
 operclass.o: operclass.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c operclass.c
@@ -215,8 +215,8 @@ operclass.o: operclass.c $(INCLUDES)
 moddata.o: moddata.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c moddata.c
 
-api-extbans.o: api-extbans.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-extbans.c
+api-extban.o: api-extban.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-extban.c
 
 md5.o: md5.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c md5.c
@@ -230,8 +230,8 @@ api-isupport.o: api-isupport.c $(INCLUDES)
 api-clicap.o: api-clicap.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-clicap.c
 
-api-mtag.o: api-mtag.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-mtag.c
+api-messagetag.o: api-messagetag.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-messagetag.c
 
 api-history-backend.o: api-history-backend.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-history-backend.c

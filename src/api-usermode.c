@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, umodes.c
+ *   IRC - Internet Relay Chat, src/api-usermode.c
  *   (C) 1999-2000 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *
  *   See file AUTHORS in IRC package for additional names of

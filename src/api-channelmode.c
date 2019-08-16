@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, extcmodes.c
+ *   IRC - Internet Relay Chat, src/api-channelmode.c
  *   (C) 2003-2007 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
