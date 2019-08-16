@@ -1240,10 +1240,13 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
-	fprintf(stderr, "  using %s\n", pcre2_version());
-	fprintf(stderr, "  using %s\n", SSLeay_version(SSLEAY_VERSION));
+	fprintf(stderr, "UnrealIRCd is brought to you by Bram Matthys (Syzop), Gottem and i\n\n");
+
+	fprintf(stderr, "Using the following libraries:\n");
+	fprintf(stderr, "* %s\n", pcre2_version());
+	fprintf(stderr, "* %s\n", SSLeay_version(SSLEAY_VERSION));
 #ifdef USE_LIBCURL
-	fprintf(stderr, "  using %s\n", curl_version());
+	fprintf(stderr, "* %s\n", curl_version());
 #endif
 	check_user_limit();
 	fprintf(stderr, "\n");

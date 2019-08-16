@@ -945,7 +945,8 @@ cat << __EOF__
 |                        - The UnrealIRCd Team -                        |
 |                                                                       |
 | * Bram Matthys (Syzop)     syzop@unrealircd.org                       |
-| * Travis McArthur (Heero)  heero@unrealircd.org                       |
+| * Gottem                   gottem@unrealircd.org                      |
+| * i                        i@unrealircd.org                           |
 |_______________________________________________________________________|
 __EOF__
 
