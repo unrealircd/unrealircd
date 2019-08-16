@@ -486,7 +486,8 @@ void add_ListItem(ListStruct *item, ListStruct **list) {
 /* (note that if you end up using this, you should probably
  *  use a circular linked list instead)
  */
-void append_ListItem(ListStruct *item, ListStruct **list) {
+void append_ListItem(ListStruct *item, ListStruct **list)
+{
 	ListStruct *l;
 
 	if (!*list)
@@ -502,8 +503,6 @@ void append_ListItem(ListStruct *item, ListStruct **list) {
 
 void del_ListItem(ListStruct *item, ListStruct **list)
 {
-	ListStruct *l, *ret;
-
 	if (!item)
 		return;
 
