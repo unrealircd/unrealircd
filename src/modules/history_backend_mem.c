@@ -207,7 +207,7 @@ void hbm_history_del_line(HistoryLogObject *h, HistoryLogLine *l)
 		h->tail = l->prev; /* could be NULL now */
 	}
 
-	free_mtags(l->mtags);
+	free_message_tags(l->mtags);
 	MyFree(l);
 
 	h->num_lines--;
@@ -340,7 +340,7 @@ int hbm_history_destroy(char *object)
 		 * The only danger is that we may forget to free some
 		 * fields that are added later there but not here.
 		 */
-		free_mtags(l->mtags);
+		free_message_tags(l->mtags);
 		MyFree(l);
 	}
 

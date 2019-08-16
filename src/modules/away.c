@@ -92,7 +92,7 @@ CMD_FUNC(m_away)
 			hash_check_watch(cptr, RPL_NOTAWAY);
 			sendto_local_common_channels(sptr, sptr, ClientCapabilityBit("away-notify"), mtags,
 			                             ":%s AWAY", sptr->name);
-			free_mtags(mtags);
+			free_message_tags(mtags);
 		}
 
 		if (MyConnect(sptr))
@@ -157,7 +157,7 @@ CMD_FUNC(m_away)
 	sendto_local_common_channels(sptr, sptr,
 	                             ClientCapabilityBit("away-notify"), mtags,
 	                             ":%s AWAY :%s", sptr->name, away);
-	free_mtags(mtags);
+	free_message_tags(mtags);
 
 	RunHook2(HOOKTYPE_AWAY, sptr, away);
 	return 0;

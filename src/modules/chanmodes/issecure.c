@@ -146,14 +146,14 @@ void issecure_unset(aChannel *chptr, aClient *sptr, int notice)
 		new_message(&me, NULL, &mtags);
 		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s NOTICE %s :User '%s' joined and is not connected through SSL/TLS, setting channel -Z (insecure)",
 			me.name, chptr->chname, sptr->name);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 	}
 		
 	chptr->mode.extmode &= ~EXTCMODE_ISSECURE;
 	mtags = NULL;
 	new_message(&me, NULL, &mtags);
 	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s -Z", me.name, chptr->chname);
-	free_mtags(mtags);
+	free_message_tags(mtags);
 }
 
 
@@ -183,7 +183,7 @@ void issecure_set(aChannel *chptr, aClient *sptr, int notice)
 		               ":%s NOTICE %s :All users in the channel are connected through SSL/TLS, setting channel +Z (secure)",
 		               me.name, chptr->chname);
 	}
-	free_mtags(mtags);
+	free_message_tags(mtags);
 
 	chptr->mode.extmode |= EXTCMODE_ISSECURE;
 
@@ -192,7 +192,7 @@ void issecure_set(aChannel *chptr, aClient *sptr, int notice)
 	sendto_channel(chptr, &me, sptr, 0, 0, SEND_LOCAL, mtags,
 	               ":%s MODE %s +Z",
 	               me.name, chptr->chname);
-	free_mtags(mtags);
+	free_message_tags(mtags);
 }
 
 /* Note: the routines below (notably the 'if's) are written with speed in mind,

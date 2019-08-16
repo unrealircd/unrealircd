@@ -3281,7 +3281,7 @@ int _join_viruschan(aClient *sptr, aTKline *tk, int type)
 		sendto_channel(chptr, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 		               0, SEND_ALL|SKIP_DEAF, mtags,
 		               ":%s NOTICE %s :%s", me.name, chbuf, buf);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 	}
 	SetVirus(sptr);
 	return 0;

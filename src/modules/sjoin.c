@@ -121,7 +121,7 @@ else {\
 	new_message_special(sptr, recv_mtags, &mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf); \
 	sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags, \
 	               ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf); \
-	free_mtags(mtags); \
+	free_message_tags(mtags); \
 	strcpy(parabuf,param);\
 	/* modebuf[0] should stay what it was ('+' or '-') */ \
 	modebuf[1] = mode;\
@@ -258,7 +258,7 @@ CMD_FUNC(m_sjoin)
 			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 			               ":%s MODE %s %s %s",
 			               sptr->name, chptr->chname, modebuf, parabuf);
-			free_mtags(mtags);
+			free_message_tags(mtags);
 		}
 		/* remove bans */
 		/* reset the buffers */
@@ -346,7 +346,7 @@ CMD_FUNC(m_sjoin)
 			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 			               ":%s MODE %s %s %s",
 			               sptr->name, chptr->chname, modebuf, parabuf);
-			free_mtags(mtags);
+			free_message_tags(mtags);
 		}
 
 		/* since we're dropping our modes, we want to clear the mlock as well. --nenolod */
@@ -550,7 +550,7 @@ getnick:
 				RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, acptr, chptr, NULL);
 				new_message_special(acptr, recv_mtags, &mtags, ":%s JOIN %s", acptr->name, chptr->chname);
 				send_join_to_local_users(acptr, chptr, mtags);
-				free_mtags(mtags);
+				free_message_tags(mtags);
 			}
 
 			/* old servers without SJOIN: */
@@ -730,7 +730,7 @@ getnick:
 		sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
 		               sptr->name, chptr->chname, modebuf, parabuf);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 	}
 	
 	if (!merge && !removetheirs && !nomode)
@@ -762,7 +762,7 @@ getnick:
 		sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
 		               sptr->name, chptr->chname, modebuf, parabuf);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 	}
 
 	if (merge && !nomode)
@@ -977,7 +977,7 @@ getnick:
 			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 			               ":%s MODE %s %s %s",
 			               sptr->name, chptr->chname, modebuf, parabuf);
-			free_mtags(mtags);
+			free_message_tags(mtags);
 		}
 
 		/* free the oldmode.* crap :( */
@@ -999,7 +999,7 @@ getnick:
 			":%s NOTICE %s :*** TS for %s changed from %ld to %ld",
 			me.name, chptr->chname, chptr->chname,
 			oldts, chptr->creationtime);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 	}
 
 	/* If something went wrong with processing of the SJOIN above and

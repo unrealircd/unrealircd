@@ -99,7 +99,7 @@ CMD_FUNC(m_sendsno)
 			sendto_one(acptr, mtags, ":%s NOTICE %s :%s", sptr->name, acptr->name, msg);
 	}
 
-	free_mtags(mtags);
+	free_message_tags(mtags);
 
 	return 0;
 }

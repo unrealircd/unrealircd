@@ -149,7 +149,7 @@ CMD_FUNC(m_knock)
 	               me.name, chptr->chname,
 	               sptr->name, sptr->user->username, GetHost(sptr),
 	               parv[2] ? parv[2] : "no reason specified");
-	free_mtags(mtags);
+	free_message_tags(mtags);
 
 	sendnotice(sptr, "Knocked on %s", chptr->chname);
 

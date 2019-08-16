@@ -355,7 +355,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		               ":%s MODE %s %s %s",
 		               sptr->name, chptr->chname,  modebuf, parabuf);
 		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 
 		/* Activate this hook just like m_mode.c */
 		RunHook7(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, ts, 0);
@@ -480,7 +480,7 @@ int do_svsmode(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, c
 					                             ":%s ACCOUNT %s",
 					                             acptr->name,
 					                             !isdigit(*acptr->user->svid) ? acptr->user->svid : "*");
-					free_mtags(mtags);
+					free_message_tags(mtags);
 				}
 				else
 				{
@@ -662,7 +662,7 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
 		               ":%s MODE %s %s %s",
 		               from->name, chptr->chname, modebuf, parabuf);
 		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 		send = 0;
 		*parabuf = 0;
 		modes = modebuf;

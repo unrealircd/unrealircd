@@ -118,7 +118,7 @@ static void secureonly_kick_insecure_users(aChannel *chptr)
 
 			sendto_server(&me, 0, 0, mtags, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
 
-			free_mtags(mtags);
+			free_message_tags(mtags);
 
 			remove_user_from_channel(cptr, chptr);
 		}

@@ -100,7 +100,7 @@ void set_post_delayed(aChannel *chptr)
 
 	new_message(&me, NULL, &mtags);
 	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +d", me.name, chptr->chname);
-	free_mtags(mtags);
+	free_message_tags(mtags);
 }
 
 void clear_post_delayed(aChannel *chptr)
@@ -111,7 +111,7 @@ void clear_post_delayed(aChannel *chptr)
 
 	new_message(&me, NULL, &mtags);
 	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s -d", me.name, chptr->chname);
-	free_mtags(mtags);
+	free_message_tags(mtags);
 }
 
 bool moded_member_invisible(Member* m, aChannel *chptr)
@@ -231,7 +231,7 @@ void clear_user_invisible_announce(aChannel *chptr, aClient *sptr, MessageTag *r
 				sendto_one(acptr, mtags, "%s", joinbuf);
 		}
 	}
-	free_mtags(mtags);
+	free_message_tags(mtags);
 }
 
 void set_user_invisible(aChannel *chptr, aClient *sptr)
@@ -328,7 +328,7 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 						} else {
 							sendto_one(user, mtags, ":%s!%s@%s JOIN :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
 						}
-						free_mtags(mtags);
+						free_message_tags(mtags);
 					}
 				}
 
@@ -356,7 +356,7 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 						MessageTag *mtags = NULL;
 						new_message_special(i->cptr, recv_mtags, &mtags, ":%s PART %s", i->cptr->name, chptr->chname);
 						sendto_one(user, mtags, ":%s!%s@%s PART :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
-						free_mtags(mtags);
+						free_message_tags(mtags);
 					}
 				}
 

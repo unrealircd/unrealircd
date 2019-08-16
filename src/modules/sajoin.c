@@ -221,7 +221,7 @@ CMD_FUNC(m_sajoin)
 					               ":%s PART %s :%s",
 					               acptr->name, chptr->chname, "Left all channels");
 					sendto_server(cptr, 0, 0, mtags, ":%s PART %s :Left all channels", acptr->name, chptr->chname);
-					free_mtags(mtags);
+					free_message_tags(mtags);
 					if (MyConnect(acptr))
 						RunHook4(HOOKTYPE_LOCAL_PART, acptr, acptr, chptr, "Left all channels");
 					remove_user_from_channel(acptr, chptr);
@@ -265,7 +265,7 @@ CMD_FUNC(m_sajoin)
 				sajoinmode = 0;
 				free(mode_args[0]);
 			}
-			free_mtags(mtags);
+			free_message_tags(mtags);
 			did_anything = 1;
 			if (*jbuf)
 				strlcat(jbuf, ",", sizeof jbuf);

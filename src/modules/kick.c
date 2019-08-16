@@ -314,7 +314,7 @@ CMD_FUNC(m_kick)
 				    ID(sptr), chptr->chname, ID(who), comment);
 				sendto_server(cptr, 0, PROTO_SID, mtags, ":%s KICK %s %s :%s",
 				    sptr->name, chptr->chname, who->name, comment);
-				free_mtags(mtags);
+				free_message_tags(mtags);
 				if (lp)
 				{
 					remove_user_from_channel(who, chptr);

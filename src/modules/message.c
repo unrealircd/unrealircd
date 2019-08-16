@@ -365,7 +365,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 
 			if (!text)
 			{
-				free_mtags(mtags);
+				free_message_tags(mtags);
 				continue;
 			}
 
@@ -376,7 +376,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 
 			RunHook8(HOOKTYPE_CHANMSG, sptr, chptr, sendflags, prefix, nick, mtags, text, notice);
 
-			free_mtags(mtags);
+			free_message_tags(mtags);
 
 			continue;
 		}
@@ -408,7 +408,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 			    MATCH_SERVER,
 			    mtags,
 			    ":%s %s %s :%s", sptr->name, cmd, nick, parv[2]);
-			free_mtags(mtags);
+			free_message_tags(mtags);
 			continue;
 		}
 
@@ -429,7 +429,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 				                  (MyClient(acptr) ? acptr->name : nick),
 				                  text);
 				RunHook5(HOOKTYPE_USERMSG, sptr, acptr, mtags, text, notice);
-				free_mtags(mtags);
+				free_message_tags(mtags);
 				continue;
 			} else
 			if (ret == CANPRIVMSG_CONTINUE)

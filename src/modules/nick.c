@@ -158,7 +158,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 			new->flags |= FLAGS_KILLED;
 			(void)exit_client(NULL, new, &me, mtags, comment);
 
-			free_mtags(mtags);
+			free_message_tags(mtags);
 		}
 	}
 	
@@ -193,7 +193,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 		existing->flags |= FLAGS_KILLED;
 		(void)exit_client(NULL, existing, &me, mtags, comment);
 
-		free_mtags(mtags);
+		free_message_tags(mtags);
 	}
 	
 #ifndef ASSUME_NICK_IN_FLIGHT
@@ -318,7 +318,7 @@ CMD_FUNC(m_uid)
 				sptr->flags |= FLAGS_KILLED;
 				n = exit_client(cptr, sptr, &me, mtags, "BadNick");
 
-				free_mtags(mtags);
+				free_message_tags(mtags);
 
 				return n;
 			}
@@ -643,7 +643,7 @@ CMD_FUNC(m_nick)
 				sptr->flags |= FLAGS_KILLED;
 				n = exit_client(cptr, sptr, &me, mtags, "BadNick");
 
-				free_mtags(mtags);
+				free_message_tags(mtags);
 
 				return n;
 			}
@@ -1067,7 +1067,7 @@ CMD_FUNC(m_nick)
 		sendto_server(cptr, 0, PROTO_SID, mtags, ":%s NICK %s %ld",
 		    sptr->name, nick, sptr->lastnick);
 		sendto_local_common_channels(sptr, NULL, 0, mtags, ":%s NICK :%s", sptr->name, nick);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 		if (removemoder)
 			sptr->umodes &= ~UMODE_REGNICK;
 	}

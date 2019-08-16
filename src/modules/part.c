@@ -212,7 +212,7 @@ CMD_FUNC(m_part)
 			}
 		}
 
-		free_mtags(mtags);
+		free_message_tags(mtags);
 
 		if (MyClient(sptr))
 			RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);

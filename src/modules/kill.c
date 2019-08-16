@@ -255,7 +255,7 @@ CMD_FUNC(m_kill)
 
 		n = exit_client(cptr, acptr, sptr, mtags, buf2);
 
-		free_mtags(mtags);
+		free_message_tags(mtags);
 
 		if ((n == FLUSH_BUFFER) && (sptr == acptr))
 			return FLUSH_BUFFER; /* return if we killed ourselves */

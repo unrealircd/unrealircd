@@ -120,7 +120,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 				               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
 				               ":%s PRIVMSG %s :%s",
 				               sptr->name, chptr->chname, parv[1]);
-				free_mtags(mtags);
+				free_message_tags(mtags);
 				return 0;
 			}
 		}
@@ -255,7 +255,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 							               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
 							               ":%s PRIVMSG %s :%s",
 							               sptr->name, chptr->chname, parv[1]);
-							free_mtags(mtags);
+							free_message_tags(mtags);
 							return 0;
 						}
 					}

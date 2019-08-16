@@ -858,7 +858,7 @@ extern void new_message_special(aClient *sender, MessageTag *recv_mtags, Message
 extern void generate_batch_id(char *str);
 extern MessageTag *find_mtag(MessageTag *mtags, const char *token);
 extern MessageTag *duplicate_mtag(MessageTag *mtag);
-extern void free_mtags(MessageTag *m);
+extern void free_message_tags(MessageTag *m);
 extern time_t server_time_to_unix_time(const char *tbuf);
 extern int history_add(char *object, MessageTag *mtags, char *line);
 extern int history_request(aClient *acptr, char *object, HistoryFilter *filter);

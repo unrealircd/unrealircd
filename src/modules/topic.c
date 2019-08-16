@@ -183,7 +183,7 @@ CMD_FUNC(m_topic)
 			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 				       ":%s TOPIC %s :%s",
 				       sptr->name, chptr->chname, chptr->topic);
-			free_mtags(mtags);
+			free_message_tags(mtags);
 		}
 		return 0;
 	}
@@ -281,7 +281,7 @@ CMD_FUNC(m_topic)
 	sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 		       ":%s TOPIC %s :%s",
 		       sptr->name, chptr->chname, chptr->topic);
-	free_mtags(mtags);
+	free_message_tags(mtags);
 
 	return 0;
 }

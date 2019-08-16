@@ -225,7 +225,7 @@ void _send_join_to_local_users(aClient *sptr, aChannel *chptr, MessageTag *mtags
 			new_message(sptr, NULL, &mtags_away);
 			sendto_one(acptr, mtags_away, ":%s!%s@%s AWAY :%s",
 			           sptr->name, sptr->user->username, GetHost(sptr), sptr->user->away);
-			free_mtags(mtags_away);
+			free_message_tags(mtags_away);
 		}
 	}
 }
@@ -339,7 +339,7 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *re
 			sendto_server(&me, 0, 0, mtags_mode, ":%s MODE %s %s %s %lu",
 			    me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
 			sendto_one(sptr, mtags_mode, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
-			free_mtags(mtags_mode);
+			free_message_tags(mtags_mode);
 		}
 
 		parv[0] = sptr->name;
@@ -351,8 +351,8 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *re
 		RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, parv);
 	}
 
-	free_mtags(mtags);
-	free_mtags(mtags_sjoin);
+	free_message_tags(mtags);
+	free_message_tags(mtags_sjoin);
 }
 
 /** User request to join a channel.
@@ -469,7 +469,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				               ":%s PART %s :%s",
 				               sptr->name, chptr->chname, "Left all channels");
 				sendto_server(cptr, 0, 0, mtags, ":%s PART %s :Left all channels", sptr->name, chptr->chname);
-				free_mtags(mtags);
+				free_message_tags(mtags);
 
 				if (MyConnect(sptr))
 					RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, "Left all channels");
@@ -608,7 +608,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		 */
 		new_message(sptr, NULL, &mtags);
 		join_channel(chptr, cptr, sptr, mtags, flags);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 	}
 	RET(0)
 #undef RET

@@ -463,7 +463,7 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 				sendto_server(cptr, 0, 0, NULL, ":%s MODE %s %s+",
 				    me.name, chptr->chname, isbounce ? "&" : "");
 			}
-			free_mtags(mtags);
+			free_message_tags(mtags);
 			return; /* nothing to send */
 		}
 	}
@@ -492,7 +492,7 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 	/* Should stop null modes */
 	if (*(modebuf + 1) == '\0')
 	{
-		free_mtags(mtags);
+		free_message_tags(mtags);
 		return;
 	}
 
@@ -538,7 +538,7 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 
 	/* After this, don't touch 'chptr' anymore! As permanent module may have destroyed the channel. */
 
-	free_mtags(mtags);
+	free_message_tags(mtags);
 
 }
 /* make_mode_str -- written by binary

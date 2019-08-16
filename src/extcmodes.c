@@ -266,7 +266,7 @@ void unload_extcmode_commit(Cmode *cmode)
 				sendto_server(NULL, 0, 0, mtags,
 					":%s MODE %s -%c 0",
 					me.name, chptr->chname, cmode->flag);
-				free_mtags(mtags);
+				free_message_tags(mtags);
 
 				chptr->mode.extmode &= ~cmode->mode;
 			}
@@ -298,7 +298,7 @@ void unload_extcmode_commit(Cmode *cmode)
 						":%s MODE %s -%c 0",
 						me.name, chptr->chname, cmode->flag);
 				}
-				free_mtags(mtags);
+				free_message_tags(mtags);
 
 				cmode->free_param(GETPARASTRUCT(chptr, cmode->flag));
 				chptr->mode.extmode &= ~cmode->mode;

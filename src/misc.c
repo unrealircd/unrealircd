@@ -465,7 +465,7 @@ static void exit_one_client(aClient *sptr, MessageTag *mtags_i, const char *comm
 
 		new_message_special(sptr, mtags_i, &mtags_o, ":%s QUIT", sptr->name);
 		sendto_local_common_channels(sptr, NULL, 0, mtags_o, ":%s QUIT :%s", sptr->name, comment);
-		free_mtags(mtags_o);
+		free_message_tags(mtags_o);
 
 		/* This hook may or may not be redundant */
 		RunHook(HOOKTYPE_EXIT_ONE_CLIENT, sptr);
@@ -669,7 +669,7 @@ int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mt
 	/* Finally, the client/server itself exits.. */
 	exit_one_client(sptr, recv_mtags, comment);
 
-	free_mtags(mtags_generated);
+	free_message_tags(mtags_generated);
 
 	return cptr == sptr ? FLUSH_BUFFER : 0;
 }
@@ -1258,7 +1258,7 @@ MessageTag *find_mtag(MessageTag *mtags, const char *token)
 	return NULL;
 }
 
-void free_mtags(MessageTag *m)
+void free_message_tags(MessageTag *m)
 {
 	MessageTag *m_next;
 

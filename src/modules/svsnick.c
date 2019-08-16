@@ -97,7 +97,7 @@ CMD_FUNC(m_svsnick)
 	new_message(acptr, NULL, &mtags);
 	sendto_local_common_channels(acptr, NULL, 0, mtags, ":%s NICK :%s", acptr->name, parv[2]);
 	sendto_server(NULL, 0, 0, mtags, ":%s NICK %s :%ld", acptr->name, parv[2], atol(parv[3]));
-	free_mtags(mtags);
+	free_message_tags(mtags);
 
 	add_history(acptr, 1);
 	del_from_client_hash_table(acptr->name, acptr);

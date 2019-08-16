@@ -1306,7 +1306,7 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 				    me.name, chptr->chname, mask);
 				sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 				    ":%s MODE %s +b %s", me.name, chptr->chname, mask);
-				free_mtags(mtags);
+				free_message_tags(mtags);
 			} /* else.. ban list is full */
 		}
 		mtags = NULL;
@@ -1316,7 +1316,7 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 		    chptr->chname, sptr->name, comment);
 		sendto_server(NULL, 0, 0, mtags, ":%s KICK %s %s :%s",
 		   me.name, chptr->chname, sptr->name, comment);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 		remove_user_from_channel(sptr, chptr);
 		return 1;
 	}
@@ -1474,7 +1474,7 @@ EVENT(modef_event)
 				sendto_channel(e->chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s MODE %s -%c",
 				               me.name, e->chptr->chname, e->m);
-				free_mtags(mtags);
+				free_message_tags(mtags);
 
 				e->chptr->mode.mode &= ~mode;
 				e->chptr->mode.extmode &= ~extmode;
@@ -1576,14 +1576,14 @@ void do_floodprot_action(aChannel *chptr, int what, char *text)
 		sendto_channel(chptr, &me, NULL, PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 		               0, SEND_ALL, mtags,
 		               ":%s NOTICE %s :%s", me.name, target, comment);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 
 		/* Then the MODE broadcast */
 		mtags = NULL;
 		new_message(&me, NULL, &mtags);
 		sendto_server(&me, 0, 0, mtags, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
 		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +%c", me.name, chptr->chname, m);
-		free_mtags(mtags);
+		free_message_tags(mtags);
 
 		/* Actually set the mode internally */
 		chptr->mode.mode |= mode;

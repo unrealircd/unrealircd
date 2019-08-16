@@ -138,7 +138,7 @@ int parse(aClient *cptr, char *buffer, int length)
 	else
 		RunHook3(HOOKTYPE_POST_COMMAND, from, mtags, ch);
 
-	free_mtags(mtags);
+	free_message_tags(mtags);
 	return ret;
 }
 
