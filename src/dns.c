@@ -1,5 +1,5 @@
 /************************************************************************
- * IRC - Internet Relay Chat, res.c
+ * IRC - Internet Relay Chat, src/dns.c
  * (C) 2005 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@
  */
 
 #include "unrealircd.h"
-#include <res.h>
+#include "dns.h"
 
 #if !defined(UNREAL_VERSION_TIME)
  #error "YOU MUST RUN ./Config WHENEVER YOU ARE UPGRADING UNREAL!!!!"

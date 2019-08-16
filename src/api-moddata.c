@@ -1,6 +1,6 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, moddata.c
- *   (C) 2003-2014 Bram Matthys (Syzop) and the UnrealIRCd Team
+ *   IRC - Internet Relay Chat, src/api-moddata.c
+ *   (C) 2003-2019 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 

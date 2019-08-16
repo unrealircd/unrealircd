@@ -21,13 +21,13 @@
 
 CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
 
-OBJS=res.o bsd.o auth.o channel.o cloak.o crule.o dbuf.o \
+OBJS=dns.o bsd.o auth.o channel.o cloak.o crule.o dbuf.o \
 	api-event.o fdlist.o hash.o ircd.o ircsprintf.o list.o \
 	match.o modules.o packet.o parse.o mempool.o operclass.o \
 	conf_preprocessor.o conf.o debug.o dispatch.o err.o extra.o kline.o \
 	misc.o numeric.o serv.o aliases.o $(STRTOUL) socket.o \
 	tls.o user.o scache.o send.o support.o api-usermode.o \
-	version.o whowas.o random.o api-channelmode.o moddata.o uid.o \
+	version.o whowas.o random.o api-channelmode.o api-moddata.o uid.o \
 	api-extban.o api-isupport.o api-command.o api-clicap.o api-messagetag.o \
 	api-history-backend.o md5.o crypt_blowfish.o updconf.o crashreport.o \
 	openssl_hostname_validation.o $(URL)
@@ -146,8 +146,8 @@ ircd.o: ircd.c $(INCLUDES)
 list.o: list.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c list.c
 
-res.o: res.c $(INCLUDES) ../include/res.h
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c res.c
+dns.o: dns.c $(INCLUDES) ../include/dns.h
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c dns.c
 
 cloak.o: cloak.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c cloak.c
@@ -155,7 +155,7 @@ cloak.o: cloak.c $(INCLUDES)
 fdlist.o: fdlist.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c fdlist.c
 
-bsd.o: bsd.c $(INCLUDES) ../include/res.h
+bsd.o: bsd.c $(INCLUDES) ../include/dns.h
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c bsd.c
 
 conf_preprocessor.o: conf_preprocessor.c $(INCLUDES)
@@ -212,8 +212,8 @@ api-channelmode.o: api-channelmode.c $(INCLUDES)
 operclass.o: operclass.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c operclass.c
 
-moddata.o: moddata.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c moddata.c
+api-moddata.o: api-moddata.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-moddata.c
 
 api-extban.o: api-extban.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-extban.c

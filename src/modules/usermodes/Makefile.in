@@ -25,7 +25,7 @@ INCLUDES = ../../include/auth.h ../../include/channel.h \
 	../../include/inet.h ../../include/ircsprintf.h \
 	../../include/license.h \
 	../../include/modules.h ../../include/modversion.h ../../include/msg.h \
-	../../include/numeric.h ../../include/proto.h ../../include/res.h \
+	../../include/numeric.h ../../include/proto.h ../../include/dns.h \
 	../../include/resource.h ../../include/setup.h \
 	../../include/struct.h ../../include/sys.h \
 	../../include/types.h ../../include/url.h \

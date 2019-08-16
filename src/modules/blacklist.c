@@ -18,7 +18,7 @@
  */
 
 #include "unrealircd.h"
-#include "res.h"
+#include "dns.h"
 
 ModuleHeader MOD_HEADER(blacklist)
 = {

@@ -155,9 +155,9 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/ERR.OBJ SRC/PACKET.OBJ SRC/BSD.OBJ \
  SRC/SERV.OBJ SRC/USER.OBJ \
  SRC/VERSION.OBJ SRC/KLINE.OBJ SRC/EXTRA.OBJ SRC/IRCSPRINTF.OBJ \
- SRC/SCACHE.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
+ SRC/SCACHE.OBJ SRC/DNS.OBJ SRC/MODULES.OBJ \
  SRC/ALIASES.OBJ SRC/API-EVENT.OBJ SRC/API-USERMODE.OBJ SRC/AUTH.OBJ SRC/TLS.OBJ \
- SRC/RANDOM.OBJ SRC/API-CHANNELMODE.OBJ SRC/MODDATA.OBJ SRC/UID.OBJ SRC/MEMPOOL.OBJ \
+ SRC/RANDOM.OBJ SRC/API-CHANNELMODE.OBJ SRC/API-MODDATA.OBJ SRC/UID.OBJ SRC/MEMPOOL.OBJ \
  SRC/DISPATCH.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
  SRC/API-CLICAP.OBJ SRC/API-MESSAGETAG.OBJ SRC/API-HISTORY-BACKEND.OBJ \
  SRC/API-EXTBAN.OBJ SRC/CRYPT_BLOWFISH.OBJ \
@@ -373,8 +373,8 @@ src/ircd.obj: src/ircd.c $(INCLUDES)
 src/list.obj: src/list.c $(INCLUDES)
         $(CC) $(CFLAGS) src/list.c
 
-src/res.obj: src/res.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/res.c
+src/dns.obj: src/dns.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/dns.c
 
 src/bsd.obj: src/bsd.c $(INCLUDES)
         $(CC) $(CFLAGS) src/bsd.c
@@ -468,8 +468,8 @@ src/random.obj: src/random.c $(INCLUDES)
 src/api-channelmode.obj: src/api-channelmode.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/api-channelmode.c
 
-src/moddata.obj: src/moddata.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/moddata.c
+src/api-moddata.obj: src/api-moddata.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/api-moddata.c
 
 src/uid.obj: src/uid.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/uid.c

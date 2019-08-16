@@ -42,7 +42,7 @@
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
-#include "res.h"
+#include "dns.h"
 #include "numeric.h"
 #include "version.h"
 #ifndef _WIN32
