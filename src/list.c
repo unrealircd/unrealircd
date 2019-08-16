@@ -500,22 +500,19 @@ void append_ListItem(ListStruct *item, ListStruct **list) {
 	item->prev = l;
 }
 
-ListStruct *del_ListItem(ListStruct *item, ListStruct **list) {
+void del_ListItem(ListStruct *item, ListStruct **list)
+{
 	ListStruct *l, *ret;
 
-	for (l = *list; l; l = l->next) {
-		if (l == item) {
-			ret = item->next;
-			if (l->prev)
-				l->prev->next = l->next;
-			else
-				*list = l->next;
-			if (l->next)
-				l->next->prev = l->prev;
-			return ret;
-		}
-	}
-	return NULL;
+	if (!item)
+		return;
+
+	if (item->prev)
+		item->prev->next = item->next;
+	if (item->next)
+		item->next->prev = item->prev;
+	if (*list == item)
+		*list = item->next; /* new head */
 }
 
 /** Add item to list with a 'priority'.

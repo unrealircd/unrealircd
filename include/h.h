@@ -140,7 +140,7 @@ extern ConfigItem_ban  *Find_ban_ip(aClient *sptr);
 extern void add_ListItem(ListStruct *, ListStruct **);
 extern void append_ListItem(ListStruct *item, ListStruct **list);
 extern void add_ListItemPrio(ListStructPrio *, ListStructPrio **, int);
-extern ListStruct *del_ListItem(ListStruct *, ListStruct **);
+extern void del_ListItem(ListStruct *, ListStruct **);
 extern MODVAR LoopStruct loop;
 extern int del_banid(aChannel *chptr, char *banid);
 extern int del_exbanid(aChannel *chptr, char *banid);
