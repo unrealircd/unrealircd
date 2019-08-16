@@ -64,8 +64,8 @@ R_MODULES= \
 	ircops.so staff.so nocodes.so \
 	charsys.so antimixedutf8.so authprompt.so sinfo.so \
 	reputation.so connthrottle.so history_backend_mem.so \
-	history_backend_null.so tkldb.so cmdrestrict.so \
-	rmtkl.so \
+	history_backend_null.so tkldb.so channeldb.so \
+	cmdrestrict.so rmtkl.so \
 	message-tags.so batch.so \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
@@ -555,6 +555,10 @@ history_backend_null.so: history_backend_null.c $(INCLUDES)
 tkldb.so: tkldb.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o tkldb.so tkldb.c
+
+channeldb.so: channeldb.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o channeldb.so channeldb.c
 
 cmdrestrict.so: cmdrestrict.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

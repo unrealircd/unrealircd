@@ -651,7 +651,7 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size
 
 	if (!(mbuf_size && pbuf_size)) return;
 
-	ismember = (IsMember(cptr, chptr) || IsServer(cptr) || IsULine(cptr)) ? 1 : 0;
+	ismember = (IsMember(cptr, chptr) || IsServer(cptr) || IsMe(cptr) || IsULine(cptr)) ? 1 : 0;
 
 	*pbuf = '\0';
 

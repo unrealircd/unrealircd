@@ -278,6 +278,7 @@ DLL_FILES=SRC/MODULES/CHGHOST.DLL SRC/MODULES/SDESC.DLL SRC/MODULES/SETIDENT.DLL
  SRC/MODULES/SERVER-TIME.DLL \
  SRC/MODULES/STS.DLL \
  SRC/MODULES/TKLDB.DLL \
+ SRC/MODULES/CHANNELDB.DLL \
  SRC/MODULES/HISTORY_BACKEND_MEM.DLL \
  SRC/MODULES/HISTORY_BACKEND_NULL.DLL \
  SRC/MODULES/CMDRESTRICT.DLL \
@@ -1036,6 +1037,9 @@ src/modules/sts.dll: src/modules/sts.c $(INCLUDES)
 
 src/modules/tkldb.dll: src/modules/tkldb.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/tkldb.c $(MODLFLAGS)
+
+src/modules/channeldb.dll: src/modules/channeldb.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/channeldb.c $(MODLFLAGS)
 
 src/modules/history_backend_mem.dll: src/modules/history_backend_mem.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/history_backend_mem.c $(MODLFLAGS)
