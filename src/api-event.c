@@ -1,6 +1,7 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, events.c
- *   (C) 2001 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
+ *   IRC - Internet Relay Chat, api-event.c
+ *   (C) 2001- Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
+ *   and the UnrealIRCd team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 
