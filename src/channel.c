@@ -330,11 +330,6 @@ int add_listmode_ex(Ban **list, aClient *cptr, aChannel *chptr, char *banid, cha
 		 */
 		if ((MyClient(cptr) || IsMe(cptr)) && ((len > MAXBANLENGTH) || (++cnt >= MAXBANS)))
 		{
-			if (MyClient(cptr))
-			{
-				/* Only send the error to local clients */
-				sendnumeric(cptr, ERR_BANLISTFULL, chptr->chname, banid);
-			}
 			do_not_add = 1;
 		}
 		if (identical_ban(ban->banstr, banid))
@@ -349,6 +344,11 @@ int add_listmode_ex(Ban **list, aClient *cptr, aChannel *chptr, char *banid, cha
 			/* The banlist is full and trying to add a new ban.
 			 * This is not permitted.
 			 */
+			if (MyClient(cptr))
+			{
+				/* Only send the error to local clients */
+				sendnumeric(cptr, ERR_BANLISTFULL, chptr->chname, banid);
+			}
 			return -1;
 		}
 		ban = make_ban();
