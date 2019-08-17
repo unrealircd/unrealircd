@@ -117,10 +117,10 @@ void unban_user(aClient *sptr, aChannel *chptr, aClient *acptr, char chmode)
 	for (ban = *banlist; ban; ban = bnext)
 	{
 		bnext = ban->next;
-		if (!match(ban->banstr, uhost) ||
-		    (*vhost && !match(ban->banstr, vhost)) ||
-		    (*ihost && !match(ban->banstr, ihost)) ||
-		    (*chost && !match(ban->banstr, chost)))
+		if (!match_simple(ban->banstr, uhost) ||
+		    (*vhost && !match_simple(ban->banstr, vhost)) ||
+		    (*ihost && !match_simple(ban->banstr, ihost)) ||
+		    (*chost && !match_simple(ban->banstr, chost)))
 		{
 			add_send_mode_param(chptr, sptr, '-',  chmode, 
 				ban->banstr);

@@ -419,14 +419,14 @@ int extban_modeT_is_banned(aClient *sptr, aChannel *chptr, char *ban, int checkt
 		return 0; /* invalid format */
 	*p++ = '\0';
 
-	if (!_match(buf, uhost))
+	if (!match_simple(buf, uhost))
 #else
 	if (1)
 #endif
 	{
 		if (!strncasecmp(p, "block:", 6))
 		{
-			if (!_match(p+6, filtered))
+			if (!match_simple(p+6, filtered))
 			{
 				if (errmsg)
 					*errmsg = "Message blocked due to a text ban";

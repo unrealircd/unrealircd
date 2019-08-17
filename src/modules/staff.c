@@ -347,7 +347,7 @@ static int cb_rehashflag(aClient *cptr, aClient *sptr, char *flag)
 	int myflag = 0;
 
 	/* "-all" only keeps compatibility with beta19 */
-	if (!_match("-all", flag) || (myflag = !_match("-staff", flag)))
+	if (!match_simple("-all", flag) || (myflag = !match_simple("-staff", flag)))
 	{
 		if (myflag)
 			sendto_ops("%sRehashing network staff file on the request of %s",

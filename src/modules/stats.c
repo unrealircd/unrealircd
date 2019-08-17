@@ -1267,7 +1267,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 	{
 		if (!mycmp(para, me.name))
 			doall = 2;
-		else if (match(para, me.name) == 0)
+		else if (match_simple(para, me.name) == 0)
 			doall = 1;
 		if (index(para, '*') || index(para, '?'))
 			wilds = 1;
@@ -1290,7 +1290,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 			continue;
 		if (remote && !doall && IsServer(acptr))
 			continue;
-		if (!doall && wilds && match(para, acptr->name))
+		if (!doall && wilds && match_simple(para, acptr->name))
 			continue;
 		if (!(para && (IsServer(acptr)
 			|| (acptr->flags & FLAGS_LISTEN))) && !(doall

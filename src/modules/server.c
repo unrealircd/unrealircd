@@ -92,7 +92,7 @@ int _check_deny_version(aClient *cptr, char *software, int protocol, char *flags
 	
 	for (vlines = conf_deny_version; vlines; vlines = vlines->next)
 	{
-		if (!match(vlines->mask, cptr->name))
+		if (!match_simple(vlines->mask, cptr->name))
 			break;
 	}
 	
@@ -283,7 +283,7 @@ int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link
 	} else {
 		/* Hunt the linkblock down ;) */
 		for(link = conf_link; link; link = link->next)
-			if (!match(link->servername, servername))
+			if (!match_simple(link->servername, servername))
 				break;
 	}
 	
@@ -591,7 +591,7 @@ CMD_FUNC(m_server)
 
 		for (deny = conf_deny_link; deny; deny = deny->next)
 		{
-			if (deny->flag.type == CRULE_ALL && !match(deny->mask, servername)
+			if (deny->flag.type == CRULE_ALL && !match_simple(deny->mask, servername)
 				&& crule_eval(deny->rule)) {
 				sendto_ops_and_log("Refused connection from %s. Rejected by deny link { } block.",
 					get_client_host(cptr));
@@ -690,7 +690,7 @@ CMD_FUNC(m_server_remote)
 			cptr->name, servername);
 		return exit_client(cptr, cptr, cptr, NULL, "Non-Hub Link");
 	}
-	if (match(aconf->hub, servername))
+	if (match_simple(aconf->hub, servername))
 	{
 		sendto_ops_and_log("Link %s cancelled, linked in %s, which hub config disallows",
 			cptr->name, servername);
@@ -698,7 +698,7 @@ CMD_FUNC(m_server_remote)
 	}
 	if (aconf->leaf)
 	{
-		if (match(aconf->leaf, servername))
+		if (match_simple(aconf->leaf, servername))
 		{
 			sendto_ops_and_log("Link %s(%s) cancelled, disallowed by leaf configuration",
 				cptr->name, servername);

@@ -574,10 +574,10 @@ static int match_it(one, mask, what)
 	switch (what)
 	{
 	  case MATCH_HOST:
-		  return (match(mask, one->user->realhost) == 0);
+		  return (match_simple(mask, one->user->realhost) == 0);
 	  case MATCH_SERVER:
 	  default:
-		  return (match(mask, one->user->server) == 0);
+		  return (match_simple(mask, one->user->server) == 0);
 	}
 }
 
