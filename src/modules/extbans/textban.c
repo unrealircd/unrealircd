@@ -277,6 +277,21 @@ int extban_modeT_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, i
 	return 1;
 }
 
+char *conv_pattern_asterisks(const char *pattern)
+{
+	static char buf[512];
+	char missing_prefix = 0, missing_suffix = 0;
+	if (*pattern != '*')
+		missing_prefix = 1;
+	if (*pattern && (pattern[strlen(pattern)-1] != '*'))
+		missing_suffix = 1;
+	snprintf(buf, sizeof(buf), "%s%s%s",
+		missing_prefix ? "*" : "",
+		pattern,
+		missing_suffix ? "*" : "");
+	return buf;
+}
+
 /** Ban callbacks */
 char *extban_modeT_conv_param(char *para_in)
 {
@@ -328,7 +343,10 @@ char *extban_modeT_conv_param(char *para_in)
 
 	/* ~T:<action>:<text> */
 	if (!strcasecmp(action, "block"))
+	{
 		action = "block"; /* ok */
+		text = conv_pattern_asterisks(text);
+	}
 #ifdef CENSORFEATURE
 	else if (!strcasecmp(action, "censor"))
 	{
@@ -355,11 +373,11 @@ char *extban_modeT_conv_param(char *para_in)
 		}
 	}
 
-	/* Rebuild the string.. */
+	/* Rebuild the string.. can be cut off if too long. */
 #ifdef UHOSTFEATURE
-	snprintf(retbuf, sizeof(retbuf), "~T:%s:%s:%s", uhost, action, text); /* can be cut off if too long */
+	snprintf(retbuf, sizeof(retbuf), "~T:%s:%s:%s", uhost, action, text);
 #else
-	snprintf(retbuf, sizeof(retbuf), "~T:%s:%s", action, text); /* can be cut off if too long */
+	snprintf(retbuf, sizeof(retbuf), "~T:%s:%s", action, text);
 #endif
 	return retbuf;
 }
