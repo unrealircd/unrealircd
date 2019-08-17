@@ -1,1 +1,255 @@
-This is the development version of UnrealIRCd 5
+UnrealIRCd 5 Release Notes
+===========================
+
+As UnrealIRCd 5 is work-in-progress, these release notes will be updated
+once in a while to reflect the features and changes.
+
+Most visible to end-users are channel history and several IRCv3 features.
+Various modules from Gottem have been integrated and enhanced.
+Channel settings of +P channels and *LINES are saved in a database and
+restored on startup (via 'channeldb' and 'tkldb' respectively).
+Channel mode +L has a slight change of meaning and a few extended bans
+have been added (~f and ~p).
+For advanced users we now have more dynamic configuration options.
+Finally, there have been speed improvements, we use better defaults and
+have added more countermeasures and options against spambots.
+Under the hood a lot of the source code was changed and cleaned up.
+
+Enhancements:
+* Support for server generated message tags, which allows us to communicate
+  additional information in protocol messages such as in JOIN and PRIVMSG.
+  Currently implemented (and permitted) message tags are:
+  * account: communicate the services account that a user uses
+  * msgid: assign an unique message id to each message
+  * time: assign a time label to each message
+  The last two are mainly for history playback.
+* Support for IRCv3 "echo-message", which helps clients, among other things,
+  to see if the message you sent was altered in any way, eg: censored,
+  stripped from color, etc.
+* Support for IRCv3 "BATCH", needed for some other features.
+* Recording and playback of channel history when channel mode +H is set.
+  The syntax is: +H max-lines-to-record:max-time-to-record-in-minutes.
+  For example: +H 50:1440 means the last 50 messages will be stored and no
+  message will be stored longer than 1440 minutes (1 day).
+  The channel history is then played back when joining such a channel,
+  but with two things to keep in mind:
+  1) The client must support the 'server-time' CAP (@time message tag).
+     Any modern IRC client supports this.
+  2) Only a maximum of 15 lines are played back on-join by default
+  The reason for the maximum 15 lines on-join playback is that this can
+  be quite annoying if you rejoin repeatedly and as to not flood the users
+  screen too much (unwanted). In the future we will support a mechanism
+  for clients to "fetch" history - rather than sending it on-join - so
+  they can fetch more than the 15 lines, up to the number of lines and
+  time configured in the +H channel mode.
+  You can configure the exact number of lines that are played back and
+  all the limits that apply to +H via set::history::channel.
+* For saving and retrieving history we currently have the following options:
+  * history_backend_mem: channel history is stored in memory.
+    This is very fast but also means history is lost on restart.
+  * history_backend_null: don't store channel history at all.
+    This can be useful to load on servers with no users on it, such as a
+    hub server, where storing history is unnecessary.
+  As you can see there is currently no 'disk' backend. However, in the
+  future more options may be added. Also note that 3rd party modules
+  can add history backends as well.
+* Channel mode +L now kicks in for any rejected join, so not just for +l but
+  also for +b, +i, +O, +z, +R and +k. If, for example, the channel is
+  +L #insecure and also +z then, when an insecure user ties to join, they
+  will be redirected to #insecure.
+* New extended ban ~f to forward users to the specified channel if the ban
+  matches. Example: +b ~f:#badisp:*!*@*.isp.org
+* New module tkldb (loaded by default): all *LINES and spamfilters are now
+  saved across reboots. No need for services for that anymore.
+* New module channeldb (loaded by default): saves and restores all channel
+  settings including topic, modes, bans etc. of +P (persistent) channels.
+* New module restrict-commands, which allows you to restrict any IRC
+  command based on criteria such as "how long is this user connected",
+  "is this user registered (has a services account)" etc.
+  The example.conf now ships with configuration to disable LIST the
+  first 60 seconds and disable INVITE the first 120 seconds.
+  If you are having spambot problems then tweaking this configuration
+  may be helpful to you.
+  See https://www.unrealircd.org/docs/Set_block#set::restrict-commands
+* New module rmtkl (loaded by default): this allows you to remove TKL's
+  such as GLINEs easily via the /RMTKL command.
+* New module webredir. Quite some people run their IRCd on port 443 or 80
+  so their users can avoid firewall restrictions in place. In such a case,
+  with this module, you can now send a HTTP redirect in case some user
+  enters your IRC server name in their browser. Eg https://irc.example.org/
+  can be made to redirect to https://www.example.org/
+  See https://www.unrealircd.org/docs/Set_block#set::webredir::url
+* The reputation and connthrottle modules are now loaded by default.
+  Just as a reminder, what these do is classifying your users in "known
+  users (known IP's)" and "unknown IP's" for IP's that have not been
+  seen before (or only for a short amount of time). Then, when there
+  is a connection flood, unknown/new IP addresses are throttled at
+  20 connections per minute, while known users are always allowed in.
+  For more information, see https://www.unrealircd.org/docs/Connthrottle
+* Add support for more dynamic configuration via @define and @if.
+  This is mostly for power users, in particular users who share the same
+  configuration file across several servers. New features are:
+  * You can define variables, like:
+    @define $SERVER "hub.example.org"
+    ..and then use $SERVER anywhere in the configuration file such as:
+    me {
+            name "$SERVER";
+            [..]
+    }
+  * You can have conditional configuration as well:
+    @if $SERVER == "hub.example.org"
+    link {
+            [..]
+    }
+    @endif
+  * In @if you can use module-loaded() to have conditional configuration
+    based on if a module is loaded or not. For example, we have the
+    following code in help.conf for HELPOP CHMODES so the line is only
+    displayed if the chanmodes/noctcp module is loaded:
+    helpop chmodes {
+            [..]
+    @if module-loaded("chanmodes/noctcp")
+            " C = No CTCPs allowed in the channel [h]";
+    $endif
+    }
+* New extban ~p (+b ~p:*!*@*.nl) to hide PART and QUIT messages.
+* You will now see a warning when a server is not responding even
+  before they time out. How long to wait for a PONG reply upon PING
+  can be changed via set::ping-warning and defaults to 15 seconds.
+  If you see the warning frequently then your connection is flakey.
+* Add new setting set::broadcast-channel-messages which defines when
+  channel messages are sent across server links. The default setting
+  is 'auto' which is the correct setting for pretty much everyone.
+* Add new option set::part-instead-of-quit-on-comment-change:
+  when a QUIT message is changed due to channel restrictions, such as
+  stripping color or censoring a word, we normally change the QUIT
+  message. This has an effect on ALL channels, not just the one that
+  imposed the restrictions. While we feel that is the best tradeoff,
+  there is now also this new option (off by default) that will change
+  the QUIT into a PART in such a case, so the other channels that
+  do not have the restrictions (eg: are -S and -G) can still see the
+  original QUIT message.
+
+Changed:
+* Modules lost their m_ prefix, so for example m_map is now just map.
+  Also the modules in cap/ are now directly in modules.
+* More modules that were previously PERM (permanent) can now be unloaded
+  and reloaded on the fly. This allows more "hotfixing" without restart
+  in case of a bug and also more control for admins at runtime.
+  Only <5 modules out of 173 are permanent now.
+* User mode +T now blocks channel CTCPs as well.
+* The authprompt module is now loaded by default. This means that if
+  you do a soft kline on someone (eg: KLINE %*@*.badisp) then the user
+  has a chance to authenticate to services, even without SASL, and
+  bypass the ban if (s)he is authenticated.
+* The WHOX module is now used by default. Previously it was optional.
+  WHOX enhances the "WHO" output, providing additional information to
+  IRC clients such as the services account that someone is using.
+  It is also more universal than standard WHO. Unfortunately this also
+  means the WHO syntax changed to something less logical.
+* At many places the term "SSL" has been changed to "SSL/TLS" or "TLS".
+  Configuration items (eg: set::ssl to set::tls) have been renamed
+  as well and so have directories (eg: conf/ssl to conf/tls).
+  The old configuration names still work and currently does NOT raise
+  any warning. Also, when upgrading an existing installation on *NIX,
+  the conf/tls directory will be symlinked to conf/ssl as to not break
+  any Let's Encrypt certificate scripts.
+* It is now mandatory to have at least one open SSL/TLS port, otherwise
+  UnrealIRCd will refuse to boot. Previously this was a warning.
+* IRCOps now need to use SSL/TLS in order to oper up, as the
+  set::plaintext-policy::oper default setting is now 'deny'.
+  Similarly, set::outdated-tls-policy::oper is now also 'deny'.
+* set::outdated-tls-policy::server is now 'deny' as well, since all
+  servers should use reasonable SSL/TLS protocols and ciphers.
+* The default generated certificated has been changed from RSA 4096 bits
+  to Elliptic Curve Cryptography "384r1". This provides the same amount
+  of security but at higher speed. This only affects the default self-
+  signed certificate. You can still use RSA certificates just fine.
+* If you do use an RSA certificate, we now require it to be at least
+  2048 bits otherwise UnrealIRCd will refuse to boot.
+* When matching allow { } blocks, we now always continue with the next
+  block (if any) if the password did not match or no password was
+  specified. In other words, allow::options::nopasscont is now the
+  default and we behave as if there was a ::wrongpasscont too.
+* All snomasks are now oper-only. Previously some were not, which
+  was confusing and could lead to information leaks.
+  Also removed weird set::snomask-on-connect accordingly.
+* The IRCd now uses hash tables that are resilient against hash table
+  attacks. Also, the hash tables have increased in size to speed things
+  up when looking up nick names etc.
+* Server options in VERSION (eg: Fhin6OoEMR3) are no longer shown to
+  normal users. They don't mean much nowadays anyway.
+* We now default to system libs (eg: --with-system-pcre2 is assumed)
+
+Minor issues fixed:
+* Specifying a custom OpenSSL/LibreSSL path works now
+
+Removed:
+* Extended ban ~R (registered nick): this was the old method to match
+  registered users. Everyone should use ~a (services account) instead.
+* The old TRE 'posix' regex method has been removed because the TRE
+  library is no longer maintained for over a decade and contains many
+  bugs. (It was already deprecated in UnrealIRCd 4.2.3). Use type
+  'regex' instead, which uses the modern PCRE2 regex engine.
+* Timesync support has been removed. Use your OS time synchronization
+  instead. (Note that Timesync was already disabled by default in 2018)
+* Changing time offsets via TSCTL OFFSET and TSCTL SVSTIME are no longer
+  supported. Use your OS time synchronization (NTP!). Adjustments via
+  TSCTL are simply not accurate enough.
+* The 'nopost' module was removed since it no longer serves any useful
+  purpose. UnrealIRCd already protects against these kind of attacks
+  via ping cookies (set::ping-cookie, enabled by default).
+
+Developers:
+* In UnrealIRCd 5, during development, --enable-asan is ON by default
+  to catch more bugs. This also means an up to 10x slowdown and more
+  memory usage. When we reach 5.0.0 stable this will be turned off.
+* We now use our own BuildBot infrastructure, so Travis-CI and AppVeyor
+  have been removed.
+* We now use a new test framework.
+* New function new_message() which should be called when a new message
+  is sent, or at least for all channel events. It adds (or inherits)
+  message tags like 'account', 'msgid', 'time', etc.
+* Many send functions now take an extra MessageTag *mtags parameter,
+  including but not limited to: sendto_one() and sendto_server().
+* New single unified sendto_channel() and sendto_local_common_channels()
+  functions that are used by all the channel commands.
+* Numerics should now be sent using sendnumeric(). There's also
+  a format string version sendnumericfmt() in case you need it.
+* The parameters in several hooks have changed. Many now have an
+  extra MessageTag *mtags parameter. Sometimes there are other changes
+  as well, for example HOOKTYPE_CHANMSG now has 4 extra parameters.
+* New HOOKTYPE_IS_HANDSHAKE_FINISHED. If a module returns 0 there, then
+  the register_user() function will not be called and the user will
+  not come online (yet). This is used by CAP and some other stuff.
+  Can be useful if your module needs to "hold" a user in the registration
+  phase.
+* The function is_module_loaded() now takes a relative path like
+  "usermodes/noctcp" because with just "ctcp" one could not see the
+  difference between usermodes/noctcp and chanmodes/noctcp.
+* CHFL_CHANPROT is now CHFL_CHANADMIN, is_chanprot() is now is_chanadmin()
+* All hash tables now use SipHash, which is a hash function that is
+  resilient against hash table attacks. If you, as a module dev, too
+  use any hash tables anywhere (note: this is quite rare), then you
+  are recommended to use our functions, see the functions siphash()
+  and siphash_nocase() in src/hash.c.
+* The random generator has been updated to use ChaCha (more modern).
+* You can now save pointers and integers etc. across rehashes by using
+  LoadPersistentPointer() and SavePersistentPointer(). For an example,
+  see src/modules/chanmodes/floodprot.c how this can be used.
+  Note that there can be no struct or type changes between rehashes.
+* New ModData types: MODDATA_LOCALVAR and MODDA_GLOBALVAR. These are
+  settings or things that are locally or globally identified by the
+  variable name only and not attached to any user/channel.
+* Various files have been renamed. As previously mentioned, the m_
+  prefix was dropped in src/modules/m_*.c. Similarly the s_ prefix
+  was dropped in src/s_*.c since it no longer had meaning. Also some
+  files have been deleted and integrated elsewhere or renamed to
+  have a name that better reflects their true meaning.
+
+Server protocol:
+* Surprisingly little has been changed in the server to server protocol
+  between UnrealIRCd 4 and UnrealIRCd 5.
+* "PROTOCTL MTAGS" indicates that the server is capable of handling
+  message tags and that the server can cope with 4K lines. (Note that
+  the ordinary non-message-tag part is still limited to 512 bytes).
