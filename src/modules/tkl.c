@@ -3546,7 +3546,7 @@ int _match_user(char *rmask, aClient *acptr, int options)
 			umask = p;
 
 			/* Could just as well check nick right now */
-			if (!match_simple(nmask, acptr->name) != 0)
+			if (!match_simple(nmask, acptr->name))
 				return 0; /* NOMATCH: nick mask did not match */
 		}
 	}
@@ -3566,7 +3566,7 @@ int _match_user(char *rmask, aClient *acptr, int options)
 				umask = mask;
 
 			/* Check user portion right away */
-			if (!match_simple(umask, client_username) != 0)
+			if (!match_simple(umask, client_username))
 				return 0; /* NOMATCH: user mask did not match */
 		} else {
 			if (nmask)
