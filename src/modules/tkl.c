@@ -3585,14 +3585,14 @@ int _match_user(char *rmask, aClient *acptr, int options)
 	if (options & MATCH_CHECK_VISIBLE_HOST)
 	{
 		char *hostname = acptr->user ? GetHost(acptr) : (MyClient(acptr) ? acptr->local->sockhost : NULL);
-		if (hostname && (!match_simple(hmask, hostname) == 0))
+		if (hostname && match_simple(hmask, hostname))
 			return 1; /* MATCH: visible host */
 	}
 
 	/**** Check cloaked host ****/
 	if (options & MATCH_CHECK_CLOAKED_HOST)
 	{
-		if (acptr->user && (!match_simple(hmask, acptr->user->cloakedhost) == 0))
+		if (acptr->user && match_simple(hmask, acptr->user->cloakedhost))
 			return 1; /* MATCH: cloaked host */
 	}
 
@@ -3611,7 +3611,7 @@ int _match_user(char *rmask, aClient *acptr, int options)
 		if (strchr(hmask, '?') || strchr(hmask, '*'))
 		{
 			/* Wildcards */
-			if (acptr->ip && (!match_simple(hmask, acptr->ip) == 0))
+			if (acptr->ip && match_simple(hmask, acptr->ip))
 				return 1; /* MATCH (IP with wildcards) */
 		} else 
 		if (strchr(hmask, ':'))
@@ -3663,7 +3663,7 @@ int _match_user(char *rmask, aClient *acptr, int options)
 	if (options & MATCH_CHECK_REAL_HOST)
 	{
 		char *hostname = acptr->user ? acptr->user->realhost : (MyClient(acptr) ? acptr->local->sockhost : NULL);
-		if (hostname && (!match_simple(hmask, hostname) == 0))
+		if (hostname && match_simple(hmask, hostname))
 			return 1; /* MATCH: hostname match */
 	}
 

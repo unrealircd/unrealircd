@@ -566,18 +566,15 @@ void sendto_local_common_channels(aClient *user, aClient *skip, long clicap, Mes
 ** addition -- Armin, 8jun90 (gruner@informatik.tu-muenchen.de)
 */
 
-static int match_it(one, mask, what)
-	aClient *one;
-	char *mask;
-	int  what;
+static int match_it(aClient *one, char *mask, int what)
 {
 	switch (what)
 	{
-	  case MATCH_HOST:
-		  return (!match_simple(mask, one->user->realhost) == 0);
-	  case MATCH_SERVER:
-	  default:
-		  return (!match_simple(mask, one->user->server) == 0);
+		case MATCH_HOST:
+			return match_simple(mask, one->user->realhost);
+		case MATCH_SERVER:
+		default:
+			return match_simple(mask, one->user->server);
 	}
 }
 

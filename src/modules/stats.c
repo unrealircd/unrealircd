@@ -1267,7 +1267,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 	{
 		if (!mycmp(para, me.name))
 			doall = 2;
-		else if (!match_simple(para, me.name) == 0)
+		else if (match_simple(para, me.name))
 			doall = 1;
 		if (index(para, '*') || index(para, '?'))
 			wilds = 1;
