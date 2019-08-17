@@ -4,6 +4,7 @@ UnrealIRCd 5 Release Notes
 As UnrealIRCd 5 is work-in-progress, these release notes will be updated
 once in a while to reflect the features and changes.
 
+Summary:
 Most visible to end-users are channel history and several IRCv3 features.
 Various modules from Gottem have been integrated and enhanced.
 Channel settings of +P channels and *LINES are saved in a database and
@@ -18,7 +19,7 @@ Under the hood a lot of the source code was changed and cleaned up.
 Enhancements:
 * Support for server generated message tags, which allows us to communicate
   additional information in protocol messages such as in JOIN and PRIVMSG.
-  Currently implemented (and permitted) message tags are:
+  Currently implemented and permitted message tags are:
   * account: communicate the services account that a user uses
   * msgid: assign an unique message id to each message
   * time: assign a time label to each message
@@ -33,8 +34,8 @@ Enhancements:
   message will be stored longer than 1440 minutes (1 day).
   The channel history is then played back when joining such a channel,
   but with two things to keep in mind:
-  1) The client must support the 'server-time' CAP (@time message tag).
-     Any modern IRC client supports this.
+  1) The client must support the 'server-time' CAP ('time' message tag),
+     otherwise history is not shown. Any modern IRC client supports this.
   2) Only a maximum of 15 lines are played back on-join by default
   The reason for the maximum 15 lines on-join playback is that this can
   be quite annoying if you rejoin repeatedly and as to not flood the users
