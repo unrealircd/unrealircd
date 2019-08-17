@@ -131,13 +131,18 @@ int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		}
 		else if (!strcmp(cep->ce_varname, "url"))
 		{
-			if (cep->ce_vardata && (!*cep->ce_vardata || strchr(cep->ce_vardata, ' ')))
+			if (!*cep->ce_vardata || strchr(cep->ce_vardata, ' '))
 			{
 				config_error("%s:%i: set::webredir::%s with empty value",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 				errors++;
 			}
-
+			if (!url_is_valid(cep->ce_vardata) || !strcmp(cep->ce_vardata, "https://..."))
+			{
+				config_error("%s:%i: set::webredir::url needs to be a valid URL",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 			if (has_url)
 			{
 				config_warn_duplicate(cep->ce_fileptr->cf_filename,
