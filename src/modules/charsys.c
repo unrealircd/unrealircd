@@ -1198,7 +1198,7 @@ void charsys_dump_table(char *filter)
 	{
 		char *charset = langlist[i].directive;
 		
-		if (match_simple(filter, charset))
+		if (_match(filter, charset))
 			continue; /* skip */
 
 		charsys_reset();

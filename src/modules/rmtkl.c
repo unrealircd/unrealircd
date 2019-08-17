@@ -152,14 +152,14 @@ int rmtkl_tryremove(aClient *sptr, aClient *cptr, TKLType *tkltype, aTKline *tkl
 			return 0;
 
 		// Is a spamfilter added through IRC, we can remove this if the "user" mask matches the reason
-		if (match_simple(uhmask, tkl->reason))
+		if (match(uhmask, tkl->reason))
 			return 0;
 	} else
 	{
-		if (match_simple(uhmask, make_user_host(tkl->usermask, tkl->hostmask)))
+		if (match(uhmask, make_user_host(tkl->usermask, tkl->hostmask)))
 			return 0;
 
-		if (commentmask && match_simple(commentmask, tkl->reason))
+		if (commentmask && match(commentmask, tkl->reason))
 			return 0;
 	}
 

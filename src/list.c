@@ -382,7 +382,7 @@ int find_str_match_link(Link *lp, char *charptr)
 	if (!charptr)
 		return 0;
 	for (; lp; lp = lp->next) {
-		if(!match_simple(lp->value.cp, charptr))
+		if(!match(lp->value.cp, charptr))
 			return 1;
 	}
 	return 0;

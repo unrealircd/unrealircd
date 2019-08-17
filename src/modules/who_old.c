@@ -431,8 +431,8 @@ char has_common_chan = 0;
 		/* if they only want people with a certain gecos */
 		if (wfl.want_gecos != WHO_DONTCARE)
 		{
-			if (((wfl.want_gecos == WHO_WANT) && match_simple(wfl.gecos, acptr->info)) ||
-			    ((wfl.want_gecos == WHO_DONTWANT) && !match_simple(wfl.gecos, acptr->info)))
+			if (((wfl.want_gecos == WHO_WANT) && match(wfl.gecos, acptr->info)) ||
+			    ((wfl.want_gecos == WHO_DONTWANT) && !match(wfl.gecos, acptr->info)))
 			{
 				return WHO_CANTSEE;
 			}
@@ -458,8 +458,8 @@ char has_common_chan = 0;
 			else
 				host = GetHost(acptr);
 
-			if (((wfl.want_host == WHO_WANT) && match_simple(wfl.host, host)) ||
-			    ((wfl.want_host == WHO_DONTWANT) && !match_simple(wfl.host, host)))
+			if (((wfl.want_host == WHO_WANT) && match(wfl.host, host)) ||
+			    ((wfl.want_host == WHO_DONTWANT) && !match(wfl.host, host)))
 			{
 				return WHO_CANTSEE;
 			}
@@ -474,8 +474,8 @@ char has_common_chan = 0;
 			if (!ip)
 				return WHO_CANTSEE;
 
-			if (((wfl.want_ip == WHO_WANT) && match_simple(wfl.ip, ip)) ||
-			    ((wfl.want_ip == WHO_DONTWANT) && !match_simple(wfl.ip, ip)))
+			if (((wfl.want_ip == WHO_WANT) && match(wfl.ip, ip)) ||
+			    ((wfl.want_ip == WHO_DONTWANT) && !match(wfl.ip, ip)))
 			{
 				return WHO_CANTSEE;
 			}
@@ -501,8 +501,8 @@ char has_common_chan = 0;
 		/* if they only want people with a certain nick.. */
 		if (wfl.want_nick != WHO_DONTCARE)
 		{
-			if (((wfl.want_nick == WHO_WANT) && match_simple(wfl.nick, acptr->name)) ||
-			    ((wfl.want_nick == WHO_DONTWANT) && !match_simple(wfl.nick, acptr->name)))
+			if (((wfl.want_nick == WHO_WANT) && match(wfl.nick, acptr->name)) ||
+			    ((wfl.want_nick == WHO_DONTWANT) && !match(wfl.nick, acptr->name)))
 			{
 				return WHO_CANTSEE;
 			}
@@ -511,8 +511,8 @@ char has_common_chan = 0;
 		/* if they only want people with a certain username */
 		if (wfl.want_user != WHO_DONTCARE)
 		{
-			if (((wfl.want_user == WHO_WANT) && match_simple(wfl.user, acptr->user->username)) ||
-			    ((wfl.want_user == WHO_DONTWANT) && !match_simple(wfl.user, acptr->user->username)))
+			if (((wfl.want_user == WHO_WANT) && match(wfl.user, acptr->user->username)) ||
+			    ((wfl.want_user == WHO_DONTWANT) && !match(wfl.user, acptr->user->username)))
 			{
 				return WHO_CANTSEE;
 			}
@@ -698,18 +698,18 @@ int oper = IsOper(sptr);
 				continue;
 			if (!oper) {
 				/* non-opers can only search on nick here */
-				if (match_simple(mask, acptr->name))
+				if (match(mask, acptr->name))
 					continue;
 			} else {
 				/* opers can search on name, ident, virthost, ip and realhost.
 				 * Yes, I like readable if's -- Syzop.
 				 */
-				if (!match_simple(mask, acptr->name) || !match_simple(mask, acptr->user->realhost) ||
-				    !match_simple(mask, acptr->user->username))
+				if (!match(mask, acptr->name) || !match(mask, acptr->user->realhost) ||
+				    !match(mask, acptr->user->username))
 					goto matchok;
-				if (IsHidden(acptr) && !match_simple(mask, acptr->user->virthost))
+				if (IsHidden(acptr) && !match(mask, acptr->user->virthost))
 					goto matchok;
-				if (acptr->ip && !match_simple(mask, acptr->ip))
+				if (acptr->ip && !match(mask, acptr->ip))
 					goto matchok;
 				/* nothing matched... */
 				continue;

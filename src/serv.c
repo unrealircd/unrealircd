@@ -585,7 +585,7 @@ CMD_FUNC(m_rehash)
 		else
 			x = hunt_server(cptr, sptr, recv_mtags, ":%s REHASH :%s", 1, parc, parv);
 	} else {
-		if (!match_simple("-glob*", parv[1])) /* This is really ugly... hack to make /rehash -global -something work */
+		if (!_match("-glob*", parv[1])) /* This is really ugly... hack to make /rehash -global -something work */
 		{
 			x = HUNTED_ISME;
 		} else {
@@ -638,7 +638,7 @@ CMD_FUNC(m_rehash)
 		/* Ok this is in an 'else' because it should be only executed for sptr == cptr,
 		 * but it's totally unrelated to the above ;).
 		 */
-		if (parv[1] && !match_simple("-glob*", parv[1]))
+		if (parv[1] && !_match("-glob*", parv[1]))
 		{
 			/* /REHASH -global [options] */
 			aClient *acptr;
@@ -698,12 +698,12 @@ CMD_FUNC(m_rehash)
 				reinit_resolver(sptr);
 				return 0;
 			}
-			if (!match_simple("-ssl*", parv[1]) || !match_simple("-tls*", parv[1]))
+			if (!_match("-ssl*", parv[1]) || !_match("-tls*", parv[1]))
 			{
 				reinit_ssl(sptr);
 				return 0;
 			}
-			if (!match_simple("-o*motd", parv[1]))
+			if (!_match("-o*motd", parv[1]))
 			{
 				if (cptr != sptr)
 					sendto_umode_global(UMODE_OPER, "Remotely rehashing OPERMOTD on request of %s", sptr->name);
@@ -713,7 +713,7 @@ CMD_FUNC(m_rehash)
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
-			if (!match_simple("-b*motd", parv[1]))
+			if (!_match("-b*motd", parv[1]))
 			{
 				if (cptr != sptr)
 					sendto_umode_global(UMODE_OPER, "Remotely rehashing BOTMOTD on request of %s", sptr->name);

@@ -95,7 +95,7 @@ CMD_FUNC(m_connect)
 	}
 
 	for (aconf = conf_link; aconf; aconf = aconf->next)
-		if (!match_simple(parv[1], aconf->servername))
+		if (!match(parv[1], aconf->servername))
 			break;
 
 	/* Checked first servernames, then try hostnames. */
@@ -119,7 +119,7 @@ CMD_FUNC(m_connect)
 	/* Evaluate deny link */
 	for (deny = conf_deny_link; deny; deny = deny->next)
 	{
-		if (deny->flag.type == CRULE_ALL && !match_simple(deny->mask, aconf->servername)
+		if (deny->flag.type == CRULE_ALL && !match(deny->mask, aconf->servername)
 			&& crule_eval(deny->rule))
 		{
 			sendnotice(sptr, "*** Connect: Disallowed by connection rule");

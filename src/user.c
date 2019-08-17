@@ -603,7 +603,7 @@ int add_silence(aClient *sptr, char *mask, int senderr)
 			}
 			else
 			{
-				if (!match_simple(lp->value.cp, mask))
+				if (!match(lp->value.cp, mask))
 					return -1;
 			}
 		else if (!mycmp(lp->value.cp, mask))

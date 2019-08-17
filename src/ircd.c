@@ -374,7 +374,7 @@ EVENT(try_connections)
 
 		/* Check connect rules to see if we're allowed to try the link */
 		for (deny = conf_deny_link; deny; deny = deny->next)
-			if (!match_simple(deny->mask, aconf->servername) && crule_eval(deny->rule))
+			if (!match(deny->mask, aconf->servername) && crule_eval(deny->rule))
 				break;
 
 		if (!deny && connect_server(aconf, NULL, NULL) == 0)

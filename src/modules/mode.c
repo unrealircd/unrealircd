@@ -338,7 +338,7 @@ int parc = *parc_out;
 		 * so we just +4 for any case where the full mask is missing.
 		 * It's better than assuming +4 for all cases, though...
 		 */
-		if (match_simple("*!*@*", parv[i]))
+		if (match("*!*@*", parv[i]))
 			len += 4;
 	}
 
@@ -353,7 +353,7 @@ int parc = *parc_out;
 	for (i = parc-1; parv[i] && (i > 3); i--)
 	{
 		len -= strlen(parv[i]);
-		if (match_simple("*!*@*", parv[i]))
+		if (match("*!*@*", parv[i]))
 			len -= 4; /* must adjust accordingly.. */
 		parv[i] = NULL;
 		(*parc_out)--;

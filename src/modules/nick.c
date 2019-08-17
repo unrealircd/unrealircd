@@ -1731,7 +1731,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			else
 				*uhost = '\0';
 			strlcat(uhost, fullname, sizeof(uhost));
-			if (!match_simple(aconf->hostname, uhost))
+			if (!match(aconf->hostname, uhost))
 				goto attach;
 		}
 
@@ -1765,7 +1765,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			else
 				strcpy(uhost, "localhost");
 
-			if (!match_simple(aconf->hostname, uhost))
+			if (!match(aconf->hostname, uhost))
 				goto attach;
 		}
 

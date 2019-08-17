@@ -2734,7 +2734,7 @@ ConfigItem_deny_dcc	*Find_deny_dcc(char *name)
 
 	for (e = conf_deny_dcc; e; e = e->next)
 	{
-		if (!match_simple(name, e->filename))
+		if (!match(name, e->filename))
 			return e;
 	}
 	return NULL;
@@ -2827,10 +2827,10 @@ ConfigItem_listen *Find_listen(char *ipmask, int port, int ipv6)
 		if (e->ipv6 != ipv6)
 			continue;
 
-		if (!match_simple(e->ip, ipmask) && (port == e->port))
+		if (!match(e->ip, ipmask) && (port == e->port))
 			return e;
 
-		if (!match_simple(ipmask, e->ip) && (port == e->port))
+		if (!match(ipmask, e->ip) && (port == e->port))
 			return e;
 	}
 
@@ -2849,7 +2849,7 @@ ConfigItem_sni *Find_sni(char *name)
 
 	for (e = conf_sni; e; e = e->next)
 	{
-        if (!match_simple(e->name, name))
+        if (!match(e->name, name))
             return e;
 	}
 	return NULL;
@@ -2912,7 +2912,7 @@ ConfigItem_link *Find_link(char *servername, aClient *acptr)
 
 	for (link = conf_link; link; link = link->next)
 	{
-		if (!match_simple(link->servername, servername) && unreal_mask_match(acptr, link->incoming.mask))
+		if (!match(link->servername, servername) && unreal_mask_match(acptr, link->incoming.mask))
 		{
 		    return link;
 		}
@@ -2948,7 +2948,7 @@ ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
 					return ban;
 				}
 			}
-			else if (!match_simple(ban->mask, host)) /* We don't worry about exceptions */
+			else if (!match(ban->mask, host)) /* We don't worry about exceptions */
 				return ban;
 		}
 	}
@@ -2978,7 +2978,7 @@ ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
 					return ban;
 				}
 			}
-			else if (!match_simple(ban->mask, host)) /* We don't worry about exceptions */
+			else if (!match(ban->mask, host)) /* We don't worry about exceptions */
 				return ban;
 		}
 	}
@@ -3007,7 +3007,7 @@ ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name)
 
 	for (dchannel = conf_deny_channel; dchannel; dchannel = dchannel->next)
 	{
-		if (!match_simple(dchannel->channel, name))
+		if (!match(dchannel->channel, name))
 		{
 			if (dchannel->class && strcmp(cptr->local->class->name, dchannel->class))
 				continue;
@@ -3022,7 +3022,7 @@ ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name)
 		/* Check exceptions... ('allow channel') */
 		for (achannel = conf_allow_channel; achannel; achannel = achannel->next)
 		{
-			if (!match_simple(achannel->channel, name))
+			if (!match(achannel->channel, name))
 			{
 				if (achannel->class && strcmp(cptr->local->class->name, achannel->class))
 					continue;
@@ -7892,7 +7892,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}
-			else if (!match_simple("*@unrealircd.com", cep->ce_vardata) || !match_simple("*@unrealircd.org",cep->ce_vardata) || !match_simple("unreal-*@lists.sourceforge.net",cep->ce_vardata))
+			else if (!match("*@unrealircd.com", cep->ce_vardata) || !match("*@unrealircd.org",cep->ce_vardata) || !match("unreal-*@lists.sourceforge.net",cep->ce_vardata))
 			{
 				config_error("%s:%i: set::kline-address may not be an UnrealIRCd Team address",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
@@ -7909,7 +7909,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}
-			else if (!match_simple("*@unrealircd.com", cep->ce_vardata) || !match_simple("*@unrealircd.org",cep->ce_vardata) || !match_simple("unreal-*@lists.sourceforge.net",cep->ce_vardata))
+			else if (!match("*@unrealircd.com", cep->ce_vardata) || !match("*@unrealircd.org",cep->ce_vardata) || !match("unreal-*@lists.sourceforge.net",cep->ce_vardata))
 			{
 				config_error("%s:%i: set::gline-address may not be an UnrealIRCd Team address",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);

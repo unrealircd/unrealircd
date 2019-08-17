@@ -501,7 +501,7 @@ extern void count_memory(aClient *cptr, char *nick);
 extern void list_scache(aClient *sptr);
 extern char *oflagstr(long oflag);
 extern int rehash(aClient *cptr, aClient *sptr, int sig);
-extern int match_simple(const char *mask, const char *name);
+extern int _match(const char *mask, const char *name);
 extern void outofmemory(void);
 extern int add_listener2(ConfigItem_listen *conf);
 extern void link_cleanup(ConfigItem_link *link_ptr);

@@ -1705,9 +1705,9 @@ void _tkl_check_local_remove_shun(aTKline *tmp)
 					is_ip = 0;
 
 				if (is_ip == 0 ?
-				    (!match_simple(tmp->hostmask, chost) && !match_simple(tmp->usermask, cname)) : 
-				    (!match_simple(tmp->hostmask, chost) || !match_simple(tmp->hostmask, cip))
-				    && !match_simple(tmp->usermask, cname))
+				    (!match(tmp->hostmask, chost) && !match(tmp->usermask, cname)) : 
+				    (!match(tmp->hostmask, chost) || !match(tmp->hostmask, cip))
+				    && !match(tmp->usermask, cname))
 				{
 					/*
 					  before blindly marking this user as un-shunned, we need to check
@@ -1718,15 +1718,15 @@ void _tkl_check_local_remove_shun(aTKline *tmp)
 					 */
 					keep_shun = 0;
 					for(tk = tklines[tkl_hash('s')]; tk && !keep_shun; tk = tk->next)
-						if(tk != tmp && !match_simple(tk->usermask, cname))
+						if(tk != tmp && !match(tk->usermask, cname))
 						{
 							if ((*tk->hostmask >= '0') && (*tk->hostmask <= '9')
 							    /* the hostmask is an IP */
-							    && (!match_simple(tk->hostmask, chost) || !match_simple(tk->hostmask, cip)))
+							    && (!match(tk->hostmask, chost) || !match(tk->hostmask, cip)))
 								keep_shun = 1;
 							else
 								/* the hostmask is not an IP */
-								if (!match_simple(tk->hostmask, chost) && !match_simple(tk->usermask, cname))
+								if (!match(tk->hostmask, chost) && !match(tk->usermask, cname))
 									keep_shun = 1;
 						}
 
@@ -2145,7 +2145,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 		if (!(lp->type & TKL_NICK))
 			continue;
 
-		if (((*lp->hostmask == '#' && *nick == '#') || (*lp->hostmask != '#' && *nick != '#')) && !match_simple(lp->hostmask, nick))
+		if (((*lp->hostmask == '#' && *nick == '#') || (*lp->hostmask != '#' && *nick != '#')) && !match(lp->hostmask, nick))
 		{
 			points = 1;
 			break;
@@ -2320,33 +2320,33 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 		{
 			if (tk->type & TKL_NICK)
 			{
-				if (match_simple(tklflags->mask, tk->hostmask))
+				if (match(tklflags->mask, tk->hostmask))
 					return;
 			}
-			else if (match_simple(tklflags->mask, make_user_host(tk->usermask, tk->hostmask)))
+			else if (match(tklflags->mask, make_user_host(tk->usermask, tk->hostmask)))
 				return;
 		}
 		if (tklflags->flags & NOT_BY_MASK)
 		{
 			if (tk->type & TKL_NICK)
 			{
-				if (!match_simple(tklflags->mask, tk->hostmask))
+				if (!match(tklflags->mask, tk->hostmask))
 					return;
 			}
-			else if (!match_simple(tklflags->mask, make_user_host(tk->usermask, tk->hostmask)))
+			else if (!match(tklflags->mask, make_user_host(tk->usermask, tk->hostmask)))
 				return;
 		}
 		if (tklflags->flags & BY_REASON)
-			if (match_simple(tklflags->reason, tk->reason))
+			if (match(tklflags->reason, tk->reason))
 				return;
 		if (tklflags->flags & NOT_BY_REASON)
-			if (!match_simple(tklflags->reason, tk->reason))
+			if (!match(tklflags->reason, tk->reason))
 				return;
 		if (tklflags->flags & BY_SETBY)
-			if (match_simple(tklflags->setby, tk->setby))
+			if (match(tklflags->setby, tk->setby))
 				return;
 		if (tklflags->flags & NOT_BY_SETBY)
-			if (!match_simple(tklflags->setby, tk->setby))
+			if (!match(tklflags->setby, tk->setby))
 				return;
 	}
 	if (tk->type == (TKL_KILL | TKL_GLOBAL))
@@ -3235,7 +3235,7 @@ static int target_is_spamexcept(char *target)
 
 	for (e = iConf.spamexcept; e; e = e->next)
 	{
-		if (!match_simple(e->name, target))
+		if (!match(e->name, target))
 			return 1;
 	}
 	return 0;
@@ -3546,7 +3546,7 @@ int _match_user(char *rmask, aClient *acptr, int options)
 			umask = p;
 
 			/* Could just as well check nick right now */
-			if (match_simple(nmask, acptr->name) != 0)
+			if (match(nmask, acptr->name) != 0)
 				return 0; /* NOMATCH: nick mask did not match */
 		}
 	}
@@ -3566,7 +3566,7 @@ int _match_user(char *rmask, aClient *acptr, int options)
 				umask = mask;
 
 			/* Check user portion right away */
-			if (match_simple(umask, client_username) != 0)
+			if (match(umask, client_username) != 0)
 				return 0; /* NOMATCH: user mask did not match */
 		} else {
 			if (nmask)
@@ -3585,14 +3585,14 @@ int _match_user(char *rmask, aClient *acptr, int options)
 	if (options & MATCH_CHECK_VISIBLE_HOST)
 	{
 		char *hostname = acptr->user ? GetHost(acptr) : (MyClient(acptr) ? acptr->local->sockhost : NULL);
-		if (hostname && (match_simple(hmask, hostname) == 0))
+		if (hostname && (match(hmask, hostname) == 0))
 			return 1; /* MATCH: visible host */
 	}
 
 	/**** Check cloaked host ****/
 	if (options & MATCH_CHECK_CLOAKED_HOST)
 	{
-		if (acptr->user && (match_simple(hmask, acptr->user->cloakedhost) == 0))
+		if (acptr->user && (match(hmask, acptr->user->cloakedhost) == 0))
 			return 1; /* MATCH: cloaked host */
 	}
 
@@ -3611,7 +3611,7 @@ int _match_user(char *rmask, aClient *acptr, int options)
 		if (strchr(hmask, '?') || strchr(hmask, '*'))
 		{
 			/* Wildcards */
-			if (acptr->ip && (match_simple(hmask, acptr->ip) == 0))
+			if (acptr->ip && (match(hmask, acptr->ip) == 0))
 				return 1; /* MATCH (IP with wildcards) */
 		} else 
 		if (strchr(hmask, ':'))
@@ -3663,7 +3663,7 @@ int _match_user(char *rmask, aClient *acptr, int options)
 	if (options & MATCH_CHECK_REAL_HOST)
 	{
 		char *hostname = acptr->user ? acptr->user->realhost : (MyClient(acptr) ? acptr->local->sockhost : NULL);
-		if (hostname && (match_simple(hmask, hostname) == 0))
+		if (hostname && (match(hmask, hostname) == 0))
 			return 1; /* MATCH: hostname match */
 	}
 
