@@ -502,6 +502,7 @@ extern void list_scache(aClient *sptr);
 extern char *oflagstr(long oflag);
 extern int rehash(aClient *cptr, aClient *sptr, int sig);
 extern int match_simple(const char *mask, const char *name);
+extern int match_esc(const char *mask, const char *name);
 extern void outofmemory(void);
 extern int add_listener2(ConfigItem_listen *conf);
 extern void link_cleanup(ConfigItem_link *link_ptr);
@@ -722,7 +723,6 @@ extern void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf, int 
 extern void unrealdns_delasyncconnects(void);
 extern int is_autojoin_chan(char *chname);
 extern void unreal_free_hostent(struct hostent *he);
-extern int match_esc(const char *mask, const char *name);
 extern struct hostent *unreal_create_hostent(char *name, char *ip);
 extern char *unreal_time_synch_error(void);
 extern int unreal_time_synch(int timeout);

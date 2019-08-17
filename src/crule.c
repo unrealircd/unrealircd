@@ -150,7 +150,7 @@ int  crule_connected(int numargs, void *crulearg[])
 	/* Faster this way -- codemastr*/
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		if (match_simple((char *)crulearg[0], acptr->name))
+		if (!match_simple((char *)crulearg[0], acptr->name))
 			continue;
 		return (1);
 	}
@@ -169,7 +169,7 @@ int  crule_directcon(int numargs, void *crulearg[])
 	{
 		if (!IsServer(acptr))
 			continue;
-		if (match_simple((char *)crulearg[0], acptr->name))
+		if (!match_simple((char *)crulearg[0], acptr->name))
 			continue;
 		return (1);
 	}
@@ -186,9 +186,9 @@ int  crule_via(int numargs, void *crulearg[])
 	/* Faster this way -- codemastr */
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		if (match_simple((char *)crulearg[1], acptr->name))
+		if (!match_simple((char *)crulearg[1], acptr->name))
 			continue;
-		if (match_simple((char *)crulearg[0], acptr->serv->up))
+		if (!match_simple((char *)crulearg[0], acptr->serv->up))
 			continue;
 		return (1);
 	}

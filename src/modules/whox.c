@@ -377,39 +377,39 @@ static int do_match(aClient *sptr, aClient *acptr, char *mask, struct who_format
 		return 1;
 
 	/* default */
-	if (fmt->matchsel == 0 && (!match_simple(mask, acptr->name) ||
-		!match_simple(mask, acptr->user->username) ||
-		!match_simple(mask, GetHost(acptr)) ||
+	if (fmt->matchsel == 0 && (match_simple(mask, acptr->name) ||
+		match_simple(mask, acptr->user->username) ||
+		match_simple(mask, GetHost(acptr)) ||
 		(IsOper(sptr) &&
-		(!match_simple(mask, acptr->user->realhost) ||
+		(match_simple(mask, acptr->user->realhost) ||
 		(acptr->ip &&
-		!match_simple(mask, acptr->ip))))))
+		match_simple(mask, acptr->ip))))))
 	{
 		return 1;
 	}
 
 	/* match nick */
-	if (IsMatch(fmt, WMATCH_NICK) && !match_simple(mask, acptr->name))
+	if (IsMatch(fmt, WMATCH_NICK) && match_simple(mask, acptr->name))
 		return 1;
 
 	/* match username */
-	if (IsMatch(fmt, WMATCH_USER) && !match_simple(mask, acptr->user->username))
+	if (IsMatch(fmt, WMATCH_USER) && match_simple(mask, acptr->user->username))
 		return 1;
 
 	/* match server */
-	if (IsMatch(fmt, WMATCH_SERVER) && IsOper(sptr) && !match_simple(mask, acptr->user->server))
+	if (IsMatch(fmt, WMATCH_SERVER) && IsOper(sptr) && match_simple(mask, acptr->user->server))
 		return 1;
 
 	/* match hostname */
-	if (IsMatch(fmt, WMATCH_HOST) && (!match_simple(mask, GetHost(acptr)) ||
-		(IsOper(sptr) && (!match_simple(mask, acptr->user->realhost) ||
-		(acptr->ip && !match_simple(mask, acptr->ip))))))
+	if (IsMatch(fmt, WMATCH_HOST) && (match_simple(mask, GetHost(acptr)) ||
+		(IsOper(sptr) && (match_simple(mask, acptr->user->realhost) ||
+		(acptr->ip && match_simple(mask, acptr->ip))))))
 	{
 		return 1;
 	}
 
 	/* match realname */
-	if (IsMatch(fmt, WMATCH_INFO) && !match_simple(mask, acptr->info))
+	if (IsMatch(fmt, WMATCH_INFO) && match_simple(mask, acptr->info))
 		return 1;
 
 	/* match ip address */
@@ -419,7 +419,7 @@ static int do_match(aClient *sptr, aClient *acptr, char *mask, struct who_format
 
 	/* match account */
 	if (IsMatch(fmt, WMATCH_ACCOUNT) && !BadPtr(acptr->user->svid) &&
-		!isdigit(*acptr->user->svid) && !match_simple(mask, acptr->user->svid))
+		!isdigit(*acptr->user->svid) && match_simple(mask, acptr->user->svid))
 	{
 		return 1;
 	}

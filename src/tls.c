@@ -1285,14 +1285,14 @@ int outdated_tls_client(aClient *acptr)
 	strlcpy(buf, tlsoptions->outdated_protocols, sizeof(buf));
 	for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
 	{
-		if (!match_simple(name, client_protocol))
+		if (match_simple(name, client_protocol))
 			 return 1; /* outdated protocol */
 	}
 
 	strlcpy(buf, tlsoptions->outdated_ciphers, sizeof(buf));
 	for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
 	{
-		if (!match_simple(name, client_ciphersuite))
+		if (match_simple(name, client_ciphersuite))
 			return 1; /* outdated cipher */
 	}
 

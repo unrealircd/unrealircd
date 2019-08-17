@@ -87,7 +87,7 @@ int extban_realname_is_banned(aClient *sptr, aChannel *chptr, char *banin, int t
 {
 	char *ban = banin+3;
 
-	if (!match_esc(ban, sptr->info))
+	if (match_esc(ban, sptr->info))
 		return 1;
 
 	return 0;

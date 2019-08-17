@@ -601,7 +601,7 @@ int upgrade_include(ConfigEntry *ce)
 	if (!file)
 		return 0;
 
-	if (!strstr(file, "help/") && !match_simple("help*.conf", file))
+	if (!strstr(file, "help/") && match_simple("help*.conf", file))
 	{
 		snprintf(buf, sizeof(buf), "include \"help/%s\";\n", file);
 		replace_section(ce, buf);
@@ -617,7 +617,7 @@ int upgrade_include(ConfigEntry *ce)
 		return 1;
 	}
 
-	if (!match_simple("badwords.*.conf", file))
+	if (match_simple("badwords.*.conf", file))
 	{
 		if (badwords_upgraded_already)
 		{

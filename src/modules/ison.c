@@ -91,7 +91,7 @@ CMD_FUNC(m_ison)
 			if (user)
 			{
 				ircsnprintf(namebuf, sizeof(namebuf), "%s@%s", acptr->user->username, GetHost(acptr));
-				if (match_simple(user, namebuf)) continue;
+				if (!match_simple(user, namebuf)) continue;
 				*--user = '!';
 			}
 

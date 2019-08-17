@@ -96,7 +96,7 @@ int extban_operclass_is_banned(aClient *sptr, aChannel *chptr, char *banin, int 
 		if (oper && oper->operclass)
 			operclass = oper->operclass;
 		
-		if (operclass && !match_simple(ban, operclass))
+		if (operclass && match_simple(ban, operclass))
 			return 1;
 	}
 

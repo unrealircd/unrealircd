@@ -148,7 +148,7 @@ int extban_inchannel_is_banned(aClient *sptr, aChannel *chptr, char *ban, int ty
 
 	for (lp = sptr->user->channel; lp; lp = lp->next)
 	{
-		if (!match_esc(p, lp->chptr->chname))
+		if (match_esc(p, lp->chptr->chname))
 		{
 			/* Channel matched, check symbol if needed (+/%/@/etc) */
 			if (symbol)

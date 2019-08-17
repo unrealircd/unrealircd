@@ -113,7 +113,7 @@ CMD_FUNC(m_trace)
 		  return 0;
 	}
 
-	doall = (parv[1] && (parc > 1)) ? !match_simple(tname, me.name) : TRUE;
+	doall = (parv[1] && (parc > 1)) ? match_simple(tname, me.name) : TRUE;
 	wilds = !parv[1] || index(tname, '*') || index(tname, '?');
 	dow = wilds || doall;
 
@@ -149,7 +149,7 @@ CMD_FUNC(m_trace)
 
 		if (!ValidatePermissionsForPath("client:see:trace:invisible-users",sptr,acptr,NULL,NULL) && (acptr != sptr))
 			continue;
-		if (!doall && wilds && match_simple(tname, acptr->name))
+		if (!doall && wilds && !match_simple(tname, acptr->name))
 			continue;
 		if (!dow && mycmp(tname, acptr->name))
 			continue;

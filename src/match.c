@@ -76,12 +76,12 @@ int match_esc(const char *mask, const char *name)
 		if (!*m)
 		{
 			if (!*n)
-				return 0;
-			if (!ma)
 				return 1;
+			if (!ma)
+				return 0;
 			for (m--; (m > (const u_char *)mask) && (*m == '?'); m--);
 			if (*m == '*')
-				return 0;
+				return 1;
 			m = ma;
 			n = ++na;
 		} else
@@ -89,18 +89,18 @@ int match_esc(const char *mask, const char *name)
 		{
 			while (*m == '*') /* collapse.. */
 				m++;
-			return (*m != 0);
+			return (*m == 0);
 		}
 		
 		if (*m != '?')
 		{
 			if (*m == '\\')
 				if (!*++m)
-					return 1; /* unfinished escape sequence */
+					return 0; /* unfinished escape sequence */
 			if ((lc(*m) != lc(*n)) && !((*m == '_') && (*n == ' ')))
 			{
 				if (!ma)
-					return 1;
+					return 0;
 				m = ma;
 				n = ++na;
 			} else
@@ -114,7 +114,7 @@ int match_esc(const char *mask, const char *name)
 			n++;
 		}
 	}
-	return 1;
+	return 0;
 }
 
 /** Same credit/copyright as match_esc() applies, except escaping removed.. ;p */
@@ -138,12 +138,12 @@ int match_simple(const char *mask, const char *name)
 		if (!*m)
 		{
 			if (!*n)
-				return 0;
-			if (!ma)
 				return 1;
+			if (!ma)
+				return 0;
 			for (m--; (m > (const u_char *)mask) && (*m == '?'); m--);
 			if (*m == '*')
-				return 0;
+				return 1;
 			m = ma;
 			n = ++na;
 		} else
@@ -151,13 +151,13 @@ int match_simple(const char *mask, const char *name)
 		{
 			while (*m == '*') /* collapse.. */
 				m++;
-			return (*m != 0);
+			return (*m == 0);
 		}
 		
 		if ((lc(*m) != lc(*n)) && !((*m == '_') && (*n == ' ')) && (*m != '?'))
 		{
 			if (!ma)
-				return 1;
+				return 0;
 			m = ma;
 			n = ++na;
 		} else
@@ -166,7 +166,7 @@ int match_simple(const char *mask, const char *name)
 			n++;
 		}
 	}
-	return 1;
+	return 0;
 }
 
 /*
@@ -470,7 +470,7 @@ int unreal_match(aMatch *m, char *str)
 {
 	if (m->type == MATCH_SIMPLE)
 	{
-		if (match_simple(m->str, str) == 0)
+		if (match_simple(m->str, str))
 			return 1;
 		return 0;
 	}

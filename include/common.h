@@ -97,7 +97,6 @@ void free();
 #define TS time_t
 
 
-extern int match_simple(const char *, const char *);
 #define mycmp(a,b) \
  ( (toupper(a[0])!=toupper(b[0])) || smycmp((a)+1,(b)+1) )
 extern int smycmp(const char *, const char *);
