@@ -1109,7 +1109,7 @@ void send_user_joins(aClient *cptr, aClient *user)
 	{
 		chptr = lp->chptr;
 		if ((mask = index(chptr->chname, ':')))
-			if (match(++mask, cptr->name))
+			if (match_simple(++mask, cptr->name))
 				continue;
 		if (*chptr->chname == '&')
 			continue;

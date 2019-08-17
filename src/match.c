@@ -58,10 +58,10 @@ u_char touppertab[], tolowertab[];
  */
 int match_esc(const char *mask, const char *name)
 {
-const u_char *m = mask;
-const u_char *n = name;
-const u_char *ma = NULL;
-const u_char *na = name;
+	const u_char *m = mask;
+	const u_char *n = name;
+	const u_char *ma = NULL;
+	const u_char *na = name;
 
 	while(1)
 	{
@@ -118,12 +118,12 @@ const u_char *na = name;
 }
 
 /** Same credit/copyright as match_esc() applies, except escaping removed.. ;p */
-static inline int match2(const char *mask, const char *name)
+int match_simple(const char *mask, const char *name)
 {
-const u_char *m = mask;
-const u_char *n = name;
-const u_char *ma = NULL;
-const u_char *na = name;
+	const u_char *m = mask;
+	const u_char *n = name;
+	const u_char *ma = NULL;
+	const u_char *na = name;
 
 	while(1)
 	{
@@ -167,6 +167,32 @@ const u_char *na = name;
 		}
 	}
 	return 1;
+}
+
+/** Match against a nick!user@host mask.
+ * "Old match with bahamut optimizations"
+ */
+int match_nuh(const char *mask, const char *name)
+{
+	if (mask[0] == '*' && mask[1] == '!')
+	{
+		mask += 2;
+		while (*name != '!' && *name)
+			name++;
+		if (!*name)
+			return 1;
+		name++;
+	}
+	if (mask[0] == '*' && mask[1] == '@')
+	{
+		mask += 2;
+		while (*name != '@' && *name)
+			name++;
+		if (!*name)
+			return 1;
+		name++;
+	}
+	return match_simple(mask,name);
 }
 
 /*
@@ -398,34 +424,6 @@ u_char char_atribs[] = {
 /* f0-ff */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-/* Old match() */
-int _match(const char *mask, const char *name) {
-	return match2(mask,name);
-}
-
-
-/* Old match() plus some optimizations from bahamut */
-int match(const char *mask, const char *name) {
-	if (mask[0] == '*' && mask[1] == '!') {
-		mask += 2;
-		while (*name != '!' && *name)
-			name++;
-		if (!*name)
-			return 1;
-		name++;
-	}
-		
-	if (mask[0] == '*' && mask[1] == '@') {
-		mask += 2;
-		while (*name != '@' && *name)
-			name++;
-		if (!*name)
-			return 1;
-		name++;
-	}
-	return match2(mask,name);
-}
-
 /** Free up all resources of an aMatch entry (including the struct itself).
  * NOTE: this function may (also) be called for aMatch structs that have only been
  *       setup half-way, so use special care when accessing members (NULL checks!)
@@ -492,13 +490,13 @@ aMatch *unreal_create_match(MatchType type, char *str, char **error)
 
 /** Try to match an aMatch entry ('m') against a string ('str').
  * @returns 1 if matched, 0 if not.
- * @notes These (more logical) return values are opposite to the match() function.
+ * @notes These (more logical) return values are opposite to the match_simple() function.
  */
 int unreal_match(aMatch *m, char *str)
 {
 	if (m->type == MATCH_SIMPLE)
 	{
-		if (_match(m->str, str) == 0)
+		if (match_simple(m->str, str) == 0)
 			return 1;
 		return 0;
 	}

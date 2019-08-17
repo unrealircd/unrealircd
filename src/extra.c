@@ -45,11 +45,11 @@ ConfigItem_allow_dcc *a;
 
 	for (d = conf_deny_dcc; d; d = d->next)
 	{
-		if ((d->flag.type == DCCDENY_HARD) && !match(d->filename, filename))
+		if ((d->flag.type == DCCDENY_HARD) && !match_simple(d->filename, filename))
 		{
 			for (a = conf_allow_dcc; a; a = a->next)
 			{
-				if ((a->flag.type == DCCDENY_HARD) && !match(a->filename, filename))
+				if ((a->flag.type == DCCDENY_HARD) && !match_simple(a->filename, filename))
 					return NULL;
 			}
 			return d;
@@ -71,11 +71,11 @@ ConfigItem_allow_dcc *a;
 
 	for (d = conf_deny_dcc; d; d = d->next)
 	{
-		if ((d->flag.type == DCCDENY_SOFT) && !match(d->filename, filename))
+		if ((d->flag.type == DCCDENY_SOFT) && !match_simple(d->filename, filename))
 		{
 			for (a = conf_allow_dcc; a; a = a->next)
 			{
-				if ((a->flag.type == DCCDENY_SOFT) && !match(a->filename, filename))
+				if ((a->flag.type == DCCDENY_SOFT) && !match_simple(a->filename, filename))
 					return NULL;
 			}
 			return d;

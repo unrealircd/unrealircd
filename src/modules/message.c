@@ -501,7 +501,7 @@ int _is_silenced(aClient *sptr, aClient *acptr)
 
 	for (; lp; lp = lp->next)
 	{
-		if (!match(lp->value.cp, sender))
+		if (!match_simple(lp->value.cp, sender))
 		{
 			if (!MyConnect(sptr))
 			{
