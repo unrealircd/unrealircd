@@ -5,8 +5,8 @@ As UnrealIRCd 5 is work-in-progress, these release notes will be updated
 once in a while to reflect the features and changes.
 
 Summary:
-Most visible to end-users are channel history and several IRCv3 features.
-Various modules from Gottem have been integrated and enhanced.
+Most visible to end-users are the new channel history and several IRCv3
+features. Various modules from Gottem have been integrated and enhanced.
 Channel settings of +P channels and *LINES are saved in a database and
 restored on startup (via 'channeldb' and 'tkldb' respectively).
 Channel mode +L has a slight change of meaning and a few extended bans
