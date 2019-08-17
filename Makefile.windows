@@ -281,7 +281,7 @@ DLL_FILES=SRC/MODULES/CHGHOST.DLL SRC/MODULES/SDESC.DLL SRC/MODULES/SETIDENT.DLL
  SRC/MODULES/CHANNELDB.DLL \
  SRC/MODULES/HISTORY_BACKEND_MEM.DLL \
  SRC/MODULES/HISTORY_BACKEND_NULL.DLL \
- SRC/MODULES/CMDRESTRICT.DLL \
+ SRC/MODULES/RESTRICT-COMMANDS.DLL \
  SRC/MODULES/RMTKL.DLL
 
 
@@ -1047,8 +1047,8 @@ src/modules/history_backend_mem.dll: src/modules/history_backend_mem.c $(INCLUDE
 src/modules/history_backend_null.dll: src/modules/history_backend_null.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/history_backend_null.c $(MODLFLAGS)
 
-src/modules/cmdrestrict.dll: src/modules/cmdrestrict.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/cmdrestrict.c $(MODLFLAGS)
+src/modules/restrict-commands.dll: src/modules/restrict-commands.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/restrict-commands.c $(MODLFLAGS)
 
 src/modules/rmtkl.dll: src/modules/rmtkl.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/rmtkl.c $(MODLFLAGS)

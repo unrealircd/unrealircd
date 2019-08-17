@@ -41,12 +41,12 @@ typedef struct {
 char *find_cmd_byconftag(char *conftag);
 RestrictedCmd *find_restrictions_bycmd(char *cmd);
 RestrictedCmd *find_restrictions_byconftag(char *conftag);
-int cmdrestrict_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
-int cmdrestrict_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
-char *cmdrestrict_hook_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
-char *cmdrestrict_hook_preusermsg(aClient *sptr, aClient *to, char *text, int notice);
-char *cmdrestrict_hook_wrapper(aClient *sptr, char *text, int notice, char *display, char *conftag);
-CMD_OVERRIDE_FUNC(cmdrestrict_override);
+int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
+char *rcmd_hook_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
+char *rcmd_hook_preusermsg(aClient *sptr, aClient *to, char *text, int notice);
+char *rcmd_hook_wrapper(aClient *sptr, char *text, int notice, char *display, char *conftag);
+CMD_OVERRIDE_FUNC(rcmd_override);
 
 // Globals
 static ModuleInfo ModInf;
@@ -60,43 +60,43 @@ CmdMap conf_cmdmaps[] = {
 	{ NULL, NULL, }, // REQUIRED for the loop to properly work
 };
 
-ModuleHeader MOD_HEADER(cmdrestrict) = {
-	"cmdrestrict",
+ModuleHeader MOD_HEADER(restrict-commands) = {
+	"restrict-commands",
 	"v1.0",
 	"Restrict specific commands unless certain conditions have been met",
 	"3.2-b8-1",
 	NULL
 };
 
-MOD_TEST(cmdrestrict)
+MOD_TEST(restrict-commands)
 {
 	memcpy(&ModInf, modinfo, modinfo->size);
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cmdrestrict_configtest);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, rcmd_configtest);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(cmdrestrict)
+MOD_INIT(restrict-commands)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, cmdrestrict_configrun);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, rcmd_configrun);
 
 	// Due to the nature of PRIVMSG/NOTICE we're gonna need to hook into PRE_* stuff instead of using command overrides
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, -1000000, cmdrestrict_hook_prechanmsg);
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, -1000000, cmdrestrict_hook_preusermsg);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, -1000000, rcmd_hook_prechanmsg);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, -1000000, rcmd_hook_preusermsg);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(cmdrestrict)
+MOD_LOAD(restrict-commands)
 {
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
-		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(cmdrestrict).name, ModuleGetErrorStr(modinfo->handle));
+		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(restrict-commands).name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(cmdrestrict)
+MOD_UNLOAD(restrict-commands)
 {
 	RestrictedCmd *rcmd, *next;
 	for (rcmd = RestrictedCmdList; rcmd; rcmd = next)
@@ -141,7 +141,7 @@ RestrictedCmd *find_restrictions_byconftag(char *conftag) {
 	return NULL;
 }
 
-int cmdrestrict_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 	ConfigEntry *cep, *cep2;
@@ -162,6 +162,12 @@ int cmdrestrict_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		has_restriction = 0;
 		for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
 		{
+			if (!strcmp(cep2->ce_varname, "disable"))
+			{
+				has_restriction = 1;
+				continue;
+			}
+
 			if (!cep2->ce_vardata)
 			{
 				config_error("%s:%i: blank set::restrict-commands::%s:%s without value", cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, cep2->ce_varname);
@@ -195,12 +201,6 @@ int cmdrestrict_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				continue;
 			}
 
-			if (!strcmp(cep2->ce_varname, "disable"))
-			{
-				has_restriction = 1;
-				continue;
-			}
-
 			config_error("%s:%i: unknown directive set::restrict-commands::%s::%s", cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, cep2->ce_varname);
 			errors++;
 		}
@@ -216,7 +216,7 @@ int cmdrestrict_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	return errors ? -1 : 1;
 }
 
-int cmdrestrict_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
+int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep, *cep2;
 	char *cmd, *conftag;
@@ -233,7 +233,7 @@ int cmdrestrict_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 	{
 		// May need to switch some stuff around for special cases where the config directive doesn't match the actual command
 		conftag = NULL;
-		if((cmd = find_cmd_byconftag(cep->ce_varname)))
+		if ((cmd = find_cmd_byconftag(cep->ce_varname)))
 			conftag = cep->ce_varname;
 		else
 			cmd = cep->ce_varname;
@@ -245,13 +245,13 @@ int cmdrestrict_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 			// Let's hope nobody tries to unload the module for PRIVMSG/NOTICE :^)
 			if (!CommandExists(cmd))
 			{
-				config_warn("[cmdrestrict] The specified command isn't (properly) loaded, meaning we're unable to override it: %s", cmd);
+				config_warn("[restrict-commands] Command '%s' does not exist. Did you mistype? Or is the module providing it not loaded?", cmd);
 				continue;
 			}
 
-			if (!CmdoverrideAdd(ModInf.handle, cmd, cmdrestrict_override))
+			if (!CmdoverrideAdd(ModInf.handle, cmd, rcmd_override))
 			{
-				config_warn("[cmdrestrict] Failed to add override for the specified command (NO RESTRICTIONS APPLY): %s", cmd);
+				config_warn("[restrict-commands] Failed to add override for '%s' (NO RESTRICTIONS APPLY)", cmd);
 				continue;
 			}
 		}
@@ -284,7 +284,7 @@ int cmdrestrict_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 
 			if (!strcmp(cep2->ce_varname, "disable"))
 			{
-				rcmd->disable = config_checkval(cep2->ce_vardata, CFG_YESNO);
+				rcmd->disable = cep2->ce_vardata ? config_checkval(cep2->ce_vardata, CFG_YESNO) : 1;
 				break; // Using break instead of continue since 'disable' takes precedence anyways
 			}
 		}
@@ -294,32 +294,32 @@ int cmdrestrict_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
-int cmdrestrict_canbypass(aClient *sptr, RestrictedCmd *rcmd) {
+int rcmd_canbypass(aClient *sptr, RestrictedCmd *rcmd) {
 	if (!sptr || !rcmd)
 		return 1;
 	if (rcmd->exempt_identified && IsLoggedIn(sptr))
 		return 1;
-	if (rcmd->exempt_reputation_score > 0 && (GetReputation(sptr)) >= rcmd->exempt_reputation_score)
+	if (rcmd->exempt_reputation_score > 0 && (GetReputation(sptr) >= rcmd->exempt_reputation_score))
 		return 1;
-	if (sptr->local && (TStime() - sptr->local->firsttime) < rcmd->connect_delay)
+	if (sptr->local && (TStime() - sptr->local->firsttime < rcmd->connect_delay))
 		return 0;
 	return 1; // Default to yes so we don't drop too many commands
 }
 
-char *cmdrestrict_hook_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
+char *rcmd_hook_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
 {
-	return cmdrestrict_hook_wrapper(sptr, text, notice, "channel", (notice ? "channel-notice" : "channel-message"));
+	return rcmd_hook_wrapper(sptr, text, notice, "channel", (notice ? "channel-notice" : "channel-message"));
 }
 
-char *cmdrestrict_hook_preusermsg(aClient *sptr, aClient *to, char *text, int notice)
+char *rcmd_hook_preusermsg(aClient *sptr, aClient *to, char *text, int notice)
 {
 	// Need a few extra exceptions for user messages only =]
-	if(sptr == to || IsULine(to))
+	if ((sptr == to) || IsULine(to))
 		return text;
-	return cmdrestrict_hook_wrapper(sptr, text, notice, "user", (notice ? "private-notice" : "private-message"));
+	return rcmd_hook_wrapper(sptr, text, notice, "user", (notice ? "private-notice" : "private-message"));
 }
 
-char *cmdrestrict_hook_wrapper(aClient *sptr, char *text, int notice, char *display, char *conftag)
+char *rcmd_hook_wrapper(aClient *sptr, char *text, int notice, char *display, char *conftag)
 {
 	RestrictedCmd *rcmd;
 
@@ -335,7 +335,7 @@ char *cmdrestrict_hook_wrapper(aClient *sptr, char *text, int notice, char *disp
 			sendnotice(sptr, "Sending of %ss to %ss been disabled by the network administrators", (notice ? "notice" : "message"), display);
 			return NULL;
 		}
-		if (!cmdrestrict_canbypass(sptr, rcmd))
+		if (!rcmd_canbypass(sptr, rcmd))
 		{
 			sendnotice(sptr, "You cannot send %ss to %ss until you've been connected for %ld seconds or more", (notice ? "notice" : "message"), display, rcmd->connect_delay);
 			return NULL;
@@ -346,7 +346,7 @@ char *cmdrestrict_hook_wrapper(aClient *sptr, char *text, int notice, char *disp
 	return text;
 }
 
-CMD_OVERRIDE_FUNC(cmdrestrict_override)
+CMD_OVERRIDE_FUNC(rcmd_override)
 {
 	RestrictedCmd *rcmd;
 
@@ -361,7 +361,7 @@ CMD_OVERRIDE_FUNC(cmdrestrict_override)
 			sendnotice(sptr, "The command %s has been disabled by the network administrators", ovr->command->cmd);
 			return 0;
 		}
-		if(!cmdrestrict_canbypass(sptr, rcmd))
+		if (!rcmd_canbypass(sptr, rcmd))
 		{
 			sendnotice(sptr, "You cannot use the %s command until you've been connected for %ld seconds or more", ovr->command->cmd, rcmd->connect_delay);
 			return 0;

@@ -65,7 +65,7 @@ R_MODULES= \
 	charsys.so antimixedutf8.so authprompt.so sinfo.so \
 	reputation.so connthrottle.so history_backend_mem.so \
 	history_backend_null.so tkldb.so channeldb.so \
-	cmdrestrict.so rmtkl.so \
+	restrict-commands.so rmtkl.so \
 	message-tags.so batch.so \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
@@ -560,9 +560,9 @@ channeldb.so: channeldb.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o channeldb.so channeldb.c
 
-cmdrestrict.so: cmdrestrict.c $(INCLUDES)
+restrict-commands.so: restrict-commands.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o cmdrestrict.so cmdrestrict.c
+		-o restrict-commands.so restrict-commands.c
 
 rmtkl.so: rmtkl.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
