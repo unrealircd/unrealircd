@@ -116,7 +116,7 @@ static void init_config(void)
 {
 	/* Set default values */
 	memset(&cfg, 0, sizeof(cfg));
-	cfg.playback_on_join.lines = 20;
+	cfg.playback_on_join.lines = 15;
 	cfg.playback_on_join.time = 86400;
 	cfg.max_storage_per_channel.lines = 200;
 	cfg.max_storage_per_channel.time = 86400*7;
