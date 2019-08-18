@@ -1,13 +1,11 @@
-[![Build Status - *NIX](https://travis-ci.org/unrealircd/unrealircd.svg?branch=unreal50)](https://travis-ci.org/unrealircd/unrealircd)
-[![Build Status - Windows](https://ci.appveyor.com/api/projects/status/9kgectl2mfyia0s5/branch/unreal50?svg=true)](https://ci.appveyor.com/project/syzop/unrealircd/branch/unreal50)
 [![Twitter Follow](https://img.shields.io/twitter/follow/Unreal_IRCd.svg?style=social&label=Follow)](https://twitter.com/Unreal_IRCd)
 
 ## About UnrealIRCd
 UnrealIRCd is an Open Source IRC Server, serving thousands of networks since 1999. 
 It runs on Linux, OS X and Windows and is currently the most widely deployed IRCd
-with a market share of over 50%. UnrealIRCd is a highly advanced IRCd with a strong
+with a market share of 42%. UnrealIRCd is a highly advanced IRCd with a strong
 focus on modularity, an advanced and highly configurable configuration file.
-Key features include SSL, cloaking, its advanced anti-flood and anti-spam systems,
+Key features include SSL/TLS, cloaking, its advanced anti-flood and anti-spam systems,
 swear filtering and module support. We are also particularly proud on our extensive
 online documentation. 
 
