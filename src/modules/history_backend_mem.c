@@ -225,11 +225,18 @@ int hbm_history_add(char *object, MessageTag *mtags, char *line)
 	return 0;
 }
 
+int can_receive_history(aClient *acptr)
+{
+	if (HasCapability(acptr, "server-time"))
+		return 1;
+	return 0;
+}
+
 void hbm_send_line(aClient *acptr, HistoryLogLine *l, char *batchid)
 {
 	static char sendbuf[8192];
 
-	if (HasCapability(acptr, "server-time"))
+	if (can_receive_history(acptr))
 	{
 		if (BadPtr(batchid))
 		{
@@ -254,7 +261,7 @@ int hbm_history_request(aClient *acptr, char *object, HistoryFilter *filter)
 	HistoryLogLine *l;
 	char batch[BATCHLEN+1];
 
-	if (!h)
+	if (!h || !can_receive_history(acptr))
 		return 0;
 
 	batch[0] = '\0';
