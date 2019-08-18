@@ -17,8 +17,7 @@
 
   @{HOME}/unrealircd/conf/ r,
   @{HOME}/unrealircd/conf/** r,
-  @{HOME}/unrealircd/data/ircd.tune rw,
-  @{HOME}/unrealircd/data/unrealircd.pid rw,
+  @{HOME}/unrealircd/data/** rw,
   @{HOME}/unrealircd/lib/*.so* mr,
   @{HOME}/unrealircd/logs/* rw,
   @{HOME}/unrealircd/modules/**.so r,
