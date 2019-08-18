@@ -20,7 +20,7 @@ if [ ! -d ~/cipherscan ]; then
 fi
 
 # Install 'unrealircd-tests'
-git clone -q git@github-unrealircd-tests:syzop/unrealircd-tests.git
+git clone -q https://github.com/unrealircd/unrealircd-tests.git
 cd unrealircd-tests
 
 # Run the test framework
