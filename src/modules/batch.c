@@ -90,12 +90,8 @@ CMD_FUNC(m_batch)
 	/* If the recipient does not support message tags or
 	 * does not support batch, then don't do anything.
 	 */
-	if (MyConnect(acptr) && !IsServer(acptr) && 
-	    !(HasCapability(acptr, "message-tags") &&
-	      HasCapability(acptr, "batch")))
-	{
+	if (MyConnect(acptr) && !IsServer(acptr) && !HasCapability(acptr, "batch"))
 		return 0;
-	}
 
 	/* Relay the batch message to the client (or server) */
 	parv[1] = "BATCH";
