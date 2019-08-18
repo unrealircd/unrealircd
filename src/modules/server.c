@@ -1693,4 +1693,6 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 
 	if (buf[prebuflen] || !sent)
 		sendto_one(cptr, mtags, "%s", buf);
+
+	free_message_tags(mtags);
 }
