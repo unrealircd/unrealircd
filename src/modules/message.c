@@ -423,11 +423,13 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 			{
 				MessageTag *mtags = NULL;
 				new_message(sptr, recv_mtags, &mtags);
+				labeled_response_inhibit = 1;
 				sendto_prefix_one(acptr, sptr, mtags, ":%s %s %s :%s",
 				                  CHECKPROTO(acptr->from, PROTO_SID) ? ID(sptr) : sptr->name,
 				                  newcmd,
 				                  (MyClient(acptr) ? acptr->name : nick),
 				                  text);
+				labeled_response_inhibit = 0;
 				RunHook5(HOOKTYPE_USERMSG, sptr, acptr, mtags, text, notice);
 				free_message_tags(mtags);
 				continue;

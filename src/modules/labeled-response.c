@@ -36,8 +36,9 @@ int lr_pre_command(aClient *from, MessageTag *mtags, char *buf);
 int lr_post_command(aClient *from, MessageTag *mtags, char *buf);
 int lr_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int *len);
 
-/* Our special version assumes that remote servers always handle it */
+/* Our special version of SupportBatch() assumes that remote servers always handle it */
 #define SupportBatch(x)		(MyConnect(x) ? HasCapability((x), "batch") : 1)
+#define SupportLabel(x)		(HasCapabilityFast(acptr, CAP_LABELED_RESPONSE))
 
 struct {
 	aClient *client; /**< The client who issued the original command with a label */
@@ -67,7 +68,7 @@ MOD_INIT(labeled-response)
 	c = ClientCapabilityAdd(modinfo->handle, &cap, &CAP_LABELED_RESPONSE);
 
 	memset(&mtag, 0, sizeof(mtag));
-	mtag.name = "label";
+	mtag.name = "draft/label";
 	mtag.is_ok = labeled_response_mtag_is_ok;
 	mtag.clicap_handler = c;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
@@ -76,7 +77,7 @@ MOD_INIT(labeled-response)
 	HookAdd(modinfo->handle, HOOKTYPE_POST_COMMAND, -2000000000, lr_post_command);
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, 0, lr_packet);
 
-	config_warn("The labeled-response module is currently broken / in development !!");
+	config_warn("The labeled-response module is currently in development !!");
 	return MOD_SUCCESS;
 }
 
@@ -170,10 +171,12 @@ int lr_post_command(aClient *from, MessageTag *mtags, char *buf)
 
 		if (currentcmd.responses == 0)
 		{
-			/* Start the batch now (only to be terminated right after) */
-			// XXX: if this changes in the spec, then send something
-			//      different for the 0-replies-case.
-			sendto_one(from, NULL, "%s", gen_start_batch());
+			/* Note: we blindly send recv_mtags back here,
+			 * which is OK now, but may not be OK later.
+			 */
+			memset(&currentcmd, 0, sizeof(currentcmd));
+			sendto_one(from, mtags, ":%s ACK", me.name);
+			return 0;
 		}
 
 		/* End the batch */
@@ -210,7 +213,7 @@ int lr_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int 
 	static char packet[8192];
 	char buf[512];
 
-	if (currentcmd.client)
+	if (currentcmd.client && !labeled_response_inhibit)
 	{
 		/* Labeled response is active */
 		if (currentcmd.client == intended_to)
@@ -264,6 +267,14 @@ int labeled_response_mtag_is_ok(aClient *acptr, char *name, char *value)
 {
 	if (IsServer(acptr))
 		return 1;
+
+	/* Ignore the label if the client does not support both
+	 * (draft/)labeled-response and batch. Yeah, batch too,
+	 * it's too much hassle to support labeled-response without
+	 * batch and the end result is quite broken too.
+	 */
+	if (MyClient(acptr) && (!SupportLabel(acptr) || !SupportBatch(acptr)))
+		return 0;
 
 	/* Do some basic sanity checking for non-servers */
 	if (value && strlen(value) <= 64)

@@ -37,6 +37,8 @@ extern char *me_hash;
 extern char backupbuf[];
 static char buf[BUFSIZE];
 
+int labeled_response_inhibit = 0;
+
 void iNAH_host(aClient *sptr, char *host)
 {
 	if (!sptr->user)

@@ -633,6 +633,7 @@ extern int do_cmd(aClient *cptr, aClient *sptr, MessageTag *mtags, char *cmd, in
 extern void create_snomask(aClient *sptr, anUser *user, char *snomask);
 extern MODVAR char *me_hash;
 extern MODVAR int dontspread;
+extern MODVAR int labeled_response_inhibit;
 
 /* Efuncs */
 extern MODVAR int (*do_join)(aClient *, aClient *, int, char **);

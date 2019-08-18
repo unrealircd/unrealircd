@@ -68,7 +68,7 @@ MOD_UNLOAD(echo_message)
 
 int em_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
 {
-	if (MyClient(sptr))
+	if (MyClient(sptr) && HasCapabilityFast(sptr, CAP_ECHO_MESSAGE))
 	{
 		sendto_prefix_one(sptr, sptr, mtags, ":%s %s %s :%s",
 			sptr->name,
@@ -81,7 +81,7 @@ int em_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *
 
 int em_usermsg(aClient *sptr, aClient *to, MessageTag *mtags, char *text, int notice)
 {
-	if (MyClient(sptr))
+	if (MyClient(sptr) && HasCapabilityFast(sptr, CAP_ECHO_MESSAGE))
 	{
 		sendto_prefix_one(sptr, sptr, mtags, ":%s %s %s :%s",
 			sptr->name,
