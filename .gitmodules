@@ -3,4 +3,4 @@
 	url = https://github.com/unrealircd/ircfly.git
 [submodule "extras/tests/functional-tests"]
 	path = extras/tests/functional-tests
-	url = https://github.com/unrealircd/unrealircd-tests.git
+	url = https://github.com/unrealircd/unrealircd-tests-old.git

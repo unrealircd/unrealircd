@@ -36,9 +36,9 @@ cd ..
 # Install 'cipherscan'
 git clone -q https://github.com/mozilla/cipherscan
 
-# Install 'unrealircd-tests'
-git clone -q https://github.com/unrealircd/unrealircd-tests.git
-cd unrealircd-tests
+# Install 'unrealircd-tests-old'
+git clone -q https://github.com/unrealircd/unrealircd-tests-old.git
+cd unrealircd-tests-old
 bundle install
 mv config.yaml.example config.yaml
 
@@ -56,7 +56,7 @@ cd ../extras/tests/tls
 ./tls-tests
 cd -
 
-# Back in unrealircd-tests, run the tests!
+# Back in unrealircd-tests-old, run the tests!
 if [[ "$OSTYPE" == "darwin"* ]]; then
 	bundle exec rake
 else
