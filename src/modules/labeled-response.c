@@ -188,6 +188,23 @@ int lr_post_command(aClient *from, MessageTag *mtags, char *buf)
 	return 0;
 }
 
+/** Helper function for lr_packet() to skip the message tags prefix,
+ * and possibly @batch as well.
+ */
+char *skip_tags(char *msg)
+{
+	if (*msg != '@')
+		return msg;
+	if (!strncmp(msg, "@batch", 6))
+	{
+		char *p;
+		for (p = msg; *p; p++)
+			if ((*p == ';') || (*p == ' '))
+				return p;
+	}
+	return msg+1; /* just skip the '@' */
+}
+
 int lr_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int *len)
 {
 	static char packet[8192];
@@ -199,28 +216,35 @@ int lr_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int 
 		if (currentcmd.client == intended_to)
 		{
 			/* Add the label */
-			// XXX: TODO: this currently assumes 0 tags already exist, BAD !!!!
-			// XXX: TODO: it also does not take into account nested batches,
-			//            ending up with a batch=xxx batch=yyy in one message, BAD !!!!
 			if (currentcmd.responses == 0)
 			{
 				/* Start the batch now, normally this would be a sendto_one()
 				 * but doing so is not possible since we are in the sending code ;)
 				 */
 				char *batchstr = gen_start_batch();
+				int more_tags = **msg == '@';
 				snprintf(packet, sizeof(packet),
 				         "%s\r\n"
-				         "@batch=%s %s",
+				         "@batch=%s%s%s",
 				         batchstr,
 				         currentcmd.batch,
-				         *msg);
+				         more_tags ? ";" : " ",
+				         more_tags ? *msg+1 : *msg);
 				*msg = packet;
 				*len = strlen(*msg);
 			} else {
-				snprintf(packet, sizeof(packet), "@batch=%s ", currentcmd.batch);
-				strlcat(packet, *msg, sizeof(packet));
-				*msg = packet;
-				*len = strlen(*msg);
+				if (!strncmp(*msg, "@batch", 6))
+				{
+					/* No buffer change needed, already contains a (now inner) batch */
+				} else {
+					int more_tags = **msg == '@';
+					snprintf(packet, sizeof(packet), "@batch=%s%s%s",
+						currentcmd.batch,
+						more_tags ? ";" : " ",
+						more_tags ? *msg+1 : *msg);
+					*msg = packet;
+					*len = strlen(*msg);
+				}
 			}
 			currentcmd.responses++;
 		}
