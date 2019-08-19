@@ -43,7 +43,9 @@
 		safefree(reason); \
 		safefree(setby); \
 		safefree(spamf_check); \
+		safefree(spamf_expr); \
 		safefree(spamf_matchtype); \
+		safefree(spamf_tkl_reason); \
 	} while(0)
 
 #define R_SAFE(x) \
@@ -409,7 +411,9 @@ int read_tkldb(void)
 
 	// Some stuff related to spamfilters
 	char *spamf_check = NULL;
+	char *spamf_expr = NULL;
 	char *spamf_matchtype = NULL;
+	char *spamf_tkl_reason = NULL;
 
 #ifdef BENCHMARK
 	struct timeval tv_alpha, tv_beta;
@@ -476,10 +480,10 @@ int read_tkldb(void)
 		int spamf = 0;
 		char spamf_action;
 		unsigned short spamf_actionval;
-		char *spamf_tkl_reason = NULL;
+		spamf_tkl_reason = NULL;
 		TS spamf_tkl_duration_tkl1000;
 		uint64_t spamf_tkl_duration;
-		char *spamf_expr = NULL;
+		spamf_expr = NULL;
 		MatchType matchtype;
 		spamf_matchtype = NULL;
 
@@ -544,6 +548,7 @@ int read_tkldb(void)
 			if (cfg.backport_tkl1000)
 			{
 				R_SAFE(read_data(fd, &spamf_actionval, sizeof(spamf_actionval)));
+				// FIXME: BUG: spamf_action is not set
 			} else {
 				R_SAFE(read_data(fd, &spamf_action, sizeof(spamf_action)));
 				spamf_actionval = banact_chartoval(spamf_action);
@@ -726,6 +731,9 @@ static int read_str(FILE *fd, char **x)
 		*x = strdup(""); // It's safer for m_tkl to work with empty strings instead of NULLs
 		return 1;
 	}
+
+	if (len > 10000)
+		return 0;
 
 	size = len;
 	*x = MyMallocEx(size + 1);

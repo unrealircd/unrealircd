@@ -457,13 +457,13 @@ int read_channeldb(void)
 		if (!read_listmode(fd, &chptr->invexlist))
 			break;
 		R_SAFE(read_data(fd, &magic, sizeof(magic)));
+		FreeChannelEntry();
+		added++;
 		if (magic != MAGIC_CHANNEL_END)
 		{
 			config_error("[channeldb] Corrupt database (%s) - channel magic end is 0x%x. Further reading aborted.", cfg.database, magic);
 			break;
 		}
-		FreeChannelEntry();
-		added++;
 	}
 
 	fclose(fd);
