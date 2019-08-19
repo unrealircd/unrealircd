@@ -62,15 +62,15 @@ Enhancements:
   matches. Example: +b ~f:#badisp:*!*@*.isp.org
 * Channel mode +f now has a 'd' action: drop message. This will send an
   error message to the user and not show the message in the channel but
-  otherwise do nothing (no kick or ban). Example: +b [5t#d]:15 will limit
+  otherwise do nothing (no kick or ban). Example: +f [5t#d]:15 will limit
   sending a maximum of 5 messages per 15 seconds per-user and drop any
   messages sent above that limit.
 * Channel mode +f now has 'r' floodtype to prevent repeated lines. This will
   compare the current message to the last message and the one before that
   the user sent to the channel. If it's a repeat then the user can be
   kicked (the default action), the message can be dropped ('d') or the
-  user can be banned ('b'). Example: +b [1r#d]:15.
-  If you want to permit 1 repeated line but not 2 then use: +b [2r#d]:15
+  user can be banned ('b'). Example: +f [1r#d]:15.
+  If you want to permit 1 repeated line but not 2 then use: +f [2r#d]:15
 * New module tkldb (loaded by default): all *LINES and spamfilters are now
   saved across reboots. No need for services for that anymore.
 * New module channeldb (loaded by default): saves and restores all channel
