@@ -483,10 +483,10 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 						break;
 					case 'r':
 						newf.limit[FLD_REPEAT] = v;
-						if (a == 'd')
+						if (a == 'b' || a == 'd')
 							newf.action[FLD_REPEAT] = a;
-						else
-							newf.action[FLD_REPEAT] = 'b';
+						if (timedban_available)
+							newf.remove_after[FLD_REPEAT] = r;
 						break;
 					default:
 						goto invalidsyntax;
@@ -652,10 +652,10 @@ void *cmodef_put_param(void *fld_in, char *param)
 				break;
 			case 'r':
 				fld->limit[FLD_REPEAT] = v;
-				if (a == 'd')
+				if (a == 'b' || a == 'd')
 					fld->action[FLD_REPEAT] = a;
-				else
-					fld->action[FLD_REPEAT] = 'b';
+				if (timedban_available)
+					fld->remove_after[FLD_REPEAT] = r;
 				break;
 			default:
 				/* NOOP */
@@ -899,10 +899,10 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 					break;
 				case 'r':
 					newf.limit[FLD_REPEAT] = v;
-					if (a == 'd')
+					if (a == 'b' || a == 'd')
 						newf.action[FLD_REPEAT] = a;
-					else
-						newf.action[FLD_REPEAT] = 'b';
+					if (timedban_available)
+						newf.remove_after[FLD_REPEAT] = r;
 					break;
 				default:
 					return NULL;
@@ -1172,79 +1172,50 @@ int floodprot_chanmode_del(aChannel *chptr, int modechar)
 	return 0;
 }
 
-int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
+int check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 {
-	Membership *lp;
-	MembershipL *lp2;
-	int c_limit, t_limit, banthem, dropit;
-	int c_limit_repeat, banthem_repeat, dropit_repeat;
+	MembershipL *lp;
 	ChanFloodProt *chp;
 	aUserFld *userfld;
 	char *msghash;
-	int isfld_text, isfld_repeat;
-	int chk_text, chk_repeat;
+	unsigned char is_flooding_text=0, is_flooding_repeat=0;
 
 	if (ValidatePermissionsForPath("channel:override:flood",sptr,NULL,chptr,NULL) || !IsFloodLimit(chptr) || is_skochanop(sptr, chptr))
 		return 0;
 
-	if (!(lp = find_membership_link(sptr->user->channel, chptr)))
+	if (!(lp = (MembershipL *)find_membership_link(sptr->user->channel, chptr)))
 		return 0; /* not in channel */
 
-	lp2 = (MembershipL *) lp;
 	chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
 	if (!chp || !(chp->limit[FLD_TEXT] || chp->limit[FLD_REPEAT]))
 		return 0;
 
-	if (moddata_membership(lp2, mdflood).ptr == NULL)
+	if (moddata_membership(lp, mdflood).ptr == NULL)
 	{
 		/* Alloc a new entry if it doesn't exist yet */
-		moddata_membership(lp2, mdflood).ptr = MyMallocEx(sizeof(aUserFld));
+		moddata_membership(lp, mdflood).ptr = MyMallocEx(sizeof(aUserFld));
 	}
-	userfld = (aUserFld *)moddata_membership(lp2, mdflood).ptr;
-
-	isfld_text = isfld_repeat = 0;
-	c_limit = c_limit_repeat = banthem = banthem_repeat = dropit = dropit_repeat = 0;
-	t_limit = chp->per;
-	if ((chk_text = chp->limit[FLD_TEXT]))
-	{
-		c_limit = chp->limit[FLD_TEXT];
-		banthem = (chp->action[FLD_TEXT] == 'b') ? 1 : 0;
-		dropit = (chp->action[FLD_TEXT] == 'd') ? 1 : 0;
-		Debug((DEBUG_ERROR, "Checking for flood +f (type 'text'): firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
-			userfld->firstmsg, TStime() - userfld->firstmsg, userfld->nmsg + 1,
-			c_limit, t_limit));
-	}
-
-	if ((chk_repeat = chp->limit[FLD_REPEAT]))
-	{
-		c_limit_repeat = chp->limit[FLD_REPEAT];
-		banthem_repeat = (chp->action[FLD_REPEAT] == 'b') ? 1 : 0;
-		dropit_repeat = (chp->action[FLD_REPEAT] == 'd') ? 1 : 0;
-		Debug((DEBUG_ERROR, "Checking for flood +f (type 'repeat'): firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
-			userfld->firstmsg, TStime() - userfld->firstmsg, userfld->nmsg_repeat + 1,
-			c_limit_repeat, t_limit));
-	}
+	userfld = (aUserFld *)moddata_membership(lp, mdflood).ptr;
 
 	/* if current - firstmsgtime >= mode.per, then reset,
 	 * if nummsg > mode.msgs then kick/ban
 	 */
-	if ((TStime() - userfld->firstmsg) >= t_limit)
+	if ((TStime() - userfld->firstmsg) >= chp->per)
 	{
 		/* reset */
 		userfld->firstmsg = TStime();
 		userfld->nmsg = 1;
 		userfld->nmsg_repeat = 1;
-		if (chk_repeat)
+		if (chp->limit[FLD_REPEAT])
 		{
 			safestrdup(userfld->lastmsg, gen_floodprot_msghash(text));
-			MyFree(userfld->prevmsg);
-			userfld->prevmsg = NULL;
+			safefree(userfld->prevmsg);
 		}
 		return 0; /* forget about it.. */
 	}
 
-	if (chk_repeat)
+	if (chp->limit[FLD_REPEAT])
 	{
 		// The if() just above should set lastmsg the first time around, but let's be certain =]
 		msghash = gen_floodprot_msghash(text);
@@ -1253,48 +1224,52 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 			if (!strcmp(userfld->lastmsg, msghash) || (userfld->prevmsg && !strcmp(userfld->prevmsg, msghash)))
 			{
 				userfld->nmsg_repeat++;
-				if (userfld->nmsg_repeat > c_limit_repeat)
-					isfld_repeat = 1;
+				if (userfld->nmsg_repeat > chp->limit[FLD_REPEAT])
+					is_flooding_repeat = 1;
 			}
 			safestrdup(userfld->prevmsg, userfld->lastmsg);
 		}
 		safestrdup(userfld->lastmsg, msghash);
 	}
 
-	if (chk_text)
+	if (chp->limit[FLD_TEXT])
 	{
 		/* increase msgs */
 		userfld->nmsg++;
-		if (userfld->nmsg > c_limit)
-			isfld_text = 1;
+		if (userfld->nmsg > chp->limit[FLD_TEXT])
+			is_flooding_text = 1;
 	}
 
-	if (isfld_text || isfld_repeat)
+	/* Do we need to take any action? */
+	if (is_flooding_text || is_flooding_repeat)
 	{
 		char comment[256], mask[256];
 		MessageTag *mtags;
+		int flood_type;
 
-		if (isfld_repeat)
+		/* Repeat takes precedence over text flood */
+		if (is_flooding_repeat)
 		{
-			banthem = banthem_repeat;
-			dropit = dropit_repeat;
 			snprintf(comment, sizeof(comment), "Flooding (Your last message is too similar to previous ones)");
+			flood_type = FLD_REPEAT;
 		} else
 		{
-			snprintf(comment, sizeof(comment), "Flooding (Limit is %i lines per %i seconds)", c_limit, t_limit);
+			snprintf(comment, sizeof(comment), "Flooding (Limit is %i lines per %i seconds)", chp->limit[FLD_TEXT], chp->per);
+			flood_type = FLD_TEXT;
 		}
 
-		if (dropit)
+		if (chp->action[flood_type] == 'd')
 		{
-			// Notify user of not being able to send the message
+			/* Drop the message */
 			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname, comment, chptr->chname);
 			return 1;
 		}
 
-		if (banthem)
-		{		/* ban. */
-			if (timedban_available && (chp->remove_after[FLD_TEXT] > 0))
-				snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", chp->remove_after[FLD_TEXT], GetHost(sptr));
+		if (chp->action[flood_type] == 'b')
+		{
+			/* Ban the user */
+			if (timedban_available && (chp->remove_after[flood_type] > 0))
+				snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", chp->remove_after[flood_type], GetHost(sptr));
 			else
 				snprintf(mask, sizeof(mask), "*!*@%s", GetHost(sptr));
 			if (add_listmode(&chptr->banlist, &me, chptr, mask) == 0)
