@@ -1279,11 +1279,10 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 			banthem = banthem_repeat;
 			dropit = dropit_repeat;
 			snprintf(comment, sizeof(comment), "Flooding (Your last message is too similar to previous ones)");
-		}
-		else if (isfld_text)
+		} else
+		{
 			snprintf(comment, sizeof(comment), "Flooding (Limit is %i lines per %i seconds)", c_limit, t_limit);
-		else // Shouldn't happen, but let's be certain to handle it
-			return 0;
+		}
 
 		if (dropit)
 		{
@@ -1631,7 +1630,7 @@ char *gen_floodprot_msghash(char *text)
 		// Remove the \001 chars around the message
 		if((len = strlen(plaintext)) && plaintext[len - 1] == '\001')
 			plaintext[len - 1] = '\0';
-		*plaintext++;
+		plaintext++;
 		if(is_action)
 			plaintext += 7;
 	}

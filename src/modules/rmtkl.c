@@ -51,7 +51,7 @@ static char *rmtkl_help[] = {
 	"network if it's a global-type ban.",
 	"Syntax:",
 	"    \002/rmtkl\002 \037user@host\037 \037type\037 [\037comment\037] [\037-skipperm\037] [\037-silent\037]",
-	"The \037user@host\037 field is a wildcard mask to match the target of a ban."
+	"The \037user@host\037 field is a wildcard mask to match the target of a ban.",
 	"The \037type\037 field may contain any number of the following characters:",
 	"    k, z, G, Z, s, F and *",
 	"    These correspond to (local) K-Line, (local) Z-Line, G-Line, Global Z-Line, (global) Shun and (global) Spamfilter",
@@ -179,14 +179,26 @@ int rmtkl_tryremove(aClient *sptr, aClient *cptr, TKLType *tkltype, aTKline *tkl
 	if (tkl->type & TKL_SPAMF)
 	{
 		if (!silent)
-			sendto_snomask(SNO_TKL, "%s removed %s [%s] %s (set at %s " "- reason: %s)", sptr->name, tkltype->txt, banact_valtostring(tkl->ptr.spamf->action), tkl->reason, (gmt ? gmt : "<unknown>"), tkl->ptr.spamf->tkl_reason);
+		{
+			sendto_snomask(SNO_TKL, "%s removed %s [%s] %s (set at %s " "- reason: %s)",
+			               sptr->name, tkltype->txt, banact_valtostring(tkl->ptr.spamf->action),
+			               tkl->reason, gmt, tkl->ptr.spamf->tkl_reason);
+		}
 
-		ircd_log(LOG_TKL, "%s removed %s [%s] %s (set at %s " "- reason: %s)", sptr->name, tkltype->txt, banact_valtostring(tkl->ptr.spamf->action), tkl->reason, (gmt ? gmt : "<unknown>"), tkl->ptr.spamf->tkl_reason);
+		ircd_log(LOG_TKL, "%s removed %s [%s] %s (set at %s " "- reason: %s)",
+		         sptr->name, tkltype->txt, banact_valtostring(tkl->ptr.spamf->action),
+		         tkl->reason, gmt, tkl->ptr.spamf->tkl_reason);
 	} else
 	{
 		if (!silent)
-			sendto_snomask(SNO_TKL, "%s removed %s %s@%s (set at %s - reason: %s)", sptr->name, tkltype->txt, tkl->usermask, tkl->hostmask, (gmt ? gmt : "<unknown>"), tkl->reason);
-		ircd_log(LOG_TKL, "%s removed %s %s@%s (set at %s - reason: %s)", sptr->name, tkltype->txt, tkl->usermask, tkl->hostmask, (gmt ? gmt : "<unknown>"), tkl->reason);
+		{
+			sendto_snomask(SNO_TKL, "%s removed %s %s@%s (set at %s - reason: %s)",
+			               sptr->name, tkltype->txt, tkl->usermask, tkl->hostmask,
+			               gmt, tkl->reason);
+		}
+		ircd_log(LOG_TKL, "%s removed %s %s@%s (set at %s - reason: %s)",
+		         sptr->name, tkltype->txt, tkl->usermask, tkl->hostmask,
+		         gmt, tkl->reason);
 	}
 
 	RunHook5(HOOKTYPE_TKL_DEL, cptr, sptr, tkl, NULL, NULL);

@@ -1210,7 +1210,6 @@ int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 	if (key_length < 2048)
 	{
 		snprintf(errbuf, sizeof(errbuf), "Your SSL/TLS certificate key is only %d bits, which is insecure", key_length);
-		*errstr = errbuf;
 		return 0;
 	}
 
