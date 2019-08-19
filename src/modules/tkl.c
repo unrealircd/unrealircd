@@ -133,7 +133,7 @@ MOD_INIT(tkl)
 	CommandAdd(modinfo->handle, "ZLINE", m_zline, 3, M_OPER);
 	CommandAdd(modinfo->handle, "KLINE", m_kline, 3, M_OPER);
 	CommandAdd(modinfo->handle, "GZLINE", m_gzline, 3, M_OPER);
-	CommandAdd(modinfo->handle, "SPAMFITLER", m_spamfilter, 7, M_OPER);
+	CommandAdd(modinfo->handle, "SPAMFILTER", m_spamfilter, 7, M_OPER);
 	CommandAdd(modinfo->handle, "TKL", _m_tkl, MAXPARA, M_OPER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
