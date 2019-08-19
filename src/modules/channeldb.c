@@ -19,7 +19,7 @@
 #define W_SAFE(x) \
 	do { \
 		if (!(x)) { \
-			config_warn("[channeldb] Write error from the persistent storage tempfile '%s': %s (DATABASE NOT SAVED)", tmpfname, strerror(errno)); \
+			config_warn("[channeldb] Error writing to temporary database file '%s': %s (DATABASE NOT SAVED)", tmpfname, strerror(errno)); \
 			fclose(fd); \
 			return 0; \
 		} \
@@ -212,7 +212,7 @@ int write_channeldb(void)
 	fd = fopen(tmpfname, "wb");
 	if (!fd)
 	{
-		config_warn("[channeldb] Unable to open the persistent storage tempfile '%s' for writing: %s", tmpfname, strerror(errno));
+		config_warn("[channeldb] Unable to open the temporary database file '%s' for writing: %s. DATABASE NOT SAVED!", tmpfname, strerror(errno));
 		return 0;
 	}
 
@@ -237,7 +237,7 @@ int write_channeldb(void)
 	// Everything seems to have gone well, attempt to close and rename the tempfile
 	if (fclose(fd) != 0)
 	{
-		config_warn("[channeldb] Got an error when trying to close the persistent storage file '%s' (possible corruption occurred, DATABASE NOT SAVED): %s", cfg.database, strerror(errno));
+		config_warn("[channeldb] Error while writing to temporary database file '%s': %s. DATABASE NOT SAVED CORRECTLY!", cfg.database, strerror(errno));
 		return 0;
 	}
 
@@ -305,7 +305,7 @@ int write_channel_entry(FILE *fd, const char *tmpfname, aChannel *chptr)
 #define R_SAFE(x) \
 	do { \
 		if (!(x)) { \
-			config_warn("[channeldb] Read error from the persistent storage file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
+			config_warn("[channeldb] Read error from database file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
 			if (e) \
 			{ \
 				safefree(e->banstr); \
@@ -359,7 +359,7 @@ int read_listmode(FILE *fd, Ban **lst)
 #define R_SAFE(x) \
 	do { \
 		if (!(x)) { \
-			config_warn("[channeldb] Read error from the persistent storage file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
+			config_warn("[channeldb] Read error from database file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
 			fclose(fd); \
 			FreeChannelEntry(); \
 			return 0; \
@@ -399,7 +399,7 @@ int read_channeldb(void)
 			config_warn("[channeldb] No database present at '%s', will start a new one", cfg.database);
 			return 1;
 		} else {
-			config_warn("[channeldb] Unable to open the persistent storage file '%s' for reading: %s", cfg.database, strerror(errno));
+			config_warn("[channeldb] Unable to open the database file '%s' for reading: %s", cfg.database, strerror(errno));
 			return 0;
 		}
 	}
@@ -408,8 +408,7 @@ int read_channeldb(void)
 	if (version > channeldb_version)
 	{
 		config_warn("[channeldb] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, channeldb_version, version);
-		if (fclose(fd) != 0)
-			config_warn("[channeldb] Got an error when trying to close the persistent storage file '%s' (possible corruption occurred): %s", cfg.database, strerror(errno));
+		fclose(fd);
 		return 0;
 	}
 
@@ -450,12 +449,9 @@ int read_channeldb(void)
 		chptr->topic_time = topic_time;
 		chptr->mode_lock = BadPtr(mode_lock) ? NULL : strdup(mode_lock);
 		set_channel_mode(chptr, modes1, modes2);
-		if (!read_listmode(fd, &chptr->banlist))
-			break;
-		if (!read_listmode(fd, &chptr->exlist))
-			break;
-		if (!read_listmode(fd, &chptr->invexlist))
-			break;
+		R_SAFE(read_listmode(fd, &chptr->banlist));
+		R_SAFE(read_listmode(fd, &chptr->exlist));
+		R_SAFE(read_listmode(fd, &chptr->invexlist));
 		R_SAFE(read_data(fd, &magic, sizeof(magic)));
 		FreeChannelEntry();
 		added++;

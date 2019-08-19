@@ -51,7 +51,7 @@
 #define R_SAFE(x) \
 	do { \
 		if (!(x)) { \
-			config_warn("[tkldb] Read error from the persistent storage file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
+			config_warn("[tkldb] Read error from database file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
 			fclose(fd); \
 			FreeTKLRead(); \
 			return 0; \
@@ -61,7 +61,7 @@
 #define W_SAFE(x) \
 	do { \
 		if (!(x)) { \
-			config_warn("[tkldb] Write error from the persistent storage tempfile '%s': %s (DATABASE NOT SAVED)", tmpfname, strerror(errno)); \
+			config_warn("[tkldb] Error writing to temporary database file '%s': %s. DATABASE NOT SAVED!", tmpfname, strerror(errno)); \
 			fclose(fd); \
 			return 0; \
 		} \
@@ -258,7 +258,7 @@ int write_tkldb(void)
 	fd = fopen(tmpfname, "wb");
 	if (!fd)
 	{
-		config_warn("[tkldb] Unable to open the persistent storage tempfile '%s' for writing: %s", tmpfname, strerror(errno));
+		config_warn("[tkldb] Unable to open temporary database file '%s' for writing: %s. DATABASE NOT SAVED!", tmpfname, strerror(errno));
 		return 0;
 	}
 
@@ -321,7 +321,7 @@ int write_tkldb(void)
 	// Everything seems to have gone well, attempt to close and rename the tempfile
 	if (fclose(fd) != 0)
 	{
-		config_warn("[tkldb] Got an error when trying to close the persistent storage file '%s' (possible corruption occurred, DATABASE NOT SAVED): %s", cfg.database, strerror(errno));
+		config_warn("[tkldb] Got an error when trying to close database file '%s' (possible corruption occurred, DATABASE NOT SAVED): %s", cfg.database, strerror(errno));
 		return 0;
 	}
 	if (rename(tmpfname, cfg.database) < 0)
@@ -433,7 +433,7 @@ int read_tkldb(void)
 			config_warn("[tkldb] No database present at '%s', will start a new one", cfg.database);
 			return 1;
 		} else {
-			config_warn("[tkldb] Unable to open the persistent storage file '%s' for reading: %s", cfg.database, strerror(errno));
+			config_warn("[tkldb] Unable to open database file '%s' for reading: %s", cfg.database, strerror(errno));
 			return 0;
 		}
 	}
@@ -444,7 +444,7 @@ int read_tkldb(void)
 		// Older DBs should still work with newer versions of this module
 		config_warn("[tkldb] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, tkl_db_version, version);
 		if (fclose(fd) != 0)
-			config_warn("[tkldb] Got an error when trying to close the persistent storage file '%s' (possible corruption occurred): %s", cfg.database, strerror(errno));
+			config_warn("[tkldb] Got an error when trying to close database file '%s' (possible corruption occurred): %s", cfg.database, strerror(errno));
 		return 0;
 	}
 
