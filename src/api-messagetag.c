@@ -138,11 +138,6 @@ void unload_mtag_handler_commit(MessageTagHandler *m)
  */
 void MessageTagHandlerDel(MessageTagHandler *m)
 {
-	if (loop.ircd_rehashing)
-		m->unloaded = 1;
-	else
-		unload_mtag_handler_commit(m);
-
 	if (m->owner)
 	{
 		ModuleObject *mobj;
@@ -156,6 +151,11 @@ void MessageTagHandlerDel(MessageTagHandler *m)
 		}
 		m->owner = NULL;
 	}
+
+	if (loop.ircd_rehashing)
+		m->unloaded = 1;
+	else
+		unload_mtag_handler_commit(m);
 }
 
 void unload_all_unused_mtag_handlers(void)

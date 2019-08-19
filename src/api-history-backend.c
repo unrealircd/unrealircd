@@ -123,11 +123,6 @@ void unload_history_backend_commit(HistoryBackend *m)
  */
 void HistoryBackendDel(HistoryBackend *m)
 {
-	if (loop.ircd_rehashing)
-		m->unloaded = 1;
-	else
-		unload_history_backend_commit(m);
-
 	if (m->owner)
 	{
 		ModuleObject *mobj;
@@ -141,6 +136,11 @@ void HistoryBackendDel(HistoryBackend *m)
 		}
 		m->owner = NULL;
 	}
+
+	if (loop.ircd_rehashing)
+		m->unloaded = 1;
+	else
+		unload_history_backend_commit(m);
 }
 
 void unload_all_unused_history_backends(void)

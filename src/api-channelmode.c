@@ -312,11 +312,6 @@ void unload_extcmode_commit(Cmode *cmode)
 
 void CmodeDel(Cmode *cmode)
 {
-	if (loop.ircd_rehashing)
-		cmode->unloaded = 1;
-	else
-		unload_extcmode_commit(cmode);
-
 	if (cmode->owner)
 	{
 		ModuleObject *cmodeobj;
@@ -329,6 +324,11 @@ void CmodeDel(Cmode *cmode)
 		}
 		cmode->owner = NULL;
 	}
+	if (loop.ircd_rehashing)
+		cmode->unloaded = 1;
+	else
+		unload_extcmode_commit(cmode);
+
 }
 
 void unload_all_unused_extcmodes(void)

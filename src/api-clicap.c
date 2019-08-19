@@ -233,11 +233,6 @@ void unload_clicap_commit(ClientCapability *clicap)
  */
 void ClientCapabilityDel(ClientCapability *clicap)
 {
-	if (loop.ircd_rehashing)
-		clicap->unloaded = 1;
-	else
-		unload_clicap_commit(clicap);
-
 	if (clicap->owner)
 	{
 		ModuleObject *mobj;
@@ -250,13 +245,18 @@ void ClientCapabilityDel(ClientCapability *clicap)
 		}
 		clicap->owner = NULL;
 	}
+
+	if (loop.ircd_rehashing)
+		clicap->unloaded = 1;
+	else
+		unload_clicap_commit(clicap);
 }
 
 void unload_all_unused_caps(void)
 {
 	ClientCapability *clicap, *clicap_next;
 
-	for (clicap = clicaps; clicap; clicap = clicap->next)
+	for (clicap = clicaps; clicap; clicap = clicap_next)
 	{
 		clicap_next = clicap->next;
 		if (clicap->unloaded)
