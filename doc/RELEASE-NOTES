@@ -1,22 +1,29 @@
-UnrealIRCd 5.0.0-dev Release Notes
-===================================
+UnrealIRCd 5.0.0-alpha1 Release Notes
+======================================
 
-As UnrealIRCd 5 is work-in-progress, these release notes will be updated
-once in a while to reflect the features and changes.
+IMPORTANT: UnrealIRCd 5 is currently in "alpha" phase. This means it
+may crash or behave weird. Do not run this on production servers!
+The alpha releases are there to show the current state of UnrealIRCd 5.
+UnrealIRCd 5 is not yet feature complete at this point; about 80% of
+the planned functionality is there.
 
-Summary:
-The most visible changes to end-users are channel history and several IRCv3
-features. Various modules from Gottem have been integrated and enhanced.
+Summary
+--------
+The most visible change to end-users is channel history.
+Various modules from Gottem have been integrated and enhanced.
 Channel settings of +P channels and *LINES are saved in a database and
 restored on startup (via 'channeldb' and 'tkldb' respectively).
-Channel mode +L has a slight change of meaning and a few extended bans
-have been added (~f and ~p).
-For advanced users we now have more dynamic configuration options.
+Channel mode +L has a slight change of meaning, the existing floodprot
+mode (+f) has a new type to prevent repeated messages and a new drop action.
+A few extended bans have been added as well (~f and ~p).
+For advanced users we now have more dynamic configuration options
+where you can define variables and use them in the configuration file.
 Finally, there have been speed improvements, we use better defaults and
 have added more countermeasures and options against spambots.
 Under the hood a lot of the source code was changed and cleaned up.
 
-Enhancements:
+Enhancements
+-------------
 * Support for server generated message tags, which allows us to communicate
   additional information in protocol messages such as in JOIN and PRIVMSG.
   Currently implemented and permitted message tags are:
@@ -122,7 +129,7 @@ Enhancements:
             [..]
     @if module-loaded("chanmodes/noctcp")
             " C = No CTCPs allowed in the channel [h]";
-    $endif
+    @endif
     }
 * New extban ~p (+b ~p:*!*@*.nl) to hide PART and QUIT messages.
 * You will now see a warning when a server is not responding even
@@ -142,7 +149,8 @@ Enhancements:
   do not have the restrictions (eg: are -S and -G) can still see the
   original QUIT message.
 
-Changed:
+Changed
+--------
 * Modules lost their m_ prefix, so for example m_map is now just map.
   Also the modules in cap/ are now directly in modules.
 * More modules that were previously PERM (permanent) can now be unloaded
@@ -193,10 +201,12 @@ Changed:
   normal users. They don't mean much nowadays anyway.
 * We now default to system libs (eg: --with-system-pcre2 is assumed)
 
-Minor issues fixed:
+Minor issues fixed
+-------------------
 * Specifying a custom OpenSSL/LibreSSL path works now
 
-Removed:
+Removed
+--------
 * Extended ban ~R (registered nick): this was the old method to match
   registered users. Everyone should use ~a (services account) instead.
 * The old TRE 'posix' regex method has been removed because the TRE
@@ -212,7 +222,13 @@ Removed:
   purpose. UnrealIRCd already protects against these kind of attacks
   via ping cookies (set::ping-cookie, enabled by default).
 
-Developers:
+Developers
+-----------
+IMPORTANT: As long as UnrealIRCd 5 is in alpha stage, we do not suggest
+3rd party module authors to start porting modules yet from U4 to U5.
+Of course you may, but the module API is still very likely to change
+so you may have to do certain (other) changes again next alpha release.
+It is therefore best to wait until beta1. You have been warned ;).
 * In UnrealIRCd 5, during development, --enable-asan is ON by default
   to catch more bugs. This also means an up to 10x slowdown and more
   memory usage. When we reach 5.0.0 stable this will be turned off.
@@ -259,7 +275,8 @@ Developers:
   files have been deleted and integrated elsewhere or renamed to
   have a name that better reflects their true meaning.
 
-Server protocol:
+Server protocol
+----------------
 * Surprisingly little has been changed in the server to server protocol
   between UnrealIRCd 4 and UnrealIRCd 5.
 * "PROTOCTL MTAGS" indicates that the server is capable of handling

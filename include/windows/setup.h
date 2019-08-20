@@ -89,6 +89,6 @@
 
 /* Version suffix such as a beta marker or release candidate marker. (e.g.:
    -rcX for unrealircd-3.2.9-rcX) */
-#define UNREAL_VERSION_SUFFIX "-dev"
+#define UNREAL_VERSION_SUFFIX "-alpha1"
 
 #endif
