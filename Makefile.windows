@@ -289,22 +289,43 @@ DLL_FILES=SRC/MODULES/CHGHOST.DLL SRC/MODULES/SDESC.DLL SRC/MODULES/SETIDENT.DLL
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
 
 CLEAN:
+        -@erase *.obj >NUL
         -@erase src\*.obj >NUL
         -@erase src\win.res >NUL
         -@erase src\version.c >NUL
         -@erase src\windows\*.obj >NUL
 	-@erase src\modules\*.obj >NUL
-	-@erase src\modules\*.dll >NUL
-	-@erase src\modules\chanmodes\*.dll >NUL
-	-@erase src\modules\usermodes\*.dll >NUL
-	-@erase src\modules\snomasks\*.dll >NUL
-	-@erase src\modules\extbans\*.dll >NUL
-        -@erase .\*.exe >NUL
-	-@erase UnrealIRCd.lib >NUL
-	-@erase src\modules\*.exp >NUL
 	-@erase src\modules\*.lib >NUL
 	-@erase src\modules\*.pdb >NUL
+	-@erase src\modules\*.dll >NUL
+	-@erase src\modules\*.exp >NUL
 	-@erase src\modules\*.ilk >NUL
+	-@erase src\modules\chanmodes\*.obj >NUL
+	-@erase src\modules\chanmodes\*.lib >NUL
+	-@erase src\modules\chanmodes\*.pdb >NUL
+	-@erase src\modules\chanmodes\*.dll >NUL
+	-@erase src\modules\chanmodes\*.exp >NUL
+	-@erase src\modules\chanmodes\*.ilk >NUL
+	-@erase src\modules\usermodes\*.obj >NUL
+	-@erase src\modules\usermodes\*.lib >NUL
+	-@erase src\modules\usermodes\*.pdb >NUL
+	-@erase src\modules\usermodes\*.dll >NUL
+	-@erase src\modules\usermodes\*.exp >NUL
+	-@erase src\modules\usermodes\*.ilk >NUL
+	-@erase src\modules\snomasks\*.obj >NUL
+	-@erase src\modules\snomasks\*.lib >NUL
+	-@erase src\modules\snomasks\*.pdb >NUL
+	-@erase src\modules\snomasks\*.dll >NUL
+	-@erase src\modules\snomasks\*.exp >NUL
+	-@erase src\modules\snomasks\*.ilk >NUL
+	-@erase src\modules\extbans\*.obj >NUL
+	-@erase src\modules\extbans\*.lib >NUL
+	-@erase src\modules\extbans\*.pdb >NUL
+	-@erase src\modules\extbans\*.dll >NUL
+	-@erase src\modules\extbans\*.exp >NUL
+	-@erase src\modules\extbans\*.ilk >NUL
+        -@erase .\*.exe >NUL
+	-@erase UnrealIRCd.lib >NUL
 
 ./UNREALSVC.EXE: SRC/UNREALSVC.OBJ SRC/WINDOWS/UNREALSVC.RES
 	$(LINK) $(DBGLFLAGST) advapi32.lib src/unrealsvc.obj src/windows/unrealsvc.res
