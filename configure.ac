@@ -443,10 +443,6 @@ dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_SETPGRP
 AC_FUNC_SETVBUF_REVERSED
-AC_CHECK_FUNCS(snprintf,
-	AC_DEFINE([HAVE_SNPRINTF], [], [Define if you have snprintf]))
-AC_CHECK_FUNCS(vsnprintf,
-	AC_DEFINE([HAVE_VSNPRINTF], [], [Define if you have vsnprintf]))
 AC_CHECK_FUNCS(strlcpy,
 	AC_DEFINE([HAVE_STRLCPY], [], [Define if you have strlcpy. Otherwise, an internal implementation will be used!]))
 AC_CHECK_FUNCS(strlcat,

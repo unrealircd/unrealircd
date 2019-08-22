@@ -136,9 +136,6 @@
 /* Define to 1 if you have the `setrlimit' function. */
 #undef HAVE_SETRLIMIT
 
-/* Define to 1 if you have the `snprintf' function. */
-#undef HAVE_SNPRINTF
-
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
@@ -195,9 +192,6 @@
 
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF
-
-/* Define to 1 if you have the `vsnprintf' function. */
-#undef HAVE_VSNPRINTF
 
 /* Define if you want modes shown in /list */
 #undef LIST_SHOW_MODES
