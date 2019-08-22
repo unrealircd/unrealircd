@@ -1176,7 +1176,7 @@ char *mystpcpy(char *dst, const char *src)
  *         so similar to what strlen() would have returned.
  * @note Caller must ensure that the buffer 'buf' is of sufficient size.
  */
-size_t add_sjsby(char *buf, char *setby, TS seton)
+size_t add_sjsby(char *buf, char *setby, time_t seton)
 {
 	char tbuf[32];
 	char *p = buf;
@@ -1230,7 +1230,7 @@ void concat_params(char *buf, int len, int parc, char *parv[])
 	}
 }
 
-char *pretty_date(TS t)
+char *pretty_date(time_t t)
 {
 	static char buf[128];
 	struct tm *tm;

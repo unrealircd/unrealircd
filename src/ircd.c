@@ -68,7 +68,6 @@ extern void init_glines(void);
 extern void tkl_init(void);
 extern void process_clients(void);
 
-MODVAR TS   last_garbage_collect = 0;
 #ifndef _WIN32
 MODVAR char **myargv;
 #else
@@ -82,9 +81,7 @@ char *debugmode = "";		/*  -"-    -"-   -"-  */
 char *sbrk0;			/* initial sbrk(0) */
 static int dorehash = 0, dorestart = 0, doreloadcert = 0;
 MODVAR int  booted = FALSE;
-MODVAR TS   lastlucheck = 0;
 
-MODVAR TS   NOW;
 #if	defined(PROFIL) && !defined(_WIN32)
 extern etext();
 
@@ -921,7 +918,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #else
 	uid_t uid, euid;
 	gid_t gid, egid;
-	TS   delay = 0;
+	time_t delay = 0;
 	struct passwd *pw;
 	struct group *gr;
 #endif
@@ -1412,11 +1409,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 
 void SocketLoop(void *dummy)
 {
-	TS   delay = 0;
-	static TS lastglinecheck = 0;
-	TS   last_tune;
-
-
 	while (1)
 #else
 	/*

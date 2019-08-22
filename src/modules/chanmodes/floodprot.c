@@ -63,7 +63,7 @@ typedef struct UserFld aUserFld;
 struct UserFld {
 	unsigned short nmsg;
 	unsigned short nmsg_repeat;
-	TS   firstmsg;
+	time_t firstmsg;
 	char *lastmsg;
 	char *prevmsg;
 };

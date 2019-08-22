@@ -59,7 +59,7 @@ char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
 char *_tkl_type_string(aTKline *tk);
 aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby,
-    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType spamf_match_type, int soft, int flags);
+    time_t expire_at, time_t set_at, time_t spamf_tkl_duration, char *spamf_tkl_reason, MatchType spamf_match_type, int soft, int flags);
 void _tkl_del_line(aTKline *tkl);
 static void _tkl_check_local_remove_shun(aTKline *tmp);
 void tkl_expire_entry(aTKline * tmp);
@@ -898,9 +898,9 @@ int ban_too_broad(char *usermask, char *hostmask)
  */
 int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type)
 {
-	TS secs;
+	time_t secs;
 	int whattodo = 0;	/* 0 = add  1 = del */
-	TS i;
+	time_t i;
 	aClient *acptr = NULL;
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
@@ -1552,8 +1552,8 @@ aTKline *tkl_find_head(char type, char *hostmask, aTKline *def)
  * such as 'reason' being the spamfilter match string (regex).
  */
 aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby,
-                       TS expire_at, TS set_at,
-                       TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType spamf_match_type,
+                       time_t expire_at, time_t set_at,
+                       time_t spamf_tkl_duration, char *spamf_tkl_reason, MatchType spamf_match_type,
                        int soft, int flags)
 {
 	aTKline *tkl;
@@ -1786,7 +1786,7 @@ void tkl_expire_entry(aTKline * tmp)
 EVENT(tkl_check_expire)
 {
 	aTKline *tkl, *next;
-	TS nowtime;
+	time_t nowtime;
 	int index, index2;
 
 	nowtime = TStime();
@@ -2634,7 +2634,7 @@ CMD_FUNC(m_tkl_add)
 	aTKline *tk;
 	int type;
 	char gmt[256], gmt2[256];
-	TS expiry_1, setat_1, spamf_tklduration = 0;
+	time_t expiry_1, setat_1, spamf_tklduration = 0;
 	MatchType spamf_match_method = MATCH_PCRE_REGEX; /* default */
 	char *reason = NULL, *timeret;
 	int softban = 0;

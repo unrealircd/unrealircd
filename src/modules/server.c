@@ -1275,7 +1275,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 }
 
 /* (only for old severs lacking SJ3) */
-static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel *channel)
+static int send_ban_list(aClient *cptr, char *chname, time_t creationtime, aChannel *channel)
 {
 	Ban *top;
 

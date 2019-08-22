@@ -384,7 +384,7 @@ CMD_FUNC(m_sjoin)
 	for (s = strtoken(&saved, cbuf, " "); s; s = strtoken(&saved, NULL, " "))
 	{
 		char *setby = cptr->name; /**< Set by (nick, nick!user@host, or server name) */
-		TS setat = TStime(); /**< Set at timestamp */
+		time_t setat = TStime(); /**< Set at timestamp */
 		int sjsby_info = 0; /**< Set to 1 if we receive SJSBY info to alter the above 2 vars */
 
 		c = 0;

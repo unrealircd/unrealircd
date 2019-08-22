@@ -93,7 +93,7 @@ static char readbuf[BUFSIZE];
 char zlinebuf[BUFSIZE];
 extern char *version;
 extern ircstats IRCstats;
-MODVAR TS last_allinuse = 0;
+MODVAR time_t last_allinuse = 0;
 
 #ifdef USE_LIBCURL
 extern void url_do_transfers_async(void);

@@ -303,7 +303,7 @@ int identical_ban(char *one, char *two)
  *  the specified channel. (Extended version with
  *  set by nick and set on timestamp)
  */
-int add_listmode_ex(Ban **list, aClient *cptr, aChannel *chptr, char *banid, char *setby, TS seton)
+int add_listmode_ex(Ban **list, aClient *cptr, aChannel *chptr, char *banid, char *setby, time_t seton)
 {
 	Ban *ban;
 	int cnt = 0, len;
@@ -739,7 +739,7 @@ int  DoesOp(char *modebuf)
 }
 
 /* This function is only used for non-SJOIN servers. So don't bother with mtags support.. */
-int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, TS creationtime)
+int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, time_t creationtime)
 {
 	if ((IsServer(cptr) && DoesOp(mode) && creationtime) || IsULine(cptr))
 		sendto_one(cptr, NULL, ":%s MODE %s %s %s %lu", from,
@@ -939,7 +939,7 @@ aChannel *get_channel(aClient *cptr, char *chname, int flag)
 		chptr->topic_nick = NULL;
 		chptr->prevch = NULL;
 		chptr->nextch = channel;
-		chptr->creationtime = MyClient(cptr) ? TStime() : (TS)0;
+		chptr->creationtime = MyClient(cptr) ? TStime() : 0;
 		channel = chptr;
 		(void)add_to_channel_hash_table(chname, chptr);
 		IRCstats.channels++;

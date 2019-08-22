@@ -1902,20 +1902,20 @@ CMD_FUNC(_m_umode)
 CMD_FUNC(m_mlock)
 {
 	aChannel *chptr = NULL;
-	TS chants;
+	time_t t;
 
 	if ((parc < 3) || BadPtr(parv[2]))
 		return 0;
 
-	chants = (TS) atol(parv[1]);
+	t = (time_t) atol(parv[1]);
 
 	/* Now, try to find the channel in question */
 	chptr = find_channel(parv[2], NULL);
 	if (!chptr)
 		return 0;
 
-	/* Senders' Channel TS is higher, drop it. */
-	if (chants > chptr->creationtime)
+	/* Senders' Channel t is higher, drop it. */
+	if (t > chptr->creationtime)
 		return 0;
 
 	if (IsServer(sptr))

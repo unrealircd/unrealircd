@@ -28,7 +28,7 @@ time_t get_file_time(char *fname)
 char *find_best_coredump(void)
 {
 	static char best_fname[512];
-	TS best_time = 0, t;
+	time_t best_time = 0, t;
 	struct dirent *dir;
 #ifndef _WIN32
 	DIR *fd = opendir(TMPDIR);

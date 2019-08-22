@@ -98,9 +98,6 @@ void free();
 #endif
 #endif
 
-#define TS time_t
-
-
 #define mycmp(a,b) \
  ( (toupper(a[0])!=toupper(b[0])) || smycmp((a)+1,(b)+1) )
 extern int smycmp(const char *, const char *);
@@ -275,7 +272,7 @@ extern int lu_noninv, lu_inv, lu_serv, lu_oper,
     lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv,
     lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
 
-extern MODVAR TS   now;
+extern MODVAR time_t now;
 
 #ifndef _WIN32
 #if defined(__STDC__)

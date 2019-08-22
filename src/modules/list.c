@@ -72,13 +72,13 @@ MOD_UNLOAD(list)
 CMD_FUNC(m_list)
 {
 	aChannel *chptr;
-	TS   currenttime = TStime();
+	time_t currenttime = TStime();
 	char *name, *p = NULL;
 	LOpts *lopt = NULL;
 	Link *lp;
 	int  usermax, usermin, error = 0, doall = 0;
-	TS   chantimemin, chantimemax;
-	TS   topictimemin, topictimemax;
+	time_t chantimemin, chantimemax;
+	time_t topictimemin, topictimemax;
 	Link *yeslist = NULL, *nolist = NULL;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("LIST");
@@ -163,7 +163,7 @@ CMD_FUNC(m_list)
 			  doall = 1;
 			  break;
 		  case 'C':
-		  case 'c':	/* Channel TS time -- creation time? */
+		  case 'c':	/* Channel time -- creation time? */
 			  ++name;
 			  switch (*name++)
 			  {

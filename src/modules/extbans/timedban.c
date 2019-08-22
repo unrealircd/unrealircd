@@ -360,10 +360,10 @@ int timedban_is_banned(aClient *sptr, aChannel *chptr, char *ban, int chktype, c
 /** Helper to check if the ban has been expired */
 int timedban_has_ban_expired(Ban *ban)
 {
-char *banstr = ban->banstr;
-char *p;
-int t;
-TS expire_on;
+	char *banstr = ban->banstr;
+	char *p;
+	int t;
+	time_t expire_on;
 
 	if (strncmp(banstr, "~t:", 3))
 		return 0; /* not for us */

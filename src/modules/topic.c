@@ -82,7 +82,7 @@ CMD_FUNC(m_topic)
 	aChannel *chptr = NULL;
 	char *topic = NULL, *name, *tnick = sptr->name;
 	char *errmsg = NULL;
-	TS   ttime = 0;
+	time_t ttime = 0;
 	int i = 0;
 	Hook *h;
 	int ismember; /* cache: IsMember() */

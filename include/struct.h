@@ -607,7 +607,7 @@ typedef struct Whowas {
 	char *servername;
 	char *realname;
 	long umodes;
-	TS   logoff;
+	time_t   logoff;
 	struct Client *online;	/* Pointer to new nickname for chasing or NULL */
 	struct Whowas *next;	/* for hash table... */
 	struct Whowas *prev;	/* for hash table... */
@@ -666,7 +666,7 @@ struct User {
 		time_t invite_t;	/* last time the user used /invite */
 		unsigned char invite_c;	/* number of times the user used /invite */
 	} flood;
-	TS lastaway;
+	time_t lastaway;
 };
 
 struct Server {
@@ -675,9 +675,9 @@ struct Server {
 	char 		*up;		/* uplink for this server */
 	char 		by[NICKLEN + 1];
 	ConfigItem_link *conf;
-	TS   		timestamp;	/* Remotely determined connect try time */
+	time_t 		timestamp;	/* Remotely determined connect try time */
 	long		users;
-	TS		boottime;	/* Startup time of server */
+	time_t		boottime;	/* Startup time of server */
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
@@ -740,7 +740,7 @@ struct _spamfilter {
 	unsigned short action; /**< Ban action, see BAN_ACT* */
 	aMatch *expr; /**< Spamfilter matcher */
 	char *tkl_reason; /**< Reason to use for bans placed by this spamfilter, escaped by unreal_encodespace(). */
-	TS tkl_duration; /**< Duration of bans placed by this spamfilter */
+	time_t tkl_duration; /**< Duration of bans placed by this spamfilter */
 };
 
 #define TKL_SUBTYPE_NONE	0x0000
@@ -761,8 +761,8 @@ struct t_kline {
 	char *hostmask; /**< Host mask [different for spamfilter] */
 	char *reason; /**< Reason [different for spamfilter] */
 	char *setby; /**< By who was this entry added */
-	TS expire_at; /**< When this entry will expire */
-	TS set_at; /**< When this entry was added */
+	time_t expire_at; /**< When this entry will expire */
+	time_t set_at; /**< When this entry was added */
 };
 
 /** A spamfilter except entry */
@@ -845,7 +845,7 @@ struct Client {
 	aLocalClient *local;	/* for locally connected clients */
 	anUser *user;		/* ...defined, if this is a User */
 	aServer *serv;		/* ...defined, if this is a server */
-	TS   lastnick;		/* TimeStamp on nick */
+	time_t lastnick;		/* TimeStamp on nick */
 	long flags;		/* client flags */
 	long umodes;		/* client usermodes */
 	aClient *from;		/* == &me, if Local Client, *NEVER* NULL! */
@@ -865,12 +865,12 @@ struct Client {
 };
 
 struct LocalClient {
-	TS   since;		/* time they will next be allowed to send something */
-	TS   firsttime;		/* Time it was created */
-	TS   lasttime;		/* last time any message was received */
-	TS   last;		/* last time a RESETIDLE message was received */
-	TS   nexttarget;	/* next time that a new target will be allowed (msg/notice/invite) */
- 	TS   nextnick;		/* Time the next nick change will be allowed */
+	time_t since;		/* time they will next be allowed to send something */
+	time_t firsttime;		/* Time it was created */
+	time_t lasttime;		/* last time any message was received */
+	time_t last;		/* last time a RESETIDLE message was received */
+	time_t nexttarget;	/* next time that a new target will be allowed (msg/notice/invite) */
+ 	time_t nextnick;		/* Time the next nick change will be allowed */
 	u_char targets[MAXCCUSERS];	/* hash values of targets */
 	char buffer[BUFSIZE];	/* Incoming message buffer */
 	short lastsq;		/* # of 2k blocks when sendqueued called last */
@@ -900,7 +900,7 @@ struct LocalClient {
 					 */
 	char *passwd;
 #ifdef DEBUGMODE
-	TS   cputime;
+	time_t cputime;
 #endif
 	char *error_str;	/* Quit reason set by dead_link in case of socket/buffer error */
 
@@ -1445,8 +1445,8 @@ struct stats {
 	unsigned long is_ckr;	/* k-bytes received to clients */
 	unsigned long is_sks;	/* k-bytes sent to servers */
 	unsigned long is_skr;	/* k-bytes received to servers */
-	TS   is_cti;		/* time spent connected by clients */
-	TS   is_sti;		/* time spent connected by servers */
+	time_t is_cti;		/* time spent connected by clients */
+	time_t is_sti;		/* time spent connected by servers */
 	unsigned int is_ac;	/* connections accepted */
 	unsigned int is_ref;	/* accepts refused */
 	unsigned int is_unco;	/* unknown commands */
@@ -1474,11 +1474,11 @@ struct ListOptions {
 	short int showall;
 	unsigned short usermin;
 	int  usermax;
-	TS   currenttime;
-	TS   chantimemin;
-	TS   chantimemax;
-	TS   topictimemin;
-	TS   topictimemax;
+	time_t currenttime;
+	time_t chantimemin;
+	time_t chantimemax;
+	time_t topictimemin;
+	time_t topictimemax;
 };
 
 #define EXTCMODETABLESZ 32
@@ -1501,7 +1501,7 @@ struct SMode {
 
 struct Watch {
 	aWatch *hnext;
-	TS   lasttime;
+	time_t lasttime;
 	Link *watch;
 	char nick[1];
 };
@@ -1521,7 +1521,7 @@ struct SLink {
 		struct {
 			char *banstr;
 			char *who;
-			TS   when;
+			time_t when;
 		} ban;
 	} value;
 };
@@ -1537,10 +1537,10 @@ struct SMember
 struct Channel {
 	struct Channel *nextch, *prevch, *hnextch;
 	Mode mode;
-	TS   creationtime;
+	time_t creationtime;
 	char *topic;
 	char *topic_nick;
-	TS   topic_time;
+	time_t topic_time;
 	int users;
 	Member *members;
 	Link *invites;
@@ -1574,7 +1574,7 @@ struct SBan {
 	struct SBan *next;
 	char *banstr;
 	char *who;
-	TS   when;
+	time_t when;
 };
 
 struct DSlink {

@@ -23,7 +23,7 @@
 #ifndef proto_h
 #define proto_h
 /* channel.c */
-extern int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, TS creationtime);
+extern int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, time_t creationtime);
 extern void make_cmodestr(void);
 
 /* lusers.c */

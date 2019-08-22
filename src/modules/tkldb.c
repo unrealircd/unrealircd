@@ -472,7 +472,7 @@ int read_tkldb(void)
 		char tklflag;
 		tkltype = NULL;
 		uint64_t expire_at, set_at;
-		TS expire_at_tkl1000, set_at_tkl1000;
+		time_t expire_at_tkl1000, set_at_tkl1000;
 		char setTime[100], expTime[100], spamfTime[100];
 
 		// Some stuff related to spamfilters
@@ -481,7 +481,7 @@ int read_tkldb(void)
 		char spamf_action;
 		unsigned short spamf_actionval;
 		spamf_tkl_reason = NULL;
-		TS spamf_tkl_duration_tkl1000;
+		time_t spamf_tkl_duration_tkl1000;
 		uint64_t spamf_tkl_duration;
 		spamf_expr = NULL;
 		MatchType matchtype;
