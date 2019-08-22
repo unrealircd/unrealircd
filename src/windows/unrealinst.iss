@@ -21,7 +21,7 @@ SolidCompression=true
 MinVersion=5.0
 OutputDir=.
 SourceDir=../../
-UninstallDisplayIcon={app}\UnrealIRCd.exe
+UninstallDisplayIcon={app}\bin\UnrealIRCd.exe
 DisableWelcomePage=no
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
@@ -38,9 +38,9 @@ Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL/TLS
 Name: "fixperm"; Description: "Make UnrealIRCd folder writable by current user";
 
 [Files]
-Source: "UnrealIRCd.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "UnrealIRCd.pdb"; DestDir: "{app}"; Flags: ignoreversion
-Source: "doc\RELEASE-NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
+Source: "UnrealIRCd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "UnrealIRCd.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "doc\RELEASE-NOTES"; DestDir: "{app}\doc"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
 
 Source: "doc\conf\*.default.conf"; DestDir: "{app}\conf"; Flags: ignoreversion
 Source: "doc\conf\*.optional.conf"; DestDir: "{app}\conf"; Flags: ignoreversion
@@ -51,17 +51,17 @@ Source: "doc\conf\aliases\*.conf"; DestDir: "{app}\conf\aliases"; Flags: ignorev
 Source: "doc\conf\help\*.conf"; DestDir: "{app}\conf\help"; Flags: ignoreversion
 Source: "doc\conf\examples\*.conf"; DestDir: "{app}\conf\examples"; Flags: ignoreversion
 
-Source: "doc\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion
-Source: "LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+Source: "doc\Donation"; DestDir: "{app}\doc"; DestName: "Donation.txt"; Flags: ignoreversion
+Source: "LICENSE"; DestDir: "{app}\doc"; DestName: "LICENSE.txt"; Flags: ignoreversion
 
 Source: "doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
 Source: "doc\technical\*.*"; DestDir: "{app}\doc\technical"; Flags: ignoreversion
 Source: "doc\conf\aliases\*"; DestDir: "{app}\conf\aliases"; Flags: ignoreversion
 
-Source: "unrealsvc.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
+Source: "unrealsvc.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; MinVersion: 0,4.0
 
-Source: "src\windows\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
-Source: "extras\tls.cnf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "src\windows\makecert.bat"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "extras\tls.cnf"; DestDir: "{app}\bin"; Flags: ignoreversion
 
 Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
 Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags: ignoreversion
@@ -69,29 +69,27 @@ Source: "src\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags
 Source: "src\modules\snomasks\*.dll"; DestDir: "{app}\modules\snomasks"; Flags: ignoreversion
 Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
 
-Source: "c:\dev\unrealircd-5-libs\pcre2\bin\pcre*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\unrealircd-5-libs\argon2\vs2015\build\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\unrealircd-5-libs\c-ares\msvc\cares\dll-release\cares.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\unrealircd-5-libs\libressl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\unrealircd-5-libs\libressl\bin\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\pcre2\bin\pcre*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\argon2\vs2015\build\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\c-ares\msvc\cares\dll-release\cares.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\libressl\bin\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\libressl\bin\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "c:\dev\unrealircd-5-libs\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 
 #ifdef USE_CURL
-Source: "c:\dev\unrealircd-5-libs\curl\builds\libcurl-vc-x64-release-dll-ssl-dll-cares-dll-ipv6-obj-lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\curl\builds\libcurl-vc-x64-release-dll-ssl-dll-cares-dll-ipv6-obj-lib\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "doc\conf\tls\curl-ca-bundle.crt"; DestDir: "{app}\conf\tls"; Flags: ignoreversion
 #endif
 
 [Dirs]
 Name: "{app}\tmp"
+Name: "{app}\bin"
 Name: "{app}\cache"
 Name: "{app}\logs"
 Name: "{app}\conf"
 Name: "{app}\conf\tls"
 Name: "{app}\data"
 Name: "{app}\modules\third"
-
-[UninstallDelete]
-Type: files; Name: "{app}\DbgHelp.Dll"
 
 [Code]
 var
@@ -106,7 +104,7 @@ var
   major: Cardinal;
 begin
 	Result := true;
-  if Not RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\16.0\VC\Runtimes\x64', 'Major', major) then
+  if Not RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Major', major) then
     begin
       MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2019 to be installed.' #13 +
              'After you click OK you will be taken to a download page from Microsoft:' #13 +
@@ -167,23 +165,23 @@ begin
 end;
 
 [Icons]
-Name: "{group}\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"
-Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
-Name: "{group}\Make Certificate"; Filename: "{app}\makecert.bat"; WorkingDir: "{app}"
-Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/UnrealIRCd_5_documentation"; WorkingDir: "{app}"
-Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"; Tasks: desktopicon
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\UnrealIRCd.exe"; WorkingDir: "{app}"; Tasks: quicklaunchicon
+Name: "{group}\UnrealIRCd"; Filename: "{app}\bin\UnrealIRCd.exe"; WorkingDir: "{app}\bin"
+Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}\bin"
+Name: "{group}\Make Certificate"; Filename: "{app}\bin\makecert.bat"; WorkingDir: "{app}\bin"
+Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/UnrealIRCd_5_documentation"; WorkingDir: "{app}\bin"
+Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\bin\UnrealIRCd.exe"; WorkingDir: "{app}\bin"; Tasks: desktopicon
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\bin\UnrealIRCd.exe"; WorkingDir: "{app}\bin"; Tasks: quicklaunchicon
 
 [Run]
 ;Filename: "notepad"; Description: "View example.conf"; Parameters: "{app}\conf\examples\example.conf"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "https://www.unrealircd.org/docs/UnrealIRCd_5_documentation"; Description: "View documentation"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "https://www.unrealircd.org/docs/Installing_%28Windows%29"; Description: "View installation instructions"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
-Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\RELEASE.NOTES.txt"; Flags: postinstall skipifsilent shellexec runmaximized
-Filename: "{app}\unrealsvc.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
-Filename: "{app}\unrealsvc.exe"; Parameters: "config startup manual"; Flags: runminimized nowait; Tasks: installservice/startdemand
-Filename: "{app}\unrealsvc.exe"; Parameters: "config startup auto"; Flags: runminimized nowait; Tasks: installservice/startboot
-Filename: "{app}\unrealsvc.exe"; Parameters: "config crashrestart 2"; Flags: runminimized nowait; Tasks: installservice/crashrestart
-Filename: "{app}\makecert.bat"; Tasks: makecert; Flags: postinstall;
+Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\doc\RELEASE.NOTES.txt"; Flags: postinstall skipifsilent shellexec runmaximized
+Filename: "{app}\bin\unrealsvc.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
+Filename: "{app}\bin\unrealsvc.exe"; Parameters: "config startup manual"; Flags: runminimized nowait; Tasks: installservice/startdemand
+Filename: "{app}\bin\unrealsvc.exe"; Parameters: "config startup auto"; Flags: runminimized nowait; Tasks: installservice/startboot
+Filename: "{app}\bin\unrealsvc.exe"; Parameters: "config crashrestart 2"; Flags: runminimized nowait; Tasks: installservice/crashrestart
+Filename: "{app}\bin\makecert.bat"; Tasks: makecert; Flags: postinstall;
 
 [UninstallRun]
-Filename: "{app}\unrealsvc.exe"; Parameters: "uninstall"; Flags: runminimized; RunOnceID: "DelService"; Tasks: installservice
+Filename: "{app}\bin\unrealsvc.exe"; Parameters: "uninstall"; Flags: runminimized; RunOnceID: "DelService"; Tasks: installservice
