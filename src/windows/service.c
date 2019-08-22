@@ -17,15 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
-#include <winsock2.h>
-#include <windows.h>
-#include <winsvc.h>
-#include "struct.h"
-#include "h.h"
-#include "proto.h"
-#include "version.h"
-#include <string.h>
+#include "unrealircd.h"
 
 SERVICE_STATUS IRCDStatus; 
 SERVICE_STATUS_HANDLE IRCDStatusHandle;

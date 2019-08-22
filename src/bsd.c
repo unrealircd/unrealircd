@@ -35,38 +35,8 @@
 
 /* 2.78 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
+#include "unrealircd.h"
 #include "dns.h"
-#include "numeric.h"
-#include "version.h"
-#ifndef _WIN32
-#include <sys/socket.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#include <sys/resource.h>
-#else
-#include <io.h>
-#endif
-#if defined(_SOLARIS)
-#include <sys/filio.h>
-#endif
-#include <stdio.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <string.h>
-#ifndef _WIN32
-#include <netinet/tcp.h>
-#endif
-#include "proto.h"
-			/* define it (BSD4.2 needs this) */
-#include "h.h"
-#include "fdlist.h"
-
-#ifndef IN_LOOPBACKNET
-#define IN_LOOPBACKNET	0x7f
-#endif
 
 #ifndef _WIN32
 #define SET_ERRNO(x) errno = x

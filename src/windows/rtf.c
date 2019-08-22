@@ -17,12 +17,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "sys.h"
-#include <windows.h>
+#include "unrealircd.h"
 #include "win.h"
-#include "common.h"
-#include "struct.h"
-#include "h.h"
 
 unsigned char *RTFBuf;
 

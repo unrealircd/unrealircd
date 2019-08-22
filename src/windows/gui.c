@@ -18,27 +18,15 @@
  */
 
 #define WIN32_VERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5
-#include "sys.h"
-#include "resource.h"
-#include "version.h"
-#include "setup.h"
-#include <windows.h>
+
+#include "unrealircd.h"
 #include <windowsx.h>
 #include <commctrl.h>
-#include "struct.h"
-#include "common.h"
-#include "numeric.h"
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <io.h>
-#include <direct.h>
-#include <errno.h>
-#include "h.h"
-#include <richedit.h>
 #include <commdlg.h>
-#include "win.h"
+#include <richedit.h>
 #include <Strsafe.h>
+#include "resource.h"
+#include "win.h"
 
 #define TOOLBAR_START 82
 #define TOOLBAR_STOP (TOOLBAR_START+20)

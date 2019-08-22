@@ -28,14 +28,6 @@
 
 char backupbuf[8192];
 
-#define MSGTAB
-#include "msg.h"
-#undef MSGTAB
-#include "sys.h"
-#include "numeric.h"
-#include "h.h"
-#include "proto.h"
-
 /*
  * NOTE: parse() should not be called recursively by other functions!
  */

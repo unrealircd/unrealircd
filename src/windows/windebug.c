@@ -17,20 +17,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "sys.h"
-#include "setup.h"
-#include <windows.h>
+#include "unrealircd.h"
 #include <dbghelp.h>
-#include "struct.h"
-#include "h.h"
-#include "proto.h"
-#include "version.h"
-#include <string.h>
-#include <signal.h>
+
 #ifndef IRCDTOTALVERSION
 #define IRCDTOTALVERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
-#define BUFFERSIZE   0x200
 
 extern OSVERSIONINFO VerInfo;
 extern char OSName[256];
