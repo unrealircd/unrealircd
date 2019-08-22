@@ -37,7 +37,7 @@ unsigned char *RTFBuf;
  * Returns:
  *  Returns 0 to indicate success
  */
-DWORD CALLBACK SplitIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) 
+DWORD CALLBACK SplitIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 {
 	StreamIO *stream = (StreamIO*)dwCookie;
 	if (*stream->size == 0)
@@ -73,7 +73,7 @@ DWORD CALLBACK SplitIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
  * Side Effects:
  *  RTFBuf contains the assembled RTF buffer
  */
-DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) 
+DWORD CALLBACK BufferIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 {
 	unsigned char *buf2;
 	static long size = 0;

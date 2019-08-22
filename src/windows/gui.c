@@ -99,7 +99,6 @@ HWND hStatusWnd;
 HWND hwIRCDWnd=NULL;
 HWND hwTreeView;
 HWND hWndMod;
-HANDLE hMainThread = 0;
 UINT WM_TASKBARCREATED, WM_FINDMSGSTRING;
 FARPROC lpfnOldWndProc;
 HMENU hContext;
@@ -289,7 +288,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		return FALSE;
 	}
 	ShowWindow(hWnd, SW_SHOW);
-	hMainThread = (HANDLE)_beginthread(SocketLoop, 0, NULL);
+	_beginthread(SocketLoop, 0, NULL);
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		if (!IsWindow(hStatusWnd) || !IsDialogMessage(hStatusWnd, &msg)) 
@@ -331,8 +330,8 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			hAbout = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_ABOUT)),0);
 			/* Systray popup menu set the items to point to the other menus*/
 			hTray = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_SYSTRAY)),0);
-			ModifyMenu(hTray, IDM_REHASH, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hRehash, "&Rehash");
-			ModifyMenu(hTray, IDM_ABOUT, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hAbout, "&About");
+			ModifyMenu(hTray, IDM_REHASH, MF_BYCOMMAND|MF_POPUP|MF_STRING, HandleToUlong(hRehash), "&Rehash");
+			ModifyMenu(hTray, IDM_ABOUT, MF_BYCOMMAND|MF_POPUP|MF_STRING, HandleToUlong(hAbout), "&About");
 			
 			SetWindowText(hDlg, WIN32_VERSION);
 			SendMessage(hDlg, WM_SETICON, (WPARAM)ICON_SMALL, 
@@ -342,7 +341,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			return TRUE;
 		}
 		case WM_CTLCOLORDLG:
-			return (LONG)MainDlgBackground;
+			return (LONG)HandleToLong(MainDlgBackground);
 		case WM_SIZE: 
 		{
 			if (wParam & SIZE_MINIMIZED)
@@ -375,7 +374,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					if (conf_log) 
 					{
 						ConfigItem_log *logs;
-						AppendMenu(hConfig, MF_POPUP|MF_STRING, (UINT)hLogs, "Logs");
+						AppendMenu(hConfig, MF_POPUP|MF_STRING, HandleToUlong(hLogs), "Logs");
 						for (logs = conf_log; logs; logs = logs->next)
 						{
 							AppendMenu(hLogs, MF_STRING, i++, logs->file);
@@ -483,7 +482,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				if (conf_log) 
 				{
 					ConfigItem_log *logs;
-					AppendMenu(hConfig, MF_POPUP|MF_STRING, (UINT)hLogs, "Logs");
+					AppendMenu(hConfig, MF_POPUP|MF_STRING, HandleToUlong(hLogs), "Logs");
 					for (logs = conf_log; logs; logs = logs->next)
 					{
 						AppendMenu(hLogs, MF_STRING, i++, logs->file);
@@ -701,7 +700,7 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			size--;
 			stream->size = &size;
 			stream->buffer = &RTFBuf;
-			edit.dwCookie = (UINT)stream;
+			edit.dwCookie = HandleToUlong(stream);
 			edit.pfnCallback = SplitIt;
 			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMIN, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
 			free(RTFString);	

@@ -231,7 +231,7 @@ int hunt_server(aClient *cptr, aClient *sptr, MessageTag *mtags, char *command, 
 /** Convert a target pointer to an 8 bit hash, used for target limiting. */
 unsigned char hash_target(void *target)
 {
-	unsigned int v = (unsigned long)target;
+	unsigned long long v = (unsigned long long)target;
 	/* ircu does >> 16 and 8 but since our sizeof(aClient) is
 	 * towards 512 (and hence the alignment), that bit is useless.
 	 * So we do >> 17 and 9.

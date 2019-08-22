@@ -63,11 +63,6 @@
 
 #include "channel.h"
 
-#if defined(_MSC_VER)
-/* needed to workaround a warning / prototype/dll inconsistency crap */
-#define vsnprintf unrl_vsnprintf
-#endif
-
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
 typedef struct t_kline aTKline;

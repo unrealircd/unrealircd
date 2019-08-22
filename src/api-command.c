@@ -133,5 +133,5 @@ void CommandDelX(Command *command, aCommand *cmd)
 
 void CommandDel(Command *command)
 {
-	return CommandDelX(command, command->cmd);
+	CommandDelX(command, command->cmd);
 }

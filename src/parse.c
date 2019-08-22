@@ -117,7 +117,7 @@ int parse(aClient *cptr, char *buffer, int length)
 
 	/* This poisons unused para elements that code should never access */
 	for (i = 0; i < MAXPARA+2; i++)
-		para[i] = (char *)0xDEADBEEF;
+		para[i] = (char *)DEADBEEF_ADDR;
 
 	/* First, skip any whitespace */
 	for (ch = buffer; *ch == ' '; ch++)
@@ -168,8 +168,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch)
 		ch[510] = '\0';
 	}
 
-	//para[0] = from->name;
-	para[0] = (char *)0xDEADBEEF; /* helps us catch bugs :) -- 1/2 */
+	para[0] = (char *)DEADBEEF_ADDR; /* helps us catch bugs :) */
 
 	if (*ch == ':' || *ch == '@')
 	{
@@ -197,8 +196,6 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch)
 			from = find_client(sender, NULL);
 			if (!from && index(sender, '@'))
 				from = hash_find_nickatserver(sender, NULL);
-			//para[0] = sender;
-			para[0] = (char *)0xDEADBEEF; /* helps us catch bugs :) -- 2/2 */
 
 			/* Hmm! If the client corresponding to the
 			 * prefix is not found--what is the correct

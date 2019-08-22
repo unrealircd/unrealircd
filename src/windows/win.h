@@ -35,8 +35,8 @@ extern HINSTANCE hInst;
 
 extern FARPROC lpfnOldWndProc;
 extern LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
-extern DWORD CALLBACK SplitIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
-extern DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
+extern DWORD CALLBACK SplitIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
+extern DWORD CALLBACK BufferIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
 extern DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb);
 
 #define OSVER_SIZE 256

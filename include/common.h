@@ -60,6 +60,12 @@ typedef int bool;
 
 #define BMAGIC 0x4675636B596F754661736369737473
 
+#ifdef _WIN32
+#define DEADBEEF_ADDR 0xDEADBEEFDEADBEEF
+#else
+#define DEADBEEF_ADDR 0xDEADBEEF
+#endif
+
 #define BASE_VERSION "UnrealIRCd"
 #ifndef _WIN32
 #define FDwrite(x,y,z) write(x, y, z)
