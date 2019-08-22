@@ -22,6 +22,7 @@ MinVersion=6.1
 OutputDir=.
 SourceDir=../../
 UninstallDisplayIcon={app}\bin\UnrealIRCd.exe
+UninstallFilesDir={app}\bin\uninstaller
 DisableWelcomePage=no
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
@@ -168,13 +169,13 @@ end;
 Name: "{group}\UnrealIRCd"; Filename: "{app}\bin\UnrealIRCd.exe"; WorkingDir: "{app}\bin"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}\bin"
 Name: "{group}\Make Certificate"; Filename: "{app}\bin\makecert.bat"; WorkingDir: "{app}\bin"
-Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/UnrealIRCd_5_documentation"; WorkingDir: "{app}\bin"
+Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/"; WorkingDir: "{app}\bin"
 Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\bin\UnrealIRCd.exe"; WorkingDir: "{app}\bin"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\bin\UnrealIRCd.exe"; WorkingDir: "{app}\bin"; Tasks: quicklaunchicon
 
 [Run]
 ;Filename: "notepad"; Description: "View example.conf"; Parameters: "{app}\conf\examples\example.conf"; Flags: postinstall skipifsilent shellexec runmaximized
-Filename: "https://www.unrealircd.org/docs/UnrealIRCd_5_documentation"; Description: "View documentation"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
+Filename: "https://www.unrealircd.org/docs/"; Description: "View documentation"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "https://www.unrealircd.org/docs/Installing_%28Windows%29"; Description: "View installation instructions"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\doc\RELEASE.NOTES.txt"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "{app}\bin\unrealsvc.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
