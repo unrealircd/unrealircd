@@ -11,7 +11,6 @@
 #include "msg.h"
 #include "mempool.h"
 #include "proto.h"
-#include "inet.h"
 #include "channel.h"
 #include <time.h>
 #include <sys/stat.h>

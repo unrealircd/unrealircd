@@ -68,6 +68,7 @@
 #ifndef _WIN32
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #else
 #define NTDDI_VERSION 0x0501
 #define _WIN32_WINNT 0x0501

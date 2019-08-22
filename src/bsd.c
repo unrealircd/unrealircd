@@ -56,7 +56,6 @@
 #if defined(_SOLARIS)
 #include <sys/filio.h>
 #endif
-#include "inet.h"
 #include <stdio.h>
 #include <signal.h>
 #include <fcntl.h>
