@@ -682,7 +682,7 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			EDITSTREAM edit;
 			SetWindowText(hDlg, title);
 			bzero(String, sizeof(String));
-			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
+			lpfnOldWndProc = (FARPROC)SetWindowLongPtr(GetDlgItem(hDlg, IDC_TEXT), GWLP_WNDPROC, (LONG_PTR)RESubClassFunc);
 			while (*s) 
 			{
 				strcat(String, *s++);
@@ -766,7 +766,7 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT), hTip;
 			StringCbPrintf(szText, sizeof(szText), "UnrealIRCd Viewer - %s", (unsigned char *)lParam);
 			SetWindowText(hDlg, szText);
-			lpfnOldWndProc = (FARPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)RESubClassFunc);
+			lpfnOldWndProc = (FARPROC)SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)RESubClassFunc);
 			if ((fd = open((unsigned char *)lParam, _O_RDONLY|_O_BINARY)) != -1) 
 			{
 				fstat(fd,&sb);
@@ -851,8 +851,8 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			hFont = CreateFont(8,0,0,0,0,0,1,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
 			SendMessage(GetDlgItem(hDlg, IDC_EMAIL), WM_SETFONT, (WPARAM)hFont,TRUE);
 			SendMessage(GetDlgItem(hDlg, IDC_URL), WM_SETFONT, (WPARAM)hFont,TRUE);
-			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_EMAIL), GWL_WNDPROC, (DWORD)LinkSubClassFunc);
-			SetWindowLong(GetDlgItem(hDlg, IDC_URL), GWL_WNDPROC, (DWORD)LinkSubClassFunc);
+			lpfnOldWndProc = (FARPROC)SetWindowLongPtr(GetDlgItem(hDlg, IDC_EMAIL), GWLP_WNDPROC, (LONG_PTR)LinkSubClassFunc);
+			SetWindowLongPtr(GetDlgItem(hDlg, IDC_URL), GWLP_WNDPROC, (LONG_PTR)LinkSubClassFunc);
 			return TRUE;
 
 		case WM_DRAWITEM: 

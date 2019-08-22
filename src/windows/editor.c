@@ -342,7 +342,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			else 
 				strcpy(szText, "UnrealIRCd Editor - New File");
 			SetWindowText(hDlg, szText);
-			lpfnOldWndProc = (FARPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)RESubClassFunc);
+			lpfnOldWndProc = (FARPROC)SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)RESubClassFunc);
 			hTool = DrawToolbar(hInst, hDlg);
 			hStatus = DrawStatusbar(hInst, hDlg, IDC_STATUS);
 			SendMessage(hWnd, EM_SETEVENTMASK, 0, (LPARAM)ENM_SELCHANGE);

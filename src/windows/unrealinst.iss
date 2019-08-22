@@ -13,7 +13,7 @@ AppSupportURL=https://www.unrealircd.org
 AppUpdatesURL=https://www.unrealircd.org
 AppMutex=UnrealMutex,Global\UnrealMutex
 DefaultDirName={pf}\UnrealIRCd 5
-DefaultGroupName=UnrealIRCd
+DefaultGroupName=UnrealIRCd 5
 AllowNoIcons=yes
 LicenseFile=src\windows\gplplusssl.rtf
 Compression=lzma
@@ -23,6 +23,8 @@ OutputDir=.
 SourceDir=../../
 UninstallDisplayIcon={app}\UnrealIRCd.exe
 DisableWelcomePage=no
+ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64
 
 ; !!! Make sure to update SSL/TLS validation (WizardForm.TasksList.Checked[9]) if tasks are added/removed !!!
 [Tasks]
@@ -67,16 +69,15 @@ Source: "src\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags
 Source: "src\modules\snomasks\*.dll"; DestDir: "{app}\modules\snomasks"; Flags: ignoreversion
 Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
 
-Source: "c:\dev\pcre2\bin\pcre*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\argon2\vs2015\build\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\c-ares\msvc\cares\dll-release\cares.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\libressl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\libressl\bin\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "c:\dev\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\pcre2\bin\pcre*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\argon2\vs2015\build\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\c-ares\msvc\cares\dll-release\cares.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\libressl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\libressl\bin\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 
 #ifdef USE_CURL
-; curl with SSL/TLS support
-Source: "C:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-ssl-dll-ipv6-sspi-obj-lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-5-libs\curl\builds\libcurl-vc-x64-release-dll-ssl-dll-cares-dll-ipv6-obj-lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "doc\conf\tls\curl-ca-bundle.crt"; DestDir: "{app}\conf\tls"; Flags: ignoreversion
 #endif
 
@@ -105,16 +106,16 @@ var
   major: Cardinal;
 begin
 	Result := true;
-  if Not RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x86', 'Major', major) then
+  if Not RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\16.0\VC\Runtimes\x64', 'Major', major) then
     begin
-      MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2017 to be installed.' #13 +
+      MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2019 to be installed.' #13 +
              'After you click OK you will be taken to a download page from Microsoft:' #13 +
-             '1) Scroll down to the "Visual Studio 2017" section' #13 +
-             '2) Click on the x86 "vc_redist.x86.exe" to download the installer' #13 +
+             '1) Scroll down to the section "Visual Studio 2015, 2017 and 2019"' #13 +
+             '2) Click on the x64 "vc_redist.x64.exe" to download the 64 bit installer' #13 +
              '3) Run the installer.' #13 + #13 +
              'If you are already absolutely sure that you have this package installed then you can skip this step.', mbInformation, MB_OK);
       ShellExec('open', 'https://support.microsoft.com/help/2977003/the-latest-supported-visual-c-downloads', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
-      MsgBox('Your browser was launched. After you have installed the Microsoft Visual C++ Redistributable for Visual Studio 2017 (vc_redist.x86.exe), click OK below to continue the UnrealIRCd installer', mbInformation, MB_OK);
+      MsgBox('Your browser was launched. After you have installed the Microsoft Visual C++ Redistributable for Visual Studio 2019 (vc_redist.x64.exe), click OK below to continue the UnrealIRCd installer', mbInformation, MB_OK);
 	end;
 end;
 

@@ -57,39 +57,39 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 {
 	static char buffer[5000];
 	char curmodule[256];
-	DWORD symOptions, dwDisp, frame;
+	DWORD symOptions;
+	DWORD64 dwDisp;
+	DWORD dwDisp32;
+	int frame;
 	HANDLE hProcess = GetCurrentProcess();
-	IMAGEHLP_SYMBOL *pSym = MyMallocEx(sizeof(IMAGEHLP_SYMBOL)+500);
-	IMAGEHLP_LINE pLine;
-	IMAGEHLP_MODULE pMod;
-	STACKFRAME Stack;
+	IMAGEHLP_SYMBOL64 *pSym = MyMallocEx(sizeof(IMAGEHLP_SYMBOL64)+500);
+	IMAGEHLP_LINE64 pLine;
+	IMAGEHLP_MODULE64 pMod;
+	STACKFRAME64 Stack;
 	CONTEXT context;
 
 	memcpy(&context, e->ContextRecord, sizeof(CONTEXT));
 
 	/* Load the stack information */
 	memset(&Stack, 0, sizeof(Stack));
-	Stack.AddrPC.Offset = e->ContextRecord->Eip;
+	Stack.AddrPC.Offset = e->ContextRecord->Rip;
 	Stack.AddrPC.Mode = AddrModeFlat;
-	Stack.AddrFrame.Offset = e->ContextRecord->Ebp;
+	Stack.AddrFrame.Offset = e->ContextRecord->Rbp;
 	Stack.AddrFrame.Mode = AddrModeFlat;
-	Stack.AddrStack.Offset = e->ContextRecord->Esp;
+	Stack.AddrStack.Offset = e->ContextRecord->Rsp;
 	Stack.AddrStack.Mode = AddrModeFlat;
-	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
-		hProcess = (HANDLE)GetCurrentProcessId();
-	else
-		hProcess = GetCurrentProcess();	
+	hProcess = GetCurrentProcess();
 
 	/* Initialize symbol retrieval system */
 	SymInitialize(hProcess, NULL, TRUE);
 	SymSetOptions(SYMOPT_LOAD_LINES|SYMOPT_UNDNAME);
-	pSym->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
+	pSym->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64);
 	pSym->MaxNameLength = 500;
 
 	/* Retrieve the first module name */
-	bzero(&pMod, sizeof(IMAGEHLP_MODULE));
-	pMod.SizeOfStruct = sizeof(IMAGEHLP_MODULE);
-	SymGetModuleInfo(hProcess, Stack.AddrPC.Offset, &pMod);
+	bzero(&pMod, sizeof(IMAGEHLP_MODULE64));
+	pMod.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
+	SymGetModuleInfo64(hProcess, Stack.AddrPC.Offset, &pMod);
 	strcpy(curmodule, pMod.ModuleName);
 	sprintf(buffer, "\tModule: %s\n", pMod.ModuleName);
 
@@ -97,13 +97,13 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 	for (frame = 0; ; frame++) 
 	{
 		char buf[500];
-		if (!StackWalk(IMAGE_FILE_MACHINE_I386, GetCurrentProcess(), GetCurrentThread(),
-			&Stack, &context, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL))
+		if (!StackWalk64(IMAGE_FILE_MACHINE_AMD64, GetCurrentProcess(), GetCurrentThread(),
+			&Stack, &context, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL))
 			break;
 
-		bzero(&pMod, sizeof(IMAGEHLP_MODULE));
-		pMod.SizeOfStruct = sizeof(IMAGEHLP_MODULE);
-		SymGetModuleInfo(hProcess, Stack.AddrPC.Offset, &pMod);
+		bzero(&pMod, sizeof(IMAGEHLP_MODULE64));
+		pMod.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
+		SymGetModuleInfo64(hProcess, Stack.AddrPC.Offset, &pMod);
 		if (strcmp(curmodule, pMod.ModuleName)) 
 		{
 			strcpy(curmodule, pMod.ModuleName);
@@ -111,10 +111,10 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 			strcat(buffer, buf);
 		}
 
-		bzero(&pLine, sizeof(IMAGEHLP_LINE));
-		pLine.SizeOfStruct = sizeof(IMAGEHLP_LINE);
-		SymGetLineFromAddr(hProcess, Stack.AddrPC.Offset, &dwDisp, &pLine);
-		SymGetSymFromAddr(hProcess, Stack.AddrPC.Offset, &dwDisp, pSym);
+		bzero(&pLine, sizeof(IMAGEHLP_LINE64));
+		pLine.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+		SymGetLineFromAddr64(hProcess, Stack.AddrPC.Offset, &dwDisp32, &pLine);
+		SymGetSymFromAddr64(hProcess, Stack.AddrPC.Offset, &dwDisp, pSym);
 		sprintf(buf, "\t\t#%d %s:%d: %s\n", frame, pLine.FileName, pLine.LineNumber, 
 		        pSym->Name);
 		strcat(buffer, buf);
@@ -128,18 +128,48 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
  * Parameters:
  *  context - The CPU context
  * Returns:
- *  The values of the EAX/EBX/ECX/EDX/ESI/EDI/EIP/EBP/ESP registers
+ *  The values of the registers as a string.
  */
 __inline char *GetRegisters(CONTEXT *context) 
 {
 	static char buffer[1024];
 
-	sprintf(buffer, "\tEAX=0x%08x EBX=0x%08x ECX=0x%08x\n"
-			"\tEDX=0x%08x ESI=0x%08x EDI=0x%08x\n"
-			"\tEIP=0x%08x EBP=0x%08x ESP=0x%08x\n",
-		context->Eax, context->Ebx, context->Ecx, context->Edx,
-		context->Esi, context->Edi, context->Eip, context->Ebp,
-		context->Esp);
+	sprintf(buffer,
+		"\tRAX=%p"
+		"\tRBX=%p"
+		"\tRCX=%p"
+		"\tRDX=%p\n"
+		"\tRSI=%p"
+		"\tRDI=%p"
+		"\tRBP=%p"
+		"\tRSP=%p\n"
+		"\tR8=%p"
+		"\tR9=%p"
+		"\tR10=%p"
+		"\tR11=%p\n"
+		"\tR12=%p"
+		"\tR13=%p"
+		"\tR14=%p"
+		"\tR15=%p\n"
+		"\tRIP=%p\n",
+		(void *)context->Rax,
+		(void *)context->Rbx,
+		(void *)context->Rcx,
+		(void *)context->Rdx,
+		(void *)context->Rsi,
+		(void *)context->Rdi,
+		(void *)context->Rbp,
+		(void *)context->Rsp,
+		(void *)context->R8,
+		(void *)context->R9,
+		(void *)context->R10,
+		(void *)context->R11,
+		(void *)context->R12,
+		(void *)context->R13,
+		(void *)context->R14,
+		(void *)context->R15,
+		(void *)context->Rip);
+
 	return buffer;
 }
 
@@ -240,7 +270,7 @@ void StartUnrealAgain(void)
  */
 LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e) 
 {
-	MEMORYSTATUS memStats;
+	MEMORYSTATUSEX memStats;
 	char file[512], text[1024], minidumpf[512];
 	FILE *fd;
 	time_t timet = time(NULL);
@@ -251,20 +281,20 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 
 	sprintf(file, "unrealircd.%d.core", getpid());
 	fd = fopen(file, "w");
-	GlobalMemoryStatus(&memStats);
+	GlobalMemoryStatusEx(&memStats);
 	fprintf(fd, "Generated at %s\n%s (%d.%d.%d)\n%s[%s%s%s] (%s) on %s\n"
 		    "-----------------\nMemory Information:\n"
-		    "\tPhysical: (Available:%ldMB/Total:%ldMB)\n"
-		    "\tVirtual: (Available:%ldMB/Total:%ldMB)\n"
+		    "\tPhysical: (Available:%lluMB/Total:%lluMB)\n"
+		    "\tVirtual: (Available:%lluMB/Total:%lluMB)\n"
 		    "-----------------\nException:\n\t%s\n-----------------\n"
 		    "Backup Buffer:\n\t%s\n-----------------\nRegisters:\n"
 		    "%s-----------------\nStack Trace:\n%s",
 		     asctime(gmtime(&timet)), OSName, VerInfo.dwMajorVersion,
 		     VerInfo.dwMinorVersion, VerInfo.dwBuildNumber, IRCDTOTALVERSION,
 		     serveropts, extraflags ? extraflags : "", tainted ? "3" : "",
-		     buildid, me.name, memStats.dwAvailPhys/1048576, memStats.dwTotalPhys/1048576,
-		     memStats.dwAvailVirtual/1048576, memStats.dwTotalVirtual/1048576, 
-		     GetException(e->ExceptionRecord->ExceptionCode), backupbuf, 
+		     buildid, me.name, memStats.ullAvailPhys/1048576, memStats.ullTotalPhys/1048576,
+		     memStats.ullAvailVirtual/1048576, memStats.ullTotalVirtual/1048576,
+		     GetException(e->ExceptionRecord->ExceptionCode), backupbuf,
 		     GetRegisters(e->ContextRecord), StackTrace(e));
 
 	sprintf(text, "UnrealIRCd has encountered a fatal error. Debugging information has been dumped to %s.", file);
