@@ -2,26 +2,25 @@ echo on
 
 rem Temporarily hardcoded:
 set TARGET=Visual Studio 2019
-set SHORTNAME=vs2017
+set SHORTNAME=vs2019
 
 rem Initialize Visual Studio variables
-if "%TARGET%" == "Visual Studio 2017" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
-if "%TARGET%" == "Visual Studio 2019" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+if "%TARGET%" == "Visual Studio 2017" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+if "%TARGET%" == "Visual Studio 2019" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 rem Installing tools
 rem only for appveyor:
 rem cinst unrar -y
 rem cinst unzip -y
 rem cinst innosetup -y
-curl -fsS -o dlltool.exe https://www.unrealircd.org/files/dev/win/dlltool.exe
 
 rem Installing UnrealIRCd dependencies
 cd \projects
-mkdir unrealircd-deps
-cd unrealircd-deps
-curl -fsS -o SetACL.exe https://www.unrealircd.org/files/dev/win/SetACL.exe
-curl -fsS -o unrealircd-libraries-devel.zip https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-devel.zip
-unzip unrealircd-libraries-devel.zip
+mkdir unrealircd-5-libs
+cd unrealircd-5-libs
+curl -fsS -o unrealircd-libraries-5-devel.zip https://www.unrealircd.org/files/dev/win/libs/unrealircd-libraries-5-devel.zip
+unzip unrealircd-libraries-5-devel.zip
+copy dlltool.exe \users\user\worker\unreal5-w10\build /y
 
 rem for appveyor: cd \projects\unrealircd
 cd \users\user\worker\unreal5-w10\build
@@ -38,9 +37,9 @@ rem And we re-run the exact same command:
 call extras\build-tests\windows\compilecmd\%SHORTNAME%.bat
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
-rem Convert c:\dev to c:\projects\unrealircd-deps
+rem Convert c:\dev to c:\projects\unrealircd-5-libs
 rem TODO: should use environment variable in innosetup script?
-sed -i "s/c:\\dev/c:\\projects\\unrealircd-deps/gi" src\windows\unrealinst.iss
+sed -i "s/c:\\dev\\unrealircd-5-libs/c:\\projects\\unrealircd-5-libs/gi" src\windows\unrealinst.iss
 
 rem Build installer file
 "c:\Program Files (x86)\Inno Setup 5\iscc.exe" /Q- src\windows\unrealinst.iss
