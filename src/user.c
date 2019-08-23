@@ -28,7 +28,6 @@
 void send_umode_out(aClient *, aClient *, long);
 void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
-void create_snomask(aClient *, anUser *, char *);
 extern int short_motd(aClient *sptr);
 extern aChannel *get_channel(aClient *cptr, char *chname, int flag);
 /* static  Link    *is_banned(aClient *, aChannel *); */
@@ -442,42 +441,6 @@ void set_snomask(aClient *sptr, char *snomask) {
 			 	 		sptr->user->snomask |= Snomask_Table[i].mode;
 			 	 	else
 			 	 		sptr->user->snomask &= ~Snomask_Table[i].mode;
-		 	 	}
-		 	 }				
-		}
-	}
-}
-
-void create_snomask(aClient *sptr, anUser *user, char *snomask) {
-	int what = MODE_ADD; /* keep this an int. -- Syzop */
-	char *p;
-	int i;
-	if (snomask == NULL) {
-		user->snomask = 0;
-		return;
-	}
-	
-	for (p = snomask; p && *p; p++) {
-		switch (*p) {
-			case '+':
-				what = MODE_ADD;
-				break;
-			case '-':
-				what = MODE_DEL;
-				break;
-			default:
-		 	 for (i = 0; i <= Snomask_highest; i++)
-		 	 {
-		 	 	if (!Snomask_Table[i].flag)
-		 	 		continue;
-		 	 	if (*p == Snomask_Table[i].flag)
-		 	 	{
-					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr,what))
-						continue;
-		 	 		if (what == MODE_ADD)
-			 	 		user->snomask |= Snomask_Table[i].mode;
-			 	 	else
-			 	 		user->snomask &= ~Snomask_Table[i].mode;
 		 	 	}
 		 	 }				
 		}
