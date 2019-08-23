@@ -26,24 +26,19 @@
 #include "ircsprintf.h"
 #include <stdio.h>
 
-/*
- * sprintf_irc
- *
- * sprintf_irc is optimized for the formats: %c, %s, %lu, %d and %u.
- *
- * sprintf_irc is NOT optimized for any other format and resorts to using
- * the normal sprintf when it encounters a format it doesn't understand
- * (including padding, width, precision etc).
- *
- * It also treats %lu as %010lu (for simplicity and speed; it is designed
- * to print timestamps).
- *
+/** Optimized version of vsnprintf() for us.
+ * ircvsnprintf is optimized for the formats: %s, %c, %d, %i, %u, %lu and %lld.
+ * If you only use these format string types then this function is significantly
+ * faster than regular vsnprintf().
+ * When it encounters any other format type or things like padding, precision,
+ * etc. then it will resort to calling vsnprintf(), so no problem.
  */
-
-char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl) {
-	char* str_begin = str;
+char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl)
+{
+	char *str_begin = str;
 	char c;
-        const char* end = str+size-1; //for comparison, not dereferencing.  It is the last position a null can go.
+	const char *end = str+size-1; /* for comparison, not dereferencing.  It is the last position a null can go. */
+	char scratch_buffer[32]; /* large enough for 64 bit integer as a string */
 
 	if (!size) return str;
 
@@ -51,49 +46,42 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl) {
 	{
 		if (c == '%')
 		{
-			c = *format++;	/* May never be '\0' ! */
-                        if (!c) break;  /* But just in case it is... these 2 instructions take care of it. */
-			if (c == 'c') {
-				*str++ = (char)va_arg(vl, int);
-				continue;
-			}
-			if (c == 's') {
+			c = *format++;
+			if (c == 's')
+			{
+				/* %s - string */
 				const char *p1 = va_arg(vl, const char *);
 				while (str!=end && *p1) *str++ = *p1++;
 				continue;
 			}
-			if (c == 'l' && *format == 'u') { /* Prints time_t value in interval
-							     [ 100000000 , 4294967295 ]
-							     Actually prints like "%010lu" */
-				int i;
-				unsigned long int v;
-				format++;
-				if (str+10>end) break;
-				v = va_arg(vl, unsigned long int);
-				for (i = 9; i>=0; i--) {
-					str[i] = (v%10)+'0';
-					v /= 10;
-				}
-				str+=10;
+			else if (c == 'c')
+			{
+				/* %c - single character */
+				*str++ = (char)va_arg(vl, int);
 				continue;
 			}
-			if (c == 'd' || c == 'i') {
-				char scratch_buffer[16], *t;
+			else if (c == 'd' || c == 'i')
+			{
+				/* %d and %i - integer */
+				char *t;
 				int v = va_arg(vl, int);
 				int i = 0;
 				size_t len;
-				if (v<0) {
+				if (v<0)
+				{
 					v*=-1;
 					*str++ = '-';
 					if (str==end) break;
 				}
-				if (v==0) {
+				if (v==0)
+				{
 					*str++ = '0';
 					continue;
 				}
 
 				t = scratch_buffer + sizeof(scratch_buffer);
-				while (v) {
+				while (v)
+				{
 					*--t = (v%10) + '0';
 					v/=10;
 				}
@@ -104,18 +92,87 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl) {
 					*str++=t[i];
 				continue;
 			}
-			if (c == 'u') {
-				char scratch_buffer[16], *t;
+			else if (c == 'l')
+			{
+				if (format[0] == 'l' && format[1] == 'd')
+				{
+					/* %lld - long long */
+					char *t;
+					long long v = va_arg(vl, long long);
+					int i = 0;
+					size_t len;
+
+					format += 2;
+					if (v<0)
+					{
+						v*=-1;
+						*str++ = '-';
+						if (str==end) break;
+					}
+					if (v==0)
+					{
+						*str++ = '0';
+						continue;
+					}
+
+					t = scratch_buffer + sizeof(scratch_buffer);
+					while (v)
+					{
+						*--t = (v%10) + '0';
+						v/=10;
+					}
+
+					len = sizeof(scratch_buffer)-(t-scratch_buffer);
+					if ((str+len)>end) break;
+					for (i = 0; i < len; i++)
+						*str++=t[i];
+					continue;
+				}
+				if (*format == 'u')
+				{
+					/* %lu - unsigned long */
+					char *t;
+					unsigned long v = va_arg(vl, unsigned long);
+					int i = 0;
+					size_t len;
+
+					format++;
+					if (v==0)
+					{
+						*str++ = '0';
+						continue;
+					}
+
+					t = scratch_buffer + sizeof(scratch_buffer);
+					while (v)
+					{
+						*--t = (v%10) + '0';
+						v/=10;
+					}
+
+					len = sizeof(scratch_buffer)-(t-scratch_buffer);
+					if ((str+len)>end) break;
+					for (i = 0; i < len; i++)
+						*str++=t[i];
+					continue;
+				}
+			}
+			else if (c == 'u')
+			{
+				/* %u - unsigned integer */
+				char *t;
 				unsigned int v = va_arg(vl, unsigned int);
 				int i = 0;
 				size_t len;
-				if (v==0) {
+				if (v==0)
+				{
 					*str++ = '0';
 					continue;
 				}
 
 				t = scratch_buffer + sizeof(scratch_buffer);
-				while (v) {
+				while (v)
+				{
 					*--t = (v%10) + '0';
 					v/=10;
 				}
@@ -126,12 +183,18 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl) {
 					*str++=t[i];
 				continue;
 			}
-			if (c == '%') {
+			else if (c == '%')
+			{
+				/* %% - literal percent character */
 				*str++ = '%';
 				continue;
 			}
+			else if (!c)
+				break; /* A % at the end of the format string (illegal, skipped) */
 			
-			//The default case: stop what we are doing and pass control to the real vsnprintf()
+			/* The default case, when we cannot handle the % format:
+			 * Stop what we are doing and pass control to the real vsnprintf()
+			 */
 			format -= 2;
 			vsnprintf(str, (size_t)(end-str+1), format, vl);
 			return str_begin;
