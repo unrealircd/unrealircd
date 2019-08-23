@@ -750,7 +750,6 @@ with_showlistmodes
 with_no_operoverride
 with_disableusermod
 with_operoverride_verify
-with_disable_extendedban_stacking
 with_system_pcre2
 with_system_argon2
 with_system_cares
@@ -1450,8 +1449,6 @@ Optional Packages:
   --with-disableusermod   Disable /set* and /chg*
   --with-operoverride-verify
                           Require opers to invite themselves to +s/+p channels
-  --with-disable-extendedban-stacking
-                          Disable extended ban stacking
   --without-system-pcre2  Use the system pcre2 package instead of bundled,
                           discovered using pkg-config
   --without-system-argon2 Use bundled version instead of system argon2
@@ -7459,16 +7456,6 @@ if test "${with_operoverride_verify+set}" = set; then :
   withval=$with_operoverride_verify; if test $withval = "yes"; then :
 
 $as_echo "#define OPEROVERRIDE_VERIFY /**/" >>confdefs.h
-
-fi
-fi
-
-
-# Check whether --with-disable-extendedban-stacking was given.
-if test "${with_disable_extendedban_stacking+set}" = set; then :
-  withval=$with_disable_extendedban_stacking; if test $withval = "yes"; then :
-
-$as_echo "#define DISABLE_STACKED_EXTBANS /**/" >>confdefs.h
 
 fi
 fi

@@ -19,9 +19,6 @@
    unrealircd from calling chmod() on the files. */
 #undef DEFAULT_PERMISSIONS
 
-/* Define to disable extended ban stacking (~q:~c:\#chan, etc) */
-#undef DISABLE_STACKED_EXTBANS
-
 /* Define if you want to disable /set* and /chg* */
 #undef DISABLE_USERMOD
 
