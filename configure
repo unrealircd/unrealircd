@@ -747,7 +747,6 @@ with_privatelibdir
 with_maxconnections
 enable_prefixaq
 with_showlistmodes
-with_shunnotices
 with_no_operoverride
 with_disableusermod
 with_operoverride_verify
@@ -1447,7 +1446,6 @@ Optional Packages:
   --with-maxconnections=size
                           Specify the max file descriptors to use
   --with-showlistmodes    Specify whether modes are shown in /list
-  --with-shunnotices      Notify a user when he/she is no longer shunned
   --with-no-operoverride  Disable OperOverride
   --with-disableusermod   Disable /set* and /chg*
   --with-operoverride-verify
@@ -7431,16 +7429,6 @@ if test "${with_showlistmodes+set}" = set; then :
   withval=$with_showlistmodes; if test $withval = "yes"; then :
 
 $as_echo "#define LIST_SHOW_MODES /**/" >>confdefs.h
-
-fi
-fi
-
-
-# Check whether --with-shunnotices was given.
-if test "${with_shunnotices+set}" = set; then :
-  withval=$with_shunnotices; if test $withval = "yes"; then :
-
-$as_echo "#define SHUN_NOTICES /**/" >>confdefs.h
 
 fi
 fi

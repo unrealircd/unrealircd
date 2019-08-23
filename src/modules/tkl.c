@@ -1733,9 +1733,6 @@ void _tkl_check_local_remove_shun(aTKline *tmp)
 					if(!keep_shun)
 					{
 						ClearShunned(acptr);
-#ifdef SHUN_NOTICES
-						sendnotice(acptr, "*** You are no longer shunned");
-#endif
 					}
 				}
 			}

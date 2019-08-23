@@ -41,12 +41,6 @@ if [ "$SHOWLISTMODES" = "1" ] ; then
 	ARG="$ARG--with-showlistmodes "
 fi
 if [ "$ADVANCED" = "1" ] ; then
-if [ "$TOPICNICKISNUH" = "1" ] ; then
-	ARG="$ARG--with-topicisnuhost "
-fi
-if [ "$SHUNNOTICES" = "1" ] ; then
-	ARG="$ARG--with-shunnotices "
-fi
 if [ "$NOOPEROVERRIDE" = "1" ] ; then
 	ARG="$ARG--with-no-operoverride "
 fi
@@ -187,65 +181,6 @@ done
 
 TEST=""
 while [ -z "$TEST" ] ; do
-    if [ "$TOPICNICKISNUH" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want the /topic command to show the nick!user@host of the person"
-    echo "who set the topic, rather than just the nickname?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
-	[Yy]*)
-	    TOPICNICKISNUH="1"
-	    ;;
-	[Nn]*)
-	    TOPICNICKISNUH=""
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
-done
-
-TEST=""
-while [ -z "$TEST" ] ; do
-    if [ "$SHUNNOTICES" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Should UnrealIRCd notify a user when they are no longer shunned?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
-	[Yy]*)
-	    SHUNNOTICES="1"
-	    ;;
-	[Nn]*)
-	    SHUNNOTICES=""
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
-done
-
-TEST=""
-while [ -z "$TEST" ] ; do
     if [ "$NOOPEROVERRIDE" = "1" ] ; then
 	TEST="Yes"
     else
@@ -375,8 +310,6 @@ REMOTEINC=""
 CURLDIR=""
 PREFIXAQ="1"
 SHOWLISTMODES="1"
-TOPICNICKISNUH=""
-SHUNNOTICES=""
 NOOPEROVERRIDE=""
 DISABLEUSERMOD=""
 OPEROVERRIDEVERIFY=""
@@ -917,8 +850,6 @@ SSLDIR="$SSLDIR"
 REMOTEINC="$REMOTEINC"
 CURLDIR="$CURLDIR"
 SHOWLISTMODES="$SHOWLISTMODES"
-TOPICNICKISNUH="$TOPICNICKISNUH"
-SHUNNOTICES="$SHUNNOTICES"
 NOOPEROVERRIDE="$NOOPEROVERRIDE"
 DISABLEUSERMOD="$DISABLEUSERMOD"
 OPEROVERRIDEVERIFY="$OPEROVERRIDEVERIFY"

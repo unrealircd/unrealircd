@@ -311,9 +311,6 @@
 /* Define to 1 if the `setpgrp' function takes no argument. */
 #undef SETPGRP_VOID
 
-/* Define if you want users to be notified when their shun is removed */
-#undef SHUN_NOTICES
-
 /* The size of `int', as computed by sizeof. */
 #undef SIZEOF_INT
 

@@ -655,9 +655,6 @@ AC_ARG_WITH(showlistmodes,
 	[AS_HELP_STRING([--with-showlistmodes], [Specify whether modes are shown in /list])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([LIST_SHOW_MODES], [], [Define if you want modes shown in /list])])])
-AC_ARG_WITH(shunnotices, [AS_HELP_STRING([--with-shunnotices], [Notify a user when he/she is no longer shunned])],
-	[AS_IF([test $withval = "yes"],
-		[AC_DEFINE([SHUN_NOTICES], [], [Define if you want users to be notified when their shun is removed])])])
 AC_ARG_WITH(no-operoverride, [AS_HELP_STRING([--with-no-operoverride], [Disable OperOverride])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([NO_OPEROVERRIDE], [], [Define if you want OperOverride disabled])])])
