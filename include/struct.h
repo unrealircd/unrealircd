@@ -806,7 +806,7 @@ extern MODVAR unsigned short Channelmode_highest;
 extern Umode *UmodeAdd(Module *module, char ch, int options, int unset_on_deoper, int (*allowed)(aClient *sptr, int what), long *mode);
 extern void UmodeDel(Umode *umode);
 
-extern Snomask *SnomaskAdd(Module *module, char ch, int unset_on_deoper, int (*allowed)(aClient *sptr, int what), long *mode);
+extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr, int what), long *mode);
 extern void SnomaskDel(Snomask *sno);
 
 extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);

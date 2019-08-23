@@ -94,20 +94,20 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDEOPER);
 	UmodeAdd(NULL, 't', UMODE_GLOBAL, 0, umode_allow_unset, &UMODE_SETHOST);
 	UmodeAdd(NULL, 'I', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDLE);
-	SnomaskAdd(NULL, 'k', 0, umode_allow_opers, &SNO_KILLS);
-	SnomaskAdd(NULL, 'c', 1, umode_allow_opers, &SNO_CLIENT);
-	SnomaskAdd(NULL, 'f', 1, umode_allow_opers, &SNO_FLOOD);
-	SnomaskAdd(NULL, 'F', 1, umode_allow_opers, &SNO_FCLIENT);
-	SnomaskAdd(NULL, 'j', 1, umode_allow_opers, &SNO_JUNK);
-	SnomaskAdd(NULL, 'v', 1, umode_allow_opers, &SNO_VHOST);
-	SnomaskAdd(NULL, 'e', 1, umode_allow_opers, &SNO_EYES);
-	SnomaskAdd(NULL, 'G', 1, umode_allow_opers, &SNO_TKL);
-	SnomaskAdd(NULL, 'n', 1, umode_allow_opers, &SNO_NICKCHANGE);
-	SnomaskAdd(NULL, 'N', 1, umode_allow_opers, &SNO_FNICKCHANGE);
-	SnomaskAdd(NULL, 'q', 1, umode_allow_opers, &SNO_QLINE);
-	SnomaskAdd(NULL, 'S', 1, umode_allow_opers, &SNO_SPAMF);
-	SnomaskAdd(NULL, 's', 1, umode_allow_opers, &SNO_SNOTICE);
-	SnomaskAdd(NULL, 'o', 1, umode_allow_opers, &SNO_OPER);
+	SnomaskAdd(NULL, 'k', umode_allow_opers, &SNO_KILLS);
+	SnomaskAdd(NULL, 'c', umode_allow_opers, &SNO_CLIENT);
+	SnomaskAdd(NULL, 'f', umode_allow_opers, &SNO_FLOOD);
+	SnomaskAdd(NULL, 'F', umode_allow_opers, &SNO_FCLIENT);
+	SnomaskAdd(NULL, 'j', umode_allow_opers, &SNO_JUNK);
+	SnomaskAdd(NULL, 'v', umode_allow_opers, &SNO_VHOST);
+	SnomaskAdd(NULL, 'e', umode_allow_opers, &SNO_EYES);
+	SnomaskAdd(NULL, 'G', umode_allow_opers, &SNO_TKL);
+	SnomaskAdd(NULL, 'n', umode_allow_opers, &SNO_NICKCHANGE);
+	SnomaskAdd(NULL, 'N', umode_allow_opers, &SNO_FNICKCHANGE);
+	SnomaskAdd(NULL, 'q', umode_allow_opers, &SNO_QLINE);
+	SnomaskAdd(NULL, 'S', umode_allow_opers, &SNO_SPAMF);
+	SnomaskAdd(NULL, 's', umode_allow_opers, &SNO_SNOTICE);
+	SnomaskAdd(NULL, 'o', umode_allow_opers, &SNO_OPER);
 }
 
 void make_umodestr(void)
@@ -256,7 +256,7 @@ void UmodeDel(Umode *umode)
 	return;
 }
 
-Snomask *SnomaskAdd(Module *module, char ch, int unset_on_deoper, int (*allowed)(aClient *sptr, int what), long *mode)
+Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr, int what), long *mode)
 {
 	short	 i = 0;
 	short	 j = 0;
@@ -287,7 +287,6 @@ Snomask *SnomaskAdd(Module *module, char ch, int unset_on_deoper, int (*allowed)
 	{
 		Snomask_Table[i].flag = ch;
 		Snomask_Table[i].allowed = allowed;
-		Snomask_Table[i].unset_on_deoper = unset_on_deoper;
 		/* Update usermode table highest */
 		for (j = 0; j < UMODETABLESZ; j++)
 			if (Snomask_Table[i].flag)
@@ -447,27 +446,12 @@ void unload_all_unused_snomasks(void)
 /**
  * This function removes any oper-only snomasks when the user is no
  * longer an IRC Operator.
- * In the past this relied on hacks and guesses. Nowadays we simply
- * use the information given by SnomaskAdd() and set::restrict-user-modes.
+ * This used to be a bit more complex but nowadays we just erase all
+ * snomasks since all of them are IRCOp-only. Easy.
  */
 void remove_oper_snomasks(aClient *sptr)
 {
-	int i;
-
-	if (RESTRICT_USERMODES && strchr(RESTRICT_USERMODES, 's'))
-	{
-		sptr->umodes &= ~UMODE_SERVNOTICE;
-		sptr->user->snomask = 0;
-		return; /* we unset all snomasks, so short-circuit */
-	}
-
-	for (i = 0; i <= Snomask_highest; i++)
-	{
-		if (!Snomask_Table[i].flag)
-			continue;
-		if (Snomask_Table[i].unset_on_deoper)
-			sptr->user->snomask &= ~Snomask_Table[i].mode;
-	}
+	sptr->user->snomask = 0;
 }
 
 /*

@@ -1639,7 +1639,7 @@ CMD_FUNC(_m_umode)
 			case '-':
 				what = MODE_DEL;
 				break;
-					/* we may not get these,
+				/* we may not get these,
 				 * but they shouldnt be in default
 				 */
 			case ' ':
@@ -1772,21 +1772,19 @@ CMD_FUNC(_m_umode)
 				}
 			}
 
-			/* SNOMASKS */
+			/* SNOMASKS: user can delete existing but not add new ones */
 			for (i = 0; i <= Snomask_highest; i++)
 			{
+				int sno = Snomask_Table[i].mode;
+
 				if (!Snomask_Table[i].flag)
 					continue;
-				if (Snomask_Table[i].unset_on_deoper)
-				{
-					/* This is an oper snomask. Is it set now and wasn't earlier?
-					 * then it needs to be stripped, as setting it is not
-					 * permitted.
-					 */
-					int sno = Snomask_Table[i].mode;
-					if ((sptr->user->snomask & sno) && !(oldsnomasks & sno))
-						sptr->user->snomask &= ~Snomask_Table[i].mode; /* remove */
-				}
+				/* Is it set now and wasn't earlier? Then it
+				 * needs to be stripped, as setting it is not
+				 * permitted.
+				 */
+				if ((sptr->user->snomask & sno) && !(oldsnomasks & sno))
+					sptr->user->snomask &= ~Snomask_Table[i].mode; /* remove */
 			}
 		} else {
 			/* User isn't an ircop at all. The solution is simple: */

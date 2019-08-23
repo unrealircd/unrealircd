@@ -150,7 +150,7 @@ MOD_INIT(blacklist)
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH_COMPLETE, 0, blacklist_rehash_complete);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, blacklist_quit);
 
-	SnomaskAdd(modinfo->handle, 'b', 1, umode_allow_opers, &SNO_BLACKLIST);
+	SnomaskAdd(modinfo->handle, 'b', umode_allow_opers, &SNO_BLACKLIST);
 
 	return MOD_SUCCESS;
 }
