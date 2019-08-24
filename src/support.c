@@ -120,10 +120,6 @@ char *strerror(int err_no)
  */
 char *inetntop(int af, const void *in, char *out, size_t the_size)
 {
-#ifdef IPV6_COMPRESSED
-	inet_ntop(af, in, out, the_size);
-	return out;
-#else
 	static char local_dummy[MYDUMMY_SIZE];
 
 	inet_ntop(af, in, local_dummy, the_size);
@@ -170,7 +166,6 @@ char *inetntop(int af, const void *in, char *out, size_t the_size)
 	else
 		bcopy(local_dummy, out, 64);
 	return out;
-#endif
 }
 
 /* Made by Potvin originally, i guess */

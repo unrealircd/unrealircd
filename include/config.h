@@ -151,12 +151,6 @@
 /* You shouldn't change anything below this line, unless absolutely needed. */
 
 /*
- * Port where ircd resides. NOTE: This *MUST* be greater than 1024 if you
- * plan to run ircd under any other uid than root.
- */
-#define PORTNUM 6667		/* 6667 is default */
-
-/*
  * Maximum number of network connections your server will allow.
  * On *NIX this is configured via ./Config so don't set it here.
  * The setting below is the Windows (default) setting and isn't actually
@@ -229,13 +223,8 @@
  * Max time from the nickname change that still causes KILL
  * automaticly to switch for the current nick of that user. (seconds)
  */
-#define KILLCHASETIMELIMIT 90	/* Recommended value: 90 */
+#define KILLCHASETIMELIMIT 30
 
-/*
- * Forces Unreal to use compressed IPv6 addresses rather than expanding them
- */
-#undef IPV6_COMPRESSED
-  
 /* Detect slow spamfilters? This requires a little more cpu time when processing
  * any spamfilter (like on text/connect/..) but will save you from slowing down
  * your IRCd to a near-halt (well, in most cases.. there are still cases like when

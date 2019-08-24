@@ -1311,7 +1311,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 	open_debugfile();
 	if (portnum < 0)
-		portnum = PORTNUM;
+		portnum = 6667;
 	me.local->port = portnum;
 	(void)init_sys();
 	applymeblock();
