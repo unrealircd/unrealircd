@@ -30,9 +30,6 @@ MODVAR char serveropts[] = {
 	'F',
 	/* Hub (always) */
 	'h',
-#ifdef	SHOW_INVISIBLE_LUSERS
-	'i',
-#endif
 	/* NOSPOOF (always) */
 	'n',
 #ifdef	VALLOC

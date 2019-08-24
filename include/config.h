@@ -88,9 +88,6 @@
 
 #define HOW_MANY_FREELINKS_ALLOWED 	200	/* default: 200 */
 
-/* NOTE: On some systems, valloc() causes many problems. */
-#undef	VALLOC			/* Define this if you have valloc(3) */
-
 /*
  * read/write are restarted after signals defining this 1, gets
  * siginterrupt call compiled, which attempts to remove this
@@ -121,15 +118,6 @@
 #define VPATH		CONFDIR"/ircd.svsmotd"	/* Services MOTD append. */
 #define BPATH		CONFDIR"/bot.motd"	/* Bot MOTD */
 #define IRCDTUNE 	PERMDATADIR"/ircd.tune"	/* tuning .. */
-
-/* SHOW_INVISIBLE_LUSERS
- *
- * As defined this will show the correct invisible count for anyone who does
- * LUSERS on your server. On a large net this doesnt mean much, but on a
- * small net it might be an advantage to undefine it.
- * (This will get defined for you if you're using userload (stats w).  -mlv)
- */
-#define	SHOW_INVISIBLE_LUSERS
 
 /** FAKELAG_CONFIGURABLE makes it possible to make certain classes exempted
  * from 'fake lag' (that is, the artificial delay that is added by the ircd

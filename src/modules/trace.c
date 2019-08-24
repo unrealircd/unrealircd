@@ -126,14 +126,8 @@ CMD_FUNC(m_trace)
 		{
 			if (acptr->from->fd < 0)
 				continue;
-#ifdef	SHOW_INVISIBLE_LUSERS
 			if (IsPerson(acptr))
 				link_u[acptr->from->fd]++;
-#else
-			if (IsPerson(acptr) &&
-			    (!IsInvisible(acptr) || ValidatePermissionsForPath("client:see:trace:invisible-users",sptr,acptr,NULL,NULL)))
-				link_u[acptr->from->fd]++;
-#endif
 			else if (IsServer(acptr))
 				link_s[acptr->from->fd]++;
 		}
