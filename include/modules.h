@@ -679,7 +679,7 @@ extern void IsupportSetValue(Isupport *isupport, const char *value);
 extern void IsupportDel(Isupport *isupport);
 extern Isupport *IsupportFind(const char *token);
 extern void IsupportSet(Module *module, const char *name, const char *value);
-extern void IsupportSetFmt(Module *module, const char *name, const char *pattern, ...) __attribute__((format(printf,3,4)));
+extern void IsupportSetFmt(Module *module, const char *name, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
 extern void IsupportDelByName(const char *name);
 
 extern ClientCapability *ClientCapabilityFind(const char *token, aClient *sptr);

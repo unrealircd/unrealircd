@@ -226,6 +226,18 @@ extern char OSName[256];
 #define __attribute__(x) /* nothing */
 #endif
 
+#undef FORMAT_STRING
+#if _MSC_VER >= 1400
+# include <sal.h>
+# if _MSC_VER > 1400
+#  define FORMAT_STRING(p) _Printf_format_string_ p
+# else
+#  define FORMAT_STRING(p) __format_string p
+# endif /* FORMAT_STRING */
+#else
+# define FORMAT_STRING(p) p
+#endif /* _MSC_VER */
+
 /* A normal abort() on windows causes the crucial stack frame to be missing
  * from the stack trace, IOTW: you don't see where abort() was called!
  * It's silly but this works:
