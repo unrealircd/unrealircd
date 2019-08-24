@@ -327,15 +327,35 @@ CMD_FUNC(m_protoctl)
 			
 			if ((TStime() - t) > MAX_SERVER_TIME_OFFSET)
 			{
-				snprintf(linkerr, sizeof(linkerr), "Your clock is %ld seconds behind my clock. Please verify both your clock and mine, fix it and try linking again.", TStime() - t);
-				snprintf(msg, sizeof(msg), "Rejecting link %s: our clock is %ld seconds ahead. Correct time is very important in IRC. Please verify the clock on both %s (them) and %s (us), fix it and then try linking again",
-					get_client_name(cptr, TRUE), TStime() - t, sptr->name, me.name);
+				snprintf(linkerr, sizeof(linkerr),
+				         "Your clock is %lld seconds behind my clock. "
+				         "Please verify both your clock and mine, "
+				         "fix it and try linking again.",
+				         (long long)(TStime() - t));
+				snprintf(msg, sizeof(msg),
+				         "Rejecting link %s: our clock is %lld seconds ahead. "
+				         "Correct time is very important in IRC. Please "
+				         "verify the clock on both %s (them) and %s (us), "
+				         "fix it and then try linking again",
+				         get_client_name(cptr, TRUE),
+				         (long long)(TStime() - t),
+				         sptr->name, me.name);
 			} else
 			if ((t - TStime()) > MAX_SERVER_TIME_OFFSET)
 			{
-				snprintf(linkerr, sizeof(linkerr), "Your clock is %ld seconds ahead of my clock. Please verify both your clock and mine, fix it, and try linking again.", t - TStime());
-				snprintf(msg, sizeof(msg), "Rejecting link %s: our clock is %ld seconds behind. Correct time is very important in IRC. Please verify the clock on both %s (them) and %s (us), fix it and then try linking again",
-					get_client_name(cptr, TRUE), t - TStime(), sptr->name, me.name);
+				snprintf(linkerr, sizeof(linkerr),
+				         "Your clock is %lld seconds ahead of my clock. "
+				         "Please verify both your clock and mine, fix it, "
+				         "and try linking again.",
+				         (long long)(t - TStime()));
+				snprintf(msg, sizeof(msg),
+				         "Rejecting link %s: our clock is %lld seconds behind. "
+				         "Correct time is very important in IRC. Please "
+				         "verify the clock on both %s (them) and %s (us), "
+				         "fix it and then try linking again",
+					get_client_name(cptr, TRUE),
+					(long long)(t - TStime()),
+					sptr->name, me.name);
 			}
 			
 			if (*msg)

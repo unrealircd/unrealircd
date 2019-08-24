@@ -457,9 +457,9 @@ CMD_FUNC(m_uid)
 				differ = (mycmp(acptr->user->username, parv[4])
 				    || mycmp(acptr->user->realhost, parv[5]));
 		}
-		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %ld <- %s %ld)",
-		    acptr->name, acptr->from->name, acptr->lastnick,
-		    cptr->name, lastnick);
+		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %lld <- %s %lld)",
+		    acptr->name, acptr->from->name, (long long)acptr->lastnick,
+		    cptr->name, (long long)lastnick);
 		/*
 		   **    I'm putting the KILL handling here just to make it easier
 		   ** to read, it's hard to follow it the way it used to be.
@@ -888,9 +888,9 @@ CMD_FUNC(m_nick)
 				differ = (mycmp(acptr->user->username, parv[4])
 				    || mycmp(acptr->user->realhost, parv[5]));
 		}
-		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %ld <- %s %ld)",
-		    acptr->name, acptr->from->name, acptr->lastnick,
-		    cptr->name, lastnick);
+		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %lld <- %s %lld)",
+		    acptr->name, acptr->from->name, (long long)acptr->lastnick,
+		    cptr->name, (long long)lastnick);
 		/*
 		   **    I'm putting the KILL handling here just to make it easier
 		   ** to read, it's hard to follow it the way it used to be.
@@ -937,9 +937,10 @@ CMD_FUNC(m_nick)
 			lastnick = atol(parv[2]);
 		differ = (mycmp(acptr->user->username, sptr->user->username) ||
 		    mycmp(acptr->user->realhost, sptr->user->realhost));
-		sendto_umode(UMODE_OPER, "Nick change collision from %s to %s (%s %ld <- %s %ld)",
-		    sptr->name, acptr->name, acptr->from->name, acptr->lastnick,
-		    sptr->from->name, lastnick);
+		sendto_umode(UMODE_OPER, "Nick change collision from %s to %s (%s %lld <- %s %lld)",
+		    sptr->name, acptr->name, acptr->from->name,
+		    (long long)acptr->lastnick,
+		    sptr->from->name, (long long)lastnick);
 		if (!(parc > 2) || lastnick == acptr->lastnick)
 		{
 			nick_collision(cptr, parv[1], nickid, sptr, acptr, NICKCOL_EQUAL);
@@ -1062,10 +1063,10 @@ CMD_FUNC(m_nick)
 		}
 		add_history(sptr, 1);
 		new_message(sptr, recv_mtags, &mtags);
-		sendto_server(cptr, PROTO_SID, 0, mtags, ":%s NICK %s %ld",
-		    ID(sptr), nick, sptr->lastnick);
-		sendto_server(cptr, 0, PROTO_SID, mtags, ":%s NICK %s %ld",
-		    sptr->name, nick, sptr->lastnick);
+		sendto_server(cptr, PROTO_SID, 0, mtags, ":%s NICK %s %lld",
+		    ID(sptr), nick, (long long)sptr->lastnick);
+		sendto_server(cptr, 0, PROTO_SID, mtags, ":%s NICK %s %lld",
+		    sptr->name, nick, (long long)sptr->lastnick);
 		sendto_local_common_channels(sptr, NULL, 0, mtags, ":%s NICK :%s", sptr->name, nick);
 		free_message_tags(mtags);
 		if (removemoder)

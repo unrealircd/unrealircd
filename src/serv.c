@@ -211,8 +211,10 @@ void send_proto(aClient *cptr, ConfigItem_link *aconf)
 	           ClientCapabilityFindReal("message-tags") ? "MTAGS" : "");
 
 	/* Second line */
-	sendto_one(cptr, NULL, "PROTOCTL CHANMODES=%s%s,%s%s,%s%s,%s%s USERMODES=%s BOOTED=%ld PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%ld EXTSWHOIS",
-		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, umodestring, me.local->since, prefix->value, charsys_get_current_languages(), me.id, (long)TStime());
+	sendto_one(cptr, NULL, "PROTOCTL CHANMODES=%s%s,%s%s,%s%s,%s%s USERMODES=%s BOOTED=%lld PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%lld EXTSWHOIS",
+		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4,
+		umodestring, (long long)me.local->since, prefix->value,
+		charsys_get_current_languages(), me.id, (long long)TStime());
 }
 
 #ifndef IRCDTOTALVERSION

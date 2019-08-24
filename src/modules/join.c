@@ -256,11 +256,11 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *re
 	/* I _know_ that the "@%s " look a bit wierd
 	   with the space and all .. but its to get around
 	   a SJOIN bug --stskeeps */
-	sendto_server(cptr, PROTO_SID | PROTO_SJ3, 0, mtags_sjoin, ":%s SJOIN %li %s :%s%s ",
-		me.id, chptr->creationtime,
+	sendto_server(cptr, PROTO_SID | PROTO_SJ3, 0, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
+		me.id, (long long)chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), ID(sptr));
-	sendto_server(cptr, PROTO_SJ3, PROTO_SID, mtags_sjoin, ":%s SJOIN %li %s :%s%s ",
-		me.name, chptr->creationtime,
+	sendto_server(cptr, PROTO_SJ3, PROTO_SID, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
+		me.name, (long long)chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
 
 	if (MyClient(sptr))
@@ -273,8 +273,8 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *re
 		if (chptr->creationtime == 0)
 		{
 			chptr->creationtime = TStime();
-			sendto_server(cptr, 0, 0, NULL, ":%s MODE %s + %lu",
-			    me.name, chptr->chname, chptr->creationtime);
+			sendto_server(cptr, 0, 0, NULL, ":%s MODE %s + %lld",
+			    me.name, chptr->chname, (long long)chptr->creationtime);
 		}
 		del_invite(sptr, chptr);
 		if (flags && !(flags & CHFL_DEOPPED))
@@ -287,17 +287,17 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *re
 			if ((flags & CHFL_CHANOWNER) || (flags & CHFL_CHANADMIN))
 			{
 				/* +ao / +qo for when PREFIX_AQ is off */
-				sendto_server(cptr, 0, PROTO_SJ3, NULL, ":%s MODE %s +o%c %s %s %lu",
+				sendto_server(cptr, 0, PROTO_SJ3, NULL, ":%s MODE %s +o%c %s %s %lld",
 				    me.name,
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name, sptr->name,
-				    chptr->creationtime);
+				    (long long)chptr->creationtime);
 			} else {
 #endif
 				/* +v/+h/+o (and +a/+q if PREFIX_AQ is on) */
-				sendto_server(cptr, 0, PROTO_SJ3, NULL, ":%s MODE %s +%c %s %lu",
+				sendto_server(cptr, 0, PROTO_SJ3, NULL, ":%s MODE %s +%c %s %lld",
 				    me.name,
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name,
-				    chptr->creationtime);
+				    (long long)chptr->creationtime);
 #ifndef PREFIX_AQ
 			}
 #endif
@@ -336,8 +336,8 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *re
 			channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
 			/* This should probably be in the SJOIN stuff */
 			new_message_special(&me, recv_mtags, &mtags_mode, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
-			sendto_server(&me, 0, 0, mtags_mode, ":%s MODE %s %s %s %lu",
-			    me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
+			sendto_server(&me, 0, 0, mtags_mode, ":%s MODE %s %s %s %lld",
+			    me.name, chptr->chname, modebuf, parabuf, (long long)chptr->creationtime);
 			sendto_one(sptr, mtags_mode, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
 			free_message_tags(mtags_mode);
 		}

@@ -80,7 +80,7 @@ CMD_FUNC(m_sqline)
 	if (parc < 2)
 		return 0;
 
-	ircsnprintf(mo, sizeof(mo), "%li", TStime());
+	ircsnprintf(mo, sizeof(mo), "%lld", (long long)TStime());
 	tkllayer[7] = mo;
         tkllayer[8] = comment ? comment : "no reason";
         return m_tkl(&me, &me, NULL, 9, tkllayer);

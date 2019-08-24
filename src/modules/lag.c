@@ -81,7 +81,7 @@ CMD_FUNC(m_lag)
 		return 0;
 	}
 
-	sendnotice(sptr, "Lag reply -- %s %s %li", me.name, parv[1], TStime());
+	sendnotice(sptr, "Lag reply -- %s %s %lld", me.name, parv[1], (long long)TStime());
 
 	return 0;
 }

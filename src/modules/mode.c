@@ -261,8 +261,9 @@ CMD_FUNC(m_mode)
 		{
 			/* !!! */
 			sendto_snomask(SNO_EYES,
-			    "*** TS bounce for %s - %lu(ours) %lu(theirs)",
-			    chptr->chname, chptr->creationtime, sendts);
+			    "*** TS bounce for %s - %lld(ours) %lld(theirs)",
+			    chptr->chname, (long long)chptr->creationtime,
+			    (long long)sendts);
 			bounce_mode(chptr, cptr, parc - 2, parv + 2);
 		}
 		return 0;
@@ -380,8 +381,8 @@ static void bounce_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[])
 	set_mode(chptr, cptr, parc, parv, &pcount, pvar, 1);
 
 	if (chptr->creationtime)
-		sendto_one(cptr, NULL, ":%s MODE %s &%s %s %lu", me.name,
-		    chptr->chname, modebuf, parabuf, chptr->creationtime);
+		sendto_one(cptr, NULL, ":%s MODE %s &%s %s %lld", me.name,
+		    chptr->chname, modebuf, parabuf, (long long)chptr->creationtime);
 	else
 		sendto_one(cptr, NULL, ":%s MODE %s &%s %s", me.name, chptr->chname,
 		    modebuf, parabuf);
@@ -428,10 +429,10 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 				if (sendts < 750000)
 				{
 					sendto_realops(
-						"Warning! Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%ld) (from %s/%s)",
-						chptr->chname, modebuf, parabuf, sendts, cptr->name, sptr->name);
-					ircd_log(LOG_ERROR, "Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%ld) (from %s/%s)",
-						chptr->chname, modebuf, parabuf, sendts, cptr->name, sptr->name);
+						"Warning! Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
+						chptr->chname, modebuf, parabuf, (long long)sendts, cptr->name, sptr->name);
+					ircd_log(LOG_ERROR, "Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
+						chptr->chname, modebuf, parabuf, (long long)sendts, cptr->name, sptr->name);
 				}
 				/* new chan or our timestamp is wrong */
 				/* now works for double-bounce prevention */
@@ -441,8 +442,8 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 			{
 				/* theirs is wrong but we let it pass anyway */
 				sendts = chptr->creationtime;
-				sendto_one(cptr, NULL, ":%s MODE %s + %lu", me.name,
-				    chptr->chname, chptr->creationtime);
+				sendto_one(cptr, NULL, ":%s MODE %s + %lld", me.name,
+				    chptr->chname, (long long)chptr->creationtime);
 			}
 		}
 		if (sendts == -1 && chptr->creationtime)
@@ -456,9 +457,9 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 			/* relay bounce time changes */
 			if (chptr->creationtime)
 			{
-				sendto_server(cptr, 0, 0, NULL, ":%s MODE %s %s+ %lu",
+				sendto_server(cptr, 0, 0, NULL, ":%s MODE %s %s+ %lld",
 				    me.name, chptr->chname, isbounce ? "&" : "",
-				    chptr->creationtime);
+				    (long long)chptr->creationtime);
 			} else {
 				sendto_server(cptr, 0, 0, NULL, ":%s MODE %s %s+",
 				    me.name, chptr->chname, isbounce ? "&" : "");
@@ -513,8 +514,10 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 	if (IsServer(sptr) && sendts != -1)
 	{
 		sendto_server(cptr, 0, 0, mtags,
-		              ":%s MODE %s %s%s %s %lu",
-		              sptr->name, chptr->chname, isbounce ? "&" : "", modebuf, parabuf, sendts);
+		              ":%s MODE %s %s%s %s %lld",
+		              sptr->name, chptr->chname,
+		              isbounce ? "&" : "", modebuf, parabuf,
+		              (long long)sendts);
 	} else
 	if (samode && IsMe(sptr))
 	{

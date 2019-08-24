@@ -872,8 +872,8 @@ void _broadcast_sinfo(aClient *acptr, aClient *to, aClient *except)
 		strlcpy(chanmodes, "*", sizeof(chanmodes));
 	}
 
-	snprintf(buf, sizeof(buf), "%ld %d %s %s %s :%s",
-		      acptr->serv->boottime,
+	snprintf(buf, sizeof(buf), "%lld %d %s %s %s :%s",
+		      (long long)acptr->serv->boottime,
 		      acptr->serv->features.protocol,
 		      SafeStr(acptr->serv->features.usermodes),
 		      chanmodes,
@@ -1079,10 +1079,9 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			else
 				send_channel_modes_sjoin3(cptr, chptr);
 			if (chptr->topic_time)
-				sendto_one(cptr, NULL,
-				    "TOPIC %s %s %lu :%s",
+				sendto_one(cptr, NULL, "TOPIC %s %s %lld :%s",
 				    chptr->chname, chptr->topic_nick,
-				    (long)chptr->topic_time, chptr->topic);
+				    (long long)chptr->topic_time, chptr->topic);
 			send_moddata_channel(cptr, chptr);
 		}
 	}
@@ -1096,8 +1095,8 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	/* send out SVSFLINEs */
 	dcc_sync(cptr);
 
-	sendto_one(cptr, NULL, "NETINFO %i %li %i %s 0 0 0 :%s",
-	    IRCstats.global_max, TStime(), UnrealProtocol,
+	sendto_one(cptr, NULL, "NETINFO %i %lld %i %s 0 0 0 :%s",
+	    IRCstats.global_max, (long long)TStime(), UnrealProtocol,
 	    CLOAK_KEYCRC,
 	    ircnetwork);
 
@@ -1219,13 +1218,13 @@ static void send_channel_modes_list_mode(aClient *cptr, aChannel *chptr, Ban *lp
 static inline void send_channel_mode(aClient *cptr, char *from, aChannel *chptr)
 {
 	if (*parabuf)
-		sendto_one(cptr, NULL, ":%s MODE %s %s %s %lu", from,
+		sendto_one(cptr, NULL, ":%s MODE %s %s %s %lld", from,
 			chptr->chname,
-			modebuf, parabuf, chptr->creationtime);
+			modebuf, parabuf, (long long)chptr->creationtime);
 	else
-		sendto_one(cptr, NULL, ":%s MODE %s %s %lu", from,
+		sendto_one(cptr, NULL, ":%s MODE %s %s %lld", from,
 			chptr->chname,
-			modebuf, chptr->creationtime);
+			modebuf, (long long)chptr->creationtime);
 }
 
 /**  Send "cptr" a full list of the MODEs for channel chptr.
@@ -1268,8 +1267,8 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	/* send MLOCK here too... --nenolod */
 	if (CHECKPROTO(cptr, PROTO_MLOCK))
 	{
-		sendto_one(cptr, NULL, "MLOCK %lu %s :%s",
-			   chptr->creationtime, chptr->chname,
+		sendto_one(cptr, NULL, "MLOCK %lld %s :%s",
+			   (long long)chptr->creationtime, chptr->chname,
 			   BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
 	}
 }
@@ -1307,8 +1306,8 @@ static int send_ban_list(aClient *cptr, char *chname, time_t creationtime, aChan
 		if (send)
 		{
 			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, NULL, "MODE %s %s %s %lu",
-			    chname, modebuf, parabuf, creationtime);
+			sendto_one(cptr, NULL, "MODE %s %s %s %lld",
+			    chname, modebuf, parabuf, (long long)creationtime);
 			sent = 1;
 			send = 0;
 			*parabuf = '\0';
@@ -1344,8 +1343,8 @@ static int send_ban_list(aClient *cptr, char *chname, time_t creationtime, aChan
 		if (send)
 		{
 			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, NULL, "MODE %s %s %s %lu",
-			    chname, modebuf, parabuf, creationtime);
+			sendto_one(cptr, NULL, "MODE %s %s %s %lld",
+			    chname, modebuf, parabuf, (long long)creationtime);
 			sent = 1;
 			send = 0;
 			*parabuf = '\0';
@@ -1381,8 +1380,8 @@ static int send_ban_list(aClient *cptr, char *chname, time_t creationtime, aChan
 		if (send)
 		{
 			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, NULL, "MODE %s %s %s %lu",
-			    chname, modebuf, parabuf, creationtime);
+			sendto_one(cptr, NULL, "MODE %s %s %s %lld",
+			    chname, modebuf, parabuf, (long long)creationtime);
 			sent = 1;
 			send = 0;
 			*parabuf = '\0';
@@ -1435,8 +1434,8 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 			strlcpy(parabuf, "<->", sizeof parabuf);
 	}
 
-	ircsnprintf(buf, sizeof(buf), "SJOIN %ld %s %s %s :",
-	    chptr->creationtime, chptr->chname, modebuf, parabuf);
+	ircsnprintf(buf, sizeof(buf), "SJOIN %lld %s %s %s :",
+	    (long long)chptr->creationtime, chptr->chname, modebuf, parabuf);
 
 	bufptr = buf + strlen(buf);
 
@@ -1472,8 +1471,8 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 				bufptr[-1] = '\0';
 			sendto_one(cptr, NULL, "%s", buf);
 
-			ircsnprintf(buf, sizeof(buf), "SJOIN %ld %s %s %s :",
-			    chptr->creationtime, chptr->chname, modebuf,
+			ircsnprintf(buf, sizeof(buf), "SJOIN %lld %s %s %s :",
+			    (long long)chptr->creationtime, chptr->chname, modebuf,
 			    parabuf);
 			n = 0;
 
@@ -1495,8 +1494,9 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 	send_ban_list(cptr, chptr->chname, chptr->creationtime, chptr);
 
 	if (modebuf[1] || *parabuf)
-		sendto_one(cptr, NULL, "MODE %s %s %s %lu",
-		    chptr->chname, modebuf, parabuf, chptr->creationtime);
+		sendto_one(cptr, NULL, "MODE %s %s %s %lld",
+		    chptr->chname, modebuf, parabuf,
+		    (long long)chptr->creationtime);
 
 	return;
 }
@@ -1550,20 +1550,20 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	if (nomode && nopara)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %ld %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
-		    (long)chptr->creationtime, chptr->chname);
+		    ":%s SJOIN %lld %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
+		    (long long)chptr->creationtime, chptr->chname);
 	}
 	if (nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %ld %s %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
-		    (long)chptr->creationtime, chptr->chname, modebuf);
+		    ":%s SJOIN %lld %s %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
+		    (long long)chptr->creationtime, chptr->chname, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %ld %s %s %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
-		    (long)chptr->creationtime, chptr->chname, modebuf, parabuf);
+		    ":%s SJOIN %lld %s %s %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
+		    (long long)chptr->creationtime, chptr->chname, modebuf, parabuf);
 	}
 
 	prebuflen = strlen(buf);

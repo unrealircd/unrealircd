@@ -105,20 +105,20 @@ CMD_FUNC(m_netinfo)
 			emsg = " [\002PLEASE SYNC YOUR CLOCKS!\002]";
 		}
 		sendto_realops
-		    ("Possible negative TS split at link %s (%li - %li = %li)%s",
-		    cptr->name, (xx), (endsync), (xx - endsync), emsg);
+		    ("Possible negative TS split at link %s (%lld - %lld = %lld)%s",
+		    cptr->name, (long long)(xx), (long long)(endsync), (long long)(xx - endsync), emsg);
 		sendto_server(&me, 0, 0, NULL,
-		    ":%s SMO o :\2(sync)\2 Possible negative TS split at link %s (%li - %li = %li)%s",
-		    me.name, cptr->name, (xx), (endsync), (xx - endsync), emsg);
+		    ":%s SMO o :\2(sync)\2 Possible negative TS split at link %s (%lld - %lld = %lld)%s",
+		    me.name, cptr->name, (long long)(xx), (long long)(endsync), (long long)(xx - endsync), emsg);
 	}
 	sendto_realops
-	    ("Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
-	    cptr->name, me.name, (TStime() - endsync), sptr->local->receiveK,
+	    ("Link %s -> %s is now synced [secs: %lld recv: %ld.%hu sent: %ld.%hu]",
+	    cptr->name, me.name, (long long)(TStime() - endsync), sptr->local->receiveK,
 	    sptr->local->receiveB, sptr->local->sendK, sptr->local->sendB);
 
 	sendto_server(&me, 0, 0, NULL,
-	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
-	    me.name, cptr->name, me.name, (TStime() - endsync), sptr->local->receiveK,
+	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %lld recv: %ld.%hu sent: %ld.%hu]",
+	    me.name, cptr->name, me.name, (long long)(TStime() - endsync), sptr->local->receiveK,
 	    sptr->local->receiveB, sptr->local->sendK, sptr->local->sendB);
 
 	if (!(strcmp(ircnetwork, parv[8]) == 0))

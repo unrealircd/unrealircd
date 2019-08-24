@@ -522,7 +522,7 @@ static void exit_one_client(aClient *sptr, MessageTag *mtags_i, const char *comm
  */
 int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mtags, char *comment)
 {
-	time_t on_for;
+	long long on_for;
 	ConfigItem_listen *listen_conf;
 	MessageTag *mtags_generated = NULL;
 
@@ -594,12 +594,12 @@ int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mt
 			}
 			on_for = TStime() - sptr->local->firsttime;
 			if (IsHidden(sptr))
-				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s [VHOST %s] (%s)",
+				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s [VHOST %s] (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 					sptr->name, sptr->user->username,
 					sptr->user->realhost, sptr->user->virthost, comment);
 			else
-				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s (%s)",
+				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 					sptr->name, sptr->user->username, sptr->user->realhost, comment);
 		} else

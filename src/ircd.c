@@ -1427,12 +1427,12 @@ void SocketLoop(void *dummy)
 			oldtimeofday = timeofday; /* pretend everything is ok the first time.. */
 		if (mytdiff(timeofday, oldtimeofday) < NEGATIVE_SHIFT_WARN) {
 			/* tdiff = # of seconds of time set backwards (positive number! eg: 60) */
-			long tdiff = oldtimeofday - timeofday;
-			ircd_log(LOG_ERROR, "WARNING: Time running backwards! Clock set back ~%ld seconds (%ld -> %ld)",
-				tdiff, oldtimeofday, timeofday);
+			time_t tdiff = oldtimeofday - timeofday;
+			ircd_log(LOG_ERROR, "WARNING: Time running backwards! Clock set back ~%lld seconds (%lld -> %lld)",
+				(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
 			ircd_log(LOG_ERROR, "[TimeShift] Resetting a few timers to prevent IRCd freeze!");
-			sendto_realops("WARNING: Time running backwards! Clock set back ~%ld seconds (%ld -> %ld)",
-				tdiff, oldtimeofday, timeofday);
+			sendto_realops("WARNING: Time running backwards! Clock set back ~%lld seconds (%lld -> %lld)",
+				(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
 			sendto_realops("Incorrect time for IRC servers is a serious problem. "
 			               "Time being set backwards (either by TSCTL or by resetting the clock) is "
 			               "even more serious and can cause clients to freeze, channels to be "
@@ -1445,12 +1445,12 @@ void SocketLoop(void *dummy)
 		if (mytdiff(timeofday, oldtimeofday) > POSITIVE_SHIFT_WARN) /* do not set too low or you get false positives */
 		{
 			/* tdiff = # of seconds of time set forward (eg: 60) */
-			long tdiff = timeofday - oldtimeofday;
-			ircd_log(LOG_ERROR, "WARNING: Time jumped ~%ld seconds ahead! (%ld -> %ld)",
-				tdiff, oldtimeofday, timeofday);
+			time_t tdiff = timeofday - oldtimeofday;
+			ircd_log(LOG_ERROR, "WARNING: Time jumped ~%lld seconds ahead! (%lld -> %lld)",
+				(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
 			ircd_log(LOG_ERROR, "[TimeShift] Resetting some timers!");
-			sendto_realops("WARNING: Time jumped ~%ld seconds ahead! (%ld -> %ld)",
-			        tdiff, oldtimeofday, timeofday);
+			sendto_realops("WARNING: Time jumped ~%lld seconds ahead! (%lld -> %lld)",
+			        (long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
 			sendto_realops("Incorrect time for IRC servers is a serious problem. "
 			               "Time being adjusted (either by TSCTL or by resetting the clock) "
 			               "more than a few seconds forward/backward can lead to serious issues.");
@@ -1466,12 +1466,12 @@ void SocketLoop(void *dummy)
 			if (timeofday - lasthighwarn > 300)
 			{
 				ircd_log(LOG_ERROR, "[TimeShift] The (IRCd) clock was set backwards. "
-					"Waiting for time to be OK again. This will be in %ld seconds",
-					highesttimeofday - timeofday);
+					"Waiting for time to be OK again. This will be in %lld seconds",
+					(long long)(highesttimeofday - timeofday));
 				sendto_realops("[TimeShift] The (IRCd) clock was set backwards. Timers, nick- "
 				               "and channel-timestamps are possibly incorrect. This message will "
 				               "repeat itself until we catch up with the original time, which will be "
-				               "in %ld seconds", highesttimeofday - timeofday);
+				               "in %lld seconds", (long long)(highesttimeofday - timeofday));
 				lasthighwarn = timeofday;
 			}
 		} else {

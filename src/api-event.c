@@ -173,9 +173,9 @@ void EventStatus(aClient *sptr)
 	}
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
 	{
-		sendnotice(sptr, "*** Event %s: e/%ld h/%ld n/%ld l/%ld",
-			eventptr->name, eventptr->every, eventptr->howmany,
-			now - eventptr->last, (eventptr->last + eventptr->every) - now);
+		sendnotice(sptr, "*** Event %s: e/%lld h/%lld n/%lld l/%lld",
+			eventptr->name, (long long)eventptr->every, (long long)eventptr->howmany,
+			(long long)(now - eventptr->last), (long long)((eventptr->last + eventptr->every) - now));
 	}
 }
 

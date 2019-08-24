@@ -1095,8 +1095,9 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 	if (CHECKPROTO(cptr, PROTO_SID) && *sptr->id)
 	{
 		sendto_one(cptr, NULL,
-			":%s UID %s %d %ld %s %s %s %s %s %s %s %s :%s",
-			sptr->srvptr->id, sptr->name, sptr->hopcount, sptr->lastnick,
+			":%s UID %s %d %lld %s %s %s %s %s %s %s %s :%s",
+			sptr->srvptr->id, sptr->name, sptr->hopcount,
+			(long long)sptr->lastnick,
 			sptr->user->username, sptr->user->realhost, sptr->id,
 			sptr->user->svid, umodes, vhost, getcloak(sptr),
 			encode_ip(sptr->ip), sptr->info);
@@ -1104,9 +1105,9 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 	}
 
 	sendto_one(cptr, NULL,
-		    "NICK %s %d %ld %s %s %s %s %s %s %s%s%s%s:%s",
-		    sptr->name,
-		    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
+		    "NICK %s %d %lld %s %s %s %s %s %s %s%s%s%s:%s",
+		    sptr->name, sptr->hopcount+1,
+		    (long long)sptr->lastnick, sptr->user->username,
 		    sptr->user->realhost, sptr->srvptr->name,
 		    sptr->user->svid, umodes, vhost,
 		    CHECKPROTO(cptr, PROTO_CLK) ? getcloak(sptr) : "",

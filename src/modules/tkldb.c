@@ -331,8 +331,8 @@ int write_tkldb(void)
 	}
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	config_status("[tkldb] Benchmark: SAVE DB: %ld microseconds",
-		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
+	config_status("[tkldb] Benchmark: SAVE DB: %lld microseconds",
+		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 	return 1;
 }
@@ -602,8 +602,8 @@ int read_tkldb(void)
 			continue;
 		}
 
-		ircsnprintf(setTime, sizeof(setTime), "%li", set_at);
-		ircsnprintf(expTime, sizeof(expTime), "%li", expire_at);
+		ircsnprintf(setTime, sizeof(setTime), "%lld", (long long)set_at);
+		ircsnprintf(expTime, sizeof(expTime), "%lld", (long long)expire_at);
 
 		// Build TKL args
 		// All of these except [8] are the same for all (only odd one is spamfilter)
@@ -633,7 +633,7 @@ int read_tkldb(void)
 
 			if (doadd)
 			{
-				ircsnprintf(spamfTime, sizeof(spamfTime), "%li", spamf_tkl_duration);
+				ircsnprintf(spamfTime, sizeof(spamfTime), "%lld", (long long)spamf_tkl_duration);
 				tkllayer[8] = spamfTime;
 				tkllayer[9] = spamf_tkl_reason;
 				tkllayer[10] = spamf_matchtype;
@@ -674,8 +674,8 @@ int read_tkldb(void)
 	}
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "[tkldb] Benchmark: LOAD DB: %ld microseconds",
-		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
+	ircd_log(LOG_ERROR, "[tkldb] Benchmark: LOAD DB: %lld microseconds",
+		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 	return 1;
 }

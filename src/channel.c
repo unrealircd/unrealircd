@@ -742,8 +742,8 @@ int  DoesOp(char *modebuf)
 int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, time_t creationtime)
 {
 	if ((IsServer(cptr) && DoesOp(mode) && creationtime) || IsULine(cptr))
-		sendto_one(cptr, NULL, ":%s MODE %s %s %s %lu", from,
-		    name, mode, param, creationtime);
+		sendto_one(cptr, NULL, ":%s MODE %s %s %s %lld", from,
+		    name, mode, param, (long long)creationtime);
 	else
 		sendto_one(cptr, NULL, ":%s MODE %s %s %s", from, name, mode, param);
 
@@ -1154,8 +1154,8 @@ void set_channel_mlock(aClient *cptr, aClient *sptr, aChannel *chptr, const char
 
 	if (propagate)
 	{
-		sendto_server(cptr, 0, 0, NULL, ":%s MLOCK %lu %s :%s",
-			      cptr->name, chptr->creationtime, chptr->chname,
+		sendto_server(cptr, 0, 0, NULL, ":%s MLOCK %lld %s :%s",
+			      cptr->name, (long long)chptr->creationtime, chptr->chname,
 			      BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
 	}
 }

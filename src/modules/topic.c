@@ -174,12 +174,12 @@ CMD_FUNC(m_topic)
 
 			RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);
 			new_message(sptr, recv_mtags, &mtags);
-			sendto_server(cptr, PROTO_SID, 0, mtags, ":%s TOPIC %s %s %lu :%s",
+			sendto_server(cptr, PROTO_SID, 0, mtags, ":%s TOPIC %s %s %lld :%s",
 			    ID(sptr), chptr->chname, chptr->topic_nick,
-			    chptr->topic_time, chptr->topic);
-			sendto_server(cptr, 0, PROTO_SID, mtags, ":%s TOPIC %s %s %lu :%s",
+			    (long long)chptr->topic_time, chptr->topic);
+			sendto_server(cptr, 0, PROTO_SID, mtags, ":%s TOPIC %s %s %lld :%s",
 			    sptr->name, chptr->chname, chptr->topic_nick,
-			    chptr->topic_time, chptr->topic);
+			    (long long)chptr->topic_time, chptr->topic);
 			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 				       ":%s TOPIC %s :%s",
 				       sptr->name, chptr->chname, chptr->topic);
@@ -275,9 +275,9 @@ CMD_FUNC(m_topic)
 		chptr->topic_time = TStime();
 
 	new_message(sptr, recv_mtags, &mtags);
-	sendto_server(cptr, 0, 0, mtags, ":%s TOPIC %s %s %lu :%s",
+	sendto_server(cptr, 0, 0, mtags, ":%s TOPIC %s %s %lld :%s",
 	    sptr->name, chptr->chname, chptr->topic_nick,
-	    chptr->topic_time, chptr->topic);
+	    (long long)chptr->topic_time, chptr->topic);
 	sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
 		       ":%s TOPIC %s :%s",
 		       sptr->name, chptr->chname, chptr->topic);

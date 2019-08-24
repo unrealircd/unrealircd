@@ -565,8 +565,8 @@ CMD_FUNC(ct_throttle)
 			} else
 			if (me.local->firsttime + cfg.start_delay > TStime())
 			{
-				sendnotice(sptr, "Module DISABLED due to start-delay (set::connthrottle::disabled-when::start-delay), will be enabled in %ld second(s).",
-					(me.local->firsttime + cfg.start_delay) - TStime());
+				sendnotice(sptr, "Module DISABLED due to start-delay (set::connthrottle::disabled-when::start-delay), will be enabled in %lld second(s).",
+					(long long)((me.local->firsttime + cfg.start_delay) - TStime()));
 			} else
 			{
 				sendnotice(sptr, "Module ENABLED");
@@ -619,9 +619,9 @@ void rehash_dump_settings(void)
 		return;
 	}
 	fprintf(fd, "# THROTTLE DUMP v1 == DO NOT EDIT!\n");
-	fprintf(fd, "TSME %ld\n", me.local->firsttime);
-	fprintf(fd, "TSNOW %ld\n", TStime());
-	fprintf(fd, "next_event %ld\n", ucounter.next_event);
+	fprintf(fd, "TSME %lld\n", (long long)me.local->firsttime);
+	fprintf(fd, "TSNOW %lld\n", (long long)TStime());
+	fprintf(fd, "next_event %lld\n", (long long)ucounter.next_event);
 	fprintf(fd, "local.count %d\n", ucounter.local.count);
 	fprintf(fd, "local.t %ld\n", ucounter.local.t);
 	fprintf(fd, "global.count %d\n", ucounter.global.count);
@@ -696,8 +696,8 @@ void rehash_read_settings(void)
 	{
 		fclose(fd);
 #ifdef DEBUGMODE
-		config_status("ts!=me.local->firsttime: ts=%ld, me.local->firsttime=%ld",
-			ts, me.local->firsttime);
+		config_status("ts!=me.local->firsttime: ts=%lld, me.local->firsttime=%lld",
+			(long long)ts, (long long)me.local->firsttime);
 #endif
 		unlink("tmp/connthrottle.tmp");
 		return;

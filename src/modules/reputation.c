@@ -377,8 +377,8 @@ void load_db(void)
 
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "Reputation benchmark: LOAD DB: %ld microseconds",
-		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
+	ircd_log(LOG_ERROR, "Reputation benchmark: LOAD DB: %lld microseconds",
+		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 }
 
@@ -409,14 +409,14 @@ void save_db(void)
 		return;
 	}
 
-	if (fprintf(fd, "REPDB 1 %ld %ld\n", reputation_starttime, TStime()) < 0)
+	if (fprintf(fd, "REPDB 1 %lld %lld\n", (long long)reputation_starttime, (long long)TStime()) < 0)
 		goto write_fail;
 
 	for (i = 0; i < REPUTATION_HASH_TABLE_SIZE; i++)
 	{
 		for (e = ReputationHashTable[i]; e; e = e->next)
 		{
-			if (fprintf(fd, "%s %d %ld\n", e->ip, (int)e->score, e->last_seen) < 0)
+			if (fprintf(fd, "%s %d %lld\n", e->ip, (int)e->score, (long long)e->last_seen) < 0)
 			{
 write_fail:
 				config_error("ERROR writing to '%s': %s -- DATABASE *NOT* SAVED!!!", tmpfname, strerror(ERRNO));
@@ -446,8 +446,8 @@ write_fail:
 
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "Reputation benchmark: SAVE DB: %ld microseconds",
-		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
+	ircd_log(LOG_ERROR, "Reputation benchmark: SAVE DB: %lld microseconds",
+		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 
 	return;
@@ -616,8 +616,8 @@ EVENT(delete_old_records)
 			if (is_reputation_expired(e))
 			{
 #ifdef DEBUGMODE
-				ircd_log(LOG_ERROR, "Deleting expired entry for '%s' (score %hd, last seen %ld seconds ago)",
-				         e->ip, e->score, TStime() - e->last_seen);
+				ircd_log(LOG_ERROR, "Deleting expired entry for '%s' (score %hd, last seen %lld seconds ago)",
+				         e->ip, e->score, (long long)(TStime() - e->last_seen));
 #endif
 				DelListItem(e, ReputationHashTable[i]);
 				MyFree(e);
@@ -627,8 +627,8 @@ EVENT(delete_old_records)
 
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
-	ircd_log(LOG_ERROR, "Reputation benchmark: EXPIRY IN MEM: %ld microseconds",
-		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
+	ircd_log(LOG_ERROR, "Reputation benchmark: EXPIRY IN MEM: %lld microseconds",
+		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 }
 
@@ -680,12 +680,14 @@ CMD_FUNC(reputation_user_cmd)
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		sendnotice(sptr, "Reputation module statistics:");
-		sendnotice(sptr, "Recording for: %ld seconds (since unixtime %ld)",
-			TStime() - reputation_starttime, reputation_starttime);
+		sendnotice(sptr, "Recording for: %lld seconds (since unixtime %lld)",
+			(long long)(TStime() - reputation_starttime),
+			(long long)reputation_starttime);
 		if (reputation_writtentime)
 		{
-			sendnotice(sptr, "Last successful db write: %ld seconds ago (unixtime %ld)",
-				TStime() - reputation_writtentime, reputation_writtentime);
+			sendnotice(sptr, "Last successful db write: %lld seconds ago (unixtime %lld)",
+				(long long)(TStime() - reputation_writtentime),
+				(long long)reputation_writtentime);
 		} else {
 			sendnotice(sptr, "Last successful db write: never");
 		}
@@ -723,8 +725,9 @@ CMD_FUNC(reputation_user_cmd)
 	sendnotice(sptr, "****************************************************");
 	sendnotice(sptr, "Reputation record for IP %s:", ip);
 	sendnotice(sptr, "    Score: %hd", e->score);
-	sendnotice(sptr, "Last seen: %ld seconds ago (unixtime: %ld)",
-		TStime() - e->last_seen, e->last_seen);
+	sendnotice(sptr, "Last seen: %lld seconds ago (unixtime: %lld)",
+		(long long)(TStime() - e->last_seen),
+		(long long)e->last_seen);
 	sendnotice(sptr, "****************************************************");
 	return 0;
 }

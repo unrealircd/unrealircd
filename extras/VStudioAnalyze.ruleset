@@ -6,7 +6,7 @@
   </Localization>
 
   <Rules AnalyzerId="Microsoft.Analyzers.NativeCodeAnalysis" RuleNamespace="Microsoft.Rules.Native">
-    <Rule Id="C6001" Action="Warning" />
+<!-- Many false positives    <Rule Id="C6001" Action="Warning" /> -->
 <!-- Many false positives    <Rule Id="C6011" Action="Warning" /> -->
     <Rule Id="C6029" Action="Warning" />
     <Rule Id="C6053" Action="Warning" />
