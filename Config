@@ -763,7 +763,8 @@ fi
 TEST="$EXTRAPARA"
 echo ""
 echo "Would you like to pass any custom parameters to configure?"
-echo "See  \`./configure --help' and write them here:"
+echo "Most people don't need this and can just press ENTER."
+echo "Otherwise, see \`./configure --help' and write them here:"
 echo $n "[$TEST] -> $c"
 read EXTRAPARA
 if [ -z "$EXTRAPARA" ]; then
