@@ -928,11 +928,7 @@ void read_motd(const char *filename, aMotdFile *themotd)
 		motd_download->themotd = themotd;
 		themotd->motd_download = motd_download;
 
-#ifdef REMOTEINC_SPECIALCACHE
 		modtime = unreal_getfilemodtime(unreal_mkcache(filename));
-#else
-		modtime = 0;
-#endif
 
 		download_file_async(filename, modtime, (vFP)read_motd_asynch_downloaded, motd_download);
 		return;
@@ -971,25 +967,20 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 	/* errors -- check for specialcached version if applicable */
 	if(!cached && !filename)
 	{
-#ifdef REMOTEINC_SPECIALCACHE
 		if(has_cached_version(url))
 		{
 			config_warn("Error downloading MOTD file from \"%s\": %s -- using cached version instead.", displayurl(url), errorbuf);
 			filename = unreal_mkcache(url);
 		} else {
-#endif
 			config_error("Error downloading MOTD file from \"%s\": %s", displayurl(url), errorbuf);
 
 			/* remove reference to this chunk of memory about to be freed. */
 			motd_download->themotd->motd_download = NULL;
 			MyFree(motd_download);
 			return;
-#ifdef REMOTEINC_SPECIALCACHE
 		}
-#endif
 	}
 
-#ifdef REMOTEINC_SPECIALCACHE
 	/*
 	 * We need to move our newly downloaded file to its cache file
 	 * if it isn't there already.
@@ -1005,7 +996,6 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 		 */
 		filename = unreal_mkcache(url);
 	}
-#endif
 
 	do_read_motd(filename, themotd);
 	MyFree(motd_download);

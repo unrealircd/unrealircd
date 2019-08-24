@@ -10093,9 +10093,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 		if (cached)
 		{
 			unreal_copyfileex(inc->file, tmp, 1);
-#ifdef REMOTEINC_SPECIALCACHE
 			unreal_copyfileex(inc->file, unreal_mkcache(url), 0);
-#endif
 			update_remote_include(inc, tmp, 0, NULL);
 		}
 		else
@@ -10106,9 +10104,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 			*/
 			unreal_copyfileex(file, tmp, 1);
 			update_remote_include(inc, tmp, 0, NULL);
-#ifdef REMOTEINC_SPECIALCACHE
 			unreal_copyfileex(file, unreal_mkcache(url), 0);
-#endif
 		}
 	}
 	for (inc = conf_include; inc; inc = inc->next)
@@ -10323,7 +10319,6 @@ int remote_include(ConfigEntry *ce)
 		file = download_file(url, &error);
 		if (!file)
 		{
-#ifdef REMOTEINC_SPECIALCACHE
 			if (has_cached_version(url))
 			{
 				config_warn("%s:%i: include: error downloading '%s': %s -- using cached version instead.",
@@ -10332,18 +10327,13 @@ int remote_include(ConfigEntry *ce)
 				file = strdup(unreal_mkcache(url));
 				/* Let it pass to load_conf()... */
 			} else {
-#endif
 				config_error("%s:%i: include: error downloading '%s': %s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 					 displayurl(url), error);
 				return -1;
-#ifdef REMOTEINC_SPECIALCACHE
 			}
-#endif
 		} else {
-#ifdef REMOTEINC_SPECIALCACHE
 			unreal_copyfileex(file, unreal_mkcache(url), 0);
-#endif
 		}
 		add_remote_include(file, url, 0, NULL, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		ret = load_conf(file, url);
@@ -10354,7 +10344,6 @@ int remote_include(ConfigEntry *ce)
 	{
 		if (errorbuf)
 		{
-#ifdef REMOTEINC_SPECIALCACHE
 			if (has_cached_version(url))
 			{
 				config_warn("%s:%i: include: error downloading '%s': %s -- using cached version instead.",
@@ -10363,14 +10352,11 @@ int remote_include(ConfigEntry *ce)
 				/* Let it pass to load_conf()... */
 				file = strdup(unreal_mkcache(url));
 			} else {
-#endif
 				config_error("%s:%i: include: error downloading '%s': %s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 					displayurl(url), errorbuf);
 				return -1;
-#ifdef REMOTEINC_SPECIALCACHE
 			}
-#endif
 		}
 		if (config_verbose > 0)
 			config_status("Loading %s from download", url);
