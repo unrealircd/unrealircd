@@ -488,9 +488,9 @@ int check_ping(aClient *cptr)
 	int ping = 0;
 
 	ping = cptr->local->class ? cptr->local->class->pingfreq : iConf.handshake_timeout;
-	Debug((DEBUG_DEBUG, "c(%s)=%d p %d a %d", cptr->name,
+	Debug((DEBUG_DEBUG, "c(%s)=%d p %d a %lld", cptr->name,
 		cptr->status, ping,
-		TStime() - cptr->local->lasttime));
+		(long long)(TStime() - cptr->local->lasttime)));
 
 	/* If ping is less than or equal to the last time we received a command from them */
 	if (ping > (TStime() - cptr->local->lasttime))
@@ -518,10 +518,10 @@ int check_ping(aClient *cptr)
 				FALSE));
 		}
 		if (IsTLSAcceptHandshake(cptr))
-			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->local->sockhost,
-				TStime(), cptr->local->since, ping));
-		(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %ld seconds",
-			(long) (TStime() - cptr->local->lasttime));
+			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%lld-%lld > %lld)", cptr->local->sockhost,
+				(long long)TStime(), (long long)cptr->local->since, (long long)ping));
+		(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %lld seconds",
+			(long long) (TStime() - cptr->local->lasttime));
 		return exit_client(cptr, cptr, &me, NULL, scratch);
 	}
 	else if (IsRegistered(cptr) &&

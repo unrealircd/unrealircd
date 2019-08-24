@@ -186,7 +186,7 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 		Usermode_Table[i].flag = ch;
 		Usermode_Table[i].allowed = allowed;
 		Usermode_Table[i].unset_on_deoper = unset_on_deoper;
-		Debug((DEBUG_DEBUG, "UmodeAdd(%c) returning %04x",
+		Debug((DEBUG_DEBUG, "UmodeAdd(%c) returning %04lx",
 			ch, Usermode_Table[i].mode));
 		/* Update usermode table highest */
 		for (j = 0; j < UMODETABLESZ; j++)

@@ -234,7 +234,7 @@ int found = 0;
 }
 
 /* irc logs.. */
-void ircd_log(int flags, char *format, ...)
+void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 {
 	static int last_log_file_warning = 0;
 	static char recursion_trap=0;

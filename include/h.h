@@ -102,8 +102,8 @@ extern EVENT(e_clean_out_throttling_buckets);
 extern void  module_loadall(void);
 extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
-extern void config_error(FORMAT_STRING(char *format), ...) __attribute__((format(printf,1,2)));
-extern void config_warn(FORMAT_STRING(char *format), ...) __attribute__((format(printf,1,2)));
+extern void config_error(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
+extern void config_warn(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
 extern void config_error_missing(const char *filename, int line, const char *entry);
 extern void config_error_unknown(const char *filename, int line, const char *block, const char *entry);
 extern void config_error_unknownflag(const char *filename, int line, const char *block, const char *entry);
@@ -114,7 +114,7 @@ extern void config_error_empty(const char *filename, int line, const char *block
 extern void config_warn_duplicate(const char *filename, int line, const char *entry);
 extern int config_is_blankorempty(ConfigEntry *cep, const char *block);
 extern MODVAR int config_verbose;
-extern void config_progress(FORMAT_STRING(char *format), ...) __attribute__((format(printf,1,2)));
+extern void config_progress(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
 extern void       ipport_seperate(char *string, char **ip, char **port);
 extern ConfigItem_class	*Find_class(char *name);
 extern ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
@@ -206,7 +206,7 @@ extern Ban *is_banned(aClient *, aChannel *, int, char **, char **);
 extern Ban *is_banned_with_nick(aClient *, aChannel *, int, char *, char **, char **);
 extern int parse_help(aClient *, char *, char *);
 
-extern void ircd_log(int, FORMAT_STRING(char *), ...) __attribute__((format(printf,2,3)));
+extern void ircd_log(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
 extern aClient *find_client(char *, aClient *);
 extern aClient *find_name(char *, aClient *);
 extern aClient *find_nickserv(char *, aClient *);
@@ -280,27 +280,27 @@ extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
 extern void sendto_channel(aChannel *chptr, aClient *from, aClient *skip,
                            int prefix, long clicap, int sendflags,
                            MessageTag *mtags,
-                           FORMAT_STRING(char *pattern), ...) __attribute__((format(printf,8,9)));
+                           FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,8,9)));
 extern void sendto_local_common_channels(aClient *user, aClient *skip,
                                          long clicap, MessageTag *mtags,
-                                         FORMAT_STRING(char *pattern), ...) __attribute__((format(printf,5,6)));
-extern void sendto_match_servs(aChannel *, aClient *, FORMAT_STRING(char *), ...) __attribute__((format(printf,3,4)));
-extern void sendto_match_butone(aClient *, aClient *, FORMAT_STRING(char *), int, MessageTag *,
-    FORMAT_STRING(char *pattern), ...) __attribute__((format(printf,6,7)));
-extern void sendto_all_butone(aClient *, aClient *, FORMAT_STRING(char *), ...) __attribute__((format(printf,3,4)));
-extern void sendto_ops(FORMAT_STRING(char *), ...) __attribute__((format(printf,1,2)));
-extern void sendto_ops_butone(FORMAT_STRING(aClient *), aClient *, char *, ...) __attribute__((format(printf,3,4)));
+                                         FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,5,6)));
+extern void sendto_match_servs(aChannel *, aClient *, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
+extern void sendto_match_butone(aClient *, aClient *, char *, int, MessageTag *,
+    FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,6,7)));
+extern void sendto_all_butone(aClient *, aClient *, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
+extern void sendto_ops(FORMAT_STRING(const char *), ...) __attribute__((format(printf,1,2)));
+extern void sendto_ops_butone(aClient *, aClient *, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
 extern void sendto_prefix_one(aClient *, aClient *, MessageTag *, FORMAT_STRING(const char *), ...) __attribute__((format(printf,4,5)));
-extern void sendto_opers(FORMAT_STRING(char *), ...) __attribute__((format(printf,1,2)));
-extern void sendto_umode(int, FORMAT_STRING(char *), ...) __attribute__((format(printf,2,3)));
-extern void sendto_umode_global(int, FORMAT_STRING(char *), ...) __attribute__((format(printf,2,3)));
-extern void sendto_snomask(int snomask, FORMAT_STRING(char *pattern), ...) __attribute__((format(printf,2,3)));
-extern void sendto_snomask_global(int snomask, FORMAT_STRING(char *pattern), ...) __attribute__((format(printf,2,3)));
-extern void sendnotice(aClient *to, FORMAT_STRING(char *pattern), ...) __attribute__((format(printf,2,3)));
+extern void sendto_opers(FORMAT_STRING(const char *), ...) __attribute__((format(printf,1,2)));
+extern void sendto_umode(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
+extern void sendto_umode_global(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
+extern void sendto_snomask(int snomask, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
+extern void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
+extern void sendnotice(aClient *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
 extern void sendnumeric(aClient *to, int numeric, ...);
-extern void sendnumericfmt(aClient *to, int numeric, FORMAT_STRING(char *pattern), ...) __attribute__((format(printf,3,4)));
+extern void sendnumericfmt(aClient *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
 extern void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...) __attribute__((format(printf, 5, 6)));
-extern void sendto_ops_and_log(FORMAT_STRING(char *pattern), ...) __attribute__((format(printf,1,2)));
+extern void sendto_ops_and_log(FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,1,2)));
 
 extern MODVAR int writecalls, writeb[];
 extern int deliver_it(aClient *cptr, char *str, int len, int *want_read);
@@ -445,7 +445,7 @@ extern char *strldup(const char *src, size_t n);
 
 extern int dopacket(aClient *, char *, int);
 
-extern void debug(int, FORMAT_STRING(char *), ...);
+extern void debug(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
 #if defined(DEBUGMODE)
 extern void send_usage(aClient *, char *);
 extern void count_memory(aClient *, char *);
@@ -523,7 +523,7 @@ extern TLSOptions *get_tls_options_for_client(aClient *acptr);
 extern int outdated_tls_client(aClient *acptr);
 extern char *outdated_tls_client_build_string(char *pattern, aClient *acptr);
 extern long config_checkval(char *value, unsigned short flags);
-extern void config_status(FORMAT_STRING(char *format), ...) __attribute__((format(printf,1,2)));
+extern void config_status(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
 extern void init_random();
 extern u_char getrandom8();
 extern uint16_t getrandom16();
@@ -710,7 +710,7 @@ extern MODVAR aTKline *tklines[TKLISTLEN];
 extern MODVAR aTKline *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
 extern char *cmdname_by_spamftarget(int target);
 extern void unrealdns_delreq_bycptr(aClient *cptr);
-extern void sendtxtnumeric(aClient *to, FORMAT_STRING(char *pattern), ...) __attribute__((format(printf,2,3)));
+extern void sendtxtnumeric(aClient *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
 extern void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf, int ipv4_only);
 extern void unrealdns_delasyncconnects(void);
 extern int is_autojoin_chan(char *chname);
@@ -741,7 +741,7 @@ extern MODVAR char *IsupportStrings[];
 extern void finish_auth(aClient *acptr);
 extern void read_packet(int fd, int revents, void *data);
 extern int process_packet(aClient *cptr, char *readbuf, int length, int killsafely);
-extern void sendto_realops_and_log(FORMAT_STRING(char *fmt), ...) __attribute__((format(printf,1,2)));
+extern void sendto_realops_and_log(FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,1,2)));
 extern int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in);
 extern void config_report_ssl_error(void);
 extern int dead_link(aClient *to, char *notice);
@@ -846,7 +846,7 @@ extern int is_handshake_finished(aClient *sptr);
 extern void SetCapability(aClient *acptr, const char *token);
 extern void ClearCapability(aClient *acptr, const char *token);
 extern void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list);
-extern void new_message_special(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, FORMAT_STRING(char *pattern), ...) __attribute__((format(printf,4,5)));
+extern void new_message_special(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,4,5)));
 extern void generate_batch_id(char *str);
 extern MessageTag *find_mtag(MessageTag *mtags, const char *token);
 extern MessageTag *duplicate_mtag(MessageTag *mtag);

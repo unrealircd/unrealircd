@@ -1536,7 +1536,7 @@ static void read_authports(int fd, int revents, void *data);
 
 void ident_failed(aClient *cptr)
 {
-	Debug((DEBUG_NOTICE, "ident_failed() for %x", cptr));
+	Debug((DEBUG_NOTICE, "ident_failed() for %p", cptr));
 	ircstp->is_abad++;
 	if (cptr->local->authfd != -1)
 	{
@@ -1573,7 +1573,7 @@ void start_auth(aClient *cptr)
 			finish_auth(cptr);
 		return;
 	}
-	Debug((DEBUG_NOTICE, "start_auth(%x) fd=%d, status=%d",
+	Debug((DEBUG_NOTICE, "start_auth(%p) fd=%d, status=%d",
 	    cptr, cptr->fd, cptr->status));
 	snprintf(buf, sizeof buf, "identd: %s", get_client_name(cptr, TRUE));
 	if ((cptr->local->authfd = fd_socket(IsIPV6(cptr) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf)) == -1)
@@ -1629,7 +1629,7 @@ static void send_authports(int fd, int revents, void *data)
 	int  ulen, tlen;
 	aClient *cptr = data;
 
-	Debug((DEBUG_NOTICE, "write_authports(%x) fd %d authfd %d stat %d",
+	Debug((DEBUG_NOTICE, "write_authports(%p) fd %d authfd %d stat %d",
 	    cptr, cptr->fd, cptr->local->authfd, cptr->status));
 
 	ircsnprintf(authbuf, sizeof(authbuf), "%d , %d\r\n",
@@ -1668,7 +1668,7 @@ static void read_authports(int fd, int revents, void *userdata)
 	aClient *cptr = userdata;
 
 	*system = *ruser = '\0';
-	Debug((DEBUG_NOTICE, "read_authports(%x) fd %d authfd %d stat %d",
+	Debug((DEBUG_NOTICE, "read_authports(%p) fd %d authfd %d stat %d",
 	    cptr, cptr->fd, cptr->local->authfd, cptr->status));
 	/*
 	 * Nasty.  Cant allow any other reads from client fd while we're

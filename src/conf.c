@@ -209,14 +209,6 @@ void			config_free(ConfigFile *cfptr);
 static ConfigFile 	*config_parse(char *filename, char *confdata);
 static void 		config_entry_free(ConfigEntry *ceptr);
 ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name);
-/*
- * Error handling
-*/
-
-void			config_warn(char *format, ...);
-void 			config_error(char *format, ...);
-void 			config_status(char *format, ...);
-void 			config_progress(char *format, ...);
 
 #ifdef _WIN32
 extern void 	win_log(char *format, ...);
@@ -1203,7 +1195,7 @@ ConfigEntry *config_find_entry(ConfigEntry *ce, char *name)
 	return cep;
 }
 
-void config_error(char *format, ...)
+void config_error(FORMAT_STRING(const char *format), ...)
 {
 	va_list		ap;
 	char		buffer[1024];
@@ -1266,7 +1258,7 @@ void config_error_empty(const char *filename, int line, const char *block,
 		filename, line, block, entry);
 }
 
-void config_status(char *format, ...)
+void config_status(FORMAT_STRING(const char *format), ...)
 {
 	va_list		ap;
 	char		buffer[1024];
@@ -1287,7 +1279,7 @@ void config_status(char *format, ...)
 		sendnotice(remote_rehash_client, "%s", buffer);
 }
 
-void config_warn(char *format, ...)
+void config_warn(FORMAT_STRING(const char *format), ...)
 {
 	va_list		ap;
 	char		buffer[1024];
@@ -1386,7 +1378,7 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 	return 0;
 }
 
-void config_progress(char *format, ...)
+void config_progress(FORMAT_STRING(const char *format), ...)
 {
 	va_list		ap;
 	char		buffer[1024];

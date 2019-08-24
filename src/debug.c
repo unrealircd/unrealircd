@@ -119,15 +119,7 @@ void	flag_del(char ch)
 
 static char debugbuf[4096];
 
-#ifndef	USE_VARARGS
-/*VARARGS2*/
-void debug(level, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10)
-	int  level;
-	char *form, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9, *p10;
-{
-#else
-void debug(int level, char *form, ...)
-#endif
+void debug(int level, FORMAT_STRING(const char *form), ...)
 {
 	int err = ERRNO;
 
@@ -136,11 +128,7 @@ void debug(int level, char *form, ...)
 
 	if ((debuglevel >= 0) && (level <= debuglevel))
 	{
-#ifndef USE_VARARGS
-		(void)ircsnprintf(debugbuf, sizeof(debugbuf), form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
-#else
 		(void)ircvsnprintf(debugbuf, sizeof(debugbuf), form, vl);
-#endif
 
 #ifndef _WIN32
 		strlcat(debugbuf, "\n", sizeof(debugbuf));

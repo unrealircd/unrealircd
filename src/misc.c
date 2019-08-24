@@ -1082,7 +1082,7 @@ int IsWebsocket(aClient *acptr)
 	return (MyConnect(acptr) && moddata_client(acptr, md).ptr) ? 1 : 0;
 }
 
-extern void send_raw_direct(aClient *user, char *pattern, ...);
+extern void send_raw_direct(aClient *user, FORMAT_STRING(const char *pattern), ...);
 
 /** Generic function to inform the user he/she has been banned.
  * @param acptr   The affected client.
@@ -1304,7 +1304,7 @@ void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list
  * identical to the message that is sent to clients (end-users).
  * For example ":xyz JOIN #chan".
  */
-void new_message_special(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *pattern, ...)
+void new_message_special(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, FORMAT_STRING(const char *pattern), ...)
 {
 	Hook *h;
 	va_list vl;

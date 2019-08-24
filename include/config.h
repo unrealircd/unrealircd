@@ -118,19 +118,6 @@
 #define	RESTARTING_SYSTEMCALLS
 #endif
 
-/*
- * If your host supports varargs and has vsprintf(), vprintf() and vscanf()
- * C calls in its library, then you can define USE_VARARGS to use varargs
- * instead of imitation variable arg passing.
-*/
-#define	USE_VARARGS
-
-/* NOTE: with current server code, varargs doesn't survive because it can't
- *       be used in a chain of 3 or more funtions which all have a variable
- *       number of params.  If anyone has a solution to this, please notify
- *       the maintainer.
- */
-
 /* DEBUGMODE: This should only be used when tracing a problem. It creates
  * an insane amount of log output which can be very useful for debugging.
  * You should *NEVER* enable this setting on production servers.
@@ -384,21 +371,15 @@
 #endif
 
 #ifdef DEBUGMODE
-#ifndef _WIN32
-		extern void debug(int, char *, ...);
-#define Debug(x) debug x
+ #define Debug(x) debug x
+ #define LOGFILE LPATH
 #else
-		extern void debug(int, char *, ...);
-#define Debug(x) debug x
-#endif
-#define LOGFILE LPATH
-#else
-#define Debug(x) ;
-#if VMS
-#define LOGFILE "NLA0:"
-#else
-#define LOGFILE "/dev/null"
-#endif
+ #define Debug(x) ;
+ #if VMS
+  #define LOGFILE "NLA0:"
+ #else
+  #define LOGFILE "/dev/null"
+ #endif
 #endif
 
 
