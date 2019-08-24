@@ -47,7 +47,7 @@ extern MODVAR time_t timeofday;
 extern MODVAR char cmodestring[512];
 extern MODVAR char umodestring[UMODETABLESZ+1];
 /* newconf */
-#define get_sendq(x) ((x)->local->class ? (x)->local->class->sendq : MAXSENDQLENGTH)
+#define get_sendq(x) ((x)->local->class ? (x)->local->class->sendq : DEFAULT_SENDQ)
 /* get_recvq is only called in send.c for local connections */
 #define get_recvq(x) ((x)->local->class->recvq ? (x)->local->class->recvq : DEFAULT_RECVQ)
 

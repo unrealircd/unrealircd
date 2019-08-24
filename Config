@@ -78,7 +78,6 @@ ARG="$ARG--with-tmpdir=$TMPDIR "
 ARG="$ARG--with-privatelibdir=$PRIVATELIBDIR "
 ARG="$ARG--with-scriptdir=$BASEPATH "
 ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
-ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
 ARG="$ARG--with-permissions=$DEFPERM "
 ARG="$ARG--enable-dynamic-linking "
 ARG="$ARG $EXTRAPARA "
@@ -272,7 +271,6 @@ BASEPATH="$HOME/unrealircd"
 DEFPERM="0600"
 SSLDIR=""
 NICKNAMEHISTORYLENGTH="2000"
-MAXSENDQLENGTH="3000000"
 MAXCONNECTIONS_REQUEST="auto"
 REMOTEINC=""
 CURLDIR=""
@@ -726,29 +724,6 @@ while [ -z "$TEST" ] ; do
     esac
 done
 
-TEST=""
-while [ -z "$TEST" ] ; do
-    TEST="$MAXSENDQLENGTH"
-    echo ""
-    echo "What is the maximum sendq length you wish to have?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	MAXSENDQLENGTH=$TEST
-	break
-    fi
-    case "$cc" in
-	[1-9][0-9][0-9][0-9]*)
-	    MAXSENDQLENGTH="$cc"
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter a number greater than or equal to 1000"
-	    TEST=""
-	    ;;
-    esac
-done
-
 echo ""
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -809,7 +784,6 @@ DOCDIR="$DOCDIR"
 TMPDIR="$TMPDIR"
 PRIVATELIBDIR="$PRIVATELIBDIR"
 PREFIXAQ="$PREFIXAQ"
-MAXSENDQLENGTH="$MAXSENDQLENGTH"
 MAXCONNECTIONS_REQUEST="$MAXCONNECTIONS_REQUEST"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
 DEFPERM="$DEFPERM"

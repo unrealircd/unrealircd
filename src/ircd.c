@@ -1270,7 +1270,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	default_class->flag.permanent = 1;
 	default_class->pingfreq = 120;
 	default_class->maxclients = 100;
-	default_class->sendq = MAXSENDQLENGTH;
+	default_class->sendq = DEFAULT_RECVQ;
 	default_class->name = "default";
 	AddListItem(default_class, conf_class);
 	if (init_conf(configfile, 0) < 0)

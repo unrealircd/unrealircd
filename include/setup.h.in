@@ -208,9 +208,6 @@
 /* Set to the maximum number of connections you want */
 #undef MAXCONNECTIONS_REQUEST
 
-/* Set to the max sendq you want */
-#undef MAXSENDQLENGTH
-
 /* Define the location of the modules */
 #undef MODULESDIR
 

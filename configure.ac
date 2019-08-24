@@ -537,9 +537,6 @@ AC_SUBST(DYNAMIC_LDFLAGS)
 AC_ARG_WITH(nick-history, [AS_HELP_STRING([--with-nick-history=length],[Specify the length of the nickname history])],
 	[AC_DEFINE_UNQUOTED([NICKNAMEHISTORYLENGTH], [$withval], [Set to the nickname history length you want])],
 	[AC_DEFINE([NICKNAMEHISTORYLENGTH], [2000], [Set to the nickname history length you want])])
-AC_ARG_WITH([sendq], [AS_HELP_STRING([--with-sendq=maxsendq],[Specify the max sendq for the server])],
-	[AC_DEFINE_UNQUOTED([MAXSENDQLENGTH], [$withval], [Set to the max sendq you want])],
-	[AC_DEFINE([MAXSENDQLENGTH], [3000000], [Set to the max sendq you want])])
 AC_ARG_WITH(permissions, [AS_HELP_STRING([--with-permissions=permissions], [Specify the default permissions for
 configuration files])],
 	dnl We have an apparently out-of-place 0 here because of a MacOSX bug and because

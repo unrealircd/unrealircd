@@ -53,10 +53,6 @@ MODVAR int  current_serial;
 */
 int dead_link(aClient *to, char *notice)
 {
-	/*
-	 * If because of BUFFERPOOL problem then clean dbuf's now so that
-	 * notices don't hurt operators below.
-	 */
 	DBufClear(&to->local->recvQ);
 	DBufClear(&to->local->sendQ);
 

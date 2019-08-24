@@ -133,29 +133,9 @@
  */
 //#undef FAKELAG_CONFIGURABLE
 
-/*
- * Max amount of internal send buffering when socket is stuck (bytes)
- */
-#ifndef MAXSENDQLENGTH
-#define MAXSENDQLENGTH 3000000
-#endif
-/*
- *  BUFFERPOOL is the maximum size of the total of all sendq's.
- *  Recommended value is 2 * MAXSENDQLENGTH, for hubs, 5 *.
- */
-#ifndef BUFFERPOOL
-#define	BUFFERPOOL     (18 * MAXSENDQLENGTH)
-#endif
-
-/*
- * DEFAULT_RECVQ
- *
- * this controls the number of bytes the server will allow a client to
- * send to the server without processing before disconnecting the client for
- * flooding it.  Values greater than 8000 make no difference to the server.
- * NOTE: you can now also set this in class::recvq, if that's not present,
- *       this default value will be used.
- */
+/* The default value for class::sendq */
+#define DEFAULT_SENDQ	3000000
+/* The default value for class::recvq */
 #define	DEFAULT_RECVQ	8000
 
 /* You can define the nickname of NickServ here (usually "NickServ").

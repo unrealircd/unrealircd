@@ -731,7 +731,6 @@ ac_user_opts='
 enable_option_checking
 enable_hardening
 with_nick_history
-with_sendq
 with_permissions
 with_bindir
 with_scriptdir
@@ -1421,7 +1420,6 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-nick-history=length
                           Specify the length of the nickname history
-  --with-sendq=maxsendq   Specify the max sendq for the server
   --with-permissions=permissions
                           Specify the default permissions for configuration
                           files
@@ -7131,20 +7129,6 @@ _ACEOF
 else
 
 $as_echo "#define NICKNAMEHISTORYLENGTH 2000" >>confdefs.h
-
-fi
-
-
-# Check whether --with-sendq was given.
-if test "${with_sendq+set}" = set; then :
-  withval=$with_sendq;
-cat >>confdefs.h <<_ACEOF
-#define MAXSENDQLENGTH $withval
-_ACEOF
-
-else
-
-$as_echo "#define MAXSENDQLENGTH 3000000" >>confdefs.h
 
 fi
 
