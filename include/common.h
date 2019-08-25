@@ -134,7 +134,7 @@ int inet_pton(int af, const char *src, void *dst);
 extern MODVAR int  global_count, max_global_count;
 extern char *myctime(time_t);
 #ifdef _WIN32
-int gettimeofday(struct timeval * tp, struct timezone * tzp);
+extern int gettimeofday(struct timeval *tp, void *tzp);
 #endif
 extern char *strtoken(char **, char *, char *);
 

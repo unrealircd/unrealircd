@@ -1485,9 +1485,8 @@ char *pcre2_version(void)
 
 
 #ifdef _WIN32
-int gettimeofday(struct timeval * tp, struct timezone * tzp)
+int gettimeofday(struct timeval *tp, void *tzp)
 {
-	// Note: some broken versions only have 8 trailing zero's, the correct epoch has 9 trailing zero's
 	// This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
 	// until 00:00:00 January 1, 1970
 	static const uint64_t EPOCH = ((uint64_t) 116444736000000000ULL);
