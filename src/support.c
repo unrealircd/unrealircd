@@ -882,49 +882,51 @@ time_t unreal_getfilemodtime(const char *filename)
 #define	AF_INET6	AF_MAX+1	/* just to let this compile */
 #endif
 
-char	*encode_ip(u_char *ip)
+/** Encode an IP string (eg: "1.2.3.4") to a BASE64 encoded value for S2S traffic */
+char *encode_ip(char *ip)
 {
-	static char buf[25];
-	u_char *cp;
-	struct in_addr ia; /* For IPv4 */
-	u_char ia6[16]; /* For IPv6 */
+	static char retbuf[25]; /* returned string */
+	char addrbuf[16];
 
 	if (!ip)
 		return "*";
 
 	if (strchr(ip, ':'))
 	{
-		inet_pton(AF_INET6, ip, ia6);
-		cp = (u_char *)ia6;
-		if (cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
-		    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
-		    && cp[9] == 0 && cp[10] == 0xff
-		    && cp[11] == 0xff)
-			b64_encode((char *)&cp[12], sizeof(struct in_addr), buf, 25);
-		else
-			b64_encode((char *)cp, 16, buf, 25);
+		/* IPv6 (likely) */
+		inet_pton(AF_INET6, ip, addrbuf);
+		/* hack for IPv4-in-IPv6 (::ffff:1.2.3.4) */
+		if (addrbuf[0] == 0 && addrbuf[1] == 0 && addrbuf[2] == 0 && addrbuf[3] == 0
+		    && addrbuf[4] == 0 && addrbuf[5] == 0 && addrbuf[6] == 0
+			&& addrbuf[7] == 0 && addrbuf[8] == 0 && addrbuf[9] == 0
+			&& addrbuf[10] == 0xff && addrbuf[11] == 0xff)
+		{
+			b64_encode(&addrbuf[12], sizeof(struct in_addr), retbuf, sizeof(retbuf));
+		} else {
+			b64_encode(addrbuf, 16, retbuf, sizeof(retbuf));
+		}
 	}
 	else
 	{
-		ia.s_addr = inet_addr(ip);
-		b64_encode((char *)&ia.s_addr, sizeof(struct in_addr), buf, 25);
+		/* IPv4 */
+		inet_pton(AF_INET, ip, addrbuf);
+		b64_encode((char *)&addrbuf, sizeof(struct in_addr), retbuf, sizeof(retbuf));
 	}
-	return buf;
+	return retbuf;
 }
 
+/** Decode a BASE64 encoded string to an IP address string. Used for S2S traffic. */
 char *decode_ip(char *buf)
 {
 	int len = strlen(buf);
 	char targ[25];
+	static char result[64];
 
-	b64_decode(buf, targ, 25);
+	b64_decode(buf, targ, sizeof(targ));
 	if (len == 24) /* IPv6 */
-	{
-		static char result[64];
-		return inetntop(AF_INET6, targ, result, 64);
-	}
+		return inetntop(AF_INET6, targ, result, sizeof(result));
 	else if (len == 8) /* IPv4 */
-		return inet_ntoa(*(struct in_addr *)targ);
+		return inetntop(AF_INET, targ, result, sizeof(result));
 	else /* Error?? */
 		return NULL;
 }
@@ -1480,3 +1482,27 @@ char *pcre2_version(void)
 	pcre2_config(PCRE2_CONFIG_VERSION, buf+6);
 	return buf;
 }
+
+
+#ifdef _WIN32
+int gettimeofday(struct timeval * tp, struct timezone * tzp)
+{
+	// Note: some broken versions only have 8 trailing zero's, the correct epoch has 9 trailing zero's
+	// This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
+	// until 00:00:00 January 1, 1970
+	static const uint64_t EPOCH = ((uint64_t) 116444736000000000ULL);
+
+	SYSTEMTIME system_time;
+	FILETIME file_time;
+	uint64_t time;
+
+	GetSystemTime( &system_time );
+	SystemTimeToFileTime( &system_time, &file_time );
+	time =  ((uint64_t)file_time.dwLowDateTime )      ;
+	time += ((uint64_t)file_time.dwHighDateTime) << 32;
+
+	tp->tv_sec  = (long) ((time - EPOCH) / 10000000L);
+	tp->tv_usec = (long) (system_time.wMilliseconds * 1000);
+	return 0;
+}
+#endif

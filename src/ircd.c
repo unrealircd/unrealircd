@@ -48,7 +48,6 @@ aClient me;			/* That's me */
 MODVAR char *me_hash;
 extern char backupbuf[8192];
 #ifdef _WIN32
-extern void CleanUpSegv(int sig);
 extern SERVICE_STATUS_HANDLE IRCDStatusHandle;
 extern SERVICE_STATUS IRCDStatus;
 #endif
@@ -1171,7 +1170,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 		  case 'U':
 		      if (chdir(CONFDIR) < 0)
-		      {
+	{
 		      	fprintf(stderr, "Unable to change to '%s' directory\n", CONFDIR);
 		      	exit(1);
 		      }

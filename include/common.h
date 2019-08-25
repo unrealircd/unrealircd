@@ -29,6 +29,7 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 #include <io.h>
+#include <direct.h>
 #endif
 #include "types.h"
 #include "config.h"
@@ -132,6 +133,9 @@ int inet_pton(int af, const char *src, void *dst);
 
 extern MODVAR int  global_count, max_global_count;
 extern char *myctime(time_t);
+#ifdef _WIN32
+int gettimeofday(struct timeval * tp, struct timezone * tzp);
+#endif
 extern char *strtoken(char **, char *, char *);
 
 #define PRECISE_CHECK

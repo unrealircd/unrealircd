@@ -37,6 +37,7 @@
 #include <sys/param.h>
 #else
 #include <stdarg.h>
+#include <process.h>
 #endif
 
 #ifdef	UNISTDH
@@ -156,10 +157,9 @@ typedef unsigned int u_int;
 #define MYOSNAME OSName
 extern char OSName[256];
 #define PATH_MAX MAX_PATH
+#define getpid _getpid
 #else
 #define MYOSNAME getosname()
-#endif
-#ifdef DEBUGMODE
 #endif
 
 #define MYDUMMY_SIZE 128

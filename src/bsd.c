@@ -1641,7 +1641,6 @@ static void send_authports(int fd, int revents, void *data)
 	{
 		if (ERRNO == P_EAGAIN)
 			return; /* Not connected yet, try again later */
-authsenderr:
 		ident_failed(cptr);
 		return;
 	}

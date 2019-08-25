@@ -68,7 +68,6 @@ HBRUSH MainDlgBackground;
 extern void SocketLoop(void *dummy);
 HINSTANCE hInst;
 NOTIFYICONDATA SysTray;
-void CleanUp(void);
 HTREEITEM AddItemToTree(HWND, LPSTR, int, short);
 void win_map(aClient *, HWND, short);
 extern Link *Servers;
@@ -90,7 +89,6 @@ HWND hWndMod;
 UINT WM_TASKBARCREATED, WM_FINDMSGSTRING;
 FARPROC lpfnOldWndProc;
 HMENU hContext;
-OSVERSIONINFO VerInfo;
 char OSName[OSVER_SIZE];
 #ifdef USE_LIBCURL
 extern char *find_loaded_remote_include(char *url);
@@ -193,6 +191,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HWND hWnd;
 	WSADATA WSAData;
 	HICON hIcon;
+	SC_HANDLE hService, hSCManager;
 	SERVICE_TABLE_ENTRY DispatchTable[] = 
 	{
 		{ "UnrealIRCd", ServiceMain },
@@ -205,48 +204,45 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	 */
 	chdir("..");
 
-	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx(&VerInfo);
 	GetOSName(OSName);
-	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) 
+
+	/* Check if we are running as a service... */
+	hSCManager = OpenSCManager(NULL, NULL, GENERIC_EXECUTE);
+	if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_EXECUTE)))
 	{
-		SC_HANDLE hService, hSCManager = OpenSCManager(NULL, NULL, GENERIC_EXECUTE);
-		if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_EXECUTE))) 
+		int save_err = 0;
+		StartServiceCtrlDispatcher(DispatchTable);
+		if (GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
 		{
-			int save_err = 0;
-			StartServiceCtrlDispatcher(DispatchTable); 
-			if (GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
-			{ 
-				SERVICE_STATUS status;
-				/* Restart handling, it's ugly but it's as 
-				 * pretty as it is gonna get :)
-				 */
-				if (__argc == 2 && !strcmp(__argv[1], "restartsvc"))
+			SERVICE_STATUS status;
+			/* Restart handling, it's ugly but it's as
+			 * pretty as it is gonna get :)
+			 */
+			if (__argc == 2 && !strcmp(__argv[1], "restartsvc"))
+			{
+				QueryServiceStatus(hService, &status);
+				if (status.dwCurrentState != SERVICE_STOPPED)
 				{
-					QueryServiceStatus(hService, &status);
-					if (status.dwCurrentState != SERVICE_STOPPED)
+					ControlService(hService,
+						SERVICE_CONTROL_STOP, &status);
+					while (status.dwCurrentState == SERVICE_STOP_PENDING)
 					{
-						ControlService(hService,
-							SERVICE_CONTROL_STOP, &status);
-						while (status.dwCurrentState == SERVICE_STOP_PENDING)
-						{
-							QueryServiceStatus(hService, &status);
-							if (status.dwCurrentState != SERVICE_STOPPED)
-								Sleep(1000);
-						}
+						QueryServiceStatus(hService, &status);
+						if (status.dwCurrentState != SERVICE_STOPPED)
+							Sleep(1000);
 					}
 				}
-				if (!StartService(hService, 0, NULL))
-					save_err = GetLastError();
 			}
-
-			CloseServiceHandle(hService);
-			CloseServiceHandle(hSCManager);
-			if (save_err != ERROR_SERVICE_DISABLED)
-				exit(0);
-		} else {
-			CloseServiceHandle(hSCManager);
+			if (!StartService(hService, 0, NULL))
+				save_err = GetLastError();
 		}
+
+		CloseServiceHandle(hService);
+		CloseServiceHandle(hSCManager);
+		if (save_err != ERROR_SERVICE_DISABLED)
+			exit(0);
+	} else {
+		CloseServiceHandle(hSCManager);
 	}
 	InitCommonControls();
 	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
@@ -1030,7 +1026,7 @@ FIXME
 }
 
 /* ugly stuff, but hey it works -- codemastr */
-void win_log(unsigned char *format, ...) 
+void win_log(FORMAT_STRING(const char *format), ...)
 {
 	va_list ap;
 	unsigned char buf[2048];

@@ -210,10 +210,6 @@ static ConfigFile 	*config_parse(char *filename, char *confdata);
 static void 		config_entry_free(ConfigEntry *ceptr);
 ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name);
 
-#ifdef _WIN32
-extern void 	win_log(char *format, ...);
-extern void		win_error();
-#endif
 extern void add_entropy_configfile(struct stat *st, char *buf);
 extern void unload_all_unused_snomasks(void);
 extern void unload_all_unused_umodes(void);

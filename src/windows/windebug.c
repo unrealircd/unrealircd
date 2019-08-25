@@ -29,7 +29,6 @@ extern char OSName[256];
 extern char backupbuf[8192];
 extern char *buildid;
 extern char *extraflags;
-void CleanUp(void);
 
 /* crappy, but safe :p */
 typedef BOOL (WINAPI *MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD dwPid, HANDLE hFile, MINIDUMP_TYPE DumpType,
@@ -274,15 +273,15 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 	sprintf(file, "unrealircd.%d.core", getpid());
 	fd = fopen(file, "w");
 	GlobalMemoryStatusEx(&memStats);
-	fprintf(fd, "Generated at %s\n%s (%d.%d.%d)\n%s[%s%s%s] (%s) on %s\n"
+	fprintf(fd, "Generated at %s\nOS: %s\n%s[%s%s%s] (%s) on %s\n"
 		    "-----------------\nMemory Information:\n"
 		    "\tPhysical: (Available:%lluMB/Total:%lluMB)\n"
 		    "\tVirtual: (Available:%lluMB/Total:%lluMB)\n"
 		    "-----------------\nException:\n\t%s\n-----------------\n"
 		    "Backup Buffer:\n\t%s\n-----------------\nRegisters:\n"
 		    "%s-----------------\nStack Trace:\n%s",
-		     asctime(gmtime(&timet)), OSName, VerInfo.dwMajorVersion,
-		     VerInfo.dwMinorVersion, VerInfo.dwBuildNumber, IRCDTOTALVERSION,
+		     asctime(gmtime(&timet)), OSName,
+			 IRCDTOTALVERSION,
 		     serveropts, extraflags ? extraflags : "", tainted ? "3" : "",
 		     buildid, me.name, memStats.ullAvailPhys/1048576, memStats.ullTotalPhys/1048576,
 		     memStats.ullAvailVirtual/1048576, memStats.ullTotalVirtual/1048576,

@@ -20,7 +20,7 @@
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
-static 	OSVERSIONINFO VerInfo;
+
 typedef BOOL (*UCHANGESERVICECONFIG2)(SC_HANDLE, DWORD, LPVOID);
 HMODULE hAdvapi;
 UCHANGESERVICECONFIG2 uChangeServiceConfig2;
@@ -29,8 +29,7 @@ UCHANGESERVICECONFIG2 uChangeServiceConfig2;
 void show_usage() {
 	fprintf(stderr, "unreal start|stop|rehash|restart|install|uninstall|config <option> <value>");
 	fprintf(stderr, "\nValid config options:\nstartup auto|manual\n");
-	if (VerInfo.dwMajorVersion == 5) 
-		fprintf(stderr, "crashrestart delay\n");
+	fprintf(stderr, "crashrestart delay\n");
 }
 
 char *show_error(DWORD code) {
@@ -42,8 +41,7 @@ char *show_error(DWORD code) {
 
 int main(int argc, char *argv[]) {
 	char *bslash;
-	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx(&VerInfo);
+
 	if (argc < 2) {
 		show_usage();
 		return -1;
@@ -71,12 +69,10 @@ int main(int argc, char *argv[]) {
 				 NULL, NULL, NULL, NULL, NULL); 
 		if (hService) 
 		{
+			SERVICE_DESCRIPTION info;
 			printf("UnrealIRCd NT Service successfully installed");
-			if (VerInfo.dwMajorVersion >= 5) {
-				SERVICE_DESCRIPTION info;
-				info.lpDescription = "Internet Relay Chat Server. Allows users to chat with eachother via an IRC client.";
-				uChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &info);
-			}
+			info.lpDescription = "Internet Relay Chat Server. Allows users to chat with eachother via an IRC client.";
+			uChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &info);
 			CloseServiceHandle(hService);
 		} else
 			printf("Failed to install UnrealIRCd NT Service - %s", show_error(GetLastError()));
@@ -151,7 +147,7 @@ int main(int argc, char *argv[]) {
 			else
 				printf("UnrealIRCd NT Service configuration change failed - %s", show_error(GetLastError()));	
 		}
-		else if (!stricmp(argv[2], "crashrestart") && VerInfo.dwMajorVersion == 5) {
+		else if (!stricmp(argv[2], "crashrestart")) {
 			SERVICE_FAILURE_ACTIONS hFailActions;
 			SC_ACTION hAction;
 			memset(&hFailActions, 0, sizeof(hFailActions));
@@ -190,8 +186,5 @@ int main(int argc, char *argv[]) {
 		show_usage();
 		return -1;
 	}
-
-		
-			
 }
 

@@ -59,6 +59,7 @@
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
 #define HAVE_EXPLICIT_BZERO
+#define explicit_bzero(a,b) SecureZeroMemory(a,b)
 #define HAVE_INET_PTON
 #define HAVE_INET_NTOP
 

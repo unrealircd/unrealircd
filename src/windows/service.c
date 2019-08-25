@@ -27,7 +27,6 @@ SERVICE_STATUS_HANDLE IRCDStatusHandle;
 
 MODVAR BOOL IsService = FALSE;
 
-extern OSVERSIONINFO VerInfo;
 #define WIN32_VERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5
 
 /* Places the service in the STOPPED state
@@ -120,8 +119,6 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	/* Register the service controller */
 	IRCDStatusHandle = RegisterServiceCtrlHandler("UnrealIRCd", IRCDCtrlHandler); 
  
-	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx(&VerInfo);
 	GetOSName(OSName);
 
 	InitDebug();
