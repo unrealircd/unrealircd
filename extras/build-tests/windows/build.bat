@@ -53,3 +53,12 @@ sha256sum unrealircd-dev-build.exe
 rem Upload artifact
 rem appveyor PushArtifact unrealircd-dev-build.exe
 rem if %ERRORLEVEL% NEQ 0 EXIT /B 1
+
+# Install 'unrealircd-tests'
+git clone -q https://github.com/unrealircd/unrealircd-tests.git
+cd unrealircd-tests
+if %ERRORLEVEL% NEQ 0 EXIT /B 1
+
+rem Not sure if this works... I think it launches an external window
+rem and does not wait.
+"C:\Program Files\Git\git-bash.exe" ./runwin
