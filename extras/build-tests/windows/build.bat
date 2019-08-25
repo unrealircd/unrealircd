@@ -54,7 +54,7 @@ rem Upload artifact
 rem appveyor PushArtifact unrealircd-dev-build.exe
 rem if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
-# Install 'unrealircd-tests'
+rem Install 'unrealircd-tests'
 git clone -q https://github.com/unrealircd/unrealircd-tests.git
 cd unrealircd-tests
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
