@@ -50,14 +50,22 @@ ren mysetup.exe unrealircd-dev-build.exe
 dir unrealircd-dev-build.exe
 sha256sum unrealircd-dev-build.exe
 
+rem Kill any old instances, just to be sure
+taskkill -im unrealircd.exe -f
+
+start /WAIT mysetup /SILENT
+
 rem Upload artifact
 rem appveyor PushArtifact unrealircd-dev-build.exe
 rem if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 rem Install 'unrealircd-tests'
-git clone -q https://github.com/unrealircd/unrealircd-tests.git
-cd unrealircd-tests
+cd ..
+rd /q/s unrealircd-tests
+git clone https://github.com/unrealircd/unrealircd-tests.git
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
+cd unrealircd-tests
+dir
 
 rem Not sure if this works... I think it launches an external window
 rem and does not wait.
