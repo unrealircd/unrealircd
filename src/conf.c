@@ -8969,9 +8969,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "broadcast-channel-messages"))
 		{
 			CheckNull(cep);
-			if (strcmp(cep->ce_varname, "auto") &&
-			    strcmp(cep->ce_varname, "always") &&
-			    strcmp(cep->ce_varname, "never"))
+			if (strcmp(cep->ce_vardata, "auto") &&
+			    strcmp(cep->ce_vardata, "always") &&
+			    strcmp(cep->ce_vardata, "never"))
 			{
 				config_error("%s:%i: set::broadcast-channel-messages: value should be 'auto', 'always' or 'never'",
 				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
