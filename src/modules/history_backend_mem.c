@@ -146,10 +146,12 @@ void hbm_duplicate_mtags(HistoryLogLine *l, MessageTag *m)
 		 */
 		struct timeval t;
 		struct tm *tm;
+		time_t sec;
 		char buf[64];
 
 		gettimeofday(&t, NULL);
-		tm = gmtime(&t.tv_sec);
+		sec = t.tv_sec;
+		tm = gmtime(&sec);
 		snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
 			tm->tm_year + 1900,
 			tm->tm_mon + 1,
