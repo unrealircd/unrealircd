@@ -667,8 +667,8 @@ int stats_traffic(aClient *sptr, char *para)
 		sp->is_cks, sp->is_cbs, sp->is_sks, sp->is_sbs);
 	sendnumericfmt(sptr, RPL_STATSDEBUG, "bytes recv %ld.%huK %ld.%huK",
 	    sp->is_ckr, sp->is_cbr, sp->is_skr, sp->is_sbr);
-	sendnumericfmt(sptr, RPL_STATSDEBUG, "time connected %d %d",
-	    sp->is_cti, sp->is_sti);
+	sendnumericfmt(sptr, RPL_STATSDEBUG, "time connected %lld %lld",
+	    (long long)sp->is_cti, (long long)sp->is_sti);
 
 	return 0;
 }
