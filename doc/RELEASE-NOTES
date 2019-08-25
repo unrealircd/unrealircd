@@ -1,4 +1,4 @@
-UnrealIRCd 5.0.0-alpha1 Release Notes
+UnrealIRCd 5.0.0-alpha2 Release Notes
 ======================================
 
 IMPORTANT: UnrealIRCd 5 is currently in "alpha" phase. This means it
@@ -151,6 +151,9 @@ Enhancements
 
 Changed
 --------
+* Windows: we now require a 64-bit version, Windows 7 or later.
+  The new program path is: C:\Program Files\UnrealIRCd 5
+  and the binaries have been moved to a new subdirectory: bin\
 * Modules lost their m_ prefix, so for example m_map is now just map.
   Also the modules in cap/ are now directly in modules.
 * More modules that were previously PERM (permanent) can now be unloaded
