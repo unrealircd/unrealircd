@@ -850,7 +850,7 @@ void sendto_ops_butone(aClient *one, aClient *from, FORMAT_STRING(const char *pa
  *       they do not want or need the expanded prefix. In that case, simply
  *       use ircvsnprintf() directly.
  */
-static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *from, FORMAT_STRING(const char *pattern), va_list vl)
+static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *from, const char *pattern, va_list vl)
 {
 	int len;
 
@@ -896,7 +896,7 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *fr
 }
 
 void vsendto_prefix_one(struct Client *to, struct Client *from, MessageTag *mtags,
-                        FORMAT_STRING(const char *pattern), va_list vl)
+                        const char *pattern, va_list vl)
 {
 	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
 

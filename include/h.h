@@ -704,8 +704,6 @@ extern char *clean_ban_mask(char *, int, aClient *);
 extern int find_invex(aChannel *chptr, aClient *sptr);
 extern void DoMD5(unsigned char *mdout, const unsigned char *src, unsigned long n);
 extern char *md5hash(unsigned char *dst, const unsigned char *src, unsigned long n);
-extern MODVAR char langsinuse[4096];
-extern MODVAR char *casemapping[2];
 extern MODVAR aTKline *tklines[TKLISTLEN];
 extern MODVAR aTKline *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
 extern char *cmdname_by_spamftarget(int target);

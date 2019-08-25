@@ -2755,8 +2755,9 @@ CMD_FUNC(m_tkl_add)
 			if (tk->type & TKL_NICK)
 			{
 				if (*tk->usermask != 'H')
-					sendto_snomask(SNO_TKL, "tkl update for %s/reason='%s'/by=%s/set=%ld/expire=%ld [causedby: %s]",
-						tk->hostmask, tk->reason, tk->setby, tk->set_at, tk->expire_at, sptr->name);
+					sendto_snomask(SNO_TKL, "tkl update for %s/reason='%s'/by=%s/set=%lld/expire=%lld [causedby: %s]",
+						tk->hostmask, tk->reason, tk->setby,
+						(long long)tk->set_at, (long long)tk->expire_at, sptr->name);
 			} else {
 				sendto_snomask(SNO_TKL, "tkl update for %s@%s/reason='%s'/by=%s/set=%lld/expire=%lld [causedby: %s]",
 					tk->usermask, tk->hostmask, tk->reason, tk->setby,

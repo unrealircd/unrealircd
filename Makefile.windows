@@ -125,24 +125,18 @@ DBGLFLAG=/debug
 MODDBGCFLAG=/LDd /MD /Zi
 !ENDIF 
 
-FD_SETSIZE=/D FD_SETSIZE=16384
-CFLAGS=$(DBGCFLAG) $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /Fosrc/ /nologo \
- $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE \
- /analyze:ruleset extras\VStudioAnalyze.ruleset
-CFLAGSST=$(DBGCFLAGST) $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /Fosrc/ /nologo \
- $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE \
- /analyze:ruleset extras\VStudioAnalyze.ruleset
+STDOPTIONS=$(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /J /I ./INCLUDE /nologo \
+ $(CURLCFLAGS) /D FD_SETSIZE=16384 $(SSLCFLAGS) /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE 
+STDLIBS=$(CARES_LIB) $(CARESLIB) $(PCRE2_LIB) $(PCRE2LIB) $(ARGON2_LIB) $(ARGON2LIB) \
+ $(LIBRESSL_LIB) $(SSLLIB) $(LIBCURL_LIB) $(CURLLIB)
+CFLAGS=$(DBGCFLAG) $(STDOPTIONS) /Fosrc/
+CFLAGSST=$(DBGCFLAGST) $(STDOPTIONS) /Fosrc/
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
- dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(CARES_LIB) $(CARESLIB) \
- $(PCRE2_LIB) $(PCRE2LIB) $(ARGON2_LIB) $(ARGON2LIB) $(LIBRESSL_LIB) $(SSLLIB) $(LIBCURL_LIB) $(CURLLIB) /def:UnrealIRCd.def /implib:UnrealIRCd.lib \
+ dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(STDLIBS) \
+ /def:UnrealIRCd.def /implib:UnrealIRCd.lib \
  /nologo $(DBGLFLAG) /out:UnrealIRCd.exe
-MODCFLAGS=$(MODDBGCFLAG) $(SSLCFLAGS) $(CURLCFLAGS) /J /Fesrc/modules/ \
- /Fosrc/modules/ /nologo $(PCRE2_INC) $(ARGON2_INC) $(CARES_INC) $(LIBCURL_INC) $(LIBRESSL_INC) /I ./INCLUDE /D \
- DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE \
- /analyze:ruleset extras\VStudioAnalyze.ruleset
-MODLFLAGS=/link /def:src/modules/module.def UnrealIRCd.lib ws2_32.lib \
- $(PCRE2_LIB) $(PCRE2LIB) $(ARGON2_LIB) $(ARGON2LIB) $(CARES_LIB) $(LIBRESSL_LIB) $(SSLLIB) \
- $(LIBCURL_LIB) $(CURLLIB)
+MODCFLAGS=$(MODDBGCFLAG) $(STDOPTIONS) /D DYNAMIC_LINKING /D MODULE_COMPILE
+MODLFLAGS=/link /def:src/modules/module.def UnrealIRCd.lib ws2_32.lib $(STDLIBS)
 
 INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
@@ -552,7 +546,7 @@ src/windows/unrealsvc.res: src/windows/unrealsvc.rc
 ################# Modules #################
 
 CUSTOMMODULE: src/modules/third/$(MODULEFILE).c
-	$(CC) $(MODCFLAGS) src/modules/third/$(MODULEFILE).c $(MODLFLAGS) \
+	$(CC) $(MODCFLAGS) src/modules/third/$(MODULEFILE).c /Fesrc/modules/third/ /Fosrc/modules/third/ $(MODLFLAGS) \
 	      /OUT:src/modules/third/$(MODULEFILE).dll $(EXLIBS)
 
 SYMBOLFILE: 
@@ -563,349 +557,349 @@ SYMBOLFILE:
 MODULES: $(DLL_FILES)
 
 src/modules/chghost.dll: src/modules/chghost.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/chghost.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/chghost.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/chgident.dll: src/modules/chgident.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/chgident.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/chgident.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/sdesc.dll: src/modules/sdesc.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/sdesc.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/sdesc.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/sethost.dll: src/modules/sethost.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/sethost.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/sethost.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/setident.dll: src/modules/setident.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/setident.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/setident.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/setname.dll: src/modules/setname.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/setname.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/setname.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svsmotd.dll: src/modules/svsmotd.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/svsmotd.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/svsmotd.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svsmode.dll: src/modules/svsmode.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/svsmode.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/svsmode.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/tkl.dll: src/modules/tkl.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/tkl.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/tkl.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/swhois.dll: src/modules/swhois.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/swhois.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/swhois.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svsnline.dll: src/modules/svsnline.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/svsnline.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/svsnline.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/who_old.dll: src/modules/who_old.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/who_old.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/who_old.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/whox.dll: src/modules/whox.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/whox.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/whox.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/away.dll: src/modules/away.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/away.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/away.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/mkpasswd.dll: src/modules/mkpasswd.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/mkpasswd.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/mkpasswd.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svsnoop.dll: src/modules/svsnoop.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/svsnoop.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/svsnoop.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svsnick.dll: src/modules/svsnick.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/svsnick.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/svsnick.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/chgname.dll: src/modules/chgname.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/chgname.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/chgname.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/kill.dll: src/modules/kill.c $(INCLUDES) 
-	$(CC) $(MODCFLAGS) src/modules/kill.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/kill.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/lag.dll: src/modules/lag.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/lag.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/lag.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/message.dll: src/modules/message.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/message.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/message.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/oper.dll: src/modules/oper.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/oper.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/oper.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/pingpong.dll: src/modules/pingpong.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/pingpong.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/pingpong.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/quit.dll: src/modules/quit.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/quit.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/quit.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/sendumode.dll: src/modules/sendumode.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/sendumode.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/sendumode.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/sqline.dll: src/modules/sqline.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/sqline.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/sqline.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/tsctl.dll: src/modules/tsctl.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/tsctl.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/tsctl.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/unsqline.dll: src/modules/unsqline.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/unsqline.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/unsqline.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/whois.dll: src/modules/whois.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/whois.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/whois.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/vhost.dll: src/modules/vhost.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/vhost.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/vhost.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/cycle.dll: src/modules/cycle.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/cycle.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/cycle.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svsjoin.dll: src/modules/svsjoin.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/svsjoin.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/svsjoin.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svspart.dll: src/modules/svspart.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/svspart.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/svspart.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svslusers.dll: src/modules/svslusers.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/svslusers.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/svslusers.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svswatch.dll: src/modules/svswatch.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/svswatch.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/svswatch.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svssilence.dll: src/modules/svssilence.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/svssilence.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/svssilence.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/sendsno.dll: src/modules/sendsno.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/sendsno.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/sendsno.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svssno.dll: src/modules/svssno.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/svssno.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/svssno.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/sajoin.dll: src/modules/sajoin.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/sajoin.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/sajoin.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/sapart.dll: src/modules/sapart.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/sapart.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/sapart.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/samode.dll: src/modules/samode.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/samode.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/samode.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/kick.dll: src/modules/kick.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/kick.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/kick.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/topic.dll: src/modules/topic.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/topic.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/topic.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/invite.dll: src/modules/invite.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/invite.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/invite.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/list.dll: src/modules/list.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/list.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/list.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/time.dll: src/modules/time.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/time.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/time.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svskill.dll: src/modules/svskill.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/svskill.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/svskill.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/sjoin.dll: src/modules/sjoin.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/sjoin.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/sjoin.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/pass.dll: src/modules/pass.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/pass.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/pass.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/userhost.dll: src/modules/userhost.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/userhost.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/userhost.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/ison.dll: src/modules/ison.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/ison.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/ison.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/silence.dll: src/modules/silence.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/silence.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/silence.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/knock.dll: src/modules/knock.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/knock.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/knock.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/umode2.dll: src/modules/umode2.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/umode2.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/umode2.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/squit.dll: src/modules/squit.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/squit.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/squit.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/protoctl.dll: src/modules/protoctl.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/protoctl.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/protoctl.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/addmotd.dll: src/modules/addmotd.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/addmotd.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/addmotd.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/addomotd.dll: src/modules/addomotd.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/addomotd.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/addomotd.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/wallops.dll: src/modules/wallops.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/wallops.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/wallops.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/admin.dll: src/modules/admin.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/admin.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/admin.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/globops.dll: src/modules/globops.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/globops.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/globops.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/locops.dll: src/modules/locops.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/locops.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/locops.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/trace.dll: src/modules/trace.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/trace.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/trace.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/netinfo.dll: src/modules/netinfo.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/netinfo.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/netinfo.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/links.dll: src/modules/links.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/links.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/links.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/help.dll: src/modules/help.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/help.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/help.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/rules.dll: src/modules/rules.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/rules.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/rules.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
  
 src/modules/close.dll: src/modules/close.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/close.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/close.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/map.dll: src/modules/map.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/map.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/map.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/eos.dll: src/modules/eos.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/eos.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/eos.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/server.dll: src/modules/server.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/server.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/server.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/stats.dll: src/modules/stats.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/stats.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/stats.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svsfline.dll: src/modules/svsfline.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/svsfline.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/svsfline.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/dccdeny.dll: src/modules/dccdeny.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/dccdeny.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/dccdeny.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/undccdeny.dll: src/modules/undccdeny.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/undccdeny.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/undccdeny.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/whowas.dll: src/modules/whowas.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/whowas.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/whowas.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/connect.dll: src/modules/connect.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/connect.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/connect.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/dccallow.dll: src/modules/dccallow.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/dccallow.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/dccallow.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/userip.dll: src/modules/userip.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/userip.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/userip.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/nick.dll: src/modules/nick.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/nick.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/nick.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/user.dll: src/modules/user.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/user.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/user.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/mode.dll: src/modules/mode.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/mode.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/mode.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/watch.dll: src/modules/watch.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/watch.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/watch.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/part.dll: src/modules/part.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/part.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/part.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/join.dll: src/modules/join.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/join.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/join.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/motd.dll: src/modules/motd.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/motd.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/motd.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/opermotd.dll: src/modules/opermotd.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/opermotd.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/opermotd.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/botmotd.dll: src/modules/botmotd.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/botmotd.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/botmotd.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/lusers.dll: src/modules/lusers.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/lusers.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/lusers.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/names.dll: src/modules/names.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/names.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/names.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/md.dll: src/modules/md.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/md.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/md.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/certfp.dll: src/modules/certfp.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/certfp.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/certfp.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/cloak.dll: src/modules/cloak.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/cloak.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/cloak.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/webirc.dll: src/modules/webirc.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/webirc.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/webirc.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/websocket.dll: src/modules/websocket.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/websocket.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/websocket.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/blacklist.dll: src/modules/blacklist.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/blacklist.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/blacklist.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/jointhrottle.dll: src/modules/jointhrottle.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/jointhrottle.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/jointhrottle.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/svsnolag.dll: src/modules/svsnolag.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/svsnolag.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/svsnolag.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/starttls.dll: src/modules/starttls.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/starttls.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/starttls.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/webredir.dll: src/modules/webredir.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/webredir.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/webredir.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/cap.dll: src/modules/cap.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/cap.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/cap.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/sasl.dll: src/modules/sasl.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/sasl.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/sasl.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/tls_antidos.dll: src/modules/tls_antidos.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/tls_antidos.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/tls_antidos.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/antirandom.dll: src/modules/antirandom.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/antirandom.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/antirandom.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/hideserver.dll: src/modules/hideserver.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/hideserver.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/hideserver.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/jumpserver.dll: src/modules/jumpserver.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/jumpserver.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/jumpserver.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/ircops.dll: src/modules/ircops.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/ircops.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/ircops.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/staff.dll: src/modules/staff.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/staff.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/staff.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/nocodes.dll: src/modules/nocodes.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/nocodes.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/nocodes.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/charsys.dll: src/modules/charsys.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/charsys.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/charsys.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/antimixedutf8.dll: src/modules/antimixedutf8.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/antimixedutf8.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/antimixedutf8.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/authprompt.dll: src/modules/authprompt.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/authprompt.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/authprompt.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/sinfo.dll: src/modules/sinfo.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/sinfo.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/sinfo.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/reputation.dll: src/modules/reputation.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/reputation.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/reputation.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/connthrottle.dll: src/modules/connthrottle.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/connthrottle.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/connthrottle.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/chanmodes/censor.dll: src/modules/chanmodes/censor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/censor.c $(MODLFLAGS)

@@ -33,7 +33,7 @@
     <Rule Id="C6305" Action="Warning" />
     <Rule Id="C6306" Action="Warning" />
     <Rule Id="C6328" Action="Warning" />
-    <Rule Id="C6385" Action="Warning" />
+<!--    <Rule Id="C6385" Action="Warning" /> more false positives -->
 <!--    <Rule Id="C6386" Action="Warning" /> the analysis this one does - or lack thereof - is particularly dumb pffff -->
 <!--    <Rule Id="C6387" Action="Warning" /> more null/0 false positives -->
     <Rule Id="C6500" Action="Warning" />
