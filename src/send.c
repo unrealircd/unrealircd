@@ -436,6 +436,8 @@ good:
 		{
 			list_for_each_entry(acptr, &server_list, special_node)
 			{
+				if ((acptr == skip) || (acptr->from == skip))
+					continue; /* still obey this rule.. */
 				if (acptr->from->local->serial != current_serial)
 				{
 					va_start(vl, pattern);
