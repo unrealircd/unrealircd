@@ -72,7 +72,6 @@ MODVAR char **myargv;
 #else
 LPCSTR cmdLine;
 #endif
-int  portnum = -1;		/* Server port number, listening this */
 char *configfile = CONFIGFILE;	/* Server configuration file */
 int  debuglevel = 0;		/* Server debug level */
 int  bootopt = 0;		/* Server boot option flags */
@@ -622,18 +621,11 @@ static int bad_command(const char *argv0)
 		argv0 = "unrealircd";
 
 	(void)printf
-	    ("Usage: %s [-f <config>] [-h <servername>] [-p <port>] [-x <loglevel>] [-t] [-F]\n"
+	    ("Usage: %s [-f <config>] [-F]\n"
 	     "\n"
 	     "UnrealIRCd\n"
 	     " -f <config>     Load configuration from <config> instead of the default\n"
 	     "                 (%s).\n"
-	     " -h <servername> Override the me::name configuration setting with\n"
-	     "                 <servername>.\n"
-	     " -p <port>       Listen on <port> in addition to the ports specified by\n"
-	     "                 the listen blocks.\n"
-	     " -x <loglevel>   Set the log level to <loglevel>.\n"
-	     " -t              Dump information to stdout as if you were a linked-in\n"
-	     "                 server.\n"
 	     " -F              Don't fork() when starting up. Use this when running\n"
 	     "                 UnrealIRCd under gdb or when playing around with settings\n"
 	     "                 on a non-production setup.\n"
@@ -643,7 +635,7 @@ static int bad_command(const char *argv0)
 #else
 	if (!IsService) {
 		MessageBox(NULL,
-		    "Usage: UnrealIRCd [-h servername] [-p portnumber] [-x loglevel]\n",
+		    "Usage: UnrealIRCd [-f configfile]\n",
 		    "UnrealIRCD/32", MB_OK);
 	}
 #endif
@@ -924,7 +916,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifdef HAVE_PSTAT
 	union pstun pstats;
 #endif
-	int  portarg = 0;
 #ifdef HAVE_SETRLIMIT
 	struct rlimit corelim;
 #endif
@@ -1026,40 +1017,22 @@ int InitUnrealIRCd(int argc, char *argv[])
 			} else
 				p = "";
 		}
-		switch (flag) {
+		switch (flag)
+		{
+			case 'F':
+				bootopt |= BOOT_NOFORK;
+				break;
+			case 'f':
 #ifndef _WIN32
-		  case 'a':
-			  bootopt |= BOOT_AUTODIE;
-			  break;
-		  case 'c':
-			  bootopt |= BOOT_CONSOLE;
-			  break;
-		  case 'q':
-			  bootopt |= BOOT_QUICK;
-			  break;
+				if ((uid != euid) || (gid != egid))
+				{
+					printf("ERROR: Command line config with a setuid/setgid ircd is not allowed");
+					exit(1);
+				}
 #endif
-		  case 'F':
-			  bootopt |= BOOT_NOFORK;
-			  break;
-#ifndef _WIN32
-		  case 'f':
-		      if ((uid == euid) && (gid == egid))
-			       configfile = strdup(p);
-			  else
-			       printf("ERROR: Command line config with a setuid/setgid ircd is not allowed");
-			  convert_to_absolute_path(&configfile, CONFDIR);
-			  break;
-		  case 'h':
-			  if (!strchr(p, '.')) {
-
-				  (void)printf
-				      ("ERROR: %s is not valid: Server names must contain at least 1 \".\"\n",
-				      p);
-				  exit(1);
-			  }
-			  strlcpy(me.name, p, sizeof(me.name));
-			  break;
-#endif
+				configfile = strdup(p);
+				convert_to_absolute_path(&configfile, CONFDIR);
+				break;
 #ifndef _WIN32
 		  case 'P':{
 			  short type;
@@ -1097,30 +1070,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 			  exit(0);
 		  }
 #endif
-
-		  case 'p':
-			  if ((portarg = atoi(p)) > 0)
-				  portnum = portarg;
-			  break;
-		  case 's':
-			  (void)printf("sizeof(aClient) == %ld\n",
-			      (long)sizeof(aClient));
-			  (void)printf("sizeof(aLocalClient) == %ld\n",
-			      (long)sizeof(aLocalClient));
-			  (void)printf("sizeof(anUser) == %ld\n",
-			      (long)sizeof(anUser));
-			  (void)printf("sizeof(aChannel) == %ld\n",
-			      (long)sizeof(aChannel));
-			  (void)printf("sizeof(aServer) == %ld\n",
-			      (long)sizeof(aServer));
-			  (void)printf("sizeof(Link) == %ld\n",
-			      (long)sizeof(Link));
-			  (void)printf("sizeof(aTKline) == %ld\n",
-			      (long)sizeof(aTKline));
-			  (void)printf("sizeof(struct ircstatsx) == %ld\n",
-			      (long)sizeof(struct ircstatsx));
-			  exit(0);
-			  break;
 #if 0
 		case 'S':
 			charsys_dump_table(p ? p : "*");
@@ -1244,7 +1193,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifdef USE_LIBCURL
 	fprintf(stderr, "* %s\n", curl_version());
 #endif
+#endif
 	check_user_limit();
+#ifndef _WIN32
 	fprintf(stderr, "\n");
 	fprintf(stderr, "This server can handle %d concurrent sockets (%d clients + %d reserve)\n\n",
 		maxclients+CLIENTS_RESERVE, maxclients, CLIENTS_RESERVE);
@@ -1309,9 +1260,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	fprintf(stderr, "Dynamic configuration initialized.. booting IRCd.\n");
 #endif
 	open_debugfile();
-	if (portnum < 0)
-		portnum = 6667;
-	me.local->port = portnum;
+	me.local->port = 6667; /* pointless? */
 	(void)init_sys();
 	applymeblock();
 #ifdef HAVE_SYSLOG

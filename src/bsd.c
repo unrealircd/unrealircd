@@ -481,6 +481,9 @@ void check_user_limit(void)
 	}
 #endif
 #endif
+#ifdef _WIN32
+	maxclients = MAXCONNECTIONS - CLIENTS_RESERVE;
+#endif
 }
 
 void init_sys(void)

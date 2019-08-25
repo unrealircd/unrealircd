@@ -231,14 +231,9 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 /*
 ** flags for bootup options (command line flags)
 */
-#define	BOOT_CONSOLE	1
-#define	BOOT_QUICK	2
-#define	BOOT_DEBUG	4
-#define	BOOT_INETD	8
-#define	BOOT_TTY	16
-#define	BOOT_OPER	32
-#define	BOOT_AUTODIE	64
-#define BOOT_NOFORK     128
+#define	BOOT_DEBUG	1
+#define	BOOT_TTY	2
+#define BOOT_NOFORK     4
 
 #define	STAT_LOG	-7	/* logfile for -x */
 #define	STAT_CONNECTING	-6

@@ -360,7 +360,6 @@ void remove_client_from_list(aClient *cptr)
 	if (!list_empty(&cptr->id_hash))
 		abort();
 	(void)free_client(cptr);
-	checklist();
 	numclients--;
 	return;
 }

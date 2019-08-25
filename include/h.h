@@ -350,7 +350,6 @@ extern aClient *make_client(aClient *, aClient *);
 extern Member *find_channel_link(Member *, aChannel *);
 extern char *pretty_mask(char *);
 extern void add_client_to_list(aClient *);
-extern void checklist();
 extern void remove_client_from_list(aClient *);
 extern void initlists();
 extern struct hostent *get_res(char *);

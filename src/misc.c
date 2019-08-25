@@ -674,17 +674,6 @@ int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mt
 	return cptr == sptr ? FLUSH_BUFFER : 0;
 }
 
-void checklist(void)
-{
-	if (!(bootopt & BOOT_AUTODIE))
-		return;
-
-	if (!list_empty(&lclient_list))
-		exit (0);
-
-	return;
-}
-
 void initstats(void)
 {
 	bzero((char *)&ircst, sizeof(ircst));
