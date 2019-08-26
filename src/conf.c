@@ -7849,11 +7849,11 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "broadcast-channel-messages"))
 		{
-			if (!strcmp(cep->ce_varname, "auto"))
+			if (!strcmp(cep->ce_vardata, "auto"))
 				tempiConf.broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_AUTO;
-			else if (!strcmp(cep->ce_varname, "always"))
+			else if (!strcmp(cep->ce_vardata, "always"))
 				tempiConf.broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_ALWAYS;
-			else if (!strcmp(cep->ce_varname, "never"))
+			else if (!strcmp(cep->ce_vardata, "never"))
 				tempiConf.broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_NEVER;
 		}
 		else

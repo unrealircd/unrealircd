@@ -369,7 +369,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 				continue;
 			}
 
-			sendto_channel(chptr, sptr, sptr,
+			sendto_channel(chptr, sptr, cptr,
 				       prefix, 0, sendflags, mtags,
 				       notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
 				       sptr->name, nick, text);
