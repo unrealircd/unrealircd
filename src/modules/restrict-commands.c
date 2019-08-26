@@ -64,8 +64,8 @@ ModuleHeader MOD_HEADER(restrict-commands) = {
 	"restrict-commands",
 	"v1.0",
 	"Restrict specific commands unless certain conditions have been met",
-	"3.2-b8-1",
-	NULL
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 MOD_TEST(restrict-commands)

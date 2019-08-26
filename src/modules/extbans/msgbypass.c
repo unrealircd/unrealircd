@@ -23,8 +23,8 @@ ModuleHeader MOD_HEADER(msgbypass)
 	"chanmodes/extbans/msgbypass",
 	"4.2",
 	"ExtBan ~m - bypass +m/+n/+c/+S/+T (msgbypass)",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 /* Forward declarations */

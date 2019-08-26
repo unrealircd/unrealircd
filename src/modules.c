@@ -293,25 +293,8 @@ Module *Module_Find(char *name)
 
 int parse_modsys_version(char *version)
 {
-	int betaversion, tag;
-	if (!strcmp(version, "3.2.3"))
-		return 0x32300;
-	if (sscanf(version, "3.2-b%d-%d", &betaversion, &tag)) 
-	{
-		switch (betaversion)
-		{
-			case 5:
-				return 0x320b5;
-			case 6:
-				return 0x320b6;
-			case 7:
-				return 0x320b7;
-			case 8:
-				return 0x320b8;
-			default:
-				return 0;
-		}
-	}
+	if (!strcmp(version, "unrealircd-5"))
+		return 0x500000;
 	return 0;
 }
 
@@ -526,24 +509,12 @@ char  *Module_Create(char *path_)
 		irc_dlsym(Mod, "Mod_Test", Mod_Test);
 		if (Mod_Test)
 		{
-			if (mod->mod_sys_version >= 0x320b8) {
-				if ((ret = (*Mod_Test)(&mod->modinfo)) < MOD_SUCCESS) {
-					ircsnprintf(errorbuf, sizeof(errorbuf), "Mod_Test returned %i",
-						   ret);
-					/* We EXPECT the module to have cleaned up it's mess */
-		        		Module_free(mod);
-					return (errorbuf);
-				}
-			}
-			else {
-				if ((ret = (*Mod_Test)(0)) < MOD_SUCCESS)
-				{
-					snprintf(errorbuf, 1023, "Mod_Test returned %i",
-						   ret);
-					/* We EXPECT the module to have cleaned up it's mess */
-				        Module_free(mod);
-					return (errorbuf);
-				}
+			if ((ret = (*Mod_Test)(&mod->modinfo)) < MOD_SUCCESS) {
+				ircsnprintf(errorbuf, sizeof(errorbuf), "Mod_Test returned %i",
+					   ret);
+				/* We EXPECT the module to have cleaned up its mess */
+				Module_free(mod);
+				return (errorbuf);
 			}
 		}
 		mod->flags = MODFLAG_TESTING;		
@@ -603,23 +574,12 @@ void Init_all_testing_modules(void)
 		if (!(mi->flags & MODFLAG_TESTING))
 			continue;
 		irc_dlsym(mi->dll, "Mod_Init", Mod_Init);
-		if (mi->mod_sys_version >= 0x320b8) {
-			if ((ret = (*Mod_Init)(&mi->modinfo)) < MOD_SUCCESS) {
-				config_error("Error loading %s: Mod_Init returned %i",
-					mi->header->name, ret);
-		        	Module_free(mi);
-				continue;
-			}
+		if ((ret = (*Mod_Init)(&mi->modinfo)) < MOD_SUCCESS) {
+			config_error("Error loading %s: Mod_Init returned %i",
+			    mi->header->name, ret);
+			Module_free(mi);
+			continue;
 		}
-		else {
-			if ((ret = (*Mod_Init)(0)) < MOD_SUCCESS)
-			{
-				config_error("Error loading %s: Mod_Init returned %i",
-					mi->header->name, ret);
-			        Module_free(mi);
-				continue;
-			}
-		}		
 		mi->flags = MODFLAG_INIT;
 	}
 }	

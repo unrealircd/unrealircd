@@ -23,8 +23,8 @@ ModuleHeader MOD_HEADER(join)
 	"chanmodes/extbans/join",
 	"4.2",
 	"Extban ~j - prevent join only",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 /* Forward declarations */

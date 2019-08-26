@@ -31,8 +31,8 @@ ModuleHeader MOD_HEADER(dccallow)
 	"dccallow",
 	"5.0",
 	"command /dccallow", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(dccallow)

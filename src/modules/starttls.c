@@ -31,8 +31,8 @@ ModuleHeader MOD_HEADER(starttls)
 	"starttls",
 	"5.0",
 	"command /starttls", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 long CLICAP_STARTTLS;

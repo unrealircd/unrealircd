@@ -32,8 +32,8 @@ ModuleHeader MOD_HEADER(svsnolag)
 	"svsnolag",
 	"5.0",
 	"commands /svsnolag and /svs2nolag", 
-	"3.2-b8-1",
-	NULL
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(svsnolag)

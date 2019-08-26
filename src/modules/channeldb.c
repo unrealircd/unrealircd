@@ -65,8 +65,8 @@ ModuleHeader MOD_HEADER(channeldb) = {
 	"channeldb",
 	"v1.0",
 	"Stores and retrieves channel settings for persistent (+P) channels",
-	"3.2-b8-1",
-	NULL
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 MOD_TEST(channeldb)

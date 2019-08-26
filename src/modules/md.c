@@ -13,8 +13,8 @@ ModuleHeader MOD_HEADER(md)
 	"md",
 	"5.0",
 	"command /MD (S2S only)",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 CMD_FUNC(m_md);

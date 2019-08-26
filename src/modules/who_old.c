@@ -35,8 +35,8 @@ ModuleHeader MOD_HEADER(who_old)
 	"who_old",	/* Name of module */
 	"5.0", /* Version */
 	"command /who (old version)", /* Short description of module */
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 /* This is called on module init, before Server Ready */

@@ -31,8 +31,8 @@ ModuleHeader MOD_HEADER(ison)
 	"ison",
 	"5.0",
 	"command /ison", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(ison)

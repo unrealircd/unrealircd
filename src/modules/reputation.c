@@ -60,8 +60,8 @@ ModuleHeader MOD_HEADER(reputation)
 	"reputation",
 	REPUTATION_VERSION,
 	"Known IP's scoring system",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 /* Defines */

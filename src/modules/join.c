@@ -47,8 +47,8 @@ ModuleHeader MOD_HEADER(join)
 	"join",
 	"5.0",
 	"command /join", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_TEST(join)

@@ -73,8 +73,8 @@ ModuleHeader MOD_HEADER(rmtkl) = {
 	"rmtkl",
 	"$Id: v1.4 2019/08/10 Gottem$",
 	"Adds /rmtkl command to easily remove *-Lines in bulk",
-	"3.2-b8-1",
-	NULL
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 MOD_INIT(rmtkl)

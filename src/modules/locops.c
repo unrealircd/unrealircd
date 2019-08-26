@@ -31,8 +31,8 @@ ModuleHeader MOD_HEADER(locops)
 	"locops",
 	"5.0",
 	"command /locops", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(locops)

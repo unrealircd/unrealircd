@@ -59,7 +59,6 @@
 #define TO_PVOIDFUNC(x) (void *(*)())(x)
 #define TO_PCHARFUNC(x) (char *(*)())(x)
 
-typedef struct _mod_symboltable Mod_SymbolDepTable;
 typedef struct _event Event;
 typedef struct _eventinfo EventInfo;
 typedef struct _irchook Hook;
@@ -73,11 +72,11 @@ typedef struct _ircefunction Efunction;
 */
 
 typedef struct _ModuleHeader {
-	char	*name;
-	char	*version;
-	char	*description;
-	char	*modversion;
-	Mod_SymbolDepTable *symdep;
+	char *name;
+	char *version;
+	char *description;
+	char *author;
+	char *modversion;
 } ModuleHeader;
 
 typedef struct _Module Module;

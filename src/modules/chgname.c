@@ -30,8 +30,8 @@ ModuleHeader MOD_HEADER(chgname)
 	"chgname",	/* Name of module */
 	"5.0", /* Version */
 	"command /chgname", /* Short description of module */
-	"3.2-b8-1",
-	NULL
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 

@@ -45,8 +45,8 @@ ModuleHeader MOD_HEADER(server)
 	"server",
 	"5.0",
 	"command /server", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_TEST(server)

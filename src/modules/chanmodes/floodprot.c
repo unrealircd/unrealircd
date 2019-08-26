@@ -24,8 +24,8 @@ ModuleHeader MOD_HEADER(floodprot)
 	"chanmodes/floodprot",
 	"$Id: floodprot.c,v 1.2 2019/08/10 syzop Exp $",
 	"Channel Mode +f",
-	"3.2-b8-1",
-	NULL,
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 #define FLD_CTCP	0 /* c */

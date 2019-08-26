@@ -33,8 +33,8 @@ ModuleHeader MOD_HEADER(swhois)
 	"swhois",
 	"5.0",
 	"command /swhois", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(swhois)

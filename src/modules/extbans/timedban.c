@@ -52,8 +52,8 @@ ModuleHeader MOD_HEADER(timedban)
 	"timedban",
 	TIMEDBAN_VERSION,
 	"ExtBan ~t: automatically removed timed bans",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 /* Forward declarations */

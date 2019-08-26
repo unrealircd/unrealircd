@@ -28,8 +28,8 @@ ModuleHeader MOD_HEADER(svskill)
 	"svskill",	/* Name of module */
 	"5.0", /* Version */
 	"command /svskill", /* Short description of module */
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 

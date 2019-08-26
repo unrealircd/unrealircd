@@ -25,8 +25,8 @@ ModuleHeader MOD_HEADER(link) = {
 	"link",
 	"5.0",
 	"Channel Mode +L",
-	"3.2-b8-1",
-	NULL
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 Cmode_t EXTMODE_LINK = 0L;

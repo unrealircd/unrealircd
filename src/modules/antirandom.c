@@ -38,8 +38,8 @@ ModuleHeader MOD_HEADER(antirandom)
 	"antirandom",
 	"v1.4",
 	"Randomness detector",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 #ifndef MAX

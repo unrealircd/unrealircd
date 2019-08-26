@@ -23,8 +23,8 @@ ModuleHeader MOD_HEADER(realname)
 	"chanmodes/extbans/realname",
 	"4.2",
 	"ExtBan ~r - Ban based on realname/gecos field",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 /* Forward declarations */

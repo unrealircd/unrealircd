@@ -24,8 +24,8 @@ ModuleHeader MOD_HEADER(partmsg)
 	"chanmodes/extbans/partmsg",
 	"4.2",
 	"ExtBan ~p - Ban/exempt Part/Quit message",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 int extban_partmsg_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg);

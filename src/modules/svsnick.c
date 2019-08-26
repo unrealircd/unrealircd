@@ -33,8 +33,8 @@ ModuleHeader MOD_HEADER(svsnick)
 	"svsnick",
 	"5.0",
 	"command /svsnick", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(svsnick)

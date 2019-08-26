@@ -16,8 +16,8 @@ ModuleHeader MOD_HEADER(history_backend_mem)
 	"history_backend_mem",
 	"1.0",
 	"History backend: memory",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 /* Defines */

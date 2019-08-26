@@ -47,8 +47,8 @@ ModuleHeader MOD_HEADER(antimixedutf8)
 	"antimixedutf8",
 	"1.0",
 	"Mixed UTF8 character filter (look-alike character spam) - by Syzop",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 struct {

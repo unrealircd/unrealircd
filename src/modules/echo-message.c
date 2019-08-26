@@ -27,8 +27,8 @@ ModuleHeader MOD_HEADER(echo_message)
 	"echo-message",
 	"5.0",
 	"Batch CAP", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 	};
 
 /* Variables */

@@ -24,8 +24,8 @@ ModuleHeader MOD_HEADER(authprompt)
 	"authprompt",
 	"1.0",
 	"SASL authentication for clients that don't support SASL",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 typedef struct _multiline MultiLine;

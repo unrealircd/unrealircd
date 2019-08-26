@@ -31,8 +31,8 @@ ModuleHeader MOD_HEADER(kill)
 	"kill",	/* Name of module */
 	"5.0", /* Version */
 	"command /kill", /* Short description of module */
-	"3.2-b8-1",
-	NULL
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 /* This is called on module init, before Server Ready */

@@ -27,8 +27,8 @@ ModuleHeader MOD_HEADER(nick)
 	"nick",
 	"5.0",
 	"command /nick", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 #define MSG_NICK 	"NICK"	

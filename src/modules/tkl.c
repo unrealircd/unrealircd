@@ -88,8 +88,8 @@ ModuleHeader MOD_HEADER(tkl)
 	"tkl",
 	"5.0",
 	"Server ban commands such as /GLINE, /SPAMFILTER, etc.",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 MOD_TEST(tkl)

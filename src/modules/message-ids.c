@@ -27,8 +27,8 @@ ModuleHeader MOD_HEADER(message-ids)
 	"message-ids",
 	"5.0",
 	"msgid CAP",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 	};
 
 /** The length of a standard 'msgid' tag (note that special

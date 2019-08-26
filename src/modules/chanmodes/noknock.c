@@ -24,8 +24,8 @@ ModuleHeader MOD_HEADER(noknock)
 	"chanmodes/noknock",
 	"4.2",
 	"Channel Mode +K",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 Cmode_t EXTCMODE_NOKNOCK;

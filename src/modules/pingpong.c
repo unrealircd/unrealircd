@@ -33,8 +33,8 @@ ModuleHeader MOD_HEADER(pingpong)
 	"pingpong",	/* Name of module */
 	"5.0", /* Version */
 	"ping, pong and nospoof", /* Short description of module */
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 /* This is called on module init, before Server Ready */
 MOD_INIT(pingpong)

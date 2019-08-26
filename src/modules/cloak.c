@@ -48,14 +48,13 @@ static inline unsigned int downsample(char *i);
 
 Callback *cloak = NULL, *cloak_csum = NULL;
 
-ModuleHeader MOD_HEADER(cloak)
-  = {
-  "cloak",
-  "v1.0",
-  "Official cloaking module (md5)",
-  "3.2-b8-1",
-  NULL
-  };
+ModuleHeader MOD_HEADER(cloak) = {
+	"cloak",
+	"v1.0",
+	"Official cloaking module (md5)",
+	"UnrealIRCd Team",
+	"unrealircd-5",
+};
 
 MOD_TEST(cloak)
 {

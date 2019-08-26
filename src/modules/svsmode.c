@@ -38,8 +38,8 @@ ModuleHeader MOD_HEADER(svsmode)
 	"svsmode",
 	"5.0",
 	"command /svsmode and svs2mode", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(svsmode)

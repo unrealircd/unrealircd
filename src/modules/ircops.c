@@ -30,8 +30,8 @@ ModuleHeader MOD_HEADER(ircops)
 	"ircops",
 	"v3.71",
 	"/IRCOPS command that lists IRC Operators",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(ircops)

@@ -26,8 +26,8 @@ ModuleHeader MOD_HEADER(operonly)
 	"chanmodes/operonly",
 	"4.2",
 	"Channel Mode +O",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 Cmode_t EXTCMODE_OPERONLY;

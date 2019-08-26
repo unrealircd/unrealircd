@@ -24,8 +24,8 @@ ModuleHeader MOD_HEADER(secureonly)
 	"chanmodes/secureonly",
 	"4.2",
 	"Channel Mode +z",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 Cmode_t EXTCMODE_SECUREONLY;

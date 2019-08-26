@@ -33,8 +33,8 @@ ModuleHeader MOD_HEADER(svssno)
 	"svssno",
 	"5.0",
 	"command /svssno", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(svssno)

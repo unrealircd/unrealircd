@@ -28,8 +28,8 @@ ModuleHeader MOD_HEADER(secureonlymsg)
 	"usermodes/secureonlymsg",
 	"4.2",
 	"User Mode +Z",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 /* Global variables */

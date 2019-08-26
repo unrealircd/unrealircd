@@ -27,8 +27,8 @@ ModuleHeader MOD_HEADER(showwhois)
 	"usermodes/showwhois",
 	"4.2",
 	"User Mode +W",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 /* Global variables */

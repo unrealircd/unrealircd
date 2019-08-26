@@ -10,8 +10,8 @@ ModuleHeader MOD_HEADER(history)
 	"chanmodes/history",
 	"1.0",
 	"Channel Mode +H",
-	"3.2-b8-1",
-	NULL,
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 typedef struct _config_history_ext ConfigHistoryExt;

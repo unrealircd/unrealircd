@@ -27,8 +27,8 @@ ModuleHeader MOD_HEADER(sasl)
 	"sasl",
 	"5.0",
 	"SASL", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 /* Forward declarations */

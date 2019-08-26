@@ -31,8 +31,8 @@ ModuleHeader MOD_HEADER(topic)
 	"topic",
 	"5.0",
 	"command /topic", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(topic)

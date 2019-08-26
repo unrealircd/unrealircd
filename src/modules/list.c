@@ -32,8 +32,8 @@ ModuleHeader MOD_HEADER(list)
 	"list",
 	"5.0",
 	"command /list", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 EVENT(send_queued_list_data);

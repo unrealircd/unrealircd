@@ -18,8 +18,8 @@ ModuleHeader MOD_HEADER(connthrottle)
 	"connthrottle",
 	CONNTHROTTLE_VERSION,
 	"Connection throttler - by Syzop",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 typedef struct {

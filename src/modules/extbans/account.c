@@ -23,8 +23,8 @@ ModuleHeader MOD_HEADER(account)
 	"chanmodes/extbans/account",
 	"4.2",
 	"ExtBan ~a - Ban/exempt by services account name",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 /* Forward declarations */

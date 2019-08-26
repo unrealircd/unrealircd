@@ -31,8 +31,8 @@ ModuleHeader MOD_HEADER(knock)
 	"knock",
 	"5.0",
 	"command /knock", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(knock)

@@ -108,8 +108,8 @@ ModuleHeader MOD_HEADER(tkldb) = {
 	"tkldb",
 	"v1.10",
 	"Stores active TKL entries (*-Lines) persistently/across IRCd restarts",
-	"3.2-b8-1",
-	NULL
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 MOD_TEST(tkldb)

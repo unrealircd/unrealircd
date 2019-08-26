@@ -32,8 +32,8 @@ ModuleHeader MOD_HEADER(sethost)
 	"sethost",	/* Name of module */
 	"5.0", /* Version */
 	"command /sethost", /* Short description of module */
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_INIT(sethost)

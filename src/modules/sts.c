@@ -27,8 +27,8 @@ ModuleHeader MOD_HEADER(sts)
 	"sts",
 	"5.0",
 	"Strict Transport Security CAP", 
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 	};
 
 MOD_INIT(sts)

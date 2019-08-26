@@ -29,8 +29,8 @@ ModuleHeader MOD_HEADER(servicebot)
 	"usermodes/servicebot",
 	"4.2",
 	"User Mode +q",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 /* Global variables */

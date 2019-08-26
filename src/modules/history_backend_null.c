@@ -15,8 +15,8 @@ ModuleHeader MOD_HEADER(history_backend_null)
 	"history_backend_null",
 	"1.0",
 	"History backend: null/none",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 /* Forward declarations */

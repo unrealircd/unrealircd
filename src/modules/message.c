@@ -40,8 +40,8 @@ ModuleHeader MOD_HEADER(message)
 	"message",	/* Name of module */
 	"5.0", /* Version */
 	"private message and notice", /* Short description of module */
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_TEST(message)

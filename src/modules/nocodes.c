@@ -27,8 +27,8 @@ ModuleHeader MOD_HEADER(nocodes)
 	"nocodes",	/* Name of module */
 	NOCODES_VERSION, /* Version */
 	"Strip/block bold/underline/reverse - by Syzop", /* Short description of module */
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);

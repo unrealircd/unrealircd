@@ -25,8 +25,8 @@ ModuleHeader MOD_HEADER(regonlyspeak)
 	"chanmodes/regonlyspeak",
 	"4.2",
 	"Channel Mode +M",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 Cmode_t EXTCMODE_REGONLYSPEAK;

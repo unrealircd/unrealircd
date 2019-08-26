@@ -32,8 +32,8 @@ ModuleHeader MOD_HEADER(jointhrottle)
 	"jointhrottle",
 	"5.0",
 	"Join flood protection (set::anti-flood::join-flood)",
-	"3.2-b8-1",
-	NULL,
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 ModuleInfo *ModInfo = NULL;

@@ -75,8 +75,8 @@ ModuleHeader MOD_HEADER(staff)
 	"staff",
 	"v3.8",
 	"/STAFF command",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
     };
 
 MOD_TEST(staff)

@@ -23,8 +23,8 @@ ModuleHeader MOD_HEADER(nickchange)
 	"chanmodes/extbans/nickchange",
 	"4.2",
 	"ExtBan ~n - prevent nick-changes only",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 };
 
 /* Forward declarations */

@@ -27,8 +27,8 @@ ModuleHeader MOD_HEADER(plaintext_policy)
 	"plaintext-policy",
 	"5.0",
 	"Plaintext Policy CAP",
-	"3.2-b8-1",
-	NULL 
+	"UnrealIRCd Team",
+	"unrealircd-5",
 	};
 
 MOD_INIT(plaintext_policy)
