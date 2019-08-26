@@ -474,7 +474,17 @@ long config_checkval(char *orig, unsigned short flags) {
 	return ret;
 }
 
-void set_channelmodes(char *modes, struct ChMode *store, int warn)
+/** Free configuration setting for set::modes-on-join */
+void free_conf_channelmodes(struct ChMode *store)
+{
+	int i;
+
+	for (i = 0; i < EXTCMODETABLESZ; i++)
+		safefree(iConf.modes_on_join.extparams[i]);
+}
+
+/* Set configuration, used for set::modes-on-join */
+void conf_channelmodes(char *modes, struct ChMode *store, int warn)
 {
 	aCtab *tab;
 	char *params = strchr(modes, ' ');
@@ -483,6 +493,9 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 	char *save = NULL;
 
 	warn = 0; // warn is broken
+
+	/* Free existing parameters first (no inheritance) */
+	free_conf_channelmodes(store);
 
 	if (params)
 	{
@@ -1487,6 +1500,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->maxchannelsperuser = 10;
 	i->maxdccallow = 10;
 	i->channel_command_prefix = strdup("`!.");
+	conf_channelmodes("+nt", &i->modes_on_join, 0);
 	i->check_target_nick_bans = 1;
 	i->maxbans = 60;
 	i->maxbanlength = 2048;
@@ -2425,11 +2439,7 @@ void	config_rehash()
 	}
 	conf_sni = NULL;
 
-	for (i = 0; i < EXTCMODETABLESZ; i++)
-	{
-		if (iConf.modes_on_join.extparams[i])
-			free(iConf.modes_on_join.extparams[i]);
-	}
+	free_conf_channelmodes(&iConf.modes_on_join);
 
 	/*
 	  reset conf_files -- should this be in its own function? no, because
@@ -7345,7 +7355,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.oper_modes = (long) set_usermode(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-join")) {
-			set_channelmodes(cep->ce_vardata, &tempiConf.modes_on_join, 0);
+			conf_channelmodes(cep->ce_vardata, &tempiConf.modes_on_join, 0);
 		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
 			safestrdup(tempiConf.oper_snomask, cep->ce_vardata);
@@ -7945,7 +7955,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						break;
 				}
 			}
-			set_channelmodes(cep->ce_vardata, &temp, 1);
+			conf_channelmodes(cep->ce_vardata, &temp, 1);
 			if (temp.mode & MODE_SECRET && temp.mode & MODE_PRIVATE)
 			{
 				config_error("%s:%i: set::modes-on-join has both +s and +p",

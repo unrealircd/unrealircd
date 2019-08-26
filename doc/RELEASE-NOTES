@@ -161,6 +161,7 @@ Changed
   in case of a bug and also more control for admins at runtime.
   Only <5 modules out of 173 are permanent now.
 * User mode +T now blocks channel CTCPs as well.
+* set::modes-on-join is now +nt by default.
 * The authprompt module is now loaded by default. This means that if
   you do a soft kline on someone (eg: KLINE %*@*.badisp) then the user
   has a chance to authenticate to services, even without SASL, and
