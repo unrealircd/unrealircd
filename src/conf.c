@@ -479,8 +479,10 @@ void free_conf_channelmodes(struct ChMode *store)
 {
 	int i;
 
+	store->mode = 0;
+	store->extmodes = 0;
 	for (i = 0; i < EXTCMODETABLESZ; i++)
-		safefree(iConf.modes_on_join.extparams[i]);
+		safefree(store->extparams[i]);
 }
 
 /* Set configuration, used for set::modes-on-join */
