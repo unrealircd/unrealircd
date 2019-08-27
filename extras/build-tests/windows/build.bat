@@ -52,8 +52,15 @@ sha256sum unrealircd-dev-build.exe
 
 rem Kill any old instances, just to be sure
 taskkill -im unrealircd.exe -f
+sleep 2
+rem Just a safety measure so we don't end up testing
+rem some old version...
+del "C:\Program Files\UnrealIRCd 5\bin\unrealircd.exe"
 
-start /WAIT mysetup /SILENT
+echo Running installer...
+start /WAIT unrealircd-dev-build.exe /VERYSILENT /LOG=setup.log
+if %ERRORLEVEL% NEQ 0 goto installerfailed
+EXIT /B 1
 
 rem Upload artifact
 rem appveyor PushArtifact unrealircd-dev-build.exe
@@ -67,6 +74,14 @@ if %ERRORLEVEL% NEQ 0 EXIT /B 1
 cd unrealircd-tests
 dir
 
-rem Not sure if this works... I think it launches an external window
-rem and does not wait.
-"C:\Program Files\Git\git-bash.exe" ./runwin
+"C:\Program Files\Git\git\bin\bash.exe" ./runwin
+if %ERRORLEVEL% NEQ 0 EXIT /B 1
+
+goto end
+
+:installerfailed
+type setup.log
+echo INSTALLATION FAILED
+EXIT /B 1
+
+:end
