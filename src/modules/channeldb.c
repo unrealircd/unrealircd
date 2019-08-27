@@ -6,6 +6,14 @@
 
 #include "unrealircd.h"
 
+ModuleHeader MOD_HEADER(channeldb) = {
+	"channeldb",
+	"1.0",
+	"Stores and retrieves channel settings for persistent (+P) channels",
+	"UnrealIRCd Team",
+	"unrealircd-5",
+};
+
 #define CHANNELDB_VERSION 100
 #define CHANNELDB_SAVE_EVERY 299
 
@@ -60,14 +68,6 @@ struct cfgstruct {
 static struct cfgstruct cfg;
 
 static int channeldb_loaded = 0;
-
-ModuleHeader MOD_HEADER(channeldb) = {
-	"channeldb",
-	"v1.0",
-	"Stores and retrieves channel settings for persistent (+P) channels",
-	"UnrealIRCd Team",
-	"unrealircd-5",
-};
 
 MOD_TEST(channeldb)
 {

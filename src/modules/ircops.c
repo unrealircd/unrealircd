@@ -28,7 +28,7 @@ CMD_FUNC(m_ircops);
 ModuleHeader MOD_HEADER(ircops)
   = {
 	"ircops",
-	"v3.71",
+	"3.71",
 	"/IRCOPS command that lists IRC Operators",
 	"UnrealIRCd Team",
 	"unrealircd-5",

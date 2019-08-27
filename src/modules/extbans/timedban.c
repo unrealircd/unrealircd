@@ -23,8 +23,6 @@
    
 #include "unrealircd.h"
 
-#define TIMEDBAN_VERSION "v1.0"
-
 /* Maximum time (in minutes) for a ban */
 #define TIMEDBAN_MAX_TIME	9999
 
@@ -50,7 +48,7 @@
 ModuleHeader MOD_HEADER(timedban)
   = {
 	"timedban",
-	TIMEDBAN_VERSION,
+	"1.0",
 	"ExtBan ~t: automatically removed timed bans",
 	"UnrealIRCd Team",
 	"unrealircd-5",

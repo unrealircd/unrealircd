@@ -73,7 +73,7 @@
 ModuleHeader MOD_HEADER(textban)
   = {
 	"textban",
-	"v2.2",
+	"2.2",
 	"ExtBan ~T (textban) by Syzop",
 	"UnrealIRCd Team",
 	"unrealircd-5",

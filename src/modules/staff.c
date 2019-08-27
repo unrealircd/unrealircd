@@ -19,9 +19,15 @@
  */
 
 #include "unrealircd.h"
-#ifdef USE_LIBCURL
-#include "url.h"
-#endif
+
+ModuleHeader MOD_HEADER(staff)
+  = {
+	"staff",
+	"3.8",
+	"/STAFF command",
+	"UnrealIRCd Team",
+	"unrealircd-5",
+    };
 
 #define MSG_STAFF	"STAFF"
 
@@ -69,15 +75,6 @@ struct {
 	char		*url;			// Full URL address
 } Download;
 #endif
-
-ModuleHeader MOD_HEADER(staff)
-  = {
-	"staff",
-	"v3.8",
-	"/STAFF command",
-	"UnrealIRCd Team",
-	"unrealircd-5",
-    };
 
 MOD_TEST(staff)
 {

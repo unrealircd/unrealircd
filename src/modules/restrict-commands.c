@@ -19,6 +19,14 @@
 
 #include "unrealircd.h"
 
+ModuleHeader MOD_HEADER(restrict-commands) = {
+	"restrict-commands",
+	"1.0",
+	"Restrict specific commands unless certain conditions have been met",
+	"UnrealIRCd Team",
+	"unrealircd-5",
+};
+
 #define GetReputation(acptr) (moddata_client_get(acptr, "reputation") ? atoi(moddata_client_get(acptr, "reputation")) : 0)
 
 typedef struct restrictedcmd RestrictedCmd;
@@ -58,14 +66,6 @@ CmdMap conf_cmdmaps[] = {
 	{ "private-message", "PRIVMSG" },
 	{ "private-notice", "NOTICE" },
 	{ NULL, NULL, }, // REQUIRED for the loop to properly work
-};
-
-ModuleHeader MOD_HEADER(restrict-commands) = {
-	"restrict-commands",
-	"v1.0",
-	"Restrict specific commands unless certain conditions have been met",
-	"UnrealIRCd Team",
-	"unrealircd-5",
 };
 
 MOD_TEST(restrict-commands)

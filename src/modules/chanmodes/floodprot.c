@@ -22,7 +22,7 @@
 ModuleHeader MOD_HEADER(floodprot)
   = {
 	"chanmodes/floodprot",
-	"$Id: floodprot.c,v 1.2 2019/08/10 syzop Exp $",
+	"5.0",
 	"Channel Mode +f",
 	"UnrealIRCd Team",
 	"unrealircd-5",

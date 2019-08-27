@@ -364,6 +364,33 @@ char *Module_GetRelPath(char *fullpath)
 	return buf;
 }
 
+/** Validate a modules' ModuleHeader.
+ * @returns Error message is returned, or NULL if everything is OK.
+ */
+static char *validate_mod_header(ModuleHeader *mod_header)
+{
+	char *p;
+
+	if (!mod_header->name || !mod_header->version || !mod_header->author || !mod_header->description)
+		return "NULL values encountered in Mod_Header struct members";
+
+	/* Validate module name */
+	for (p = mod_header->name; *p; p++)
+		if (!isalnum(*p) && !strchr("._-/", *p))
+			return "ModuleHeader.name contains illegal characters (must be: a-zA-Z0-9._-/)";
+
+	/* Validate version, even more strict */
+	if (!isdigit(mod_header->version[0]))
+		return "ModuleHeader.version must start with a digit";
+	for (p = mod_header->version; *p; p++)
+		if (!isalnum(*p) && !strchr("._-", *p))
+			return "ModuleHeader.version contains illegal characters (must be: a-zA-Z0-9._-)";
+
+	/* Author and description are not checked, has no constraints */
+
+	return NULL; /* SUCCESS */
+}
+
 /*
  * Returns an error if insucessful .. yes NULL is OK! 
 */
@@ -384,6 +411,7 @@ char  *Module_Create(char *path_)
 	char 		*path, *tmppath;
 	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
+	char		*reterr;
 	Module          *mod = NULL, **Mod_Handle = NULL;
 	char *expectedmodversion = our_mod_version;
 	unsigned int expectedcompilerversion = our_compiler_version;
@@ -466,12 +494,11 @@ char  *Module_Create(char *path_)
 			remove(tmppath);
 			return(errorbuf);
 		}
-		if (!mod_header->name || !mod_header->version ||
-		    !mod_header->description)
+		if ((reterr = validate_mod_header(mod_header)))
 		{
 			irc_dlclose(Mod);
 			remove(tmppath);
-			return("Lacking sane header pointer");
+			return(reterr);
 		}
 		if (Module_Find(mod_header->name))
 		{
@@ -887,9 +914,9 @@ CMD_FUNC(m_module)
 		return 0;
 
 	if (all)
-		sendnotice(sptr, "Showing ALL loaded modules:");
+		sendtxtnumeric(sptr, "Showing ALL loaded modules:");
 	else
-		sendnotice(sptr, "Showing loaded 3rd party modules (use \"MODULE -all\" to show all modules):");
+		sendtxtnumeric(sptr, "Showing loaded 3rd party modules (use \"MODULE -all\" to show all modules):");
 
 	for (mi = Modules; mi; mi = mi->next)
 	{
@@ -907,15 +934,21 @@ CMD_FUNC(m_module)
 		if (!(mi->options & MOD_OPT_OFFICIAL))
 			strlcat(tmp, "[3RD] ", sizeof(tmp));
 		if (!ValidatePermissionsForPath("server:module",sptr,NULL,NULL,NULL))
-			sendnotice(sptr, "*** %s (%s)%s",
-				mi->header->name, mi->header->description,
-				mi->options & MOD_OPT_OFFICIAL ? "" : " [3RD]");
+			sendtxtnumeric(sptr, "*** %s - %s - by %s %s",
+				mi->header->name,
+				mi->header->description,
+				mi->header->author,
+				mi->options & MOD_OPT_OFFICIAL ? "" : "[3RD]");
 		else
-			sendnotice(sptr, "*** %s - %s (%s) %s",
-				mi->header->name, mi->header->version, mi->header->description, tmp);
+			sendtxtnumeric(sptr, "*** %s %s - %s - by %s %s",
+				mi->header->name,
+				mi->header->version,
+				mi->header->description,
+				mi->header->author,
+				tmp);
 	}
 
-	sendnotice(sptr, "End of module list");
+	sendtxtnumeric(sptr, "End of module list");
 
 	if (!ValidatePermissionsForPath("server:module",sptr,NULL,NULL,NULL))
 		return 0;
@@ -930,12 +963,12 @@ CMD_FUNC(m_module)
 		p += strlen(p);
 		if (p > tmp + 380)
 		{
-			sendnotice(sptr, "Hooks: %s", tmp);
+			sendtxtnumeric(sptr, "Hooks: %s", tmp);
 			tmp[0] = '\0';
 			p = tmp;
 		}
 	}
-	sendnotice(sptr, "Hooks: %s ", tmp);
+	sendtxtnumeric(sptr, "Hooks: %s ", tmp);
 
 	tmp[0] = '\0';
 	p = tmp;
@@ -948,20 +981,20 @@ CMD_FUNC(m_module)
 				p += strlen(p);
 				if (p > tmp+380)
 				{
-					sendnotice(sptr, "Override: %s", tmp);
+					sendtxtnumeric(sptr, "Override: %s", tmp);
 					tmp[0] = '\0';
 					p = tmp;
 				}
 			}
 	}
-	sendnotice(sptr, "Override: %s", tmp);
+	sendtxtnumeric(sptr, "Override: %s", tmp);
 
 #ifdef DEBUGMODE
-	sendnotice(sptr, "Efunctions dump:");
+	sendtxtnumeric(sptr, "Efunctions dump:");
 	for (i=0; i < MAXEFUNCTIONS; i++)
 		if ((e = Efunctions[i]))
 		{
-			sendnotice(sptr, "type=%d, name=%s, pointer=%p %s, owner=%s",
+			sendtxtnumeric(sptr, "type=%d, name=%s, pointer=%p %s, owner=%s",
 				e->type,
 				efunction_table[e->type].name ? efunction_table[e->type].name : "<null>",
 				e->func.voidfunc,

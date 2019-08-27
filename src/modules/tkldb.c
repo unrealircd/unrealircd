@@ -19,6 +19,14 @@
 
 #include "unrealircd.h"
 
+ModuleHeader MOD_HEADER(tkldb) = {
+	"tkldb",
+	"1.10",
+	"Stores active TKL entries (*-Lines) persistently/across IRCd restarts",
+	"UnrealIRCd Team",
+	"unrealircd-5",
+};
+
 #define TKL_DB_VERSION 1100
 #define TKL_DB_SAVE_EVERY 299
 
@@ -103,14 +111,6 @@ struct cfgstruct {
 static struct cfgstruct cfg;
 
 static int tkls_loaded = 0;
-
-ModuleHeader MOD_HEADER(tkldb) = {
-	"tkldb",
-	"v1.10",
-	"Stores active TKL entries (*-Lines) persistently/across IRCd restarts",
-	"UnrealIRCd Team",
-	"unrealircd-5",
-};
 
 MOD_TEST(tkldb)
 {

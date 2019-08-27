@@ -20,14 +20,12 @@
 
 #include "unrealircd.h"
 
-#define NOCODES_VERSION "v1.2"
-
 ModuleHeader MOD_HEADER(nocodes)
 = {
 	"nocodes",	/* Name of module */
-	NOCODES_VERSION, /* Version */
+	"1.2", /* Version */
 	"Strip/block bold/underline/reverse - by Syzop", /* Short description of module */
-	"UnrealIRCd Team",
+	"UnrealIRCd Team", /* Author */
 	"unrealircd-5",
 };
 

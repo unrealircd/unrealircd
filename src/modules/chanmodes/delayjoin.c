@@ -8,7 +8,7 @@
 ModuleHeader MOD_HEADER(delayjoin)
   = {
 	"delayjoin",   /* Name of module */
-	"v0.0.1", /* Version */
+	"5.0", /* Version */
 	"delayed join (+D,+d)", /* Short description of module */
 	"UnrealIRCd Team",
 	"unrealircd-5",

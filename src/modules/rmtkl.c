@@ -19,6 +19,14 @@
 
 #include "unrealircd.h"
 
+ModuleHeader MOD_HEADER(rmtkl) = {
+	"rmtkl",
+	"1.4",
+	"Adds /rmtkl command to easily remove *-Lines in bulk",
+	"Gottem and the UnrealIRCd Team",
+	"unrealircd-5",
+};
+
 #define IsParam(x) (parc > (x) && !BadPtr(parv[(x)]))
 #define IsNotParam(x) (parc <= (x) || BadPtr(parv[(x)]))
 
@@ -69,16 +77,9 @@ static char *rmtkl_help[] = {
 	NULL
 };
 
-ModuleHeader MOD_HEADER(rmtkl) = {
-	"rmtkl",
-	"$Id: v1.4 2019/08/10 Gottem$",
-	"Adds /rmtkl command to easily remove *-Lines in bulk",
-	"UnrealIRCd Team",
-	"unrealircd-5",
-};
-
 MOD_INIT(rmtkl)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	if (CommandExists("RMTKL"))
 	{
 		config_error("Command RMTKL already exists");

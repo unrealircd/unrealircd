@@ -26,7 +26,7 @@ CMD_FUNC(webredir);
 ModuleHeader MOD_HEADER(webredir)
   = {
 	"webredir",
-	"v1.0",
+	"1.0",
 	"Do 301 redirect for HEAD/GET/POST/PUT commands", 
 	"UnrealIRCd Team",
 	"unrealircd-5",

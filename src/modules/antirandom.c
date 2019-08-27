@@ -36,8 +36,8 @@
 ModuleHeader MOD_HEADER(antirandom)
   = {
 	"antirandom",
-	"v1.4",
-	"Randomness detector",
+	"1.4",
+	"Detect and ban users with random names",
 	"UnrealIRCd Team",
 	"unrealircd-5",
     };

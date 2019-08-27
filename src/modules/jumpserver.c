@@ -22,7 +22,7 @@
 ModuleHeader MOD_HEADER(jumpserver)
   = {
 	"jumpserver",
-	"v1.1",
+	"1.1",
 	"/jumpserver command",
 	"UnrealIRCd Team",
 	"unrealircd-5",
