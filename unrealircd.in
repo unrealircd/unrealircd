@@ -14,6 +14,11 @@ if [ "$1" = "start" ] ; then
 	if [ -r $PID_FILE ] ; then
 		mv -f $PID_FILE $PID_BACKUP
 	fi
+	# We use AddressSanitizer in development builds, but ASan does not dump core
+	# by default because older gcc/clang might dump a 16TB core file.
+	# We explicitly enable it here. Note that this only applies to 5.0.0-alpha
+	# and 5.0.0-beta releases and explicit --with-asan development builds:
+	export ASAN_OPTIONS=abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1
 	# Check if ~/Unrealxxx/unrealircd.conf exists but the file
 	# ~/unrealircd/conf/unrealircd.conf does not.
 	# If so, then assume a user-build and give the user a nice hint...
