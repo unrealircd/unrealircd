@@ -60,7 +60,6 @@ del "C:\Program Files\UnrealIRCd 5\bin\unrealircd.exe"
 echo Running installer...
 start /WAIT unrealircd-dev-build.exe /VERYSILENT /LOG=setup.log
 if %ERRORLEVEL% NEQ 0 goto installerfailed
-EXIT /B 1
 
 rem Upload artifact
 rem appveyor PushArtifact unrealircd-dev-build.exe
@@ -74,7 +73,7 @@ if %ERRORLEVEL% NEQ 0 EXIT /B 1
 cd unrealircd-tests
 dir
 
-"C:\Program Files\Git\git\bin\bash.exe" ./runwin
+"C:\Program Files\Git\bin\bash.exe" ./runwin
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 goto end
