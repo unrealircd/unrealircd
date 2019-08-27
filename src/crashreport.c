@@ -327,7 +327,7 @@ int attach_file(FILE *fdi, FILE *fdo)
 
 		total += strlen(printbuf);
 
-		if (total > 9500000)
+		if (total > 15000000)
 			return 0; /* Safety limit */
 	}
 
@@ -335,16 +335,71 @@ int attach_file(FILE *fdi, FILE *fdo)
 	return 1;
 }
 
+/** Figure out the libc library name (.so file), copy it to tmp/
+ * to include it in the bug report. This can improve the backtrace
+ * a lot (read: make it actually readable / useful) in case we
+ * crash in a libc function.
+ */
+char *copy_libc_so(void)
+{
+#ifdef _WIN32
+	return "";
+#else
+	FILE *fd;
+	char buf[1024];
+	static char ret[512];
+	char *basename, *libcname = NULL, *p, *start;
+
+	snprintf(buf, sizeof(buf), "ldd %s/unrealircd 2>/dev/null", BINDIR);
+	fd = popen(buf, "r");
+	if (!fd)
+		return "";
+
+	while ((fgets(buf, sizeof(buf), fd)))
+	{
+		stripcrlf(buf);
+		p = strstr(buf, "libc.so");
+		if (!p)
+			continue;
+		basename = p;
+		p = strchr(p, ' ');
+		if (!p)
+			continue;
+		*p++ = '\0';
+		p = strstr(p, "=> ");
+		if (!p)
+			continue;
+		start = p += 3; /* skip "=> " */
+		p = strchr(start, ' ');
+		if (!p)
+			continue;
+		*p = '\0';
+		libcname = start;
+		break;
+	}
+	pclose(fd);
+
+	if (!basename || !libcname)
+		return ""; /* not found, weird */
+
+	snprintf(ret, sizeof(ret), "%s/%s", TMPDIR, basename);
+	if (!unreal_copyfile(libcname, ret))
+		return ""; /* copying failed */
+
+	return ret;
+#endif
+}
 int attach_coredump(FILE *fdo, char *coredump)
 {
 	FILE *fdi;
 	char fname[512];
+	char *libcname = copy_libc_so();
 
 #ifndef _WIN32
 	/* On *NIX we create a .tar.bz2 / .tar.gz (may take a couple of seconds) */
 	printf("Please wait...\n");
-	snprintf(fname, sizeof(fname), "tar c %s/unrealircd %s %s 2>/dev/null|(bzip2 || gzip) 2>/dev/null",
-		BINDIR, coredump, MODULESDIR);
+	snprintf(fname, sizeof(fname), "tar c %s/unrealircd %s %s %s 2>/dev/null|(bzip2 || gzip) 2>/dev/null",
+		BINDIR, coredump, MODULESDIR, libcname);
 
 	fdi = popen(fname, "r");
 #else
