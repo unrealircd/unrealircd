@@ -455,7 +455,10 @@ SSL_CTX *crashreport_init_ssl(void)
 	ctx_client = SSL_CTX_new(SSLv23_client_method());
 	if (!ctx_client)
 		return NULL;
-	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3);
+#ifdef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
+	SSL_CTX_set_min_proto_version(ctx_client, TLS1_2_VERSION);
+#endif
+	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_1);
 
 	/* Verify peer certificate */
 	snprintf(buf, sizeof(buf), "%s/tls/curl-ca-bundle.crt", CONFDIR);
