@@ -2240,6 +2240,7 @@ void	config_rehash()
 		DelListItem(except_ptr, conf_except);
 		MyFree(except_ptr);
 	}
+	/* Free ban realname { }, ban server { } and ban version { } */
 	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) next)
 	{
 		next = (ListStruct *)ban_ptr->next;
@@ -2920,14 +2921,12 @@ ConfigItem_link *Find_link(char *servername, aClient *acptr)
 	return NULL;
 }
 
-ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
+/** Find a ban of type CONF_BAN_*, which is currently only
+ * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
+ */
+ConfigItem_ban *Find_ban(aClient *sptr, char *host, short type)
 {
 	ConfigItem_ban *ban;
-
-	/* Check for an except ONLY if we find a ban, makes it
-	 * faster since most users will not have a ban so excepts
-	 * don't need to be searched -- codemastr
-	 */
 
 	for (ban = conf_ban; ban; ban = ban->next)
 	{
@@ -2955,14 +2954,13 @@ ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
 	return NULL;
 }
 
+/** Find a ban of type CONF_BAN_*, which is currently only
+ * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
+ * This is the extended version, only used by m_svsnline.
+ */
 ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
 {
 	ConfigItem_ban *ban;
-
-	/* Check for an except ONLY if we find a ban, makes it
-	 * faster since most users will not have a ban so excepts
-	 * don't need to be searched -- codemastr
-	 */
 
 	for (ban = conf_ban; ban; ban = ban->next)
 	{
@@ -6679,15 +6677,13 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = MyMallocEx(sizeof(ConfigItem_ban));
 	if (!strcmp(ce->ce_vardata, "realname"))
-	{
 		ca->flag.type = CONF_BAN_REALNAME;
-	}
 	else if (!strcmp(ce->ce_vardata, "server"))
 		ca->flag.type = CONF_BAN_SERVER;
 	else if (!strcmp(ce->ce_vardata, "version"))
 	{
 		ca->flag.type = CONF_BAN_VERSION;
-		tempiConf.use_ban_version = 1;
+		tempiConf.use_ban_version = 1; /* enable CTCP VERSION on connect */
 	}
 	else {
 		int value;
