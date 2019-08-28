@@ -134,13 +134,20 @@ char *long_date(time_t clock)
 /** Convert timestamp to a short date, a la: Wed Jun 30 21:49:08 1993
  * @returns A short date string, or NULL if the timestamp is invalid
  * (out of range)
+ * @param ts   The timestamp
+ * @param buf  The buffer to store the string (minimum size: 128 bytes),
+ *             or NULL to use temporary static storage.
  */
-char *short_date(time_t ts)
+char *short_date(time_t ts, char *buf)
 {
 	struct tm *t = gmtime(&ts);
-	static char buf[256];
 	char *timestr;
+	static char retbuf[128];
 
+	if (!buf)
+		buf = retbuf;
+
+	*buf = '\0';
 	if (!t)
 		return NULL;
 
@@ -148,7 +155,7 @@ char *short_date(time_t ts)
 	if (!timestr)
 		return NULL;
 
-	strlcpy(buf, timestr, sizeof(buf));
+	strlcpy(buf, timestr, 128);
 	stripcrlf(buf);
 	return buf;
 }

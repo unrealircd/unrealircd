@@ -167,10 +167,12 @@ int rmtkl_tryremove(aClient *sptr, aClient *cptr, TKLType *tkltype, aTKline *tkl
 	if (skipperm && tkl->expire_at == 0)
 		return 0;
 
+	// FIXME: use sendnotice_tkl_del() once it exists !!
+
 	// Convert "set at" timestamp to human readable time, we'll try to remove the TKL even if this fails (might be a bogus entry in that case)
 	if (tkl->set_at)
 	{
-		if ((timeret = short_date(tkl->set_at)))
+		if ((timeret = short_date(tkl->set_at, NULL)))
 			strlcpy(gmt, timeret, sizeof(gmt));
 		else
 			strlcpy(gmt, "<INVALID TIMESTAMP>", sizeof(gmt));

@@ -313,7 +313,7 @@ extern int check_registered_user(aClient *);
 extern char *get_client_name(aClient *, int);
 extern char *get_client_host(aClient *);
 extern char *myctime(time_t);
-extern char *short_date(time_t);
+extern char *short_date(time_t, char *buf);
 extern char *long_date(time_t);
 extern int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mtags, char *comment);
 extern void initstats(), tstats(aClient *, char *);
