@@ -348,7 +348,7 @@ char *copy_libc_so(void)
 	FILE *fd;
 	char buf[1024];
 	static char ret[512];
-	char *basename, *libcname = NULL, *p, *start;
+	char *basename = NULL, *libcname = NULL, *p, *start;
 
 	snprintf(buf, sizeof(buf), "ldd %s/unrealircd 2>/dev/null", BINDIR);
 	fd = popen(buf, "r");
