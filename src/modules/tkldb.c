@@ -27,7 +27,8 @@ ModuleHeader MOD_HEADER(tkldb) = {
 	"unrealircd-5",
 };
 
-#define TKL_DB_VERSION 1100
+#define TKL_DB_MAGIC 0x10101010
+#define TKL_DB_VERSION 4999
 #define TKL_DB_SAVE_EVERY 299
 
 #ifdef DEBUGMODE
@@ -45,15 +46,8 @@ ModuleHeader MOD_HEADER(tkldb) = {
 #define FreeTKLRead() \
  	do { \
 		/* Some of these might be NULL */ \
-		safefree(tkltype); \
-		safefree(usermask); \
-		safefree(hostmask); \
-		safefree(reason); \
-		safefree(setby); \
-		safefree(spamf_check); \
-		safefree(spamf_expr); \
-		safefree(spamf_matchtype); \
-		safefree(spamf_tkl_reason); \
+		if (tkl) \
+			free_tkl(tkl); \
 	} while(0)
 
 #define R_SAFE(x) \
@@ -93,20 +87,12 @@ EVENT(write_tkldb_evt);
 int write_tkldb(void);
 int write_tkline(FILE *fd, const char *tmpfname, aTKline *tkl);
 int read_tkldb(void);
-static inline int read_data(FILE *fd, void *buf, size_t len);
-static inline int write_data(FILE *fd, void *buf, size_t len);
-static int write_str(FILE *fd, char *x);
-static int read_str(FILE *fd, char **x);
 
 // Globals
 static ModDataInfo *tkldb_md;
-static uint32_t tkl_db_version = TKL_DB_VERSION;
+const uint32_t tkl_db_version = TKL_DB_VERSION;
 struct cfgstruct {
 	char *database;
-
-	// Stored .db might still work with flags instead of actual values (will be corrected on next write)
-	// This backport stuff will eventually be removed ;]
-	unsigned int backport_tkl1000;
 };
 static struct cfgstruct cfg;
 
@@ -177,7 +163,6 @@ void setcfg(void)
 	// Default: data/tkl.db
 	cfg.database = strdup("tkl.db");
 	convert_to_absolute_path(&cfg.database, PERMDATADIR);
-	cfg.backport_tkl1000 = 0;
 }
 
 void freecfg(void)
@@ -262,6 +247,7 @@ int write_tkldb(void)
 		return 0;
 	}
 
+	W_SAFE(write_int32(fd, TKL_DB_MAGIC));
 	W_SAFE(write_data(fd, &tkl_db_version, sizeof(tkl_db_version)));
 
 	// Count the *-Lines
@@ -337,92 +323,74 @@ int write_tkldb(void)
 	return 1;
 }
 
+/** Write a TKL entry */
 int write_tkline(FILE *fd, const char *tmpfname, aTKline *tkl)
 {
-	// Since we can't just write 'tkl' in its entirety, we have to get the relevant variables instead
-	// These will be used to reconstruct the proper internal m_tkl() call ;]
 	char tkltype;
-	char usermask_subtype[256]; // Might need to prefix something to usermask
-	char spamf_action; // Storing the action not as unsigned short, but as char is more reliable for the future
-	uint64_t expire_at, set_at, spamf_tkl_duration; // To prevent 32 vs 64 bit incompatibilies regarding the TS data type(def)
+	char buf[256];
 
+	/* First, write the common attributes */
 	tkltype = tkl_typetochar(tkl->type);
 	W_SAFE(write_data(fd, &tkltype, sizeof(tkltype))); // TKL char
 
-	// Might be a softban
-	if (!tkl->ptr.spamf && (tkl->subtype & TKL_SUBTYPE_SOFT))
+	W_SAFE(write_str(fd, tkl->set_by));
+	W_SAFE(write_int64(fd, tkl->set_at));
+	W_SAFE(write_int64(fd, tkl->expire_at));
+
+	if (TKLIsServerBan(tkl))
 	{
-		snprintf(usermask_subtype, sizeof(usermask_subtype), "%%%s", tkl->usermask);
-		W_SAFE(write_str(fd, usermask_subtype)); // User mask (targets for spamfilter, like 'cpnNPqdatu'), includes % for softbans
+		char *usermask = tkl->ptr.serverban->usermask;
+		if (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT)
+		{
+			snprintf(buf, sizeof(buf), "%%%s", tkl->ptr.serverban->usermask);
+			usermask = buf;
+		}
+		W_SAFE(write_str(fd, usermask));
+		W_SAFE(write_str(fd, tkl->ptr.serverban->hostmask));
+		W_SAFE(write_str(fd, tkl->ptr.serverban->reason));
 	} else
+	if (TKLIsNameBan(tkl))
 	{
-		W_SAFE(write_str(fd, tkl->usermask));
+		char *hold = tkl->ptr.nameban->hold ? "H" : "*";
+		W_SAFE(write_str(fd, hold));
+		W_SAFE(write_str(fd, tkl->ptr.nameban->name));
+		W_SAFE(write_str(fd, tkl->ptr.nameban->reason));
+	} else
+	if (TKLIsSpamfilter(tkl))
+	{
+		char *match_type = unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type);
+		char *target = spamfilter_target_inttostring(tkl->ptr.spamfilter->target);
+		char action = banact_valtochar(tkl->ptr.spamfilter->action);
+
+		W_SAFE(write_str(fd, match_type));
+		W_SAFE(write_str(fd, tkl->ptr.spamfilter->match->str));
+		W_SAFE(write_str(fd, target));
+		W_SAFE(write_data(fd, &action, sizeof(action)));
+		W_SAFE(write_str(fd, tkl->ptr.spamfilter->tkl_reason));
+		W_SAFE(write_int64(fd, tkl->ptr.spamfilter->tkl_duration));
 	}
 
-	W_SAFE(write_str(fd, tkl->hostmask)); // Host mask (action for spamfilter, like 'block')
-	W_SAFE(write_str(fd, tkl->reason)); // Ban reason (TKL time for spamfilters, in case of *-Line actions)
-	W_SAFE(write_str(fd, tkl->setby));
-
-	expire_at = tkl->expire_at;
-	set_at = tkl->set_at;
-	W_SAFE(write_data(fd, &expire_at, sizeof(expire_at)));
-	W_SAFE(write_data(fd, &set_at, sizeof(set_at)));
-
-	if (tkl->ptr.spamf)
-	{
-		W_SAFE(write_str(fd, "SPAMF")); // Write a string so we know to expect more when reading the DB
-		spamf_action = banact_valtochar(tkl->ptr.spamf->action); // Block, GZ-Line, etc; also refer to BAN_ACT_*
-		W_SAFE(write_data(fd, &spamf_action, sizeof(spamf_action)));
-		W_SAFE(write_str(fd, tkl->ptr.spamf->tkl_reason));
-		spamf_tkl_duration = tkl->ptr.spamf->tkl_duration;
-		W_SAFE(write_data(fd, &spamf_tkl_duration, sizeof(spamf_tkl_duration)));
-		W_SAFE(write_str(fd, tkl->ptr.spamf->expr->str)); // Actual expression/regex/etc
-
-		// Expression type (simple/PCRE), see also enum MatchType
-		if (tkl->ptr.spamf->expr->type == MATCH_PCRE_REGEX)
-			W_SAFE(write_str(fd, "regex"));
-		else
-			W_SAFE(write_str(fd, "simple"));
-	} else
-	{
-		W_SAFE(write_str(fd, "NOSPAMF"));
-	}
 	return 1;
 }
 
+/** Read all entries from the TKL db */
 int read_tkldb(void)
 {
 	FILE *fd;
-	uint64_t i;
+	aTKline *tkl = NULL;
+	uint32_t magic = 0;
+	uint64_t cnt;
 	uint64_t tklcount = 0;
-	size_t tklcount_tkl1000 = 0;
 	uint32_t version;
-	int added = 0;
-	int expired = 0;
+	int added_cnt = 0;
 	char c;
-
-	// Variables for all TKL types
-	// Some of them need to be declared and NULL initialised early due to the macro FreeTKLRead() being used by R_SAFE() on error
-	char *tkltype = NULL;
-	char *usermask = NULL;
-	char *hostmask = NULL;
-	char *reason = NULL;
-	char *setby = NULL;
-
-	// Some stuff related to spamfilters
-	char *spamf_check = NULL;
-	char *spamf_expr = NULL;
-	char *spamf_matchtype = NULL;
-	char *spamf_tkl_reason = NULL;
+	char *str;
 
 #ifdef BENCHMARK
 	struct timeval tv_alpha, tv_beta;
 
 	gettimeofday(&tv_alpha, NULL);
 #endif
-
-	ircd_log(LOG_ERROR, "[tkldb] Reading stored *-Lines from '%s'", cfg.database);
-	sendto_realops("[tkldb] Reading stored *-Lines from '%s'", cfg.database); // Probably won't be seen ever, but just in case ;]
 
 	fd = fopen(cfg.database, "rb");
 	if (!fd)
@@ -438,240 +406,224 @@ int read_tkldb(void)
 		}
 	}
 
-	R_SAFE(read_data(fd, &version, sizeof(version)));
-	if (version > tkl_db_version)
+	/* The database starts with a "magic value" - unless it's some old version or corrupt */
+	R_SAFE(read_data(fd, &magic, sizeof(magic)));
+	if (magic != TKL_DB_MAGIC)
 	{
-		// Older DBs should still work with newer versions of this module
-		config_warn("[tkldb] Database '%s' has a wrong version: expected it to be <= %u but got %u instead", cfg.database, tkl_db_version, version);
-		if (fclose(fd) != 0)
-			config_warn("[tkldb] Got an error when trying to close database file '%s' (possible corruption occurred): %s", cfg.database, strerror(errno));
+		config_error("[tkldb] Database '%s' uses an old and unsupported format OR is corrupt", cfg.database);
+		config_status("If you are upgrading from UnrealIRCd 4 (or 5.0.0-alpha1) then we suggest you to "
+		              "delete the existing database. Just keep at least 1 server linked during the upgrade "
+		              "process to preserve your global *LINES and Spamfilters.");
+		fclose(fd);
 		return 0;
 	}
 
-	cfg.backport_tkl1000 = (version <= 1000 ? 1 : 0);
-	if (cfg.backport_tkl1000)
+	/* Now do a version check */
+	R_SAFE(read_data(fd, &version, sizeof(version)));
+	if (version < 4999)
 	{
-		R_SAFE(read_data(fd, &tklcount_tkl1000, sizeof(tklcount_tkl1000)));
-		tklcount = tklcount_tkl1000;
-	} else
+		config_error("[tkldb] Database '%s' uses an unsupport - possibly old - format (%ld).", cfg.database, (long)version);
+		fclose(fd);
+		return 0;
+	}
+	if (version > tkl_db_version)
 	{
-		R_SAFE(read_data(fd, &tklcount, sizeof(tklcount)));
+		config_warn("[tkldb] Database '%s' has version %lu while we only support %lu. Did you just downgrade UnrealIRCd? Sorry this is not suported",
+			cfg.database, (unsigned long)tkl_db_version, (unsigned long)version);
+		fclose(fd);
+		return 0;
 	}
 
-	for (i = 1; i <= tklcount; i++)
+	R_SAFE(read_data(fd, &tklcount, sizeof(tklcount)));
+
+	for (cnt = 0; cnt < tklcount; cnt++)
 	{
-		int type;
-		unsigned short subtype;
-		int parc = 0;
+		int do_not_add = 0;
 
-		// Variables for all TKL types
-		usermask = NULL;
-		hostmask = NULL;
-		reason = NULL;
-		setby = NULL;
-		char tklflag;
-		tkltype = NULL;
-		uint64_t expire_at, set_at;
-		time_t expire_at_tkl1000, set_at_tkl1000;
-		char setTime[100], expTime[100], spamfTime[100];
+		tkl = MyMallocEx(sizeof(aTKline));
 
-		// Some stuff related to spamfilters
-		spamf_check = NULL;
-		int spamf = 0;
-		char spamf_action;
-		unsigned short spamf_actionval;
-		spamf_tkl_reason = NULL;
-		time_t spamf_tkl_duration_tkl1000;
-		uint64_t spamf_tkl_duration;
-		spamf_expr = NULL;
-		MatchType matchtype;
-		spamf_matchtype = NULL;
-
-		int doadd = 1;
-		aTKline *tkl;
-
-		char *tkllayer[13] = { // Args for m_tkl()
-			me.name, // 0: Server name
-			"+", // 1: Direction
-			NULL, // 2: Type, like G
-			NULL, // 3: User mask (targets for spamfilter)
-			NULL, // 4: Host mask (action for spamfilter)
-			NULL, // 5: Set by who
-			NULL, // 6: Expiration time
-			NULL, // 7: Set-at time
-			NULL, // 8: Reason (TKL time for spamfilters, in case of *-Line actions)
-			NULL, // 9: Spamfilter only: TKL reason (w/ underscores and all)
-			NULL, // 10: Spamfilter only: Match type (simple/regex)
-			NULL, // 11: Spamfilter only: Match string/regex
-			NULL, // 12: Some functions rely on the post-last entry being NULL =]
-		};
-
-		if (cfg.backport_tkl1000)
+		/* First, fetch the TKL type.. */
+		R_SAFE(read_data(fd, &c, sizeof(c)));
+		tkl->type = tkl_chartotype(c);
+		if (!tkl->type)
 		{
-			R_SAFE(read_data(fd, &type, sizeof(type)));
-			tklflag = tkl_typetochar(type);
-			tkltype = MyMallocEx(2);
-			tkltype[0] = tklflag;
-			tkltype[1] = '\0';
-			R_SAFE(read_data(fd, &subtype, sizeof(subtype))); // Subtype is kinda redundant so we're not using it past v1000 anymore
-		}
-		else {
-			// No need for tkl_typetochar() on read anymore
-			R_SAFE(read_data(fd, &tklflag, sizeof(tklflag)));
-			tkltype = MyMallocEx(2);
-			tkltype[0] = tklflag;
-			tkltype[1] = '\0';
-		}
-
-		R_SAFE(read_str(fd, &usermask));
-		R_SAFE(read_str(fd, &hostmask));
-		R_SAFE(read_str(fd, &reason));
-		R_SAFE(read_str(fd, &setby));
-
-		if (cfg.backport_tkl1000)
-		{
-			R_SAFE(read_data(fd, &expire_at_tkl1000, sizeof(expire_at_tkl1000)));
-			R_SAFE(read_data(fd, &set_at_tkl1000, sizeof(set_at_tkl1000)));
-			expire_at = expire_at_tkl1000;
-			set_at = set_at_tkl1000;
-		}
-		else {
-			R_SAFE(read_data(fd, &expire_at, sizeof(expire_at)));
-			R_SAFE(read_data(fd, &set_at, sizeof(set_at)));
-		}
-
-		R_SAFE(read_str(fd, &spamf_check));
-		if (!strcmp(spamf_check, "SPAMF"))
-		{
-			spamf = 1;
-
-			if (cfg.backport_tkl1000)
-			{
-				R_SAFE(read_data(fd, &spamf_actionval, sizeof(spamf_actionval)));
-				// FIXME: BUG: spamf_action is not set
-			} else {
-				R_SAFE(read_data(fd, &spamf_action, sizeof(spamf_action)));
-				spamf_actionval = banact_chartoval(spamf_action);
-			}
-
-			R_SAFE(read_str(fd, &spamf_tkl_reason));
-
-			if (cfg.backport_tkl1000)
-			{
-				R_SAFE(read_data(fd, &spamf_tkl_duration_tkl1000, sizeof(spamf_tkl_duration_tkl1000)));
-				spamf_tkl_duration = spamf_tkl_duration_tkl1000;
-			} else {
-				R_SAFE(read_data(fd, &spamf_tkl_duration, sizeof(spamf_tkl_duration)));
-			}
-
-			R_SAFE(read_str(fd, &spamf_expr));
-			if (cfg.backport_tkl1000)
-			{
-				R_SAFE(read_data(fd, &matchtype, sizeof(matchtype)));
-				if (matchtype == MATCH_PCRE_REGEX)
-					spamf_matchtype = strdup("regex");
-				else
-					spamf_matchtype = strdup("simple");
-			}
-			else {
-				// We have better compatibility by just using the strings, since its MATCH_* counterpart might just change in value someday
-				R_SAFE(read_str(fd, &spamf_matchtype));
-				if (!strcmp(spamf_matchtype, "regex"))
-					matchtype = MATCH_PCRE_REGEX;
-				else
-					matchtype = MATCH_SIMPLE;
-			}
-		}
-
-		// v1000 still stored local Q-Lines and spamfilters, but those are either added through a .conf or already built-in
-		if (strchr("qf", tklflag))
-		{
+			/* We can't continue reading the DB if we don't know the TKL type,
+			 * since we don't know how long the entry will be, we can't skip it.
+			 * This is "impossible" anyway, unless we some day remove a TKL type
+			 * in core UnrealIRCd. In which case we should add some skipping code
+			 * here to gracefully handle that situation ;)
+			 */
+			config_error("[tkldb] Invalid type '%c' encountered - STOPPED READING DATABASE!", tkl->type);
 			FreeTKLRead();
-			continue;
+			break; /* we MUST stop reading */
 		}
 
-		// Don't add the TKL if it's expired
-		if (expire_at != 0 && expire_at <= TStime())
+		/* Read the common types (same for all TKLs) */
+		R_SAFE(read_str(fd, &tkl->set_by));
+		R_SAFE(read_int64(fd, &tkl->set_at));
+		R_SAFE(read_int64(fd, &tkl->expire_at));
+
+		/* Save some CPU... if it's already expired then don't bother adding */
+		if (tkl->expire_at != 0 && tkl->expire_at <= TStime())
+			do_not_add = 1;
+
+		/* Now handle all the specific types */
+		if (TKLIsServerBan(tkl))
 		{
-#ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "[tkldb] Not re-adding expired %c:-Line '%s@%s' [%s]", tklflag, usermask, hostmask, reason);
-			sendto_realops("[tkldb] Not re-adding expired %c-Line '%s@%s' [%s]", tklflag, usermask, hostmask, reason); // Probably won't be seen ever, but just in case ;]
-#endif
-			expired++;
+			int softban = 0;
+
+			tkl->ptr.serverban = MyMallocEx(sizeof(ServerBan));
+
+			/* Usermask - but taking into account that the
+			 * %-prefix means a soft ban.
+			 */
+			R_SAFE(read_str(fd, &str));
+			if (*str == '%')
+			{
+				softban = 1;
+				str++;
+			}
+			tkl->ptr.serverban->usermask = strdup(str);
+			safefree(str);
+
+			/* And the other 2 fields.. */
+			R_SAFE(read_str(fd, &tkl->ptr.serverban->hostmask));
+			R_SAFE(read_str(fd, &tkl->ptr.serverban->reason));
+
+			if (find_tkl_serverban(tkl->type, tkl->ptr.serverban->usermask,
+			                       tkl->ptr.serverban->hostmask, softban))
+			{
+				do_not_add = 1;
+			}
+
+			if (!do_not_add)
+			{
+				tkl_add_serverban(tkl->type, tkl->ptr.serverban->usermask,
+				                  tkl->ptr.serverban->hostmask,
+				                  tkl->ptr.serverban->reason,
+				                  tkl->set_by, tkl->expire_at,
+				                  tkl->set_at, softban, 0);
+			}
+		} else
+		if (TKLIsNameBan(tkl))
+		{
+			tkl->ptr.nameban = MyMallocEx(sizeof(NameBan));
+
+			R_SAFE(read_str(fd, &str));
+			if (*str == 'H')
+				tkl->ptr.nameban->hold = 1;
+			safefree(str);
+			R_SAFE(read_str(fd, &tkl->ptr.nameban->name));
+			R_SAFE(read_str(fd, &tkl->ptr.nameban->reason));
+
+			if (find_tkl_nameban(tkl->type, tkl->ptr.nameban->name,
+			                     tkl->ptr.nameban->hold))
+			{
+				do_not_add = 1;
+			}
+
+			if (!do_not_add)
+			{
+				tkl_add_nameban(tkl->type, tkl->ptr.nameban->name,
+				                tkl->ptr.nameban->hold,
+				                tkl->ptr.nameban->reason,
+				                tkl->set_by, tkl->expire_at,
+				                tkl->set_at, 0);
+			}
+		} else
+		if (TKLIsSpamfilter(tkl))
+		{
+			int match_method;
+			char *err = NULL;
+
+			tkl->ptr.spamfilter = MyMallocEx(sizeof(Spamfilter));
+
+			/* Match method */
+			R_SAFE(read_str(fd, &str));
+			match_method = unreal_match_method_strtoval(str);
+			if (!match_method)
+			{
+				config_warn("[tkldb] Unhandled spamfilter match method '%s' -- spamfilter entry not added", str);
+				do_not_add = 1;
+			}
+			safefree(str);
+
+			/* Match string (eg: regex) */
+			R_SAFE(read_str(fd, &str));
+			tkl->ptr.spamfilter->match = unreal_create_match(match_method, str, &err);
+			if (!tkl->ptr.spamfilter->match)
+			{
+				config_warn("[tkldb] Spamfilter '%s' does not compile: %s -- spamfilter entry not added", str, err);
+				do_not_add = 1;
+			}
+			safefree(str);
+
+			/* Target (eg: cpn) */
+			R_SAFE(read_str(fd, &str));
+			tkl->ptr.spamfilter->target = spamfilter_gettargets(str, NULL);
+			if (!tkl->ptr.spamfilter->target)
+			{
+				config_warn("[tkldb] Spamfilter '%s' without any valid targets (%s) -- spamfilter entry not added",
+					tkl->ptr.spamfilter->match->str, str);
+				do_not_add = 1;
+			}
+			safefree(str);
+
+			/* Action */
+			R_SAFE(read_data(fd, &c, sizeof(c)));
+			tkl->ptr.spamfilter->action = banact_chartoval(c);
+			if (!tkl->ptr.spamfilter->action)
+			{
+				config_warn("[tkldb] Spamfilter '%s' without valid action (%c) -- spamfilter entry not added",
+					tkl->ptr.spamfilter->match->str, c);
+				do_not_add = 1;
+			}
+
+			R_SAFE(read_str(fd, &tkl->ptr.spamfilter->tkl_reason));
+			R_SAFE(read_int64(fd, &tkl->ptr.spamfilter->tkl_duration));
+
+			if (find_tkl_spamfilter(tkl->type, tkl->ptr.spamfilter->match->str,
+			                        tkl->ptr.spamfilter->action,
+			                        tkl->ptr.spamfilter->target))
+			{
+				do_not_add = 1;
+			}
+
+			if (!do_not_add)
+			{
+				tkl_add_spamfilter(tkl->type, tkl->ptr.spamfilter->target,
+				                   tkl->ptr.spamfilter->action,
+				                   tkl->ptr.spamfilter->match,
+				                   tkl->set_by, tkl->expire_at, tkl->set_at,
+				                   tkl->ptr.spamfilter->tkl_duration,
+				                   tkl->ptr.spamfilter->tkl_reason,
+				                   0);
+				/* tkl_add_spamfilter() does not copy the match but assign it.
+				 * so set to NULL here to avoid a read-after-free later on.
+				 */
+				tkl->ptr.spamfilter->match = NULL;
+			}
+		} else
+		{
+			config_error("[tkldb] Unhandled type!! TKLDB is missing support for type %ld -- STOPPED reading db entries!", (long)tkl->type);
 			FreeTKLRead();
-			continue;
+			break; /* we MUST stop reading */
 		}
 
-		ircsnprintf(setTime, sizeof(setTime), "%lld", (long long)set_at);
-		ircsnprintf(expTime, sizeof(expTime), "%lld", (long long)expire_at);
+		if (!do_not_add)
+			added_cnt++;
 
-		// Build TKL args
-		// All of these except [8] are the same for all (only odd one is spamfilter)
-		parc = 9;
-		tkllayer[2] = tkltype;
-		tkllayer[3] = usermask;
-		tkllayer[4] = hostmask;
-		tkllayer[5] = setby;
-		tkllayer[6] = expTime;
-		tkllayer[7] = setTime;
-		tkllayer[8] = reason;
-
-		if (spamf)
-		{
-			parc = 12;
-			// Make sure this particular *-Line isn't already active somehow
-			for (tkl = tklines[tkl_hash(tklflag)]; tkl; tkl = tkl->next)
-			{
-				// We can assume it's the same spamfilter if all of the following match: spamfilter expression, targets, TKL reason, action, matchtype and TKL duration
-				if (!strcmp(tkl->ptr.spamf->expr->str, spamf_expr) && !strcmp(tkl->usermask, usermask) && !strcmp(tkl->ptr.spamf->tkl_reason, spamf_tkl_reason) &&
-					tkl->ptr.spamf->action == spamf_action && tkl->ptr.spamf->expr->type == matchtype && tkl->ptr.spamf->tkl_duration == spamf_tkl_duration)
-				{
-					doadd = 0;
-					break;
-				}
-			}
-
-			if (doadd)
-			{
-				ircsnprintf(spamfTime, sizeof(spamfTime), "%lld", (long long)spamf_tkl_duration);
-				tkllayer[8] = spamfTime;
-				tkllayer[9] = spamf_tkl_reason;
-				tkllayer[10] = spamf_matchtype;
-				tkllayer[11] = spamf_expr;
-			}
-		}
-		else {
-			for (tkl = tklines[tkl_hash(tklflag)]; tkl; tkl = tkl->next)
-			{
-				if (!strcmp(tkl->usermask, usermask) && !strcmp(tkl->hostmask, hostmask) && !strcmp(tkl->reason, reason) && tkl->expire_at == expire_at)
-				{
-					doadd = 0;
-					break;
-				}
-			}
-		}
-
-		if (doadd)
-		{
-			m_tkl(&me, &me, NULL, parc, tkllayer);
-			added++;
-		}
 		FreeTKLRead();
 	}
 
 	/* If everything went fine, then reading a single byte should cause an EOF error */
 	if (fread(&c, 1, 1, fd) == 1)
-	{
-		ircd_log(LOG_ERROR, "[warning] [tkldb] Database possibly corrupt. Extra data found at end of DB file.");
-		sendto_realops("[warning] [tkldb] Database possibly corrupt. Extra data found at end of DB file.");
-	}
+		config_warn("[tkldb] Database invalid. Extra data found at end of DB file.");
 	fclose(fd);
 
-	if (added || expired)
-	{
-		ircd_log(LOG_ERROR, "[tkldb] Re-added %d *-Lines (skipped %d expired)", added, expired);
-		sendto_realops("[tkldb] Re-added %d *-Lines (skipped %d expired)", added, expired); // Probably won't be seen ever, but just in case ;]
-	}
+	if (added_cnt)
+		config_status("[tkldb] Re-added %d *-Lines", added_cnt);
+
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
 	ircd_log(LOG_ERROR, "[tkldb] Benchmark: LOAD DB: %lld microseconds",
@@ -680,69 +632,3 @@ int read_tkldb(void)
 	return 1;
 }
 
-static inline int read_data(FILE *fd, void *buf, size_t len)
-{
-	if (fread(buf, 1, len, fd) < len)
-		return 0;
-	return 1;
-}
-
-static inline int write_data(FILE *fd, void *buf, size_t len)
-{
-	if (fwrite(buf, 1, len, fd) < len)
-		return 0;
-	return 1;
-}
-
-static int write_str(FILE *fd, char *x)
-{
-	uint16_t len = (x ? strlen(x) : 0);
-	if (!write_data(fd, &len, sizeof(len)))
-		return 0;
-	if (len)
-	{
-		if (!write_data(fd, x, len))
-			return 0;
-	}
-	return 1;
-}
-
-static int read_str(FILE *fd, char **x)
-{
-	uint16_t len;
-	size_t len_tkl1000; // len used to be of type size_t, but this has portability problems when writing to/reading from binary files
-	size_t size;
-
-	*x = NULL;
-
-	if (cfg.backport_tkl1000)
-	{
-		if (!read_data(fd, &len_tkl1000, sizeof(len_tkl1000)))
-			return 0;
-		len = len_tkl1000;
-	} else
-	{
-		if (!read_data(fd, &len, sizeof(len)))
-			return 0;
-	}
-
-	if (!len)
-	{
-		*x = strdup(""); // It's safer for m_tkl to work with empty strings instead of NULLs
-		return 1;
-	}
-
-	if (len > 10000)
-		return 0;
-
-	size = len;
-	*x = MyMallocEx(size + 1);
-	if (!read_data(fd, *x, size))
-	{
-		MyFree(*x);
-		*x = NULL;
-		return 0;
-	}
-	(*x)[len] = 0;
-	return 1;
-}

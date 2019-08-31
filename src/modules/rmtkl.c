@@ -49,7 +49,7 @@ TKLType tkl_types[] = {
 	{ TKL_KILL | TKL_GLOBAL, 'G', "G-Line", "server-ban:gline:remove" },
 	{ TKL_ZAP | TKL_GLOBAL, 'Z', "Global Z-Line", "server-ban:zline:global:remove" },
 	{ TKL_SHUN | TKL_GLOBAL, 's', "Shun", "server-ban:shun:remove" },
-	{ TKL_SPAMF | TKL_GLOBAL, 'F', "Global Spamfilter", "server-ban:spamfilter:remove" },
+//	{ TKL_SPAMF | TKL_GLOBAL, 'F', "Global Spamfilter", "server-ban:spamfilter:remove" }, TODO: re-add spamfilter support
 	{ 0, 0, "Unknown *-Line", 0 },
 };
 
@@ -71,8 +71,8 @@ static char *rmtkl_help[] = {
 	"        [remove \037all\037 supported TKLs except spamfilters]",
 	"    - \002/rmtkl *@*.mx GZ\002 * -skipperm",
 	"        [remove all Mexican G/Z-Lines while skipping over permanent ones]",
-	"    - \002/rmtkl * * *Zombie*\002",
-	"        [remove all non-spamfilter bans having \037Zombie\037 in the reason field]",
+/*	"    - \002/rmtkl * * *Zombie*\002",
+	"        [remove all non-spamfilter bans having \037Zombie\037 in the reason field]", TODO: re-add spamfilter support  */
 	"*** \002End of help\002 ***",
 	NULL
 };
@@ -143,66 +143,37 @@ int rmtkl_tryremove(aClient *sptr, aClient *cptr, TKLType *tkltype, aTKline *tkl
 		return 0;
 
 	// Let's not touch Q-Lines
-	if (tkl->type & TKL_NICK)
+	if (tkl->type & TKL_NAME)
 		return 0;
 
-	if (tkl->type & TKL_SPAMF)
-	{
-		// Skip default spamfilters and ones added through configs, 'f' is the proper flag for that
-		if (tkltype->flag == 'f')
-			return 0;
+	/* Don't touch TKL's that were added through config */
+	if (tkl->flags & TKL_FLAG_CONFIG)
+		return 0;
 
+	if (TKLIsSpamfilter(tkl))
+	{
+#if 0
+//FIXME: re-add spamfilter support
 		// Is a spamfilter added through IRC, we can remove this if the "user" mask matches the reason
 		if (!match_simple(uhmask, tkl->reason))
 			return 0;
+#endif
 	} else
+	if (TKLIsServerBan(tkl))
 	{
-		if (!match_simple(uhmask, make_user_host(tkl->usermask, tkl->hostmask)))
+		if (!match_simple(uhmask, make_user_host(tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask)))
 			return 0;
 
-		if (commentmask && !match_simple(commentmask, tkl->reason))
+		if (commentmask && !match_simple(commentmask, tkl->ptr.serverban->reason))
 			return 0;
-	}
+	} else
+		return 0;
 
 	if (skipperm && tkl->expire_at == 0)
 		return 0;
 
-	// FIXME: use sendnotice_tkl_del() once it exists !!
-
-	// Convert "set at" timestamp to human readable time, we'll try to remove the TKL even if this fails (might be a bogus entry in that case)
-	if (tkl->set_at)
-	{
-		if ((timeret = short_date(tkl->set_at, NULL)))
-			strlcpy(gmt, timeret, sizeof(gmt));
-		else
-			strlcpy(gmt, "<INVALID TIMESTAMP>", sizeof(gmt));
-	}
-
-	// Spamfilters have a slightly different format
-	if (tkl->type & TKL_SPAMF)
-	{
-		if (!silent)
-		{
-			sendto_snomask(SNO_TKL, "%s removed %s [%s] %s (set at %s " "- reason: %s)",
-			               sptr->name, tkltype->txt, banact_valtostring(tkl->ptr.spamf->action),
-			               tkl->reason, gmt, tkl->ptr.spamf->tkl_reason);
-		}
-
-		ircd_log(LOG_TKL, "%s removed %s [%s] %s (set at %s " "- reason: %s)",
-		         sptr->name, tkltype->txt, banact_valtostring(tkl->ptr.spamf->action),
-		         tkl->reason, gmt, tkl->ptr.spamf->tkl_reason);
-	} else
-	{
-		if (!silent)
-		{
-			sendto_snomask(SNO_TKL, "%s removed %s %s@%s (set at %s - reason: %s)",
-			               sptr->name, tkltype->txt, tkl->usermask, tkl->hostmask,
-			               gmt, tkl->reason);
-		}
-		ircd_log(LOG_TKL, "%s removed %s %s@%s (set at %s - reason: %s)",
-		         sptr->name, tkltype->txt, tkl->usermask, tkl->hostmask,
-		         gmt, tkl->reason);
-	}
+	if (!silent)
+		sendnotice_tkl_del(sptr->name, tkl);
 
 	RunHook5(HOOKTYPE_TKL_DEL, cptr, sptr, tkl, NULL, NULL);
 

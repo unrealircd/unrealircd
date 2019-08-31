@@ -1418,3 +1418,162 @@ time_t server_time_to_unix_time(const char *tbuf)
 	ret = my_timegm(&tm);
 	return ret;
 }
+
+/** Write a 64 bit integer.
+ * @param fd   File descriptor
+ * @param t    The value to write
+ * @example write_int64(fd, 1234);
+ * @returns 1 on success, 0 on failure.
+ */
+int write_int64(FILE *fd, uint64_t t)
+{
+	if (fwrite(&t, 1, sizeof(t), fd) < sizeof(t))
+		return 0;
+	return 1;
+}
+
+/** Write a 32 bit integer.
+ * @param fd   File descriptor
+ * @param t    The value to write
+ * @example write_int32(fd, 1234);
+ * @returns 1 on success, 0 on failure.
+ */
+int write_int32(FILE *fd, uint32_t t)
+{
+	if (fwrite(&t, 1, sizeof(t), fd) < sizeof(t))
+		return 0;
+	return 1;
+}
+
+/** Read a 64 bit integer.
+ * @param fd   File descriptor
+ * @param t    The value to write
+ * @example read_int64(fd, &var);
+ * @returns 1 on success, 0 on failure.
+ */
+int read_int64(FILE *fd, uint64_t *t)
+{
+	if (fread(t, 1, sizeof(uint64_t), fd) < sizeof(uint64_t))
+		return 0;
+	return 1;
+}
+
+/** Read a 64 bit integer.
+ * @param fd   File descriptor
+ * @param t    The value to write
+ * @example read_int64(fd, &var);
+ * @returns 1 on success, 0 on failure.
+ */
+int read_int32(FILE *fd, uint32_t *t)
+{
+	if (fread(t, 1, sizeof(uint32_t), fd) < sizeof(uint32_t))
+		return 0;
+	return 1;
+}
+
+/** Read binary data.
+ * @param fd   File descriptor
+ * @param buf  Pointer to buffer
+ * @param len  Size of buffer
+ * @example read_data(fd, buf, sizeof(buf));
+ * @notes This function is not used much, in most cases
+ *        you should use read_str(), read_int32() or
+ *        read_int64() instead.
+ * @returns 1 on success, 0 on failure.
+ */
+int read_data(FILE *fd, void *buf, size_t len)
+{
+	if (fread(buf, 1, len, fd) < len)
+		return 0;
+	return 1;
+}
+
+/** Write binary data.
+ * @param fd   File descriptor
+ * @param buf  Pointer to buffer
+ * @param len  Size of buffer
+ * @example write_data(fd, buf, sizeof(buf));
+ * @notes This function is not used much, in most cases
+ *        you should use write_str(), write_int32() or
+ *        write_int64() instead.
+ * @returns 1 on success, 0 on failure.
+ */
+int write_data(FILE *fd, const void *buf, size_t len)
+{
+	if (fwrite(buf, 1, len, fd) < len)
+		return 0;
+	return 1;
+}
+
+/** Write a string.
+ * @param fd   File descriptor
+ * @param x    Pointer to string
+ * @example write_str(fd, "hello there!");
+ * @notes This function can write a string up to 65534
+ *        characters, which should be plenty for usage
+ *        in UnrealIRCd.
+ *        Note that 'x' can safely be NULL.
+ * @returns 1 on success, 0 on failure.
+ */
+int write_str(FILE *fd, char *x)
+{
+	uint16_t len;
+
+	len = x ? strlen(x) : 0xffff;
+	if (!write_data(fd, &len, sizeof(len)))
+		return 0;
+	if ((len > 0) && (len < 0xffff))
+	{
+		if (!write_data(fd, x, len))
+			return 0;
+	}
+	return 1;
+}
+
+/** Read a string.
+ * @param fd   File descriptor
+ * @param x    Pointer to string pointer
+ * @example write_str(fd, &str);
+ * @notes This function will allocate memory for the data
+ *        and set the string pointer to this value.
+ *        If a NULL pointer was written via write_str()
+ *        then read_str() may also return a NULL pointer.
+ * @returns 1 on success, 0 on failure.
+ */
+int read_str(FILE *fd, char **x)
+{
+	uint16_t len;
+	size_t size;
+
+	*x = NULL;
+
+	if (!read_data(fd, &len, sizeof(len)))
+		return 0;
+
+	if (len == 0xffff)
+	{
+		/* Magic value meaning NULL */
+		*x = NULL;
+		return 1;
+	}
+
+	if (len == 0)
+	{
+		/* 0 means empty string */
+		*x = strdup("");
+		return 1;
+	}
+
+	if (len > 10000)
+		return 0;
+
+	size = len;
+	*x = MyMallocEx(size + 1);
+	if (!read_data(fd, *x, size))
+	{
+		safefree(*x);
+		return 0;
+	}
+	(*x)[len] = 0;
+	return 1;
+}

@@ -587,7 +587,7 @@ int stats_port(aClient *sptr, char *para)
 
 int stats_bannick(aClient *sptr, char *para)
 {
-	tkl_stats(sptr, TKL_NICK, para);
+	tkl_stats(sptr, TKL_NAME, para);
 	return 0;
 }
 
@@ -1000,7 +1000,7 @@ int stats_banrealname(aClient *sptr, char *para)
 
 int stats_sqline(aClient *sptr, char *para)
 {
-	tkl_stats(sptr, TKL_NICK|TKL_GLOBAL, para);
+	tkl_stats(sptr, TKL_NAME|TKL_GLOBAL, para);
 	return 0;
 }
 

@@ -51,12 +51,6 @@ EVENT(write_channeldb_evt);
 int write_channeldb(void);
 int write_channel_entry(FILE *fd, const char *tmpfname, aChannel *chptr);
 int read_channeldb(void);
-static inline int read_data(FILE *fd, void *buf, size_t len);
-static inline int write_data(FILE *fd, void *buf, size_t len);
-static inline int write_int64(FILE *fd, uint64_t t);
-static inline int write_int32(FILE *fd, uint32_t t);
-static int write_str(FILE *fd, char *x);
-static int read_str(FILE *fd, char **x);
 static void set_channel_mode(aChannel *chptr, char *modes, char *parameters);
 
 // Globals
@@ -478,74 +472,6 @@ int read_channeldb(void)
 }
 #undef FreeChannelEntry
 #undef R_SAFE
-
-static inline int read_data(FILE *fd, void *buf, size_t len)
-{
-	if (fread(buf, 1, len, fd) < len)
-		return 0;
-	return 1;
-}
-
-static inline int write_data(FILE *fd, void *buf, size_t len)
-{
-	if (fwrite(buf, 1, len, fd) < len)
-		return 0;
-	return 1;
-}
-
-static inline int write_int64(FILE *fd, uint64_t t)
-{
-	if (fwrite(&t, 1, sizeof(t), fd) < sizeof(t))
-		return 0;
-	return 1;
-}
-static inline int write_int32(FILE *fd, uint32_t t)
-{
-	if (fwrite(&t, 1, sizeof(t), fd) < sizeof(t))
-		return 0;
-	return 1;
-}
-
-static int write_str(FILE *fd, char *x)
-{
-	uint16_t len = (x ? strlen(x) : 0);
-	if (!write_data(fd, &len, sizeof(len)))
-		return 0;
-	if (len)
-	{
-		if (!write_data(fd, x, len))
-			return 0;
-	}
-	return 1;
-}
-
-static int read_str(FILE *fd, char **x)
-{
-	uint16_t len;
-	size_t size;
-
-	*x = NULL;
-
-	if (!read_data(fd, &len, sizeof(len)))
-		return 0;
-
-	if (!len)
-	{
-		*x = strdup("");
-		return 1;
-	}
-
-	size = len;
-	*x = MyMallocEx(size + 1);
-	if (!read_data(fd, *x, size))
-	{
-		MyFree(*x);
-		*x = NULL;
-		return 0;
-	}
-	(*x)[len] = 0;
-	return 1;
-}
 
 static void set_channel_mode(aChannel *chptr, char *modes, char *parameters)
 {

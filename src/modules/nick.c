@@ -743,13 +743,13 @@ CMD_FUNC(m_nick)
 		{
 			if (ishold)
 			{
-				sendnumeric(sptr, ERR_ERRONEUSNICKNAME, nick, tklban->reason);
+				sendnumeric(sptr, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
 				return 0;
 			}
 			if (!ValidatePermissionsForPath("immune:server-ban:ban-nick",sptr,NULL,NULL,nick))
 			{
 				sptr->local->since += 4; /* lag them up */
-				sendnumeric(sptr, ERR_ERRONEUSNICKNAME, nick, tklban->reason);
+				sendnumeric(sptr, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
 				sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
 				    nick, get_client_name(cptr, FALSE));
 				return 0;	/* NICK message ignored */

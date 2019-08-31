@@ -580,21 +580,6 @@ MOD_UNLOAD(antirandom)
 	return MOD_SUCCESS;
 }
 
-/* Sends a message to all (local) opers AND logs to the ircdlog (as LOG_ERROR) */
-static void multi_log(char *fmt, ...)
-{
-	va_list vl;
-	static char buf[2048];
-
-	va_start(vl, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, vl);
-	va_end(vl);
-	
-	sendto_realops("%s", buf);
-	ircd_log(LOG_ERROR, "%s", buf);
-}
-
-
 static void free_config(void)
 {
 	safefree(cfg.ban_reason);
@@ -845,21 +830,21 @@ static int internal_getscore(char *str)
 	{
 		score += 5 + (digits - 5);
 #ifdef DEBUGMODE
-		multi_log("score@'%s': MATCH for digits check", str);
+		sendto_ops_and_log("score@'%s': MATCH for digits check", str);
 #endif
 	}
 	if (vowels >= 4)
 	{
 		score += 4 + (vowels - 4);
 #ifdef DEBUGMODE
-		multi_log("score@'%s': MATCH for vowels check", str);
+		sendto_ops_and_log("score@'%s': MATCH for vowels check", str);
 #endif
 	}
 	if (consonants >= 4)
 	{
 		score += 4 + (consonants - 4);
 #ifdef DEBUGMODE
-		multi_log("score@'%s': MATCH for consonants check", str);
+		sendto_ops_and_log("score@'%s': MATCH for consonants check", str);
 #endif
 	}
 	
@@ -870,7 +855,7 @@ static int internal_getscore(char *str)
 			{
 				score++; /* OK */
 #ifdef DEBUGMODE
-				multi_log("score@'%s': MATCH for '%s[%s]' %c/%c/%c", str, t->two, t->rest,
+				sendto_ops_and_log("score@'%s': MATCH for '%s[%s]' %c/%c/%c", str, t->two, t->rest,
 					s[0], s[1], s[2]);
 #endif
 			}
@@ -934,7 +919,7 @@ static int get_spam_score(aClient *sptr)
 		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
 #endif
 #ifdef DEBUGMODE
-	multi_log("got score: %d/%d/%d = %d",
+	sendto_ops_and_log("got score: %d/%d/%d = %d",
 		nscore, uscore, gscore, score);
 #endif
 
@@ -979,12 +964,12 @@ int antirandom_preconnect(aClient *sptr)
 		{
 			if (cfg.ban_action == BAN_ACT_WARN)
 			{
-				multi_log("[antirandom] would have denied access to user with score %d: %s!%s@%s:%s",
+				sendto_ops_and_log("[antirandom] would have denied access to user with score %d: %s!%s@%s:%s",
 					score, sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
 				return 0;
 			}
 			if (cfg.show_failedconnects)
-				multi_log("[antirandom] denied access to user with score %d: %s!%s@%s:%s",
+				sendto_ops_and_log("[antirandom] denied access to user with score %d: %s!%s@%s:%s",
 					score, sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
 			return place_host_ban(sptr, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
 		}

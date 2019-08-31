@@ -448,16 +448,19 @@ int authprompt_place_host_ban(aClient *sptr, int action, char *reason, long dura
 }
 
 /** Called upon "check for KLINE/GLINE" */
-int authprompt_find_tkline_match(aClient *sptr, aTKline *tk)
+int authprompt_find_tkline_match(aClient *sptr, aTKline *tkl)
 {
 	/* If it's a soft-xx action and the user is not logged in
 	 * and the user is not yet online, then we will handle this user.
 	 */
-	if ((tk->subtype & TKL_SUBTYPE_SOFT) && !IsLoggedIn(sptr) && !IsPerson(sptr))
+	if (TKLIsServerBan(tkl) &&
+	   (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) &&
+	   !IsLoggedIn(sptr) &&
+	   !IsPerson(sptr))
 	{
 		/* Send ban reason */
-		if (tk->reason)
-			sendnotice(sptr, "%s", tk->reason);
+		if (tkl->ptr.serverban->reason)
+			sendnotice(sptr, "%s", tkl->ptr.serverban->reason);
 
 		/* And tag the user */
 		authprompt_tag_as_auth_required(sptr);

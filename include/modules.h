@@ -1170,7 +1170,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define EFUNC_REGISTER_USER					7
 #define EFUNC_TKL_HASH						8
 #define EFUNC_TKL_TYPETOCHAR				9
-#define EFUNC_TKL_ADD_LINE					10
+#define EFUNC_TKL_ADD_SERVERBAN					10
 #define EFUNC_TKL_DEL_LINE					11
 #define EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN	12
 #define EFUNC_TKL_EXPIRE					13
@@ -1227,6 +1227,14 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define EFUNC_BROADCAST_MD_GLOBALVAR_CMD	67
 #define EFUNC_TKL_IP_HASH		68
 #define EFUNC_TKL_IP_HASH_TYPE		69
+#define EFUNC_TKL_ADD_NAMEBAN		70
+#define EFUNC_TKL_ADD_SPAMFILTER	71
+#define EFUNC_SENDNOTICE_TKL_ADD	72
+#define EFUNC_SENDNOTICE_TKL_DEL	73
+#define EFUNC_FREE_TKL			74
+#define EFUNC_FIND_TKL_SERVERBAN	75
+#define EFUNC_FIND_TKL_NAMEBAN		76
+#define EFUNC_FIND_TKL_SPAMFILTER	77
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

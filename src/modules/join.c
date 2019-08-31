@@ -530,7 +530,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			if (ValidatePermissionsForPath("immune:server-ban:deny-channel",sptr,NULL,NULL,NULL) && (tklban = find_qline(sptr, name, &ishold)))
 			{
-				sendnumeric(sptr, ERR_FORBIDDENCHANNEL, name, tklban->reason);
+				sendnumeric(sptr, ERR_FORBIDDENCHANNEL, name, tklban->ptr.nameban->reason);
 				continue;
 			}
 			/* ugly set::spamfilter::virus-help-channel-deny hack.. */

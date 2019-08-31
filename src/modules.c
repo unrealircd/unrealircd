@@ -73,8 +73,14 @@ int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
 int (*tkl_chartotype)(char c);
 char *(*tkl_type_string)(aTKline *tk);
-aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
-    time_t expire_at, time_t set_at, time_t spamf_tkl_duration, char *spamf_tkl_reason, MatchType spamf_match_type, int soft, int flags);
+aTKline *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
+                              time_t expire_at, time_t set_at, int soft, int flags);
+aTKline *(*tkl_add_nameban)(int type, char *name, int hold, char *reason, char *setby,
+                            time_t expire_at, time_t set_at, int flags);
+aTKline *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, aMatch *match, char *setby,
+                               time_t expire_at, time_t set_at,
+                               time_t spamf_tkl_duration, char *spamf_tkl_reason,
+                               int flags);
 aTKline *(*tkl_del_line)(aTKline *tkl);
 void (*tkl_check_local_remove_shun)(aTKline *tmp);
 int (*find_tkline_match)(aClient *cptr, int skip_soft);
@@ -128,6 +134,12 @@ void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 void (*broadcast_md_globalvar_cmd)(aClient *except, aClient *sender, char *varname, char *value);
 int (*tkl_ip_hash)(char *ip);
 int (*tkl_ip_hash_type)(int type);
+void (*sendnotice_tkl_del)(char *removed_by, aTKline *tkl);
+void (*sendnotice_tkl_add)(aTKline *tkl);
+void (*free_tkl)(aTKline *tkl);
+aTKline *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int softban);
+aTKline *(*find_tkl_nameban)(int type, char *name, int hold);
+aTKline *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL, NULL},
@@ -140,7 +152,7 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 07 */	{"register_user", (void *)&register_user, NULL},
 /* 08 */	{"tkl_hash", (void *)&tkl_hash, NULL},
 /* 09 */	{"tkl_typetochar", (void *)&tkl_typetochar, NULL},
-/* 10 */	{"tkl_add_line", (void *)&tkl_add_line, NULL},
+/* 10 */	{"tkl_add_serverban", (void *)&tkl_add_serverban, NULL},
 /* 11 */	{"tkl_del_line", (void *)&tkl_del_line, NULL},
 /* 12 */	{"tkl_check_local_remove_shun", (void *)&tkl_check_local_remove_shun, NULL},
 /* 13 */	{NULL, NULL, NULL},
@@ -200,7 +212,15 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 67 */	{"broadcast_md_globalvar_cmd", (void *)&broadcast_md_globalvar_cmd, NULL},
 /* 68 */	{"tkl_ip_hash", (void *)&tkl_ip_hash, NULL},
 /* 69 */	{"tkl_ip_hash_type", (void *)&tkl_ip_hash_type, NULL},
-/* 70 */	{NULL, NULL, NULL},
+/* 70 */	{"tkl_add_nameban", (void *)&tkl_add_nameban, NULL},
+/* 71 */	{"tkl_add_spamfilter", (void *)&tkl_add_spamfilter, NULL},
+/* 72 */	{"sendnotice_tkl_add", (void *)&sendnotice_tkl_add, NULL},
+/* 73 */	{"sendnotice_tkl_del", (void *)&sendnotice_tkl_del, NULL},
+/* 74 */	{"free_tkl", (void *)&free_tkl, NULL},
+/* 75 */	{"find_tkl_serverban", (void *)&find_tkl_serverban, NULL},
+/* 76 */	{"find_tkl_nameban", (void *)&find_tkl_nameban, NULL},
+/* 77 */	{"find_tkl_spamfilter", (void *)&find_tkl_spamfilter, NULL},
+/* 78 */	{NULL, NULL, NULL},
 };
 
 #ifdef UNDERSCORE

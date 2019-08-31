@@ -645,8 +645,20 @@ extern MODVAR int (*tkl_hash)(unsigned int c);
 extern MODVAR char (*tkl_typetochar)(int type);
 extern MODVAR int (*tkl_chartotype)(char c);
 extern MODVAR char *(*tkl_type_string)(aTKline *tk);
-extern MODVAR aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
-                  time_t expire_at, time_t set_at, time_t spamf_tkl_duration, char *spamf_tkl_reason, MatchType spamf_match_type, int soft, int flags);
+extern MODVAR aTKline *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
+                                            time_t expire_at, time_t set_at, int soft, int flags);
+extern MODVAR aTKline *(*tkl_add_nameban)(int type, char *name, int hold, char *reason, char *setby,
+                                          time_t expire_at, time_t set_at, int flags);
+extern MODVAR aTKline *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, aMatch *match, char *setby,
+                                             time_t expire_at, time_t set_at,
+                                             time_t spamf_tkl_duration, char *spamf_tkl_reason,
+                                             int flags);
+extern MODVAR aTKline *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int softban);
+extern MODVAR aTKline *(*find_tkl_nameban)(int type, char *name, int hold);
+extern MODVAR aTKline *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
+extern MODVAR void (*sendnotice_tkl_del)(char *removed_by, aTKline *tkl);
+extern MODVAR void (*sendnotice_tkl_add)(aTKline *tkl);
+extern MODVAR void (*free_tkl)(aTKline *tkl);
 extern MODVAR aTKline *(*tkl_del_line)(aTKline *tkl);
 extern MODVAR void (*tkl_check_local_remove_shun)(aTKline *tmp);
 extern MODVAR int (*find_tkline_match)(aClient *cptr, int skip_soft);
@@ -861,3 +873,11 @@ extern int history_request(aClient *acptr, char *object, HistoryFilter *filter);
 extern int history_del(char *object, int max_lines, long max_time);
 extern int history_destroy(char *object);
 extern void special_delayed_unloading(void);
+extern int write_int64(FILE *fd, uint64_t t);
+extern int write_int32(FILE *fd, uint32_t t);
+extern int read_int64(FILE *fd, uint64_t *t);
+extern int read_int32(FILE *fd, uint32_t *t);
+extern int read_data(FILE *fd, void *buf, size_t len);
+extern int write_data(FILE *fd, const void *buf, size_t len);
+extern int write_str(FILE *fd, char *x);
+extern int read_str(FILE *fd, char **x);

@@ -73,7 +73,7 @@ int _check_banned(aClient *cptr, int exitflags)
 
 	if ((tk = find_tkline_match_zap(cptr)))
 	{
-		return banned_client(cptr, "Z-Lined", tk->reason, (tk->type & TKL_GLOBAL)?1:0, exitflags);
+		return banned_client(cptr, "Z-Lined", tk->ptr.serverban->reason, (tk->type & TKL_GLOBAL)?1:0, exitflags);
 	}
 	else
 	{

@@ -174,9 +174,9 @@ static NameValue _LogFlags[] = {
 static NameValue ExceptTklFlags[] = {
 	{ 0, "all" },
 	{ TKL_GLOBAL|TKL_KILL,	"gline" },
-	{ TKL_GLOBAL|TKL_NICK,	"gqline" },
+	{ TKL_GLOBAL|TKL_NAME,	"gqline" },
 	{ TKL_GLOBAL|TKL_ZAP,	"gzline" },
-	{ TKL_NICK,		"qline" },
+	{ TKL_NAME,		"qline" },
 	{ TKL_GLOBAL|TKL_SHUN,	"shun" }
 };
 
@@ -1644,14 +1644,14 @@ void postconf_defaults(void)
 	//        which is more meaningful.
 	for (tk = tklines[tkl_hash('q')]; tk; tk = tk->next)
 	{
-		if (tk->type != TKL_NICK)
+		if (tk->type != TKL_NAME)
 			continue;
-		if (!tk->setby)
+		if (!tk->set_by)
 		{
 			if (me.name[0] != '\0')
-				tk->setby = strdup(me.name);
+				tk->set_by = strdup(me.name);
 			else
-				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
+				tk->set_by = strdup(conf_me->name ? conf_me->name : "~server~");
 		}
 	}
 
@@ -1659,19 +1659,19 @@ void postconf_defaults(void)
 	{
 		if (tk->type != TKL_SPAMF)
 			continue; /* global entry or something else.. */
-		if (!strcmp(tk->ptr.spamf->tkl_reason, "<internally added by ircd>"))
+		if (!strcmp(tk->ptr.spamfilter->tkl_reason, "<internally added by ircd>"))
 		{
-			MyFree(tk->ptr.spamf->tkl_reason);
-			tk->ptr.spamf->tkl_reason = strdup(encoded);
-			tk->ptr.spamf->tkl_duration = SPAMFILTER_BAN_TIME;
+			MyFree(tk->ptr.spamfilter->tkl_reason);
+			tk->ptr.spamfilter->tkl_reason = strdup(encoded);
+			tk->ptr.spamfilter->tkl_duration = SPAMFILTER_BAN_TIME;
 		}
 		/* This one is even more ugly, but our config crap is VERY confusing :[ */
-		if (!tk->setby)
+		if (!tk->set_by)
 		{
 			if (me.name[0] != '\0')
-				tk->setby = strdup(me.name);
+				tk->set_by = strdup(me.name);
 			else
-				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
+				tk->set_by = strdup(conf_me->name ? conf_me->name : "~server~");
 		}
 	}
 
@@ -6882,7 +6882,7 @@ int _conf_require(ConfigFile *conf, ConfigEntry *ce)
 	if (!reason)
 		reason = strdup("-");
 
-	tkl_add_line(TKL_KILL, usermask, hostmask, reason, "-config-", 0, TStime(), 0, NULL, 0, 1, TKL_FLAG_CONFIG);
+	tkl_add_serverban(TKL_KILL, usermask, hostmask, reason, "-config-", 0, TStime(), 1, TKL_FLAG_CONFIG);
 	safefree(usermask);
 	safefree(hostmask);
 	safefree(reason);
