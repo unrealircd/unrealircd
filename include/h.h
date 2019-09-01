@@ -648,6 +648,8 @@ extern MODVAR int (*tkl_chartotype)(char c);
 extern MODVAR char *(*tkl_type_string)(aTKline *tk);
 extern MODVAR aTKline *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
                                             time_t expire_at, time_t set_at, int soft, int flags);
+extern MODVAR aTKline *(*tkl_add_banexception)(int type, char *usermask, char *hostmask, char *reason, char *set_by,
+                                               time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
 extern MODVAR aTKline *(*tkl_add_nameban)(int type, char *name, int hold, char *reason, char *setby,
                                           time_t expire_at, time_t set_at, int flags);
 extern MODVAR aTKline *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, aMatch *match, char *setby,
@@ -655,6 +657,7 @@ extern MODVAR aTKline *(*tkl_add_spamfilter)(int type, unsigned short target, un
                                              time_t spamf_tkl_duration, char *spamf_tkl_reason,
                                              int flags);
 extern MODVAR aTKline *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int softban);
+extern MODVAR aTKline *(*find_tkl_banexception)(int type, char *usermask, char *hostmask, int softban);
 extern MODVAR aTKline *(*find_tkl_nameban)(int type, char *name, int hold);
 extern MODVAR aTKline *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
 extern MODVAR void (*sendnotice_tkl_del)(char *removed_by, aTKline *tkl);

@@ -68,6 +68,7 @@ typedef struct ConfItem aConfItem;
 typedef struct t_kline aTKline;
 typedef struct _spamfilter Spamfilter;
 typedef struct _serverban ServerBan;
+typedef struct _banexception BanException;
 typedef struct _nameban NameBan;
 typedef struct _spamexcept SpamExcept;
 typedef struct _conditionalconfig ConditionalConfig;
@@ -703,7 +704,7 @@ struct Server {
 
 
 /* tkl:
- *   TKL_KILL|TKL_GLOBAL 	= Global K-Line (GLINELine)
+ *   TKL_KILL|TKL_GLOBAL 	= Global K-Line (GLINE)
  *   TKL_ZAP|TKL_GLOBAL		= Global Z-Line (ZLINE)
  *   TKL_KILL			= Local K-Line
  *   TKL_ZAP			= Local Z-Line
@@ -714,7 +715,7 @@ struct Server {
 #define TKL_SHUN	0x0008
 #define TKL_SPAMF	0x0020
 #define TKL_NAME	0x0040
-#define TKL_EXCEPT	0x0080
+#define TKL_EXCEPTION	0x0080
 
 #define TKLIsServerBan(tkl)		((tkl)->type & (TKL_KILL|TKL_ZAP|TKL_SHUN))
 #define TKLIsServerBanType(tpe)		((tpe) & (TKL_KILL|TKL_ZAP|TKL_SHUN))
@@ -722,6 +723,8 @@ struct Server {
 #define TKLIsSpamfilterType(tpe)	((tpe) & TKL_SPAMF)
 #define TKLIsNameBan(tkl)		((tkl)->type & TKL_NAME)
 #define TKLIsNameBanType(tpe)		((tpe) & TKL_NAME)
+#define TKLIsBanException(tkl)		((tkl)->type & TKL_EXCEPTION)
+#define TKLIsBanExceptionType(tpe)	((tpe) & TKL_EXCEPTION)
 
 #define SPAMF_CHANMSG		0x0001 /* c */
 #define SPAMF_USERMSG		0x0002 /* p */
@@ -737,15 +740,6 @@ struct Server {
 /* Other flags only for function calls: */
 #define SPAMFLAG_NOWARN		0x0001
 
-/** Spamfilter sub-struct of TKL entry (Spamfilter) */
-struct _spamfilter {
-	unsigned short target;
-	unsigned short action; /**< Ban action, see BAN_ACT* */
-	aMatch *match; /**< Spamfilter matcher */
-	char *tkl_reason; /**< Reason to use for bans placed by this spamfilter, escaped by unreal_encodespace(). */
-	time_t tkl_duration; /**< Duration of bans placed by this spamfilter */
-};
-
 /** Server ban sub-struct of TKL entry (KLINE/GLINE/ZLINE/GZLINE/SHUN) */
 struct _serverban {
 	char *usermask; /**< User mask */
@@ -760,6 +754,25 @@ struct _nameban {
 	char *name; /**< the nick or channel that is banned */
 	char *reason; /**< Reason */
 };
+
+/** Spamfilter sub-struct of TKL entry (Spamfilter) */
+struct _spamfilter {
+	unsigned short target;
+	unsigned short action; /**< Ban action, see BAN_ACT* */
+	aMatch *match; /**< Spamfilter matcher */
+	char *tkl_reason; /**< Reason to use for bans placed by this spamfilter, escaped by unreal_encodespace(). */
+	time_t tkl_duration; /**< Duration of bans placed by this spamfilter */
+};
+
+/** Ban exception sub-struct of TKL entry (ELINE) */
+struct _banexception {
+	char *usermask; /**< User mask */
+	char *hostmask; /**< Host mask */
+	unsigned short subtype; /**< See TKL_SUBTYPE_* */
+	char *bantypes; /**< Exception types */
+	char *reason; /**< Reason */
+};
+
 
 #define TKL_SUBTYPE_NONE	0x0000
 #define TKL_SUBTYPE_SOFT	0x0001 /* (require SASL) */
@@ -778,6 +791,7 @@ struct t_kline {
 		Spamfilter *spamfilter;
 		ServerBan *serverban;
 		NameBan *nameban;
+		BanException *banexception;
 	} ptr;
 };
 

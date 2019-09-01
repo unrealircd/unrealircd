@@ -54,6 +54,8 @@ aTKline *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short a
                                time_t expire_at, time_t set_at,
                                time_t spamf_tkl_duration, char *spamf_tkl_reason,
                                int flags);
+aTKline *(*tkl_add_banexception)(int type, char *usermask, char *hostmask, char *reason, char *set_by,
+                                time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
 aTKline *(*tkl_del_line)(aTKline *tkl);
 void (*tkl_check_local_remove_shun)(aTKline *tmp);
 int (*find_tkline_match)(aClient *cptr, int skip_soft);
@@ -111,6 +113,7 @@ void (*sendnotice_tkl_del)(char *removed_by, aTKline *tkl);
 void (*sendnotice_tkl_add)(aTKline *tkl);
 void (*free_tkl)(aTKline *tkl);
 aTKline *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int softban);
+aTKline *(*find_tkl_banexception)(int type, char *usermask, char *hostmask, int softban);
 aTKline *(*find_tkl_nameban)(int type, char *name, int hold);
 aTKline *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
 
@@ -246,6 +249,11 @@ void efunctions_switchover(void)
 		{
 			if (e->willberemoved)
 				continue;
+			if (!efunction_table[i].funcptr)
+			{
+				ircd_log(LOG_ERROR, "[BUG] efunctions_switchover(): someone forgot to initialize the function table for efunc %d", i);
+				abort();
+			}
 			*efunction_table[i].funcptr = e->func.voidfunc;  /* This is the new one. */
 			if (!(e->owner->options & MOD_OPT_PERM))
 				e->willberemoved = 1;
@@ -281,6 +289,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_TKL_HASH, tkl_hash, NULL);
 	efunc_init_function(EFUNC_TKL_TYPETOCHAR, tkl_typetochar, NULL);
 	efunc_init_function(EFUNC_TKL_ADD_SERVERBAN, tkl_add_serverban, NULL);
+	efunc_init_function(EFUNC_TKL_ADD_BANEXCEPTION, tkl_add_banexception, NULL);
 	efunc_init_function(EFUNC_TKL_DEL_LINE, tkl_del_line, NULL);
 	efunc_init_function(EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN, tkl_check_local_remove_shun, NULL);
 	efunc_init_function(EFUNC_FIND_TKLINE_MATCH, find_tkline_match, NULL);
@@ -340,6 +349,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_SENDNOTICE_TKL_DEL, sendnotice_tkl_del, NULL);
 	efunc_init_function(EFUNC_FREE_TKL, free_tkl, NULL);
 	efunc_init_function(EFUNC_FIND_TKL_SERVERBAN, find_tkl_serverban, NULL);
+	efunc_init_function(EFUNC_FIND_TKL_BANEXCEPTION, find_tkl_banexception, NULL);
 	efunc_init_function(EFUNC_FIND_TKL_NAMEBAN, find_tkl_nameban, NULL);
 	efunc_init_function(EFUNC_FIND_TKL_SPAMFILTER, find_tkl_spamfilter, NULL);
 }
