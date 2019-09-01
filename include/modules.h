@@ -65,6 +65,7 @@ typedef struct _irchook Hook;
 typedef struct _hooktype Hooktype;
 typedef struct _irccallback Callback;
 typedef struct _ircefunction Efunction;
+typedef enum EfunctionType EfunctionType;
 
 /*
  * Module header that every module must include, with the name of
@@ -638,7 +639,6 @@ struct _eventinfo {
 extern MODVAR Hook		*Hooks[MAXHOOKTYPES];
 extern MODVAR Hooktype		Hooktypes[MAXCUSTOMHOOKS];
 extern MODVAR Callback *Callbacks[MAXCALLBACKS], *RCallbacks[MAXCALLBACKS];
-extern MODVAR Efunction *Efunctions[MAXEFUNCTIONS];
 extern MODVAR ClientCapability *clicaps;
 
 extern Event   *EventAdd(Module *, char *name, long every, long howmany, vFP event, void *data);
@@ -792,8 +792,8 @@ extern Callback	*CallbackDel(Callback *cb);
 #define EfunctionAddPVoid(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, func, NULL)
 #define EfunctionAddPChar(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, NULL, func)
 
-extern Efunction	*EfunctionAddMain(Module *module, int eftype, int (*intfunc)(), void (*voidfunc)(), void *(*pvoidfunc)(), char *(*pcharfunc)());
-extern Efunction	*EfunctionDel(Efunction *cb);
+extern Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*intfunc)(), void (*voidfunc)(), void *(*pvoidfunc)(), char *(*pcharfunc)());
+extern Efunction *EfunctionDel(Efunction *cb);
 
 extern Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned char params, int flags);
 extern Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned char params, int flags);
@@ -1160,81 +1160,90 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define CALLBACKTYPE_BLACKLIST_CHECK 4
 #define CALLBACKTYPE_REPUTATION_STARTTIME 5
 
-/* Efunction types */
-#define EFUNC_DO_JOIN       				1
-#define EFUNC_JOIN_CHANNEL  				2
-#define EFUNC_CAN_JOIN      				3
-#define EFUNC_DO_MODE       				4
-#define EFUNC_SET_MODE      				5
-#define EFUNC_M_UMODE						6
-#define EFUNC_REGISTER_USER					7
-#define EFUNC_TKL_HASH						8
-#define EFUNC_TKL_TYPETOCHAR				9
-#define EFUNC_TKL_ADD_SERVERBAN					10
-#define EFUNC_TKL_DEL_LINE					11
-#define EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN	12
-#define EFUNC_TKL_EXPIRE					13
-#define EFUNC_TKL_CHECK_EXPIRE				14
-#define EFUNC_FIND_TKLINE_MATCH				15
-#define EFUNC_FIND_SHUN						16
-#define EFUNC_FIND_SPAMFILTER_USER			17
-#define EFUNC_FIND_QLINE					18
-#define EFUNC_FIND_TKLINE_MATCH_ZAP			19
-#define EFUNC_TKL_STATS						20
-#define EFUNC_TKL_SYNCH						21
-#define EFUNC_M_TKL							22
-#define EFUNC_PLACE_HOST_BAN				23
-#define EFUNC_DOSPAMFILTER					24
-#define EFUNC_DOSPAMFILTER_VIRUSCHAN		25
-#define EFUNC_FIND_TKLINE_MATCH_ZAP_EX		26
-#define EFUNC_SEND_LIST						27
-#define EFUNC_STRIPCOLORS					31
-#define EFUNC_STRIPCONTROLCODES				32
-#define EFUNC_SPAMFILTER_BUILD_USER_STRING	33
-#define EFUNC_IS_SILENCED					34
-#define EFUNC_SEND_PROTOCTL_SERVERS	35
-#define EFUNC_VERIFY_LINK		36
-#define EFUNC_SEND_SERVER_MESSAGE	37
-#define EFUNC_BROADCAST_MD_CLIENT            38
-#define EFUNC_BROADCAST_MD_CHANNEL           39
-#define EFUNC_BROADCAST_MD_MEMBER            40
-#define EFUNC_BROADCAST_MD_MEMBERSHIP        41
-#define EFUNC_CHECK_BANNED              42
-#define EFUNC_INTRODUCE_USER            43
-#define EFUNC_CHECK_DENY_VERSION        44
-#define EFUNC_BROADCAST_MD_CLIENT_CMD	45
-#define EFUNC_BROADCAST_MD_CHANNEL_CMD	46
-#define EFUNC_BROADCAST_MD_MEMBER_CMD	47
-#define EFUNC_BROADCAST_MD_MEMBERSHIP_CMD	48
-#define EFUNC_SEND_MODDATA_CLIENT	49
-#define EFUNC_SEND_MODDATA_CHANNEL	50
-#define EFUNC_SEND_MODDATA_MEMBERS	51
-#define EFUNC_BROADCAST_MODDATA_CLIENT	52
-#define EFUNC_MATCH_USER			53
-#define EFUNC_USERHOST_SAVE_CURRENT	54
-#define EFUNC_USERHOST_CHANGED		55
-#define EFUNC_SEND_JOIN_TO_LOCAL_USERS		56
-#define EFUNC_DO_NICK_NAME			57
-#define EFUNC_DO_REMOTE_NICK_NAME	58
-#define EFUNC_CHARSYS_GET_CURRENT_LANGUAGES	59
-#define EFUNC_BROADCAST_SINFO		60
-#define EFUNC_PARSE_MESSAGE_TAGS	61
-#define EFUNC_MTAGS_TO_STRING		62
-#define EFUNC_TKL_CHARTOTYPE		63
-#define EFUNC_TKL_TYPE_STRING		64
-#define EFUNC_CAN_SEND			65
-#define EFUNC_BROADCAST_MD_GLOBALVAR	66
-#define EFUNC_BROADCAST_MD_GLOBALVAR_CMD	67
-#define EFUNC_TKL_IP_HASH		68
-#define EFUNC_TKL_IP_HASH_TYPE		69
-#define EFUNC_TKL_ADD_NAMEBAN		70
-#define EFUNC_TKL_ADD_SPAMFILTER	71
-#define EFUNC_SENDNOTICE_TKL_ADD	72
-#define EFUNC_SENDNOTICE_TKL_DEL	73
-#define EFUNC_FREE_TKL			74
-#define EFUNC_FIND_TKL_SERVERBAN	75
-#define EFUNC_FIND_TKL_NAMEBAN		76
-#define EFUNC_FIND_TKL_SPAMFILTER	77
+/* To add a new efunction, only if you are an UnrealIRCd coder:
+ * 1) Add a new entry here at the end
+ * 2) Add the function in src/api-efunctions.c
+ * 3) Add the initalization in src/api-efunctions.c
+ * 4) Add the extern entry in include/h.h in the
+ *    section marked "Efuncs"
+ */
+/** Efunction types. */
+enum EfunctionType {
+	EFUNC_DO_JOIN=1,
+	EFUNC_JOIN_CHANNEL,
+	EFUNC_CAN_JOIN,
+	EFUNC_DO_MODE,
+	EFUNC_SET_MODE,
+	EFUNC_M_UMODE,
+	EFUNC_REGISTER_USER,
+	EFUNC_TKL_HASH,
+	EFUNC_TKL_TYPETOCHAR,
+	EFUNC_TKL_ADD_SERVERBAN,
+	EFUNC_TKL_DEL_LINE,
+	EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN,
+	EFUNC_TKL_EXPIRE,
+	EFUNC_TKL_CHECK_EXPIRE,
+	EFUNC_FIND_TKLINE_MATCH,
+	EFUNC_FIND_SHUN,
+	EFUNC_FIND_SPAMFILTER_USER,
+	EFUNC_FIND_QLINE,
+	EFUNC_FIND_TKLINE_MATCH_ZAP,
+	EFUNC_TKL_STATS,
+	EFUNC_TKL_SYNCH,
+	EFUNC_M_TKL,
+	EFUNC_PLACE_HOST_BAN,
+	EFUNC_DOSPAMFILTER,
+	EFUNC_DOSPAMFILTER_VIRUSCHAN,
+	EFUNC_FIND_TKLINE_MATCH_ZAP_EX,
+	EFUNC_SEND_LIST,
+	EFUNC_STRIPCOLORS,
+	EFUNC_STRIPCONTROLCODES,
+	EFUNC_SPAMFILTER_BUILD_USER_STRING,
+	EFUNC_IS_SILENCED,
+	EFUNC_SEND_PROTOCTL_SERVERS,
+	EFUNC_VERIFY_LINK,
+	EFUNC_SEND_SERVER_MESSAGE,
+	EFUNC_BROADCAST_MD_CLIENT,
+	EFUNC_BROADCAST_MD_CHANNEL,
+	EFUNC_BROADCAST_MD_MEMBER,
+	EFUNC_BROADCAST_MD_MEMBERSHIP,
+	EFUNC_CHECK_BANNED,
+	EFUNC_INTRODUCE_USER,
+	EFUNC_CHECK_DENY_VERSION,
+	EFUNC_BROADCAST_MD_CLIENT_CMD,
+	EFUNC_BROADCAST_MD_CHANNEL_CMD,
+	EFUNC_BROADCAST_MD_MEMBER_CMD,
+	EFUNC_BROADCAST_MD_MEMBERSHIP_CMD,
+	EFUNC_SEND_MODDATA_CLIENT,
+	EFUNC_SEND_MODDATA_CHANNEL,
+	EFUNC_SEND_MODDATA_MEMBERS,
+	EFUNC_BROADCAST_MODDATA_CLIENT,
+	EFUNC_MATCH_USER,
+	EFUNC_USERHOST_SAVE_CURRENT,
+	EFUNC_USERHOST_CHANGED,
+	EFUNC_SEND_JOIN_TO_LOCAL_USERS,
+	EFUNC_DO_NICK_NAME,
+	EFUNC_DO_REMOTE_NICK_NAME,
+	EFUNC_CHARSYS_GET_CURRENT_LANGUAGES,
+	EFUNC_BROADCAST_SINFO,
+	EFUNC_PARSE_MESSAGE_TAGS,
+	EFUNC_MTAGS_TO_STRING,
+	EFUNC_TKL_CHARTOTYPE,
+	EFUNC_TKL_TYPE_STRING,
+	EFUNC_CAN_SEND,
+	EFUNC_BROADCAST_MD_GLOBALVAR,
+	EFUNC_BROADCAST_MD_GLOBALVAR_CMD,
+	EFUNC_TKL_IP_HASH,
+	EFUNC_TKL_IP_HASH_TYPE,
+	EFUNC_TKL_ADD_NAMEBAN,
+	EFUNC_TKL_ADD_SPAMFILTER,
+	EFUNC_SENDNOTICE_TKL_ADD,
+	EFUNC_SENDNOTICE_TKL_DEL,
+	EFUNC_FREE_TKL,
+	EFUNC_FIND_TKL_SERVERBAN,
+	EFUNC_FIND_TKL_NAMEBAN,
+	EFUNC_FIND_TKL_SPAMFILTER,
+};
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

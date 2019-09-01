@@ -22,14 +22,16 @@
 CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
 
 OBJS=dns.o bsd.o auth.o channel.o cloak.o crule.o dbuf.o \
-	api-event.o fdlist.o hash.o ircd.o ircsprintf.o list.o \
+	fdlist.o hash.o ircd.o ircsprintf.o list.o \
 	match.o modules.o packet.o parse.o mempool.o operclass.o \
 	conf_preprocessor.o conf.o debug.o dispatch.o err.o extra.o kline.o \
 	misc.o numeric.o serv.o aliases.o $(STRTOUL) socket.o \
-	tls.o user.o scache.o send.o support.o api-usermode.o \
-	version.o whowas.o random.o api-channelmode.o api-moddata.o uid.o \
-	api-extban.o api-isupport.o api-command.o api-clicap.o api-messagetag.o \
-	api-history-backend.o md5.o crypt_blowfish.o updconf.o crashreport.o \
+	tls.o user.o scache.o send.o support.o \
+	version.o whowas.o random.o api-usermode.o api-channelmode.o \
+	api-moddata.o uid.o api-extban.o api-isupport.o api-command.o \
+	api-clicap.o api-messagetag.o api-history-backend.o api-efunctions.o \
+	api-event.o \
+	md5.o crypt_blowfish.o updconf.o crashreport.o \
 	openssl_hostname_validation.o $(URL)
 
 SRC=$(OBJS:%.o=%.c)
@@ -113,9 +115,6 @@ mempool.o: mempool.c $(INCLUDES)
 support.o: support.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c support.c
 
-api-usermode.o: api-usermode.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-usermode.c
-
 userload.o: userload.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c userload.c
 
@@ -124,9 +123,6 @@ uid.o: uid.c $(INCLUDES)
 
 aliases.o: aliases.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c aliases.c
-
-api-event.o: api-event.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-event.c
 
 clean:
 	$(RM) -f *.o *.so *~ core ircd version.c; \
@@ -206,20 +202,26 @@ crule.o: crule.c $(INCLUDES)
 random.o: random.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c random.c
 
-api-channelmode.o: api-channelmode.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-channelmode.c
-
 operclass.o: operclass.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c operclass.c
+
+md5.o: md5.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c md5.c
+
+api-usermode.o: api-usermode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-usermode.c
+
+api-event.o: api-event.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-event.c
+
+api-channelmode.o: api-channelmode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-channelmode.c
 
 api-moddata.o: api-moddata.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-moddata.c
 
 api-extban.o: api-extban.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-extban.c
-
-md5.o: md5.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c md5.c
 
 api-command.o: api-command.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-command.c
@@ -235,6 +237,9 @@ api-messagetag.o: api-messagetag.c $(INCLUDES)
 
 api-history-backend.o: api-history-backend.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-history-backend.c
+
+api-efunctions.o: api-efunctions.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c api-efunctions.c
 
 crypt_blowfish.o: crypt_blowfish.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c crypt_blowfish.c

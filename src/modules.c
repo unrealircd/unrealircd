@@ -42,7 +42,6 @@ Hook	   	*Hooks[MAXHOOKTYPES];
 Hooktype	Hooktypes[MAXCUSTOMHOOKS];
 Callback	*Callbacks[MAXCALLBACKS];	/* Callback objects for modules, used for rehashing etc (can be multiple) */
 Callback	*RCallbacks[MAXCALLBACKS];	/* 'Real' callback function, used for callback function calls */
-Efunction	*Efunctions[MAXEFUNCTIONS];	/* Efunction objects (used for rehashing) */
 MODVAR Module          *Modules = NULL;
 MODVAR Versionflag     *Versionflags = NULL;
 
@@ -53,175 +52,6 @@ Module *Module_make(ModuleHeader *header,
        void *mod
 #endif
        );
-
-typedef struct {
-	char *name;
-	void **funcptr;
-	void *deffunc;
-} EfunctionsList;
-
-/* Efuncs */
-int (*do_join)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int flags);
-int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
-void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
-    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-int (*m_umode)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
-int (*register_user)(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
-int (*tkl_hash)(unsigned int c);
-char (*tkl_typetochar)(int type);
-int (*tkl_chartotype)(char c);
-char *(*tkl_type_string)(aTKline *tk);
-aTKline *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
-                              time_t expire_at, time_t set_at, int soft, int flags);
-aTKline *(*tkl_add_nameban)(int type, char *name, int hold, char *reason, char *setby,
-                            time_t expire_at, time_t set_at, int flags);
-aTKline *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, aMatch *match, char *setby,
-                               time_t expire_at, time_t set_at,
-                               time_t spamf_tkl_duration, char *spamf_tkl_reason,
-                               int flags);
-aTKline *(*tkl_del_line)(aTKline *tkl);
-void (*tkl_check_local_remove_shun)(aTKline *tmp);
-int (*find_tkline_match)(aClient *cptr, int skip_soft);
-int (*find_shun)(aClient *cptr);
-int(*find_spamfilter_user)(aClient *sptr, int flags);
-aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
-aTKline *(*find_tkline_match_zap)(aClient *cptr);
-void (*tkl_stats)(aClient *cptr, int type, char *para);
-void (*tkl_synch)(aClient *sptr);
-int (*m_tkl)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
-int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
-int (*run_spamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
-int (*join_viruschan)(aClient *sptr, aTKline *tk, int type);
-void (*send_list)(aClient *cptr);
-unsigned char *(*StripColors)(unsigned char *text);
-const char *(*StripControlCodes)(unsigned char *text);
-void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
-int (*is_silenced)(aClient *sptr, aClient *acptr);
-void (*send_protoctl_servers)(aClient *sptr, int response);
-int (*verify_link)(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
-void (*introduce_user)(aClient *to, aClient *acptr);
-void (*send_server_message)(aClient *sptr);
-void (*broadcast_md_client)(ModDataInfo *mdi, aClient *acptr, ModData *md);
-void (*broadcast_md_channel)(ModDataInfo *mdi, aChannel *chptr, ModData *md);
-void (*broadcast_md_member)(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md);
-void (*broadcast_md_membership)(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md);
-int (*check_banned)(aClient *cptr, int exitflags);
-int (*check_deny_version)(aClient *cptr, char *software, int protocol, char *flags);
-void (*broadcast_md_client_cmd)(aClient *except, aClient *sender, aClient *acptr, char *varname, char *value);
-void (*broadcast_md_channel_cmd)(aClient *except, aClient *sender, aChannel *chptr, char *varname, char *value);
-void (*broadcast_md_member_cmd)(aClient *except, aClient *sender, aChannel *chptr, aClient *acptr, char *varname, char *value);
-void (*broadcast_md_membership_cmd)(aClient *except, aClient *sender, aClient *acptr, aChannel *chptr, char *varname, char *value);
-void (*send_moddata_client)(aClient *srv, aClient *acptr);
-void (*send_moddata_channel)(aClient *srv, aChannel *chptr);
-void (*send_moddata_members)(aClient *srv);
-void (*broadcast_moddata_client)(aClient *acptr);
-int (*match_user)(char *rmask, aClient *acptr, int options);
-void (*userhost_changed)(aClient *sptr);
-void (*userhost_save_current)(aClient *sptr);
-void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr, MessageTag *mtags);
-int (*do_nick_name)(char *nick);
-int (*do_remote_nick_name)(char *nick);
-char *(*charsys_get_current_languages)(void);
-void (*broadcast_sinfo)(aClient *acptr, aClient *to, aClient *except);
-void (*parse_message_tags)(aClient *cptr, char **str, MessageTag **mtag_list);
-extern void parse_message_tags_default_handler(aClient *cptr, char **str, MessageTag **mtag_list);
-char *(*mtags_to_string)(MessageTag *m, aClient *acptr);
-extern char *mtags_to_string_default_handler(MessageTag *m, aClient *acptr);
-int (*can_send)(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice);
-void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
-void (*broadcast_md_globalvar_cmd)(aClient *except, aClient *sender, char *varname, char *value);
-int (*tkl_ip_hash)(char *ip);
-int (*tkl_ip_hash_type)(int type);
-void (*sendnotice_tkl_del)(char *removed_by, aTKline *tkl);
-void (*sendnotice_tkl_add)(aTKline *tkl);
-void (*free_tkl)(aTKline *tkl);
-aTKline *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int softban);
-aTKline *(*find_tkl_nameban)(int type, char *name, int hold);
-aTKline *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
-
-static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
-/* 00 */	{NULL, NULL, NULL},
-/* 01 */	{"do_join", (void *)&do_join, NULL},
-/* 02 */	{"join_channel", (void *)&join_channel, NULL},
-/* 03 */	{"can_join", (void *)&can_join, NULL},
-/* 04 */	{"do_mode", (void *)&do_mode, NULL},
-/* 05 */	{"set_mode", (void *)&set_mode, NULL},
-/* 06 */	{"m_umode", (void *)&m_umode, NULL},
-/* 07 */	{"register_user", (void *)&register_user, NULL},
-/* 08 */	{"tkl_hash", (void *)&tkl_hash, NULL},
-/* 09 */	{"tkl_typetochar", (void *)&tkl_typetochar, NULL},
-/* 10 */	{"tkl_add_serverban", (void *)&tkl_add_serverban, NULL},
-/* 11 */	{"tkl_del_line", (void *)&tkl_del_line, NULL},
-/* 12 */	{"tkl_check_local_remove_shun", (void *)&tkl_check_local_remove_shun, NULL},
-/* 13 */	{NULL, NULL, NULL},
-/* 14 */	{NULL, NULL, NULL},
-/* 15 */	{"find_tkline_match", (void *)&find_tkline_match, NULL},
-/* 16 */	{"find_shun", (void *)&find_shun, NULL},
-/* 17 */	{"find_spamfilter_user", (void *)&find_spamfilter_user, NULL},
-/* 18 */	{"find_qline", (void *)&find_qline, NULL},
-/* 19 */	{"find_tkline_match_zap", (void *)&find_tkline_match_zap, NULL},
-/* 20 */	{"tkl_stats", (void *)&tkl_stats, NULL},
-/* 21 */	{"tkl_synch", (void *)&tkl_synch, NULL},
-/* 22 */	{"m_tkl", (void *)&m_tkl, NULL},
-/* 23 */	{"place_host_ban", (void *)&place_host_ban, NULL},
-/* 24 */	{"run_spamfilter", (void *)&run_spamfilter, NULL},
-/* 25 */	{"join_viruschan", (void *)&join_viruschan, NULL},
-/* 26 */	{NULL, NULL, NULL},
-/* 27 */	{"send_list", (void *)&send_list, NULL},
-/* 28 */	{NULL, NULL, NULL},
-/* 29 */	{NULL, NULL, NULL},
-/* 30 */	{NULL, NULL, NULL},
-/* 31 */	{"StripColors", (void *)&StripColors, NULL},
-/* 32 */	{"StripControlCodes", (void *)&StripControlCodes, NULL},
-/* 33 */	{"spamfilter_build_user_string", (void *)&spamfilter_build_user_string, NULL},
-/* 34 */	{"is_silenced", (void *)&is_silenced, NULL},
-/* 35 */	{"send_protoctl_servers", (void *)&send_protoctl_servers, NULL},
-/* 36 */	{"verify_link", (void *)&verify_link, NULL},
-/* 37 */	{"send_server_message", (void *)&send_server_message, NULL},
-/* 38 */	{"broadcast_md_client", (void *)&broadcast_md_client, NULL},
-/* 39 */	{"broadcast_md_channel", (void *)&broadcast_md_channel, NULL},
-/* 40 */	{"broadcast_md_member", (void *)&broadcast_md_member, NULL}, 
-/* 41 */	{"broadcast_md_membership", (void *)&broadcast_md_membership, NULL},
-/* 42 */	{"check_banned", (void *)&check_banned, NULL},
-/* 43 */	{"introduce_user", (void *)&introduce_user, NULL},
-/* 44 */	{"check_deny_version", (void *)&check_deny_version, NULL},
-/* 45 */	{"broadcast_md_client_cmd", (void *)&broadcast_md_client_cmd, NULL},
-/* 46 */	{"broadcast_md_channel_cmd", (void *)&broadcast_md_channel_cmd, NULL},
-/* 47 */	{"broadcast_md_member_cmd", (void *)&broadcast_md_member_cmd, NULL},
-/* 48 */	{"broadcast_md_membership_cmd", (void *)&broadcast_md_membership_cmd, NULL},
-/* 49 */	{"send_moddata_client", (void *)&send_moddata_client, NULL},
-/* 50 */	{"send_moddata_channel", (void *)&send_moddata_channel, NULL},
-/* 51 */	{"send_moddata_members", (void *)&send_moddata_members, NULL},
-/* 52 */	{"broadcast_moddata_client", (void *)&broadcast_moddata_client, NULL},
-/* 53 */	{"match_user", (void *)&match_user, NULL},
-/* 54 */	{"userhost_save_current", (void *)&userhost_save_current, NULL},
-/* 55 */	{"userhost_changed", (void *)&userhost_changed, NULL},
-/* 56 */	{"send_join_to_local_users", (void *)&send_join_to_local_users, NULL},
-/* 57 */	{"do_nick_name", (void *)&do_nick_name, NULL},
-/* 58 */	{"do_remote_nick_name", (void *)&do_remote_nick_name, NULL},
-/* 59 */	{"charsys_get_current_languages", (void *)&charsys_get_current_languages, NULL},
-/* 60 */	{"broadcast_sinfo", (void *)&broadcast_sinfo, NULL},
-/* 61 */	{"parse_message_tags", (void *)&parse_message_tags, &parse_message_tags_default_handler},
-/* 62 */	{"mtags_to_string", (void *)&mtags_to_string, &mtags_to_string_default_handler},
-/* 63 */	{"tkl_chartotype", (void *)&tkl_chartotype, NULL},
-/* 64 */	{"tkl_type_string", (void *)&tkl_type_string, NULL},
-/* 65 */	{"can_send", (void *)&can_send, NULL},
-/* 66 */	{"broadcast_md_globalvar", (void *)&broadcast_md_globalvar, NULL},
-/* 67 */	{"broadcast_md_globalvar_cmd", (void *)&broadcast_md_globalvar_cmd, NULL},
-/* 68 */	{"tkl_ip_hash", (void *)&tkl_ip_hash, NULL},
-/* 69 */	{"tkl_ip_hash_type", (void *)&tkl_ip_hash_type, NULL},
-/* 70 */	{"tkl_add_nameban", (void *)&tkl_add_nameban, NULL},
-/* 71 */	{"tkl_add_spamfilter", (void *)&tkl_add_spamfilter, NULL},
-/* 72 */	{"sendnotice_tkl_add", (void *)&sendnotice_tkl_add, NULL},
-/* 73 */	{"sendnotice_tkl_del", (void *)&sendnotice_tkl_del, NULL},
-/* 74 */	{"free_tkl", (void *)&free_tkl, NULL},
-/* 75 */	{"find_tkl_serverban", (void *)&find_tkl_serverban, NULL},
-/* 76 */	{"find_tkl_nameban", (void *)&find_tkl_nameban, NULL},
-/* 77 */	{"find_tkl_spamfilter", (void *)&find_tkl_spamfilter, NULL},
-/* 78 */	{NULL, NULL, NULL},
-};
 
 #ifdef UNDERSCORE
 void *obsd_dlsym(void *handle, char *symbol) {
@@ -917,9 +747,6 @@ CMD_FUNC(m_module)
 	char tmp[1024], *p;
 	aCommand *mptr;
 	int all = 0;
-#ifdef DEBUGMODE
-	Efunction *e;
-#endif
 
 	if ((parc > 1) && !strcmp(parv[1], "-all"))
 		all = 1;
@@ -1009,20 +836,6 @@ CMD_FUNC(m_module)
 	}
 	sendtxtnumeric(sptr, "Override: %s", tmp);
 
-#ifdef DEBUGMODE
-	sendtxtnumeric(sptr, "Efunctions dump:");
-	for (i=0; i < MAXEFUNCTIONS; i++)
-		if ((e = Efunctions[i]))
-		{
-			sendtxtnumeric(sptr, "type=%d, name=%s, pointer=%p %s, owner=%s",
-				e->type,
-				efunction_table[e->type].name ? efunction_table[e->type].name : "<null>",
-				e->func.voidfunc,
-				*efunction_table[e->type].funcptr == e->func.voidfunc ? " [ACTIVE]" : "",
-				e->owner ? e->owner->header->name : "<null>");
-		}
-#endif
-	
 	return 1;
 }
 
@@ -1308,65 +1121,6 @@ Callback *CallbackDel(Callback *cb)
 	return NULL;
 }
 
-Efunction	*EfunctionAddMain(Module *module, int eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
-{
-	Efunction *p;
-
-	if (!module || !(module->options & MOD_OPT_OFFICIAL))
-	{
-		if (module)
-			module->errorcode = MODERR_INVALID;
-		return NULL;
-	}
-	
-	p = MyMallocEx(sizeof(Efunction));
-	if (func)
-		p->func.intfunc = func;
-	if (vfunc)
-		p->func.voidfunc = vfunc;
-	if (pvfunc)
-		p->func.pvoidfunc = pvfunc;
-	if (cfunc)
-		p->func.pcharfunc = cfunc;
-	p->type = eftype;
-	p->owner = module;
-	AddListItem(p, Efunctions[eftype]);
-	if (module) {
-		ModuleObject *cbobj = MyMallocEx(sizeof(ModuleObject));
-		cbobj->object.efunction = p;
-		cbobj->type = MOBJ_EFUNCTION;
-		AddListItem(cbobj, module->objects);
-		module->errorcode = MODERR_NOERROR;
-	}
-	return p;
-}
-
-Efunction *EfunctionDel(Efunction *cb)
-{
-Efunction *p, *q;
-	for (p = Efunctions[cb->type]; p; p = p->next) {
-		if (p == cb) {
-			q = p->next;
-			DelListItem(p, Efunctions[cb->type]);
-			if (*efunction_table[cb->type].funcptr == p)
-				*efunction_table[cb->type].funcptr = NULL;
-			if (p->owner) {
-				ModuleObject *cbobj;
-				for (cbobj = p->owner->objects; cbobj; cbobj = cbobj->next) {
-					if ((cbobj->type == MOBJ_EFUNCTION) && (cbobj->object.efunction == p)) {
-						DelListItem(cbobj, cb->owner->objects);
-						MyFree(cbobj);
-						break;
-					}
-				}
-			}
-			MyFree(p);
-			return q;
-		}
-	}
-	return NULL;
-}
-
 Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc function)
 {
 	aCommand *p;
@@ -1573,86 +1327,6 @@ int i;
 					e->willberemoved = 1;
 				break;
 			}
-}
-
-static int num_efunctions(int eftype)
-{
-Efunction *e;
-int cnt = 0;
-
-#ifdef DEBUGMODE
-	if ((eftype < 0) || (eftype >= MAXEFUNCTIONS))
-		abort();
-#endif
-
-	for (e = Efunctions[eftype]; e; e = e->next)
-		if (!e->willberemoved)
-			cnt++;
-			
-	return cnt;
-}
-
-
-/** Ensure that all efunctions are present. */
-int efunctions_check(void)
-{
-int i, n, errors=0;
-
-	for (i=0; i < MAXEFUNCTIONS; i++)
-		if (efunction_table[i].name)
-		{
-			n = num_efunctions(i);
-			if ((n != 1) && (errors > 10))
-			{
-				config_error("[--efunction errors truncated to prevent flooding--]");
-				break;
-			}
-			if ((n < 1) && !efunction_table[i].deffunc)
-			{
-				config_error("ERROR: efunction '%s' not found, you probably did not "
-				             "load all required modules! (hint: see modules.default.conf)",
-				             efunction_table[i].name);
-				errors++;
-			} else
-			if (n > 1)
-			{
-				config_error("ERROR: efunction '%s' was found %d times, perhaps you "
-				             "loaded a module multiple times??",
-				             efunction_table[i].name, n);
-				errors++;
-			}
-		}
-	return errors ? -1 : 0;
-}
-
-void efunctions_switchover(void)
-{
-Efunction *e;
-int i;
-
-	/* Now set the real efunction, and tag the new one
-	 * as 'willberemoved' if needed.
-	 */
-
-	for (i=0; i < MAXEFUNCTIONS; i++)
-	{
-		int found = 0;
-		for (e = Efunctions[i]; e; e = e->next)
-		{
-			if (e->willberemoved)
-				continue;
-			*efunction_table[i].funcptr = e->func.voidfunc;  /* This is the new one. */
-			if (!(e->owner->options & MOD_OPT_PERM))
-				e->willberemoved = 1;
-			found = 1;
-			break;
-		}
-		if (!found)
-		{
-			if (efunction_table[i].deffunc)
-				*efunction_table[i].funcptr = efunction_table[i].deffunc;
-		}
-	}
 }
 
 #ifdef _WIN32

@@ -995,6 +995,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	tkl_init();
 	umode_init();
 	extcmode_init();
+	efunctions_init();
 	clear_scache_hash_table();
 #ifdef HAVE_SETRLIMIT
 	/* Make it so we can dump core */
