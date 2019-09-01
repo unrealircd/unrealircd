@@ -116,6 +116,7 @@ aTKline *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int sof
 aTKline *(*find_tkl_banexception)(int type, char *usermask, char *hostmask, int softban);
 aTKline *(*find_tkl_nameban)(int type, char *name, int hold);
 aTKline *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
+int (*find_tkl_exception)(int ban_type, aClient *cptr);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
 {
@@ -352,4 +353,5 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_FIND_TKL_BANEXCEPTION, find_tkl_banexception, NULL);
 	efunc_init_function(EFUNC_FIND_TKL_NAMEBAN, find_tkl_nameban, NULL);
 	efunc_init_function(EFUNC_FIND_TKL_SPAMFILTER, find_tkl_spamfilter, NULL);
+	efunc_init_function(EFUNC_FIND_TKL_EXCEPTION, find_tkl_exception, NULL);
 }

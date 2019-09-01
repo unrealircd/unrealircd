@@ -2935,19 +2935,9 @@ ConfigItem_ban *Find_ban(aClient *sptr, char *host, short type)
 			if (sptr)
 			{
 				if (match_user(ban->mask, sptr, MATCH_CHECK_REAL))
-				{
-					/* Person got a exception */
-					// FIXME: this code is for the transition
-					// it should not be called blindly like
-					// we do now, since it would allow bypassing
-					// of even qlines and such..
-					// contact Syzop when in doubt :D
-					if (Find_except(sptr, CONF_EXCEPT_BAN))
-						return NULL;
 					return ban;
-				}
 			}
-			else if (match_simple(ban->mask, host)) /* We don't worry about exceptions */
+			else if (match_simple(ban->mask, host))
 				return ban;
 		}
 	}
@@ -2969,14 +2959,9 @@ ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
 			if (sptr)
 			{
 				if (match_user(ban->mask, sptr, MATCH_CHECK_REAL))
-				{
-					/* Person got a exception */
-					if (Find_except(sptr, type))
-						return NULL;
 					return ban;
-				}
 			}
-			else if (match_simple(ban->mask, host)) /* We don't worry about exceptions */
+			else if (match_simple(ban->mask, host))
 				return ban;
 		}
 	}
@@ -5493,117 +5478,26 @@ int	_test_allow_dcc(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
-void create_tkl_except_ii(char *mask, char *type)
+int _conf_except(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigItem_except *ca;
-	NameValue *opf;
-	ca = MyMallocEx(sizeof(ConfigItem_except));
-	ca->mask = strdup(mask);
-
-	opf = config_binary_flags_search(ExceptTklFlags, type, ARRAY_SIZEOF(ExceptTklFlags));
-	ca->type = opf->flag;
-	ca->flag.type = CONF_EXCEPT_TKL;
-	AddListItem(ca, conf_except);
-}
-
-void create_tkl_except(char *mask, char *type)
-{
-	if (!strcmp(type, "all"))
-	{
-		/* Special treatment */
-		int i;
-		for (i = 0; i < ARRAY_SIZEOF(ExceptTklFlags); i++)
-			if (ExceptTklFlags[i].flag)
-				create_tkl_except_ii(mask, ExceptTklFlags[i].name);
-	}
-	else
-		create_tkl_except_ii(mask, type);
-}
-
-int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
-{
-
-	ConfigEntry *cep;
-	ConfigItem_except *ca;
 	Hook *h;
+	int value;
 
-	if (!strcmp(ce->ce_vardata, "ban")) {
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		{
-			if (!strcmp(cep->ce_varname, "mask")) {
-				ca = MyMallocEx(sizeof(ConfigItem_except));
-				ca->mask = strdup(cep->ce_vardata);
-				ca->flag.type = CONF_EXCEPT_BAN;
-				AddListItem(ca, conf_except);
-			}
-			else {
-			}
-		}
+	for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+	{
+		value = (*(h->func.intfunc))(conf,ce,CONFIG_EXCEPT);
+		if (value == 1)
+			break;
 	}
-	else if (!strcmp(ce->ce_vardata, "throttle")) {
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		{
-			if (!strcmp(cep->ce_varname, "mask")) {
-				ca = MyMallocEx(sizeof(ConfigItem_except));
-				ca->mask = strdup(cep->ce_vardata);
-				ca->flag.type = CONF_EXCEPT_THROTTLE;
-				AddListItem(ca, conf_except);
-			}
-			else {
-			}
-		}
 
-	}
-	else if (!strcmp(ce->ce_vardata, "tkl")) {
-		ConfigEntry *mask = NULL, *type = NULL;
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		{
-			if (!strcmp(cep->ce_varname, "mask"))
-				mask = cep;
-			else if (!strcmp(cep->ce_varname, "type"))
-				type = cep;
-		}
-		if (type->ce_vardata)
-			create_tkl_except(mask->ce_vardata, type->ce_vardata);
-		else
-		{
-			ConfigEntry *cepp;
-			for (cepp = type->ce_entries; cepp; cepp = cepp->ce_next)
-				create_tkl_except(mask->ce_vardata, cepp->ce_varname);
-		}
-	}
-	else if (!strcmp(ce->ce_vardata, "blacklist")) {
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		{
-			if (!strcmp(cep->ce_varname, "mask")) {
-				ca = MyMallocEx(sizeof(ConfigItem_except));
-				ca->mask = strdup(cep->ce_vardata);
-				ca->flag.type = CONF_EXCEPT_BLACKLIST;
-				AddListItem(ca, conf_except);
-			}
-			else {
-			}
-		}
-
-	}
-	else {
-		int value;
-		for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
-		{
-			value = (*(h->func.intfunc))(conf,ce,CONFIG_EXCEPT);
-			if (value == 1)
-				break;
-		}
-	}
 	return 1;
 }
 
-int     _test_except(ConfigFile *conf, ConfigEntry *ce)
+int _test_except(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep;
-	int	    errors = 0;
+	int errors = 0;
 	Hook *h;
-	char has_mask = 0;
+	int used = 0;
 
 	if (!ce->ce_vardata)
 	{
@@ -5612,243 +5506,41 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 		return 1;
 	}
 
-	if (!strcmp(ce->ce_vardata, "ban"))
+	for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
 	{
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		int value, errs = 0;
+		if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+		    && !(h->owner->options & MOD_OPT_PERM))
+			continue;
+		value = (*(h->func.intfunc))(conf,ce,CONFIG_EXCEPT,&errs);
+		if (value == 2)
+			used = 1;
+		if (value == 1)
 		{
-			if (config_is_blankorempty(cep, "except ban"))
-			{
-				errors++;
-				continue;
-			}
-			if (!strcmp(cep->ce_varname, "mask"))
-			{
-				if (has_mask)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "except ban::mask");
-					continue;
-				}
-				has_mask = 1;
-			}
-			else
-			{
-				config_error_unknown(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "except ban", cep->ce_varname);
-				errors++;
-				continue;
-			}
+			used = 1;
+			break;
 		}
-		if (!has_mask)
+		if (value == -1)
 		{
-			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				"except ban::mask");
-			errors++;
+			used = 1;
+			errors += errs;
+			break;
 		}
-		return errors;
+		if (value == -2)
+		{
+			used = 1;
+			errors += errs;
+		}
 	}
-	else if (!strcmp(ce->ce_vardata, "throttle")) {
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		{
-			if (config_is_blankorempty(cep, "except throttle"))
-			{
-				errors++;
-				continue;
-			}
-			if (!strcmp(cep->ce_varname, "mask"))
-			{
-				has_mask = 1;
-			}
-			else
-			{
-				config_error_unknown(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "except throttle", cep->ce_varname);
-				errors++;
-				continue;
-			}
-		}
-		if (!has_mask)
-		{
-			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				"except throttle::mask");
-			errors++;
-		}
-		return errors;
-	}
-	else if (!strcmp(ce->ce_vardata, "tkl")) {
-		char has_type = 0;
 
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		{
-			if (!strcmp(cep->ce_varname, "mask"))
-			{
-				if (!cep->ce_vardata)
-				{
-					config_error_empty(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "except tkl", "mask");
-					errors++;
-					continue;
-				}
-				if (has_mask)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "except tkl::mask");
-					continue;
-				}
-				has_mask = 1;
-			}
-			else if (!strcmp(cep->ce_varname, "type"))
-			{
-				if (has_type)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "except tkl::type");
-					continue;
-				}
-				if (cep->ce_vardata)
-				{
-					if (!strcmp(cep->ce_vardata, "tkline") ||
-					    !strcmp(cep->ce_vardata, "tzline"))
-					{
-						config_error("%s:%i: except tkl of type %s is"
-							     " deprecated. Use except ban {}"
-							     " instead",
-							     cep->ce_fileptr->cf_filename,
-							     cep->ce_varlinenum,
-							     cep->ce_vardata);
-						errors++;
-					}
-					if (!config_binary_flags_search(ExceptTklFlags,
-					     cep->ce_vardata, ARRAY_SIZEOF(ExceptTklFlags)))
-					{
-						config_error("%s:%i: unknown except tkl type %s",
-							     cep->ce_fileptr->cf_filename,
-							     cep->ce_varlinenum,
-							     cep->ce_vardata);
-						return 1;
-					}
-				}
-				else if (cep->ce_entries)
-				{
-					ConfigEntry *cepp;
-					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-					{
-						if (!strcmp(cepp->ce_varname, "tkline") ||
-						    !strcmp(cepp->ce_varname, "tzline"))
-						{
-							config_error("%s:%i: except tkl of type %s is"
-								     " deprecated. Use except ban {}"
-								     " instead",
-								     cepp->ce_fileptr->cf_filename,
-								     cepp->ce_varlinenum,
-								     cepp->ce_varname);
-							errors++;
-						}
-						if (!config_binary_flags_search(ExceptTklFlags,
-						     cepp->ce_varname, ARRAY_SIZEOF(ExceptTklFlags)))
-						{
-							config_error("%s:%i: unknown except tkl type %s",
-								     cepp->ce_fileptr->cf_filename,
-								     cepp->ce_varlinenum,
-								     cepp->ce_varname);
-							return 1;
-						}
-					}
-				}
-				else
-				{
-					config_error_empty(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "except tkl", "type");
-					errors++;
-					continue;
-				}
-				has_type = 1;
-			}
-			else
-			{
-				config_error_unknown(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "except tkl", cep->ce_varname);
-				errors++;
-				continue;
-			}
-		}
-		if (!has_mask)
-		{
-			config_error("%s:%i: except tkl without mask item",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return 1;
-		}
-		if (!has_type)
-		{
-			config_error("%s:%i: except tkl without type item",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return 1;
-		}
-		return errors;
+	if (!used)
+	{
+		config_error("%s:%i: unknown except type %s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);
+		return 1;
 	}
-	else if (!strcmp(ce->ce_vardata, "blacklist")) {
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		{
-			if (config_is_blankorempty(cep, "except blacklist"))
-			{
-				errors++;
-				continue;
-			}
-			if (!strcmp(cep->ce_varname, "mask"))
-			{
-				has_mask = 1;
-			}
-			else
-			{
-				config_error_unknown(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "except blacklist", cep->ce_varname);
-				errors++;
-				continue;
-			}
-		}
-		if (!has_mask)
-		{
-			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				"except blacklist::mask");
-			errors++;
-		}
-		return errors;
-	}
-	else {
-		int used = 0;
-		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
-		{
-			int value, errs = 0;
-			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
-			    && !(h->owner->options & MOD_OPT_PERM))
-				continue;
-			value = (*(h->func.intfunc))(conf,ce,CONFIG_EXCEPT,&errs);
-			if (value == 2)
-				used = 1;
-			if (value == 1)
-			{
-				used = 1;
-				break;
-			}
-			if (value == -1)
-			{
-				used = 1;
-				errors += errs;
-				break;
-			}
-			if (value == -2)
-			{
-				used = 1;
-				errors += errs;
-			}
-		}
-		if (!used) {
-			config_error("%s:%i: unknown except type %s",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				ce->ce_vardata);
-			return 1;
-		}
-	}
+
 	return errors;
 }
 

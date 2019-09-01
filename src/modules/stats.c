@@ -59,7 +59,7 @@ int stats_banversion(aClient *, char *);
 int stats_links(aClient *, char *);
 int stats_denylinkall(aClient *, char *);
 int stats_gline(aClient *, char *);
-int stats_exceptban(aClient *, char *);
+int stats_except(aClient *, char *);
 int stats_allow(aClient *, char *);
 int stats_command(aClient *, char *);
 int stats_oper(aClient *, char *);
@@ -71,7 +71,6 @@ int stats_uline(aClient *, char *);
 int stats_vhost(aClient *, char *);
 int stats_mem(aClient *, char *);
 int stats_denylinkauto(aClient *, char *);
-int stats_exceptthrottle(aClient *, char *);
 int stats_denydcc(aClient *, char *);
 int stats_kline(aClient *, char *);
 int stats_banrealname(aClient *, char *);
@@ -107,7 +106,7 @@ struct statstab StatsTable[] = {
 	{ 'B', "banversion",	stats_banversion,	0		},
 	{ 'C', "link", 		stats_links,		0 		},
 	{ 'D', "denylinkall",	stats_denylinkall,	0		},
-	{ 'E', "exceptban",	stats_exceptban,	0 		},
+	{ 'E', "except",	stats_except,		0 		},
 	{ 'F', "denydcc",	stats_denydcc,		0 		},
 	{ 'G', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'H', "link",	 	stats_links,		0 		},	
@@ -129,7 +128,6 @@ struct statstab StatsTable[] = {
 	{ 'Z', "mem",		stats_mem,		0 		},
 	{ 'c', "link", 		stats_links,		0 		},
 	{ 'd', "denylinkauto",	stats_denylinkauto,	0 		},
-	{ 'e', "exceptthrottle",stats_exceptthrottle,	0		},
 	{ 'f', "spamfilter",	stats_spamfilter,	FLAGS_AS_PARA	},	
 	{ 'g', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'h', "link", 		stats_links,		0 		},
@@ -490,8 +488,10 @@ int stats_spamfilter(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_exceptban(aClient *sptr, char *para)
+int stats_except(aClient *sptr, char *para)
 {
+#if 0
+	// FIXME: update numeric and send list to users ;)
 	ConfigItem_except *excepts;
 	for (excepts = conf_except; excepts; excepts = excepts->next)
 	{
@@ -500,6 +500,7 @@ int stats_exceptban(aClient *sptr, char *para)
 		else if (excepts->flag.type == CONF_EXCEPT_TKL)
 			sendnumeric(sptr, RPL_STATSEXCEPTTKL, tkl_typetochar(excepts->type), excepts->mask);
 	}
+#endif
 	return 0;
 }
 
@@ -924,15 +925,6 @@ int stats_denylinkauto(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_exceptthrottle(aClient *sptr, char *para)
-{
-	ConfigItem_except *excepts;
-	for (excepts = conf_except; excepts; excepts = excepts->next)
-		if (excepts->flag.type == CONF_EXCEPT_THROTTLE)
-			sendnumeric(sptr, RPL_STATSELINE, excepts->mask);
-	return 0;
-}
-
 int stats_denydcc(aClient *sptr, char *para)
 {
 	ConfigItem_deny_dcc *denytmp;
@@ -976,12 +968,6 @@ int stats_kline(aClient *sptr, char *para)
 
 	tkl_stats(sptr, TKL_KILL, NULL);
 	tkl_stats(sptr, TKL_ZAP, NULL);
-
-	for (excepts = conf_except; excepts; excepts = excepts->next)
-	{
-		if (excepts->flag.type == CONF_EXCEPT_BAN)
-			sendnumeric(sptr, RPL_STATSKLINE, "E", excepts->mask, "");
-	}
 	return 0;
 }
 

@@ -716,6 +716,9 @@ struct Server {
 #define TKL_SPAMF	0x0020
 #define TKL_NAME	0x0040
 #define TKL_EXCEPTION	0x0080
+/* these are not real tkl types, but only used for exceptions: */
+#define TKL_THROTTLE	0x1000
+#define TKL_BLACKLIST	0x2000
 
 #define TKLIsServerBan(tkl)		((tkl)->type & (TKL_KILL|TKL_ZAP|TKL_SHUN))
 #define TKLIsServerBanType(tpe)		((tpe) & (TKL_KILL|TKL_ZAP|TKL_SHUN))
@@ -1071,12 +1074,6 @@ struct _configflag_tld
 
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
-
-#define CONF_EXCEPT_BAN		1
-#define CONF_EXCEPT_TKL		2
-#define CONF_EXCEPT_THROTTLE	3
-#define CONF_EXCEPT_BLACKLIST	4
-
 
 struct _configitem {
 	ConfigItem *prev, *next;

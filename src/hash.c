@@ -999,7 +999,7 @@ int throttle_can_connect(aClient *sptr)
 		return 1;
 	else
 	{
-		if (Find_except(sptr, CONF_EXCEPT_THROTTLE))
+		if (find_tkl_exception(TKL_THROTTLE, sptr))
 			return 2;
 		if (b->count+1 > (THROTTLING_COUNT ? THROTTLING_COUNT : 3))
 			return 0;

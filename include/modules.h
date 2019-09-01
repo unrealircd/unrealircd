@@ -972,7 +972,7 @@ int hooktype_remote_nickchange(aClient *cptr, aClient *sptr, char *newnick);
 int hooktype_channel_create(aClient *sptr, aChannel *chptr);
 int hooktype_channel_destroy(aChannel *chptr, int *should_destroy);
 int hooktype_remote_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_tkl_except(aClient *cptr, aTKline *tkl);
+int hooktype_tkl_except(aClient *cptr, int ban_type);
 int hooktype_umode_change(aClient *sptr, long setflags, long newflags);
 int hooktype_topic(aClient *cptr, aClient *sptr, aChannel *chptr, char *topic);
 int hooktype_rehash_complete(void);
@@ -1245,6 +1245,7 @@ enum EfunctionType {
 	EFUNC_FIND_TKL_BANEXCEPTION,
 	EFUNC_FIND_TKL_NAMEBAN,
 	EFUNC_FIND_TKL_SPAMFILTER,
+	EFUNC_FIND_TKL_EXCEPTION,
 };
 
 /* Module flags */

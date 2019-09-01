@@ -977,7 +977,7 @@ refuse_client:
 
 	j = 1;
 
-	if (!Find_except(acptr, CONF_EXCEPT_THROTTLE))
+	if (!find_tkl_exception(TKL_THROTTLE, acptr))
 	{
 		list_for_each_entry(acptr2, &unknown_list, lclient_node)
 		{

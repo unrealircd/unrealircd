@@ -560,7 +560,7 @@ int blacklist_start_check(aClient *cptr)
 	Blacklist *bl;
 
 	/* If the user is on 'except blacklist' then don't bother checking... */
-	if (Find_except(cptr, CONF_EXCEPT_BLACKLIST))
+	if (find_tkl_exception(TKL_BLACKLIST, cptr))
 		return 0;
 	
 	if (!BLUSER(cptr))

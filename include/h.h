@@ -714,6 +714,7 @@ extern MODVAR void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 extern MODVAR void (*broadcast_md_globalvar_cmd)(aClient *except, aClient *sender, char *varname, char *value);
 extern MODVAR int (*tkl_ip_hash)(char *ip);
 extern MODVAR int (*tkl_ip_hash_type)(int type);
+extern MODVAR int (*find_tkl_exception)(int ban_type, aClient *cptr);
 /* /Efuncs */
 
 extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;

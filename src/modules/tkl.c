@@ -28,6 +28,8 @@ int tkl_config_test_spamfilter(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_spamfilter(ConfigFile *, ConfigEntry *, int);
 int tkl_config_test_ban(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_ban(ConfigFile *, ConfigEntry *, int);
+int tkl_config_test_except(ConfigFile *, ConfigEntry *, int, int *);
+int tkl_config_run_except(ConfigFile *, ConfigEntry *, int);
 CMD_FUNC(m_gline);
 CMD_FUNC(m_shun);
 CMD_FUNC(m_tempshun);
@@ -35,6 +37,7 @@ CMD_FUNC(m_gzline);
 CMD_FUNC(m_kline);
 CMD_FUNC(m_zline);
 CMD_FUNC(m_spamfilter);
+CMD_FUNC(m_eline);
 int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type);
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
@@ -76,6 +79,7 @@ aTKline *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softb
 aTKline *_find_tkl_banexception(int type, char *usermask, char *hostmask, int softban);
 aTKline *_find_tkl_nameban(int type, char *name, int hold);
 aTKline *_find_tkl_spamfilter(int type, char *match_string, unsigned short action, unsigned short target);
+int _find_tkl_exception(int ban_type, aClient *cptr);
 
 /* Externals (only for us :D) */
 extern int MODVAR spamf_ugly_vchanoverride;
@@ -94,6 +98,7 @@ MOD_TEST(tkl)
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_spamfilter);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_ban);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_except);
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_HASH, _tkl_hash);
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_TYPETOCHAR, TO_INTFUNC(_tkl_typetochar));
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_CHARTOTYPE, TO_INTFUNC(_tkl_chartotype));
@@ -126,6 +131,7 @@ MOD_TEST(tkl)
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_IP_HASH_TYPE, _tkl_ip_hash_type);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SENDNOTICE_TKL_ADD, _sendnotice_tkl_add);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SENDNOTICE_TKL_DEL, _sendnotice_tkl_del);
+	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKL_EXCEPTION, _find_tkl_exception);
 	return MOD_SUCCESS;
 }
 
@@ -134,6 +140,7 @@ MOD_INIT(tkl)
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamfilter);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_ban);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_except);
 	CommandAdd(modinfo->handle, "GLINE", m_gline, 3, M_OPER);
 	CommandAdd(modinfo->handle, "SHUN", m_shun, 3, M_OPER);
 	CommandAdd(modinfo->handle, "TEMPSHUN", m_tempshun, 2, M_OPER);
@@ -141,6 +148,7 @@ MOD_INIT(tkl)
 	CommandAdd(modinfo->handle, "KLINE", m_kline, 3, M_OPER);
 	CommandAdd(modinfo->handle, "GZLINE", m_gzline, 3, M_OPER);
 	CommandAdd(modinfo->handle, "SPAMFILTER", m_spamfilter, 7, M_OPER);
+	CommandAdd(modinfo->handle, "ELINE", m_eline, 4, M_OPER);
 	CommandAdd(modinfo->handle, "TKL", _m_tkl, MAXPARA, M_OPER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -577,6 +585,176 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	return 1;
 }
 
+int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int *errs)
+{
+	ConfigEntry *cep;
+	ConfigItem_except *ca;
+	Hook *h;
+	char *bantypes = NULL;
+	int errors = 0;
+
+	/* We are only interested in except { } blocks */
+	if (configtype != CONFIG_EXCEPT)
+		return 0;
+
+	/* These are the types that we handle */
+	if (strcmp(ce->ce_vardata, "ban") && strcmp(ce->ce_vardata, "throttle") &&
+	    strcmp(ce->ce_vardata, "tkl") && strcmp(ce->ce_vardata, "blacklist") &&
+	    strcmp(ce->ce_vardata, "spamfilter"))
+	{
+		return 0;
+	}
+
+	if (!strcmp(ce->ce_vardata, "tkl"))
+	{
+		config_error("%s:%d: except tkl { } has been renamed to except ban { }",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		config_status("Please rename your block in the configuration file.");
+		*errs = 1;
+		return -1;
+	}
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "mask"))
+		{
+			// TODO: verify mask, can be both a list or just 1 directly
+		} else
+		if (!strcmp(cep->ce_varname, "type"))
+		{
+			// TODO: verify type, can be both a list or just 1 directly
+		} else {
+			config_error_unknown(cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, "except", cep->ce_varname);
+			errors++;
+			continue;
+		}
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+void config_create_tkl_except(char *mask, char *bantypes)
+{
+	char *usermask = NULL;
+	char *hostmask = NULL;
+	int soft = 0;
+	char buf[256], *p;
+
+	if (*mask == '%')
+	{
+		soft = 1;
+		mask++;
+	}
+	strlcpy(buf, mask, sizeof(buf));
+	p = strchr(buf, '@');
+	if (!p)
+	{
+		usermask = "*";
+		hostmask = buf;
+	} else {
+		*p++ = '\0';
+		usermask = buf;
+		hostmask = p;
+	}
+
+	if ((*usermask == ':') || (*hostmask == ':'))
+	{
+		config_error("Cannot add illegal ban '%s': for a given user@host neither"
+		             "user nor host may start with a : character (semicolon)", mask);
+		return;
+	}
+
+	tkl_add_banexception(TKL_EXCEPTION, usermask, hostmask, "Added in configuration file",
+	                     "-config-", 0, TStime(), soft, bantypes, TKL_FLAG_CONFIG);
+}
+
+void tkl_config_run_except_add_bantype(char *bantypes, size_t bantypeslen, char *name)
+{
+	if (!strcmp(name, "kline"))
+		strlcat(bantypes, "k", sizeof(bantypes));
+	// etc etc.. but probably in a different way ;)
+}
+
+int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
+{
+	ConfigEntry *cep, *cepp;
+	ConfigItem_except *ca;
+	Hook *h;
+	char *default_bantypes = NULL;
+	char bantypes[64];
+
+	/* We are only interested in except { } blocks */
+	if (configtype != CONFIG_EXCEPT)
+		return 0;
+
+	/* These are the types that we handle */
+	if (strcmp(ce->ce_vardata, "ban") && strcmp(ce->ce_vardata, "throttle") &&
+	    strcmp(ce->ce_vardata, "blacklist") &&
+	    strcmp(ce->ce_vardata, "spamfilter"))
+	{
+		return 0;
+	}
+
+	*bantypes = '\0';
+
+	/* First configure all the types */
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "type"))
+		{
+			if (cep->ce_entries)
+			{
+				/* type { x; y; z; }; */
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+					tkl_config_run_except_add_bantype(bantypes, sizeof(bantypes), cepp->ce_varname);
+			} else
+			if (cep->ce_vardata)
+			{
+				/* type x; */
+				tkl_config_run_except_add_bantype(bantypes, sizeof(bantypes), cep->ce_vardata);
+			}
+		}
+	}
+
+	if (!*bantypes)
+	{
+		/* Default setting if no 'type' is specified: */
+		if (!strcmp(ce->ce_vardata, "ban"))
+			strlcpy(bantypes, "kgzZs", sizeof(bantypes));
+		else if (!strcmp(ce->ce_vardata, "throttle"))
+			strlcpy(bantypes, "t", sizeof(bantypes));
+		else if (!strcmp(ce->ce_vardata, "blacklist"))
+			strlcpy(bantypes, "b", sizeof(bantypes));
+		else if (!strcmp(ce->ce_vardata, "spamfilter"))
+			strlcpy(bantypes, "f", sizeof(bantypes));
+		else
+			abort(); /* someone can't code */
+	}
+
+	/* Now walk through all mask entries */
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "mask"))
+		{
+			if (cep->ce_entries)
+			{
+				/* mask { *@1.1.1.1; *@2.2.2.2; *@3.3.3.3; }; */
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+					config_create_tkl_except(cepp->ce_varname, bantypes);
+			} else
+			if (cep->ce_vardata)
+			{
+				/* mask *@1.1.1.1; */
+				config_create_tkl_except(cep->ce_vardata, bantypes);
+			}
+		}
+	}
+
+	return 1;
+}
+
 /** Return unique spamfilter id for aTKline */
 char *spamfilter_id(aTKline *tk)
 {
@@ -614,7 +792,6 @@ CMD_FUNC(m_gline)
 	}
 
 	return m_tkl_line(cptr, sptr, parc, parv, "G");
-
 }
 
 /** GZLINE - Global zline.
@@ -891,7 +1068,7 @@ int ban_too_broad(char *usermask, char *hostmask)
  * This allows us doing some syntax checking and other helpful
  * things that are the same for many types of *LINES.
  */
-int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type)
+int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char *type)
 {
 	time_t secs;
 	int whattodo = 0;	/* 0 = add  1 = del */
@@ -971,7 +1148,7 @@ int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type)
 		}
 		if (*hostmask == ':')
 		{
-			sendnotice(sptr, "[error] For (weird) technical reasons you cannot start the host with a ':', sorry");
+			sendnotice(sptr, "[error] For technical reasons you cannot start the host with a ':', sorry");
 			return 0;
 		}
 		if (((*type == 'z') || (*type == 'Z')) && !whattodo)
@@ -1087,6 +1264,217 @@ int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type)
 	}
 	return 0;
 }
+
+int eline_syntax(aClient *sptr)
+{
+	sendnotice(sptr, " Syntax: /ELINE <user@host> <bantypes> <expiry-time> <reason>");
+	sendnotice(sptr, "Valid bantypes are:");
+	sendnotice(sptr, "k: K-Line     g: G-Line");
+	sendnotice(sptr, "z: Z-Line     Z: Global Z-Line");
+	sendnotice(sptr, "q: Q-Line");
+	sendnotice(sptr, "s: Shun");
+	sendnotice(sptr, "f: Spamfilter");
+	sendnotice(sptr, "t: Throttling");
+	sendnotice(sptr, "b: Blacklist checking");
+	sendnotice(sptr, "Example: /ELINE *@unrealircd.org kgzZ 0 This user is exempt");
+	sendnotice(sptr, "-");
+	sendnotice(sptr, "To get a list of all current ELINEs, type: /STATS exceptban");
+	return 0;
+}
+
+/** Check if any of the specified types require the
+ * exception to be placed on *@ip rather than
+ * user@host or *@host. For eg zlines.
+ */
+int eline_type_requires_ip(char *bantypes)
+{
+	if (strchr(bantypes, 'z') || strchr(bantypes, 'Z') || strchr(bantypes, 't') || strchr(bantypes, 'b'))
+		return 1;
+	return 0;
+}
+
+CMD_FUNC(m_eline)
+{
+	time_t secs = 0;
+	int add = 1;
+	time_t i;
+	aClient *acptr = NULL;
+	char *mask = NULL;
+	char mo[1024], mo2[1024];
+	char *p, *usermask, *hostmask, *bantypes=NULL, *reason;
+	char *tkllayer[11] = {
+		me.name,		/*0  server.name */
+		NULL,			/*1  +|- */
+		NULL,			/*2  E   */
+		NULL,			/*3  user */
+		NULL,			/*4  host */
+		NULL,			/*5  set_by */
+		"0",			/*6  expire_at */
+		"-",			/*7  set_at */
+		"-",			/*8  ban types */
+		"-",			/*9  reason */
+		NULL
+	};
+	struct tm *t;
+
+	if (IsServer(sptr))
+		return 0;
+
+	if (!ValidatePermissionsForPath("server-ban:eline",sptr,NULL,NULL,NULL))
+	{
+		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		return 0;
+	}
+
+	/* For del we need at least:
+	 * ELINE -user@host
+	 * The 'add' case is checked later.
+	 */
+	if ((parc < 2) || BadPtr(parv[1]))
+		return eline_syntax(sptr);
+
+	mask = parv[1];
+	if (*mask == '-')
+	{
+		add = 0;
+		mask++;
+	}
+	else if (*mask == '+')
+	{
+		add = 1;
+		mask++;
+	}
+
+	/* For add we need more:
+	 * ELINE user@host bantypes expiry :reason
+	 */
+	if (add)
+	{
+		if ((parc < 5) || BadPtr(parv[4]))
+			return eline_syntax(sptr);
+		bantypes = parv[2];
+		reason = parv[4];
+	}
+
+	if (strchr(mask, '!'))
+	{
+		sendnotice(sptr, "[error] Cannot have '!' in masks.");
+		return 0;
+	}
+	if (*mask == ':')
+	{
+		sendnotice(sptr, "[error] Mask cannot start with a ':'.");
+		return 0;
+	}
+	if (strchr(mask, ' '))
+		return 0;
+
+	/* Check if it's a hostmask and legal .. */
+	p = strchr(mask, '@');
+	if (p)
+	{
+		if ((p == mask) || !p[1])
+		{
+			sendnotice(sptr, "Error: no user@host specified");
+			return 0;
+		}
+		usermask = strtok(mask, "@");
+		hostmask = strtok(NULL, "");
+		if (BadPtr(hostmask)) {
+			if (BadPtr(usermask)) {
+				return 0;
+			}
+			hostmask = usermask;
+			usermask = "*";
+		}
+		if (*hostmask == ':')
+		{
+			sendnotice(sptr, "[error] For technical reasons you cannot start the host with a ':', sorry");
+			return 0;
+		}
+		if (add && eline_type_requires_ip(bantypes))
+		{
+			/* Trying to exempt a user from a (G)ZLINE,
+			 * make sure the user isn't specifying a host then.
+			 */
+			if (strcmp(usermask, "*"))
+			{
+				sendnotice(sptr, "ERROR: Ban exceptions with type z/Z/t/b need to be placed at \037*\037@ipmask, not \037user\037@ipmask. "
+				                 "This is because checking (g)zlines, throttling and blacklists is done BEFORE any dns and ident lookups.");
+				return -1;
+			}
+			for (p=hostmask; *p; p++)
+				if (isalpha(*p) && !isxdigit(*p))
+				{
+					sendnotice(sptr, "ERROR: Ban exceptions with type z/Z/t/b need to be placed at *@\037ipmask\037, not *@\037hostmask\037. "
+					                 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
+				                         "This is because checking (g)zlines, throttling and blacklists is done BEFORE any dns and ident lookups.");
+					return -1;
+				}
+		}
+	}
+	else
+	{
+		/* It's seemingly a nick .. let's see if we can find the user */
+		if ((acptr = find_person(mask, NULL)))
+		{
+			usermask = "*";
+			hostmask = GetIP(acptr);
+			if (!hostmask)
+			{
+				sendnotice(sptr, "Could not get IP for user '%s'", acptr->name);
+				return 0;
+			}
+		}
+		else
+		{
+			sendnumeric(sptr, ERR_NOSUCHNICK, mask);
+			return 0;
+		}
+	}
+
+	if (add)
+	{
+		secs = atime(parv[3]);
+		if ((secs <= 0) && (*parv[3] != '0'))
+		{
+			sendnotice(sptr, "*** [error] The expiry time you specified is out of range!");
+			return eline_syntax(sptr);
+		}
+	}
+
+	tkllayer[1] = add ? "+" : "-";
+	tkllayer[2] = "E";
+	tkllayer[3] = usermask;
+	tkllayer[4] = hostmask;
+	tkllayer[5] = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
+
+	if (add)
+	{
+		/* Add ELINE */
+		if (secs == 0)
+			ircsnprintf(mo, sizeof(mo), "%lld", (long long)secs); /* "0" */
+		else
+			ircsnprintf(mo, sizeof(mo), "%lld", (long long)(secs + TStime()));
+		ircsnprintf(mo2, sizeof(mo2), "%lld", (long long)TStime());
+		tkllayer[6] = mo;
+		tkllayer[7] = mo2;
+		tkllayer[8] = bantypes;
+		tkllayer[9] = reason;
+		/* call the tkl layer .. */
+		m_tkl(&me, &me, NULL, 10, tkllayer);
+	}
+	else
+	{
+		/* Remove ELINE */
+		/* call the tkl layer .. */
+		m_tkl(&me, &me, NULL, 10, tkllayer);
+
+	}
+	return 0;
+}
+
+
 
 /** Helper function for m_spamfilter, explaining usage. */
 int spamfilter_usage(aClient *sptr)
@@ -1445,6 +1833,49 @@ int _tkl_chartotype(char c)
 			return 0;
 	}
 	/* NOTREACHED */
+}
+
+int tkl_banexception_chartotype(char c)
+{
+	int ret = _tkl_chartotype(c);
+	if (ret == 0)
+	{
+		if (c == 't')
+			ret = TKL_THROTTLE;
+		else if (c == 'b')
+			ret = TKL_BLACKLIST;
+	}
+	return ret;
+}
+
+int tkl_banexception_matches_type(aTKline *except, int bantype)
+{
+	char *p;
+	int extype;
+
+	if (!TKLIsBanException(except))
+		abort();
+
+	for (p = except->ptr.banexception->bantypes; *p; p++)
+	{
+		extype = tkl_banexception_chartotype(*p);
+		if ((extype & TKL_SPAMF) || (extype & TKL_SHUN) || (extype & TKL_NAME))
+		{
+			/* For spamfilter, shun and qline we don't care
+			 * whether they are global or not. That would only
+			 * be confusing to the admin.
+			 */
+			extype &= ~TKL_GLOBAL;
+			if (bantype & extype)
+				return 1;
+		} else {
+			/* Rest requires an exact match */
+			if (bantype == extype)
+				return 1;
+		}
+	}
+
+	return 0;
 }
 
 /** Used for finding out which element of the tkl_ip hash table is used (primary element) */
@@ -1972,31 +2403,44 @@ EVENT(tkl_check_expire)
 	}
 }
 
-/** Helper function for find_tkl_exception() */
-int find_tkl_exception_matcher(aClient *cptr, aTKline *tkl)
+/* This is just a helper function for find_tkl_exception() */
+static int find_tkl_exception_matcher(aClient *cptr, int ban_type, aTKline *except_tkl)
 {
 	char uhost[NICKLEN+HOSTLEN+1];
 	Hook *hook;
 
-	if (!TKLIsBanException(tkl))
+	if (!TKLIsBanException(except_tkl))
 		return 0;
 
-	snprintf(uhost, sizeof(uhost), "%s@%s", tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask);
+	if (!tkl_banexception_matches_type(except_tkl, ban_type))
+		return 0;
 
-	// FIXME: check exception ban types!! (right now it always matches)
+	snprintf(uhost, sizeof(uhost), "%s@%s",
+	         except_tkl->ptr.banexception->usermask, except_tkl->ptr.banexception->hostmask);
 
 	if (match_user(uhost, cptr, MATCH_CHECK_REAL))
 	{
-		if (!(tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT))
+		if (!(except_tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT))
 			return 1; /* hard ban exempt */
-		if ((tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT) && IsLoggedIn(cptr))
+		if ((except_tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT) && IsLoggedIn(cptr))
 			return 1; /* soft ban exempt - only matches if user is logged in */
 	}
 
 	return 0; /* not found */
 }
 
-int find_tkl_exception(aTKline *ban_tkl, aClient *cptr)
+/** Search for TKL Exceptions for this user.
+ * @param ban_type The ban type to check, normally ban_tkl->type.
+ * @param cptr     The user
+ * @returns 1 if ban exempt, 0 if not.
+ * @notes
+ * If you have a TKL ban that matched, say, 'ban_tkl'.
+ * Then you call this function like this:
+ * if (find_tkl_exception(ban_tkl->type, cptr))
+ *     return 0; // User is exempt
+ * [.. continue and ban the user..]
+ */
+int _find_tkl_exception(int ban_type, aClient *cptr)
 {
 	aTKline *tkl, *ret;
 	int index, index2;
@@ -2012,7 +2456,7 @@ int find_tkl_exception(aTKline *ban_tkl, aClient *cptr)
 	{
 		for (tkl = tklines_ip_hash[index][index2]; tkl; tkl = tkl->next)
 		{
-			if (find_tkl_exception_matcher(cptr, tkl))
+			if (find_tkl_exception_matcher(cptr, ban_type, tkl))
 				return 1; /* exempt */
 		}
 	}
@@ -2020,7 +2464,7 @@ int find_tkl_exception(aTKline *ban_tkl, aClient *cptr)
 	/* If not banned (yet), then check regular entries.. */
 	for (tkl = tklines[tkl_hash('e')]; tkl; tkl = tkl->next)
 	{
-			if (find_tkl_exception_matcher(cptr, tkl))
+			if (find_tkl_exception_matcher(cptr, ban_type, tkl))
 				return 1; /* exempt */
 	}
 
@@ -2028,7 +2472,7 @@ int find_tkl_exception(aTKline *ban_tkl, aClient *cptr)
 
 	for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
 	{
-		if (hook->func.intfunc(cptr, tkl) > 0)
+		if (hook->func.intfunc(cptr, ban_type) > 0)
 			return 1; /* exempt by hook */
 	}
 	return 0; /* Not exempt */
@@ -2056,7 +2500,7 @@ int find_tkline_match_matcher(aClient *cptr, int skip_soft, aTKline *tkl)
 		    ((tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) && !IsLoggedIn(cptr)))
 		{
 			/* Found match. Now check for exception... */
-			if (find_tkl_exception(tkl, cptr))
+			if (find_tkl_exception(tkl->type, cptr))
 				return 0; /* exempted */
 			return 1; /* banned */
 		}
@@ -2142,7 +2586,6 @@ int _find_shun(aClient *cptr)
 	ConfigItem_except *excepts;
 	int match_type = 0;
 	Hook *hook;
-	int banned = 0;
 
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
@@ -2169,39 +2612,15 @@ int _find_shun(aClient *cptr)
 			    ((tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) && !IsLoggedIn(cptr)))
 			{
 				/* Found match. Now check for exception... */
-				banned = 1;
-				match_type = CONF_EXCEPT_TKL;
-				for (excepts = conf_except; excepts; excepts = excepts->next)
-				{
-					if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL &&
-						excepts->type != tkl->type))
-						continue;
-
-					if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL))
-					{
-						banned = 0; /* exempt by except block */
-						break;
-					}
-				}
-				for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
-				{
-					if (hook->func.intfunc(cptr, tkl) > 0)
-					{
-						banned = 0; /* exempt by hook */
-						break;
-					}
-				}
-				if (banned)
-					break;
+				if (find_tkl_exception(TKL_SHUN, cptr))
+					return 1;
+				SetShunned(cptr);
+				return 2; /* Shunned */
 			}
 		}
 	}
 
-	if (!banned)
-		return 1;
-
-	SetShunned(cptr);
-	return 2;
+	return 1; /* No match */
 }
 
 /** Helper function for spamfilter_build_user_string().
@@ -2351,20 +2770,15 @@ aTKline *_find_qline(aClient *cptr, char *name, int *ishold)
 	if (points != 1)
 		return NULL;
 
-	/* It's a services hold */
+	/* It's a services hold (except bans don't override this) */
 	if (tkl->ptr.nameban->hold)
 	{
 		*ishold = 1;
 		return tkl;
 	}
 
-	for (excepts = conf_except; excepts; excepts = excepts->next)
-	{
-		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != TKL_NAME)
-			continue;
-		if (match_user(excepts->mask, cptr, MATCH_CHECK_REAL))
-			return NULL; /* exempt */
-	}
+	if (find_tkl_exception(TKL_NAME, cptr))
+		return NULL; /* exempt */
 
 	return tkl;
 }
@@ -2380,26 +2794,12 @@ aTKline *find_tkline_match_zap_matcher(aClient *cptr, aTKline *tkl)
 
 	if (match_user(tkl->ptr.serverban->hostmask, cptr, MATCH_CHECK_IP))
 	{
-		for (excepts = conf_except; excepts; excepts = excepts->next)
-		{
-			/* This used to be:
-			 * if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != tkl->type)
-			 * It now checks for 'except ban', hope this is what most people want,
-			 * it is at least the same as in find_tkline_match, which is how it currently
-			 * is when a user is connected. -- Syzop/20081221
-			 */
-			if (excepts->flag.type != CONF_EXCEPT_BAN)
-				continue;
-			if (match_user(excepts->mask, cptr, MATCH_CHECK_IP))
-				return NULL; /* exempt */
-		}
-		for (hook = Hooks[HOOKTYPE_TKL_EXCEPT]; hook; hook = hook->next)
-			if (hook->func.intfunc(cptr, tkl) > 0)
-				return NULL; /* exempt */
-
-		return tkl;
+		if (find_tkl_exception(TKL_ZAP, cptr))
+			return NULL; /* exempt */
+		return tkl; /* banned */
 	}
-	return NULL;
+
+	return NULL; /* no match */
 }
 
 /** Find matching (G)ZLINE, if any.
@@ -2993,13 +3393,15 @@ void _sendnotice_tkl_add(aTKline *tkl)
 	{
 		if (tkl->expire_at != 0)
 		{
-			ircsnprintf(buf, sizeof(buf), "Exception added for %s%s@%s for types '%s' on %s GMT (from %s to expire at %s GMT: %s)",
+			ircsnprintf(buf, sizeof(buf), "%s added for %s%s@%s for types '%s' on %s GMT (from %s to expire at %s GMT: %s)",
+				tkl_type_str,
 				(tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 				tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask,
 				tkl->ptr.banexception->bantypes,
 				set_at, tkl->set_by, expire_at, tkl->ptr.banexception->reason);
 		} else {
-			ircsnprintf(buf, sizeof(buf), "Permanent exception added for %s%s@%s for types '%s' on %s GMT (from %s: %s)",
+			ircsnprintf(buf, sizeof(buf), "Permanent %s added for %s%s@%s for types '%s' on %s GMT (from %s: %s)",
+				tkl_type_str,
 				(tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
 				tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask,
 				tkl->ptr.banexception->bantypes,
