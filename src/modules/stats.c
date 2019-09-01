@@ -588,6 +588,7 @@ int stats_port(aClient *sptr, char *para)
 int stats_bannick(aClient *sptr, char *para)
 {
 	tkl_stats(sptr, TKL_NAME, para);
+	tkl_stats(sptr, TKL_GLOBAL|TKL_NAME, para);
 	return 0;
 }
 

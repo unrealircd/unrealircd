@@ -1479,6 +1479,15 @@ int _tkl_ip_hash(char *ip)
 	}
 }
 
+// TODO: consider efunc
+int tkl_ip_hash_tkl(aTKline *tkl)
+{
+	if (TKLIsServerBan(tkl))
+		return tkl_ip_hash(tkl->ptr.serverban->hostmask);
+	// TODO: expand for except
+	return -1;
+}
+
 /** Used for finding out which tkl_ip hash table needs to be used (secondary element).
  * NOTE: Returns -1 for types that are never on the TKL ip hash table, such as spamfilter.
  *       This can be used by the caller as a quick way to find out if the type is supported.
@@ -1617,7 +1626,7 @@ aTKline *_tkl_add_serverban(int type, char *usermask, char *hostmask, char *reas
 	index = tkl_ip_hash_type(tkl_typetochar(type));
 	if (index >= 0)
 	{
-		index2 = tkl_ip_hash(tkl->ptr.serverban->hostmask);
+		index2 = tkl_ip_hash_tkl(tkl);
 		if (index2 >= 0)
 		{
 			AddListItem(tkl, tklines_ip_hash[index][index2]);
@@ -1668,7 +1677,7 @@ aTKline *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *se
 	tkl->ptr.nameban = MyMallocEx(sizeof(ServerBan));
 	tkl->ptr.nameban->name = strdup(name);
 	tkl->ptr.nameban->hold = hold;
-	tkl->ptr.serverban->reason = strdup(reason);
+	tkl->ptr.nameban->reason = strdup(reason);
 
 	/* Name bans go via the normal TKL list.. */
 	index = tkl_hash(tkl_typetochar(type));
@@ -1726,7 +1735,7 @@ void _tkl_del_line(aTKline *tkl)
 	index = tkl_ip_hash_type(tkl_typetochar(tkl->type));
 	if (index >= 0)
 	{
-		index2 = tkl_ip_hash(tkl->ptr.serverban->hostmask);
+		index2 = tkl_ip_hash_tkl(tkl);
 		if (index2 >= 0)
 		{
 			DelListItem(tkl, tklines_ip_hash[index][index2]);
