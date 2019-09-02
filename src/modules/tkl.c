@@ -1395,7 +1395,7 @@ CMD_FUNC(m_eline)
 	aClient *acptr = NULL;
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
-	char *p, *usermask, *hostmask, *bantypes=NULL, *reason;
+	char *p, *usermask, *hostmask, *bantypes=NULL, *reason=NULL;
 	char *tkllayer[11] = {
 		me.name,		/*0  server.name */
 		NULL,			/*1  +|- */
