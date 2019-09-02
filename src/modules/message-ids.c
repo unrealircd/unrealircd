@@ -81,7 +81,7 @@ MOD_UNLOAD(message-ids)
  */
 int msgid_mtag_is_ok(aClient *acptr, char *name, char *value)
 {
-	if (IsServer(acptr))
+	if (IsServer(acptr) && !BadPtr(value))
 		return 1;
 
 	return 0;
