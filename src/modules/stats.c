@@ -106,7 +106,6 @@ struct statstab StatsTable[] = {
 	{ 'B', "banversion",	stats_banversion,	0		},
 	{ 'C', "link", 		stats_links,		0 		},
 	{ 'D', "denylinkall",	stats_denylinkall,	0		},
-	{ 'E', "except",	stats_except,		0 		},
 	{ 'F', "denydcc",	stats_denydcc,		0 		},
 	{ 'G', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'H', "link",	 	stats_links,		0 		},	
@@ -128,6 +127,7 @@ struct statstab StatsTable[] = {
 	{ 'Z', "mem",		stats_mem,		0 		},
 	{ 'c', "link", 		stats_links,		0 		},
 	{ 'd', "denylinkauto",	stats_denylinkauto,	0 		},
+	{ 'e', "except",	stats_except,		0 		},
 	{ 'f', "spamfilter",	stats_spamfilter,	FLAGS_AS_PARA	},	
 	{ 'g', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'h', "link", 		stats_links,		0 		},
@@ -200,8 +200,7 @@ static inline void stats_help(aClient *sptr)
 	sendnumeric(sptr, RPL_STATSHELP, "C - link - Send the link block list");
 	sendnumeric(sptr, RPL_STATSHELP, "d - denylinkauto - Send the deny link (auto) block list");
 	sendnumeric(sptr, RPL_STATSHELP, "D - denylinkall - Send the deny link (all) block list");
-	sendnumeric(sptr, RPL_STATSHELP, "e - exceptthrottle - Send the except throttle block list");
-	sendnumeric(sptr, RPL_STATSHELP, "E - exceptban - Send the except ban and except tkl block list");
+	sendnumeric(sptr, RPL_STATSHELP, "e - except - Send the ban exception list (ELINEs and in config))");
 	sendnumeric(sptr, RPL_STATSHELP, "f - spamfilter - Send the spamfilter list");
 	sendnumeric(sptr, RPL_STATSHELP, "F - denydcc - Send the deny dcc and allow dcc block lists");
 	sendnumeric(sptr, RPL_STATSHELP, "G - gline - Send the gline and gzline list");
@@ -490,17 +489,8 @@ int stats_spamfilter(aClient *sptr, char *para)
 
 int stats_except(aClient *sptr, char *para)
 {
-#if 0
-	// FIXME: update numeric and send list to users ;)
-	ConfigItem_except *excepts;
-	for (excepts = conf_except; excepts; excepts = excepts->next)
-	{
-		if (excepts->flag.type == CONF_EXCEPT_BAN)
-			sendnumeric(sptr, RPL_STATSKLINE, "E", excepts->mask, "");
-		else if (excepts->flag.type == CONF_EXCEPT_TKL)
-			sendnumeric(sptr, RPL_STATSEXCEPTTKL, tkl_typetochar(excepts->type), excepts->mask);
-	}
-#endif
+	tkl_stats(sptr, TKL_EXCEPTION, para);
+	tkl_stats(sptr, TKL_EXCEPTION|TKL_GLOBAL, para);
 	return 0;
 }
 

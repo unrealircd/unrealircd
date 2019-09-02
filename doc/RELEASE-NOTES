@@ -61,6 +61,10 @@ Enhancements
   As you can see there is currently no 'disk' backend. However, in the
   future more options may be added. Also note that 3rd party modules
   can add history backends as well.
+* Support for ban exceptions via the new /ELINE command. This allows you
+  to add exceptions for regular bans (KLINE/GLINE/ZLINE/etc), but also
+  for connection throttling and blacklist checking.
+  For more information, just type /ELINE in your IRC client as oper.
 * Channel mode +L now kicks in for any rejected join, so not just for +l but
   also for +b, +i, +O, +z, +R and +k. If, for example, the channel is
   +L #insecure and also +z then, when an insecure user ties to join, they
@@ -151,6 +155,9 @@ Enhancements
 
 Changed
 --------
+* The "except tkl" block is now called "except ban". If no type
+  is specified in an except ban { } block then we exempt the entry
+  from kline, gline, zline, gzline and shun.
 * Windows: we now require a 64-bit version, Windows 7 or later.
   The new program path is: C:\Program Files\UnrealIRCd 5
   and the binaries have been moved to a new subdirectory: bin\
@@ -288,7 +295,11 @@ It is therefore best to wait until beta1. You have been warned ;).
 Server protocol
 ----------------
 * Surprisingly little has been changed in the server to server protocol
-  between UnrealIRCd 4 and UnrealIRCd 5.
+  between UnrealIRCd 4 and UnrealIRCd 5:
 * "PROTOCTL MTAGS" indicates that the server is capable of handling
   message tags and that the server can cope with 4K lines. (Note that
   the ordinary non-message-tag part is still limited to 512 bytes).
+* We now assume at least UnrealIRCd 4 like protocol abilities,
+  such as SID, NICKv2, TKLEXT2, etc.
+  (more precise information will follow)
+  In particular this means UnrealIRCd 3.2.x will not link with 5.x.

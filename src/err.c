@@ -249,12 +249,12 @@ static char *replies[] = {
 /* 222    RPL_SQLINE_NICK */ "%s :%s",
 /* 223    RPL_STATSGLINE */ "%c %s%s@%s %li %li %s :%s",
 /* 224    RPL_STATSTLINE */ "T %s %s %s",
-/* 225    RPL_STATSELINE */ "e %s",
+/* 225    RPL_STATSELINE (we use 230 instead) */ NULL,
 /* 226    RPL_STATSNLINE */ "n %s %s",
 /* 227    RPL_STATSVLINE */ "v %s %s %s",
 /* 228    RPL_STATSBANVER */ "%s %s",
 /* 229    RPL_STATSSPAMF */  "%c %s %s %s %li %li %li %s %s :%s",
-/* 230    RPL_STATSEXCEPTTKL */ "%c %s",
+/* 230    RPL_STATSEXCEPTTKL */ "%s%s@%s %s %li %li %s :%s",
 /* 231 */ NULL, /* rfc1459 */
 /* 232    RPL_RULES */ ":- %s",
 /* 233 */ NULL, /* rfc1459 */
