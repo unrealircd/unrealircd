@@ -123,10 +123,10 @@ TKLTypeTable tkl_types[] = {
 	{ "local-spamfilter", 'e', TKL_EXCEPTION,               "Local Exception",  1, 0 },
 	{ "local-exception",  'f', TKL_SPAMF,                   "Local Spamfilter", 1, 0 },
 	{ "blacklist",        'b', TKL_BLACKLIST,               "Blacklist",        0, 1 },
-	{ "throttle",         't', TKL_THROTTLE,                "Throttle",         0, 1 },
+	{ "connect-flood",    'c', TKL_CONNECT_FLOOD,           "Connect flood",    0, 1 },
 	{ NULL,               '\0', 0,                          NULL,               0, 0 },
 };
-#define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, throttle"
+#define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood"
 
 MOD_TEST(tkl)
 {
@@ -627,6 +627,7 @@ int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int 
 	Hook *h;
 	char *bantypes = NULL;
 	int errors = 0;
+	int has_mask = 0;
 
 	/* We are only interested in except { } blocks */
 	if (configtype != CONFIG_EXCEPT)
@@ -653,7 +654,33 @@ int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int 
 	{
 		if (!strcmp(cep->ce_varname, "mask"))
 		{
-			// TODO: verify mask, can be both a list or just 1 directly
+			if (cep->ce_entries)
+			{
+				/* mask { *@1.1.1.1; *@2.2.2.2; *@3.3.3.3; }; */
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (!cepp->ce_varname)
+					{
+						config_error_empty(cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum, "except ban", "mask");
+						errors++;
+						continue;
+					}
+					has_mask = 1;
+				}
+			} else
+			if (cep->ce_vardata)
+			{
+				/* mask *@1.1.1.1; */
+				if (!cep->ce_vardata)
+				{
+					config_error_empty(cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum, "except ban", "mask");
+					errors++;
+					continue;
+				}
+				has_mask = 1;
+			}
 		} else
 		if (!strcmp(cep->ce_varname, "type"))
 		{
@@ -686,6 +713,13 @@ int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int 
 			errors++;
 			continue;
 		}
+	}
+
+	if (!has_mask)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"except ban::mask");
+		errors++;
 	}
 
 	*errs = errors;
@@ -1348,7 +1382,7 @@ int eline_syntax(aClient *sptr)
  */
 int eline_type_requires_ip(char *bantypes)
 {
-	if (strchr(bantypes, 'z') || strchr(bantypes, 'Z') || strchr(bantypes, 't') || strchr(bantypes, 'b'))
+	if (strchr(bantypes, 'z') || strchr(bantypes, 'Z') || strchr(bantypes, 'c') || strchr(bantypes, 'b'))
 		return 1;
 	return 0;
 }
@@ -1459,16 +1493,16 @@ CMD_FUNC(m_eline)
 			 */
 			if (strcmp(usermask, "*"))
 			{
-				sendnotice(sptr, "ERROR: Ban exceptions with type z/Z/t/b need to be placed at \037*\037@ipmask, not \037user\037@ipmask. "
-				                 "This is because checking (g)zlines, throttling and blacklists is done BEFORE any dns and ident lookups.");
+				sendnotice(sptr, "ERROR: Ban exceptions with type z/Z/c/b need to be placed at \037*\037@ipmask, not \037user\037@ipmask. "
+				                 "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE any dns and ident lookups.");
 				return -1;
 			}
 			for (p=hostmask; *p; p++)
 				if (isalpha(*p) && !isxdigit(*p))
 				{
-					sendnotice(sptr, "ERROR: Ban exceptions with type z/Z/t/b need to be placed at *@\037ipmask\037, not *@\037hostmask\037. "
+					sendnotice(sptr, "ERROR: Ban exceptions with type z/Z/c/b need to be placed at *@\037ipmask\037, not *@\037hostmask\037. "
 					                 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
-				                         "This is because checking (g)zlines, throttling and blacklists is done BEFORE any dns and ident lookups.");
+				                         "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE any dns and ident lookups.");
 					return -1;
 				}
 		}

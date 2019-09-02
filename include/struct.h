@@ -709,16 +709,16 @@ struct Server {
  *   TKL_KILL			= Local K-Line
  *   TKL_ZAP			= Local Z-Line
  */
-#define TKL_KILL	0x0001
-#define TKL_ZAP		0x0002
-#define TKL_GLOBAL	0x0004
-#define TKL_SHUN	0x0008
-#define TKL_SPAMF	0x0020
-#define TKL_NAME	0x0040
-#define TKL_EXCEPTION	0x0080
+#define TKL_KILL		0x0001
+#define TKL_ZAP			0x0002
+#define TKL_GLOBAL		0x0004
+#define TKL_SHUN		0x0008
+#define TKL_SPAMF		0x0020
+#define TKL_NAME		0x0040
+#define TKL_EXCEPTION		0x0080
 /* these are not real tkl types, but only used for exceptions: */
-#define TKL_THROTTLE	0x1000
-#define TKL_BLACKLIST	0x2000
+#define TKL_CONNECT_FLOOD	0x1000
+#define TKL_BLACKLIST		0x2000
 
 #define TKLIsServerBan(tkl)		((tkl)->type & (TKL_KILL|TKL_ZAP|TKL_SHUN))
 #define TKLIsServerBanType(tpe)		((tpe) & (TKL_KILL|TKL_ZAP|TKL_SHUN))
