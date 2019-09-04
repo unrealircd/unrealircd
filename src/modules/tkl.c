@@ -111,22 +111,26 @@ struct _tkltypetable
  */
 TKLTypeTable tkl_types[] = {
 	/* <config name> <letter> <TKL_xxx type>               <logging name> <tkl option?> <exempt option?> */
-	{ "gline",            'G', TKL_KILL       | TKL_GLOBAL, "G-Line",           1, 1 },
-	{ "kline",            'k', TKL_KILL,                    "K-Line",           1, 1 },
-	{ "gzline",           'Z', TKL_ZAP        | TKL_GLOBAL, "Global Z-Line",    1, 1 },
-	{ "zline",            'z', TKL_ZAP,                     "Z-Line",           1, 1 },
-	{ "spamfilter",       'F', TKL_SPAMF      | TKL_GLOBAL, "Spamfilter",       1, 1 },
-	{ "qline",            'Q', TKL_NAME       | TKL_GLOBAL, "Q-Line",           1, 1 },
-	{ "except",           'E', TKL_EXCEPTION  | TKL_GLOBAL, "Exception",        1, 0 },
-	{ "shun",             's', TKL_SHUN       | TKL_GLOBAL, "Shun",             1, 0 },
-	{ "local-qline",      'q', TKL_NAME,                    "Local Q-Line",     1, 0 },
-	{ "local-spamfilter", 'e', TKL_EXCEPTION,               "Local Exception",  1, 0 },
-	{ "local-exception",  'f', TKL_SPAMF,                   "Local Spamfilter", 1, 0 },
-	{ "blacklist",        'b', TKL_BLACKLIST,               "Blacklist",        0, 1 },
-	{ "connect-flood",    'c', TKL_CONNECT_FLOOD,           "Connect flood",    0, 1 },
-	{ NULL,               '\0', 0,                          NULL,               0, 0 },
+	{ "gline",              'G', TKL_KILL       | TKL_GLOBAL, "G-Line",             1, 1 },
+	{ "kline",              'k', TKL_KILL,                    "K-Line",             1, 1 },
+	{ "gzline",             'Z', TKL_ZAP        | TKL_GLOBAL, "Global Z-Line",      1, 1 },
+	{ "zline",              'z', TKL_ZAP,                     "Z-Line",             1, 1 },
+	{ "spamfilter",         'F', TKL_SPAMF      | TKL_GLOBAL, "Spamfilter",         1, 1 },
+	{ "qline",              'Q', TKL_NAME       | TKL_GLOBAL, "Q-Line",             1, 1 },
+	{ "except",             'E', TKL_EXCEPTION  | TKL_GLOBAL, "Exception",          1, 0 },
+	{ "shun",               's', TKL_SHUN       | TKL_GLOBAL, "Shun",               1, 0 },
+	{ "local-qline",        'q', TKL_NAME,                    "Local Q-Line",       1, 0 },
+	{ "local-spamfilter",   'e', TKL_EXCEPTION,               "Local Exception",    1, 0 },
+	{ "local-exception",    'f', TKL_SPAMF,                   "Local Spamfilter",   1, 0 },
+	{ "blacklist",          'b', TKL_BLACKLIST,               "Blacklist",          0, 1 },
+	{ "connect-flood",      'c', TKL_CONNECT_FLOOD,           "Connect flood",      0, 1 },
+	{ "unknown-data-flood", 'd', TKL_UNKNOWN_DATA_FLOOD,      "Unknown data flood", 0, 1 },
+	{ "antirandom",         'r', TKL_ANTIRANDOM,              "Antirandom",         0, 1 },
+	{ "antimixedutf8",      '8', TKL_ANTIMIXEDUTF8,           "Antimixedutf8",      0, 1 },
+	{ "ban-version",        'v', TKL_BAN_VERSION,             "Ban Version",        0, 1 },
+	{ NULL,                 '\0', 0,                          NULL,                 0, 0 },
 };
-#define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood"
+#define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood, unknown-data-flood, antirandom, antimixedutf8, ban-version"
 
 MOD_TEST(tkl)
 {
@@ -1370,6 +1374,11 @@ int eline_syntax(aClient *sptr)
 	sendnotice(sptr, "f: Spamfilter");
 	sendnotice(sptr, "t: Throttling");
 	sendnotice(sptr, "b: Blacklist checking");
+	sendnotice(sptr, "c: Connect flood (bypass set::anti-flood::connect-flood))");
+	sendnotice(sptr, "d: Unknown data flood (no ZLINE on too much data before registration)");
+	sendnotice(sptr, "r: Bypass antirandom module");
+	sendnotice(sptr, "8: Bypass antimixedutf8 module");
+	sendnotice(sptr, "v: Bypass ban version { } blocks");
 	sendnotice(sptr, "Example: /ELINE *@unrealircd.org kgzZ 0 This user is exempt");
 	sendnotice(sptr, "-");
 	sendnotice(sptr, "To get a list of all current ELINEs, type: /STATS except");

@@ -181,7 +181,7 @@ CMD_OVERRIDE_FUNC(override_msg)
 	}
 
 	score = lookalikespam_score(StripControlCodes(parv[2]));
-	if (score >= cfg.score)
+	if ((score >= cfg.score) && !find_tkl_exception(TKL_ANTIMIXEDUTF8, sptr))
 	{
 		if (cfg.ban_action == BAN_ACT_KILL)
 		{

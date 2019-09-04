@@ -822,7 +822,7 @@ extern CMD_FUNC(m_rehash);
 extern CMD_FUNC(m_die);
 extern CMD_FUNC(m_restart);
 extern int m_alias(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], char *cmd); /* special! */
-extern void ban_flooder(aClient *cptr);
+extern int ban_flooder(aClient *cptr);
 extern char *pcre2_version(void);
 extern int has_common_channels(aClient *c1, aClient *c2);
 extern int user_can_see_member(aClient *user, aClient *target, aChannel *chptr);

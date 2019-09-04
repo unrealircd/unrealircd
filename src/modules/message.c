@@ -864,7 +864,7 @@ char *_StripControlCodes(unsigned char *text)
 	return new_str;
 }
 
-int	ban_version(aClient *sptr, char *text)
+int ban_version(aClient *sptr, char *text)
 {
 	int len;
 	ConfigItem_ban *ban;
@@ -879,6 +879,9 @@ int	ban_version(aClient *sptr, char *text)
 	if ((ban = Find_ban(NULL, text, CONF_BAN_VERSION)))
 	{
 		if (IsSoftBanAction(ban->action) && IsLoggedIn(sptr))
+			return 0; /* soft ban does not apply to us, we are logged in */
+
+		if (find_tkl_exception(TKL_BAN_VERSION, sptr))
 			return 0; /* we are exempt */
 
 		return place_host_ban(sptr, ban->action, ban->reason, BAN_VERSION_TKL_TIME);

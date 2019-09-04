@@ -1000,6 +1000,9 @@ static int is_exempt(aClient *sptr)
 			return 1;
 	}
 
+	if (find_tkl_exception(TKL_ANTIRANDOM, sptr))
+		return 1;
+
 	/* Soft ban and logged in? */
 	if (IsSoftBanAction(cfg.ban_action) && IsLoggedIn(sptr))
 		return 1;

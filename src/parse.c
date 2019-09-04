@@ -37,11 +37,17 @@ static char sender[HOSTLEN + 1];
 static int cancel_clients(aClient *, aClient *, char *);
 static void remove_unknown(aClient *, char *);
 
-void ban_flooder(aClient *cptr)
+int ban_flooder(aClient *cptr)
 {
+	/* Check if user is exempt.
+	 * Note that we will still kill the client, since it's clearly misbehaving,
+	 * but we won't ZLINE the host, so it won't affect other connections
+	 * from the same IP.
+	 */
+	if (find_tkl_exception(TKL_UNKNOWN_DATA_FLOOD, cptr))
+		return exit_client(cptr, cptr, &me, NULL, "Flood from unknown connection");
 	/* place_host_ban also takes care of removing any other clients with same host/ip */
-	place_host_ban(cptr, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
-	return;
+	return place_host_ban(cptr, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
 }
 
 /*
@@ -96,8 +102,7 @@ int parse(aClient *cptr, char *buffer, int length)
 	{
 		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
 			cptr->local->sockhost);
-		ban_flooder(cptr);
-		return FLUSH_BUFFER;
+		return ban_flooder(cptr);
 	}
 
 	/* This stores the last executed command in 'backupbuf', useful for debugging crashes */
