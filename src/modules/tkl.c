@@ -52,7 +52,7 @@ int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
 char *_tkl_type_string(aTKline *tk);
-int tkl_banexception_configname_to_char(char *name);
+char *tkl_banexception_configname_to_chars(char *name);
 aTKline *_tkl_add_serverban(int type, char *usermask, char *hostmask, char *reason, char *set_by,
                             time_t expire_at, time_t set_at, int soft, int flags);
 aTKline *_tkl_add_banexception(int type, char *usermask, char *hostmask, char *reason, char *set_by,
@@ -118,7 +118,7 @@ TKLTypeTable tkl_types[] = {
 	{ "spamfilter",         'F', TKL_SPAMF      | TKL_GLOBAL, "Spamfilter",         1, 1 },
 	{ "qline",              'Q', TKL_NAME       | TKL_GLOBAL, "Q-Line",             1, 1 },
 	{ "except",             'E', TKL_EXCEPTION  | TKL_GLOBAL, "Exception",          1, 0 },
-	{ "shun",               's', TKL_SHUN       | TKL_GLOBAL, "Shun",               1, 0 },
+	{ "shun",               's', TKL_SHUN       | TKL_GLOBAL, "Shun",               1, 1 },
 	{ "local-qline",        'q', TKL_NAME,                    "Local Q-Line",       1, 0 },
 	{ "local-spamfilter",   'e', TKL_EXCEPTION,               "Local Exception",    1, 0 },
 	{ "local-exception",    'f', TKL_SPAMF,                   "Local Spamfilter",   1, 0 },
@@ -692,7 +692,7 @@ int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int 
 			{
 				/* type { x; y; z; }; */
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-					if (!tkl_banexception_configname_to_char(cepp->ce_varname))
+					if (!tkl_banexception_configname_to_chars(cepp->ce_varname))
 					{
 						config_error("%s:%d: except ban::type '%s' unknown. Must be one of: %s",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname,
@@ -703,7 +703,7 @@ int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int 
 			if (cep->ce_vardata)
 			{
 				/* type x; */
-				if (!tkl_banexception_configname_to_char(cep->ce_vardata))
+				if (!tkl_banexception_configname_to_chars(cep->ce_vardata))
 				{
 					config_error("%s:%d: except ban::type '%s' unknown. Must be one of: %s",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata,
@@ -765,16 +765,6 @@ void config_create_tkl_except(char *mask, char *bantypes)
 	                     "-config-", 0, TStime(), soft, bantypes, TKL_FLAG_CONFIG);
 }
 
-void tkl_config_run_except_add_bantype(char *bantypes, size_t bantypeslen, char *name)
-{
-	char str[2];
-	str[0] = tkl_banexception_configname_to_char(name);
-	str[1] = '\0';
-
-	if (*str)
-		strlcat(bantypes, str, bantypeslen);
-}
-
 int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 {
 	ConfigEntry *cep, *cepp;
@@ -806,12 +796,16 @@ int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 			{
 				/* type { x; y; z; }; */
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-					tkl_config_run_except_add_bantype(bantypes, sizeof(bantypes), cepp->ce_varname);
+				{
+					char *str = tkl_banexception_configname_to_chars(cepp->ce_varname);
+					strlcat(bantypes, str, sizeof(bantypes));
+				}
 			} else
 			if (cep->ce_vardata)
 			{
 				/* type x; */
-				tkl_config_run_except_add_bantype(bantypes, sizeof(bantypes), cep->ce_vardata);
+				char *str = tkl_banexception_configname_to_chars(cep->ce_vardata);
+				strlcat(bantypes, str, sizeof(bantypes));
 			}
 		}
 	}
@@ -1902,13 +1896,34 @@ int tkl_banexception_chartotype(char c)
 	return 0;
 }
 
-int tkl_banexception_configname_to_char(char *name)
+char *tkl_banexception_configname_to_chars(char *name)
 {
+	static char buf[128];
 	int i;
+
+	if (!strcasecmp(name, "all"))
+	{
+		/* 'all' means everything except qline: */
+		char *p = buf;
+		for (i=0; tkl_types[i].config_name; i++)
+		{
+			if (tkl_types[i].exceptiontype && !(tkl_types[i].type & TKL_NAME))
+				*p++ = tkl_types[i].letter;
+		}
+		*p = '\0';
+		return buf;
+	}
+
 	for (i=0; tkl_types[i].config_name; i++)
+	{
 		if (!strcasecmp(name, tkl_types[i].config_name) && tkl_types[i].exceptiontype)
-			return tkl_types[i].letter;
-	return 0;
+		{
+			buf[0] = tkl_types[i].letter;
+			buf[1] = '\0';
+			return buf;
+		}
+	}
+	return NULL;
 }
 
 /** Show TKL type as a string (used when adding/removing) */
