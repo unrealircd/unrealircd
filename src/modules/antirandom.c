@@ -514,7 +514,7 @@ struct {
 
 struct {
 	int threshold;
-	int ban_action;
+	BanAction ban_action;
 	char *ban_reason;
 	long ban_time;
 	int convert_to_lowercase;

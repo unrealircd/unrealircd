@@ -66,7 +66,7 @@ aTKline *(*find_tkline_match_zap)(aClient *cptr);
 void (*tkl_stats)(aClient *cptr, int type, char *para);
 void (*tkl_synch)(aClient *sptr);
 int (*m_tkl)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
-int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
+int (*place_host_ban)(aClient *sptr, BanAction action, char *reason, long duration);
 int (*run_spamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 int (*join_viruschan)(aClient *sptr, aTKline *tk, int type);
 void (*send_list)(aClient *cptr);

@@ -53,7 +53,7 @@ ModuleHeader MOD_HEADER(antimixedutf8)
 
 struct {
 	int score;
-	int ban_action;
+	BanAction ban_action;
 	char *ban_reason;
 	long ban_time;
 } cfg;
@@ -189,11 +189,8 @@ CMD_OVERRIDE_FUNC(override_msg)
 				GetIP(sptr), score);
 		} /* no else here!! */
 
-		if ((cfg.ban_action == BAN_ACT_BLOCK)
-#ifdef BAN_ACT_SOFT_BLOCK
-		    || ((cfg.ban_action == BAN_ACT_SOFT_BLOCK) && !IsLoggedIn(sptr))
-#endif
-		    )
+		if ((cfg.ban_action == BAN_ACT_BLOCK) ||
+		    ((cfg.ban_action == BAN_ACT_SOFT_BLOCK) && !IsLoggedIn(sptr)))
 		{
 			sendnotice(sptr, "%s", cfg.ban_reason);
 			return 0;

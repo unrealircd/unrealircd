@@ -78,7 +78,7 @@ aTKline *_find_tkline_match_zap(aClient *cptr);
 void _tkl_stats(aClient *cptr, int type, char *para);
 void _tkl_synch(aClient *sptr);
 CMD_FUNC(_m_tkl);
-int _place_host_ban(aClient *sptr, int action, char *reason, long duration);
+int _place_host_ban(aClient *sptr, BanAction action, char *reason, long duration);
 int _run_spamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 int _join_viruschan(aClient *sptr, aTKline *tk, int type);
 void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr);
@@ -4036,7 +4036,7 @@ CMD_FUNC(_m_tkl)
  *            has been freed.
  * @retval 0  no action is taken, the user is exempted.
  */
-int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
+int _place_host_ban(aClient *sptr, BanAction action, char *reason, long duration)
 {
 	/* If this is a soft action and the user is logged in, then the ban does not apply.
 	 * NOTE: Actually in such a case it would be better if place_host_ban() would not

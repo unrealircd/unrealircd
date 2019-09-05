@@ -731,9 +731,9 @@ int valid_host(char *host)
 /*|| BAN ACTION ROUTINES FOLLOW ||*/
 
 /** Converts a banaction string (eg: "kill") to an integer value (eg: BAN_ACT_KILL) */
-int banact_stringtoval(char *s)
+BanAction banact_stringtoval(char *s)
 {
-BanActTable *b;
+	BanActTable *b;
 
 	for (b = &banacttable[0]; b->value; b++)
 		if (!strcasecmp(s, b->name))
@@ -742,9 +742,9 @@ BanActTable *b;
 }
 
 /** Converts a banaction character (eg: 'K') to an integer value (eg: BAN_ACT_KILL) */
-int banact_chartoval(char c)
+BanAction banact_chartoval(char c)
 {
-BanActTable *b;
+	BanActTable *b;
 
 	for (b = &banacttable[0]; b->value; b++)
 		if (b->character == c)
@@ -753,9 +753,9 @@ BanActTable *b;
 }
 
 /** Converts a banaction value (eg: BAN_ACT_KILL) to a character value (eg: 'k') */
-char banact_valtochar(int val)
+char banact_valtochar(BanAction val)
 {
-BanActTable *b;
+	BanActTable *b;
 
 	for (b = &banacttable[0]; b->value; b++)
 		if (b->value == val)
@@ -764,9 +764,9 @@ BanActTable *b;
 }
 
 /** Converts a banaction value (eg: BAN_ACT_KLINE) to a string (eg: "kline") */
-char *banact_valtostring(int val)
+char *banact_valtostring(BanAction val)
 {
-BanActTable *b;
+	BanActTable *b;
 
 	for (b = &banacttable[0]; b->value; b++)
 		if (b->value == val)

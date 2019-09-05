@@ -714,7 +714,7 @@ int blacklist_parse_reply(struct hostent *he, int entry)
  * from blacklist_preconnect() for softbans that need to be delayed
  * as to give the user the opportunity to do SASL Authentication.
  */
-int blacklist_action(aClient *acptr, char *opernotice, int ban_action, char *ban_reason, long ban_time)
+int blacklist_action(aClient *acptr, char *opernotice, BanAction ban_action, char *ban_reason, long ban_time)
 {
 	sendto_snomask(SNO_BLACKLIST, "%s", opernotice);
 	ircd_log(LOG_KILL, "%s", opernotice);

@@ -747,6 +747,37 @@ struct Server {
 /* Other flags only for function calls: */
 #define SPAMFLAG_NOWARN		0x0001
 
+/* Ban actions. These must be ordered by severity (!) */
+typedef enum BanAction {
+	BAN_ACT_GZLINE		=1100,
+	BAN_ACT_GLINE		=1000,
+	BAN_ACT_SOFT_GLINE	= 950,
+	BAN_ACT_ZLINE		= 900,
+	BAN_ACT_KLINE		= 800,
+	BAN_ACT_SOFT_KLINE	= 850,
+	BAN_ACT_SHUN		= 700,
+	BAN_ACT_SOFT_SHUN	= 650,
+	BAN_ACT_KILL		= 600,
+	BAN_ACT_SOFT_KILL	= 550,
+	BAN_ACT_TEMPSHUN	= 500,
+	BAN_ACT_SOFT_TEMPSHUN	= 450,
+	BAN_ACT_VIRUSCHAN	= 400,
+	BAN_ACT_SOFT_VIRUSCHAN	= 350,
+	BAN_ACT_DCCBLOCK	= 300,
+	BAN_ACT_SOFT_DCCBLOCK	= 250,
+	BAN_ACT_BLOCK		= 200,
+	BAN_ACT_SOFT_BLOCK	= 150,
+	BAN_ACT_WARN		= 100,
+	BAN_ACT_SOFT_WARN	=  50,
+} BanAction;
+
+#define IsSoftBanAction(x)   ((x == BAN_ACT_SOFT_GLINE) || (x == BAN_ACT_SOFT_KLINE) || \
+                              (x == BAN_ACT_SOFT_SHUN) || (x == BAN_ACT_SOFT_KILL) || \
+                              (x == BAN_ACT_SOFT_TEMPSHUN) || (x == BAN_ACT_SOFT_VIRUSCHAN) || \
+                              (x == BAN_ACT_SOFT_DCCBLOCK) || (x == BAN_ACT_SOFT_BLOCK) || \
+                              (x == BAN_ACT_SOFT_WARN))
+
+
 /** Server ban sub-struct of TKL entry (KLINE/GLINE/ZLINE/GZLINE/SHUN) */
 struct _serverban {
 	char *usermask; /**< User mask */
@@ -765,7 +796,7 @@ struct _nameban {
 /** Spamfilter sub-struct of TKL entry (Spamfilter) */
 struct _spamfilter {
 	unsigned short target;
-	unsigned short action; /**< Ban action, see BAN_ACT* */
+	BanAction action; /**< Ban action, see BAN_ACT* */
 	aMatch *match; /**< Spamfilter matcher */
 	char *tkl_reason; /**< Reason to use for bans placed by this spamfilter, escaped by unreal_encodespace(). */
 	time_t tkl_duration; /**< Duration of bans placed by this spamfilter */
@@ -1048,33 +1079,6 @@ struct _configflag_tld
 #define CONF_BAN_TYPE_CONF	0
 #define CONF_BAN_TYPE_AKILL	1
 #define CONF_BAN_TYPE_TEMPORARY 2
-
-/* Ban actions. These must be ordered by severity (!) */
-#define BAN_ACT_GZLINE		1100
-#define BAN_ACT_GLINE		1000
-#define BAN_ACT_SOFT_GLINE	 950
-#define BAN_ACT_ZLINE		 900
-#define BAN_ACT_KLINE		 800
-#define BAN_ACT_SOFT_KLINE	 850
-#define BAN_ACT_SHUN		 700
-#define BAN_ACT_SOFT_SHUN	 650
-#define BAN_ACT_KILL		 600
-#define BAN_ACT_SOFT_KILL	 550
-#define BAN_ACT_TEMPSHUN	 500
-#define BAN_ACT_SOFT_TEMPSHUN	 450
-#define BAN_ACT_VIRUSCHAN	 400
-#define BAN_ACT_SOFT_VIRUSCHAN	 350
-#define BAN_ACT_DCCBLOCK	 300
-#define BAN_ACT_SOFT_DCCBLOCK	 250
-#define BAN_ACT_BLOCK		 200
-#define BAN_ACT_SOFT_BLOCK	 150
-#define BAN_ACT_WARN		 100
-#define BAN_ACT_SOFT_WARN	  50
-#define IsSoftBanAction(x)   ((x == BAN_ACT_SOFT_GLINE) || (x == BAN_ACT_SOFT_KLINE) || \
-                              (x == BAN_ACT_SOFT_SHUN) || (x == BAN_ACT_SOFT_KILL) || \
-                              (x == BAN_ACT_SOFT_TEMPSHUN) || (x == BAN_ACT_SOFT_VIRUSCHAN) || \
-                              (x == BAN_ACT_SOFT_DCCBLOCK) || (x == BAN_ACT_SOFT_BLOCK) || \
-                              (x == BAN_ACT_SOFT_WARN))
 
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
