@@ -241,6 +241,13 @@ static char *validate_mod_header(ModuleHeader *mod_header)
 	return NULL; /* SUCCESS */
 }
 
+void deletetmp(char *path)
+{
+#ifndef REMOVETMP
+	remove(path);
+#endif
+}
+
 /*
  * Returns an error if insucessful .. yes NULL is OK! 
 */
@@ -299,7 +306,7 @@ char  *Module_Create(char *path_)
 			         "Module was compiled for '%s', we were configured for '%s'. SOLUTION: Recompile the module(s).",
 			         Mod_Version, expectedmodversion);
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return errorbuf;
 		}
 		if (!Mod_Version)
@@ -307,7 +314,7 @@ char  *Module_Create(char *path_)
 			snprintf(errorbuf, sizeof(errorbuf),
 				"Module is lacking Mod_Version. Perhaps a very old one you forgot to recompile?");
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return errorbuf;
 		}
 		irc_dlsym(Mod, "compiler_version", compiler_version);
@@ -320,20 +327,20 @@ char  *Module_Create(char *path_)
 			         "Module was compiled with GCC %s, core was compiled with GCC %s. SOLUTION: Recompile your UnrealIRCd and all its modules by doing a 'make clean; ./Config -quick && make'.",
 			         theyhad, wehave);
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return errorbuf;
 		}
 		irc_dlsym(Mod, "Mod_Header", mod_header);
 		if (!mod_header)
 		{
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return ("Unable to locate Mod_Header");
 		}
 		if (!mod_header->modversion)
 		{
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return ("Lacking mod_header->modversion");
 		}
 		if (!(modsys_ver = parse_modsys_version(mod_header->modversion)))
@@ -341,19 +348,19 @@ char  *Module_Create(char *path_)
 			snprintf(errorbuf, 1023, "Unsupported module system version '%s'",
 				   mod_header->modversion);
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return(errorbuf);
 		}
 		if ((reterr = validate_mod_header(mod_header)))
 		{
 			irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return(reterr);
 		}
 		if (Module_Find(mod_header->name))
 		{
 		        irc_dlclose(Mod);
-			remove(tmppath);
+			deletetmp(tmppath);
 			return (NULL);
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
@@ -559,9 +566,7 @@ void Unload_all_loaded_modules(void)
 		}
 		DelListItem(mi,Modules);
 		irc_dlclose(mi->dll);
-#ifndef DEBUGMODE
-		remove(mi->tmp_file);
-#endif
+		deletetmp(mi->tmp_file);
 		MyFree(mi->tmp_file);
 		MyFree(mi);
 	}
@@ -590,7 +595,7 @@ void Unload_all_testing_modules(void)
 		}
 		DelListItem(mi,Modules);
 		irc_dlclose(mi->dll);
-		remove(mi->tmp_file);
+		deletetmp(mi->tmp_file);
 		MyFree(mi->tmp_file);
 		MyFree(mi);
 	}
@@ -1235,7 +1240,7 @@ void	unload_all_modules(void)
 		irc_dlsym(m->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
 			(*Mod_Unload)(&m->modinfo);
-		remove(m->tmp_file);
+		deletetmp(m->tmp_file);
 	}
 }
 
