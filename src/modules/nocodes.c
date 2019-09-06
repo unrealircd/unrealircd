@@ -68,11 +68,11 @@ char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, cha
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
 			i = (*(h->func.intfunc))(sptr, chptr, BYPASS_CHANMSG_COLOR);
+			if (i == HOOK_ALLOW)
+				return text; /* bypass */
 			if (i != HOOK_CONTINUE)
 				break;
 		}
-		if (i == HOOK_ALLOW)
-			return text; /* bypass */
 
 		strlcpy(retbuf, StripControlCodes(text), sizeof(retbuf));
 		return retbuf;
@@ -84,11 +84,11 @@ char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, cha
 			for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 			{
 				i = (*(h->func.intfunc))(sptr, chptr, BYPASS_CHANMSG_COLOR);
+				if (i == HOOK_ALLOW)
+					return text; /* bypass */
 				if (i != HOOK_CONTINUE)
 					break;
 			}
-			if (i == HOOK_ALLOW)
-				return text; /* bypass */
 
 			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
 				"Control codes (bold/underline/reverse) are not permitted in this channel",

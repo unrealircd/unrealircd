@@ -95,11 +95,11 @@ char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
 			i = (*(h->func.intfunc))(sptr, chptr, BYPASS_CHANMSG_COLOR);
+			if (i == HOOK_ALLOW)
+				return text; /* bypass */
 			if (i != HOOK_CONTINUE)
 				break;
 		}
-		if (i == HOOK_ALLOW)
-			return text; /* bypass */
 
 		if (!notice)
 		{

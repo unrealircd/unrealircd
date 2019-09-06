@@ -94,11 +94,11 @@ int regonlyspeak_can_send(aClient *cptr, aChannel *chptr, Membership *lp, char *
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
 			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_CHANMSG_MODERATED);
+			if (i == HOOK_ALLOW)
+				return HOOK_CONTINUE; /* bypass +M restriction */
 			if (i != HOOK_CONTINUE)
 				break;
 		}
-		if (i == HOOK_ALLOW)
-			return HOOK_CONTINUE; /* bypass +M restriction */
 
 		*errmsg = "You must have a registered nick (+r) to talk on this channel";
 		return HOOK_DENY; /* BLOCK message */
