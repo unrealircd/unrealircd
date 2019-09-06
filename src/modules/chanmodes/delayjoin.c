@@ -26,7 +26,7 @@ static Cmode_t EXTMODE_POST_DELAYED;
 int visible_in_channel( aClient *cptr, aChannel *chptr);
 int moded_check_part( aClient *cptr, aChannel *chptr);
 int moded_join(aClient *cptr, aChannel *chptr);
-int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
+int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *comment);
 int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
 int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
                    MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
@@ -271,7 +271,7 @@ int moded_join(aClient *cptr, aChannel *chptr)
 	return 0;
 }
 
-int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment)
+int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *comment)
 {
 	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
 		clear_user_invisible(chptr,cptr);

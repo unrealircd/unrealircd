@@ -149,10 +149,11 @@ CMD_FUNC(m_knock)
 	               me.name, chptr->chname,
 	               sptr->name, sptr->user->username, GetHost(sptr),
 	               parv[2] ? parv[2] : "no reason specified");
-	free_message_tags(mtags);
 
 	sendnotice(sptr, "Knocked on %s", chptr->chname);
 
-        RunHook2(HOOKTYPE_KNOCK, sptr, chptr);
+        RunHook4(HOOKTYPE_KNOCK, sptr, chptr, mtags, parv[2]);
+
+	free_message_tags(mtags);
 	return 0;
 }

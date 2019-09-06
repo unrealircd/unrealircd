@@ -341,12 +341,12 @@ int sasl_connect(aClient *sptr)
 	return abort_sasl(sptr);
 }
 
-int sasl_quit(aClient *sptr, char *comment)
+int sasl_quit(aClient *sptr, MessageTag *mtags, char *comment)
 {
 	return abort_sasl(sptr);
 }
 
-int sasl_server_quit(aClient *sptr)
+int sasl_server_quit(aClient *sptr, MessageTag *mtags)
 {
 	if (!SASL_SERVER)
 		return 0;

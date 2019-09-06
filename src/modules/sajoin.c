@@ -221,9 +221,9 @@ CMD_FUNC(m_sajoin)
 					               ":%s PART %s :%s",
 					               acptr->name, chptr->chname, "Left all channels");
 					sendto_server(cptr, 0, 0, mtags, ":%s PART %s :Left all channels", acptr->name, chptr->chname);
-					free_message_tags(mtags);
 					if (MyConnect(acptr))
-						RunHook4(HOOKTYPE_LOCAL_PART, acptr, acptr, chptr, "Left all channels");
+						RunHook5(HOOKTYPE_LOCAL_PART, acptr, acptr, chptr, mtags, "Left all channels");
+					free_message_tags(mtags);
 					remove_user_from_channel(acptr, chptr);
 				}
 				strcpy(jbuf, "0");

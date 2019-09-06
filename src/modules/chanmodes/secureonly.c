@@ -98,8 +98,6 @@ static void secureonly_kick_insecure_users(aChannel *chptr)
 			int prefix = 0;
 			MessageTag *mtags = NULL;
 
-			RunHook5(HOOKTYPE_LOCAL_KICK, &me, &me, cptr, chptr, comment);
-
 			if (invisible_user_in_channel(cptr, chptr))
 			{
 				/* Send only to chanops */
@@ -107,6 +105,8 @@ static void secureonly_kick_insecure_users(aChannel *chptr)
 			}
 
 			new_message(&me, NULL, &mtags);
+
+			RunHook6(HOOKTYPE_LOCAL_KICK, &me, &me, cptr, chptr, mtags, comment);
 
 			sendto_channel(chptr, &me, cptr,
 				       prefix, 0,

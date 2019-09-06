@@ -212,12 +212,12 @@ CMD_FUNC(m_part)
 			}
 		}
 
-		free_message_tags(mtags);
-
 		if (MyClient(sptr))
-			RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
+			RunHook5(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, mtags, comment);
 		else
-			RunHook4(HOOKTYPE_REMOTE_PART, cptr, sptr, chptr, comment);
+			RunHook5(HOOKTYPE_REMOTE_PART, cptr, sptr, chptr, mtags, comment);
+
+		free_message_tags(mtags);
 
 		remove_user_from_channel(sptr, chptr);
 	}

@@ -346,9 +346,9 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *re
 		parv[1] = chptr->chname;
 		(void)do_cmd(cptr, sptr, NULL, "NAMES", 2, parv);
 
-		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr, chptr, parv);
+		RunHook5(HOOKTYPE_LOCAL_JOIN, cptr, sptr, chptr, mtags, parv);
 	} else {
-		RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, parv);
+		RunHook5(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, mtags, parv);
 	}
 
 	free_message_tags(mtags);
@@ -472,7 +472,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				free_message_tags(mtags);
 
 				if (MyConnect(sptr))
-					RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, "Left all channels");
+					RunHook5(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, mtags, "Left all channels");
 				remove_user_from_channel(sptr, chptr);
 			}
 			continue;

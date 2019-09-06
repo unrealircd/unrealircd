@@ -468,15 +468,12 @@ static void exit_one_client(aClient *sptr, MessageTag *mtags_i, const char *comm
 		MessageTag *mtags_o = NULL;
 
 		if (!MyClient(sptr))
-			RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);
+			RunHook3(HOOKTYPE_REMOTE_QUIT, sptr, mtags_i, comment);
 
 		new_message_special(sptr, mtags_i, &mtags_o, ":%s QUIT", sptr->name);
 		sendto_local_common_channels(sptr, NULL, 0, mtags_o, ":%s QUIT :%s", sptr->name, comment);
 		free_message_tags(mtags_o);
 
-		/* This hook may or may not be redundant */
-		RunHook(HOOKTYPE_EXIT_ONE_CLIENT, sptr);
-		
 		while ((mp = sptr->user->channel))
 			remove_user_from_channel(sptr, mp->chptr);
 
@@ -589,7 +586,7 @@ int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mt
 		sptr->flags |= FLAGS_CLOSING;
 		if (IsPerson(sptr))
 		{
-			RunHook2(HOOKTYPE_LOCAL_QUIT, sptr, comment);
+			RunHook3(HOOKTYPE_LOCAL_QUIT, sptr, recv_mtags, comment);
 			sendto_connectnotice(sptr, 1, comment);
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_watch_list(sptr);
@@ -612,7 +609,7 @@ int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mt
 		} else
 		if (IsUnknown(sptr))
 		{
-			RunHook2(HOOKTYPE_UNKUSER_QUIT, sptr, comment);
+			RunHook3(HOOKTYPE_UNKUSER_QUIT, sptr, recv_mtags, comment);
 		}
 
 		if (sptr->fd >= 0 && !IsConnecting(sptr))
@@ -665,7 +662,7 @@ int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mt
 
 		remove_dependents(sptr, cptr, recv_mtags, comment, splitstr);
 
-		RunHook(HOOKTYPE_SERVER_QUIT, sptr);
+		RunHook2(HOOKTYPE_SERVER_QUIT, sptr, recv_mtags);
 	}
 	else if (IsClient(sptr) && !(sptr->flags & FLAGS_KILLED))
 	{

@@ -351,14 +351,16 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		MessageTag *mtags = NULL;
 		/* NOTE: cannot use 'recv_mtag' here because MODE could be rewrapped. Not ideal :( */
 		new_message(sptr, NULL, &mtags);
+
 		sendto_channel(chptr, sptr, sptr, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
 		               sptr->name, chptr->chname,  modebuf, parabuf);
 		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
-		free_message_tags(mtags);
 
 		/* Activate this hook just like m_mode.c */
-		RunHook7(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, ts, 0);
+		RunHook8(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, ts, 0);
+
+		free_message_tags(mtags);
 
 		*parabuf = 0;
 	}

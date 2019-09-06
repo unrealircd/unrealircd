@@ -280,13 +280,17 @@ CMD_FUNC(m_kick)
 					}
 					if (breakit)
 						continue;
-					RunHook5(HOOKTYPE_LOCAL_KICK, cptr,sptr,who,chptr,comment);
-				} else {
-					RunHook5(HOOKTYPE_REMOTE_KICK, cptr, sptr, who, chptr, comment);
 				}
+
 				mtags = NULL;
 				new_message_special(sptr, recv_mtags, &mtags, ":%s KICK %s %s", sptr->name, chptr->chname, who->name);
 				/* The same message is actually sent at 5 places below (though max 4 at most) */
+
+				if (MyClient(sptr))
+					RunHook6(HOOKTYPE_LOCAL_KICK, cptr, sptr, who, chptr, mtags, comment);
+				else
+					RunHook6(HOOKTYPE_REMOTE_KICK, cptr, sptr, who, chptr, mtags, comment);
+
 				if (lp)
 				{
 					if (invisible_user_in_channel(who, chptr))

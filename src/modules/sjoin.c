@@ -547,7 +547,7 @@ getnick:
 				MessageTag *mtags = NULL;
 
 				add_user_to_channel(chptr, acptr, modeflags);
-				RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, acptr, chptr, NULL);
+				RunHook5(HOOKTYPE_REMOTE_JOIN, cptr, acptr, chptr, recv_mtags, NULL);
 				new_message_special(acptr, recv_mtags, &mtags, ":%s JOIN %s", acptr->name, chptr->chname);
 				send_join_to_local_users(acptr, chptr, mtags);
 				free_message_tags(mtags);

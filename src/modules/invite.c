@@ -283,9 +283,8 @@ CMD_FUNC(m_invite)
 				               ":%s NOTICE @%s :%s invited %s into the channel.",
 				               me.name, chptr->chname, sptr->name, acptr->name);
 			}
+			add_invite(sptr, acptr, chptr, mtags);
 			free_message_tags(mtags);
-
-			add_invite(sptr, acptr, chptr);
 		}
 	}
 

@@ -172,8 +172,8 @@ CMD_FUNC(m_topic)
 			safestrldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
 			chptr->topic_time = ttime;
 
-			RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);
 			new_message(sptr, recv_mtags, &mtags);
+			RunHook5(HOOKTYPE_TOPIC, cptr, sptr, chptr, mtags, topic);
 			sendto_server(cptr, PROTO_SID, 0, mtags, ":%s TOPIC %s %s %lld :%s",
 			    ID(sptr), chptr->chname, chptr->topic_nick,
 			    (long long)chptr->topic_time, chptr->topic);
@@ -253,7 +253,6 @@ CMD_FUNC(m_topic)
 				if (!topic)
 					return 0;
 			}
-			RunHook4(HOOKTYPE_LOCAL_TOPIC, cptr, sptr, chptr, topic);
 		}
 
 		/* At this point 'tnick' is set to sptr->name.
@@ -268,13 +267,13 @@ CMD_FUNC(m_topic)
 	safestrldup(chptr->topic, topic, iConf.topic_length+1);
 	safestrldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
 
-	RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);
 	if (ttime && IsServer(cptr))
 		chptr->topic_time = ttime;
 	else
 		chptr->topic_time = TStime();
 
 	new_message(sptr, recv_mtags, &mtags);
+	RunHook5(HOOKTYPE_TOPIC, cptr, sptr, chptr, mtags, topic);
 	sendto_server(cptr, 0, 0, mtags, ":%s TOPIC %s %s %lld :%s",
 	    sptr->name, chptr->chname, chptr->topic_nick,
 	    (long long)chptr->topic_time, chptr->topic);

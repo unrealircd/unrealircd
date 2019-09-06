@@ -956,7 +956,7 @@ aChannel *get_channel(aClient *cptr, char *chname, int flag)
  * Should U-lined clients have higher limits?   -Donwulff
  */
 
-void add_invite(aClient *from, aClient *to, aChannel *chptr)
+void add_invite(aClient *from, aClient *to, aChannel *chptr, MessageTag *mtags)
 {
 	Link *inv, *tmp;
 
@@ -996,7 +996,7 @@ void add_invite(aClient *from, aClient *to, aChannel *chptr)
 	inv->next = to->user->invited;
 	to->user->invited = inv;
 
-	RunHook3(HOOKTYPE_INVITE, from, to, chptr);
+	RunHook4(HOOKTYPE_INVITE, from, to, chptr, mtags);
 }
 
 /*

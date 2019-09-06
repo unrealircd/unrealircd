@@ -535,9 +535,9 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 	}
 
 	if (MyConnect(sptr))
-		RunHook7(HOOKTYPE_LOCAL_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
+		RunHook8(HOOKTYPE_LOCAL_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
 	else
-		RunHook7(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
+		RunHook8(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
 
 	/* After this, don't touch 'chptr' anymore! As permanent module may have destroyed the channel. */
 
