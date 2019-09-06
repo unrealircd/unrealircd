@@ -326,13 +326,8 @@ int read_listmode(FILE *fd, Ban **lst)
 		R_SAFE(read_str(fd, &e->who));
 		R_SAFE(read_data(fd, &when, sizeof(when)));
 		e->when = when;
-		if (*lst)
-		{
-			*lst = e;
-		} else {
-			e->next = *lst;
-			*lst = e;
-		}
+		e->next = *lst;
+		*lst = e;
 	}
 
 	return 1;
