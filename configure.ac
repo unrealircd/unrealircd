@@ -883,7 +883,7 @@ fi
 
 dnl Address sanitizer build
 if test "$ac_cv_asan" = "yes" ; then
-	CFLAGS="$CFLAGS -O0 -fno-inline -fsanitize=address -fno-omit-frame-pointer -DNOCLOSEFD"
+	CFLAGS="$CFLAGS -O1 -fno-inline -fsanitize=address -fno-omit-frame-pointer -DNOCLOSEFD"
 	IRCDLIBS="-fsanitize=address $IRCDLIBS"
 fi
 
