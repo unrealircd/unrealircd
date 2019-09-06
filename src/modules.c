@@ -69,6 +69,12 @@ void *obsd_dlsym(void *handle, char *symbol) {
 }
 #endif
 
+void deletetmp(char *path)
+{
+#ifndef NOREMOVETMP
+	remove(path);
+#endif
+}
 
 void DeleteTempModules(void)
 {
@@ -94,7 +100,7 @@ void DeleteTempModules(void)
 		if (!strstr(fname, ".so") && !strstr(fname, ".conf") && strstr(fname, "core"))
 			continue; /* core dump */
 		ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, fname);
-		remove(tempbuf);
+		deletetmp(tempbuf);
 	}
 	closedir(fd);
 #else
@@ -109,7 +115,7 @@ void DeleteTempModules(void)
 		if (strcmp(hData.cFileName, ".") || strcmp(hData.cFileName, ".."))
 		{
 			ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, hData.cFileName);
-			remove(tempbuf);
+			deletetmp(tempbuf);
 		}
 	}
 	while (FindNextFile(hFile, &hData))
@@ -117,7 +123,7 @@ void DeleteTempModules(void)
 		if (!strcmp(hData.cFileName, ".") || !strcmp(hData.cFileName, ".."))
 			continue;
 		ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, hData.cFileName);
-		remove(tempbuf);
+		deletetmp(tempbuf);
 	}
 	FindClose(hFile);
 #endif	
@@ -239,13 +245,6 @@ static char *validate_mod_header(ModuleHeader *mod_header)
 	/* Author and description are not checked, has no constraints */
 
 	return NULL; /* SUCCESS */
-}
-
-void deletetmp(char *path)
-{
-#ifndef REMOVETMP
-	remove(path);
-#endif
 }
 
 /*
