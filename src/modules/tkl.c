@@ -2317,6 +2317,14 @@ void _free_tkl(aTKline *tkl)
 		if (tkl->ptr.spamfilter->match)
 			unreal_delete_match(tkl->ptr.spamfilter->match);
 		MyFree(tkl->ptr.spamfilter);
+	} else
+	if (TKLIsBanException(tkl) && tkl->ptr.banexception)
+	{
+		safefree(tkl->ptr.banexception->usermask);
+		safefree(tkl->ptr.banexception->hostmask);
+		safefree(tkl->ptr.banexception->bantypes);
+		safefree(tkl->ptr.banexception->reason);
+		MyFree(tkl->ptr.banexception);
 	}
 	MyFree(tkl);
 }
