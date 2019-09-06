@@ -135,7 +135,7 @@ Member *member;
 /* Set channel status of 'chptr' to be no longer secure (-Z) due to 'sptr'.
  * sptr MAY be null!
  */
-void issecure_unset(aChannel *chptr, aClient *sptr, int notice)
+void issecure_unset(aChannel *chptr, aClient *sptr, MessageTag *recv_mtags, int notice)
 {
 	Hook *h;
 	MessageTag *mtags;
@@ -143,7 +143,7 @@ void issecure_unset(aChannel *chptr, aClient *sptr, int notice)
 	if (notice)
 	{
 		mtags = NULL;
-		new_message(&me, NULL, &mtags);
+		new_message_special(&me, recv_mtags, &mtags, "NOTICE %s :setting -Z", chptr->chname);
 		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s NOTICE %s :User '%s' joined and is not connected through SSL/TLS, setting channel -Z (insecure)",
 			me.name, chptr->chname, sptr->name);
 		free_message_tags(mtags);
@@ -151,7 +151,7 @@ void issecure_unset(aChannel *chptr, aClient *sptr, int notice)
 		
 	chptr->mode.extmode &= ~EXTCMODE_ISSECURE;
 	mtags = NULL;
-	new_message(&me, NULL, &mtags);
+	new_message_special(&me, recv_mtags, &mtags, "MODE %s -Z", chptr->chname);
 	sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s -Z", me.name, chptr->chname);
 	free_message_tags(mtags);
 }
@@ -162,12 +162,12 @@ void issecure_unset(aChannel *chptr, aClient *sptr, int notice)
  * now considered secure. If 'sptr' is non-NULL then we are now secure
  * thanks to this user leaving the chat.
  */
-void issecure_set(aChannel *chptr, aClient *sptr, int notice)
+void issecure_set(aChannel *chptr, aClient *sptr, MessageTag *recv_mtags, int notice)
 {
 	MessageTag *mtags;
 
 	mtags = NULL;
-	new_message(&me, NULL, &mtags);
+	new_message_special(&me, recv_mtags, &mtags, "NOTICE %s :setting +Z", chptr->chname);
 	if (notice && sptr)
 	{
 		/* note that we have to skip 'sptr', since when this call is being made
@@ -188,7 +188,7 @@ void issecure_set(aChannel *chptr, aClient *sptr, int notice)
 	chptr->mode.extmode |= EXTCMODE_ISSECURE;
 
 	mtags = NULL;
-	new_message(&me, NULL, &mtags);
+	new_message_special(&me, recv_mtags, &mtags, "MODE %s +Z", chptr->chname);
 	sendto_channel(chptr, &me, sptr, 0, 0, SEND_LOCAL, mtags,
 	               ":%s MODE %s +Z",
 	               me.name, chptr->chname);
@@ -203,11 +203,11 @@ int issecure_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mta
 {
 	/* Check only if chan already +zZ and the user joining is insecure (no need to count) */
 	if (IsSecureJoin(chptr) && IsSecureChanIndicated(chptr) && !IsSecureConnect(sptr) && !IsULine(sptr))
-		issecure_unset(chptr, sptr, 1);
+		issecure_unset(chptr, sptr, mtags, 1);
 
 	/* Special case for +z in modes-on-join and first user creating the channel */
 	if ((chptr->users == 1) && IsSecureJoin(chptr) && !IsSecureChanIndicated(chptr) && !channel_has_insecure_users(chptr))
-		issecure_set(chptr, NULL, 0);
+		issecure_set(chptr, NULL, mtags, 0);
 
 	return 0;
 }
@@ -217,7 +217,7 @@ int issecure_part(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mta
 	/* Only care if chan is +z-Z and the user leaving is insecure, then count */
 	if (IsSecureJoin(chptr) && !IsSecureChanIndicated(chptr) && !IsSecureConnect(sptr) &&
 	    !channel_has_insecure_users_butone(chptr, sptr))
-		issecure_set(chptr, sptr, 1);
+		issecure_set(chptr, sptr, mtags, 1);
 	return 0;
 }
 
@@ -232,7 +232,7 @@ aChannel *chptr;
 		/* Identical to part */
 		if (IsSecureJoin(chptr) && !IsSecureChanIndicated(chptr) && 
 		    !IsSecureConnect(sptr) && !channel_has_insecure_users_butone(chptr, sptr))
-			issecure_set(chptr, sptr, 1);
+			issecure_set(chptr, sptr, mtags, 1);
 	}
 	return 0;
 }
@@ -242,7 +242,7 @@ int issecure_kick(aClient *cptr, aClient *sptr, aClient *victim, aChannel *chptr
 	/* Identical to part&quit, except we care about 'victim' and not 'sptr' */
 	if (IsSecureJoin(chptr) && !IsSecureChanIndicated(chptr) &&
 	    !IsSecureConnect(victim) && !channel_has_insecure_users_butone(chptr, victim))
-		issecure_set(chptr, victim, 1);
+		issecure_set(chptr, victim, mtags, 1);
 	return 0;
 }
 
@@ -262,16 +262,16 @@ int issecure_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag 
 		{
 			/* Should be -Z, if not already */
 			if (IsSecureChanIndicated(chptr))
-				issecure_unset(chptr, NULL, 0); /* would be odd if we got here ;) */
+				issecure_unset(chptr, NULL, mtags, 0); /* would be odd if we got here ;) */
 		} else {
 			/* Should be +Z, but check if it isn't already.. */
 			if (!IsSecureChanIndicated(chptr))
-				issecure_set(chptr, NULL, 0);
+				issecure_set(chptr, NULL, mtags, 0);
 		}
 	} else {
 		/* there was a -z, check if the channel is currently +Z and if so, set it -Z */
 		if (IsSecureChanIndicated(chptr))
-			issecure_unset(chptr, NULL, 0);
+			issecure_unset(chptr, NULL, mtags, 0);
 	}
 	return 0;
 }

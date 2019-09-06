@@ -121,7 +121,7 @@ void mtag_add_or_inherit_msgid(aClient *sender, MessageTag *recv_mtags, MessageT
 	else
 		m = mtag_generate_msgid();
 
-	if (signature && !strchr(m->value, '-'))
+	if (signature)
 	{
 		/* Special case:
 		 * Some commands will receive a single msgid from
@@ -133,13 +133,23 @@ void mtag_add_or_inherit_msgid(aClient *sender, MessageTag *recv_mtags, MessageT
 		 * concatenated to the existing msgid.
 		 * The hash is the first half of a SHA256 hash, then
 		 * base64'd, and with the == suffix removed.
-		 *
-		 * The !strchr(m->value, '-') in the if above
-		 * ensures that we never do more stacking,
-		 * although theoretically that could be necessary,
-		 * in which case we should reconsider.
-		 * For now this fixes some PART issue.
 		 */
+		char prefix[MSGIDLEN+1], *p;
+		strlcpy(prefix, m->value, sizeof(prefix));
+		p = strchr(prefix, '-');
+		if (p)
+		{
+			/* It is possible that we have more stacking.
+			 * IOTW: we are already stacked like xxx-yyy
+			 * and it would have become an xxx-yyy-zzz
+			 * sequence. Instead, we strip the yyy-
+			 * so the end result will be xxx-zzz.
+			 *
+			 * One example code path would be when someone joins
+			 * and the issecure module sets -Z.
+			 */
+			*p = '\0';
+		}
 		SHA256_CTX hash;
 		char binaryhash[SHA256_DIGEST_LENGTH];
 		char b64hash[SHA256_DIGEST_LENGTH*2+1];
@@ -151,7 +161,7 @@ void mtag_add_or_inherit_msgid(aClient *sender, MessageTag *recv_mtags, MessageT
 		SHA256_Final(binaryhash, &hash);
 		b64_encode(binaryhash, sizeof(binaryhash)/2, b64hash, sizeof(b64hash));
 		b64hash[22] = '\0'; /* cut off at '=' */
-		snprintf(newbuf, sizeof(newbuf), "%s-%s", m->value, b64hash);
+		snprintf(newbuf, sizeof(newbuf), "%s-%s", prefix, b64hash);
 		safestrdup(m->value, newbuf);
 	}
 	AddListItem(m, *mtag_list);
