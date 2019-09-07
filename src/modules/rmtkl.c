@@ -106,7 +106,7 @@ MOD_UNLOAD(rmtkl)
 
 static int dump_str(aClient *sptr, char **buf)
 {
-	if (IsServer(sptr))
+	if (!MyClient(sptr))
 		return 0;
 
 	// Using sendto_one() instead of sendnumericfmt() because the latter strips indentation and stuff ;]
