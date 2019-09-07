@@ -1392,30 +1392,6 @@ void floodprottimer_del(aChannel *chptr, char mflag)
         }
 }
 
-long get_mode_bitbychar(char m)
-{
-	aCtab *tab = &cFlagTab[0];
-
-	while(tab->mode != 0x0)
-	{
-		if (tab->flag == m)
-			return tab->mode;
-		tab++;;
-	}
-	return 0;
-}
-
-Cmode_t get_extmode_bitbychar(char m)
-{
-        int extm;
-        for (extm=0; extm <= Channelmode_highest; extm++)
-        {
-                if (Channelmode_Table[extm].flag == m)
-                        return Channelmode_Table[extm].mode;
-        }
-        return 0;
-}
-
 EVENT(modef_event)
 {
 	RemoveFld *e, *e_next;
