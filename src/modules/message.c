@@ -851,6 +851,13 @@ char *_StripControlCodes(unsigned char *text)
 			case 17:
 				/* monospace */
 				break;
+			case 0xe2:
+				if (!strncmp(text+1, "\x80\x8b", 2))
+				{
+					text += 2; /* +2 means we skip 3 */
+					break;
+				}
+				/*fallthrough*/
 			default:
 				new_str[i] = *text;
 				i++;
