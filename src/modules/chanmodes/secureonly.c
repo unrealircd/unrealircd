@@ -33,7 +33,7 @@ Cmode_t EXTCMODE_SECUREONLY;
 #define IsSecureOnly(chptr)    (chptr->mode.extmode & EXTCMODE_SECUREONLY)
 
 int secureonly_check_join(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-void secureonly_channel_sync (aChannel* chptr, int merge, int removetheirs, int nomode);
+int secureonly_channel_sync (aChannel* chptr, int merge, int removetheirs, int nomode);
 int secureonly_send_channel(aClient *acptr, aChannel* chptr);
 int secureonly_check_secure(aChannel* chptr);
 int secureonly_check_sajoin(aClient *acptr, aChannel* chptr, aClient *sptr);
@@ -56,7 +56,7 @@ MOD_INIT(secureonly)
 
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_JOIN, 0, secureonly_specialcheck);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, secureonly_check_join);
-	HookAddVoid(modinfo->handle, HOOKTYPE_CHANNEL_SYNCED, 0, secureonly_channel_sync);
+	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_SYNCED, 0, secureonly_channel_sync);
 	HookAdd(modinfo->handle, HOOKTYPE_IS_CHANNEL_SECURE, 0, secureonly_check_secure);
 	HookAdd(modinfo->handle, HOOKTYPE_SEND_CHANNEL, 0, secureonly_send_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SAJOIN, 0, secureonly_check_sajoin);
@@ -77,8 +77,10 @@ MOD_UNLOAD(secureonly)
 }
 
 
-/** Kicks all insecure users on a +z channel */
-static void secureonly_kick_insecure_users(aChannel *chptr)
+/** Kicks all insecure users on a +z channel
+ * Returns 1 if the channel was destroyed as a result of this.
+ */
+static int secureonly_kick_insecure_users(aChannel *chptr)
 {
 	Member *member, *mb2;
 	aClient *cptr;
@@ -87,7 +89,7 @@ static void secureonly_kick_insecure_users(aChannel *chptr)
 	char *comment = "Insecure user not allowed on secure channel (+z)";
 
 	if (!IsSecureOnly(chptr))
-		return;
+		return 0;
 
 	for (member = chptr->members; member; member = mb2)
 	{
@@ -120,9 +122,11 @@ static void secureonly_kick_insecure_users(aChannel *chptr)
 
 			free_message_tags(mtags);
 
-			remove_user_from_channel(cptr, chptr);
+			if (remove_user_from_channel(cptr, chptr) == 1)
+				return 1; /* channel was destroyed */
 		}
 	}
+	return 0;
 }
 
 int secureonly_check_join(aClient *sptr, aChannel *chptr, char *key, char *parv[])
@@ -155,12 +159,11 @@ int secureonly_check_secure(aChannel *chptr)
 	return 0;
 }
 
-void secureonly_channel_sync(aChannel *chptr, int merge, int removetheirs, int nomode)
+int secureonly_channel_sync(aChannel *chptr, int merge, int removetheirs, int nomode)
 {
-	if ((!merge && !removetheirs && !nomode) || (merge && !nomode))
-	{
-		secureonly_kick_insecure_users(chptr);
-	}
+	if (!merge && !removetheirs && !nomode)
+		return secureonly_kick_insecure_users(chptr); /* may return 1, meaning channel is destroyed */
+	return 0;
 }
 
 int secureonly_send_channel(aClient *acptr, aChannel *chptr)

@@ -54,7 +54,7 @@ char cmodestring[512];
 /* Some forward declarations */
 char *clean_ban_mask(char *, int, aClient *);
 void channel_modes(aClient *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, aChannel *chptr);
-void sub1_from_channel(aChannel *);
+int sub1_from_channel(aChannel *);
 void clean_channelname(char *);
 void del_invite(aClient *, aChannel *);
 
@@ -560,40 +560,48 @@ void add_user_to_channel(aChannel *chptr, aClient *who, int flags)
 	}
 }
 
-void remove_user_from_channel(aClient *sptr, aChannel *chptr)
+/** Remove the user from the channel.
+ * This doesn't send any PART etc. It does the free'ing of
+ * membership etc. It will also DESTROY the channel if the
+ * user was the last user (and the channel is not +P),
+ * via sub1_from_channel(), that is.
+ */
+int remove_user_from_channel(aClient *sptr, aChannel *chptr)
 {
-	Member **curr; Membership **curr2;
-	Member *tmp; Membership *tmp2;
-	Member *lp = chptr->members;
+	Member **curr;
+	Membership **curr2;
+	Member *tmp;
+	Membership *tmp2;
 
-	/* find 1st entry in list that is not user */
-	for (; lp && (lp->cptr == sptr); lp = lp->next);
-	for (;;)
+	/* Update chptr->members list */
+	for (curr = &chptr->members; (tmp = *curr); curr = &tmp->next)
 	{
-		for (curr = &chptr->members; (tmp = *curr); curr = &tmp->next)
-			if (tmp->cptr == sptr)
-			{
-				*curr = tmp->next;
-				free_member(tmp);
-				break;
-			}
-		for (curr2 = &sptr->user->channel; (tmp2 = *curr2); curr2 = &tmp2->next)
-			if (tmp2->chptr == chptr)
-			{
-				*curr2 = tmp2->next;
-				free_membership(tmp2, MyClient(sptr));
-				break;
-			}
-		sptr->user->joined--;
-		if (lp)
+		if (tmp->cptr == sptr)
+		{
+			*curr = tmp->next;
+			free_member(tmp);
 			break;
-		if (chptr->members)
-			sptr = chptr->members->cptr;
-		else
-			break;
-		sub1_from_channel(chptr);
+		}
 	}
-	sub1_from_channel(chptr);
+
+	/* Update sptr->user->channel list */
+	for (curr2 = &sptr->user->channel; (tmp2 = *curr2); curr2 = &tmp2->next)
+	{
+		if (tmp2->chptr == chptr)
+		{
+			*curr2 = tmp2->next;
+			free_membership(tmp2, MyClient(sptr));
+			break;
+		}
+	}
+
+	/* Update user record to reflect 1 less joined */
+	sptr->user->joined--;
+
+	/* Now sub1_from_channel() will deal with the channel record
+	 * and destroy the channel if needed.
+	 */
+	return sub1_from_channel(chptr);
 }
 
 long get_access(aClient *cptr, aChannel *chptr)
@@ -1047,75 +1055,79 @@ void del_invite(aClient *cptr, aChannel *chptr)
 		}
 }
 
-/*
-**  Subtract one user from channel i (and free channel
-**  block, if channel became empty).
-*/
-void sub1_from_channel(aChannel *chptr)
+/** Subtract one user from channel i. Free the channel if it became empty.
+ * @param chptr The channel
+ * @returns 1 if the channel was freed, 0 if the channel still exists.
+ */
+int sub1_from_channel(aChannel *chptr)
 {
 	Ban *ban;
 	Link *lp;
 	int should_destroy = 1;
 
 	--chptr->users;
-	if (chptr->users <= 0)
+	if (chptr->users > 0)
+		return 0;
+
+	/* No users in the channel anymore */
+	chptr->users = 0; /* to be sure */
+
+	/* If the channel is +P then this hook will actually stop destruction. */
+	RunHook2(HOOKTYPE_CHANNEL_DESTROY, chptr, &should_destroy);
+	if (!should_destroy)
+		return 0;
+
+	/* We are now going to destroy the channel.
+	 * But first we will destroy all kinds of references and lists...
+	 */
+
+	while ((lp = chptr->invites))
+		del_invite(lp->value.cptr, chptr);
+
+	while (chptr->banlist)
 	{
-		chptr->users = 0;
-
-		/*
-		 * Now, find all invite links from channel structure
-		 */
-		RunHook2(HOOKTYPE_CHANNEL_DESTROY, chptr, &should_destroy);
-		if (!should_destroy)
-			return;
-
-		while ((lp = chptr->invites))
-			del_invite(lp->value.cptr, chptr);
-
-		while (chptr->banlist)
-		{
-			ban = chptr->banlist;
-			chptr->banlist = ban->next;
-			MyFree(ban->banstr);
-			MyFree(ban->who);
-			free_ban(ban);
-		}
-		while (chptr->exlist)
-		{
-			ban = chptr->exlist;
-			chptr->exlist = ban->next;
-			MyFree(ban->banstr);
-			MyFree(ban->who);
-			free_ban(ban);
-		}
-		while (chptr->invexlist)
-		{
-			ban = chptr->invexlist;
-			chptr->invexlist = ban->next;
-			MyFree(ban->banstr);
-			MyFree(ban->who);
-			free_ban(ban);
-		}
-
-		/* free extcmode params */
-		extcmode_free_paramlist(chptr->mode.extmodeparams);
-
-		if (chptr->mode_lock)
-			MyFree(chptr->mode_lock);
-		if (chptr->topic)
-			MyFree(chptr->topic);
-		if (chptr->topic_nick)
-			MyFree(chptr->topic_nick);
-		if (chptr->prevch)
-			chptr->prevch->nextch = chptr->nextch;
-		else
-			channel = chptr->nextch;
-		if (chptr->nextch)
-			chptr->nextch->prevch = chptr->prevch;
-		(void)del_from_channel_hash_table(chptr->chname, chptr);
-		IRCstats.channels--;
-		MyFree(chptr);
+		ban = chptr->banlist;
+		chptr->banlist = ban->next;
+		MyFree(ban->banstr);
+		MyFree(ban->who);
+		free_ban(ban);
 	}
+	while (chptr->exlist)
+	{
+		ban = chptr->exlist;
+		chptr->exlist = ban->next;
+		MyFree(ban->banstr);
+		MyFree(ban->who);
+		free_ban(ban);
+	}
+	while (chptr->invexlist)
+	{
+		ban = chptr->invexlist;
+		chptr->invexlist = ban->next;
+		MyFree(ban->banstr);
+		MyFree(ban->who);
+		free_ban(ban);
+	}
+
+	/* free extcmode params */
+	extcmode_free_paramlist(chptr->mode.extmodeparams);
+
+	if (chptr->mode_lock)
+		MyFree(chptr->mode_lock);
+	if (chptr->topic)
+		MyFree(chptr->topic);
+	if (chptr->topic_nick)
+		MyFree(chptr->topic_nick);
+	if (chptr->prevch)
+		chptr->prevch->nextch = chptr->nextch;
+	else
+		channel = chptr->nextch;
+	if (chptr->nextch)
+		chptr->nextch->prevch = chptr->prevch;
+	(void)del_from_channel_hash_table(chptr->chname, chptr);
+	IRCstats.channels--;
+	MyFree(chptr);
+	return 1;
 }
 
 /* This function is only used for non-SJOIN servers. So don't bother with mtags support.. */

@@ -987,7 +987,9 @@ getnick:
 
 	for (h = Hooks[HOOKTYPE_CHANNEL_SYNCED]; h; h = h->next)
 	{
-		(*(h->func.voidfunc))(chptr,merge,removetheirs,nomode);
+		int i = (*(h->func.intfunc))(chptr,merge,removetheirs,nomode);
+		if (i == 1)
+			return -1; /* channel no longer exists */
 	}
 
 	/* we should be synched by now, */
