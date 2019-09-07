@@ -92,13 +92,14 @@ int noknock_mode_del (aChannel *chptr, int modeChar)
 
 int noknock_mode_allow(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
-
 	if (!(chptr->mode.mode & MODE_INVITEONLY))
 	{
-		sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE, 'K', "+i must be set");
+		if (checkt == EXCHK_ACCESS_ERR)
+		{
+			sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE, 'K', "+i must be set");
+		}
 		return EX_DENY;
 	}
 
 	return extcmode_default_requirehalfop(cptr,chptr,mode,para,checkt,what);
 }
-
