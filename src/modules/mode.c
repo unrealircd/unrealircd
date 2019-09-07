@@ -471,7 +471,7 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
 
 	/* opermode for twimodesystem --sts */
 #ifndef NO_OPEROVERRIDE
-	if (opermode == 1)
+	if ((opermode == 1) && IsPerson(sptr))
 	{
 		if (modebuf[1])
 		{
@@ -1535,7 +1535,7 @@ void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pc
 	make_mode_str(chptr, oldm, oldem, oldl, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), bounce);
 
 #ifndef NO_OPEROVERRIDE
-	if (htrig == 1)
+	if ((htrig == 1) && IsPerson(cptr))
 	{
 		/* This is horrible. Just horrible. */
 		if (!((modebuf[0] == '+' || modebuf[0] == '-') && modebuf[1] == '\0'))
