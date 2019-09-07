@@ -4,7 +4,7 @@ UnrealIRCd 5.0.0-alpha2 Release Notes
 IMPORTANT: UnrealIRCd 5 is currently in "alpha" phase. This means it
 may crash or behave weird. Do not run this on production servers!
 The alpha releases are there to show the current state of UnrealIRCd 5.
-UnrealIRCd 5 is not yet feature complete at this point; about 80% of
+UnrealIRCd 5 is not yet feature complete at this point; about 90% of
 the planned functionality is there.
 
 Summary
@@ -16,8 +16,9 @@ restored on startup (via 'channeldb' and 'tkldb' respectively).
 Channel mode +L has a slight change of meaning, the existing floodprot
 mode (+f) has a new type to prevent repeated messages and a new drop action.
 A few extended bans have been added as well (~f and ~p).
-For advanced users we now have more dynamic configuration options
-where you can define variables and use them in the configuration file.
+IRCOps now have the ability to add ban exceptions via the /ELINE command.
+Advanced admins can use more dynamic configuration options where you can
+define variables and use them later in the configuration file.
 Finally, there have been speed improvements, we use better defaults and
 have added more countermeasures and options against spambots.
 Under the hood a lot of the source code was changed and cleaned up.
@@ -64,7 +65,7 @@ Enhancements
 * Support for ban exceptions via the new /ELINE command. This allows you
   to add exceptions for regular bans (KLINE/GLINE/ZLINE/etc), but also
   for connection throttling and blacklist checking.
-  For more information, just type /ELINE in your IRC client as oper.
+  For more information, just type /ELINE in your IRC client as an IRCOp.
 * Channel mode +L now kicks in for any rejected join, so not just for +l but
   also for +b, +i, +O, +z, +R and +k. If, for example, the channel is
   +L #insecure and also +z then, when an insecure user ties to join, they
@@ -264,6 +265,10 @@ It is therefore best to wait until beta1. You have been warned ;).
 * The parameters in several hooks have changed. Many now have an
   extra MessageTag *mtags parameter. Sometimes there are other changes
   as well, for example HOOKTYPE_CHANMSG now has 4 extra parameters.
+* If you ever send a timestamp in a printf-like function, such as
+  in sendto_server(), then be sure to use %lld and cast the timestamp
+  to 'long long' so that it is compatible with both *NIX and Windows.
+  Example: sendnotice(sptr, "Timestamp is %lld", (long long)ts);
 * New HOOKTYPE_IS_HANDSHAKE_FINISHED. If a module returns 0 there, then
   the register_user() function will not be called and the user will
   not come online (yet). This is used by CAP and some other stuff.
