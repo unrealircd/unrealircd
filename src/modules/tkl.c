@@ -2346,6 +2346,33 @@ void _tkl_del_line(aTKline *tkl)
 		index2 = tkl_ip_hash_tkl(tkl);
 		if (index2 >= 0)
 		{
+#if 1
+			/* Temporary validation until an rmtkl(?) bug is fixed */
+			aTKline *d;
+			int really_found = 0;
+			for (d = tklines_ip_hash[index][index2]; d; d = d->next)
+				if (d == tkl)
+				{
+					really_found = 1;
+					break;
+				}
+			if (!really_found)
+			{
+				ircd_log(LOG_ERROR, "[BUG] [Crash] tkl_del_line() for %s (%d): "
+				                    "NOT found in tklines_ip_hash[%d][%d], "
+				                    "this should never happen!",
+				                    tkl_type_string(tkl),
+				                    tkl->type,
+				                    index, index2);
+				if (TKLIsServerBan(tkl))
+				{
+					ircd_log(LOG_ERROR, "Additional information: the ban was on %s@%s",
+						tkl->ptr.serverban->usermask ? tkl->ptr.serverban->usermask : "<null>",
+						tkl->ptr.serverban->hostmask ? tkl->ptr.serverban->hostmask : "<null>");
+				}
+				abort();
+			}
+#endif
 			DelListItem(tkl, tklines_ip_hash[index][index2]);
 			found = 1;
 		}
