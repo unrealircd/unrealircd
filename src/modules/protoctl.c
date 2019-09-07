@@ -193,6 +193,9 @@ CMD_FUNC(m_protoctl)
 			if (*sptr->id && (strlen(sptr->id)==3))
 				return exit_client(cptr, cptr, &me, NULL, "Got PROTOCTL SID twice");
 
+			if (IsServer(cptr))
+				return exit_client(cptr, cptr, &me, NULL, "Got PROTOCTL SID after SERVER, that's the wrong order!");
+
 			if ((acptr = hash_find_id(sid, NULL)) != NULL)
 			{
 				sendto_one(sptr, NULL, "ERROR :SID %s already exists from %s", acptr->id, acptr->name);
