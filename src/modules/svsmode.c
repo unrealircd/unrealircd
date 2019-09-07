@@ -174,174 +174,103 @@ void clear_bans(aClient *sptr, aChannel *chptr, char chmode)
 	}
 }
 
+/** Special Channel MODE command for services, used by SVSMODE and SVS2MODE.
+ * @notes
+ * This SVSMODE/SVS2MODE for channels is not simply the regular MODE "but for
+ * services". No, it does different things.
+ *
+ *  Syntax: SVSMODE <channel> <mode and params>
+ *
+ * There are three variants (do NOT mix them!):
+ * 1) SVSMODE #chan -[b|e|I]
+ *    This will remove all bans/exempts/invex in the channel.
+ * 2) SVSMODE #chan -[b|e|I] nickname
+ *    This will remove all bans/exempts/invex that affect nickname.
+ *    Eg: -b nick may remove bans places on IP, host, cloaked host, vhost,
+ *    basically anything that matches this nickname. Note that the
+ *    user with the specified nickname needs to be online for this to work.
+ * 3) SVSMODE #chan -[v|h|o|a|q]
+ *    This will remove the specified mode(s) from all users in the channel.
+ *    Eg: -o will result in a MODE -o for every channel operator.
+ *
+ * OLD syntax had a 'ts' parameter. No services are known to use this.
+ */
 int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[]) 
 {
 	aChannel *chptr;
-	time_t ts;
 	aClient *acptr;
 	char *m;
 	int what = MODE_ADD;
-	int i = 4;
+	int i = 4; // wtf is this
+	Member *cm;
+	int channel_flags;
 
-	*parabuf = '\0';
-	modebuf[0] = 0;
-	if(!(chptr = find_channel(parv[1], NULL)))
+	*parabuf = *modebuf = '\0';
+
+	if ((parc < 3) || BadPtr(parv[2]))
 		return 0;
 
-	ts = atol(parv[parc-1]);
-	for(m = parv[2]; *m; m++) {
-		switch (*m) {
+	if (!(chptr = find_channel(parv[1], NULL)))
+		return 0;
+
+	for(m = parv[2]; *m; m++)
+	{
+		switch (*m)
+		{
 			case '+':
 				what = MODE_ADD;
 				break;
 			case '-':
 				what = MODE_DEL;
 				break;
-			case 'q': {
-				Member *cm;
-				for (cm = chptr->members; cm; cm = cm->next) {
-					if (cm->flags & CHFL_CHANOWNER) {
+			case 'v':
+			case 'h':
+			case 'o':
+			case 'a':
+			case 'q':
+				if (what != MODE_DEL)
+				{
+					sendto_realops("Warning! Received SVS(2)MODE with +%c for %s from %s, which is invalid!!",
+						*m, chptr->chname, sptr->name);
+					continue;
+				}
+				channel_flags = char_to_channelflag(*m);
+				for (cm = chptr->members; cm; cm = cm->next)
+				{
+					if (cm->flags & channel_flags)
+					{
 						Membership *mb;
-						mb = find_membership_link(cm->cptr->user->channel,
-							chptr);
-						add_send_mode_param(chptr, sptr, '-', 'q', cm->cptr->name);
-						cm->flags &= ~CHFL_CHANOWNER;
+						mb = find_membership_link(cm->cptr->user->channel, chptr);
+						add_send_mode_param(chptr, sptr, '-', *m, cm->cptr->name);
+						cm->flags &= ~channel_flags;
 						if (mb)
 							mb->flags = cm->flags;
 					}
 				}
-			}
-			break;
-			case 'a': {
-				Member *cm;
-				for (cm = chptr->members; cm; cm = cm->next) {
-					if (cm->flags & CHFL_CHANADMIN) {
-						Membership *mb;
-						mb = find_membership_link(cm->cptr->user->channel,
-							chptr);
-						add_send_mode_param(chptr, sptr, '-', 'a', cm->cptr->name);
-						cm->flags &= ~CHFL_CHANADMIN;
-						if (mb)
-							mb->flags = cm->flags;
-					}
-				}
-			}
-			break;
-			case 'o': {
-				Member *cm;
-				for (cm = chptr->members; cm; cm = cm->next) {
-					if (cm->flags & CHFL_CHANOP) {
-						Membership *mb;
-						mb = find_membership_link(cm->cptr->user->channel,
-							chptr);
-						add_send_mode_param(chptr, sptr, '-', 'o', cm->cptr->name);
-						cm->flags &= ~CHFL_CHANOP;
-						if (mb)
-							mb->flags = cm->flags;
-					}
-				}
-			}
-			break;
-			case 'h': {
-				Member *cm;
-				for (cm = chptr->members; cm; cm = cm->next) {
-					if (cm->flags & CHFL_HALFOP) {
-						Membership *mb;
-						mb = find_membership_link(cm->cptr->user->channel,
-							chptr);
-						add_send_mode_param(chptr, sptr, '-', 'h', cm->cptr->name);
-						cm->flags &= ~CHFL_HALFOP;
-						if (mb)
-							mb->flags = cm->flags;
-					}
-				}
-			}
-			break;
-			case 'v': {
-				Member *cm;
-				for (cm = chptr->members; cm; cm = cm->next) {
-					if (cm->flags & CHFL_VOICE) {
-						Membership *mb;
-						mb = find_membership_link(cm->cptr->user->channel,
-							chptr);
-						add_send_mode_param(chptr, sptr, '-', 'v', cm->cptr->name);
-						cm->flags &= ~CHFL_VOICE;
-						if (mb)
-							mb->flags = cm->flags;
-					}
-				}
-			}
-			break;
-			case 'b': {
-				Extban *extban;
-				Ban *ban, *bnext;
-				if (parc >= i) {
-					if (!(acptr = find_person(parv[i-1], NULL))) {
-						i++;
-						break;
-					}
-					if (ts && ts != acptr->local->since) {
+				break;
+			case 'b':
+			case 'e':
+			case 'I':
+				if (parc >= i)
+				{
+					if (!(acptr = find_person(parv[i-1], NULL)))
+					{
 						i++;
 						break;
 					}
 					i++;
 
-					unban_user(sptr, chptr, acptr, 'b');
+					unban_user(sptr, chptr, acptr, *m);
 				}
 				else {
-					clear_bans(sptr, chptr, 'b');
+					clear_bans(sptr, chptr, *m);
 				}
-			}
-			break;
-			case 'e': {
-				Extban *extban;
-				Ban *ban, *bnext;
-				if (parc >= i) {
-					if (!(acptr = find_person(parv[i-1], NULL))) {
-						i++;
-						break;
-					}
-					if (ts && ts != acptr->local->since) {
-						i++;
-						break;
-					}
-					i++;
-
-					unban_user(sptr, chptr, acptr, 'e');
-				}
-				else {
-					clear_bans(sptr, chptr, 'e');
-				}
-			}
-			break;
-			case 'I': {
-				Ban *ban, *bnext;
-				if (parc >= i) {
-					if (!(acptr = find_person(parv[i-1], NULL))) {
-						i++;
-						break;
-					}
-					if (ts && ts != acptr->local->since) {
-						i++;
-						break;
-					}
-					i++;
-
-					unban_user(sptr, chptr, acptr, 'I');
-				}
-				else {
-					clear_bans(sptr, chptr, 'I');
-				}
-			}
-			break;
-
-#ifdef DEBUGMODE
-		default:
-			sendto_realops("Warning! Invalid mode `%c' used with 'SVSMODE %s %s %s' (from %s %s)",
-				       *m, chptr->chname, parv[2], parv[3] ? parv[3] : "",
-				       cptr->name, sptr->name);
-			break;
-#endif
+				break;
+			default:
+				sendto_realops("Warning! Invalid mode `%c' used with 'SVSMODE %s %s %s' (from %s %s)",
+					       *m, chptr->chname, parv[2], parv[3] ? parv[3] : "",
+					       cptr->name, sptr->name);
+				break;
 		}
 	}
 
@@ -358,7 +287,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
 
 		/* Activate this hook just like m_mode.c */
-		RunHook8(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, ts, 0);
+		RunHook8(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, 0, 0);
 
 		free_message_tags(mtags);
 
@@ -367,9 +296,10 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
-/*
- * do_svsmode() [merge from svsmode/svs2mode]
- * parv[1] - username to change mode for
+/** Special User MODE command for Services.
+ * @notes
+ * This is used by both SVSMODE and SVS2MODE, when dealing with users (not channels).
+ * parv[1] - nick to change mode for
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)
  *
@@ -618,7 +548,8 @@ CMD_FUNC(m_svs2mode)
 	return do_svsmode(cptr, sptr, recv_mtags, parc, parv, 1);
 }
 
-void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param) {
+void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param)
+{
 	static char *modes = NULL, lastwhat;
 	static short count = 0;
 	short send = 0;

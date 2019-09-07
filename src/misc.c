@@ -900,6 +900,26 @@ char *p, *name;
 	return 0;
 }
 
+/** Convert a character like 'o' to the corresponding channel flag
+ *  like CHFL_CHANOP.
+ * @param c   The mode character. The only valid values are: vhoaq
+ * @returns One of CHFL_* or 0 if an invalid mode character is specified.
+ */
+int char_to_channelflag(char c)
+{
+	if (c == 'v')
+		return CHFL_VOICE;
+	else if (c == 'h')
+		return CHFL_HALFOP;
+	else if (c == 'o')
+		return CHFL_CHANOP;
+	else if (c == 'a')
+		return CHFL_CHANADMIN;
+	else if (c == 'q')
+		return CHFL_CHANOWNER;
+	return 0;
+}
+
 char *getcloak(aClient *sptr)
 {
 	if (!*sptr->user->cloakedhost)

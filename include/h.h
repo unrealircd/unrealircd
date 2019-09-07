@@ -886,3 +886,4 @@ extern int read_data(FILE *fd, void *buf, size_t len);
 extern int write_data(FILE *fd, const void *buf, size_t len);
 extern int write_str(FILE *fd, char *x);
 extern int read_str(FILE *fd, char **x);
+extern int char_to_channelflag(char c);
