@@ -348,7 +348,7 @@ AC_HEADER_TIME
 AC_HEADER_SYS_WAIT
 AC_STRUCT_TM
 AC_TYPE_UID_T
-unreal_CHECK_TYPE_SIZES
+dnl Do we need this?: unreal_CHECK_TYPE_SIZES
 
 dnl in the future, it would be nice to avoid AC_TRY_RUN to allow
 dnl better support for crosscompiling.

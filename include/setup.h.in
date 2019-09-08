@@ -196,9 +196,6 @@
 /* Define the location of the log files */
 #undef LOGDIR
 
-/* Define if rlim_t is long long */
-#undef LONG_LONG_RLIM_T
-
 /* Define if you have lrand48 */
 #undef LRADN48
 
@@ -305,18 +302,6 @@
 /* Define to 1 if the `setpgrp' function takes no argument. */
 #undef SETPGRP_VOID
 
-/* The size of `int', as computed by sizeof. */
-#undef SIZEOF_INT
-
-/* The size of `long', as computed by sizeof. */
-#undef SIZEOF_LONG
-
-/* The size of `rlim_t', as computed by sizeof. */
-#undef SIZEOF_RLIM_T
-
-/* The size of `short', as computed by sizeof. */
-#undef SIZEOF_SHORT
-
 /* Link... statically(?) (defining this macro will probably cause the build
    tofail) */
 #undef STATIC_LINKING
@@ -392,12 +377,6 @@
 #undef inline
 #endif
 
-/* Define to `short' if <sys/types.h> does not define. */
-#undef int16_t
-
-/* Define to `long' if <sys/types.h> does not define. */
-#undef int32_t
-
 /* Define to the type of a signed integer type wide enough to hold a pointer,
    if such a type exists, and if the system does not define it. */
 #undef intptr_t
@@ -407,12 +386,6 @@
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
-
-/* Define to `unsigned short' if <sys/types.h> does not define. */
-#undef u_int16_t
-
-/* Define to `unsigned long' if <sys/types.h> does not define. */
-#undef u_int32_t
 
 /* Define to `int' if <sys/types.h> doesn't define. */
 #undef uid_t
