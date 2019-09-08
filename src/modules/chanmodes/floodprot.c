@@ -64,8 +64,8 @@ struct UserFld {
 	unsigned short nmsg;
 	unsigned short nmsg_repeat;
 	time_t firstmsg;
-	char *lastmsg;
-	char *prevmsg;
+	uint64_t lastmsg;
+	uint64_t prevmsg;
 };
 
 /* Maximum timers, iotw: max number of possible actions.
@@ -89,6 +89,7 @@ ModDataInfo *mdflood = NULL;
 Cmode_t EXTMODE_FLOODLIMIT = 0L;
 static int timedban_available = 0; /**< Set to 1 if extbans/timedban module is loaded. */
 RemoveFld *removefld_list = NULL;
+char *floodprot_msghash_key = NULL;
 
 #define IsFloodLimit(x)	((x)->mode.extmode & EXTMODE_FLOODLIMIT)
 
@@ -106,7 +107,7 @@ char *channel_modef_string(ChanFloodProt *x, char *str);
 int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text);
 void do_floodprot_action(aChannel *chptr, int what, char *text);
 void floodprottimer_add(aChannel *chptr, char mflag, time_t when);
-char *gen_floodprot_msghash(char *text);
+uint64_t gen_floodprot_msghash(char *text);
 int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type, int what);
 void *cmodef_put_param(void *r_in, char *param);
 char *cmodef_get_param(void *r_in);
@@ -126,6 +127,7 @@ int floodprot_chanmode_del(aChannel *chptr, int m);
 void userfld_free(ModData *md);
 int floodprot_stats(aClient *sptr, char *flag);
 void floodprot_free_removefld_list(ModData *m);
+void floodprot_free_msghash_key(ModData *m);
 
 MOD_TEST(floodprot)
 {
@@ -156,6 +158,7 @@ MOD_INIT(floodprot)
 	init_config();
 
 	LoadPersistentPointer(modinfo, removefld_list, floodprot_free_removefld_list);
+	LoadPersistentPointer(modinfo, floodprot_msghash_key, floodprot_free_msghash_key);
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "floodprot";
@@ -164,6 +167,11 @@ MOD_INIT(floodprot)
 	mdflood = ModDataAdd(modinfo->handle, mreq);
 	if (!mdflood)
 	        abort();
+	if (!floodprot_msghash_key)
+	{
+		floodprot_msghash_key = MyMallocEx(16);
+		siphash_generate_key(floodprot_msghash_key);
+	}
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, floodprot_config_run);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, floodprot_pre_chanmsg);
@@ -1177,7 +1185,7 @@ int check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 	MembershipL *lp;
 	ChanFloodProt *chp;
 	aUserFld *userfld;
-	char *msghash;
+	uint64_t msghash;
 	unsigned char is_flooding_text=0, is_flooding_repeat=0;
 
 	if (ValidatePermissionsForPath("channel:override:flood",sptr,NULL,chptr,NULL) || !IsFloodLimit(chptr) || is_skochanop(sptr, chptr))
@@ -1196,40 +1204,38 @@ int check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 		/* Alloc a new entry if it doesn't exist yet */
 		moddata_membership(lp, mdflood).ptr = MyMallocEx(sizeof(aUserFld));
 	}
+
 	userfld = (aUserFld *)moddata_membership(lp, mdflood).ptr;
 
-	/* if current - firstmsgtime >= mode.per, then reset,
-	 * if nummsg > mode.msgs then kick/ban
-	 */
-	if ((TStime() - userfld->firstmsg) >= chp->per)
-	{
-		/* reset */
-		userfld->firstmsg = TStime();
-		userfld->nmsg = 1;
-		userfld->nmsg_repeat = 1;
-		if (chp->limit[FLD_REPEAT])
-		{
-			safestrdup(userfld->lastmsg, gen_floodprot_msghash(text));
-			safefree(userfld->prevmsg);
-		}
-		return 0; /* forget about it.. */
-	}
-
+	/* Anti-repeat ('r') */
 	if (chp->limit[FLD_REPEAT])
 	{
-		// The if() just above should set lastmsg the first time around, but let's be certain =]
+		/* if current - firstmsgtime >= mode.per, then reset,
+		 * if nummsg > mode.msgs then kick/ban
+		 */
+		if ((TStime() - userfld->firstmsg) >= chp->per)
+		{
+			/* reset */
+			userfld->firstmsg = TStime();
+			userfld->nmsg = 1;
+			userfld->nmsg_repeat = 1;
+			userfld->lastmsg = gen_floodprot_msghash(text);
+			userfld->prevmsg = 0;
+			return 0; /* forget about it.. */
+		}
+
 		msghash = gen_floodprot_msghash(text);
 		if (userfld->lastmsg)
 		{
-			if (!strcmp(userfld->lastmsg, msghash) || (userfld->prevmsg && !strcmp(userfld->prevmsg, msghash)))
+			if ((userfld->lastmsg == msghash) || (userfld->prevmsg == msghash))
 			{
 				userfld->nmsg_repeat++;
 				if (userfld->nmsg_repeat > chp->limit[FLD_REPEAT])
 					is_flooding_repeat = 1;
 			}
-			safestrdup(userfld->prevmsg, userfld->lastmsg);
+			userfld->prevmsg = userfld->lastmsg;
 		}
-		safestrdup(userfld->lastmsg, msghash);
+		userfld->lastmsg = msghash;
 	}
 
 	if (chp->limit[FLD_TEXT])
@@ -1550,7 +1556,7 @@ void do_floodprot_action(aChannel *chptr, int what, char *text)
 	}
 }
 
-char *gen_floodprot_msghash(char *text)
+uint64_t gen_floodprot_msghash(char *text)
 {
 	int i;
 	int is_ctcp, is_action;
@@ -1586,22 +1592,7 @@ char *gen_floodprot_msghash(char *text)
 			plaintext += 7;
 	}
 
-	memset(&msghash, 0, sizeof(msghash));
-	if (!(len = strlen(plaintext)))
-	{
-		/* Empty string usually means the message consists of control codes only
-		 * No need to hash this though, which saves a bit of time
-		 */
-		msghash[0] = ' ';
-		return msghash;
-	}
-
-	memset(&binaryhash, 0, sizeof(binaryhash));
-	SHA256_Init(&ckctx);
-	SHA256_Update(&ckctx, plaintext, len);
-	SHA256_Final(binaryhash, &ckctx);
-	b64_encode(binaryhash, SHA256_DIGEST_LENGTH, msghash, sizeof(msghash));
-	return msghash;
+	return siphash(text, floodprot_msghash_key);
 }
 
 // FIXME: REMARK: make sure you can only do a +f/-f once (latest in line wins).
@@ -1624,14 +1615,8 @@ static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
 void userfld_free(ModData *md)
 {
 	aUserFld *userfld;
-	if (md->ptr)
-	{
-		// Make sure we don't leak memory :D
-		userfld = md->ptr;
-		MyFree(userfld->lastmsg);
-		MyFree(userfld->prevmsg);
-	}
-	MyFree(md->ptr);
+	/* We don't have any struct members (anymore) that need freeing */
+	safefree(md->ptr);
 }
 
 int floodprot_stats(aClient *sptr, char *flag)
@@ -1651,4 +1636,9 @@ void floodprot_free_removefld_list(ModData *m)
 		e_next = e->next;
 		MyFree(e);
 	}
+}
+
+void floodprot_free_msghash_key(ModData *m)
+{
+	safefree(floodprot_msghash_key);
 }
