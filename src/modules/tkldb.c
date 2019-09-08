@@ -410,7 +410,7 @@ int read_tkldb(void)
 	R_SAFE(read_data(fd, &magic, sizeof(magic)));
 	if (magic != TKL_DB_MAGIC)
 	{
-		config_error("[tkldb] Database '%s' uses an old and unsupported format OR is corrupt", cfg.database);
+		config_warn("[tkldb] Database '%s' uses an old and unsupported format OR is corrupt", cfg.database);
 		config_status("If you are upgrading from UnrealIRCd 4 (or 5.0.0-alpha1) then we suggest you to "
 		              "delete the existing database. Just keep at least 1 server linked during the upgrade "
 		              "process to preserve your global *LINES and Spamfilters.");
@@ -422,7 +422,7 @@ int read_tkldb(void)
 	R_SAFE(read_data(fd, &version, sizeof(version)));
 	if (version < 4999)
 	{
-		config_error("[tkldb] Database '%s' uses an unsupport - possibly old - format (%ld).", cfg.database, (long)version);
+		config_warn("[tkldb] Database '%s' uses an unsupport - possibly old - format (%ld).", cfg.database, (long)version);
 		fclose(fd);
 		return 0;
 	}
@@ -453,7 +453,7 @@ int read_tkldb(void)
 			 * in core UnrealIRCd. In which case we should add some skipping code
 			 * here to gracefully handle that situation ;)
 			 */
-			config_error("[tkldb] Invalid type '%c' encountered - STOPPED READING DATABASE!", tkl->type);
+			config_warn("[tkldb] Invalid type '%c' encountered - STOPPED READING DATABASE!", tkl->type);
 			FreeTKLRead();
 			break; /* we MUST stop reading */
 		}
@@ -605,7 +605,7 @@ int read_tkldb(void)
 			}
 		} else
 		{
-			config_error("[tkldb] Unhandled type!! TKLDB is missing support for type %ld -- STOPPED reading db entries!", (long)tkl->type);
+			config_warn("[tkldb] Unhandled type!! TKLDB is missing support for type %ld -- STOPPED reading db entries!", (long)tkl->type);
 			FreeTKLRead();
 			break; /* we MUST stop reading */
 		}
