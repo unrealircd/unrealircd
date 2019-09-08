@@ -111,9 +111,7 @@ extern	char	*rindex(char *, char);
 #endif
 
 #ifndef _WIN32
-#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif
 #ifndef WEXITSTATUS
 #define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
 #endif

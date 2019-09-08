@@ -337,17 +337,17 @@ AC_CHECK_HEADER(glob.h,
 	AC_DEFINE([GLOBH], [], [Define if you have the <glob.h> header file.]))
 AC_CHECK_HEADERS([stdint.h inttypes.h])
 dnl Checks for typedefs, structures, and compiler characteristics.
-AC_C_CONST
-AC_C_INLINE
+dnl AC_C_CONST
+dnl AC_C_INLINE
 
-AC_TYPE_MODE_T
-AC_TYPE_SIZE_T
-AC_TYPE_INTPTR_T
+dnl AC_TYPE_MODE_T
+dnl AC_TYPE_SIZE_T
+dnl AC_TYPE_INTPTR_T
 
-AC_HEADER_TIME
-AC_HEADER_SYS_WAIT
-AC_STRUCT_TM
-AC_TYPE_UID_T
+dnl AC_HEADER_TIME
+dnl AC_HEADER_SYS_WAIT
+dnl AC_STRUCT_TM
+dnl AC_TYPE_UID_T
 dnl Do we need this?: unreal_CHECK_TYPE_SIZES
 
 dnl in the future, it would be nice to avoid AC_TRY_RUN to allow
