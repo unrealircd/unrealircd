@@ -465,15 +465,17 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				chptr = lp->chptr;
 
 				new_message(sptr, NULL, &mtags);
+
 				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
 				               ":%s PART %s :%s",
 				               sptr->name, chptr->chname, "Left all channels");
 				sendto_server(cptr, 0, 0, mtags, ":%s PART %s :Left all channels", sptr->name, chptr->chname);
-				free_message_tags(mtags);
 
 				if (MyConnect(sptr))
 					RunHook5(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, mtags, "Left all channels");
+
 				remove_user_from_channel(sptr, chptr);
+				free_message_tags(mtags);
 			}
 			continue;
 		}
