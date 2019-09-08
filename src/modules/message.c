@@ -854,7 +854,9 @@ char *_StripControlCodes(unsigned char *text)
 			case 0xe2:
 				if (!strncmp(text+1, "\x80\x8b", 2))
 				{
-					text += 2; /* +2 means we skip 3 */
+					/* +2 means we skip 3 */
+					text += 2;
+					len  -= 2;
 					break;
 				}
 				/*fallthrough*/
