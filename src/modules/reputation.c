@@ -101,7 +101,7 @@ long reputation_starttime = 0;
 long reputation_writtentime = 0;
 
 static ReputationEntry *ReputationHashTable[REPUTATION_HASH_TABLE_SIZE];
-static char siphashkey_reputation[16];
+static char siphashkey_reputation[SIPHASH_KEY_LENGTH];
 
 static ModuleInfo ModInf;
 

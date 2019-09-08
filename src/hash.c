@@ -90,7 +90,8 @@
  * Note that you probably want siphash() or siphash_nocase() instead.
  * @param in    The data to hash
  * @param inlen The length of the data
- * @param k     The key to use for hashing (16 bytes, not NUL terminated)
+ * @param k     The key to use for hashing (SIPHASH_KEY_LENGTH bytes,
+ *              which is actually 16, not NUL terminated)
  * @returns Hash result as a 64 bit unsigned integer.
  * @notes The key (k) should be random and must stay the same for
  *        as long as you use the function for your specific hash table.
@@ -162,7 +163,8 @@ uint64_t siphash_raw(const char *in, size_t inlen, const char *k)
  * This deals with IRC case-insensitive matches, which is
  * what you need for things like nicks and channels.
  * @param str   The string to hash (NUL-terminated)
- * @param k     The key to use for hashing (16 bytes, not NUL terminated)
+ * @param k     The key to use for hashing (SIPHASH_KEY_LENGTH bytes,
+ *              which is actually 16, not NUL terminated)
  * @returns Hash result as a 64 bit unsigned integer.
  * @notes The key (k) should be random and must stay the same for
  *        as long as you use the function for your specific hash table.
@@ -232,7 +234,8 @@ uint64_t siphash_nocase(const char *in, const char *k)
 
 /** Generic hash function in UnrealIRCd.
  * @param str   The string to hash (NUL-terminated)
- * @param k     The key to use for hashing (16 bytes, not NUL terminated)
+ * @param k     The key to use for hashing (SIPHASH_KEY_LENGTH bytes,
+ *              which is actually 16, not NUL terminated)
  * @returns Hash result as a 64 bit unsigned integer.
  * @notes The key (k) should be random and must stay the same for
  *        as long as you use the function for your specific hash table.
@@ -259,11 +262,11 @@ static struct list_head idTable[NICK_HASH_TABLE_SIZE];
 static aChannel *channelTable[CHAN_HASH_TABLE_SIZE];
 static aWatch *watchTable[WATCH_HASH_TABLE_SIZE];
 
-static char siphashkey_nick[16];
-static char siphashkey_chan[16];
-static char siphashkey_watch[16];
-static char siphashkey_whowas[16];
-static char siphashkey_throttling[16];
+static char siphashkey_nick[SIPHASH_KEY_LENGTH];
+static char siphashkey_chan[SIPHASH_KEY_LENGTH];
+static char siphashkey_watch[SIPHASH_KEY_LENGTH];
+static char siphashkey_whowas[SIPHASH_KEY_LENGTH];
+static char siphashkey_throttling[SIPHASH_KEY_LENGTH];
 
 extern char unreallogo[];
 

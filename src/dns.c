@@ -62,7 +62,7 @@ static DNSCache *cache_hashtbl[DNS_HASH_SIZE]; /**< Hash table of cache */
 
 static unsigned int unrealdns_num_cache = 0; /**< # of cache entries in memory */
 
-static char siphashkey_dns_ip[16];
+static char siphashkey_dns_ip[SIPHASH_KEY_LENGTH];
 
 static void unrealdns_io_cb(int fd, int revents, void *data)
 {

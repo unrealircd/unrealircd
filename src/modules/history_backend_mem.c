@@ -44,7 +44,7 @@ struct _historyloglineobject {
 };
 
 /* Global variables */
-static char siphashkey_history_backend_mem[16];
+static char siphashkey_history_backend_mem[SIPHASH_KEY_LENGTH];
 HistoryLogObject *history_hash_table[HISTORY_BACKEND_MEM_HASH_TABLE_SIZE];
 
 /* Forward declarations */

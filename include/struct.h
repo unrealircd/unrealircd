@@ -237,6 +237,11 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	BOOT_TTY	2
 #define BOOT_NOFORK     4
 
+/* Length of the key that you feed into siphash_generate_key()
+ * DO NOT CHANGE THIS as the siphash code depends on it.
+ */
+#define SIPHASH_KEY_LENGTH 16
+
 #define	STAT_LOG	-7	/* logfile for -x */
 #define	STAT_CONNECTING	-6
 #define STAT_TLS_STARTTLS_HANDSHAKE -8
