@@ -6724,15 +6724,6 @@ else
 fi
 
 
-case `uname -s` in
-	*SunOS*|*solaris*)
-
-$as_echo "#define _SOLARIS /**/" >>confdefs.h
-
-		IRCDLIBS="$IRCDLIBS -lresolv "
-		;;
-esac
-
 for ac_func in poll
 do :
   ac_fn_c_check_func "$LINENO" "poll" "ac_cv_func_poll"

@@ -262,6 +262,3 @@
 /* Define if you have libcurl installed to get remote includes and MOTD
    support */
 #undef USE_LIBCURL
-
-/* Define if you are compiling unrealircd on Sun's (or Oracle's?) Solaris */
-#undef _SOLARIS

@@ -38,9 +38,6 @@
 #include <sys/file.h>
 #include <sys/ioctl.h>
 #endif
-#if defined(_SOLARIS)
-#include <sys/filio.h>
-#endif
 
 /***************************************************************************************
  * Backend-independent functions.  fd_setselect() and friends                          *

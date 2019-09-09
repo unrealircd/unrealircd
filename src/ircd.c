@@ -83,7 +83,7 @@ MODVAR int  booted = FALSE;
 #if	defined(PROFIL) && !defined(_WIN32)
 extern etext();
 
-VOIDSIG s_monitor(void)
+void s_monitor(void)
 {
 	static int mon = 0;
 #ifdef	POSIX_SIGNALS
@@ -105,7 +105,7 @@ VOIDSIG s_monitor(void)
 
 #endif
 
-VOIDSIG s_die()
+void s_die()
 {
 #ifdef _WIN32
 	aClient *cptr;
@@ -132,9 +132,9 @@ VOIDSIG s_die()
 }
 
 #ifndef _WIN32
-static VOIDSIG s_rehash()
+static void s_rehash()
 #else
-VOIDSIG s_rehash()
+void s_rehash()
 #endif
 {
 #ifdef	POSIX_SIGNALS
@@ -155,7 +155,7 @@ VOIDSIG s_rehash()
 }
 
 #ifndef _WIN32
-static VOIDSIG s_reloadcert()
+static void s_reloadcert()
 {
 #ifdef	POSIX_SIGNALS
 	struct sigaction act;
@@ -178,7 +178,7 @@ void restart(char *mesg)
 	server_reboot(mesg);
 }
 
-VOIDSIG s_restart()
+void s_restart()
 {
 	dorestart = 1;
 #if 0
@@ -197,7 +197,7 @@ VOIDSIG s_restart()
 
 
 #ifndef _WIN32
-VOIDSIG dummy()
+void dummy()
 {
 #ifndef HAVE_RELIABLE_SIGNALS
 	(void)signal(SIGALRM, dummy);

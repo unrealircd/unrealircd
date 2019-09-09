@@ -70,22 +70,10 @@
 #define	strncasecmp	myncmp
 #endif
 
-#ifdef AIX
-#include <sys/select.h>
+#ifndef _WIN32
+#include <sys/time.h>
 #endif
-#if defined(HPUX )|| defined(AIX) || defined(_WIN32)
 #include <time.h>
-#ifdef AIX
-#include <sys/time.h>
-#endif
-#else
-#include <sys/time.h>
-#endif
-#ifdef NEXT
-#define VOIDSIG int		/* whether signal() returns int of void */
-#else
-#define VOIDSIG void		/* whether signal() returns int of void */
-#endif
 
 #ifndef _WIN32
 #include <sys/wait.h>
@@ -95,12 +83,6 @@
 #ifndef WIFEXITED
 #define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif
-#endif
-
-#ifdef _SOLARIS
-#define OPT_TYPE char		/* opt type for get/setsockopt */
-#else
-#define OPT_TYPE void
 #endif
 
 /*
@@ -118,7 +100,7 @@
 #endif
 
 #ifndef _WIN32
-extern VOIDSIG dummy();
+extern void dummy();
 #endif
 
 #ifdef	NO_U_TYPES

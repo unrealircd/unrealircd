@@ -164,8 +164,7 @@ void report_error(char *text, aClient *cptr)
 	 */
 #ifdef	SO_ERROR
 	if (cptr && !IsMe(cptr) && cptr->fd >= 0)
-		if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR,
-		    (OPT_TYPE *)&err, &len))
+		if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR, (void *)&err, &len))
 			if (err)
 				errtmp = err;
 #endif
@@ -209,8 +208,7 @@ void report_baderror(char *text, aClient *cptr)
 	 */
 #ifdef	SO_ERROR
 	if (cptr && !IsMe(cptr) && cptr->fd >= 0)
-		if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR,
-		    (OPT_TYPE *)&err, &len))
+		if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR, (void *)&err, &len))
 			if (err)
 				errtmp = err;
 #endif
@@ -488,13 +486,9 @@ void check_user_limit(void)
 
 void init_sys(void)
 {
+#ifndef _WIN32
 	/* Create new session / set process group */
-#if defined(HPUX) || defined(_SOLARIS) || \
-    defined(_POSIX_SOURCE) || defined(SVR4) || defined(SGI) || \
-    defined(OSXTIGER) || defined(__QNX__)
 	(void)setsid();
-#elif !defined(_WIN32)
-	(void)setpgrp(0, (int)getpid());
 #endif
 
 	init_resolver(1);
@@ -744,7 +738,7 @@ void set_ipv6_opts(int fd)
 {
 #if defined(IPV6_V6ONLY)
 	int opt = 1;
-	(void)setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
+	(void)setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&opt, sizeof(opt));
 #endif
 }
 
@@ -759,30 +753,17 @@ void set_sock_opts(int fd, aClient *cptr, int ipv6)
 		set_ipv6_opts(fd);
 #ifdef SO_REUSEADDR
 	opt = 1;
-	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (OPT_TYPE *)&opt,
-	    sizeof(opt)) < 0)
+	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (void *)&opt, sizeof(opt)) < 0)
 			report_error("setsockopt(SO_REUSEADDR) %s:%s", cptr);
-#endif
-#if  defined(SO_DEBUG) && defined(DEBUGMODE) && 0
-/* Solaris with SO_DEBUG writes to syslog by default */
-#if !defined(_SOLARIS) || defined(HAVE_SYSLOG)
-	opt = 1;
-	if (setsockopt(fd, SOL_SOCKET, SO_DEBUG, (OPT_TYPE *)&opt,
-	    sizeof(opt)) < 0)
-		
-		report_error("setsockopt(SO_DEBUG) %s:%s", cptr);
-#endif /* _SOLARIS */
 #endif
 #if defined(SO_USELOOPBACK) && !defined(_WIN32)
 	opt = 1;
-	if (setsockopt(fd, SOL_SOCKET, SO_USELOOPBACK, (OPT_TYPE *)&opt,
-	    sizeof(opt)) < 0)
+	if (setsockopt(fd, SOL_SOCKET, SO_USELOOPBACK, (void *)&opt, sizeof(opt)) < 0)
 		report_error("setsockopt(SO_USELOOPBACK) %s:%s", cptr);
 #endif
 #ifdef	SO_RCVBUF
 	opt = 8192;
-	if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (OPT_TYPE *)&opt,
-	    sizeof(opt)) < 0)
+	if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (void *)&opt, sizeof(opt)) < 0)
 		report_error("setsockopt(SO_RCVBUF) %s:%s", cptr);
 #endif
 #ifdef	SO_SNDBUF
@@ -794,8 +775,7 @@ void set_sock_opts(int fd, aClient *cptr, int ipv6)
 # else
 	opt = 8192;
 # endif
-	if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (OPT_TYPE *)&opt,
-	    sizeof(opt)) < 0)
+	if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (void *)&opt, sizeof(opt)) < 0)
 		report_error("setsockopt(SO_SNDBUF) %s:%s", cptr);
 #endif
 }
@@ -810,8 +790,7 @@ int  get_sockerr(aClient *cptr)
 #endif
 #ifdef	SO_ERROR
 	if (cptr->fd >= 0)
-		if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR,
-		    (OPT_TYPE *)&err, &len))
+		if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR, (void *)&err, &len))
 			if (err)
 				errtmp = err;
 #endif

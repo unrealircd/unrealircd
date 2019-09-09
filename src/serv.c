@@ -28,7 +28,7 @@
 /* for uname(), is POSIX so should be OK... */
 #include <sys/utsname.h>
 #endif
-extern VOIDSIG s_die();
+extern void s_die();
 
 static char buf[BUFSIZE];
 

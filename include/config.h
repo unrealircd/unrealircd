@@ -370,33 +370,6 @@ error You stuffed up config.h signals
 #if (NICKNAMEHISTORYLENGTH < 100)
 #  define NICKNAMEHISTORYLENGTH 100
 #endif
-/*
- * Some ugliness for AIX platforms.
- */
-#ifdef AIX
-# include <sys/machine.h>
-# if BYTE_ORDER == BIG_ENDIAN
-#  define BIT_ZERO_ON_LEFT
-# endif
-# if BYTE_ORDER == LITTLE_ENDIAN
-#  define BIT_ZERO_ON_RIGHT
-# endif
-/*
- * this one is used later in sys/types.h (or so i believe). -avalon
- */
-# define BSD_INCLUDES
-#endif
-/*
- * This is just to make Solaris porting easier -- codemastr
- */
-#if defined(SOL20) || defined(SOL25) || defined(SOL26) || defined(SOL27)
-#define _SOLARIS
-#endif
-#if defined(AIX) && defined(_XOPEN_SOURCE_EXTENDED) && _XOPEN_SOURCE_EXTENDED
-# define SOCK_LEN_TYPE size_t
-#else
-# define SOCK_LEN_TYPE int
-#endif
 
 #if defined(__GNUC__) && defined(__GNUC_MINOR__) && \
     ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)) && \

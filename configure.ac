@@ -553,13 +553,6 @@ AC_ARG_ENABLE([asan],
   [ac_cv_asan="no"],
   [ac_cv_asan="yes"])
 
-case `uname -s` in
-	*SunOS*|*solaris*)
-		AC_DEFINE([_SOLARIS], [], [Define if you are compiling unrealircd on Sun's (or Oracle's?) Solaris])
-		IRCDLIBS="$IRCDLIBS -lresolv "
-		;;
-esac
-
 AC_CHECK_FUNCS([poll],
 	AC_DEFINE([HAVE_POLL], [], [Define if you have poll]))
 AC_CHECK_FUNCS([epoll_create epoll_ctl epoll_wait],
