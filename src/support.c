@@ -36,6 +36,40 @@ char	*my_itoa(int i)
 	return (buf);
 }
 
+/*
+** 	strtoken.c --  	walk through a string of tokens, using a set
+**			of separators
+**			argv 9/90
+*/
+char *strtoken(char **save, char *str, char *fs)
+{
+	char *pos, *tmp;
+
+	if (str)
+		pos = str;	/* new string scan */
+	else
+		pos = *save; /* keep last position across calls */
+
+	while (pos && *pos && strchr(fs, *pos) != NULL)
+		pos++;		/* skip leading separators */
+
+	if (!pos || !*pos)
+		return (pos = *save = NULL);	/* string contains only sep's */
+
+	tmp = pos;		/* now, keep position of the token */
+
+	while (*pos && strchr(fs, *pos) == NULL)
+		pos++;		/* skip content of the token */
+
+	if (*pos)
+		*pos++ = '\0';	/* remove first sep after the token */
+	else
+		pos = NULL;	/* end of string */
+
+	*save = pos;
+	return (tmp);
+}
+
 #ifdef NEED_STRERROR
 /*
 **	strerror - return an appropriate system error string to a given errno
