@@ -4609,9 +4609,9 @@ int _match_user(char *rmask, aClient *acptr, int options)
 			 */
 			if (!acptr->ip || !strchr(acptr->ip, ':'))
 				return 0; /* NOMATCH: hmask is IPv6 address and client is not IPv6 */
-			if (!inet_pton6(acptr->ip, clientip))
+			if (!inet_pton(AF_INET6, acptr->ip, clientip))
 				return 0; /* NOMATCH: unusual failure */
-			if (!inet_pton6(hmask, maskip))
+			if (!inet_pton(AF_INET6, hmask, maskip))
 				return 0; /* NOMATCH: invalid IPv6 IP in hostmask */
 
 			if (cidr < 0)
@@ -4630,7 +4630,7 @@ int _match_user(char *rmask, aClient *acptr, int options)
 			 * The exception is CIDR. If we have CIDR mask then don't bother checking for
 			 * virtual hosts and things like that since '/' can never be in a hostname.
 			 */
-			if (acptr->ip && inet_pton4(acptr->ip, clientip) && inet_pton4(hmask, maskip))
+			if (acptr->ip && inet_pton(AF_INET, acptr->ip, clientip) && inet_pton(AF_INET, hmask, maskip))
 			{
 				if (cidr < 0)
 				{
