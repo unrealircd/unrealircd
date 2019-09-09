@@ -33,10 +33,8 @@
 #endif
 #include "types.h"
 #include "config.h"
-#ifdef	PARAMH
-#include <sys/param.h>
-#endif
 #ifndef _WIN32
+#include <sys/param.h>
 #include <stdbool.h>
 #else
 typedef int bool;

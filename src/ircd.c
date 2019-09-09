@@ -916,7 +916,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifdef HAVE_PSTAT
 	union pstun pstats;
 #endif
-#ifdef HAVE_SETRLIMIT
+#ifndef _WIN32
 	struct rlimit corelim;
 #endif
 
@@ -997,7 +997,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	extcmode_init();
 	efunctions_init();
 	clear_scache_hash_table();
-#ifdef HAVE_SETRLIMIT
+#ifndef _WIN32
 	/* Make it so we can dump core */
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
 	setrlimit(RLIMIT_CORE, &corelim);

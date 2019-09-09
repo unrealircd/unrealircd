@@ -39,19 +39,10 @@
 #include <stdarg.h>
 #include <process.h>
 #endif
-
-#ifdef	UNISTDH
-#include <unistd.h>
-#endif
-#ifdef	STDLIBH
 #include <stdlib.h>
-#endif
-#ifdef	STRINGSH
+#ifndef _WIN32
+#include <unistd.h>
 #include <strings.h>
-#else
-# ifdef	STRINGH
-# include <string.h>
-# endif
 #endif
 
 /* get intptr_t if the system provides it -- otherwise, ./configure will define it for us */

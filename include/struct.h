@@ -46,9 +46,7 @@
 #ifndef _WIN32
 #include <netinet/in.h>
 #include <netdb.h>
-#endif
-#ifdef STDDEFH
-# include <stddef.h>
+#include <stddef.h>
 #endif
 
 #ifdef HAVE_SYSLOG

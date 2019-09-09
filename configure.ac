@@ -306,20 +306,8 @@ if test "$ac_cv_ip6" = "no"; then
 	AC_MSG_ERROR([Your system does not support IPv6])
 fi
 
-AC_CHECK_HEADER(sys/param.h,
-	AC_DEFINE([PARAMH], [], [Define if you have the <sys/param.h> header file.]))
-AC_CHECK_HEADER(stdlib.h,
-	AC_DEFINE([STDLIBH], [], [Define if you have the <stdlib.h> header file.]))
-AC_CHECK_HEADER(stddef.h,
-	AC_DEFINE([STDDEFH], [], [Define if you have the <stddef.h> header file.]))
 AC_CHECK_HEADER(sys/syslog.h,
 	AC_DEFINE([SYSSYSLOGH], [], [Define if you have the <sys/syslog.h> header file.]))
-AC_CHECK_HEADER(unistd.h,
-	AC_DEFINE([UNISTDH], [], [Define if you have the <unistd.h> header file.]))
-AC_CHECK_HEADER(string.h,
-	AC_DEFINE([STRINGH], [], [Define if you have the <string.h> header file.]))
-AC_CHECK_HEADER(strings.h,
-	AC_DEFINE([STRINGSH], [], [Define if you have the <strings.h> header file.]))
 AC_CHECK_HEADER(malloc.h,
 	AC_DEFINE([MALLOCH], [<malloc.h>], [Define to <malloc.h> you need malloc.h.]))
 AC_CHECK_HEADER(sys/rusage.h,
@@ -343,12 +331,6 @@ AC_CHECK_FUNCS(inet_pton,
 AC_CHECK_FUNCS(inet_ntop,
 	AC_DEFINE([HAVE_INET_NTOP], [], [Define if you have inet_ntop]))
 
-AC_CHECK_FUNCS([setrlimit])
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([gettimeofday],
-	[AC_DEFINE([GETTIMEOFDAY], [], [Define if you have gettimeofday])],
-	[AC_CHECK_FUNCS([lrand48],
-		[AC_DEFINE([LRADN48], [], [Define if you have lrand48])])])
 AC_CHECK_FUNCS([getrusage],
 	[AC_DEFINE([GETRUSAGE_2], [], [Define if you have getrusage])],
 	[AC_CHECK_FUNCS([times],

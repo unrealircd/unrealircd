@@ -23,11 +23,6 @@
 #define __setup_include__
 
 #undef  PARAMH
-#undef  UNISTDH
-#define STRINGH
-#undef  STRINGSH
-#define STDLIBH
-#undef  STDDEFH
 #undef  SYSSYSLOGH
 #define NOINDEX
 #define NOBCOPY
@@ -36,7 +31,6 @@
 #undef  NEED_INET_ADDR
 #undef  NEED_INET_NTOA
 #define NEED_INET_NETOF
-#define GETTIMEOFDAY
 #undef  LRAND48
 #define MALLOCH <malloc.h>
 #undef  NBLOCK_POSIX
