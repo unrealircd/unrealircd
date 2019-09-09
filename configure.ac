@@ -326,10 +326,6 @@ AC_CHECK_FUNCS(strlcat,
 	AC_DEFINE([HAVE_STRLCAT], [], [Define if you have strlcat]))
 AC_CHECK_FUNCS(strlncat,
 	AC_DEFINE([HAVE_STRLNCAT], [], [Define if you have strlncat]))
-AC_CHECK_FUNCS(inet_pton,
-	AC_DEFINE([HAVE_INET_PTON], [], [Define if you have inet_pton]))
-AC_CHECK_FUNCS(inet_ntop,
-	AC_DEFINE([HAVE_INET_NTOP], [], [Define if you have inet_ntop]))
 
 AC_CHECK_FUNCS([getrusage],
 	[AC_DEFINE([GETRUSAGE_2], [], [Define if you have getrusage])],

@@ -43,8 +43,6 @@
 #define strncasecmp _strnicmp
 #define HAVE_EXPLICIT_BZERO
 #define explicit_bzero(a,b) SecureZeroMemory(a,b)
-#define HAVE_INET_PTON
-#define HAVE_INET_NTOP
 
 /* mode_t: Needed in s_conf.c for the third argument of open(3p).
  * Should be an int because of http://msdn.microsoft.com/en-us/library/z0kc8e3z(VS.71).aspx

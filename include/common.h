@@ -102,14 +102,6 @@ extern char *strtok2(char *, char *);
 extern char *strtoken(char **, char *, char *);
 #endif
 
-#ifndef HAVE_INET_NTOP
-const char *inet_ntop(int, const void *, char *, size_t);
-#endif
-
-#ifndef HAVE_INET_PTON
-int inet_pton(int af, const char *src, void *dst);
-#endif
-
 extern MODVAR int  global_count, max_global_count;
 extern char *myctime(time_t);
 #ifdef _WIN32
