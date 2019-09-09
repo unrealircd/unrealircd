@@ -73,12 +73,6 @@ AC_CHECK_LIB(descrypt, crypt,
 	[AC_CHECK_LIB(crypt, crypt,
 		[AC_DEFINE([HAVE_CRYPT], [], [Define if you have crypt])
 			IRCDLIBS="$IRCDLIBS-lcrypt "])])
-AC_CHECK_LIB(socket, socket,
-	[IRCDLIBS="$IRCDLIBS-lsocket "
-		SOCKLIB="-lsocket"])
-AC_CHECK_LIB(nsl, inet_ntoa,
-	[IRCDLIBS="$IRCDLIBS-lnsl "
-		INETLIB="-lnsl"])
 
 dnl HARDENING START
 dnl This is taken from https://github.com/kmcallister/autoharden
@@ -297,8 +291,6 @@ dnl AC_DEFINE([DYNAMIC_LINKING], [], [Link dynamically as opposed to statically.
 ])
 
 AC_CACHE_CHECK([if your system has IPv6 support], [ac_cv_ip6], [
-save_libs="$LIBS"
-LIBS="$LIBS $SOCKLIB"
 AC_TRY_RUN([
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -313,7 +305,6 @@ exit(0); /* We only check if the code compiles, that's enough. We can deal with 
 if test "$ac_cv_ip6" = "no"; then
 	AC_MSG_ERROR([Your system does not support IPv6])
 fi
-LIBS="$save_libs"
 
 AC_CHECK_HEADER(sys/param.h,
 	AC_DEFINE([PARAMH], [], [Define if you have the <sys/param.h> header file.]))
@@ -336,109 +327,7 @@ AC_CHECK_HEADER(sys/rusage.h,
 AC_CHECK_HEADER(glob.h,
 	AC_DEFINE([GLOBH], [], [Define if you have the <glob.h> header file.]))
 AC_CHECK_HEADERS([stdint.h inttypes.h])
-dnl Checks for typedefs, structures, and compiler characteristics.
-dnl AC_C_CONST
-dnl AC_C_INLINE
 
-dnl AC_TYPE_MODE_T
-dnl AC_TYPE_SIZE_T
-dnl AC_TYPE_INTPTR_T
-
-dnl AC_HEADER_TIME
-dnl AC_HEADER_SYS_WAIT
-dnl AC_STRUCT_TM
-dnl AC_TYPE_UID_T
-dnl Do we need this?: unreal_CHECK_TYPE_SIZES
-
-dnl in the future, it would be nice to avoid AC_TRY_RUN to allow
-dnl better support for crosscompiling.
-AC_CACHE_CHECK([what kind of nonblocking sockets you have], [ac_cv_nonblocking],[
-save_libs="$LIBS"
-LIBS="$LIBS $SOCKLIB"
-AC_TRY_RUN([
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
-#include <signal.h>
-alarmed() {
-exit(1);
-}
-int main() {
-#ifdef O_NONBLOCK
-char b[12], x[32];
-int f, l = sizeof(x);
-f = socket(AF_INET, SOCK_DGRAM, 0);
-if (f >= 0 && !(fcntl(f, F_SETFL, O_NONBLOCK))) {
-signal(SIGALRM, alarmed);
-alarm(3);
-recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
-alarm(0);
-exit(0);
-}
-#endif
-exit(1);
-}
-],ac_cv_nonblocking=O_NONBLOCK,[
-AC_TRY_RUN([
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
-#include <signal.h>
-alarmed() {
-exit(0);
-}
-int main() {
-#ifdef O_NDELAY
-char b[12], x[32];
-int f, l = sizeof(x);
-f = socket(AF_INET, SOCK_DGRAM, 0);
-if (f >= 0 && !(fcntl(f, F_SETFL, O_NDELAY))) {
-signal(SIGALRM, alarmed);
-alarm(3);
-recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
-alarm(0);
-exit(0);
-}
-#endif
-exit(1);
-}],ac_cv_nonblocking=O_NDELAY,[
-AC_TRY_RUN([
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
-#include <signal.h>
-alarmed() {
-exit(1);
-}
-int main() {
-#ifdef FIONBIO
-char b[12], x[32];
-int f, l = sizeof(x);
-f = socket(AF_INET, SOCK_DGRAM, 0);
-if (f >= 0 && !(fcntl(f, F_SETFL, FIONBIO))) {
-signal(SIGALRM, alarmed);
-alarm(3);
-recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
-alarm(0);
-exit(0);
-}
-#endif
-exit(1);
-], ac_cv_nonblocking=FIONBIO,ac_cv_nonblocking=none)])])])
-if test "$ac_cv_nonblocking" = "O_NONBLOCK"; then
-	AC_DEFINE([NBLOCK_POSIX], [], [Define if you have O_NONBLOCK])
-elif test "$ac_cv_nonblocking" = "O_NDELAY"; then
-	AC_DEFINE([NBLOCK_BSD], [], [Define if you have O_NDELAY])
-elif test "$ac_cv_nonblocking" = "FIONBIO"; then
-	AC_DEFINE([NBLOCK_SYSV], [], [Define if you have FIONBIO])
-fi
-LIBS="$save_libs"
 dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_SETPGRP
@@ -524,11 +413,8 @@ AC_CHECK_FUNCS(bcmp,,AC_DEFINE([NEED_BCMP], [], [Define if you don't have bcmp])
 AC_CHECK_FUNCS(bzero,,AC_DEFINE([NEED_BZERO], [], [Define if you need bzero]))
 AC_CHECK_FUNCS(explicit_bzero,AC_DEFINE([HAVE_EXPLICIT_BZERO], [], [Define if you have explicit_bzero]))
 AC_CHECK_FUNCS(strcasecmp,AC_DEFINE([GOT_STRCASECMP], [], [Define if you have strcasecmp]))
-save_libs="$LIBS"
-LIBS="$LIBS $SOCKLIB $INETLIB"
 AC_CHECK_FUNCS(inet_addr,,AC_DEFINE([NEED_INET_ADDR], [], [Define if you need inet_addr]))
 AC_CHECK_FUNCS(inet_ntoa,,AC_DEFINE([NEED_INET_NTOA], [], [Define if you need inet_ntoa]))
-LIBS="$save_libs"
 AC_CHECK_FUNCS(syslog,AC_DEFINE([HAVE_SYSLOG], [], [Define if you have syslog]))
 AC_SUBST(STRTOUL)
 AC_SUBST(CRYPTOLIB)

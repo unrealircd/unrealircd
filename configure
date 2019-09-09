@@ -3589,88 +3589,6 @@ fi
 
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for socket in -lsocket" >&5
-$as_echo_n "checking for socket in -lsocket... " >&6; }
-if ${ac_cv_lib_socket_socket+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lsocket  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char socket ();
-int
-main ()
-{
-return socket ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_socket_socket=yes
-else
-  ac_cv_lib_socket_socket=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_socket_socket" >&5
-$as_echo "$ac_cv_lib_socket_socket" >&6; }
-if test "x$ac_cv_lib_socket_socket" = xyes; then :
-  IRCDLIBS="$IRCDLIBS-lsocket "
-		SOCKLIB="-lsocket"
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for inet_ntoa in -lnsl" >&5
-$as_echo_n "checking for inet_ntoa in -lnsl... " >&6; }
-if ${ac_cv_lib_nsl_inet_ntoa+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lnsl  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char inet_ntoa ();
-int
-main ()
-{
-return inet_ntoa ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_nsl_inet_ntoa=yes
-else
-  ac_cv_lib_nsl_inet_ntoa=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_nsl_inet_ntoa" >&5
-$as_echo "$ac_cv_lib_nsl_inet_ntoa" >&6; }
-if test "x$ac_cv_lib_nsl_inet_ntoa" = xyes; then :
-  IRCDLIBS="$IRCDLIBS-lnsl "
-		INETLIB="-lnsl"
-fi
-
 
 # We want to check for compiler flag support, but there is no way to make
 # clang's "argument unused" warning fatal.  So we invoke the compiler through a
@@ -5008,8 +4926,6 @@ if ${ac_cv_ip6+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
-save_libs="$LIBS"
-LIBS="$LIBS $SOCKLIB"
 if test "$cross_compiling" = yes; then :
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -5043,7 +4959,6 @@ $as_echo "$ac_cv_ip6" >&6; }
 if test "$ac_cv_ip6" = "no"; then
 	as_fn_error $? "Your system does not support IPv6" "$LINENO" 5
 fi
-LIBS="$save_libs"
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -5536,163 +5451,6 @@ fi
 done
 
 
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking what kind of nonblocking sockets you have" >&5
-$as_echo_n "checking what kind of nonblocking sockets you have... " >&6; }
-if ${ac_cv_nonblocking+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-save_libs="$LIBS"
-LIBS="$LIBS $SOCKLIB"
-if test "$cross_compiling" = yes; then :
-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "cannot run test program while cross compiling
-See \`config.log' for more details" "$LINENO" 5; }
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
-#include <signal.h>
-alarmed() {
-exit(1);
-}
-int main() {
-#ifdef O_NONBLOCK
-char b[12], x[32];
-int f, l = sizeof(x);
-f = socket(AF_INET, SOCK_DGRAM, 0);
-if (f >= 0 && !(fcntl(f, F_SETFL, O_NONBLOCK))) {
-signal(SIGALRM, alarmed);
-alarm(3);
-recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
-alarm(0);
-exit(0);
-}
-#endif
-exit(1);
-}
-
-_ACEOF
-if ac_fn_c_try_run "$LINENO"; then :
-  ac_cv_nonblocking=O_NONBLOCK
-else
-
-if test "$cross_compiling" = yes; then :
-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "cannot run test program while cross compiling
-See \`config.log' for more details" "$LINENO" 5; }
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
-#include <signal.h>
-alarmed() {
-exit(0);
-}
-int main() {
-#ifdef O_NDELAY
-char b[12], x[32];
-int f, l = sizeof(x);
-f = socket(AF_INET, SOCK_DGRAM, 0);
-if (f >= 0 && !(fcntl(f, F_SETFL, O_NDELAY))) {
-signal(SIGALRM, alarmed);
-alarm(3);
-recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
-alarm(0);
-exit(0);
-}
-#endif
-exit(1);
-}
-_ACEOF
-if ac_fn_c_try_run "$LINENO"; then :
-  ac_cv_nonblocking=O_NDELAY
-else
-
-if test "$cross_compiling" = yes; then :
-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "cannot run test program while cross compiling
-See \`config.log' for more details" "$LINENO" 5; }
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
-#include <signal.h>
-alarmed() {
-exit(1);
-}
-int main() {
-#ifdef FIONBIO
-char b[12], x[32];
-int f, l = sizeof(x);
-f = socket(AF_INET, SOCK_DGRAM, 0);
-if (f >= 0 && !(fcntl(f, F_SETFL, FIONBIO))) {
-signal(SIGALRM, alarmed);
-alarm(3);
-recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
-alarm(0);
-exit(0);
-}
-#endif
-exit(1);
-
-_ACEOF
-if ac_fn_c_try_run "$LINENO"; then :
-  ac_cv_nonblocking=FIONBIO
-else
-  ac_cv_nonblocking=none
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_nonblocking" >&5
-$as_echo "$ac_cv_nonblocking" >&6; }
-if test "$ac_cv_nonblocking" = "O_NONBLOCK"; then
-
-$as_echo "#define NBLOCK_POSIX /**/" >>confdefs.h
-
-elif test "$ac_cv_nonblocking" = "O_NDELAY"; then
-
-$as_echo "#define NBLOCK_BSD /**/" >>confdefs.h
-
-elif test "$ac_cv_nonblocking" = "FIONBIO"; then
-
-$as_echo "#define NBLOCK_SYSV /**/" >>confdefs.h
-
-fi
-LIBS="$save_libs"
 if test $ac_cv_c_compiler_gnu = yes; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC needs -traditional" >&5
 $as_echo_n "checking whether $CC needs -traditional... " >&6; }
@@ -6250,8 +6008,6 @@ $as_echo "#define GOT_STRCASECMP /**/" >>confdefs.h
 fi
 done
 
-save_libs="$LIBS"
-LIBS="$LIBS $SOCKLIB $INETLIB"
 for ac_func in inet_addr
 do :
   ac_fn_c_check_func "$LINENO" "inet_addr" "ac_cv_func_inet_addr"
@@ -6282,7 +6038,6 @@ $as_echo "#define NEED_INET_NTOA /**/" >>confdefs.h
 fi
 done
 
-LIBS="$save_libs"
 for ac_func in syslog
 do :
   ac_fn_c_check_func "$LINENO" "syslog" "ac_cv_func_syslog"

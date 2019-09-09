@@ -823,32 +823,11 @@ int  get_sockerr(aClient *cptr)
  */
 void set_non_blocking(int fd, aClient *cptr)
 {
-	int  res, nonb = 0;
+	int res, nonb = 0;
 
-	/*
-	   ** NOTE: consult ALL your relevant manual pages *BEFORE* changing
-	   **    these ioctl's.  There are quite a few variations on them,
-	   **    as can be seen by the PCS one.  They are *NOT* all the same.
-	   **    Heed this well. - Avalon.
-	 */
-#ifdef	NBLOCK_POSIX
 	nonb |= O_NONBLOCK;
-#endif
-#ifdef	NBLOCK_BSD
-	nonb |= O_NDELAY;
-#endif
-#ifdef	NBLOCK_SYSV
-	/* This portion of code might also apply to NeXT.  -LynX */
-	res = 1;
 
-	if (ioctl(fd, FIONBIO, &res) < 0)
-	{
-		if (cptr) 
-			report_error("ioctl(fd,FIONBIO) failed for %s:%s", cptr);
-		
-	}
-#else
-# if !defined(_WIN32)
+#if !defined(_WIN32)
 	if ((res = fcntl(fd, F_GETFL, 0)) == -1)
 	{
 		if (cptr)
@@ -863,7 +842,7 @@ void set_non_blocking(int fd, aClient *cptr)
 			report_error("fcntl(fd, F_SETL, nonb) failed for %s:%s", cptr);
 		}
 	}
-# else
+#else
 	nonb = 1;
 	if (ioctlsocket(fd, FIONBIO, &nonb) < 0)
 	{
@@ -872,7 +851,6 @@ void set_non_blocking(int fd, aClient *cptr)
 			report_error("ioctlsocket(fd,FIONBIO) failed for %s:%s", cptr);
 		}
 	}
-# endif
 #endif
 	return;
 }

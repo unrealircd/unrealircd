@@ -202,15 +202,6 @@
 /* Define the location of the modules */
 #undef MODULESDIR
 
-/* Define if you have O_NDELAY */
-#undef NBLOCK_BSD
-
-/* Define if you have O_NONBLOCK */
-#undef NBLOCK_POSIX
-
-/* Define if you have FIONBIO */
-#undef NBLOCK_SYSV
-
 /* Define if you don't have bcmp */
 #undef NEED_BCMP
 
