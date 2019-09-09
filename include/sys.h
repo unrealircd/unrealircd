@@ -78,11 +78,6 @@ extern	char	*index(char *, char);
 extern	char	*rindex(char *, char);
 */
 #endif
-#ifdef NOBCOPY
-#define bcopy(x,y,z)	memcpy(y,x,z)
-#define bcmp(x,y,z)	memcmp(x,y,z)
-#define bzero(p,s)	memset(p,0,s)
-#endif
 
 #ifdef AIX
 #include <sys/select.h>

@@ -201,7 +201,7 @@ Membership	*make_membership(int local)
 			lp = freemembership;
 			freemembership = freemembership->next;
 		}
-		bzero(lp, sizeof(Membership));
+		memset(lp, 0, sizeof(Membership));
 	}
 	else
 	{
@@ -221,7 +221,7 @@ Membership	*make_membership(int local)
 			lp2 = freemembershipL;
 			freemembershipL = (MembershipL *) freemembershipL->next;
 		}
-		bzero(lp2, sizeof(MembershipL));
+		memset(lp2, 0, sizeof(MembershipL));
 	}
 	if (local)
 	{

@@ -415,7 +415,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SetWindowPos(hRich, NULL, 0, 0, old_rich_width+new_width, 
 				old_rich_height+new_height,
 				SWP_NOMOVE|SWP_NOREPOSITION|SWP_NOZORDER);
-			bzero(&rOld, sizeof(RECT));
+			memset(&rOld, 0, sizeof(rOld));
 			return TRUE;
 		} 
 
@@ -586,7 +586,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			if (LOWORD(wParam) == IDC_FIND)
 			{
 				static FINDREPLACE fr;
-				bzero(&fr, sizeof(FINDREPLACE));
+				memset(&fr, 0, sizeof(fr));
 				fr.lStructSize = sizeof(FINDREPLACE);
 				fr.hwndOwner = hDlg;
 				fr.lpstrFindWhat = findbuf;
@@ -640,7 +640,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				{
 					unsigned char path[MAX_PATH];
 					path[0] = '\0';
-					bzero(&lpopen, sizeof(OPENFILENAME));
+					memset(&lpopen, 0, sizeof(lpopen));
 					lpopen.lStructSize = sizeof(OPENFILENAME);
 					lpopen.hwndOwner = hDlg;
 					lpopen.lpstrFilter = NULL;

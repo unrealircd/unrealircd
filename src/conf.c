@@ -1843,9 +1843,9 @@ int	init_conf(char *rootconf, int rehash)
 		config_error("%s:%i - Someone forgot to clean up", __FILE__, __LINE__);
 		return -1;
 	}
-	bzero(&tempiConf, sizeof(iConf));
-	bzero(&settings, sizeof(settings));
-	bzero(&requiredstuff, sizeof(requiredstuff));
+	memset(&tempiConf, 0, sizeof(iConf));
+	memset(&settings, 0, sizeof(settings));
+	memset(&requiredstuff, 0, sizeof(requiredstuff));
 	config_setdefaultsettings(&tempiConf);
 	clicap_pre_rehash();
 	free_config_defines();
@@ -2589,8 +2589,8 @@ int	config_run()
 	close_listeners();
 	loop.do_bancheck = 1;
 	free_iConf(&iConf);
-	bcopy(&tempiConf, &iConf, sizeof(aConfiguration));
-	bzero(&tempiConf, sizeof(aConfiguration));
+	memcpy(&iConf, &tempiConf, sizeof(iConf));
+	memset(&tempiConf, 0, sizeof(tempiConf));
 
 	{
 		EventInfo eInfo;
@@ -3024,8 +3024,8 @@ ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name)
 
 void init_dynconf(void)
 {
-	bzero(&iConf, sizeof(iConf));
-	bzero(&tempiConf, sizeof(iConf));
+	memset(&iConf, 0, sizeof(iConf));
+	memset(&tempiConf, 0, sizeof(iConf));
 }
 
 char *pretty_time_val(long timeval)
@@ -3133,7 +3133,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 	}
 	globfree(&files);
 #elif defined(_WIN32)
-	bzero(cPath,MAX_PATH);
+	memset(cPath, 0, MAX_PATH);
 	if (strchr(ce->ce_vardata, '/') || strchr(ce->ce_vardata, '\\')) {
 		strlcpy(cPath,ce->ce_vardata,MAX_PATH);
 		cSlash=cPath+strlen(cPath);
@@ -7620,7 +7620,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "modes-on-join")) {
 			char *c;
 			struct ChMode temp;
-			bzero(&temp, sizeof(temp));
+			memset(&temp, 0, sizeof(temp));
 			CheckNull(cep);
 			CheckDuplicate(cep, modes_on_join, "modes-on-join");
 			for (c = cep->ce_vardata; *c; c++)

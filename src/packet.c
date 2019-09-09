@@ -21,7 +21,7 @@
 
 #include "unrealircd.h"
 
-aCommand	*CommandHash[256]; /* one per letter */
+aCommand *CommandHash[256]; /* one per letter */
 
 /*
 ** dopacket
@@ -66,7 +66,7 @@ void	init_CommandHash(void)
 	long		chainlength;
 #endif
 	
-	bzero(CommandHash, sizeof(CommandHash));
+	memset(CommandHash, 0, sizeof(CommandHash));
 	CommandAdd(NULL, MSG_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
 	CommandAdd(NULL, MSG_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	CommandAdd(NULL, MSG_SUMMON, m_summon, 1, M_USER);

@@ -600,7 +600,7 @@ int stats_traffic(aClient *sptr, char *para)
 	time_t now = TStime();
 
 	sp = &tmp;
-	bcopy((char *)ircstp, (char *)sp, sizeof(*sp));
+	memcpy(sp, ircstp, sizeof(*sp));
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{

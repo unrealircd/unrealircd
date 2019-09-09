@@ -144,8 +144,8 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 				char output[1024], current[1024];
 				char nums[4];
 
-				bzero(current, sizeof current);
-				bzero(output, sizeof output);
+				memset(current, 0, sizeof(current));
+				memset(output, 0, sizeof(output));
 
 				while(format->parameters[i] && j < 500) 
 				{

@@ -392,15 +392,6 @@ error You stuffed up config.h signals
 #if defined(SOL20) || defined(SOL25) || defined(SOL26) || defined(SOL27)
 #define _SOLARIS
 #endif
-#ifdef NEED_BCMP
-#define bcmp memcmp
-#endif
-#ifdef NEED_BCOPY
-#define bcopy(a,b,c) memcpy(b,a,c)
-#endif
-#ifdef NEED_BZERO
-#define bzero(a,b) memset(a,0,b)
-#endif
 #if defined(AIX) && defined(_XOPEN_SOURCE_EXTENDED) && _XOPEN_SOURCE_EXTENDED
 # define SOCK_LEN_TYPE size_t
 #else

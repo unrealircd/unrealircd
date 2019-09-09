@@ -53,12 +53,12 @@ static mp_pool_t *user_pool = NULL;
 void initlists(void)
 {
 #ifdef	DEBUGMODE
-	bzero((char *)&cloc, sizeof(cloc));
-	bzero((char *)&crem, sizeof(crem));
-	bzero((char *)&users, sizeof(users));
-	bzero((char *)&servs, sizeof(servs));
-	bzero((char *)&links, sizeof(links));
-	bzero((char *)&classs, sizeof(classs));
+	memset(&cloc, 0, sizeof(cloc));
+	memset(&crem, 0, sizeof(crem));
+	memset(&users, 0, sizeof(users));
+	memset(&servs, 0, sizeof(servs));
+	memset(&links, 0, sizeof(links));
+	memset(&classs, 0, sizeof(classs));
 #endif
 
 	INIT_LIST_HEAD(&client_list);

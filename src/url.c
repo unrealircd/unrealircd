@@ -219,7 +219,7 @@ char *download_file(const char *url, char **error)
 	curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
 
 	set_curl_tls_options(curl);
-	bzero(errorbuf, CURL_ERROR_SIZE);
+	memset(errorbuf, 0, CURL_ERROR_SIZE);
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
 	res = curl_easy_perform(curl);
 	fclose(fd);
@@ -431,7 +431,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->fd);
 		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 		set_curl_tls_options(curl);
-		bzero(handle->errorbuf, CURL_ERROR_SIZE);
+		memset(handle->errorbuf, 0, CURL_ERROR_SIZE);
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
 		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);
 		curl_easy_setopt(curl, CURLOPT_FILETIME, 1);

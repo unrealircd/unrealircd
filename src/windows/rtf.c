@@ -154,7 +154,7 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 	IRCColor *TextColors = NULL;
 	IRCColor *BgColors = NULL;
 	
-	bzero(buffer, cb);
+	memset(buffer, 0, cb);
 
 	for (; *pbBuff; pbBuff++)
 	{

@@ -142,7 +142,7 @@ void initwhowas()
 
 	for (i = 0; i < NICKNAMEHISTORYLENGTH; i++)
 	{
-		bzero((char *)&WHOWAS[i], sizeof(aWhowas));
+		memset(&WHOWAS[i], 0, sizeof(aWhowas));
 		WHOWAS[i].hashv = -1;
 	}
 	for (i = 0; i < WHOWAS_HASH_TABLE_SIZE; i++)

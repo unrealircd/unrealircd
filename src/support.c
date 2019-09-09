@@ -114,19 +114,23 @@ char *strerror(int err_no)
 
 #endif /* NEED_STRERROR */
 
-/*
- * inetntop: return the : notation of a given IPv6 internet number.
- *           make sure the compressed representation (rfc 1884) isn't used.
+/** inetntop() returns the : notation of a given IPv6 internet number.
+ * It will always return the uncompressed form (without ::).
  */
-char *inetntop(int af, const void *in, char *out, size_t the_size)
+char *inetntop(int af, const void *in, char *out, size_t size)
 {
-	static char local_dummy[MYDUMMY_SIZE];
+	char tmp[MYDUMMY_SIZE];
 
-	inet_ntop(af, in, local_dummy, the_size);
-	if (strstr(local_dummy, "::"))
+	inet_ntop(af, in, tmp, size);
+	if (!strstr(tmp, "::"))
 	{
-		char cnt = 0, *cp = local_dummy, *op = out;
+		/* IPv4 or IPv6 that is already uncompressed */
+		strlcpy(out, tmp, size);
+	} else
+	{
+		char cnt = 0, *cp = tmp, *op = out;
 
+		/* It's an IPv6 compressed address that we need to expand */
 		while (*cp)
 		{
 			if (*cp == ':')
@@ -137,13 +141,13 @@ char *inetntop(int af, const void *in, char *out, size_t the_size)
 				break;
 			}
 		}
-		cp = local_dummy;
+		cp = tmp;
 		while (*cp)
 		{
 			*op++ = *cp++;
 			if (*(cp - 1) == ':' && *cp == ':')
 			{
-				if ((cp - 1) == local_dummy)
+				if ((cp - 1) == tmp)
 				{
 					op--;
 					*op++ = '0';
@@ -161,10 +165,8 @@ char *inetntop(int af, const void *in, char *out, size_t the_size)
 		if (*(op - 1) == ':')
 			*op++ = '0';
 		*op = '\0';
-		Debug((DEBUG_DNS, "Expanding `%s' -> `%s'", local_dummy, out));
+		Debug((DEBUG_DNS, "Expanding `%s' -> `%s'", tmp, out));
 	}
-	else
-		bcopy(local_dummy, out, 64);
 	return out;
 }
 
@@ -584,11 +586,11 @@ int b64_decode(char const *src, unsigned char *target, size_t targsize)
 	return (tarindex);
 }
 
-void	*MyMallocEx(size_t size)
+void *MyMallocEx(size_t size)
 {
 	void *p = MyMalloc(size);
 
-	bzero(p, size);
+	memset(p, 0, size);
 	return (p);
 }
 
@@ -1204,7 +1206,6 @@ int inet_pton4(const char *src, unsigned char *dst)
 	}
 	if (octets < 4)
 		return (0);
-	/* bcopy(tmp, dst, INADDRSZ); */
 	memcpy(dst, tmp, INADDRSZ);
 	return (1);
 }
@@ -1300,7 +1301,6 @@ int inet_pton6(const char *src, unsigned char *dst)
 	}
 	if (tp != endp)
 		return (0);
-	/* bcopy(tmp, dst, IN6ADDRSZ); */
 	memcpy(dst, tmp, IN6ADDRSZ);
 	return (1);
 }

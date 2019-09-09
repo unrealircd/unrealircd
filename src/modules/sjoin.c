@@ -771,7 +771,7 @@ getnick:
 		Mode oldmode; /**< The old mode (OUR mode) */
 
 		/* Copy current mode to oldmode (need to duplicate all extended mode params too..) */
-		bcopy(&chptr->mode, &oldmode, sizeof(Mode));
+		memcpy(&oldmode, &chptr->mode, sizeof(oldmode));
 		memset(&oldmode.extmodeparams, 0, sizeof(oldmode.extmodeparams));
 		extcmode_duplicate_paramlist(chptr->mode.extmodeparams, oldmode.extmodeparams);
 

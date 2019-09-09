@@ -2996,7 +2996,7 @@ static void parse_stats_params(char *para, TKLFlag *flag)
 	char *flags, *tmp;
 	char what = '+';
 
-	bzero(flag, sizeof(TKLFlag));
+	memset(flag, 0, sizeof(TKLFlag));
 	strlcpy(paratmp, para, sizeof(paratmp));
 	flags = strtok(paratmp, " ");
 	if (!flags)

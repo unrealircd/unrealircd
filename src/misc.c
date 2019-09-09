@@ -106,7 +106,7 @@ char *long_date(time_t clock)
 	if (!clock)
 		time(&clock);
 	gm = gmtime(&clock);
-	bcopy((char *)gm, (char *)&gmbuf, sizeof(gmbuf));
+	memcpy(&gmbuf, gm, sizeof(gmbuf));
 	gm = &gmbuf;
 	lt = localtime(&clock);
 #ifndef _WIN32
@@ -188,7 +188,7 @@ char *make_user_host(char *name, char *host)
 	static char namebuf[USERLEN + HOSTLEN + 6];
 	char *s = namebuf;
 
-	bzero(namebuf, sizeof(namebuf));
+	memset(namebuf, 0, sizeof(namebuf));
 	name = check_string(name);
 	strlcpy(s, name, USERLEN + 1);
 	s += strlen(s);
@@ -680,7 +680,7 @@ int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mt
 
 void initstats(void)
 {
-	bzero((char *)&ircst, sizeof(ircst));
+	memset(&ircst, 0, sizeof(ircst));
 }
 
 void verify_opercount(aClient *orig, char *tag)

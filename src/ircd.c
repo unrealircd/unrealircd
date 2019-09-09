@@ -278,8 +278,8 @@ void server_reboot(char *mesg)
 		PROCESS_INFORMATION pi;
 		STARTUPINFO si;
 		char fname[MAX_PATH];
-		bzero(&status, sizeof(status));
-		bzero(&si, sizeof(si));
+		memset(&status, 0, sizeof(status));
+		memset(&si, 0, sizeof(si));
 		IRCDStatus.dwCurrentState = SERVICE_STOP_PENDING;
 		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
 		GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
@@ -932,7 +932,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	memset(&svsmotd, '\0', sizeof(aMotdFile));
 	memset(&me, 0, sizeof(me));
 	me.local = MyMallocEx(sizeof(aLocalClient));
-	bzero(&loop, sizeof(loop));
+	memset(&loop, 0, sizeof(loop));
 
 	init_hash();
 
@@ -979,7 +979,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #else
 	WSAStartup(wVersionRequested, &wsaData);
 #endif
-	bzero(&StatsZ, sizeof(StatsZ));
+	memset(&StatsZ, 0, sizeof(StatsZ));
 	setup_signals();
 
 	memset(&IRCstats, '\0', sizeof(ircstats));

@@ -37,15 +37,6 @@
 /* Define if ssl library has SSL_CTX_set_min_proto_version */
 #undef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
 
-/* Define to 1 if you have the `bcmp' function. */
-#undef HAVE_BCMP
-
-/* Define to 1 if you have the `bcopy' function. */
-#undef HAVE_BCOPY
-
-/* Define to 1 if you have the `bzero' function. */
-#undef HAVE_BZERO
-
 /* Define if you have crypt */
 #undef HAVE_CRYPT
 
@@ -177,15 +168,6 @@
 
 /* Define the location of the modules */
 #undef MODULESDIR
-
-/* Define if you don't have bcmp */
-#undef NEED_BCMP
-
-/* Define if you don't have bcopy */
-#undef NEED_BCOPY
-
-/* Define if you need bzero */
-#undef NEED_BZERO
 
 /* Define if you need inet_addr */
 #undef NEED_INET_ADDR

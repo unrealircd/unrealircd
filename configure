@@ -3677,7 +3677,7 @@ fi
 
 
 if test "$ac_cv_prog_cc_c99" = "no"; then :
-  as_fn_error $? "No C99 compiler was found. Please install gcc or clang and probably more. Eg, on Debian/Ubuntu you probably want to run: apt-get install build-essential " "$LINENO" 5
+  as_fn_error $? "No C99 compiler was found. Please install gcc or clang and other build tools. Eg, on Debian/Ubuntu you probably want to run the following as root: apt-get install build-essential " "$LINENO" 5
 fi
 
 
@@ -5966,51 +5966,6 @@ _ACEOF
 
 else
   STRTOUL="strtoul.o"
-fi
-done
-
-for ac_func in bcopy
-do :
-  ac_fn_c_check_func "$LINENO" "bcopy" "ac_cv_func_bcopy"
-if test "x$ac_cv_func_bcopy" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BCOPY 1
-_ACEOF
-
-else
-
-$as_echo "#define NEED_BCOPY /**/" >>confdefs.h
-
-fi
-done
-
-for ac_func in bcmp
-do :
-  ac_fn_c_check_func "$LINENO" "bcmp" "ac_cv_func_bcmp"
-if test "x$ac_cv_func_bcmp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BCMP 1
-_ACEOF
-
-else
-
-$as_echo "#define NEED_BCMP /**/" >>confdefs.h
-
-fi
-done
-
-for ac_func in bzero
-do :
-  ac_fn_c_check_func "$LINENO" "bzero" "ac_cv_func_bzero"
-if test "x$ac_cv_func_bzero" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BZERO 1
-_ACEOF
-
-else
-
-$as_echo "#define NEED_BZERO /**/" >>confdefs.h
-
 fi
 done
 

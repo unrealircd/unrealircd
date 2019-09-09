@@ -563,7 +563,7 @@ int add_silence(aClient *sptr, char *mask, int senderr)
 			return -1;
 	}
 	lp = make_link();
-	bzero((char *)lp, sizeof(Link));
+	memset(lp, 0, sizeof(Link));
 	lp->next = sptr->user->silence;
 	lp->value.cp = strdup(mask);
 	sptr->user->silence = lp;

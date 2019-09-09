@@ -290,7 +290,7 @@ void init_hash(void)
 	memset(channelTable, 0, sizeof(channelTable));
 	memset(watchTable, 0, sizeof(watchTable));
 
-	bzero(ThrottlingHash, sizeof(ThrottlingHash));
+	memset(ThrottlingHash, 0, sizeof(ThrottlingHash));
 	/* do not call init_throttling() here, as
 	 * config file has not been read yet.
 	 * The hash table is ready, anyway.

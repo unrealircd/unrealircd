@@ -669,7 +669,7 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			StreamIO *stream = MyMallocEx(sizeof(StreamIO));
 			EDITSTREAM edit;
 			SetWindowText(hDlg, title);
-			bzero(String, sizeof(String));
+			memset(String, 0, sizeof(String));
 			lpfnOldWndProc = (FARPROC)SetWindowLongPtr(GetDlgItem(hDlg, IDC_TEXT), GWLP_WNDPROC, (LONG_PTR)RESubClassFunc);
 			while (*s) 
 			{

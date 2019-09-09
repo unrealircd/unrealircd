@@ -78,7 +78,7 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 	pSym->MaxNameLength = 500;
 
 	/* Retrieve the first module name */
-	bzero(&pMod, sizeof(IMAGEHLP_MODULE64));
+	memset(&pMod, 0, sizeof(pMod));
 	pMod.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
 	SymGetModuleInfo64(hProcess, Stack.AddrPC.Offset, &pMod);
 	strcpy(curmodule, pMod.ModuleName);
@@ -92,7 +92,7 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 			&Stack, &context, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL))
 			break;
 
-		bzero(&pMod, sizeof(IMAGEHLP_MODULE64));
+		memset(&pMod, 0, sizeof(pMod));
 		pMod.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
 		SymGetModuleInfo64(hProcess, Stack.AddrPC.Offset, &pMod);
 		if (strcmp(curmodule, pMod.ModuleName)) 
@@ -102,7 +102,7 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 			strcat(buffer, buf);
 		}
 
-		bzero(&pLine, sizeof(IMAGEHLP_LINE64));
+		memset(&pLine, 0, sizeof(pLine));
 		pLine.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 		SymGetLineFromAddr64(hProcess, Stack.AddrPC.Offset, &dwDisp32, &pLine);
 		SymGetSymFromAddr64(hProcess, Stack.AddrPC.Offset, &dwDisp, pSym);
