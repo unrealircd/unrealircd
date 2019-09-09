@@ -747,7 +747,6 @@ with_maxconnections
 enable_prefixaq
 with_showlistmodes
 with_no_operoverride
-with_disableusermod
 with_operoverride_verify
 with_system_pcre2
 with_system_argon2
@@ -1444,7 +1443,6 @@ Optional Packages:
                           Specify the max file descriptors to use
   --with-showlistmodes    Specify whether modes are shown in /list
   --with-no-operoverride  Disable OperOverride
-  --with-disableusermod   Disable /set* and /chg*
   --with-operoverride-verify
                           Require opers to invite themselves to +s/+p channels
   --without-system-pcre2  Use the system pcre2 package instead of bundled,
@@ -6357,16 +6355,6 @@ if test "${with_no_operoverride+set}" = set; then :
   withval=$with_no_operoverride; if test $withval = "yes"; then :
 
 $as_echo "#define NO_OPEROVERRIDE /**/" >>confdefs.h
-
-fi
-fi
-
-
-# Check whether --with-disableusermod was given.
-if test "${with_disableusermod+set}" = set; then :
-  withval=$with_disableusermod; if test $withval = "yes"; then :
-
-$as_echo "#define DISABLE_USERMOD /**/" >>confdefs.h
 
 fi
 fi

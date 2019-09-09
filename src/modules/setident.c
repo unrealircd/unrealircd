@@ -53,87 +53,25 @@ MOD_UNLOAD(setident)
 }
 
 /* m_setident - 12/05/1999 - Stskeeps
- *  :prefix SETIDENT newident
- *  parv[1] - newident
- *  D: This will set your username to be <x> (like (/setident Root))
- *     (if you are IRCop) **efg*
- *     Very experimental currently
- * 	   Cloning of m_sethost at some points - so same authors ;P
+ * :prefix SETIDENT newident
+ * parv[1] - newident
+ * D: This will set your username to be <x> (like (/setident Root))
+ * (if you are IRCop) **efg*
+ * Cloning of m_sethost at some points - so same authors ;P
 */
 CMD_FUNC(m_setident)
 {
 
 	char *vident, *s;
-#ifndef DISABLE_USERMOD
-	int  permit = 0;	/* 0 = opers(glob/locop) 1 = global oper */
-#else
-	int  permit = 2;
-#endif
-	int  legalident = 1;	/* is legal characters? */
-	if (!MyConnect(sptr))
-		goto permit_2;
-	switch (permit)
-	{
-	  case 0:
-	  case 1:
-		  if (!ValidatePermissionsForPath("self:set:ident",sptr,NULL,NULL,NULL))
-		  {
-			  sendnumeric(sptr, ERR_NOPRIVILEGES);
-			  return 0;
-		  }
-		  break;
-	  case 2:
-		  if (MyConnect(sptr))
-		  {
-			  sendnumeric(sptr, ERR_NOPRIVILEGES);
-			  return 0;
-		  }
-		  break;
-	  default:
-		  sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,
-		      ":%s WALLOPS :[SETIDENT] Somebody fixing this corrupted server? !(0|1) !!!",
-		      me.name);
-		  break;
-	}
-      permit_2:
-	if (parc < 2)
-		vident = NULL;
-	else
-		vident = parv[1];
 
-	if (BadPtr(vident))
+	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		if (MyConnect(sptr))
-			sendnotice(sptr, "*** Syntax: /SetIdent <new ident>");
+			sendnotice(sptr, "*** Syntax: /SETIDENT <new ident>");
 		return 1;
 	}
 
-	if (strlen(vident) > (USERLEN))
-	{
-		if (MyConnect(sptr))
-			sendnotice(sptr, "*** /SetIdent Error: Usernames are limited to %i characters.", USERLEN);
-		return 0;
-	}
-
-	/* illegal?! */
-	for (s = vident; *s; s++)
-	{
-		if ((*s == '~') && (s == vident))
-			continue;
-		if (!isallowed(*s))
-		{
-			legalident = 0;
-			break;
-		}
-	}
-
-	if (legalident == 0)
-	{
-		sendnotice(sptr, "*** /SetIdent Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.'.");
-		return 0;
-	}
-
-	userhost_save_current(sptr);
+	vident = parv[1];
 
 	switch (UHOST_ALLOWED)
 	{
@@ -142,14 +80,14 @@ CMD_FUNC(m_setident)
 		case UHALLOW_NEVER:
 			if (MyClient(sptr))
 			{
-				sendnotice(sptr, "*** /SetIdent is disabled");
+				sendnotice(sptr, "*** /SETIDENT is disabled");
 				return 0;
 			}
 			break;
 		case UHALLOW_NOCHANS:
 			if (MyClient(sptr) && sptr->user->joined)
 			{
-				sendnotice(sptr, "*** /SetIdent can not be used while you are on a channel");
+				sendnotice(sptr, "*** /SETIDENT cannot be used while you are on a channel");
 				return 0;
 			}
 			break;
@@ -158,18 +96,37 @@ CMD_FUNC(m_setident)
 			break;
 	}
 
-	/* get it in */
-	ircsnprintf(sptr->user->username, sizeof(sptr->user->username), "%s", vident);
-	/* spread it out */
+	if (strlen(vident) > USERLEN)
+	{
+		if (MyConnect(sptr))
+			sendnotice(sptr, "*** /SETIDENT Error: Usernames are limited to %i characters.", USERLEN);
+		return 0;
+	}
+
+	/* Check if the new ident contains illegal characters */
+	for (s = vident; *s; s++)
+	{
+		if ((*s == '~') && (s == vident))
+			continue;
+		if (!isallowed(*s))
+		{
+			sendnotice(sptr, "*** /SETIDENT Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.'.");
+			return 0;
+		}
+	}
+
+	userhost_save_current(sptr);
+
+	strlcpy(sptr->user->username, vident, sizeof(sptr->user->username));
+
 	sendto_server(cptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name, parv[1]);
 
 	userhost_changed(sptr);
 
 	if (MyConnect(sptr))
 	{
-		sendnotice(sptr,
-		    "Your nick!user@host-mask is now (%s!%s@%s) - To disable ident set change it manually by /setident'ing again",
-		    sptr->name, sptr->user->username, GetHost(sptr));
+		sendnotice(sptr, "Your nick!user@host-mask is now (%s!%s@%s)",
+		                 sptr->name, sptr->user->username, GetHost(sptr));
 	}
 	return 0;
 }

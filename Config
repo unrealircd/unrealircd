@@ -44,9 +44,6 @@ if [ "$ADVANCED" = "1" ] ; then
 if [ "$NOOPEROVERRIDE" = "1" ] ; then
 	ARG="$ARG--with-no-operoverride "
 fi
-if [ "$DISABLEUSERMOD" = "1" ] ; then
-	ARG="$ARG--with-disableusermod "
-fi
 if [ "$OPEROVERRIDEVERIFY" = "1" ] ; then
 	ARG="$ARG--with-operoverride-verify "
 fi
@@ -206,36 +203,6 @@ done
 
 TEST=""
 while [ -z "$TEST" ] ; do
-    if [ "$DISABLEUSERMOD" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want to disable /sethost, /setident, /chgname,"
-    echo "/chghost, and /chgident?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
-	[Yy]*)
-	    DISABLEUSERMOD="1"
-	    ;;
-	[Nn]*)
-	    DISABLEUSERMOD=""
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
-done
-
-TEST=""
-while [ -z "$TEST" ] ; do
     if [ "$OPEROVERRIDEVERIFY" = "1" ] ; then
 	TEST="Yes"
     else
@@ -277,7 +244,6 @@ CURLDIR=""
 PREFIXAQ="1"
 SHOWLISTMODES="1"
 NOOPEROVERRIDE=""
-DISABLEUSERMOD=""
 OPEROVERRIDEVERIFY=""
 GENCERTIFICATE="1"
 EXTRAPARA=""
@@ -793,7 +759,6 @@ REMOTEINC="$REMOTEINC"
 CURLDIR="$CURLDIR"
 SHOWLISTMODES="$SHOWLISTMODES"
 NOOPEROVERRIDE="$NOOPEROVERRIDE"
-DISABLEUSERMOD="$DISABLEUSERMOD"
 OPEROVERRIDEVERIFY="$OPEROVERRIDEVERIFY"
 GENCERTIFICATE="$GENCERTIFICATE"
 EXTRAPARA="$EXTRAPARA"

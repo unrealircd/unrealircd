@@ -19,9 +19,6 @@
    unrealircd from calling chmod() on the files. */
 #undef DEFAULT_PERMISSIONS
 
-/* Define if you want to disable /set* and /chg* */
-#undef DISABLE_USERMOD
-
 /* Define the location of the documentation */
 #undef DOCDIR
 

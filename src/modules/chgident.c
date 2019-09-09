@@ -73,15 +73,6 @@ CMD_FUNC(m_chgident)
 	}
 
 
-#ifdef DISABLE_USERMOD
-	if (MyClient(sptr))
-	{
-		sendnumeric(sptr, ERR_DISABLED, "CHGIDENT",
-			"This command is disabled on this server");
-		return 0;
-	}
-#endif
-
 	if ((parc < 3) || !*parv[2])
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CHGIDENT");

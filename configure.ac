@@ -541,9 +541,6 @@ AC_ARG_WITH(showlistmodes,
 AC_ARG_WITH(no-operoverride, [AS_HELP_STRING([--with-no-operoverride], [Disable OperOverride])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([NO_OPEROVERRIDE], [], [Define if you want OperOverride disabled])])])
-AC_ARG_WITH(disableusermod, [AS_HELP_STRING([--with-disableusermod], [Disable /set* and /chg*])],
-	[AS_IF([test $withval = "yes"],
-		[AC_DEFINE([DISABLE_USERMOD], [], [Define if you want to disable /set* and /chg*])])])
 AC_ARG_WITH(operoverride-verify, [AS_HELP_STRING([--with-operoverride-verify], [Require opers to invite themselves to +s/+p channels])],
 	[AS_IF([test $withval = "yes"],
 		[AC_DEFINE([OPEROVERRIDE_VERIFY], [], [Define if you want opers to have to use /invite to join +s/+p channels])])])

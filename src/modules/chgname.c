@@ -76,15 +76,6 @@ CMD_FUNC(m_chgname)
 		return 0;
 	}
 
-#ifdef DISABLE_USERMOD
-	if (MyClient(sptr))
-	{
-		sendnumeric(sptr, ERR_DISABLED, "CHGNAME",
-			"This command is disabled on this server");
-		return 0;
-	}
-#endif
-
 	if ((parc < 3) || !*parv[2])
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CHGNAME");
