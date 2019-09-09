@@ -146,6 +146,7 @@ struct zConfiguration {
 	aNetwork network;
 	unsigned short default_ipv6_clone_mask;
 	int ping_cookie;
+	int min_nick_length;
 	int nick_length;
 	int topic_length;
 	int kick_length;
@@ -366,6 +367,7 @@ struct SetCheck {
 	unsigned has_options_disable_cap:1;
 	unsigned has_options_disable_ipv6:1;
 	unsigned has_ping_cookie:1;
+	unsigned has_min_nick_length:1;
 	unsigned has_nick_length:1;
 	unsigned has_hide_ban_reason:1;
 };

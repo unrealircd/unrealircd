@@ -24,13 +24,13 @@
 
 CMD_FUNC(m_stats);
 
-#define MSG_STATS 	"STATS"	
+#define MSG_STATS 	"STATS"
 
 ModuleHeader MOD_HEADER(stats)
   = {
 	"stats",
 	"5.0",
-	"command /stats", 
+	"command /stats",
 	"UnrealIRCd Team",
 	"unrealircd-5",
     };
@@ -108,7 +108,7 @@ struct statstab StatsTable[] = {
 	{ 'D', "denylinkall",	stats_denylinkall,	0		},
 	{ 'F', "denydcc",	stats_denydcc,		0 		},
 	{ 'G', "gline",		stats_gline,		FLAGS_AS_PARA	},
-	{ 'H', "link",	 	stats_links,		0 		},	
+	{ 'H', "link",	 	stats_links,		0 		},
 	{ 'I', "allow",		stats_allow,		0 		},
 	{ 'K', "kline",		stats_kline,		0 		},
 	{ 'L', "linkinfoall",	stats_linkinfoall,	SERVER_AS_PARA	},
@@ -122,13 +122,13 @@ struct statstab StatsTable[] = {
 	{ 'U', "uline",		stats_uline,		0 		},
 	{ 'V', "vhost", 	stats_vhost,		0 		},
 	{ 'W', "fdtable",       stats_fdtable,          0               },
-	{ 'X', "notlink",	stats_notlink,		0 		},	
-	{ 'Y', "class",		stats_class,		0 		},	
+	{ 'X', "notlink",	stats_notlink,		0 		},
+	{ 'Y', "class",		stats_class,		0 		},
 	{ 'Z', "mem",		stats_mem,		0 		},
 	{ 'c', "link", 		stats_links,		0 		},
 	{ 'd', "denylinkauto",	stats_denylinkauto,	0 		},
 	{ 'e', "except",	stats_except,		0 		},
-	{ 'f', "spamfilter",	stats_spamfilter,	FLAGS_AS_PARA	},	
+	{ 'f', "spamfilter",	stats_spamfilter,	FLAGS_AS_PARA	},
 	{ 'g', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'h', "link", 		stats_links,		0 		},
 	{ 'j', "officialchans", stats_officialchannels, 0 		},
@@ -143,7 +143,7 @@ struct statstab StatsTable[] = {
 	{ 't', "tld",		stats_tld,		0 		},
 	{ 'u', "uptime",	stats_uptime,		0 		},
 	{ 'v', "denyver",	stats_denyver,		0 		},
-	{ 'x', "notlink",	stats_notlink,		0 		},	
+	{ 'x', "notlink",	stats_notlink,		0 		},
 	{ 'y', "class",		stats_class,		0 		},
 	{ 0, 	NULL, 		NULL, 			0		}
 };
@@ -159,7 +159,7 @@ int stats_compare(char *s1, char *s2)
 		s2++;
 	}
 	return 1;
-}	
+}
 
 static inline struct statstab *stats_binary_search(char c) {
 	int start = 0;
@@ -167,9 +167,9 @@ static inline struct statstab *stats_binary_search(char c) {
 	int mid;
 	while (start <= stop) {
 		mid = (start+stop)/2;
-		if (c < StatsTable[mid].flag) 
+		if (c < StatsTable[mid].flag)
 			stop = mid-1;
-		else if (StatsTable[mid].flag == c) 
+		else if (StatsTable[mid].flag == c)
 			return &StatsTable[mid];
 		else
 			start = mid+1;
@@ -252,7 +252,7 @@ static inline int stats_operonly_short(char c)
 		return 1;
 	l = tolower(c);
 	/* Hack for the flags that are case insensitive */
-	if (l == 'o' || l == 'y' || l == 'k' || l == 'g' || l == 'x' || l == 'c' || 
+	if (l == 'o' || l == 'y' || l == 'k' || l == 'g' || l == 'x' || l == 'c' ||
 		l =='f' || l == 'i' || l == 'h' || l == 'm')
 	{
 		if (islower(c) && strchr(OPER_ONLY_STATS, toupper(c)))
@@ -326,9 +326,9 @@ CMD_FUNC(m_stats)
 	{
 		if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL) && stats_operonly_short(parv[1][0]))
 		{
-			sendnumeric(sptr, ERR_NOPRIVILEGES);	
+			sendnumeric(sptr, ERR_NOPRIVILEGES);
 			return 0;
-		}	
+		}
 		/* Old style, we can use a binary search here */
 		stat = stats_binary_search(parv[1][0]);
 	}
@@ -336,7 +336,7 @@ CMD_FUNC(m_stats)
 	{
 		if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL) && stats_operonly_long(parv[1]))
 		{
-			sendnumeric(sptr, ERR_NOPRIVILEGES);	
+			sendnumeric(sptr, ERR_NOPRIVILEGES);
 			return 0;
 		}
 		/* New style, search the hard way */
@@ -358,7 +358,7 @@ CMD_FUNC(m_stats)
 		{
 			if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL) && stats_operonly_short(stat->flag))
 			{
-				sendnumeric(sptr, ERR_NOPRIVILEGES);	
+				sendnumeric(sptr, ERR_NOPRIVILEGES);
 				return 0;
 			}
 		}
@@ -498,8 +498,8 @@ int stats_allow(aClient *sptr, char *para)
 {
 	ConfigItem_allow *allows;
 	for (allows = conf_allow; allows; allows = allows->next)
-		sendnumeric(sptr, RPL_STATSILINE, allows->ip, allows->hostname, allows->maxperip, 
-			allows->class->name, allows->server ? allows->server 
+		sendnumeric(sptr, RPL_STATSILINE, allows->ip, allows->hostname, allows->maxperip,
+			allows->class->name, allows->server ? allows->server
 			: defserv, allows->port ? allows->port : 6667);
 	return 0;
 }
@@ -522,7 +522,7 @@ int stats_command(aClient *sptr, char *para)
 #endif
 
 	return 0;
-}	
+}
 
 int stats_oper(aClient *sptr, char *para)
 {
@@ -533,7 +533,7 @@ int stats_oper(aClient *sptr, char *para)
 	{
 		for (m = oper_p->mask; m; m = m->next)
 		{
-	  		sendnumeric(sptr, RPL_STATSOLINE, 
+	  		sendnumeric(sptr, RPL_STATSOLINE,
 	  			'O', m->mask, oper_p->name,
 	  			"-",
 	  			oper_p->class->name? oper_p->class->name : "");
@@ -689,7 +689,7 @@ int stats_uline(aClient *sptr, char *para)
 	ConfigItem_ulines *ulines;
 	for (ulines = conf_ulines; ulines; ulines = ulines->next)
 		sendnumeric(sptr, RPL_STATSULINE, ulines->servername);
-	return 0;	
+	return 0;
 }
 int stats_vhost(aClient *sptr, char *para)
 {
@@ -769,7 +769,7 @@ int stats_mem(aClient *sptr, char *para)
 			/*for (link = acptr->confs; link; link = link->next)
 				lcc++;
 			wle += acptr->notifies;*/
-			
+
 		}
 		else
 			rc++;
@@ -796,7 +796,7 @@ int stats_mem(aClient *sptr, char *para)
 	for (chptr = channel; chptr; chptr = chptr->nextch)
 	{
 		Member *member;
-		
+
 		ch++;
 		chm += (strlen(chptr->chname) + sizeof(aChannel));
 		for (member = chptr->members; member; member = member->next)
@@ -1052,6 +1052,8 @@ int stats_set(aClient *sptr, char *para)
 	*modebuf = *parabuf = 0;
 	chmode_str(&iConf.modes_on_join, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
 	sendtxtnumeric(sptr, "modes-on-join: %s %s", modebuf, parabuf);
+	if (iConf.min_nick_length)
+		sendtxtnumeric(sptr, "min-nick-length: %i", iConf.min_nick_length);
 	sendtxtnumeric(sptr, "nick-length: %i", iConf.nick_length);
 	sendtxtnumeric(sptr, "snomask-on-oper: %s", OPER_SNOMASK);
 	if (OPER_ONLY_STATS)
@@ -1104,8 +1106,8 @@ int stats_set(aClient *sptr, char *para)
 	sendtxtnumeric(sptr, "ping-warning: %i seconds", PINGWARNING);
 	sendtxtnumeric(sptr, "auto-join: %s", AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
 	sendtxtnumeric(sptr, "oper-auto-join: %s", OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
-	sendtxtnumeric(sptr, "static-quit: %s", STATIC_QUIT ? STATIC_QUIT : "<none>");	
-	sendtxtnumeric(sptr, "static-part: %s", STATIC_PART ? STATIC_PART : "<none>");	
+	sendtxtnumeric(sptr, "static-quit: %s", STATIC_QUIT ? STATIC_QUIT : "<none>");
+	sendtxtnumeric(sptr, "static-part: %s", STATIC_PART ? STATIC_PART : "<none>");
 	sendtxtnumeric(sptr, "who-limit: %d", WHOLIMIT);
 	sendtxtnumeric(sptr, "silence-limit: %d", SILENCE_LIMIT);
 	if (DNS_BINDIP)
@@ -1146,7 +1148,7 @@ int stats_tld(aClient *sptr, char *para)
 	for (tld = conf_tld; tld; tld = tld->next)
 	{
 		sendnumeric(sptr, RPL_STATSTLINE,
-			tld->mask, tld->motd_file, tld->rules_file ? 
+			tld->mask, tld->motd_file, tld->rules_file ?
 			tld->rules_file : "none");
 	}
 

@@ -26,12 +26,12 @@ ModuleHeader MOD_HEADER(nick)
   = {
 	"nick",
 	"5.0",
-	"command /nick", 
+	"command /nick",
 	"UnrealIRCd Team",
 	"unrealircd-5",
     };
 
-#define MSG_NICK 	"NICK"	
+#define MSG_NICK 	"NICK"
 
 /* Forward declarations */
 CMD_FUNC(m_nick);
@@ -89,7 +89,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 	char comment[512];
 	char *new_server, *existing_server;
 	char reintroduce_existing_user = 0;
-	
+
 	ircd_log(LOG_ERROR, "Nick collision: %s[%s]@%s (new) vs %s[%s]@%s (existing). Winner: %s. Type: %s",
 		newnick, newid ? newid : "", cptr->name,
 		existing->name, existing->id, existing->srvptr->name,
@@ -136,7 +136,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 			 */
 #endif
 		}
-		
+
 		/* non-cptr case... only necessary if nick-changing. */
 		if (new)
 		{
@@ -152,7 +152,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 			sendto_server(cptr, 0, PROTO_SID, mtags,
 				":%s KILL %s :%s (%s)",
 				me.name, new->name, me.name, comment);
-			
+
 			/* Exit the client */
 			ircstp->is_kill++;
 			new->flags |= FLAGS_KILLED;
@@ -161,7 +161,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 			free_message_tags(mtags);
 		}
 	}
-	
+
 	if ((type == NICKCOL_EQUAL) || (type == NICKCOL_NEW_WON))
 	{
 		MessageTag *mtags = NULL;
@@ -172,7 +172,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 		sendto_server(NULL, PROTO_SID, 0, mtags,
 			":%s KILL %s :%s (%s)",
 			me.name, ID(existing), me.name, comment);
-		
+
 #ifndef ASSUME_NICK_IN_FLIGHT
 		/* This is not ideal on non-SID servers, may kill the wrong person. */
 		sendto_server(NULL, 0, PROTO_SID, mtags,
@@ -183,7 +183,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 			":%s KILL %s :%s (%s)",
 			 me.name, existing->name, me.name, comment);
 #endif
-		
+
 		/* NOTE: we may have sent two KILLs on the same nick in some cases.
 		 * Should be acceptable and only happens in a non-100% UID network.
 		 */
@@ -195,7 +195,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 
 		free_message_tags(mtags);
 	}
-	
+
 #ifndef ASSUME_NICK_IN_FLIGHT
 	if (reintroduce_existing_user)
 	{
@@ -215,7 +215,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 			/* Hmmm duplicate code... hmmmmmm. taken from send_channel_modes_sjoin3. */
 			Membership *lp;
 			char flags[16], *p;
-			
+
 			for (lp = existing->user->channel; lp; lp = lp->next)
 			{
 				p = flags;
@@ -230,7 +230,7 @@ void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aCl
 				if (lp->flags & MODE_CHANADMIN)
 					*p++ = '~';
 				*p = '\0';
-				
+
 				sendto_one(cptr, NULL, ":%s SJOIN %ld %s + :%s%s",
 					me.name, lp->chptr->creationtime, lp->chptr->chname,
 					flags, existing->name);
@@ -383,7 +383,7 @@ CMD_FUNC(m_uid)
 				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
 				    acptrs ? acptrs->name : "unknown server");
 		}
-		
+
 		if (IsServer(cptr) && IsPerson(sptr) && !ishold) /* remote user changing nick */
 		{
 			sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
@@ -590,13 +590,21 @@ CMD_FUNC(m_nick)
 	}
 
 	if (!IsServer(cptr))
+	{
+		if (MyConnect(sptr) && iConf.min_nick_length && !IsOper(sptr) && !IsULine(sptr) && strlen(parv[1]) < iConf.min_nick_length)
+		{
+			snprintf(descbuf, sizeof descbuf, "A minimum length of %d chars is required", iConf.min_nick_length);
+			sendnumeric(sptr, ERR_ERRONEUSNICKNAME, parv[1], descbuf);
+			return 0;
+		}
 		strlcpy(nick, parv[1], iConf.nick_length + 1);
+	}
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
 
 	if (MyConnect(sptr) && sptr->user && !ValidatePermissionsForPath("immune:nick-flood",sptr,NULL,NULL,NULL))
 	{
-		if ((sptr->user->flood.nick_c >= NICK_COUNT) && 
+		if ((sptr->user->flood.nick_c >= NICK_COUNT) &&
 		    (TStime() - sptr->user->flood.nick_t < NICK_PERIOD))
 		{
 			/* Throttle... */
@@ -732,7 +740,7 @@ CMD_FUNC(m_nick)
 				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
 				    acptrs ? acptrs->name : "unknown server");
 		}
-		
+
 		if (IsServer(cptr) && IsPerson(sptr) && !ishold) /* remote user changing nick */
 		{
 			sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
@@ -1213,11 +1221,11 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	cptr->local->last = TStime();
 	nick = sptr->name; /* <- The data is always the same, but the pointer is sometimes not,
 	                    *    I need this for one of my modules, so do not remove! ;) -- Syzop */
-	
+
 	if (MyConnect(sptr))
 	{
 	        char temp[USERLEN + 1];
-	        
+
 		if ((i = check_client(sptr, username)))
 		{
 			ircstp->is_ref++;
@@ -1234,7 +1242,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		{
 			/* reject ASCII < 32 and ASCII >= 127 (note: upper resolver might be even more strict). */
 			for (tmpstr = sptr->local->sockhost; *tmpstr > ' ' && *tmpstr < 127; tmpstr++);
-			
+
 			/* if host contained invalid ASCII _OR_ the DNS reply is an IP-like reply
 			 * (like: 1.2.3.4 or ::ffff:1.2.3.4), then reject it and use IP instead.
 			 */
@@ -1269,9 +1277,9 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		/* because username may point to user->username */
 		strlcpy(temp, username, USERLEN + 1);
 
-		if (!(sptr->flags & FLAGS_DOID)) 
+		if (!(sptr->flags & FLAGS_DOID))
 			strlcpy(user->username, temp, USERLEN + 1);
-		else if (sptr->flags & FLAGS_GOTID) 
+		else if (sptr->flags & FLAGS_GOTID)
 			strlcpy(user->username, sptr->username, USERLEN+1);
 		else
 		{
@@ -1295,7 +1303,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 *
 		 * Moved the noident thing to the right place - see above
 		 * -OnyxDragon
-		 * 
+		 *
 		 * No longer use nickname if the entire ident is invalid,
                  * if thats the case, it is likely the user is trying to cause
 		 * problems so just ban them. (Using the nick could introduce
@@ -1433,7 +1441,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 					me.name, tls_get_cipher(sptr->local->ssl));
 			}
 		}
-		
+
 		{
 			char *parv[2];
 			parv[0] = sptr->name;
@@ -1443,7 +1451,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		}
 
 		RunHook2(HOOKTYPE_WELCOME, sptr, 266);
-		
+
 		short_motd(sptr);
 
 		RunHook2(HOOKTYPE_WELCOME, sptr, 376);
@@ -1580,13 +1588,13 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		if (IsSecure(sptr) && (iConf.outdated_tls_policy_user == POLICY_WARN) && outdated_tls_client(sptr))
 			sendnotice(sptr, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, sptr));
-		
+
 		/* Make creation time the real 'online since' time, excluding registration time.
 		 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean
 		 * 1 second in practice (#2174).
 		 */
 		sptr->local->firsttime = TStime();
-		
+
 		/* Give the user a fresh start as far as fake-lag is concerned.
 		 * Otherwise the user could be lagged up already due to all the CAP stuff.
 		 */
@@ -1640,7 +1648,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 int check_init(aClient *cptr, char *sockn, size_t size)
 {
 	strlcpy(sockn, cptr->local->sockhost, HOSTLEN);
-	
+
 	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, ==0);
 
 	/* Some silly hack to convert 127.0.0.1 and such into 'localhost' */
@@ -1669,7 +1677,7 @@ int check_client(aClient *cptr, char *username)
 	static char sockname[HOSTLEN + 1];
 	struct hostent *hp = NULL;
 	int  i;
-	
+
 	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]", cptr->name, cptr->local->sockhost));
 
 	if (check_init(cptr, sockname, sizeof(sockname)))

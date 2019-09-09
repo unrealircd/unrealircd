@@ -192,6 +192,9 @@ struct {
 	unsigned conf_admin : 1;
 	unsigned conf_listen : 1;
 } requiredstuff;
+struct {
+	int min, max;
+} nicklengths;
 struct SetCheck settings;
 /*
  * Utilities
@@ -1513,7 +1516,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ping_cookie = 1;
 	i->ping_warning = 15; /* default ping warning notices 15 seconds */
 	i->default_ipv6_clone_mask = 64;
-	i->nick_length = NICKLEN;
+	nicklengths.min = i->min_nick_length = 0; /* 0 means no minimum required */
+	nicklengths.max = i->nick_length = NICKLEN;
 	i->topic_length = 360;
 	i->away_length = 307;
 	i->kick_length = 307;
@@ -1846,6 +1850,7 @@ int	init_conf(char *rootconf, int rehash)
 	memset(&tempiConf, 0, sizeof(iConf));
 	memset(&settings, 0, sizeof(settings));
 	memset(&requiredstuff, 0, sizeof(requiredstuff));
+	memset(&nicklengths, 0, sizeof(nicklengths));
 	config_setdefaultsettings(&tempiConf);
 	clicap_pre_rehash();
 	free_config_defines();
@@ -2485,6 +2490,8 @@ int	config_post_test()
 		Error("set::network-name is missing");
 	if (!settings.has_help_channel)
 		Error("set::help-channel is missing");
+	if (nicklengths.min > nicklengths.max)
+		Error("set::nick-length is smaller than set::min-nick-length");
 
 	for (h = Hooks[HOOKTYPE_CONFIGPOSTTEST]; h; h = h->next)
 	{
@@ -3055,19 +3062,19 @@ char *pretty_time_val(long timeval)
 void convert_to_absolute_path(char **path, char *reldir)
 {
 	char *s;
-	
+
 	if (!*path || !**path)
 		return; /* NULL or empty */
-	
+
 	if (strstr(*path, "://"))
 		return; /* URL: don't touch */
-	
+
 	if ((**path == '/') || (**path == '\\'))
 		return; /* already absolute path */
-	
+
 	if (!strncmp(*path, reldir, strlen(reldir)))
 		return; /* already contains reldir */
-	
+
 	s = MyMallocEx(strlen(reldir) + strlen(*path) + 2);
 	sprintf(s, "%s/%s", reldir, *path); /* safe, see line above */
 	MyFree(*path);
@@ -3898,7 +3905,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				}
 				has_operclass = 1;
 				continue;
-			} 
+			}
 			/* oper::class */
 			else if (!strcmp(cep->ce_varname, "class"))
 			{
@@ -4824,7 +4831,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: listen block has a new syntax, see https://www.unrealircd.org/docs/Listen_block",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			
+
 		need_34_upgrade = 1;
 		return 1;
 	}
@@ -4904,7 +4911,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "ip"))
 		{
 			has_ip = 1;
-			
+
 			if (strcmp(cep->ce_vardata, "*") && !is_valid_ip(cep->ce_vardata))
 			{
 				config_error("%s:%i: listen: illegal listen::ip (%s). Must be either '*' or contain a valid IP.",
@@ -4972,7 +4979,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			continue; /* always */
 		}
 	}
-	
+
 	if (!has_ip)
 	{
 		config_error("%s:%d: listen block requires an listen::ip",
@@ -7413,6 +7420,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.ban_version_tkl_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
+		else if (!strcmp(cep->ce_varname, "min-nick-length")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.min_nick_length = v;
+		}
 		else if (!strcmp(cep->ce_varname, "nick-length")) {
 			int v = atoi(cep->ce_vardata);
 			tempiConf.nick_length = v;
@@ -8415,6 +8426,20 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "min-nick-length")) {
+			int v;
+			CheckDuplicate(cep, min_nick_length, "min-nick-length");
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > NICKLEN))
+			{
+				config_error("%s:%i: set::min-nick-length: value '%d' out of range (should be 1-%d)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, NICKLEN);
+				errors++;
+			}
+			else
+				nicklengths.min = v;
+		}
 		else if (!strcmp(cep->ce_varname, "nick-length")) {
 			int v;
 			CheckDuplicate(cep, nick_length, "nick-length");
@@ -8426,6 +8451,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, NICKLEN);
 				errors++;
 			}
+			else
+				nicklengths.max = v;
 		}
 		else if (!strcmp(cep->ce_varname, "topic-length")) {
 			int v;
@@ -8820,7 +8847,7 @@ void start_listeners(void)
 	ConfigItem_listen *listenptr;
 	int failed = 0, ports_bound = 0;
 	char boundmsg_ipv4[512], boundmsg_ipv6[512];
-	
+
 	*boundmsg_ipv4 = *boundmsg_ipv6 = '\0';
 
 	for (listenptr = conf_listen; listenptr; listenptr = listenptr->next)
@@ -8867,7 +8894,7 @@ void start_listeners(void)
 		                    "listen blocks, maybe you have to bind to a specific IP rather than \"*\".");
 		exit(-1);
 	}
-	
+
 	if (failed && !loop.ircd_booted)
 	{
 		ircd_log(LOG_ERROR, "Could not listen on all specified addresses/ports. See errors above. "
@@ -9050,7 +9077,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 		safestrdup(alias->nick, alias->alias);
 	}
 	AliasAdd(NULL, alias->alias, m_alias, 1, M_USER|M_ALIAS);
-	
+
 	AddListItem(alias, conf_alias);
 	return 0;
 }

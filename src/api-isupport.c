@@ -3,7 +3,7 @@
  *   (c) 2004 Dominick Meglio and the UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
- *   the programmers. 
+ *   the programmers.
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -112,6 +112,7 @@ void isupport_init(void)
 	IsupportSetFmt(NULL, "TOPICLEN", "%d", iConf.topic_length);
 	IsupportSetFmt(NULL, "QUITLEN", "%d", iConf.quit_length);
 	IsupportSetFmt(NULL, "CHANNELLEN", "%d", CHANNELLEN);
+	IsupportSetFmt(NULL, "MINNICKLEN", "%d", iConf.min_nick_length);
 	IsupportSetFmt(NULL, "NICKLEN", "%d", iConf.nick_length);
 	IsupportSetFmt(NULL, "MAXNICKLEN", "%d", NICKLEN);
 	IsupportSetFmt(NULL, "MAXLIST", "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
@@ -222,7 +223,7 @@ Isupport *IsupportAdd(Module *module, const char *token, const char *value)
 	if (value)
 		isupport->value = strdup(value);
 	isupport_add_sorted(isupport);
-	make_isupportstrings(); 
+	make_isupportstrings();
 	if (module)
 	{
 		ModuleObject *isupportobj = MyMallocEx(sizeof(ModuleObject));
