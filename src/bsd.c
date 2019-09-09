@@ -825,9 +825,9 @@ void set_non_blocking(int fd, aClient *cptr)
 {
 	int res, nonb = 0;
 
+#if !defined(_WIN32)
 	nonb |= O_NONBLOCK;
 
-#if !defined(_WIN32)
 	if ((res = fcntl(fd, F_GETFL, 0)) == -1)
 	{
 		if (cptr)
