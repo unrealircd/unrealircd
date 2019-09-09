@@ -46,7 +46,7 @@ static ModuleInfo	*MyModInfo;
 ModuleHeader MOD_HEADER(hideserver)
   = {
 	"hideserver",
-	"v5.0",
+	"5.0",
 	"Hide servers from /MAP & /LINKS",
 	"UnrealIRCd Team",
 	"unrealircd-5",
