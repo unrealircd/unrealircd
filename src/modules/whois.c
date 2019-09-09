@@ -99,7 +99,7 @@ CMD_FUNC(m_whois)
 
 		found = 0;
 		/* We do not support "WHOIS *" */
-		wilds = (index(nick, '?') || index(nick, '*'));
+		wilds = (strchr(nick, '?') || strchr(nick, '*'));
 		if (wilds)
 			continue;
 

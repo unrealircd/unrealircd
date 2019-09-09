@@ -1246,7 +1246,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 			doall = 2;
 		else if (match_simple(para, me.name))
 			doall = 1;
-		if (index(para, '*') || index(para, '?'))
+		if (strchr(para, '*') || strchr(para, '?'))
 			wilds = 1;
 	}
 	else

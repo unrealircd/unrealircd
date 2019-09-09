@@ -83,8 +83,8 @@ CMD_FUNC(m_svssilence)
 		c = *p;
 		if ((c == '-') || (c == '+'))
 			p++;
-		else if (!(index(p, '@') || index(p, '.') ||
-		    index(p, '!') || index(p, '*')))
+		else if (!(strchr(p, '@') || strchr(p, '.') ||
+		    strchr(p, '!') || strchr(p, '*')))
 		{
 			/* "no such nick" */
 			continue;

@@ -111,10 +111,9 @@ CMD_FUNC(m_watch)
 		parv[1] = def;
 	}
 
-	for (s = (char *)strtoken(&p, *++pav, " "); s;
-	    s = (char *)strtoken(&p, NULL, " "))
+	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " "))
 	{
-		if ((user = (char *)index(s, '!')))
+		if ((user = strchr(s, '!')))
 			*user++ = '\0';	/* Not used */
 			
 		if (!strcmp(s, "A") && WATCH_AWAY_NOTIFICATION)

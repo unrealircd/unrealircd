@@ -1669,9 +1669,9 @@ static void read_authports(int fd, int revents, void *userdata)
 	    (sscanf(cptr->local->buffer, "%hd , %hd : USERID : %*[^:]: %10s",
 	    &remp, &locp, ruser) == 3))
 	{
-		s = rindex(cptr->local->buffer, ':');
+		s = strrchr(cptr->local->buffer, ':');
 		*s++ = '\0';
-		for (t = (rindex(cptr->local->buffer, ':') + 1); *t; t++)
+		for (t = (strrchr(cptr->local->buffer, ':') + 1); *t; t++)
 			if (!isspace(*t))
 				break;
 		strlcpy(system, t, sizeof(system));
@@ -1684,7 +1684,7 @@ static void read_authports(int fd, int revents, void *userdata)
 	}
 	else if (len != 0)
 	{
-		if (!index(cptr->local->buffer, '\n') && !index(cptr->local->buffer, '\r'))
+		if (!strchr(cptr->local->buffer, '\n') && !strchr(cptr->local->buffer, '\r'))
 			return;
 		Debug((DEBUG_ERROR, "local %d remote %d", locp, remp));
 		Debug((DEBUG_ERROR, "bad auth reply in [%s]", cptr->local->buffer));

@@ -84,7 +84,7 @@ CMD_FUNC(m_ison)
 
 	for (s = strtoken(&p, parv[1], " "); s; s = strtoken(&p, NULL, " "))
 	{
-		if ((user = index(s, '!')))
+		if ((user = strchr(s, '!')))
 			*user++ = '\0';
 		if ((acptr = find_person(s, NULL)))
 		{

@@ -81,7 +81,7 @@ CMD_FUNC(m_whowas)
 	if (!MyConnect(sptr) && (max > 20))
 		max = 20;
 
-	p = (char *)strchr(parv[1], ',');
+	p = strchr(parv[1], ',');
 	if (p)
 		*p = '\0';
 	nick = parv[1];

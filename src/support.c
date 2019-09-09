@@ -52,7 +52,7 @@ char *strtoken(char **save, char *str, char *fs)
 	else
 		pos = *save; /* keep last position across calls */
 
-	while (pos && *pos && index(fs, *pos) != NULL)
+	while (pos && *pos && strchr(fs, *pos) != NULL)
 		pos++;		/* skip leading separators */
 
 	if (!pos || !*pos)
@@ -60,7 +60,7 @@ char *strtoken(char **save, char *str, char *fs)
 
 	tmp = pos;		/* now, keep position of the token */
 
-	while (*pos && index(fs, *pos) == NULL)
+	while (*pos && strchr(fs, *pos) == NULL)
 		pos++;		/* skip content of the token */
 
 	if (*pos)

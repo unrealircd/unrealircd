@@ -245,7 +245,7 @@ char *myctime(time_t value)
 	char *p;
 
 	strlcpy(buf, ctime(&value), sizeof buf);
-	if ((p = (char *)index(buf, '\n')) != NULL)
+	if ((p = strchr(buf, '\n')) != NULL)
 		*p = '\0';
 
 	return buf;
@@ -322,7 +322,7 @@ char *get_client_host(aClient *cptr)
 void set_sockhost(aClient *cptr, char *host)
 {
 	char *s;
-	if ((s = (char *)index(host, '@')))
+	if ((s = strchr(host, '@')))
 		s++;
 	else
 		s = host;

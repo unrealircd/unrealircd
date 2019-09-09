@@ -191,7 +191,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch)
 		if (*sender && IsServer(cptr))
 		{
 			from = find_client(sender, NULL);
-			if (!from && index(sender, '@'))
+			if (!from && strchr(sender, '@'))
 				from = hash_find_nickatserver(sender, NULL);
 
 			/* Hmm! If the client corresponding to the
@@ -240,7 +240,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch)
 	   ** numerics must have paramters and thus a space after the command
 	   ** code. -avalon
 	 */
-	s = (char *)index(ch, ' ');	/* s -> End of the command code */
+	s = strchr(ch, ' ');	/* s -> End of the command code */
 	len = (s) ? (s - ch) : 0;
 	if (len == 3 &&
 	    isdigit(*ch) && isdigit(*(ch + 1)) && isdigit(*(ch + 2)))
@@ -447,7 +447,7 @@ static void remove_unknown(aClient *cptr, char *sender)
 	 * Do kill if it came from a server because it means there is a ghost
 	 * user on the other server which needs to be removed. -avalon
 	 */
-	if ((isdigit(*sender) && strlen(sender) <= SIDLEN) || index(sender, '.'))
+	if ((isdigit(*sender) && strlen(sender) <= SIDLEN) || strchr(sender, '.'))
 		sendto_one(cptr, NULL, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
 		    me.name, sender, sender, cptr->name);
 	else

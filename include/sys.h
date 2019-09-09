@@ -70,15 +70,6 @@
 #define	strncasecmp	myncmp
 #endif
 
-#ifdef NOINDEX
-#define   index   strchr
-#define   rindex  strrchr
-/*
-extern	char	*index(char *, char);
-extern	char	*rindex(char *, char);
-*/
-#endif
-
 #ifdef AIX
 #include <sys/select.h>
 #endif

@@ -84,7 +84,7 @@ CMD_FUNC(m_kill)
 
 	strlcpy(inpath, oinpath, sizeof inpath);
 
-	if (IsServer(cptr) && (s = (char *)index(inpath, '.')) != NULL)
+	if (IsServer(cptr) && (s = strchr(inpath, '.')) != NULL)
 		*s = '\0';	/* Truncate at first "." -- hmm... why ? */
 
 	if (!IsServer(cptr) && !ValidatePermissionsForPath("kill:global",sptr,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",sptr,NULL,NULL,NULL))
@@ -236,7 +236,7 @@ CMD_FUNC(m_kill)
 			acptr->flags |= FLAGS_KILLED;
 			
 			/* Prepare the buffer for exit_client */
-			if ((killer = index(path, ' ')))
+			if ((killer = strchr(path, ' ')))
 			{
 				while ((killer >= path) && *killer && *killer != '!')
 					killer--;

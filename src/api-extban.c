@@ -186,15 +186,15 @@ char pfix[8];
 
 	if ((*mask == '~') && !strchr(mask, '@'))
 		return NULL; /* not a user@host ban, too confusing. */
-	if ((user = index((cp = mask), '!')))
+	if ((user = strchr((cp = mask), '!')))
 		*user++ = '\0';
-	if ((host = rindex(user ? user : cp, '@')))
+	if ((host = strrchr(user ? user : cp, '@')))
 	{
 		*host++ = '\0';
 		if (!user)
 			ret = make_nick_user_host(NULL, trim_str(cp,USERLEN), trim_str(host,HOSTLEN));
 	}
-	else if (!user && index(cp, '.'))
+	else if (!user && strchr(cp, '.'))
 		ret = make_nick_user_host(NULL, NULL, trim_str(cp,HOSTLEN));
 	if (!ret)
 		ret = make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));

@@ -58,9 +58,6 @@
 /* Define to 1 if you have the `getrusage' function. */
 #undef HAVE_GETRUSAGE
 
-/* Define to 1 if you have the `index' function. */
-#undef HAVE_INDEX
-
 /* Define to 1 if you have the `inet_ntop' function. */
 #undef HAVE_INET_NTOP
 
@@ -174,9 +171,6 @@
 
 /* Set to the nickname history length you want */
 #undef NICKNAMEHISTORYLENGTH
-
-/* Define if you do not have the index function. */
-#undef NOINDEX
 
 /* Define if you want OperOverride disabled */
 #undef NO_OPEROVERRIDE

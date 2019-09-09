@@ -443,7 +443,7 @@ int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, ch
 		/* If nick@server -and- the @server portion was set::services-server then send a special message */
 		if (!acptr && SERVICES_NAME)
 		{
-			char *server = index(nick, '@');
+			char *server = strchr(nick, '@');
 			if (server && strncasecmp(server + 1, SERVICES_NAME, strlen(SERVICES_NAME)) == 0)
 			{
 				sendnumeric(sptr, ERR_SERVICESDOWN, nick);
@@ -597,9 +597,9 @@ int size_string, ret;
 	for (; *ctcp == ' '; ctcp++); /* skip leading spaces */
 
 	if (*ctcp == '"' && *(ctcp+1))
-		end = index(ctcp+1, '"');
+		end = strchr(ctcp+1, '"');
 	else
-		end = index(ctcp, ' ');
+		end = strchr(ctcp, ' ');
 
 	/* check if it was fake.. just pass it along then .. */
 	if (!end || (end < ctcp))
@@ -666,9 +666,9 @@ int size_string;
 		return 1; /* something else, allow */
 
 	if (*ctcp == '"' && *(ctcp+1))
-		end = index(ctcp+1, '"');
+		end = strchr(ctcp+1, '"');
 	else
-		end = index(ctcp, ' ');
+		end = strchr(ctcp, ' ');
 
 	/* check if it was fake.. just pass it along then .. */
 	if (!end || (end < ctcp))

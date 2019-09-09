@@ -85,8 +85,8 @@ CMD_FUNC(m_silence)
 		c = *cp;
 		if (c == '-' || c == '+')
 			cp++;
-		else if (!(index(cp, '@') || index(cp, '.') ||
-		    index(cp, '!') || index(cp, '*')))
+		else if (!(strchr(cp, '@') || strchr(cp, '.') ||
+		    strchr(cp, '!') || strchr(cp, '*')))
 		{
 			sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
 			return -1;

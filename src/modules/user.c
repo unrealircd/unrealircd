@@ -78,7 +78,7 @@ CMD_FUNC(m_user)
 		return exit_client(cptr, sptr, sptr, NULL, "This port is for servers only");
 	}
 
-	if (parc > 2 && (username = (char *)index(parv[1], '@')))
+	if (parc > 2 && (username = strchr(parv[1], '@')))
 		*username = '\0';
 	if (parc < 5 || *parv[1] == '\0' || *parv[2] == '\0' ||
 	    *parv[3] == '\0' || *parv[4] == '\0')

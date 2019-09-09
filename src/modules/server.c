@@ -522,7 +522,7 @@ CMD_FUNC(m_server)
 	for (ch = servername; *ch; ch++)
 		if (*ch <= ' ' || *ch > '~')
 			break;
-	if (*ch || !index(servername, '.'))
+	if (*ch || !strchr(servername, '.'))
 	{
 		sendto_one(sptr, NULL, "ERROR :Bogus server name (%s)", servername);
 		sendto_snomask

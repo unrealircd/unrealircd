@@ -5941,21 +5941,6 @@ $as_echo "#define NEED_STRERROR /**/" >>confdefs.h
 fi
 done
 
-for ac_func in index
-do :
-  ac_fn_c_check_func "$LINENO" "index" "ac_cv_func_index"
-if test "x$ac_cv_func_index" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_INDEX 1
-_ACEOF
-
-else
-
-$as_echo "#define NOINDEX /**/" >>confdefs.h
-
-fi
-done
-
 for ac_func in strtoul
 do :
   ac_fn_c_check_func "$LINENO" "strtoul" "ac_cv_func_strtoul"

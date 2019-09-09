@@ -1721,7 +1721,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			hname = hp->h_name;
 			strlcpy(fullname, hname, sizeof(fullname));
 			Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, fullname));
-			if (index(aconf->hostname, '@'))
+			if (strchr(aconf->hostname, '@'))
 			{
 				if (aconf->flags.noident)
 					strlcpy(uhost, username, sizeof(uhost));
@@ -1736,7 +1736,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 				goto attach;
 		}
 
-		if (index(aconf->ip, '@'))
+		if (strchr(aconf->ip, '@'))
 		{
 			if (aconf->flags.noident)
 				strlcpy(uhost, username, sizeof(uhost));
@@ -1755,7 +1755,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		 * 'localhost' instead of an ip... -- Syzop. */
 		if (!strcmp(sockhost, "localhost"))
 		{
-			if (index(aconf->hostname, '@'))
+			if (strchr(aconf->hostname, '@'))
 			{
 				if (aconf->flags.noident)
 					strlcpy(uhost, username, sizeof(uhost));
@@ -1772,7 +1772,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 
 		continue;
 	      attach:
-/*		if (index(uhost, '@'))  now flag based -- codemastr */
+/*		if (strchr(uhost, '@'))  now flag based -- codemastr */
 		if (!aconf->flags.noident)
 			cptr->flags |= FLAGS_DOID;
 		if (!aconf->flags.useip && hp)

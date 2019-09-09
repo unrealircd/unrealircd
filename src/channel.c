@@ -788,15 +788,15 @@ char *pretty_mask(char *mask)
 	char *user;
 	char *host;
 
-	if ((user = index((cp = mask), '!')))
+	if ((user = strchr((cp = mask), '!')))
 		*user++ = '\0';
-	if ((host = rindex(user ? user : cp, '@')))
+	if ((host = strrchr(user ? user : cp, '@')))
 	{
 		*host++ = '\0';
 		if (!user)
 			return make_nick_user_host(NULL, cp, host);
 	}
-	else if (!user && index(cp, '.'))
+	else if (!user && strchr(cp, '.'))
 		return make_nick_user_host(NULL, NULL, cp);
 	return make_nick_user_host(cp, user, host);
 }
@@ -832,7 +832,7 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	strlcpy(maskbuf, mask, sizeof(maskbuf));
 	mask = maskbuf;
 
-	cp = index(mask, ' ');
+	cp = strchr(mask, ' ');
 	if (cp)
 		*cp = '\0';
 
@@ -890,9 +890,9 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	if ((*mask == '~') && !strchr(mask, '@'))
 		return NULL; /* not an extended ban and not a ~user@host ban either. */
 
-	if ((user = index((cp = mask), '!')))
+	if ((user = strchr((cp = mask), '!')))
 		*user++ = '\0';
-	if ((host = rindex(user ? user : cp, '@')))
+	if ((host = strrchr(user ? user : cp, '@')))
 	{
 		*host++ = '\0';
 
@@ -900,7 +900,7 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 			return make_nick_user_host(NULL, trim_str(cp,USERLEN), 
 				trim_str(host,HOSTLEN));
 	}
-	else if (!user && index(cp, '.'))
+	else if (!user && strchr(cp, '.'))
 		return make_nick_user_host(NULL, NULL, trim_str(cp,HOSTLEN));
 	return make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), 
 		trim_str(host,HOSTLEN));
@@ -1144,7 +1144,7 @@ void send_user_joins(aClient *cptr, aClient *user)
 	for (lp = user->user->channel; lp; lp = lp->next)
 	{
 		chptr = lp->chptr;
-		if ((mask = index(chptr->chname, ':')))
+		if ((mask = strchr(chptr->chname, ':')))
 			if (!match_simple(++mask, cptr->name))
 				continue;
 		if (*chptr->chname == '&')

@@ -230,7 +230,7 @@ CMD_FUNC(m_protoctl)
 			}
 			
 			servername = strtoken(&p, buf, ",");
-			if (!servername || (strlen(servername) > HOSTLEN) || !index(servername, '.'))
+			if (!servername || (strlen(servername) > HOSTLEN) || !strchr(servername, '.'))
 			{
 				sendto_one(sptr, NULL, "ERROR :Bogus server name in EAUTH (%s)", servername ? servername : "");
 				sendto_snomask

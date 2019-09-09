@@ -114,7 +114,7 @@ CMD_FUNC(m_trace)
 	}
 
 	doall = (parv[1] && (parc > 1)) ? match_simple(tname, me.name) : TRUE;
-	wilds = !parv[1] || index(tname, '*') || index(tname, '?');
+	wilds = !parv[1] || strchr(tname, '*') || strchr(tname, '?');
 	dow = wilds || doall;
 
 	for (i = 0; i < MAXCONNECTIONS; i++)

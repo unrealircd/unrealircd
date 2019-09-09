@@ -361,7 +361,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 
 			  //                   chptr->mode.kmode = 0;
 		  }
-		  xp = index(param, ':');
+		  xp = strchr(param, ':');
 		  *xp = '\0';
 		  xxi =
 		      atoi((*param ==
@@ -783,7 +783,7 @@ char *cmodef_conv_param(char *param_in, aClient *cptr)
 
 		  //                   chptr->mode.kmode = 0;
 	  }
-	  xp = index(param, ':');
+	  xp = strchr(param, ':');
 	  *xp = '\0';
 	  xxi =
 	      atoi((*param ==
