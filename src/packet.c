@@ -118,7 +118,7 @@ static inline aCommand *find_Cmd(char *cmd, int flags)
 			continue;
 		if ((flags & M_ALIAS) && !(p->flags & M_ALIAS))
 			continue;
-		if (!stricmp(p->cmd, cmd))
+		if (!strcasecmp(p->cmd, cmd))
 			return p;
 	}
 	return NULL;
@@ -138,7 +138,7 @@ aCommand *find_Command_simple(char *cmd)
 	aCommand	*p;
 	
 	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
-		if (!stricmp(p->cmd, cmd))
+		if (!strcasecmp(p->cmd, cmd))
 				return (p);
 	}
 

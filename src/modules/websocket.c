@@ -364,7 +364,7 @@ int websocket_handle_handshake(aClient *sptr, char *readbuf, int *length)
 	     r;
 	     r = websocket_handshake_helper(NULL, 0, &key, &value, &lastloc, &end_of_request))
 	{
-		if (!stricmp(key, "Sec-WebSocket-Key"))
+		if (!strcasecmp(key, "Sec-WebSocket-Key"))
 		{
 			if (strchr(value, ':'))
 			{

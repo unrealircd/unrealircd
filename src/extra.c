@@ -266,7 +266,7 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 
 	for (logs = conf_log; logs; logs = logs->next) {
 #ifdef HAVE_SYSLOG
-		if (!stricmp(logs->file, "syslog") && logs->flags & flags) {
+		if (!strcasecmp(logs->file, "syslog") && logs->flags & flags) {
 			syslog(LOG_INFO, "%s", buf);
 			written++;
 			continue;

@@ -276,7 +276,7 @@ static inline int stats_operonly_long(char *s)
 	OperStat *os;
 	for (os = iConf.oper_only_stats_ext; os; os = os->next)
 	{
-		if (!stricmp(os->flag, s))
+		if (!strcasecmp(os->flag, s))
 			return 1;
 	}
 	return 0;

@@ -125,7 +125,7 @@ RestrictedCmd *find_restrictions_bycmd(char *cmd) {
 	RestrictedCmd *rcmd;
 	for (rcmd = RestrictedCmdList; rcmd; rcmd = rcmd->next)
 	{
-		if (!stricmp(rcmd->cmd, cmd))
+		if (!strcasecmp(rcmd->cmd, cmd))
 			return rcmd;
 	}
 	return NULL;

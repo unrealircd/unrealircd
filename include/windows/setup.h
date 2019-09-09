@@ -42,8 +42,8 @@
 #define LIST_SHOW_MODES
 #ifndef mode_t
 #define GOT_STRCASECMP
-#define strcasecmp _stricmp
-#define strncasecmp _strnicmp
+#define strcasecmp _strcasecmp
+#define strncasecmp _strncasecmp
 #define HAVE_EXPLICIT_BZERO
 #define explicit_bzero(a,b) SecureZeroMemory(a,b)
 #define HAVE_INET_PTON

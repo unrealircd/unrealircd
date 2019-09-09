@@ -41,7 +41,7 @@ ClientCapability *ClientCapabilityFindReal(const char *token)
 
 	for (clicap = clicaps; clicap; clicap = clicap->next)
 	{
-		if (!stricmp(token, clicap->name))
+		if (!strcasecmp(token, clicap->name))
 			return clicap;
 	}
 
@@ -61,7 +61,7 @@ ClientCapability *ClientCapabilityFind(const char *token, aClient *sptr)
 
 	for (clicap = clicaps; clicap; clicap = clicap->next)
 	{
-		if (!stricmp(token, clicap->name))
+		if (!strcasecmp(token, clicap->name))
 		{
 			if (clicap->visible && !clicap->visible(sptr))
 				return NULL; /* hidden */

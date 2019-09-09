@@ -160,7 +160,7 @@ Isupport *IsupportFind(const char *token)
 
 	for (isupport = Isupports; isupport; isupport = isupport->next)
 	{
-		if (!stricmp(token, isupport->token))
+		if (!strcasecmp(token, isupport->token))
 			return isupport;
 	}
 	return NULL;

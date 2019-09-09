@@ -82,7 +82,7 @@ int extban_account_is_banned(aClient *sptr, aChannel *chptr, char *banin, int ty
 {
 	char *ban = banin+3;
 
-	if (!stricmp(ban, sptr->user->svid))
+	if (!strcasecmp(ban, sptr->user->svid))
 		return 1;
 
 	return 0;

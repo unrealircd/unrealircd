@@ -90,7 +90,7 @@ static aClient *decode_puid(char *puid)
 		cookie = atoi(it2);
 	}
 
-	if (stricmp(me.name, puid))
+	if (strcasecmp(me.name, puid))
 		return NULL;
 
 	list_for_each_entry(cptr, &unknown_list, lclient_node)
@@ -133,7 +133,7 @@ CMD_FUNC(m_svslogin)
 	if (!SASL_SERVER || MyClient(sptr) || (parc < 3) || !parv[3])
 		return 0;
 
-	if (!stricmp(parv[1], me.name))
+	if (!strcasecmp(parv[1], me.name))
 	{
 		aClient *target_p;
 
@@ -180,7 +180,7 @@ CMD_FUNC(m_sasl)
 	if (!SASL_SERVER || MyClient(sptr) || (parc < 4) || !parv[4])
 		return 0;
 
-	if (!stricmp(parv[1], me.name))
+	if (!strcasecmp(parv[1], me.name))
 	{
 		aClient *target_p;
 
@@ -196,7 +196,7 @@ CMD_FUNC(m_sasl)
 			make_user(target_p);
 
 		/* reject if another SASL agent is answering */
-		if (*target_p->local->sasl_agent && stricmp(sptr->name, target_p->local->sasl_agent))
+		if (*target_p->local->sasl_agent && strcasecmp(sptr->name, target_p->local->sasl_agent))
 			return 0;
 		else
 			strlcpy(target_p->local->sasl_agent, sptr->name, sizeof(target_p->local->sasl_agent));

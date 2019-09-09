@@ -441,8 +441,8 @@ char has_common_chan = 0;
 		/* if they only want people with a certain server */
 		if (wfl.want_server != WHO_DONTCARE)
 		{
-			if (((wfl.want_server == WHO_WANT) && stricmp(wfl.server, acptr->user->server)) ||
-			    ((wfl.want_server == WHO_DONTWANT) && !stricmp(wfl.server, acptr->user->server)))
+			if (((wfl.want_server == WHO_WANT) && strcasecmp(wfl.server, acptr->user->server)) ||
+			    ((wfl.want_server == WHO_DONTWANT) && !strcasecmp(wfl.server, acptr->user->server)))
 			{
 				return WHO_CANTSEE;
 			}

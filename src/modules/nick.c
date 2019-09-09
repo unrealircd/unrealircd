@@ -365,7 +365,7 @@ CMD_FUNC(m_uid)
 	   ** client, just reject it. -Lefler
 	   ** Allow opers to use Q-lined nicknames. -Russell
 	 */
-	if (!stricmp("ircd", nick) || !stricmp("irc", nick))
+	if (!strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
 	{
 		sendnumeric(sptr, ERR_ERRONEUSNICKNAME, nick,
 		    "Reserved for internal IRCd purposes");
@@ -706,7 +706,7 @@ CMD_FUNC(m_nick)
 	   ** client, just reject it. -Lefler
 	   ** Allow opers to use Q-lined nicknames. -Russell
 	 */
-	if (!stricmp("ircd", nick) || !stricmp("irc", nick))
+	if (!strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
 	{
 		sendnumeric(sptr, ERR_ERRONEUSNICKNAME, nick,
 		    "Reserved for internal IRCd purposes");

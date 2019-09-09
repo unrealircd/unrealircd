@@ -284,7 +284,7 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch)
 			   ** This error should indeed not be sent in case
 			   ** of notices -- Syzop.
 			 */
-			if (!IsRegistered(cptr) && stricmp(ch, "NOTICE")) {
+			if (!IsRegistered(cptr) && strcasecmp(ch, "NOTICE")) {
 				sendnumericfmt(from, ERR_NOTREGISTERED, "You have not registered");
 				parse_addlag(cptr, bytes);
 				return -1;

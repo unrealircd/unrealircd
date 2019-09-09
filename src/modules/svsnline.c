@@ -130,7 +130,7 @@ CMD_FUNC(m_svsnline)
 				continue;
 			if (bconf->flag.type2 != CONF_BAN_TYPE_AKILL)
 				continue;
-			if (!stricmp(bconf->mask, parv[2]))
+			if (!strcasecmp(bconf->mask, parv[2]))
 				break;
 		  }
 		  if (bconf)

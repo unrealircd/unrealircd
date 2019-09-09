@@ -128,9 +128,9 @@ static TKLType *find_TKLType_by_flag(char flag)
 }
 
 void rmtkl_check_options(char *param, int *skipperm, int *silent) {
-	if (!stricmp("-skipperm", param))
+	if (!strcasecmp("-skipperm", param))
 		*skipperm = 1;
-	if (!stricmp("-silent", param))
+	if (!strcasecmp("-silent", param))
 		*silent = 1;
 }
 

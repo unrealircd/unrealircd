@@ -678,7 +678,7 @@ CMD_FUNC(m_rehash)
 		}
 	}
 
-	if (!BadPtr(parv[1]) && stricmp(parv[1], "-all"))
+	if (!BadPtr(parv[1]) && strcasecmp(parv[1], "-all"))
 	{
 
 		if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
@@ -689,13 +689,13 @@ CMD_FUNC(m_rehash)
 
 		if (*parv[1] == '-')
 		{
-			if (!strnicmp("-gar", parv[1], 4))
+			if (!strncasecmp("-gar", parv[1], 4))
 			{
 				loop.do_garbage_collect = 1;
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
-			if (!strnicmp("-dns", parv[1], 4))
+			if (!strncasecmp("-dns", parv[1], 4))
 			{
 				reinit_resolver(sptr);
 				return 0;
@@ -725,8 +725,8 @@ CMD_FUNC(m_rehash)
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
-			if (!strnicmp("-motd", parv[1], 5)
-			    || !strnicmp("-rules", parv[1], 6))
+			if (!strncasecmp("-motd", parv[1], 5)
+			    || !strncasecmp("-rules", parv[1], 6))
 			{
 				if (cptr != sptr)
 					sendto_umode_global(UMODE_OPER, "Remotely rehasing all MOTDs and RULES on request of %s", sptr->name);

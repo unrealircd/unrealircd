@@ -41,7 +41,7 @@ MessageTagHandler *MessageTagHandlerFind(const char *token)
 
 	for (m = mtaghandlers; m; m = m->next)
 	{
-		if (!stricmp(token, m->name))
+		if (!strcasecmp(token, m->name))
 			return m;
 	}
 	return NULL;

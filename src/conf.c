@@ -2002,7 +2002,7 @@ int	load_conf(char *filename, const char *original_path)
 			continue;
 		}
 #ifdef _WIN32
-		if (!stricmp(filename, inc->file))
+		if (!strcasecmp(filename, inc->file))
 		{
 			counter ++;
 			continue;
@@ -2750,7 +2750,7 @@ ConfigItem_alias *Find_alias(char *name)
 
 	for (e = conf_alias; e; e = e->next)
 	{
-		if (!stricmp(e->alias, name))
+		if (!strcasecmp(e->alias, name))
 			return e;
 	}
 	return NULL;
@@ -2865,7 +2865,7 @@ ConfigItem_ulines *Find_uline(char *host)
 
 	for(ulines = conf_ulines; ulines; ulines = ulines->next)
 	{
-		if (!stricmp(host, ulines->servername))
+		if (!strcasecmp(host, ulines->servername))
 			return ulines;
 	}
 	return NULL;
@@ -6740,15 +6740,15 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 					name++;
 				}
 
-				if (!stricmp(name, "All"))
+				if (!strcasecmp(name, "All"))
 					option = TLS_PROTOCOL_ALL;
-				else if (!stricmp(name, "TLSv1"))
+				else if (!strcasecmp(name, "TLSv1"))
 					option = TLS_PROTOCOL_TLSV1;
-				else if (!stricmp(name, "TLSv1.1"))
+				else if (!strcasecmp(name, "TLSv1.1"))
 					option = TLS_PROTOCOL_TLSV1_1;
-				else if (!stricmp(name, "TLSv1.2"))
+				else if (!strcasecmp(name, "TLSv1.2"))
 					option = TLS_PROTOCOL_TLSV1_2;
-				else if (!stricmp(name, "TLSv1.3"))
+				else if (!strcasecmp(name, "TLSv1.3"))
 					option = TLS_PROTOCOL_TLSV1_3;
 				else
 				{
@@ -6947,15 +6947,15 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 					name++;
 				}
 
-				if (!stricmp(name, "All"))
+				if (!strcasecmp(name, "All"))
 					option = TLS_PROTOCOL_ALL;
-				else if (!stricmp(name, "TLSv1"))
+				else if (!strcasecmp(name, "TLSv1"))
 					option = TLS_PROTOCOL_TLSV1;
-				else if (!stricmp(name, "TLSv1.1"))
+				else if (!strcasecmp(name, "TLSv1.1"))
 					option = TLS_PROTOCOL_TLSV1_1;
-				else if (!stricmp(name, "TLSv1.2"))
+				else if (!strcasecmp(name, "TLSv1.2"))
 					option = TLS_PROTOCOL_TLSV1_2;
-				else if (!stricmp(name, "TLSv1.3"))
+				else if (!strcasecmp(name, "TLSv1.3"))
 					option = TLS_PROTOCOL_TLSV1_3;
 
 				if (option)
@@ -7090,11 +7090,11 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.uhnames = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
-			if (!stricmp(cep->ce_vardata, "always"))
+			if (!strcasecmp(cep->ce_vardata, "always"))
 				tempiConf.userhost_allowed = UHALLOW_ALWAYS;
-			else if (!stricmp(cep->ce_vardata, "never"))
+			else if (!strcasecmp(cep->ce_vardata, "never"))
 				tempiConf.userhost_allowed = UHALLOW_NEVER;
-			else if (!stricmp(cep->ce_vardata, "not-on-channels"))
+			else if (!strcasecmp(cep->ce_vardata, "not-on-channels"))
 				tempiConf.userhost_allowed = UHALLOW_NOCHANS;
 			else
 				tempiConf.userhost_allowed = UHALLOW_REJOIN;
@@ -7743,10 +7743,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, allow_userhost_change, "allow-userhost-change");
-			if (stricmp(cep->ce_vardata, "always") &&
-			    stricmp(cep->ce_vardata, "never") &&
-			    stricmp(cep->ce_vardata, "not-on-channels") &&
-			    stricmp(cep->ce_vardata, "force-rejoin"))
+			if (strcasecmp(cep->ce_vardata, "always") &&
+			    strcasecmp(cep->ce_vardata, "never") &&
+			    strcasecmp(cep->ce_vardata, "not-on-channels") &&
+			    strcasecmp(cep->ce_vardata, "force-rejoin"))
 			{
 				config_error("%s:%i: set::allow-userhost-change is invalid",
 					cep->ce_fileptr->cf_filename,
@@ -8809,7 +8809,7 @@ int is_blacklisted_module(char *name)
 	ConfigItem_blacklist_module *m;
 
 	for (m = conf_blacklist_module; m; m = m->next)
-		if (!stricmp(m->name, name) || !stricmp(m->name, path))
+		if (!strcasecmp(m->name, name) || !strcasecmp(m->name, path))
 			return 1;
 
 	return 0;
@@ -9765,7 +9765,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 			continue;
 		if (inc->flag.type & INCLUDE_NOTLOADED)
 			continue;
-		if (stricmp(url, inc->url))
+		if (strcasecmp(url, inc->url))
 			continue;
 
 		inc->flag.type &= ~INCLUDE_DLQUEUED;
@@ -9961,7 +9961,7 @@ char *find_remote_include(char *url, char **errorbuf)
 			continue;
 		if (!(inc->flag.type & INCLUDE_REMOTE))
 			continue;
-		if (!stricmp(url, inc->url))
+		if (!strcasecmp(url, inc->url))
 		{
 			*errorbuf = inc->errorbuf;
 			return inc->file;
@@ -9980,7 +9980,7 @@ char *find_loaded_remote_include(char *url)
 			continue;
 		if (!(inc->flag.type & INCLUDE_REMOTE))
 			continue;
-		if (!stricmp(url, inc->url))
+		if (!strcasecmp(url, inc->url))
 			return inc->file;
 	}
 

@@ -56,13 +56,13 @@ CMD_FUNC(m_tsctl)
 		return 0;
 	}
 
-	if (MyClient(sptr) && (!parv[1] || stricmp(parv[1], "alltime")))
+	if (MyClient(sptr) && (!parv[1] || strcasecmp(parv[1], "alltime")))
 	{
 		sendnotice(sptr, "/TSCTL now shows the time on all servers. You can now longer MODIFY the time.");
 		parv[1] = "alltime";
 	}
 
-	if (parv[1] && !stricmp(parv[1], "alltime"))
+	if (parv[1] && !strcasecmp(parv[1], "alltime"))
 	{
 		sendnotice(sptr, "*** Server=%s TStime=%lld",
 			me.name, (long long)TStime());

@@ -74,7 +74,7 @@ ConfigItem_help *Find_Help(char *command)
 	{
 		if (help->command == NULL)
 			continue;
-		else if (!stricmp(command,help->command))
+		else if (!strcasecmp(command,help->command))
 			return help;
 	}
 	return NULL;

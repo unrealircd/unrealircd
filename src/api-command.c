@@ -25,7 +25,7 @@ int CommandExists(char *name)
 	
 	for (p = CommandHash[toupper(*name)]; p; p = p->next)
 	{
-		if (!stricmp(p->cmd, name))
+		if (!strcasecmp(p->cmd, name))
 			return 1;
 	}
 

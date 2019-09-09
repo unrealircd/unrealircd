@@ -285,16 +285,9 @@
  #define LOGFILE LPATH
 #else
  #define Debug(x) ;
- #if VMS
-  #define LOGFILE "NLA0:"
- #else
-  #define LOGFILE "/dev/null"
- #endif
+ #define LOGFILE "/dev/null"
 #endif
 
-// FIXME: get rid of this
-# define stricmp strcasecmp
-# define strnicmp strncasecmp
 #if defined(DEFAULT_RECVQ)
 #    if (DEFAULT_RECVQ < 512)
      error DEFAULT_RECVQ needs redefining.

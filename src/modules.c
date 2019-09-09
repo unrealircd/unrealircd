@@ -846,7 +846,7 @@ CMD_FUNC(m_module)
 Hooktype *HooktypeFind(char *string) {
 	Hooktype *hooktype;
 	for (hooktype = Hooktypes; hooktype->string ;hooktype++) {
-		if (!stricmp(hooktype->string, string))
+		if (!strcasecmp(hooktype->string, string))
 			return hooktype;
 	}
 	return NULL;

@@ -3374,8 +3374,8 @@ aTKline *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softb
 	{
 		if (tkl->type == type)
 		{
-			if (!stricmp(tkl->ptr.serverban->hostmask, hostmask) &&
-			    !stricmp(tkl->ptr.serverban->usermask, usermask))
+			if (!strcasecmp(tkl->ptr.serverban->hostmask, hostmask) &&
+			    !strcasecmp(tkl->ptr.serverban->usermask, usermask))
 			{
 				/* And an extra check for soft/hard ban mismatches.. */
 				if ((tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) == softban)
@@ -3400,8 +3400,8 @@ aTKline *_find_tkl_banexception(int type, char *usermask, char *hostmask, int so
 	{
 		if (tkl->type == type)
 		{
-			if (!stricmp(tkl->ptr.banexception->hostmask, hostmask) &&
-			    !stricmp(tkl->ptr.banexception->usermask, usermask))
+			if (!strcasecmp(tkl->ptr.banexception->hostmask, hostmask) &&
+			    !strcasecmp(tkl->ptr.banexception->usermask, usermask))
 			{
 				/* And an extra check for soft/hard ban mismatches.. */
 				if ((tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT) == softban)
@@ -3423,7 +3423,7 @@ aTKline *_find_tkl_nameban(int type, char *name, int hold)
 
 	for (tkl = tklines[tkl_hash(tpe)]; tkl; tkl = tkl->next)
 	{
-		if ((tkl->type == type) && !stricmp(tkl->ptr.nameban->name, name))
+		if ((tkl->type == type) && !strcasecmp(tkl->ptr.nameban->name, name))
 			return tkl;
 	}
 	return NULL; /* Not found */

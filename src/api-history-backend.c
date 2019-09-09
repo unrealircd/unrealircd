@@ -41,7 +41,7 @@ HistoryBackend *HistoryBackendFind(const char *name)
 
 	for (m = historybackends; m; m = m->next)
 	{
-		if (!stricmp(name, m->name))
+		if (!strcasecmp(name, m->name))
 			return m;
 	}
 	return NULL;
