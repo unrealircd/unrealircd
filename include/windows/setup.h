@@ -39,13 +39,17 @@
 #define NEED_U_INT32_T
 #define PREFIX_AQ
 #define LIST_SHOW_MODES
-#ifndef mode_t
-#define strcasecmp _strcasecmp
-#define strncasecmp _strncasecmp
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 #define HAVE_EXPLICIT_BZERO
 #define explicit_bzero(a,b) SecureZeroMemory(a,b)
 #define HAVE_INET_PTON
 #define HAVE_INET_NTOP
+
+/* mode_t: Needed in s_conf.c for the third argument of open(3p).
+ * Should be an int because of http://msdn.microsoft.com/en-us/library/z0kc8e3z(VS.71).aspx
+ */
+#define mode_t int
 
 /* We don't use any of the wincrypt stuff and this silences
  * a warning emitted by LibreSSL:
@@ -55,14 +59,6 @@
 /* We require Windows 7 or later */
 #define NTDDI_VERSION 0x06010000
 #define _WIN32_WINNT 0x0601
-
-/*
-  Needed in s_conf.c for the third argument of open(3p).
-
-  Should be an int because of http://msdn.microsoft.com/en-us/library/z0kc8e3z(VS.71).aspx
- */
-#define mode_t int
-#endif
 
 /* Generation version number (e.g.: 3 for Unreal3*) */
 #define UNREAL_VERSION_GENERATION 5

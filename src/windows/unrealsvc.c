@@ -17,9 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <windows.h>
-#include <string.h>
-#include <stdio.h>
+#include "unrealircd.h"
 
 typedef BOOL (*UCHANGESERVICECONFIG2)(SC_HANDLE, DWORD, LPVOID);
 HMODULE hAdvapi;
