@@ -88,9 +88,6 @@
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
 
-/* Define to 1 if you have the `strerror' function. */
-#undef HAVE_STRERROR
-
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
@@ -135,9 +132,6 @@
 
 /* Define the location of the modules */
 #undef MODULESDIR
-
-/* Define if you need the strerror function. */
-#undef NEED_STRERROR
 
 /* Set to the nickname history length you want */
 #undef NICKNAMEHISTORYLENGTH

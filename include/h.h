@@ -222,9 +222,7 @@ extern void reset_help();
 extern MODVAR char *debugmode, *configfile, *sbrk0;
 extern char *getfield(char *);
 extern void set_sockhost(aClient *, char *);
-#ifndef _WIN32
-extern char *strerror(int);
-#else
+#ifdef _WIN32
 extern MODFUNC char *sock_strerror(int);
 #endif
 extern int dgets(int, char *, int);

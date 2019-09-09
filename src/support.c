@@ -70,33 +70,6 @@ char *strtoken(char **save, char *str, char *fs)
 	return (tmp);
 }
 
-#ifdef NEED_STRERROR
-/*
-**	strerror - return an appropriate system error string to a given errno
-**
-**		   argv 11/90
-*/
-char *strerror(int err_no)
-{
-	extern char *sys_errlist[];	/* Sigh... hopefully on all systems */
-	extern int sys_nerr;
-
-	static char buff[40];
-	char *errp;
-
-	errp = (err_no > sys_nerr ? NULL : sys_errlist[err_no]);
-
-	if (errp == NULL)
-	{
-		errp = buff;
-		(void)ircsnprintf(buff, sizeof(buff), "Unknown Error %d", err_no);
-
-	}
-	return errp;
-}
-
-#endif /* NEED_STRERROR */
-
 /** inetntop() returns the : notation of a given IPv6 internet number.
  * It will always return the uncompressed form (without ::).
  */
