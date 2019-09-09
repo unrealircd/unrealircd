@@ -359,7 +359,6 @@ AC_CHECK_FUNCS(strtok,,AC_DEFINE([NEED_STRTOK], [], [Define if you need the strt
 AC_CHECK_FUNCS(strerror,,AC_DEFINE([NEED_STRERROR], [], [Define if you need the strerror function.]))
 AC_CHECK_FUNCS(strtoul,,STRTOUL="strtoul.o")
 AC_CHECK_FUNCS(explicit_bzero,AC_DEFINE([HAVE_EXPLICIT_BZERO], [], [Define if you have explicit_bzero]))
-AC_CHECK_FUNCS(strcasecmp,AC_DEFINE([GOT_STRCASECMP], [], [Define if you have strcasecmp]))
 AC_CHECK_FUNCS(syslog,AC_DEFINE([HAVE_SYSLOG], [], [Define if you have syslog]))
 AC_SUBST(STRTOUL)
 AC_SUBST(CRYPTOLIB)

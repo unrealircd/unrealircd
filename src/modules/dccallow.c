@@ -133,7 +133,7 @@ CMD_FUNC(m_dccallow)
 			}
 			del_dccallow(sptr, acptr);
 		} else
-		if (!didlist && !myncmp(s, "list", 4))
+		if (!didlist && !strncasecmp(s, "list", 4))
 		{
 			didanything = didlist = 1;
 			sendnumericfmt(sptr, RPL_DCCINFO, "The following users are on your dcc allow list:");
@@ -147,7 +147,7 @@ CMD_FUNC(m_dccallow)
 			}
 			sendnumeric(sptr, RPL_ENDOFDCCLIST, s);
 		} else
-		if (!didhelp && !myncmp(s, "help", 4))
+		if (!didhelp && !strncasecmp(s, "help", 4))
 		{
 			didanything = didhelp = 1;
 			for(ptr = dcc_help; *ptr; ptr++)

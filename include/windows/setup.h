@@ -41,7 +41,6 @@
 #define PREFIX_AQ
 #define LIST_SHOW_MODES
 #ifndef mode_t
-#define GOT_STRCASECMP
 #define strcasecmp _strcasecmp
 #define strncasecmp _strncasecmp
 #define HAVE_EXPLICIT_BZERO

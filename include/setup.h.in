@@ -25,9 +25,6 @@
 /* Define if you have the <glob.h> header file. */
 #undef GLOBH
 
-/* Define if you have strcasecmp */
-#undef GOT_STRCASECMP
-
 /* Define if ssl library has SSL_CTX_set1_curves_list */
 #undef HAS_SSL_CTX_SET1_CURVES_LIST
 
@@ -96,9 +93,6 @@
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
-
-/* Define to 1 if you have the `strcasecmp' function. */
-#undef HAVE_STRCASECMP
 
 /* Define to 1 if you have the `strerror' function. */
 #undef HAVE_STRERROR

@@ -65,10 +65,6 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #endif
-#ifndef GOT_STRCASECMP
-#define	strcasecmp	mycmp
-#define	strncasecmp	myncmp
-#endif
 
 #ifndef _WIN32
 #include <sys/time.h>

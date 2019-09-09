@@ -49,7 +49,6 @@ ID_Copyright("(C) Tony Vincell");
 #include <stdio.h>
 #include <string.h>
 #define BadPtr(x) (!(x) || (*(x) == '\0'))
-#define mycmp strcasecmp
 #endif
 
 #if defined(CR_DEBUG) || defined(CR_CHKCONF)
@@ -562,7 +561,7 @@ int  crule_parsefunction(crule_treeptr *funcrootp, int *next_tokp, char **rulept
 	{
 		for (funcnum = 0;; funcnum++)
 		{
-			if (mycmp(crule_funclist[funcnum].name, funcname) == 0)
+			if (strcasecmp(crule_funclist[funcnum].name, funcname) == 0)
 				break;
 			if (crule_funclist[funcnum].name[0] == '\0')
 				return (CR_UNKNWFUNC);

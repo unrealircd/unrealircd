@@ -581,9 +581,9 @@ int size_string, ret;
 
 	ctcp = &text[1];
 	/* Most likely a DCC send .. */
-	if (!myncmp(ctcp, "DCC SEND ", 9))
+	if (!strncasecmp(ctcp, "DCC SEND ", 9))
 		ctcp = text + 10;
-	else if (!myncmp(ctcp, "DCC RESUME ", 11))
+	else if (!strncasecmp(ctcp, "DCC RESUME ", 11))
 		ctcp = text + 12;
 	else
 		return 1; /* something else, allow */
@@ -660,7 +660,7 @@ int size_string;
 
 	ctcp = &text[1];
 	/* Most likely a DCC send .. */
-	if (!myncmp(ctcp, "DCC SEND ", 9))
+	if (!strncasecmp(ctcp, "DCC SEND ", 9))
 		ctcp = text + 10;
 	else
 		return 1; /* something else, allow */

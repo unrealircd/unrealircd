@@ -203,10 +203,12 @@ char *collapse(char *pattern)
 }
 
 
-/*
- *  Case insensitive comparison of two NULL terminated strings.
- *
- *	returns	 0, if s1 equal to s2
+/* Case insensitive comparison of two NULL terminated strings,
+ * using the "IRC nick comparisson" rules. Or, well, partially
+ * anyway.
+ * Should be used for NICK-related comparissons. And probably
+ * not even then, since this does not deal with multibyte.
+ * @returns 	 0, if s1 equal to s2
  *		<0, if s1 lexicographically less than s2
  *		>0, if s1 lexicographically greater than s2
  */
@@ -225,27 +227,6 @@ int  smycmp(const char *s1, const char *s2)
 			return 0;
 		str1++;
 		str2++;
-	}
-	return (res);
-}
-
-
-int  myncmp(const char *str1, const char *str2, int n)
-{
-	u_char *s1;
-	u_char *s2;
-	int  res;
-
-	s1 = (u_char *)str1;
-	s2 = (u_char *)str2;
-
-	while ((res = toupper(*s1) - toupper(*s2)) == 0)
-	{
-		s1++;
-		s2++;
-		n--;
-		if (n == 0 || (*s1 == '\0' && *s2 == '\0'))
-			return 0;
 	}
 	return (res);
 }
