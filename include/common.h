@@ -110,16 +110,6 @@ extern char *strtok2(char *, char *);
 #ifdef NEED_STRTOKEN
 extern char *strtoken(char **, char *, char *);
 #endif
-#ifdef NEED_INET_ADDR
-extern unsigned long inet_addr(char *);
-#endif
-
-#if defined(NEED_INET_NTOA) || defined(NEED_INET_NETOF) && !defined(_WIN32)
-#include <netinet/in.h>
-#endif
-#ifdef NEED_INET_NTOA
-extern char *inet_ntoa(struct in_addr);
-#endif
 
 #ifndef HAVE_INET_NTOP
 const char *inet_ntop(int, const void *, char *, size_t);

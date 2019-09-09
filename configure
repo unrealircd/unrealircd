@@ -5995,36 +5995,6 @@ $as_echo "#define GOT_STRCASECMP /**/" >>confdefs.h
 fi
 done
 
-for ac_func in inet_addr
-do :
-  ac_fn_c_check_func "$LINENO" "inet_addr" "ac_cv_func_inet_addr"
-if test "x$ac_cv_func_inet_addr" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_INET_ADDR 1
-_ACEOF
-
-else
-
-$as_echo "#define NEED_INET_ADDR /**/" >>confdefs.h
-
-fi
-done
-
-for ac_func in inet_ntoa
-do :
-  ac_fn_c_check_func "$LINENO" "inet_ntoa" "ac_cv_func_inet_ntoa"
-if test "x$ac_cv_func_inet_ntoa" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_INET_NTOA 1
-_ACEOF
-
-else
-
-$as_echo "#define NEED_INET_NTOA /**/" >>confdefs.h
-
-fi
-done
-
 for ac_func in syslog
 do :
   ac_fn_c_check_func "$LINENO" "syslog" "ac_cv_func_syslog"

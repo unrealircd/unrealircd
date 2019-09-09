@@ -27,9 +27,6 @@
 #define NOINDEX
 #define NEED_STRTOKEN
 #undef  NEED_STRTOK
-#undef  NEED_INET_ADDR
-#undef  NEED_INET_NTOA
-#define NEED_INET_NETOF
 #undef  LRAND48
 #define MALLOCH <malloc.h>
 #undef  NBLOCK_POSIX
