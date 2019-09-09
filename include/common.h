@@ -136,19 +136,10 @@ extern char *strtoken(char **, char *, char *);
 #endif
 
 extern MODVAR u_char tolowertab[], touppertab[];
-
-#if defined(NICK_GB2312) || defined(NICK_GBK) || defined(NICK_GBK_JAP)
-#define USE_LOCALE
-#include <ctype.h>
-#endif
-
-#ifndef USE_LOCALE
 #undef tolower
 #define tolower(c) (tolowertab[(u_char)(c)])
-
 #undef toupper
 #define toupper(c) (touppertab[(u_char)(c)])
-
 #undef isalpha
 #undef isdigit
 #undef isxdigit
@@ -161,7 +152,6 @@ extern MODVAR u_char tolowertab[], touppertab[];
 #undef isupper
 #undef isspace
 #undef iscntrl
-#endif
 extern MODVAR unsigned char char_atribs[];
 
 #define PRINT 1
@@ -181,7 +171,6 @@ extern MODVAR unsigned char char_atribs[];
 #endif
 
 #define isallowed(c) (char_atribs[(u_char)(c)]&ALLOW)
-#ifndef USE_LOCALE
 #define	iscntrl(c) (char_atribs[(u_char)(c)]&CNTRL)
 #define isalpha(c) (char_atribs[(u_char)(c)]&ALPHA)
 #define isspace(c) (char_atribs[(u_char)(c)]&SPACE)
@@ -195,7 +184,6 @@ extern MODVAR unsigned char char_atribs[];
 #define isascii(c) ((u_char)(c) >= 0 && (u_char)(c) <= 0x7f)
 #define isgraph(c) ((char_atribs[(u_char)(c)]&PRINT) && ((u_char)(c) != 0x32))
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
-#endif
 #define iswseperator(c) (!isalnum(c) && !((u_char)c >= 128))
 
 #ifndef MALLOCD

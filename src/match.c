@@ -31,17 +31,9 @@ ID_Copyright("(C) 1990 Jarkko Oikarinen");
  *		1, if no match
  */
 
-#ifndef USE_LOCALE
 u_char touppertab[], tolowertab[];
 #define tolowertab2 tolowertab
-#endif
-
-#ifndef USE_LOCALE
-#define lc(x) tolowertab2[x]	/* use mylowertab, because registers are FASTER */
-#else				/* maybe in the old 4mb hard drive days but not anymore -- codemastr */
-#define lc(x) tolower(x)
-#endif
-
+#define lc(x) tolowertab2[x]
 
 /* Match routine for special cases where escaping is needed in a normal fashion.
  * Checks a string ('name') against a globbing(+more) pattern ('mask').
@@ -258,7 +250,6 @@ int  myncmp(const char *str1, const char *str2, int n)
 	return (res);
 }
 
-#ifndef USE_LOCALE
 u_char tolowertab[] = {
 	0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa,
 	0xb, 0xc, 0xd, 0xe, 0xf, 0x10, 0x11, 0x12, 0x13, 0x14,
@@ -329,7 +320,6 @@ u_char touppertab[] = {
 	0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff
 };
 
-#endif
 u_char char_atribs[] = {
 /* 0-7 */ CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL,
 /* 8-12 */ CNTRL, CNTRL | SPACE, CNTRL | SPACE, CNTRL | SPACE,

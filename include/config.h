@@ -68,11 +68,6 @@
 # define MODULE_SUFFIX	".dll"
 #endif
 
-/* If you want to support chinese and/or japanese nicks */
-#undef NICK_GB2312
-#undef NICK_GBK
-#undef NICK_GBK_JAP
-
 /* Permit remote /rehash */
 #define REMOTE_REHASH
 
