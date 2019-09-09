@@ -103,9 +103,6 @@
 /* Define to 1 if you have the `strlncat' function. */
 #undef HAVE_STRLNCAT
 
-/* Define to 1 if you have the `strtoul' function. */
-#undef HAVE_STRTOUL
-
 /* Define to 1 if you have the `syslog' function. */
 #undef HAVE_SYSLOG
 

@@ -91,12 +91,6 @@ IRCDMODE = 711
 
 URL=@URL@
 
-# [CHANGEME]
-# If you get a link-time error dealing with strtoul, comment out
-# this line.
-# STRTOUL=	strtoul.o
-STRTOUL=@STRTOUL@
-
 # Where is your openssl binary
 OPENSSLPATH=@OPENSSLPATH@
 
@@ -119,7 +113,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'RES=${RES}' 'BINDIR=${BINDIR}' 'INSTALL=${INSTALL}' \
 		'INCLUDEDIR=${INCLUDEDIR}' \
 		'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
-		'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
+		'SHELL=${SHELL}' \
 		'CRYPTOLIB=${CRYPTOLIB}' \
 		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' \
 		'URL=${URL}'

@@ -662,7 +662,6 @@ BINDIR
 DYNAMIC_LDFLAGS
 MODULEFLAGS
 CRYPTOLIB
-STRTOUL
 EGREP
 GREP
 CPP
@@ -5731,19 +5730,6 @@ fi
 done
 
 
-for ac_func in strtoul
-do :
-  ac_fn_c_check_func "$LINENO" "strtoul" "ac_cv_func_strtoul"
-if test "x$ac_cv_func_strtoul" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_STRTOUL 1
-_ACEOF
-
-else
-  STRTOUL="strtoul.o"
-fi
-done
-
 for ac_func in explicit_bzero
 do :
   ac_fn_c_check_func "$LINENO" "explicit_bzero" "ac_cv_func_explicit_bzero"
@@ -5769,7 +5755,6 @@ $as_echo "#define HAVE_SYSLOG /**/" >>confdefs.h
 
 fi
 done
-
 
 
 
