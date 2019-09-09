@@ -26,7 +26,6 @@
 #define NOINDEX
 #define NEED_STRTOKEN
 #undef  NEED_STRTOK
-#define MALLOCH <malloc.h>
 #undef  TIMES_2
 #undef  GETRUSAGE_2
 #define CONFDIR "conf"

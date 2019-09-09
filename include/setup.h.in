@@ -142,9 +142,6 @@
 /* Define the location of the log files */
 #undef LOGDIR
 
-/* Define to <malloc.h> you need malloc.h. */
-#undef MALLOCH
-
 /* Set to the maximum number of connections you want */
 #undef MAXCONNECTIONS_REQUEST
 
@@ -208,9 +205,6 @@
 
 /* Define the directory where the unrealircd start stop scripts is located */
 #undef SCRIPTDIR
-
-/* Define to 1 if the `setpgrp' function takes no argument. */
-#undef SETPGRP_VOID
 
 /* Link... statically(?) (defining this macro will probably cause the build
    tofail) */

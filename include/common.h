@@ -88,15 +88,6 @@ typedef int bool;
 #define UNSURE (2)
 #endif
 
-#if 0
-#ifndef	MALLOCH
-char *malloc(), *calloc();
-void free();
-#else
-#include MALLOCH
-#endif
-#endif
-
 #define mycmp(a,b) \
  ( (toupper(a[0])!=toupper(b[0])) || smycmp((a)+1,(b)+1) )
 extern int smycmp(const char *, const char *);

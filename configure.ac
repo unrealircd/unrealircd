@@ -313,8 +313,6 @@ fi
 
 AC_CHECK_HEADER(sys/syslog.h,
 	AC_DEFINE([SYSSYSLOGH], [], [Define if you have the <sys/syslog.h> header file.]))
-AC_CHECK_HEADER(malloc.h,
-	AC_DEFINE([MALLOCH], [<malloc.h>], [Define to <malloc.h> you need malloc.h.]))
 AC_CHECK_HEADER(sys/rusage.h,
 	AC_DEFINE([RUSAGEH], [], [Define if you have the <sys/rusage.h> header file.]))
 AC_CHECK_HEADER(glob.h,
@@ -322,8 +320,6 @@ AC_CHECK_HEADER(glob.h,
 AC_CHECK_HEADERS([stdint.h inttypes.h])
 
 dnl Checks for library functions.
-AC_FUNC_SETPGRP
-AC_FUNC_SETVBUF_REVERSED
 AC_CHECK_FUNCS(strlcpy,
 	AC_DEFINE([HAVE_STRLCPY], [], [Define if you have strlcpy. Otherwise, an internal implementation will be used!]))
 AC_CHECK_FUNCS(strlcat,
