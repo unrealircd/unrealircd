@@ -95,9 +95,6 @@ extern int smycmp(const char *, const char *);
 extern int myncmp(const char *, const char *, int);
 #endif
 
-#ifdef NEED_STRTOK
-extern char *strtok2(char *, char *);
-#endif
 #ifdef NEED_STRTOKEN
 extern char *strtoken(char **, char *, char *);
 #endif

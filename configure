@@ -5746,21 +5746,6 @@ $as_echo "#define NEED_STRTOKEN /**/" >>confdefs.h
 fi
 done
 
-for ac_func in strtok
-do :
-  ac_fn_c_check_func "$LINENO" "strtok" "ac_cv_func_strtok"
-if test "x$ac_cv_func_strtok" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_STRTOK 1
-_ACEOF
-
-else
-
-$as_echo "#define NEED_STRTOK /**/" >>confdefs.h
-
-fi
-done
-
 for ac_func in strerror
 do :
   ac_fn_c_check_func "$LINENO" "strerror" "ac_cv_func_strerror"

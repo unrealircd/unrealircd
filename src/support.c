@@ -73,20 +73,6 @@ char *strtoken(char **save, char *str, char *fs)
 }
 #endif /* NEED_STRTOKEN */
 
-#ifdef	NEED_STRTOK
-/*
-** NOT encouraged to use!
-*/
-
-char *strtok2(char *str, char *fs)
-{
-	static char *pos;
-
-	return strtoken(&pos, str, fs);
-}
-
-#endif /* NEED_STRTOK */
-
 #ifdef NEED_STRERROR
 /*
 **	strerror - return an appropriate system error string to a given errno

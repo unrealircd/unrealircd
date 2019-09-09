@@ -25,7 +25,6 @@
 #undef  SYSSYSLOGH
 #define NOINDEX
 #define NEED_STRTOKEN
-#undef  NEED_STRTOK
 #undef  TIMES_2
 #undef  GETRUSAGE_2
 #define CONFDIR "conf"
