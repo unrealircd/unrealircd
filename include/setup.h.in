@@ -3,9 +3,6 @@
 /* Define the directory where the unrealircd binary is located */
 #undef BINDIR
 
-/* Define if you have BSD signals */
-#undef BSD_RELIABLE_SIGNALS
-
 /* Define the location of the cached remote include files */
 #undef CACHEDIR
 
@@ -202,9 +199,6 @@
 /* Define the path of the pid file */
 #undef PIDFILE
 
-/* Define if you have POSIX signals */
-#undef POSIX_SIGNALS
-
 /* Define if you want +a/+q prefixes */
 #undef PREFIX_AQ
 
@@ -233,9 +227,6 @@
 
 /* Define if you have the <sys/syslog.h> header file. */
 #undef SYSSYSLOGH
-
-/* Define if you have SYSV signals */
-#undef SYSV_UNRELIABLE_SIGNALS
 
 /* Define if you have times */
 #undef TIMES_2

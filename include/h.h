@@ -551,7 +551,6 @@ extern void win_error();
 extern void win_log(FORMAT_STRING(const char *format), ...);
 extern int GetOSName(char *pszOS);
 extern void CleanUp(void);
-extern void CleanUpSegv(int sig);
 extern int CountRTFSize(unsigned char *buffer);
 extern void IRCToRTF(unsigned char *buffer, unsigned char *string);
 #endif

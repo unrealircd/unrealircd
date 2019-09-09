@@ -80,31 +80,6 @@ char *sbrk0;			/* initial sbrk(0) */
 static int dorehash = 0, dorestart = 0, doreloadcert = 0;
 MODVAR int  booted = FALSE;
 
-#if	defined(PROFIL) && !defined(_WIN32)
-extern etext();
-
-void s_monitor(void)
-{
-	static int mon = 0;
-#ifdef	POSIX_SIGNALS
-	struct sigaction act;
-#endif
-
-	(void)moncontrol(mon);
-	mon = 1 - mon;
-#ifdef	POSIX_SIGNALS
-	act.sa_handler = s_rehash;
-	act.sa_flags = 0;
-	(void)sigemptyset(&act.sa_mask);
-	(void)sigaddset(&act.sa_mask, SIGUSR1);
-	(void)sigaction(SIGUSR1, &act, NULL);
-#else
-	(void)signal(SIGUSR1, s_monitor);
-#endif
-}
-
-#endif
-
 void s_die()
 {
 #ifdef _WIN32
@@ -133,45 +108,27 @@ void s_die()
 
 #ifndef _WIN32
 static void s_rehash()
-#else
-void s_rehash()
-#endif
 {
-#ifdef	POSIX_SIGNALS
 	struct sigaction act;
-#endif
 	dorehash = 1;
-#ifdef	POSIX_SIGNALS
 	act.sa_handler = s_rehash;
 	act.sa_flags = 0;
 	(void)sigemptyset(&act.sa_mask);
 	(void)sigaddset(&act.sa_mask, SIGHUP);
 	(void)sigaction(SIGHUP, &act, NULL);
-#else
-# ifndef _WIN32
-	(void)signal(SIGHUP, s_rehash);	/* sysV -argv */
-# endif
-#endif
 }
 
-#ifndef _WIN32
 static void s_reloadcert()
 {
-#ifdef	POSIX_SIGNALS
 	struct sigaction act;
-#endif
 	doreloadcert = 1;
-#ifdef	POSIX_SIGNALS
 	act.sa_handler = s_reloadcert;
 	act.sa_flags = 0;
 	(void)sigemptyset(&act.sa_mask);
 	(void)sigaddset(&act.sa_mask, SIGUSR1);
 	(void)sigaction(SIGUSR1, &act, NULL);
-#else
-	(void)signal(SIGUSR1, s_reloadcert);	/* sysV -argv */
-#endif
 }
-#endif
+#endif // #ifndef _WIN32
 
 void restart(char *mesg)
 {
@@ -197,38 +154,26 @@ void s_restart()
 
 
 #ifndef _WIN32
-void dummy()
+/** Signal handler for signals which we ignore,
+ * like SIGPIPE ("Broken pipe") and SIGWINCH (terminal window changed) etc.
+ */
+void ignore_this_signal()
 {
-#ifndef HAVE_RELIABLE_SIGNALS
-	(void)signal(SIGALRM, dummy);
-	(void)signal(SIGPIPE, dummy);
-#ifndef HPUX			/* Only 9k/800 series require this, but don't know how to.. */
-# ifdef SIGWINCH
-	(void)signal(SIGWINCH, dummy);
-# endif
-#endif
-#else
-# ifdef POSIX_SIGNALS
 	struct sigaction act;
 
-	act.sa_handler = dummy;
+	act.sa_handler = ignore_this_signal;
 	act.sa_flags = 0;
 	(void)sigemptyset(&act.sa_mask);
 	(void)sigaddset(&act.sa_mask, SIGALRM);
 	(void)sigaddset(&act.sa_mask, SIGPIPE);
-#  ifdef SIGWINCH
-	(void)sigaddset(&act.sa_mask, SIGWINCH);
-#  endif
 	(void)sigaction(SIGALRM, &act, (struct sigaction *)NULL);
 	(void)sigaction(SIGPIPE, &act, (struct sigaction *)NULL);
-#  ifdef SIGWINCH
+#ifdef SIGWINCH
+	(void)sigaddset(&act.sa_mask, SIGWINCH);
 	(void)sigaction(SIGWINCH, &act, (struct sigaction *)NULL);
-#  endif
-# endif
 #endif
 }
-
-#endif				/* _WIN32 */
+#endif /* #ifndef _WIN32 */
 
 
 void server_reboot(char *mesg)
@@ -963,11 +908,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 			"\n");
 		exit(1);
 	}
-# ifdef	PROFIL
-	(void)monstartup(0, etext);
-	(void)moncontrol(1);
-	(void)signal(SIGUSR1, s_monitor);
-# endif
 #endif
 #ifndef _WIN32
 	myargv = argv;
@@ -1528,19 +1468,18 @@ static void open_debugfile(void)
 static void setup_signals()
 {
 #ifndef _WIN32
-#ifdef	POSIX_SIGNALS
 	struct sigaction act;
 	act.sa_handler = SIG_IGN;
 	act.sa_flags = 0;
 	(void)sigemptyset(&act.sa_mask);
 	(void)sigaddset(&act.sa_mask, SIGPIPE);
 	(void)sigaddset(&act.sa_mask, SIGALRM);
-# ifdef	SIGWINCH
+#ifdef SIGWINCH
 	(void)sigaddset(&act.sa_mask, SIGWINCH);
 	(void)sigaction(SIGWINCH, &act, NULL);
-# endif
+#endif
 	(void)sigaction(SIGPIPE, &act, NULL);
-	act.sa_handler = dummy;
+	act.sa_handler = ignore_this_signal;
 	(void)sigaction(SIGALRM, &act, NULL);
 	act.sa_handler = s_rehash;
 	(void)sigemptyset(&act.sa_mask);
@@ -1556,33 +1495,5 @@ static void setup_signals()
 	(void)sigemptyset(&act.sa_mask);
 	(void)sigaddset(&act.sa_mask, SIGUSR1);
 	(void)sigaction(SIGUSR1, &act, NULL);
-#else
-# ifndef	HAVE_RELIABLE_SIGNALS
-	(void)signal(SIGPIPE, dummy);
-#  ifdef	SIGWINCH
-	(void)signal(SIGWINCH, dummy);
-#  endif
-# else
-#  ifdef	SIGWINCH
-	(void)signal(SIGWINCH, SIG_IGN);
-#  endif
-	(void)signal(SIGPIPE, SIG_IGN);
-# endif
-	(void)signal(SIGALRM, dummy);
-	(void)signal(SIGHUP, s_rehash);
-	(void)signal(SIGTERM, s_die);
-	(void)signal(SIGINT, s_restart);
-	(void)signal(SIGUSR1, s_reloadcert);
-#endif
-#ifdef RESTARTING_SYSTEMCALLS
-	/*
-	 * ** At least on Apollo sr10.1 it seems continuing system calls
-	 * ** after signal is the default. The following 'siginterrupt'
-	 * ** should change that default to interrupting calls.
-	 */
-	(void)siginterrupt(SIGALRM, 1);
-#endif
-#else
-	(void)signal(SIGSEGV, CleanUpSegv);
 #endif
 }

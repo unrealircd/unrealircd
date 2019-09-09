@@ -22,15 +22,11 @@
 #ifndef __setup_include__
 #define __setup_include__
 
-#undef  PARAMH
 #undef  SYSSYSLOGH
 #define NOINDEX
 #define NEED_STRTOKEN
 #undef  NEED_STRTOK
-#undef  LRAND48
 #define MALLOCH <malloc.h>
-#undef  NBLOCK_POSIX
-#undef  POSIX_SIGNALS
 #undef  TIMES_2
 #undef  GETRUSAGE_2
 #define CONFDIR "conf"

@@ -78,10 +78,6 @@ void CleanUp(void)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
 }
-void CleanUpSegv(int sig)
-{
-	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
-}
 HWND hStatusWnd;
 HWND hwIRCDWnd=NULL;
 HWND hwTreeView;

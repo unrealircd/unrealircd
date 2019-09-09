@@ -354,40 +354,6 @@ AC_CHECK_FUNCS([setproctitle],
 	]
 )
 
-
-AC_CACHE_CHECK([what type of signals you have], [ac_cv_sigtype], [
-AC_TRY_RUN([
-#include <signal.h>
-int main() {
-sigaction(SIGTERM, (struct sigaction *)0L, (struct sigaction *)0L);
-}
-], ac_cv_sigtype=POSIX, [
-AC_TRY_RUN([
-#include <signal.h>
-int	calls = 0;
-void	handler()
-{
-if (calls)
-return;
-calls++;
-kill(getpid(), SIGTERM);
-sleep(1);
-}
-
-int main() {
-signal(SIGTERM, handler);
-kill(getpid(), SIGTERM);
-exit(0);
-}
-], ac_cv_sigtype=BSD,ac_cv_sigtype=SYSV)])])
-
-if test "$ac_cv_sigtype" = "POSIX"; then
-	AC_DEFINE([POSIX_SIGNALS], [], [Define if you have POSIX signals])
-elif test "$ac_cv_sigtype" = "BSD"; then
-	AC_DEFINE([BSD_RELIABLE_SIGNALS], [], [Define if you have BSD signals])
-else
-	AC_DEFINE([SYSV_UNRELIABLE_SIGNALS], [], [Define if you have SYSV signals])
-fi 
 AC_CHECK_FUNCS(strtoken,,AC_DEFINE([NEED_STRTOKEN], [], [Define if you need the strtoken function.]))
 AC_CHECK_FUNCS(strtok,,AC_DEFINE([NEED_STRTOK], [], [Define if you need the strtok function.]))
 AC_CHECK_FUNCS(strerror,,AC_DEFINE([NEED_STRERROR], [], [Define if you need the strerror function.]))

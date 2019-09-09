@@ -292,33 +292,7 @@
  #endif
 #endif
 
-#ifdef	BSD_RELIABLE_SIGNALS
-# if defined(SYSV_UNRELIABLE_SIGNALS) || defined(POSIX_SIGNALS)
-error You stuffed up config.h signals
-#define use only one.
-# endif
-#define	HAVE_RELIABLE_SIGNALS
-#endif
-#ifdef	SYSV_UNRELIABLE_SIGNALS
-# ifdef	POSIX_SIGNALS
-     error You stuffed up config.h signals
-#define use only one.
-# endif
-#undef	HAVE_RELIABLE_SIGNALS
-#endif
-#ifdef	POSIX_SIGNALS
-#define	HAVE_RELIABLE_SIGNALS
-#endif
-#ifdef HAVECURSES
-# define DOCURSES
-#else
-# undef DOCURSES
-#endif
-#ifdef HAVETERMCAP
-# define DOTERMCAP
-#else
-# undef DOTERMCAP
-#endif
+// FIXME: get rid of this
 # define stricmp strcasecmp
 # define strnicmp strncasecmp
 #if defined(DEFAULT_RECVQ)
