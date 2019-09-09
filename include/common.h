@@ -95,8 +95,10 @@ extern int smycmp(const char *, const char *);
 extern int myncmp(const char *, const char *, int);
 #endif
 
-#ifdef NEED_STRTOKEN
-extern char *strtoken(char **, char *, char *);
+#ifdef _WIN32
+ #define strtoken(x,y,z) strtok_s(y,z,x)
+#else
+ #define strtoken(x,y,z) strtok_r(y,z,x)
 #endif
 
 extern MODVAR int  global_count, max_global_count;
@@ -104,7 +106,6 @@ extern char *myctime(time_t);
 #ifdef _WIN32
 extern int gettimeofday(struct timeval *tp, void *tzp);
 #endif
-extern char *strtoken(char **, char *, char *);
 
 #define PRECISE_CHECK
 

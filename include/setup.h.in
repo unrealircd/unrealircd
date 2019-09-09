@@ -106,9 +106,6 @@
 /* Define to 1 if you have the `strlncat' function. */
 #undef HAVE_STRLNCAT
 
-/* Define to 1 if you have the `strtoken' function. */
-#undef HAVE_STRTOKEN
-
 /* Define to 1 if you have the `strtoul' function. */
 #undef HAVE_STRTOUL
 
@@ -141,9 +138,6 @@
 
 /* Define if you need the strerror function. */
 #undef NEED_STRERROR
-
-/* Define if you need the strtoken function. */
-#undef NEED_STRTOKEN
 
 /* Set to the nickname history length you want */
 #undef NICKNAMEHISTORYLENGTH
