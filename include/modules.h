@@ -32,12 +32,6 @@
  #define irc_dlclose FreeLibrary
  #define irc_dlsym(x,y,z) z = (void *)GetProcAddress(x,y)
  #define irc_dlerror our_dlerror
-#elif defined(HPUX)
- #define MOD_EXTENSION "so"
- #define irc_dlopen(x,y) shl_load(x,y,0L)
- #define irc_dlsym(x,y,z) shl_findsym(x,y,z)
- #define irc_dlclose shl_unload
- #define irc_dlerror() strerror(errno)
 #else
  #define MOD_EXTENSION "so"
  #define irc_dlopen dlopen
@@ -575,8 +569,6 @@ struct _Module
 	ModuleHeader    *header; /* The module's header */
 #ifdef _WIN32
 	HMODULE dll;		/* Return value of LoadLibrary */
-#elif defined(HPUX)
-	shl_t	dll;
 #else
 	void	*dll;		/* Return value of dlopen */
 #endif	

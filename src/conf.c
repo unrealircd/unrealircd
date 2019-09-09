@@ -9858,14 +9858,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 {
 	if (sig == 1)
-	{
 		sendto_ops("Got signal SIGHUP, reloading %s file", configfile);
-#ifdef	ULTRIX
-		if (fork() > 0)
-			exit(0);
-		write_pidfile();
-#endif
-	}
 	loop.ircd_rehashing = 1; /* double checking.. */
 	if (init_conf(configfile, 1) == 0)
 		run_configuration();

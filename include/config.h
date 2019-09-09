@@ -280,35 +280,6 @@
 #define	CONFIGFILE CPATH
 #define	IRCD_PIDFILE PIDFILE
 
-#ifdef	__osf__
-#define	OSF
-/* OSF defines BSD to be its version of BSD */
-#undef BSD
-#include <sys/param.h>
-#ifndef BSD
-#define BSD
-#endif
-#endif
-
-#ifdef	ultrix
-#define	ULTRIX
-#endif
-
-#ifdef	__hpux
-#define	HPUX
-#endif
-
-#ifdef	sgi
-#define	SGI
-#endif
-
-#ifndef KLINE_TEMP
-#define KLINE_PERM 0
-#define KLINE_TEMP 1
-#define KLINE_AKILL 2
-#define KLINE_EXCEPT 3
-#endif
-
 #ifdef DEBUGMODE
  #define Debug(x) debug x
  #define LOGFILE LPATH
@@ -319,16 +290,6 @@
  #else
   #define LOGFILE "/dev/null"
  #endif
-#endif
-
-
-#if defined(mips) || defined(PCS)
-#undef SYSV
-#endif
-
-#ifdef MIPS
-#undef BSD
-#define BSD             1	/* mips only works in bsd43 environment */
 #endif
 
 #ifdef	BSD_RELIABLE_SIGNALS
