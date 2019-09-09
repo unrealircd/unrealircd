@@ -66,6 +66,11 @@ AC_PATH_PROG(GMAKE,gmake)
 AC_PATH_PROG(GUNZIP, gunzip)
 AC_PATH_PROG(PKGCONFIG, pkg-config)
 
+dnl Check for compiler
+AC_PROG_CC_C99
+AS_IF([test "$ac_cv_prog_cc_c99" = "no"],
+	[AC_MSG_ERROR([No C99 compiler was found. Please install gcc or clang and other build tools. Eg, on Debian/Ubuntu you probably want to run the following as root: apt-get install build-essential ])])
+
 dnl Checks for libraries.
 AC_CHECK_LIB(descrypt, crypt,
 	[AC_DEFINE([HAVE_CRYPT], [], [Define if you have crypt])
@@ -317,7 +322,6 @@ AC_CHECK_HEADER(glob.h,
 AC_CHECK_HEADERS([stdint.h inttypes.h])
 
 dnl Checks for library functions.
-AC_PROG_GCC_TRADITIONAL
 AC_FUNC_SETPGRP
 AC_FUNC_SETVBUF_REVERSED
 AC_CHECK_FUNCS(strlcpy,
