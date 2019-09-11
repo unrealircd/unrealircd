@@ -1797,7 +1797,7 @@ int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 				}
 			}
 		}
-		if (!Auth_Check(cptr, aconf->auth, cptr->local->passwd))
+		if (aconf->auth && !Auth_Check(cptr, aconf->auth, cptr->local->passwd))
 		{
 			/* Always do continue if password was wrong. */
 			continue;
