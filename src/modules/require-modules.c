@@ -438,7 +438,6 @@ CMD_FUNC(require_modules)
 		if (!(mod = find_modptr_byname(name, 1)))
 		{
 			/* Since only the server missing the module will report it, we need to broadcast the warning network-wide ;]
-			 * The notice gets sent to snomask +s (/mode nick +s +s), which every oper should have set really
 			 * Obviously we won't send this notice if the module seems to be locally required only
 			 */
 			if (flag == 'G')
