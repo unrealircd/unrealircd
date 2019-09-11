@@ -151,25 +151,25 @@ CMD_FUNC(m_trace)
 		class = acptr->local->class ? acptr->local->class->name : "default";
 		switch (acptr->status)
 		{
-			case STAT_CONNECTING:
+			case CLIENT_STATUS_CONNECTING:
 				sendnumeric(sptr, RPL_TRACECONNECTING, class, name);
 				cnt++;
 				break;
 
-			case STAT_HANDSHAKE:
+			case CLIENT_STATUS_HANDSHAKE:
 				sendnumeric(sptr, RPL_TRACEHANDSHAKE, class, name);
 				cnt++;
 				break;
 
-			case STAT_ME:
+			case CLIENT_STATUS_ME:
 				break;
 
-			case STAT_UNKNOWN:
+			case CLIENT_STATUS_UNKNOWN:
 				sendnumeric(sptr, RPL_TRACEUNKNOWN, class, name);
 				cnt++;
 				break;
 
-			case STAT_CLIENT:
+			case CLIENT_STATUS_CLIENT:
 				/* Only opers see users if there is a wildcard
 				 * but anyone can see all the opers.
 				 */
@@ -190,7 +190,7 @@ CMD_FUNC(m_trace)
 				}
 				break;
 
-			case STAT_SERVER:
+			case CLIENT_STATUS_SERVER:
 				if (acptr->serv->user)
 					sendnumeric(sptr, RPL_TRACESERVER, class, acptr->local->fd >= 0 ? link_s[acptr->local->fd] : -1,
 					    acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name, acptr->serv->by,
@@ -205,17 +205,17 @@ CMD_FUNC(m_trace)
 				cnt++;
 				break;
 
-			case STAT_LOG:
+			case CLIENT_STATUS_LOG:
 				sendnumeric(sptr, RPL_TRACELOG, LOGFILE, acptr->local->port);
 				cnt++;
 				break;
 
-			case STAT_TLS_CONNECT_HANDSHAKE:
+			case CLIENT_STATUS_TLS_CONNECT_HANDSHAKE:
 				sendnumeric(sptr, RPL_TRACENEWTYPE, "TLS-Connect-Handshake", name);
 				cnt++;
 				break;
 
-			case STAT_TLS_ACCEPT_HANDSHAKE:
+			case CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE:
 				sendnumeric(sptr, RPL_TRACENEWTYPE, "TLS-Accept-Handshake", name);
 				cnt++;
 				break;

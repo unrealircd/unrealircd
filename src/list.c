@@ -105,7 +105,7 @@ Client *make_client(Client *from, Client *servr)
 	cptr->user = NULL;
 	cptr->serv = NULL;
 	cptr->srvptr = servr;
-	cptr->status = STAT_UNKNOWN;
+	cptr->status = CLIENT_STATUS_UNKNOWN;
 
 	INIT_LIST_HEAD(&cptr->client_node);
 	INIT_LIST_HEAD(&cptr->client_hash);

@@ -962,7 +962,7 @@ refuse_client:
 	add_client_to_list(acptr);
 
 	ircstats.unknown++;
-	acptr->status = STAT_UNKNOWN;
+	acptr->status = CLIENT_STATUS_UNKNOWN;
 
 	list_add(&acptr->lclient_node, &unknown_list);
 
@@ -1003,7 +1003,7 @@ void	start_of_normal_client_handshake(Client *acptr)
 {
 struct hostent *he;
 
-	acptr->status = STAT_UNKNOWN; /* reset, to be sure (TLS handshake has ended) */
+	acptr->status = CLIENT_STATUS_UNKNOWN; /* reset, to be sure (TLS handshake has ended) */
 
 	RunHook(HOOKTYPE_HANDSHAKE, acptr);
 
@@ -1084,7 +1084,7 @@ static int parse_client_queued(Client *cptr)
 	}
 
 	while (DBufLength(&cptr->local->recvQ) &&
-	    ((cptr->status < STAT_UNKNOWN) || (cptr->local->since - now < 10)))
+	    ((cptr->status < CLIENT_STATUS_UNKNOWN) || (cptr->local->since - now < 10)))
 	{
 		dolen = dbuf_getmsg(&cptr->local->recvQ, buf);
 
@@ -1288,7 +1288,7 @@ void process_clients(void)
 	do {
 		list_for_each_entry(cptr, &unknown_list, lclient_node)
 			if ((cptr->local->fd >= 0) && DBufLength(&cptr->local->recvQ))
-				if ((parse_client_queued(cptr) == FLUSH_BUFFER) || (cptr->status > STAT_UNKNOWN))
+				if ((parse_client_queued(cptr) == FLUSH_BUFFER) || (cptr->status > CLIENT_STATUS_UNKNOWN))
 					break;
 	} while(&cptr->lclient_node != &unknown_list);
 }

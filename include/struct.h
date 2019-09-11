@@ -237,45 +237,47 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
  */
 #define SIPHASH_KEY_LENGTH 16
 
-#define	STAT_LOG	-7	/* logfile for -x */
-#define	STAT_CONNECTING	-6
-#define STAT_TLS_STARTTLS_HANDSHAKE -8
-#define STAT_TLS_CONNECT_HANDSHAKE -5
-#define STAT_TLS_ACCEPT_HANDSHAKE -4
-#define	STAT_HANDSHAKE	-3
-#define	STAT_ME		-2
-#define	STAT_UNKNOWN	-1
-#define	STAT_SERVER	0
-#define	STAT_CLIENT	1
+typedef enum ClientStatus {
+	CLIENT_STATUS_LOG			= -7,
+	CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE	= -8,
+	CLIENT_STATUS_CONNECTING		= -6,
+	CLIENT_STATUS_TLS_CONNECT_HANDSHAKE	= -5,
+	CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE	= -4,
+	CLIENT_STATUS_HANDSHAKE			= -3,
+	CLIENT_STATUS_ME			= -2,
+	CLIENT_STATUS_UNKNOWN			= -1,
+	CLIENT_STATUS_SERVER			= 0,
+	CLIENT_STATUS_CLIENT			= 1,
+} ClientStatus;
 
 /*
  * status macros.
  */
-#define	IsRegisteredUser(x)	((x)->status == STAT_CLIENT)
-#define	IsRegistered(x)		((x)->status >= STAT_SERVER)
-#define	IsConnecting(x)		((x)->status == STAT_CONNECTING)
-#define	IsHandshake(x)		((x)->status == STAT_HANDSHAKE)
-#define	IsMe(x)			((x)->status == STAT_ME)
-#define	IsUnknown(x)		(((x)->status == STAT_UNKNOWN) || ((x)->status == STAT_TLS_STARTTLS_HANDSHAKE))
-#define	IsServer(x)		((x)->status == STAT_SERVER)
-#define	IsClient(x)		((x)->status == STAT_CLIENT)
-#define	IsLog(x)		((x)->status == STAT_LOG)
+#define	IsRegisteredUser(x)	((x)->status == CLIENT_STATUS_CLIENT)
+#define	IsRegistered(x)		((x)->status >= CLIENT_STATUS_SERVER)
+#define	IsConnecting(x)		((x)->status == CLIENT_STATUS_CONNECTING)
+#define	IsHandshake(x)		((x)->status == CLIENT_STATUS_HANDSHAKE)
+#define	IsMe(x)			((x)->status == CLIENT_STATUS_ME)
+#define	IsUnknown(x)		(((x)->status == CLIENT_STATUS_UNKNOWN) || ((x)->status == CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE))
+#define	IsServer(x)		((x)->status == CLIENT_STATUS_SERVER)
+#define	IsClient(x)		((x)->status == CLIENT_STATUS_CLIENT)
+#define	IsLog(x)		((x)->status == CLIENT_STATUS_LOG)
 
-#define IsStartTLSHandshake(x)	((x)->status == STAT_TLS_STARTTLS_HANDSHAKE)
-#define IsTLSAcceptHandshake(x)	((x)->status == STAT_TLS_ACCEPT_HANDSHAKE)
-#define IsTLSConnectHandshake(x)	((x)->status == STAT_TLS_CONNECT_HANDSHAKE)
+#define IsStartTLSHandshake(x)	((x)->status == CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE)
+#define IsTLSAcceptHandshake(x)	((x)->status == CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE)
+#define IsTLSConnectHandshake(x)	((x)->status == CLIENT_STATUS_TLS_CONNECT_HANDSHAKE)
 #define IsTLSHandshake(x) (IsTLSAcceptHandshake(x) || IsTLSConnectHandshake(x) | IsStartTLSHandshake(x))
-#define SetStartTLSHandshake(x)	((x)->status = STAT_TLS_STARTTLS_HANDSHAKE)
-#define SetTLSAcceptHandshake(x)	((x)->status = STAT_TLS_ACCEPT_HANDSHAKE)
-#define SetTLSConnectHandshake(x)	((x)->status = STAT_TLS_CONNECT_HANDSHAKE)
+#define SetStartTLSHandshake(x)	((x)->status = CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE)
+#define SetTLSAcceptHandshake(x)	((x)->status = CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE)
+#define SetTLSConnectHandshake(x)	((x)->status = CLIENT_STATUS_TLS_CONNECT_HANDSHAKE)
 
-#define	SetConnecting(x)	((x)->status = STAT_CONNECTING)
-#define	SetHandshake(x)		((x)->status = STAT_HANDSHAKE)
-#define	SetMe(x)		((x)->status = STAT_ME)
-#define	SetUnknown(x)		((x)->status = STAT_UNKNOWN)
-#define	SetServer(x)		((x)->status = STAT_SERVER)
-#define	SetClient(x)		((x)->status = STAT_CLIENT)
-#define	SetLog(x)		((x)->status = STAT_LOG)
+#define	SetConnecting(x)	((x)->status = CLIENT_STATUS_CONNECTING)
+#define	SetHandshake(x)		((x)->status = CLIENT_STATUS_HANDSHAKE)
+#define	SetMe(x)		((x)->status = CLIENT_STATUS_ME)
+#define	SetUnknown(x)		((x)->status = CLIENT_STATUS_UNKNOWN)
+#define	SetServer(x)		((x)->status = CLIENT_STATUS_SERVER)
+#define	SetClient(x)		((x)->status = CLIENT_STATUS_CLIENT)
+#define	SetLog(x)		((x)->status = CLIENT_STATUS_LOG)
 
 #define IsSynched(x)	(x->serv->flags.synced)
 #define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
@@ -915,6 +917,7 @@ struct Client {
 	struct list_head id_hash;		/**< For UID/SID hash table (idTable) */
 	struct list_head lclient_node;		/**< For local client list (lclient_list) */
 	struct list_head special_node;		/**< For special lists (server || unknown || oper) */
+	ClientStatus status;			/**< Client status, one of CLIENT_STATUS_* */
 	LocalClient *local;			/**< Additional information regarding locally connected clients */
 	ClientUser *user;			/**< Additional information, if this client is a user/person */
 	Server *serv;				/**< Additional information, if this is a server */
@@ -930,10 +933,9 @@ struct Client {
 	char info[REALLEN + 1];			/**< Additional client information text. For persons this is gecos/realname */
 	char id[IDLEN + 1];			/**< Unique ID: SID or UID */
 	Client *srvptr;				/**< Server on where this client is connected to (can be &me) */
-	short status;				/**< Client type */
-	ModData moddata[MODDATA_MAX_CLIENT];	/**< Client attached module data, used by the ModData system */
 	int count;				/**< Amount of data in buffer */
 	char *ip;				/**< IP address of user or server (never NULL) */
+	ModData moddata[MODDATA_MAX_CLIENT];	/**< Client attached module data, used by the ModData system */
 };
 
 struct LocalClient {
