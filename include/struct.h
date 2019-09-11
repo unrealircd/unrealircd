@@ -906,30 +906,35 @@ extern void unload_all_unused_moddata(void);
 #define TLSFLAG_NOSTARTTLS	0x8
 #define TLSFLAG_DISABLECLIENTCERT 0x10
 
+/** A client on this or a remote server.
+ * Every client (person, server, unknown,..) has this Client structure associated with it.
+ */
 struct Client {
-	struct list_head client_node; 	/* for global client list (client_list) */
-	struct list_head client_hash;	/* for clientTable */
-	struct list_head id_hash;	/* for idTable */
-	LocalClient *local;	/* for locally connected clients */
-	ClientUser *user;		/* ...defined, if this is a User */
-	Server *serv;		/* ...defined, if this is a server */
-	time_t lastnick;		/* TimeStamp on nick */
-	long flags;		/* client flags */
-	long umodes;		/* client usermodes */
-	Client *direction;		/* == &me, if Local Client, *NEVER* NULL! */
-	int  fd;		/* >= 0, for local clients */
-	unsigned char hopcount;		/* number of servers to this 0 = local */
-	char name[HOSTLEN + 1];	/* Unique name of the client, nick or host */
-	char username[USERLEN + 1];	/* username here now for auth stuff */
-	char info[REALLEN + 1];	/* Free form additional client information */
-	char id[IDLEN + 1];	/* SID or UID */
-	Client *srvptr;	/* Server introducing this.  May be &me */
-	short status;		/* client type */
-	ModData moddata[MODDATA_MAX_CLIENT]; /* for modules */
-	int  count;		/* Amount of data in buffer */
-	struct list_head lclient_node;	/* for local client list (lclient_list) */
-	struct list_head special_node;	/* for special lists (server || unknown || oper) */
-	char *ip; /* IP of user or server */
+	struct list_head client_node;		/**< For global client list (client_list) */
+	struct list_head client_hash;		/**< For name hash table (clientTable) */
+	struct list_head id_hash;		/**< For UID/SID hash table (idTable) */
+	struct list_head lclient_node;		/**< For local client list (lclient_list) */
+	struct list_head special_node;		/**< For special lists (server || unknown || oper) */
+	LocalClient *local;			/**< Additional information regarding locally connected clients */
+	ClientUser *user;			/**< Additional information, if this client is a user/person */
+	Server *serv;				/**< Additional information, if this is a server */
+	time_t lastnick;			/**< Timestamp on nick */
+	long flags;				/**< Client flags (one or more of FLAG_*) */
+	long umodes;				/**< Client usermodes (if user/person) */
+	Client *direction;			/**< Direction from which this client originated.
+	                                             This always points to a directly connected server or &me.
+	                                             It is never NULL */
+	int  fd;				/**< File descriptor, which is >= 0, for local clients */
+	unsigned char hopcount;			/**< Number of servers to this, 0 means local client */
+	char name[HOSTLEN + 1];			/**< Unique name of the client: nickname for persons, hostname for servers */
+	char username[USERLEN + 1];		/**< Username, or actually the ident */
+	char info[REALLEN + 1];			/**< Additional client information text. For persons this is gecos/realname */
+	char id[IDLEN + 1];			/**< Unique ID: SID or UID */
+	Client *srvptr;				/**< Server on where this client is connected to (can be &me) */
+	short status;				/**< Client type */
+	ModData moddata[MODDATA_MAX_CLIENT];	/**< Client attached module data, used by the ModData system */
+	int count;				/**< Amount of data in buffer */
+	char *ip;				/**< IP address of user or server (never NULL) */
 };
 
 struct LocalClient {
