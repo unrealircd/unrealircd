@@ -46,7 +46,7 @@ int  deliver_it(Client *cptr, char *str, int len, int *want_read)
 
 	*want_read = 0;
 
-	if (IsDead(cptr) || (!IsServer(cptr) && !IsPerson(cptr)
+	if (IsDeadSocket(cptr) || (!IsServer(cptr) && !IsPerson(cptr)
 	    && !IsHandshake(cptr) 
 	    && !IsTLSHandshake(cptr)
  
@@ -55,7 +55,7 @@ int  deliver_it(Client *cptr, char *str, int len, int *want_read)
 		str[len] = '\0';
 		sendto_ops
 		    ("* * * DEBUG ERROR * * * !!! Calling deliver_it() for %s, status %d %s, with message: %s",
-		    cptr->name, cptr->status, IsDead(cptr) ? "DEAD" : "", str);
+		    cptr->name, cptr->status, IsDeadSocket(cptr) ? "DEAD" : "", str);
 		return -1;
 	}
 

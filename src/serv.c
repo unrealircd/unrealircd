@@ -391,7 +391,7 @@ char *get_cptr_status(Client *acptr)
 
 	*p = '\0';
 	*p++ = '[';
-	if (acptr->flags & FLAGS_LISTEN)
+	if (IsListening(acptr))
 	{
 		if (acptr->umodes & LISTENER_NORMAL)
 			*p++ = '*';
@@ -404,7 +404,7 @@ char *get_cptr_status(Client *acptr)
 	}
 	else
 	{
-		if (acptr->flags & FLAGS_TLS)
+		if (IsTLS(acptr))
 			*p++ = 's';
 	}
 	*p++ = ']';

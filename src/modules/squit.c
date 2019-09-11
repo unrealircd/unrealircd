@@ -161,7 +161,7 @@ CMD_FUNC(m_squit)
 		 * there is a very good chance they don't want us to
 		 * reconnect right away.  -Cabal95
 		 */
-		acptr->flags |= FLAGS_SQUIT;
+		SetSQuit(acptr);
 	}
 
 	return exit_client(cptr, acptr, sptr, recv_mtags, comment);

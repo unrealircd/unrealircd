@@ -675,7 +675,7 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 		SSL_set_tlsext_host_name(acptr->local->ssl, acptr->serv->conf->servername);
 	}
 
-	acptr->flags |= FLAGS_TLS;
+	SetTLS(acptr);
 
 	switch (ircd_SSL_connect(acptr, fd))
 	{
@@ -708,7 +708,7 @@ int ircd_SSL_accept(Client *acptr, int fd)
 	int ssl_err;
 
 #ifdef MSG_PEEK
-	if (!(acptr->flags & FLAGS_NCALL))
+	if (!IsNextCall(acptr))
 	{
 		char buf[1024];
 		int n;
@@ -740,7 +740,7 @@ int ircd_SSL_accept(Client *acptr, int fd)
 			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, acptr);
 		}
 		if (n > 0)
-			acptr->flags |= FLAGS_NCALL;
+			SetNextCall(acptr);
 	}
 #endif
 	if ((ssl_err = SSL_accept(acptr->local->ssl)) <= 0)
@@ -849,7 +849,7 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr)
 	char additional_info[256];
 	const char *one, *two;
 
-	if (IsDead(sptr))
+	if (IsDeadSocket(sptr))
 	{
 #ifdef DEBUGMODE
 		/* This is quite possible I guess.. especially if we don't pay attention upstream :p */
@@ -895,7 +895,7 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr)
 	 * the only way to do it.
 	 * IRC protocol wasn`t SSL enabled .. --vejeta
 	 */
-	sptr->flags |= FLAGS_DEADSOCKET;
+	SetDeadSocket(sptr);
 	sendto_snomask(SNO_JUNK, "Exiting ssl client %s: %s: %s%s",
 		get_client_name(sptr, TRUE), ssl_func, ssl_errstr, additional_info);
 
@@ -945,7 +945,7 @@ int client_starttls(Client *acptr)
 	if ((acptr->local->ssl = SSL_new(ctx_client)) == NULL)
 		goto fail_starttls;
 
-	acptr->flags |= FLAGS_TLS;
+	SetTLS(acptr);
 
 	SSL_set_fd(acptr->local->ssl, acptr->local->fd);
 	SSL_set_nonblocking(acptr->local->ssl);
@@ -971,7 +971,7 @@ fail_starttls:
 	/* Failure */
 	sendnumeric(acptr, ERR_STARTTLS, "STARTTLS failed");
 	acptr->local->ssl = NULL;
-	acptr->flags &= ~FLAGS_TLS;
+	ClearTLS(acptr);
 	SetUnknown(acptr);
 	return 0; /* hm. we allow to continue anyway. not sure if we want that. */
 }

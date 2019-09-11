@@ -155,7 +155,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 
 			/* Exit the client */
 			ircstp->is_kill++;
-			new->flags |= FLAGS_KILLED;
+			SetKilled(new);
 			(void)exit_client(NULL, new, &me, mtags, comment);
 
 			free_message_tags(mtags);
@@ -190,7 +190,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 
 		/* Exit the client */
 		ircstp->is_kill++;
-		existing->flags |= FLAGS_KILLED;
+		SetKilled(existing);
 		(void)exit_client(NULL, existing, &me, mtags, comment);
 
 		free_message_tags(mtags);
@@ -315,7 +315,7 @@ CMD_FUNC(m_uid)
 				    sptr->user ? sptr->ident : "",
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
-				sptr->flags |= FLAGS_KILLED;
+				SetKilled(sptr);
 				n = exit_client(cptr, sptr, &me, mtags, "BadNick");
 
 				free_message_tags(mtags);
@@ -327,7 +327,7 @@ CMD_FUNC(m_uid)
 	}
 
 	/* Kill quarantined opers early... */
-	if (IsServer(cptr) && (sptr->direction->flags & FLAGS_QUARANTINE) &&
+	if (IsServer(cptr) && IsQuarantined(sptr->direction) &&
 	    (parc >= 11) && strchr(parv[8], 'o'))
 	{
 		ircstp->is_kill++;
@@ -415,7 +415,7 @@ CMD_FUNC(m_uid)
 		       ** would be lost
 		     */
 		    get_client_name(cptr, FALSE));
-		sptr->flags |= FLAGS_KILLED;
+		SetKilled(sptr);
 		return exit_client(cptr, sptr, &me, NULL, "Nick/Server collision");
 	}
 
@@ -428,7 +428,7 @@ CMD_FUNC(m_uid)
 
 		if (MyConnect(acptr) && IsUnknown(acptr))
 		{
-			acptr->flags |= FLAGS_KILLED;
+			SetKilled(acptr);
 			exit_client(NULL, acptr, &me, NULL, "Overridden");
 			goto nickkill2done;
 		}
@@ -441,7 +441,7 @@ CMD_FUNC(m_uid)
 			ircstp->is_kill++;
 			sendto_one(acptr, NULL, ":%s KILL %s :%s (Lost user field!)",
 			    me.name, acptr->name, me.name);
-			acptr->flags |= FLAGS_KILLED;
+			SetKilled(acptr);
 			/* Here's the previous versions' desynch.  If the old one is
 			   messed up, trash the old one and accept the new one.
 			   Remember - at this point there is a new nick coming in!
@@ -533,7 +533,7 @@ nickkill2done:
 		parv[6] = sptr->name;
 		if (do_cmd(cptr, sptr, recv_mtags, "USER", parc - 3, &parv[3]) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
-		if (GotNetInfo(cptr) && !IsULine(sptr))
+		if (IsNetInfo(cptr) && !IsULine(sptr))
 			sendto_fconnectnotice(sptr, 0, NULL);
 	}
 
@@ -648,7 +648,7 @@ CMD_FUNC(m_nick)
 				    sptr->user ? sptr->ident : "",
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
-				sptr->flags |= FLAGS_KILLED;
+				SetKilled(sptr);
 				n = exit_client(cptr, sptr, &me, mtags, "BadNick");
 
 				free_message_tags(mtags);
@@ -660,7 +660,7 @@ CMD_FUNC(m_nick)
 	}
 
 	/* Kill quarantined opers early... */
-	if (IsServer(cptr) && (sptr->direction->flags & FLAGS_QUARANTINE) &&
+	if (IsServer(cptr) && IsQuarantined(sptr->direction) &&
 	    (parc >= 11) && strchr(parv[8], 'o'))
 	{
 		ircstp->is_kill++;
@@ -788,7 +788,7 @@ CMD_FUNC(m_nick)
 		       ** would be lost
 		     */
 		    get_client_name(cptr, FALSE));
-		sptr->flags |= FLAGS_KILLED;
+		SetKilled(sptr);
 		return exit_client(cptr, sptr, &me, NULL, "Nick/Server collision");
 	}
 
@@ -809,7 +809,7 @@ CMD_FUNC(m_nick)
 		/* This may help - copying code below */
 		if (acptr == cptr)
 			return 0;
-		acptr->flags |= FLAGS_KILLED;
+		SetKilled(acptr);
 		exit_client(NULL, acptr, &me, NULL, "Overridden");
 		goto nickkilldone;
 	}
@@ -822,7 +822,7 @@ CMD_FUNC(m_nick)
 		ircstp->is_kill++;
 		sendto_one(acptr, NULL, ":%s KILL %s :%s (Lost user field!)",
 		    me.name, acptr->name, me.name);
-		acptr->flags |= FLAGS_KILLED;
+		SetKilled(acptr);
 		/* Here's the previous versions' desynch.  If the old one is
 		   messed up, trash the old one and accept the new one.
 		   Remember - at this point there is a new nick coming in!
@@ -1141,7 +1141,7 @@ CMD_FUNC(m_nick)
 		parv[3] = nick;
 		if (do_cmd(cptr, sptr, recv_mtags, "USER", parc - 3, &parv[3]) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
-		if (GotNetInfo(cptr) && !IsULine(sptr))
+		if (IsNetInfo(cptr) && !IsULine(sptr))
 			sendto_fconnectnotice(sptr, 0, NULL);
 	}
 	else if (IsPerson(sptr) && update_watch)
@@ -1267,9 +1267,9 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		/* because username may point to user->username */
 		strlcpy(temp, username, USERLEN + 1);
 
-		if (!(sptr->flags & FLAGS_DOID))
+		if (!IsUseIdent(sptr))
 			strlcpy(user->username, temp, USERLEN + 1);
-		else if (sptr->flags & FLAGS_GOTID)
+		else if (IsGotID(sptr))
 			strlcpy(user->username, sptr->ident, USERLEN+1);
 		else
 		{
@@ -1470,7 +1470,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 			    cptr->name, nick, user->username, user->server);
 			sendto_one(cptr, NULL, ":%s KILL %s :%s (No such server: %s)",
 			    me.name, sptr->name, me.name, user->server);
-			sptr->flags |= FLAGS_KILLED;
+			SetKilled(sptr);
 			return exit_client(sptr, sptr, &me, NULL,
 			    "USER without prefix(2.8) or wrong prefix");
 		}
@@ -1482,7 +1482,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s != %s[%s])",
 			    me.name, sptr->name, me.name, user->server,
 			    acptr->direction->name, acptr->direction->local->sockhost);
-			sptr->flags |= FLAGS_KILLED;
+			SetKilled(sptr);
 			return exit_client(sptr, sptr, &me, NULL,
 			    "USER server wrong direction");
 		}
@@ -1491,7 +1491,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		/* *FINALL* this gets in ircd... -- Barubary */
 		/* We change this a bit .. */
 		if (IsULine(sptr->srvptr))
-			sptr->flags |= FLAGS_ULINE;
+			SetULine(sptr);
 	}
 	if (sptr->umodes & UMODE_INVISIBLE)
 	{
@@ -1573,7 +1573,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		if (user->snomask)
 			sendnumeric(sptr, RPL_SNOMASK, get_snostr(user->snomask));
 
-		if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_user == POLICY_WARN))
+		if (!IsSecure(sptr) && !IsLocalhost(sptr) && (iConf.plaintext_policy_user == POLICY_WARN))
 			sendnotice(sptr, "%s", iConf.plaintext_policy_user_message);
 
 		if (IsSecure(sptr) && (iConf.outdated_tls_policy_user == POLICY_WARN) && outdated_tls_client(sptr))
@@ -1695,7 +1695,7 @@ int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
 
-	if (!IsSecure(cptr) && !IsLocal(cptr) && (iConf.plaintext_policy_user == POLICY_DENY))
+	if (!IsSecure(cptr) && !IsLocalhost(cptr) && (iConf.plaintext_policy_user == POLICY_DENY))
 	{
 		return exit_client(cptr, cptr, &me, NULL, iConf.plaintext_policy_user_message);
 	}
@@ -1772,7 +1772,7 @@ int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 	      attach:
 /*		if (strchr(uhost, '@'))  now flag based -- codemastr */
 		if (!aconf->flags.noident)
-			cptr->flags |= FLAGS_DOID;
+			SetUseIdent(cptr);
 		if (!aconf->flags.useip && hp)
 			strlcpy(uhost, fullname, sizeof(uhost));
 		else

@@ -482,9 +482,9 @@ static void set_channel_mode(Channel *chptr, char *modes, char *parameters)
 		myparv[myparc++] = strdup(param);
 	myparv[myparc] = NULL;
 
-	me.flags |= FLAGS_ULINE; // hack for crash.. set ulined so no access checks.
+	SetULine(&me); // hack for crash.. set ulined so no access checks.
 	do_mode(chptr, &me, &me, NULL, myparc, myparv, 0, 0);
-	me.flags &= ~FLAGS_ULINE; // and clear it again..
+	SetULine(&me); // and clear it again..
 
 	for (i = 0; i < myparc; i++)
 		safefree(myparv[i]);

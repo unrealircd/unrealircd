@@ -283,8 +283,7 @@ char *get_client_name(Client *sptr, int showip)
 		if (showip)
 			(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%s@%s.%u]",
 			    sptr->name,
-			    (!(sptr->flags & FLAGS_GOTID)) ? "" :
-			    sptr->ident,
+			    IsGotID(sptr) ? sptr->ident : "",
 			    sptr->ip ? sptr->ip : "???",
 			    (unsigned int)sptr->local->port);
 		else
@@ -310,7 +309,7 @@ char *get_client_host(Client *cptr)
 		return get_client_name(cptr, FALSE);
 	(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%-.*s@%-.*s]",
 	    cptr->name, USERLEN,
-  	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->ident,
+  	    IsGotID(cptr) ? cptr->ident : "",
 	    HOSTLEN, cptr->local->hostp->h_name);
 	return nbuf;
 }
@@ -582,7 +581,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 					listen_cleanup();
 				}
 			}
-		sptr->flags |= FLAGS_CLOSING;
+		SetClosing(sptr);
 		if (IsPerson(sptr))
 		{
 			RunHook3(HOOKTYPE_LOCAL_QUIT, sptr, recv_mtags, comment);
@@ -663,7 +662,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 
 		RunHook2(HOOKTYPE_SERVER_QUIT, sptr, recv_mtags);
 	}
-	else if (IsClient(sptr) && !(sptr->flags & FLAGS_KILLED))
+	else if (IsClient(sptr) && !IsKilled(sptr))
 	{
 		sendto_server(cptr, PROTO_SID, 0, recv_mtags, ":%s QUIT :%s", ID(sptr), comment);
 		sendto_server(cptr, 0, PROTO_SID, recv_mtags, ":%s QUIT :%s", sptr->name, comment);

@@ -1267,10 +1267,12 @@ int stats_linkinfoint(Client *sptr, char *para, int all)
 			continue;
 		if (!doall && wilds && !match_simple(para, acptr->name))
 			continue;
-		if (!(para && (IsServer(acptr)
-			|| (acptr->flags & FLAGS_LISTEN))) && !(doall
-			|| wilds) && mycmp(para, acptr->name))
+		if (!(para && (IsServer(acptr) || IsListening(acptr))) &&
+		    !(doall || wilds) &&
+		    mycmp(para, acptr->name))
+		{
 			continue;
+		}
 
 #ifdef DEBUGMODE
 		ircsnprintf(pbuf, sizeof(pbuf), "%ld :%ld", (long)acptr->local->cputime,

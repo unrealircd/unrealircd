@@ -254,7 +254,7 @@ static void dump_map(Client *cptr, Client *server, char *mask, int prompt_length
 			continue;
 		if (FindHiddenServer(acptr->name))
 			break;
-		acptr->flags |= FLAGS_MAP;
+		SetMap(acptr);
 		cnt++;
 	}
 
@@ -266,7 +266,7 @@ static void dump_map(Client *cptr, Client *server, char *mask, int prompt_length
 			break;
 		if (acptr->srvptr != server)
 			continue;
-		if (!(acptr->flags & FLAGS_MAP))
+		if (!IsMap(acptr))
 			continue;
 		if (--cnt == 0)
 			*p = '`';

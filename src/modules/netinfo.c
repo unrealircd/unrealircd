@@ -77,7 +77,7 @@ CMD_FUNC(m_netinfo)
 	if (parc < 9)
 		return 0;
 
-	if (GotNetInfo(cptr))
+	if (IsNetInfo(cptr))
 	{
 		sendto_realops("Already got NETINFO from Link %s", cptr->name);
 		return 0;

@@ -45,7 +45,7 @@ MODVAR int  current_serial;
 ** dead_link
 **	An error has been detected. The link *must* be closed,
 **	but *cannot* call ExitClient (m_bye) from here.
-**	Instead, mark it with FLAGS_DEADSOCKET. This should
+**	Instead, mark it as a dead socket. This should
 **	generate ExitClient from the main loop.
 **
 **	notice will be the quit message. notice will also be
@@ -56,10 +56,10 @@ int dead_link(Client *to, char *notice)
 	DBufClear(&to->local->recvQ);
 	DBufClear(&to->local->sendQ);
 
-	if (to->flags & FLAGS_DEADSOCKET)
+	if (IsDeadSocket(to))
 		return -1; /* already pending to be closed */
 
-	to->flags |= FLAGS_DEADSOCKET;
+	SetDeadSocket(to);
 
 	/* We may get here because of the 'CPR' in check_deadsockets().
 	 * In which case, we return -1 as well.
@@ -67,7 +67,7 @@ int dead_link(Client *to, char *notice)
 	if (to->local->error_str)
 		return -1; /* don't overwrite & don't send multiple times */
 	
-	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
+	if (!IsPerson(to) && !IsUnknown(to) && !IsClosing(to))
 		sendto_ops_and_log("Link to server %s (%s) closed: %s",
 			to->name, to->ip?to->ip:"<no-ip>", notice);
 	Debug((DEBUG_ERROR, "dead_link: %s - %s", notice, get_client_name(to, FALSE)));
@@ -82,7 +82,7 @@ static void send_queued_cb(int fd, int revents, void *data)
 {
 	Client *to = data;
 
-	if (IsDead(to))
+	if (IsDeadSocket(to))
 		return;
 
 	send_queued(to);
@@ -100,7 +100,7 @@ int send_queued(Client *to)
 	int want_read;
 
 	/* We NEVER write to dead sockets. */
-	if (IsDead(to))
+	if (IsDeadSocket(to))
 		return -1;
 
 	while (DBufLength(&to->local->sendQ) > 0)
@@ -145,7 +145,7 @@ int send_queued(Client *to)
 	if ((DBufLength(&to->local->sendQ) == 0) && (to->local->fd >= 0))
 		fd_setselect(to->local->fd, FD_SELECT_NOWRITE, NULL, to);
 
-	return (IsDead(to)) ? -1 : 0;
+	return (IsDeadSocket(to)) ? -1 : 0;
 }
 
 /*
@@ -206,7 +206,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 
 	if (to->direction)
 		to = to->direction;
-	if (IsDead(to))
+	if (IsDeadSocket(to))
 		return;		/* This socket has already
 				   been marked as dead */
 	if (to->local->fd < 0)

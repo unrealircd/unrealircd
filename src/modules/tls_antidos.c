@@ -70,7 +70,7 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
 		SAD *e = SSL_get_ex_data(ssl, tls_antidos_index);
 		Client *acptr = e->acptr;
 		
-		if (IsServer(acptr) || IsDead(acptr))
+		if (IsServer(acptr) || IsDeadSocket(acptr))
 			return; /* if it's a server, or already pending to be killed off then we don't care */
 
 		if (e->ts < TStime() - HANDSHAKE_LIMIT_SECS)

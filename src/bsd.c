@@ -639,7 +639,7 @@ void completed_connection(int fd, int revents, void *data)
 		start_server_handshake(cptr);
 	}
 
-	if (!IsDead(cptr))
+	if (!IsDeadSocket(cptr))
 		start_auth(cptr);
 
 	fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
@@ -924,11 +924,11 @@ refuse_client:
 	acptr->local->port = port;
 	acptr->local->fd = fd;
 
-	/* Tag loopback connections as FLAGS_LOCAL */
+	/* Tag loopback connections */
 	if (is_loopback_ip(acptr->ip))
 	{
 		ircstp->is_loc++;
-		acptr->flags |= FLAGS_LOCAL;
+		SetLocalhost(acptr);
 	}
 
 	j = 1;
@@ -978,7 +978,7 @@ refuse_client:
 			{
 				goto refuse_client;
 			}
-			acptr->flags |= FLAGS_TLS;
+			SetTLS(acptr);
 			SSL_set_fd(acptr->local->ssl, fd);
 			SSL_set_nonblocking(acptr->local->ssl);
 			SSL_set_ex_data(acptr->local->ssl, ssl_client_index, acptr);
@@ -1021,7 +1021,7 @@ struct hostent *he;
 		if (!he)
 		{
 			/* Resolving in progress */
-			SetDNS(acptr);
+			SetDNSLookup(acptr);
 		} else {
 			/* Host was in our cache */
 			acptr->local->hostp = he;
@@ -1037,12 +1037,12 @@ doauth:
 
 void proceed_normal_client_handshake(Client *acptr, struct hostent *he)
 {
-	ClearDNS(acptr);
+	ClearDNSLookup(acptr);
 	acptr->local->hostp = he;
 	if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->local->listener))
 		sendto_one(acptr, NULL, "%s", acptr->local->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 
-	if (!dns_special_flag && !DoingAuth(acptr))
+	if (!dns_special_flag && !IsIdentLookup(acptr))
 		finish_auth(acptr);
 }
 
@@ -1071,10 +1071,10 @@ static int parse_client_queued(Client *cptr)
 	time_t now = TStime();
 	char buf[READBUFSIZE];
 
-	if (DoingDNS(cptr))
+	if (IsDNSLookup(cptr))
 		return 0; /* we delay processing of data until the host is resolved */
 
-	if (DoingAuth(cptr))
+	if (IsIdentLookup(cptr))
 		return 0; /* we delay processing of data until identd has replied */
 
 	if (!IsPerson(cptr) && !IsServer(cptr) && (iConf.handshake_delay > 0) &&
@@ -1159,7 +1159,7 @@ void read_packet(int fd, int revents, void *data)
 	int processdata;
 
 	/* Don't read from dead sockets */
-	if (IsDead(cptr))
+	if (IsDeadSocket(cptr))
 	{
 		fd_setselect(fd, FD_SELECT_READ, NULL, cptr);
 		return;
@@ -1232,7 +1232,7 @@ void read_packet(int fd, int revents, void *data)
 		if (cptr->local->lasttime > cptr->local->since)
 			cptr->local->since = cptr->local->lasttime;
 		/* FIXME: Is this correct? I have my doubts. */
-		cptr->flags &= ~FLAGS_PINGSENT;
+		ClearPingSent(cptr);
 
 		ClearPingWarning(cptr);
 
@@ -1516,10 +1516,11 @@ void ident_failed(Client *cptr)
 		--OpenFiles;
 		cptr->local->authfd = -1;
 	}
-	cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
+	ClearIdentLookupSent(cptr);
+	ClearIdentLookup(cptr);
 	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
 		sendto_one(cptr, NULL, "%s", REPORT_FAIL_ID);
-	if (!DoingDNS(cptr))
+	if (!IsDNSLookup(cptr))
 		finish_auth(cptr);
 }
 
@@ -1540,8 +1541,9 @@ void start_auth(Client *cptr)
 	/* If ident checking is disabled or it's an outgoing connect, then no ident check */
 	if ((IDENT_CHECK == 0) || (cptr->serv && IsHandshake(cptr)))
 	{
-		cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
-		if (!DoingDNS(cptr))
+		ClearIdentLookupSent(cptr);
+		ClearIdentLookup(cptr);
+		if (!IsDNSLookup(cptr))
 			finish_auth(cptr);
 		return;
 	}
@@ -1579,7 +1581,8 @@ void start_auth(Client *cptr)
 		ident_failed(cptr);
 		return;
 	}
-	cptr->flags |= (FLAGS_WRAUTH | FLAGS_AUTH);
+	SetIdentLookupSent(cptr);
+	SetIdentLookup(cptr);
 
 	fd_setselect(cptr->local->authfd, FD_SELECT_WRITE, send_authports, cptr);
 
@@ -1616,7 +1619,7 @@ static void send_authports(int fd, int revents, void *data)
 		ident_failed(cptr);
 		return;
 	}
-	cptr->flags &= ~FLAGS_WRAUTH;
+	ClearIdentLookupSent(cptr);
 
 	fd_setselect(cptr->local->authfd, FD_SELECT_READ|FD_SELECT_NOWRITE, read_authports, cptr);
 
@@ -1685,8 +1688,8 @@ static void read_authports(int fd, int revents, void *userdata)
     --OpenFiles;
     cptr->local->authfd = -1;
 	cptr->local->identbufcnt = 0;
-	ClearAuth(cptr);
-	if (!DoingDNS(cptr))
+	ClearIdentLookup(cptr);
+	if (!IsDNSLookup(cptr))
 		finish_auth(cptr);
 	if (len > 0)
 		Debug((DEBUG_INFO, "ident reply: [%s]", cptr->local->buffer));
@@ -1701,7 +1704,7 @@ static void read_authports(int fd, int revents, void *userdata)
 	}
 	ircstp->is_asuc++;
 	strlcpy(cptr->ident, ruser, USERLEN + 1);
-	cptr->flags |= FLAGS_GOTID;
+	SetGotID(cptr);
 	Debug((DEBUG_INFO, "got username [%s]", ruser));
 	return;
 }

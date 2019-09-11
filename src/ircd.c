@@ -419,7 +419,7 @@ EVENT(check_unknowns)
 			(void)exit_client(cptr, cptr, &me, NULL, "Registration Timeout");
 			continue;
 		}
-		if (DoingAuth(cptr) && ((TStime() - cptr->local->firsttime) > IDENT_CONNECT_TIMEOUT))
+		if (IsIdentLookup(cptr) && ((TStime() - cptr->local->firsttime) > IDENT_CONNECT_TIMEOUT))
 			ident_failed(cptr);
 	}
 }
@@ -441,7 +441,7 @@ int check_ping(Client *cptr)
 
 	if (
 		/* If we have sent a ping */
-		((cptr->flags & FLAGS_PINGSENT)
+		(IsPingSent(cptr)
 		/* And they had 2x ping frequency to respond */
 		&& ((TStime() - cptr->local->lasttime) >= (2 * ping)))
 		||
@@ -467,19 +467,12 @@ int check_ping(Client *cptr)
 			(long long) (TStime() - cptr->local->lasttime));
 		return exit_client(cptr, cptr, &me, NULL, scratch);
 	}
-	else if (IsRegistered(cptr) &&
-		((cptr->flags & FLAGS_PINGSENT) == 0)) {
-		/*
-		 * if we havent PINGed the connection and we havent
-		 * heard from it in a while, PING it to make sure
-		 * it is still alive.
-		 */
-		cptr->flags |= FLAGS_PINGSENT;
-
+	else if (IsRegistered(cptr) && !IsPingSent(cptr))
+	{
+		/* Time to send a PING */
+		SetPingSent(cptr);
 		ClearPingWarning(cptr);
-		/*
-		 * not nice but does the job
-		 */
+		/* not nice but does the job */
 		cptr->local->lasttime = TStime() - ping;
 		sendto_one(cptr, NULL, "PING :%s", me.name);
 	}
@@ -529,12 +522,13 @@ EVENT(check_deadsockets)
 
 	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
 	{
-		/* No need to notify opers here. It's already done when "FLAGS_DEADSOCKET" is set. */
-		if (cptr->flags & FLAGS_DEADSOCKET) {
+		/* No need to notify opers here. It's already done when dead socket is set */
+		if (IsDeadSocket(cptr))
+		{
 #ifdef DEBUGMODE
 			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->local->fd, cptr->name);
 #endif
-			cptr->flags &= ~FLAGS_DEADSOCKET; /* CPR. So we send the error. */
+			ClearDeadSocket(cptr); /* CPR. So we send the error. */
 			(void)exit_client(cptr, cptr, &me, NULL, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
 			continue;
 		}
@@ -542,12 +536,13 @@ EVENT(check_deadsockets)
 
 	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
 	{
-		/* No need to notify opers here. It's already done when "FLAGS_DEADSOCKET" is set. */
-		if (cptr->flags & FLAGS_DEADSOCKET) {
+		/* No need to notify opers here. It's already done when dead socket is set */
+		if (IsDeadSocket(cptr))
+		{
 #ifdef DEBUGMODE
 			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->local->fd, cptr->name);
 #endif
-			cptr->flags &= ~FLAGS_DEADSOCKET; /* CPR. So we send the error. */
+			ClearDeadSocket(cptr); /* CPR. So we send the error. */
 			(void)exit_client(cptr, cptr, &me, NULL, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
 			continue;
 		}
@@ -1169,7 +1164,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	booted = TRUE;
 	load_tunefile();
 	make_umodestr();
-	me.flags = FLAGS_LISTEN;
+	SetListening(&me);
 	me.local->fd = -1;
 	SetMe(&me);
 	make_server(&me);

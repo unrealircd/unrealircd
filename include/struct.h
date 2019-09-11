@@ -283,34 +283,34 @@ typedef enum ClientStatus {
 #define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
 
 /* client->flags */
-#define	FLAGS_PINGSENT   0x00000001	/* Unreplied ping sent */
-#define	FLAGS_DEADSOCKET 0x00000002	/* Local socket is dead--Exiting soon */
-#define	FLAGS_KILLED     0x00000004	/* Prevents "QUIT" from being sent for this */
-#define FLAGS_IPV6       0x00000008	/* For quick checking */
-#define FLAGS_OUTGOING   0x00000010	/* Outgoing connection, do not touch cptr->listener->clients */
-#define	FLAGS_CLOSING    0x00000020	/* Set when closing to suppress errors */
-#define	FLAGS_LISTEN     0x00000040	/* Used to mark clients which we listen() on */
-#define	FLAGS_DOINGDNS	 0x00000080	/* Client is waiting for a DNS response */
-#define	FLAGS_AUTH       0x00000100	/* Client is waiting on rfc931 response */
-#define	FLAGS_WRAUTH	 0x00000200	/* Set if we havent writen to ident server */
-#define	FLAGS_LOCAL      0x00000400	/* Set for local clients */
-#define	FLAGS_GOTID      0x00000800	/* Successful ident lookup achieved */
-#define	FLAGS_DOID       0x00001000	/* Allow block { } says we should do an ident check */
-#define FLAGS_NCALL      0x00002000	/* Next call (don't ask...) */
-#define FLAGS_ULINE      0x00004000	/* User/server is considered U-lined */
-#define FLAGS_SQUIT      0x00008000	/* Server has been /SQUIT by an oper */
-#define FLAGS_PROTOCTL   0x00010000	/* Received a PROTOCTL message */
-#define FLAGS_EAUTH      0x00020000	/* Server authenticated via PROTOCTL EAUTH */
-#define FLAGS_NETINFO    0x00040000	/* Received a NETINFO message */
-#define FLAGS_QUARANTINE 0x00080000	/* Quarantined server */
-#define FLAGS_DCCNOTICE  0x00100000	/* Has the user seen a notice on how to use DCCALLOW already? */
-#define FLAGS_SHUNNED    0x00200000	/* Connection is shunned */
-#define FLAGS_VIRUS      0x00400000	/* Tagged by spamfilter */
-#define FLAGS_TLS        0x00800000	/* Connection is using SSL/TLS */
-#define FLAGS_NOFAKELAG  0x01000000	/* Exemption from fake lag */
-#define FLAGS_DCCBLOCK   0x02000000	/* Block all DCC send requests */
-#define FLAGS_MAP        0x04000000	/* Show this entry in /MAP */
-#define FLAGS_PINGWARN	 0x08000000	/* Server ping warning */
+#define	CLIENT_FLAG_PINGSENT		0x00000001	/* Unreplied ping sent */
+#define	CLIENT_FLAG_DEADSOCKET		0x00000002	/* Local socket is dead--Exiting soon */
+#define	CLIENT_FLAG_KILLED		0x00000004	/* Prevents "QUIT" from being sent for this */
+#define CLIENT_FLAG_IPV6		0x00000008	/* For quick checking */
+#define CLIENT_FLAG_OUTGOING		0x00000010	/* Outgoing connection, do not touch cptr->listener->clients */
+#define	CLIENT_FLAG_CLOSING		0x00000020	/* Set when closing to suppress errors */
+#define	CLIENT_FLAG_LISTEN		0x00000040	/* Used to mark clients which we listen() on */
+#define	CLIENT_FLAG_DNSLOOKUP		0x00000080	/* Client is waiting for a DNS response */
+#define	CLIENT_FLAG_IDENTLOOKUP		0x00000100	/* Client is waiting on rfc931 response */
+#define	CLIENT_FLAG_IDENTLOOKUPSENT	0x00000200	/* Set if we havent writen to ident server */
+#define	CLIENT_FLAG_LOCAL		0x00000400	/* Set for local clients */
+#define	CLIENT_FLAG_GOTID		0x00000800	/* Successful ident lookup achieved */
+#define	CLIENT_FLAG_USEIDENT		0x00001000	/* Allow block { } says we should do an ident check */
+#define CLIENT_FLAG_NCALL		0x00002000	/* Next call (don't ask...) */
+#define CLIENT_FLAG_ULINE		0x00004000	/* User/server is considered U-lined */
+#define CLIENT_FLAG_SQUIT		0x00008000	/* Server has been /SQUIT by an oper */
+#define CLIENT_FLAG_PROTOCTL		0x00010000	/* Received a PROTOCTL message */
+#define CLIENT_FLAG_EAUTH		0x00020000	/* Server authenticated via PROTOCTL EAUTH */
+#define CLIENT_FLAG_NETINFO		0x00040000	/* Received a NETINFO message */
+#define CLIENT_FLAG_QUARANTINE		0x00080000	/* Quarantined server */
+#define CLIENT_FLAG_DCCNOTICE		0x00100000	/* Has the user seen a notice on how to use DCCALLOW already? */
+#define CLIENT_FLAG_SHUNNED		0x00200000	/* Connection is shunned */
+#define CLIENT_FLAG_VIRUS		0x00400000	/* Tagged by spamfilter */
+#define CLIENT_FLAG_TLS			0x00800000	/* Connection is using SSL/TLS */
+#define CLIENT_FLAG_NOFAKELAG		0x01000000	/* Exemption from fake lag */
+#define CLIENT_FLAG_DCCBLOCK		0x02000000	/* Block all DCC send requests */
+#define CLIENT_FLAG_MAP			0x04000000	/* Show this entry in /MAP */
+#define CLIENT_FLAG_PINGWARN		0x08000000	/* Server ping warning */
 
 #define SNO_DEFOPER "+kscfvGqobS"
 #define SNO_DEFUSER "+ks"
@@ -319,7 +319,7 @@ typedef enum ClientStatus {
 #define ALL_UMODES (AllUmodes)
 /* SEND_UMODES and ALL_UMODES are now handled by umode_get/umode_lget/umode_gget -- Syzop. */
 
-#define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
+#define	CLIENT_FLAG_ID	(CLIENT_FLAG_USEIDENT|CLIENT_FLAG_GOTID)
 
 /* PROTO_*: Server protocol extensions (acptr->local->proto).
  * Note that client protocol extensions have been moved
@@ -351,91 +351,144 @@ typedef enum ClientStatus {
 #define SetCapabilityFast(cptr, val)  do { (cptr)->local->caps |= (val); } while(0)
 #define ClearCapabilityFast(cptr, val)  do { (cptr)->local->caps &= ~(val); } while(0)
 
-/*
- * flags macros.
- */
+/* Usermode and snomask macros: */
 #define IsDeaf(x)               ((x)->umodes & UMODE_DEAF)
-#define IsKillsF(x)		((x)->user->snomask & SNO_KILLS)
-#define IsClientF(x)		((x)->user->snomask & SNO_CLIENT)
-#define IsFloodF(x)		((x)->user->snomask & SNO_FLOOD)
-#define IsEyes(x)		((x)->user->snomask & SNO_EYES)
 #define	IsOper(x)		((x)->umodes & UMODE_OPER)
 #define	IsInvisible(x)		((x)->umodes & UMODE_INVISIBLE)
 #define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
-#define IsLoggedIn(x)		(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */
 #define	IsPerson(x)		((x)->user && IsClient(x))
 #define	SendWallops(x)		(!IsMe(x) && IsPerson(x) && ((x)->umodes & UMODE_WALLOP))
-#define	SendServNotice(x)	(((x)->user) && ((x)->user->snomask & SNO_SNOTICE))
-#define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
-#define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
-#define	IsDead(x)		((x)->flags & FLAGS_DEADSOCKET)
-#define GotProtoctl(x)		((x)->flags & FLAGS_PROTOCTL)
-#define IsOutgoing(x)		((x)->flags & FLAGS_OUTGOING)
-#define GotNetInfo(x) 		((x)->flags & FLAGS_NETINFO)
-#define SetNetInfo(x)		((x)->flags |= FLAGS_NETINFO)
-#define SetEAuth(x)		((x)->flags |= FLAGS_EAUTH)
-#define IsEAuth(x)		((x)->flags & FLAGS_EAUTH)
-#define IsShunned(x)		((x)->flags & FLAGS_SHUNNED)
-#define SetShunned(x)		((x)->flags |= FLAGS_SHUNNED)
-#define ClearShunned(x)		((x)->flags &= ~FLAGS_SHUNNED)
-#define IsVirus(x)			((x)->flags & FLAGS_VIRUS)
-#define SetVirus(x)			((x)->flags |= FLAGS_VIRUS)
-#define ClearVirus(x)		((x)->flags &= ~FLAGS_VIRUS)
-#define IsSecure(x)		((x)->flags & FLAGS_TLS)
-
-/* Fake lag exception */
-#define IsNoFakeLag(x)      ((x)->flags & FLAGS_NOFAKELAG)
-#define SetNoFakeLag(x)     ((x)->flags |= FLAGS_NOFAKELAG)
-#define ClearNoFakeLag(x)   ((x)->flags &= ~FLAGS_NOFAKELAG)
-
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
-#define IsSetHost(x)			((x)->umodes & UMODE_SETHOST)
+#define IsSetHost(x)		((x)->umodes & UMODE_SETHOST)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
-#define IsTLS(x)		IsSecure(x)
-#define	IsNotSpoof(x)		((x)->local->nospoof == 0)
+#define	SetOper(x)		((x)->umodes |= UMODE_OPER)
+#define	SetInvisible(x)		((x)->umodes |= UMODE_INVISIBLE)
+#define	SetWallops(x)  		((x)->umodes |= UMODE_WALLOP)
+#define SetRegNick(x)		((x)->umodes & UMODE_REGNICK)
+#define SetHidden(x)            ((x)->umodes |= UMODE_HIDE)
+#define SetHideOper(x)		((x)->umodes |= UMODE_HIDEOPER)
+#define IsSecureConnect(x)	((x)->umodes & UMODE_SECURE)
+#define	ClearOper(x)		((x)->umodes &= ~UMODE_OPER)
+#define	ClearInvisible(x)	((x)->umodes &= ~UMODE_INVISIBLE)
+#define	ClearWallops(x)		((x)->umodes &= ~UMODE_WALLOP)
+#define ClearHidden(x)          ((x)->umodes &= ~UMODE_HIDE)
+#define ClearHideOper(x)	((x)->umodes &= ~UMODE_HIDEOPER)
 
-#define GetHost(x)			(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
-#define GetIP(x)			(x->ip ? x->ip : "255.255.255.255")
-
+/* Snomask macros: */
+#define	SendServNotice(x)	(((x)->user) && ((x)->user->snomask & SNO_SNOTICE))
+#define IsKillsF(x)		((x)->user->snomask & SNO_KILLS)
+#define IsClientF(x)		((x)->user->snomask & SNO_CLIENT)
+#define IsFloodF(x)		((x)->user->snomask & SNO_FLOOD)
+#define IsEyes(x)		((x)->user->snomask & SNO_EYES)
 #define SetKillsF(x)		((x)->user->snomask |= SNO_KILLS)
 #define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
 #define SetFloodF(x)		((x)->user->snomask |= SNO_FLOOD)
-#define	SetOper(x)		((x)->umodes |= UMODE_OPER)
-#define	SetInvisible(x)		((x)->umodes |= UMODE_INVISIBLE)
 #define SetEyes(x)		((x)->user->snomask |= SNO_EYES)
-#define	SetWallops(x)  		((x)->umodes |= UMODE_WALLOP)
-#define	SetDNS(x)		((x)->flags |= FLAGS_DOINGDNS)
-#define	DoingDNS(x)		((x)->flags & FLAGS_DOINGDNS)
-#define SetOutgoing(x)		do { x->flags |= FLAGS_OUTGOING; } while(0)
-#define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
-#define IsDCCNotice(x)		((x)->flags & FLAGS_DCCNOTICE)
-#define SetDCCNotice(x)		do { x->flags |= FLAGS_DCCNOTICE; } while(0)
-#define SetRegNick(x)		((x)->umodes & UMODE_REGNICK)
-#define SetHidden(x)            ((x)->umodes |= UMODE_HIDE)
-#define SetHideOper(x)      ((x)->umodes |= UMODE_HIDEOPER)
-#define IsSecureConnect(x)	((x)->umodes & UMODE_SECURE)
 #define ClearKillsF(x)		((x)->user->snomask &= ~SNO_KILLS)
 #define ClearClientF(x)		((x)->user->snomask &= ~SNO_CLIENT)
 #define ClearFloodF(x)		((x)->user->snomask &= ~SNO_FLOOD)
 #define ClearEyes(x)		((x)->user->snomask &= ~SNO_EYES)
-#define	ClearOper(x)		((x)->umodes &= ~UMODE_OPER)
-#define	ClearInvisible(x)	((x)->umodes &= ~UMODE_INVISIBLE)
-#define	ClearWallops(x)		((x)->umodes &= ~UMODE_WALLOP)
-#define	ClearDNS(x)		((x)->flags &= ~FLAGS_DOINGDNS)
-#define	ClearAuth(x)		((x)->flags &= ~FLAGS_AUTH)
-#define ClearHidden(x)          ((x)->umodes &= ~UMODE_HIDE)
-#define ClearHideOper(x)    ((x)->umodes &= ~UMODE_HIDEOPER)
 
-#define SetIPV6(x)			do { x->flags |= FLAGS_IPV6; } while(0)
-#define IsIPV6(x)			((x)->flags & FLAGS_IPV6)
 
-#define SetPingWarning(x)	((x)->flags |= FLAGS_PINGWARN)
-#define IsPingWarning(x)	((x)->flags & FLAGS_PINGWARN)
-#define ClearPingWarning(x)	((x)->flags &= ~FLAGS_PINGWARN)
-/*
- * ProtoCtl options
+/* Client flags macros: to check for via IsXX(),
+ * to set via SetXX() and to clear the flag via ClearXX()
  */
+#define IsIdentLookup(x)		((x)->flags & CLIENT_FLAG_IDENTLOOKUP)
+#define IsClosing(x)			((x)->flags & CLIENT_FLAG_CLOSING)
+#define IsDCCBlock(x)			((x)->flags & CLIENT_FLAG_DCCBLOCK)
+#define IsDCCNotice(x)			((x)->flags & CLIENT_FLAG_DCCNOTICE)
+#define IsDeadSocket(x)			((x)->flags & CLIENT_FLAG_DEADSOCKET)
+#define IsUseIdent(x)			((x)->flags & CLIENT_FLAG_USEIDENT)
+#define IsDNSLookup(x)			((x)->flags & CLIENT_FLAG_DNSLOOKUP)
+#define IsEAuth(x)			((x)->flags & CLIENT_FLAG_EAUTH)
+#define IsGotID(x)			((x)->flags & CLIENT_FLAG_GOTID)
+#define IsIPV6(x)			((x)->flags & CLIENT_FLAG_IPV6)
+#define IsKilled(x)			((x)->flags & CLIENT_FLAG_KILLED)
+#define IsListening(x)			((x)->flags & CLIENT_FLAG_LISTEN)
+#define IsLocalhost(x)			((x)->flags & CLIENT_FLAG_LOCAL)
+#define IsMap(x)			((x)->flags & CLIENT_FLAG_MAP)
+#define IsNextCall(x)			((x)->flags & CLIENT_FLAG_NCALL)
+#define IsNetInfo(x)			((x)->flags & CLIENT_FLAG_NETINFO)
+#define IsNoFakeLag(x)			((x)->flags & CLIENT_FLAG_NOFAKELAG)
+#define IsOutgoing(x)			((x)->flags & CLIENT_FLAG_OUTGOING)
+#define IsPingSent(x)			((x)->flags & CLIENT_FLAG_PINGSENT)
+#define IsPingWarning(x)		((x)->flags & CLIENT_FLAG_PINGWARN)
+#define IsProtoctlReceived(x)		((x)->flags & CLIENT_FLAG_PROTOCTL)
+#define IsQuarantined(x)		((x)->flags & CLIENT_FLAG_QUARANTINE)
+#define IsShunned(x)			((x)->flags & CLIENT_FLAG_SHUNNED)
+#define IsSQuit(x)			((x)->flags & CLIENT_FLAG_SQUIT)
+#define IsTLS(x)			((x)->flags & CLIENT_FLAG_TLS)
+#define IsSecure(x)			((x)->flags & CLIENT_FLAG_TLS)
+#define IsULine(x)			((x)->flags & CLIENT_FLAG_ULINE)
+#define IsVirus(x)			((x)->flags & CLIENT_FLAG_VIRUS)
+#define IsIdentLookupSent(x)		((x)->flags & CLIENT_FLAG_IDENTLOOKUPSENT)
+#define SetIdentLookup(x)		do { (x)->flags |= CLIENT_FLAG_IDENTLOOKUP; } while(0)
+#define SetClosing(x)			do { (x)->flags |= CLIENT_FLAG_CLOSING; } while(0)
+#define SetDCCBlock(x)			do { (x)->flags |= CLIENT_FLAG_DCCBLOCK; } while(0)
+#define SetDCCNotice(x)			do { (x)->flags |= CLIENT_FLAG_DCCNOTICE; } while(0)
+#define SetDeadSocket(x)		do { (x)->flags |= CLIENT_FLAG_DEADSOCKET; } while(0)
+#define SetUseIdent(x)			do { (x)->flags |= CLIENT_FLAG_USEIDENT; } while(0)
+#define SetDNSLookup(x)			do { (x)->flags |= CLIENT_FLAG_DNSLOOKUP; } while(0)
+#define SetEAuth(x)			do { (x)->flags |= CLIENT_FLAG_EAUTH; } while(0)
+#define SetGotID(x)			do { (x)->flags |= CLIENT_FLAG_GOTID; } while(0)
+#define SetIPV6(x)			do { (x)->flags |= CLIENT_FLAG_IPV6; } while(0)
+#define SetKilled(x)			do { (x)->flags |= CLIENT_FLAG_KILLED; } while(0)
+#define SetListening(x)			do { (x)->flags |= CLIENT_FLAG_LISTEN; } while(0)
+#define SetLocalhost(x)			do { (x)->flags |= CLIENT_FLAG_LOCAL; } while(0)
+#define SetMap(x)			do { (x)->flags |= CLIENT_FLAG_MAP; } while(0)
+#define SetNextCall(x)			do { (x)->flags |= CLIENT_FLAG_NCALL; } while(0)
+#define SetNetInfo(x)			do { (x)->flags |= CLIENT_FLAG_NETINFO; } while(0)
+#define SetNoFakeLag(x)			do { (x)->flags |= CLIENT_FLAG_NOFAKELAG; } while(0)
+#define SetOutgoing(x)			do { (x)->flags |= CLIENT_FLAG_OUTGOING; } while(0)
+#define SetPingSent(x)			do { (x)->flags |= CLIENT_FLAG_PINGSENT; } while(0)
+#define SetPingWarning(x)		do { (x)->flags |= CLIENT_FLAG_PINGWARN; } while(0)
+#define SetProtoctlReceived(x)		do { (x)->flags |= CLIENT_FLAG_PROTOCTL; } while(0)
+#define SetQuarantined(x)		do { (x)->flags |= CLIENT_FLAG_QUARANTINE; } while(0)
+#define SetShunned(x)			do { (x)->flags |= CLIENT_FLAG_SHUNNED; } while(0)
+#define SetSQuit(x)			do { (x)->flags |= CLIENT_FLAG_SQUIT; } while(0)
+#define SetTLS(x)			do { (x)->flags |= CLIENT_FLAG_TLS; } while(0)
+#define SetULine(x)			do { (x)->flags |= CLIENT_FLAG_ULINE; } while(0)
+#define SetVirus(x)			do { (x)->flags |= CLIENT_FLAG_VIRUS; } while(0)
+#define SetIdentLookupSent(x)		do { (x)->flags |= CLIENT_FLAG_IDENTLOOKUPSENT; } while(0)
+#define ClearIdentLookup(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTLOOKUP; } while(0)
+#define ClearClosing(x)			do { (x)->flags &= ~CLIENT_FLAG_CLOSING; } while(0)
+#define ClearDCCBlock(x)		do { (x)->flags &= ~CLIENT_FLAG_DCCBLOCK; } while(0)
+#define ClearDCCNotice(x)		do { (x)->flags &= ~CLIENT_FLAG_DCCNOTICE; } while(0)
+#define ClearDeadSocket(x)		do { (x)->flags &= ~CLIENT_FLAG_DEADSOCKET; } while(0)
+#define ClearUseIdent(x)		do { (x)->flags &= ~CLIENT_FLAG_USEIDENT; } while(0)
+#define ClearDNSLookup(x)		do { (x)->flags &= ~CLIENT_FLAG_DNSLOOKUP; } while(0)
+#define ClearEAuth(x)			do { (x)->flags &= ~CLIENT_FLAG_EAUTH; } while(0)
+#define ClearGotID(x)			do { (x)->flags &= ~CLIENT_FLAG_GOTID; } while(0)
+#define ClearIPV6(x)			do { (x)->flags &= ~CLIENT_FLAG_IPV6; } while(0)
+#define ClearKilled(x)			do { (x)->flags &= ~CLIENT_FLAG_KILLED; } while(0)
+#define ClearListening(x)		do { (x)->flags &= ~CLIENT_FLAG_LISTEN; } while(0)
+#define ClearLocalhost(x)		do { (x)->flags &= ~CLIENT_FLAG_LOCAL; } while(0)
+#define ClearMap(x)			do { (x)->flags &= ~CLIENT_FLAG_MAP; } while(0)
+#define ClearNextCall(x)		do { (x)->flags &= ~CLIENT_FLAG_NCALL; } while(0)
+#define ClearNetInfo(x)			do { (x)->flags &= ~CLIENT_FLAG_NETINFO; } while(0)
+#define ClearNoFakeLag(x)		do { (x)->flags &= ~CLIENT_FLAG_NOFAKELAG; } while(0)
+#define ClearOutgoing(x)		do { (x)->flags &= ~CLIENT_FLAG_OUTGOING; } while(0)
+#define ClearPingSent(x)		do { (x)->flags &= ~CLIENT_FLAG_PINGSENT; } while(0)
+#define ClearPingWarning(x)		do { (x)->flags &= ~CLIENT_FLAG_PINGWARN; } while(0)
+#define ClearProtoctlReceived(x)	do { (x)->flags &= ~CLIENT_FLAG_PROTOCTL; } while(0)
+#define ClearQuarantined(x)		do { (x)->flags &= ~CLIENT_FLAG_QUARANTINE; } while(0)
+#define ClearShunned(x)			do { (x)->flags &= ~CLIENT_FLAG_SHUNNED; } while(0)
+#define ClearSQuit(x)			do { (x)->flags &= ~CLIENT_FLAG_SQUIT; } while(0)
+#define ClearTLS(x)			do { (x)->flags &= ~CLIENT_FLAG_TLS; } while(0)
+#define ClearULine(x)			do { (x)->flags &= ~CLIENT_FLAG_ULINE; } while(0)
+#define ClearVirus(x)			do { (x)->flags &= ~CLIENT_FLAG_VIRUS; } while(0)
+#define ClearIdentLookupSent(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTLOOKUPSENT; } while(0)
+
+
+/* Others that access client structs: */
+#define	IsNotSpoof(x)	((x)->local->nospoof == 0)
+#define GetHost(x)	(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
+#define GetIP(x)	(x->ip ? x->ip : "255.255.255.255")
+#define IsLoggedIn(x)	(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */
+
+
+/* PROTOCTL (Server protocol) stuff */
 #ifndef DEBUGMODE
 #define CHECKPROTO(x,y)	(((x)->local->proto & y) == y)
 #else
@@ -922,7 +975,7 @@ struct Client {
 	ClientUser *user;			/**< Additional information, if this client is a user/person */
 	Server *serv;				/**< Additional information, if this is a server */
 	time_t lastnick;			/**< Timestamp on nick */
-	long flags;				/**< Client flags (one or more of FLAG_*) */
+	long flags;				/**< Client flags (one or more of CLIENT_FLAG_*) */
 	long umodes;				/**< Client usermodes (if user/person) */
 	Client *direction;			/**< Direction from which this client originated.
 	                                             This always points to a directly connected server or &me.

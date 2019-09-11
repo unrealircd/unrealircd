@@ -1673,7 +1673,7 @@ CMD_FUNC(_m_umode)
 				break;
 			case 'o':
 			case 'O':
-				if(sptr->direction->flags & FLAGS_QUARANTINE)
+				if (IsQuarantined(sptr->direction))
 				{
 					sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", sptr->name, sptr->srvptr->name);
 					sendto_server(NULL, 0, 0, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)", me.name, sptr->name, me.name);

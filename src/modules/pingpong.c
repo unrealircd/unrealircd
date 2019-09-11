@@ -167,8 +167,8 @@ CMD_FUNC(m_pong)
 
 	origin = parv[1];
 	destination = parv[2];
-	cptr->flags &= ~FLAGS_PINGSENT;
-	sptr->flags &= ~FLAGS_PINGSENT;
+	ClearPingSent(sptr);
+	ClearPingSent(cptr);
 	ClearPingWarning(cptr);
 
 	/* Remote pongs for clients? uhh... */

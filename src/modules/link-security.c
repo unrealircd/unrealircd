@@ -151,7 +151,7 @@ int our_link_security(void)
 	
 	list_for_each_entry(acptr, &server_list, special_node)
 	{
-		if (IsLocal(acptr))
+		if (IsLocalhost(acptr))
 			continue; /* server connected via localhost */
 		if (!IsSecure(acptr))
 			return 0; /* Any non-SSL server (which is not localhost) results in level 0. */

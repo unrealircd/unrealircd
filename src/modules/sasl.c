@@ -324,7 +324,7 @@ int sasl_capability_visible(Client *sptr)
 	 * won't attempt SASL authentication and thus it prevents the client
 	 * from sending the password unencrypted (in case of method PLAIN).
 	 */
-	if (sptr && !IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_user == POLICY_DENY))
+	if (sptr && !IsSecure(sptr) && !IsLocalhost(sptr) && (iConf.plaintext_policy_user == POLICY_DENY))
 		return 0;
 
 	/* Similarly, don't advertise when we are going to reject the user

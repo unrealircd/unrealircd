@@ -100,7 +100,7 @@ CMD_FUNC(m_starttls)
 	Debug((DEBUG_DEBUG, "Starting SSL handshake (due to STARTTLS) for %s", sptr->local->sockhost));
 	if ((sptr->local->ssl = SSL_new(ctx)) == NULL)
 		goto fail;
-	sptr->flags |= FLAGS_TLS;
+	SetTLS(sptr);
 	SSL_set_fd(sptr->local->ssl, sptr->local->fd);
 	SSL_set_nonblocking(sptr->local->ssl);
 	if (!ircd_SSL_accept(sptr, sptr->local->fd)) {
@@ -117,7 +117,7 @@ fail:
 	/* Failure */
 	sendnumeric(sptr, ERR_STARTTLS, "STARTTLS failed");
 	sptr->local->ssl = NULL;
-	sptr->flags &= ~FLAGS_TLS;
+	ClearTLS(sptr);
 	SetUnknown(sptr);
 	return 0;
 }

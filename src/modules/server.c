@@ -434,7 +434,7 @@ skip_host_check:
 				get_client_name(cptr, TRUE));
 		return exit_client(cptr, cptr, &me, NULL, "Full class");
 	}
-	if (!IsLocal(cptr) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(cptr))
+	if (!IsLocalhost(cptr) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(cptr))
 	{
 		sendto_one(cptr, NULL, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 		sendto_ops_and_log("Rejected insecure server %s. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS", cptr->name);
@@ -600,7 +600,7 @@ CMD_FUNC(m_server)
 			}
 		}
 		if (aconf->options & CONNECT_QUARANTINE)
-			cptr->flags |= FLAGS_QUARANTINE;
+			SetQuarantined(cptr);
 
 		ircsnprintf(descbuf, sizeof descbuf, "Server: %s", servername);
 		fd_desc(cptr->local->fd, descbuf);
@@ -727,9 +727,8 @@ CMD_FUNC(m_server_remote)
 	/* Taken from bahamut makes it so all servers behind a U-Lined
 	 * server are also U-Lined, very helpful if HIDE_ULINES is on
 	 */
-	if (IsULine(sptr)
-	    || (Find_uline(acptr->name)))
-		acptr->flags |= FLAGS_ULINE;
+	if (IsULine(sptr) || (Find_uline(acptr->name)))
+		SetULine(acptr);
 	ircstats.servers++;
 	(void)find_or_add(acptr->name);
 	add_client_to_list(acptr);
@@ -925,7 +924,7 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 	list_move(&cptr->client_node, &global_server_list);
 	list_move(&cptr->lclient_node, &lclient_list);
 	list_add(&cptr->special_node, &server_list);
-	if ((Find_uline(cptr->name)))
+	if (Find_uline(cptr->name))
 	{
 		if (cptr->serv && cptr->serv->features.software && !strncmp(cptr->serv->features.software, "UnrealIRCd-", 11))
 		{
@@ -936,7 +935,7 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 			               "See https://www.unrealircd.org/docs/FAQ#bad-ulines",
 			               cptr->name);
 		}
-		cptr->flags |= FLAGS_ULINE;
+		SetULine(cptr);
 	}
 	(void)find_or_add(cptr->name);
 	if (IsSecure(cptr))
@@ -959,7 +958,7 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 		 * Yeah.. there are still other cases when non-TLS links are fine (eg: local IP
 		 * of the same machine), we won't bother with detecting that. -- Syzop
 		 */
-		if (!IsLocal(cptr) && (iConf.plaintext_policy_server == POLICY_WARN))
+		if (!IsLocalhost(cptr) && (iConf.plaintext_policy_server == POLICY_WARN))
 		{
 			sendto_realops("\002WARNING:\002 This link is unencrypted (not SSL/TLS). We highly recommend to use "
 			               "SSL/TLS for server linking. See https://www.unrealircd.org/docs/Linking_servers");

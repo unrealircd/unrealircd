@@ -63,14 +63,14 @@ MOD_UNLOAD(protoctl)
 CMD_FUNC(m_protoctl)
 {
 	int  i;
-	int first_protoctl = (GotProtoctl(sptr)) ? 0 : 1; /**< First PROTOCTL we receive? Special ;) */
+	int first_protoctl = IsProtoctlReceived(sptr) ? 0 : 1; /**< First PROTOCTL we receive? Special ;) */
 	char proto[512];
 	char *name, *value, *p;
 
 	if (!MyConnect(sptr))
 		return 0; /* Remote PROTOCTL's are not supported */
 
-	cptr->flags |= FLAGS_PROTOCTL;
+	SetProtoctlReceived(cptr);
 
 	for (i = 1; i < parc; i++)
 	{

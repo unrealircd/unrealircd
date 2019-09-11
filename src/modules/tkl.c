@@ -4457,7 +4457,7 @@ int _run_spamfilter(Client *sptr, char *str_in, int target, char *destination, i
 		{
 			sendnotice(sptr, "DCC to %s blocked: %s", destination, reason);
 			sendnotice(sptr, "*** You have been blocked from sending files, reconnect to regain permission to send files");
-			sptr->flags |= FLAGS_DCCBLOCK;
+			SetDCCBlock(sptr);
 		}
 		return -1;
 	} else

@@ -588,7 +588,7 @@ int size_string, ret;
 	else
 		return 1; /* something else, allow */
 
-	if (sptr->flags & FLAGS_DCCBLOCK)
+	if (IsDCCBlock(sptr))
 	{
 		sendnotice(sptr, "*** You are blocked from sending files as you have tried to "
 		                 "send a forbidden file - reconnect to regain ability to send");
@@ -621,7 +621,7 @@ int size_string, ret;
 		sendnumericfmt(sptr,
 		    RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, target, fl->reason);
 		sendnotice(sptr, "*** You have been blocked from sending files, reconnect to regain permission to send files");
-		sptr->flags |= FLAGS_DCCBLOCK;
+		SetDCCBlock(sptr);
 
 		RunHook5(HOOKTYPE_DCC_DENIED, sptr, target, realfile, displayfile, fl);
 

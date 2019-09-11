@@ -233,7 +233,7 @@ CMD_FUNC(m_kill)
 			    sptr->name, acptr->name, inpath, path);
 
 			/* Don't send a QUIT for this */
-			acptr->flags |= FLAGS_KILLED;
+			SetKilled(acptr);
 			
 			/* Prepare the buffer for exit_client */
 			if ((killer = strchr(path, ' ')))

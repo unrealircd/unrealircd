@@ -28,8 +28,6 @@
 
 #define ChannelExists(n)	(find_channel(n, NULL))
 
-#define IsULine(sptr)	(sptr->flags & FLAGS_ULINE)
-
 /* NOTE: Timestamps will be added to MODE-commands, so never make
  * RESYNCMODES and MODEPARAMS higher than MAXPARA-3. DALnet servers
  * before Dreamforge aren't safe with more than six. -Donwulff

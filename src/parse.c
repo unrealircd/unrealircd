@@ -95,7 +95,7 @@ int parse(Client *cptr, char *buffer, int length)
 	Debug((DEBUG_ERROR, "Parsing: %s (from %s)", buffer,
 	    (*cptr->name ? cptr->name : "*")));
 
-	if (IsDead(cptr))
+	if (IsDeadSocket(cptr))
 		return 0;
 
 	if ((cptr->local->receiveK >= UNKNOWN_FLOOD_AMOUNT) && IsUnknown(cptr))

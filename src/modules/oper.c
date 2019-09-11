@@ -112,7 +112,7 @@ CMD_FUNC(m_oper)
 	password = (parc > 2) ? parv[2] : "";
 
 	/* set::plaintext-policy::oper 'deny' */
-	if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_oper == POLICY_DENY))
+	if (!IsSecure(sptr) && !IsLocalhost(sptr) && (iConf.plaintext_policy_oper == POLICY_DENY))
 	{
 		sendnotice(sptr, "%s", iConf.plaintext_policy_oper_message);
 		sendto_snomask_global
@@ -310,7 +310,7 @@ CMD_FUNC(m_oper)
 	}
 
 	/* set::plaintext-policy::oper 'warn' */
-	if (!IsSecure(sptr) && !IsLocal(sptr) && (iConf.plaintext_policy_oper == POLICY_WARN))
+	if (!IsSecure(sptr) && !IsLocalhost(sptr) && (iConf.plaintext_policy_oper == POLICY_WARN))
 	{
 		sendnotice(sptr, "%s", iConf.plaintext_policy_oper_message);
 		sendto_snomask_global

@@ -92,7 +92,7 @@ static void dump_map(Client *cptr, Client *server, char *mask, int prompt_length
 		if (acptr->srvptr != server ||
  		    (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL)))
 			continue;
-		acptr->flags |= FLAGS_MAP;
+		SetMap(acptr);
 		cnt++;
 	}
 
@@ -102,7 +102,7 @@ static void dump_map(Client *cptr, Client *server, char *mask, int prompt_length
 			continue;
 		if (acptr->srvptr != server)
 			continue;
-		if (!(acptr->flags & FLAGS_MAP))
+		if (!IsMap(acptr))
 			continue;
 		if (--cnt == 0)
 			*p = '`';
