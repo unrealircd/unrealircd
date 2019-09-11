@@ -31,9 +31,6 @@ struct AuthTypeList {
 AuthTypeList MODVAR AuthTypeLists[] = {
 	{"plain",           AUTHTYPE_PLAINTEXT},
 	{"plaintext",       AUTHTYPE_PLAINTEXT},
-	{"md5",             AUTHTYPE_MD5},
-	{"sha1",            AUTHTYPE_SHA1},
-	{"ripemd160",       AUTHTYPE_RIPEMD160},
 	{"crypt",           AUTHTYPE_UNIXCRYPT},
 	{"unixcrypt",       AUTHTYPE_UNIXCRYPT},
 	{"bcrypt",          AUTHTYPE_BCRYPT},
@@ -48,8 +45,29 @@ AuthTypeList MODVAR AuthTypeLists[] = {
 	{NULL,              0}
 };
 
-/* Forward declarations */
-static int parsepass(char *str, char **salt, char **hash);
+/* Helper function for Auth_AutoDetectHashType() */
+static int parsepass(char *str, char **salt, char **hash)
+{
+	static char saltbuf[512], hashbuf[512];
+	char *p;
+	int max;
+
+	/* Syntax: $<salt>$<hash> */
+	if (*str != '$')
+		return 0;
+	p = strchr(str+1, '$');
+	if (!p || (p == str+1) || !p[1])
+		return 0;
+
+	max = p - str;
+	if (max > sizeof(saltbuf))
+		max = sizeof(saltbuf);
+	strlcpy(saltbuf, str+1, max);
+	strlcpy(hashbuf, p+1, sizeof(hashbuf));
+	*salt = saltbuf;
+	*hash = hashbuf;
+	return 1;
+}
 
 /** Auto detect hash type for input hash 'hash'.
  * Will fallback to AUTHTYPE_PLAINTEXT when not found (or invalid).
@@ -105,14 +123,11 @@ int Auth_AutoDetectHashType(char *hash)
 	if (bits <= 0)
 		return AUTHTYPE_UNIXCRYPT; /* decode failed. likely some other crypt() type. */
 
-	/* We (only) detect MD5 and SHA1 automatically.
-	 * If, for some reason, you use RIPEMD160 then you'll have to be explicit about it ;)
+	/* These are for two old/ancient UnrealIRCd types ('md5' and 'sha1').
+	 * This code is there to make sure they don't end up as AUTHTYPE_UNIXCRYPT...
 	 */
-	if (bits == 128)
-		return AUTHTYPE_MD5;
-
-	if (bits == 160)
-		return AUTHTYPE_SHA1;
+	if ((bits == 128) || (bits == 160))
+		return AUTHTYPE_INVALID;
 
 	/* else it's likely some other crypt() type */
 	return AUTHTYPE_UNIXCRYPT;
@@ -208,15 +223,6 @@ int Auth_CheckError(ConfigEntry *ce)
 		default: ;
 	}
 
-	if ((type == AUTHTYPE_MD5) || (type == AUTHTYPE_SHA1) || (type == AUTHTYPE_RIPEMD160))
-	{
-		config_warn("%s:%i: Deprecated authentication type. "
-		            "Consider using the more secure auth-type 'argon2' instead. "
-		            "See https://www.unrealircd.org/docs/Authentication_types for the complete list.",
-		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		/* do not return, not an error. */
-	}
-
 	/* Unix crypt is a bit more complicated: most types are outright 'bad',
 	 * while other types have reasonable security similar to 'bcrypt'.
 	 * To be honest these people should probably use 'argon2' since it's
@@ -272,46 +278,12 @@ void Auth_FreeAuthConfig(AuthConfig *as)
 	}
 }
 
-/* Both values are pretty insane as of 2004, but... just in case. */
-#define MAXSALTLEN		127
-#define MAXHASHLEN		255
-
 /* RAW salt length (before b64_encode) to use in /MKPASSWD
  * and REAL salt length (after b64_encode, including terminating nul),
  * used for reserving memory.
  */
 #define RAWSALTLEN		6
 #define REALSALTLEN		12
-
-/** Parses a password.
- * This routine can parse a pass that has a salt (new as of unreal 3.2.1)
- * and will set the 'salt' pointer and 'hash' accordingly.
- * RETURN VALUES:
- * 1 If succeeded, salt and hash can be used.
- * 0 If it's a password without a salt ('old'), salt and hash are not touched.
- */
-static int parsepass(char *str, char **salt, char **hash)
-{
-	static char saltbuf[MAXSALTLEN+1], hashbuf[MAXHASHLEN+1];
-	char *p;
-	int max;
-
-	/* Syntax: $<salt>$<hash> */
-	if (*str != '$')
-		return 0;
-	p = strchr(str+1, '$');
-	if (!p || (p == str+1) || !p[1])
-		return 0;
-
-	max = p - str;
-	if (max > sizeof(saltbuf))
-		max = sizeof(saltbuf);
-	strlcpy(saltbuf, str+1, max);
-	strlcpy(hashbuf, p+1, sizeof(hashbuf));
-	*salt = saltbuf;
-	*hash = hashbuf;
-	return 1;
-}
 
 static int authcheck_argon2(Client *cptr, AuthConfig *as, char *para)
 {
@@ -356,163 +328,6 @@ static int authcheck_bcrypt(Client *cptr, AuthConfig *as, char *para)
 		return 1; /* MATCH */
 
 	return 0; /* NO MATCH */
-}
-
-static int authcheck_md5(Client *cptr, AuthConfig *as, char *para)
-{
-	static char buf[512];
-	int	i, r;
-	char *saltstr, *hashstr;
-
-	if (!para)
-		return 0;
-	r = parsepass(as->data, &saltstr, &hashstr);
-	if (r == 0) /* Old method without salt: b64(MD5(<pass>)) */
-	{
-		char result[16];
-
-		DoMD5(result, para, strlen(para));
-		if ((i = b64_encode(result, sizeof(result), buf, sizeof(buf))))
-		{
-			if (!strcmp(buf, as->data))
-				return 1;
-		}
-		return 0;
-	} else {
-		/* New method with salt: b64(MD5(MD5(<pass>)+salt)) */
-		char result1[MAXSALTLEN+16+1];
-		char result2[16];
-		char rsalt[MAXSALTLEN+1];
-		int rsaltlen;
-
-		/* First, decode the salt to something real... */
-		rsaltlen = b64_decode(saltstr, rsalt, sizeof(rsalt));
-		if (rsaltlen <= 0)
-			return 0;
-
-		/* Then hash the password (1st round)... */
-		DoMD5(result1, para, strlen(para));
-
-		/* Add salt to result */
-		memcpy(result1+16, rsalt, rsaltlen); /* b64_decode already made sure bounds are ok */
-
-		/* Then hash it all together again (2nd round)... */
-		DoMD5(result2, result1, rsaltlen+16);
-
-		/* Then base64 encode it all and we are done... */
-		if ((i = b64_encode(result2, sizeof(result2), buf, sizeof(buf))))
-		{
-			if (!strcmp(buf, hashstr))
-				return 1;
-		}
-		return 0;
-	}
-}
-
-static int authcheck_sha1(Client *cptr, AuthConfig *as, char *para)
-{
-	char buf[512];
-	int i, r;
-	char *saltstr, *hashstr;
-
-	if (!para)
-		return 0;
-	r = parsepass(as->data, &saltstr, &hashstr);
-	if (r)
-	{
-		/* New method with salt: b64(SHA1(SHA1(<pass>)+salt)) */
-		char result1[MAXSALTLEN+20+1];
-		char result2[20];
-		char rsalt[MAXSALTLEN+1];
-		int rsaltlen;
-		SHA_CTX hash;
-
-		/* First, decode the salt to something real... */
-		rsaltlen = b64_decode(saltstr, rsalt, sizeof(rsalt));
-		if (rsaltlen <= 0)
-			return 0;
-
-		/* Then hash the password (1st round)... */
-		SHA1_Init(&hash);
-		SHA1_Update(&hash, para, strlen(para));
-		SHA1_Final(result1, &hash);
-
-		/* Add salt to result */
-		memcpy(result1+20, rsalt, rsaltlen); /* b64_decode already made sure bounds are ok */
-
-		/* Then hash it all together again (2nd round)... */
-		SHA1_Init(&hash);
-		SHA1_Update(&hash, result1, rsaltlen+20);
-		SHA1_Final(result2, &hash);
-
-		/* Then base64 encode it all and we are done... */
-		if ((i = b64_encode(result2, sizeof(result2), buf, sizeof(buf))))
-		{
-			if (!strcmp(buf, hashstr))
-				return 1;
-		}
-		return 0;
-	} else {
-		/* OLD auth */
-		if ((i = b64_encode(SHA1(para, strlen(para), NULL), 20, buf, sizeof(buf))))
-		{
-			if (!strcmp(buf, as->data))
-				return 1;
-		}
-		return 0;
-	}
-}
-
-static int authcheck_ripemd160(Client *cptr, AuthConfig *as, char *para)
-{
-	char buf[512];
-	int i, r;
-	char *saltstr, *hashstr;
-
-	if (!para)
-		return 0;
-	r = parsepass(as->data, &saltstr, &hashstr);
-	if (r)
-	{
-		/* New method with salt: b64(RIPEMD160(RIPEMD160(<pass>)+salt)) */
-		char result1[MAXSALTLEN+20+1];
-		char result2[20];
-		char rsalt[MAXSALTLEN+1];
-		int rsaltlen;
-		RIPEMD160_CTX hash;
-
-		/* First, decode the salt to something real... */
-		rsaltlen = b64_decode(saltstr, rsalt, sizeof(rsalt));
-		if (rsaltlen <= 0)
-			return 0;
-
-		/* Then hash the password (1st round)... */
-		RIPEMD160_Init(&hash);
-		RIPEMD160_Update(&hash, para, strlen(para));
-		RIPEMD160_Final(result1, &hash);
-		/* Add salt to result */
-		memcpy(result1+20, rsalt, rsaltlen); /* b64_decode already made sure bounds are ok */
-
-		/* Then hash it all together again (2nd round)... */
-		RIPEMD160_Init(&hash);
-		RIPEMD160_Update(&hash, result1, rsaltlen+20);
-		RIPEMD160_Final(result2, &hash);
-		/* Then base64 encode it all and we are done... */
-		if ((i = b64_encode(result2, sizeof(result2), buf, sizeof(buf))))
-		{
-			if (!strcmp(buf, hashstr))
-				return 1;
-		}
-		return 0;
-	} else {
-		/* OLD auth */
-		if ((i = b64_encode(RIPEMD160(para, strlen(para), NULL), 20, buf, sizeof(buf))))
-		{
-			if (!strcmp(buf, as->data))
-				return 1;
-		}
-		return 0;
-	}
 }
 
 static int authcheck_tls_clientcert(Client *cptr, AuthConfig *as, char *para)
@@ -648,15 +463,6 @@ int Auth_Check(Client *cptr, AuthConfig *as, char *para)
 			if (res && !strcmp(res, as->data))
 				return 1;
 			return 0;
-
-		case AUTHTYPE_MD5:
-			return authcheck_md5(cptr, as, para);
-
-		case AUTHTYPE_SHA1:
-			return authcheck_sha1(cptr, as, para);
-
-		case AUTHTYPE_RIPEMD160:
-			return authcheck_ripemd160(cptr, as, para);
 
 		case AUTHTYPE_TLS_CLIENTCERT:
 			return authcheck_tls_clientcert(cptr, as, para);

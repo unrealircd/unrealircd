@@ -95,15 +95,6 @@ CMD_FUNC(m_mkpasswd)
 		return 0;
 	}
 
-	if ((type == AUTHTYPE_MD5) || (type == AUTHTYPE_SHA1) ||
-	    (type == AUTHTYPE_RIPEMD160) || (type == AUTHTYPE_UNIXCRYPT))
-	{
-		sendnotice(sptr, "ERROR: Deprecated authentication type '%s'. Use 'argon2' instead. "
-		           "See https://www.unrealircd.org/docs/Authentication_types for the complete list.",
-		           parv[1]);
-		return 0;
-	}
-
 	if (!(result = Auth_Hash(type, parv[2])))
 	{
 		sendnotice(sptr, "*** Authentication method %s failed", parv[1]);
