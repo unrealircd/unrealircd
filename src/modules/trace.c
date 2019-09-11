@@ -191,17 +191,10 @@ CMD_FUNC(m_trace)
 				break;
 
 			case CLIENT_STATUS_SERVER:
-				if (acptr->serv->user)
-					sendnumeric(sptr, RPL_TRACESERVER, class, acptr->local->fd >= 0 ? link_s[acptr->local->fd] : -1,
-					    acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name, acptr->serv->by,
-					    acptr->serv->user->username,
-					    acptr->serv->user->realhost,
-					    now - acptr->local->lasttime);
-				else
-					sendnumeric(sptr, RPL_TRACESERVER, class, acptr->local->fd >= 0 ? link_s[acptr->local->fd] : -1,
-					    acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name, *(acptr->serv->by) ?
-					    acptr->serv->by : "*", "*", me.name,
-					    now - acptr->local->lasttime);
+				sendnumeric(sptr, RPL_TRACESERVER, class, acptr->local->fd >= 0 ? link_s[acptr->local->fd] : -1,
+				    acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name, *(acptr->serv->by) ?
+				    acptr->serv->by : "*", "*", me.name,
+				    now - acptr->local->lasttime);
 				cnt++;
 				break;
 

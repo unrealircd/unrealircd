@@ -233,7 +233,6 @@ Server *make_server(Client *cptr)
 #ifdef	DEBUGMODE
 		servs.inuse++;
 #endif
-		serv->user = NULL;
 		*serv->by = '\0';
 		serv->users = 0;
 		serv->up = NULL;
@@ -329,8 +328,6 @@ void remove_client_from_list(Client *cptr)
 		(void)free_user(cptr->user, cptr);
 	if (cptr->serv)
 	{
-		if (cptr->serv->user)
-			free_user(cptr->serv->user, cptr);
 		safefree(cptr->serv->features.usermodes);
 		safefree(cptr->serv->features.chanmodes[0]);
 		safefree(cptr->serv->features.chanmodes[1]);

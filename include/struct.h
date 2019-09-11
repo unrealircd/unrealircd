@@ -1019,7 +1019,6 @@ struct User {
 /** Server information (local servers and remote servers), you use sptr->serv to access these (see also @link Client @endlink).
  */
 struct Server {
-	ClientUser *user;		/**< Who activated this connection */
 	char *up;			/**< Name of uplink for this server */
 	char by[NICKLEN + 1];		/**< Uhhhh - who activated this connection - AGAIN? */
 	ConfigItem_link *conf;		/**< link { } block associated with this server, or NULL */

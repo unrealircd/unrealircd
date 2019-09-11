@@ -1398,20 +1398,9 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
 		cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
 	if (by && IsUser(by))
-	{
-		(void)strlcpy(cptr->serv->by, by->name, sizeof cptr->serv->by);
-		if (cptr->serv->user)
-			free_user(cptr->serv->user, NULL);
-		cptr->serv->user = by->user;
-		by->user->refcnt++;
-	}
+		strlcpy(cptr->serv->by, by->name, sizeof(cptr->serv->by));
 	else
-	{
-		(void)strlcpy(cptr->serv->by, "AutoConn.", sizeof cptr->serv->by);
-		if (cptr->serv->user)
-			free_user(cptr->serv->user, NULL);
-		cptr->serv->user = NULL;
-	}
+		strlcpy(cptr->serv->by, "AutoConn.", sizeof cptr->serv->by);
 	cptr->serv->up = me.name;
 	SetConnecting(cptr);
 	SetOutgoing(cptr);
