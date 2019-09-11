@@ -237,40 +237,44 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
  */
 #define SIPHASH_KEY_LENGTH 16
 
+/** This specifies the current client status or the client type - see @link ClientStatus @endlink in particular.
+ * You may think "server" or "client" are the only choices here, but there are many more
+ * such as states where the user is in the middle of an SSL/TLS handshake.
+ * @defgroup ClientStatuses Client statuses / types
+ * @{
+ */
 typedef enum ClientStatus {
-	CLIENT_STATUS_LOG			= -7,
-	CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE	= -8,
-	CLIENT_STATUS_CONNECTING		= -6,
-	CLIENT_STATUS_TLS_CONNECT_HANDSHAKE	= -5,
-	CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE	= -4,
-	CLIENT_STATUS_HANDSHAKE			= -3,
-	CLIENT_STATUS_ME			= -2,
-	CLIENT_STATUS_UNKNOWN			= -1,
-	CLIENT_STATUS_SERVER			= 0,
-	CLIENT_STATUS_CLIENT			= 1,
+	CLIENT_STATUS_LOG			= -7,	/**< Client is a log file */
+	CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE	= -8,	/**< Client is doing a STARTTLS handshake */
+	CLIENT_STATUS_CONNECTING		= -6,	/**< Client is an outgoing connect */
+	CLIENT_STATUS_TLS_CONNECT_HANDSHAKE	= -5,	/**< Client is doing an SSL/TLS handshake - outgoing connection */
+	CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE	= -4,	/**< Client is doing an SSL/TLS handshake - incoming connection */
+	CLIENT_STATUS_HANDSHAKE			= -3,	/**< Client is doing a server handshake - outgoing connection */
+	CLIENT_STATUS_ME			= -2,	/**< Client is &me (this server) */
+	CLIENT_STATUS_UNKNOWN			= -1,	/**< Client is doing a hanshake. May become a server or user later, we don't know yet */
+	CLIENT_STATUS_SERVER			= 0,	/**< Client is a server (fully authenticated) */
+	CLIENT_STATUS_CLIENT			= 1,	/**< Client is a user (fully authenticated) */
 } ClientStatus;
 
-/*
- * status macros.
- */
-#define	IsRegisteredUser(x)	((x)->status == CLIENT_STATUS_CLIENT)
-#define	IsRegistered(x)		((x)->status >= CLIENT_STATUS_SERVER)
-#define	IsConnecting(x)		((x)->status == CLIENT_STATUS_CONNECTING)
-#define	IsHandshake(x)		((x)->status == CLIENT_STATUS_HANDSHAKE)
-#define	IsMe(x)			((x)->status == CLIENT_STATUS_ME)
-#define	IsUnknown(x)		(((x)->status == CLIENT_STATUS_UNKNOWN) || ((x)->status == CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE))
-#define	IsServer(x)		((x)->status == CLIENT_STATUS_SERVER)
-#define	IsClient(x)		((x)->status == CLIENT_STATUS_CLIENT)
-#define	IsLog(x)		((x)->status == CLIENT_STATUS_LOG)
+#define	MyConnect(x)			((x)->local)			/**< Is a locally connected client (server, person or user) */
+#define	MyClient(x)			(MyConnect(x) && IsRegisteredUser(x))	/**< Is a locally connected user/person */
+#define	IsRegisteredUser(x)	((x)->status == CLIENT_STATUS_CLIENT)	/**< Is a user/person that has completed the connection handshake */
+#define	IsRegistered(x)		((x)->status >= CLIENT_STATUS_SERVER)	/**< Client has completed the connection handshake (user or server) */
+#define	IsConnecting(x)		((x)->status == CLIENT_STATUS_CONNECTING)	/**< Is an outgoing connect to another server */
+#define	IsHandshake(x)		((x)->status == CLIENT_STATUS_HANDSHAKE)	/**< Is doing a handshake (while connecting to another server) */
+#define	IsMe(x)			((x)->status == CLIENT_STATUS_ME)	/**< This is true for &me */
+/** Client is not fully registered yet. May become a user or a server, we don't know yet. */
+#define	IsUnknown(x)		(((x)->status == CLIENT_STATUS_UNKNOWN) || ((x)->status == CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE))	
+#define	IsServer(x)		((x)->status == CLIENT_STATUS_SERVER)	/**< Is a server that has completed the connection handshake */
+#define	IsLog(x)		((x)->status == CLIENT_STATUS_LOG)	/**< Is a log file, not a user or server */
+#define IsStartTLSHandshake(x)	((x)->status == CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE)	/**< Currently doing a STARTTLS handshake */
+#define IsTLSAcceptHandshake(x)	((x)->status == CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE)	/**< Currently doing a TLS handshake - incoming */
+#define IsTLSConnectHandshake(x)	((x)->status == CLIENT_STATUS_TLS_CONNECT_HANDSHAKE)	/**< Currently doing a TLS handshake - outgoing */
+#define IsTLSHandshake(x) (IsTLSAcceptHandshake(x) || IsTLSConnectHandshake(x) | IsStartTLSHandshake(x))	/**< Currently doing a TLS handshake (incoming/outgoing/STARTTLS) */
 
-#define IsStartTLSHandshake(x)	((x)->status == CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE)
-#define IsTLSAcceptHandshake(x)	((x)->status == CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE)
-#define IsTLSConnectHandshake(x)	((x)->status == CLIENT_STATUS_TLS_CONNECT_HANDSHAKE)
-#define IsTLSHandshake(x) (IsTLSAcceptHandshake(x) || IsTLSConnectHandshake(x) | IsStartTLSHandshake(x))
 #define SetStartTLSHandshake(x)	((x)->status = CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE)
 #define SetTLSAcceptHandshake(x)	((x)->status = CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE)
 #define SetTLSConnectHandshake(x)	((x)->status = CLIENT_STATUS_TLS_CONNECT_HANDSHAKE)
-
 #define	SetConnecting(x)	((x)->status = CLIENT_STATUS_CONNECTING)
 #define	SetHandshake(x)		((x)->status = CLIENT_STATUS_HANDSHAKE)
 #define	SetMe(x)		((x)->status = CLIENT_STATUS_ME)
@@ -279,38 +283,41 @@ typedef enum ClientStatus {
 #define	SetClient(x)		((x)->status = CLIENT_STATUS_CLIENT)
 #define	SetLog(x)		((x)->status = CLIENT_STATUS_LOG)
 
-#define IsSynched(x)	(x->serv->flags.synced)
-#define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
+/* @} */
 
-/* client->flags */
-#define	CLIENT_FLAG_PINGSENT		0x00000001	/* Unreplied ping sent */
-#define	CLIENT_FLAG_DEADSOCKET		0x00000002	/* Local socket is dead--Exiting soon */
-#define	CLIENT_FLAG_KILLED		0x00000004	/* Prevents "QUIT" from being sent for this */
-#define CLIENT_FLAG_IPV6		0x00000008	/* For quick checking */
-#define CLIENT_FLAG_OUTGOING		0x00000010	/* Outgoing connection, do not touch cptr->listener->clients */
-#define	CLIENT_FLAG_CLOSING		0x00000020	/* Set when closing to suppress errors */
-#define	CLIENT_FLAG_LISTEN		0x00000040	/* Used to mark clients which we listen() on */
-#define	CLIENT_FLAG_DNSLOOKUP		0x00000080	/* Client is waiting for a DNS response */
-#define	CLIENT_FLAG_IDENTLOOKUP		0x00000100	/* Client is waiting on rfc931 response */
-#define	CLIENT_FLAG_IDENTLOOKUPSENT	0x00000200	/* Set if we havent writen to ident server */
-#define	CLIENT_FLAG_LOCAL		0x00000400	/* Set for local clients */
-#define	CLIENT_FLAG_GOTID		0x00000800	/* Successful ident lookup achieved */
-#define	CLIENT_FLAG_USEIDENT		0x00001000	/* Allow block { } says we should do an ident check */
-#define CLIENT_FLAG_NCALL		0x00002000	/* Next call (don't ask...) */
-#define CLIENT_FLAG_ULINE		0x00004000	/* User/server is considered U-lined */
-#define CLIENT_FLAG_SQUIT		0x00008000	/* Server has been /SQUIT by an oper */
-#define CLIENT_FLAG_PROTOCTL		0x00010000	/* Received a PROTOCTL message */
-#define CLIENT_FLAG_EAUTH		0x00020000	/* Server authenticated via PROTOCTL EAUTH */
-#define CLIENT_FLAG_NETINFO		0x00040000	/* Received a NETINFO message */
-#define CLIENT_FLAG_QUARANTINE		0x00080000	/* Quarantined server */
-#define CLIENT_FLAG_DCCNOTICE		0x00100000	/* Has the user seen a notice on how to use DCCALLOW already? */
-#define CLIENT_FLAG_SHUNNED		0x00200000	/* Connection is shunned */
-#define CLIENT_FLAG_VIRUS		0x00400000	/* Tagged by spamfilter */
-#define CLIENT_FLAG_TLS			0x00800000	/* Connection is using SSL/TLS */
-#define CLIENT_FLAG_NOFAKELAG		0x01000000	/* Exemption from fake lag */
-#define CLIENT_FLAG_DCCBLOCK		0x02000000	/* Block all DCC send requests */
-#define CLIENT_FLAG_MAP			0x04000000	/* Show this entry in /MAP */
-#define CLIENT_FLAG_PINGWARN		0x08000000	/* Server ping warning */
+/** Used for checking certain properties of clients, such as IsSecure() and IsULine().
+ * @defgroup ClientFlags Client flags
+ * @{
+ */
+#define	CLIENT_FLAG_PINGSENT		0x00000001	/**< PING sent, no reply yet */
+#define	CLIENT_FLAG_DEADSOCKET		0x00000002	/**< Local socket is dead--Exiting soon */
+#define	CLIENT_FLAG_KILLED		0x00000004	/**< Prevents "QUIT" from being sent for this */
+#define CLIENT_FLAG_IPV6		0x00000008	/**< Connection is using IPv6 */
+#define CLIENT_FLAG_OUTGOING		0x00000010	/**< Outgoing connection (do not touch cptr->listener->clients) */
+#define	CLIENT_FLAG_CLOSING		0x00000020	/**< Set when closing to suppress errors */
+#define	CLIENT_FLAG_LISTEN		0x00000040	/**< Used to mark clients which we listen() on */
+#define	CLIENT_FLAG_DNSLOOKUP		0x00000080	/**< Client is doing a DNS lookup */
+#define	CLIENT_FLAG_IDENTLOOKUP		0x00000100	/**< Client is doing an Ident lookup (RFC931) */
+#define	CLIENT_FLAG_IDENTLOOKUPSENT	0x00000200	/**< Set if we havent writen to ident server */
+#define	CLIENT_FLAG_LOCALHOST		0x00000400	/**< Set for localhost clients */
+#define	CLIENT_FLAG_IDENTSUCCESS	0x00000800	/**< Successful ident lookup achieved */
+#define	CLIENT_FLAG_USEIDENT		0x00001000	/**< The allow { } block says we should use the ident (if available) */
+#define CLIENT_FLAG_NEXTCALL		0x00002000	/**< Next call (don't ask...) */
+#define CLIENT_FLAG_ULINE		0x00004000	/**< User/server is considered U-lined (eg: services) */
+#define CLIENT_FLAG_SQUIT		0x00008000	/**< Server has been /SQUIT by an oper */
+#define CLIENT_FLAG_PROTOCTL		0x00010000	/**< Received at least 1 PROTOCTL message */
+#define CLIENT_FLAG_EAUTH		0x00020000	/**< Server authenticated via PROTOCTL EAUTH */
+#define CLIENT_FLAG_NETINFO		0x00040000	/**< Received a NETINFO message */
+#define CLIENT_FLAG_QUARANTINE		0x00080000	/**< Quarantined server (don't allow ircops on this server) */
+#define CLIENT_FLAG_DCCNOTICE		0x00100000	/**< Has the user seen a notice on how to use DCCALLOW already? */
+#define CLIENT_FLAG_SHUNNED		0x00200000	/**< Connection is shunned (user cannot execute any commands) */
+#define CLIENT_FLAG_VIRUS		0x00400000	/**< Tagged by spamfilter as a virus */
+#define CLIENT_FLAG_TLS			0x00800000	/**< Connection is using SSL/TLS */
+#define CLIENT_FLAG_NOFAKELAG		0x01000000	/**< Exemption from fake lag */
+#define CLIENT_FLAG_DCCBLOCK		0x02000000	/**< Block all DCC send requests */
+#define CLIENT_FLAG_MAP			0x04000000	/**< Show this entry in /MAP (only used in map module) */
+#define CLIENT_FLAG_PINGWARN		0x08000000	/**< Server ping warning (remote server slow with responding to PINGs) */
+/** @} */
 
 #define SNO_DEFOPER "+kscfvGqobS"
 #define SNO_DEFUSER "+ks"
@@ -319,7 +326,7 @@ typedef enum ClientStatus {
 #define ALL_UMODES (AllUmodes)
 /* SEND_UMODES and ALL_UMODES are now handled by umode_get/umode_lget/umode_gget -- Syzop. */
 
-#define	CLIENT_FLAG_ID	(CLIENT_FLAG_USEIDENT|CLIENT_FLAG_GOTID)
+#define	CLIENT_FLAG_ID	(CLIENT_FLAG_USEIDENT|CLIENT_FLAG_IDENTSUCCESS)
 
 /* PROTO_*: Server protocol extensions (acptr->local->proto).
  * Note that client protocol extensions have been moved
@@ -357,7 +364,7 @@ typedef enum ClientStatus {
 #define	IsInvisible(x)		((x)->umodes & UMODE_INVISIBLE)
 #define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
-#define	IsPerson(x)		((x)->user && IsClient(x))
+#define	IsPerson(x)		((x)->user && IsRegisteredUser(x))
 #define	SendWallops(x)		(!IsMe(x) && IsPerson(x) && ((x)->umodes & UMODE_WALLOP))
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
 #define IsSetHost(x)		((x)->umodes & UMODE_SETHOST)
@@ -394,21 +401,25 @@ typedef enum ClientStatus {
 /* Client flags macros: to check for via IsXX(),
  * to set via SetXX() and to clear the flag via ClearXX()
  */
-#define IsIdentLookup(x)		((x)->flags & CLIENT_FLAG_IDENTLOOKUP)
-#define IsClosing(x)			((x)->flags & CLIENT_FLAG_CLOSING)
+/**
+ * @ingroup ClientFlags
+ * @{
+ */
+#define IsIdentLookup(x)		((x)->flags & CLIENT_FLAG_IDENTLOOKUP)	/**< Is doing Ident lookups */
+#define IsClosing(x)			((x)->flags & CLIENT_FLAG_CLOSING)	/**< Is closing the connection */
 #define IsDCCBlock(x)			((x)->flags & CLIENT_FLAG_DCCBLOCK)
 #define IsDCCNotice(x)			((x)->flags & CLIENT_FLAG_DCCNOTICE)
 #define IsDeadSocket(x)			((x)->flags & CLIENT_FLAG_DEADSOCKET)
 #define IsUseIdent(x)			((x)->flags & CLIENT_FLAG_USEIDENT)
 #define IsDNSLookup(x)			((x)->flags & CLIENT_FLAG_DNSLOOKUP)
 #define IsEAuth(x)			((x)->flags & CLIENT_FLAG_EAUTH)
-#define IsGotID(x)			((x)->flags & CLIENT_FLAG_GOTID)
+#define IsIdentSuccess(x)		((x)->flags & CLIENT_FLAG_IDENTSUCCESS)
 #define IsIPV6(x)			((x)->flags & CLIENT_FLAG_IPV6)
 #define IsKilled(x)			((x)->flags & CLIENT_FLAG_KILLED)
 #define IsListening(x)			((x)->flags & CLIENT_FLAG_LISTEN)
-#define IsLocalhost(x)			((x)->flags & CLIENT_FLAG_LOCAL)
+#define IsLocalhost(x)			((x)->flags & CLIENT_FLAG_LOCALHOST)
 #define IsMap(x)			((x)->flags & CLIENT_FLAG_MAP)
-#define IsNextCall(x)			((x)->flags & CLIENT_FLAG_NCALL)
+#define IsNextCall(x)			((x)->flags & CLIENT_FLAG_NEXTCALL)
 #define IsNetInfo(x)			((x)->flags & CLIENT_FLAG_NETINFO)
 #define IsNoFakeLag(x)			((x)->flags & CLIENT_FLAG_NOFAKELAG)
 #define IsOutgoing(x)			((x)->flags & CLIENT_FLAG_OUTGOING)
@@ -431,13 +442,13 @@ typedef enum ClientStatus {
 #define SetUseIdent(x)			do { (x)->flags |= CLIENT_FLAG_USEIDENT; } while(0)
 #define SetDNSLookup(x)			do { (x)->flags |= CLIENT_FLAG_DNSLOOKUP; } while(0)
 #define SetEAuth(x)			do { (x)->flags |= CLIENT_FLAG_EAUTH; } while(0)
-#define SetGotID(x)			do { (x)->flags |= CLIENT_FLAG_GOTID; } while(0)
+#define SetIdentSuccess(x)		do { (x)->flags |= CLIENT_FLAG_IDENTSUCCESS; } while(0)
 #define SetIPV6(x)			do { (x)->flags |= CLIENT_FLAG_IPV6; } while(0)
 #define SetKilled(x)			do { (x)->flags |= CLIENT_FLAG_KILLED; } while(0)
 #define SetListening(x)			do { (x)->flags |= CLIENT_FLAG_LISTEN; } while(0)
-#define SetLocalhost(x)			do { (x)->flags |= CLIENT_FLAG_LOCAL; } while(0)
+#define SetLocalhost(x)			do { (x)->flags |= CLIENT_FLAG_LOCALHOST; } while(0)
 #define SetMap(x)			do { (x)->flags |= CLIENT_FLAG_MAP; } while(0)
-#define SetNextCall(x)			do { (x)->flags |= CLIENT_FLAG_NCALL; } while(0)
+#define SetNextCall(x)			do { (x)->flags |= CLIENT_FLAG_NEXTCALL; } while(0)
 #define SetNetInfo(x)			do { (x)->flags |= CLIENT_FLAG_NETINFO; } while(0)
 #define SetNoFakeLag(x)			do { (x)->flags |= CLIENT_FLAG_NOFAKELAG; } while(0)
 #define SetOutgoing(x)			do { (x)->flags |= CLIENT_FLAG_OUTGOING; } while(0)
@@ -459,13 +470,13 @@ typedef enum ClientStatus {
 #define ClearUseIdent(x)		do { (x)->flags &= ~CLIENT_FLAG_USEIDENT; } while(0)
 #define ClearDNSLookup(x)		do { (x)->flags &= ~CLIENT_FLAG_DNSLOOKUP; } while(0)
 #define ClearEAuth(x)			do { (x)->flags &= ~CLIENT_FLAG_EAUTH; } while(0)
-#define ClearGotID(x)			do { (x)->flags &= ~CLIENT_FLAG_GOTID; } while(0)
+#define ClearIdentSuccess(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTSUCCESS; } while(0)
 #define ClearIPV6(x)			do { (x)->flags &= ~CLIENT_FLAG_IPV6; } while(0)
 #define ClearKilled(x)			do { (x)->flags &= ~CLIENT_FLAG_KILLED; } while(0)
 #define ClearListening(x)		do { (x)->flags &= ~CLIENT_FLAG_LISTEN; } while(0)
-#define ClearLocalhost(x)		do { (x)->flags &= ~CLIENT_FLAG_LOCAL; } while(0)
+#define ClearLocalhost(x)		do { (x)->flags &= ~CLIENT_FLAG_LOCALHOST; } while(0)
 #define ClearMap(x)			do { (x)->flags &= ~CLIENT_FLAG_MAP; } while(0)
-#define ClearNextCall(x)		do { (x)->flags &= ~CLIENT_FLAG_NCALL; } while(0)
+#define ClearNextCall(x)		do { (x)->flags &= ~CLIENT_FLAG_NEXTCALL; } while(0)
 #define ClearNetInfo(x)			do { (x)->flags &= ~CLIENT_FLAG_NETINFO; } while(0)
 #define ClearNoFakeLag(x)		do { (x)->flags &= ~CLIENT_FLAG_NOFAKELAG; } while(0)
 #define ClearOutgoing(x)		do { (x)->flags &= ~CLIENT_FLAG_OUTGOING; } while(0)
@@ -479,6 +490,7 @@ typedef enum ClientStatus {
 #define ClearULine(x)			do { (x)->flags &= ~CLIENT_FLAG_ULINE; } while(0)
 #define ClearVirus(x)			do { (x)->flags &= ~CLIENT_FLAG_VIRUS; } while(0)
 #define ClearIdentLookupSent(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTLOOKUPSENT; } while(0)
+/* @} */
 
 
 /* Others that access client structs: */
@@ -486,7 +498,8 @@ typedef enum ClientStatus {
 #define GetHost(x)	(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
 #define GetIP(x)	(x->ip ? x->ip : "255.255.255.255")
 #define IsLoggedIn(x)	(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */
-
+#define IsSynched(x)	(x->serv->flags.synced)
+#define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
 
 /* PROTOCTL (Server protocol) stuff */
 #ifndef DEBUGMODE
@@ -1850,11 +1863,6 @@ struct ListStructPrio {
 /** Is valid character in nick? [not for external usage, use do_check_nickname instead!] */
 #define isvalid(c)   (char_atribs[(u_char)(c)]&ALLOWN)
 
-/* remote fds are set to -256, else its a local fd (a local fd
- * can get -1 or -2 in case it has been closed). -- Syzop
- */
-#define	MyConnect(x)			((x)->local)
-#define	MyClient(x)			(MyConnect(x) && IsClient(x))
 
 #define TStime() (timeofday)
 

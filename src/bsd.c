@@ -677,7 +677,7 @@ void close_connection(Client *cptr)
 			ircstp->is_sbr &= 0x3ff;
 		}
 	}
-	else if (IsClient(cptr))
+	else if (IsRegisteredUser(cptr))
 	{
 		ircstp->is_cl++;
 		ircstp->is_cbs += cptr->local->sendB;
@@ -1704,7 +1704,7 @@ static void read_authports(int fd, int revents, void *userdata)
 	}
 	ircstp->is_asuc++;
 	strlcpy(cptr->ident, ruser, USERLEN + 1);
-	SetGotID(cptr);
+	SetIdentSuccess(cptr);
 	Debug((DEBUG_INFO, "got username [%s]", ruser));
 	return;
 }

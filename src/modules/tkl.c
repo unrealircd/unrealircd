@@ -4469,7 +4469,7 @@ int _run_spamfilter(Client *sptr, char *str_in, int target, char *destination, i
 		/* There's a race condition for SPAMF_USER, so 'rettk' is used for SPAMF_USER
 		 * when a user is currently connecting and filters are checked:
 		 */
-		if (!IsClient(sptr))
+		if (!IsRegisteredUser(sptr))
 		{
 			if (rettkl)
 				*rettkl = tkl;

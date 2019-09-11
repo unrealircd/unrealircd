@@ -551,7 +551,7 @@ Client *find_person(char *name, Client *cptr)
 
 	c2ptr = find_client(name, cptr);
 
-	if (c2ptr && IsClient(c2ptr) && c2ptr->user)
+	if (c2ptr && IsRegisteredUser(c2ptr) && c2ptr->user)
 		return c2ptr;
 
 	return NULL;

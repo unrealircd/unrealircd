@@ -431,7 +431,7 @@ static int cancel_clients(Client *cptr, Client *sptr, char *cmd)
 
 static void remove_unknown(Client *cptr, char *sender)
 {
-	if (!IsRegistered(cptr) || IsClient(cptr))
+	if (!IsRegistered(cptr) || IsRegisteredUser(cptr))
 		return;
 	/*
 	 * Not from a server so don't need to worry about it.

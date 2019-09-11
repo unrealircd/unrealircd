@@ -802,7 +802,7 @@ char *reason = parv[1];
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (IsClient(acptr))
+		if (IsRegisteredUser(acptr))
 			sendnotice(acptr, "Server Restarted by %s", sptr->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, NULL, ":%s ERROR :Restarted by %s: %s",
@@ -1122,7 +1122,7 @@ CMD_FUNC(m_die)
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (IsClient(acptr))
+		if (IsRegisteredUser(acptr))
 			sendnotice(acptr, "Server Terminated by %s", 
 				sptr->name);
 		else if (IsServer(acptr))
@@ -1146,7 +1146,7 @@ int  localdie(void)
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (IsClient(acptr))
+		if (IsRegisteredUser(acptr))
 			sendnotice(acptr, "Server Terminated by local console");
 		else if (IsServer(acptr))
 			sendto_one(acptr, NULL,

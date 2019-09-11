@@ -1269,7 +1269,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 
 		if (!IsUseIdent(sptr))
 			strlcpy(user->username, temp, USERLEN + 1);
-		else if (IsGotID(sptr))
+		else if (IsIdentSuccess(sptr))
 			strlcpy(user->username, sptr->ident, USERLEN+1);
 		else
 		{

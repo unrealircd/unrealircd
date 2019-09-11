@@ -159,7 +159,7 @@ CMD_FUNC(m_sjoin)
 	long modeflags;
 	char queue_s=0, queue_c=0; /* oh this is soooooo ugly :p */
 	
-	if (IsClient(sptr) || parc < 4 || !IsServer(sptr))
+	if (IsRegisteredUser(sptr) || parc < 4 || !IsServer(sptr))
 		return 0;
 
 	if (!IsChannelName(parv[2]))

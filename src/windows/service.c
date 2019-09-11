@@ -63,7 +63,7 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode)
 		{
 			if (!(acptr = local[i]))
 				continue;
-			if (IsClient(acptr))
+			if (IsRegisteredUser(acptr))
 				sendnotice(acptr, "Server Terminating.");
 			else if (IsServer(acptr))
 				sendto_one(acptr, NULL, ":%s ERROR :Terminated", me.name);

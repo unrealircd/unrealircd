@@ -283,7 +283,7 @@ char *get_client_name(Client *sptr, int showip)
 		if (showip)
 			(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%s@%s.%u]",
 			    sptr->name,
-			    IsGotID(sptr) ? sptr->ident : "",
+			    IsIdentSuccess(sptr) ? sptr->ident : "",
 			    sptr->ip ? sptr->ip : "???",
 			    (unsigned int)sptr->local->port);
 		else
@@ -309,7 +309,7 @@ char *get_client_host(Client *cptr)
 		return get_client_name(cptr, FALSE);
 	(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%-.*s@%-.*s]",
 	    cptr->name, USERLEN,
-  	    IsGotID(cptr) ? cptr->ident : "",
+  	    IsIdentSuccess(cptr) ? cptr->ident : "",
 	    HOSTLEN, cptr->local->hostp->h_name);
 	return nbuf;
 }
@@ -461,7 +461,7 @@ static void exit_one_client(Client *sptr, MessageTag *mtags_i, const char *comme
 
 	assert(!IsMe(sptr));
 
-	if (IsClient(sptr))
+	if (IsRegisteredUser(sptr))
 	{
 		MessageTag *mtags_o = NULL;
 
@@ -549,7 +549,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 				sptr->local->class = NULL;
 			}
 		}
-		if (IsClient(sptr))
+		if (IsRegisteredUser(sptr))
 			ircstats.me_clients--;
 		if (sptr->serv && sptr->serv->conf)
 		{
@@ -662,7 +662,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 
 		RunHook2(HOOKTYPE_SERVER_QUIT, sptr, recv_mtags);
 	}
-	else if (IsClient(sptr) && !IsKilled(sptr))
+	else if (IsRegisteredUser(sptr) && !IsKilled(sptr))
 	{
 		sendto_server(cptr, PROTO_SID, 0, recv_mtags, ":%s QUIT :%s", ID(sptr), comment);
 		sendto_server(cptr, 0, PROTO_SID, recv_mtags, ":%s QUIT :%s", sptr->name, comment);

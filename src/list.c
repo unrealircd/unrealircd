@@ -300,7 +300,7 @@ void remove_client_from_list(Client *cptr)
 	{
 		ircstats.servers--;
 	}
-	if (IsClient(cptr))
+	if (IsRegisteredUser(cptr))
 	{
 		if (IsInvisible(cptr))
 		{

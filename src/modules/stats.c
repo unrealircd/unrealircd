@@ -623,7 +623,7 @@ int stats_traffic(Client *sptr, char *para)
 				sp->is_sbr &= 0x3ff;
 			}
 		}
-		else if (IsClient(acptr))
+		else if (IsRegisteredUser(acptr))
 		{
 			sp->is_cbs += acptr->local->sendB;
 			sp->is_cbr += acptr->local->receiveB;
