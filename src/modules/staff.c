@@ -48,7 +48,7 @@ ModuleHeader MOD_HEADER(staff)
 #define ircfree(x)       do { if (x) MyFree(x); x = NULL; } while(0)
 
 /* Forward declarations */
-static void unload_motd_file(aMotdFile *list);
+static void unload_motd_file(MOTDFile *list);
 CMD_FUNC(m_staff);
 static int cb_rehashflag(Client *cptr, Client *sptr, char *flag);
 static int cb_test(ConfigFile *, ConfigEntry *, int, int *);
@@ -62,7 +62,7 @@ static void download_staff_file_complete(char *url, char *file, char *errorbuf, 
 static void InitConf();
 static void FreeConf();
 
-static aMotdFile staff;
+static MOTDFile staff;
 static char *staff_file;
 
 #ifdef USE_LIBCURL
@@ -246,9 +246,9 @@ static void download_staff_file_complete(char *url, char *file, char *errorbuf, 
 }
 #endif
 
-static void unload_motd_file(aMotdFile *list)
+static void unload_motd_file(MOTDFile *list)
 {
-	aMotdLine *old, *new;
+	MOTDLine *old, *new;
 
 	if (!list)
 		return;
@@ -364,8 +364,8 @@ static int cb_rehashflag(Client *cptr, Client *sptr, char *flag)
 /** The routine that actual does the /STAFF command */
 CMD_FUNC(m_staff)
 {
-	aMotdFile *temp;
-	aMotdLine *aLine;
+	MOTDFile *temp;
+	MOTDLine *aLine;
 
 	if (!IsPerson(sptr))
 		return -1;

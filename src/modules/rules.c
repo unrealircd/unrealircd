@@ -59,7 +59,7 @@ MOD_UNLOAD(rules)
 CMD_FUNC(m_rules)
 {
 	ConfigItem_tld *ptr;
-	aMotdLine *temp;
+	MOTDLine *temp;
 
 	temp = NULL;
 

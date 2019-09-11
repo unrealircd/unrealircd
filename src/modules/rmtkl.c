@@ -40,7 +40,7 @@ typedef struct {
 static int dump_str(Client *sptr, char **buf);
 static TKLType *find_TKLType_by_flag(char flag);
 void rmtkl_check_options(char *param, int *skipperm, int *silent);
-int rmtkl_tryremove(Client *sptr, Client *cptr, TKLType *tkltype, aTKline *tkl, char *uhmask, char *commentmask, int skipperm, int silent);
+int rmtkl_tryremove(Client *sptr, Client *cptr, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent);
 CMD_FUNC(rmtkl);
 
 TKLType tkl_types[] = {
@@ -134,7 +134,7 @@ void rmtkl_check_options(char *param, int *skipperm, int *silent) {
 		*silent = 1;
 }
 
-int rmtkl_tryremove(Client *sptr, Client *cptr, TKLType *tkltype, aTKline *tkl, char *uhmask, char *commentmask, int skipperm, int silent)
+int rmtkl_tryremove(Client *sptr, Client *cptr, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent)
 {
 	char *timeret;
 	char gmt[256];
@@ -184,7 +184,7 @@ int rmtkl_tryremove(Client *sptr, Client *cptr, TKLType *tkltype, aTKline *tkl, 
 }
 
 CMD_FUNC(rmtkl) {
-	aTKline *tkl, *next;
+	TKL *tkl, *next;
 	TKLType *tkltype;
 	char *types, *uhmask, *commentmask, *p;
 	char tklchar;

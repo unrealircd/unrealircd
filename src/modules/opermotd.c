@@ -57,7 +57,7 @@ MOD_UNLOAD(opermotd)
  */
 CMD_FUNC(m_opermotd)
 {
-	aMotdLine *motdline;
+	MOTDLine *motdline;
 	ConfigItem_tld *tld;
 
 	if (!ValidatePermissionsForPath("server:opermotd",sptr,NULL,NULL,NULL))

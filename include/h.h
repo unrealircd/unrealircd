@@ -52,7 +52,7 @@ extern MODVAR char umodestring[UMODETABLESZ+1];
 #define get_recvq(x) ((x)->local->class->recvq ? (x)->local->class->recvq : DEFAULT_RECVQ)
 
 #define CMD_FUNC(x) int (x) (Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
-#define CMD_OVERRIDE_FUNC(x) int (x)(Cmdoverride *ovr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+#define CMD_OVERRIDE_FUNC(x) int (x)(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
 
 /* Configuration preprocessor */
 extern int parse_preprocessor_item(char *start, char *end, char *filename, int linenumber, ConditionalConfig **cc);
@@ -379,7 +379,7 @@ extern int del_from_watch_hash_table(char *, Client *);
 extern int hash_check_watch(Client *, int);
 extern int hash_del_watch_list(Client *);
 extern void count_watch_memory(int *, u_long *);
-extern aWatch *hash_get_watch(char *);
+extern Watch *hash_get_watch(char *);
 extern Channel *hash_get_chan_bucket(uint64_t);
 extern Client *hash_find_client(const char *, Client *);
 extern Client *hash_find_id(const char *, Client *);
@@ -503,7 +503,7 @@ extern int        init_conf(char *filename, int rehash);
 extern void       validate_configuration(void);
 extern void       run_configuration(void);
 extern void rehash_motdrules();
-extern void read_motd(const char *filename, aMotdFile *motd); /* s_serv.c */
+extern void read_motd(const char *filename, MOTDFile *motd); /* s_serv.c */
 extern void send_proto(Client *, ConfigItem_link *);
 extern void unload_all_modules(void);
 extern void set_sock_opts(int fd, Client *cptr, int ipv6);
@@ -638,37 +638,37 @@ extern MODVAR int (*register_user)(Client *cptr, Client *sptr, char *nick, char 
 extern MODVAR int (*tkl_hash)(unsigned int c);
 extern MODVAR char (*tkl_typetochar)(int type);
 extern MODVAR int (*tkl_chartotype)(char c);
-extern MODVAR char *(*tkl_type_string)(aTKline *tk);
-extern MODVAR aTKline *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
+extern MODVAR char *(*tkl_type_string)(TKL *tk);
+extern MODVAR TKL *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
                                             time_t expire_at, time_t set_at, int soft, int flags);
-extern MODVAR aTKline *(*tkl_add_banexception)(int type, char *usermask, char *hostmask, char *reason, char *set_by,
+extern MODVAR TKL *(*tkl_add_banexception)(int type, char *usermask, char *hostmask, char *reason, char *set_by,
                                                time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
-extern MODVAR aTKline *(*tkl_add_nameban)(int type, char *name, int hold, char *reason, char *setby,
+extern MODVAR TKL *(*tkl_add_nameban)(int type, char *name, int hold, char *reason, char *setby,
                                           time_t expire_at, time_t set_at, int flags);
-extern MODVAR aTKline *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, Match *match, char *setby,
+extern MODVAR TKL *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, Match *match, char *setby,
                                              time_t expire_at, time_t set_at,
                                              time_t spamf_tkl_duration, char *spamf_tkl_reason,
                                              int flags);
-extern MODVAR aTKline *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int softban);
-extern MODVAR aTKline *(*find_tkl_banexception)(int type, char *usermask, char *hostmask, int softban);
-extern MODVAR aTKline *(*find_tkl_nameban)(int type, char *name, int hold);
-extern MODVAR aTKline *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
-extern MODVAR void (*sendnotice_tkl_del)(char *removed_by, aTKline *tkl);
-extern MODVAR void (*sendnotice_tkl_add)(aTKline *tkl);
-extern MODVAR void (*free_tkl)(aTKline *tkl);
-extern MODVAR aTKline *(*tkl_del_line)(aTKline *tkl);
-extern MODVAR void (*tkl_check_local_remove_shun)(aTKline *tmp);
+extern MODVAR TKL *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int softban);
+extern MODVAR TKL *(*find_tkl_banexception)(int type, char *usermask, char *hostmask, int softban);
+extern MODVAR TKL *(*find_tkl_nameban)(int type, char *name, int hold);
+extern MODVAR TKL *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
+extern MODVAR void (*sendnotice_tkl_del)(char *removed_by, TKL *tkl);
+extern MODVAR void (*sendnotice_tkl_add)(TKL *tkl);
+extern MODVAR void (*free_tkl)(TKL *tkl);
+extern MODVAR TKL *(*tkl_del_line)(TKL *tkl);
+extern MODVAR void (*tkl_check_local_remove_shun)(TKL *tmp);
 extern MODVAR int (*find_tkline_match)(Client *cptr, int skip_soft);
 extern MODVAR int (*find_shun)(Client *cptr);
 extern MODVAR int (*find_spamfilter_user)(Client *sptr, int flags);
-extern MODVAR aTKline *(*find_qline)(Client *cptr, char *nick, int *ishold);
-extern MODVAR aTKline *(*find_tkline_match_zap)(Client *cptr);
+extern MODVAR TKL *(*find_qline)(Client *cptr, char *nick, int *ishold);
+extern MODVAR TKL *(*find_tkline_match_zap)(Client *cptr);
 extern MODVAR void (*tkl_stats)(Client *cptr, int type, char *para);
 extern MODVAR void (*tkl_synch)(Client *sptr);
 extern MODVAR int (*m_tkl)(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[]);
 extern MODVAR int (*place_host_ban)(Client *sptr, BanAction action, char *reason, long duration);
-extern MODVAR int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
-extern MODVAR int (*join_viruschan)(Client *sptr, aTKline *tk, int type);
+extern MODVAR int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
+extern MODVAR int (*join_viruschan)(Client *sptr, TKL *tk, int type);
 extern MODVAR void (*send_list)(Client *cptr);
 extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
@@ -710,7 +710,7 @@ extern MODVAR int (*tkl_ip_hash_type)(int type);
 extern MODVAR int (*find_tkl_exception)(int ban_type, Client *cptr);
 /* /Efuncs */
 
-extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;
+extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;
 extern MODVAR int max_connection_count;
 extern int add_listmode(Ban **list, Client *cptr, Channel *chptr, char *banid);
 extern int add_listmode_ex(Ban **list, Client *cptr, Channel *chptr, char *banid, char *setby, time_t seton);
@@ -720,8 +720,8 @@ extern char *clean_ban_mask(char *, int, Client *);
 extern int find_invex(Channel *chptr, Client *sptr);
 extern void DoMD5(unsigned char *mdout, const unsigned char *src, unsigned long n);
 extern char *md5hash(unsigned char *dst, const unsigned char *src, unsigned long n);
-extern MODVAR aTKline *tklines[TKLISTLEN];
-extern MODVAR aTKline *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
+extern MODVAR TKL *tklines[TKLISTLEN];
+extern MODVAR TKL *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
 extern char *cmdname_by_spamftarget(int target);
 extern void unrealdns_delreq_bycptr(Client *cptr);
 extern void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
@@ -741,14 +741,14 @@ extern char *cm_getparameter_ex(void **p, char mode);
 extern void cm_putparameter_ex(void **p, char mode, char *str);
 extern void cm_freeparameter_ex(void **p, char mode, char *str);
 extern int file_exists(char* file);
-extern void free_motd(aMotdFile *motd); /* s_serv.c */
+extern void free_motd(MOTDFile *motd); /* s_serv.c */
 extern void fix_timers(void);
 extern char *chfl_to_sjoin_symbol(int s);
 extern char chfl_to_chanmode(int s);
 extern void add_pending_net(Client *sptr, char *str);
 extern void free_pending_net(Client *sptr);
 extern Client *find_non_pending_net_duplicates(Client *cptr);
-extern aPendingNet *find_pending_net_by_sid_butone(char *sid, Client *exempt);
+extern PendingNet *find_pending_net_by_sid_butone(char *sid, Client *exempt);
 extern Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid);
 extern MODVAR char serveropts[];
 extern MODVAR char *IsupportStrings[];

@@ -1596,7 +1596,7 @@ ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
 void postconf_defaults(void)
 {
 	char tmpbuf[512];
-	aTKline *tk;
+	TKL *tk;
 	char *encoded;
 
 	if (!iConf.plaintext_policy_user_message)
@@ -2104,7 +2104,7 @@ int	load_conf(char *filename, const char *original_path)
  */
 void remove_config_tkls(void)
 {
-	aTKline *tk, *tk_next;
+	TKL *tk, *tk_next;
 	int index, index2;
 
 	/* IP hashed TKL list */
@@ -2403,7 +2403,7 @@ void	config_rehash()
 		MyFree(alias_ptr);
 	}
 	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)next) {
-		aMotdLine *text;
+		MOTDLine *text;
 		next = (ListStruct *)help_ptr->next;
 		safefree(help_ptr->command);
 		while (help_ptr->text) {
@@ -5823,7 +5823,7 @@ int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	ConfigItem_help *ca;
-	aMotdLine *last = NULL, *temp;
+	MOTDLine *last = NULL, *temp;
 	ca = MyMallocEx(sizeof(ConfigItem_help));
 
 	if (!ce->ce_vardata)
@@ -5833,7 +5833,7 @@ int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		temp = MyMallocEx(sizeof(aMotdLine));
+		temp = MyMallocEx(sizeof(MOTDLine));
 		temp->line = strdup(cep->ce_varname);
 		temp->next = NULL;
 		if (!last)

@@ -85,7 +85,7 @@ int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int tkldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 EVENT(write_tkldb_evt);
 int write_tkldb(void);
-int write_tkline(FILE *fd, const char *tmpfname, aTKline *tkl);
+int write_tkline(FILE *fd, const char *tmpfname, TKL *tkl);
 int read_tkldb(void);
 
 // Globals
@@ -231,7 +231,7 @@ int write_tkldb(void)
 	FILE *fd;
 	uint64_t tklcount;
 	int index, index2;
-	aTKline *tkl;
+	TKL *tkl;
 #ifdef BENCHMARK
 	struct timeval tv_alpha, tv_beta;
 
@@ -324,7 +324,7 @@ int write_tkldb(void)
 }
 
 /** Write a TKL entry */
-int write_tkline(FILE *fd, const char *tmpfname, aTKline *tkl)
+int write_tkline(FILE *fd, const char *tmpfname, TKL *tkl)
 {
 	char tkltype;
 	char buf[256];
@@ -377,7 +377,7 @@ int write_tkline(FILE *fd, const char *tmpfname, aTKline *tkl)
 int read_tkldb(void)
 {
 	FILE *fd;
-	aTKline *tkl = NULL;
+	TKL *tkl = NULL;
 	uint32_t magic = 0;
 	uint64_t cnt;
 	uint64_t tklcount = 0;
@@ -440,7 +440,7 @@ int read_tkldb(void)
 	{
 		int do_not_add = 0;
 
-		tkl = MyMallocEx(sizeof(aTKline));
+		tkl = MyMallocEx(sizeof(TKL));
 
 		/* First, fetch the TKL type.. */
 		R_SAFE(read_data(fd, &c, sizeof(c)));

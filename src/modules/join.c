@@ -370,7 +370,7 @@ int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
 	char *name, *key = NULL;
 	int  i, flags = 0, ishold;
 	char *p = NULL, *p2 = NULL;
-	aTKline *tklban;
+	TKL *tklban;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("JOIN");
 

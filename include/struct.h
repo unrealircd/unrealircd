@@ -62,7 +62,7 @@
 #include "channel.h"
 
 typedef struct LoopStruct LoopStruct;
-typedef struct aTKline aTKline;
+typedef struct TKL TKL;
 typedef struct Spamfilter Spamfilter;
 typedef struct ServerBan ServerBan;
 typedef struct BanException BanException;
@@ -116,26 +116,25 @@ typedef struct ListStructPrio ListStructPrio;
 #define CFG_SIZE 0x0002
 #define CFG_YESNO 0x0004
 
-typedef struct Watch aWatch;
+typedef struct Watch Watch;
 typedef struct Client Client;
-typedef struct LocalClient aLocalClient;
+typedef struct LocalClient LocalClient;
 typedef struct Channel Channel;
 typedef struct User ClientUser;
 typedef struct Server Server;
-typedef struct SLink Link;
+typedef struct Link Link;
 typedef struct Ban Ban;
 typedef struct Mode Mode;
 typedef struct MessageTag MessageTag;
-typedef struct ListOptions LOpts;
-typedef struct Motd aMotdFile; /* represents a whole MOTD, including remote MOTD support info */
-typedef struct MotdItem aMotdLine; /* one line of a MOTD stored as a linked list */
+typedef struct ChannelListOptions ChannelListOptions;
+typedef struct MOTDFile MOTDFile; /* represents a whole MOTD, including remote MOTD support info */
+typedef struct MOTDLine MOTDLine; /* one line of a MOTD stored as a linked list */
 #ifdef USE_LIBCURL
-typedef struct MotdDownload aMotdDownload; /* used to coordinate download of a remote MOTD */
+typedef struct MOTDDownload MOTDDownload; /* used to coordinate download of a remote MOTD */
 #endif
 
-typedef struct trecord aTrecord;
 typedef struct RealCommand RealCommand;
-typedef struct Cmdoverride Cmdoverride;
+typedef struct CommandOverride CommandOverride;
 typedef struct Member Member;
 typedef struct Membership Membership;
 typedef struct MembershipL MembershipL;
@@ -525,16 +524,15 @@ union _moddata
 };
 
 #ifdef USE_LIBCURL
-struct Motd;
-struct MotdDownload
+struct MOTDDownload
 {
-	struct Motd *themotd;
+	MOTDFile *themotd;
 };
 #endif /* USE_LIBCURL */
 
-struct Motd 
+struct MOTDFile 
 {
-	struct MotdItem *lines;
+	struct MOTDLine *lines;
 	struct tm last_modified; /* store the last modification time */
 
 #ifdef USE_LIBCURL
@@ -547,7 +545,7 @@ struct Motd
 
 	  To prevent such a situation from leading to a segfault, we
 	  introduce this remote control pointer. It works like this:
-	  1. read_motd() is called with a URL. A new MotdDownload is
+	  1. read_motd() is called with a URL. A new MOTDDownload is
 	     allocated and the pointer is placed here. This pointer is
 	     also passed to the asynchrnous download handler.
 	  2.a. The download is completed and read_motd_asynch_downloaded()
@@ -560,13 +558,13 @@ struct Motd
 	       the download. read_motd_asynch_downloaded() is eventually called
 	       and frees motd_download.
 	 */
-	struct MotdDownload *motd_download;
+	struct MOTDDownload *motd_download;
 #endif /* USE_LIBCURL */
 };
 
-struct MotdItem {
+struct MOTDLine {
 	char *line;
-	struct MotdItem *next;
+	struct MOTDLine *next;
 };
 
 struct LoopStruct {
@@ -648,7 +646,7 @@ struct User {
 	char *virthost;
 	char *server;
 	SWhois *swhois; /* special whois entries */
-	LOpts *lopt;            /* Saved /list options */
+	ChannelListOptions *lopt;            /* Saved /list options */
 	aWhowas *whowas;
 	int snomask;
 #ifdef	LIST_DEBUG
@@ -820,8 +818,8 @@ struct BanException {
 #define TKL_FLAG_CONFIG		0x0001 /* Entry from configuration file. Cannot be removed by using commands. */
 
 /** A TKL entry, such as a KLINE, GLINE, Spamfilter, QLINE, Exception, .. */
-struct aTKline {
-	aTKline *prev, *next;
+struct TKL {
+	TKL *prev, *next;
 	unsigned int type; /**< TKL type. One of TKL_*, such as TKL_KILL|TKL_GLOBAL for gline */
 	unsigned short flags; /**< One of TKL_FLAG_*, such as TKL_FLAG_CONFIG */
 	char *set_by; /**< By who was this entry added */
@@ -860,7 +858,7 @@ extern MODVAR ircstats IRCstats;
 
 typedef int (*CmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 typedef int (*AliasCmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
-typedef int (*OverrideCmdFunc)(Cmdoverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+typedef int (*OverrideCmdFunc)(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 
 #include "modules.h"
 
@@ -912,7 +910,7 @@ struct Client {
 	struct list_head client_node; 	/* for global client list (client_list) */
 	struct list_head client_hash;	/* for clientTable */
 	struct list_head id_hash;	/* for idTable */
-	aLocalClient *local;	/* for locally connected clients */
+	LocalClient *local;	/* for locally connected clients */
 	ClientUser *user;		/* ...defined, if this is a User */
 	Server *serv;		/* ...defined, if this is a server */
 	time_t lastnick;		/* TimeStamp on nick */
@@ -1250,7 +1248,7 @@ struct ConfigItem_tld {
 	char 		*mask, *channel;
 	char 		*motd_file, *rules_file, *smotd_file;
 	char 		*botmotd_file, *opermotd_file;
-	aMotdFile	rules, motd, smotd, botmotd, opermotd;
+	MOTDFile	rules, motd, smotd, botmotd, opermotd;
 	u_short		options;
 };
 
@@ -1450,7 +1448,7 @@ struct ConfigItem_help {
 	ConfigItem_help *prev, *next;
 	ConfigFlag flag;
 	char *command;
-	aMotdLine *text;
+	MOTDLine *text;
 };
 
 struct ConfigItem_offchans {
@@ -1504,8 +1502,8 @@ typedef struct MemoryInfo {
 	unsigned long classesmem;
 } MemoryInfo;
 
-struct ListOptions {
-	LOpts *next;
+struct ChannelListOptions {
+	ChannelListOptions *next;
 	Link *yeslist, *nolist;
 	unsigned int  starthash;
 	short int showall;
@@ -1537,7 +1535,7 @@ struct Mode {
 /* Used for notify-hash buckets... -Donwulff */
 
 struct Watch {
-	aWatch *hnext;
+	Watch *hnext;
 	time_t lasttime;
 	Link *watch;
 	char nick[1];
@@ -1545,14 +1543,14 @@ struct Watch {
 
 /* general link structure used for chains */
 
-struct SLink {
-	struct SLink *next;
+struct Link {
+	struct Link *next;
 	int  flags;
 	union {
 		Client *cptr;
 		Channel *chptr;
 		ListStruct *aconf;
-		aWatch *wptr;
+		Watch *wptr;
 		aName *whowas;
 		char *cp;
 		struct {
@@ -1850,16 +1848,16 @@ struct RealCommand {
 	unsigned long   	bytes;
 	Module 			*owner;
 	RealCommand		*friend; /* cmd if token, token if cmd */
-	Cmdoverride		*overriders;
-	Cmdoverride		*overridetail;
+	CommandOverride		*overriders;
+	CommandOverride		*overridetail;
 #ifdef DEBUGMODE
 	unsigned long 		lticks;
 	unsigned long 		rticks;
 #endif
 };
 
-struct Cmdoverride {
-	Cmdoverride		*prev, *next;
+struct CommandOverride {
+	CommandOverride		*prev, *next;
 	int			priority;
 	Module			*owner;
 	RealCommand		*command;
@@ -1893,17 +1891,17 @@ struct ParseMode {
 	char buf[512]; /* internal parse buffer */
 };
 
-typedef struct PendingServer aPendingServer;
+typedef struct PendingServer PendingServer;
 struct PendingServer {
-	aPendingServer *prev, *next;
+	PendingServer *prev, *next;
 	char sid[IDLEN+1];
 };
 
-typedef struct PendingNet aPendingNet;
+typedef struct PendingNet PendingNet;
 struct PendingNet {
-	aPendingNet *prev, *next; /* Previous and next in list */
+	PendingNet *prev, *next; /* Previous and next in list */
 	Client *sptr; /**< Client to which these servers belong */
-	aPendingServer *servers; /**< The list of servers connected to the client */
+	PendingServer *servers; /**< The list of servers connected to the client */
 };
 
 extern void init_throttling();

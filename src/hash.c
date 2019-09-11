@@ -260,7 +260,7 @@ void siphash_generate_key(char *k)
 static struct list_head clientTable[NICK_HASH_TABLE_SIZE];
 static struct list_head idTable[NICK_HASH_TABLE_SIZE];
 static Channel *channelTable[CHAN_HASH_TABLE_SIZE];
-static aWatch *watchTable[WATCH_HASH_TABLE_SIZE];
+static Watch *watchTable[WATCH_HASH_TABLE_SIZE];
 
 static char siphashkey_nick[SIPHASH_KEY_LENGTH];
 static char siphashkey_chan[SIPHASH_KEY_LENGTH];
@@ -586,7 +586,7 @@ Channel *hash_get_chan_bucket(uint64_t hashv)
 void  count_watch_memory(int *count, u_long *memory)
 {
 	int i = WATCH_HASH_TABLE_SIZE;
-	aWatch *anptr;
+	Watch *anptr;
 
 	while (i--)
 	{
@@ -594,7 +594,7 @@ void  count_watch_memory(int *count, u_long *memory)
 		while (anptr)
 		{
 			(*count)++;
-			(*memory) += sizeof(aWatch)+strlen(anptr->nick);
+			(*memory) += sizeof(Watch)+strlen(anptr->nick);
 			anptr = anptr->hnext;
 		}
 	}
@@ -606,7 +606,7 @@ void  count_watch_memory(int *count, u_long *memory)
 int add_to_watch_hash_table(char *nick, Client *cptr, int awaynotify)
 {
 	unsigned int hashv;
-	aWatch  *anptr;
+	Watch  *anptr;
 	Link  *lp;
 	
 	
@@ -614,13 +614,13 @@ int add_to_watch_hash_table(char *nick, Client *cptr, int awaynotify)
 	hashv = hash_watch_nick_name(nick);
 	
 	/* Find the right nick (header) in the bucket, or NULL... */
-	if ((anptr = (aWatch *)watchTable[hashv]))
+	if ((anptr = (Watch *)watchTable[hashv]))
 	  while (anptr && mycmp(anptr->nick, nick))
 		 anptr = anptr->hnext;
 	
 	/* If found NULL (no header for this nick), make one... */
 	if (!anptr) {
-		anptr = (aWatch *)MyMallocEx(sizeof(aWatch)+strlen(nick));
+		anptr = (Watch *)MyMallocEx(sizeof(Watch)+strlen(nick));
 		anptr->lasttime = timeofday;
 		strcpy(anptr->nick, nick);
 		
@@ -659,7 +659,7 @@ int add_to_watch_hash_table(char *nick, Client *cptr, int awaynotify)
 int hash_check_watch(Client *cptr, int reply)
 {
 	unsigned int hashv;
-	aWatch  *anptr;
+	Watch  *anptr;
 	Link  *lp;
 	int awaynotify = 0;
 	
@@ -671,7 +671,7 @@ int hash_check_watch(Client *cptr, int reply)
 	hashv = hash_watch_nick_name(cptr->name);
 	
 	/* Find the right header in this bucket */
-	if ((anptr = (aWatch *)watchTable[hashv]))
+	if ((anptr = (Watch *)watchTable[hashv]))
 	  while (anptr && mycmp(anptr->nick, cptr->name))
 		 anptr = anptr->hnext;
 	if (!anptr)
@@ -721,14 +721,14 @@ int hash_check_watch(Client *cptr, int reply)
 /*
  * hash_get_watch
  */
-aWatch  *hash_get_watch(char *nick)
+Watch  *hash_get_watch(char *nick)
 {
 	unsigned int hashv;
-	aWatch  *anptr;
+	Watch  *anptr;
 	
 	hashv = hash_watch_nick_name(nick);
 	
-	if ((anptr = (aWatch *)watchTable[hashv]))
+	if ((anptr = (Watch *)watchTable[hashv]))
 	  while (anptr && mycmp(anptr->nick, nick))
 		 anptr = anptr->hnext;
 	
@@ -741,14 +741,14 @@ aWatch  *hash_get_watch(char *nick)
 int del_from_watch_hash_table(char *nick, Client *cptr)
 {
 	unsigned int hashv;
-	aWatch  *anptr, *nlast = NULL;
+	Watch  *anptr, *nlast = NULL;
 	Link  *lp, *last = NULL;
 
 	/* Get the bucket for this nick... */
 	hashv = hash_watch_nick_name(nick);
 	
 	/* Find the right header, maintaining last-link pointer... */
-	if ((anptr = (aWatch *)watchTable[hashv]))
+	if ((anptr = (Watch *)watchTable[hashv]))
 	  while (anptr && mycmp(anptr->nick, nick)) {
 		  nlast = anptr;
 		  anptr = anptr->hnext;
@@ -817,7 +817,7 @@ int del_from_watch_hash_table(char *nick, Client *cptr)
 int   hash_del_watch_list(Client *cptr)
 {
 	unsigned int   hashv;
-	aWatch  *anptr;
+	Watch  *anptr;
 	Link  *np, *lp, *last;
 	
 	
@@ -852,7 +852,7 @@ int   hash_del_watch_list(Client *cptr)
 			 * remove it. Need to find the last-pointer!
 			 */
 			if (!anptr->watch) {
-				aWatch  *np2, *nl;
+				Watch  *np2, *nl;
 				
 				hashv = hash_watch_nick_name(anptr->nick);
 				

@@ -74,7 +74,7 @@ CMD_FUNC(m_list)
 	Channel *chptr;
 	time_t currenttime = TStime();
 	char *name, *p = NULL;
-	LOpts *lopt = NULL;
+	ChannelListOptions *lopt = NULL;
 	Link *lp;
 	int  usermax, usermin, error = 0, doall = 0;
 	time_t chantimemin, chantimemax;
@@ -120,7 +120,7 @@ CMD_FUNC(m_list)
 	{
 
 		sendnumeric(sptr, RPL_LISTSTART);
-		lopt = sptr->user->lopt = MyMallocEx(sizeof(LOpts));
+		lopt = sptr->user->lopt = MyMallocEx(sizeof(ChannelListOptions));
 		lopt->showall = 1;
 
 		if (DBufLength(&cptr->local->sendQ) < 2048)
@@ -256,7 +256,7 @@ CMD_FUNC(m_list)
 
 	if (doall)
 	{
-		lopt = sptr->user->lopt = MyMallocEx(sizeof(LOpts));
+		lopt = sptr->user->lopt = MyMallocEx(sizeof(ChannelListOptions));
 		lopt->usermin = usermin;
 		lopt->usermax = usermax;
 		lopt->topictimemax = topictimemax;
@@ -285,7 +285,7 @@ CMD_FUNC(m_list)
 void _send_list(Client *cptr)
 {
 	Channel *chptr;
-	LOpts *lopt = cptr->user->lopt;
+	ChannelListOptions *lopt = cptr->user->lopt;
 	unsigned int  hashnum;
 	int numsend = (get_sendq(cptr) / 768) + 1; /* (was previously hard-coded) */
 	/* ^

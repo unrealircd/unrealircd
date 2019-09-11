@@ -866,7 +866,7 @@ int stats_mem(Client *sptr, char *para)
 	    (long)(sizeof(struct list_head) * NICK_HASH_TABLE_SIZE),
 	    CHAN_HASH_TABLE_SIZE,
 	    (long)(sizeof(Channel *) * CHAN_HASH_TABLE_SIZE), WATCH_HASH_TABLE_SIZE,
-	    (long)(sizeof(aWatch *) * WATCH_HASH_TABLE_SIZE));
+	    (long)(sizeof(Watch *) * WATCH_HASH_TABLE_SIZE));
 
 	for (link = freelink; link; link = link->next)
 		fl++;
@@ -881,7 +881,7 @@ int stats_mem(Client *sptr, char *para)
 	tot += fl * sizeof(Link);
 	tot += sizeof(struct list_head) * NICK_HASH_TABLE_SIZE;
 	tot += sizeof(Channel *) * CHAN_HASH_TABLE_SIZE;
-	tot += sizeof(aWatch *) * WATCH_HASH_TABLE_SIZE;
+	tot += sizeof(Watch *) * WATCH_HASH_TABLE_SIZE;
 
 	sendnumericfmt(sptr, RPL_STATSDEBUG, "Total: ww %ld ch %ld cl %ld co %ld db %ld",
 	    totww, totch, totcl, com, db);

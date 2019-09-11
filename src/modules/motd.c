@@ -59,8 +59,8 @@ MOD_UNLOAD(motd)
 CMD_FUNC(m_motd)
 {
 	ConfigItem_tld *ptr;
-	aMotdFile *themotd;
-	aMotdLine *motdline;
+	MOTDFile *themotd;
+	MOTDLine *motdline;
 	int  svsnofile = 0;
 
 

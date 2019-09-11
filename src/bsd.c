@@ -888,7 +888,7 @@ Client *add_connection(ConfigItem_listen *listener, int fd)
 {
 	Client *acptr, *acptr2;
 	ConfigItem_ban *bconf;
-	aTKline *tk;
+	TKL *tk;
 	int i, j;
 	char *ip;
 	int port = 0;

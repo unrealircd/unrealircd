@@ -37,20 +37,20 @@ extern ircstats IRCstats;
 extern int do_garbage_collect;
 /* We need all these for cached MOTDs -- codemastr */
 extern char *buildid;
-aMotdFile opermotd;
-aMotdFile rules;
-aMotdFile motd;
-aMotdFile svsmotd;
-aMotdFile botmotd;
-aMotdFile smotd;
+MOTDFile opermotd;
+MOTDFile rules;
+MOTDFile motd;
+MOTDFile svsmotd;
+MOTDFile botmotd;
+MOTDFile smotd;
 
-void read_motd(const char *filename, aMotdFile *motd);
-void do_read_motd(const char *filename, aMotdFile *themotd);
+void read_motd(const char *filename, MOTDFile *motd);
+void do_read_motd(const char *filename, MOTDFile *themotd);
 #ifdef USE_LIBCURL
-void read_motd_asynch_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, aMotdDownload *motd_download);
+void read_motd_asynch_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDDownload *motd_download);
 #endif
 
-extern aMotdLine *Find_file(char *, short);
+extern MOTDLine *Find_file(char *, short);
 
 void reread_motdsandrules();
 
@@ -825,8 +825,8 @@ char *reason = parv[1];
 int short_motd(Client *sptr)
 {
        ConfigItem_tld *tld;
-       aMotdFile *themotd;
-       aMotdLine *motdline;
+       MOTDFile *themotd;
+       MOTDLine *motdline;
        struct tm *tm;
        char is_short;
 
@@ -897,11 +897,11 @@ int short_motd(Client *sptr)
  * @param filename Filename of file to read or URL. NULL is accepted and causes the *motd to be free()d.
  * @param motd Reference to motd pointer (used for freeing if needed and for asynchronous remote MOTD support)
  */
-void read_motd(const char *filename, aMotdFile *themotd)
+void read_motd(const char *filename, MOTDFile *themotd)
 {
 #ifdef USE_LIBCURL
 	time_t modtime;
-	aMotdDownload *motd_download;
+	MOTDDownload *motd_download;
 #endif
 
 	/* TODO: if themotd points to a tld's motd,
@@ -922,7 +922,7 @@ void read_motd(const char *filename, aMotdFile *themotd)
 	if(filename && url_is_valid(filename))
 	{
 		/* prepare our payload for read_motd_asynch_downloaded() */
-		motd_download = MyMallocEx(sizeof(aMotdDownload));
+		motd_download = MyMallocEx(sizeof(MOTDDownload));
 		if(!motd_download)
 			outofmemory();
 		motd_download->themotd = themotd;
@@ -949,14 +949,14 @@ void read_motd(const char *filename, aMotdFile *themotd)
    @param errorbuf NULL or an errorstring if there was an error while downloading the MOTD.
    @param cached 0 if the URL was downloaded freshly or 1 if the last download was canceled and the local copy should be used.
  */
-void read_motd_asynch_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, aMotdDownload *motd_download)
+void read_motd_asynch_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDDownload *motd_download)
 {
-	aMotdFile *themotd;
+	MOTDFile *themotd;
 
 	themotd = motd_download->themotd;
 	/*
 	  check if the download was soft-canceled. See struct.h's docs on
-	  struct MotdDownload for details.
+	  struct MOTDDownload for details.
 	*/
 	if(!themotd)
 	{
@@ -1007,7 +1007,7 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
    Does the actual reading of the MOTD. To be called only by
    read_motd() or read_motd_asynch_downloaded().
  */
-void do_read_motd(const char *filename, aMotdFile *themotd)
+void do_read_motd(const char *filename, MOTDFile *themotd)
 {
 	FILE *fd;
 	struct tm *tm_tmp;
@@ -1016,7 +1016,7 @@ void do_read_motd(const char *filename, aMotdFile *themotd)
 	char line[512];
 	char *tmp;
 
-	aMotdLine *last, *temp;
+	MOTDLine *last, *temp;
 
 	free_motd(themotd);
 
@@ -1043,7 +1043,7 @@ void do_read_motd(const char *filename, aMotdFile *themotd)
 		if (strlen(line) > 510)
 			line[510] = '\0';
 
-		temp = MyMallocEx(sizeof(aMotdLine));
+		temp = MyMallocEx(sizeof(MOTDLine));
 		temp->line = strdup(line);
 
 		if(last)
@@ -1064,14 +1064,14 @@ void do_read_motd(const char *filename, aMotdFile *themotd)
 }
 
 /**
-   Frees the contents of a aMotdFile structure.
-   The aMotdFile structure itself should be statically
+   Frees the contents of a MOTDFile structure.
+   The MOTDFile structure itself should be statically
    allocated and deallocated. If the caller wants, it must
-   manually free the aMotdFile structure itself.
+   manually free the MOTDFile structure itself.
  */
-void free_motd(aMotdFile *themotd)
+void free_motd(MOTDFile *themotd)
 {
-	aMotdLine *next, *motdline;
+	MOTDLine *next, *motdline;
 
 	if(!themotd)
 		return;
@@ -1168,12 +1168,12 @@ int  localdie(void)
 
 #endif
 
-aPendingNet *pendingnet = NULL;
+PendingNet *pendingnet = NULL;
 
 void add_pending_net(Client *sptr, char *str)
 {
-	aPendingNet *net;
-	aPendingServer *srv;
+	PendingNet *net;
+	PendingServer *srv;
 	int num = 1;
 	char *p, *name;
 
@@ -1181,7 +1181,7 @@ void add_pending_net(Client *sptr, char *str)
 		return;
 
 	/* Allocate */
-	net = MyMallocEx(sizeof(aPendingNet));
+	net = MyMallocEx(sizeof(PendingNet));
 	net->sptr = sptr;
 
 	/* Fill in */
@@ -1192,7 +1192,7 @@ void add_pending_net(Client *sptr, char *str)
 		if (!*name)
 			continue;
 		
-		srv = MyMallocEx(sizeof(aPendingServer));
+		srv = MyMallocEx(sizeof(PendingServer));
 		strlcpy(srv->sid, name, sizeof(srv->sid));
 		AddListItem(srv, net->servers);
 	}
@@ -1202,8 +1202,8 @@ void add_pending_net(Client *sptr, char *str)
 
 void free_pending_net(Client *sptr)
 {
-	aPendingNet *net, *net_next;
-	aPendingServer *srv, *srv_next;
+	PendingNet *net, *net_next;
+	PendingServer *srv, *srv_next;
 	
 	for (net = pendingnet; net; net = net_next)
 	{
@@ -1222,10 +1222,10 @@ void free_pending_net(Client *sptr)
 	}
 }
 
-aPendingNet *find_pending_net_by_sid_butone(char *sid, Client *exempt)
+PendingNet *find_pending_net_by_sid_butone(char *sid, Client *exempt)
 {
-	aPendingNet *net;
-	aPendingServer *srv;
+	PendingNet *net;
+	PendingServer *srv;
 
 	if (BadPtr(sid))
 		return NULL;
@@ -1244,8 +1244,8 @@ aPendingNet *find_pending_net_by_sid_butone(char *sid, Client *exempt)
 /** Search the pending connections list for any identical sids */
 Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid)
 {
-	aPendingNet *net, *other;
-	aPendingServer *s;
+	PendingNet *net, *other;
+	PendingServer *s;
 
 	*srv = NULL;
 	*sid = NULL;
@@ -1273,8 +1273,8 @@ Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid)
 
 Client *find_non_pending_net_duplicates(Client *cptr)
 {
-	aPendingNet *net;
-	aPendingServer *s;
+	PendingNet *net;
+	PendingServer *s;
 	Client *acptr;
 
 	for (net = pendingnet; net; net = net->next)

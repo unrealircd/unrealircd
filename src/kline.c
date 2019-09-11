@@ -25,8 +25,8 @@
 
 // FIXME: with so little here, why have a file for it? Move it!
 
-MODVAR aTKline *tklines[TKLISTLEN];
-MODVAR aTKline *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
+MODVAR TKL *tklines[TKLISTLEN];
+MODVAR TKL *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
 int MODVAR spamf_ugly_vchanoverride = 0;
 
 void tkl_init(void)

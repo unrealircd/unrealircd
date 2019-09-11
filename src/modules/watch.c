@@ -175,7 +175,7 @@ CMD_FUNC(m_watch)
 		if ((*s == 'S' || *s == 's') && !did_s)
 		{
 			Link *lp;
-			aWatch *anptr;
+			Watch *anptr;
 			int  count = 0;
 			
 			did_s = 1;

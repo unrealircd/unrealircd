@@ -95,10 +95,10 @@ MOD_INIT(hideserver)
 
 MOD_LOAD(hideserver)
 {
-	if (!CmdoverrideAdd(MyMod, "MAP", override_map))
+	if (!CommandOverrideAdd(MyMod, "MAP", override_map))
 		return MOD_FAILED;
 
-	if (!CmdoverrideAdd(MyMod, "LINKS", override_links))
+	if (!CommandOverrideAdd(MyMod, "LINKS", override_links))
 		return MOD_FAILED;
 
 	return MOD_SUCCESS;
@@ -326,7 +326,7 @@ CMD_OVERRIDE_FUNC(override_map)
 		parv[1] = "*";
 	
 	if (IsOper(sptr))
-		return CallCmdoverride(ovr, cptr, sptr, recv_mtags, parc, parv);
+		return CallCommandOverride(ovr, cptr, sptr, recv_mtags, parc, parv);
 
 	if (Settings.disable_map)
 	{
@@ -366,7 +366,7 @@ CMD_OVERRIDE_FUNC(override_links)
 	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;
 
 	if (IsOper(sptr))
-		return CallCmdoverride(ovr, cptr, sptr, recv_mtags, parc, parv);
+		return CallCommandOverride(ovr, cptr, sptr, recv_mtags, parc, parv);
 
 	if (Settings.disable_links)
 	{

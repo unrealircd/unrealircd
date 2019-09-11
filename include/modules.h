@@ -97,7 +97,7 @@ typedef enum ModuleObjectType {
 	MOBJ_VERSIONFLAG = 5,
 	MOBJ_SNOMASK = 6,
 	MOBJ_UMODE = 7,
-	MOBJ_CMDOVERRIDE = 8,
+	MOBJ_COMMANDOVERRIDE = 8,
 	MOBJ_EXTBAN = 9,
 	MOBJ_CALLBACK = 10,
 	MOBJ_ISUPPORT = 11,
@@ -537,7 +537,7 @@ typedef struct ModuleObject {
 		Versionflag *versionflag;
 		Snomask *snomask;
 		Umode *umode;
-		Cmdoverride *cmdoverride;
+		CommandOverride *cmdoverride;
 		Extban *extban;
 		Callback *callback;
 		Efunction *efunction;
@@ -788,10 +788,10 @@ extern Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsi
 extern void CommandDel(Command *command);
 extern void CommandDelX(Command *command, RealCommand *cmd);
 extern int CommandExists(char *name);
-extern Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, OverrideCmdFunc func);
-extern Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc func);
-extern void CmdoverrideDel(Cmdoverride *ovr);
-extern int CallCmdoverride(Cmdoverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+extern CommandOverride *CommandOverrideAdd(Module *module, char *cmd, OverrideCmdFunc func);
+extern CommandOverride *CommandOverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc func);
+extern void CommandOverrideDel(CommandOverride *ovr);
+extern int CallCommandOverride(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 
 extern void moddata_free_client(Client *acptr);
 extern void moddata_free_channel(Channel *chptr);
@@ -985,10 +985,10 @@ int hooktype_channel_destroy(Channel *chptr, int *should_destroy);
 int hooktype_tkl_except(Client *cptr, int ban_type);
 int hooktype_umode_change(Client *sptr, long setflags, long newflags);
 int hooktype_rehash_complete(void);
-int hooktype_tkl_add(Client *cptr, Client *sptr, aTKline *tkl);
-int hooktype_tkl_del(Client *cptr, Client *sptr, aTKline *tkl);
+int hooktype_tkl_add(Client *cptr, Client *sptr, TKL *tkl);
+int hooktype_tkl_del(Client *cptr, Client *sptr, TKL *tkl);
 int hooktype_log(int flags, char *timebuf, char *buf);
-int hooktype_local_spamfilter(Client *acptr, char *str, char *str_in, int type, char *target, aTKline *tkl);
+int hooktype_local_spamfilter(Client *acptr, char *str, char *str_in, int type, char *target, TKL *tkl);
 int hooktype_silenced(Client *cptr, Client *sptr, Client *to, int notice);
 int hooktype_rawpacket_in(Client *sptr, char *readbuf, int *length);
 int hooktype_local_nickpass(Client *sptr, Client *nickserv);
@@ -1018,7 +1018,7 @@ int hooktype_require_sasl(Client *sptr, char *reason);
 int hooktype_sasl_continuation(Client *sptr, char *buf);
 int hooktype_sasl_result(Client *sptr, int success);
 int hooktype_place_host_ban(Client *sptr, int action, char *reason, long duration);
-int hooktype_find_tkline_match(Client *sptr, aTKline *tk);
+int hooktype_find_tkline_match(Client *sptr, TKL *tk);
 int hooktype_welcome(Client *sptr, int after_numeric);
 int hooktype_pre_command(Client *from, MessageTag *mtags, char *buf);
 int hooktype_post_command(Client *from, MessageTag *mtags, char *buf);

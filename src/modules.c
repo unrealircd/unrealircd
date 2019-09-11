@@ -493,8 +493,8 @@ void FreeModObj(ModuleObject *obj, Module *m)
 	else if (obj->type == MOBJ_CMODE) {
 		CmodeDel(obj->object.cmode);
 	}
-	else if (obj->type == MOBJ_CMDOVERRIDE) {
-		CmdoverrideDel(obj->object.cmdoverride);
+	else if (obj->type == MOBJ_COMMANDOVERRIDE) {
+		CommandOverrideDel(obj->object.cmdoverride);
 	}
 	else if (obj->type == MOBJ_EXTBAN) {
 		ExtbanDel(obj->object.extban);
@@ -1125,10 +1125,10 @@ Callback *CallbackDel(Callback *cb)
 	return NULL;
 }
 
-Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc function)
+CommandOverride *CommandOverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc function)
 {
 	RealCommand *p;
-	Cmdoverride *ovr;
+	CommandOverride *ovr;
 	
 	if (!(p = find_Command_simple(name)))
 	{
@@ -1145,14 +1145,14 @@ Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, Override
 			return NULL;
 		}
 	}
-	ovr = MyMallocEx(sizeof(Cmdoverride));
+	ovr = MyMallocEx(sizeof(CommandOverride));
 	ovr->func = function;
 	ovr->owner = module; /* TODO: module objects */
 	ovr->priority = priority;
 	if (module)
 	{
 		ModuleObject *cmdoverobj = MyMallocEx(sizeof(ModuleObject));
-		cmdoverobj->type = MOBJ_CMDOVERRIDE;
+		cmdoverobj->type = MOBJ_COMMANDOVERRIDE;
 		cmdoverobj->object.cmdoverride = ovr;
 		AddListItem(cmdoverobj, module->objects);
 		module->errorcode = MODERR_NOERROR;
@@ -1170,12 +1170,12 @@ Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, Override
 	return ovr;
 }
 
-Cmdoverride *CmdoverrideAdd(Module *module, char *name, OverrideCmdFunc function)
+CommandOverride *CommandOverrideAdd(Module *module, char *name, OverrideCmdFunc function)
 {
-	return CmdoverrideAddEx(module, name, 0, function);
+	return CommandOverrideAddEx(module, name, 0, function);
 }
 
-void CmdoverrideDel(Cmdoverride *cmd)
+void CommandOverrideDel(CommandOverride *cmd)
 {
 	if (!cmd->next)
 		cmd->command->overridetail = cmd->prev;
@@ -1193,7 +1193,7 @@ void CmdoverrideDel(Cmdoverride *cmd)
 		ModuleObject *obj;
 		for (obj = cmd->owner->objects; obj; obj = obj->next)
 		{
-			if (obj->type != MOBJ_CMDOVERRIDE)
+			if (obj->type != MOBJ_COMMANDOVERRIDE)
 				continue;
 			if (obj->object.cmdoverride == cmd)
 			{
@@ -1206,7 +1206,7 @@ void CmdoverrideDel(Cmdoverride *cmd)
 	MyFree(cmd);
 }
 
-int CallCmdoverride(Cmdoverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[])
+int CallCommandOverride(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[])
 {
 	if (ovr->next)
 		return ovr->next->func(ovr->next, cptr, sptr, mtags, parc, parv);

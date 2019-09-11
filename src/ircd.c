@@ -869,14 +869,14 @@ int InitUnrealIRCd(int argc, char *argv[])
 
 	init_random(); /* needs to be done very early!! */
 
-	memset(&botmotd, '\0', sizeof(aMotdFile));
-	memset(&rules, '\0', sizeof(aMotdFile));
-	memset(&opermotd, '\0', sizeof(aMotdFile));
-	memset(&motd, '\0', sizeof(aMotdFile));
-	memset(&smotd, '\0', sizeof(aMotdFile));
-	memset(&svsmotd, '\0', sizeof(aMotdFile));
+	memset(&botmotd, '\0', sizeof(MOTDFile));
+	memset(&rules, '\0', sizeof(MOTDFile));
+	memset(&opermotd, '\0', sizeof(MOTDFile));
+	memset(&motd, '\0', sizeof(MOTDFile));
+	memset(&smotd, '\0', sizeof(MOTDFile));
+	memset(&svsmotd, '\0', sizeof(MOTDFile));
 	memset(&me, 0, sizeof(me));
-	me.local = MyMallocEx(sizeof(aLocalClient));
+	me.local = MyMallocEx(sizeof(LocalClient));
 	memset(&loop, 0, sizeof(loop));
 
 	init_hash();

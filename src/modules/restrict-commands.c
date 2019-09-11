@@ -249,7 +249,7 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 				continue;
 			}
 
-			if (!CmdoverrideAdd(ModInf.handle, cmd, rcmd_override))
+			if (!CommandOverrideAdd(ModInf.handle, cmd, rcmd_override))
 			{
 				config_warn("[restrict-commands] Failed to add override for '%s' (NO RESTRICTIONS APPLY)", cmd);
 				continue;
@@ -351,7 +351,7 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 	RestrictedCmd *rcmd;
 
 	if (!MyClient(sptr) || !sptr->local || IsOper(sptr) || IsULine(sptr))
-		return CallCmdoverride(ovr, cptr, sptr, recv_mtags, parc, parv);
+		return CallCommandOverride(ovr, cptr, sptr, recv_mtags, parc, parv);
 
 	rcmd = find_restrictions_bycmd(ovr->command->cmd);
 	if (rcmd)
@@ -369,5 +369,5 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 	}
 
 	// No restrictions apply, process command as normal =]
-	return CallCmdoverride(ovr, cptr, sptr, recv_mtags, parc, parv);
+	return CallCommandOverride(ovr, cptr, sptr, recv_mtags, parc, parv);
 }

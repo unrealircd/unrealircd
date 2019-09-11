@@ -261,7 +261,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 */
 CMD_FUNC(m_uid)
 {
-	aTKline *tklban;
+	TKL *tklban;
 	int ishold;
 	Client *acptr, *serv = NULL;
 	Client *acptrs;
@@ -567,7 +567,7 @@ nickkill2done:
 */
 CMD_FUNC(m_nick)
 {
-	aTKline *tklban;
+	TKL *tklban;
 	int ishold;
 	Client *acptr, *serv = NULL;
 	Client *acptrs;
@@ -1216,7 +1216,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		NULL,		/*7  set_at */
 		NULL		/*8  reason */
 	};
-	aTKline *savetkl = NULL;
+	TKL *savetkl = NULL;
 	ConfigItem_tld *tlds;
 	cptr->local->last = TStime();
 	nick = sptr->name; /* <- The data is always the same, but the pointer is sometimes not,

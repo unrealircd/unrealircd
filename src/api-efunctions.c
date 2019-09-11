@@ -45,30 +45,30 @@ int (*register_user)(Client *cptr, Client *sptr, char *nick, char *username, cha
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
 int (*tkl_chartotype)(char c);
-char *(*tkl_type_string)(aTKline *tk);
-aTKline *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
+char *(*tkl_type_string)(TKL *tk);
+TKL *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *reason, char *setby,
                               time_t expire_at, time_t set_at, int soft, int flags);
-aTKline *(*tkl_add_nameban)(int type, char *name, int hold, char *reason, char *setby,
+TKL *(*tkl_add_nameban)(int type, char *name, int hold, char *reason, char *setby,
                             time_t expire_at, time_t set_at, int flags);
-aTKline *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, Match *match, char *setby,
+TKL *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, Match *match, char *setby,
                                time_t expire_at, time_t set_at,
                                time_t spamf_tkl_duration, char *spamf_tkl_reason,
                                int flags);
-aTKline *(*tkl_add_banexception)(int type, char *usermask, char *hostmask, char *reason, char *set_by,
+TKL *(*tkl_add_banexception)(int type, char *usermask, char *hostmask, char *reason, char *set_by,
                                 time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
-aTKline *(*tkl_del_line)(aTKline *tkl);
-void (*tkl_check_local_remove_shun)(aTKline *tmp);
+TKL *(*tkl_del_line)(TKL *tkl);
+void (*tkl_check_local_remove_shun)(TKL *tmp);
 int (*find_tkline_match)(Client *cptr, int skip_soft);
 int (*find_shun)(Client *cptr);
 int(*find_spamfilter_user)(Client *sptr, int flags);
-aTKline *(*find_qline)(Client *cptr, char *nick, int *ishold);
-aTKline *(*find_tkline_match_zap)(Client *cptr);
+TKL *(*find_qline)(Client *cptr, char *nick, int *ishold);
+TKL *(*find_tkline_match_zap)(Client *cptr);
 void (*tkl_stats)(Client *cptr, int type, char *para);
 void (*tkl_synch)(Client *sptr);
 int (*m_tkl)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 int (*place_host_ban)(Client *sptr, BanAction action, char *reason, long duration);
-int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
-int (*join_viruschan)(Client *sptr, aTKline *tk, int type);
+int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
+int (*join_viruschan)(Client *sptr, TKL *tk, int type);
 void (*send_list)(Client *cptr);
 unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
@@ -109,13 +109,13 @@ void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, char *varname, char *value);
 int (*tkl_ip_hash)(char *ip);
 int (*tkl_ip_hash_type)(int type);
-void (*sendnotice_tkl_del)(char *removed_by, aTKline *tkl);
-void (*sendnotice_tkl_add)(aTKline *tkl);
-void (*free_tkl)(aTKline *tkl);
-aTKline *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int softban);
-aTKline *(*find_tkl_banexception)(int type, char *usermask, char *hostmask, int softban);
-aTKline *(*find_tkl_nameban)(int type, char *name, int hold);
-aTKline *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
+void (*sendnotice_tkl_del)(char *removed_by, TKL *tkl);
+void (*sendnotice_tkl_add)(TKL *tkl);
+void (*free_tkl)(TKL *tkl);
+TKL *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int softban);
+TKL *(*find_tkl_banexception)(int type, char *usermask, char *hostmask, int softban);
+TKL *(*find_tkl_nameban)(int type, char *name, int hold);
+TKL *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
 int (*find_tkl_exception)(int ban_type, Client *cptr);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())

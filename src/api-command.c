@@ -104,7 +104,7 @@ Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned ch
 
 void CommandDelX(Command *command, RealCommand *cmd)
 {
-	Cmdoverride *ovr, *ovrnext;
+	CommandOverride *ovr, *ovrnext;
 
 	DelListItem(cmd, CommandHash[toupper(*cmd->cmd)]);
 	if (command && cmd->owner)
@@ -123,7 +123,7 @@ void CommandDelX(Command *command, RealCommand *cmd)
 	for (ovr = cmd->overriders; ovr; ovr = ovrnext)
 	{
 		ovrnext = ovr->next;
-		CmdoverrideDel(ovr);
+		CommandOverrideDel(ovr);
 	}
 	MyFree(cmd->cmd);
 	MyFree(cmd);

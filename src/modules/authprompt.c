@@ -60,7 +60,7 @@ int authprompt_require_sasl(Client *acptr, char *reason);
 int authprompt_sasl_continuation(Client *acptr, char *buf);
 int authprompt_sasl_result(Client *acptr, int success);
 int authprompt_place_host_ban(Client *sptr, int action, char *reason, long duration);
-int authprompt_find_tkline_match(Client *sptr, aTKline *tk);
+int authprompt_find_tkline_match(Client *sptr, TKL *tk);
 int authprompt_pre_connect(Client *sptr);
 CMD_FUNC(m_auth);
 void authprompt_md_free(ModData *md);
@@ -448,7 +448,7 @@ int authprompt_place_host_ban(Client *sptr, int action, char *reason, long durat
 }
 
 /** Called upon "check for KLINE/GLINE" */
-int authprompt_find_tkline_match(Client *sptr, aTKline *tkl)
+int authprompt_find_tkline_match(Client *sptr, TKL *tkl)
 {
 	/* If it's a soft-xx action and the user is not logged in
 	 * and the user is not yet online, then we will handle this user.

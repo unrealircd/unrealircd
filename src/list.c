@@ -118,7 +118,7 @@ Client *make_client(Client *from, Client *servr)
 		/* Local client */
 		const char *id;
 		
-		cptr->local = MyMallocEx(sizeof(aLocalClient));
+		cptr->local = MyMallocEx(sizeof(LocalClient));
 		
 		INIT_LIST_HEAD(&cptr->lclient_node);
 		INIT_LIST_HEAD(&cptr->special_node);

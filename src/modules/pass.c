@@ -68,7 +68,7 @@ MOD_UNLOAD(pass)
 /** Handles zlines/gzlines/throttling/unknown connections */
 int _check_banned(Client *cptr, int exitflags)
 {
-	aTKline *tk;
+	TKL *tk;
 	ConfigItem_ban *bconf;
 
 	if ((tk = find_tkline_match_zap(cptr)))
