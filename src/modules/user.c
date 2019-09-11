@@ -68,7 +68,7 @@ CMD_FUNC(m_user)
 	char *username, *host, *server, *realname, *umodex = NULL, *virthost =
 	    NULL, *ip = NULL;
 	char *sstamp = NULL;
-	aClient *acptr;
+	Client *acptr;
 
 	if (IsServer(cptr) && !IsUnknown(sptr))
 		return 0;

@@ -25,12 +25,12 @@
 
 #include "unrealircd.h"
 
-void send_umode_out(aClient *, aClient *, long);
-void send_umode(aClient *, aClient *, long, long, char *);
-void set_snomask(aClient *, char *);
-extern int short_motd(aClient *sptr);
-extern aChannel *get_channel(aClient *cptr, char *chname, int flag);
-/* static  Link    *is_banned(aClient *, aChannel *); */
+void send_umode_out(Client *, Client *, long);
+void send_umode(Client *, Client *, long, long, char *);
+void set_snomask(Client *, char *);
+extern int short_motd(Client *sptr);
+extern Channel *get_channel(Client *cptr, char *chname, int flag);
+/* static  Link    *is_banned(Client *, Channel *); */
 int  dontspread = 0;
 extern char *me_hash;
 extern char backupbuf[];
@@ -38,7 +38,7 @@ static char buf[BUFSIZE];
 
 int labeled_response_inhibit = 0;
 
-void iNAH_host(aClient *sptr, char *host)
+void iNAH_host(Client *sptr, char *host)
 {
 	if (!sptr->user)
 		return;
@@ -181,9 +181,9 @@ long set_usermode(char *umode)
 ** complex and no longer understandable. It also was responsible
 ** for mysterious issues and crashes. Hence rewritten.
 */
-int hunt_server(aClient *cptr, aClient *sptr, MessageTag *mtags, char *command, int server, int parc, char *parv[])
+int hunt_server(Client *cptr, Client *sptr, MessageTag *mtags, char *command, int server, int parc, char *parv[])
 {
-	aClient *acptr;
+	Client *acptr;
 	char *saved;
 
 	/* This would be strange and bad. Previous version assumed "it's for me". Hmm.. okay. */
@@ -231,7 +231,7 @@ int hunt_server(aClient *cptr, aClient *sptr, MessageTag *mtags, char *command, 
 unsigned char hash_target(void *target)
 {
 	unsigned long long v = (unsigned long long)target;
-	/* ircu does >> 16 and 8 but since our sizeof(aClient) is
+	/* ircu does >> 16 and 8 but since our sizeof(Client) is
 	 * towards 512 (and hence the alignment), that bit is useless.
 	 * So we do >> 17 and 9.
 	 */
@@ -244,7 +244,7 @@ unsigned char hash_target(void *target)
  * @param name   The name of the target client (used in the error message)
  * @retval Returns 1 if too many targets were addressed (do not send!), 0 if ok to send.
  */
-int check_for_target_limit(aClient *sptr, void *target, const char *name)
+int check_for_target_limit(Client *sptr, void *target, const char *name)
 {
 	u_char *p;
 	u_char hash = hash_target(target);
@@ -352,7 +352,7 @@ char *canonize(char *buffer)
 ** by vmlinuz
 ** returns an ascii string of modes
 */
-char *get_sno_str(aClient *sptr) {
+char *get_sno_str(Client *sptr) {
 	int i;
 	char *m;
 
@@ -366,7 +366,7 @@ char *get_sno_str(aClient *sptr) {
 	return buf;
 }
 
-char *get_mode_str(aClient *acptr)
+char *get_mode_str(Client *acptr)
 {
 	int  i;
 	char *m;
@@ -411,7 +411,7 @@ char *get_snostr(long sno) {
 }
 
 
-void set_snomask(aClient *sptr, char *snomask) {
+void set_snomask(Client *sptr, char *snomask) {
 	int what = MODE_ADD; /* keep this an int. -- Syzop */
 	char *p;
 	int i;
@@ -451,7 +451,7 @@ void set_snomask(aClient *sptr, char *snomask) {
  * send the MODE string for user (user) to connection cptr
  * -avalon
  */
-void send_umode(aClient *cptr, aClient *sptr, long old, long sendmask, char *umode_buf)
+void send_umode(Client *cptr, Client *sptr, long old, long sendmask, char *umode_buf)
 {
 	int i;
 	long flag;
@@ -503,9 +503,9 @@ void send_umode(aClient *cptr, aClient *sptr, long old, long sendmask, char *umo
 /*
  * added Sat Jul 25 07:30:42 EST 1992
  */
-void send_umode_out(aClient *cptr, aClient *sptr, long old)
+void send_umode_out(Client *cptr, Client *sptr, long old)
 {
-	aClient *acptr;
+	Client *acptr;
 
 	send_umode(NULL, sptr, old, SEND_UMODES, buf);
 
@@ -523,7 +523,7 @@ void send_umode_out(aClient *cptr, aClient *sptr, long old)
 		send_umode(cptr, sptr, old, ALL_UMODES, buf);
 }
 
-int  del_silence(aClient *sptr, char *mask)
+int  del_silence(Client *sptr, char *mask)
 {
 	Link **lp;
 	Link *tmp;
@@ -540,7 +540,7 @@ int  del_silence(aClient *sptr, char *mask)
 	return -1;
 }
 
-int add_silence(aClient *sptr, char *mask, int senderr)
+int add_silence(Client *sptr, char *mask, int senderr)
 {
 	Link *lp;
 	int  cnt = 0;
@@ -720,7 +720,7 @@ void set_targmax_defaults(void)
  * eg: the cap module checks if client capability negotiation
  * is in progress
  */
-int is_handshake_finished(aClient *sptr)
+int is_handshake_finished(Client *sptr)
 {
 	Hook *h;
 	int n;

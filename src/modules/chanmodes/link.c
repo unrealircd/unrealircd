@@ -45,20 +45,20 @@ typedef enum {
 	LINKTYPE_BADKEY = 7, // +k
 } linkType;
 
-int cmodeL_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type, int what);
+int cmodeL_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, int what);
 void *cmodeL_put_param(void *r_in, char *param);
 char *cmodeL_get_param(void *r_in);
-char *cmodeL_conv_param(char *param_in, aClient *sptr);
+char *cmodeL_conv_param(char *param_in, Client *sptr);
 void cmodeL_free_param(void *r);
 void *cmodeL_dup_struct(void *r_in);
-int cmodeL_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
+int cmodeL_sjoin_check(Channel *chptr, void *ourx, void *theirx);
 
-int extban_link_syntax(aClient *sptr, int checkt, char *reason);
-int extban_link_is_ok(aClient *sptr, aChannel *chptr, char *param, int checkt, int what, int what2);
+int extban_link_syntax(Client *sptr, int checkt, char *reason);
+int extban_link_is_ok(Client *sptr, Channel *chptr, char *param, int checkt, int what, int what2);
 char *extban_link_conv_param(char *param);
-int extban_link_is_banned(aClient *sptr, aChannel *chptr, char *ban, int type, char **msg, char **errmsg);
-int link_doforward(aClient *sptr, aChannel *chptr, char *linked, linkType linktype);
-int link_pre_localjoin_cb(aClient *sptr, aChannel *chptr, char *parv[]);
+int extban_link_is_banned(Client *sptr, Channel *chptr, char *ban, int type, char **msg, char **errmsg);
+int link_doforward(Client *sptr, Channel *chptr, char *linked, linkType linktype);
+int link_pre_localjoin_cb(Client *sptr, Channel *chptr, char *parv[]);
 
 MOD_INIT(link)
 {
@@ -107,7 +107,7 @@ MOD_UNLOAD(link)
 	return MOD_SUCCESS;
 }
 
-int cmodeL_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type, int what)
+int cmodeL_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
@@ -178,7 +178,7 @@ char *cmodeL_get_param(void *r_in)
 /** Convert parameter to something proper.
  * NOTE: cptr may be NULL
  */
-char *cmodeL_conv_param(char *param_in, aClient *sptr)
+char *cmodeL_conv_param(char *param_in, Client *sptr)
 {
 	static char buf[CHANNELLEN+1];
 	char *p;
@@ -208,7 +208,7 @@ void *cmodeL_dup_struct(void *r_in)
 	return (void *)w;
 }
 
-int cmodeL_sjoin_check(aChannel *chptr, void *ourx, void *theirx)
+int cmodeL_sjoin_check(Channel *chptr, void *ourx, void *theirx)
 {
 	aModeLEntry *our = (aModeLEntry *)ourx;
 	aModeLEntry *their = (aModeLEntry *)theirx;
@@ -220,7 +220,7 @@ int cmodeL_sjoin_check(aChannel *chptr, void *ourx, void *theirx)
 	return EXSJ_THEYWON;
 }
 
-int extban_link_syntax(aClient *sptr, int checkt, char *reason)
+int extban_link_syntax(Client *sptr, int checkt, char *reason)
 {
 	if (MyClient(sptr) && (checkt == EXBCHK_PARAM))
 	{
@@ -235,7 +235,7 @@ int extban_link_syntax(aClient *sptr, int checkt, char *reason)
 	return 0; // Reject ban
 }
 
-int extban_link_is_ok(aClient *sptr, aChannel *chptr, char *param, int checkt, int what, int what2)
+int extban_link_is_ok(Client *sptr, Channel *chptr, char *param, int checkt, int what, int what2)
 {
 	char paramtmp[MAX_EB_LEN + 1];
 	char tmpmask[MAX_EB_LEN + 1];
@@ -304,13 +304,13 @@ char *extban_link_conv_param(char *param)
 	return retbuf;
 }
 
-int extban_link_is_banned(aClient *sptr, aChannel *chptr, char *ban, int type, char **msg, char **errmsg)
+int extban_link_is_banned(Client *sptr, Channel *chptr, char *ban, int type, char **msg, char **errmsg)
 {
 	// We don't actually ban here because we have to extract the channel name in PRE_LOCAL_JOIN anyways
 	return 0;
 }
 
-int link_doforward(aClient *sptr, aChannel *chptr, char *linked, linkType type)
+int link_doforward(Client *sptr, Channel *chptr, char *linked, linkType type)
 {
 	char desc[64];
 	char *parv[3];
@@ -358,7 +358,7 @@ int link_doforward(aClient *sptr, aChannel *chptr, char *linked, linkType type)
 	return HOOK_DENY; // Original channel join = ignored
 }
 
-int link_pre_localjoin_cb(aClient *sptr, aChannel *chptr, char *parv[])
+int link_pre_localjoin_cb(Client *sptr, Channel *chptr, char *parv[])
 {
 	char *linked;
 	int canjoin;

@@ -67,7 +67,7 @@ MOD_UNLOAD(chgname)
 */
 CMD_FUNC(m_chgname)
 {
-	aClient *acptr;
+	Client *acptr;
 	ConfigItem_ban *bconf;
 
 	if (!ValidatePermissionsForPath("client:set:name",sptr,NULL,NULL,NULL))

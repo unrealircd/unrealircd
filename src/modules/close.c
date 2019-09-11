@@ -57,7 +57,7 @@ MOD_UNLOAD(close)
 */
 CMD_FUNC(m_close)
 {
-	aClient *acptr, *acptr2;
+	Client *acptr, *acptr2;
 	int  i;
 	int  closed = 0;
 

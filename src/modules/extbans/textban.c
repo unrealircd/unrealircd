@@ -81,8 +81,8 @@ ModuleHeader MOD_HEADER(textban)
 
 /* Forward declarations */
 char *extban_modeT_conv_param(char *para_in);
-int extban_modeT_is_banned(aClient *sptr, aChannel *chptr, char *ban, int type, char **msg, char **errmsg);
-int extban_modeT_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what, int what2);
+int extban_modeT_is_banned(Client *sptr, Channel *chptr, char *ban, int type, char **msg, char **errmsg);
+int extban_modeT_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int what, int what2);
 void parse_word(const char *s, char **word, int *type);
 
 MOD_INIT(textban)
@@ -242,7 +242,7 @@ int textban_replace(int type, char *badword, char *line, char *buf)
 }
 #endif
 
-unsigned int counttextbans(aChannel *chptr)
+unsigned int counttextbans(Channel *chptr)
 {
 	Ban *ban;
 	unsigned int cnt = 0;
@@ -257,7 +257,7 @@ unsigned int counttextbans(aChannel *chptr)
 }
 
 
-int extban_modeT_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what, int what2)
+int extban_modeT_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int what, int what2)
 {
 	int n;
 
@@ -382,7 +382,7 @@ char *extban_modeT_conv_param(char *para_in)
 	return retbuf;
 }
 
-int extban_modeT_is_banned(aClient *sptr, aChannel *chptr, char *ban, int checktype, char **msg, char **errmsg)
+int extban_modeT_is_banned(Client *sptr, Channel *chptr, char *ban, int checktype, char **msg, char **errmsg)
 {
 	static char filtered[512]; /* temp buffer */
 	long fl;

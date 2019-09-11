@@ -32,12 +32,12 @@ Cmode_t EXTCMODE_SECUREONLY;
 
 #define IsSecureOnly(chptr)    (chptr->mode.extmode & EXTCMODE_SECUREONLY)
 
-int secureonly_check_join(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-int secureonly_channel_sync (aChannel* chptr, int merge, int removetheirs, int nomode);
-int secureonly_send_channel(aClient *acptr, aChannel* chptr);
-int secureonly_check_secure(aChannel* chptr);
-int secureonly_check_sajoin(aClient *acptr, aChannel* chptr, aClient *sptr);
-int secureonly_specialcheck(aClient *sptr, aChannel *chptr, char *parv[]);
+int secureonly_check_join(Client *sptr, Channel *chptr, char *key, char *parv[]);
+int secureonly_channel_sync (Channel* chptr, int merge, int removetheirs, int nomode);
+int secureonly_send_channel(Client *acptr, Channel* chptr);
+int secureonly_check_secure(Channel* chptr);
+int secureonly_check_sajoin(Client *acptr, Channel* chptr, Client *sptr);
+int secureonly_specialcheck(Client *sptr, Channel *chptr, char *parv[]);
 
 MOD_TEST(secureonly)
 {
@@ -80,10 +80,10 @@ MOD_UNLOAD(secureonly)
 /** Kicks all insecure users on a +z channel
  * Returns 1 if the channel was destroyed as a result of this.
  */
-static int secureonly_kick_insecure_users(aChannel *chptr)
+static int secureonly_kick_insecure_users(Channel *chptr)
 {
 	Member *member, *mb2;
-	aClient *cptr;
+	Client *cptr;
 	int i = 0;
 	Hook *h;
 	char *comment = "Insecure user not allowed on secure channel (+z)";
@@ -129,7 +129,7 @@ static int secureonly_kick_insecure_users(aChannel *chptr)
 	return 0;
 }
 
-int secureonly_check_join(aClient *sptr, aChannel *chptr, char *key, char *parv[])
+int secureonly_check_join(Client *sptr, Channel *chptr, char *key, char *parv[])
 {
 	Link *lp;
 
@@ -149,7 +149,7 @@ int secureonly_check_join(aClient *sptr, aChannel *chptr, char *key, char *parv[
 	return 0;
 }
 
-int secureonly_check_secure(aChannel *chptr)
+int secureonly_check_secure(Channel *chptr)
 {
 	if (IsSecureOnly(chptr))
 	{
@@ -159,14 +159,14 @@ int secureonly_check_secure(aChannel *chptr)
 	return 0;
 }
 
-int secureonly_channel_sync(aChannel *chptr, int merge, int removetheirs, int nomode)
+int secureonly_channel_sync(Channel *chptr, int merge, int removetheirs, int nomode)
 {
 	if (!merge && !removetheirs && !nomode)
 		return secureonly_kick_insecure_users(chptr); /* may return 1, meaning channel is destroyed */
 	return 0;
 }
 
-int secureonly_send_channel(aClient *acptr, aChannel *chptr)
+int secureonly_send_channel(Client *acptr, Channel *chptr)
 {
 	if (IsSecureOnly(chptr))
 		if (!IsSecure(acptr))
@@ -175,7 +175,7 @@ int secureonly_send_channel(aClient *acptr, aChannel *chptr)
 	return HOOK_CONTINUE;
 }
 
-int secureonly_check_sajoin(aClient *acptr, aChannel *chptr, aClient *sptr)
+int secureonly_check_sajoin(Client *acptr, Channel *chptr, Client *sptr)
 {
 	if (IsSecureOnly(chptr) && !IsSecure(acptr))
 	{
@@ -190,7 +190,7 @@ int secureonly_check_sajoin(aClient *acptr, aChannel *chptr, aClient *sptr)
 /* Special check for +z in set::modes-on-join. Needs to be done early.
  * Perhaps one day this will be properly handled in the core so this can be removed.
  */
-int secureonly_specialcheck(aClient *sptr, aChannel *chptr, char *parv[])
+int secureonly_specialcheck(Client *sptr, Channel *chptr, char *parv[])
 {
 	if ((chptr->users == 0) && (iConf.modes_on_join.extmodes & EXTCMODE_SECUREONLY) && !IsSecure(sptr) && !IsOper(sptr))
 	{

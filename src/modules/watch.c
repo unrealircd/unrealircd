@@ -58,9 +58,9 @@ MOD_UNLOAD(watch)
  * RPL_WATCHOFF	- Successfully removed from WATCH-list.
  * ERR_TOOMANYWATCH - Take a guess :>  Too many WATCH entries.
  */
-static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2, int awaynotify)
+static void show_watch(Client *cptr, char *name, int rpl1, int rpl2, int awaynotify)
 {
-	aClient *acptr;
+	Client *acptr;
 
 
 	if ((acptr = find_person(name, NULL)))
@@ -93,7 +93,7 @@ static char buf[BUFSIZE];
  */
 CMD_FUNC(m_watch)
 {
-	aClient *acptr;
+	Client *acptr;
 	char *s, **pav = parv, *user;
 	char *p = NULL, *def = "l";
 	int awaynotify = 0;

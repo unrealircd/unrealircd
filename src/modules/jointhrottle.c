@@ -58,12 +58,12 @@ struct JFlood {
 int jointhrottle_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int jointhrottle_config_run(ConfigFile *, ConfigEntry *, int);
 void jointhrottle_md_free(ModData *m);
-int jointhrottle_can_join(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-int jointhrottle_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *parv[]);
-static int isjthrottled(aClient *cptr, aChannel *chptr);
-static void jointhrottle_increase_usercounter(aClient *cptr, aChannel *chptr);
+int jointhrottle_can_join(Client *sptr, Channel *chptr, char *key, char *parv[]);
+int jointhrottle_local_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
+static int isjthrottled(Client *cptr, Channel *chptr);
+static void jointhrottle_increase_usercounter(Client *cptr, Channel *chptr);
 EVENT(jointhrottle_cleanup_structs);
-aJFlood *jointhrottle_addentry(aClient *cptr, aChannel *chptr);
+aJFlood *jointhrottle_addentry(Client *cptr, Channel *chptr);
 
 MOD_TEST(jointhrottle)
 {
@@ -151,7 +151,7 @@ int jointhrottle_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 0;
 }
 
-static int isjthrottled(aClient *cptr, aChannel *chptr)
+static int isjthrottled(Client *cptr, Channel *chptr)
 {
 aJFlood *e;
 int num=cfg.num, t=cfg.t;
@@ -176,7 +176,7 @@ int num=cfg.num, t=cfg.t;
 	return 0;
 }
 
-static void jointhrottle_increase_usercounter(aClient *cptr, aChannel *chptr)
+static void jointhrottle_increase_usercounter(Client *cptr, Channel *chptr)
 {
 aJFlood *e;
 int num=cfg.num, t=cfg.t;
@@ -206,7 +206,7 @@ int num=cfg.num, t=cfg.t;
 	}
 }
 
-int jointhrottle_can_join(aClient *sptr, aChannel *chptr, char *key, char *parv[])
+int jointhrottle_can_join(Client *sptr, Channel *chptr, char *key, char *parv[])
 {
 	if (!ValidatePermissionsForPath("immune:join-flood",sptr,NULL,chptr,NULL) && isjthrottled(sptr, chptr))
 		return ERR_TOOMANYJOINS;
@@ -214,7 +214,7 @@ int jointhrottle_can_join(aClient *sptr, aChannel *chptr, char *key, char *parv[
 }
 
 
-int jointhrottle_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *parv[])
+int jointhrottle_local_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[])
 {
 	jointhrottle_increase_usercounter(cptr, chptr);
 	return 0;
@@ -223,7 +223,7 @@ int jointhrottle_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, Messa
 /** Adds a aJFlood entry to user & channel and returns entry.
  * NOTE: Does not check for already-existing-entry
  */
-aJFlood *jointhrottle_addentry(aClient *cptr, aChannel *chptr)
+aJFlood *jointhrottle_addentry(Client *cptr, Channel *chptr)
 {
 aJFlood *e;
 
@@ -254,8 +254,8 @@ aJFlood *e;
 /** Regularly cleans up user/chan structs */
 EVENT(jointhrottle_cleanup_structs)
 {
-aClient *acptr;
-aChannel *chptr;
+Client *acptr;
+Channel *chptr;
 aJFlood *jf, *jf_next;
 int t = cfg.t;
 	

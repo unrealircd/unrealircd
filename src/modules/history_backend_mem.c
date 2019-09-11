@@ -25,16 +25,16 @@ ModuleHeader MOD_HEADER(history_backend_mem)
 #define HISTORY_BACKEND_MEM_HASH_TABLE_SIZE 1019
 
 /* Definitions (structs, etc.) */
-typedef struct _historylogline HistoryLogLine;
-struct _historylogline {
+typedef struct HistoryLogLine HistoryLogLine;
+struct HistoryLogLine {
 	HistoryLogLine *prev, *next;
 	time_t t;
 	MessageTag *mtags;
 	char line[1];
 };
 
-typedef struct _historyloglineobject HistoryLogObject;
-struct _historyloglineobject {
+typedef struct HistoryLogObject HistoryLogObject;
+struct HistoryLogObject {
 	HistoryLogObject *prev, *next;
 	HistoryLogLine *head; /**< Start of the log (the earliest entry) */
 	HistoryLogLine *tail; /**< End of the log (the latest entry) */
@@ -50,7 +50,7 @@ HistoryLogObject *history_hash_table[HISTORY_BACKEND_MEM_HASH_TABLE_SIZE];
 /* Forward declarations */
 int hbm_history_add(char *object, MessageTag *mtags, char *line);
 int hbm_history_del(char *object, int max_lines, long max_time);
-int hbm_history_request(aClient *acptr, char *object, HistoryFilter *filter);
+int hbm_history_request(Client *acptr, char *object, HistoryFilter *filter);
 int hbm_history_destroy(char *object);
 
 MOD_INIT(history_backend_mem)
@@ -227,14 +227,14 @@ int hbm_history_add(char *object, MessageTag *mtags, char *line)
 	return 0;
 }
 
-int can_receive_history(aClient *acptr)
+int can_receive_history(Client *acptr)
 {
 	if (HasCapability(acptr, "server-time"))
 		return 1;
 	return 0;
 }
 
-void hbm_send_line(aClient *acptr, HistoryLogLine *l, char *batchid)
+void hbm_send_line(Client *acptr, HistoryLogLine *l, char *batchid)
 {
 	static char sendbuf[8192];
 
@@ -257,7 +257,7 @@ void hbm_send_line(aClient *acptr, HistoryLogLine *l, char *batchid)
 	}
 }
 
-int hbm_history_request(aClient *acptr, char *object, HistoryFilter *filter)
+int hbm_history_request(Client *acptr, char *object, HistoryFilter *filter)
 {
 	HistoryLogObject *h = hbm_find_object(object);
 	HistoryLogLine *l;

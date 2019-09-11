@@ -64,7 +64,7 @@ MOD_UNLOAD(svssilence)
  */
 CMD_FUNC(m_svssilence)
 {
-	aClient *acptr;
+	Client *acptr;
 	int mine;
 	char *p, *cp, c;
 	

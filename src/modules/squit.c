@@ -60,7 +60,7 @@ MOD_UNLOAD(squit)
 CMD_FUNC(m_squit)
 {
 	char *server;
-	aClient *acptr;
+	Client *acptr;
 	char *comment = (parc > 2 && parv[parc - 1]) ? parv[parc - 1] : cptr->name;
 
 	if (!ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL))

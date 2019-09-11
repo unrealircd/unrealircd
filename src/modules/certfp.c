@@ -24,9 +24,9 @@ ModuleHeader MOD_HEADER(certfp)
 void certfp_free(ModData *m);
 char *certfp_serialize(ModData *m);
 void certfp_unserialize(char *str, ModData *m);
-int certfp_handshake(aClient *sptr);
-int certfp_connect(aClient *sptr);
-int certfp_whois(aClient *sptr, aClient *acptr);
+int certfp_handshake(Client *sptr);
+int certfp_connect(Client *sptr);
+int certfp_whois(Client *sptr, Client *acptr);
 
 ModDataInfo *certfp_md; /* Module Data structure which we acquire */
 
@@ -71,7 +71,7 @@ MOD_UNLOAD(certfp)
 /* 
  * Obtain client's fingerprint.
  */
-char *get_fingerprint_for_client(aClient *cptr)
+char *get_fingerprint_for_client(Client *cptr)
 {
 	unsigned int n;
 	unsigned int l;
@@ -103,7 +103,7 @@ char *get_fingerprint_for_client(aClient *cptr)
 	return NULL;
 }
 
-int certfp_handshake(aClient *acptr)
+int certfp_handshake(Client *acptr)
 {
 	if (acptr->local->ssl)
 	{
@@ -117,7 +117,7 @@ int certfp_handshake(aClient *acptr)
 	return 0;
 }
 
-int certfp_connect(aClient *acptr)
+int certfp_connect(Client *acptr)
 {
 	if (IsSecure(acptr))
 	{
@@ -130,7 +130,7 @@ int certfp_connect(aClient *acptr)
 	return 0;
 }
 
-int certfp_whois(aClient *sptr, aClient *acptr)
+int certfp_whois(Client *sptr, Client *acptr)
 {
 	char *fp = moddata_client_get(acptr, "certfp");
 	

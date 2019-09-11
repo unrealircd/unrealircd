@@ -59,7 +59,7 @@ MOD_UNLOAD(part)
 */
 CMD_FUNC(m_part)
 {
-	aChannel *chptr;
+	Channel *chptr;
 	Membership *lp;
 	char *p = NULL, *name;
 	char *commentx = (parc > 2 && parv[2]) ? parv[2] : NULL;

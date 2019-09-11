@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(showwhois)
 long UMODE_SHOWWHOIS = 0L;
 
 /* Forward declarations */
-int showwhois_whois(aClient *sptr, aClient *acptr);
+int showwhois_whois(Client *sptr, Client *acptr);
 
 MOD_TEST(showwhois)
 {
@@ -62,7 +62,7 @@ MOD_UNLOAD(showwhois)
 	return MOD_SUCCESS;
 }
 
-int showwhois_whois(aClient *sptr, aClient *acptr)
+int showwhois_whois(Client *sptr, Client *acptr)
 {
 	if (IsWhois(acptr) && (sptr != acptr))
 	{

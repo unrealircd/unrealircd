@@ -64,7 +64,7 @@ MOD_UNLOAD(silence)
 CMD_FUNC(m_silence)
 {
 	Link *lp;
-	aClient *acptr;
+	Client *acptr;
 	char c, *cp;
 
 	acptr = sptr;

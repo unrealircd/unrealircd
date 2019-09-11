@@ -51,7 +51,7 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode)
 {
 	DWORD status;
 	int i;
-	aClient *acptr;
+	Client *acptr;
 
 	/* Stopping */
 	if (opcode == SERVICE_CONTROL_STOP) 

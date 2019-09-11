@@ -50,11 +50,11 @@ ModuleHeader MOD_HEADER(staff)
 /* Forward declarations */
 static void unload_motd_file(aMotdFile *list);
 CMD_FUNC(m_staff);
-static int cb_rehashflag(aClient *cptr, aClient *sptr, char *flag);
+static int cb_rehashflag(Client *cptr, Client *sptr, char *flag);
 static int cb_test(ConfigFile *, ConfigEntry *, int, int *);
 static int cb_conf(ConfigFile *, ConfigEntry *, int);
 static int cb_rehash();
-static int cb_stats(aClient *sptr, char *flag);
+static int cb_stats(Client *sptr, char *flag);
 #ifdef USE_LIBCURL
 static int download_staff_file(ConfigEntry *ce);
 static void download_staff_file_complete(char *url, char *file, char *errorbuf, int cached, void *dummy);
@@ -331,7 +331,7 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 0;
 }
 
-static int cb_stats(aClient *sptr, char *flag)
+static int cb_stats(Client *sptr, char *flag)
 {
 	if (*flag == 'S')
 		sendtxtnumeric(sptr, "staff-file: %s", STAFF_FILE);
@@ -339,7 +339,7 @@ static int cb_stats(aClient *sptr, char *flag)
 	return 0;
 }
 
-static int cb_rehashflag(aClient *cptr, aClient *sptr, char *flag)
+static int cb_rehashflag(Client *cptr, Client *sptr, char *flag)
 {
 	int myflag = 0;
 

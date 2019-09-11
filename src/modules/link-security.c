@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER(link_security)
 char *link_security_md_serialize(ModData *m);
 void link_security_md_unserialize(char *str, ModData *m);
 EVENT(checklinksec);
-char *link_security_capability_parameter(aClient *acptr);
+char *link_security_capability_parameter(Client *acptr);
 CMD_FUNC(m_linksecurity);
 
 /* Global variables */
@@ -114,7 +114,7 @@ void link_security_md_unserialize(char *str, ModData *m)
 /** Return 1 if the server certificate is verified for
  * server 'acptr', return 0 if not.
  */
-int certificate_verification_active(aClient *acptr)
+int certificate_verification_active(Client *acptr)
 {
 	ConfigItem_link *conf;
 	
@@ -146,7 +146,7 @@ int certificate_verification_active(aClient *acptr)
  */
 int our_link_security(void)
 {
-	aClient *acptr;
+	Client *acptr;
 	int level = 2; /* safest */
 	
 	list_for_each_entry(acptr, &server_list, special_node)
@@ -176,7 +176,7 @@ EVENT(checklinksec)
 {
 	int last_local_link_security = local_link_security;
 	int last_global_link_security = global_link_security;
-	aClient *acptr;
+	Client *acptr;
 	char *s;
 	int v;
 	int warning_sent = 0;
@@ -230,7 +230,7 @@ EVENT(checklinksec)
 	}
 }
 
-char *link_security_capability_parameter(aClient *acptr)
+char *link_security_capability_parameter(Client *acptr)
 {
 	return valtostr(effective_link_security);
 }
@@ -238,7 +238,7 @@ char *link_security_capability_parameter(aClient *acptr)
 /** /LINKSECURITY command */
 CMD_FUNC(m_linksecurity)
 {
-	aClient *acptr;
+	Client *acptr;
 	char *s;
 	int v;
 	

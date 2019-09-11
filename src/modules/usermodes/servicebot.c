@@ -37,13 +37,13 @@ ModuleHeader MOD_HEADER(servicebot)
 long UMODE_SERVICEBOT = 0L;
 
 /* Forward declarations */
-int servicebot_can_kick(aClient *sptr, aClient *target, aChannel *chptr,
+int servicebot_can_kick(Client *sptr, Client *target, Channel *chptr,
                     char *comment, long sptr_flags, long target_flags, char **reject_reason);
-int servicebot_mode_deop(aClient *sptr, aClient *target, aChannel *chptr,
+int servicebot_mode_deop(Client *sptr, Client *target, Channel *chptr,
                     u_int what, int modechar, long my_access, char **reject_reason);
-int servicebot_pre_kill(aClient *sptr, aClient *target, char *reason);
-int servicebot_whois(aClient *sptr, aClient *acptr);
-int servicebot_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr);
+int servicebot_pre_kill(Client *sptr, Client *target, char *reason);
+int servicebot_whois(Client *sptr, Client *acptr);
+int servicebot_see_channel_in_whois(Client *sptr, Client *target, Channel *chptr);
                     
 MOD_TEST(servicebot)
 {
@@ -74,7 +74,7 @@ MOD_UNLOAD(servicebot)
 	return MOD_SUCCESS;
 }
 
-int servicebot_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *comment,
+int servicebot_can_kick(Client *sptr, Client *target, Channel *chptr, char *comment,
                     long sptr_flags, long target_flags, char **reject_reason)
 {
 	static char errmsg[NICKLEN+256];
@@ -95,7 +95,7 @@ int servicebot_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *c
 	return EX_ALLOW;
 }
 
-int servicebot_mode_deop(aClient *sptr, aClient *target, aChannel *chptr,
+int servicebot_mode_deop(Client *sptr, Client *target, Channel *chptr,
                     u_int what, int modechar, long my_access, char **reject_reason)
 {
 	static char errmsg[NICKLEN+256];
@@ -113,7 +113,7 @@ int servicebot_mode_deop(aClient *sptr, aClient *target, aChannel *chptr,
 	return EX_ALLOW;
 }
 
-int servicebot_pre_kill(aClient *sptr, aClient *target, char *reason)
+int servicebot_pre_kill(Client *sptr, Client *target, char *reason)
 {
 	if (IsServiceBot(target) && !(ValidatePermissionsForPath("services:servicebot:kill",sptr,target,NULL,NULL) || IsULine(sptr)))
 	{
@@ -123,7 +123,7 @@ int servicebot_pre_kill(aClient *sptr, aClient *target, char *reason)
 	return EX_ALLOW;
 }
 
-int servicebot_whois(aClient *sptr, aClient *acptr)
+int servicebot_whois(Client *sptr, Client *acptr)
 {
 	int hideoper = (IsHideOper(acptr) && (sptr != acptr) && !IsOper(sptr)) ? 1 : 0;
 
@@ -134,7 +134,7 @@ int servicebot_whois(aClient *sptr, aClient *acptr)
 }
 
 /* This hides the servicebot, even if you are in the same channel, unless oper overriding */
-int servicebot_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr)
+int servicebot_see_channel_in_whois(Client *sptr, Client *target, Channel *chptr)
 {
 	if (IsServiceBot(target))
 		return EX_DENY;

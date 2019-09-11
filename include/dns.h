@@ -8,25 +8,25 @@ typedef enum {
 	DNSREQ_CONNECT = 3
 } DNSReqType;
 
-typedef struct _dnsreq DNSReq;
+typedef struct DNSReq DNSReq;
 
 /* Depending on the request type, some fields are filled in:
  * cptr: DNSREQ_CLIENT, DNSREQ_CONNECT
  * link: DNSREQ_LINKCONF, DNSREQ_CONNECT
  */
 
-struct _dnsreq {
+struct DNSReq {
 	DNSReq *prev, *next;
 	char *name; /**< Name being resolved (only for DNSREQ_LINKCONF and DNSREQ_CONNECT) */
 	char ipv6; /**< Resolving for ipv6 or ipv4? */
 	DNSReqType type; /**< DNS Request type (DNSREQ_*) */
-	aClient *cptr; /**< Client the request is for, NULL if client died OR unavailable */
+	Client *cptr; /**< Client the request is for, NULL if client died OR unavailable */
 	ConfigItem_link *linkblock; /**< Linkblock */
 };
 
-typedef struct _dnscache DNSCache;
+typedef struct DNSCache DNSCache;
 
-struct _dnscache {
+struct DNSCache {
 	DNSCache *prev, *next;		/**< Previous and next in linked list */
 	DNSCache *hprev, *hnext;	/**< Previous and next in hash list */
 	char *name;					/**< The hostname */
@@ -34,9 +34,9 @@ struct _dnscache {
 	time_t expires;				/**< When record expires */
 };
 
-typedef struct _dnsstats DNSStats;
+typedef struct DNSStats DNSStats;
 
-struct _dnsstats {
+struct DNSStats {
 	unsigned int cache_hits;
 	unsigned int cache_misses;
 	unsigned int cache_adds;
@@ -66,7 +66,7 @@ extern ares_channel resolver_channel;
 
 extern void init_resolver(int);
 
-struct hostent *unrealdns_doclient(aClient *cptr);
+struct hostent *unrealdns_doclient(Client *cptr);
 
 extern void unreal_gethostbyname(const char *name, int family, ares_host_callback callback, void *arg);
 

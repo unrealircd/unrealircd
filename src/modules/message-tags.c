@@ -32,8 +32,8 @@ ModuleHeader MOD_HEADER(message-tags)
 	};
 
 long CAP_MESSAGE_TAGS = 0L;
-char *_mtags_to_string(MessageTag *m, aClient *acptr);
-void _parse_message_tags(aClient *cptr, char **str, MessageTag **mtag_list);
+char *_mtags_to_string(MessageTag *m, Client *acptr);
+void _parse_message_tags(Client *cptr, char **str, MessageTag **mtag_list);
 
 MOD_TEST(message-tags)
 {
@@ -142,7 +142,7 @@ void message_tag_escape(char *in, char *out)
 }
 
 /** Incoming filter for message tags */
-int message_tag_ok(aClient *cptr, char *name, char *value)
+int message_tag_ok(Client *cptr, char *name, char *value)
 {
 	MessageTagHandler *m;
 
@@ -159,7 +159,7 @@ int message_tag_ok(aClient *cptr, char *name, char *value)
 	return 0;
 }
 
-void _parse_message_tags(aClient *cptr, char **str, MessageTag **mtag_list)
+void _parse_message_tags(Client *cptr, char **str, MessageTag **mtag_list)
 {
 	char *remainder;
 	char *element, *p, *x;
@@ -209,7 +209,7 @@ void _parse_message_tags(aClient *cptr, char **str, MessageTag **mtag_list)
 }
 
 /** Outgoing filter for tags */
-int client_accepts_tag(const char *token, aClient *acptr)
+int client_accepts_tag(const char *token, Client *acptr)
 {
 	MessageTagHandler *m;
 
@@ -252,7 +252,7 @@ int client_accepts_tag(const char *token, aClient *acptr)
  * Taking into account the restrictions that 'acptr' may have.
  * @returns A string (static buffer) or NULL if no tags at all (!)
  */
-char *_mtags_to_string(MessageTag *m, aClient *acptr)
+char *_mtags_to_string(MessageTag *m, Client *acptr)
 {
 	static char buf[4096], name[8192], value[8192];
 	char tbuf[512];

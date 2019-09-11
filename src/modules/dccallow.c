@@ -61,7 +61,7 @@ CMD_FUNC(m_dccallow)
 {
 	Link *lp;
 	char *p, *s;
-	aClient *acptr;
+	Client *acptr;
 	int didlist = 0, didhelp = 0, didanything = 0;
 	char **ptr;
 	int ntargets = 0;

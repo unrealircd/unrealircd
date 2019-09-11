@@ -53,7 +53,7 @@ MOD_UNLOAD(invite)
 }
 
 /* Send the user their list of active invites */
-int send_invite_list(aClient *sptr)
+int send_invite_list(Client *sptr)
 {
 	Link *inv;
 
@@ -73,8 +73,8 @@ int send_invite_list(aClient *sptr)
 */
 CMD_FUNC(m_invite)
 {
-	aClient *acptr;
-	aChannel *chptr;
+	Client *acptr;
+	Channel *chptr;
 	int override = 0;
 	int i = 0;
 	Hook *h;

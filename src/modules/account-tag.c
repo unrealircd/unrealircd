@@ -34,8 +34,8 @@ ModuleHeader MOD_HEADER(account-tag)
 /* Variables */
 long CAP_ACCOUNT_TAG = 0L;
 
-int account_tag_mtag_is_ok(aClient *acptr, char *name, char *value);
-void mtag_add_account(aClient *acptr, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
+int account_tag_mtag_is_ok(Client *acptr, char *name, char *value);
+void mtag_add_account(Client *acptr, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 
 MOD_INIT(account-tag)
 {
@@ -75,7 +75,7 @@ MOD_UNLOAD(account-tag)
  * syntax.
  * We simply allow account-tag ONLY from servers and with any syntax.
  */
-int account_tag_mtag_is_ok(aClient *acptr, char *name, char *value)
+int account_tag_mtag_is_ok(Client *acptr, char *name, char *value)
 {
 	if (IsServer(acptr))
 		return 1;
@@ -83,7 +83,7 @@ int account_tag_mtag_is_ok(aClient *acptr, char *name, char *value)
 	return 0;
 }
 
-void mtag_add_account(aClient *acptr, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
+void mtag_add_account(Client *acptr, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
 {
 	MessageTag *m;
 

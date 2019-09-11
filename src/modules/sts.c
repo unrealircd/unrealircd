@@ -55,7 +55,7 @@ MOD_UNLOAD(sts)
 /** Check if this capability should be visible.
  * Note that 'acptr' may be NULL.
  */
-int sts_capability_visible(aClient *acptr)
+int sts_capability_visible(Client *acptr)
 {
 	TLSOptions *ssl;
 
@@ -78,7 +78,7 @@ int sts_capability_visible(aClient *acptr)
 	return 0;
 }
 
-char *sts_capability_parameter(aClient *acptr)
+char *sts_capability_parameter(Client *acptr)
 {
 	TLSOptions *ssl;
 	static char buf[256];

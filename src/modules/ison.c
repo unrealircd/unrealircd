@@ -67,7 +67,7 @@ static char buf[BUFSIZE];
 CMD_FUNC(m_ison)
 {
 	char namebuf[USERLEN + HOSTLEN + 4];
-	aClient *acptr;
+	Client *acptr;
 	char *s, *user;
 	char *p = NULL;
 

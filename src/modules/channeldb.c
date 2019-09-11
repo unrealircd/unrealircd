@@ -49,9 +49,9 @@ int channeldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int channeldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 EVENT(write_channeldb_evt);
 int write_channeldb(void);
-int write_channel_entry(FILE *fd, const char *tmpfname, aChannel *chptr);
+int write_channel_entry(FILE *fd, const char *tmpfname, Channel *chptr);
 int read_channeldb(void);
-static void set_channel_mode(aChannel *chptr, char *modes, char *parameters);
+static void set_channel_mode(Channel *chptr, char *modes, char *parameters);
 
 // Globals
 static ModDataInfo *channeldb_md;
@@ -193,7 +193,7 @@ int write_channeldb(void)
 	char tmpfname[512];
 	FILE *fd;
 	int index, index2;
-	aChannel *chptr;
+	Channel *chptr;
 	int cnt = 0;
 #ifdef BENCHMARK
 	struct timeval tv_alpha, tv_beta;
@@ -268,7 +268,7 @@ int write_listmode(FILE *fd, const char *tmpfname, Ban *lst)
 	return 1;
 }
 
-int write_channel_entry(FILE *fd, const char *tmpfname, aChannel *chptr)
+int write_channel_entry(FILE *fd, const char *tmpfname, Channel *chptr)
 {
 	W_SAFE(write_int32(fd, MAGIC_CHANNEL_START));
 	/* Channel name */
@@ -415,7 +415,7 @@ int read_channeldb(void)
 		modes2 = NULL;
 		mode_lock = NULL;
 		
-		aChannel *chptr;
+		Channel *chptr;
 		R_SAFE(read_data(fd, &magic, sizeof(magic)));
 		if (magic != MAGIC_CHANNEL_START)
 		{
@@ -468,7 +468,7 @@ int read_channeldb(void)
 #undef FreeChannelEntry
 #undef R_SAFE
 
-static void set_channel_mode(aChannel *chptr, char *modes, char *parameters)
+static void set_channel_mode(Channel *chptr, char *modes, char *parameters)
 {
 	char buf[512];
 	char *p, *param;

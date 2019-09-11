@@ -63,7 +63,7 @@ MOD_UNLOAD(chghost)
 
 CMD_FUNC(m_chghost)
 {
-	aClient *acptr;
+	Client *acptr;
 
 	if (MyClient(sptr) && !ValidatePermissionsForPath("client:set:host",sptr,NULL,NULL,NULL))
 	{

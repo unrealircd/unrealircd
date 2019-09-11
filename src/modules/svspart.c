@@ -61,7 +61,7 @@ MOD_UNLOAD(svspart)
 */
 CMD_FUNC(m_svspart)
 {
-	aClient *acptr;
+	Client *acptr;
 	char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
 	if (!IsULine(sptr))
 		return 0;

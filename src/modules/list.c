@@ -23,7 +23,7 @@
 #include "unrealircd.h"
 
 CMD_FUNC(m_list);
-void _send_list(aClient *cptr);
+void _send_list(Client *cptr);
 
 #define MSG_LIST 	"LIST"	
 
@@ -71,7 +71,7 @@ MOD_UNLOAD(list)
  */
 CMD_FUNC(m_list)
 {
-	aChannel *chptr;
+	Channel *chptr;
 	time_t currenttime = TStime();
 	char *name, *p = NULL;
 	LOpts *lopt = NULL;
@@ -282,9 +282,9 @@ CMD_FUNC(m_list)
  * cptr = Local client to send the output back to.
  * Taken from bahamut, modified for Unreal by codemastr.
  */
-void _send_list(aClient *cptr)
+void _send_list(Client *cptr)
 {
-	aChannel *chptr;
+	Channel *chptr;
 	LOpts *lopt = cptr->user->lopt;
 	unsigned int  hashnum;
 	int numsend = (get_sendq(cptr) / 768) + 1; /* (was previously hard-coded) */
@@ -414,7 +414,7 @@ void _send_list(aClient *cptr)
 
 EVENT(send_queued_list_data)
 {
-	aClient *acptr, *saved;
+	Client *acptr, *saved;
 	list_for_each_entry_safe(acptr, saved, &lclient_list, lclient_node)
 	{
 		if (DoList(acptr) && IsSendable(acptr))

@@ -41,8 +41,8 @@ typedef enum {
 	DNSBL_RECORD=1, DNSBL_BITMASK=2
 } DNSBLType;
 
-typedef struct _dnsbl DNSBL;
-struct _dnsbl {
+typedef struct DNSBL DNSBL;
+struct DNSBL {
 	char *name;
 	DNSBLType type;
 	int *reply;
@@ -58,8 +58,8 @@ typedef enum {
 	BLACKLIST_BACKEND_DNS = 1
 } BlacklistBackendType;
 
-typedef struct _blacklist Blacklist;
-struct _blacklist {
+typedef struct Blacklist Blacklist;
+struct Blacklist {
 	Blacklist *prev, *next;
 	char *name;
 	BlacklistBackendType backend_type;
@@ -73,9 +73,9 @@ struct _blacklist {
  * some metadata. We can't use cptr directly there as the client may
  * be gone already by the time we receive the DNS reply.
  */
-typedef struct _bluser BLUser;
-struct _bluser {
-	aClient *cptr;
+typedef struct BLUser BLUser;
+struct BLUser {
+	Client *cptr;
 	int is_ipv6;
 	int refcnt;
 	/* The following save_* fields are used by softbans: */
@@ -95,12 +95,12 @@ int blacklist_config_run(ConfigFile *, ConfigEntry *, int);
 void blacklist_free_conf(void);
 void delete_blacklist_block(Blacklist *e);
 void blacklist_md_free(ModData *md);
-int blacklist_handshake(aClient *cptr);
-int blacklist_quit(aClient *cptr, MessageTag *mtags, char *comment);
-int blacklist_preconnect(aClient *sptr);
+int blacklist_handshake(Client *cptr);
+int blacklist_quit(Client *cptr, MessageTag *mtags, char *comment);
+int blacklist_preconnect(Client *sptr);
 void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hostent *he);
-int blacklist_start_check(aClient *cptr);
-int blacklist_dns_request(aClient *cptr, Blacklist *bl);
+int blacklist_start_check(Client *cptr);
+int blacklist_dns_request(Client *cptr, Blacklist *bl);
 int blacklist_rehash(void);
 int blacklist_rehash_complete(void);
 void blacklist_set_handshake_delay(void);
@@ -549,13 +549,13 @@ void blacklist_md_free(ModData *md)
 	md->ptr = NULL;
 }
 
-int blacklist_handshake(aClient *cptr)
+int blacklist_handshake(Client *cptr)
 {
 	blacklist_start_check(cptr);
 	return 0;
 }
 
-int blacklist_start_check(aClient *cptr)
+int blacklist_start_check(Client *cptr)
 {
 	Blacklist *bl;
 
@@ -583,7 +583,7 @@ int blacklist_start_check(aClient *cptr)
 	return 0;
 }
 
-int blacklist_dns_request(aClient *cptr, Blacklist *d)
+int blacklist_dns_request(Client *cptr, Blacklist *d)
 {
 	char buf[256], wbuf[128];
 	unsigned int e[8];
@@ -639,7 +639,7 @@ void blacklist_cancel(BLUser *bl)
 	bl->cptr = NULL;
 }
 
-int blacklist_quit(aClient *cptr, MessageTag *mtags, char *comment)
+int blacklist_quit(Client *cptr, MessageTag *mtags, char *comment)
 {
 	if (BLUSER(cptr))
 		blacklist_cancel(BLUSER(cptr));
@@ -668,7 +668,7 @@ void blacklist_free_bluser_if_able(BLUser *bl)
 	MyFree(bl);
 }
 
-char *getdnsblname(char *p, aClient *cptr)
+char *getdnsblname(char *p, Client *cptr)
 {
 int dots = 0;
 	int dots_count;
@@ -714,14 +714,14 @@ int blacklist_parse_reply(struct hostent *he, int entry)
  * from blacklist_preconnect() for softbans that need to be delayed
  * as to give the user the opportunity to do SASL Authentication.
  */
-int blacklist_action(aClient *acptr, char *opernotice, BanAction ban_action, char *ban_reason, long ban_time)
+int blacklist_action(Client *acptr, char *opernotice, BanAction ban_action, char *ban_reason, long ban_time)
 {
 	sendto_snomask(SNO_BLACKLIST, "%s", opernotice);
 	ircd_log(LOG_KILL, "%s", opernotice);
 	return place_host_ban(acptr, ban_action, ban_reason, ban_time);
 }
 
-void blacklist_hit(aClient *acptr, Blacklist *bl, int reply)
+void blacklist_hit(Client *acptr, Blacklist *bl, int reply)
 {
 	char opernotice[512], banbuf[512];
 	const char *name[4], *value[4];
@@ -759,7 +759,7 @@ void blacklist_hit(aClient *acptr, Blacklist *bl, int reply)
 	}
 }
 
-void blacklist_process_result(aClient *acptr, int status, struct hostent *he)
+void blacklist_process_result(Client *acptr, int status, struct hostent *he)
 {
 	Blacklist *bl;
 	char *domain;
@@ -798,7 +798,7 @@ void blacklist_process_result(aClient *acptr, int status, struct hostent *he)
 void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hostent *he)
 {
 	BLUser *blu = (BLUser *)arg;
-	aClient *acptr = blu->cptr;
+	Client *acptr = blu->cptr;
 
 	blu->refcnt--; /* one less outstanding DNS request remaining */
 
@@ -817,7 +817,7 @@ void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hos
 	blacklist_process_result(acptr, status, he);
 }
 
-int blacklist_preconnect(aClient *acptr)
+int blacklist_preconnect(Client *acptr)
 {
 	BLUser *blu = BLUSER(acptr);
 

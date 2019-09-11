@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(privacy)
 long UMODE_PRIVACY = 0L;
 
 /* Forward declarations */
-int privacy_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr);
+int privacy_see_channel_in_whois(Client *sptr, Client *target, Channel *chptr);
                     
 MOD_INIT(privacy)
 {
@@ -60,7 +60,7 @@ MOD_UNLOAD(privacy)
 /* This hides channels in /WHOIS output, unless the requestor is in the same channel
  * or some IRCOp is overriding.
  */
-int privacy_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr)
+int privacy_see_channel_in_whois(Client *sptr, Client *target, Channel *chptr)
 {
 	if (IsPrivacy(target) && !IsMember(sptr, chptr))
 		return EX_DENY;

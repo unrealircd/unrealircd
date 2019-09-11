@@ -54,9 +54,9 @@ MOD_UNLOAD(svsnolag)
 	return MOD_SUCCESS;
 }
 
-int do_svsnolag(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_change)
+int do_svsnolag(Client *cptr, Client *sptr, int parc, char *parv[], int show_change)
 {
-	aClient *acptr;
+	Client *acptr;
 	char *cmd = show_change ? MSG_SVS2NOLAG : MSG_SVSNOLAG;
 
 	if (!IsULine(sptr))

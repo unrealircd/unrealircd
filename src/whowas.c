@@ -34,7 +34,7 @@ aWhowas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
 
 MODVAR int whowas_next = 0;
 
-void add_history(aClient *cptr, int online)
+void add_history(Client *cptr, int online)
 {
 	aWhowas *new;
 
@@ -85,7 +85,7 @@ void add_history(aClient *cptr, int online)
 		whowas_next = 0;
 }
 
-void off_history(aClient *cptr)
+void off_history(Client *cptr)
 {
 	aWhowas *temp, *next;
 
@@ -97,7 +97,7 @@ void off_history(aClient *cptr)
 	}
 }
 
-aClient *get_history(char *nick, time_t timelimit)
+Client *get_history(char *nick, time_t timelimit)
 {
 	aWhowas *temp;
 	int  blah;

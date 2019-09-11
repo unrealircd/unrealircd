@@ -34,9 +34,9 @@ Cmode_t EXTCMODE_NOCOLOR;
 
 #define IsNoColor(chptr)    (chptr->mode.extmode & EXTCMODE_NOCOLOR)
 
-char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
-char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
-char *nocolor_prelocalquit(aClient *sptr, char *comment);
+char *nocolor_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
+char *nocolor_prelocalpart(Client *sptr, Channel *chptr, char *comment);
+char *nocolor_prelocalquit(Client *sptr, char *comment);
 
 MOD_TEST(nocolor)
 {
@@ -85,7 +85,7 @@ static int IsUsingColor(char *s)
         return 0;
 }
 
-char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
+char *nocolor_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	Hook *h;
 	int i;
@@ -112,7 +112,7 @@ char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char
 	return text;
 }
 
-char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)
+char *nocolor_prelocalpart(Client *sptr, Channel *chptr, char *comment)
 {
 	if (!comment)
 		return NULL;
@@ -124,7 +124,7 @@ char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)
 }
 
 /** Is any channel where the user is in +c? */
-static int IsAnyChannelNoColor(aClient *sptr)
+static int IsAnyChannelNoColor(Client *sptr)
 {
 	Membership *lp;
 
@@ -134,7 +134,7 @@ static int IsAnyChannelNoColor(aClient *sptr)
 	return 0;
 }
 
-char *nocolor_prelocalquit(aClient *sptr, char *comment)
+char *nocolor_prelocalquit(Client *sptr, char *comment)
 {
 	if (!comment)
 		return NULL;

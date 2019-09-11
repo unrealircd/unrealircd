@@ -34,9 +34,9 @@ Cmode_t EXTCMODE_STRIPCOLOR;
 
 #define IsStripColor(chptr)    (chptr->mode.extmode & EXTCMODE_STRIPCOLOR)
 
-char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
-char *stripcolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
-char *stripcolor_prelocalquit(aClient *sptr, char *comment);
+char *stripcolor_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
+char *stripcolor_prelocalpart(Client *sptr, Channel *chptr, char *comment);
+char *stripcolor_prelocalquit(Client *sptr, char *comment);
 
 MOD_TEST(stripcolor)
 {
@@ -73,7 +73,7 @@ MOD_UNLOAD(stripcolor)
 	return MOD_SUCCESS;
 }
 
-char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
+char *stripcolor_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	Hook *h;
 	int i;
@@ -95,7 +95,7 @@ char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, c
 	return text;
 }
 
-char *stripcolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)
+char *stripcolor_prelocalpart(Client *sptr, Channel *chptr, char *comment)
 {
 	if (!comment)
 		return NULL;
@@ -107,7 +107,7 @@ char *stripcolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)
 }
 
 /** Is any channel where the user is in +S? */
-static int IsAnyChannelStripColor(aClient *sptr)
+static int IsAnyChannelStripColor(Client *sptr)
 {
 	Membership *lp;
 
@@ -118,7 +118,7 @@ static int IsAnyChannelStripColor(aClient *sptr)
 }
 
 
-char *stripcolor_prelocalquit(aClient *sptr, char *comment)
+char *stripcolor_prelocalquit(Client *sptr, char *comment)
 {
 	if (!comment)
 		return NULL;

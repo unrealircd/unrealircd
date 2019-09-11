@@ -70,8 +70,8 @@ CMD_FUNC(m_names)
 	int uhnames = (MyConnect(sptr) && HasCapability(sptr, "userhost-in-names")); // cache UHNAMES support
 	int bufLen = NICKLEN + (!uhnames ? 0 : (1 + USERLEN + 1 + HOSTLEN));
 	int  mlen = strlen(me.name) + bufLen + 7;
-	aChannel *chptr;
-	aClient *acptr;
+	Channel *chptr;
+	Client *acptr;
 	int  member;
 	int i = 0;
 	Hook *h;

@@ -40,7 +40,7 @@
  *             zero return. Upper level routine will have to
  *             decide what to do with those unwritten bytes...
  */
-int  deliver_it(aClient *cptr, char *str, int len, int *want_read)
+int  deliver_it(Client *cptr, char *str, int len, int *want_read)
 {
 	int  retval;
 

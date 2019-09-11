@@ -68,7 +68,7 @@ void initlists(void)
 	INIT_LIST_HEAD(&unknown_list);
 	INIT_LIST_HEAD(&global_server_list);
 
-	user_pool = mp_pool_new(sizeof(anUser), 512 * 1024);
+	user_pool = mp_pool_new(sizeof(ClientUser), 512 * 1024);
 }
 
 void outofmemory(void)
@@ -79,7 +79,7 @@ void outofmemory(void)
 
 
 /*
-** Create a new aClient structure and set it to initial state.
+** Create a new Client structure and set it to initial state.
 **
 **	from == NULL,	create local client (a client connected
 **			to a socket).
@@ -88,11 +88,11 @@ void outofmemory(void)
 **			associated with the client defined by
 **			'from'). ('from' is a local client!!).
 */
-aClient *make_client(aClient *from, aClient *servr)
+Client *make_client(Client *from, Client *servr)
 {
-	aClient *cptr = NULL;
+	Client *cptr = NULL;
 
-	cptr = MyMallocEx(sizeof(aClient));
+	cptr = MyMallocEx(sizeof(Client));
 
 #ifdef	DEBUGMODE
 	if (!from)
@@ -145,7 +145,7 @@ aClient *make_client(aClient *from, aClient *servr)
 	return (cptr);
 }
 
-void free_client(aClient *cptr)
+void free_client(Client *cptr)
 {
 	if (!list_empty(&cptr->client_node))
 		list_del(&cptr->client_node);
@@ -186,15 +186,15 @@ void free_client(aClient *cptr)
 ** 'make_user' add's an User information block to a client
 ** if it was not previously allocated.
 */
-anUser *make_user(aClient *cptr)
+ClientUser *make_user(Client *cptr)
 {
-	anUser *user;
+	ClientUser *user;
 
 	user = cptr->user;
 	if (!user)
 	{
 		user = mp_pool_get(user_pool);
-		memset(user, 0, sizeof(anUser));
+		memset(user, 0, sizeof(ClientUser));
 
 #ifdef	DEBUGMODE
 		users.inuse++;
@@ -226,14 +226,14 @@ anUser *make_user(aClient *cptr)
 	return user;
 }
 
-aServer *make_server(aClient *cptr)
+Server *make_server(Client *cptr)
 {
 
-	aServer *serv = cptr->serv;
+	Server *serv = cptr->serv;
 
 	if (!serv)
 	{
-		serv = MyMallocEx(sizeof(aServer));
+		serv = MyMallocEx(sizeof(Server));
 #ifdef	DEBUGMODE
 		servs.inuse++;
 #endif
@@ -259,7 +259,7 @@ aServer *make_server(aClient *cptr)
 **	Decrease user reference count by one and realease block,
 **	if count reaches 0
 */
-void free_user(anUser *user, aClient *cptr)
+void free_user(ClientUser *user, Client *cptr)
 {
 	if (user->refcnt == 0)
 		sendto_realops("[BUG] free_user: ref count for '%s' was already 0!?", user->username);
@@ -296,7 +296,7 @@ void free_user(anUser *user, aClient *cptr)
  * taken the code from ExitOneClient() for this and placed it here.
  * - avalon
  */
-void remove_client_from_list(aClient *cptr)
+void remove_client_from_list(Client *cptr)
 {
 	list_del(&cptr->client_node);
 	if (IsServer(cptr))
@@ -370,7 +370,7 @@ void remove_client_from_list(aClient *cptr)
  * in this file, shouldnt they ?  after all, this is list.c, isnt it ?
  * -avalon
  */
-void add_client_to_list(aClient *cptr)
+void add_client_to_list(Client *cptr)
 {
 	list_add(&cptr->client_node, &client_list);
 }

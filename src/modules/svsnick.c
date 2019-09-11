@@ -61,8 +61,8 @@ MOD_UNLOAD(svsnick)
 */
 CMD_FUNC(m_svsnick)
 {
-	aClient *acptr;
-	aClient *ocptr; /* Other client */
+	Client *acptr;
+	Client *ocptr; /* Other client */
 	MessageTag *mtags = NULL;
 
 	if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))

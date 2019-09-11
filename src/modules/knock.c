@@ -65,7 +65,7 @@ MOD_UNLOAD(knock)
 */
 CMD_FUNC(m_knock)
 {
-	aChannel *chptr;
+	Channel *chptr;
 	Hook *h;
 	int i = 0;
 	MessageTag *mtags = NULL;

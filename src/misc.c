@@ -26,7 +26,7 @@
 extern ircstats IRCstats;
 extern char	*me_hash;
 
-static void exit_one_client(aClient *, MessageTag *mtags_i, const char *);
+static void exit_one_client(Client *, MessageTag *mtags_i, const char *);
 
 static char *months[] = {
 	"January", "February", "March", "April",
@@ -275,7 +275,7 @@ char *myctime(time_t value)
 **	to internal buffer (nbuf). *NEVER* use the returned pointer
 **	to modify what it points!!!
 */
-char *get_client_name(aClient *sptr, int showip)
+char *get_client_name(Client *sptr, int showip)
 {
 	static char nbuf[HOSTLEN * 2 + USERLEN + 5];
 
@@ -301,7 +301,7 @@ char *get_client_name(aClient *sptr, int showip)
 	return sptr->name;
 }
 
-char *get_client_host(aClient *cptr)
+char *get_client_host(Client *cptr)
 {
 	static char nbuf[HOSTLEN * 2 + USERLEN + 5];
 
@@ -319,7 +319,7 @@ char *get_client_host(aClient *cptr)
 /*
  * Set sockhost to 'host'. Skip the user@ part of 'host' if necessary.
  */
-void set_sockhost(aClient *cptr, char *host)
+void set_sockhost(Client *cptr, char *host)
 {
 	char *s;
 	if ((s = strchr(host, '@')))
@@ -329,9 +329,9 @@ void set_sockhost(aClient *cptr, char *host)
 	strlcpy(cptr->local->sockhost, s, sizeof(cptr->local->sockhost));
 }
 
-void remove_dcc_references(aClient *sptr)
+void remove_dcc_references(Client *sptr)
 {
-aClient *acptr;
+Client *acptr;
 Link *lp, *nextlp;
 Link **lpp, *tmp;
 int found;
@@ -376,10 +376,10 @@ int found;
  * clients.  A server needs the client QUITs if it does not support NOQUIT.
  *    - kaniini
  */
-static void recurse_send_quits(aClient *cptr, aClient *sptr, aClient *from, aClient *to,
+static void recurse_send_quits(Client *cptr, Client *sptr, Client *from, Client *to,
                                MessageTag *mtags, const char *comment, const char *splitstr)
 {
-	aClient *acptr, *next;
+	Client *acptr, *next;
 
 	if (!MyConnect(to))
 		return; /* We shouldn't even be called for non-remotes */
@@ -413,9 +413,9 @@ static void recurse_send_quits(aClient *cptr, aClient *sptr, aClient *from, aCli
  * and servers before the server itself; exit_one_client takes care of
  * actually removing things off llists.   tweaked from +CSr31  -orabidoo
  */
-static void recurse_remove_clients(aClient *sptr, MessageTag *mtags, const char *comment)
+static void recurse_remove_clients(Client *sptr, MessageTag *mtags, const char *comment)
 {
-	aClient *acptr, *next;
+	Client *acptr, *next;
 
 	list_for_each_entry_safe(acptr, next, &client_list, client_node)
 	{
@@ -440,9 +440,9 @@ static void recurse_remove_clients(aClient *sptr, MessageTag *mtags, const char 
 ** all necessary QUITs and SQUITs.  source_p itself is still on the lists,
 ** and its SQUITs have been sent except for the upstream one  -orabidoo
 */
-static void remove_dependents(aClient *sptr, aClient *from, MessageTag *mtags, const char *comment, const char *splitstr)
+static void remove_dependents(Client *sptr, Client *from, MessageTag *mtags, const char *comment, const char *splitstr)
 {
-	aClient *acptr;
+	Client *acptr;
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 		recurse_send_quits(sptr, sptr, from, acptr, mtags, comment, splitstr);
@@ -456,7 +456,7 @@ static void remove_dependents(aClient *sptr, aClient *from, MessageTag *mtags, c
 */
 /* DANGER: Ugly hack follows. */
 /* Yeah :/ */
-static void exit_one_client(aClient *sptr, MessageTag *mtags_i, const char *comment)
+static void exit_one_client(Client *sptr, MessageTag *mtags_i, const char *comment)
 {
 	Link *lp;
 	Membership *mp;
@@ -524,7 +524,7 @@ static void exit_one_client(aClient *sptr, MessageTag *mtags_i, const char *comm
  *	FLUSH_BUFFER	if (cptr == sptr)
  *	0		if (cptr != sptr)
  */
-int exit_client(aClient *cptr, aClient *sptr, aClient *from, MessageTag *recv_mtags, char *comment)
+int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags, char *comment)
 {
 	long long on_for;
 	ConfigItem_listen *listen_conf;
@@ -683,10 +683,10 @@ void initstats(void)
 	memset(&ircst, 0, sizeof(ircst));
 }
 
-void verify_opercount(aClient *orig, char *tag)
+void verify_opercount(Client *orig, char *tag)
 {
 int counted = 0;
-aClient *acptr;
+Client *acptr;
 char text[2048];
 
 	list_for_each_entry(acptr, &client_list, client_node)
@@ -774,7 +774,7 @@ char *banact_valtostring(BanAction val)
 /*|| BAN TARGET ROUTINES FOLLOW ||*/
 
 /** Extract target flags from string 's'. */
-int spamfilter_gettargets(char *s, aClient *sptr)
+int spamfilter_gettargets(char *s, Client *sptr)
 {
 SpamfilterTargetTable *e;
 int flags = 0;
@@ -920,7 +920,7 @@ int char_to_channelflag(char c)
 	return 0;
 }
 
-char *getcloak(aClient *sptr)
+char *getcloak(Client *sptr)
 {
 	if (!*sptr->user->cloakedhost)
 	{
@@ -934,7 +934,7 @@ char *getcloak(aClient *sptr)
 // FIXME: should detect <U5 ;)
 int mixed_network(void)
 {
-	aClient *acptr;
+	Client *acptr;
 	
 	list_for_each_entry(acptr, &server_list, special_node)
 	{
@@ -990,7 +990,7 @@ void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce)
 }
 
 /** Check if a client matches any of the masks in the mask list */
-int unreal_mask_match(aClient *acptr, ConfigItem_mask *m)
+int unreal_mask_match(Client *acptr, ConfigItem_mask *m)
 {
 	for (; m; m = m->next)
 	{
@@ -1027,7 +1027,7 @@ int hlength = strlen (haystack);
   return NULL; /* not found */
 }
 
-int swhois_add(aClient *acptr, char *tag, int priority, char *swhois, aClient *from, aClient *skip)
+int swhois_add(Client *acptr, char *tag, int priority, char *swhois, Client *from, Client *skip)
 {
 	SWhois *s;
 
@@ -1055,7 +1055,7 @@ int swhois_add(aClient *acptr, char *tag, int priority, char *swhois, aClient *f
  * Delete swhois by tag and swhois. Then broadcast this change to all other servers.
  * Remark: if you use swhois "*" then it will remove all swhois titles for that tag
  */
-int swhois_delete(aClient *acptr, char *tag, char *swhois, aClient *from, aClient *skip)
+int swhois_delete(Client *acptr, char *tag, char *swhois, Client *from, Client *skip)
 {
 	SWhois *s, *s_next;
 	int ret = -1; /* default to 'not found' */
@@ -1087,7 +1087,7 @@ int swhois_delete(aClient *acptr, char *tag, char *swhois, aClient *from, aClien
 }
 
 /** Is this user using a websocket? (LOCAL USERS ONLY) */
-int IsWebsocket(aClient *acptr)
+int IsWebsocket(Client *acptr)
 {
 	ModDataInfo *md = findmoddata_byname("websocket", MODDATATYPE_CLIENT);
 	if (!md)
@@ -1095,7 +1095,7 @@ int IsWebsocket(aClient *acptr)
 	return (MyConnect(acptr) && moddata_client(acptr, md).ptr) ? 1 : 0;
 }
 
-extern void send_raw_direct(aClient *user, FORMAT_STRING(const char *pattern), ...);
+extern void send_raw_direct(Client *user, FORMAT_STRING(const char *pattern), ...);
 
 /** Generic function to inform the user he/she has been banned.
  * @param acptr   The affected client.
@@ -1110,7 +1110,7 @@ extern void send_raw_direct(aClient *user, FORMAT_STRING(const char *pattern), .
  * @retval Usually FLUSH_BUFFER. In any case: do not touch 'acptr' after
  *         calling this function!
  */
-int banned_client(aClient *acptr, char *bantype, char *reason, int global, int noexit)
+int banned_client(Client *acptr, char *bantype, char *reason, int global, int noexit)
 {
 	char buf[512];
 	char *fmt = global ? iConf.reject_message_gline : iConf.reject_message_kline;
@@ -1300,7 +1300,7 @@ MessageTag *duplicate_mtag(MessageTag *mtag)
  * This function calls modules so they can add tags, such as:
  * msgid, time and account.
  */
-void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list)
+void new_message(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list)
 {
 	Hook *h;
 	for (h = Hooks[HOOKTYPE_NEW_MESSAGE]; h; h = h->next)
@@ -1317,7 +1317,7 @@ void new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list
  * identical to the message that is sent to clients (end-users).
  * For example ":xyz JOIN #chan".
  */
-void new_message_special(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, FORMAT_STRING(const char *pattern), ...)
+void new_message_special(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, FORMAT_STRING(const char *pattern), ...)
 {
 	Hook *h;
 	va_list vl;
@@ -1335,7 +1335,7 @@ void new_message_special(aClient *sender, MessageTag *recv_mtags, MessageTag **m
  * This is only used if the 'mtags' module is NOT loaded,
  * which would be quite unusual, but possible.
  */
-void parse_message_tags_default_handler(aClient *cptr, char **str, MessageTag **mtag_list)
+void parse_message_tags_default_handler(Client *cptr, char **str, MessageTag **mtag_list)
 {
 	/* Just skip everything until the space character */
 	for (; **str && **str != ' '; *str = *str + 1);
@@ -1345,7 +1345,7 @@ void parse_message_tags_default_handler(aClient *cptr, char **str, MessageTag **
  * This is only used if the 'mtags' module is NOT loaded,
  * which would be quite unusual, but possible.
  */
-char *mtags_to_string_default_handler(MessageTag *m, aClient *acptr)
+char *mtags_to_string_default_handler(MessageTag *m, Client *acptr)
 {
 	return NULL;
 }

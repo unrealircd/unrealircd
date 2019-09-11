@@ -53,12 +53,12 @@
 #define TO_PVOIDFUNC(x) (void *(*)())(x)
 #define TO_PCHARFUNC(x) (char *(*)())(x)
 
-typedef struct _event Event;
-typedef struct _eventinfo EventInfo;
-typedef struct _irchook Hook;
-typedef struct _hooktype Hooktype;
-typedef struct _irccallback Callback;
-typedef struct _ircefunction Efunction;
+typedef struct Event Event;
+typedef struct EventInfo EventInfo;
+typedef struct Hook Hook;
+typedef struct Hooktype Hooktype;
+typedef struct Callback Callback;
+typedef struct Efunction Efunction;
 typedef enum EfunctionType EfunctionType;
 
 /*
@@ -66,7 +66,7 @@ typedef enum EfunctionType EfunctionType;
  * mod_header
 */
 
-typedef struct _ModuleHeader {
+typedef struct ModuleHeader {
 	char *name;
 	char *version;
 	char *description;
@@ -74,11 +74,11 @@ typedef struct _ModuleHeader {
 	char *modversion;
 } ModuleHeader;
 
-typedef struct _Module Module;
+typedef struct Module Module;
 
-typedef struct _ModuleChild
+typedef struct ModuleChild
 {
-	struct _ModuleChild *prev, *next; 
+	struct ModuleChild *prev, *next; 
 	Module *child; /* Aww. aint it cute? */
 } ModuleChild;
 
@@ -114,7 +114,7 @@ typedef struct {
         long mode; /**< Mode mask */
         char flag; /**< Mode character */
         int unset_on_deoper; /**< When set to 1 then this user mode will be unset on de-oper */
-        int (*allowed)(aClient *sptr, int what); /**< The 'is this user allowed to set this mode?' routine */
+        int (*allowed)(Client *sptr, int what); /**< The 'is this user allowed to set this mode?' routine */
         char unloaded; /**< Internal flag to indicate module is being unloaded */
         Module *owner; /**< Module that owns this user mode */
 } Umode;
@@ -123,16 +123,16 @@ typedef struct {
         long mode; /**< Snomask mask */
         char flag; /**< Snomask character */
         int unset_on_deoper; /**< When set to 1 then this snomask will be unset on de-oper */
-        int (*allowed)(aClient *sptr, int what); /**< The 'is this user allowed to set this snomask?' routine */
+        int (*allowed)(Client *sptr, int what); /**< The 'is this user allowed to set this snomask?' routine */
         char unloaded; /**< Internal flag to indicate module is being unloaded */
         Module *owner; /**< Module that owns this snomask */
 } Snomask;
 
 typedef enum ModDataType { MODDATATYPE_LOCALVAR=1, MODDATATYPE_GLOBALVAR=2, MODDATATYPE_CLIENT=3, MODDATATYPE_CHANNEL=4, MODDATATYPE_MEMBER=5, MODDATATYPE_MEMBERSHIP=6 } ModDataType;
 
-typedef struct _moddatainfo ModDataInfo;
+typedef struct ModDataInfo ModDataInfo;
 
-struct _moddatainfo {
+struct ModDataInfo {
 	ModDataInfo *prev, *next;
 	char *name; /**< Name for this moddata */
 	Module *owner; /**< Owner of this moddata */
@@ -194,14 +194,14 @@ typedef struct {
 	int			paracount;
 
 	/** access and parameter checking.
-	 * aClient *: the client
-	 * aChannel *: the channel
+	 * Client *: the client
+	 * Channel *: the channel
 	 * para *: the parameter (NULL for paramless modes)
 	 * int: check type (see EXCHK_*)
 	 * int: what (MODE_ADD or MODE_DEL)
 	 * return value: 1=ok, 0=bad
 	 */
-	int			(*is_ok)(aClient *,aChannel *, char mode, char *para, int, int);
+	int			(*is_ok)(Client *,Channel *, char mode, char *para, int, int);
 
 	/** NOTE: The routines below are NULL for paramless modes */
 	
@@ -223,13 +223,13 @@ typedef struct {
 	/** Convert input parameter to output.
 	 * Like +l "1aaa" becomes "1".
 	 * char *: the input parameter.
-	 * aClient *: the client that the mode request came from:
+	 * Client *: the client that the mode request came from:
 	 *            1. Can be NULL! (eg: if called for set::modes-on-join)
 	 *            2. Probably only used in rare cases, see also next remark
 	 *            3. ERRORS SHOULD NOT BE SENT BY conv_param BUT BY is_ok!
 	 * return value: pointer to output string (temp. storage)
 	 */
-	char *		(*conv_param)(char *, aClient *);
+	char *		(*conv_param)(char *, Client *);
 
 	/** free and remove parameter from list.
 	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
@@ -248,11 +248,11 @@ typedef struct {
 	 * +l 5 vs +l 10. This function should determinate who wins the fight, this decision
 	 * should of course not be random but the same at every server on the net.
 	 * examples of such comparisons are "highest wins" (+l) and a strcmp() check (+k/+L).
-	 * aChannel *: channel the fight is about.
+	 * Channel *: channel the fight is about.
 	 * aExtCMtableParam *: our parameter
 	 * aExtCMtableParam *: their parameter
 	 */
-	int			(*sjoin_check)(aChannel *, void *, void *);
+	int			(*sjoin_check)(Channel *, void *, void *);
 
 	/** Local channel mode? Prevents remote servers from setting/unsetting this */
 	char local;
@@ -278,13 +278,13 @@ typedef struct {
 typedef struct {
 	char		flag;
 	int		paracount;
-	int		(*is_ok)(aClient *,aChannel *, char mode, char *para, int, int);
+	int		(*is_ok)(Client *,Channel *, char mode, char *para, int, int);
 	void *	(*put_param)(void *, char *);
 	char *		(*get_param)(void *);
-	char *		(*conv_param)(char *, aClient *);
+	char *		(*conv_param)(char *, Client *);
 	void		(*free_param)(void *);
 	void *	(*dup_struct)(void *);
-	int		(*sjoin_check)(aChannel *, void *, void *);
+	int		(*sjoin_check)(Channel *, void *, void *);
 	char		local;
 	char		unset_with_param;
 } CmodeInfo;
@@ -332,8 +332,8 @@ typedef struct {
 	ExtbanOptions options;
 
 	/** access checking [optional].
-	 * aClient *: the client
-	 * aChannel *: the channel
+	 * Client *: the client
+	 * Channel *: the channel
 	 * para: the ban parameter
 	 * int: check type (see EXBCHK_*)
 	 * int: what (MODE_ADD or MODE_DEL)
@@ -342,7 +342,7 @@ typedef struct {
 	 * NOTE: just set this of NULL if you want only +hoaq to place/remove bans as usual.
 	 * NOTE2: This has not been tested yet!!
 	 */
-	int			(*is_ok)(aClient *, aChannel *, char *para, int, int, int);
+	int			(*is_ok)(Client *, Channel *, char *para, int, int, int);
 
 	/** Convert input parameter to output [optional].
 	 * like with normal bans '+b blah' gets '+b blah!*@*', and it allows
@@ -355,70 +355,73 @@ typedef struct {
 
 	/** Checks if the user is affected by this ban [required].
 	 * Called from is_banned.
-	 * aClient *: the client
-	 * aChannel *: the channel
+	 * Client *: the client
+	 * Channel *: the channel
 	 * para: the ban entry
 	 * int: a value of BANCHK_* (see struct.h)
 	 * char **: optionally a message, can be NULL!! (for some BANCHK_ types)
 	 * char **: optionally for setting an error message, can be NULL!!
 	 */
-	int			(*is_banned)(aClient *sptr, aChannel *chptr, char *para, int checktype, char **msg, char **errormsg);
+	int			(*is_banned)(Client *sptr, Channel *chptr, char *para, int checktype, char **msg, char **errormsg);
 } Extban;
 
 typedef struct {
 	char	flag;
 	ExtbanOptions options;
-	int			(*is_ok)(aClient *, aChannel *, char *para, int, int, int);
+	int			(*is_ok)(Client *, Channel *, char *para, int, int, int);
 	char *			(*conv_param)(char *);
-	int			(*is_banned)(aClient *, aChannel *, char *, int, char **, char **);
+	int			(*is_banned)(Client *, Channel *, char *, int, char **, char **);
 } ExtbanInfo;
 
 
-typedef struct _command {
-	struct _command *prev, *next;
+typedef struct Command Command;
+struct Command {
+	Command *prev, *next;
 	aCommand *cmd;
-} Command;
+};
 
-typedef struct _versionflag {
-	struct _versionflag *prev, *next;
+typedef struct Versionflag Versionflag;
+struct Versionflag {
+	Versionflag *prev, *next;
 	char flag;
 	ModuleChild *parents;
-} Versionflag;
+};
 
 /* This type needs a forward declaration: */
-typedef struct _messagetaghandler MessageTagHandler;
+typedef struct MessageTagHandler MessageTagHandler;
 
 #define CLICAP_FLAGS_NONE               0x0
 #define CLICAP_FLAGS_ADVERTISE_ONLY     0x4
 
-typedef struct _clientcapability {
-	struct _clientcapability *prev, *next;
+typedef struct ClientCapability ClientCapability;
+struct ClientCapability {
+	ClientCapability *prev, *next;
 	char *name;                              /**< The name of the CAP */
 	long cap;                                /**< The acptr->user->proto we should set (if any, can be 0, like for sts) */
 	int flags;                               /**< A flag from CLICAP_FLAGS_* */
-	int (*visible)(aClient *);               /**< Should the capability be visible? Note: parameter may be NULL. [optional] */
-	char *(*parameter)(aClient *);           /**< CAP parameters. Note: parameter may be NULL. [optional] */
+	int (*visible)(Client *);               /**< Should the capability be visible? Note: parameter may be NULL. [optional] */
+	char *(*parameter)(Client *);           /**< CAP parameters. Note: parameter may be NULL. [optional] */
 	MessageTagHandler *mtag_handler;         /**< For reverse dependency */
 	Module *owner;                           /**< Module introducing this CAP. */
 	char unloaded;                           /**< Internal flag to indicate module is being unloaded */
-} ClientCapability;
+};
 
 typedef struct {
 	char *name;
 	int flags;
-	int (*visible)(aClient *);
-	char *(*parameter)(aClient *);
+	int (*visible)(Client *);
+	char *(*parameter)(Client *);
 } ClientCapabilityInfo;
 
 #define MTAG_HANDLER_FLAGS_NONE			0x0
 #define MTAG_HANDLER_FLAGS_NO_CAP_NEEDED	0x1
 
 /** Message Tag Handler */
-struct _messagetaghandler {
+struct MessageTagHandler {
 	MessageTagHandler *prev, *next;
 	char *name;                                 /**< The name of the message-tag */
 	int flags;                                  /**< A flag of MTAG_HANDLER_FLAGS_* */
-	int (*is_ok)(aClient *, char *, char *);    /**< Verify syntax and access rights */
+	int (*is_ok)(Client *, char *, char *);    /**< Verify syntax and access rights */
 	Module *owner;                              /**< Module introducing this CAP. */
 	ClientCapability *clicap_handler;           /**< Client capability handler associated with this */
 	char unloaded;                              /**< Internal flag to indicate module is being unloaded */
@@ -430,25 +433,25 @@ struct _messagetaghandler {
 typedef struct {
 	char *name;
 	int flags;
-	int (*is_ok)(aClient *, char *, char *);
+	int (*is_ok)(Client *, char *, char *);
 	ClientCapability *clicap_handler;
 } MessageTagHandlerInfo;
 
 /** Filter for history get requests */
-typedef struct _history_filter HistoryFilter;
-struct _history_filter {
+typedef struct HistoryFilter HistoryFilter;
+struct HistoryFilter {
     int last_lines;
     int last_seconds;
 };
 
 /** History Backend */
-typedef struct _history_backend HistoryBackend;
-struct _history_backend {
+typedef struct HistoryBackend HistoryBackend;
+struct HistoryBackend {
 	HistoryBackend *prev, *next;
 	char *name;                                   /**< The name of the history backend (eg: "mem") */
 	int (*history_add)(char *object, MessageTag *mtags, char *line); /**< Add to history */
 	int (*history_del)(char *object, int max_lines, long max_time); /**< Delete history, based on lines/time */
-	int (*history_request)(aClient *acptr, char *object, HistoryFilter *filter);  /**< Request history */
+	int (*history_request)(Client *acptr, char *object, HistoryFilter *filter);  /**< Request history */
 	int (*history_destroy)(char *object);  /**< Destroy history of this object completely */
 	Module *owner;                                /**< Module introducing this */
 	char unloaded;                                /**< Internal flag to indicate module is being unloaded */
@@ -461,11 +464,11 @@ typedef struct {
 	char *name;
 	int (*history_add)(char *object, MessageTag *mtags, char *line);
 	int (*history_del)(char *object, int max_lines, long max_time);
-	int (*history_request)(aClient *acptr, char *object, HistoryFilter *filter);
+	int (*history_request)(Client *acptr, char *object, HistoryFilter *filter);
 	int (*history_destroy)(char *object);
 } HistoryBackendInfo;
 
-struct _irchook {
+struct Hook {
 	Hook *prev, *next;
 	int priority;
 	int type;
@@ -477,7 +480,7 @@ struct _irchook {
 	Module *owner;
 };
 
-struct _irccallback {
+struct Callback {
 	Callback *prev, *next;
 	short type;
 	union {
@@ -497,7 +500,7 @@ struct _irccallback {
  *   not allowed to add them.
  * - all efunctions are declared as function pointers in modules.c
  */
-struct _ircefunction {
+struct Efunction {
 	Efunction *prev, *next;
 	short type;
 	union {
@@ -510,21 +513,21 @@ struct _ircefunction {
 	char willberemoved; /* will be removed on next rehash? (eg the 'old'/'current' one) */
 };
 
-struct _hooktype {
+struct Hooktype {
 	short id;
 	char *string;
 	ModuleChild *parents;
 };
 
-typedef struct _isupport {
-	struct _isupport *prev, *next;
+typedef struct ISupport {
+	struct ISupport *prev, *next;
 	char *token;
 	char *value;
 	Module *owner;
 } Isupport;
 
-typedef struct _ModuleObject {
-	struct _ModuleObject *prev, *next;
+typedef struct ModuleObject {
+	struct ModuleObject *prev, *next;
 	ModuleObjectType type;
 	union {
 		Event *event;
@@ -563,9 +566,9 @@ extern const char *ModuleGetErrorStr(Module *module);
 extern unsigned int ModuleGetOptions(Module *module);
 extern unsigned int ModuleSetOptions(Module *module, unsigned int options, int action);
 
-struct _Module
+struct Module
 {
-	struct _Module *prev, *next;
+	struct Module *prev, *next;
 	ModuleHeader    *header; /* The module's header */
 #ifdef _WIN32
 	HMODULE dll;		/* Return value of LoadLibrary */
@@ -591,17 +594,10 @@ struct _Module
 #define MOD_OPT_OFFICIAL	0x0002 /* Official module, do not set "tainted" */
 #define MOD_OPT_PERM_RELOADABLE	0x0004 /* Module is semi-permanent: it can be re-loaded but not un-loaded */
 
-struct _mod_symboltable
-{
-	char	*symbol;
-	vFP 	*pointer;
-	char	*module;
-};
-
 #define MOD_Dep(name, container,module) {#name, (vFP *) &container, module}
 
 /* Event structs */
-struct _event {
+struct Event {
 	Event   *prev, *next;
 	char    *name;
 	time_t  every;
@@ -618,7 +614,7 @@ struct _event {
 #define EMOD_EVENT 0x0008
 #define EMOD_DATA 0x0010
 
-struct _eventinfo {
+struct EventInfo {
 	int flags;
 	long howmany;
 	time_t every;
@@ -639,7 +635,7 @@ extern Event   *EventMarkDel(Event *event);
 extern Event   *EventFind(char *name);
 extern int     EventMod(Event *event, EventInfo *mods);
 extern void    DoEvents(void);
-extern void    EventStatus(aClient *sptr);
+extern void    EventStatus(Client *sptr);
 extern void    SetupEvents(void);
 
 
@@ -673,7 +669,7 @@ extern void IsupportSet(Module *module, const char *name, const char *value);
 extern void IsupportSetFmt(Module *module, const char *name, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
 extern void IsupportDelByName(const char *name);
 
-extern ClientCapability *ClientCapabilityFind(const char *token, aClient *sptr);
+extern ClientCapability *ClientCapabilityFind(const char *token, Client *sptr);
 extern ClientCapability *ClientCapabilityFindReal(const char *token);
 extern ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clicap_request, long *cap);
 extern void ClientCapabilityDel(ClientCapability *clicap);
@@ -795,15 +791,15 @@ extern int CommandExists(char *name);
 extern Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, OverrideCmdFunc func);
 extern Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc func);
 extern void CmdoverrideDel(Cmdoverride *ovr);
-extern int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
+extern int CallCmdoverride(Cmdoverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 
-extern void moddata_free_client(aClient *acptr);
-extern void moddata_free_channel(aChannel *chptr);
+extern void moddata_free_client(Client *acptr);
+extern void moddata_free_channel(Channel *chptr);
 extern void moddata_free_member(Member *m);
 extern void moddata_free_membership(Membership *m);
 extern ModDataInfo *findmoddata_byname(char *name, ModDataType type);
-extern int moddata_client_set(aClient *acptr, char *varname, char *value);
-extern char *moddata_client_get(aClient *acptr, char *varname);
+extern int moddata_client_set(Client *acptr, char *varname, char *value);
+extern char *moddata_client_get(Client *acptr, char *varname);
 
 extern int LoadPersistentPointerX(ModuleInfo *modinfo, char *varshortname, void **var, void (*free_variable)(ModData *m));
 #define LoadPersistentPointer(modinfo, var, free_variable) LoadPersistentPointerX(modinfo, #var, (void **)&var, free_variable)
@@ -930,105 +926,105 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
  */
 
 /* Hook prototypes */
-int hooktype_local_connect(aClient *sptr);
-int hooktype_remote_connect(aClient *sptr);
-int hooktype_server_connect(aClient *sptr);
-int hooktype_post_server_connect(aClient *sptr);
-char *hooktype_pre_local_quit(aClient *sptr, char *comment);
-int hooktype_local_quit(aClient *sptr, MessageTag *mtags, char *comment);
-int hooktype_remote_quit(aClient *sptr, MessageTag *mtags, char *comment);
-int hooktype_unkuser_quit(aClient *sptr, MessageTag *mtags, char *comment);
-int hooktype_pre_local_connect(aClient *sptr);
-int hooktype_server_quit(aClient *sptr, MessageTag *mtags);
-int hooktype_local_nickchange(aClient *sptr, char *newnick);
-int hooktype_remote_nickchange(aClient *cptr, aClient *sptr, char *newnick);
-int hooktype_can_join(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-int hooktype_pre_local_join(aClient *sptr, aChannel *chptr, char *parv[]);
-int hooktype_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *parv[]);
-int hooktype_remote_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *parv[]);
-char *hooktype_pre_local_part(aClient *sptr, aChannel *chptr, char *comment);
-int hooktype_local_part(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *comment);
-int hooktype_remote_part(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *comment);
-char *hooktype_pre_local_kick(aClient *sptr, aClient *victim, aChannel *chptr, char *comment);
-int hooktype_can_kick(aClient *sptr, aClient *victim, aChannel *chptr, char *comment, long sptr_flags, long victim_flags, char **error);
-int hooktype_local_kick(aClient *cptr, aClient *sptr, aClient *victim, aChannel *chptr, MessageTag *mtags, char *comment);
-int hooktype_remote_kick(aClient *cptr, aClient *sptr, aClient *victim, aChannel *chptr, MessageTag *mtags, char *comment);
-char *hooktype_pre_usermsg(aClient *sptr, aClient *to, char *text, int notice);
-int hooktype_usermsg(aClient *sptr, aClient *to, MessageTag *mtags, char *text, int notice);
-int hooktype_can_send(aClient *sptr, aChannel *chptr, Membership *member, char **text, char **errmsg, int notice);
-char *hooktype_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
-int hooktype_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
-char *hooktype_pre_local_topic(aClient *cptr, aClient *sptr, aChannel *chptr, char *topic);
-int hooktype_local_topic(aClient *cptr, aClient *sptr, aChannel *chptr, char *topic);
-int hooktype_topic(aClient *cptr, aClient *sptr, aChannel *chptr, char *topic);
-int hooktype_pre_local_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_pre_remote_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_local_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_remote_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_modechar_del(aChannel *chptr, int modechar);
-int hooktype_modechar_add(aChannel *chptr, int modechar);
-int hooktype_away(aClient *sptr, MessageTag *mtags, char *reason);
-int hooktype_pre_invite(aClient *sptr, aClient *acptr, aChannel *chptr, int *override);
-int hooktype_invite(aClient *from, aClient *to, aChannel *chptr, MessageTag *mtags);
-int hooktype_pre_knock(aClient *sptr, aChannel *chptr);
-int hooktype_knock(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *comment);
-int hooktype_whois(aClient *sptr, aClient *target);
-int hooktype_who_status(aClient *sptr, aClient *target, aChannel *chptr, Member *member, char *status, int cansee);
-int hooktype_pre_kill(aClient *sptr, aClient *victim, char *killpath);
-int hooktype_local_kill(aClient *sptr, aClient *victim, char *comment);
-int hooktype_rehashflag(aClient *cptr, aClient *sptr, char *str);
+int hooktype_local_connect(Client *sptr);
+int hooktype_remote_connect(Client *sptr);
+int hooktype_server_connect(Client *sptr);
+int hooktype_post_server_connect(Client *sptr);
+char *hooktype_pre_local_quit(Client *sptr, char *comment);
+int hooktype_local_quit(Client *sptr, MessageTag *mtags, char *comment);
+int hooktype_remote_quit(Client *sptr, MessageTag *mtags, char *comment);
+int hooktype_unkuser_quit(Client *sptr, MessageTag *mtags, char *comment);
+int hooktype_pre_local_connect(Client *sptr);
+int hooktype_server_quit(Client *sptr, MessageTag *mtags);
+int hooktype_local_nickchange(Client *sptr, char *newnick);
+int hooktype_remote_nickchange(Client *cptr, Client *sptr, char *newnick);
+int hooktype_can_join(Client *sptr, Channel *chptr, char *key, char *parv[]);
+int hooktype_pre_local_join(Client *sptr, Channel *chptr, char *parv[]);
+int hooktype_local_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
+int hooktype_remote_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
+char *hooktype_pre_local_part(Client *sptr, Channel *chptr, char *comment);
+int hooktype_local_part(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
+int hooktype_remote_part(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
+char *hooktype_pre_local_kick(Client *sptr, Client *victim, Channel *chptr, char *comment);
+int hooktype_can_kick(Client *sptr, Client *victim, Channel *chptr, char *comment, long sptr_flags, long victim_flags, char **error);
+int hooktype_local_kick(Client *cptr, Client *sptr, Client *victim, Channel *chptr, MessageTag *mtags, char *comment);
+int hooktype_remote_kick(Client *cptr, Client *sptr, Client *victim, Channel *chptr, MessageTag *mtags, char *comment);
+char *hooktype_pre_usermsg(Client *sptr, Client *to, char *text, int notice);
+int hooktype_usermsg(Client *sptr, Client *to, MessageTag *mtags, char *text, int notice);
+int hooktype_can_send(Client *sptr, Channel *chptr, Membership *member, char **text, char **errmsg, int notice);
+char *hooktype_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
+int hooktype_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
+char *hooktype_pre_local_topic(Client *cptr, Client *sptr, Channel *chptr, char *topic);
+int hooktype_local_topic(Client *cptr, Client *sptr, Channel *chptr, char *topic);
+int hooktype_topic(Client *cptr, Client *sptr, Channel *chptr, char *topic);
+int hooktype_pre_local_chanmode(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_pre_remote_chanmode(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_local_chanmode(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_remote_chanmode(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_modechar_del(Channel *chptr, int modechar);
+int hooktype_modechar_add(Channel *chptr, int modechar);
+int hooktype_away(Client *sptr, MessageTag *mtags, char *reason);
+int hooktype_pre_invite(Client *sptr, Client *acptr, Channel *chptr, int *override);
+int hooktype_invite(Client *from, Client *to, Channel *chptr, MessageTag *mtags);
+int hooktype_pre_knock(Client *sptr, Channel *chptr);
+int hooktype_knock(Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
+int hooktype_whois(Client *sptr, Client *target);
+int hooktype_who_status(Client *sptr, Client *target, Channel *chptr, Member *member, char *status, int cansee);
+int hooktype_pre_kill(Client *sptr, Client *victim, char *killpath);
+int hooktype_local_kill(Client *sptr, Client *victim, char *comment);
+int hooktype_rehashflag(Client *cptr, Client *sptr, char *str);
 int hooktype_configposttest(int *errors);
 int hooktype_rehash(void);
-int hooktype_stats(aClient *sptr, char *str);
+int hooktype_stats(Client *sptr, char *str);
 int hooktype_configtest(ConfigFile *cfptr, ConfigEntry *ce, int section, int *errors);
 int hooktype_configrun(ConfigFile *cfptr, ConfigEntry *ce, int section);
-int hooktype_local_oper(aClient *sptr, int add);
-int hooktype_local_pass(aClient *sptr, char *password);
-int hooktype_channel_create(aClient *sptr, aChannel *chptr);
-int hooktype_channel_destroy(aChannel *chptr, int *should_destroy);
-int hooktype_tkl_except(aClient *cptr, int ban_type);
-int hooktype_umode_change(aClient *sptr, long setflags, long newflags);
+int hooktype_local_oper(Client *sptr, int add);
+int hooktype_local_pass(Client *sptr, char *password);
+int hooktype_channel_create(Client *sptr, Channel *chptr);
+int hooktype_channel_destroy(Channel *chptr, int *should_destroy);
+int hooktype_tkl_except(Client *cptr, int ban_type);
+int hooktype_umode_change(Client *sptr, long setflags, long newflags);
 int hooktype_rehash_complete(void);
-int hooktype_tkl_add(aClient *cptr, aClient *sptr, aTKline *tkl);
-int hooktype_tkl_del(aClient *cptr, aClient *sptr, aTKline *tkl);
+int hooktype_tkl_add(Client *cptr, Client *sptr, aTKline *tkl);
+int hooktype_tkl_del(Client *cptr, Client *sptr, aTKline *tkl);
 int hooktype_log(int flags, char *timebuf, char *buf);
-int hooktype_local_spamfilter(aClient *acptr, char *str, char *str_in, int type, char *target, aTKline *tkl);
-int hooktype_silenced(aClient *cptr, aClient *sptr, aClient *to, int notice);
-int hooktype_rawpacket_in(aClient *sptr, char *readbuf, int *length);
-int hooktype_local_nickpass(aClient *sptr, aClient *nickserv);
-int hooktype_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int *length);
-int hooktype_handshake(aClient *sptr);
-int hooktype_free_client(aClient *acptr);
-int hooktype_free_user(anUser *user, aClient *acptr);
-int hooktype_can_join_limitexceeded(aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-int hooktype_visible_in_channel(aClient *sptr, aChannel *chptr);
-int hooktype_join_data(aClient *who, aChannel *chptr);
-int hooktype_oper_invite_ban(aClient *sptr, aChannel *chptr);
-int hooktype_view_topic_outside_channel(aClient *sptr, aChannel *chptr);
-int hooktype_chan_permit_nick_change(aClient *sptr, aChannel *chptr);
-int hooktype_is_channel_secure(aChannel *chptr);
-int hooktype_can_send_secure(aClient *sptr, aChannel *chptr);
-int hooktype_channel_synced(aChannel *chptr, int merge, int removetheirs, int nomode);
-int hooktype_can_sajoin(aClient *target, aChannel *chptr, aClient *sptr);
-int hooktype_check_init(aClient *cptr, char *sockname, size_t size);
-int hooktype_mode_deop(aClient *sptr, aClient *victim, aChannel *chptr, u_int what, int modechar, long my_access, char **badmode);
-int hooktype_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr);
-int hooktype_dcc_denied(aClient *sptr, aClient *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
-int hooktype_server_handshake_out(aClient *sptr);
-int hooktype_server_synched(aClient *sptr);
-int hooktype_secure_connect(aClient *sptr);
-int hooktype_can_bypass_channel_message_restriction(aClient *sptr, aChannel *chptr, BypassChannelMessageRestrictionType bypass_type);
-int hooktype_require_sasl(aClient *sptr, char *reason);
-int hooktype_sasl_continuation(aClient *sptr, char *buf);
-int hooktype_sasl_result(aClient *sptr, int success);
-int hooktype_place_host_ban(aClient *sptr, int action, char *reason, long duration);
-int hooktype_find_tkline_match(aClient *sptr, aTKline *tk);
-int hooktype_welcome(aClient *sptr, int after_numeric);
-int hooktype_pre_command(aClient *from, MessageTag *mtags, char *buf);
-int hooktype_post_command(aClient *from, MessageTag *mtags, char *buf);
-void hooktype_new_message(aClient *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
-int hooktype_is_handshake_finished(aClient *acptr);
-char *hooktype_pre_local_quit_chan(aClient *sptr, aChannel *chptr, char *comment);
+int hooktype_local_spamfilter(Client *acptr, char *str, char *str_in, int type, char *target, aTKline *tkl);
+int hooktype_silenced(Client *cptr, Client *sptr, Client *to, int notice);
+int hooktype_rawpacket_in(Client *sptr, char *readbuf, int *length);
+int hooktype_local_nickpass(Client *sptr, Client *nickserv);
+int hooktype_packet(Client *from, Client *to, Client *intended_to, char **msg, int *length);
+int hooktype_handshake(Client *sptr);
+int hooktype_free_client(Client *acptr);
+int hooktype_free_user(ClientUser *user, Client *acptr);
+int hooktype_can_join_limitexceeded(Client *sptr, Channel *chptr, char *key, char *parv[]);
+int hooktype_visible_in_channel(Client *sptr, Channel *chptr);
+int hooktype_join_data(Client *who, Channel *chptr);
+int hooktype_oper_invite_ban(Client *sptr, Channel *chptr);
+int hooktype_view_topic_outside_channel(Client *sptr, Channel *chptr);
+int hooktype_chan_permit_nick_change(Client *sptr, Channel *chptr);
+int hooktype_is_channel_secure(Channel *chptr);
+int hooktype_can_send_secure(Client *sptr, Channel *chptr);
+int hooktype_channel_synced(Channel *chptr, int merge, int removetheirs, int nomode);
+int hooktype_can_sajoin(Client *target, Channel *chptr, Client *sptr);
+int hooktype_check_init(Client *cptr, char *sockname, size_t size);
+int hooktype_mode_deop(Client *sptr, Client *victim, Channel *chptr, u_int what, int modechar, long my_access, char **badmode);
+int hooktype_see_channel_in_whois(Client *sptr, Client *target, Channel *chptr);
+int hooktype_dcc_denied(Client *sptr, Client *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
+int hooktype_server_handshake_out(Client *sptr);
+int hooktype_server_synched(Client *sptr);
+int hooktype_secure_connect(Client *sptr);
+int hooktype_can_bypass_channel_message_restriction(Client *sptr, Channel *chptr, BypassChannelMessageRestrictionType bypass_type);
+int hooktype_require_sasl(Client *sptr, char *reason);
+int hooktype_sasl_continuation(Client *sptr, char *buf);
+int hooktype_sasl_result(Client *sptr, int success);
+int hooktype_place_host_ban(Client *sptr, int action, char *reason, long duration);
+int hooktype_find_tkline_match(Client *sptr, aTKline *tk);
+int hooktype_welcome(Client *sptr, int after_numeric);
+int hooktype_pre_command(Client *from, MessageTag *mtags, char *buf);
+int hooktype_post_command(Client *from, MessageTag *mtags, char *buf);
+void hooktype_new_message(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
+int hooktype_is_handshake_finished(Client *acptr);
+char *hooktype_pre_local_quit_chan(Client *sptr, Channel *chptr, char *comment);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))

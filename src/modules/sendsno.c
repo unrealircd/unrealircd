@@ -66,7 +66,7 @@ CMD_FUNC(m_sendsno)
 	char *sno, *msg, *p;
 	long snomask = 0;
 	int i;
-	aClient *acptr;
+	Client *acptr;
 
 	if ((parc < 3) || BadPtr(parv[2]))
 	{

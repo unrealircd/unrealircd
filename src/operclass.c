@@ -5,46 +5,46 @@
 
 #include "unrealircd.h"
 
-typedef struct _operClass_PathNode OperClass_PathNode;
-typedef struct _operClass_CallbackNode OperClass_CallbackNode;
+typedef struct OperClassPathNode OperClassPathNode;
+typedef struct OperClassCallbackNode OperClassCallbackNode;
 
-struct _operClass_PathNode
+struct OperClassPathNode
 {
-	OperClass_PathNode *prev,*next;
-	OperClass_PathNode *children;
+	OperClassPathNode *prev,*next;
+	OperClassPathNode *children;
 	char* identifier;
-	OperClass_CallbackNode* callbacks;
+	OperClassCallbackNode* callbacks;
 };
 
-struct _operClass_CallbackNode
+struct OperClassCallbackNode
 {
-	OperClass_CallbackNode *prev, *next;
-	OperClass_PathNode *parent;
+	OperClassCallbackNode *prev, *next;
+	OperClassPathNode *parent;
 	OperClassEntryEvalCallback callback;
 };
 
-struct _operClass_Validator
+struct OperClassValidator
 {
 	Module* owner;
-	OperClass_CallbackNode* node;
+	OperClassCallbackNode* node;
 };
 
 OperClassACLPath* OperClass_parsePath(char* path);
 void OperClass_freePath(OperClassACLPath* path);
-OperClass_PathNode* OperClass_findPathNodeForIdentifier(char* identifier, OperClass_PathNode *head);
+OperClassPathNode* OperClass_findPathNodeForIdentifier(char* identifier, OperClassPathNode *head);
 
-OperClass_PathNode* rootEvalNode = NULL;
+OperClassPathNode* rootEvalNode = NULL;
 
 OperClassValidator* OperClassAddValidator(Module *module, char* pathStr, OperClassEntryEvalCallback callback)
 {
-	OperClass_PathNode *node,*nextNode;
-	OperClass_CallbackNode *callbackNode;
+	OperClassPathNode *node,*nextNode;
+	OperClassCallbackNode *callbackNode;
 	OperClassValidator *validator; 
 	OperClassACLPath* path = OperClass_parsePath(pathStr);
 
 	if (!rootEvalNode)
 	{
-		rootEvalNode = MyMallocEx(sizeof(OperClass_PathNode));
+		rootEvalNode = MyMallocEx(sizeof(OperClassPathNode));
 	}
 
 	node = rootEvalNode;
@@ -54,7 +54,7 @@ OperClassValidator* OperClassAddValidator(Module *module, char* pathStr, OperCla
 		nextNode = OperClass_findPathNodeForIdentifier(path->identifier,node->children);
 		if (!nextNode)
 		{
-			nextNode = MyMallocEx(sizeof(OperClass_PathNode));
+			nextNode = MyMallocEx(sizeof(OperClassPathNode));
 			nextNode->identifier = strdup(path->identifier);
 			AddListItem(nextNode,node->children);
 		}
@@ -62,7 +62,7 @@ OperClassValidator* OperClassAddValidator(Module *module, char* pathStr, OperCla
 		path = path->next;
 	}
 
-	callbackNode = MyMallocEx(sizeof(OperClass_CallbackNode));
+	callbackNode = MyMallocEx(sizeof(OperClassCallbackNode));
 	callbackNode->callback = callback;
 	callbackNode->parent = node;	
 	AddListItem(callbackNode,node->callbacks);
@@ -163,7 +163,7 @@ OperClassACL* OperClass_FindACL(OperClassACL* acl, char* name)
 	return NULL;
 }
 
-OperClass_PathNode* OperClass_findPathNodeForIdentifier(char* identifier, OperClass_PathNode *head)
+OperClassPathNode* OperClass_findPathNodeForIdentifier(char* identifier, OperClassPathNode *head)
 {
 	for (; head; head = head->next)
 	{
@@ -177,8 +177,8 @@ OperClass_PathNode* OperClass_findPathNodeForIdentifier(char* identifier, OperCl
 
 unsigned char OperClass_evaluateACLEntry(OperClassACLEntry* entry, OperClassACLPath* path, OperClassCheckParams* params)
 {
-	OperClass_PathNode *node = rootEvalNode;	
-	OperClass_CallbackNode *callbackNode = NULL;
+	OperClassPathNode *node = rootEvalNode;	
+	OperClassCallbackNode *callbackNode = NULL;
 	unsigned char eval = 0;
 
 	/* If no variables, always match */
@@ -279,7 +279,7 @@ OperPermission ValidatePermissionsForPathEx(OperClassACL* acl, OperClassACLPath*
 	return OPER_DENY;
 }
 
-OperPermission ValidatePermissionsForPath(char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra)
+OperPermission ValidatePermissionsForPath(char* path, Client *sptr, Client *victim, Channel *channel, void* extra)
 {
 	ConfigItem_oper *ce_oper;
 	ConfigItem_operclass *ce_operClass;

@@ -99,7 +99,7 @@ moddataadd_isok:
 	return m;
 }
 
-void moddata_free_client(aClient *acptr)
+void moddata_free_client(Client *acptr)
 {
 ModDataInfo *md;
 
@@ -114,7 +114,7 @@ ModDataInfo *md;
 }
 
 // FIXME: this is never called
-void moddata_free_channel(aChannel *chptr)
+void moddata_free_channel(Channel *chptr)
 {
 ModDataInfo *md;
 
@@ -173,7 +173,7 @@ void unload_moddata_commit(ModDataInfo *md)
 			break;
 		case MODDATATYPE_CLIENT:
 		{
-			aClient *acptr;
+			Client *acptr;
 			list_for_each_entry(acptr, &lclient_list, lclient_node)
 			{
 				if (md->free && moddata_client(acptr, md).ptr)
@@ -186,7 +186,7 @@ void unload_moddata_commit(ModDataInfo *md)
 		}
 		case MODDATATYPE_CHANNEL:
 		{
-			aChannel *chptr;
+			Channel *chptr;
 			for (chptr = channel; chptr; chptr=chptr->nextch)
 			{
 				if (md->free && moddata_channel(chptr, md).ptr)
@@ -197,7 +197,7 @@ void unload_moddata_commit(ModDataInfo *md)
 		}
 		case MODDATATYPE_MEMBER:
 		{
-			aChannel *chptr;
+			Channel *chptr;
 			Member *m;
 			for (chptr = channel; chptr; chptr=chptr->nextch)
 			{
@@ -212,7 +212,7 @@ void unload_moddata_commit(ModDataInfo *md)
 		}
 		case MODDATATYPE_MEMBERSHIP:
 		{
-			aClient *acptr;
+			Client *acptr;
 			Membership *m;
 			list_for_each_entry(acptr, &lclient_list, lclient_node)
 			{
@@ -293,7 +293,7 @@ int module_has_moddata(Module *mod)
 }
 
 /** Set ModData for client (via variable name, string value) */
-int moddata_client_set(aClient *acptr, char *varname, char *value)
+int moddata_client_set(Client *acptr, char *varname, char *value)
 {
 	ModDataInfo *md;
 
@@ -324,7 +324,7 @@ int moddata_client_set(aClient *acptr, char *varname, char *value)
 }
 
 /** Get ModData for client (via variable name) */
-char *moddata_client_get(aClient *acptr, char *varname)
+char *moddata_client_get(Client *acptr, char *varname)
 {
 	ModDataInfo *md;
 

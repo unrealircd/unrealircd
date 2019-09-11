@@ -33,7 +33,7 @@ char uid_int_to_char(int v)
 
 const char *uid_get(void)
 {
-	aClient *acptr;
+	Client *acptr;
 	static char uid[IDLEN];
 	static int uidcounter = 0;
 

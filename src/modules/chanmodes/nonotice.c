@@ -32,7 +32,7 @@ Cmode_t EXTCMODE_NONOTICE;
 
 #define IsNoNotice(chptr)    (chptr->mode.extmode & EXTCMODE_NONOTICE)
 
-int nonotice_check_can_send(aClient *cptr, aChannel *chptr, Membership *lp, char **msg, char **errmsg, int notice);
+int nonotice_check_can_send(Client *cptr, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice);
 
 MOD_TEST(nonotice)
 {
@@ -65,7 +65,7 @@ MOD_UNLOAD(nonotice)
 	return MOD_SUCCESS;
 }
 
-int nonotice_check_can_send(aClient *cptr, aChannel *chptr, Membership *lp, char **msg, char **errmsg, int notice)
+int nonotice_check_can_send(Client *cptr, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice)
 {
 	Hook *h;
 	int i;

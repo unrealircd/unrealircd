@@ -20,16 +20,16 @@
 
 #include "unrealircd.h"
 
-int _is_silenced(aClient *, aClient *);
+int _is_silenced(Client *, Client *);
 char *_StripColors(unsigned char *text);
 char *_StripControlCodes(unsigned char *text);
 
-int	ban_version(aClient *sptr, char *text);
+int	ban_version(Client *sptr, char *text);
 
 CMD_FUNC(m_private);
 CMD_FUNC(m_notice);
-int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice);
-int _can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice);
+int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice);
+int _can_send(Client *cptr, Channel *chptr, char **msgtext, char **errmsg, int notice);
 
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
@@ -75,8 +75,8 @@ MOD_UNLOAD(message)
 	return MOD_SUCCESS;
 }
 
-static int check_dcc(aClient *sptr, char *target, aClient *targetcli, char *text);
-static int check_dcc_soft(aClient *from, aClient *to, char *text);
+static int check_dcc(Client *sptr, char *target, Client *targetcli, char *text);
+static int check_dcc_soft(Client *from, Client *to, char *text);
 
 #define CANPRIVMSG_CONTINUE		100
 #define CANPRIVMSG_SEND			101
@@ -93,7 +93,7 @@ static int check_dcc_soft(aClient *from, aClient *to, char *text);
  * CANPRIVMSG_SEND: send the message (use text/newcmd!)
  * Other: return with this value (can be anything like 0, -1, FLUSH_BUFFER, etc)
  */
-static int can_privmsg(aClient *cptr, aClient *sptr, aClient *acptr, int notice, char **text, char **cmd)
+static int can_privmsg(Client *cptr, Client *sptr, Client *acptr, int notice, char **text, char **cmd)
 {
 int ret;
 
@@ -161,11 +161,11 @@ int ret;
 ** rev argv 6/91
 **
 */
-int m_message(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice)
+int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice)
 {
-	aClient *acptr, *srvptr;
+	Client *acptr, *srvptr;
 	char *s;
-	aChannel *chptr;
+	Channel *chptr;
 	char *nick, *server, *p, *p2, *pc, *text, *errmsg, *newcmd;
 	int  cansend = 0;
 	int  prefix = 0;
@@ -491,7 +491,7 @@ CMD_FUNC(m_notice)
  * but more over, if this is detected on a server not local to sptr
  * the SILENCE mask is sent upstream.
  */
-int _is_silenced(aClient *sptr, aClient *acptr)
+int _is_silenced(Client *sptr, Client *acptr)
 {
 	Link *lp;
 	static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
@@ -569,7 +569,7 @@ size_t n = strlen(f);
  * Dcc ban stuff by _Jozeph_ added by Stskeeps with comments.
  * moved and various improvements by Syzop.
  */
-static int check_dcc(aClient *sptr, char *target, aClient *targetcli, char *text)
+static int check_dcc(Client *sptr, char *target, Client *targetcli, char *text)
 {
 char *ctcp;
 ConfigItem_deny_dcc *fl;
@@ -648,7 +648,7 @@ int size_string, ret;
  * 1:			allowed
  * 0:			block
  */
-static int check_dcc_soft(aClient *from, aClient *to, char *text)
+static int check_dcc_soft(Client *from, Client *to, char *text)
 {
 char *ctcp;
 ConfigItem_deny_dcc *fl;
@@ -873,7 +873,7 @@ char *_StripControlCodes(unsigned char *text)
 	return new_str;
 }
 
-int ban_version(aClient *sptr, char *text)
+int ban_version(Client *sptr, char *text)
 {
 	int len;
 	ConfigItem_ban *ban;
@@ -908,7 +908,7 @@ int ban_version(aClient *sptr, char *text)
  * @returns Returns 1 if the user is allowed to send, otherwise 0.
  * (note that this behavior was reversed in UnrealIRCd versions <5.x.
  */
-int _can_send(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice)
+int _can_send(Client *cptr, Channel *chptr, char **msgtext, char **errmsg, int notice)
 {
 	Membership *lp;
 	int  member, i = 0;

@@ -114,9 +114,9 @@ void reputation_md_unserialize(char *str, ModData *m);
 void config_setdefaults(void);
 CMD_FUNC(reputation_cmd);
 CMD_FUNC(reputationunperm);
-int reputation_whois(aClient *sptr, aClient *acptr);
-int reputation_set_on_connect(aClient *sptr);
-int reputation_pre_lconnect(aClient *sptr);
+int reputation_whois(Client *sptr, Client *acptr);
+int reputation_set_on_connect(Client *sptr);
+int reputation_pre_lconnect(Client *sptr);
 int reputation_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int reputation_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 int reputation_config_posttest(int *errs);
@@ -482,7 +482,7 @@ ReputationEntry *find_reputation_entry(char *ip)
  * been established, before any data.
  * Remote user: early in the HOOKTYPE_REMOTE_CONNECT hook.
  */
-int reputation_set_on_connect(aClient *acptr)
+int reputation_set_on_connect(Client *acptr)
 {
 	char *ip = acptr->ip;
 	ReputationEntry *e;
@@ -499,7 +499,7 @@ int reputation_set_on_connect(aClient *acptr)
 	return 0;
 }
 
-int reputation_pre_lconnect(aClient *sptr)
+int reputation_pre_lconnect(Client *sptr)
 {
 	/* User will likely be accepted. Inform other servers about the score
 	 * we have for this user. For more information about this type of
@@ -515,7 +515,7 @@ EVENT(add_scores)
 {
 	static int marker = 0;
 	char *ip;
-	aClient *acptr;
+	Client *acptr;
 	ReputationEntry *e;
 
 	/* This marker is used so we only bump score for an IP entry
@@ -701,7 +701,7 @@ CMD_FUNC(reputation_user_cmd)
 	{
 		ip = parv[1];
 	} else {
-		aClient *acptr = find_person(parv[1], NULL);
+		Client *acptr = find_person(parv[1], NULL);
 		if (!acptr)
 		{
 			sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
@@ -847,7 +847,7 @@ CMD_FUNC(reputation_cmd)
 	return 0;
 }
 
-int reputation_whois(aClient *sptr, aClient *acptr)
+int reputation_whois(Client *sptr, Client *acptr)
 {
 	int reputation = Reputation(acptr);
 

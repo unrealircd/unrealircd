@@ -64,7 +64,7 @@ MOD_UNLOAD(kill)
 */
 CMD_FUNC(m_kill)
 {
-	aClient *acptr;
+	Client *acptr;
 	char inpath[HOSTLEN * 2 + USERLEN + 5];
 	char *oinpath = get_client_name(cptr, FALSE);
 	char *user, *path, *killer, *nick, *p, *s;

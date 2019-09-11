@@ -60,7 +60,7 @@ MOD_UNLOAD(samode)
  */
 CMD_FUNC(m_samode)
 {
-	aChannel *chptr;
+	Channel *chptr;
 
 	if (parc <= 2)
 	{

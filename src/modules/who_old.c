@@ -64,13 +64,13 @@ MOD_UNLOAD(who_old)
 	return MOD_SUCCESS;
 }
 
-static void do_channel_who(aClient *sptr, aChannel *channel, char *mask);
-static void make_who_status(aClient *, aClient *, aChannel *, Member *, char *, int);
-static void do_other_who(aClient *sptr, char *mask);
-static void send_who_reply(aClient *, aClient *, char *, char *, char *);
-static char *first_visible_channel(aClient *, aClient *, int *);
-static int parse_who_options(aClient *, int, char**);
-static void who_sendhelp(aClient *);
+static void do_channel_who(Client *sptr, Channel *channel, char *mask);
+static void make_who_status(Client *, Client *, Channel *, Member *, char *, int);
+static void do_other_who(Client *sptr, char *mask);
+static void send_who_reply(Client *, Client *, char *, char *, char *);
+static char *first_visible_channel(Client *, Client *, int *);
+static int parse_who_options(Client *, int, char**);
+static void who_sendhelp(Client *);
 
 #define WF_OPERONLY  0x01 /**< only show opers */
 #define WF_ONCHANNEL 0x02 /**< we're on the channel we're /who'ing */
@@ -117,7 +117,7 @@ struct {
 /** The /who command: retrieves information from users. */
 CMD_FUNC(m_who)
 {
-	aChannel *target_channel;
+	Channel *target_channel;
 	char *mask = parv[1];
 	char star[] = "*";
 	int i = 0;
@@ -179,7 +179,7 @@ CMD_FUNC(m_who)
 	return 0;
 }
 
-static void who_sendhelp(aClient *sptr)
+static void who_sendhelp(Client *sptr)
 {
   char *who_help[] = {
     "/WHO [+|-][achmnsuM] [args]",
@@ -247,7 +247,7 @@ static void who_sendhelp(aClient *sptr)
 #define WHO_ADD 1
 #define WHO_DEL 2
 
-static int parse_who_options(aClient *sptr, int argc, char **argv)
+static int parse_who_options(Client *sptr, int argc, char **argv)
 {
 char *s = argv[0];
 int what = WHO_ADD;
@@ -387,7 +387,7 @@ int i = 1;
 #undef DOIT
 }
 
-static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
+static int can_see(Client *sptr, Client *acptr, Channel *channel)
 {
 int ret = 0;
 int i=0;
@@ -419,7 +419,7 @@ char has_common_chan = 0;
 		/* if they only want people on a certain channel. */
 		if (wfl.want_channel != WHO_DONTCARE)
  		{
-			aChannel *chan = find_channel(wfl.channel, NULL);
+			Channel *chan = find_channel(wfl.channel, NULL);
 			if (!chan && wfl.want_channel == WHO_WANT)
 				return WHO_CANTSEE;
 			if ((wfl.want_channel == WHO_WANT) && !IsMember(acptr, chan))
@@ -588,7 +588,7 @@ char has_common_chan = 0;
 	}
 }
 
-static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
+static void do_channel_who(Client *sptr, Channel *channel, char *mask)
 {
 	Member *cm = channel->members;
 	if (IsMember(sptr, channel) || ValidatePermissionsForPath("channel:see:who:onchannel",sptr,NULL,channel,NULL))
@@ -596,7 +596,7 @@ static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
 
 	for (cm = channel->members; cm; cm = cm->next)
 	{
-		aClient *acptr = cm->cptr;
+		Client *acptr = cm->cptr;
 		char status[32];
 		int cansee;
 		if ((cansee = can_see(sptr, acptr, channel)) & WHO_CANTSEE)
@@ -607,7 +607,7 @@ static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
     }
 }
 
-static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel, 
+static void make_who_status(Client *sptr, Client *acptr, Channel *channel, 
 			    Member *cm, char *status, int cansee)
 {
 	int i = 0;
@@ -676,7 +676,7 @@ static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel,
 	status[i] = '\0';
 }
 
-static void do_other_who(aClient *sptr, char *mask)
+static void do_other_who(Client *sptr, char *mask)
 {
 int oper = IsOper(sptr);
 
@@ -684,7 +684,7 @@ int oper = IsOper(sptr);
 	{
 		int i = 0;
 		/* go through all users.. */
-		aClient *acptr;
+		Client *acptr;
 		who_flags |= WF_WILDCARD;
 
 		list_for_each_entry(acptr, &client_list, client_node)
@@ -731,7 +731,7 @@ matchok:
 	else
 	{
 		/* just a single client (no wildcards detected) */
-		aClient *acptr = find_client(mask, NULL);
+		Client *acptr = find_client(mask, NULL);
 		int cansee;
 		char status[20];
 		char *channel;
@@ -749,7 +749,7 @@ matchok:
 	}
 }
 
-static void send_who_reply(aClient *sptr, aClient *acptr, 
+static void send_who_reply(Client *sptr, Client *acptr, 
 			   char *channel, char *status, char *xstat)
 {
 	char *stat;
@@ -800,7 +800,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 	free(stat);
 }
 
-static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
+static char *first_visible_channel(Client *sptr, Client *acptr, int *flg)
 {
 	Membership *lp;
 
@@ -808,7 +808,7 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 
 	for (lp = acptr->user->channel; lp; lp = lp->next)
 	{
-		aChannel *chptr = lp->chptr;
+		Channel *chptr = lp->chptr;
 		Hook *h;
 		int ret = EX_ALLOW;
 		int operoverride = 0;

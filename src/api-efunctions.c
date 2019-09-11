@@ -34,14 +34,14 @@ static Efunction *Efunctions[MAXEFUNCTIONS]; /* Efunction objects (used for reha
 static EfunctionsList efunction_table[MAXEFUNCTIONS];
 
 /* Efuncs */
-int (*do_join)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int flags);
-int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
-void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
+int (*do_join)(Client *cptr, Client *sptr, int parc, char *parv[]);
+void (*join_channel)(Channel *chptr, Client *cptr, Client *sptr, MessageTag *mtags, int flags);
+int (*can_join)(Client *cptr, Client *sptr, Channel *chptr, char *key, char *parv[]);
+void (*do_mode)(Channel *chptr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
+void (*set_mode)(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-int (*m_umode)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
-int (*register_user)(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
+int (*m_umode)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+int (*register_user)(Client *cptr, Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
 int (*tkl_chartotype)(char c);
@@ -50,7 +50,7 @@ aTKline *(*tkl_add_serverban)(int type, char *usermask, char *hostmask, char *re
                               time_t expire_at, time_t set_at, int soft, int flags);
 aTKline *(*tkl_add_nameban)(int type, char *name, int hold, char *reason, char *setby,
                             time_t expire_at, time_t set_at, int flags);
-aTKline *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, aMatch *match, char *setby,
+aTKline *(*tkl_add_spamfilter)(int type, unsigned short target, unsigned short action, Match *match, char *setby,
                                time_t expire_at, time_t set_at,
                                time_t spamf_tkl_duration, char *spamf_tkl_reason,
                                int flags);
@@ -58,55 +58,55 @@ aTKline *(*tkl_add_banexception)(int type, char *usermask, char *hostmask, char 
                                 time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
 aTKline *(*tkl_del_line)(aTKline *tkl);
 void (*tkl_check_local_remove_shun)(aTKline *tmp);
-int (*find_tkline_match)(aClient *cptr, int skip_soft);
-int (*find_shun)(aClient *cptr);
-int(*find_spamfilter_user)(aClient *sptr, int flags);
-aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
-aTKline *(*find_tkline_match_zap)(aClient *cptr);
-void (*tkl_stats)(aClient *cptr, int type, char *para);
-void (*tkl_synch)(aClient *sptr);
-int (*m_tkl)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
-int (*place_host_ban)(aClient *sptr, BanAction action, char *reason, long duration);
-int (*run_spamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
-int (*join_viruschan)(aClient *sptr, aTKline *tk, int type);
-void (*send_list)(aClient *cptr);
+int (*find_tkline_match)(Client *cptr, int skip_soft);
+int (*find_shun)(Client *cptr);
+int(*find_spamfilter_user)(Client *sptr, int flags);
+aTKline *(*find_qline)(Client *cptr, char *nick, int *ishold);
+aTKline *(*find_tkline_match_zap)(Client *cptr);
+void (*tkl_stats)(Client *cptr, int type, char *para);
+void (*tkl_synch)(Client *sptr);
+int (*m_tkl)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+int (*place_host_ban)(Client *sptr, BanAction action, char *reason, long duration);
+int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
+int (*join_viruschan)(Client *sptr, aTKline *tk, int type);
+void (*send_list)(Client *cptr);
 unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
-void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
-int (*is_silenced)(aClient *sptr, aClient *acptr);
-void (*send_protoctl_servers)(aClient *sptr, int response);
-int (*verify_link)(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
-void (*introduce_user)(aClient *to, aClient *acptr);
-void (*send_server_message)(aClient *sptr);
-void (*broadcast_md_client)(ModDataInfo *mdi, aClient *acptr, ModData *md);
-void (*broadcast_md_channel)(ModDataInfo *mdi, aChannel *chptr, ModData *md);
-void (*broadcast_md_member)(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md);
-void (*broadcast_md_membership)(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md);
-int (*check_banned)(aClient *cptr, int exitflags);
-int (*check_deny_version)(aClient *cptr, char *software, int protocol, char *flags);
-void (*broadcast_md_client_cmd)(aClient *except, aClient *sender, aClient *acptr, char *varname, char *value);
-void (*broadcast_md_channel_cmd)(aClient *except, aClient *sender, aChannel *chptr, char *varname, char *value);
-void (*broadcast_md_member_cmd)(aClient *except, aClient *sender, aChannel *chptr, aClient *acptr, char *varname, char *value);
-void (*broadcast_md_membership_cmd)(aClient *except, aClient *sender, aClient *acptr, aChannel *chptr, char *varname, char *value);
-void (*send_moddata_client)(aClient *srv, aClient *acptr);
-void (*send_moddata_channel)(aClient *srv, aChannel *chptr);
-void (*send_moddata_members)(aClient *srv);
-void (*broadcast_moddata_client)(aClient *acptr);
-int (*match_user)(char *rmask, aClient *acptr, int options);
-void (*userhost_changed)(aClient *sptr);
-void (*userhost_save_current)(aClient *sptr);
-void (*send_join_to_local_users)(aClient *sptr, aChannel *chptr, MessageTag *mtags);
+void (*spamfilter_build_user_string)(char *buf, char *nick, Client *acptr);
+int (*is_silenced)(Client *sptr, Client *acptr);
+void (*send_protoctl_servers)(Client *sptr, int response);
+int (*verify_link)(Client *cptr, Client *sptr, char *servername, ConfigItem_link **link_out);
+void (*introduce_user)(Client *to, Client *acptr);
+void (*send_server_message)(Client *sptr);
+void (*broadcast_md_client)(ModDataInfo *mdi, Client *acptr, ModData *md);
+void (*broadcast_md_channel)(ModDataInfo *mdi, Channel *chptr, ModData *md);
+void (*broadcast_md_member)(ModDataInfo *mdi, Channel *chptr, Member *m, ModData *md);
+void (*broadcast_md_membership)(ModDataInfo *mdi, Client *acptr, Membership *m, ModData *md);
+int (*check_banned)(Client *cptr, int exitflags);
+int (*check_deny_version)(Client *cptr, char *software, int protocol, char *flags);
+void (*broadcast_md_client_cmd)(Client *except, Client *sender, Client *acptr, char *varname, char *value);
+void (*broadcast_md_channel_cmd)(Client *except, Client *sender, Channel *chptr, char *varname, char *value);
+void (*broadcast_md_member_cmd)(Client *except, Client *sender, Channel *chptr, Client *acptr, char *varname, char *value);
+void (*broadcast_md_membership_cmd)(Client *except, Client *sender, Client *acptr, Channel *chptr, char *varname, char *value);
+void (*send_moddata_client)(Client *srv, Client *acptr);
+void (*send_moddata_channel)(Client *srv, Channel *chptr);
+void (*send_moddata_members)(Client *srv);
+void (*broadcast_moddata_client)(Client *acptr);
+int (*match_user)(char *rmask, Client *acptr, int options);
+void (*userhost_changed)(Client *sptr);
+void (*userhost_save_current)(Client *sptr);
+void (*send_join_to_local_users)(Client *sptr, Channel *chptr, MessageTag *mtags);
 int (*do_nick_name)(char *nick);
 int (*do_remote_nick_name)(char *nick);
 char *(*charsys_get_current_languages)(void);
-void (*broadcast_sinfo)(aClient *acptr, aClient *to, aClient *except);
-void (*parse_message_tags)(aClient *cptr, char **str, MessageTag **mtag_list);
-extern void parse_message_tags_default_handler(aClient *cptr, char **str, MessageTag **mtag_list);
-char *(*mtags_to_string)(MessageTag *m, aClient *acptr);
-extern char *mtags_to_string_default_handler(MessageTag *m, aClient *acptr);
-int (*can_send)(aClient *cptr, aChannel *chptr, char **msgtext, char **errmsg, int notice);
+void (*broadcast_sinfo)(Client *acptr, Client *to, Client *except);
+void (*parse_message_tags)(Client *cptr, char **str, MessageTag **mtag_list);
+extern void parse_message_tags_default_handler(Client *cptr, char **str, MessageTag **mtag_list);
+char *(*mtags_to_string)(MessageTag *m, Client *acptr);
+extern char *mtags_to_string_default_handler(MessageTag *m, Client *acptr);
+int (*can_send)(Client *cptr, Channel *chptr, char **msgtext, char **errmsg, int notice);
 void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
-void (*broadcast_md_globalvar_cmd)(aClient *except, aClient *sender, char *varname, char *value);
+void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, char *varname, char *value);
 int (*tkl_ip_hash)(char *ip);
 int (*tkl_ip_hash_type)(int type);
 void (*sendnotice_tkl_del)(char *removed_by, aTKline *tkl);
@@ -116,7 +116,7 @@ aTKline *(*find_tkl_serverban)(int type, char *usermask, char *hostmask, int sof
 aTKline *(*find_tkl_banexception)(int type, char *usermask, char *hostmask, int softban);
 aTKline *(*find_tkl_nameban)(int type, char *name, int hold);
 aTKline *(*find_tkl_spamfilter)(int type, char *match_string, unsigned short action, unsigned short target);
-int (*find_tkl_exception)(int ban_type, aClient *cptr);
+int (*find_tkl_exception)(int ban_type, Client *cptr);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
 {

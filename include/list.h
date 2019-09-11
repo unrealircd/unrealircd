@@ -16,9 +16,9 @@
 #endif
 
 #ifdef _WIN32
-#define typeof(x)   aClient 
+#define typeof(x)   Client 
 /* ^ FIXME if/when Microsoft supports this.
- * All functions use aClient at the moment, with the exception of CAP, which has
+ * All functions use Client at the moment, with the exception of CAP, which has
  * to use list_for_each_entry2 because of it
  * Yeah this looks ugly and hacky.. thanks nenolod for making all code use this
  * non-portable gcc-specific stuff and violating all our code rules. Once again.

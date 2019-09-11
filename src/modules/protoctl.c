@@ -184,7 +184,7 @@ CMD_FUNC(m_protoctl)
 		}
 		else if (!strcmp(name, "SID") && value)
 		{
-			aClient *acptr;
+			Client *acptr;
 			char *sid = value;
 
 			if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
@@ -277,7 +277,7 @@ CMD_FUNC(m_protoctl)
 		}
 		else if (!strcmp(name, "SERVERS") && value && NEW_LINKING_PROTOCOL)
 		{
-			aClient *acptr, *srv;
+			Client *acptr, *srv;
 			char *sid = NULL;
 			
 			if (!IsEAuth(cptr))

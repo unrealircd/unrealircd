@@ -14,8 +14,8 @@ ModuleHeader MOD_HEADER(history)
 	"unrealircd-5",
     };
 
-typedef struct _config_history_ext ConfigHistoryExt;
-struct _config_history_ext {
+typedef struct ConfigHistoryExt ConfigHistoryExt;
+struct ConfigHistoryExt {
 	int lines;
 	long time;
 };
@@ -24,8 +24,8 @@ struct {
 	ConfigHistoryExt max_storage_per_channel; /**< Maximum number of lines & time to record */
 } cfg;
 
-typedef struct _historychanmode HistoryChanMode;
-struct _historychanmode {
+typedef struct HistoryChanMode HistoryChanMode;
+struct HistoryChanMode {
 	unsigned int max_lines; /**< Maximum number of messages to record */
 	unsigned long max_time; /**< Maximum number of time to record */
 };
@@ -54,16 +54,16 @@ static void init_config(void);
 int history_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int history_config_run(ConfigFile *, ConfigEntry *, int);
 static int compare_history_modes(HistoryChanMode *a, HistoryChanMode *b);
-int history_chanmode_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type, int what);
+int history_chanmode_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, int what);
 void *history_chanmode_put_param(void *r_in, char *param);
 char *history_chanmode_get_param(void *r_in);
-char *history_chanmode_conv_param(char *param, aClient *cptr);
+char *history_chanmode_conv_param(char *param, Client *cptr);
 void history_chanmode_free_param(void *r);
 void *history_chanmode_dup_struct(void *r_in);
-int history_chanmode_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
-int history_channel_destroy(aChannel *chptr, int *should_destroy);
-int history_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
-int history_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *parv[]);
+int history_chanmode_sjoin_check(Channel *chptr, void *ourx, void *theirx);
+int history_channel_destroy(Channel *chptr, int *should_destroy);
+int history_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
+int history_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
 EVENT(history_clean);
 
 MOD_TEST(history)
@@ -338,7 +338,7 @@ int history_parse_chanmode(char *param, int *lines, long *t)
  * Does the user have rights to add/remove this channel mode?
  * Is the supplied mode parameter ok?
  */
-int history_chanmode_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int type, int what)
+int history_chanmode_is_ok(Client *sptr, Channel *chptr, char mode, char *param, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
@@ -370,7 +370,7 @@ int history_chanmode_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para
 /** Convert channel parameter to something proper.
  * NOTE: cptr may be NULL if called for e.g. set::modes-playback-on-join
  */
-char *history_chanmode_conv_param(char *param, aClient *cptr)
+char *history_chanmode_conv_param(char *param, Client *cptr)
 {
 	static char buf[64];
 	int lines = 0;
@@ -444,7 +444,7 @@ void *history_chanmode_dup_struct(void *r_in)
  * we have to deal with merging the settings on different sides
  * (if they differ at all). That's what we do here.
  */
-int history_chanmode_sjoin_check(aChannel *chptr, void *ourx, void *theirx)
+int history_chanmode_sjoin_check(Channel *chptr, void *ourx, void *theirx)
 {
 	HistoryChanMode *our = (HistoryChanMode *)ourx;
 	HistoryChanMode *their = (HistoryChanMode *)theirx;
@@ -459,7 +459,7 @@ int history_chanmode_sjoin_check(aChannel *chptr, void *ourx, void *theirx)
 }
 
 /** Channel is destroyed (or is it?) */
-int history_channel_destroy(aChannel *chptr, int *should_destroy)
+int history_channel_destroy(Channel *chptr, int *should_destroy)
 {
 	if (*should_destroy == 0)
 		return 0; /* channel will not be destroyed */
@@ -469,7 +469,7 @@ int history_channel_destroy(aChannel *chptr, int *should_destroy)
 	return 0;
 }
 
-int history_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
+int history_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
 {
 	char buf[512];
 	char source[64];
@@ -506,7 +506,7 @@ int history_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, c
 	return 0;
 }
 
-int history_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *parv[])
+int history_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[])
 {
 	if (!HistoryEnabled(chptr))
 		return 0;
@@ -530,7 +530,7 @@ EVENT(history_clean)
 {
 	static int hashnum = 0;
 	int loopcnt = 0;
-	aChannel *chptr;
+	Channel *chptr;
 
 	do
 	{

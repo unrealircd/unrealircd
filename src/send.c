@@ -22,8 +22,8 @@
 
 #include "unrealircd.h"
 
-void vsendto_one(aClient *to, MessageTag *mtags, const char *pattern, va_list vl);
-void sendbufto_one(aClient *to, char *msg, unsigned int quick);
+void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl);
+void sendbufto_one(Client *to, char *msg, unsigned int quick);
 static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *from, const char *pattern, va_list vl);
 
 #define ADD_CRLF(buf, len) { if (len > 510) len = 510; \
@@ -51,7 +51,7 @@ MODVAR int  current_serial;
 **	notice will be the quit message. notice will also be
 **	sent to locally connected IRCOps in case 'to' is a server.
 */
-int dead_link(aClient *to, char *notice)
+int dead_link(Client *to, char *notice)
 {
 	DBufClear(&to->local->recvQ);
 	DBufClear(&to->local->sendQ);
@@ -80,7 +80,7 @@ int dead_link(aClient *to, char *notice)
  */
 static void send_queued_cb(int fd, int revents, void *data)
 {
-	aClient *to = data;
+	Client *to = data;
 
 	if (IsDead(to))
 		return;
@@ -92,7 +92,7 @@ static void send_queued_cb(int fd, int revents, void *data)
  * sent to the client. It is called from the event loop and also
  * a couple of other places (such as when closing the connection).
  */
-int send_queued(aClient *to)
+int send_queued(Client *to)
 {
 	char *msg;
 	int  len, rlen;
@@ -151,7 +151,7 @@ int send_queued(aClient *to)
 /*
  *  send message to single client
  */
-void sendto_one(aClient *to, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
+void sendto_one(Client *to, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	va_start(vl, pattern);
@@ -159,7 +159,7 @@ void sendto_one(aClient *to, MessageTag *mtags, FORMAT_STRING(const char *patter
 	va_end(vl);
 }
 
-void vsendto_one(aClient *to, MessageTag *mtags, const char *pattern, va_list vl)
+void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl)
 {
 	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
 
@@ -196,11 +196,11 @@ void vsendto_one(aClient *to, MessageTag *mtags, const char *pattern, va_list vl
  *   careful to take everything into account, including side-
  *   effects not mentioned here.
  */
-void sendbufto_one(aClient *to, char *msg, unsigned int quick)
+void sendbufto_one(Client *to, char *msg, unsigned int quick)
 {
 	int len;
 	Hook *h;
-	aClient *intended_to = to;
+	Client *intended_to = to;
 	
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", msg, to->name));
 
@@ -349,14 +349,14 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
  * @param pattern     The pattern (eg: ":%s PRIVMSG %s :%s")
  * @param ...         The parameters for the pattern.
  */
-void sendto_channel(aChannel *chptr, aClient *from, aClient *skip,
+void sendto_channel(Channel *chptr, Client *from, Client *skip,
                     int prefix, long clicap, int sendflags,
                     MessageTag *mtags,
                     FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	Member *lp;
-	aClient *acptr;
+	Client *acptr;
 	int  i = 0,j = 0;
 	Hook *h;
 
@@ -472,9 +472,9 @@ good:
  * what we had going on here.
  * - kaniini
  */
-void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...)
+void sendto_server(Client *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...)
 {
-	aClient *cptr;
+	Client *cptr;
 
 	/* noone to send to.. */
 	if (list_empty(&server_list))
@@ -512,12 +512,12 @@ void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps, Messa
  * @param pattern     The pattern (eg: ":%s NICK %s").
  * @param ...         The parameters for the pattern.
  */
-void sendto_local_common_channels(aClient *user, aClient *skip, long clicap, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
+void sendto_local_common_channels(Client *user, Client *skip, long clicap, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	Membership *channels;
 	Member *users;
-	aClient *cptr;
+	Client *cptr;
 
 	/* We now create the buffer _before_ we send it to the clients. -- Syzop */
 	*sendbuf = '\0';
@@ -564,7 +564,7 @@ void sendto_local_common_channels(aClient *user, aClient *skip, long clicap, Mes
 ** addition -- Armin, 8jun90 (gruner@informatik.tu-muenchen.de)
 */
 
-static int match_it(aClient *one, char *mask, int what)
+static int match_it(Client *one, char *mask, int what)
 {
 	switch (what)
 	{
@@ -582,12 +582,12 @@ static int match_it(aClient *one, char *mask, int what)
  * Send to all clients which match the mask in a way defined on 'what';
  * either by user hostname or user servername.
  */
-void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
+void sendto_match_butone(Client *one, Client *from, char *mask, int what,
     MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	int  i;
-	aClient *cptr, *acptr;
+	Client *cptr, *acptr;
 	char cansendlocal, cansendglobal;
 
 	if (MyConnect(from))
@@ -633,7 +633,7 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 void sendto_ops(FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	aClient *cptr;
+	Client *cptr;
 	char nbuf[1024];
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
@@ -656,7 +656,7 @@ void sendto_ops(FORMAT_STRING(const char *pattern), ...)
 void sendto_umode(int umodes, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	aClient *cptr;
+	Client *cptr;
 	char nbuf[1024];
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
@@ -680,7 +680,7 @@ void sendto_umode(int umodes, FORMAT_STRING(const char *pattern), ...)
 void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	aClient *cptr;
+	Client *cptr;
 	char nbuf[1024];
 	int i;
 	char modestr[128];
@@ -728,7 +728,7 @@ void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 void sendto_snomask(int snomask, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	aClient *cptr;
+	Client *cptr;
 	char nbuf[2048];
 
 	va_start(vl, pattern);
@@ -750,7 +750,7 @@ void sendto_snomask(int snomask, FORMAT_STRING(const char *pattern), ...)
 void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	aClient *cptr;
+	Client *cptr;
 	int  i;
 	char nbuf[2048], snobuf[32], *p;
 
@@ -782,7 +782,7 @@ void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
 void send_cap_notify(int add, char *token)
 {
 	va_list vl;
-	aClient *cptr;
+	Client *cptr;
 	char nbuf[1024];
 	ClientCapability *clicap = ClientCapabilityFindReal(token);
 	long CAP_NOTIFY = ClientCapabilityBit("cap-notify");
@@ -822,11 +822,11 @@ void send_cap_notify(int add, char *token)
 ** one - client not to send message to
 ** from- client which message is from *NEVER* NULL!!
 */
-void sendto_ops_butone(aClient *one, aClient *from, FORMAT_STRING(const char *pattern), ...)
+void sendto_ops_butone(Client *one, Client *from, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	int  i;
-	aClient *cptr;
+	Client *cptr;
 
 	++current_serial;
 	list_for_each_entry(cptr, &client_list, client_node)
@@ -928,7 +928,7 @@ void vsendto_prefix_one(struct Client *to, struct Client *from, MessageTag *mtag
  * -avalon
  */
 
-void sendto_prefix_one(aClient *to, aClient *from, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
+void sendto_prefix_one(Client *to, Client *from, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	va_start(vl, pattern);
@@ -944,7 +944,7 @@ void sendto_prefix_one(aClient *to, aClient *from, MessageTag *mtags, FORMAT_STR
 void sendto_realops(FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	aClient *cptr;
+	Client *cptr;
 	char nbuf[1024];
 
 	list_for_each_entry(cptr, &oper_list, special_node)
@@ -973,9 +973,9 @@ static char buf[2048];
 	ircd_log(LOG_ERROR, "%s", buf);
 }
 
-void sendto_connectnotice(aClient *acptr, int disconnect, char *comment)
+void sendto_connectnotice(Client *acptr, int disconnect, char *comment)
 {
-	aClient *cptr;
+	Client *cptr;
 	int  i, j;
 	char connect[512], secure[256];
 
@@ -1006,9 +1006,9 @@ void sendto_connectnotice(aClient *acptr, int disconnect, char *comment)
 	}
 }
 
-void sendto_fconnectnotice(aClient *acptr, int disconnect, char *comment)
+void sendto_fconnectnotice(Client *acptr, int disconnect, char *comment)
 {
-	aClient *cptr;
+	Client *cptr;
 	int  i, j;
 	char connect[512], secure[256];
 
@@ -1042,9 +1042,9 @@ void sendto_fconnectnotice(aClient *acptr, int disconnect, char *comment)
  * @param sptr Client to introduce
  * @param umodes User modes of client
  */
-void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *umodes)
+void sendto_serv_butone_nickcmd(Client *one, Client *sptr, char *umodes)
 {
-	aClient *cptr;
+	Client *cptr;
 
 	if (BadPtr(umodes))
 		umodes = "+";
@@ -1068,7 +1068,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *umodes)
  * @param sptr Client to introduce
  * @param umodes User modes of client
  */
-void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
+void sendto_one_nickcmd(Client *cptr, Client *sptr, char *umodes)
 {
 	char *vhost;
 
@@ -1121,7 +1121,7 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
  * has a % in their nick, which is a safe assumption since % is illegal.
  */
  
-void sendnotice(aClient *to, FORMAT_STRING(const char *pattern), ...)
+void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...)
 {
 static char realpattern[1024];
 va_list vl;
@@ -1134,7 +1134,7 @@ char *name = *to->name ? to->name : "*";
 	va_end(vl);
 }
 
-void sendtxtnumeric(aClient *to, FORMAT_STRING(const char *pattern), ...)
+void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...)
 {
 static char realpattern[1024];
 va_list vl;
@@ -1147,7 +1147,7 @@ va_list vl;
 }
 
 /** Send numeric to IRC client */
-void sendnumeric(aClient *to, int numeric, ...)
+void sendnumeric(Client *to, int numeric, ...)
 {
 	va_list vl;
 	char pattern[512];
@@ -1160,7 +1160,7 @@ void sendnumeric(aClient *to, int numeric, ...)
 }
 
 /** Send numeric to IRC client */
-void sendnumericfmt(aClient *to, int numeric, FORMAT_STRING(const char *pattern), ...)
+void sendnumericfmt(Client *to, int numeric, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
 	char realpattern[512];
@@ -1187,7 +1187,7 @@ void sendnumericfmt(aClient *to, int numeric, FORMAT_STRING(const char *pattern)
  * By the way, did I already mention that you SHOULD NOT USE THIS
  * FUNCTION? ;)
  */
-void send_raw_direct(aClient *user, FORMAT_STRING(FORMAT_STRING(const char *pattern)), ...)
+void send_raw_direct(Client *user, FORMAT_STRING(FORMAT_STRING(const char *pattern)), ...)
 {
 	va_list vl;
 	int sendlen;

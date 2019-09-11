@@ -25,25 +25,25 @@
 /* Forward declarations */
 CMD_FUNC(m_mode);
 CMD_FUNC(m_mlock);
-void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode);
-void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
+void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode);
+void _set_mode(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcount,
                        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 CMD_FUNC(_m_umode);
 
 /* local: */
-static void bounce_mode(aChannel *, aClient *, int, char **);
-int do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
-                 u_int what, aClient *cptr,
+static void bounce_mode(Channel *, Client *, int, char **);
+int do_mode_char(Channel *chptr, long modetype, char modechar, char *param,
+                 u_int what, Client *cptr,
                  u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce, long my_access);
-int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
-                    aClient *cptr, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
+int do_extmode_char(Channel *chptr, Cmode *handler, char *param, u_int what,
+                    Client *cptr, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                     char bounce);
-void make_mode_str(aChannel *chptr, long oldm, Cmode_t oldem, long oldl, int pcount,
+void make_mode_str(Channel *chptr, long oldm, Cmode_t oldem, long oldl, int pcount,
                    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
                    size_t mode_buf_size, size_t para_buf_size, char bounce);
 
 static void mode_cutoff(char *s);
-static void mode_cutoff2(aClient *sptr, aChannel *chptr, int *parc_out, char *parv[]);
+static void mode_cutoff2(Client *sptr, Channel *chptr, int *parc_out, char *parv[]);
 
 static int samode_in_progress = 0;
 
@@ -98,7 +98,7 @@ CMD_FUNC(m_mode)
 {
 	long unsigned sendts = 0;
 	Ban *ban;
-	aChannel *chptr;
+	Channel *chptr;
 
 	/* Now, try to find the channel in question */
 	if (parc > 1)
@@ -310,7 +310,7 @@ unsigned short modesleft = MAXMODEPARAMS * 2; /* be generous... */
  * amplification/enlargement problem that happens with bans/exempts/invex
  * as explained in #2837. -- Syzop
  */
-static void mode_cutoff2(aClient *sptr, aChannel *chptr, int *parc_out, char *parv[])
+static void mode_cutoff2(Client *sptr, Channel *chptr, int *parc_out, char *parv[])
 {
 int modes = 0;
 char *s;
@@ -373,7 +373,7 @@ int parc = *parc_out;
  * param (last param) of the calls to set_mode and make_mode_str, it will not
  * set the mode, but create the bounce string.
  */
-static void bounce_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[])
+static void bounce_mode(Channel *chptr, Client *cptr, int parc, char *parv[])
 {
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
@@ -394,7 +394,7 @@ static void bounce_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[])
  *	User or server is authorized to do the mode.  This takes care of
  * setting the mode and relaying it to other users and servers.
  */
-void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode)
+void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode)
 {
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
@@ -549,7 +549,7 @@ void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mt
  *  contain the +x-y stuff, and the parabuf will contain the parameters.
  *  If bounce is set to 1, it will make the string it needs for a bounce.
  */
-void make_mode_str(aChannel *chptr, long oldm, Cmode_t oldem, long oldl, int pcount,
+void make_mode_str(Channel *chptr, long oldm, Cmode_t oldem, long oldl, int pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf,
     size_t mode_buf_size, size_t para_buf_size, char bounce)
 {
@@ -733,15 +733,15 @@ void make_mode_str(aChannel *chptr, long oldm, Cmode_t oldem, long oldl, int pco
 #define is_xchanop(x) ((x & CHFL_CHANOP))
 #endif
 
-int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
-	u_int what, aClient *cptr,
+int  do_mode_char(Channel *chptr, long modetype, char modechar, char *param,
+	u_int what, Client *cptr,
 	 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce, long my_access)
 {
 	aCtab *tab = &cFlagTab[0];
 	int  retval = 0;
 	Member *member = NULL;
 	Membership *membership = NULL;
-	aClient *who;
+	Client *who;
 	unsigned int tmp = 0;
 	char tmpbuf[512], *tmpstr;
 	char tc = ' ';		/* */
@@ -1201,8 +1201,8 @@ process_listmode:
   * note: if bounce is requested then the mode will not be set.
   * @returns amount of params eaten (0 or 1)
   */
-int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
-                    aClient *cptr, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
+int do_extmode_char(Channel *chptr, Cmode *handler, char *param, u_int what,
+                    Client *cptr, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                     char bounce)
 {
 	int paracnt = (what == MODE_ADD) ? handler->paracount : 0;
@@ -1322,7 +1322,7 @@ int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
  * could deal with unknown "parameter eating" channel modes, minimizing desynchs.
  * Now, in 2015, I finally added the code to deal with this. -- Syzop
  */
-int paracount_for_chanmode_from_server(aClient *acptr, u_int what, char mode)
+int paracount_for_chanmode_from_server(Client *acptr, u_int what, char mode)
 {
 	if (MyClient(acptr))
 		return 0; /* no server, we have no idea, assume 0 paracount */
@@ -1387,7 +1387,7 @@ int paracount_for_chanmode(u_int what, char mode)
 /* set_mode
  *	written by binary
  */
-void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
+void _set_mode(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcount,
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce)
 {
 	char *curchr;
@@ -1565,7 +1565,7 @@ CMD_FUNC(_m_umode)
 {
 	int i;
 	char **p, *m;
-	aClient *acptr;
+	Client *acptr;
 	int what, setsnomask = 0;
 	long oldumodes = 0;
 	int oldsnomasks = 0;
@@ -1902,7 +1902,7 @@ CMD_FUNC(_m_umode)
 
 CMD_FUNC(m_mlock)
 {
-	aChannel *chptr = NULL;
+	Channel *chptr = NULL;
 	time_t t;
 
 	if ((parc < 3) || BadPtr(parv[2]))

@@ -38,8 +38,8 @@ ModuleHeader MOD_HEADER(cap)
 	};
 
 /* Forward declarations */
-int cap_is_handshake_finished(aClient *acptr);
-int cap_never_visible(aClient *acptr);
+int cap_is_handshake_finished(Client *acptr);
+int cap_never_visible(Client *acptr);
 
 /* Variables */
 long CAP_IN_PROGRESS = 0L;
@@ -109,7 +109,7 @@ MOD_UNLOAD(cap)
 	return MOD_SUCCESS;
 }
 
-static ClientCapability *clicap_find(aClient *sptr, const char *data, int *negate, int *finished, int *errors)
+static ClientCapability *clicap_find(Client *sptr, const char *data, int *negate, int *finished, int *errors)
 {
 	static char buf[BUFSIZE];
 	static char *p;
@@ -167,7 +167,7 @@ static ClientCapability *clicap_find(aClient *sptr, const char *data, int *negat
 	return cap;
 }
 
-static void clicap_generate(aClient *sptr, const char *subcmd, int flags)
+static void clicap_generate(Client *sptr, const char *subcmd, int flags)
 {
 	ClientCapability *cap;
 	char buf[BUFSIZE];
@@ -233,7 +233,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags)
 	sendto_one(sptr, NULL, "%s :%s", buf, capbuf);
 }
 
-static int cap_end(aClient *sptr, const char *arg)
+static int cap_end(Client *sptr, const char *arg)
 {
 	if (IsRegisteredUser(sptr))
 		return 0;
@@ -246,13 +246,13 @@ static int cap_end(aClient *sptr, const char *arg)
 	return 0;
 }
 
-static int cap_list(aClient *sptr, const char *arg)
+static int cap_list(Client *sptr, const char *arg)
 {
 	clicap_generate(sptr, "LIST", sptr->local->caps ? sptr->local->caps : -1);
 	return 0;
 }
 
-static int cap_ls(aClient *sptr, const char *arg)
+static int cap_ls(Client *sptr, const char *arg)
 {
 	if (!IsRegisteredUser(sptr))
 		SetCapabilityFast(sptr, CAP_IN_PROGRESS);
@@ -273,7 +273,7 @@ static int cap_ls(aClient *sptr, const char *arg)
 	return 0;
 }
 
-static int cap_req(aClient *sptr, const char *arg)
+static int cap_req(Client *sptr, const char *arg)
 {
 	char buf[BUFSIZE];
 	char pbuf[2][BUFSIZE];
@@ -367,13 +367,13 @@ static int clicap_cmd_search(const char *command, struct clicap_cmd *entry)
 	return strcasecmp(command, entry->cmd);
 }
 
-int cap_never_visible(aClient *acptr)
+int cap_never_visible(Client *acptr)
 {
 	return 0;
 }
 
 /** Is our handshake done? */
-int cap_is_handshake_finished(aClient *acptr)
+int cap_is_handshake_finished(Client *acptr)
 {
 	if (HasCapabilityFast(acptr, CAP_IN_PROGRESS))
 		return 0; /* We are in CAP LS stage, waiting for a CAP END */

@@ -306,7 +306,7 @@ int max;
 	return 1;
 }
 
-static int authcheck_argon2(aClient *cptr, anAuthStruct *as, char *para)
+static int authcheck_argon2(Client *cptr, anAuthStruct *as, char *para)
 {
 	argon2_type hashtype;
 
@@ -331,7 +331,7 @@ static int authcheck_argon2(aClient *cptr, anAuthStruct *as, char *para)
 	return -1; /* NO MATCH or error */
 }
 
-static int authcheck_bcrypt(aClient *cptr, anAuthStruct *as, char *para)
+static int authcheck_bcrypt(Client *cptr, anAuthStruct *as, char *para)
 {
 char data[512]; /* NOTE: only 64 required by BF_crypt() */
 char *str;
@@ -351,7 +351,7 @@ char *str;
 	return -1; /* NO MATCH */
 }
 
-static int authcheck_md5(aClient *cptr, anAuthStruct *as, char *para)
+static int authcheck_md5(Client *cptr, anAuthStruct *as, char *para)
 {
 static char buf[512];
 int	i, r;
@@ -407,7 +407,7 @@ char *saltstr, *hashstr;
 	return -1; /* NOTREACHED */
 }
 
-static int authcheck_sha1(aClient *cptr, anAuthStruct *as, char *para)
+static int authcheck_sha1(Client *cptr, anAuthStruct *as, char *para)
 {
 char buf[512];
 int i, r;
@@ -465,7 +465,7 @@ char *saltstr, *hashstr;
 	}
 }
 
-static int authcheck_ripemd160(aClient *cptr, anAuthStruct *as, char *para)
+static int authcheck_ripemd160(Client *cptr, anAuthStruct *as, char *para)
 {
 char buf[512];
 int i, r;
@@ -535,7 +535,7 @@ char *saltstr, *hashstr;
  * -2 if authentication is delayed, don't error
  * No AuthStruct = everyone allowed
 */
-int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
+int	Auth_Check(Client *cptr, anAuthStruct *as, char *para)
 {
 	extern	char *crypt();
 	char *res;

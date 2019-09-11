@@ -69,7 +69,7 @@ extern void SocketLoop(void *dummy);
 HINSTANCE hInst;
 NOTIFYICONDATA SysTray;
 HTREEITEM AddItemToTree(HWND, LPSTR, int, short);
-void win_map(aClient *, HWND, short);
+void win_map(Client *, HWND, short);
 extern Link *Servers;
 extern ircstats IRCstats;
 unsigned char *errors = NULL;
@@ -287,7 +287,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 
 	unsigned char *argv[3];
-	aClient *paClient;
+	Client *pClient;
 	unsigned char *msg;
 	POINT p;
 
@@ -1002,9 +1002,9 @@ HTREEITEM AddItemToTree(HWND hWnd, LPSTR lpszItem, int nLevel, short remap)
  * I removed the Potvin credit because it no longer uses any original code and I don't
  * even think Potvin actually made the original code
  */
-void win_map(aClient *server, HWND hwTreeView, short remap)
+void win_map(Client *server, HWND hwTreeView, short remap)
 {
-	aClient *acptr;
+	Client *acptr;
 	Link *lp;
 
 /*

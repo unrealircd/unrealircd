@@ -37,7 +37,7 @@ aCommand *CommandHash[256]; /* one per letter */
 **
 ** Rewritten for linebufs, 19th May 2013. --kaniini
 */
-int  dopacket(aClient *cptr, char *buffer, int length)
+int  dopacket(Client *cptr, char *buffer, int length)
 {
 	me.local->receiveB += length;	/* Update bytes received */
 	cptr->local->receiveB += length;
@@ -168,7 +168,7 @@ aCommand *find_Command_simple(char *cmd)
  *    of 1024 bytes, most of the ircd code depends on the max size of the
  *    total command being less than 512 bytes. Same for parc < MAXPARA.
  */
-int do_cmd(aClient *cptr, aClient *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[])
+int do_cmd(Client *cptr, Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[])
 {
 aCommand *cmptr;
 

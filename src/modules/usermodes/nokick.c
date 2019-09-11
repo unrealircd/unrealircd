@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(nokick)
 long UMODE_NOKICK = 0L;
 
 /* Forward declarations */
-int nokick_can_kick(aClient *sptr, aClient *target, aChannel *chptr,
+int nokick_can_kick(Client *sptr, Client *target, Channel *chptr,
                     char *comment, long sptr_flags, long target_flags, char **reject_reason);
 
 MOD_TEST(nokick)
@@ -63,7 +63,7 @@ MOD_UNLOAD(nokick)
 	return MOD_SUCCESS;
 }
 
-int nokick_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *comment,
+int nokick_can_kick(Client *sptr, Client *target, Channel *chptr, char *comment,
                     long sptr_flags, long target_flags, char **reject_reason)
 {
 	static char errmsg[NICKLEN+256];

@@ -41,7 +41,7 @@ MOD_UNLOAD(sinfo)
  * https://www.unrealircd.org/docs/Server_protocol:SINFO_command
  * ^ contains important remarks regarding when to send it and when not.
  */
-int sinfo_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int sinfo_server(Client *cptr, Client *sptr, int parc, char *parv[])
 {
 	char buf[512];
 
@@ -111,9 +111,9 @@ int sinfo_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 }
 
 #define SafeDisplayStr(x)  ((x && *(x)) ? (x) : "-")
-int sinfo_user(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int sinfo_user(Client *cptr, Client *sptr, int parc, char *parv[])
 {
-	aClient *acptr;
+	Client *acptr;
 
 	if (!IsOper(sptr))
 	{

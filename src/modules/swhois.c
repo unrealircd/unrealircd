@@ -66,7 +66,7 @@ MOD_UNLOAD(swhois)
  */
 CMD_FUNC(m_swhois)
 {
-	aClient *acptr;
+	Client *acptr;
 	char tag[HOSTLEN+1];
 	char swhois[SWHOISLEN+1];
 	int add;

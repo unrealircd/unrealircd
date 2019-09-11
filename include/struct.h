@@ -61,72 +61,72 @@
 
 #include "channel.h"
 
-typedef struct aloopStruct LoopStruct;
+typedef struct LoopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
-typedef struct t_kline aTKline;
-typedef struct _spamfilter Spamfilter;
-typedef struct _serverban ServerBan;
-typedef struct _banexception BanException;
-typedef struct _nameban NameBan;
-typedef struct _spamexcept SpamExcept;
-typedef struct _conditionalconfig ConditionalConfig;
-typedef struct _configentry ConfigEntry;
-typedef struct _configfile ConfigFile;
-typedef struct _configflag ConfigFlag;
-typedef struct _configflag_except ConfigFlag_except;
-typedef struct _configflag_ban ConfigFlag_ban;
-typedef struct _configflag_tld ConfigFlag_tld;
-typedef struct _configitem ConfigItem;
-typedef struct _configitem_me ConfigItem_me;
-typedef struct _configitem_files ConfigItem_files;
-typedef struct _configitem_admin ConfigItem_admin;
-typedef struct _configitem_class ConfigItem_class;
-typedef struct _configitem_oper ConfigItem_oper;
-typedef struct _configitem_operclass ConfigItem_operclass;
-typedef struct _configitem_mask ConfigItem_mask;
-typedef struct _configitem_drpass ConfigItem_drpass;
-typedef struct _configitem_ulines ConfigItem_ulines;
-typedef struct _configitem_tld ConfigItem_tld;
-typedef struct _configitem_listen ConfigItem_listen;
-typedef struct _configitem_sni ConfigItem_sni;
-typedef struct _configitem_allow ConfigItem_allow;
-typedef struct _configflag_allow ConfigFlag_allow;
-typedef struct _configitem_allow_channel ConfigItem_allow_channel;
-typedef struct _configitem_allow_dcc ConfigItem_allow_dcc;
-typedef struct _configitem_vhost ConfigItem_vhost;
-typedef struct _configitem_except ConfigItem_except;
-typedef struct _configitem_link	ConfigItem_link;
-typedef struct _configitem_ban ConfigItem_ban;
-typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
-typedef struct _configitem_deny_link ConfigItem_deny_link;
-typedef struct _configitem_deny_channel ConfigItem_deny_channel;
-typedef struct _configitem_deny_version ConfigItem_deny_version;
-typedef struct _configitem_log ConfigItem_log;
-typedef struct _configitem_unknown ConfigItem_unknown;
-typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
-typedef struct _configitem_alias ConfigItem_alias;
-typedef struct _configitem_alias_format ConfigItem_alias_format;
-typedef struct _configitem_include ConfigItem_include;
-typedef struct _configitem_blacklist_module ConfigItem_blacklist_module;
-typedef struct _configitem_help ConfigItem_help;
-typedef struct _configitem_offchans ConfigItem_offchans;
-typedef struct liststruct ListStruct;
-typedef struct liststructprio ListStructPrio;
+typedef struct aTKline aTKline;
+typedef struct Spamfilter Spamfilter;
+typedef struct ServerBan ServerBan;
+typedef struct BanException BanException;
+typedef struct NameBan NameBan;
+typedef struct SpamExcept SpamExcept;
+typedef struct ConditionalConfig ConditionalConfig;
+typedef struct ConfigEntry ConfigEntry;
+typedef struct ConfigFile ConfigFile;
+typedef struct ConfigFlag ConfigFlag;
+typedef struct ConfigFlag_except ConfigFlag_except;
+typedef struct ConfigFlag_ban ConfigFlag_ban;
+typedef struct ConfigFlag_tld ConfigFlag_tld;
+typedef struct ConfigItem ConfigItem;
+typedef struct ConfigItem_me ConfigItem_me;
+typedef struct ConfigItem_files ConfigItem_files;
+typedef struct ConfigItem_admin ConfigItem_admin;
+typedef struct ConfigItem_class ConfigItem_class;
+typedef struct ConfigItem_oper ConfigItem_oper;
+typedef struct ConfigItem_operclass ConfigItem_operclass;
+typedef struct ConfigItem_mask ConfigItem_mask;
+typedef struct ConfigItem_drpass ConfigItem_drpass;
+typedef struct ConfigItem_ulines ConfigItem_ulines;
+typedef struct ConfigItem_tld ConfigItem_tld;
+typedef struct ConfigItem_listen ConfigItem_listen;
+typedef struct ConfigItem_sni ConfigItem_sni;
+typedef struct ConfigItem_allow ConfigItem_allow;
+typedef struct ConfigFlag_allow ConfigFlag_allow;
+typedef struct ConfigItem_allow_channel ConfigItem_allow_channel;
+typedef struct ConfigItem_allow_dcc ConfigItem_allow_dcc;
+typedef struct ConfigItem_vhost ConfigItem_vhost;
+typedef struct ConfigItem_except ConfigItem_except;
+typedef struct ConfigItem_link	ConfigItem_link;
+typedef struct ConfigItem_ban ConfigItem_ban;
+typedef struct ConfigItem_deny_dcc ConfigItem_deny_dcc;
+typedef struct ConfigItem_deny_link ConfigItem_deny_link;
+typedef struct ConfigItem_deny_channel ConfigItem_deny_channel;
+typedef struct ConfigItem_deny_version ConfigItem_deny_version;
+typedef struct ConfigItem_log ConfigItem_log;
+typedef struct ConfigItem_unknown ConfigItem_unknown;
+typedef struct ConfigItem_unknown_ext ConfigItem_unknown_ext;
+typedef struct ConfigItem_alias ConfigItem_alias;
+typedef struct ConfigItem_alias_format ConfigItem_alias_format;
+typedef struct ConfigItem_include ConfigItem_include;
+typedef struct ConfigItem_blacklist_module ConfigItem_blacklist_module;
+typedef struct ConfigItem_help ConfigItem_help;
+typedef struct ConfigItem_offchans ConfigItem_offchans;
+typedef struct ListStruct ListStruct;
+typedef struct ListStructPrio ListStructPrio;
 
 #define CFG_TIME 0x0001
 #define CFG_SIZE 0x0002
 #define CFG_YESNO 0x0004
 
 typedef struct Watch aWatch;
-typedef struct Client aClient;
+typedef struct Client Client;
 typedef struct LocalClient aLocalClient;
-typedef struct Channel aChannel;
-typedef struct User anUser;
-typedef struct Server aServer;
+typedef struct Channel Channel;
+typedef struct User ClientUser;
+typedef struct Server Server;
 typedef struct SLink Link;
-typedef struct SBan Ban;
-typedef struct SMode Mode;
-typedef struct _message_tag MessageTag;
+typedef struct Ban Ban;
+typedef struct Mode Mode;
+typedef struct MessageTag MessageTag;
 typedef struct ListOptions LOpts;
 typedef struct Motd aMotdFile; /* represents a whole MOTD, including remote MOTD support info */
 typedef struct MotdItem aMotdLine; /* one line of a MOTD stored as a linked list */
@@ -135,24 +135,24 @@ typedef struct MotdDownload aMotdDownload; /* used to coordinate download of a r
 #endif
 
 typedef struct trecord aTrecord;
-typedef struct Command aCommand;
-typedef struct _cmdoverride Cmdoverride;
-typedef struct SMember Member;
-typedef struct SMembership Membership;
-typedef struct SMembershipL MembershipL;
+typedef struct aCommand aCommand;
+typedef struct Cmdoverride Cmdoverride;
+typedef struct Member Member;
+typedef struct Membership Membership;
+typedef struct MembershipL MembershipL;
 
 typedef enum OperClassEntryType { OPERCLASSENTRY_ALLOW=1, OPERCLASSENTRY_DENY=2} OperClassEntryType;
 
 typedef enum OperPermission { OPER_ALLOW=1, OPER_DENY=0} OperPermission;
 
-struct _operClass_Validator;
-typedef struct _operClass_Validator OperClassValidator;
-typedef struct _operClassACLPath OperClassACLPath;
-typedef struct _operClass OperClass;
-typedef struct _operClassACL OperClassACL;
-typedef struct _operClassACLEntry OperClassACLEntry;
-typedef struct _operClassACLEntryVar OperClassACLEntryVar;
-typedef struct _operClassCheckParams OperClassCheckParams;
+struct OperClassValidator;
+typedef struct OperClassValidator OperClassValidator;
+typedef struct OperClassACLPath OperClassACLPath;
+typedef struct OperClass OperClass;
+typedef struct OperClassACL OperClassACL;
+typedef struct OperClassACLEntry OperClassACLEntry;
+typedef struct OperClassACLEntryVar OperClassACLEntryVar;
+typedef struct OperClassCheckParams OperClassCheckParams;
 
 typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* variables,OperClassCheckParams* params);
 
@@ -570,7 +570,7 @@ struct MotdItem {
 	struct MotdItem *next;
 };
 
-struct aloopStruct {
+struct LoopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned ircd_booted : 1;
 	unsigned ircd_forked : 1;
@@ -579,24 +579,24 @@ struct aloopStruct {
 	unsigned do_bancheck_spamf_away : 1; /* perform 'away' spamfilter bancheck */
 	unsigned ircd_rehashing : 1;
 	unsigned tainted : 1;
-	aClient *rehash_save_cptr, *rehash_save_sptr;
+	Client *rehash_save_cptr, *rehash_save_sptr;
 	int rehash_save_sig;
 };
 
-/** Matching types for aMatch.type */
+/** Matching types for Match.type */
 typedef enum {
 	MATCH_SIMPLE=1, /**< Simple pattern with * and ? */
 	MATCH_PCRE_REGEX=2, /**< PCRE2 Perl-like regex (new) */
 } MatchType;
 
 /** Match struct, which allows various matching styles, see MATCH_* */
-typedef struct _match {
+typedef struct Match {
 	char *str; /**< Text of the glob/regex/whatever. Always set. */
 	MatchType type;
 	union {
 		pcre2_code *pcre2_expr; /**< PCRE2 Perl-like Regex */
 	} ext;
-} aMatch;
+} Match;
 
 typedef struct Whowas {
 	int  hashv;
@@ -615,8 +615,8 @@ typedef struct Whowas {
 	struct Whowas *cprev;	/* for client struct linked list */
 } aWhowas;
 
-typedef struct _swhois SWhois;
-struct _swhois {
+typedef struct SWhois SWhois;
+struct SWhois {
 	SWhois *prev, *next;
 	int priority;
 	char *line;
@@ -653,7 +653,7 @@ struct User {
 	aWhowas *whowas;
 	int snomask;
 #ifdef	LIST_DEBUG
-	aClient *bcptr;
+	Client *bcptr;
 #endif
 	char *operlogin;	/* Only used if person is/was opered, used for oper::maxlogins */
 	struct {
@@ -671,7 +671,7 @@ struct User {
 
 struct Server {
 	struct Server 	*nexts;
-	anUser 		*user;		/* who activated this connection */
+	ClientUser 		*user;		/* who activated this connection */
 	char 		*up;		/* uplink for this server */
 	char 		by[NICKLEN + 1];
 	ConfigItem_link *conf;
@@ -679,7 +679,7 @@ struct Server {
 	long		users;
 	time_t		boottime;	/* Startup time of server */
 #ifdef	LIST_DEBUG
-	aClient *bcptr;
+	Client *bcptr;
 #endif
 	struct {
 		unsigned synced:1;		/* Server linked? (3.2beta18+) */
@@ -782,7 +782,7 @@ typedef enum BanAction {
 
 
 /** Server ban sub-struct of TKL entry (KLINE/GLINE/ZLINE/GZLINE/SHUN) */
-struct _serverban {
+struct ServerBan {
 	char *usermask; /**< User mask */
 	char *hostmask; /**< Host mask */
 	unsigned short subtype; /**< See TKL_SUBTYPE_* */
@@ -790,23 +790,23 @@ struct _serverban {
 };
 
 /* Name ban sub-struct of TKL entry (QLINE) */
-struct _nameban {
+struct NameBan {
 	char hold; /**< nickname hold is used by services */
 	char *name; /**< the nick or channel that is banned */
 	char *reason; /**< Reason */
 };
 
 /** Spamfilter sub-struct of TKL entry (Spamfilter) */
-struct _spamfilter {
+struct Spamfilter {
 	unsigned short target;
 	BanAction action; /**< Ban action, see BAN_ACT* */
-	aMatch *match; /**< Spamfilter matcher */
+	Match *match; /**< Spamfilter matcher */
 	char *tkl_reason; /**< Reason to use for bans placed by this spamfilter, escaped by unreal_encodespace(). */
 	time_t tkl_duration; /**< Duration of bans placed by this spamfilter */
 };
 
 /** Ban exception sub-struct of TKL entry (ELINE) */
-struct _banexception {
+struct BanException {
 	char *usermask; /**< User mask */
 	char *hostmask; /**< Host mask */
 	unsigned short subtype; /**< See TKL_SUBTYPE_* */
@@ -821,7 +821,7 @@ struct _banexception {
 #define TKL_FLAG_CONFIG		0x0001 /* Entry from configuration file. Cannot be removed by using commands. */
 
 /** A TKL entry, such as a KLINE, GLINE, Spamfilter, QLINE, Exception, .. */
-struct t_kline {
+struct aTKline {
 	aTKline *prev, *next;
 	unsigned int type; /**< TKL type. One of TKL_*, such as TKL_KILL|TKL_GLOBAL for gline */
 	unsigned short flags; /**< One of TKL_FLAG_*, such as TKL_FLAG_CONFIG */
@@ -837,7 +837,7 @@ struct t_kline {
 };
 
 /** A spamfilter except entry */
-struct _spamexcept {
+struct SpamExcept {
 	SpamExcept *prev, *next;
 	char name[1];
 };
@@ -859,9 +859,9 @@ typedef struct ircstatsx {
 /** The /LUSERS stats information */
 extern MODVAR ircstats IRCstats;
 
-typedef int (*CmdFunc)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
-typedef int (*AliasCmdFunc)(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
-typedef int (*OverrideCmdFunc)(Cmdoverride *ovr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[]);
+typedef int (*CmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+typedef int (*AliasCmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
+typedef int (*OverrideCmdFunc)(Cmdoverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 
 #include "modules.h"
 
@@ -874,10 +874,10 @@ extern MODVAR short Snomask_highest;
 extern MODVAR Cmode *Channelmode_Table;
 extern MODVAR unsigned short Channelmode_highest;
 
-extern Umode *UmodeAdd(Module *module, char ch, int options, int unset_on_deoper, int (*allowed)(aClient *sptr, int what), long *mode);
+extern Umode *UmodeAdd(Module *module, char ch, int options, int unset_on_deoper, int (*allowed)(Client *sptr, int what), long *mode);
 extern void UmodeDel(Umode *umode);
 
-extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr, int what), long *mode);
+extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(Client *sptr, int what), long *mode);
 extern void SnomaskDel(Snomask *sno);
 
 extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);
@@ -914,19 +914,19 @@ struct Client {
 	struct list_head client_hash;	/* for clientTable */
 	struct list_head id_hash;	/* for idTable */
 	aLocalClient *local;	/* for locally connected clients */
-	anUser *user;		/* ...defined, if this is a User */
-	aServer *serv;		/* ...defined, if this is a server */
+	ClientUser *user;		/* ...defined, if this is a User */
+	Server *serv;		/* ...defined, if this is a server */
 	time_t lastnick;		/* TimeStamp on nick */
 	long flags;		/* client flags */
 	long umodes;		/* client usermodes */
-	aClient *from;		/* == &me, if Local Client, *NEVER* NULL! */
+	Client *from;		/* == &me, if Local Client, *NEVER* NULL! */
 	int  fd;		/* >= 0, for local clients */
 	unsigned char hopcount;		/* number of servers to this 0 = local */
 	char name[HOSTLEN + 1];	/* Unique name of the client, nick or host */
 	char username[USERLEN + 1];	/* username here now for auth stuff */
 	char info[REALLEN + 1];	/* Free form additional client information */
 	char id[IDLEN + 1];	/* SID or UID */
-	aClient *srvptr;	/* Server introducing this.  May be &me */
+	Client *srvptr;	/* Server introducing this.  May be &me */
 	short status;		/* client type */
 	ModData moddata[MODDATA_MAX_CLIENT]; /* for modules */
 	int  count;		/* Amount of data in buffer */
@@ -984,17 +984,17 @@ struct LocalClient {
 };
 
 
-#define	CLIENT_LOCAL_SIZE sizeof(aClient)
-#define	CLIENT_REMOTE_SIZE offsetof(aClient,count)
+#define	CLIENT_LOCAL_SIZE sizeof(Client)
+#define	CLIENT_REMOTE_SIZE offsetof(Client,count)
 
-struct _message_tag {
+struct MessageTag {
 	MessageTag *prev, *next;
 	char *name;
 	char *value;
 };
 
-typedef struct _name_value_list NameValueList;
-struct _name_value_list {
+typedef struct NameValueList NameValueList;
+struct NameValueList {
 	NameValueList *prev, *next;
 	char *name;
 	char *value;
@@ -1021,7 +1021,7 @@ struct _name_value_list {
 
 typedef enum ConfigIfCondition { IF_DEFINED=1, IF_VALUE=2, IF_MODULE=3} ConfigIfCondition;
 
-struct _conditionalconfig
+struct ConditionalConfig
 {
 	ConditionalConfig *prev, *next;
 	int priority; /**< Preprocessor level. Starts with 1, then 2, 3, .. */
@@ -1031,14 +1031,14 @@ struct _conditionalconfig
 	char *opt; /**< Only for IF_VALUE */
 };
 
-struct _configfile
+struct ConfigFile
 {
         char            *cf_filename;
         ConfigEntry     *cf_entries;
         ConfigFile     *cf_next;
 };
 
-struct _configentry
+struct ConfigEntry
 {
         ConfigFile	*ce_fileptr;
         int 	 	ce_varlinenum, ce_fileposstart, ce_fileposend, ce_sectlinenum;
@@ -1047,7 +1047,7 @@ struct _configentry
         ConditionalConfig *ce_cond;
 };
 
-struct _configflag 
+struct ConfigFlag 
 {
 	unsigned	temporary : 1;
 	unsigned	permanent : 1;
@@ -1055,20 +1055,20 @@ struct _configflag
 
 /* configflag specialized for except socks/ban -Stskeeps */
 
-struct _configflag_except
+struct ConfigFlag_except
 {
 	unsigned	temporary : 1;
 	unsigned	type	  : 4;
 };
 
-struct _configflag_ban
+struct ConfigFlag_ban
 {
 	unsigned	temporary : 1;
 	unsigned	type	  : 4;
 	unsigned	type2	  : 2;
 };
 
-struct _configflag_tld
+struct ConfigFlag_tld
 {
 	unsigned	temporary : 1;
 	unsigned	motdptr   : 1;
@@ -1086,22 +1086,22 @@ struct _configflag_tld
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
 
-struct _configitem {
+struct ConfigItem {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
 };
 
-struct _configitem_me {
+struct ConfigItem_me {
 	char	   *name, *info, *sid;
 };
 
-struct _configitem_files {
+struct ConfigItem_files {
 	char	*motd_file, *rules_file, *smotd_file;
 	char	*botmotd_file, *opermotd_file, *svsmotd_file;
 	char	*pid_file, *tune_file;
 };
 
-struct _configitem_admin {
+struct ConfigItem_admin {
 	ConfigItem_admin *prev, *next;
 	ConfigFlag flag;
 	char	   *line; 
@@ -1109,7 +1109,7 @@ struct _configitem_admin {
 
 #define CLASS_OPT_NOFAKELAG		0x1
 
-struct _configitem_class {
+struct ConfigItem_class {
 	ConfigItem_class *prev, *next;
 	ConfigFlag flag;
 	char	   *name;
@@ -1120,13 +1120,13 @@ struct _configitem_class {
 	unsigned int options;
 };
 
-struct _configflag_allow {
+struct ConfigFlag_allow {
 	unsigned	noident :1;
 	unsigned	useip :1;
 	unsigned	tls :1;
 };
 
-struct _configitem_allow {
+struct ConfigItem_allow {
 	ConfigItem_allow	*prev, *next;
 	ConfigFlag			flag;
 	char				*ip, *hostname, *server;
@@ -1138,27 +1138,27 @@ struct _configitem_allow {
 	unsigned short ipv6_clone_mask;
 };
 
-struct _operClassACLPath
+struct OperClassACLPath
 {
 	OperClassACLPath *prev,*next;
 	char* identifier;
 };
 
-struct _operClassACLEntryVar
+struct OperClassACLEntryVar
 {
         OperClassACLEntryVar *prev,*next;
         char* name;
         char* value;
 };
 
-struct _operClassACLEntry
+struct OperClassACLEntry
 {
         OperClassACLEntry *prev,*next;
         OperClassACLEntryVar *variables;
         OperClassEntryType type;
 };
 
-struct _operClassACL
+struct OperClassACL
 {
         OperClassACL *prev,*next;
         char *name;
@@ -1166,27 +1166,27 @@ struct _operClassACL
         OperClassACL *acls;
 };
 
-struct _operClass
+struct OperClass
 {
         char *ISA;
         char *name;
         OperClassACL *acls;
 };
 
-struct _operClassCheckParams
+struct OperClassCheckParams
 {
-        aClient *sptr;
-        aClient *victim;
-        aChannel *channel;
+        Client *sptr;
+        Client *victim;
+        Channel *channel;
         void *extra;
 };
 
-struct _configitem_operclass {
+struct ConfigItem_operclass {
 	ConfigItem_operclass *prev, *next;
 	OperClass *classStruct;
 };
 
-struct _configitem_oper {
+struct ConfigItem_oper {
 	ConfigItem_oper *prev, *next;
 	ConfigFlag flag;
 	char *name, *snomask;
@@ -1205,8 +1205,8 @@ struct _configitem_oper {
  *       conf_tlsblock() function in s_conf.c to have it inherited
  *       from set::tls to the other config blocks!
  */
-typedef struct _tlsoptions TLSOptions;
-struct _tlsoptions {
+typedef struct TLSOptions TLSOptions;
+struct TLSOptions {
 	char *certificate_file;
 	char *key_file;
 	char *dh_file;
@@ -1225,18 +1225,18 @@ struct _tlsoptions {
 	int sts_preload;
 };
 
-struct _configitem_mask {
+struct ConfigItem_mask {
 	ConfigItem_mask *prev, *next;
 	ConfigFlag flag;
 	char *mask;
 };
 
-struct _configitem_drpass {
+struct ConfigItem_drpass {
 	anAuthStruct	 *restartauth;
 	anAuthStruct	 *dieauth;
 };
 
-struct _configitem_ulines {
+struct ConfigItem_ulines {
 	ConfigItem_ulines  *prev, *next;
 	ConfigFlag 	 flag;
 	char 		 *servername;
@@ -1245,7 +1245,7 @@ struct _configitem_ulines {
 #define TLD_TLS		0x1
 #define TLD_REMOTE	0x2
 
-struct _configitem_tld {
+struct ConfigItem_tld {
 	ConfigItem_tld 	*prev, *next;
 	ConfigFlag_tld 	flag;
 	char 		*mask, *channel;
@@ -1255,7 +1255,7 @@ struct _configitem_tld {
 	u_short		options;
 };
 
-struct _configitem_listen {
+struct ConfigItem_listen {
 	ConfigItem_listen *prev, *next;
 	ConfigFlag flag;
 	char *ip;
@@ -1267,7 +1267,7 @@ struct _configitem_listen {
 	TLSOptions *tls_options;
 };
 
-struct _configitem_sni {
+struct ConfigItem_sni {
 	ConfigItem_sni *prev, *next;
 	ConfigFlag flag;
 	char *name;
@@ -1275,7 +1275,7 @@ struct _configitem_sni {
 	TLSOptions *tls_options;
 };
 
-struct _configitem_vhost {
+struct ConfigItem_vhost {
 	ConfigItem_vhost 	*prev, *next;
 	ConfigFlag 	flag;
 	ConfigItem_mask *mask;
@@ -1284,7 +1284,7 @@ struct _configitem_vhost {
 	anAuthStruct	*auth;
 };
 
-struct _configitem_link {
+struct ConfigItem_link {
 	ConfigItem_link	*prev, *next;
 	ConfigFlag	flag;
 	/* config options: */
@@ -1313,39 +1313,39 @@ struct _configitem_link {
 	TLSOptions *tls_options; /**< SSL Options for outgoing connection (optional) */
 };
 
-struct _configitem_except {
+struct ConfigItem_except {
 	ConfigItem_except      *prev, *next;
 	ConfigFlag_except      flag;
 	int type;
 	char		*mask;
 };
 
-struct _configitem_ban {
+struct ConfigItem_ban {
 	ConfigItem_ban	*prev, *next;
 	ConfigFlag_ban	flag;
 	char			*mask, *reason;
 	unsigned short action;
 };
 
-struct _configitem_deny_dcc {
+struct ConfigItem_deny_dcc {
 	ConfigItem_deny_dcc		*prev, *next;
 	ConfigFlag_ban		flag;
 	char			*filename, *reason;
 };
 
-struct _configitem_deny_link {
+struct ConfigItem_deny_link {
 	ConfigItem_deny_link *prev, *next;
 	ConfigFlag_except flag;
 	char *mask, *rule, *prettyrule;
 };
 
-struct _configitem_deny_version {
+struct ConfigItem_deny_version {
 	ConfigItem_deny_version	*prev, *next;
 	ConfigFlag		flag;
 	char 			*mask, *version, *flags;
 };
 
-struct _configitem_deny_channel {
+struct ConfigItem_deny_channel {
 	ConfigItem_deny_channel		*prev, *next;
 	ConfigFlag		flag;
 	char			*channel, *reason, *redirect, *class;
@@ -1353,20 +1353,20 @@ struct _configitem_deny_channel {
 	ConfigItem_mask *mask;
 };
 
-struct _configitem_allow_channel {
+struct ConfigItem_allow_channel {
 	ConfigItem_allow_channel		*prev, *next;
 	ConfigFlag		flag;
 	char			*channel, *class;
 	ConfigItem_mask *mask;
 };
 
-struct _configitem_allow_dcc {
+struct ConfigItem_allow_dcc {
 	ConfigItem_allow_dcc		*prev, *next;
 	ConfigFlag_ban	flag;
 	char			*filename;
 };
 
-struct _configitem_log {
+struct ConfigItem_log {
 	ConfigItem_log *prev, *next;
 	ConfigFlag flag;
 	char *file;
@@ -1375,13 +1375,13 @@ struct _configitem_log {
 	int  logfd;
 };
 
-struct _configitem_unknown {
+struct ConfigItem_unknown {
 	ConfigItem_unknown *prev, *next;
 	ConfigFlag flag;
 	ConfigEntry *ce;
 };
 
-struct _configitem_unknown_ext {
+struct ConfigItem_unknown_ext {
 	ConfigItem_unknown_ext *prev, *next;
 	ConfigFlag flag;
 	char *ce_varname, *ce_vardata;
@@ -1395,7 +1395,7 @@ typedef enum {
 	ALIAS_SERVICES=1, ALIAS_STATS, ALIAS_NORMAL, ALIAS_COMMAND, ALIAS_CHANNEL, ALIAS_REAL
 } AliasType;
 
-struct _configitem_alias {
+struct ConfigItem_alias {
 	ConfigItem_alias *prev, *next;
 	ConfigFlag flag;
 	ConfigItem_alias_format *format;
@@ -1404,13 +1404,13 @@ struct _configitem_alias {
 	unsigned int spamfilter:1;
 };
 
-struct _configitem_alias_format {
+struct ConfigItem_alias_format {
 	ConfigItem_alias_format *prev, *next;
 	ConfigFlag flag;
 	char *nick;
 	AliasType type;
 	char *format, *parameters;
-	aMatch *expr;
+	Match *expr;
 };
 
 /**
@@ -1430,7 +1430,7 @@ struct _configitem_alias_format {
  */
 #define INCLUDE_USED       0x8
 	
-struct _configitem_include {
+struct ConfigItem_include {
 	ConfigItem_include *prev, *next;
 	ConfigFlag_ban flag;
 	char *file;
@@ -1442,19 +1442,19 @@ struct _configitem_include {
 	int included_from_line;
 };
 
-struct _configitem_blacklist_module {
+struct ConfigItem_blacklist_module {
 	ConfigItem_blacklist_module *prev, *next;
 	char *name;
 };
 
-struct _configitem_help {
+struct ConfigItem_help {
 	ConfigItem_help *prev, *next;
 	ConfigFlag flag;
 	char *command;
 	aMotdLine *text;
 };
 
-struct _configitem_offchans {
+struct ConfigItem_offchans {
 	ConfigItem_offchans *prev, *next;
 	char chname[CHANNELLEN+1];
 	char *topic;
@@ -1500,7 +1500,7 @@ struct stats {
 	unsigned int is_loc;	/* local connections made */
 };
 
-typedef struct _MemoryInfo {
+typedef struct MemoryInfo {
 	unsigned int classes;
 	unsigned long classesmem;
 } MemoryInfo;
@@ -1527,7 +1527,7 @@ struct ListOptions {
 #define MAXPARAMMODES 16
 
 /* mode structure for channels */
-struct SMode {
+struct Mode {
 	long mode;
 	Cmode_t extmode;
 	void *extmodeparams[MAXPARAMMODES+1];
@@ -1550,8 +1550,8 @@ struct SLink {
 	struct SLink *next;
 	int  flags;
 	union {
-		aClient *cptr;
-		aChannel *chptr;
+		Client *cptr;
+		Channel *chptr;
 		ListStruct *aconf;
 		aWatch *wptr;
 		aName *whowas;
@@ -1564,10 +1564,10 @@ struct SLink {
 	} value;
 };
 
-struct SMember
+struct Member
 {
-	struct SMember *next;
-	aClient	      *cptr;
+	struct Member *next;
+	Client	      *cptr;
 	int		flags;
 	ModData moddata[MODDATA_MAX_MEMBER]; /* for modules */
 };
@@ -1591,25 +1591,25 @@ struct Channel {
 };
 
 /** user/channel membership struct for local clients */
-struct SMembershipL
+struct MembershipL
 {
-	struct SMembership 	*next;
+	struct Membership 	*next;
 	struct Channel		*chptr;
 	int			flags;
 	ModData moddata[MODDATA_MAX_MEMBERSHIP]; /* for modules */
 };
 
 /** user/channel membership struct for remote clients */
-struct SMembership
+struct Membership
 {
-	struct SMembership 	*next;
+	struct Membership 	*next;
 	struct Channel		*chptr;
 	int			flags;
 	ModData moddata[MODDATA_MAX_MEMBERSHIP]; /* for modules */
 };
 
-struct SBan {
-	struct SBan *next;
+struct Ban {
+	struct Ban *next;
 	char *banstr;
 	char *who;
 	time_t when;
@@ -1619,8 +1619,8 @@ struct DSlink {
 	struct DSlink *next;
 	struct DSlink *prev;
 	union {
-		aClient *cptr;
-		aChannel *chptr;
+		Client *cptr;
+		Channel *chptr;
 		ListStruct *aconf;
 		char *cp;
 	} value;
@@ -1685,11 +1685,11 @@ struct DSlink {
 						del_ListItem((ListStruct *)item, (ListStruct **)&list); \
 					} while(0)
 
-struct liststruct {
+struct ListStruct {
 	ListStruct *prev, *next;
 };
 
-struct liststructprio {
+struct ListStructPrio {
 	ListStructPrio *prev, *next;
 	int priority;
 };
@@ -1824,10 +1824,10 @@ extern MODVAR SSL_CTX *ctx_client;
 extern SSL_METHOD *meth;
 extern int early_init_ssl();
 extern int init_ssl();
-extern int ssl_handshake(aClient *);   /* Handshake the accpeted con.*/
-extern int ssl_client_handshake(aClient *, ConfigItem_link *); /* and the initiated con.*/
-extern int ircd_SSL_accept(aClient *acptr, int fd);
-extern int ircd_SSL_connect(aClient *acptr, int fd);
+extern int ssl_handshake(Client *);   /* Handshake the accpeted con.*/
+extern int ssl_client_handshake(Client *, ConfigItem_link *); /* and the initiated con.*/
+extern int ircd_SSL_accept(Client *acptr, int fd);
+extern int ircd_SSL_connect(Client *acptr, int fd);
 extern int SSL_smart_shutdown(SSL *ssl);
 extern void ircd_SSL_client_handshake(int, int, void *);
 extern void SSL_set_nonblocking(SSL *s);
@@ -1840,7 +1840,7 @@ extern SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server);
 
 #define TLS_PROTOCOL_ALL		0xffff
 
-struct Command {
+struct aCommand {
 	aCommand		*prev, *next;
 	char 			*cmd;
 	CmdFunc			func;
@@ -1859,7 +1859,7 @@ struct Command {
 #endif
 };
 
-struct _cmdoverride {
+struct Cmdoverride {
 	Cmdoverride		*prev, *next;
 	int			priority;
 	Module			*owner;
@@ -1883,8 +1883,8 @@ typedef struct {
 } aCtab;
 
 /** Parse channel mode */
-typedef struct _parsemode ParseMode;
-struct _parsemode {
+typedef struct ParseMode ParseMode;
+struct ParseMode {
 	int what;
 	char modechar;
 	char *param;
@@ -1903,17 +1903,17 @@ struct PendingServer {
 typedef struct PendingNet aPendingNet;
 struct PendingNet {
 	aPendingNet *prev, *next; /* Previous and next in list */
-	aClient *sptr; /**< Client to which these servers belong */
+	Client *sptr; /**< Client to which these servers belong */
 	aPendingServer *servers; /**< The list of servers connected to the client */
 };
 
 extern void init_throttling();
-extern struct ThrottlingBucket *find_throttling_bucket(aClient *);
-extern void add_throttling_bucket(aClient *);
-extern int throttle_can_connect(aClient *);
+extern struct ThrottlingBucket *find_throttling_bucket(Client *);
+extern void add_throttling_bucket(Client *);
+extern int throttle_can_connect(Client *);
 
-typedef struct _maxtargets MaxTarget;
-struct _maxtargets {
+typedef struct MaxTarget MaxTarget;
+struct MaxTarget {
 	MaxTarget *prev, *next;
 	char *cmd;
 	int limit;
@@ -1975,9 +1975,9 @@ typedef enum {
 #define BADWORD_REPLACE 1
 #define BADWORD_BLOCK 2
 
-typedef struct _configitem_badword ConfigItem_badword;
+typedef struct ConfigItem_badword ConfigItem_badword;
 
-struct _configitem_badword {
+struct ConfigItem_badword {
 	ConfigItem_badword      *prev, *next;
 	ConfigFlag	flag;
 	char		*word, *replace;

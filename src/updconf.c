@@ -12,7 +12,7 @@ extern void config_free(ConfigFile *cfptr);
 
 char configfiletmp[512];
 
-struct _upgrade
+struct Upgrade
 {
 	char *locop_host;
 	char *oper_host;
@@ -23,7 +23,7 @@ struct _upgrade
 	int host_on_oper_up;
 };
 
-struct _upgrade upgrade;
+struct Upgrade upgrade;
 
 typedef struct flagmapping FlagMapping;
 struct flagmapping

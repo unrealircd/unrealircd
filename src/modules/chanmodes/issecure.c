@@ -41,13 +41,13 @@ Cmode_t EXTCMODE_ISSECURE;
 
 #define IsSecureChanIndicated(chptr)	(chptr->mode.extmode & EXTCMODE_ISSECURE)
 
-int IsSecureJoin(aChannel *chptr);
-int modeZ_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int checkt, int what);
-int issecure_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *parv[]);
-int issecure_part(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *comment);
-int issecure_quit(aClient *acptr, MessageTag *mtags, char *comment);
-int issecure_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, MessageTag *mtags, char *comment);
-int issecure_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags,
+int IsSecureJoin(Channel *chptr);
+int modeZ_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int checkt, int what);
+int issecure_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
+int issecure_part(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
+int issecure_quit(Client *acptr, MessageTag *mtags, char *comment);
+int issecure_kick(Client *cptr, Client *sptr, Client *acptr, Channel *chptr, MessageTag *mtags, char *comment);
+int issecure_chanmode(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags,
                              char *modebuf, char *parabuf, time_t sendts, int samode);
                              
 
@@ -93,7 +93,7 @@ MOD_UNLOAD(issecure)
 	return MOD_SUCCESS;
 }
 
-int IsSecureJoin(aChannel *chptr)
+int IsSecureJoin(Channel *chptr)
 {
 	Hook *h;
 	int i = 0;
@@ -108,13 +108,13 @@ int IsSecureJoin(aChannel *chptr)
 	return i;
 }
 
-int modeZ_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int checkt, int what)
+int modeZ_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int checkt, int what)
 {
 	/* Reject any attempt to set or unset our mode. Even to IRCOps */
 	return EX_ALWAYS_DENY;
 }
 
-int channel_has_insecure_users_butone(aChannel *chptr, aClient *skip)
+int channel_has_insecure_users_butone(Channel *chptr, Client *skip)
 {
 Member *member;
 
@@ -135,7 +135,7 @@ Member *member;
 /* Set channel status of 'chptr' to be no longer secure (-Z) due to 'sptr'.
  * sptr MAY be null!
  */
-void issecure_unset(aChannel *chptr, aClient *sptr, MessageTag *recv_mtags, int notice)
+void issecure_unset(Channel *chptr, Client *sptr, MessageTag *recv_mtags, int notice)
 {
 	Hook *h;
 	MessageTag *mtags;
@@ -162,7 +162,7 @@ void issecure_unset(aChannel *chptr, aClient *sptr, MessageTag *recv_mtags, int 
  * now considered secure. If 'sptr' is non-NULL then we are now secure
  * thanks to this user leaving the chat.
  */
-void issecure_set(aChannel *chptr, aClient *sptr, MessageTag *recv_mtags, int notice)
+void issecure_set(Channel *chptr, Client *sptr, MessageTag *recv_mtags, int notice)
 {
 	MessageTag *mtags;
 
@@ -199,7 +199,7 @@ void issecure_set(aChannel *chptr, aClient *sptr, MessageTag *recv_mtags, int no
  *       so while they can be written shorter, they would only take longer to execute!
  */
 
-int issecure_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *parv[])
+int issecure_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[])
 {
 	/* Check only if chan already +zZ and the user joining is insecure (no need to count) */
 	if (IsSecureJoin(chptr) && IsSecureChanIndicated(chptr) && !IsSecureConnect(sptr) && !IsULine(sptr))
@@ -212,7 +212,7 @@ int issecure_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mta
 	return 0;
 }
 
-int issecure_part(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *comment)
+int issecure_part(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *comment)
 {
 	/* Only care if chan is +z-Z and the user leaving is insecure, then count */
 	if (IsSecureJoin(chptr) && !IsSecureChanIndicated(chptr) && !IsSecureConnect(sptr) &&
@@ -221,10 +221,10 @@ int issecure_part(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mta
 	return 0;
 }
 
-int issecure_quit(aClient *sptr, MessageTag *mtags, char *comment)
+int issecure_quit(Client *sptr, MessageTag *mtags, char *comment)
 {
 Membership *membership;
-aChannel *chptr;
+Channel *chptr;
 
 	for (membership = sptr->user->channel; membership; membership=membership->next)
 	{
@@ -237,7 +237,7 @@ aChannel *chptr;
 	return 0;
 }
 
-int issecure_kick(aClient *cptr, aClient *sptr, aClient *victim, aChannel *chptr, MessageTag *mtags, char *comment)
+int issecure_kick(Client *cptr, Client *sptr, Client *victim, Channel *chptr, MessageTag *mtags, char *comment)
 {
 	/* Identical to part&quit, except we care about 'victim' and not 'sptr' */
 	if (IsSecureJoin(chptr) && !IsSecureChanIndicated(chptr) &&
@@ -246,7 +246,7 @@ int issecure_kick(aClient *cptr, aClient *sptr, aClient *victim, aChannel *chptr
 	return 0;
 }
 
-int issecure_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags,
+int issecure_chanmode(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags,
                              char *modebuf, char *parabuf, time_t sendts, int samode)
 {
 	if (!strchr(modebuf, 'z'))

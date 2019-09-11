@@ -24,16 +24,16 @@
 
 /* Forward declarations */
 CMD_FUNC(m_join);
-void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *mtags, int flags);
-int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
-void _userhost_save_current(aClient *sptr);
-void _userhost_changed(aClient *sptr);
-void _send_join_to_local_users(aClient *sptr, aChannel *chptr, MessageTag *mtags);
+void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *mtags, int flags);
+int _do_join(Client *cptr, Client *sptr, int parc, char *parv[]);
+int _can_join(Client *cptr, Client *sptr, Channel *chptr, char *key, char *parv[]);
+void _userhost_save_current(Client *sptr);
+void _userhost_changed(Client *sptr);
+void _send_join_to_local_users(Client *sptr, Channel *chptr, MessageTag *mtags);
 
 /* Externs */
 extern MODVAR int spamf_ugly_vchanoverride;
-extern int find_invex(aChannel *chptr, aClient *sptr);
+extern int find_invex(Channel *chptr, Client *sptr);
 
 /* Local vars */
 static int bouncedtimes = 0;
@@ -87,7 +87,7 @@ MOD_UNLOAD(join)
  * (eg: bans at the end), so don't change it unless you have a good reason
  * to do so -- Syzop.
  */
-int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[])
+int _can_join(Client *cptr, Client *sptr, Channel *chptr, char *key, char *parv[])
 {
 Link *lp;
 Ban *banned;
@@ -186,11 +186,11 @@ CMD_FUNC(m_join)
  * Taking into account that not everyone in chptr should see the JOIN (mode +D)
  * and taking into account the different types of JOIN (due to CAP extended-join).
  */
-void _send_join_to_local_users(aClient *sptr, aChannel *chptr, MessageTag *mtags)
+void _send_join_to_local_users(Client *sptr, Channel *chptr, MessageTag *mtags)
 {
 	int chanops_only = invisible_user_in_channel(sptr, chptr);
 	Member *lp;
-	aClient *acptr;
+	Client *acptr;
 	char joinbuf[512];
 	char exjoinbuf[512];
 	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
@@ -233,7 +233,7 @@ void _send_join_to_local_users(aClient *sptr, aChannel *chptr, MessageTag *mtags
 /* Routine that actually makes a user join the channel
  * this does no actual checking (banned, etc.) it just adds the user
  */
-void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int flags)
+void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int flags)
 {
 	MessageTag *mtags = NULL; /** Message tags to send to local users (sender is :user) */
 	MessageTag *mtags_sjoin = NULL; /* Message tags to send to remote servers for SJOIN (sender is :me.name) */
@@ -362,11 +362,11 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, MessageTag *re
  * increased every time we enter this loop and decreased anytime we leave the
  * loop. So be carefull not to use a simple 'return' after bouncedtimes++. -- Syzop
  */
-int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
 {
 	char jbuf[BUFSIZE];
 	Membership *lp;
-	aChannel *chptr;
+	Channel *chptr;
 	char *name, *key = NULL;
 	int  i, flags = 0, ishold;
 	char *p = NULL, *p2 = NULL;
@@ -542,7 +542,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			{
 				int invited = 0;
 				Link *lp;
-				aChannel *chptr = find_channel(name, NULL);
+				Channel *chptr = find_channel(name, NULL);
 				
 				if (chptr)
 				{
@@ -620,7 +620,7 @@ int _do_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * of the core so it could be upgraded on the fly should it be necessary.
  */
 
-char *get_chmodes_for_user(aClient *sptr, int flags)
+char *get_chmodes_for_user(Client *sptr, int flags)
 {
 	static char modebuf[512]; /* returned */
 	char flagbuf[8]; /* For holding "vhoaq" */
@@ -667,7 +667,7 @@ static char remember_user[USERLEN+1];
 static char remember_host[HOSTLEN+1];
 
 /** Save current nick/user/host. Used later by userhost_changed(). */
-void _userhost_save_current(aClient *sptr)
+void _userhost_save_current(Client *sptr)
 {
 	strlcpy(remember_nick, sptr->name, sizeof(remember_nick));
 	strlcpy(remember_user, sptr->user->username, sizeof(remember_user));
@@ -689,12 +689,12 @@ void _userhost_save_current(aClient *sptr)
  * << change username or hostname here >>
  * userhost_changed(acptr);
  */
-void _userhost_changed(aClient *sptr)
+void _userhost_changed(Client *sptr)
 {
 	Membership *channels;
-	aChannel *chptr;
+	Channel *chptr;
 	Member *lp;
-	aClient *acptr;
+	Client *acptr;
 	int i = 0;
 	int impact = 0;
 	char buf[512];
@@ -722,7 +722,7 @@ void _userhost_changed(aClient *sptr)
 		/* Walk through all channels of this user.. */
 		for (channels = sptr->user->channel; channels; channels = channels->next)
 		{
-			aChannel *chptr = channels->chptr;
+			Channel *chptr = channels->chptr;
 			int flags = channels->flags;
 			char *modes;
 			char partbuf[512]; /* PART */

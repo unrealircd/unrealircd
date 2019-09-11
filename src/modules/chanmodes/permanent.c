@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER(permanent)
 
 static Cmode_t EXTMODE_PERMANENT = 0L;
 
-static int permanent_channel_destroy(aChannel *chptr, int *should_destroy)
+static int permanent_channel_destroy(Channel *chptr, int *should_destroy)
 {
 	if (chptr->mode.extmode & EXTMODE_PERMANENT)
 		*should_destroy = 0;
@@ -38,7 +38,7 @@ static int permanent_channel_destroy(aChannel *chptr, int *should_destroy)
 	return 0;
 }
 
-static int permanent_is_ok(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
+static int permanent_is_ok(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what)
 {
 	if (!IsOper(cptr))
 	{
@@ -51,7 +51,7 @@ static int permanent_is_ok(aClient *cptr, aChannel *chptr, char mode, char *para
 	return EX_ALLOW;
 }
 
-int permanent_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode)
+int permanent_chanmode(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode)
 {
 	/* Destroy the channel if it was set '(SA)MODE #chan -P' with nobody in it (#4442) */
 	if (!(chptr->mode.extmode & EXTMODE_PERMANENT) && (chptr->users <= 0))

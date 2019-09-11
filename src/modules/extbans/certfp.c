@@ -28,9 +28,9 @@ ModuleHeader MOD_HEADER(certfp)
 };
 
 /* Forward declarations */
-int extban_certfp_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what, int what2);
+int extban_certfp_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int what, int what2);
 char *extban_certfp_conv_param(char *para);
-int extban_certfp_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg);
+int extban_certfp_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /* Called upon module init */
 MOD_INIT(certfp)
@@ -67,14 +67,14 @@ MOD_UNLOAD(account)
 
 #define CERT_FP_LEN 64
 
-int extban_certfp_usage(aClient *sptr)
+int extban_certfp_usage(Client *sptr)
 {
 	sendnotice(sptr, "ERROR: ExtBan ~S expects an SHA256 fingerprint in hexadecimal format (no colons). "
 					 "For example: +e ~S:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef)");
 	return EX_DENY;
 }
 
-int extban_certfp_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what, int what2)
+int extban_certfp_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int what, int what2)
 {
 	if (checkt == EXCHK_PARAM)
 	{
@@ -108,7 +108,7 @@ char *extban_certfp_conv_param(char *para)
 	return retbuf;
 }
 
-int extban_certfp_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg)
+int extban_certfp_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
 {
 	char *ban = banin+3;
 	char *fp;

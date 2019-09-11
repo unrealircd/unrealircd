@@ -28,9 +28,9 @@ ModuleHeader MOD_HEADER(msgbypass)
 };
 
 /* Forward declarations */
-int extban_msgbypass_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg);
-int msgbypass_can_bypass(aClient *sptr, aChannel *chptr, BypassChannelMessageRestrictionType bypass_type);
-int msgbypass_extban_is_ok(aClient* sptr, aChannel* chptr, char* para, int checkt, int what, int what2);
+int extban_msgbypass_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
+int msgbypass_can_bypass(Client *sptr, Channel *chptr, BypassChannelMessageRestrictionType bypass_type);
+int msgbypass_extban_is_ok(Client* sptr, Channel* chptr, char* para, int checkt, int what, int what2);
 char *msgbypass_extban_conv_param(char *para);
 
 /** Called upon module init */
@@ -68,13 +68,13 @@ MOD_UNLOAD(msgbypass)
 }
 
 /** Is the user banned? No, never by us anyway. */
-int extban_msgbypass_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg)
+int extban_msgbypass_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
 {
 	return 0; /* not banned by us */
 }
 
 /** Can the user bypass restrictions? */
-int msgbypass_can_bypass(aClient *sptr, aChannel *chptr, BypassChannelMessageRestrictionType bypass_type)
+int msgbypass_can_bypass(Client *sptr, Channel *chptr, BypassChannelMessageRestrictionType bypass_type)
 {
 	Ban *ban;
 	char *p;
@@ -158,7 +158,7 @@ char *msgbypass_extban_conv_param(char *para_in)
 	return retbuf;
 }
 
-int msgbypass_extban_syntax(aClient *sptr, int checkt, char *reason)
+int msgbypass_extban_syntax(Client *sptr, int checkt, char *reason)
 {
 	if (MyClient(sptr) && (checkt == EXBCHK_PARAM))
 	{
@@ -171,7 +171,7 @@ int msgbypass_extban_syntax(aClient *sptr, int checkt, char *reason)
 	return 0; /* FAIL: ban rejected */
 }
 
-int msgbypass_extban_is_ok(aClient* sptr, aChannel* chptr, char* para_in, int checkt, int what, int what2)
+int msgbypass_extban_is_ok(Client* sptr, Channel* chptr, char* para_in, int checkt, int what, int what2)
 {
 	char para[MAX_LENGTH+1];
 	char tmpmask[MAX_LENGTH+1];

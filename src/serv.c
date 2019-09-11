@@ -58,8 +58,8 @@ void reread_motdsandrules();
 /*
 ** m_functions execute protocol messages on this server:
 **      CMD_FUNC(functionname) causes it to use the header
-**            int functionname (aClient *cptr,
-**  	      	aClient *sptr, int parc, char *parv[])
+**            int functionname (Client *cptr,
+**  	      	Client *sptr, int parc, char *parv[])
 **
 **
 **	cptr	is always NON-NULL, pointing to a *LOCAL* client
@@ -141,7 +141,7 @@ char *p;
 #endif
 
 
-void send_version(aClient* sptr, int reply)
+void send_version(Client* sptr, int reply)
 {
 	int i;
 
@@ -197,7 +197,7 @@ char *num = NULL;
  * too many for a single line. If this breaks your services because
  * you fail to maintain PROTOCTL state, then fix them!
  */
-void send_proto(aClient *cptr, ConfigItem_link *aconf)
+void send_proto(Client *cptr, ConfigItem_link *aconf)
 {
 	Isupport *prefix = IsupportFind("PREFIX");
 
@@ -221,7 +221,7 @@ void send_proto(aClient *cptr, ConfigItem_link *aconf)
 #define IRCDTOTALVERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
 
-int remotecmdfilter(aClient *sptr, int parc, char *parv[])
+int remotecmdfilter(Client *sptr, int parc, char *parv[])
 {
 	/* no remote requests permitted from non-ircops */
 	if (MyClient(sptr) && !ValidatePermissionsForPath("server:remote",sptr,NULL,NULL,NULL) && !BadPtr(parv[1]))
@@ -264,7 +264,7 @@ char *unrealinfo[] =
 	NULL
 };
 
-void m_info_send(aClient *sptr)
+void m_info_send(Client *sptr)
 {
 char **text = unrealinfo;
 
@@ -385,7 +385,7 @@ CMD_FUNC(m_credits)
 	return 0;
 }
 
-char *get_cptr_status(aClient *acptr)
+char *get_cptr_status(Client *acptr)
 {
 	static char buf[10];
 	char *p = buf;
@@ -414,7 +414,7 @@ char *get_cptr_status(aClient *acptr)
 }
 
 /* Used to blank out ports -- Barubary */
-char *get_client_name2(aClient *acptr, int showports)
+char *get_client_name2(Client *acptr, int showports)
 {
 	char *pointer = get_client_name(acptr, TRUE);
 
@@ -556,7 +556,7 @@ void reread_motdsandrules()
 	read_motd(conf_files->svsmotd_file, &svsmotd);
 }
 
-extern void reinit_resolver(aClient *sptr);
+extern void reinit_resolver(Client *sptr);
 
 /*
 ** m_rehash
@@ -643,7 +643,7 @@ CMD_FUNC(m_rehash)
 		if (parv[1] && match_simple("-glob*", parv[1]))
 		{
 			/* /REHASH -global [options] */
-			aClient *acptr;
+			Client *acptr;
 			
 			/* Shift parv's to the left */
 			parv[1] = parv[2];
@@ -767,7 +767,7 @@ CMD_FUNC(m_rehash)
 CMD_FUNC(m_restart)
 {
 char *reason = parv[1];
-	aClient *acptr;
+	Client *acptr;
 	int i;
 
 	/* Check permissions */
@@ -822,7 +822,7 @@ char *reason = parv[1];
  * Heavily modified from the ircu m_motd by codemastr
  * Also svsmotd support added
  */
-int short_motd(aClient *sptr)
+int short_motd(Client *sptr)
 {
        ConfigItem_tld *tld;
        aMotdFile *themotd;
@@ -1099,7 +1099,7 @@ void free_motd(aMotdFile *themotd)
  */
 CMD_FUNC(m_die)
 {
-	aClient *acptr;
+	Client *acptr;
 	int  i;
 
 	if (!ValidatePermissionsForPath("server:die",sptr,NULL,NULL,NULL))
@@ -1152,7 +1152,7 @@ CMD_FUNC(m_die)
  */
 int  localdie(void)
 {
-	aClient *acptr;
+	Client *acptr;
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
@@ -1170,7 +1170,7 @@ int  localdie(void)
 
 aPendingNet *pendingnet = NULL;
 
-void add_pending_net(aClient *sptr, char *str)
+void add_pending_net(Client *sptr, char *str)
 {
 	aPendingNet *net;
 	aPendingServer *srv;
@@ -1200,7 +1200,7 @@ void add_pending_net(aClient *sptr, char *str)
 	AddListItem(net, pendingnet);
 }
 
-void free_pending_net(aClient *sptr)
+void free_pending_net(Client *sptr)
 {
 	aPendingNet *net, *net_next;
 	aPendingServer *srv, *srv_next;
@@ -1222,7 +1222,7 @@ void free_pending_net(aClient *sptr)
 	}
 }
 
-aPendingNet *find_pending_net_by_sid_butone(char *sid, aClient *exempt)
+aPendingNet *find_pending_net_by_sid_butone(char *sid, Client *exempt)
 {
 	aPendingNet *net;
 	aPendingServer *srv;
@@ -1242,7 +1242,7 @@ aPendingNet *find_pending_net_by_sid_butone(char *sid, aClient *exempt)
 }
 
 /** Search the pending connections list for any identical sids */
-aClient *find_pending_net_duplicates(aClient *cptr, aClient **srv, char **sid)
+Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid)
 {
 	aPendingNet *net, *other;
 	aPendingServer *s;
@@ -1271,11 +1271,11 @@ aClient *find_pending_net_duplicates(aClient *cptr, aClient **srv, char **sid)
 	return NULL;
 }
 
-aClient *find_non_pending_net_duplicates(aClient *cptr)
+Client *find_non_pending_net_duplicates(Client *cptr)
 {
 	aPendingNet *net;
 	aPendingServer *s;
-	aClient *acptr;
+	Client *acptr;
 
 	for (net = pendingnet; net; net = net->next)
 	{
@@ -1293,7 +1293,7 @@ aClient *find_non_pending_net_duplicates(aClient *cptr)
 	return NULL;
 }
 
-void parse_chanmodes_protoctl(aClient *sptr, char *str)
+void parse_chanmodes_protoctl(Client *sptr, char *str)
 {
 	char *modes, *p;
 	char copy[256];

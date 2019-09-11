@@ -37,7 +37,7 @@ CMD_FUNC(m_batch);
 /* Variables */
 long CAP_BATCH = 0L;
 
-int batch_mtag_is_ok(aClient *acptr, char *name, char *value);
+int batch_mtag_is_ok(Client *acptr, char *name, char *value);
 
 MOD_INIT(batch)
 {
@@ -77,7 +77,7 @@ MOD_UNLOAD(batch)
  */
 CMD_FUNC(m_batch)
 {
-	aClient *acptr;
+	Client *acptr;
 	char buf[512];
 
 	if (!IsServer(cptr) || (parc < 3))
@@ -106,7 +106,7 @@ CMD_FUNC(m_batch)
  * syntax.
  * We simply allow batch ONLY from servers and with any syntax.
  */
-int batch_mtag_is_ok(aClient *acptr, char *name, char *value)
+int batch_mtag_is_ok(Client *acptr, char *name, char *value)
 {
 	if (IsServer(acptr))
 		return 1;

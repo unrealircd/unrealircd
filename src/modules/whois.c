@@ -63,8 +63,8 @@ MOD_UNLOAD(whois)
 CMD_FUNC(m_whois)
 {
 	Membership *lp;
-	aClient *acptr;
-	aChannel *chptr;
+	Client *acptr;
+	Channel *chptr;
 	char *nick, *tmp, *name;
 	char *p = NULL;
 	int  found, len, mlen;

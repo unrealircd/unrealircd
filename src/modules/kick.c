@@ -67,8 +67,8 @@ MOD_UNLOAD(kick)
 
 CMD_FUNC(m_kick)
 {
-	aClient *who;
-	aChannel *chptr;
+	Client *who;
+	Channel *chptr;
 	int  chasing = 0;
 	char *comment, *name, *p = NULL, *user, *p2 = NULL, *badkick;
 	Membership *lp;

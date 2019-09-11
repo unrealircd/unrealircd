@@ -35,9 +35,9 @@ ModuleHeader MOD_HEADER(bot)
 long UMODE_BOT = 0L;
 
 /* Forward declarations */
-int bot_whois(aClient *sptr, aClient *acptr);
-int bot_who_status(aClient *sptr, aClient *acptr, aChannel *chptr, Member *cm, char *status, int cansee);
-int bot_umode_change(aClient *sptr, long oldmode, long newmode);
+int bot_whois(Client *sptr, Client *acptr);
+int bot_who_status(Client *sptr, Client *acptr, Channel *chptr, Member *cm, char *status, int cansee);
+int bot_umode_change(Client *sptr, long oldmode, long newmode);
 
 MOD_TEST(bot)
 {
@@ -66,7 +66,7 @@ MOD_UNLOAD(bot)
 	return MOD_SUCCESS;
 }
 
-int bot_whois(aClient *sptr, aClient *acptr)
+int bot_whois(Client *sptr, Client *acptr)
 {
 	if (IsBot(acptr))
 		sendnumeric(sptr, RPL_WHOISBOT, acptr->name, ircnetwork);
@@ -74,7 +74,7 @@ int bot_whois(aClient *sptr, aClient *acptr)
 	return 0;
 }
 
-int bot_who_status(aClient *sptr, aClient *acptr, aChannel *chptr, Member *cm, char *status, int cansee)
+int bot_who_status(Client *sptr, Client *acptr, Channel *chptr, Member *cm, char *status, int cansee)
 {
 	if (IsBot(acptr))
 		return 'B';
@@ -82,7 +82,7 @@ int bot_who_status(aClient *sptr, aClient *acptr, aChannel *chptr, Member *cm, c
 	return 0;
 }
 
-int bot_umode_change(aClient *sptr, long oldmode, long newmode)
+int bot_umode_change(Client *sptr, long oldmode, long newmode)
 {
 	if ((newmode & UMODE_BOT) && !(oldmode & UMODE_BOT) && MyClient(sptr))
 	{

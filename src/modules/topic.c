@@ -52,7 +52,7 @@ MOD_UNLOAD(topic)
 	return MOD_SUCCESS;
 }
 
-void topicoverride(aClient *sptr, aChannel *chptr, char *topic)
+void topicoverride(Client *sptr, Channel *chptr, char *topic)
 {
 	sendto_snomask(SNO_EYES,
 	    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
@@ -79,7 +79,7 @@ void topicoverride(aClient *sptr, aChannel *chptr, char *topic)
  */
 CMD_FUNC(m_topic)
 {
-	aChannel *chptr = NULL;
+	Channel *chptr = NULL;
 	char *topic = NULL, *name, *tnick = sptr->name;
 	char *errmsg = NULL;
 	time_t ttime = 0;

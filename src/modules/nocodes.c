@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER(nocodes)
 	"unrealircd-5",
 };
 
-char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
+char *nocodes_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
 
 MOD_INIT(nocodes)
 {
@@ -57,7 +57,7 @@ static int has_controlcodes(char *p)
 	return 0;
 }
 
-char *nocodes_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
+char *nocodes_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	static char retbuf[4096];
 	Hook *h;

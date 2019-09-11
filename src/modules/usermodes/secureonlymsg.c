@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER(secureonlymsg)
 long UMODE_SECUREONLYMSG = 0L;
 
 /* Forward declarations */
-char *secureonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int notice);
+char *secureonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int notice);
                     
 MOD_INIT(secureonlymsg)
 {
@@ -58,7 +58,7 @@ MOD_UNLOAD(secureonlymsg)
 	return MOD_SUCCESS;
 }
 
-char *secureonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int notice)
+char *secureonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int notice)
 {
 	if (IsSecureOnlyMsg(target) && !IsServer(sptr) && !IsULine(sptr) && !IsSecureConnect(sptr))
 	{

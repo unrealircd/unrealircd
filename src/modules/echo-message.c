@@ -35,8 +35,8 @@ ModuleHeader MOD_HEADER(echo_message)
 long CAP_ECHO_MESSAGE = 0L;
 
 /* Forward declarations */
-int em_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
-int em_usermsg(aClient *sptr, aClient *to, MessageTag *mtags, char *text, int notice);
+int em_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
+int em_usermsg(Client *sptr, Client *to, MessageTag *mtags, char *text, int notice);
 
 MOD_INIT(echo_message)
 {
@@ -66,7 +66,7 @@ MOD_UNLOAD(echo_message)
 	return MOD_SUCCESS;
 }
 
-int em_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
+int em_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
 {
 	if (MyClient(sptr) && HasCapabilityFast(sptr, CAP_ECHO_MESSAGE))
 	{
@@ -79,7 +79,7 @@ int em_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *
 	return 0;
 }
 
-int em_usermsg(aClient *sptr, aClient *to, MessageTag *mtags, char *text, int notice)
+int em_usermsg(Client *sptr, Client *to, MessageTag *mtags, char *text, int notice)
 {
 	if (MyClient(sptr) && HasCapabilityFast(sptr, CAP_ECHO_MESSAGE))
 	{

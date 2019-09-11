@@ -28,8 +28,8 @@ ModuleHeader MOD_HEADER(authprompt)
 	"unrealircd-5",
 };
 
-typedef struct _multiline MultiLine;
-struct _multiline {
+typedef struct MultiLine MultiLine;
+struct MultiLine {
 	MultiLine *prev, *next;
 	char *line;
 };
@@ -42,8 +42,8 @@ struct {
 } cfg;
 
 /** User struct */
-typedef struct _apuser APUser;
-struct _apuser {
+typedef struct APUser APUser;
+struct APUser {
 	char *authmsg;
 };
 
@@ -56,12 +56,12 @@ static void init_config(void);
 static void config_postdefaults(void);
 int authprompt_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int authprompt_config_run(ConfigFile *, ConfigEntry *, int);
-int authprompt_require_sasl(aClient *acptr, char *reason);
-int authprompt_sasl_continuation(aClient *acptr, char *buf);
-int authprompt_sasl_result(aClient *acptr, int success);
-int authprompt_place_host_ban(aClient *sptr, int action, char *reason, long duration);
-int authprompt_find_tkline_match(aClient *sptr, aTKline *tk);
-int authprompt_pre_connect(aClient *sptr);
+int authprompt_require_sasl(Client *acptr, char *reason);
+int authprompt_sasl_continuation(Client *acptr, char *buf);
+int authprompt_sasl_result(Client *acptr, int success);
+int authprompt_place_host_ban(Client *sptr, int action, char *reason, long duration);
+int authprompt_find_tkline_match(Client *sptr, aTKline *tk);
+int authprompt_pre_connect(Client *sptr);
 CMD_FUNC(m_auth);
 void authprompt_md_free(ModData *md);
 
@@ -275,7 +275,7 @@ int parse_nickpass(const char *str, char **username, char **password)
 }
 
 /* NOTE: This function is stolen from m_sasl. Not good. */
-static const char *encode_puid(aClient *client)
+static const char *encode_puid(Client *client)
 {
 	static char buf[HOSTLEN + 20];
 
@@ -315,9 +315,9 @@ char *make_authbuf(const char *username, const char *password)
  * Among other things, this is used to discover the agent
  * which will later be used for this session.
  */
-void send_first_auth(aClient *sptr)
+void send_first_auth(Client *sptr)
 {
-	aClient *acptr;
+	Client *acptr;
 	char *addr = BadPtr(sptr->ip) ? "0" : sptr->ip;
 	char *certfp = moddata_client_get(sptr, "certfp");
 	acptr = find_client(SASL_SERVER, NULL);
@@ -392,26 +392,26 @@ CMD_FUNC(m_auth)
 	return 0;
 }
 
-void send_multinotice(aClient *sptr, MultiLine *m)
+void send_multinotice(Client *sptr, MultiLine *m)
 {
 	for (; m; m = m->next)
 		sendnotice(sptr, "%s", m->line);
 }
 
-void authprompt_tag_as_auth_required(aClient *sptr)
+void authprompt_tag_as_auth_required(Client *sptr)
 {
 	/* Allocate, and therefore indicate, that we are going to handle SASL for this user */
 	if (!SEUSER(sptr))
 		SetAPUser(sptr, MyMallocEx(sizeof(APUser)));
 }
 
-void authprompt_send_auth_required_message(aClient *sptr)
+void authprompt_send_auth_required_message(Client *sptr)
 {
 	/* Display set::authentication-prompt::message */
 	send_multinotice(sptr, cfg.message);
 }
 
-int authprompt_require_sasl(aClient *sptr, char *reason)
+int authprompt_require_sasl(Client *sptr, char *reason)
 {
 	/* If the client did SASL then we (authprompt) will not kick in */
 	if (HasCapability(sptr, "sasl"))
@@ -429,7 +429,7 @@ int authprompt_require_sasl(aClient *sptr, char *reason)
 }
 
 /* Called upon "place a host ban on this user" (eg: spamfilter, blacklist, ..) */
-int authprompt_place_host_ban(aClient *sptr, int action, char *reason, long duration)
+int authprompt_place_host_ban(Client *sptr, int action, char *reason, long duration)
 {
 	/* If it's a soft-xx action and the user is not logged in
 	 * and the user is not yet online, then we will handle this user.
@@ -448,7 +448,7 @@ int authprompt_place_host_ban(aClient *sptr, int action, char *reason, long dura
 }
 
 /** Called upon "check for KLINE/GLINE" */
-int authprompt_find_tkline_match(aClient *sptr, aTKline *tkl)
+int authprompt_find_tkline_match(Client *sptr, aTKline *tkl)
 {
 	/* If it's a soft-xx action and the user is not logged in
 	 * and the user is not yet online, then we will handle this user.
@@ -469,7 +469,7 @@ int authprompt_find_tkline_match(aClient *sptr, aTKline *tkl)
 	return 99; /* no action taken, proceed normally */
 }
 
-int authprompt_pre_connect(aClient *sptr)
+int authprompt_pre_connect(Client *sptr)
 {
 	/* If the user is tagged as auth required and not logged in, then.. */
 	if (SEUSER(sptr) && !IsLoggedIn(sptr))
@@ -481,7 +481,7 @@ int authprompt_pre_connect(aClient *sptr)
 	return 0; /* no action taken, proceed normally */
 }
 
-int authprompt_sasl_continuation(aClient *sptr, char *buf)
+int authprompt_sasl_continuation(Client *sptr, char *buf)
 {
 	/* If it's not for us (eg: user is doing real SASL) then return 0. */
 	if (!SEUSER(sptr) || !SEUSER(sptr)->authmsg)
@@ -489,7 +489,7 @@ int authprompt_sasl_continuation(aClient *sptr, char *buf)
 
 	if (!strcmp(buf, "+"))
 	{
-		aClient *agent = find_client(sptr->local->sasl_agent, NULL);
+		Client *agent = find_client(sptr->local->sasl_agent, NULL);
 		if (agent)
 		{
 			sendto_one(agent, NULL, ":%s SASL %s %s C %s",
@@ -500,7 +500,7 @@ int authprompt_sasl_continuation(aClient *sptr, char *buf)
 	return 1; /* inhibit displaying of message */
 }
 
-int authprompt_sasl_result(aClient *sptr, int success)
+int authprompt_sasl_result(Client *sptr, int success)
 {
 	/* If it's not for us (eg: user is doing real SASL) then return 0. */
 	if (!SEUSER(sptr))

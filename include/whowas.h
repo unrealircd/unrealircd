@@ -39,8 +39,8 @@
 ** WHOWAS structure moved here from whowas.c
 */
 typedef struct aname {
-	anUser *ww_user;
-	aClient *ww_online;
+	ClientUser *ww_user;
+	Client *ww_online;
 	time_t ww_logout;
 	long ww_umodes;
 	char ww_nick[NICKLEN + 1];
@@ -55,7 +55,7 @@ typedef struct aname {
 **	Client must be a fully registered user (specifically,
 **	the user structure must have been allocated).
 */
-void add_history(aClient *, int);
+void add_history(Client *, int);
 
 /*
 ** off_history
@@ -64,7 +64,7 @@ void add_history(aClient *, int);
 **	structures and it must know when they cease to exist. This
 **	also implicitly calls AddHistory.
 */
-void off_history(aClient *);
+void off_history(Client *);
 
 /*
 ** get_history
@@ -72,7 +72,7 @@ void off_history(aClient *);
 **	nickname within the timelimit. Returns NULL, if no
 **	one found...
 */
-aClient *get_history(char *, time_t);
+Client *get_history(char *, time_t);
 					/* Nick name */
 					/* Time limit in seconds */
 

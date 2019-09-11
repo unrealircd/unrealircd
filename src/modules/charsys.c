@@ -42,8 +42,8 @@ ModuleHeader MOD_HEADER(charsys)
  */
 
 /** Our multibyte structure */
-typedef struct _mblist MBList;
-struct _mblist
+typedef struct MBList MBList;
+struct MBList
 {
 	MBList *next;
 	char s1, e1, s2, e2;
@@ -72,8 +72,8 @@ char langsinuse[4096];
 #define LANGAV_CYRILLIC_UTF8	0x004000 /* UTF8: cyrillic script */
 #define LANGAV_GREEK_UTF8		0x008000 /* UTF8: greek script */
 #define LANGAV_HEBREW_UTF8		0x010000 /* UTF8: hebrew script */
-typedef struct _langlist LangList;
-struct _langlist
+typedef struct LangList LangList;
+struct LangList
 {
 	char *directive;
 	char *code;
@@ -141,8 +141,8 @@ static LangList langlist[] = {
 };
 
 /* For temporary use during config_run */
-typedef struct _ilanglist ILangList;
-struct _ilanglist
+typedef struct ILangList ILangList;
+struct ILangList
 {
 	ILangList *prev, *next;
 	char *name;

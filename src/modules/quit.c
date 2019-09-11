@@ -93,7 +93,7 @@ CMD_FUNC(m_quit)
 		{
 			Membership *lp;
 			char *newcomment;
-			aChannel *chptr;
+			Channel *chptr;
 
 			for (lp = sptr->user->channel; lp; lp = lp_next)
 			{

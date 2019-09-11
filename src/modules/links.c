@@ -54,7 +54,7 @@ MOD_UNLOAD(links)
 
 CMD_FUNC(m_links)
 {
-	aClient *acptr;
+	Client *acptr;
 	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;
 
 	list_for_each_entry(acptr, &global_server_list, client_node)

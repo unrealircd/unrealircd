@@ -57,12 +57,12 @@ MOD_UNLOAD(map)
  * New /MAP format -Potvin
  * dump_map function.
  */
-static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_length, int length)
+static void dump_map(Client *cptr, Client *server, char *mask, int prompt_length, int length)
 {
 	static char prompt[64];
 	char *p = &prompt[prompt_length];
 	int  cnt = 0;
-	aClient *acptr;
+	Client *acptr;
 
 	*p = '\0';
 
@@ -113,10 +113,10 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 		p[-1] = '-';
 }
 
-void dump_flat_map(aClient *cptr, aClient *server, int length)
+void dump_flat_map(Client *cptr, Client *server, int length)
 {
 char buf[4];
-aClient *acptr;
+Client *acptr;
 int cnt = 0, hide_ulines;
 
 	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL)) ? 1 : 0;
@@ -151,7 +151,7 @@ int cnt = 0, hide_ulines;
 **/
 CMD_FUNC(m_map)
 {
-	aClient *acptr;
+	Client *acptr;
 	int  longest = strlen(me.name);
 
 

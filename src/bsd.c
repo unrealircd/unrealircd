@@ -54,9 +54,9 @@ extern char backupbuf[8192];
 int      OpenFiles = 0;    /* GLOBAL - number of files currently open */
 int readcalls = 0;
 
-int connect_inet(ConfigItem_link *, aClient *);
+int connect_inet(ConfigItem_link *, Client *);
 void completed_connection(int, int, void *);
-void set_sock_opts(int, aClient *, int);
+void set_sock_opts(int, Client *, int);
 void set_ipv6_opts(int);
 void close_listener(ConfigItem_listen *listener);
 static char readbuf[BUFSIZE];
@@ -87,13 +87,13 @@ extern void url_do_transfers_async(void);
 # endif
 #endif
 
-void start_of_normal_client_handshake(aClient *acptr);
-void proceed_normal_client_handshake(aClient *acptr, struct hostent *he);
+void start_of_normal_client_handshake(Client *acptr);
+void proceed_normal_client_handshake(Client *acptr, struct hostent *he);
 
 /* winlocal */
 void close_connections(void)
 {
-	aClient* cptr;
+	Client* cptr;
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 	{
@@ -147,7 +147,7 @@ void close_connections(void)
 **	cptr	if not NULL, is the *LOCAL* client associated with
 **		the error.
 */
-void report_error(char *text, aClient *cptr)
+void report_error(char *text, Client *cptr)
 {
 	int errtmp = ERRNO, origerr = ERRNO;
 	char *host, xbuf[256];
@@ -185,7 +185,7 @@ void report_error(char *text, aClient *cptr)
 	return;
 }
 
-void report_baderror(char *text, aClient *cptr)
+void report_baderror(char *text, Client *cptr)
 {
 #ifndef _WIN32
 	int  errtmp = errno;	/* debug may change 'errno' */
@@ -411,7 +411,7 @@ void close_listener(ConfigItem_listen *listener)
 
 void close_listeners(void)
 {
-	aClient *cptr;
+	Client *cptr;
 	ConfigItem_listen *aconf, *aconf_next;
 
 	/* close all 'extra' listening ports we have */
@@ -560,7 +560,7 @@ void write_pidfile(void)
 /** Reject an insecure (outgoing) server link that isn't SSL/TLS.
  * This function is void and not int because it can be called from other void functions
  */
-void reject_insecure_server(aClient *cptr)
+void reject_insecure_server(Client *cptr)
 {
 	sendto_umode(UMODE_OPER, "Could not link with server %s with SSL/TLS enabled. "
 	                         "Please check logs on the other side of the link. "
@@ -570,7 +570,7 @@ void reject_insecure_server(aClient *cptr)
 	dead_link(cptr, "Rejected link without SSL/TLS");
 }
 
-void start_server_handshake(aClient *cptr)
+void start_server_handshake(Client *cptr)
 {
 	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
 
@@ -613,7 +613,7 @@ void start_server_handshake(aClient *cptr)
 */
 void completed_connection(int fd, int revents, void *data)
 {
-	aClient *cptr = data;
+	Client *cptr = data;
 	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
 
 	if (IsHandshake(cptr))
@@ -651,7 +651,7 @@ void completed_connection(int fd, int revents, void *data)
 **	Close the physical connection. This function must make
 **	MyConnect(cptr) == FALSE, and set cptr->from == NULL.
 */
-void close_connection(aClient *cptr)
+void close_connection(Client *cptr)
 {
 	ConfigItem_link *aconf;
 #ifdef DO_REMAPPING
@@ -745,7 +745,7 @@ void set_ipv6_opts(int fd)
 /*
 ** set_sock_opts
 */
-void set_sock_opts(int fd, aClient *cptr, int ipv6)
+void set_sock_opts(int fd, Client *cptr, int ipv6)
 {
 	int  opt;
 
@@ -781,7 +781,7 @@ void set_sock_opts(int fd, aClient *cptr, int ipv6)
 }
 
 
-int  get_sockerr(aClient *cptr)
+int  get_sockerr(Client *cptr)
 {
 #ifndef _WIN32
 	int  errtmp = errno, err = 0, len = sizeof(err);
@@ -800,7 +800,7 @@ int  get_sockerr(aClient *cptr)
 /*
  * Set socket 'fd' to non blocking mode.
  */
-void set_non_blocking(int fd, aClient *cptr)
+void set_non_blocking(int fd, Client *cptr)
 {
 	int res, nonb = 0;
 
@@ -853,7 +853,7 @@ int is_loopback_ip(char *ip)
 	return 0;
 }
 
-char *getpeerip(aClient *acptr, int fd, int *port)
+char *getpeerip(Client *acptr, int fd, int *port)
 {
 	static char ret[HOSTLEN+1];
 
@@ -884,9 +884,9 @@ char *getpeerip(aClient *acptr, int fd, int *port)
  * The client is added to the linked list of clients but isnt added to any
  * hash tables yuet since it doesnt have a name.
  */
-aClient *add_connection(ConfigItem_listen *listener, int fd)
+Client *add_connection(ConfigItem_listen *listener, int fd)
 {
-	aClient *acptr, *acptr2;
+	Client *acptr, *acptr2;
 	ConfigItem_ban *bconf;
 	aTKline *tk;
 	int i, j;
@@ -1000,7 +1000,7 @@ refuse_client:
 
 static int dns_special_flag = 0; /* This is for an "interesting" race condition  very ugly. */
 
-void	start_of_normal_client_handshake(aClient *acptr)
+void	start_of_normal_client_handshake(Client *acptr)
 {
 struct hostent *he;
 
@@ -1036,7 +1036,7 @@ doauth:
 	fd_setselect(acptr->fd, FD_SELECT_READ, read_packet, acptr);
 }
 
-void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
+void proceed_normal_client_handshake(Client *acptr, struct hostent *he)
 {
 	ClearDNS(acptr);
 	acptr->local->hostp = he;
@@ -1064,7 +1064,7 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 ** after we're done reading crap.
 **    -- nenolod
 */
-static int parse_client_queued(aClient *cptr)
+static int parse_client_queued(Client *cptr)
 {
 	int dolen = 0;
 	int allow_read;
@@ -1099,7 +1099,20 @@ static int parse_client_queued(aClient *cptr)
 	return 0;
 }
 
-int process_packet(aClient *cptr, char *readbuf, int length, int killsafely)
+/** Put a packet in the client receive queue and process the data (if
+ * the 'fake lag' rules permit doing so).
+ * @param cptr        The client
+ * @param readbuf     The read buffer
+ * @param length      The length of the data
+ * @param killsafely  If 1 then we may call exit_client() if the client
+ *                    is flooding. If 0 then we use dead_link().
+ * @returns 1 in normal circumstances, 0 if client was killed.
+ * @notes If killsafely is 1 and the return value is 0 then
+ *        you may not touch 'cptr' after calling this function
+ *        since the client (cptr) has been freed.
+ *        If this is a problem, then set killsafely to 0 when calling.
+ */
+int process_packet(Client *cptr, char *readbuf, int length, int killsafely)
 {
 	dbuf_put(&cptr->local->recvQ, readbuf, length);
 
@@ -1140,7 +1153,7 @@ int process_packet(aClient *cptr, char *readbuf, int length, int killsafely)
 
 void read_packet(int fd, int revents, void *data)
 {
-	aClient *cptr = data;
+	Client *cptr = data;
 	int length = 0;
 	time_t now = TStime();
 	Hook *h;
@@ -1244,7 +1257,7 @@ void read_packet(int fd, int revents, void *data)
 /* Process input from clients that may have been deliberately delayed due to fake lag */
 void process_clients(void)
 {
-	aClient *cptr;
+	Client *cptr;
         
 	/* Problem:
 	 * 1) When 'cptr' exits we can't check 'current_element->next' since this
@@ -1282,7 +1295,7 @@ void process_clients(void)
 }
 
 /* When auth is finished, go back and parse all prior input. */
-void finish_auth(aClient *acptr)
+void finish_auth(Client *acptr)
 {
 }
 
@@ -1306,9 +1319,9 @@ int is_valid_ip(char *str)
 /*
  * connect_server
  */
-int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
+int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 {
-	aClient *cptr;
+	Client *cptr;
 	char *s;
 
 #ifdef DEBUGMODE
@@ -1419,7 +1432,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	return 0;
 }
 
-int connect_inet(ConfigItem_link *aconf, aClient *cptr)
+int connect_inet(ConfigItem_link *aconf, Client *cptr)
 {
 	int len;
 	struct hostent *hp;
@@ -1494,7 +1507,7 @@ int ipv6_capable(void)
 static void send_authports(int fd, int revents, void *data);
 static void read_authports(int fd, int revents, void *data);
 
-void ident_failed(aClient *cptr)
+void ident_failed(Client *cptr)
 {
 	Debug((DEBUG_NOTICE, "ident_failed() for %p", cptr));
 	ircstp->is_abad++;
@@ -1520,7 +1533,7 @@ void ident_failed(aClient *cptr)
  * identifing process fail, it is aborted and the user is given a username
  * of "unknown".
  */
-void start_auth(aClient *cptr)
+void start_auth(Client *cptr)
 {
 	int len;
 	char buf[BUFSIZE];
@@ -1587,7 +1600,7 @@ static void send_authports(int fd, int revents, void *data)
 {
 	char authbuf[32];
 	int  ulen, tlen;
-	aClient *cptr = data;
+	Client *cptr = data;
 
 	Debug((DEBUG_NOTICE, "write_authports(%p) fd %d authfd %d stat %d",
 	    cptr, cptr->fd, cptr->local->authfd, cptr->status));
@@ -1624,7 +1637,7 @@ static void read_authports(int fd, int revents, void *userdata)
 	int  len;
 	char ruser[USERLEN + 1], system[8];
 	u_short remp = 0, locp = 0;
-	aClient *cptr = userdata;
+	Client *cptr = userdata;
 
 	*system = *ruser = '\0';
 	Debug((DEBUG_NOTICE, "read_authports(%p) fd %d authfd %d stat %d",

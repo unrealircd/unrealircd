@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER(join)
 };
 
 /* Forward declarations */
-int extban_modej_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg);
+int extban_modej_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
 MOD_INIT(join)
@@ -64,7 +64,7 @@ MOD_UNLOAD(join)
 }
 
 /** This ban that affects JOINs only */
-int extban_modej_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg)
+int extban_modej_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
 {
 	char *sub_ban;
 

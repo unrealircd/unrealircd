@@ -62,11 +62,11 @@ struct who_format
 };
 
 CMD_FUNC(m_whox);
-static void who_global(aClient *sptr, char *mask, int operspy, struct who_format *fmt);
-static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_format *fmt);
-static void do_who_on_channel(aClient *sptr, aChannel *chptr,
+static void who_global(Client *sptr, char *mask, int operspy, struct who_format *fmt);
+static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_format *fmt);
+static void do_who_on_channel(Client *sptr, Channel *chptr,
                               int member, int operspy, struct who_format *fmt);
-static int convert_classical_who_request(aClient *sptr, int *parc, char *parv[], char **orig_mask, struct who_format *fmt);
+static int convert_classical_who_request(Client *sptr, int *parc, char *parv[], char **orig_mask, struct who_format *fmt);
 
 ModuleHeader MOD_HEADER(whox)
   = {
@@ -140,7 +140,7 @@ CMD_FUNC(m_whox)
 	const char *s;
 	char maskcopy[BUFSIZE];
 	Membership *lp;
-	aClient *acptr;
+	Client *acptr;
 
 	memset(&fmt, 0, sizeof(fmt));
 
@@ -289,7 +289,7 @@ CMD_FUNC(m_whox)
 	/* '/who #some_channel' */
 	if (IsChannelName(mask))
 	{
-		aChannel *chptr = NULL;
+		Channel *chptr = NULL;
 
 		/* List all users on a given channel */
 		if ((chptr = find_channel(orig_mask, NULL)) != NULL)
@@ -371,7 +371,7 @@ CMD_FUNC(m_whox)
  * output	- 1 if match, 0 if no match
  * side effects	- NONE
  */
-static int do_match(aClient *sptr, aClient *acptr, char *mask, struct who_format *fmt)
+static int do_match(Client *sptr, Client *acptr, char *mask, struct who_format *fmt)
 {
 	if (mask == NULL)
 		return 1;
@@ -448,11 +448,11 @@ static int do_match(aClient *sptr, aClient *acptr, char *mask, struct who_format
  *			  marks matched clients.
  */
 
-static void who_common_channel(aClient *sptr, aChannel *chptr,
+static void who_common_channel(Client *sptr, Channel *chptr,
 	char *mask, int *maxmatches, struct who_format *fmt)
 {
 	Member *cm = chptr->members;
-	aClient *acptr;
+	Client *acptr;
 	Hook *h;
 	int i = 0;
 
@@ -504,9 +504,9 @@ static void who_common_channel(aClient *sptr, aChannel *chptr,
  *			  and will be left cleared on return
  */
 
-static void who_global(aClient *sptr, char *mask, int operspy, struct who_format *fmt)
+static void who_global(Client *sptr, char *mask, int operspy, struct who_format *fmt)
 {
-	aClient *acptr;
+	Client *acptr;
 	int maxmatches = WHOLIMIT ? WHOLIMIT : 100;
 
 	/* first, list all matching INvisible clients on common channels
@@ -566,7 +566,7 @@ static void who_global(aClient *sptr, char *mask, int operspy, struct who_format
  * side effects		- do a who on given channel
  */
 
-static void do_who_on_channel(aClient *sptr, aChannel *chptr,
+static void do_who_on_channel(Client *sptr, Channel *chptr,
 	int member, int operspy, struct who_format *fmt)
 {
 	Member *cm = chptr->members;
@@ -575,7 +575,7 @@ static void do_who_on_channel(aClient *sptr, aChannel *chptr,
 
 	for (cm = chptr->members; cm; cm = cm->next)
 	{
-		aClient *acptr = cm->cptr;
+		Client *acptr = cm->cptr;
 
 		if (IsMatch(fmt, WMATCH_OPER) && !IsOper(acptr))
 			continue;
@@ -630,7 +630,7 @@ static void append_format(char *buf, size_t bufsize, size_t *pos, const char *fm
  * Side Effects		- none
  */
 
-static int show_ip(aClient *sptr, aClient *acptr)
+static int show_ip(Client *sptr, Client *acptr)
 {
 	if (IsServer(acptr))
 		return 0;
@@ -653,7 +653,7 @@ static int show_ip(aClient *sptr, aClient *acptr)
  * side effects - do a who on given person
  */
 
-static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_format *fmt)
+static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_format *fmt)
 {
 	char status[20];
 	char str[510 + 1];
@@ -809,7 +809,7 @@ static void do_who(aClient *sptr, aClient *acptr, aChannel *chptr, struct who_fo
 }
 
 /* Yeah, this is fun. Thank you WHOX !!! */
-static int convert_classical_who_request(aClient *sptr, int *parc, char *parv[], char **orig_mask, struct who_format *fmt)
+static int convert_classical_who_request(Client *sptr, int *parc, char *parv[], char **orig_mask, struct who_format *fmt)
 {
 	char *p;
 	static char pbuf1[256];

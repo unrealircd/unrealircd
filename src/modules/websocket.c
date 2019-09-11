@@ -23,14 +23,14 @@ ModuleHeader MOD_HEADER(websocket)
  #error "In UnrealIRCd char should always be unsigned. Check your compiler"
 #endif
 
-struct _websocketuser {
+typedef struct WebSocketUser WebSocketUser;
+struct WebSocketUser {
 	char get; /**< GET initiated */
 	char handshake_completed; /**< Handshake completed, use data frames */
 	char *handshake_key; /**< Handshake key (used during handshake) */
 	char *lefttoparse; /**< Leftover buffer to parse */
 	int lefttoparselen; /**< Length of lefttoparse buffer */
 };
-typedef struct _websocketuser WebSocketUser;
 
 #define WSU(cptr)	((WebSocketUser *)moddata_client(cptr, websocket_md).ptr)
 
@@ -44,16 +44,16 @@ typedef struct _websocketuser WebSocketUser;
 #define WSOP_PONG         0x0a
 
 /* Forward declarations */
-int websocket_packet_out(aClient *from, aClient *to, aClient *intended_to, char **msg, int *length);
-int websocket_packet_in(aClient *sptr, char *readbuf, int *length);
+int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);
+int websocket_packet_in(Client *sptr, char *readbuf, int *length);
 void websocket_mdata_free(ModData *m);
-int websocket_handle_packet(aClient *sptr, char *readbuf, int length);
-int websocket_handle_handshake(aClient *sptr, char *readbuf, int *length);
-int websocket_complete_handshake(aClient *sptr);
-int websocket_handle_packet_ping(aClient *sptr, char *buf, int len);
-int websocket_handle_packet_pong(aClient *sptr, char *buf, int len);
+int websocket_handle_packet(Client *sptr, char *readbuf, int length);
+int websocket_handle_handshake(Client *sptr, char *readbuf, int *length);
+int websocket_complete_handshake(Client *sptr);
+int websocket_handle_packet_ping(Client *sptr, char *buf, int len);
+int websocket_handle_packet_pong(Client *sptr, char *buf, int len);
 int websocket_create_frame(int opcode, char **buf, int *len);
-int websocket_send_frame(aClient *sptr, int opcode, char *buf, int len);
+int websocket_send_frame(Client *sptr, int opcode, char *buf, int len);
 
 /* Global variables */
 ModDataInfo *websocket_md;
@@ -111,7 +111,7 @@ void websocket_mdata_free(ModData *m)
 /** Outgoing packet hook.
  * This transforms the output to be Websocket-compliant, if necessary.
  */
-int websocket_packet_out(aClient *from, aClient *to, aClient *intended_to, char **msg, int *length)
+int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length)
 {
 	if (MyConnect(to) && WSU(to) && WSU(to)->handshake_completed)
 	{
@@ -121,7 +121,7 @@ int websocket_packet_out(aClient *from, aClient *to, aClient *intended_to, char 
 	return 0;
 }
 
-int websocket_handle_websocket(aClient *sptr, char *readbuf2, int length2)
+int websocket_handle_websocket(Client *sptr, char *readbuf2, int length2)
 {
 	int n;
 	char *ptr;
@@ -173,7 +173,7 @@ int websocket_handle_websocket(aClient *sptr, char *readbuf2, int length2)
  * 0 means: don't process this data, but you can read another packet if you want
  * >0 means: process this data (regular IRC data, non-websocket stuff)
  */
-int websocket_packet_in(aClient *sptr, char *readbuf, int *length)
+int websocket_packet_in(Client *sptr, char *readbuf, int *length)
 {
 	if ((sptr->local->receiveM == 0) && !WSU(sptr) && (*length > 8) && !strncmp(readbuf, "GET ", 4))
 	{
@@ -328,7 +328,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 /** Handle client GET WebSocket handshake.
  * Yes, I'm going to assume that the header fits in one packet and one packet only.
  */
-int websocket_handle_handshake(aClient *sptr, char *readbuf, int *length)
+int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 {
 	char *key, *value;
 	int r, end_of_request;
@@ -402,7 +402,7 @@ int websocket_handle_handshake(aClient *sptr, char *readbuf, int *length)
 }
 
 /** Complete the handshake by sending the appropriate HTTP 101 response etc. */
-int websocket_complete_handshake(aClient *sptr)
+int websocket_complete_handshake(Client *sptr)
 {
 	char buf[512], hashbuf[64];
 	SHA_CTX hash;
@@ -465,7 +465,7 @@ void add_lf_if_needed(char **buf, int *len)
  *          OR 0 to indicate a possible short read (want more data)
  *          OR -1 in case of an error.
  */
-int websocket_handle_packet(aClient *sptr, char *readbuf, int length)
+int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 {
 	char fin; /**< Final fragment */
 	char opcode; /**< Opcode */
@@ -583,7 +583,7 @@ int websocket_handle_packet(aClient *sptr, char *readbuf, int length)
 	return -1; /* NOTREACHED */
 }
 
-int websocket_handle_packet_ping(aClient *sptr, char *buf, int len)
+int websocket_handle_packet_ping(Client *sptr, char *buf, int len)
 {
 	if (len > 500)
 	{
@@ -595,7 +595,7 @@ int websocket_handle_packet_ping(aClient *sptr, char *buf, int len)
 	return 0;
 }
 
-int websocket_handle_packet_pong(aClient *sptr, char *buf, int len)
+int websocket_handle_packet_pong(Client *sptr, char *buf, int len)
 {
 	/* We don't care */
 	return 0;
@@ -644,7 +644,7 @@ int websocket_create_frame(int opcode, char **buf, int *len)
 }
 
 /** Create and send a frame */
-int websocket_send_frame(aClient *sptr, int opcode, char *buf, int len)
+int websocket_send_frame(Client *sptr, int opcode, char *buf, int len)
 {
 	char *b = buf;
 	int l = len;

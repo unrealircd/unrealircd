@@ -101,7 +101,7 @@ MOD_UNLOAD(ircops)
 
 CMD_FUNC(m_ircops)
 {
-	aClient *acptr;
+	Client *acptr;
 	char buf[512];
 	int opers = 0, total = 0, aways = 0;
 

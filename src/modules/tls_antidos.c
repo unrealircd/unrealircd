@@ -22,9 +22,9 @@ ModuleHeader MOD_HEADER(tls_antidos)
 #define HANDSHAKE_LIMIT_COUNT 3
 #define HANDSHAKE_LIMIT_SECS 300
 
-typedef struct _sad SAD;
-struct _sad {
-	aClient *acptr; /**< client */
+typedef struct SAD SAD;
+struct SAD {
+	Client *acptr; /**< client */
 	time_t ts; /**< time */
 	int n; /**< number of times */
 };
@@ -32,7 +32,7 @@ struct _sad {
 int tls_antidos_index = 0; /* slot# we acquire from OpenSSL. Hmm.. looks awfully similar to our moddata system ;) */
 
 /* Forward declaration */
-int tls_antidos_handshake(aClient *acptr);
+int tls_antidos_handshake(Client *acptr);
 
 void tls_antidos_free(void *parent, void *ptr, CRYPTO_EX_DATA *ad, int idx, long argl, void *argp);
 
@@ -68,7 +68,7 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
 	if (where & SSL_CB_HANDSHAKE_START)
 	{
 		SAD *e = SSL_get_ex_data(ssl, tls_antidos_index);
-		aClient *acptr = e->acptr;
+		Client *acptr = e->acptr;
 		
 		if (IsServer(acptr) || IsDead(acptr))
 			return; /* if it's a server, or already pending to be killed off then we don't care */
@@ -93,7 +93,7 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
  * This function is called quite quickly after accept(),
  * in any case very likely before any data has been received.
  */
-int tls_antidos_handshake(aClient *acptr)
+int tls_antidos_handshake(Client *acptr)
 {
 	if (acptr->local->ssl)
 	{

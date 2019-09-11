@@ -32,7 +32,7 @@ extern HWND hwIRCDWnd;
 #define SAFE_SSL_ACCEPT 3
 #define SAFE_SSL_CONNECT 4
 
-static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr);
+static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr);
 extern int cipher_check(SSL_CTX *ctx, char **errstr);
 extern int certificate_quality_check(SSL_CTX *ctx, char **errstr);
 
@@ -185,15 +185,15 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 	return 1;
 }
 
-/** get aClient pointerd by SSL pointer */
-aClient *get_client_by_ssl(SSL *ssl)
+/** get Client pointerd by SSL pointer */
+Client *get_client_by_ssl(SSL *ssl)
 {
 	return SSL_get_ex_data(ssl, ssl_client_index);
 }
 
 static void set_client_sni_name(SSL *ssl, char *name)
 {
-	aClient *acptr = get_client_by_ssl(ssl);
+	Client *acptr = get_client_by_ssl(ssl);
 	if (acptr)
 		safestrdup(acptr->local->sni_servername, name);
 }
@@ -498,7 +498,7 @@ int early_init_ssl(void)
 	SSL_load_error_strings();
 	SSLeay_add_ssl_algorithms();
 
-	/* This is used to track (SSL *) <--> (aClient *) relationships: */
+	/* This is used to track (SSL *) <--> (Client *) relationships: */
 	ssl_client_index = SSL_get_ex_new_index(0, "ssl_client", NULL, NULL, NULL);
 	return 1;
 }
@@ -515,7 +515,7 @@ int init_ssl(void)
 	return 1;
 }
 
-void reinit_ssl(aClient *acptr)
+void reinit_ssl(Client *acptr)
 {
 	SSL_CTX *tmp;
 	ConfigItem_listen *listen;
@@ -622,7 +622,7 @@ char *tls_get_cipher(SSL *ssl)
 /** Get the applicable ::ssl-options block for this local client,
  * which may be defined in the link block, listen block, or set block.
  */
-TLSOptions *get_tls_options_for_client(aClient *acptr)
+TLSOptions *get_tls_options_for_client(Client *acptr)
 {
 	if (!acptr->local)
 		return NULL;
@@ -636,7 +636,7 @@ TLSOptions *get_tls_options_for_client(aClient *acptr)
 /** Outgoing SSL connect (read: handshake) to another server. */
 void ircd_SSL_client_handshake(int fd, int revents, void *data)
 {
-	aClient *acptr = data;
+	Client *acptr = data;
 	SSL_CTX *ctx = (acptr->serv && acptr->serv->conf && acptr->serv->conf->ssl_ctx) ? acptr->serv->conf->ssl_ctx : ctx_client;
 	TLSOptions *tlsoptions = get_tls_options_for_client(acptr);
 
@@ -699,11 +699,11 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 
 static void ircd_SSL_accept_retry(int fd, int revents, void *data)
 {
-	aClient *acptr = data;
+	Client *acptr = data;
 	ircd_SSL_accept(acptr, fd);
 }
 
-int ircd_SSL_accept(aClient *acptr, int fd)
+int ircd_SSL_accept(Client *acptr, int fd)
 {
 	int ssl_err;
 
@@ -775,11 +775,11 @@ int ircd_SSL_accept(aClient *acptr, int fd)
 
 static void ircd_SSL_connect_retry(int fd, int revents, void *data)
 {
-	aClient *acptr = data;
+	Client *acptr = data;
 	ircd_SSL_connect(acptr, fd);
 }
 
-int ircd_SSL_connect(aClient *acptr, int fd)
+int ircd_SSL_connect(Client *acptr, int fd)
 {
 	int ssl_err;
 
@@ -840,7 +840,7 @@ int SSL_smart_shutdown(SSL *ssl)
  * \param my_errno A preserved value of errno to pass to ssl_error_str().
  * \param sptr The client the error is associated with.
  */
-static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr)
+static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr)
 {
 	/* don`t alter ERRNO */
 	int errtmp = ERRNO;
@@ -940,7 +940,7 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 	return -1;
 }
 
-int client_starttls(aClient *acptr)
+int client_starttls(Client *acptr)
 {
 	if ((acptr->local->ssl = SSL_new(ctx_client)) == NULL)
 		goto fail_starttls;
@@ -980,7 +980,7 @@ fail_starttls:
  * NOTE: The default global SSL options will be returned if not found,
  *       or NULL if no such options are available (unlikely, but possible?).
  */
-TLSOptions *FindTLSOptionsForUser(aClient *acptr)
+TLSOptions *FindTLSOptionsForUser(Client *acptr)
 {
 	ConfigItem_sni *sni;
 	TLSOptions *sslopt = iConf.tls_options; /* default */
@@ -1223,7 +1223,7 @@ int certificate_quality_check(SSL_CTX *ctx, char **errstr)
  * openssl dgst -sha256 -binary public.key | openssl enc -base64
  * ( from https://tools.ietf.org/html/draft-ietf-websec-key-pinning-21#appendix-A )
  */
-char *spki_fingerprint(aClient *cptr)
+char *spki_fingerprint(Client *cptr)
 {
 	X509 *x509_cert = NULL;
 	unsigned char *der_cert = NULL, *p;
@@ -1270,7 +1270,7 @@ char *spki_fingerprint(aClient *cptr)
 }
 
 /** Returns 1 if the client is using an outdated protocol or cipher, 0 otherwise */
-int outdated_tls_client(aClient *acptr)
+int outdated_tls_client(Client *acptr)
 {
 	TLSOptions *tlsoptions = get_tls_options_for_client(acptr);
 	char buf[1024], *name, *p;
@@ -1298,7 +1298,7 @@ int outdated_tls_client(aClient *acptr)
 	return 0; /* OK, not outdated */
 }
 
-char *outdated_tls_client_build_string(char *pattern, aClient *acptr)
+char *outdated_tls_client_build_string(char *pattern, Client *acptr)
 {
 	static char buf[512];
 	const char *name[3], *value[3];

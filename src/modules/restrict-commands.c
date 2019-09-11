@@ -51,9 +51,9 @@ RestrictedCmd *find_restrictions_bycmd(char *cmd);
 RestrictedCmd *find_restrictions_byconftag(char *conftag);
 int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
-char *rcmd_hook_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
-char *rcmd_hook_preusermsg(aClient *sptr, aClient *to, char *text, int notice);
-char *rcmd_hook_wrapper(aClient *sptr, char *text, int notice, char *display, char *conftag);
+char *rcmd_hook_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
+char *rcmd_hook_preusermsg(Client *sptr, Client *to, char *text, int notice);
+char *rcmd_hook_wrapper(Client *sptr, char *text, int notice, char *display, char *conftag);
 CMD_OVERRIDE_FUNC(rcmd_override);
 
 // Globals
@@ -294,7 +294,7 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
-int rcmd_canbypass(aClient *sptr, RestrictedCmd *rcmd) {
+int rcmd_canbypass(Client *sptr, RestrictedCmd *rcmd) {
 	if (!sptr || !rcmd)
 		return 1;
 	if (rcmd->exempt_identified && IsLoggedIn(sptr))
@@ -306,12 +306,12 @@ int rcmd_canbypass(aClient *sptr, RestrictedCmd *rcmd) {
 	return 1; // Default to yes so we don't drop too many commands
 }
 
-char *rcmd_hook_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
+char *rcmd_hook_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	return rcmd_hook_wrapper(sptr, text, notice, "channel", (notice ? "channel-notice" : "channel-message"));
 }
 
-char *rcmd_hook_preusermsg(aClient *sptr, aClient *to, char *text, int notice)
+char *rcmd_hook_preusermsg(Client *sptr, Client *to, char *text, int notice)
 {
 	// Need a few extra exceptions for user messages only =]
 	if ((sptr == to) || IsULine(to))
@@ -319,7 +319,7 @@ char *rcmd_hook_preusermsg(aClient *sptr, aClient *to, char *text, int notice)
 	return rcmd_hook_wrapper(sptr, text, notice, "user", (notice ? "private-notice" : "private-message"));
 }
 
-char *rcmd_hook_wrapper(aClient *sptr, char *text, int notice, char *display, char *conftag)
+char *rcmd_hook_wrapper(Client *sptr, char *text, int notice, char *display, char *conftag)
 {
 	RestrictedCmd *rcmd;
 

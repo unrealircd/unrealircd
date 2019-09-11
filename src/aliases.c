@@ -43,10 +43,10 @@ void strrangetok(char *in, char *out, char tok, short first, short last) {
 
 /* m_alias is a special type of command, it has an extra argument 'cmd'. */
 static int recursive_alias = 0;
-int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd)
+int m_alias(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd)
 {
 	ConfigItem_alias *alias;
-	aClient *acptr;
+	Client *acptr;
 	int ret;
 
 	if (!(alias = Find_alias(cmd))) 
@@ -106,7 +106,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 	}
 	else if (alias->type == ALIAS_CHANNEL)
 	{
-		aChannel *chptr;
+		Channel *chptr;
 		if ((chptr = find_channel(alias->nick, NULL)))
 		{
 			char *msg = parv[1];
@@ -241,7 +241,7 @@ int m_alias(aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *par
 				}
 				else if (format->type == ALIAS_CHANNEL)
 				{
-					aChannel *chptr;
+					Channel *chptr;
 					if ((chptr = find_channel(format->nick, NULL)))
 					{
 						char *msg = output;

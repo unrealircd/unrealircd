@@ -62,7 +62,7 @@ MOD_UNLOAD(svskill)
 CMD_FUNC(m_svskill)
 {
 	MessageTag *mtags = NULL;
-	aClient *acptr;
+	Client *acptr;
 	char *comment = "SVS Killed";
 	int n;
 

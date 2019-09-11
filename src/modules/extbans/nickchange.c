@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER(nickchange)
 };
 
 /* Forward declarations */
-int extban_nickchange_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg);
+int extban_nickchange_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
 MOD_INIT(nickchange)
@@ -64,7 +64,7 @@ MOD_UNLOAD(nickchange)
 }
 
 /** This ban that affects nick-changes only */
-int extban_nickchange_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type, char **msg, char **errmsg)
+int extban_nickchange_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
 {
 	char *sub_ban;
 

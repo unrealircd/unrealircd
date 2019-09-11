@@ -36,9 +36,9 @@ ModuleHeader MOD_HEADER(nick)
 /* Forward declarations */
 CMD_FUNC(m_nick);
 CMD_FUNC(m_uid);
-int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
-int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
-int check_client(aClient *cptr, char *username);
+int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
+int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username);
+int check_client(Client *cptr, char *username);
 
 MOD_TEST(nick)
 {
@@ -84,7 +84,7 @@ static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
  * I moved this all to a single routine here rather than having all code duplicated
  * due to SID vs NICK and some code quadruplicated.
  */
-void nick_collision(aClient *cptr, char *newnick, char *newid, aClient *new, aClient *existing, int type)
+void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Client *existing, int type)
 {
 	char comment[512];
 	char *new_server, *existing_server;
@@ -263,8 +263,8 @@ CMD_FUNC(m_uid)
 {
 	aTKline *tklban;
 	int ishold;
-	aClient *acptr, *serv = NULL;
-	aClient *acptrs;
+	Client *acptr, *serv = NULL;
+	Client *acptrs;
 	char nick[NICKLEN + 2], *s, descbuf[BUFSIZE];
 	Membership *mp;
 	long lastnick = 0l;
@@ -569,8 +569,8 @@ CMD_FUNC(m_nick)
 {
 	aTKline *tklban;
 	int ishold;
-	aClient *acptr, *serv = NULL;
-	aClient *acptrs;
+	Client *acptr, *serv = NULL;
+	Client *acptrs;
 	char nick[NICKLEN + 2], *s, descbuf[BUFSIZE];
 	Membership *mp;
 	long lastnick = 0l;
@@ -1191,9 +1191,9 @@ CMD_FUNC(m_nick)
 **	   nick from local user or kill him/her...
 */
 
-extern int short_motd(aClient *sptr);
+extern int short_motd(Client *sptr);
 
-int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip)
+int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip)
 {
 	ConfigItem_ban *bconf;
 	char *tmpstr;
@@ -1201,8 +1201,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
 	int  xx;
-	anUser *user = sptr->user;
-	aClient *nsptr;
+	ClientUser *user = sptr->user;
+	Client *nsptr;
 	int  i;
 	char mo[256];
 	char *tkllayer[9] = {
@@ -1471,7 +1471,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	}
 	else if (IsServer(cptr))
 	{
-		aClient *acptr;
+		Client *acptr;
 
 		if (!(acptr = find_server_quick(user->server)))
 		{
@@ -1645,7 +1645,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
  * But nowadays this takes place much earlier (in add_connection?).
  * It's mainly used for "localhost" and WEBIRC magic only now...
  */
-int check_init(aClient *cptr, char *sockn, size_t size)
+int check_init(Client *cptr, char *sockn, size_t size)
 {
 	strlcpy(sockn, cptr->local->sockhost, HOSTLEN);
 
@@ -1672,7 +1672,7 @@ int check_init(aClient *cptr, char *sockn, size_t size)
  * -1 = Access denied
  * -2 = Bad socket.
  */
-int check_client(aClient *cptr, char *username)
+int check_client(Client *cptr, char *username)
 {
 	static char sockname[HOSTLEN + 1];
 	struct hostent *hp = NULL;
@@ -1697,7 +1697,7 @@ int check_client(aClient *cptr, char *username)
  * @returns Must return 0 if user is permitted. If the client should be rejected then
  * use return exit_client(...)
  */
-int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username)
+int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username)
 {
 	ConfigItem_allow *aconf;
 	char *hname;
@@ -1791,7 +1791,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 
 		if (aconf->maxperip)
 		{
-			aClient *acptr, *acptr2;
+			Client *acptr, *acptr2;
 
 			ii = 1;
 			list_for_each_entry_safe(acptr, acptr2, &lclient_list, lclient_node)

@@ -496,8 +496,8 @@ static char *triples_txt[] = {
 
 /* Used for parsed triples: */
 #define TRIPLES_REST_SIZE	32
-typedef struct _triples Triples;
-struct _triples {
+typedef struct Triples Triples;
+struct Triples {
 	Triples *next;
 	char two[3];
 	char rest[TRIPLES_REST_SIZE];
@@ -532,8 +532,8 @@ static void free_config(void);
 int antirandom_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int antirandom_config_run(ConfigFile *, ConfigEntry *, int);
 int antirandom_config_posttest(int *);
-int antirandom_preconnect(aClient *sptr);
-static int is_exempt(aClient *sptr);
+int antirandom_preconnect(Client *sptr);
+static int is_exempt(Client *sptr);
 
 MOD_TEST(antirandom)
 {
@@ -885,7 +885,7 @@ void strtolower_safe(char *dst, char *src, int size)
 /** Returns "spam score".
  * @note a user is expected, do not call for anything else (eg: servers)
  */
-static int get_spam_score(aClient *sptr)
+static int get_spam_score(Client *sptr)
 {
 	char *nick = sptr->name;
 	char *user = sptr->user->username;
@@ -928,7 +928,7 @@ static int get_spam_score(aClient *sptr)
 
 void check_all_users(void)
 {
-	aClient *acptr;
+	Client *acptr;
 	int i, matches=0, score;
 	
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
@@ -953,7 +953,7 @@ void check_all_users(void)
 		sendto_realops("[antirandom] %d match%s", matches, matches == 1 ? "" : "es");
 }
 
-int antirandom_preconnect(aClient *sptr)
+int antirandom_preconnect(Client *sptr)
 {
 	int score;
 
@@ -990,7 +990,7 @@ static void free_stuff(void)
 }
 
 /** Is this user exempt from antirandom interventions? */
-static int is_exempt(aClient *sptr)
+static int is_exempt(Client *sptr)
 {
 	/* WEBIRC gateway and exempt? */
 	if (cfg.except_webirc)

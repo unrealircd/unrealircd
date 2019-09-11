@@ -369,11 +369,11 @@ u_char char_atribs[] = {
 /* f0-ff */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-/** Free up all resources of an aMatch entry (including the struct itself).
- * NOTE: this function may (also) be called for aMatch structs that have only been
+/** Free up all resources of an Match entry (including the struct itself).
+ * NOTE: this function may (also) be called for Match structs that have only been
  *       setup half-way, so use special care when accessing members (NULL checks!)
  */
-void unreal_delete_match(aMatch *m)
+void unreal_delete_match(Match *m)
 {
 	safefree(m->str);
 	if (m->type == MATCH_PCRE_REGEX)
@@ -384,9 +384,9 @@ void unreal_delete_match(aMatch *m)
 	MyFree(m);
 }
 
-aMatch *unreal_create_match(MatchType type, char *str, char **error)
+Match *unreal_create_match(MatchType type, char *str, char **error)
 {
-	aMatch *m = MyMallocEx(sizeof(aMatch));
+	Match *m = MyMallocEx(sizeof(Match));
 	static char errorbuf[512];
 
 	*errorbuf = '\0';
@@ -433,11 +433,11 @@ aMatch *unreal_create_match(MatchType type, char *str, char **error)
 	return m;
 }
 
-/** Try to match an aMatch entry ('m') against a string ('str').
+/** Try to match an Match entry ('m') against a string ('str').
  * @returns 1 if matched, 0 if not.
  * @notes These (more logical) return values are opposite to the match_simple() function.
  */
-int unreal_match(aMatch *m, char *str)
+int unreal_match(Match *m, char *str)
 {
 	if (m->type == MATCH_SIMPLE)
 	{

@@ -175,7 +175,7 @@ int history_del(char *object, int max_lines, long max_time)
 	return 1;
 }
 
-int history_request(aClient *acptr, char *object, HistoryFilter *filter)
+int history_request(Client *acptr, char *object, HistoryFilter *filter)
 {
 	HistoryBackend *hb;
 

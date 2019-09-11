@@ -56,10 +56,10 @@ ModuleHeader MOD_HEADER(timedban)
 
 /* Forward declarations */
 char *timedban_extban_conv_param(char *para_in);
-int timedban_extban_is_ok(aClient* sptr, aChannel* chptr, char* para_in, int checkt, int what, int what2);
-int timedban_is_banned(aClient *sptr, aChannel *chptr, char *ban, int chktype, char **msg, char **errmsg);
-void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param);
-char *timedban_chanmsg(aClient *, aClient *, aChannel *, char *, int);
+int timedban_extban_is_ok(Client* sptr, Channel* chptr, char* para_in, int checkt, int what, int what2);
+int timedban_is_banned(Client *sptr, Channel *chptr, char *ban, int chktype, char **msg, char **errmsg);
+void add_send_mode_param(Channel *chptr, Client *from, char what, char mode, char *param);
+char *timedban_chanmsg(Client *, Client *, Channel *, char *, int);
 
 EVENT(timedban_timeout);
 
@@ -212,7 +212,7 @@ char *timedban_extban_conv_param(char *para_in)
 	return retbuf;
 }
 
-int timedban_extban_syntax(aClient *sptr, int checkt, char *reason)
+int timedban_extban_syntax(Client *sptr, int checkt, char *reason)
 {
 	if (MyClient(sptr) && (checkt == EXBCHK_PARAM))
 	{
@@ -226,7 +226,7 @@ int timedban_extban_syntax(aClient *sptr, int checkt, char *reason)
 }
 
 /** Generic helper for sub-bans, used by our "is this ban ok?" function */
-int generic_ban_is_ok(aClient *sptr, aChannel *chptr, char *mask, int checkt, int what, int what2)
+int generic_ban_is_ok(Client *sptr, Channel *chptr, char *mask, int checkt, int what, int what2)
 {
 	if ((mask[0] == '~') && MyClient(sptr))
 	{
@@ -290,7 +290,7 @@ int generic_ban_is_ok(aClient *sptr, aChannel *chptr, char *mask, int checkt, in
 }
 
 /** Validate ban ("is this ban ok?") */
-int timedban_extban_is_ok(aClient* sptr, aChannel* chptr, char* para_in, int checkt, int what, int what2)
+int timedban_extban_is_ok(Client* sptr, Channel* chptr, char* para_in, int checkt, int what, int what2)
 {
 	char para[MAX_LENGTH+1];
 	char tmpmask[MAX_LENGTH+1];
@@ -343,7 +343,7 @@ int timedban_extban_is_ok(aClient* sptr, aChannel* chptr, char* para_in, int che
 }
 
 /** Check if the user is currently banned */
-int timedban_is_banned(aClient *sptr, aChannel *chptr, char *ban, int chktype, char **msg, char **errmsg)
+int timedban_is_banned(Client *sptr, Channel *chptr, char *ban, int chktype, char **msg, char **errmsg)
 {
 	if (strncmp(ban, "~t:", 3))
 		return 0; /* not for us */
@@ -385,7 +385,7 @@ static char pbuf[512];
 /** This removes any expired timedbans */
 EVENT(timedban_timeout)
 {
-	aChannel *chptr;
+	Channel *chptr;
 	Ban *ban, *nextban;
 	static int current_iteration = 0;
 
@@ -447,7 +447,7 @@ EVENT(timedban_timeout)
  #error "add_send_mode_param() is not made for MODEBUFLEN > 512"
 #endif
 
-void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param) {
+void add_send_mode_param(Channel *chptr, Client *from, char what, char mode, char *param) {
 	static char *modes = NULL, lastwhat;
 	static short count = 0;
 	short send = 0;

@@ -32,10 +32,10 @@ ModuleHeader MOD_HEADER(operonly)
 
 Cmode_t EXTCMODE_OPERONLY;
 
-int operonly_require_oper(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
-int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[]);
-int operonly_topic_allow (aClient *sptr, aChannel *chptr);
-int operonly_check_ban(aClient *cptr, aChannel *chptr);
+int operonly_require_oper(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what);
+int operonly_check (Client *cptr, Channel *chptr, char *key, char *parv[]);
+int operonly_topic_allow (Client *sptr, Channel *chptr);
+int operonly_check_ban(Client *cptr, Channel *chptr);
 
 MOD_TEST(operonly)
 {
@@ -71,14 +71,14 @@ MOD_UNLOAD(noctcp)
 	return MOD_SUCCESS;
 }
 
-int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[])
+int operonly_check (Client *cptr, Channel *chptr, char *key, char *parv[])
 {
 	if ((chptr->mode.extmode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join",cptr,NULL,chptr,NULL))
 		return ERR_OPERONLY;
 	return 0;
 }
 
-int operonly_check_ban(aClient *cptr, aChannel *chptr)
+int operonly_check_ban(Client *cptr, Channel *chptr)
 {
 	 if ((chptr->mode.extmode & EXTCMODE_OPERONLY) &&
 		    !ValidatePermissionsForPath("channel:operonly:ban",cptr,NULL,NULL,NULL))
@@ -87,7 +87,7 @@ int operonly_check_ban(aClient *cptr, aChannel *chptr)
 	 return HOOK_CONTINUE;
 }
 
-int operonly_topic_allow (aClient *sptr, aChannel *chptr)
+int operonly_topic_allow (Client *sptr, Channel *chptr)
 {
 	if (chptr->mode.extmode & EXTCMODE_OPERONLY && !ValidatePermissionsForPath("channel:operonly:topic",sptr,NULL,chptr,NULL))
 		return HOOK_DENY;
@@ -95,7 +95,7 @@ int operonly_topic_allow (aClient *sptr, aChannel *chptr)
 	return HOOK_CONTINUE;
 }
 
-int operonly_require_oper(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
+int operonly_require_oper(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what)
 {
 	if (!MyClient(cptr) || ValidatePermissionsForPath("channel:operonly:set",cptr,NULL,chptr,NULL))
 		return EX_ALLOW;

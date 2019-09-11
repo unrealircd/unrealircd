@@ -89,7 +89,7 @@ CMD_FUNC(m_mdex)
 	{
 		if (!strcmp(type, "client"))
 		{
-			aClient *acptr = find_client(objname, NULL);
+			Client *acptr = find_client(objname, NULL);
 			md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
 			if (!md || !md->unserialize || !md->free || !acptr)
 				return 0;
@@ -104,7 +104,7 @@ CMD_FUNC(m_mdex)
 		} else
 		if (!strcmp(type, "channel"))
 		{
-			aChannel *chptr = find_channel(objname, NULL);
+			Channel *chptr = find_channel(objname, NULL);
 			md = findmoddata_byname(varname, MODDATATYPE_CHANNEL);
 			if (!md || !md->unserialize || !md->free || !chptr)
 				return 0;
@@ -119,8 +119,8 @@ CMD_FUNC(m_mdex)
 		} else
 		if (!strcmp(type, "member"))
 		{
-			aClient *acptr;
-			aChannel *chptr;
+			Client *acptr;
+			Channel *chptr;
 			Member *m;
 			char *p;
 			
@@ -157,8 +157,8 @@ CMD_FUNC(m_mdex)
 		} else
 		if (!strcmp(type, "membership"))
 		{
-			aClient *acptr;
-			aChannel *chptr;
+			Client *acptr;
+			Channel *chptr;
 			Membership *m;
 			char *p;
 			
@@ -198,7 +198,7 @@ CMD_FUNC(m_mdex)
 	{
 		if (!strcmp(type, "client"))
 		{
-			aClient *acptr = find_client(objname, NULL);
+			Client *acptr = find_client(objname, NULL);
 			char *str;
 			
 			md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
@@ -212,7 +212,7 @@ CMD_FUNC(m_mdex)
 		} else
 		if (!strcmp(type, "channel"))
 		{
-			aChannel *chptr = find_channel(objname, NULL);
+			Channel *chptr = find_channel(objname, NULL);
 			char *str;
 			
 			md = findmoddata_byname(varname, MODDATATYPE_CHANNEL);
@@ -226,8 +226,8 @@ CMD_FUNC(m_mdex)
 		} else
 		if (!strcmp(type, "member"))
 		{
-			aClient *acptr;
-			aChannel *chptr;
+			Client *acptr;
+			Channel *chptr;
 			Member *m;
 			char *p, *str;
 			
@@ -261,8 +261,8 @@ CMD_FUNC(m_mdex)
 		} else
 		if (!strcmp(type, "membership"))
 		{
-			aClient *acptr;
-			aChannel *chptr;
+			Client *acptr;
+			Channel *chptr;
 			Membership *m;
 			char *p, *str;
 			

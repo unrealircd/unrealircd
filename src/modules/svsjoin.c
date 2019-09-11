@@ -61,7 +61,7 @@ MOD_UNLOAD(svsjoin)
 */
 CMD_FUNC(m_svsjoin)
 {
-	aClient *acptr;
+	Client *acptr;
 
 	if (!IsULine(sptr))
 		return 0;

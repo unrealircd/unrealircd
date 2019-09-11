@@ -23,17 +23,17 @@
 #include "unrealircd.h"
 
 /* Forward declarations */
-void send_channel_modes(aClient *cptr, aChannel *chptr);
-void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
-void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
+void send_channel_modes(Client *cptr, Channel *chptr);
+void send_channel_modes_sjoin(Client *cptr, Channel *chptr);
+void send_channel_modes_sjoin3(Client *cptr, Channel *chptr);
 CMD_FUNC(m_server);
 CMD_FUNC(m_server_remote);
-int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
-void _send_protoctl_servers(aClient *sptr, int response);
-void _send_server_message(aClient *sptr);
-void _introduce_user(aClient *to, aClient *acptr);
-int _check_deny_version(aClient *cptr, char *software, int protocol, char *flags);
-void _broadcast_sinfo(aClient *acptr, aClient *to, aClient *except);
+int _verify_link(Client *cptr, Client *sptr, char *servername, ConfigItem_link **link_out);
+void _send_protoctl_servers(Client *sptr, int response);
+void _send_server_message(Client *sptr);
+void _introduce_user(Client *to, Client *acptr);
+int _check_deny_version(Client *cptr, char *software, int protocol, char *flags);
+void _broadcast_sinfo(Client *acptr, Client *to, Client *except);
 
 /* Global variables */
 static char buf[BUFSIZE];
@@ -81,12 +81,12 @@ MOD_UNLOAD(server)
 	return MOD_SUCCESS;
 }
 
-int m_server_synch(aClient *cptr, ConfigItem_link *conf);
+int m_server_synch(Client *cptr, ConfigItem_link *conf);
 
 /** Check deny version { } blocks.
  * NOTE: cptr will always be valid, but all the other values may be NULL or 0 !!!
  */
-int _check_deny_version(aClient *cptr, char *software, int protocol, char *flags)
+int _check_deny_version(Client *cptr, char *software, int protocol, char *flags)
 {
 	ConfigItem_deny_version *vlines;
 	
@@ -167,10 +167,10 @@ int _check_deny_version(aClient *cptr, char *software, int protocol, char *flags
 /** Send our PROTOCTL SERVERS=x,x,x,x stuff.
  * When response is set, it will be PROTOCTL SERVERS=*x,x,x (mind the asterisk).
  */
-void _send_protoctl_servers(aClient *sptr, int response)
+void _send_protoctl_servers(Client *sptr, int response)
 {
 	char buf[512];
-	aClient *acptr;
+	Client *acptr;
 
 	if (!NEW_LINKING_PROTOCOL)
 		return;
@@ -195,7 +195,7 @@ void _send_protoctl_servers(aClient *sptr, int response)
 	sendto_one(sptr, NULL, "%s", buf);
 }
 
-void _send_server_message(aClient *sptr)
+void _send_server_message(Client *sptr)
 {
 	if (sptr->serv && sptr->serv->flags.server_sent)
 	{
@@ -228,12 +228,12 @@ void _send_server_message(aClient *sptr)
  * @returns This function returns 0 on succesful auth, other values should be returned by
  *          the calling function, as it will always be FLUSH_BUFFER due to exit_client().
  */
-int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out)
+int _verify_link(Client *cptr, Client *sptr, char *servername, ConfigItem_link **link_out)
 {
 	char xerrmsg[256];
 	ConfigItem_link *link;
 	char *inpath = get_client_name(cptr, TRUE);
-	aClient *acptr = NULL, *ocptr = NULL;
+	Client *acptr = NULL, *ocptr = NULL;
 	ConfigItem_ban *bconf;
 
 	/* We set the sockhost here so you can have incoming masks based on hostnames.
@@ -618,7 +618,7 @@ CMD_FUNC(m_server)
 
 CMD_FUNC(m_server_remote)
 {
-	aClient *acptr, *ocptr, *bcptr;
+	Client *acptr, *ocptr, *bcptr;
 	ConfigItem_link	*aconf;
 	ConfigItem_ban *bconf;
 	int 	hop;
@@ -758,7 +758,7 @@ CMD_FUNC(m_server_remote)
 	return 0;
 }
 
-void _introduce_user(aClient *to, aClient *acptr)
+void _introduce_user(Client *to, Client *acptr)
 {
 	send_umode(NULL, acptr, 0, SEND_UMODES, buf);
 
@@ -788,7 +788,7 @@ void _introduce_user(aClient *to, aClient *acptr)
 	}
 }
 
-void tls_link_notification_verify(aClient *acptr, ConfigItem_link *aconf)
+void tls_link_notification_verify(Client *acptr, ConfigItem_link *aconf)
 {
 	char *spki_fp;
 	char *tls_fp;
@@ -857,7 +857,7 @@ void tls_link_notification_verify(aClient *acptr, ConfigItem_link *aconf)
  * provide all of the detailed info. If any information is
  * absent we will send 0 for numbers and * for NULL strings.
  */
-void _broadcast_sinfo(aClient *acptr, aClient *to, aClient *except)
+void _broadcast_sinfo(Client *acptr, Client *to, Client *except)
 {
 	char chanmodes[128], buf[512];
 
@@ -890,10 +890,10 @@ void _broadcast_sinfo(aClient *acptr, aClient *to, aClient *except)
 	}
 }
 
-int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
+int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
-	aClient		*acptr;
+	Client		*acptr;
 	char buf[BUFSIZE];
 	int incoming = IsUnknown(cptr) ? 1 : 0;
 
@@ -1065,7 +1065,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	   ** Last, pass all channels plus statuses
 	 */
 	{
-		aChannel *chptr;
+		Channel *chptr;
 		for (chptr = channel; chptr; chptr = chptr->nextch)
 		{
 			ModDataInfo *mdi;
@@ -1114,7 +1114,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
  * Previously this function was called send_mode_list() when it was dual-function.
  * (only for old severs lacking SJOIN/SJ3
  */
-static void send_channel_modes_members(aClient *cptr, aChannel *chptr, int mask, char flag)
+static void send_channel_modes_members(Client *cptr, Channel *chptr, int mask, char flag)
 {
 	Member *lp;
 	char *cp, *name;
@@ -1166,7 +1166,7 @@ static void send_channel_modes_members(aClient *cptr, aChannel *chptr, int mask,
  * Previously this was combined with +vhoaq stuff in the send_mode_list() function.
  * (only for old severs lacking SJOIN/SJ3
  */
-static void send_channel_modes_list_mode(aClient *cptr, aChannel *chptr, Ban *lp, char flag)
+static void send_channel_modes_list_mode(Client *cptr, Channel *chptr, Ban *lp, char flag)
 {
 	char *cp, *name;
 	int count = 0, send = 0;
@@ -1215,7 +1215,7 @@ static void send_channel_modes_list_mode(aClient *cptr, aChannel *chptr, Ban *lp
 }
 
 /* (only for old severs lacking SJOIN/SJ3 */
-static inline void send_channel_mode(aClient *cptr, char *from, aChannel *chptr)
+static inline void send_channel_mode(Client *cptr, char *from, Channel *chptr)
 {
 	if (*parabuf)
 		sendto_one(cptr, NULL, ":%s MODE %s %s %s %lld", from,
@@ -1230,7 +1230,7 @@ static inline void send_channel_mode(aClient *cptr, char *from, aChannel *chptr)
 /**  Send "cptr" a full list of the MODEs for channel chptr.
  * Note that this function is only used for servers lacking SJOIN/SJOIN3.
  */
-void send_channel_modes(aClient *cptr, aChannel *chptr)
+void send_channel_modes(Client *cptr, Channel *chptr)
 {
 	if (*chptr->chname != '#')
 		return;
@@ -1274,7 +1274,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 }
 
 /* (only for old severs lacking SJ3) */
-static int send_ban_list(aClient *cptr, char *chname, time_t creationtime, aChannel *channel)
+static int send_ban_list(Client *cptr, char *chname, time_t creationtime, Channel *channel)
 {
 	Ban *top;
 
@@ -1404,7 +1404,7 @@ static int send_ban_list(aClient *cptr, char *chname, time_t creationtime, aChan
  * This will send "cptr" a full list of the modes for channel chptr,
  * NOTE: this is only for old servers who do not support SJ3.
  */
-void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
+void send_channel_modes_sjoin(Client *cptr, Channel *chptr)
 {
 	Member *members;
 	Member *lp;
@@ -1507,7 +1507,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
  * looked weird and just plain inefficient. We now fill up our send-buffer
  * really as much as we can, without causing any overflows of course.
  */
-void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
+void send_channel_modes_sjoin3(Client *cptr, Channel *chptr)
 {
 	MessageTag *mtags = NULL;
 	Member *members;

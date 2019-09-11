@@ -18,7 +18,7 @@
 #include "unrealircd.h"
 
 /* mode = 0, just use strlcpy, 1 = Realloc new and return new pointer */
-char *make_virthost(aClient *sptr, char *curr, char *new, int mode)
+char *make_virthost(Client *sptr, char *curr, char *new, int mode)
 {
 char host[256], *mask, *x, *p, *q;
 

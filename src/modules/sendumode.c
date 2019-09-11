@@ -75,7 +75,7 @@ CMD_FUNC(m_sendumode)
 	int i;
 	long umode_s = 0;
 
-	aClient* acptr;
+	Client* acptr;
 
 	message = (parc > 3) ? parv[3] : parv[2];
 

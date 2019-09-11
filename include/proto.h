@@ -23,7 +23,7 @@
 #ifndef proto_h
 #define proto_h
 /* channel.c */
-extern int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, time_t creationtime);
+extern int  sendmodeto_one(Client *cptr, char *from, char *name, char *mode, char *param, time_t creationtime);
 extern void make_cmodestr(void);
 
 /* lusers.c */
@@ -36,7 +36,7 @@ extern char *collapse(char *pattern);
 extern void clear_scache_hash_table(void);
 
 /* send.c */
-extern void sendto_one(aClient *, MessageTag *mtags, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
+extern void sendto_one(Client *, MessageTag *mtags, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
 extern void sendto_realops(FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,1,2)));
 
 /* ircd.c */
@@ -55,9 +55,9 @@ extern EVENT(save_tunefile);
 extern void read_motd(const char *filename, aMotdFile *motd);
 
 /* s_user.c */
-extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
+extern int  check_for_target_limit(Client *sptr, void *target, const char *name);
 extern void make_umodestr(void);
-extern char *get_mode_str(aClient *acptr);
+extern char *get_mode_str(Client *acptr);
 
 /* s_misc.c */
 extern char *convert_time(time_t ltime);

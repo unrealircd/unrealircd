@@ -124,7 +124,7 @@ char tmpbuf[512];
 
 /** General is_ok for n!u@h stuff that also deals with recursive extbans.
  */
-int extban_is_ok_nuh_extban(aClient* sptr, aChannel* chptr, char* para, int checkt, int what, int what2)
+int extban_is_ok_nuh_extban(Client* sptr, Channel* chptr, char* para, int checkt, int what, int what2)
 {
 	char *mask = (para + 3);
 	Extban *p = NULL;

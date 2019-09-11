@@ -40,10 +40,10 @@ static char buffer[1024];
 **	sending back a neat error message -- big danger of creating
 **	a ping pong error message...
 */
-int do_numeric(int numeric, aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+int do_numeric(int numeric, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
 {
-	aClient *acptr;
-	aChannel *chptr;
+	Client *acptr;
+	Channel *chptr;
 	char *nick, *p;
 	int  i;
 

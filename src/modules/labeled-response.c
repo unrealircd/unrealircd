@@ -32,16 +32,16 @@ ModuleHeader MOD_HEADER(labeled-response)
 	};
 
 /* Forward declarations */
-int lr_pre_command(aClient *from, MessageTag *mtags, char *buf);
-int lr_post_command(aClient *from, MessageTag *mtags, char *buf);
-int lr_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int *len);
+int lr_pre_command(Client *from, MessageTag *mtags, char *buf);
+int lr_post_command(Client *from, MessageTag *mtags, char *buf);
+int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len);
 
 /* Our special version of SupportBatch() assumes that remote servers always handle it */
 #define SupportBatch(x)		(MyConnect(x) ? HasCapability((x), "batch") : 1)
 #define SupportLabel(x)		(HasCapabilityFast(acptr, CAP_LABELED_RESPONSE))
 
 struct {
-	aClient *client; /**< The client who issued the original command with a label */
+	Client *client; /**< The client who issued the original command with a label */
 	char label[256]; /**< The label attached to this command */
 	char batch[BATCHLEN+1]; /**< The generated batch id */
 	int responses; /**< Number of lines sent back to client */
@@ -51,7 +51,7 @@ struct {
 
 long CAP_LABELED_RESPONSE = 0L;
 
-int labeled_response_mtag_is_ok(aClient *acptr, char *name, char *value);
+int labeled_response_mtag_is_ok(Client *acptr, char *name, char *value);
 
 MOD_INIT(labeled-response)
 {
@@ -91,7 +91,7 @@ MOD_UNLOAD(labeled-response)
 	return MOD_SUCCESS;
 }
 
-int lr_pre_command(aClient *from, MessageTag *mtags, char *buf)
+int lr_pre_command(Client *from, MessageTag *mtags, char *buf)
 {
 	memset(&currentcmd, 0, sizeof(currentcmd));
 
@@ -154,7 +154,7 @@ char *gen_start_batch(void)
 	return buf;
 }
 
-int lr_post_command(aClient *from, MessageTag *mtags, char *buf)
+int lr_post_command(Client *from, MessageTag *mtags, char *buf)
 {
 	/* We may have to start or end a BATCH here, if all of
 	 * the following is true:
@@ -167,7 +167,7 @@ int lr_post_command(aClient *from, MessageTag *mtags, char *buf)
 	if (from && currentcmd.client && SupportBatch(from) &&
 	    !(currentcmd.sent_remote && !currentcmd.responses))
 	{
-		aClient *savedptr;
+		Client *savedptr;
 
 		if (currentcmd.responses == 0)
 		{
@@ -208,7 +208,7 @@ char *skip_tags(char *msg)
 	return msg+1; /* just skip the '@' */
 }
 
-int lr_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int *len)
+int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len)
 {
 	static char packet[8192];
 	char buf[512];
@@ -263,7 +263,7 @@ int lr_packet(aClient *from, aClient *to, aClient *intended_to, char **msg, int 
 /** This function verifies if the client sending the
  * tag is permitted to do so and uses a permitted syntax.
  */
-int labeled_response_mtag_is_ok(aClient *acptr, char *name, char *value)
+int labeled_response_mtag_is_ok(Client *acptr, char *name, char *value)
 {
 	if (IsServer(acptr))
 		return 1;

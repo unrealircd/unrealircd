@@ -20,9 +20,9 @@ Cmode_t EXTMODE_CENSOR = 0L;
 
 #define IsCensored(x) ((x)->mode.extmode & EXTMODE_CENSOR)
 
-char *censor_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
-char *censor_pre_local_part(aClient *sptr, aChannel *chptr, char *text);
-char *censor_pre_local_quit(aClient *sptr, char *text);
+char *censor_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
+char *censor_pre_local_part(Client *sptr, Channel *chptr, char *text);
+char *censor_pre_local_quit(Client *sptr, char *text);
 
 int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int censor_config_run(ConfigFile *, ConfigEntry *, int);
@@ -253,7 +253,7 @@ char *stripbadwords_channel(char *str, int *blocked)
 	return stripbadwords(str, conf_badword_channel, blocked);
 }
 
-char *censor_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
+char *censor_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	int blocked;
 	Hook *h;
@@ -283,7 +283,7 @@ char *censor_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char
 	return text;
 }
 
-char *censor_pre_local_part(aClient *sptr, aChannel *chptr, char *text)
+char *censor_pre_local_part(Client *sptr, Channel *chptr, char *text)
 {
 	int blocked;
 
@@ -298,7 +298,7 @@ char *censor_pre_local_part(aClient *sptr, aChannel *chptr, char *text)
 }
 
 /** Is any channel where the user is in +G? */
-static int IsAnyChannelCensored(aClient *sptr)
+static int IsAnyChannelCensored(Client *sptr)
 {
 	Membership *lp;
 
@@ -308,7 +308,7 @@ static int IsAnyChannelCensored(aClient *sptr)
 	return 0;
 }
 
-char *censor_pre_local_quit(aClient *sptr, char *text)
+char *censor_pre_local_quit(Client *sptr, char *text)
 {
 	int blocked = 0;
 
@@ -322,7 +322,7 @@ char *censor_pre_local_quit(aClient *sptr, char *text)
 }
 
 // TODO: when stats is modular, make it call this for badwords
-int stats_badwords(aClient *sptr, char *para)
+int stats_badwords(Client *sptr, char *para)
 {
 	ConfigItem_badword *words;
 

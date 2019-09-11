@@ -33,12 +33,12 @@ ModuleHeader MOD_HEADER(jumpserver)
 
 /* Forward declarations */
 CMD_FUNC(m_jumpserver);
-int jumpserver_preconnect(aClient *);
+int jumpserver_preconnect(Client *);
 void jumpserver_free_jss(ModData *m);
 
 /* Jumpserver status struct */
-typedef struct _jss JSS;
-struct _jss
+typedef struct JSS JSS;
+struct JSS
 {
 	char *reason;
 	char *server;
@@ -69,7 +69,7 @@ MOD_UNLOAD(jumpserver)
 	return MOD_SUCCESS;
 }
 
-static int do_jumpserver_exit_client(aClient *sptr)
+static int do_jumpserver_exit_client(Client *sptr)
 {
 	if (IsSecure(sptr) && jss->ssl_server)
 		sendnumeric(sptr, RPL_REDIR, jss->ssl_server, NULL, jss->ssl_port);
@@ -81,7 +81,7 @@ static int do_jumpserver_exit_client(aClient *sptr)
 static void redirect_all_clients(void)
 {
 	int i, count = 0;
-	aClient *acptr, *saved;
+	Client *acptr, *saved;
 
 	list_for_each_entry_safe(acptr, saved, &lclient_list, lclient_node)
 	{
@@ -95,7 +95,7 @@ static void redirect_all_clients(void)
 		count, count == 1 ? "" : "s"); /* Language fun... ;p */
 }
 
-int jumpserver_preconnect(aClient *sptr)
+int jumpserver_preconnect(Client *sptr)
 {
 	if (jss)
 		return do_jumpserver_exit_client(sptr);

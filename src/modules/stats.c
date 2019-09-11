@@ -53,42 +53,42 @@ MOD_UNLOAD(stats)
 }
 
 extern MODVAR int  max_connection_count;
-extern char *get_client_name2(aClient *, int);
+extern char *get_client_name2(Client *, int);
 
-int stats_banversion(aClient *, char *);
-int stats_links(aClient *, char *);
-int stats_denylinkall(aClient *, char *);
-int stats_gline(aClient *, char *);
-int stats_except(aClient *, char *);
-int stats_allow(aClient *, char *);
-int stats_command(aClient *, char *);
-int stats_oper(aClient *, char *);
-int stats_port(aClient *, char *);
-int stats_bannick(aClient *, char *);
-int stats_usage(aClient *, char *);
-int stats_traffic(aClient *, char *);
-int stats_uline(aClient *, char *);
-int stats_vhost(aClient *, char *);
-int stats_mem(aClient *, char *);
-int stats_denylinkauto(aClient *, char *);
-int stats_denydcc(aClient *, char *);
-int stats_kline(aClient *, char *);
-int stats_banrealname(aClient *, char *);
-int stats_sqline(aClient *, char *);
-int stats_linkinfoint(aClient *, char *, int);
-int stats_linkinfo(aClient *, char *);
-int stats_linkinfoall(aClient *, char *);
-int stats_chanrestrict(aClient *, char *);
-int stats_shun(aClient *, char *);
-int stats_set(aClient *, char *);
-int stats_tld(aClient *, char *);
-int stats_uptime(aClient *, char *);
-int stats_denyver(aClient *, char *);
-int stats_notlink(aClient *, char *);
-int stats_class(aClient *, char *);
-int stats_officialchannels(aClient *, char *);
-int stats_spamfilter(aClient *, char *);
-int stats_fdtable(aClient *, char *);
+int stats_banversion(Client *, char *);
+int stats_links(Client *, char *);
+int stats_denylinkall(Client *, char *);
+int stats_gline(Client *, char *);
+int stats_except(Client *, char *);
+int stats_allow(Client *, char *);
+int stats_command(Client *, char *);
+int stats_oper(Client *, char *);
+int stats_port(Client *, char *);
+int stats_bannick(Client *, char *);
+int stats_usage(Client *, char *);
+int stats_traffic(Client *, char *);
+int stats_uline(Client *, char *);
+int stats_vhost(Client *, char *);
+int stats_mem(Client *, char *);
+int stats_denylinkauto(Client *, char *);
+int stats_denydcc(Client *, char *);
+int stats_kline(Client *, char *);
+int stats_banrealname(Client *, char *);
+int stats_sqline(Client *, char *);
+int stats_linkinfoint(Client *, char *, int);
+int stats_linkinfo(Client *, char *);
+int stats_linkinfoall(Client *, char *);
+int stats_chanrestrict(Client *, char *);
+int stats_shun(Client *, char *);
+int stats_set(Client *, char *);
+int stats_tld(Client *, char *);
+int stats_uptime(Client *, char *);
+int stats_denyver(Client *, char *);
+int stats_notlink(Client *, char *);
+int stats_class(Client *, char *);
+int stats_officialchannels(Client *, char *);
+int stats_spamfilter(Client *, char *);
+int stats_fdtable(Client *, char *);
 
 #define SERVER_AS_PARA 0x1
 #define FLAGS_AS_PARA 0x2
@@ -96,7 +96,7 @@ int stats_fdtable(aClient *, char *);
 struct statstab {
 	char flag;
 	char *longflag;
-	int (*func)(aClient *sptr, char *para);
+	int (*func)(Client *sptr, char *para);
 	int options;
 };
 
@@ -192,7 +192,7 @@ static inline char *stats_combine_parv(char *p1, char *p2)
 	return buf;
 }
 
-static inline void stats_help(aClient *sptr)
+static inline void stats_help(Client *sptr)
 {
 	sendnumeric(sptr, RPL_STATSHELP, "/Stats flags:");
 	sendnumeric(sptr, RPL_STATSHELP, "B - banversion - Send the ban version list");
@@ -402,7 +402,7 @@ CMD_FUNC(m_stats)
 	return 0;
 }
 
-int stats_banversion(aClient *sptr, char *para)
+int stats_banversion(Client *sptr, char *para)
 {
 	ConfigItem_ban *bans;
 	for (bans = conf_ban; bans; bans = bans->next)
@@ -415,11 +415,11 @@ int stats_banversion(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_links(aClient *sptr, char *para)
+int stats_links(Client *sptr, char *para)
 {
 	ConfigItem_link *link_p;
 #ifdef DEBUGMODE
-	aClient *acptr;
+	Client *acptr;
 #endif
 	for (link_p = conf_link; link_p; link_p = link_p->next)
 	{
@@ -460,7 +460,7 @@ int stats_links(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_denylinkall(aClient *sptr, char *para)
+int stats_denylinkall(Client *sptr, char *para)
 {
 	ConfigItem_deny_link *links;
 
@@ -473,28 +473,28 @@ int stats_denylinkall(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_gline(aClient *sptr, char *para)
+int stats_gline(Client *sptr, char *para)
 {
 	tkl_stats(sptr, TKL_GLOBAL|TKL_KILL, para);
 	tkl_stats(sptr, TKL_GLOBAL|TKL_ZAP, para);
 	return 0;
 }
 
-int stats_spamfilter(aClient *sptr, char *para)
+int stats_spamfilter(Client *sptr, char *para)
 {
 	tkl_stats(sptr, TKL_SPAMF, para);
 	tkl_stats(sptr, TKL_GLOBAL|TKL_SPAMF, para);
 	return 0;
 }
 
-int stats_except(aClient *sptr, char *para)
+int stats_except(Client *sptr, char *para)
 {
 	tkl_stats(sptr, TKL_EXCEPTION, para);
 	tkl_stats(sptr, TKL_EXCEPTION|TKL_GLOBAL, para);
 	return 0;
 }
 
-int stats_allow(aClient *sptr, char *para)
+int stats_allow(Client *sptr, char *para)
 {
 	ConfigItem_allow *allows;
 	for (allows = conf_allow; allows; allows = allows->next)
@@ -504,7 +504,7 @@ int stats_allow(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_command(aClient *sptr, char *para)
+int stats_command(Client *sptr, char *para)
 {
 	int i;
 	aCommand *mptr;
@@ -524,7 +524,7 @@ int stats_command(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_oper(aClient *sptr, char *para)
+int stats_oper(Client *sptr, char *para)
 {
 	ConfigItem_oper *oper_p;
 	ConfigItem_mask *m;
@@ -554,7 +554,7 @@ static char *stats_port_helper(ConfigItem_listen *listener)
 	return buf;
 }
 
-int stats_port(aClient *sptr, char *para)
+int stats_port(Client *sptr, char *para)
 {
 	int i;
 	ConfigItem_listen *listener;
@@ -576,14 +576,14 @@ int stats_port(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_bannick(aClient *sptr, char *para)
+int stats_bannick(Client *sptr, char *para)
 {
 	tkl_stats(sptr, TKL_NAME, para);
 	tkl_stats(sptr, TKL_GLOBAL|TKL_NAME, para);
 	return 0;
 }
 
-int stats_usage(aClient *sptr, char *para)
+int stats_usage(Client *sptr, char *para)
 {
 #ifdef DEBUGMODE
 	send_usage(sptr, sptr->name);
@@ -591,9 +591,9 @@ int stats_usage(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_traffic(aClient *sptr, char *para)
+int stats_traffic(Client *sptr, char *para)
 {
-	aClient *acptr;
+	Client *acptr;
 	int  i;
 	struct stats *sp;
 	struct stats tmp;
@@ -665,7 +665,7 @@ int stats_traffic(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_fdtable(aClient *sptr, char *para)
+int stats_fdtable(Client *sptr, char *para)
 {
 	int i;
 
@@ -684,14 +684,14 @@ int stats_fdtable(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_uline(aClient *sptr, char *para)
+int stats_uline(Client *sptr, char *para)
 {
 	ConfigItem_ulines *ulines;
 	for (ulines = conf_ulines; ulines; ulines = ulines->next)
 		sendnumeric(sptr, RPL_STATSULINE, ulines->servername);
 	return 0;
 }
-int stats_vhost(aClient *sptr, char *para)
+int stats_vhost(Client *sptr, char *para)
 {
 	ConfigItem_mask *m;
 	ConfigItem_vhost *vhosts;
@@ -707,16 +707,16 @@ int stats_vhost(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_mem(aClient *sptr, char *para)
+int stats_mem(Client *sptr, char *para)
 {
 	extern MODVAR int flinks;
 	extern MODVAR Link *freelink;
 	extern MODVAR MemoryInfo StatsZ;
 
-	aClient *acptr;
+	Client *acptr;
 	Ban *ban;
 	Link *link;
-	aChannel *chptr;
+	Channel *chptr;
 
 	int  lc = 0,		/* local clients */
 	     ch = 0,		/* channels */
@@ -798,7 +798,7 @@ int stats_mem(aClient *sptr, char *para)
 		Member *member;
 
 		ch++;
-		chm += (strlen(chptr->chname) + sizeof(aChannel));
+		chm += (strlen(chptr->chname) + sizeof(Channel));
 		for (member = chptr->members; member; member = member->next)
 			chu++;
 		for (link = chptr->invites; link; link = link->next)
@@ -826,7 +826,7 @@ int stats_mem(aClient *sptr, char *para)
 	sendnumericfmt(sptr, RPL_STATSDEBUG, "Client Local %d(%ld) Remote %d(%ld)",
 	    lc, lcm, rc, rcm);
 	sendnumericfmt(sptr, RPL_STATSDEBUG, "Users %d(%ld) Invites %d(%ld)",
-	    us, (long)(us * sizeof(anUser)),
+	    us, (long)(us * sizeof(ClientUser)),
 	    usi, (long)(usi * sizeof(Link)));
 	sendnumericfmt(sptr, RPL_STATSDEBUG, "User channels %d(%ld) Aways %d(%ld)",
 	    usc, (long)(usc * sizeof(Link)), aw, awm);
@@ -835,7 +835,7 @@ int stats_mem(aClient *sptr, char *para)
 	sendnumericfmt(sptr, RPL_STATSDEBUG, "Attached confs %d(%ld)",
 	    lcc, (long)(lcc * sizeof(Link)));
 
-	totcl = lcm + rcm + us * sizeof(anUser) + usc * sizeof(Link) + awm;
+	totcl = lcm + rcm + us * sizeof(ClientUser) + usc * sizeof(Link) + awm;
 	totcl += lcc * sizeof(Link) + usi * sizeof(Link) + wlhm;
 	totcl += wle * sizeof(Link);
 
@@ -853,19 +853,19 @@ int stats_mem(aClient *sptr, char *para)
 	totch = chm + chbm + chu * sizeof(Link) + chi * sizeof(Link);
 
 	sendnumericfmt(sptr, RPL_STATSDEBUG, "Whowas users %d(%ld) away %d(%ld)",
-	    wwu, (long)(wwu * sizeof(anUser)),
+	    wwu, (long)(wwu * sizeof(ClientUser)),
 	    wwa, wwam);
 	sendnumericfmt(sptr, RPL_STATSDEBUG, "Whowas array %d(%ld)",
 	    NICKNAMEHISTORYLENGTH, wwm);
 
-	totww = wwu * sizeof(anUser) + wwam + wwm;
+	totww = wwu * sizeof(ClientUser) + wwam + wwm;
 
 	sendnumericfmt(sptr, RPL_STATSDEBUG,
 	    "Hash: client %d(%ld) chan %d(%ld) watch %d(%ld)",
 	    NICK_HASH_TABLE_SIZE,
 	    (long)(sizeof(struct list_head) * NICK_HASH_TABLE_SIZE),
 	    CHAN_HASH_TABLE_SIZE,
-	    (long)(sizeof(aChannel *) * CHAN_HASH_TABLE_SIZE), WATCH_HASH_TABLE_SIZE,
+	    (long)(sizeof(Channel *) * CHAN_HASH_TABLE_SIZE), WATCH_HASH_TABLE_SIZE,
 	    (long)(sizeof(aWatch *) * WATCH_HASH_TABLE_SIZE));
 
 	for (link = freelink; link; link = link->next)
@@ -880,7 +880,7 @@ int stats_mem(aClient *sptr, char *para)
 	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
 	tot += fl * sizeof(Link);
 	tot += sizeof(struct list_head) * NICK_HASH_TABLE_SIZE;
-	tot += sizeof(aChannel *) * CHAN_HASH_TABLE_SIZE;
+	tot += sizeof(Channel *) * CHAN_HASH_TABLE_SIZE;
 	tot += sizeof(aWatch *) * WATCH_HASH_TABLE_SIZE;
 
 	sendnumericfmt(sptr, RPL_STATSDEBUG, "Total: ww %ld ch %ld cl %ld co %ld db %ld",
@@ -902,7 +902,7 @@ int stats_mem(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_denylinkauto(aClient *sptr, char *para)
+int stats_denylinkauto(Client *sptr, char *para)
 {
 	ConfigItem_deny_link *links;
 
@@ -915,7 +915,7 @@ int stats_denylinkauto(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_denydcc(aClient *sptr, char *para)
+int stats_denydcc(Client *sptr, char *para)
 {
 	ConfigItem_deny_dcc *denytmp;
 	ConfigItem_allow_dcc *allowtmp;
@@ -952,7 +952,7 @@ int stats_denydcc(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_kline(aClient *sptr, char *para)
+int stats_kline(Client *sptr, char *para)
 {
 	ConfigItem_except *excepts;
 
@@ -961,7 +961,7 @@ int stats_kline(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_banrealname(aClient *sptr, char *para)
+int stats_banrealname(Client *sptr, char *para)
 {
 	ConfigItem_ban *bans;
 	for (bans = conf_ban; bans; bans = bans->next)
@@ -975,13 +975,13 @@ int stats_banrealname(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_sqline(aClient *sptr, char *para)
+int stats_sqline(Client *sptr, char *para)
 {
 	tkl_stats(sptr, TKL_NAME|TKL_GLOBAL, para);
 	return 0;
 }
 
-int stats_chanrestrict(aClient *sptr, char *para)
+int stats_chanrestrict(Client *sptr, char *para)
 {
 	ConfigItem_deny_channel *dchans;
 	ConfigItem_allow_channel *achans;
@@ -996,14 +996,14 @@ int stats_chanrestrict(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_shun(aClient *sptr, char *para)
+int stats_shun(Client *sptr, char *para)
 {
 	tkl_stats(sptr, TKL_GLOBAL|TKL_SHUN, para);
 	return 0;
 }
 
 /* should this be moved to a seperate stats flag? */
-int stats_officialchannels(aClient *sptr, char *para)
+int stats_officialchannels(Client *sptr, char *para)
 {
 	ConfigItem_offchans *x;
 
@@ -1016,7 +1016,7 @@ int stats_officialchannels(aClient *sptr, char *para)
 
 #define SafePrint(x)   ((x) ? (x) : "")
 
-int stats_set(aClient *sptr, char *para)
+int stats_set(Client *sptr, char *para)
 {
 	char *uhallow;
 
@@ -1141,7 +1141,7 @@ int stats_set(aClient *sptr, char *para)
 	return 1;
 }
 
-int stats_tld(aClient *sptr, char *para)
+int stats_tld(Client *sptr, char *para)
 {
 	ConfigItem_tld *tld;
 
@@ -1155,7 +1155,7 @@ int stats_tld(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_uptime(aClient *sptr, char *para)
+int stats_uptime(Client *sptr, char *para)
 {
 	time_t tmpnow;
 
@@ -1168,7 +1168,7 @@ int stats_uptime(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_denyver(aClient *sptr, char *para)
+int stats_denyver(Client *sptr, char *para)
 {
 	ConfigItem_deny_version *versions;
 	for (versions = conf_deny_version; versions; versions = versions->next)
@@ -1179,7 +1179,7 @@ int stats_denyver(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_notlink(aClient *sptr, char *para)
+int stats_notlink(Client *sptr, char *para)
 {
 	ConfigItem_link *link_p;
 
@@ -1194,7 +1194,7 @@ int stats_notlink(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_class(aClient *sptr, char *para)
+int stats_class(Client *sptr, char *para)
 {
 	ConfigItem_class *classes;
 
@@ -1210,17 +1210,17 @@ int stats_class(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_linkinfo(aClient *sptr, char *para)
+int stats_linkinfo(Client *sptr, char *para)
 {
 	return stats_linkinfoint(sptr, para, 0);
 }
 
-int stats_linkinfoall(aClient *sptr, char *para)
+int stats_linkinfoall(Client *sptr, char *para)
 {
 	return stats_linkinfoint(sptr, para, 1);
 }
 
-int stats_linkinfoint(aClient *sptr, char *para, int all)
+int stats_linkinfoint(Client *sptr, char *para, int all)
 {
 #ifndef DEBUGMODE
 	static char Sformat[] = "SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle";
@@ -1235,7 +1235,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 	int doall = 0;
 	int showports = ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL);
 	int i;
-	aClient *acptr;
+	Client *acptr;
 	/*
 	 * send info about connections which match, or all if the
 	 * mask matches me.name.  Only restrictions are on those who

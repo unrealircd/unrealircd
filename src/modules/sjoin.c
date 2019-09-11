@@ -149,7 +149,7 @@ CMD_FUNC(m_sjoin)
 	char uid_sjsby_buf[BUFSIZE];  /**< Buffer for server-to-server traffic which will be broadcasted to others (servers supporting SID/UID and SJSBY) */
 	char sj3_parabuf[BUFSIZE]; /**< Prefix for the above SJOIN buffers (":xxx SJOIN #channel +mode :") */
 	char *s = NULL;
-	aChannel *chptr; /**< Channel */
+	Channel *chptr; /**< Channel */
 	aParv *ap;
 	int pcount, i;
 	Hook *h;
@@ -506,7 +506,7 @@ getnick:
 		Debug((DEBUG_DEBUG, "Got nick: %s", nick));
 		if (!(modeflags & CHFL_BAN) && !(modeflags & CHFL_EXCEPT) && !(modeflags & CHFL_INVEX))
 		{
-			aClient *acptr;
+			Client *acptr;
 
 			/* A person joining */
 

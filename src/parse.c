@@ -34,10 +34,10 @@ char backupbuf[8192];
 static char *para[MAXPARA + 2];
 
 static char sender[HOSTLEN + 1];
-static int cancel_clients(aClient *, aClient *, char *);
-static void remove_unknown(aClient *, char *);
+static int cancel_clients(Client *, Client *, char *);
+static void remove_unknown(Client *, char *);
 
-int ban_flooder(aClient *cptr)
+int ban_flooder(Client *cptr)
 {
 	/* Check if user is exempt.
 	 * Note that we will still kill the client, since it's clearly misbehaving,
@@ -53,7 +53,7 @@ int ban_flooder(aClient *cptr)
 /*
  * This routine adds fake lag if needed.
  */
-void parse_addlag(aClient *cptr, int cmdbytes)
+void parse_addlag(Client *cptr, int cmdbytes)
 {
 	if (!IsServer(cptr) && !IsNoFakeLag(cptr) &&
 #ifdef FAKELAG_CONFIGURABLE
@@ -65,18 +65,18 @@ void parse_addlag(aClient *cptr, int cmdbytes)
 	}		
 }
 
-int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch);
+int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch);
 
 /*
  * parse a buffer.
  *
  * NOTE: parse() cannot not be called recusively by any other functions!
  */
-int parse(aClient *cptr, char *buffer, int length)
+int parse(Client *cptr, char *buffer, int length)
 {
 	Hook *h;
 	int buf_len = 0;
-	aClient *from = cptr;
+	Client *from = cptr;
 	char *ch;
 	int i, ret;
 #ifdef DEBUGMODE
@@ -139,9 +139,9 @@ int parse(aClient *cptr, char *buffer, int length)
 	return ret;
 }
 
-int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch)
+int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 {
-	aClient *from = cptr;
+	Client *from = cptr;
 	char *s;
 	int len, i, numeric = 0, paramcount;
 #ifdef DEBUGMODE
@@ -423,13 +423,13 @@ int parse2(aClient *cptr, aClient **fromptr, MessageTag *mtags, char *ch)
 #endif
 }
 
-static int cancel_clients(aClient *cptr, aClient *sptr, char *cmd)
+static int cancel_clients(Client *cptr, Client *sptr, char *cmd)
 {
 	if (IsServer(cptr) || IsServer(sptr) || IsMe(sptr)) return 0;
 	return exit_client(cptr, cptr, &me, NULL, "Fake prefix");
 }
 
-static void remove_unknown(aClient *cptr, char *sender)
+static void remove_unknown(Client *cptr, char *sender)
 {
 	if (!IsRegistered(cptr) || IsClient(cptr))
 		return;

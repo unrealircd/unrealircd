@@ -19,13 +19,13 @@
 #include "unrealircd.h"
 
 /* Types */
-typedef struct _configitem_webirc ConfigItem_webirc;
+typedef struct ConfigItem_webirc ConfigItem_webirc;
 
 typedef enum {
 	WEBIRC_PASS=1, WEBIRC_WEBIRC=2
 } WEBIRCType;
 
-struct _configitem_webirc {
+struct ConfigItem_webirc {
 	ConfigItem_webirc *prev, *next;
 	ConfigFlag flag;
 	ConfigItem_mask *mask;
@@ -49,8 +49,8 @@ ConfigItem_webirc *conf_webirc = NULL;
 
 /* Forward declarations */
 CMD_FUNC(m_webirc);
-int webirc_check_init(aClient *cptr, char *sockn, size_t size);
-int webirc_local_pass(aClient *sptr, char *password);
+int webirc_check_init(Client *cptr, char *sockn, size_t size);
+int webirc_local_pass(Client *sptr, char *password);
 int webirc_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int webirc_config_run(ConfigFile *, ConfigEntry *, int);
 void webirc_free_conf(void);
@@ -58,7 +58,7 @@ void delete_webircblock(ConfigItem_webirc *e);
 char *webirc_md_serialize(ModData *m);
 void webirc_md_unserialize(char *str, ModData *m);
 void webirc_md_free(ModData *md);
-int webirc_secure_connect(aClient *acptr);
+int webirc_secure_connect(Client *acptr);
 
 #define IsWEBIRC(x)			(moddata_client(x, webirc_md).l)
 #define IsWEBIRCSecure(x)	(moddata_client(x, webirc_md).l == 2)
@@ -304,7 +304,7 @@ void webirc_md_free(ModData *md)
 	md->l = 0;
 }
 
-ConfigItem_webirc *Find_webirc(aClient *sptr, char *password, WEBIRCType type, char **errorstr)
+ConfigItem_webirc *Find_webirc(Client *sptr, char *password, WEBIRCType type, char **errorstr)
 {
 	ConfigItem_webirc *e;
 	char *error = NULL;
@@ -338,7 +338,7 @@ ConfigItem_webirc *Find_webirc(aClient *sptr, char *password, WEBIRCType type, c
 #define WEBIRC_STRINGLEN  (sizeof(WEBIRC_STRING)-1)
 
 /* Does the CGI:IRC host spoofing work */
-int dowebirc(aClient *cptr, char *ip, char *host, char *options)
+int dowebirc(Client *cptr, char *ip, char *host, char *options)
 {
 	char scratch[64];
 	char *sockhost;
@@ -439,7 +439,7 @@ CMD_FUNC(m_webirc)
 }
 
 
-int webirc_check_init(aClient *cptr, char *sockn, size_t size)
+int webirc_check_init(Client *cptr, char *sockn, size_t size)
 {
 	if (IsWEBIRC(cptr))
 	{
@@ -450,7 +450,7 @@ int webirc_check_init(aClient *cptr, char *sockn, size_t size)
 	return 1; /* nothing to do */
 }
 
-int webirc_local_pass(aClient *sptr, char *password)
+int webirc_local_pass(Client *sptr, char *password)
 {
 	if (!strncmp(password, WEBIRC_STRING, WEBIRC_STRINGLEN))
 	{
@@ -481,7 +481,7 @@ int webirc_local_pass(aClient *sptr, char *password)
 }
 
 /** Called from register_user() right after setting user +z */
-int webirc_secure_connect(aClient *acptr)
+int webirc_secure_connect(Client *acptr)
 {
 	/* Remove secure mode (-z) if the WEBIRC gateway did not ensure
 	 * us that their [client]--[webirc gateway] connection is also

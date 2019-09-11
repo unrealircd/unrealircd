@@ -243,7 +243,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 
 void unload_extcmode_commit(Cmode *cmode)
 {
-	aChannel *chptr;
+	Channel *chptr;
 
 	if (!cmode)
 		return;	
@@ -376,17 +376,17 @@ Cmode *handler;
 	}
 }
 
-char *cm_getparameter(aChannel *chptr, char mode)
+char *cm_getparameter(Channel *chptr, char mode)
 {
 	return GETPARAMHANDLERBYLETTER(mode)->get_param(GETPARASTRUCT(chptr, mode));
 }
 
-void cm_putparameter(aChannel *chptr, char mode, char *str)
+void cm_putparameter(Channel *chptr, char mode, char *str)
 {
 	GETPARASTRUCT(chptr, mode) = GETPARAMHANDLERBYLETTER(mode)->put_param(GETPARASTRUCT(chptr, mode), str);
 }
 
-void cm_freeparameter(aChannel *chptr, char mode)
+void cm_freeparameter(Channel *chptr, char mode)
 {
 	GETPARAMHANDLERBYLETTER(mode)->free_param(GETPARASTRUCT(chptr, mode));
 	GETPARASTRUCT(chptr, mode) = NULL;
@@ -408,7 +408,7 @@ void cm_freeparameter_ex(void **p, char mode, char *str)
 	GETPARASTRUCTEX(p, mode) = NULL;
 }
 
-int extcmode_default_requirechop(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
+int extcmode_default_requirechop(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what)
 {
 	if (IsPerson(cptr) && is_chan_op(cptr, chptr))
 		return EX_ALLOW;
@@ -417,7 +417,7 @@ int extcmode_default_requirechop(aClient *cptr, aChannel *chptr, char mode, char
 	return EX_DENY;
 }
 
-int extcmode_default_requirehalfop(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
+int extcmode_default_requirehalfop(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what)
 {
 	if (IsPerson(cptr) &&
 	    (is_chan_op(cptr, chptr) || is_half_op(cptr, chptr)))

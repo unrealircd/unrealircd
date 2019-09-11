@@ -23,16 +23,16 @@
 /*
  * Some typedefs..
 */
-typedef struct _confcommand ConfigCommand;
-struct	_confcommand
+typedef struct ConfigCommand ConfigCommand;
+struct ConfigCommand
 {
 	char	*name;
 	int	(*conffunc)(ConfigFile *conf, ConfigEntry *ce);
 	int 	(*testfunc)(ConfigFile *conf, ConfigEntry *ce);
 };
 
-typedef struct _conf_namevalue NameValue;
-struct _conf_namevalue
+typedef struct NameValue NameValue;
+struct NameValue
 {
 	long	flag;
 	char	*name;
@@ -275,7 +275,7 @@ MODVAR aConfiguration		tempiConf;
 MODVAR ConfigFile		*conf = NULL;
 extern NameValueList *config_defines;
 MODVAR int ipv6_disabled = 0;
-MODVAR aClient *remote_rehash_client = NULL;
+MODVAR Client *remote_rehash_client = NULL;
 
 MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
@@ -294,7 +294,7 @@ int remote_include(ConfigEntry *ce);
 void unload_notloaded_includes(void);
 void load_includes(void);
 void unload_loaded_includes(void);
-int rehash_internal(aClient *cptr, aClient *sptr, int sig);
+int rehash_internal(Client *cptr, Client *sptr, int sig);
 int is_blacklisted_module(char *name);
 
 /** Return the printable string of a 'cep' location, such as set::something::xyz */
@@ -2812,7 +2812,7 @@ ConfigItem_operclass *Find_operclass(char *name)
 int count_oper_sessions(char *name)
 {
 	int count = 0;
-	aClient *cptr;
+	Client *cptr;
 
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
@@ -2879,7 +2879,7 @@ ConfigItem_ulines *Find_uline(char *host)
 }
 
 
-ConfigItem_except *Find_except(aClient *sptr, short type)
+ConfigItem_except *Find_except(Client *sptr, short type)
 {
 	ConfigItem_except *excepts;
 
@@ -2894,7 +2894,7 @@ ConfigItem_except *Find_except(aClient *sptr, short type)
 	return NULL;
 }
 
-ConfigItem_tld *Find_tld(aClient *cptr)
+ConfigItem_tld *Find_tld(Client *cptr)
 {
 	ConfigItem_tld *tld;
 
@@ -2914,7 +2914,7 @@ ConfigItem_tld *Find_tld(aClient *cptr)
 }
 
 
-ConfigItem_link *Find_link(char *servername, aClient *acptr)
+ConfigItem_link *Find_link(char *servername, Client *acptr)
 {
 	ConfigItem_link	*link;
 
@@ -2931,7 +2931,7 @@ ConfigItem_link *Find_link(char *servername, aClient *acptr)
 /** Find a ban of type CONF_BAN_*, which is currently only
  * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
  */
-ConfigItem_ban *Find_ban(aClient *sptr, char *host, short type)
+ConfigItem_ban *Find_ban(Client *sptr, char *host, short type)
 {
 	ConfigItem_ban *ban;
 
@@ -2955,7 +2955,7 @@ ConfigItem_ban *Find_ban(aClient *sptr, char *host, short type)
  * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
  * This is the extended version, only used by m_svsnline.
  */
-ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
+ConfigItem_ban 	*Find_banEx(Client *sptr, char *host, short type, short type2)
 {
 	ConfigItem_ban *ban;
 
@@ -2990,7 +2990,7 @@ ConfigItem_vhost *Find_vhost(char *name)
 
 
 /** returns NULL if allowed and struct if denied */
-ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name)
+ConfigItem_deny_channel *Find_channel_allowed(Client *cptr, char *name)
 {
 	ConfigItem_deny_channel *dchannel;
 	ConfigItem_allow_channel *achannel;
@@ -9115,7 +9115,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 		}
 		if (!strcmp(cep->ce_varname, "format")) {
 			char *err = NULL;
-			aMatch *expr;
+			Match *expr;
 			char has_type = 0, has_target = 0, has_parameters = 0;
 
 			has_format = 1;
@@ -9839,7 +9839,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 }
 #endif
 
-int     rehash(aClient *cptr, aClient *sptr, int sig)
+int     rehash(Client *cptr, Client *sptr, int sig)
 {
 #ifdef USE_LIBCURL
 	ConfigItem_include *inc;
@@ -9882,7 +9882,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 #endif
 }
 
-int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
+int	rehash_internal(Client *cptr, Client *sptr, int sig)
 {
 	if (sig == 1)
 		sendto_ops("Got signal SIGHUP, reloading %s file", configfile);

@@ -47,7 +47,7 @@ CMD_FUNC(m_kline);
 CMD_FUNC(m_zline);
 CMD_FUNC(m_spamfilter);
 CMD_FUNC(m_eline);
-int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type);
+int m_tkl_line(Client *cptr, Client *sptr, int parc, char *parv[], char* type);
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
@@ -59,7 +59,7 @@ aTKline *_tkl_add_banexception(int type, char *usermask, char *hostmask, char *r
                                time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
 aTKline *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *set_by,
                           time_t expire_at, time_t set_at, int flags);
-aTKline *_tkl_add_spamfilter(int type, unsigned short target, unsigned short action, aMatch *match, char *set_by,
+aTKline *_tkl_add_spamfilter(int type, unsigned short target, unsigned short action, Match *match, char *set_by,
                              time_t expire_at, time_t set_at,
                              time_t spamf_tkl_duration, char *spamf_tkl_reason,
                              int flags);
@@ -70,32 +70,32 @@ void _tkl_del_line(aTKline *tkl);
 static void _tkl_check_local_remove_shun(aTKline *tmp);
 void tkl_expire_entry(aTKline * tmp);
 EVENT(tkl_check_expire);
-int _find_tkline_match(aClient *cptr, int skip_soft);
-int _find_shun(aClient *cptr);
-int _find_spamfilter_user(aClient *sptr, int flags);
-aTKline *_find_qline(aClient *cptr, char *nick, int *ishold);
-aTKline *_find_tkline_match_zap(aClient *cptr);
-void _tkl_stats(aClient *cptr, int type, char *para);
-void _tkl_synch(aClient *sptr);
+int _find_tkline_match(Client *cptr, int skip_soft);
+int _find_shun(Client *cptr);
+int _find_spamfilter_user(Client *sptr, int flags);
+aTKline *_find_qline(Client *cptr, char *nick, int *ishold);
+aTKline *_find_tkline_match_zap(Client *cptr);
+void _tkl_stats(Client *cptr, int type, char *para);
+void _tkl_synch(Client *sptr);
 CMD_FUNC(_m_tkl);
-int _place_host_ban(aClient *sptr, BanAction action, char *reason, long duration);
-int _run_spamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
-int _join_viruschan(aClient *sptr, aTKline *tk, int type);
-void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr);
-int _match_user(char *rmask, aClient *acptr, int options);
+int _place_host_ban(Client *sptr, BanAction action, char *reason, long duration);
+int _run_spamfilter(Client *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
+int _join_viruschan(Client *sptr, aTKline *tk, int type);
+void _spamfilter_build_user_string(char *buf, char *nick, Client *acptr);
+int _match_user(char *rmask, Client *acptr, int options);
 int _tkl_ip_hash(char *ip);
 int _tkl_ip_hash_type(int type);
 aTKline *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softban);
 aTKline *_find_tkl_banexception(int type, char *usermask, char *hostmask, int softban);
 aTKline *_find_tkl_nameban(int type, char *name, int hold);
 aTKline *_find_tkl_spamfilter(int type, char *match_string, unsigned short action, unsigned short target);
-int _find_tkl_exception(int ban_type, aClient *cptr);
+int _find_tkl_exception(int ban_type, Client *cptr);
 
 /* Externals (only for us :D) */
 extern int MODVAR spamf_ugly_vchanoverride;
 
-typedef struct _tkltypetable TKLTypeTable;
-struct _tkltypetable
+typedef struct TKLTypeTable TKLTypeTable;
+struct TKLTypeTable
 {
 	char *config_name;        /**< The name as used in the configuration file */
 	char letter;              /**< The letter ised in the TKL S2S command */
@@ -354,7 +354,7 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 
 	if (match && match_type)
 	{
-		aMatch *m;
+		Match *m;
 		char *err;
 
 		m = unreal_create_match(match_type, match, &err);
@@ -431,7 +431,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	char *banreason = "<internally added by ircd>";
 	int action = 0, target = 0;
 	int match_type = 0;
-	aMatch *m;
+	Match *m;
 
 	/* We are only interested in spamfilter { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->ce_varname, "spamfilter"))
@@ -943,7 +943,7 @@ CMD_FUNC(m_shun)
  */
 CMD_FUNC(m_tempshun)
 {
-	aClient *acptr;
+	Client *acptr;
 	char *comment = ((parc > 2) && !BadPtr(parv[2])) ? parv[2] : "no reason";
 	char *name;
 	int remove = 0;
@@ -1043,7 +1043,7 @@ CMD_FUNC(m_kline)
 }
 
 /** Generate stats for '/GLINE -stats' and such */
-void tkl_general_stats(aClient *sptr)
+void tkl_general_stats(Client *sptr)
 {
 	int index, index2;
 	aTKline *tkl;
@@ -1160,12 +1160,12 @@ int ban_too_broad(char *usermask, char *hostmask)
  * This allows us doing some syntax checking and other helpful
  * things that are the same for many types of *LINES.
  */
-int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char *type)
+int m_tkl_line(Client *cptr, Client *sptr, int parc, char *parv[], char *type)
 {
 	time_t secs;
 	int whattodo = 0;	/* 0 = add  1 = del */
 	time_t i;
-	aClient *acptr = NULL;
+	Client *acptr = NULL;
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
 	char *p, *usermask, *hostmask;
@@ -1357,7 +1357,7 @@ int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char *type)
 	return 0;
 }
 
-int eline_syntax(aClient *sptr)
+int eline_syntax(Client *sptr)
 {
 	sendnotice(sptr, " Syntax: /ELINE <user@host> <bantypes> <expiry-time> <reason>");
 	sendnotice(sptr, "Valid bantypes are:");
@@ -1395,7 +1395,7 @@ CMD_FUNC(m_eline)
 	time_t secs = 0;
 	int add = 1;
 	time_t i;
-	aClient *acptr = NULL;
+	Client *acptr = NULL;
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
 	char *p, *usermask, *hostmask, *bantypes=NULL, *reason=NULL;
@@ -1574,7 +1574,7 @@ CMD_FUNC(m_eline)
 
 
 /** Helper function for m_spamfilter, explaining usage. */
-int spamfilter_usage(aClient *sptr)
+int spamfilter_usage(Client *sptr)
 {
 	sendnotice(sptr, "Use: /spamfilter [add|del|remove|+|-] [-simple|-regex|-posix] [type] [action] [tkltime] [tklreason] [regex]");
 	sendnotice(sptr, "See '/helpop ?spamfilter' for more information.");
@@ -1583,7 +1583,7 @@ int spamfilter_usage(aClient *sptr)
 }
 
 /** Helper function for m_spamfilter, explaining usage has changed. */
-int spamfilter_new_usage(aClient *cptr, aClient *sptr, char *parv[])
+int spamfilter_new_usage(Client *cptr, Client *sptr, char *parv[])
 {
 	sendnotice(sptr, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes), "
 	                 "-posix (old unreal 3.2.x posix regexes) or "
@@ -1597,7 +1597,7 @@ int spamfilter_new_usage(aClient *cptr, aClient *sptr, char *parv[])
 } 
 
 /** Delete a spamfilter by ID (the ID can be obtained via '/SPAMFILTER del' */
-int spamfilter_del_by_id(aClient *sptr, char *id)
+int spamfilter_del_by_id(Client *sptr, char *id)
 {
 	int index;
 	aTKline *tk;
@@ -1687,7 +1687,7 @@ CMD_FUNC(m_spamfilter)
 	char targetbuf[64], actionbuf[2];
 	char reason[512];
 	int n;
-	aMatch *m;
+	Match *m;
 	int match_type = 0;
 	char *err = NULL;
 
@@ -2082,7 +2082,7 @@ aTKline *tkl_find_head(char type, char *hostmask, aTKline *def)
  * @returns                   The TKL entry, or NULL in case of a problem,
  *                            such as a regex failing to compile, memory problem, ..
  */
-aTKline *_tkl_add_spamfilter(int type, unsigned short target, unsigned short action, aMatch *match, char *set_by,
+aTKline *_tkl_add_spamfilter(int type, unsigned short target, unsigned short action, Match *match, char *set_by,
                              time_t expire_at, time_t set_at,
                              time_t tkl_duration, char *tkl_reason,
                              int flags)
@@ -2399,7 +2399,7 @@ void _tkl_check_local_remove_shun(aTKline *tmp)
 	long i;
 	char *chost, *cname, *cip;
 	int is_ip;
-	aClient *acptr;
+	Client *acptr;
 
 	aTKline *tk;
 	int keep_shun;
@@ -2541,7 +2541,7 @@ EVENT(tkl_check_expire)
 }
 
 /* This is just a helper function for find_tkl_exception() */
-static int find_tkl_exception_matcher(aClient *cptr, int ban_type, aTKline *except_tkl)
+static int find_tkl_exception_matcher(Client *cptr, int ban_type, aTKline *except_tkl)
 {
 	char uhost[NICKLEN+HOSTLEN+1];
 	Hook *hook;
@@ -2577,7 +2577,7 @@ static int find_tkl_exception_matcher(aClient *cptr, int ban_type, aTKline *exce
  *     return 0; // User is exempt
  * [.. continue and ban the user..]
  */
-int _find_tkl_exception(int ban_type, aClient *cptr)
+int _find_tkl_exception(int ban_type, Client *cptr)
 {
 	aTKline *tkl, *ret;
 	int index, index2;
@@ -2614,7 +2614,7 @@ int _find_tkl_exception(int ban_type, aClient *cptr)
 }
 
 /** Helper function for find_tkline_match() */
-int find_tkline_match_matcher(aClient *cptr, int skip_soft, aTKline *tkl)
+int find_tkline_match_matcher(Client *cptr, int skip_soft, aTKline *tkl)
 {
 	char uhost[NICKLEN+HOSTLEN+1];
 	ConfigItem_except *excepts;
@@ -2648,7 +2648,7 @@ int find_tkline_match_matcher(aClient *cptr, int skip_soft, aTKline *tkl)
  * @retval <0 if client is banned (user is killed, don't touch 'cptr' anymore),
  *         otherwise the client is not banned (either no match or on an exception list).
  */
-int _find_tkline_match(aClient *cptr, int skip_soft)
+int _find_tkline_match(Client *cptr, int skip_soft)
 {
 	aTKline *tkl;
 	int banned = 0;
@@ -2715,7 +2715,7 @@ int _find_tkline_match(aClient *cptr, int skip_soft)
 }
 
 /** Check if user is shunned. Returns 2 in such a case (FIXME: why 2 ?) */
-int _find_shun(aClient *cptr)
+int _find_shun(Client *cptr)
 {
 	aTKline *tkl;
 	ConfigItem_except *excepts;
@@ -2779,7 +2779,7 @@ char *SpamfilterMagicHost(char *i)
  * @param nick  The nickname (because acptr can be nick-changing).
  * @param acptr The affected client.
  */
-void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr)
+void _spamfilter_build_user_string(char *buf, char *nick, Client *acptr)
 {
 	snprintf(buf, NICKLEN+USERLEN+HOSTLEN+1, "%s!%s@%s:%s",
 		nick, acptr->user->username, SpamfilterMagicHost(acptr->user->realhost), acptr->info);
@@ -2792,7 +2792,7 @@ void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr)
  * Assumes: only call for clients, possible assume on local clients [?]
  * Return values: see run_spamfilter()
  */
-int _find_spamfilter_user(aClient *sptr, int flags)
+int _find_spamfilter_user(Client *sptr, int flags)
 {
 	char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 
@@ -2811,7 +2811,7 @@ int spamfilter_check_users(aTKline *tkl)
 	char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 	char buf[1024];
 	int matches = 0;
-	aClient *acptr;
+	Client *acptr;
 
 	list_for_each_entry_reverse(acptr, &lclient_list, lclient_node)
 	{
@@ -2841,11 +2841,11 @@ int spamfilter_check_users(aTKline *tkl)
 /** Similarly to previous, but match against all global users.
  * FUNCTION IS UNUSED !!
  */
-int spamfilter_check_all_users(aClient *from, aTKline *tkl)
+int spamfilter_check_all_users(Client *from, aTKline *tkl)
 {
 	char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 	int matches = 0;
-	aClient *acptr;
+	Client *acptr;
 
 	list_for_each_entry(acptr, &client_list, client_node)
 	{
@@ -2877,7 +2877,7 @@ int spamfilter_check_all_users(aClient *from, aTKline *tkl)
  * #*ble* will match with #bbleh
  * *ble* will NOT match with #bbleh, will with bbleh
  */
-aTKline *_find_qline(aClient *cptr, char *name, int *ishold)
+aTKline *_find_qline(Client *cptr, char *name, int *ishold)
 {
 	aTKline *tkl;
 	int	points = 0;
@@ -2919,7 +2919,7 @@ aTKline *_find_qline(aClient *cptr, char *name, int *ishold)
 }
 
 /** Helper function for find_tkline_match_zap() */
-aTKline *find_tkline_match_zap_matcher(aClient *cptr, aTKline *tkl)
+aTKline *find_tkline_match_zap_matcher(Client *cptr, aTKline *tkl)
 {
 	ConfigItem_except *excepts;
 	Hook *hook;
@@ -2941,7 +2941,7 @@ aTKline *find_tkline_match_zap_matcher(aClient *cptr, aTKline *tkl)
  * Note: function prototype changed as per UnrealIRCd 4.2.0.
  * @retval The (G)Z-Line that matched, or NULL if no such ban was found.
  */
-aTKline *_find_tkline_match_zap(aClient *cptr)
+aTKline *_find_tkline_match_zap(Client *cptr)
 {
 	aTKline *tkl, *ret;
 	int index, index2;
@@ -3046,7 +3046,7 @@ static void parse_stats_params(char *para, TKLFlag *flag)
 /** Does this TKL entry match the search terms?
  * This is a helper function for tkl_stats().
  */
-void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, aTKline *tkl)
+void tkl_stats_matcher(Client *cptr, int type, char *para, TKLFlag *tklflags, aTKline *tkl)
 {
 	/***** First, handle the selection ******/
 
@@ -3202,7 +3202,7 @@ void tkl_stats_matcher(aClient *cptr, int type, char *para, TKLFlag *tklflags, a
 }
 
 /* TKL Stats. This is used by /STATS gline and all the others */
-void _tkl_stats(aClient *cptr, int type, char *para)
+void _tkl_stats(Client *cptr, int type, char *para)
 {
 	aTKline *tk;
 	TKLFlag tklflags;
@@ -3249,7 +3249,7 @@ void _tkl_stats(aClient *cptr, int type, char *para)
  * @param to      The remote server.
  * @param tkl     The TKL entry.
  */
-void tkl_synch_send_entry(int add, aClient *sender, aClient *to, aTKline *tkl)
+void tkl_synch_send_entry(int add, Client *sender, Client *to, aTKline *tkl)
 {
 	char typ;
 
@@ -3317,9 +3317,9 @@ void tkl_synch_send_entry(int add, aClient *sender, aClient *to, aTKline *tkl)
  * @param skip    The client to skip, eg cptr or NULL.
  * @param tkl     The TKL entry to synchronize with the other servers.
  */
-void tkl_broadcast_entry(int add, aClient *sender, aClient *skip, aTKline *tkl)
+void tkl_broadcast_entry(int add, Client *sender, Client *skip, aTKline *tkl)
 {
-	aClient *cptr;
+	Client *cptr;
 
 	list_for_each_entry(cptr, &server_list, special_node)
 	{
@@ -3333,7 +3333,7 @@ void tkl_broadcast_entry(int add, aClient *sender, aClient *skip, aTKline *tkl)
 /** Synchronize all TKL entries with this server.
  * @param sptr The server to synchronize with.
  */
-void _tkl_synch(aClient *sptr)
+void _tkl_synch(Client *sptr)
 {
 	aTKline *tkl;
 	int index, index2;
@@ -3749,7 +3749,7 @@ CMD_FUNC(m_tkl_add)
 		/* Validate spamfilter-specific TKL fields */
 		MatchType match_method;
 		char *match_string;
-		aMatch *m; /* compiled match_string */
+		Match *m; /* compiled match_string */
 		time_t tkl_duration;
 		char *tkl_reason;
 		unsigned short action;
@@ -4071,7 +4071,7 @@ CMD_FUNC(_m_tkl)
  *            has been freed.
  * @retval 0  no action is taken, the user is exempted.
  */
-int _place_host_ban(aClient *sptr, BanAction action, char *reason, long duration)
+int _place_host_ban(Client *sptr, BanAction action, char *reason, long duration)
 {
 	/* If this is a soft action and the user is logged in, then the ban does not apply.
 	 * NOTE: Actually in such a case it would be better if place_host_ban() would not
@@ -4237,10 +4237,10 @@ static int target_is_spamexcept(char *target)
  * @param type  The spamfilter type (SPAMF_*)
  *              TODO: Looks redundant?
  */
-int _join_viruschan(aClient *sptr, aTKline *tkl, int type)
+int _join_viruschan(Client *sptr, aTKline *tkl, int type)
 {
 	char *xparv[3], chbuf[CHANNELLEN + 16], buf[2048];
-	aChannel *chptr;
+	Channel *chptr;
 	int ret;
 
 	snprintf(buf, sizeof(buf), "0,%s", SPAMFILTER_VIRUSCHAN);
@@ -4289,7 +4289,7 @@ int _join_viruschan(aClient *sptr, aTKline *tkl, int type)
  * _NOT_ valid anymore so you should return immediately
  * (like from m_message, m_part, m_quit, etc).
  */
-int _run_spamfilter(aClient *sptr, char *str_in, int target, char *destination, int flags, aTKline **rettkl)
+int _run_spamfilter(Client *sptr, char *str_in, int target, char *destination, int flags, aTKline **rettkl)
 {
 	aTKline *tkl;
 	aTKline *winner_tkl = NULL;
@@ -4510,7 +4510,7 @@ static int comp_with_mask(void *addr, void *dest, u_int mask)
  * CIDR support is available so 'host' may be like '1.2.0.0/16'.
  * @returns 1 on match, 0 on no match.
  */
-int _match_user(char *rmask, aClient *acptr, int options)
+int _match_user(char *rmask, Client *acptr, int options)
 {
 	char mask[NICKLEN+USERLEN+HOSTLEN+8];
 	char clientip[IPSZ], maskip[IPSZ];

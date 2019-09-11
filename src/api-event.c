@@ -161,7 +161,7 @@ freeit:
 	}
 }
 
-void EventStatus(aClient *sptr)
+void EventStatus(Client *sptr)
 {
 	Event *eventptr;
 	time_t now = TStime();

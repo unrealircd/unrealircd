@@ -59,7 +59,7 @@ MOD_UNLOAD(trace)
 CMD_FUNC(m_trace)
 {
 	int  i;
-	aClient *acptr;
+	Client *acptr;
 	ConfigItem_class *cltmp;
 	char *tname;
 	int  doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
@@ -100,7 +100,7 @@ CMD_FUNC(m_trace)
 	{
 	  case HUNTED_PASS:	/* note: gets here only if parv[1] exists */
 	  {
-		  aClient *ac2ptr;
+		  Client *ac2ptr;
 
 		  ac2ptr = find_client(tname, NULL);
 		  sendnumeric(sptr, RPL_TRACELINK,

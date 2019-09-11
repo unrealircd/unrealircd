@@ -55,7 +55,7 @@ MOD_UNLOAD(oper)
 	return MOD_SUCCESS;
 }
 
-void set_oper_host(aClient *sptr, char *host)
+void set_oper_host(Client *sptr, char *host)
 {
         char uhost[HOSTLEN + USERLEN + 1];
         char *p;

@@ -26,7 +26,7 @@
 
 #include "unrealircd.h"
 
-void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param);
+void add_send_mode_param(Channel *chptr, Client *from, char what, char mode, char *param);
 CMD_FUNC(m_svsmode);
 CMD_FUNC(m_svs2mode);
 
@@ -60,7 +60,7 @@ MOD_UNLOAD(svsmode)
 	return MOD_SUCCESS;
 }
 
-void unban_user(aClient *sptr, aChannel *chptr, aClient *acptr, char chmode)
+void unban_user(Client *sptr, Channel *chptr, Client *acptr, char chmode)
 {
 	Extban *extban;
 	Ban *ban, *bnext;
@@ -140,7 +140,7 @@ void unban_user(aClient *sptr, aChannel *chptr, aClient *acptr, char chmode)
 	}
 }
 
-void clear_bans(aClient *sptr, aChannel *chptr, char chmode)
+void clear_bans(Client *sptr, Channel *chptr, char chmode)
 {
 	Extban *extban;
 	Ban *ban, *bnext;
@@ -195,10 +195,10 @@ void clear_bans(aClient *sptr, aChannel *chptr, char chmode)
  *
  * OLD syntax had a 'ts' parameter. No services are known to use this.
  */
-int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[]) 
+int channel_svsmode(Client *cptr, Client *sptr, int parc, char *parv[]) 
 {
-	aChannel *chptr;
-	aClient *acptr;
+	Channel *chptr;
+	Client *acptr;
 	char *m;
 	int what = MODE_ADD;
 	int i = 4; // wtf is this
@@ -305,11 +305,11 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
  *
  * show_change can be 0 (for svsmode) or 1 (for svs2mode).
  */
-int do_svsmode(aClient *cptr, aClient *sptr, MessageTag *recv_mtags, int parc, char *parv[], int show_change)
+int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int show_change)
 {
 	int i;
 	char *m;
-	aClient *acptr;
+	Client *acptr;
 	int  what;
 	long setflags = 0;
 
@@ -548,7 +548,7 @@ CMD_FUNC(m_svs2mode)
 	return do_svsmode(cptr, sptr, recv_mtags, parc, parv, 1);
 }
 
-void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param)
+void add_send_mode_param(Channel *chptr, Client *from, char what, char mode, char *param)
 {
 	static char *modes = NULL, lastwhat;
 	static short count = 0;

@@ -61,7 +61,7 @@ MOD_UNLOAD(sajoin)
 */
 CMD_FUNC(m_sajoin)
 {
-	aClient *acptr;
+	Client *acptr;
 	char jbuf[BUFSIZE];
 	char mode = '\0';
 	char sjmode = '\0';
@@ -113,7 +113,7 @@ CMD_FUNC(m_sajoin)
 		/* Now works like m_join */
 		for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
 		{
-			aChannel *chptr;
+			Channel *chptr;
 			Membership *lp;
 
 			if (++ntargets > maxtargets)
@@ -200,7 +200,7 @@ CMD_FUNC(m_sajoin)
 		{
 			MessageTag *mtags = NULL;
 			int flags;
-			aChannel *chptr;
+			Channel *chptr;
 			Membership *lp;
 			Hook *h;
 			int i = 0;

@@ -62,7 +62,7 @@ MOD_UNLOAD(chgident)
 
 CMD_FUNC(m_chgident)
 {
-	aClient *acptr;
+	Client *acptr;
 	char *s;
 	int legalident = 1;
 

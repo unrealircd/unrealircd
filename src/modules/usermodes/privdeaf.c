@@ -17,7 +17,7 @@ ModuleHeader MOD_HEADER(privdeaf)
 static long UMODE_PRIVDEAF = 0;
 static Umode *UmodePrivdeaf = NULL;
 
-char *privdeaf_checkmsg(aClient *, aClient *, char *, int);
+char *privdeaf_checkmsg(Client *, Client *, char *, int);
 
 MOD_INIT(privdeaf)
 {
@@ -47,7 +47,7 @@ MOD_UNLOAD(privdeaf)
 	return MOD_SUCCESS;
 }
 
-char *privdeaf_checkmsg(aClient *sptr, aClient *acptr, char *text, int notice)
+char *privdeaf_checkmsg(Client *sptr, Client *acptr, char *text, int notice)
 {
 	if ((acptr->umodes & UMODE_PRIVDEAF) && !IsOper(sptr) &&
 	    !IsULine(sptr) && !IsServer(sptr) && (sptr != acptr))

@@ -18,20 +18,20 @@ ModuleHeader MOD_HEADER(md)
     };
 
 CMD_FUNC(m_md);
-void _broadcast_md_client(ModDataInfo *mdi, aClient *acptr, ModData *md);
-void _broadcast_md_channel(ModDataInfo *mdi, aChannel *chptr, ModData *md);
-void _broadcast_md_member(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md);
-void _broadcast_md_membership(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md);
+void _broadcast_md_client(ModDataInfo *mdi, Client *acptr, ModData *md);
+void _broadcast_md_channel(ModDataInfo *mdi, Channel *chptr, ModData *md);
+void _broadcast_md_member(ModDataInfo *mdi, Channel *chptr, Member *m, ModData *md);
+void _broadcast_md_membership(ModDataInfo *mdi, Client *acptr, Membership *m, ModData *md);
 void _broadcast_md_globalvar(ModDataInfo *mdi, ModData *md);
-void _broadcast_md_client_cmd(aClient *except, aClient *sender, aClient *acptr, char *varname, char *value);
-void _broadcast_md_channel_cmd(aClient *except, aClient *sender, aChannel *chptr, char *varname, char *value);
-void _broadcast_md_member_cmd(aClient *except, aClient *sender, aChannel *chptr, aClient *acptr, char *varname, char *value);
-void _broadcast_md_membership_cmd(aClient *except, aClient *sender, aClient *acptr, aChannel *chptr, char *varname, char *value);
-void _broadcast_md_globalvar_cmd(aClient *except, aClient *sender, char *varname, char *value);
-void _send_moddata_client(aClient *srv, aClient *acptr);
-void _send_moddata_channel(aClient *srv, aChannel *chptr);
-void _send_moddata_members(aClient *srv);
-void _broadcast_moddata_client(aClient *acptr);
+void _broadcast_md_client_cmd(Client *except, Client *sender, Client *acptr, char *varname, char *value);
+void _broadcast_md_channel_cmd(Client *except, Client *sender, Channel *chptr, char *varname, char *value);
+void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *chptr, Client *acptr, char *varname, char *value);
+void _broadcast_md_membership_cmd(Client *except, Client *sender, Client *acptr, Channel *chptr, char *varname, char *value);
+void _broadcast_md_globalvar_cmd(Client *except, Client *sender, char *varname, char *value);
+void _send_moddata_client(Client *srv, Client *acptr);
+void _send_moddata_channel(Client *srv, Channel *chptr);
+void _send_moddata_members(Client *srv);
+void _broadcast_moddata_client(Client *acptr);
 
 extern MODVAR ModDataInfo *MDInfo;
 
@@ -101,7 +101,7 @@ CMD_FUNC(m_md)
 
 	if (!strcmp(type, "client"))
 	{
-		aClient *acptr = find_client(objname, NULL);
+		Client *acptr = find_client(objname, NULL);
 		md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
 		if (!md || !md->unserialize || !acptr)
 			return 0;
@@ -118,7 +118,7 @@ CMD_FUNC(m_md)
 	} else
 	if (!strcmp(type, "channel"))
 	{
-		aChannel *chptr = find_channel(objname, NULL);
+		Channel *chptr = find_channel(objname, NULL);
 		md = findmoddata_byname(varname, MODDATATYPE_CHANNEL);
 		if (!md || !md->unserialize || !chptr)
 			return 0;
@@ -135,8 +135,8 @@ CMD_FUNC(m_md)
 	} else
 	if (!strcmp(type, "member"))
 	{
-		aClient *acptr;
-		aChannel *chptr;
+		Client *acptr;
+		Channel *chptr;
 		Member *m;
 		char *p;
 
@@ -175,8 +175,8 @@ CMD_FUNC(m_md)
 	} else
 	if (!strcmp(type, "membership"))
 	{
-		aClient *acptr;
-		aChannel *chptr;
+		Client *acptr;
+		Channel *chptr;
 		Membership *m;
 		char *p;
 
@@ -233,7 +233,7 @@ CMD_FUNC(m_md)
 	return 0;
 }
 
-void _broadcast_md_client_cmd(aClient *except, aClient *sender, aClient *acptr, char *varname, char *value)
+void _broadcast_md_client_cmd(Client *except, Client *sender, Client *acptr, char *varname, char *value)
 {
 	if (value)
 	{
@@ -251,7 +251,7 @@ void _broadcast_md_client_cmd(aClient *except, aClient *sender, aClient *acptr, 
 	}
 }
 
-void _broadcast_md_channel_cmd(aClient *except, aClient *sender, aChannel *chptr, char *varname, char *value)
+void _broadcast_md_channel_cmd(Client *except, Client *sender, Channel *chptr, char *varname, char *value)
 {
 	if (value)
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s :%s",
@@ -261,7 +261,7 @@ void _broadcast_md_channel_cmd(aClient *except, aClient *sender, aChannel *chptr
 			sender->name, "channel", chptr->chname, varname);
 }
 
-void _broadcast_md_member_cmd(aClient *except, aClient *sender, aChannel *chptr, aClient *acptr, char *varname, char *value)
+void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *chptr, Client *acptr, char *varname, char *value)
 {
 	if (value)
 	{
@@ -279,7 +279,7 @@ void _broadcast_md_member_cmd(aClient *except, aClient *sender, aChannel *chptr,
 	}
 }
 
-void _broadcast_md_membership_cmd(aClient *except, aClient *sender, aClient *acptr, aChannel *chptr, char *varname, char *value)
+void _broadcast_md_membership_cmd(Client *except, Client *sender, Client *acptr, Channel *chptr, char *varname, char *value)
 {
 	if (value)
 	{
@@ -297,7 +297,7 @@ void _broadcast_md_membership_cmd(aClient *except, aClient *sender, aClient *acp
 	}
 }
 
-void _broadcast_md_globalvar_cmd(aClient *except, aClient *sender, char *varname, char *value)
+void _broadcast_md_globalvar_cmd(Client *except, Client *sender, char *varname, char *value)
 {
 	if (value)
 	{
@@ -321,28 +321,28 @@ void _broadcast_md_globalvar_cmd(aClient *except, aClient *sender, char *varname
  * @param md    The ModData. May be NULL for unset.
  */
  
-void _broadcast_md_client(ModDataInfo *mdi, aClient *acptr, ModData *md)
+void _broadcast_md_client(ModDataInfo *mdi, Client *acptr, ModData *md)
 {
 	char *value = md ? mdi->serialize(md) : NULL;
 
 	broadcast_md_client_cmd(NULL, &me, acptr, mdi->name, value);
 }
 
-void _broadcast_md_channel(ModDataInfo *mdi, aChannel *chptr, ModData *md)
+void _broadcast_md_channel(ModDataInfo *mdi, Channel *chptr, ModData *md)
 {
 	char *value = md ? mdi->serialize(md) : NULL;
 
 	broadcast_md_channel_cmd(NULL, &me, chptr, mdi->name, value);
 }
 
-void _broadcast_md_member(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md)
+void _broadcast_md_member(ModDataInfo *mdi, Channel *chptr, Member *m, ModData *md)
 {
 	char *value = md ? mdi->serialize(md) : NULL;
 
 	broadcast_md_member_cmd(NULL, &me, chptr, m->cptr, mdi->name, value);
 }
 
-void _broadcast_md_membership(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md)
+void _broadcast_md_membership(ModDataInfo *mdi, Client *acptr, Membership *m, ModData *md)
 {
 	char *value = md ? mdi->serialize(md) : NULL;
 
@@ -357,7 +357,7 @@ void _broadcast_md_globalvar(ModDataInfo *mdi, ModData *md)
 }
 
 /** Send all moddata attached to client 'acptr' to remote server 'srv' (if the module wants this), called by .. */
-void _send_moddata_client(aClient *srv, aClient *acptr)
+void _send_moddata_client(Client *srv, Client *acptr)
 {
 	ModDataInfo *mdi;
 	char *user = CHECKPROTO(srv, PROTO_SID) ? ID(acptr) : acptr->name;
@@ -375,7 +375,7 @@ void _send_moddata_client(aClient *srv, aClient *acptr)
 }
 
 /** Send all moddata attached to channel 'chptr' to remote server 'srv' (if the module wants this), called by SJOIN */
-void _send_moddata_channel(aClient *srv, aChannel *chptr)
+void _send_moddata_channel(Client *srv, Channel *chptr)
 {
 	ModDataInfo *mdi;
 
@@ -392,11 +392,11 @@ void _send_moddata_channel(aClient *srv, aChannel *chptr)
 }
 
 /** Send all moddata attached to member & memberships for 'chptr' to remote server 'srv' (if the module wants this), called by SJOIN */
-void _send_moddata_members(aClient *srv)
+void _send_moddata_members(Client *srv)
 {
 	ModDataInfo *mdi;
-	aChannel *chptr;
-	aClient *acptr;
+	Channel *chptr;
+	Client *acptr;
 
 	for (chptr = channel; chptr; chptr = chptr->nextch)
 	{
@@ -448,9 +448,9 @@ void _send_moddata_members(aClient *srv)
 }
 
 /** Broadcast moddata attached to client 'acptr' to all servers. */
-void _broadcast_moddata_client(aClient *acptr)
+void _broadcast_moddata_client(Client *acptr)
 {
-	aClient *cptr;
+	Client *cptr;
 
 	list_for_each_entry(cptr, &server_list, special_node)
 	{

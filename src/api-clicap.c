@@ -55,7 +55,7 @@ ClientCapability *ClientCapabilityFindReal(const char *token)
  * @return Returns the handle to the clicap token if it was found,
  *         otherwise NULL is returned.
  */
-ClientCapability *ClientCapabilityFind(const char *token, aClient *sptr)
+ClientCapability *ClientCapabilityFind(const char *token, Client *sptr)
 {
 	ClientCapability *clicap;
 
@@ -86,12 +86,12 @@ long ClientCapabilityBit(const char *token)
 	return clicap ? clicap->cap : 0L;
 }
 
-void SetCapability(aClient *acptr, const char *token)
+void SetCapability(Client *acptr, const char *token)
 {
 	acptr->local->caps |= ClientCapabilityBit(token);
 }
 
-void ClearCapability(aClient *acptr, const char *token)
+void ClearCapability(Client *acptr, const char *token)
 {
 	acptr->local->caps &= ~(ClientCapabilityBit(token));
 }
@@ -292,7 +292,7 @@ void clicap_pre_rehash(void)
 /** Clear 'proto' protocol for all users */
 void clear_cap_for_users(long cap)
 {
-	aClient *acptr;
+	Client *acptr;
 
 	if (cap == 0)
 		return;

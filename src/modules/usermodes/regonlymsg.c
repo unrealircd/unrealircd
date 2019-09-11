@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(regonlymsg)
 long UMODE_REGONLYMSG = 0L;
 
 /* Forward declarations */
-char *regonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int notice);
+char *regonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int notice);
                     
 MOD_INIT(regonlymsg)
 {
@@ -57,7 +57,7 @@ MOD_UNLOAD(regonlymsg)
 	return MOD_SUCCESS;
 }
 
-char *regonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int notice)
+char *regonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int notice)
 {
 	if (IsRegOnlyMsg(target) && !IsServer(sptr) && !IsULine(sptr) && !IsLoggedIn(sptr))
 	{

@@ -47,7 +47,7 @@ typedef struct {
 	long t;
 } ThrottleCounter;
 
-struct _ucounter {
+struct UCounter {
 	ThrottleCounter local;		/**< Local counter */
 	ThrottleCounter global;		/**< Global counter */
 	int rejected_clients;		/**< Number of rejected clients this minute */
@@ -60,7 +60,7 @@ struct _ucounter {
 	int throttling_banner_displayed;/**< Big we-are-now-throttling banner displayed? */
 	time_t next_event;		/**< When is next event? (for "last 60 seconds" stats) */
 };
-static struct _ucounter ucounter;
+static struct UCounter ucounter;
 
 static char rehash_dump_filename[512];
 
@@ -72,9 +72,9 @@ static char rehash_dump_filename[512];
 int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int ct_config_posttest(int *errs);
 int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
-int ct_pre_lconnect(aClient *sptr);
-int ct_lconnect(aClient *);
-int ct_rconnect(aClient *);
+int ct_pre_lconnect(Client *sptr);
+int ct_lconnect(Client *);
+int ct_rconnect(Client *);
 CMD_FUNC(ct_throttle);
 void rehash_dump_settings(void);
 void rehash_read_settings(void);
@@ -379,7 +379,7 @@ EVENT(connthrottle_evt)
 
 #define THROT_LOCAL 1
 #define THROT_GLOBAL 2
-int ct_pre_lconnect(aClient *sptr)
+int ct_pre_lconnect(Client *sptr)
 {
 	int throttle=0;
 	int score;
@@ -460,7 +460,7 @@ void bump_connect_counter(int local_connect)
 	}
 }
 
-int ct_lconnect(aClient *sptr)
+int ct_lconnect(Client *sptr)
 {
 	int score;
 
@@ -496,7 +496,7 @@ int ct_lconnect(aClient *sptr)
 	return 0;
 }
 
-int ct_rconnect(aClient *sptr)
+int ct_rconnect(Client *sptr)
 {
 	int score;
 
@@ -528,7 +528,7 @@ int ct_rconnect(aClient *sptr)
 	return 0;
 }
 
-static void ct_throttle_usage(aClient *sptr)
+static void ct_throttle_usage(Client *sptr)
 {
 	sendnotice(sptr, "Usage: /THROTTLE [ON|OFF|STATUS|RESET]");
 	sendnotice(sptr, " ON:     Enabled protection");

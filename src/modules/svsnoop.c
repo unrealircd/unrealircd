@@ -57,7 +57,7 @@ MOD_UNLOAD(svsnoop)
 
 CMD_FUNC(m_svsnoop)
 {
-	aClient *acptr;
+	Client *acptr;
 
 	if (!(IsULine(sptr) && parc > 2))
 		return 0;

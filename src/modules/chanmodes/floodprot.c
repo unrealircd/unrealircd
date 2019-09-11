@@ -54,7 +54,7 @@ typedef struct SRemoveFld RemoveFld;
 
 struct SRemoveFld {
 	struct SRemoveFld *prev, *next;
-	aChannel *chptr;
+	Channel *chptr;
 	char m; /* mode to be removed */
 	time_t when; /* scheduled at */
 };
@@ -98,34 +98,34 @@ static void init_config(void);
 int floodprot_rehash_complete(void);
 int floodprot_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int floodprot_config_run(ConfigFile *, ConfigEntry *, int);
-void floodprottimer_del(aChannel *chptr, char mflag);
-void floodprottimer_stopchantimers(aChannel *chptr);
+void floodprottimer_del(Channel *chptr, char mflag);
+void floodprottimer_stopchantimers(Channel *chptr);
 static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r);
 static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b);
-static int do_floodprot(aChannel *chptr, int what);
+static int do_floodprot(Channel *chptr, int what);
 char *channel_modef_string(ChanFloodProt *x, char *str);
-int  check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text);
-void do_floodprot_action(aChannel *chptr, int what, char *text);
-void floodprottimer_add(aChannel *chptr, char mflag, time_t when);
+int  check_for_chan_flood(Client *sptr, Channel *chptr, char *text);
+void do_floodprot_action(Channel *chptr, int what, char *text);
+void floodprottimer_add(Channel *chptr, char mflag, time_t when);
 uint64_t gen_floodprot_msghash(char *text);
-int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type, int what);
+int cmodef_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, int what);
 void *cmodef_put_param(void *r_in, char *param);
 char *cmodef_get_param(void *r_in);
-char *cmodef_conv_param(char *param_in, aClient *cptr);
+char *cmodef_conv_param(char *param_in, Client *cptr);
 void cmodef_free_param(void *r);
 void *cmodef_dup_struct(void *r_in);
-int cmodef_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
-int floodprot_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *parv[]);
+int cmodef_sjoin_check(Channel *chptr, void *ourx, void *theirx);
+int floodprot_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
 EVENT(modef_event);
-int cmodef_channel_destroy(aChannel *chptr, int *should_destroy);
-char *floodprot_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
-int floodprot_post_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
-int floodprot_knock(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *comment);
-int floodprot_local_nickchange(aClient *sptr, char *oldnick);
-int floodprot_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick);
-int floodprot_chanmode_del(aChannel *chptr, int m);
+int cmodef_channel_destroy(Channel *chptr, int *should_destroy);
+char *floodprot_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
+int floodprot_post_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
+int floodprot_knock(Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
+int floodprot_local_nickchange(Client *sptr, char *oldnick);
+int floodprot_remote_nickchange(Client *cptr, Client *sptr, char *oldnick);
+int floodprot_chanmode_del(Channel *chptr, int m);
 void userfld_free(ModData *md);
-int floodprot_stats(aClient *sptr, char *flag);
+int floodprot_stats(Client *sptr, char *flag);
 void floodprot_free_removefld_list(ModData *m);
 void floodprot_free_msghash_key(ModData *m);
 
@@ -300,7 +300,7 @@ int floodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
-int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int type, int what)
+int cmodef_is_ok(Client *sptr, Channel *chptr, char mode, char *param, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
@@ -726,7 +726,7 @@ char *cmodef_get_param(void *r_in)
 /** Convert parameter to something proper.
  * NOTE: cptr may be NULL if called for e.g. set::modes-on-join
  */
-char *cmodef_conv_param(char *param_in, aClient *cptr)
+char *cmodef_conv_param(char *param_in, Client *cptr)
 {
 	static char retbuf[256];
 	char param[256], *p;
@@ -960,7 +960,7 @@ void *cmodef_dup_struct(void *r_in)
 	return (void *)w;
 }
 
-int cmodef_sjoin_check(aChannel *chptr, void *ourx, void *theirx)
+int cmodef_sjoin_check(Channel *chptr, void *ourx, void *theirx)
 {
 	ChanFloodProt *our = (ChanFloodProt *)ourx;
 	ChanFloodProt *their = (ChanFloodProt *)theirx;
@@ -981,7 +981,7 @@ int cmodef_sjoin_check(aChannel *chptr, void *ourx, void *theirx)
 	return EXSJ_MERGE;
 }
 
-int floodprot_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *parv[])
+int floodprot_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[])
 {
 	/* I'll explain this only once:
 	 * 1. if channel is +f
@@ -1005,12 +1005,12 @@ int floodprot_join(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mt
 	return 0;
 }
 
-int cmodef_cleanup_user2(aClient *sptr)
+int cmodef_cleanup_user2(Client *sptr)
 {
 	return 0;
 }
 
-int cmodef_channel_destroy(aChannel *chptr, int *should_destroy)
+int cmodef_channel_destroy(Channel *chptr, int *should_destroy)
 {
 	floodprottimer_stopchantimers(chptr);
 	return 0;
@@ -1072,14 +1072,14 @@ char *channel_modef_string(ChanFloodProt *x, char *retbuf)
 	return retbuf;
 }
 
-char *floodprot_pre_chanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
+char *floodprot_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	if (MyClient(sptr) && (check_for_chan_flood(sptr, chptr, text) == 1))
 		return NULL; /* don't send it */
 	return text;
 }
 
-int floodprot_post_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
+int floodprot_post_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
 {
 	if (!IsFloodLimit(chptr) || is_skochanop(sptr, chptr) || IsULine(sptr))
 		return 0;
@@ -1098,20 +1098,20 @@ int floodprot_post_chanmsg(aClient *sptr, aChannel *chptr, int sendflags, int pr
 	return 0;
 }
 
-int floodprot_knock(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *comment)
+int floodprot_knock(Client *sptr, Channel *chptr, MessageTag *mtags, char *comment)
 {
 	if (IsFloodLimit(chptr) && !IsULine(sptr) && do_floodprot(chptr, FLD_KNOCK) && MyClient(sptr))
 		do_floodprot_action(chptr, FLD_KNOCK, "knock");
 	return 0;
 }
 
-static int gotnickchange(aClient *sptr)
+static int gotnickchange(Client *sptr)
 {
 Membership *mp;
 
 	for (mp = sptr->user->channel; mp; mp = mp->next)
 	{
-		aChannel *chptr = mp->chptr;
+		Channel *chptr = mp->chptr;
 		if (chptr && IsFloodLimit(chptr) &&
 		    !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANADMIN)) &&
 		    do_floodprot(chptr, FLD_NICK) && MyClient(sptr))
@@ -1122,21 +1122,21 @@ Membership *mp;
 	return 0;
 }
 
-int floodprot_local_nickchange(aClient *sptr, char *oldnick)
+int floodprot_local_nickchange(Client *sptr, char *oldnick)
 {
 	if (IsULine(sptr))
 		return 0;
 	return gotnickchange(sptr);
 }
 
-int floodprot_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick)
+int floodprot_remote_nickchange(Client *cptr, Client *sptr, char *oldnick)
 {
 	if (IsULine(sptr))
 		return 0;
 	return gotnickchange(sptr);
 }
 
-int floodprot_chanmode_del(aChannel *chptr, int modechar)
+int floodprot_chanmode_del(Channel *chptr, int modechar)
 {
 	ChanFloodProt *chp;
 
@@ -1180,7 +1180,7 @@ int floodprot_chanmode_del(aChannel *chptr, int modechar)
 	return 0;
 }
 
-int check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
+int check_for_chan_flood(Client *sptr, Channel *chptr, char *text)
 {
 	MembershipL *lp;
 	ChanFloodProt *chp;
@@ -1303,7 +1303,7 @@ int check_for_chan_flood(aClient *sptr, aChannel *chptr, char *text)
 	return 0;
 }
 
-RemoveFld *floodprottimer_find(aChannel *chptr, char mflag)
+RemoveFld *floodprottimer_find(Channel *chptr, char mflag)
 {
 	RemoveFld *e;
 
@@ -1335,7 +1335,7 @@ void strccat(char *s, char c)
  *   do not modify it yourself.
  * - chptr->mode.floodprot is asumed to be non-NULL.
  */
-void floodprottimer_add(aChannel *chptr, char mflag, time_t when)
+void floodprottimer_add(Channel *chptr, char mflag, time_t when)
 {
 	RemoveFld *e = NULL;
 	unsigned char add=1;
@@ -1372,7 +1372,7 @@ void floodprottimer_add(aChannel *chptr, char mflag, time_t when)
 		AddListItem(e, removefld_list);
 }
 
-void floodprottimer_del(aChannel *chptr, char mflag)
+void floodprottimer_del(Channel *chptr, char mflag)
 {
 	RemoveFld *e;
 	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
@@ -1448,7 +1448,7 @@ EVENT(modef_event)
 	}
 }
 
-void floodprottimer_stopchantimers(aChannel *chptr)
+void floodprottimer_stopchantimers(Channel *chptr)
 {
 	RemoveFld *e, *e_next;
 
@@ -1463,7 +1463,7 @@ void floodprottimer_stopchantimers(aChannel *chptr)
 	}
 }
 
-int do_floodprot(aChannel *chptr, int what)
+int do_floodprot(Channel *chptr, int what)
 {
 	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 
@@ -1493,7 +1493,7 @@ int do_floodprot(aChannel *chptr, int what)
 	return 0;
 }
 
-void do_floodprot_action(aChannel *chptr, int what, char *text)
+void do_floodprot_action(Channel *chptr, int what, char *text)
 {
 	char m;
 	int mode = 0;
@@ -1619,7 +1619,7 @@ void userfld_free(ModData *md)
 	safefree(md->ptr);
 }
 
-int floodprot_stats(aClient *sptr, char *flag)
+int floodprot_stats(Client *sptr, char *flag)
 {
 	sendtxtnumeric(sptr, "modef-default-unsettime: %hd", (unsigned short)MODEF_DEFAULT_UNSETTIME);
 	sendtxtnumeric(sptr, "modef-max-unsettime: %hd", (unsigned short)MODEF_MAX_UNSETTIME);

@@ -65,7 +65,7 @@ MOD_UNLOAD(pingpong)
 */
 CMD_FUNC(m_ping)
 {
-	aClient *acptr;
+	Client *acptr;
 	char *origin, *destination;
 
 	if (parc < 2 || *parv[1] == '\0')
@@ -153,7 +153,7 @@ CMD_FUNC(m_nospoof)
 */
 CMD_FUNC(m_pong)
 {
-	aClient *acptr;
+	Client *acptr;
 	char *origin, *destination;
 
 	if (!IsRegistered(cptr))

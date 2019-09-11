@@ -47,8 +47,8 @@ struct ChMode {
 	char *extparams[EXTCMODETABLESZ];
 };
 
-typedef struct _OperStat {
-	struct _OperStat *prev, *next;
+typedef struct OperStat {
+	struct OperStat *prev, *next;
 	char *flag;
 } OperStat;
 

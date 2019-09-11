@@ -259,7 +259,7 @@ void siphash_generate_key(char *k)
 
 static struct list_head clientTable[NICK_HASH_TABLE_SIZE];
 static struct list_head idTable[NICK_HASH_TABLE_SIZE];
-static aChannel *channelTable[CHAN_HASH_TABLE_SIZE];
+static Channel *channelTable[CHAN_HASH_TABLE_SIZE];
 static aWatch *watchTable[WATCH_HASH_TABLE_SIZE];
 
 static char siphashkey_nick[SIPHASH_KEY_LENGTH];
@@ -323,7 +323,7 @@ uint64_t hash_whowas_name(const char *name)
 /*
  * add_to_client_hash_table
  */
-int add_to_client_hash_table(char *name, aClient *cptr)
+int add_to_client_hash_table(char *name, Client *cptr)
 {
 	unsigned int hashv;
 	/*
@@ -349,7 +349,7 @@ int add_to_client_hash_table(char *name, aClient *cptr)
 /*
  * add_to_client_hash_table
  */
-int add_to_id_hash_table(char *name, aClient *cptr)
+int add_to_id_hash_table(char *name, Client *cptr)
 {
 	unsigned int hashv;
 	hashv = hash_client_name(name);
@@ -360,7 +360,7 @@ int add_to_id_hash_table(char *name, aClient *cptr)
 /*
  * add_to_channel_hash_table
  */
-int add_to_channel_hash_table(char *name, aChannel *chptr)
+int add_to_channel_hash_table(char *name, Channel *chptr)
 {
 	unsigned int hashv;
 
@@ -372,7 +372,7 @@ int add_to_channel_hash_table(char *name, aChannel *chptr)
 /*
  * del_from_client_hash_table
  */
-int del_from_client_hash_table(char *name, aClient *cptr)
+int del_from_client_hash_table(char *name, Client *cptr)
 {
 	if (!list_empty(&cptr->client_hash))
 		list_del(&cptr->client_hash);
@@ -382,7 +382,7 @@ int del_from_client_hash_table(char *name, aClient *cptr)
 	return 0;
 }
 
-int del_from_id_hash_table(char *name, aClient *cptr)
+int del_from_id_hash_table(char *name, Client *cptr)
 {
 	if (!list_empty(&cptr->id_hash))
 		list_del(&cptr->id_hash);
@@ -395,9 +395,9 @@ int del_from_id_hash_table(char *name, aClient *cptr)
 /*
  * del_from_channel_hash_table
  */
-void del_from_channel_hash_table(char *name, aChannel *chptr)
+void del_from_channel_hash_table(char *name, Channel *chptr)
 {
-	aChannel *tmp, *prev = NULL;
+	Channel *tmp, *prev = NULL;
 	unsigned int hashv;
 
 	hashv = hash_channel_name(name);
@@ -420,9 +420,9 @@ void del_from_channel_hash_table(char *name, aChannel *chptr)
 /*
  * hash_find_client
  */
-aClient *hash_find_client(const char *name, aClient *cptr)
+Client *hash_find_client(const char *name, Client *cptr)
 {
-	aClient *tmp;
+	Client *tmp;
 	unsigned int hashv;
 
 	hashv = hash_client_name(name);
@@ -435,9 +435,9 @@ aClient *hash_find_client(const char *name, aClient *cptr)
 	return cptr;
 }
 
-aClient *hash_find_id(const char *name, aClient *cptr)
+Client *hash_find_id(const char *name, Client *cptr)
 {
-	aClient *tmp;
+	Client *tmp;
 	unsigned int hashv;
 
 	hashv = hash_client_name(name);
@@ -453,11 +453,11 @@ aClient *hash_find_id(const char *name, aClient *cptr)
 /*
  * hash_find_nickatserver
  */
-aClient *hash_find_nickatserver(const char *str, aClient *cptr)
+Client *hash_find_nickatserver(const char *str, Client *cptr)
 {
 	char *serv;
 	char nick[NICKLEN+HOSTLEN+1];
-	aClient *acptr;
+	Client *acptr;
 	
 	strlcpy(nick, str, sizeof(nick)); /* let's work on a copy */
 
@@ -481,9 +481,9 @@ aClient *hash_find_nickatserver(const char *str, aClient *cptr)
 /*
  * hash_find_server
  */
-aClient *hash_find_server(const char *server, aClient *cptr)
+Client *hash_find_server(const char *server, Client *cptr)
 {
-	aClient *tmp;
+	Client *tmp;
 	unsigned int hashv;
 
 	hashv = hash_client_name(server);
@@ -506,11 +506,11 @@ aClient *hash_find_server(const char *server, aClient *cptr)
  * @notes If 'cptr' is a server or NULL, then we also check
  *        the ID table, otherwise not.
  */
-aClient *find_client(char *name, aClient *cptr)
+Client *find_client(char *name, Client *cptr)
 {
 	if (cptr == NULL || IsServer(cptr))
 	{
-		aClient *acptr;
+		Client *acptr;
 
 		if ((acptr = hash_find_id(name, NULL)) != NULL)
 			return acptr;
@@ -526,11 +526,11 @@ aClient *find_client(char *name, aClient *cptr)
  * @notes If 'cptr' is a server or NULL, then we also check
  *        the ID table, otherwise not.
  */
-aClient *find_server(char *name, aClient *cptr)
+Client *find_server(char *name, Client *cptr)
 {
 	if (name)
 	{
-		aClient *acptr;
+		Client *acptr;
 
 		if ((acptr = find_client(name, NULL)) != NULL && (IsServer(acptr) || IsMe(acptr)))
 			return acptr;
@@ -545,9 +545,9 @@ aClient *find_server(char *name, aClient *cptr)
  * @notes If 'cptr' is a server or NULL, then we also check
  *        the ID table, otherwise not.
  */
-aClient *find_person(char *name, aClient *cptr)
+Client *find_person(char *name, Client *cptr)
 {
-	aClient *c2ptr;
+	Client *c2ptr;
 
 	c2ptr = find_client(name, cptr);
 
@@ -561,10 +561,10 @@ aClient *find_person(char *name, aClient *cptr)
 /*
  * hash_find_channel
  */
-aChannel *hash_find_channel(char *name, aChannel *chptr)
+Channel *hash_find_channel(char *name, Channel *chptr)
 {
 	unsigned int hashv;
-	aChannel *tmp;
+	Channel *tmp;
 
 	hashv = hash_channel_name(name);
 
@@ -576,7 +576,7 @@ aChannel *hash_find_channel(char *name, aChannel *chptr)
 	return chptr;
 }
 
-aChannel *hash_get_chan_bucket(uint64_t hashv)
+Channel *hash_get_chan_bucket(uint64_t hashv)
 {
 	if (hashv > CHAN_HASH_TABLE_SIZE)
 		return NULL;
@@ -603,7 +603,7 @@ void  count_watch_memory(int *count, u_long *memory)
 /*
  * add_to_watch_hash_table
  */
-int add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
+int add_to_watch_hash_table(char *nick, Client *cptr, int awaynotify)
 {
 	unsigned int hashv;
 	aWatch  *anptr;
@@ -656,7 +656,7 @@ int add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
 /*
  *  hash_check_watch
  */
-int hash_check_watch(aClient *cptr, int reply)
+int hash_check_watch(Client *cptr, int reply)
 {
 	unsigned int hashv;
 	aWatch  *anptr;
@@ -738,7 +738,7 @@ aWatch  *hash_get_watch(char *nick)
 /*
  * del_from_watch_hash_table
  */
-int del_from_watch_hash_table(char *nick, aClient *cptr)
+int del_from_watch_hash_table(char *nick, Client *cptr)
 {
 	unsigned int hashv;
 	aWatch  *anptr, *nlast = NULL;
@@ -814,7 +814,7 @@ int del_from_watch_hash_table(char *nick, aClient *cptr)
 /*
  * hash_del_watch_list
  */
-int   hash_del_watch_list(aClient *cptr)
+int   hash_del_watch_list(Client *cptr)
 {
 	unsigned int   hashv;
 	aWatch  *anptr;
@@ -908,7 +908,7 @@ uint64_t hash_throttling(char *ip)
 	return siphash(ip, siphashkey_throttling) % THROTTLING_HASH_TABLE_SIZE;
 }
 
-struct ThrottlingBucket *find_throttling_bucket(aClient *acptr)
+struct ThrottlingBucket *find_throttling_bucket(Client *acptr)
 {
 	int hash = 0;
 	struct ThrottlingBucket *p;
@@ -970,7 +970,7 @@ EVENT(e_clean_out_throttling_buckets)
 	return;
 }
 
-void add_throttling_bucket(aClient *acptr)
+void add_throttling_bucket(Client *acptr)
 {
 	int hash;
 	struct ThrottlingBucket *n;
@@ -991,7 +991,7 @@ void add_throttling_bucket(aClient *acptr)
  * @retval 2 Allowed, not in list or is an exception.
  * @see add_connection()
  */
-int throttle_can_connect(aClient *sptr)
+int throttle_can_connect(Client *sptr)
 {
 	struct ThrottlingBucket *b;
 

@@ -61,10 +61,10 @@ MOD_UNLOAD(svssno)
  * parv[2] - snomasks to change
  * show_change determines whether to show the change to the user
  */
-int  do_svssno(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_change)
+int  do_svssno(Client *cptr, Client *sptr, int parc, char *parv[], int show_change)
 {
 	char *p;
-	aClient *acptr;
+	Client *acptr;
 	int what = MODE_ADD, i;
 
 	if (!IsULine(sptr))

@@ -35,7 +35,7 @@ ID_Copyright("(C) Carsten Munk 1999");
 
 /* checks if the dcc is blacklisted.
  */
-ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, char *filename)
+ConfigItem_deny_dcc *dcc_isforbidden(Client *sptr, char *filename)
 {
 ConfigItem_deny_dcc *d;
 ConfigItem_allow_dcc *a;
@@ -61,7 +61,7 @@ ConfigItem_allow_dcc *a;
 
 /* checks if the dcc is discouraged ('soft bans').
  */
-ConfigItem_deny_dcc *dcc_isdiscouraged(aClient *sptr, char *filename)
+ConfigItem_deny_dcc *dcc_isdiscouraged(Client *sptr, char *filename)
 {
 ConfigItem_deny_dcc *d;
 ConfigItem_allow_dcc *a;
@@ -85,7 +85,7 @@ ConfigItem_allow_dcc *a;
 	return NULL;
 }
 
-void dcc_sync(aClient *sptr)
+void dcc_sync(Client *sptr)
 {
 	ConfigItem_deny_dcc *p;
 	for (p = conf_deny_dcc; p; p = p->next)
@@ -141,7 +141,7 @@ void dcc_wipe_services(void)
 /* The dccallow functions below are all taken from bahamut (1.8.1).
  * Well, with some small modifications of course. -- Syzop
  */
-int on_dccallow_list(aClient *to, aClient *from)
+int on_dccallow_list(Client *to, Client *from)
 {
 Link *lp;
 
@@ -150,7 +150,7 @@ Link *lp;
 			return 1;
 	return 0;
 }
-int add_dccallow(aClient *sptr, aClient *optr)
+int add_dccallow(Client *sptr, Client *optr)
 {
 Link *lp;
 int cnt = 0;
@@ -187,7 +187,7 @@ int cnt = 0;
 	return 0;
 }
 
-int del_dccallow(aClient *sptr, aClient *optr)
+int del_dccallow(Client *sptr, Client *optr)
 {
 Link **lpp, *lp;
 int found = 0;

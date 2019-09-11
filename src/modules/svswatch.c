@@ -60,7 +60,7 @@ MOD_UNLOAD(svswatch)
  */
 CMD_FUNC(m_svswatch)
 {
-	aClient *acptr;
+	Client *acptr;
 	if (!IsULine(sptr))
 		return 0;
 

@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER(pass)
     };
 
 /* Forward declarations */
-int _check_banned(aClient *cptr, int exitflags);
+int _check_banned(Client *cptr, int exitflags);
 
 MOD_TEST(pass)
 {
@@ -66,7 +66,7 @@ MOD_UNLOAD(pass)
 }
 
 /** Handles zlines/gzlines/throttling/unknown connections */
-int _check_banned(aClient *cptr, int exitflags)
+int _check_banned(Client *cptr, int exitflags)
 {
 	aTKline *tk;
 	ConfigItem_ban *bconf;

@@ -35,8 +35,8 @@ ModuleHeader MOD_HEADER(sasl)
 void saslmechlist_free(ModData *m);
 char *saslmechlist_serialize(ModData *m);
 void saslmechlist_unserialize(char *str, ModData *m);
-char *sasl_capability_parameter(aClient *acptr);
-int sasl_server_synched(aClient *sptr);
+char *sasl_capability_parameter(Client *acptr);
+int sasl_server_synched(Client *sptr);
 
 /* Macros */
 #define MSG_AUTHENTICATE "AUTHENTICATE"
@@ -73,9 +73,9 @@ long CAP_SASL = 0L;
  * Decode PUID sent from a SASL agent.  If the servername in the PUID doesn't match
  * ours, we reject the PUID (by returning NULL).
  */
-static aClient *decode_puid(char *puid)
+static Client *decode_puid(char *puid)
 {
-	aClient *cptr;
+	Client *cptr;
 	char *it, *it2;
 	int cookie = 0;
 
@@ -103,9 +103,9 @@ static aClient *decode_puid(char *puid)
 /*
  * encode_puid
  *
- * Encode PUID based on aClient.
+ * Encode PUID based on Client.
  */
-static const char *encode_puid(aClient *client)
+static const char *encode_puid(Client *client)
 {
 	static char buf[HOSTLEN + 20];
 
@@ -135,7 +135,7 @@ CMD_FUNC(m_svslogin)
 
 	if (!strcasecmp(parv[1], me.name))
 	{
-		aClient *target_p;
+		Client *target_p;
 
 		target_p = find_client(parv[2], NULL);
 		if (target_p && !MyConnect(target_p))
@@ -182,7 +182,7 @@ CMD_FUNC(m_sasl)
 
 	if (!strcasecmp(parv[1], me.name))
 	{
-		aClient *target_p;
+		Client *target_p;
 
 		target_p = find_client(parv[2], NULL);
 		if (target_p && !MyConnect(target_p))
@@ -242,7 +242,7 @@ CMD_FUNC(m_sasl)
  */
 CMD_FUNC(m_authenticate)
 {
-	aClient *agent_p = NULL;
+	Client *agent_p = NULL;
 
 	/* Failing to use CAP REQ for sasl is a protocol violation. */
 	if (!SASL_SERVER || !MyConnect(sptr) || BadPtr(parv[1]) || !HasCapability(sptr, "sasl"))
@@ -287,7 +287,7 @@ CMD_FUNC(m_authenticate)
 	return 0;
 }
 
-static int abort_sasl(aClient *cptr)
+static int abort_sasl(Client *cptr)
 {
 	if (cptr->local->sasl_out == 0 || cptr->local->sasl_complete)
 		return 0;
@@ -297,7 +297,7 @@ static int abort_sasl(aClient *cptr)
 
 	if (*cptr->local->sasl_agent)
 	{
-		aClient *agent_p = find_client(cptr->local->sasl_agent, NULL);
+		Client *agent_p = find_client(cptr->local->sasl_agent, NULL);
 
 		if (agent_p != NULL)
 		{
@@ -314,7 +314,7 @@ static int abort_sasl(aClient *cptr)
 /** Is this capability visible?
  * Note that 'sptr' may be NULL when queried from CAP DEL / CAP NEW
  */
-int sasl_capability_visible(aClient *sptr)
+int sasl_capability_visible(Client *sptr)
 {
 	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
 		return 0;
@@ -336,17 +336,17 @@ int sasl_capability_visible(aClient *sptr)
 	return 1;
 }
 
-int sasl_connect(aClient *sptr)
+int sasl_connect(Client *sptr)
 {
 	return abort_sasl(sptr);
 }
 
-int sasl_quit(aClient *sptr, MessageTag *mtags, char *comment)
+int sasl_quit(Client *sptr, MessageTag *mtags, char *comment)
 {
 	return abort_sasl(sptr);
 }
 
-int sasl_server_quit(aClient *sptr, MessageTag *mtags)
+int sasl_server_quit(Client *sptr, MessageTag *mtags)
 {
 	if (!SASL_SERVER)
 		return 0;
@@ -362,7 +362,7 @@ void auto_discover_sasl_server(int justlinked)
 {
 	if (!SASL_SERVER && SERVICES_NAME)
 	{
-		aClient *acptr = find_server(SERVICES_NAME, NULL);
+		Client *acptr = find_server(SERVICES_NAME, NULL);
 		if (acptr && moddata_client_get(acptr, "saslmechlist"))
 		{
 			/* SASL server found */
@@ -384,7 +384,7 @@ void auto_discover_sasl_server(int justlinked)
 	}
 }
 
-int sasl_server_synched(aClient *sptr)
+int sasl_server_synched(Client *sptr)
 {
 	if (!SASL_SERVER)
 	{
@@ -464,9 +464,9 @@ void saslmechlist_unserialize(char *str, ModData *m)
 	m->str = strdup(str);
 }
 
-char *sasl_capability_parameter(aClient *acptr)
+char *sasl_capability_parameter(Client *acptr)
 {
-	aClient *server;
+	Client *server;
 
 	if (SASL_SERVER)
 	{

@@ -1206,7 +1206,7 @@ void CmdoverrideDel(Cmdoverride *cmd)
 	MyFree(cmd);
 }
 
-int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, MessageTag *mtags, int parc, char *parv[])
+int CallCmdoverride(Cmdoverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[])
 {
 	if (ovr->next)
 		return ovr->next->func(ovr->next, cptr, sptr, mtags, parc, parv);

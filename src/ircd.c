@@ -44,7 +44,7 @@ char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
     REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
     REPORT_FAIL_ID[256];
 ircstats IRCstats;
-aClient me;			/* That's me */
+Client me;			/* That's me */
 MODVAR char *me_hash;
 extern char backupbuf[8192];
 #ifdef _WIN32
@@ -83,7 +83,7 @@ MODVAR int  booted = FALSE;
 void s_die()
 {
 #ifdef _WIN32
-	aClient *cptr;
+	Client *cptr;
 	if (!IsService)
 	{
 		unload_all_modules();
@@ -179,7 +179,7 @@ void ignore_this_signal()
 void server_reboot(char *mesg)
 {
 	int i;
-	aClient *cptr;
+	Client *cptr;
 	sendto_realops("Aieeeee!!!  Restarting server... %s", mesg);
 	Debug((DEBUG_NOTICE, "Restarting server... %s", mesg));
 
@@ -287,7 +287,7 @@ EVENT(try_connections)
 {
 	ConfigItem_link *aconf;
 	ConfigItem_deny_link *deny;
-	aClient *cptr;
+	Client *cptr;
 	int  confrq;
 	ConfigItem_class *class;
 
@@ -324,7 +324,7 @@ EVENT(try_connections)
 	}
 }
 
-int check_tkls(aClient *cptr)
+int check_tkls(Client *cptr)
 {
 	ConfigItem_ban *bconf = NULL;
 	char banbuf[1024];
@@ -403,7 +403,7 @@ int check_tkls(aClient *cptr)
  */
 EVENT(check_unknowns)
 {
-	aClient *cptr, *cptr2;
+	Client *cptr, *cptr2;
 
 	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
 	{
@@ -425,7 +425,7 @@ EVENT(check_unknowns)
 }
 
 /** Ping individual user, and check for ping timeout */
-int check_ping(aClient *cptr)
+int check_ping(Client *cptr)
 {
 	char scratch[64];
 	int ping = 0;
@@ -503,7 +503,7 @@ int check_ping(aClient *cptr)
  */
 EVENT(check_pings)
 {
-	aClient *cptr, *cptr2;
+	Client *cptr, *cptr2;
 
 	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
 	{
@@ -525,7 +525,7 @@ EVENT(check_pings)
 
 EVENT(check_deadsockets)
 {
-	aClient *cptr, *cptr2;
+	Client *cptr, *cptr2;
 
 	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
 	{
@@ -695,7 +695,7 @@ extern MODVAR Event *events;
 void fix_timers(void)
 {
 	int i, cnt;
-	aClient *acptr;
+	Client *acptr;
 	Event *e;
 	struct ThrottlingBucket *thr;
 	ConfigItem_link *lnk;
@@ -1424,7 +1424,7 @@ static void open_debugfile(void)
 {
 #ifdef	DEBUGMODE
 	int  fd;
-	aClient *cptr;
+	Client *cptr;
 	if (debuglevel >= 0) {
 		cptr = make_client(NULL, NULL);
 		cptr->fd = 2;

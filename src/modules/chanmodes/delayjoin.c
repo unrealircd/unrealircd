@@ -23,14 +23,14 @@ static Cmode *CmodePostDelayed = NULL;
 static Cmode_t EXTMODE_DELAYED;
 static Cmode_t EXTMODE_POST_DELAYED;
 
-int visible_in_channel( aClient *cptr, aChannel *chptr);
-int moded_check_part( aClient *cptr, aChannel *chptr);
-int moded_join(aClient *cptr, aChannel *chptr);
-int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *comment);
-int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
-int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
+int visible_in_channel( Client *cptr, Channel *chptr);
+int moded_check_part( Client *cptr, Channel *chptr);
+int moded_join(Client *cptr, Channel *chptr);
+int moded_part(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
+int deny_all(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what);
+int moded_chanmode(Client *cptr, Client *sptr, Channel *chptr,
                    MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-char *moded_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice);
+char *moded_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
 char *moded_serialize(ModData *m);
 void moded_unserialize(char *str, ModData *m);
 
@@ -92,7 +92,7 @@ MOD_UNLOAD(delayjoin)
 	return MOD_SUCCESS;
 }
 
-void set_post_delayed(aChannel *chptr)
+void set_post_delayed(Channel *chptr)
 {
 	MessageTag *mtags = NULL;
 
@@ -103,7 +103,7 @@ void set_post_delayed(aChannel *chptr)
 	free_message_tags(mtags);
 }
 
-void clear_post_delayed(aChannel *chptr)
+void clear_post_delayed(Channel *chptr)
 {
 	MessageTag *mtags = NULL;
 
@@ -114,7 +114,7 @@ void clear_post_delayed(aChannel *chptr)
 	free_message_tags(mtags);
 }
 
-bool moded_member_invisible(Member* m, aChannel *chptr)
+bool moded_member_invisible(Member* m, Channel *chptr)
 {
 	ModDataInfo *md;
 
@@ -132,12 +132,12 @@ bool moded_member_invisible(Member* m, aChannel *chptr)
 
 }
 
-bool moded_user_invisible(aClient *cptr, aChannel *chptr)
+bool moded_user_invisible(Client *cptr, Channel *chptr)
 {
 	return moded_member_invisible(find_member_link(chptr->members, cptr),chptr);
 }
 
-bool channel_has_invisible_users(aChannel *chptr)
+bool channel_has_invisible_users(Channel *chptr)
 {
 	Member* i;
 	for (i = chptr->members; i; i = i->next)
@@ -150,21 +150,21 @@ bool channel_has_invisible_users(aChannel *chptr)
 	return false;
 }
 
-bool channel_is_post_delayed(aChannel *chptr)
+bool channel_is_post_delayed(Channel *chptr)
 {
 	if (chptr->mode.extmode & EXTMODE_POST_DELAYED)
 		return true;
 	return false;
 }
 
-bool channel_is_delayed(aChannel *chptr)
+bool channel_is_delayed(Channel *chptr)
 {
 	if (chptr->mode.extmode & EXTMODE_DELAYED)
 		return true;
 	return false;
 }
 
-void clear_user_invisible(aChannel *chptr, aClient *sptr)
+void clear_user_invisible(Channel *chptr, Client *sptr)
 {
 	Member *i;
 	ModDataInfo *md;
@@ -201,7 +201,7 @@ void clear_user_invisible(aChannel *chptr, aClient *sptr)
 	}
 }
 
-void clear_user_invisible_announce(aChannel *chptr, aClient *sptr, MessageTag *recv_mtags)
+void clear_user_invisible_announce(Channel *chptr, Client *sptr, MessageTag *recv_mtags)
 {
 	Member *i;
 	MessageTag *mtags = NULL;
@@ -222,7 +222,7 @@ void clear_user_invisible_announce(aChannel *chptr, aClient *sptr, MessageTag *r
 	new_message_special(sptr, recv_mtags, &mtags, ":%s JOIN %s", sptr->name, chptr->chname);
 	for (i = chptr->members; i; i = i->next)
 	{
-		aClient *acptr = i->cptr;
+		Client *acptr = i->cptr;
 		if (!is_skochanop(acptr,chptr) && acptr != sptr && MyConnect(acptr))
 		{
 			if (HasCapabilityFast(acptr, CAP_EXTENDED_JOIN))
@@ -234,7 +234,7 @@ void clear_user_invisible_announce(aChannel *chptr, aClient *sptr, MessageTag *r
 	free_message_tags(mtags);
 }
 
-void set_user_invisible(aChannel *chptr, aClient *sptr)
+void set_user_invisible(Channel *chptr, Client *sptr)
 {
 	Member *m = find_member_link(chptr->members,sptr);
 	ModDataInfo *md;
@@ -251,19 +251,19 @@ void set_user_invisible(aChannel *chptr, aClient *sptr)
 }
 
 
-int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
+int deny_all(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what)
 {
 	return EX_ALWAYS_DENY;
 }
 
 
-int visible_in_channel(aClient *cptr, aChannel *chptr)
+int visible_in_channel(Client *cptr, Channel *chptr)
 {
 	return channel_is_delayed(chptr) && moded_user_invisible(cptr,chptr);
 }
 
 
-int moded_join(aClient *cptr, aChannel *chptr)
+int moded_join(Client *cptr, Channel *chptr)
 {
 	if (channel_is_delayed(chptr))
 		set_user_invisible(chptr,cptr);
@@ -271,7 +271,7 @@ int moded_join(aClient *cptr, aChannel *chptr)
 	return 0;
 }
 
-int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags, char *comment)
+int moded_part(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *comment)
 {
 	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
 		clear_user_invisible(chptr,cptr);
@@ -279,7 +279,7 @@ int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, MessageTag *mtags,
 	return 0;
 }
 
-int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
+int moded_chanmode(Client *cptr, Client *sptr, Channel *chptr,
                    MessageTag *recv_mtags, char *modebuf, char *parabuf, time_t sendts, int samode)
 {
 	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
@@ -299,7 +299,7 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 			if (pm.what == MODE_ADD && (pm.modechar == 'o' || pm.modechar == 'h' || pm.modechar == 'a' || pm.modechar == 'q' || pm.modechar == 'v'))
 			{
 				Member* i;
-				aClient* user = find_client(pm.param,NULL);
+				Client* user = find_client(pm.param,NULL);
 				if (!user)
 					continue;
 
@@ -336,7 +336,7 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 			if (pm.what == MODE_DEL && (pm.modechar == 'o' || pm.modechar == 'h' || pm.modechar == 'a' || pm.modechar == 'q' || pm.modechar == 'v'))
 			{
 				Member* i;
-				aClient* user = find_client(pm.param,NULL);
+				Client* user = find_client(pm.param,NULL);
 				if (!user)
 					continue;
 
@@ -367,7 +367,7 @@ int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 	return 0;
 }
 
-char *moded_prechanmsg(aClient *sptr, aChannel *chptr, MessageTag *mtags, char *text, int notice)
+char *moded_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
 
 	if ((channel_is_delayed(chptr) || channel_is_post_delayed(chptr)) && (moded_user_invisible(sptr,chptr)))

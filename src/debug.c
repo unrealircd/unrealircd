@@ -150,7 +150,7 @@ void debug(int level, FORMAT_STRING(const char *form), ...)
  * different field names for "struct rusage".
  * -avalon
  */
-void send_usage(aClient *cptr, char *nick)
+void send_usage(Client *cptr, char *nick)
 {
 
 #ifdef GETRUSAGE_2
@@ -231,7 +231,7 @@ void send_usage(aClient *cptr, char *nick)
 	return;
 }
 
-int checkprotoflags(aClient *sptr, int flags, char *file, int line)
+int checkprotoflags(Client *sptr, int flags, char *file, int line)
 {
 	if (!MyConnect(sptr))
 		ircd_log(LOG_ERROR, "[Debug] [BUG] ERROR: %s:%d: IsToken(<%s>,%d) on remote client",

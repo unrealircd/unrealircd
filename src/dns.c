@@ -47,7 +47,7 @@ static void unrealdns_freeandremovereq(DNSReq *r);
 void unrealdns_removecacherecord(DNSCache *c);
 
 /* Externs */
-extern void proceed_normal_client_handshake(aClient *acptr, struct hostent *he);
+extern void proceed_normal_client_handshake(Client *acptr, struct hostent *he);
 
 /* Global variables */
 
@@ -170,7 +170,7 @@ void init_resolver(int firsttime)
 	unrealdns_timeout_hdl = EventAdd(NULL, "unrealdns_timeout", 0, 0, unrealdns_timeout, NULL);
 }
 
-void reinit_resolver(aClient *sptr)
+void reinit_resolver(Client *sptr)
 {
 	EventDel(unrealdns_timeout_hdl);
 
@@ -199,7 +199,7 @@ void unrealdns_addreqtolist(DNSReq *r)
  *   We return NULL in this case and an asynchronic request is done.
  *   When done, proceed_normal_client_handshake() is called.
  */
-struct hostent *unrealdns_doclient(aClient *cptr)
+struct hostent *unrealdns_doclient(Client *cptr)
 {
 	DNSReq *r;
 	static struct hostent *he;
@@ -258,7 +258,7 @@ void unrealdns_cb_iptoname(void *arg, int status, int timeouts, struct hostent *
 {
 DNSReq *r = (DNSReq *)arg;
 DNSReq *newr;
-aClient *acptr = r->cptr;
+Client *acptr = r->cptr;
 char ipv6 = r->ipv6;
 
 	unrealdns_freeandremovereq(r);
@@ -308,7 +308,7 @@ char *p;
 void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct hostent *he)
 {
 	DNSReq *r = (DNSReq *)arg;
-	aClient *acptr = r->cptr;
+	Client *acptr = r->cptr;
 	char ipv6 = r->ipv6;
 	int i;
 	struct hostent *he2;
@@ -626,7 +626,7 @@ static void unrealdns_freeandremovereq(DNSReq *r)
 /** Delete requests for client 'cptr'.
  * Actually we DO NOT (and should not) delete them, but simply mark them as 'dead'.
  */
-void unrealdns_delreq_bycptr(aClient *cptr)
+void unrealdns_delreq_bycptr(Client *cptr)
 {
 DNSReq *r;
 

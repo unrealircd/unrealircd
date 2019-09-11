@@ -35,7 +35,7 @@ int CLOAK_IP_ONLY = 0;
 #define KEY2 cloak_key2
 #define KEY3 cloak_key3
 
-char *hidehost(aClient *acptr, char *host);
+char *hidehost(Client *acptr, char *host);
 char *cloakcsum();
 int cloak_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int cloak_config_run(ConfigFile *, ConfigEntry *, int);
@@ -250,7 +250,7 @@ char buf[512], result[16];
 	return 1;
 }
 
-char *hidehost(aClient *acptr, char *host)
+char *hidehost(Client *acptr, char *host)
 {
 	char *p;
 

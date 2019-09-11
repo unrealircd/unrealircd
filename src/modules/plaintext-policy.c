@@ -52,7 +52,7 @@ MOD_UNLOAD(plaintext_policy)
 	return MOD_SUCCESS;
 }
 
-char *plaintext_policy_capability_parameter(aClient *acptr)
+char *plaintext_policy_capability_parameter(Client *acptr)
 {
 	static char buf[128];
 	

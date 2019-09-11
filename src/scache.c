@@ -8,7 +8,7 @@ static int hash(char *);	/*
 				 * keep it hidden here 
 				 */
 /*
- * ircd used to store full servernames in anUser as well as in the
+ * ircd used to store full servernames in ClientUser as well as in the
  * whowas info.  there can be some 40k such structures alive at any
  * given time, while the number of unique server names a server sees in
  * its lifetime is at most a few hundred.  by tokenizing server names

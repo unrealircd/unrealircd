@@ -40,7 +40,7 @@
 #include <string.h>
 
 char *collapse(char *pattern);
-extern aClient *client;
+extern Client *client;
 
 ID_Copyright("(C) Tony Vincell");
 
@@ -143,7 +143,7 @@ struct crule_funclistent crule_funclist[] = {
 int  crule_connected(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-	aClient *acptr;
+	Client *acptr;
 
 	/* taken from m_links */
 	/* Faster this way -- codemastr*/
@@ -160,7 +160,7 @@ int  crule_connected(int numargs, void *crulearg[])
 int  crule_directcon(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-	aClient *acptr;
+	Client *acptr;
 
 	/* adapted from m_trace and exit_one_client */
 	/* XXX: iterate server_list when added */
@@ -179,7 +179,7 @@ int  crule_directcon(int numargs, void *crulearg[])
 int  crule_via(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-	aClient *acptr;
+	Client *acptr;
 
 	/* adapted from m_links */
 	/* Faster this way -- codemastr */
@@ -198,7 +198,7 @@ int  crule_via(int numargs, void *crulearg[])
 int  crule_directop(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-	aClient *acptr;
+	Client *acptr;
 
 	/* adapted from m_trace */
 	list_for_each_entry(acptr, &lclient_list, lclient_node)

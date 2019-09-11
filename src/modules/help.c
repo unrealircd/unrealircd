@@ -80,7 +80,7 @@ ConfigItem_help *Find_Help(char *command)
 	return NULL;
 }
 
-int  parse_help(aClient *sptr, char *name, char *help)
+int  parse_help(Client *sptr, char *name, char *help)
 {
 	ConfigItem_help *helpitem;
 	aMotdLine *text;

@@ -63,7 +63,7 @@ CMD_FUNC(m_connect)
 	int  retval;
 	ConfigItem_link	*aconf;
 	ConfigItem_deny_link *deny;
-	aClient *acptr;
+	Client *acptr;
 
 
 	if (!IsServer(sptr) && MyConnect(sptr) && !ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && parc > 3)
