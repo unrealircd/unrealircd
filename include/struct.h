@@ -937,124 +937,105 @@ struct Client {
 /** Local client information, use sptr->local to access these (see also @link Client @endlink).
  */
 struct LocalClient {
-	int  fd;				/**< File descriptor, which is >= 0, for local clients */
-	time_t since;		/* time they will next be allowed to send something */
-	time_t firsttime;		/* Time it was created */
-	time_t lasttime;		/* last time any message was received */
-	time_t last;		/* last time a RESETIDLE message was received */
-	time_t nexttarget;	/* next time that a new target will be allowed (msg/notice/invite) */
- 	time_t nextnick;		/* Time the next nick change will be allowed */
-	u_char targets[MAXCCUSERS];	/* hash values of targets */
-	char buffer[BUFSIZE];	/* Incoming message buffer */
-	short lastsq;		/* # of 2k blocks when sendqueued called last */
-	dbuf sendQ;		/* Outgoing message queue--if socket full */
-	dbuf recvQ;		/* Hold for data incoming yet to be parsed */
-	uint32_t nospoof;	/* Anti-spoofing random number */
-	int proto;		/* ProtoCtl options */
-	long caps;		/* Client capabilities */
-	long sendM;		/* Statistics: protocol messages send */
-	long sendK;		/* Statistics: total k-bytes send */
-	long receiveM;		/* Statistics: protocol messages received */
-	SSL		*ssl;
-	long receiveK;		/* Statistics: total k-bytes received */
-	u_short sendB;		/* counters to count upto 1-k lots of bytes */
-	u_short receiveB;	/* sent and received. */
-	ConfigItem_listen *listener;
-	ConfigItem_class *class;		/* Configuration record associated */
-	int authfd;		/* fd for rfc931 authentication */
-        long serial;            /* current serial for send.c functions */
-	u_short port;		/* remote port of client */
-	struct hostent *hostp;
-	u_short watches;	/* Keep track of count of notifies */
-	Link *watch;		/* Links to clients notify-structures */
-	char sockhost[HOSTLEN + 1];	/* This is the host name from the socket
-					   ** and after which the connection was
-					   ** accepted.
-					 */
-	char *passwd;
+	int fd;				/**< File descriptor, can be <0 if socket has been closed already. */
+	time_t since;			/**< Time when user will next be allowed to send something (actually since<currenttime+10) */
+	time_t firsttime;		/**< Time user was created (connected on IRC) */
+	time_t lasttime;		/**< Last time any message was received */
+	time_t last;			/**< Last time a RESETIDLE message was received (PRIVMSG) */
+	time_t nexttarget;		/**< Next time that a new target will be allowed (msg/notice/invite) */
+	time_t nextnick;		/**< Time the next nick change will be allowed */
+	u_char targets[MAXCCUSERS];	/**< Hash values of targets for target limiting */
+	char buffer[BUFSIZE];		/**< Incoming message buffer */
+	short lastsq;			/**< # of 2k blocks when sendqueued called last */
+	dbuf sendQ;			/**< Outgoing send queue (data to be sent) */
+	dbuf recvQ;			/**< Incoming receive queue (incoming data yet to be parsed) */
+	uint32_t nospoof;		/**< Anti-spoofing random number (used in user handshake PING/PONG) */
+	int proto;			/**< PROTOCTL options */
+	long caps;			/**< User capabilities */
+	SSL *ssl;			/**< OpenSSL/LibreSSL struct for SSL/TLS connection */
+	long sendM;			/**< Statistics: protocol messages send */
+	long sendK;			/**< Statistics: total k-bytes send */
+	long receiveM;			/**< Statistics: protocol messages received */
+	long receiveK;			/**< Statistics: total k-bytes received */
+	u_short sendB;			/**< Statistics: counters to count upto 1-k lots of bytes */
+	u_short receiveB;		/**< Statistics: sent and received (???) */
+	ConfigItem_listen *listener;	/**< If this client IsListening() then this is the listener configuration attached to it */
+	ConfigItem_class *class;	/**< The class { } block associated to this client */
+	int authfd;			/**< File descriptor for ident checking (RFC931) */
+	long serial;			/**< Current serial number for send.c functions (to avoid sending duplicate messages) */
+	u_short port;			/**< Remote TCP port of client */
+	struct hostent *hostp;		/**< Host record for this client (used by DNS code) */
+	Link *watch;			/**< Watch notification list (WATCH) for this user */
+	u_short watches;		/**< Number of entries in the watch list */
+	char sockhost[HOSTLEN + 1];	/**< Hostname from the socket */
+	char *passwd;			/**< Password used during connect, if any (freed once connected and set to NULL) */
 #ifdef DEBUGMODE
-	time_t cputime;
+	time_t cputime;			/**< Something with debugging (why is this a time_t? TODO) */
 #endif
-	char *error_str;	/* Quit reason set by dead_link in case of socket/buffer error */
-
-	char sasl_agent[NICKLEN + 1];
-	unsigned char sasl_out;
-	unsigned char sasl_complete;
-	u_short sasl_cookie;
-	char *sni_servername; /**< Servername as sent by client during SNI (otherwise NULL) */
-	int cap_protocol; /**< CAP protocol in use. At least 300 for any CAP capable client. 302 for 3.2, etc.. */
-	int identbufcnt;			/**< Counter for 'ident' reading code */
+	char *error_str;		/**< Quit reason set by dead_link() in case of socket/buffer error, later used by exit_client() */
+	char sasl_agent[NICKLEN + 1];	/**< SASL: SASL Agent the user is interacting with */
+	unsigned char sasl_out;		/**< SASL: Number of outgoing sasl messages */
+	unsigned char sasl_complete;	/**< SASL: >0 if SASL authentication was successful */
+	u_short sasl_cookie;		/**< SASL: Temporary SASL cookie (TODO: get rid of this pseudo-nick code and use UID) */
+	char *sni_servername;		/**< Servername as sent by client via SNI (Server Name Indication) in SSL/TLS, otherwise NULL */
+	int cap_protocol;		/**< CAP protocol in use. At least 300 for any CAP capable client. 302 for 3.2, etc.. */
+	int identbufcnt;		/**< Counter for 'ident' reading code */
 };
 
 /** User information (persons, not servers), you use sptr->user to access these (see also @link Client @endlink).
  */
 struct User {
-	Membership *channel;		/* chain of channel pointer blocks */
-	Link *invited;		/* chain of invite pointer blocks */
-	Link *silence;		/* chain of silence pointer blocks */
-	Link *dccallow;		/* chain of dccallowed entries */
-	char *away;		/* pointer to away message */
-
-	/*
-	 * svid: a value that is assigned by services to this user record.
-	 * in previous versions of Unreal, this was strictly a timestamp value,
-	 * which is less useful in the modern world of IRC where nicks are grouped to
-	 * accounts, so it is now a string.
-	 */
-	char svid[SVIDLEN + 1];
-
-	signed char refcnt;	/* Number of times this block is referenced */
-	unsigned short joined;		/* number of channels joined */
-	char username[USERLEN + 1];
-	char realhost[HOSTLEN + 1];
-	char cloakedhost[HOSTLEN + 1]; /* cloaked host (masked host for caching). NOT NECESSARILY THE SAME AS virthost. */
-	char *virthost;
-	char *server;
-	SWhois *swhois; /* special whois entries */
-	ChannelListOptions *lopt;            /* Saved /list options */
-	aWhowas *whowas;
-	int snomask;
-#ifdef	LIST_DEBUG
-	Client *bcptr;
-#endif
-	char *operlogin;	/* Only used if user is/was opered, used for oper::maxlogins */
+	Membership *channel;		/**< Channels that the user is in (linked list) */
+	Link *invited;			/**< Channels has the user been invited to (linked list) */
+	Link *silence;			/**< Silence list (linked list) */
+	Link *dccallow;			/**< DCCALLOW list (linked list) */
+	char *away;			/**< AWAY message, or NULL if not away */
+	char svid[SVIDLEN + 1];		/**< Unique value assigned by services (SVID) */
+	signed char refcnt;		/**< Reference counter (since this same record can also be used by Whowas and Server) */
+	unsigned short joined;		/**< Number of channels joined */
+	char username[USERLEN + 1];	/**< Username, the user portion in nick!user@host. */
+	char realhost[HOSTLEN + 1];	/**< Realhost, the real host of the user (IP or hostname) - usually this is not shown to other users */
+	char cloakedhost[HOSTLEN + 1];	/**< Cloaked host - generated by cloaking algorithm */
+	char *virthost;			/**< Virtual host - when user has user mode +x this is the active host */
+	char *server;			/**< Server name the user is on (?) */
+	SWhois *swhois;			/**< Special "additional" WHOIS entries such as "a Network Administrator" */
+	ChannelListOptions *lopt;	/**< Saved channel list options (during /LIST command) */
+	aWhowas *whowas;		/**< Something for whowas :D :D */
+	int snomask;			/**< Server Notice Mask (snomask) - only for IRCOps */
+	char *operlogin;		/**< Which oper { } block was used to oper up, otherwise NULL - used by oper::maxlogins */
 	struct {
-		time_t nick_t;
-		unsigned char nick_c;
-		time_t away_t;		/* last time the user set away */
-		unsigned char away_c;	/* number of times away has been set */
-		time_t knock_t;		/* last time the user has knocked */
-		unsigned char knock_c;	/* number of times the user knocked */
-		time_t invite_t;	/* last time the user used /invite */
-		unsigned char invite_c;	/* number of times the user used /invite */
-	} flood;
-	time_t lastaway;
+		time_t nick_t;		/**< For set::anti-flood::nick-flood: time */
+		time_t away_t;		/**< For set::anti-flood::away-flood: time */
+		time_t knock_t;		/**< For set::anti-flood::knock-flood: time */
+		time_t invite_t;	/**< For set::anti-flood::invite-flood: time */
+		unsigned char nick_c;	/**< For set::anti-flood::nick-flood: counter */
+		unsigned char away_c;	/**< For set::anti-flood::away-flood: counter */
+		unsigned char knock_c;	/**< For set::anti-flood::knock-flood: counter */
+		unsigned char invite_c;	/**< For set::anti-flood::invite-flood: counter */
+	} flood;			/**< Anti-flood counters */
+	time_t lastaway;		/**< Last time the user went AWAY */
 };
 
 /** Server information (local servers and remote servers), you use sptr->serv to access these (see also @link Client @endlink).
  */
 struct Server {
-	struct Server 	*nexts;
-	ClientUser 		*user;		/* who activated this connection */
-	char 		*up;		/* uplink for this server */
-	char 		by[NICKLEN + 1];
-	ConfigItem_link *conf;
-	time_t 		timestamp;	/* Remotely determined connect try time */
-	long		users;
-	time_t		boottime;	/* Startup time of server */
-#ifdef	LIST_DEBUG
-	Client *bcptr;
-#endif
+	ClientUser *user;		/**< Who activated this connection */
+	char *up;			/**< Name of uplink for this server */
+	char by[NICKLEN + 1];		/**< Uhhhh - who activated this connection - AGAIN? */
+	ConfigItem_link *conf;		/**< link { } block associated with this server, or NULL */
+	time_t timestamp;		/**< Remotely determined connect try time */
+	long users;			/**< Number of users on this server */
+	time_t boottime;		/**< Startup time of server (boot time) */
 	struct {
-		unsigned synced:1;		/* Server linked? (3.2beta18+) */
-		unsigned server_sent:1;		/* SERVER message sent to this link? (for outgoing links) */
+		unsigned synced:1;	/**< Server synchronization finished? (3.2beta18+) */
+		unsigned server_sent:1;	/**< SERVER message sent to this link? (for outgoing links) */
 	} flags;
 	struct {
-		char *usermodes;
-		char *chanmodes[4];
-		int protocol;
-		char *software;
-		char *nickchars;
+		char *usermodes;	/**< Usermodes that this server knows about */
+		char *chanmodes[4];	/**< Channel modes that this server knows (in 4 groups, like CHANMODES= in ISUPPORT/005) */
+		int protocol;		/**< Link protocol version */
+		char *software;		/**< Name of the software (eg: unrealircd-X.Y.Z) */
+		char *nickchars;	/**< Nick character sets active on this server) */
 	} features;
 };
 
