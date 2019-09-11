@@ -405,7 +405,7 @@ void _send_moddata_members(Client *srv)
 		{
 			char *user = CHECKPROTO(srv, PROTO_SID) ? ID(m->cptr) : m->cptr->name;
 
-			if (m->cptr->from == srv)
+			if (m->cptr->direction == srv)
 				continue; /* from srv's direction */
 			for (mdi = MDInfo; mdi; mdi = mdi->next)
 			{
@@ -426,7 +426,7 @@ void _send_moddata_members(Client *srv)
 		if (!IsPerson(acptr) || !acptr->user)
 			continue;
 
-		if (acptr->from == srv)
+		if (acptr->direction == srv)
 			continue; /* from srv's direction */
 
 		for (m = acptr->user->channel; m; m = m->next)

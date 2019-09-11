@@ -1219,7 +1219,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	me.hopcount = 0;
 	me.local->authfd = -1;
 	me.user = NULL;
-	me.from = &me;
+	me.direction = &me;
 
 	/*
 	 * This listener will never go away

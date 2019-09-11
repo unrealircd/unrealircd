@@ -1333,9 +1333,9 @@ int paracount_for_chanmode_from_server(Client *acptr, u_int what, char mode)
 		 * received this MODE. The uplink is the directly-connected-server to us
 		 * and may differ from the server the user is actually on. This is correct.
 		 */
-		if (!acptr->from || !acptr->from->serv)
+		if (!acptr->direction || !acptr->direction->serv)
 			return 0;
-		acptr = acptr->from;
+		acptr = acptr->direction;
 	}
 
 	if (acptr->serv->features.chanmodes[0] && strchr(acptr->serv->features.chanmodes[0], mode))
@@ -1673,7 +1673,7 @@ CMD_FUNC(_m_umode)
 				break;
 			case 'o':
 			case 'O':
-				if(sptr->from->flags & FLAGS_QUARANTINE)
+				if(sptr->direction->flags & FLAGS_QUARANTINE)
 				{
 					sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", sptr->name, sptr->srvptr->name);
 					sendto_server(NULL, 0, 0, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)", me.name, sptr->name, me.name);

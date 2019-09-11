@@ -101,7 +101,7 @@ Client *make_client(Client *from, Client *servr)
 #endif
 
 	/* Note:  structure is zero (calloc) */
-	cptr->from = from ? from : cptr;	/* 'from' of local client is self! */
+	cptr->direction = from ? from : cptr;	/* 'from' of local client is self! */
 	cptr->user = NULL;
 	cptr->serv = NULL;
 	cptr->srvptr = servr;

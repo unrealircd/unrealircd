@@ -632,7 +632,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 		   ** Close the Client connection first and mark it
 		   ** so that no messages are attempted to send to it.
 		   ** (The following *must* make MyConnect(sptr) == FALSE!).
-		   ** It also makes sptr->from == NULL, thus it's unnecessary
+		   ** It also makes sptr->direction == NULL, thus it's unnecessary
 		   ** to test whether "sptr != acptr" in the following loops.
 		 */
 		close_connection(sptr);

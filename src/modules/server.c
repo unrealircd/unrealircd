@@ -404,7 +404,7 @@ skip_host_check:
 			return exit_client(sptr, sptr, sptr, NULL, "Server Exists");
 		}
 
-		acptr = acptr->from;
+		acptr = acptr->direction;
 		ocptr =
 		    (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
 		acptr =
@@ -412,11 +412,11 @@ skip_host_check:
 		sendto_one(acptr, NULL,
 		    "ERROR :Server %s already exists from %s",
 		    servername,
-		    (ocptr->from ? ocptr->from->name : "<nobody>"));
+		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
 		sendto_ops_and_log
 		    ("Link %s cancelled, server %s already exists from %s",
 		    get_client_name(acptr, TRUE), servername,
-		    (ocptr->from ? ocptr->from->name : "<nobody>"));
+		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
 		return exit_client(acptr, acptr, acptr, NULL,
 		    "Server Exists");
 	}
@@ -643,7 +643,7 @@ CMD_FUNC(m_server_remote)
 			return exit_client(sptr, sptr, sptr, NULL, "Server Exists");
 		}
 
-		acptr = acptr->from;
+		acptr = acptr->direction;
 		ocptr =
 		    (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
 		acptr =
@@ -651,11 +651,11 @@ CMD_FUNC(m_server_remote)
 		sendto_one(acptr, NULL,
 		    "ERROR :Server %s already exists from %s",
 		    servername,
-		    (ocptr->from ? ocptr->from->name : "<nobody>"));
+		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
 		sendto_ops_and_log
 		    ("Link %s cancelled, server %s already exists from %s",
 		    get_client_name(acptr, TRUE), servername,
-		    (ocptr->from ? ocptr->from->name : "<nobody>"));
+		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
 		if (acptr == cptr) {
 			return exit_client(acptr, acptr, acptr, NULL, "Server Exists");
 		} else {
@@ -1006,8 +1006,8 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 
 	list_for_each_entry_reverse(acptr, &global_server_list, client_node)
 	{
-		/* acptr->from == acptr for acptr == cptr */
-		if (acptr->from == cptr)
+		/* acptr->direction == acptr for acptr == cptr */
+		if (acptr->direction == cptr)
 			continue;
 
 		if (IsServer(acptr))
@@ -1051,8 +1051,8 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 	/* Synching nick information */
 	list_for_each_entry_reverse(acptr, &client_list, client_node)
 	{
-		/* acptr->from == acptr for acptr == cptr */
-		if (acptr->from == cptr)
+		/* acptr->direction == acptr for acptr == cptr */
+		if (acptr->direction == cptr)
 			continue;
 		if (IsPerson(acptr))
 		{

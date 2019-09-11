@@ -104,7 +104,7 @@ CMD_FUNC(m_trace)
 
 		  ac2ptr = find_client(tname, NULL);
 		  sendnumeric(sptr, RPL_TRACELINK,
-		      version, debugmode, tname, ac2ptr->from->name);
+		      version, debugmode, tname, ac2ptr->direction->name);
 		  return 0;
 	  }
 	  case HUNTED_ISME:
@@ -124,12 +124,12 @@ CMD_FUNC(m_trace)
 	if (doall) {
 		list_for_each_entry(acptr, &client_list, client_node)
 		{
-			if (acptr->from->fd < 0)
+			if (acptr->direction->fd < 0)
 				continue;
 			if (IsPerson(acptr))
-				link_u[acptr->from->fd]++;
+				link_u[acptr->direction->fd]++;
 			else if (IsServer(acptr))
-				link_s[acptr->from->fd]++;
+				link_s[acptr->direction->fd]++;
 		}
 	}
 

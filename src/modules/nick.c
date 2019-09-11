@@ -97,7 +97,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 		new ? "nick-change" : "new user connecting");
 
 	new_server = cptr->name; // not correct, should be sptr
-	existing_server = (existing == existing->from) ? me.name : existing->from->name;
+	existing_server = (existing == existing->direction) ? me.name : existing->direction->name;
 	if (type == NICKCOL_EXISTING_WON)
 		snprintf(comment, sizeof(comment), "Nick collision: %s <- %s", new_server, existing_server);
 	else if (type == NICKCOL_NEW_WON)
@@ -327,7 +327,7 @@ CMD_FUNC(m_uid)
 	}
 
 	/* Kill quarantined opers early... */
-	if (IsServer(cptr) && (sptr->from->flags & FLAGS_QUARANTINE) &&
+	if (IsServer(cptr) && (sptr->direction->flags & FLAGS_QUARANTINE) &&
 	    (parc >= 11) && strchr(parv[8], 'o'))
 	{
 		ircstp->is_kill++;
@@ -353,7 +353,7 @@ CMD_FUNC(m_uid)
 	if (IsServer(cptr) &&
 	    (parc > 7
 	    && (!(serv = find_server(sptr->name, NULL))
-	    || serv->from != cptr->from)))
+	    || serv->direction != cptr->direction)))
 	{
 		sendto_realops("Cannot find SID for %s (%s)", sptr->name,
 		    backupbuf);
@@ -404,11 +404,11 @@ CMD_FUNC(m_uid)
 		   ** Ultimate way to jupiter a nick ? >;-). -avalon
 		 */
 		sendto_umode(UMODE_OPER, "Nick collision on %s(%s <- %s)",
-		    sptr->name, acptr->from->name,
+		    sptr->name, acptr->direction->name,
 		    get_client_name(cptr, FALSE));
 		ircstp->is_kill++;
 		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s)",
-		    me.name, sptr->name, me.name, acptr->from->name,
+		    me.name, sptr->name, me.name, acptr->direction->name,
 		    /* NOTE: Cannot use get_client_name
 		       ** twice here, it returns static
 		       ** string pointer--the other info
@@ -458,7 +458,7 @@ CMD_FUNC(m_uid)
 				    || mycmp(acptr->user->realhost, parv[5]));
 		}
 		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %lld <- %s %lld)",
-		    acptr->name, acptr->from->name, (long long)acptr->lastnick,
+		    acptr->name, acptr->direction->name, (long long)acptr->lastnick,
 		    cptr->name, (long long)lastnick);
 		/*
 		   **    I'm putting the KILL handling here just to make it easier
@@ -480,7 +480,7 @@ CMD_FUNC(m_uid)
 		}
 
 		if ((differ && (acptr->lastnick > lastnick)) ||
-		    (!differ && (acptr->lastnick < lastnick)) || acptr->from == cptr)	/* we missed a QUIT somewhere ? */
+		    (!differ && (acptr->lastnick < lastnick)) || acptr->direction == cptr)	/* we missed a QUIT somewhere ? */
 		{
 			nick_collision(cptr, parv[1], ((parc > 6) ? parv[6] : NULL), NULL, acptr, NICKCOL_NEW_WON);
 			/* We got rid of the "wrong" user. Introduce the correct one. */
@@ -660,7 +660,7 @@ CMD_FUNC(m_nick)
 	}
 
 	/* Kill quarantined opers early... */
-	if (IsServer(cptr) && (sptr->from->flags & FLAGS_QUARANTINE) &&
+	if (IsServer(cptr) && (sptr->direction->flags & FLAGS_QUARANTINE) &&
 	    (parc >= 11) && strchr(parv[8], 'o'))
 	{
 		ircstp->is_kill++;
@@ -686,7 +686,7 @@ CMD_FUNC(m_nick)
 	if (IsServer(cptr) &&
 	    (parc > 7
 	    && (!(serv = find_server(parv[6], NULL))
-	    || serv->from != cptr->from)))
+	    || serv->direction != cptr->direction)))
 	{
 		sendto_realops("Cannot find server %s (%s)", parv[6],
 		    backupbuf);
@@ -777,11 +777,11 @@ CMD_FUNC(m_nick)
 		   ** Ultimate way to jupiter a nick ? >;-). -avalon
 		 */
 		sendto_umode(UMODE_OPER, "Nick collision on %s(%s <- %s)",
-		    sptr->name, acptr->from->name,
+		    sptr->name, acptr->direction->name,
 		    get_client_name(cptr, FALSE));
 		ircstp->is_kill++;
 		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s)",
-		    me.name, sptr->name, me.name, acptr->from->name,
+		    me.name, sptr->name, me.name, acptr->direction->name,
 		    /* NOTE: Cannot use get_client_name
 		       ** twice here, it returns static
 		       ** string pointer--the other info
@@ -897,7 +897,7 @@ CMD_FUNC(m_nick)
 				    || mycmp(acptr->user->realhost, parv[5]));
 		}
 		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %lld <- %s %lld)",
-		    acptr->name, acptr->from->name, (long long)acptr->lastnick,
+		    acptr->name, acptr->direction->name, (long long)acptr->lastnick,
 		    cptr->name, (long long)lastnick);
 		/*
 		   **    I'm putting the KILL handling here just to make it easier
@@ -919,7 +919,7 @@ CMD_FUNC(m_nick)
 		}
 
 		if ((differ && (acptr->lastnick > lastnick)) ||
-		    (!differ && (acptr->lastnick < lastnick)) || acptr->from == cptr)	/* we missed a QUIT somewhere ? */
+		    (!differ && (acptr->lastnick < lastnick)) || acptr->direction == cptr)	/* we missed a QUIT somewhere ? */
 		{
 			nick_collision(cptr, parv[1], nickid, NULL, acptr, NICKCOL_NEW_WON);
 			/* OK, we got rid of the "wrong" user, now we're going to add the
@@ -946,9 +946,9 @@ CMD_FUNC(m_nick)
 		differ = (mycmp(acptr->user->username, sptr->user->username) ||
 		    mycmp(acptr->user->realhost, sptr->user->realhost));
 		sendto_umode(UMODE_OPER, "Nick change collision from %s to %s (%s %lld <- %s %lld)",
-		    sptr->name, acptr->name, acptr->from->name,
+		    sptr->name, acptr->name, acptr->direction->name,
 		    (long long)acptr->lastnick,
-		    sptr->from->name, (long long)lastnick);
+		    sptr->direction->name, (long long)lastnick);
 		if (!(parc > 2) || lastnick == acptr->lastnick)
 		{
 			nick_collision(cptr, parv[1], nickid, sptr, acptr, NICKCOL_EQUAL);
@@ -1474,14 +1474,14 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 			return exit_client(sptr, sptr, &me, NULL,
 			    "USER without prefix(2.8) or wrong prefix");
 		}
-		else if (acptr->from != sptr->from)
+		else if (acptr->direction != sptr->direction)
 		{
 			sendto_ops("Bad User [%s] :%s USER %s %s, != %s[%s]",
 			    cptr->name, nick, user->username, user->server,
-			    acptr->name, acptr->from->name);
+			    acptr->name, acptr->direction->name);
 			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s != %s[%s])",
 			    me.name, sptr->name, me.name, user->server,
-			    acptr->from->name, acptr->from->local->sockhost);
+			    acptr->direction->name, acptr->direction->local->sockhost);
 			sptr->flags |= FLAGS_KILLED;
 			return exit_client(sptr, sptr, &me, NULL,
 			    "USER server wrong direction");

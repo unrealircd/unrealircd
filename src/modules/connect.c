@@ -90,7 +90,7 @@ CMD_FUNC(m_connect)
 	{
 		sendnotice(sptr, "*** Connect: Server %s %s %s.",
 		    parv[1], "already exists from",
-		    acptr->from->name);
+		    acptr->direction->name);
 		return 0;
 	}
 

@@ -163,13 +163,13 @@ int do_numeric(int numeric, Client *cptr, Client *sptr, MessageTag *recv_mtags, 
 				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
 				    sptr->name, numeric, nick, buffer);
 			}
-			else if (IsServer(acptr) && acptr->from != cptr)
+			else if (IsServer(acptr) && acptr->direction != cptr)
 				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
 				    sptr->name, numeric, nick, buffer);
 		}
 		else if ((acptr = find_server_quick(nick)))
 		{
-			if (!IsMe(acptr) && acptr->from != cptr)
+			if (!IsMe(acptr) && acptr->direction != cptr)
 				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
 				    sptr->name, numeric, nick, buffer);
 		}

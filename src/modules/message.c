@@ -425,7 +425,7 @@ int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char
 				new_message(sptr, recv_mtags, &mtags);
 				labeled_response_inhibit = 1;
 				sendto_prefix_one(acptr, sptr, mtags, ":%s %s %s :%s",
-				                  CHECKPROTO(acptr->from, PROTO_SID) ? ID(sptr) : sptr->name,
+				                  CHECKPROTO(acptr->direction, PROTO_SID) ? ID(sptr) : sptr->name,
 				                  newcmd,
 				                  (MyClient(acptr) ? acptr->name : nick),
 				                  text);
@@ -507,7 +507,7 @@ int _is_silenced(Client *sptr, Client *acptr)
 		{
 			if (!MyConnect(sptr))
 			{
-				sendto_one(sptr->from, NULL, ":%s SILENCE %s :%s",
+				sendto_one(sptr->direction, NULL, ":%s SILENCE %s :%s",
 				    acptr->name, sptr->name, lp->value.cp);
 				lp->flags = 1;
 			}

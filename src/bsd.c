@@ -648,7 +648,7 @@ void completed_connection(int fd, int revents, void *data)
 /*
 ** close_connection
 **	Close the physical connection. This function must make
-**	MyConnect(cptr) == FALSE, and set cptr->from == NULL.
+**	MyConnect(cptr) == FALSE, and set cptr->direction == NULL.
 */
 void close_connection(Client *cptr)
 {
@@ -728,7 +728,7 @@ void close_connection(Client *cptr)
 
 	}
 
-	cptr->from = NULL;	/* ...this should catch them! >:) --msa */
+	cptr->direction = NULL;	/* ...this should catch them! >:) --msa */
 
 	return;
 }

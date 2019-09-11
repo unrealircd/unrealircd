@@ -207,7 +207,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 				remove_unknown(cptr, sender);
 				return -1;
 			}
-			if (from->from != cptr)
+			if (from->direction != cptr)
 			{
 				ircstp->is_wrdi++;
 				return cancel_clients(cptr, from, ch);

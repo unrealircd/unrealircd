@@ -516,7 +516,7 @@ getnick:
 			if (!(acptr = find_person(nick, NULL)))
 				continue;
 
-			if (acptr->from != sptr->from)
+			if (acptr->direction != sptr->direction)
 			{
 				if (IsMember(acptr, chptr))
 				{

@@ -146,7 +146,7 @@ int message_tag_ok(Client *cptr, char *name, char *value)
 {
 	MessageTagHandler *m;
 
-	if (IsServer(cptr) || IsServer(cptr->from))
+	if (IsServer(cptr) || IsServer(cptr->direction))
 		return 1; /* assume upstream filtered already */
 
 	m = MessageTagHandlerFind(name);
@@ -261,7 +261,7 @@ char *_mtags_to_string(MessageTag *m, Client *acptr)
 		return NULL;
 
 	/* Remote servers need to indicate support via PROTOCTL MTAGS */
-	if (acptr->from && IsServer(acptr->from) && !SupportMTAGS(acptr->from))
+	if (acptr->direction && IsServer(acptr->direction) && !SupportMTAGS(acptr->direction))
 		return NULL;
 
 	*buf = '\0';

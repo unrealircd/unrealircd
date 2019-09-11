@@ -204,8 +204,8 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 	
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", msg, to->name));
 
-	if (to->from)
-		to = to->from;
+	if (to->direction)
+		to = to->direction;
 	if (IsDead(to))
 		return;		/* This socket has already
 				   been marked as dead */
@@ -366,7 +366,7 @@ void sendto_channel(Channel *chptr, Client *from, Client *skip,
 		acptr = lp->cptr;
 
 		/* Skip sending to 'skip' */
-		if ((acptr == skip) || (acptr->from == skip))
+		if ((acptr == skip) || (acptr->direction == skip))
 			continue;
 		/* Don't send to deaf clients (unless 'senddeaf' is set) */
 		if (IsDeaf(acptr) && (sendflags & SKIP_DEAF))
@@ -411,13 +411,13 @@ good:
 			if (sendflags & SEND_REMOTE)
 			{
 				/* Message already sent to remote link? */
-				if (acptr->from->local->serial != current_serial)
+				if (acptr->direction->local->serial != current_serial)
 				{
 					va_start(vl, pattern);
 					vsendto_prefix_one(acptr, from, mtags, pattern, vl);
 					va_end(vl);
 
-					acptr->from->local->serial = current_serial;
+					acptr->direction->local->serial = current_serial;
 				}
 			}
 		}
@@ -436,15 +436,15 @@ good:
 		{
 			list_for_each_entry(acptr, &server_list, special_node)
 			{
-				if ((acptr == skip) || (acptr->from == skip))
+				if ((acptr == skip) || (acptr->direction == skip))
 					continue; /* still obey this rule.. */
-				if (acptr->from->local->serial != current_serial)
+				if (acptr->direction->local->serial != current_serial)
 				{
 					va_start(vl, pattern);
 					vsendto_prefix_one(acptr, from, mtags, pattern, vl);
 					va_end(vl);
 
-					acptr->from->local->serial = current_serial;
+					acptr->direction->local->serial = current_serial;
 				}
 			}
 		}
@@ -484,7 +484,7 @@ void sendto_server(Client *one, unsigned long caps, unsigned long nocaps, Messag
 	{
 		va_list vl;
 
-		if (one && cptr == one->from)
+		if (one && cptr == one->direction)
 			continue;
 
 		if (caps && !CHECKPROTO(cptr, caps))
@@ -833,14 +833,14 @@ void sendto_ops_butone(Client *one, Client *from, FORMAT_STRING(const char *patt
 	{
 		if (!SendWallops(cptr))
 			continue;
-		if (cptr->from->local->serial == current_serial)	/* sent message along it already ? */
+		if (cptr->direction->local->serial == current_serial)	/* sent message along it already ? */
 			continue;
-		if (cptr->from == one)
+		if (cptr->direction == one)
 			continue;	/* ...was the one I should skip */
-		cptr->from->local->serial = current_serial;
+		cptr->direction->local->serial = current_serial;
 
 		va_start(vl, pattern);
-		vsendto_prefix_one(cptr->from, from, NULL, pattern, vl);
+		vsendto_prefix_one(cptr->direction, from, NULL, pattern, vl);
 		va_end(vl);
 	}
 }
@@ -1053,7 +1053,7 @@ void sendto_serv_butone_nickcmd(Client *one, Client *sptr, char *umodes)
 	{
 		va_list vl;
 
-		if (one && cptr == one->from)
+		if (one && cptr == one->direction)
 			continue;
 		
 		if (!CHECKPROTO(cptr, PROTO_SID) && !CHECKPROTO(cptr, PROTO_NICKv2))

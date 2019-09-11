@@ -975,7 +975,7 @@ CMD_FUNC(m_tempshun)
 	}
 	if (!MyClient(acptr))
 	{
-		sendto_one(acptr->from, NULL, ":%s TEMPSHUN %s :%s",
+		sendto_one(acptr->direction, NULL, ":%s TEMPSHUN %s :%s",
 			sptr->name, parv[1], comment);
 	} else {
 		char buf[1024];
@@ -3323,7 +3323,7 @@ void tkl_broadcast_entry(int add, Client *sender, Client *skip, TKL *tkl)
 
 	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (skip && cptr == skip->from)
+		if (skip && cptr == skip->direction)
 			continue;
 
 		tkl_synch_send_entry(add, sender, cptr, tkl);

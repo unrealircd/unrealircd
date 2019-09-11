@@ -93,12 +93,12 @@ void reread_motdsandrules();
 **
 **	*Always* true (if 'parse' and others are working correct):
 **
-**	1)	sptr->from == cptr  (note: cptr->from == cptr)
+**	1)	sptr->direction == cptr  (note: cptr->direction == cptr)
 **
 **	2)	MyConnect(sptr) <=> sptr == cptr (e.g. sptr
 **		*cannot* be a local connection, unless it's
 **		actually cptr!). [MyConnect(x) should probably
-**		be defined as (x == x->from) --msa ]
+**		be defined as (x == x->direction) --msa ]
 **
 **	parc	number of variable parameter strings (if zero,
 **		parv is allowed to be NULL)

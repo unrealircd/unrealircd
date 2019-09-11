@@ -136,12 +136,12 @@ long set_usermode(char *umode)
 **
 **	*Always* true (if 'parse' and others are working correct):
 **
-**	1)	sptr->from == cptr  (note: cptr->from == cptr)
+**	1)	sptr->direction == cptr  (note: cptr->direction == cptr)
 **
 **	2)	MyConnect(sptr) <=> sptr == cptr (e.g. sptr
 **		*cannot* be a local connection, unless it's
 **		actually cptr!). [MyConnect(x) should probably
-**		be defined as (x == x->from) --msa ]
+**		be defined as (x == x->direction) --msa ]
 **
 **	parc	number of variable parameter strings (if zero,
 **		parv is allowed to be NULL)
@@ -206,7 +206,7 @@ int hunt_server(Client *cptr, Client *sptr, MessageTag *mtags, char *command, in
 		return HUNTED_ISME;
 
 	/* Never send the message back from where it came from */
-	if (acptr->from == sptr->from)
+	if (acptr->direction == sptr->direction)
 	{
 		sendnumeric(sptr, ERR_NOSUCHSERVER, parv[server]);
 		return HUNTED_NOSUCH;
