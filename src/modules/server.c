@@ -603,7 +603,7 @@ CMD_FUNC(m_server)
 			cptr->flags |= FLAGS_QUARANTINE;
 
 		ircsnprintf(descbuf, sizeof descbuf, "Server: %s", servername);
-		fd_desc(cptr->fd, descbuf);
+		fd_desc(cptr->local->fd, descbuf);
 
 		/* Start synch now */
 		if (m_server_synch(cptr, aconf) == FLUSH_BUFFER)

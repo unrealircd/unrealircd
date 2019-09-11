@@ -532,7 +532,7 @@ EVENT(check_deadsockets)
 		/* No need to notify opers here. It's already done when "FLAGS_DEADSOCKET" is set. */
 		if (cptr->flags & FLAGS_DEADSOCKET) {
 #ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->fd, cptr->name);
+			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->local->fd, cptr->name);
 #endif
 			cptr->flags &= ~FLAGS_DEADSOCKET; /* CPR. So we send the error. */
 			(void)exit_client(cptr, cptr, &me, NULL, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
@@ -545,7 +545,7 @@ EVENT(check_deadsockets)
 		/* No need to notify opers here. It's already done when "FLAGS_DEADSOCKET" is set. */
 		if (cptr->flags & FLAGS_DEADSOCKET) {
 #ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->fd, cptr->name);
+			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->local->fd, cptr->name);
 #endif
 			cptr->flags &= ~FLAGS_DEADSOCKET; /* CPR. So we send the error. */
 			(void)exit_client(cptr, cptr, &me, NULL, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
@@ -1170,7 +1170,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	load_tunefile();
 	make_umodestr();
 	me.flags = FLAGS_LISTEN;
-	me.fd = -1;
+	me.local->fd = -1;
 	SetMe(&me);
 	make_server(&me);
 	extcmodes_check_for_changes();
@@ -1427,7 +1427,7 @@ static void open_debugfile(void)
 	Client *cptr;
 	if (debuglevel >= 0) {
 		cptr = make_client(NULL, NULL);
-		cptr->fd = 2;
+		cptr->local->fd = 2;
 		SetLog(cptr);
 		cptr->local->port = debuglevel;
 		cptr->flags = 0;
@@ -1444,7 +1444,7 @@ static void open_debugfile(void)
 					exit(-1);
 
 #if 1
-			cptr->fd = fd;
+			cptr->local->fd = fd;
 			debugfd = fd;
 #else
 			/* if (fd != 2) {

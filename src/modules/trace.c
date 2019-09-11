@@ -124,12 +124,12 @@ CMD_FUNC(m_trace)
 	if (doall) {
 		list_for_each_entry(acptr, &client_list, client_node)
 		{
-			if (acptr->direction->fd < 0)
+			if (acptr->direction->local->fd < 0)
 				continue;
 			if (IsPerson(acptr))
-				link_u[acptr->direction->fd]++;
+				link_u[acptr->direction->local->fd]++;
 			else if (IsServer(acptr))
-				link_s[acptr->direction->fd]++;
+				link_s[acptr->direction->local->fd]++;
 		}
 	}
 
@@ -192,14 +192,14 @@ CMD_FUNC(m_trace)
 
 			case STAT_SERVER:
 				if (acptr->serv->user)
-					sendnumeric(sptr, RPL_TRACESERVER, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
-					    acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, acptr->serv->by,
+					sendnumeric(sptr, RPL_TRACESERVER, class, acptr->local->fd >= 0 ? link_s[acptr->local->fd] : -1,
+					    acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name, acptr->serv->by,
 					    acptr->serv->user->username,
 					    acptr->serv->user->realhost,
 					    now - acptr->local->lasttime);
 				else
-					sendnumeric(sptr, RPL_TRACESERVER, class, acptr->fd >= 0 ? link_s[acptr->fd] : -1,
-					    acptr->fd >= 0 ? link_u[acptr->fd] : -1, name, *(acptr->serv->by) ?
+					sendnumeric(sptr, RPL_TRACESERVER, class, acptr->local->fd >= 0 ? link_s[acptr->local->fd] : -1,
+					    acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name, *(acptr->serv->by) ?
 					    acptr->serv->by : "*", "*", me.name,
 					    now - acptr->local->lasttime);
 				cnt++;

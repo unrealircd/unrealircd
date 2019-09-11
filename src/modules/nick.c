@@ -1131,7 +1131,7 @@ CMD_FUNC(m_nick)
 	if (MyConnect(sptr))
 	{
 		snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
-		fd_desc(sptr->fd, descbuf);
+		fd_desc(sptr->local->fd, descbuf);
 	}
 
 	(void)strcpy(sptr->name, nick);
@@ -1380,7 +1380,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		int i;
 
 		snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
-		fd_desc(sptr->fd, descbuf);
+		fd_desc(sptr->local->fd, descbuf);
 
 		list_move(&sptr->lclient_node, &lclient_list);
 

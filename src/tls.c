@@ -653,7 +653,7 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 		return;
 	}
 
-	SSL_set_fd(acptr->local->ssl, acptr->fd);
+	SSL_set_fd(acptr->local->ssl, acptr->local->fd);
 	SSL_set_connect_state(acptr->local->ssl);
 	SSL_set_nonblocking(acptr->local->ssl);
 
@@ -681,7 +681,7 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 	{
 		case -1:
 			fd_close(fd);
-			acptr->fd = -1;
+			acptr->local->fd = -1;
 			--OpenFiles;
 			return;
 		case 0: 
@@ -854,7 +854,7 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr)
 #ifdef DEBUGMODE
 		/* This is quite possible I guess.. especially if we don't pay attention upstream :p */
 		ircd_log(LOG_ERROR, "Warning: fatal_ssl_error() called for already-dead-socket (%d/%s)",
-			sptr->fd, sptr->name);
+			sptr->local->fd, sptr->name);
 #endif
 		return -1;
 	}
@@ -934,8 +934,8 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr)
 	}
 
 	/* deregister I/O notification since we don't care anymore. the actual closing of socket will happen later. */
-	if (sptr->fd >= 0)
-		fd_unnotify(sptr->fd);
+	if (sptr->local->fd >= 0)
+		fd_unnotify(sptr->local->fd);
 
 	return -1;
 }
@@ -947,7 +947,7 @@ int client_starttls(Client *acptr)
 
 	acptr->flags |= FLAGS_TLS;
 
-	SSL_set_fd(acptr->local->ssl, acptr->fd);
+	SSL_set_fd(acptr->local->ssl, acptr->local->fd);
 	SSL_set_nonblocking(acptr->local->ssl);
 
 	if (acptr->serv && acptr->serv->conf)
@@ -956,7 +956,7 @@ int client_starttls(Client *acptr)
 		SSL_set_tlsext_host_name(acptr->local->ssl, acptr->serv->conf->servername);
 	}
 
-	if (ircd_SSL_connect(acptr, acptr->fd) < 0)
+	if (ircd_SSL_connect(acptr, acptr->local->fd) < 0)
 	{
 		Debug((DEBUG_DEBUG, "Failed SSL connect handshake in instance 1: %s", acptr->name));
 		SSL_set_shutdown(acptr->local->ssl, SSL_RECEIVED_SHUTDOWN);

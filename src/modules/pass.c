@@ -88,7 +88,7 @@ int _check_banned(Client *cptr, int exitflags)
 					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) - "
 					"Email %s for more information.\r\n",
 					cptr->ip, KLINE_ADDRESS);
-				(void)send(cptr->fd, zlinebuf, strlen(zlinebuf), 0);
+				(void)send(cptr->local->fd, zlinebuf, strlen(zlinebuf), 0);
 				return FLUSH_BUFFER;
 			} else {
 				ircsnprintf(zlinebuf, sizeof(zlinebuf),

@@ -101,9 +101,9 @@ CMD_FUNC(m_starttls)
 	if ((sptr->local->ssl = SSL_new(ctx)) == NULL)
 		goto fail;
 	sptr->flags |= FLAGS_TLS;
-	SSL_set_fd(sptr->local->ssl, sptr->fd);
+	SSL_set_fd(sptr->local->ssl, sptr->local->fd);
 	SSL_set_nonblocking(sptr->local->ssl);
-	if (!ircd_SSL_accept(sptr, sptr->fd)) {
+	if (!ircd_SSL_accept(sptr, sptr->local->fd)) {
 		Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", sptr->local->sockhost));
 		SSL_set_shutdown(sptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
 		SSL_smart_shutdown(sptr->local->ssl);

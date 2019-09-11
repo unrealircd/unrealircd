@@ -124,26 +124,26 @@ int send_queued(Client *to)
 			 * to the user and ask to notify us when there's data
 			 * to read.
 			 */
-			fd_setselect(to->fd, FD_SELECT_READ, send_queued_cb, to);
-			fd_setselect(to->fd, FD_SELECT_WRITE, NULL, to);
+			fd_setselect(to->local->fd, FD_SELECT_READ, send_queued_cb, to);
+			fd_setselect(to->local->fd, FD_SELECT_WRITE, NULL, to);
 			break;
 		}
 		/* Restore handling of reads towards read_packet(), since
 		 * it may be overwritten in an earlier call to send_queued(),
 		 * to handle reads by send_queued_cb(), see directly above.
 		 */
-		fd_setselect(to->fd, FD_SELECT_READ, read_packet, to);
+		fd_setselect(to->local->fd, FD_SELECT_READ, read_packet, to);
 		if (rlen < block->size)
 		{
 			/* incomplete write due to EWOULDBLOCK, reschedule */
-			fd_setselect(to->fd, FD_SELECT_WRITE, send_queued_cb, to);
+			fd_setselect(to->local->fd, FD_SELECT_WRITE, send_queued_cb, to);
 			break;
 		}
 	}
 	
 	/* Nothing left to write, stop asking for write-ready notification. */
-	if ((DBufLength(&to->local->sendQ) == 0) && (to->fd >= 0))
-		fd_setselect(to->fd, FD_SELECT_NOWRITE, NULL, to);
+	if ((DBufLength(&to->local->sendQ) == 0) && (to->local->fd >= 0))
+		fd_setselect(to->local->fd, FD_SELECT_NOWRITE, NULL, to);
 
 	return (IsDead(to)) ? -1 : 0;
 }
@@ -209,7 +209,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 	if (IsDead(to))
 		return;		/* This socket has already
 				   been marked as dead */
-	if (to->fd < 0)
+	if (to->local->fd < 0)
 	{
 		/* This is normal when 'to' was being closed (via exit_client
 		 *  and close_connection) --Run
@@ -217,7 +217,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 		 */
 		Debug((DEBUG_ERROR,
 		    "Local socket %s with negative fd %d... AARGH!", to->name,
-		    to->fd));
+		    to->local->fd));
 		return;
 	}
 
@@ -1196,7 +1196,7 @@ void send_raw_direct(Client *user, FORMAT_STRING(FORMAT_STRING(const char *patte
 	va_start(vl, pattern);
 	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
 	va_end(vl);
-	(void)send(user->fd, sendbuf, sendlen, 0);
+	(void)send(user->local->fd, sendbuf, sendlen, 0);
 }
 
 /** Send a message to all locally connected IRCOps and log the error.

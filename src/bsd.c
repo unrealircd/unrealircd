@@ -96,25 +96,25 @@ void close_connections(void)
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 	{
-		if (cptr->fd >= 0)
+		if (cptr->local->fd >= 0)
 		{
-			fd_close(cptr->fd);
-			cptr->fd = -2;
+			fd_close(cptr->local->fd);
+			cptr->local->fd = -2;
 		}
 	}
 
 	list_for_each_entry(cptr, &unknown_list, lclient_node)
 	{
-		if (cptr->fd >= 0)
+		if (cptr->local->fd >= 0)
 		{
-			fd_close(cptr->fd);
-			cptr->fd = -2;
+			fd_close(cptr->local->fd);
+			cptr->local->fd = -2;
 		}
 
 		if (cptr->local->authfd >= 0)
 		{
 			fd_close(cptr->local->authfd);
-			cptr->fd = -1;
+			cptr->local->fd = -1;
 		}
 	}
 
@@ -162,8 +162,8 @@ void report_error(char *text, Client *cptr)
 	 * gamble anyway.
 	 */
 #ifdef	SO_ERROR
-	if (cptr && !IsMe(cptr) && cptr->fd >= 0)
-		if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR, (void *)&err, &len))
+	if (cptr && !IsMe(cptr) && cptr->local->fd >= 0)
+		if (!getsockopt(cptr->local->fd, SOL_SOCKET, SO_ERROR, (void *)&err, &len))
 			if (err)
 				errtmp = err;
 #endif
@@ -206,8 +206,8 @@ void report_baderror(char *text, Client *cptr)
 	 * gamble anyway.
 	 */
 #ifdef	SO_ERROR
-	if (cptr && !IsMe(cptr) && cptr->fd >= 0)
-		if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR, (void *)&err, &len))
+	if (cptr && !IsMe(cptr) && cptr->local->fd >= 0)
+		if (!getsockopt(cptr->local->fd, SOL_SOCKET, SO_ERROR, (void *)&err, &len))
 			if (err)
 				errtmp = err;
 #endif
@@ -655,7 +655,7 @@ void close_connection(Client *cptr)
 	ConfigItem_link *aconf;
 #ifdef DO_REMAPPING
 	int  i, j;
-	int  empty = cptr->fd;
+	int  empty = cptr->local->fd;
 #endif
 
 	if (IsServer(cptr))
@@ -711,7 +711,7 @@ void close_connection(Client *cptr)
 		--OpenFiles;
 	}
 
-	if (cptr->fd >= 0)
+	if (cptr->local->fd >= 0)
 	{
 		send_queued(cptr);
 		if (IsTLS(cptr) && cptr->local->ssl) {
@@ -720,8 +720,8 @@ void close_connection(Client *cptr)
 			SSL_free(cptr->local->ssl);
 			cptr->local->ssl = NULL;
 		}
-		fd_close(cptr->fd);
-		cptr->fd = -2;
+		fd_close(cptr->local->fd);
+		cptr->local->fd = -2;
 		--OpenFiles;
 		DBufClear(&cptr->local->sendQ);
 		DBufClear(&cptr->local->recvQ);
@@ -788,8 +788,8 @@ int  get_sockerr(Client *cptr)
 	int  errtmp = WSAGetLastError(), err = 0, len = sizeof(err);
 #endif
 #ifdef	SO_ERROR
-	if (cptr->fd >= 0)
-		if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR, (void *)&err, &len))
+	if (cptr->local->fd >= 0)
+		if (!getsockopt(cptr->local->fd, SOL_SOCKET, SO_ERROR, (void *)&err, &len))
 			if (err)
 				errtmp = err;
 #endif
@@ -911,7 +911,7 @@ Client *add_connection(ConfigItem_listen *listener, int fd)
 		}
 refuse_client:
 			ircstp->is_ref++;
-			acptr->fd = -2;
+			acptr->local->fd = -2;
 			free_client(acptr);
 			fd_close(fd);
 			--OpenFiles;
@@ -922,7 +922,7 @@ refuse_client:
 	set_sockhost(acptr, ip);
 	acptr->ip = strdup(ip);
 	acptr->local->port = port;
-	acptr->fd = fd;
+	acptr->local->fd = fd;
 
 	/* Tag loopback connections as FLAGS_LOCAL */
 	if (is_loopback_ip(acptr->ip))
@@ -1032,7 +1032,7 @@ struct hostent *he;
 
 doauth:
 	start_auth(acptr);
-	fd_setselect(acptr->fd, FD_SELECT_READ, read_packet, acptr);
+	fd_setselect(acptr->local->fd, FD_SELECT_READ, read_packet, acptr);
 }
 
 void proceed_normal_client_handshake(Client *acptr, struct hostent *he)
@@ -1209,7 +1209,7 @@ void read_packet(int fd, int revents, void *data)
 			}
 		}
 		else
-			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
+			length = recv(cptr->local->fd, readbuf, sizeof(readbuf), 0);
 
 		if (length <= 0)
 		{
@@ -1279,7 +1279,7 @@ void process_clients(void)
 
 	do {
 		list_for_each_entry(cptr, &lclient_list, lclient_node)
-			if ((cptr->fd >= 0) && DBufLength(&cptr->local->recvQ))
+			if ((cptr->local->fd >= 0) && DBufLength(&cptr->local->recvQ))
 				if (parse_client_queued(cptr) == FLUSH_BUFFER)
 					break;
 	} while(&cptr->lclient_node != &lclient_list);
@@ -1287,7 +1287,7 @@ void process_clients(void)
 	/* For unknown_list we also have to take into account the unknown->client transition */
 	do {
 		list_for_each_entry(cptr, &unknown_list, lclient_node)
-			if ((cptr->fd >= 0) && DBufLength(&cptr->local->recvQ))
+			if ((cptr->local->fd >= 0) && DBufLength(&cptr->local->recvQ))
 				if ((parse_client_queued(cptr) == FLUSH_BUFFER) || (cptr->status > STAT_UNKNOWN))
 					break;
 	} while(&cptr->lclient_node != &unknown_list);
@@ -1378,9 +1378,9 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 		report_error("Connect to host %s failed: %s", cptr);
 		if (by && IsPerson(by) && !MyClient(by))
 			sendnotice(by, "*** Connect to host %s failed.", cptr->name);
-		fd_close(cptr->fd);
+		fd_close(cptr->local->fd);
 		--OpenFiles;
-		cptr->fd = -2;
+		cptr->local->fd = -2;
 		free_client(cptr);
 		SET_ERRNO(errtmp);
 		if (ERRNO == P_EINTR)
@@ -1423,10 +1423,10 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	if (aconf->outgoing.options & CONNECT_TLS)
 	{
 		SetTLSConnectHandshake(cptr);
-		fd_setselect(cptr->fd, FD_SELECT_WRITE, ircd_SSL_client_handshake, cptr);
+		fd_setselect(cptr->local->fd, FD_SELECT_WRITE, ircd_SSL_client_handshake, cptr);
 	}
 	else
-		fd_setselect(cptr->fd, FD_SELECT_WRITE, completed_connection, cptr);
+		fd_setselect(cptr->local->fd, FD_SELECT_WRITE, completed_connection, cptr);
 
 	return 0;
 }
@@ -1448,8 +1448,8 @@ int connect_inet(ConfigItem_link *aconf, Client *cptr)
 	cptr->ip = strdup(aconf->connect_ip);
 	
 	snprintf(buf, sizeof buf, "Outgoing connection: %s", get_client_name(cptr, TRUE));
-	cptr->fd = fd_socket(IsIPV6(cptr) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf);
-	if (cptr->fd < 0)
+	cptr->local->fd = fd_socket(IsIPV6(cptr) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf);
+	if (cptr->local->fd < 0)
 	{
 		if (ERRNO == P_EMFILE)
 		{
@@ -1475,7 +1475,7 @@ int connect_inet(ConfigItem_link *aconf, Client *cptr)
 
 	if (bindip && strcmp("*", bindip))
 	{
-		if (!unreal_bind(cptr->fd, bindip, 0, IsIPV6(cptr)))
+		if (!unreal_bind(cptr->local->fd, bindip, 0, IsIPV6(cptr)))
 		{
 			report_baderror("Error binding to local port for %s:%s -- "
 			                "Your link::outgoing::bind-ip is probably incorrect.", cptr);
@@ -1483,10 +1483,10 @@ int connect_inet(ConfigItem_link *aconf, Client *cptr)
 		}
 	}
 
-	set_non_blocking(cptr->fd, cptr);
-	set_sock_opts(cptr->fd, cptr, IsIPV6(cptr));
+	set_non_blocking(cptr->local->fd, cptr);
+	set_sock_opts(cptr->local->fd, cptr, IsIPV6(cptr));
 
-	return unreal_connect(cptr->fd, cptr->ip, aconf->outgoing.port, IsIPV6(cptr));
+	return unreal_connect(cptr->local->fd, cptr->ip, aconf->outgoing.port, IsIPV6(cptr));
 }
 
 /** Checks if the system is IPv6 capable.
@@ -1546,7 +1546,7 @@ void start_auth(Client *cptr)
 		return;
 	}
 	Debug((DEBUG_NOTICE, "start_auth(%p) fd=%d, status=%d",
-	    cptr, cptr->fd, cptr->status));
+	    cptr, cptr->local->fd, cptr->status));
 	snprintf(buf, sizeof buf, "identd: %s", get_client_name(cptr, TRUE));
 	if ((cptr->local->authfd = fd_socket(IsIPV6(cptr) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf)) == -1)
 	{
@@ -1602,7 +1602,7 @@ static void send_authports(int fd, int revents, void *data)
 	Client *cptr = data;
 
 	Debug((DEBUG_NOTICE, "write_authports(%p) fd %d authfd %d stat %d",
-	    cptr, cptr->fd, cptr->local->authfd, cptr->status));
+	    cptr, cptr->local->fd, cptr->local->authfd, cptr->status));
 
 	ircsnprintf(authbuf, sizeof(authbuf), "%d , %d\r\n",
 		cptr->local->port,
@@ -1640,7 +1640,7 @@ static void read_authports(int fd, int revents, void *userdata)
 
 	*system = *ruser = '\0';
 	Debug((DEBUG_NOTICE, "read_authports(%p) fd %d authfd %d stat %d",
-	    cptr, cptr->fd, cptr->local->authfd, cptr->status));
+	    cptr, cptr->local->fd, cptr->local->authfd, cptr->status));
 	/*
 	 * Nasty.  Cant allow any other reads from client fd while we're
 	 * waiting on the authfd to return a full valid string.  Use the

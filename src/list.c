@@ -129,7 +129,7 @@ Client *make_client(Client *from, Client *servr)
 		cptr->local->sockhost[0] = '\0';
 		cptr->local->buffer[0] = '\0';
 		cptr->local->authfd = -1;
-		cptr->fd = -1;
+		cptr->local->fd = -1;
 
 		dbuf_queue_init(&cptr->local->recvQ);
 		dbuf_queue_init(&cptr->local->sendQ);
@@ -138,8 +138,6 @@ Client *make_client(Client *from, Client *servr)
 			;
 		strlcpy(cptr->id, id, sizeof cptr->id);
 		add_to_id_hash_table(cptr->id, cptr);
-	} else {
-		cptr->fd = -256;
 	}
 	return (cptr);
 }
@@ -347,7 +345,7 @@ void remove_client_from_list(Client *cptr)
 #endif
 	}
 #ifdef	DEBUGMODE
-	if (cptr->fd == -2)
+	if (cptr->local && cptr->local->fd == -2)
 		cloc.inuse--;
 	else
 		crem.inuse--;

@@ -924,7 +924,6 @@ struct Client {
 	Client *direction;			/**< Direction from which this client originated.
 	                                             This always points to a directly connected server or &me.
 	                                             It is never NULL */
-	int  fd;				/**< File descriptor, which is >= 0, for local clients */
 	unsigned char hopcount;			/**< Number of servers to this, 0 means local client */
 	char name[HOSTLEN + 1];			/**< Unique name of the client: nickname for persons, hostname for servers */
 	char username[USERLEN + 1];		/**< Username, or actually the ident */
@@ -938,6 +937,7 @@ struct Client {
 };
 
 struct LocalClient {
+	int  fd;				/**< File descriptor, which is >= 0, for local clients */
 	time_t since;		/* time they will next be allowed to send something */
 	time_t firsttime;		/* Time it was created */
 	time_t lasttime;		/* last time any message was received */
@@ -1802,7 +1802,7 @@ struct ListStructPrio {
 /* remote fds are set to -256, else its a local fd (a local fd
  * can get -1 or -2 in case it has been closed). -- Syzop
  */
-#define	MyConnect(x)			((x)->fd != -256)
+#define	MyConnect(x)			((x)->local)
 #define	MyClient(x)			(MyConnect(x) && IsClient(x))
 
 #define TStime() (timeofday)

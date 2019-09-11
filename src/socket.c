@@ -86,7 +86,7 @@ int  deliver_it(Client *cptr, char *str, int len, int *want_read)
 		}
 	}
 	else
-		retval = send(cptr->fd, str, len, 0);
+		retval = send(cptr->local->fd, str, len, 0);
 	/*
 	   ** Convert WOULDBLOCK to a return of "0 bytes moved". This
 	   ** should occur only if socket was non-blocking. Note, that

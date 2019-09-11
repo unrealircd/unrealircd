@@ -611,7 +611,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 			RunHook3(HOOKTYPE_UNKUSER_QUIT, sptr, recv_mtags, comment);
 		}
 
-		if (sptr->fd >= 0 && !IsConnecting(sptr))
+		if (sptr->local->fd >= 0 && !IsConnecting(sptr))
 		{
 			if (cptr != NULL && sptr != cptr)
 				sendto_one(sptr, NULL,
