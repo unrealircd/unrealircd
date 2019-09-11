@@ -76,23 +76,6 @@ inline int op_can_override(char* acl, Client *sptr,Channel *channel,void* extra)
 #endif
 }
 
-void make_cmodestr(void)
-{
-	char *p = &cmodestring[0];
-	CoreChannelModeTable *tab = &corechannelmodetable[0];
-	int i;
-	while (tab->mode != 0x0)
-	{
-		*p = tab->flag;
-		p++;
-		tab++;
-	}
-	for (i=0; i <= Channelmode_highest; i++)
-		if (Channelmode_Table[i].flag)
-			*p++ = Channelmode_Table[i].flag;
-	*p = '\0';
-}
-
 int  Halfop_mode(long mode)
 {
 	CoreChannelModeTable *tab = &corechannelmodetable[0];

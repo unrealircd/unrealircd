@@ -26,22 +26,24 @@
 
 #include "unrealircd.h"
 
-/* Channel parameter to slot# mapping */
+/** Channel parameter to slot# mapping - used by GETPARAMSLOT() macro */
 MODVAR unsigned char param_to_slot_mapping[256];
-
-extern void make_cmodestr(void);
-
+/** Table with details on each channel mode handler */
+Cmode *Channelmode_Table = NULL;
+/** Highest index in Channelmode_Table */
+unsigned short Channelmode_highest = 0;
+/** Extended channel modes in use - used by ISUPPORT/005 numeric only */
 char extchmstr[4][64];
 
-Cmode *Channelmode_Table = NULL;
-unsigned short Channelmode_highest = 0;
-
-Cmode *ParamTable[MAXPARAMMODES+1];
+/* Private functions (forward declaration) and variables */
+static void make_cmodestr(void);
+static char previous_chanmodes[256];
+static Cmode *ParamTable[MAXPARAMMODES+1];
 
 void make_extcmodestr()
 {
-char *p;
-int i;
+	char *p;
+	int i;
 	
 	extchmstr[0][0] = extchmstr[1][0] = extchmstr[2][0] = extchmstr[3][0] = '\0';
 	
@@ -72,7 +74,24 @@ int i;
 	*p = '\0';
 }
 
-static char previous_chanmodes[256];
+
+static void make_cmodestr(void)
+{
+	char *p = &cmodestring[0];
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
+	int i;
+	while (tab->mode != 0x0)
+	{
+		*p = tab->flag;
+		p++;
+		tab++;
+	}
+	for (i=0; i <= Channelmode_highest; i++)
+		if (Channelmode_Table[i].flag)
+			*p++ = Channelmode_Table[i].flag;
+	*p = '\0';
+}
+
 
 void extcmodes_check_for_changes(void)
 {
@@ -154,7 +173,7 @@ void extcmode_para_delslot(Cmode *c, int slot)
 	param_to_slot_mapping[c->flag] = 0;
 }
 
-/** Register a new channel mode */
+/** Register a new channel mode (Channel Mode API) */
 Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 {
 	short i = 0, j = 0;
@@ -246,7 +265,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	return &(Channelmode_Table[i]);
 }
 
-void unload_extcmode_commit(Cmode *cmode)
+static void unload_extcmode_commit(Cmode *cmode)
 {
 	Channel *chptr;
 
@@ -368,8 +387,8 @@ void extcmode_duplicate_paramlist(void **xi, void **xo)
 
 void extcmode_free_paramlist(void **ar)
 {
-int i;
-Cmode *handler;
+	int i;
+	Cmode *handler;
 
 	for (i = 0; i < MAXPARAMMODES; i++)
 	{

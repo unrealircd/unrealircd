@@ -1032,7 +1032,7 @@ struct Server {
 	struct {
 		char *usermodes;	/**< Usermodes that this server knows about */
 		char *chanmodes[4];	/**< Channel modes that this server knows (in 4 groups, like CHANMODES= in ISUPPORT/005) */
-		int protocol;		/**< Link protocol version */
+		int protocol;		/**< Link-protocol version */
 		char *software;		/**< Name of the software (eg: unrealircd-X.Y.Z) */
 		char *nickchars;	/**< Nick character sets active on this server) */
 	} features;
@@ -1083,7 +1083,7 @@ typedef struct AuthConfig AuthConfig;
  * configuration file.
  */
 struct AuthConfig {
-	AuthenticationType	type;  /**< Type of data, one of AUTHTYPE_* (TODO: enum?) */
+	AuthenticationType	type;  /**< Type of data, one of AUTHTYPE_* */
 	char			*data; /**< Data associated with this record */
 };
 
