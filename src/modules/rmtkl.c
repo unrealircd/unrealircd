@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER(rmtkl) = {
 #define IsNotParam(x) (parc <= (x) || BadPtr(parv[(x)]))
 
 typedef struct {
-	int	type;
+	int type;
 	char flag;
 	char *txt;
 	char *operpriv;
