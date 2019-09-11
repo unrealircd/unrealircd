@@ -251,7 +251,7 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
 			}
 			currentcmd.responses++;
 		}
-		else if (IsServer(to) || !MyClient(to))
+		else if (IsServer(to) || !MyUser(to))
 		{
 			currentcmd.sent_remote = 1;
 		}
@@ -273,7 +273,7 @@ int labeled_response_mtag_is_ok(Client *acptr, char *name, char *value)
 	 * it's too much hassle to support labeled-response without
 	 * batch and the end result is quite broken too.
 	 */
-	if (MyClient(acptr) && (!SupportLabel(acptr) || !SupportBatch(acptr)))
+	if (MyUser(acptr) && (!SupportLabel(acptr) || !SupportBatch(acptr)))
 		return 0;
 
 	/* Do some basic sanity checking for non-servers */

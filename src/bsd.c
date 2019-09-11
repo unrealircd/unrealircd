@@ -677,7 +677,7 @@ void close_connection(Client *cptr)
 			ircstp->is_sbr &= 0x3ff;
 		}
 	}
-	else if (IsRegisteredUser(cptr))
+	else if (IsUser(cptr))
 	{
 		ircstp->is_cl++;
 		ircstp->is_cbs += cptr->local->sendB;
@@ -1077,7 +1077,7 @@ static int parse_client_queued(Client *cptr)
 	if (IsIdentLookup(cptr))
 		return 0; /* we delay processing of data until identd has replied */
 
-	if (!IsPerson(cptr) && !IsServer(cptr) && (iConf.handshake_delay > 0) &&
+	if (!IsUser(cptr) && !IsServer(cptr) && (iConf.handshake_delay > 0) &&
 	    (TStime() - cptr->local->firsttime < iConf.handshake_delay))
 	{
 		return 0; /* we delay processing of data until set::handshake-delay is reached */
@@ -1132,7 +1132,7 @@ int process_packet(Client *cptr, char *readbuf, int length, int killsafely)
 	}
 
 	/* excess flood check */
-	if (IsPerson(cptr) && DBufLength(&cptr->local->recvQ) > get_recvq(cptr))
+	if (IsUser(cptr) && DBufLength(&cptr->local->recvQ) > get_recvq(cptr))
 	{
 		sendto_snomask(SNO_FLOOD,
 			"*** Flood -- %s!%s@%s (%d) exceeds %d recvQ",
@@ -1376,7 +1376,7 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	{
 		int errtmp = ERRNO;
 		report_error("Connect to host %s failed: %s", cptr);
-		if (by && IsPerson(by) && !MyClient(by))
+		if (by && IsUser(by) && !MyUser(by))
 			sendnotice(by, "*** Connect to host %s failed.", cptr->name);
 		fd_close(cptr->local->fd);
 		--OpenFiles;
@@ -1397,7 +1397,7 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 #endif
 	Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
 		cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
-	if (by && IsPerson(by))
+	if (by && IsUser(by))
 	{
 		(void)strlcpy(cptr->serv->by, by->name, sizeof cptr->serv->by);
 		if (cptr->serv->user)

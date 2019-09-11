@@ -229,11 +229,11 @@ void UmodeDel(Umode *umode)
 		list_for_each_entry(cptr, &client_list, client_node)
 		{
 			long oldumode = 0;
-			if (!IsPerson(cptr))
+			if (!IsUser(cptr))
 				continue;
 			oldumode = cptr->umodes;
 			cptr->umodes &= ~umode->mode;
-			if (MyClient(cptr))
+			if (MyUser(cptr))
 				send_umode_out(cptr, cptr, oldumode);
 		}
 		umode->flag = '\0';
@@ -325,7 +325,7 @@ void SnomaskDel(Snomask *sno)
 		list_for_each_entry(cptr, &lclient_list, lclient_node)
 		{
 			long oldsno;
-			if (!cptr || !IsPerson(cptr))
+			if (!cptr || !IsUser(cptr))
 				continue;
 			oldsno = cptr->user->snomask;
 			cptr->user->snomask &= ~sno->mode;
@@ -356,7 +356,7 @@ int umode_allow_all(Client *sptr, int what)
 
 int umode_allow_unset(Client *sptr, int what)
 {
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 		return 1;
 	if (what == MODE_DEL)
 		return 1;
@@ -365,14 +365,14 @@ int umode_allow_unset(Client *sptr, int what)
 
 int umode_allow_none(Client *sptr, int what)
 {
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 		return 0;
 	return 1;
 }
 
 int umode_allow_opers(Client *sptr, int what)
 {
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 		return IsOper(sptr) ? 1 : 0;
 	else
 		return 1;
@@ -393,11 +393,11 @@ void unload_all_unused_umodes(void)
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 	{
 		long oldumode = 0;
-		if (!IsPerson(cptr))
+		if (!IsUser(cptr))
 			continue;
 		oldumode = cptr->umodes;
 		cptr->umodes &= ~(removed_umode);
-		if (MyClient(cptr))
+		if (MyUser(cptr))
 			send_umode_out(cptr, cptr, oldumode);
 	}
 	for (i = 0; i < UMODETABLESZ; i++)
@@ -434,7 +434,7 @@ void unload_all_unused_snomasks(void)
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 	{
 		long oldsno;
-		if (!cptr || !IsPerson(cptr))
+		if (!cptr || !IsUser(cptr))
 			continue;
 		oldsno = cptr->user->snomask;
 		cptr->user->snomask &= ~(removed_sno);
@@ -478,7 +478,7 @@ void remove_oper_privileges(Client *sptr, int broadcast_mode_change)
 	remove_oper_snomasks(sptr);
 	if (broadcast_mode_change && (sptr->umodes != oldumodes))
 		send_umode_out(sptr, sptr, oldumodes);
-	if (MyClient(sptr)) /* only do if it's our client, remote servers will send a SWHOIS cmd */
+	if (MyUser(sptr)) /* only do if it's our client, remote servers will send a SWHOIS cmd */
 		swhois_delete(sptr, "oper", "*", &me, NULL);
 }
 

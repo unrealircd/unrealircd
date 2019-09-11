@@ -78,14 +78,14 @@ CMD_FUNC(m_setident)
 		case UHALLOW_ALWAYS:
 			break;
 		case UHALLOW_NEVER:
-			if (MyClient(sptr))
+			if (MyUser(sptr))
 			{
 				sendnotice(sptr, "*** /SETIDENT is disabled");
 				return 0;
 			}
 			break;
 		case UHALLOW_NOCHANS:
-			if (MyClient(sptr) && sptr->user->joined)
+			if (MyUser(sptr) && sptr->user->joined)
 			{
 				sendnotice(sptr, "*** /SETIDENT cannot be used while you are on a channel");
 				return 0;

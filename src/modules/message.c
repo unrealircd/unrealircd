@@ -103,7 +103,7 @@ int ret;
 		return CANPRIVMSG_CONTINUE;
 	}
 
-	if (MyClient(sptr) && !strncasecmp(*text, "\001DCC", 4))
+	if (MyUser(sptr) && !strncasecmp(*text, "\001DCC", 4))
 	{
 		ret = check_dcc(sptr, acptr->name, acptr, *text);
 		if (ret < 0)
@@ -111,11 +111,11 @@ int ret;
 		if (ret == 0)
 			return CANPRIVMSG_CONTINUE;
 	}
-	if (MyClient(acptr) && !strncasecmp(*text, "\001DCC", 4) &&
+	if (MyUser(acptr) && !strncasecmp(*text, "\001DCC", 4) &&
 	    !check_dcc_soft(sptr, acptr, *text))
 		return CANPRIVMSG_CONTINUE;
 
-	if (MyClient(sptr) && check_for_target_limit(sptr, acptr, acptr->name))
+	if (MyUser(sptr) && check_for_target_limit(sptr, acptr, acptr->name))
 		return CANPRIVMSG_CONTINUE;
 
 	if (!is_silenced(sptr, acptr))
@@ -127,7 +127,7 @@ int ret;
 			sendnumeric(sptr, RPL_AWAY, acptr->name,
 			    acptr->user->away);
 
-		if (MyClient(sptr))
+		if (MyUser(sptr))
 		{
 			ret = run_spamfilter(sptr, *text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), acptr->name, 0, NULL);
 			if (ret < 0)
@@ -195,16 +195,16 @@ int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char
 
 	for (p = NULL, nick = strtoken(&p, parv[1], ","); nick; nick = strtoken(&p, NULL, ","))
 	{
-		if (MyClient(sptr) && (++ntargets > maxtargets))
+		if (MyUser(sptr) && (++ntargets > maxtargets))
 		{
 			sendnumeric(sptr, ERR_TOOMANYTARGETS, nick, maxtargets, cmd);
 			break;
 		}
 		/* The nicks "ircd" and "irc" are special (and reserved) */
-		if (!strcasecmp(nick, "ircd") && MyClient(sptr))
+		if (!strcasecmp(nick, "ircd") && MyUser(sptr))
 			return 0;
 
-		if (!strcasecmp(nick, "irc") && MyClient(sptr))
+		if (!strcasecmp(nick, "irc") && MyUser(sptr))
 		{
 			/* When ban version { } is enabled the IRCd sends a CTCP VERSION request
 			 * from the "IRC" nick. So we need to handle CTCP VERSION replies to "IRC".
@@ -264,7 +264,7 @@ int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char
 
 				if (prefix)
 				{
-					if (MyClient(sptr) && !op_can_override("channel:override:message:prefix",sptr,chptr,NULL))
+					if (MyUser(sptr) && !op_can_override("channel:override:message:prefix",sptr,chptr,NULL))
 					{
 						Membership *lp = find_membership_link(sptr->user->channel, chptr);
 						/* Check if user is allowed to send. RULES:
@@ -306,7 +306,7 @@ int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char
 				}
 			}
 
-			if (MyClient(sptr) && (*parv[2] == 1))
+			if (MyUser(sptr) && (*parv[2] == 1))
 			{
 				ret = check_dcc(sptr, chptr->chname, NULL, parv[2]);
 				if (ret < 0)
@@ -323,7 +323,7 @@ int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char
 
 			text = parv[2];
 			errmsg = NULL;
-			if (MyClient(sptr) && !IsULine(sptr))
+			if (MyUser(sptr) && !IsULine(sptr))
 			{
 				if (!can_send(sptr, chptr, &text, &errmsg, notice))
 				{
@@ -347,7 +347,7 @@ int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char
 
 			text = parv[2];
 
-			if (MyClient(sptr))
+			if (MyUser(sptr))
 			{
 				ret = run_spamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname, 0, NULL);
 				if (ret < 0)
@@ -427,7 +427,7 @@ int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char
 				sendto_prefix_one(acptr, sptr, mtags, ":%s %s %s :%s",
 				                  CHECKPROTO(acptr->direction, PROTO_SID) ? ID(sptr) : sptr->name,
 				                  newcmd,
-				                  (MyClient(acptr) ? acptr->name : nick),
+				                  (MyUser(acptr) ? acptr->name : nick),
 				                  text);
 				labeled_response_inhibit = 0;
 				RunHook5(HOOKTYPE_USERMSG, sptr, acptr, mtags, text, notice);
@@ -914,7 +914,7 @@ int _can_send(Client *cptr, Channel *chptr, char **msgtext, char **errmsg, int n
 	int  member, i = 0;
 	Hook *h;
 
-	if (!MyClient(cptr))
+	if (!MyUser(cptr))
 		return 1;
 
 	*errmsg = NULL;
@@ -992,7 +992,7 @@ int _can_send(Client *cptr, Channel *chptr, char **msgtext, char **errmsg, int n
 
 	if ((!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
-	    CHFL_HALFOP | CHFL_CHANADMIN))) && MyClient(cptr)
+	    CHFL_HALFOP | CHFL_CHANADMIN))) && MyUser(cptr)
 	    && is_banned(cptr, chptr, BANCHK_MSG, msgtext, errmsg))
 	{
 		/* Modules can set 'errmsg', otherwise we default to this: */

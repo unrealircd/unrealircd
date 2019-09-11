@@ -76,7 +76,7 @@ static int IsACTCP(char *s)
 
 char *noctcp_preusermsg(Client *sptr, Client *acptr, char *text, int notice)
 {
-	if (MyClient(sptr) && !notice && IsNoCTCP(acptr) && !IsOper(sptr) && IsACTCP(text))
+	if (MyUser(sptr) && !notice && IsNoCTCP(acptr) && !IsOper(sptr) && IsACTCP(text))
 	{
 		sendnumeric(sptr, ERR_NOCTCP, acptr->name);
 		return NULL;

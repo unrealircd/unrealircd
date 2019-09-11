@@ -72,7 +72,7 @@ MOD_UNLOAD(noctcp)
 
 int noknock_check (Client *sptr, Channel *chptr)
 {
-	if (MyClient(sptr) && IsNoKnock(chptr))
+	if (MyUser(sptr) && IsNoKnock(chptr))
 	{
 		sendnumeric(sptr, ERR_CANNOTKNOCK, chptr->chname, "No knocks are allowed! (+K)");
 		return HOOK_DENY;

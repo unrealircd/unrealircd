@@ -99,7 +99,7 @@ CMD_FUNC(m_kick)
 			continue;
 		}
 		/* Store "sptr" access flags */
-		if (IsPerson(sptr))
+		if (IsUser(sptr))
 			sptr_flags = get_access(sptr, chptr);
 		if (!IsServer(cptr) && !IsULine(sptr) && !op_can_override("channel:override:kick:no-ops",sptr,chptr,NULL)
 		    && !(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP))
@@ -112,7 +112,7 @@ CMD_FUNC(m_kick)
 		{
 			long who_flags;
 
-			if (MyClient(sptr) && (++ntargets > maxtargets))
+			if (MyUser(sptr) && (++ntargets > maxtargets))
 			{
 				sendnumeric(sptr, ERR_TOOMANYTARGETS, user, maxtargets, "KICK");
 				break;
@@ -130,7 +130,7 @@ CMD_FUNC(m_kick)
 				/* Note for coders regarding oper override:
 				 * always let a remote kick (=from a user on another server) through or
 				 * else we will get desynched. In short this means all the denying should
-				 * always contain a && MyClient(sptr) [or sptr!=cptr] and at the end
+				 * always contain a && MyUser(sptr) [or sptr!=cptr] and at the end
 				 * a remote kick should always be allowed (pass through). -- Syzop
 				 */
 
@@ -153,10 +153,10 @@ CMD_FUNC(m_kick)
 
 				if (ret == EX_ALWAYS_DENY)
 				{
-					if (MyClient(sptr) && badkick)
+					if (MyUser(sptr) && badkick)
 						sendto_one(sptr, NULL, "%s", badkick); /* send error, if any */
 
-					if (MyClient(sptr))
+					if (MyUser(sptr))
 						continue; /* reject the kick (note: we never block remote kicks) */
 				}
 				
@@ -175,7 +175,7 @@ CMD_FUNC(m_kick)
 						goto attack; /* all other checks don't matter anymore (and could cause double msgs) */
 					} else {
 						/* Not an oper overriding */
-						if (MyClient(sptr) && badkick)
+						if (MyUser(sptr) && badkick)
 							sendto_one(sptr, NULL, "%s", badkick); /* send error, if any */
 
 						continue; /* reject the kick */
@@ -225,7 +225,7 @@ CMD_FUNC(m_kick)
 
 						goto attack;
 					}
-					else if (!IsULine(sptr) && (who != sptr) && MyClient(sptr))
+					else if (!IsULine(sptr) && (who != sptr) && MyUser(sptr))
 					{
 						char errbuf[NICKLEN+25];
 						if (who_flags & CHFL_CHANOWNER)
@@ -242,7 +242,7 @@ CMD_FUNC(m_kick)
 				
 				/* victim is +o, we are +h [operoverride is already taken care of 2 blocks above] */
 				if ((who_flags & CHFL_ISOP) && (sptr_flags & CHFL_HALFOP)
-				    && !(sptr_flags & CHFL_ISOP) && !IsULine(sptr) && MyClient(sptr))
+				    && !(sptr_flags & CHFL_ISOP) && !IsULine(sptr) && MyUser(sptr))
 				{
 					char errbuf[NICKLEN+30];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel operator", who->name);
@@ -253,7 +253,7 @@ CMD_FUNC(m_kick)
 
 				/* victim is +h, we are +h [operoverride is already taken care of 3 blocks above] */
 				if ((who_flags & CHFL_HALFOP) && (sptr_flags & CHFL_HALFOP)
-				    && !(sptr_flags & CHFL_ISOP) && MyClient(sptr))
+				    && !(sptr_flags & CHFL_ISOP) && MyUser(sptr))
 				{
 					char errbuf[NICKLEN+15];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a halfop", who->name);
@@ -286,7 +286,7 @@ CMD_FUNC(m_kick)
 				new_message_special(sptr, recv_mtags, &mtags, ":%s KICK %s %s", sptr->name, chptr->chname, who->name);
 				/* The same message is actually sent at 5 places below (though max 4 at most) */
 
-				if (MyClient(sptr))
+				if (MyUser(sptr))
 					RunHook6(HOOKTYPE_LOCAL_KICK, cptr, sptr, who, chptr, mtags, comment);
 				else
 					RunHook6(HOOKTYPE_REMOTE_KICK, cptr, sptr, who, chptr, mtags, comment);
@@ -302,7 +302,7 @@ CMD_FUNC(m_kick)
 						               ":%s KICK %s %s :%s",
 						               sptr->name, chptr->chname, who->name, comment);
 
-						if (MyClient(who))
+						if (MyUser(who))
 						{
 							sendto_prefix_one(who, sptr, mtags, ":%s KICK %s %s :%s",
 								sptr->name, chptr->chname, who->name, comment);
@@ -324,10 +324,10 @@ CMD_FUNC(m_kick)
 					remove_user_from_channel(who, chptr);
 				}
 			}
-			else if (MyClient(sptr))
+			else if (MyUser(sptr))
 				sendnumeric(sptr, ERR_USERNOTINCHANNEL, user, name);
 		}		/* loop on parv[2] */
-		if (MyClient(cptr))
+		if (MyUser(cptr))
 			break;
 	}			/* loop on parv[1] */
 

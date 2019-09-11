@@ -360,7 +360,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 			case 'o':
 				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_OPER))
 				{
-					if (!IsOper(acptr) && MyClient(acptr))
+					if (!IsOper(acptr) && MyUser(acptr))
 						list_add(&acptr->special_node, &oper_list);
 
 					ircstats.operators++;
@@ -375,7 +375,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 						ircstats.operators--;
 					}
 
-					if (MyClient(acptr) && !list_empty(&acptr->special_node))
+					if (MyUser(acptr) && !list_empty(&acptr->special_node))
 						list_del(&acptr->special_node);
 					
 					/* User is no longer oper (after the goto below, anyway)...
@@ -448,7 +448,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 					 * in which case we would have needlessly announced it. Ok I didn't test it but that's
 					 * the idea behind it :P. -- Syzop
 					 */
-					if (MyClient(acptr) && !strcasecmp(acptr->user->virthost, acptr->user->cloakedhost))
+					if (MyUser(acptr) && !strcasecmp(acptr->user->virthost, acptr->user->cloakedhost))
 						sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", acptr->name,
 							acptr->user->virthost);
 				}
@@ -469,7 +469,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 						/* Make the change effective: */
 						safestrdup(acptr->user->virthost, acptr->user->cloakedhost);
 						/* And broadcast the change to VHP servers */
-						if (MyClient(acptr))
+						if (MyUser(acptr))
 							sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", acptr->name,
 								acptr->user->virthost);
 					}
@@ -516,7 +516,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 	{
 		char buf[BUFSIZE];
 		send_umode(NULL, acptr, setflags, ALL_UMODES, buf);
-		if (MyClient(acptr) && buf[0] && buf[1])
+		if (MyUser(acptr) && buf[0] && buf[1])
 			sendto_one(acptr, NULL, ":%s MODE %s :%s", sptr->name, acptr->name, buf);
 	}
 

@@ -258,7 +258,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 			*s++ = '\0';
 		if (!IsRegistered(from))
 			flags |= M_UNREGISTERED;
-		if (IsPerson(from))
+		if (IsUser(from))
 			flags |= M_USER;
 		if (IsServer(from))
 			flags |= M_SERVER;
@@ -294,7 +294,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 				
 			if (ch[0] != '\0')
 			{
-				if (IsPerson(from))
+				if (IsUser(from))
 					sendto_one(from, NULL,
 					    ":%s %d %s %s :Unknown command",
 					    me.name, ERR_UNKNOWNCOMMAND,
@@ -386,7 +386,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 	if (cmptr == NULL)
 		return (do_numeric(numeric, cptr, from, mtags, i, para));
 	cmptr->count++;
-	if (IsRegisteredUser(cptr) && (cmptr->flags & M_RESETIDLE))
+	if (IsUser(cptr) && (cmptr->flags & M_RESETIDLE))
 		cptr->local->last = TStime();
 
 #ifndef DEBUGMODE
@@ -431,7 +431,7 @@ static int cancel_clients(Client *cptr, Client *sptr, char *cmd)
 
 static void remove_unknown(Client *cptr, char *sender)
 {
-	if (!IsRegistered(cptr) || IsRegisteredUser(cptr))
+	if (!IsRegistered(cptr) || IsUser(cptr))
 		return;
 	/*
 	 * Not from a server so don't need to worry about it.

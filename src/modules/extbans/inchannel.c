@@ -98,7 +98,7 @@ int extban_inchannel_is_ok(Client *sptr, Channel *chptr, char *para, int checkt,
 {
 	char *p;
 
-	if ((checkt == EXBCHK_PARAM) && MyClient(sptr) && (what == MODE_ADD) && (strlen(para) > 3))
+	if ((checkt == EXBCHK_PARAM) && MyUser(sptr) && (what == MODE_ADD) && (strlen(para) > 3))
 	{
 		p = para + 3;
 		if ((*p == '+') || (*p == '%') || (*p == '%') ||

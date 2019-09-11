@@ -122,7 +122,7 @@ CMD_FUNC(m_who)
 	char star[] = "*";
 	int i = 0;
 
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 		return 0;
 
 	who_flags = 0;
@@ -395,7 +395,7 @@ Hook *h;
 char has_common_chan = 0;
 	do {
 		/* can only see people */
-		if (!IsPerson(acptr))
+		if (!IsUser(acptr))
 			return WHO_CANTSEE;
 
 		/* can only see opers if thats what they want */
@@ -486,7 +486,7 @@ char has_common_chan = 0;
 		{
 			int port;
 			
-			if (!MyClient(acptr))
+			if (!MyUser(acptr))
 				return WHO_CANTSEE;
 
 			port = acptr->local->listener->port;
@@ -694,7 +694,7 @@ int oper = IsOper(sptr);
 		char *channel;
 		int flg;
 
-			if (!IsPerson(acptr))
+			if (!IsUser(acptr))
 				continue;
 			if (!oper) {
 				/* non-opers can only search on nick here */

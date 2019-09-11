@@ -193,7 +193,7 @@ int hunt_server(Client *cptr, Client *sptr, MessageTag *mtags, char *command, in
 	acptr = find_client(parv[server], NULL);
 
 	/* find_client() may find a variety of clients. Only servers/persons please, no 'unknowns'. */
-	if (acptr && MyConnect(acptr) && !IsMe(acptr) && !IsPerson(acptr) && !IsServer(acptr))
+	if (acptr && MyConnect(acptr) && !IsMe(acptr) && !IsUser(acptr) && !IsServer(acptr))
 		acptr = NULL;
 
 	if (!acptr)
@@ -202,7 +202,7 @@ int hunt_server(Client *cptr, Client *sptr, MessageTag *mtags, char *command, in
 		return HUNTED_NOSUCH;
 	}
 	
-	if (IsMe(acptr) || MyClient(acptr))
+	if (IsMe(acptr) || MyUser(acptr))
 		return HUNTED_ISME;
 
 	/* Never send the message back from where it came from */
@@ -469,7 +469,7 @@ void send_umode(Client *cptr, Client *sptr, long old, long sendmask, char *umode
 		if (!Usermode_Table[i].flag)
 			continue;
 		flag = Usermode_Table[i].mode;
-		if (MyClient(sptr) && !(flag & sendmask))
+		if (MyUser(sptr) && !(flag & sendmask))
 			continue;
 		if ((flag & old) && !(sptr->umodes & flag))
 		{
@@ -519,7 +519,7 @@ void send_umode_out(Client *cptr, Client *sptr, long old)
 		}
 	}
 
-	if (cptr && MyClient(cptr))
+	if (cptr && MyUser(cptr))
 		send_umode(cptr, sptr, old, ALL_UMODES, buf);
 }
 
@@ -547,7 +547,7 @@ int add_silence(Client *sptr, char *mask, int senderr)
 
 	for (lp = sptr->user->silence; lp; lp = lp->next)
 	{
-		if (MyClient(sptr))
+		if (MyUser(sptr))
 			if ((strlen(lp->value.cp) > MAXSILELENGTH) || (++cnt >= SILENCE_LIMIT))
 			{
 				if (senderr)

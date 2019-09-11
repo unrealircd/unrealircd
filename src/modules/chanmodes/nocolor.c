@@ -90,7 +90,7 @@ char *nocolor_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *
 	Hook *h;
 	int i;
 
-	if (MyClient(sptr) && IsNoColor(chptr) && IsUsingColor(text))
+	if (MyUser(sptr) && IsNoColor(chptr) && IsUsingColor(text))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
@@ -117,7 +117,7 @@ char *nocolor_prelocalpart(Client *sptr, Channel *chptr, char *comment)
 	if (!comment)
 		return NULL;
 
-	if (MyClient(sptr) && IsNoColor(chptr) && IsUsingColor(comment))
+	if (MyUser(sptr) && IsNoColor(chptr) && IsUsingColor(comment))
 		return NULL;
 
 	return comment;
@@ -139,7 +139,7 @@ char *nocolor_prelocalquit(Client *sptr, char *comment)
 	if (!comment)
 		return NULL;
 
-	if (MyClient(sptr) && !BadPtr(comment) && IsUsingColor(comment) && IsAnyChannelNoColor(sptr))
+	if (MyUser(sptr) && !BadPtr(comment) && IsUsingColor(comment) && IsAnyChannelNoColor(sptr))
 		return NULL;
 
 	return comment;

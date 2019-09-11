@@ -260,7 +260,7 @@ CMD_FUNC(m_invite)
 
 	if (MyConnect(acptr))
 	{
-		if (IsPerson(sptr) 
+		if (IsUser(sptr) 
 		    && (is_chan_op(sptr, chptr)
 		    || IsULine(sptr)
 		    || ValidatePermissionsForPath("channel:override:invite:self",sptr,NULL,chptr,NULL)

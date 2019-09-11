@@ -933,7 +933,7 @@ void check_all_users(void)
 	
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (IsPerson(acptr))
+		if (IsUser(acptr))
 		{
 			if (is_exempt(acptr))
 				continue;

@@ -108,7 +108,7 @@ CMD_FUNC(m_ircops)
 	list_for_each_entry(acptr, &client_list, client_node)
 	{
 		/* List only real IRC Operators */
-		if (IsULine(acptr) || !IsPerson(acptr) || !IsOper(acptr))
+		if (IsULine(acptr) || !IsUser(acptr) || !IsOper(acptr))
 			continue;
 		/* Don't list +H users */
 		if (!IsOper(sptr) && IsHideOper(acptr))

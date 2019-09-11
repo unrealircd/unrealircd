@@ -532,7 +532,7 @@ EVENT(add_scores)
 	
 	list_for_each_entry(acptr, &client_list, client_node)
 	{
-		if (!IsPerson(acptr))
+		if (!IsUser(acptr))
 			continue; /* skip servers, unknowns, etc.. */
 
 		ip = acptr->ip;
@@ -838,7 +838,7 @@ CMD_FUNC(reputation_server_cmd)
 
 CMD_FUNC(reputation_cmd)
 {
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 		return reputation_user_cmd(cptr, sptr, recv_mtags, parc, parv);
 
 	if (IsServer(sptr))

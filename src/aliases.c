@@ -91,7 +91,7 @@ int m_alias(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[
 		{
 			if (alias->spamfilter && (ret = run_spamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
 				return ret;
-			if (MyClient(acptr))
+			if (MyUser(acptr))
 				sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
 					sptr->user->username, GetHost(sptr),
 					alias->nick, parv[1]);
@@ -226,7 +226,7 @@ int m_alias(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[
 					{
 						if (alias->spamfilter && (ret = run_spamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
 							return ret;
-						if (MyClient(acptr))
+						if (MyUser(acptr))
 							sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
 							sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
 							format->nick, output);

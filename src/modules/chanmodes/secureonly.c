@@ -95,7 +95,7 @@ static int secureonly_kick_insecure_users(Channel *chptr)
 	{
 		mb2 = member->next;
 		cptr = member->cptr;
-		if (MyClient(cptr) && !IsSecureConnect(cptr) && !IsULine(cptr))
+		if (MyUser(cptr) && !IsSecureConnect(cptr) && !IsULine(cptr))
 		{
 			int prefix = 0;
 			MessageTag *mtags = NULL;

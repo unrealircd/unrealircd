@@ -189,7 +189,7 @@ CMD_FUNC(m_topic)
 	}
 
 	/* Topic change. Either locally (check permissions!) or remote, check permissions: */
-	if (IsPerson(sptr))
+	if (IsUser(sptr))
 	{
 		char *newtopic = NULL;
 
@@ -197,7 +197,7 @@ CMD_FUNC(m_topic)
 		if ((chptr->mode.mode & MODE_TOPICLIMIT) &&
 		    !is_skochanop(sptr, chptr) && !IsULine(sptr) && !IsServer(sptr))
 		{
-			if (MyClient(sptr) && !ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
+			if (MyUser(sptr) && !ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
 			{
 				sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
 				return 0;
@@ -212,7 +212,7 @@ CMD_FUNC(m_topic)
 		{
 			char buf[512];
 
-			if (MyClient(sptr) && !ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
+			if (MyUser(sptr) && !ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
 			{
 				ircsnprintf(buf, sizeof(buf), "You cannot change the topic on %s while being banned", chptr->chname);
 				sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
@@ -220,7 +220,7 @@ CMD_FUNC(m_topic)
 			}
 			topicoverride(sptr, chptr, topic);
 		}
-		if (MyClient(sptr) && newtopic)
+		if (MyUser(sptr) && newtopic)
 			topic = newtopic; /* process is_banned() changes of topic (eg: text replacement), but only for local clients */
 
 		/* -t, +m, and not +vhoaq */
@@ -228,7 +228,7 @@ CMD_FUNC(m_topic)
 		{
 			char buf[512];
 
-			if (MyClient(sptr) && ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
+			if (MyUser(sptr) && ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
 			{
 				topicoverride(sptr, chptr, topic);
 			} else {
@@ -240,7 +240,7 @@ CMD_FUNC(m_topic)
 		}
 
 		/* For local users, run spamfilters and hooks.. */
-		if (MyClient(sptr))
+		if (MyUser(sptr))
 		{
 			Hook *tmphook;
 			int n;

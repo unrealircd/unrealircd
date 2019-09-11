@@ -235,7 +235,7 @@ static void clicap_generate(Client *sptr, const char *subcmd, int flags)
 
 static int cap_end(Client *sptr, const char *arg)
 {
-	if (IsRegisteredUser(sptr))
+	if (IsUser(sptr))
 		return 0;
 
 	ClearCapabilityFast(sptr, CAP_IN_PROGRESS);
@@ -254,7 +254,7 @@ static int cap_list(Client *sptr, const char *arg)
 
 static int cap_ls(Client *sptr, const char *arg)
 {
-	if (!IsRegisteredUser(sptr))
+	if (!IsUser(sptr))
 		SetCapabilityFast(sptr, CAP_IN_PROGRESS);
 
 	if (arg)
@@ -284,7 +284,7 @@ static int cap_req(Client *sptr, const char *arg)
 	int finished = 0, negate;
 	int errors = 0;
 
-	if (!IsRegisteredUser(sptr))
+	if (!IsUser(sptr))
 		SetCapabilityFast(sptr, CAP_IN_PROGRESS);
 
 	if (BadPtr(arg))
@@ -398,7 +398,7 @@ CMD_FUNC(m_cap)
 	if (DISABLE_CAP)
 	{
 		/* I know nothing! */
-		if (IsPerson(sptr))
+		if (IsUser(sptr))
 			sendnumeric(sptr, ERR_UNKNOWNCOMMAND, "CAP");
 		else
 			sendnumeric(sptr, ERR_NOTREGISTERED);

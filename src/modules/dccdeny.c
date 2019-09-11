@@ -59,7 +59,7 @@ MOD_UNLOAD(dccdeny)
  */
 CMD_FUNC(m_dccdeny)
 {
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 		return 0;
 
 	if (!ValidatePermissionsForPath("server-ban:dccdeny",sptr,NULL,NULL,NULL))

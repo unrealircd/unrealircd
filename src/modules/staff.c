@@ -367,7 +367,7 @@ CMD_FUNC(m_staff)
 	MOTDFile *temp;
 	MOTDLine *aLine;
 
-	if (!IsPerson(sptr))
+	if (!IsUser(sptr))
 		return -1;
 
 	if (hunt_server(cptr, sptr, recv_mtags, ":%s STAFF", 1, parc, parv) != HUNTED_ISME)

@@ -423,7 +423,7 @@ void _send_moddata_members(Client *srv)
 	list_for_each_entry(acptr, &client_list, client_node)
 	{
 		Membership *m;
-		if (!IsPerson(acptr) || !acptr->user)
+		if (!IsUser(acptr) || !acptr->user)
 			continue;
 
 		if (acptr->direction == srv)

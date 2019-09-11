@@ -71,7 +71,7 @@ CMD_FUNC(m_ison)
 	char *s, *user;
 	char *p = NULL;
 
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 		return 0;
 
 	if (parc < 2)

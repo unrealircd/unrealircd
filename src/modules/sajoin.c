@@ -90,7 +90,7 @@ CMD_FUNC(m_sajoin)
 	}
 
 	/* If it's not for our client, then simply pass on the message... */
-	if (!MyClient(acptr))
+	if (!MyUser(acptr))
 	{
 		sendto_one(acptr, NULL, ":%s SAJOIN %s %s", sptr->name, parv[1], parv[2]);
 

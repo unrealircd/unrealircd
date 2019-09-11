@@ -157,7 +157,7 @@ static int isjthrottled(Client *cptr, Channel *chptr)
 	int num = cfg.num;
 	int t = cfg.t;
 
-	if (!MyClient(cptr))
+	if (!MyUser(cptr))
 		return 0;
 
 	/* Grab user<->chan entry.. */
@@ -183,7 +183,7 @@ static void jointhrottle_increase_usercounter(Client *cptr, Channel *chptr)
 	int num = cfg.num;
 	int t = cfg.t;
 
-	if (!MyClient(cptr))
+	if (!MyUser(cptr))
 		return;
 		
 	/* Grab user<->chan entry.. */
@@ -230,7 +230,7 @@ JoinFlood *jointhrottle_addentry(Client *cptr, Channel *chptr)
 	JoinFlood *e;
 
 #ifdef DEBUGMODE
-	if (!IsPerson(cptr))
+	if (!IsUser(cptr))
 		abort();
 
 	for (e=moddata_client(cptr, jointhrottle_md).ptr; e; e=e->next)
@@ -263,7 +263,7 @@ EVENT(jointhrottle_cleanup_structs)
 	
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (!MyClient(acptr))
+		if (!MyUser(acptr))
 			continue; /* only (local) persons.. */
 
 		for (jf = moddata_client(acptr, jointhrottle_md).ptr; jf; jf = jf_next)

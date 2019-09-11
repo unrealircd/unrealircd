@@ -63,7 +63,7 @@ CMD_FUNC(m_botmotd)
 	if (hunt_server(cptr, sptr, recv_mtags, ":%s BOTMOTD :%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
 
-	if (!IsPerson(sptr))
+	if (!IsUser(sptr))
 		return 0;
 
 	tld = Find_tld(sptr);

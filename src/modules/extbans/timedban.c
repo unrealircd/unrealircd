@@ -214,7 +214,7 @@ char *timedban_extban_conv_param(char *para_in)
 
 int timedban_extban_syntax(Client *sptr, int checkt, char *reason)
 {
-	if (MyClient(sptr) && (checkt == EXBCHK_PARAM))
+	if (MyUser(sptr) && (checkt == EXBCHK_PARAM))
 	{
 		sendnotice(sptr, "Error when setting timed ban: %s", reason);
 		sendnotice(sptr, " Syntax: +b ~t:duration:mask");
@@ -228,13 +228,13 @@ int timedban_extban_syntax(Client *sptr, int checkt, char *reason)
 /** Generic helper for sub-bans, used by our "is this ban ok?" function */
 int generic_ban_is_ok(Client *sptr, Channel *chptr, char *mask, int checkt, int what, int what2)
 {
-	if ((mask[0] == '~') && MyClient(sptr))
+	if ((mask[0] == '~') && MyUser(sptr))
 	{
 		Extban *p;
 
 		/* This portion is copied from clean_ban_mask() */
 		if (mask[1] && (mask[2] == ':') &&
-		    RESTRICT_EXTENDEDBANS && MyClient(sptr) &&
+		    RESTRICT_EXTENDEDBANS && MyUser(sptr) &&
 		    !ValidatePermissionsForPath("immune:restrict-extendedbans",sptr,NULL,NULL,NULL))
 		{
 			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))

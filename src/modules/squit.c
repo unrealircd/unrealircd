@@ -123,7 +123,7 @@ CMD_FUNC(m_squit)
 		sendnumeric(sptr, ERR_NOSUCHSERVER, server);
 		return 0;
 	}
-	if (MyClient(sptr) && ((!ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && !MyConnect(acptr)) ||
+	if (MyUser(sptr) && ((!ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && !MyConnect(acptr)) ||
 	    (!ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL) && MyConnect(acptr))))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
@@ -132,7 +132,7 @@ CMD_FUNC(m_squit)
 	/*
 	   **  Notify all opers, if my local link is remotely squitted
 	 */
-	if (MyConnect(acptr) && !MyClient(cptr))
+	if (MyConnect(acptr) && !MyUser(cptr))
 	{
 		sendto_umode_global(UMODE_OPER, "Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);

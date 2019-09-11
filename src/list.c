@@ -300,7 +300,7 @@ void remove_client_from_list(Client *cptr)
 	{
 		ircstats.servers--;
 	}
-	if (IsRegisteredUser(cptr))
+	if (IsUser(cptr))
 	{
 		if (IsInvisible(cptr))
 		{
@@ -320,7 +320,7 @@ void remove_client_from_list(Client *cptr)
 	)
 		ircstats.unknown--;
 
-	if (IsPerson(cptr))	/* Only persons can have been added before */
+	if (IsUser(cptr))	/* Only persons can have been added before */
 	{
 		add_history(cptr, 0);
 		off_history(cptr);	/* Remove all pointers to cptr */

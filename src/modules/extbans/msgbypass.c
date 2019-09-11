@@ -160,7 +160,7 @@ char *msgbypass_extban_conv_param(char *para_in)
 
 int msgbypass_extban_syntax(Client *sptr, int checkt, char *reason)
 {
-	if (MyClient(sptr) && (checkt == EXBCHK_PARAM))
+	if (MyUser(sptr) && (checkt == EXBCHK_PARAM))
 	{
 		sendnotice(sptr, "Error when setting ban exception: %s", reason);
 		sendnotice(sptr, " Syntax: +e ~m:type:mask");

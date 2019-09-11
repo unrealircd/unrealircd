@@ -551,7 +551,7 @@ Client *find_person(char *name, Client *cptr)
 
 	c2ptr = find_client(name, cptr);
 
-	if (c2ptr && IsRegisteredUser(c2ptr) && c2ptr->user)
+	if (c2ptr && IsUser(c2ptr) && c2ptr->user)
 		return c2ptr;
 
 	return NULL;
@@ -687,8 +687,8 @@ int hash_check_watch(Client *cptr, int reply)
 		{
 			sendnumeric(lp->value.cptr, reply, me.name,
 			    lp->value.cptr->name, cptr->name,
-			    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-			    (IsPerson(cptr) ?
+			    (IsUser(cptr) ? cptr->user->username : "<N/A>"),
+			    (IsUser(cptr) ?
 			    (IsHidden(cptr) ? cptr->user->virthost : cptr->
 			    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
 		}
@@ -701,15 +701,15 @@ int hash_check_watch(Client *cptr, int reply)
 			if (reply == RPL_NOTAWAY)
 				sendnumeric(lp->value.cptr, reply, me.name,
 				    lp->value.cptr->name, cptr->name,
-				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-				    (IsPerson(cptr) ?
+				    (IsUser(cptr) ? cptr->user->username : "<N/A>"),
+				    (IsUser(cptr) ?
 				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
 				    user->realhost) : "<N/A>"), cptr->user->lastaway);
 			else /* RPL_GONEAWAY / RPL_REAWAY */
 				sendnumeric(lp->value.cptr, reply, me.name,
 				    lp->value.cptr->name, cptr->name,
-				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-				    (IsPerson(cptr) ?
+				    (IsUser(cptr) ? cptr->user->username : "<N/A>"),
+				    (IsUser(cptr) ?
 				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
 				    user->realhost) : "<N/A>"), cptr->user->lastaway, cptr->user->away);
 		}

@@ -253,12 +253,12 @@ typedef enum ClientStatus {
 	CLIENT_STATUS_ME			= -2,	/**< Client is &me (this server) */
 	CLIENT_STATUS_UNKNOWN			= -1,	/**< Client is doing a hanshake. May become a server or user later, we don't know yet */
 	CLIENT_STATUS_SERVER			= 0,	/**< Client is a server (fully authenticated) */
-	CLIENT_STATUS_CLIENT			= 1,	/**< Client is a user (fully authenticated) */
+	CLIENT_STATUS_USER			= 1,	/**< Client is a user (fully authenticated) */
 } ClientStatus;
 
-#define	MyConnect(x)			((x)->local)			/**< Is a locally connected client (server, person or user) */
-#define	MyClient(x)			(MyConnect(x) && IsRegisteredUser(x))	/**< Is a locally connected user/person */
-#define	IsRegisteredUser(x)	((x)->status == CLIENT_STATUS_CLIENT)	/**< Is a user/person that has completed the connection handshake */
+#define	MyConnect(x)			((x)->local)			/**< Is a locally connected client (server or user) */
+#define	MyUser(x)			(MyConnect(x) && IsUser(x))	/**< Is a locally connected user */
+#define	IsUser(x)	((x)->status == CLIENT_STATUS_USER)	/**< Is a user that has completed the connection handshake */
 #define	IsRegistered(x)		((x)->status >= CLIENT_STATUS_SERVER)	/**< Client has completed the connection handshake (user or server) */
 #define	IsConnecting(x)		((x)->status == CLIENT_STATUS_CONNECTING)	/**< Is an outgoing connect to another server */
 #define	IsHandshake(x)		((x)->status == CLIENT_STATUS_HANDSHAKE)	/**< Is doing a handshake (while connecting to another server) */
@@ -280,7 +280,7 @@ typedef enum ClientStatus {
 #define	SetMe(x)		((x)->status = CLIENT_STATUS_ME)
 #define	SetUnknown(x)		((x)->status = CLIENT_STATUS_UNKNOWN)
 #define	SetServer(x)		((x)->status = CLIENT_STATUS_SERVER)
-#define	SetClient(x)		((x)->status = CLIENT_STATUS_CLIENT)
+#define	SetUser(x)		((x)->status = CLIENT_STATUS_USER)
 #define	SetLog(x)		((x)->status = CLIENT_STATUS_LOG)
 
 /* @} */
@@ -364,8 +364,7 @@ typedef enum ClientStatus {
 #define	IsInvisible(x)		((x)->umodes & UMODE_INVISIBLE)
 #define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
-#define	IsPerson(x)		((x)->user && IsRegisteredUser(x))
-#define	SendWallops(x)		(!IsMe(x) && IsPerson(x) && ((x)->umodes & UMODE_WALLOP))
+#define	SendWallops(x)		(!IsMe(x) && IsUser(x) && ((x)->umodes & UMODE_WALLOP))
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
 #define IsSetHost(x)		((x)->umodes & UMODE_SETHOST)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
@@ -719,7 +718,7 @@ struct User {
 #ifdef	LIST_DEBUG
 	Client *bcptr;
 #endif
-	char *operlogin;	/* Only used if person is/was opered, used for oper::maxlogins */
+	char *operlogin;	/* Only used if user is/was opered, used for oper::maxlogins */
 	struct {
 		time_t nick_t;
 		unsigned char nick_c;
@@ -975,7 +974,7 @@ extern void unload_all_unused_moddata(void);
 #define TLSFLAG_DISABLECLIENTCERT 0x10
 
 /** A client on this or a remote server.
- * Every client (person, server, unknown,..) has this Client structure associated with it.
+ * Every client (user, server, unknown,..) has this Client structure associated with it.
  */
 struct Client {
 	struct list_head client_node;		/**< For global client list (client_list) */
@@ -985,18 +984,18 @@ struct Client {
 	struct list_head special_node;		/**< For special lists (server || unknown || oper) */
 	ClientStatus status;			/**< Client status, one of CLIENT_STATUS_* */
 	LocalClient *local;			/**< Additional information regarding locally connected clients */
-	ClientUser *user;			/**< Additional information, if this client is a user/person */
+	ClientUser *user;			/**< Additional information, if this client is a user */
 	Server *serv;				/**< Additional information, if this is a server */
 	time_t lastnick;			/**< Timestamp on nick */
 	long flags;				/**< Client flags (one or more of CLIENT_FLAG_*) */
-	long umodes;				/**< Client usermodes (if user/person) */
+	long umodes;				/**< Client usermodes (if user) */
 	Client *direction;			/**< Direction from which this client originated.
 	                                             This always points to a directly connected server or &me.
 	                                             It is never NULL */
 	unsigned char hopcount;			/**< Number of servers to this, 0 means local client */
-	char name[HOSTLEN + 1];			/**< Unique name of the client: nickname for persons, hostname for servers */
+	char name[HOSTLEN + 1];			/**< Unique name of the client: nickname for users, hostname for servers */
 	char ident[USERLEN + 1];		/**< Ident of the user, if available. Otherwise set to "unknown". */
-	char info[REALLEN + 1];			/**< Additional client information text. For persons this is gecos/realname */
+	char info[REALLEN + 1];			/**< Additional client information text. For users this is gecos/realname */
 	char id[IDLEN + 1];			/**< Unique ID: SID or UID */
 	Client *srvptr;				/**< Server on where this client is connected to (can be &me) */
 	char *ip;				/**< IP address of user or server (never NULL) */
@@ -1678,7 +1677,7 @@ struct Channel {
 	char chname[1];
 };
 
-/** user/channel membership struct for local clients */
+/** user/channel membership struct for users */
 struct MembershipL
 {
 	struct Membership 	*next;
@@ -1687,7 +1686,7 @@ struct MembershipL
 	ModData moddata[MODDATA_MAX_MEMBERSHIP]; /* for modules */
 };
 
-/** user/channel membership struct for remote clients */
+/** user/channel membership struct for remote users */
 struct Membership
 {
 	struct Membership 	*next;

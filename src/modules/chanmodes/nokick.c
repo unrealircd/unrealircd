@@ -71,7 +71,7 @@ int nokick_check (Client* sptr, Client* who, Channel *chptr, char* comment, long
 {
 	static char errmsg[256];
 
-	if (MyClient(sptr) && IsNoKick(chptr))
+	if (MyUser(sptr) && IsNoKick(chptr))
 	{
 		ircsnprintf(errmsg, sizeof(errmsg), ":%s %d %s %s :%s",
 		            me.name, ERR_CANNOTDOCOMMAND, sptr->name,

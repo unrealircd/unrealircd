@@ -67,7 +67,7 @@ CMD_FUNC(m_locops)
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "LOCOPS");
 		return 0;
 	}
-	if (MyClient(sptr) && !ValidatePermissionsForPath("chat:locops",sptr,NULL,NULL,NULL))
+	if (MyUser(sptr) && !ValidatePermissionsForPath("chat:locops",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;

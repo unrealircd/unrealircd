@@ -126,7 +126,7 @@ CMD_FUNC(m_trace)
 		{
 			if (acptr->direction->local->fd < 0)
 				continue;
-			if (IsPerson(acptr))
+			if (IsUser(acptr))
 				link_u[acptr->direction->local->fd]++;
 			else if (IsServer(acptr))
 				link_s[acptr->direction->local->fd]++;
@@ -169,7 +169,7 @@ CMD_FUNC(m_trace)
 				cnt++;
 				break;
 
-			case CLIENT_STATUS_CLIENT:
+			case CLIENT_STATUS_USER:
 				/* Only opers see users if there is a wildcard
 				 * but anyone can see all the opers.
 				 */

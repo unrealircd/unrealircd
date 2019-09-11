@@ -72,7 +72,7 @@ CMD_FUNC(m_connect)
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
-	if (!IsServer(sptr) && MyClient(sptr) && !ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL) && parc <= 3)
+	if (!IsServer(sptr) && MyUser(sptr) && !ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL) && parc <= 3)
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
@@ -128,7 +128,7 @@ CMD_FUNC(m_connect)
 	}
 
 	/* Notify all operators about remote connect requests */
-	if (!MyClient(cptr))
+	if (!MyUser(cptr))
 	{
 		sendto_server(&me, 0, 0, NULL,
 		    ":%s GLOBOPS :Remote CONNECT %s %s from %s",

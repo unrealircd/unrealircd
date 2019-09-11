@@ -85,7 +85,7 @@ CMD_FUNC(m_oper)
 	char *name, *password;
 	long old_umodes = sptr->umodes & ALL_UMODES;
 
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 		return 0;
 
 	if ((parc < 2) || BadPtr(parv[1]))

@@ -69,7 +69,7 @@ CMD_FUNC(m_svspart)
 	if (parc < 3 || !(acptr = find_person(parv[1], NULL))) 
 		return 0;
 
-	if (MyClient(acptr))
+	if (MyUser(acptr))
 	{
 		parv[0] = acptr->name;
 		parv[1] = parv[2];

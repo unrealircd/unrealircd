@@ -94,7 +94,7 @@ CMD_FUNC(m_sapart)
 		return 0;
 	}
 
-	if (MyClient(acptr))
+	if (MyUser(acptr))
 	{
 		/* Now works like m_join */
 		*jbuf = 0;

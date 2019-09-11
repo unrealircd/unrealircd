@@ -135,7 +135,7 @@ CMD_FUNC(m_help)
 	char *helptopic, *s;
 	Link *tmpl;
 
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 		return 0; /* never remote */
 
 	helptopic = parc > 1 ? parv[1] : NULL;

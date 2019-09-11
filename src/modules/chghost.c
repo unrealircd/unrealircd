@@ -65,7 +65,7 @@ CMD_FUNC(m_chghost)
 {
 	Client *acptr;
 
-	if (MyClient(sptr) && !ValidatePermissionsForPath("client:set:host",sptr,NULL,NULL,NULL))
+	if (MyUser(sptr) && !ValidatePermissionsForPath("client:set:host",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
@@ -108,7 +108,7 @@ CMD_FUNC(m_chghost)
 		switch (UHOST_ALLOWED)
 		{
 			case UHALLOW_NEVER:
-				if (MyClient(sptr))
+				if (MyUser(sptr))
 				{
 					sendnumeric(sptr, ERR_DISABLED, "CHGHOST",
 						"This command is disabled on this server");
@@ -118,7 +118,7 @@ CMD_FUNC(m_chghost)
 			case UHALLOW_ALWAYS:
 				break;
 			case UHALLOW_NOCHANS:
-				if (IsPerson(acptr) && MyClient(sptr) && acptr->user->joined)
+				if (IsUser(acptr) && MyUser(sptr) && acptr->user->joined)
 				{
 					sendnotice(sptr, "*** /ChgHost can not be used while %s is on a channel", acptr->name);
 					return 0;
@@ -155,7 +155,7 @@ CMD_FUNC(m_chghost)
 		
 		userhost_changed(acptr);
 
-		if (MyClient(acptr))
+		if (MyUser(acptr))
 			sendnumeric(acptr, RPL_HOSTHIDDEN, parv[2]);
 		
 		return 0;

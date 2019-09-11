@@ -72,7 +72,7 @@ MOD_UNLOAD(noinvite)
 
 int noinvite_pre_knock(Client *sptr, Channel *chptr)
 {
-	if (MyClient(sptr) && IsNoInvite(chptr))
+	if (MyUser(sptr) && IsNoInvite(chptr))
 	{
 		sendnumeric(sptr, ERR_CANNOTKNOCK,
 				    chptr->chname, "The channel does not allow invites (+V)");
@@ -84,7 +84,7 @@ int noinvite_pre_knock(Client *sptr, Channel *chptr)
 
 int noinvite_pre_invite(Client *sptr, Client *acptr, Channel *chptr, int *override)
 {
-	if (MyClient(sptr) && IsNoInvite(chptr))
+	if (MyUser(sptr) && IsNoInvite(chptr))
 	{
 		if (ValidatePermissionsForPath("channel:override:invite:noinvite",sptr,NULL,chptr,NULL) && sptr == acptr)
 		{

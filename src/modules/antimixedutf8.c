@@ -174,7 +174,7 @@ CMD_OVERRIDE_FUNC(override_msg)
 {
 	int score, ret;
 	
-	if (!MyClient(sptr) || (parc < 3) || BadPtr(parv[2]))
+	if (!MyUser(sptr) || (parc < 3) || BadPtr(parv[2]))
 	{
 		/* Short circuit for: remote clients or insufficient parameters */
 		return CallCommandOverride(ovr, cptr, sptr, recv_mtags, parc, parv);

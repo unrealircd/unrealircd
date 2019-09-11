@@ -69,7 +69,7 @@ CMD_FUNC(m_silence)
 
 	acptr = sptr;
 
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 	{
 		if (parc < 2 || *parv[1] == '\0'
 		    || (acptr = find_person(parv[1], NULL)))
@@ -121,7 +121,7 @@ CMD_FUNC(m_silence)
 		else
 		{
 			(void)add_silence(sptr, parv[2], 1);
-			if (!MyClient(acptr))
+			if (!MyUser(acptr))
 				sendto_one(acptr, NULL, ":%s SILENCE %s :%s",
 				    sptr->name, parv[1], parv[2]);
 		}

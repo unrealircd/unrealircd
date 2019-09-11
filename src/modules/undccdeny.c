@@ -58,7 +58,7 @@ MOD_UNLOAD(undccdeny)
 CMD_FUNC(m_undccdeny)
 {
 	ConfigItem_deny_dcc *p;
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 		return 0;
 
 	if (!ValidatePermissionsForPath("server-ban:dccdeny",sptr,NULL,NULL,NULL))

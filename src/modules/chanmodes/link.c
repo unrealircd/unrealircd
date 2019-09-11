@@ -111,7 +111,7 @@ int cmodeL_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, 
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
-		if (IsPerson(sptr) && is_chanowner(sptr, chptr))
+		if (IsUser(sptr) && is_chanowner(sptr, chptr))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
 			sendnumeric(sptr, ERR_CHANOWNPRIVNEEDED, chptr->chname);
@@ -126,7 +126,7 @@ int cmodeL_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, 
 			return EX_DENY; /* multiple channels not permitted */
 		if (!IsChannelName(para))
 		{
-			if (MyClient(sptr))
+			if (MyUser(sptr))
 				sendnumeric(sptr, ERR_NOSUCHCHANNEL, para);
 			return EX_DENY;
 		}
@@ -138,7 +138,7 @@ int cmodeL_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, 
 			*p = '\0';
 		if (find_channel(buf, NULL) == chptr)
 		{
-			if (MyClient(sptr))
+			if (MyUser(sptr))
 				sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'L',
 					   "a channel cannot be linked to itself");
 			return EX_DENY;
@@ -222,7 +222,7 @@ int cmodeL_sjoin_check(Channel *chptr, void *ourx, void *theirx)
 
 int extban_link_syntax(Client *sptr, int checkt, char *reason)
 {
-	if (MyClient(sptr) && (checkt == EXBCHK_PARAM))
+	if (MyUser(sptr) && (checkt == EXBCHK_PARAM))
 	{
 		sendnotice(sptr, "Error when setting ban: %s", reason);
 		sendnotice(sptr, "  Syntax: +b ~f:#channel:mask");

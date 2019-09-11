@@ -62,7 +62,7 @@ CMD_FUNC(m_vhost)
 	int 	i;
 	char olduser[USERLEN+1];
 
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 		return 0;
 
 	if ((parc < 2) || BadPtr(parv[1]))
@@ -116,7 +116,7 @@ CMD_FUNC(m_vhost)
 	switch (UHOST_ALLOWED)
 	{
 		case UHALLOW_NEVER:
-			if (MyClient(sptr))
+			if (MyUser(sptr))
 			{
 				sendnotice(sptr, "*** /vhost is disabled");
 				return 0;
@@ -125,7 +125,7 @@ CMD_FUNC(m_vhost)
 		case UHALLOW_ALWAYS:
 			break;
 		case UHALLOW_NOCHANS:
-			if (MyClient(sptr) && sptr->user->joined)
+			if (MyUser(sptr) && sptr->user->joined)
 			{
 				sendnotice(sptr, "*** /vhost can not be used while you are on a channel");
 				return 0;

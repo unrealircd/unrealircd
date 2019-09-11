@@ -67,7 +67,7 @@ int dead_link(Client *to, char *notice)
 	if (to->local->error_str)
 		return -1; /* don't overwrite & don't send multiple times */
 	
-	if (!IsPerson(to) && !IsUnknown(to) && !IsClosing(to))
+	if (!IsUser(to) && !IsUnknown(to) && !IsClosing(to))
 		sendto_ops_and_log("Link to server %s (%s) closed: %s",
 			to->name, to->ip?to->ip:"<no-ip>", notice);
 	Debug((DEBUG_ERROR, "dead_link: %s - %s", notice, get_client_name(to, FALSE)));
@@ -392,10 +392,10 @@ void sendto_channel(Channel *chptr, Client *from, Client *skip,
 		continue;
 good:
 		/* Now deal with 'clicap' (if non-zero) */
-		if (clicap && MyClient(acptr) && !HasCapabilityFast(acptr, clicap))
+		if (clicap && MyUser(acptr) && !HasCapabilityFast(acptr, clicap))
 			continue;
 
-		if (MyClient(acptr))
+		if (MyUser(acptr))
 		{
 			/* Local client */
 			if (sendflags & SEND_LOCAL)
@@ -615,7 +615,7 @@ void sendto_match_butone(Client *one, Client *from, char *mask, int what,
 	{
 		list_for_each_entry(cptr, &lclient_list, lclient_node)
 		{
-			if (!IsMe(cptr) && (cptr != one) && IsRegisteredUser(cptr) && match_it(cptr, mask, what))
+			if (!IsMe(cptr) && (cptr != one) && IsUser(cptr) && match_it(cptr, mask, what))
 			{
 				va_start(vl, pattern);
 				vsendto_prefix_one(cptr, from, mtags, pattern, vl);
@@ -660,7 +660,7 @@ void sendto_umode(int umodes, FORMAT_STRING(const char *pattern), ...)
 	char nbuf[1024];
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
-		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
+		if (IsUser(cptr) && (cptr->umodes & umodes) == umodes)
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :",
 			    me.name, cptr->name);
@@ -700,7 +700,7 @@ void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 	{
-		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
+		if (IsUser(cptr) && (cptr->umodes & umodes) == umodes)
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :",
 			    me.name, cptr->name);
@@ -868,7 +868,7 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *fr
 		*buf = ':';
 		strcpy(buf+1, from->name);
 
-		if (IsPerson(from))
+		if (IsUser(from))
 		{
 			char *username = from->user->username;
 			char *host = GetHost(from);
@@ -902,7 +902,7 @@ void vsendto_prefix_one(struct Client *to, struct Client *from, MessageTag *mtag
 {
 	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
 
-	if (to && from && MyClient(to) && from->user)
+	if (to && from && MyUser(to) && from->user)
 		vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, from, pattern, vl);
 	else
 		ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);

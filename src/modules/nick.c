@@ -384,7 +384,7 @@ CMD_FUNC(m_uid)
 				    acptrs ? acptrs->name : "unknown server");
 		}
 
-		if (IsServer(cptr) && IsPerson(sptr) && !ishold) /* remote user changing nick */
+		if (IsServer(cptr) && IsUser(sptr) && !ishold) /* remote user changing nick */
 		{
 			sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
 				sptr->name, sptr->srvptr ? sptr->srvptr->name : "<unknown>");
@@ -579,7 +579,7 @@ CMD_FUNC(m_nick)
 	unsigned char removemoder = (sptr->umodes & UMODE_REGNICK) ? 1 : 0;
 	Hook *h;
 	int i = 0;
-	char *nickid = (IsPerson(sptr) && *sptr->id) ? sptr->id : NULL;
+	char *nickid = (IsUser(sptr) && *sptr->id) ? sptr->id : NULL;
 	/*
 	 * If the user didn't specify a nickname, complain
 	 */
@@ -720,7 +720,7 @@ CMD_FUNC(m_nick)
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
-	if (MyClient(sptr)) /* local client changin nick afterwards.. */
+	if (MyUser(sptr)) /* local client changin nick afterwards.. */
 	{
 		int xx;
 		spamfilter_build_user_string(spamfilter_user, nick, sptr);
@@ -741,7 +741,7 @@ CMD_FUNC(m_nick)
 				    acptrs ? acptrs->name : "unknown server");
 		}
 
-		if (IsServer(cptr) && IsPerson(sptr) && !ishold) /* remote user changing nick */
+		if (IsServer(cptr) && IsUser(sptr) && !ishold) /* remote user changing nick */
 		{
 			sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
 				sptr->name, sptr->srvptr ? sptr->srvptr->name : "<unknown>");
@@ -792,7 +792,7 @@ CMD_FUNC(m_nick)
 		return exit_client(cptr, sptr, &me, NULL, "Nick/Server collision");
 	}
 
-	if (MyClient(cptr) && !ValidatePermissionsForPath("immune:nick-flood",sptr,NULL,NULL,NULL))
+	if (MyUser(cptr) && !ValidatePermissionsForPath("immune:nick-flood",sptr,NULL,NULL,NULL))
 		cptr->local->since += 3;	/* Nick-flood prot. -Donwulff */
 
 	if (!(acptr = find_client(nick, NULL)))
@@ -993,7 +993,7 @@ CMD_FUNC(m_nick)
 		}
 		newusr = 1;
 	}
-	else if (sptr->name[0] && IsPerson(sptr))
+	else if (sptr->name[0] && IsUser(sptr))
 	{
 		MessageTag *mtags = NULL;
 
@@ -1004,7 +1004,7 @@ CMD_FUNC(m_nick)
 		   ** change to occur.
 		   ** Also set 'lastnick' to current time, if changed.
 		 */
-		if (MyClient(sptr))
+		if (MyUser(sptr))
 		{
 			for (mp = sptr->user->channel; mp; mp = mp->next)
 			{
@@ -1060,9 +1060,9 @@ CMD_FUNC(m_nick)
 		 */
 		if (mycmp(sptr->name, nick) ||
 		    /* Next line can be removed when all upgraded  --Run */
-		    (!MyClient(sptr) && parc > 2
+		    (!MyUser(sptr) && parc > 2
 		    && atol(parv[2]) < sptr->lastnick))
-			sptr->lastnick = (MyClient(sptr)
+			sptr->lastnick = (MyUser(sptr)
 			    || parc < 3) ? TStime() : atol(parv[2]);
 		if (sptr->lastnick < 0)
 		{
@@ -1123,7 +1123,7 @@ CMD_FUNC(m_nick)
 	if (update_watch && sptr->name[0])
 	{
 		(void)del_from_client_hash_table(sptr->name, sptr);
-		if (IsPerson(sptr))
+		if (IsUser(sptr))
 			hash_check_watch(sptr, RPL_LOGOFF);
 	}
 
@@ -1144,15 +1144,15 @@ CMD_FUNC(m_nick)
 		if (IsNetInfo(cptr) && !IsULine(sptr))
 			sendto_fconnectnotice(sptr, 0, NULL);
 	}
-	else if (IsPerson(sptr) && update_watch)
+	else if (IsUser(sptr) && update_watch)
 		hash_check_watch(sptr, RPL_LOGON);
 
-	if (newusr && !MyClient(sptr) && IsPerson(sptr))
+	if (newusr && !MyUser(sptr) && IsUser(sptr))
 	{
 		RunHook(HOOKTYPE_REMOTE_CONNECT, sptr);
 	}
 
-	if (removemoder && MyClient(sptr))
+	if (removemoder && MyUser(sptr))
 	{
 		sendto_one(sptr, NULL, ":%s MODE %s :-r", me.name, sptr->name);
 	}
@@ -1366,7 +1366,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 	{
 		strlcpy(user->username, username, USERLEN+1);
 	}
-	SetClient(sptr);
+	SetUser(sptr);
 	ircstats.clients++;
 	if (sptr->srvptr && sptr->srvptr->serv)
 		sptr->srvptr->serv->users++;

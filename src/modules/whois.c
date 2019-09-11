@@ -91,7 +91,7 @@ CMD_FUNC(m_whois)
 	{
 		unsigned char invis, showchannel, member, wilds, hideoper; /* <- these are all boolean-alike */
 
-		if (MyClient(sptr) && (++ntargets > maxtargets))
+		if (MyUser(sptr) && (++ntargets > maxtargets))
 		{
 			sendnumeric(sptr, ERR_TOOMANYTARGETS, nick, maxtargets, "WHOIS");
 			break;
@@ -118,7 +118,7 @@ CMD_FUNC(m_whois)
 			 *   the target user(s) are on;
 			 */
 
-			if (!IsPerson(acptr))
+			if (!IsUser(acptr))
 				continue;
 
 			name = (!*acptr->name) ? "?" : acptr->name;
@@ -235,7 +235,7 @@ CMD_FUNC(m_whois)
 					}
 
 					access = get_access(acptr, chptr);
-					if (!MyClient(sptr) || !HasCapability(sptr, "multi-prefix"))
+					if (!MyUser(sptr) || !HasCapability(sptr, "multi-prefix"))
 					{
 #ifdef PREFIX_AQ
 						if (access & CHFL_CHANOWNER)
@@ -295,7 +295,7 @@ CMD_FUNC(m_whois)
 					strlcat(buf, "a Local IRC Operator", sizeof buf);
 				if (buf[0])
 				{
-					if (IsOper(sptr) && MyClient(acptr))
+					if (IsOper(sptr) && MyUser(acptr))
 					{
 						char *operclass = "???";
 						ConfigItem_oper *oper = Find_oper(acptr->user->operlogin);

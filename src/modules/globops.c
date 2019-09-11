@@ -67,13 +67,13 @@ CMD_FUNC(m_globops)
 		return 0;
 	}
 
-	if (MyClient(sptr) && !ValidatePermissionsForPath("chat:globops",sptr,NULL,NULL,NULL))
+	if (MyUser(sptr) && !ValidatePermissionsForPath("chat:globops",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 	{
 		/* Easy */
 		sendto_umode_global(UMODE_OPER, "from %s: %s", sptr->name, message);

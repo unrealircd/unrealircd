@@ -97,7 +97,7 @@ int operonly_topic_allow (Client *sptr, Channel *chptr)
 
 int operonly_require_oper(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (!MyClient(cptr) || ValidatePermissionsForPath("channel:operonly:set",cptr,NULL,chptr,NULL))
+	if (!MyUser(cptr) || ValidatePermissionsForPath("channel:operonly:set",cptr,NULL,chptr,NULL))
 		return EX_ALLOW;
 
 	if (checkt == EXCHK_ACCESS_ERR)

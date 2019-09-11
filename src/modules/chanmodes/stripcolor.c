@@ -78,7 +78,7 @@ char *stripcolor_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, cha
 	Hook *h;
 	int i;
 
-	if (MyClient(sptr) && IsStripColor(chptr))
+	if (MyUser(sptr) && IsStripColor(chptr))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
@@ -100,7 +100,7 @@ char *stripcolor_prelocalpart(Client *sptr, Channel *chptr, char *comment)
 	if (!comment)
 		return NULL;
 
-	if (MyClient(sptr) && IsStripColor(chptr))
+	if (MyUser(sptr) && IsStripColor(chptr))
 		comment = StripColors(comment);
 
 	return comment;
@@ -123,7 +123,7 @@ char *stripcolor_prelocalquit(Client *sptr, char *comment)
 	if (!comment)
 		return NULL;
 
-	if (MyClient(sptr) && !BadPtr(comment) && IsAnyChannelStripColor(sptr))
+	if (MyUser(sptr) && !BadPtr(comment) && IsAnyChannelStripColor(sptr))
 		comment = StripColors(comment);
         
 	return comment;

@@ -241,7 +241,7 @@ char *censor_pre_usermsg(Client *sptr, Client *target, char *text, int notice)
 {
 int blocked;
 
-	if (MyClient(sptr) && IsCensored(target))
+	if (MyUser(sptr) && IsCensored(target))
 	{
 		text = stripbadwords_message(text, &blocked);
 		if (blocked)

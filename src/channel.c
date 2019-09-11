@@ -64,7 +64,7 @@ void del_invite(Client *, Channel *);
 inline int op_can_override(char* acl, Client *sptr,Channel *channel,void* extra)
 {
 #ifndef NO_OPEROVERRIDE
-	if (MyClient(sptr) && !(ValidatePermissionsForPath(acl,sptr,NULL,channel,extra)))
+	if (MyUser(sptr) && !(ValidatePermissionsForPath(acl,sptr,NULL,channel,extra)))
 		return 0;
 	return 1;
 #else
@@ -312,13 +312,13 @@ int add_listmode_ex(Ban **list, Client *cptr, Channel *chptr, char *banid, char 
 	int cnt = 0, len;
 	int do_not_add = 0;
 
-	if (MyClient(cptr))
+	if (MyUser(cptr))
 		(void)collapse(banid);
 
 	len = strlen(banid);
 	if (!*list && ((len > MAXBANLENGTH) || (MAXBANS < 1)))
 	{
-		if (MyClient(cptr))
+		if (MyUser(cptr))
 		{
 			/* Only send the error to local clients */
 			sendnumeric(cptr, ERR_BANLISTFULL, chptr->chname, banid);
@@ -331,7 +331,7 @@ int add_listmode_ex(Ban **list, Client *cptr, Channel *chptr, char *banid, char 
 		/* Check MAXBANLENGTH / MAXBANS only for local clients
 		 * and 'me' (for +b's set during +f).
 		 */
-		if ((MyClient(cptr) || IsMe(cptr)) && ((len > MAXBANLENGTH) || (++cnt >= MAXBANS)))
+		if ((MyUser(cptr) || IsMe(cptr)) && ((len > MAXBANLENGTH) || (++cnt >= MAXBANS)))
 		{
 			do_not_add = 1;
 		}
@@ -347,7 +347,7 @@ int add_listmode_ex(Ban **list, Client *cptr, Channel *chptr, char *banid, char 
 			/* The banlist is full and trying to add a new ban.
 			 * This is not permitted.
 			 */
-			if (MyClient(cptr))
+			if (MyUser(cptr))
 			{
 				/* Only send the error to local clients */
 				sendnumeric(cptr, ERR_BANLISTFULL, chptr->chname, banid);
@@ -382,7 +382,7 @@ int add_listmode(Ban **list, Client *cptr, Channel *chptr, char *banid)
 	char *setby = cptr->name;
 	char nuhbuf[NICKLEN+USERLEN+HOSTLEN+4];
 
-	if (IsPerson(cptr) && (iConf.ban_setter == SETTER_NICK_USER_HOST))
+	if (IsUser(cptr) && (iConf.ban_setter == SETTER_NICK_USER_HOST))
 		setby = make_nick_user_host_r(nuhbuf, cptr->name, cptr->user->username, GetHost(cptr));
 
 	return add_listmode_ex(list, cptr, chptr, banid, setby, TStime());
@@ -551,7 +551,7 @@ void add_user_to_channel(Channel *chptr, Client *who, int flags)
 		chptr->members = ptr;
 		chptr->users++;
 
-		ptr2 = make_membership(MyClient(who));
+		ptr2 = make_membership(MyUser(who));
 		/* we should make this more efficient --stskeeps 
 		   is now, as we only use it in membership */
 		ptr2->chptr = chptr;
@@ -593,7 +593,7 @@ int remove_user_from_channel(Client *sptr, Channel *chptr)
 		if (tmp2->chptr == chptr)
 		{
 			*curr2 = tmp2->next;
-			free_membership(tmp2, MyClient(sptr));
+			free_membership(tmp2, MyUser(sptr));
 			break;
 		}
 	}
@@ -610,7 +610,7 @@ int remove_user_from_channel(Client *sptr, Channel *chptr)
 long get_access(Client *cptr, Channel *chptr)
 {
 	Membership *lp;
-	if (chptr && IsPerson(cptr))
+	if (chptr && IsUser(cptr))
 		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			return lp->flags;
 	return 0;
@@ -852,7 +852,7 @@ char *clean_ban_mask(char *mask, int what, Client *cptr)
 	/* Extended ban? */
 	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
 	{
-		if (RESTRICT_EXTENDEDBANS && MyClient(cptr) && !ValidatePermissionsForPath("immune:restrict-extendedbans",cptr,NULL,NULL,NULL))
+		if (RESTRICT_EXTENDEDBANS && MyUser(cptr) && !ValidatePermissionsForPath("immune:restrict-extendedbans",cptr,NULL,NULL,NULL))
 		{
 			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
 			{
@@ -876,7 +876,7 @@ char *clean_ban_mask(char *mask, int what, Client *cptr)
 			 * - if from a local client trying to REMOVE the extban,
 			 *   allow it too (so you don't get "unremovable" extbans).
 			 */
-			if (!MyClient(cptr) || (what == MODE_DEL))
+			if (!MyUser(cptr) || (what == MODE_DEL))
 				return mask; /* allow it */
 			return NULL; /* reject */
 		}
@@ -957,7 +957,7 @@ Channel *get_channel(Client *cptr, char *chname, int flag)
 		return NULL;
 
 	len = strlen(chname);
-	if (MyClient(cptr) && len > CHANNELLEN)
+	if (MyUser(cptr) && len > CHANNELLEN)
 	{
 		len = CHANNELLEN;
 		*(chname + CHANNELLEN) = '\0';
@@ -974,7 +974,7 @@ Channel *get_channel(Client *cptr, char *chname, int flag)
 		chptr->topic_nick = NULL;
 		chptr->prevch = NULL;
 		chptr->nextch = channel;
-		chptr->creationtime = MyClient(cptr) ? TStime() : 0;
+		chptr->creationtime = MyUser(cptr) ? TStime() : 0;
 		channel = chptr;
 		(void)add_to_channel_hash_table(chname, chptr);
 		ircstats.channels++;

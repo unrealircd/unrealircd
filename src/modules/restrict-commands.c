@@ -324,7 +324,7 @@ char *rcmd_hook_wrapper(Client *sptr, char *text, int notice, char *display, cha
 	RestrictedCommand *rcmd;
 
 	// Let's allow non-local users, opers and U:Lines early =]
-	if (!MyClient(sptr) || !sptr->local || IsOper(sptr) || IsULine(sptr))
+	if (!MyUser(sptr) || !sptr->local || IsOper(sptr) || IsULine(sptr))
 		return text;
 
 	rcmd = find_restrictions_byconftag(conftag);
@@ -350,7 +350,7 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 {
 	RestrictedCommand *rcmd;
 
-	if (!MyClient(sptr) || !sptr->local || IsOper(sptr) || IsULine(sptr))
+	if (!MyUser(sptr) || !sptr->local || IsOper(sptr) || IsULine(sptr))
 		return CallCommandOverride(ovr, cptr, sptr, recv_mtags, parc, parv);
 
 	rcmd = find_restrictions_bycmd(ovr->command->cmd);

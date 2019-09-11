@@ -131,7 +131,7 @@ int extban_is_ok_nuh_extban(Client* sptr, Channel* chptr, char* para, int checkt
 	int isok;
 	static int extban_is_ok_recursion = 0;
 
-	/* Mostly copied from clean_ban_mask - but note MyClient checks aren't needed here: extban->is_ok() according to m_mode isn't called for nonlocal. */
+	/* Mostly copied from clean_ban_mask - but note MyUser checks aren't needed here: extban->is_ok() according to m_mode isn't called for nonlocal. */
 	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
 	{
 		if (extban_is_ok_recursion)

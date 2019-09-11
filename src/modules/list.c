@@ -147,7 +147,7 @@ CMD_FUNC(m_list)
 	for (name = strtoken(&p, parv[1], ","); name && !error;
 	    name = strtoken(&p, NULL, ","))
 	{
-		if (MyClient(sptr) && (++ntargets > maxtargets))
+		if (MyUser(sptr) && (++ntargets > maxtargets))
 		{
 			sendnumeric(sptr, ERR_TOOMANYTARGETS, name, maxtargets, "LIST");
 			break;

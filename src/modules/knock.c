@@ -125,7 +125,7 @@ CMD_FUNC(m_knock)
 	if (i == HOOK_DENY)
 		return 0;
 
-	if (MyClient(sptr) && !ValidatePermissionsForPath("immune:knock-flood",sptr,NULL,NULL,NULL))
+	if (MyUser(sptr) && !ValidatePermissionsForPath("immune:knock-flood",sptr,NULL,NULL,NULL))
 	{
 		if ((sptr->user->flood.knock_t + KNOCK_PERIOD) <= timeofday)
 		{

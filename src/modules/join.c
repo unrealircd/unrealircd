@@ -263,7 +263,7 @@ void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_
 		me.name, (long long)chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
 
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 	{
 		/*
 		   ** Make a (temporal) creationtime, if someone joins
@@ -401,7 +401,7 @@ int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
 	for (i = 0, name = strtoken(&p, parv[1], ","); name;
 	    name = strtoken(&p, NULL, ","))
 	{
-		if (MyClient(sptr) && (++ntargets > maxtargets))
+		if (MyUser(sptr) && (++ntargets > maxtargets))
 		{
 			sendnumeric(sptr, ERR_TOOMANYTARGETS, name, maxtargets, "JOIN");
 			break;
@@ -426,7 +426,7 @@ int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
 		}
 		else if (!IsChannelName(name))
 		{
-			if (MyClient(sptr))
+			if (MyUser(sptr))
 				sendnumeric(sptr, ERR_NOSUCHCHANNEL, name);
 			continue;
 		}
@@ -805,7 +805,7 @@ void _userhost_changed(Client *sptr)
 		for (lp = channels->chptr->members; lp; lp = lp->next)
 		{
 			acptr = lp->cptr;
-			if (MyClient(acptr) && HasCapabilityFast(acptr, CAP_CHGHOST) &&
+			if (MyUser(acptr) && HasCapabilityFast(acptr, CAP_CHGHOST) &&
 			    (acptr->local->serial != current_serial) && (sptr != acptr))
 			{
 				/* FIXME: send mtag */
@@ -815,7 +815,7 @@ void _userhost_changed(Client *sptr)
 		}
 	}
 
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 	{
 		/* We take the liberty of sending the CHGHOST to the impacted user as
 		 * well. This makes things easy for client coders.

@@ -82,7 +82,7 @@ CMD_FUNC(m_dccallow)
 		NULL
 	};
 
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 		return 0;
 	
 	if (parc < 2)
@@ -94,7 +94,7 @@ CMD_FUNC(m_dccallow)
 
 	for (p = NULL, s = strtoken(&p, parv[1], ", "); s; s = strtoken(&p, NULL, ", "))
 	{
-		if (MyClient(sptr) && (++ntargets > maxtargets))
+		if (MyUser(sptr) && (++ntargets > maxtargets))
 		{
 			sendnumeric(sptr, ERR_TOOMANYTARGETS, s, maxtargets, "DCCALLOW");
 			break;

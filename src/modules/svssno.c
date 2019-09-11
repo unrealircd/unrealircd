@@ -86,7 +86,7 @@ int  do_svssno(Client *cptr, Client *sptr, int parc, char *parv[], int show_chan
 		return 0;
 	}
 
-	if (MyClient(acptr))
+	if (MyUser(acptr))
 	{
 		if (parc == 2)
 			acptr->user->snomask = 0;

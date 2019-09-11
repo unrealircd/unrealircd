@@ -75,7 +75,7 @@ CMD_FUNC(m_part)
 		return 0;
 	}
 
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 	{
 		if (IsShunned(sptr))
 			commentx = NULL;
@@ -102,7 +102,7 @@ CMD_FUNC(m_part)
 	{
 		MessageTag *mtags = NULL;
 
-		if (MyClient(sptr) && (++ntargets > maxtargets))
+		if (MyUser(sptr) && (++ntargets > maxtargets))
 		{
 			sendnumeric(sptr, ERR_TOOMANYTARGETS, name, maxtargets, "PART");
 			break;
@@ -127,7 +127,7 @@ CMD_FUNC(m_part)
 			   ** for a remote client (who sends back a PART),
 			   ** so check for remote client or not --Run
 			 */
-			if (MyClient(sptr))
+			if (MyUser(sptr))
 				sendnumeric(sptr, ERR_NOTONCHANNEL, name);
 			continue;
 		}
@@ -175,7 +175,7 @@ CMD_FUNC(m_part)
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s",
 					       sptr->name, chptr->chname);
-				if (MyClient(sptr))
+				if (MyUser(sptr))
 				{
 					sendto_one(sptr, mtags, ":%s!%s@%s PART %s",
 						sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
@@ -188,7 +188,7 @@ CMD_FUNC(m_part)
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s %s",
 					       sptr->name, chptr->chname, comment);
-				if (MyClient(sptr))
+				if (MyUser(sptr))
 				{
 					sendto_one(sptr, mtags,
 						":%s!%s@%s PART %s %s",
@@ -212,7 +212,7 @@ CMD_FUNC(m_part)
 			}
 		}
 
-		if (MyClient(sptr))
+		if (MyUser(sptr))
 			RunHook5(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, mtags, comment);
 		else
 			RunHook5(HOOKTYPE_REMOTE_PART, cptr, sptr, chptr, mtags, comment);

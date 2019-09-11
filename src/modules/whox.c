@@ -144,7 +144,7 @@ CMD_FUNC(m_whox)
 
 	memset(&fmt, 0, sizeof(fmt));
 
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 		return 0;
 
 	if ((parc < 2))
@@ -527,7 +527,7 @@ static void who_global(Client *sptr, char *mask, int operspy, struct who_format 
 	 */
 	list_for_each_entry(acptr, &client_list, client_node)
 	{
-		if(!IsPerson(acptr))
+		if(!IsUser(acptr))
 			continue;
 
 		if(IsInvisible(acptr) && !operspy)
@@ -787,7 +787,7 @@ static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_forma
 		if (HasField(fmt, FIELD_HOP))
 			append_format(str, sizeof str, &pos, " %d", hide ? 0 : acptr->hopcount);
 		if (HasField(fmt, FIELD_IDLE))
-			append_format(str, sizeof str, &pos, " %d", (int)(MyClient(acptr) &&
+			append_format(str, sizeof str, &pos, " %d", (int)(MyUser(acptr) &&
 				(!(acptr->umodes & UMODE_HIDLE) || IsOper(sptr) ||
 				(sptr == acptr)) ? TStime() - acptr->local->last : 0));
 		if (HasField(fmt, FIELD_ACCOUNT))

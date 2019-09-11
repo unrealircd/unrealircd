@@ -85,7 +85,7 @@ static void redirect_all_clients(void)
 
 	list_for_each_entry_safe(acptr, saved, &lclient_list, lclient_node)
 	{
-		if (IsPerson(acptr) && !IsOper(acptr))
+		if (IsUser(acptr) && !IsOper(acptr))
 		{
 			do_jumpserver_exit_client(acptr);
 			count++;

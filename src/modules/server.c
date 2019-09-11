@@ -485,7 +485,7 @@ CMD_FUNC(m_server)
 
 
 	/* Ignore it  */
-	if (IsPerson(sptr))
+	if (IsUser(sptr))
 	{
 		sendnumeric(cptr, ERR_ALREADYREGISTRED);
 		sendnotice(cptr,
@@ -1053,7 +1053,7 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 		/* acptr->direction == acptr for acptr == cptr */
 		if (acptr->direction == cptr)
 			continue;
-		if (IsPerson(acptr))
+		if (IsUser(acptr))
 		{
 			introduce_user(cptr, acptr);
 			if (!SupportSJOIN(cptr))

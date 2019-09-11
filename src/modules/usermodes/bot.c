@@ -84,7 +84,7 @@ int bot_who_status(Client *sptr, Client *acptr, Channel *chptr, Member *cm, char
 
 int bot_umode_change(Client *sptr, long oldmode, long newmode)
 {
-	if ((newmode & UMODE_BOT) && !(oldmode & UMODE_BOT) && MyClient(sptr))
+	if ((newmode & UMODE_BOT) && !(oldmode & UMODE_BOT) && MyUser(sptr))
 	{
 		/* now +B */
 		char *parv[2];

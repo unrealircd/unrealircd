@@ -434,7 +434,7 @@ int authprompt_place_host_ban(Client *sptr, int action, char *reason, long durat
 	/* If it's a soft-xx action and the user is not logged in
 	 * and the user is not yet online, then we will handle this user.
 	 */
-	if (IsSoftBanAction(action) && !IsLoggedIn(sptr) && !IsPerson(sptr))
+	if (IsSoftBanAction(action) && !IsLoggedIn(sptr) && !IsUser(sptr))
 	{
 		/* Send ban reason */
 		if (reason)
@@ -456,7 +456,7 @@ int authprompt_find_tkline_match(Client *sptr, TKL *tkl)
 	if (TKLIsServerBan(tkl) &&
 	   (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) &&
 	   !IsLoggedIn(sptr) &&
-	   !IsPerson(sptr))
+	   !IsUser(sptr))
 	{
 		/* Send ban reason */
 		if (tkl->ptr.serverban->reason)

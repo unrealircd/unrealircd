@@ -47,7 +47,7 @@ int do_numeric(int numeric, Client *cptr, Client *sptr, MessageTag *recv_mtags, 
 	char *nick, *p;
 	int  i;
 
-	if (!IsServer(sptr) && !IsPerson(sptr) && IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr))
+	if (!IsServer(sptr) && !IsUser(sptr) && IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr))
 	{
 		/* This is an outgoing server connect that is currently not yet IsServer() but in 'unknown' state.
 		 * We need to handle a few responses here.
@@ -149,7 +149,7 @@ int do_numeric(int numeric, Client *cptr, Client *sptr, MessageTag *recv_mtags, 
 			   ** with numerics which can happen with nick collisions.
 			   ** - Avalon
 			 */
-			if (!IsMe(acptr) && IsPerson(acptr))
+			if (!IsMe(acptr) && IsUser(acptr))
 			{
 				/* Added for .U3.2. drop remote 'You are not on
 				   ** that channel', we should be synced anyway,

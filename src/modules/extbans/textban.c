@@ -261,12 +261,12 @@ int extban_modeT_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int
 {
 	int n;
 
-	if ((what == MODE_ADD) && (what2 == EXBTYPE_EXCEPT) && MyClient(sptr))
+	if ((what == MODE_ADD) && (what2 == EXBTYPE_EXCEPT) && MyUser(sptr))
 		return 0; /* except is not supported */
 
 	/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
 	if ((what == MODE_ADD) && (checkt == EXBCHK_PARAM) &&
-	     MyClient(sptr) && !IsOper(sptr) &&
+	     MyUser(sptr) && !IsOper(sptr) &&
 	    ((n = counttextbans(chptr)) >= MAX_EXTBANT_PER_CHAN))
 	{
 		/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */

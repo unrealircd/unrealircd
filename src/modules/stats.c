@@ -623,7 +623,7 @@ int stats_traffic(Client *sptr, char *para)
 				sp->is_sbr &= 0x3ff;
 			}
 		}
-		else if (IsRegisteredUser(acptr))
+		else if (IsUser(acptr))
 		{
 			sp->is_cbs += acptr->local->sendB;
 			sp->is_cbr += acptr->local->receiveB;
@@ -1250,7 +1250,7 @@ int stats_linkinfoint(Client *sptr, char *para, int all)
 	else
 		para = me.name;
 	sendnumericfmt(sptr, RPL_STATSLINKINFO, "%s", Sformat);
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 	{
 		remote = 1;
 		wilds = 0;

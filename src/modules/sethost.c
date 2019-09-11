@@ -63,7 +63,7 @@ CMD_FUNC(m_sethost)
 {
 	char *vhost;
 
-	if (MyClient(sptr) && !ValidatePermissionsForPath("self:set:host",sptr,NULL,NULL,NULL))
+	if (MyUser(sptr) && !ValidatePermissionsForPath("self:set:host",sptr,NULL,NULL,NULL))
 	{
   		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
@@ -99,7 +99,7 @@ CMD_FUNC(m_sethost)
 		return 0;
 	}
 
-	if (MyClient(sptr) && !strcmp(GetHost(sptr), vhost))
+	if (MyUser(sptr) && !strcmp(GetHost(sptr), vhost))
 	{
 		sendnotice(sptr, "/SetHost Error: requested host is same as current host.");
 		return 0;
@@ -110,7 +110,7 @@ CMD_FUNC(m_sethost)
 	switch (UHOST_ALLOWED)
 	{
 		case UHALLOW_NEVER:
-			if (MyClient(sptr))
+			if (MyUser(sptr))
 			{
 				sendnotice(sptr, "*** /SetHost is disabled");
 				return 0;
@@ -119,7 +119,7 @@ CMD_FUNC(m_sethost)
 		case UHALLOW_ALWAYS:
 			break;
 		case UHALLOW_NOCHANS:
-			if (MyClient(sptr) && sptr->user->joined)
+			if (MyUser(sptr) && sptr->user->joined)
 			{
 				sendnotice(sptr, "*** /SetHost can not be used while you are on a channel");
 				return 0;

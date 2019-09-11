@@ -80,7 +80,7 @@ static int IsACTCP(char *s)
 
 char *noctcp_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
-	if (MyClient(sptr) && IsNoCTCP(chptr) && IsACTCP(text))
+	if (MyUser(sptr) && IsNoCTCP(chptr) && IsACTCP(text))
 	{
 		if (!notice)
 		{

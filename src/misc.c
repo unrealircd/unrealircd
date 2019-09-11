@@ -461,11 +461,11 @@ static void exit_one_client(Client *sptr, MessageTag *mtags_i, const char *comme
 
 	assert(!IsMe(sptr));
 
-	if (IsRegisteredUser(sptr))
+	if (IsUser(sptr))
 	{
 		MessageTag *mtags_o = NULL;
 
-		if (!MyClient(sptr))
+		if (!MyUser(sptr))
 			RunHook3(HOOKTYPE_REMOTE_QUIT, sptr, mtags_i, comment);
 
 		new_message_special(sptr, mtags_i, &mtags_o, ":%s QUIT", sptr->name);
@@ -508,7 +508,7 @@ static void exit_one_client(Client *sptr, MessageTag *mtags_i, const char *comme
 	}
 	if (*sptr->name)
 		del_from_client_hash_table(sptr->name, sptr);
-	if (IsRegisteredUser(sptr))
+	if (IsUser(sptr))
 		hash_check_watch(sptr, RPL_LOGOFF);
 	if (remote_rehash_client == sptr)
 		remote_rehash_client = NULL; /* client did a /REHASH and QUIT before rehash was complete */
@@ -549,7 +549,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 				sptr->local->class = NULL;
 			}
 		}
-		if (IsRegisteredUser(sptr))
+		if (IsUser(sptr))
 			ircstats.me_clients--;
 		if (sptr->serv && sptr->serv->conf)
 		{
@@ -582,7 +582,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 				}
 			}
 		SetClosing(sptr);
-		if (IsPerson(sptr))
+		if (IsUser(sptr))
 		{
 			RunHook3(HOOKTYPE_LOCAL_QUIT, sptr, recv_mtags, comment);
 			sendto_connectnotice(sptr, 1, comment);
@@ -636,7 +636,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 		 */
 		close_connection(sptr);
 	}
-	else if (IsPerson(sptr) && !IsULine(sptr))
+	else if (IsUser(sptr) && !IsULine(sptr))
 	{
 		if (sptr->srvptr != &me)
 			sendto_fconnectnotice(sptr, 1, comment);
@@ -662,7 +662,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 
 		RunHook2(HOOKTYPE_SERVER_QUIT, sptr, recv_mtags);
 	}
-	else if (IsRegisteredUser(sptr) && !IsKilled(sptr))
+	else if (IsUser(sptr) && !IsKilled(sptr))
 	{
 		sendto_server(cptr, PROTO_SID, 0, recv_mtags, ":%s QUIT :%s", ID(sptr), comment);
 		sendto_server(cptr, 0, PROTO_SID, recv_mtags, ":%s QUIT :%s", sptr->name, comment);

@@ -79,7 +79,7 @@ int servicebot_can_kick(Client *sptr, Client *target, Channel *chptr, char *comm
 {
 	static char errmsg[NICKLEN+256];
 
-	if (MyClient(sptr) && !IsULine(sptr) && IsServiceBot(target))
+	if (MyUser(sptr) && !IsULine(sptr) && IsServiceBot(target))
 	{
 		char errmsg2[NICKLEN+32];
 		snprintf(errmsg2, sizeof(errmsg2), "%s is a Service Bot", target->name);
@@ -100,7 +100,7 @@ int servicebot_mode_deop(Client *sptr, Client *target, Channel *chptr,
 {
 	static char errmsg[NICKLEN+256];
 	
-	if (IsServiceBot(target) && MyClient(sptr) && !ValidatePermissionsForPath("services:servicebot:deop",sptr,target,chptr,NULL) && (what == MODE_DEL))
+	if (IsServiceBot(target) && MyUser(sptr) && !ValidatePermissionsForPath("services:servicebot:deop",sptr,target,chptr,NULL) && (what == MODE_DEL))
 	{
 		snprintf(errmsg, sizeof(errmsg), ":%s %d %s %c :%s is a Service Bot",
 			me.name, ERR_CANNOTCHANGECHANMODE, sptr->name, (char)modechar, target->name);

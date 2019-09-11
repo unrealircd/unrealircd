@@ -70,7 +70,7 @@ CMD_FUNC(m_userip)
 	char response[5][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
 	int  i;			/* loop counter */
 
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 		return -1;
 		
 	if (parc < 2)

@@ -109,7 +109,7 @@ static const char *encode_puid(Client *client)
 {
 	static char buf[HOSTLEN + 20];
 
-	if (MyClient(client))
+	if (MyUser(client))
 		return client->id;
 
 	/* create a cookie if necessary (and in case getrandom16 returns 0, then run again) */
@@ -130,7 +130,7 @@ static const char *encode_puid(Client *client)
  */
 CMD_FUNC(m_svslogin)
 {
-	if (!SASL_SERVER || MyClient(sptr) || (parc < 3) || !parv[3])
+	if (!SASL_SERVER || MyUser(sptr) || (parc < 3) || !parv[3])
 		return 0;
 
 	if (!strcasecmp(parv[1], me.name))
@@ -177,7 +177,7 @@ CMD_FUNC(m_svslogin)
  */
 CMD_FUNC(m_sasl)
 {
-	if (!SASL_SERVER || MyClient(sptr) || (parc < 4) || !parv[4])
+	if (!SASL_SERVER || MyUser(sptr) || (parc < 4) || !parv[4])
 		return 0;
 
 	if (!strcasecmp(parv[1], me.name))

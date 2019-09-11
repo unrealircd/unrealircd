@@ -342,7 +342,7 @@ int history_chanmode_is_ok(Client *sptr, Channel *chptr, char mode, char *param,
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
-		if (IsPerson(sptr) && is_chan_op(sptr, chptr))
+		if (IsUser(sptr) && is_chan_op(sptr, chptr))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
 			sendnumeric(sptr, ERR_NOTFORHALFOPS, 'H');
@@ -488,7 +488,7 @@ int history_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, cha
 	if (prefix)
 		return 0;
 
-	if (IsPerson(sptr))
+	if (IsUser(sptr))
 		snprintf(source, sizeof(source), "%s!%s@%s", sptr->name, sptr->user->username, GetHost(sptr));
 	else
 		strlcpy(source, sptr->name, sizeof(source));
@@ -511,7 +511,7 @@ int history_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, 
 	if (!HistoryEnabled(chptr))
 		return 0;
 
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 	{
 		HistoryChanMode *settings = (HistoryChanMode *)GETPARASTRUCT(chptr, 'H');
 		history_del(chptr->chname, settings->max_lines, settings->max_time);

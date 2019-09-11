@@ -304,7 +304,7 @@ int cmodef_is_ok(Client *sptr, Channel *chptr, char mode, char *param, int type,
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
-		if (IsPerson(sptr) && is_chan_op(sptr, chptr))
+		if (IsUser(sptr) && is_chan_op(sptr, chptr))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
 			sendnumeric(sptr, ERR_NOTFORHALFOPS, 'f');
@@ -406,7 +406,7 @@ int cmodef_is_ok(Client *sptr, Channel *chptr, char mode, char *param, int type,
 				      (*p == 'm') || (*p == 'n') || (*p == 't') ||
 				      (*p == 'r')))
 				{
-					if (MyClient(sptr) && *p && (warnings++ < 3))
+					if (MyUser(sptr) && *p && (warnings++ < 3))
 						sendnotice(sptr, "warning: channelmode +f: floodtype '%c' unknown, ignored.", *p);
 					continue; /* continue instead of break for forward compatability. */
 				}
@@ -415,7 +415,7 @@ int cmodef_is_ok(Client *sptr, Channel *chptr, char mode, char *param, int type,
 				v = atoi(x);
 				if ((v < 1) || (v > 999)) /* out of range... */
 				{
-					if (MyClient(sptr))
+					if (MyUser(sptr))
 					{
 						sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE,
 							   'f', "value should be from 1-999");
@@ -425,7 +425,7 @@ int cmodef_is_ok(Client *sptr, Channel *chptr, char mode, char *param, int type,
 				}
 				p++;
 				a = '\0';
-				r = MyClient(sptr) ? MODEF_DEFAULT_UNSETTIME : 0;
+				r = MyUser(sptr) ? MODEF_DEFAULT_UNSETTIME : 0;
 				if (*p != '\0')
 				{
 					if (*p == '#')
@@ -439,8 +439,8 @@ int cmodef_is_ok(Client *sptr, Channel *chptr, char mode, char *param, int type,
 							tv = atoi(p);
 							if (tv <= 0)
 								tv = 0; /* (ignored) */
-							if (tv > (MyClient(sptr) ? MODEF_MAX_UNSETTIME : 255))
-								tv = (MyClient(sptr) ? MODEF_MAX_UNSETTIME : 255); /* set to max */
+							if (tv > (MyUser(sptr) ? MODEF_MAX_UNSETTIME : 255))
+								tv = (MyUser(sptr) ? MODEF_MAX_UNSETTIME : 255); /* set to max */
 							r = (unsigned char)tv;
 						}
 					}
@@ -510,7 +510,7 @@ int cmodef_is_ok(Client *sptr, Channel *chptr, char mode, char *param, int type,
 			v = atoi(p2);
 			if ((v < 1) || (v > 999)) /* 'per' out of range */
 			{
-				if (MyClient(sptr))
+				if (MyUser(sptr))
 					sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'f',
 						   "time range should be 1-999");
 				goto invalidsyntax;
@@ -734,7 +734,7 @@ char *cmodef_conv_param(char *param_in, Client *cptr)
 	ChannelFloodProtection newf;
 	int xxi, xyi, xzi, hascolon;
 	char *xp;
-	int localclient = (!cptr || MyClient(cptr)) ? 1 : 0;
+	int localclient = (!cptr || MyUser(cptr)) ? 1 : 0;
 
 	memset(&newf, 0, sizeof(newf));
 
@@ -994,11 +994,11 @@ int floodprot_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags
 	 * from all servers.
 	 */
 	if (IsFloodLimit(chptr) &&
-	    (MyClient(sptr) || sptr->srvptr->serv->flags.synced) &&
+	    (MyUser(sptr) || sptr->srvptr->serv->flags.synced) &&
 	    (sptr->srvptr->serv->boottime && (TStime() - sptr->srvptr->serv->boottime >= MODEF_BOOT_DELAY)) &&
 	    !IsULine(sptr) &&
 	    do_floodprot(chptr, FLD_JOIN) &&
-	    MyClient(sptr))
+	    MyUser(sptr))
 	{
 		do_floodprot_action(chptr, FLD_JOIN, "join");
 	}
@@ -1074,7 +1074,7 @@ char *channel_modef_string(ChannelFloodProtection *x, char *retbuf)
 
 char *floodprot_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
-	if (MyClient(sptr) && (check_for_chan_flood(sptr, chptr, text) == 1))
+	if (MyUser(sptr) && (check_for_chan_flood(sptr, chptr, text) == 1))
 		return NULL; /* don't send it */
 	return text;
 }
@@ -1086,11 +1086,11 @@ int floodprot_post_chanmsg(Client *sptr, Channel *chptr, int sendflags, int pref
 
 	/* HINT: don't be so stupid to reorder the items in the if's below.. you'll break things -- Syzop. */
 
-	if (do_floodprot(chptr, FLD_MSG) && MyClient(sptr))
+	if (do_floodprot(chptr, FLD_MSG) && MyUser(sptr))
 		do_floodprot_action(chptr, FLD_MSG, "msg/notice");
 
 	if ((text[0] == '\001') && strncmp(text+1, "ACTION ", 7) &&
-	    do_floodprot(chptr, FLD_CTCP) && MyClient(sptr))
+	    do_floodprot(chptr, FLD_CTCP) && MyUser(sptr))
 	{
 		do_floodprot_action(chptr, FLD_CTCP, "CTCP");
 	}
@@ -1100,7 +1100,7 @@ int floodprot_post_chanmsg(Client *sptr, Channel *chptr, int sendflags, int pref
 
 int floodprot_knock(Client *sptr, Channel *chptr, MessageTag *mtags, char *comment)
 {
-	if (IsFloodLimit(chptr) && !IsULine(sptr) && do_floodprot(chptr, FLD_KNOCK) && MyClient(sptr))
+	if (IsFloodLimit(chptr) && !IsULine(sptr) && do_floodprot(chptr, FLD_KNOCK) && MyUser(sptr))
 		do_floodprot_action(chptr, FLD_KNOCK, "knock");
 	return 0;
 }
@@ -1114,7 +1114,7 @@ Membership *mp;
 		Channel *chptr = mp->chptr;
 		if (chptr && IsFloodLimit(chptr) &&
 		    !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANADMIN)) &&
-		    do_floodprot(chptr, FLD_NICK) && MyClient(sptr))
+		    do_floodprot(chptr, FLD_NICK) && MyUser(sptr))
 		{
 			do_floodprot_action(chptr, FLD_NICK, "nick");
 		}

@@ -107,7 +107,7 @@ CMD_FUNC(m_chgname)
 		/* set the realname to make ban checking work */
 		ircsnprintf(acptr->info, sizeof(acptr->info), "%s", parv[2]);
 
-		if (MyClient(acptr))
+		if (MyUser(acptr))
 		{
 			/* only check for realname bans if the person who's name is being changed is NOT an oper */
 			if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",acptr,NULL,NULL,NULL) &&

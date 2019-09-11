@@ -730,7 +730,7 @@ void blacklist_hit(Client *acptr, Blacklist *bl, int reply)
 	if (find_tkline_match(acptr, 1) < 0)
 		return; /* already klined/glined. Don't send the warning from below. */
 
-	if (IsPerson(acptr))
+	if (IsUser(acptr))
 		snprintf(opernotice, sizeof(opernotice), "[Blacklist] IP %s (%s) matches blacklist %s (%s/reply=%d)",
 			GetIP(acptr), acptr->name, bl->name, bl->backend->dns->name, reply);
 	else

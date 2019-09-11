@@ -65,7 +65,7 @@ CMD_FUNC(m_quit)
 	if (parv[1] && (strlen(comment) > iConf.quit_length))
 		comment[iConf.quit_length] = '\0';
 
-	if (!IsServer(cptr) && IsPerson(sptr))
+	if (!IsServer(cptr) && IsUser(sptr))
 	{
 		int n;
 		Hook *tmphook;
@@ -89,7 +89,7 @@ CMD_FUNC(m_quit)
 				comment = sptr->name;
 		}
 
-		if (iConf.part_instead_of_quit_on_comment_change && MyClient(sptr))
+		if (iConf.part_instead_of_quit_on_comment_change && MyUser(sptr))
 		{
 			Membership *lp;
 			char *newcomment;

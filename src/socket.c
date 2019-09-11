@@ -46,7 +46,7 @@ int  deliver_it(Client *cptr, char *str, int len, int *want_read)
 
 	*want_read = 0;
 
-	if (IsDeadSocket(cptr) || (!IsServer(cptr) && !IsPerson(cptr)
+	if (IsDeadSocket(cptr) || (!IsServer(cptr) && !IsUser(cptr)
 	    && !IsHandshake(cptr) 
 	    && !IsTLSHandshake(cptr)
  

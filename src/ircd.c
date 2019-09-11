@@ -337,7 +337,7 @@ int check_tkls(Client *cptr)
 
 	find_shun(cptr); /* check for shunned and take action, if so */
 
-	if (IsPerson(cptr))
+	if (IsUser(cptr))
 	{
 		/* Check ban realname { } */
 		if (!ValidatePermissionsForPath("immune",cptr,NULL,NULL,NULL) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
@@ -347,7 +347,7 @@ int check_tkls(Client *cptr)
 	/* If user is meant to be killed, take action: */
 	if (killflag)
 	{
-		if (IsPerson(cptr))
+		if (IsUser(cptr))
 			sendto_realops("Ban active for %s (%s)",
 				get_client_name(cptr, FALSE),
 				bconf->reason ? bconf->reason : "no reason");
@@ -358,13 +358,13 @@ int check_tkls(Client *cptr)
 				bconf->reason ? bconf->reason : "no reason");
 
 		if (bconf->reason) {
-			if (IsPerson(cptr))
+			if (IsUser(cptr))
 				snprintf(banbuf, sizeof(banbuf), "User has been banned (%s)", bconf->reason);
 			else
 				snprintf(banbuf, sizeof(banbuf), "Banned (%s)", bconf->reason);
 			(void)exit_client(cptr, cptr, &me, NULL, banbuf);
 		} else {
-			if (IsPerson(cptr))
+			if (IsUser(cptr))
 				(void)exit_client(cptr, cptr, &me, NULL, "User has been banned");
 			else
 				(void)exit_client(cptr, cptr, &me, NULL, "Banned");
@@ -372,10 +372,10 @@ int check_tkls(Client *cptr)
 		return 0; /* stop processing this user, as (s)he is dead now. */
 	}
 
-	if (loop.do_bancheck_spamf_user && IsPerson(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
+	if (loop.do_bancheck_spamf_user && IsUser(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
 		return 0;
 
-	if (loop.do_bancheck_spamf_away && IsPerson(cptr) && cptr->user->away != NULL &&
+	if (loop.do_bancheck_spamf_away && IsUser(cptr) && cptr->user->away != NULL &&
 		run_spamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
 		return 0;
 
@@ -717,7 +717,7 @@ void fix_timers(void)
 		}
 
 		/* users */
-		if (MyClient(acptr))
+		if (MyUser(acptr))
 		{
 			if (acptr->local->nextnick > TStime())
 			{

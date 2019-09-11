@@ -109,7 +109,7 @@ CMD_FUNC(m_chgident)
 		switch (UHOST_ALLOWED)
 		{
 			case UHALLOW_NEVER:
-				if (MyClient(sptr))
+				if (MyUser(sptr))
 				{
 					sendnumeric(sptr, ERR_DISABLED, "CHGIDENT",
 						"This command is disabled on this server");
@@ -119,7 +119,7 @@ CMD_FUNC(m_chgident)
 			case UHALLOW_ALWAYS:
 				break;
 			case UHALLOW_NOCHANS:
-				if (IsPerson(acptr) && MyClient(sptr) && acptr->user->joined)
+				if (IsUser(acptr) && MyUser(sptr) && acptr->user->joined)
 				{
 					sendnotice(sptr, "*** /ChgIdent can not be used while %s is on a channel", acptr->name);
 					return 0;

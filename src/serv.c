@@ -157,7 +157,7 @@ void send_version(Client* sptr, int reply)
 CMD_FUNC(m_version)
 {
 	/* Only allow remote VERSIONs if registered -- Syzop */
-	if (!IsPerson(sptr) && !IsServer(cptr))
+	if (!IsUser(sptr) && !IsServer(cptr))
 	{
 		send_version(sptr,RPL_ISUPPORT);
 		return 0;
@@ -179,7 +179,7 @@ CMD_FUNC(m_version)
 			sendnotice(sptr, "%s", curl_version());
 #endif
 		}
-		if (MyClient(sptr))
+		if (MyUser(sptr))
 			send_version(sptr,RPL_ISUPPORT);
 		else
 			send_version(sptr,RPL_REMOTEISUPPORT);
@@ -223,14 +223,14 @@ void send_proto(Client *cptr, ConfigItem_link *aconf)
 int remotecmdfilter(Client *sptr, int parc, char *parv[])
 {
 	/* no remote requests permitted from non-ircops */
-	if (MyClient(sptr) && !ValidatePermissionsForPath("server:remote",sptr,NULL,NULL,NULL) && !BadPtr(parv[1]))
+	if (MyUser(sptr) && !ValidatePermissionsForPath("server:remote",sptr,NULL,NULL,NULL) && !BadPtr(parv[1]))
 	{
 		parv[1] = NULL;
 		parc = 1;
 	}
 
 	/* same as above, but in case an old server forwards a request to us: we ignore it */
-	if (!MyClient(sptr) && !ValidatePermissionsForPath("server:remote",sptr,NULL,NULL,NULL))
+	if (!MyUser(sptr) && !ValidatePermissionsForPath("server:remote",sptr,NULL,NULL,NULL))
 		return 1; /* STOP (return) */
 	
 	return 0; /* Continue */
@@ -597,7 +597,7 @@ CMD_FUNC(m_rehash)
 	if (x != HUNTED_ISME)
 		return 0; /* Now forwarded or server didnt exist */
 
-	if (MyClient(sptr) && IsWebsocket(sptr))
+	if (MyUser(sptr) && IsWebsocket(sptr))
 	{
 		sendnotice(sptr, "Sorry, for technical reasons it is not possible to REHASH "
 		                 "the local server from a WebSocket connection.");
@@ -802,7 +802,7 @@ char *reason = parv[1];
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (IsRegisteredUser(acptr))
+		if (IsUser(acptr))
 			sendnotice(acptr, "Server Restarted by %s", sptr->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, NULL, ":%s ERROR :Restarted by %s: %s",
@@ -1122,7 +1122,7 @@ CMD_FUNC(m_die)
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (IsRegisteredUser(acptr))
+		if (IsUser(acptr))
 			sendnotice(acptr, "Server Terminated by %s", 
 				sptr->name);
 		else if (IsServer(acptr))
@@ -1146,7 +1146,7 @@ int  localdie(void)
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (IsRegisteredUser(acptr))
+		if (IsUser(acptr))
 			sendnotice(acptr, "Server Terminated by local console");
 		else if (IsServer(acptr))
 			sendto_one(acptr, NULL,

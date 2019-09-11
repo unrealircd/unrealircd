@@ -68,7 +68,7 @@ int do_svsnolag(Client *cptr, Client *sptr, int parc, char *parv[], int show_cha
 	if (!(acptr = find_person(parv[2], NULL)))
 		return 0;
 
-	if (!MyClient(acptr))
+	if (!MyUser(acptr))
 	{
 		sendto_one(acptr, NULL, ":%s %s %s %s", sptr->name, cmd, parv[1], parv[2]);
 		return 0;

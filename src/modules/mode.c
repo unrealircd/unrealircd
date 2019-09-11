@@ -136,7 +136,7 @@ CMD_FUNC(m_mode)
 		return 0;
 	}
 
-	if (IsPerson(sptr) && strstr(parv[2], "b") && BadPtr(parv[3]))
+	if (IsUser(sptr) && strstr(parv[2], "b") && BadPtr(parv[3]))
 	{
 		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",sptr,NULL,chptr,NULL))
 			return 0;
@@ -149,7 +149,7 @@ CMD_FUNC(m_mode)
 		return 0;
 	}
 
-	if (IsPerson(sptr) && strstr(parv[2], "e") && BadPtr(parv[3]))
+	if (IsUser(sptr) && strstr(parv[2], "e") && BadPtr(parv[3]))
 	{
 		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",sptr,NULL,chptr,NULL))
 			return 0;
@@ -162,7 +162,7 @@ CMD_FUNC(m_mode)
 		return 0;
 	}
 
-	if (IsPerson(sptr) && strstr(parv[2], "I") && BadPtr(parv[3]))
+	if (IsUser(sptr) && strstr(parv[2], "I") && BadPtr(parv[3]))
 	{
 		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteinvexlist",sptr,NULL,chptr,NULL))
 			return 0;
@@ -173,7 +173,7 @@ CMD_FUNC(m_mode)
 		return 0;
 	}
 
-	if (IsPerson(sptr) && strstr(parv[2], "q") && BadPtr(parv[3]))
+	if (IsUser(sptr) && strstr(parv[2], "q") && BadPtr(parv[3]))
 	{
 		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",sptr,NULL,chptr,NULL))
 			return 0;
@@ -195,7 +195,7 @@ CMD_FUNC(m_mode)
 		}
 	}
 
-	if (IsPerson(sptr) && strstr(parv[2], "a") && BadPtr(parv[3]))
+	if (IsUser(sptr) && strstr(parv[2], "a") && BadPtr(parv[3]))
 	{
 		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",sptr,NULL,chptr,NULL))
 			return 0;
@@ -220,7 +220,7 @@ CMD_FUNC(m_mode)
 	opermode = 0;
 
 #ifndef NO_OPEROVERRIDE
-	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
+	if (IsUser(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
 	    !is_half_op(sptr, chptr) && ValidatePermissionsForPath("channel:override:mode",sptr,NULL,chptr,NULL))
 	{
 		sendts = 0;
@@ -228,7 +228,7 @@ CMD_FUNC(m_mode)
 		goto aftercheck;
 	}
 
-	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
+	if (IsUser(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
 	    is_half_op(sptr, chptr) && ValidatePermissionsForPath("channel:override:mode",sptr,NULL,chptr,NULL))
 	{
 		opermode = 2;
@@ -236,7 +236,7 @@ CMD_FUNC(m_mode)
 	}
 #endif
 
-	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
+	if (IsUser(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
 	    !is_half_op(sptr, chptr) &&
 	    (cptr == sptr || !ValidatePermissionsForPath("channel:override:mode",sptr,NULL,chptr,NULL)))
 	{
@@ -276,7 +276,7 @@ CMD_FUNC(m_mode)
 aftercheck:
 
 	/* This is to prevent excess +<whatever> modes. -- Syzop */
-	if (MyClient(sptr) && parv[2])
+	if (MyUser(sptr) && parv[2])
 	{
 		mode_cutoff(parv[2]);
 		mode_cutoff2(sptr, chptr, &parc, parv);
@@ -471,7 +471,7 @@ void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags
 
 	/* opermode for twimodesystem --sts */
 #ifndef NO_OPEROVERRIDE
-	if ((opermode == 1) && IsPerson(sptr))
+	if ((opermode == 1) && IsUser(sptr))
 	{
 		if (modebuf[1])
 		{
@@ -497,7 +497,7 @@ void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags
 		return;
 	}
 
-	if (IsPerson(sptr) && samode && MyClient(sptr))
+	if (IsUser(sptr) && samode && MyUser(sptr))
 	{
 		if (!sajoinmode)
 			sendto_umode_global(UMODE_OPER, "%s used SAMODE %s (%s%s%s)",
@@ -754,7 +754,7 @@ int  do_mode_char(Channel *chptr, long modetype, char modechar, char *param,
 	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr) &&
 	    !op_can_override("channel:override:mode",cptr,chptr,&modetype) && !samode_in_progress)
 	{
-		if (MyClient(cptr) && (modetype == MODE_HALFOP) && (what == MODE_DEL) &&
+		if (MyUser(cptr) && (modetype == MODE_HALFOP) && (what == MODE_DEL) &&
 		    param && (find_client(param, NULL) == cptr))
 		{
 			/* halfop -h'ing him/herself */
@@ -764,7 +764,7 @@ int  do_mode_char(Channel *chptr, long modetype, char modechar, char *param,
 			/* Ugly halfop hack --sts
 			   - this allows halfops to do +b +e +v and so on */
 			/* (Syzop/20040413: Allow remote halfop modes */
-			if ((Halfop_mode(modetype) == FALSE) && MyClient(cptr))
+			if ((Halfop_mode(modetype) == FALSE) && MyUser(cptr))
 			{
 				int eaten = 0;
 				while (tab->mode != 0x0)
@@ -819,7 +819,7 @@ int  do_mode_char(Channel *chptr, long modetype, char modechar, char *param,
 			REQUIRE_PARAMETER()
 			if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress)
 			{
-					if (MyClient(cptr) && !op_can_override("channel:override:mode",cptr,chptr,&modetype))
+					if (MyUser(cptr) && !op_can_override("channel:override:mode",cptr,chptr,&modetype))
 					{
 						sendnumeric(cptr, ERR_CHANOWNPRIVNEEDED, chptr->chname);
 						break;
@@ -834,7 +834,7 @@ int  do_mode_char(Channel *chptr, long modetype, char modechar, char *param,
 			if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress &&
 			    !(param && (what == MODE_DEL) && (find_client(param, NULL) == cptr)))
 			{
-					if (MyClient(cptr) && !op_can_override("channel:override:mode",cptr,chptr,&modetype))
+					if (MyUser(cptr) && !op_can_override("channel:override:mode",cptr,chptr,&modetype))
 					{
 						sendnumeric(cptr, ERR_CHANOWNPRIVNEEDED, chptr->chname);
 						break;
@@ -888,10 +888,10 @@ process_listmode:
 
 				if (ret == EX_ALWAYS_DENY)
 				{
-					if (MyClient(cptr) && badmode)
+					if (MyUser(cptr) && badmode)
 						sendto_one(cptr, NULL, "%s", badmode); /* send error message, if any */
 
-				if (MyClient(cptr))
+				if (MyUser(cptr))
 					break; /* stop processing this mode */
 				}
 
@@ -917,7 +917,7 @@ process_listmode:
 			    && !is_chanowner(cptr, chptr) && !IsServer(cptr)
 			    && !IsULine(cptr) && !opermode && !samode_in_progress && (what == MODE_DEL))
 			{
-				if (MyClient(cptr))
+				if (MyUser(cptr))
 				{
 					/* Need this !op_can_override() here again, even with the !opermode
 					 * check a few lines up, all due to halfops. -- Syzop
@@ -944,7 +944,7 @@ process_listmode:
 			    && !is_chanowner(cptr, chptr) && !IsServer(cptr) && !opermode && !samode_in_progress
 			    && modetype != MODE_CHANOWNER && (what == MODE_DEL))
 			{
-				if (MyClient(cptr))
+				if (MyUser(cptr))
 				{
 					/* Need this !op_can_override() here again, even with the !opermode
 					 * check a few lines up, all due to halfops. -- Syzop
@@ -1069,7 +1069,7 @@ process_listmode:
 			if (BadPtr(tmpstr))
 			{
 				/* Invalid ban. See if we can send an error about that */
-				if ((param[0] == '~') && MyClient(cptr) && !bounce && (strlen(param) > 2))
+				if ((param[0] == '~') && MyUser(cptr) && !bounce && (strlen(param) > 2))
 				{
 					Extban *p = findmod_by_bantype(param[1]);
 					if (p && p->is_ok)
@@ -1078,7 +1078,7 @@ process_listmode:
 
 				break; /* ignore ban, but eat param */
 			}
-			if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
+			if ((tmpstr[0] == '~') && MyUser(cptr) && !bounce)
 			{
 				/* extban: check access if needed */
 				Extban *p = findmod_by_bantype(tmpstr[1]);
@@ -1117,7 +1117,7 @@ process_listmode:
 			tmpstr = clean_ban_mask(param, what, cptr);
 			if (BadPtr(tmpstr))
 				break; /* ignore except, but eat param */
-			if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce && (strlen(param) > 2))
+			if ((tmpstr[0] == '~') && MyUser(cptr) && !bounce && (strlen(param) > 2))
 			{
 				/* extban: check access if needed */
 				Extban *p = findmod_by_bantype(tmpstr[1]);
@@ -1156,7 +1156,7 @@ process_listmode:
 			tmpstr = clean_ban_mask(param, what, cptr);
 			if (BadPtr(tmpstr))
 				break; /* ignore except, but eat param */
-			if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce && (strlen(param) > 2))
+			if ((tmpstr[0] == '~') && MyUser(cptr) && !bounce && (strlen(param) > 2))
 			{
 				/* extban: check access if needed */
 				Extban *p = findmod_by_bantype(tmpstr[1]);
@@ -1218,10 +1218,10 @@ int do_extmode_char(Channel *chptr, Cmode *handler, char *param, u_int what,
 		return 0;
 
 	/* Prevent remote users from setting local channel modes */
-	if (handler->local && !MyClient(cptr))
+	if (handler->local && !MyUser(cptr))
 		return paracnt;
 
-	if (MyClient(cptr))
+	if (MyUser(cptr))
 	{
 		x = handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS, what);
 		if ((x == EX_ALWAYS_DENY) ||
@@ -1234,7 +1234,7 @@ int do_extmode_char(Channel *chptr, Cmode *handler, char *param, u_int what,
 			opermode = 1; /* override in progress... */
 	} else {
 		/* remote user: we only need to check if we need to generate an operoverride msg */
-		if (!IsULine(cptr) && IsPerson(cptr) && op_can_override("channel:override:mode:del",cptr,chptr,handler) &&
+		if (!IsULine(cptr) && IsUser(cptr) && op_can_override("channel:override:mode:del",cptr,chptr,handler) &&
 		    (handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS, what) != EX_ALLOW))
 		{
 			opermode = 1; /* override in progress... */
@@ -1324,7 +1324,7 @@ int do_extmode_char(Channel *chptr, Cmode *handler, char *param, u_int what,
  */
 int paracount_for_chanmode_from_server(Client *acptr, u_int what, char mode)
 {
-	if (MyClient(acptr))
+	if (MyUser(acptr))
 		return 0; /* no server, we have no idea, assume 0 paracount */
 
 	if (!acptr->serv)
@@ -1418,7 +1418,7 @@ void _set_mode(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcou
 		checkrestr = 1;
 
 	/* Set access to the status we have */
-	my_access = IsPerson(cptr) ? get_access(cptr, chptr) : 0;
+	my_access = IsUser(cptr) ? get_access(cptr, chptr) : 0;
 
 	for (curchr = parv[0]; *curchr; curchr++)
 	{
@@ -1431,7 +1431,7 @@ void _set_mode(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcou
 				what = MODE_DEL;
 				break;
 			default:
-				if (MyClient(cptr) && chptr->mode_lock && strchr(chptr->mode_lock, *curchr) != NULL)
+				if (MyUser(cptr) && chptr->mode_lock && strchr(chptr->mode_lock, *curchr) != NULL)
 				{
 					if (!sent_mlock_warning)
 					{
@@ -1467,7 +1467,7 @@ void _set_mode(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcou
 				}
 				if (found == 0) /* Mode char unknown */
 				{
-					if (!MyClient(cptr))
+					if (!MyUser(cptr))
 						paracount += paracount_for_chanmode_from_server(cptr, what, *curchr);
 					else
 						sendnumeric(cptr, ERR_UNKNOWNMODE, *curchr);
@@ -1535,7 +1535,7 @@ void _set_mode(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcou
 	make_mode_str(chptr, oldm, oldem, oldl, *pcount, pvar, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), bounce);
 
 #ifndef NO_OPEROVERRIDE
-	if ((htrig == 1) && IsPerson(cptr))
+	if ((htrig == 1) && IsUser(cptr))
 	{
 		/* This is horrible. Just horrible. */
 		if (!((modebuf[0] == '+' || modebuf[0] == '-') && modebuf[1] == '\0'))
@@ -1613,7 +1613,7 @@ CMD_FUNC(_m_umode)
 		if ((sptr->user->snomask & Snomask_Table[i].mode))
 			oldsnomasks |= Snomask_Table[i].mode;
 
-	if (RESTRICT_USERMODES && MyClient(sptr) && !ValidatePermissionsForPath("immune:restrict-usermodes",sptr,NULL,NULL,NULL))
+	if (RESTRICT_USERMODES && MyUser(sptr) && !ValidatePermissionsForPath("immune:restrict-usermodes",sptr,NULL,NULL,NULL))
 		chk_restrict = 1;
 
 	if (MyConnect(sptr))
@@ -1684,7 +1684,7 @@ CMD_FUNC(_m_umode)
 				 * but we need to take care here too because it might cause problems
 				 * that's just asking for bugs! -- Syzop.
 				 */
-				if (MyClient(sptr) && (what == MODE_ADD)) /* Someone setting himself +o? Deny it. */
+				if (MyUser(sptr) && (what == MODE_ADD)) /* Someone setting himself +o? Deny it. */
 					break;
 				goto def;
 			case 't':
@@ -1694,7 +1694,7 @@ CMD_FUNC(_m_umode)
 				case UHALLOW_ALWAYS:
 					goto def;
 				case UHALLOW_NEVER:
-					if (MyClient(sptr))
+					if (MyUser(sptr))
 					{
 						if (!modex_err)
 						{
@@ -1706,7 +1706,7 @@ CMD_FUNC(_m_umode)
 					}
 					goto def;
 				case UHALLOW_NOCHANS:
-					if (MyClient(sptr) && sptr->user->joined)
+					if (MyUser(sptr) && sptr->user->joined)
 					{
 						if (!modex_err)
 						{
@@ -1795,7 +1795,7 @@ CMD_FUNC(_m_umode)
 		}
 	}
 
-	if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
+	if (MyUser(sptr) && (sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
 		sptr->umodes &= ~UMODE_SECURE;
 
 	/* -x translates to -xt (if applicable) */
@@ -1822,7 +1822,7 @@ CMD_FUNC(_m_umode)
 
 		/* Notify */
 		userhost_changed(sptr);
-		if (MyClient(sptr))
+		if (MyUser(sptr))
 			sendnumeric(sptr, RPL_HOSTHIDDEN, sptr->user->virthost);
 	}
 
@@ -1838,7 +1838,7 @@ CMD_FUNC(_m_umode)
 
 		/* Notify */
 		userhost_changed(sptr);
-		if (MyClient(sptr))
+		if (MyUser(sptr))
 			sendnumeric(sptr, RPL_HOSTHIDDEN, sptr->user->realhost);
 	}
 	/*

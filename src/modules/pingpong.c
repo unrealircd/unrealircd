@@ -76,7 +76,7 @@ CMD_FUNC(m_ping)
 	origin = parv[1];
 	destination = parv[2];	/* Will get NULL or pointer (parc >= 2!!) */
 
-	if (!MyClient(sptr))
+	if (!MyUser(sptr))
 	{
 		/* I've no idea who invented this or what it is supposed to do.. */
 		acptr = find_client(origin, NULL);
@@ -88,7 +88,7 @@ CMD_FUNC(m_ping)
 
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0 && mycmp(destination, me.id) != 0)
 	{
-		if (MyClient(sptr))
+		if (MyUser(sptr))
 			origin = sptr->name; /* Make sure origin is not spoofed */
 		if ((acptr = find_server_quick(destination)) && (acptr != &me))
 			sendto_one(acptr, NULL, ":%s PING %s :%s", sptr->name, origin, destination);
@@ -172,7 +172,7 @@ CMD_FUNC(m_pong)
 	ClearPingWarning(cptr);
 
 	/* Remote pongs for clients? uhh... */
-	if (MyClient(sptr) || !IsRegistered(sptr))
+	if (MyUser(sptr) || !IsRegistered(sptr))
 		destination = NULL;
 
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)

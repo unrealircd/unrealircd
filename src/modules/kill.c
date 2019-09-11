@@ -102,14 +102,14 @@ CMD_FUNC(m_kill)
 	if (strlen(path) > iConf.quit_length)
 		path[iConf.quit_length] = '\0';
 
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 		user = canonize(user);
 
 	for (p = NULL, nick = strtoken(&p, user, ","); nick; nick = strtoken(&p, NULL, ","))
 	{
 		MessageTag *mtags = NULL;
 
-		if (MyClient(sptr) && (++ntargets > maxtargets))
+		if (MyUser(sptr) && (++ntargets > maxtargets))
 		{
 			sendnumeric(sptr, ERR_TOOMANYTARGETS, nick, maxtargets, "KILL");
 			break;
@@ -121,7 +121,7 @@ CMD_FUNC(m_kill)
 		 * In other words: we'll check the history for recently changed nicks.
 		 * We don't do this for remote KILL requests as we have UID for that.
 		 */
-		if (!acptr && MyClient(sptr))
+		if (!acptr && MyUser(sptr))
 		{
 			acptr = get_history(nick, KILLCHASETIMELIMIT);
 			if (acptr)
@@ -134,8 +134,8 @@ CMD_FUNC(m_kill)
 			continue;
 		}
 
-		if ((!MyConnect(acptr) && MyClient(cptr) && !ValidatePermissionsForPath("kill:global",sptr,acptr,NULL,NULL))
-		    || (MyConnect(acptr) && MyClient(cptr)
+		if ((!MyConnect(acptr) && MyUser(cptr) && !ValidatePermissionsForPath("kill:global",sptr,acptr,NULL,NULL))
+		    || (MyConnect(acptr) && MyUser(cptr)
 		    && !ValidatePermissionsForPath("kill:local",sptr,acptr,NULL,NULL)))
 		{
 			sendnumeric(sptr, ERR_NOPRIVILEGES);
@@ -143,7 +143,7 @@ CMD_FUNC(m_kill)
 		}
 
 		/* Hooks can plug-in here to reject a kill */
-		if (MyClient(sptr))
+		if (MyUser(sptr))
 		{
 			int ret = EX_ALLOW;
 			for (h = Hooks[HOOKTYPE_PRE_KILL]; h; h = h->next)
@@ -250,7 +250,7 @@ CMD_FUNC(m_kill)
 			ircsnprintf(buf2, sizeof(buf2), "Killed (%s)", killer);
 		}
 
-		if (MyClient(sptr))
+		if (MyUser(sptr))
 			RunHook3(HOOKTYPE_LOCAL_KILL, sptr, acptr, parv[2]);
 
 		n = exit_client(cptr, acptr, sptr, mtags, buf2);

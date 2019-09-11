@@ -82,7 +82,7 @@ CMD_FUNC(m_setname)
 		return 0;
 	}
 
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 	{
 		/* set temp info for spamfilter check*/
 		strcpy(tmpinfo, sptr->info);

@@ -62,7 +62,7 @@ CMD_FUNC(m_admin)
 	/* Users may want to get the address in case k-lined, etc. -- Barubary
 
 	   * Only allow remote ADMINs if registered -- Barubary */
-	if (IsPerson(sptr) || IsServer(cptr))
+	if (IsUser(sptr) || IsServer(cptr))
 		if (hunt_server(cptr, sptr, recv_mtags, ":%s ADMIN :%s", 1, parc, parv) != HUNTED_ISME)
 			return 0;
 

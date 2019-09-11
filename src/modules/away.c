@@ -101,14 +101,14 @@ CMD_FUNC(m_away)
 		return 0;
 	}
 
-	if (MyClient(sptr))
+	if (MyUser(sptr))
 	{
 		n = run_spamfilter(sptr, parv[1], SPAMF_AWAY, NULL, 0, NULL);
 			if (n < 0)
 		return n;
 	}
 
-	if (MyClient(sptr) && AWAY_PERIOD && !ValidatePermissionsForPath("immune:away-flood",sptr,NULL,NULL,NULL))
+	if (MyUser(sptr) && AWAY_PERIOD && !ValidatePermissionsForPath("immune:away-flood",sptr,NULL,NULL,NULL))
 	{
 		if ((sptr->user->flood.away_t + AWAY_PERIOD) <= timeofday)
 		{

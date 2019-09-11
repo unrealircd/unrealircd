@@ -161,7 +161,7 @@ CMD_FUNC(m_sinfo)
 {
 	if (IsServer(sptr))
 		return sinfo_server(cptr, sptr, parc, parv);
-	else if (MyClient(sptr))
+	else if (MyUser(sptr))
 		return sinfo_user(cptr, sptr, parc, parv);
 	return 0;
 }

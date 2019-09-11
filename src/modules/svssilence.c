@@ -76,7 +76,7 @@ CMD_FUNC(m_svssilence)
 	
 	sendto_server(sptr, 0, 0, NULL, ":%s SVSSILENCE %s :%s", sptr->name, parv[1], parv[2]);
 
-	mine = MyClient(acptr) ? 1 : 0;
+	mine = MyUser(acptr) ? 1 : 0;
 
 	for (p = strtok(parv[2], " "); p; p = strtok(NULL, " "))
 	{

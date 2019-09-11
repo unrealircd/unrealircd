@@ -755,7 +755,7 @@ CMD_FUNC(m_module)
 	if ((parc > 1) && !strcmp(parv[1], "-all"))
 		all = 1;
 
-	if (MyClient(sptr) && !IsOper(sptr) && all)
+	if (MyUser(sptr) && !IsOper(sptr) && all)
 		sptr->local->since += 7; /* Lag them up. Big list. */
 
 	if ((parc > 2) && (hunt_server(cptr, sptr, recv_mtags, ":%s MODULE %s :%s", 2, parc, parv) != HUNTED_ISME))

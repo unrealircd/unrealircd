@@ -948,7 +948,7 @@ CMD_FUNC(m_tempshun)
 	char *name;
 	int remove = 0;
 
-	if (MyClient(sptr) && (!ValidatePermissionsForPath("server-ban:shun:temporary",sptr,NULL,NULL,NULL)))
+	if (MyUser(sptr) && (!ValidatePermissionsForPath("server-ban:shun:temporary",sptr,NULL,NULL,NULL)))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
@@ -973,7 +973,7 @@ CMD_FUNC(m_tempshun)
 		sendnumeric(sptr, ERR_NOSUCHNICK, name);
 		return 0;
 	}
-	if (!MyClient(acptr))
+	if (!MyUser(acptr))
 	{
 		sendto_one(acptr->direction, NULL, ":%s TEMPSHUN %s :%s",
 			sptr->name, parv[1], comment);
@@ -2407,7 +2407,7 @@ void _tkl_check_local_remove_shun(TKL *tmp)
 	for (i = 0; i <= 5; i++)
 	{
 		list_for_each_entry(acptr, &lclient_list, lclient_node)
-			if (MyClient(acptr) && IsShunned(acptr))
+			if (MyUser(acptr) && IsShunned(acptr))
 			{
 				chost = acptr->local->sockhost;
 				cname = acptr->user->username;
@@ -2815,7 +2815,7 @@ int spamfilter_check_users(TKL *tkl)
 
 	list_for_each_entry_reverse(acptr, &lclient_list, lclient_node)
 	{
-		if (MyClient(acptr))
+		if (MyUser(acptr))
 		{
 			spamfilter_build_user_string(spamfilter_user, acptr->name, acptr);
 			if (!unreal_match(tkl->ptr.spamfilter->match, spamfilter_user))
@@ -2849,7 +2849,7 @@ int spamfilter_check_all_users(Client *from, TKL *tkl)
 
 	list_for_each_entry(acptr, &client_list, client_node)
 	{
-		if (IsPerson(acptr))
+		if (IsUser(acptr))
 		{
 			spamfilter_build_user_string(spamfilter_user, acptr->name, acptr);
 			if (!unreal_match(tkl->ptr.spamfilter->match, spamfilter_user))
@@ -4309,7 +4309,7 @@ int _run_spamfilter(Client *sptr, char *str_in, int target, char *destination, i
 	else
 		str = (char *)StripControlCodes(str_in);
 
-	/* (note: using sptr->user check here instead of IsPerson()
+	/* (note: using sptr->user check here instead of IsUser()
 	 * due to SPAMF_USER where user isn't marked as client/person yet.
 	 */
 	if (!sptr->user || ValidatePermissionsForPath("immune:server-ban:spamfilter",sptr,NULL,NULL,NULL) || IsULine(sptr))
@@ -4469,7 +4469,7 @@ int _run_spamfilter(Client *sptr, char *str_in, int target, char *destination, i
 		/* There's a race condition for SPAMF_USER, so 'rettk' is used for SPAMF_USER
 		 * when a user is currently connecting and filters are checked:
 		 */
-		if (!IsRegisteredUser(sptr))
+		if (!IsUser(sptr))
 		{
 			if (rettkl)
 				*rettkl = tkl;
@@ -4570,7 +4570,7 @@ int _match_user(char *rmask, Client *acptr, int options)
 	/**** Check visible host ****/
 	if (options & MATCH_CHECK_VISIBLE_HOST)
 	{
-		char *hostname = acptr->user ? GetHost(acptr) : (MyClient(acptr) ? acptr->local->sockhost : NULL);
+		char *hostname = acptr->user ? GetHost(acptr) : (MyUser(acptr) ? acptr->local->sockhost : NULL);
 		if (hostname && match_simple(hmask, hostname))
 			return 1; /* MATCH: visible host */
 	}
@@ -4648,7 +4648,7 @@ int _match_user(char *rmask, Client *acptr, int options)
 	/**** Check real host ****/
 	if (options & MATCH_CHECK_REAL_HOST)
 	{
-		char *hostname = acptr->user ? acptr->user->realhost : (MyClient(acptr) ? acptr->local->sockhost : NULL);
+		char *hostname = acptr->user ? acptr->user->realhost : (MyUser(acptr) ? acptr->local->sockhost : NULL);
 		if (hostname && match_simple(hmask, hostname))
 			return 1; /* MATCH: hostname match */
 	}
