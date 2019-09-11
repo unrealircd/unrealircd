@@ -41,7 +41,7 @@ SRC=$(OBJS:%.o=%.c)
 BINCFLAGS=@HARDEN_BINCFLAGS@
 BINLDFLAGS=@DYNAMIC_LDFLAGS@ @HARDEN_BINLDFLAGS@
 
-INCLUDES = ../include/auth.h ../include/channel.h \
+INCLUDES = ../include/channel.h \
 	../include/class.h ../include/common.h ../include/config.h ../include/dbuf.h \
 	../include/dynconf.h ../include/fdlist.h ../include/h.h \
 	../include/ircsprintf.h \

@@ -21,7 +21,14 @@
 #include "crypt_blowfish.h"
 #include <argon2.h>
 
-anAuthStruct MODVAR AuthTypes[] = {
+typedef struct AuthTypeList AuthTypeList;
+struct AuthTypeList {
+	char			*name;
+	AuthenticationType	type;
+};
+
+/** The list of authentication types that we support. */
+AuthTypeList MODVAR AuthTypeLists[] = {
 	{"plain",           AUTHTYPE_PLAINTEXT},
 	{"plaintext",       AUTHTYPE_PLAINTEXT},
 	{"md5",             AUTHTYPE_MD5},
@@ -119,36 +126,33 @@ int Auth_AutoDetectHashType(char *hash)
  *               than trying to determine the type on the 'hash' parameter.
  *               Or leave NULL, then we use hash autodetection.
  */
-int	Auth_FindType(char *hash, char *type)
+AuthenticationType Auth_FindType(char *hash, char *type)
 {
 	if (type)
 	{
-		anAuthStruct *p = AuthTypes;
-		while (p->data)
+		AuthTypeList *e = AuthTypeLists;
+		while (e->name)
 		{
-			if (!mycmp(p->data, type))
-				return p->type;
-			p++;
+			if (!mycmp(e->name, type))
+				return e->type;
+			e++;
 		}
-		return -1; /* Not found */
+		return AUTHTYPE_INVALID; /* Not found */
 	}
 
 	if (hash)
 		return Auth_AutoDetectHashType(hash);
 
-	return -1; /* both 'hash' and 'type' are NULL */
+	return AUTHTYPE_INVALID; /* both 'hash' and 'type' are NULL */
 }
 
-/*
- * This is for converting something like:
- * {
- * 	password "data" { type; };
- * } 
+/** Check the syntax of an authentication block.
+ * This is a block like: password "data" { type; };
+ * in the configuration file.
 */
-
-int		Auth_CheckError(ConfigEntry *ce)
+int Auth_CheckError(ConfigEntry *ce)
 {
-	short		type = AUTHTYPE_PLAINTEXT;
+	AuthenticationType type = AUTHTYPE_PLAINTEXT;
 	X509 *x509_filecert = NULL;
 	FILE *x509_f = NULL;
 	if (!ce->ce_vardata)
@@ -241,22 +245,25 @@ int		Auth_CheckError(ConfigEntry *ce)
 	return 1;	
 }
 
-anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce)
+/** Convert an authentication block from the configuration file
+ * into an AuthConfig structure so it can be used at runtime.
+ */
+AuthConfig *AuthBlockToAuthConfig(ConfigEntry *ce)
 {
-	short		type = AUTHTYPE_PLAINTEXT;
-	anAuthStruct 	*as = NULL;
+	AuthenticationType type = AUTHTYPE_PLAINTEXT;
+	AuthConfig *as = NULL;
 
 	type = Auth_FindType(ce->ce_vardata, ce->ce_entries ? ce->ce_entries->ce_varname : NULL);
-	if (type == -1)
+	if (type == AUTHTYPE_INVALID)
 		type = AUTHTYPE_PLAINTEXT;
 
-	as = MyMallocEx(sizeof(anAuthStruct));
+	as = MyMallocEx(sizeof(AuthConfig));
 	as->data = strdup(ce->ce_vardata);
 	as->type = type;
 	return as;
 }
 
-void	Auth_DeleteAuthStruct(anAuthStruct *as)
+void	Auth_DeleteAuthConfig(AuthConfig *as)
 {
 	if (!as)
 		return;
@@ -306,7 +313,7 @@ int max;
 	return 1;
 }
 
-static int authcheck_argon2(Client *cptr, anAuthStruct *as, char *para)
+static int authcheck_argon2(Client *cptr, AuthConfig *as, char *para)
 {
 	argon2_type hashtype;
 
@@ -331,7 +338,7 @@ static int authcheck_argon2(Client *cptr, anAuthStruct *as, char *para)
 	return -1; /* NO MATCH or error */
 }
 
-static int authcheck_bcrypt(Client *cptr, anAuthStruct *as, char *para)
+static int authcheck_bcrypt(Client *cptr, AuthConfig *as, char *para)
 {
 char data[512]; /* NOTE: only 64 required by BF_crypt() */
 char *str;
@@ -351,7 +358,7 @@ char *str;
 	return -1; /* NO MATCH */
 }
 
-static int authcheck_md5(Client *cptr, anAuthStruct *as, char *para)
+static int authcheck_md5(Client *cptr, AuthConfig *as, char *para)
 {
 static char buf[512];
 int	i, r;
@@ -407,7 +414,7 @@ char *saltstr, *hashstr;
 	return -1; /* NOTREACHED */
 }
 
-static int authcheck_sha1(Client *cptr, anAuthStruct *as, char *para)
+static int authcheck_sha1(Client *cptr, AuthConfig *as, char *para)
 {
 char buf[512];
 int i, r;
@@ -465,7 +472,7 @@ char *saltstr, *hashstr;
 	}
 }
 
-static int authcheck_ripemd160(Client *cptr, anAuthStruct *as, char *para)
+static int authcheck_ripemd160(Client *cptr, AuthConfig *as, char *para)
 {
 char buf[512];
 int i, r;
@@ -533,9 +540,9 @@ char *saltstr, *hashstr;
  *  1 if authentication succeeded
  *  2 if authentication succeeded, using parameter
  * -2 if authentication is delayed, don't error
- * No AuthStruct = everyone allowed
+ * No AuthConfig = everyone allowed
 */
-int	Auth_Check(Client *cptr, anAuthStruct *as, char *para)
+int	Auth_Check(Client *cptr, AuthConfig *as, char *para)
 {
 	extern	char *crypt();
 	char *res;
@@ -661,6 +668,9 @@ int	Auth_Check(Client *cptr, anAuthStruct *as, char *para)
 
 			return 2; /* SUCCESS */
 		}
+
+		case AUTHTYPE_INVALID:
+			return -1; /* Should never happen */
 	}
 	return -1;
 }
@@ -734,18 +744,23 @@ static char *mkpass_bcrypt(char *para)
 	return buf;
 }
 
-char	*Auth_Make(short type, char *para)
+/** Create a hashed password for the specified string.
+ * @param type  One of AUTHTYPE_*, eg AUTHTYPE_ARGON2.
+ * @param text  The password in plaintext.
+ * @returns The hashed password.
+ */
+char *Auth_Hash(AuthenticationType type, char *text)
 {
 	switch (type)
 	{
 		case AUTHTYPE_PLAINTEXT:
-			return para;
+			return text;
 
 		case AUTHTYPE_ARGON2:
-			return mkpass_argon2(para);
+			return mkpass_argon2(text);
 
 		case AUTHTYPE_BCRYPT:
-			return mkpass_bcrypt(para);
+			return mkpass_bcrypt(text);
 
 		default:
 			return NULL;

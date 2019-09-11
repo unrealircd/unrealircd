@@ -30,7 +30,7 @@ struct ConfigItem_webirc {
 	ConfigFlag flag;
 	ConfigItem_mask *mask;
 	WEBIRCType type;
-	anAuthStruct *auth;
+	AuthConfig *auth;
 };
 
 /* Module header */
@@ -134,7 +134,7 @@ void delete_webircblock(ConfigItem_webirc *e)
 {
 	unreal_delete_masks(e->mask);
 	if (e->auth)
-		Auth_DeleteAuthStruct(e->auth);
+		Auth_DeleteAuthConfig(e->auth);
 	DelListItem(e, conf_webirc);
 	MyFree(e);
 }
@@ -267,7 +267,7 @@ int webirc_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->ce_varname, "mask"))
 			unreal_add_masks(&webirc->mask, cep);
 		else if (!strcmp(cep->ce_varname, "password"))
-			webirc->auth = Auth_ConvertConf2AuthStruct(cep);
+			webirc->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "type"))
 		{
 			if (!strcmp(cep->ce_vardata, "webirc"))

@@ -468,11 +468,11 @@ extern void close_connections(void);
 extern int b64_encode(unsigned char const *src, size_t srclength, char *target, size_t targsize);
 extern int b64_decode(char const *src, unsigned char *target, size_t targsize);
 
-extern int Auth_FindType(char *hash, char *type);
-extern anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce);
-extern void		Auth_DeleteAuthStruct(anAuthStruct *as);
-extern int		Auth_Check(Client *cptr, anAuthStruct *as, char *para);
-extern char   		*Auth_Make(short type, char *para);
+extern AuthenticationType Auth_FindType(char *hash, char *type);
+extern AuthConfig	*AuthBlockToAuthConfig(ConfigEntry *ce);
+extern void		Auth_DeleteAuthConfig(AuthConfig *as);
+extern int		Auth_Check(Client *cptr, AuthConfig *as, char *para);
+extern char   		*Auth_Hash(int type, char *para);
 extern int   		Auth_CheckError(ConfigEntry *ce);
 
 extern char *make_virthost(Client *sptr, char *curr, char *new, int mode);

@@ -55,7 +55,6 @@
 #  include <sys/syslog.h>
 # endif
 #endif
-#include "auth.h" 
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include "pcre2.h"
 
@@ -1011,7 +1010,33 @@ struct NameValueList {
 #define PREPROCESSOR_PHASE_INITIAL	1
 #define PREPROCESSOR_PHASE_MODULE	2
 
+typedef enum AuthenticationType {
+	AUTHTYPE_INVALID		= -1,
+	AUTHTYPE_PLAINTEXT		= 0,
+	AUTHTYPE_UNIXCRYPT		= 1,
+	AUTHTYPE_MD5        		= 2,
+	AUTHTYPE_SHA1	    		= 3,
+	AUTHTYPE_TLS_CLIENTCERT		= 4,
+	AUTHTYPE_RIPEMD160		= 5,
+	AUTHTYPE_TLS_CLIENTCERTFP	= 6,
+	AUTHTYPE_BCRYPT			= 7,
+	AUTHTYPE_SPKIFP			= 8,
+	AUTHTYPE_ARGON2			= 9,
+} AuthenticationType;
 
+typedef struct AuthConfig AuthConfig;
+/** Authentication Configuration - this can be a password or
+ * other authentication method that was parsed from the
+ * configuration file.
+ */
+struct AuthConfig {
+	AuthenticationType	type;  /**< Type of data, one of AUTHTYPE_* (TODO: enum?) */
+	char			*data; /**< Data associated with this record */
+};
+
+#ifndef HAVE_CRYPT
+#define crypt DES_crypt
+#endif
 
 /*
  * conf2 stuff -stskeeps
@@ -1128,7 +1153,7 @@ struct ConfigItem_allow {
 	ConfigItem_allow	*prev, *next;
 	ConfigFlag			flag;
 	char				*ip, *hostname, *server;
-	anAuthStruct		*auth;	
+	AuthConfig		*auth;	
 	unsigned short		maxperip;
 	int					port;
 	ConfigItem_class	*class;
@@ -1189,7 +1214,7 @@ struct ConfigItem_oper {
 	ConfigFlag flag;
 	char *name, *snomask;
 	SWhois *swhois;
-	anAuthStruct *auth;
+	AuthConfig *auth;
 	char *operclass;
 	ConfigItem_class *class;
 	ConfigItem_mask *mask;
@@ -1230,8 +1255,8 @@ struct ConfigItem_mask {
 };
 
 struct ConfigItem_drpass {
-	anAuthStruct	 *restartauth;
-	anAuthStruct	 *dieauth;
+	AuthConfig	 *restartauth;
+	AuthConfig	 *dieauth;
 };
 
 struct ConfigItem_ulines {
@@ -1279,7 +1304,7 @@ struct ConfigItem_vhost {
 	ConfigItem_mask *mask;
 	char		*login, *virthost, *virtuser;
 	SWhois *swhois;
-	anAuthStruct	*auth;
+	AuthConfig	*auth;
 };
 
 struct ConfigItem_link {
@@ -1296,7 +1321,7 @@ struct ConfigItem_link {
 		int port; /**< Port to connect to */
 		int options; /**< Connect options like tls or autoconnect */
 	} outgoing;
-	anAuthStruct *auth; /**< authentication method (eg: password) */
+	AuthConfig *auth; /**< authentication method (eg: password) */
 	char *hub; /**< Hub mask */
 	char *leaf; /**< Leaf mask */
 	int leaf_depth; /**< Leaf depth */

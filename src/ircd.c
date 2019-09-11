@@ -1003,7 +1003,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 		                 "You are suggested to use the 'argon2' algorithm instead.");
 				  p[8] = '\0';
 			  }
-			  if (!(result = Auth_Make(type, p))) {
+			  if (!(result = Auth_Hash(type, p))) {
 				  printf("Failed to generate password. Deprecated method? Try 'argon2' instead.\n");
 				  exit(0);
 			  }

@@ -2181,7 +2181,7 @@ void	config_rehash()
 		safefree(oper_ptr->snomask);
 		safefree(oper_ptr->operclass);
 		safefree(oper_ptr->vhost);
-		Auth_DeleteAuthStruct(oper_ptr->auth);
+		Auth_DeleteAuthConfig(oper_ptr->auth);
 		unreal_delete_masks(oper_ptr->mask);
 		DelListItem(oper_ptr, conf_oper);
 		for (s = oper_ptr->swhois; s; s = s_next)
@@ -2234,7 +2234,7 @@ void	config_rehash()
 		next = (ListStruct *)allow_ptr->next;
 		safefree(allow_ptr->ip);
 		safefree(allow_ptr->hostname);
-		Auth_DeleteAuthStruct(allow_ptr->auth);
+		Auth_DeleteAuthConfig(allow_ptr->auth);
 		DelListItem(allow_ptr, conf_allow);
 		MyFree(allow_ptr);
 	}
@@ -2287,7 +2287,7 @@ void	config_rehash()
 		next = (ListStruct *)vhost_ptr->next;
 
 		safefree(vhost_ptr->login);
-		Auth_DeleteAuthStruct(vhost_ptr->auth);
+		Auth_DeleteAuthConfig(vhost_ptr->auth);
 		safefree(vhost_ptr->virthost);
 		safefree(vhost_ptr->virtuser);
 		unreal_delete_masks(vhost_ptr->mask);
@@ -2365,9 +2365,9 @@ void	config_rehash()
 
 	if (conf_drpass)
 	{
-		Auth_DeleteAuthStruct(conf_drpass->restartauth);
+		Auth_DeleteAuthConfig(conf_drpass->restartauth);
 		conf_drpass->restartauth = NULL;
-		Auth_DeleteAuthStruct(conf_drpass->dieauth);
+		Auth_DeleteAuthConfig(conf_drpass->dieauth);
 		conf_drpass->dieauth = NULL;
 		safefree(conf_drpass);
 	}
@@ -3782,7 +3782,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "operclass"))
 			oper->operclass = strdup(cep->ce_vardata);
 		if (!strcmp(cep->ce_varname, "password"))
-			oper->auth = Auth_ConvertConf2AuthStruct(cep);
+			oper->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
 			oper->class = Find_class(cep->ce_vardata);
@@ -4335,16 +4335,16 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "restart"))
 		{
 			if (conf_drpass->restartauth)
-				Auth_DeleteAuthStruct(conf_drpass->restartauth);
+				Auth_DeleteAuthConfig(conf_drpass->restartauth);
 
-			conf_drpass->restartauth = Auth_ConvertConf2AuthStruct(cep);
+			conf_drpass->restartauth = AuthBlockToAuthConfig(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "die"))
 		{
 			if (conf_drpass->dieauth)
-				Auth_DeleteAuthStruct(conf_drpass->dieauth);
+				Auth_DeleteAuthConfig(conf_drpass->dieauth);
 
-			conf_drpass->dieauth = Auth_ConvertConf2AuthStruct(cep);
+			conf_drpass->dieauth = AuthBlockToAuthConfig(cep);
 		}
 	}
 	return 1;
@@ -5037,7 +5037,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "hostname"))
 			allow->hostname = strdup(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "password"))
-			allow->auth = Auth_ConvertConf2AuthStruct(cep);
+			allow->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
 			allow->class = Find_class(cep->ce_vardata);
@@ -5579,7 +5579,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "login"))
 			vhost->login = strdup(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "password"))
-			vhost->auth = Auth_ConvertConf2AuthStruct(cep);
+			vhost->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "mask"))
 		{
 			unreal_add_masks(&vhost->mask, cep);
@@ -6042,7 +6042,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "password"))
-			link->auth = Auth_ConvertConf2AuthStruct(cep);
+			link->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "hub"))
 			safestrdup(link->hub, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "leaf"))
@@ -6228,7 +6228,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			{
 				errors++;
 			} else {
-				anAuthStruct *auth = Auth_ConvertConf2AuthStruct(cep);
+				AuthConfig *auth = AuthBlockToAuthConfig(cep);
 				/* hm. would be nicer if handled @auth-system I think. ah well.. */
 				if ((auth->type != AUTHTYPE_PLAINTEXT) && (auth->type != AUTHTYPE_TLS_CLIENTCERT) &&
 				    (auth->type != AUTHTYPE_TLS_CLIENTCERTFP) && (auth->type != AUTHTYPE_SPKIFP))
@@ -6239,7 +6239,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 					             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 					errors++;
 				}
-				Auth_DeleteAuthStruct(auth);
+				Auth_DeleteAuthConfig(auth);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hub"))
@@ -9909,7 +9909,7 @@ void link_cleanup(ConfigItem_link *link_ptr)
 {
 	safefree(link_ptr->servername);
 	unreal_delete_masks(link_ptr->incoming.mask);
-	Auth_DeleteAuthStruct(link_ptr->auth);
+	Auth_DeleteAuthConfig(link_ptr->auth);
 	safefree(link_ptr->outgoing.bind_ip);
 	safefree(link_ptr->outgoing.hostname);
 	safefree(link_ptr->hub);

@@ -104,7 +104,7 @@ CMD_FUNC(m_mkpasswd)
 		return 0;
 	}
 
-	if (!(result = Auth_Make(type, parv[2])))
+	if (!(result = Auth_Hash(type, parv[2])))
 	{
 		sendnotice(sptr, "*** Authentication method %s failed", parv[1]);
 		return 0;
