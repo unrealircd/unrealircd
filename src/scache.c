@@ -22,10 +22,11 @@ static int hash(char *);	/*
 
 #define SCACHE_HASH_SIZE 257
 
-typedef struct scache_entry {
+typedef struct SCACHE SCACHE;
+struct SCACHE {
 	char name[HOSTLEN + 1];
-	struct scache_entry *next;
-} SCACHE;
+	SCACHE *next;
+};
 
 static SCACHE *scache_hash[SCACHE_HASH_SIZE];
 

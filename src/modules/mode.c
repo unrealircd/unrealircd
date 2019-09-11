@@ -554,7 +554,7 @@ void make_mode_str(Channel *chptr, long oldm, Cmode_t oldem, long oldl, int pcou
     size_t mode_buf_size, size_t para_buf_size, char bounce)
 {
 	char tmpbuf[MODEBUFLEN+3], *tmpstr;
-	aCtab *tab = &cFlagTab[0];
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	char *x = mode_buf;
 	int  what, cnt, z;
 	int i;
@@ -566,7 +566,7 @@ void make_mode_str(Channel *chptr, long oldm, Cmode_t oldem, long oldl, int pcou
 	*para_buf = '\0';
 	what = 0;
 	/* + param-less modes */
-	tab = &cFlagTab[0];
+	tab = &corechannelmodetable[0];
 	while (tab->mode != 0x0)
 	{
 		if (chptr->mode.mode & tab->mode)
@@ -604,7 +604,7 @@ void make_mode_str(Channel *chptr, long oldm, Cmode_t oldem, long oldl, int pcou
 
 	*x = '\0';
 	/* - param-less modes */
-	tab = &cFlagTab[0];
+	tab = &corechannelmodetable[0];
 	while (tab->mode != 0x0)
 	{
 		if (!(chptr->mode.mode & tab->mode))
@@ -737,7 +737,7 @@ int  do_mode_char(Channel *chptr, long modetype, char modechar, char *param,
 	u_int what, Client *cptr,
 	 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce, long my_access)
 {
-	aCtab *tab = &cFlagTab[0];
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	int  retval = 0;
 	Member *member = NULL;
 	Membership *membership = NULL;
@@ -1398,8 +1398,8 @@ void _set_mode(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcou
 #ifdef DEVELOP
 	char *tmpo = NULL;
 #endif
-	aCtab *tab = &cFlagTab[0];
-	aCtab foundat;
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
+	CoreChannelModeTable foundat;
 	int found = 0;
 	int sent_mlock_warning = 0;
 	unsigned int htrig = 0;
@@ -1441,7 +1441,7 @@ void _set_mode(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcou
 					continue;
 				}
 				found = 0;
-				tab = &cFlagTab[0];
+				tab = &corechannelmodetable[0];
 				while ((tab->mode != 0x0) && found == 0)
 				{
 					if (tab->flag == *curchr)
@@ -1858,29 +1858,29 @@ CMD_FUNC(_m_umode)
 	}
 
 	if (!(oldumodes & UMODE_OPER) && IsOper(sptr))
-		IRCstats.operators++;
+		ircstats.operators++;
 
 	/* deal with opercounts and stuff */
 	if ((oldumodes & UMODE_OPER) && !IsOper(sptr))
 	{
-		IRCstats.operators--;
+		ircstats.operators--;
 		VERIFY_OPERCOUNT(sptr, "umode1");
 	} else /* YES this 'else' must be here, otherwise we can decrease twice. fixes opercount bug. */
 	if (!(oldumodes & UMODE_HIDEOPER) && IsHideOper(sptr))
 	{
-		IRCstats.operators--;
+		ircstats.operators--;
 		VERIFY_OPERCOUNT(sptr, "umode2");
 	}
 	/* end of dealing with opercounts */
 
 	if ((oldumodes & UMODE_HIDEOPER) && !IsHideOper(sptr))
 	{
-		IRCstats.operators++;
+		ircstats.operators++;
 	}
 	if (!(oldumodes & UMODE_INVISIBLE) && IsInvisible(sptr))
-		IRCstats.invisible++;
+		ircstats.invisible++;
 	if ((oldumodes & UMODE_INVISIBLE) && !IsInvisible(sptr))
-		IRCstats.invisible--;
+		ircstats.invisible--;
 
 	if (MyConnect(sptr) && !IsOper(sptr))
 		remove_oper_privileges(sptr, 0);

@@ -38,7 +38,7 @@ ModuleHeader MOD_HEADER(userip)
 MOD_INIT(userip)
 {
 	CommandAdd(modinfo->handle, MSG_USERIP, m_userip, 1, M_USER);
-	IsupportAdd(modinfo->handle, "USERIP", NULL);
+	ISupportAdd(modinfo->handle, "USERIP", NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

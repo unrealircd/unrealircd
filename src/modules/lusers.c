@@ -65,31 +65,31 @@ char flatmap;
 	flatmap = (FLAT_MAP && !ValidatePermissionsForPath("server:info:lusers",sptr,NULL,NULL,NULL)) ? 1 : 0;
 
 	/* Just to correct results ---Stskeeps */
-	if (IRCstats.clients > IRCstats.global_max)
-		IRCstats.global_max = IRCstats.clients;
-	if (IRCstats.me_clients > IRCstats.me_max)
-		IRCstats.me_max = IRCstats.me_clients;
+	if (ircstats.clients > ircstats.global_max)
+		ircstats.global_max = ircstats.clients;
+	if (ircstats.me_clients > ircstats.me_max)
+		ircstats.me_max = ircstats.me_clients;
 
 	sendnumeric(sptr, RPL_LUSERCLIENT,
-	    IRCstats.clients - IRCstats.invisible, IRCstats.invisible,
-	    IRCstats.servers);
+	    ircstats.clients - ircstats.invisible, ircstats.invisible,
+	    ircstats.servers);
 
-	if (IRCstats.operators)
-		sendnumeric(sptr, RPL_LUSEROP, IRCstats.operators);
-	if (IRCstats.unknown)
-		sendnumeric(sptr, RPL_LUSERUNKNOWN, IRCstats.unknown);
-	if (IRCstats.channels)
-		sendnumeric(sptr, RPL_LUSERCHANNELS, IRCstats.channels);
-	sendnumeric(sptr, RPL_LUSERME, IRCstats.me_clients, flatmap ? 0 : IRCstats.me_servers);
-	sendnumeric(sptr, RPL_LOCALUSERS, IRCstats.me_clients, IRCstats.me_max, IRCstats.me_clients, IRCstats.me_max);
-	sendnumeric(sptr, RPL_GLOBALUSERS, IRCstats.clients, IRCstats.global_max, IRCstats.clients, IRCstats.global_max);
-	if ((IRCstats.me_clients + IRCstats.me_servers) > max_connection_count)
+	if (ircstats.operators)
+		sendnumeric(sptr, RPL_LUSEROP, ircstats.operators);
+	if (ircstats.unknown)
+		sendnumeric(sptr, RPL_LUSERUNKNOWN, ircstats.unknown);
+	if (ircstats.channels)
+		sendnumeric(sptr, RPL_LUSERCHANNELS, ircstats.channels);
+	sendnumeric(sptr, RPL_LUSERME, ircstats.me_clients, flatmap ? 0 : ircstats.me_servers);
+	sendnumeric(sptr, RPL_LOCALUSERS, ircstats.me_clients, ircstats.me_max, ircstats.me_clients, ircstats.me_max);
+	sendnumeric(sptr, RPL_GLOBALUSERS, ircstats.clients, ircstats.global_max, ircstats.clients, ircstats.global_max);
+	if ((ircstats.me_clients + ircstats.me_servers) > max_connection_count)
 	{
 		max_connection_count =
-		    IRCstats.me_clients + IRCstats.me_servers;
+		    ircstats.me_clients + ircstats.me_servers;
 		if (max_connection_count % 10 == 0)	/* only send on even tens */
 			sendto_ops("New record on this server: %d connections (%d clients)",
-			    max_connection_count, IRCstats.me_clients);
+			    max_connection_count, ircstats.me_clients);
 	}
 	return 0;
 }

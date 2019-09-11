@@ -519,12 +519,13 @@ struct Hooktype {
 	ModuleChild *parents;
 };
 
-typedef struct ISupport {
-	struct ISupport *prev, *next;
+typedef struct ISupport ISupport;
+struct ISupport {
+	ISupport *prev, *next;
 	char *token;
 	char *value;
 	Module *owner;
-} Isupport;
+};
 
 typedef struct ModuleObject {
 	struct ModuleObject *prev, *next;
@@ -541,7 +542,7 @@ typedef struct ModuleObject {
 		Extban *extban;
 		Callback *callback;
 		Efunction *efunction;
-		Isupport *isupport;
+		ISupport *isupport;
 		Cmode *cmode;
 		ModDataInfo *moddata;
 		OperClassValidator *validator;
@@ -661,13 +662,13 @@ extern const char *our_dlerror(void);
 extern Versionflag *VersionflagAdd(Module *module, char flag);
 extern void VersionflagDel(Versionflag *vflag, Module *module);
 
-extern Isupport *IsupportAdd(Module *module, const char *token, const char *value);
-extern void IsupportSetValue(Isupport *isupport, const char *value);
-extern void IsupportDel(Isupport *isupport);
-extern Isupport *IsupportFind(const char *token);
-extern void IsupportSet(Module *module, const char *name, const char *value);
-extern void IsupportSetFmt(Module *module, const char *name, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
-extern void IsupportDelByName(const char *name);
+extern ISupport *ISupportAdd(Module *module, const char *token, const char *value);
+extern void ISupportSetValue(ISupport *isupport, const char *value);
+extern void ISupportDel(ISupport *isupport);
+extern ISupport *ISupportFind(const char *token);
+extern void ISupportSet(Module *module, const char *name, const char *value);
+extern void ISupportSetFmt(Module *module, const char *name, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
+extern void ISupportDelByName(const char *name);
 
 extern ClientCapability *ClientCapabilityFind(const char *token, Client *sptr);
 extern ClientCapability *ClientCapabilityFindReal(const char *token);

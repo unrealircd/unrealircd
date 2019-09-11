@@ -24,8 +24,8 @@ typedef struct {
 	unsigned char **buffer;
 } StreamIO;
 
-typedef struct colorlist {
-	struct colorlist *next;
+typedef struct IRCColor {
+	struct IRCColor *next;
 	unsigned char *color;
 } IRCColor;
 

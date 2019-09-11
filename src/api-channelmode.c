@@ -73,7 +73,7 @@ static char previous_chanmodes[256];
 void extcmodes_check_for_changes(void)
 {
 	char chanmodes[256];
-	Isupport *isup;
+	ISupport *isup;
 
 	make_cmodestr();
 	make_extcmodestr();
@@ -93,14 +93,14 @@ void extcmodes_check_for_changes(void)
 	            me.serv->features.chanmodes[2],
 	            me.serv->features.chanmodes[3]);
 
-	isup = IsupportFind("CHANMODES");
+	isup = ISupportFind("CHANMODES");
 	if (!isup)
 	{
 		strlcpy(previous_chanmodes, chanmodes, sizeof(previous_chanmodes));
 		return; /* not booted yet. then we are done here. */
 	}
 	
-	IsupportSetValue(isup, chanmodes);
+	ISupportSetValue(isup, chanmodes);
 	
 	if (*previous_chanmodes && strcmp(chanmodes, previous_chanmodes))
 	{

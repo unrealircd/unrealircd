@@ -296,9 +296,9 @@ CMD_FUNC(m_oper)
 
 	/* Update statistics */
 	if (IsInvisible(sptr) && !(old & UMODE_INVISIBLE))
-		IRCstats.invisible++;
+		ircstats.invisible++;
 	if (IsOper(sptr) && !IsHideOper(sptr))
-		IRCstats.operators++;
+		ircstats.operators++;
 
 	if (SHOWOPERMOTD == 1)
 		(void)do_cmd(cptr, sptr, NULL, "OPERMOTD", parc, parv);

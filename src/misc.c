@@ -23,7 +23,6 @@
 
 #include "unrealircd.h"
 
-extern ircstats IRCstats;
 extern char	*me_hash;
 
 static void exit_one_client(Client *, MessageTag *mtags_i, const char *);
@@ -552,7 +551,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 			}
 		}
 		if (IsClient(sptr))
-			IRCstats.me_clients--;
+			ircstats.me_clients--;
 		if (sptr->serv && sptr->serv->conf)
 		{
 			sptr->serv->conf->refcount--;
@@ -568,7 +567,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 		}
 		if (IsServer(sptr))
 		{
-			IRCstats.me_servers--;
+			ircstats.me_servers--;
 			ircd_log(LOG_SERVER, "SQUIT %s (%s)", sptr->name, comment);
 		}
 		free_pending_net(sptr);
@@ -694,17 +693,17 @@ char text[2048];
 		if (IsOper(acptr) && !IsHideOper(acptr))
 			counted++;
 	}
-	if (counted == IRCstats.operators)
+	if (counted == ircstats.operators)
 		return;
 	snprintf(text, sizeof(text), "[BUG] operator count bug! value in /lusers is '%d', we counted '%d', "
 	               "user='%s', userserver='%s', tag=%s. Corrected. ",
-	               IRCstats.operators, counted, orig->name,
+	               ircstats.operators, counted, orig->name,
 	               orig->srvptr ? orig->srvptr->name : "<null>", tag ? tag : "<null>");
 #ifdef DEBUGMODE
 	sendto_realops("%s", text);
 #endif
 	ircd_log(LOG_ERROR, "%s", text);
-	IRCstats.operators = counted;
+	ircstats.operators = counted;
 }
 
 /** Check if the specified hostname does not contain forbidden characters.

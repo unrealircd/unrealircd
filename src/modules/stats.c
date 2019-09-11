@@ -744,7 +744,6 @@ int stats_mem(Client *sptr, char *para)
 	     rcm = 0,		/* memory used by remote clients */
 	     awm = 0,		/* memory used by aways */
 	     wwam = 0,		/* whowas away memory used */
-	     wwm = 0,		/* whowas array memory used */
 	     com = 0,		/* memory used by conf lines */
 	     wlhm = 0,		/* watchlist memory used */
 	     db = 0,		/* memory used by dbufs */
@@ -759,7 +758,6 @@ int stats_mem(Client *sptr, char *para)
 
 	count_whowas_memory(&wwu, &wwam);
 	count_watch_memory(&wlh, &wlhm);
-	wwm = sizeof(aName) * NICKNAMEHISTORYLENGTH;
 
 	list_for_each_entry(acptr, &client_list, client_node)
 	{
@@ -855,10 +853,8 @@ int stats_mem(Client *sptr, char *para)
 	sendnumericfmt(sptr, RPL_STATSDEBUG, "Whowas users %d(%ld) away %d(%ld)",
 	    wwu, (long)(wwu * sizeof(ClientUser)),
 	    wwa, wwam);
-	sendnumericfmt(sptr, RPL_STATSDEBUG, "Whowas array %d(%ld)",
-	    NICKNAMEHISTORYLENGTH, wwm);
 
-	totww = wwu * sizeof(ClientUser) + wwam + wwm;
+	totww = wwu * sizeof(ClientUser) + wwam;
 
 	sendnumericfmt(sptr, RPL_STATSDEBUG,
 	    "Hash: client %d(%ld) chan %d(%ld) watch %d(%ld)",
@@ -1164,7 +1160,7 @@ int stats_uptime(Client *sptr, char *para)
 	    tmpnow / 86400, (tmpnow / 3600) % 24, (tmpnow / 60) % 60,
 	    tmpnow % 60);
 	sendnumeric(sptr, RPL_STATSCONN,
-	    max_connection_count, IRCstats.me_max);
+	    max_connection_count, ircstats.me_max);
 	return 0;
 }
 

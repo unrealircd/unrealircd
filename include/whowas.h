@@ -36,19 +36,6 @@
 #define __whowas_include__
 
 /*
-** WHOWAS structure moved here from whowas.c
-*/
-typedef struct aname {
-	ClientUser *ww_user;
-	Client *ww_online;
-	time_t ww_logout;
-	long ww_umodes;
-	char ww_nick[NICKLEN + 1];
-	char ww_info[REALLEN + 1];
-} aName;
-
-
-/*
 ** add_history
 **	Add the currently defined name of the client to history.
 **	usually called before changing to a new name (nick).

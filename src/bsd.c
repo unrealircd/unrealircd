@@ -62,7 +62,6 @@ void close_listener(ConfigItem_listen *listener);
 static char readbuf[BUFSIZE];
 char zlinebuf[BUFSIZE];
 extern char *version;
-extern ircstats IRCstats;
 MODVAR time_t last_allinuse = 0;
 
 #ifdef USE_LIBCURL
@@ -962,7 +961,7 @@ refuse_client:
 		acptr->local->listener->clients++;
 	add_client_to_list(acptr);
 
-	IRCstats.unknown++;
+	ircstats.unknown++;
 	acptr->status = STAT_UNKNOWN;
 
 	list_add(&acptr->lclient_node, &unknown_list);
@@ -1416,7 +1415,7 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	cptr->serv->up = me.name;
 	SetConnecting(cptr);
 	SetOutgoing(cptr);
-	IRCstats.unknown++;
+	ircstats.unknown++;
 	list_add(&cptr->lclient_node, &unknown_list);
 	set_sockhost(cptr, aconf->outgoing.hostname);
 	add_client_to_list(cptr);

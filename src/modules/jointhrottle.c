@@ -45,10 +45,10 @@ struct {
 	unsigned short t;
 } cfg;
 
-typedef struct JFlood aJFlood;
+typedef struct JoinFlood JoinFlood;
 
-struct JFlood {
-	aJFlood *prev, *next;
+struct JoinFlood {
+	JoinFlood *prev, *next;
 	char chname[CHANNELLEN+1];
 	time_t firstjoin;
 	unsigned short numjoins;
@@ -63,7 +63,7 @@ int jointhrottle_local_join(Client *cptr, Client *sptr, Channel *chptr, MessageT
 static int isjthrottled(Client *cptr, Channel *chptr);
 static void jointhrottle_increase_usercounter(Client *cptr, Channel *chptr);
 EVENT(jointhrottle_cleanup_structs);
-aJFlood *jointhrottle_addentry(Client *cptr, Channel *chptr);
+JoinFlood *jointhrottle_addentry(Client *cptr, Channel *chptr);
 
 MOD_TEST(jointhrottle)
 {
@@ -153,8 +153,9 @@ int jointhrottle_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 static int isjthrottled(Client *cptr, Channel *chptr)
 {
-aJFlood *e;
-int num=cfg.num, t=cfg.t;
+	JoinFlood *e;
+	int num = cfg.num;
+	int t = cfg.t;
 
 	if (!MyClient(cptr))
 		return 0;
@@ -178,8 +179,9 @@ int num=cfg.num, t=cfg.t;
 
 static void jointhrottle_increase_usercounter(Client *cptr, Channel *chptr)
 {
-aJFlood *e;
-int num=cfg.num, t=cfg.t;
+	JoinFlood *e;
+	int num = cfg.num;
+	int t = cfg.t;
 
 	if (!MyClient(cptr))
 		return;
@@ -220,12 +222,12 @@ int jointhrottle_local_join(Client *cptr, Client *sptr, Channel *chptr, MessageT
 	return 0;
 }
 
-/** Adds a aJFlood entry to user & channel and returns entry.
+/** Adds a JoinFlood entry to user & channel and returns entry.
  * NOTE: Does not check for already-existing-entry
  */
-aJFlood *jointhrottle_addentry(Client *cptr, Channel *chptr)
+JoinFlood *jointhrottle_addentry(Client *cptr, Channel *chptr)
 {
-aJFlood *e;
+	JoinFlood *e;
 
 #ifdef DEBUGMODE
 	if (!IsPerson(cptr))
@@ -236,13 +238,13 @@ aJFlood *e;
 			abort(); /* already exists -- should never happen */
 #endif
 
-	e = MyMallocEx(sizeof(aJFlood));
+	e = MyMallocEx(sizeof(JoinFlood));
 	strlcpy(e->chname, chptr->chname, sizeof(e->chname));
 
 	/* Insert our new entry as (new) head */
 	if (moddata_client(cptr, jointhrottle_md).ptr)
 	{
-		aJFlood *current_head = moddata_client(cptr, jointhrottle_md).ptr;
+		JoinFlood *current_head = moddata_client(cptr, jointhrottle_md).ptr;
 		current_head->prev = e;
 		e->next = current_head;
 	}
@@ -254,10 +256,10 @@ aJFlood *e;
 /** Regularly cleans up user/chan structs */
 EVENT(jointhrottle_cleanup_structs)
 {
-Client *acptr;
-Channel *chptr;
-aJFlood *jf, *jf_next;
-int t = cfg.t;
+	Client *acptr;
+	Channel *chptr;
+	JoinFlood *jf, *jf_next;
+	int t = cfg.t;
 	
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
@@ -297,7 +299,7 @@ int t = cfg.t;
 
 void jointhrottle_md_free(ModData *m)
 {
-aJFlood *j, *j_next;
+	JoinFlood *j, *j_next;
 
 	if (!m->ptr)
 		return;

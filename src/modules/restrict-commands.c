@@ -29,9 +29,9 @@ ModuleHeader MOD_HEADER(restrict-commands) = {
 
 #define GetReputation(acptr) (moddata_client_get(acptr, "reputation") ? atoi(moddata_client_get(acptr, "reputation")) : 0)
 
-typedef struct restrictedcmd RestrictedCmd;
-struct restrictedcmd {
-	RestrictedCmd *prev, *next;
+typedef struct RestrictedCommand RestrictedCommand;
+struct RestrictedCommand {
+	RestrictedCommand *prev, *next;
 	char *cmd;
 	char *conftag;
 	long connect_delay;
@@ -47,8 +47,8 @@ typedef struct {
 
 // Forward declarations
 char *find_cmd_byconftag(char *conftag);
-RestrictedCmd *find_restrictions_bycmd(char *cmd);
-RestrictedCmd *find_restrictions_byconftag(char *conftag);
+RestrictedCommand *find_restrictions_bycmd(char *cmd);
+RestrictedCommand *find_restrictions_byconftag(char *conftag);
 int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 char *rcmd_hook_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
@@ -58,7 +58,7 @@ CMD_OVERRIDE_FUNC(rcmd_override);
 
 // Globals
 static ModuleInfo ModInf;
-RestrictedCmd *RestrictedCmdList = NULL;
+RestrictedCommand *RestrictedCommandList = NULL;
 CmdMap conf_cmdmaps[] = {
 	// These are special cases in which we can't override the command, so they are handled through hooks instead
 	{ "channel-message", "PRIVMSG" },
@@ -98,16 +98,16 @@ MOD_LOAD(restrict-commands)
 
 MOD_UNLOAD(restrict-commands)
 {
-	RestrictedCmd *rcmd, *next;
-	for (rcmd = RestrictedCmdList; rcmd; rcmd = next)
+	RestrictedCommand *rcmd, *next;
+	for (rcmd = RestrictedCommandList; rcmd; rcmd = next)
 	{
 		next = rcmd->next;
 		MyFree(rcmd->conftag);
 		MyFree(rcmd->cmd);
-		DelListItem(rcmd, RestrictedCmdList);
+		DelListItem(rcmd, RestrictedCommandList);
 		MyFree(rcmd);
 	}
-	RestrictedCmdList = NULL;
+	RestrictedCommandList = NULL;
 	return MOD_SUCCESS;
 }
 
@@ -121,9 +121,9 @@ char *find_cmd_byconftag(char *conftag) {
 	return NULL;
 }
 
-RestrictedCmd *find_restrictions_bycmd(char *cmd) {
-	RestrictedCmd *rcmd;
-	for (rcmd = RestrictedCmdList; rcmd; rcmd = rcmd->next)
+RestrictedCommand *find_restrictions_bycmd(char *cmd) {
+	RestrictedCommand *rcmd;
+	for (rcmd = RestrictedCommandList; rcmd; rcmd = rcmd->next)
 	{
 		if (!strcasecmp(rcmd->cmd, cmd))
 			return rcmd;
@@ -131,9 +131,9 @@ RestrictedCmd *find_restrictions_bycmd(char *cmd) {
 	return NULL;
 }
 
-RestrictedCmd *find_restrictions_byconftag(char *conftag) {
-	RestrictedCmd *rcmd;
-	for (rcmd = RestrictedCmdList; rcmd; rcmd = rcmd->next)
+RestrictedCommand *find_restrictions_byconftag(char *conftag) {
+	RestrictedCommand *rcmd;
+	for (rcmd = RestrictedCommandList; rcmd; rcmd = rcmd->next)
 	{
 		if (rcmd->conftag && !strcmp(rcmd->conftag, conftag))
 			return rcmd;
@@ -145,7 +145,7 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 	ConfigEntry *cep, *cep2;
-	RestrictedCmd *rcmd;
+	RestrictedCommand *rcmd;
 	long connect_delay;
 	int exempt_reputation_score;
 	int has_restriction;
@@ -220,7 +220,7 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep, *cep2;
 	char *cmd, *conftag;
-	RestrictedCmd *rcmd;
+	RestrictedCommand *rcmd;
 
 	// We are only interested in set::restrict-commands
 	if (type != CONFIG_SET)
@@ -256,7 +256,7 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 			}
 		}
 
-		rcmd = MyMallocEx(sizeof(RestrictedCmd));
+		rcmd = MyMallocEx(sizeof(RestrictedCommand));
 		rcmd->cmd = strdup(cmd);
 		rcmd->conftag = (conftag ? strdup(conftag) : NULL);
 		for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
@@ -288,13 +288,13 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 				break; // Using break instead of continue since 'disable' takes precedence anyways
 			}
 		}
-		AddListItem(rcmd, RestrictedCmdList);
+		AddListItem(rcmd, RestrictedCommandList);
 	}
 
 	return 1;
 }
 
-int rcmd_canbypass(Client *sptr, RestrictedCmd *rcmd) {
+int rcmd_canbypass(Client *sptr, RestrictedCommand *rcmd) {
 	if (!sptr || !rcmd)
 		return 1;
 	if (rcmd->exempt_identified && IsLoggedIn(sptr))
@@ -321,7 +321,7 @@ char *rcmd_hook_preusermsg(Client *sptr, Client *to, char *text, int notice)
 
 char *rcmd_hook_wrapper(Client *sptr, char *text, int notice, char *display, char *conftag)
 {
-	RestrictedCmd *rcmd;
+	RestrictedCommand *rcmd;
 
 	// Let's allow non-local users, opers and U:Lines early =]
 	if (!MyClient(sptr) || !sptr->local || IsOper(sptr) || IsULine(sptr))
@@ -348,7 +348,7 @@ char *rcmd_hook_wrapper(Client *sptr, char *text, int notice, char *display, cha
 
 CMD_OVERRIDE_FUNC(rcmd_override)
 {
-	RestrictedCmd *rcmd;
+	RestrictedCommand *rcmd;
 
 	if (!MyClient(sptr) || !sptr->local || IsOper(sptr) || IsULine(sptr))
 		return CallCommandOverride(ovr, cptr, sptr, recv_mtags, parc, parv);

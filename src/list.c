@@ -22,7 +22,6 @@
 
 void free_link(Link *);
 Link *make_link();
-extern ircstats IRCstats;
 
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
@@ -301,27 +300,27 @@ void remove_client_from_list(Client *cptr)
 	list_del(&cptr->client_node);
 	if (IsServer(cptr))
 	{
-		IRCstats.servers--;
+		ircstats.servers--;
 	}
 	if (IsClient(cptr))
 	{
 		if (IsInvisible(cptr))
 		{
-			IRCstats.invisible--;
+			ircstats.invisible--;
 		}
 		if (IsOper(cptr) && !IsHideOper(cptr))
 		{
-			IRCstats.operators--;
+			ircstats.operators--;
 			VERIFY_OPERCOUNT(cptr, "rmvlist");
 		}
-		IRCstats.clients--;
+		ircstats.clients--;
 		if (cptr->srvptr && cptr->srvptr->serv)
 			cptr->srvptr->serv->users--;
 	}
 	if (IsUnknown(cptr) || IsConnecting(cptr) || IsHandshake(cptr)
 		|| IsTLSHandshake(cptr)
 	)
-		IRCstats.unknown--;
+		ircstats.unknown--;
 
 	if (IsPerson(cptr))	/* Only persons can have been added before */
 	{

@@ -71,7 +71,6 @@ NOTIFYICONDATA SysTray;
 HTREEITEM AddItemToTree(HWND, LPSTR, int, short);
 void win_map(Client *, HWND, short);
 extern Link *Servers;
-extern ircstats IRCstats;
 unsigned char *errors = NULL;
 extern VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv);
 void CleanUp(void)
@@ -905,20 +904,20 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 		{
 			hwTreeView = GetDlgItem(hDlg, IDC_TREE);
 			win_map(&me, hwTreeView, 0);
-			SetDlgItemInt(hDlg, IDC_CLIENTS, IRCstats.clients, FALSE);
-			SetDlgItemInt(hDlg, IDC_SERVERS, IRCstats.servers, FALSE);
-			SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
-			SetDlgItemInt(hDlg, IDC_UNKNOWN, IRCstats.unknown, FALSE);
-			SetDlgItemInt(hDlg, IDC_OPERS, IRCstats.operators, FALSE);
-			SetDlgItemInt(hDlg, IDC_CHANNELS, IRCstats.channels, FALSE);
-			if (IRCstats.clients > IRCstats.global_max)
-				IRCstats.global_max = IRCstats.clients;
-			if (IRCstats.me_clients > IRCstats.me_max)
-					IRCstats.me_max = IRCstats.me_clients;
-			SetDlgItemInt(hDlg, IDC_MAXCLIENTS, IRCstats.global_max, FALSE);
-			SetDlgItemInt(hDlg, IDC_LCLIENTS, IRCstats.me_clients, FALSE);
-			SetDlgItemInt(hDlg, IDC_LSERVERS, IRCstats.me_servers, FALSE);
-			SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, IRCstats.me_max, FALSE);
+			SetDlgItemInt(hDlg, IDC_CLIENTS, ircstats.clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_SERVERS, ircstats.servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_INVISO, ircstats.invisible, FALSE);
+			SetDlgItemInt(hDlg, IDC_UNKNOWN, ircstats.unknown, FALSE);
+			SetDlgItemInt(hDlg, IDC_OPERS, ircstats.operators, FALSE);
+			SetDlgItemInt(hDlg, IDC_CHANNELS, ircstats.channels, FALSE);
+			if (ircstats.clients > ircstats.global_max)
+				ircstats.global_max = ircstats.clients;
+			if (ircstats.me_clients > ircstats.me_max)
+					ircstats.me_max = ircstats.me_clients;
+			SetDlgItemInt(hDlg, IDC_MAXCLIENTS, ircstats.global_max, FALSE);
+			SetDlgItemInt(hDlg, IDC_LCLIENTS, ircstats.me_clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_LSERVERS, ircstats.me_servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, ircstats.me_max, FALSE);
 			SetTimer(hDlg, 1, 5000, NULL);
 			return TRUE;
 		}
@@ -928,21 +927,21 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 		case WM_TIMER:
 			TreeView_DeleteAllItems(hwTreeView);
 			win_map(&me, hwTreeView, 1);
-			SetDlgItemInt(hDlg, IDC_CLIENTS, IRCstats.clients, FALSE);
-			SetDlgItemInt(hDlg, IDC_SERVERS, IRCstats.servers, FALSE);
-			SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
-			SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
-			SetDlgItemInt(hDlg, IDC_UNKNOWN, IRCstats.unknown, FALSE);
-			SetDlgItemInt(hDlg, IDC_OPERS, IRCstats.operators, FALSE);
-			SetDlgItemInt(hDlg, IDC_CHANNELS, IRCstats.channels, FALSE);
-			if (IRCstats.clients > IRCstats.global_max)
-				IRCstats.global_max = IRCstats.clients;
-			if (IRCstats.me_clients > IRCstats.me_max)
-					IRCstats.me_max = IRCstats.me_clients;
-			SetDlgItemInt(hDlg, IDC_MAXCLIENTS, IRCstats.global_max, FALSE);
-			SetDlgItemInt(hDlg, IDC_LCLIENTS, IRCstats.me_clients, FALSE);
-			SetDlgItemInt(hDlg, IDC_LSERVERS, IRCstats.me_servers, FALSE);
-			SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, IRCstats.me_max, FALSE);
+			SetDlgItemInt(hDlg, IDC_CLIENTS, ircstats.clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_SERVERS, ircstats.servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_INVISO, ircstats.invisible, FALSE);
+			SetDlgItemInt(hDlg, IDC_INVISO, ircstats.invisible, FALSE);
+			SetDlgItemInt(hDlg, IDC_UNKNOWN, ircstats.unknown, FALSE);
+			SetDlgItemInt(hDlg, IDC_OPERS, ircstats.operators, FALSE);
+			SetDlgItemInt(hDlg, IDC_CHANNELS, ircstats.channels, FALSE);
+			if (ircstats.clients > ircstats.global_max)
+				ircstats.global_max = ircstats.clients;
+			if (ircstats.me_clients > ircstats.me_max)
+					ircstats.me_max = ircstats.me_clients;
+			SetDlgItemInt(hDlg, IDC_MAXCLIENTS, ircstats.global_max, FALSE);
+			SetDlgItemInt(hDlg, IDC_LCLIENTS, ircstats.me_clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_LSERVERS, ircstats.me_servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, ircstats.me_max, FALSE);
 			SetTimer(hDlg, 1, 5000, NULL);
 			return TRUE;
 		case WM_COMMAND:

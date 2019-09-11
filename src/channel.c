@@ -28,7 +28,10 @@ Channel *channel = NULL;
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
 MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
-aCtab cFlagTab[] = {
+/** This describes the letters, modes and options for core channel modes.
+ * These are +ntmispklr and also the list modes +vhoaq and +beI.
+ */
+CoreChannelModeTable corechannelmodetable[] = {
 	{MODE_LIMIT, 'l', 1, 1},
 	{MODE_VOICE, 'v', 1, 1},
 	{MODE_HALFOP, 'h', 0, 1},
@@ -72,7 +75,7 @@ inline int op_can_override(char* acl, Client *sptr,Channel *channel,void* extra)
 void make_cmodestr(void)
 {
 	char *p = &cmodestring[0];
-	aCtab *tab = &cFlagTab[0];
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	int i;
 	while (tab->mode != 0x0)
 	{
@@ -88,7 +91,7 @@ void make_cmodestr(void)
 
 int  Halfop_mode(long mode)
 {
-	aCtab *tab = &cFlagTab[0];
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
 
 	while (tab->mode != 0x0)
 	{
@@ -616,7 +619,7 @@ long get_access(Client *cptr, Channel *chptr)
 /** Returns 1 if channel has this channel mode set and 0 if not */
 int has_channel_mode(Channel *chptr, char mode)
 {
-	aCtab *tab = &cFlagTab[0];
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	int i;
 
 	/* Extended channel modes */
@@ -658,7 +661,7 @@ Cmode_t get_extmode_bitbychar(char m)
 
 long get_mode_bitbychar(char m)
 {
-	aCtab *tab = &cFlagTab[0];
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
 
 	while(tab->mode != 0x0)
 	{
@@ -676,7 +679,7 @@ long get_mode_bitbychar(char m)
 /* TODO: this function has many security issues and needs an audit, maybe even a recode */
 void channel_modes(Client *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *chptr)
 {
-	aCtab *tab = &cFlagTab[0];
+	CoreChannelModeTable *tab = &corechannelmodetable[0];
 	char bcbuf[1024];
 	int ismember;
 	int i;
@@ -974,7 +977,7 @@ Channel *get_channel(Client *cptr, char *chname, int flag)
 		chptr->creationtime = MyClient(cptr) ? TStime() : 0;
 		channel = chptr;
 		(void)add_to_channel_hash_table(chname, chptr);
-		IRCstats.channels++;
+		ircstats.channels++;
 		RunHook2(HOOKTYPE_CHANNEL_CREATE, cptr, chptr);
 	}
 	return chptr;
@@ -1125,7 +1128,7 @@ int sub1_from_channel(Channel *chptr)
 	if (chptr->nextch)
 		chptr->nextch->prevch = chptr->prevch;
 	(void)del_from_channel_hash_table(chptr->chname, chptr);
-	IRCstats.channels--;
+	ircstats.channels--;
 	MyFree(chptr);
 	return 1;
 }
@@ -1242,7 +1245,7 @@ int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 		}
 		else
 		{
-			aCtab *tab = &cFlagTab[0];
+			CoreChannelModeTable *tab = &corechannelmodetable[0];
 			int i;
 			int eatparam = 0;
 

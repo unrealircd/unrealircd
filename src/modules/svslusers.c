@@ -70,10 +70,10 @@ CMD_FUNC(m_svslusers)
 		int temp;
 		temp = atoi(parv[2]);
 		if (temp >= 0)
-			IRCstats.global_max = temp;
+			ircstats.global_max = temp;
 		temp = atoi(parv[3]);
 		if (temp >= 0) 
-			IRCstats.me_max = temp;
+			ircstats.me_max = temp;
         }
         return 0;
 }

@@ -84,9 +84,9 @@ struct cfgstruct {
 	char *database;
 };
 
-typedef struct reputationentry ReputationEntry;
+typedef struct ReputationEntry ReputationEntry;
 
-struct reputationentry {
+struct ReputationEntry {
 	ReputationEntry *prev, *next;
 	unsigned short score; /**< score for the user */
 	long last_seen; /**< user last seen (unix timestamp) */

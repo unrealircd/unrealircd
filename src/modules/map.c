@@ -38,7 +38,7 @@ ModuleHeader MOD_HEADER(map)
 MOD_INIT(map)
 {
 	CommandAdd(modinfo->handle, MSG_MAP, m_map, MAXPARA, M_USER);
-	IsupportAdd(modinfo->handle, "MAP", NULL);
+	ISupportAdd(modinfo->handle, "MAP", NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

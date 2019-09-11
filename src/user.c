@@ -677,7 +677,7 @@ void set_isupport_targmax(void)
 			strlcat(buf, ",", sizeof(buf));
 		strlcat(buf, tbuf, sizeof(buf));
 	}
-	IsupportSet(NULL, "TARGMAX", buf);
+	ISupportSet(NULL, "TARGMAX", buf);
 }
 
 /** Called between config test and config run */

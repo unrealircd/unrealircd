@@ -19,8 +19,6 @@
 
 #include "unrealircd.h"
 
-extern ircstats IRCstats;
-
 /* Function to return a group of tokens -- codemastr */
 void strrangetok(char *in, char *out, char tok, short first, short last) {
 	int i = 0, tokcount = 0, j = 0;

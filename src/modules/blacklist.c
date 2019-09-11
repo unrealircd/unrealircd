@@ -48,8 +48,8 @@ struct DNSBL {
 	int *reply;
 };
 
-typedef union _blacklistbackend BlacklistBackend;
-union _blacklistbackend
+typedef union BlacklistBackend BlacklistBackend;
+union BlacklistBackend
 {
 	DNSBL *dns;
 };

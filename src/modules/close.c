@@ -78,7 +78,7 @@ CMD_FUNC(m_close)
 	sendnumeric(sptr, RPL_CLOSEEND, closed);
 	sendto_realops("%s!%s@%s closed %d unknown connections", sptr->name,
 	    sptr->user->username, GetHost(sptr), closed);
-	IRCstats.unknown = 0;
+	ircstats.unknown = 0;
 
 	return 0;
 }

@@ -37,7 +37,7 @@ void set_isupport_extban(void)
 			*m++ = ExtBan_Table[i].flag;
 	}
 	*m = 0;
-	IsupportSetFmt(NULL, "EXTBAN", "~,%s", extbanstr);
+	ISupportSetFmt(NULL, "EXTBAN", "~,%s", extbanstr);
 }
 
 Extban *findmod_by_bantype(char c)

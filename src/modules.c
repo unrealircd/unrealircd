@@ -506,7 +506,7 @@ void FreeModObj(ModuleObject *obj, Module *m)
 		EfunctionDel(obj->object.efunction);
 	}
 	else if (obj->type == MOBJ_ISUPPORT) {
-		IsupportDel(obj->object.isupport);
+		ISupportDel(obj->object.isupport);
 	}
 	else if (obj->type == MOBJ_MODDATA) {
 		ModDataDel(obj->object.moddata);

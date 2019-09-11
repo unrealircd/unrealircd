@@ -491,7 +491,7 @@ void free_conf_channelmodes(struct ChMode *store)
 /* Set configuration, used for set::modes-on-join */
 void conf_channelmodes(char *modes, struct ChMode *store, int warn)
 {
-	aCtab *tab;
+	CoreChannelModeTable *tab;
 	char *params = strchr(modes, ' ');
 	char *parambuf = NULL;
 	char *param = NULL;
@@ -522,7 +522,7 @@ void conf_channelmodes(char *modes, struct ChMode *store, int warn)
 				modes++;
 			continue;
 		}
-		for (tab = &cFlagTab[0]; tab->mode; tab++)
+		for (tab = &corechannelmodetable[0]; tab->mode; tab++)
 		{
 			if (tab->flag == *modes)
 			{
@@ -568,7 +568,7 @@ void conf_channelmodes(char *modes, struct ChMode *store, int warn)
 
 void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size)
 {
-	aCtab *tab;
+	CoreChannelModeTable *tab;
 	int i;
 
 	if (!(mbuf_size && pbuf_size))
@@ -577,7 +577,7 @@ void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, 
 	*pbuf = 0;
 	*mbuf++ = '+';
 	if (--mbuf_size == 0) return;
-	for (tab = &cFlagTab[0]; tab->mode; tab++)
+	for (tab = &corechannelmodetable[0]; tab->mode; tab++)
 	{
 		if (modes->mode & tab->mode)
 		{

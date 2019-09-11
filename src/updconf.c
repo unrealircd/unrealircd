@@ -25,8 +25,8 @@ struct Upgrade
 
 struct Upgrade upgrade;
 
-typedef struct flagmapping FlagMapping;
-struct flagmapping
+typedef struct FlagMapping FlagMapping;
+struct FlagMapping
 {
 	char shortflag;
 	char *longflag;

@@ -85,7 +85,7 @@ MOD_INIT(whox)
 		config_warn("You cannot load both m_whox and m_who. You should ONLY load the m_whox module.");
 		return MOD_FAILED;
 	}
-	IsupportAdd(modinfo->handle, "WHOX", NULL);
+	ISupportAdd(modinfo->handle, "WHOX", NULL);
 	return MOD_SUCCESS;
 }
 

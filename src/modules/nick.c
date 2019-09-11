@@ -1377,7 +1377,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		strlcpy(user->username, username, USERLEN+1);
 	}
 	SetClient(sptr);
-	IRCstats.clients++;
+	ircstats.clients++;
 	if (sptr->srvptr && sptr->srvptr->serv)
 		sptr->srvptr->serv->users++;
 
@@ -1394,8 +1394,8 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 
 		list_move(&sptr->lclient_node, &lclient_list);
 
-		IRCstats.unknown--;
-		IRCstats.me_clients++;
+		ircstats.unknown--;
+		ircstats.me_clients++;
 
 		if (IsSecure(sptr))
 		{
@@ -1422,8 +1422,8 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		    me.name, version, umodestring, cmodestring);
 		RunHook2(HOOKTYPE_WELCOME, sptr, 4);
 
-		for (i = 0; IsupportStrings[i]; i++)
-			sendnumeric(sptr, RPL_ISUPPORT, IsupportStrings[i]);
+		for (i = 0; ISupportStrings[i]; i++)
+			sendnumeric(sptr, RPL_ISUPPORT, ISupportStrings[i]);
 
 		RunHook2(HOOKTYPE_WELCOME, sptr, 5);
 
@@ -1505,7 +1505,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 	}
 	if (sptr->umodes & UMODE_INVISIBLE)
 	{
-		IRCstats.invisible++;
+		ircstats.invisible++;
 	}
 
 	if (virthost && umode)

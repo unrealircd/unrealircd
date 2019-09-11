@@ -514,8 +514,8 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define ID(sptr)	(*sptr->id ? sptr->id : sptr->name)
 
 /** Union for moddata objects */
-typedef union _moddata ModData;
-union _moddata
+typedef union ModData ModData;
+union ModData
 {
         int i;
         long l;
@@ -840,7 +840,8 @@ struct SpamExcept {
 };
 
 /** IRC Statistics, used for /LUSERS */
-typedef struct ircstatsx {
+typedef struct IRCStatistics IRCStatistics;
+struct IRCStatistics {
 	int  clients;		/* total */
 	int  invisible;		/* invisible */
 	unsigned short  servers;		/* servers */
@@ -851,10 +852,10 @@ typedef struct ircstatsx {
 	unsigned short  me_servers;	/* my servers */
 	int  me_max;		/* local max */
 	int  global_max;	/* global max */
-} ircstats;
+};
 
 /** The /LUSERS stats information */
-extern MODVAR ircstats IRCstats;
+extern MODVAR IRCStatistics ircstats;
 
 typedef int (*CmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 typedef int (*AliasCmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
@@ -1551,7 +1552,6 @@ struct Link {
 		Channel *chptr;
 		ListStruct *aconf;
 		Watch *wptr;
-		aName *whowas;
 		char *cp;
 		struct {
 			char *banstr;
@@ -1872,12 +1872,13 @@ struct ThrottlingBucket
 	char count;
 };
 
-typedef struct {
-	long mode;
-	char flag;
-	unsigned  halfop : 1;       /* 1 = yes 0 = no */
-	unsigned  parameters : 1;
-} aCtab;
+typedef struct CoreChannelModeTable CoreChannelModeTable;
+struct CoreChannelModeTable {
+	long mode;			/**< Mode value (which bit will be set) */
+	char flag;			/**< Mode letter (eg: 't') */
+	unsigned halfop : 1;		/**< May halfop set this mode? 1/0 */
+	unsigned parameters : 1;	/**< Mode requires a parameter? 1/0 */
+};
 
 /** Parse channel mode */
 typedef struct ParseMode ParseMode;
@@ -1917,7 +1918,7 @@ struct MaxTarget {
 };
 #define MAXTARGETS_MAX	1000000 /* used for 'max' */
 
-#define VERIFY_OPERCOUNT(clnt,tag) { if (IRCstats.operators < 0) verify_opercount(clnt,tag); } while(0)
+#define VERIFY_OPERCOUNT(clnt,tag) { if (ircstats.operators < 0) verify_opercount(clnt,tag); } while(0)
 
 #define MARK_AS_OFFICIAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL, 1);  } while(0)
 

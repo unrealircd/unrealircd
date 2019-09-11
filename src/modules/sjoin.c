@@ -767,7 +767,7 @@ getnick:
 
 	if (merge && !nomode)
 	{
-		aCtab *acp;
+		CoreChannelModeTable *acp;
 		Mode oldmode; /**< The old mode (OUR mode) */
 
 		/* Copy current mode to oldmode (need to duplicate all extended mode params too..) */
@@ -835,7 +835,7 @@ getnick:
 			queue_s = 1;
 		}
 		/* Add single char modes... */
-		for (acp = cFlagTab; acp->mode; acp++)
+		for (acp = corechannelmodetable; acp->mode; acp++)
 		{
 			if ((oldmode.mode & acp->mode) && !(chptr->mode.mode & acp->mode) && !acp->parameters)
 			{
@@ -858,7 +858,7 @@ getnick:
 		if (queue_c)
 			Addsingle('c');
 
-		for (acp = cFlagTab; acp->mode; acp++)
+		for (acp = corechannelmodetable; acp->mode; acp++)
 		{
 			if (!(oldmode.mode & acp->mode) && (chptr->mode.mode & acp->mode) && !acp->parameters)
 			{

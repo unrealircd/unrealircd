@@ -33,7 +33,6 @@ extern void s_die();
 static char buf[BUFSIZE];
 
 MODVAR int  max_connection_count = 1, max_client_count = 1;
-extern ircstats IRCstats;
 extern int do_garbage_collect;
 /* We need all these for cached MOTDs -- codemastr */
 extern char *buildid;
@@ -145,9 +144,9 @@ void send_version(Client* sptr, int reply)
 {
 	int i;
 
-	for (i = 0; IsupportStrings[i]; i++)
+	for (i = 0; ISupportStrings[i]; i++)
 	{
-		sendnumeric(sptr, reply, IsupportStrings[i]);
+		sendnumeric(sptr, reply, ISupportStrings[i]);
 	}
 }
 
@@ -199,7 +198,7 @@ char *num = NULL;
  */
 void send_proto(Client *cptr, ConfigItem_link *aconf)
 {
-	Isupport *prefix = IsupportFind("PREFIX");
+	ISupport *prefix = ISupportFind("PREFIX");
 
 	/* CAUTION: If adding a token to an existing PROTOCTL line below,
 	 *          then ensure that MAXPARA is not reached!
@@ -505,7 +504,7 @@ EVENT(save_tunefile)
 		return;
 	}
 	fprintf(tunefile, "0\n");
-	fprintf(tunefile, "%d\n", IRCstats.me_max);
+	fprintf(tunefile, "%d\n", ircstats.me_max);
 	fclose(tunefile);
 }
 
@@ -525,7 +524,7 @@ void load_tunefile(void)
 	if (!fgets(buf, sizeof(buf), tunefile))
 	    fprintf(stderr, "Warning: error while reading the peak user count from the tunefile%s%s\n",
 		errno? ": ": "", errno? strerror(errno): "");
-	IRCstats.me_max = atol(buf);
+	ircstats.me_max = atol(buf);
 	fclose(tunefile);
 }
 

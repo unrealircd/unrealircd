@@ -74,7 +74,7 @@ CMD_FUNC(m_svsnoop)
 				{
 					if (IsOper(acptr))
 					{
-						IRCstats.operators--;
+						ircstats.operators--;
 						VERIFY_OPERCOUNT(acptr, "svsnoop");
 					}
 

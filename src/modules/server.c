@@ -730,7 +730,7 @@ CMD_FUNC(m_server_remote)
 	if (IsULine(sptr)
 	    || (Find_uline(acptr->name)))
 		acptr->flags |= FLAGS_ULINE;
-	IRCstats.servers++;
+	ircstats.servers++;
 	(void)find_or_add(acptr->name);
 	add_client_to_list(acptr);
 	(void)add_to_client_hash_table(acptr->name, acptr);
@@ -919,9 +919,9 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 	/* Set up server structure */
 	free_pending_net(cptr);
 	SetServer(cptr);
-	IRCstats.me_servers++;
-	IRCstats.servers++;
-	IRCstats.unknown--;
+	ircstats.me_servers++;
+	ircstats.servers++;
+	ircstats.unknown--;
 	list_move(&cptr->client_node, &global_server_list);
 	list_move(&cptr->lclient_node, &lclient_list);
 	list_add(&cptr->special_node, &server_list);
@@ -1096,7 +1096,7 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 	dcc_sync(cptr);
 
 	sendto_one(cptr, NULL, "NETINFO %i %lld %i %s 0 0 0 :%s",
-	    IRCstats.global_max, (long long)TStime(), UnrealProtocol,
+	    ircstats.global_max, (long long)TStime(), UnrealProtocol,
 	    CLOAK_KEYCRC,
 	    ircnetwork);
 

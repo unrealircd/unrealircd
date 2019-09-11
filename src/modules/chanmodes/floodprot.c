@@ -49,18 +49,18 @@ struct {
 #define MODEF_MAX_UNSETTIME		cfg.modef_max_unsettime
 #define MODEF_BOOT_DELAY		cfg.modef_boot_delay
 
-typedef struct SChanFloodProt ChanFloodProt;
-typedef struct SRemoveFld RemoveFld;
+typedef struct ChannelFloodProtection ChannelFloodProtection;
+typedef struct RemoveChannelModeTimer RemoveChannelModeTimer;
 
-struct SRemoveFld {
-	struct SRemoveFld *prev, *next;
+struct RemoveChannelModeTimer {
+	struct RemoveChannelModeTimer *prev, *next;
 	Channel *chptr;
 	char m; /* mode to be removed */
 	time_t when; /* scheduled at */
 };
 
-typedef struct UserFld aUserFld;
-struct UserFld {
+typedef struct MemberFlood MemberFlood;
+struct MemberFlood {
 	unsigned short nmsg;
 	unsigned short nmsg_repeat;
 	time_t firstmsg;
@@ -74,7 +74,7 @@ struct UserFld {
 #define MAXCHMODEFACTIONS 8
 
 /** Per-channel flood protection settings and counters */
-struct SChanFloodProt {
+struct ChannelFloodProtection {
 	unsigned short	per; /**< setting: per <XX> seconds */
 	time_t		timer[NUMFLD]; /**< runtime: timers */
 	unsigned short	counter[NUMFLD]; /**< runtime: counters */
@@ -88,7 +88,7 @@ struct SChanFloodProt {
 ModDataInfo *mdflood = NULL;
 Cmode_t EXTMODE_FLOODLIMIT = 0L;
 static int timedban_available = 0; /**< Set to 1 if extbans/timedban module is loaded. */
-RemoveFld *removefld_list = NULL;
+RemoveChannelModeTimer *removechannelmodetimer_list = NULL;
 char *floodprot_msghash_key = NULL;
 
 #define IsFloodLimit(x)	((x)->mode.extmode & EXTMODE_FLOODLIMIT)
@@ -101,9 +101,9 @@ int floodprot_config_run(ConfigFile *, ConfigEntry *, int);
 void floodprottimer_del(Channel *chptr, char mflag);
 void floodprottimer_stopchantimers(Channel *chptr);
 static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r);
-static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b);
+static int compare_floodprot_modes(ChannelFloodProtection *a, ChannelFloodProtection *b);
 static int do_floodprot(Channel *chptr, int what);
-char *channel_modef_string(ChanFloodProt *x, char *str);
+char *channel_modef_string(ChannelFloodProtection *x, char *str);
 int  check_for_chan_flood(Client *sptr, Channel *chptr, char *text);
 void do_floodprot_action(Channel *chptr, int what, char *text);
 void floodprottimer_add(Channel *chptr, char mflag, time_t when);
@@ -124,9 +124,9 @@ int floodprot_knock(Client *sptr, Channel *chptr, MessageTag *mtags, char *comme
 int floodprot_local_nickchange(Client *sptr, char *oldnick);
 int floodprot_remote_nickchange(Client *cptr, Client *sptr, char *oldnick);
 int floodprot_chanmode_del(Channel *chptr, int m);
-void userfld_free(ModData *md);
+void memberflood_free(ModData *md);
 int floodprot_stats(Client *sptr, char *flag);
-void floodprot_free_removefld_list(ModData *m);
+void floodprot_free_removechannelmodetimer_list(ModData *m);
 void floodprot_free_msghash_key(ModData *m);
 
 MOD_TEST(floodprot)
@@ -157,13 +157,13 @@ MOD_INIT(floodprot)
 
 	init_config();
 
-	LoadPersistentPointer(modinfo, removefld_list, floodprot_free_removefld_list);
+	LoadPersistentPointer(modinfo, removechannelmodetimer_list, floodprot_free_removechannelmodetimer_list);
 	LoadPersistentPointer(modinfo, floodprot_msghash_key, floodprot_free_msghash_key);
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "floodprot";
 	mreq.type = MODDATATYPE_MEMBERSHIP;
-	mreq.free = userfld_free;
+	mreq.free = memberflood_free;
 	mdflood = ModDataAdd(modinfo->handle, mreq);
 	if (!mdflood)
 	        abort();
@@ -197,7 +197,7 @@ MOD_LOAD(floodprot)
 
 MOD_UNLOAD(floodprot)
 {
-	SavePersistentPointer(modinfo, removefld_list);
+	SavePersistentPointer(modinfo, removechannelmodetimer_list);
 	return MOD_SUCCESS;
 }
 
@@ -312,7 +312,7 @@ int cmodef_is_ok(Client *sptr, Channel *chptr, char mode, char *param, int type,
 	} else
 	if (type == EXCHK_PARAM)
 	{
-		ChanFloodProt newf;
+		ChannelFloodProtection newf;
 		int xxi, xyi, xzi, hascolon;
 		char *xp;
 
@@ -539,7 +539,7 @@ invalidsyntax:
 
 void *cmodef_put_param(void *fld_in, char *param)
 {
-	ChanFloodProt *fld = (ChanFloodProt *)fld_in;
+	ChannelFloodProtection *fld = (ChannelFloodProtection *)fld_in;
 	char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
 	int v;
 	unsigned short warnings = 0, breakit;
@@ -550,7 +550,7 @@ void *cmodef_put_param(void *fld_in, char *param)
 	if (!fld)
 	{
 		/* Need to create one */
-		fld = MyMallocEx(sizeof(ChanFloodProt));
+		fld = MyMallocEx(sizeof(ChannelFloodProtection));
 	}
 
 	/* always reset settings (l, a, r) */
@@ -566,13 +566,13 @@ void *cmodef_put_param(void *fld_in, char *param)
 	p2 = strchr(xbuf+1, ']');
 	if (!p2)
 	{
-		memset(fld, 0, sizeof(ChanFloodProt));
+		memset(fld, 0, sizeof(ChannelFloodProtection));
 		return fld; /* FAIL */
 	}
 	*p2 = '\0';
 	if (*(p2+1) != ':')
 	{
-		memset(fld, 0, sizeof(ChanFloodProt));
+		memset(fld, 0, sizeof(ChannelFloodProtection));
 		return fld; /* FAIL */
 	}
 	breakit = 0;
@@ -674,13 +674,13 @@ void *cmodef_put_param(void *fld_in, char *param)
 	p2++;
 	if (*p2 != ':')
 	{
-		memset(fld, 0, sizeof(ChanFloodProt));
+		memset(fld, 0, sizeof(ChannelFloodProtection));
 		return fld; /* FAIL */
 	}
 	p2++;
 	if (!*p2)
 	{
-		memset(fld, 0, sizeof(ChanFloodProt));
+		memset(fld, 0, sizeof(ChannelFloodProtection));
 		return fld; /* FAIL */
 	}
 	v = atoi(p2);
@@ -704,7 +704,7 @@ void *cmodef_put_param(void *fld_in, char *param)
 			breakit=0;
 	if (breakit)
 	{
-		memset(fld, 0, sizeof(ChanFloodProt));
+		memset(fld, 0, sizeof(ChannelFloodProtection));
 		return fld; /* FAIL */
 	}
 
@@ -713,7 +713,7 @@ void *cmodef_put_param(void *fld_in, char *param)
 
 char *cmodef_get_param(void *r_in)
 {
-	ChanFloodProt *r = (ChanFloodProt *)r_in;
+	ChannelFloodProtection *r = (ChannelFloodProtection *)r_in;
 	static char retbuf[512];
 
 	if (!r)
@@ -731,7 +731,7 @@ char *cmodef_conv_param(char *param_in, Client *cptr)
 	static char retbuf[256];
 	char param[256], *p;
 	int num, t, fail = 0;
-	ChanFloodProt newf;
+	ChannelFloodProtection newf;
 	int xxi, xyi, xzi, hascolon;
 	char *xp;
 	int localclient = (!cptr || MyClient(cptr)) ? 1 : 0;
@@ -953,17 +953,17 @@ void cmodef_free_param(void *r)
 
 void *cmodef_dup_struct(void *r_in)
 {
-	ChanFloodProt *r = (ChanFloodProt *)r_in;
-	ChanFloodProt *w = MyMallocEx(sizeof(ChanFloodProt));
+	ChannelFloodProtection *r = (ChannelFloodProtection *)r_in;
+	ChannelFloodProtection *w = MyMallocEx(sizeof(ChannelFloodProtection));
 
-	memcpy(w, r, sizeof(ChanFloodProt));
+	memcpy(w, r, sizeof(ChannelFloodProtection));
 	return (void *)w;
 }
 
 int cmodef_sjoin_check(Channel *chptr, void *ourx, void *theirx)
 {
-	ChanFloodProt *our = (ChanFloodProt *)ourx;
-	ChanFloodProt *their = (ChanFloodProt *)theirx;
+	ChannelFloodProtection *our = (ChannelFloodProtection *)ourx;
+	ChannelFloodProtection *their = (ChannelFloodProtection *)theirx;
 	char *x;
 	int i;
 
@@ -1043,7 +1043,7 @@ char tmpbuf[16], *p2 = tmpbuf;
 /** returns the channelmode +f string (ie: '[5k,40j]:10').
  * 'retbuf' is suggested to be of size 512, which is more than X times the maximum (for safety).
  */
-char *channel_modef_string(ChanFloodProt *x, char *retbuf)
+char *channel_modef_string(ChannelFloodProtection *x, char *retbuf)
 {
 	char *p = retbuf;
 
@@ -1138,12 +1138,12 @@ int floodprot_remote_nickchange(Client *cptr, Client *sptr, char *oldnick)
 
 int floodprot_chanmode_del(Channel *chptr, int modechar)
 {
-	ChanFloodProt *chp;
+	ChannelFloodProtection *chp;
 
 	if (!IsFloodLimit(chptr))
 		return 0;
 
-	chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
+	chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
 	if (!chp)
 		return 0;
 
@@ -1183,8 +1183,8 @@ int floodprot_chanmode_del(Channel *chptr, int modechar)
 int check_for_chan_flood(Client *sptr, Channel *chptr, char *text)
 {
 	MembershipL *lp;
-	ChanFloodProt *chp;
-	aUserFld *userfld;
+	ChannelFloodProtection *chp;
+	MemberFlood *memberflood;
 	uint64_t msghash;
 	unsigned char is_flooding_text=0, is_flooding_repeat=0;
 
@@ -1194,7 +1194,7 @@ int check_for_chan_flood(Client *sptr, Channel *chptr, char *text)
 	if (!(lp = (MembershipL *)find_membership_link(sptr->user->channel, chptr)))
 		return 0; /* not in channel */
 
-	chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
+	chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
 
 	if (!chp || !(chp->limit[FLD_TEXT] || chp->limit[FLD_REPEAT]))
 		return 0;
@@ -1202,10 +1202,10 @@ int check_for_chan_flood(Client *sptr, Channel *chptr, char *text)
 	if (moddata_membership(lp, mdflood).ptr == NULL)
 	{
 		/* Alloc a new entry if it doesn't exist yet */
-		moddata_membership(lp, mdflood).ptr = MyMallocEx(sizeof(aUserFld));
+		moddata_membership(lp, mdflood).ptr = MyMallocEx(sizeof(MemberFlood));
 	}
 
-	userfld = (aUserFld *)moddata_membership(lp, mdflood).ptr;
+	memberflood = (MemberFlood *)moddata_membership(lp, mdflood).ptr;
 
 	/* Anti-repeat ('r') */
 	if (chp->limit[FLD_REPEAT])
@@ -1213,36 +1213,36 @@ int check_for_chan_flood(Client *sptr, Channel *chptr, char *text)
 		/* if current - firstmsgtime >= mode.per, then reset,
 		 * if nummsg > mode.msgs then kick/ban
 		 */
-		if ((TStime() - userfld->firstmsg) >= chp->per)
+		if ((TStime() - memberflood->firstmsg) >= chp->per)
 		{
 			/* reset */
-			userfld->firstmsg = TStime();
-			userfld->nmsg = 1;
-			userfld->nmsg_repeat = 1;
-			userfld->lastmsg = gen_floodprot_msghash(text);
-			userfld->prevmsg = 0;
+			memberflood->firstmsg = TStime();
+			memberflood->nmsg = 1;
+			memberflood->nmsg_repeat = 1;
+			memberflood->lastmsg = gen_floodprot_msghash(text);
+			memberflood->prevmsg = 0;
 			return 0; /* forget about it.. */
 		}
 
 		msghash = gen_floodprot_msghash(text);
-		if (userfld->lastmsg)
+		if (memberflood->lastmsg)
 		{
-			if ((userfld->lastmsg == msghash) || (userfld->prevmsg == msghash))
+			if ((memberflood->lastmsg == msghash) || (memberflood->prevmsg == msghash))
 			{
-				userfld->nmsg_repeat++;
-				if (userfld->nmsg_repeat > chp->limit[FLD_REPEAT])
+				memberflood->nmsg_repeat++;
+				if (memberflood->nmsg_repeat > chp->limit[FLD_REPEAT])
 					is_flooding_repeat = 1;
 			}
-			userfld->prevmsg = userfld->lastmsg;
+			memberflood->prevmsg = memberflood->lastmsg;
 		}
-		userfld->lastmsg = msghash;
+		memberflood->lastmsg = msghash;
 	}
 
 	if (chp->limit[FLD_TEXT])
 	{
 		/* increase msgs */
-		userfld->nmsg++;
-		if (userfld->nmsg > chp->limit[FLD_TEXT])
+		memberflood->nmsg++;
+		if (memberflood->nmsg > chp->limit[FLD_TEXT])
 			is_flooding_text = 1;
 	}
 
@@ -1303,11 +1303,11 @@ int check_for_chan_flood(Client *sptr, Channel *chptr, char *text)
 	return 0;
 }
 
-RemoveFld *floodprottimer_find(Channel *chptr, char mflag)
+RemoveChannelModeTimer *floodprottimer_find(Channel *chptr, char mflag)
 {
-	RemoveFld *e;
+	RemoveChannelModeTimer *e;
 
-	for (e=removefld_list; e; e=e->next)
+	for (e=removechannelmodetimer_list; e; e=e->next)
 	{
 		if ((e->chptr == chptr) && (e->m == mflag))
 			return e;
@@ -1337,9 +1337,9 @@ void strccat(char *s, char c)
  */
 void floodprottimer_add(Channel *chptr, char mflag, time_t when)
 {
-	RemoveFld *e = NULL;
+	RemoveChannelModeTimer *e = NULL;
 	unsigned char add=1;
-	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
+	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
 
 	if (strchr(chp->timers_running, mflag))
 	{
@@ -1362,20 +1362,20 @@ void floodprottimer_add(Channel *chptr, char mflag, time_t when)
 	}
 
 	if (add)
-		e = MyMallocEx(sizeof(RemoveFld));
+		e = MyMallocEx(sizeof(RemoveChannelModeTimer));
 
 	e->chptr = chptr;
 	e->m = mflag;
 	e->when = when;
 
 	if (add)
-		AddListItem(e, removefld_list);
+		AddListItem(e, removechannelmodetimer_list);
 }
 
 void floodprottimer_del(Channel *chptr, char mflag)
 {
-	RemoveFld *e;
-	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
+	RemoveChannelModeTimer *e;
+	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
 
 	if (chp && !strchr(chp->timers_running, mflag))
 		return; /* nothing to remove.. */
@@ -1383,7 +1383,7 @@ void floodprottimer_del(Channel *chptr, char mflag)
 	if (!e)
 		return;
 
-	DelListItem(e, removefld_list);
+	DelListItem(e, removechannelmodetimer_list);
 	MyFree(e);
 
 	if (chp)
@@ -1400,12 +1400,12 @@ void floodprottimer_del(Channel *chptr, char mflag)
 
 EVENT(modef_event)
 {
-	RemoveFld *e, *e_next;
+	RemoveChannelModeTimer *e, *e_next;
 	time_t now;
 
 	now = TStime();
 
-	for (e = removefld_list; e; e = e_next)
+	for (e = removechannelmodetimer_list; e; e = e_next)
 	{
 		e_next = e->next;
 		if (e->when <= now)
@@ -1437,7 +1437,7 @@ EVENT(modef_event)
 			}
 
 			/* And delete... */
-			DelListItem(e, removefld_list);
+			DelListItem(e, removechannelmodetimer_list);
 			MyFree(e);
 		} else {
 #ifdef NEWFLDDBG
@@ -1450,14 +1450,14 @@ EVENT(modef_event)
 
 void floodprottimer_stopchantimers(Channel *chptr)
 {
-	RemoveFld *e, *e_next;
+	RemoveChannelModeTimer *e, *e_next;
 
-	for (e = removefld_list; e; e = e_next)
+	for (e = removechannelmodetimer_list; e; e = e_next)
 	{
 		e_next = e->next;
 		if (e->chptr == chptr)
 		{
-			DelListItem(e, removefld_list);
+			DelListItem(e, removechannelmodetimer_list);
 			MyFree(e);
 		}
 	}
@@ -1465,7 +1465,7 @@ void floodprottimer_stopchantimers(Channel *chptr)
 
 int do_floodprot(Channel *chptr, int what)
 {
-	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
+	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
 
 	if (!chp || !chp->limit[what]) /* no +f or not restricted */
 		return 0;
@@ -1498,7 +1498,7 @@ void do_floodprot_action(Channel *chptr, int what, char *text)
 	char m;
 	int mode = 0;
 	Cmode_t extmode = 0;
-	ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
+	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
 
 	m = chp->action[what];
 	if (!m)
@@ -1597,12 +1597,12 @@ uint64_t gen_floodprot_msghash(char *text)
 
 // FIXME: REMARK: make sure you can only do a +f/-f once (latest in line wins).
 
-/* Checks if 2 ChanFloodProt modes (chmode +f) are different.
+/* Checks if 2 ChannelFloodProtection modes (chmode +f) are different.
  * This is a bit more complicated than 1 simple memcmp(a,b,..) because
  * counters are also stored in this struct so we have to do
  * it manually :( -- Syzop.
  */
-static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
+static int compare_floodprot_modes(ChannelFloodProtection *a, ChannelFloodProtection *b)
 {
 	if (memcmp(a->limit, b->limit, sizeof(a->limit)) ||
 	    memcmp(a->action, b->action, sizeof(a->action)) ||
@@ -1612,9 +1612,9 @@ static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
 		return 0;
 }
 
-void userfld_free(ModData *md)
+void memberflood_free(ModData *md)
 {
-	aUserFld *userfld;
+	MemberFlood *memberflood;
 	/* We don't have any struct members (anymore) that need freeing */
 	safefree(md->ptr);
 }
@@ -1627,11 +1627,11 @@ int floodprot_stats(Client *sptr, char *flag)
 }
 
 /** Admin unloading the floodprot module for good. Bad. */
-void floodprot_free_removefld_list(ModData *m)
+void floodprot_free_removechannelmodetimer_list(ModData *m)
 {
-	RemoveFld *e, *e_next;
+	RemoveChannelModeTimer *e, *e_next;
 
-	for (e=removefld_list; e; e=e_next)
+	for (e=removechannelmodetimer_list; e; e=e_next)
 	{
 		e_next = e->next;
 		MyFree(e);

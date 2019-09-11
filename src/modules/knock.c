@@ -38,7 +38,7 @@ ModuleHeader MOD_HEADER(knock)
 MOD_INIT(knock)
 {
 	CommandAdd(modinfo->handle, MSG_KNOCK, m_knock, 2, M_USER);
-	IsupportAdd(modinfo->handle, "KNOCK", NULL);
+	ISupportAdd(modinfo->handle, "KNOCK", NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
