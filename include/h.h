@@ -36,7 +36,6 @@ extern char *getreply(int);
 #define err_str(x) getreply(x)
 extern MODVAR Member *freemember;
 extern MODVAR Membership *freemembership;
-extern MODVAR MembershipL *freemembershipL;
 extern MODVAR Client me;
 extern MODVAR Channel *channel;
 extern MODVAR ModData localvar_moddata[MODDATA_MAX_LOCALVAR];

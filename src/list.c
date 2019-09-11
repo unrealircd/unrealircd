@@ -41,7 +41,6 @@ MODVAR int  freelinks = 0;
 MODVAR Link *freelink = NULL;
 MODVAR Member *freemember = NULL;
 MODVAR Membership *freemembership = NULL;
-MODVAR MembershipL *freemembershipL = NULL;
 MODVAR int  numclients = 0;
 
 /* unless documented otherwise, these are all local-only, except client_list. */

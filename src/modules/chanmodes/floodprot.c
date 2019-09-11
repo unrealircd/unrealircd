@@ -1182,7 +1182,7 @@ int floodprot_chanmode_del(Channel *chptr, int modechar)
 
 int check_for_chan_flood(Client *sptr, Channel *chptr, char *text)
 {
-	MembershipL *lp;
+	Membership *mb;
 	ChannelFloodProtection *chp;
 	MemberFlood *memberflood;
 	uint64_t msghash;
@@ -1191,7 +1191,7 @@ int check_for_chan_flood(Client *sptr, Channel *chptr, char *text)
 	if (ValidatePermissionsForPath("channel:override:flood",sptr,NULL,chptr,NULL) || !IsFloodLimit(chptr) || is_skochanop(sptr, chptr))
 		return 0;
 
-	if (!(lp = (MembershipL *)find_membership_link(sptr->user->channel, chptr)))
+	if (!(mb = find_membership_link(sptr->user->channel, chptr)))
 		return 0; /* not in channel */
 
 	chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
@@ -1199,13 +1199,13 @@ int check_for_chan_flood(Client *sptr, Channel *chptr, char *text)
 	if (!chp || !(chp->limit[FLD_TEXT] || chp->limit[FLD_REPEAT]))
 		return 0;
 
-	if (moddata_membership(lp, mdflood).ptr == NULL)
+	if (moddata_membership(mb, mdflood).ptr == NULL)
 	{
 		/* Alloc a new entry if it doesn't exist yet */
-		moddata_membership(lp, mdflood).ptr = MyMallocEx(sizeof(MemberFlood));
+		moddata_membership(mb, mdflood).ptr = MyMallocEx(sizeof(MemberFlood));
 	}
 
-	memberflood = (MemberFlood *)moddata_membership(lp, mdflood).ptr;
+	memberflood = (MemberFlood *)moddata_membership(mb, mdflood).ptr;
 
 	/* Anti-repeat ('r') */
 	if (chp->limit[FLD_REPEAT])

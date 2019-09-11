@@ -140,10 +140,8 @@ Membership *find_membership_link(Membership *lp, Channel *ptr)
 		}
 	return NULL;
 }
-/* 
- * Member functions
-*/
-Member	*make_member(void)
+
+static Member *make_member(void)
 {
 	Member *lp;
 	unsigned int	i;
@@ -165,7 +163,7 @@ Member	*make_member(void)
 	return lp;
 }
 
-void	free_member(Member *lp)
+static void free_member(Member *lp)
 {
 	if (!lp)
 		return;
@@ -177,79 +175,39 @@ void	free_member(Member *lp)
 	freemember = lp;
 }
 
-/* 
- * Membership functions
-*/
-Membership	*make_membership(int local)
+static Membership *make_membership(void)
 {
-	Membership *lp = NULL;
-	MembershipL *lp2 = NULL;
+	Membership *m = NULL;
 	unsigned int	i;
 
-	if (!local)
+	if (freemembership == NULL)
 	{
-		if (freemembership == NULL)
+		for (i = 1; i <= (4072/sizeof(Membership)); i++)
 		{
-			for (i = 1; i <= (4072/sizeof(Membership)); i++)
-			{
-				lp = MyMallocEx(sizeof(Membership));
-				lp->next = freemembership;
-				freemembership = lp;
-			}
-			lp = freemembership;
-			freemembership = lp->next;
+			m = MyMallocEx(sizeof(Membership));
+			m->next = freemembership;
+			freemembership = m;
 		}
-		else
-		{
-			lp = freemembership;
-			freemembership = freemembership->next;
-		}
-		memset(lp, 0, sizeof(Membership));
+		m = freemembership;
+		freemembership = m->next;
 	}
 	else
 	{
-		if (freemembershipL == NULL)
-		{
-			for (i = 1; i <= (4072/sizeof(MembershipL)); i++)
-			{
-				lp2 = MyMallocEx(sizeof(MembershipL));
-				lp2->next = (Membership *) freemembershipL;
-				freemembershipL = lp2;
-			}
-			lp2 = freemembershipL;
-			freemembershipL = (MembershipL *) lp2->next;
-		}
-		else
-		{
-			lp2 = freemembershipL;
-			freemembershipL = (MembershipL *) freemembershipL->next;
-		}
-		memset(lp2, 0, sizeof(MembershipL));
+		m = freemembership;
+		freemembership = freemembership->next;
 	}
-	if (local)
-	{
-		return ((Membership *) lp2);
-	}
-	return lp;
+	memset(m, 0, sizeof(Membership));
+	return m;
 }
 
-void	free_membership(Membership *lp, int local)
+static void free_membership(Membership *m)
 {
-	if (lp)
+	if (m)
 	{
-		moddata_free_membership(lp);
-		if (!local)
-		{
-			memset(lp, 0, sizeof(Membership));
-			lp->next = freemembership;
-			freemembership = lp;
-		}
-		else
-		{
-			memset(lp, 0, sizeof(Membership));
-			lp->next = (Membership *) freemembershipL;
-			freemembershipL = (MembershipL *) lp;
-		}
+		moddata_free_membership(m);
+		memset(m, 0, sizeof(Membership));
+		m->next = freemembership;
+		freemembership = m;
 	}
 }
 
@@ -539,25 +497,23 @@ Ban *is_banned_with_nick(Client *sptr, Channel *chptr, int type, char *nick, cha
  */
 void add_user_to_channel(Channel *chptr, Client *who, int flags)
 {
-	Member *ptr;
-	Membership *ptr2;
+	Member *m;
+	Membership *mb;
 
 	if (who->user)
 	{
-		ptr = make_member();
-		ptr->cptr = who;
-		ptr->flags = flags;
-		ptr->next = chptr->members;
-		chptr->members = ptr;
+		m = make_member();
+		m->cptr = who;
+		m->flags = flags;
+		m->next = chptr->members;
+		chptr->members = m;
 		chptr->users++;
 
-		ptr2 = make_membership(MyUser(who));
-		/* we should make this more efficient --stskeeps 
-		   is now, as we only use it in membership */
-		ptr2->chptr = chptr;
-		ptr2->next = who->user->channel;
-		ptr2->flags = flags;
-		who->user->channel = ptr2;
+		mb = make_membership();
+		mb->chptr = chptr;
+		mb->next = who->user->channel;
+		mb->flags = flags;
+		who->user->channel = mb;
 		who->user->joined++;
 		RunHook2(HOOKTYPE_JOIN_DATA,who,chptr);
 	}
@@ -571,29 +527,29 @@ void add_user_to_channel(Channel *chptr, Client *who, int flags)
  */
 int remove_user_from_channel(Client *sptr, Channel *chptr)
 {
-	Member **curr;
-	Membership **curr2;
-	Member *tmp;
-	Membership *tmp2;
+	Member **m;
+	Member *m2;
+	Membership **mb;
+	Membership *mb2;
 
 	/* Update chptr->members list */
-	for (curr = &chptr->members; (tmp = *curr); curr = &tmp->next)
+	for (m = &chptr->members; (m2 = *m); m = &m2->next)
 	{
-		if (tmp->cptr == sptr)
+		if (m2->cptr == sptr)
 		{
-			*curr = tmp->next;
-			free_member(tmp);
+			*m = m2->next;
+			free_member(m2);
 			break;
 		}
 	}
 
 	/* Update sptr->user->channel list */
-	for (curr2 = &sptr->user->channel; (tmp2 = *curr2); curr2 = &tmp2->next)
+	for (mb = &sptr->user->channel; (mb2 = *mb); mb = &mb2->next)
 	{
-		if (tmp2->chptr == chptr)
+		if (mb2->chptr == chptr)
 		{
-			*curr2 = tmp2->next;
-			free_membership(tmp2, MyUser(sptr));
+			*mb = mb2->next;
+			free_membership(mb2);
 			break;
 		}
 	}

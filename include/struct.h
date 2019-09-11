@@ -136,7 +136,6 @@ typedef struct RealCommand RealCommand;
 typedef struct CommandOverride CommandOverride;
 typedef struct Member Member;
 typedef struct Membership Membership;
-typedef struct MembershipL MembershipL;
 
 typedef enum OperClassEntryType { OPERCLASSENTRY_ALLOW=1, OPERCLASSENTRY_DENY=2} OperClassEntryType;
 
@@ -1675,15 +1674,6 @@ struct Channel {
 	char *mode_lock;
 	ModData moddata[MODDATA_MAX_CHANNEL]; /* for modules */
 	char chname[1];
-};
-
-/** user/channel membership struct for users */
-struct MembershipL
-{
-	struct Membership 	*next;
-	struct Channel		*chptr;
-	int			flags;
-	ModData moddata[MODDATA_MAX_MEMBERSHIP]; /* for modules */
 };
 
 /** user/channel membership struct for remote users */
