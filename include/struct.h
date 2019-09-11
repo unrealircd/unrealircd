@@ -170,7 +170,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define MAXKICKLEN	360	/* absolute maximum kick length (above this = only cutoff danger) */
 #define MAXQUITLEN	395	/* absolute maximum quit length (above this = only cutoff danger) */
 #define	CHANNELLEN	32
-#define	PASSWDLEN 	48	/* was 20, then 32, now 48. */
+#define	PASSWDLEN 	256	/* some insane large limit (previously: 20, 32, 48) */
 #define	KEYLEN		23
 #define LINKLEN		32
 #define	BUFSIZE		512	/* WARNING: *DONT* CHANGE THIS!!!! */

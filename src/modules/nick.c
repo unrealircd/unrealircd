@@ -1094,33 +1094,23 @@ CMD_FUNC(m_nick)
 			sendto_one(sptr, NULL, "PING :%X", sptr->local->nospoof);
 		}
 
-		/* Copy password to the passwd field if it's given after NICK
-		 * - originally by taz, modified by Wizzu
-		 */
+		/* Copy password to the passwd field if it's given after NICK */
 		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN))
-		{
-			safefree(sptr->local->passwd);
-			sptr->local->passwd = strdup(parv[2]);
-		}
+			safestrdup(sptr->local->passwd, parv[2]);
+
 		/* This had to be copied here to avoid problems.. */
 		strlcpy(sptr->name, nick, sizeof(sptr->name));
+
+		/* Let's see if we can get online now... */
 		if (is_handshake_finished(sptr))
 		{
-			/*
-			   ** USER already received, now we have NICK.
-			   ** *NOTE* For servers "NICK" *must* precede the
-			   ** user message (giving USER before NICK is possible
-			   ** only for local client connection!). register_user
-			   ** may reject the client and call exit_client for it
-			   ** --must test this and exit m_nick too!!!
-			 */
+			/* Send a CTCP VERSION */
 			if (!iConf.ping_cookie && USE_BAN_VERSION && MyConnect(sptr))
 				sendto_one(sptr, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 					me.name, nick);
 
-			sptr->lastnick = TStime();	/* Always local client */
-			if (register_user(cptr, sptr, nick,
-			    sptr->user->username, NULL, NULL, NULL) == FLUSH_BUFFER)
+			sptr->lastnick = TStime();
+			if (register_user(cptr, sptr, nick, sptr->user->username, NULL, NULL, NULL) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
 			strlcpy(nick, sptr->name, sizeof(nick)); /* don't ask, but I need this. do not remove! -- Syzop */
 			update_watch = 0;

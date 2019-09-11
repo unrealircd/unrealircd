@@ -1,6 +1,7 @@
 /*
  *   Unreal Internet Relay Chat Daemon, src/auth.c
  *   (C) 2001 Carsten V. Munk (stskeeps@tspre.org)
+ *   (C) 2003-2019 Bram Matthys (syzop@vulnscan.org) and the UnrealIRCd team
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
