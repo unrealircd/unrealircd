@@ -140,7 +140,7 @@ CMD_FUNC(m_part)
 				comment = NULL;
 			/* Same for +m */
 			if ((chptr->mode.mode & MODE_MODERATED) && comment &&
-				 !has_voice(sptr, chptr) && !is_halfop(sptr, chptr))
+				 !has_voice(sptr, chptr) && !is_half_op(sptr, chptr))
 			{
 				comment = NULL;
 			}

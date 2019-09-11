@@ -182,21 +182,6 @@ extern int del_silence(Client *, char *);
 extern void send_user_joins(Client *, Client *);
 extern void clean_channelname(char *);
 extern long get_access(Client *, Channel *);
-#ifdef PREFIX_AQ
- #define CHFL_CHANOP_OR_HIGHER (CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER)
- #define CHFL_HALFOP_OR_HIGHER (CHFL_CHANOWNER|CHFL_CHANADMIN|CHFL_CHANOP|CHFL_HALFOP)
-#else
- #define CHFL_CHANOP_OR_HIGHER (CHFL_CHANOP)
- #define CHFL_HALFOP_OR_HIGHER (CHFL_CHANOP|CHFL_HALFOP)
-#endif
-
-#define is_chan_op(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANOP_OR_HIGHER)
-#define is_skochanop(cptr,chptr) (get_access(cptr,chptr) & CHFL_HALFOP_OR_HIGHER)
-#define has_voice(cptr,chptr) (get_access(cptr,chptr) & CHFL_VOICE)
-#define is_halfop is_half_op
-#define is_half_op(cptr,chptr) (get_access(cptr,chptr) & CHFL_HALFOP)
-#define is_chanowner(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANOWNER)
-#define is_chanadmin(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANADMIN)
 extern int ban_check_mask(Client *, Channel *, char *, int, char **, char **, int);
 extern int extban_is_ok_nuh_extban(Client *, Channel *, char *, int, int, int);
 extern char *extban_conv_param_nuh_or_extban(char *);

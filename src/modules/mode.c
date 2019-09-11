@@ -824,7 +824,7 @@ int  do_mode_char(Channel *chptr, long modetype, char modechar, char *param,
 						sendnumeric(cptr, ERR_CHANOWNPRIVNEEDED, chptr->chname);
 						break;
 					}
-					if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
+					if (!is_half_op(cptr, chptr)) /* htrig will take care of halfop override notices */
 						opermode = 1;
 			}
 			goto process_listmode;
@@ -839,7 +839,7 @@ int  do_mode_char(Channel *chptr, long modetype, char modechar, char *param,
 						sendnumeric(cptr, ERR_CHANOWNPRIVNEEDED, chptr->chname);
 						break;
 					}
-					if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
+					if (!is_half_op(cptr, chptr)) /* htrig will take care of halfop override notices */
 						opermode = 1;
 			}
 			goto process_listmode;

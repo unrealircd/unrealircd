@@ -20,6 +20,10 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/** @file
+ * @brief The channel mode API used by modules.
+ */
+
 #include "unrealircd.h"
 
 /* Channel parameter to slot# mapping */
@@ -150,6 +154,7 @@ void extcmode_para_delslot(Cmode *c, int slot)
 	param_to_slot_mapping[c->flag] = 0;
 }
 
+/** Register a new channel mode */
 Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 {
 	short i = 0, j = 0;

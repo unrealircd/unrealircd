@@ -400,7 +400,7 @@ typedef enum ClientStatus {
  * to set via SetXX() and to clear the flag via ClearXX()
  */
 /**
- * @ingroup ClientFlags
+ * @addtogroup ClientFlags
  * @{
  */
 #define IsIdentLookup(x)		((x)->flags & CLIENT_FLAG_IDENTLOOKUP)	/**< Is doing Ident lookups */
@@ -685,77 +685,6 @@ struct SWhois {
 	char *setby;
 };
 	
-/*
- * Client structures
- */
-struct User {
-	Membership *channel;		/* chain of channel pointer blocks */
-	Link *invited;		/* chain of invite pointer blocks */
-	Link *silence;		/* chain of silence pointer blocks */
-	Link *dccallow;		/* chain of dccallowed entries */
-	char *away;		/* pointer to away message */
-
-	/*
-	 * svid: a value that is assigned by services to this user record.
-	 * in previous versions of Unreal, this was strictly a timestamp value,
-	 * which is less useful in the modern world of IRC where nicks are grouped to
-	 * accounts, so it is now a string.
-	 */
-	char svid[SVIDLEN + 1];
-
-	signed char refcnt;	/* Number of times this block is referenced */
-	unsigned short joined;		/* number of channels joined */
-	char username[USERLEN + 1];
-	char realhost[HOSTLEN + 1];
-	char cloakedhost[HOSTLEN + 1]; /* cloaked host (masked host for caching). NOT NECESSARILY THE SAME AS virthost. */
-	char *virthost;
-	char *server;
-	SWhois *swhois; /* special whois entries */
-	ChannelListOptions *lopt;            /* Saved /list options */
-	aWhowas *whowas;
-	int snomask;
-#ifdef	LIST_DEBUG
-	Client *bcptr;
-#endif
-	char *operlogin;	/* Only used if user is/was opered, used for oper::maxlogins */
-	struct {
-		time_t nick_t;
-		unsigned char nick_c;
-		time_t away_t;		/* last time the user set away */
-		unsigned char away_c;	/* number of times away has been set */
-		time_t knock_t;		/* last time the user has knocked */
-		unsigned char knock_c;	/* number of times the user knocked */
-		time_t invite_t;	/* last time the user used /invite */
-		unsigned char invite_c;	/* number of times the user used /invite */
-	} flood;
-	time_t lastaway;
-};
-
-struct Server {
-	struct Server 	*nexts;
-	ClientUser 		*user;		/* who activated this connection */
-	char 		*up;		/* uplink for this server */
-	char 		by[NICKLEN + 1];
-	ConfigItem_link *conf;
-	time_t 		timestamp;	/* Remotely determined connect try time */
-	long		users;
-	time_t		boottime;	/* Startup time of server */
-#ifdef	LIST_DEBUG
-	Client *bcptr;
-#endif
-	struct {
-		unsigned synced:1;		/* Server linked? (3.2beta18+) */
-		unsigned server_sent:1;		/* SERVER message sent to this link? (for outgoing links) */
-	} flags;
-	struct {
-		char *usermodes;
-		char *chanmodes[4];
-		int protocol;
-		char *software;
-		char *nickchars;
-	} features;
-};
-
 #define M_UNREGISTERED	0x0001
 #define M_USER			0x0002
 #define M_SERVER		0x0004
@@ -972,8 +901,12 @@ extern void unload_all_unused_moddata(void);
 #define TLSFLAG_NOSTARTTLS	0x8
 #define TLSFLAG_DISABLECLIENTCERT 0x10
 
-/** A client on this or a remote server.
- * Every client (user, server, unknown,..) has this Client structure associated with it.
+/** This shows the Client struct (any client), the User struct (a user), Server (a server) that are commonly accessed both in the core and by 3rd party coders.
+ * @defgroup CommonStructs Common structs
+ * @{
+ */
+
+/** A client on this or a remote server - can be a user, server, unknown, etc..
  */
 struct Client {
 	struct list_head client_node;		/**< For global client list (client_list) */
@@ -1001,6 +934,8 @@ struct Client {
 	ModData moddata[MODDATA_MAX_CLIENT];	/**< Client attached module data, used by the ModData system */
 };
 
+/** Local client information, use sptr->local to access these (see also @link Client @endlink).
+ */
 struct LocalClient {
 	int  fd;				/**< File descriptor, which is >= 0, for local clients */
 	time_t since;		/* time they will next be allowed to send something */
@@ -1050,6 +985,80 @@ struct LocalClient {
 	int cap_protocol; /**< CAP protocol in use. At least 300 for any CAP capable client. 302 for 3.2, etc.. */
 	int identbufcnt;			/**< Counter for 'ident' reading code */
 };
+
+/** User information (persons, not servers), you use sptr->user to access these (see also @link Client @endlink).
+ */
+struct User {
+	Membership *channel;		/* chain of channel pointer blocks */
+	Link *invited;		/* chain of invite pointer blocks */
+	Link *silence;		/* chain of silence pointer blocks */
+	Link *dccallow;		/* chain of dccallowed entries */
+	char *away;		/* pointer to away message */
+
+	/*
+	 * svid: a value that is assigned by services to this user record.
+	 * in previous versions of Unreal, this was strictly a timestamp value,
+	 * which is less useful in the modern world of IRC where nicks are grouped to
+	 * accounts, so it is now a string.
+	 */
+	char svid[SVIDLEN + 1];
+
+	signed char refcnt;	/* Number of times this block is referenced */
+	unsigned short joined;		/* number of channels joined */
+	char username[USERLEN + 1];
+	char realhost[HOSTLEN + 1];
+	char cloakedhost[HOSTLEN + 1]; /* cloaked host (masked host for caching). NOT NECESSARILY THE SAME AS virthost. */
+	char *virthost;
+	char *server;
+	SWhois *swhois; /* special whois entries */
+	ChannelListOptions *lopt;            /* Saved /list options */
+	aWhowas *whowas;
+	int snomask;
+#ifdef	LIST_DEBUG
+	Client *bcptr;
+#endif
+	char *operlogin;	/* Only used if user is/was opered, used for oper::maxlogins */
+	struct {
+		time_t nick_t;
+		unsigned char nick_c;
+		time_t away_t;		/* last time the user set away */
+		unsigned char away_c;	/* number of times away has been set */
+		time_t knock_t;		/* last time the user has knocked */
+		unsigned char knock_c;	/* number of times the user knocked */
+		time_t invite_t;	/* last time the user used /invite */
+		unsigned char invite_c;	/* number of times the user used /invite */
+	} flood;
+	time_t lastaway;
+};
+
+/** Server information (local servers and remote servers), you use sptr->serv to access these (see also @link Client @endlink).
+ */
+struct Server {
+	struct Server 	*nexts;
+	ClientUser 		*user;		/* who activated this connection */
+	char 		*up;		/* uplink for this server */
+	char 		by[NICKLEN + 1];
+	ConfigItem_link *conf;
+	time_t 		timestamp;	/* Remotely determined connect try time */
+	long		users;
+	time_t		boottime;	/* Startup time of server */
+#ifdef	LIST_DEBUG
+	Client *bcptr;
+#endif
+	struct {
+		unsigned synced:1;		/* Server linked? (3.2beta18+) */
+		unsigned server_sent:1;		/* SERVER message sent to this link? (for outgoing links) */
+	} flags;
+	struct {
+		char *usermodes;
+		char *chanmodes[4];
+		int protocol;
+		char *software;
+		char *nickchars;
+	} features;
+};
+
+/* @} */
 
 struct MessageTag {
 	MessageTag *prev, *next;
@@ -1613,13 +1622,17 @@ struct ChannelListOptions {
  */
 #define MAXPARAMMODES 16
 
-/* mode structure for channels */
+/** Channel Mode.
+ * NOTE: you normally don't access these struct members directly.
+ * For simple checking if a mode is set, use has_channel_mode()
+ * Otherwise, see the extended channel modes API, CmodeAdd(), etc.
+ */
 struct Mode {
-	long mode;
-	Cmode_t extmode;
-	void *extmodeparams[MAXPARAMMODES+1];
-	int  limit;
-	char key[KEYLEN + 1];
+	long mode;				/**< Core modes set on this channel (one of MODE_*) */
+	Cmode_t extmode;			/**< Other ("extended") channel modes set on this channel */
+	void *extmodeparams[MAXPARAMMODES+1];	/**< Parameters for extended channel modes */
+	int  limit;				/**< The +l limit in effect (eg: 40), if any - otherwise 0 */
+	char key[KEYLEN + 1];			/**< The +k key in effect (eg: secret), if any - otherwise NULL */
 };
 
 /* Used for notify-hash buckets... -Donwulff */
@@ -1650,46 +1663,66 @@ struct Link {
 	} value;
 };
 
+/**
+ * @addtogroup CommonStructs
+ * @{
+ */
+
+/** A channel on IRC */
+struct Channel {
+	struct Channel *nextch;			/**< Next channel in linked list (channel) */
+	struct Channel *prevch;			/**< Previous channel in linked list (channel) */
+	struct Channel *hnextch;		/**< Next channel in hash table */
+	Mode mode;				/**< Channel Mode set on this channel */
+	time_t creationtime;			/**< When the channel was first created */
+	char *topic;				/**< Channel TOPIC */
+	char *topic_nick;			/**< Person (or server) who set the TOPIC */
+	time_t topic_time;			/**< Time at which the topic was last set */
+	int users;				/**< Number of users in the channel */
+	Member *members;			/**< List of channel members (users in the channel) */
+	Link *invites;				/**< List of outstanding /INVITE's from ops */
+	Ban *banlist;				/**< List of bans (+b) */
+	Ban *exlist;				/**< List of ban exceptions (+e) */
+	Ban *invexlist;				/**< List of invite exceptions (+I) */
+	char *mode_lock;			/**< Mode lock (MLOCK) applied to channel - usually by Services */
+	ModData moddata[MODDATA_MAX_CHANNEL];	/**< Channel attached module data, used by the ModData system */
+	char chname[1];				/**< Channel name */
+};
+
+/** user/channel member struct (chptr->members).
+ * This is Member which is used in the linked list chptr->members for each channel.
+ * There is also Membership which is used in sptr->user->channels (see Membership for that).
+ * Both must be kept synchronized 100% at all times.
+ */
 struct Member
 {
-	struct Member *next;
-	Client	      *cptr;
-	int		flags;
-	ModData moddata[MODDATA_MAX_MEMBER]; /* for modules */
+	struct Member *next;				/**< Next entry in list */
+	Client	      *cptr;				/**< The client */
+	int		flags;				/**< The access of the user on this channel (one or more of CHFL_*) */
+	ModData moddata[MODDATA_MAX_MEMBER];		/** Member attached module data, used by the ModData system */
 };
 
-struct Channel {
-	struct Channel *nextch, *prevch, *hnextch;
-	Mode mode;
-	time_t creationtime;
-	char *topic;
-	char *topic_nick;
-	time_t topic_time;
-	int users;
-	Member *members;
-	Link *invites;
-	Ban *banlist;
-	Ban *exlist;		/* exceptions */
-	Ban *invexlist;         /* invite list */
-	char *mode_lock;
-	ModData moddata[MODDATA_MAX_CHANNEL]; /* for modules */
-	char chname[1];
-};
-
-/** user/channel membership struct for remote users */
+/** user/channel membership struct (sptr->user->channels).
+ * This is Membership which is used in the linked list sptr->user->channels for each user.
+ * There is also Member which is used in chptr->members (see Member for that).
+ * Both must be kept synchronized 100% at all times.
+ */
 struct Membership
 {
-	struct Membership 	*next;
-	struct Channel		*chptr;
-	int			flags;
-	ModData moddata[MODDATA_MAX_MEMBERSHIP]; /* for modules */
+	struct Membership 	*next;			/**< Next entry in list */
+	struct Channel		*chptr;			/**< The channel */
+	int			flags;			/**< The access of the user on this channel (one or more of CHFL_*) */
+	ModData moddata[MODDATA_MAX_MEMBERSHIP];	/**< Membership attached module data, used by the ModData system */
 };
 
+/** @} */
+
+/** A ban, exempt or invite exception entry */
 struct Ban {
-	struct Ban *next;
-	char *banstr;
-	char *who;
-	time_t when;
+	struct Ban *next;	/**< Next entry in list */
+	char *banstr;		/**< The string (eg: *!*@*.example.org) */
+	char *who;		/**< Person or server who set the entry (eg: Nick) */
+	time_t when;		/**< When the entry was added */
 };
 
 struct DSlink {
@@ -1779,20 +1812,42 @@ struct ListStructPrio {
 */
 
 /* Channel related flags */
+#ifdef PREFIX_AQ
+ #define CHFL_CHANOP_OR_HIGHER (CHFL_CHANOP|CHFL_CHANADMIN|CHFL_CHANOWNER)
+ #define CHFL_HALFOP_OR_HIGHER (CHFL_CHANOWNER|CHFL_CHANADMIN|CHFL_CHANOP|CHFL_HALFOP)
+#else
+ #define CHFL_CHANOP_OR_HIGHER (CHFL_CHANOP)
+ #define CHFL_HALFOP_OR_HIGHER (CHFL_CHANOP|CHFL_HALFOP)
+#endif
 
-#define	CHFL_CHANOP     0x0001	/* Channel operator */
-#define	CHFL_VOICE      0x0002	/* the power to speak */
-
-#define	CHFL_DEOPPED	0x0004	/* Is de-opped by a server */
-#define	CHFL_SERVOPOK   0x0008	/* Server op allowed */
-#define	CHFL_ZOMBIE     0x0010	/* Kicked from channel */
-/* Bans are stored in separate linked list, so phase this out? */
-#define	CHFL_BAN     	0x0020	/* ban channel flag */
-#define CHFL_CHANOWNER 	0x0040	/* channel owner (+q) */
-#define CHFL_CHANADMIN  	0x0080	/* channel admin (+a) */
-#define CHFL_HALFOP	0x0100	/* halfop */
-#define CHFL_EXCEPT	0x0200	/* phase this out ? +e */
-#define CHFL_INVEX	0x0400  /* invite exception */
+/** Channel flags (privileges) of users on a channel.
+ * This is used by Member and Membership (m->flags) to indicate the access rights of a user in a channel.
+ * Also used by SJOIN and MODE to set some flags while a JOIN or MODE is in process.
+ * @defgroup ChannelFlags Channel access flags
+ * @{
+ */
+/** Is channel owner (+q) */
+#define is_chanowner(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANOWNER)
+/** Is channel admin (+a) */
+#define is_chanadmin(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANADMIN)
+/** Is channel operator or higher (+o/+a/+q) */
+#define is_chan_op(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANOP_OR_HIGHER)
+/** Is some kind of channel op (+h/+o/+a/+q) */
+#define is_skochanop(cptr,chptr) (get_access(cptr,chptr) & CHFL_HALFOP_OR_HIGHER)
+/** Is half-op (+h) */
+#define is_half_op(cptr,chptr) (get_access(cptr,chptr) & CHFL_HALFOP)
+/** Has voice (+v) */
+#define has_voice(cptr,chptr) (get_access(cptr,chptr) & CHFL_VOICE)
+#define CHFL_CHANOWNER	0x0040	/**< Channel owner (+q) */
+#define CHFL_CHANADMIN	0x0080	/**< Channel admin (+a) */
+#define	CHFL_CHANOP     0x0001	/**< Channel operator (+o) */
+#define CHFL_HALFOP	0x0100	/**< Channel halfop (+h) */
+#define	CHFL_VOICE      0x0002	/**< Voice (+v, can speak through bans and +m) */
+#define	CHFL_DEOPPED	0x0004	/**< De-oped by a server (temporary state) */
+#define	CHFL_BAN     	0x0100	/**< Channel ban (+b) - not a real flag, only used in sjoin.c */
+#define CHFL_EXCEPT	0x0200	/**< Channel except (+e) - not a real flag, only used in sjoin.c */
+#define CHFL_INVEX	0x0400  /**< Channel invite exception (+I) - not a real flag, only used in sjoin.c */
+/** @} */
 
 #define CHFL_REJOINING	0x8000  /* used internally by rejoin_* */
 

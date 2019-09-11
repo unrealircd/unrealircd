@@ -18,6 +18,10 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/** @file
+ * @brief Various important (common) channel functions.
+ */
+
 #include "unrealircd.h"
 
 long opermode = 0;
