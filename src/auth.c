@@ -432,7 +432,7 @@ int Auth_Check(Client *cptr, AuthConfig *as, char *para)
 	extern char *crypt();
 	char *res;
 
-	if (!as->data)
+	if (!as || !as->data)
 		return 0; /* Should not happen, but better be safe.. */
 
 	switch (as->type)
