@@ -788,8 +788,8 @@ int stats_mem(Client *sptr, char *para)
 			}
 		}
 	}
-	lcm = lc * CLIENT_LOCAL_SIZE;
-	rcm = rc * CLIENT_REMOTE_SIZE;
+	lcm = lc * sizeof(Client)+sizeof(LocalClient);
+	rcm = rc * sizeof(Client);
 
 	for (chptr = channel; chptr; chptr = chptr->nextch)
 	{

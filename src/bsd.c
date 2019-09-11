@@ -1648,15 +1648,15 @@ static void read_authports(int fd, int revents, void *userdata)
 	 * Oh. this is needed because an authd reply may come back in more
 	 * than 1 read! -avalon
 	 */
-	  if ((len = READ_SOCK(cptr->local->authfd, cptr->local->buffer + cptr->count,
-		  sizeof(cptr->local->buffer) - 1 - cptr->count)) >= 0)
+	  if ((len = READ_SOCK(cptr->local->authfd, cptr->local->buffer + cptr->local->identbufcnt,
+		  sizeof(cptr->local->buffer) - 1 - cptr->local->identbufcnt)) >= 0)
 	{
-		cptr->count += len;
-		cptr->local->buffer[cptr->count] = '\0';
+		cptr->local->identbufcnt += len;
+		cptr->local->buffer[cptr->local->identbufcnt] = '\0';
 	}
 
 	cptr->local->lasttime = TStime();
-	if ((len > 0) && (cptr->count != (sizeof(cptr->local->buffer) - 1)) &&
+	if ((len > 0) && (cptr->local->identbufcnt != (sizeof(cptr->local->buffer) - 1)) &&
 	    (sscanf(cptr->local->buffer, "%hd , %hd : USERID : %*[^:]: %10s",
 	    &remp, &locp, ruser) == 3))
 	{
@@ -1684,7 +1684,7 @@ static void read_authports(int fd, int revents, void *userdata)
     fd_close(cptr->local->authfd);
     --OpenFiles;
     cptr->local->authfd = -1;
-	cptr->count = 0;
+	cptr->local->identbufcnt = 0;
 	ClearAuth(cptr);
 	if (!DoingDNS(cptr))
 		finish_auth(cptr);

@@ -933,7 +933,6 @@ struct Client {
 	char info[REALLEN + 1];			/**< Additional client information text. For persons this is gecos/realname */
 	char id[IDLEN + 1];			/**< Unique ID: SID or UID */
 	Client *srvptr;				/**< Server on where this client is connected to (can be &me) */
-	int count;				/**< Amount of data in buffer */
 	char *ip;				/**< IP address of user or server (never NULL) */
 	ModData moddata[MODDATA_MAX_CLIENT];	/**< Client attached module data, used by the ModData system */
 };
@@ -985,11 +984,8 @@ struct LocalClient {
 	u_short sasl_cookie;
 	char *sni_servername; /**< Servername as sent by client during SNI (otherwise NULL) */
 	int cap_protocol; /**< CAP protocol in use. At least 300 for any CAP capable client. 302 for 3.2, etc.. */
+	int identbufcnt;			/**< Counter for 'ident' reading code */
 };
-
-
-#define	CLIENT_LOCAL_SIZE sizeof(Client)
-#define	CLIENT_REMOTE_SIZE offsetof(Client,count)
 
 struct MessageTag {
 	MessageTag *prev, *next;
