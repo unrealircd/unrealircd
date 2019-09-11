@@ -749,7 +749,7 @@ CMD_FUNC(m_module)
 	Module *mi;
 	int i;
 	char tmp[1024], *p;
-	aCommand *mptr;
+	RealCommand *mptr;
 	int all = 0;
 
 	if ((parc > 1) && !strcmp(parv[1], "-all"))
@@ -1127,7 +1127,7 @@ Callback *CallbackDel(Callback *cb)
 
 Cmdoverride *CmdoverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc function)
 {
-	aCommand *p;
+	RealCommand *p;
 	Cmdoverride *ovr;
 	
 	if (!(p = find_Command_simple(name)))

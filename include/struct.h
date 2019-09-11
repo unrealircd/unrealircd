@@ -62,7 +62,6 @@
 #include "channel.h"
 
 typedef struct LoopStruct LoopStruct;
-typedef struct ConfItem aConfItem;
 typedef struct aTKline aTKline;
 typedef struct Spamfilter Spamfilter;
 typedef struct ServerBan ServerBan;
@@ -135,7 +134,7 @@ typedef struct MotdDownload aMotdDownload; /* used to coordinate download of a r
 #endif
 
 typedef struct trecord aTrecord;
-typedef struct aCommand aCommand;
+typedef struct RealCommand RealCommand;
 typedef struct Cmdoverride Cmdoverride;
 typedef struct Member Member;
 typedef struct Membership Membership;
@@ -1840,8 +1839,8 @@ extern SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server);
 
 #define TLS_PROTOCOL_ALL		0xffff
 
-struct aCommand {
-	aCommand		*prev, *next;
+struct RealCommand {
+	RealCommand		*prev, *next;
 	char 			*cmd;
 	CmdFunc			func;
 	AliasCmdFunc		aliasfunc;
@@ -1850,7 +1849,7 @@ struct aCommand {
 	unsigned		parameters : 5;
 	unsigned long   	bytes;
 	Module 			*owner;
-	aCommand		*friend; /* cmd if token, token if cmd */
+	RealCommand		*friend; /* cmd if token, token if cmd */
 	Cmdoverride		*overriders;
 	Cmdoverride		*overridetail;
 #ifdef DEBUGMODE
@@ -1863,7 +1862,7 @@ struct Cmdoverride {
 	Cmdoverride		*prev, *next;
 	int			priority;
 	Module			*owner;
-	aCommand		*command;
+	RealCommand		*command;
 	OverrideCmdFunc		func;
 };
 

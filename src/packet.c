@@ -21,7 +21,7 @@
 
 #include "unrealircd.h"
 
-aCommand *CommandHash[256]; /* one per letter */
+RealCommand *CommandHash[256]; /* one per letter */
 
 /*
 ** dopacket
@@ -61,7 +61,7 @@ int  dopacket(Client *cptr, char *buffer, int length)
 void	init_CommandHash(void)
 {
 #ifdef DEVELOP_DEBUG
-	aCommand	 *p;
+	RealCommand	 *p;
 	int		 i;
 	long		chainlength;
 #endif
@@ -94,9 +94,9 @@ void	init_CommandHash(void)
 #endif
 }
 
-aCommand *add_Command_backend(char *cmd)
+RealCommand *add_Command_backend(char *cmd)
 {
-	aCommand *c = MyMallocEx(sizeof(aCommand));
+	RealCommand *c = MyMallocEx(sizeof(RealCommand));
 
 	c->cmd = strdup(cmd);
 
@@ -106,9 +106,9 @@ aCommand *add_Command_backend(char *cmd)
 	return c;
 }
 
-static inline aCommand *find_Cmd(char *cmd, int flags)
+static inline RealCommand *find_Cmd(char *cmd, int flags)
 {
-	aCommand *p;
+	RealCommand *p;
 	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
 		if ((flags & M_UNREGISTERED) && !(p->flags & M_UNREGISTERED))
 			continue;
@@ -124,18 +124,18 @@ static inline aCommand *find_Cmd(char *cmd, int flags)
 	return NULL;
 }
 
-aCommand *find_Command(char *cmd, short token, int flags)
+RealCommand *find_Command(char *cmd, short token, int flags)
 {
-	aCommand *p;
+	RealCommand *p;
 	
 	Debug((DEBUG_NOTICE, "FindCommand %s", cmd));
 
 	return find_Cmd(cmd, flags);
 }
 
-aCommand *find_Command_simple(char *cmd)
+RealCommand *find_Command_simple(char *cmd)
 {
-	aCommand	*p;
+	RealCommand	*p;
 	
 	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
 		if (!strcasecmp(p->cmd, cmd))
@@ -170,7 +170,7 @@ aCommand *find_Command_simple(char *cmd)
  */
 int do_cmd(Client *cptr, Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[])
 {
-aCommand *cmptr;
+RealCommand *cmptr;
 
 	cmptr = find_Command_simple(cmd);
 	if (!cmptr)

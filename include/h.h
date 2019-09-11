@@ -164,8 +164,8 @@ extern MODVAR int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
 
 #endif
 extern MODVAR struct list_head client_list, lclient_list, server_list, oper_list, unknown_list, global_server_list;
-extern aCommand *find_Command(char *cmd, short token, int flags);
-extern aCommand *find_Command_simple(char *cmd);
+extern RealCommand *find_Command(char *cmd, short token, int flags);
+extern RealCommand *find_Command_simple(char *cmd);
 extern Channel *find_channel(char *, Channel *);
 extern Membership *find_membership_link(Membership *lp, Channel *ptr);
 extern Member *find_member_link(Member *, Client *);
@@ -215,7 +215,6 @@ extern Client *find_server(char *, Client *);
 extern Client *find_service(char *, Client *);
 #define find_server_quick(x) find_server(x, NULL)
 extern char *find_or_add(char *);
-extern int attach_conf(Client *, aConfItem *);
 extern void inittoken();
 extern void reset_help();
 
@@ -236,10 +235,7 @@ extern MODVAR int OpenFiles;  /* number of files currently open */
 extern MODVAR int debuglevel, portnum, debugtty, maxusersperchannel;
 extern MODVAR int readcalls, udpfd, resfd;
 extern Client *add_connection(ConfigItem_listen *, int);
-extern int add_listener(aConfItem *);
 extern void add_local_domain(char *, int);
-extern int check_server(Client *, struct hostent *, aConfItem *,
-    aConfItem *, int);
 extern int check_server_init(Client *);
 extern void close_connection(Client *);
 extern void close_listeners();
@@ -452,9 +448,9 @@ extern int checkprotoflags(Client *, int, char *, int);
 extern char *inetntop(int af, const void *in, char *local_dummy, size_t the_size);
 
 /* Internal command stuff - not for modules */
-extern MODVAR aCommand *CommandHash[256];
+extern MODVAR RealCommand *CommandHash[256];
 extern void init_CommandHash(void);
-extern aCommand *add_Command_backend(char *cmd);
+extern RealCommand *add_Command_backend(char *cmd);
 
 /* CRULE */
 char *crule_parse(char *);
@@ -493,7 +489,7 @@ extern int rehash(Client *cptr, Client *sptr, int sig);
 extern int match_simple(const char *mask, const char *name);
 extern int match_esc(const char *mask, const char *name);
 extern void outofmemory(void);
-extern int add_listener2(ConfigItem_listen *conf);
+extern int add_listener(ConfigItem_listen *conf);
 extern void link_cleanup(ConfigItem_link *link_ptr);
 extern void       listen_cleanup();
 extern int  numeric_collides(long numeric);

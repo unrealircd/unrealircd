@@ -21,12 +21,9 @@
 
 
 #define DYNCONF_H
-/* config level */
-#define DYNCONF_CONF_VERSION "1.5"
-#define DYNCONF_NETWORK_VERSION "2.2"
 
-typedef struct zNetwork aNetwork;
-struct zNetwork {
+typedef struct NetworkConfiguration NetworkConfiguration;
+struct NetworkConfiguration {
 	unsigned x_inah:1;
 	char *x_ircnetwork;
 	char *x_ircnet005;
@@ -54,8 +51,9 @@ typedef struct OperStat {
 
 typedef enum BroadcastChannelMessagesOption { BROADCAST_CHANNEL_MESSAGES_AUTO=1, BROADCAST_CHANNEL_MESSAGES_ALWAYS=2, BROADCAST_CHANNEL_MESSAGES_NEVER=3 } BroadcastChannelMessagesOption;
 
-typedef struct zConfiguration aConfiguration;
-struct zConfiguration {
+/** The set { } block configuration */
+typedef struct Configuration Configuration;
+struct Configuration {
 	unsigned som:1;
 	unsigned hide_ulines:1;
 	unsigned flat_map:1;
@@ -143,7 +141,7 @@ struct zConfiguration {
 	int maxbanlength;
 	int watch_away_notification;
 	int uhnames;
-	aNetwork network;
+	NetworkConfiguration network;
 	unsigned short default_ipv6_clone_mask;
 	int ping_cookie;
 	int min_nick_length;
@@ -169,11 +167,9 @@ struct zConfiguration {
 	BroadcastChannelMessagesOption broadcast_channel_messages;
 };
 
-#ifndef DYNCONF_C
-extern MODVAR aConfiguration iConf;
-extern MODVAR aConfiguration tempiConf;
+extern MODVAR Configuration iConf;
+extern MODVAR Configuration tempiConf;
 extern MODVAR int ipv6_disabled;
-#endif
 
 #define KLINE_ADDRESS			iConf.kline_address
 #define GLINE_ADDRESS			iConf.gline_address
@@ -278,7 +274,9 @@ extern MODVAR int ipv6_disabled;
 
 #define UHNAMES_ENABLED	iConf.uhnames
 
-/* Used for "is present?" and duplicate checking */
+/** Used for testing the set { } block configuration.
+ * It tests if a setting is present and is also used for duplicate checking.
+ */
 struct SetCheck {
 	unsigned has_show_opermotd:1;
 	unsigned has_hide_ulines:1;
@@ -371,5 +369,3 @@ struct SetCheck {
 	unsigned has_nick_length:1;
 	unsigned has_hide_ban_reason:1;
 };
-
-

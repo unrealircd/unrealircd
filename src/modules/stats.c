@@ -507,7 +507,7 @@ int stats_allow(Client *sptr, char *para)
 int stats_command(Client *sptr, char *para)
 {
 	int i;
-	aCommand *mptr;
+	RealCommand *mptr;
 	for (i = 0; i < 256; i++)
 		for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
 			if (mptr->count)

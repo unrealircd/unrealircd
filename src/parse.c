@@ -83,7 +83,7 @@ int parse(Client *cptr, char *buffer, int length)
 	time_t then, ticks;
 	int  retval;
 #endif
-	aCommand *cmptr = NULL;
+	RealCommand *cmptr = NULL;
 	MessageTag *mtags = NULL;
 
 	for (h = Hooks[HOOKTYPE_PACKET]; h; h = h->next)
@@ -148,7 +148,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 	time_t then, ticks;
 	int retval;
 #endif
-	aCommand *cmptr = NULL;
+	RealCommand *cmptr = NULL;
 	int bytes;
 
 	*fromptr = cptr; /* The default, unless a source is specified (and permitted) */

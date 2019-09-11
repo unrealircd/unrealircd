@@ -270,8 +270,8 @@ ConfigItem_blacklist_module	*conf_blacklist_module = NULL;
 ConfigItem_help		*conf_help = NULL;
 ConfigItem_offchans	*conf_offchans = NULL;
 
-MODVAR aConfiguration		iConf;
-MODVAR aConfiguration		tempiConf;
+MODVAR Configuration		iConf;
+MODVAR Configuration		tempiConf;
 MODVAR ConfigFile		*conf = NULL;
 extern NameValueList *config_defines;
 MODVAR int ipv6_disabled = 0;
@@ -1439,7 +1439,7 @@ ConfigCommand *config_binary_search(char *cmd) {
 	return NULL;
 }
 
-void	free_iConf(aConfiguration *i)
+void	free_iConf(Configuration *i)
 {
 	safefree(i->kline_address);
 	safefree(i->gline_address);
@@ -1481,7 +1481,7 @@ void	free_iConf(aConfiguration *i)
 
 int	config_test();
 
-void config_setdefaultsettings(aConfiguration *i)
+void config_setdefaultsettings(Configuration *i)
 {
 	char tmp[512];
 
@@ -1703,7 +1703,7 @@ void postconf_fixes(void)
  */
 static void do_weird_shun_stuff()
 {
-aCommand *cmptr;
+RealCommand *cmptr;
 
 	if ((cmptr = find_Command_simple("PART")))
 	{
@@ -2380,7 +2380,7 @@ void	config_rehash()
 		MyFree(log_ptr);
 	}
 	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)next) {
-		aCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
+		RealCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
 		ConfigItem_alias_format *fmt;
 		next = (ListStruct *)alias_ptr->next;
 		safefree(alias_ptr->nick);
@@ -8855,7 +8855,7 @@ void start_listeners(void)
 		/* Try to bind to any ports that are not yet bound and not marked as temporary */
 		if (!(listenptr->options & LISTENER_BOUND) && !listenptr->flag.temporary)
 		{
-			if (add_listener2(listenptr) == -1)
+			if (add_listener(listenptr) == -1)
 			{
 				ircd_log(LOG_ERROR, "Failed to bind to %s:%i", listenptr->ip, listenptr->port);
 				failed = 1;
@@ -8880,7 +8880,7 @@ void start_listeners(void)
 		}
 
 		/* NOTE: do not merge this with code above (nor in an else block),
-		 * as add_listener2() affects this flag.
+		 * as add_listener() affects this flag.
 		 */
 		if (listenptr->options & LISTENER_BOUND)
 			ports_bound++;
@@ -9006,7 +9006,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_alias *alias = NULL;
 	ConfigItem_alias_format *format;
 	ConfigEntry 	    	*cep, *cepp;
-	aCommand *cmptr;
+	RealCommand *cmptr;
 
 	if ((cmptr = find_Command(ce->ce_vardata, 0, M_ALIAS)))
 		CommandDelX(NULL, cmptr);

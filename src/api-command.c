@@ -21,7 +21,7 @@
 
 int CommandExists(char *name)
 {
-	aCommand *p;
+	RealCommand *p;
 	
 	for (p = CommandHash[toupper(*name)]; p; p = p->next)
 	{
@@ -35,7 +35,7 @@ int CommandExists(char *name)
 Command *CommandAddInternal(Module *module, char *cmd, CmdFunc func, AliasCmdFunc aliasfunc, unsigned char params, int flags)
 {
 	Command *command = NULL;
-	aCommand *c;
+	RealCommand *c;
 
 	if (find_Command_simple(cmd))
 	{
@@ -102,7 +102,7 @@ Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned ch
 	return CommandAddInternal(module, cmd, NULL, aliasfunc, params, flags);
 }
 
-void CommandDelX(Command *command, aCommand *cmd)
+void CommandDelX(Command *command, RealCommand *cmd)
 {
 	Cmdoverride *ovr, *ovrnext;
 

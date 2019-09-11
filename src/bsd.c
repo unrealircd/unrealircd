@@ -360,7 +360,7 @@ int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 	return 0;
 }
 
-int add_listener2(ConfigItem_listen *conf)
+int add_listener(ConfigItem_listen *conf)
 {
 	if (inetport(conf, conf->ip, conf->port, conf->ipv6))
 	{
