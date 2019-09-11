@@ -594,7 +594,7 @@ struct Module
 #define MOD_OPT_PERM		0x0001 /* Permanent module (not unloadable) */
 #define MOD_OPT_OFFICIAL	0x0002 /* Official module, do not set "tainted" */
 #define MOD_OPT_PERM_RELOADABLE	0x0004 /* Module is semi-permanent: it can be re-loaded but not un-loaded */
-
+#define MOD_OPT_GLOBAL		0x0008 /* Module is required to be loaded globally (i.e. across the entire network) */
 #define MOD_Dep(name, container,module) {#name, (vFP *) &container, module}
 
 /* Event structs */

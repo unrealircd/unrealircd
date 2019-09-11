@@ -2031,6 +2031,7 @@ struct MaxTarget {
 #define VERIFY_OPERCOUNT(clnt,tag) { if (ircstats.operators < 0) verify_opercount(clnt,tag); } while(0)
 
 #define MARK_AS_OFFICIAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL, 1);  } while(0)
+#define MARK_AS_GLOBAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_GLOBAL, 1);  } while(0)
 
 /* old.. please don't use anymore */
 #define CHANOPPFX "@"

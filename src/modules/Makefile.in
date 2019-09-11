@@ -65,7 +65,7 @@ R_MODULES= \
 	charsys.so antimixedutf8.so authprompt.so sinfo.so \
 	reputation.so connthrottle.so history_backend_mem.so \
 	history_backend_null.so tkldb.so channeldb.so \
-	restrict-commands.so rmtkl.so \
+	restrict-commands.so rmtkl.so require-modules.so \
 	message-tags.so batch.so \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
@@ -607,6 +607,10 @@ sts.so: sts.c $(INCLUDES)
 echo-message.so: echo-message.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o echo-message.so echo-message.c
+
+require-modules.so: require-modules.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o require-modules.so require-modules.c
 
 #############################################################################
 # capabilities
