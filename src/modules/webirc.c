@@ -134,7 +134,7 @@ void delete_webircblock(ConfigItem_webirc *e)
 {
 	unreal_delete_masks(e->mask);
 	if (e->auth)
-		Auth_DeleteAuthConfig(e->auth);
+		Auth_FreeAuthConfig(e->auth);
 	DelListItem(e, conf_webirc);
 	MyFree(e);
 }
@@ -316,7 +316,7 @@ ConfigItem_webirc *Find_webirc(Client *sptr, char *password, WEBIRCType type, ch
 			if (type == WEBIRC_WEBIRC)
 			{
 				/* Check password */
-				if (Auth_Check(sptr, e->auth, password) == -1)
+				if (!Auth_Check(sptr, e->auth, password))
 					error = "CGI:IRC -- Invalid password";
 				else
 					return e; /* Found matching block, return straight away */

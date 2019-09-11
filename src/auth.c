@@ -72,7 +72,7 @@ int Auth_AutoDetectHashType(char *hash)
 			for (p = hash; *p; p++)
 				if ((*p != ':') && !strchr(hexchars, *p))
 					return AUTHTYPE_PLAINTEXT; /* not hex and not colon */
-			
+
 			return AUTHTYPE_TLS_CLIENTCERTFP;
 		}
 
@@ -87,10 +87,10 @@ int Auth_AutoDetectHashType(char *hash)
 			return AUTHTYPE_SPKIFP;
 		}
 	}
-	
+
 	if ((*hash != '$') || !strchr(hash+1, '$'))
 		return AUTHTYPE_PLAINTEXT;
-	
+
 	if (!strncmp(hash, "$2a$", 4) || !strncmp(hash, "$2b$", 4) || !strncmp(hash, "$2y$", 4))
 		return AUTHTYPE_BCRYPT;
 
@@ -108,13 +108,12 @@ int Auth_AutoDetectHashType(char *hash)
 	/* We (only) detect MD5 and SHA1 automatically.
 	 * If, for some reason, you use RIPEMD160 then you'll have to be explicit about it ;)
 	 */
-	
 	if (bits == 128)
 		return AUTHTYPE_MD5;
-	
+
 	if (bits == 160)
 		return AUTHTYPE_SHA1;
-	
+
 	/* else it's likely some other crypt() type */
 	return AUTHTYPE_UNIXCRYPT;
 }
@@ -242,7 +241,7 @@ int Auth_CheckError(ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, PASSWDLEN);
 		return -1;
 	}
-	return 1;	
+	return 1;
 }
 
 /** Convert an authentication block from the configuration file
@@ -263,13 +262,14 @@ AuthConfig *AuthBlockToAuthConfig(ConfigEntry *ce)
 	return as;
 }
 
-void	Auth_DeleteAuthConfig(AuthConfig *as)
+/** Free an AuthConfig struct */
+void Auth_FreeAuthConfig(AuthConfig *as)
 {
-	if (!as)
-		return;
-	if (as->data) 
-		MyFree(as->data);
-	MyFree(as);
+	if (as)
+	{
+		safefree(as->data);
+		MyFree(as);
+	}
 }
 
 /* Both values are pretty insane as of 2004, but... just in case. */
@@ -292,9 +292,9 @@ void	Auth_DeleteAuthConfig(AuthConfig *as)
  */
 static int parsepass(char *str, char **salt, char **hash)
 {
-static char saltbuf[MAXSALTLEN+1], hashbuf[MAXHASHLEN+1];
-char *p;
-int max;
+	static char saltbuf[MAXSALTLEN+1], hashbuf[MAXHASHLEN+1];
+	char *p;
+	int max;
 
 	/* Syntax: $<salt>$<hash> */
 	if (*str != '$')
@@ -318,7 +318,7 @@ static int authcheck_argon2(Client *cptr, AuthConfig *as, char *para)
 	argon2_type hashtype;
 
 	if (!para)
-		return -1;
+		return 0;
 
 	/* Find out the hashtype. Why do we need to do this, why is this
 	 * not in the library or irrelevant by using some generic function?
@@ -330,68 +330,66 @@ static int authcheck_argon2(Client *cptr, AuthConfig *as, char *para)
 	else if (!strncmp(as->data, "$argon2d", 8))
 		hashtype = Argon2_d;
 	else
-		return -1; /* unknown argon2 type */
+		return 0; /* unknown argon2 type */
 
 	if (argon2_verify(as->data, para, strlen(para), hashtype) == ARGON2_OK)
-		return 2; /* MATCH */
+		return 1; /* MATCH */
 
-	return -1; /* NO MATCH or error */
+	return 0; /* NO MATCH or error */
 }
 
 static int authcheck_bcrypt(Client *cptr, AuthConfig *as, char *para)
 {
-char data[512]; /* NOTE: only 64 required by BF_crypt() */
-char *str;
+	char data[512]; /* NOTE: only 64 required by BF_crypt() */
+	char *str;
 
 	if (!para)
-		return -1;
+		return 0;
 
 	memset(data, 0, sizeof(data));
 	str = _crypt_blowfish_rn(para, as->data, data, sizeof(data));
 
 	if (!str)
-		return -1; /* ERROR / INVALID HASH */
+		return 0; /* ERROR / INVALID HASH */
 
 	if (!strcmp(str, as->data))
-		return 2; /* MATCH */
-	
-	return -1; /* NO MATCH */
+		return 1; /* MATCH */
+
+	return 0; /* NO MATCH */
 }
 
 static int authcheck_md5(Client *cptr, AuthConfig *as, char *para)
 {
-static char buf[512];
-int	i, r;
-char *saltstr, *hashstr;
+	static char buf[512];
+	int	i, r;
+	char *saltstr, *hashstr;
 
 	if (!para)
-		return -1;
+		return 0;
 	r = parsepass(as->data, &saltstr, &hashstr);
 	if (r == 0) /* Old method without salt: b64(MD5(<pass>)) */
 	{
 		char result[16];
-		
+
 		DoMD5(result, para, strlen(para));
 		if ((i = b64_encode(result, sizeof(result), buf, sizeof(buf))))
 		{
 			if (!strcmp(buf, as->data))
-				return 2;
-			else
-				return -1;
-		} else
-			return -1;
+				return 1;
+		}
+		return 0;
 	} else {
 		/* New method with salt: b64(MD5(MD5(<pass>)+salt)) */
 		char result1[MAXSALTLEN+16+1];
 		char result2[16];
 		char rsalt[MAXSALTLEN+1];
 		int rsaltlen;
-		
+
 		/* First, decode the salt to something real... */
 		rsaltlen = b64_decode(saltstr, rsalt, sizeof(rsalt));
 		if (rsaltlen <= 0)
-			return -1;
-		
+			return 0;
+
 		/* Then hash the password (1st round)... */
 		DoMD5(result1, para, strlen(para));
 
@@ -400,28 +398,25 @@ char *saltstr, *hashstr;
 
 		/* Then hash it all together again (2nd round)... */
 		DoMD5(result2, result1, rsaltlen+16);
-		
+
 		/* Then base64 encode it all and we are done... */
 		if ((i = b64_encode(result2, sizeof(result2), buf, sizeof(buf))))
 		{
 			if (!strcmp(buf, hashstr))
-				return 2;
-			else
-				return -1;
-		} else
-			return -1;
+				return 1;
+		}
+		return 0;
 	}
-	return -1; /* NOTREACHED */
 }
 
 static int authcheck_sha1(Client *cptr, AuthConfig *as, char *para)
 {
-char buf[512];
-int i, r;
-char *saltstr, *hashstr;
+	char buf[512];
+	int i, r;
+	char *saltstr, *hashstr;
 
 	if (!para)
-		return -1;
+		return 0;
 	r = parsepass(as->data, &saltstr, &hashstr);
 	if (r)
 	{
@@ -431,11 +426,11 @@ char *saltstr, *hashstr;
 		char rsalt[MAXSALTLEN+1];
 		int rsaltlen;
 		SHA_CTX hash;
-		
+
 		/* First, decode the salt to something real... */
 		rsaltlen = b64_decode(saltstr, rsalt, sizeof(rsalt));
 		if (rsaltlen <= 0)
-			return -1;
+			return 0;
 
 		/* Then hash the password (1st round)... */
 		SHA1_Init(&hash);
@@ -454,32 +449,28 @@ char *saltstr, *hashstr;
 		if ((i = b64_encode(result2, sizeof(result2), buf, sizeof(buf))))
 		{
 			if (!strcmp(buf, hashstr))
-				return 2;
-			else
-				return -1;
-		} else
-			return -1;
+				return 1;
+		}
+		return 0;
 	} else {
 		/* OLD auth */
 		if ((i = b64_encode(SHA1(para, strlen(para), NULL), 20, buf, sizeof(buf))))
 		{
 			if (!strcmp(buf, as->data))
-				return 2;
-			else
-				return -1;
-		} else
-			return -1;
+				return 1;
+		}
+		return 0;
 	}
 }
 
 static int authcheck_ripemd160(Client *cptr, AuthConfig *as, char *para)
 {
-char buf[512];
-int i, r;
-char *saltstr, *hashstr;
+	char buf[512];
+	int i, r;
+	char *saltstr, *hashstr;
 
 	if (!para)
-		return -1;
+		return 0;
 	r = parsepass(as->data, &saltstr, &hashstr);
 	if (r)
 	{
@@ -489,11 +480,11 @@ char *saltstr, *hashstr;
 		char rsalt[MAXSALTLEN+1];
 		int rsaltlen;
 		RIPEMD160_CTX hash;
-		
+
 		/* First, decode the salt to something real... */
 		rsaltlen = b64_decode(saltstr, rsalt, sizeof(rsalt));
 		if (rsaltlen <= 0)
-			return -1;
+			return 0;
 
 		/* Then hash the password (1st round)... */
 		RIPEMD160_Init(&hash);
@@ -510,22 +501,96 @@ char *saltstr, *hashstr;
 		if ((i = b64_encode(result2, sizeof(result2), buf, sizeof(buf))))
 		{
 			if (!strcmp(buf, hashstr))
-				return 2;
-			else
-				return -1;
-		} else
-			return -1;
+				return 1;
+		}
+		return 0;
 	} else {
 		/* OLD auth */
 		if ((i = b64_encode(RIPEMD160(para, strlen(para), NULL), 20, buf, sizeof(buf))))
 		{
 			if (!strcmp(buf, as->data))
-				return 2;
-			else
-				return -1;
-		} else
-			return -1;
+				return 1;
+		}
+		return 0;
 	}
+}
+
+static int authcheck_tls_clientcert(Client *cptr, AuthConfig *as, char *para)
+{
+	X509 *x509_clientcert = NULL;
+	X509 *x509_filecert = NULL;
+	FILE *x509_f = NULL;
+
+	if (!cptr->local->ssl)
+		return 0;
+	x509_clientcert = SSL_get_peer_certificate(cptr->local->ssl);
+	if (!x509_clientcert)
+		return 0;
+	if (!(x509_f = fopen(as->data, "r")))
+	{
+		X509_free(x509_clientcert);
+		return 0;
+	}
+	x509_filecert = PEM_read_X509(x509_f, NULL, NULL, NULL);
+	fclose(x509_f);
+	if (!x509_filecert)
+	{
+		X509_free(x509_clientcert);
+		return 0;
+	}
+	if (X509_cmp(x509_filecert, x509_clientcert) != 0)
+	{
+		X509_free(x509_clientcert);
+		X509_free(x509_filecert);
+		return 0;
+	}
+	X509_free(x509_clientcert);
+	X509_free(x509_filecert);
+	return 1;
+}
+
+static int authcheck_tls_clientcert_fingerprint(Client *cptr, AuthConfig *as, char *para)
+{
+	int i, k;
+	char hexcolon[EVP_MAX_MD_SIZE * 3 + 1];
+	char *fp;
+
+	if (!cptr->local->ssl)
+		return 0;
+
+	fp = moddata_client_get(cptr, "certfp");
+	if (!fp)
+		return 0;
+
+	/* Make a colon version so that we keep in line with
+	 * previous versions, based on Nath's patch -dboyz
+	 */
+	k=0;
+	for (i=0; i<strlen(fp); i++)
+	{
+		if (i != 0 && i % 2 == 0)
+			hexcolon[k++] = ':';
+		hexcolon[k++] = fp[i];
+	}
+	hexcolon[k] = '\0';
+
+	if (strcasecmp(as->data, hexcolon) && strcasecmp(as->data, fp))
+		return 0;
+
+	return 1;
+}
+
+static int authcheck_spkifp(Client *cptr, AuthConfig *as, char *para)
+{
+	char *fp = spki_fingerprint(cptr);
+
+	if (!fp)
+		return 0; /* auth failed: not SSL (or other failure) */
+
+	if (strcasecmp(as->data, fp))
+		return 0; /* auth failed: mismatch */
+
+	return 1; /* SUCCESS */
 }
 
 
@@ -535,36 +600,40 @@ char *saltstr, *hashstr;
  * para will used in coordination with the auth type	
 */
 
-/*
- * -1 if authentication failed
- *  1 if authentication succeeded
- *  2 if authentication succeeded, using parameter
- * -2 if authentication is delayed, don't error
- * No AuthConfig = everyone allowed
-*/
-int	Auth_Check(Client *cptr, AuthConfig *as, char *para)
+/** Check authentication, such as a password against the
+ * provided AuthConfig (which was parsed from the configuration
+ * file earlier).
+ * @param cptr    The client.
+ * @param as      The authentication config.
+ * @param para    The provided parameter (NULL allowed)
+ * @returns 1 if passed, 0 if incorrect (eg: invalid password)
+ * @notes
+ * - The return value was different in versions before UnrealIRCd 5.0.0!
+ * - In older versions a NULL 'as' was treated as an allow, now it's deny.
+ */
+int Auth_Check(Client *cptr, AuthConfig *as, char *para)
 {
-	extern	char *crypt();
+	extern char *crypt();
 	char *res;
 
-	if (!as)
-		return 1;
-		
+	if (!as->data)
+		return 0; /* Should not happen, but better be safe.. */
+
 	switch (as->type)
 	{
 		case AUTHTYPE_PLAINTEXT:
 			if (!para)
-				return -1;
+				return 0;
 			if (!strcmp(as->data, "changemeplease") && !strcmp(para, as->data))
 			{
 				sendto_realops("Rejecting default password 'changemeplease'. "
 				               "Please change the password in the configuration file.");
-				return -1;
+				return 0;
 			}
 			/* plain text compare */
 			if (!strcmp(para, as->data))
-				return 2;
-			return -1;
+				return 1;
+			return 0;
 
 		case AUTHTYPE_ARGON2:
 			return authcheck_argon2(cptr, as, para);
@@ -574,14 +643,11 @@ int	Auth_Check(Client *cptr, AuthConfig *as, char *para)
 
 		case AUTHTYPE_UNIXCRYPT:
 			if (!para)
-				return -1;
-			/* If our data is like 1 or none, we just let em through .. */
-			if (!(as->data[0] && as->data[1]))
-				return 1;
+				return 0;
 			res = crypt(para, as->data);
 			if (res && !strcmp(res, as->data))
-				return 2;
-			return -1;
+				return 1;
+			return 0;
 
 		case AUTHTYPE_MD5:
 			return authcheck_md5(cptr, as, para);
@@ -591,88 +657,20 @@ int	Auth_Check(Client *cptr, AuthConfig *as, char *para)
 
 		case AUTHTYPE_RIPEMD160:
 			return authcheck_ripemd160(cptr, as, para);
-		
-		case AUTHTYPE_TLS_CLIENTCERT:
-		{
-			X509 *x509_clientcert = NULL;
-			X509 *x509_filecert = NULL;
-			FILE *x509_f = NULL;
 
-			if (!cptr->local->ssl)
-				return -1;
-			x509_clientcert = SSL_get_peer_certificate(cptr->local->ssl);
-			if (!x509_clientcert)
-				return -1;
-			if (!(x509_f = fopen(as->data, "r")))
-			{
-				X509_free(x509_clientcert);
-				return -1;
-			}
-			x509_filecert = PEM_read_X509(x509_f, NULL, NULL, NULL);
-			fclose(x509_f);
-			if (!x509_filecert)
-			{
-				X509_free(x509_clientcert);
-				return -1;
-			}
-			if (X509_cmp(x509_filecert, x509_clientcert) != 0)
-			{
-				X509_free(x509_clientcert);
-				X509_free(x509_filecert);
-				break;
-			}
-			X509_free(x509_clientcert);
-			X509_free(x509_filecert);
-			return 2;	
-		}
+		case AUTHTYPE_TLS_CLIENTCERT:
+			return authcheck_tls_clientcert(cptr, as, para);
 
 		case AUTHTYPE_TLS_CLIENTCERTFP:
-		{
-			int i, k;
-			char hexcolon[EVP_MAX_MD_SIZE * 3 + 1];
-			char *fp;
-
-			if (!cptr->local->ssl)
-				return -1;
-			
-			fp = moddata_client_get(cptr, "certfp");
-			if (!fp)
-				return -1;
-				
-			/* Make a colon version so that we keep in line with
-			 * previous versions, based on Nath's patch -dboyz
-			 */
-			k=0;
-			for (i=0; i<strlen(fp); i++) {
-				if (i != 0 && i % 2 == 0)
-					hexcolon[k++] = ':';
-				hexcolon[k++] = fp[i];
- 			}
-			hexcolon[k] = '\0';
-
-			if (strcasecmp(as->data, hexcolon) && strcasecmp(as->data, fp))
-				return -1;
-
-			return 2;
-		}
+			return authcheck_tls_clientcert_fingerprint(cptr, as, para);
 
 		case AUTHTYPE_SPKIFP:
-		{
-			char *fp = spki_fingerprint(cptr);
-
-			if (!fp)
-				return -1; /* auth failed: not SSL (or other failure) */
-
-			if (strcasecmp(as->data, fp))
-				return -1; /* auth failed: mismatch */
-
-			return 2; /* SUCCESS */
-		}
+			return authcheck_spkifp(cptr, as, para);
 
 		case AUTHTYPE_INVALID:
-			return -1; /* Should never happen */
+			return 0; /* Should never happen */
 	}
-	return -1;
+	return 0;
 }
 
 #define UNREALIRCD_ARGON2_DEFAULT_TIME_COST             3
@@ -730,11 +728,11 @@ static char *mkpass_bcrypt(char *para)
 
 	for (i=0; i<sizeof(random_data); i++)
 		random_data[i] = getrandom8();
-	
+
 	saltstr = _crypt_gensalt_blowfish_rn("$2y", 9, random_data, sizeof(random_data), salt, sizeof(salt));
 	if (!saltstr)
 		return NULL;
-	
+
 	str = _crypt_blowfish_rn(para, saltstr, data, sizeof(data));
 
 	if (!str)

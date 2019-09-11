@@ -1807,16 +1807,14 @@ int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 				}
 			}
 		}
-		if ((i = Auth_Check(cptr, aconf->auth, cptr->local->passwd)) == -1)
+		if (!Auth_Check(cptr, aconf->auth, cptr->local->passwd))
 		{
 			/* Always do continue if password was wrong. */
 			continue;
 		}
-		if ((i == 2) && (cptr->local->passwd))
-		{
-			MyFree(cptr->local->passwd);
-			cptr->local->passwd = NULL;
-		}
+		/* Password (or other auth method) was correct */
+		safefree(cptr->local->passwd);
+
 		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
 		{
 			cptr->local->class = aconf->class;

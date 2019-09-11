@@ -253,6 +253,7 @@ It is therefore best to wait until beta1. You have been warned ;).
 * We now use our own BuildBot infrastructure, so Travis-CI and AppVeyor
   have been removed.
 * We now use a new test framework.
+* Auth_Check() now returns 1 for allow and 0 on deny (!!)
 * New function new_message() which should be called when a new message
   is sent, or at least for all channel events. It adds (or inherits)
   message tags like 'account', 'msgid', 'time', etc.

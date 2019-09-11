@@ -60,6 +60,7 @@ CMD_FUNC(m_vhost)
 	char *login, *password, host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 	int	len, length;
 	int 	i;
+	char olduser[USERLEN+1];
 
 	if (!MyClient(sptr))
 		return 0;
@@ -100,68 +101,7 @@ CMD_FUNC(m_vhost)
 		return 0;
 	}
 
-	i = Auth_Check(cptr, vhost->auth, password);
-	if (i > 0)
-	{
-		char olduser[USERLEN+1];
-		
-		userhost_save_current(sptr);
-
-		switch (UHOST_ALLOWED)
-		{
-			case UHALLOW_NEVER:
-				if (MyClient(sptr))
-				{
-					sendnotice(sptr, "*** /vhost is disabled");
-					return 0;
-				}
-				break;
-			case UHALLOW_ALWAYS:
-				break;
-			case UHALLOW_NOCHANS:
-				if (MyClient(sptr) && sptr->user->joined)
-				{
-					sendnotice(sptr, "*** /vhost can not be used while you are on a channel");
-					return 0;
-				}
-				break;
-			case UHALLOW_REJOIN:
-				/* join sent later when the host has been changed */
-				break;
-		}
-		safestrdup(sptr->user->virthost, vhost->virthost);
-		if (vhost->virtuser)
-		{
-			strcpy(olduser, sptr->user->username);
-			strlcpy(sptr->user->username, vhost->virtuser, USERLEN);
-			sendto_server(cptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name,
-			    sptr->user->username);
-		}
-		sptr->umodes |= UMODE_HIDE;
-		sptr->umodes |= UMODE_SETHOST;
-		sendto_server(cptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, sptr->user->virthost);
-		sendto_one(sptr, NULL, ":%s MODE %s :+tx", sptr->name, sptr->name);
-		if (vhost->swhois)
-		{
-			SWhois *s;
-			for (s = vhost->swhois; s; s = s->next)
-				swhois_add(sptr, "vhost", -100, s->line, &me, NULL);
-		}
-		sendnumeric(sptr, RPL_HOSTHIDDEN, vhost->virthost);
-		sendnotice(sptr, "*** Your vhost is now %s%s%s",
-			vhost->virtuser ? vhost->virtuser : "",
-			vhost->virtuser ? "@" : "",
-			vhost->virthost);
-		sendto_snomask(SNO_VHOST,
-		    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s%s%s",
-		    login, sptr->name,
-		    vhost->virtuser ? olduser : sptr->user->username,
-		    sptr->user->realhost, vhost->virtuser ? vhost->virtuser : "", 
-		    	vhost->virtuser ? "@" : "", vhost->virthost);
-		userhost_changed(sptr);
-		return 0;
-	}
-	if (i == -1)
+	if (!Auth_Check(cptr, vhost->auth, password))
 	{
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
@@ -171,7 +111,66 @@ CMD_FUNC(m_vhost)
 		sendnotice(sptr, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
 		return 0;
 	}
-	/* Belay that order, Lt. (upon -2)*/
-	
-	return 0;	
+
+	/* Authentication passed, but.. there could still be other restrictions: */
+	switch (UHOST_ALLOWED)
+	{
+		case UHALLOW_NEVER:
+			if (MyClient(sptr))
+			{
+				sendnotice(sptr, "*** /vhost is disabled");
+				return 0;
+			}
+			break;
+		case UHALLOW_ALWAYS:
+			break;
+		case UHALLOW_NOCHANS:
+			if (MyClient(sptr) && sptr->user->joined)
+			{
+				sendnotice(sptr, "*** /vhost can not be used while you are on a channel");
+				return 0;
+			}
+			break;
+		case UHALLOW_REJOIN:
+			/* join sent later when the host has been changed */
+			break;
+	}
+
+	/* All checks passed, now let's go ahead and change the host */
+
+	userhost_save_current(sptr);
+
+	safestrdup(sptr->user->virthost, vhost->virthost);
+	if (vhost->virtuser)
+	{
+		strcpy(olduser, sptr->user->username);
+		strlcpy(sptr->user->username, vhost->virtuser, USERLEN);
+		sendto_server(cptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name,
+		    sptr->user->username);
+	}
+	sptr->umodes |= UMODE_HIDE;
+	sptr->umodes |= UMODE_SETHOST;
+	sendto_server(cptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, sptr->user->virthost);
+	sendto_one(sptr, NULL, ":%s MODE %s :+tx", sptr->name, sptr->name);
+	if (vhost->swhois)
+	{
+		SWhois *s;
+		for (s = vhost->swhois; s; s = s->next)
+			swhois_add(sptr, "vhost", -100, s->line, &me, NULL);
+	}
+	sendnumeric(sptr, RPL_HOSTHIDDEN, vhost->virthost);
+	sendnotice(sptr, "*** Your vhost is now %s%s%s",
+		vhost->virtuser ? vhost->virtuser : "",
+		vhost->virtuser ? "@" : "",
+		vhost->virthost);
+	sendto_snomask(SNO_VHOST,
+	    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s%s%s",
+	    login, sptr->name,
+	    vhost->virtuser ? olduser : sptr->user->username,
+	    sptr->user->realhost, vhost->virtuser ? vhost->virtuser : "", 
+		vhost->virtuser ? "@" : "", vhost->virthost);
+
+	userhost_changed(sptr);
+
+	return 0;
 }

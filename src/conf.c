@@ -2181,7 +2181,7 @@ void	config_rehash()
 		safefree(oper_ptr->snomask);
 		safefree(oper_ptr->operclass);
 		safefree(oper_ptr->vhost);
-		Auth_DeleteAuthConfig(oper_ptr->auth);
+		Auth_FreeAuthConfig(oper_ptr->auth);
 		unreal_delete_masks(oper_ptr->mask);
 		DelListItem(oper_ptr, conf_oper);
 		for (s = oper_ptr->swhois; s; s = s_next)
@@ -2234,7 +2234,7 @@ void	config_rehash()
 		next = (ListStruct *)allow_ptr->next;
 		safefree(allow_ptr->ip);
 		safefree(allow_ptr->hostname);
-		Auth_DeleteAuthConfig(allow_ptr->auth);
+		Auth_FreeAuthConfig(allow_ptr->auth);
 		DelListItem(allow_ptr, conf_allow);
 		MyFree(allow_ptr);
 	}
@@ -2287,7 +2287,7 @@ void	config_rehash()
 		next = (ListStruct *)vhost_ptr->next;
 
 		safefree(vhost_ptr->login);
-		Auth_DeleteAuthConfig(vhost_ptr->auth);
+		Auth_FreeAuthConfig(vhost_ptr->auth);
 		safefree(vhost_ptr->virthost);
 		safefree(vhost_ptr->virtuser);
 		unreal_delete_masks(vhost_ptr->mask);
@@ -2365,9 +2365,9 @@ void	config_rehash()
 
 	if (conf_drpass)
 	{
-		Auth_DeleteAuthConfig(conf_drpass->restartauth);
+		Auth_FreeAuthConfig(conf_drpass->restartauth);
 		conf_drpass->restartauth = NULL;
-		Auth_DeleteAuthConfig(conf_drpass->dieauth);
+		Auth_FreeAuthConfig(conf_drpass->dieauth);
 		conf_drpass->dieauth = NULL;
 		safefree(conf_drpass);
 	}
@@ -4335,14 +4335,14 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "restart"))
 		{
 			if (conf_drpass->restartauth)
-				Auth_DeleteAuthConfig(conf_drpass->restartauth);
+				Auth_FreeAuthConfig(conf_drpass->restartauth);
 
 			conf_drpass->restartauth = AuthBlockToAuthConfig(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "die"))
 		{
 			if (conf_drpass->dieauth)
-				Auth_DeleteAuthConfig(conf_drpass->dieauth);
+				Auth_FreeAuthConfig(conf_drpass->dieauth);
 
 			conf_drpass->dieauth = AuthBlockToAuthConfig(cep);
 		}
@@ -6239,7 +6239,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 					             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 					errors++;
 				}
-				Auth_DeleteAuthConfig(auth);
+				Auth_FreeAuthConfig(auth);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hub"))
@@ -9909,7 +9909,7 @@ void link_cleanup(ConfigItem_link *link_ptr)
 {
 	safefree(link_ptr->servername);
 	unreal_delete_masks(link_ptr->incoming.mask);
-	Auth_DeleteAuthConfig(link_ptr->auth);
+	Auth_FreeAuthConfig(link_ptr->auth);
 	safefree(link_ptr->outgoing.bind_ip);
 	safefree(link_ptr->outgoing.hostname);
 	safefree(link_ptr->hub);

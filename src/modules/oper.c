@@ -83,8 +83,7 @@ CMD_FUNC(m_oper)
 {
 	ConfigItem_oper *operblock;
 	char *name, *password;
-	int i = 0, j = 0;
-	long old = sptr->umodes & ALL_UMODES; /* old user modes */
+	long old_umodes = sptr->umodes & ALL_UMODES;
 
 	if (!MyClient(sptr))
 		return 0;
@@ -162,8 +161,7 @@ CMD_FUNC(m_oper)
 		return 0;
 	}
 
-	i = Auth_Check(cptr, operblock->auth, password);
-	if (i == -1)
+	if (!Auth_Check(cptr, operblock->auth, password))
 	{
 		sendnumeric(sptr, ERR_PASSWDMISMATCH);
 		if (FAILOPER_WARN)
@@ -177,9 +175,6 @@ CMD_FUNC(m_oper)
 		sptr->local->since += 7;
 		return 0;
 	}
-	
-	if (i < 2)
-		return 0; /* anything below 2 means 'not really authenticated' */
 
 	/* Authentication of the oper succeeded (like, password, ssl cert),
 	 * but we still have some other restrictions to check below as well,
@@ -285,7 +280,7 @@ CMD_FUNC(m_oper)
 		sptr->umodes |= UMODE_SERVNOTICE;
 	}
 	
-	send_umode_out(cptr, sptr, old);
+	send_umode_out(cptr, sptr, old_umodes);
 	sendnumeric(sptr, RPL_SNOMASK, get_sno_str(sptr));
 
 	list_add(&sptr->special_node, &oper_list);
@@ -295,7 +290,7 @@ CMD_FUNC(m_oper)
 	sendnumeric(sptr, RPL_YOUREOPER);
 
 	/* Update statistics */
-	if (IsInvisible(sptr) && !(old & UMODE_INVISIBLE))
+	if (IsInvisible(sptr) && !(old_umodes & UMODE_INVISIBLE))
 		ircstats.invisible++;
 	if (IsOper(sptr) && !IsHideOper(sptr))
 		ircstats.operators++;

@@ -470,7 +470,7 @@ extern int b64_decode(char const *src, unsigned char *target, size_t targsize);
 
 extern AuthenticationType Auth_FindType(char *hash, char *type);
 extern AuthConfig	*AuthBlockToAuthConfig(ConfigEntry *ce);
-extern void		Auth_DeleteAuthConfig(AuthConfig *as);
+extern void		Auth_FreeAuthConfig(AuthConfig *as);
 extern int		Auth_Check(Client *cptr, AuthConfig *as, char *para);
 extern char   		*Auth_Hash(int type, char *para);
 extern int   		Auth_CheckError(ConfigEntry *ce);

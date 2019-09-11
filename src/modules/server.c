@@ -318,7 +318,7 @@ errlink:
 
 skip_host_check:
 	/* Now for checking passwords */
-	if (Auth_Check(cptr, link->auth, cptr->local->passwd) == -1)
+	if (!Auth_Check(cptr, link->auth, cptr->local->passwd))
 	{
 		/* Let's help admins a bit with a good error message in case
 		 * they mix different authentication systems (plaintext password

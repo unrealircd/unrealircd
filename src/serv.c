@@ -790,15 +790,11 @@ char *reason = parv[1];
 		/* Syntax: /restart <pass> [reason] */
 		if (conf_drpass)
 		{
-			int ret;
-			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
-			if (ret == -1)
+			if (!Auth_Check(cptr, conf_drpass->restartauth, parv[1]))
 			{
 				sendnumeric(sptr, ERR_PASSWDMISMATCH);
 				return 0;
 			}
-			if (ret < 1)
-				return 0;
 			reason = parv[2];
 		}
 	}
@@ -1114,14 +1110,9 @@ CMD_FUNC(m_die)
 			sendnumeric(sptr, ERR_NEEDMOREPARAMS, "DIE");
 			return 0;
 		}
-		i = Auth_Check(cptr, conf_drpass->dieauth, parv[1]);
-		if (i == -1)
+		if (!Auth_Check(cptr, conf_drpass->dieauth, parv[1]))
 		{
 			sendnumeric(sptr, ERR_PASSWDMISMATCH);
-			return 0;
-		}
-		if (i < 1)
-		{
 			return 0;
 		}
 	}
