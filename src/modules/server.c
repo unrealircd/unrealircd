@@ -275,7 +275,7 @@ int _verify_link(Client *cptr, Client *sptr, char *servername, ConfigItem_link *
 
 			sendto_one(cptr, NULL, "ERROR :%s", xerrmsg);
 			sendto_ops_and_log("Outgoing link aborted to %s(%s@%s) (%s) %s",
-				cptr->serv->conf->servername, cptr->username, cptr->local->sockhost, xerrmsg, inpath);
+				cptr->serv->conf->servername, cptr->ident, cptr->local->sockhost, xerrmsg, inpath);
 			return exit_client(cptr, sptr, &me, NULL, xerrmsg);
 		}
 		link = cptr->serv->conf;
@@ -311,7 +311,7 @@ errlink:
 		    servername, GetIP(cptr), inpath);
 		/* And send the "verbose" error msg only to locally connected ircops */
 		sendto_ops_and_log("Link denied for %s(%s@%s) (%s) %s",
-		    servername, cptr->username, cptr->local->sockhost, xerrmsg, inpath);
+		    servername, cptr->ident, cptr->local->sockhost, xerrmsg, inpath);
 		return exit_client(cptr, sptr, &me, NULL,
 		    "Link denied (No link block found with your server name or link::incoming::mask did not match)");
 	}

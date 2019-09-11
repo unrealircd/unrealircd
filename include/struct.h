@@ -929,7 +929,7 @@ struct Client {
 	                                             It is never NULL */
 	unsigned char hopcount;			/**< Number of servers to this, 0 means local client */
 	char name[HOSTLEN + 1];			/**< Unique name of the client: nickname for persons, hostname for servers */
-	char username[USERLEN + 1];		/**< Username, or actually the ident */
+	char ident[USERLEN + 1];		/**< Ident of the user, if available. Otherwise set to "unknown". */
 	char info[REALLEN + 1];			/**< Additional client information text. For persons this is gecos/realname */
 	char id[IDLEN + 1];			/**< Unique ID: SID or UID */
 	Client *srvptr;				/**< Server on where this client is connected to (can be &me) */

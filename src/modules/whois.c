@@ -147,7 +147,7 @@ CMD_FUNC(m_whois)
 			if ((acptr == sptr) || IsOper(sptr))
 			{
 				sendnumeric(sptr, RPL_WHOISHOST, acptr->name,
-					(MyConnect(acptr) && strcmp(acptr->username, "unknown")) ? acptr->username : "*",
+					(MyConnect(acptr) && strcmp(acptr->ident, "unknown")) ? acptr->ident : "*",
 					acptr->user->realhost, acptr->ip ? acptr->ip : "");
 			}
 

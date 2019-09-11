@@ -284,7 +284,7 @@ char *get_client_name(Client *sptr, int showip)
 			(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%s@%s.%u]",
 			    sptr->name,
 			    (!(sptr->flags & FLAGS_GOTID)) ? "" :
-			    sptr->username,
+			    sptr->ident,
 			    sptr->ip ? sptr->ip : "???",
 			    (unsigned int)sptr->local->port);
 		else
@@ -310,7 +310,7 @@ char *get_client_host(Client *cptr)
 		return get_client_name(cptr, FALSE);
 	(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%-.*s@%-.*s]",
 	    cptr->name, USERLEN,
-  	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
+  	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->ident,
 	    HOSTLEN, cptr->local->hostp->h_name);
 	return nbuf;
 }

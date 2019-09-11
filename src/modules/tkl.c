@@ -4542,7 +4542,7 @@ int _match_user(char *rmask, Client *acptr, int options)
 		p = strchr(p ? p : mask, '@');
 		if (p)
 		{
-			char *client_username = (acptr->user && *acptr->user->username) ? acptr->user->username : acptr->username;
+			char *client_username = (acptr->user && *acptr->user->username) ? acptr->user->username : acptr->ident;
 
 			*p++ = '\0';
 			if (!*p || !*mask)

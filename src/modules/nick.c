@@ -312,7 +312,7 @@ CMD_FUNC(m_uid)
 				    me.name, sptr->name, me.name,
 				    get_client_name(cptr, FALSE),
 				    sptr->name,
-				    sptr->user ? sptr->username : "",
+				    sptr->user ? sptr->ident : "",
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
 				sptr->flags |= FLAGS_KILLED;
@@ -645,7 +645,7 @@ CMD_FUNC(m_nick)
 				    me.name, sptr->name, me.name,
 				    get_client_name(cptr, FALSE),
 				    sptr->name,
-				    sptr->user ? sptr->username : "",
+				    sptr->user ? sptr->ident : "",
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
 				sptr->flags |= FLAGS_KILLED;
@@ -1259,7 +1259,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		 * username. -Donwulff
 		 *
 		 * I do, We only allow a-z A-Z 0-9 _ - and . now so the
-		 * !strchr(sptr->username, '@') check is out of date. -Cabal95
+		 * !strchr(sptr->ident, '@') check is out of date. -Cabal95
 		 *
 		 * Moved the noident stuff here. -OnyxDragon
 		 */
@@ -1270,7 +1270,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		if (!(sptr->flags & FLAGS_DOID))
 			strlcpy(user->username, temp, USERLEN + 1);
 		else if (sptr->flags & FLAGS_GOTID)
-			strlcpy(user->username, sptr->username, USERLEN+1);
+			strlcpy(user->username, sptr->ident, USERLEN+1);
 		else
 		{
 			if (IDENT_CHECK == 0) {
@@ -1724,7 +1724,7 @@ int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 				if (aconf->flags.noident)
 					strlcpy(uhost, username, sizeof(uhost));
 				else
-					strlcpy(uhost, cptr->username, sizeof(uhost));
+					strlcpy(uhost, cptr->ident, sizeof(uhost));
 				strlcat(uhost, "@", sizeof(uhost));
 			}
 			else
@@ -1739,7 +1739,7 @@ int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 			if (aconf->flags.noident)
 				strlcpy(uhost, username, sizeof(uhost));
 			else
-				strlcpy(uhost, cptr->username, sizeof(uhost));
+				strlcpy(uhost, cptr->ident, sizeof(uhost));
 			(void)strlcat(uhost, "@", sizeof(uhost));
 		}
 		else
@@ -1758,7 +1758,7 @@ int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 				if (aconf->flags.noident)
 					strlcpy(uhost, username, sizeof(uhost));
 				else
-					strlcpy(uhost, cptr->username, sizeof(uhost));
+					strlcpy(uhost, cptr->ident, sizeof(uhost));
 				strlcat(uhost, "@localhost", sizeof(uhost));
 			}
 			else

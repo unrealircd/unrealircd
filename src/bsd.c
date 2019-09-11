@@ -1700,7 +1700,7 @@ static void read_authports(int fd, int revents, void *userdata)
 		return;
 	}
 	ircstp->is_asuc++;
-	strlcpy(cptr->username, ruser, USERLEN + 1);
+	strlcpy(cptr->ident, ruser, USERLEN + 1);
 	cptr->flags |= FLAGS_GOTID;
 	Debug((DEBUG_INFO, "got username [%s]", ruser));
 	return;

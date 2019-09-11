@@ -111,7 +111,7 @@ Client *make_client(Client *from, Client *servr)
 	INIT_LIST_HEAD(&cptr->client_hash);
 	INIT_LIST_HEAD(&cptr->id_hash);
 
-	(void)strcpy(cptr->username, "unknown");
+	(void)strcpy(cptr->ident, "unknown");
 	if (!from)
 	{
 		/* Local client */
