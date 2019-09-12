@@ -486,11 +486,10 @@ int reqmods_hook_serverconnect(Client *sptr)
 	 * which will then run through the received list and check the names/versions
 	 */
 	char modbuf[64];
-	char sendbuf[BUFSIZE - HOSTLEN - 4]; // Try to use a large as buffer as possible (while accounting for ":<server name> ")
+	/* Try to use a large buffer, but take into account the hostname, command, spaces, etc */
+	char sendbuf[BUFSIZE - HOSTLEN - 16];
 	Module *mod;
 	size_t len, modlen;
-	size_t bufsize, modsize;
-	int count;
 
 	/* Let's not have leaves directly connected to the hub send their module list to other *leaves* as well =]
 	 * Since the hub will introduce all servers currently linked to it, this POST_SERVER_CONNECT hook is
@@ -501,31 +500,24 @@ int reqmods_hook_serverconnect(Client *sptr)
 
 	sendbuf[0] = '\0';
 	len = 0;
-	count = 0;
-	bufsize = sizeof(sendbuf);
-	modsize = sizeof(modbuf);
 
 	for (mod = Modules; mod; mod = mod->next)
 	{
 		/* At this stage we don't care if the module isn't global (or not fully loaded), we'll dump all modules
 		 * so we can properly deny certain ones across the network
 		 */
-		ircsnprintf(modbuf, modsize, "%c:%s:%s", ((mod->options & MOD_OPT_GLOBAL) ? 'G' : 'L'), mod->header->name, mod->header->version);
-		modlen = strlen(modbuf);
-		if ((len + modlen + 2) > bufsize) // Adding 2 to because 1) null byte 2) space between modules
+		ircsnprintf(modbuf, sizeof(modbuf), "%c:%s:%s", ((mod->options & MOD_OPT_GLOBAL) ? 'G' : 'L'), mod->header->name, mod->header->version);
+		modlen = strlen(modbuf) + 1;
+		if (len + modlen > sizeof(sendbuf))
 		{
 			// "Flush" current list =]
 			sendto_one(sptr, NULL, ":%s %s :%s", me.id, MSG_SMOD, sendbuf);
 			sendbuf[0] = '\0';
 			len = 0;
-			count = 0;
 		}
 
-		ircsnprintf(sendbuf + len, bufsize - len, "%s%s", (len > 0 ? " " : ""), modbuf);
-		if (len)
-			len++; // Include the space if necessary
+		ircsnprintf(sendbuf + len, sizeof(sendbuf) - len, "%s%s", (len > 0 ? " " : ""), modbuf);
 		len += modlen;
-		count++;
 	}
 
 	// May have something left
