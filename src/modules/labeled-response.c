@@ -265,6 +265,9 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
  */
 int labeled_response_mtag_is_ok(Client *acptr, char *name, char *value)
 {
+	if (BadPtr(value))
+		return 0;
+
 	if (IsServer(acptr))
 		return 1;
 
@@ -277,7 +280,7 @@ int labeled_response_mtag_is_ok(Client *acptr, char *name, char *value)
 		return 0;
 
 	/* Do some basic sanity checking for non-servers */
-	if (value && strlen(value) <= 64)
+	if (strlen(value) <= 64)
 		return 1;
 
 	return 0;

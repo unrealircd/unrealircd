@@ -73,11 +73,11 @@ MOD_UNLOAD(server-time)
 /** This function verifies if the client sending
  * 'server-time' is permitted to do so and uses a permitted
  * syntax.
- * We simply allow server-time ONLY from servers and with any syntax.
+ * We simply allow server-time ONLY from servers.
  */
 int server_time_mtag_is_ok(Client *acptr, char *name, char *value)
 {
-	if (IsServer(acptr))
+	if (IsServer(acptr) && !BadPtr(value))
 		return 1;
 
 	return 0;
