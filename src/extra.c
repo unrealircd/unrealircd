@@ -243,7 +243,7 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 	ConfigItem_log *logs;
 	char buf[2048], timebuf[128];
 	struct stat fstats;
-	int written = 0, write_failure = 0;
+	int written = 0;
 	int n;
 
 	/* Trap infinite recursions to avoid crash if log file is unavailable,
@@ -324,7 +324,6 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 							last_log_file_warning = TStime();
 						}
 					}
-					write_failure = 1;
 					continue;
 				}
 			}
@@ -353,8 +352,6 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 						last_log_file_warning = TStime();
 					}
 				}
-
-				write_failure = 1;
 			}
 		}
 	}

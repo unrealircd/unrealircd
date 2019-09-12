@@ -53,8 +53,7 @@ int i;
 
 Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 {
-int slot;
-char tmpbuf[512];
+	int slot;
 
 	if (findmod_by_bantype(req.flag))
 	{
@@ -94,7 +93,6 @@ char tmpbuf[512];
 
 void ExtbanDel(Extban *eb)
 {
-char tmpbuf[512];
 	/* Just zero it all away.. */
 
 	if (eb->owner)

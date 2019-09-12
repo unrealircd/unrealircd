@@ -172,7 +172,7 @@ int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 int webredir_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
-	ConfigEntry *cep, *cep2;
+	ConfigEntry *cep;
 
 	if (type != CONFIG_SET)
 		return 0;

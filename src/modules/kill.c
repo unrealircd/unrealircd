@@ -68,7 +68,7 @@ CMD_FUNC(m_kill)
 	char inpath[HOSTLEN * 2 + USERLEN + 5];
 	char *oinpath = get_client_name(cptr, FALSE);
 	char *user, *path, *killer, *nick, *p, *s;
-	int  chasing = 0, kcount = 0;
+	int kcount = 0;
 	Hook *h;
 	int ntargets = 0, n;
 	int maxtargets = max_targets_for_command("KILL");

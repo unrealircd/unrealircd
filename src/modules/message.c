@@ -163,11 +163,9 @@ int ret;
 */
 int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice)
 {
-	Client *acptr, *srvptr;
-	char *s;
+	Client *acptr;
 	Channel *chptr;
-	char *nick, *server, *p, *p2, *pc, *text, *errmsg, *newcmd;
-	int  cansend = 0;
+	char *nick, *p, *p2, *pc, *text, *errmsg, *newcmd;
 	int  prefix = 0;
 	char pfixchan[CHANNELLEN + 4];
 	int ret;

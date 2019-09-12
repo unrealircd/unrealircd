@@ -312,10 +312,8 @@ unsigned short modesleft = MAXMODEPARAMS * 2; /* be generous... */
  */
 static void mode_cutoff2(Client *sptr, Channel *chptr, int *parc_out, char *parv[])
 {
-int modes = 0;
-char *s;
-int len, i;
-int parc = *parc_out;
+	int len, i;
+	int parc = *parc_out;
 
 	if (parc-2 <= 3)
 		return; /* Less than 3 mode parameters? Then we don't even have to check */
@@ -746,9 +744,6 @@ int  do_mode_char(Channel *chptr, long modetype, char modechar, char *param,
 	char tmpbuf[512], *tmpstr;
 	char tc = ' ';		/* */
 	int  chasing = 0, x;
-	int xxi, xyi, xzi, hascolon;
-	char *xp;
-	int  notsecure;
 	Hook *h;
 
 	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr) &&

@@ -75,7 +75,7 @@ static int parsepass(char *str, char **salt, char **hash)
  */
 int Auth_AutoDetectHashType(char *hash)
 {
-	static char buf[512], hashbuf[256];
+	static char hashbuf[256];
 	char *saltstr, *hashstr;
 	int bits;
 

@@ -176,9 +176,6 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 
 static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 {
-	int verify_err = 0;
-
-	verify_err = X509_STORE_CTX_get_error(ctx);
 	/* We accept the connection. Certificate verifiction takes
 	 * place elsewhere, such as in _verify_link().
 	 */
@@ -608,8 +605,6 @@ void SSL_set_nonblocking(SSL *s)
 char *tls_get_cipher(SSL *ssl)
 {
 	static char buf[256];
-	int bits;
-	const SSL_CIPHER *c; 
 	
 	buf[0] = '\0';
 	strlcpy(buf, SSL_get_version(ssl), sizeof(buf));
@@ -1276,7 +1271,6 @@ int outdated_tls_client(Client *acptr)
 	char buf[1024], *name, *p;
 	const char *client_protocol = SSL_get_version(acptr->local->ssl);
 	const char *client_ciphersuite = SSL_get_cipher(acptr->local->ssl);
-	int bad = 0;
 
 	if (!tlsoptions)
 		return 0; /* odd.. */

@@ -868,8 +868,6 @@ static int internal_getscore(char *str)
 
 void strtolower_safe(char *dst, char *src, int size)
 {
-	int i;
-
 	if (!size)
 		return; /* size of 0 is unworkable */
 	size--; /* for \0 */
@@ -929,7 +927,7 @@ static int get_spam_score(Client *sptr)
 void check_all_users(void)
 {
 	Client *acptr;
-	int i, matches=0, score;
+	int matches=0, score;
 	
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{

@@ -140,7 +140,6 @@ CMD_FUNC(m_sjoin)
 	unsigned short merge;	/**< same timestamp: merge their & our modes */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	char cbuf[1024];
-	char buf[1024];
 	char nick[1024]; /**< nick or ban/invex/exempt being processed */
 	char scratch_buf[1024]; /**< scratch buffer */
 	char prefix[16]; /**< prefix of nick for server to server traffic (eg: @) */
@@ -154,8 +153,8 @@ CMD_FUNC(m_sjoin)
 	int pcount, i;
 	Hook *h;
 	time_t ts, oldts;
-	unsigned short b=0, c;
-	char *t, *bp, *tp, *p, *saved = NULL;
+	unsigned short b=0;
+	char *tp, *p, *saved = NULL;
 	long modeflags;
 	char queue_s=0, queue_c=0; /* oh this is soooooo ugly :p */
 	
@@ -356,10 +355,7 @@ CMD_FUNC(m_sjoin)
 	parabuf[0] = 0;
 	modebuf[0] = '+';
 	modebuf[1] = '\0';
-	t = parv[parc - 1];
 	b = 1;
-	c = 0;
-	bp = buf;
 	strlcpy(cbuf, parv[parc-1], sizeof cbuf);
 
 	sj3_parabuf[0] = '\0';
@@ -387,7 +383,6 @@ CMD_FUNC(m_sjoin)
 		time_t setat = TStime(); /**< Set at timestamp */
 		int sjsby_info = 0; /**< Set to 1 if we receive SJSBY info to alter the above 2 vars */
 
-		c = 0;
 		modeflags = 0;
 		i = 0;
 		tp = s;

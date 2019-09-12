@@ -65,7 +65,6 @@ CMD_FUNC(m_part)
 	char *commentx = (parc > 2 && parv[2]) ? parv[2] : NULL;
 	char *comment;
 	int n;
-	Hook *h;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("PART");
 	

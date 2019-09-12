@@ -88,7 +88,6 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 {
 	char comment[512];
 	char *new_server, *existing_server;
-	char reintroduce_existing_user = 0;
 
 	ircd_log(LOG_ERROR, "Nick collision: %s[%s]@%s (new) vs %s[%s]@%s (existing). Winner: %s. Type: %s",
 		newnick, newid ? newid : "", cptr->name,
@@ -265,11 +264,9 @@ CMD_FUNC(m_uid)
 	int ishold;
 	Client *acptr, *serv = NULL;
 	Client *acptrs;
-	char nick[NICKLEN + 2], *s, descbuf[BUFSIZE];
-	Membership *mp;
+	char nick[NICKLEN + 2];
 	long lastnick = 0l;
-	int  differ = 1, update_watch = 1;
-	unsigned char removemoder = 1;
+	int  differ = 1;
 
 	if (parc < 13)
 	{
@@ -571,7 +568,7 @@ CMD_FUNC(m_nick)
 	int ishold;
 	Client *acptr, *serv = NULL;
 	Client *acptrs;
-	char nick[NICKLEN + 2], *s, descbuf[BUFSIZE];
+	char nick[NICKLEN + 2], descbuf[BUFSIZE];
 	Membership *mp;
 	long lastnick = 0l;
 	int  differ = 1, update_watch = 1;
@@ -1187,14 +1184,12 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 {
 	ConfigItem_ban *bconf;
 	char *tmpstr;
-	const char *id;
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
 	int  xx;
 	ClientUser *user = sptr->user;
 	Client *nsptr;
 	int  i;
-	char mo[256];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -1687,11 +1682,10 @@ int check_client(Client *cptr, char *username)
  * @returns Must return 0 if user is permitted. If the client should be rejected then
  * use return exit_client(...)
  */
-int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username)
+int AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username)
 {
 	ConfigItem_allow *aconf;
 	char *hname;
-	int  i, ii = 0;
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
 
@@ -1782,14 +1776,14 @@ int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 		if (aconf->maxperip)
 		{
 			Client *acptr, *acptr2;
+			int cnt = 1;
 
-			ii = 1;
 			list_for_each_entry_safe(acptr, acptr2, &lclient_list, lclient_node)
 			{
 				if (!strcmp(GetIP(acptr), GetIP(cptr)))
 				{
-					ii++;
-					if (ii > aconf->maxperip)
+					cnt++;
+					if (cnt > aconf->maxperip)
 					{
 						/* Already got too many with that ip# */
 						return exit_client(cptr, cptr, &me, NULL, iConf.reject_message_too_many_connections);

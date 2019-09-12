@@ -41,7 +41,7 @@ ModuleHeader MOD_HEADER(channeldb) = {
 		} \
 	} while(0)
 
-// Forward declarations
+/* Forward declarations */
 void channeldb_moddata_free(ModData *md);
 void setcfg(void);
 void freecfg(void);
@@ -53,8 +53,7 @@ int write_channel_entry(FILE *fd, const char *tmpfname, Channel *chptr);
 int read_channeldb(void);
 static void set_channel_mode(Channel *chptr, char *modes, char *parameters);
 
-// Globals
-static ModDataInfo *channeldb_md;
+/* Global variables */
 static uint32_t channeldb_version = CHANNELDB_VERSION;
 struct cfgstruct {
 	char *database;
@@ -192,7 +191,6 @@ int write_channeldb(void)
 {
 	char tmpfname[512];
 	FILE *fd;
-	int index, index2;
 	Channel *chptr;
 	int cnt = 0;
 #ifdef BENCHMARK

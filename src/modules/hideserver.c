@@ -113,8 +113,8 @@ MOD_UNLOAD(hideserver)
 
 static int cb_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
-	ConfigEntry	*cep, *cepp;
-	int		errors = 0;
+	ConfigEntry *cep;
+	int errors = 0;
 
 	if (type == CONFIG_MAIN)
 	{

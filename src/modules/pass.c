@@ -69,7 +69,6 @@ MOD_UNLOAD(pass)
 int _check_banned(Client *cptr, int exitflags)
 {
 	TKL *tk;
-	ConfigItem_ban *bconf;
 
 	if ((tk = find_tkline_match_zap(cptr)))
 	{

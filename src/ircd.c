@@ -787,7 +787,6 @@ static void generate_cloakkeys()
 	int keyNum;
 	int keyLen;
 	int charIndex;
-	int value;
 
 	short has_upper;
 	short has_lower;
@@ -849,9 +848,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 #else
 	uid_t uid, euid;
 	gid_t gid, egid;
-	time_t delay = 0;
-	struct passwd *pw;
-	struct group *gr;
 #endif
 #ifdef HAVE_PSTAT
 	union pstun pstats;

@@ -311,14 +311,14 @@ static void url_check_multi_handles(void)
 static void url_socket_pollcb(int fd, int revents, void *data)
 {
 	int flags = 0;
-	int dummy, r;
+	int dummy;
 
 	if (revents & FD_SELECT_READ)
 		flags |= CURL_CSELECT_IN;
 	if (revents & FD_SELECT_WRITE)
 		flags |= CURL_CSELECT_OUT;
 
-	r = curl_multi_socket_action(multihandle, fd, flags, &dummy);
+	curl_multi_socket_action(multihandle, fd, flags, &dummy);
 	url_check_multi_handles();
 }
 

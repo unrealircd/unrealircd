@@ -225,7 +225,7 @@ int evaluate_preprocessor_define(char *statement, char *filename, int linenumber
 int parse_preprocessor_item(char *start, char *end, char *filename, int linenumber, ConditionalConfig **cc)
 {
 	char buf[512];
-	int n, max;
+	int max;
 
 	*cc = NULL;
 
@@ -458,7 +458,6 @@ char *get_config_define(char *name)
 
 void preprocessor_replace_defines(char **item)
 {
-	NameValueList *e;
 	static char buf[4096];
 	char varname[512];
 	const char *i, *varstart, *varend;

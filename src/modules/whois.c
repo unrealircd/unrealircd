@@ -89,7 +89,7 @@ CMD_FUNC(m_whois)
 
 	for (tmp = canonize(parv[1]); (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
-		unsigned char invis, showchannel, member, wilds, hideoper; /* <- these are all boolean-alike */
+		unsigned char showchannel, wilds, hideoper; /* <- these are all boolean-alike */
 
 		if (MyUser(sptr) && (++ntargets > maxtargets))
 		{
@@ -122,9 +122,6 @@ CMD_FUNC(m_whois)
 				continue;
 
 			name = (!*acptr->name) ? "?" : acptr->name;
-
-			invis = acptr != sptr && IsInvisible(acptr);
-			member = (acptr->user->channel) ? 1 : 0;
 
 			hideoper = 0;
 			if (IsHideOper(acptr) && (acptr != sptr) && !IsOper(sptr))

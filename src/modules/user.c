@@ -64,11 +64,14 @@ MOD_UNLOAD(user)
 */
 CMD_FUNC(m_user)
 {
-#define	UFLAGS	(UMODE_INVISIBLE|UMODE_WALLOP|UMODE_SERVNOTICE)
-	char *username, *host, *server, *realname, *umodex = NULL, *virthost =
-	    NULL, *ip = NULL;
+	char *username;
+	char *host;
+	char *server;
+	char *realname;
+	char *umodex = NULL;
+	char *virthost = NULL;
+	char *ip = NULL;
 	char *sstamp = NULL;
-	Client *acptr;
 
 	if (IsServer(cptr) && !IsUnknown(sptr))
 		return 0;

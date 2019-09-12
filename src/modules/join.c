@@ -237,8 +237,6 @@ void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_
 {
 	MessageTag *mtags = NULL; /** Message tags to send to local users (sender is :user) */
 	MessageTag *mtags_sjoin = NULL; /* Message tags to send to remote servers for SJOIN (sender is :me.name) */
-	Hook *h;
-	int i = 0;
 	char *parv[] = { 0, 0 };
 
 	/* Same way as in SJOIN */
@@ -692,10 +690,8 @@ void _userhost_save_current(Client *sptr)
 void _userhost_changed(Client *sptr)
 {
 	Membership *channels;
-	Channel *chptr;
 	Member *lp;
 	Client *acptr;
-	int i = 0;
 	int impact = 0;
 	char buf[512];
 	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");

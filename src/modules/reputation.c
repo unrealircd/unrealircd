@@ -386,7 +386,6 @@ void save_db(void)
 {
 	FILE *fd;
 	char tmpfname[512];
-	char buf[512], *p;
 	int i;
 	ReputationEntry *e;
 #ifdef BENCHMARK
@@ -763,7 +762,6 @@ CMD_FUNC(reputation_server_cmd)
 	ReputationEntry *e;
 	char *ip;
 	int score;
-	long since;
 	int allow_reply;
 
 	/* :server REPUTATION <ip> <score> */

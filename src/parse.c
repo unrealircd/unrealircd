@@ -75,15 +75,9 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch);
 int parse(Client *cptr, char *buffer, int length)
 {
 	Hook *h;
-	int buf_len = 0;
 	Client *from = cptr;
 	char *ch;
 	int i, ret;
-#ifdef DEBUGMODE
-	time_t then, ticks;
-	int  retval;
-#endif
-	RealCommand *cmptr = NULL;
 	MessageTag *mtags = NULL;
 
 	for (h = Hooks[HOOKTYPE_PACKET]; h; h = h->next)

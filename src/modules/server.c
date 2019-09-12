@@ -476,7 +476,6 @@ CMD_FUNC(m_server)
  /*	char *password = NULL; */
 	char *ch = NULL;	/* */
 	char descbuf[BUFSIZE];
-	char *inpath = get_client_name(cptr, TRUE);
 	int  hop = 0;
 	char info[REALLEN + 61];
 	ConfigItem_link *aconf = NULL;
@@ -544,7 +543,6 @@ CMD_FUNC(m_server)
 	 */
 	if (IsUnknown(cptr) || IsHandshake(cptr))
 	{
-		char xerrmsg[256];
 		int ret;
 		ret = verify_link(cptr, sptr, servername, &aconf);
 		if (ret < 0)
@@ -618,7 +616,7 @@ CMD_FUNC(m_server)
 
 CMD_FUNC(m_server_remote)
 {
-	Client *acptr, *ocptr, *bcptr;
+	Client *acptr, *ocptr;
 	ConfigItem_link	*aconf;
 	ConfigItem_ban *bconf;
 	int 	hop;
@@ -893,7 +891,6 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
 	Client		*acptr;
-	char buf[BUFSIZE];
 	int incoming = IsUnknown(cptr) ? 1 : 0;
 
 	ircd_log(LOG_SERVER, "SERVER %s", cptr->name);
@@ -1067,8 +1064,6 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 		Channel *chptr;
 		for (chptr = channel; chptr; chptr = chptr->nextch)
 		{
-			ModDataInfo *mdi;
-			
 			if (!SupportSJOIN(cptr))
 				send_channel_modes(cptr, chptr);
 			else if (SupportSJOIN(cptr) && !SupportSJ3(cptr))
@@ -1512,7 +1507,6 @@ void send_channel_modes_sjoin3(Client *cptr, Channel *chptr)
 	Member *members;
 	Member *lp;
 	Ban *ban;
-	char *name;
 	short nomode, nopara;
 	char tbuf[512]; /* work buffer, for temporary data */
 	char buf[1024]; /* send buffer */

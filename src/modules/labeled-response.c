@@ -211,7 +211,6 @@ char *skip_tags(char *msg)
 int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len)
 {
 	static char packet[8192];
-	char buf[512];
 
 	if (currentcmd.client && !labeled_response_inhibit)
 	{

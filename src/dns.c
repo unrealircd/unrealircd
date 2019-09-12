@@ -122,7 +122,7 @@ static Event *unrealdns_timeout_hdl = NULL;
 void init_resolver(int firsttime)
 {
 	struct ares_options options;
-	int n, v, k;
+	int n;
 	int optmask;
 
 	if (requests)
@@ -202,7 +202,6 @@ void unrealdns_addreqtolist(DNSReq *r)
 struct hostent *unrealdns_doclient(Client *cptr)
 {
 	DNSReq *r;
-	static struct hostent *he;
 	char *cache_name;
 
 	cache_name = unrealdns_findcache_ip(cptr->ip);
@@ -312,7 +311,6 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 	char ipv6 = r->ipv6;
 	int i;
 	struct hostent *he2;
-	uint32_t ipv4_addr = 0;
 
 	if (!acptr)
 		goto bad;
@@ -447,7 +445,7 @@ static uint64_t unrealdns_hash_ip(const char *ip)
 static void unrealdns_addtocache(char *name, char *ip)
 {
 	unsigned int hashv;
-	DNSCache *c, *n;
+	DNSCache *c;
 
 	dnsstats.cache_adds++;
 

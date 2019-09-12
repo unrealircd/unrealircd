@@ -136,9 +136,6 @@ void rmtkl_check_options(char *param, int *skipperm, int *silent) {
 
 int rmtkl_tryremove(Client *sptr, Client *cptr, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent)
 {
-	char *timeret;
-	char gmt[256];
-
 	if (tkl->type != tkltype->type)
 		return 0;
 

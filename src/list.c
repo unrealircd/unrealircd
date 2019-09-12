@@ -30,7 +30,7 @@ ID_Notes("2.24 4/20/94");
 #ifdef	DEBUGMODE
 static struct liststats {
 	int  inuse;
-} cloc, crem, users, servs, links, classs, aconfs;
+} cloc, crem, users, servs, links;
 
 #endif
 
@@ -56,7 +56,6 @@ void initlists(void)
 	memset(&users, 0, sizeof(users));
 	memset(&servs, 0, sizeof(servs));
 	memset(&links, 0, sizeof(links));
-	memset(&classs, 0, sizeof(classs));
 #endif
 
 	INIT_LIST_HEAD(&client_list);

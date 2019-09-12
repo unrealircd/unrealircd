@@ -171,16 +171,6 @@ static NameValue _LogFlags[] = {
 };
 
 /* This MUST be alphabetized */
-static NameValue ExceptTklFlags[] = {
-	{ 0, "all" },
-	{ TKL_GLOBAL|TKL_KILL,	"gline" },
-	{ TKL_GLOBAL|TKL_NAME,	"gqline" },
-	{ TKL_GLOBAL|TKL_ZAP,	"gzline" },
-	{ TKL_NAME,		"qline" },
-	{ TKL_GLOBAL|TKL_SHUN,	"shun" }
-};
-
-/* This MUST be alphabetized */
 static NameValue _TLSFlags[] = {
 	{ TLSFLAG_FAILIFNOCERT, "fail-if-no-clientcert" },
 	{ TLSFLAG_DISABLECLIENTCERT, "no-client-certificate" },
@@ -843,11 +833,10 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 	ConfigEntry	**lastce;
 	ConfigEntry	*cursection;
 	ConfigFile	*curcf;
-	ConfigFile	*lastcf;
 	int preprocessor_level = 0;
 	ConditionalConfig *cc, *cc_list = NULL;
 
-	lastcf = curcf = MyMallocEx(sizeof(ConfigFile));
+	curcf = MyMallocEx(sizeof(ConfigFile));
 	curcf->cf_filename = strdup(filename);
 	lastce = &(curcf->cf_entries);
 	curce = NULL;
@@ -1595,7 +1584,6 @@ ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
  */
 void postconf_defaults(void)
 {
-	char tmpbuf[512];
 	TKL *tk;
 	char *encoded;
 
@@ -2160,7 +2148,6 @@ void	config_rehash()
 	OperStat 			*os_ptr;
 	ListStruct 	*next, *next2;
 	SpamExcept *spamex_ptr;
-	int i;
 
 	USE_BAN_VERSION = 0;
 
@@ -2174,7 +2161,6 @@ void	config_rehash()
 
 	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *)next)
 	{
-		ConfigItem_mask *oper_mask;
 		SWhois *s, *s_next;
 		next = (ListStruct *)oper_ptr->next;
 		safefree(oper_ptr->name);
@@ -2281,7 +2267,6 @@ void	config_rehash()
 	}
 	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *) next)
 	{
-		ConfigItem_mask *vhost_mask;
 		SWhois *s, *s_next;
 
 		next = (ListStruct *)vhost_ptr->next;
@@ -3637,10 +3622,11 @@ OperClassACLEntry* _conf_parseACLEntry(ConfigEntry *ce)
 OperClassACL* _conf_parseACL(char* name, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
-	ConfigEntry *cepp;
 	OperClassACL *acl = NULL;
+
 	acl = MyMallocEx(sizeof(OperClassACL));
 	acl->name = strdup(name);
+
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "deny") || !strcmp(cep->ce_varname, "allow"))
@@ -3708,7 +3694,6 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 {
 	char has_permissions = 0, has_parent = 0;
 	ConfigEntry *cep;
-	NameValue *ofp;
 	int	errors = 0;
 
 	if (!ce->ce_vardata)
@@ -3846,14 +3831,11 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
-	char has_class = 0, has_password = 0, has_swhois = 0, has_snomask = 0;
+	char has_class = 0, has_password = 0, has_snomask = 0;
 	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_maxlogins = 0;
 	char has_operclass = 0, has_vhost = 0;
-	int oper_flags = 0;
 	ConfigEntry *cep;
-	ConfigEntry *cepp;
-	NameValue *ofp;
-	int	errors = 0;
+	int errors = 0;
 
 	if (!ce->ce_vardata)
 	{
@@ -4422,12 +4404,8 @@ int	_conf_ulines(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_ulines(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep;
-	int errors = 0;
-
 	/* No check needed */
-
-	return errors;
+	return 0;
 }
 
 int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
@@ -5557,7 +5535,6 @@ int _test_except(ConfigFile *conf, ConfigEntry *ce)
 int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigItem_vhost *vhost;
-	ConfigItem_mask *mask;
 	ConfigEntry *cep, *cepp;
 	vhost = MyMallocEx(sizeof(ConfigItem_vhost));
 
@@ -5614,7 +5591,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 {
 	int errors = 0;
 	ConfigEntry *cep;
-	char has_vhost = 0, has_login = 0, has_password = 0, has_swhois = 0, has_mask = 0;
+	char has_vhost = 0, has_login = 0, has_password = 0, has_mask = 0;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -5706,8 +5683,6 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "from"))
 		{
-			ConfigEntry *cepp;
-
 			config_error("%s:%i: vhost::from::userhost is now called oper::mask",
 						 cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			errors++;
@@ -5761,7 +5736,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 int	_test_sni(ConfigFile *conf, ConfigEntry *ce)
 {
 	int errors = 0;
-	ConfigEntry *cep, *tlsconfig = NULL;
+	ConfigEntry *cep;
 
 	if (!ce->ce_vardata)
 	{
@@ -6106,7 +6081,6 @@ int config_detect_duplicate(int *var, ConfigEntry *ce, int *errors)
 int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
-	NameValue *ofp;
 	int errors = 0;
 
 	int has_incoming = 0, has_incoming_mask = 0, has_outgoing = 0;
@@ -6593,8 +6567,7 @@ int _test_require(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	int errors = 0;
 	Hook *h;
-	char type = 0;
-	char has_mask = 0, has_action = 0, has_reason = 0;
+	char has_mask = 0, has_reason = 0;
 
 	if (!ce->ce_vardata)
 	{
@@ -7574,7 +7547,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
-	long		templong;
 	int		tempi;
 	int	    errors = 0;
 	Hook	*h;
@@ -7626,7 +7598,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
 					errors++;
 				}
-			templong = (long) set_usermode(cep->ce_vardata);
+			set_usermode(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-join")) {
 			char *c;
@@ -7676,14 +7648,13 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
 					errors++;
 				}
-			templong = (long) set_usermode(cep->ce_vardata);
+			set_usermode(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, snomask_on_oper, "snomask-on-oper");
 		}
 		else if (!strcmp(cep->ce_varname, "level-on-join")) {
-			char *p;
 			CheckNull(cep);
 			CheckDuplicate(cep, level_on_join, "level-on-join");
 			if (!channellevel_to_int(cep->ce_vardata))

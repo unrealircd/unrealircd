@@ -744,8 +744,8 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
  */
 char *badword_config_check_regex(char *str, int fastsupport, int check_broadness)
 {
-	int errorcode, errorbufsize, regex=0;
-	char *errtmp, *tmp;
+	int regex=0;
+	char *tmp;
 	static char errorbuf[512];
 
 	if (fastsupport)
@@ -790,7 +790,6 @@ int badword_config_process(ConfigItem_badword *ca, char *str)
 {
 	char *tmp;
 	short regex = 0;
-	int regflags = 0;
 	int ast_l = 0, ast_r = 0;
 
 	/* The fast badwords routine can do: "blah" "*blah" "blah*" and "*blah*",
@@ -815,7 +814,6 @@ int badword_config_process(ConfigItem_badword *ca, char *str)
 		int errorcode = 0;
 		PCRE2_SIZE erroroffset = 0;
 		int options = 0;
-		char buf2[512];
 
 		ca->type = BADW_TYPE_REGEX;
 		safestrdup(ca->word, str);

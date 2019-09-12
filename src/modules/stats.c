@@ -556,7 +556,6 @@ static char *stats_port_helper(ConfigItem_listen *listener)
 
 int stats_port(Client *sptr, char *para)
 {
-	int i;
 	ConfigItem_listen *listener;
 
 	for (listener = conf_listen; listener != NULL; listener = listener->next)
@@ -594,7 +593,6 @@ int stats_usage(Client *sptr, char *para)
 int stats_traffic(Client *sptr, char *para)
 {
 	Client *acptr;
-	int  i;
 	struct stats *sp;
 	struct stats tmp;
 	time_t now = TStime();
@@ -950,8 +948,6 @@ int stats_denydcc(Client *sptr, char *para)
 
 int stats_kline(Client *sptr, char *para)
 {
-	ConfigItem_except *excepts;
-
 	tkl_stats(sptr, TKL_KILL, NULL);
 	tkl_stats(sptr, TKL_ZAP, NULL);
 	return 0;
@@ -1230,7 +1226,6 @@ int stats_linkinfoint(Client *sptr, char *para, int all)
 	int wilds = 0;
 	int doall = 0;
 	int showports = ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL);
-	int i;
 	Client *acptr;
 	/*
 	 * send info about connections which match, or all if the

@@ -77,7 +77,7 @@ ModuleHeader MOD_HEADER(tkldb) = {
 		} \
 	} while(0)
 
-// Forward declarations
+/* Forward declarations */
 void tkldb_moddata_free(ModData *md);
 void setcfg(void);
 void freecfg(void);
@@ -88,8 +88,7 @@ int write_tkldb(void);
 int write_tkline(FILE *fd, const char *tmpfname, TKL *tkl);
 int read_tkldb(void);
 
-// Globals
-static ModDataInfo *tkldb_md;
+/* Globals variables */
 const uint32_t tkl_db_version = TKL_DB_VERSION;
 struct cfgstruct {
 	char *database;

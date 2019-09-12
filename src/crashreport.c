@@ -223,10 +223,6 @@ int crash_report_backtrace(FILE *reportfd, char *coredump)
 	fprintf(reportfd, "START OF BACKTRACE\n");
 	while((fgets(buf, sizeof(buf), fd)))
 	{
-		char *file, *path;
-		char target[512];
-		char **arr;
-
 		stripcrlf(buf);
 		fprintf(reportfd, " %s\n", buf);
 	}
@@ -256,7 +252,6 @@ int crash_report_backtrace(FILE *reportfd, char *coredump)
 
 void crash_report_header(FILE *reportfd, char *coredump)
 {
-	char buf[512];
 	time_t t;
 	
 	fprintf(reportfd, "== UNREALIRCD CRASH REPORT ==\n"
@@ -488,7 +483,6 @@ int running_interactive(void)
 int getfilesize(char *fname)
 {
 	struct stat st;
-	int size;
 	
 	if (stat(fname, &st) != 0)
 		return -1;
@@ -501,7 +495,6 @@ int getfilesize(char *fname)
 SSL_CTX *crashreport_init_ssl(void)
 {
 	SSL_CTX *ctx_client;
-	X509_VERIFY_PARAM *param = NULL;
 	char buf[512];
 	
 	SSL_load_error_strings();

@@ -236,8 +236,6 @@ int can_receive_history(Client *acptr)
 
 void hbm_send_line(Client *acptr, HistoryLogLine *l, char *batchid)
 {
-	static char sendbuf[8192];
-
 	if (can_receive_history(acptr))
 	{
 		if (BadPtr(batchid))

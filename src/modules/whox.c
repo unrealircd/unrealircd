@@ -129,7 +129,6 @@ MOD_UNLOAD(whox)
  */
 CMD_FUNC(m_whox)
 {
-	static time_t last_used = 0;
 	char *mask;
 	char *orig_mask;
 	char ch; /* Scratch char register */
@@ -813,7 +812,6 @@ static int convert_classical_who_request(Client *sptr, int *parc, char *parv[], 
 {
 	char *p;
 	static char pbuf1[256];
-	static char pbuf2[256];
 	int points;
 
 	/* Figure out if the user is doing a 'classical' UnrealIRCd request,

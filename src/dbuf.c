@@ -95,8 +95,6 @@ void dbuf_put(dbuf *dyn, char *buf, size_t length)
 void dbuf_delete(dbuf *dyn, size_t length)
 {
 	struct dbufbuf *block;
-	dbufbuf *d;
-	int  chunk;
 
 	assert(dyn->length >= length);
 	if (length == 0)

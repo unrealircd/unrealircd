@@ -175,7 +175,6 @@ static void clicap_generate(Client *sptr, const char *subcmd, int flags)
 	char *p;
 	int buflen = 0;
 	int curlen, mlen;
-	size_t i;
 
 	mlen = snprintf(buf, BUFSIZE, ":%s CAP %s %s", me.name,	BadPtr(sptr->name) ? "*" : sptr->name, subcmd);
 

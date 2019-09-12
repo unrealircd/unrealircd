@@ -57,9 +57,7 @@ MOD_UNLOAD(vhost)
 CMD_FUNC(m_vhost)
 {
 	ConfigItem_vhost *vhost;
-	char *login, *password, host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
-	int	len, length;
-	int 	i;
+	char *login, *password;
 	char olduser[USERLEN+1];
 
 	if (!MyUser(sptr))

@@ -73,8 +73,6 @@ CMD_FUNC(m_names)
 	Channel *chptr;
 	Client *acptr;
 	int  member;
-	int i = 0;
-	Hook *h;
 	Member *cm;
 	int  idx, flag = 1, spos;
 	char *s, *para = parv[1];

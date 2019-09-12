@@ -259,7 +259,7 @@ void make_isupportstrings(void)
 	int i;
 #define ISUPPORTLEN BUFSIZE-HOSTLEN-NICKLEN-39
 	int bufsize = ISUPPORTLEN;
-	int tokcnt = 0, len = 0;
+	int tokcnt = 0;
 	ISupport *isupport;
 	char tmp[ISUPPORTLEN];
 

@@ -59,7 +59,6 @@ int fd_open(int fd, const char *desc)
 
 int fd_fileopen(const char *path, unsigned int flags)
 {
-	FDEntry *fde;
 	int fd;
 	char comment[FD_DESC_SZ];
 	char pathbuf[BUFSIZE];
@@ -119,9 +118,6 @@ int fd_unmap(int fd)
 
 void fd_close(int fd)
 {
-	FDEntry *fde;
-	unsigned int befl;
-
 	if (!fd_unmap(fd))
 		return;
 

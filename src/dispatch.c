@@ -436,7 +436,6 @@ void fd_refresh(int fd)
 	struct epoll_event ep_event;
 	FDEntry *fde = &fd_table[fd];
 	unsigned int pflags = 0;
-	unsigned int i;
 	int op = -1;
 
 	if (epoll_fd == -1)

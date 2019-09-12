@@ -246,7 +246,6 @@ unsigned char hash_target(void *target)
  */
 int check_for_target_limit(Client *sptr, void *target, const char *name)
 {
-	u_char *p;
 	u_char hash = hash_target(target);
 	int i;
 

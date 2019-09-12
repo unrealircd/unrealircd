@@ -467,7 +467,6 @@ void add_lf_if_needed(char **buf, int *len)
  */
 int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 {
-	char fin; /**< Final fragment */
 	char opcode; /**< Opcode */
 	char masked; /**< Masked */
 	int len; /**< Length of the packet */
@@ -481,7 +480,7 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 		return 0;
 	}
 	
-	fin    = readbuf[0] & 0x80;
+	/* fin    = readbuf[0] & 0x80; -- unused */
 	opcode = readbuf[0] & 0x7F;
 	masked = readbuf[1] & 0x80;
 	len    = readbuf[1] & 0x7F;

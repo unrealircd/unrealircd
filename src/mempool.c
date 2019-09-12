@@ -571,8 +571,7 @@ mp_pool_clean(mp_pool_t *pool, int n_to_keep, int keep_recently_used)
 }
 
 /** Helper: Given a list of chunks, free all the chunks in the list. */
-static void
-destroy_chunks(mp_chunk_t *chunk)
+static void destroy_chunks(mp_chunk_t *chunk)
 {
   mp_chunk_t *next;
 

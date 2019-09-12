@@ -376,8 +376,7 @@ static inline void ilang_swap(ILangList *one, ILangList *two)
 
 static void ilang_sort(void)
 {
-ILangList *outer, *inner;
-char *tmp;
+	ILangList *outer, *inner;
 
 	/* Selection sort -- perhaps optimize to qsort/whatever if
      * possible? ;)
@@ -394,7 +393,7 @@ char *tmp;
 
 void charsys_finish(void)
 {
-ILangList *e, *e_next;
+	ILangList *e, *e_next;
 
 	/* Sort alphabetically */
 	ilang_sort();
@@ -495,7 +494,7 @@ char *ch;
 
 static int isvalidmbyte(unsigned char c1, unsigned char c2)
 {
-MBList *m;
+	MBList *m;
 
 	for (m=mblist; m; m=m->next)
 	{
@@ -512,10 +511,9 @@ MBList *m;
  */
 static int do_nick_name_multibyte(char *nick)
 {
-int len;
-char *ch;
-MBList *m;
-int firstmbchar = 0;
+	int len;
+	char *ch;
+	int firstmbchar = 0;
 
 	if ((*nick == '-') || isdigit(*nick))
 		return 0;
@@ -1124,8 +1122,10 @@ void charsys_add_language(char *name)
 /** This displays all the nick characters that are permitted */
 char *charsys_displaychars(void)
 {
+#if 0
 	MBList *m;
 	unsigned char hibyte, lobyte;
+#endif
 	static char buf[512];
 	int n = 0;
 	int i, j;

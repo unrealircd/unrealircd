@@ -410,7 +410,6 @@ void close_listener(ConfigItem_listen *listener)
 
 void close_listeners(void)
 {
-	Client *cptr;
 	ConfigItem_listen *aconf, *aconf_next;
 
 	/* close all 'extra' listening ports we have */
@@ -652,12 +651,6 @@ void completed_connection(int fd, int revents, void *data)
 */
 void close_connection(Client *cptr)
 {
-	ConfigItem_link *aconf;
-#ifdef DO_REMAPPING
-	int  i, j;
-	int  empty = cptr->local->fd;
-#endif
-
 	if (IsServer(cptr))
 	{
 		ircstp->is_sv++;
@@ -877,6 +870,30 @@ char *getpeerip(Client *acptr, int fd, int *port)
 	}
 }
 
+/** This checks set::max-unknown-connections-per-ip,
+ * which is an important safety feature.
+ */
+static int check_too_many_unknown_connections(Client *acptr)
+{
+	int cnt = 1;
+	Client *c;
+
+	if (!find_tkl_exception(TKL_CONNECT_FLOOD, acptr))
+	{
+		list_for_each_entry(c, &unknown_list, lclient_node)
+		{
+			if (!strcmp(acptr->ip,GetIP(c)))
+			{
+				cnt++;
+				if (cnt > iConf.max_unknown_connections_per_ip)
+					return 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
 /*
  * Creates a client which has just connected to us on the given fd.
  * The sockhost field is initialized with the ip# of the host.
@@ -885,10 +902,7 @@ char *getpeerip(Client *acptr, int fd, int *port)
  */
 Client *add_connection(ConfigItem_listen *listener, int fd)
 {
-	Client *acptr, *acptr2;
-	ConfigItem_ban *bconf;
-	TKL *tk;
-	int i, j;
+	Client *acptr;
 	char *ip;
 	int port = 0;
 	
@@ -931,28 +945,17 @@ refuse_client:
 		SetLocalhost(acptr);
 	}
 
-	j = 1;
-
-	if (!find_tkl_exception(TKL_CONNECT_FLOOD, acptr))
+	/* Check set::max-unknown-connections-per-ip */
+	if (check_too_many_unknown_connections(acptr))
 	{
-		list_for_each_entry(acptr2, &unknown_list, lclient_node)
-		{
-			if (!strcmp(acptr->ip,GetIP(acptr2)))
-			{
-				j++;
-				if (j > iConf.max_unknown_connections_per_ip)
-				{
-					ircsnprintf(zlinebuf, sizeof(zlinebuf),
-						"ERROR :Closing Link: [%s] (Too many unknown connections from your IP)"
-						"\r\n",
-						acptr->ip);
-					(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
-					goto refuse_client;
-				}
-			}
-		}
+		ircsnprintf(zlinebuf, sizeof(zlinebuf),
+		            "ERROR :Closing Link: [%s] (Too many unknown connections from your IP)\r\n",
+		            acptr->ip);
+		(void)send(fd, zlinebuf, strlen(zlinebuf), 0);
+		goto refuse_client;
 	}
 
+	/* Check (G)Z-Lines and set::anti-flood::connect-flood */
 	if (check_banned(acptr, NO_EXIT_CLIENT) < 0)
 		goto refuse_client;
 
@@ -1066,8 +1069,6 @@ void proceed_normal_client_handshake(Client *acptr, struct hostent *he)
 static int parse_client_queued(Client *cptr)
 {
 	int dolen = 0;
-	int allow_read;
-	int done;
 	time_t now = TStime();
 	char buf[READBUFSIZE];
 
@@ -1321,7 +1322,6 @@ int is_valid_ip(char *str)
 int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 {
 	Client *cptr;
-	char *s;
 
 #ifdef DEBUGMODE
 	sendto_realops("connect_server() called with aconf %p, refcount: %d, TEMP: %s",
@@ -1422,11 +1422,8 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 
 int connect_inet(ConfigItem_link *aconf, Client *cptr)
 {
-	int len;
-	struct hostent *hp;
 	char *bindip;
 	char buf[BUFSIZE];
-	int n;
 
 	if (!aconf->connect_ip)
 		return 0; /* handled upstream or shouldn't happen */
@@ -1524,7 +1521,6 @@ void ident_failed(Client *cptr)
  */
 void start_auth(Client *cptr)
 {
-	int len;
 	char buf[BUFSIZE];
 
 	/* If ident checking is disabled or it's an outgoing connect, then no ident check */
@@ -1590,7 +1586,6 @@ void start_auth(Client *cptr)
 static void send_authports(int fd, int revents, void *data)
 {
 	char authbuf[32];
-	int  ulen, tlen;
 	Client *cptr = data;
 
 	Debug((DEBUG_NOTICE, "write_authports(%p) fd %d authfd %d stat %d",

@@ -69,7 +69,6 @@ CMD_FUNC(m_quit)
 	{
 		int n;
 		Hook *tmphook;
-		Membership *lp, *lp_next;
 
 		if (STATIC_QUIT)
 			return exit_client(cptr, sptr, sptr, recv_mtags, STATIC_QUIT);
@@ -91,7 +90,7 @@ CMD_FUNC(m_quit)
 
 		if (iConf.part_instead_of_quit_on_comment_change && MyUser(sptr))
 		{
-			Membership *lp;
+			Membership *lp, *lp_next;
 			char *newcomment;
 			Channel *chptr;
 

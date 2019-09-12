@@ -80,7 +80,7 @@ static int do_jumpserver_exit_client(Client *sptr)
 
 static void redirect_all_clients(void)
 {
-	int i, count = 0;
+	int count = 0;
 	Client *acptr, *saved;
 
 	list_for_each_entry_safe(acptr, saved, &lclient_list, lclient_node)
@@ -121,7 +121,7 @@ void jumpserver_free_jss(ModData *m)
 
 CMD_FUNC(m_jumpserver)
 {
-	char *serv, *sslserv=NULL, *reason, *p, *p2;
+	char *serv, *sslserv=NULL, *reason, *p;
 	int all=0, port=6667, sslport=6697;
 	char logbuf[512];
 

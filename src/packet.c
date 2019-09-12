@@ -126,8 +126,6 @@ static inline RealCommand *find_Cmd(char *cmd, int flags)
 
 RealCommand *find_Command(char *cmd, short token, int flags)
 {
-	RealCommand *p;
-	
 	Debug((DEBUG_NOTICE, "FindCommand %s", cmd));
 
 	return find_Cmd(cmd, flags);

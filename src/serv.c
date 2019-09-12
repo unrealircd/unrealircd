@@ -30,8 +30,6 @@
 #endif
 extern void s_die();
 
-static char buf[BUFSIZE];
-
 MODVAR int  max_connection_count = 1, max_client_count = 1;
 extern int do_garbage_collect;
 /* We need all these for cached MOTDs -- codemastr */
@@ -115,9 +113,9 @@ void reread_motdsandrules();
 #ifndef _WIN32
 char *getosname(void)
 {
-static char buf[1024];
-struct utsname osinf;
-char *p;
+	static char buf[1024];
+	struct utsname osinf;
+	char *p;
 
 	memset(&osinf, 0, sizeof(osinf));
 	if (uname(&osinf) != 0)
@@ -767,7 +765,6 @@ CMD_FUNC(m_restart)
 {
 char *reason = parv[1];
 	Client *acptr;
-	int i;
 
 	/* Check permissions */
 	if (!ValidatePermissionsForPath("server:restart",sptr,NULL,NULL,NULL))
@@ -1095,7 +1092,6 @@ void free_motd(MOTDFile *themotd)
 CMD_FUNC(m_die)
 {
 	Client *acptr;
-	int  i;
 
 	if (!ValidatePermissionsForPath("server:die",sptr,NULL,NULL,NULL))
 	{
@@ -1164,7 +1160,6 @@ void add_pending_net(Client *sptr, char *str)
 {
 	PendingNet *net;
 	PendingServer *srv;
-	int num = 1;
 	char *p, *name;
 
 	if (BadPtr(str) || !sptr)

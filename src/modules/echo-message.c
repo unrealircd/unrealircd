@@ -41,14 +41,12 @@ int em_usermsg(Client *sptr, Client *to, MessageTag *mtags, char *text, int noti
 MOD_INIT(echo_message)
 {
 	ClientCapabilityInfo cap;
-	ClientCapability *c;
-	MessageTagHandlerInfo mtag;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "echo-message";
-	c = ClientCapabilityAdd(modinfo->handle, &cap, &CAP_ECHO_MESSAGE);
+	ClientCapabilityAdd(modinfo->handle, &cap, &CAP_ECHO_MESSAGE);
 
 	HookAdd(modinfo->handle, HOOKTYPE_CHANMSG, 0, em_chanmsg);
 	HookAdd(modinfo->handle, HOOKTYPE_USERMSG, 0, em_usermsg);

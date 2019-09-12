@@ -425,8 +425,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
-	TKL *tk;
-	char *word = NULL, *reason = NULL;
+	char *word = NULL;
 	time_t bantime = (SPAMFILTER_BAN_TIME ? SPAMFILTER_BAN_TIME : 86400);
 	char *banreason = "<internally added by ircd>";
 	int action = 0, target = 0;
@@ -459,7 +458,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->ce_varname, "reason"))
 		{
-			reason = cep->ce_vardata;
+			banreason = cep->ce_vardata;
 		}
 		else if (!strcmp(cep->ce_varname, "ban-time"))
 		{
@@ -627,9 +626,6 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 int tkl_config_test_except(ConfigFile *cf, ConfigEntry *ce, int configtype, int *errs)
 {
 	ConfigEntry *cep, *cepp;
-	ConfigItem_except *ca;
-	Hook *h;
-	char *bantypes = NULL;
 	int errors = 0;
 	int has_mask = 0;
 
@@ -768,9 +764,6 @@ void config_create_tkl_except(char *mask, char *bantypes)
 int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 {
 	ConfigEntry *cep, *cepp;
-	ConfigItem_except *ca;
-	Hook *h;
-	char *default_bantypes = NULL;
 	char bantypes[64];
 
 	/* We are only interested in except { } blocks */
@@ -1394,7 +1387,6 @@ CMD_FUNC(m_eline)
 {
 	time_t secs = 0;
 	int add = 1;
-	time_t i;
 	Client *acptr = NULL;
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
@@ -1412,7 +1404,6 @@ CMD_FUNC(m_eline)
 		"-",			/*9  reason */
 		NULL
 	};
-	struct tm *t;
 
 	if (IsServer(sptr))
 		return 0;
@@ -2261,7 +2252,7 @@ TKL *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *set_by
                           time_t expire_at, time_t set_at, int flags)
 {
 	TKL *tkl;
-	int index, index2;
+	int index;
 
 	if (!TKLIsNameBanType(type))
 		abort();
@@ -2544,7 +2535,6 @@ EVENT(tkl_check_expire)
 static int find_tkl_exception_matcher(Client *cptr, int ban_type, TKL *except_tkl)
 {
 	char uhost[NICKLEN+HOSTLEN+1];
-	Hook *hook;
 
 	if (!TKLIsBanException(except_tkl))
 		return 0;
@@ -2579,7 +2569,7 @@ static int find_tkl_exception_matcher(Client *cptr, int ban_type, TKL *except_tk
  */
 int _find_tkl_exception(int ban_type, Client *cptr)
 {
-	TKL *tkl, *ret;
+	TKL *tkl;
 	int index, index2;
 	Hook *hook;
 
@@ -2617,8 +2607,6 @@ int _find_tkl_exception(int ban_type, Client *cptr)
 int find_tkline_match_matcher(Client *cptr, int skip_soft, TKL *tkl)
 {
 	char uhost[NICKLEN+HOSTLEN+1];
-	ConfigItem_except *excepts;
-	Hook *hook;
 
 	if (!TKLIsServerBan(tkl) || (tkl->type & TKL_SHUN))
 		return 0;
@@ -2718,9 +2706,6 @@ int _find_tkline_match(Client *cptr, int skip_soft)
 int _find_shun(Client *cptr)
 {
 	TKL *tkl;
-	ConfigItem_except *excepts;
-	int match_type = 0;
-	Hook *hook;
 
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
@@ -2881,7 +2866,6 @@ TKL *_find_qline(Client *cptr, char *name, int *ishold)
 {
 	TKL *tkl;
 	int	points = 0;
-	ConfigItem_except *excepts;
 	*ishold = 0;
 
 	if (IsServer(cptr) || IsMe(cptr))
@@ -2921,9 +2905,6 @@ TKL *_find_qline(Client *cptr, char *name, int *ishold)
 /** Helper function for find_tkline_match_zap() */
 TKL *find_tkline_match_zap_matcher(Client *cptr, TKL *tkl)
 {
-	ConfigItem_except *excepts;
-	Hook *hook;
-
 	if (!(tkl->type & TKL_ZAP))
 		return NULL;
 

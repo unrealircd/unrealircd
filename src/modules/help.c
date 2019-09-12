@@ -132,8 +132,7 @@ int  parse_help(Client *sptr, char *name, char *help)
 */
 CMD_FUNC(m_help)
 {
-	char *helptopic, *s;
-	Link *tmpl;
+	char *helptopic;
 
 	if (!MyUser(sptr))
 		return 0; /* never remote */

@@ -202,8 +202,6 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 
 void unload_clicap_commit(ClientCapability *clicap)
 {
-	long bit = clicap->cap;
-
 	/* This is an unusual operation, I think we should log it. */
 	ircd_log(LOG_ERROR, "Unloading client capability '%s'", clicap->name);
 	sendto_realops("Unloading client capability '%s'", clicap->name);

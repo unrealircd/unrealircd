@@ -141,7 +141,7 @@ void delete_webircblock(ConfigItem_webirc *e)
 
 int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
-	ConfigEntry	*cep, *cepp;
+	ConfigEntry *cep;
 	int errors = 0;
 	char has_mask = 0; /* mandatory */
 	char has_password = 0; /* mandatory */
@@ -250,7 +250,6 @@ int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 int webirc_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
-	ConfigEntry *cepp;
 	ConfigItem_webirc *webirc = NULL;
 	
 	if (type != CONFIG_MAIN)
@@ -341,8 +340,6 @@ ConfigItem_webirc *Find_webirc(Client *sptr, char *password, WEBIRCType type, ch
 int dowebirc(Client *cptr, char *ip, char *host, char *options)
 {
 	char scratch[64];
-	char *sockhost;
-	int secure = 0;
 
 	if (IsWEBIRC(cptr))
 		return exit_client(cptr, cptr, &me, NULL, "Double CGI:IRC request (already identified)");
@@ -414,7 +411,6 @@ int dowebirc(Client *cptr, char *ip, char *host, char *options)
 CMD_FUNC(m_webirc)
 {
 	char *ip, *host, *password, *options;
-	size_t ourlen;
 	ConfigItem_webirc *e;
 	char *error = NULL;
 

@@ -33,9 +33,6 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *fr
 
 static char sendbuf[2048];
 static char sendbuf2[4096];
-static char tcmd[2048];
-static char ccmd[2048];
-static char xcmd[2048];
 
 void vsendto_prefix_one(struct Client *to, struct Client *from, MessageTag *mtags,
     const char *pattern, va_list vl);
@@ -94,7 +91,6 @@ static void send_queued_cb(int fd, int revents, void *data)
  */
 int send_queued(Client *to)
 {
-	char *msg;
 	int  len, rlen;
 	dbufbuf *block;
 	int want_read;
@@ -357,8 +353,6 @@ void sendto_channel(Channel *chptr, Client *from, Client *skip,
 	va_list vl;
 	Member *lp;
 	Client *acptr;
-	int  i = 0,j = 0;
-	Hook *h;
 
 	++current_serial;
 	for (lp = chptr->members; lp; lp = lp->next)
@@ -586,8 +580,7 @@ void sendto_match_butone(Client *one, Client *from, char *mask, int what,
     MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	int  i;
-	Client *cptr, *acptr;
+	Client *cptr;
 	char cansendlocal, cansendglobal;
 
 	if (MyConnect(from))
@@ -781,9 +774,7 @@ void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
  */
 void send_cap_notify(int add, char *token)
 {
-	va_list vl;
 	Client *cptr;
-	char nbuf[1024];
 	ClientCapability *clicap = ClientCapabilityFindReal(token);
 	long CAP_NOTIFY = ClientCapabilityBit("cap-notify");
 
@@ -825,7 +816,6 @@ void send_cap_notify(int add, char *token)
 void sendto_ops_butone(Client *one, Client *from, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	int  i;
 	Client *cptr;
 
 	++current_serial;
@@ -976,7 +966,6 @@ static char buf[2048];
 void sendto_connectnotice(Client *acptr, int disconnect, char *comment)
 {
 	Client *cptr;
-	int  i, j;
 	char connect[512], secure[256];
 
 	if (!disconnect)
@@ -1009,7 +998,6 @@ void sendto_connectnotice(Client *acptr, int disconnect, char *comment)
 void sendto_fconnectnotice(Client *acptr, int disconnect, char *comment)
 {
 	Client *cptr;
-	int  i, j;
 	char connect[512], secure[256];
 
 	if (!disconnect)
@@ -1051,8 +1039,6 @@ void sendto_serv_butone_nickcmd(Client *one, Client *sptr, char *umodes)
 	
 	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		va_list vl;
-
 		if (one && cptr == one->direction)
 			continue;
 		

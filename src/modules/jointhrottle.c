@@ -180,8 +180,6 @@ static int isjthrottled(Client *cptr, Channel *chptr)
 static void jointhrottle_increase_usercounter(Client *cptr, Channel *chptr)
 {
 	JoinFlood *e;
-	int num = cfg.num;
-	int t = cfg.t;
 
 	if (!MyUser(cptr))
 		return;
@@ -198,7 +196,7 @@ static void jointhrottle_increase_usercounter(Client *cptr, Channel *chptr)
 		e->firstjoin = TStime();
 		e->numjoins = 1;
 	} else
-	if ((TStime() - e->firstjoin) < t) /* still valid? */
+	if ((TStime() - e->firstjoin) < cfg.t) /* still valid? */
 	{
 		e->numjoins++;
 	} else {
@@ -257,9 +255,7 @@ JoinFlood *jointhrottle_addentry(Client *cptr, Channel *chptr)
 EVENT(jointhrottle_cleanup_structs)
 {
 	Client *acptr;
-	Channel *chptr;
 	JoinFlood *jf, *jf_next;
-	int t = cfg.t;
 	
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
@@ -270,15 +266,11 @@ EVENT(jointhrottle_cleanup_structs)
 		{
 			jf_next = jf->next;
 			
-			chptr = find_channel(jf->chname, NULL);
-			/* Now check if chptr is valid and if a flood still applies, if so we skip,
-			 * in all other cases we free the (no longer useful) entry.
-			 */
-			if (jf->firstjoin + t > TStime())
+			if (jf->firstjoin + cfg.t > TStime())
 				continue; /* still valid entry */
 #ifdef DEBUGMODE
 			ircd_log(LOG_ERROR, "jointhrottle_cleanup_structs(): freeing %s/%s (%ld[%ld], %d)",
-				acptr->name, jf->chname, jf->firstjoin, (long)(TStime() - jf->firstjoin), t);
+				acptr->name, jf->chname, jf->firstjoin, (long)(TStime() - jf->firstjoin), cfg.t);
 #endif
 			if (moddata_client(acptr, jointhrottle_md).ptr == jf)
 			{

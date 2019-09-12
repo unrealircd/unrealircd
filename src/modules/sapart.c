@@ -63,7 +63,6 @@ MOD_UNLOAD(sapart)
 
 CMD_FUNC(m_sapart)
 {
-	MessageTag *mtags = NULL;
 	Client *acptr;
 	Channel *chptr;
 	Membership *lp;

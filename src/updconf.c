@@ -253,7 +253,7 @@ char *updconf_addquotes(char *str)
 
 int upgrade_me_block(ConfigEntry *ce)
 {
-	ConfigEntry *cep, *cepp;
+	ConfigEntry *cep;
 	char *name = NULL;
 	char *info = NULL;
 	int numeric = 0;
@@ -323,7 +323,6 @@ int upgrade_link_block(ConfigEntry *ce)
 	char *ciphers = NULL;
 	char *password_receive_authmethod = NULL;
 	int need_incoming = 0, need_outgoing = 0;
-	int upg_passwd_warning = 0;
 
 	/* ripped from test_link */
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -493,7 +492,7 @@ int upgrade_link_block(ConfigEntry *ce)
 #define MAXFROMENTRIES 100
 int upgrade_from_subblock(ConfigEntry *ce)
 {
-	ConfigEntry *cep, *cepp;
+	ConfigEntry *cep;
 	char *list[MAXFROMENTRIES];
 	int listcnt = 0;
 
@@ -595,7 +594,6 @@ int upgrade_loadmodule(ConfigEntry *ce)
 int upgrade_include(ConfigEntry *ce)
 {
 	char *file = ce->ce_vardata;
-	char tmp[512], *p, *newfile;
 	static int badwords_upgraded_already = 0;
 	
 	if (!file)
@@ -1036,7 +1034,7 @@ int upgrade_listen_block(ConfigEntry *ce)
 
 int upgrade_cgiirc_block(ConfigEntry *ce)
 {
-	ConfigEntry *cep, *cepp;
+	ConfigEntry *cep;
 	char *type = NULL;
 	char *username = NULL;
 	char *hostname = NULL;
@@ -1607,7 +1605,7 @@ static void add_include_list(char *fname, ConfigFile **cf)
 
 void build_include_list_ex(char *fname, ConfigFile **cf_list)
 {
-	ConfigFile *cf, *cf2;
+	ConfigFile *cf;
 	ConfigEntry *ce;
 
 	if (strstr(fname, "://"))
@@ -1648,7 +1646,6 @@ void update_conf(void)
 {
 	ConfigFile *files;
 	ConfigFile *cf;
-	ConfigEntry *ce, *cep, *cepp;
 	char *mainconf = configfile;
 	int upgraded_files = 0;
 

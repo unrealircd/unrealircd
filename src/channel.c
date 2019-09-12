@@ -29,7 +29,7 @@ long sajoinmode = 0;
 Channel *channel = NULL;
 
 /* some buffers for rebuilding channel/nick lists with comma's */
-static char nickbuf[BUFSIZE], buf[BUFSIZE];
+static char buf[BUFSIZE];
 MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
 /** This describes the letters, modes and options for core channel modes.
@@ -623,7 +623,6 @@ long get_mode_bitbychar(char m)
 void channel_modes(Client *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *chptr)
 {
 	CoreChannelModeTable *tab = &corechannelmodetable[0];
-	char bcbuf[1024];
 	int ismember;
 	int i;
 

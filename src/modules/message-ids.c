@@ -47,8 +47,6 @@ void mtag_add_or_inherit_msgid(Client *sender, MessageTag *recv_mtags, MessageTa
 
 MOD_INIT(message-ids)
 {
-	ClientCapabilityInfo cap;
-	ClientCapability *c;
 	MessageTagHandlerInfo mtag;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);

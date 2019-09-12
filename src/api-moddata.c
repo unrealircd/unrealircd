@@ -29,9 +29,6 @@ MODVAR ModData globalvar_moddata[MODDATA_MAX_GLOBALVAR];
 
 ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 {
-	short i = 0, j = 0;
-	int paraslot = -1;
-	char tmpbuf[512];
 	int slotav = 0; /* highest available slot */
 	ModDataInfo *m;
 	int new_struct = 0;

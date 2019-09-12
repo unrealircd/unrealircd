@@ -58,7 +58,6 @@ MOD_UNLOAD(close)
 CMD_FUNC(m_close)
 {
 	Client *acptr, *acptr2;
-	int  i;
 	int  closed = 0;
 
 	if (!ValidatePermissionsForPath("server:close",sptr,NULL,NULL,NULL))

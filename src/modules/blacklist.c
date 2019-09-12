@@ -244,7 +244,6 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	int errors = 0;
 	char has_reason = 0, has_ban_time = 0, has_action = 0;
 	char has_dns_type = 0, has_dns_reply = 0, has_dns_name = 0;
-	DNSBLType blacklist_type = 0;
 
 	if (type != CONFIG_MAIN)
 		return 0;
@@ -344,9 +343,9 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					}
 					has_dns_type = 1;
 					if (!strcmp(cepp->ce_vardata, "record"))
-						blacklist_type = DNSBL_RECORD;
+						;
 					else if (!strcmp(cepp->ce_vardata, "bitmask"))
-						blacklist_type = DNSBL_BITMASK;
+						;
 					else
 					{
 						config_error("%s:%i: unknown blacklist::dns::type '%s', must be either 'record' or 'bitmask'",
@@ -604,8 +603,8 @@ int blacklist_dns_request(Client *cptr, Blacklist *d)
 	} else
 	if (strchr(ip, ':'))
 	{
-		int i, j;
 		/* IPv6 */
+		int i;
 		BLUSER(cptr)->is_ipv6 = 1;
 		if (sscanf(ip, "%x:%x:%x:%x:%x:%x:%x:%x",
 		    &e[0], &e[1], &e[2], &e[3], &e[4], &e[5], &e[6], &e[7]) != 8)

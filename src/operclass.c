@@ -285,7 +285,6 @@ OperPermission ValidatePermissionsForPath(char* path, Client *sptr, Client *vict
 	ConfigItem_operclass *ce_operClass;
 	OperClass *oc = NULL;
 	OperClassACLPath *operPath;
-	OperClassACL *acl;
 
 	if (!sptr)
 		return OPER_DENY;

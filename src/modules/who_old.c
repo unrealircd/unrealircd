@@ -389,10 +389,9 @@ int i = 1;
 
 static int can_see(Client *sptr, Client *acptr, Channel *channel)
 {
-int ret = 0;
-int i=0;
-Hook *h;
-char has_common_chan = 0;
+	int ret = 0;
+	char has_common_chan = 0;
+
 	do {
 		/* can only see people */
 		if (!IsUser(acptr))
