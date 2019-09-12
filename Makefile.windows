@@ -284,7 +284,7 @@ DLL_FILES=SRC/MODULES/CHGHOST.DLL SRC/MODULES/SDESC.DLL SRC/MODULES/SETIDENT.DLL
  SRC/MODULES/RESTRICT-COMMANDS.DLL \
  SRC/MODULES/RMTKL.DLL \
  SRC/MODULES/ECHO-MESSAGE.DLL \
- SRC/MODULES/REQUIRE-MODULES.DLL
+ SRC/MODULES/REQUIRE-MODULE.DLL
 
 
 ALL: CONF UNREALSVC.EXE UnrealIRCd.exe MODULES 
@@ -1082,7 +1082,7 @@ src/modules/rmtkl.dll: src/modules/rmtkl.c $(INCLUDES)
 src/modules/echo-message.dll: src/modules/echo-message.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/echo-message.c $(MODLFLAGS)
 
-src/modules/require-modules.dll: src/modules/require-modules.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/require-modules.c $(MODLFLAGS)
+src/modules/require-module.dll: src/modules/require-module.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/require-module.c $(MODLFLAGS)
 
 dummy:

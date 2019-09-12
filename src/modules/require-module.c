@@ -20,10 +20,10 @@
 
 #include "unrealircd.h"
 
-#define MSG_REQMODS "REQMODS"
+#define MSG_SMOD "SMOD"
 
-ModuleHeader MOD_HEADER(require_modules) = {
-	"require-modules",
+ModuleHeader MOD_HEADER(require_module) = {
+	"require-module",
 	"5.0",
 	"Check for required modules across the network",
 	"UnrealIRCd Team",
@@ -53,7 +53,7 @@ int reqmods_configrun_require(ConfigFile *cf, ConfigEntry *ce, int type);
 int reqmods_configtest_set(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int reqmods_configrun_set(ConfigFile *cf, ConfigEntry *ce, int type);
 
-CMD_FUNC(require_modules);
+CMD_FUNC(cmd_smod);
 int reqmods_hook_serverconnect(Client *sptr);
 
 // Globals
@@ -67,34 +67,35 @@ struct cfgstruct {
 };
 static struct cfgstruct cfg;
 
-MOD_TEST(require_modules)
+MOD_TEST(require_module)
 {
-	memset(&cfg, 0, sizeof(cfg));
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, reqmods_configtest);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(require_modules)
+MOD_INIT(require_module)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	MARK_AS_GLOBAL_MODULE(modinfo);
+	memset(&cfg, 0, sizeof(cfg));
+	cfg.squit_on_deny = 1;
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, reqmods_configrun);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_CONNECT, 0, reqmods_hook_serverconnect);
-	CommandAdd(modinfo->handle, MSG_REQMODS, require_modules, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SMOD, cmd_smod, MAXPARA, M_SERVER);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(require_modules)
+MOD_LOAD(require_module)
 {
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
-		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(require_modules).name, ModuleGetErrorStr(modinfo->handle));
+		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(require_module).name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(require_modules)
+MOD_UNLOAD(require_module)
 {
 	DenyMod *dmod, *next;
 	for (dmod = DenyModList; dmod; dmod = next)
@@ -196,7 +197,7 @@ int reqmods_configtest_deny(ConfigFile *cf, ConfigEntry *ce, int type, int *errs
 			// We do a loose check here because a module might not be fully loaded yet
 			if (find_modptr_byname(cep->ce_vardata, 0))
 			{
-				config_error("[require-modules] Module '%s' was specified as denied but we've actually loaded it ourselves", cep->ce_vardata);
+				config_error("[require-module] Module '%s' was specified as denied but we've actually loaded it ourselves", cep->ce_vardata);
 				errors++;
 			}
 			has_name = 1;
@@ -282,7 +283,7 @@ int reqmods_configtest_require(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		{
 			if (!find_modptr_byname(cep->ce_vardata, 0))
 			{
-				config_error("[require-modules] Module '%s' was specified as required but we didn't even load it ourselves (maybe double check the name?)", cep->ce_vardata);
+				config_error("[require-module] Module '%s' was specified as required but we didn't even load it ourselves (maybe double check the name?)", cep->ce_vardata);
 				errors++;
 			}
 
@@ -321,7 +322,7 @@ int reqmods_configrun_require(ConfigFile *cf, ConfigEntry *ce, int type)
 			if (!(mod = find_modptr_byname(cep->ce_vardata, 0)))
 			{
 				// Something went very wrong :D
-				config_error("[require-modules] [BUG?] Passed configtest_require() but not configrun_require() for module '%s' (seems to not be loaded after all)", cep->ce_vardata);
+				config_error("[require-module] [BUG?] Passed configtest_require() but not configrun_require() for module '%s' (seems to not be loaded after all)", cep->ce_vardata);
 				continue;
 			}
 
@@ -340,22 +341,22 @@ int reqmods_configtest_set(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	int errors = 0;
 	ConfigEntry *cep;
 
-	// We are only interested in set::require-modules
-	if (strcmp(ce->ce_varname, "require-modules"))
+	// We are only interested in set::require-module
+	if (strcmp(ce->ce_varname, "require-module"))
 		return 0;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strlen(cep->ce_varname))
 		{
-			config_error("%s:%i: blank set::require-modules directive", cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			config_error("%s:%i: blank set::require-module directive", cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			errors++;
 			continue;
 		}
 
 		if (!cep->ce_vardata || !strlen(cep->ce_vardata))
 		{
-			config_error("%s:%i: blank set::require-modules::%s without value", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			config_error("%s:%i: blank set::require-module::%s without value", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++;
 			continue;
 		}
@@ -363,7 +364,7 @@ int reqmods_configtest_set(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		if (!strcmp(cep->ce_varname, "squit-on-deny") || !strcmp(cep->ce_varname, "squit-on-missing") || !strcmp(cep->ce_varname, "squit-on-mismatch"))
 			continue;
 
-		config_error("%s:%i: unknown directive set::require-modules::%s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+		config_error("%s:%i: unknown directive set::require-module::%s", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 		errors++;
 	}
 
@@ -399,7 +400,7 @@ int reqmods_configrun_set(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
-CMD_FUNC(require_modules)
+CMD_FUNC(cmd_smod)
 {
 	char flag, name[64], *version;
 	char buf[BUFSIZE];
@@ -416,10 +417,17 @@ CMD_FUNC(require_modules)
 	strlcpy(buf, parv[1], sizeof(buf));
 	for (modbuf = strtoken(&p, buf, " "); modbuf; modbuf = strtoken(&p, NULL, " "))
 	{
-		flag = *modbuf++; // Get the local/global flag
+		p = strchr(name, ':');
+		if (!p)
+			continue; /* malformed request */
+		*p++ = '\0';
+		flag = *modbuf; // Get the local/global flag (FIXME: parses only first letter atm)
+		modbuf = p+1;
 		strlcpy(name, modbuf, sizeof(name)); // Let's work on a copy of the param
-		if ((version = strstr(name, ":")))
-			*version++ = '\0';
+		version = strchr(name, ':');
+		if (!version)
+			continue; /* malformed request */
+		*version++ = '\0';
 
 		// Even if a denied module is only required locally, maybe still prevent a server that uses it from linking in
 		if ((dmod = find_denymod_byname(name)))
@@ -502,12 +510,12 @@ int reqmods_hook_serverconnect(Client *sptr)
 		/* At this stage we don't care if the module isn't global (or not fully loaded), we'll dump all modules
 		 * so we can properly deny certain ones across the network
 		 */
-		ircsnprintf(modbuf, modsize, "%c%s:%s", ((mod->options & MOD_OPT_GLOBAL) ? 'G' : 'L'), mod->header->name, mod->header->version);
+		ircsnprintf(modbuf, modsize, "%c:%s:%s", ((mod->options & MOD_OPT_GLOBAL) ? 'G' : 'L'), mod->header->name, mod->header->version);
 		modlen = strlen(modbuf);
 		if ((len + modlen + 2) > bufsize) // Adding 2 to because 1) null byte 2) space between modules
 		{
 			// "Flush" current list =]
-			sendto_one(sptr, NULL, ":%s %s :%s", me.id, MSG_REQMODS, sendbuf);
+			sendto_one(sptr, NULL, ":%s %s :%s", me.id, MSG_SMOD, sendbuf);
 			sendbuf[0] = '\0';
 			len = 0;
 			count = 0;
@@ -522,6 +530,6 @@ int reqmods_hook_serverconnect(Client *sptr)
 
 	// May have something left
 	if (sendbuf[0])
-		sendto_one(sptr, NULL, ":%s %s :%s", me.id, MSG_REQMODS, sendbuf);
+		sendto_one(sptr, NULL, ":%s %s :%s", me.id, MSG_SMOD, sendbuf);
 	return HOOK_CONTINUE;
 }
