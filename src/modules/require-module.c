@@ -404,27 +404,29 @@ CMD_FUNC(cmd_smod)
 {
 	char flag, name[64], *version;
 	char buf[BUFSIZE];
-	char *p, *modbuf;
+	char *tmp, *p, *modbuf;
 	Module *mod;
 	DenyMod *dmod;
 	int i;
+	int abort;
 
 	// A non-server sptr shouldn't really be possible here, but still :D
 	if (!MyConnect(sptr) || !IsServer(sptr) || BadPtr(parv[1]))
 		return 0;
 
-	// Module strings are passed as 1 parameter
+	// Module strings are passed as 1 space-delimited parameter
 	strlcpy(buf, parv[1], sizeof(buf));
-	for (modbuf = strtoken(&p, buf, " "); modbuf; modbuf = strtoken(&p, NULL, " "))
+	abort = 0;
+	for (modbuf = strtoken(&tmp, buf, " "); modbuf; modbuf = strtoken(&tmp, NULL, " "))
 	{
-		p = strchr(name, ':');
+		p = strchr(modbuf, ':');
 		if (!p)
 			continue; /* malformed request */
-		*p++ = '\0';
 		flag = *modbuf; // Get the local/global flag (FIXME: parses only first letter atm)
 		modbuf = p+1;
 		strlcpy(name, modbuf, sizeof(name)); // Let's work on a copy of the param
 		version = strchr(name, ':');
+
 		if (!version)
 			continue; /* malformed request */
 		*version++ = '\0';
@@ -435,10 +437,7 @@ CMD_FUNC(cmd_smod)
 			// Send this particular notice to local opers only
 			sendto_umode(UMODE_OPER, "Server %s is using module '%s' which is specified in a deny module { } config block (reason: %s)", sptr->name, name, dmod->reason);
 			if (cfg.squit_on_deny) // If set to SQUIT, simply use the reason as-is
-			{
-				sendto_umode_global(UMODE_OPER, "ABORTING LINK: %s <=> %s (reason: %s)", me.name, sptr->name, dmod->reason);
-				return exit_client(cptr, sptr, &me, NULL, dmod->reason);
-			}
+				abort = 1;
 			continue;
 		}
 
@@ -446,16 +445,13 @@ CMD_FUNC(cmd_smod)
 		if (!(mod = find_modptr_byname(name, 1)))
 		{
 			/* Since only the server missing the module will report it, we need to broadcast the warning network-wide ;]
-			 * Obviously we won't send this notice if the module seems to be locally required only
+			 * Obviously we won't take any action if the module seems to be locally required only
 			 */
 			if (flag == 'G')
 			{
 				sendto_umode_global(UMODE_OPER, "Globally required module '%s' wasn't (fully) loaded or is missing entirely", name);
 				if (cfg.squit_on_missing)
-				{
-					sendto_umode_global(UMODE_OPER, "ABORTING LINK: %s <=> %s", me.name, sptr->name);
-					return exit_client(cptr, sptr, &me, NULL, "Missing globally required module");
-				}
+					abort = 1;
 			}
 			continue;
 		}
@@ -469,12 +465,15 @@ CMD_FUNC(cmd_smod)
 			// Version mismatches can be (and are) reported on both ends separately, so a local server notice is enough
 			sendto_umode(UMODE_OPER, "Version mismatch for module '%s' (ours: %s, theirs: %s)", name, mod->header->version, version);
 			if (cfg.squit_on_mismatch)
-			{
-				sendto_umode_global(UMODE_OPER, "ABORTING LINK: %s <=> %s", me.name, sptr->name);
-				return exit_client(cptr, sptr, &me, NULL, "Module version mismatch");
-			}
+				abort = 1;
 			continue;
 		}
+	}
+
+	if (abort)
+	{
+		sendto_umode_global(UMODE_OPER, "ABORTING LINK: %s <=> %s", me.name, sptr->name);
+		return exit_client(cptr, sptr, &me, NULL, "ABORTING LINK");
 	}
 
 	return 0;
@@ -492,8 +491,7 @@ int reqmods_hook_serverconnect(Client *sptr)
 	size_t len, modlen;
 
 	/* Let's not have leaves directly connected to the hub send their module list to other *leaves* as well =]
-	 * Since the hub will introduce all servers currently linked to it, this POST_SERVER_CONNECT hook is
-	 * actually called for every separate node
+	 * Since the hub will introduce all servers currently linked to it, this hook is actually called for every separate node
 	 */
 	if (!MyConnect(sptr))
 		return HOOK_CONTINUE;
@@ -507,8 +505,8 @@ int reqmods_hook_serverconnect(Client *sptr)
 		 * so we can properly deny certain ones across the network
 		 */
 		ircsnprintf(modbuf, sizeof(modbuf), "%c:%s:%s", ((mod->options & MOD_OPT_GLOBAL) ? 'G' : 'L'), mod->header->name, mod->header->version);
-		modlen = strlen(modbuf) + 1;
-		if (len + modlen > sizeof(sendbuf))
+		modlen = strlen(modbuf);
+		if (len + modlen + 2 > sizeof(sendbuf)) // Account for space and nullbyte, otherwise the last module string might be cut off
 		{
 			// "Flush" current list =]
 			sendto_one(sptr, NULL, ":%s %s :%s", me.id, MSG_SMOD, sendbuf);
@@ -517,6 +515,12 @@ int reqmods_hook_serverconnect(Client *sptr)
 		}
 
 		ircsnprintf(sendbuf + len, sizeof(sendbuf) - len, "%s%s", (len > 0 ? " " : ""), modbuf);
+
+		/* Maybe account for the space between modules, can't do this earlier because otherwise the ircsnprintf() would skip past the nullbyte
+		 * of the previous module (which in turn terminates the string prematurely)
+		 */
+		if (len)
+			len++;
 		len += modlen;
 	}
 
