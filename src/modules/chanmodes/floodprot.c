@@ -313,219 +313,155 @@ int cmodef_is_ok(Client *sptr, Channel *chptr, char mode, char *param, int type,
 	if (type == EXCHK_PARAM)
 	{
 		ChannelFloodProtection newf;
-		int xxi, xyi, xzi, hascolon;
-		char *xp;
+		char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
+		int v;
+		unsigned short warnings = 0, breakit;
+		unsigned char r;
 
 		memset(&newf, 0, sizeof(newf));
 
-		/* old +f was like +f 10:5 or +f *10:5
-		 * new is +f [5c,30j,10t#b]:15
-		 * +f 10:5  --> +f [10t]:5
-		 * +f *10:5 --> +f [10t#b]:5
-		 */
-		if (param[0] != '[')
+		/* old +f was like +f 10:5 or +f *10:5 - no longer supported */
+		if ((param[0] != '[') || strlen(param) < 3)
+			goto invalidsyntax;;
+
+		/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
+		strlcpy(xbuf, param, sizeof(xbuf));
+		p2 = strchr(xbuf+1, ']');
+		if (!p2)
+			goto invalidsyntax;
+		*p2 = '\0';
+		if (*(p2+1) != ':')
+			goto invalidsyntax;
+
+		breakit = 0;
+		for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
 		{
-			/* <<OLD +f>> */
-		  /* like 1:1 and if its less than 3 chars then ahem.. */
-		  if (strlen(param) < 3)
-		  	goto invalidsyntax;
-		  /* may not contain other chars
-		     than 0123456789: & NULL */
-		  hascolon = 0;
-		  for (xp = param; *xp; xp++)
-		  {
-			  if (*xp == ':')
-				hascolon++;
-			  /* fast alpha check */
-			  if (((*xp < '0') || (*xp > '9'))
-			      && (*xp != ':')
-			      && (*xp != '*'))
-				goto invalidsyntax;
-			  /* uh oh, not the first char */
-			  if (*xp == '*' && (xp != param))
-				goto invalidsyntax;
-		  }
-		  /* We can avoid 2 strchr() and a strrchr() like this
-		   * it should be much faster. -- codemastr
-		   */
-		  if (hascolon != 1)
-			goto invalidsyntax;
-		  if (*param == '*')
-		  {
-			  xzi = 1;
-			  //                      chptr->mode.kmode = 1;
-		  }
-		  else
-		  {
-			  xzi = 0;
-
-			  //                   chptr->mode.kmode = 0;
-		  }
-		  xp = strchr(param, ':');
-		  *xp = '\0';
-		  xxi =
-		      atoi((*param ==
-		      '*' ? (param + 1) : param));
-		  xp++;
-		  xyi = atoi(xp);
-		  if (xxi > 500 || xyi > 500)
-			goto invalidsyntax;
-		  xp--;
-		  *xp = ':';
-		  if ((xxi <= 0) || (xyi <= 0))
-			  goto invalidsyntax;
-
-		  /* ok, we passed */
-		  newf.limit[FLD_TEXT] = xxi;
-		  newf.per = xyi;
-		  if (xzi == 1)
-		      newf.action[FLD_TEXT] = 'b';
-		} else {
-			/* NEW +F */
-			char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
-			int v;
-			unsigned short warnings = 0, breakit;
-			unsigned char r;
-
-			/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
-			strlcpy(xbuf, param, sizeof(xbuf));
-			p2 = strchr(xbuf+1, ']');
-			if (!p2)
-				goto invalidsyntax;
-			*p2 = '\0';
-			if (*(p2+1) != ':')
-				goto invalidsyntax;
-			breakit = 0;
-			for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
+			/* <number><1 letter>[optional: '#'+1 letter] */
+			p = x;
+			while(isdigit(*p)) { p++; }
+			if ((*p == '\0') ||
+			    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
+			      (*p == 'm') || (*p == 'n') || (*p == 't') ||
+			      (*p == 'r')))
 			{
-				/* <number><1 letter>[optional: '#'+1 letter] */
-				p = x;
-				while(isdigit(*p)) { p++; }
-				if ((*p == '\0') ||
-				    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
-				      (*p == 'm') || (*p == 'n') || (*p == 't') ||
-				      (*p == 'r')))
-				{
-					if (MyUser(sptr) && *p && (warnings++ < 3))
-						sendnotice(sptr, "warning: channelmode +f: floodtype '%c' unknown, ignored.", *p);
-					continue; /* continue instead of break for forward compatability. */
-				}
-				c = *p;
-				*p = '\0';
-				v = atoi(x);
-				if ((v < 1) || (v > 999)) /* out of range... */
-				{
-					if (MyUser(sptr))
-					{
-						sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE,
-							   'f', "value should be from 1-999");
-						goto invalidsyntax;
-					} else
-						continue; /* just ignore for remote servers */
-				}
-				p++;
-				a = '\0';
-				r = MyUser(sptr) ? MODEF_DEFAULT_UNSETTIME : 0;
-				if (*p != '\0')
-				{
-					if (*p == '#')
-					{
-						p++;
-						a = *p;
-						p++;
-						if (*p != '\0')
-						{
-							int tv;
-							tv = atoi(p);
-							if (tv <= 0)
-								tv = 0; /* (ignored) */
-							if (tv > (MyUser(sptr) ? MODEF_MAX_UNSETTIME : 255))
-								tv = (MyUser(sptr) ? MODEF_MAX_UNSETTIME : 255); /* set to max */
-							r = (unsigned char)tv;
-						}
-					}
-				}
-
-				switch(c)
-				{
-					case 'c':
-						newf.limit[FLD_CTCP] = v;
-						if ((a == 'm') || (a == 'M'))
-							newf.action[FLD_CTCP] = a;
-						else
-							newf.action[FLD_CTCP] = 'C';
-						newf.remove_after[FLD_CTCP] = r;
-						break;
-					case 'j':
-						newf.limit[FLD_JOIN] = v;
-						if (a == 'R')
-							newf.action[FLD_JOIN] = a;
-						else
-							newf.action[FLD_JOIN] = 'i';
-						newf.remove_after[FLD_JOIN] = r;
-						break;
-					case 'k':
-						newf.limit[FLD_KNOCK] = v;
-						newf.action[FLD_KNOCK] = 'K';
-						newf.remove_after[FLD_KNOCK] = r;
-						break;
-					case 'm':
-						newf.limit[FLD_MSG] = v;
-						if (a == 'M')
-							newf.action[FLD_MSG] = a;
-						else
-							newf.action[FLD_MSG] = 'm';
-						newf.remove_after[FLD_MSG] = r;
-						break;
-					case 'n':
-						newf.limit[FLD_NICK] = v;
-						newf.action[FLD_NICK] = 'N';
-						newf.remove_after[FLD_NICK] = r;
-						break;
-					case 't':
-						newf.limit[FLD_TEXT] = v;
-						if (a == 'b' || a == 'd')
-							newf.action[FLD_TEXT] = a;
-						if (timedban_available)
-							newf.remove_after[FLD_TEXT] = r;
-						break;
-					case 'r':
-						newf.limit[FLD_REPEAT] = v;
-						if (a == 'b' || a == 'd')
-							newf.action[FLD_REPEAT] = a;
-						if (timedban_available)
-							newf.remove_after[FLD_REPEAT] = r;
-						break;
-					default:
-						goto invalidsyntax;
-				}
-			} /* for */
-			/* parse 'per' */
-			p2++;
-			if (*p2 != ':')
-				goto invalidsyntax;
-			p2++;
-			if (!*p2)
-				goto invalidsyntax;
-			v = atoi(p2);
-			if ((v < 1) || (v > 999)) /* 'per' out of range */
+				if (MyUser(sptr) && *p && (warnings++ < 3))
+					sendnotice(sptr, "warning: channelmode +f: floodtype '%c' unknown, ignored.", *p);
+				continue; /* continue instead of break for forward compatability. */
+			}
+			c = *p;
+			*p = '\0';
+			v = atoi(x);
+			if ((v < 1) || (v > 999)) /* out of range... */
 			{
 				if (MyUser(sptr))
-					sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'f',
-						   "time range should be 1-999");
-				goto invalidsyntax;
+				{
+					sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE,
+						   'f', "value should be from 1-999");
+					goto invalidsyntax;
+				} else
+					continue; /* just ignore for remote servers */
 			}
-			newf.per = v;
+			p++;
+			a = '\0';
+			r = MyUser(sptr) ? MODEF_DEFAULT_UNSETTIME : 0;
+			if (*p != '\0')
+			{
+				if (*p == '#')
+				{
+					p++;
+					a = *p;
+					p++;
+					if (*p != '\0')
+					{
+						int tv;
+						tv = atoi(p);
+						if (tv <= 0)
+							tv = 0; /* (ignored) */
+						if (tv > (MyUser(sptr) ? MODEF_MAX_UNSETTIME : 255))
+							tv = (MyUser(sptr) ? MODEF_MAX_UNSETTIME : 255); /* set to max */
+						r = (unsigned char)tv;
+					}
+				}
+			}
 
-			/* Is anything turned on? (to stop things like '+f []:15' */
-			breakit = 1;
-			for (v=0; v < NUMFLD; v++)
-				if (newf.limit[v])
-					breakit=0;
-			if (breakit)
-				goto invalidsyntax;
+			switch(c)
+			{
+				case 'c':
+					newf.limit[FLD_CTCP] = v;
+					if ((a == 'm') || (a == 'M'))
+						newf.action[FLD_CTCP] = a;
+					else
+						newf.action[FLD_CTCP] = 'C';
+					newf.remove_after[FLD_CTCP] = r;
+					break;
+				case 'j':
+					newf.limit[FLD_JOIN] = v;
+					if (a == 'R')
+						newf.action[FLD_JOIN] = a;
+					else
+						newf.action[FLD_JOIN] = 'i';
+					newf.remove_after[FLD_JOIN] = r;
+					break;
+				case 'k':
+					newf.limit[FLD_KNOCK] = v;
+					newf.action[FLD_KNOCK] = 'K';
+					newf.remove_after[FLD_KNOCK] = r;
+					break;
+				case 'm':
+					newf.limit[FLD_MSG] = v;
+					if (a == 'M')
+						newf.action[FLD_MSG] = a;
+					else
+						newf.action[FLD_MSG] = 'm';
+					newf.remove_after[FLD_MSG] = r;
+					break;
+				case 'n':
+					newf.limit[FLD_NICK] = v;
+					newf.action[FLD_NICK] = 'N';
+					newf.remove_after[FLD_NICK] = r;
+					break;
+				case 't':
+					newf.limit[FLD_TEXT] = v;
+					if (a == 'b' || a == 'd')
+						newf.action[FLD_TEXT] = a;
+					if (timedban_available)
+						newf.remove_after[FLD_TEXT] = r;
+					break;
+				case 'r':
+					newf.limit[FLD_REPEAT] = v;
+					if (a == 'b' || a == 'd')
+						newf.action[FLD_REPEAT] = a;
+					if (timedban_available)
+						newf.remove_after[FLD_REPEAT] = r;
+					break;
+				default:
+					goto invalidsyntax;
+			}
+		} /* for */
+		/* parse 'per' */
+		p2++;
+		if (*p2 != ':')
+			goto invalidsyntax;
+		p2++;
+		if (!*p2)
+			goto invalidsyntax;
+		v = atoi(p2);
+		if ((v < 1) || (v > 999)) /* 'per' out of range */
+		{
+			if (MyUser(sptr))
+				sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'f',
+					   "time range should be 1-999");
+			goto invalidsyntax;
+		}
+		newf.per = v;
 
-		} /* if param[0] == '[' */
+		/* Is anything turned on? (to stop things like '+f []:15' */
+		breakit = 1;
+		for (v=0; v < NUMFLD; v++)
+			if (newf.limit[v])
+				breakit=0;
+		if (breakit)
+			goto invalidsyntax;
 
 		return EX_ALLOW;
 invalidsyntax:
@@ -542,7 +478,7 @@ void *cmodef_put_param(void *fld_in, char *param)
 	ChannelFloodProtection *fld = (ChannelFloodProtection *)fld_in;
 	char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
 	int v;
-	unsigned short warnings = 0, breakit;
+	unsigned short breakit;
 	unsigned char r;
 
 	strlcpy(xbuf, param, sizeof(xbuf));
@@ -562,7 +498,6 @@ void *cmodef_put_param(void *fld_in, char *param)
 	}
 
 	/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
-
 	p2 = strchr(xbuf+1, ']');
 	if (!p2)
 	{
@@ -729,217 +664,151 @@ char *cmodef_get_param(void *r_in)
 char *cmodef_conv_param(char *param_in, Client *cptr)
 {
 	static char retbuf[256];
-	char param[256], *p;
-	int num, t, fail = 0;
+	char param[256];
 	ChannelFloodProtection newf;
-	int xxi, xyi, xzi, hascolon;
-	char *xp;
 	int localclient = (!cptr || MyUser(cptr)) ? 1 : 0;
+	char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
+	int v;
+	unsigned short breakit;
+	unsigned char r;
 
 	memset(&newf, 0, sizeof(newf));
 
 	strlcpy(param, param_in, sizeof(param));
 
-	/* old +f was like +f 10:5 or +f *10:5
-	 * new is +f [5c,30j,10t#b]:15
-	 * +f 10:5  --> +f [10t]:5
-	 * +f *10:5 --> +f [10t#b]:5
-	 */
+	/* old +f was like +f 10:5 or +f *10:5 - no longer supported */
 	if (param[0] != '[')
+		return NULL;
+
+	/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
+	strlcpy(xbuf, param, sizeof(xbuf));
+	p2 = strchr(xbuf+1, ']');
+	if (!p2)
+		return NULL;
+	*p2 = '\0';
+	if (*(p2+1) != ':')
+		return NULL;
+	breakit = 0;
+	for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
 	{
-		/* <<OLD +f>> */
-	  /* like 1:1 and if its less than 3 chars then ahem.. */
-	  if (strlen(param) < 3)
-	  	return NULL;
-	  /* may not contain other chars
-	     than 0123456789: & NULL */
-	  hascolon = 0;
-	  for (xp = param; *xp; xp++)
-	  {
-		  if (*xp == ':')
-			hascolon++;
-		  /* fast alpha check */
-		  if (((*xp < '0') || (*xp > '9'))
-		      && (*xp != ':')
-		      && (*xp != '*'))
-			return NULL;
-		  /* uh oh, not the first char */
-		  if (*xp == '*' && (xp != param))
-			return NULL;
-	  }
-	  /* We can avoid 2 strchr() and a strrchr() like this
-	   * it should be much faster. -- codemastr
-	   */
-	  if (hascolon != 1)
-		return NULL;
-	  if (*param == '*')
-	  {
-		  xzi = 1;
-		  //                      chptr->mode.kmode = 1;
-	  }
-	  else
-	  {
-		  xzi = 0;
-
-		  //                   chptr->mode.kmode = 0;
-	  }
-	  xp = strchr(param, ':');
-	  *xp = '\0';
-	  xxi =
-	      atoi((*param ==
-	      '*' ? (param + 1) : param));
-	  xp++;
-	  xyi = atoi(xp);
-	  if (xxi > 500 || xyi > 500)
-		return NULL;
-	  xp--;
-	  *xp = ':';
-	  if ((xxi <= 0) || (xyi <= 0))
-		  return NULL;
-
-	  /* ok, we passed */
-	  newf.limit[FLD_TEXT] = xxi;
-	  newf.per = xyi;
-	  if (xzi == 1)
-	      newf.action[FLD_TEXT] = 'b';
-	} else {
-		/* NEW +F */
-		char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
-		int v;
-		unsigned short warnings = 0, breakit;
-		unsigned char r;
-
-		/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
-		strlcpy(xbuf, param, sizeof(xbuf));
-		p2 = strchr(xbuf+1, ']');
-		if (!p2)
-			return NULL;
-		*p2 = '\0';
-		if (*(p2+1) != ':')
-			return NULL;
-		breakit = 0;
-		for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
+		/* <number><1 letter>[optional: '#'+1 letter] */
+		p = x;
+		while(isdigit(*p)) { p++; }
+		if ((*p == '\0') ||
+		    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
+		      (*p == 'm') || (*p == 'n') || (*p == 't') ||
+		      (*p == 'r')))
 		{
-			/* <number><1 letter>[optional: '#'+1 letter] */
-			p = x;
-			while(isdigit(*p)) { p++; }
-			if ((*p == '\0') ||
-			    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
-			      (*p == 'm') || (*p == 'n') || (*p == 't') ||
-			      (*p == 'r')))
-			{
-				/* (unknown type) */
-				continue; /* continue instead of break for forward compatability. */
-			}
-			c = *p;
-			*p = '\0';
-			v = atoi(x);
-			if ((v < 1) || (v > 999)) /* out of range... */
-			{
-				if (localclient || (v < 1))
-					return NULL;
-			}
-			p++;
-			a = '\0';
-			r = localclient ? MODEF_DEFAULT_UNSETTIME : 0;
-			if (*p != '\0')
-			{
-				if (*p == '#')
-				{
-					p++;
-					a = *p;
-					p++;
-					if (*p != '\0')
-					{
-						int tv;
-						tv = atoi(p);
-						if (tv <= 0)
-							tv = 0; /* (ignored) */
-						if (tv > (localclient ? MODEF_MAX_UNSETTIME : 255))
-							tv = (localclient ? MODEF_MAX_UNSETTIME : 255); /* set to max */
-						r = (unsigned char)tv;
-					}
-				}
-			}
-
-			switch(c)
-			{
-				case 'c':
-					newf.limit[FLD_CTCP] = v;
-					if ((a == 'm') || (a == 'M'))
-						newf.action[FLD_CTCP] = a;
-					else
-						newf.action[FLD_CTCP] = 'C';
-					newf.remove_after[FLD_CTCP] = r;
-					break;
-				case 'j':
-					newf.limit[FLD_JOIN] = v;
-					if (a == 'R')
-						newf.action[FLD_JOIN] = a;
-					else
-						newf.action[FLD_JOIN] = 'i';
-					newf.remove_after[FLD_JOIN] = r;
-					break;
-				case 'k':
-					newf.limit[FLD_KNOCK] = v;
-					newf.action[FLD_KNOCK] = 'K';
-					newf.remove_after[FLD_KNOCK] = r;
-					break;
-				case 'm':
-					newf.limit[FLD_MSG] = v;
-					if (a == 'M')
-						newf.action[FLD_MSG] = a;
-					else
-						newf.action[FLD_MSG] = 'm';
-					newf.remove_after[FLD_MSG] = r;
-					break;
-				case 'n':
-					newf.limit[FLD_NICK] = v;
-					newf.action[FLD_NICK] = 'N';
-					newf.remove_after[FLD_NICK] = r;
-					break;
-				case 't':
-					newf.limit[FLD_TEXT] = v;
-					if (a == 'b' || a == 'd')
-						newf.action[FLD_TEXT] = a;
-					if (timedban_available)
-						newf.remove_after[FLD_TEXT] = r;
-					break;
-				case 'r':
-					newf.limit[FLD_REPEAT] = v;
-					if (a == 'b' || a == 'd')
-						newf.action[FLD_REPEAT] = a;
-					if (timedban_available)
-						newf.remove_after[FLD_REPEAT] = r;
-					break;
-				default:
-					return NULL;
-			}
-		} /* for */
-		/* parse 'per' */
-		p2++;
-		if (*p2 != ':')
-			return NULL;
-		p2++;
-		if (!*p2)
-			return NULL;
-		v = atoi(p2);
-		if ((v < 1) || (v > 999)) /* 'per' out of range */
+			/* (unknown type) */
+			continue; /* continue instead of break for forward compatability. */
+		}
+		c = *p;
+		*p = '\0';
+		v = atoi(x);
+		if ((v < 1) || (v > 999)) /* out of range... */
 		{
 			if (localclient || (v < 1))
 				return NULL;
 		}
-		newf.per = v;
+		p++;
+		a = '\0';
+		r = localclient ? MODEF_DEFAULT_UNSETTIME : 0;
+		if (*p != '\0')
+		{
+			if (*p == '#')
+			{
+				p++;
+				a = *p;
+				p++;
+				if (*p != '\0')
+				{
+					int tv;
+					tv = atoi(p);
+					if (tv <= 0)
+						tv = 0; /* (ignored) */
+					if (tv > (localclient ? MODEF_MAX_UNSETTIME : 255))
+						tv = (localclient ? MODEF_MAX_UNSETTIME : 255); /* set to max */
+					r = (unsigned char)tv;
+				}
+			}
+		}
 
-		/* Is anything turned on? (to stop things like '+f []:15' */
-		breakit = 1;
-		for (v=0; v < NUMFLD; v++)
-			if (newf.limit[v])
-				breakit=0;
-		if (breakit)
+		switch(c)
+		{
+			case 'c':
+				newf.limit[FLD_CTCP] = v;
+				if ((a == 'm') || (a == 'M'))
+					newf.action[FLD_CTCP] = a;
+				else
+					newf.action[FLD_CTCP] = 'C';
+				newf.remove_after[FLD_CTCP] = r;
+				break;
+			case 'j':
+				newf.limit[FLD_JOIN] = v;
+				if (a == 'R')
+					newf.action[FLD_JOIN] = a;
+				else
+					newf.action[FLD_JOIN] = 'i';
+				newf.remove_after[FLD_JOIN] = r;
+				break;
+			case 'k':
+				newf.limit[FLD_KNOCK] = v;
+				newf.action[FLD_KNOCK] = 'K';
+				newf.remove_after[FLD_KNOCK] = r;
+				break;
+			case 'm':
+				newf.limit[FLD_MSG] = v;
+				if (a == 'M')
+					newf.action[FLD_MSG] = a;
+				else
+					newf.action[FLD_MSG] = 'm';
+				newf.remove_after[FLD_MSG] = r;
+				break;
+			case 'n':
+				newf.limit[FLD_NICK] = v;
+				newf.action[FLD_NICK] = 'N';
+				newf.remove_after[FLD_NICK] = r;
+				break;
+			case 't':
+				newf.limit[FLD_TEXT] = v;
+				if (a == 'b' || a == 'd')
+					newf.action[FLD_TEXT] = a;
+				if (timedban_available)
+					newf.remove_after[FLD_TEXT] = r;
+				break;
+			case 'r':
+				newf.limit[FLD_REPEAT] = v;
+				if (a == 'b' || a == 'd')
+					newf.action[FLD_REPEAT] = a;
+				if (timedban_available)
+					newf.remove_after[FLD_REPEAT] = r;
+				break;
+			default:
+				return NULL;
+		}
+	} /* for */
+	/* parse 'per' */
+	p2++;
+	if (*p2 != ':')
+		return NULL;
+	p2++;
+	if (!*p2)
+		return NULL;
+	v = atoi(p2);
+	if ((v < 1) || (v > 999)) /* 'per' out of range */
+	{
+		if (localclient || (v < 1))
 			return NULL;
+	}
+	newf.per = v;
 
-	} /* if param[0] == '[' */
+	/* Is anything turned on? (to stop things like '+f []:15' */
+	breakit = 1;
+	for (v=0; v < NUMFLD; v++)
+		if (newf.limit[v])
+			breakit=0;
+	if (breakit)
+		return NULL;
 
 	channel_modef_string(&newf, retbuf);
 	return retbuf;
@@ -964,7 +833,6 @@ int cmodef_sjoin_check(Channel *chptr, void *ourx, void *theirx)
 {
 	ChannelFloodProtection *our = (ChannelFloodProtection *)ourx;
 	ChannelFloodProtection *their = (ChannelFloodProtection *)theirx;
-	char *x;
 	int i;
 
 	if (compare_floodprot_modes(our, their) == 0)
@@ -1351,7 +1219,6 @@ void floodprottimer_add(Channel *chptr, char mflag, time_t when)
 
 	if (!strchr(chp->timers_running, mflag))
 	{
-		char *p;
 		if (strlen(chp->timers_running)+1 >= sizeof(chp->timers_running))
 		{
 			sendto_realops_and_log("floodprottimer_add: too many timers running for %s (%s)!!!",
@@ -1562,9 +1429,6 @@ uint64_t gen_floodprot_msghash(char *text)
 	int is_ctcp, is_action;
 	char *plaintext;
 	size_t len;
-	SHA256_CTX ckctx;
-	unsigned char binaryhash[SHA256_DIGEST_LENGTH];
-	static char msghash[256];
 
 	is_ctcp = is_action = 0;
 	// Remove any control chars (colours/bold/CTCP/etc) and convert it to lowercase before hashing it
@@ -1614,7 +1478,6 @@ static int compare_floodprot_modes(ChannelFloodProtection *a, ChannelFloodProtec
 
 void memberflood_free(ModData *md)
 {
-	MemberFlood *memberflood;
 	/* We don't have any struct members (anymore) that need freeing */
 	safefree(md->ptr);
 }
