@@ -245,9 +245,9 @@ int reqmods_configrun_deny(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 	}
 
-	// Just use a somewhat cryptic default reason if none was specified (since it's optional)
+	// Just use a default reason if none was specified (since it's optional)
 	if (!dmod->reason || !strlen(dmod->reason))
-		 safestrdup(dmod->reason, "A forbidden module is being used");
+		 safestrdup(dmod->reason, "no reason");
 	AddListItem(dmod, DenyModList);
 	return 1;
 }
@@ -425,8 +425,8 @@ CMD_FUNC(cmd_smod)
 		flag = *modbuf; // Get the local/global flag (FIXME: parses only first letter atm)
 		modbuf = p+1;
 		strlcpy(name, modbuf, sizeof(name)); // Let's work on a copy of the param
-		version = strchr(name, ':');
 
+		version = strchr(name, ':');
 		if (!version)
 			continue; /* malformed request */
 		*version++ = '\0';
@@ -435,13 +435,13 @@ CMD_FUNC(cmd_smod)
 		if ((dmod = find_denymod_byname(name)))
 		{
 			// Send this particular notice to local opers only
-			sendto_umode(UMODE_OPER, "Server %s is using module '%s' which is specified in a deny module { } config block (reason: %s)", sptr->name, name, dmod->reason);
-			if (cfg.squit_on_deny) // If set to SQUIT, simply use the reason as-is
+			sendto_umode_global(UMODE_OPER, "Server %s is using module '%s' which is specified in a deny module { } config block (reason: %s)", sptr->name, name, dmod->reason);
+			if (cfg.squit_on_deny)
 				abort = 1;
 			continue;
 		}
 
-		// Doing a strict check for the module being fully loaded so we can emit a warning in that case too :>
+		// Doing a strict check for the module being fully loaded so we can emit an alert in that case too :>
 		if (!(mod = find_modptr_byname(name, 1)))
 		{
 			/* Since only the server missing the module will report it, we need to broadcast the warning network-wide ;]
@@ -457,8 +457,7 @@ CMD_FUNC(cmd_smod)
 		}
 
 		/* A strcasecmp() suffices because the version string only has to *start* with a digit, it can have e.g. "-alpha" at the end
-		 * Also, if the version bit is dropped of for some weird reason, we'll treat it as a mismatch too
-		 * Furthermore, we check the module version for locally required modules as well (for completeness)
+		 * We also check the module version for locally required modules (for completeness)
 		 */
 		if (!version || strcasecmp(mod->header->version, version))
 		{
