@@ -18,7 +18,7 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(account)
+ModuleHeader MOD_HEADER
 = {
 	"extbans/account",
 	"4.2",
@@ -32,7 +32,7 @@ char *extban_account_conv_param(char *para);
 int extban_account_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
-MOD_INIT(account)
+MOD_INIT()
 {
 	ExtbanInfo req;
 	
@@ -53,13 +53,13 @@ MOD_INIT(account)
 }
 
 /** Called upon module load */
-MOD_LOAD(account)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-MOD_UNLOAD(account)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

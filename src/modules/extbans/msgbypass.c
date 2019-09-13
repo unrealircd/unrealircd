@@ -18,7 +18,7 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(msgbypass)
+ModuleHeader MOD_HEADER
 = {
 	"extbans/msgbypass",
 	"4.2",
@@ -34,7 +34,7 @@ int msgbypass_extban_is_ok(Client* sptr, Channel* chptr, char* para, int checkt,
 char *msgbypass_extban_conv_param(char *para);
 
 /** Called upon module init */
-MOD_INIT(msgbypass)
+MOD_INIT()
 {
 	ExtbanInfo req;
 	
@@ -55,14 +55,14 @@ MOD_INIT(msgbypass)
 }
 
 /** Called upon module load */
-MOD_LOAD(msgbypass)
+MOD_LOAD()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION, 0, msgbypass_can_bypass);
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-MOD_UNLOAD(msgbypass)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

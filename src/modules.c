@@ -234,7 +234,7 @@ static char *validate_mod_header(char *relpath, ModuleHeader *mod_header)
 	/* Validate module name */
 	if (strcmp(mod_header->name, relpath))
 	{
-		snprintf(buf, sizeof(buf), "Module has path '%s' but uses name '%s' in MOD_HEADER(). These should be the same!",
+		snprintf(buf, sizeof(buf), "Module has path '%s' but uses name '%s' in MOD_HEADER. These should be the same!",
 			relpath, mod_header->name);
 		return buf;
 	}

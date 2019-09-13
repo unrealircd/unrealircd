@@ -26,7 +26,7 @@ CMD_FUNC(m_admin);
 
 #define MSG_ADMIN 	"ADMIN"	
 
-ModuleHeader MOD_HEADER(admin)
+ModuleHeader MOD_HEADER
   = {
 	"admin",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(admin)
 	"unrealircd-5",
     };
 
-MOD_INIT(admin)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(admin)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(admin)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

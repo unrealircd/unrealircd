@@ -24,7 +24,7 @@ CMD_FUNC(m_unsqline);
 
 #define MSG_UNSQLINE    "UNSQLINE"      /* UNSQLINE */
 
-ModuleHeader MOD_HEADER(unsqline)
+ModuleHeader MOD_HEADER
   = {
 	"unsqline",	/* Name of module */
 	"5.0", /* Version */
@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER(unsqline)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(unsqline)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_UNSQLINE, m_unsqline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -42,13 +42,13 @@ MOD_INIT(unsqline)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(unsqline)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(unsqline)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

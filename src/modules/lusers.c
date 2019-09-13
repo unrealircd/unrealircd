@@ -26,7 +26,7 @@ CMD_FUNC(m_lusers);
 
 #define MSG_LUSERS 	"LUSERS"	
 
-ModuleHeader MOD_HEADER(lusers)
+ModuleHeader MOD_HEADER
   = {
 	"lusers",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(lusers)
 	"unrealircd-5",
     };
 
-MOD_INIT(lusers)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_LUSERS, m_lusers, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(lusers)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(lusers)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

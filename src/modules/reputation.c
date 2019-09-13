@@ -55,7 +55,7 @@
  #define CALLBACKTYPE_REPUTATION_STARTTIME 5
 #endif
 
-ModuleHeader MOD_HEADER(reputation)
+ModuleHeader MOD_HEADER
   = {
 	"reputation",
 	REPUTATION_VERSION,
@@ -129,7 +129,7 @@ void load_db(void);
 void save_db(void);
 int reputation_starttime_callback(void);
 
-MOD_TEST(reputation)
+MOD_TEST()
 {
 	memcpy(&ModInf, modinfo, modinfo->size);
 	memset(&cfg, 0, sizeof(cfg));
@@ -139,7 +139,7 @@ MOD_TEST(reputation)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(reputation)
+MOD_INIT()
 {
 	ModDataInfo mreq;
 
@@ -170,7 +170,7 @@ MOD_INIT(reputation)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(reputation)
+MOD_LOAD()
 {
 	load_db();
 	if (reputation_starttime == 0)
@@ -181,7 +181,7 @@ MOD_LOAD(reputation)
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(reputation)
+MOD_UNLOAD()
 {
 	save_db();
 	return MOD_SUCCESS;

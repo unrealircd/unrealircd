@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(labeled-response)
+ModuleHeader MOD_HEADER
   = {
 	"labeled-response",
 	"5.0",
@@ -53,7 +53,7 @@ long CAP_LABELED_RESPONSE = 0L;
 
 int labeled_response_mtag_is_ok(Client *acptr, char *name, char *value);
 
-MOD_INIT(labeled-response)
+MOD_INIT()
 {
 	ClientCapabilityInfo cap;
 	ClientCapability *c;
@@ -81,12 +81,12 @@ MOD_INIT(labeled-response)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(labeled-response)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(labeled-response)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -42,7 +42,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(antimixedutf8)
+ModuleHeader MOD_HEADER
 = {
 	"antimixedutf8",
 	"1.0",
@@ -207,13 +207,13 @@ CMD_OVERRIDE_FUNC(override_msg)
 
 /*** rest is module and config stuff ****/
 
-MOD_TEST(antimixedutf8)
+MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, antimixedutf8_config_test);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(antimixedutf8)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	
@@ -222,7 +222,7 @@ MOD_INIT(antimixedutf8)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(antimixedutf8)
+MOD_LOAD()
 {
 	if (!CommandOverrideAdd(modinfo->handle, "PRIVMSG", override_msg))
 		return MOD_FAILED;
@@ -233,7 +233,7 @@ MOD_LOAD(antimixedutf8)
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(antimixedutf8)
+MOD_UNLOAD()
 {
 	free_config();
 	return MOD_SUCCESS;

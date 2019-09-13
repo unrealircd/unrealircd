@@ -10,7 +10,7 @@
 
 #define WEBSOCKET_VERSION "1.0.0"
 
-ModuleHeader MOD_HEADER(websocket)
+ModuleHeader MOD_HEADER
   = {
 	"websocket",
 	WEBSOCKET_VERSION,
@@ -58,7 +58,7 @@ int websocket_send_frame(Client *sptr, int opcode, char *buf, int len);
 /* Global variables */
 ModDataInfo *websocket_md;
 
-MOD_INIT(websocket)
+MOD_INIT()
 {
 	ModDataInfo mreq;
 
@@ -79,7 +79,7 @@ MOD_INIT(websocket)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(websocket)
+MOD_LOAD()
 {
 	if (SHOWCONNECTINFO)
 	{
@@ -91,7 +91,7 @@ MOD_LOAD(websocket)
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(websocket)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -21,7 +21,7 @@
 
 CMD_FUNC(noinvite);
 
-ModuleHeader MOD_HEADER(noinvite)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/noinvite",
 	"4.2",
@@ -37,12 +37,12 @@ Cmode_t EXTCMODE_NOINVITE;
 int noinvite_pre_knock(Client *sptr, Channel *chptr);
 int noinvite_pre_invite(Client *sptr, Client *acptr, Channel *chptr, int *override);
 
-MOD_TEST(noinvite)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(noinvite)
+MOD_INIT()
 {
 	CmodeInfo req;
 
@@ -59,12 +59,12 @@ MOD_INIT(noinvite)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(noinvite)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(noinvite)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(plaintext_policy)
+ModuleHeader MOD_HEADER
   = {
 	"plaintext-policy",
 	"5.0",
@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER(plaintext_policy)
 	"unrealircd-5",
 	};
 
-MOD_INIT(plaintext_policy)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -40,14 +40,14 @@ MOD_INIT(plaintext_policy)
 
 void init_plaintext_policy(ModuleInfo *modinfo);
 
-MOD_LOAD(plaintext_policy)
+MOD_LOAD()
 {
 	/* init_plaintext_policy is delayed to MOD_LOAD due to configuration dependency */
 	init_plaintext_policy(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(plaintext_policy)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

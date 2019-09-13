@@ -22,7 +22,7 @@
 
 #define MSG_SMOD "SMOD"
 
-ModuleHeader MOD_HEADER(require_module) = {
+ModuleHeader MOD_HEADER = {
 	"require-module",
 	"5.0",
 	"Check for required modules across the network",
@@ -67,13 +67,13 @@ struct cfgstruct {
 };
 static struct cfgstruct cfg;
 
-MOD_TEST(require_module)
+MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, reqmods_configtest);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(require_module)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	MARK_AS_GLOBAL_MODULE(modinfo);
@@ -85,17 +85,17 @@ MOD_INIT(require_module)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(require_module)
+MOD_LOAD()
 {
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
-		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(require_module).name, ModuleGetErrorStr(modinfo->handle));
+		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(require_module)
+MOD_UNLOAD()
 {
 	DenyMod *dmod, *next;
 	for (dmod = DenyModList; dmod; dmod = next)

@@ -26,7 +26,7 @@ CMD_FUNC(m_undccdeny);
 
 #define MSG_UNDCCDENY 	"UNDCCDENY"	
 
-ModuleHeader MOD_HEADER(undccdeny)
+ModuleHeader MOD_HEADER
   = {
 	"undccdeny",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(undccdeny)
 	"unrealircd-5",
     };
 
-MOD_INIT(undccdeny)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_UNDCCDENY, m_undccdeny, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(undccdeny)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(undccdeny)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

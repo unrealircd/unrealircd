@@ -26,7 +26,7 @@ CMD_FUNC(m_svsfline);
 
 #define MSG_SVSFLINE 	"SVSFLINE"	
 
-ModuleHeader MOD_HEADER(svsfline)
+ModuleHeader MOD_HEADER
   = {
 	"svsfline",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(svsfline)
 	"unrealircd-5",
     };
 
-MOD_INIT(svsfline)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSFLINE, m_svsfline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(svsfline)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(svsfline)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

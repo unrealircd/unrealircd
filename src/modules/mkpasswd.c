@@ -28,7 +28,7 @@ CMD_FUNC(m_mkpasswd);
 
 #define MSG_MKPASSWD 	"MKPASSWD"	
 
-ModuleHeader MOD_HEADER(mkpasswd)
+ModuleHeader MOD_HEADER
   = {
 	"mkpasswd",
 	"5.0",
@@ -37,19 +37,19 @@ ModuleHeader MOD_HEADER(mkpasswd)
 	"unrealircd-5",
     };
 
-MOD_INIT(mkpasswd)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_MKPASSWD, m_mkpasswd, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(mkpasswd)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(mkpasswd)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -40,7 +40,7 @@ static char buf[BUFSIZE];
 
 #define MSG_SERVER 	"SERVER"	
 
-ModuleHeader MOD_HEADER(server)
+ModuleHeader MOD_HEADER
   = {
 	"server",
 	"5.0",
@@ -49,7 +49,7 @@ ModuleHeader MOD_HEADER(server)
 	"unrealircd-5",
     };
 
-MOD_TEST(server)
+MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_PROTOCTL_SERVERS, _send_protoctl_servers);
@@ -61,7 +61,7 @@ MOD_TEST(server)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(server)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
 	CommandAdd(modinfo->handle, "SID", m_server_remote, MAXPARA, M_SERVER);
@@ -71,12 +71,12 @@ MOD_INIT(server)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(server)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(server)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

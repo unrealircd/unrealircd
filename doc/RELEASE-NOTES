@@ -241,12 +241,20 @@ IMPORTANT: As long as UnrealIRCd 5 is in alpha stage, we do not suggest
 Of course you may, but the module API is still very likely to change
 so you may have to do certain (other) changes again next alpha release.
 It is therefore best to wait until beta1. You have been warned ;).
-* The ModuleHeader struct has been changed. An author field has been
-  added, the last field (which was always NULL) has been removed,
-  and there are now restrictions on the name and version fields to
-  ensure the version starts with a digit etc.
-  Have a look at one of the many src/modules/*.c for inspiration.
-  Also, be sure to use "unrealircd-5" for the last field.
+* The module header is now as follows:
+  ModuleHeader MOD_HEADER
+    = {
+          "nameofmodule",
+          "5.0",
+          "Some description", 
+          "Name of Author",
+          "unrealircd-5",
+      };
+  There's a new author field, the version must start with a digit,
+  and also the name of the module must match the loadmodule name.
+  So for example third/funmod must also be named third/funmod.
+* The MOD_TEST, MOD_INIT, MOD_LOAD and MOD_UNLOAD functions no longer
+  take a name argument. So: MOD_INIT(mymod) is now MOD_INIT()
 * In UnrealIRCd 5, during development, --enable-asan is ON by default
   to catch more bugs. This also means an up to 10x slowdown and more
   memory usage. When we reach 5.0.0 stable this will be turned off.

@@ -26,7 +26,7 @@ CMD_FUNC(m_names);
 
 #define MSG_NAMES 	"NAMES"
 
-ModuleHeader MOD_HEADER(names)
+ModuleHeader MOD_HEADER
   = {
 	"names",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(names)
 	"unrealircd-5",
     };
 
-MOD_INIT(names)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_NAMES, m_names, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(names)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(names)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

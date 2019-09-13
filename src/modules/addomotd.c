@@ -26,7 +26,7 @@ CMD_FUNC(m_addomotd);
 
 #define MSG_ADDOMOTD 	"ADDOMOTD"	
 
-ModuleHeader MOD_HEADER(addomotd)
+ModuleHeader MOD_HEADER
   = {
 	"addomotd",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(addomotd)
 	"unrealircd-5",
     };
 
-MOD_INIT(addomotd)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_ADDOMOTD, m_addomotd, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(addomotd)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(addomotd)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

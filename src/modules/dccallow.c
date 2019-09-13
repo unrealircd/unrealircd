@@ -26,7 +26,7 @@ CMD_FUNC(m_dccallow);
 
 #define MSG_DCCALLOW 	"DCCALLOW"
 
-ModuleHeader MOD_HEADER(dccallow)
+ModuleHeader MOD_HEADER
   = {
 	"dccallow",
 	"5.0",
@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(dccallow)
 	"unrealircd-5",
     };
 
-MOD_INIT(dccallow)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_DCCALLOW, m_dccallow, 1, M_USER);
 	ISupportAdd(modinfo->handle, "USERIP", NULL);
@@ -43,12 +43,12 @@ MOD_INIT(dccallow)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(dccallow)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(dccallow)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

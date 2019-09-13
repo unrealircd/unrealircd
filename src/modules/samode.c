@@ -26,7 +26,7 @@ CMD_FUNC(m_samode);
 
 #define MSG_SAMODE 	"SAMODE"	
 
-ModuleHeader MOD_HEADER(samode)
+ModuleHeader MOD_HEADER
   = {
 	"samode",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(samode)
 	"unrealircd-5",
     };
 
-MOD_INIT(samode)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SAMODE, m_samode, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(samode)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(samode)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

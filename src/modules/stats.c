@@ -26,7 +26,7 @@ CMD_FUNC(m_stats);
 
 #define MSG_STATS 	"STATS"
 
-ModuleHeader MOD_HEADER(stats)
+ModuleHeader MOD_HEADER
   = {
 	"stats",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(stats)
 	"unrealircd-5",
     };
 
-MOD_INIT(stats)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_STATS, m_stats, 3, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(stats)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(stats)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

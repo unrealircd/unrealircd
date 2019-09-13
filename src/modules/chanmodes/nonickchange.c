@@ -20,7 +20,7 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER(nonickchange)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/nonickchange",
 	"4.2",
@@ -35,12 +35,12 @@ Cmode_t EXTCMODE_NONICKCHANGE;
 
 int nonickchange_check (Client *sptr, Channel *chptr);
 
-MOD_TEST(nonickchange)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(nonickchange)
+MOD_INIT()
 {
 CmodeInfo req;
 
@@ -57,12 +57,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(nonickchange)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(nonickchange)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

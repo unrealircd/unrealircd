@@ -24,7 +24,7 @@ CMD_FUNC(m_svsjoin);
 /* Place includes here */
 #define MSG_SVSJOIN       "SVSJOIN"
 
-ModuleHeader MOD_HEADER(svsjoin)
+ModuleHeader MOD_HEADER
   = {
 	"svsjoin",	/* Name of module */
 	"5.0", /* Version */
@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER(svsjoin)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(svsjoin)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSJOIN, m_svsjoin, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -42,13 +42,13 @@ MOD_INIT(svsjoin)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(svsjoin)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(svsjoin)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;	
 }

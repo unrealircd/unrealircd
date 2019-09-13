@@ -24,7 +24,7 @@ CMD_FUNC(m_svssilence);
 /* Place includes here */
 #define MSG_SVSSILENCE       "SVSSILENCE"
 
-ModuleHeader MOD_HEADER(svssilence)
+ModuleHeader MOD_HEADER
   = {
 	"svssilence",	/* Name of module */
 	"5.0", /* Version */
@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER(svssilence)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(svssilence)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSSILENCE, m_svssilence, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -42,13 +42,13 @@ MOD_INIT(svssilence)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(svssilence)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(svssilence)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;	
 }

@@ -22,7 +22,7 @@
 #define IsWhois(cptr)    (cptr->umodes & UMODE_SHOWWHOIS)
 
 /* Module header */
-ModuleHeader MOD_HEADER(showwhois)
+ModuleHeader MOD_HEADER
   = {
 	"usermodes/showwhois",
 	"4.2",
@@ -37,12 +37,12 @@ long UMODE_SHOWWHOIS = 0L;
 /* Forward declarations */
 int showwhois_whois(Client *sptr, Client *acptr);
 
-MOD_TEST(showwhois)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(showwhois)
+MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'W', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_SHOWWHOIS);
 	
@@ -52,12 +52,12 @@ MOD_INIT(showwhois)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(showwhois)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(showwhois)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

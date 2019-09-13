@@ -49,7 +49,7 @@ static int samode_in_progress = 0;
 
 #define MSG_MODE 	"MODE"
 
-ModuleHeader MOD_HEADER(mode)
+ModuleHeader MOD_HEADER
   = {
 	"mode",
 	"5.0",
@@ -58,7 +58,7 @@ ModuleHeader MOD_HEADER(mode)
 	"unrealircd-5",
     };
 
-MOD_TEST(mode)
+MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_DO_MODE, _do_mode);
@@ -67,7 +67,7 @@ MOD_TEST(mode)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(mode)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_MODE, m_mode, MAXPARA, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_MLOCK, m_mlock, MAXPARA, M_SERVER);
@@ -75,12 +75,12 @@ MOD_INIT(mode)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(mode)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(mode)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

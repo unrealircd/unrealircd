@@ -34,7 +34,7 @@ struct ConfigItem_webirc {
 };
 
 /* Module header */
-ModuleHeader MOD_HEADER(webirc)
+ModuleHeader MOD_HEADER
 = {
 	"webirc",
 	"5.0",
@@ -68,14 +68,14 @@ int webirc_secure_connect(Client *acptr);
 
 #define MSG_WEBIRC "WEBIRC"
 
-MOD_TEST(webirc)
+MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, webirc_config_test);
 	return MOD_SUCCESS;
 }
 
 /** Called upon module init */
-MOD_INIT(webirc)
+MOD_INIT()
 {
 	ModDataInfo mreq;
 
@@ -106,13 +106,13 @@ MOD_INIT(webirc)
 }
 
 /** Called upon module load */
-MOD_LOAD(webirc)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-MOD_UNLOAD(webirc)
+MOD_UNLOAD()
 {
 	webirc_free_conf();
 	return MOD_SUCCESS;

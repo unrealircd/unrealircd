@@ -5,7 +5,7 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(history)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/history",
 	"1.0",
@@ -66,13 +66,13 @@ int history_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, cha
 int history_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
 EVENT(history_clean);
 
-MOD_TEST(history)
+MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, history_config_test);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(history)
+MOD_INIT()
 {
 	CmodeInfo creq;
 	ModDataInfo mreq;
@@ -101,13 +101,13 @@ MOD_INIT(history)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(history)
+MOD_LOAD()
 {
 	EventAdd(modinfo->handle, "history_clean", HISTORY_TIMER_EVERY, 0, history_clean, NULL);
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(history)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

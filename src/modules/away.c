@@ -28,7 +28,7 @@ CMD_FUNC(m_away);
 
 #define MSG_AWAY 	"AWAY"	
 
-ModuleHeader MOD_HEADER(away)
+ModuleHeader MOD_HEADER
   = {
 	"away",
 	"5.0",
@@ -37,19 +37,19 @@ ModuleHeader MOD_HEADER(away)
 	"unrealircd-5",
     };
 
-MOD_INIT(away)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_AWAY, m_away, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(away)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(away)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

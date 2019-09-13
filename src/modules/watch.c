@@ -26,7 +26,7 @@ CMD_FUNC(m_watch);
 
 #define MSG_WATCH 	"WATCH"	
 
-ModuleHeader MOD_HEADER(watch)
+ModuleHeader MOD_HEADER
   = {
 	"watch",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(watch)
 	"unrealircd-5",
     };
 
-MOD_INIT(watch)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_WATCH, m_watch, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(watch)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(watch)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

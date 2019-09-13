@@ -26,7 +26,7 @@ CMD_FUNC(m_eos);
 
 #define MSG_EOS 	"EOS"	
 
-ModuleHeader MOD_HEADER(eos)
+ModuleHeader MOD_HEADER
   = {
 	"eos",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(eos)
 	"unrealircd-5",
     };
 
-MOD_INIT(eos)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_EOS, m_eos, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(eos)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(eos)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

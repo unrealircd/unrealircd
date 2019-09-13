@@ -29,7 +29,7 @@ CMD_FUNC(m_svsnoop);
 #define MSG_SVSNOOP 	"SVSNOOP"	
 
 
-ModuleHeader MOD_HEADER(svsnoop)
+ModuleHeader MOD_HEADER
   = {
 	"svsnoop",
 	"5.0",
@@ -38,19 +38,19 @@ ModuleHeader MOD_HEADER(svsnoop)
 	"unrealircd-5",
     };
 
-MOD_INIT(svsnoop)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSNOOP, m_svsnoop, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(svsnoop)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(svsnoop)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

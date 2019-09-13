@@ -20,7 +20,7 @@
 #include "unrealircd.h"
 
 /* Module header */
-ModuleHeader MOD_HEADER(dccreject)
+ModuleHeader MOD_HEADER
   = {
 	"snomasks/dccreject",
 	"4.2",
@@ -35,12 +35,12 @@ long SNO_DCCREJECT = 0L;
 /* Forward declarations */
 int dccreject_dcc_denied(Client *sptr, Client *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *dccdeny);
 
-MOD_TEST(dccreject)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(dccreject)
+MOD_INIT()
 {
 	SnomaskAdd(modinfo->handle, 'D', umode_allow_opers, &SNO_DCCREJECT);
 	
@@ -50,12 +50,12 @@ MOD_INIT(dccreject)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(dccreject)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(dccreject)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

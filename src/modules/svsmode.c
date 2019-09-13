@@ -33,7 +33,7 @@ CMD_FUNC(m_svs2mode);
 #define MSG_SVSMODE 	"SVSMODE"	
 #define MSG_SVS2MODE    "SVS2MODE"
 
-ModuleHeader MOD_HEADER(svsmode)
+ModuleHeader MOD_HEADER
   = {
 	"svsmode",
 	"5.0",
@@ -42,7 +42,7 @@ ModuleHeader MOD_HEADER(svsmode)
 	"unrealircd-5",
     };
 
-MOD_INIT(svsmode)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSMODE, m_svsmode, MAXPARA, M_SERVER|M_USER);
 	CommandAdd(modinfo->handle, MSG_SVS2MODE, m_svs2mode, MAXPARA, M_SERVER|M_USER);
@@ -50,12 +50,12 @@ MOD_INIT(svsmode)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(svsmode)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(svsmode)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

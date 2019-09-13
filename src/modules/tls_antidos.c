@@ -10,7 +10,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(tls_antidos)
+ModuleHeader MOD_HEADER
   = {
 	"tls_antidos",
 	"5.0",
@@ -36,7 +36,7 @@ int tls_antidos_handshake(Client *acptr);
 
 void tls_antidos_free(void *parent, void *ptr, CRYPTO_EX_DATA *ad, int idx, long argl, void *argp);
 
-MOD_INIT(tls_antidos)
+MOD_INIT()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, tls_antidos_handshake);
 
@@ -52,12 +52,12 @@ MOD_INIT(tls_antidos)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(tls_antidos)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(tls_antidos)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

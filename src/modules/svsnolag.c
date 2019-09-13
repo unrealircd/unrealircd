@@ -27,7 +27,7 @@ CMD_FUNC(m_svs2nolag);
 #define MSG_SVSNOLAG 	"SVSNOLAG"	
 #define MSG_SVS2NOLAG 	"SVS2NOLAG"	
 
-ModuleHeader MOD_HEADER(svsnolag)
+ModuleHeader MOD_HEADER
   = {
 	"svsnolag",
 	"5.0",
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER(svsnolag)
 	"unrealircd-5",
     };
 
-MOD_INIT(svsnolag)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSNOLAG, m_svsnolag, MAXPARA, M_SERVER);
 	CommandAdd(modinfo->handle, MSG_SVS2NOLAG, m_svs2nolag, MAXPARA, M_SERVER);
@@ -44,12 +44,12 @@ MOD_INIT(svsnolag)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(svsnolag)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(svsnolag)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

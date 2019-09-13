@@ -26,7 +26,7 @@ CMD_FUNC(m_connect);
 
 #define MSG_CONNECT 	"CONNECT"	
 
-ModuleHeader MOD_HEADER(connect)
+ModuleHeader MOD_HEADER
   = {
 	"connect",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(connect)
 	"unrealircd-5",
     };
 
-MOD_INIT(connect)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_CONNECT, m_connect, MAXPARA, M_USER|M_SERVER); /* hmm.. server.. really? */
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(connect)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(connect)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

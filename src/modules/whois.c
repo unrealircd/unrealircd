@@ -26,7 +26,7 @@ CMD_FUNC(m_whois);
 
 #define MSG_WHOIS       "WHOIS"
 
-ModuleHeader MOD_HEADER(whois)
+ModuleHeader MOD_HEADER
   = {
 	"whois",	/* Name of module */
 	"5.0", /* Version */
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER(whois)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(whois)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_WHOIS, m_whois, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -44,13 +44,13 @@ MOD_INIT(whois)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(whois)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(whois)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(batch)
+ModuleHeader MOD_HEADER
   = {
 	"batch",
 	"5.0",
@@ -39,7 +39,7 @@ long CAP_BATCH = 0L;
 
 int batch_mtag_is_ok(Client *acptr, char *name, char *value);
 
-MOD_INIT(batch)
+MOD_INIT()
 {
 	ClientCapabilityInfo cap;
 	ClientCapability *c;
@@ -61,12 +61,12 @@ MOD_INIT(batch)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(batch)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(batch)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -26,7 +26,7 @@ CMD_FUNC(m_sajoin);
 
 #define MSG_SAJOIN 	"SAJOIN"	
 
-ModuleHeader MOD_HEADER(sajoin)
+ModuleHeader MOD_HEADER
   = {
 	"sajoin",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(sajoin)
 	"unrealircd-5",
     };
 
-MOD_INIT(sajoin)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SAJOIN, m_sajoin, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(sajoin)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(sajoin)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -26,7 +26,7 @@ CMD_FUNC(m_sdesc);
 
 #define MSG_SDESC 	"SDESC"	/* sdesc */
 
-ModuleHeader MOD_HEADER(sdesc)
+ModuleHeader MOD_HEADER
   = {
 	"sdesc",	/* Name of module */
 	"5.0", /* Version */
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(sdesc)
 	"unrealircd-5",
     };
 
-MOD_INIT(sdesc)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SDESC, m_sdesc, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(sdesc)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(sdesc)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

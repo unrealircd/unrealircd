@@ -42,7 +42,7 @@ static int bouncedtimes = 0;
 #define MAXBOUNCE   5 /** Most sensible */
 #define MSG_JOIN 	"JOIN"	
 
-ModuleHeader MOD_HEADER(join)
+ModuleHeader MOD_HEADER
   = {
 	"join",
 	"5.0",
@@ -51,7 +51,7 @@ ModuleHeader MOD_HEADER(join)
 	"unrealircd-5",
     };
 
-MOD_TEST(join)
+MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_JOIN_CHANNEL, _join_channel);
@@ -64,19 +64,19 @@ MOD_TEST(join)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(join)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_JOIN, m_join, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(join)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(join)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

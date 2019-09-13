@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(restrict-commands) = {
+ModuleHeader MOD_HEADER = {
 	"restrict-commands",
 	"1.0",
 	"Restrict specific commands unless certain conditions have been met",
@@ -68,14 +68,14 @@ CmdMap conf_cmdmaps[] = {
 	{ NULL, NULL, }, // REQUIRED for the loop to properly work
 };
 
-MOD_TEST(restrict-commands)
+MOD_TEST()
 {
 	memcpy(&ModInf, modinfo, modinfo->size);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, rcmd_configtest);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(restrict-commands)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, rcmd_configrun);
@@ -86,17 +86,17 @@ MOD_INIT(restrict-commands)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(restrict-commands)
+MOD_LOAD()
 {
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
-		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(restrict-commands).name, ModuleGetErrorStr(modinfo->handle));
+		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(restrict-commands)
+MOD_UNLOAD()
 {
 	RestrictedCommand *rcmd, *next;
 	for (rcmd = RestrictedCommandList; rcmd; rcmd = next)

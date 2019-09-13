@@ -10,7 +10,7 @@
  * channel mode +H.
  */
 
-ModuleHeader MOD_HEADER(history_backend_null)
+ModuleHeader MOD_HEADER
 = {
 	"history_backend_null",
 	"1.0",
@@ -25,7 +25,7 @@ int hbn_history_del(char *object, int max_lines, long max_time);
 int hbn_history_request(Client *acptr, char *object, HistoryFilter *filter);
 int hbn_history_destroy(char *object);
 
-MOD_INIT(history_backend_null)
+MOD_INIT()
 {
 	HistoryBackendInfo hbi;
 
@@ -44,12 +44,12 @@ MOD_INIT(history_backend_null)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(history_backend_null)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(history_backend_null)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

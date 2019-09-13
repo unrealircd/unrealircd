@@ -23,7 +23,7 @@
 #define IsSecureOnlyMsg(cptr)    (cptr->umodes & UMODE_SECUREONLYMSG)
 
 /* Module header */
-ModuleHeader MOD_HEADER(secureonlymsg)
+ModuleHeader MOD_HEADER
   = {
 	"usermodes/secureonlymsg",
 	"4.2",
@@ -38,7 +38,7 @@ long UMODE_SECUREONLYMSG = 0L;
 /* Forward declarations */
 char *secureonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int notice);
                     
-MOD_INIT(secureonlymsg)
+MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'Z', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_SECUREONLYMSG);
 	
@@ -48,12 +48,12 @@ MOD_INIT(secureonlymsg)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(secureonlymsg)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(secureonlymsg)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

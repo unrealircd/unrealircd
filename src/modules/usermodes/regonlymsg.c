@@ -22,7 +22,7 @@
 #define IsRegOnlyMsg(cptr)    (cptr->umodes & UMODE_REGONLYMSG)
 
 /* Module header */
-ModuleHeader MOD_HEADER(regonlymsg)
+ModuleHeader MOD_HEADER
   = {
 	"usermodes/regonlymsg",
 	"4.2",
@@ -37,7 +37,7 @@ long UMODE_REGONLYMSG = 0L;
 /* Forward declarations */
 char *regonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int notice);
                     
-MOD_INIT(regonlymsg)
+MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'R', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_REGONLYMSG);
 	
@@ -47,12 +47,12 @@ MOD_INIT(regonlymsg)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(regonlymsg)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(regonlymsg)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

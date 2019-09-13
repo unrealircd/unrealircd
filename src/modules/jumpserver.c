@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(jumpserver)
+ModuleHeader MOD_HEADER
   = {
 	"jumpserver",
 	"1.1",
@@ -49,7 +49,7 @@ struct JSS
 
 JSS *jss=NULL; /**< JumpServer Status. NULL=disabled. */
 
-MOD_INIT(jumpserver)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	LoadPersistentPointer(modinfo, jss, jumpserver_free_jss);
@@ -58,12 +58,12 @@ MOD_INIT(jumpserver)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(jumpserver)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(jumpserver)
+MOD_UNLOAD()
 {
 	SavePersistentPointer(modinfo, jss);
 	return MOD_SUCCESS;

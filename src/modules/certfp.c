@@ -11,7 +11,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(certfp)
+ModuleHeader MOD_HEADER
   = {
 	"certfp",
 	"5.0",
@@ -32,7 +32,7 @@ ModDataInfo *certfp_md; /* Module Data structure which we acquire */
 
 #define WHOISCERTFP_STRING ":%s 276 %s %s :has client certificate fingerprint %s"
 
-MOD_INIT(certfp)
+MOD_INIT()
 {
 ModDataInfo mreq;
 
@@ -57,13 +57,13 @@ ModDataInfo mreq;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(certfp)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 
-MOD_UNLOAD(certfp)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

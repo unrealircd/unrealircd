@@ -28,7 +28,7 @@ CMD_FUNC(m_nospoof);
 #define MSG_PING        "PING"  /* PING */
 #define MSG_PONG        "PONG"  /* PONG */
 
-ModuleHeader MOD_HEADER(pingpong)
+ModuleHeader MOD_HEADER
   = {
 	"pingpong",	/* Name of module */
 	"5.0", /* Version */
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER(pingpong)
 	"unrealircd-5",
     };
 /* This is called on module init, before Server Ready */
-MOD_INIT(pingpong)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_PING, m_ping, MAXPARA, M_USER|M_SERVER|M_SHUN);
 	CommandAdd(modinfo->handle, MSG_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN|M_VIRUS);
@@ -46,14 +46,14 @@ MOD_INIT(pingpong)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(pingpong)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-MOD_UNLOAD(pingpong)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

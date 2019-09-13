@@ -26,7 +26,7 @@ CMD_FUNC(m_locops);
 
 #define MSG_LOCOPS 	"LOCOPS"	
 
-ModuleHeader MOD_HEADER(locops)
+ModuleHeader MOD_HEADER
   = {
 	"locops",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(locops)
 	"unrealircd-5",
     };
 
-MOD_INIT(locops)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_LOCOPS, m_locops, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(locops)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(locops)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

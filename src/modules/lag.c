@@ -25,7 +25,7 @@ CMD_FUNC(m_lag);
 /* Place includes here */
 #define MSG_LAG         "LAG"   /* Lag detect */
 
-ModuleHeader MOD_HEADER(lag)
+ModuleHeader MOD_HEADER
   = {
 	"lag",	/* Name of module */
 	"5.0", /* Version */
@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(lag)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(lag)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_LAG, m_lag, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -43,13 +43,13 @@ MOD_INIT(lag)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(lag)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(lag)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

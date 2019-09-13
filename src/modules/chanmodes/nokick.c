@@ -20,7 +20,7 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER(nokick)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/nokick",
 	"4.2",
@@ -35,12 +35,12 @@ Cmode_t EXTCMODE_NOKICK;
 
 int nokick_check (Client* sptr, Client* who, Channel *chptr, char* comment, long sptr_flags, long who_flags, char **reject_reason);
 
-MOD_TEST(nokick)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(nokick)
+MOD_INIT()
 {
 	CmodeInfo req;
 
@@ -57,12 +57,12 @@ MOD_INIT(nokick)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(nokick)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(nokick)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

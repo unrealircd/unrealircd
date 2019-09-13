@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(nick)
+ModuleHeader MOD_HEADER
   = {
 	"nick",
 	"5.0",
@@ -40,14 +40,14 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username);
 int check_client(Client *cptr, char *username);
 
-MOD_TEST(nick)
+MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAdd(modinfo->handle, EFUNC_REGISTER_USER, _register_user);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(nick)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_NICK, m_nick, MAXPARA, M_USER|M_SERVER|M_UNREGISTERED);
 	CommandAdd(modinfo->handle, "UID", m_uid, MAXPARA, M_SERVER);
@@ -55,12 +55,12 @@ MOD_INIT(nick)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(nick)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(nick)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

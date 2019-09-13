@@ -23,7 +23,7 @@ CMD_FUNC(m_svskill);
 
 #define MSG_SVSKILL	"SVSKILL"
 
-ModuleHeader MOD_HEADER(svskill)
+ModuleHeader MOD_HEADER
   = {
 	"svskill",	/* Name of module */
 	"5.0", /* Version */
@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER(svskill)
 
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(svskill)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSKILL, m_svskill, MAXPARA, M_SERVER|M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -42,14 +42,14 @@ MOD_INIT(svskill)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(svskill)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-MOD_UNLOAD(svskill)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

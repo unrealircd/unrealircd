@@ -21,7 +21,7 @@
 
 CMD_FUNC(nocolor);
 
-ModuleHeader MOD_HEADER(nocolor)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/nocolor",
 	"4.2",
@@ -38,12 +38,12 @@ char *nocolor_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *
 char *nocolor_prelocalpart(Client *sptr, Channel *chptr, char *comment);
 char *nocolor_prelocalquit(Client *sptr, char *comment);
 
-MOD_TEST(nocolor)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(nocolor)
+MOD_INIT()
 {
 CmodeInfo req;
 
@@ -63,12 +63,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(nocolor)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(nocolor)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

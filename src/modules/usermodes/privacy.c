@@ -22,7 +22,7 @@
 #define IsPrivacy(cptr)    (cptr->umodes & UMODE_PRIVACY)
 
 /* Module header */
-ModuleHeader MOD_HEADER(privacy)
+ModuleHeader MOD_HEADER
   = {
 	"usermodes/privacy",
 	"4.2",
@@ -37,7 +37,7 @@ long UMODE_PRIVACY = 0L;
 /* Forward declarations */
 int privacy_see_channel_in_whois(Client *sptr, Client *target, Channel *chptr);
                     
-MOD_INIT(privacy)
+MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'p', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_PRIVACY);
 	
@@ -47,12 +47,12 @@ MOD_INIT(privacy)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(privacy)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(privacy)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

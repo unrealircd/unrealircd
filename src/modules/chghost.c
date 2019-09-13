@@ -26,7 +26,7 @@
 
 CMD_FUNC(m_chghost);
 
-ModuleHeader MOD_HEADER(chghost)
+ModuleHeader MOD_HEADER
   = {
 	"chghost",	/* Name of module */
 	"5.0", /* Version */
@@ -35,20 +35,20 @@ ModuleHeader MOD_HEADER(chghost)
 	"unrealircd-5",
     };
 
-MOD_INIT(chghost)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_CHGHOST, m_chghost, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(chghost)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 	
 }
 
-MOD_UNLOAD(chghost)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;	
 }

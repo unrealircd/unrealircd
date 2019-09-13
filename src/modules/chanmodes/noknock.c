@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(noknock)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/noknock",
 	"4.2",
@@ -36,12 +36,12 @@ int noknock_check (Client *sptr, Channel *chptr);
 int noknock_mode_allow(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what);
 int noknock_mode_del (Channel *chptr, int modeChar);
 
-MOD_TEST(noknock)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(noknock)
+MOD_INIT()
 {
 CmodeInfo req;
 
@@ -59,12 +59,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(noctcp)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(noctcp)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

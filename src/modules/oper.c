@@ -26,7 +26,7 @@ CMD_FUNC(m_oper);
 /* Place includes here */
 #define MSG_OPER        "OPER"  /* OPER */
 
-ModuleHeader MOD_HEADER(oper)
+ModuleHeader MOD_HEADER
   = {
 	"oper",	/* Name of module */
 	"5.0", /* Version */
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER(oper)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(oper)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_OPER, m_oper, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -44,13 +44,13 @@ MOD_INIT(oper)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(oper)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(oper)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -21,7 +21,7 @@
 
 CMD_FUNC(noctcp);
 
-ModuleHeader MOD_HEADER(noctcp)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/noctcp",
 	"4.2",
@@ -36,12 +36,12 @@ Cmode_t EXTCMODE_NOCTCP;
 
 char *noctcp_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
 
-MOD_TEST(noctcp)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(noctcp)
+MOD_INIT()
 {
 CmodeInfo req;
 
@@ -57,12 +57,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(noctcp)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(noctcp)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

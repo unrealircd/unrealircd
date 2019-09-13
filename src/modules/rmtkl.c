@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(rmtkl) = {
+ModuleHeader MOD_HEADER = {
 	"rmtkl",
 	"1.4",
 	"Adds /rmtkl command to easily remove *-Lines in bulk",
@@ -77,7 +77,7 @@ static char *rmtkl_help[] = {
 	NULL
 };
 
-MOD_INIT(rmtkl)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	if (CommandExists("RMTKL"))
@@ -89,17 +89,17 @@ MOD_INIT(rmtkl)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(rmtkl)
+MOD_LOAD()
 {
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
-		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(rmtkl).name, ModuleGetErrorStr(modinfo->handle));
+		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(rmtkl)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

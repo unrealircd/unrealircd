@@ -28,7 +28,7 @@ CMD_FUNC(m_svsnline);
 
 #define MSG_SVSNLINE 	"SVSNLINE"	/* svsnline */
 
-ModuleHeader MOD_HEADER(svsnline)
+ModuleHeader MOD_HEADER
   = {
 	"svsnline",	/* Name of module */
 	"5.0", /* Version */
@@ -38,7 +38,7 @@ ModuleHeader MOD_HEADER(svsnline)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(svsnline)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSNLINE, m_svsnline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -46,13 +46,13 @@ MOD_INIT(svsnline)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(svsnline)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(svsnline)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -26,7 +26,7 @@ CMD_FUNC(m_setname);
 
 #define MSG_SETNAME 	"SETNAME"	/* setname */
 
-ModuleHeader MOD_HEADER(setname)
+ModuleHeader MOD_HEADER
   = {
 	"setname",	/* Name of module */
 	"5.0", /* Version */
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(setname)
 	"unrealircd-5",
     };
 
-MOD_INIT(setname)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SETNAME, m_setname, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(setname)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(setname)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

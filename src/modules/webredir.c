@@ -23,7 +23,7 @@
 
 CMD_FUNC(webredir);
 
-ModuleHeader MOD_HEADER(webredir)
+ModuleHeader MOD_HEADER
   = {
 	"webredir",
 	"1.0",
@@ -44,14 +44,14 @@ int webredir_config_posttest(int *errs);
 int webredir_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int webredir_config_run(ConfigFile *, ConfigEntry *, int);
 
-MOD_TEST(webredir)
+MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, webredir_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, webredir_config_posttest);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(webredir)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, "HEAD", webredir, MAXPARA, M_UNREGISTERED);
 	CommandAdd(modinfo->handle, "GET", webredir, MAXPARA, M_UNREGISTERED);
@@ -63,7 +63,7 @@ MOD_INIT(webredir)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(webredir)
+MOD_LOAD()
 {
 	if (SHOWCONNECTINFO)
 	{
@@ -74,7 +74,7 @@ MOD_LOAD(webredir)
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(webredir)
+MOD_UNLOAD()
 {
 	free_config();
 	return MOD_SUCCESS;

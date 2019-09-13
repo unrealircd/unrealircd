@@ -68,7 +68,7 @@ static void do_who_on_channel(Client *sptr, Channel *chptr,
                               int member, int operspy, struct who_format *fmt);
 static int convert_classical_who_request(Client *sptr, int *parc, char *parv[], char **orig_mask, struct who_format *fmt);
 
-ModuleHeader MOD_HEADER(whox)
+ModuleHeader MOD_HEADER
   = {
 	"whox",
 	"5.0",
@@ -77,7 +77,7 @@ ModuleHeader MOD_HEADER(whox)
 	"unrealircd-5",
     };
 
-MOD_INIT(whox)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	if (!CommandAdd(modinfo->handle, MSG_WHO, m_whox, MAXPARA, M_USER))
@@ -89,12 +89,12 @@ MOD_INIT(whox)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(whox)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(whox)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

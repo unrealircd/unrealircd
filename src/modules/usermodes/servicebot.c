@@ -24,7 +24,7 @@
 #define WHOIS_SERVICE_STRING ":%s 313 %s %s :is a Network Service"
 
 /* Module header */
-ModuleHeader MOD_HEADER(servicebot)
+ModuleHeader MOD_HEADER
   = {
 	"usermodes/servicebot",
 	"4.2",
@@ -45,12 +45,12 @@ int servicebot_pre_kill(Client *sptr, Client *target, char *reason);
 int servicebot_whois(Client *sptr, Client *acptr);
 int servicebot_see_channel_in_whois(Client *sptr, Client *target, Channel *chptr);
                     
-MOD_TEST(servicebot)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(servicebot)
+MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'S', UMODE_GLOBAL, 1, umode_allow_none, &UMODE_SERVICEBOT);
 	
@@ -64,12 +64,12 @@ MOD_INIT(servicebot)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(servicebot)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(servicebot)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

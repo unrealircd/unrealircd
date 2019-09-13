@@ -18,7 +18,7 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(inchannel)
+ModuleHeader MOD_HEADER
 = {
 	"extbans/inchannel",
 	"4.2",
@@ -33,7 +33,7 @@ char *extban_inchannel_conv_param(char *para);
 int extban_inchannel_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
-MOD_INIT(inchannel)
+MOD_INIT()
 {
 	ExtbanInfo req;
 	
@@ -54,13 +54,13 @@ MOD_INIT(inchannel)
 }
 
 /** Called upon module load */
-MOD_LOAD(inchannel)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-MOD_UNLOAD(inchannel)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

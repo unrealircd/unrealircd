@@ -28,7 +28,7 @@ CMD_FUNC(m_svs2sno);
 #define MSG_SVSSNO 	"SVSSNO"	
 #define MSG_SVS2SNO 	"SVS2SNO"	
 
-ModuleHeader MOD_HEADER(svssno)
+ModuleHeader MOD_HEADER
   = {
 	"svssno",
 	"5.0",
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER(svssno)
 	"unrealircd-5",
     };
 
-MOD_INIT(svssno)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSSNO, m_svssno, MAXPARA, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_SVS2SNO, m_svs2sno, MAXPARA, M_USER|M_SERVER);
@@ -45,12 +45,12 @@ MOD_INIT(svssno)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(svssno)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(svssno)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

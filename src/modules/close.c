@@ -26,7 +26,7 @@ CMD_FUNC(m_close);
 
 #define MSG_CLOSE 	"CLOSE"	
 
-ModuleHeader MOD_HEADER(close)
+ModuleHeader MOD_HEADER
   = {
 	"close",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(close)
 	"unrealircd-5",
     };
 
-MOD_INIT(close)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_CLOSE, m_close, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(close)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(close)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

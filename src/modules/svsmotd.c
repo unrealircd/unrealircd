@@ -28,7 +28,7 @@ CMD_FUNC(m_svsmotd);
 
 #define MSG_SVSMOTD 	"SVSMOTD"	
 
-ModuleHeader MOD_HEADER(svsmotd)
+ModuleHeader MOD_HEADER
   = {
 	"svsmotd",
 	"5.0",
@@ -37,19 +37,19 @@ ModuleHeader MOD_HEADER(svsmotd)
 	"unrealircd-5",
     };
 
-MOD_INIT(svsmotd)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSMOTD, m_svsmotd, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(svsmotd)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(svsmotd)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

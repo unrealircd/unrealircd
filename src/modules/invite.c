@@ -26,7 +26,7 @@ CMD_FUNC(m_invite);
 
 #define MSG_INVITE 	"INVITE"	
 
-ModuleHeader MOD_HEADER(invite)
+ModuleHeader MOD_HEADER
   = {
 	"invite",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(invite)
 	"unrealircd-5",
     };
 
-MOD_INIT(invite)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_INVITE, m_invite, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(invite)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(invite)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

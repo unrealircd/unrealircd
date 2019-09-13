@@ -26,7 +26,7 @@
  #define ARRAY_SIZEOF(x) (sizeof((x))/sizeof((x)[0]))
 #endif
 
-ModuleHeader MOD_HEADER(charsys)
+ModuleHeader MOD_HEADER
 = {
 	"charsys",	/* Name of module */
 	"5.0", /* Version */
@@ -180,7 +180,7 @@ int charsys_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 int charsys_config_posttest(int *errs);
 char *_charsys_get_current_languages(void);
 
-MOD_TEST(charsys)
+MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAdd(modinfo->handle, EFUNC_DO_NICK_NAME, _do_nick_name);
@@ -193,7 +193,7 @@ MOD_TEST(charsys)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(charsys)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, charsys_config_run);
@@ -201,14 +201,14 @@ MOD_INIT(charsys)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(charsys)
+MOD_LOAD()
 {
 	charsys_finish();
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(charsys)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

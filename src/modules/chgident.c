@@ -26,7 +26,7 @@
 
 CMD_FUNC(m_chgident);
 
-ModuleHeader MOD_HEADER(chgident)
+ModuleHeader MOD_HEADER
   = {
 	"chgident",	/* Name of module */
 	"5.0", /* Version */
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(chgident)
 	"unrealircd-5",
     };
 
-MOD_INIT(chgident)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_CHGIDENT, m_chgident, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(chgident)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(chgident)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

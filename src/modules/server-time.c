@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(server-time)
+ModuleHeader MOD_HEADER
   = {
 	"server-time",
 	"5.0",
@@ -37,7 +37,7 @@ long CAP_SERVER_TIME = 0L;
 int server_time_mtag_is_ok(Client *acptr, char *name, char *value);
 void mtag_add_or_inherit_time(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 
-MOD_INIT(server-time)
+MOD_INIT()
 {
 	ClientCapabilityInfo cap;
 	ClientCapability *c;
@@ -60,12 +60,12 @@ MOD_INIT(server-time)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(server-time)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(server-time)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

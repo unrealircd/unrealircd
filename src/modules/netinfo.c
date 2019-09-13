@@ -26,7 +26,7 @@ CMD_FUNC(m_netinfo);
 
 #define MSG_NETINFO 	"NETINFO"	
 
-ModuleHeader MOD_HEADER(netinfo)
+ModuleHeader MOD_HEADER
   = {
 	"netinfo",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(netinfo)
 	"unrealircd-5",
     };
 
-MOD_INIT(netinfo)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_NETINFO, m_netinfo, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(netinfo)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(netinfo)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

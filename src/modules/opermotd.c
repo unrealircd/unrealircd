@@ -26,7 +26,7 @@ CMD_FUNC(m_opermotd);
 
 #define MSG_OPERMOTD 	"OPERMOTD"	
 
-ModuleHeader MOD_HEADER(opermotd)
+ModuleHeader MOD_HEADER
   = {
 	"opermotd",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(opermotd)
 	"unrealircd-5",
     };
 
-MOD_INIT(opermotd)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_OPERMOTD, m_opermotd, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(opermotd)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(opermotd)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

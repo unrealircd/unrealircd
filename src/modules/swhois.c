@@ -28,7 +28,7 @@ CMD_FUNC(m_swhois);
 
 #define MSG_SWHOIS 	"SWHOIS"	
 
-ModuleHeader MOD_HEADER(swhois)
+ModuleHeader MOD_HEADER
   = {
 	"swhois",
 	"5.0",
@@ -37,19 +37,19 @@ ModuleHeader MOD_HEADER(swhois)
 	"unrealircd-5",
     };
 
-MOD_INIT(swhois)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SWHOIS, m_swhois, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(swhois)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(swhois)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

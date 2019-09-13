@@ -21,7 +21,7 @@
 
 CMD_FUNC(operonly);
 
-ModuleHeader MOD_HEADER(operonly)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/operonly",
 	"4.2",
@@ -37,12 +37,12 @@ int operonly_check (Client *cptr, Channel *chptr, char *key, char *parv[]);
 int operonly_topic_allow (Client *sptr, Channel *chptr);
 int operonly_check_ban(Client *cptr, Channel *chptr);
 
-MOD_TEST(operonly)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(operonly)
+MOD_INIT()
 {
 CmodeInfo req;
 
@@ -61,12 +61,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(noctcp)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(noctcp)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -26,7 +26,7 @@ CMD_FUNC(m_map);
 
 #define MSG_MAP 	"MAP"	
 
-ModuleHeader MOD_HEADER(map)
+ModuleHeader MOD_HEADER
   = {
 	"map",
 	"5.0",
@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(map)
 	"unrealircd-5",
     };
 
-MOD_INIT(map)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_MAP, m_map, MAXPARA, M_USER);
 	ISupportAdd(modinfo->handle, "MAP", NULL);
@@ -43,12 +43,12 @@ MOD_INIT(map)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(map)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(map)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

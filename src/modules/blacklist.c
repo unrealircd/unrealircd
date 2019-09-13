@@ -20,7 +20,7 @@
 #include "unrealircd.h"
 #include "dns.h"
 
-ModuleHeader MOD_HEADER(blacklist)
+ModuleHeader MOD_HEADER
 = {
 	"blacklist",
 	"5.0",
@@ -111,7 +111,7 @@ void blacklist_free_bluser_if_able(BLUser *bl);
 
 long SNO_BLACKLIST = 0L;
 
-MOD_TEST(blacklist)
+MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, blacklist_config_test);
 
@@ -120,7 +120,7 @@ MOD_TEST(blacklist)
 }
 
 /** Called upon module init */
-MOD_INIT(blacklist)
+MOD_INIT()
 {
 	ModDataInfo mreq;
 
@@ -156,14 +156,14 @@ MOD_INIT(blacklist)
 }
 
 /** Called upon module load */
-MOD_LOAD(blacklist)
+MOD_LOAD()
 {
 	blacklist_set_handshake_delay();
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-MOD_UNLOAD(blacklist)
+MOD_UNLOAD()
 {
 	blacklist_free_conf();
 	return MOD_SUCCESS;

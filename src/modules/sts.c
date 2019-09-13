@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(sts)
+ModuleHeader MOD_HEADER
   = {
 	"sts",
 	"5.0",
@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER(sts)
 	"unrealircd-5",
 	};
 
-MOD_INIT(sts)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -40,14 +40,14 @@ MOD_INIT(sts)
 
 void init_sts(ModuleInfo *modinfo);
 
-MOD_LOAD(sts)
+MOD_LOAD()
 {
 	/* init_sts is delayed to MOD_LOAD due to configuration dependency */
 	init_sts(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(sts)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

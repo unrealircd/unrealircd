@@ -26,7 +26,7 @@ CMD_FUNC(m_user);
 
 #define MSG_USER 	"USER"	
 
-ModuleHeader MOD_HEADER(user)
+ModuleHeader MOD_HEADER
   = {
 	"user",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(user)
 	"unrealircd-5",
     };
 
-MOD_INIT(user)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_USER, m_user, 4, M_USER|M_UNREGISTERED);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(user)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(user)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

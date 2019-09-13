@@ -26,7 +26,7 @@ CMD_FUNC(m_wallops);
 
 #define MSG_WALLOPS 	"WALLOPS"	
 
-ModuleHeader MOD_HEADER(wallops)
+ModuleHeader MOD_HEADER
   = {
 	"wallops",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(wallops)
 	"unrealircd-5",
     };
 
-MOD_INIT(wallops)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_WALLOPS, m_wallops, 1, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(wallops)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(wallops)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

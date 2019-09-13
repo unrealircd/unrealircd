@@ -24,7 +24,7 @@ CMD_FUNC(m_cycle);
 /* Place includes here */
 #define MSG_CYCLE       "CYCLE"
 
-ModuleHeader MOD_HEADER(cycle)
+ModuleHeader MOD_HEADER
   = {
 	"cycle",	/* Name of module */
 	"5.0", /* Version */
@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER(cycle)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(cycle)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_CYCLE, m_cycle, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -42,14 +42,14 @@ MOD_INIT(cycle)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(cycle)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 	
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(cycle)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;	
 }

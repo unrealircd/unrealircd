@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(permanent)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/permanent",
 	"4.2",
@@ -61,7 +61,7 @@ int permanent_chanmode(Client *cptr, Client *sptr, Channel *chptr, MessageTag *m
 }
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(permanent)
+MOD_INIT()
 {
 CmodeInfo req;
 
@@ -81,13 +81,13 @@ CmodeInfo req;
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(permanent)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(permanent)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

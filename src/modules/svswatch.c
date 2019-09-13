@@ -24,7 +24,7 @@ CMD_FUNC(m_svswatch);
 /* Place includes here */
 #define MSG_SVSWATCH       "SVSWATCH"
 
-ModuleHeader MOD_HEADER(svswatch)
+ModuleHeader MOD_HEADER
   = {
 	"svswatch",	/* Name of module */
 	"5.0", /* Version */
@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER(svswatch)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(svswatch)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSWATCH, m_svswatch, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -42,14 +42,14 @@ MOD_INIT(svswatch)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(svswatch)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 	
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(svswatch)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;	
 }

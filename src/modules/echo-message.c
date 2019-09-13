@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(echo_message)
+ModuleHeader MOD_HEADER
   = {
 	"echo-message",
 	"5.0",
@@ -38,7 +38,7 @@ long CAP_ECHO_MESSAGE = 0L;
 int em_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
 int em_usermsg(Client *sptr, Client *to, MessageTag *mtags, char *text, int notice);
 
-MOD_INIT(echo_message)
+MOD_INIT()
 {
 	ClientCapabilityInfo cap;
 
@@ -54,12 +54,12 @@ MOD_INIT(echo_message)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(echo_message)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(echo_message)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

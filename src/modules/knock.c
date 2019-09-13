@@ -26,7 +26,7 @@ CMD_FUNC(m_knock);
 
 #define MSG_KNOCK 	"KNOCK"	
 
-ModuleHeader MOD_HEADER(knock)
+ModuleHeader MOD_HEADER
   = {
 	"knock",
 	"5.0",
@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(knock)
 	"unrealircd-5",
     };
 
-MOD_INIT(knock)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_KNOCK, m_knock, 2, M_USER);
 	ISupportAdd(modinfo->handle, "KNOCK", NULL);
@@ -43,12 +43,12 @@ MOD_INIT(knock)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(knock)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(knock)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

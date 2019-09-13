@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(floodprot)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/floodprot",
 	"5.0",
@@ -129,13 +129,13 @@ int floodprot_stats(Client *sptr, char *flag);
 void floodprot_free_removechannelmodetimer_list(ModData *m);
 void floodprot_free_msghash_key(ModData *m);
 
-MOD_TEST(floodprot)
+MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, floodprot_config_test);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(floodprot)
+MOD_INIT()
 {
 	CmodeInfo creq;
 	ModDataInfo mreq;
@@ -188,14 +188,14 @@ MOD_INIT(floodprot)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(floodprot)
+MOD_LOAD()
 {
 	EventAdd(modinfo->handle, "modef_event", 10, 0, modef_event, NULL);
 	floodprot_rehash_complete();
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(floodprot)
+MOD_UNLOAD()
 {
 	SavePersistentPointer(modinfo, removechannelmodetimer_list);
 	return MOD_SUCCESS;

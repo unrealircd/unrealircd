@@ -25,7 +25,7 @@
 
 CMD_FUNC(m_ircops);
 
-ModuleHeader MOD_HEADER(ircops)
+ModuleHeader MOD_HEADER
   = {
 	"ircops",
 	"3.71",
@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER(ircops)
 	"unrealircd-5",
     };
 
-MOD_INIT(ircops)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	if (CommandExists(MSG_IRCOPS))
@@ -54,12 +54,12 @@ MOD_INIT(ircops)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(ircops)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(ircops)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -26,7 +26,7 @@ CMD_FUNC(m_part);
 
 #define MSG_PART 	"PART"	
 
-ModuleHeader MOD_HEADER(part)
+ModuleHeader MOD_HEADER
   = {
 	"part",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(part)
 	"unrealircd-5",
     };
 
-MOD_INIT(part)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_PART, m_part, 2, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(part)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(part)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

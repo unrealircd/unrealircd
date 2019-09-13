@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(partmsg)
+ModuleHeader MOD_HEADER
 = {
 	"extbans/partmsg",
 	"4.2",
@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER(partmsg)
 
 int extban_partmsg_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
-MOD_INIT(partmsg)
+MOD_INIT()
 {
 	ExtbanInfo req;
 
@@ -51,13 +51,13 @@ MOD_INIT(partmsg)
 }
 
 /** Called upon module load */
-MOD_LOAD(partmsg)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-MOD_UNLOAD(partmsg)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

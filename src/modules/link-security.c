@@ -23,7 +23,7 @@
 #include "unrealircd.h"
 
 /* Module header */
-ModuleHeader MOD_HEADER(link_security)
+ModuleHeader MOD_HEADER
   = {
 	"link-security",
 	"5.0",
@@ -46,7 +46,7 @@ int global_link_security = -1;
 int effective_link_security = -1;
 
 /** Module initalization */
-MOD_INIT(link_security)
+MOD_INIT()
 {
 	ModDataInfo mreq;
 
@@ -71,7 +71,7 @@ MOD_INIT(link_security)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(link_security)
+MOD_LOAD()
 {
 	ClientCapabilityInfo cap;
 
@@ -86,7 +86,7 @@ MOD_LOAD(link_security)
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(link_security)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

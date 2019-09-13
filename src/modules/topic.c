@@ -26,7 +26,7 @@ CMD_FUNC(m_topic);
 
 #define MSG_TOPIC 	"TOPIC"
 
-ModuleHeader MOD_HEADER(topic)
+ModuleHeader MOD_HEADER
   = {
 	"topic",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(topic)
 	"unrealircd-5",
     };
 
-MOD_INIT(topic)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_TOPIC, m_topic, 4, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(topic)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(topic)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

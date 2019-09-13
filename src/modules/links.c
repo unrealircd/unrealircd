@@ -26,7 +26,7 @@ CMD_FUNC(m_links);
 
 #define MSG_LINKS 	"LINKS"	
 
-ModuleHeader MOD_HEADER(links)
+ModuleHeader MOD_HEADER
   = {
 	"links",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(links)
 	"unrealircd-5",
     };
 
-MOD_INIT(links)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_LINKS, m_links, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(links)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(links)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

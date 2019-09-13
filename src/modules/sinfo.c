@@ -6,7 +6,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(sinfo)
+ModuleHeader MOD_HEADER
   = {
 	"sinfo",
 	"5.0",
@@ -18,7 +18,7 @@ ModuleHeader MOD_HEADER(sinfo)
 /* Forward declarations */
 CMD_FUNC(m_sinfo);
 
-MOD_INIT(sinfo)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, "SINFO", m_sinfo, MAXPARA, M_USER|M_SERVER);
@@ -26,12 +26,12 @@ MOD_INIT(sinfo)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(sinfo)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(sinfo)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

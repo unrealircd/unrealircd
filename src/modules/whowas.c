@@ -26,7 +26,7 @@ CMD_FUNC(m_whowas);
 
 #define MSG_WHOWAS 	"WHOWAS"	
 
-ModuleHeader MOD_HEADER(whowas)
+ModuleHeader MOD_HEADER
   = {
 	"whowas",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(whowas)
 	"unrealircd-5",
     };
 
-MOD_INIT(whowas)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_WHOWAS, m_whowas, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(whowas)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(whowas)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

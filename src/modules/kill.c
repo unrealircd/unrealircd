@@ -26,7 +26,7 @@ static char buf[BUFSIZE], buf2[BUFSIZE];
 /* Place includes here */
 #define MSG_KILL        "KILL"  /* KILL */
 
-ModuleHeader MOD_HEADER(kill)
+ModuleHeader MOD_HEADER
   = {
 	"kill",	/* Name of module */
 	"5.0", /* Version */
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER(kill)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(kill)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_KILL, m_kill, 2, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -44,14 +44,14 @@ MOD_INIT(kill)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(kill)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-MOD_UNLOAD(kill)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

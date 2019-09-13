@@ -45,7 +45,7 @@
  */
 #define TIMEDBAN_TIMER_DELTA ((TIMEDBAN_TIMER_ITERATION_SPLIT*TIMEDBAN_TIMER)/2)
 
-ModuleHeader MOD_HEADER(timedban)
+ModuleHeader MOD_HEADER
   = {
 	"extbans/timedban",
 	"1.0",
@@ -63,12 +63,12 @@ char *timedban_chanmsg(Client *, Client *, Channel *, char *, int);
 
 EVENT(timedban_timeout);
 
-MOD_TEST(timedban)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(timedban)
+MOD_INIT()
 {
 ExtbanInfo extban;
 
@@ -94,12 +94,12 @@ ExtbanInfo extban;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(timedban)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(timedban)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

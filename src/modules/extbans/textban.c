@@ -70,7 +70,7 @@
 #undef BENCHMARK
 
 
-ModuleHeader MOD_HEADER(textban)
+ModuleHeader MOD_HEADER
   = {
 	"extbans/textban",
 	"2.2",
@@ -85,7 +85,7 @@ int extban_modeT_is_banned(Client *sptr, Channel *chptr, char *ban, int type, ch
 int extban_modeT_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int what, int what2);
 void parse_word(const char *s, char **word, int *type);
 
-MOD_INIT(textban)
+MOD_INIT()
 {
 	ExtbanInfo req;
 
@@ -106,12 +106,12 @@ MOD_INIT(textban)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(textban)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(textban)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

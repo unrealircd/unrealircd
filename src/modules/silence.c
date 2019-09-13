@@ -26,7 +26,7 @@ CMD_FUNC(m_silence);
 
 #define MSG_SILENCE 	"SILENCE"	
 
-ModuleHeader MOD_HEADER(silence)
+ModuleHeader MOD_HEADER
   = {
 	"silence",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(silence)
 	"unrealircd-5",
     };
 
-MOD_INIT(silence)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SILENCE, m_silence, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(silence)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(silence)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -28,7 +28,7 @@
 
 CMD_FUNC(issecure);
 
-ModuleHeader MOD_HEADER(issecure)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/issecure",
 	"4.2",
@@ -51,12 +51,12 @@ int issecure_chanmode(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mt
                              char *modebuf, char *parabuf, time_t sendts, int samode);
                              
 
-MOD_TEST(issecure)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(issecure)
+MOD_INIT()
 {
 CmodeInfo req;
 
@@ -83,12 +83,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(issecure)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(issecure)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

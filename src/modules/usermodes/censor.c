@@ -6,7 +6,7 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER(censor)
+ModuleHeader MOD_HEADER
   = {
 	"usermodes/censor",
 	"4.2",
@@ -32,13 +32,13 @@ ConfigItem_badword *conf_badword_message = NULL;
 static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca, int regex, int regflags);
 
 
-MOD_TEST(censor)
+MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, censor_config_test);
 	return MOD_SUCCESS;
 }
 	
-MOD_INIT(censor)
+MOD_INIT()
 {
 	ModInfo = modinfo;
 
@@ -52,13 +52,13 @@ MOD_INIT(censor)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(censor)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 
-MOD_UNLOAD(censor)
+MOD_UNLOAD()
 {
 ConfigItem_badword *badword, *next;
 

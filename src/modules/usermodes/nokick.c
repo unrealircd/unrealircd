@@ -22,7 +22,7 @@
 #define IsNokick(cptr)    (cptr->umodes & UMODE_NOKICK)
 
 /* Module header */
-ModuleHeader MOD_HEADER(nokick)
+ModuleHeader MOD_HEADER
   = {
 	"usermodes/nokick",
 	"4.2",
@@ -38,12 +38,12 @@ long UMODE_NOKICK = 0L;
 int nokick_can_kick(Client *sptr, Client *target, Channel *chptr,
                     char *comment, long sptr_flags, long target_flags, char **reject_reason);
 
-MOD_TEST(nokick)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(nokick)
+MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'q', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_NOKICK); // TODO: limit more!!
 	
@@ -53,12 +53,12 @@ MOD_INIT(nokick)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(nokick)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(nokick)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

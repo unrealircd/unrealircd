@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(tkldb) = {
+ModuleHeader MOD_HEADER = {
 	"tkldb",
 	"1.10",
 	"Stores active TKL entries (*-Lines) persistently/across IRCd restarts",
@@ -72,7 +72,7 @@ ModuleHeader MOD_HEADER(tkldb) = {
 #define IsMDErr(x, y, z) \
 	do { \
 		if (!(x)) { \
-			config_error("A critical error occurred when registering ModData for %s: %s", MOD_HEADER(y).name, ModuleGetErrorStr((z)->handle)); \
+			config_error("A critical error occurred when registering ModData for %s: %s", MOD_HEADER.name, ModuleGetErrorStr((z)->handle)); \
 			return MOD_FAILED; \
 		} \
 	} while(0)
@@ -97,14 +97,14 @@ static struct cfgstruct cfg;
 
 static int tkls_loaded = 0;
 
-MOD_TEST(tkldb)
+MOD_TEST()
 {
 	memset(&cfg, 0, sizeof(cfg));
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkldb_configtest);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(tkldb)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -132,18 +132,18 @@ MOD_INIT(tkldb)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(tkldb)
+MOD_LOAD()
 {
 	EventAdd(modinfo->handle, "tkldb_write_tkldb", TKL_DB_SAVE_EVERY, 0, write_tkldb_evt, NULL);
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
-		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(tkldb).name, ModuleGetErrorStr(modinfo->handle));
+		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(tkldb)
+MOD_UNLOAD()
 {
 	write_tkldb();
 	freecfg();

@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(tsctl)
+ModuleHeader MOD_HEADER
   = {
 	"tsctl",	/* Name of module */
 	"5.0", /* Version */
@@ -31,19 +31,19 @@ ModuleHeader MOD_HEADER(tsctl)
 
 CMD_FUNC(m_tsctl);
 
-MOD_INIT(tsctl)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, "TSCTL", m_tsctl, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(tsctl)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(tsctl)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -43,7 +43,7 @@ static ModuleInfo	*MyModInfo;
 #define MyMod		MyModInfo->handle
 #define SAVE_MODINFO	MyModInfo = modinfo;
 
-ModuleHeader MOD_HEADER(hideserver)
+ModuleHeader MOD_HEADER
   = {
 	"hideserver",
 	"5.0",
@@ -73,7 +73,7 @@ static void FreeConf()
 	}
 }
 
-MOD_TEST(hideserver)
+MOD_TEST()
 {
 	SAVE_MODINFO
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cb_test);
@@ -81,7 +81,7 @@ MOD_TEST(hideserver)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(hideserver)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	SAVE_MODINFO
@@ -93,7 +93,7 @@ MOD_INIT(hideserver)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(hideserver)
+MOD_LOAD()
 {
 	if (!CommandOverrideAdd(MyMod, "MAP", override_map))
 		return MOD_FAILED;
@@ -104,7 +104,7 @@ MOD_LOAD(hideserver)
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(hideserver)
+MOD_UNLOAD()
 {
 	FreeConf();
 

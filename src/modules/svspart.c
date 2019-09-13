@@ -23,7 +23,7 @@ CMD_FUNC(m_svspart);
 
 #define MSG_SVSPART       "SVSPART"
 
-ModuleHeader MOD_HEADER(svspart)
+ModuleHeader MOD_HEADER
   = {
 	"svspart",	/* Name of module */
 	"5.0", /* Version */
@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER(svspart)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(svspart)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSPART, m_svspart, 3, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -41,13 +41,13 @@ MOD_INIT(svspart)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(svspart)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(svspart)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;	
 }

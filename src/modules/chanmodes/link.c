@@ -21,7 +21,7 @@
 
 #define MAX_EB_LEN 128 // Max extban length
 
-ModuleHeader MOD_HEADER(link) = {
+ModuleHeader MOD_HEADER = {
 	"chanmodes/link",
 	"5.0",
 	"Channel Mode +L",
@@ -60,7 +60,7 @@ int extban_link_is_banned(Client *sptr, Channel *chptr, char *ban, int type, cha
 int link_doforward(Client *sptr, Channel *chptr, char *linked, linkType linktype);
 int link_pre_localjoin_cb(Client *sptr, Channel *chptr, char *parv[]);
 
-MOD_INIT(link)
+MOD_INIT()
 {
 	CmodeInfo req;
 	ExtbanInfo req_extban;
@@ -96,13 +96,13 @@ MOD_INIT(link)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(link)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 
-MOD_UNLOAD(link)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

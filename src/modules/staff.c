@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(staff)
+ModuleHeader MOD_HEADER
   = {
 	"staff",
 	"3.8",
@@ -76,13 +76,13 @@ struct {
 } Download;
 #endif
 
-MOD_TEST(staff)
+MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cb_test);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(staff)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 #ifdef USE_LIBCURL
@@ -101,12 +101,12 @@ MOD_INIT(staff)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(staff)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(staff)
+MOD_UNLOAD()
 {
 	FreeConf();
 	unload_motd_file(&staff);

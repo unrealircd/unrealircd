@@ -23,7 +23,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(tkl)
+ModuleHeader MOD_HEADER
 = {
 	"tkl",
 	"5.0",
@@ -132,7 +132,7 @@ TKLTypeTable tkl_types[] = {
 };
 #define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood, unknown-data-flood, antirandom, antimixedutf8, ban-version"
 
-MOD_TEST(tkl)
+MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_spamfilter);
@@ -174,7 +174,7 @@ MOD_TEST(tkl)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(tkl)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamfilter);
@@ -193,13 +193,13 @@ MOD_INIT(tkl)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(tkl)
+MOD_LOAD()
 {
 	EventAdd(modinfo->handle, "tklexpire", 5, 0, tkl_check_expire, NULL);
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(tkl)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -26,7 +26,7 @@ CMD_FUNC(m_dccdeny);
 
 #define MSG_DCCDENY 	"DCCDENY"	
 
-ModuleHeader MOD_HEADER(dccdeny)
+ModuleHeader MOD_HEADER
   = {
 	"dccdeny",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(dccdeny)
 	"unrealircd-5",
     };
 
-MOD_INIT(dccdeny)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_DCCDENY, m_dccdeny, 2, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(dccdeny)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(dccdeny)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

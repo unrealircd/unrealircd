@@ -48,7 +48,7 @@ static inline unsigned int downsample(char *i);
 
 Callback *cloak = NULL, *cloak_csum = NULL;
 
-ModuleHeader MOD_HEADER(cloak) = {
+ModuleHeader MOD_HEADER = {
 	"cloak",
 	"1.0",
 	"Official cloaking module (md5)",
@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(cloak) = {
 	"unrealircd-5",
 };
 
-MOD_TEST(cloak)
+MOD_TEST()
 {
 	cloak = CallbackAddPCharEx(modinfo->handle, CALLBACKTYPE_CLOAK_EX, hidehost);
 	if (!cloak)
@@ -75,19 +75,19 @@ MOD_TEST(cloak)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(cloak)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, cloak_config_run);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(cloak)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(cloak)
+MOD_UNLOAD()
 {
 	if (cloak_key1)
 	{

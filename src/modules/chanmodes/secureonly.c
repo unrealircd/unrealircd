@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(secureonly)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/secureonly",
 	"4.2",
@@ -39,12 +39,12 @@ int secureonly_check_secure(Channel* chptr);
 int secureonly_check_sajoin(Client *acptr, Channel* chptr, Client *sptr);
 int secureonly_specialcheck(Client *sptr, Channel *chptr, char *parv[]);
 
-MOD_TEST(secureonly)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(secureonly)
+MOD_INIT()
 {
 	CmodeInfo req;
 
@@ -66,12 +66,12 @@ MOD_INIT(secureonly)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(secureonly)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(secureonly)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

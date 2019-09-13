@@ -26,7 +26,7 @@ CMD_FUNC(m_squit);
 
 #define MSG_SQUIT 	"SQUIT"	
 
-ModuleHeader MOD_HEADER(squit)
+ModuleHeader MOD_HEADER
   = {
 	"squit",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(squit)
 	"unrealircd-5",
     };
 
-MOD_INIT(squit)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SQUIT, m_squit, 2, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(squit)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(squit)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

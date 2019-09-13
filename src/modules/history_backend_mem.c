@@ -11,7 +11,7 @@
  * are executed as fast as possible.
  */
 
-ModuleHeader MOD_HEADER(history_backend_mem)
+ModuleHeader MOD_HEADER
 = {
 	"history_backend_mem",
 	"1.0",
@@ -53,7 +53,7 @@ int hbm_history_del(char *object, int max_lines, long max_time);
 int hbm_history_request(Client *acptr, char *object, HistoryFilter *filter);
 int hbm_history_destroy(char *object);
 
-MOD_INIT(history_backend_mem)
+MOD_INIT()
 {
 	HistoryBackendInfo hbi;
 
@@ -75,12 +75,12 @@ MOD_INIT(history_backend_mem)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(history_backend_mem)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(history_backend_mem)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

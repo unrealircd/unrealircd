@@ -26,7 +26,7 @@ CMD_FUNC(m_protoctl);
 
 #define MSG_PROTOCTL 	"PROTOCTL"	
 
-ModuleHeader MOD_HEADER(protoctl)
+ModuleHeader MOD_HEADER
   = {
 	"protoctl",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(protoctl)
 	"unrealircd-5",
     };
 
-MOD_INIT(protoctl)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(protoctl)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(protoctl)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

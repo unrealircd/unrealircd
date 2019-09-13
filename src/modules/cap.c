@@ -28,7 +28,7 @@ CMD_FUNC(m_cap);
 
 #define MSG_CAP 	"CAP"
 
-ModuleHeader MOD_HEADER(cap)
+ModuleHeader MOD_HEADER
   = {
 	"cap",	/* Name of module */
 	"5.0", /* Version */
@@ -51,7 +51,7 @@ long CAP_NOTIFY = 0L;
 long CAP_CHGHOST = 0L;
 long CAP_EXTENDED_JOIN = 0L;
 
-MOD_INIT(cap)
+MOD_INIT()
 {
 	ClientCapabilityInfo c;
 	
@@ -99,12 +99,12 @@ MOD_INIT(cap)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(cap)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(cap)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

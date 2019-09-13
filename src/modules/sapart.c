@@ -26,7 +26,7 @@ CMD_FUNC(m_sapart);
 
 #define MSG_SAPART 	"SAPART"	
 
-ModuleHeader MOD_HEADER(sapart)
+ModuleHeader MOD_HEADER
   = {
 	"sapart",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(sapart)
 	"unrealircd-5",
     };
 
-MOD_INIT(sapart)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SAPART, m_sapart, 3, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(sapart)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(sapart)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

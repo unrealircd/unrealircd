@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(nocodes)
+ModuleHeader MOD_HEADER
 = {
 	"nocodes",	/* Name of module */
 	"1.2", /* Version */
@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER(nocodes)
 
 char *nocodes_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
 
-MOD_INIT(nocodes)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -39,12 +39,12 @@ MOD_INIT(nocodes)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(nocodes)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(nocodes)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

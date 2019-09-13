@@ -28,7 +28,7 @@ CMD_FUNC(m_svsnick);
 
 #define MSG_SVSNICK 	"SVSNICK"	
 
-ModuleHeader MOD_HEADER(svsnick)
+ModuleHeader MOD_HEADER
   = {
 	"svsnick",
 	"5.0",
@@ -37,19 +37,19 @@ ModuleHeader MOD_HEADER(svsnick)
 	"unrealircd-5",
     };
 
-MOD_INIT(svsnick)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSNICK, m_svsnick, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(svsnick)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(svsnick)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

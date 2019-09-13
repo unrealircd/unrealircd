@@ -27,7 +27,7 @@ CMD_FUNC(m_sethost);
 /* Place includes here */
 #define MSG_SETHOST 	"SETHOST"	/* sethost */
 
-ModuleHeader MOD_HEADER(sethost)
+ModuleHeader MOD_HEADER
   = {
 	"sethost",	/* Name of module */
 	"5.0", /* Version */
@@ -36,19 +36,19 @@ ModuleHeader MOD_HEADER(sethost)
 	"unrealircd-5",
     };
 
-MOD_INIT(sethost)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SETHOST, m_sethost, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(sethost)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(sethost)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -5,7 +5,7 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(delayjoin)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/delayjoin",   /* Name of module */
 	"5.0", /* Version */
@@ -34,7 +34,7 @@ char *moded_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *te
 char *moded_serialize(ModData *m);
 void moded_unserialize(char *str, ModData *m);
 
-MOD_INIT(delayjoin)
+MOD_INIT()
 {
 	CmodeInfo req;
 	ModDataInfo mreq;
@@ -82,12 +82,12 @@ MOD_INIT(delayjoin)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(delayjoin)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(delayjoin)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

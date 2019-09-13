@@ -27,7 +27,7 @@
 #define JOINTHROTTLE_DEFAULT_COUNT 3
 #define JOINTHROTTLE_DEFAULT_TIME 90
 
-ModuleHeader MOD_HEADER(jointhrottle)
+ModuleHeader MOD_HEADER
   = {
 	"jointhrottle",
 	"5.0",
@@ -65,13 +65,13 @@ static void jointhrottle_increase_usercounter(Client *cptr, Channel *chptr);
 EVENT(jointhrottle_cleanup_structs);
 JoinFlood *jointhrottle_addentry(Client *cptr, Channel *chptr);
 
-MOD_TEST(jointhrottle)
+MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, jointhrottle_config_test);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(jointhrottle)
+MOD_INIT()
 {
 	ModDataInfo mreq;
 
@@ -98,13 +98,13 @@ MOD_INIT(jointhrottle)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(jointhrottle)
+MOD_LOAD()
 {
 	EventAdd(ModInfo->handle, "jointhrottle_cleanup_structs", 60, 0, jointhrottle_cleanup_structs, NULL);
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(jointhrottle)
+MOD_UNLOAD()
 {
 	return MOD_FAILED;
 }

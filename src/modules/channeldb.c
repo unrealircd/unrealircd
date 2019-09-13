@@ -6,7 +6,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(channeldb) = {
+ModuleHeader MOD_HEADER = {
 	"channeldb",
 	"1.0",
 	"Stores and retrieves channel settings for persistent (+P) channels",
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER(channeldb) = {
 #define IsMDErr(x, y, z) \
 	do { \
 		if (!(x)) { \
-			config_error("A critical error occurred when registering ModData for %s: %s", MOD_HEADER(y).name, ModuleGetErrorStr((z)->handle)); \
+			config_error("A critical error occurred when registering ModData for %s: %s", MOD_HEADER.name, ModuleGetErrorStr((z)->handle)); \
 			return MOD_FAILED; \
 		} \
 	} while(0)
@@ -62,14 +62,14 @@ static struct cfgstruct cfg;
 
 static int channeldb_loaded = 0;
 
-MOD_TEST(channeldb)
+MOD_TEST()
 {
 	memset(&cfg, 0, sizeof(cfg));
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, channeldb_configtest);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(channeldb)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -95,18 +95,18 @@ MOD_INIT(channeldb)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(channeldb)
+MOD_LOAD()
 {
 	EventAdd(modinfo->handle, "channeldb_write_channeldb", CHANNELDB_SAVE_EVERY, 0, write_channeldb_evt, NULL);
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
-		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER(channeldb).name, ModuleGetErrorStr(modinfo->handle));
+		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(channeldb)
+MOD_UNLOAD()
 {
 	write_channeldb();
 	freecfg();

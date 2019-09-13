@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(nonotice)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/nonotice",
 	"4.2",
@@ -34,12 +34,12 @@ Cmode_t EXTCMODE_NONOTICE;
 
 int nonotice_check_can_send(Client *cptr, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice);
 
-MOD_TEST(nonotice)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(nonotice)
+MOD_INIT()
 {
 	CmodeInfo req;
 
@@ -55,12 +55,12 @@ MOD_INIT(nonotice)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(nonotice)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(nonotice)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -26,7 +26,7 @@ CMD_FUNC(m_ison);
 
 #define MSG_ISON 	"ISON"	
 
-ModuleHeader MOD_HEADER(ison)
+ModuleHeader MOD_HEADER
   = {
 	"ison",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(ison)
 	"unrealircd-5",
     };
 
-MOD_INIT(ison)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_ISON, m_ison, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(ison)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(ison)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

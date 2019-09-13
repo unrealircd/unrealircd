@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(message-ids)
+ModuleHeader MOD_HEADER
   = {
 	"message-ids",
 	"5.0",
@@ -45,7 +45,7 @@ long CAP_ACCOUNT_TAG = 0L;
 int msgid_mtag_is_ok(Client *acptr, char *name, char *value);
 void mtag_add_or_inherit_msgid(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 
-MOD_INIT(message-ids)
+MOD_INIT()
 {
 	MessageTagHandlerInfo mtag;
 
@@ -62,12 +62,12 @@ MOD_INIT(message-ids)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(message-ids)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(message-ids)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

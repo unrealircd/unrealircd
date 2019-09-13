@@ -27,7 +27,7 @@ CMD_FUNC(m_help);
 #define MSG_HELP 	"HELP"	
 #define MSG_HELPOP	"HELPOP"
 
-ModuleHeader MOD_HEADER(help)
+ModuleHeader MOD_HEADER
   = {
 	"help",
 	"5.0",
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER(help)
 	"unrealircd-5",
     };
 
-MOD_INIT(help)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_HELP, m_help, 1, M_USER);
 	CommandAdd(modinfo->handle, MSG_HELPOP, m_help, 1, M_USER);
@@ -44,12 +44,12 @@ MOD_INIT(help)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(help)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(help)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -18,7 +18,7 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(quiet)
+ModuleHeader MOD_HEADER
 = {
 	"extbans/quiet",
 	"4.2",
@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER(quiet)
 int extban_quiet_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
-MOD_INIT(quiet)
+MOD_INIT()
 {
 	ExtbanInfo req;
 	
@@ -52,13 +52,13 @@ MOD_INIT(quiet)
 }
 
 /** Called upon module load */
-MOD_LOAD(quiet)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-MOD_UNLOAD(quiet)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

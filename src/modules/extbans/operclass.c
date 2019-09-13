@@ -18,7 +18,7 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(operclass)
+ModuleHeader MOD_HEADER
 = {
 	"extbans/operclass",
 	"4.2",
@@ -32,7 +32,7 @@ char *extban_operclass_conv_param(char *para);
 int extban_operclass_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
-MOD_INIT(operclass)
+MOD_INIT()
 {
 	ExtbanInfo req;
 	
@@ -53,13 +53,13 @@ MOD_INIT(operclass)
 }
 
 /** Called upon module load */
-MOD_LOAD(operclass)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-MOD_UNLOAD(operclass)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

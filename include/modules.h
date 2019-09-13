@@ -1257,11 +1257,11 @@ enum EfunctionType {
 #define CONFIG_REQUIRE 9
 #define CONFIG_LISTEN 10
 
-#define MOD_HEADER(name) Mod_Header
-#define MOD_TEST(name) DLLFUNC int Mod_Test(ModuleInfo *modinfo)
-#define MOD_INIT(name) DLLFUNC int Mod_Init(ModuleInfo *modinfo)
-#define MOD_LOAD(name) DLLFUNC int Mod_Load(ModuleInfo *modinfo)
-#define MOD_UNLOAD(name) DLLFUNC int Mod_Unload(ModuleInfo *modinfo)
+#define MOD_HEADER Mod_Header
+#define MOD_TEST() DLLFUNC int Mod_Test(ModuleInfo *modinfo)
+#define MOD_INIT() DLLFUNC int Mod_Init(ModuleInfo *modinfo)
+#define MOD_LOAD() DLLFUNC int Mod_Load(ModuleInfo *modinfo)
+#define MOD_UNLOAD() DLLFUNC int Mod_Unload(ModuleInfo *modinfo)
 
 #define CLOAK_KEYCRC	RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM] != NULL ? RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM]->func.pcharfunc() : "nil"
 

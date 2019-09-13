@@ -26,7 +26,7 @@ CMD_FUNC(m_botmotd);
 
 #define MSG_BOTMOTD 	"BOTMOTD"	
 
-ModuleHeader MOD_HEADER(botmotd)
+ModuleHeader MOD_HEADER
   = {
 	"botmotd",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(botmotd)
 	"unrealircd-5",
     };
 
-MOD_INIT(botmotd)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_BOTMOTD, m_botmotd, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(botmotd)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(botmotd)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

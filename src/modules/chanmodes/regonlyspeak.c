@@ -20,7 +20,7 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER(regonlyspeak)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/regonlyspeak",
 	"4.2",
@@ -37,12 +37,12 @@ static char errMsg[2048];
 int regonlyspeak_can_send(Client *cptr, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice);
 char *regonlyspeak_part_message (Client* sptr, Channel *chptr, char* comment);
 
-MOD_TEST(regonlyspeak)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(regonlyspeak)
+MOD_INIT()
 {
 	CmodeInfo req;
 
@@ -60,12 +60,12 @@ MOD_INIT(regonlyspeak)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(regonlyspeak)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(regonlyspeak)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

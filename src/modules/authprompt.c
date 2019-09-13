@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(authprompt)
+ModuleHeader MOD_HEADER
 = {
 	"authprompt",
 	"1.0",
@@ -70,13 +70,13 @@ void authprompt_md_free(ModData *md);
 #define SEUSER(x)       ((APUser *)moddata_client(x, authprompt_md).ptr)
 #define AGENT_SID(agent_p)      (agent_p->user != NULL ? agent_p->user->server : agent_p->name)
 
-MOD_TEST(authprompt)
+MOD_TEST()
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, authprompt_config_test);
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(authprompt)
+MOD_INIT()
 {
 	ModDataInfo mreq;
 
@@ -109,13 +109,13 @@ MOD_INIT(authprompt)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(authprompt)
+MOD_LOAD()
 {
 	config_postdefaults();
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(authprompt)
+MOD_UNLOAD()
 {
 	free_config();
 	return MOD_SUCCESS;

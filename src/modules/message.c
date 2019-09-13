@@ -35,7 +35,7 @@ int _can_send(Client *cptr, Channel *chptr, char **msgtext, char **errmsg, int n
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
 #define MSG_NOTICE      "NOTICE"        /* NOTI */
 
-ModuleHeader MOD_HEADER(message)
+ModuleHeader MOD_HEADER
   = {
 	"message",	/* Name of module */
 	"5.0", /* Version */
@@ -44,7 +44,7 @@ ModuleHeader MOD_HEADER(message)
 	"unrealircd-5",
     };
 
-MOD_TEST(message)
+MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
@@ -55,7 +55,7 @@ MOD_TEST(message)
 }
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(message)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_PRIVATE, m_private, 2, M_USER|M_SERVER|M_RESETIDLE|M_VIRUS);
 	CommandAdd(modinfo->handle, MSG_NOTICE, m_notice, 2, M_USER|M_SERVER);
@@ -64,13 +64,13 @@ MOD_INIT(message)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(message)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-MOD_UNLOAD(message)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

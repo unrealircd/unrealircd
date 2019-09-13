@@ -5,7 +5,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(privdeaf)
+ModuleHeader MOD_HEADER
 = {
 	"usermodes/privdeaf",
 	"1.2",
@@ -19,7 +19,7 @@ static Umode *UmodePrivdeaf = NULL;
 
 char *privdeaf_checkmsg(Client *, Client *, char *, int);
 
-MOD_INIT(privdeaf)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	UmodePrivdeaf = UmodeAdd(modinfo->handle, 'D', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_PRIVDEAF);
@@ -37,12 +37,12 @@ MOD_INIT(privdeaf)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(privdeaf)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(privdeaf)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

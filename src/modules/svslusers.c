@@ -28,7 +28,7 @@ CMD_FUNC(m_svslusers);
 
 #define MSG_SVSLUSERS 	"SVSLUSERS"	
 
-ModuleHeader MOD_HEADER(svslusers)
+ModuleHeader MOD_HEADER
   = {
 	"svslusers",
 	"5.0",
@@ -37,19 +37,19 @@ ModuleHeader MOD_HEADER(svslusers)
 	"unrealircd-5",
     };
 
-MOD_INIT(svslusers)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SVSLUSERS, m_svslusers, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(svslusers)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(svslusers)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

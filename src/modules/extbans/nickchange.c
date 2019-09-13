@@ -18,7 +18,7 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(nickchange)
+ModuleHeader MOD_HEADER
 = {
 	"extbans/nickchange",
 	"4.2",
@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER(nickchange)
 int extban_nickchange_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
-MOD_INIT(nickchange)
+MOD_INIT()
 {
 	ExtbanInfo req;
 	
@@ -52,13 +52,13 @@ MOD_INIT(nickchange)
 }
 
 /** Called upon module load */
-MOD_LOAD(nickchange)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-MOD_UNLOAD(nickchange)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

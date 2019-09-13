@@ -21,7 +21,7 @@
 
 CMD_FUNC(stripcolor);
 
-ModuleHeader MOD_HEADER(stripcolor)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/stripcolor",
 	"4.2",
@@ -38,12 +38,12 @@ char *stripcolor_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, cha
 char *stripcolor_prelocalpart(Client *sptr, Channel *chptr, char *comment);
 char *stripcolor_prelocalquit(Client *sptr, char *comment);
 
-MOD_TEST(stripcolor)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(stripcolor)
+MOD_INIT()
 {
 CmodeInfo req;
 
@@ -63,12 +63,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(stripcolor)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(stripcolor)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -26,7 +26,7 @@ CMD_FUNC(m_globops);
 
 #define MSG_GLOBOPS 	"GLOBOPS"	
 
-ModuleHeader MOD_HEADER(globops)
+ModuleHeader MOD_HEADER
   = {
 	"globops",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(globops)
 	"unrealircd-5",
     };
 
-MOD_INIT(globops)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_GLOBOPS, m_globops, 1, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(globops)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(globops)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -26,7 +26,7 @@ CMD_FUNC(m_userhost);
 
 #define MSG_USERHOST 	"USERHOST"	
 
-ModuleHeader MOD_HEADER(userhost)
+ModuleHeader MOD_HEADER
   = {
 	"userhost",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(userhost)
 	"unrealircd-5",
     };
 
-MOD_INIT(userhost)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_USERHOST, m_userhost, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(userhost)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(userhost)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

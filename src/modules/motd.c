@@ -26,7 +26,7 @@ CMD_FUNC(m_motd);
 
 #define MSG_MOTD 	"MOTD"	
 
-ModuleHeader MOD_HEADER(motd)
+ModuleHeader MOD_HEADER
   = {
 	"motd",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(motd)
 	"unrealircd-5",
     };
 
-MOD_INIT(motd)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_MOTD, m_motd, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(motd)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(motd)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

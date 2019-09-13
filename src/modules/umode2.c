@@ -26,7 +26,7 @@ CMD_FUNC(m_umode2);
 
 #define MSG_UMODE2 	"UMODE2"	
 
-ModuleHeader MOD_HEADER(umode2)
+ModuleHeader MOD_HEADER
   = {
 	"umode2",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(umode2)
 	"unrealircd-5",
     };
 
-MOD_INIT(umode2)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_UMODE2, m_umode2, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(umode2)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(umode2)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

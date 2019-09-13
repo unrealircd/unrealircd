@@ -24,7 +24,7 @@ CMD_FUNC(m_time);
 /* Place includes here */
 #define MSG_TIME	"TIME"
 
-ModuleHeader MOD_HEADER(time)
+ModuleHeader MOD_HEADER
   = {
 	"time",	/* Name of module */
 	"5.0", /* Version */
@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(time)
 
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(time)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_TIME, m_time, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -43,14 +43,14 @@ MOD_INIT(time)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(time)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-MOD_UNLOAD(time)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

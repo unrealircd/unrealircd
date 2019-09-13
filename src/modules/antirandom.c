@@ -33,7 +33,7 @@
  */
 #undef TIMING
 
-ModuleHeader MOD_HEADER(antirandom)
+ModuleHeader MOD_HEADER
   = {
 	"antirandom",
 	"1.4",
@@ -535,7 +535,7 @@ int antirandom_config_posttest(int *);
 int antirandom_preconnect(Client *sptr);
 static int is_exempt(Client *sptr);
 
-MOD_TEST(antirandom)
+MOD_TEST()
 {
 	memset(&req, 0, sizeof(req));
 	memset(&cfg, 0, sizeof(cfg));
@@ -544,7 +544,7 @@ MOD_TEST(antirandom)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(antirandom)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	if (!init_stuff())
@@ -566,14 +566,14 @@ MOD_INIT(antirandom)
 
 void check_all_users(void);
 
-MOD_LOAD(antirandom)
+MOD_LOAD()
 {
 	if (cfg.fullstatus_on_load)
 		check_all_users();
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(antirandom)
+MOD_UNLOAD()
 {
 	free_stuff();
 	free_config();

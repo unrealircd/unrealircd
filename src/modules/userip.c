@@ -26,7 +26,7 @@ CMD_FUNC(m_userip);
 
 #define MSG_USERIP 	"USERIP"	
 
-ModuleHeader MOD_HEADER(userip)
+ModuleHeader MOD_HEADER
   = {
 	"userip",
 	"5.0",
@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER(userip)
 	"unrealircd-5",
     };
 
-MOD_INIT(userip)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_USERIP, m_userip, 1, M_USER);
 	ISupportAdd(modinfo->handle, "USERIP", NULL);
@@ -43,12 +43,12 @@ MOD_INIT(userip)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(userip)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(userip)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

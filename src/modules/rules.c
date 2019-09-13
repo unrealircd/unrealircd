@@ -26,7 +26,7 @@ CMD_FUNC(m_rules);
 
 #define MSG_RULES 	"RULES"	
 
-ModuleHeader MOD_HEADER(rules)
+ModuleHeader MOD_HEADER
   = {
 	"rules",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(rules)
 	"unrealircd-5",
     };
 
-MOD_INIT(rules)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_RULES, m_rules, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(rules)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(rules)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

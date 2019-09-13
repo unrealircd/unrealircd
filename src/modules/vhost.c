@@ -24,7 +24,7 @@ CMD_FUNC(m_vhost);
 /* Place includes here */
 #define MSG_VHOST       "VHOST"
 
-ModuleHeader MOD_HEADER(vhost)
+ModuleHeader MOD_HEADER
   = {
 	"vhost",	/* Name of module */
 	"5.0", /* Version */
@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER(vhost)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(vhost)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_VHOST, m_vhost, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -42,14 +42,14 @@ MOD_INIT(vhost)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(vhost)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-MOD_UNLOAD(vhost)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;	
 }

@@ -26,7 +26,7 @@
 
 CMD_FUNC(m_setident);
 
-ModuleHeader MOD_HEADER(setident)
+ModuleHeader MOD_HEADER
   = {
 	"setident",	/* Name of module */
 	"5.0", /* Version */
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(setident)
 	"unrealircd-5",
     };
 
-MOD_INIT(setident)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SETIDENT, m_setident, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(setident)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(setident)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

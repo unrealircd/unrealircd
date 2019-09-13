@@ -10,7 +10,7 @@
 
 CMD_FUNC(m_mdex);
 
-ModuleHeader MOD_HEADER(mdex)
+ModuleHeader MOD_HEADER
   = {
 	"mdex",
 	"5.0",
@@ -24,7 +24,7 @@ void mdex_free(ModData *m);
 char *mdex_serialize(ModData *m);
 void mdex_unserialize(char *str, ModData *m);
 
-MOD_INIT(mdex)
+MOD_INIT()
 {
 ModDataInfo mreq;
 
@@ -56,13 +56,13 @@ ModDataInfo mreq;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(mdex)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 
-MOD_UNLOAD(mdex)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

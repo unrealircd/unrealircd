@@ -20,7 +20,7 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER(regonly)
+ModuleHeader MOD_HEADER
   = {
 	"chanmodes/regonly",
 	"4.2",
@@ -36,12 +36,12 @@ Cmode_t EXTCMODE_REGONLY;
 int regonly_check (Client *cptr, Channel *chptr, char *key, char *parv[]);
 
 
-MOD_TEST(regonly)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(regonly)
+MOD_INIT()
 {
 CmodeInfo req;
 
@@ -58,12 +58,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(regonly)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(regonly)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

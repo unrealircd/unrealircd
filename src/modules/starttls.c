@@ -26,7 +26,7 @@ CMD_FUNC(m_starttls);
 
 #define MSG_STARTTLS 	"STARTTLS"	
 
-ModuleHeader MOD_HEADER(starttls)
+ModuleHeader MOD_HEADER
   = {
 	"starttls",
 	"5.0",
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER(starttls)
 
 long CLICAP_STARTTLS;
 
-MOD_INIT(starttls)
+MOD_INIT()
 {
 	ClientCapabilityInfo cap;
 	
@@ -50,12 +50,12 @@ MOD_INIT(starttls)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(starttls)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(starttls)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

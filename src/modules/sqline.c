@@ -27,7 +27,7 @@ CMD_FUNC(m_sqline);
 
 
 
-ModuleHeader MOD_HEADER(sqline)
+ModuleHeader MOD_HEADER
   = {
 	"sqline",	/* Name of module */
 	"5.0", /* Version */
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER(sqline)
     };
 
 /* This is called on module init, before Server Ready */
-MOD_INIT(sqline)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SQLINE, m_sqline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -45,14 +45,14 @@ MOD_INIT(sqline)
 }
 
 /* Is first run when server is 100% ready */
-MOD_LOAD(sqline)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-MOD_UNLOAD(sqline)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

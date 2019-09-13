@@ -18,7 +18,7 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(join)
+ModuleHeader MOD_HEADER
 = {
 	"extbans/join",
 	"4.2",
@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER(join)
 int extban_modej_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
-MOD_INIT(join)
+MOD_INIT()
 {
 	ExtbanInfo req;
 	
@@ -52,13 +52,13 @@ MOD_INIT(join)
 }
 
 /** Called upon module load */
-MOD_LOAD(join)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-MOD_UNLOAD(join)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

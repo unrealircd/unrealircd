@@ -21,7 +21,7 @@
 
 CMD_FUNC(noctcp);
 
-ModuleHeader MOD_HEADER(noctcp)
+ModuleHeader MOD_HEADER
   = {
 	"usermodes/noctcp",
 	"4.2",
@@ -36,12 +36,12 @@ long UMODE_NOCTCP = 0L;
 
 char *noctcp_preusermsg(Client *sptr, Client *acptr, char *text, int notice);
 
-MOD_TEST(noctcp)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(noctcp)
+MOD_INIT()
 {
 CmodeInfo req;
 
@@ -53,12 +53,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(noctcp)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(noctcp)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

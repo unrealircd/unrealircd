@@ -22,7 +22,7 @@
 #define IsBot(cptr)    (cptr->umodes & UMODE_BOT)
 
 /* Module header */
-ModuleHeader MOD_HEADER(bot)
+ModuleHeader MOD_HEADER
   = {
 	"usermodes/bot",
 	"4.2",
@@ -39,12 +39,12 @@ int bot_whois(Client *sptr, Client *acptr);
 int bot_who_status(Client *sptr, Client *acptr, Channel *chptr, Member *cm, char *status, int cansee);
 int bot_umode_change(Client *sptr, long oldmode, long newmode);
 
-MOD_TEST(bot)
+MOD_TEST()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(bot)
+MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'B', UMODE_GLOBAL, 0, NULL, &UMODE_BOT);
 	
@@ -56,12 +56,12 @@ MOD_INIT(bot)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(bot)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(bot)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

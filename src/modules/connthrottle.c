@@ -13,7 +13,7 @@
  #define CALLBACKTYPE_REPUTATION_STARTTIME 5
 #endif
 
-ModuleHeader MOD_HEADER(connthrottle)
+ModuleHeader MOD_HEADER
   = {
 	"connthrottle",
 	CONNTHROTTLE_VERSION,
@@ -80,7 +80,7 @@ void rehash_dump_settings(void);
 void rehash_read_settings(void);
 EVENT(connthrottle_evt);
 
-MOD_TEST(connthrottle)
+MOD_TEST()
 {
 	memset(&cfg, 0, sizeof(cfg));
 	memset(&ucounter, 0, sizeof(ucounter));
@@ -98,7 +98,7 @@ MOD_TEST(connthrottle)
 	return MOD_SUCCESS;
 }
 
-MOD_INIT(connthrottle)
+MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	snprintf(rehash_dump_filename, sizeof(rehash_dump_filename), "%s/connthrottle.tmp", TMPDIR);
@@ -110,14 +110,14 @@ MOD_INIT(connthrottle)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(connthrottle)
+MOD_LOAD()
 {
 	rehash_read_settings();
 	EventAdd(modinfo->handle, "connthrottle_evt", 1, 0, connthrottle_evt, NULL);
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(connthrottle)
+MOD_UNLOAD()
 {
 	rehash_dump_settings();
 	return MOD_SUCCESS;

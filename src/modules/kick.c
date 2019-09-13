@@ -26,7 +26,7 @@ CMD_FUNC(m_kick);
 
 #define MSG_KICK 	"KICK"	
 
-ModuleHeader MOD_HEADER(kick)
+ModuleHeader MOD_HEADER
   = {
 	"kick",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(kick)
 	"unrealircd-5",
     };
 
-MOD_INIT(kick)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_KICK, m_kick, 3, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(kick)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(kick)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

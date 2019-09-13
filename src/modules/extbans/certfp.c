@@ -18,7 +18,7 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(certfp)
+ModuleHeader MOD_HEADER
 = {
 	"extbans/certfp",
 	"4.2",
@@ -33,7 +33,7 @@ char *extban_certfp_conv_param(char *para);
 int extban_certfp_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /* Called upon module init */
-MOD_INIT(certfp)
+MOD_INIT()
 {
 	ExtbanInfo req;
 	
@@ -54,13 +54,13 @@ MOD_INIT(certfp)
 }
 
 /* Called upon module load */
-MOD_LOAD(certfp)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
 /* Called upon unload */
-MOD_UNLOAD(account)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

@@ -26,7 +26,7 @@ CMD_FUNC(m_trace);
 
 #define MSG_TRACE 	"TRACE"	
 
-ModuleHeader MOD_HEADER(trace)
+ModuleHeader MOD_HEADER
   = {
 	"trace",
 	"5.0",
@@ -35,19 +35,19 @@ ModuleHeader MOD_HEADER(trace)
 	"unrealircd-5",
     };
 
-MOD_INIT(trace)
+MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_TRACE, m_trace, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(trace)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(trace)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }

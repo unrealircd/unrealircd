@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER(message-tags)
+ModuleHeader MOD_HEADER
   = {
 	"message-tags",
 	"5.0",
@@ -36,7 +36,7 @@ char *_mtags_to_string(MessageTag *m, Client *acptr);
 void _parse_message_tags(Client *cptr, char **str, MessageTag **mtag_list);
 CMD_FUNC(m_tagmsg);
 
-MOD_TEST(message-tags)
+MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -46,7 +46,7 @@ MOD_TEST(message-tags)
 	return 0;
 }
 
-MOD_INIT(message-tags)
+MOD_INIT()
 {
 	ClientCapabilityInfo cap;
 
@@ -59,12 +59,12 @@ MOD_INIT(message-tags)
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(message-tags)
+MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(message-tags)
+MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }
