@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_svsnick.c
+ *   IRC - Internet Relay Chat, src/modules/svsnick.c
  *   (C) 2001 The UnrealIRCd Team
  *
  *   svsnick command

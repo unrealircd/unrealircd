@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_starttls.c
+ *   IRC - Internet Relay Chat, src/modules/starttls.c
  *   (C) 2009 Syzop & The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of

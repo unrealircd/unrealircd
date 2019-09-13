@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/modules/m_time.c
+ *   Unreal Internet Relay Chat Daemon, src/modules/time.c
  *   (C) 2004 The UnrealIRCd Team
  *
  *   This program is free software; you can redistribute it and/or modify

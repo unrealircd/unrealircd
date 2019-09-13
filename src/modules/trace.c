@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_trace.c
+ *   IRC - Internet Relay Chat, src/modules/trace.c
  *   (C) 2004 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of

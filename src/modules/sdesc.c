@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_sdesc.c
+ *   IRC - Internet Relay Chat, src/modules/sdesc.c
  *   (C) 1999-2001 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *
  *   See file AUTHORS in IRC package for additional names of

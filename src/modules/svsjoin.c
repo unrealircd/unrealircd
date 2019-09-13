@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/modules/m_svsjoin.c
+ *   Unreal Internet Relay Chat Daemon, src/modules/svsjoin.c
  *   (C) 2000-2001 Carsten V. Munk and the UnrealIRCd Team
  *
  *   This program is free software; you can redistribute it and/or modify

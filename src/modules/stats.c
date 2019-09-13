@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_stats.c
+ *   IRC - Internet Relay Chat, src/modules/stats.c
  *   (C) 2004-present The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of

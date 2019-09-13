@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_svsnolag.c
+ *   IRC - Internet Relay Chat, src/modules/svsnolag.c
  *   (C) 2006 Alex Berezhnyak and djGrrr
  *
  *   Fake lag exception - SVSNOLAG and SVS2NOLAG commands

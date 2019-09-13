@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_join.c
+ *   IRC - Internet Relay Chat, src/modules/join.c
  *   (C) 2005 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of

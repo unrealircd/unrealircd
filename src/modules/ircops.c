@@ -77,7 +77,7 @@ MOD_UNLOAD()
  */
 
 /************************************************************************
- * IRC - Internet Relay Chat, modules/m_ircops.c
+ * IRC - Internet Relay Chat, modules/ircops.c
  *
  *   Copyright (C) 2000-2002 TR-IRCD Development
  *

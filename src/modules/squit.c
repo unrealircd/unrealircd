@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_squit.c
+ *   IRC - Internet Relay Chat, src/modules/squit.c
  *   (C) 2004 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of

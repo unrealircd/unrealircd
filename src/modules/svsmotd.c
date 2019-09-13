@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_svsmotd.c
+ *   IRC - Internet Relay Chat, src/modules/svsmotd.c
  *   (C) 2001 The UnrealIRCd Team
  *
  *   SVSMOTD command

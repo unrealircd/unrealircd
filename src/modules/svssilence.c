@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/modules/m_svssilence.c
+ *   Unreal Internet Relay Chat Daemon, src/modules/svssilence.c
  *   (C) 2003 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  *   This program is free software; you can redistribute it and/or modify

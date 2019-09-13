@@ -3538,7 +3538,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 			has_opermotd = 1;
 		}
 		/* files::svsmotd
-		 * This config stuff should somehow be inside of modules/m_svsmotd.c!!!... right?
+		 * This config stuff should somehow be inside of modules/svsmotd.c!!!... right?
 		 */
 		else if (!strcmp(cep->ce_varname, "svsmotd"))
 		{

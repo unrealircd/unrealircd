@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_setname.c
+ *   IRC - Internet Relay Chat, src/modules/setname.c
  *   (c) 1999-2001 Dominick Meglio (codemastr) <codemastr@unrealircd.com>
  *
  *   See file AUTHORS in IRC package for additional names of

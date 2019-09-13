@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/modules/m_whois.c
+ *   Unreal Internet Relay Chat Daemon, src/modules/whois.c
  *   (C) 2000-2001 Carsten V. Munk and the UnrealIRCd Team
  *   Moved to modules by Fish (Justin Hammond)
  *

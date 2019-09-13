@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_away.c
+ *   IRC - Internet Relay Chat, src/modules/away.c
  *   (C) 2001 The UnrealIRCd Team
  *
  *   away command

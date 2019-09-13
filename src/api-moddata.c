@@ -387,5 +387,5 @@ int moddata_globalvar_set(char *varname, char *value)
 }
 
 /* The rest of the MD related functions, the send/receive functions,
- * are in src/modules/m_md.c
+ * are in src/modules/md.c
  */

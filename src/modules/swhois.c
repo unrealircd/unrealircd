@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_swhois.c
+ *   IRC - Internet Relay Chat, src/modules/swhois.c
  *   (C) 2001 The UnrealIRCd Team
  *
  *   SWHOIS command

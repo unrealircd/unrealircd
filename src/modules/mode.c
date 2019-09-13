@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_mode.c
+ *   IRC - Internet Relay Chat, src/modules/mode.c
  *   (C) 2005 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of

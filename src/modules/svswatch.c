@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/modules/m_svswatch.c
+ *   Unreal Internet Relay Chat Daemon, src/modules/svswatch.c
  *   (C) 2003 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  *   This program is free software; you can redistribute it and/or modify

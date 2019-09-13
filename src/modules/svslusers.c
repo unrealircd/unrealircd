@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_svslusers.c
+ *   IRC - Internet Relay Chat, src/modules/svslusers.c
  *   (C) 2002 codemastr [Dominick Meglio] (codemastr@unrealircd.com)
  *
  *   SVSLUSERS command, allows remote setting of local and global max user count
