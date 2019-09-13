@@ -376,6 +376,10 @@ int reqmods_configrun_set(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 
+	// We are only interested in set::require-module
+	if (strcmp(ce->ce_varname, "require-module"))
+		return 0;
+
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "squit-on-deny"))
