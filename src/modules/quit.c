@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_quit);
+CMD_FUNC(cmd_quit);
 
 #define MSG_QUIT        "QUIT"  /* QUIT */
 
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_QUIT, m_quit, 1, M_UNREGISTERED|M_USER|M_VIRUS);
+	CommandAdd(modinfo->handle, MSG_QUIT, cmd_quit, 1, M_UNREGISTERED|M_USER|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -54,10 +54,10 @@ MOD_UNLOAD()
 }
 
 /*
-** m_quit
+** cmd_quit
 **	parv[1] = comment
 */
-CMD_FUNC(m_quit)
+CMD_FUNC(cmd_quit)
 {
 	char *comment = (parc > 1 && parv[1]) ? parv[1] : sptr->name;
 	static char commentbuf[MAXQUITLEN + 1];

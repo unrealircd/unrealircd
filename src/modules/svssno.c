@@ -22,8 +22,8 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svssno);
-CMD_FUNC(m_svs2sno);
+CMD_FUNC(cmd_svssno);
+CMD_FUNC(cmd_svs2sno);
 
 #define MSG_SVSSNO 	"SVSSNO"	
 #define MSG_SVS2SNO 	"SVS2SNO"	
@@ -39,8 +39,8 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSSNO, m_svssno, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_SVS2SNO, m_svs2sno, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSSNO, cmd_svssno, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVS2SNO, cmd_svs2sno, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -124,12 +124,12 @@ int  do_svssno(Client *cptr, Client *sptr, int parc, char *parv[], int show_chan
 	return 0;
 }
 
-CMD_FUNC(m_svssno)
+CMD_FUNC(cmd_svssno)
 {
 	return do_svssno(cptr, sptr, parc, parv, 0);
 }
 
-CMD_FUNC(m_svs2sno)
+CMD_FUNC(cmd_svs2sno)
 {
 	return do_svssno(cptr, sptr, parc, parv, 1);
 }

@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_stats);
+CMD_FUNC(cmd_stats);
 
 #define MSG_STATS 	"STATS"
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_STATS, m_stats, 3, M_USER);
+	CommandAdd(modinfo->handle, MSG_STATS, cmd_stats, 3, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -300,7 +300,7 @@ static inline char *stats_operonly_long_to_short()
 	return buffer;
 }
 
-CMD_FUNC(m_stats)
+CMD_FUNC(cmd_stats)
 {
 	struct statstab *stat;
 

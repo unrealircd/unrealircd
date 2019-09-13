@@ -23,7 +23,7 @@
 #define MSG_CHGNAME     "CHGNAME"
 #define MSG_SVSNAME     "SVSNAME"
 
-CMD_FUNC(m_chgname);
+CMD_FUNC(cmd_chgname);
 
 ModuleHeader MOD_HEADER
   = {
@@ -38,8 +38,8 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_CHGNAME, m_chgname, 2, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_SVSNAME, m_chgname, 2, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_CHGNAME, cmd_chgname, 2, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSNAME, cmd_chgname, 2, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -59,13 +59,13 @@ MOD_UNLOAD()
 
 
 /*
- * m_chgname - Tue May 23 13:06:35 BST 200 (almost a year after I made CHGIDENT) - Stskeeps
+ * cmd_chgname - Tue May 23 13:06:35 BST 200 (almost a year after I made CHGIDENT) - Stskeeps
  * :prefix CHGNAME <nick> <new realname>
  * parv[1] - nickname
  * parv[2] - realname
  *
 */
-CMD_FUNC(m_chgname)
+CMD_FUNC(cmd_chgname)
 {
 	Client *acptr;
 	ConfigItem_ban *bconf;

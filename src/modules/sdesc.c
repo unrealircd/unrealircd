@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_sdesc);
+CMD_FUNC(cmd_sdesc);
 
 #define MSG_SDESC 	"SDESC"	/* sdesc */
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SDESC, m_sdesc, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_SDESC, cmd_sdesc, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -52,13 +52,13 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/* m_sdesc - 15/05/1999 - Stskeeps
+/* cmd_sdesc - 15/05/1999 - Stskeeps
  *  :prefix SDESC
  *  parv[1] - description
  *  D: Sets server info if you are Server Admin (ONLINE)
 */
 
-CMD_FUNC(m_sdesc)
+CMD_FUNC(cmd_sdesc)
 {
 	if (!ValidatePermissionsForPath("server:description",sptr,NULL,NULL,NULL))
 	{

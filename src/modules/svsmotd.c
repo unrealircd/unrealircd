@@ -24,7 +24,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svsmotd);
+CMD_FUNC(cmd_svsmotd);
 
 #define MSG_SVSMOTD 	"SVSMOTD"	
 
@@ -39,7 +39,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSMOTD, m_svsmotd, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSMOTD, cmd_svsmotd, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -55,10 +55,10 @@ MOD_UNLOAD()
 }
 
 /*
-** m_svsmotd
+** cmd_svsmotd
 **
 */
-CMD_FUNC(m_svsmotd)
+CMD_FUNC(cmd_svsmotd)
 {
         FILE *conf = NULL;
 

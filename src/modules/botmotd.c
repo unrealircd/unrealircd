@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_botmotd);
+CMD_FUNC(cmd_botmotd);
 
 #define MSG_BOTMOTD 	"BOTMOTD"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_BOTMOTD, m_botmotd, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_BOTMOTD, cmd_botmotd, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -55,7 +55,7 @@ MOD_UNLOAD()
 /*
  * Modified from comstud by codemastr
  */
-CMD_FUNC(m_botmotd)
+CMD_FUNC(cmd_botmotd)
 {
 	MOTDLine *motdline;
 	ConfigItem_tld *tld;

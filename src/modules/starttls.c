@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_starttls);
+CMD_FUNC(cmd_starttls);
 
 #define MSG_STARTTLS 	"STARTTLS"	
 
@@ -42,7 +42,7 @@ MOD_INIT()
 	ClientCapabilityInfo cap;
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_STARTTLS, m_starttls, MAXPARA, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, MSG_STARTTLS, cmd_starttls, MAXPARA, M_UNREGISTERED);
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "tls";
 	ClientCapabilityAdd(modinfo->handle, &cap, &CLICAP_STARTTLS);
@@ -60,7 +60,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-CMD_FUNC(m_starttls)
+CMD_FUNC(cmd_starttls)
 {
 	SSL_CTX *ctx;
 	int tls_options;

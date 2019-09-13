@@ -8,7 +8,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_mdex);
+CMD_FUNC(cmd_mdex);
 
 ModuleHeader MOD_HEADER
   = {
@@ -51,7 +51,7 @@ ModDataInfo mreq;
 	if (!mdex_cli)
 	        abort();
 
-	CommandAdd(modinfo->handle, "MDEX", m_mdex, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, "MDEX", cmd_mdex, MAXPARA, M_USER);
 
 	return MOD_SUCCESS;
 }
@@ -67,7 +67,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-CMD_FUNC(m_mdex)
+CMD_FUNC(cmd_mdex)
 {
 	char *action, *type, *objname, *varname, *value;
 	ModDataInfo *md;

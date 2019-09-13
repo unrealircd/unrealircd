@@ -41,7 +41,7 @@ MODVAR int  current_serial;
 /*
 ** dead_link
 **	An error has been detected. The link *must* be closed,
-**	but *cannot* call ExitClient (m_bye) from here.
+**	but *cannot* call ExitClient (cmd_bye) from here.
 **	Instead, mark it as a dead socket. This should
 **	generate ExitClient from the main loop.
 **

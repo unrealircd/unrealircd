@@ -1,5 +1,5 @@
 /*
- *   m_ircops - /IRCOPS command that lists IRC Operators
+ *   cmd_ircops - /IRCOPS command that lists IRC Operators
  *   (C) Copyright 2004-2016 Syzop <syzop@vulnscan.org>
  *   (C) Copyright 2003-2004 AngryWolf <angrywolf@flashmail.com>
  *
@@ -23,7 +23,7 @@
 #define MSG_IRCOPS        "IRCOPS"
 #define IsAway(x)         (x)->user->away
 
-CMD_FUNC(m_ircops);
+CMD_FUNC(cmd_ircops);
 
 ModuleHeader MOD_HEADER
   = {
@@ -42,7 +42,7 @@ MOD_INIT()
 		config_error("Command " MSG_IRCOPS " already exists");
 		return MOD_FAILED;
 	}
-	CommandAdd(modinfo->handle, MSG_IRCOPS, m_ircops, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_IRCOPS, cmd_ircops, MAXPARA, M_USER);
 
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
@@ -66,7 +66,7 @@ MOD_UNLOAD()
 
 
 /*
- * m_ircops
+ * cmd_ircops
  *
  *     parv[0]: sender prefix
  *
@@ -99,7 +99,7 @@ MOD_UNLOAD()
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-CMD_FUNC(m_ircops)
+CMD_FUNC(cmd_ircops)
 {
 	Client *acptr;
 	char buf[512];

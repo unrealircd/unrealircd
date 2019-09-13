@@ -244,7 +244,7 @@ typedef struct {
 	void *	(*dup_struct)(void *);
 
 	/** Compares 2 parameters and decides who wins the sjoin fight.
-	 * When syncing channel modes (m_sjoin) a parameter conflict may occur, things like
+	 * When syncing channel modes (cmd_sjoin) a parameter conflict may occur, things like
 	 * +l 5 vs +l 10. This function should determinate who wins the fight, this decision
 	 * should of course not be random but the same at every server on the net.
 	 * examples of such comparisons are "highest wins" (+l) and a strcmp() check (+k/+L).
@@ -1160,7 +1160,7 @@ enum EfunctionType {
 	EFUNC_CAN_JOIN,
 	EFUNC_DO_MODE,
 	EFUNC_SET_MODE,
-	EFUNC_M_UMODE,
+	EFUNC_CMD_UMODE,
 	EFUNC_REGISTER_USER,
 	EFUNC_TKL_HASH,
 	EFUNC_TKL_TYPETOCHAR,
@@ -1176,7 +1176,7 @@ enum EfunctionType {
 	EFUNC_FIND_TKLINE_MATCH_ZAP,
 	EFUNC_TKL_STATS,
 	EFUNC_TKL_SYNCH,
-	EFUNC_M_TKL,
+	EFUNC_CMD_TKL,
 	EFUNC_PLACE_HOST_BAN,
 	EFUNC_DOSPAMFILTER,
 	EFUNC_DOSPAMFILTER_VIRUSCHAN,

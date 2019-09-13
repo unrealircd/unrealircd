@@ -252,7 +252,7 @@ int generic_ban_is_ok(Client *sptr, Channel *chptr, char *mask, int checkt, int 
 		}
 		/* End of portion */
 
-		/* This portion is inspired by m_mode */
+		/* This portion is inspired by cmd_mode */
 		p = findmod_by_bantype(mask[1]);
 		if (checkt == EXBCHK_ACCESS)
 		{

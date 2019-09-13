@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_addmotd);
+CMD_FUNC(cmd_addmotd);
 
 #define MSG_ADDMOTD 	"ADDMOTD"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_ADDMOTD, m_addmotd, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_ADDMOTD, cmd_addmotd, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,11 +53,11 @@ MOD_UNLOAD()
 }
 
 /*
-** m_addmotd (write a line to ircd.motd)
+** cmd_addmotd (write a line to ircd.motd)
 **
 ** De-Potvinized by codemastr
 */
-CMD_FUNC(m_addmotd)
+CMD_FUNC(cmd_addmotd)
 {
 	FILE *conf;
 	char *text;

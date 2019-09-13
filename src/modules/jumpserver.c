@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 #define MSG_JUMPSERVER 	"JUMPSERVER"
 
 /* Forward declarations */
-CMD_FUNC(m_jumpserver);
+CMD_FUNC(cmd_jumpserver);
 int jumpserver_preconnect(Client *);
 void jumpserver_free_jss(ModData *m);
 
@@ -53,7 +53,7 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	LoadPersistentPointer(modinfo, jss, jumpserver_free_jss);
-	CommandAdd(modinfo->handle, MSG_JUMPSERVER, m_jumpserver, 3, M_USER);
+	CommandAdd(modinfo->handle, MSG_JUMPSERVER, cmd_jumpserver, 3, M_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, jumpserver_preconnect);
 	return MOD_SUCCESS;
 }
@@ -119,7 +119,7 @@ void jumpserver_free_jss(ModData *m)
 	free_jss();
 }
 
-CMD_FUNC(m_jumpserver)
+CMD_FUNC(cmd_jumpserver)
 {
 	char *serv, *sslserv=NULL, *reason, *p;
 	int all=0, port=6667, sslport=6697;

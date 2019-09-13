@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_cycle);
+CMD_FUNC(cmd_cycle);
 
 /* Place includes here */
 #define MSG_CYCLE       "CYCLE"
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_CYCLE, m_cycle, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_CYCLE, cmd_cycle, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -55,11 +55,11 @@ MOD_UNLOAD()
 }
 
 /*
- * m_cycle() - Stskeeps
+ * cmd_cycle() - Stskeeps
  * parv[1] = channels
 */
 
-CMD_FUNC(m_cycle)
+CMD_FUNC(cmd_cycle)
 {
 	char channels[BUFSIZE];
 	int n;

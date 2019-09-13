@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_rules);
+CMD_FUNC(cmd_rules);
 
 #define MSG_RULES 	"RULES"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_RULES, m_rules, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_RULES, cmd_rules, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,10 +53,10 @@ MOD_UNLOAD()
 }
 
 /*
- * Heavily modified from the ircu m_motd by codemastr
+ * Heavily modified from the ircu cmd_motd by codemastr
  * Also svsmotd support added
  */
-CMD_FUNC(m_rules)
+CMD_FUNC(cmd_rules)
 {
 	ConfigItem_tld *ptr;
 	MOTDLine *temp;

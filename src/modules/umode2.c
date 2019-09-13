@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_umode2);
+CMD_FUNC(cmd_umode2);
 
 #define MSG_UMODE2 	"UMODE2"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_UMODE2, m_umode2, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_UMODE2, cmd_umode2, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,12 +53,12 @@ MOD_UNLOAD()
 }
 
 /*
-    m_umode2 added by Stskeeps
+    cmd_umode2 added by Stskeeps
     parv[1] - modes to change
     Small wrapper to bandwidth save
 */
 
-CMD_FUNC(m_umode2)
+CMD_FUNC(cmd_umode2)
 {
 	char *xparv[5] = {
 		sptr->name,
@@ -70,5 +70,5 @@ CMD_FUNC(m_umode2)
 
 	if (!parv[1])
 		return 0;
-	return m_umode(cptr, sptr, recv_mtags, (parc > 3) ? 4 : 3, xparv);
+	return cmd_umode(cptr, sptr, recv_mtags, (parc > 3) ? 4 : 3, xparv);
 }

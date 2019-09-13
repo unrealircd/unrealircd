@@ -29,11 +29,11 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
     };
 
-CMD_FUNC(m_tsctl);
+CMD_FUNC(cmd_tsctl);
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, "TSCTL", m_tsctl, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, "TSCTL", cmd_tsctl, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -48,7 +48,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-CMD_FUNC(m_tsctl)
+CMD_FUNC(cmd_tsctl)
 {
 	if (!ValidatePermissionsForPath("server:tsctl:view",sptr,NULL,NULL,NULL))
 	{

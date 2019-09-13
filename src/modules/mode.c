@@ -23,12 +23,12 @@
 #include "unrealircd.h"
 
 /* Forward declarations */
-CMD_FUNC(m_mode);
-CMD_FUNC(m_mlock);
+CMD_FUNC(cmd_mode);
+CMD_FUNC(cmd_mlock);
 void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode);
 void _set_mode(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcount,
                        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-CMD_FUNC(_m_umode);
+CMD_FUNC(_cmd_umode);
 
 /* local: */
 static void bounce_mode(Channel *, Client *, int, char **);
@@ -63,14 +63,14 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_DO_MODE, _do_mode);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SET_MODE, _set_mode);
-	EfunctionAdd(modinfo->handle, EFUNC_M_UMODE, _m_umode);
+	EfunctionAdd(modinfo->handle, EFUNC_CMD_UMODE, _cmd_umode);
 	return MOD_SUCCESS;
 }
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_MODE, m_mode, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_MLOCK, m_mlock, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_MODE, cmd_mode, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_MLOCK, cmd_mlock, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -86,7 +86,7 @@ MOD_UNLOAD()
 }
 
 /*
- * m_mode -- written by binary (garryb@binary.islesfan.net)
+ * cmd_mode -- written by binary (garryb@binary.islesfan.net)
  * Completely rewrote it.  The old mode command was 820 lines of ICKY
  * coding, which is a complete waste, because I wrote it in 570 lines of
  * *decent* coding.  This is also easier to read, change, and fine-tune.  Plus,
@@ -94,7 +94,7 @@ MOD_UNLOAD()
  *
  * parv[1] - channel
  */
-CMD_FUNC(m_mode)
+CMD_FUNC(cmd_mode)
 {
 	long unsigned sendts = 0;
 	Ban *ban;
@@ -108,11 +108,11 @@ CMD_FUNC(m_mode)
 			chptr = find_channel(parv[1], NULL);
 			if (!chptr)
 			{
-				return m_umode(cptr, sptr, recv_mtags, parc, parv);
+				return cmd_umode(cptr, sptr, recv_mtags, parc, parv);
 			}
 		}
 		else
-			return m_umode(cptr, sptr, recv_mtags, parc, parv);
+			return cmd_umode(cptr, sptr, recv_mtags, parc, parv);
 	}
 	else
 	{
@@ -1552,11 +1552,11 @@ void _set_mode(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcou
 }
 
 /*
- * m_umode() added 15/10/91 By Darren Reed.
+ * cmd_umode() added 15/10/91 By Darren Reed.
  * parv[1] - username to change mode for
  * parv[2] - modes to change
  */
-CMD_FUNC(_m_umode)
+CMD_FUNC(_cmd_umode)
 {
 	int i;
 	char **p, *m;
@@ -1895,7 +1895,7 @@ CMD_FUNC(_m_umode)
 	return 0;
 }
 
-CMD_FUNC(m_mlock)
+CMD_FUNC(cmd_mlock)
 {
 	Channel *chptr = NULL;
 	time_t t;

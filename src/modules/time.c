@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_time);
+CMD_FUNC(cmd_time);
 
 /* Place includes here */
 #define MSG_TIME	"TIME"
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_TIME, m_time, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_TIME, cmd_time, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -56,10 +56,10 @@ MOD_UNLOAD()
 }
 
 /*
-** m_time
+** cmd_time
 **	parv[1] = servername
 */
-CMD_FUNC(m_time)
+CMD_FUNC(cmd_time)
 {
 	if (hunt_server(cptr, sptr, recv_mtags, ":%s TIME :%s", 1, parc, parv) == HUNTED_ISME)
 		sendnumeric(sptr, RPL_TIME, me.name, long_date(0));

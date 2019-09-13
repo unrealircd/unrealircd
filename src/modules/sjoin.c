@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_sjoin);
+CMD_FUNC(cmd_sjoin);
 
 #define MSG_SJOIN 	"SJOIN"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SJOIN, m_sjoin, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SJOIN, cmd_sjoin, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -131,7 +131,7 @@ else {\
 #define Addsingle(x) do { modebuf[b] = x; b++; modebuf[b] = '\0'; } while(0)
 #define CheckStatus(x,y) do { if (modeflags & (y)) { Addit((x), acptr->name); } } while(0)
 
-CMD_FUNC(m_sjoin)
+CMD_FUNC(cmd_sjoin)
 {
 	unsigned short nopara;
 	unsigned short nomode; /**< An SJOIN without MODE? */

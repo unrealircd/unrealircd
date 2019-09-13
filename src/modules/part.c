@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_part);
+CMD_FUNC(cmd_part);
 
 #define MSG_PART 	"PART"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_PART, m_part, 2, M_USER);
+	CommandAdd(modinfo->handle, MSG_PART, cmd_part, 2, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,11 +53,11 @@ MOD_UNLOAD()
 }
 
 /*
-** m_part
+** cmd_part
 **	parv[1] = channel
 **	parv[2] = comment (added by Lefler)
 */
-CMD_FUNC(m_part)
+CMD_FUNC(cmd_part)
 {
 	Channel *chptr;
 	Membership *lp;

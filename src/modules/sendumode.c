@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_sendumode);
+CMD_FUNC(cmd_sendumode);
 
 /* Place includes here */
 #define MSG_SENDUMODE   "SENDUMODE"
@@ -38,8 +38,8 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SENDUMODE, m_sendumode, MAXPARA, M_SERVER);
-	CommandAdd(modinfo->handle, MSG_SMO, m_sendumode, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SENDUMODE, cmd_sendumode, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SMO, cmd_sendumode, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -57,7 +57,7 @@ MOD_UNLOAD()
 }
 
 /*
-** m_sendumode - Stskeeps
+** cmd_sendumode - Stskeeps
 **      parv[1] = target
 **      parv[2] = message text
 ** Pretty handy proc.. 
@@ -67,7 +67,7 @@ MOD_UNLOAD()
 ** Silly half-snomask support ripped out in 2015. Very confusing, and broken.
 ** We have SENDSNO for snomask sending since 2004. -- Syzop
 */
-CMD_FUNC(m_sendumode)
+CMD_FUNC(cmd_sendumode)
 {
 	MessageTag *mtags = NULL;
 	char *message;

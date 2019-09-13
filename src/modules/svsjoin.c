@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svsjoin);
+CMD_FUNC(cmd_svsjoin);
 
 /* Place includes here */
 #define MSG_SVSJOIN       "SVSJOIN"
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSJOIN, m_svsjoin, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSJOIN, cmd_svsjoin, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,13 +53,13 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;	
 }
 
-/* m_svsjoin() - Lamego - Wed Jul 21 20:04:48 1999
+/* cmd_svsjoin() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
 	parv[3] - (optional) channel key(s)
 */
-CMD_FUNC(m_svsjoin)
+CMD_FUNC(cmd_svsjoin)
 {
 	Client *acptr;
 

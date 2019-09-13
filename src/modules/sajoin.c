@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_sajoin);
+CMD_FUNC(cmd_sajoin);
 
 #define MSG_SAJOIN 	"SAJOIN"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SAJOIN, m_sajoin, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SAJOIN, cmd_sajoin, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -52,14 +52,14 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/* m_sajoin() - Lamego - Wed Jul 21 20:04:48 1999
+/* cmd_sajoin() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.
    Coded for Sadmin by Stskeeps
    also Modified by NiQuiL (niquil@programmer.net)
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
 */
-CMD_FUNC(m_sajoin)
+CMD_FUNC(cmd_sajoin)
 {
 	Client *acptr;
 	char jbuf[BUFSIZE];
@@ -110,7 +110,7 @@ CMD_FUNC(m_sajoin)
 	
 		*jbuf = 0;
 
-		/* Now works like m_join */
+		/* Now works like cmd_join */
 		for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
 		{
 			Channel *chptr;

@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_watch);
+CMD_FUNC(cmd_watch);
 
 #define MSG_WATCH 	"WATCH"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_WATCH, m_watch, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_WATCH, cmd_watch, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -89,9 +89,9 @@ static void show_watch(Client *cptr, char *name, int rpl1, int rpl2, int awaynot
 static char buf[BUFSIZE];
 
 /*
- * m_watch
+ * cmd_watch
  */
-CMD_FUNC(m_watch)
+CMD_FUNC(cmd_watch)
 {
 	Client *acptr;
 	char *s, **pav = parv, *user;

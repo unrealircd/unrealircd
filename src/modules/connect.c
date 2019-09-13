@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_connect);
+CMD_FUNC(cmd_connect);
 
 #define MSG_CONNECT 	"CONNECT"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_CONNECT, m_connect, MAXPARA, M_USER|M_SERVER); /* hmm.. server.. really? */
+	CommandAdd(modinfo->handle, MSG_CONNECT, cmd_connect, MAXPARA, M_USER|M_SERVER); /* hmm.. server.. really? */
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,12 +53,12 @@ MOD_UNLOAD()
 }
 
 /***********************************************************************
- * m_connect() - Added by Jto 11 Feb 1989
+ * cmd_connect() - Added by Jto 11 Feb 1989
  ***********************************************************************//*
-   ** m_connect
+   ** cmd_connect
    **  parv[1] = servername
  */
-CMD_FUNC(m_connect)
+CMD_FUNC(cmd_connect)
 {
 	int  retval;
 	ConfigItem_link	*aconf;

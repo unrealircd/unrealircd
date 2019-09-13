@@ -642,7 +642,7 @@ DNSReq *r;
 	
 }
 
-CMD_FUNC(m_dns)
+CMD_FUNC(cmd_dns)
 {
 DNSCache *c;
 DNSReq *r;

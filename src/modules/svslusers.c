@@ -24,7 +24,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svslusers);
+CMD_FUNC(cmd_svslusers);
 
 #define MSG_SVSLUSERS 	"SVSLUSERS"	
 
@@ -39,7 +39,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSLUSERS, m_svslusers, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSLUSERS, cmd_svslusers, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -54,14 +54,14 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 /*
-** m_svslusers
+** cmd_svslusers
 **      parv[1] = server to update
 **      parv[2] = max global users
 **      parv[3] = max local users
 **      If -1 is specified for either number, it is ignored and the current count
 **      is kept.
 */
-CMD_FUNC(m_svslusers)
+CMD_FUNC(cmd_svslusers)
 {
         if (!IsULine(sptr) || parc < 4)
 		return -1;  

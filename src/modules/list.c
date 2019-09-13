@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_list);
+CMD_FUNC(cmd_list);
 void _send_list(Client *cptr);
 
 #define MSG_LIST 	"LIST"	
@@ -47,7 +47,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_LIST, m_list, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_LIST, cmd_list, MAXPARA, M_USER);
 	EventAdd(modinfo->handle, "send_queued_list_data", 1, 0, send_queued_list_data, NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -69,7 +69,7 @@ MOD_UNLOAD()
 /*
  * parv[1] = channel
  */
-CMD_FUNC(m_list)
+CMD_FUNC(cmd_list)
 {
 	Channel *chptr;
 	time_t currenttime = TStime();

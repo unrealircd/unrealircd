@@ -1,5 +1,5 @@
 /*
- *   m_staff: Displays a file(/URL) when the /STAFF command is used.
+ *   cmd_staff: Displays a file(/URL) when the /STAFF command is used.
  *   (C) Copyright 2004-2016 Syzop <syzop@vulnscan.org>
  *   (C) Copyright 2003-2004 AngryWolf <angrywolf@flashmail.com>
  *
@@ -49,7 +49,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 static void unload_motd_file(MOTDFile *list);
-CMD_FUNC(m_staff);
+CMD_FUNC(cmd_staff);
 static int cb_rehashflag(Client *cptr, Client *sptr, char *flag);
 static int cb_test(ConfigFile *, ConfigEntry *, int, int *);
 static int cb_conf(ConfigFile *, ConfigEntry *, int);
@@ -92,7 +92,7 @@ MOD_INIT()
 	memset(&staff, 0, sizeof(staff));
 	InitConf();
 
-	CommandAdd(modinfo->handle, MSG_STAFF, m_staff, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_STAFF, cmd_staff, MAXPARA, M_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, cb_conf);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, cb_rehash);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASHFLAG, 0, cb_rehashflag);
@@ -362,7 +362,7 @@ static int cb_rehashflag(Client *cptr, Client *sptr, char *flag)
 }
 
 /** The routine that actual does the /STAFF command */
-CMD_FUNC(m_staff)
+CMD_FUNC(cmd_staff)
 {
 	MOTDFile *temp;
 	MOTDLine *aLine;

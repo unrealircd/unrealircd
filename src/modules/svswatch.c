@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svswatch);
+CMD_FUNC(cmd_svswatch);
 
 /* Place includes here */
 #define MSG_SVSWATCH       "SVSWATCH"
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSWATCH, m_svswatch, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSWATCH, cmd_svswatch, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -54,11 +54,11 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;	
 }
 
-/* m_svswatch() - written by Syzop, suggested by Griever.
+/* cmd_svswatch() - written by Syzop, suggested by Griever.
  * parv[1] - target nick
  * parv[2] - parameters
  */
-CMD_FUNC(m_svswatch)
+CMD_FUNC(cmd_svswatch)
 {
 	Client *acptr;
 	if (!IsULine(sptr))

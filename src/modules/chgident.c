@@ -24,7 +24,7 @@
 
 #define MSG_CHGIDENT 	"CHGIDENT"
 
-CMD_FUNC(m_chgident);
+CMD_FUNC(cmd_chgident);
 
 ModuleHeader MOD_HEADER
   = {
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_CHGIDENT, m_chgident, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_CHGIDENT, cmd_chgident, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,14 +53,14 @@ MOD_UNLOAD()
 }
 
 /* 
- * m_chgident - 12/07/1999 (two months after I made SETIDENT) - Stskeeps
+ * cmd_chgident - 12/07/1999 (two months after I made SETIDENT) - Stskeeps
  * :prefix CHGIDENT <nick> <new identname>
  * parv[1] - nickname
  * parv[2] - identname
  *
 */
 
-CMD_FUNC(m_chgident)
+CMD_FUNC(cmd_chgident)
 {
 	Client *acptr;
 	char *s;

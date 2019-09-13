@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_pass);
+CMD_FUNC(cmd_pass);
 
 #define MSG_PASS 	"PASS"	
 
@@ -49,7 +49,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_PASS, cmd_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -105,13 +105,13 @@ int _check_banned(Client *cptr, int exitflags)
 }
 
 /***************************************************************************
- * m_pass() - Added Sat, 4 March 1989
+ * cmd_pass() - Added Sat, 4 March 1989
  ***************************************************************************/
 /*
-** m_pass
+** cmd_pass
 **	parv[1] = password
 */
-CMD_FUNC(m_pass)
+CMD_FUNC(cmd_pass)
 {
 	char *password = parc > 1 ? parv[1] : NULL;
 

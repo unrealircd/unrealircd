@@ -62,7 +62,7 @@ int authprompt_sasl_result(Client *acptr, int success);
 int authprompt_place_host_ban(Client *sptr, int action, char *reason, long duration);
 int authprompt_find_tkline_match(Client *sptr, TKL *tk);
 int authprompt_pre_connect(Client *sptr);
-CMD_FUNC(m_auth);
+CMD_FUNC(cmd_auth);
 void authprompt_md_free(ModData *md);
 
 /* Some macros */
@@ -105,7 +105,7 @@ MOD_INIT()
 	 * a chance to be handled first.
 	 */
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, -1000000, authprompt_pre_connect);
-	CommandAdd(modinfo->handle, "AUTH", m_auth, 1, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, "AUTH", cmd_auth, 1, M_UNREGISTERED);
 	return MOD_SUCCESS;
 }
 
@@ -274,7 +274,7 @@ int parse_nickpass(const char *str, char **username, char **password)
 	return 1;
 }
 
-/* NOTE: This function is stolen from m_sasl. Not good. */
+/* NOTE: This function is stolen from cmd_sasl. Not good. */
 static const char *encode_puid(Client *client)
 {
 	static char buf[HOSTLEN + 20];
@@ -342,7 +342,7 @@ void send_first_auth(Client *sptr)
 	sptr->local->sasl_out++;
 }
 
-CMD_FUNC(m_auth)
+CMD_FUNC(cmd_auth)
 {
 	char *username = NULL;
 	char *password = NULL;

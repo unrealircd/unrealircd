@@ -764,7 +764,7 @@ void	Module_AddAsChild(Module *parent, Module *child)
 	AddListItem(childp, parent->children);
 }
 
-/* m_module.
+/* cmd_module.
  * by Stskeeps, codemastr, Syzop.
  * Changed it so it's now public for users too, as quite some people
  * (and users) requested they should have the right to see what kind 
@@ -773,7 +773,7 @@ void	Module_AddAsChild(Module *parent, Module *child)
  * I do not consider this sensitive information, but just in case
  * I stripped the version string for non-admins (eg: normal users). -- Syzop
  */
-CMD_FUNC(m_module)
+CMD_FUNC(cmd_module)
 {
 	Module *mi;
 	int i;

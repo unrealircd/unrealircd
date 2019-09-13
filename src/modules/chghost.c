@@ -24,7 +24,7 @@
 
 #define MSG_CHGHOST 	"CHGHOST"
 
-CMD_FUNC(m_chghost);
+CMD_FUNC(cmd_chghost);
 
 ModuleHeader MOD_HEADER
   = {
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_CHGHOST, m_chghost, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_CHGHOST, cmd_chghost, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -54,14 +54,14 @@ MOD_UNLOAD()
 }
 
 /* 
- * m_chghost - 12/07/1999 (two months after I made SETIDENT) - Stskeeps
+ * cmd_chghost - 12/07/1999 (two months after I made SETIDENT) - Stskeeps
  * :prefix CHGHOST <nick> <new hostname>
  * parv[1] - nickname
  * parv[2] - hostname
  *
 */
 
-CMD_FUNC(m_chghost)
+CMD_FUNC(cmd_chghost)
 {
 	Client *acptr;
 

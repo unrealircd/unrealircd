@@ -24,7 +24,7 @@
 
 typedef int (*bqcmp)(const void *, const void *);
 
-CMD_FUNC(m_cap);
+CMD_FUNC(cmd_cap);
 
 #define MSG_CAP 	"CAP"
 
@@ -56,7 +56,7 @@ MOD_INIT()
 	ClientCapabilityInfo c;
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_CAP, m_cap, MAXPARA, M_UNREGISTERED|M_USER|M_NOLAG);
+	CommandAdd(modinfo->handle, MSG_CAP, cmd_cap, MAXPARA, M_UNREGISTERED|M_USER|M_NOLAG);
 
 	/* This first cap is special, in the sense that it is hidden
 	 * and indicates a cap exchange is in progress.
@@ -380,7 +380,7 @@ int cap_is_handshake_finished(Client *acptr)
 	return 1;
 }
 
-CMD_FUNC(m_cap)
+CMD_FUNC(cmd_cap)
 {
 	struct clicap_cmd *cmd;
 

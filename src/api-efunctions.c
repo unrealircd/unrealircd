@@ -40,7 +40,7 @@ int (*can_join)(Client *cptr, Client *sptr, Channel *chptr, char *key, char *par
 void (*do_mode)(Channel *chptr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
 void (*set_mode)(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-int (*m_umode)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+int (*cmd_umode)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 int (*register_user)(Client *cptr, Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
@@ -65,7 +65,7 @@ TKL *(*find_qline)(Client *cptr, char *nick, int *ishold);
 TKL *(*find_tkline_match_zap)(Client *cptr);
 void (*tkl_stats)(Client *cptr, int type, char *para);
 void (*tkl_synch)(Client *sptr);
-int (*m_tkl)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+int (*cmd_tkl)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 int (*place_host_ban)(Client *sptr, BanAction action, char *reason, long duration);
 int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
 int (*join_viruschan)(Client *sptr, TKL *tk, int type);
@@ -285,7 +285,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_CAN_JOIN, can_join, NULL);
 	efunc_init_function(EFUNC_DO_MODE, do_mode, NULL);
 	efunc_init_function(EFUNC_SET_MODE, set_mode, NULL);
-	efunc_init_function(EFUNC_M_UMODE, m_umode, NULL);
+	efunc_init_function(EFUNC_CMD_UMODE, cmd_umode, NULL);
 	efunc_init_function(EFUNC_REGISTER_USER, register_user, NULL);
 	efunc_init_function(EFUNC_TKL_HASH, tkl_hash, NULL);
 	efunc_init_function(EFUNC_TKL_TYPETOCHAR, tkl_typetochar, NULL);
@@ -300,7 +300,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_FIND_TKLINE_MATCH_ZAP, find_tkline_match_zap, NULL);
 	efunc_init_function(EFUNC_TKL_STATS, tkl_stats, NULL);
 	efunc_init_function(EFUNC_TKL_SYNCH, tkl_synch, NULL);
-	efunc_init_function(EFUNC_M_TKL, m_tkl, NULL);
+	efunc_init_function(EFUNC_CMD_TKL, cmd_tkl, NULL);
 	efunc_init_function(EFUNC_PLACE_HOST_BAN, place_host_ban, NULL);
 	efunc_init_function(EFUNC_DOSPAMFILTER, run_spamfilter, NULL);
 	efunc_init_function(EFUNC_DOSPAMFILTER_VIRUSCHAN, join_viruschan, NULL);

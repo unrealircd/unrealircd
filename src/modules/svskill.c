@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svskill);
+CMD_FUNC(cmd_svskill);
 
 #define MSG_SVSKILL	"SVSKILL"
 
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSKILL, m_svskill, MAXPARA, M_SERVER|M_USER);
+	CommandAdd(modinfo->handle, MSG_SVSKILL, cmd_svskill, MAXPARA, M_SERVER|M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -55,11 +55,11 @@ MOD_UNLOAD()
 }
 
 /*
-** m_svskill
+** cmd_svskill
 **	parv[1] = client
 **	parv[2] = kill message
 */
-CMD_FUNC(m_svskill)
+CMD_FUNC(cmd_svskill)
 {
 	MessageTag *mtags = NULL;
 	Client *acptr;

@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_netinfo);
+CMD_FUNC(cmd_netinfo);
 
 #define MSG_NETINFO 	"NETINFO"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_NETINFO, m_netinfo, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_NETINFO, cmd_netinfo, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -67,7 +67,7 @@ MOD_UNLOAD()
  * parv[7] = free(**)
  * parv[8] = network name
  */
-CMD_FUNC(m_netinfo)
+CMD_FUNC(cmd_netinfo)
 {
 	long 		lmax;
 	time_t	 	xx;

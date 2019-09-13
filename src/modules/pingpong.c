@@ -20,9 +20,9 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_ping);
-CMD_FUNC(m_pong);
-CMD_FUNC(m_nospoof);
+CMD_FUNC(cmd_ping);
+CMD_FUNC(cmd_pong);
+CMD_FUNC(cmd_nospoof);
 
 /* Place includes here */
 #define MSG_PING        "PING"  /* PING */
@@ -39,8 +39,8 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_PING, m_ping, MAXPARA, M_USER|M_SERVER|M_SHUN);
-	CommandAdd(modinfo->handle, MSG_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN|M_VIRUS);
+	CommandAdd(modinfo->handle, MSG_PING, cmd_ping, MAXPARA, M_USER|M_SERVER|M_SHUN);
+	CommandAdd(modinfo->handle, MSG_PONG, cmd_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -59,11 +59,11 @@ MOD_UNLOAD()
 }
 
 /*
-** m_ping
+** cmd_ping
 **	parv[1] = origin
 **	parv[2] = destination
 */
-CMD_FUNC(m_ping)
+CMD_FUNC(cmd_ping)
 {
 	Client *acptr;
 	char *origin, *destination;
@@ -105,10 +105,10 @@ CMD_FUNC(m_ping)
 }
 
 /*
-** m_nospoof - allows clients to respond to no spoofing patch
+** cmd_nospoof - allows clients to respond to no spoofing patch
 **	parv[1] = code
 */
-CMD_FUNC(m_nospoof)
+CMD_FUNC(cmd_nospoof)
 {
 	unsigned long result;
 
@@ -147,17 +147,17 @@ CMD_FUNC(m_nospoof)
 }
 
 /*
-** m_pong
+** cmd_pong
 **	parv[1] = origin
 **	parv[2] = destination
 */
-CMD_FUNC(m_pong)
+CMD_FUNC(cmd_pong)
 {
 	Client *acptr;
 	char *origin, *destination;
 
 	if (!IsRegistered(cptr))
-		return m_nospoof(cptr, sptr, recv_mtags, parc, parv);
+		return cmd_nospoof(cptr, sptr, recv_mtags, parc, parv);
 
 	if (parc < 2 || *parv[1] == '\0')
 	{

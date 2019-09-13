@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_trace);
+CMD_FUNC(cmd_trace);
 
 #define MSG_TRACE 	"TRACE"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_TRACE, m_trace, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_TRACE, cmd_trace, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,10 +53,10 @@ MOD_UNLOAD()
 }
 
 /*
-** m_trace
+** cmd_trace
 **	parv[1] = servername
 */
-CMD_FUNC(m_trace)
+CMD_FUNC(cmd_trace)
 {
 	int  i;
 	Client *acptr;

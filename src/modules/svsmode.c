@@ -27,8 +27,8 @@
 #include "unrealircd.h"
 
 void add_send_mode_param(Channel *chptr, Client *from, char what, char mode, char *param);
-CMD_FUNC(m_svsmode);
-CMD_FUNC(m_svs2mode);
+CMD_FUNC(cmd_svsmode);
+CMD_FUNC(cmd_svs2mode);
 
 #define MSG_SVSMODE 	"SVSMODE"	
 #define MSG_SVS2MODE    "SVS2MODE"
@@ -44,8 +44,8 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSMODE, m_svsmode, MAXPARA, M_SERVER|M_USER);
-	CommandAdd(modinfo->handle, MSG_SVS2MODE, m_svs2mode, MAXPARA, M_SERVER|M_USER);
+	CommandAdd(modinfo->handle, MSG_SVSMODE, cmd_svsmode, MAXPARA, M_SERVER|M_USER);
+	CommandAdd(modinfo->handle, MSG_SVS2MODE, cmd_svs2mode, MAXPARA, M_SERVER|M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -286,7 +286,7 @@ int channel_svsmode(Client *cptr, Client *sptr, int parc, char *parv[])
 		               sptr->name, chptr->chname,  modebuf, parabuf);
 		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
 
-		/* Activate this hook just like m_mode.c */
+		/* Activate this hook just like cmd_mode.c */
 		RunHook8(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, 0, 0);
 
 		free_message_tags(mtags);
@@ -506,7 +506,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 		    sptr->name, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2]);
 
-	/* Here we trigger the same hooks that m_mode does and, likewise,
+	/* Here we trigger the same hooks that cmd_mode does and, likewise,
 	   only if the old flags (setflags) are different than the newly-
 	   set ones */
 	if (setflags != acptr->umodes)
@@ -527,23 +527,23 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 }
 
 /*
- * m_svsmode() added by taz
+ * cmd_svsmode() added by taz
  * parv[1] - username to change mode for
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)
  */
-CMD_FUNC(m_svsmode)
+CMD_FUNC(cmd_svsmode)
 {
 	return do_svsmode(cptr, sptr, recv_mtags, parc, parv, 0);
 }
 
 /*
- * m_svs2mode() added by Potvin
+ * cmd_svs2mode() added by Potvin
  * parv[1] - username to change mode for
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)
  */
-CMD_FUNC(m_svs2mode)
+CMD_FUNC(cmd_svs2mode)
 {
 	return do_svsmode(cptr, sptr, recv_mtags, parc, parv, 1);
 }

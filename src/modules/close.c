@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_close);
+CMD_FUNC(cmd_close);
 
 #define MSG_CLOSE 	"CLOSE"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_CLOSE, m_close, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_CLOSE, cmd_close, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,9 +53,9 @@ MOD_UNLOAD()
 }
 
 /*
-** m_close - added by Darren Reed Jul 13 1992.
+** cmd_close - added by Darren Reed Jul 13 1992.
 */
-CMD_FUNC(m_close)
+CMD_FUNC(cmd_close)
 {
 	Client *acptr, *acptr2;
 	int  closed = 0;

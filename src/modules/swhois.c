@@ -24,7 +24,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_swhois);
+CMD_FUNC(cmd_swhois);
 
 #define MSG_SWHOIS 	"SWHOIS"	
 
@@ -39,7 +39,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SWHOIS, m_swhois, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SWHOIS, cmd_swhois, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -64,7 +64,7 @@ MOD_UNLOAD()
  * parv[4] = priority
  * parv[5] = swhois
  */
-CMD_FUNC(m_swhois)
+CMD_FUNC(cmd_swhois)
 {
 	Client *acptr;
 	char tag[HOSTLEN+1];

@@ -1,5 +1,5 @@
 /*
- * m_sinfo - Server information
+ * cmd_sinfo - Server information
  * (C) Copyright 2019 Bram Matthys (Syzop) and the UnrealIRCd team.
  * License: GPLv2
  */
@@ -16,12 +16,12 @@ ModuleHeader MOD_HEADER
     };
 
 /* Forward declarations */
-CMD_FUNC(m_sinfo);
+CMD_FUNC(cmd_sinfo);
 
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, "SINFO", m_sinfo, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, "SINFO", cmd_sinfo, MAXPARA, M_USER|M_SERVER);
 
 	return MOD_SUCCESS;
 }
@@ -157,7 +157,7 @@ int sinfo_user(Client *cptr, Client *sptr, int parc, char *parv[])
 	return 0;
 }
 
-CMD_FUNC(m_sinfo)
+CMD_FUNC(cmd_sinfo)
 {
 	if (IsServer(sptr))
 		return sinfo_server(cptr, sptr, parc, parv);

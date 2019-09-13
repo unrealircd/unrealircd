@@ -48,7 +48,7 @@ ModDataInfo *webirc_md = NULL;
 ConfigItem_webirc *conf_webirc = NULL;
 
 /* Forward declarations */
-CMD_FUNC(m_webirc);
+CMD_FUNC(cmd_webirc);
 int webirc_check_init(Client *cptr, char *sockn, size_t size);
 int webirc_local_pass(Client *sptr, char *password);
 int webirc_config_test(ConfigFile *, ConfigEntry *, int, int *);
@@ -100,7 +100,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PASS, 0, webirc_local_pass);
 	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, webirc_secure_connect);
 
-	CommandAdd(modinfo->handle, MSG_WEBIRC, m_webirc, MAXPARA, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, MSG_WEBIRC, cmd_webirc, MAXPARA, M_UNREGISTERED);
 		
 	return MOD_SUCCESS;
 }
@@ -408,7 +408,7 @@ int dowebirc(Client *cptr, char *ip, char *host, char *options)
 }
 
 /* WEBIRC <pass> "cgiirc" <hostname> <ip> [:option1 [option2...]]*/
-CMD_FUNC(m_webirc)
+CMD_FUNC(cmd_webirc)
 {
 	char *ip, *host, *password, *options;
 	ConfigItem_webirc *e;

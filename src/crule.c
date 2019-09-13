@@ -145,7 +145,7 @@ int  crule_connected(int numargs, void *crulearg[])
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *acptr;
 
-	/* taken from m_links */
+	/* taken from cmd_links */
 	/* Faster this way -- codemastr*/
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -162,7 +162,7 @@ int  crule_directcon(int numargs, void *crulearg[])
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *acptr;
 
-	/* adapted from m_trace and exit_one_client */
+	/* adapted from cmd_trace and exit_one_client */
 	/* XXX: iterate server_list when added */
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
@@ -181,7 +181,7 @@ int  crule_via(int numargs, void *crulearg[])
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *acptr;
 
-	/* adapted from m_links */
+	/* adapted from cmd_links */
 	/* Faster this way -- codemastr */
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -200,7 +200,7 @@ int  crule_directop(int numargs, void *crulearg[])
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	Client *acptr;
 
-	/* adapted from m_trace */
+	/* adapted from cmd_trace */
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
 		if (!IsOper(acptr))

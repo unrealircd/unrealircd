@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_map);
+CMD_FUNC(cmd_map);
 
 #define MSG_MAP 	"MAP"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_MAP, m_map, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_MAP, cmd_map, MAXPARA, M_USER);
 	ISupportAdd(modinfo->handle, "MAP", NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -145,11 +145,11 @@ int cnt = 0, hide_ulines;
 
 /*
 ** New /MAP format. -Potvin
-** m_map (NEW)
+** cmd_map (NEW)
 **
 **      parv[1] = server mask
 **/
-CMD_FUNC(m_map)
+CMD_FUNC(cmd_map)
 {
 	Client *acptr;
 	int  longest = strlen(me.name);

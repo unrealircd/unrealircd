@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_protoctl);
+CMD_FUNC(cmd_protoctl);
 
 #define MSG_PROTOCTL 	"PROTOCTL"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
+	CommandAdd(modinfo->handle, MSG_PROTOCTL, cmd_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -60,7 +60,7 @@ MOD_UNLOAD()
  * for all technical documentation, especially if you are a server
  * or services coder.
  */
-CMD_FUNC(m_protoctl)
+CMD_FUNC(cmd_protoctl)
 {
 	int  i;
 	int first_protoctl = IsProtoctlReceived(sptr) ? 0 : 1; /**< First PROTOCTL we receive? Special ;) */
@@ -264,7 +264,7 @@ CMD_FUNC(m_protoctl)
 			SetEAuth(cptr);
 			make_server(cptr); /* allocate and set cptr->serv */
 			/* Set cptr->name but don't add to hash list. The real work on
-			 * that is done in m_server. We just set it here for display
+			 * that is done in cmd_server. We just set it here for display
 			 * purposes of error messages (such as reject due to clock).
 			 */
 			strlcpy(cptr->name, servername, sizeof(cptr->name));

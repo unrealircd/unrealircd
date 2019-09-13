@@ -53,7 +53,7 @@ void reread_motdsandrules();
 
 
 /*
-** m_functions execute protocol messages on this server:
+** cmd_functions execute protocol messages on this server:
 **      CMD_FUNC(functionname) causes it to use the header
 **            int functionname (Client *cptr,
 **  	      	Client *sptr, int parc, char *parv[])
@@ -62,8 +62,8 @@ void reread_motdsandrules();
 **	cptr	is always NON-NULL, pointing to a *LOCAL* client
 **		structure (with an open socket connected!). This
 **		identifies the physical socket where the message
-**		originated (or which caused the m_function to be
-**		executed--some m_functions may call others...).
+**		originated (or which caused the cmd_function to be
+**		executed--some cmd_functions may call others...).
 **
 **	sptr	is the source of the message, defined by the
 **		prefix part of the message if present. If not
@@ -149,10 +149,10 @@ void send_version(Client* sptr, int reply)
 }
 
 /*
-** m_version
+** cmd_version
 **	parv[1] = remote server
 */
-CMD_FUNC(m_version)
+CMD_FUNC(cmd_version)
 {
 	/* Only allow remote VERSIONs if registered -- Syzop */
 	if (!IsUser(sptr) && !IsServer(cptr))
@@ -236,7 +236,7 @@ int remotecmdfilter(Client *sptr, int parc, char *parv[])
 
 
 /*
- * sends m_info into to sptr
+ * sends cmd_info into to sptr
 */
 
 char *unrealinfo[] =
@@ -261,7 +261,7 @@ char *unrealinfo[] =
 	NULL
 };
 
-void m_info_send(Client *sptr)
+void cmd_info_send(Client *sptr)
 {
 char **text = unrealinfo;
 
@@ -289,29 +289,29 @@ char **text = unrealinfo;
 }
 
 /*
-** m_info
+** cmd_info
 **	parv[1] = servername
 **  Modified for hardcode by Stskeeps
 */
 
-CMD_FUNC(m_info)
+CMD_FUNC(cmd_info)
 {
 	if (remotecmdfilter(sptr, parc, parv))
 		return 0;
 
 	if (hunt_server(cptr, sptr, recv_mtags, ":%s INFO :%s", 1, parc, parv) == HUNTED_ISME)
 	{
-		m_info_send(sptr);
+		cmd_info_send(sptr);
 	}
 
 	return 0;
 }
 
 /*
-** m_dalinfo
+** cmd_dalinfo
 **      parv[1] = servername
 */
-CMD_FUNC(m_dalinfo)
+CMD_FUNC(cmd_dalinfo)
 {
 	char **text = dalinfotext;
 
@@ -334,10 +334,10 @@ CMD_FUNC(m_dalinfo)
 }
 
 /*
-** m_license
+** cmd_license
 **      parv[1] = servername
 */
-CMD_FUNC(m_license)
+CMD_FUNC(cmd_license)
 {
 	char **text = gnulicense;
 
@@ -357,10 +357,10 @@ CMD_FUNC(m_license)
 }
 
 /*
-** m_credits
+** cmd_credits
 **      parv[1] = servername
 */
-CMD_FUNC(m_credits)
+CMD_FUNC(cmd_credits)
 {
 	char **text = unrealcredits;
 
@@ -432,9 +432,9 @@ char *get_client_name2(Client *acptr, int showports)
 }
 
 /*
-** m_summon
+** cmd_summon
 */
-CMD_FUNC(m_summon)
+CMD_FUNC(cmd_summon)
 {
 	/* /summon is old and out dated, we just return an error as
 	 * required by RFC1459 -- codemastr
@@ -442,10 +442,10 @@ CMD_FUNC(m_summon)
 	return 0;
 }
 /*
-** m_users
+** cmd_users
 **	parv[1] = servername
 */ 
-CMD_FUNC(m_users)
+CMD_FUNC(cmd_users)
 {
 	/* /users is out of date, just return an error as  required by
 	 * RFC1459 -- codemastr
@@ -460,7 +460,7 @@ CMD_FUNC(m_users)
 **
 **	parv[*] = parameters
 */ 
-CMD_FUNC(m_error)
+CMD_FUNC(cmd_error)
 {
 	char *para;
 
@@ -556,7 +556,7 @@ void reread_motdsandrules()
 extern void reinit_resolver(Client *sptr);
 
 /*
-** m_rehash
+** cmd_rehash
 ** remote rehash by binary
 ** now allows the -flags in remote rehash
 ** ugly code but it seems to work :) -- codemastr
@@ -565,7 +565,7 @@ extern void reinit_resolver(Client *sptr);
 ** removed '-all' code, this is now considered as '/rehash', this is ok
 ** since we rehash everything with simple '/rehash' now. Syzop/20040205
 */
-CMD_FUNC(m_rehash)
+CMD_FUNC(cmd_rehash)
 {
 	int x = 0;
 
@@ -601,7 +601,7 @@ CMD_FUNC(m_rehash)
 		                 "the local server from a WebSocket connection.");
 		/* Issue details:
 		 * websocket_handle_packet -> process_packet -> parse_client_queued ->
-		 * dopacket -> parse -> m_rehash... and then 'websocket' is unloaded so
+		 * dopacket -> parse -> cmd_rehash... and then 'websocket' is unloaded so
 		 * we "cannot get back" as that websocket_handle_packet function is gone.
 		 *
 		 * Solution would be either to delay the rehash or to make websocket perm.
@@ -756,12 +756,12 @@ CMD_FUNC(m_rehash)
 }
 
 /*
-** m_restart
+** cmd_restart
 **
 ** parv[1] - password *OR* reason if no drpass { } block exists
 ** parv[2] - reason for restart (optional & only if drpass block exists)
 */
-CMD_FUNC(m_restart)
+CMD_FUNC(cmd_restart)
 {
 char *reason = parv[1];
 	Client *acptr;
@@ -811,7 +811,7 @@ char *reason = parv[1];
 }
 
 /*
- * Heavily modified from the ircu m_motd by codemastr
+ * Heavily modified from the ircu cmd_motd by codemastr
  * Also svsmotd support added
  */
 int short_motd(Client *sptr)
@@ -1085,11 +1085,11 @@ void free_motd(MOTDFile *themotd)
 }
 
 
-/* m_die, this terminates the server, and it intentionally does not
+/* cmd_die, this terminates the server, and it intentionally does not
  * have a reason. If you use it you should first do a GLOBOPS and
  * then a server notice to let everyone know what is going down...
  */
-CMD_FUNC(m_die)
+CMD_FUNC(cmd_die)
 {
 	Client *acptr;
 

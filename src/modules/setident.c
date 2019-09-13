@@ -24,7 +24,7 @@
 
 #define MSG_SETIDENT 	"SETIDENT"	/* set ident */
 
-CMD_FUNC(m_setident);
+CMD_FUNC(cmd_setident);
 
 ModuleHeader MOD_HEADER
   = {
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SETIDENT, m_setident, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_SETIDENT, cmd_setident, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -52,14 +52,14 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/* m_setident - 12/05/1999 - Stskeeps
+/* cmd_setident - 12/05/1999 - Stskeeps
  * :prefix SETIDENT newident
  * parv[1] - newident
  * D: This will set your username to be <x> (like (/setident Root))
  * (if you are IRCop) **efg*
- * Cloning of m_sethost at some points - so same authors ;P
+ * Cloning of cmd_sethost at some points - so same authors ;P
 */
-CMD_FUNC(m_setident)
+CMD_FUNC(cmd_setident)
 {
 
 	char *vident, *s;

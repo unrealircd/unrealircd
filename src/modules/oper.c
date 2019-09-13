@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_oper);
+CMD_FUNC(cmd_oper);
 
 
 /* Place includes here */
@@ -38,7 +38,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_OPER, m_oper, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_OPER, cmd_oper, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -75,11 +75,11 @@ void set_oper_host(Client *sptr, char *host)
 }
 
 /*
-** m_oper
+** cmd_oper
 **	parv[1] = oper name
 **	parv[2] = oper password
 */
-CMD_FUNC(m_oper)
+CMD_FUNC(cmd_oper)
 {
 	ConfigItem_oper *operblock;
 	char *name, *password;

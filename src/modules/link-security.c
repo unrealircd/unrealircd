@@ -37,7 +37,7 @@ char *link_security_md_serialize(ModData *m);
 void link_security_md_unserialize(char *str, ModData *m);
 EVENT(checklinksec);
 char *link_security_capability_parameter(Client *acptr);
-CMD_FUNC(m_linksecurity);
+CMD_FUNC(cmd_linksecurity);
 
 /* Global variables */
 ModDataInfo *link_security_md;
@@ -66,7 +66,7 @@ MOD_INIT()
 		abort();
 	}
 	
-	CommandAdd(modinfo->handle, "LINKSECURITY", m_linksecurity, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, "LINKSECURITY", cmd_linksecurity, MAXPARA, M_USER);
 
 	return MOD_SUCCESS;
 }
@@ -236,7 +236,7 @@ char *link_security_capability_parameter(Client *acptr)
 }
 
 /** /LINKSECURITY command */
-CMD_FUNC(m_linksecurity)
+CMD_FUNC(cmd_linksecurity)
 {
 	Client *acptr;
 	char *s;

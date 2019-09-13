@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svssilence);
+CMD_FUNC(cmd_svssilence);
 
 /* Place includes here */
 #define MSG_SVSSILENCE       "SVSSILENCE"
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSSILENCE, m_svssilence, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSSILENCE, cmd_svssilence, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,8 +53,8 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;	
 }
 
-/* m_svssilence()
- * written by Syzop (copied a lot from m_silence),
+/* cmd_svssilence()
+ * written by Syzop (copied a lot from cmd_silence),
  * suggested by <??>.
  * parv[1] - target nick
  * parv[2] - space delimited silence list (+Blah +Blih -Bluh etc)
@@ -62,7 +62,7 @@ MOD_UNLOAD()
  * In contrast to the normal SILENCE command, this is sent to all servers
  * because it can/will add&remove multiple silence entries at once.
  */
-CMD_FUNC(m_svssilence)
+CMD_FUNC(cmd_svssilence)
 {
 	Client *acptr;
 	int mine;

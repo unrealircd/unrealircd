@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_admin);
+CMD_FUNC(cmd_admin);
 
 #define MSG_ADMIN 	"ADMIN"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN|M_VIRUS);
+	CommandAdd(modinfo->handle, MSG_ADMIN, cmd_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,10 +53,10 @@ MOD_UNLOAD()
 }
 
 /*
-** m_admin
+** cmd_admin
 **	parv[1] = servername
 */
-CMD_FUNC(m_admin)
+CMD_FUNC(cmd_admin)
 {
 	ConfigItem_admin *admin;
 	/* Users may want to get the address in case k-lined, etc. -- Barubary

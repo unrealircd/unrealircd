@@ -518,7 +518,7 @@ static void exit_one_client(Client *sptr, MessageTag *mtags_i, const char *comme
 /* Exit this IRC client, and all the dependents if this is a server.
  *
  * For convenience, this function returns a suitable value for
- * m_funtion return value:
+ * cmd_function() return values:
  *	FLUSH_BUFFER	if (cptr == sptr)
  *	0		if (cptr != sptr)
  */
@@ -1177,7 +1177,7 @@ char *mystpcpy(char *dst, const char *src)
 	return dst;
 }
 
-/** Helper function for send_channel_modes_sjoin3() and m_sjoin()
+/** Helper function for send_channel_modes_sjoin3() and cmd_sjoin()
  * to build the SJSBY prefix which is <seton,setby> to
  * communicate when the ban was set and by whom.
  * @param buf   The buffer to write to

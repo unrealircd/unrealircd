@@ -25,7 +25,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_who);
+CMD_FUNC(cmd_who);
 
 /* Place includes here */
 #define MSG_WHO 	"WHO"
@@ -42,9 +42,9 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	if (!CommandAdd(modinfo->handle, MSG_WHO, m_who, MAXPARA, M_USER))
+	if (!CommandAdd(modinfo->handle, MSG_WHO, cmd_who, MAXPARA, M_USER))
 	{
-		config_warn("You cannot load both the m_whox and m_who module. You should ONLY load the m_whox module.");
+		config_warn("You cannot load both the cmd_whox and cmd_who module. You should ONLY load the cmd_whox module.");
 		return MOD_FAILED;
 	}
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -115,7 +115,7 @@ struct {
 } wfl;
 
 /** The /who command: retrieves information from users. */
-CMD_FUNC(m_who)
+CMD_FUNC(cmd_who)
 {
 	Channel *target_channel;
 	char *mask = parv[1];

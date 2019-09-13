@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_wallops);
+CMD_FUNC(cmd_wallops);
 
 #define MSG_WALLOPS 	"WALLOPS"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_WALLOPS, m_wallops, 1, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_WALLOPS, cmd_wallops, 1, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,10 +53,10 @@ MOD_UNLOAD()
 }
 
 /*
-** m_wallops (write to *all* opers currently online)
+** cmd_wallops (write to *all* opers currently online)
 **	parv[1] = message text
 */
-CMD_FUNC(m_wallops)
+CMD_FUNC(cmd_wallops)
 {
 	char *message;
 	message = parc > 1 ? parv[1] : NULL;

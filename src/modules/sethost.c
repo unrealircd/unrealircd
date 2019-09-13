@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_sethost);
+CMD_FUNC(cmd_sethost);
 
 /* Place includes here */
 #define MSG_SETHOST 	"SETHOST"	/* sethost */
@@ -38,7 +38,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SETHOST, m_sethost, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_SETHOST, cmd_sethost, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -54,12 +54,12 @@ MOD_UNLOAD()
 }
 
 /*
-   m_sethost() added by Stskeeps (30/04/1999)
+   cmd_sethost() added by Stskeeps (30/04/1999)
                (modified at 15/05/1999) by Stskeeps | Potvin
    :prefix SETHOST newhost
    parv[1] - newhost
 */
-CMD_FUNC(m_sethost)
+CMD_FUNC(cmd_sethost)
 {
 	char *vhost;
 

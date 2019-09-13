@@ -24,7 +24,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_away);
+CMD_FUNC(cmd_away);
 
 #define MSG_AWAY 	"AWAY"	
 
@@ -39,7 +39,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_AWAY, m_away, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_AWAY, cmd_away, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -54,7 +54,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 /***********************************************************************
- * m_away() - Added 14 Dec 1988 by jto.
+ * cmd_away() - Added 14 Dec 1988 by jto.
  *            Not currently really working, I don't like this
  *            call at all...
  *
@@ -65,10 +65,10 @@ MOD_UNLOAD()
  ***********************************************************************/
 
 /*
-** m_away
+** cmd_away
 **      parv[1] = away message
 */
-CMD_FUNC(m_away)
+CMD_FUNC(cmd_away)
 {
 	char *away, *awy2 = parv[1];
 	int n, wasaway = 0;

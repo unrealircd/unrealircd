@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_globops);
+CMD_FUNC(cmd_globops);
 
 #define MSG_GLOBOPS 	"GLOBOPS"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_GLOBOPS, m_globops, 1, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_GLOBOPS, cmd_globops, 1, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -55,7 +55,7 @@ MOD_UNLOAD()
 /** Write message to IRCOps.
  * parv[1] = message text
  */
-CMD_FUNC(m_globops)
+CMD_FUNC(cmd_globops)
 {
 	char *message;
 

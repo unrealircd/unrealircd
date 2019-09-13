@@ -1,4 +1,4 @@
-/* m_whox.c / WHOX.
+/* cmd_whox.c / WHOX.
  * based on code from charybdis and ircu.
  * was originally made for tircd and modified to work with u4.
  * - 2018 i <ircd@servx.org>
@@ -61,7 +61,7 @@ struct who_format
 	int show_ip;
 };
 
-CMD_FUNC(m_whox);
+CMD_FUNC(cmd_whox);
 static void who_global(Client *sptr, char *mask, int operspy, struct who_format *fmt);
 static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_format *fmt);
 static void do_who_on_channel(Client *sptr, Channel *chptr,
@@ -80,9 +80,9 @@ ModuleHeader MOD_HEADER
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	if (!CommandAdd(modinfo->handle, MSG_WHO, m_whox, MAXPARA, M_USER))
+	if (!CommandAdd(modinfo->handle, MSG_WHO, cmd_whox, MAXPARA, M_USER))
 	{
-		config_warn("You cannot load both m_whox and m_who. You should ONLY load the m_whox module.");
+		config_warn("You cannot load both cmd_whox and cmd_who. You should ONLY load the cmd_whox module.");
 		return MOD_FAILED;
 	}
 	ISupportAdd(modinfo->handle, "WHOX", NULL);
@@ -99,7 +99,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/** m_whox: standardized "extended" version of WHO.
+/** cmd_whox: standardized "extended" version of WHO.
  * The good thing about WHOX is that it allows the client to define what
  * output they want to see. Another good thing is that it is standardized
  * (ok, actually it isn't... but hey!).
@@ -127,7 +127,7 @@ MOD_UNLOAD()
  * When in doubt, we will assume WHOX so to not break the spec
  * (which again.. doesn't exist... but hey..)
  */
-CMD_FUNC(m_whox)
+CMD_FUNC(cmd_whox)
 {
 	char *mask;
 	char *orig_mask;

@@ -1895,7 +1895,7 @@ struct ListStructPrio {
 #define IsSendable(x)		(DBufLength(&x->local->sendQ) < 2048)
 #define DoList(x)		((x)->user && (x)->user->lopt)
 
-/* used in SetMode() in channel.c and m_umode() in s_msg.c */
+/* used in SetMode() in channel.c and cmd_umode() in s_msg.c */
 
 #define	MODE_NULL      0
 #define	MODE_ADD       0x40000000

@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_kick);
+CMD_FUNC(cmd_kick);
 
 #define MSG_KICK 	"KICK"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_KICK, m_kick, 3, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_KICK, cmd_kick, 3, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,7 +53,7 @@ MOD_UNLOAD()
 }
 
 /*
-** m_kick
+** cmd_kick
 **	parv[1] = channel
 **	parv[2] = client to kick
 **	parv[3] = kick comment
@@ -65,7 +65,7 @@ MOD_UNLOAD()
 #define CHFL_ISOP (CHFL_CHANOP)
 #endif
 
-CMD_FUNC(m_kick)
+CMD_FUNC(cmd_kick)
 {
 	Client *who;
 	Channel *chptr;

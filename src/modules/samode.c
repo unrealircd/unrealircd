@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_samode);
+CMD_FUNC(cmd_samode);
 
 #define MSG_SAMODE 	"SAMODE"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SAMODE, m_samode, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_SAMODE, cmd_samode, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,12 +53,12 @@ MOD_UNLOAD()
 }
 
 /*
- * m_samode
+ * cmd_samode
  * parv[1] = channel
  * parv[2] = modes
  * -t
  */
-CMD_FUNC(m_samode)
+CMD_FUNC(cmd_samode)
 {
 	Channel *chptr;
 

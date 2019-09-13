@@ -67,19 +67,19 @@ void	init_CommandHash(void)
 #endif
 	
 	memset(CommandHash, 0, sizeof(CommandHash));
-	CommandAdd(NULL, MSG_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
-	CommandAdd(NULL, MSG_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
-	CommandAdd(NULL, MSG_SUMMON, m_summon, 1, M_USER);
-	CommandAdd(NULL, MSG_USERS, m_users, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_INFO, m_info, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_DNS, m_dns, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_REHASH, m_rehash, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(NULL, MSG_RESTART, m_restart, 2, M_USER);
-	CommandAdd(NULL, MSG_DIE, m_die, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_DALINFO, m_dalinfo, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_CREDITS, m_credits, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_LICENSE, m_license, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_MODULE, m_module, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_ERROR, cmd_error, MAXPARA, M_UNREGISTERED|M_SERVER);
+	CommandAdd(NULL, MSG_VERSION, cmd_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
+	CommandAdd(NULL, MSG_SUMMON, cmd_summon, 1, M_USER);
+	CommandAdd(NULL, MSG_USERS, cmd_users, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_INFO, cmd_info, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_DNS, cmd_dns, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_REHASH, cmd_rehash, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(NULL, MSG_RESTART, cmd_restart, 2, M_USER);
+	CommandAdd(NULL, MSG_DIE, cmd_die, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_DALINFO, cmd_dalinfo, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_CREDITS, cmd_credits, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_LICENSE, cmd_license, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_MODULE, cmd_module, MAXPARA, M_USER);
 		
 #ifdef DEVELOP_DEBUG
 	for (i = 0; i <= 255; i++)

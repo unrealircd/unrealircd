@@ -24,7 +24,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svsnline);
+CMD_FUNC(cmd_svsnline);
 
 #define MSG_SVSNLINE 	"SVSNLINE"	/* svsnline */
 
@@ -40,7 +40,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSNLINE, m_svsnline, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSNLINE, cmd_svsnline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -76,13 +76,13 @@ void wipe_svsnlines(void)
 }
 
 /*
- * m_svsnline
+ * cmd_svsnline
  * SVSNLINE + reason_where_is_space :realname mask with spaces
  * SVSNLINE - :realname mask
  * SVSNLINE *     Wipes
  * -Stskeeps
 */
-CMD_FUNC(m_svsnline)
+CMD_FUNC(cmd_svsnline)
 {
 	ConfigItem_ban *bconf;
 	char		*s;

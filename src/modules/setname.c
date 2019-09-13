@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_setname);
+CMD_FUNC(cmd_setname);
 
 #define MSG_SETNAME 	"SETNAME"	/* setname */
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SETNAME, m_setname, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_SETNAME, cmd_setname, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -52,14 +52,14 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/* m_setname - 12/05/1999 - Stskeeps
+/* cmd_setname - 12/05/1999 - Stskeeps
  * :prefix SETNAME :gecos
  * parv[1] - gecos
  * D: This will set your gecos to be <x> (like (/setname :The lonely wanderer))
    yes it is experimental but anyways ;P
     FREEDOM TO THE USERS! ;) 
 */ 
-CMD_FUNC(m_setname)
+CMD_FUNC(cmd_setname)
 {
 	int xx;
 	char tmpinfo[REALLEN + 1];

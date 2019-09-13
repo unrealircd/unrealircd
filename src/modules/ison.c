@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_ison);
+CMD_FUNC(cmd_ison);
 
 #define MSG_ISON 	"ISON"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_ISON, m_ison, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_ISON, cmd_ison, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,7 +53,7 @@ MOD_UNLOAD()
 }
 
 /*
- * m_ison added by Darren Reed 13/8/91 to act as an efficent user indicator
+ * cmd_ison added by Darren Reed 13/8/91 to act as an efficent user indicator
  * with respect to cpu/bandwidth used. Implemented for NOTIFY feature in
  * clients. Designed to reduce number of whois requests. Can process
  * nicknames in batches as long as the maximum buffer length.
@@ -64,7 +64,7 @@ MOD_UNLOAD()
 
 static char buf[BUFSIZE];
 
-CMD_FUNC(m_ison)
+CMD_FUNC(cmd_ison)
 {
 	char namebuf[USERLEN + HOSTLEN + 4];
 	Client *acptr;

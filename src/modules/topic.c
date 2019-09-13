@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_topic);
+CMD_FUNC(cmd_topic);
 
 #define MSG_TOPIC 	"TOPIC"
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_TOPIC, m_topic, 4, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_TOPIC, cmd_topic, 4, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -77,7 +77,7 @@ void topicoverride(Client *sptr, Channel *chptr, char *topic)
  * parv[3] = topic time
  * parv[4] = topic text
  */
-CMD_FUNC(m_topic)
+CMD_FUNC(cmd_topic)
 {
 	Channel *chptr = NULL;
 	char *topic = NULL, *name, *tnick = sptr->name;

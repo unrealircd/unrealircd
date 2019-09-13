@@ -19,9 +19,9 @@
 
 #include "unrealircd.h"
 
-// FIXME: move this to m_whowas,
+// FIXME: move this to cmd_whowas,
 // Consider making add_history an efunc? Or via a hook?
-// Some users may not want to load m_whowas at all.
+// Some users may not want to load cmd_whowas at all.
 
 /* internally defined function */
 static void add_whowas_to_clist(aWhowas **, aWhowas *);

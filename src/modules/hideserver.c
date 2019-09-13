@@ -313,7 +313,7 @@ int cnt = 0, hide_ulines;
 
 /*
 ** New /MAP format. -Potvin
-** m_map (NEW)
+** cmd_map (NEW)
 **
 **      parv[1] = server mask
 **/

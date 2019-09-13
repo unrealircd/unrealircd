@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_lusers);
+CMD_FUNC(cmd_lusers);
 
 #define MSG_LUSERS 	"LUSERS"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_LUSERS, m_lusers, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_LUSERS, cmd_lusers, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -55,7 +55,7 @@ MOD_UNLOAD()
 /*
  * parv[1] = server to query
  */
-CMD_FUNC(m_lusers)
+CMD_FUNC(cmd_lusers)
 {
 char flatmap;
 

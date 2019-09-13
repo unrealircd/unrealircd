@@ -24,7 +24,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svsnick);
+CMD_FUNC(cmd_svsnick);
 
 #define MSG_SVSNICK 	"SVSNICK"	
 
@@ -39,7 +39,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSNICK, m_svsnick, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSNICK, cmd_svsnick, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -54,12 +54,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 /*
-** m_svsnick
+** cmd_svsnick
 **      parv[1] = old nickname
 **      parv[2] = new nickname
 **      parv[3] = timestamp
 */
-CMD_FUNC(m_svsnick)
+CMD_FUNC(cmd_svsnick)
 {
 	Client *acptr;
 	Client *ocptr; /* Other client */

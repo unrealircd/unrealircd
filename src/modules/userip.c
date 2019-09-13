@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_userip);
+CMD_FUNC(cmd_userip);
 
 #define MSG_USERIP 	"USERIP"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_USERIP, m_userip, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_USERIP, cmd_userip, 1, M_USER);
 	ISupportAdd(modinfo->handle, "USERIP", NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -54,13 +54,13 @@ MOD_UNLOAD()
 }
 
 /*
- * m_userip is based on m_userhost
- * m_userhost added by Darren Reed 13/8/91 to aid clients and reduce
+ * cmd_userip is based on cmd_userhost
+ * cmd_userhost added by Darren Reed 13/8/91 to aid clients and reduce
  * the need for complicated requests like WHOIS. It returns user/host
  * information only (no spurious AWAY labels or channels).
  * Re-written by Dianora 1999
  */
-CMD_FUNC(m_userip)
+CMD_FUNC(cmd_userip)
 {
 
 	char *p;		/* scratch end pointer */

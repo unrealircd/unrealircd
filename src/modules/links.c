@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_links);
+CMD_FUNC(cmd_links);
 
 #define MSG_LINKS 	"LINKS"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_LINKS, m_links, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_LINKS, cmd_links, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -52,7 +52,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-CMD_FUNC(m_links)
+CMD_FUNC(cmd_links)
 {
 	Client *acptr;
 	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;

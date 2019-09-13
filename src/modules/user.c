@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_user);
+CMD_FUNC(cmd_user);
 
 #define MSG_USER 	"USER"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_USER, m_user, 4, M_USER|M_UNREGISTERED);
+	CommandAdd(modinfo->handle, MSG_USER, cmd_user, 4, M_USER|M_UNREGISTERED);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,7 +53,7 @@ MOD_UNLOAD()
 }
 
 /*
-** m_user
+** cmd_user
 **	parv[1] = username (login name, account)
 **	parv[2] = client host name (used only from other servers)
 **	parv[3] = server host name (used only from other servers)
@@ -62,7 +62,7 @@ MOD_UNLOAD()
 ** NOTE: Be advised that multiple USER messages are possible,
 **       hence, always check if a certain struct is already allocated... -- Syzop
 */
-CMD_FUNC(m_user)
+CMD_FUNC(cmd_user)
 {
 	char *username;
 	char *host;

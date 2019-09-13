@@ -587,7 +587,7 @@ void start_server_handshake(Client *cptr)
 	send_proto(cptr, aconf);
 	if (NEW_LINKING_PROTOCOL)
 	{
-		/* Sending SERVER message moved to m_protoctl, so it's send after the first PROTOCTL
+		/* Sending SERVER message moved to cmd_protoctl, so it's send after the first PROTOCTL
 		 * we receive from the remote server. Of course, this assumes that the remote server
 		 * to which we are connecting will at least send one PROTOCTL... but since it's an
 		 * outgoing connect, we can safely assume it's a remote UnrealIRCd server (or some

@@ -102,13 +102,13 @@ long set_usermode(char *umode)
 }
 
 /*
-** m_functions execute protocol messages on this server:
+** cmd_functions execute protocol messages on this server:
 **
 **	cptr	is always NON-NULL, pointing to a *LOCAL* client
 **		structure (with an open socket connected!). This
 **		identifies the physical socket where the message
-**		originated (or which caused the m_function to be
-**		executed--some m_functions may call others...).
+**		originated (or which caused the cmd_function to be
+**		executed--some cmd_functions may call others...).
 **
 **	sptr	is the source of the message, defined by the
 **		prefix part of the message if present. If not

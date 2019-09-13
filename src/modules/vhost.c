@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_vhost);
+CMD_FUNC(cmd_vhost);
 
 /* Place includes here */
 #define MSG_VHOST       "VHOST"
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_VHOST, m_vhost, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_VHOST, cmd_vhost, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -54,7 +54,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;	
 }
 
-CMD_FUNC(m_vhost)
+CMD_FUNC(cmd_vhost)
 {
 	ConfigItem_vhost *vhost;
 	char *login, *password;

@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_sendsno);
+CMD_FUNC(cmd_sendsno);
 
 #define MSG_SENDSNO   "SENDSNO"
 
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SENDSNO, m_sendsno, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SENDSNO, cmd_sendsno, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -54,13 +54,13 @@ MOD_UNLOAD()
 }
 
 /*
-** m_sendsno - Written by Syzop, bit based on SENDUMODE from Stskeeps
+** cmd_sendsno - Written by Syzop, bit based on SENDUMODE from Stskeeps
 **      parv[1] = target snomask
 **      parv[2] = message text
 ** Servers can use this to:
 **   :server.unreal.net SENDSNO e :Hiiiii
 */
-CMD_FUNC(m_sendsno)
+CMD_FUNC(cmd_sendsno)
 {
 	MessageTag *mtags = NULL;
 	char *sno, *msg, *p;

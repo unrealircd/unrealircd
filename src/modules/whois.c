@@ -22,7 +22,7 @@
 
 static char buf[BUFSIZE];
 
-CMD_FUNC(m_whois);
+CMD_FUNC(cmd_whois);
 
 #define MSG_WHOIS       "WHOIS"
 
@@ -38,7 +38,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_WHOIS, m_whois, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_WHOIS, cmd_whois, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -57,10 +57,10 @@ MOD_UNLOAD()
 
 
 /*
-** m_whois
+** cmd_whois
 **	parv[1] = nickname masklist
 */
-CMD_FUNC(m_whois)
+CMD_FUNC(cmd_whois)
 {
 	Membership *lp;
 	Client *acptr;

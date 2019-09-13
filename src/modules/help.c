@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_help);
+CMD_FUNC(cmd_help);
 
 #define MSG_HELP 	"HELP"	
 #define MSG_HELPOP	"HELPOP"
@@ -38,8 +38,8 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_HELP, m_help, 1, M_USER);
-	CommandAdd(modinfo->handle, MSG_HELPOP, m_help, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_HELP, cmd_help, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_HELPOP, cmd_help, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -127,10 +127,10 @@ int  parse_help(Client *sptr, char *name, char *help)
 }
 
 /*
-** m_help (help/write to +h currently online) -Donwulff
+** cmd_help (help/write to +h currently online) -Donwulff
 **	parv[1] = optional message text
 */
-CMD_FUNC(m_help)
+CMD_FUNC(cmd_help)
 {
 	char *helptopic;
 

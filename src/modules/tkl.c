@@ -1,5 +1,5 @@
 /*
- * Unreal Internet Relay Chat Daemon, src/modules/m_tkl.c
+ * Unreal Internet Relay Chat Daemon, src/modules/tkl.c
  * TKL Commands: server bans, spamfilters, etc.
  * (C) 1999-2019 Bram Matthys and The UnrealIRCd Team
  *
@@ -39,15 +39,15 @@ int tkl_config_test_ban(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_ban(ConfigFile *, ConfigEntry *, int);
 int tkl_config_test_except(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_except(ConfigFile *, ConfigEntry *, int);
-CMD_FUNC(m_gline);
-CMD_FUNC(m_shun);
-CMD_FUNC(m_tempshun);
-CMD_FUNC(m_gzline);
-CMD_FUNC(m_kline);
-CMD_FUNC(m_zline);
-CMD_FUNC(m_spamfilter);
-CMD_FUNC(m_eline);
-int m_tkl_line(Client *cptr, Client *sptr, int parc, char *parv[], char* type);
+CMD_FUNC(cmd_gline);
+CMD_FUNC(cmd_shun);
+CMD_FUNC(cmd_tempshun);
+CMD_FUNC(cmd_gzline);
+CMD_FUNC(cmd_kline);
+CMD_FUNC(cmd_zline);
+CMD_FUNC(cmd_spamfilter);
+CMD_FUNC(cmd_eline);
+int cmd_tkl_line(Client *cptr, Client *sptr, int parc, char *parv[], char* type);
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
@@ -77,7 +77,7 @@ TKL *_find_qline(Client *cptr, char *nick, int *ishold);
 TKL *_find_tkline_match_zap(Client *cptr);
 void _tkl_stats(Client *cptr, int type, char *para);
 void _tkl_synch(Client *sptr);
-CMD_FUNC(_m_tkl);
+CMD_FUNC(_cmd_tkl);
 int _place_host_ban(Client *sptr, BanAction action, char *reason, long duration);
 int _run_spamfilter(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
 int _join_viruschan(Client *sptr, TKL *tk, int type);
@@ -101,7 +101,7 @@ struct TKLTypeTable
 	char letter;              /**< The letter ised in the TKL S2S command */
 	int type;                 /**< TKL_xxx, optionally OR'ed with TKL_GLOBAL */
 	char *log_name;           /**< Used for logging and server notices */
-	unsigned tkltype:1;       /**< Is a type available in m_tkl() and friends */
+	unsigned tkltype:1;       /**< Is a type available in cmd_tkl() and friends */
 	unsigned exceptiontype:1; /**< Is a type available for exceptions */
 };
 
@@ -160,7 +160,7 @@ MOD_TEST()
 	EfunctionAddPVoid(modinfo->handle, EFUNC_FIND_TKL_SPAMFILTER, TO_PVOIDFUNC(_find_tkl_spamfilter));
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_STATS, _tkl_stats);
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_SYNCH, _tkl_synch);
-	EfunctionAdd(modinfo->handle, EFUNC_M_TKL, _m_tkl);
+	EfunctionAdd(modinfo->handle, EFUNC_CMD_TKL, _cmd_tkl);
 	EfunctionAdd(modinfo->handle, EFUNC_PLACE_HOST_BAN, _place_host_ban);
 	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER, _run_spamfilter);
 	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER_VIRUSCHAN, _join_viruschan);
@@ -180,15 +180,15 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamfilter);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_ban);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_except);
-	CommandAdd(modinfo->handle, "GLINE", m_gline, 3, M_OPER);
-	CommandAdd(modinfo->handle, "SHUN", m_shun, 3, M_OPER);
-	CommandAdd(modinfo->handle, "TEMPSHUN", m_tempshun, 2, M_OPER);
-	CommandAdd(modinfo->handle, "ZLINE", m_zline, 3, M_OPER);
-	CommandAdd(modinfo->handle, "KLINE", m_kline, 3, M_OPER);
-	CommandAdd(modinfo->handle, "GZLINE", m_gzline, 3, M_OPER);
-	CommandAdd(modinfo->handle, "SPAMFILTER", m_spamfilter, 7, M_OPER);
-	CommandAdd(modinfo->handle, "ELINE", m_eline, 4, M_OPER);
-	CommandAdd(modinfo->handle, "TKL", _m_tkl, MAXPARA, M_OPER|M_SERVER);
+	CommandAdd(modinfo->handle, "GLINE", cmd_gline, 3, M_OPER);
+	CommandAdd(modinfo->handle, "SHUN", cmd_shun, 3, M_OPER);
+	CommandAdd(modinfo->handle, "TEMPSHUN", cmd_tempshun, 2, M_OPER);
+	CommandAdd(modinfo->handle, "ZLINE", cmd_zline, 3, M_OPER);
+	CommandAdd(modinfo->handle, "KLINE", cmd_kline, 3, M_OPER);
+	CommandAdd(modinfo->handle, "GZLINE", cmd_gzline, 3, M_OPER);
+	CommandAdd(modinfo->handle, "SPAMFILTER", cmd_spamfilter, 7, M_OPER);
+	CommandAdd(modinfo->handle, "ELINE", cmd_eline, 4, M_OPER);
+	CommandAdd(modinfo->handle, "TKL", _cmd_tkl, MAXPARA, M_OPER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -856,7 +856,7 @@ char *spamfilter_id(TKL *tk)
 ** parv[2] = for how long
 ** parv[3] = reason
 */
-CMD_FUNC(m_gline)
+CMD_FUNC(cmd_gline)
 {
 	if (IsServer(sptr))
 		return 0;
@@ -876,12 +876,12 @@ CMD_FUNC(m_gline)
 		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
 	}
 
-	return m_tkl_line(cptr, sptr, parc, parv, "G");
+	return cmd_tkl_line(cptr, sptr, parc, parv, "G");
 }
 
 /** GZLINE - Global zline.
  */
-CMD_FUNC(m_gzline)
+CMD_FUNC(cmd_gzline)
 {
 	if (IsServer(sptr))
 		return 0;
@@ -901,13 +901,13 @@ CMD_FUNC(m_gzline)
 		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
 	}
 
-	return m_tkl_line(cptr, sptr, parc, parv, "Z");
+	return cmd_tkl_line(cptr, sptr, parc, parv, "Z");
 
 }
 
 /** SHUN - Shun a user so it can no longer execute any meaningful commands.
  */
-CMD_FUNC(m_shun)
+CMD_FUNC(cmd_shun)
 {
 	if (IsServer(sptr))
 		return 0;
@@ -927,14 +927,14 @@ CMD_FUNC(m_shun)
 		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
 	}
 
-	return m_tkl_line(cptr, sptr, parc, parv, "s");
+	return cmd_tkl_line(cptr, sptr, parc, parv, "s");
 
 }
 
 /** TEMPSHUN - Temporarily shun a user so it can no longer execute
  *  any meaningful commands - until the user disconnects (session only).
  */
-CMD_FUNC(m_tempshun)
+CMD_FUNC(cmd_tempshun)
 {
 	Client *acptr;
 	char *comment = ((parc > 2) && !BadPtr(parv[2])) ? parv[2] : "no reason";
@@ -1006,7 +1006,7 @@ CMD_FUNC(m_tempshun)
 
 /** KLINE - Kill line (ban user from local server)
  */
-CMD_FUNC(m_kline)
+CMD_FUNC(cmd_kline)
 {
 	if (IsServer(sptr))
 		return 0;
@@ -1032,7 +1032,7 @@ CMD_FUNC(m_kline)
 		return 0;
 	}
 
-	return m_tkl_line(cptr, sptr, parc, parv, "k");
+	return cmd_tkl_line(cptr, sptr, parc, parv, "k");
 }
 
 /** Generate stats for '/GLINE -stats' and such */
@@ -1074,7 +1074,7 @@ void tkl_general_stats(Client *sptr)
  * This happens before any DNS/ident lookups have been done and
  * before any data has been processed (including no SSL/TLS handshake, etc.)
  */
-CMD_FUNC(m_zline)
+CMD_FUNC(cmd_zline)
 {
 	if (IsServer(sptr))
 		return 0;
@@ -1101,7 +1101,7 @@ CMD_FUNC(m_zline)
 		return 0;
 	}
 
-	return m_tkl_line(cptr, sptr, parc, parv, "z");
+	return cmd_tkl_line(cptr, sptr, parc, parv, "z");
 
 }
 
@@ -1149,11 +1149,11 @@ int ban_too_broad(char *usermask, char *hostmask)
 }
 
 /** Intermediate layer between user functions such as KLINE/GLINE
- * and the TKL layer (m_tkl).
+ * and the TKL layer (cmd_tkl).
  * This allows us doing some syntax checking and other helpful
  * things that are the same for many types of *LINES.
  */
-int m_tkl_line(Client *cptr, Client *sptr, int parc, char *parv[], char *type)
+int cmd_tkl_line(Client *cptr, Client *sptr, int parc, char *parv[], char *type)
 {
 	time_t secs;
 	int whattodo = 0;	/* 0 = add  1 = del */
@@ -1339,12 +1339,12 @@ int m_tkl_line(Client *cptr, Client *sptr, int parc, char *parv[], char *type)
 		}
 
 		/* call the tkl layer .. */
-		m_tkl(&me, &me, NULL, 9, tkllayer);
+		cmd_tkl(&me, &me, NULL, 9, tkllayer);
 	}
 	else
 	{
 		/* call the tkl layer .. */
-		m_tkl(&me, &me, NULL, 6, tkllayer);
+		cmd_tkl(&me, &me, NULL, 6, tkllayer);
 
 	}
 	return 0;
@@ -1383,7 +1383,7 @@ int eline_type_requires_ip(char *bantypes)
 	return 0;
 }
 
-CMD_FUNC(m_eline)
+CMD_FUNC(cmd_eline)
 {
 	time_t secs = 0;
 	int add = 1;
@@ -1550,13 +1550,13 @@ CMD_FUNC(m_eline)
 		tkllayer[8] = bantypes;
 		tkllayer[9] = reason;
 		/* call the tkl layer .. */
-		m_tkl(&me, &me, NULL, 10, tkllayer);
+		cmd_tkl(&me, &me, NULL, 10, tkllayer);
 	}
 	else
 	{
 		/* Remove ELINE */
 		/* call the tkl layer .. */
-		m_tkl(&me, &me, NULL, 10, tkllayer);
+		cmd_tkl(&me, &me, NULL, 10, tkllayer);
 
 	}
 	return 0;
@@ -1564,7 +1564,7 @@ CMD_FUNC(m_eline)
 
 
 
-/** Helper function for m_spamfilter, explaining usage. */
+/** Helper function for cmd_spamfilter, explaining usage. */
 int spamfilter_usage(Client *sptr)
 {
 	sendnotice(sptr, "Use: /spamfilter [add|del|remove|+|-] [-simple|-regex|-posix] [type] [action] [tkltime] [tklreason] [regex]");
@@ -1573,7 +1573,7 @@ int spamfilter_usage(Client *sptr)
 	return 0;
 }
 
-/** Helper function for m_spamfilter, explaining usage has changed. */
+/** Helper function for cmd_spamfilter, explaining usage has changed. */
 int spamfilter_new_usage(Client *cptr, Client *sptr, char *parv[])
 {
 	sendnotice(sptr, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes), "
@@ -1644,7 +1644,7 @@ int spamfilter_del_by_id(Client *sptr, char *id)
 	ircsnprintf(mo2, sizeof(mo2), "%lld", (long long)TStime());
 	tkllayer[7] = mo2; /* deletion time */
 
-	m_tkl(&me, &me, NULL, 12, tkllayer);
+	cmd_tkl(&me, &me, NULL, 12, tkllayer);
 
 	return 0;
 }
@@ -1655,7 +1655,7 @@ int spamfilter_del_by_id(Client *sptr, char *id)
  * /SPAMFILTER [add|del|remove|+|-] [match-type] [type] [action] [tkltime] [reason] [regex]
  *                   1                    2         3       4        5        6        7
  */
-CMD_FUNC(m_spamfilter)
+CMD_FUNC(cmd_spamfilter)
 {
 	int whattodo = 0;	/* 0 = add  1 = del */
 	char mo[32], mo2[32];
@@ -1824,7 +1824,7 @@ CMD_FUNC(m_spamfilter)
 		tkllayer[7] = mo2;
 	}
 
-	m_tkl(&me, &me, NULL, 12, tkllayer);
+	cmd_tkl(&me, &me, NULL, 12, tkllayer);
 
 	return 0;
 }
@@ -3570,8 +3570,8 @@ void _sendnotice_tkl_del(char *removed_by, TKL *tkl)
 	ircd_log(LOG_TKL, "%s", buf);
 }
 
-/** Add a TKL using the TKL layer. See m_tkl for parv[] and protocol documentation. */
-CMD_FUNC(m_tkl_add)
+/** Add a TKL using the TKL layer. See cmd_tkl for parv[] and protocol documentation. */
+CMD_FUNC(cmd_tkl_add)
 {
 	TKL *tkl;
 	int type;
@@ -3857,8 +3857,8 @@ CMD_FUNC(m_tkl_add)
 	return 0;
 }
 
-/** Delete a TKL using the TKL layer. See m_tkl for parv[] and protocol documentation. */
-CMD_FUNC(m_tkl_del)
+/** Delete a TKL using the TKL layer. See cmd_tkl for parv[] and protocol documentation. */
+CMD_FUNC(cmd_tkl_del)
 {
 	TKL *tkl;
 	int type;
@@ -3922,7 +3922,7 @@ CMD_FUNC(m_tkl_del)
 
 		if (parc < 9)
 		{
-			sendto_realops("[BUG] m_tkl called with bogus spamfilter removal request [f/F], from=%s, parc=%d",
+			sendto_realops("[BUG] cmd_tkl called with bogus spamfilter removal request [f/F], from=%s, parc=%d",
 				       sptr->name, parc);
 			return 0; /* bogus */
 		}
@@ -4014,11 +4014,11 @@ CMD_FUNC(m_tkl_del)
  * parv[11]:                                       match-string [C]
  *
  * [A] tkl reason field must be escaped by caller [eg: use unreal_encodespace()
- *     if m_tkl is called internally].
+ *     if cmd_tkl is called internally].
  * [B] match-type must be one of: regex, simple, posix.
  * [C] Could be a regex or a regular string with wildcards, depending on [B]
  */
-CMD_FUNC(_m_tkl)
+CMD_FUNC(_cmd_tkl)
 {
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
 		return 0;
@@ -4029,9 +4029,9 @@ CMD_FUNC(_m_tkl)
 	switch (*parv[1])
 	{
 		case '+':
-			return m_tkl_add(cptr, sptr, recv_mtags, parc, parv);
+			return cmd_tkl_add(cptr, sptr, recv_mtags, parc, parv);
 		case '-':
-			return m_tkl_del(cptr, sptr, recv_mtags, parc, parv);
+			return cmd_tkl_del(cptr, sptr, recv_mtags, parc, parv);
 		default:
 			break;
 	}
@@ -4138,7 +4138,7 @@ int _place_host_ban(Client *sptr, BanAction action, char *reason, long duration)
 			tkllayer[6] = mo;
 			tkllayer[7] = mo2;
 			tkllayer[8] = reason;
-			m_tkl(&me, &me, NULL, 9, tkllayer);
+			cmd_tkl(&me, &me, NULL, 9, tkllayer);
 			if ((action == BAN_ACT_SHUN) || (action == BAN_ACT_SOFT_SHUN))
 			{
 				find_shun(sptr);
@@ -4268,7 +4268,7 @@ int _join_viruschan(Client *sptr, TKL *tkl, int type)
  * 0 if not matched, non-0 if it should be blocked.
  * Return value can be FLUSH_BUFFER (-2) which means 'sptr' is
  * _NOT_ valid anymore so you should return immediately
- * (like from m_message, m_part, m_quit, etc).
+ * (like from cmd_message, cmd_part, cmd_quit, etc).
  */
 int _run_spamfilter(Client *sptr, char *str_in, int target, char *destination, int flags, TKL **rettkl)
 {

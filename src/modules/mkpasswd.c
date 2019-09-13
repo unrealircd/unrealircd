@@ -24,7 +24,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_mkpasswd);
+CMD_FUNC(cmd_mkpasswd);
 
 #define MSG_MKPASSWD 	"MKPASSWD"	
 
@@ -39,7 +39,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_MKPASSWD, m_mkpasswd, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_MKPASSWD, cmd_mkpasswd, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -55,10 +55,10 @@ MOD_UNLOAD()
 }
 
 /*
-** m_mkpasswd
+** cmd_mkpasswd
 **      parv[1] = password to encrypt
 */
-CMD_FUNC(m_mkpasswd)
+CMD_FUNC(cmd_mkpasswd)
 {
 	short	type;
 	char	*result = NULL;

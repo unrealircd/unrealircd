@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_names);
+CMD_FUNC(cmd_names);
 
 #define MSG_NAMES 	"NAMES"
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_NAMES, m_names, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_NAMES, cmd_names, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,18 +53,18 @@ MOD_UNLOAD()
 }
 
 /************************************************************************
- * m_names() - Added by Jto 27 Apr 1989
+ * cmd_names() - Added by Jto 27 Apr 1989
  * 12 Feb 2000 - geesh, time for a rewrite -lucas
  ************************************************************************/
 
 static char buf[BUFSIZE];
 
 /*
-** m_names
+** cmd_names
 **	parv[1] = channel
 */
 #define TRUNCATED_NAMES 64
-CMD_FUNC(m_names)
+CMD_FUNC(cmd_names)
 {
 	int multiprefix = (MyConnect(sptr) && HasCapability(sptr, "multi-prefix"));
 	int uhnames = (MyConnect(sptr) && HasCapability(sptr, "userhost-in-names")); // cache UHNAMES support

@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_kill);
+CMD_FUNC(cmd_kill);
 static char buf[BUFSIZE], buf2[BUFSIZE];
 
 /* Place includes here */
@@ -38,7 +38,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_KILL, m_kill, 2, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_KILL, cmd_kill, 2, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -58,11 +58,11 @@ MOD_UNLOAD()
 
 
 /*
-** m_kill
+** cmd_kill
 **	parv[1] = kill victim(s) - comma separated list
 **	parv[2] = kill path
 */
-CMD_FUNC(m_kill)
+CMD_FUNC(cmd_kill)
 {
 	Client *acptr;
 	char inpath[HOSTLEN * 2 + USERLEN + 5];

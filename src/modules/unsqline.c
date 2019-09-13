@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_unsqline);
+CMD_FUNC(cmd_unsqline);
 
 #define MSG_UNSQLINE    "UNSQLINE"      /* UNSQLINE */
 
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_UNSQLINE, m_unsqline, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_UNSQLINE, cmd_unsqline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,10 +53,10 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/* m_unsqline
+/* cmd_unsqline
 **	parv[1] = nickmask
 */
-CMD_FUNC(m_unsqline)
+CMD_FUNC(cmd_unsqline)
 {
 	char *tkllayer[6] = {
 		me.name,           /*0  server.name */
@@ -70,7 +70,7 @@ CMD_FUNC(m_unsqline)
 	if (parc < 2)
 		return 0;
 
-	m_tkl(&me, &me, NULL, 6, tkllayer);
+	cmd_tkl(&me, &me, NULL, 6, tkllayer);
 	
 	return 0;
 }

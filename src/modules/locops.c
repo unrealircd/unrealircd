@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_locops);
+CMD_FUNC(cmd_locops);
 
 #define MSG_LOCOPS 	"LOCOPS"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_LOCOPS, m_locops, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_LOCOPS, cmd_locops, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,10 +53,10 @@ MOD_UNLOAD()
 }
 
 /*
-** m_locops (write to opers who are +g currently online *this* server)
+** cmd_locops (write to opers who are +g currently online *this* server)
 **      parv[1] = message text
 */
-CMD_FUNC(m_locops)
+CMD_FUNC(cmd_locops)
 {
 	char *message;
 

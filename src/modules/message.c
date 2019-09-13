@@ -26,9 +26,9 @@ char *_StripControlCodes(unsigned char *text);
 
 int	ban_version(Client *sptr, char *text);
 
-CMD_FUNC(m_private);
-CMD_FUNC(m_notice);
-int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice);
+CMD_FUNC(cmd_private);
+CMD_FUNC(cmd_notice);
+int cmd_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice);
 int _can_send(Client *cptr, Channel *chptr, char **msgtext, char **errmsg, int notice);
 
 /* Place includes here */
@@ -57,8 +57,8 @@ MOD_TEST()
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_PRIVATE, m_private, 2, M_USER|M_SERVER|M_RESETIDLE|M_VIRUS);
-	CommandAdd(modinfo->handle, MSG_NOTICE, m_notice, 2, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_PRIVATE, cmd_private, 2, M_USER|M_SERVER|M_RESETIDLE|M_VIRUS);
+	CommandAdd(modinfo->handle, MSG_NOTICE, cmd_notice, 2, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -151,7 +151,7 @@ int ret;
 }
 
 /*
-** m_message (used in m_private() and m_notice())
+** cmd_message (used in cmd_private() and cmd_notice())
 ** the general function to deliver MSG's between users/channels
 **
 **	parv[1] = receiver list
@@ -161,7 +161,7 @@ int ret;
 ** rev argv 6/91
 **
 */
-int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice)
+int cmd_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice)
 {
 	Client *acptr;
 	Channel *chptr;
@@ -457,27 +457,27 @@ int m_message(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char
 }
 
 /*
-** m_private
+** cmd_private
 **	parv[1] = receiver list
 **	parv[2] = message text
 */
-CMD_FUNC(m_private)
+CMD_FUNC(cmd_private)
 {
-	return m_message(cptr, sptr, recv_mtags, parc, parv, 0);
+	return cmd_message(cptr, sptr, recv_mtags, parc, parv, 0);
 }
 
 /*
-** m_notice
+** cmd_notice
 **	parv[1] = receiver list
 **	parv[2] = notice text
 */
-CMD_FUNC(m_notice)
+CMD_FUNC(cmd_notice)
 {
-	return m_message(cptr, sptr, recv_mtags, parc, parv, 1);
+	return cmd_message(cptr, sptr, recv_mtags, parc, parv, 1);
 }
 
 /***********************************************************************
- * m_silence() - Added 19 May 1994 by Run.
+ * cmd_silence() - Added 19 May 1994 by Run.
  *
  ***********************************************************************/
 

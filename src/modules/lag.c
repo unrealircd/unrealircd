@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_lag);
+CMD_FUNC(cmd_lag);
 
 /* Place includes here */
 #define MSG_LAG         "LAG"   /* Lag detect */
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_LAG, m_lag, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_LAG, cmd_lag, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -54,11 +54,11 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/* m_lag (lag measure) - Stskeeps
+/* cmd_lag (lag measure) - Stskeeps
  * parv[1] = server to query
 */
 
-CMD_FUNC(m_lag)
+CMD_FUNC(cmd_lag)
 {
 	if (!ValidatePermissionsForPath("server:info:lag",sptr,NULL,NULL,NULL))
 	{

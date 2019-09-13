@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_silence);
+CMD_FUNC(cmd_silence);
 
 #define MSG_SILENCE 	"SILENCE"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SILENCE, m_silence, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_SILENCE, cmd_silence, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,7 +53,7 @@ MOD_UNLOAD()
 }
 
 /*
-** m_silence
+** cmd_silence
 ** From local client:
 **	parv[1] = mask (NULL sends the list)
 ** From remote client:
@@ -61,7 +61,7 @@ MOD_UNLOAD()
 **      parv[2] = mask
 */
 
-CMD_FUNC(m_silence)
+CMD_FUNC(cmd_silence)
 {
 	Link *lp;
 	Client *acptr;

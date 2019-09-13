@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_squit);
+CMD_FUNC(cmd_squit);
 
 #define MSG_SQUIT 	"SQUIT"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SQUIT, m_squit, 2, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SQUIT, cmd_squit, 2, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,11 +53,11 @@ MOD_UNLOAD()
 }
 
 /*
-** m_squit
+** cmd_squit
 **	parv[1] = server name
 **	parv[parc-1] = comment
 */
-CMD_FUNC(m_squit)
+CMD_FUNC(cmd_squit)
 {
 	char *server;
 	Client *acptr;

@@ -26,8 +26,8 @@
 void send_channel_modes(Client *cptr, Channel *chptr);
 void send_channel_modes_sjoin(Client *cptr, Channel *chptr);
 void send_channel_modes_sjoin3(Client *cptr, Channel *chptr);
-CMD_FUNC(m_server);
-CMD_FUNC(m_server_remote);
+CMD_FUNC(cmd_server);
+CMD_FUNC(cmd_server_remote);
 int _verify_link(Client *cptr, Client *sptr, char *servername, ConfigItem_link **link_out);
 void _send_protoctl_servers(Client *sptr, int response);
 void _send_server_message(Client *sptr);
@@ -63,8 +63,8 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
-	CommandAdd(modinfo->handle, "SID", m_server_remote, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SERVER, cmd_server, MAXPARA, M_UNREGISTERED|M_SERVER);
+	CommandAdd(modinfo->handle, "SID", cmd_server_remote, MAXPARA, M_SERVER);
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -81,7 +81,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int m_server_synch(Client *cptr, ConfigItem_link *conf);
+int cmd_server_synch(Client *cptr, ConfigItem_link *conf);
 
 /** Check deny version { } blocks.
  * NOTE: cptr will always be valid, but all the other values may be NULL or 0 !!!
@@ -452,7 +452,7 @@ skip_host_check:
 }
 
 /*
-** m_sid
+** cmd_sid
 **      parv[1] = servername
 **      parv[2] = hopcount
 **      parv[3] = sid
@@ -460,7 +460,7 @@ skip_host_check:
 */
 
 /*
-** m_server
+** cmd_server
 **	parv[1] = servername
 **      parv[2] = hopcount
 **      parv[3] = numeric { ignored }
@@ -470,7 +470,7 @@ skip_host_check:
 **
 **  Recode 2001 by Stskeeps
 */
-CMD_FUNC(m_server)
+CMD_FUNC(cmd_server)
 {
 	char *servername = NULL;	/* Pointer for servername */
  /*	char *password = NULL; */
@@ -604,17 +604,17 @@ CMD_FUNC(m_server)
 		fd_desc(cptr->local->fd, descbuf);
 
 		/* Start synch now */
-		if (m_server_synch(cptr, aconf) == FLUSH_BUFFER)
+		if (cmd_server_synch(cptr, aconf) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
 	}
 	else
 	{
-		return m_server_remote(cptr, sptr, recv_mtags, parc, parv);
+		return cmd_server_remote(cptr, sptr, recv_mtags, parc, parv);
 	}
 	return 0;
 }
 
-CMD_FUNC(m_server_remote)
+CMD_FUNC(cmd_server_remote)
 {
 	Client *acptr, *ocptr;
 	ConfigItem_link	*aconf;
@@ -887,7 +887,7 @@ void _broadcast_sinfo(Client *acptr, Client *to, Client *except)
 	}
 }
 
-int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
+int	cmd_server_synch(Client *cptr, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
 	Client		*acptr;
@@ -1034,7 +1034,7 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 			{
 				sendto_one(cptr, NULL, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name);
 #ifdef DEBUGMODE
-				ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to uplink '%s' with src %s...",
+				ircd_log(LOG_ERROR, "[EOSDBG] cmd_server_synch: sending to uplink '%s' with src %s...",
 					cptr->name, acptr->name);
 #endif
 			}
@@ -1097,7 +1097,7 @@ int	m_server_synch(Client *cptr, ConfigItem_link *aconf)
 	/* Send EOS (End Of Sync) to the just linked server... */
 	sendto_one(cptr, NULL, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name);
 #ifdef DEBUGMODE
-	ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to justlinked '%s' with src ME...",
+	ircd_log(LOG_ERROR, "[EOSDBG] cmd_server_synch: sending to justlinked '%s' with src ME...",
 			cptr->name);
 #endif
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, cptr);

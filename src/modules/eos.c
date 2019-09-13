@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_eos);
+CMD_FUNC(cmd_eos);
 
 #define MSG_EOS 	"EOS"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_EOS, m_eos, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_EOS, cmd_eos, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -59,15 +59,15 @@ MOD_UNLOAD()
  *          etc are introduced). Makes us able to know if a server is linked.
  * History: Added in beta18 (in cvs since 2003-08-11) by Syzop
  */
-CMD_FUNC(m_eos)
+CMD_FUNC(cmd_eos)
 {
 	if (!IsServer(sptr))
 		return 0;
 	sptr->serv->flags.synced = 1;
 	/* pass it on ^_- */
 #ifdef DEBUGMODE
-	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: got sync from %s (path:%s)", sptr->name, cptr->name);
-	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: broadcasting it back to everyone except route from %s", cptr->name);
+	ircd_log(LOG_ERROR, "[EOSDBG] cmd_eos: got sync from %s (path:%s)", sptr->name, cptr->name);
+	ircd_log(LOG_ERROR, "[EOSDBG] cmd_eos: broadcasting it back to everyone except route from %s", cptr->name);
 #endif
 	sendto_server(cptr, 0, 0, NULL, ":%s EOS", sptr->name);
 

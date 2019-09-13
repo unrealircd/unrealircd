@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_knock);
+CMD_FUNC(cmd_knock);
 
 #define MSG_KNOCK 	"KNOCK"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_KNOCK, m_knock, 2, M_USER);
+	CommandAdd(modinfo->handle, MSG_KNOCK, cmd_knock, 2, M_USER);
 	ISupportAdd(modinfo->handle, "KNOCK", NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -54,7 +54,7 @@ MOD_UNLOAD()
 }
 
 /*
-** m_knock
+** cmd_knock
 **	parv[1] - channel
 **	parv[2] - reason
 **
@@ -63,7 +63,7 @@ MOD_UNLOAD()
 ** (C) codemastr & Stskeeps
 ** 
 */
-CMD_FUNC(m_knock)
+CMD_FUNC(cmd_knock)
 {
 	Channel *chptr;
 	Hook *h;

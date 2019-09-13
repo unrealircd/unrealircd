@@ -23,7 +23,7 @@
 #include "unrealircd.h"
 
 /* Forward declarations */
-CMD_FUNC(m_join);
+CMD_FUNC(cmd_join);
 void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *mtags, int flags);
 int _do_join(Client *cptr, Client *sptr, int parc, char *parv[]);
 int _can_join(Client *cptr, Client *sptr, Channel *chptr, char *key, char *parv[]);
@@ -66,7 +66,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_JOIN, m_join, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_JOIN, cmd_join, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -156,7 +156,7 @@ int i=0,j=0;
 }
 
 /*
-** m_join
+** cmd_join
 **	parv[1] = channel
 **	parv[2] = channel password (key)
 **
@@ -166,7 +166,7 @@ int i=0,j=0;
 ** UnrealIRCd 4 and probably UnrealIRCd 3.2.something already do
 ** this, so this comment is mostly for services coders, I guess.
 */
-CMD_FUNC(m_join)
+CMD_FUNC(cmd_join)
 {
 	int r;
 
@@ -354,9 +354,9 @@ void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_
 }
 
 /** User request to join a channel.
- * This routine is normally called from m_join but can also be called from
+ * This routine is normally called from cmd_join but can also be called from
  * do_join->can_join->link module->do_join if the channel is 'linked' (chmode +L).
- * We therefore use a counter 'bouncedtimes' which is set to 0 in m_join,
+ * We therefore use a counter 'bouncedtimes' which is set to 0 in cmd_join,
  * increased every time we enter this loop and decreased anytime we leave the
  * loop. So be carefull not to use a simple 'return' after bouncedtimes++. -- Syzop
  */
@@ -441,7 +441,7 @@ int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
 	p = NULL;
 	if (parv[2])
 		key = strtoken(&p2, parv[2], ",");
-	parv[2] = NULL;		/* for m_names call later, parv[parc] must == NULL */
+	parv[2] = NULL;		/* for cmd_names call later, parv[parc] must == NULL */
 	for (name = strtoken(&p, jbuf, ","); name;
 	    key = (key) ? strtoken(&p2, NULL, ",") : NULL,
 	    name = strtoken(&p, NULL, ","))

@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_sqline);
+CMD_FUNC(cmd_sqline);
 
 /* Place includes here */
 #define MSG_SQLINE      "SQLINE"        /* SQLINE */
@@ -39,7 +39,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SQLINE, m_sqline, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SQLINE, cmd_sqline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -57,11 +57,11 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/* m_sqline
+/* cmd_sqline
  *	parv[1] = nickmask
  *	parv[2] = reason
  */
-CMD_FUNC(m_sqline)
+CMD_FUNC(cmd_sqline)
 {
 	char    mo[1024];
 	char *comment = (parc == 3) ? parv[2] : NULL;
@@ -83,5 +83,5 @@ CMD_FUNC(m_sqline)
 	ircsnprintf(mo, sizeof(mo), "%lld", (long long)TStime());
 	tkllayer[7] = mo;
         tkllayer[8] = comment ? comment : "no reason";
-        return m_tkl(&me, &me, NULL, 9, tkllayer);
+        return cmd_tkl(&me, &me, NULL, 9, tkllayer);
 }

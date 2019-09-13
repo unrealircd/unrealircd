@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_undccdeny);
+CMD_FUNC(cmd_undccdeny);
 
 #define MSG_UNDCCDENY 	"UNDCCDENY"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_UNDCCDENY, m_undccdeny, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_UNDCCDENY, cmd_undccdeny, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -55,7 +55,7 @@ MOD_UNLOAD()
 /* Remove a temporary dccdeny line
  * parv[1] - file/mask
  */
-CMD_FUNC(m_undccdeny)
+CMD_FUNC(cmd_undccdeny)
 {
 	ConfigItem_deny_dcc *p;
 	if (!MyUser(sptr))

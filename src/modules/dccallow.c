@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_dccallow);
+CMD_FUNC(cmd_dccallow);
 
 #define MSG_DCCALLOW 	"DCCALLOW"
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_DCCALLOW, m_dccallow, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_DCCALLOW, cmd_dccallow, 1, M_USER);
 	ISupportAdd(modinfo->handle, "USERIP", NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -53,11 +53,11 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/* m_dccallow:
+/* cmd_dccallow:
  * HISTORY:
  * Taken from bahamut 1.8.1
  */
-CMD_FUNC(m_dccallow)
+CMD_FUNC(cmd_dccallow)
 {
 	Link *lp;
 	char *p, *s;

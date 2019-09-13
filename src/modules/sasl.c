@@ -128,7 +128,7 @@ static const char *encode_puid(Client *client)
  * parv[2]: target PUID
  * parv[3]: ESVID
  */
-CMD_FUNC(m_svslogin)
+CMD_FUNC(cmd_svslogin)
 {
 	if (!SASL_SERVER || MyUser(sptr) || (parc < 3) || !parv[3])
 		return 0;
@@ -175,7 +175,7 @@ CMD_FUNC(m_svslogin)
  * parv[4]: data
  * parv[5]: out-of-bound data
  */
-CMD_FUNC(m_sasl)
+CMD_FUNC(cmd_sasl)
 {
 	if (!SASL_SERVER || MyUser(sptr) || (parc < 4) || !parv[4])
 		return 0;
@@ -240,7 +240,7 @@ CMD_FUNC(m_sasl)
  *
  * parv[1]: data
  */
-CMD_FUNC(m_authenticate)
+CMD_FUNC(cmd_authenticate)
 {
 	Client *agent_p = NULL;
 
@@ -406,9 +406,9 @@ MOD_INIT()
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	CommandAdd(modinfo->handle, MSG_SASL, m_sasl, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_SVSLOGIN, m_svslogin, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, m_authenticate, MAXPARA, M_UNREGISTERED|M_USER);
+	CommandAdd(modinfo->handle, MSG_SASL, cmd_sasl, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSLOGIN, cmd_svslogin, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, cmd_authenticate, MAXPARA, M_UNREGISTERED|M_USER);
 
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, sasl_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, sasl_quit);

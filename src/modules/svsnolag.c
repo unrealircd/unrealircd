@@ -21,8 +21,8 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svsnolag);
-CMD_FUNC(m_svs2nolag);
+CMD_FUNC(cmd_svsnolag);
+CMD_FUNC(cmd_svs2nolag);
 
 #define MSG_SVSNOLAG 	"SVSNOLAG"	
 #define MSG_SVS2NOLAG 	"SVS2NOLAG"	
@@ -38,8 +38,8 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSNOLAG, m_svsnolag, MAXPARA, M_SERVER);
-	CommandAdd(modinfo->handle, MSG_SVS2NOLAG, m_svs2nolag, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSNOLAG, cmd_svsnolag, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVS2NOLAG, cmd_svs2nolag, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -96,12 +96,12 @@ int do_svsnolag(Client *cptr, Client *sptr, int parc, char *parv[], int show_cha
 	return 0;
 }
 
-CMD_FUNC(m_svsnolag)
+CMD_FUNC(cmd_svsnolag)
 {
 	return do_svsnolag(cptr, sptr, parc, parv, 0);
 }
 
-CMD_FUNC(m_svs2nolag)
+CMD_FUNC(cmd_svs2nolag)
 {
 	return do_svsnolag(cptr, sptr, parc, parv, 1);
 }

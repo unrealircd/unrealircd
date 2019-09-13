@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svsfline);
+CMD_FUNC(cmd_svsfline);
 
 #define MSG_SVSFLINE 	"SVSFLINE"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSFLINE, m_svsfline, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSFLINE, cmd_svsfline, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -52,7 +52,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-CMD_FUNC(m_svsfline)
+CMD_FUNC(cmd_svsfline)
 {
 	if (parc < 2)
 		return 0;

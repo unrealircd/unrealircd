@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_invite);
+CMD_FUNC(cmd_invite);
 
 #define MSG_INVITE 	"INVITE"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_INVITE, m_invite, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_INVITE, cmd_invite, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -67,11 +67,11 @@ int send_invite_list(Client *sptr)
 }
 
 /*
-** m_invite
+** cmd_invite
 **	parv[1] - user to invite
 **	parv[2] - channel number
 */
-CMD_FUNC(m_invite)
+CMD_FUNC(cmd_invite)
 {
 	Client *acptr;
 	Channel *chptr;

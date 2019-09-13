@@ -34,8 +34,8 @@ ModuleHeader MOD_HEADER
 #define MSG_NICK 	"NICK"
 
 /* Forward declarations */
-CMD_FUNC(m_nick);
-CMD_FUNC(m_uid);
+CMD_FUNC(cmd_nick);
+CMD_FUNC(cmd_uid);
 int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 int	AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username);
 int check_client(Client *cptr, char *username);
@@ -49,8 +49,8 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_NICK, m_nick, MAXPARA, M_USER|M_SERVER|M_UNREGISTERED);
-	CommandAdd(modinfo->handle, "UID", m_uid, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_NICK, cmd_nick, MAXPARA, M_USER|M_SERVER|M_UNREGISTERED);
+	CommandAdd(modinfo->handle, "UID", cmd_uid, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -241,7 +241,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 }
 
 /*
-** m_uid
+** cmd_uid
 **	parv[1] = nickname
 **      parv[2] = hopcount
 **      parv[3] = timestamp
@@ -258,7 +258,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 ** Technical documentation is available at:
 ** https://www.unrealircd.org/docs/Server_protocol:UID_command
 */
-CMD_FUNC(m_uid)
+CMD_FUNC(cmd_uid)
 {
 	TKL *tklban;
 	int ishold;
@@ -540,7 +540,7 @@ nickkill2done:
 }
 
 /*
-** m_nick
+** cmd_nick
 **	parv[1] = nickname
 **  if from new client  -taz
 **	parv[2] = nick password
@@ -562,7 +562,7 @@ nickkill2done:
 **      parv[10] = ip
 **      parv[11] = info
 */
-CMD_FUNC(m_nick)
+CMD_FUNC(cmd_nick)
 {
 	TKL *tklban;
 	int ishold;

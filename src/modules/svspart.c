@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svspart);
+CMD_FUNC(cmd_svspart);
 
 #define MSG_SVSPART       "SVSPART"
 
@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSPART, m_svspart, 3, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSPART, cmd_svspart, 3, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -52,14 +52,14 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;	
 }
 
-/* m_svspart() - Lamego - Wed Jul 21 20:04:48 1999
+/* cmd_svspart() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.
   Modified for PART by Stskeeps
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
 	parv[3] - comment
 */
-CMD_FUNC(m_svspart)
+CMD_FUNC(cmd_svspart)
 {
 	Client *acptr;
 	char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);

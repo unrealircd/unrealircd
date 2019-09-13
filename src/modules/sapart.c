@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_sapart);
+CMD_FUNC(cmd_sapart);
 
 #define MSG_SAPART 	"SAPART"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SAPART, m_sapart, 3, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SAPART, cmd_sapart, 3, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -52,7 +52,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/* m_sapart() - Lamego - Wed Jul 21 20:04:48 1999
+/* cmd_sapart() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.
    Coded for Sadmin by Stskeeps
    also Modified by NiQuiL (niquil@programmer.net)
@@ -61,7 +61,7 @@ MOD_UNLOAD()
 	parv[3] - comment
 */
 
-CMD_FUNC(m_sapart)
+CMD_FUNC(cmd_sapart)
 {
 	Client *acptr;
 	Channel *chptr;
@@ -95,7 +95,7 @@ CMD_FUNC(m_sapart)
 
 	if (MyUser(acptr))
 	{
-		/* Now works like m_join */
+		/* Now works like cmd_join */
 		*jbuf = 0;
 
 		for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p,

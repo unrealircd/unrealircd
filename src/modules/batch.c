@@ -32,7 +32,7 @@ ModuleHeader MOD_HEADER
 	};
 
 /* Forward declarations */
-CMD_FUNC(m_batch);
+CMD_FUNC(cmd_batch);
 
 /* Variables */
 long CAP_BATCH = 0L;
@@ -57,7 +57,7 @@ MOD_INIT()
 	mtag.clicap_handler = c;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
-	CommandAdd(modinfo->handle, "BATCH", m_batch, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, "BATCH", cmd_batch, MAXPARA, M_USER|M_SERVER);
 	return MOD_SUCCESS;
 }
 
@@ -75,7 +75,7 @@ MOD_UNLOAD()
  * As an intra-server command:
  * :sender BATCH target +xxxxx [etc etc etc]
  */
-CMD_FUNC(m_batch)
+CMD_FUNC(cmd_batch)
 {
 	Client *acptr;
 	char buf[512];

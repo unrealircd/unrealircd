@@ -1687,7 +1687,7 @@ void postconf_fixes(void)
 
 /* Needed for set::options::allow-part-if-shunned,
  * we can't just make it M_SHUN and do a ALLOW_PART_IF_SHUNNED in
- * m_part itself because that will also block internal calls (like sapart). -- Syzop
+ * cmd_part itself because that will also block internal calls (like sapart). -- Syzop
  */
 static void do_weird_shun_stuff()
 {
@@ -2938,7 +2938,7 @@ ConfigItem_ban *Find_ban(Client *sptr, char *host, short type)
 
 /** Find a ban of type CONF_BAN_*, which is currently only
  * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
- * This is the extended version, only used by m_svsnline.
+ * This is the extended version, only used by cmd_svsnline.
  */
 ConfigItem_ban 	*Find_banEx(Client *sptr, char *host, short type, short type2)
 {
@@ -9047,7 +9047,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 	if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
 		safestrdup(alias->nick, alias->alias);
 	}
-	AliasAdd(NULL, alias->alias, m_alias, 1, M_USER|M_ALIAS);
+	AliasAdd(NULL, alias->alias, cmd_alias, 1, M_USER|M_ALIAS);
 
 	AddListItem(alias, conf_alias);
 	return 0;

@@ -17,7 +17,7 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
     };
 
-CMD_FUNC(m_md);
+CMD_FUNC(cmd_md);
 void _broadcast_md_client(ModDataInfo *mdi, Client *acptr, ModData *md);
 void _broadcast_md_channel(ModDataInfo *mdi, Channel *chptr, ModData *md);
 void _broadcast_md_member(ModDataInfo *mdi, Channel *chptr, Member *m, ModData *md);
@@ -57,7 +57,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, "MD", m_md, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, "MD", cmd_md, MAXPARA, M_SERVER);
 	return MOD_SUCCESS;
 }
 
@@ -86,7 +86,7 @@ MOD_UNLOAD()
  * Module API documentation (if writing an UnrealIRCd module):
  * https://www.unrealircd.org/docs/Dev:Module_Storage
  */
-CMD_FUNC(m_md)
+CMD_FUNC(cmd_md)
 {
 	char *type, *objname, *varname, *value;
 	ModDataInfo *md;

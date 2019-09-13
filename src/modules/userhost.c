@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_userhost);
+CMD_FUNC(cmd_userhost);
 
 #define MSG_USERHOST 	"USERHOST"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_USERHOST, m_userhost, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_USERHOST, cmd_userhost, 1, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -53,12 +53,12 @@ MOD_UNLOAD()
 }
 
 /*
- * m_userhost added by Darren Reed 13/8/91 to aid clients and reduce
+ * cmd_userhost added by Darren Reed 13/8/91 to aid clients and reduce
  * the need for complicated requests like WHOIS. It returns user/host
  * information only (no spurious AWAY labels or channels).
  * Re-written by Dianora 1999
  */
-CMD_FUNC(m_userhost)
+CMD_FUNC(cmd_userhost)
 {
 	char *p;		/* scratch end pointer */
 	char *cn;		/* current name */

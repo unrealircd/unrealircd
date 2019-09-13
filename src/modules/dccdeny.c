@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_dccdeny);
+CMD_FUNC(cmd_dccdeny);
 
 #define MSG_DCCDENY 	"DCCDENY"	
 
@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_DCCDENY, m_dccdeny, 2, M_USER);
+	CommandAdd(modinfo->handle, MSG_DCCDENY, cmd_dccdeny, 2, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -57,7 +57,7 @@ MOD_UNLOAD()
  * parv[1] - file
  * parv[2] - reason
  */
-CMD_FUNC(m_dccdeny)
+CMD_FUNC(cmd_dccdeny)
 {
 	if (!MyUser(sptr))
 		return 0;

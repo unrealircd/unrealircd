@@ -24,7 +24,7 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(m_svsnoop);
+CMD_FUNC(cmd_svsnoop);
 
 #define MSG_SVSNOOP 	"SVSNOOP"	
 
@@ -40,7 +40,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSNOOP, m_svsnoop, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSNOOP, cmd_svsnoop, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -55,7 +55,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-CMD_FUNC(m_svsnoop)
+CMD_FUNC(cmd_svsnoop)
 {
 	Client *acptr;
 
