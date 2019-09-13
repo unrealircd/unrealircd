@@ -236,8 +236,6 @@ extern void report_error(char *, Client *);
 extern void set_non_blocking(int, Client *);
 extern int setup_ping();
 
-extern void start_auth(Client *);
-
 extern void set_channel_mlock(Client *, Client *, Channel *, const char *, int);
 
 extern void restart(char *);
@@ -506,7 +504,6 @@ extern u_char getrandom8();
 extern uint16_t getrandom16();
 extern uint32_t getrandom32();
 extern void gen_random_alnum(char *buf, int numbytes);
-extern void ident_failed(Client *cptr);
 
 extern MODVAR char extchmstr[4][64];
 
@@ -768,7 +765,6 @@ extern void remove_oper_privileges(Client *sptr, int broadcast_mode_change);
 extern int client_starttls(Client *acptr);
 extern void start_server_handshake(Client *cptr);
 extern void reject_insecure_server(Client *cptr);
-extern void ident_failed(Client *cptr);
 extern void report_crash(void);
 extern int inet_pton4(const char *src, unsigned char *dst);
 extern int inet_pton6(const char *src, unsigned char *dst);

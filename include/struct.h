@@ -945,7 +945,6 @@ struct LocalClient {
 	time_t nexttarget;		/**< Next time that a new target will be allowed (msg/notice/invite) */
 	time_t nextnick;		/**< Time the next nick change will be allowed */
 	u_char targets[MAXCCUSERS];	/**< Hash values of targets for target limiting */
-	char buffer[BUFSIZE];		/**< Incoming message buffer */
 	short lastsq;			/**< # of 2k blocks when sendqueued called last */
 	dbuf sendQ;			/**< Outgoing send queue (data to be sent) */
 	dbuf recvQ;			/**< Incoming receive queue (incoming data yet to be parsed) */

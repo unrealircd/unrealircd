@@ -419,8 +419,6 @@ EVENT(check_unknowns)
 			(void)exit_client(cptr, cptr, &me, NULL, "Registration Timeout");
 			continue;
 		}
-		if (IsIdentLookup(cptr) && ((TStime() - cptr->local->firsttime) > IDENT_CONNECT_TIMEOUT))
-			ident_failed(cptr);
 	}
 }
 

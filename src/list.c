@@ -125,7 +125,6 @@ Client *make_client(Client *from, Client *servr)
 		cptr->local->class = NULL;
 		cptr->local->passwd = NULL;
 		cptr->local->sockhost[0] = '\0';
-		cptr->local->buffer[0] = '\0';
 		cptr->local->authfd = -1;
 		cptr->local->fd = -1;
 

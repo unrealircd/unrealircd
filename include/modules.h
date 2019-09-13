@@ -918,6 +918,7 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_NEW_MESSAGE 100
 #define HOOKTYPE_IS_HANDSHAKE_FINISHED 101
 #define HOOKTYPE_PRE_LOCAL_QUIT_CHAN 102
+#define HOOKTYPE_IDENT_LOOKUP 103
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -1026,6 +1027,7 @@ int hooktype_post_command(Client *from, MessageTag *mtags, char *buf);
 void hooktype_new_message(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 int hooktype_is_handshake_finished(Client *acptr);
 char *hooktype_pre_local_quit_chan(Client *sptr, Channel *chptr, char *comment);
+int hooktype_ident_lookup(Client *acptr);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
@@ -1130,7 +1132,9 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_PRE_COMMAND) && !ValidateHook(hooktype_pre_command, func)) || \
         ((hooktype == HOOKTYPE_POST_COMMAND) && !ValidateHook(hooktype_post_command, func)) || \
         ((hooktype == HOOKTYPE_NEW_MESSAGE) && !ValidateHook(hooktype_new_message, func)) || \
-        ((hooktype == HOOKTYPE_IS_HANDSHAKE_FINISHED) && !ValidateHook(hooktype_is_handshake_finished, func)) ) \
+        ((hooktype == HOOKTYPE_IS_HANDSHAKE_FINISHED) && !ValidateHook(hooktype_is_handshake_finished, func)) || \
+        ((hooktype == HOOKTYPE_PRE_LOCAL_QUIT_CHAN) && !ValidateHook(hooktype_pre_local_quit_chan, func)) || \
+        ((hooktype == HOOKTYPE_IDENT_LOOKUP) && !ValidateHook(hooktype_ident_lookup, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
