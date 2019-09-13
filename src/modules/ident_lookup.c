@@ -221,11 +221,11 @@ static char *ident_lookup_parse(Client *acptr, char *buf)
 	/* Username */
 	// A) Skip any ~ or ^ at the start
 	for (; *buf; buf++)
-		if (!strchr("~^", *buf))
+		if (!strchr("~^", *buf) && (*buf > 32))
 			break;
 	// B) Stop at the end, IOTW stop at newline, space, etc.
 	for (p=buf; *p; p++)
-		if (strchr("\n\r@: ", *p))
+		if (strchr("\n\r@:", *p) || (*p <= 32))
 		{
 			*p = '\0';
 			break;
