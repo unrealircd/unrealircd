@@ -247,6 +247,20 @@ static char *validate_mod_header(ModuleHeader *mod_header)
 	return NULL; /* SUCCESS */
 }
 
+int module_already_in_testing(char *relpath)
+{
+	Module *m;
+	for (m = Modules; m; m = m->next)
+	{
+		if (!(m->options & MOD_OPT_PERM) &&
+		    (!(m->flags & MODFLAG_TESTING) || (m->flags & MODFLAG_DELAYED)))
+			continue;
+		if (!strcmp(m->relpath, relpath))
+			return 1;
+	}
+	return 0;
+}
+
 /*
  * Returns an error if insucessful .. yes NULL is OK! 
 */
@@ -264,7 +278,7 @@ char  *Module_Create(char *path_)
 	char    *Mod_Version;
 	unsigned int *compiler_version;
 	static char 	errorbuf[1024];
-	char 		*path, *tmppath;
+	char 		*path, *relpath, *tmppath;
 	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
 	char		*reterr;
@@ -275,6 +289,10 @@ char  *Module_Create(char *path_)
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s", path_));
 
 	path = Module_TransformPath(path_);
+
+	relpath = Module_GetRelPath(path);
+	if (module_already_in_testing(relpath))
+		return 0;
 
 	tmppath = unreal_mktemp(TMPDIR, unreal_getmodfilename(path));
 	if (!tmppath)
@@ -366,7 +384,7 @@ char  *Module_Create(char *path_)
 		mod->tmp_file = strdup(tmppath);
 		mod->mod_sys_version = modsys_ver;
 		mod->compiler_version = compiler_version ? *compiler_version : 0;
-		mod->relpath = strdup(Module_GetRelPath(path));
+		mod->relpath = strdup(relpath);
 
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
 		if (!Mod_Init)
