@@ -20,7 +20,7 @@
 
 ModuleHeader MOD_HEADER(join)
 = {
-	"chanmodes/extbans/join",
+	"extbans/join",
 	"4.2",
 	"Extban ~j - prevent join only",
 	"UnrealIRCd Team",

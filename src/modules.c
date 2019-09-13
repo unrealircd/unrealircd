@@ -223,14 +223,25 @@ char *Module_GetRelPath(char *fullpath)
 /** Validate a modules' ModuleHeader.
  * @returns Error message is returned, or NULL if everything is OK.
  */
-static char *validate_mod_header(ModuleHeader *mod_header)
+static char *validate_mod_header(char *relpath, ModuleHeader *mod_header)
 {
 	char *p;
+	static char buf[256];
 
 	if (!mod_header->name || !mod_header->version || !mod_header->author || !mod_header->description)
 		return "NULL values encountered in Mod_Header struct members";
 
 	/* Validate module name */
+	if (strcmp(mod_header->name, relpath))
+	{
+		snprintf(buf, sizeof(buf), "Module has path '%s' but uses name '%s' in MOD_HEADER(). These should be the same!",
+			relpath, mod_header->name);
+		return buf;
+	}
+	/* This too, just to be sure.. we never ever want other characters
+	 * than these, since it may break the S2S SMOD command or /MODULE
+	 * output etc.
+	 */
 	for (p = mod_header->name; *p; p++)
 		if (!isalnum(*p) && !strchr("._-/", *p))
 			return "ModuleHeader.name contains illegal characters (must be: a-zA-Z0-9._-/)";
@@ -368,7 +379,7 @@ char  *Module_Create(char *path_)
 			deletetmp(tmppath);
 			return(errorbuf);
 		}
-		if ((reterr = validate_mod_header(mod_header)))
+		if ((reterr = validate_mod_header(relpath, mod_header)))
 		{
 			irc_dlclose(Mod);
 			deletetmp(tmppath);

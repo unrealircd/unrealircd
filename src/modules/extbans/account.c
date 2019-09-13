@@ -20,7 +20,7 @@
 
 ModuleHeader MOD_HEADER(account)
 = {
-	"chanmodes/extbans/account",
+	"extbans/account",
 	"4.2",
 	"ExtBan ~a - Ban/exempt by services account name",
 	"UnrealIRCd Team",

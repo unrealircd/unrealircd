@@ -20,7 +20,7 @@
 
 ModuleHeader MOD_HEADER(operclass)
 = {
-	"chanmodes/extbans/operclass",
+	"extbans/operclass",
 	"4.2",
 	"ExtBan ~O - Ban/exempt operclass",
 	"UnrealIRCd Team",

@@ -22,7 +22,7 @@
 #define MAX_EB_LEN 128 // Max extban length
 
 ModuleHeader MOD_HEADER(link) = {
-	"link",
+	"chanmodes/link",
 	"5.0",
 	"Channel Mode +L",
 	"UnrealIRCd Team",

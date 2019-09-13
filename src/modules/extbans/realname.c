@@ -20,7 +20,7 @@
 
 ModuleHeader MOD_HEADER(realname)
 = {
-	"chanmodes/extbans/realname",
+	"extbans/realname",
 	"4.2",
 	"ExtBan ~r - Ban based on realname/gecos field",
 	"UnrealIRCd Team",

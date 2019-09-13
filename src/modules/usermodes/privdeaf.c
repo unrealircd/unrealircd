@@ -7,7 +7,7 @@
 
 ModuleHeader MOD_HEADER(privdeaf)
 = {
-	"privdeaf",
+	"usermodes/privdeaf",
 	"1.2",
 	"Private Messages Deaf (+D) -- by Syzop",
 	"UnrealIRCd Team",

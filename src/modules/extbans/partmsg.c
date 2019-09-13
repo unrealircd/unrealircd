@@ -21,7 +21,7 @@
 
 ModuleHeader MOD_HEADER(partmsg)
 = {
-	"chanmodes/extbans/partmsg",
+	"extbans/partmsg",
 	"4.2",
 	"ExtBan ~p - Ban/exempt Part/Quit message",
 	"UnrealIRCd Team",

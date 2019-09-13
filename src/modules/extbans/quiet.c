@@ -20,7 +20,7 @@
 
 ModuleHeader MOD_HEADER(quiet)
 = {
-	"chanmodes/extbans/quiet",
+	"extbans/quiet",
 	"4.2",
 	"ExtBan ~q - prevent messages only (quiet)",
 	"UnrealIRCd Team",

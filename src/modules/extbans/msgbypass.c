@@ -20,7 +20,7 @@
 
 ModuleHeader MOD_HEADER(msgbypass)
 = {
-	"chanmodes/extbans/msgbypass",
+	"extbans/msgbypass",
 	"4.2",
 	"ExtBan ~m - bypass +m/+n/+c/+S/+T (msgbypass)",
 	"UnrealIRCd Team",

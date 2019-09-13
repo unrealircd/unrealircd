@@ -47,7 +47,7 @@
 
 ModuleHeader MOD_HEADER(timedban)
   = {
-	"timedban",
+	"extbans/timedban",
 	"1.0",
 	"ExtBan ~t: automatically removed timed bans",
 	"UnrealIRCd Team",

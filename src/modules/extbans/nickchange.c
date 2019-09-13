@@ -20,7 +20,7 @@
 
 ModuleHeader MOD_HEADER(nickchange)
 = {
-	"chanmodes/extbans/nickchange",
+	"extbans/nickchange",
 	"4.2",
 	"ExtBan ~n - prevent nick-changes only",
 	"UnrealIRCd Team",

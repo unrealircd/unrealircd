@@ -20,7 +20,7 @@
 
 ModuleHeader MOD_HEADER(inchannel)
 = {
-	"chanmodes/extbans/inchannel",
+	"extbans/inchannel",
 	"4.2",
 	"ExtBan ~c - banned when in specified channel",
 	"UnrealIRCd Team",
