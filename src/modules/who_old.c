@@ -796,7 +796,7 @@ static void send_who_reply(Client *sptr, Client *acptr,
 		     acptr->info                 /* realname */
 		     );
 	}
-	free(stat);
+	safe_free(stat);
 }
 
 static char *first_visible_channel(Client *sptr, Client *acptr, int *flg)

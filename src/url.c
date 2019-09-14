@@ -180,7 +180,7 @@ char *download_file(const char *url, char **error)
 	if (!curl)
 	{
 		if (file)
-			free(file);
+			safe_free(file);
 		strlcpy(errorbuf, "curl_easy_init() failed", sizeof(errorbuf));
 		*error = errorbuf;
 		return NULL;
@@ -191,7 +191,7 @@ char *download_file(const char *url, char **error)
 	{
 		snprintf(errorbuf, CURL_ERROR_SIZE, "Cannot write to %s: %s", tmp, strerror(errno));
 		if (file)
-			free(file);
+			safe_free(file);
 		*error = errorbuf;
 		return NULL;
 	}
@@ -224,7 +224,7 @@ char *download_file(const char *url, char **error)
 	res = curl_easy_perform(curl);
 	fclose(fd);
 	if (file)
-		free(file);
+		safe_free(file);
 	if (res == CURLE_OK)
 	{
 		long last_mod;
@@ -295,8 +295,8 @@ static void url_check_multi_handles(void)
 				remove(handle->filename);
 			}
 
-			free(handle->url);
-			free(handle);
+			safe_free(handle->url);
+			safe_free(handle);
 			curl_multi_remove_handle(multihandle, easyhand);
 
 			/* NOTE: after curl_multi_remove_handle() you cannot use

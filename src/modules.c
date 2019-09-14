@@ -54,18 +54,21 @@ Module *Module_make(ModuleHeader *header,
        );
 
 #ifdef UNDERSCORE
-void *obsd_dlsym(void *handle, char *symbol) {
-    size_t buflen = strlen(symbol) + 2;
-    char *obsdsymbol = safe_alloc(buflen);
-    void *symaddr = NULL;
+/* dlsym for OpenBSD */
+void *obsd_dlsym(void *handle, char *symbol)
+{
+	size_t buflen = strlen(symbol) + 2;
+	char *obsdsymbol = safe_alloc(buflen);
+	void *symaddr = NULL;
 
-    if (obsdsymbol) {
-       ircsnprintf(obsdsymbol, buflen, "_%s", symbol);
-       symaddr = dlsym(handle, obsdsymbol);
-       free(obsdsymbol);
-    }
+	if (obsdsymbol)
+	{
+		ircsnprintf(obsdsymbol, buflen, "_%s", symbol);
+		symaddr = dlsym(handle, obsdsymbol);
+		safe_free(obsdsymbol);
+	}
 
-    return symaddr;
+	return symaddr;
 }
 #endif
 

@@ -682,8 +682,8 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			edit.dwCookie = HandleToUlong(stream);
 			edit.pfnCallback = SplitIt;
 			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMIN, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
-			free(RTFString);	
-			free(stream);
+			safe_free(RTFString);
+			safe_free(stream);
 			return TRUE;
 		}
 
@@ -771,9 +771,9 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 				SendMessage(hWnd, EM_STREAMIN, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
 				close(fd);
 				RTFBuf = NULL;
-				free(buffer);
-				free(string);
-				free(stream);
+				safe_free(buffer);
+				safe_free(string);
+				safe_free(stream);
 			}
 			return TRUE;
 		}

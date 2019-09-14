@@ -237,10 +237,10 @@ ISupport *ISupportAdd(Module *module, const char *token, const char *value)
 void ISupportDel(ISupport *isupport)
 {
 	DelListItem(isupport, ISupports);
-	free(isupport->token);
+	safe_free(isupport->token);
 	if (isupport->value)
-		free(isupport->value);
-	free(isupport);
+		safe_free(isupport->value);
+	safe_free(isupport);
 	make_isupportstrings();
 }
 

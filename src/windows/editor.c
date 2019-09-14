@@ -372,9 +372,9 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				SendMessage(hWnd, EM_EMPTYUNDOBUFFER, 0, 0);
 				close(fd);
 				RTFBuf = NULL;
-				free(buffer);
-				free(string);
-				free(stream);
+				safe_free(buffer);
+				safe_free(string);
+				safe_free(stream);
 				hClip = SetClipboardViewer(hDlg);
 				if (SendMessage(hWnd, EM_CANPASTE, 0, 0)) 
 					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_PASTE, (LPARAM)MAKELONG(TRUE,0));
@@ -663,7 +663,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				edit.pfnCallback = BufferIt;
 				SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMOUT, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
 				RTFToIRC(fd, RTFBuf, strlen(RTFBuf));
-				free(RTFBuf);
+				safe_free(RTFBuf);
 				RTFBuf = NULL;
 				SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETMODIFY, (WPARAM)FALSE, 0);
 	

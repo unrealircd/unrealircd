@@ -263,7 +263,7 @@ CMD_FUNC(cmd_sajoin)
 				mode_args[2] = 0;
 				(void)do_mode(chptr, &me, acptr, NULL, 3, mode_args, 0, 1);
 				sajoinmode = 0;
-				free(mode_args[0]);
+				safe_free(mode_args[0]);
 			}
 			free_message_tags(mtags);
 			did_anything = 1;

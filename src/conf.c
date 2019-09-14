@@ -461,7 +461,7 @@ long config_checkval(char *orig, unsigned short flags) {
 		}
 		ret += atoi(sz+1)*mfactor;
 	}
-	free(value);
+	safe_free(value);
 	return ret;
 }
 
@@ -551,7 +551,7 @@ void conf_channelmodes(char *modes, struct ChMode *store, int warn)
 		}
 	}
 	if (parambuf)
-		free(parambuf);
+		safe_free(parambuf);
 }
 
 void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size)
@@ -768,7 +768,7 @@ ConfigFile *config_load(char *filename)
 	{
 		config_error("Error reading \"%s\": %s\n", filename,
 			ret == -1 ? strerror(errno) : strerror(EFAULT));
-		free(buf);
+		safe_free(buf);
 		close(fd);
 		return NULL;
 	}
@@ -777,7 +777,7 @@ ConfigFile *config_load(char *filename)
 	close(fd);
 	add_entropy_configfile(&sb, buf);
 	cfptr = config_parse(filename, buf);
-	free(buf);
+	safe_free(buf);
 	return cfptr;
 }
 
@@ -791,8 +791,8 @@ void config_free(ConfigFile *cfptr)
 		if (cfptr->cf_entries)
 			config_entry_free(cfptr->cf_entries);
 		if (cfptr->cf_filename)
-			free(cfptr->cf_filename);
-		free(cfptr);
+			safe_free(cfptr->cf_filename);
+		safe_free(cfptr);
 	}
 }
 
@@ -1179,10 +1179,10 @@ static void config_entry_free(ConfigEntry *ceptr)
 		if (ceptr->ce_entries)
 			config_entry_free(ceptr->ce_entries);
 		if (ceptr->ce_varname)
-			free(ceptr->ce_varname);
+			safe_free(ceptr->ce_varname);
 		if (ceptr->ce_vardata)
-			free(ceptr->ce_vardata);
-		free(ceptr);
+			safe_free(ceptr->ce_vardata);
+		safe_free(ceptr);
 	}
 }
 
@@ -3144,7 +3144,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 
 		add_include(path, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		ret = load_conf(path, path);
-		free(path);
+		safe_free(path);
 
 	}
 	else
@@ -3167,7 +3167,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 
 			add_include(path, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			ret = load_conf(path, path);
-			free(path);
+			safe_free(path);
 			if (ret < 0)
 				break;
 		}
@@ -6357,7 +6357,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else {
 		int value;
-		free(ca); /* ca isn't used, modules have their own list. */
+		safe_free(ca); /* ca isn't used, modules have their own list. */
 		for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 		{
 			value = (*(h->func.intfunc))(conf,ce,CONFIG_BAN);
@@ -9779,7 +9779,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 		char *urlfile = url_getfilename(url);
 		char *file_basename = unreal_getfilename(urlfile);
 		char *tmp = unreal_mktemp(TMPDIR, file_basename ? file_basename : "download.conf");
-		free(urlfile);
+		safe_free(urlfile);
 
 		if (cached)
 		{
@@ -10021,7 +10021,7 @@ int remote_include(ConfigEntry *ce)
 		}
 		add_remote_include(file, url, 0, NULL, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		ret = load_conf(file, url);
-		free(file);
+		safe_free(file);
 		return ret;
 	}
 	else
@@ -10149,15 +10149,15 @@ void unload_notloaded_includes(void)
 				{
 					remove(inc->file);
 				}
-				free(inc->url);
+				safe_free(inc->url);
 				if (inc->errorbuf)
-					free(inc->errorbuf);
+					safe_free(inc->errorbuf);
 			}
 #endif
-			free(inc->file);
-			free(inc->included_from);
+			safe_free(inc->file);
+			safe_free(inc->included_from);
 			DelListItem(inc, conf_include);
-			free(inc);
+			safe_free(inc);
 		}
 	}
 }
@@ -10183,15 +10183,15 @@ void unload_loaded_includes(void)
 				{
 					remove(inc->file);
 				}
-				free(inc->url);
+				safe_free(inc->url);
 				if (inc->errorbuf)
-					free(inc->errorbuf);
+					safe_free(inc->errorbuf);
 			}
 #endif
-			free(inc->file);
-			free(inc->included_from);
+			safe_free(inc->file);
+			safe_free(inc->included_from);
 			DelListItem(inc, conf_include);
-			free(inc);
+			safe_free(inc);
 		}
 	}
 }
