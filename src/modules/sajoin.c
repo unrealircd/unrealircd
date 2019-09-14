@@ -256,7 +256,7 @@ CMD_FUNC(cmd_sajoin)
 			{
 				opermode = 0;
 				sajoinmode = 1;
-				mode_args[0] = (char*)malloc(2);
+				mode_args[0] = safe_alloc(2);
 				mode_args[0][0] = mode;
 				mode_args[0][1] = '\0';
 				mode_args[1] = acptr->name;

@@ -80,9 +80,9 @@ void	flag_add(char ch)
 	}
 	else
 	{
-		extraflags = malloc(2);
+		extraflags = safe_alloc(2);
 		extraflags[0] = ch;
-		extraflags[1] = 0;
+		extraflags[1] = '\0';
 	}
 }
 
