@@ -423,6 +423,7 @@ Link *make_link(void)
 #ifdef	DEBUGMODE
 	links.inuse++;
 #endif
+	memset(lp, 0, sizeof(Link));
 	return lp;
 }
 
