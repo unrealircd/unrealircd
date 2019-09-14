@@ -271,7 +271,7 @@ CMD_FUNC(cmd_protoctl)
 			if (protocol)
 				cptr->serv->features.protocol = atoi(protocol);
 			if (software)
-				cptr->serv->features.software = strdup(software);
+				safe_strdup(cptr->serv->features.software, software);
 			if (!IsHandshake(cptr) && aconf) /* Send PASS early... */
 				sendto_one(sptr, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		}

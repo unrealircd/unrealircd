@@ -240,7 +240,7 @@ void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf, int ipv4_on
 	/* Create a request */
 	r = safe_alloc(sizeof(DNSReq));
 	r->linkblock = conf;
-	r->name = strdup(name);
+	safe_strdup(r->name, name);
 	if (!DISABLE_IPV6 && !ipv4_only)
 	{
 		/* We try an IPv6 lookup first, and if that fails we try IPv4. */
@@ -277,7 +277,7 @@ char ipv6 = r->ipv6;
 	newr = safe_alloc(sizeof(DNSReq));
 	newr->cptr = acptr;
 	newr->ipv6 = ipv6;
-	newr->name = strdup(he->h_name);
+	safe_strdup(newr->name, he->h_name);
 	unrealdns_addreqtolist(newr);
 
 	ares_gethostbyname(resolver_channel, he->h_name, ipv6 ? AF_INET6 : AF_INET, unrealdns_cb_nametoip_verify, newr);
@@ -414,7 +414,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	/* Ok, since we got here, it seems things were actually succesfull */
 
 	/* Fill in [linkblockstruct]->ipnum */
-	r->linkblock->connect_ip = strdup(ip);
+	safe_strdup(r->linkblock->connect_ip, ip);
 	he2 = unreal_create_hostent(he->h_name, ip);
 
 	switch ((n = connect_server(r->linkblock, r->cptr, he2)))
@@ -467,8 +467,8 @@ static void unrealdns_addtocache(char *name, char *ip)
 
 	/* Create record */
 	c = safe_alloc(sizeof(DNSCache));
-	c->name = strdup(name);
-	c->ip = strdup(ip);
+	safe_strdup(c->name, name);
+	safe_strdup(c->ip, ip);
 	c->expires = TStime() + DNSCACHE_TTL;
 	
 	/* Add to hash table */
@@ -578,7 +578,7 @@ struct hostent *he;
 
 	/* Create a hostent structure (I HATE HOSTENTS) and return it.. */
 	he = safe_alloc(sizeof(struct hostent));
-	he->h_name = strdup(name);
+	safe_strdup(he->h_name, name);
 	if (strchr(ip, ':'))
 	{
 		/* IPv6 */

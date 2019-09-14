@@ -101,8 +101,8 @@ void	DCCdeny_add(char *filename, char *reason, int type, int type2)
 	ConfigItem_deny_dcc *deny = NULL;
 	
 	deny = safe_alloc(sizeof(ConfigItem_deny_dcc));
-	deny->filename = strdup(filename);
-	deny->reason = strdup(reason);
+	safe_strdup(deny->filename, filename);
+	safe_strdup(deny->reason, reason);
 	deny->flag.type = type;
 	deny->flag.type2 = type2;
 	AddListItem(deny, conf_deny_dcc);
@@ -111,10 +111,8 @@ void	DCCdeny_add(char *filename, char *reason, int type, int type2)
 void	DCCdeny_del(ConfigItem_deny_dcc *deny)
 {
 	DelListItem(deny, conf_deny_dcc);
-	if (deny->filename)
-		safe_free(deny->filename);
-	if (deny->reason)
-		safe_free(deny->reason);
+	safe_free(deny->filename);
+	safe_free(deny->reason);
 	safe_free(deny);
 }
 

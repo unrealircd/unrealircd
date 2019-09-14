@@ -627,7 +627,7 @@ char tmp[512], *lang, *p;
 		{
 			/* Add... */
 			li = safe_alloc(sizeof(ILangList));
-			li->name = strdup(lang);
+			safe_strdup(li->name, lang);
 			AddListItem(li, ilanglist);
 		}
 	}

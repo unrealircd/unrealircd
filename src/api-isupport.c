@@ -138,13 +138,7 @@ void isupport_init(void)
  */
 void ISupportSetValue(ISupport *isupport, const char *value)
 {
-	if (isupport->value)
-		free(isupport->value);
-	if (value)
-		isupport->value = strdup(value);
-	else
-		isupport->value = NULL;
-
+	safe_strdup(isupport->value, value);
 	make_isupportstrings();
 }
 
@@ -219,9 +213,9 @@ ISupport *ISupportAdd(Module *module, const char *token, const char *value)
 
 	isupport = safe_alloc(sizeof(ISupport));
 	isupport->owner = module;
-	isupport->token = strdup(token);
+	safe_strdup(isupport->token, token);
 	if (value)
-		isupport->value = strdup(value);
+		safe_strdup(isupport->value, value);
 	isupport_add_sorted(isupport);
 	make_isupportstrings();
 	if (module)

@@ -98,7 +98,7 @@ RealCommand *add_Command_backend(char *cmd)
 {
 	RealCommand *c = safe_alloc(sizeof(RealCommand));
 
-	c->cmd = strdup(cmd);
+	safe_strdup(c->cmd, cmd);
 
 	/* Add in hash with hash value = first byte */
 	AddListItem(c, CommandHash[toupper(*cmd)]);

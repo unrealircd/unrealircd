@@ -90,8 +90,8 @@ void mtag_add_account(Client *acptr, MessageTag *recv_mtags, MessageTag **mtag_l
 	if (acptr && acptr->user && (*acptr->user->svid != '*') && !isdigit(*acptr->user->svid))
 	{
 		m = safe_alloc(sizeof(MessageTag));
-		m->name = strdup("account");
-		m->value = strdup(acptr->user->svid);
+		safe_strdup(m->name, "account");
+		safe_strdup(m->value, acptr->user->svid);
 
 		AddListItem(m, *mtag_list);
 	}

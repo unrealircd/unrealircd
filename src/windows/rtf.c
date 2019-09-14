@@ -101,7 +101,7 @@ DWORD CALLBACK BufferIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 void ColorPush(unsigned char *color, IRCColor **stack)
 {
 	IRCColor *t = safe_alloc(sizeof(IRCColor));
-	t->color = strdup(color);
+	safe_strdup(t->color, color);
 	t->next = *stack;
 	(*stack) = t;
 }

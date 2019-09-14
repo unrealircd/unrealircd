@@ -104,7 +104,7 @@ int msgid_mtag_is_ok(Client *acptr, char *name, char *value)
 MessageTag *mtag_generate_msgid(void)
 {
 	MessageTag *m = safe_alloc(sizeof(MessageTag));
-	m->name = strdup("msgid");
+	safe_strdup(m->name, "msgid");
 	m->value = safe_alloc(MSGIDLEN+1);
 	gen_random_alnum(m->value, MSGIDLEN);
 	return m;

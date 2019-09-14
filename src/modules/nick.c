@@ -1367,7 +1367,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		sptr->srvptr->serv->users++;
 
 	make_virthost(sptr, user->realhost, user->cloakedhost, 0);
-	user->virthost = strdup(user->cloakedhost);
+	safe_strdup(user->virthost, user->cloakedhost);
 
 	if (MyConnect(sptr))
 	{
@@ -1506,7 +1506,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 				           sptr->name, ip);
 				return exit_client(sptr, sptr, &me, NULL, "USER with invalid IP");
 			}
-			sptr->ip = strdup(ipstring);
+			safe_strdup(sptr->ip, ipstring);
 		}
 
 		/* For remote clients we recalculate the cloakedhost here because

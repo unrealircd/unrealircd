@@ -427,8 +427,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 					if (acptr->user->virthost)
 					{
 						/* Removing mode +x and virthost set... recalculate host then (but don't activate it!) */
-						safe_free(acptr->user->virthost);
-						acptr->user->virthost = strdup(acptr->user->cloakedhost);
+						safe_strdup(acptr->user->virthost, acptr->user->cloakedhost);
 					}
 				} else
 				{
@@ -438,7 +437,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 						/* Hmm... +x but no virthost set, that's bad... use cloakedhost.
 						 * Not sure if this could ever happen, but just in case... -- Syzop
 						 */
-						acptr->user->virthost = strdup(acptr->user->cloakedhost);
+						safe_strdup(acptr->user->virthost, acptr->user->cloakedhost);
 					}
 					/* Announce the new host to VHP servers if we're setting the virthost to the cloakedhost.
 					 * In other cases, we can assume that the host has been broadcasted already (after all,

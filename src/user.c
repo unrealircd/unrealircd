@@ -45,12 +45,7 @@ void iNAH_host(Client *sptr, char *host)
 
 	userhost_save_current(sptr);
 
-	if (sptr->user->virthost)
-	{
-		safe_free(sptr->user->virthost);
-		sptr->user->virthost = NULL;
-	}
-	sptr->user->virthost = strdup(host);
+	safe_strdup(sptr->user->virthost, host);
 	if (MyConnect(sptr))
 		sendto_server(&me, 0, 0, NULL, ":%s SETHOST :%s", sptr->name, sptr->user->virthost);
 	sptr->umodes |= UMODE_SETHOST;
@@ -564,7 +559,7 @@ int add_silence(Client *sptr, char *mask, int senderr)
 	lp = make_link();
 	memset(lp, 0, sizeof(Link));
 	lp->next = sptr->user->silence;
-	lp->value.cp = strdup(mask);
+	safe_strdup(lp->value.cp, mask);
 	sptr->user->silence = lp;
 	return 0;
 }
@@ -630,7 +625,7 @@ void setmaxtargets(char *cmd, int limit)
 			*o++ = toupper(*i);
 		*o = '\0';
 		m = safe_alloc(sizeof(MaxTarget));
-		m->cmd = strdup(cmdupper);
+		safe_strdup(m->cmd, cmdupper);
 		maxtarget_add_sorted(m);
 	}
 	m->limit = limit;

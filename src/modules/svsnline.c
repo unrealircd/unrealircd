@@ -103,8 +103,8 @@ CMD_FUNC(cmd_svsnline)
 		  {
 			bconf = safe_alloc(sizeof(ConfigItem_ban));
 			bconf->flag.type = CONF_BAN_REALNAME;
-			bconf->mask = strdup(parv[3]);
-			bconf->reason = strdup(parv[2]);
+			safe_strdup(bconf->mask, parv[3]);
+			safe_strdup(bconf->reason, parv[2]);
 			for (s = bconf->reason; *s; s++)
 				if (*s == '_')
 					*s = ' ';

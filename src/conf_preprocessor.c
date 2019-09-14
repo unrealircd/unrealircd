@@ -74,7 +74,7 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 		cc = safe_alloc(sizeof(ConditionalConfig));
 		cc->condition = IF_MODULE;
 		cc->negative = negative;
-		cc->name = strdup(name);
+		safe_strdup(cc->name, name);
 		*cc_out = cc;
 		return PREPROCESSOR_IF;
 	} else
@@ -104,7 +104,7 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 		cc = safe_alloc(sizeof(ConditionalConfig));
 		cc->condition = IF_DEFINED;
 		cc->negative = negative;
-		cc->name = strdup(name);
+		safe_strdup(cc->name, name);
 		*cc_out = cc;
 		return PREPROCESSOR_IF;
 	} else
@@ -168,8 +168,8 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 		cc = safe_alloc(sizeof(ConditionalConfig));
 		cc->condition = IF_VALUE;
 		cc->negative = negative;
-		cc->name = strdup(name);
-		cc->opt = strdup(name2);
+		safe_strdup(cc->name, name);
+		safe_strdup(cc->opt, name2);
 		*cc_out = cc;
 		return PREPROCESSOR_IF;
 	}
@@ -216,8 +216,8 @@ int evaluate_preprocessor_define(char *statement, char *filename, int linenumber
 	*name_terminator = '\0';
 
 	NameValueList *d = safe_alloc(sizeof(NameValueList));
-	d->name = strdup(name);
-	d->value = strdup(value);
+	safe_strdup(d->name, name);
+	safe_strdup(d->value, value);
 	AddListItem(d, config_defines);
 	return PREPROCESSOR_DEFINE;
 }

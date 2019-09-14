@@ -392,10 +392,10 @@ char  *Module_Create(char *path_)
 			return (NULL);
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
-		mod->tmp_file = strdup(tmppath);
+		safe_strdup(mod->tmp_file, tmppath);
 		mod->mod_sys_version = modsys_ver;
 		mod->compiler_version = compiler_version ? *compiler_version : 0;
-		mod->relpath = strdup(relpath);
+		safe_strdup(mod->relpath, relpath);
 
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
 		if (!Mod_Init)

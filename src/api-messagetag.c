@@ -89,7 +89,7 @@ MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *m
 	} else {
 		/* New message tag handler */
 		m = safe_alloc(sizeof(MessageTagHandler));
-		m->name = strdup(mreq->name);
+		safe_strdup(m->name, mreq->name);
 	}
 	/* Add or update the following fields: */
 	m->owner = module;

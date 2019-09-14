@@ -68,7 +68,7 @@ int dead_link(Client *to, char *notice)
 		sendto_ops_and_log("Link to server %s (%s) closed: %s",
 			to->name, to->ip?to->ip:"<no-ip>", notice);
 	Debug((DEBUG_ERROR, "dead_link: %s - %s", notice, get_client_name(to, FALSE)));
-	to->local->error_str = strdup(notice);
+	safe_strdup(to->local->error_str, notice);
 	return -1;
 }
 

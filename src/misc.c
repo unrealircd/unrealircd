@@ -1035,8 +1035,8 @@ int swhois_add(Client *acptr, char *tag, int priority, char *swhois, Client *fro
 			return -1; /* exists */
 
 	s = safe_alloc(sizeof(SWhois));
-	s->line = strdup(swhois);
-	s->setby = strdup(tag);
+	safe_strdup(s->line, swhois);
+	safe_strdup(s->setby, tag);
 	s->priority = priority;
 	AddListItemPrio(s, acptr->user->swhois, s->priority);
 	
@@ -1289,7 +1289,7 @@ void free_message_tags(MessageTag *m)
 MessageTag *duplicate_mtag(MessageTag *mtag)
 {
 	MessageTag *m = safe_alloc(sizeof(MessageTag));
-	m->name = strdup(mtag->name);
+	safe_strdup(m->name, mtag->name);
 	safe_strdup(m->value, mtag->value);
 	return m;
 }

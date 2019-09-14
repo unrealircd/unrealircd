@@ -264,7 +264,7 @@ AuthConfig *AuthBlockToAuthConfig(ConfigEntry *ce)
 		type = AUTHTYPE_PLAINTEXT;
 
 	as = safe_alloc(sizeof(AuthConfig));
-	as->data = strdup(ce->ce_vardata);
+	safe_strdup(as->data, ce->ce_vardata);
 	as->type = type;
 	return as;
 }

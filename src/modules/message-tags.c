@@ -198,8 +198,12 @@ void _parse_message_tags(Client *cptr, char **str, MessageTag **mtag_list)
 		if (message_tag_ok(cptr, name, value))
 		{
 			m = safe_alloc(sizeof(MessageTag));
-			m->name = strdup(name);
-			m->value = BadPtr(value) ? NULL : strdup(value);
+			safe_strdup(m->name, name);
+			/* Both NULL and empty become NULL: */
+			if (BadPtr(value))
+				m->value = NULL;
+			else /* a real value... */
+				safe_strdup(m->value, value);
 			AddListItem(m, *mtag_list);
 		}
 	}

@@ -224,8 +224,7 @@ CMD_FUNC(cmd_oper)
 	/* /OPER really succeeded now. Start processing it. */
 
 	/* Store which oper block was used to become IRCOp (for maxlogins and whois) */
-	safe_free(sptr->user->operlogin);
-	sptr->user->operlogin = strdup(operblock->name);
+	safe_strdup(sptr->user->operlogin, operblock->name);
 
 	/* Put in the right class */
 	if (sptr->local->class)
@@ -256,7 +255,7 @@ CMD_FUNC(cmd_oper)
 	if (IsHidden(sptr) && !sptr->user->virthost)
 	{
 		/* +x has just been set by modes-on-oper and no vhost. cloak the oper! */
-		sptr->user->virthost = strdup(sptr->user->cloakedhost);
+		safe_strdup(sptr->user->virthost, sptr->user->cloakedhost);
 	}
 
 	sendto_snomask_global(SNO_OPER,

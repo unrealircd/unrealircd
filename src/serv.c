@@ -1034,7 +1034,7 @@ void do_read_motd(const char *filename, MOTDFile *themotd)
 			line[510] = '\0';
 
 		temp = safe_alloc(sizeof(MOTDLine));
-		temp->line = strdup(line);
+		safe_strdup(temp->line, line);
 
 		if(last)
 			last->next = temp;

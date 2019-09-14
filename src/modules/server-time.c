@@ -109,8 +109,8 @@ void mtag_add_or_inherit_time(Client *sender, MessageTag *recv_mtags, MessageTag
 			(int)(t.tv_usec / 1000));
 
 		m = safe_alloc(sizeof(MessageTag));
-		m->name = strdup("time");
-		m->value = strdup(buf);
+		safe_strdup(m->name, "time");
+		safe_strdup(m->value, buf);
 	}
 	AddListItem(m, *mtag_list);
 }

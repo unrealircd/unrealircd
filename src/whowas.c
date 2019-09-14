@@ -56,15 +56,15 @@ void add_history(Client *cptr, int online)
 	new->hashv = hash_whowas_name(cptr->name);
 	new->logoff = TStime();
 	new->umodes = cptr->umodes;
-	new->name = strdup(cptr->name);
-	new->username = strdup(cptr->user->username);
-	new->hostname = strdup(cptr->user->realhost);
+	safe_strdup(new->name, cptr->name);
+	safe_strdup(new->username, cptr->user->username);
+	safe_strdup(new->hostname, cptr->user->realhost);
 	if (cptr->user->virthost)
-		new->virthost = strdup(cptr->user->virthost);
+		safe_strdup(new->virthost, cptr->user->virthost);
 	else
-		new->virthost = strdup("");
+		safe_strdup(new->virthost, "");
 	new->servername = cptr->user->server;
-	new->realname = strdup(cptr->info);
+	safe_strdup(new->realname, cptr->info);
 
 	/* Its not string copied, a pointer to the scache hash is copied
 	   -Dianora

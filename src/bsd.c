@@ -953,7 +953,7 @@ refuse_client:
 
 	/* Fill in sockhost & ip ASAP */
 	set_sockhost(acptr, ip);
-	acptr->ip = strdup(ip);
+	safe_strdup(acptr->ip, ip);
 	acptr->local->port = port;
 	acptr->local->fd = fd;
 
@@ -1364,7 +1364,7 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 		if (is_valid_ip(aconf->outgoing.hostname))
 		{
 			/* link::outgoing::hostname is an IP address. No need to resolve host. */
-			aconf->connect_ip = strdup(aconf->outgoing.hostname);
+			safe_strdup(aconf->connect_ip, aconf->outgoing.hostname);
 		} else
 		{
 			/* It's a hostname, let the resolver look it up. */
@@ -1450,7 +1450,7 @@ int connect_inet(ConfigItem_link *aconf, Client *cptr)
 	if (strchr(aconf->connect_ip, ':'))
 		SetIPV6(cptr);
 	
-	cptr->ip = strdup(aconf->connect_ip);
+	safe_strdup(cptr->ip, aconf->connect_ip);
 	
 	snprintf(buf, sizeof buf, "Outgoing connection: %s", get_client_name(cptr, TRUE));
 	cptr->local->fd = fd_socket(IsIPV6(cptr) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf);

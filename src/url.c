@@ -413,18 +413,16 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		{
 			snprintf(errorbuf, sizeof(errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
 			callback(url, NULL, errorbuf, 0, callback_data);
-			if (file)
-				safe_free(file);
+			safe_free(file);
 			safe_free(handle);
 			return;
 		}
 		handle->callback = callback;
 		handle->callback_data = callback_data;
 		handle->cachetime = cachetime;
-		handle->url = strdup(url);
+		safe_strdup(handle->url, url);
 		strlcpy(handle->filename, tmp, sizeof(handle->filename));
-		if (file)
-			free(file);
+		safe_free(file);
 
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);

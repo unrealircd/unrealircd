@@ -220,7 +220,7 @@ CMD_FUNC(cmd_list)
 				  lp = make_link();
 				  lp->next = nolist;
 				  nolist = lp;
-				  lp->value.cp = strdup(name + 1);
+				  safe_strdup(lp->value.cp, name + 1);
 			  }
 			  else if (strchr(name, '*') || strchr(name, '?'))
 			  {
@@ -228,7 +228,7 @@ CMD_FUNC(cmd_list)
 				  lp = make_link();
 				  lp->next = yeslist;
 				  yeslist = lp;
-				  lp->value.cp = strdup(name);
+				  safe_strdup(lp->value.cp, name);
 			  }
 			  else	/* Just a normal channel */
 			  {

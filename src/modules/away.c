@@ -148,7 +148,8 @@ CMD_FUNC(cmd_away)
 		wasaway = 1;
 	}
 	
-	away = sptr->user->away = strdup(awy2);
+	safe_strdup(sptr->user->away, awy2);
+	away = sptr->user->away;
 
 	if (MyConnect(sptr))
 		sendnumeric(sptr, RPL_NOWAWAY);

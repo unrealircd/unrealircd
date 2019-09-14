@@ -40,7 +40,7 @@ Event *EventAdd(Module *module, char *name, long every, long howmany,
 		return NULL;
 	}
 	newevent = safe_alloc(sizeof(Event));
-	newevent->name = strdup(name);
+	safe_strdup(newevent->name, name);
 	newevent->howmany = howmany;
 	newevent->every = every;
 	newevent->event = event;
@@ -120,10 +120,7 @@ int EventMod(Event *event, EventInfo *mods)
 	if (mods->flags & EMOD_HOWMANY)
 		event->howmany = mods->howmany;
 	if (mods->flags & EMOD_NAME)
-	{
-		free(event->name);
-		event->name = strdup(mods->name);
-	}
+		safe_strdup(event->name, mods->name);
 	if (mods->flags & EMOD_EVENT)
 		event->event = mods->event;
 	if (mods->flags & EMOD_DATA)

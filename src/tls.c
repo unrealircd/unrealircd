@@ -922,10 +922,10 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr)
 	if (errtmp)
 	{
 		SET_ERRNO(errtmp);
-		sptr->local->error_str = strdup(strerror(errtmp));
+		safe_strdup(sptr->local->error_str, strerror(errtmp));
 	} else {
 		SET_ERRNO(P_EIO);
-		sptr->local->error_str = strdup(ssl_errstr);
+		safe_strdup(sptr->local->error_str, ssl_errstr);
 	}
 
 	/* deregister I/O notification since we don't care anymore. the actual closing of socket will happen later. */

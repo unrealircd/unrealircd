@@ -1598,7 +1598,7 @@ static void add_include_list(char *fname, ConfigFile **cf)
 	ConfigFile *n = safe_alloc(sizeof(ConfigFile));
 	
 //	config_status("INCLUDE: %s", fname);
-	n->cf_filename = strdup(fname);
+	safe_strdup(n->cf_filename, fname);
 	n->cf_next = *cf;
 	*cf = n;
 }

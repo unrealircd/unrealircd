@@ -83,7 +83,7 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 	} else {
 		/* New history backend */
 		m = safe_alloc(sizeof(HistoryBackend));
-		m->name = strdup(mreq->name);
+		safe_strdup(m->name, mreq->name);
 	}
 
 	/* Add or update the following fields: */

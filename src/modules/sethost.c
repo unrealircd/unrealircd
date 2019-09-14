@@ -134,12 +134,7 @@ CMD_FUNC(cmd_sethost)
 	sptr->umodes |= UMODE_HIDE;
 	sptr->umodes |= UMODE_SETHOST;
 	/* get it in */
-	if (sptr->user->virthost)
-	{
-		safe_free(sptr->user->virthost);
-		sptr->user->virthost = NULL;
-	}
-	sptr->user->virthost = strdup(vhost);
+	safe_strdup(sptr->user->virthost, vhost);
 	/* spread it out */
 	sendto_server(cptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, parv[1]);
 

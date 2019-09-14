@@ -55,7 +55,7 @@ OperClassValidator* OperClassAddValidator(Module *module, char* pathStr, OperCla
 		if (!nextNode)
 		{
 			nextNode = safe_alloc(sizeof(OperClassPathNode));
-			nextNode->identifier = strdup(path->identifier);
+			safe_strdup(nextNode->identifier, path->identifier);
 			AddListItem(nextNode,node->children);
 		}
 		node = nextNode;
@@ -120,7 +120,7 @@ OperClassACLPath* OperClass_parsePath(char* path)
 	while (str)
 	{
 		tmpPath = safe_alloc(sizeof(OperClassACLPath));
-		tmpPath->identifier = strdup(str);
+		safe_strdup(tmpPath->identifier, str);
 		AddListItem(tmpPath,pathHead);
 		str = strtok(NULL,":");
 	}

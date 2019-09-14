@@ -257,8 +257,8 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 
 		rcmd = safe_alloc(sizeof(RestrictedCommand));
-		rcmd->cmd = strdup(cmd);
-		rcmd->conftag = (conftag ? strdup(conftag) : NULL);
+		safe_strdup(rcmd->cmd, cmd);
+		safe_strdup(rcmd->conftag, conftag);
 		for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
 		{
 			if (!cep2->ce_vardata)

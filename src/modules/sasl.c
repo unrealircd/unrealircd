@@ -446,8 +446,7 @@ MOD_UNLOAD()
 
 void saslmechlist_free(ModData *m)
 {
-	if (m->str)
-		safe_free(m->str);
+	safe_free(m->str);
 }
 
 char *saslmechlist_serialize(ModData *m)
@@ -459,9 +458,7 @@ char *saslmechlist_serialize(ModData *m)
 
 void saslmechlist_unserialize(char *str, ModData *m)
 {
-	if (m->str)
-		safe_free(m->str);
-	m->str = strdup(str);
+	safe_strdup(m->str, str);
 }
 
 char *sasl_capability_parameter(Client *acptr)

@@ -170,7 +170,7 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 		}
 		/* New client capability */
 		clicap = safe_alloc(sizeof(ClientCapability));
-		clicap->name = strdup(clicap_request->name);
+		safe_strdup(clicap->name, clicap_request->name);
 		clicap->cap = v;
 	}
 	/* Add or update the following fields: */

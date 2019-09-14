@@ -155,7 +155,5 @@ char *certfp_serialize(ModData *m)
 
 void certfp_unserialize(char *str, ModData *m)
 {
-	if (m->str)
-		safe_free(m->str);
-	m->str = strdup(str);
+	safe_strdup(m->str, str);
 }

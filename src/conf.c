@@ -1639,9 +1639,9 @@ void postconf_defaults(void)
 		if (!tk->set_by)
 		{
 			if (me.name[0] != '\0')
-				tk->set_by = strdup(me.name);
+				safe_strdup(tk->set_by, me.name);
 			else
-				tk->set_by = strdup(conf_me->name ? conf_me->name : "~server~");
+				safe_strdup(tk->set_by, conf_me->name ? conf_me->name : "~server~");
 		}
 	}
 
@@ -1651,17 +1651,16 @@ void postconf_defaults(void)
 			continue; /* global entry or something else.. */
 		if (!strcmp(tk->ptr.spamfilter->tkl_reason, "<internally added by ircd>"))
 		{
-			safe_free(tk->ptr.spamfilter->tkl_reason);
-			tk->ptr.spamfilter->tkl_reason = strdup(encoded);
+			safe_strdup(tk->ptr.spamfilter->tkl_reason, encoded);
 			tk->ptr.spamfilter->tkl_duration = SPAMFILTER_BAN_TIME;
 		}
 		/* This one is even more ugly, but our config crap is VERY confusing :[ */
 		if (!tk->set_by)
 		{
 			if (me.name[0] != '\0')
-				tk->set_by = strdup(me.name);
+				safe_strdup(tk->set_by, me.name);
 			else
-				tk->set_by = strdup(conf_me->name ? conf_me->name : "~server~");
+				safe_strdup(tk->set_by, conf_me->name ? conf_me->name : "~server~");
 		}
 	}
 
@@ -3417,15 +3416,15 @@ int	_conf_files(ConfigFile *conf, ConfigEntry *ce)
 		conf_files = safe_alloc(sizeof(ConfigItem_files));
 
 		/* set defaults */
-		conf_files->motd_file = strdup(MPATH);
-		conf_files->rules_file = strdup(RPATH);
-		conf_files->smotd_file = strdup(SMPATH);
-		conf_files->botmotd_file = strdup(BPATH);
-		conf_files->opermotd_file = strdup(OPATH);
-		conf_files->svsmotd_file = strdup(VPATH);
+		safe_strdup(conf_files->motd_file, MPATH);
+		safe_strdup(conf_files->rules_file, RPATH);
+		safe_strdup(conf_files->smotd_file, SMPATH);
+		safe_strdup(conf_files->botmotd_file, BPATH);
+		safe_strdup(conf_files->opermotd_file, OPATH);
+		safe_strdup(conf_files->svsmotd_file, VPATH);
 
-		conf_files->pid_file = strdup(IRCD_PIDFILE);
-		conf_files->tune_file = strdup(IRCDTUNE);
+		safe_strdup(conf_files->pid_file, IRCD_PIDFILE);
+		safe_strdup(conf_files->tune_file, IRCDTUNE);
 
 		/* we let actual files get read in later by the motd caching mechanism */
 	}
@@ -3606,10 +3605,10 @@ OperClassACLEntry* _conf_parseACLEntry(ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		OperClassACLEntryVar *var = safe_alloc(sizeof(OperClassACLEntryVar));
-		var->name = strdup(cep->ce_varname);
+		safe_strdup(var->name, cep->ce_varname);
 		if (cep->ce_vardata)
 		{
-			var->value = strdup(cep->ce_vardata);
+			safe_strdup(var->value, cep->ce_vardata);
 		}
 		AddListItem(var,entry->variables);
 	}
@@ -3623,7 +3622,7 @@ OperClassACL* _conf_parseACL(char* name, ConfigEntry *ce)
 	OperClassACL *acl = NULL;
 
 	acl = safe_alloc(sizeof(OperClassACL));
-	acl->name = strdup(name);
+	safe_strdup(acl->name, name);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -3648,13 +3647,13 @@ int	_conf_operclass(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_operclass *operClass = NULL;
 	operClass = safe_alloc(sizeof(ConfigItem_operclass));
 	operClass->classStruct = safe_alloc(sizeof(OperClass));
-	operClass->classStruct->name = strdup(ce->ce_vardata);
+	safe_strdup(operClass->classStruct->name, ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "parent"))
 		{
-			operClass->classStruct->ISA = strdup(cep->ce_vardata);
+			safe_strdup(operClass->classStruct->ISA, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "permissions"))
 		{
@@ -3758,12 +3757,12 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_oper *oper = NULL;
 
 	oper =  safe_alloc(sizeof(ConfigItem_oper));
-	oper->name = strdup(ce->ce_vardata);
+	safe_strdup(oper->name, ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "operclass"))
-			oper->operclass = strdup(cep->ce_vardata);
+			safe_strdup(oper->operclass, cep->ce_vardata);
 		if (!strcmp(cep->ce_varname, "password"))
 			oper->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "class"))
@@ -3785,16 +3784,16 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
 					s = safe_alloc(sizeof(SWhois));
-					s->line = strdup(cepp->ce_varname);
-					s->setby = strdup("oper");
+					safe_strdup(s->line, cepp->ce_varname);
+					safe_strdup(s->setby, "oper");
 					AddListItem(s, oper->swhois);
 				}
 			} else
 			if (cep->ce_vardata)
 			{
 				s = safe_alloc(sizeof(SWhois));
-				s->line = strdup(cep->ce_vardata);
-				s->setby = strdup("oper");
+				safe_strdup(s->line, cep->ce_vardata);
+				safe_strdup(s->setby, "oper");
 				AddListItem(s, oper->swhois);
 			}
 		}
@@ -4416,30 +4415,30 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "mask"))
-			ca->mask = strdup(cep->ce_vardata);
+			safe_strdup(ca->mask, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "motd"))
 		{
-			ca->motd_file = strdup(cep->ce_vardata);
+			safe_strdup(ca->motd_file, cep->ce_vardata);
 			read_motd(cep->ce_vardata, &ca->motd);
 		}
 		else if (!strcmp(cep->ce_varname, "shortmotd"))
 		{
-			ca->smotd_file = strdup(cep->ce_vardata);
+			safe_strdup(ca->smotd_file, cep->ce_vardata);
 			read_motd(cep->ce_vardata, &ca->smotd);
 		}
 		else if (!strcmp(cep->ce_varname, "opermotd"))
 		{
-			ca->opermotd_file = strdup(cep->ce_vardata);
+			safe_strdup(ca->opermotd_file, cep->ce_vardata);
 			read_motd(cep->ce_vardata, &ca->opermotd);
 		}
 		else if (!strcmp(cep->ce_varname, "botmotd"))
 		{
-			ca->botmotd_file = strdup(cep->ce_vardata);
+			safe_strdup(ca->botmotd_file, cep->ce_vardata);
 			read_motd(cep->ce_vardata, &ca->botmotd);
 		}
 		else if (!strcmp(cep->ce_varname, "rules"))
 		{
-			ca->rules_file = strdup(cep->ce_vardata);
+			safe_strdup(ca->rules_file, cep->ce_vardata);
 			read_motd(cep->ce_vardata, &ca->rules);
 		}
 		else if (!strcmp(cep->ce_varname, "options"))
@@ -4454,7 +4453,7 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "channel"))
-			ca->channel = strdup(cep->ce_vardata);
+			safe_strdup(ca->channel, cep->ce_vardata);
 	}
 	AddListItem(ca, conf_tld);
 	return 1;
@@ -4710,7 +4709,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			if (!(listen = Find_listen(ip, port, 0)))
 			{
 				listen = safe_alloc(sizeof(ConfigItem_listen));
-				listen->ip = strdup(ip);
+				safe_strdup(listen->ip, ip);
 				listen->port = port;
 				listen->fd = -1;
 				listen->ipv6 = 0;
@@ -4754,7 +4753,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				if (!(listen = Find_listen(ip, port, 1)))
 				{
 					listen = safe_alloc(sizeof(ConfigItem_listen));
-					listen->ip = strdup(ip);
+					safe_strdup(listen->ip, ip);
 					listen->port = port;
 					listen->fd = -1;
 					listen->ipv6 = 1;
@@ -5008,10 +5007,10 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->ce_varname, "ip"))
 		{
-			allow->ip = strdup(cep->ce_vardata);
+			safe_strdup(allow->ip, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "hostname"))
-			allow->hostname = strdup(cep->ce_vardata);
+			safe_strdup(allow->hostname, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "password"))
 			allow->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "class"))
@@ -5029,7 +5028,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "maxperip"))
 			allow->maxperip = atoi(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "redirect-server"))
-			allow->server = strdup(cep->ce_vardata);
+			safe_strdup(allow->server, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "redirect-port"))
 			allow->port = atoi(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "ipv6-clone-mask"))
@@ -5056,10 +5055,10 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	}
 
 	if (!allow->hostname)
-		allow->hostname = strdup("*@NOMATCH");
+		safe_strdup(allow->hostname, "*@NOMATCH");
 
 	if (!allow->ip)
-		allow->ip = strdup("*@NOMATCH");
+		safe_strdup(allow->ip, "*@NOMATCH");
 
 	AddListItem(allow, conf_allow);
 	return 1;
@@ -5544,15 +5543,15 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 			user = strtok(cep->ce_vardata, "@");
 			host = strtok(NULL, "");
 			if (!host)
-				vhost->virthost = strdup(user);
+				safe_strdup(vhost->virthost, user);
 			else
 			{
-				vhost->virtuser = strdup(user);
-				vhost->virthost = strdup(host);
+				safe_strdup(vhost->virtuser, user);
+				safe_strdup(vhost->virthost, host);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "login"))
-			vhost->login = strdup(cep->ce_vardata);
+			safe_strdup(vhost->login, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "password"))
 			vhost->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "mask"))
@@ -5567,16 +5566,16 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
 					s = safe_alloc(sizeof(SWhois));
-					s->line = strdup(cepp->ce_varname);
-					s->setby = strdup("vhost");
+					safe_strdup(s->line, cepp->ce_varname);
+					safe_strdup(s->setby, "vhost");
 					AddListItem(s, vhost->swhois);
 				}
 			} else
 			if (cep->ce_vardata)
 			{
 				s = safe_alloc(sizeof(SWhois));
-				s->line = strdup(cep->ce_vardata);
-				s->setby = strdup("vhost");
+				safe_strdup(s->line, cep->ce_vardata);
+				safe_strdup(s->setby, "vhost");
 				AddListItem(s, vhost->swhois);
 			}
 		}
@@ -5783,7 +5782,7 @@ int	_conf_sni(ConfigFile *conf, ConfigEntry *ce)
 		return 0;
 
 	sni = safe_alloc(sizeof(ConfigItem_listen));
-	sni->name = strdup(name);
+	safe_strdup(sni->name, name);
 	sni->tls_options = safe_alloc(sizeof(TLSOptions));
 	conf_tlsblock(conf, tlsconfig, sni->tls_options);
 	sni->ssl_ctx = init_ctx(sni->tls_options, 1);
@@ -5802,12 +5801,12 @@ int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
 	if (!ce->ce_vardata)
 		ca->command = NULL;
 	else
-		ca->command = strdup(ce->ce_vardata);
+		safe_strdup(ca->command, ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		temp = safe_alloc(sizeof(MOTDLine));
-		temp->line = strdup(cep->ce_varname);
+		safe_strdup(temp->line, cep->ce_varname);
 		temp->next = NULL;
 		if (!last)
 			ca->text = temp;
@@ -5972,7 +5971,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	NameValue *ofp;
 
 	link = safe_alloc(sizeof(ConfigItem_link));
-	link->servername = strdup(ce->ce_vardata);
+	safe_strdup(link->servername, ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -6052,7 +6051,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 
 	/* The default is 'hub *', unless you specify leaf or hub manually. */
 	if (!link->hub && !link->leaf)
-		link->hub = strdup("*");
+		safe_strdup(link->hub, "*");
 
 	AddListItem(link, conf_link);
 	return 0;
@@ -6371,10 +6370,10 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->ce_varname, "mask"))
 		{
-			ca->mask = strdup(cep->ce_vardata);
+			safe_strdup(ca->mask, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "reason"))
-			ca->reason = strdup(cep->ce_vardata);
+			safe_strdup(ca->reason, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "action"))
 			ca ->action = banact_stringtoval(cep->ce_vardata);
 	}
@@ -8793,7 +8792,7 @@ int	_test_blacklist_module(ConfigFile *conf, ConfigEntry *ce)
 	}
 
 	m = safe_alloc(sizeof(ConfigItem_blacklist_module));
-	m->name = strdup(ce->ce_vardata);
+	safe_strdup(m->name, ce->ce_vardata);
 	AddListItem(m, conf_blacklist_module);
 
 	return 0;
@@ -8902,7 +8901,7 @@ int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
 		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 		{
 			if (!strcmp(cepp->ce_varname, "topic"))
-				of->topic = strdup(cepp->ce_vardata);
+				safe_strdup(of->topic, cepp->ce_vardata);
 		}
 		AddListItem(of, conf_offchans);
 	}

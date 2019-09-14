@@ -1129,9 +1129,7 @@ void send_user_joins(Client *cptr, Client *user)
  */
 void set_channel_mlock(Client *cptr, Client *sptr, Channel *chptr, const char *newmlock, int propagate)
 {
-	if (chptr->mode_lock)
-		safe_free(chptr->mode_lock);
-	chptr->mode_lock = (newmlock != NULL) ? strdup(newmlock) : NULL;
+	safe_strdup(chptr->mode_lock, newmlock);
 
 	if (propagate)
 	{

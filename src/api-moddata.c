@@ -71,7 +71,7 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 
 	new_struct = 1;
 	m = safe_alloc(sizeof(ModDataInfo));
-	m->name = strdup(req.name);
+	safe_strdup(m->name, req.name);
 	m->slot = slotav;
 	m->type = req.type;
 moddataadd_isok:

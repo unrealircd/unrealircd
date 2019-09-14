@@ -131,7 +131,7 @@ static void init_config(void)
 static void addmultiline(MultiLine **l, char *line)
 {
 	MultiLine *m = safe_alloc(sizeof(MultiLine));
-	m->line = strdup(line);
+	safe_strdup(m->line, line);
 	append_ListItem((ListStruct *)m, (ListStruct **)l);
 }
 

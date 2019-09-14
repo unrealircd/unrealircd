@@ -431,10 +431,10 @@ int read_channeldb(void)
 		/* If we got this far, we can create/initialize the channel with the above */
 		chptr = get_channel(&me, chname, CREATE);
 		chptr->creationtime = creationtime;
-		chptr->topic = BadPtr(topic) ? NULL : strdup(topic);
-		chptr->topic_nick = BadPtr(topic_nick) ? NULL : strdup(topic_nick);
+		safe_strdup(chptr->topic, topic);
+		safe_strdup(chptr->topic_nick, topic_nick);
 		chptr->topic_time = topic_time;
-		chptr->mode_lock = BadPtr(mode_lock) ? NULL : strdup(mode_lock);
+		safe_strdup(chptr->mode_lock, mode_lock);
 		set_channel_mode(chptr, modes1, modes2);
 		R_SAFE(read_listmode(fd, &chptr->banlist));
 		R_SAFE(read_listmode(fd, &chptr->exlist));

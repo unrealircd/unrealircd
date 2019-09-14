@@ -357,8 +357,7 @@ int dowebirc(Client *cptr, char *ip, char *host, char *options)
 	}
 
 	/* STEP 2: Update GetIP() */
-	safe_free(cptr->ip);
-	cptr->ip = strdup(ip);
+	safe_strdup(cptr->ip, ip);
 		
 	/* STEP 3: Update cptr->local->hostp */
 	/* (free old) */

@@ -977,7 +977,7 @@ void add_throttling_bucket(Client *acptr)
 
 	n = safe_alloc(sizeof(struct ThrottlingBucket));	
 	n->next = n->prev = NULL; 
-	n->ip = strdup(acptr->ip);
+	safe_strdup(n->ip, acptr->ip);
 	n->since = TStime();
 	n->count = 1;
 	hash = hash_throttling(acptr->ip);

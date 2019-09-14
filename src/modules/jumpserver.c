@@ -234,14 +234,14 @@ CMD_FUNC(cmd_jumpserver)
 	jss = safe_alloc(sizeof(JSS));
 
 	/* Set it */
-	jss->server = strdup(serv);
+	safe_strdup(jss->server, serv);
 	jss->port = port;
 	if (sslserv)
 	{
-		jss->ssl_server = strdup(sslserv);
+		safe_strdup(jss->ssl_server, sslserv);
 		jss->ssl_port = sslport;
 	}
-	jss->reason = strdup(reason);
+	safe_strdup(jss->reason, reason);
 
 	/* Broadcast/log */
 	if (sslserv)

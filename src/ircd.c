@@ -1219,7 +1219,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	timeofday = time(NULL);
 	me.local->lasttime = me.local->since = me.local->firsttime = me.serv->boottime = TStime();
 	me.serv->features.protocol = UnrealProtocol;
-	me.serv->features.software = strdup(version);
+	safe_strdup(me.serv->features.software, version);
 	(void)add_to_client_hash_table(me.name, &me);
 	(void)add_to_id_hash_table(me.id, &me);
 	list_add(&me.client_node, &global_server_list);

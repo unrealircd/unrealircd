@@ -391,7 +391,7 @@ Match *unreal_create_match(MatchType type, char *str, char **error)
 
 	*errorbuf = '\0';
 
-	m->str = strdup(str);
+	safe_strdup(m->str, str);
 	m->type = type;
 	
 	if (m->type == MATCH_SIMPLE)

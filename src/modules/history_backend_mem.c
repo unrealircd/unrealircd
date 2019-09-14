@@ -162,8 +162,8 @@ void hbm_duplicate_mtags(HistoryLogLine *l, MessageTag *m)
 			(int)(t.tv_usec / 1000));
 
 		n = safe_alloc(sizeof(MessageTag));
-		n->name = strdup("time");
-		n->value = strdup(buf);
+		safe_strdup(n->name, "time");
+		safe_strdup(n->value, buf);
 		AddListItem(n, l->mtags);
 	}
 	/* Now convert the "time" message tag to something we can use in l->t */

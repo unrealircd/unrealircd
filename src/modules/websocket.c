@@ -395,8 +395,7 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 	if (lastloc)
 	{
 		/* Last line was cut somewhere, save it for next round. */
-		safe_free(WSU(sptr)->lefttoparse);
-		WSU(sptr)->lefttoparse = strdup(lastloc);
+		safe_strdup(WSU(sptr)->lefttoparse, lastloc);
 	}
 	return 0; /* don't let UnrealIRCd process this */
 }
