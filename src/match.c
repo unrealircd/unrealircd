@@ -204,9 +204,9 @@ char *collapse(char *pattern)
 
 
 /* Case insensitive comparison of two NULL terminated strings,
- * using the "IRC nick comparisson" rules. Or, well, partially
+ * using the "IRC nick comparison" rules. Or, well, partially
  * anyway.
- * Should be used for NICK-related comparissons. And probably
+ * Should be used for NICK-related comparisons. And probably
  * not even then, since this does not deal with multibyte.
  * @returns 	 0, if s1 equal to s2
  *		<0, if s1 lexicographically less than s2

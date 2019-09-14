@@ -302,7 +302,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		}
 		if (cmptr->flags != 0) { /* temporary until all commands are updated */
 
-		/* Logic in comparisions below is a bit complicated, see notes */
+		/* Logic in comparisons below is a bit complicated, see notes */
 
 		/* If you're a user, and this command does not permit users or opers, deny */
 		if ((flags & M_USER) && !(cmptr->flags & M_USER) && !(cmptr->flags & M_OPER))

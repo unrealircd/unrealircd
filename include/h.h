@@ -492,6 +492,8 @@ extern void set_sock_opts(int fd, Client *cptr, int ipv6);
 extern void stripcrlf(char *line);
 extern time_t rfc2time(char *s);
 extern char *rfctime(time_t t, char *buf);
+extern int strnatcmp(char const *a, char const *b);
+extern int strnatcasecmp(char const *a, char const *b);
 extern void *MyMallocEx(size_t size);
 extern MODFUNC char  *tls_get_cipher(SSL *ssl);
 extern TLSOptions *get_tls_options_for_client(Client *acptr);
