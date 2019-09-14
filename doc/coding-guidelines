@@ -109,17 +109,8 @@ Rules about patches & modifications to UnrealIRCd
     h and l.
 
 19. Initialize your structs and use the proper memory calls.
-    In UnrealIRCd we use MyMalloc, MyMallocEx and MyFree (so not malloc/free).
-    MyMalloc usually maps to malloc, and MyMallocEx is a malloc plus filling
-    the memory area (eg: the struct) with zero's (a la calloc).
-    Use of MyMallocEx is suggested. In general you should not be using MyMalloc.
-    "But MyMalloc is faster!" you might say. This is true, but using MyMallocEx
-    has very little speed impact and enormous benefits: people tend to forget
-    to set certain fields in the struct to NULL, or much more common: when
-    someone later on (eg: 1 year later) adds a field to a struct, there could
-    be several places he/she needs to update to make sure x->something is NULL
-    after allocating a new struct. Bad idea.
-    Little speed impact, huge stability benefits, easy decision ;).
+    In UnrealIRCd we use safe_alloc, safe_free, safe_strdup and safe_strldup.
+    Do NOT use malloc, calloc or strdup.
 
 20. Comment your code! This should speak for itself...
     Put comments wherever you think they are needed, to aid any further coders
