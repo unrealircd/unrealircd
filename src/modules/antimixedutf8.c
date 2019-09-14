@@ -333,8 +333,6 @@ int antimixedutf8_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		} else
 		if (!strcmp(cep->ce_varname, "ban-reason"))
 		{
-			if (cfg.ban_reason)
-				safe_free(cfg.ban_reason);
 			safe_strdup(cfg.ban_reason, cep->ce_vardata);
 		} else
 		if (!strcmp(cep->ce_varname, "ban-time"))

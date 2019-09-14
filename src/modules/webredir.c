@@ -87,8 +87,7 @@ static void init_config(void)
 
 static void free_config(void)
 {
-	if (cfg.url)
-		safe_free(cfg.url);
+	safe_free(cfg.url);
 
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
@@ -185,8 +184,6 @@ int webredir_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	{
 		if (!strcmp(cep->ce_varname, "url"))
 		{
-			if (cfg.url)
-				safe_free(cfg.url);
 			safe_strdup(cfg.url, cep->ce_vardata);
 		}
 	}

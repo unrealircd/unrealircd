@@ -1057,19 +1057,19 @@ int sub1_from_channel(Channel *chptr)
 	/* free extcmode params */
 	extcmode_free_paramlist(chptr->mode.extmodeparams);
 
-	if (chptr->mode_lock)
-		safe_free(chptr->mode_lock);
-	if (chptr->topic)
-		safe_free(chptr->topic);
-	if (chptr->topic_nick)
-		safe_free(chptr->topic_nick);
+	safe_free(chptr->mode_lock);
+	safe_free(chptr->topic);
+	safe_free(chptr->topic_nick);
+
 	if (chptr->prevch)
 		chptr->prevch->nextch = chptr->nextch;
 	else
 		channel = chptr->nextch;
+
 	if (chptr->nextch)
 		chptr->nextch->prevch = chptr->prevch;
 	(void)del_from_channel_hash_table(chptr->chname, chptr);
+
 	ircstats.channels--;
 	safe_free(chptr);
 	return 1;

@@ -126,10 +126,8 @@ void dcc_wipe_services(void)
 		if (dconf->flag.type2 == CONF_BAN_TYPE_AKILL)
 		{
 			DelListItem(dconf, conf_deny_dcc);
-			if (dconf->filename)
-				safe_free(dconf->filename);
-			if (dconf->reason)
-				safe_free(dconf->reason);
+			safe_free(dconf->filename);
+			safe_free(dconf->reason);
 			safe_free(dconf);
 		}
 	}

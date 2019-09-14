@@ -550,8 +550,7 @@ void conf_channelmodes(char *modes, struct ChMode *store, int warn)
 			}
 		}
 	}
-	if (parambuf)
-		safe_free(parambuf);
+	safe_free(parambuf);
 }
 
 void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size)
@@ -790,8 +789,7 @@ void config_free(ConfigFile *cfptr)
 		nptr = cfptr->cf_next;
 		if (cfptr->cf_entries)
 			config_entry_free(cfptr->cf_entries);
-		if (cfptr->cf_filename)
-			safe_free(cfptr->cf_filename);
+		safe_free(cfptr->cf_filename);
 		safe_free(cfptr);
 	}
 }
@@ -1178,10 +1176,8 @@ static void config_entry_free(ConfigEntry *ceptr)
 		nptr = ceptr->ce_next;
 		if (ceptr->ce_entries)
 			config_entry_free(ceptr->ce_entries);
-		if (ceptr->ce_varname)
-			safe_free(ceptr->ce_varname);
-		if (ceptr->ce_vardata)
-			safe_free(ceptr->ce_vardata);
+		safe_free(ceptr->ce_varname);
+		safe_free(ceptr->ce_vardata);
 		safe_free(ceptr);
 	}
 }
@@ -10150,8 +10146,7 @@ void unload_notloaded_includes(void)
 					remove(inc->file);
 				}
 				safe_free(inc->url);
-				if (inc->errorbuf)
-					safe_free(inc->errorbuf);
+				safe_free(inc->errorbuf);
 			}
 #endif
 			safe_free(inc->file);
@@ -10184,8 +10179,7 @@ void unload_loaded_includes(void)
 					remove(inc->file);
 				}
 				safe_free(inc->url);
-				if (inc->errorbuf)
-					safe_free(inc->errorbuf);
+				safe_free(inc->errorbuf);
 			}
 #endif
 			safe_free(inc->file);

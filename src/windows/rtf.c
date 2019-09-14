@@ -84,8 +84,7 @@ DWORD CALLBACK BufferIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 	memcpy(buf2+size,pbBuff,cb);
 
 	size += cb;
-	if (RTFBuf)
-		safe_free(RTFBuf);
+	safe_free(RTFBuf);
 
 	RTFBuf = buf2;
 

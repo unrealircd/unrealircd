@@ -43,7 +43,6 @@ char *make_virthost(Client *sptr, char *curr, char *new, int mode)
 		strlcpy(new, mask, HOSTLEN + 1);
 		return NULL;
 	}
-	if (new)
-		safe_free(new);
+	safe_free(new);
 	return raw_strdup(mask);
 }

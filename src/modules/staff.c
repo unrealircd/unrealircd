@@ -131,8 +131,7 @@ static void InitConf()
 
 static void FreeConf()
 {
-	if (staff_file)
-		safe_free(staff_file);
+	safe_free(staff_file);
 }
 
 /*** web routines */

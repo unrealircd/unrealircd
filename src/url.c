@@ -179,8 +179,7 @@ char *download_file(const char *url, char **error)
 
 	if (!curl)
 	{
-		if (file)
-			safe_free(file);
+		safe_free(file);
 		strlcpy(errorbuf, "curl_easy_init() failed", sizeof(errorbuf));
 		*error = errorbuf;
 		return NULL;
@@ -190,8 +189,7 @@ char *download_file(const char *url, char **error)
 	if (!fd)
 	{
 		snprintf(errorbuf, CURL_ERROR_SIZE, "Cannot write to %s: %s", tmp, strerror(errno));
-		if (file)
-			safe_free(file);
+		safe_free(file);
 		*error = errorbuf;
 		return NULL;
 	}
@@ -223,8 +221,7 @@ char *download_file(const char *url, char **error)
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
 	res = curl_easy_perform(curl);
 	fclose(fd);
-	if (file)
-		safe_free(file);
+	safe_free(file);
 	if (res == CURLE_OK)
 	{
 		long last_mod;

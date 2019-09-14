@@ -136,11 +136,8 @@ CMD_FUNC(cmd_svsnline)
 		  if (bconf)
 		  {
 		  	DelListItem(bconf, conf_ban);
-		  	
-		  	if (bconf->mask)
-		  		safe_free(bconf->mask);
-		  	if (bconf->reason)
-		  		safe_free(bconf->reason);
+	  		safe_free(bconf->mask);
+	  		safe_free(bconf->reason);
 		  	safe_free(bconf);
 		  	
 		  }

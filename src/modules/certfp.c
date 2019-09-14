@@ -141,9 +141,7 @@ int certfp_whois(Client *sptr, Client *acptr)
 
 void certfp_free(ModData *m)
 {
-	if (m->str)
-		safe_free(m->str);
-	m->str = NULL;
+	safe_free(m->str);
 }
 
 char *certfp_serialize(ModData *m)

@@ -857,8 +857,7 @@ int badword_config_process(ConfigItem_badword *ca, char *str)
 void badword_config_free(ConfigItem_badword *e)
 {
 	safe_free(e->word);
-	if (e->replace)
-		safe_free(e->replace);
+	safe_free(e->replace);
 	if (e->pcre2_expr)
 		pcre2_code_free(e->pcre2_expr);
 	safe_free(e);

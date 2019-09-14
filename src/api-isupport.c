@@ -238,8 +238,7 @@ void ISupportDel(ISupport *isupport)
 {
 	DelListItem(isupport, ISupports);
 	safe_free(isupport->token);
-	if (isupport->value)
-		safe_free(isupport->value);
+	safe_free(isupport->value);
 	safe_free(isupport);
 	make_isupportstrings();
 }

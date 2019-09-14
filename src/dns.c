@@ -616,8 +616,7 @@ static void unrealdns_freeandremovereq(DNSReq *r)
 	if (r->next)
 		r->next->prev = r->prev;
 
-	if (r->name)
-		safe_free(r->name);
+	safe_free(r->name);
 	safe_free(r);
 }
 
