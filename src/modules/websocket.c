@@ -102,9 +102,9 @@ void websocket_mdata_free(ModData *m)
 	WebSocketUser *wsu = (WebSocketUser *)m->ptr;
 	if (wsu)
 	{
-		safefree(wsu->handshake_key);
-		safefree(wsu->lefttoparse);
-		MyFree(m->ptr);
+		safe_free(wsu->handshake_key);
+		safe_free(wsu->lefttoparse);
+		safe_free(m->ptr);
 	}
 }
 
@@ -140,7 +140,7 @@ int websocket_handle_websocket(Client *sptr, char *readbuf2, int length2)
 		memcpy(readbuf, WSU(sptr)->lefttoparse, length1);
 	memcpy(readbuf+length1, readbuf2, length2);
 
-	safefree(WSU(sptr)->lefttoparse);
+	safe_free(WSU(sptr)->lefttoparse);
 	WSU(sptr)->lefttoparselen = 0;
 	
 	ptr = readbuf;
@@ -151,8 +151,8 @@ int websocket_handle_websocket(Client *sptr, char *readbuf2, int length2)
 		if (n == 0)
 		{
 			/* Short read. Stop processing for now, but save data for next time */
-			safefree(WSU(sptr)->lefttoparse);
-			WSU(sptr)->lefttoparse = MyMallocEx(length);
+			safe_free(WSU(sptr)->lefttoparse);
+			WSU(sptr)->lefttoparse = safe_alloc(length);
 			WSU(sptr)->lefttoparselen = length;
 			memcpy(WSU(sptr)->lefttoparse, ptr, length);
 			return 0;
@@ -178,7 +178,7 @@ int websocket_packet_in(Client *sptr, char *readbuf, int *length)
 	if ((sptr->local->receiveM == 0) && !WSU(sptr) && (*length > 8) && !strncmp(readbuf, "GET ", 4))
 	{
 		/* Allocate a new WebSocketUser struct for this session */
-		moddata_client(sptr, websocket_md).ptr = MyMallocEx(sizeof(WebSocketUser));
+		moddata_client(sptr, websocket_md).ptr = safe_alloc(sizeof(WebSocketUser));
 		WSU(sptr)->get = 1;
 	}
 
@@ -357,7 +357,7 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 	}
 	memcpy(netbuf+nprefix, readbuf, n); /* SAFE: see checking above */
 	netbuf[n+nprefix] = '\0';
-	safefree(WSU(sptr)->lefttoparse);
+	safe_free(WSU(sptr)->lefttoparse);
 
 	/** Now step through the lines.. **/
 	for (r = websocket_handshake_helper(netbuf, strlen(netbuf), &key, &value, &lastloc, &end_of_request);
@@ -372,7 +372,7 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 				dead_link(sptr, "Invalid characters in Sec-WebSocket-Key");
 				return -1;
 			}
-			safestrdup(WSU(sptr)->handshake_key, value);
+			safe_strdup(WSU(sptr)->handshake_key, value);
 		}
 	}
 	
@@ -395,7 +395,7 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 	if (lastloc)
 	{
 		/* Last line was cut somewhere, save it for next round. */
-		safefree(WSU(sptr)->lefttoparse);
+		safe_free(WSU(sptr)->lefttoparse);
 		WSU(sptr)->lefttoparse = strdup(lastloc);
 	}
 	return 0; /* don't let UnrealIRCd process this */

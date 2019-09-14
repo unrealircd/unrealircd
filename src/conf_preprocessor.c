@@ -71,7 +71,7 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 			return PREPROCESSOR_ERROR;
 		}
 		*p = '\0';
-		cc = MyMallocEx(sizeof(ConditionalConfig));
+		cc = safe_alloc(sizeof(ConditionalConfig));
 		cc->condition = IF_MODULE;
 		cc->negative = negative;
 		cc->name = strdup(name);
@@ -101,7 +101,7 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 			return PREPROCESSOR_ERROR;
 		}
 		*p = '\0';
-		cc = MyMallocEx(sizeof(ConditionalConfig));
+		cc = safe_alloc(sizeof(ConditionalConfig));
 		cc->condition = IF_DEFINED;
 		cc->negative = negative;
 		cc->name = strdup(name);
@@ -165,7 +165,7 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 			return PREPROCESSOR_ERROR;
 		}
 		*p = '\0';
-		cc = MyMallocEx(sizeof(ConditionalConfig));
+		cc = safe_alloc(sizeof(ConditionalConfig));
 		cc->condition = IF_VALUE;
 		cc->negative = negative;
 		cc->name = strdup(name);
@@ -215,7 +215,7 @@ int evaluate_preprocessor_define(char *statement, char *filename, int linenumber
 	*p = '\0';
 	*name_terminator = '\0';
 
-	NameValueList *d = MyMallocEx(sizeof(NameValueList));
+	NameValueList *d = safe_alloc(sizeof(NameValueList));
 	d->name = strdup(name);
 	d->value = strdup(value);
 	AddListItem(d, config_defines);
@@ -250,9 +250,9 @@ int parse_preprocessor_item(char *start, char *end, char *filename, int linenumb
  */
 void preprocessor_cc_free_entry(ConditionalConfig *cc)
 {
-	safefree(cc->name);
-	safefree(cc->opt);
-	MyFree(cc);
+	safe_free(cc->name);
+	safe_free(cc->opt);
+	safe_free(cc);
 }
 
 /** Free ConditionalConfig entries in a linked list that
@@ -280,9 +280,9 @@ void preprocessor_cc_duplicate_list(ConditionalConfig *r, ConditionalConfig **ou
 	*out = NULL;
 	for (; r; r = r->next)
 	{
-		cc = MyMallocEx(sizeof(ConditionalConfig));
-		safestrdup(cc->name, r->name);
-		safestrdup(cc->opt, r->opt);
+		cc = safe_alloc(sizeof(ConditionalConfig));
+		safe_strdup(cc->name, r->name);
+		safe_strdup(cc->opt, r->opt);
 		cc->priority = r->priority;
 		cc->condition = r->condition;
 		cc->negative = r->negative;
@@ -297,9 +297,9 @@ void preprocessor_cc_free_list(ConditionalConfig *cc)
 	for (; cc; cc = cc_next)
 	{
 		cc_next = cc->next;
-		safefree(cc->name);
-		safefree(cc->opt);
-		MyFree(cc);
+		safe_free(cc->name);
+		safe_free(cc->opt);
+		safe_free(cc);
 	}
 }
 
@@ -310,9 +310,9 @@ void free_config_entry(ConfigEntry *ce)
 		preprocessor_cc_free_list(ce->ce_cond);
 
 	/* free ConfigEntry */
-	safefree(ce->ce_varname);
-	safefree(ce->ce_vardata);
-	MyFree(ce);
+	safe_free(ce->ce_varname);
+	safe_free(ce->ce_vardata);
+	safe_free(ce);
 }
 
 NameValueList *find_config_define(const char *name)
@@ -435,9 +435,9 @@ void free_config_defines(void)
 	for (e = config_defines; e; e = e_next)
 	{
 		e_next = e->next;
-		safefree(e->name);
-		safefree(e->value);
-		MyFree(e);
+		safe_free(e->name);
+		safe_free(e->value);
+		safe_free(e);
 	}
 	config_defines = NULL;
 }
@@ -505,5 +505,5 @@ void preprocessor_replace_defines(char **item)
 			break; /* no input buffer left */
 	}
 	*o = '\0';
-	safestrdup(*item, buf);
+	safe_strdup(*item, buf);
 }

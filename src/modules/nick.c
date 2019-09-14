@@ -1093,7 +1093,7 @@ CMD_FUNC(cmd_nick)
 
 		/* Copy password to the passwd field if it's given after NICK */
 		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN))
-			safestrdup(sptr->local->passwd, parv[2]);
+			safe_strdup(sptr->local->passwd, parv[2]);
 
 		/* This had to be copied here to avoid problems.. */
 		strlcpy(sptr->name, nick, sizeof(sptr->name));
@@ -1513,7 +1513,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		 * it may depend on the IP address (bug #5064).
 		 */
 		make_virthost(sptr, user->realhost, user->cloakedhost, 0);
-		safestrdup(user->virthost, user->cloakedhost);
+		safe_strdup(user->virthost, user->cloakedhost);
 
 		/* Set the umodes */
 		tkllayer[0] = nick;
@@ -1526,7 +1526,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 
 		/* Set the vhost */
 		if (virthost && *virthost != '*')
-			safestrdup(sptr->user->virthost, virthost);
+			safe_strdup(sptr->user->virthost, virthost);
 	}
 
 	hash_check_watch(sptr, RPL_LOGON);	/* Uglier hack */
@@ -1620,7 +1620,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 
 	if (MyConnect(sptr) && !BadPtr(sptr->local->passwd))
 	{
-		MyFree(sptr->local->passwd);
+		safe_free(sptr->local->passwd);
 		sptr->local->passwd = NULL;
 	}
 	return 0;
@@ -1797,7 +1797,7 @@ int AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 			continue;
 		}
 		/* Password (or other auth method) was correct */
-		safefree(cptr->local->passwd);
+		safe_free(cptr->local->passwd);
 
 		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
 		{

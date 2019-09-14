@@ -160,13 +160,13 @@ void tkldb_moddata_free(ModData *md)
 void setcfg(void)
 {
 	// Default: data/tkl.db
-	cfg.database = strdup("tkl.db");
+	safe_strdup(cfg.database, "tkl.db");
 	convert_to_absolute_path(&cfg.database, PERMDATADIR);
 }
 
 void freecfg(void)
 {
-	MyFree(cfg.database);
+	safe_free(cfg.database);
 }
 
 int tkldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -214,7 +214,7 @@ int tkldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "database"))
-			safestrdup(cfg.database, cep->ce_vardata);
+			safe_strdup(cfg.database, cep->ce_vardata);
 	}
 	return 1;
 }
@@ -439,7 +439,7 @@ int read_tkldb(void)
 	{
 		int do_not_add = 0;
 
-		tkl = MyMallocEx(sizeof(TKL));
+		tkl = safe_alloc(sizeof(TKL));
 
 		/* First, fetch the TKL type.. */
 		R_SAFE(read_data(fd, &c, sizeof(c)));
@@ -471,7 +471,7 @@ int read_tkldb(void)
 		{
 			int softban = 0;
 
-			tkl->ptr.serverban = MyMallocEx(sizeof(ServerBan));
+			tkl->ptr.serverban = safe_alloc(sizeof(ServerBan));
 
 			/* Usermask - but taking into account that the
 			 * %-prefix means a soft ban.
@@ -480,10 +480,11 @@ int read_tkldb(void)
 			if (*str == '%')
 			{
 				softban = 1;
-				str++;
+				safe_strdup(tkl->ptr.serverban->usermask, str+1);
+			} else {
+				safe_strdup(tkl->ptr.serverban->usermask, str);
 			}
-			tkl->ptr.serverban->usermask = strdup(str);
-			safefree(str);
+			safe_free(str);
 
 			/* And the other 2 fields.. */
 			R_SAFE(read_str(fd, &tkl->ptr.serverban->hostmask));
@@ -506,12 +507,12 @@ int read_tkldb(void)
 		} else
 		if (TKLIsNameBan(tkl))
 		{
-			tkl->ptr.nameban = MyMallocEx(sizeof(NameBan));
+			tkl->ptr.nameban = safe_alloc(sizeof(NameBan));
 
 			R_SAFE(read_str(fd, &str));
 			if (*str == 'H')
 				tkl->ptr.nameban->hold = 1;
-			safefree(str);
+			safe_free(str);
 			R_SAFE(read_str(fd, &tkl->ptr.nameban->name));
 			R_SAFE(read_str(fd, &tkl->ptr.nameban->reason));
 
@@ -535,7 +536,7 @@ int read_tkldb(void)
 			int match_method;
 			char *err = NULL;
 
-			tkl->ptr.spamfilter = MyMallocEx(sizeof(Spamfilter));
+			tkl->ptr.spamfilter = safe_alloc(sizeof(Spamfilter));
 
 			/* Match method */
 			R_SAFE(read_str(fd, &str));
@@ -545,7 +546,7 @@ int read_tkldb(void)
 				config_warn("[tkldb] Unhandled spamfilter match method '%s' -- spamfilter entry not added", str);
 				do_not_add = 1;
 			}
-			safefree(str);
+			safe_free(str);
 
 			/* Match string (eg: regex) */
 			R_SAFE(read_str(fd, &str));
@@ -555,7 +556,7 @@ int read_tkldb(void)
 				config_warn("[tkldb] Spamfilter '%s' does not compile: %s -- spamfilter entry not added", str, err);
 				do_not_add = 1;
 			}
-			safefree(str);
+			safe_free(str);
 
 			/* Target (eg: cpn) */
 			R_SAFE(read_str(fd, &str));
@@ -566,7 +567,7 @@ int read_tkldb(void)
 					tkl->ptr.spamfilter->match->str, str);
 				do_not_add = 1;
 			}
-			safefree(str);
+			safe_free(str);
 
 			/* Action */
 			R_SAFE(read_data(fd, &c, sizeof(c)));

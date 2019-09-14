@@ -53,13 +53,13 @@ MOD_TEST()
 
 MOD_INIT()
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	init_config();
 	CommandAdd(modinfo->handle, "HEAD", webredir, MAXPARA, M_UNREGISTERED);
 	CommandAdd(modinfo->handle, "GET", webredir, MAXPARA, M_UNREGISTERED);
 	CommandAdd(modinfo->handle, "POST", webredir, MAXPARA, M_UNREGISTERED);
 	CommandAdd(modinfo->handle, "PUT", webredir, MAXPARA, M_UNREGISTERED);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, webredir_config_run);
-	MARK_AS_OFFICIAL_MODULE(modinfo);
-	init_config();
 	return MOD_SUCCESS;
 }
 
@@ -88,7 +88,7 @@ static void init_config(void)
 static void free_config(void)
 {
 	if (cfg.url)
-		MyFree(cfg.url);
+		safe_free(cfg.url);
 
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
@@ -186,8 +186,8 @@ int webredir_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->ce_varname, "url"))
 		{
 			if (cfg.url)
-				MyFree(cfg.url);
-			cfg.url = strdup(cep->ce_vardata);
+				safe_free(cfg.url);
+			safe_strdup(cfg.url, cep->ce_vardata);
 		}
 	}
 	return 1;

@@ -914,9 +914,7 @@ void read_motd(const char *filename, MOTDFile *themotd)
 	if(filename && url_is_valid(filename))
 	{
 		/* prepare our payload for read_motd_asynch_downloaded() */
-		motd_download = MyMallocEx(sizeof(MOTDDownload));
-		if(!motd_download)
-			outofmemory();
+		motd_download = safe_alloc(sizeof(MOTDDownload));
 		motd_download->themotd = themotd;
 		themotd->motd_download = motd_download;
 
@@ -952,7 +950,7 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 	*/
 	if(!themotd)
 	{
-		MyFree(motd_download);
+		safe_free(motd_download);
 		return;
 	}
 
@@ -968,7 +966,7 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 
 			/* remove reference to this chunk of memory about to be freed. */
 			motd_download->themotd->motd_download = NULL;
-			MyFree(motd_download);
+			safe_free(motd_download);
 			return;
 		}
 	}
@@ -990,7 +988,7 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 	}
 
 	do_read_motd(filename, themotd);
-	MyFree(motd_download);
+	safe_free(motd_download);
 }
 #endif /* USE_LIBCURL */
 
@@ -1035,7 +1033,7 @@ void do_read_motd(const char *filename, MOTDFile *themotd)
 		if (strlen(line) > 510)
 			line[510] = '\0';
 
-		temp = MyMallocEx(sizeof(MOTDLine));
+		temp = safe_alloc(sizeof(MOTDLine));
 		temp->line = strdup(line);
 
 		if(last)
@@ -1071,8 +1069,8 @@ void free_motd(MOTDFile *themotd)
 	for (motdline = themotd->lines; motdline; motdline = next)
 	{
 		next = motdline->next;
-		MyFree(motdline->line);
-		MyFree(motdline);
+		safe_free(motdline->line);
+		safe_free(motdline);
 	}
 
 	themotd->lines = NULL;
@@ -1166,7 +1164,7 @@ void add_pending_net(Client *sptr, char *str)
 		return;
 
 	/* Allocate */
-	net = MyMallocEx(sizeof(PendingNet));
+	net = safe_alloc(sizeof(PendingNet));
 	net->sptr = sptr;
 
 	/* Fill in */
@@ -1177,7 +1175,7 @@ void add_pending_net(Client *sptr, char *str)
 		if (!*name)
 			continue;
 		
-		srv = MyMallocEx(sizeof(PendingServer));
+		srv = safe_alloc(sizeof(PendingServer));
 		strlcpy(srv->sid, name, sizeof(srv->sid));
 		AddListItem(srv, net->servers);
 	}
@@ -1198,10 +1196,10 @@ void free_pending_net(Client *sptr)
 			for (srv = net->servers; srv; srv = srv_next)
 			{
 				srv_next = srv->next;
-				MyFree(srv);
+				safe_free(srv);
 			}
 			DelListItem(net, pendingnet);
-			MyFree(net);
+			safe_free(net);
 			/* Don't break, there can be multiple objects */
 		}
 	}
@@ -1288,19 +1286,19 @@ void parse_chanmodes_protoctl(Client *sptr, char *str)
 	modes = strtoken(&p, copy, ",");
 	if (modes)
 	{
-		safestrdup(sptr->serv->features.chanmodes[0], modes);
+		safe_strdup(sptr->serv->features.chanmodes[0], modes);
 		modes = strtoken(&p, NULL, ",");
 		if (modes)
 		{
-			safestrdup(sptr->serv->features.chanmodes[1], modes);
+			safe_strdup(sptr->serv->features.chanmodes[1], modes);
 			modes = strtoken(&p, NULL, ",");
 			if (modes)
 			{
-				safestrdup(sptr->serv->features.chanmodes[2], modes);
+				safe_strdup(sptr->serv->features.chanmodes[2], modes);
 				modes = strtoken(&p, NULL, ",");
 				if (modes)
 				{
-					safestrdup(sptr->serv->features.chanmodes[3], modes);
+					safe_strdup(sptr->serv->features.chanmodes[3], modes);
 				}
 			}
 		}
@@ -1314,7 +1312,7 @@ void charsys_check_for_changes(void)
 {
 	char *langsinuse = charsys_get_current_languages();
 	/* already called by charsys_finish() */
-	safestrdup(me.serv->features.nickchars, langsinuse);
+	safe_strdup(me.serv->features.nickchars, langsinuse);
 
 	if (!previous_langsinuse_ready)
 	{

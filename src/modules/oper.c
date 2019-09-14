@@ -224,7 +224,7 @@ CMD_FUNC(cmd_oper)
 	/* /OPER really succeeded now. Start processing it. */
 
 	/* Store which oper block was used to become IRCOp (for maxlogins and whois) */
-	safefree(sptr->user->operlogin);
+	safe_free(sptr->user->operlogin);
 	sptr->user->operlogin = strdup(operblock->name);
 
 	/* Put in the right class */

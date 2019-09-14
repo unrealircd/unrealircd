@@ -360,11 +360,9 @@ char *x;
 }
 
 long config_checkval(char *orig, unsigned short flags) {
-	char *value;
+	char *value = raw_strdup(orig);
 	char *text;
 	long ret = 0;
-
-	value = strdup(orig);
 
 	if (flags == CFG_YESNO) {
 		for (text = value; *text; text++) {
@@ -475,7 +473,7 @@ void free_conf_channelmodes(struct ChMode *store)
 	store->mode = 0;
 	store->extmodes = 0;
 	for (i = 0; i < EXTCMODETABLESZ; i++)
-		safefree(store->extparams[i]);
+		safe_free(store->extparams[i]);
 }
 
 /* Set configuration, used for set::modes-on-join */
@@ -495,7 +493,7 @@ void conf_channelmodes(char *modes, struct ChMode *store, int warn)
 	if (params)
 	{
 		params++;
-		parambuf = strdup(params);
+		safe_strdup(parambuf, params);
 		param = strtoken(&save, parambuf, " ");
 	}
 
@@ -542,7 +540,7 @@ void conf_channelmodes(char *modes, struct ChMode *store, int warn)
 						param = Channelmode_Table[i].conv_param(param, NULL);
 						if (!param)
 							break; /* invalid parameter fmt, do not set mode. */
-						store->extparams[i] = strdup(param);
+						store->extparams[i] = raw_strdup(param);
 						/* Get next parameter */
 						param = strtoken(&save, NULL, " ");
 					}
@@ -758,7 +756,7 @@ ConfigFile *config_load(char *filename)
 		close(fd);
 		return cfptr;
 	}
-	buf = MyMallocEx(sb.st_size+1);
+	buf = safe_alloc(sb.st_size+1);
 	if (buf == NULL)
 	{
 		config_error("Out of memory trying to load \"%s\"\n", filename);
@@ -836,8 +834,8 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 	int preprocessor_level = 0;
 	ConditionalConfig *cc, *cc_list = NULL;
 
-	curcf = MyMallocEx(sizeof(ConfigFile));
-	curcf->cf_filename = strdup(filename);
+	curcf = safe_alloc(sizeof(ConfigFile));
+	safe_strdup(curcf->cf_filename, filename);
 	lastce = &(curcf->cf_entries);
 	curce = NULL;
 	cursection = NULL;
@@ -1014,15 +1012,15 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					}
 					else
 					{
-						safestrldup(curce->ce_vardata, start, ptr-start+1);
+						safe_strldup(curce->ce_vardata, start, ptr-start+1);
 						preprocessor_replace_defines(&curce->ce_vardata);
 						unreal_delquotes(curce->ce_vardata);
 					}
 				}
 				else
 				{
-					curce = MyMallocEx(sizeof(ConfigEntry));
-					safestrldup(curce->ce_varname, start, ptr-start+1);
+					curce = safe_alloc(sizeof(ConfigEntry));
+					safe_strldup(curce->ce_varname, start, ptr-start+1);
 					preprocessor_replace_defines(&curce->ce_varname);
 					unreal_delquotes(curce->ce_varname);
 					curce->ce_varlinenum = linenumber;
@@ -1121,15 +1119,15 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					}
 					else
 					{
-						safestrldup(curce->ce_vardata, start, ptr-start+1);
+						safe_strldup(curce->ce_vardata, start, ptr-start+1);
 						preprocessor_replace_defines(&curce->ce_vardata);
 					}
 				}
 				else
 				{
-					curce = MyMallocEx(sizeof(ConfigEntry));
+					curce = safe_alloc(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
-					safestrldup(curce->ce_varname, start, ptr-start+1);
+					safe_strldup(curce->ce_varname, start, ptr-start+1);
 					preprocessor_replace_defines(&curce->ce_varname);
 					curce->ce_varlinenum = linenumber;
 					curce->ce_fileptr = curcf;
@@ -1430,42 +1428,42 @@ ConfigCommand *config_binary_search(char *cmd) {
 
 void	free_iConf(Configuration *i)
 {
-	safefree(i->kline_address);
-	safefree(i->gline_address);
-	safefree(i->auto_join_chans);
-	safefree(i->oper_auto_join_chans);
-	safefree(i->oper_only_stats);
-	safefree(i->channel_command_prefix);
-	safefree(i->oper_snomask);
-	safefree(i->static_quit);
+	safe_free(i->kline_address);
+	safe_free(i->gline_address);
+	safe_free(i->auto_join_chans);
+	safe_free(i->oper_auto_join_chans);
+	safe_free(i->oper_only_stats);
+	safe_free(i->channel_command_prefix);
+	safe_free(i->oper_snomask);
+	safe_free(i->static_quit);
 	if (i->tls_options)
 	{
 	    free_tls_options(i->tls_options);
 	    i->tls_options = NULL;
 	}
-	safefree(i->restrict_usermodes);
-	safefree(i->restrict_channelmodes);
-	safefree(i->restrict_extendedbans);
-	safefree(i->network.x_ircnetwork);
-	safefree(i->network.x_ircnet005);
-	safefree(i->network.x_defserv);
-	safefree(i->network.x_services_name);
-	safefree(i->network.x_hidden_host);
-	safefree(i->network.x_prefix_quit);
-	safefree(i->network.x_helpchan);
-	safefree(i->network.x_stats_server);
-	safefree(i->network.x_sasl_server);
-	safefree(i->spamfilter_ban_reason);
-	safefree(i->spamfilter_virus_help_channel);
-	safefree(i->spamexcept_line);
-	safefree(i->link_bindip);
-	safefree(i->outdated_tls_policy_user_message);
-	safefree(i->outdated_tls_policy_oper_message);
-	safefree(i->reject_message_too_many_connections);
-	safefree(i->reject_message_server_full);
-	safefree(i->reject_message_unauthorized);
-	safefree(i->reject_message_kline);
-	safefree(i->reject_message_gline);
+	safe_free(i->restrict_usermodes);
+	safe_free(i->restrict_channelmodes);
+	safe_free(i->restrict_extendedbans);
+	safe_free(i->network.x_ircnetwork);
+	safe_free(i->network.x_ircnet005);
+	safe_free(i->network.x_defserv);
+	safe_free(i->network.x_services_name);
+	safe_free(i->network.x_hidden_host);
+	safe_free(i->network.x_prefix_quit);
+	safe_free(i->network.x_helpchan);
+	safe_free(i->network.x_stats_server);
+	safe_free(i->network.x_sasl_server);
+	safe_free(i->spamfilter_ban_reason);
+	safe_free(i->spamfilter_virus_help_channel);
+	safe_free(i->spamexcept_line);
+	safe_free(i->link_bindip);
+	safe_free(i->outdated_tls_policy_user_message);
+	safe_free(i->outdated_tls_policy_oper_message);
+	safe_free(i->reject_message_too_many_connections);
+	safe_free(i->reject_message_server_full);
+	safe_free(i->reject_message_unauthorized);
+	safe_free(i->reject_message_kline);
+	safe_free(i->reject_message_gline);
 }
 
 int	config_test();
@@ -1476,7 +1474,7 @@ void config_setdefaultsettings(Configuration *i)
 
 	i->unknown_flood_amount = 4;
 	i->unknown_flood_bantime = 600;
-	i->oper_snomask = strdup(SNO_DEFOPER);
+	safe_strdup(i->oper_snomask, SNO_DEFOPER);
 	i->ident_read_timeout = 7;
 	i->ident_connect_timeout = 3;
 	i->nick_count = 3; i->nick_period = 60; /* NICK flood protection: max 3 per 60s */
@@ -1486,14 +1484,14 @@ void config_setdefaultsettings(Configuration *i)
 	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
 	i->ban_version_tkl_time = 86400; /* 1d */
 	i->spamfilter_ban_time = 86400; /* 1d */
-	i->spamfilter_ban_reason = strdup("Spam/advertising");
-	i->spamfilter_virus_help_channel = strdup("#help");
+	safe_strdup(i->spamfilter_ban_reason, "Spam/advertising");
+	safe_strdup(i->spamfilter_virus_help_channel, "#help");
 	i->spamfilter_detectslow_warn = 250;
 	i->spamfilter_detectslow_fatal = 500;
 	i->spamfilter_stop_on_first_match = 1;
 	i->maxchannelsperuser = 10;
 	i->maxdccallow = 10;
-	i->channel_command_prefix = strdup("`!.");
+	safe_strdup(i->channel_command_prefix, "`!.");
 	conf_channelmodes("+nt", &i->modes_on_join, 0);
 	i->check_target_nick_bans = 1;
 	i->maxbans = 60;
@@ -1511,37 +1509,37 @@ void config_setdefaultsettings(Configuration *i)
 	i->away_length = 307;
 	i->kick_length = 307;
 	i->quit_length = 307;
-	i->link_bindip = strdup("*");
-	i->oper_only_stats = strdup("*");
-	i->network.x_hidden_host = strdup("Clk");
+	safe_strdup(i->link_bindip, "*");
+	safe_strdup(i->oper_only_stats, "*");
+	safe_strdup(i->network.x_hidden_host, "Clk");
 	if (!ipv6_capable())
 		DISABLE_IPV6 = 1;
-	i->network.x_prefix_quit = strdup("Quit");
+	safe_strdup(i->network.x_prefix_quit, "Quit");
 	i->max_unknown_connections_per_ip = 3;
 	i->handshake_timeout = 30;
 	i->handshake_delay = -1;
 	i->broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_AUTO;
 
 	/* SSL/TLS options */
-	i->tls_options = MyMallocEx(sizeof(TLSOptions));
+	i->tls_options = safe_alloc(sizeof(TLSOptions));
 	snprintf(tmp, sizeof(tmp), "%s/tls/server.cert.pem", CONFDIR);
-	i->tls_options->certificate_file = strdup(tmp);
+	safe_strdup(i->tls_options->certificate_file, tmp);
 	snprintf(tmp, sizeof(tmp), "%s/tls/server.key.pem", CONFDIR);
-	i->tls_options->key_file = strdup(tmp);
+	safe_strdup(i->tls_options->key_file, tmp);
 	snprintf(tmp, sizeof(tmp), "%s/tls/curl-ca-bundle.crt", CONFDIR);
-	i->tls_options->trusted_ca_file = strdup(tmp);
-	i->tls_options->ciphers = strdup(UNREALIRCD_DEFAULT_CIPHERS);
-	i->tls_options->ciphersuites = strdup(UNREALIRCD_DEFAULT_CIPHERSUITES);
+	safe_strdup(i->tls_options->trusted_ca_file, tmp);
+	safe_strdup(i->tls_options->ciphers, UNREALIRCD_DEFAULT_CIPHERS);
+	safe_strdup(i->tls_options->ciphersuites, UNREALIRCD_DEFAULT_CIPHERSUITES);
 	i->tls_options->protocols = TLS_PROTOCOL_ALL;
 #ifdef HAS_SSL_CTX_SET1_CURVES_LIST
-	i->tls_options->ecdh_curves = strdup(UNREALIRCD_DEFAULT_ECDH_CURVES);
+	safe_strdup(i->tls_options->ecdh_curves, UNREALIRCD_DEFAULT_ECDH_CURVES);
 #endif
-	i->tls_options->outdated_protocols = strdup("TLSv1,TLSv1.1");
+	safe_strdup(i->tls_options->outdated_protocols, "TLSv1,TLSv1.1");
 	/* the following may look strange but "AES*" matches all
 	 * AES ciphersuites that do not have Forward Secrecy.
 	 * Any decent client using AES will use ECDHE-xx-AES.
 	 */
-	i->tls_options->outdated_ciphers = strdup("AES*,RC4*,DES*");
+	safe_strdup(i->tls_options->outdated_ciphers, "AES*,RC4*,DES*");
 
 	i->plaintext_policy_user = POLICY_ALLOW;
 	i->plaintext_policy_oper = POLICY_DENY;
@@ -1551,11 +1549,11 @@ void config_setdefaultsettings(Configuration *i)
 	i->outdated_tls_policy_oper = POLICY_DENY;
 	i->outdated_tls_policy_server = POLICY_DENY;
 
-	i->reject_message_too_many_connections = strdup("Too many connections from your IP");
-	i->reject_message_server_full = strdup("This server is full");
-	i->reject_message_unauthorized = strdup("You are not authorized to connect to this server");
-	i->reject_message_kline = strdup("You are not welcome on this server. $bantype: $banreason. Email $klineaddr for more information.");
-	i->reject_message_gline = strdup("You are not welcome on this network. $bantype: $banreason. Email $glineaddr for more information.");
+	safe_strdup(i->reject_message_too_many_connections, "Too many connections from your IP");
+	safe_strdup(i->reject_message_server_full, "This server is full");
+	safe_strdup(i->reject_message_unauthorized, "You are not authorized to connect to this server");
+	safe_strdup(i->reject_message_kline, "You are not welcome on this server. $bantype: $banreason. Email $klineaddr for more information.");
+	safe_strdup(i->reject_message_gline, "You are not welcome on this network. $bantype: $banreason. Email $glineaddr for more information.");
 
 	i->topic_setter = SETTER_NICK;
 	i->ban_setter = SETTER_NICK;
@@ -1567,11 +1565,11 @@ void config_setdefaultsettings(Configuration *i)
 
 static void make_default_logblock(void)
 {
-ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
+	ConfigItem_log *ca = safe_alloc(sizeof(ConfigItem_log));
 
 	config_status("No log { } block found -- using default: errors will be logged to 'ircd.log'");
 
-	ca->file = strdup("ircd.log");
+	safe_strdup(ca->file, "ircd.log");
 	convert_to_absolute_path(&ca->file, LOGDIR);
 	ca->flags |= LOG_ERROR;
 	ca->logfd = -1;
@@ -1591,36 +1589,36 @@ void postconf_defaults(void)
 	{
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.plaintext_policy_user == POLICY_DENY)
-			safestrdup(iConf.plaintext_policy_user_message, "Insecure connection. Please reconnect using SSL/TLS.");
+			safe_strdup(iConf.plaintext_policy_user_message, "Insecure connection. Please reconnect using SSL/TLS.");
 		else if (iConf.plaintext_policy_user == POLICY_WARN)
-			safestrdup(iConf.plaintext_policy_user_message, "WARNING: Insecure connection. Please consider using SSL/TLS.");
+			safe_strdup(iConf.plaintext_policy_user_message, "WARNING: Insecure connection. Please consider using SSL/TLS.");
 	}
 
 	if (!iConf.plaintext_policy_oper_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.plaintext_policy_oper == POLICY_DENY)
-			safestrdup(iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
+			safe_strdup(iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
 		else if (iConf.plaintext_policy_oper == POLICY_WARN)
-			safestrdup(iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
+			safe_strdup(iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
 	}
 
 	if (!iConf.outdated_tls_policy_user_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.outdated_tls_policy_user == POLICY_DENY)
-			safestrdup(iConf.outdated_tls_policy_user_message, "Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+			safe_strdup(iConf.outdated_tls_policy_user_message, "Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 		else if (iConf.outdated_tls_policy_user == POLICY_WARN)
-			safestrdup(iConf.outdated_tls_policy_user_message, "WARNING: Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+			safe_strdup(iConf.outdated_tls_policy_user_message, "WARNING: Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 	}
 
 	if (!iConf.outdated_tls_policy_oper_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.outdated_tls_policy_oper == POLICY_DENY)
-			safestrdup(iConf.outdated_tls_policy_oper_message, "Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+			safe_strdup(iConf.outdated_tls_policy_oper_message, "Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 		else if (iConf.outdated_tls_policy_oper == POLICY_WARN)
-			safestrdup(iConf.outdated_tls_policy_oper_message, "WARNING: Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
+			safe_strdup(iConf.outdated_tls_policy_oper_message, "WARNING: Your IRC client is using an outdated SSL/TLS protocol or ciphersuite ($protocol-$cipher). Please upgrade your IRC client.");
 	}
 
 	/* We got a chicken-and-egg problem here.. antries added without reason or ban-time
@@ -1653,7 +1651,7 @@ void postconf_defaults(void)
 			continue; /* global entry or something else.. */
 		if (!strcmp(tk->ptr.spamfilter->tkl_reason, "<internally added by ircd>"))
 		{
-			MyFree(tk->ptr.spamfilter->tkl_reason);
+			safe_free(tk->ptr.spamfilter->tkl_reason);
 			tk->ptr.spamfilter->tkl_reason = strdup(encoded);
 			tk->ptr.spamfilter->tkl_duration = SPAMFILTER_BAN_TIME;
 		}
@@ -1813,8 +1811,8 @@ int config_loadmodules(void)
 	for (blm = conf_blacklist_module; blm; blm = blm_next)
 	{
 		blm_next = blm->next;
-		safefree(blm->name);
-		safefree(blm);
+		safe_free(blm->name);
+		safe_free(blm);
 	}
 	conf_blacklist_module = NULL;
 	/* End of freeing code */
@@ -1875,7 +1873,7 @@ int	init_conf(char *rootconf, int rehash)
 		if (rehash)
 		{
 			Hook *h;
-			safestrdup(old_pid_file, conf_files->pid_file);
+			safe_strdup(old_pid_file, conf_files->pid_file);
 			unrealdns_delasyncconnects();
 			config_rehash();
 			Unload_all_loaded_modules();
@@ -1910,7 +1908,7 @@ int	init_conf(char *rootconf, int rehash)
 				   old_pid_file);
 			write_pidfile();
 		}
-		safefree(old_pid_file);
+		safe_free(old_pid_file);
 	}
 	else
 	{
@@ -2154,30 +2152,30 @@ void	config_rehash()
 	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *)next)
 	{
 		next = (ListStruct *)admin_ptr->next;
-		safefree(admin_ptr->line);
+		safe_free(admin_ptr->line);
 		DelListItem(admin_ptr, conf_admin);
-		MyFree(admin_ptr);
+		safe_free(admin_ptr);
 	}
 
 	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *)next)
 	{
 		SWhois *s, *s_next;
 		next = (ListStruct *)oper_ptr->next;
-		safefree(oper_ptr->name);
-		safefree(oper_ptr->snomask);
-		safefree(oper_ptr->operclass);
-		safefree(oper_ptr->vhost);
+		safe_free(oper_ptr->name);
+		safe_free(oper_ptr->snomask);
+		safe_free(oper_ptr->operclass);
+		safe_free(oper_ptr->vhost);
 		Auth_FreeAuthConfig(oper_ptr->auth);
 		unreal_delete_masks(oper_ptr->mask);
 		DelListItem(oper_ptr, conf_oper);
 		for (s = oper_ptr->swhois; s; s = s_next)
 		{
 			s_next = s->next;
-			safefree(s->line);
-			safefree(s->setby);
-			MyFree(s);
+			safe_free(s->line);
+			safe_free(s->setby);
+			safe_free(s);
 		}
-		MyFree(oper_ptr);
+		safe_free(oper_ptr);
 	}
 
 	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
@@ -2211,25 +2209,25 @@ void	config_rehash()
 	{
 		next = (ListStruct *)uline_ptr->next;
 		/* We'll wipe it out when it has no clients */
-		safefree(uline_ptr->servername);
+		safe_free(uline_ptr->servername);
 		DelListItem(uline_ptr, conf_ulines);
-		MyFree(uline_ptr);
+		safe_free(uline_ptr);
 	}
 	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) next)
 	{
 		next = (ListStruct *)allow_ptr->next;
-		safefree(allow_ptr->ip);
-		safefree(allow_ptr->hostname);
+		safe_free(allow_ptr->ip);
+		safe_free(allow_ptr->hostname);
 		Auth_FreeAuthConfig(allow_ptr->auth);
 		DelListItem(allow_ptr, conf_allow);
-		MyFree(allow_ptr);
+		safe_free(allow_ptr);
 	}
 	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) next)
 	{
 		next = (ListStruct *)except_ptr->next;
-		safefree(except_ptr->mask);
+		safe_free(except_ptr->mask);
 		DelListItem(except_ptr, conf_except);
-		MyFree(except_ptr);
+		safe_free(except_ptr);
 	}
 	/* Free ban realname { }, ban server { } and ban version { } */
 	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) next)
@@ -2237,10 +2235,10 @@ void	config_rehash()
 		next = (ListStruct *)ban_ptr->next;
 		if (ban_ptr->flag.type2 == CONF_BAN_TYPE_CONF || ban_ptr->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 		{
-			safefree(ban_ptr->mask);
-			safefree(ban_ptr->reason);
+			safe_free(ban_ptr->mask);
+			safe_free(ban_ptr->reason);
 			DelListItem(ban_ptr, conf_ban);
-			MyFree(ban_ptr);
+			safe_free(ban_ptr);
 		}
 	}
 	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = listen_ptr->next)
@@ -2250,11 +2248,11 @@ void	config_rehash()
 	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) next)
 	{
 		next = (ListStruct *)tld_ptr->next;
-		safefree(tld_ptr->motd_file);
-		safefree(tld_ptr->rules_file);
-		safefree(tld_ptr->smotd_file);
-		safefree(tld_ptr->opermotd_file);
-		safefree(tld_ptr->botmotd_file);
+		safe_free(tld_ptr->motd_file);
+		safe_free(tld_ptr->rules_file);
+		safe_free(tld_ptr->smotd_file);
+		safe_free(tld_ptr->opermotd_file);
+		safe_free(tld_ptr->botmotd_file);
 
 		free_motd(&tld_ptr->motd);
 		free_motd(&tld_ptr->rules);
@@ -2263,7 +2261,7 @@ void	config_rehash()
 		free_motd(&tld_ptr->botmotd);
 
 		DelListItem(tld_ptr, conf_tld);
-		MyFree(tld_ptr);
+		safe_free(tld_ptr);
 	}
 	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *) next)
 	{
@@ -2271,20 +2269,20 @@ void	config_rehash()
 
 		next = (ListStruct *)vhost_ptr->next;
 
-		safefree(vhost_ptr->login);
+		safe_free(vhost_ptr->login);
 		Auth_FreeAuthConfig(vhost_ptr->auth);
-		safefree(vhost_ptr->virthost);
-		safefree(vhost_ptr->virtuser);
+		safe_free(vhost_ptr->virthost);
+		safe_free(vhost_ptr->virtuser);
 		unreal_delete_masks(vhost_ptr->mask);
 		for (s = vhost_ptr->swhois; s; s = s_next)
 		{
 			s_next = s->next;
-			safefree(s->line);
-			safefree(s->setby);
-			MyFree(s);
+			safe_free(s->line);
+			safe_free(s->setby);
+			safe_free(s);
 		}
 		DelListItem(vhost_ptr, conf_vhost);
-		MyFree(vhost_ptr);
+		safe_free(vhost_ptr);
 	}
 
 	remove_config_tkls();
@@ -2294,57 +2292,57 @@ void	config_rehash()
 		next = (ListStruct *)deny_dcc_ptr->next;
 		if (deny_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
 		{
-			safefree(deny_dcc_ptr->filename);
-			safefree(deny_dcc_ptr->reason);
+			safe_free(deny_dcc_ptr->filename);
+			safe_free(deny_dcc_ptr->reason);
 			DelListItem(deny_dcc_ptr, conf_deny_dcc);
-			MyFree(deny_dcc_ptr);
+			safe_free(deny_dcc_ptr);
 		}
 	}
 	for (deny_link_ptr = conf_deny_link; deny_link_ptr; deny_link_ptr = (ConfigItem_deny_link *) next) {
 		next = (ListStruct *)deny_link_ptr->next;
-		safefree(deny_link_ptr->prettyrule);
-		safefree(deny_link_ptr->mask);
+		safe_free(deny_link_ptr->prettyrule);
+		safe_free(deny_link_ptr->mask);
 		crule_free(&deny_link_ptr->rule);
 		DelListItem(deny_link_ptr, conf_deny_link);
-		MyFree(deny_link_ptr);
+		safe_free(deny_link_ptr);
 	}
 	for (deny_version_ptr = conf_deny_version; deny_version_ptr; deny_version_ptr = (ConfigItem_deny_version *) next) {
 		next = (ListStruct *)deny_version_ptr->next;
-		safefree(deny_version_ptr->mask);
-		safefree(deny_version_ptr->version);
-		safefree(deny_version_ptr->flags);
+		safe_free(deny_version_ptr->mask);
+		safe_free(deny_version_ptr->version);
+		safe_free(deny_version_ptr->flags);
 		DelListItem(deny_version_ptr, conf_deny_version);
-		MyFree(deny_version_ptr);
+		safe_free(deny_version_ptr);
 	}
 	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) next)
 	{
 		next = (ListStruct *)deny_channel_ptr->next;
-		safefree(deny_channel_ptr->redirect);
-		safefree(deny_channel_ptr->channel);
-		safefree(deny_channel_ptr->reason);
-		safefree(deny_channel_ptr->class);
+		safe_free(deny_channel_ptr->redirect);
+		safe_free(deny_channel_ptr->channel);
+		safe_free(deny_channel_ptr->reason);
+		safe_free(deny_channel_ptr->class);
 		DelListItem(deny_channel_ptr, conf_deny_channel);
 		unreal_delete_masks(deny_channel_ptr->mask);
-		MyFree(deny_channel_ptr);
+		safe_free(deny_channel_ptr);
 	}
 
 	for (allow_channel_ptr = conf_allow_channel; allow_channel_ptr; allow_channel_ptr = (ConfigItem_allow_channel *) next)
 	{
 		next = (ListStruct *)allow_channel_ptr->next;
-		safefree(allow_channel_ptr->channel);
-		safefree(allow_channel_ptr->class);
+		safe_free(allow_channel_ptr->channel);
+		safe_free(allow_channel_ptr->class);
 		DelListItem(allow_channel_ptr, conf_allow_channel);
 		unreal_delete_masks(allow_channel_ptr->mask);
-		MyFree(allow_channel_ptr);
+		safe_free(allow_channel_ptr);
 	}
 	for (allow_dcc_ptr = conf_allow_dcc; allow_dcc_ptr; allow_dcc_ptr = (ConfigItem_allow_dcc *)next)
 	{
 		next = (ListStruct *)allow_dcc_ptr->next;
 		if (allow_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
 		{
-			safefree(allow_dcc_ptr->filename);
+			safe_free(allow_dcc_ptr->filename);
 			DelListItem(allow_dcc_ptr, conf_allow_dcc);
-			MyFree(allow_dcc_ptr);
+			safe_free(allow_dcc_ptr);
 		}
 	}
 
@@ -2354,70 +2352,70 @@ void	config_rehash()
 		conf_drpass->restartauth = NULL;
 		Auth_FreeAuthConfig(conf_drpass->dieauth);
 		conf_drpass->dieauth = NULL;
-		safefree(conf_drpass);
+		safe_free(conf_drpass);
 	}
 	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)next) {
 		next = (ListStruct *)log_ptr->next;
 		if (log_ptr->logfd != -1)
 			fd_close(log_ptr->logfd);
-		safefree(log_ptr->file);
+		safe_free(log_ptr->file);
 		DelListItem(log_ptr, conf_log);
-		MyFree(log_ptr);
+		safe_free(log_ptr);
 	}
 	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)next) {
 		RealCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
 		ConfigItem_alias_format *fmt;
 		next = (ListStruct *)alias_ptr->next;
-		safefree(alias_ptr->nick);
+		safe_free(alias_ptr->nick);
 		if (cmptr)
 			CommandDelX(NULL, cmptr);
-		safefree(alias_ptr->alias);
+		safe_free(alias_ptr->alias);
 		if (alias_ptr->format && (alias_ptr->type == ALIAS_COMMAND)) {
 			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) next2)
 			{
 				next2 = (ListStruct *)fmt->next;
-				safefree(fmt->format);
-				safefree(fmt->nick);
-				safefree(fmt->parameters);
+				safe_free(fmt->format);
+				safe_free(fmt->nick);
+				safe_free(fmt->parameters);
 				unreal_delete_match(fmt->expr);
 				DelListItem(fmt, alias_ptr->format);
-				MyFree(fmt);
+				safe_free(fmt);
 			}
 		}
 		DelListItem(alias_ptr, conf_alias);
-		MyFree(alias_ptr);
+		safe_free(alias_ptr);
 	}
 	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)next) {
 		MOTDLine *text;
 		next = (ListStruct *)help_ptr->next;
-		safefree(help_ptr->command);
+		safe_free(help_ptr->command);
 		while (help_ptr->text) {
 			text = help_ptr->text->next;
-			safefree(help_ptr->text->line);
-			safefree(help_ptr->text);
+			safe_free(help_ptr->text->line);
+			safe_free(help_ptr->text);
 			help_ptr->text = text;
 		}
 		DelListItem(help_ptr, conf_help);
-		MyFree(help_ptr);
+		safe_free(help_ptr);
 	}
 	for (os_ptr = iConf.oper_only_stats_ext; os_ptr; os_ptr = (OperStat *)next)
 	{
 		next = (ListStruct *)os_ptr->next;
-		safefree(os_ptr->flag);
-		MyFree(os_ptr);
+		safe_free(os_ptr->flag);
+		safe_free(os_ptr);
 	}
 	iConf.oper_only_stats_ext = NULL;
 	for (spamex_ptr = iConf.spamexcept; spamex_ptr; spamex_ptr = (SpamExcept *)next)
 	{
 		next = (ListStruct *)spamex_ptr->next;
-		MyFree(spamex_ptr);
+		safe_free(spamex_ptr);
 	}
 	iConf.spamexcept = NULL;
 	for (of_ptr = conf_offchans; of_ptr; of_ptr = (ConfigItem_offchans *)next)
 	{
 		next = (ListStruct *)of_ptr->next;
-		safefree(of_ptr->topic);
-		MyFree(of_ptr);
+		safe_free(of_ptr->topic);
+		safe_free(of_ptr);
 	}
 	conf_offchans = NULL;
 
@@ -2427,8 +2425,8 @@ void	config_rehash()
 	    next = (ListStruct *)sni->next;
 	    SSL_CTX_free(sni->ssl_ctx);
 	    free_tls_options(sni->tls_options);
-	    safefree(sni->name);
-	    MyFree(sni);
+	    safe_free(sni->name);
+	    safe_free(sni);
 	}
 	conf_sni = NULL;
 
@@ -2438,20 +2436,20 @@ void	config_rehash()
 	  reset conf_files -- should this be in its own function? no, because
 	  it's only used here
 	 */
-	safefree(conf_files->motd_file);
-	safefree(conf_files->smotd_file);
-	safefree(conf_files->opermotd_file);
-	safefree(conf_files->svsmotd_file);
-	safefree(conf_files->botmotd_file);
-	safefree(conf_files->rules_file);
-	safefree(conf_files->pid_file);
-	safefree(conf_files->tune_file);
+	safe_free(conf_files->motd_file);
+	safe_free(conf_files->smotd_file);
+	safe_free(conf_files->opermotd_file);
+	safe_free(conf_files->svsmotd_file);
+	safe_free(conf_files->botmotd_file);
+	safe_free(conf_files->rules_file);
+	safe_free(conf_files->pid_file);
+	safe_free(conf_files->tune_file);
 	/*
 	   Don't free conf_files->pid_file here; the old value is used to determine if
 	   the pidfile location has changed and write_pidfile() needs to be called
 	   again.
 	*/
-	safefree(conf_files);
+	safe_free(conf_files);
 	conf_files = NULL;
 }
 
@@ -3060,9 +3058,9 @@ void convert_to_absolute_path(char **path, char *reldir)
 	if (!strncmp(*path, reldir, strlen(reldir)))
 		return; /* already contains reldir */
 
-	s = MyMallocEx(strlen(reldir) + strlen(*path) + 2);
+	s = safe_alloc(strlen(reldir) + strlen(*path) + 2);
 	sprintf(s, "%s/%s", reldir, *path); /* safe, see line above */
-	MyFree(*path);
+	safe_free(*path);
 	*path = s;
 }
 
@@ -3141,7 +3139,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}
 	if (cPath) {
-		path = MyMallocEx(strlen(cPath) + strlen(FindData.cFileName)+1);
+		path = safe_alloc(strlen(cPath) + strlen(FindData.cFileName)+1);
 		strcpy(path, cPath);
 		strcat(path, FindData.cFileName);
 
@@ -3164,7 +3162,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 	ret = 0;
 	while (FindNextFile(hFind, &FindData) != 0) {
 		if (cPath) {
-			path = MyMallocEx(strlen(cPath) + strlen(FindData.cFileName)+1);
+			path = safe_alloc(strlen(cPath) + strlen(FindData.cFileName)+1);
 			strcpy(path,cPath);
 			strcat(path,FindData.cFileName);
 
@@ -3203,10 +3201,10 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		ca = MyMallocEx(sizeof(ConfigItem_admin));
+		ca = safe_alloc(sizeof(ConfigItem_admin));
 		if (!conf_admin)
 			conf_admin_tail = ca;
-		safestrdup(ca->line, cep->ce_varname);
+		safe_strdup(ca->line, cep->ce_varname);
 		AddListItem(ca, conf_admin);
 	}
 	return 1;
@@ -3243,21 +3241,21 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 
 	if (!conf_me)
-		conf_me = MyMallocEx(sizeof(ConfigItem_me));
+		conf_me = safe_alloc(sizeof(ConfigItem_me));
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "name"))
 		{
-			safestrdup(conf_me->name, cep->ce_vardata);
+			safe_strdup(conf_me->name, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "info"))
 		{
-			safestrdup(conf_me->info, cep->ce_vardata);
+			safe_strdup(conf_me->info, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "sid"))
 		{
-			safestrdup(conf_me->sid, cep->ce_vardata);
+			safe_strdup(conf_me->sid, cep->ce_vardata);
 		}
 	}
 	return 1;
@@ -3416,7 +3414,7 @@ int	_conf_files(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!conf_files)
 	{
-		conf_files = MyMallocEx(sizeof(ConfigItem_files));
+		conf_files = safe_alloc(sizeof(ConfigItem_files));
 
 		/* set defaults */
 		conf_files->motd_file = strdup(MPATH);
@@ -3443,21 +3441,21 @@ int	_conf_files(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "motd"))
-			safestrdup(conf_files->motd_file, cep->ce_vardata);
+			safe_strdup(conf_files->motd_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "shortmotd"))
-			safestrdup(conf_files->smotd_file, cep->ce_vardata);
+			safe_strdup(conf_files->smotd_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "opermotd"))
-			safestrdup(conf_files->opermotd_file, cep->ce_vardata);
+			safe_strdup(conf_files->opermotd_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "svsmotd"))
-			safestrdup(conf_files->svsmotd_file, cep->ce_vardata);
+			safe_strdup(conf_files->svsmotd_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "botmotd"))
-			safestrdup(conf_files->botmotd_file, cep->ce_vardata);
+			safe_strdup(conf_files->botmotd_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "rules"))
-			safestrdup(conf_files->rules_file, cep->ce_vardata);
+			safe_strdup(conf_files->rules_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "tunefile"))
-			safestrdup(conf_files->tune_file, cep->ce_vardata);
+			safe_strdup(conf_files->tune_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "pidfile"))
-			safestrdup(conf_files->pid_file, cep->ce_vardata);
+			safe_strdup(conf_files->pid_file, cep->ce_vardata);
 	}
 	return 1;
 }
@@ -3598,7 +3596,7 @@ OperClassACLEntry* _conf_parseACLEntry(ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	OperClassACLEntry *entry = NULL;
-	entry = MyMallocEx(sizeof(OperClassACLEntry));
+	entry = safe_alloc(sizeof(OperClassACLEntry));
 
 	if (!strcmp(ce->ce_varname,"allow"))
 		entry->type = OPERCLASSENTRY_ALLOW;
@@ -3607,7 +3605,7 @@ OperClassACLEntry* _conf_parseACLEntry(ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		OperClassACLEntryVar *var = MyMallocEx(sizeof(OperClassACLEntryVar));
+		OperClassACLEntryVar *var = safe_alloc(sizeof(OperClassACLEntryVar));
 		var->name = strdup(cep->ce_varname);
 		if (cep->ce_vardata)
 		{
@@ -3624,7 +3622,7 @@ OperClassACL* _conf_parseACL(char* name, ConfigEntry *ce)
 	ConfigEntry *cep;
 	OperClassACL *acl = NULL;
 
-	acl = MyMallocEx(sizeof(OperClassACL));
+	acl = safe_alloc(sizeof(OperClassACL));
 	acl->name = strdup(name);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -3648,8 +3646,8 @@ int	_conf_operclass(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	ConfigItem_operclass *operClass = NULL;
-	operClass = MyMallocEx(sizeof(ConfigItem_operclass));
-	operClass->classStruct = MyMallocEx(sizeof(OperClass));
+	operClass = safe_alloc(sizeof(ConfigItem_operclass));
+	operClass->classStruct = safe_alloc(sizeof(OperClass));
 	operClass->classStruct->name = strdup(ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -3759,7 +3757,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cepp;
 	ConfigItem_oper *oper = NULL;
 
-	oper =  MyMallocEx(sizeof(ConfigItem_oper));
+	oper =  safe_alloc(sizeof(ConfigItem_oper));
 	oper->name = strdup(ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -3786,7 +3784,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
-					s = MyMallocEx(sizeof(SWhois));
+					s = safe_alloc(sizeof(SWhois));
 					s->line = strdup(cepp->ce_varname);
 					s->setby = strdup("oper");
 					AddListItem(s, oper->swhois);
@@ -3794,7 +3792,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 			} else
 			if (cep->ce_vardata)
 			{
-				s = MyMallocEx(sizeof(SWhois));
+				s = safe_alloc(sizeof(SWhois));
 				s->line = strdup(cep->ce_vardata);
 				s->setby = strdup("oper");
 				AddListItem(s, oper->swhois);
@@ -3802,7 +3800,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "snomask"))
 		{
-			safestrdup(oper->snomask, cep->ce_vardata);
+			safe_strdup(oper->snomask, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "modes"))
 		{
@@ -3822,7 +3820,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "vhost"))
 		{
-			safestrdup(oper->vhost, cep->ce_vardata);
+			safe_strdup(oper->vhost, cep->ce_vardata);
 		}
 	}
 	AddListItem(oper, conf_oper);
@@ -4097,8 +4095,8 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!(class = Find_class(ce->ce_vardata)))
 	{
-		class = MyMallocEx(sizeof(ConfigItem_class));
-		safestrdup(class->name, ce->ce_vardata);
+		class = safe_alloc(sizeof(ConfigItem_class));
+		safe_strdup(class->name, ce->ce_vardata);
 		isnew = 1;
 	}
 	else
@@ -4107,7 +4105,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		class->flag.temporary = 0;
 		class->options = 0; /* RESET OPTIONS */
 	}
-	safestrdup(class->name, ce->ce_vardata);
+	safe_strdup(class->name, ce->ce_vardata);
 
 	class->connfreq = 15; /* default */
 
@@ -4309,7 +4307,7 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!conf_drpass)
 	{
-		conf_drpass =  MyMallocEx(sizeof(ConfigItem_drpass));
+		conf_drpass =  safe_alloc(sizeof(ConfigItem_drpass));
 	}
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -4395,8 +4393,8 @@ int	_conf_ulines(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		ca = MyMallocEx(sizeof(ConfigItem_ulines));
-		safestrdup(ca->servername, cep->ce_varname);
+		ca = safe_alloc(sizeof(ConfigItem_ulines));
+		safe_strdup(ca->servername, cep->ce_varname);
 		AddListItem(ca, conf_ulines);
 	}
 	return 1;
@@ -4413,7 +4411,7 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigItem_tld *ca;
 
-	ca = MyMallocEx(sizeof(ConfigItem_tld));
+	ca = safe_alloc(sizeof(ConfigItem_tld));
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -4711,7 +4709,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		{
 			if (!(listen = Find_listen(ip, port, 0)))
 			{
-				listen = MyMallocEx(sizeof(ConfigItem_listen));
+				listen = safe_alloc(sizeof(ConfigItem_listen));
 				listen->ip = strdup(ip);
 				listen->port = port;
 				listen->fd = -1;
@@ -4742,7 +4740,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 
 			if (tlsconfig)
 			{
-				listen->tls_options = MyMallocEx(sizeof(TLSOptions));
+				listen->tls_options = safe_alloc(sizeof(TLSOptions));
 				conf_tlsblock(conf, tlsconfig, listen->tls_options);
 				listen->ssl_ctx = init_ctx(listen->tls_options, 1);
 			}
@@ -4755,7 +4753,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!(listen = Find_listen(ip, port, 1)))
 				{
-					listen = MyMallocEx(sizeof(ConfigItem_listen));
+					listen = safe_alloc(sizeof(ConfigItem_listen));
 					listen->ip = strdup(ip);
 					listen->port = port;
 					listen->fd = -1;
@@ -4786,7 +4784,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 
 				if (tlsconfig)
 				{
-					listen->tls_options = MyMallocEx(sizeof(TLSOptions));
+					listen->tls_options = safe_alloc(sizeof(TLSOptions));
 					conf_tlsblock(conf, tlsconfig, listen->tls_options);
 					listen->ssl_ctx = init_ctx(listen->tls_options, 1);
 				}
@@ -4973,7 +4971,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	}
 
 	if (port_6667)
-		safestrdup(port_6667_ip, ip);
+		safe_strdup(port_6667_ip, ip);
 
 	requiredstuff.conf_listen = 1;
 	return errors;
@@ -5004,7 +5002,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			return 0;
 		}
 	}
-	allow = MyMallocEx(sizeof(ConfigItem_allow));
+	allow = safe_alloc(sizeof(ConfigItem_allow));
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -5334,10 +5332,10 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "channel"))
 		{
 			/* This way, we permit multiple ::channel items in one allow block */
-			allow = MyMallocEx(sizeof(ConfigItem_allow_channel));
-			safestrdup(allow->channel, cep->ce_vardata);
+			allow = safe_alloc(sizeof(ConfigItem_allow_channel));
+			safe_strdup(allow->channel, cep->ce_vardata);
 			if (class)
-				safestrdup(allow->class, class);
+				safe_strdup(allow->class, class);
 			if (mask)
 				unreal_add_masks(&allow->mask, mask);
 			AddListItem(allow, conf_allow_channel);
@@ -5398,12 +5396,12 @@ int	_conf_allow_dcc(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_allow_dcc *allow = NULL;
 	ConfigEntry *cep;
 
-	allow = MyMallocEx(sizeof(ConfigItem_allow_dcc));
+	allow = safe_alloc(sizeof(ConfigItem_allow_dcc));
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "filename"))
-			safestrdup(allow->filename, cep->ce_vardata);
+			safe_strdup(allow->filename, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "soft"))
 		{
 			int x = config_checkval(cep->ce_vardata,CFG_YESNO);
@@ -5536,7 +5534,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigItem_vhost *vhost;
 	ConfigEntry *cep, *cepp;
-	vhost = MyMallocEx(sizeof(ConfigItem_vhost));
+	vhost = safe_alloc(sizeof(ConfigItem_vhost));
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -5568,7 +5566,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
-					s = MyMallocEx(sizeof(SWhois));
+					s = safe_alloc(sizeof(SWhois));
 					s->line = strdup(cepp->ce_varname);
 					s->setby = strdup("vhost");
 					AddListItem(s, vhost->swhois);
@@ -5576,7 +5574,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 			} else
 			if (cep->ce_vardata)
 			{
-				s = MyMallocEx(sizeof(SWhois));
+				s = safe_alloc(sizeof(SWhois));
 				s->line = strdup(cep->ce_vardata);
 				s->setby = strdup("vhost");
 				AddListItem(s, vhost->swhois);
@@ -5784,9 +5782,9 @@ int	_conf_sni(ConfigFile *conf, ConfigEntry *ce)
 	if (!tlsconfig)
 		return 0;
 
-	sni = MyMallocEx(sizeof(ConfigItem_listen));
+	sni = safe_alloc(sizeof(ConfigItem_listen));
 	sni->name = strdup(name);
-	sni->tls_options = MyMallocEx(sizeof(TLSOptions));
+	sni->tls_options = safe_alloc(sizeof(TLSOptions));
 	conf_tlsblock(conf, tlsconfig, sni->tls_options);
 	sni->ssl_ctx = init_ctx(sni->tls_options, 1);
 	AddListItem(sni, conf_sni);
@@ -5799,7 +5797,7 @@ int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigItem_help *ca;
 	MOTDLine *last = NULL, *temp;
-	ca = MyMallocEx(sizeof(ConfigItem_help));
+	ca = safe_alloc(sizeof(ConfigItem_help));
 
 	if (!ce->ce_vardata)
 		ca->command = NULL;
@@ -5808,7 +5806,7 @@ int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		temp = MyMallocEx(sizeof(MOTDLine));
+		temp = safe_alloc(sizeof(MOTDLine));
 		temp->line = strdup(cep->ce_varname);
 		temp->next = NULL;
 		if (!last)
@@ -5850,9 +5848,9 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_log *ca;
 	NameValue *ofp = NULL;
 
-	ca = MyMallocEx(sizeof(ConfigItem_log));
+	ca = safe_alloc(sizeof(ConfigItem_log));
 	ca->logfd = -1;
-	safestrdup(ca->file, ce->ce_vardata);
+	safe_strdup(ca->file, ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -5973,7 +5971,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_link *link = NULL;
 	NameValue *ofp;
 
-	link = MyMallocEx(sizeof(ConfigItem_link));
+	link = safe_alloc(sizeof(ConfigItem_link));
 	link->servername = strdup(ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -5993,9 +5991,9 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!strcmp(cepp->ce_varname, "bind-ip"))
-					safestrdup(link->outgoing.bind_ip, cepp->ce_vardata);
+					safe_strdup(link->outgoing.bind_ip, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "hostname"))
-					safestrdup(link->outgoing.hostname, cepp->ce_vardata);
+					safe_strdup(link->outgoing.hostname, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "port"))
 					link->outgoing.port = atoi(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "options"))
@@ -6010,7 +6008,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "ssl-options") || !strcmp(cepp->ce_varname, "tls-options"))
 				{
-					link->tls_options = MyMallocEx(sizeof(TLSOptions));
+					link->tls_options = safe_alloc(sizeof(TLSOptions));
 					conf_tlsblock(conf, cepp, link->tls_options);
 					link->ssl_ctx = init_ctx(link->tls_options, 0);
 				}
@@ -6019,9 +6017,9 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "password"))
 			link->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "hub"))
-			safestrdup(link->hub, cep->ce_vardata);
+			safe_strdup(link->hub, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "leaf"))
-			safestrdup(link->leaf, cep->ce_vardata);
+			safe_strdup(link->leaf, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "leaf-depth") || !strcmp(cep->ce_varname, "leafdepth"))
 			link->leaf_depth = atoi(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "class"))
@@ -6348,7 +6346,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_ban *ca;
 	Hook *h;
 
-	ca = MyMallocEx(sizeof(ConfigItem_ban));
+	ca = safe_alloc(sizeof(ConfigItem_ban));
 	if (!strcmp(ce->ce_vardata, "realname"))
 		ca->flag.type = CONF_BAN_REALNAME;
 	else if (!strcmp(ce->ce_vardata, "server"))
@@ -6539,26 +6537,26 @@ int _conf_require(ConfigFile *conf, ConfigEntry *ce)
 			if (p)
 			{
 				*p++ = '\0';
-				usermask = strdup(buf);
-				hostmask = strdup(p);
+				safe_strdup(usermask, buf);
+				safe_strdup(hostmask, p);
 			} else {
-				hostmask = strdup(cep->ce_vardata);
+				safe_strdup(hostmask, cep->ce_vardata);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "reason"))
-			reason = strdup(cep->ce_vardata);
+			safe_strdup(reason, cep->ce_vardata);
 	}
 
 	if (!usermask)
-		usermask = strdup("*");
+		safe_strdup(usermask, "*");
 
 	if (!reason)
-		reason = strdup("-");
+		safe_strdup(reason, "-");
 
 	tkl_add_serverban(TKL_KILL, usermask, hostmask, reason, "-config-", 0, TStime(), 1, TKL_FLAG_CONFIG);
-	safefree(usermask);
-	safefree(hostmask);
-	safefree(reason);
+	safe_free(usermask);
+	safe_free(hostmask);
+	safe_free(reason);
 	return 0;
 }
 
@@ -6854,17 +6852,17 @@ void free_tls_options(TLSOptions *tlsoptions)
 	if (!tlsoptions)
 		return;
 
-	safefree(tlsoptions->certificate_file);
-	safefree(tlsoptions->key_file);
-	safefree(tlsoptions->dh_file);
-	safefree(tlsoptions->trusted_ca_file);
-	safefree(tlsoptions->ciphers);
-	safefree(tlsoptions->ciphersuites);
-	safefree(tlsoptions->ecdh_curves);
-	safefree(tlsoptions->outdated_protocols);
-	safefree(tlsoptions->outdated_ciphers);
+	safe_free(tlsoptions->certificate_file);
+	safe_free(tlsoptions->key_file);
+	safe_free(tlsoptions->dh_file);
+	safe_free(tlsoptions->trusted_ca_file);
+	safe_free(tlsoptions->ciphers);
+	safe_free(tlsoptions->ciphersuites);
+	safe_free(tlsoptions->ecdh_curves);
+	safe_free(tlsoptions->outdated_protocols);
+	safe_free(tlsoptions->outdated_ciphers);
 	memset(tlsoptions, 0, sizeof(TLSOptions));
-	MyFree(tlsoptions);
+	safe_free(tlsoptions);
 }
 
 void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
@@ -6875,16 +6873,16 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 	/* First, inherit settings from set::options::tls */
 	if (tlsoptions != tempiConf.tls_options)
 	{
-		safestrdup(tlsoptions->certificate_file, tempiConf.tls_options->certificate_file);
-		safestrdup(tlsoptions->key_file, tempiConf.tls_options->key_file);
-		safestrdup(tlsoptions->dh_file, tempiConf.tls_options->dh_file);
-		safestrdup(tlsoptions->trusted_ca_file, tempiConf.tls_options->trusted_ca_file);
+		safe_strdup(tlsoptions->certificate_file, tempiConf.tls_options->certificate_file);
+		safe_strdup(tlsoptions->key_file, tempiConf.tls_options->key_file);
+		safe_strdup(tlsoptions->dh_file, tempiConf.tls_options->dh_file);
+		safe_strdup(tlsoptions->trusted_ca_file, tempiConf.tls_options->trusted_ca_file);
 		tlsoptions->protocols = tempiConf.tls_options->protocols;
-		safestrdup(tlsoptions->ciphers, tempiConf.tls_options->ciphers);
-		safestrdup(tlsoptions->ciphersuites, tempiConf.tls_options->ciphersuites);
-		safestrdup(tlsoptions->ecdh_curves, tempiConf.tls_options->ecdh_curves);
-		safestrdup(tlsoptions->outdated_protocols, tempiConf.tls_options->outdated_protocols);
-		safestrdup(tlsoptions->outdated_ciphers, tempiConf.tls_options->outdated_ciphers);
+		safe_strdup(tlsoptions->ciphers, tempiConf.tls_options->ciphers);
+		safe_strdup(tlsoptions->ciphersuites, tempiConf.tls_options->ciphersuites);
+		safe_strdup(tlsoptions->ecdh_curves, tempiConf.tls_options->ecdh_curves);
+		safe_strdup(tlsoptions->outdated_protocols, tempiConf.tls_options->outdated_protocols);
+		safe_strdup(tlsoptions->outdated_ciphers, tempiConf.tls_options->outdated_ciphers);
 		tlsoptions->options = tempiConf.tls_options->options;
 		tlsoptions->renegotiate_bytes = tempiConf.tls_options->renegotiate_bytes;
 		tlsoptions->renegotiate_timeout = tempiConf.tls_options->renegotiate_timeout;
@@ -6898,15 +6896,15 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 	{
 		if (!strcmp(cepp->ce_varname, "ciphers") || !strcmp(cepp->ce_varname, "server-cipher-list"))
 		{
-			safestrdup(tlsoptions->ciphers, cepp->ce_vardata);
+			safe_strdup(tlsoptions->ciphers, cepp->ce_vardata);
 		}
 		else if (!strcmp(cepp->ce_varname, "ciphersuites"))
 		{
-			safestrdup(tlsoptions->ciphersuites, cepp->ce_vardata);
+			safe_strdup(tlsoptions->ciphersuites, cepp->ce_vardata);
 		}
 		else if (!strcmp(cepp->ce_varname, "ecdh-curves"))
 		{
-			safestrdup(tlsoptions->ecdh_curves, cepp->ce_vardata);
+			safe_strdup(tlsoptions->ecdh_curves, cepp->ce_vardata);
 		}
 		else if (!strcmp(cepp->ce_varname, "protocols"))
 		{
@@ -6956,17 +6954,17 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 		else if (!strcmp(cepp->ce_varname, "certificate"))
 		{
 			convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
-			safestrdup(tlsoptions->certificate_file, cepp->ce_vardata);
+			safe_strdup(tlsoptions->certificate_file, cepp->ce_vardata);
 		}
 		else if (!strcmp(cepp->ce_varname, "key"))
 		{
 			convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
-			safestrdup(tlsoptions->key_file, cepp->ce_vardata);
+			safe_strdup(tlsoptions->key_file, cepp->ce_vardata);
 		}
 		else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
 		{
 			convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
-			safestrdup(tlsoptions->trusted_ca_file, cepp->ce_vardata);
+			safe_strdup(tlsoptions->trusted_ca_file, cepp->ce_vardata);
 		}
 		else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
 		{
@@ -7013,10 +7011,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "kline-address")) {
-			safestrdup(tempiConf.kline_address, cep->ce_vardata);
+			safe_strdup(tempiConf.kline_address, cep->ce_vardata);
 		}
 		if (!strcmp(cep->ce_varname, "gline-address")) {
-			safestrdup(tempiConf.gline_address, cep->ce_vardata);
+			safe_strdup(tempiConf.gline_address, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
 			tempiConf.conn_modes = (long) set_usermode(cep->ce_vardata);
@@ -7028,16 +7026,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			conf_channelmodes(cep->ce_vardata, &tempiConf.modes_on_join, 0);
 		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
-			safestrdup(tempiConf.oper_snomask, cep->ce_vardata);
+			safe_strdup(tempiConf.oper_snomask, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "level-on-join")) {
 			tempiConf.level_on_join = channellevel_to_int(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
-			safestrdup(tempiConf.static_quit, cep->ce_vardata);
+			safe_strdup(tempiConf.static_quit, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "static-part")) {
-			safestrdup(tempiConf.static_part, cep->ce_vardata);
+			safe_strdup(tempiConf.static_part, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "who-limit")) {
 			tempiConf.who_limit = atol(cep->ce_vardata);
@@ -7052,10 +7050,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.silence_limit = atol(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
-			safestrdup(tempiConf.auto_join_chans, cep->ce_vardata);
+			safe_strdup(tempiConf.auto_join_chans, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
-			safestrdup(tempiConf.oper_auto_join_chans, cep->ce_vardata);
+			safe_strdup(tempiConf.oper_auto_join_chans, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "check-target-nick-bans")) {
 			tempiConf.check_target_nick_bans = config_checkval(cep->ce_vardata, CFG_YESNO);
@@ -7080,11 +7078,11 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				tempiConf.userhost_allowed = UHALLOW_REJOIN;
 		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
-			safestrdup(tempiConf.channel_command_prefix, cep->ce_vardata);
+			safe_strdup(tempiConf.channel_command_prefix, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "restrict-usermodes")) {
 			int i;
-			char *p = MyMallocEx(strlen(cep->ce_vardata) + 1), *x = p;
+			char *p = safe_alloc(strlen(cep->ce_vardata) + 1), *x = p;
 			/* The data should be something like 'Gw' or something,
 			 * but just in case users use '+Gw' then ignore the + (and -).
 			 */
@@ -7096,7 +7094,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "restrict-channelmodes")) {
 			int i;
-			char *p = MyMallocEx(strlen(cep->ce_vardata) + 1), *x = p;
+			char *p = safe_alloc(strlen(cep->ce_vardata) + 1), *x = p;
 			/* The data should be something like 'GL' or something,
 			 * but just in case users use '+GL' then ignore the + (and -).
 			 */
@@ -7107,7 +7105,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.restrict_channelmodes = p;
 		}
 		else if (!strcmp(cep->ce_varname, "restrict-extendedbans")) {
-			safestrdup(tempiConf.restrict_extendedbans, cep->ce_vardata);
+			safe_strdup(tempiConf.restrict_extendedbans, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "new-linking-protocol")) {
 			tempiConf.new_linking_protocol = atoi(cep->ce_vardata);
@@ -7118,14 +7116,14 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
 			if (!cep->ce_entries)
 			{
-				safestrdup(tempiConf.oper_only_stats, cep->ce_vardata);
+				safe_strdup(tempiConf.oper_only_stats, cep->ce_vardata);
 			}
 			else
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
-					OperStat *os = MyMallocEx(sizeof(OperStat));
-					safestrdup(os->flag, cepp->ce_varname);
+					OperStat *os = safe_alloc(sizeof(OperStat));
+					safe_strdup(os->flag, cepp->ce_varname);
 					AddListItem(os, tempiConf.oper_only_stats_ext);
 				}
 			}
@@ -7153,52 +7151,52 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "network-name")) {
 			char *tmp;
-			safestrdup(tempiConf.network.x_ircnetwork, cep->ce_vardata);
+			safe_strdup(tempiConf.network.x_ircnetwork, cep->ce_vardata);
 			for (tmp = cep->ce_vardata; *cep->ce_vardata; cep->ce_vardata++) {
 				if (*cep->ce_vardata == ' ')
 					*cep->ce_vardata='-';
 			}
-			safestrdup(tempiConf.network.x_ircnet005, tmp);
+			safe_strdup(tempiConf.network.x_ircnet005, tmp);
 			cep->ce_vardata = tmp;
 		}
 		else if (!strcmp(cep->ce_varname, "default-server")) {
-			safestrdup(tempiConf.network.x_defserv, cep->ce_vardata);
+			safe_strdup(tempiConf.network.x_defserv, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "services-server")) {
-			safestrdup(tempiConf.network.x_services_name, cep->ce_vardata);
+			safe_strdup(tempiConf.network.x_services_name, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "sasl-server")) {
-			safestrdup(tempiConf.network.x_sasl_server, cep->ce_vardata);
+			safe_strdup(tempiConf.network.x_sasl_server, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "stats-server")) {
-			safestrdup(tempiConf.network.x_stats_server, cep->ce_vardata);
+			safe_strdup(tempiConf.network.x_stats_server, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "help-channel")) {
-			safestrdup(tempiConf.network.x_helpchan, cep->ce_vardata);
+			safe_strdup(tempiConf.network.x_helpchan, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "hiddenhost-prefix")) {
-			safestrdup(tempiConf.network.x_hidden_host, cep->ce_vardata);
+			safe_strdup(tempiConf.network.x_hidden_host, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "hide-ban-reason")) {
 			tempiConf.hide_ban_reason = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
 		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
 			if (!strcmp(cep->ce_vardata, "0") || !strcmp(cep->ce_vardata, "no"))
-				safefree(tempiConf.network.x_prefix_quit);
+				safe_free(tempiConf.network.x_prefix_quit);
 			else
-				safestrdup(tempiConf.network.x_prefix_quit, cep->ce_vardata);
+				safe_strdup(tempiConf.network.x_prefix_quit, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "link")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "bind-ip")) {
-					safestrdup(tempiConf.link_bindip, cepp->ce_vardata);
+					safe_strdup(tempiConf.link_bindip, cepp->ce_vardata);
 				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "dns")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "bind-ip")) {
-					safestrdup(tempiConf.dns_bindip, cepp->ce_vardata);
+					safe_strdup(tempiConf.dns_bindip, cepp->ce_vardata);
 				}
 			}
 		}
@@ -7349,23 +7347,23 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->ce_varname, "ban-time"))
 					tempiConf.spamfilter_ban_time = config_checkval(cepp->ce_vardata,CFG_TIME);
 				else if (!strcmp(cepp->ce_varname, "ban-reason"))
-					safestrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
+					safe_strdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "virus-help-channel"))
-					safestrdup(tempiConf.spamfilter_virus_help_channel, cepp->ce_vardata);
+					safe_strdup(tempiConf.spamfilter_virus_help_channel, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "virus-help-channel-deny"))
 					tempiConf.spamfilter_vchan_deny = config_checkval(cepp->ce_vardata,CFG_YESNO);
 				else if (!strcmp(cepp->ce_varname, "except"))
 				{
 					char *name, *p;
 					SpamExcept *e;
-					safestrdup(tempiConf.spamexcept_line, cepp->ce_vardata);
+					safe_strdup(tempiConf.spamexcept_line, cepp->ce_vardata);
 					for (name = strtoken(&p, cepp->ce_vardata, ","); name; name = strtoken(&p, NULL, ","))
 					{
 						if (*name == ' ')
 							name++;
 						if (*name)
 						{
-							e = MyMallocEx(sizeof(SpamExcept) + strlen(name));
+							e = safe_alloc(sizeof(SpamExcept) + strlen(name));
 							strcpy(e->name, name);
 							AddListItem(e, tempiConf.spamexcept);
 						}
@@ -7432,9 +7430,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "server"))
 					tempiConf.plaintext_policy_server = policy_strtoval(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "user-message"))
-					safestrdup(tempiConf.plaintext_policy_user_message, cepp->ce_vardata);
+					safe_strdup(tempiConf.plaintext_policy_user_message, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "oper-message"))
-					safestrdup(tempiConf.plaintext_policy_oper_message, cepp->ce_vardata);
+					safe_strdup(tempiConf.plaintext_policy_oper_message, cepp->ce_vardata);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "outdated-tls-policy"))
@@ -7448,9 +7446,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "server"))
 					tempiConf.outdated_tls_policy_server = policy_strtoval(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "user-message"))
-					safestrdup(tempiConf.outdated_tls_policy_user_message, cepp->ce_vardata);
+					safe_strdup(tempiConf.outdated_tls_policy_user_message, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "oper-message"))
-					safestrdup(tempiConf.outdated_tls_policy_oper_message, cepp->ce_vardata);
+					safe_strdup(tempiConf.outdated_tls_policy_oper_message, cepp->ce_vardata);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "default-ipv6-clone-mask"))
@@ -7488,15 +7486,15 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!strcmp(cepp->ce_varname, "too-many-connections"))
-					safestrdup(tempiConf.reject_message_too_many_connections, cepp->ce_vardata);
+					safe_strdup(tempiConf.reject_message_too_many_connections, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "server-full"))
-					safestrdup(tempiConf.reject_message_server_full, cepp->ce_vardata);
+					safe_strdup(tempiConf.reject_message_server_full, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "unauthorized"))
-					safestrdup(tempiConf.reject_message_unauthorized, cepp->ce_vardata);
+					safe_strdup(tempiConf.reject_message_unauthorized, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "kline"))
-					safestrdup(tempiConf.reject_message_kline, cepp->ce_vardata);
+					safe_strdup(tempiConf.reject_message_kline, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "gline"))
-					safestrdup(tempiConf.reject_message_gline, cepp->ce_vardata);
+					safe_strdup(tempiConf.reject_message_gline, cepp->ce_vardata);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "topic-setter"))
@@ -8794,7 +8792,7 @@ int	_test_blacklist_module(ConfigFile *conf, ConfigEntry *ce)
 		/* fallthrough */
 	}
 
-	m = MyMallocEx(sizeof(ConfigItem_blacklist_module));
+	m = safe_alloc(sizeof(ConfigItem_blacklist_module));
 	m->name = strdup(ce->ce_vardata);
 	AddListItem(m, conf_blacklist_module);
 
@@ -8899,7 +8897,7 @@ int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		ConfigItem_offchans *of = MyMallocEx(sizeof(ConfigItem_offchans));
+		ConfigItem_offchans *of = safe_alloc(sizeof(ConfigItem_offchans));
 		strlcpy(of->chname, cep->ce_varname, CHANNELLEN+1);
 		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 		{
@@ -8990,13 +8988,13 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if ((alias = Find_alias(ce->ce_vardata)))
 		DelListItem(alias, conf_alias);
-	alias = MyMallocEx(sizeof(ConfigItem_alias));
-	safestrdup(alias->alias, ce->ce_vardata);
+	alias = safe_alloc(sizeof(ConfigItem_alias));
+	safe_strdup(alias->alias, ce->ce_vardata);
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "format")) {
-			format = MyMallocEx(sizeof(ConfigItem_alias_format));
-			safestrdup(format->format, cep->ce_vardata);
+			format = safe_alloc(sizeof(ConfigItem_alias_format));
+			safe_strdup(format->format, cep->ce_vardata);
 			format->expr = unreal_create_match(MATCH_PCRE_REGEX, cep->ce_vardata, NULL);
 			if (!format->expr)
 				abort(); /* Impossible due to _test_alias earlier */
@@ -9004,10 +9002,10 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->ce_varname, "nick") ||
 				    !strcmp(cepp->ce_varname, "target") ||
 				    !strcmp(cepp->ce_varname, "command")) {
-					safestrdup(format->nick, cepp->ce_vardata);
+					safe_strdup(format->nick, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "parameters")) {
-					safestrdup(format->parameters, cepp->ce_vardata);
+					safe_strdup(format->parameters, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "type")) {
 					if (!strcmp(cepp->ce_vardata, "services"))
@@ -9027,7 +9025,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 
 		else if (!strcmp(cep->ce_varname, "nick") || !strcmp(cep->ce_varname, "target"))
 		{
-			safestrdup(alias->nick, cep->ce_vardata);
+			safe_strdup(alias->nick, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "type")) {
 			if (!strcmp(cep->ce_vardata, "services"))
@@ -9045,7 +9043,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 			alias->spamfilter = config_checkval(cep->ce_vardata, CFG_YESNO);
 	}
 	if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
-		safestrdup(alias->nick, alias->alias);
+		safe_strdup(alias->nick, alias->alias);
 	}
 	AliasAdd(NULL, alias->alias, cmd_alias, 1, M_USER|M_ALIAS);
 
@@ -9279,16 +9277,16 @@ int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_deny_dcc 	*deny = NULL;
 	ConfigEntry 	    	*cep;
 
-	deny = MyMallocEx(sizeof(ConfigItem_deny_dcc));
+	deny = safe_alloc(sizeof(ConfigItem_deny_dcc));
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "filename"))
 		{
-			safestrdup(deny->filename, cep->ce_vardata);
+			safe_strdup(deny->filename, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "reason"))
 		{
-			safestrdup(deny->reason, cep->ce_vardata);
+			safe_strdup(deny->reason, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "soft"))
 		{
@@ -9300,9 +9298,9 @@ int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
 	if (!deny->reason)
 	{
 		if (deny->flag.type == DCCDENY_HARD)
-			safestrdup(deny->reason, "Possible infected virus file");
+			safe_strdup(deny->reason, "Possible infected virus file");
 		else
-			safestrdup(deny->reason, "Possible executable content");
+			safe_strdup(deny->reason, "Possible executable content");
 	}
 	AddListItem(deny, conf_deny_dcc);
 	return 0;
@@ -9313,20 +9311,20 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_deny_channel 	*deny = NULL;
 	ConfigEntry 	    	*cep;
 
-	deny = MyMallocEx(sizeof(ConfigItem_deny_channel));
+	deny = safe_alloc(sizeof(ConfigItem_deny_channel));
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "channel"))
 		{
-			safestrdup(deny->channel, cep->ce_vardata);
+			safe_strdup(deny->channel, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "redirect"))
 		{
-			safestrdup(deny->redirect, cep->ce_vardata);
+			safe_strdup(deny->redirect, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "reason"))
 		{
-			safestrdup(deny->reason, cep->ce_vardata);
+			safe_strdup(deny->reason, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "warn"))
 		{
@@ -9334,7 +9332,7 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
-			safestrdup(deny->class, cep->ce_vardata);
+			safe_strdup(deny->class, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "mask"))
 		{
@@ -9349,17 +9347,17 @@ int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_deny_link 	*deny = NULL;
 	ConfigEntry 	    	*cep;
 
-	deny = MyMallocEx(sizeof(ConfigItem_deny_link));
+	deny = safe_alloc(sizeof(ConfigItem_deny_link));
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "mask"))
 		{
-			safestrdup(deny->mask, cep->ce_vardata);
+			safe_strdup(deny->mask, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "rule"))
 		{
 			deny->rule = (char *)crule_parse(cep->ce_vardata);
-			safestrdup(deny->prettyrule, cep->ce_vardata);
+			safe_strdup(deny->prettyrule, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "type")) {
 			if (!strcmp(cep->ce_vardata, "all"))
@@ -9377,20 +9375,20 @@ int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_deny_version *deny = NULL;
 	ConfigEntry 	    	*cep;
 
-	deny = MyMallocEx(sizeof(ConfigItem_deny_version));
+	deny = safe_alloc(sizeof(ConfigItem_deny_version));
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "mask"))
 		{
-			safestrdup(deny->mask, cep->ce_vardata);
+			safe_strdup(deny->mask, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "version"))
 		{
-			safestrdup(deny->version, cep->ce_vardata);
+			safe_strdup(deny->version, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "flags"))
 		{
-			safestrdup(deny->flags, cep->ce_vardata);
+			safe_strdup(deny->flags, cep->ce_vardata);
 		}
 	}
 	AddListItem(deny, conf_deny_version);
@@ -9878,13 +9876,13 @@ int	rehash_internal(Client *cptr, Client *sptr, int sig)
 
 void link_cleanup(ConfigItem_link *link_ptr)
 {
-	safefree(link_ptr->servername);
+	safe_free(link_ptr->servername);
 	unreal_delete_masks(link_ptr->incoming.mask);
 	Auth_FreeAuthConfig(link_ptr->auth);
-	safefree(link_ptr->outgoing.bind_ip);
-	safefree(link_ptr->outgoing.hostname);
-	safefree(link_ptr->hub);
-	safefree(link_ptr->leaf);
+	safe_free(link_ptr->outgoing.bind_ip);
+	safe_free(link_ptr->outgoing.hostname);
+	safe_free(link_ptr->hub);
+	safe_free(link_ptr->leaf);
 	if (link_ptr->ssl_ctx)
 	{
 		SSL_CTX_free(link_ptr->ssl_ctx);
@@ -9914,16 +9912,16 @@ void delete_linkblock(ConfigItem_link *link_ptr)
 	}
 	link_cleanup(link_ptr);
 	DelListItem(link_ptr, conf_link);
-	MyFree(link_ptr);
+	safe_free(link_ptr);
 }
 
 void delete_classblock(ConfigItem_class *class_ptr)
 {
 	Debug((DEBUG_ERROR, "delete_classblock: deleting %s, clients=%d, xrefcount=%d",
 		class_ptr->name, class_ptr->clients, class_ptr->xrefcount));
-	safefree(class_ptr->name);
+	safe_free(class_ptr->name);
 	DelListItem(class_ptr, conf_class);
-	MyFree(class_ptr);
+	safe_free(class_ptr);
 }
 
 void	listen_cleanup()
@@ -9936,10 +9934,10 @@ void	listen_cleanup()
 		next = listen_ptr->next;
 		if (listen_ptr->flag.temporary && !listen_ptr->clients)
 		{
-			safefree(listen_ptr->ip);
+			safe_free(listen_ptr->ip);
 			free_tls_options(listen_ptr->tls_options);
 			DelListItem(listen_ptr, conf_listen);
-			MyFree(listen_ptr);
+			safe_free(listen_ptr);
 			i++;
 		}
 	}
@@ -10011,7 +10009,7 @@ int remote_include(ConfigEntry *ce)
 				config_warn("%s:%i: include: error downloading '%s': %s -- using cached version instead.",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 					displayurl(url), error);
-				file = strdup(unreal_mkcache(url));
+				safe_strdup(file, unreal_mkcache(url));
 				/* Let it pass to load_conf()... */
 			} else {
 				config_error("%s:%i: include: error downloading '%s': %s",
@@ -10037,7 +10035,7 @@ int remote_include(ConfigEntry *ce)
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 					displayurl(url), errorbuf);
 				/* Let it pass to load_conf()... */
-				file = strdup(unreal_mkcache(url));
+				safe_strdup(file, unreal_mkcache(url));
 			} else {
 				config_error("%s:%i: include: error downloading '%s': %s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
@@ -10069,10 +10067,10 @@ void add_include(const char *file, const char *included_from, int included_from_
 {
 	ConfigItem_include *inc;
 
-	inc = MyMallocEx(sizeof(ConfigItem_include));
-	inc->file = strdup(file);
+	inc = safe_alloc(sizeof(ConfigItem_include));
+	safe_strdup(inc->file, file);
 	inc->flag.type = INCLUDE_NOTLOADED;
-	inc->included_from = strdup(included_from);
+	safe_strdup(inc->included_from, included_from);
 	inc->included_from_line = included_from_line;
 	AddListItem(inc, conf_include);
 }
@@ -10092,14 +10090,14 @@ void add_remote_include(const char *file, const char *url, int flags, const char
 {
 	ConfigItem_include *inc;
 
-	/* we rely on MyMallocEx() zeroing the ConfigItem_include */
-	inc = MyMallocEx(sizeof(ConfigItem_include));
+	/* we rely on safe_alloc() zeroing the ConfigItem_include */
+	inc = safe_alloc(sizeof(ConfigItem_include));
 	if (included_from)
 	{
-		inc->included_from = strdup(included_from);
+		safe_strdup(inc->included_from, included_from);
 		inc->included_from_line = included_from_line;
 	}
-	inc->url = strdup(url);
+	safe_strdup(inc->url, url);
 
 	update_remote_include(inc, file, INCLUDE_NOTLOADED|INCLUDE_REMOTE|flags, errorbuf);
 	AddListItem(inc, conf_include);
@@ -10121,11 +10119,11 @@ void update_remote_include(ConfigItem_include *inc, const char *file, int flags,
 	 * file may be NULL when errorbuf is non-NULL and vice-versa.
 	 */
 	if (file)
-		inc->file = strdup(file);
+		safe_strdup(inc->file, file);
 	inc->flag.type |= flags;
 
 	if (errorbuf)
-		inc->errorbuf = strdup(errorbuf);
+		safe_strdup(inc->errorbuf, errorbuf);
 }
 #endif
 

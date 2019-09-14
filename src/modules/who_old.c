@@ -755,7 +755,7 @@ static void send_who_reply(Client *sptr, Client *acptr,
 	char *host;
 	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;
 
-	stat = MyMallocEx(strlen(status) + strlen(xstat) + 1);
+	stat = safe_alloc(strlen(status) + strlen(xstat) + 1);
 	sprintf(stat, "%s%s", status, xstat);
 
 	if (IsOper(sptr))

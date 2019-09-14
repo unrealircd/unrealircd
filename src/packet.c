@@ -96,7 +96,7 @@ void	init_CommandHash(void)
 
 RealCommand *add_Command_backend(char *cmd)
 {
-	RealCommand *c = MyMallocEx(sizeof(RealCommand));
+	RealCommand *c = safe_alloc(sizeof(RealCommand));
 
 	c->cmd = strdup(cmd);
 

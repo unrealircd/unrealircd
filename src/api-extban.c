@@ -80,7 +80,7 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 	ExtBan_Table[slot].options = req.options;
 	if (module)
 	{
-		ModuleObject *banobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *banobj = safe_alloc(sizeof(ModuleObject));
 		banobj->object.extban = &ExtBan_Table[slot];
 		banobj->type = MOBJ_EXTBAN;
 		AddListItem(banobj, module->objects);
@@ -103,7 +103,7 @@ void ExtbanDel(Extban *eb)
 			if (banobj->type == MOBJ_EXTBAN && banobj->object.extban == eb)
 			{
 				DelListItem(banobj, eb->owner->objects);
-				MyFree(banobj);
+				safe_free(banobj);
 				break;
 			}
 		}

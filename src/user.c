@@ -47,7 +47,7 @@ void iNAH_host(Client *sptr, char *host)
 
 	if (sptr->user->virthost)
 	{
-		MyFree(sptr->user->virthost);
+		safe_free(sptr->user->virthost);
 		sptr->user->virthost = NULL;
 	}
 	sptr->user->virthost = strdup(host);
@@ -532,7 +532,7 @@ int  del_silence(Client *sptr, char *mask)
 		{
 			tmp = *lp;
 			*lp = tmp->next;
-			MyFree(tmp->value.cp);
+			safe_free(tmp->value.cp);
 			free_link(tmp);
 			return 0;
 		}
@@ -629,7 +629,7 @@ void setmaxtargets(char *cmd, int limit)
 		for (i=cmd,o=cmdupper; *i; i++)
 			*o++ = toupper(*i);
 		*o = '\0';
-		m = MyMallocEx(sizeof(MaxTarget));
+		m = safe_alloc(sizeof(MaxTarget));
 		m->cmd = strdup(cmdupper);
 		maxtarget_add_sorted(m);
 	}
@@ -644,8 +644,8 @@ void freemaxtargets(void)
 	for (m = maxtargets; m; m = m_next)
 	{
 		m_next = m->next;
-		safefree(m->cmd);
-		MyFree(m);
+		safe_free(m->cmd);
+		safe_free(m);
 	}
 	maxtargets = NULL;
 }

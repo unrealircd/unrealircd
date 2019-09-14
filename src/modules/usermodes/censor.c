@@ -195,7 +195,7 @@ int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (strcmp(ce->ce_vardata, "message") && strcmp(ce->ce_vardata, "all"))
 	        return 0; /* not for us */
 
-	ca = MyMallocEx(sizeof(ConfigItem_badword));
+	ca = safe_alloc(sizeof(ConfigItem_badword));
 	ca->action = BADWORD_REPLACE;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -209,7 +209,7 @@ int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->ce_varname, "replace"))
 		{
-			safestrdup(ca->replace, cep->ce_vardata);
+			safe_strdup(ca->replace, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "word"))
 		{

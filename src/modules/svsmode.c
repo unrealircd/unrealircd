@@ -427,7 +427,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 					if (acptr->user->virthost)
 					{
 						/* Removing mode +x and virthost set... recalculate host then (but don't activate it!) */
-						MyFree(acptr->user->virthost);
+						safe_free(acptr->user->virthost);
 						acptr->user->virthost = strdup(acptr->user->cloakedhost);
 					}
 				} else
@@ -467,7 +467,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 					if (acptr->user->virthost && *acptr->user->cloakedhost && strcasecmp(acptr->user->cloakedhost, GetHost(acptr)))
 					{
 						/* Make the change effective: */
-						safestrdup(acptr->user->virthost, acptr->user->cloakedhost);
+						safe_strdup(acptr->user->virthost, acptr->user->cloakedhost);
 						/* And broadcast the change to VHP servers */
 						if (MyUser(acptr))
 							sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", acptr->name,

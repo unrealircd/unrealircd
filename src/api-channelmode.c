@@ -102,13 +102,13 @@ void extcmodes_check_for_changes(void)
 	make_extcmodestr();
 
 	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR1, EXPAR1);
-	safestrdup(me.serv->features.chanmodes[0], chanmodes);
+	safe_strdup(me.serv->features.chanmodes[0], chanmodes);
 	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR2, EXPAR2);
-	safestrdup(me.serv->features.chanmodes[1], chanmodes);
+	safe_strdup(me.serv->features.chanmodes[1], chanmodes);
 	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR3, EXPAR3);
-	safestrdup(me.serv->features.chanmodes[2], chanmodes);
+	safe_strdup(me.serv->features.chanmodes[2], chanmodes);
 	snprintf(chanmodes, sizeof(chanmodes), "%s%s", CHPAR4, EXPAR4);
-	safestrdup(me.serv->features.chanmodes[3], chanmodes);
+	safe_strdup(me.serv->features.chanmodes[3], chanmodes);
 
 	ircsnprintf(chanmodes, sizeof(chanmodes), "%s,%s,%s,%s",
 	            me.serv->features.chanmodes[0],
@@ -142,7 +142,7 @@ void	extcmode_init(void)
 {
 	Cmode_t val = 1;
 	int	i;
-	Channelmode_Table = MyMallocEx(sizeof(Cmode) * EXTCMODETABLESZ);
+	Channelmode_Table = safe_alloc(sizeof(Cmode) * EXTCMODETABLESZ);
 	for (i = 0; i < EXTCMODETABLESZ; i++)
 	{
 		Channelmode_Table[i].mode = val;
@@ -256,7 +256,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
                 
 	if (module)
 	{
-		ModuleObject *cmodeobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *cmodeobj = safe_alloc(sizeof(ModuleObject));
 		cmodeobj->object.cmode = &Channelmode_Table[i];
 		cmodeobj->type = MOBJ_CMODE;
 		AddListItem(cmodeobj, module->objects);
@@ -342,7 +342,7 @@ void CmodeDel(Cmode *cmode)
 		for (cmodeobj = cmode->owner->objects; cmodeobj; cmodeobj = cmodeobj->next) {
 			if (cmodeobj->type == MOBJ_CMODE && cmodeobj->object.cmode == cmode) {
 				DelListItem(cmodeobj, cmode->owner->objects);
-				MyFree(cmodeobj);
+				safe_free(cmodeobj);
 				break;
 			}
 		}

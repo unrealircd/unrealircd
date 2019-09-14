@@ -72,10 +72,10 @@ void	flag_add(char ch)
 	if (extraflags)
 	{
 		char tmp[2] = { ch, 0 };
-		newextra = MyMallocEx(strlen(extraflags) + 2);
+		newextra = safe_alloc(strlen(extraflags) + 2);
 		strcpy(newextra, extraflags);
 		strcat(newextra, tmp);
-		MyFree(extraflags);
+		safe_free(extraflags);
 		extraflags = newextra;
 	}
 	else
@@ -96,12 +96,12 @@ void	flag_del(char ch)
 	for (newsz = 0, p = extraflags; *p; p++)
 		if (*p != ch)
 			newsz++;
-	newflags = MyMallocEx(newsz + 1);
+	newflags = safe_alloc(newsz + 1);
 	for (p = newflags, op = extraflags; (*op) && (newsz); newsz--, op++)
 		if (*op != ch)
 			*p++ = *op;
 	*p = '\0';
-	MyFree(extraflags);
+	safe_free(extraflags);
 	extraflags = newflags;
 }
 

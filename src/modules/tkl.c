@@ -585,23 +585,23 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 			if (p)
 			{
 				*p++ = '\0';
-				usermask = strdup(buf);
-				hostmask = strdup(p);
+				safe_strdup(usermask, buf);
+				safe_strdup(hostmask, p);
 			} else {
-				hostmask = strdup(cep->ce_vardata);
+				safe_strdup(hostmask, cep->ce_vardata);
 			}
 		} else
 		if (!strcmp(cep->ce_varname, "reason"))
 		{
-			reason = strdup(cep->ce_vardata);
+			safe_strdup(reason, cep->ce_vardata);
 		}
 	}
 
 	if (!usermask)
-		usermask = strdup("*");
+		safe_strdup(usermask, "*");
 
 	if (!reason)
-		reason = strdup("-");
+		safe_strdup(reason, "-");
 
 	if (!strcmp(ce->ce_vardata, "nick"))
 		tkltype = TKL_NAME;
@@ -617,9 +617,9 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	else if (TKLIsServerBanType(tkltype))
 		tkl_add_serverban(tkltype, usermask, hostmask, reason, "-config-", 0, TStime(), 0, TKL_FLAG_CONFIG);
 
-	safefree(usermask);
-	safefree(hostmask);
-	safefree(reason);
+	safe_free(usermask);
+	safe_free(hostmask);
+	safe_free(reason);
 	return 1;
 }
 
@@ -2084,19 +2084,19 @@ TKL *_tkl_add_spamfilter(int type, unsigned short target, unsigned short action,
 	if (!(type & TKL_SPAMF))
 		abort();
 
-	tkl = MyMallocEx(sizeof(TKL));
+	tkl = safe_alloc(sizeof(TKL));
 	/* First the common fields */
 	tkl->type = type;
 	tkl->flags = flags;
 	tkl->set_at = set_at;
-	tkl->set_by = strdup(set_by);
+	safe_strdup(tkl->set_by, set_by);
 	tkl->expire_at = expire_at;
 	/* Then the spamfilter fields */
-	tkl->ptr.spamfilter = MyMallocEx(sizeof(Spamfilter));
+	tkl->ptr.spamfilter = safe_alloc(sizeof(Spamfilter));
 	tkl->ptr.spamfilter->target = target;
 	tkl->ptr.spamfilter->action = action;
 	tkl->ptr.spamfilter->match = match;
-	tkl->ptr.spamfilter->tkl_reason = strdup(tkl_reason);
+	safe_strdup(tkl->ptr.spamfilter->tkl_reason, tkl_reason);
 	tkl->ptr.spamfilter->tkl_duration = tkl_duration;
 
 	if (tkl->ptr.spamfilter->target & SPAMF_USER)
@@ -2137,20 +2137,20 @@ TKL *_tkl_add_serverban(int type, char *usermask, char *hostmask, char *reason, 
 	if (!TKLIsServerBanType(type))
 		abort();
 
-	tkl = MyMallocEx(sizeof(TKL));
+	tkl = safe_alloc(sizeof(TKL));
 	/* First the common fields */
 	tkl->type = type;
 	tkl->flags = flags;
 	tkl->set_at = set_at;
-	tkl->set_by = strdup(set_by);
+	safe_strdup(tkl->set_by, set_by);
 	tkl->expire_at = expire_at;
 	/* Now the server ban fields */
-	tkl->ptr.serverban = MyMallocEx(sizeof(ServerBan));
-	tkl->ptr.serverban->usermask = strdup(usermask);
-	tkl->ptr.serverban->hostmask = strdup(hostmask);
+	tkl->ptr.serverban = safe_alloc(sizeof(ServerBan));
+	safe_strdup(tkl->ptr.serverban->usermask, usermask);
+	safe_strdup(tkl->ptr.serverban->hostmask, hostmask);
 	if (soft)
 		tkl->ptr.serverban->subtype = TKL_SUBTYPE_SOFT;
-	tkl->ptr.serverban->reason = strdup(reason);
+	safe_strdup(tkl->ptr.serverban->reason, reason);
 
 	/* For ip hash table TKL's... */
 	index = tkl_ip_hash_type(tkl_typetochar(type));
@@ -2197,21 +2197,21 @@ TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, char *reaso
 	if (!TKLIsBanExceptionType(type))
 		abort();
 
-	tkl = MyMallocEx(sizeof(TKL));
+	tkl = safe_alloc(sizeof(TKL));
 	/* First the common fields */
 	tkl->type = type;
 	tkl->flags = flags;
 	tkl->set_at = set_at;
-	tkl->set_by = strdup(set_by);
+	safe_strdup(tkl->set_by, set_by);
 	tkl->expire_at = expire_at;
 	/* Now the ban except fields */
-	tkl->ptr.banexception = MyMallocEx(sizeof(BanException));
-	tkl->ptr.banexception->usermask = strdup(usermask);
-	tkl->ptr.banexception->hostmask = strdup(hostmask);
+	tkl->ptr.banexception = safe_alloc(sizeof(BanException));
+	safe_strdup(tkl->ptr.banexception->usermask, usermask);
+	safe_strdup(tkl->ptr.banexception->hostmask, hostmask);
 	if (soft)
 		tkl->ptr.banexception->subtype = TKL_SUBTYPE_SOFT;
-	tkl->ptr.banexception->bantypes = strdup(bantypes);
-	tkl->ptr.banexception->reason = strdup(reason);
+	safe_strdup(tkl->ptr.banexception->bantypes, bantypes);
+	safe_strdup(tkl->ptr.banexception->reason, reason);
 
 	/* For ip hash table TKL's... */
 	index = tkl_ip_hash_type(tkl_typetochar(type));
@@ -2257,18 +2257,18 @@ TKL *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *set_by
 	if (!TKLIsNameBanType(type))
 		abort();
 
-	tkl = MyMallocEx(sizeof(TKL));
+	tkl = safe_alloc(sizeof(TKL));
 	/* First the common fields */
 	tkl->type = type;
 	tkl->flags = flags;
 	tkl->set_at = set_at;
-	tkl->set_by = strdup(set_by);
+	safe_strdup(tkl->set_by, set_by);
 	tkl->expire_at = expire_at;
 	/* Now the name ban fields */
-	tkl->ptr.nameban = MyMallocEx(sizeof(ServerBan));
-	tkl->ptr.nameban->name = strdup(name);
+	tkl->ptr.nameban = safe_alloc(sizeof(ServerBan));
+	safe_strdup(tkl->ptr.nameban->name, name);
 	tkl->ptr.nameban->hold = hold;
-	tkl->ptr.nameban->reason = strdup(reason);
+	safe_strdup(tkl->ptr.nameban->reason, reason);
 
 	/* Name bans go via the normal TKL list.. */
 	index = tkl_hash(tkl_typetochar(type));
@@ -2286,38 +2286,38 @@ void _free_tkl(TKL *tkl)
 {
 	/* Free the entry */
 	/* First, the common fields */
-	safefree(tkl->set_by);
+	safe_free(tkl->set_by);
 	/* Now the type specific fields */
 	if (TKLIsServerBan(tkl) && tkl->ptr.serverban)
 	{
-		safefree(tkl->ptr.serverban->usermask);
-		safefree(tkl->ptr.serverban->hostmask);
-		safefree(tkl->ptr.serverban->reason);
-		MyFree(tkl->ptr.serverban);
+		safe_free(tkl->ptr.serverban->usermask);
+		safe_free(tkl->ptr.serverban->hostmask);
+		safe_free(tkl->ptr.serverban->reason);
+		safe_free(tkl->ptr.serverban);
 	} else
 	if (TKLIsNameBan(tkl) && tkl->ptr.nameban)
 	{
-		safefree(tkl->ptr.nameban->name);
-		safefree(tkl->ptr.nameban->reason);
-		MyFree(tkl->ptr.nameban);
+		safe_free(tkl->ptr.nameban->name);
+		safe_free(tkl->ptr.nameban->reason);
+		safe_free(tkl->ptr.nameban);
 	} else
 	if (TKLIsSpamfilter(tkl) && tkl->ptr.spamfilter)
 	{
 		/* Spamfilter */
-		safefree(tkl->ptr.spamfilter->tkl_reason);
+		safe_free(tkl->ptr.spamfilter->tkl_reason);
 		if (tkl->ptr.spamfilter->match)
 			unreal_delete_match(tkl->ptr.spamfilter->match);
-		MyFree(tkl->ptr.spamfilter);
+		safe_free(tkl->ptr.spamfilter);
 	} else
 	if (TKLIsBanException(tkl) && tkl->ptr.banexception)
 	{
-		safefree(tkl->ptr.banexception->usermask);
-		safefree(tkl->ptr.banexception->hostmask);
-		safefree(tkl->ptr.banexception->bantypes);
-		safefree(tkl->ptr.banexception->reason);
-		MyFree(tkl->ptr.banexception);
+		safe_free(tkl->ptr.banexception->usermask);
+		safe_free(tkl->ptr.banexception->hostmask);
+		safe_free(tkl->ptr.banexception->bantypes);
+		safe_free(tkl->ptr.banexception->reason);
+		safe_free(tkl->ptr.banexception);
 	}
-	MyFree(tkl);
+	safe_free(tkl);
 }
 
 /** Delete a TKL entry from the list and free it.
@@ -3830,7 +3830,7 @@ CMD_FUNC(cmd_tkl_add)
 				tkl->expire_at = MAX(tkl->expire_at, expire_at);
 
 			if (strcmp(tkl->set_by, parv[5]) < 0)
-				safestrdup(tkl->set_by, parv[5]);
+				safe_strdup(tkl->set_by, parv[5]);
 
 			if (type & TKL_GLOBAL)
 				tkl_broadcast_entry(1, sptr, cptr, tkl);
@@ -4411,7 +4411,7 @@ int _run_spamfilter(Client *sptr, char *str_in, int target, char *destination, i
 				if (sptr->user->away && !strcmp(str_in, sptr->user->away))
 				{
 					/* free away & broadcast the unset */
-					MyFree(sptr->user->away);
+					safe_free(sptr->user->away);
 					sptr->user->away = NULL;
 					sendto_server(sptr, 0, 0, NULL, ":%s AWAY", sptr->name);
 				}

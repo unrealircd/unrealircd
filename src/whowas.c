@@ -42,11 +42,11 @@ void add_history(Client *cptr, int online)
 
 	if (new->hashv != -1)
 	{
-		safefree(new->name);
-		safefree(new->hostname);
-		safefree(new->virthost);
-		safefree(new->realname);
-		safefree(new->username);
+		safe_free(new->name);
+		safe_free(new->hostname);
+		safe_free(new->virthost);
+		safe_free(new->realname);
+		safe_free(new->username);
 		new->servername = NULL;
 
 		if (new->online)

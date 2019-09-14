@@ -263,7 +263,7 @@ AuthConfig *AuthBlockToAuthConfig(ConfigEntry *ce)
 	if (type == AUTHTYPE_INVALID)
 		type = AUTHTYPE_PLAINTEXT;
 
-	as = MyMallocEx(sizeof(AuthConfig));
+	as = safe_alloc(sizeof(AuthConfig));
 	as->data = strdup(ce->ce_vardata);
 	as->type = type;
 	return as;
@@ -274,8 +274,8 @@ void Auth_FreeAuthConfig(AuthConfig *as)
 {
 	if (as)
 	{
-		safefree(as->data);
-		MyFree(as);
+		safe_free(as->data);
+		safe_free(as);
 	}
 }
 

@@ -209,7 +209,7 @@ struct hostent *unrealdns_doclient(Client *cptr)
 		return unreal_create_hostent(cache_name, cptr->ip);
 
 	/* Create a request */
-	r = MyMallocEx(sizeof(DNSReq));
+	r = safe_alloc(sizeof(DNSReq));
 	r->cptr = cptr;
 	r->ipv6 = IsIPV6(cptr);
 	unrealdns_addreqtolist(r);
@@ -238,7 +238,7 @@ void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf, int ipv4_on
 	DNSReq *r;
 
 	/* Create a request */
-	r = MyMallocEx(sizeof(DNSReq));
+	r = safe_alloc(sizeof(DNSReq));
 	r->linkblock = conf;
 	r->name = strdup(name);
 	if (!DISABLE_IPV6 && !ipv4_only)
@@ -274,7 +274,7 @@ char ipv6 = r->ipv6;
 	}
 
 	/* Good, we got a valid response, now prepare for name -> ip */
-	newr = MyMallocEx(sizeof(DNSReq));
+	newr = safe_alloc(sizeof(DNSReq));
 	newr->cptr = acptr;
 	newr->ipv6 = ipv6;
 	newr->name = strdup(he->h_name);
@@ -466,7 +466,7 @@ static void unrealdns_addtocache(char *name, char *ip)
 	}
 
 	/* Create record */
-	c = MyMallocEx(sizeof(DNSCache));
+	c = safe_alloc(sizeof(DNSCache));
 	c->name = strdup(name);
 	c->ip = strdup(ip);
 	c->expires = TStime() + DNSCACHE_TTL;
@@ -546,9 +546,9 @@ unsigned int hashv;
 	if (c->hnext)
 		c->hnext->hprev = c->hprev;
 	
-	MyFree(c->name);
-	MyFree(c->ip);
-	MyFree(c);
+	safe_free(c->name);
+	safe_free(c->ip);
+	safe_free(c);
 
 	unrealdns_num_cache--;
 }
@@ -577,21 +577,21 @@ struct hostent *unreal_create_hostent(char *name, char *ip)
 struct hostent *he;
 
 	/* Create a hostent structure (I HATE HOSTENTS) and return it.. */
-	he = MyMallocEx(sizeof(struct hostent));
+	he = safe_alloc(sizeof(struct hostent));
 	he->h_name = strdup(name);
 	if (strchr(ip, ':'))
 	{
 		/* IPv6 */
 		he->h_addrtype = AF_INET6;
 		he->h_length = sizeof(struct in6_addr);
-		he->h_addr_list = MyMallocEx(sizeof(char *) * 2); /* alocate an array of 2 pointers */
-		he->h_addr_list[0] = MyMallocEx(sizeof(struct in6_addr));
+		he->h_addr_list = safe_alloc(sizeof(char *) * 2); /* alocate an array of 2 pointers */
+		he->h_addr_list[0] = safe_alloc(sizeof(struct in6_addr));
 		inet_pton(AF_INET6, ip, he->h_addr_list[0]);
 	} else {
 		he->h_addrtype = AF_INET;
 		he->h_length = sizeof(struct in_addr);
-		he->h_addr_list = MyMallocEx(sizeof(char *) * 2); /* alocate an array of 2 pointers */
-		he->h_addr_list[0] = MyMallocEx(sizeof(struct in_addr));
+		he->h_addr_list = safe_alloc(sizeof(char *) * 2); /* alocate an array of 2 pointers */
+		he->h_addr_list[0] = safe_alloc(sizeof(struct in_addr));
 		inet_pton(AF_INET, ip, he->h_addr_list[0]);
 	}
 
@@ -600,10 +600,10 @@ struct hostent *he;
 
 void unreal_free_hostent(struct hostent *he)
 {
-	MyFree(he->h_name);
-	MyFree(he->h_addr_list[0]);
-	MyFree(he->h_addr_list);
-	MyFree(he);
+	safe_free(he->h_name);
+	safe_free(he->h_addr_list[0]);
+	safe_free(he->h_addr_list);
+	safe_free(he);
 }
 
 static void unrealdns_freeandremovereq(DNSReq *r)
@@ -617,8 +617,8 @@ static void unrealdns_freeandremovereq(DNSReq *r)
 		r->next->prev = r->prev;
 
 	if (r->name)
-		MyFree(r->name);
-	MyFree(r);
+		safe_free(r->name);
+	safe_free(r);
 }
 
 /** Delete requests for client 'cptr'.
@@ -679,8 +679,8 @@ char *param;
 		while (cache_list)
 		{
 			c = cache_list->next;
-			MyFree(cache_list->name);
-			MyFree(cache_list);
+			safe_free(cache_list->name);
+			safe_free(cache_list);
 			cache_list = c;
 		}
 		memset(&cache_hashtbl, 0, sizeof(cache_hashtbl));

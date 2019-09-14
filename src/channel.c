@@ -137,7 +137,7 @@ static Member *make_member(void)
 	{
 		for (i = 1; i <= (4072/sizeof(Member)); ++i)
 		{
-			lp = MyMallocEx(sizeof(Member));
+			lp = safe_alloc(sizeof(Member));
 			lp->cptr = NULL;
 			lp->flags = 0;
 			lp->next = freemember;
@@ -171,7 +171,7 @@ static Membership *make_membership(void)
 	{
 		for (i = 1; i <= (4072/sizeof(Membership)); i++)
 		{
-			m = MyMallocEx(sizeof(Membership));
+			m = safe_alloc(sizeof(Membership));
 			m->next = freemembership;
 			freemembership = m;
 		}
@@ -313,8 +313,8 @@ int add_listmode_ex(Ban **list, Client *cptr, Channel *chptr, char *banid, char 
 	}
 
 	/* Update/set if this ban is new or older than existing one */
-	safestrdup(ban->banstr, banid); /* cAsE may differ, use oldest version of it */
-	safestrdup(ban->who, setby);
+	safe_strdup(ban->banstr, banid); /* cAsE may differ, use oldest version of it */
+	safe_strdup(ban->who, setby);
 	ban->when = seton;
 	return 0;
 }
@@ -350,8 +350,8 @@ int del_listmode(Ban **list, Channel *chptr, char *banid)
 		{
 			tmp = *ban;
 			*ban = tmp->next;
-			MyFree(tmp->banstr);
-			MyFree(tmp->who);
+			safe_free(tmp->banstr);
+			safe_free(tmp->who);
 			free_ban(tmp);
 			return 0;
 		}
@@ -908,7 +908,7 @@ Channel *get_channel(Client *cptr, char *chname, int flag)
 		return (chptr);
 	if (flag == CREATE)
 	{
-		chptr = MyMallocEx(sizeof(Channel) + len);
+		chptr = safe_alloc(sizeof(Channel) + len);
 		strlcpy(chptr->chname, chname, len + 1);
 		if (channel)
 			channel->prevch = chptr;
@@ -1033,24 +1033,24 @@ int sub1_from_channel(Channel *chptr)
 	{
 		ban = chptr->banlist;
 		chptr->banlist = ban->next;
-		MyFree(ban->banstr);
-		MyFree(ban->who);
+		safe_free(ban->banstr);
+		safe_free(ban->who);
 		free_ban(ban);
 	}
 	while (chptr->exlist)
 	{
 		ban = chptr->exlist;
 		chptr->exlist = ban->next;
-		MyFree(ban->banstr);
-		MyFree(ban->who);
+		safe_free(ban->banstr);
+		safe_free(ban->who);
 		free_ban(ban);
 	}
 	while (chptr->invexlist)
 	{
 		ban = chptr->invexlist;
 		chptr->invexlist = ban->next;
-		MyFree(ban->banstr);
-		MyFree(ban->who);
+		safe_free(ban->banstr);
+		safe_free(ban->who);
 		free_ban(ban);
 	}
 
@@ -1058,11 +1058,11 @@ int sub1_from_channel(Channel *chptr)
 	extcmode_free_paramlist(chptr->mode.extmodeparams);
 
 	if (chptr->mode_lock)
-		MyFree(chptr->mode_lock);
+		safe_free(chptr->mode_lock);
 	if (chptr->topic)
-		MyFree(chptr->topic);
+		safe_free(chptr->topic);
 	if (chptr->topic_nick)
-		MyFree(chptr->topic_nick);
+		safe_free(chptr->topic_nick);
 	if (chptr->prevch)
 		chptr->prevch->nextch = chptr->nextch;
 	else
@@ -1071,7 +1071,7 @@ int sub1_from_channel(Channel *chptr)
 		chptr->nextch->prevch = chptr->prevch;
 	(void)del_from_channel_hash_table(chptr->chname, chptr);
 	ircstats.channels--;
-	MyFree(chptr);
+	safe_free(chptr);
 	return 1;
 }
 
@@ -1130,7 +1130,7 @@ void send_user_joins(Client *cptr, Client *user)
 void set_channel_mlock(Client *cptr, Client *sptr, Channel *chptr, const char *newmlock, int propagate)
 {
 	if (chptr->mode_lock)
-		MyFree(chptr->mode_lock);
+		safe_free(chptr->mode_lock);
 	chptr->mode_lock = (newmlock != NULL) ? strdup(newmlock) : NULL;
 
 	if (propagate)

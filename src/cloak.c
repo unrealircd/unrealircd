@@ -20,7 +20,7 @@
 /* mode = 0, just use strlcpy, 1 = Realloc new and return new pointer */
 char *make_virthost(Client *sptr, char *curr, char *new, int mode)
 {
-char host[256], *mask, *x, *p, *q;
+	char host[256], *mask, *p, *q;
 
 	if (!curr)
 		return NULL;
@@ -44,7 +44,6 @@ char host[256], *mask, *x, *p, *q;
 		return NULL;
 	}
 	if (new)
-		MyFree(new);
-	x = strdup(mask);
-	return x;
+		safe_free(new);
+	return raw_strdup(mask);
 }

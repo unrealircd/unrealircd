@@ -91,9 +91,9 @@ MOD_UNLOAD()
 {
 	if (cloak_key1)
 	{
-		MyFree(cloak_key1);
-		MyFree(cloak_key2);
-		MyFree(cloak_key3);
+		safe_free(cloak_key1);
+		safe_free(cloak_key2);
+		safe_free(cloak_key3);
 	}
 	return MOD_SUCCESS;
 }
@@ -220,11 +220,11 @@ char buf[512], result[16];
 
 	/* config test should ensure this goes fine... */
 	cep = ce->ce_entries;
-	cloak_key1 = strdup(cep->ce_varname);
+	safe_strdup(cloak_key1, cep->ce_varname);
 	cep = cep->ce_next;
-	cloak_key2 = strdup(cep->ce_varname);
+	safe_strdup(cloak_key2, cep->ce_varname);
 	cep = cep->ce_next;
-	cloak_key3 = strdup(cep->ce_varname);
+	safe_strdup(cloak_key3, cep->ce_varname);
 
 	/* Calculate checksum */
 	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY1, KEY2, KEY3);

@@ -101,10 +101,10 @@ MOD_UNLOAD()
 	for (dmod = DenyModList; dmod; dmod = next)
 	{
 		next = dmod->next;
-		MyFree(dmod->name);
-		MyFree(dmod->reason);
+		safe_free(dmod->name);
+		safe_free(dmod->reason);
 		DelListItem(dmod, DenyModList);
-		MyFree(dmod);
+		safe_free(dmod);
 	}
 	DenyModList = NULL;
 	return MOD_SUCCESS;
@@ -229,25 +229,25 @@ int reqmods_configrun_deny(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (strcmp(ce->ce_vardata, "module"))
 		return 0;
 
-	dmod = MyMallocEx(sizeof(DenyMod));
+	dmod = safe_alloc(sizeof(DenyMod));
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "name"))
 		{
-			safestrdup(dmod->name, cep->ce_vardata);
+			safe_strdup(dmod->name, cep->ce_vardata);
 			continue;
 		}
 
 		if (!strcmp(cep->ce_varname, "reason"))
 		{
-			safestrdup(dmod->reason, cep->ce_vardata);
+			safe_strdup(dmod->reason, cep->ce_vardata);
 			continue;
 		}
 	}
 
 	// Just use a default reason if none was specified (since it's optional)
 	if (!dmod->reason || !strlen(dmod->reason))
-		 safestrdup(dmod->reason, "no reason");
+		 safe_strdup(dmod->reason, "no reason");
 	AddListItem(dmod, DenyModList);
 	return 1;
 }

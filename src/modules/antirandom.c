@@ -582,7 +582,7 @@ MOD_UNLOAD()
 
 static void free_config(void)
 {
-	safefree(cfg.ban_reason);
+	safe_free(cfg.ban_reason);
 	unreal_delete_masks(cfg.except_hosts);
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
@@ -699,8 +699,8 @@ int antirandom_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->ce_varname, "ban-reason"))
 		{
 			if (cfg.ban_reason)
-				MyFree(cfg.ban_reason);
-			cfg.ban_reason = strdup(cep->ce_vardata);
+				safe_free(cfg.ban_reason);
+			safe_strdup(cfg.ban_reason, cep->ce_vardata);
 		} else
 		if (!strcmp(cep->ce_varname, "ban-time"))
 		{
@@ -752,7 +752,7 @@ static int init_triples(void)
 	for (s=triples_txt; *s; s++)
 	{
 		cnt++;
-		e = MyMallocEx(sizeof(Triples));
+		e = safe_alloc(sizeof(Triples));
 		if (strlen(*s) > 2)
 		{
 			config_error("init_triples: error parsing triples_txt, cnt=%d, item='%s' (length>2)",
@@ -982,7 +982,7 @@ static void free_stuff(void)
 	for (t=triples; t; t=t_next)
 	{
 		t_next = t->next;
-		MyFree(t);
+		safe_free(t);
 	}
 	triples = NULL;
 }

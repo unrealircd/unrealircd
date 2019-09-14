@@ -39,7 +39,7 @@ Event *EventAdd(Module *module, char *name, long every, long howmany,
 			module->errorcode = MODERR_INVALID;
 		return NULL;
 	}
-	newevent = MyMallocEx(sizeof(Event));
+	newevent = safe_alloc(sizeof(Event));
 	newevent->name = strdup(name);
 	newevent->howmany = howmany;
 	newevent->every = every;
@@ -50,7 +50,7 @@ Event *EventAdd(Module *module, char *name, long every, long howmany,
 	AddListItem(newevent,events);
 	if (module)
 	{
-		ModuleObject *eventobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *eventobj = safe_alloc(sizeof(ModuleObject));
 		eventobj->object.event = newevent;
 		eventobj->type = MOBJ_EVENT;
 		AddListItem(eventobj, module->objects);
@@ -74,7 +74,7 @@ Event *EventDel(Event *event)
 		if (p == event)
 		{
 			q = p->next;
-			MyFree(p->name);
+			safe_free(p->name);
 			DelListItem(p, events);
 			if (p->owner)
 			{
@@ -84,12 +84,12 @@ Event *EventDel(Event *event)
 					if (eventobjs->type == MOBJ_EVENT && eventobjs->object.event == p)
 					{
 						DelListItem(eventobjs, p->owner->objects);
-						MyFree(eventobjs);
+						safe_free(eventobjs);
 						break;
 					}
 				}
 			}
-			MyFree(p);
+			safe_free(p);
 			return q;		
 		}
 	}

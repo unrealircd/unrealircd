@@ -291,7 +291,7 @@ char *strldup(const char *src, size_t max)
 	if (n > max-1)
 		n = max-1;
 
-	ptr = MyMallocEx(n+1);
+	ptr = safe_alloc(n+1);
 	memcpy(ptr, src, n);
 	ptr[n] = '\0';
 
@@ -701,12 +701,54 @@ int strnatcasecmp(char const *a, char const *b)
 
 /* End of natural sort case comparison functions */
 
-void *MyMallocEx(size_t size)
-{
-	void *p = MyMalloc(size);
+/* Memory allocation routines */
 
-	memset(p, 0, size);
-	return (p);
+/** Allocate memory - should always be used instead of malloc/calloc.
+ * @param size How many bytes to allocate
+ * @returns A pointer to the newly allocated memory.
+ * @notes If out of memory then the IRCd will exit.
+ */
+void *safe_alloc(size_t size)
+{
+	void *p;
+	if (size == 0)
+		return NULL;
+	p = calloc(1, size);
+	if (!p)
+		outofmemory(size);
+	return p;
+}
+
+char *our_strdup(const char *str)
+{
+	char *ret = strdup(str);
+	if (!ret)
+		outofmemory(strlen(str));
+	return ret;
+}
+
+char *our_strldup(const char *str, size_t max)
+{
+	char *ret = strldup(str, max);
+	if (!ret)
+		outofmemory(MAX(strlen(str), max));
+	return ret;
+}
+
+/** Called when out of memory */
+void outofmemory(size_t bytes)
+{
+	static int log_attempt = 1;
+
+	if (log_attempt)
+	{
+		log_attempt = 0;
+		if (bytes)
+			ircd_log(LOG_ERROR, "Out of memory while trying to allocate %lld bytes!", (long long)bytes);
+		else
+			ircd_log(LOG_ERROR, "Out of memory");
+	}
+	exit(7);
 }
 
 int file_exists(char* file)

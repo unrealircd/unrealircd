@@ -592,7 +592,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 			{
 				free_str_list(sptr->user->lopt->yeslist);
 				free_str_list(sptr->user->lopt->nolist);
-				MyFree(sptr->user->lopt);
+				safe_free(sptr->user->lopt);
 			}
 			on_for = TStime() - sptr->local->firsttime;
 			if (IsHidden(sptr))
@@ -953,22 +953,22 @@ void unreal_delete_masks(ConfigItem_mask *m)
 	{
 		m_next = m->next;
 
-		safefree(m->mask);
+		safe_free(m->mask);
 
-		MyFree(m);
+		safe_free(m);
 	}
 }
 
 /** Internal function to add one individual mask to the list */
 static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 {
-	ConfigItem_mask *m = MyMallocEx(sizeof(ConfigItem_mask));
+	ConfigItem_mask *m = safe_alloc(sizeof(ConfigItem_mask));
 
 	/* Since we allow both mask "xyz"; and mask { abc; def; };... */
 	if (ce->ce_vardata)
-		safestrdup(m->mask, ce->ce_vardata);
+		safe_strdup(m->mask, ce->ce_vardata);
 	else
-		safestrdup(m->mask, ce->ce_varname);
+		safe_strdup(m->mask, ce->ce_varname);
 	
 	add_ListItem((ListStruct *)m, (ListStruct **)head);
 }
@@ -1034,7 +1034,7 @@ int swhois_add(Client *acptr, char *tag, int priority, char *swhois, Client *fro
 		if (!strcmp(s->line, swhois))
 			return -1; /* exists */
 
-	s = MyMallocEx(sizeof(SWhois));
+	s = safe_alloc(sizeof(SWhois));
 	s->line = strdup(swhois);
 	s->setby = strdup(tag);
 	s->priority = priority;
@@ -1067,9 +1067,9 @@ int swhois_delete(Client *acptr, char *tag, char *swhois, Client *from, Client *
 		    !strcmp(s->setby, tag)))
 		{
 			DelListItem(s, acptr->user->swhois);
-			MyFree(s->line);
-			MyFree(s->setby);
-			MyFree(s);
+			safe_free(s->line);
+			safe_free(s->setby);
+			safe_free(s);
 
 			sendto_server(skip, 0, PROTO_EXTSWHOIS, NULL, ":%s SWHOIS %s :",
 				from->name, acptr->name);
@@ -1276,9 +1276,9 @@ void free_message_tags(MessageTag *m)
 	for (; m; m = m_next)
 	{
 		m_next = m->next;
-		safefree(m->name);
-		safefree(m->value);
-		MyFree(m);
+		safe_free(m->name);
+		safe_free(m->value);
+		safe_free(m);
 	}
 }
 
@@ -1288,9 +1288,9 @@ void free_message_tags(MessageTag *m)
  */
 MessageTag *duplicate_mtag(MessageTag *mtag)
 {
-	MessageTag *m = MyMallocEx(sizeof(MessageTag));
+	MessageTag *m = safe_alloc(sizeof(MessageTag));
 	m->name = strdup(mtag->name);
-	safestrdup(m->value, mtag->value);
+	safe_strdup(m->value, mtag->value);
 	return m;
 }
 
@@ -1376,13 +1376,13 @@ time_t my_timegm(struct tm *tm)
 	time_t ret;
 	char *tz = NULL;
 
-	safestrdup(tz, getenv("TZ"));
+	safe_strdup(tz, getenv("TZ"));
 	setenv("TZ", "", 1);
 	ret = mktime(tm);
 	if (tz)
 	{
 		setenv("TZ", tz, 1);
-		MyFree(tz);
+		safe_free(tz);
 	} else {
 		unsetenv("TZ");
 	}
@@ -1575,7 +1575,7 @@ int read_str(FILE *fd, char **x)
 	if (len == 0)
 	{
 		/* 0 means empty string */
-		*x = strdup("");
+		safe_strdup(*x, "");
 		return 1;
 	}
 
@@ -1583,10 +1583,10 @@ int read_str(FILE *fd, char **x)
 		return 0;
 
 	size = len;
-	*x = MyMallocEx(size + 1);
+	*x = safe_alloc(size + 1);
 	if (!read_data(fd, *x, size))
 	{
-		safefree(*x);
+		safe_free(*x);
 		return 0;
 	}
 	(*x)[len] = 0;

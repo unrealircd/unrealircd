@@ -65,7 +65,7 @@ void	umode_init(void)
 {
 	long val = 1;
 	int	i;
-	Usermode_Table = MyMallocEx(sizeof(Umode) * UMODETABLESZ);
+	Usermode_Table = safe_alloc(sizeof(Umode) * UMODETABLESZ);
 	for (i = 0; i < UMODETABLESZ; i++)
 	{
 		Usermode_Table[i].mode = val;
@@ -73,7 +73,7 @@ void	umode_init(void)
 	}
 	Usermode_highest = 0;
 
-	Snomask_Table = MyMallocEx(sizeof(Snomask) * UMODETABLESZ);
+	Snomask_Table = safe_alloc(sizeof(Snomask) * UMODETABLESZ);
 	val = 1;
 	for (i = 0; i < UMODETABLESZ; i++)
 	{
@@ -129,7 +129,7 @@ static char previous_umodestring[256];
 void umodes_check_for_changes(void)
 {
 	make_umodestr();
-	safestrdup(me.serv->features.usermodes, umodestring);
+	safe_strdup(me.serv->features.usermodes, umodestring);
 
 	if (!*previous_umodestring)
 	{
@@ -201,7 +201,7 @@ Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*
 		Usermode_Table[i].owner = module;
 		if (module)
 		{
-			ModuleObject *umodeobj = MyMallocEx(sizeof(ModuleObject));
+			ModuleObject *umodeobj = safe_alloc(sizeof(ModuleObject));
 			umodeobj->object.umode = &(Usermode_Table[i]);
 			umodeobj->type = MOBJ_UMODE;
 			AddListItem(umodeobj, module->objects);
@@ -247,7 +247,7 @@ void UmodeDel(Umode *umode)
 		for (umodeobj = umode->owner->objects; umodeobj; umodeobj = umodeobj->next) {
 			if (umodeobj->type == MOBJ_UMODE && umodeobj->object.umode == umode) {
 				DelListItem(umodeobj, umode->owner->objects);
-				MyFree(umodeobj);
+				safe_free(umodeobj);
 				break;
 			}
 		}
@@ -296,7 +296,7 @@ Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(Client *sptr, int wh
 		Snomask_Table[i].owner = module;
 		if (module)
 		{
-			ModuleObject *snoobj = MyMallocEx(sizeof(ModuleObject));
+			ModuleObject *snoobj = safe_alloc(sizeof(ModuleObject));
 			snoobj->object.snomask = &(Snomask_Table[i]);
 			snoobj->type = MOBJ_SNOMASK;
 			AddListItem(snoobj, module->objects);
@@ -340,7 +340,7 @@ void SnomaskDel(Snomask *sno)
 		for (snoobj = sno->owner->objects; snoobj; snoobj = snoobj->next) {
 			if (snoobj->type == MOBJ_SNOMASK && snoobj->object.snomask == sno) {
 				DelListItem(snoobj, sno->owner->objects);
-				MyFree(snoobj);
+				safe_free(snoobj);
 				break;
 			}
 		}

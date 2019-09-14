@@ -88,7 +88,7 @@ MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *m
 		}
 	} else {
 		/* New message tag handler */
-		m = MyMallocEx(sizeof(MessageTagHandler));
+		m = safe_alloc(sizeof(MessageTagHandler));
 		m->name = strdup(mreq->name);
 	}
 	/* Add or update the following fields: */
@@ -105,7 +105,7 @@ MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *m
 
 	if (module)
 	{
-		ModuleObject *mobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *mobj = safe_alloc(sizeof(ModuleObject));
 		mobj->type = MOBJ_MTAG;
 		mobj->object.mtag = m;
 		AddListItem(mobj, module->objects);
@@ -127,8 +127,8 @@ void unload_mtag_handler_commit(MessageTagHandler *m)
 
 	/* Destroy the object */
 	DelListItem(m, mtaghandlers);
-	safefree(m->name);
-	MyFree(m);
+	safe_free(m->name);
+	safe_free(m);
 }
 
 /**
@@ -145,7 +145,7 @@ void MessageTagHandlerDel(MessageTagHandler *m)
 			if (mobj->type == MOBJ_MTAG && mobj->object.mtag == m)
 			{
 				DelListItem(mobj, m->owner->objects);
-				MyFree(mobj);
+				safe_free(mobj);
 				break;
 			}
 		}

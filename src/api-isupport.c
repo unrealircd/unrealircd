@@ -217,7 +217,7 @@ ISupport *ISupportAdd(Module *module, const char *token, const char *value)
 		}
 	}
 
-	isupport = MyMallocEx(sizeof(ISupport));
+	isupport = safe_alloc(sizeof(ISupport));
 	isupport->owner = module;
 	isupport->token = strdup(token);
 	if (value)
@@ -226,7 +226,7 @@ ISupport *ISupportAdd(Module *module, const char *token, const char *value)
 	make_isupportstrings();
 	if (module)
 	{
-		ModuleObject *isupportobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *isupportobj = safe_alloc(sizeof(ModuleObject));
 		isupportobj->object.isupport = isupport;
 		isupportobj->type = MOBJ_ISUPPORT;
 		AddListItem(isupportobj, module->objects);
@@ -265,10 +265,10 @@ void make_isupportstrings(void)
 
 	/* Free any previous strings */
 	for (i = 0; ISupportStrings[i]; i++)
-		safefree(ISupportStrings[i]);
+		safe_free(ISupportStrings[i]);
 
 	i = 0;
-	ISupportStrings[i] = MyMallocEx(bufsize+1);
+	ISupportStrings[i] = safe_alloc(bufsize+1);
 
 	for (isupport = ISupports; isupport; isupport = isupport->next)
 	{
@@ -281,7 +281,7 @@ void make_isupportstrings(void)
 		if ((strlen(ISupportStrings[i]) + strlen(tmp) + 1 >= ISUPPORTLEN) || (tokcnt == 13))
 		{
 			/* No room or max tokens reached: start a new buffer */
-			ISupportStrings[++i] = MyMallocEx(bufsize+1);
+			ISupportStrings[++i] = safe_alloc(bufsize+1);
 			tokcnt = 1;
 			if (i == MAXISUPPORTLINES)
 				abort(); /* should never happen anyway */

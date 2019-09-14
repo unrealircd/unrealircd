@@ -102,10 +102,10 @@ MOD_UNLOAD()
 	for (rcmd = RestrictedCommandList; rcmd; rcmd = next)
 	{
 		next = rcmd->next;
-		MyFree(rcmd->conftag);
-		MyFree(rcmd->cmd);
+		safe_free(rcmd->conftag);
+		safe_free(rcmd->cmd);
 		DelListItem(rcmd, RestrictedCommandList);
-		MyFree(rcmd);
+		safe_free(rcmd);
 	}
 	RestrictedCommandList = NULL;
 	return MOD_SUCCESS;
@@ -256,7 +256,7 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 			}
 		}
 
-		rcmd = MyMallocEx(sizeof(RestrictedCommand));
+		rcmd = safe_alloc(sizeof(RestrictedCommand));
 		rcmd->cmd = strdup(cmd);
 		rcmd->conftag = (conftag ? strdup(conftag) : NULL);
 		for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)

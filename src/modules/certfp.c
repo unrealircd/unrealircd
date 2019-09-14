@@ -142,7 +142,7 @@ int certfp_whois(Client *sptr, Client *acptr)
 void certfp_free(ModData *m)
 {
 	if (m->str)
-		MyFree(m->str);
+		safe_free(m->str);
 	m->str = NULL;
 }
 
@@ -156,6 +156,6 @@ char *certfp_serialize(ModData *m)
 void certfp_unserialize(char *str, ModData *m)
 {
 	if (m->str)
-		MyFree(m->str);
+		safe_free(m->str);
 	m->str = strdup(str);
 }

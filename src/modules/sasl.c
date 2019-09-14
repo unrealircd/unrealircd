@@ -377,7 +377,7 @@ void auto_discover_sasl_server(int justlinked)
 				                    "I'm setting set::sasl-server to '%s' internally.",
 				                    SERVICES_NAME, SERVICES_NAME);
 			}
-			safestrdup(SASL_SERVER, SERVICES_NAME);
+			safe_strdup(SASL_SERVER, SERVICES_NAME);
 			if (justlinked)
 				sasl_server_synched(acptr);
 		}
@@ -447,7 +447,7 @@ MOD_UNLOAD()
 void saslmechlist_free(ModData *m)
 {
 	if (m->str)
-		MyFree(m->str);
+		safe_free(m->str);
 }
 
 char *saslmechlist_serialize(ModData *m)
@@ -460,7 +460,7 @@ char *saslmechlist_serialize(ModData *m)
 void saslmechlist_unserialize(char *str, ModData *m)
 {
 	if (m->str)
-		MyFree(m->str);
+		safe_free(m->str);
 	m->str = strdup(str);
 }
 

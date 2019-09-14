@@ -1812,7 +1812,7 @@ CMD_FUNC(_cmd_umode)
 				sptr->name, sptr->user->virthost);
 
 		/* Set the vhost */
-		safefree(sptr->user->virthost);
+		safe_free(sptr->user->virthost);
 		sptr->user->virthost = strdup(sptr->user->cloakedhost);
 
 		/* Notify */
@@ -1828,7 +1828,7 @@ CMD_FUNC(_cmd_umode)
 		 * for ban-checking... free+recreate here because it could have
 		 * been a vhost for example. -- Syzop
 		 */
-		safefree(sptr->user->virthost);
+		safe_free(sptr->user->virthost);
 		sptr->user->virthost = strdup(sptr->user->cloakedhost);
 
 		/* Notify */

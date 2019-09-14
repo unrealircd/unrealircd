@@ -60,8 +60,8 @@ Command *CommandAddInternal(Module *module, char *cmd, CmdFunc func, AliasCmdFun
 
 	if (module)
 	{
-		ModuleObject *cmdobj = MyMallocEx(sizeof(ModuleObject));
-		command = MyMallocEx(sizeof(Command));
+		ModuleObject *cmdobj = safe_alloc(sizeof(ModuleObject));
+		command = safe_alloc(sizeof(Command));
 		command->cmd = c;
 		command->cmd->owner = module;
 		command->cmd->friend = NULL;
@@ -115,7 +115,7 @@ void CommandDelX(Command *command, RealCommand *cmd)
 			if (cmdobj->type == MOBJ_COMMAND && cmdobj->object.command == command)
 			{
 				DelListItem(cmdobj,cmd->owner->objects);
-				MyFree(cmdobj);
+				safe_free(cmdobj);
 				break;
 			}
 		}
@@ -125,10 +125,10 @@ void CommandDelX(Command *command, RealCommand *cmd)
 		ovrnext = ovr->next;
 		CommandOverrideDel(ovr);
 	}
-	MyFree(cmd->cmd);
-	MyFree(cmd);
+	safe_free(cmd->cmd);
+	safe_free(cmd);
 	if (command)
-		MyFree(command);
+		safe_free(command);
 }
 
 void CommandDel(Command *command)

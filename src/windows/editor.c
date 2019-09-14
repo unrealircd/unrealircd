@@ -332,7 +332,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			int fd,len;
 			char *buffer, *string;
 			EDITSTREAM edit;
-			StreamIO *stream = MyMallocEx(sizeof(StreamIO));
+			StreamIO *stream = safe_alloc(sizeof(StreamIO));
 			unsigned char szText[256];
 			struct stat sb;
 			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT), hTip;
@@ -354,11 +354,11 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			{
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
-				buffer = MyMallocEx(sb.st_size+1);
+				buffer = safe_alloc(sb.st_size+1);
 				len = read(fd, buffer, sb.st_size);
 				buffer[len] = 0;
 				len = CountRTFSize(buffer)+1;
-				string = MyMallocEx(len);
+				string = safe_alloc(len);
 				IRCToRTF(buffer,string);
 				RTFBuf = string;
 				len--;

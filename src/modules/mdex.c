@@ -302,7 +302,7 @@ CMD_FUNC(cmd_mdex)
 void mdex_free(ModData *m)
 {
 	if (m->str)
-		MyFree(m->str);
+		safe_free(m->str);
 }
 
 char *mdex_serialize(ModData *m)
@@ -315,6 +315,6 @@ char *mdex_serialize(ModData *m)
 void mdex_unserialize(char *str, ModData *m)
 {
 	if (m->str)
-		MyFree(m->str);
+		safe_free(m->str);
 	m->str = strdup(str);
 }

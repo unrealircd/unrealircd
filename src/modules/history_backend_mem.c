@@ -114,7 +114,7 @@ HistoryLogObject *hbm_find_or_add_object(char *object)
 			return h;
 	}
 	/* Create new one */
-	h = MyMallocEx(sizeof(HistoryLogObject));
+	h = safe_alloc(sizeof(HistoryLogObject));
 	strlcpy(h->name, object, sizeof(h->name));
 	AddListItem(h, history_hash_table[hashv]);
 	return h;
@@ -125,7 +125,7 @@ void hbm_delete_object_hlo(HistoryLogObject *h)
 	int hashv = hbm_hash(h->name);
 
 	DelListItem(h, history_hash_table[hashv]);
-	MyFree(h);
+	safe_free(h);
 }
 
 void hbm_duplicate_mtags(HistoryLogLine *l, MessageTag *m)
@@ -161,7 +161,7 @@ void hbm_duplicate_mtags(HistoryLogLine *l, MessageTag *m)
 			tm->tm_sec,
 			(int)(t.tv_usec / 1000));
 
-		n = MyMallocEx(sizeof(MessageTag));
+		n = safe_alloc(sizeof(MessageTag));
 		n->name = strdup("time");
 		n->value = strdup(buf);
 		AddListItem(n, l->mtags);
@@ -173,7 +173,7 @@ void hbm_duplicate_mtags(HistoryLogLine *l, MessageTag *m)
 /** Add a line to a history object */
 void hbm_history_add_line(HistoryLogObject *h, MessageTag *mtags, char *line)
 {
-	HistoryLogLine *l = MyMallocEx(sizeof(HistoryLogLine) + strlen(line));
+	HistoryLogLine *l = safe_alloc(sizeof(HistoryLogLine) + strlen(line));
 	strcpy(l->line, line); /* safe, see memory allocation above ^ */
 	hbm_duplicate_mtags(l, mtags);
 	if (h->tail)
@@ -210,7 +210,7 @@ void hbm_history_del_line(HistoryLogObject *h, HistoryLogLine *l)
 	}
 
 	free_message_tags(l->mtags);
-	MyFree(l);
+	safe_free(l);
 
 	h->num_lines--;
 
@@ -242,13 +242,13 @@ void hbm_send_line(Client *acptr, HistoryLogLine *l, char *batchid)
 		{
 			sendto_one(acptr, l->mtags, "%s", l->line);
 		} else {
-			MessageTag *m = MyMallocEx(sizeof(MessageTag));
+			MessageTag *m = safe_alloc(sizeof(MessageTag));
 			m->name = "batch";
 			m->value = batchid;
 			AddListItem(m, l->mtags);
 			sendto_one(acptr, l->mtags, "%s", l->line);
 			DelListItem(m, l->mtags);
-			MyFree(m);
+			safe_free(m);
 		}
 	} else {
 		/* without server-time, log playback is a bit annoying, so skip it? */
@@ -348,7 +348,7 @@ int hbm_history_destroy(char *object)
 		 * fields that are added later there but not here.
 		 */
 		free_message_tags(l->mtags);
-		MyFree(l);
+		safe_free(l);
 	}
 
 	hbm_delete_object_hlo(h);

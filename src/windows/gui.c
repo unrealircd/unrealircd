@@ -661,7 +661,7 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			unsigned char	String[16384];
 			int size;
 			unsigned char *RTFString;
-			StreamIO *stream = MyMallocEx(sizeof(StreamIO));
+			StreamIO *stream = safe_alloc(sizeof(StreamIO));
 			EDITSTREAM edit;
 			SetWindowText(hDlg, title);
 			memset(String, 0, sizeof(String));
@@ -673,7 +673,7 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 					strcat(String, "\r\n");
 			}
 			size = CountRTFSize(String)+1;
-			RTFString = MyMallocEx(size);
+			RTFString = safe_alloc(size);
 			IRCToRTF(String,RTFString);
 			RTFBuf = RTFString;
 			size--;
@@ -743,7 +743,7 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			int fd,len;
 			unsigned char *buffer = '\0', *string = '\0';
 			EDITSTREAM edit;
-			StreamIO *stream = MyMallocEx(sizeof(StreamIO));
+			StreamIO *stream = safe_alloc(sizeof(StreamIO));
 			unsigned char szText[256];
 			struct stat sb;
 			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT), hTip;
@@ -754,12 +754,12 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			{
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
-				buffer = MyMallocEx(sb.st_size+1);
+				buffer = safe_alloc(sb.st_size+1);
 				buffer[0] = 0;
 				len = read(fd, buffer, sb.st_size); 
 				buffer[len] = 0;
 				len = CountRTFSize(buffer)+1;
-				string = MyMallocEx(len);
+				string = safe_alloc(len);
 				IRCToRTF(buffer,string);
 				RTFBuf = string;
 				len--;
@@ -1036,14 +1036,14 @@ void win_log(FORMAT_STRING(const char *format), ...)
 		strcat(buf, "\r\n");
 		if (errors) 
 		{
-			char *tbuf = MyMallocEx(strlen(errors) + strlen(buf) + 1);
+			char *tbuf = safe_alloc(strlen(errors) + strlen(buf) + 1);
 			strcpy(tbuf, errors);
 			strcat(tbuf, buf);
 			errors = tbuf;
 		}
 		else 
 		{
-			errors = strdup(buf);
+			safe_strdup(errors, buf);
 		}
 	}
 	else 
@@ -1100,7 +1100,7 @@ LRESULT CALLBACK ConfigErrorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		case WM_INITDIALOG:
 			MessageBeep(MB_ICONEXCLAMATION);
 			SetDlgItemText(hDlg, IDC_CONFIGERROR, errors);
-			MyFree(errors);
+			safe_free(errors);
 			errors = NULL;
 			return (TRUE);
 		case WM_COMMAND:

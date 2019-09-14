@@ -375,18 +375,18 @@ u_char char_atribs[] = {
  */
 void unreal_delete_match(Match *m)
 {
-	safefree(m->str);
+	safe_free(m->str);
 	if (m->type == MATCH_PCRE_REGEX)
 	{
 		if (m->ext.pcre2_expr)
 			pcre2_code_free(m->ext.pcre2_expr);
 	}
-	MyFree(m);
+	safe_free(m);
 }
 
 Match *unreal_create_match(MatchType type, char *str, char **error)
 {
-	Match *m = MyMallocEx(sizeof(Match));
+	Match *m = safe_alloc(sizeof(Match));
 	static char errorbuf[512];
 
 	*errorbuf = '\0';
@@ -816,7 +816,7 @@ int badword_config_process(ConfigItem_badword *ca, char *str)
 		int options = 0;
 
 		ca->type = BADW_TYPE_REGEX;
-		safestrdup(ca->word, str);
+		safe_strdup(ca->word, str);
 
 		options = PCRE2_CASELESS|PCRE2_NEVER_UTF|PCRE2_NEVER_UCP;
 
@@ -835,7 +835,7 @@ int badword_config_process(ConfigItem_badword *ca, char *str)
 	{
 		char *tmpw;
 		ca->type = BADW_TYPE_FAST;
-		ca->word = tmpw = MyMallocEx(strlen(str) - ast_l - ast_r + 1);
+		ca->word = tmpw = safe_alloc(strlen(str) - ast_l - ast_r + 1);
 		/* Copy except for asterisks */
 		for (tmp = str; *tmp; tmp++)
 			if (*tmp != '*')
@@ -856,10 +856,10 @@ int badword_config_process(ConfigItem_badword *ca, char *str)
  */
 void badword_config_free(ConfigItem_badword *e)
 {
-	safefree(e->word);
+	safe_free(e->word);
 	if (e->replace)
-		safefree(e->replace);
+		safe_free(e->replace);
 	if (e->pcre2_expr)
 		pcre2_code_free(e->pcre2_expr);
-	MyFree(e);
+	safe_free(e);
 }

@@ -236,7 +236,7 @@ JoinFlood *jointhrottle_addentry(Client *cptr, Channel *chptr)
 			abort(); /* already exists -- should never happen */
 #endif
 
-	e = MyMallocEx(sizeof(JoinFlood));
+	e = safe_alloc(sizeof(JoinFlood));
 	strlcpy(e->chname, chptr->chname, sizeof(e->chname));
 
 	/* Insert our new entry as (new) head */
@@ -284,7 +284,7 @@ EVENT(jointhrottle_cleanup_structs)
 				if (jf->next)
 					jf->next->prev = jf->prev;
 			}
-			MyFree(jf);
+			safe_free(jf);
 		}
 	}
 }
@@ -299,7 +299,7 @@ void jointhrottle_md_free(ModData *m)
 	for (j = m->ptr; j; j = j_next)
 	{
 		j_next = j->next;
-		MyFree(j);
+		safe_free(j);
 	}	
 
 	m->ptr = NULL;

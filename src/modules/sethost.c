@@ -136,7 +136,7 @@ CMD_FUNC(cmd_sethost)
 	/* get it in */
 	if (sptr->user->virthost)
 	{
-		MyFree(sptr->user->virthost);
+		safe_free(sptr->user->virthost);
 		sptr->user->virthost = NULL;
 	}
 	sptr->user->virthost = strdup(vhost);

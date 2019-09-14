@@ -108,7 +108,7 @@ void mtag_add_or_inherit_time(Client *sender, MessageTag *recv_mtags, MessageTag
 			tm->tm_sec,
 			(int)(t.tv_usec / 1000));
 
-		m = MyMallocEx(sizeof(MessageTag));
+		m = safe_alloc(sizeof(MessageTag));
 		m->name = strdup("time");
 		m->value = strdup(buf);
 	}

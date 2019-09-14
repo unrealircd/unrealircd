@@ -76,7 +76,7 @@ DWORD CALLBACK BufferIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 	if (!RTFBuf)
 		size = 0;
 
-	buf2 = MyMallocEx(size+cb+1);
+	buf2 = safe_alloc(size+cb+1);
 
 	if (RTFBuf)
 		memcpy(buf2,RTFBuf,size);
@@ -85,7 +85,7 @@ DWORD CALLBACK BufferIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 
 	size += cb;
 	if (RTFBuf)
-		MyFree(RTFBuf);
+		safe_free(RTFBuf);
 
 	RTFBuf = buf2;
 
@@ -100,7 +100,7 @@ DWORD CALLBACK BufferIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
  */
 void ColorPush(unsigned char *color, IRCColor **stack)
 {
-	IRCColor *t = MyMallocEx(sizeof(IRCColor));
+	IRCColor *t = safe_alloc(sizeof(IRCColor));
 	t->color = strdup(color);
 	t->next = *stack;
 	(*stack) = t;
@@ -115,10 +115,10 @@ void ColorPop(IRCColor **stack)
 	IRCColor *p = *stack;
 	if (!(*stack))
 		return;
-	MyFree(p->color);
+	safe_free(p->color);
 	
 	*stack = p->next;
-	MyFree(p);
+	safe_free(p);
 }
 
 /* Completely empties the color stack
@@ -131,8 +131,8 @@ void ColorEmpty(IRCColor **stack)
 	for (t = *stack; t; t = next)
 	{
 		next = t->next;
-		MyFree(t->color);
-		MyFree(t);
+		safe_free(t->color);
+		safe_free(t);
 	}
 }
 
@@ -146,7 +146,7 @@ void ColorEmpty(IRCColor **stack)
  */
 DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb) 
 {
-	unsigned char *buffer = MyMallocEx(cb*2+2);
+	unsigned char *buffer = safe_alloc(cb*2+2);
 	int colors[17], bold = 0, uline = 0, incolor = 0, inbg = 0;
 	int lastwascf = 0, lastwascf0 = 0;
 	int i = 0;

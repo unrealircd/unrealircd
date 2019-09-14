@@ -148,7 +148,7 @@ CMD_FUNC(cmd_chghost)
 		    sptr->name, acptr->name, parv[2]);
 		if (acptr->user->virthost)
 		{
-			MyFree(acptr->user->virthost);
+			safe_free(acptr->user->virthost);
 			acptr->user->virthost = 0;
 		}
 		acptr->user->virthost = strdup(parv[2]);

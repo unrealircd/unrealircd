@@ -89,7 +89,7 @@ void mtag_add_account(Client *acptr, MessageTag *recv_mtags, MessageTag **mtag_l
 
 	if (acptr && acptr->user && (*acptr->user->svid != '*') && !isdigit(*acptr->user->svid))
 	{
-		m = MyMallocEx(sizeof(MessageTag));
+		m = safe_alloc(sizeof(MessageTag));
 		m->name = strdup("account");
 		m->value = strdup(acptr->user->svid);
 

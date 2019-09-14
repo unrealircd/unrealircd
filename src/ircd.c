@@ -72,7 +72,7 @@ MODVAR char **myargv;
 #else
 LPCSTR cmdLine;
 #endif
-char *configfile = CONFIGFILE;	/* Server configuration file */
+char *configfile = NULL; 	/* Server configuration file */
 int  debuglevel = 0;		/* Server debug level */
 int  bootopt = 0;		/* Server boot option flags */
 char *debugmode = "";		/*  -"-    -"-   -"-  */
@@ -263,7 +263,7 @@ EVENT(garbage_collect)
 			freelinks--;
 			p.next = freelink;
 			freelink = freelink->next;
-			MyFree(p.next);
+			safe_free(p.next);
 		}
 		if (loop.do_garbage_collect == 1) {
 			loop.do_garbage_collect = 0;
@@ -855,6 +855,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 
 	timeofday = time(NULL);
+	safe_strdup(configfile, CONFIGFILE);
 
 	init_random(); /* needs to be done very early!! */
 
@@ -865,7 +866,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	memset(&smotd, '\0', sizeof(MOTDFile));
 	memset(&svsmotd, '\0', sizeof(MOTDFile));
 	memset(&me, 0, sizeof(me));
-	me.local = MyMallocEx(sizeof(LocalClient));
+	me.local = safe_alloc(sizeof(LocalClient));
 	memset(&loop, 0, sizeof(loop));
 
 	init_hash();
@@ -960,7 +961,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 					exit(1);
 				}
 #endif
-				configfile = strdup(p);
+				safe_strdup(configfile, p);
 				convert_to_absolute_path(&configfile, CONFDIR);
 				break;
 #ifndef _WIN32
@@ -1144,7 +1145,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	/*
 	 * Add default class
 	 */
-	default_class = MyMallocEx(sizeof(ConfigItem_class));
+	default_class = safe_alloc(sizeof(ConfigItem_class));
 	default_class->flag.permanent = 1;
 	default_class->pingfreq = 120;
 	default_class->maxclients = 100;

@@ -136,7 +136,7 @@ void delete_webircblock(ConfigItem_webirc *e)
 	if (e->auth)
 		Auth_FreeAuthConfig(e->auth);
 	DelListItem(e, conf_webirc);
-	MyFree(e);
+	safe_free(e);
 }
 
 int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -258,7 +258,7 @@ int webirc_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "webirc"))
 		return 0; /* not interested */
 
-	webirc = MyMallocEx(sizeof(ConfigItem_webirc));
+	webirc = safe_alloc(sizeof(ConfigItem_webirc));
 	webirc->type = WEBIRC_WEBIRC; /* default */
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -357,7 +357,7 @@ int dowebirc(Client *cptr, char *ip, char *host, char *options)
 	}
 
 	/* STEP 2: Update GetIP() */
-	safefree(cptr->ip);
+	safe_free(cptr->ip);
 	cptr->ip = strdup(ip);
 		
 	/* STEP 3: Update cptr->local->hostp */

@@ -129,7 +129,7 @@ Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(),
 		return NULL;
 	}
 	
-	p = MyMallocEx(sizeof(Efunction));
+	p = safe_alloc(sizeof(Efunction));
 	if (func)
 		p->func.intfunc = func;
 	if (vfunc)
@@ -143,7 +143,7 @@ Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(),
 	AddListItem(p, Efunctions[eftype]);
 	if (module)
 	{
-		ModuleObject *cbobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *cbobj = safe_alloc(sizeof(ModuleObject));
 		cbobj->object.efunction = p;
 		cbobj->type = MOBJ_EFUNCTION;
 		AddListItem(cbobj, module->objects);
@@ -172,12 +172,12 @@ Efunction *EfunctionDel(Efunction *cb)
 					if ((cbobj->type == MOBJ_EFUNCTION) && (cbobj->object.efunction == p))
 					{
 						DelListItem(cbobj, cb->owner->objects);
-						MyFree(cbobj);
+						safe_free(cbobj);
 						break;
 					}
 				}
 			}
-			MyFree(p);
+			safe_free(p);
 			return q;
 		}
 	}
@@ -273,13 +273,14 @@ void efunctions_switchover(void)
 
 void efunc_init_function_(EfunctionType what, char *name, void *func, void *default_func)
 {
-	efunction_table[what].name = strdup(name);
+	safe_strdup(efunction_table[what].name, name);
 	efunction_table[what].funcptr = func;
 	efunction_table[what].deffunc = default_func;
 }
 
 void efunctions_init(void)
 {
+	memset(&efunction_table, 0, sizeof(efunction_table));
 	efunc_init_function(EFUNC_DO_JOIN, do_join, NULL);
 	efunc_init_function(EFUNC_JOIN_CHANNEL, join_channel, NULL);
 	efunc_init_function(EFUNC_CAN_JOIN, can_join, NULL);

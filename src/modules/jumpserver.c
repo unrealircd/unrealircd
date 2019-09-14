@@ -106,10 +106,10 @@ void free_jss(void)
 {
 	if (jss)
 	{
-		safefree(jss->server);
-		safefree(jss->reason);
-		safefree(jss->ssl_server);
-		MyFree(jss);
+		safe_free(jss->server);
+		safe_free(jss->reason);
+		safe_free(jss->ssl_server);
+		safe_free(jss);
 		jss = NULL;
 	}
 }
@@ -231,7 +231,7 @@ CMD_FUNC(cmd_jumpserver)
 	if (jss)
 		free_jss();
 
-	jss = MyMallocEx(sizeof(JSS));
+	jss = safe_alloc(sizeof(JSS));
 
 	/* Set it */
 	jss->server = strdup(serv);

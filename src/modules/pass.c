@@ -127,7 +127,7 @@ CMD_FUNC(cmd_pass)
 	}
 
 	/* Store the password */
-	safestrldup(cptr->local->passwd, password, PASSWDLEN+1);
+	safe_strldup(cptr->local->passwd, password, PASSWDLEN+1);
 
 	/* note: the original non-truncated password is supplied as 2nd parameter. */
 	RunHookReturnInt2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);

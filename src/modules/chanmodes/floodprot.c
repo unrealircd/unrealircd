@@ -169,7 +169,7 @@ MOD_INIT()
 	        abort();
 	if (!floodprot_msghash_key)
 	{
-		floodprot_msghash_key = MyMallocEx(16);
+		floodprot_msghash_key = safe_alloc(16);
 		siphash_generate_key(floodprot_msghash_key);
 	}
 
@@ -486,7 +486,7 @@ void *cmodef_put_param(void *fld_in, char *param)
 	if (!fld)
 	{
 		/* Need to create one */
-		fld = MyMallocEx(sizeof(ChannelFloodProtection));
+		fld = safe_alloc(sizeof(ChannelFloodProtection));
 	}
 
 	/* always reset settings (l, a, r) */
@@ -817,13 +817,13 @@ char *cmodef_conv_param(char *param_in, Client *cptr)
 void cmodef_free_param(void *r)
 {
 	// TODO: consider cancelling timers just to e sure? or maybe in DEBUGMODE?
-	MyFree(r);
+	safe_free(r);
 }
 
 void *cmodef_dup_struct(void *r_in)
 {
 	ChannelFloodProtection *r = (ChannelFloodProtection *)r_in;
-	ChannelFloodProtection *w = MyMallocEx(sizeof(ChannelFloodProtection));
+	ChannelFloodProtection *w = safe_alloc(sizeof(ChannelFloodProtection));
 
 	memcpy(w, r, sizeof(ChannelFloodProtection));
 	return (void *)w;
@@ -1070,7 +1070,7 @@ int check_for_chan_flood(Client *sptr, Channel *chptr, char *text)
 	if (moddata_membership(mb, mdflood).ptr == NULL)
 	{
 		/* Alloc a new entry if it doesn't exist yet */
-		moddata_membership(mb, mdflood).ptr = MyMallocEx(sizeof(MemberFlood));
+		moddata_membership(mb, mdflood).ptr = safe_alloc(sizeof(MemberFlood));
 	}
 
 	memberflood = (MemberFlood *)moddata_membership(mb, mdflood).ptr;
@@ -1229,7 +1229,7 @@ void floodprottimer_add(Channel *chptr, char mflag, time_t when)
 	}
 
 	if (add)
-		e = MyMallocEx(sizeof(RemoveChannelModeTimer));
+		e = safe_alloc(sizeof(RemoveChannelModeTimer));
 
 	e->chptr = chptr;
 	e->m = mflag;
@@ -1251,7 +1251,7 @@ void floodprottimer_del(Channel *chptr, char mflag)
 		return;
 
 	DelListItem(e, removechannelmodetimer_list);
-	MyFree(e);
+	safe_free(e);
 
 	if (chp)
         {
@@ -1305,7 +1305,7 @@ EVENT(modef_event)
 
 			/* And delete... */
 			DelListItem(e, removechannelmodetimer_list);
-			MyFree(e);
+			safe_free(e);
 		} else {
 #ifdef NEWFLDDBG
 			sendto_realops("modef_event: chan %s mode -%c about %d seconds",
@@ -1325,7 +1325,7 @@ void floodprottimer_stopchantimers(Channel *chptr)
 		if (e->chptr == chptr)
 		{
 			DelListItem(e, removechannelmodetimer_list);
-			MyFree(e);
+			safe_free(e);
 		}
 	}
 }
@@ -1479,7 +1479,7 @@ static int compare_floodprot_modes(ChannelFloodProtection *a, ChannelFloodProtec
 void memberflood_free(ModData *md)
 {
 	/* We don't have any struct members (anymore) that need freeing */
-	safefree(md->ptr);
+	safe_free(md->ptr);
 }
 
 int floodprot_stats(Client *sptr, char *flag)
@@ -1497,11 +1497,11 @@ void floodprot_free_removechannelmodetimer_list(ModData *m)
 	for (e=removechannelmodetimer_list; e; e=e_next)
 	{
 		e_next = e->next;
-		MyFree(e);
+		safe_free(e);
 	}
 }
 
 void floodprot_free_msghash_key(ModData *m)
 {
-	safefree(floodprot_msghash_key);
+	safe_free(floodprot_msghash_key);
 }

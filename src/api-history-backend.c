@@ -82,7 +82,7 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 		}
 	} else {
 		/* New history backend */
-		m = MyMallocEx(sizeof(HistoryBackend));
+		m = safe_alloc(sizeof(HistoryBackend));
 		m->name = strdup(mreq->name);
 	}
 
@@ -98,7 +98,7 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 
 	if (module)
 	{
-		ModuleObject *mobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *mobj = safe_alloc(sizeof(ModuleObject));
 		mobj->type = MOBJ_HISTORY_BACKEND;
 		mobj->object.history_backend = m;
 		AddListItem(mobj, module->objects);
@@ -112,8 +112,8 @@ void unload_history_backend_commit(HistoryBackend *m)
 {
 	/* Destroy the object */
 	DelListItem(m, historybackends);
-	safefree(m->name);
-	MyFree(m);
+	safe_free(m->name);
+	safe_free(m);
 }
 
 /**
@@ -130,7 +130,7 @@ void HistoryBackendDel(HistoryBackend *m)
 			if (mobj->type == MOBJ_HISTORY_BACKEND && mobj->object.history_backend == m)
 			{
 				DelListItem(mobj, m->owner->objects);
-				MyFree(mobj);
+				safe_free(mobj);
 				break;
 			}
 		}

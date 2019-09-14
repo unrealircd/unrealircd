@@ -44,7 +44,7 @@ OperClassValidator* OperClassAddValidator(Module *module, char* pathStr, OperCla
 
 	if (!rootEvalNode)
 	{
-		rootEvalNode = MyMallocEx(sizeof(OperClassPathNode));
+		rootEvalNode = safe_alloc(sizeof(OperClassPathNode));
 	}
 
 	node = rootEvalNode;
@@ -54,7 +54,7 @@ OperClassValidator* OperClassAddValidator(Module *module, char* pathStr, OperCla
 		nextNode = OperClass_findPathNodeForIdentifier(path->identifier,node->children);
 		if (!nextNode)
 		{
-			nextNode = MyMallocEx(sizeof(OperClassPathNode));
+			nextNode = safe_alloc(sizeof(OperClassPathNode));
 			nextNode->identifier = strdup(path->identifier);
 			AddListItem(nextNode,node->children);
 		}
@@ -62,18 +62,18 @@ OperClassValidator* OperClassAddValidator(Module *module, char* pathStr, OperCla
 		path = path->next;
 	}
 
-	callbackNode = MyMallocEx(sizeof(OperClassCallbackNode));
+	callbackNode = safe_alloc(sizeof(OperClassCallbackNode));
 	callbackNode->callback = callback;
 	callbackNode->parent = node;	
 	AddListItem(callbackNode,node->callbacks);
 
-	validator = MyMallocEx(sizeof(OperClassValidator));
+	validator = safe_alloc(sizeof(OperClassValidator));
 	validator->node = callbackNode;	
 	validator->owner = module;
 
 	if (module)
 	{
-		ModuleObject *mobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *mobj = safe_alloc(sizeof(ModuleObject));
 		mobj->object.validator = validator;
 		mobj->type = MOBJ_VALIDATOR;
 		AddListItem(mobj, module->objects);
@@ -95,7 +95,7 @@ void OperClassValidatorDel(OperClassValidator* validator)
 			if ((mdobj->type == MOBJ_VALIDATOR) && (mdobj->object.validator == validator))
 			{
 				DelListItem(mdobj, validator->owner->objects);
-				MyFree(mdobj);
+				safe_free(mdobj);
 				break;
 			}
 		}
@@ -107,19 +107,19 @@ void OperClassValidatorDel(OperClassValidator* validator)
 	 * back up and doing cleanup in practice, since this tree is very small
 	 */
 	DelListItem(validator->node,validator->node->parent->callbacks);
-	MyFree(validator->node);
-	MyFree(validator);	
+	safe_free(validator->node);
+	safe_free(validator);	
 }
 
 OperClassACLPath* OperClass_parsePath(char* path)
 {
-	char* pathCopy = strdup(path);
+	char *pathCopy = raw_strdup(path);
 	OperClassACLPath* pathHead = NULL;
 	OperClassACLPath* tmpPath;
 	char *str = strtok(pathCopy,":");
 	while (str)
 	{
-		tmpPath = MyMallocEx(sizeof(OperClassACLPath));
+		tmpPath = safe_alloc(sizeof(OperClassACLPath));
 		tmpPath->identifier = strdup(str);
 		AddListItem(tmpPath,pathHead);
 		str = strtok(NULL,":");
@@ -135,7 +135,7 @@ OperClassACLPath* OperClass_parsePath(char* path)
 	pathHead->next = pathHead->prev;
 	pathHead->prev = NULL;	
 
-	MyFree(pathCopy);
+	safe_free(pathCopy);
 	return pathHead;
 }
 
@@ -145,8 +145,8 @@ void OperClass_freePath(OperClassACLPath* path)
 	while (path)
 	{
 		next = path->next;
-		MyFree(path->identifier);
-		MyFree(path);
+		safe_free(path->identifier);
+		safe_free(path);
 		path = next;
 	}	
 }
@@ -316,7 +316,7 @@ OperPermission ValidatePermissionsForPath(char* path, Client *sptr, Client *vict
 		if (acl)
 		{
 			OperPermission perm;
-			OperClassCheckParams *params = MyMallocEx(sizeof(OperClassCheckParams));
+			OperClassCheckParams *params = safe_alloc(sizeof(OperClassCheckParams));
 			params->sptr = sptr;
 			params->victim = victim;
 			params->channel = channel;
@@ -324,7 +324,7 @@ OperPermission ValidatePermissionsForPath(char* path, Client *sptr, Client *vict
 			
 			perm = ValidatePermissionsForPathEx(acl, operPath, params);
 			OperClass_freePath(operPath);
-			MyFree(params);
+			safe_free(params);
 			return perm;
 		}
 		if (!oc->ISA)

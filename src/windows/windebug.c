@@ -53,7 +53,7 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 	DWORD dwDisp32;
 	int frame;
 	HANDLE hProcess = GetCurrentProcess();
-	IMAGEHLP_SYMBOL64 *pSym = MyMallocEx(sizeof(IMAGEHLP_SYMBOL64)+500);
+	IMAGEHLP_SYMBOL64 *pSym = safe_alloc(sizeof(IMAGEHLP_SYMBOL64)+500);
 	IMAGEHLP_LINE64 pLine;
 	IMAGEHLP_MODULE64 pMod;
 	STACKFRAME64 Stack;

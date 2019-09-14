@@ -56,7 +56,7 @@ Module *Module_make(ModuleHeader *header,
 #ifdef UNDERSCORE
 void *obsd_dlsym(void *handle, char *symbol) {
     size_t buflen = strlen(symbol) + 2;
-    char *obsdsymbol = MyMallocEx(buflen);
+    char *obsdsymbol = safe_alloc(buflen);
     void *symaddr = NULL;
 
     if (obsdsymbol) {
@@ -460,7 +460,7 @@ Module *Module_make(ModuleHeader *header,
 {
 	Module *modp = NULL;
 	
-	modp = MyMallocEx(sizeof(Module));
+	modp = safe_alloc(sizeof(Module));
 	modp->header = header;
 	modp->dll = mod;
 	modp->flags = MODFLAG_NONE;
@@ -590,13 +590,13 @@ void Unload_all_loaded_modules(void)
 		{
 			childnext = child->next;
 			DelListItem(child,mi->children);
-			MyFree(child);
+			safe_free(child);
 		}
 		DelListItem(mi,Modules);
 		irc_dlclose(mi->dll);
 		deletetmp(mi->tmp_file);
-		MyFree(mi->tmp_file);
-		MyFree(mi);
+		safe_free(mi->tmp_file);
+		safe_free(mi);
 	}
 }
 
@@ -619,13 +619,13 @@ void Unload_all_testing_modules(void)
 		{
 			childnext = child->next;
 			DelListItem(child,mi->children);
-			MyFree(child);
+			safe_free(child);
 		}
 		DelListItem(mi,Modules);
 		irc_dlclose(mi->dll);
 		deletetmp(mi->tmp_file);
-		MyFree(mi->tmp_file);
-		MyFree(mi);
+		safe_free(mi->tmp_file);
+		safe_free(mi);
 	}
 }
 
@@ -658,7 +658,7 @@ int    Module_free(Module *mod)
 			if (cp->child == mod)
 			{
 				DelListItem(mod, p->children);
-				MyFree(cp);
+				safe_free(cp);
 				/* We can assume there can be only one. */
 				break;
 			}
@@ -666,8 +666,8 @@ int    Module_free(Module *mod)
 	}
 	DelListItem(mod, Modules);
 	irc_dlclose(mod->dll);
-	MyFree(mod->tmp_file);
-	MyFree(mod);
+	safe_free(mod->tmp_file);
+	safe_free(mod);
 	return 1;
 }
 
@@ -759,7 +759,7 @@ void	Module_AddAsChild(Module *parent, Module *child)
 {
 	ModuleChild	*childp = NULL;
 	
-	childp = MyMallocEx(sizeof(ModuleChild));
+	childp = safe_alloc(sizeof(ModuleChild));
 	childp->child = child;
 	AddListItem(childp, parent->children);
 }
@@ -905,11 +905,11 @@ Versionflag *VersionflagAdd(Module *module, char flag)
 		}
 		if (!child)
 		{
-			parent = MyMallocEx(sizeof(ModuleChild));
+			parent = safe_alloc(sizeof(ModuleChild));
 			parent->child = module;
 			if (module) {
 				ModuleObject *vflagobj;
-				vflagobj = MyMallocEx(sizeof(ModuleObject));
+				vflagobj = safe_alloc(sizeof(ModuleObject));
 				vflagobj->type = MOBJ_VERSIONFLAG;
 				vflagobj->object.versionflag = vflag;
 				AddListItem(vflagobj, module->objects);
@@ -919,14 +919,14 @@ Versionflag *VersionflagAdd(Module *module, char flag)
 		}
 		return vflag;
 	}
-	vflag = MyMallocEx(sizeof(Versionflag));
+	vflag = safe_alloc(sizeof(Versionflag));
 	vflag->flag = flag;
-	parent = MyMallocEx(sizeof(ModuleChild));
+	parent = safe_alloc(sizeof(ModuleChild));
 	parent->child = module;
 	if (module)
 	{
 		ModuleObject *vflagobj;
-		vflagobj = MyMallocEx(sizeof(ModuleObject));
+		vflagobj = safe_alloc(sizeof(ModuleObject));
 		vflagobj->type = MOBJ_VERSIONFLAG;
 		vflagobj->object.versionflag = vflag;
 		AddListItem(vflagobj, module->objects);
@@ -949,7 +949,7 @@ void VersionflagDel(Versionflag *vflag, Module *module)
 		if (owner->child == module)
 		{
 			DelListItem(owner,vflag->parents);
-			MyFree(owner);
+			safe_free(owner);
 			break;
 		}
 	}
@@ -959,7 +959,7 @@ void VersionflagDel(Versionflag *vflag, Module *module)
 		for (objs = module->objects; objs; objs = objs->next) {
 			if (objs->type == MOBJ_VERSIONFLAG && objs->object.versionflag == vflag) {
 				DelListItem(objs,module->objects);
-				MyFree(objs);
+				safe_free(objs);
 				break;
 			}
 		}
@@ -968,95 +968,15 @@ void VersionflagDel(Versionflag *vflag, Module *module)
 	{
 		flag_del(vflag->flag);
 		DelListItem(vflag, Versionflags);
-		MyFree(vflag);
+		safe_free(vflag);
 	}
 }
 
-#if 0
-Hooktype *HooktypeAdd(Module *module, char *string, int *type) {
-	Hooktype *hooktype;
-	int i;
-	ModuleChild *parent;
-	ModuleObject *hooktypeobj;
-	if ((hooktype = HooktypeFind(string))) {
-		ModuleChild *child;
-		for (child = hooktype->parents; child; child = child->next) {
-			if (child->child == module)
-				break;
-		}
-		if (!child) {
-			parent = MyMallocEx(sizeof(ModuleChild));
-			parent->child = module;
-			if (module) {
-				hooktypeobj = MyMallocEx(sizeof(ModuleObject));
-				hooktypeobj->type = MOBJ_HOOKTYPE;
-				hooktypeobj->object.hooktype = hooktype;
-				AddListItem(hooktypeobj, module->objects);
-				module->errorcode = MODERR_NOERROR;
-			}
-			AddListItem(parent,hooktype->parents);
-		}
-		*type = hooktype->id;
-		return hooktype;
-	}
-	for (hooktype = Hooktypes, i = 0; hooktype->string; hooktype++, i++) ;
-
-	if (i >= 39)
-	{
-		if (module)
-			module->errorcode = MODERR_NOSPACE;
-		return NULL;
-	}
-
-	Hooktypes[i].id = i+41;
-	Hooktypes[i].string = strdup(string);
-	parent = MyMallocEx(sizeof(ModuleChild));
-	parent->child = module;
-	if (module) {
-		hooktypeobj = MyMallocEx(sizeof(ModuleObject));
-		hooktypeobj->type = MOBJ_HOOKTYPE;
-		hooktypeobj->object.hooktype = &Hooktypes[i];
-		AddListItem(hooktypeobj,module->objects);
-		module->errorcode = MODERR_NOERROR;
-	}
-	AddListItem(parent,Hooktypes[i].parents);
-	*type = i+41;
-	return &Hooktypes[i];
-}
-
-void HooktypeDel(Hooktype *hooktype, Module *module) {
-	ModuleChild *child;
-	ModuleObject *objs;
-	for (child = hooktype->parents; child; child = child->next) {
-		if (child->child == module) {
-			DelListItem(child,hooktype->parents);
-			MyFree(child);
-			break;
-		}
-	}
-	if (module) {
-		for (objs = module->objects; objs; objs = objs->next) {
-			if (objs->type == MOBJ_HOOKTYPE && objs->object.hooktype == hooktype) {
-				DelListItem(objs,module->objects);
-				MyFree(objs);
-				break;
-			}
-		}
-	}
-	if (!hooktype->parents) {
-		MyFree(hooktype->string);
-		hooktype->string = NULL;
-		hooktype->id = 0;
-		hooktype->parents = NULL;
-	}
-}
-#endif		
-	
 Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), void (*vfunc)(), char *(*cfunc)())
 {
 	Hook *p;
 	
-	p = (Hook *) MyMallocEx(sizeof(Hook));
+	p = (Hook *) safe_alloc(sizeof(Hook));
 	if (func)
 		p->func.intfunc = func;
 	if (vfunc)
@@ -1068,7 +988,7 @@ Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), voi
 	p->priority = priority;
 
 	if (module) {
-		ModuleObject *hookobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *hookobj = (ModuleObject *)safe_alloc(sizeof(ModuleObject));
 		hookobj->object.hook = p;
 		hookobj->type = MOBJ_HOOK;
 		AddListItem(hookobj, module->objects);
@@ -1092,12 +1012,12 @@ Hook *HookDel(Hook *hook)
 				for (hookobj = p->owner->objects; hookobj; hookobj = hookobj->next) {
 					if (hookobj->type == MOBJ_HOOK && hookobj->object.hook == p) {
 						DelListItem(hookobj, hook->owner->objects);
-						MyFree(hookobj);
+						safe_free(hookobj);
 						break;
 					}
 				}
 			}
-			MyFree(p);
+			safe_free(p);
 			return q;
 		}
 	}
@@ -1108,7 +1028,7 @@ Callback	*CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfun
 {
 	Callback *p;
 	
-	p = MyMallocEx(sizeof(Callback));
+	p = safe_alloc(sizeof(Callback));
 	if (func)
 		p->func.intfunc = func;
 	if (vfunc)
@@ -1119,7 +1039,7 @@ Callback	*CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfun
 	p->owner = module;
 	AddListItem(p, Callbacks[cbtype]);
 	if (module) {
-		ModuleObject *cbobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *cbobj = safe_alloc(sizeof(ModuleObject));
 		cbobj->object.callback = p;
 		cbobj->type = MOBJ_CALLBACK;
 		AddListItem(cbobj, module->objects);
@@ -1142,12 +1062,12 @@ Callback *CallbackDel(Callback *cb)
 				for (cbobj = p->owner->objects; cbobj; cbobj = cbobj->next) {
 					if ((cbobj->type == MOBJ_CALLBACK) && (cbobj->object.callback == p)) {
 						DelListItem(cbobj, cb->owner->objects);
-						MyFree(cbobj);
+						safe_free(cbobj);
 						break;
 					}
 				}
 			}
-			MyFree(p);
+			safe_free(p);
 			return q;
 		}
 	}
@@ -1174,13 +1094,13 @@ CommandOverride *CommandOverrideAddEx(Module *module, char *name, int priority, 
 			return NULL;
 		}
 	}
-	ovr = MyMallocEx(sizeof(CommandOverride));
+	ovr = safe_alloc(sizeof(CommandOverride));
 	ovr->func = function;
 	ovr->owner = module; /* TODO: module objects */
 	ovr->priority = priority;
 	if (module)
 	{
-		ModuleObject *cmdoverobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *cmdoverobj = safe_alloc(sizeof(ModuleObject));
 		cmdoverobj->type = MOBJ_COMMANDOVERRIDE;
 		cmdoverobj->object.cmdoverride = ovr;
 		AddListItem(cmdoverobj, module->objects);
@@ -1227,12 +1147,12 @@ void CommandOverrideDel(CommandOverride *cmd)
 			if (obj->object.cmdoverride == cmd)
 			{
 				DelListItem(obj, cmd->owner->objects);
-				MyFree(obj);
+				safe_free(obj);
 				break;
 			}
 		}
 	}
-	MyFree(cmd);
+	safe_free(cmd);
 }
 
 int CallCommandOverride(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[])
@@ -1244,8 +1164,8 @@ int CallCommandOverride(CommandOverride *ovr, Client *cptr, Client *sptr, Messag
 
 EVENT(e_unload_module_delayed)
 {
-	char	*name = strdup(data);
-	int	i; 
+	char *name = raw_strdup(data);
+	int i; 
 	i = Module_Unload(name);
 	if (i == -1)
 	{
@@ -1255,7 +1175,7 @@ EVENT(e_unload_module_delayed)
 	{
 		sendto_realops("Unloaded module %s", name);
 	}
-	free(name);
+	safe_free(name);
 	return;
 }
 

@@ -123,13 +123,13 @@ void channeldb_moddata_free(ModData *md)
 void setcfg(void)
 {
 	// Default: data/channel.db
-	cfg.database = strdup("channel.db");
+	safe_strdup(cfg.database, "channel.db");
 	convert_to_absolute_path(&cfg.database, PERMDATADIR);
 }
 
 void freecfg(void)
 {
-	safefree(cfg.database);
+	safe_free(cfg.database);
 }
 
 int channeldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -177,7 +177,7 @@ int channeldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "database"))
-			safestrdup(cfg.database, cep->ce_vardata);
+			safe_strdup(cfg.database, cep->ce_vardata);
 	}
 	return 1;
 }
@@ -300,9 +300,9 @@ int write_channel_entry(FILE *fd, const char *tmpfname, Channel *chptr)
 			config_warn("[channeldb] Read error from database file '%s' (possible corruption): %s", cfg.database, strerror(errno)); \
 			if (e) \
 			{ \
-				safefree(e->banstr); \
-				safefree(e->who); \
-				safefree(e); \
+				safe_free(e->banstr); \
+				safe_free(e->who); \
+				safe_free(e); \
 			} \
 			return 0; \
 		} \
@@ -319,7 +319,7 @@ int read_listmode(FILE *fd, Ban **lst)
 
 	for (i = 0; i < total; i++)
 	{
-		e = MyMallocEx(sizeof(Ban));
+		e = safe_alloc(sizeof(Ban));
 		R_SAFE(read_str(fd, &e->banstr));
 		R_SAFE(read_str(fd, &e->who));
 		R_SAFE(read_data(fd, &when, sizeof(when)));
@@ -335,12 +335,12 @@ int read_listmode(FILE *fd, Ban **lst)
 #define FreeChannelEntry() \
  	do { \
 		/* Some of these might be NULL */ \
-		safefree(chname); \
-		safefree(topic); \
-		safefree(topic_nick); \
-		safefree(modes1); \
-		safefree(modes2); \
-		safefree(mode_lock); \
+		safe_free(chname); \
+		safe_free(topic); \
+		safe_free(topic_nick); \
+		safe_free(modes1); \
+		safe_free(modes2); \
+		safe_free(mode_lock); \
 	} while(0)
 
 #define R_SAFE(x) \
@@ -473,11 +473,12 @@ static void set_channel_mode(Channel *chptr, char *modes, char *parameters)
 	int myparc = 1, i;
 	char *myparv[64];
 
-	myparv[0] = strdup(modes);
+	memset(&myparv, 0, sizeof(myparv));
+	myparv[0] = raw_strdup(modes);
 
 	strlcpy(buf, parameters, sizeof(buf));
 	for (param = strtoken(&p, buf, " "); param; param = strtoken(&p, NULL, " "))
-		myparv[myparc++] = strdup(param);
+		myparv[myparc++] = raw_strdup(param);
 	myparv[myparc] = NULL;
 
 	SetULine(&me); // hack for crash.. set ulined so no access checks.
@@ -485,5 +486,5 @@ static void set_channel_mode(Channel *chptr, char *modes, char *parameters)
 	SetULine(&me); // and clear it again..
 
 	for (i = 0; i < myparc; i++)
-		safefree(myparv[i]);
+		safe_free(myparv[i]);
 }

@@ -270,8 +270,8 @@ CMD_FUNC(cmd_sjoin)
 			Ban *ban = chptr->banlist;
 			Addit('b', ban->banstr);
 			chptr->banlist = ban->next;
-			MyFree(ban->banstr);
-			MyFree(ban->who);
+			safe_free(ban->banstr);
+			safe_free(ban->who);
 			free_ban(ban);
 		}
 		while(chptr->exlist)
@@ -279,8 +279,8 @@ CMD_FUNC(cmd_sjoin)
 			Ban *ban = chptr->exlist;
 			Addit('e', ban->banstr);
 			chptr->exlist = ban->next;
-			MyFree(ban->banstr);
-			MyFree(ban->who);
+			safe_free(ban->banstr);
+			safe_free(ban->who);
 			free_ban(ban);
 		}
 		while(chptr->invexlist)
@@ -288,8 +288,8 @@ CMD_FUNC(cmd_sjoin)
 			Ban *ban = chptr->invexlist;
 			Addit('I', ban->banstr);
 			chptr->invexlist = ban->next;
-			MyFree(ban->banstr);
-			MyFree(ban->who);
+			safe_free(ban->banstr);
+			safe_free(ban->who);
 			free_ban(ban);
 		}
 		for (lp = chptr->members; lp; lp = lp->next)

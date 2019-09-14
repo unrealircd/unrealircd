@@ -100,7 +100,7 @@ void	DCCdeny_add(char *filename, char *reason, int type, int type2)
 {
 	ConfigItem_deny_dcc *deny = NULL;
 	
-	deny = MyMallocEx(sizeof(ConfigItem_deny_dcc));
+	deny = safe_alloc(sizeof(ConfigItem_deny_dcc));
 	deny->filename = strdup(filename);
 	deny->reason = strdup(reason);
 	deny->flag.type = type;
@@ -112,10 +112,10 @@ void	DCCdeny_del(ConfigItem_deny_dcc *deny)
 {
 	DelListItem(deny, conf_deny_dcc);
 	if (deny->filename)
-		MyFree(deny->filename);
+		safe_free(deny->filename);
 	if (deny->reason)
-		MyFree(deny->reason);
-	MyFree(deny);
+		safe_free(deny->reason);
+	safe_free(deny);
 }
 
 void dcc_wipe_services(void)
@@ -129,10 +129,10 @@ void dcc_wipe_services(void)
 		{
 			DelListItem(dconf, conf_deny_dcc);
 			if (dconf->filename)
-				MyFree(dconf->filename);
+				safe_free(dconf->filename);
 			if (dconf->reason)
-				MyFree(dconf->reason);
-			MyFree(dconf);
+				safe_free(dconf->reason);
+			safe_free(dconf);
 		}
 	}
 

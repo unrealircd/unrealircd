@@ -897,7 +897,7 @@ int	cmd_server_synch(Client *cptr, ConfigItem_link *aconf)
 
 	if (cptr->local->passwd)
 	{
-		MyFree(cptr->local->passwd);
+		safe_free(cptr->local->passwd);
 		cptr->local->passwd = NULL;
 	}
 	if (incoming)

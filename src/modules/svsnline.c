@@ -68,9 +68,9 @@ void wipe_svsnlines(void)
 			(bconf->flag.type2 == CONF_BAN_TYPE_AKILL))
 		{
 			DelListItem(bconf, conf_ban);
-			safefree(bconf->mask);
-			safefree(bconf->reason);
-			MyFree(bconf);
+			safe_free(bconf->mask);
+			safe_free(bconf->reason);
+			safe_free(bconf);
 		}
 	}
 }
@@ -101,7 +101,7 @@ CMD_FUNC(cmd_svsnline)
 		 
 		  if (!Find_banEx(NULL, parv[3], CONF_BAN_REALNAME, CONF_BAN_TYPE_AKILL))
 		  {
-			bconf = MyMallocEx(sizeof(ConfigItem_ban));
+			bconf = safe_alloc(sizeof(ConfigItem_ban));
 			bconf->flag.type = CONF_BAN_REALNAME;
 			bconf->mask = strdup(parv[3]);
 			bconf->reason = strdup(parv[2]);
@@ -138,10 +138,10 @@ CMD_FUNC(cmd_svsnline)
 		  	DelListItem(bconf, conf_ban);
 		  	
 		  	if (bconf->mask)
-		  		MyFree(bconf->mask);
+		  		safe_free(bconf->mask);
 		  	if (bconf->reason)
-		  		MyFree(bconf->reason);
-		  	MyFree(bconf);
+		  		safe_free(bconf->reason);
+		  	safe_free(bconf);
 		  	
 		  }
 		  sendto_server(cptr, 0, 0, NULL, ":%s SVSNLINE - %s", sptr->name, parv[2]);

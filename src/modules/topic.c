@@ -168,8 +168,8 @@ CMD_FUNC(cmd_topic)
 		 */
 		{
 			/* Set the topic */
-			safestrldup(chptr->topic, topic, iConf.topic_length+1);
-			safestrldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
+			safe_strldup(chptr->topic, topic, iConf.topic_length+1);
+			safe_strldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
 			chptr->topic_time = ttime;
 
 			new_message(sptr, recv_mtags, &mtags);
@@ -264,8 +264,8 @@ CMD_FUNC(cmd_topic)
 	}
 
 	/* Set the topic */
-	safestrldup(chptr->topic, topic, iConf.topic_length+1);
-	safestrldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
+	safe_strldup(chptr->topic, topic, iConf.topic_length+1);
+	safe_strldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
 
 	if (ttime && IsServer(cptr))
 		chptr->topic_time = ttime;

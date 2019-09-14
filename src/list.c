@@ -34,8 +34,6 @@ static struct liststats {
 
 #endif
 
-void outofmemory();
-
 MODVAR int  flinks = 0;
 MODVAR int  freelinks = 0;
 MODVAR Link *freelink = NULL;
@@ -68,13 +66,6 @@ void initlists(void)
 	user_pool = mp_pool_new(sizeof(ClientUser), 512 * 1024);
 }
 
-void outofmemory(void)
-{
-	Debug((DEBUG_FATAL, "Out of memory: restarting server..."));
-	restart("Out of Memory");
-}
-
-
 /*
 ** Create a new Client structure and set it to initial state.
 **
@@ -89,7 +80,7 @@ Client *make_client(Client *from, Client *servr)
 {
 	Client *cptr = NULL;
 
-	cptr = MyMallocEx(sizeof(Client));
+	cptr = safe_alloc(sizeof(Client));
 
 #ifdef	DEBUGMODE
 	if (!from)
@@ -115,7 +106,7 @@ Client *make_client(Client *from, Client *servr)
 		/* Local client */
 		const char *id;
 		
-		cptr->local = MyMallocEx(sizeof(LocalClient));
+		cptr->local = safe_alloc(sizeof(LocalClient));
 		
 		INIT_LIST_HEAD(&cptr->lclient_node);
 		INIT_LIST_HEAD(&cptr->special_node);
@@ -154,12 +145,12 @@ void free_client(Client *cptr)
 		RunHook(HOOKTYPE_FREE_CLIENT, cptr);
 		if (cptr->local)
 		{
-			safefree(cptr->local->passwd);
-			safefree(cptr->local->error_str);
+			safe_free(cptr->local->passwd);
+			safe_free(cptr->local->error_str);
 			if (cptr->local->hostp)
 				unreal_free_hostent(cptr->local->hostp);
 			
-			MyFree(cptr->local);
+			safe_free(cptr->local);
 		}
 		if (*cptr->id)
 		{
@@ -171,9 +162,9 @@ void free_client(Client *cptr)
 		}
 	}
 	
-	safefree(cptr->ip);
+	safe_free(cptr->ip);
 
-	MyFree(cptr);
+	safe_free(cptr);
 }
 
 /*
@@ -227,7 +218,7 @@ Server *make_server(Client *cptr)
 
 	if (!serv)
 	{
-		serv = MyMallocEx(sizeof(Server));
+		serv = safe_alloc(sizeof(Server));
 #ifdef	DEBUGMODE
 		servs.inuse++;
 #endif
@@ -262,22 +253,22 @@ void free_user(ClientUser *user, Client *cptr)
 	{
 		RunHook2(HOOKTYPE_FREE_USER, user, cptr);
 		if (user->away)
-			MyFree(user->away);
+			safe_free(user->away);
 		if (user->swhois)
 		{
 			SWhois *s, *s_next;
 			for (s = user->swhois; s; s = s_next)
 			{
 				s_next = s->next;
-				safefree(s->line);
-				safefree(s->setby);
-				MyFree(s);
+				safe_free(s->line);
+				safe_free(s->setby);
+				safe_free(s);
 			}
 		}
 		if (user->virthost)
-			MyFree(user->virthost);
+			safe_free(user->virthost);
 		if (user->operlogin)
-			MyFree(user->operlogin);
+			safe_free(user->operlogin);
 		mp_pool_release(user);
 #ifdef	DEBUGMODE
 		users.inuse--;
@@ -326,14 +317,14 @@ void remove_client_from_list(Client *cptr)
 		(void)free_user(cptr->user, cptr);
 	if (cptr->serv)
 	{
-		safefree(cptr->serv->features.usermodes);
-		safefree(cptr->serv->features.chanmodes[0]);
-		safefree(cptr->serv->features.chanmodes[1]);
-		safefree(cptr->serv->features.chanmodes[2]);
-		safefree(cptr->serv->features.chanmodes[3]);
-		safefree(cptr->serv->features.software);
-		safefree(cptr->serv->features.nickchars);
-		MyFree(cptr->serv);
+		safe_free(cptr->serv->features.usermodes);
+		safe_free(cptr->serv->features.chanmodes[0]);
+		safe_free(cptr->serv->features.chanmodes[1]);
+		safe_free(cptr->serv->features.chanmodes[2]);
+		safe_free(cptr->serv->features.chanmodes[3]);
+		safe_free(cptr->serv->features.software);
+		safe_free(cptr->serv->features.nickchars);
+		safe_free(cptr->serv);
 #ifdef	DEBUGMODE
 		servs.inuse--;
 #endif
@@ -386,7 +377,7 @@ void free_str_list(Link *lp)
 	while (lp)
 	{
 		next = lp->next;
-		MyFree(lp->value.cp);
+		safe_free(lp->value.cp);
 		free_link(lp);
 		lp = next;
 	}
@@ -414,7 +405,7 @@ Link *make_link(void)
 	{
 		for (i = 1; i <= LINKSIZE; i++)
 		{
-			lp = MyMallocEx(sizeof(Link));
+			lp = safe_alloc(sizeof(Link));
 			lp->next = freelink;
 			freelink = lp;
 		}
@@ -450,7 +441,7 @@ Ban *make_ban(void)
 {
 	Ban *lp;
 
-	lp = MyMallocEx(sizeof(Ban));
+	lp = safe_alloc(sizeof(Ban));
 #ifdef	DEBUGMODE
 	links.inuse++;
 #endif
@@ -459,7 +450,7 @@ Ban *make_ban(void)
 
 void free_ban(Ban *lp)
 {
-	MyFree(lp);
+	safe_free(lp);
 #ifdef	DEBUGMODE
 	links.inuse--;
 #endif

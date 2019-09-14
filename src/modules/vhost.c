@@ -138,7 +138,7 @@ CMD_FUNC(cmd_vhost)
 
 	userhost_save_current(sptr);
 
-	safestrdup(sptr->user->virthost, vhost->virthost);
+	safe_strdup(sptr->user->virthost, vhost->virthost);
 	if (vhost->virtuser)
 	{
 		strcpy(olduser, sptr->user->username);

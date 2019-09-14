@@ -192,7 +192,7 @@ static void set_client_sni_name(SSL *ssl, char *name)
 {
 	Client *acptr = get_client_by_ssl(ssl);
 	if (acptr)
-		safestrdup(acptr->local->sni_servername, name);
+		safe_strdup(acptr->local->sni_servername, name);
 }
 
 static int ssl_hostname_callback(SSL *ssl, int *unk, void *arg)
@@ -1239,7 +1239,7 @@ char *spki_fingerprint(Client *cptr)
 		der_cert_len = i2d_X509_PUBKEY(X509_get_X509_PUBKEY(x509_cert), NULL);
 		if ((der_cert_len > 0) && (der_cert_len < 16384))
 		{
-			der_cert = p = MyMallocEx(der_cert_len);
+			der_cert = p = safe_alloc(der_cert_len);
 			n = i2d_X509_PUBKEY(X509_get_X509_PUBKEY(x509_cert), &p);
 
 			if ((n > 0) && ((p - der_cert) == der_cert_len))
@@ -1253,11 +1253,11 @@ char *spki_fingerprint(Client *cptr)
 
 				/* And convert the binary to a base64 string... */
 				n = b64_encode(checksum, SHA256_DIGEST_LENGTH, retbuf, sizeof(retbuf));
-				MyFree(der_cert);
+				safe_free(der_cert);
 				X509_free(x509_cert);
 				return retbuf; /* SUCCESS */
 			}
-			MyFree(der_cert);
+			safe_free(der_cert);
 		}
 		X509_free(x509_cert);
 	}

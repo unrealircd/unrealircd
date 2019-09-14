@@ -396,7 +396,7 @@ void *history_chanmode_put_param(void *mode_in, char *param)
 	if (!h)
 	{
 		/* Need to create one */
-		h = MyMallocEx(sizeof(HistoryChanMode));
+		h = safe_alloc(sizeof(HistoryChanMode));
 	}
 
 	h->max_lines = lines;
@@ -427,14 +427,14 @@ char *history_chanmode_get_param(void *h_in)
 /** Free channel mode */
 void history_chanmode_free_param(void *r)
 {
-	MyFree(r);
+	safe_free(r);
 }
 
 /** Duplicate the channel mode +H settings */
 void *history_chanmode_dup_struct(void *r_in)
 {
 	HistoryChanMode *r = (HistoryChanMode *)r_in;
-	HistoryChanMode *w = MyMallocEx(sizeof(HistoryChanMode));
+	HistoryChanMode *w = safe_alloc(sizeof(HistoryChanMode));
 
 	memcpy(w, r, sizeof(HistoryChanMode));
 	return (void *)w;

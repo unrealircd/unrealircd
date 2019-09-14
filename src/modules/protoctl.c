@@ -176,7 +176,7 @@ CMD_FUNC(cmd_protoctl)
 				/* return exit_client(cptr, cptr, &me, NULL, "Nick charset mismatch"); */
 			}
 			if (cptr->serv)
-				safestrdup(cptr->serv->features.nickchars, value);
+				safe_strdup(cptr->serv->features.nickchars, value);
 
 			/* If this is a runtime change (so post-handshake): */
 			if (IsServer(sptr))
@@ -381,7 +381,7 @@ CMD_FUNC(cmd_protoctl)
 		}
 		else if (!strcmp(name, "USERMODES") && value && sptr->serv)
 		{
-			safestrdup(sptr->serv->features.usermodes, value);
+			safe_strdup(sptr->serv->features.usermodes, value);
 			/* If this is a runtime change (so post-handshake): */
 			if (IsServer(sptr))
 				broadcast_sinfo(sptr, NULL, cptr);

@@ -225,17 +225,17 @@ void delete_blacklist_block(Blacklist *e)
 	{
 		if (e->backend->dns)
 		{
-			MyFree(e->backend->dns->name);
-			MyFree(e->backend->dns->reply);
-			MyFree(e->backend->dns);
+			safe_free(e->backend->dns->name);
+			safe_free(e->backend->dns->reply);
+			safe_free(e->backend->dns);
 		}
 	}
 	
-	MyFree(e->backend);
+	safe_free(e->backend);
 
-	MyFree(e->name);
-	MyFree(e->reason);
-	MyFree(e);
+	safe_free(e->name);
+	safe_free(e->reason);
+	safe_free(e);
 }
 
 int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
@@ -456,7 +456,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "blacklist"))
 		return 0; /* not interested */
 
-	d = MyMallocEx(sizeof(Blacklist));
+	d = safe_alloc(sizeof(Blacklist));
 	d->name = strdup(ce->ce_vardata);
 	/* set some defaults. TODO: use set::blacklist or something ? */
 	d->action = BAN_ACT_KILL;
@@ -465,8 +465,8 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	
 	/* assume dns for now ;) */
 	d->backend_type = BLACKLIST_BACKEND_DNS;
-	d->backend = MyMallocEx(sizeof(BlacklistBackend));
-	d->backend->dns = MyMallocEx(sizeof(DNSBL));
+	d->backend = safe_alloc(sizeof(BlacklistBackend));
+	d->backend->dns = safe_alloc(sizeof(DNSBL));
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -479,7 +479,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 					if (cepp->ce_vardata)
 					{
 						/* single reply */
-						d->backend->dns->reply = MyMallocEx(sizeof(int)*2);
+						d->backend->dns->reply = safe_alloc(sizeof(int)*2);
 						d->backend->dns->reply[0] = atoi(cepp->ce_vardata);
 						d->backend->dns->reply[1] = 0;
 					} else
@@ -496,7 +496,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 						if (cnt == 0)
 							abort(); /* impossible */
 						
-						d->backend->dns->reply = MyMallocEx(sizeof(int)*(cnt+1));
+						d->backend->dns->reply = safe_alloc(sizeof(int)*(cnt+1));
 						
 						cnt = 0;
 						for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
@@ -515,7 +515,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 				} else
 				if (!strcmp(cepp->ce_varname, "name"))
 				{
-					safestrdup(d->backend->dns->name, cepp->ce_vardata);
+					safe_strdup(d->backend->dns->name, cepp->ce_vardata);
 				}
 			}
 		}
@@ -525,7 +525,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->ce_varname, "reason"))
 		{
-			safestrdup(d->reason, cep->ce_vardata);
+			safe_strdup(d->reason, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "ban-time"))
 		{
@@ -564,7 +564,7 @@ int blacklist_start_check(Client *cptr)
 	
 	if (!BLUSER(cptr))
 	{
-		SetBLUser(cptr, MyMallocEx(sizeof(BLUser)));
+		SetBLUser(cptr, safe_alloc(sizeof(BLUser)));
 		BLUSER(cptr)->cptr = cptr;
 	}
 
@@ -662,9 +662,9 @@ void blacklist_free_bluser_if_able(BLUser *bl)
 	if (bl->refcnt > 0)
 		return; /* unable, still have DNS requests/replies in-flight */
 
-	safefree(bl->save_opernotice);
-	safefree(bl->save_reason);
-	MyFree(bl);
+	safe_free(bl->save_opernotice);
+	safe_free(bl->save_reason);
+	safe_free(bl);
 }
 
 char *getdnsblname(char *p, Client *cptr)
@@ -750,8 +750,8 @@ void blacklist_hit(Client *acptr, Blacklist *bl, int reply)
 		/* For soft bans, delay the action until later (so user can do SASL auth) */
 		blu->save_action = bl->action;
 		blu->save_tkltime = bl->ban_time;
-		safestrdup(blu->save_opernotice, opernotice);
-		safestrdup(blu->save_reason, banbuf);
+		safe_strdup(blu->save_opernotice, opernotice);
+		safe_strdup(blu->save_reason, banbuf);
 	} else {
 		/* Otherwise, execute the action immediately */
 		blacklist_action(acptr, opernotice, bl->action, banbuf, bl->ban_time);

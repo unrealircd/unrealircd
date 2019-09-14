@@ -84,7 +84,7 @@ CMD_FUNC(cmd_away)
 		/* Marking as not away */
 		if (away)
 		{
-			MyFree(away);
+			safe_free(away);
 			sptr->user->away = NULL;
 
 			new_message(sptr, recv_mtags, &mtags);
@@ -144,7 +144,7 @@ CMD_FUNC(cmd_away)
 
 	if (away)
 	{
-		MyFree(away);
+		safe_free(away);
 		wasaway = 1;
 	}
 	

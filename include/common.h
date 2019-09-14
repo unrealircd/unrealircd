@@ -163,29 +163,6 @@ extern MODVAR unsigned char char_atribs[];
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
 #define iswseperator(c) (!isalnum(c) && !((u_char)c >= 128))
 
-#ifndef MALLOCD
-#define MyFree free
-#define MyMalloc malloc
-#define MyRealloc realloc
-#else
-#define MyFree(x) do {debug(DEBUG_MALLOC, "%s:%i: free %02x", __FILE__, __LINE__, x); free(x); } while(0)
-#define MyMalloc(x) StsMalloc(x, __FILE__, __LINE__)
-#define MyRealloc realloc
-static char *StsMalloc(size_t size, char *file, long line)
-{
-	void *x;
-	
-	x = malloc(size);
-	debug(DEBUG_MALLOC, "%s:%i: malloc %02x", file, line, x);
-	return x;
-}
-
-#endif
-
-#define safestrdup(x,y) do { if (x) MyFree(x); if (!(y)) x = NULL; else x = strdup(y); } while(0)
-#define safestrldup(x,y,sz) do { if (x) MyFree(x); if (!y) x = NULL; else x = strldup(y,sz); } while(0)
-#define safefree(x) do { if (x) MyFree(x); x = NULL; } while(0)
-
 /*
  * Protocol support text.  DO NO CHANGE THIS unless you know what
  * you are doing.

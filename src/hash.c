@@ -620,7 +620,7 @@ int add_to_watch_hash_table(char *nick, Client *cptr, int awaynotify)
 	
 	/* If found NULL (no header for this nick), make one... */
 	if (!anptr) {
-		anptr = (Watch *)MyMallocEx(sizeof(Watch)+strlen(nick));
+		anptr = (Watch *)safe_alloc(sizeof(Watch)+strlen(nick));
 		anptr->lasttime = timeofday;
 		strcpy(anptr->nick, nick);
 		
@@ -802,7 +802,7 @@ int del_from_watch_hash_table(char *nick, Client *cptr)
 		  watchTable[hashv] = anptr->hnext;
 		else
 		  nlast->hnext = anptr->hnext;
-		MyFree(anptr);
+		safe_free(anptr);
 	}
 	
 	/* Update count of notifies on nick */
@@ -867,7 +867,7 @@ int   hash_del_watch_list(Client *cptr)
 				  nl->hnext = anptr->hnext;
 				else
 				  watchTable[hashv] = anptr->hnext;
-				MyFree(anptr);
+				safe_free(anptr);
 			}
 		}
 		
@@ -937,8 +937,8 @@ EVENT(e_clean_out_throttling_buckets)
 			if ((TStime() - n->since) > (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15))
 			{
 				DelListItem(n, ThrottlingHash[i]);
-				MyFree(n->ip);
-				MyFree(n);
+				safe_free(n->ip);
+				safe_free(n);
 			}
 		}
 	}
@@ -975,7 +975,7 @@ void add_throttling_bucket(Client *acptr)
 	int hash;
 	struct ThrottlingBucket *n;
 
-	n = MyMallocEx(sizeof(struct ThrottlingBucket));	
+	n = safe_alloc(sizeof(struct ThrottlingBucket));	
 	n->next = n->prev = NULL; 
 	n->ip = strdup(acptr->ip);
 	n->since = TStime();

@@ -157,7 +157,7 @@ void *cmodeL_put_param(void *r_in, char *param)
 	if (!r)
 	{
 		/* Need to create one */
-		r = MyMallocEx(sizeof(aModeLEntry));
+		r = safe_alloc(sizeof(aModeLEntry));
 	}
 	strlcpy(r->linked, param, sizeof(r->linked));
 	return (void *)r;
@@ -196,13 +196,13 @@ char *cmodeL_conv_param(char *param_in, Client *sptr)
 
 void cmodeL_free_param(void *r)
 {
-	MyFree(r);
+	safe_free(r);
 }
 
 void *cmodeL_dup_struct(void *r_in)
 {
 	aModeLEntry *r = (aModeLEntry *)r_in;
-	aModeLEntry *w = MyMallocEx(sizeof(aModeLEntry));
+	aModeLEntry *w = safe_alloc(sizeof(aModeLEntry));
 
 	memcpy(w, r, sizeof(aModeLEntry));
 	return (void *)w;

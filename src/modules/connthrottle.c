@@ -89,7 +89,7 @@ MOD_TEST()
 	cfg.local.count = 20; cfg.local.period = 60;
 	cfg.global.count = 30; cfg.global.period = 60;
 	cfg.start_delay = 180;		/* 3 minutes */
-	cfg.reason = strdup("Throttled: Too many users trying to connect, please wait a while and try again");
+	safe_strdup(cfg.reason, "Throttled: Too many users trying to connect, please wait a while and try again");
 	cfg.minimum_reputation_score = 24;
 	cfg.sasl_bypass = 1;
 
@@ -318,8 +318,8 @@ int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		} else
 		if (!strcmp(cep->ce_varname, "reason"))
 		{
-			safefree(cfg.reason);
-			cfg.reason = MyMalloc(strlen(cep->ce_vardata)+16);
+			safe_free(cfg.reason);
+			cfg.reason = safe_alloc(strlen(cep->ce_vardata)+16);
 			sprintf(cfg.reason, "Throttled: %s", cep->ce_vardata);
 		}
 	}

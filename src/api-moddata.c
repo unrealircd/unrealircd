@@ -70,7 +70,7 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 	}
 
 	new_struct = 1;
-	m = MyMallocEx(sizeof(ModDataInfo));
+	m = safe_alloc(sizeof(ModDataInfo));
 	m->name = strdup(req.name);
 	m->slot = slotav;
 	m->type = req.type;
@@ -86,7 +86,7 @@ moddataadd_isok:
 
 	if (module)
 	{
-		ModuleObject *mobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *mobj = safe_alloc(sizeof(ModuleObject));
 		mobj->object.moddata = m;
 		mobj->type = MOBJ_MODDATA;
 		AddListItem(mobj, module->objects);
@@ -227,8 +227,8 @@ void unload_moddata_commit(ModDataInfo *md)
 	}
 	
 	DelListItem(md, MDInfo);
-	MyFree(md->name);
-	MyFree(md);
+	safe_free(md->name);
+	safe_free(md);
 }
 
 void ModDataDel(ModDataInfo *md)
@@ -242,7 +242,7 @@ void ModDataDel(ModDataInfo *md)
 			if ((mdobj->type == MOBJ_MODDATA) && (mdobj->object.moddata == md))
 			{
 				DelListItem(mdobj, md->owner->objects);
-				MyFree(mdobj);
+				safe_free(mdobj);
 				break;
 			}
 		}

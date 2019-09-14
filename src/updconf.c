@@ -99,7 +99,7 @@ void modify_file(int start, char *ins, int stop)
 		die();
 	}
 
-	rdbuf = MyMallocEx(start);
+	rdbuf = safe_alloc(start);
 	
 	if ((n = fread(rdbuf, 1, start, fdi)) != start)
 	{
@@ -109,7 +109,7 @@ void modify_file(int start, char *ins, int stop)
 	
 	fwrite(rdbuf, 1, start, fdo);
 	
-	safefree(rdbuf);
+	safe_free(rdbuf);
 
 	if (ins)
 		fwrite(ins, 1, strlen(ins), fdo); /* insert this piece */
@@ -121,7 +121,7 @@ void modify_file(int start, char *ins, int stop)
 	}
 	
 	// read the remaining stuff
-	rdbuf = MyMallocEx(CFGBUFSIZE);
+	rdbuf = safe_alloc(CFGBUFSIZE);
 	
 	while(1)
 	{
@@ -155,7 +155,7 @@ end:
 	fclose(fdi);
 	fclose(fdo);
 	
-	safefree(rdbuf);
+	safe_free(rdbuf);
 	// todo: handle write errors and such..
 
 	unlink(configfiletmp);
@@ -1412,22 +1412,22 @@ void update_read_settings(char *cfgfile)
 						if (!cepp->ce_vardata)
 							continue;
 						if (!strcmp(cepp->ce_varname, "local")) {
-							safestrdup(upgrade.locop_host, cepp->ce_vardata);
+							safe_strdup(upgrade.locop_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "global")) {
-							safestrdup(upgrade.oper_host, cepp->ce_vardata);
+							safe_strdup(upgrade.oper_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "coadmin")) {
-							safestrdup(upgrade.coadmin_host, cepp->ce_vardata);
+							safe_strdup(upgrade.coadmin_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "admin")) {
-							safestrdup(upgrade.admin_host, cepp->ce_vardata);
+							safe_strdup(upgrade.admin_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
-							safestrdup(upgrade.sadmin_host, cepp->ce_vardata);
+							safe_strdup(upgrade.sadmin_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "netadmin")) {
-							safestrdup(upgrade.netadmin_host, cepp->ce_vardata);
+							safe_strdup(upgrade.netadmin_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
 							upgrade.host_on_oper_up = config_checkval(cepp->ce_vardata,CFG_YESNO);
@@ -1595,7 +1595,7 @@ static int already_included(char *fname, ConfigFile *cf)
 
 static void add_include_list(char *fname, ConfigFile **cf)
 {
-	ConfigFile *n = MyMallocEx(sizeof(ConfigFile));
+	ConfigFile *n = safe_alloc(sizeof(ConfigFile));
 	
 //	config_status("INCLUDE: %s", fname);
 	n->cf_filename = strdup(fname);
@@ -1622,9 +1622,9 @@ void build_include_list_ex(char *fname, ConfigFile **cf_list)
 		{
 			if ((ce->ce_vardata[0] != '/') && (ce->ce_vardata[0] != '\\') && strcmp(ce->ce_vardata, CPATH))
 			{
-				char *str = MyMallocEx(strlen(ce->ce_vardata) + strlen(CONFDIR) + 4);
+				char *str = safe_alloc(strlen(ce->ce_vardata) + strlen(CONFDIR) + 4);
 				sprintf(str, "%s/%s", CONFDIR, ce->ce_vardata);
-				MyFree(ce->ce_vardata);
+				safe_free(ce->ce_vardata);
 				ce->ce_vardata = str;
 			}
 			if (!already_included(ce->ce_vardata, *cf_list))

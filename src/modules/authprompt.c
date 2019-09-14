@@ -130,7 +130,7 @@ static void init_config(void)
 
 static void addmultiline(MultiLine **l, char *line)
 {
-	MultiLine *m = MyMallocEx(sizeof(MultiLine));
+	MultiLine *m = safe_alloc(sizeof(MultiLine));
 	m->line = strdup(line);
 	append_ListItem((ListStruct *)m, (ListStruct **)l);
 }
@@ -141,8 +141,8 @@ static void freemultiline(MultiLine *l)
 	for (; l; l = l_next)
 	{
 		l_next = l->next;
-		safefree(l->line);
-		MyFree(l);
+		safe_free(l->line);
+		safe_free(l);
 	}
 }
 
@@ -240,8 +240,8 @@ void authprompt_md_free(ModData *md)
 
 	if (se)
 	{
-		safefree(se->authmsg);
-		MyFree(se);
+		safe_free(se->authmsg);
+		safe_free(se);
 		md->ptr = se = NULL;
 	}
 }
@@ -385,7 +385,7 @@ CMD_FUNC(cmd_auth)
 		return 0;
 	}
 
-	safestrdup(SEUSER(sptr)->authmsg, authbuf);
+	safe_strdup(SEUSER(sptr)->authmsg, authbuf);
 
 	send_first_auth(sptr);
 
@@ -402,7 +402,7 @@ void authprompt_tag_as_auth_required(Client *sptr)
 {
 	/* Allocate, and therefore indicate, that we are going to handle SASL for this user */
 	if (!SEUSER(sptr))
-		SetAPUser(sptr, MyMallocEx(sizeof(APUser)));
+		SetAPUser(sptr, safe_alloc(sizeof(APUser)));
 }
 
 void authprompt_send_auth_required_message(Client *sptr)

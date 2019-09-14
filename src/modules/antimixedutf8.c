@@ -244,14 +244,14 @@ static void init_config(void)
 	memset(&cfg, 0, sizeof(cfg));
 	/* Default values */
 	cfg.score = 10;
-	cfg.ban_reason = strdup("Possible mixed character spam");
+	safe_strdup(cfg.ban_reason, "Possible mixed character spam");
 	cfg.ban_action = BAN_ACT_BLOCK;
 	cfg.ban_time = 60 * 60 * 4; /* irrelevant for block, but some default for others */
 }
 
 static void free_config(void)
 {
-	safefree(cfg.ban_reason);
+	safe_free(cfg.ban_reason);
 	memset(&cfg, 0, sizeof(cfg)); /* needed! */
 }
 
@@ -334,8 +334,8 @@ int antimixedutf8_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->ce_varname, "ban-reason"))
 		{
 			if (cfg.ban_reason)
-				MyFree(cfg.ban_reason);
-			cfg.ban_reason = strdup(cep->ce_vardata);
+				safe_free(cfg.ban_reason);
+			safe_strdup(cfg.ban_reason, cep->ce_vardata);
 		} else
 		if (!strcmp(cep->ce_varname, "ban-time"))
 		{

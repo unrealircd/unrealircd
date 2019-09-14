@@ -112,17 +112,17 @@ char *url_getfilename(const char *url)
 	{
 		c++;
 		if (!*c || *c == '?')
-			return strdup("-");
+			return raw_strdup("-");
 		start = c;
 		while (*c && *c != '?')
 			c++;
 		if (!*c)
-			return strdup(start);
+			return raw_strdup(start);
 		else
-			return strldup(start, c-start+1);
+			return raw_strldup(start, c-start+1);
 
 	}
-	return strdup("-");
+	return raw_strdup("-");
 }
 
 /*
@@ -234,7 +234,7 @@ char *download_file(const char *url, char **error)
 
 		if (last_mod != -1)
 			unreal_setfilemodtime(tmp, last_mod);
-		return strdup(tmp);
+		return raw_strdup(tmp);
 	}
 	else
 	{
@@ -407,15 +407,15 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 		char *file = url_getfilename(url);
 		char *filename = unreal_getfilename(file);
 		char *tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
-		FileHandle *handle = MyMallocEx(sizeof(FileHandle));
+		FileHandle *handle = safe_alloc(sizeof(FileHandle));
 		handle->fd = fopen(tmp, "wb");
 		if (!handle->fd)
 		{
 			snprintf(errorbuf, sizeof(errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
 			callback(url, NULL, errorbuf, 0, callback_data);
 			if (file)
-				MyFree(file);
-			MyFree(handle);
+				safe_free(file);
+			safe_free(handle);
 			return;
 		}
 		handle->callback = callback;

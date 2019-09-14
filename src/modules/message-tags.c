@@ -197,7 +197,7 @@ void _parse_message_tags(Client *cptr, char **str, MessageTag **mtag_list)
 		 */
 		if (message_tag_ok(cptr, name, value))
 		{
-			m = MyMallocEx(sizeof(MessageTag));
+			m = safe_alloc(sizeof(MessageTag));
 			m->name = strdup(name);
 			m->value = BadPtr(value) ? NULL : strdup(value);
 			AddListItem(m, *mtag_list);

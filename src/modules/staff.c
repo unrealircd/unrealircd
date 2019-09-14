@@ -44,9 +44,6 @@ ModuleHeader MOD_HEADER
 #define RPL_ENDOFSTAFF   ":%s 702 %s :End of /STAFF command."
 #define RPL_NOSTAFF      ":%s 703 %s :Network Staff File is missing"
 
-#define ircstrdup(x,y)   do { if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y); } while(0)
-#define ircfree(x)       do { if (x) MyFree(x); x = NULL; } while(0)
-
 /* Forward declarations */
 static void unload_motd_file(MOTDFile *list);
 CMD_FUNC(cmd_staff);
@@ -86,7 +83,7 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 #ifdef USE_LIBCURL
-	memset(&Download, 0, sizeof Download);
+	memset(&Download, 0, sizeof(Download));
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
 #endif
 	memset(&staff, 0, sizeof(staff));
@@ -112,9 +109,9 @@ MOD_UNLOAD()
 	unload_motd_file(&staff);
 
 #ifdef USE_LIBCURL
-	ircfree(Download.path);
-   	ircfree(Download.file);
-	ircfree(Download.url);
+	safe_free(Download.path);
+   	safe_free(Download.file);
+	safe_free(Download.url);
 #endif
 
 	return MOD_SUCCESS;
@@ -135,7 +132,7 @@ static void InitConf()
 static void FreeConf()
 {
 	if (staff_file)
-		MyFree(staff_file);
+		safe_free(staff_file);
 }
 
 /*** web routines */
@@ -150,7 +147,7 @@ static void remove_staff_file()
 				config_status("Cannot remove file %s: %s",
 					Download.path, strerror(errno));
 		}
-	        MyFree(Download.path);
+	        safe_free(Download.path);
 	        Download.path = NULL;
 	}
 }
@@ -165,13 +162,13 @@ static int download_staff_file(ConfigEntry *ce)
 		return 0;
 
 	Download.is_url = 1;
-	ircstrdup(Download.url, ce->ce_vardata);
+	safe_strdup(Download.url, ce->ce_vardata);
 
 	file = url_getfilename(ce->ce_vardata);
 	filename = unreal_getfilename(file);
 	/* TODO: handle NULL returns */
-	ircstrdup(Download.file, filename);
-	MyFree(file);
+	safe_strdup(Download.file, filename);
+	safe_free(file);
 
 	if (!loop.ircd_rehashing && !Download.once_completed)
 	{
@@ -189,10 +186,10 @@ static int download_staff_file(ConfigEntry *ce)
 		}
 
 		Download.once_completed = 1;
-		ircstrdup(Download.path, file);
+		safe_strdup(Download.path, file);
 		read_motd(Download.path, &staff);
 
-		MyFree(file);
+		safe_free(file);
 		return 0;
 	}
 
@@ -230,7 +227,7 @@ static void download_staff_file_complete(char *url, char *file, char *errorbuf, 
 		}
 
 		remove_staff_file();
-		Download.path = strdup(file);
+		safe_strdup(Download.path, file);
 		read_motd(Download.path, &staff);
 	} else
 	{
@@ -240,8 +237,8 @@ static void download_staff_file_complete(char *url, char *file, char *errorbuf, 
 		/* TODO: handle null returns ? */
 		unreal_copyfile(Download.path, tmp);
 		remove_staff_file();
-		Download.path = strdup(tmp);
-		MyFree(urlfile);
+		safe_strdup(Download.path, tmp);
+		safe_free(urlfile);
 	}
 }
 #endif
@@ -261,8 +258,8 @@ static void unload_motd_file(MOTDFile *list)
 	while (new)
 	{
 		old = new->next;
-		MyFree(new->line);
-		MyFree(new);
+		safe_free(new->line);
+		safe_free(new);
 		new = old;
 	}
 }
@@ -288,7 +285,7 @@ static int cb_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 						ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 					errors++;
 				}
-				ircfree(file);
+				safe_free(file);
 			}
 #endif
 
@@ -309,7 +306,7 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 #ifdef USE_LIBCURL
 			if (!Download.in_progress)
 			{
-				ircstrdup(staff_file, ce->ce_vardata);
+				safe_strdup(staff_file, ce->ce_vardata);
 				if (url_is_valid(ce->ce_vardata))
 				{
 					download_staff_file(ce);

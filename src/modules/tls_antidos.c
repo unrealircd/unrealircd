@@ -97,7 +97,7 @@ int tls_antidos_handshake(Client *acptr)
 {
 	if (acptr->local->ssl)
 	{
-		SAD *sad = MyMallocEx(sizeof(SAD));
+		SAD *sad = safe_alloc(sizeof(SAD));
 		sad->acptr = acptr;
 		SSL_set_info_callback(acptr->local->ssl, ssl_info_callback);
 		SSL_set_ex_data(acptr->local->ssl, tls_antidos_index, sad);
@@ -108,5 +108,5 @@ int tls_antidos_handshake(Client *acptr)
 /** Called by OpenSSL when the SSL structure is freed (so we can free up our custom struct too) */
 void tls_antidos_free(void *parent, void *ptr, CRYPTO_EX_DATA *ad, int idx, long argl, void *argp)
 {
-	MyFree(ptr);
+	safe_free(ptr);
 }

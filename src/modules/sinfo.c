@@ -76,32 +76,32 @@ int sinfo_server(Client *cptr, Client *sptr, int parc, char *parv[])
 	sptr->serv->features.protocol = atoi(parv[2]);
 
 	if (!strcmp(parv[3], "*"))
-		safefree(sptr->serv->features.usermodes);
+		safe_free(sptr->serv->features.usermodes);
 	else
-		safestrdup(sptr->serv->features.usermodes, parv[3]);
+		safe_strdup(sptr->serv->features.usermodes, parv[3]);
 
 	if (!strcmp(parv[4], "*"))
 	{
-		safefree(sptr->serv->features.chanmodes[0]);
-		safefree(sptr->serv->features.chanmodes[1]);
-		safefree(sptr->serv->features.chanmodes[2]);
-		safefree(sptr->serv->features.chanmodes[3]);
+		safe_free(sptr->serv->features.chanmodes[0]);
+		safe_free(sptr->serv->features.chanmodes[1]);
+		safe_free(sptr->serv->features.chanmodes[2]);
+		safe_free(sptr->serv->features.chanmodes[3]);
 	} else {
 		parse_chanmodes_protoctl(sptr, parv[4]);
 	}
 
 	if (!strcmp(parv[5], "*"))
-		safefree(sptr->serv->features.nickchars);
+		safe_free(sptr->serv->features.nickchars);
 	else
-		safestrdup(sptr->serv->features.nickchars, parv[5]);
+		safe_strdup(sptr->serv->features.nickchars, parv[5]);
 
 	/* Software is always the last parameter. It is currently parv[6]
 	 * but may change later. So always use parv[parc-1].
 	 */
 	if (!strcmp(parv[parc-1], "*"))
-		safefree(sptr->serv->features.software);
+		safe_free(sptr->serv->features.software);
 	else
-		safestrdup(sptr->serv->features.software, parv[parc-1]);
+		safe_strdup(sptr->serv->features.software, parv[parc-1]);
 
 	/* Broadcast to 'the other side' of the net */
 	concat_params(buf, sizeof(buf), parc, parv);

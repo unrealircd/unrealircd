@@ -349,7 +349,7 @@ void charsys_reset(void)
 	for (m=mblist; m; m=m_next)
 	{
 		m_next = m->next;
-		MyFree(m);
+		safe_free(m);
 	}
 	mblist=mblist_tail=NULL;
 	/* Then add the default which will always be allowed */
@@ -411,8 +411,8 @@ void charsys_finish(void)
 	for (e=ilanglist; e; e=e_next)
 	{
 		e_next=e->next;
-		MyFree(e->name);
-		MyFree(e);
+		safe_free(e->name);
+		safe_free(e);
 	}
 	ilanglist = NULL;
 #ifdef DEBUGMODE
@@ -431,7 +431,7 @@ void charsys_finish(void)
  */
 void charsys_addmultibyterange(char s1, char e1, char s2, char e2)
 {
-MBList *m = MyMallocEx(sizeof(MBList));
+MBList *m = safe_alloc(sizeof(MBList));
 
 	m->s1 = s1;
 	m->e1 = e1;
@@ -626,7 +626,7 @@ char tmp[512], *lang, *p;
 		if (!found)
 		{
 			/* Add... */
-			li = MyMallocEx(sizeof(ILangList));
+			li = safe_alloc(sizeof(ILangList));
 			li->name = strdup(lang);
 			AddListItem(li, ilanglist);
 		}

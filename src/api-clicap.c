@@ -169,7 +169,7 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 			}
 		}
 		/* New client capability */
-		clicap = MyMallocEx(sizeof(ClientCapability));
+		clicap = safe_alloc(sizeof(ClientCapability));
 		clicap->name = strdup(clicap_request->name);
 		clicap->cap = v;
 	}
@@ -190,7 +190,7 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 
 	if (module)
 	{
-		ModuleObject *clicapobj = MyMallocEx(sizeof(ModuleObject));
+		ModuleObject *clicapobj = safe_alloc(sizeof(ModuleObject));
 		clicapobj->object.clicap = clicap;
 		clicapobj->type = MOBJ_CLICAP;
 		AddListItem(clicapobj, module->objects);
@@ -221,8 +221,8 @@ void unload_clicap_commit(ClientCapability *clicap)
 
 	/* Destroy the capability */
 	DelListItem(clicap, clicaps);
-	safefree(clicap->name);
-	MyFree(clicap);
+	safe_free(clicap->name);
+	safe_free(clicap);
 }
 /**
  * Removes the specified clicap token.
@@ -237,7 +237,7 @@ void ClientCapabilityDel(ClientCapability *clicap)
 		for (mobj = clicap->owner->objects; mobj; mobj = mobj->next) {
 			if (mobj->type == MOBJ_CLICAP && mobj->object.clicap == clicap) {
 				DelListItem(mobj, clicap->owner->objects);
-				MyFree(mobj);
+				safe_free(mobj);
 				break;
 			}
 		}
@@ -281,7 +281,7 @@ void clicap_pre_rehash(void)
 			ircd_log(LOG_ERROR, "More than %d caps loaded - what???", MAXCLICAPS);
 			break;
 		}
-		old_caps[i] = strdup(clicap->name);
+		safe_strdup(old_caps[i], clicap->name);
 		old_caps_proto[i] = clicap->cap;
 		i++;
 	}
@@ -368,5 +368,5 @@ void clicap_post_rehash(void)
 
 	/* Now free the old caps. */
 	for (i = 0; old_caps[i]; i++)
-		safefree(old_caps[i]);
+		safe_free(old_caps[i]);
 }

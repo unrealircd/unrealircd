@@ -111,7 +111,7 @@ CMD_FUNC(cmd_list)
 		sendnumeric(sptr, RPL_LISTEND);
 		free_str_list(sptr->user->lopt->yeslist);
 		free_str_list(sptr->user->lopt->nolist);
-		MyFree(sptr->user->lopt);
+		safe_free(sptr->user->lopt);
 		sptr->user->lopt = NULL;
 		return 0;
 	}
@@ -120,7 +120,7 @@ CMD_FUNC(cmd_list)
 	{
 
 		sendnumeric(sptr, RPL_LISTSTART);
-		lopt = sptr->user->lopt = MyMallocEx(sizeof(ChannelListOptions));
+		lopt = sptr->user->lopt = safe_alloc(sizeof(ChannelListOptions));
 		lopt->showall = 1;
 
 		if (DBufLength(&cptr->local->sendQ) < 2048)
@@ -256,7 +256,7 @@ CMD_FUNC(cmd_list)
 
 	if (doall)
 	{
-		lopt = sptr->user->lopt = MyMallocEx(sizeof(ChannelListOptions));
+		lopt = sptr->user->lopt = safe_alloc(sizeof(ChannelListOptions));
 		lopt->usermin = usermin;
 		lopt->usermax = usermax;
 		lopt->topictimemax = topictimemax;
@@ -399,7 +399,7 @@ void _send_list(Client *cptr)
 		sendnumeric(cptr, RPL_LISTEND);
 		free_str_list(cptr->user->lopt->yeslist);
 		free_str_list(cptr->user->lopt->nolist);
-		MyFree(cptr->user->lopt);
+		safe_free(cptr->user->lopt);
 		cptr->user->lopt = NULL;
 		return;
 	}

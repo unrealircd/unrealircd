@@ -61,15 +61,15 @@ static void FreeConf()
 {
 	ConfigItem_ulines	*h, *next;
 
-	safefree(Settings.map_deny_message);
-	safefree(Settings.links_deny_message);
+	safe_free(Settings.map_deny_message);
+	safe_free(Settings.links_deny_message);
 
 	for (h = HiddenServers; h; h = next)
 	{
 		next = h->next;
 		DelListItem(h, HiddenServers);
-		MyFree(h->servername);
-		MyFree(h);
+		safe_free(h->servername);
+		safe_free(h);
 	}
 }
 
@@ -175,11 +175,11 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 					Settings.disable_links = config_checkval(cep->ce_vardata, CFG_YESNO);
 				else if (!strcmp(cep->ce_varname, "map-deny-message"))
 				{
-					safestrdup(Settings.map_deny_message, cep->ce_vardata);
+					safe_strdup(Settings.map_deny_message, cep->ce_vardata);
 				}
 				else if (!strcmp(cep->ce_varname, "links-deny-message"))
 				{
-					safestrdup(Settings.links_deny_message, cep->ce_vardata);
+					safe_strdup(Settings.links_deny_message, cep->ce_vardata);
 				}
 				else if (!strcmp(cep->ce_varname, "hide"))
 				{
@@ -188,8 +188,8 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 						if (!strcasecmp(cepp->ce_varname, me.name))
 							continue;
 
-						ca = MyMallocEx(sizeof(ConfigItem_ulines));
-						safestrdup(ca->servername, cepp->ce_varname);
+						ca = safe_alloc(sizeof(ConfigItem_ulines));
+						safe_strdup(ca->servername, cepp->ce_varname);
 						AddListItem(ca, HiddenServers);
 					}
 				}

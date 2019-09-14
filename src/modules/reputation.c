@@ -190,7 +190,7 @@ MOD_UNLOAD()
 void config_setdefaults(void)
 {
 	/* data/reputation.db */
-	cfg.database = strdup("reputation.db");
+	safe_strdup(cfg.database, "reputation.db");
 	convert_to_absolute_path(&cfg.database, PERMDATADIR);
 
 	/* EXPIRES the following entries if the IP does appear for some time: */
@@ -261,7 +261,7 @@ int reputation_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	{
 		if (!strcmp(cep->ce_varname, "database"))
 		{
-			safestrdup(cfg.database, cep->ce_vardata);
+			safe_strdup(cfg.database, cep->ce_vardata);
 		}
 	}
 	return 1;
@@ -366,7 +366,7 @@ void load_db(void)
 		if (!last_seen)
 			continue;
 		
-		e = MyMallocEx(sizeof(ReputationEntry)+strlen(ip));
+		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip));
 		strcpy(e->ip, ip); /* safe, see alloc above */
 		e->score = atoi(score);
 		e->last_seen = atol(last_seen);
@@ -542,7 +542,7 @@ EVENT(add_scores)
 		if (!e)
 		{
 			/* Create */
-			e = MyMallocEx(sizeof(ReputationEntry)+strlen(ip));
+			e = safe_alloc(sizeof(ReputationEntry)+strlen(ip));
 			strcpy(e->ip, ip); /* safe, allocated above */
 			add_reputation_entry(e);
 		}
@@ -619,7 +619,7 @@ EVENT(delete_old_records)
 				         e->ip, e->score, (long long)(TStime() - e->last_seen));
 #endif
 				DelListItem(e, ReputationHashTable[i]);
-				MyFree(e);
+				safe_free(e);
 			}
 		}
 	}
@@ -816,7 +816,7 @@ CMD_FUNC(reputation_server_cmd)
 		ircd_log(LOG_ERROR, "[reputation] Score for '%s' from %s is %d, we had no entry, adding it",
 			ip, sptr->name, score);
 #endif
-		e = MyMallocEx(sizeof(ReputationEntry)+strlen(ip));
+		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip));
 		strcpy(e->ip, ip); /* safe, see alloc above */
 		e->score = score;
 		e->last_seen = TStime();

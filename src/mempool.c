@@ -232,7 +232,7 @@ static mp_chunk_t *
 mp_chunk_new(mp_pool_t *pool)
 {
   size_t sz = pool->new_chunk_capacity * pool->item_alloc_size;
-  mp_chunk_t *chunk = MyMallocEx(CHUNK_OVERHEAD + sz);
+  mp_chunk_t *chunk = safe_alloc(CHUNK_OVERHEAD + sz);
 
 #ifdef MEMPOOL_STATS
   ++pool->total_chunks_allocated;
@@ -420,7 +420,7 @@ mp_pool_new(size_t item_size, size_t chunk_capacity)
   assert(chunk_capacity < SIZE_T_CEILING);
   assert(SIZE_T_CEILING / item_size > chunk_capacity);
 */
-  pool = MyMallocEx(sizeof(mp_pool_t));
+  pool = safe_alloc(sizeof(mp_pool_t));
   /*
    * First, we figure out how much space to allow per item. We'll want to
    * use make sure we have enough for the overhead plus the item size.
@@ -504,7 +504,7 @@ mp_pool_sort_used_chunks(mp_pool_t *pool)
   if (!inverted)
     return;
 
-  chunks = MyMallocEx(sizeof(mp_chunk_t *) * n);
+  chunks = safe_alloc(sizeof(mp_chunk_t *) * n);
 
   for (i=0,chunk = pool->used_chunks; chunk; chunk = chunk->next)
     chunks[i++] = chunk;
@@ -519,7 +519,7 @@ mp_pool_sort_used_chunks(mp_pool_t *pool)
   }
 
   chunks[n - 1]->next = NULL;
-  MyFree(chunks);
+  safe_free(chunks);
   mp_pool_assert_ok(pool);
 }
 
@@ -558,7 +558,7 @@ mp_pool_clean(mp_pool_t *pool, int n_to_keep, int keep_recently_used)
   while (chunk) {
     mp_chunk_t *next = chunk->next;
     chunk->magic = 0xdeadbeef;
-    MyFree(chunk);
+    safe_free(chunk);
 #ifdef MEMPOOL_STATS
     ++pool->total_chunks_freed;
 #endif
@@ -578,7 +578,7 @@ static void destroy_chunks(mp_chunk_t *chunk)
   while (chunk) {
     chunk->magic = 0xd3adb33f;
     next = chunk->next;
-    MyFree(chunk);
+    safe_free(chunk);
     chunk = next;
   }
 }

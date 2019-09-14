@@ -103,9 +103,9 @@ int msgid_mtag_is_ok(Client *acptr, char *name, char *value)
  */
 MessageTag *mtag_generate_msgid(void)
 {
-	MessageTag *m = MyMallocEx(sizeof(MessageTag));
+	MessageTag *m = safe_alloc(sizeof(MessageTag));
 	m->name = strdup("msgid");
-	m->value = MyMallocEx(MSGIDLEN+1);
+	m->value = safe_alloc(MSGIDLEN+1);
 	gen_random_alnum(m->value, MSGIDLEN);
 	return m;
 }
@@ -160,7 +160,7 @@ void mtag_add_or_inherit_msgid(Client *sender, MessageTag *recv_mtags, MessageTa
 		b64_encode(binaryhash, sizeof(binaryhash)/2, b64hash, sizeof(b64hash));
 		b64hash[22] = '\0'; /* cut off at '=' */
 		snprintf(newbuf, sizeof(newbuf), "%s-%s", prefix, b64hash);
-		safestrdup(m->value, newbuf);
+		safe_strdup(m->value, newbuf);
 	}
 	AddListItem(m, *mtag_list);
 }

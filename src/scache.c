@@ -83,14 +83,14 @@ char *find_or_add(char *name)
 	 */
 	if ((ptr = scache_hash[hash_index]))
 	{
-		newptr = scache_hash[hash_index] = MyMallocEx(sizeof(SCACHE));
+		newptr = scache_hash[hash_index] = safe_alloc(sizeof(SCACHE));
 		strlcpy(newptr->name, name, sizeof(newptr->name));
 		newptr->next = ptr;
 		return (newptr->name);
 	}
 	else
 	{
-		ptr = scache_hash[hash_index] = MyMallocEx(sizeof(SCACHE));
+		ptr = scache_hash[hash_index] = safe_alloc(sizeof(SCACHE));
 		strlcpy(ptr->name, name, sizeof(newptr->name));
 		ptr->next = (SCACHE *) NULL;
 		return (ptr->name);

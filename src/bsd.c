@@ -1353,7 +1353,7 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	if (!hp)
 	{
 		/* Remove "cache" */
-		safefree(aconf->connect_ip);
+		safe_free(aconf->connect_ip);
 	}
 	/*
 	 * If we dont know the IP# for this host and itis a hostname and

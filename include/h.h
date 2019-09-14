@@ -241,7 +241,7 @@ extern void set_channel_mlock(Client *, Client *, Channel *, const char *, int);
 extern void restart(char *);
 extern void server_reboot(char *);
 extern void terminate(), write_pidfile();
-extern void *MyMallocEx(size_t size);
+extern void *safe_alloc(size_t size);
 extern int send_queued(Client *);
 extern void sendto_connectnotice(Client *sptr, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(Client *one, Client *sptr, char *umodes);
@@ -470,7 +470,6 @@ extern char *oflagstr(long oflag);
 extern int rehash(Client *cptr, Client *sptr, int sig);
 extern int match_simple(const char *mask, const char *name);
 extern int match_esc(const char *mask, const char *name);
-extern void outofmemory(void);
 extern int add_listener(ConfigItem_listen *conf);
 extern void link_cleanup(ConfigItem_link *link_ptr);
 extern void       listen_cleanup();
@@ -494,7 +493,70 @@ extern time_t rfc2time(char *s);
 extern char *rfctime(time_t t, char *buf);
 extern int strnatcmp(char const *a, char const *b);
 extern int strnatcasecmp(char const *a, char const *b);
-extern void *MyMallocEx(size_t size);
+extern void outofmemory(size_t bytes);
+
+/** Memory allocation and deallocation functions and macros that should be used in UnrealIRCd.
+ * Use these instead of malloc/calloc/free.
+ * @defgroup MemoryRoutines Memory allocation and deallocation
+ * @{
+ */
+extern void *safe_alloc(size_t size);
+/** Free previously allocate memory pointer.
+ * This also sets the pointer to NULL, since that would otherwise be common to forget.
+ */
+#define safe_free(x) do { if (x) free(x); x = NULL; } while(0)
+/** Free previously allocated memory pointer.
+ * Raw version which does not touch the pointer itself. You most likely don't
+ * need this, as it's only used in 1 place in UnrealIRCd.
+ */
+#define safe_free_raw(x) free(x)
+
+/** Free previous memory (if any) and then save a duplicate of the specified string.
+ * @param dst   The current pointer and the pointer where a new copy of the string will be stored.
+ * @param str   The string you want to copy
+ */
+#define safe_strdup(dst,str) do { if (dst) free(dst); if (!(str)) dst = NULL; else dst = our_strdup(str); } while(0)
+
+/** Return a copy of the string. Do not free any existing memory.
+ * @param str   The string to duplicate
+ * @returns A pointer to the new copy.
+ * @notes
+ * Generally you need to use safe_strdup() instead(!). But when clearly initializing
+ * a variable that does not have a previous value, then raw_strdup() usage is fine, eg:
+ * int somefunc()
+ * {
+ *     char *somevar = raw_strdup("IRC");
+ * And, similarly if you want to return a duplicate (there is no destination variable):
+ * return raw_strdup(something);
+ */
+#define raw_strdup(str) strdup(str)
+
+/** Free previous memory (if any) and then save a duplicate of the specified string with a length limit.
+ * @param dst   The current pointer and the pointer where a new copy of the string will be stored.
+ * @param str   The string you want to copy
+ * @param sz    Length limit including the NUL byte, usually sizeof(dst)
+ */
+#define safe_strldup(dst,str,sz) do { if (dst) free(dst); if (!str) dst = NULL; else dst = our_strldup(str,sz); } while(0)
+
+/** Return a duplicate of the specified string with a length limit. Do not free any existing memory.
+ * @param str   The string you want to copy
+ * @param sz    Length limit including the NUL byte, usually sizeof(dst)
+ * @returns A pointer to the new copy.
+ * @notes
+ * Generally you need to use safe_strldup() instead(!). But when clearly initializing
+ * a variable that does not have a previous value, then raw_strldup() usage is fine, eg:
+ * int somefunc(char *str)
+ * {
+ *     char *somevar = raw_strldup(str, 16);
+ * And, similarly if you want to return a duplicate (there is no destination variable):
+ * return raw_strldup(something);
+ */
+#define raw_strldup(str, max) our_strldup(str, max)
+
+/** @} */
+extern char *our_strdup(const char *str);
+extern char *our_strldup(const char *str, size_t max);
+
 extern MODFUNC char  *tls_get_cipher(SSL *ssl);
 extern TLSOptions *get_tls_options_for_client(Client *acptr);
 extern int outdated_tls_client(Client *acptr);
