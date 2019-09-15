@@ -586,12 +586,6 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 			sendto_connectnotice(sptr, 1, comment);
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_watch_list(sptr);
-			if (sptr->user && sptr->user->lopt)
-			{
-				free_str_list(sptr->user->lopt->yeslist);
-				free_str_list(sptr->user->lopt->nolist);
-				safe_free(sptr->user->lopt);
-			}
 			on_for = TStime() - sptr->local->firsttime;
 			if (IsHidden(sptr))
 				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s [VHOST %s] (%s)",

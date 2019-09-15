@@ -125,7 +125,6 @@ typedef struct Link Link;
 typedef struct Ban Ban;
 typedef struct Mode Mode;
 typedef struct MessageTag MessageTag;
-typedef struct ChannelListOptions ChannelListOptions;
 typedef struct MOTDFile MOTDFile; /* represents a whole MOTD, including remote MOTD support info */
 typedef struct MOTDLine MOTDLine; /* one line of a MOTD stored as a linked list */
 #ifdef USE_LIBCURL
@@ -588,6 +587,121 @@ union ModData
         void *ptr;
 };
 
+#ifndef _WIN32
+ #define CHECK_LIST_ENTRY(list)		if (offsetof(typeof(*list),prev) != offsetof(ListStruct,prev)) \
+					{ \
+						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->prev must be 1st struct member)", __FILE__, __LINE__); \
+						abort(); \
+					} \
+					if (offsetof(typeof(*list),next) != offsetof(ListStruct,next)) \
+					{ \
+						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->next must be 2nd struct member))", __FILE__, __LINE__); \
+						abort(); \
+					}
+#else
+ #define CHECK_LIST_ENTRY(list)		/* not available on Windows, typeof() not reliable */
+#endif
+
+#ifndef _WIN32
+ #define CHECK_PRIO_LIST_ENTRY(list)	if (offsetof(typeof(*list),prev) != offsetof(ListStructPrio,prev)) \
+					{ \
+						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->prev must be 1st struct member)", __FILE__, __LINE__); \
+						abort(); \
+					} \
+					if (offsetof(typeof(*list),next) != offsetof(ListStructPrio,next)) \
+					{ \
+						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->next must be 2nd struct member))", __FILE__, __LINE__); \
+						abort(); \
+					} \
+					if (offsetof(typeof(*list),priority) != offsetof(ListStructPrio,priority)) \
+					{ \
+						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->priority must be 3rd struct member))", __FILE__, __LINE__); \
+						abort(); \
+					}
+#else
+ #define CHECK_PRIO_LIST_ENTRY(list)	/* not available on Windows, typeof() not reliable */
+#endif
+
+
+/** These are the generic list functions that are used all around in UnrealIRCd.
+ * @defgroup ListFunctions List functions
+ * @{
+ */
+
+/** Generic linked list HEAD */
+struct ListStruct {
+	ListStruct *prev, *next;
+};
+
+/** Generic linked list HEAD with priority */
+struct ListStructPrio {
+	ListStructPrio *prev, *next;
+	int priority;
+};
+
+/** Add an item to a standard linked list (in the front)
+ */
+#define AddListItem(item,list)		do { \
+						CHECK_LIST_ENTRY(list) \
+						add_ListItem((ListStruct *)item, (ListStruct **)&list); \
+					} while(0)
+
+/** Append an item to a standard linked list (at the back)
+*/
+#define AppendListItem(item,list)	do { \
+						CHECK_LIST_ENTRY(list) \
+						append_ListItem((ListStruct *)item, (ListStruct **)&list); \
+					} while(0)
+
+/** Delete an item from a standard linked list
+*/
+#define DelListItem(item,list)		do { \
+						CHECK_LIST_ENTRY(list) \
+						del_ListItem((ListStruct *)item, (ListStruct **)&list); \
+					} while(0)
+
+/** Add an item to a standard linked list - UNCHECKED function, only use if absolutely necessary!
+*/
+#define AddListItemUnchecked(item,list)	add_ListItem((ListStruct *)item, (ListStruct **)&list)
+/** Append an item to a standard linked list - UNCHECKED function, only use if absolutely necessary!
+*/
+#define AppendListItemUnchecked(item,list) append_ListItem((ListStruct *)item, (ListStruct **)&list)
+/** Delete an item from a standard linked list - UNCHECKED function, only use if absolutely necessary!
+*/
+#define DelListItemUnchecked(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
+
+#define AddListItemPrio(item,list,prio)	do { \
+						CHECK_PRIO_LIST_ENTRY(list); \
+						add_ListItemPrio((ListStructPrio *)item, (ListStructPrio **)&list, prio); \
+					} while(0)
+
+#define DelListItemPrio(item,list,prio)	do { \
+						CHECK_PRIO_LIST_ENTRY(list); \
+						del_ListItem((ListStruct *)item, (ListStruct **)&list); \
+					} while(0)
+
+typedef struct NameList NameList;
+/** Generic linked list where each entry has a name which you can use.
+ * Use this if you simply want to have a list of entries
+ * that only have a name and no other properties.
+ *
+ * Use the following functions to add, find and delete entries:
+ * add_name_list(), find_name_list(), del_name_list(), free_entire_name_list()
+ */
+struct NameList {
+	NameList *prev, *next;
+	char name[1];
+};
+
+/** Free an entire NameList */
+#define free_entire_name_list(list) do { _free_entire_name_list(list); list = NULL; } while(0)
+/** Add an entry to a NameList */
+#define add_name_list(list, str)  _add_name_list(&list, str)
+/** Delete an entry from a NameList - AND free it */
+#define del_name_list(list, str)  _del_name_list(&list, str)
+
+/** @} */
+
 #ifdef USE_LIBCURL
 struct MOTDDownload
 {
@@ -998,7 +1112,6 @@ struct User {
 	char *virthost;			/**< Virtual host - when user has user mode +x this is the active host */
 	char *server;			/**< Server name the user is on (?) */
 	SWhois *swhois;			/**< Special "additional" WHOIS entries such as "a Network Administrator" */
-	ChannelListOptions *lopt;	/**< Saved channel list options (during /LIST command) */
 	aWhowas *whowas;		/**< Something for whowas :D :D */
 	int snomask;			/**< Server Notice Mask (snomask) - only for IRCOps */
 	char *operlogin;		/**< Which oper { } block was used to oper up, otherwise NULL - used by oper::maxlogins */
@@ -1580,20 +1693,6 @@ typedef struct MemoryInfo {
 	unsigned long classesmem;
 } MemoryInfo;
 
-struct ChannelListOptions {
-	ChannelListOptions *next;
-	Link *yeslist, *nolist;
-	unsigned int  starthash;
-	short int showall;
-	unsigned short usermin;
-	int  usermax;
-	time_t currenttime;
-	time_t chantimemin;
-	time_t chantimemax;
-	time_t topictimemin;
-	time_t topictimemax;
-};
-
 #define EXTCMODETABLESZ 32
 
 /* Number of maximum paramter modes to allow.
@@ -1714,85 +1813,6 @@ struct DSlink {
 		char *cp;
 	} value;
 };
-#ifndef _WIN32
- #define CHECK_LIST_ENTRY(list)		if (offsetof(typeof(*list),prev) != offsetof(ListStruct,prev)) \
-					{ \
-						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->prev must be 1st struct member)", __FILE__, __LINE__); \
-						abort(); \
-					} \
-					if (offsetof(typeof(*list),next) != offsetof(ListStruct,next)) \
-					{ \
-						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->next must be 2nd struct member))", __FILE__, __LINE__); \
-						abort(); \
-					}
-#else
- #define CHECK_LIST_ENTRY(list)		/* not available on Windows, typeof() not reliable */
-#endif
-
-/** Add an item to a standard linked list (in the front) */
-#define AddListItem(item,list)		do { \
-						CHECK_LIST_ENTRY(list) \
-						add_ListItem((ListStruct *)item, (ListStruct **)&list); \
-					} while(0)
-
-/** Append an item to a standard linked list (at the back) */
-#define AppendListItem(item,list)	do { \
-						CHECK_LIST_ENTRY(list) \
-						append_ListItem((ListStruct *)item, (ListStruct **)&list); \
-					} while(0)
-
-/** Delete an item from a standard linked list */
-#define DelListItem(item,list)		do { \
-						CHECK_LIST_ENTRY(list) \
-						del_ListItem((ListStruct *)item, (ListStruct **)&list); \
-					} while(0)
-
-/** Add an item to a standard linked list - UNCHECKED function, only use if absolutely necessary! */
-#define AddListItemUnchecked(item,list)	add_ListItem((ListStruct *)item, (ListStruct **)&list)
-/** Append an item to a standard linked list - UNCHECKED function, only use if absolutely necessary! */
-#define AppendListItemUnchecked(item,list) append_ListItem((ListStruct *)item, (ListStruct **)&list)
-/** Delete an item from a standard linked list - UNCHECKED function, only use if absolutely necessary! */
-#define DelListItemUnchecked(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
-
-#ifndef _WIN32
- #define CHECK_PRIO_LIST_ENTRY(list)	if (offsetof(typeof(*list),prev) != offsetof(ListStructPrio,prev)) \
-					{ \
-						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->prev must be 1st struct member)", __FILE__, __LINE__); \
-						abort(); \
-					} \
-					if (offsetof(typeof(*list),next) != offsetof(ListStructPrio,next)) \
-					{ \
-						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->next must be 2nd struct member))", __FILE__, __LINE__); \
-						abort(); \
-					} \
-					if (offsetof(typeof(*list),priority) != offsetof(ListStructPrio,priority)) \
-					{ \
-						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on struct with incorrect order (->priority must be 3rd struct member))", __FILE__, __LINE__); \
-						abort(); \
-					}
-#else
- #define CHECK_PRIO_LIST_ENTRY(list)	/* not available on Windows, typeof() not reliable */
-#endif
-
-#define AddListItemPrio(item,list,prio)	do { \
-						CHECK_PRIO_LIST_ENTRY(list); \
-						add_ListItemPrio((ListStructPrio *)item, (ListStructPrio **)&list, prio); \
-					} while(0)
-
-#define DelListItemPrio(item,list,prio)	do { \
-						CHECK_PRIO_LIST_ENTRY(list); \
-						del_ListItem((ListStruct *)item, (ListStruct **)&list); \
-					} while(0)
-
-struct ListStruct {
-	ListStruct *prev, *next;
-};
-
-struct ListStructPrio {
-	ListStructPrio *prev, *next;
-	int priority;
-};
-
 /* channel structure */
 
 
@@ -1898,11 +1918,6 @@ struct ListStructPrio {
 
 
 #define TStime() (timeofday)
-
-/* Lifted somewhat from Undernet code --Rak */
-
-#define IsSendable(x)		(DBufLength(&x->local->sendQ) < 2048)
-#define DoList(x)		((x)->user && (x)->user->lopt)
 
 /* used in SetMode() in channel.c and cmd_umode() in s_msg.c */
 

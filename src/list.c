@@ -194,7 +194,6 @@ ClientUser *make_user(Client *cptr)
 		user->invited = NULL;
 		user->server = NULL;
 		strlcpy(user->svid, "0", sizeof(user->svid));
-		user->lopt = NULL;
 		user->whowas = NULL;
 		user->snomask = 0;
 		if (cptr->ip)
@@ -354,18 +353,6 @@ void remove_client_from_list(Client *cptr)
 void add_client_to_list(Client *cptr)
 {
 	list_add(&cptr->client_node, &client_list);
-}
-
-/* Based on find_str_link() from bahamut -- codemastr */
-int find_str_match_link(Link *lp, char *charptr)
-{
-	if (!charptr)
-		return 0;
-	for (; lp; lp = lp->next) {
-		if(match_simple(lp->value.cp, charptr))
-			return 1;
-	}
-	return 0;
 }
 
 void free_str_list(Link *lp)
@@ -538,5 +525,68 @@ void add_ListItemPrio(ListStructPrio *new, ListStructPrio **list, int priority)
 		last->next = new;
 		new->prev = last;
 	}
+}
+
+void _add_name_list(NameList **list, char *name)
+{
+	NameList *e = safe_alloc(sizeof(NameList)+strlen(name));
+	strcpy(e->name, name); /* safe, allocated above */
+	AddListItem(e, *list);
+}
+
+void _free_entire_name_list(NameList *n)
+{
+	NameList *n_next;
+
+	for (; n; n = n_next)
+	{
+		n_next = n->next;
+		safe_free(n);
+	}
+}
+
+void _del_name_list(NameList **list, char *name)
+{
+	NameList *e = find_name_list(*list, name);
+	if (e)
+	{
+		DelListItem(e, *list);
+		safe_free(e);
+		return;
+	}
+}
+
+/** Find an entry in a NameList - case insensitive comparisson.
+ * @ingroup ListFunctions
+ */
+NameList *find_name_list(NameList *list, char *name)
+{
+	NameList *e;
+
+	for (e = list; e; e = e->next)
+	{
+		if (!strcasecmp(e->name, name))
+		{
+			return e;
+		}
+	}
+	return NULL;
+}
+
+/** Find an entry in a NameList by running match_simpl() on it.
+ * @ingroup ListFunctions
+ */
+NameList *find_name_list_match(NameList *list, char *name)
+{
+	NameList *e;
+
+	for (e = list; e; e = e->next)
+	{
+		if (match_simple(e->name, name))
+		{
+			return e;
+		}
+	}
+	return NULL;
 }
 

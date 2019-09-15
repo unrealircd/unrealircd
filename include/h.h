@@ -712,7 +712,6 @@ extern MODVAR int (*cmd_tkl)(Client *cptr, Client *sptr, MessageTag *recv_mtags,
 extern MODVAR int (*place_host_ban)(Client *sptr, BanAction action, char *reason, long duration);
 extern MODVAR int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
 extern MODVAR int (*join_viruschan)(Client *sptr, TKL *tk, int type);
-extern MODVAR void (*send_list)(Client *cptr);
 extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
 extern MODVAR void (*spamfilter_build_user_string)(char *buf, char *nick, Client *acptr);
@@ -926,3 +925,8 @@ extern int write_data(FILE *fd, const void *buf, size_t len);
 extern int write_str(FILE *fd, char *x);
 extern int read_str(FILE *fd, char **x);
 extern int char_to_channelflag(char c);
+extern void _free_entire_name_list(NameList *n);
+extern void _add_name_list(NameList **list, char *name);
+extern void _del_name_list(NameList **list, char *name);
+extern NameList *find_name_list(NameList *list, char *name);
+extern NameList *find_name_list_match(NameList *list, char *name);

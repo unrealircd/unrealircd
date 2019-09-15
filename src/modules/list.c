@@ -23,7 +23,7 @@
 #include "unrealircd.h"
 
 CMD_FUNC(cmd_list);
-void _send_list(Client *cptr);
+void send_list(Client *cptr);
 
 #define MSG_LIST 	"LIST"	
 
@@ -36,20 +36,62 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
     };
 
+typedef struct ChannelListOptions ChannelListOptions;
+struct ChannelListOptions {
+	NameList *yeslist;
+	NameList *nolist;
+	unsigned int starthash;
+	short int showall;
+	unsigned short usermin;
+	int  usermax;
+	time_t currenttime;
+	time_t chantimemin;
+	time_t chantimemax;
+	time_t topictimemin;
+	time_t topictimemax;
+};
+
+/* Global variables */
+ModDataInfo *list_md = NULL;
+
+/* Macros */
+#define CHANNELLISTOPTIONS(x)       ((ChannelListOptions *)moddata_local_client(x, list_md).ptr)
+#define ALLOCATE_CHANNELLISTOPTIONS(cptr)	do { moddata_local_client(cptr, list_md).ptr = safe_alloc(sizeof(ChannelListOptions)); } while(0)
+#define free_list_options(sptr)		list_md_free(&moddata_local_client(sptr, list_md))
+
+#define DoList(x)               (MyUser((x)) && CHANNELLISTOPTIONS((x)))
+#define IsSendable(x)		(DBufLength(&x->local->sendQ) < 2048)
+
+/* Forward declarations */
 EVENT(send_queued_list_data);
+void list_md_free(ModData *md);
 
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_LIST, _send_list);
 	return MOD_SUCCESS;
 }
 
 MOD_INIT()
 {
+	ModDataInfo mreq;
+
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	memset(&mreq, 0, sizeof(mreq));
+	mreq.name = "list";
+	mreq.type = MODDATATYPE_LOCAL_CLIENT;
+	mreq.free = list_md_free;
+	list_md = ModDataAdd(modinfo->handle, mreq);
+	if (!list_md)
+	{
+		config_error("could not register list moddata");
+		return MOD_FAILED;
+	}
+
 	CommandAdd(modinfo->handle, MSG_LIST, cmd_list, MAXPARA, M_USER);
 	EventAdd(modinfo->handle, "send_queued_list_data", 1, 0, send_queued_list_data, NULL);
-	MARK_AS_OFFICIAL_MODULE(modinfo);
+
 	return MOD_SUCCESS;
 }
 
@@ -75,11 +117,11 @@ CMD_FUNC(cmd_list)
 	time_t currenttime = TStime();
 	char *name, *p = NULL;
 	ChannelListOptions *lopt = NULL;
-	Link *lp;
-	int  usermax, usermin, error = 0, doall = 0;
+	int usermax, usermin, error = 0, doall = 0;
 	time_t chantimemin, chantimemax;
 	time_t topictimemin, topictimemax;
-	Link *yeslist = NULL, *nolist = NULL;
+	NameList *yeslist = NULL;
+	NameList *nolist = NULL;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("LIST");
 
@@ -105,23 +147,19 @@ CMD_FUNC(cmd_list)
 	if (cptr != sptr || !sptr->user)
 		return 0;
 
-	/* If a /list is in progress, then another one will cancel it */
-	if ((lopt = sptr->user->lopt) != NULL)
+	/* If a /LIST is in progress then a new one will cancel it */
+	if (CHANNELLISTOPTIONS(sptr))
 	{
 		sendnumeric(sptr, RPL_LISTEND);
-		free_str_list(sptr->user->lopt->yeslist);
-		free_str_list(sptr->user->lopt->nolist);
-		safe_free(sptr->user->lopt);
-		sptr->user->lopt = NULL;
+		free_list_options(sptr);
 		return 0;
 	}
 
 	if (parc < 2 || BadPtr(parv[1]))
 	{
-
 		sendnumeric(sptr, RPL_LISTSTART);
-		lopt = sptr->user->lopt = safe_alloc(sizeof(ChannelListOptions));
-		lopt->showall = 1;
+		ALLOCATE_CHANNELLISTOPTIONS(sptr);
+		CHANNELLISTOPTIONS(sptr)->showall = 1;
 
 		if (DBufLength(&cptr->local->sendQ) < 2048)
 			send_list(cptr);
@@ -217,18 +255,12 @@ CMD_FUNC(cmd_list)
 			  if (*name == '!')
 			  {
 				  doall = 1;
-				  lp = make_link();
-				  lp->next = nolist;
-				  nolist = lp;
-				  safe_strdup(lp->value.cp, name + 1);
+				  add_name_list(nolist, name + 1);
 			  }
 			  else if (strchr(name, '*') || strchr(name, '?'))
 			  {
 				  doall = 1;
-				  lp = make_link();
-				  lp->next = yeslist;
-				  yeslist = lp;
-				  safe_strdup(lp->value.cp, name);
+				  add_name_list(yeslist, name);
 			  }
 			  else	/* Just a normal channel */
 			  {
@@ -256,15 +288,15 @@ CMD_FUNC(cmd_list)
 
 	if (doall)
 	{
-		lopt = sptr->user->lopt = safe_alloc(sizeof(ChannelListOptions));
-		lopt->usermin = usermin;
-		lopt->usermax = usermax;
-		lopt->topictimemax = topictimemax;
-		lopt->topictimemin = topictimemin;
-		lopt->chantimemax = chantimemax;
-		lopt->chantimemin = chantimemin;
-		lopt->nolist = nolist;
-		lopt->yeslist = yeslist;
+		ALLOCATE_CHANNELLISTOPTIONS(sptr);
+		CHANNELLISTOPTIONS(sptr)->usermin = usermin;
+		CHANNELLISTOPTIONS(sptr)->usermax = usermax;
+		CHANNELLISTOPTIONS(sptr)->topictimemax = topictimemax;
+		CHANNELLISTOPTIONS(sptr)->topictimemin = topictimemin;
+		CHANNELLISTOPTIONS(sptr)->chantimemax = chantimemax;
+		CHANNELLISTOPTIONS(sptr)->chantimemin = chantimemin;
+		CHANNELLISTOPTIONS(sptr)->nolist = nolist;
+		CHANNELLISTOPTIONS(sptr)->yeslist = yeslist;
 
 		if (DBufLength(&cptr->local->sendQ) < 2048)
 			send_list(cptr);
@@ -282,10 +314,10 @@ CMD_FUNC(cmd_list)
  * cptr = Local client to send the output back to.
  * Taken from bahamut, modified for Unreal by codemastr.
  */
-void _send_list(Client *cptr)
+void send_list(Client *cptr)
 {
 	Channel *chptr;
-	ChannelListOptions *lopt = cptr->user->lopt;
+	ChannelListOptions *lopt = CHANNELLISTOPTIONS(cptr);
 	unsigned int  hashnum;
 	int numsend = (get_sendq(cptr) / 768) + 1; /* (was previously hard-coded) */
 	/* ^
@@ -351,13 +383,11 @@ void _send_list(Client *cptr)
 						continue;
 
 					/* Must not be on nolist (if it exists) */
-					if (lopt->nolist && find_str_match_link(lopt->nolist,
-					    chptr->chname))
+					if (lopt->nolist && find_name_list_match(lopt->nolist, chptr->chname))
 						continue;
 
 					/* Must be on yeslist (if it exists) */
-					if (lopt->yeslist && !find_str_match_link(lopt->yeslist,
-					    chptr->chname))
+					if (lopt->yeslist && !find_name_list_match(lopt->yeslist, chptr->chname))
 						continue;
 				}
 #ifdef LIST_SHOW_MODES
@@ -397,10 +427,7 @@ void _send_list(Client *cptr)
 	if (hashnum == CHAN_HASH_TABLE_SIZE)
 	{
 		sendnumeric(cptr, RPL_LISTEND);
-		free_str_list(cptr->user->lopt->yeslist);
-		free_str_list(cptr->user->lopt->nolist);
-		safe_free(cptr->user->lopt);
-		cptr->user->lopt = NULL;
+		free_list_options(cptr);
 		return;
 	}
 
@@ -420,4 +447,18 @@ EVENT(send_queued_list_data)
 		if (DoList(acptr) && IsSendable(acptr))
 			send_list(acptr);
 	}
+}
+
+/** Called on client exit: free the channel list options of this user */
+void list_md_free(ModData *md)
+{
+	ChannelListOptions *lopt = (ChannelListOptions *)md->ptr;
+
+	if (!lopt)
+		return;
+
+	free_entire_name_list(lopt->yeslist);
+	free_entire_name_list(lopt->nolist);
+
+	safe_free(md->ptr);
 }

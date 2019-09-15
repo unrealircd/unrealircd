@@ -69,7 +69,6 @@ int (*cmd_tkl)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *pa
 int (*place_host_ban)(Client *sptr, BanAction action, char *reason, long duration);
 int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
 int (*join_viruschan)(Client *sptr, TKL *tk, int type);
-void (*send_list)(Client *cptr);
 unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
 void (*spamfilter_build_user_string)(char *buf, char *nick, Client *acptr);
@@ -307,7 +306,6 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_PLACE_HOST_BAN, place_host_ban, NULL);
 	efunc_init_function(EFUNC_DOSPAMFILTER, run_spamfilter, NULL);
 	efunc_init_function(EFUNC_DOSPAMFILTER_VIRUSCHAN, join_viruschan, NULL);
-	efunc_init_function(EFUNC_SEND_LIST, send_list, NULL);
 	efunc_init_function(EFUNC_STRIPCOLORS, StripColors, NULL);
 	efunc_init_function(EFUNC_STRIPCONTROLCODES, StripControlCodes, NULL);
 	efunc_init_function(EFUNC_SPAMFILTER_BUILD_USER_STRING, spamfilter_build_user_string, NULL);
