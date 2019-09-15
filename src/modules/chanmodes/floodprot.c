@@ -1075,23 +1075,23 @@ int check_for_chan_flood(Client *sptr, Channel *chptr, char *text)
 
 	memberflood = (MemberFlood *)moddata_membership(mb, mdflood).ptr;
 
+	if ((TStime() - memberflood->firstmsg) >= chp->per)
+	{
+		/* Reset due to moving into a new time slot */
+		memberflood->firstmsg = TStime();
+		memberflood->nmsg = 1;
+		memberflood->nmsg_repeat = 1;
+		if (chp->limit[FLD_REPEAT])
+		{
+			memberflood->lastmsg = gen_floodprot_msghash(text);
+			memberflood->prevmsg = 0;
+		}
+		return 0; /* forget about it.. */
+	}
+
 	/* Anti-repeat ('r') */
 	if (chp->limit[FLD_REPEAT])
 	{
-		/* if current - firstmsgtime >= mode.per, then reset,
-		 * if nummsg > mode.msgs then kick/ban
-		 */
-		if ((TStime() - memberflood->firstmsg) >= chp->per)
-		{
-			/* reset */
-			memberflood->firstmsg = TStime();
-			memberflood->nmsg = 1;
-			memberflood->nmsg_repeat = 1;
-			memberflood->lastmsg = gen_floodprot_msghash(text);
-			memberflood->prevmsg = 0;
-			return 0; /* forget about it.. */
-		}
-
 		msghash = gen_floodprot_msghash(text);
 		if (memberflood->lastmsg)
 		{
