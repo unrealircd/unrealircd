@@ -624,9 +624,7 @@ CMD_FUNC(cmd_rehash)
 				sendnotice(sptr, "A rehash is already in progress");
 				return 0;
 			}
-			sendto_umode_global(UMODE_OPER,
-			    ":%s GLOBOPS :%s is remotely rehashing server config file",
-			    me.name, sptr->name);
+			sendto_umode_global(UMODE_OPER, "%s is remotely rehashing server %s config file", sptr->name, me.name);
 			remote_rehash_client = sptr;
 			reread_motdsandrules();
 			return rehash(cptr, sptr,
