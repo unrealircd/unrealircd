@@ -502,7 +502,7 @@ EVENT(save_tunefile)
 		return;
 	}
 	fprintf(tunefile, "0\n");
-	fprintf(tunefile, "%d\n", ircstats.me_max);
+	fprintf(tunefile, "%d\n", irccounts.me_max);
 	fclose(tunefile);
 }
 
@@ -522,7 +522,7 @@ void load_tunefile(void)
 	if (!fgets(buf, sizeof(buf), tunefile))
 	    fprintf(stderr, "Warning: error while reading the peak user count from the tunefile%s%s\n",
 		errno? ": ": "", errno? strerror(errno): "");
-	ircstats.me_max = atol(buf);
+	irccounts.me_max = atol(buf);
 	fclose(tunefile);
 }
 

@@ -353,9 +353,9 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 				break;
 			case 'i':
 				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_INVISIBLE))
-					ircstats.invisible++;
+					irccounts.invisible++;
 				if ((what == MODE_DEL) && (acptr->umodes & UMODE_INVISIBLE))
-					ircstats.invisible--;
+					irccounts.invisible--;
 				goto setmodex;
 			case 'o':
 				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_OPER))
@@ -363,7 +363,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 					if (!IsOper(acptr) && MyUser(acptr))
 						list_add(&acptr->special_node, &oper_list);
 
-					ircstats.operators++;
+					irccounts.operators++;
 				}
 				if ((what == MODE_DEL) && (acptr->umodes & UMODE_OPER))
 				{
@@ -372,7 +372,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 						/* clear 'H' too, and opercount stays the same.. */
 						acptr->umodes &= ~UMODE_HIDEOPER;
 					} else {
-						ircstats.operators--;
+						irccounts.operators--;
 					}
 
 					if (MyUser(acptr) && !list_empty(&acptr->special_node))
@@ -396,10 +396,10 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 							"report at https://bugs.unrealircd.org/", sptr->name, parv[1], parv[2], acptr->umodes);
 						break; /* abort! */
 					}
-					ircstats.operators--;
+					irccounts.operators--;
 				}
 				if (what == MODE_DEL && (acptr->umodes & UMODE_HIDEOPER))
-					ircstats.operators++;
+					irccounts.operators++;
 				goto setmodex;
 			case 'd':
 				if (parv[3])

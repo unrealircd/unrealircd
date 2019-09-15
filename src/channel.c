@@ -919,7 +919,7 @@ Channel *get_channel(Client *cptr, char *chname, int flag)
 		chptr->creationtime = MyUser(cptr) ? TStime() : 0;
 		channel = chptr;
 		(void)add_to_channel_hash_table(chname, chptr);
-		ircstats.channels++;
+		irccounts.channels++;
 		RunHook2(HOOKTYPE_CHANNEL_CREATE, cptr, chptr);
 	}
 	return chptr;
@@ -1070,7 +1070,7 @@ int sub1_from_channel(Channel *chptr)
 		chptr->nextch->prevch = chptr->prevch;
 	(void)del_from_channel_hash_table(chptr->chname, chptr);
 
-	ircstats.channels--;
+	irccounts.channels--;
 	safe_free(chptr);
 	return 1;
 }

@@ -287,27 +287,27 @@ void remove_client_from_list(Client *cptr)
 	list_del(&cptr->client_node);
 	if (IsServer(cptr))
 	{
-		ircstats.servers--;
+		irccounts.servers--;
 	}
 	if (IsUser(cptr))
 	{
 		if (IsInvisible(cptr))
 		{
-			ircstats.invisible--;
+			irccounts.invisible--;
 		}
 		if (IsOper(cptr) && !IsHideOper(cptr))
 		{
-			ircstats.operators--;
+			irccounts.operators--;
 			VERIFY_OPERCOUNT(cptr, "rmvlist");
 		}
-		ircstats.clients--;
+		irccounts.clients--;
 		if (cptr->srvptr && cptr->srvptr->serv)
 			cptr->srvptr->serv->users--;
 	}
 	if (IsUnknown(cptr) || IsConnecting(cptr) || IsHandshake(cptr)
 		|| IsTLSHandshake(cptr)
 	)
-		ircstats.unknown--;
+		irccounts.unknown--;
 
 	if (IsUser(cptr))	/* Only persons can have been added before */
 	{

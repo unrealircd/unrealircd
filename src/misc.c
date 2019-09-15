@@ -548,7 +548,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 			}
 		}
 		if (IsUser(sptr))
-			ircstats.me_clients--;
+			irccounts.me_clients--;
 		if (sptr->serv && sptr->serv->conf)
 		{
 			sptr->serv->conf->refcount--;
@@ -564,7 +564,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 		}
 		if (IsServer(sptr))
 		{
-			ircstats.me_servers--;
+			irccounts.me_servers--;
 			ircd_log(LOG_SERVER, "SQUIT %s (%s)", sptr->name, comment);
 		}
 		free_pending_net(sptr);
@@ -684,17 +684,17 @@ char text[2048];
 		if (IsOper(acptr) && !IsHideOper(acptr))
 			counted++;
 	}
-	if (counted == ircstats.operators)
+	if (counted == irccounts.operators)
 		return;
 	snprintf(text, sizeof(text), "[BUG] operator count bug! value in /lusers is '%d', we counted '%d', "
 	               "user='%s', userserver='%s', tag=%s. Corrected. ",
-	               ircstats.operators, counted, orig->name,
+	               irccounts.operators, counted, orig->name,
 	               orig->srvptr ? orig->srvptr->name : "<null>", tag ? tag : "<null>");
 #ifdef DEBUGMODE
 	sendto_realops("%s", text);
 #endif
 	ircd_log(LOG_ERROR, "%s", text);
-	ircstats.operators = counted;
+	irccounts.operators = counted;
 }
 
 /** Check if the specified hostname does not contain forbidden characters.

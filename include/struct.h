@@ -947,9 +947,9 @@ struct SpamExcept {
 	char name[1];
 };
 
-/** IRC Statistics, used for /LUSERS */
-typedef struct IRCStatistics IRCStatistics;
-struct IRCStatistics {
+/** IRC Counts, used for /LUSERS */
+typedef struct IRCCounts IRCCounts;
+struct IRCCounts {
 	int  clients;		/* total */
 	int  invisible;		/* invisible */
 	unsigned short  servers;		/* servers */
@@ -963,7 +963,7 @@ struct IRCStatistics {
 };
 
 /** The /LUSERS stats information */
-extern MODVAR IRCStatistics ircstats;
+extern MODVAR IRCCounts irccounts;
 
 typedef int (*CmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 typedef int (*AliasCmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
@@ -1802,19 +1802,6 @@ struct Ban {
 	time_t when;		/**< When the entry was added */
 };
 
-struct DSlink {
-	struct DSlink *next;
-	struct DSlink *prev;
-	union {
-		Client *cptr;
-		Channel *chptr;
-		ListStruct *aconf;
-		char *cp;
-	} value;
-};
-/* channel structure */
-
-
 /*
 ** Channel Related macros follow
 */
@@ -2051,7 +2038,7 @@ struct MaxTarget {
 };
 #define MAXTARGETS_MAX	1000000 /* used for 'max' */
 
-#define VERIFY_OPERCOUNT(clnt,tag) { if (ircstats.operators < 0) verify_opercount(clnt,tag); } while(0)
+#define VERIFY_OPERCOUNT(clnt,tag) { if (irccounts.operators < 0) verify_opercount(clnt,tag); } while(0)
 
 #define MARK_AS_OFFICIAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL, 1);  } while(0)
 #define MARK_AS_GLOBAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_GLOBAL, 1);  } while(0)

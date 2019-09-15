@@ -1851,29 +1851,29 @@ CMD_FUNC(_cmd_umode)
 	}
 
 	if (!(oldumodes & UMODE_OPER) && IsOper(sptr))
-		ircstats.operators++;
+		irccounts.operators++;
 
 	/* deal with opercounts and stuff */
 	if ((oldumodes & UMODE_OPER) && !IsOper(sptr))
 	{
-		ircstats.operators--;
+		irccounts.operators--;
 		VERIFY_OPERCOUNT(sptr, "umode1");
 	} else /* YES this 'else' must be here, otherwise we can decrease twice. fixes opercount bug. */
 	if (!(oldumodes & UMODE_HIDEOPER) && IsHideOper(sptr))
 	{
-		ircstats.operators--;
+		irccounts.operators--;
 		VERIFY_OPERCOUNT(sptr, "umode2");
 	}
 	/* end of dealing with opercounts */
 
 	if ((oldumodes & UMODE_HIDEOPER) && !IsHideOper(sptr))
 	{
-		ircstats.operators++;
+		irccounts.operators++;
 	}
 	if (!(oldumodes & UMODE_INVISIBLE) && IsInvisible(sptr))
-		ircstats.invisible++;
+		irccounts.invisible++;
 	if ((oldumodes & UMODE_INVISIBLE) && !IsInvisible(sptr))
-		ircstats.invisible--;
+		irccounts.invisible--;
 
 	if (MyConnect(sptr) && !IsOper(sptr))
 		remove_oper_privileges(sptr, 0);

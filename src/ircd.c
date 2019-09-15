@@ -43,7 +43,7 @@ int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
     REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
     REPORT_FAIL_ID[256];
-IRCStatistics ircstats;
+IRCCounts irccounts;
 Client me;			/* That's me */
 MODVAR char *me_hash;
 extern char backupbuf[8192];
@@ -912,8 +912,8 @@ int InitUnrealIRCd(int argc, char *argv[])
 	memset(&StatsZ, 0, sizeof(StatsZ));
 	setup_signals();
 
-	memset(&ircstats, '\0', sizeof(ircstats));
-	ircstats.servers = 1;
+	memset(&irccounts, '\0', sizeof(irccounts));
+	irccounts.servers = 1;
 
 	mp_pool_init();
 	dbuf_init();
@@ -1362,10 +1362,10 @@ void SocketLoop(void *dummy)
 		 * ** second
 		 * ** also check for expiring glines
 		 */
-		if (ircstats.clients > ircstats.global_max)
-			ircstats.global_max = ircstats.clients;
-		if (ircstats.me_clients > ircstats.me_max)
-			ircstats.me_max = ircstats.me_clients;
+		if (irccounts.clients > irccounts.global_max)
+			irccounts.global_max = irccounts.clients;
+		if (irccounts.me_clients > irccounts.me_max)
+			irccounts.me_max = irccounts.me_clients;
 
 		fd_select(SOCKETLOOP_MAX_DELAY);
 

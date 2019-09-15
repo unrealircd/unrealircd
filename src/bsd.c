@@ -983,7 +983,7 @@ refuse_client:
 		acptr->local->listener->clients++;
 	add_client_to_list(acptr);
 
-	ircstats.unknown++;
+	irccounts.unknown++;
 	acptr->status = CLIENT_STATUS_UNKNOWN;
 
 	list_add(&acptr->lclient_node, &unknown_list);
@@ -1423,7 +1423,7 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	cptr->serv->up = me.name;
 	SetConnecting(cptr);
 	SetOutgoing(cptr);
-	ircstats.unknown++;
+	irccounts.unknown++;
 	list_add(&cptr->lclient_node, &unknown_list);
 	set_sockhost(cptr, aconf->outgoing.hostname);
 	add_client_to_list(cptr);

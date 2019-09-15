@@ -1156,7 +1156,7 @@ int stats_uptime(Client *sptr, char *para)
 	    tmpnow / 86400, (tmpnow / 3600) % 24, (tmpnow / 60) % 60,
 	    tmpnow % 60);
 	sendnumeric(sptr, RPL_STATSCONN,
-	    max_connection_count, ircstats.me_max);
+	    max_connection_count, irccounts.me_max);
 	return 0;
 }
 

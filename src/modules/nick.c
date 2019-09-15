@@ -1362,7 +1362,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		strlcpy(user->username, username, USERLEN+1);
 	}
 	SetUser(sptr);
-	ircstats.clients++;
+	irccounts.clients++;
 	if (sptr->srvptr && sptr->srvptr->serv)
 		sptr->srvptr->serv->users++;
 
@@ -1379,8 +1379,8 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 
 		list_move(&sptr->lclient_node, &lclient_list);
 
-		ircstats.unknown--;
-		ircstats.me_clients++;
+		irccounts.unknown--;
+		irccounts.me_clients++;
 
 		if (IsSecure(sptr))
 		{
@@ -1490,7 +1490,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 	}
 	if (sptr->umodes & UMODE_INVISIBLE)
 	{
-		ircstats.invisible++;
+		irccounts.invisible++;
 	}
 
 	if (virthost && umode)

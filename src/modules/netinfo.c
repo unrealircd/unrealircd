@@ -89,9 +89,9 @@ CMD_FUNC(cmd_netinfo)
 	protocol = atol(parv[3]);
 
 	/* max global count != max_global_count --sts */
-	if (lmax > ircstats.global_max)
+	if (lmax > irccounts.global_max)
 	{
-		ircstats.global_max = lmax;
+		irccounts.global_max = lmax;
 		sendto_realops("Max Global Count is now %li (set by link %s)",
 		    lmax, cptr->name);
 	}

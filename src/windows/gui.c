@@ -904,20 +904,20 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 		{
 			hwTreeView = GetDlgItem(hDlg, IDC_TREE);
 			win_map(&me, hwTreeView, 0);
-			SetDlgItemInt(hDlg, IDC_CLIENTS, ircstats.clients, FALSE);
-			SetDlgItemInt(hDlg, IDC_SERVERS, ircstats.servers, FALSE);
-			SetDlgItemInt(hDlg, IDC_INVISO, ircstats.invisible, FALSE);
-			SetDlgItemInt(hDlg, IDC_UNKNOWN, ircstats.unknown, FALSE);
-			SetDlgItemInt(hDlg, IDC_OPERS, ircstats.operators, FALSE);
-			SetDlgItemInt(hDlg, IDC_CHANNELS, ircstats.channels, FALSE);
-			if (ircstats.clients > ircstats.global_max)
-				ircstats.global_max = ircstats.clients;
-			if (ircstats.me_clients > ircstats.me_max)
-					ircstats.me_max = ircstats.me_clients;
-			SetDlgItemInt(hDlg, IDC_MAXCLIENTS, ircstats.global_max, FALSE);
-			SetDlgItemInt(hDlg, IDC_LCLIENTS, ircstats.me_clients, FALSE);
-			SetDlgItemInt(hDlg, IDC_LSERVERS, ircstats.me_servers, FALSE);
-			SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, ircstats.me_max, FALSE);
+			SetDlgItemInt(hDlg, IDC_CLIENTS, irccounts.clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_SERVERS, irccounts.servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_INVISO, irccounts.invisible, FALSE);
+			SetDlgItemInt(hDlg, IDC_UNKNOWN, irccounts.unknown, FALSE);
+			SetDlgItemInt(hDlg, IDC_OPERS, irccounts.operators, FALSE);
+			SetDlgItemInt(hDlg, IDC_CHANNELS, irccounts.channels, FALSE);
+			if (irccounts.clients > irccounts.global_max)
+				irccounts.global_max = irccounts.clients;
+			if (irccounts.me_clients > irccounts.me_max)
+					irccounts.me_max = irccounts.me_clients;
+			SetDlgItemInt(hDlg, IDC_MAXCLIENTS, irccounts.global_max, FALSE);
+			SetDlgItemInt(hDlg, IDC_LCLIENTS, irccounts.me_clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_LSERVERS, irccounts.me_servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, irccounts.me_max, FALSE);
 			SetTimer(hDlg, 1, 5000, NULL);
 			return TRUE;
 		}
@@ -927,21 +927,21 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 		case WM_TIMER:
 			TreeView_DeleteAllItems(hwTreeView);
 			win_map(&me, hwTreeView, 1);
-			SetDlgItemInt(hDlg, IDC_CLIENTS, ircstats.clients, FALSE);
-			SetDlgItemInt(hDlg, IDC_SERVERS, ircstats.servers, FALSE);
-			SetDlgItemInt(hDlg, IDC_INVISO, ircstats.invisible, FALSE);
-			SetDlgItemInt(hDlg, IDC_INVISO, ircstats.invisible, FALSE);
-			SetDlgItemInt(hDlg, IDC_UNKNOWN, ircstats.unknown, FALSE);
-			SetDlgItemInt(hDlg, IDC_OPERS, ircstats.operators, FALSE);
-			SetDlgItemInt(hDlg, IDC_CHANNELS, ircstats.channels, FALSE);
-			if (ircstats.clients > ircstats.global_max)
-				ircstats.global_max = ircstats.clients;
-			if (ircstats.me_clients > ircstats.me_max)
-					ircstats.me_max = ircstats.me_clients;
-			SetDlgItemInt(hDlg, IDC_MAXCLIENTS, ircstats.global_max, FALSE);
-			SetDlgItemInt(hDlg, IDC_LCLIENTS, ircstats.me_clients, FALSE);
-			SetDlgItemInt(hDlg, IDC_LSERVERS, ircstats.me_servers, FALSE);
-			SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, ircstats.me_max, FALSE);
+			SetDlgItemInt(hDlg, IDC_CLIENTS, irccounts.clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_SERVERS, irccounts.servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_INVISO, irccounts.invisible, FALSE);
+			SetDlgItemInt(hDlg, IDC_INVISO, irccounts.invisible, FALSE);
+			SetDlgItemInt(hDlg, IDC_UNKNOWN, irccounts.unknown, FALSE);
+			SetDlgItemInt(hDlg, IDC_OPERS, irccounts.operators, FALSE);
+			SetDlgItemInt(hDlg, IDC_CHANNELS, irccounts.channels, FALSE);
+			if (irccounts.clients > irccounts.global_max)
+				irccounts.global_max = irccounts.clients;
+			if (irccounts.me_clients > irccounts.me_max)
+					irccounts.me_max = irccounts.me_clients;
+			SetDlgItemInt(hDlg, IDC_MAXCLIENTS, irccounts.global_max, FALSE);
+			SetDlgItemInt(hDlg, IDC_LCLIENTS, irccounts.me_clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_LSERVERS, irccounts.me_servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, irccounts.me_max, FALSE);
 			SetTimer(hDlg, 1, 5000, NULL);
 			return TRUE;
 		case WM_COMMAND:

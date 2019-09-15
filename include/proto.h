@@ -26,7 +26,7 @@
 extern int  sendmodeto_one(Client *cptr, char *from, char *name, char *mode, char *param, time_t creationtime);
 
 /* lusers.c */
-extern void init_ircstats(void);
+extern void init_irccounts(void);
 
 /* match.c */
 extern char *collapse(char *pattern);
