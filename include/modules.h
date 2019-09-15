@@ -128,7 +128,15 @@ typedef struct {
         Module *owner; /**< Module that owns this snomask */
 } Snomask;
 
-typedef enum ModDataType { MODDATATYPE_LOCALVAR=1, MODDATATYPE_GLOBALVAR=2, MODDATATYPE_CLIENT=3, MODDATATYPE_CHANNEL=4, MODDATATYPE_MEMBER=5, MODDATATYPE_MEMBERSHIP=6 } ModDataType;
+typedef enum ModDataType {
+	MODDATATYPE_LOCALVAR	= 1,
+	MODDATATYPE_GLOBALVAR	= 2,
+	MODDATATYPE_CLIENT	= 3,
+	MODDATATYPE_LOCALCLIENT	= 4,
+	MODDATATYPE_CHANNEL	= 5,
+	MODDATATYPE_MEMBER	= 6,
+	MODDATATYPE_MEMBERSHIP	= 7,
+} ModDataType;
 
 typedef struct ModDataInfo ModDataInfo;
 
@@ -146,6 +154,7 @@ struct ModDataInfo {
 };
 
 #define moddata_client(acptr, md)    acptr->moddata[md->slot]
+#define moddata_localclient(acptr, md)    acptr->local->moddata[md->slot]
 #define moddata_channel(chptr, md)   chptr->moddata[md->slot]
 #define moddata_member(m, md)        m->moddata[md->slot]
 #define moddata_membership(m, md)    m->moddata[md->slot]
@@ -795,12 +804,15 @@ extern void CommandOverrideDel(CommandOverride *ovr);
 extern int CallCommandOverride(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 
 extern void moddata_free_client(Client *acptr);
+extern void moddata_free_localclient(Client *acptr);
 extern void moddata_free_channel(Channel *chptr);
 extern void moddata_free_member(Member *m);
 extern void moddata_free_membership(Membership *m);
 extern ModDataInfo *findmoddata_byname(char *name, ModDataType type);
 extern int moddata_client_set(Client *acptr, char *varname, char *value);
 extern char *moddata_client_get(Client *acptr, char *varname);
+extern int moddata_localclient_set(Client *acptr, char *varname, char *value);
+extern char *moddata_localclient_get(Client *acptr, char *varname);
 
 extern int LoadPersistentPointerX(ModuleInfo *modinfo, char *varshortname, void **var, void (*free_variable)(ModData *m));
 #define LoadPersistentPointer(modinfo, var, free_variable) LoadPersistentPointerX(modinfo, #var, (void **)&var, free_variable)
