@@ -153,6 +153,10 @@ dnl HARDENING END
 dnl UnrealIRCd might not be strict-aliasing safe at this time
 check_cc_flag([-fno-strict-aliasing], [CFLAGS="$CFLAGS -fno-strict-aliasing"])
 
+dnl UnrealIRCd should be able to compile with -fno-common
+dnl This also makes ASan (if it is in use) able to instrument these variables.
+check_cc_flag([-fno-common], [CFLAGS="$CFLAGS -fno-common"])
+
 dnl Previously -funsigned-char was in a config check. It would always
 dnl be enabled with gcc and clang. We now unconditionally enable it,
 dnl skipping the check. This will cause an error if someone uses a

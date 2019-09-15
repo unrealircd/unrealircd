@@ -45,9 +45,10 @@
  * use malloc/free instead, so ASan can do it's job much better.
  * Theoretically we could still use ASan + memory pools if we manually
  * designate and mark red zones. However, that still does not fix the
- * case of quick memory re-use. Mempool is made so a freed area is
- * re-used quickly, while for ASan purposes we would need the exact
- * opposite, since quick re-use will hide use-after-free bugs. -- Syzop
+ * case of quick memory re-use. Mempool re-uses a freed area quickly
+ * to be efficient, while ASan does the exact opposite (putting
+ * freed items in a 256MB quarantine buffer), since quick re-use
+ * will hide use-after-free bugs. -- Syzop
  */
 void mp_pool_init(void)
 {
