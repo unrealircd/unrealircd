@@ -129,7 +129,7 @@ int send_queued(Client *to)
 		 * to handle reads by send_queued_cb(), see directly above.
 		 */
 		fd_setselect(to->local->fd, FD_SELECT_READ, read_packet, to);
-		if (rlen < block->size)
+		if (rlen < len)
 		{
 			/* incomplete write due to EWOULDBLOCK, reschedule */
 			fd_setselect(to->local->fd, FD_SELECT_WRITE, send_queued_cb, to);

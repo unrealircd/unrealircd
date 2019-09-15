@@ -38,6 +38,43 @@
 
 #include "unrealircd.h"
 
+#ifdef __SANITIZE_ADDRESS__
+/* When running with AddressSanitizer, if using memory pools we will
+ * likely NOT detect various kinds of misusage. (This is a known problem)
+ * Therefore, if ASan is enabled, we don't use memory pools and will
+ * use malloc/free instead, so ASan can do it's job much better.
+ * Theoretically we could still use ASan + memory pools if we manually
+ * designate and mark red zones. However, that still does not fix the
+ * case of quick memory re-use. Mempool is made so a freed area is
+ * re-used quickly, while for ASan purposes we would need the exact
+ * opposite, since quick re-use will hide use-after-free bugs. -- Syzop
+ */
+void mp_pool_init(void)
+{
+}
+
+mp_pool_t *mp_pool_new(size_t sz, size_t ignored)
+{
+    mp_pool_t *m = safe_alloc(sizeof(mp_pool_t));
+    /* We (mis)use the item_alloc_size. It has a slightly different
+     * meaning in the real mempool code where it's aligned, rounded, etc.
+     * That is something we don't want as it would hide small overflows.
+     */
+    m->item_alloc_size = sz;
+    return m;
+}
+
+void *mp_pool_get(mp_pool_t *pool)
+{
+    return malloc(pool->item_alloc_size);
+}
+
+void mp_pool_release(void *item)
+{
+    safe_free(item);
+}
+#else
+
 /** Returns floor(log2(u64)).  If u64 is 0, (incorrectly) returns 0. */
 static int
 tor_log2(uint64_t u64)
@@ -704,3 +741,4 @@ mp_pool_log_status(mp_pool_t *pool)
        (long long)pool->total_chunks_freed);
 #endif
 }
+#endif
