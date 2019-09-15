@@ -517,53 +517,6 @@ void send_umode_out(Client *cptr, Client *sptr, long old)
 		send_umode(cptr, sptr, old, ALL_UMODES, buf);
 }
 
-int  del_silence(Client *sptr, char *mask)
-{
-	Link **lp;
-	Link *tmp;
-
-	for (lp = &(sptr->user->silence); *lp; lp = &((*lp)->next))
-		if (mycmp(mask, (*lp)->value.cp) == 0)
-		{
-			tmp = *lp;
-			*lp = tmp->next;
-			safe_free(tmp->value.cp);
-			free_link(tmp);
-			return 0;
-		}
-	return -1;
-}
-
-int add_silence(Client *sptr, char *mask, int senderr)
-{
-	Link *lp;
-	int  cnt = 0;
-
-	for (lp = sptr->user->silence; lp; lp = lp->next)
-	{
-		if (MyUser(sptr))
-			if ((strlen(lp->value.cp) > MAXSILELENGTH) || (++cnt >= SILENCE_LIMIT))
-			{
-				if (senderr)
-					sendnumeric(sptr, ERR_SILELISTFULL, mask);
-				return -1;
-			}
-			else
-			{
-				if (match_simple(lp->value.cp, mask))
-					return -1;
-			}
-		else if (!mycmp(lp->value.cp, mask))
-			return -1;
-	}
-	lp = make_link();
-	memset(lp, 0, sizeof(Link));
-	lp->next = sptr->user->silence;
-	safe_strdup(lp->value.cp, mask);
-	sptr->user->silence = lp;
-	return 0;
-}
-
 static MaxTarget *maxtargets = NULL; /**< For set::max-targets-per-command configuration */
 
 static void maxtarget_add_sorted(MaxTarget *n)

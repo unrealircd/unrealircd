@@ -35,10 +35,24 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
     };
 
+/* Forward declarations */
+int _is_silenced(Client *, Client *);
+int _del_silence(Client *sptr, const char *mask);
+int _add_silence(Client *sptr, const char *mask, int senderr);
+
+MOD_TEST()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAdd(modinfo->handle, EFUNC_ADD_SILENCE, _add_silence);
+	EfunctionAdd(modinfo->handle, EFUNC_DEL_SILENCE, _del_silence);
+	EfunctionAdd(modinfo->handle, EFUNC_IS_SILENCED, _is_silenced);
+	return MOD_SUCCESS;
+}
+
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SILENCE, cmd_silence, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	CommandAdd(modinfo->handle, MSG_SILENCE, cmd_silence, MAXPARA, M_USER);
 	return MOD_SUCCESS;
 }
 
@@ -133,3 +147,85 @@ CMD_FUNC(cmd_silence)
 	}
 	return 0;
 }
+
+int _del_silence(Client *sptr, const char *mask)
+{
+	Link **lp;
+	Link *tmp;
+
+	for (lp = &(sptr->user->silence); *lp; lp = &((*lp)->next))
+		if (mycmp(mask, (*lp)->value.cp) == 0)
+		{
+			tmp = *lp;
+			*lp = tmp->next;
+			safe_free(tmp->value.cp);
+			free_link(tmp);
+			return 0;
+		}
+	return -1;
+}
+
+int _add_silence(Client *sptr, const char *mask, int senderr)
+{
+	Link *lp;
+	int  cnt = 0;
+
+	for (lp = sptr->user->silence; lp; lp = lp->next)
+	{
+		if (MyUser(sptr))
+			if ((strlen(lp->value.cp) > MAXSILELENGTH) || (++cnt >= SILENCE_LIMIT))
+			{
+				if (senderr)
+					sendnumeric(sptr, ERR_SILELISTFULL, mask);
+				return -1;
+			}
+			else
+			{
+				if (match_simple(lp->value.cp, mask))
+					return -1;
+			}
+		else if (!mycmp(lp->value.cp, mask))
+			return -1;
+	}
+	lp = make_link();
+	memset(lp, 0, sizeof(Link));
+	lp->next = sptr->user->silence;
+	safe_strdup(lp->value.cp, mask);
+	sptr->user->silence = lp;
+	return 0;
+}
+
+/*
+ * is_silenced : Does the actual check wether sptr is allowed
+ *               to send a message to acptr.
+ *               Both must be registered persons.
+ * If sptr is silenced by acptr, his message should not be propagated,
+ * but more over, if this is detected on a server not local to sptr
+ * the SILENCE mask is sent upstream.
+ */
+int _is_silenced(Client *sptr, Client *acptr)
+{
+	Link *lp;
+	static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
+
+	if (!acptr->user || !sptr->user || !(lp = acptr->user->silence))
+		return 0;
+
+	ircsnprintf(sender, sizeof(sender), "%s!%s@%s", sptr->name, sptr->user->username, GetHost(sptr));
+
+	for (; lp; lp = lp->next)
+	{
+		if (match_simple(lp->value.cp, sender))
+		{
+			if (!MyConnect(sptr))
+			{
+				sendto_one(sptr->direction, NULL, ":%s SILENCE %s :%s",
+				    acptr->name, sptr->name, lp->value.cp);
+				lp->flags = 1;
+			}
+			return 1;
+		}
+	}
+	return 0;
+}
+

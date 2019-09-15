@@ -177,8 +177,6 @@ extern char *get_sno_str(Client *sptr);
 extern int check_tkls(Client *cptr);
 /* for services */
 extern void del_invite(Client *, Channel *);
-extern int add_silence(Client *, char *, int);
-extern int del_silence(Client *, char *);
 extern void send_user_joins(Client *, Client *);
 extern void clean_channelname(char *);
 extern long get_access(Client *, Channel *);
@@ -718,7 +716,6 @@ extern MODVAR void (*send_list)(Client *cptr);
 extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
 extern MODVAR void (*spamfilter_build_user_string)(char *buf, char *nick, Client *acptr);
-extern MODVAR int (*is_silenced)(Client *sptr, Client *acptr);
 extern MODVAR void (*send_protoctl_servers)(Client *sptr, int response);
 extern MODVAR int (*verify_link)(Client *cptr, Client *sptr, char *servername, ConfigItem_link **link_out);
 extern MODVAR void (*send_server_message)(Client *sptr);
@@ -753,6 +750,9 @@ extern MODVAR void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender,
 extern MODVAR int (*tkl_ip_hash)(char *ip);
 extern MODVAR int (*tkl_ip_hash_type)(int type);
 extern MODVAR int (*find_tkl_exception)(int ban_type, Client *cptr);
+extern MODVAR int (*del_silence)(Client *sptr, const char *mask);
+extern MODVAR int (*add_silence)(Client *sptr, const char *mask, int senderr);
+extern MODVAR int (*is_silenced)(Client *sptr, Client *acptr);
 /* /Efuncs */
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;

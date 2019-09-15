@@ -20,7 +20,6 @@
 
 #include "unrealircd.h"
 
-int _is_silenced(Client *, Client *);
 char *_StripColors(unsigned char *text);
 char *_StripControlCodes(unsigned char *text);
 
@@ -49,7 +48,6 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCONTROLCODES, _StripControlCodes);
-	EfunctionAdd(modinfo->handle, EFUNC_IS_SILENCED, _is_silenced);
 	EfunctionAdd(modinfo->handle, EFUNC_CAN_SEND, _can_send);
 	return MOD_SUCCESS;
 }
@@ -474,45 +472,6 @@ CMD_FUNC(cmd_private)
 CMD_FUNC(cmd_notice)
 {
 	return cmd_message(cptr, sptr, recv_mtags, parc, parv, 1);
-}
-
-/***********************************************************************
- * cmd_silence() - Added 19 May 1994 by Run.
- *
- ***********************************************************************/
-
-/*
- * is_silenced : Does the actual check wether sptr is allowed
- *               to send a message to acptr.
- *               Both must be registered persons.
- * If sptr is silenced by acptr, his message should not be propagated,
- * but more over, if this is detected on a server not local to sptr
- * the SILENCE mask is sent upstream.
- */
-int _is_silenced(Client *sptr, Client *acptr)
-{
-	Link *lp;
-	static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
-
-	if (!acptr->user || !sptr->user || !(lp = acptr->user->silence))
-		return 0;
-
-	ircsnprintf(sender, sizeof(sender), "%s!%s@%s", sptr->name, sptr->user->username, GetHost(sptr));
-
-	for (; lp; lp = lp->next)
-	{
-		if (match_simple(lp->value.cp, sender))
-		{
-			if (!MyConnect(sptr))
-			{
-				sendto_one(sptr->direction, NULL, ":%s SILENCE %s :%s",
-				    acptr->name, sptr->name, lp->value.cp);
-				lp->flags = 1;
-			}
-			return 1;
-		}
-	}
-	return 0;
 }
 
 /** Make a viewable dcc filename.
