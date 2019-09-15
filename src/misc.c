@@ -496,7 +496,7 @@ static void exit_one_client(Client *sptr, MessageTag *mtags_i, const char *comme
 	/* Free module related data for this client */
 	moddata_free_client(sptr);
 	if (MyConnect(sptr))
-		moddata_free_localclient(sptr);
+		moddata_free_local_client(sptr);
 
 	/* Remove sptr from the client list */
 	if (*sptr->id)

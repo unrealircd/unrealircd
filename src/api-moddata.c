@@ -24,8 +24,8 @@
 
 MODVAR ModDataInfo *MDInfo = NULL;
 
-MODVAR ModData localvar_moddata[MODDATA_MAX_LOCALVAR];
-MODVAR ModData globalvar_moddata[MODDATA_MAX_GLOBALVAR];
+MODVAR ModData local_variable_moddata[MODDATA_MAX_LOCAL_VARIABLE];
+MODVAR ModData global_variable_moddata[MODDATA_MAX_GLOBAL_VARIABLE];
 
 ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 {
@@ -57,10 +57,10 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 		}
 
 	/* Now check if we are within bounds (if we really have a free slot available) */
-	if (((req.type == MODDATATYPE_LOCALVAR) && (slotav >= MODDATA_MAX_LOCALVAR)) ||
-	    ((req.type == MODDATATYPE_GLOBALVAR) && (slotav >= MODDATA_MAX_GLOBALVAR)) ||
+	if (((req.type == MODDATATYPE_LOCAL_VARIABLE) && (slotav >= MODDATA_MAX_LOCAL_VARIABLE)) ||
+	    ((req.type == MODDATATYPE_GLOBAL_VARIABLE) && (slotav >= MODDATA_MAX_GLOBAL_VARIABLE)) ||
 	    ((req.type == MODDATATYPE_CLIENT) && (slotav >= MODDATA_MAX_CLIENT)) ||
-	    ((req.type == MODDATATYPE_LOCALCLIENT) && (slotav >= MODDATA_MAX_LOCALCLIENT)) ||
+	    ((req.type == MODDATATYPE_LOCAL_CLIENT) && (slotav >= MODDATA_MAX_LOCAL_CLIENT)) ||
 	    ((req.type == MODDATATYPE_CHANNEL) && (slotav >= MODDATA_MAX_CHANNEL)) ||
 	    ((req.type == MODDATATYPE_MEMBER) && (slotav >= MODDATA_MAX_MEMBER)) ||
 	    ((req.type == MODDATATYPE_MEMBERSHIP) && (slotav >= MODDATA_MAX_MEMBERSHIP)))
@@ -111,15 +111,15 @@ void moddata_free_client(Client *acptr)
 	memset(acptr->moddata, 0, sizeof(acptr->moddata));
 }
 
-void moddata_free_localclient(Client *acptr)
+void moddata_free_local_client(Client *acptr)
 {
 	ModDataInfo *md;
 
 	for (md = MDInfo; md; md = md->next)
-		if (md->type == MODDATATYPE_LOCALCLIENT)
+		if (md->type == MODDATATYPE_LOCAL_CLIENT)
 		{
-			if (md->free && moddata_localclient(acptr, md).ptr)
-				md->free(&moddata_localclient(acptr, md));
+			if (md->free && moddata_local_client(acptr, md).ptr)
+				md->free(&moddata_local_client(acptr, md));
 		}
 
 	memset(acptr->moddata, 0, sizeof(acptr->moddata));
@@ -173,15 +173,15 @@ void unload_moddata_commit(ModDataInfo *md)
 {
 	switch(md->type)
 	{
-		case MODDATATYPE_LOCALVAR:
-			if (md->free && moddata_localvar(md).ptr)
-				md->free(&moddata_localvar(md));
-			memset(&moddata_localvar(md), 0, sizeof(ModData));
+		case MODDATATYPE_LOCAL_VARIABLE:
+			if (md->free && moddata_local_variable(md).ptr)
+				md->free(&moddata_local_variable(md));
+			memset(&moddata_local_variable(md), 0, sizeof(ModData));
 			break;
-		case MODDATATYPE_GLOBALVAR:
-			if (md->free && moddata_globalvar(md).ptr)
-				md->free(&moddata_globalvar(md));
-			memset(&moddata_globalvar(md), 0, sizeof(ModData));
+		case MODDATATYPE_GLOBAL_VARIABLE:
+			if (md->free && moddata_global_variable(md).ptr)
+				md->free(&moddata_global_variable(md));
+			memset(&moddata_global_variable(md), 0, sizeof(ModData));
 			break;
 		case MODDATATYPE_CLIENT:
 		{
@@ -194,14 +194,14 @@ void unload_moddata_commit(ModDataInfo *md)
 			}
 			break;
 		}
-		case MODDATATYPE_LOCALCLIENT:
+		case MODDATATYPE_LOCAL_CLIENT:
 		{
 			Client *acptr;
 			list_for_each_entry(acptr, &lclient_list, lclient_node)
 			{
-				if (md->free && moddata_localclient(acptr, md).ptr)
-					md->free(&moddata_localclient(acptr, md));
-				memset(&moddata_localclient(acptr, md), 0, sizeof(ModData));
+				if (md->free && moddata_local_client(acptr, md).ptr)
+					md->free(&moddata_local_client(acptr, md));
+				memset(&moddata_local_client(acptr, md), 0, sizeof(ModData));
 			}
 			break;
 		}
@@ -358,14 +358,14 @@ char *moddata_client_get(Client *acptr, char *varname)
 }
 
 /** Set ModData for LocalClient (via variable name, string value) */
-int moddata_localclient_set(Client *acptr, char *varname, char *value)
+int moddata_local_client_set(Client *acptr, char *varname, char *value)
 {
 	ModDataInfo *md;
 
 	if (!MyConnect(acptr))
 		abort();
 
-	md = findmoddata_byname(varname, MODDATATYPE_LOCALCLIENT);
+	md = findmoddata_byname(varname, MODDATATYPE_LOCAL_CLIENT);
 
 	if (!md)
 		return 0;
@@ -373,13 +373,13 @@ int moddata_localclient_set(Client *acptr, char *varname, char *value)
 	if (value)
 	{
 		/* SET */
-		md->unserialize(value, &moddata_localclient(acptr, md));
+		md->unserialize(value, &moddata_local_client(acptr, md));
 	}
 	else
 	{
 		/* UNSET */
-		md->free(&moddata_localclient(acptr, md));
-		memset(&moddata_localclient(acptr, md), 0, sizeof(ModData));
+		md->free(&moddata_local_client(acptr, md));
+		memset(&moddata_local_client(acptr, md), 0, sizeof(ModData));
 	}
 
 	/* If 'sync' field is set and the client is not in pre-registered
@@ -392,27 +392,27 @@ int moddata_localclient_set(Client *acptr, char *varname, char *value)
 }
 
 /** Get ModData for LocalClient (via variable name) */
-char *moddata_localclient_get(Client *acptr, char *varname)
+char *moddata_local_client_get(Client *acptr, char *varname)
 {
 	ModDataInfo *md;
 
 	if (!MyConnect(acptr))
 		abort();
 
-	md = findmoddata_byname(varname, MODDATATYPE_LOCALCLIENT);
+	md = findmoddata_byname(varname, MODDATATYPE_LOCAL_CLIENT);
 
 	if (!md)
 		return NULL;
 
-	return md->serialize(&moddata_localclient(acptr, md)); /* can be NULL */
+	return md->serialize(&moddata_local_client(acptr, md)); /* can be NULL */
 }
 
-/** Set localvar or globalvar moddata (via variable name, string value) */
-int moddata_localvar_set(char *varname, char *value)
+/** Set local variable moddata (via variable name, string value) */
+int moddata_local_variable_set(char *varname, char *value)
 {
 	ModDataInfo *md;
 
-	md = findmoddata_byname(varname, MODDATATYPE_LOCALVAR);
+	md = findmoddata_byname(varname, MODDATATYPE_LOCAL_VARIABLE);
 
 	if (!md)
 		return 0;
@@ -420,24 +420,24 @@ int moddata_localvar_set(char *varname, char *value)
 	if (value)
 	{
 		/* SET */
-		md->unserialize(value, &moddata_localvar(md));
+		md->unserialize(value, &moddata_local_variable(md));
 	}
 	else
 	{
 		/* UNSET */
-		md->free(&moddata_localvar(md));
-		memset(&moddata_localvar(md), 0, sizeof(ModData));
+		md->free(&moddata_local_variable(md));
+		memset(&moddata_local_variable(md), 0, sizeof(ModData));
 	}
 
 	return 1;
 }
 
-/** Set globalvar or globalvar moddata (via variable name, string value) */
-int moddata_globalvar_set(char *varname, char *value)
+/** Set global variable moddata (via variable name, string value) */
+int moddata_global_variable_set(char *varname, char *value)
 {
 	ModDataInfo *md;
 
-	md = findmoddata_byname(varname, MODDATATYPE_GLOBALVAR);
+	md = findmoddata_byname(varname, MODDATATYPE_GLOBAL_VARIABLE);
 
 	if (!md)
 		return 0;
@@ -445,13 +445,13 @@ int moddata_globalvar_set(char *varname, char *value)
 	if (value)
 	{
 		/* SET */
-		md->unserialize(value, &moddata_globalvar(md));
+		md->unserialize(value, &moddata_global_variable(md));
 	}
 	else
 	{
 		/* UNSET */
-		md->free(&moddata_globalvar(md));
-		memset(&moddata_globalvar(md), 0, sizeof(ModData));
+		md->free(&moddata_global_variable(md));
+		memset(&moddata_global_variable(md), 0, sizeof(ModData));
 	}
 
 	if (md->sync)

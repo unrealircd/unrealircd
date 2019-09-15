@@ -129,13 +129,13 @@ typedef struct {
 } Snomask;
 
 typedef enum ModDataType {
-	MODDATATYPE_LOCALVAR	= 1,
-	MODDATATYPE_GLOBALVAR	= 2,
-	MODDATATYPE_CLIENT	= 3,
-	MODDATATYPE_LOCALCLIENT	= 4,
-	MODDATATYPE_CHANNEL	= 5,
-	MODDATATYPE_MEMBER	= 6,
-	MODDATATYPE_MEMBERSHIP	= 7,
+	MODDATATYPE_LOCAL_VARIABLE	= 1,
+	MODDATATYPE_GLOBAL_VARIABLE	= 2,
+	MODDATATYPE_CLIENT		= 3,
+	MODDATATYPE_LOCAL_CLIENT	= 4,
+	MODDATATYPE_CHANNEL		= 5,
+	MODDATATYPE_MEMBER		= 6,
+	MODDATATYPE_MEMBERSHIP		= 7,
 } ModDataType;
 
 typedef struct ModDataInfo ModDataInfo;
@@ -154,16 +154,16 @@ struct ModDataInfo {
 };
 
 #define moddata_client(acptr, md)    acptr->moddata[md->slot]
-#define moddata_localclient(acptr, md)    acptr->local->moddata[md->slot]
+#define moddata_local_client(acptr, md)    acptr->local->moddata[md->slot]
 #define moddata_channel(chptr, md)   chptr->moddata[md->slot]
 #define moddata_member(m, md)        m->moddata[md->slot]
 #define moddata_membership(m, md)    m->moddata[md->slot]
-#define moddata_localvar(md)         localvar_moddata[md->slot]
-#define moddata_globalvar(md)        globalvar_moddata[md->slot]
+#define moddata_local_variable(md)         local_variable_moddata[md->slot]
+#define moddata_global_variable(md)        global_variable_moddata[md->slot]
 
 #define EXCHK_ACCESS		0 /* Check access */
 #define EXCHK_ACCESS_ERR	1 /* Check access and send error if needed */
-#define EXCHK_PARAM			2 /* Check parameter and send error if needed */
+#define EXCHK_PARAM		2 /* Check parameter and send error if needed */
 
 /* Can bypass message restriction - Types */
 typedef enum BypassChannelMessageRestrictionType {
@@ -174,14 +174,14 @@ typedef enum BypassChannelMessageRestrictionType {
 	BYPASS_CHANMSG_NOTICE = 5,
 } BypassChannelMessageRestrictionType;
 
-#define EXSJ_SAME			0 /* Parameters are the same */
-#define EXSJ_WEWON			1 /* We won! w00t */
+#define EXSJ_SAME		0 /* Parameters are the same */
+#define EXSJ_WEWON		1 /* We won! w00t */
 #define EXSJ_THEYWON		2 /* They won :( */
 #define EXSJ_MERGE		3 /* Merging of modes.. neither won nor lost (merged params are in 'our' on return) */
 
 /* return values for EXCHK_ACCESS*: */
-#define EX_DENY				0  /* Disallowed, except in case of operoverride */
-#define EX_ALLOW			1  /* Allowed */
+#define EX_DENY			0  /* Disallowed, except in case of operoverride */
+#define EX_ALLOW		1  /* Allowed */
 #define EX_ALWAYS_DENY		-1 /* Disallowed, even in case of operoverride
                                 * (eg: for operlevel modes like +A)
                                 */
@@ -804,15 +804,15 @@ extern void CommandOverrideDel(CommandOverride *ovr);
 extern int CallCommandOverride(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 
 extern void moddata_free_client(Client *acptr);
-extern void moddata_free_localclient(Client *acptr);
+extern void moddata_free_local_client(Client *acptr);
 extern void moddata_free_channel(Channel *chptr);
 extern void moddata_free_member(Member *m);
 extern void moddata_free_membership(Membership *m);
 extern ModDataInfo *findmoddata_byname(char *name, ModDataType type);
 extern int moddata_client_set(Client *acptr, char *varname, char *value);
 extern char *moddata_client_get(Client *acptr, char *varname);
-extern int moddata_localclient_set(Client *acptr, char *varname, char *value);
-extern char *moddata_localclient_get(Client *acptr, char *varname);
+extern int moddata_local_client_set(Client *acptr, char *varname, char *value);
+extern char *moddata_local_client_get(Client *acptr, char *varname);
 
 extern int LoadPersistentPointerX(ModuleInfo *modinfo, char *varshortname, void **var, void (*free_variable)(ModData *m));
 #define LoadPersistentPointer(modinfo, var, free_variable) LoadPersistentPointerX(modinfo, #var, (void **)&var, free_variable)

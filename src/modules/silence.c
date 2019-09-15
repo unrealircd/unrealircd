@@ -46,7 +46,7 @@ struct Silence
 ModDataInfo *silence_md = NULL;
 
 /* Macros */
-#define SILENCELIST(x)       ((Silence *)moddata_localclient(x, silence_md).ptr)
+#define SILENCELIST(x)       ((Silence *)moddata_local_client(x, silence_md).ptr)
 
 /* Forward declarations */
 int _is_silenced(Client *, Client *);
@@ -71,7 +71,7 @@ MOD_INIT()
 
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "silence";
-	mreq.type = MODDATATYPE_LOCALCLIENT;
+	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	mreq.free = silence_md_free;
 	silence_md = ModDataAdd(modinfo->handle, mreq);
 	if (!silence_md)
@@ -159,7 +159,7 @@ int _del_silence(Client *sptr, const char *mask)
 	{
 		if (mycmp(mask, s->mask) == 0)
 		{
-			DelListItemUnchecked(s, moddata_localclient(sptr, silence_md).ptr);
+			DelListItemUnchecked(s, moddata_local_client(sptr, silence_md).ptr);
 			safe_free(s);
 			return 1;
 		}
@@ -199,7 +199,7 @@ int _add_silence(Client *sptr, const char *mask, int senderr)
 	/* Add the new entry */
 	s = safe_alloc(sizeof(Silence)+strlen(mask));
 	strcpy(s->mask, mask); /* safe, allocated above */
-	AddListItemUnchecked(s, moddata_localclient(sptr, silence_md).ptr);
+	AddListItemUnchecked(s, moddata_local_client(sptr, silence_md).ptr);
 	return 0;
 }
 

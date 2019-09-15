@@ -979,7 +979,7 @@ struct LocalClient {
 	char *sni_servername;		/**< Servername as sent by client via SNI (Server Name Indication) in SSL/TLS, otherwise NULL */
 	int cap_protocol;		/**< CAP protocol in use. At least 300 for any CAP capable client. 302 for 3.2, etc.. */
 	int identbufcnt;		/**< Counter for 'ident' reading code */
-	ModData moddata[MODDATA_MAX_LOCALCLIENT];	/**< LocalClient attached module data, used by the ModData system */
+	ModData moddata[MODDATA_MAX_LOCAL_CLIENT];	/**< LocalClient attached module data, used by the ModData system */
 };
 
 /** User information (persons, not servers), you use sptr->user to access these (see also @link Client @endlink).

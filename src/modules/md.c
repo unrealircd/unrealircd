@@ -216,16 +216,16 @@ CMD_FUNC(cmd_md)
 	if (!strcmp(type, "globalvar"))
 	{
 		/* objname is ignored */
-		md = findmoddata_byname(varname, MODDATATYPE_GLOBALVAR);
+		md = findmoddata_byname(varname, MODDATATYPE_GLOBAL_VARIABLE);
 		if (!md || !md->unserialize)
 			return 0;
 		if (value)
-			md->unserialize(value, &moddata_globalvar(md));
+			md->unserialize(value, &moddata_global_variable(md));
 		else
 		{
 			if (md->free)
-				md->free(&moddata_globalvar(md));
-			memset(&moddata_globalvar(md), 0, sizeof(ModData));
+				md->free(&moddata_global_variable(md));
+			memset(&moddata_global_variable(md), 0, sizeof(ModData));
 		}
 		/* Pass on to other servers */
 		broadcast_md_globalvar_cmd(cptr, sptr, varname, value);

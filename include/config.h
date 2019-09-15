@@ -236,12 +236,12 @@
  * UnrealIRCd 5.0.0         : 12, 8, 8, 4, 4, 500, 500
  */
 #define MODDATA_MAX_CLIENT		 12
-#define MODDATA_MAX_LOCALCLIENT		  8
+#define MODDATA_MAX_LOCAL_CLIENT	  8
 #define MODDATA_MAX_CHANNEL		  8
 #define MODDATA_MAX_MEMBER		  4
 #define MODDATA_MAX_MEMBERSHIP		  4
-#define MODDATA_MAX_LOCALVAR		500
-#define MODDATA_MAX_GLOBALVAR		500
+#define MODDATA_MAX_LOCAL_VARIABLE	500
+#define MODDATA_MAX_GLOBAL_VARIABLE	500
 
 /* If EXPERIMENTAL is #define'd then all users will receive a notice about
  * this when they connect, along with a pointer to bugs.unrealircd.org where
