@@ -44,6 +44,8 @@ MODVAR int  numclients = 0;
 /* unless documented otherwise, these are all local-only, except client_list. */
 MODVAR struct list_head client_list, lclient_list, server_list, oper_list, unknown_list, global_server_list;
 
+static mp_pool_t *client_pool = NULL;
+static mp_pool_t *local_client_pool = NULL;
 static mp_pool_t *user_pool = NULL;
 static mp_pool_t *link_pool = NULL;
 
@@ -64,6 +66,8 @@ void initlists(void)
 	INIT_LIST_HEAD(&unknown_list);
 	INIT_LIST_HEAD(&global_server_list);
 
+	client_pool = mp_pool_new(sizeof(Client), 512 * 1024);
+	local_client_pool = mp_pool_new(sizeof(LocalClient), 512 * 1024);
 	user_pool = mp_pool_new(sizeof(ClientUser), 512 * 1024);
 	link_pool = mp_pool_new(sizeof(Link), 512 * 1024);
 }
@@ -80,9 +84,8 @@ void initlists(void)
 */
 Client *make_client(Client *from, Client *servr)
 {
-	Client *cptr = NULL;
-
-	cptr = safe_alloc(sizeof(Client));
+	Client *cptr = mp_pool_get(client_pool);
+	memset(cptr, 0, sizeof(Client));
 
 #ifdef	DEBUGMODE
 	if (!from)
@@ -91,10 +94,8 @@ Client *make_client(Client *from, Client *servr)
 		crem.inuse++;
 #endif
 
-	/* Note:  structure is zero (calloc) */
+	/* Note: all fields are already NULL/0, no need to set here */
 	cptr->direction = from ? from : cptr;	/* 'from' of local client is self! */
-	cptr->user = NULL;
-	cptr->serv = NULL;
 	cptr->srvptr = servr;
 	cptr->status = CLIENT_STATUS_UNKNOWN;
 
@@ -108,7 +109,8 @@ Client *make_client(Client *from, Client *servr)
 		/* Local client */
 		const char *id;
 		
-		cptr->local = safe_alloc(sizeof(LocalClient));
+		cptr->local = mp_pool_get(local_client_pool);
+		memset(cptr->local, 0, sizeof(LocalClient));
 		
 		INIT_LIST_HEAD(&cptr->lclient_node);
 		INIT_LIST_HEAD(&cptr->special_node);
@@ -152,7 +154,7 @@ void free_client(Client *cptr)
 			if (cptr->local->hostp)
 				unreal_free_hostent(cptr->local->hostp);
 			
-			safe_free(cptr->local);
+			mp_pool_release(cptr->local);
 		}
 		if (*cptr->id)
 		{
@@ -166,7 +168,7 @@ void free_client(Client *cptr)
 	
 	safe_free(cptr->ip);
 
-	safe_free(cptr);
+	mp_pool_release(cptr);
 }
 
 /*

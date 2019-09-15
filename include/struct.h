@@ -1024,14 +1024,14 @@ extern void unload_all_unused_moddata(void);
  */
 struct Client {
 	struct list_head client_node;		/**< For global client list (client_list) */
-	struct list_head client_hash;		/**< For name hash table (clientTable) */
-	struct list_head id_hash;		/**< For UID/SID hash table (idTable) */
 	struct list_head lclient_node;		/**< For local client list (lclient_list) */
 	struct list_head special_node;		/**< For special lists (server || unknown || oper) */
-	ClientStatus status;			/**< Client status, one of CLIENT_STATUS_* */
 	LocalClient *local;			/**< Additional information regarding locally connected clients */
 	ClientUser *user;			/**< Additional information, if this client is a user */
 	Server *serv;				/**< Additional information, if this is a server */
+	ClientStatus status;			/**< Client status, one of CLIENT_STATUS_* */
+	struct list_head client_hash;		/**< For name hash table (clientTable) */
+	char name[HOSTLEN + 1];			/**< Unique name of the client: nickname for users, hostname for servers */
 	time_t lastnick;			/**< Timestamp on nick */
 	long flags;				/**< Client flags (one or more of CLIENT_FLAG_*) */
 	long umodes;				/**< Client usermodes (if user) */
@@ -1039,10 +1039,10 @@ struct Client {
 	                                             This always points to a directly connected server or &me.
 	                                             It is never NULL */
 	unsigned char hopcount;			/**< Number of servers to this, 0 means local client */
-	char name[HOSTLEN + 1];			/**< Unique name of the client: nickname for users, hostname for servers */
 	char ident[USERLEN + 1];		/**< Ident of the user, if available. Otherwise set to "unknown". */
 	char info[REALLEN + 1];			/**< Additional client information text. For users this is gecos/realname */
 	char id[IDLEN + 1];			/**< Unique ID: SID or UID */
+	struct list_head id_hash;		/**< For UID/SID hash table (idTable) */
 	Client *srvptr;				/**< Server on where this client is connected to (can be &me) */
 	char *ip;				/**< IP address of user or server (never NULL) */
 	ModData moddata[MODDATA_MAX_CLIENT];	/**< Client attached module data, used by the ModData system */
@@ -1052,36 +1052,31 @@ struct Client {
  */
 struct LocalClient {
 	int fd;				/**< File descriptor, can be <0 if socket has been closed already. */
+	SSL *ssl;			/**< OpenSSL/LibreSSL struct for SSL/TLS connection */
 	time_t since;			/**< Time when user will next be allowed to send something (actually since<currenttime+10) */
 	time_t firsttime;		/**< Time user was created (connected on IRC) */
 	time_t lasttime;		/**< Last time any message was received */
-	time_t last;			/**< Last time a RESETIDLE message was received (PRIVMSG) */
-	time_t nexttarget;		/**< Next time that a new target will be allowed (msg/notice/invite) */
-	time_t nextnick;		/**< Time the next nick change will be allowed */
-	u_char targets[MAXCCUSERS];	/**< Hash values of targets for target limiting */
-	short lastsq;			/**< # of 2k blocks when sendqueued called last */
 	dbuf sendQ;			/**< Outgoing send queue (data to be sent) */
 	dbuf recvQ;			/**< Incoming receive queue (incoming data yet to be parsed) */
-	uint32_t nospoof;		/**< Anti-spoofing random number (used in user handshake PING/PONG) */
+	ConfigItem_class *class;	/**< The class { } block associated to this client */
 	int proto;			/**< PROTOCTL options */
-	long caps;			/**< User capabilities */
-	SSL *ssl;			/**< OpenSSL/LibreSSL struct for SSL/TLS connection */
+	long caps;			/**< User: enabled capabilities (via CAP command) */
+	time_t nexttarget;		/**< Next time that a new target will be allowed (msg/notice/invite) */
+	u_char targets[MAXCCUSERS];	/**< Hash values of targets for target limiting */
+	ConfigItem_listen *listener;	/**< If this client IsListening() then this is the listener configuration attached to it */
+	long serial;			/**< Current serial number for send.c functions (to avoid sending duplicate messages) */
+	time_t nextnick;		/**< Time the next nick change will be allowed */
+	time_t last;			/**< Last time a RESETIDLE message was received (PRIVMSG) */
 	long sendM;			/**< Statistics: protocol messages send */
 	long sendK;			/**< Statistics: total k-bytes send */
 	long receiveM;			/**< Statistics: protocol messages received */
 	long receiveK;			/**< Statistics: total k-bytes received */
 	u_short sendB;			/**< Statistics: counters to count upto 1-k lots of bytes */
 	u_short receiveB;		/**< Statistics: sent and received (???) */
-	ConfigItem_listen *listener;	/**< If this client IsListening() then this is the listener configuration attached to it */
-	ConfigItem_class *class;	/**< The class { } block associated to this client */
-	int authfd;			/**< File descriptor for ident checking (RFC931) */
-	long serial;			/**< Current serial number for send.c functions (to avoid sending duplicate messages) */
-	u_short port;			/**< Remote TCP port of client */
-	struct hostent *hostp;		/**< Host record for this client (used by DNS code) */
+	short lastsq;			/**< # of 2k blocks when sendqueued called last */
 	Link *watch;			/**< Watch notification list (WATCH) for this user */
 	u_short watches;		/**< Number of entries in the watch list */
-	char sockhost[HOSTLEN + 1];	/**< Hostname from the socket */
-	char *passwd;			/**< Password used during connect, if any (freed once connected and set to NULL) */
+	ModData moddata[MODDATA_MAX_LOCAL_CLIENT];	/**< LocalClient attached module data, used by the ModData system */
 #ifdef DEBUGMODE
 	time_t cputime;			/**< Something with debugging (why is this a time_t? TODO) */
 #endif
@@ -1092,8 +1087,13 @@ struct LocalClient {
 	u_short sasl_cookie;		/**< SASL: Temporary SASL cookie (TODO: get rid of this pseudo-nick code and use UID) */
 	char *sni_servername;		/**< Servername as sent by client via SNI (Server Name Indication) in SSL/TLS, otherwise NULL */
 	int cap_protocol;		/**< CAP protocol in use. At least 300 for any CAP capable client. 302 for 3.2, etc.. */
+	uint32_t nospoof;		/**< Anti-spoofing random number (used in user handshake PING/PONG) */
+	char *passwd;			/**< Password used during connect, if any (freed once connected and set to NULL) */
+	int authfd;			/**< File descriptor for ident checking (RFC931) */
 	int identbufcnt;		/**< Counter for 'ident' reading code */
-	ModData moddata[MODDATA_MAX_LOCAL_CLIENT];	/**< LocalClient attached module data, used by the ModData system */
+	struct hostent *hostp;		/**< Host record for this client (used by DNS code) */
+	char sockhost[HOSTLEN + 1];	/**< Hostname from the socket */
+	u_short port;			/**< Remote TCP port of client */
 };
 
 /** User information (persons, not servers), you use sptr->user to access these (see also @link Client @endlink).
