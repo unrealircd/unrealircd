@@ -84,7 +84,7 @@ MOD_INIT()
 	mreq.serialize = NULL; /* not supported */
 	mreq.unserialize = NULL; /* not supported */
 	mreq.sync = 0;
-	mreq.type = MODDATATYPE_CLIENT;
+	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	jointhrottle_md = ModDataAdd(modinfo->handle, mreq);
 	if (!jointhrottle_md)
 		abort();
@@ -161,7 +161,7 @@ static int isjthrottled(Client *cptr, Channel *chptr)
 		return 0;
 
 	/* Grab user<->chan entry.. */
-	for (e = moddata_client(cptr, jointhrottle_md).ptr; e; e=e->next)
+	for (e = moddata_local_client(cptr, jointhrottle_md).ptr; e; e=e->next)
 		if (!strcasecmp(e->chname, chptr->chname))
 			break;
 	
@@ -185,7 +185,7 @@ static void jointhrottle_increase_usercounter(Client *cptr, Channel *chptr)
 		return;
 		
 	/* Grab user<->chan entry.. */
-	for (e = moddata_client(cptr, jointhrottle_md).ptr; e; e=e->next)
+	for (e = moddata_local_client(cptr, jointhrottle_md).ptr; e; e=e->next)
 		if (!strcasecmp(e->chname, chptr->chname))
 			break;
 	
@@ -231,7 +231,7 @@ JoinFlood *jointhrottle_addentry(Client *cptr, Channel *chptr)
 	if (!IsUser(cptr))
 		abort();
 
-	for (e=moddata_client(cptr, jointhrottle_md).ptr; e; e=e->next)
+	for (e=moddata_local_client(cptr, jointhrottle_md).ptr; e; e=e->next)
 		if (!strcasecmp(e->chname, chptr->chname))
 			abort(); /* already exists -- should never happen */
 #endif
@@ -240,13 +240,13 @@ JoinFlood *jointhrottle_addentry(Client *cptr, Channel *chptr)
 	strlcpy(e->chname, chptr->chname, sizeof(e->chname));
 
 	/* Insert our new entry as (new) head */
-	if (moddata_client(cptr, jointhrottle_md).ptr)
+	if (moddata_local_client(cptr, jointhrottle_md).ptr)
 	{
-		JoinFlood *current_head = moddata_client(cptr, jointhrottle_md).ptr;
+		JoinFlood *current_head = moddata_local_client(cptr, jointhrottle_md).ptr;
 		current_head->prev = e;
 		e->next = current_head;
 	}
-	moddata_client(cptr, jointhrottle_md).ptr = e;
+	moddata_local_client(cptr, jointhrottle_md).ptr = e;
 
 	return e;
 }
@@ -262,7 +262,7 @@ EVENT(jointhrottle_cleanup_structs)
 		if (!MyUser(acptr))
 			continue; /* only (local) persons.. */
 
-		for (jf = moddata_client(acptr, jointhrottle_md).ptr; jf; jf = jf_next)
+		for (jf = moddata_local_client(acptr, jointhrottle_md).ptr; jf; jf = jf_next)
 		{
 			jf_next = jf->next;
 			
@@ -272,10 +272,10 @@ EVENT(jointhrottle_cleanup_structs)
 			ircd_log(LOG_ERROR, "jointhrottle_cleanup_structs(): freeing %s/%s (%ld[%ld], %d)",
 				acptr->name, jf->chname, jf->firstjoin, (long)(TStime() - jf->firstjoin), cfg.t);
 #endif
-			if (moddata_client(acptr, jointhrottle_md).ptr == jf)
+			if (moddata_local_client(acptr, jointhrottle_md).ptr == jf)
 			{
 				/* change head */
-				moddata_client(acptr, jointhrottle_md).ptr = jf->next; /* could be set to NULL now */
+				moddata_local_client(acptr, jointhrottle_md).ptr = jf->next; /* could be set to NULL now */
 				if (jf->next)
 					jf->next->prev = NULL;
 			} else {
