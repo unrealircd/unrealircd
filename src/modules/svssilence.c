@@ -21,9 +21,6 @@
 
 CMD_FUNC(cmd_svssilence);
 
-/* Place includes here */
-#define MSG_SVSSILENCE       "SVSSILENCE"
-
 ModuleHeader MOD_HEADER
   = {
 	"svssilence",	/* Name of module */
@@ -33,21 +30,18 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
     };
 
-/* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSSILENCE, cmd_svssilence, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, "SVSSILENCE", cmd_svssilence, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-/* Is first run when server is 100% ready */
 MOD_LOAD()
 {
 	return MOD_SUCCESS;
 }
 
-/* Called when module is unloaded */
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;	
@@ -59,8 +53,7 @@ MOD_UNLOAD()
  * parv[1] - target nick
  * parv[2] - space delimited silence list (+Blah +Blih -Bluh etc)
  * SERVER DISTRIBUTION:
- * In contrast to the normal SILENCE command, this is sent to all servers
- * because it can/will add&remove multiple silence entries at once.
+ * Since UnrealIRCd 5 it is directed to the target client (previously: broadcasted).
  */
 CMD_FUNC(cmd_svssilence)
 {
@@ -74,17 +67,19 @@ CMD_FUNC(cmd_svssilence)
 	if (parc < 3 || BadPtr(parv[2]) || !(acptr = find_person(parv[1], NULL)))
 		return 0;
 	
-	sendto_server(sptr, 0, 0, NULL, ":%s SVSSILENCE %s :%s", sptr->name, parv[1], parv[2]);
+	if (!MyUser(acptr))
+	{
+		sendto_one(acptr, NULL, ":%s SVSSILENCE %s :%s", sptr->name, parv[1], parv[2]);
+		return 0;
+	}
 
-	mine = MyUser(acptr) ? 1 : 0;
-
+	/* It's for our client */
 	for (p = strtok(parv[2], " "); p; p = strtok(NULL, " "))
 	{
 		c = *p;
 		if ((c == '-') || (c == '+'))
 			p++;
-		else if (!(strchr(p, '@') || strchr(p, '.') ||
-		    strchr(p, '!') || strchr(p, '*')))
+		else if (!(strchr(p, '@') || strchr(p, '.') || strchr(p, '!') || strchr(p, '*')))
 		{
 			/* "no such nick" */
 			continue;
@@ -93,10 +88,9 @@ CMD_FUNC(cmd_svssilence)
 			c = '+';
 		cp = pretty_mask(p);
 		if ((c == '-' && !del_silence(acptr, cp)) ||
-			(c != '-' && !add_silence(acptr, cp, 0)))
+		    (c != '-' && !add_silence(acptr, cp, 0)))
 		{
-			if (mine)
-				sendto_prefix_one(acptr, acptr, NULL, ":%s SILENCE %c%s", sptr->name, c, cp);
+			sendto_prefix_one(acptr, acptr, NULL, ":%s SILENCE %c%s", sptr->name, c, cp);
 		}
 	}
 	return 0;

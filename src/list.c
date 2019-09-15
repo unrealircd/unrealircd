@@ -192,7 +192,6 @@ ClientUser *make_user(Client *cptr)
 		user->joined = 0;
 		user->channel = NULL;
 		user->invited = NULL;
-		user->silence = NULL;
 		user->server = NULL;
 		strlcpy(user->svid, "0", sizeof(user->svid));
 		user->lopt = NULL;

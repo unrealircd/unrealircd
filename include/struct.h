@@ -986,7 +986,6 @@ struct LocalClient {
 struct User {
 	Membership *channel;		/**< Channels that the user is in (linked list) */
 	Link *invited;			/**< Channels has the user been invited to (linked list) */
-	Link *silence;			/**< Silence list (linked list) */
 	Link *dccallow;			/**< DCCALLOW list (linked list) */
 	char *away;			/**< AWAY message, or NULL if not away */
 	char svid[SVIDLEN + 1];		/**< Unique value assigned by services (SVID) */
@@ -1729,20 +1728,30 @@ struct DSlink {
  #define CHECK_LIST_ENTRY(list)		/* not available on Windows, typeof() not reliable */
 #endif
 
+/** Add an item to a standard linked list (in the front) */
 #define AddListItem(item,list)		do { \
 						CHECK_LIST_ENTRY(list) \
 						add_ListItem((ListStruct *)item, (ListStruct **)&list); \
 					} while(0)
 
+/** Append an item to a standard linked list (at the back) */
 #define AppendListItem(item,list)	do { \
 						CHECK_LIST_ENTRY(list) \
 						append_ListItem((ListStruct *)item, (ListStruct **)&list); \
 					} while(0)
 
+/** Delete an item from a standard linked list */
 #define DelListItem(item,list)		do { \
 						CHECK_LIST_ENTRY(list) \
 						del_ListItem((ListStruct *)item, (ListStruct **)&list); \
 					} while(0)
+
+/** Add an item to a standard linked list - UNCHECKED function, only use if absolutely necessary! */
+#define AddListItemUnchecked(item,list)	add_ListItem((ListStruct *)item, (ListStruct **)&list)
+/** Append an item to a standard linked list - UNCHECKED function, only use if absolutely necessary! */
+#define AppendListItemUnchecked(item,list) append_ListItem((ListStruct *)item, (ListStruct **)&list)
+/** Delete an item from a standard linked list - UNCHECKED function, only use if absolutely necessary! */
+#define DelListItemUnchecked(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
 
 #ifndef _WIN32
  #define CHECK_PRIO_LIST_ENTRY(list)	if (offsetof(typeof(*list),prev) != offsetof(ListStructPrio,prev)) \

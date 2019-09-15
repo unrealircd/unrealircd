@@ -1,6 +1,6 @@
 /*
  *   IRC - Internet Relay Chat, src/modules/silence.c
- *   (C) 2004 The UnrealIRCd Team
+ *   (C) 2004- The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -24,8 +24,6 @@
 
 CMD_FUNC(cmd_silence);
 
-#define MSG_SILENCE 	"SILENCE"	
-
 ModuleHeader MOD_HEADER
   = {
 	"silence",
@@ -35,10 +33,26 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
     };
 
+/* Structs */
+typedef struct Silence Silence;
+/** A /SILENCE entry */
+struct Silence
+{
+	Silence *prev, *next;
+	char mask[1]; /**< user!nick@host mask of silence entry */
+};
+
+/* Global variables */
+ModDataInfo *silence_md = NULL;
+
+/* Macros */
+#define SILENCELIST(x)       ((Silence *)moddata_client(x, silence_md).ptr)
+
 /* Forward declarations */
 int _is_silenced(Client *, Client *);
 int _del_silence(Client *sptr, const char *mask);
 int _add_silence(Client *sptr, const char *mask, int senderr);
+void silence_md_free(ModData *md);
 
 MOD_TEST()
 {
@@ -51,8 +65,21 @@ MOD_TEST()
 
 MOD_INIT()
 {
+	ModDataInfo mreq;
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_SILENCE, cmd_silence, MAXPARA, M_USER);
+
+	memset(&mreq, 0, sizeof(mreq));
+	mreq.name = "silence";
+	mreq.type = MODDATATYPE_CLIENT;
+	mreq.free = silence_md_free;
+	silence_md = ModDataAdd(modinfo->handle, mreq);
+	if (!silence_md)
+	{
+		config_error("could not register silence moddata");
+		return MOD_FAILED;
+	}
+	CommandAdd(modinfo->handle, "SILENCE", cmd_silence, MAXPARA, M_USER);
 	return MOD_SUCCESS;
 }
 
@@ -66,166 +93,150 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/*
-** cmd_silence
-** From local client:
-**	parv[1] = mask (NULL sends the list)
-** From remote client:
-**	parv[1] = nick that must be silenced
-**      parv[2] = mask
-*/
+/** The /SILENCE command - server-side ignore list.
+ * Syntax:
+ * SILENCE +user  To add a user from the silence list
+ * SILENCE -user  To remove a user from the silence list
+ * SILENCE        To send the current silence list
+ *
+ */
 
 CMD_FUNC(cmd_silence)
 {
-	Link *lp;
 	Client *acptr;
-	char c, *cp;
-
-	acptr = sptr;
+	Silence *s;
+	char action, *p;
 
 	if (MyUser(sptr))
 	{
-		if (parc < 2 || *parv[1] == '\0'
-		    || (acptr = find_person(parv[1], NULL)))
+		if (parc < 2 || BadPtr(parv[1]))
 		{
-			if (acptr != sptr)
-				return 0;
-			for (lp = acptr->user->silence; lp; lp = lp->next)
-				sendnumeric(sptr, RPL_SILELIST, acptr->name, lp->value.cp);
+			for (s = SILENCELIST(sptr); s; s = s->next)
+				sendnumeric(sptr, RPL_SILELIST, sptr->name, s->mask);
 			sendnumeric(sptr, RPL_ENDOFSILELIST);
 			return 0;
 		}
-		cp = parv[1];
-		c = *cp;
-		if (c == '-' || c == '+')
-			cp++;
-		else if (!(strchr(cp, '@') || strchr(cp, '.') ||
-		    strchr(cp, '!') || strchr(cp, '*')))
+		p = parv[1];
+		action = *p;
+		if (action == '-' || action == '+')
+		{
+			p++;
+		} else
+		if (!strchr(p, '@') && !strchr(p, '.') && !strchr(p, '!') && !strchr(p, '*') && !find_person(p, NULL))
 		{
 			sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
 			return -1;
+		} else
+		{
+			action = '+';
 		}
-		else
-			c = '+';
-		cp = pretty_mask(cp);
-		if ((c == '-' && !del_silence(sptr, cp)) ||
-		    (c != '-' && !add_silence(sptr, cp, 1)))
+		p = pretty_mask(p);
+		if ((action == '-' && !del_silence(sptr, p)) ||
+		    (action != '-' && !add_silence(sptr, p, 1)))
 		{
 			sendto_prefix_one(sptr, sptr, NULL, ":%s SILENCE %c%s",
-			    sptr->name, c, cp);
-			if (c == '-')
-				sendto_server(NULL, 0, 0, NULL, ":%s SILENCE * -%s",
-				    sptr->name, cp);
+			    sptr->name, action, p);
 		}
+		return 0;
 	}
-	else if (parc < 3 || *parv[2] == '\0')
-	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    "SILENCE");
-		return -1;
-	}
-	else if ((c = *parv[2]) == '-' || (acptr = find_person(parv[1], NULL)))
-	{
-		if (c == '-')
-		{
-			if (!del_silence(sptr, parv[2] + 1))
-				sendto_server(cptr, 0, 0, NULL, ":%s SILENCE %s :%s",
-				    sptr->name, parv[1], parv[2]);
-		}
-		else
-		{
-			(void)add_silence(sptr, parv[2], 1);
-			if (!MyUser(acptr))
-				sendto_one(acptr, NULL, ":%s SILENCE %s :%s",
-				    sptr->name, parv[1], parv[2]);
-		}
-	}
-	else
-	{
-		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
-		return -1;
-	}
+
+	/* Probably server to server traffic.
+	 * We don't care about this anymore on UnrealIRCd 5 and later.
+	 */
 	return 0;
 }
 
+/** Delete item from the silence list.
+ * @param sptr The client.
+ * @param mask The mask to delete from the list.
+ * @returns 1 if entry was found and deleted, 0 if not found.
+ */
 int _del_silence(Client *sptr, const char *mask)
 {
-	Link **lp;
-	Link *tmp;
+	Silence *s;
 
-	for (lp = &(sptr->user->silence); *lp; lp = &((*lp)->next))
-		if (mycmp(mask, (*lp)->value.cp) == 0)
-		{
-			tmp = *lp;
-			*lp = tmp->next;
-			safe_free(tmp->value.cp);
-			free_link(tmp);
-			return 0;
-		}
-	return -1;
-}
-
-int _add_silence(Client *sptr, const char *mask, int senderr)
-{
-	Link *lp;
-	int  cnt = 0;
-
-	for (lp = sptr->user->silence; lp; lp = lp->next)
+	for (s = SILENCELIST(sptr); s; s = s->next)
 	{
-		if (MyUser(sptr))
-			if ((strlen(lp->value.cp) > MAXSILELENGTH) || (++cnt >= SILENCE_LIMIT))
-			{
-				if (senderr)
-					sendnumeric(sptr, ERR_SILELISTFULL, mask);
-				return -1;
-			}
-			else
-			{
-				if (match_simple(lp->value.cp, mask))
-					return -1;
-			}
-		else if (!mycmp(lp->value.cp, mask))
-			return -1;
-	}
-	lp = make_link();
-	memset(lp, 0, sizeof(Link));
-	lp->next = sptr->user->silence;
-	safe_strdup(lp->value.cp, mask);
-	sptr->user->silence = lp;
-	return 0;
-}
-
-/*
- * is_silenced : Does the actual check wether sptr is allowed
- *               to send a message to acptr.
- *               Both must be registered persons.
- * If sptr is silenced by acptr, his message should not be propagated,
- * but more over, if this is detected on a server not local to sptr
- * the SILENCE mask is sent upstream.
- */
-int _is_silenced(Client *sptr, Client *acptr)
-{
-	Link *lp;
-	static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
-
-	if (!acptr->user || !sptr->user || !(lp = acptr->user->silence))
-		return 0;
-
-	ircsnprintf(sender, sizeof(sender), "%s!%s@%s", sptr->name, sptr->user->username, GetHost(sptr));
-
-	for (; lp; lp = lp->next)
-	{
-		if (match_simple(lp->value.cp, sender))
+		if (mycmp(mask, s->mask) == 0)
 		{
-			if (!MyConnect(sptr))
-			{
-				sendto_one(sptr->direction, NULL, ":%s SILENCE %s :%s",
-				    acptr->name, sptr->name, lp->value.cp);
-				lp->flags = 1;
-			}
+			DelListItemUnchecked(s, moddata_client(sptr, silence_md).ptr);
+			safe_free(s);
 			return 1;
 		}
 	}
 	return 0;
 }
 
+/** Add item to the silence list.
+ * @param sptr The client.
+ * @param mask The mask to add to the list.
+ * @returns 1 if silence entry added,
+ *          0 if not added, eg: full or already covered by an existing silence entry.
+ */
+int _add_silence(Client *sptr, const char *mask, int senderr)
+{
+	Silence *s;
+	int cnt = 0;
+
+	if (!MyUser(sptr))
+		return 0;
+
+	for (s = SILENCELIST(sptr); s; s = s->next)
+	{
+		if ((strlen(s->mask) > MAXSILELENGTH) || (++cnt >= SILENCE_LIMIT))
+		{
+			if (senderr)
+				sendnumeric(sptr, ERR_SILELISTFULL, mask);
+			return 0;
+		}
+		else
+		{
+			if (match_simple(s->mask, mask))
+				return 0;
+		}
+	}
+
+	/* Add the new entry */
+	s = safe_alloc(sizeof(Silence)+strlen(mask));
+	strcpy(s->mask, mask); /* safe, allocated above */
+	AddListItemUnchecked(s, moddata_client(sptr, silence_md).ptr);
+	return 0;
+}
+
+/** Check whether sender is silenced by receiver.
+ * @param sender    The client that intends to send a message.
+ * @param receiver  The client that would receive the message.
+ * @returns 1 if sender is silenced by receiver (do NOT send the message),
+ *          0 if not silenced (go ahead and send).
+ */
+int _is_silenced(Client *sender, Client *receiver)
+{
+	Silence *s;
+	char mask[HOSTLEN + NICKLEN + USERLEN + 5];
+
+	if (!MyUser(receiver) || !receiver->user || !sender->user || !SILENCELIST(receiver))
+		return 0;
+
+	ircsnprintf(mask, sizeof(mask), "%s!%s@%s", sender->name, sender->user->username, GetHost(sender));
+
+	for (s = SILENCELIST(receiver); s; s = s->next)
+	{
+		if (match_simple(s->mask, mask))
+			return 1;
+	}
+
+	return 0;
+}
+
+/** Called on client exit: free the silence list of this user */
+void silence_md_free(ModData *md)
+{
+	Silence *b, *b_next;
+
+	for (b = md->ptr; b; b = b_next)
+	{
+		b_next = b->next;
+		safe_free(b);
+	}
+	md->ptr = NULL;
+}

@@ -480,10 +480,6 @@ static void exit_one_client(Client *sptr, MessageTag *mtags_i, const char *comme
 			del_invite(sptr, lp->value.chptr);
 		/* again, this is all that is needed */
 
-		/* Clean up silencefield */
-		while ((lp = sptr->user->silence))
-			(void)del_silence(sptr, lp->value.cp);
-
 		/* Clean up dccallow list and (if needed) notify other clients
 		 * that have this person on DCCALLOW that the user just left/got removed.
 		 */
