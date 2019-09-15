@@ -1722,22 +1722,21 @@ struct Watch {
 	char nick[1];
 };
 
-/* general link structure used for chains */
-
+/** General link structure used for certain chains (watch list, invite list, dccallow).
+ * Note that these always require you to use the make_link() and free_link() functions.
+ * Do not combine with other alloc/free functions!!
+ */
 struct Link {
 	struct Link *next;
-	int  flags;
+	int flags;
 	union {
 		Client *cptr;
 		Channel *chptr;
-		ListStruct *aconf;
 		Watch *wptr;
-		char *cp;
-		struct {
-			char *banstr;
-			char *who;
-			time_t when;
-		} ban;
+		/* there used to be 'char *cp' here too,
+		 * but in such a case you better use NameList
+		 * instead of Link!
+		 */
 	} value;
 };
 

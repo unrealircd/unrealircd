@@ -45,6 +45,7 @@ MODVAR int  numclients = 0;
 MODVAR struct list_head client_list, lclient_list, server_list, oper_list, unknown_list, global_server_list;
 
 static mp_pool_t *user_pool = NULL;
+static mp_pool_t *link_pool = NULL;
 
 void initlists(void)
 {
@@ -64,6 +65,7 @@ void initlists(void)
 	INIT_LIST_HEAD(&global_server_list);
 
 	user_pool = mp_pool_new(sizeof(ClientUser), 512 * 1024);
+	link_pool = mp_pool_new(sizeof(Link), 512 * 1024);
 }
 
 /*
@@ -355,69 +357,24 @@ void add_client_to_list(Client *cptr)
 	list_add(&cptr->client_node, &client_list);
 }
 
-void free_str_list(Link *lp)
-{
-	Link *next;
-
-
-	while (lp)
-	{
-		next = lp->next;
-		safe_free(lp->value.cp);
-		free_link(lp);
-		lp = next;
-	}
-
-	return;
-}
-
-
-#define	LINKSIZE	(4072/sizeof(Link))
-
+/** Make a new link entry.
+ * @notes When you no longer need it, call free_link()
+ *        NEVER call free() or safe_free() on it.
+ */
 Link *make_link(void)
 {
-	Link *lp;
-	int  i;
-
-	/* "caching" slab-allocator... ie. we're allocating one pages
-	   (hopefully - upped to the Linux default, not dbuf.c) worth of 
-	   link-structures at time to avoid all the malloc overhead.
-	   All links left free from this process or separately freed 
-	   by a call to free_link() are moved over to freelink-list.
-	   Impact? Let's see... -Donwulff */
-	/* Impact is a huge memory leak -Stskeeps
-	   hope this implementation works a little bit better */
-	if (freelink == NULL)
-	{
-		for (i = 1; i <= LINKSIZE; i++)
-		{
-			lp = safe_alloc(sizeof(Link));
-			lp->next = freelink;
-			freelink = lp;
-		}
-		freelinks = freelinks + LINKSIZE;
-		lp = freelink;
-		freelink = lp->next;
-		freelinks--;
-	}
-	else
-	{
-		lp = freelink;
-		freelink = freelink->next;
-		freelinks--;
-	}
+	Link *l = mp_pool_get(link_pool);
+	memset(l, 0, sizeof(Link));
 #ifdef	DEBUGMODE
 	links.inuse++;
 #endif
-	memset(lp, 0, sizeof(Link));
-	return lp;
+	return l;
 }
 
+/** Releases a link that was previously created with make_link() */
 void free_link(Link *lp)
 {
-	lp->next = freelink;
-	freelink = lp;
-	freelinks++;
+	mp_pool_release(lp);
 
 #ifdef	DEBUGMODE
 	links.inuse--;
@@ -443,7 +400,8 @@ void free_ban(Ban *lp)
 #endif
 }
 
-void add_ListItem(ListStruct *item, ListStruct **list) {
+void add_ListItem(ListStruct *item, ListStruct **list)
+{
 	item->next = *list;
 	item->prev = NULL;
 	if (*list)
@@ -526,6 +484,8 @@ void add_ListItemPrio(ListStructPrio *new, ListStructPrio **list, int priority)
 		new->prev = last;
 	}
 }
+
+/* NameList functions */
 
 void _add_name_list(NameList **list, char *name)
 {

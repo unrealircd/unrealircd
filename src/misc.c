@@ -329,10 +329,10 @@ void set_sockhost(Client *cptr, char *host)
 
 void remove_dcc_references(Client *sptr)
 {
-Client *acptr;
-Link *lp, *nextlp;
-Link **lpp, *tmp;
-int found;
+	Client *acptr;
+	Link *lp, *nextlp;
+	Link **lpp, *tmp;
+	int found;
 
 	lp = sptr->user->dccallow;
 	while(lp)
