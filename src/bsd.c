@@ -241,14 +241,14 @@ static void listener_accept(int listener_fd, int revents, void *data)
 		return;
 	}
 
-	ircstp->is_ac++;
+	ircstats.is_ac++;
 
 	set_sock_opts(cli_fd, NULL, listener->ipv6);
 	set_non_blocking(cli_fd, NULL);
 
 	if ((++OpenFiles >= maxclients) || (cli_fd >= maxclients))
 	{
-		ircstp->is_ref++;
+		ircstats.is_ref++;
 		if (last_allinuse < TStime() - 15)
 		{
 			sendto_ops_and_log("All connections in use. ([@%s/%u])", listener->ip, listener->port);
@@ -672,44 +672,44 @@ void close_connection(Client *cptr)
 {
 	if (IsServer(cptr))
 	{
-		ircstp->is_sv++;
-		ircstp->is_sbs += cptr->local->sendB;
-		ircstp->is_sbr += cptr->local->receiveB;
-		ircstp->is_sks += cptr->local->sendK;
-		ircstp->is_skr += cptr->local->receiveK;
-		ircstp->is_sti += TStime() - cptr->local->firsttime;
-		if (ircstp->is_sbs > 1023)
+		ircstats.is_sv++;
+		ircstats.is_sbs += cptr->local->sendB;
+		ircstats.is_sbr += cptr->local->receiveB;
+		ircstats.is_sks += cptr->local->sendK;
+		ircstats.is_skr += cptr->local->receiveK;
+		ircstats.is_sti += TStime() - cptr->local->firsttime;
+		if (ircstats.is_sbs > 1023)
 		{
-			ircstp->is_sks += (ircstp->is_sbs >> 10);
-			ircstp->is_sbs &= 0x3ff;
+			ircstats.is_sks += (ircstats.is_sbs >> 10);
+			ircstats.is_sbs &= 0x3ff;
 		}
-		if (ircstp->is_sbr > 1023)
+		if (ircstats.is_sbr > 1023)
 		{
-			ircstp->is_skr += (ircstp->is_sbr >> 10);
-			ircstp->is_sbr &= 0x3ff;
+			ircstats.is_skr += (ircstats.is_sbr >> 10);
+			ircstats.is_sbr &= 0x3ff;
 		}
 	}
 	else if (IsUser(cptr))
 	{
-		ircstp->is_cl++;
-		ircstp->is_cbs += cptr->local->sendB;
-		ircstp->is_cbr += cptr->local->receiveB;
-		ircstp->is_cks += cptr->local->sendK;
-		ircstp->is_ckr += cptr->local->receiveK;
-		ircstp->is_cti += TStime() - cptr->local->firsttime;
-		if (ircstp->is_cbs > 1023)
+		ircstats.is_cl++;
+		ircstats.is_cbs += cptr->local->sendB;
+		ircstats.is_cbr += cptr->local->receiveB;
+		ircstats.is_cks += cptr->local->sendK;
+		ircstats.is_ckr += cptr->local->receiveK;
+		ircstats.is_cti += TStime() - cptr->local->firsttime;
+		if (ircstats.is_cbs > 1023)
 		{
-			ircstp->is_cks += (ircstp->is_cbs >> 10);
-			ircstp->is_cbs &= 0x3ff;
+			ircstats.is_cks += (ircstats.is_cbs >> 10);
+			ircstats.is_cbs &= 0x3ff;
 		}
-		if (ircstp->is_cbr > 1023)
+		if (ircstats.is_cbr > 1023)
 		{
-			ircstp->is_ckr += (ircstp->is_cbr >> 10);
-			ircstp->is_cbr &= 0x3ff;
+			ircstats.is_ckr += (ircstats.is_cbr >> 10);
+			ircstats.is_cbr &= 0x3ff;
 		}
 	}
 	else
-		ircstp->is_ni++;
+		ircstats.is_ni++;
 
 	/*
 	 * remove outstanding DNS queries.
@@ -943,7 +943,7 @@ Client *add_connection(ConfigItem_listen *listener, int fd)
 			report_error("Failed to accept new client %s :%s", acptr);
 		}
 refuse_client:
-			ircstp->is_ref++;
+			ircstats.is_ref++;
 			acptr->local->fd = -2;
 			free_client(acptr);
 			fd_close(fd);
@@ -960,7 +960,7 @@ refuse_client:
 	/* Tag loopback connections */
 	if (is_loopback_ip(acptr->ip))
 	{
-		ircstp->is_loc++;
+		ircstats.is_loc++;
 		SetLocalhost(acptr);
 	}
 

@@ -40,7 +40,7 @@ extern MODVAR Client me;
 extern MODVAR Channel *channel;
 extern MODVAR ModData local_variable_moddata[MODDATA_MAX_LOCAL_VARIABLE];
 extern MODVAR ModData global_variable_moddata[MODDATA_MAX_GLOBAL_VARIABLE];
-extern MODVAR struct stats *ircstp;
+extern MODVAR IRCStatistics ircstats;
 extern MODVAR int bootopt;
 extern MODVAR time_t timeofday;
 extern MODVAR char cmodestring[512];

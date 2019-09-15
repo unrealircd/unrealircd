@@ -153,7 +153,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 				me.name, new->name, me.name, comment);
 
 			/* Exit the client */
-			ircstp->is_kill++;
+			ircstats.is_kill++;
 			SetKilled(new);
 			(void)exit_client(NULL, new, &me, mtags, comment);
 
@@ -188,7 +188,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 		 */
 
 		/* Exit the client */
-		ircstp->is_kill++;
+		ircstats.is_kill++;
 		SetKilled(existing);
 		(void)exit_client(NULL, existing, &me, mtags, comment);
 
@@ -290,7 +290,7 @@ CMD_FUNC(cmd_uid)
 
 		if (IsServer(cptr))
 		{
-			ircstp->is_kill++;
+			ircstats.is_kill++;
 			sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
 			    parv[1], sptr->name, get_client_name(cptr, FALSE));
 			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
@@ -327,7 +327,7 @@ CMD_FUNC(cmd_uid)
 	if (IsServer(cptr) && IsQuarantined(sptr->direction) &&
 	    (parc >= 11) && strchr(parv[8], 'o'))
 	{
-		ircstp->is_kill++;
+		ircstats.is_kill++;
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
 		sendto_one(cptr, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
 			me.name, parv[1], me.name);
@@ -403,7 +403,7 @@ CMD_FUNC(cmd_uid)
 		sendto_umode(UMODE_OPER, "Nick collision on %s(%s <- %s)",
 		    sptr->name, acptr->direction->name,
 		    get_client_name(cptr, FALSE));
-		ircstp->is_kill++;
+		ircstats.is_kill++;
 		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s)",
 		    me.name, sptr->name, me.name, acptr->direction->name,
 		    /* NOTE: Cannot use get_client_name
@@ -435,7 +435,7 @@ CMD_FUNC(cmd_uid)
 			/* This is a Bad Thing */
 			sendto_umode(UMODE_OPER, "Lost user field for %s in change from %s",
 			    acptr->name, get_client_name(cptr, FALSE));
-			ircstp->is_kill++;
+			ircstats.is_kill++;
 			sendto_one(acptr, NULL, ":%s KILL %s :%s (Lost user field!)",
 			    me.name, acptr->name, me.name);
 			SetKilled(acptr);
@@ -623,7 +623,7 @@ CMD_FUNC(cmd_nick)
 
 		if (IsServer(cptr))
 		{
-			ircstp->is_kill++;
+			ircstats.is_kill++;
 			sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
 			    parv[1], sptr->name, get_client_name(cptr, FALSE));
 			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
@@ -660,7 +660,7 @@ CMD_FUNC(cmd_nick)
 	if (IsServer(cptr) && IsQuarantined(sptr->direction) &&
 	    (parc >= 11) && strchr(parv[8], 'o'))
 	{
-		ircstp->is_kill++;
+		ircstats.is_kill++;
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
 		sendto_one(cptr, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
 			me.name, parv[1], me.name);
@@ -776,7 +776,7 @@ CMD_FUNC(cmd_nick)
 		sendto_umode(UMODE_OPER, "Nick collision on %s(%s <- %s)",
 		    sptr->name, acptr->direction->name,
 		    get_client_name(cptr, FALSE));
-		ircstp->is_kill++;
+		ircstats.is_kill++;
 		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s)",
 		    me.name, sptr->name, me.name, acptr->direction->name,
 		    /* NOTE: Cannot use get_client_name
@@ -816,7 +816,7 @@ CMD_FUNC(cmd_nick)
 		/* This is a Bad Thing */
 		sendto_umode(UMODE_OPER, "Lost user field for %s in change from %s",
 		    acptr->name, get_client_name(cptr, FALSE));
-		ircstp->is_kill++;
+		ircstats.is_kill++;
 		sendto_one(acptr, NULL, ":%s KILL %s :%s (Lost user field!)",
 		    me.name, acptr->name, me.name);
 		SetKilled(acptr);
@@ -1213,7 +1213,7 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 
 		if ((i = check_client(sptr, username)))
 		{
-			ircstp->is_ref++;
+			ircstats.is_ref++;
 			/* Usually the return value of check_client is 0 (allow) or -5 (reject),
 			 * but there are some rare cases where the client is not yet killed,
 			 * so have a generic exit_client() here to be safe.
@@ -1330,13 +1330,13 @@ int _register_user(Client *cptr, Client *sptr, char *nick, char *username, char 
 		/* Check ban realname { } blocks */
 		if ((bconf = Find_ban(NULL, sptr->info, CONF_BAN_REALNAME)))
 		{
-			ircstp->is_ref++;
+			ircstats.is_ref++;
 			return banned_client(sptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
 		}
 		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
 		if ((xx = find_tkline_match(sptr, 0)) < 0)
 		{
-			ircstp->is_ref++;
+			ircstats.is_ref++;
 			return xx;
 		}
 		find_shun(sptr);

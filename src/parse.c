@@ -197,13 +197,13 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 
 			if (!from)
 			{
-				ircstp->is_unpf++;
+				ircstats.is_unpf++;
 				remove_unknown(cptr, sender);
 				return -1;
 			}
 			if (from->direction != cptr)
 			{
-				ircstp->is_wrdi++;
+				ircstats.is_wrdi++;
 				return cancel_clients(cptr, from, ch);
 			}
 			*fromptr = from; /* Update source client */
@@ -216,7 +216,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 
 	if (*ch == '\0')
 	{
-		ircstp->is_empt++;
+		ircstats.is_empt++;
 		Debug((DEBUG_NOTICE, "Empty message from host %s:%s",
 		    cptr->name, from->name));
 		if (!IsServer(cptr))
@@ -243,7 +243,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		numeric = (*ch - '0') * 100 + (*(ch + 1) - '0') * 10
 		    + (*(ch + 2) - '0');
 		paramcount = MAXPARA;
-		ircstp->is_num++;
+		ircstats.is_num++;
 	}
 	else
 	{
@@ -297,7 +297,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 				    ch, get_client_name(cptr, TRUE)));
 				parse_addlag(cptr, bytes);
 			}
-			ircstp->is_unco++;
+			ircstats.is_unco++;
 			return (-1);
 		}
 		if (cmptr->flags != 0) { /* temporary until all commands are updated */

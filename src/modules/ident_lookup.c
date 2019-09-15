@@ -44,7 +44,7 @@ MOD_UNLOAD()
 static void ident_lookup_failed(Client *cptr)
 {
 	Debug((DEBUG_NOTICE, "ident_lookup_failed() for %p", cptr));
-	ircstp->is_abad++;
+	ircstats.is_abad++;
 	if (cptr->local->authfd != -1)
 	{
 		fd_close(cptr->local->authfd);
@@ -177,9 +177,9 @@ static void ident_lookup_receive(int fd, int revents, void *userdata)
 	{
 		strlcpy(cptr->ident, ident, USERLEN + 1);
 		SetIdentSuccess(cptr);
-		ircstp->is_asuc++;
+		ircstats.is_asuc++;
 	} else {
-		ircstp->is_abad++;
+		ircstats.is_abad++;
 	}
 	return;
 }

@@ -2687,7 +2687,7 @@ int _find_tkline_match(Client *cptr, int skip_soft)
 
 	if (tkl->type & TKL_KILL)
 	{
-		ircstp->is_ref++;
+		ircstats.is_ref++;
 		if (tkl->type & TKL_GLOBAL)
 			return banned_client(cptr, "G-Lined", tkl->ptr.serverban->reason, 1, 0);
 		else
@@ -2695,7 +2695,7 @@ int _find_tkline_match(Client *cptr, int skip_soft)
 	}
 	if (tkl->type & TKL_ZAP)
 	{
-		ircstp->is_ref++;
+		ircstats.is_ref++;
 		return banned_client(cptr, "Z-Lined", tkl->ptr.serverban->reason, (tkl->type & TKL_GLOBAL)?1:0, 0);
 	}
 

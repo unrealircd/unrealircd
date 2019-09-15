@@ -93,7 +93,7 @@ SpamfilterTargetTable spamfiltertargettable[] = {
 /*
  * stats stuff
  */
-struct stats ircst, *ircstp = &ircst;
+struct IRCStatistics ircstats;
 
 char *long_date(time_t clock)
 {
@@ -670,7 +670,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 
 void initstats(void)
 {
-	memset(&ircst, 0, sizeof(ircst));
+	memset(&ircstats, 0, sizeof(ircstats));
 }
 
 void verify_opercount(Client *orig, char *tag)

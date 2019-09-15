@@ -593,12 +593,12 @@ int stats_usage(Client *sptr, char *para)
 int stats_traffic(Client *sptr, char *para)
 {
 	Client *acptr;
-	struct stats *sp;
-	struct stats tmp;
+	IRCStatistics *sp;
+	IRCStatistics tmp;
 	time_t now = TStime();
 
 	sp = &tmp;
-	memcpy(sp, ircstp, sizeof(*sp));
+	memcpy(sp, &ircstats, sizeof(IRCStatistics));
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{

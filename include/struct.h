@@ -1659,7 +1659,8 @@ struct ConfigItem_offchans {
 /*
  * statistics structures
  */
-struct stats {
+typedef struct IRCStatistics IRCStatistics;
+struct IRCStatistics {
 	unsigned int is_cl;	/* number of client connections */
 	unsigned int is_sv;	/* number of server connections */
 	unsigned int is_ni;	/* connection but no idea who it was */
