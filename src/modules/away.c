@@ -70,22 +70,19 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_away)
 {
-	char *away, *awy2 = parv[1];
-	int n, wasaway = 0;
+	char *new_reason = parv[1];
+	int n, already_as_away = 0;
 	MessageTag *mtags = NULL;
 
 	if (IsServer(sptr))
 		return 0;
 
-	away = sptr->user->away;
-
-	if (parc < 2 || !*awy2)
+	if (parc < 2 || !*new_reason)
 	{
 		/* Marking as not away */
-		if (away)
+		if (sptr->user->away)
 		{
-			safe_free(away);
-			sptr->user->away = NULL;
+			safe_free(sptr->user->away);
 
 			new_message(sptr, recv_mtags, &mtags);
 			sendto_server(cptr, 0, 0, mtags, ":%s AWAY", sptr->name);
@@ -101,13 +98,15 @@ CMD_FUNC(cmd_away)
 		return 0;
 	}
 
+	/* Check spamfilters */
 	if (MyUser(sptr))
 	{
-		n = run_spamfilter(sptr, parv[1], SPAMF_AWAY, NULL, 0, NULL);
-			if (n < 0)
-		return n;
+		n = run_spamfilter(sptr, new_reason, SPAMF_AWAY, NULL, 0, NULL);
+		if (n < 0)
+			return n;
 	}
 
+	/* Check set::anti-flood::away-flood */
 	if (MyUser(sptr) && AWAY_PERIOD && !ValidatePermissionsForPath("immune:away-flood",sptr,NULL,NULL,NULL))
 	{
 		if ((sptr->user->flood.away_t + AWAY_PERIOD) <= timeofday)
@@ -124,43 +123,40 @@ CMD_FUNC(cmd_away)
 		}
 	}
 
-	if (strlen(awy2) > iConf.away_length)
-		awy2[iConf.away_length] = '\0';
+	/* Obey set::away-length */
+	if (strlen(new_reason) > iConf.away_length)
+		new_reason[iConf.away_length] = '\0';
 
-	if (away)
-	{
-		/* No Change */
-		if (strcmp(away, parv[1]) == 0)
-			return 0;
-	}
+	/* Check if the new away reason is the same as the current reason - if so then return (no change) */
+	if ((sptr->user->away) && !strcmp(sptr->user->away, new_reason))
+		return 0;
 
-	/* Marking as away */
+	/* All tests passed. Now marking as away (or still away but changing the away reason) */
 
 	sptr->user->lastaway = TStime();
 	
 	new_message(sptr, recv_mtags, &mtags);
 
-	sendto_server(cptr, 0, 0, mtags, ":%s AWAY :%s", sptr->name, awy2);
+	sendto_server(cptr, 0, 0, mtags, ":%s AWAY :%s", sptr->name, new_reason);
 
-	if (away)
+	if (sptr->user->away)
 	{
-		safe_free(away);
-		wasaway = 1;
+		safe_free(sptr->user->away);
+		already_as_away = 1;
 	}
 	
-	safe_strdup(sptr->user->away, awy2);
-	away = sptr->user->away;
+	safe_strdup(sptr->user->away, new_reason);
 
 	if (MyConnect(sptr))
 		sendnumeric(sptr, RPL_NOWAWAY);
 
-	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
+	hash_check_watch(cptr, already_as_away ? RPL_REAWAY : RPL_GONEAWAY);
 
 	sendto_local_common_channels(sptr, sptr,
 	                             ClientCapabilityBit("away-notify"), mtags,
-	                             ":%s AWAY :%s", sptr->name, away);
+	                             ":%s AWAY :%s", sptr->name, sptr->user->away);
 
-	RunHook3(HOOKTYPE_AWAY, sptr, mtags, away);
+	RunHook3(HOOKTYPE_AWAY, sptr, mtags, sptr->user->away);
 
 	free_message_tags(mtags);
 
