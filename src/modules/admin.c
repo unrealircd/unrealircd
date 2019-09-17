@@ -78,11 +78,9 @@ CMD_FUNC(cmd_admin)
 	for (admin = conf_admin_tail; admin; admin = admin->prev)
 	{
 		if (!admin->next)
-			sendnumeric(sptr, RPL_ADMINLOC1,
-			    me.name, sptr->name, admin->line);
+			sendnumeric(sptr, RPL_ADMINLOC1, admin->line);
 		else if (!admin->next->next)
-			sendnumeric(sptr, RPL_ADMINLOC2,
-			    me.name, sptr->name, admin->line);
+			sendnumeric(sptr, RPL_ADMINLOC2, admin->line);
 		else
 			sendnumeric(sptr, RPL_ADMINEMAIL, admin->line);
 	}
