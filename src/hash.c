@@ -685,8 +685,8 @@ int hash_check_watch(Client *cptr, int reply)
 	{
 		if (!awaynotify)
 		{
-			sendnumeric(lp->value.cptr, reply, me.name,
-			    lp->value.cptr->name, cptr->name,
+			sendnumeric(lp->value.cptr, reply,
+			    cptr->name,
 			    (IsUser(cptr) ? cptr->user->username : "<N/A>"),
 			    (IsUser(cptr) ?
 			    (IsHidden(cptr) ? cptr->user->virthost : cptr->
@@ -699,15 +699,15 @@ int hash_check_watch(Client *cptr, int reply)
 				continue; /* skip away/unaway notification for users not interested in them */
 
 			if (reply == RPL_NOTAWAY)
-				sendnumeric(lp->value.cptr, reply, me.name,
-				    lp->value.cptr->name, cptr->name,
+				sendnumeric(lp->value.cptr, reply,
+				    cptr->name,
 				    (IsUser(cptr) ? cptr->user->username : "<N/A>"),
 				    (IsUser(cptr) ?
 				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
 				    user->realhost) : "<N/A>"), cptr->user->lastaway);
 			else /* RPL_GONEAWAY / RPL_REAWAY */
-				sendnumeric(lp->value.cptr, reply, me.name,
-				    lp->value.cptr->name, cptr->name,
+				sendnumeric(lp->value.cptr, reply,
+				    cptr->name,
 				    (IsUser(cptr) ? cptr->user->username : "<N/A>"),
 				    (IsUser(cptr) ?
 				    (IsHidden(cptr) ? cptr->user->virthost : cptr->

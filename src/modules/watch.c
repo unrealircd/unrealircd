@@ -74,14 +74,14 @@ static void show_watch(Client *cptr, char *name, int rpl1, int rpl2, int awaynot
 			return;
 		}
 		
-		sendnumeric(cptr, rpl1, me.name, cptr->name,
+		sendnumeric(cptr, rpl1,
 		    acptr->name, acptr->user->username,
 		    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
 		    realhost, acptr->lastnick);
 	}
 	else
 	{
-		sendnumeric(cptr, rpl2, me.name, cptr->name,
+		sendnumeric(cptr, rpl2,
 		    name, "*", "*", 0L);
 	}
 }

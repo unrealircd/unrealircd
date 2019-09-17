@@ -590,7 +590,7 @@ int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
 			{
 				if (i != -1)
 				{
-					sendnumeric(sptr, i, me.name, sptr->name, name);
+					sendnumeric(sptr, i, name);
 				}
 				continue;
 			}
