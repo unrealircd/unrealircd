@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
   = {
 	"usermodes/servicebot",
 	"4.2",
-	"User Mode +q",
+	"User Mode +S",
 	"UnrealIRCd Team",
 	"unrealircd-5",
     };
