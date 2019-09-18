@@ -899,6 +899,8 @@ void init_throttling()
 		v = THROTTLING_PERIOD/2;
 		if (v > 5)
 			v = 5; /* accuracy, please */
+		if (v < 1)
+			v = 1; /* duh */
 	}
 	EventAdd(NULL, "bucketcleaning", v, 0, e_clean_out_throttling_buckets, NULL);
 }

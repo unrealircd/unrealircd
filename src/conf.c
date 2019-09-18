@@ -2588,6 +2588,8 @@ int	config_run()
 			v = THROTTLING_PERIOD/2;
 			if (v > 5)
 				v = 5; /* accuracy, please */
+			if (v < 1)
+				v = 1; /* duh */
 		}
 		eInfo.every = v;
 		EventMod(EventFind("bucketcleaning"), &eInfo);
