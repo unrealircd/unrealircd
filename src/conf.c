@@ -1011,20 +1011,20 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					else
 					{
 						safe_strldup(curce->ce_vardata, start, ptr-start+1);
-						preprocessor_replace_defines(&curce->ce_vardata);
+						preprocessor_replace_defines(&curce->ce_vardata, curce);
 						unreal_delquotes(curce->ce_vardata);
 					}
 				}
 				else
 				{
 					curce = safe_alloc(sizeof(ConfigEntry));
-					safe_strldup(curce->ce_varname, start, ptr-start+1);
-					preprocessor_replace_defines(&curce->ce_varname);
-					unreal_delquotes(curce->ce_varname);
 					curce->ce_varlinenum = linenumber;
 					curce->ce_fileptr = curcf;
 					curce->ce_prevlevel = cursection;
 					curce->ce_fileposstart = (start - confdata);
+					safe_strldup(curce->ce_varname, start, ptr-start+1);
+					preprocessor_replace_defines(&curce->ce_varname, curce);
+					unreal_delquotes(curce->ce_varname);
 					preprocessor_cc_duplicate_list(cc_list, &curce->ce_cond);
 				}
 				break;
@@ -1118,19 +1118,19 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					else
 					{
 						safe_strldup(curce->ce_vardata, start, ptr-start+1);
-						preprocessor_replace_defines(&curce->ce_vardata);
+						preprocessor_replace_defines(&curce->ce_vardata, curce);
 					}
 				}
 				else
 				{
 					curce = safe_alloc(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
-					safe_strldup(curce->ce_varname, start, ptr-start+1);
-					preprocessor_replace_defines(&curce->ce_varname);
 					curce->ce_varlinenum = linenumber;
 					curce->ce_fileptr = curcf;
 					curce->ce_prevlevel = cursection;
 					curce->ce_fileposstart = (start - confdata);
+					safe_strldup(curce->ce_varname, start, ptr-start+1);
+					preprocessor_replace_defines(&curce->ce_varname, curce);
 					if (curce->ce_cond)
 						abort(); // hmm this can be reached? FIXME!
 					preprocessor_cc_duplicate_list(cc_list, &curce->ce_cond);

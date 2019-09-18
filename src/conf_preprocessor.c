@@ -22,6 +22,13 @@ void read_until(char **p, char *stopchars)
 	for (; **p && !strchr(stopchars, **p); *p = *p + 1);
 }
 
+static inline int ValidVarCharacter(char x)
+{
+	if (isupper(x) || isdigit(x) || strchr("_", x))
+		return 1;
+	return 0;
+}
+
 int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, ConditionalConfig **cc_out)
 {
 	char *p=statement, *name;
@@ -226,7 +233,7 @@ int evaluate_preprocessor_define(char *statement, char *filename, int linenumber
 	name++;
 	for (p = name; *p; p++)
 	{
-		if (!isupper(*p) && !isdigit(*p) && !strchr("_", *p))
+		if (!ValidVarCharacter(*p))
 		{
 			config_error("%s:%i: A $VARIABLE name may only contain UPPERcase characters, "
 			             "digits, and the _ character. Illegal character: '%c'",
@@ -483,7 +490,7 @@ char *get_config_define(char *name)
 	return NULL;
 }
 
-void preprocessor_replace_defines(char **item)
+void preprocessor_replace_defines(char **item, ConfigEntry *ce)
 {
 	static char buf[4096];
 	char varname[512];
@@ -510,16 +517,40 @@ void preprocessor_replace_defines(char **item)
 		/* $ encountered: */
 		varstart = i;
 		i++;
-		for (; *i && (isalnum(*i) || strchr("_", *i)); i++);
+		for (; *i && ValidVarCharacter(*i); i++);
 		varend = i;
 		i--;
 		limit = varend - varstart + 1;
 		if (limit > sizeof(varname))
 			limit = sizeof(varname);
 		strlcpy(varname, varstart, limit);
-		value = get_config_define(varname+1);
-		if (!value)
-			value = varname; /* not found? then use varname, including the '$' */
+		if (!strncmp(varstart, "$$", 2))
+		{
+			/* If we get here then we encountered "$$"
+			 * and varname is just "$".
+			 * This means we are hitting a $ escape sequence,
+			 * the $$ is used as a literal $.
+			 * Would be very rare if you need it, but.. we support it.
+			 */
+			value = varname; /* bit confusing, but no +1 here */
+			i++; /* skip extra $ in input */
+		} else
+		{
+			value = get_config_define(varname+1);
+			if (!value)
+			{
+				/* Complain about $VARS if they are not defined, but don't bother
+				 * for cases where it's clearly not a macro, eg. contains illegal
+				 * variable characters.
+				 */
+				if ((limit > 2) && ((*varend == '\0') || strchr("\t ,.", *varend)))
+				{
+					config_warn("%s:%d: Variable %s used here but there's no @define for it earlier.",
+						    ce->ce_fileptr->cf_filename, ce->ce_varlinenum, varname);
+				}
+				value = varname; /* not found? then use varname, including the '$' */
+			}
+		}
 		limit = strlen(value) + 1;
 		if (limit > n)
 			limit = n;
