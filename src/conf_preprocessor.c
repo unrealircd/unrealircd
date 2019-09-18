@@ -539,6 +539,7 @@ void preprocessor_replace_defines(char **item, ConfigEntry *ce)
 			value = get_config_define(varname+1);
 			if (!value)
 			{
+#if 0
 				/* Complain about $VARS if they are not defined, but don't bother
 				 * for cases where it's clearly not a macro, eg. contains illegal
 				 * variable characters.
@@ -548,6 +549,7 @@ void preprocessor_replace_defines(char **item, ConfigEntry *ce)
 					config_warn("%s:%d: Variable %s used here but there's no @define for it earlier.",
 						    ce->ce_fileptr->cf_filename, ce->ce_varlinenum, varname);
 				}
+#endif
 				value = varname; /* not found? then use varname, including the '$' */
 			}
 		}
