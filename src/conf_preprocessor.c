@@ -215,6 +215,33 @@ int evaluate_preprocessor_define(char *statement, char *filename, int linenumber
 	*p = '\0';
 	*name_terminator = '\0';
 
+	if (*name != '$')
+	{
+		config_error("%s:%i: the defined variable should start with a dollar sign ($), "
+		             "so: @define $something \"123\" and not @define something \"123\"",
+		             filename, linenumber);
+		return PREPROCESSOR_ERROR;
+	}
+	/* Skip dollar sign */
+	name++;
+	for (p = name; *p; p++)
+	{
+		if (!isupper(*p) && !isdigit(*p) && !strchr("_", *p))
+		{
+			config_error("%s:%i: A $VARIABLE name may only contain UPPERcase characters, "
+			             "digits, and the _ character. Illegal character: '%c'",
+			             filename, linenumber, *p);
+			return PREPROCESSOR_ERROR;
+		}
+	}
+
+	if (strlen(value) > 512)
+	{
+		config_error("%s:%i: Value of defined variable is extremely large (%ld characters)!",
+		             filename, linenumber, (long)strlen(value));
+		return PREPROCESSOR_ERROR;
+	}
+
 	NameValueList *d = safe_alloc(sizeof(NameValueList));
 	safe_strdup(d->name, name);
 	safe_strdup(d->value, value);
