@@ -348,6 +348,19 @@ int write_tkline(FILE *fd, const char *tmpfname, TKL *tkl)
 		W_SAFE(write_str(fd, tkl->ptr.serverban->hostmask));
 		W_SAFE(write_str(fd, tkl->ptr.serverban->reason));
 	} else
+	if (TKLIsBanException(tkl))
+	{
+		char *usermask = tkl->ptr.banexception->usermask;
+		if (tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT)
+		{
+			snprintf(buf, sizeof(buf), "%%%s", tkl->ptr.banexception->usermask);
+			usermask = buf;
+		}
+		W_SAFE(write_str(fd, usermask));
+		W_SAFE(write_str(fd, tkl->ptr.banexception->hostmask));
+		W_SAFE(write_str(fd, tkl->ptr.banexception->bantypes));
+		W_SAFE(write_str(fd, tkl->ptr.banexception->reason));
+	} else
 	if (TKLIsNameBan(tkl))
 	{
 		char *hold = tkl->ptr.nameban->hold ? "H" : "*";
@@ -503,6 +516,47 @@ int read_tkldb(void)
 				                  tkl->ptr.serverban->reason,
 				                  tkl->set_by, tkl->expire_at,
 				                  tkl->set_at, softban, 0);
+			}
+		} else
+		if (TKLIsBanException(tkl))
+		{
+			int softban = 0;
+
+			tkl->ptr.banexception = safe_alloc(sizeof(BanException));
+
+			/* Usermask - but taking into account that the
+			 * %-prefix means a soft ban.
+			 */
+			R_SAFE(read_str(fd, &str));
+			if (*str == '%')
+			{
+				softban = 1;
+				safe_strdup(tkl->ptr.banexception->usermask, str+1);
+			} else {
+				safe_strdup(tkl->ptr.banexception->usermask, str);
+			}
+			safe_free(str);
+
+			/* And the other 3 fields.. */
+			R_SAFE(read_str(fd, &tkl->ptr.banexception->hostmask));
+			R_SAFE(read_str(fd, &tkl->ptr.banexception->bantypes));
+			R_SAFE(read_str(fd, &tkl->ptr.banexception->reason));
+
+			if (find_tkl_banexception(tkl->type, tkl->ptr.banexception->usermask,
+			                          tkl->ptr.banexception->hostmask, softban))
+			{
+				do_not_add = 1;
+			}
+
+			if (!do_not_add)
+			{
+				tkl_add_banexception(tkl->type, tkl->ptr.banexception->usermask,
+				                     tkl->ptr.banexception->hostmask,
+				                     tkl->ptr.banexception->reason,
+				                     tkl->set_by, tkl->expire_at,
+				                     tkl->set_at, softban,
+				                     tkl->ptr.banexception->bantypes,
+				                     0);
 			}
 		} else
 		if (TKLIsNameBan(tkl))
