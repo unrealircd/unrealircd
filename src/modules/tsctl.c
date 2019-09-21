@@ -58,7 +58,7 @@ CMD_FUNC(cmd_tsctl)
 
 	if (MyUser(sptr) && (!parv[1] || strcasecmp(parv[1], "alltime")))
 	{
-		sendnotice(sptr, "/TSCTL now shows the time on all servers. You can now longer MODIFY the time.");
+		sendnotice(sptr, "/TSCTL now shows the time on all servers. You can no longer modify the time.");
 		parv[1] = "alltime";
 	}
 
