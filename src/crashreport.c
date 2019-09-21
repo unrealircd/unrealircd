@@ -326,6 +326,8 @@ int crash_report_asan_log(FILE *reportfd, char *coredump)
 		return 0;
 
 	return 1;
+#else
+	return 0;
 #endif
 }
 
