@@ -1,7 +1,6 @@
 /* UnrealIRCd crash reporter code.
- * (C) Copyright 2015 Bram Matthys ("Syzop") and the UnrealIRCd Team.
- *
- * GPLv2
+ * (C) Copyright 2015-2019 Bram Matthys ("Syzop") and the UnrealIRCd Team.
+ * License: GPLv2
  */
 
 #include "unrealircd.h"
@@ -88,6 +87,45 @@ char *find_best_coredump(void)
 		return best_fname;
 	
 	return NULL; /* none found */
+}
+
+/** Find the latest AddressSanitizer log file */
+char *find_best_asan_log(void)
+{
+#ifndef _WIN32
+	static char best_fname[512];
+	time_t best_time = 0, t;
+	struct dirent *dir;
+	DIR *fd = opendir(TMPDIR);
+
+	if (!fd)
+		return NULL;
+
+	*best_fname = '\0';
+
+	while ((dir = readdir(fd)))
+	{
+		char *fname = dir->d_name;
+		if (strstr(fname, "unrealircd_asan.") && !strstr(fname, ".so") &&
+		    !strstr(fname, ".conf") && !strstr(fname, ".txt") &&
+		    !strstr(fname, ".done"))
+		{
+			char buf[512];
+
+			snprintf(buf, sizeof(buf), "%s/%s", TMPDIR, fname);
+			t = get_file_time(buf);
+			if (t && (t > best_time))
+			{
+				best_time = t;
+				strlcpy(best_fname, buf, sizeof(best_fname));
+			}
+		}
+	}
+	closedir(fd);
+	return BadPtr(best_fname) ? NULL : best_fname;
+#else
+	return NULL;
+#endif
 }
 
 #define EL_AR_MAX MAXPARA
@@ -246,6 +284,47 @@ int crash_report_backtrace(FILE *reportfd, char *coredump)
 	}
 	fclose(fd);
 	fprintf(reportfd, "END OF CRASH DUMP\n");
+	return 1;
+#endif
+}
+
+int crash_report_asan_log(FILE *reportfd, char *coredump)
+{
+#ifndef _WIN32
+	time_t coretime, asantime;
+	FILE *fd;
+	char buf[1024];
+	char *asan_log = find_best_asan_log();
+	int n;
+
+	if (!asan_log)
+		return 0;
+
+	coretime = get_file_time(coredump);
+	asantime = get_file_time(asan_log);
+
+	fprintf(reportfd, "ASan log file found '%s' which is %ld newer than core file\n",
+		asan_log,
+		(long)((long)(coretime) - (long)asantime));
+
+	fd = fopen(asan_log, "r");
+	if (!fd)
+	{
+		fprintf(reportfd, "Could not open ASan log (%s)\n", strerror(errno));
+		return 0;
+	}
+	fprintf(reportfd, "START OF ASAN LOG\n");
+	while((fgets(buf, sizeof(buf), fd)))
+	{
+		stripcrlf(buf);
+		fprintf(reportfd, " %s\n", buf);
+	}
+	n = pclose(fd);
+	fprintf(reportfd, "END OF ASAN LOG\n");
+
+	if (WEXITSTATUS(n) == 127)
+		return 0;
+
 	return 1;
 #endif
 }
@@ -449,7 +528,7 @@ char *generate_crash_report(char *coredump, int *thirdpartymods)
 	crash_report_fix_libs(coredump, thirdpartymods);
 	
 	crash_report_backtrace(reportfd, coredump);
-
+	crash_report_asan_log(reportfd, coredump);
 	attach_coredump(reportfd, coredump);
 
 	fclose(reportfd);

@@ -100,8 +100,9 @@ void DeleteTempModules(void)
 		char *fname = dir->d_name;
 		if (!strcmp(fname, ".") || !strcmp(fname, ".."))
 			continue;
-		if (!strstr(fname, ".so") && !strstr(fname, ".conf") && strstr(fname, "core"))
-			continue; /* core dump */
+		if (!strstr(fname, ".so") && !strstr(fname, ".conf") &&
+		    (strstr(fname, "core") || strstr(fname, "unrealircd_asan.")))
+			continue; /* core dump or ASan log */
 		ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, fname);
 		deletetmp(tempbuf);
 	}
