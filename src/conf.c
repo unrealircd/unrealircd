@@ -200,7 +200,6 @@ long	config_checkval(char *value, unsigned short flags);
 ConfigFile		*config_load(char *filename);
 void			config_free(ConfigFile *cfptr);
 static ConfigFile 	*config_parse(char *filename, char *confdata);
-static void 		config_entry_free(ConfigEntry *ceptr);
 ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name);
 
 extern void add_entropy_configfile(struct stat *st, char *buf);
@@ -1167,18 +1166,21 @@ breakout:
 	return curcf;
 }
 
-static void config_entry_free(ConfigEntry *ceptr)
+/** Free a ConfigEntry struct (and all it's children) */
+void config_entry_free(ConfigEntry *ce)
 {
 	ConfigEntry	*nptr;
 
-	for(;ceptr;ceptr=nptr)
+	for(;ce;ce=nptr)
 	{
-		nptr = ceptr->ce_next;
-		if (ceptr->ce_entries)
-			config_entry_free(ceptr->ce_entries);
-		safe_free(ceptr->ce_varname);
-		safe_free(ceptr->ce_vardata);
-		safe_free(ceptr);
+		nptr = ce->ce_next;
+		if (ce->ce_entries)
+			config_entry_free(ce->ce_entries);
+		safe_free(ce->ce_varname);
+		safe_free(ce->ce_vardata);
+		if (ce->ce_cond)
+			preprocessor_cc_free_list(ce->ce_cond);
+		safe_free(ce);
 	}
 }
 

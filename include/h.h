@@ -57,6 +57,7 @@ extern MODVAR char umodestring[UMODETABLESZ+1];
 extern int parse_preprocessor_item(char *start, char *end, char *filename, int linenumber, ConditionalConfig **cc);
 extern void preprocessor_cc_duplicate_list(ConditionalConfig *r, ConditionalConfig **out);
 extern void preprocessor_cc_free_level(ConditionalConfig **cc_list, int level);
+extern void preprocessor_cc_free_list(ConditionalConfig *cc);
 extern void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, int phase);
 extern void preprocessor_resolve_conditionals_all(int phase);
 extern void free_config_defines(void);
@@ -114,6 +115,7 @@ extern void config_warn_duplicate(const char *filename, int line, const char *en
 extern int config_is_blankorempty(ConfigEntry *cep, const char *block);
 extern MODVAR int config_verbose;
 extern void config_progress(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
+extern void config_entry_free(ConfigEntry *ce);
 extern void       ipport_seperate(char *string, char **ip, char **port);
 extern ConfigItem_class	*Find_class(char *name);
 extern ConfigItem_deny_dcc	*Find_deny_dcc(char *name);

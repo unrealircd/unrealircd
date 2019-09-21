@@ -337,18 +337,6 @@ void preprocessor_cc_free_list(ConditionalConfig *cc)
 	}
 }
 
-void free_config_entry(ConfigEntry *ce)
-{
-	/* free ConditionalConfig */
-	if (ce->ce_cond)
-		preprocessor_cc_free_list(ce->ce_cond);
-
-	/* free ConfigEntry */
-	safe_free(ce->ce_varname);
-	safe_free(ce->ce_vardata);
-	safe_free(ce);
-}
-
 NameValueList *find_config_define(const char *name)
 {
 	NameValueList *n;
@@ -423,9 +411,7 @@ void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, int phase)
 				/* non-head */
 				ce_prev->ce_next = ce->ce_next; /* can be NULL now */
 			}
-			// FIXME: this entry may have ce->ce_entries as well, right?
-			// if so, we must free those too or we have a memory leak !
-			free_config_entry(ce);
+			config_entry_free(ce);
 			continue;
 		}
 
@@ -444,7 +430,7 @@ void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, int phase)
 					/* non-head */
 					ce_prev->ce_next = cep->ce_next;
 				}
-				free_config_entry(cep);
+				config_entry_free(cep);
 				continue;
 			}
 			preprocessor_resolve_conditionals_ce(&cep, phase);
