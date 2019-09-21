@@ -39,6 +39,9 @@ MOD_INIT()
 	CmodeInfo req;
 	ModDataInfo mreq;
 
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM_RELOADABLE, 1);
+
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.is_ok = extcmode_default_requirechop;
@@ -76,8 +79,6 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, 0, moded_chanmode);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, 0, moded_chanmode);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 99999999, moded_prechanmsg);
-
-	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	return MOD_SUCCESS;
 }
