@@ -47,6 +47,7 @@ typedef struct {
 	long t;
 } ThrottleCounter;
 
+typedef struct UCounter UCounter;
 struct UCounter {
 	ThrottleCounter local;		/**< Local counter */
 	ThrottleCounter global;		/**< Global counter */
@@ -60,9 +61,7 @@ struct UCounter {
 	int throttling_banner_displayed;/**< Big we-are-now-throttling banner displayed? */
 	time_t next_event;		/**< When is next event? (for "last 60 seconds" stats) */
 };
-static struct UCounter ucounter;
-
-static char rehash_dump_filename[512];
+UCounter *ucounter = NULL;
 
 #define MSG_THROTTLE "THROTTLE"
 
@@ -76,9 +75,8 @@ int ct_pre_lconnect(Client *sptr);
 int ct_lconnect(Client *);
 int ct_rconnect(Client *);
 CMD_FUNC(ct_throttle);
-void rehash_dump_settings(void);
-void rehash_read_settings(void);
 EVENT(connthrottle_evt);
+void ucounter_free(ModData *m);
 
 MOD_TEST()
 {
@@ -101,7 +99,9 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	snprintf(rehash_dump_filename, sizeof(rehash_dump_filename), "%s/connthrottle.tmp", TMPDIR);
+	LoadPersistentPointer(modinfo, ucounter, ucounter_free);
+	if (!ucounter)
+		ucounter = safe_alloc(sizeof(UCounter));
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, ct_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, ct_pre_lconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, ct_lconnect);
@@ -112,14 +112,14 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	rehash_read_settings();
 	EventAdd(modinfo->handle, "connthrottle_evt", 1, 0, connthrottle_evt, NULL);
 	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD()
 {
-	rehash_dump_settings();
+	SavePersistentPointer(modinfo, ucounter);
+	safe_free(cfg.reason);
 	return MOD_SUCCESS;
 }
 
@@ -349,32 +349,32 @@ EVENT(connthrottle_evt)
 {
 	char buf[512];
 
-	if (ucounter.next_event > TStime())
+	if (ucounter->next_event > TStime())
 		return;
-	ucounter.next_event = TStime() + 60;
+	ucounter->next_event = TStime() + 60;
 
-	if (ucounter.rejected_clients)
+	if (ucounter->rejected_clients)
 	{
 		snprintf(buf, sizeof(buf),
 		         "[ConnThrottle] Stats for this server past 60 secs: Connections rejected: %d. Accepted: %d known user(s), %d SASL and %d new user(s).",
-		         ucounter.rejected_clients,
-		         ucounter.allowed_score,
-		         ucounter.allowed_sasl,
-		         ucounter.allowed_other);
+		         ucounter->rejected_clients,
+		         ucounter->allowed_score,
+		         ucounter->allowed_sasl,
+		         ucounter->allowed_other);
 
 		sendto_realops("%s", buf);
 		ircd_log(LOG_ERROR, "%s", buf);
 	}
 
 	/* Reset stats for next message */
-	ucounter.rejected_clients = 0;
-	ucounter.allowed_score = 0;
-	ucounter.allowed_sasl = 0;
-	ucounter.allowed_other = 0;
+	ucounter->rejected_clients = 0;
+	ucounter->allowed_score = 0;
+	ucounter->allowed_sasl = 0;
+	ucounter->allowed_other = 0;
 
-	ucounter.throttling_previous_minute = ucounter.throttling_this_minute;
-	ucounter.throttling_this_minute = 0; /* reset */
-	ucounter.throttling_banner_displayed = 0; /* reset */
+	ucounter->throttling_previous_minute = ucounter->throttling_this_minute;
+	ucounter->throttling_this_minute = 0; /* reset */
+	ucounter->throttling_banner_displayed = 0; /* reset */
 }
 
 #define THROT_LOCAL 1
@@ -387,7 +387,7 @@ int ct_pre_lconnect(Client *sptr)
 	if (me.local->firsttime + cfg.start_delay > TStime())
 		return 0; /* no throttle: start delay */
 
-	if (ucounter.disabled)
+	if (ucounter->disabled)
 		return 0; /* protection disabled: allow user */
 
 	if (still_reputation_gathering())
@@ -409,25 +409,25 @@ int ct_pre_lconnect(Client *sptr)
 	/* If we reach this then the user is NEW */
 
 	/* +1 global client would reach global limit? */
-	if ((TStime() - ucounter.global.t < cfg.global.period) && (ucounter.global.count+1 > cfg.global.count))
+	if ((TStime() - ucounter->global.t < cfg.global.period) && (ucounter->global.count+1 > cfg.global.count))
 		throttle |= THROT_GLOBAL;
 
 	/* +1 local client would reach local limit? */
-	if ((TStime() - ucounter.local.t < cfg.local.period) && (ucounter.local.count+1 > cfg.local.count))
+	if ((TStime() - ucounter->local.t < cfg.local.period) && (ucounter->local.count+1 > cfg.local.count))
 		throttle |= THROT_LOCAL;
 
 	if (throttle)
 	{
-		ucounter.throttling_this_minute = 1;
-		ucounter.rejected_clients++;
+		ucounter->throttling_this_minute = 1;
+		ucounter->rejected_clients++;
 		/* We send the LARGE banner if throttling was activated */
-		if (!ucounter.throttling_previous_minute && !ucounter.throttling_banner_displayed)
+		if (!ucounter->throttling_previous_minute && !ucounter->throttling_banner_displayed)
 		{
 			ircd_log(LOG_ERROR, "[ConnThrottle] Connection throttling has been ACTIVATED due to a HIGH CONNECTION RATE.");
 			sendto_realops("[ConnThrottle] Connection throttling has been ACTIVATED due to a HIGH CONNECTION RATE.");
 			sendto_realops("[ConnThrottle] Users with IP addresses that have not been seen before will be rejected above the set connection rate. Known users can still get in.");
 			sendto_realops("[ConnThrottle] For more information see https://www.unrealircd.org/docs/ConnThrottle");
-			ucounter.throttling_banner_displayed = 1;
+			ucounter->throttling_banner_displayed = 1;
 		}
 		return exit_client(sptr, sptr, &me, NULL, cfg.reason);
 	}
@@ -441,22 +441,22 @@ void bump_connect_counter(int local_connect)
 	if (local_connect)
 	{
 		/* Bump local connect counter */
-		if (TStime() - ucounter.local.t >= cfg.local.period)
+		if (TStime() - ucounter->local.t >= cfg.local.period)
 		{
-			ucounter.local.t = TStime();
-			ucounter.local.count = 1;
+			ucounter->local.t = TStime();
+			ucounter->local.count = 1;
 		} else {
-			ucounter.local.count++;
+			ucounter->local.count++;
 		}
 	}
 
 	/* Bump global connect counter */
-	if (TStime() - ucounter.global.t >= cfg.global.period)
+	if (TStime() - ucounter->global.t >= cfg.global.period)
 	{
-		ucounter.global.t = TStime();
-		ucounter.global.count = 1;
+		ucounter->global.t = TStime();
+		ucounter->global.count = 1;
 	} else {
-		ucounter.global.count++;
+		ucounter->global.count++;
 	}
 }
 
@@ -467,7 +467,7 @@ int ct_lconnect(Client *sptr)
 	if (me.local->firsttime + cfg.start_delay > TStime())
 		return 0; /* no throttle: start delay */
 
-	if (ucounter.disabled)
+	if (ucounter->disabled)
 		return 0; /* protection disabled: allow user */
 
 	if (still_reputation_gathering())
@@ -476,7 +476,7 @@ int ct_lconnect(Client *sptr)
 	if (cfg.sasl_bypass && IsLoggedIn(sptr))
 	{
 		/* Allowed in: user authenticated using SASL */
-		ucounter.allowed_sasl++;
+		ucounter->allowed_sasl++;
 		return 0;
 	}
 
@@ -484,12 +484,12 @@ int ct_lconnect(Client *sptr)
 	if (score >= cfg.minimum_reputation_score)
 	{
 		/* Allowed in: IP has enough reputation ("known user") */
-		ucounter.allowed_score++;
+		ucounter->allowed_score++;
 		return 0;
 	}
 
 	/* Allowed NEW user */
-	ucounter.allowed_other++;
+	ucounter->allowed_other++;
 
 	bump_connect_counter(1);
 
@@ -555,7 +555,7 @@ CMD_FUNC(ct_throttle)
 	if (!strcasecmp(parv[1], "STATS") || !strcasecmp(parv[1], "STATUS"))
 	{
 		sendnotice(sptr, "STATUS:");
-		if (ucounter.disabled)
+		if (ucounter->disabled)
 		{
 			sendnotice(sptr, "Module DISABLED on oper request. To re-enable, type: /THROTTLE ON");
 		} else {
@@ -575,25 +575,25 @@ CMD_FUNC(ct_throttle)
 	} else 
 	if (!strcasecmp(parv[1], "OFF"))
 	{
-		if (ucounter.disabled == 1)
+		if (ucounter->disabled == 1)
 		{
 			sendnotice(sptr, "Already OFF");
 			return 0;
 		}
-		ucounter.disabled = 1;
+		ucounter->disabled = 1;
 		sendto_realops("[connthrottle] %s (%s@%s) DISABLED the connthrottle module.",
 			sptr->name, sptr->user->username, sptr->user->realhost);
 	} else
 	if (!strcasecmp(parv[1], "ON"))
 	{
-		if (ucounter.disabled == 0)
+		if (ucounter->disabled == 0)
 		{
 			sendnotice(sptr, "Already ON");
 			return 0;
 		}
 		sendto_realops("[connthrottle] %s (%s@%s) ENABLED the connthrottle module.",
 			sptr->name, sptr->user->username, sptr->user->realhost);
-		ucounter.disabled = 0;
+		ucounter->disabled = 0;
 	} else
 	if (!strcasecmp(parv[1], "RESET"))
 	{
@@ -608,187 +608,7 @@ CMD_FUNC(ct_throttle)
 	return 0;
 }
 
-void rehash_dump_settings(void)
+void ucounter_free(ModData *m)
 {
-	FILE *fd = fopen(rehash_dump_filename, "w");
-
-	if (!fd)
-	{
-		config_status("WARNING: could not write to tmp/connthrottle.tmp (%s): "
-		             "throttling counts and status will be RESET", strerror(errno));
-		return;
-	}
-	fprintf(fd, "# THROTTLE DUMP v1 == DO NOT EDIT!\n");
-	fprintf(fd, "TSME %lld\n", (long long)me.local->firsttime);
-	fprintf(fd, "TSNOW %lld\n", (long long)TStime());
-	fprintf(fd, "next_event %lld\n", (long long)ucounter.next_event);
-	fprintf(fd, "local.count %d\n", ucounter.local.count);
-	fprintf(fd, "local.t %ld\n", ucounter.local.t);
-	fprintf(fd, "global.count %d\n", ucounter.global.count);
-	fprintf(fd, "global.t %ld\n", ucounter.global.t);
-	fprintf(fd, "rejected_clients %d\n", ucounter.rejected_clients);
-	fprintf(fd, "allowed_score %d\n", ucounter.allowed_score);
-	fprintf(fd, "allowed_sasl %d\n", ucounter.allowed_sasl);
-	fprintf(fd, "allowed_other %d\n", ucounter.allowed_other);
-	fprintf(fd, "disabled %d\n", (int)ucounter.disabled);
-	fprintf(fd, "throttling_this_minute %d\n", ucounter.throttling_this_minute);
-	fprintf(fd, "throttling_previous_minute %d\n", ucounter.throttling_previous_minute);
-	fprintf(fd, "throttling_banner_displayed %d\n", ucounter.throttling_banner_displayed);
-	if (fclose(fd))
-	{
-		/* fclose(/fprintf) error */
-		config_status("WARNING: error while writing to tmp/connthrottle.tmp (%s): "
-		              "throttling counts and status will be RESET", strerror(errno));
-	}
-}
-
-/** Helper for rehash_read_settings() to parse connthrottle temp file */
-int parse_connthrottle_file(char *str, char **name, char **value)
-{
-	static char buf[512];
-	char *p;
-
-	/* Initialize */
-	*name = *value = NULL;
-	strlcpy(buf, str, sizeof(buf));
-
-	/* Strtoken */
-	p = strchr(buf, ' ');
-	if (!p)
-		return 0;
-	*p++ = '\0';
-
-	/* Success */
-	*name = buf;
-	*value = p;
-	return 1;
-}
-
-void rehash_read_settings(void)
-{
-	FILE *fd = fopen(rehash_dump_filename, "r");
-	char buf[512], *name, *value;
-	time_t ts;
-	int num = 0;
-
-	if (!fd)
-		return;
-
-	/* 1. Check header */
-	if (!fgets(buf, sizeof(buf), fd) || strncmp(buf, "# THROTTLE DUMP v1 == DO NOT EDIT!", 34))
-	{
-		config_status("WARNING: tmp/connthrottle.tmp corrupt (I)");
-		fclose(fd);
-		return;
-	}
-
-	/* 2. Check if boottime matches exactly */
-	if (!fgets(buf, sizeof(buf), fd) ||
-	    !parse_connthrottle_file(buf, &name, &value) ||
-	    strcmp(name, "TSME"))
-	{
-		config_status("WARNING: tmp/connthrottle.tmp corrupt (II)");
-		fclose(fd);
-		return;
-	}	
-	ts = atoi(buf+5);
-	if (ts != me.local->firsttime) /* Not rehashing, possible restart or die */
-	{
-		fclose(fd);
-#ifdef DEBUGMODE
-		config_status("ts!=me.local->firsttime: ts=%lld, me.local->firsttime=%lld",
-			(long long)ts, (long long)me.local->firsttime);
-#endif
-		unlink("tmp/connthrottle.tmp");
-		return;
-	}
-
-	/* 3. Now parse the rest */
-	while((fgets(buf, sizeof(buf), fd)))
-	{
-		if (!parse_connthrottle_file(buf, &name, &value))
-		{
-			config_warn("Corrupt connthrottle temp file. Settings may be lost.");
-			continue;
-		}
-
-		if (!strcmp(name, "TSNOW"))
-		{
-			/* Ignored */
-		} else
-		if (!strcmp(name, "next_event"))
-		{	ucounter.next_event = atol(value);
-			num++;
-		} else
-		if (!strcmp(name, "local.count"))
-		{	ucounter.local.count = atoi(value);
-			num++;
-		} else
-		if (!strcmp(name, "local.t"))
-		{
-			ucounter.local.t = atol(value);
-			num++;
-		} else
-		if (!strcmp(name, "global.count"))
-		{
-			ucounter.global.count = atoi(value);
-			num++;
-		} else
-		if (!strcmp(name, "global.t"))
-		{
-			ucounter.global.t = atol(value);
-			num++;
-		} else
-		if (!strcmp(name, "rejected_clients"))
-		{
-			ucounter.rejected_clients = atoi(value);
-			num++;
-		} else
-		if (!strcmp(name, "allowed_score"))
-		{
-			ucounter.allowed_score = atoi(value);
-			num++;
-		} else
-		if (!strcmp(name, "allowed_sasl"))
-		{
-			ucounter.allowed_sasl = atoi(value);
-			num++;
-		} else
-		if (!strcmp(name, "allowed_other"))
-		{
-			ucounter.allowed_other = atoi(value);
-			num++;
-		} else
-		if (!strcmp(name, "disabled"))
-		{
-			ucounter.disabled = (char)atoi(value);
-			num++;
-		} else
-		if (!strcmp(name, "throttling_this_minute"))
-		{
-			ucounter.throttling_this_minute = atoi(value);
-			num++;
-		} else
-		if (!strcmp(name, "throttling_previous_minute"))
-		{
-			ucounter.throttling_previous_minute = atoi(value);
-			num++;
-		} else
-		if (!strcmp(name, "throttling_banner_displayed"))
-		{
-			ucounter.throttling_banner_displayed = atoi(value);
-			num++;
-		} else
-		{
-			config_warn("[BUG] Unknown variable in temporary connthrottle file: %s", name);
-		}
-	}
-	fclose(fd);
-	#define EXPECT_VAR_COUNT 13
-	if (num != EXPECT_VAR_COUNT)
-	{
-		config_status("[connthrottle] WARNING: Only %d variables read but expected %d: "
-		              "some information may have been lost during the rehash!",
-		              num, EXPECT_VAR_COUNT);
-	}
+	safe_free(ucounter);
 }
