@@ -599,6 +599,7 @@ void Unload_all_loaded_modules(void)
 		irc_dlclose(mi->dll);
 		deletetmp(mi->tmp_file);
 		safe_free(mi->tmp_file);
+		safe_free(mi->relpath);
 		safe_free(mi);
 	}
 }
