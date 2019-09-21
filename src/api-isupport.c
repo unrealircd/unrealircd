@@ -237,6 +237,19 @@ ISupport *ISupportAdd(Module *module, const char *token, const char *value)
 void ISupportDel(ISupport *isupport)
 {
 	DelListItem(isupport, ISupports);
+	if (isupport->owner)
+	{
+		ModuleObject *mo;
+		for (mo = isupport->owner->objects; mo; mo = mo->next)
+		{
+			if (mo->type == MOBJ_ISUPPORT && mo->object.isupport == isupport)
+			{
+				DelListItem(mo, isupport->owner->objects);
+				safe_free(mo);
+				break;
+			}
+		}
+	}
 	safe_free(isupport->token);
 	safe_free(isupport->value);
 	safe_free(isupport);
