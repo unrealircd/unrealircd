@@ -1355,6 +1355,8 @@ void SocketLoop(void *dummy)
 		} else {
 			highesttimeofday = timeofday;
 		}
+		if (oldtimeofday != timeofday)
+			new_second = 1;
 		oldtimeofday = timeofday;
 		if (new_second)
 			DoEvents();
