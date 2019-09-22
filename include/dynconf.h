@@ -51,6 +51,8 @@ typedef struct OperStat {
 
 typedef enum BroadcastChannelMessagesOption { BROADCAST_CHANNEL_MESSAGES_AUTO=1, BROADCAST_CHANNEL_MESSAGES_ALWAYS=2, BROADCAST_CHANNEL_MESSAGES_NEVER=3 } BroadcastChannelMessagesOption;
 
+typedef enum AllowedChannelChars { ALLOWED_CHANNELCHARS_ANY=1, ALLOWED_CHANNELCHARS_ASCII=2, ALLOWED_CHANNELCHARS_UTF8=3 } AllowedChannelChars;
+
 /** The set { } block configuration */
 typedef struct Configuration Configuration;
 struct Configuration {
@@ -165,6 +167,7 @@ struct Configuration {
 	int ban_setter_sync;
 	int part_instead_of_quit_on_comment_change;
 	BroadcastChannelMessagesOption broadcast_channel_messages;
+	AllowedChannelChars allowed_channelchars;
 };
 
 extern MODVAR Configuration iConf;

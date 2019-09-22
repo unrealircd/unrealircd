@@ -862,28 +862,58 @@ int find_invex(Channel *chptr, Client *sptr)
 	return 0;
 }
 
-/*
-** Remove bells and commas from channel name
-*/
-
-void clean_channelname(char *cn)
+/** Remove unwanted characters from channel name.
+ * You must call this before creating a new channel,
+ * eg in case of /JOIN.
+ */
+void clean_channelname(char *cname)
 {
-	u_char *ch = (u_char *)cn;
+	char *ch = cname;
+	char *end;
 
-
-	for (; *ch; ch++)
-		/* Don't allow any control chars, the space, the comma,
-		 * or the "non-breaking space" in channel names.
-		 * Might later be changed to a system where the list of
-		 * allowed/non-allowed chars for channels was a define
-		 * or some such.
-		 *   --Wizzu
-		 */
-		if (*ch < 33 || *ch == ',' || *ch == ':')
+	if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY)
+	{
+		/* The default up to and including UnrealIRCd 4 */
+		for (; *ch; ch++)
 		{
-			*ch = '\0';
-			return;
+			if (*ch < 33 || *ch == ',' || *ch == ':')
+			{
+				*ch = '\0';
+				break;
+			}
 		}
+	} else
+	if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ASCII)
+	{
+		/* The strict setting: only allow ASCII 32-128, except some chars */
+		for (; *ch; ch++)
+		{
+			if (*ch < 33 || *ch == ',' || *ch == ':' || *ch > 127)
+			{
+				*ch = '\0';
+				break;
+			}
+		}
+	} else
+	if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_UTF8)
+	{
+		/* Only allow UTF8, and also disallow some chars */
+		for (; *ch; ch++)
+		{
+			if (*ch < 33 || *ch == ',' || *ch == ':')
+			{
+				*ch = '\0';
+				break;
+			}
+		}
+		/* And run it through the UTF8 validator */
+		if (!unrl_utf8_validate(cname, (const char **)&end))
+			*end = '\0';
+	} else
+	{
+		/* Impossible */
+		abort();
+	}
 }
 
 /*

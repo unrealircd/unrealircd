@@ -160,6 +160,20 @@ Enhancements
 
 Changed
 --------
+* Channel names must now be valid UTF8 by default.
+  We actually have 3 possible settings of set::allowed-channelchars:
+  utf8:  Channel must be valid UTF8, this is the new default
+  ascii: A very strict setting, for example in use at freenode,
+         the channel name may not contain high ascii or UTF8
+  any:   A very loose setting, which allows almost all characters
+         in the channel name. This was the OLD default, up to and
+         including UnrealIRCd 4. It is no longer recommended.
+  For most networks this new default setting of utf8 will be fine, since
+  by far most IRC clients use UTF8 for many years already.
+  If you have a network that has a significant portion of chatters
+  that are on old non-UTF8 clients that use a specific character set
+  then you may want to use set { allowed-nickchars any; }
+  Some Russian and Ukrainian networks are known to need this.
 * The "except tkl" block is now called "except ban". If no type
   is specified in an except ban { } block then we exempt the entry
   from kline, gline, zline, gzline and shun.

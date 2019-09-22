@@ -1559,6 +1559,8 @@ void config_setdefaultsettings(Configuration *i)
 
 	i->max_concurrent_conversations_users = 10;
 	i->max_concurrent_conversations_new_user_every = 15;
+
+	i->allowed_channelchars = ALLOWED_CHANNELCHARS_UTF8;
 }
 
 static void make_default_logblock(void)
@@ -7527,6 +7529,15 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->ce_vardata, "never"))
 				tempiConf.broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_NEVER;
 		}
+		else if (!strcmp(cep->ce_varname, "allowed-channelchars"))
+		{
+			if (!strcmp(cep->ce_vardata, "ascii"))
+				tempiConf.allowed_channelchars = ALLOWED_CHANNELCHARS_ASCII;
+			else if (!strcmp(cep->ce_vardata, "utf8"))
+				tempiConf.allowed_channelchars = ALLOWED_CHANNELCHARS_UTF8;
+			else if (!strcmp(cep->ce_vardata, "any"))
+				tempiConf.allowed_channelchars = ALLOWED_CHANNELCHARS_ANY;
+		}
 		else
 		{
 			int value;
@@ -8669,6 +8680,18 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			    strcmp(cep->ce_vardata, "never"))
 			{
 				config_error("%s:%i: set::broadcast-channel-messages: value should be 'auto', 'always' or 'never'",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "allowed-channelchars"))
+		{
+			CheckNull(cep);
+			if (strcmp(cep->ce_vardata, "ascii") &&
+			    strcmp(cep->ce_vardata, "utf8") &&
+			    strcmp(cep->ce_vardata, "any"))
+			{
+				config_error("%s:%i: set::allowed-channelchars: value should be one of: 'ascii', 'utf8' or 'any'",
 				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}

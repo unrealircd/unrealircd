@@ -162,7 +162,8 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/API-CLICAP.OBJ SRC/API-MESSAGETAG.OBJ SRC/API-HISTORY-BACKEND.OBJ \
  SRC/API-EXTBAN.OBJ SRC/API-EFUNCTIONS.OBJ SRC/CRYPT_BLOWFISH.OBJ \
  SRC/OPERCLASS.OBJ SRC/UPDCONF.OBJ SRC/CRASHREPORT.OBJ \
- SRC/OPENSSL_HOSTNAME_VALIDATION.OBJ $(CURLOBJ)
+ SRC/OPENSSL_HOSTNAME_VALIDATION.OBJ \
+ SRC/UTF8.OBJ $(CURLOBJ)
 
 OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/WINDEBUG.OBJ SRC/RTF.OBJ \
  SRC/EDITOR.OBJ SRC/WIN.OBJ 
@@ -542,6 +543,9 @@ src/operclass.obj: src/operclass.c $(INCLUDES) ./include/dbuf.h
 
 src/updconf.obj: src/updconf.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/updconf.c
+
+src/utf8.obj: src/utf8.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/utf8.c
 
 src/windows/win.res: src/windows/wingui.rc
         $(RC) /l 0x409 /fosrc/windows/win.res /i ./include /i ./src \

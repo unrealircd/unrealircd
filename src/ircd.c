@@ -1153,6 +1153,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 		  case 'R':
 		      report_crash();
 		      exit(0);
+		  case '8':
+		      utf8_test();
+		      exit(0);
 		  default:
 #ifndef _WIN32
 			  return bad_command(myargv[0]);

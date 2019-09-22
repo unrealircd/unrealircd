@@ -935,3 +935,6 @@ extern void _del_name_list(NameList **list, char *name);
 extern NameList *find_name_list(NameList *list, char *name);
 extern NameList *find_name_list_match(NameList *list, char *name);
 extern int minimum_msec_since_last_run(struct timeval *tv_old, long minimum);
+extern int unrl_utf8_validate(const char *str, const char **end);
+extern char *unrl_utf8_make_valid(const char *str);
+extern void utf8_test(void);

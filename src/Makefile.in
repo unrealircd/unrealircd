@@ -32,6 +32,7 @@ OBJS=dns.o bsd.o auth.o channel.o cloak.o crule.o dbuf.o \
 	api-clicap.o api-messagetag.o api-history-backend.o api-efunctions.o \
 	api-event.o \
 	md5.o crypt_blowfish.o updconf.o crashreport.o \
+	utf8.o \
 	openssl_hostname_validation.o $(URL)
 
 SRC=$(OBJS:%.o=%.c)
@@ -249,6 +250,9 @@ updconf.o: updconf.c $(INCLUDES)
 
 crashreport.o: crashreport.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c crashreport.c
+
+utf8.o: utf8.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c utf8.c
 
 openssl_hostname_validation.o: openssl_hostname_validation.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c openssl_hostname_validation.c
