@@ -81,7 +81,6 @@ void ucounter_free(ModData *m);
 MOD_TEST()
 {
 	memset(&cfg, 0, sizeof(cfg));
-	memset(&ucounter, 0, sizeof(ucounter));
 	
 	/* Defaults: */
 	cfg.local.count = 20; cfg.local.period = 60;
@@ -597,7 +596,7 @@ CMD_FUNC(ct_throttle)
 	} else
 	if (!strcasecmp(parv[1], "RESET"))
 	{
-		memset(&ucounter, 0, sizeof(ucounter));
+		memset(ucounter, 0, sizeof(UCounter));
 		sendto_realops("[connthrottle] %s (%s@%s) did a RESET on the stats/counters!!",
 			sptr->name, sptr->user->username, sptr->user->realhost);
 	} else
