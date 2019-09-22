@@ -32,7 +32,12 @@ struct WebSocketUser {
 	int lefttoparselen; /**< Length of lefttoparse buffer */
 };
 
+#define WEBSOCKET_TYPE_BINARY	0x1
+#define WEBSOCKET_TYPE_TEXT	0x2
+
 #define WSU(cptr)	((WebSocketUser *)moddata_client(cptr, websocket_md).ptr)
+
+#define WEBSOCKET_TYPE(cptr)	((cptr->local && cptr->local->listener) ? cptr->local->listener->websocket_options : 0)
 
 #define WEBSOCKET_MAGIC_KEY "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" /* see RFC6455 */
 
@@ -44,6 +49,8 @@ struct WebSocketUser {
 #define WSOP_PONG         0x0a
 
 /* Forward declarations */
+int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
 int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);
 int websocket_packet_in(Client *sptr, char *readbuf, int *length);
 void websocket_mdata_free(ModData *m);
@@ -58,15 +65,22 @@ int websocket_send_frame(Client *sptr, int opcode, char *buf, int len);
 /* Global variables */
 ModDataInfo *websocket_md;
 
+MOD_TEST()
+{
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, websocket_config_test);
+	return MOD_SUCCESS;
+}
+
 MOD_INIT()
 {
 	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
+
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, websocket_config_run_ex);
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, 0, websocket_packet_out);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, 0, websocket_packet_in);
-	
+
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "websocket";
 	mreq.serialize = NULL;
@@ -87,13 +101,100 @@ MOD_LOAD()
 		            "as this setting is incompatible with the websocket module.");
 		SHOWCONNECTINFO = 0;
 	}
-	
+
 	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
+}
+
+#ifndef CheckNull
+ #define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+#endif
+
+int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	int errors = 0;
+	ConfigEntry *cep;
+	int has_type = 0;
+
+	if (type != CONFIG_LISTEN_OPTIONS)
+		return 0;
+
+	/* We are only interrested in listen::options::websocket.. */
+	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "websocket"))
+		return 0;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "type"))
+		{
+			CheckNull(cep);
+			has_type = 1;
+			if (!strcmp(cep->ce_varname, "binary") || !strcmp(cep->ce_varname, "text"))
+			{
+				config_error("%s:%i: listen::options::websocket::type must be either 'binary' or 'text' (not '%s')",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+				errors++;
+			}
+		} else
+		{
+			config_error("%s:%i: unknown directive listen::options::websocket::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			errors++;
+			continue;
+		}
+	}
+
+	if (!has_type)
+	{
+		config_error("%s:%i: websocket set, but type unspecified. Use something like: listen { ip *; port 443; websocket { type text; } }",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr)
+{
+	ConfigEntry *cep, *cepp;
+	ConfigItem_listen *l;
+	static int warned_once = 0;
+
+	if (type != CONFIG_LISTEN_OPTIONS)
+		return 0;
+
+	/* We are only interrested in listen::options::websocket.. */
+	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "websocket"))
+		return 0;
+
+	l = (ConfigItem_listen *)ptr;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "type"))
+		{
+			if (!strcmp(cep->ce_vardata, "binary"))
+				l->websocket_options = WEBSOCKET_TYPE_BINARY;
+			else if (!strcmp(cep->ce_vardata, "text"))
+			{
+				l->websocket_options = WEBSOCKET_TYPE_TEXT;
+				// FIXME: check for non-utf8 nickchars as well
+				if ((tempiConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY) && !warned_once)
+				{
+					config_warn("You have a websocket listener with type 'text' AND your set::allowed-channelchars is set to 'any'. "
+					            "This is not a recommended combination as this makes your websocket vulnerable to UTF8 conversion attacks.");
+					config_warn("It is highly recommended that you use set { allowed-channelchars utf8; }");
+					warned_once = 1;
+				}
+			}
+		}
+	}
+	return 1;
 }
 
 /** UnrealIRCd internals: free WebSocketUser object. */
@@ -115,7 +216,16 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
 {
 	if (MyConnect(to) && WSU(to) && WSU(to)->handshake_completed)
 	{
-		websocket_create_frame(WSOP_BINARY, msg, length);
+		if (WEBSOCKET_TYPE(to) == WEBSOCKET_TYPE_BINARY)
+			websocket_create_frame(WSOP_BINARY, msg, length);
+		else if (WEBSOCKET_TYPE(to) == WEBSOCKET_TYPE_TEXT)
+		{
+			/* Some more conversions are needed */
+			char *safe_msg = unrl_utf8_make_valid(*msg);
+			*msg = safe_msg;
+			*length = *msg ? strlen(safe_msg) : 0;
+			websocket_create_frame(WSOP_TEXT, msg, length);
+		}
 		return 0;
 	}
 	return 0;
@@ -128,21 +238,21 @@ int websocket_handle_websocket(Client *sptr, char *readbuf2, int length2)
 	int length;
 	int length1 = WSU(sptr)->lefttoparselen;
 	char readbuf[4096];
-	
+
 	length = length1 + length2;
 	if (length > sizeof(readbuf)-1)
 	{
 		dead_link(sptr, "Illegal buffer stacking/Excess flood");
 		return 0;
 	}
-	
+
 	if (length1 > 0)
 		memcpy(readbuf, WSU(sptr)->lefttoparse, length1);
 	memcpy(readbuf+length1, readbuf2, length2);
 
 	safe_free(WSU(sptr)->lefttoparse);
 	WSU(sptr)->lefttoparselen = 0;
-	
+
 	ptr = readbuf;
 	do {
 		n = websocket_handle_packet(sptr, ptr, length);
@@ -175,7 +285,7 @@ int websocket_handle_websocket(Client *sptr, char *readbuf2, int length2)
  */
 int websocket_packet_in(Client *sptr, char *readbuf, int *length)
 {
-	if ((sptr->local->receiveM == 0) && !WSU(sptr) && (*length > 8) && !strncmp(readbuf, "GET ", 4))
+	if ((sptr->local->receiveM == 0) && WEBSOCKET_TYPE(sptr) && !WSU(sptr) && (*length > 8) && !strncmp(readbuf, "GET ", 4))
 	{
 		/* Allocate a new WebSocketUser struct for this session */
 		moddata_client(sptr, websocket_md).ptr = safe_alloc(sizeof(WebSocketUser));
@@ -184,7 +294,7 @@ int websocket_packet_in(Client *sptr, char *readbuf, int *length)
 
 	if (!WSU(sptr))
 		return 1; /* "normal" IRC client */
-	
+
 	if (WSU(sptr)->handshake_completed)
 		return websocket_handle_websocket(sptr, readbuf, *length);
 	/* else.. */
@@ -198,7 +308,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 	char *p;
 	char *k = NULL, *v = NULL;
 	int foundlf = 0;
-	
+
 	if (buffer)
 	{
 		/* Initialize */
@@ -209,17 +319,17 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 		buf[len] = '\0';
 		nextptr = buf;
 	}
-	
+
 	*end_of_request = 0;
-	
+
 	p = nextptr;
-	
+
 	if (!p)
 	{
 		*key = *value = NULL;
 		return 0; /* done processing data */
 	}
-	
+
 	if (!strncmp(p, "\n", 1) || !strncmp(p, "\r\n", 2))
 	{
 		*key = *value = NULL;
@@ -228,7 +338,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 	}
 
 	/* Note: p *could* point to the NUL byte ('\0') */
-	
+
 	/* Special handling for GET line itself. */
 	if (!strncmp(p, "GET ", 4))
 	{
@@ -262,7 +372,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 	 * Example line "Host: www.unrealircd.org"
 	 */
 	k = p; /* SET KEY */
-	
+
 	/* First check if the line contains a terminating \n. If not, don't process it
 	 * as it may have been a cut header.
 	 */
@@ -274,16 +384,16 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 			break;
 		}
 	}
-	
+
 	if (!foundlf)
 	{
 		*key = *value = NULL;
 		*lastloc = k;
 		return 0;
 	}
-	
+
 	p = k;
-	
+
 	for (; *p; p++)
 	{
 		if ((*p == '\n') || (*p == '\r'))
@@ -297,7 +407,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 			*p++ = '\0';
 			if (*p++ != ' ')
 				break; /* missing mandatory space after ':' */
-			
+
 			v = p; /* SET VALUE */
 			nextptr = NULL; /* set to "we are done" in case next for loop fails */
 			for (; *p; p++)
@@ -319,7 +429,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 			return 1;
 		}
 	}
-	
+
 	/* Fatal parse error */
 	*key = *value = NULL;
 	return 0;
@@ -375,7 +485,7 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 			safe_strdup(WSU(sptr)->handshake_key, value);
 		}
 	}
-	
+
 	if (end_of_request)
 	{
 		if (!WSU(sptr)->handshake_key)
@@ -406,16 +516,16 @@ int websocket_complete_handshake(Client *sptr)
 	char buf[512], hashbuf[64];
 	SHA_CTX hash;
 	char sha1out[20]; /* 160 bits */
-	
+
 	WSU(sptr)->handshake_completed = 1;
 
 	snprintf(buf, sizeof(buf), "%s%s", WSU(sptr)->handshake_key, WEBSOCKET_MAGIC_KEY);
 	SHA1_Init(&hash);
 	SHA1_Update(&hash, buf, strlen(buf));
 	SHA1_Final(sha1out, &hash);
-	
+
 	b64_encode(sha1out, sizeof(sha1out), hashbuf, sizeof(hashbuf));
-	
+
 	snprintf(buf, sizeof(buf),
 	         "HTTP/1.1 101 Switching Protocols\r\n"
 	         "Upgrade: websocket\r\n"
@@ -423,14 +533,14 @@ int websocket_complete_handshake(Client *sptr)
 	         "Sec-WebSocket-Accept: %s\r\n"
 	         "\r\n",
 	         hashbuf);
-	
+
 	/* Caution: we bypass sendQ flood checking by doing it this way.
 	 * Risk is minimal, though, as we only permit limited text only
 	 * once per session.
 	 */
 	dbuf_put(&sptr->local->sendQ, buf, strlen(buf));
 	send_queued(sptr);
-	
+
 	return 0;
 }
 
@@ -472,27 +582,27 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 	char maskkey[4]; /**< Key used for masking */
 	char *p, *payload;
 	int total_packet_size;
-	
+
 	if (length < 4)
 	{
 		/* WebSocket packet too short */
 		return 0;
 	}
-	
+
 	/* fin    = readbuf[0] & 0x80; -- unused */
 	opcode = readbuf[0] & 0x7F;
 	masked = readbuf[1] & 0x80;
 	len    = readbuf[1] & 0x7F;
 	p = &readbuf[2]; /* point to next element */
-	
+
 	/* actually 'fin' is unused.. we don't care. */
-	
+
 	if (!masked)
 	{
 		dead_link(sptr, "WebSocket packet not masked");
 		return -1; /* Having the masked bit set is required (RFC6455 p29) */
 	}
-	
+
 	if (len == 127)
 	{
 		dead_link(sptr, "WebSocket packet with insane size");
@@ -519,7 +629,7 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 			return -1; /* This is a violation (not a short read), see page 29 */
 		}
 		p += 2; /* advance pointer 2 bytes */
-		
+
 		/* Need to check the length again, now it has changed: */
 		if (length < len + 4 + 4)
 		{
@@ -529,7 +639,7 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 		/* And update the packet size */
 		total_packet_size = len + 4 + 4; /* 4 for header, 4 for mask key, rest for payload */
 	}
-	
+
 	memcpy(maskkey, p, 4);
 	p+= 4;
 	payload = (len > 0) ? p : NULL;
@@ -545,7 +655,7 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 			*p++ = v ^ maskkey[n % 4];
 		}
 	}
-	
+
 	switch(opcode)
 	{
 		case WSOP_CONTINUATION:
@@ -558,21 +668,21 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 					return -1; /* fatal error occured (such as flood kill) */
 			}
 			return total_packet_size;
-		
+
 		case WSOP_CLOSE:
 			dead_link(sptr, "Connection closed"); /* TODO: Improve I guess */
 			return -1;
-		
+
 		case WSOP_PING:
 			if (websocket_handle_packet_ping(sptr, payload, len) < 0)
 				return -1;
 			return total_packet_size;
-		
+
 		case WSOP_PONG:
 			if (websocket_handle_packet_pong(sptr, payload, len) < 0)
 				return -1;
 			return total_packet_size;
-		
+
 		default:
 			dead_link(sptr, "WebSocket: Unknown opcode");
 			return -1;
@@ -603,9 +713,9 @@ int websocket_handle_packet_pong(Client *sptr, char *buf, int len)
 int websocket_create_frame(int opcode, char **buf, int *len)
 {
 	static char sendbuf[8192];
-	
+
 	sendbuf[0] = opcode | 0x80; /* opcode & final */
-	
+
 	if (*len > sizeof(sendbuf) - 8)
 		abort(); /* should never happen (safety) */
 
@@ -646,16 +756,16 @@ int websocket_send_frame(Client *sptr, int opcode, char *buf, int len)
 {
 	char *b = buf;
 	int l = len;
-	
+
 	if (websocket_create_frame(opcode, &b, &l) < 0)
 		return -1;
-	
+
 	if (DBufLength(&sptr->local->sendQ) > get_sendq(sptr))
 	{
 		dead_link(sptr, "Max SendQ exceeded");
 		return -1;
 	}
-	
+
 	dbuf_put(&sptr->local->sendQ, b, l);
 	send_queued(sptr);
 	return 0;

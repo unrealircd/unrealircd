@@ -933,6 +933,7 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_IS_HANDSHAKE_FINISHED 101
 #define HOOKTYPE_PRE_LOCAL_QUIT_CHAN 102
 #define HOOKTYPE_IDENT_LOOKUP 103
+#define HOOKTYPE_CONFIGRUN_EX 104
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -994,6 +995,7 @@ int hooktype_rehash(void);
 int hooktype_stats(Client *sptr, char *str);
 int hooktype_configtest(ConfigFile *cfptr, ConfigEntry *ce, int section, int *errors);
 int hooktype_configrun(ConfigFile *cfptr, ConfigEntry *ce, int section);
+int hooktype_configrun_ex(ConfigFile *cfptr, ConfigEntry *ce, int section, void *ptr);
 int hooktype_local_oper(Client *sptr, int add);
 int hooktype_local_pass(Client *sptr, char *password);
 int hooktype_channel_create(Client *sptr, Channel *chptr);
@@ -1148,7 +1150,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_NEW_MESSAGE) && !ValidateHook(hooktype_new_message, func)) || \
         ((hooktype == HOOKTYPE_IS_HANDSHAKE_FINISHED) && !ValidateHook(hooktype_is_handshake_finished, func)) || \
         ((hooktype == HOOKTYPE_PRE_LOCAL_QUIT_CHAN) && !ValidateHook(hooktype_pre_local_quit_chan, func)) || \
-        ((hooktype == HOOKTYPE_IDENT_LOOKUP) && !ValidateHook(hooktype_ident_lookup, func)) ) \
+        ((hooktype == HOOKTYPE_IDENT_LOOKUP) && !ValidateHook(hooktype_ident_lookup, func)) || \
+        ((hooktype == HOOKTYPE_CONFIGRUN_EX) && !ValidateHook(hooktype_configrun_ex, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
@@ -1276,6 +1279,7 @@ enum EfunctionType {
 #define CONFIG_SET_ANTI_FLOOD 8
 #define CONFIG_REQUIRE 9
 #define CONFIG_LISTEN 10
+#define CONFIG_LISTEN_OPTIONS 11
 
 #define MOD_HEADER Mod_Header
 #define MOD_TEST() DLLFUNC int Mod_Test(ModuleInfo *modinfo)

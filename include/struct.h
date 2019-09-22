@@ -1453,6 +1453,7 @@ struct ConfigItem_listen {
 	int ipv6;
 	SSL_CTX *ssl_ctx;
 	TLSOptions *tls_options;
+	int websocket_options; /* should be in module, but lazy */
 };
 
 struct ConfigItem_sni {

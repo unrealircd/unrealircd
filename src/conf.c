@@ -4687,7 +4687,16 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			{
 				NameValue *ofp;
 				if ((ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, ARRAY_SIZEOF(_ListenerFlags))))
+				{
 					tmpflags |= ofp->flag;
+				} else {
+					for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+					{
+						int value = (*(h->func.intfunc))(conf, cepp, CONFIG_LISTEN_OPTIONS);
+						if (value == 1)
+							break;
+					}
+				}
 			}
 		} else
 		if (!strcmp(cep->ce_varname, "ssl-options") || !strcmp(cep->ce_varname, "tls-options"))
@@ -4745,6 +4754,45 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				conf_tlsblock(conf, tlsconfig, listen->tls_options);
 				listen->ssl_ctx = init_ctx(listen->tls_options, 1);
 			}
+
+			/* For modules that hook CONFIG_LISTEN and CONFIG_LISTEN_OPTIONS.
+			 * Yeah, ugly we have this here..
+			 * and again about 100 lines down too.
+			 */
+			for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+			{
+				if (!strcmp(cep->ce_varname, "ip"))
+					;
+				else if (!strcmp(cep->ce_varname, "port"))
+					;
+				else if (!strcmp(cep->ce_varname, "options"))
+				{
+					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+					{
+						NameValue *ofp;
+						if (!config_binary_flags_search(_ListenerFlags, cepp->ce_varname, ARRAY_SIZEOF(_ListenerFlags)))
+						{
+							for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
+							{
+								int value = (*(h->func.intfunc))(conf, cepp, CONFIG_LISTEN_OPTIONS, listen);
+								if (value == 1)
+									break;
+							}
+						}
+					}
+				} else
+				if (!strcmp(cep->ce_varname, "ssl-options") || !strcmp(cep->ce_varname, "tls-options"))
+					;
+				else
+				{
+					for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
+					{
+						int value = (*(h->func.intfunc))(conf, cep, CONFIG_LISTEN, listen);
+						if (value == 1)
+							break;
+					}
+				}
+			}
 		}
 
 		/* Then deal with IPv6 (if available/enabled) */
@@ -4788,6 +4836,43 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 					listen->tls_options = safe_alloc(sizeof(TLSOptions));
 					conf_tlsblock(conf, tlsconfig, listen->tls_options);
 					listen->ssl_ctx = init_ctx(listen->tls_options, 1);
+				}
+				/* For modules that hook CONFIG_LISTEN and CONFIG_LISTEN_OPTIONS.
+				 * Yeah, ugly we have this here..
+				 */
+				for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+				{
+					if (!strcmp(cep->ce_varname, "ip"))
+						;
+					else if (!strcmp(cep->ce_varname, "port"))
+						;
+					else if (!strcmp(cep->ce_varname, "options"))
+					{
+						for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+						{
+							NameValue *ofp;
+							if (!config_binary_flags_search(_ListenerFlags, cepp->ce_varname, ARRAY_SIZEOF(_ListenerFlags)))
+							{
+								for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
+								{
+									int value = (*(h->func.intfunc))(conf, cepp, CONFIG_LISTEN_OPTIONS, listen);
+									if (value == 1)
+										break;
+								}
+							}
+						}
+					} else
+					if (!strcmp(cep->ce_varname, "ssl-options") || !strcmp(cep->ce_varname, "tls-options"))
+						;
+					else
+					{
+						for (h = Hooks[HOOKTYPE_CONFIGRUN_EX]; h; h = h->next)
+						{
+							int value = (*(h->func.intfunc))(conf, cep, CONFIG_LISTEN, listen);
+							if (value == 1)
+								break;
+						}
+					}
 				}
 			}
 		}
@@ -4860,10 +4945,43 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				NameValue *ofp;
 				if (!(ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, ARRAY_SIZEOF(_ListenerFlags))))
 				{
-					config_error_unknownopt(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "listen::options", cepp->ce_varname);
-					errors++;
-					continue;
+					/* Check if a module knows about this listen::options::something */
+					int used_by_module = 0;
+					for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
+					{
+						int value, errs = 0;
+						if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+						    && !(h->owner->options & MOD_OPT_PERM))
+						{
+							continue;
+						}
+						value = (*(h->func.intfunc))(conf, cepp, CONFIG_LISTEN_OPTIONS, &errs);
+						if (value == 2)
+							used_by_module = 1;
+						if (value == 1)
+						{
+							used_by_module = 1;
+							break;
+						}
+						if (value == -1)
+						{
+							used_by_module = 1;
+							errors += errs;
+							break;
+						}
+						if (value == -2)
+						{
+							used_by_module = 1;
+							errors += errs;
+						}
+					}
+					if (!used_by_module)
+					{
+						config_error_unknownopt(cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum, "listen::options", cepp->ce_varname);
+						errors++;
+						continue;
+					}
 				}
 				if (!strcmp(cepp->ce_varname, "ssl") || !strcmp(cepp->ce_varname, "tls"))
 					have_tls_listeners = 1; /* for ssl config test */
