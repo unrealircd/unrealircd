@@ -45,6 +45,7 @@
 void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 {
 	FDEntry *fde;
+	int changed = 0;
 #if 0
 	ircd_log(LOG_ERROR, "fd_setselect(): fd %d flags %d func %p", fd, flags, &iocb);
 #endif
@@ -65,29 +66,25 @@ void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 
 	if (flags & FD_SELECT_READ)
 	{
-		fde->read_callback = iocb;
-
-		if (flags & FD_SELECT_ONESHOT)
-			fde->read_oneshot = 1;
-		else
-			fde->read_oneshot = 0;
+		if (fde->read_callback != iocb)
+		{
+			fde->read_callback = iocb;
+			changed = 1;
+		}
 	}
 	if (flags & FD_SELECT_WRITE)
 	{
-		fde->write_callback = iocb;
-
-		if (flags & FD_SELECT_ONESHOT)
-			fde->write_oneshot = 1;
-		else
-			fde->write_oneshot = 0;
-	} else
-	if (flags & FD_SELECT_NOWRITE)
-	{
-		fde->write_callback = NULL;
-		fde->write_oneshot = 0;
+		if (fde->write_callback != iocb)
+		{
+			fde->write_callback = iocb;
+			changed = 1;
+		}
 	}
 
-	fd_refresh(fd);
+	// This is efficient, but.. there are places which do two fd_setselect(),
+	// it would be nice if we can merge this into one syscall..
+	if (changed)
+		fd_refresh(fd);
 }
 
 /***************************************************************************************
@@ -233,31 +230,17 @@ void fd_select(time_t delay)
 		if (evflags & FD_SELECT_READ)
 		{
 			iocb = fde->read_callback;
-			if (fde->read_oneshot)
-			{
-				FD_CLR(fd, &read_fds);
-				fde->read_callback = NULL;
-			}
 
 			if (iocb != NULL)
 				iocb(fd, evflags, fde->data);
-
-			fde->read_oneshot = 0;
 		}
 
 		if (evflags & FD_SELECT_WRITE)
 		{
 			iocb = fde->write_callback;
-			if (fde->write_oneshot)
-			{
-				FD_CLR(fd, &write_fds);
-				fde->write_callback = NULL;
-			}
 
 			if (iocb != NULL)
 				iocb(fd, evflags, fde->data);
-
-			fde->write_oneshot = 0;
 		}
 
 		num--;
@@ -397,25 +380,17 @@ void fd_select(time_t delay)
 		if (revents == EVFILT_READ)
 		{
 			iocb = fde->read_callback;
-			if (fde->read_oneshot)
-				fde->read_callback = NULL;
 
 			if (iocb != NULL)
 				iocb(fd, FD_SELECT_READ, fde->data);
-
-			fde->read_oneshot = 0;
 		}
 
 		if (revents == EVFILT_WRITE)
 		{
 			iocb = fde->write_callback;
-			if (fde->write_oneshot)
-				fde->write_callback = NULL;
 
 			if (iocb != NULL)
 				iocb(fd, FD_SELECT_WRITE, fde->data);
-
-			fde->write_oneshot = 0;
 		}
 	}
 }
@@ -446,9 +421,6 @@ void fd_refresh(int fd)
 
 	if (fde->write_callback)
 		pflags |= EPOLLOUT;
-
-	if (fde->read_oneshot || fde->write_oneshot)
-		pflags |= EPOLLONESHOT;
 
 	if (pflags == 0 && fde->backend_flags == 0)
 		return;
@@ -523,13 +495,10 @@ void fd_select(time_t delay)
 		if (evflags & FD_SELECT_READ)
 		{
 			iocb = fde->read_callback;
-			if (fde->read_oneshot)
-				fde->read_callback = NULL;
 
 			if (iocb != NULL)
 				iocb(fd, evflags, fde->data);
 
-			fde->read_oneshot = 0;
 #ifdef DEBUG_IOENGINE
 			read_callbacks++;
 #endif
@@ -538,13 +507,10 @@ void fd_select(time_t delay)
 		if (evflags & FD_SELECT_WRITE)
 		{
 			iocb = fde->write_callback;
-			if (fde->write_oneshot)
-				fde->write_callback = NULL;
 
 			if (iocb != NULL)
 				iocb(fd, evflags, fde->data);
 
-			fde->write_oneshot = 0;
 #ifdef DEBUG_IOENGINE
 			write_callbacks++;
 #endif
@@ -650,25 +616,16 @@ void fd_select(time_t delay)
 		if (evflags & FD_SELECT_READ)
 		{
 			iocb = fde->read_callback;
-			if (fde->read_oneshot)
-				fde->read_callback = NULL;
 
 			if (iocb != NULL)
 				iocb(fd, evflags, fde->data);
-
-			fde->read_oneshot = 0;
 		}
 
 		if (evflags & FD_SELECT_WRITE)
 		{
 			iocb = fde->write_callback;
-			if (fde->write_oneshot)
-				fde->write_callback = NULL;
-
 			if (iocb != NULL)
 				iocb(fd, evflags, fde->data);
-
-			fde->write_oneshot = 0;
 		}
 	}
 }

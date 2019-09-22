@@ -139,7 +139,6 @@ FDEntry *fde;
 		return;
 		
 	fde->read_callback = fde->write_callback = NULL;
-	fde->read_oneshot = fde->write_oneshot = 0;
 	fd_refresh(fd);
 }
 

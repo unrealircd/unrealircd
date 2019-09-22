@@ -45,7 +45,7 @@
 */
 typedef struct dbuf {
 	u_int length;		/* Current number of bytes stored */
-	u_int offset;		/* Offset to the first byte */
+//	u_int offset;		/* Offset to the first byte */
 	struct list_head dbuf_list;
 } dbuf;
 

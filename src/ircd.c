@@ -1295,6 +1295,7 @@ void SocketLoop(void *dummy)
 	for (;;)
 #endif
 	{
+		int new_second = 0;
 
 #define NEGATIVE_SHIFT_WARN	-15
 #define POSITIVE_SHIFT_WARN	20
@@ -1355,7 +1356,8 @@ void SocketLoop(void *dummy)
 			highesttimeofday = timeofday;
 		}
 		oldtimeofday = timeofday;
-		DoEvents();
+		if (new_second)
+			DoEvents();
 
 		/*
 		 * ** Run through the hashes and check lusers every
@@ -1369,7 +1371,8 @@ void SocketLoop(void *dummy)
 
 		fd_select(SOCKETLOOP_MAX_DELAY);
 
-		process_clients();
+		if (new_second)
+			process_clients();
 
 		timeofday = time(NULL);
 

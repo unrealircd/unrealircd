@@ -215,7 +215,6 @@ ClientUser *make_user(Client *cptr)
 
 Server *make_server(Client *cptr)
 {
-
 	Server *serv = cptr->serv;
 
 	if (!serv)
@@ -236,6 +235,11 @@ Server *make_server(Client *cptr)
 		 */
 		del_from_id_hash_table(cptr->id, cptr);
 		*cptr->id = '\0';
+	}
+	if (MyConnect(cptr) && (cptr->local->fd >= 0))
+	{
+		/* Give servers a large socket buffer for performance */
+		set_socket_buffers(cptr->local->fd, SERVER_SOCKET_RECEIVE_BUFFER, SERVER_SOCKET_SEND_BUFFER);
 	}
 	return cptr->serv;
 }

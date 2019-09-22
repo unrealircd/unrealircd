@@ -244,7 +244,6 @@ static void listener_accept(int listener_fd, int revents, void *data)
 	ircstats.is_ac++;
 
 	set_sock_opts(cli_fd, NULL, listener->ipv6);
-	set_non_blocking(cli_fd, NULL);
 
 	if ((++OpenFiles >= maxclients) || (cli_fd >= maxclients))
 	{
@@ -309,7 +308,6 @@ int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 	}
 
 	set_sock_opts(listener->fd, NULL, ipv6);
-	set_non_blocking(listener->fd, NULL);
 
 	if (!unreal_bind(listener->fd, ip, port, ipv6))
 	{
@@ -753,12 +751,29 @@ void set_ipv6_opts(int fd)
 #endif
 }
 
+/** This sets the *OS* socket buffers.
+ * Note that setting these high is not always a good idea.
+ * For example for regular users we keep the receive buffer tight
+ * so we detect a high receive queue (Excess Flood) properly.
+ * See include/fdlist.h for more information
+ */
+void set_socket_buffers(int fd, int rcvbuf, int sndbuf)
+{
+	int opt;
+
+	opt = rcvbuf;
+	setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (void *)&opt, sizeof(opt));
+
+	opt = sndbuf;
+	setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (void *)&opt, sizeof(opt));
+}
+
 /*
 ** set_sock_opts
 */
 void set_sock_opts(int fd, Client *cptr, int ipv6)
 {
-	int  opt;
+	int opt;
 
 	if (ipv6)
 		set_ipv6_opts(fd);
@@ -772,22 +787,32 @@ void set_sock_opts(int fd, Client *cptr, int ipv6)
 	if (setsockopt(fd, SOL_SOCKET, SO_USELOOPBACK, (void *)&opt, sizeof(opt)) < 0)
 		report_error("setsockopt(SO_USELOOPBACK) %s:%s", cptr);
 #endif
-#ifdef	SO_RCVBUF
-	opt = 8192;
-	if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (void *)&opt, sizeof(opt)) < 0)
-		report_error("setsockopt(SO_RCVBUF) %s:%s", cptr);
-#endif
-#ifdef	SO_SNDBUF
-# ifdef	_SEQUENT_
-/* seems that Sequent freezes up if the receving buffer is a different size
- * to the sending buffer (maybe a tcp window problem too).
- */
-	opt = 8192;
-# else
-	opt = 8192;
-# endif
-	if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (void *)&opt, sizeof(opt)) < 0)
-		report_error("setsockopt(SO_SNDBUF) %s:%s", cptr);
+	set_socket_buffers(fd, USER_SOCKET_RECEIVE_BUFFER, USER_SOCKET_SEND_BUFFER);
+	/* Set to non blocking: */
+#if !defined(_WIN32)
+	if ((opt = fcntl(fd, F_GETFL, 0)) == -1)
+	{
+		if (cptr)
+		{
+			report_error("fcntl(fd, F_GETFL) failed for %s:%s", cptr);
+		}
+	}
+	else if (fcntl(fd, F_SETFL, opt | O_NONBLOCK) == -1)
+	{
+		if (cptr)
+		{
+			report_error("fcntl(fd, F_SETL, nonb) failed for %s:%s", cptr);
+		}
+	}
+#else
+	opt = 1;
+	if (ioctlsocket(fd, FIONBIO, &opt) < 0)
+	{
+		if (cptr)
+		{
+			report_error("ioctlsocket(fd,FIONBIO) failed for %s:%s", cptr);
+		}
+	}
 #endif
 }
 
@@ -806,43 +831,6 @@ int  get_sockerr(Client *cptr)
 				errtmp = err;
 #endif
 	return errtmp;
-}
-
-/*
- * Set socket 'fd' to non blocking mode.
- */
-void set_non_blocking(int fd, Client *cptr)
-{
-	int res, nonb = 0;
-
-#if !defined(_WIN32)
-	nonb |= O_NONBLOCK;
-
-	if ((res = fcntl(fd, F_GETFL, 0)) == -1)
-	{
-		if (cptr)
-		{
-			report_error("fcntl(fd, F_GETFL) failed for %s:%s", cptr);
-		}
-	}
-	else if (fcntl(fd, F_SETFL, res | nonb) == -1)
-	{
-		if (cptr)
-		{
-			report_error("fcntl(fd, F_SETL, nonb) failed for %s:%s", cptr);
-		}
-	}
-#else
-	nonb = 1;
-	if (ioctlsocket(fd, FIONBIO, &nonb) < 0)
-	{
-		if (cptr)
-		{
-			report_error("ioctlsocket(fd,FIONBIO) failed for %s:%s", cptr);
-		}
-	}
-#endif
-	return;
 }
 
 /** Returns 1 if using a loopback IP (127.0.0.1) or
@@ -1188,7 +1176,12 @@ void read_packet(int fd, int revents, void *data)
 	SET_ERRNO(0);
 
 	fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
-	fd_setselect(fd, FD_SELECT_WRITE, NULL, cptr);
+	/* Restore handling of writes towards send_queued_cb(), since
+	 * it may be overwritten in an earlier call to read_packet(),
+	 * to handle (SSL) writes by read_packet(), see below under
+	 * SSL_ERROR_WANT_WRITE.
+	 */
+	fd_setselect(fd, FD_SELECT_WRITE, send_queued_cb, cptr);
 
 	while (1)
 	{
@@ -1210,7 +1203,6 @@ void read_packet(int fd, int revents, void *data)
 					break;
 				case SSL_ERROR_WANT_READ:
 					fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
-					fd_setselect(fd, FD_SELECT_WRITE, NULL, cptr);
 					length = -1;
 					SET_ERRNO(P_EWOULDBLOCK);
 					break;
@@ -1488,7 +1480,6 @@ int connect_inet(ConfigItem_link *aconf, Client *cptr)
 		}
 	}
 
-	set_non_blocking(cptr->local->fd, cptr);
 	set_sock_opts(cptr->local->fd, cptr, IsIPV6(cptr));
 
 	return unreal_connect(cptr->local->fd, cptr->ip, aconf->outgoing.port, IsIPV6(cptr));

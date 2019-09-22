@@ -75,7 +75,7 @@ int dead_link(Client *to, char *notice)
 /** This is a callback function from the event loop.
  * All it does is call send_queued().
  */
-static void send_queued_cb(int fd, int revents, void *data)
+void send_queued_cb(int fd, int revents, void *data)
 {
 	Client *to = data;
 
@@ -139,9 +139,18 @@ int send_queued(Client *to)
 	
 	/* Nothing left to write, stop asking for write-ready notification. */
 	if ((DBufLength(&to->local->sendQ) == 0) && (to->local->fd >= 0))
-		fd_setselect(to->local->fd, FD_SELECT_NOWRITE, NULL, to);
+		fd_setselect(to->local->fd, FD_SELECT_WRITE, NULL, to);
 
 	return (IsDeadSocket(to)) ? -1 : 0;
+}
+
+/** Mark "to" with "there is data to be send" */
+void mark_data_to_send(Client *to)
+{
+	if (!IsDeadSocket(to) && (to->local->fd >= 0) && (DBufLength(&to->local->sendQ) > 0))
+	{
+		fd_setselect(to->local->fd, FD_SELECT_WRITE, send_queued_cb, to);
+	}
 }
 
 /*
@@ -323,8 +332,11 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 	to->local->sendM += 1;
 	me.local->sendM += 1;
 
-	if (DBufLength(&to->local->sendQ) > 0)
-		send_queued(to);
+	/* Previously we ran send_queued() here directly, but that is
+	 * a bad idea, CPU-wise. So now we just mark the client indicating
+	 * that there is data to send.
+	 */
+	mark_data_to_send(to);
 }
 
 /** A single function to send data to a channel.

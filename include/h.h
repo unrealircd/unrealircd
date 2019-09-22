@@ -233,7 +233,6 @@ extern void init_modef();
 extern int verify_hostname(char *name);
 
 extern void report_error(char *, Client *);
-extern void set_non_blocking(int, Client *);
 extern int setup_ping();
 
 extern void set_channel_mlock(Client *, Client *, Channel *, const char *, int);
@@ -242,7 +241,9 @@ extern void restart(char *);
 extern void server_reboot(char *);
 extern void terminate(), write_pidfile();
 extern void *safe_alloc(size_t size);
+extern void set_socket_buffers(int fd, int rcvbuf, int sndbuf);
 extern int send_queued(Client *);
+extern void send_queued_cb(int fd, int revents, void *data);
 extern void sendto_connectnotice(Client *sptr, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(Client *one, Client *sptr, char *umodes);
 extern void    sendto_message_one(Client *to, Client *from, char *sender,

@@ -94,7 +94,6 @@ static int ident_lookup_connect(Client *cptr)
 		sendto_one(cptr, NULL, "%s", REPORT_DO_ID);
 
 	set_sock_opts(cptr->local->authfd, cptr, IsIPV6(cptr));
-	set_non_blocking(cptr->local->authfd, cptr);
 
 	/* Bind to the IP the user got in */
 	unreal_bind(cptr->local->authfd, cptr->local->listener->ip, 0, IsIPV6(cptr));
@@ -132,7 +131,8 @@ static void ident_lookup_send(int fd, int revents, void *data)
 	}
 	ClearIdentLookupSent(cptr);
 
-	fd_setselect(cptr->local->authfd, FD_SELECT_READ|FD_SELECT_NOWRITE, ident_lookup_receive, cptr);
+	fd_setselect(cptr->local->authfd, FD_SELECT_READ, ident_lookup_receive, cptr);
+	fd_setselect(cptr->local->authfd, FD_SELECT_WRITE, NULL, cptr);
 
 	return;
 }
