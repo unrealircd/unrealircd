@@ -630,6 +630,7 @@ void Unload_all_testing_modules(void)
 		irc_dlclose(mi->dll);
 		deletetmp(mi->tmp_file);
 		safe_free(mi->tmp_file);
+		safe_free(mi->relpath);
 		safe_free(mi);
 	}
 }
@@ -672,6 +673,7 @@ int    Module_free(Module *mod)
 	DelListItem(mod, Modules);
 	irc_dlclose(mod->dll);
 	safe_free(mod->tmp_file);
+	safe_free(mod->relpath);
 	safe_free(mod);
 	return 1;
 }
