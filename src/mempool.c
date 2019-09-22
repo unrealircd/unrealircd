@@ -261,7 +261,7 @@ static mp_pool_t *mp_allocated_pools = NULL;
 void
 mp_pool_init(void)
 {
-  EventAdd(NULL, "mp_pool_garbage_collect", 119, 0, &mp_pool_garbage_collect, NULL);
+  EventAdd(NULL, "mp_pool_garbage_collect", &mp_pool_garbage_collect, NULL, 119*1000, 0);
 }
 
 /** Helper: Allocate and return a new memory chunk for <b>pool</b>.  Does not
