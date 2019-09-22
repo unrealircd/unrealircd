@@ -30,6 +30,7 @@ extern char unreallogo[];
 int  SVSNOOP = 0;
 extern MODVAR char *buildid;
 time_t timeofday = 0;
+struct timeval timeofday_tv;
 int  tainted = 0;
 LoopStruct loop;
 MODVAR MemoryInfo StatsZ;
@@ -57,8 +58,6 @@ MODVAR unsigned char conf_debuglevel = 0;
 #ifdef USE_LIBCURL
 extern void url_init(void);
 #endif
-
-time_t highesttimeofday=0, oldtimeofday=0, lasthighwarn=0;
 
 void server_reboot(char *);
 void restart(char *);
@@ -834,6 +833,100 @@ static void generate_cloakkeys()
  */
 #define mytdiff(a, b)   ((long)a - (long)b)
 
+#define NEGATIVE_SHIFT_WARN	-15
+#define POSITIVE_SHIFT_WARN	20
+
+void detect_timeshift_and_warn(void)
+{
+	static time_t highesttimeofday=0, oldtimeofday=0, lasthighwarn=0;
+
+	if (oldtimeofday == 0)
+		oldtimeofday = timeofday; /* pretend everything is ok the first time.. */
+
+	if (mytdiff(timeofday, oldtimeofday) < NEGATIVE_SHIFT_WARN) {
+		/* tdiff = # of seconds of time set backwards (positive number! eg: 60) */
+		time_t tdiff = oldtimeofday - timeofday;
+		ircd_log(LOG_ERROR, "WARNING: Time running backwards! Clock set back ~%lld seconds (%lld -> %lld)",
+			(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
+		ircd_log(LOG_ERROR, "[TimeShift] Resetting a few timers to prevent IRCd freeze!");
+		sendto_realops("WARNING: Time running backwards! Clock set back ~%lld seconds (%lld -> %lld)",
+			(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
+		sendto_realops("Incorrect time for IRC servers is a serious problem. "
+			       "Time being set backwards (system clock changed) is "
+			       "even more serious and can cause clients to freeze, channels to be "
+			       "taken over, and other issues.");
+		sendto_realops("Please be sure your clock is always synchronized before "
+			       "the IRCd is started!");
+		sendto_realops("[TimeShift] Resetting a few timers to prevent IRCd freeze!");
+		fix_timers();
+	} else
+	if (mytdiff(timeofday, oldtimeofday) > POSITIVE_SHIFT_WARN) /* do not set too low or you get false positives */
+	{
+		/* tdiff = # of seconds of time set forward (eg: 60) */
+		time_t tdiff = timeofday - oldtimeofday;
+		ircd_log(LOG_ERROR, "WARNING: Time jumped ~%lld seconds ahead! (%lld -> %lld)",
+			(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
+		ircd_log(LOG_ERROR, "[TimeShift] Resetting some timers!");
+		sendto_realops("WARNING: Time jumped ~%lld seconds ahead! (%lld -> %lld)",
+			(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
+		sendto_realops("Incorrect time for IRC servers is a serious problem. "
+			       "Time being adjusted (by changing the system clock) "
+			       "more than a few seconds forward/backward can lead to serious issues.");
+		sendto_realops("Please be sure your clock is always synchronized before "
+			       "the IRCd is started!");
+		sendto_realops("[TimeShift] Resetting some timers!");
+		fix_timers();
+	}
+
+	if (highesttimeofday+NEGATIVE_SHIFT_WARN > timeofday)
+	{
+		if (lasthighwarn > timeofday)
+			lasthighwarn = timeofday;
+		if (timeofday - lasthighwarn > 300)
+		{
+			ircd_log(LOG_ERROR, "[TimeShift] The (IRCd) clock was set backwards. "
+				"Waiting for time to be OK again. This will be in %lld seconds",
+				(long long)(highesttimeofday - timeofday));
+			sendto_realops("[TimeShift] The (IRCd) clock was set backwards. Timers, nick- "
+				       "and channel-timestamps are possibly incorrect. This message will "
+				       "repeat itself until we catch up with the original time, which will be "
+				       "in %lld seconds", (long long)(highesttimeofday - timeofday));
+			lasthighwarn = timeofday;
+		}
+	} else {
+		highesttimeofday = timeofday;
+	}
+
+	oldtimeofday = timeofday;
+}
+
+/** Check if at least 'minimum' seconds passed by since last run.
+ * @param tv_old   Pointer to a timeval struct to keep track of things.
+ * @param minimum  The time specified in milliseconds (eg: 1000 for 1 second)
+ * @returns When 'minimum' msec passed 1 is returned and the time is reset, otherwise 0 is returned.
+ */
+int minimum_msec_since_last_run(struct timeval *tv_old, long minimum)
+{
+	long v;
+
+	if (tv_old->tv_sec == 0)
+	{
+		/* First call ever */
+		tv_old->tv_sec = timeofday_tv.tv_sec;
+		tv_old->tv_usec = timeofday_tv.tv_usec;
+		return 0;
+	}
+	v = ((timeofday_tv.tv_sec - tv_old->tv_sec) * 1000) + ((timeofday_tv.tv_usec - tv_old->tv_usec)/1000);
+	if (v >= minimum)
+	{
+		tv_old->tv_sec = timeofday_tv.tv_sec;
+		tv_old->tv_usec = timeofday_tv.tv_usec;
+		return 1;
+	}
+	return 0;
+}
+
+/** The main function. This will call SocketLoop() once the server is ready. */
 #ifndef _WIN32
 int main(int argc, char *argv[])
 #else
@@ -1279,115 +1372,49 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 	module_loadall();
 
-#ifdef _WIN32
+#ifndef _WIN32
+	SocketLoop(NULL);
+#endif
 	return 1;
 }
 
-
+/** The main loop that the server will run all the time.
+ * On Windows this is a thread, on *NIX we simply jump here from main()
+ * when the server is ready.
+ */
 void SocketLoop(void *dummy)
 {
+	struct timeval doevents_tv, process_clients_tv;
+
+	memset(&doevents_tv, 0, sizeof(doevents_tv));
+	memset(&process_clients_tv, 0, sizeof(process_clients_tv));
+
 	while (1)
-#else
-	/*
-	 * Forever drunk .. forever drunk ..
-	 * * (Sorry Alphaville.)
-	 */
-	for (;;)
-#endif
 	{
-		int new_second = 0;
+		gettimeofday(&timeofday_tv, NULL);
+		timeofday = timeofday_tv.tv_sec;
 
-#define NEGATIVE_SHIFT_WARN	-15
-#define POSITIVE_SHIFT_WARN	20
+		detect_timeshift_and_warn();
 
-		timeofday = time(NULL);
-		if (oldtimeofday == 0)
-			oldtimeofday = timeofday; /* pretend everything is ok the first time.. */
-		if (mytdiff(timeofday, oldtimeofday) < NEGATIVE_SHIFT_WARN) {
-			/* tdiff = # of seconds of time set backwards (positive number! eg: 60) */
-			time_t tdiff = oldtimeofday - timeofday;
-			ircd_log(LOG_ERROR, "WARNING: Time running backwards! Clock set back ~%lld seconds (%lld -> %lld)",
-				(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
-			ircd_log(LOG_ERROR, "[TimeShift] Resetting a few timers to prevent IRCd freeze!");
-			sendto_realops("WARNING: Time running backwards! Clock set back ~%lld seconds (%lld -> %lld)",
-				(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
-			sendto_realops("Incorrect time for IRC servers is a serious problem. "
-			               "Time being set backwards (system clock changed) is "
-			               "even more serious and can cause clients to freeze, channels to be "
-			               "taken over, and other issues.");
-			sendto_realops("Please be sure your clock is always synchronized before "
-			               "the IRCd is started!");
-			sendto_realops("[TimeShift] Resetting a few timers to prevent IRCd freeze!");
-			fix_timers();
-		} else
-		if (mytdiff(timeofday, oldtimeofday) > POSITIVE_SHIFT_WARN) /* do not set too low or you get false positives */
-		{
-			/* tdiff = # of seconds of time set forward (eg: 60) */
-			time_t tdiff = timeofday - oldtimeofday;
-			ircd_log(LOG_ERROR, "WARNING: Time jumped ~%lld seconds ahead! (%lld -> %lld)",
-				(long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
-			ircd_log(LOG_ERROR, "[TimeShift] Resetting some timers!");
-			sendto_realops("WARNING: Time jumped ~%lld seconds ahead! (%lld -> %lld)",
-			        (long long)tdiff, (long long)oldtimeofday, (long long)timeofday);
-			sendto_realops("Incorrect time for IRC servers is a serious problem. "
-			               "Time being adjusted (by changing the system clock) "
-			               "more than a few seconds forward/backward can lead to serious issues.");
-			sendto_realops("Please be sure your clock is always synchronized before "
-			               "the IRCd is started!");
-			sendto_realops("[TimeShift] Resetting some timers!");
-			fix_timers();
-		}
-		if (highesttimeofday+NEGATIVE_SHIFT_WARN > timeofday)
-		{
-			if (lasthighwarn > timeofday)
-				lasthighwarn = timeofday;
-			if (timeofday - lasthighwarn > 300)
-			{
-				ircd_log(LOG_ERROR, "[TimeShift] The (IRCd) clock was set backwards. "
-					"Waiting for time to be OK again. This will be in %lld seconds",
-					(long long)(highesttimeofday - timeofday));
-				sendto_realops("[TimeShift] The (IRCd) clock was set backwards. Timers, nick- "
-				               "and channel-timestamps are possibly incorrect. This message will "
-				               "repeat itself until we catch up with the original time, which will be "
-				               "in %lld seconds", (long long)(highesttimeofday - timeofday));
-				lasthighwarn = timeofday;
-			}
-		} else {
-			highesttimeofday = timeofday;
-		}
-		if (oldtimeofday != timeofday)
-			new_second = 1;
-		oldtimeofday = timeofday;
-		if (new_second)
+		if (minimum_msec_since_last_run(&doevents_tv, 250))
 			DoEvents();
 
-		/*
-		 * ** Run through the hashes and check lusers every
-		 * ** second
-		 * ** also check for expiring glines
-		 */
+		/* Update statistics */
 		if (irccounts.clients > irccounts.global_max)
 			irccounts.global_max = irccounts.clients;
 		if (irccounts.me_clients > irccounts.me_max)
 			irccounts.me_max = irccounts.me_clients;
 
+		/* Process I/O */
 		fd_select(SOCKETLOOP_MAX_DELAY);
 
-		if (new_second)
+		if (minimum_msec_since_last_run(&process_clients_tv, 200))
 			process_clients();
 
-		timeofday = time(NULL);
-
-		/*
-		 * Debug((DEBUG_DEBUG, "Got message(s)"));
-		 */
-		/*
-		 * ** ...perhaps should not do these loops every time,
-		 * ** but only if there is some chance of something
-		 * ** happening (but, note that conf->hold times may
-		 * ** be changed elsewhere--so precomputed next event
-		 * ** time might be too far away... (similarly with
-		 * ** ping times) --msa
+		/* Check if there are pending "actions".
+		 * These are actions that should be done outside of
+		 * process_clients() and fd_select() when we are not
+		 * processing any clients.
 		 */
 		if (dorehash)
 		{

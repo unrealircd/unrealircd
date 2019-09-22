@@ -43,6 +43,7 @@ extern MODVAR ModData global_variable_moddata[MODDATA_MAX_GLOBAL_VARIABLE];
 extern MODVAR IRCStatistics ircstats;
 extern MODVAR int bootopt;
 extern MODVAR time_t timeofday;
+extern MODVAR struct timeval timeofday_tv;
 extern MODVAR char cmodestring[512];
 extern MODVAR char umodestring[UMODETABLESZ+1];
 /* newconf */
@@ -583,10 +584,10 @@ extern void extcmode_free_paramlist(void **ar);
 extern void chmode_str(struct ChMode *, char *, char *, size_t, size_t);
 extern char *get_cptr_status(Client *);
 extern char *get_snostr(long);
+extern void SocketLoop(void *);
 #ifdef _WIN32
 extern void InitDebug(void);
 extern int InitUnrealIRCd(int argc, char **);
-extern void SocketLoop(void *);
 extern void win_error();
 extern void win_log(FORMAT_STRING(const char *format), ...);
 extern int GetOSName(char *pszOS);

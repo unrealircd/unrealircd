@@ -211,8 +211,10 @@
  * This means any other events and such may be delayed up to this value
  * when there is no socket data waiting for us (no clients sending anything).
  * Was 2000ms in 3.2.x, 1000ms for versions below 3.4-alpha4.
+ * 500ms in UnrealIRCd 4 (?)
+ * 250ms in UnrealIRCd 5.
  */
-#define SOCKETLOOP_MAX_DELAY 500
+#define SOCKETLOOP_MAX_DELAY 250
 
 /*
  * Max time from the nickname change that still causes KILL
