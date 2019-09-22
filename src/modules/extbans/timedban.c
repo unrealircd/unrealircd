@@ -89,7 +89,7 @@ ExtbanInfo extban;
 		return MOD_FAILED;
 	}
                 
-	EventAdd(modinfo->handle, "timedban_timeout", TIMEDBAN_TIMER, 0, timedban_timeout, NULL);
+	EventAdd(modinfo->handle, "timedban_timeout", timedban_timeout, NULL, TIMEDBAN_TIMER*1000, 0);
 
 	return MOD_SUCCESS;
 }

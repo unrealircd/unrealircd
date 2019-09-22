@@ -286,6 +286,12 @@ It is therefore best to wait until beta1. You have been warned ;).
   in sendto_server(), then be sure to use %lld and cast the timestamp
   to 'long long' so that it is compatible with both *NIX and Windows.
   Example: sendnotice(sptr, "Timestamp is %lld", (long long)ts);
+* EventAdd() changed the order of parameters and expects every_msec now
+  which specifies the time in milliseconds rather than seconds. This
+  allows for additional precision, or at least multiple calls per second.
+  The minimum allowed every_msec value is 100 at this time.
+  The prototype is now: EventAdd(Module *module, char *name,
+  vFP event, void *data, long every_msec, int count);
 * New HOOKTYPE_IS_HANDSHAKE_FINISHED. If a module returns 0 there, then
   the register_user() function will not be called and the user will
   not come online (yet). This is used by CAP and some other stuff.

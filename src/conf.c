@@ -2584,16 +2584,16 @@ int	config_run()
 		long v;
 		eInfo.flags = EMOD_EVERY;
 		if (!THROTTLING_PERIOD)
-			v = 120;
+			v = 120000;
 		else
 		{
 			v = THROTTLING_PERIOD/2;
 			if (v > 5)
-				v = 5; /* accuracy, please */
+				v = 5000; /* accuracy, please */
 			if (v < 1)
-				v = 1; /* duh */
+				v = 1000; /* duh */
 		}
-		eInfo.every = v;
+		eInfo.every_msec = v;
 		EventMod(EventFind("bucketcleaning"), &eInfo);
 	}
 

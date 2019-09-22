@@ -735,11 +735,10 @@ void fix_timers(void)
 	/* Reset all event timers */
 	for (e = events; e; e = e->next)
 	{
-		if (e->last > TStime())
+		if (e->last_run.tv_sec > TStime())
 		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: e->last %ld -> %ld",
-				e->name, e->last, TStime()-1));
-			e->last = TStime()-1;
+			e->last_run.tv_sec = TStime()-1;
+			e->last_run.tv_usec = 0;
 		}
 	}
 
@@ -947,7 +946,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 	struct rlimit corelim;
 #endif
 
-	timeofday = time(NULL);
+	gettimeofday(&timeofday_tv, NULL);
+	timeofday = timeofday_tv.tv_sec;
+
 	safe_strdup(configfile, CONFIGFILE);
 
 	init_random(); /* needs to be done very early!! */

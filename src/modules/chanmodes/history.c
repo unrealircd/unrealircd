@@ -103,7 +103,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	EventAdd(modinfo->handle, "history_clean", HISTORY_TIMER_EVERY, 0, history_clean, NULL);
+	EventAdd(modinfo->handle, "history_clean", history_clean, NULL, HISTORY_TIMER_EVERY*1000, 0);
 	return MOD_SUCCESS;
 }
 

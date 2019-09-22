@@ -90,7 +90,7 @@ MOD_INIT()
 	}
 
 	CommandAdd(modinfo->handle, MSG_LIST, cmd_list, MAXPARA, M_USER);
-	EventAdd(modinfo->handle, "send_queued_list_data", 1, 0, send_queued_list_data, NULL);
+	EventAdd(modinfo->handle, "send_queued_list_data", send_queued_list_data, NULL, 1500, 0);
 
 	return MOD_SUCCESS;
 }

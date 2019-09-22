@@ -1449,7 +1449,7 @@ void special_delayed_unloading(void)
 			{
 			    config_warn("Delaying module unloading of '%s' a few seconds...", m->header->name);
 			    m->flags |= MODFLAG_DELAYED;
-			    EventAdd(NULL, "e_unload_module_delayed", 5, 1, e_unload_module_delayed, m->header->name);
+			    EventAdd(NULL, "e_unload_module_delayed", e_unload_module_delayed, m->header->name, 5000, 1);
 			}
 		}
 	}

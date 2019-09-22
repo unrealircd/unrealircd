@@ -24,7 +24,7 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1); /* needed? or not? */
-	EventAdd(NULL, "check_ident_timeout", 1, 0, check_ident_timeout, NULL);
+	EventAdd(NULL, "check_ident_timeout", check_ident_timeout, NULL, 1000, 0);
 	HookAdd(modinfo->handle, HOOKTYPE_IDENT_LOOKUP, 0, ident_lookup_connect);
 
 	return MOD_SUCCESS;

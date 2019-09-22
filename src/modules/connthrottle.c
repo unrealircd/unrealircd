@@ -111,7 +111,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	EventAdd(modinfo->handle, "connthrottle_evt", 1, 0, connthrottle_evt, NULL);
+	EventAdd(modinfo->handle, "connthrottle_evt", connthrottle_evt, NULL, 1000, 0);
 	return MOD_SUCCESS;
 }
 

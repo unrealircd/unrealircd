@@ -134,7 +134,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	EventAdd(modinfo->handle, "tkldb_write_tkldb", TKL_DB_SAVE_EVERY, 0, write_tkldb_evt, NULL);
+	EventAdd(modinfo->handle, "tkldb_write_tkldb", write_tkldb_evt, NULL, TKL_DB_SAVE_EVERY*1000, 0);
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
 		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));

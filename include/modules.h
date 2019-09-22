@@ -606,16 +606,17 @@ struct Module
 #define MOD_OPT_GLOBAL		0x0008 /* Module is required to be loaded globally (i.e. across the entire network) */
 #define MOD_Dep(name, container,module) {#name, (vFP *) &container, module}
 
-/* Event structs */
+/** Event structs */
 struct Event {
-	Event   *prev, *next;
-	char    *name;
-	time_t  every;
-	long    howmany;
-	vFP	event;
-	void    *data;
-	time_t  last;
-	Module *owner;
+	Event		*prev;		/**< Previous event (linked list) */
+	Event		*next;		/**< Next event (linked list) */
+	char		*name;		/**< Name of the event */
+	long		every_msec;	/**< How often we should run this event */
+	long		count;		/**< How many times this event should run (0 = infinite) */
+	vFP		event;		/**< Actual function to call */
+	void		*data;		/**< The data to pass in the function call */
+	struct timeval	last_run;	/**< Last time this event ran */
+	Module		*owner;		/**< To which module this event belongs */
 };
 
 #define EMOD_EVERY 0x0001
@@ -624,10 +625,11 @@ struct Event {
 #define EMOD_EVENT 0x0008
 #define EMOD_DATA 0x0010
 
+/** event struct information, for EventMod() only - see Event for documentation */
 struct EventInfo {
 	int flags;
-	long howmany;
-	time_t every;
+	long count;
+	time_t every_msec;
 	char *name;
 	vFP event;
 	void *data;
@@ -639,14 +641,14 @@ extern MODVAR Hooktype		Hooktypes[MAXCUSTOMHOOKS];
 extern MODVAR Callback *Callbacks[MAXCALLBACKS], *RCallbacks[MAXCALLBACKS];
 extern MODVAR ClientCapability *clicaps;
 
-extern Event   *EventAdd(Module *, char *name, long every, long howmany, vFP event, void *data);
-extern Event   *EventDel(Event *event);
-extern Event   *EventMarkDel(Event *event);
-extern Event   *EventFind(char *name);
-extern int     EventMod(Event *event, EventInfo *mods);
-extern void    DoEvents(void);
-extern void    EventStatus(Client *sptr);
-extern void    SetupEvents(void);
+extern Event *EventAdd(Module *module, char *name, vFP event, void *data, long every_msec, int count);
+extern Event  *EventDel(Event *event);
+extern Event *EventMarkDel(Event *event);
+extern Event *EventFind(char *name);
+extern int EventMod(Event *event, EventInfo *mods);
+extern void DoEvents(void);
+extern void EventStatus(Client *sptr);
+extern void SetupEvents(void);
 
 
 extern void    Module_Init(void);

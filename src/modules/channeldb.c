@@ -97,7 +97,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	EventAdd(modinfo->handle, "channeldb_write_channeldb", CHANNELDB_SAVE_EVERY, 0, write_channeldb_evt, NULL);
+	EventAdd(modinfo->handle, "channeldb_write_channeldb", write_channeldb_evt, NULL, CHANNELDB_SAVE_EVERY*1000, 0);
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
 		config_error("A critical error occurred when loading module %s: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));

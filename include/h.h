@@ -934,3 +934,4 @@ extern void _add_name_list(NameList **list, char *name);
 extern void _del_name_list(NameList **list, char *name);
 extern NameList *find_name_list(NameList *list, char *name);
 extern NameList *find_name_list_match(NameList *list, char *name);
+extern int minimum_msec_since_last_run(struct timeval *tv_old, long minimum);

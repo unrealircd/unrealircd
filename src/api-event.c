@@ -29,23 +29,46 @@ MODVAR Event *events = NULL;
 
 extern EVENT(unrealdns_removeoldrecords);
 
-Event *EventAdd(Module *module, char *name, long every, long howmany,
-                vFP event, void *data)
+/** Add an event, a function that will run at regular intervals.
+ * @param module	Module that this event belongs to
+ * @param name		Name of the event
+ * @param event		The EVENT(function) to be called
+ * @param data		The data to be passed to the function (or just NULL)
+ * @param every_msec	Every <this> milliseconds the event will be called, but see notes.
+ * @param count		After how many times we should stop calling this even (0 = infinite times)
+ * @returns an Event struct
+ * @notes UnrealIRCd will try to call the event every 'every_msec' milliseconds.
+ *        However, in case of low traffic the minimum time is at least SOCKETLOOP_MAX_DELAY
+ *        which is 250ms at the time of writing. Also, we reject any value below 100 msecs.
+ *        The actual calling time will not be quicker than the specified every_msec but
+ *        can be later, in case of high load, in very extreme cases even up to 1000 or 2000
+ *        msec later but that would be very unusual. Just saying, it's not a guarantee..
+ */
+Event *EventAdd(Module *module, char *name, vFP event, void *data, long every_msec, int count)
 {
 	Event *newevent;
-	if (!name || (every < 0) || (howmany < 0) || !event)
+	if (!name || (every_msec < 0) || (count < 0) || !event)
 	{
 		if (module)
 			module->errorcode = MODERR_INVALID;
 		return NULL;
 	}
+	if (every_msec < 100)
+	{
+		ircd_log(LOG_ERROR, "[BUG] EventAdd() from module %s with suspiciously low every_msec value (%ld). "
+		                    "Note that it is in milliseconds now (1000 = 1 second)!",
+		                    module ? module->header->name : "???",
+		                    every_msec);
+		every_msec = 100;
+	}
 	newevent = safe_alloc(sizeof(Event));
 	safe_strdup(newevent->name, name);
-	newevent->howmany = howmany;
-	newevent->every = every;
+	newevent->count = count;
+	newevent->every_msec = every_msec;
 	newevent->event = event;
 	newevent->data = data;
-	newevent->last = TStime();
+	newevent->last_run.tv_sec = timeofday_tv.tv_sec;
+	newevent->last_run.tv_usec = timeofday_tv.tv_usec;
 	newevent->owner = module;
 	AddListItem(newevent,events);
 	if (module)
@@ -62,7 +85,7 @@ Event *EventAdd(Module *module, char *name, long every, long howmany,
 
 Event *EventMarkDel(Event *event)
 {
-	event->howmany = -1;
+	event->count = -1;
 	return event;
 }
 
@@ -116,9 +139,9 @@ int EventMod(Event *event, EventInfo *mods)
 	}
 
 	if (mods->flags & EMOD_EVERY)
-		event->every = mods->every;
+		event->every_msec = mods->every_msec;
 	if (mods->flags & EMOD_HOWMANY)
-		event->howmany = mods->howmany;
+		event->count = mods->count;
 	if (mods->flags & EMOD_NAME)
 		safe_strdup(event->name, mods->name);
 	if (mods->flags & EMOD_EVENT)
@@ -137,16 +160,15 @@ void DoEvents(void)
 
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
 	{
-		if (eventptr->howmany == -1)
+		if (eventptr->count == -1)
 			goto freeit;
-		if ((eventptr->every == 0) || ((TStime() - eventptr->last) >= eventptr->every))
+		if ((eventptr->every_msec == 0) || minimum_msec_since_last_run(&eventptr->last_run, eventptr->every_msec))
 		{
-			eventptr->last = TStime();
 			(*eventptr->event)(eventptr->data);
-			if (eventptr->howmany > 0)
+			if (eventptr->count > 0)
 			{
-				eventptr->howmany--;
-				if (eventptr->howmany == 0)
+				eventptr->count--;
+				if (eventptr->count == 0)
 				{
 freeit:
 					temp.next = EventDel(eventptr);
@@ -158,33 +180,15 @@ freeit:
 	}
 }
 
-void EventStatus(Client *sptr)
-{
-	Event *eventptr;
-	time_t now = TStime();
-	
-	if (!events)
-	{
-		sendnotice(sptr, "*** No events");
-		return;
-	}
-	for (eventptr = events; eventptr; eventptr = eventptr->next)
-	{
-		sendnotice(sptr, "*** Event %s: e/%lld h/%lld n/%lld l/%lld",
-			eventptr->name, (long long)eventptr->every, (long long)eventptr->howmany,
-			(long long)(now - eventptr->last), (long long)((eventptr->last + eventptr->every) - now));
-	}
-}
-
 void SetupEvents(void)
 {
 	/* Start events */
-	EventAdd(NULL, "tunefile", 300, 0, save_tunefile, NULL);
-	EventAdd(NULL, "garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
-	EventAdd(NULL, "loop", 0, 0, loop_event, NULL);
-	EventAdd(NULL, "unrealdns_removeoldrecords", 15, 0, unrealdns_removeoldrecords, NULL);
-	EventAdd(NULL, "check_pings", 1, 0, check_pings, NULL);
-	EventAdd(NULL, "check_deadsockets", 1, 0, check_deadsockets, NULL);
-	EventAdd(NULL, "check_unknowns", 1, 0, check_unknowns, NULL);
-	EventAdd(NULL, "try_connections", 2, 0, try_connections, NULL);
+	EventAdd(NULL, "tunefile", save_tunefile, NULL, 300*1000, 0);
+	EventAdd(NULL, "garbage", garbage_collect, NULL, GARBAGE_COLLECT_EVERY*1000, 0);
+	EventAdd(NULL, "loop", loop_event, NULL, 1000, 0);
+	EventAdd(NULL, "unrealdns_removeoldrecords", unrealdns_removeoldrecords, NULL, 15000, 0);
+	EventAdd(NULL, "check_pings", check_pings, NULL, 1000, 0);
+	EventAdd(NULL, "check_deadsockets", check_deadsockets, NULL, 1000, 0);
+	EventAdd(NULL, "check_unknowns", check_unknowns, NULL, 1000, 0);
+	EventAdd(NULL, "try_connections", try_connections, NULL, 2000, 0);
 }

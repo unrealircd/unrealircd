@@ -167,7 +167,7 @@ void init_resolver(int firsttime)
 	}
 
 	ares_set_socket_callback(resolver_channel, unrealdns_sock_create_cb, NULL);
-	unrealdns_timeout_hdl = EventAdd(NULL, "unrealdns_timeout", 0, 0, unrealdns_timeout, NULL);
+	unrealdns_timeout_hdl = EventAdd(NULL, "unrealdns_timeout", unrealdns_timeout, NULL, 500, 0);
 }
 
 void reinit_resolver(Client *sptr)

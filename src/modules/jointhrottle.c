@@ -100,7 +100,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	EventAdd(ModInfo->handle, "jointhrottle_cleanup_structs", 60, 0, jointhrottle_cleanup_structs, NULL);
+	EventAdd(ModInfo->handle, "jointhrottle_cleanup_structs", jointhrottle_cleanup_structs, NULL, 60000, 0);
 	return MOD_SUCCESS;
 }
 

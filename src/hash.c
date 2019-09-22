@@ -898,11 +898,11 @@ void init_throttling()
 	{
 		v = THROTTLING_PERIOD/2;
 		if (v > 5)
-			v = 5; /* accuracy, please */
+			v = 5000; /* run at least every 5s */
 		if (v < 1)
-			v = 1; /* duh */
+			v = 1000; /* run at max once every 1s */
 	}
-	EventAdd(NULL, "bucketcleaning", v, 0, e_clean_out_throttling_buckets, NULL);
+	EventAdd(NULL, "bucketcleaning", e_clean_out_throttling_buckets, NULL, v, 0);
 }
 
 uint64_t hash_throttling(char *ip)

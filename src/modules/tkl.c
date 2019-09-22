@@ -195,7 +195,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	EventAdd(modinfo->handle, "tklexpire", 5, 0, tkl_check_expire, NULL);
+	EventAdd(modinfo->handle, "tklexpire", tkl_check_expire, NULL, 5000, 0);
 	return MOD_SUCCESS;
 }
 
