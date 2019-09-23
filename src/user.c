@@ -36,7 +36,10 @@ extern char *me_hash;
 extern char backupbuf[];
 static char buf[BUFSIZE];
 
-int labeled_response_inhibit = 0;
+MODVAR int labeled_response_inhibit = 0;
+
+/** Set to 1 if an UTF8 incompatible nick character set is in use */
+MODVAR int non_utf8_nick_chars_in_use = 0;
 
 void iNAH_host(Client *sptr, char *host)
 {

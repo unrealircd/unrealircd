@@ -938,3 +938,4 @@ extern int minimum_msec_since_last_run(struct timeval *tv_old, long minimum);
 extern int unrl_utf8_validate(const char *str, const char **end);
 extern char *unrl_utf8_make_valid(const char *str);
 extern void utf8_test(void);
+extern MODVAR int non_utf8_nick_chars_in_use;

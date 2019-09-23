@@ -1168,7 +1168,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
 #define CALLBACKTYPE_REPUTATION_STARTTIME 5
 
 /* To add a new efunction, only if you are an UnrealIRCd coder:
- * 1) Add a new entry here at the end
+ * 1) Add a new entry here
  * 2) Add the function in src/api-efunctions.c
  * 3) Add the initalization in src/api-efunctions.c
  * 4) Add the extern entry in include/h.h in the

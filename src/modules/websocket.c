@@ -119,6 +119,7 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	int errors = 0;
 	ConfigEntry *cep;
 	int has_type = 0;
+	static char errored_once_nick = 0;
 
 	if (type != CONFIG_LISTEN_OPTIONS)
 		return 0;
@@ -133,7 +134,25 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		{
 			CheckNull(cep);
 			has_type = 1;
-			if (!strcmp(cep->ce_varname, "binary") || !strcmp(cep->ce_varname, "text"))
+			if (!strcmp(cep->ce_vardata, "text"))
+			{
+				if (non_utf8_nick_chars_in_use && !errored_once_nick)
+				{
+					/* This one is a hard error, since the consequences are grave */
+					config_error("You have a websocket listener with type 'text' AND your set::allowed-nickchars contains at least one non-UTF8 character set.");
+					config_error("This is a very BAD idea as this makes your websocket vulnerable to UTF8 conversion attacks. "
+					             "This can cause things like unkickable users and 'ghosts' for websocket users.");
+					config_error("You have 4 options: 1) Remove the websocket listener, 2) Use websocket type 'binary', "
+					             "3) Remove the non-UTF8 character set from set::allowed-nickchars, 4) Replace the non-UTF8 with an UTF8 character set in set::allowed-nickchars");
+					config_error("For more details see https://www.unrealircd.org/docs/WebSocket_support#websockets-and-non-utf8");
+					errored_once_nick = 1;
+					errors++;
+				}
+			}
+			else if (!strcmp(cep->ce_vardata, "binary"))
+			{
+			}
+			else
 			{
 				config_error("%s:%i: listen::options::websocket::type must be either 'binary' or 'text' (not '%s')",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
@@ -163,7 +182,7 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 {
 	ConfigEntry *cep, *cepp;
 	ConfigItem_listen *l;
-	static int warned_once = 0;
+	static char warned_once_channel = 0;
 
 	if (type != CONFIG_LISTEN_OPTIONS)
 		return 0;
@@ -183,13 +202,15 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 			else if (!strcmp(cep->ce_vardata, "text"))
 			{
 				l->websocket_options = WEBSOCKET_TYPE_TEXT;
-				// FIXME: check for non-utf8 nickchars as well
-				if ((tempiConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY) && !warned_once)
+				if ((tempiConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY) && !warned_once_channel)
 				{
-					config_warn("You have a websocket listener with type 'text' AND your set::allowed-channelchars is set to 'any'. "
-					            "This is not a recommended combination as this makes your websocket vulnerable to UTF8 conversion attacks.");
+					/* This one is a warning, since the consequences are less grave than with nicks */
+					config_warn("You have a websocket listener with type 'text' AND your set::allowed-channelchars is set to 'any'.");
+					config_warn("This is not a recommended combination as this makes your websocket vulnerable to UTF8 conversion attacks. "
+					            "This can cause things like unpartable channels for websocket users.");
 					config_warn("It is highly recommended that you use set { allowed-channelchars utf8; }");
-					warned_once = 1;
+					config_warn("For more details see https://www.unrealircd.org/docs/WebSocket_support#websockets-and-non-utf8");
+					warned_once_channel = 1;
 				}
 			}
 		}

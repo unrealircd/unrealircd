@@ -53,7 +53,7 @@ MBList *mblist = NULL, *mblist_tail = NULL;
 /* Use this to prevent mixing of certain combinations
  * (such as GBK & high-ascii, etc)
  */
-static int langav;
+static int langav = 0;
 char langsinuse[4096];
 
 /* bitmasks: */
@@ -67,11 +67,12 @@ char langsinuse[4096];
 #define LANGAV_W1251			0x000080 /* windows-1251 (eg: russian) */
 #define LANGAV_LATIN2W1250		0x000100 /* Compatible with both latin2 AND windows-1250 (eg: hungarian) */
 #define LANGAV_ISO8859_6		0x000200 /* arabic */
-#define LANGAV_GBK				0x001000 /* (Chinese) GBK encoding */
-#define LANGAV_LATIN_UTF8		0x002000 /* UTF8: latin script */
-#define LANGAV_CYRILLIC_UTF8	0x004000 /* UTF8: cyrillic script */
-#define LANGAV_GREEK_UTF8		0x008000 /* UTF8: greek script */
-#define LANGAV_HEBREW_UTF8		0x010000 /* UTF8: hebrew script */
+#define LANGAV_GBK			0x001000 /* (Chinese) GBK encoding */
+#define LANGAV_UTF8			0x002000 /* any UTF8 encoding */
+#define LANGAV_LATIN_UTF8		0x004000 /* UTF8: latin script */
+#define LANGAV_CYRILLIC_UTF8		0x008000 /* UTF8: cyrillic script */
+#define LANGAV_GREEK_UTF8		0x010000 /* UTF8: greek script */
+#define LANGAV_HEBREW_UTF8		0x020000 /* UTF8: hebrew script */
 typedef struct LangList LangList;
 struct LangList
 {
@@ -83,57 +84,57 @@ struct LangList
 /* MUST be alphabetized (first column) */
 static LangList langlist[] = {
 /*	{ "arabic",       "ara", LANGAV_ASCII|LANGAV_ISO8859_6 }, -- TODO: check if this has issues first! */
-	{ "belarussian-utf8", "blr-utf8", LANGAV_ASCII|LANGAV_CYRILLIC_UTF8 },
+	{ "belarussian-utf8", "blr-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_CYRILLIC_UTF8 },
 	{ "belarussian-w1251", "blr", LANGAV_ASCII|LANGAV_W1251 },
 	{ "catalan",      "cat", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "catalan-utf8", "cat-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "catalan-utf8", "cat-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "chinese",      "chi-j,chi-s,chi-t", LANGAV_GBK },
 	{ "chinese-ja",   "chi-j", LANGAV_GBK },
 	{ "chinese-simp", "chi-s", LANGAV_GBK },
 	{ "chinese-trad", "chi-t", LANGAV_GBK },
-	{ "cyrillic-utf8", "blr-utf8,rus-utf8,ukr-utf8", LANGAV_ASCII|LANGAV_CYRILLIC_UTF8 },
+	{ "cyrillic-utf8", "blr-utf8,rus-utf8,ukr-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_CYRILLIC_UTF8 },
 	{ "czech",        "cze-m", LANGAV_ASCII|LANGAV_W1250 },
-	{ "czech-utf8",   "cze-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "czech-utf8",   "cze-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "danish",       "dan", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "danish-utf8",  "dan-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "danish-utf8",  "dan-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "dutch",        "dut", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "dutch-utf8",   "dut-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "dutch-utf8",   "dut-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "french",       "fre", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "french-utf8",  "fre-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "french-utf8",  "fre-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "gbk",          "chi-s,chi-t,chi-j", LANGAV_GBK },
 	{ "german",       "ger", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "german-utf8",  "ger-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "german-utf8",  "ger-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "greek",        "gre", LANGAV_ASCII|LANGAV_ISO8859_7 },
-	{ "greek-utf8",   "gre-utf8", LANGAV_ASCII|LANGAV_GREEK_UTF8 },
+	{ "greek-utf8",   "gre-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_GREEK_UTF8 },
 	{ "hebrew",       "heb", LANGAV_ASCII|LANGAV_ISO8859_8I },
-	{ "hebrew-utf8",  "heb", LANGAV_ASCII|LANGAV_HEBREW_UTF8 },
+	{ "hebrew-utf8",  "heb-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_HEBREW_UTF8 },
 	{ "hungarian",    "hun", LANGAV_ASCII|LANGAV_LATIN2W1250 },
-	{ "hungarian-utf8","hun-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "hungarian-utf8","hun-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "icelandic",    "ice", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "icelandic-utf8","ice-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "icelandic-utf8","ice-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "italian",      "ita", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "italian-utf8", "ita-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
-	{ "latin-utf8",   "cat-utf8,cze-utf8,dan-utf8,dut-utf8,fre-utf8,ger-utf8,hun-utf8,ice-utf8,ita-utf8,pol-utf8,rum-utf8,slo-utf8,spa-utf8,swe-utf8,tur-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "italian-utf8", "ita-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
+	{ "latin-utf8",   "cat-utf8,cze-utf8,dan-utf8,dut-utf8,fre-utf8,ger-utf8,hun-utf8,ice-utf8,ita-utf8,pol-utf8,rum-utf8,slo-utf8,spa-utf8,swe-utf8,tur-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "latin1",       "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "latin2",       "hun,pol,rum", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish",       "pol", LANGAV_ASCII|LANGAV_LATIN2 },
-	{ "polish-utf8",  "pol-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "polish-utf8",  "pol-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "polish-w1250", "pol-m", LANGAV_ASCII|LANGAV_W1250 },
 	{ "romanian",     "rum", LANGAV_ASCII|LANGAV_LATIN2W1250 },
-	{ "romanian-utf8","rum-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
-	{ "russian-utf8", "rus-utf8", LANGAV_ASCII|LANGAV_CYRILLIC_UTF8 },
+	{ "romanian-utf8","rum-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
+	{ "russian-utf8", "rus-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_CYRILLIC_UTF8 },
 	{ "russian-w1251","rus", LANGAV_ASCII|LANGAV_W1251 },
 	{ "slovak",       "slo-m", LANGAV_ASCII|LANGAV_W1250 },
-	{ "slovak-utf8",  "slo-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "slovak-utf8",  "slo-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "spanish",      "spa", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "spanish-utf8", "spa-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "spanish-utf8", "spa-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "swedish",      "swe", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "swedish-utf8", "swe-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "swedish-utf8", "swe-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "swiss-german", "swg", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "swiss-german-utf8", "swg-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
+	{ "swiss-german-utf8", "swg-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
 	{ "turkish",      "tur", LANGAV_ASCII|LANGAV_ISO8859_9 },
-	{ "turkish-utf8", "tur-utf8", LANGAV_ASCII|LANGAV_LATIN_UTF8 },
-	{ "ukrainian-utf8", "ukr-utf8", LANGAV_ASCII|LANGAV_CYRILLIC_UTF8 },
+	{ "turkish-utf8", "tur-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_LATIN_UTF8 },
+	{ "ukrainian-utf8", "ukr-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_CYRILLIC_UTF8 },
 	{ "ukrainian-w1251", "ukr", LANGAV_ASCII|LANGAV_W1251 },
 	{ "windows-1250", "cze-m,pol-m,rum,slo-m,hun",  LANGAV_ASCII|LANGAV_W1250 },
 	{ "windows-1251", "rus,ukr,blr", LANGAV_ASCII|LANGAV_W1251 },
@@ -365,6 +366,7 @@ void charsys_reset(void)
 void charsys_reset_pretest(void)
 {
 	langav = 0;
+	non_utf8_nick_chars_in_use = 0;
 }
 
 static inline void ilang_swap(ILangList *one, ILangList *two)
@@ -578,14 +580,25 @@ int mid;
 	return NULL;
 }
 
+static LangList *charsys_find_language_code(char *code)
+{
+	int i;
+	for (i = 0; langlist[i].code; i++)
+		if (!strcasecmp(langlist[i].code, code))
+			return &langlist[i];
+	return NULL;
+}
+
 /** Check if language is available. */
 int charsys_test_language(char *name)
 {
-LangList *l = charsys_find_language(name);
+	LangList *l = charsys_find_language(name);
 
 	if (l)
 	{
 		langav |= l->setflags;
+		if (!(l->setflags & LANGAV_UTF8))
+			non_utf8_nick_chars_in_use = 1;
 		return 1;
 	}
 	if (!strcmp(name, "euro-west"))
