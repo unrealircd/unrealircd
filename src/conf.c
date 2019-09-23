@@ -2645,8 +2645,18 @@ int	config_test()
 	{
 		if (config_verbose > 1)
 			config_status("Testing %s", cfptr->cf_filename);
+		/* First test the set { } block */
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
+			if (!strcmp(ce->ce_varname, "set"))
+				errors += _test_set(cfptr, ce);
+		}
+		/* Now test all the rest */
+		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
+		{
+			/* These are already processed, so skip them here.. */
+			if (!strcmp(ce->ce_varname, "set"))
+				continue;
 			if ((cc = config_binary_search(ce->ce_varname))) {
 				if (cc->testfunc)
 					errors += (cc->testfunc(cfptr, ce));
