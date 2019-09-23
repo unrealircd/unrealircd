@@ -38,7 +38,7 @@
 
 #include "unrealircd.h"
 
-#ifdef __SANITIZE_ADDRESS__
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
 /* When running with AddressSanitizer, if using memory pools we will
  * likely NOT detect various kinds of misusage. (This is a known problem)
  * Therefore, if ASan is enabled, we don't use memory pools and will
