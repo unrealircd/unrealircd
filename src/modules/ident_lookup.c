@@ -143,7 +143,7 @@ static void ident_lookup_receive(int fd, int revents, void *userdata)
 	Client *cptr = userdata;
 	char *ident = NULL;
 	char buf[512];
-	ssize_t len;
+	int len;
 
 	len = READ_SOCK(cptr->local->authfd, buf, sizeof(buf)-1);
 	if (ERRNO == P_EAGAIN)
