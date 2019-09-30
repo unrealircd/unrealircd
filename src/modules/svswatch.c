@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSWATCH, cmd_svswatch, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSWATCH, cmd_svswatch, MAXPARA, CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

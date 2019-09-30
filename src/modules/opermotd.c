@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_OPERMOTD, cmd_opermotd, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_OPERMOTD, cmd_opermotd, MAXPARA, CMD_USER|CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

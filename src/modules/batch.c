@@ -57,7 +57,7 @@ MOD_INIT()
 	mtag.clicap_handler = c;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
-	CommandAdd(modinfo->handle, "BATCH", cmd_batch, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, "BATCH", cmd_batch, MAXPARA, CMD_USER|CMD_SERVER);
 	return MOD_SUCCESS;
 }
 

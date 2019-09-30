@@ -105,7 +105,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, ct_pre_lconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, ct_lconnect);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, 0, ct_rconnect);
-	CommandAdd(modinfo->handle, MSG_THROTTLE, ct_throttle, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_THROTTLE, ct_throttle, MAXPARA, CMD_USER|CMD_SERVER);
 	return MOD_SUCCESS;
 }
 

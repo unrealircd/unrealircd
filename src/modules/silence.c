@@ -79,7 +79,7 @@ MOD_INIT()
 		config_error("could not register silence moddata");
 		return MOD_FAILED;
 	}
-	CommandAdd(modinfo->handle, "SILENCE", cmd_silence, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, "SILENCE", cmd_silence, MAXPARA, CMD_USER);
 	return MOD_SUCCESS;
 }
 

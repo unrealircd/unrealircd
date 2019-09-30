@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SQUIT, cmd_squit, 2, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SQUIT, cmd_squit, 2, CMD_USER|CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

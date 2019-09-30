@@ -51,7 +51,7 @@ ModDataInfo mreq;
 	if (!mdex_cli)
 	        abort();
 
-	CommandAdd(modinfo->handle, "MDEX", cmd_mdex, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, "MDEX", cmd_mdex, MAXPARA, CMD_USER);
 
 	return MOD_SUCCESS;
 }

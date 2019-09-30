@@ -51,9 +51,6 @@ extern MODVAR char umodestring[UMODETABLESZ+1];
 /* get_recvq is only called in send.c for local connections */
 #define get_recvq(x) ((x)->local->class->recvq ? (x)->local->class->recvq : DEFAULT_RECVQ)
 
-#define CMD_FUNC(x) int (x) (Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
-#define CMD_OVERRIDE_FUNC(x) int (x)(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
-
 /* Configuration preprocessor */
 extern int parse_preprocessor_item(char *start, char *end, char *filename, int linenumber, ConditionalConfig **cc);
 extern void preprocessor_cc_duplicate_list(ConditionalConfig *r, ConditionalConfig **out);

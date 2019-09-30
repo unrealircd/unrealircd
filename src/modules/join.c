@@ -66,7 +66,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_JOIN, cmd_join, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_JOIN, cmd_join, MAXPARA, CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_CONNECT, cmd_connect, MAXPARA, M_USER|M_SERVER); /* hmm.. server.. really? */
+	CommandAdd(modinfo->handle, MSG_CONNECT, cmd_connect, MAXPARA, CMD_USER|CMD_SERVER); /* hmm.. server.. really? */
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

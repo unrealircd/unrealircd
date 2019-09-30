@@ -38,8 +38,8 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSNOLAG, cmd_svsnolag, MAXPARA, M_SERVER);
-	CommandAdd(modinfo->handle, MSG_SVS2NOLAG, cmd_svs2nolag, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSNOLAG, cmd_svsnolag, MAXPARA, CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVS2NOLAG, cmd_svs2nolag, MAXPARA, CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

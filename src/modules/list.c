@@ -89,7 +89,7 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 
-	CommandAdd(modinfo->handle, MSG_LIST, cmd_list, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_LIST, cmd_list, MAXPARA, CMD_USER);
 	EventAdd(modinfo->handle, "send_queued_list_data", send_queued_list_data, NULL, 1500, 0);
 
 	return MOD_SUCCESS;

@@ -69,8 +69,8 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_MODE, cmd_mode, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_MLOCK, cmd_mlock, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_MODE, cmd_mode, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_MLOCK, cmd_mlock, MAXPARA, CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

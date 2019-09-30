@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_UMODE2, cmd_umode2, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_UMODE2, cmd_umode2, MAXPARA, CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

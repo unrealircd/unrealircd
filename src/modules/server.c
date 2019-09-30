@@ -63,8 +63,8 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SERVER, cmd_server, MAXPARA, M_UNREGISTERED|M_SERVER);
-	CommandAdd(modinfo->handle, "SID", cmd_server_remote, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SERVER, cmd_server, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
+	CommandAdd(modinfo->handle, "SID", cmd_server_remote, MAXPARA, CMD_SERVER);
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 

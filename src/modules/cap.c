@@ -56,7 +56,7 @@ MOD_INIT()
 	ClientCapabilityInfo c;
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_CAP, cmd_cap, MAXPARA, M_UNREGISTERED|M_USER|M_NOLAG);
+	CommandAdd(modinfo->handle, MSG_CAP, cmd_cap, MAXPARA, CMD_UNREGISTERED|CMD_USER|CMD_NOLAG);
 
 	/* This first cap is special, in the sense that it is hidden
 	 * and indicates a cap exchange is in progress.

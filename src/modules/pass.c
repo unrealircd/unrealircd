@@ -49,7 +49,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_PASS, cmd_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_PASS, cmd_pass, 1, CMD_UNREGISTERED|CMD_USER|CMD_SERVER);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

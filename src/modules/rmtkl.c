@@ -85,7 +85,7 @@ MOD_INIT()
 		config_error("Command RMTKL already exists");
 		return MOD_FAILED;
 	}
-	CommandAdd(modinfo->handle, "RMTKL", rmtkl, 5, M_USER);
+	CommandAdd(modinfo->handle, "RMTKL", rmtkl, 5, CMD_USER);
 	return MOD_SUCCESS;
 }
 

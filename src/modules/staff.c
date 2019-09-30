@@ -89,7 +89,7 @@ MOD_INIT()
 	memset(&staff, 0, sizeof(staff));
 	InitConf();
 
-	CommandAdd(modinfo->handle, MSG_STAFF, cmd_staff, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_STAFF, cmd_staff, MAXPARA, CMD_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, cb_conf);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, cb_rehash);
 	HookAdd(modinfo->handle, HOOKTYPE_REHASHFLAG, 0, cb_rehashflag);

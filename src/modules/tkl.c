@@ -180,15 +180,15 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamfilter);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_ban);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_except);
-	CommandAdd(modinfo->handle, "GLINE", cmd_gline, 3, M_OPER);
-	CommandAdd(modinfo->handle, "SHUN", cmd_shun, 3, M_OPER);
-	CommandAdd(modinfo->handle, "TEMPSHUN", cmd_tempshun, 2, M_OPER);
-	CommandAdd(modinfo->handle, "ZLINE", cmd_zline, 3, M_OPER);
-	CommandAdd(modinfo->handle, "KLINE", cmd_kline, 3, M_OPER);
-	CommandAdd(modinfo->handle, "GZLINE", cmd_gzline, 3, M_OPER);
-	CommandAdd(modinfo->handle, "SPAMFILTER", cmd_spamfilter, 7, M_OPER);
-	CommandAdd(modinfo->handle, "ELINE", cmd_eline, 4, M_OPER);
-	CommandAdd(modinfo->handle, "TKL", _cmd_tkl, MAXPARA, M_OPER|M_SERVER);
+	CommandAdd(modinfo->handle, "GLINE", cmd_gline, 3, CMD_OPER);
+	CommandAdd(modinfo->handle, "SHUN", cmd_shun, 3, CMD_OPER);
+	CommandAdd(modinfo->handle, "TEMPSHUN", cmd_tempshun, 2, CMD_OPER);
+	CommandAdd(modinfo->handle, "ZLINE", cmd_zline, 3, CMD_OPER);
+	CommandAdd(modinfo->handle, "KLINE", cmd_kline, 3, CMD_OPER);
+	CommandAdd(modinfo->handle, "GZLINE", cmd_gzline, 3, CMD_OPER);
+	CommandAdd(modinfo->handle, "SPAMFILTER", cmd_spamfilter, 7, CMD_OPER);
+	CommandAdd(modinfo->handle, "ELINE", cmd_eline, 4, CMD_OPER);
+	CommandAdd(modinfo->handle, "TKL", _cmd_tkl, MAXPARA, CMD_OPER|CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

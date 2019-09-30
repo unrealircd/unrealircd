@@ -55,10 +55,10 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	init_config();
-	CommandAdd(modinfo->handle, "HEAD", webredir, MAXPARA, M_UNREGISTERED);
-	CommandAdd(modinfo->handle, "GET", webredir, MAXPARA, M_UNREGISTERED);
-	CommandAdd(modinfo->handle, "POST", webredir, MAXPARA, M_UNREGISTERED);
-	CommandAdd(modinfo->handle, "PUT", webredir, MAXPARA, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, "HEAD", webredir, MAXPARA, CMD_UNREGISTERED);
+	CommandAdd(modinfo->handle, "GET", webredir, MAXPARA, CMD_UNREGISTERED);
+	CommandAdd(modinfo->handle, "POST", webredir, MAXPARA, CMD_UNREGISTERED);
+	CommandAdd(modinfo->handle, "PUT", webredir, MAXPARA, CMD_UNREGISTERED);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, webredir_config_run);
 	return MOD_SUCCESS;
 }

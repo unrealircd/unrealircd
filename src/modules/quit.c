@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_QUIT, cmd_quit, 1, M_UNREGISTERED|M_USER|M_VIRUS);
+	CommandAdd(modinfo->handle, MSG_QUIT, cmd_quit, 1, CMD_UNREGISTERED|CMD_USER|CMD_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

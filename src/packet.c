@@ -67,19 +67,19 @@ void	init_CommandHash(void)
 #endif
 	
 	memset(CommandHash, 0, sizeof(CommandHash));
-	CommandAdd(NULL, MSG_ERROR, cmd_error, MAXPARA, M_UNREGISTERED|M_SERVER);
-	CommandAdd(NULL, MSG_VERSION, cmd_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
-	CommandAdd(NULL, MSG_SUMMON, cmd_summon, 1, M_USER);
-	CommandAdd(NULL, MSG_USERS, cmd_users, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_INFO, cmd_info, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_DNS, cmd_dns, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_REHASH, cmd_rehash, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(NULL, MSG_RESTART, cmd_restart, 2, M_USER);
-	CommandAdd(NULL, MSG_DIE, cmd_die, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_DALINFO, cmd_dalinfo, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_CREDITS, cmd_credits, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_LICENSE, cmd_license, MAXPARA, M_USER);
-	CommandAdd(NULL, MSG_MODULE, cmd_module, MAXPARA, M_USER);
+	CommandAdd(NULL, MSG_ERROR, cmd_error, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
+	CommandAdd(NULL, MSG_VERSION, cmd_version, MAXPARA, CMD_UNREGISTERED|CMD_USER|CMD_SERVER);
+	CommandAdd(NULL, MSG_SUMMON, cmd_summon, 1, CMD_USER);
+	CommandAdd(NULL, MSG_USERS, cmd_users, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_INFO, cmd_info, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_DNS, cmd_dns, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_REHASH, cmd_rehash, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(NULL, MSG_RESTART, cmd_restart, 2, CMD_USER);
+	CommandAdd(NULL, MSG_DIE, cmd_die, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_DALINFO, cmd_dalinfo, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_CREDITS, cmd_credits, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_LICENSE, cmd_license, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_MODULE, cmd_module, MAXPARA, CMD_USER);
 		
 #ifdef DEVELOP_DEBUG
 	for (i = 0; i <= 255; i++)
@@ -110,13 +110,13 @@ static inline RealCommand *find_Cmd(char *cmd, int flags)
 {
 	RealCommand *p;
 	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
-		if ((flags & M_UNREGISTERED) && !(p->flags & M_UNREGISTERED))
+		if ((flags & CMD_UNREGISTERED) && !(p->flags & CMD_UNREGISTERED))
 			continue;
-		if ((flags & M_SHUN) && !(p->flags & M_SHUN))
+		if ((flags & CMD_SHUN) && !(p->flags & CMD_SHUN))
 			continue;
-		if ((flags & M_VIRUS) && !(p->flags & M_VIRUS))
+		if ((flags & CMD_VIRUS) && !(p->flags & CMD_VIRUS))
 			continue;
-		if ((flags & M_ALIAS) && !(p->flags & M_ALIAS))
+		if ((flags & CMD_ALIAS) && !(p->flags & CMD_ALIAS))
 			continue;
 		if (!strcasecmp(p->cmd, cmd))
 			return p;

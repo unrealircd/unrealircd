@@ -49,8 +49,8 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_NICK, cmd_nick, MAXPARA, M_USER|M_SERVER|M_UNREGISTERED);
-	CommandAdd(modinfo->handle, "UID", cmd_uid, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_NICK, cmd_nick, MAXPARA, CMD_USER|CMD_SERVER|CMD_UNREGISTERED);
+	CommandAdd(modinfo->handle, "UID", cmd_uid, MAXPARA, CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

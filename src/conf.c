@@ -1683,7 +1683,7 @@ void postconf_fixes(void)
 }
 
 /* Needed for set::options::allow-part-if-shunned,
- * we can't just make it M_SHUN and do a ALLOW_PART_IF_SHUNNED in
+ * we can't just make it CMD_SHUN and do a ALLOW_PART_IF_SHUNNED in
  * cmd_part itself because that will also block internal calls (like sapart). -- Syzop
  */
 static void do_weird_shun_stuff()
@@ -1693,9 +1693,9 @@ RealCommand *cmptr;
 	if ((cmptr = find_Command_simple("PART")))
 	{
 		if (ALLOW_PART_IF_SHUNNED)
-			cmptr->flags |= M_SHUN;
+			cmptr->flags |= CMD_SHUN;
 		else
-			cmptr->flags &= ~M_SHUN;
+			cmptr->flags &= ~CMD_SHUN;
 	}
 }
 
@@ -9127,7 +9127,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry 	    	*cep, *cepp;
 	RealCommand *cmptr;
 
-	if ((cmptr = find_Command(ce->ce_vardata, 0, M_ALIAS)))
+	if ((cmptr = find_Command(ce->ce_vardata, 0, CMD_ALIAS)))
 		CommandDelX(NULL, cmptr);
 	if (find_Command_simple(ce->ce_vardata))
 	{
@@ -9195,7 +9195,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 	if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
 		safe_strdup(alias->nick, alias->alias);
 	}
-	AliasAdd(NULL, alias->alias, cmd_alias, 1, M_USER|M_ALIAS);
+	AliasAdd(NULL, alias->alias, cmd_alias, 1, CMD_USER|CMD_ALIAS);
 
 	AddListItem(alias, conf_alias);
 	return 0;
@@ -9220,7 +9220,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
-	else if (!find_Command(ce->ce_vardata, 0, M_ALIAS) && find_Command(ce->ce_vardata, 0, 0)) {
+	else if (!find_Command(ce->ce_vardata, 0, CMD_ALIAS) && find_Command(ce->ce_vardata, 0, 0)) {
 		config_status("%s:%i: %s is an existing command, can not add alias",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
 		errors++;

@@ -278,19 +278,19 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 
 		/* Set the appropriate flags for the command lookup */
 		if (!IsRegistered(from))
-			flags |= M_UNREGISTERED;
+			flags |= CMD_UNREGISTERED;
 		if (IsUser(from))
-			flags |= M_USER;
+			flags |= CMD_USER;
 		if (IsServer(from))
-			flags |= M_SERVER;
+			flags |= CMD_SERVER;
 		if (IsShunned(from))
-			flags |= M_SHUN;
+			flags |= CMD_SHUN;
 		if (IsVirus(from))
-			flags |= M_VIRUS;
+			flags |= CMD_VIRUS;
 		if (IsOper(from))
-			flags |= M_OPER;
+			flags |= CMD_OPER;
 		cmptr = find_Command(ch, IsServer(cptr) ? 1 : 0, flags);
-		if (!cmptr || !(cmptr->flags & M_NOLAG))
+		if (!cmptr || !(cmptr->flags & CMD_NOLAG))
 		{
 			/* Add fake lag (doing this early in the code, so we don't forget) */
 			parse_addlag(cptr, bytes);
@@ -330,19 +330,19 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		/* Logic in comparisons below is a bit complicated, see notes */
 
 		/* If you're a user, and this command does not permit users or opers, deny */
-		if ((flags & M_USER) && !(cmptr->flags & M_USER) && !(cmptr->flags & M_OPER))
+		if ((flags & CMD_USER) && !(cmptr->flags & CMD_USER) && !(cmptr->flags & CMD_OPER))
 		{
 			sendnumeric(cptr, ERR_NOTFORUSERS, cmptr->cmd);
 			return -1;
 		}
 
 		/* If you're a server, but command doesn't want servers, deny */
-		if ((flags & M_SERVER) && !(cmptr->flags & M_SERVER))
+		if ((flags & CMD_SERVER) && !(cmptr->flags & CMD_SERVER))
 			return -1;
 		}
 
 		/* If you're a user, but not an operator, and this requires operators, deny */
-		if ((cmptr->flags & M_OPER) && (flags & M_USER) && !(flags & M_OPER))
+		if ((cmptr->flags & CMD_OPER) && (flags & CMD_USER) && !(flags & CMD_OPER))
 		{
 			sendnumeric(cptr, ERR_NOPRIVILEGES);
 			return -1;
@@ -401,11 +401,11 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 	if (cmptr == NULL)
 		return do_numeric(numeric, cptr, from, mtags, i, para);
 	cmptr->count++;
-	if (IsUser(cptr) && (cmptr->flags & M_RESETIDLE))
+	if (IsUser(cptr) && (cmptr->flags & CMD_RESETIDLE))
 		cptr->local->last = TStime();
 
 #ifndef DEBUGMODE
-	if (cmptr->flags & M_ALIAS)
+	if (cmptr->flags & CMD_ALIAS)
 	{
 		return (*cmptr->aliasfunc) (cptr, from, mtags, i, para, cmptr->cmd);
 	} else {
@@ -415,7 +415,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 	}
 #else
 	then = clock();
-	if (cmptr->flags & M_ALIAS)
+	if (cmptr->flags & CMD_ALIAS)
 	{
 		retval = (*cmptr->aliasfunc) (cptr, from, mtags, i, para, cmptr->cmd);
 	} else {

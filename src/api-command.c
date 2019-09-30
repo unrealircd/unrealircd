@@ -71,19 +71,12 @@ Command *CommandAddInternal(Module *module, char *cmd, CmdFunc func, AliasCmdFun
 		module->errorcode = MODERR_NOERROR;
 	}
 
-	if (flags & M_ANNOUNCE)
-	{
-		config_warn("Command '%s' has M_ANNOUNCE set, but this is no longer "
-		            "supported. Old 3rd party module %s? Check for updates!",
-		            c->cmd, module ? module->header->name : "");
-	}
-
 	return command;
 }
 
 Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned char params, int flags)
 {
-	if (flags & M_ALIAS)
+	if (flags & CMD_ALIAS)
 	{
 		config_error("Command '%s' used CommandAdd() to add a command alias, "
 		             "but should have used AliasAdd() instead. "
@@ -97,8 +90,8 @@ Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned char param
 
 Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned char params, int flags)
 {
-	if (!(flags & M_ALIAS))
-		flags |= M_ALIAS;
+	if (!(flags & CMD_ALIAS))
+		flags |= CMD_ALIAS;
 	return CommandAddInternal(module, cmd, NULL, aliasfunc, params, flags);
 }
 

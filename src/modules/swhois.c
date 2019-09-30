@@ -39,7 +39,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SWHOIS, cmd_swhois, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SWHOIS, cmd_swhois, MAXPARA, CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

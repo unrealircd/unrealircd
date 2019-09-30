@@ -406,9 +406,9 @@ MOD_INIT()
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	CommandAdd(modinfo->handle, MSG_SASL, cmd_sasl, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_SVSLOGIN, cmd_svslogin, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, cmd_authenticate, MAXPARA, M_UNREGISTERED|M_USER);
+	CommandAdd(modinfo->handle, MSG_SASL, cmd_sasl, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSLOGIN, cmd_svslogin, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, cmd_authenticate, MAXPARA, CMD_UNREGISTERED|CMD_USER);
 
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, sasl_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, sasl_quit);

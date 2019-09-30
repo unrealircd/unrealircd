@@ -165,8 +165,8 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, reputation_set_on_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 2000000000, reputation_pre_lconnect); /* (prio: last) */
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, -1000000000, reputation_set_on_connect); /* (prio: near-first) */
-	CommandAdd(ModInf.handle, "REPUTATION", reputation_cmd, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(ModInf.handle, "REPUTATIONUNPERM", reputationunperm, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(ModInf.handle, "REPUTATION", reputation_cmd, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(ModInf.handle, "REPUTATIONUNPERM", reputationunperm, MAXPARA, CMD_USER|CMD_SERVER);
 	return MOD_SUCCESS;
 }
 

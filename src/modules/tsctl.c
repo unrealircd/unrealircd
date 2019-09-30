@@ -33,7 +33,7 @@ CMD_FUNC(cmd_tsctl);
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, "TSCTL", cmd_tsctl, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, "TSCTL", cmd_tsctl, MAXPARA, CMD_USER|CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

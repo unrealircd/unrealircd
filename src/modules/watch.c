@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_WATCH, cmd_watch, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_WATCH, cmd_watch, 1, CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

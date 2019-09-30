@@ -798,17 +798,99 @@ struct SWhois {
 	char *line;
 	char *setby;
 };
-	
-#define M_UNREGISTERED	0x0001
-#define M_USER			0x0002
-#define M_SERVER		0x0004
-#define M_SHUN			0x0008
-#define M_NOLAG			0x0010
-#define M_ALIAS			0x0020
-#define M_RESETIDLE		0x0040
-#define M_VIRUS			0x0080
-#define M_ANNOUNCE		0x0100 /* deprecated! */
-#define M_OPER			0x0200
+
+/** The command API - used by modules and the core.
+ * @defgroup CommandAPI Command API
+ * @{
+ */
+/** Command can be called by unregistered users (still in handshake) */
+#define CMD_UNREGISTERED	0x0001
+/** Command can be called by users (either directly connected, or remote) */
+#define CMD_USER		0x0002
+/** Command can be called by servers */
+#define CMD_SERVER		0x0004
+/** Command can be used by shunned users (only very few commands need this) */
+#define CMD_SHUN		0x0008
+/** Command will NOT add fake lag (extremely rare, use with care) */
+#define CMD_NOLAG		0x0010
+/** Command is actually an alias */
+#define CMD_ALIAS		0x0020
+/** Command will reset the idle time (only for PRIVMSG) */
+#define CMD_RESETIDLE		0x0040
+/** Command can be used by virus tagged users (only very few commands) */
+#define CMD_VIRUS		0x0080
+/** Command requires IRCOp privileges */
+#define CMD_OPER		0x0200
+
+/** Command function - used by all command handlers.
+ * This is used in the code like <pre>CMD_FUNC(cmd_yourcmd)</pre> as a function definition.
+ * @param cptr        The client direction pointer.
+ * @param sptr        The source client pointer (you usually need this one).
+ * @param recv_mtags  Received message tags for this command.
+ * @param parc        Parameter count *plus* 1.
+ * @param parv        Parameter values.
+ * @note  The use of sptr and cptr often confuse people. The short answer is that in most cases you
+ *        will use 'sptr' (source client pointer) since that is the actual client that you should be
+ *        dealing with. The 'cptr' is the connected client from which the command was received.
+ *        This is best illustrated with an example. Consider the following toplogy:
+ *
+ *            serverA--serverB--serverC
+ *                |               |
+ *            clientA           clientC
+ *
+ *
+ *        Say, *clientA* sends a message to a channel, the IRC protocol message is
+ *        `PRIVMSG #test :hi`. When *serverA* receives this message and calls the cmd_message()
+ *        command handler, *sptr* will point to clientA, and *cptr* will point to clientA as well.
+ *
+ *        Now, *serverA* will send the channel message to serverB to deliver it to other clients.
+ *        The IRC protocol message is `:clientA PRIVMSG #test :hi`. When *serverB* receives this
+ *        message and calls the cmd_message() command handler, *sptr* will point to *clientA*,
+ *        but this time *cptr* will point to *serverA* (!!). That is because cptr points to the
+ *        local client on which this message was received, which is *serverA* in this case.
+ *
+ *        Let's continue this example: *serverB* will send the channel message to *serverC*,
+ *        sending `:clientA PRIVMSG #test :hi`. On *serverC*, when it receives this
+ *        message it will call cmd_message() with *sptr* pointing to *clientA*, and
+ *        *cptr* pointing to *serverB*. It will point *cptr* to *serverB* because *serverB* is
+ *        the directly connected client from which this message was received.
+ *
+ *        As you can see, **cptr says nothing about which server the client (*sptr*) is on**,
+ *        the only thing it specifies is the *direction* from which the message was received.
+ *
+ *        In almost all cases you will use *sptr*. It's just that sometimes you need the direction
+ *        as well, such as for sending functions.
+ *
+ * @note  Slightly confusing, but parc will be 2 if 1 parameter was provided.
+ *        It is two because parv will still have 2 elements, parv[1] will be your first parameter,
+ *        and parv[2] will be NULL.
+ *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
+ *        E.g. parv[3] in the above example is out of bounds.
+ */
+#define CMD_FUNC(x) int (x) (Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+/* @} */
+
+/** Command override function - used by all command override handlers.
+ * This is used in the code like <pre>CMD_OVERRIDE_FUNC(ovr_somecmd)</pre> as a function definition.
+ * @param ovr         The command override structure.
+ * @param cptr        The client direction pointer.
+ * @param sptr        The source client pointer (you usually need this one).
+ * @param recv_mtags  Received message tags for this command.
+ * @param parc        Parameter count *plus* 1.
+ * @param parv        Parameter values.
+ * @notes Slightly confusing, but parc will be 2 if 1 parameter was provided.
+ *        It is two because parv will still have 2 elements, parv[1] will be your first parameter,
+ *        and parv[2] will be NULL.
+ *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
+ *        E.g. parv[3] in the above example.
+ */
+#define CMD_OVERRIDE_FUNC(x) int (x)(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+
+
+
+typedef int (*CmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+typedef int (*AliasCmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
+typedef int (*OverrideCmdFunc)(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 
 
 /* tkl:
@@ -965,11 +1047,36 @@ struct IRCCounts {
 /** The /LUSERS stats information */
 extern MODVAR IRCCounts irccounts;
 
-typedef int (*CmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
-typedef int (*AliasCmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
-typedef int (*OverrideCmdFunc)(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
-
 #include "modules.h"
+
+/** A "real" command (internal interface, not for modules) */
+struct RealCommand {
+	RealCommand		*prev, *next;
+	char 			*cmd;
+	CmdFunc			func;
+	AliasCmdFunc		aliasfunc;
+	int			flags;
+	unsigned int    	count;
+	unsigned		parameters : 5;
+	unsigned long   	bytes;
+	Module 			*owner;
+	RealCommand		*friend; /* cmd if token, token if cmd */
+	CommandOverride		*overriders;
+	CommandOverride		*overridetail;
+#ifdef DEBUGMODE
+	unsigned long 		lticks;
+	unsigned long 		rticks;
+#endif
+};
+
+/** A command override */
+struct CommandOverride {
+	CommandOverride		*prev, *next;
+	int			priority;
+	Module			*owner;
+	RealCommand		*command;
+	OverrideCmdFunc		func;
+};
 
 extern MODVAR Umode *Usermode_Table;
 extern MODVAR short	 Usermode_highest;
@@ -1958,33 +2065,6 @@ extern SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server);
 #define TLS_PROTOCOL_TLSV1_3	0x0008
 
 #define TLS_PROTOCOL_ALL		0xffff
-
-struct RealCommand {
-	RealCommand		*prev, *next;
-	char 			*cmd;
-	CmdFunc			func;
-	AliasCmdFunc		aliasfunc;
-	int			flags;
-	unsigned int    	count;
-	unsigned		parameters : 5;
-	unsigned long   	bytes;
-	Module 			*owner;
-	RealCommand		*friend; /* cmd if token, token if cmd */
-	CommandOverride		*overriders;
-	CommandOverride		*overridetail;
-#ifdef DEBUGMODE
-	unsigned long 		lticks;
-	unsigned long 		rticks;
-#endif
-};
-
-struct CommandOverride {
-	CommandOverride		*prev, *next;
-	int			priority;
-	Module			*owner;
-	RealCommand		*command;
-	OverrideCmdFunc		func;
-};
 
 struct ThrottlingBucket
 {

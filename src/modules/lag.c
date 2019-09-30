@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_LAG, cmd_lag, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_LAG, cmd_lag, MAXPARA, CMD_USER|CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

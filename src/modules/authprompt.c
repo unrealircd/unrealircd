@@ -105,7 +105,7 @@ MOD_INIT()
 	 * a chance to be handled first.
 	 */
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, -1000000, authprompt_pre_connect);
-	CommandAdd(modinfo->handle, "AUTH", cmd_auth, 1, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, "AUTH", cmd_auth, 1, CMD_UNREGISTERED);
 	return MOD_SUCCESS;
 }
 

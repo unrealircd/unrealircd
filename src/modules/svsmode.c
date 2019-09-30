@@ -44,8 +44,8 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSMODE, cmd_svsmode, MAXPARA, M_SERVER|M_USER);
-	CommandAdd(modinfo->handle, MSG_SVS2MODE, cmd_svs2mode, MAXPARA, M_SERVER|M_USER);
+	CommandAdd(modinfo->handle, MSG_SVSMODE, cmd_svsmode, MAXPARA, CMD_SERVER|CMD_USER);
+	CommandAdd(modinfo->handle, MSG_SVS2MODE, cmd_svs2mode, MAXPARA, CMD_SERVER|CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

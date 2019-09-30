@@ -21,7 +21,7 @@ CMD_FUNC(cmd_sinfo);
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, "SINFO", cmd_sinfo, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, "SINFO", cmd_sinfo, MAXPARA, CMD_USER|CMD_SERVER);
 
 	return MOD_SUCCESS;
 }

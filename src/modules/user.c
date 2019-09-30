@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_USER, cmd_user, 4, M_USER|M_UNREGISTERED);
+	CommandAdd(modinfo->handle, MSG_USER, cmd_user, 4, CMD_USER|CMD_UNREGISTERED);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

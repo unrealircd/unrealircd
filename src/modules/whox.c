@@ -80,7 +80,7 @@ ModuleHeader MOD_HEADER
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	if (!CommandAdd(modinfo->handle, MSG_WHO, cmd_whox, MAXPARA, M_USER))
+	if (!CommandAdd(modinfo->handle, MSG_WHO, cmd_whox, MAXPARA, CMD_USER))
 	{
 		config_warn("You cannot load both cmd_whox and cmd_who. You should ONLY load the cmd_whox module.");
 		return MOD_FAILED;

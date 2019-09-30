@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_UNDCCDENY, cmd_undccdeny, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_UNDCCDENY, cmd_undccdeny, MAXPARA, CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

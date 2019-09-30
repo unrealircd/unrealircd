@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_DCCALLOW, cmd_dccallow, 1, M_USER);
+	CommandAdd(modinfo->handle, MSG_DCCALLOW, cmd_dccallow, 1, CMD_USER);
 	ISupportAdd(modinfo->handle, "USERIP", NULL);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

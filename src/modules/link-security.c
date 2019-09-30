@@ -66,7 +66,7 @@ MOD_INIT()
 		abort();
 	}
 	
-	CommandAdd(modinfo->handle, "LINKSECURITY", cmd_linksecurity, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, "LINKSECURITY", cmd_linksecurity, MAXPARA, CMD_USER);
 
 	return MOD_SUCCESS;
 }

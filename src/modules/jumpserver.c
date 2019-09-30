@@ -53,7 +53,7 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	LoadPersistentPointer(modinfo, jss, jumpserver_free_jss);
-	CommandAdd(modinfo->handle, MSG_JUMPSERVER, cmd_jumpserver, 3, M_USER);
+	CommandAdd(modinfo->handle, MSG_JUMPSERVER, cmd_jumpserver, 3, CMD_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, jumpserver_preconnect);
 	return MOD_SUCCESS;
 }

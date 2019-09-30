@@ -39,8 +39,8 @@ ModuleHeader MOD_HEADER
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_PING, cmd_ping, MAXPARA, M_USER|M_SERVER|M_SHUN);
-	CommandAdd(modinfo->handle, MSG_PONG, cmd_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN|M_VIRUS);
+	CommandAdd(modinfo->handle, MSG_PING, cmd_ping, MAXPARA, CMD_USER|CMD_SERVER|CMD_SHUN);
+	CommandAdd(modinfo->handle, MSG_PONG, cmd_pong, MAXPARA, CMD_UNREGISTERED|CMD_USER|CMD_SERVER|CMD_SHUN|CMD_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

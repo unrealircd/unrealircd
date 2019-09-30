@@ -42,7 +42,7 @@ MOD_INIT()
 		config_error("Command " MSG_IRCOPS " already exists");
 		return MOD_FAILED;
 	}
-	CommandAdd(modinfo->handle, MSG_IRCOPS, cmd_ircops, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_IRCOPS, cmd_ircops, MAXPARA, CMD_USER);
 
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{

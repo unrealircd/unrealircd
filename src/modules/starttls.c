@@ -42,7 +42,7 @@ MOD_INIT()
 	ClientCapabilityInfo cap;
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_STARTTLS, cmd_starttls, MAXPARA, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, MSG_STARTTLS, cmd_starttls, MAXPARA, CMD_UNREGISTERED);
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "tls";
 	ClientCapabilityAdd(modinfo->handle, &cap, &CLICAP_STARTTLS);

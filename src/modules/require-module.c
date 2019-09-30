@@ -81,7 +81,7 @@ MOD_INIT()
 	cfg.squit_on_deny = 1;
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, reqmods_configrun);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_CONNECT, 0, reqmods_hook_serverconnect);
-	CommandAdd(modinfo->handle, MSG_SMOD, cmd_smod, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SMOD, cmd_smod, MAXPARA, CMD_SERVER);
 	return MOD_SUCCESS;
 }
 

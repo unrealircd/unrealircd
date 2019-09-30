@@ -100,7 +100,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PASS, 0, webirc_local_pass);
 	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, webirc_secure_connect);
 
-	CommandAdd(modinfo->handle, MSG_WEBIRC, cmd_webirc, MAXPARA, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, MSG_WEBIRC, cmd_webirc, MAXPARA, CMD_UNREGISTERED);
 		
 	return MOD_SUCCESS;
 }
