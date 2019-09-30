@@ -407,7 +407,7 @@ CMD_FUNC(cmd_protoctl)
 		/* SERVER message moved from completed_connection() to here due to EAUTH/SERVERS PROTOCTL stuff,
 		 * which needed to be delayed until after both sides have received SERVERS=xx (..or not.. in case
 		 * of older servers).
-		 * Actually, this is often not reached, as the PANGPANG stuff in numeric.c is reached first.
+		 * Actually, this is often not reached, as the PANGPANG stuff in do_numeric() is reached first.
 		 */
 		send_server_message(cptr);
 	}

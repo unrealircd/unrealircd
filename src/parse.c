@@ -18,28 +18,27 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* -- Jto -- 03 Jun 1990
- * Changed the order of defines...
+/** @file
+ * @brief Main line parsing functions - for incoming lines from clients.
  */
-
-/* parse.c 2.33 1/30/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
-
 #include "unrealircd.h"
 
+/** Last (or current) command that we processed. Useful for post-mortem. */
 char backupbuf[8192];
 
-/*
- * NOTE: parse() should not be called recursively by other functions!
- */
 static char *para[MAXPARA + 2];
 
-static char sender[HOSTLEN + 1];
 static int cancel_clients(Client *, Client *, char *);
 static void remove_unknown(Client *, char *);
 
+/** Ban user that is "flooding from an unknown connection".
+ * This is basically a client sending lots of data but not registering.
+ * Note that "lots" in terms of IRC is a few KB's, since more is rather unusual.
+ * @param cptr The client.
+ */
 int ban_flooder(Client *cptr)
 {
-	/* Check if user is exempt.
+	/* First, check if user is exempt.
 	 * Note that we will still kill the client, since it's clearly misbehaving,
 	 * but we won't ZLINE the host, so it won't affect other connections
 	 * from the same IP.
@@ -50,8 +49,21 @@ int ban_flooder(Client *cptr)
 	return place_host_ban(cptr, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
 }
 
-/*
- * This routine adds fake lag if needed.
+/** Add "fake lag" if needed.
+ * The main purpose of fake lag is to create artificial lag when
+ * processing incoming data from the client. So, if a client sends
+ * a lot of commands, then next command will be processed at a rate
+ * of 1 per second, or even slower. The exact algorithm is defined in this function.
+ *
+ * Servers are exempt from fake lag, so are IRCOps and clients tagged as
+ * 'no fake lag' by services (rarely used). Finally, there is also an
+ * option called class::options::nofakelag which exempts fakelag.
+ * Exemptions should be granted with extreme care, since a client will
+ * be able to flood at full speed causing potentially many Mbits or even
+ * GBits of data to be sent out to other clients.
+ *
+ * @param cptr   The client.
+ * @param cptr   Number of bytes in the command.
  */
 void parse_addlag(Client *cptr, int cmdbytes)
 {
@@ -67,10 +79,13 @@ void parse_addlag(Client *cptr, int cmdbytes)
 
 int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch);
 
-/*
- * parse a buffer.
- *
- * NOTE: parse() cannot not be called recusively by any other functions!
+/** Parse an incoming line.
+ * A line was received previously, buffered via dbuf, now popped from the dbuf stack,
+ * and we should now process it.
+ * @param cptr    The client from which the message was received
+ * @param buffer  The buffer
+ * @param length  The length of the buffer
+ * @notes parse() cannot not be called recusively by any other functions!
  */
 int parse(Client *cptr, char *buffer, int length)
 {
@@ -80,14 +95,18 @@ int parse(Client *cptr, char *buffer, int length)
 	int i, ret;
 	MessageTag *mtags = NULL;
 
+	/* Take extreme care in this function, as messages can be up to READBUFSIZE
+	 * in size, which is 8192 at the time of writing.
+	 * This, while all the rest of the IRCd code assumes a maximum length
+	 * of BUFSIZE, which is 512 (including NUL byte).
+	 */
 	for (h = Hooks[HOOKTYPE_PACKET]; h; h = h->next)
 	{
 		(*(h->func.intfunc))(from, &me, NULL, &buffer, &length);
 		if(!buffer) return 0;
 	}
 
-	Debug((DEBUG_ERROR, "Parsing: %s (from %s)", buffer,
-	    (*cptr->name ? cptr->name : "*")));
+	Debug((DEBUG_ERROR, "Parsing: %s (from %s)", buffer, (*cptr->name ? cptr->name : "*")));
 
 	if (IsDeadSocket(cptr))
 		return 0;
@@ -133,6 +152,13 @@ int parse(Client *cptr, char *buffer, int length)
 	return ret;
 }
 
+/** Parse the remaining line - helper function for parse().
+ * @param cptr   The client from which the message was received
+ * @param from   The sender, this may be changed by parse2() when
+ *               the message has a sender, eg :xyz PRIVMSG ..
+ * @param mtags  Message tags received for this message.
+ * @param ch     The incoming line received (buffer), excluding message tags.
+ */
 int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 {
 	Client *from = cptr;
@@ -147,9 +173,6 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 
 	*fromptr = cptr; /* The default, unless a source is specified (and permitted) */
 
-	s = sender;
-	*s = '\0';
-
 	/* The remaining part should never be more than 510 bytes
 	 * (that is 512 minus CR LF, as specified in RFC1459 section 2.3).
 	 * If it is too long, then we cut it off here.
@@ -163,44 +186,53 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 
 	if (*ch == ':' || *ch == '@')
 	{
-		/*
-		   ** Copy the prefix to 'sender' assuming it terminates
-		   ** with SPACE (or NULL, which is an error, though).
-		 */
-		for (++ch, i = 0; *ch && *ch != ' '; ++ch)
-			if (s < (sender + sizeof(sender) - 1))
-				*s++ = *ch;	/* leave room for NULL */
+		char sender[HOSTLEN + 1];
+		s = sender;
 		*s = '\0';
-		/*
-		   ** Actually, only messages coming from servers can have
-		   ** the prefix--prefix silently ignored, if coming from
-		   ** a user client...
-		   **
-		   ** ...sigh, the current release "v2.2PL1" generates also
-		   ** null prefixes, at least to NOTIFY messages (e.g. it
-		   ** puts "sptr->nickname" as prefix from server structures
-		   ** where it's null--the following will handle this case
-		   ** as "no prefix" at all --msa  (": NOTICE nick ...")
+
+		/* Deal with :sender ... */
+		for (++ch, i = 0; *ch && *ch != ' '; ++ch)
+		{
+			if (s < sender + sizeof(sender) - 1)
+				*s++ = *ch;
+		}
+		*s = '\0';
+
+		/* For servers we lookup the sender and change 'from' accordingly.
+		 * For other clients we ignore the sender.
 		 */
 		if (*sender && IsServer(cptr))
 		{
 			from = find_client(sender, NULL);
+
 			if (!from && strchr(sender, '@'))
 				from = hash_find_nickatserver(sender, NULL);
 
-			/* Hmm! If the client corresponding to the
-			 * prefix is not found--what is the correct
-			 * action??? Now, I will ignore the message
-			 * (old IRC just let it through as if the
-			 * prefix just wasn't there...) --msa
+			/* Sender not found. Possibly a ghost, so kill it.
+			 * This can happen in normal circumstances. For example
+			 * in case of A-B-C where we are B. If a KILL came from C
+			 * for a client on A and we processed it at B, then until
+			 * A has processed it we may still receive messages from A
+			 * about it's soon-to-be-killed-client (all due to lag).
 			 */
-
 			if (!from)
 			{
 				ircstats.is_unpf++;
 				remove_unknown(cptr, sender);
 				return -1;
 			}
+			/* This is more severe. The server gave a source of a client
+			 * that cannot exist from that direction.
+			 * Eg in case of a topology of A-B-C-D and we are B,
+			 * we got a message from A with ":D MODE...".
+			 * In that case we send a SQUIT to that direction telling to
+			 * unlink D from that side. This will likely lead to a
+			 * problematic situation, though.
+			 * This is, by the way, also why we try to prevent this situation
+			 * in the first place by using PROTOCTL SERVERS=...
+			 * in which case we reject such a flawed link very early
+			 * in the server handshake process. -- Syzop
+			 */
 			if (from->direction != cptr)
 			{
 				ircstats.is_wrdi++;
@@ -216,40 +248,35 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 
 	if (*ch == '\0')
 	{
-		ircstats.is_empt++;
-		Debug((DEBUG_NOTICE, "Empty message from host %s:%s",
-		    cptr->name, from->name));
 		if (!IsServer(cptr))
 			cptr->local->since++; /* 1s fake lag */
-		return (-1);
+		return -1;
 	}
 
 	/* Recalculate string length, now that we have skipped the sender */
 	bytes = strlen(ch);
 
-	/*
-	   ** Extract the command code from the packet.  Point s to the end
-	   ** of the command code and calculate the length using pointer
-	   ** arithmetic.  Note: only need length for numerics and *all*
-	   ** numerics must have paramters and thus a space after the command
-	   ** code. -avalon
-	 */
+	/* Now let's figure out the command (or numeric)... */
 	s = strchr(ch, ' ');	/* s -> End of the command code */
 	len = (s) ? (s - ch) : 0;
-	if (len == 3 &&
-	    isdigit(*ch) && isdigit(*(ch + 1)) && isdigit(*(ch + 2)))
+
+	if (len == 3 && isdigit(*ch) && isdigit(*(ch + 1)) && isdigit(*(ch + 2)))
 	{
+		/* Numeric (eg: 311) */
 		cmptr = NULL;
-		numeric = (*ch - '0') * 100 + (*(ch + 1) - '0') * 10
-		    + (*(ch + 2) - '0');
+		numeric = (*ch - '0') * 100 + (*(ch + 1) - '0') * 10 + (*(ch + 2) - '0');
 		paramcount = MAXPARA;
 		ircstats.is_num++;
+		parse_addlag(cptr, bytes);
 	}
 	else
 	{
+		/* Command (eg: PRIVMSG) */
 		int flags = 0;
 		if (s)
 			*s++ = '\0';
+
+		/* Set the appropriate flags for the command lookup */
 		if (!IsRegistered(from))
 			flags |= M_UNREGISTERED;
 		if (IsUser(from))
@@ -263,39 +290,37 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		if (IsOper(from))
 			flags |= M_OPER;
 		cmptr = find_Command(ch, IsServer(cptr) ? 1 : 0, flags);
+		if (!cmptr || !(cmptr->flags & M_NOLAG))
+		{
+			/* Add fake lag (doing this early in the code, so we don't forget) */
+			parse_addlag(cptr, bytes);
+		}
 		if (!cmptr)
 		{
-			/*
-			   ** Note: Give error message *only* to recognized
-			   ** persons. It's a nightmare situation to have
-			   ** two programs sending "Unknown command"'s or
-			   ** equivalent to each other at full blast....
-			   ** If it has got to person state, it at least
-			   ** seems to be well behaving. Perhaps this message
-			   ** should never be generated, though...  --msa
-			   ** Hm, when is the buffer empty -- if a command
-			   ** code has been found ?? -Armin
-			   ** This error should indeed not be sent in case
-			   ** of notices -- Syzop.
+			/* Don't send error messages in response to NOTICEs
+			 * in pre-connection state.
 			 */
-			if (!IsRegistered(cptr) && strcasecmp(ch, "NOTICE")) {
+			if (!IsRegistered(cptr) && strcasecmp(ch, "NOTICE"))
+			{
 				sendnumericfmt(from, ERR_NOTREGISTERED, "You have not registered");
-				parse_addlag(cptr, bytes);
 				return -1;
 			}
+			/* If the user is shunned then don't send anything back in case
+			 * of an unknown command, since we want to save data.
+			 */
 			if (IsShunned(cptr))
 				return -1;
 				
 			if (ch[0] != '\0')
 			{
 				if (IsUser(from))
-					sendto_one(from, NULL,
-					    ":%s %d %s %s :Unknown command",
-					    me.name, ERR_UNKNOWNCOMMAND,
-					    from->name, ch);
-				Debug((DEBUG_ERROR, "Unknown (%s) from %s",
-				    ch, get_client_name(cptr, TRUE)));
-				parse_addlag(cptr, bytes);
+				{
+					sendto_one(from, NULL, ":%s %d %s %s :Unknown command",
+					                       me.name, ERR_UNKNOWNCOMMAND,
+					                       from->name, ch);
+					Debug((DEBUG_ERROR, "Unknown (%s) from %s",
+					    ch, get_client_name(cptr, TRUE)));
+				}
 			}
 			ircstats.is_unco++;
 			return (-1);
@@ -308,7 +333,6 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		if ((flags & M_USER) && !(cmptr->flags & M_USER) && !(cmptr->flags & M_OPER))
 		{
 			sendnumeric(cptr, ERR_NOTFORUSERS, cmptr->cmd);
-			parse_addlag(cptr, bytes);
 			return -1;
 		}
 
@@ -321,13 +345,10 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		if ((cmptr->flags & M_OPER) && (flags & M_USER) && !(flags & M_OPER))
 		{
 			sendnumeric(cptr, ERR_NOPRIVILEGES);
-			parse_addlag(cptr, bytes);
 			return -1;
 		}
 		paramcount = cmptr->parameters;
 		cmptr->bytes += bytes;
-		if (!(cmptr->flags & M_NOLAG))
-			parse_addlag(cptr, bytes);
 	}
 	/*
 	   ** Must the following loop really be so devious? On
@@ -378,7 +399,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 	}
 	para[++i] = NULL;
 	if (cmptr == NULL)
-		return (do_numeric(numeric, cptr, from, mtags, i, para));
+		return do_numeric(numeric, cptr, from, mtags, i, para);
 	cmptr->count++;
 	if (IsUser(cptr) && (cmptr->flags & M_RESETIDLE))
 		cptr->local->last = TStime();
@@ -415,6 +436,123 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 
 	return retval;
 #endif
+}
+
+/** Numeric received from a connection.
+ * @param numeric     The numeric code (range 000-999)
+ * @param cptr        The client
+ * @param recv_mtags  Received message tags
+ * @param parc        Parameter count
+ * @param parv        Parameters
+ * @notes In general you should NOT send anything back if you receive
+ *        a numeric, this to prevent creating loops.
+ */
+int do_numeric(int numeric, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+{
+	Client *acptr;
+	Channel *chptr;
+	char *nick, *p;
+	int i;
+	char buffer[BUFSIZE];
+
+	if ((numeric < 0) || (numeric > 999))
+		return -1;
+
+	if (!IsServer(sptr) && !IsUser(sptr) && IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr))
+	{
+		/* This is an outgoing server connect that is currently not yet IsServer() but in 'unknown' state.
+		 * We need to handle a few responses here.
+		 */
+
+		/* If we get a numeric 451 (not registered) back for the magic command __PANGPANG__
+		 * Then this means we are dealing with an Unreal server <3.2.9 and we should send the
+		 * SERVER command right now.
+		 */
+		if ((numeric == 451) && (parc > 2) && strstr(parv[1], "__PANGPANG__"))
+		{
+			send_server_message(sptr);
+			return 0;
+		}
+
+		/* STARTTLS: unknown command */
+		if ((numeric == 451) && (parc > 2) && strstr(parv[1], "STARTTLS"))
+		{
+			if (cptr->serv->conf && (cptr->serv->conf->outgoing.options & CONNECT_INSECURE))
+				start_server_handshake(cptr);
+			else
+				reject_insecure_server(cptr);
+			return 0;
+		}
+
+		/* STARTTLS failed */
+		if (numeric == 691)
+		{
+			sendto_umode(UMODE_OPER, "STARTTLS failed for link %s. Please check the other side of the link.", cptr->name);
+			reject_insecure_server(cptr);
+			return 0;
+		}
+
+		/* STARTTLS OK */
+		if (numeric == 670)
+		{
+			int ret = client_starttls(cptr);
+			if (ret < 0)
+			{
+				sendto_umode(UMODE_OPER, "STARTTLS handshake failed for link %s. Strange.", cptr->name);
+				reject_insecure_server(cptr);
+				return ret;
+			}
+			/* We don't call start_server_handshake() here. First the TLS handshake will
+			 * be completed, then completed_connection() will be called for a second time,
+			 * which will call completed_connection() from there.
+			 */
+			return 0;
+		}
+	}
+
+	/* Other than the (strange) code from above, we actually
+	 * don't process numerics from non-servers. So return here.
+	 */
+	if ((parc < 2) || BadPtr(parv[1]) || !IsServer(sptr))
+		return 0;
+
+	/* Remap low number numerics. */
+	if (numeric < 100)
+		numeric += 100;
+
+	/* Convert parv[] back to a string 'buffer', since that is
+	 * what we use in the sendto_* functions below.
+	 */
+	concat_params(buffer, sizeof(buffer), parc, parv);
+
+	/* Now actually process the numeric, IOTW: send it on */
+	for (; (nick = strtoken(&p, parv[1], ",")); parv[1] = NULL)
+	{
+		if ((acptr = find_client(nick, NULL)))
+		{
+			if (!IsMe(acptr) && IsUser(acptr))
+			{
+				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
+				    sptr->name, numeric, nick, buffer);
+			}
+			else if (IsServer(acptr) && acptr->direction != cptr)
+				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
+				    sptr->name, numeric, nick, buffer);
+		}
+		else if ((acptr = find_server_quick(nick)))
+		{
+			if (!IsMe(acptr) && acptr->direction != cptr)
+				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
+				    sptr->name, numeric, nick, buffer);
+		}
+		else if ((chptr = find_channel(nick, NULL)))
+		{
+			sendto_channel(chptr, sptr, sptr, 0, 0, SEND_ALL, recv_mtags,
+			               ":%s %d %s%s", sptr->name, numeric, chptr->chname, buffer);
+		}
+	}
+
+	return 0;
 }
 
 static int cancel_clients(Client *cptr, Client *sptr, char *cmd)

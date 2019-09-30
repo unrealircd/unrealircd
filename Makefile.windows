@@ -149,7 +149,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/CONF.OBJ SRC/CONF_PREPROCESSOR.OBJ \
  SRC/FDLIST.OBJ SRC/DBUF.OBJ  \
  SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
- SRC/NUMERIC.OBJ SRC/WHOWAS.OBJ \
+ SRC/WHOWAS.OBJ \
  SRC/MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ \
  SRC/DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
  SRC/ERR.OBJ SRC/PACKET.OBJ SRC/BSD.OBJ \
@@ -441,9 +441,6 @@ src/extra.obj: src/extra.c $(INCLUDES) ./include/dbuf.h \
 
 src/serv.obj: src/serv.c $(INCLUDES) ./include/dbuf.h ./include/whowas.h
         $(CC) $(CFLAGS) src/serv.c
-
-src/numeric.obj: src/numeric.c $(INCLUDES) ./include/dbuf.h
-        $(CC) $(CFLAGS) src/numeric.c
 
 src/whowas.obj: src/whowas.c $(INCLUDES) ./include/dbuf.h ./include/whowas.h
         $(CC) $(CFLAGS) src/whowas.c

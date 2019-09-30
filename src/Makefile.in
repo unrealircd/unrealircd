@@ -25,7 +25,7 @@ OBJS=dns.o bsd.o auth.o channel.o cloak.o crule.o dbuf.o \
 	fdlist.o hash.o ircd.o ircsprintf.o list.o \
 	match.o modules.o packet.o parse.o mempool.o operclass.o \
 	conf_preprocessor.o conf.o debug.o dispatch.o err.o extra.o kline.o \
-	misc.o numeric.o serv.o aliases.o socket.o \
+	misc.o serv.o aliases.o socket.o \
 	tls.o user.o scache.o send.o support.o \
 	version.o whowas.o random.o api-usermode.o api-channelmode.o \
 	api-moddata.o uid.o api-extban.o api-isupport.o api-command.o \
@@ -187,9 +187,6 @@ kline.o: kline.c $(INCLUDES)
 
 serv.o: serv.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c serv.c
-
-numeric.o: numeric.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c numeric.c
 
 whowas.o: whowas.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c whowas.c
