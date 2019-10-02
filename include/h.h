@@ -654,7 +654,7 @@ extern void efunctions_switchover(void);
 extern char *encode_ip(char *);
 extern char *decode_ip(char *);
 extern void sendto_fconnectnotice(Client *sptr, int disconnect, char *comment);
-extern void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
+extern void sendto_one_nickcmd(Client *server, Client *client, char *umodes);
 extern int on_dccallow_list(Client *to, Client *from);
 extern int add_dccallow(Client *sptr, Client *optr);
 extern int del_dccallow(Client *sptr, Client *optr);
