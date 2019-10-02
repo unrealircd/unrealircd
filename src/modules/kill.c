@@ -66,7 +66,7 @@ CMD_FUNC(cmd_kill)
 {
 	Client *acptr;
 	char inpath[HOSTLEN * 2 + USERLEN + 5];
-	char *oinpath = get_client_name(cptr, FALSE);
+	char *oinpath = get_client_name(sptr->direction, FALSE);
 	char *user, *path, *killer, *nick, *p, *s;
 	int kcount = 0;
 	Hook *h;
@@ -79,15 +79,19 @@ CMD_FUNC(cmd_kill)
 		return 0;
 	}
 
+	// FIXME: clean all this killpath shit, nobody cares anymore these days.
+	// FYI, I just replaced 'cptr' with 'sptr->direction' for now, but
+	// we should clean up this mess later, see the FIXME.
+
 	user = parv[1];
 	path = parv[2];		/* Either defined or NULL (parc >= 2!!) */
 
 	strlcpy(inpath, oinpath, sizeof inpath);
 
-	if (IsServer(cptr) && (s = strchr(inpath, '.')) != NULL)
+	if (IsServer(sptr->direction) && (s = strchr(inpath, '.')) != NULL)
 		*s = '\0';	/* Truncate at first "." -- hmm... why ? */
 
-	if (!IsServer(cptr) && !ValidatePermissionsForPath("kill:global",sptr,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",sptr,NULL,NULL,NULL))
+	if (!IsServer(sptr->direction) && !ValidatePermissionsForPath("kill:global",sptr,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
@@ -134,8 +138,8 @@ CMD_FUNC(cmd_kill)
 			continue;
 		}
 
-		if ((!MyConnect(acptr) && MyUser(cptr) && !ValidatePermissionsForPath("kill:global",sptr,acptr,NULL,NULL))
-		    || (MyConnect(acptr) && MyUser(cptr)
+		if ((!MyConnect(acptr) && MyUser(sptr) && !ValidatePermissionsForPath("kill:global",sptr,acptr,NULL,NULL))
+		    || (MyConnect(acptr) && MyUser(sptr)
 		    && !ValidatePermissionsForPath("kill:local",sptr,acptr,NULL,NULL)))
 		{
 			sendnumeric(sptr, ERR_NOPRIVILEGES);
@@ -169,7 +173,7 @@ CMD_FUNC(cmd_kill)
 			break;
 		}
 
-		if (!IsServer(cptr))
+		if (!IsServer(sptr->direction))
 		{
 			/*
 			   ** The kill originates from this server, initialize path.
@@ -179,10 +183,10 @@ CMD_FUNC(cmd_kill)
 			   **   ...!operhost!oper
 			   **   ...!operhost!oper (comment)
 			 */
-			strlcpy(inpath, GetHost(cptr), sizeof inpath);
+			strlcpy(inpath, GetHost(sptr->direction), sizeof inpath);
 			if (kcount == 1)
 			{
-				ircsnprintf(buf, sizeof(buf), "%s (%s)", cptr->name, path);
+				ircsnprintf(buf, sizeof(buf), "%s (%s)", sptr->direction->name, path);
 				path = buf;
 			}
 		}
@@ -227,9 +231,9 @@ CMD_FUNC(cmd_kill)
 			/* Kill from one server to another (we may be src, victim or something in-between) */
 
 			/* Broadcast it to other SID and non-SID servers (may be a NOOP, obviously) */
-			sendto_server(cptr, PROTO_SID, 0, mtags, ":%s KILL %s :%s!%s",
+			sendto_server(sptr, PROTO_SID, 0, mtags, ":%s KILL %s :%s!%s",
 			    sptr->name, ID(acptr), inpath, path);
-			sendto_server(cptr, 0, PROTO_SID, mtags, ":%s KILL %s :%s!%s",
+			sendto_server(sptr, 0, PROTO_SID, mtags, ":%s KILL %s :%s!%s",
 			    sptr->name, acptr->name, inpath, path);
 
 			/* Don't send a QUIT for this */
@@ -253,7 +257,7 @@ CMD_FUNC(cmd_kill)
 		if (MyUser(sptr))
 			RunHook3(HOOKTYPE_LOCAL_KILL, sptr, acptr, parv[2]);
 
-		n = exit_client(cptr, acptr, sptr, mtags, buf2);
+		n = exit_client(sptr->direction, acptr, sptr, mtags, buf2);
 
 		free_message_tags(mtags);
 

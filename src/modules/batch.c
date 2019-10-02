@@ -80,7 +80,7 @@ CMD_FUNC(cmd_batch)
 	Client *acptr;
 	char buf[512];
 
-	if (!IsServer(cptr) || (parc < 3))
+	if (MyUser(sptr) || (parc < 3))
 		return 0;
 
 	acptr = find_client(parv[1], NULL);

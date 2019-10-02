@@ -47,7 +47,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 static void unload_motd_file(MOTDFile *list);
 CMD_FUNC(cmd_staff);
-static int cb_rehashflag(Client *cptr, Client *sptr, char *flag);
+static int cb_rehashflag(Client *sptr, char *flag);
 static int cb_test(ConfigFile *, ConfigEntry *, int, int *);
 static int cb_conf(ConfigFile *, ConfigEntry *, int);
 static int cb_rehash();
@@ -335,7 +335,7 @@ static int cb_stats(Client *sptr, char *flag)
 	return 0;
 }
 
-static int cb_rehashflag(Client *cptr, Client *sptr, char *flag)
+static int cb_rehashflag(Client *sptr, char *flag)
 {
 	int myflag = 0;
 
@@ -344,7 +344,7 @@ static int cb_rehashflag(Client *cptr, Client *sptr, char *flag)
 	{
 		if (myflag)
 			sendto_ops("%sRehashing network staff file on the request of %s",
-                                cptr != sptr ? "Remotely " : "", sptr->name);
+                                MyUser(sptr) ? "Remotely " : "", sptr->name);
 
 #ifdef USE_LIBCURL
 		if (Download.is_url)
@@ -366,7 +366,7 @@ CMD_FUNC(cmd_staff)
 	if (!IsUser(sptr))
 		return -1;
 
-	if (hunt_server(cptr, sptr, recv_mtags, ":%s STAFF", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(sptr, recv_mtags, ":%s STAFF", 1, parc, parv) != HUNTED_ISME)
 		return 0;
 
 	if (!staff.lines)

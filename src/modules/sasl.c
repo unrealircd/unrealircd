@@ -160,7 +160,7 @@ CMD_FUNC(cmd_svslogin)
 	}
 
 	/* not for us; propagate. */
-	sendto_server(cptr, 0, 0, NULL, ":%s SVSLOGIN %s %s %s",
+	sendto_server(sptr, 0, 0, NULL, ":%s SVSLOGIN %s %s %s",
 	    sptr->name, parv[1], parv[2], parv[3]);
 
 	return 0;
@@ -229,7 +229,7 @@ CMD_FUNC(cmd_sasl)
 	}
 
 	/* not for us; propagate. */
-	sendto_server(cptr, 0, 0, NULL, ":%s SASL %s %s %c %s %s",
+	sendto_server(sptr, 0, 0, NULL, ":%s SASL %s %s %c %s %s",
 	    sptr->name, parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
 
 	return 0;

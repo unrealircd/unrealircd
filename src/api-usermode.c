@@ -234,7 +234,7 @@ void UmodeDel(Umode *umode)
 			oldumode = cptr->umodes;
 			cptr->umodes &= ~umode->mode;
 			if (MyUser(cptr))
-				send_umode_out(cptr, cptr, oldumode);
+				send_umode_out(cptr, 1, oldumode);
 		}
 		umode->flag = '\0';
 		AllUmodes &= ~(umode->mode);
@@ -398,7 +398,7 @@ void unload_all_unused_umodes(void)
 		oldumode = cptr->umodes;
 		cptr->umodes &= ~(removed_umode);
 		if (MyUser(cptr))
-			send_umode_out(cptr, cptr, oldumode);
+			send_umode_out(cptr, 1, oldumode);
 	}
 	for (i = 0; i < UMODETABLESZ; i++)
 	{
@@ -477,7 +477,7 @@ void remove_oper_privileges(Client *sptr, int broadcast_mode_change)
 	remove_oper_modes(sptr);
 	remove_oper_snomasks(sptr);
 	if (broadcast_mode_change && (sptr->umodes != oldumodes))
-		send_umode_out(sptr, sptr, oldumodes);
+		send_umode_out(sptr, 1, oldumodes);
 	if (MyUser(sptr)) /* only do if it's our client, remote servers will send a SWHOIS cmd */
 		swhois_delete(sptr, "oper", "*", &me, NULL);
 }

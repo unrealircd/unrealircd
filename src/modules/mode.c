@@ -25,7 +25,7 @@
 /* Forward declarations */
 CMD_FUNC(cmd_mode);
 CMD_FUNC(cmd_mlock);
-void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode);
+void _do_mode(Channel *chptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode);
 void _set_mode(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcount,
                        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 CMD_FUNC(_cmd_umode);
@@ -108,11 +108,11 @@ CMD_FUNC(cmd_mode)
 			chptr = find_channel(parv[1], NULL);
 			if (!chptr)
 			{
-				return cmd_umode(cptr, sptr, recv_mtags, parc, parv);
+				return cmd_umode(sptr, recv_mtags, parc, parv);
 			}
 		}
 		else
-			return cmd_umode(cptr, sptr, recv_mtags, parc, parv);
+			return cmd_umode(sptr, recv_mtags, parc, parv);
 	}
 	else
 	{
@@ -129,90 +129,81 @@ CMD_FUNC(cmd_mode)
 
 		modebuf[1] = '\0';
 		channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
-		sendnumeric(sptr, RPL_CHANNELMODEIS,
-		    chptr->chname, modebuf, parabuf);
-		sendnumeric(sptr, RPL_CREATIONTIME,
-		    chptr->chname, chptr->creationtime);
+		sendnumeric(sptr, RPL_CHANNELMODEIS, chptr->chname, modebuf, parabuf);
+		sendnumeric(sptr, RPL_CREATIONTIME, chptr->chname, chptr->creationtime);
 		return 0;
 	}
 
-	if (IsUser(sptr) && strstr(parv[2], "b") && BadPtr(parv[3]))
+	if (MyUser(sptr))
 	{
-		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",sptr,NULL,chptr,NULL))
+		/* Deal with information requests from local users, such as:
+		 * MODE #chan b    Show the ban list
+		 * MODE #chan e    Show the ban exemption list
+		 * MODE #chan I    Show the invite exception list
+		 * MODE #chan q    Show list of channel owners
+		 * MODE #chan a    Show list of channel admins
+		 */
+		if (strstr(parv[2], "b") && BadPtr(parv[3]))
+		{
+			if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",sptr,NULL,chptr,NULL))
+				return 0;
+			/* send ban list */
+			for (ban = chptr->banlist; ban; ban = ban->next)
+				sendnumeric(sptr, RPL_BANLIST, chptr->chname, ban->banstr, ban->who, ban->when);
+			sendnumeric(sptr, RPL_ENDOFBANLIST, chptr->chname);
 			return 0;
-		/* send ban list */
-		for (ban = chptr->banlist; ban; ban = ban->next)
-			sendnumeric(sptr, RPL_BANLIST, chptr->chname, ban->banstr,
-			    ban->who, ban->when);
-		sendnumeric(cptr, RPL_ENDOFBANLIST,
-		    chptr->chname);
-		return 0;
-	}
+		}
 
-	if (IsUser(sptr) && strstr(parv[2], "e") && BadPtr(parv[3]))
-	{
-		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",sptr,NULL,chptr,NULL))
+		if (strstr(parv[2], "e") && BadPtr(parv[3]))
+		{
+			if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",sptr,NULL,chptr,NULL))
+				return 0;
+			/* send exban list */
+			for (ban = chptr->exlist; ban; ban = ban->next)
+				sendnumeric(sptr, RPL_EXLIST, chptr->chname, ban->banstr, ban->who, ban->when);
+			sendnumeric(sptr, RPL_ENDOFEXLIST, chptr->chname);
 			return 0;
-		/* send exban list */
-		for (ban = chptr->exlist; ban; ban = ban->next)
-			sendnumeric(sptr, RPL_EXLIST, chptr->chname, ban->banstr,
-			    ban->who, ban->when);
-		sendnumeric(cptr, RPL_ENDOFEXLIST,
-		    chptr->chname);
-		return 0;
-	}
+		}
 
-	if (IsUser(sptr) && strstr(parv[2], "I") && BadPtr(parv[3]))
-	{
-		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteinvexlist",sptr,NULL,chptr,NULL))
+		if (strstr(parv[2], "I") && BadPtr(parv[3]))
+		{
+			if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteinvexlist",sptr,NULL,chptr,NULL))
+				return 0;
+			for (ban = chptr->invexlist; ban; ban = ban->next)
+				sendnumeric(sptr, RPL_INVEXLIST, chptr->chname, ban->banstr, ban->who, ban->when);
+			sendnumeric(sptr, RPL_ENDOFINVEXLIST, chptr->chname);
 			return 0;
-		for (ban = chptr->invexlist; ban; ban = ban->next)
-			sendnumeric(sptr, RPL_INVEXLIST, chptr->chname, ban->banstr,
-			    ban->who, ban->when);
-		sendnumeric(sptr, RPL_ENDOFINVEXLIST, chptr->chname);
-		return 0;
-	}
+		}
 
-	if (IsUser(sptr) && strstr(parv[2], "q") && BadPtr(parv[3]))
-	{
-		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",sptr,NULL,chptr,NULL))
-			return 0;
+		if (strstr(parv[2], "q") && BadPtr(parv[3]))
 		{
 			Member *member;
-			/* send chanowner list */
-			/* [Whole story about bad loops removed, sorry ;)]
-			 * Now rewritten so it works (was: bad logic) -- Syzop
-			 */
+
+			if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",sptr,NULL,chptr,NULL))
+				return 0;
+
 			for (member = chptr->members; member; member = member->next)
 			{
 				if (is_chanowner(member->cptr, chptr))
-					sendnumeric(sptr, RPL_QLIST, chptr->chname,
-					    member->cptr->name);
+					sendnumeric(sptr, RPL_QLIST, chptr->chname, member->cptr->name);
 			}
-			sendnumeric(cptr, RPL_ENDOFQLIST,
-			    chptr->chname);
+			sendnumeric(sptr, RPL_ENDOFQLIST, chptr->chname);
 			return 0;
 		}
-	}
 
-	if (IsUser(sptr) && strstr(parv[2], "a") && BadPtr(parv[3]))
-	{
-		if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",sptr,NULL,chptr,NULL))
-			return 0;
+		if (strstr(parv[2], "a") && BadPtr(parv[3]))
 		{
 			Member *member;
-			/* send chanowner list */
-			/* [Whole story about bad loops removed, sorry ;)]
-			 * Now rewritten so it works (was: bad logic) -- Syzop
-			 */
+
+			if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",sptr,NULL,chptr,NULL))
+				return 0;
+
 			for (member = chptr->members; member; member = member->next)
 			{
 				if (is_chanadmin(member->cptr, chptr))
-					sendnumeric(sptr, RPL_ALIST, chptr->chname,
-					    member->cptr->name);
+					sendnumeric(sptr, RPL_ALIST, chptr->chname, member->cptr->name);
 			}
-			sendnumeric(cptr, RPL_ENDOFALIST,
-			    chptr->chname);
+			sendnumeric(sptr, RPL_ENDOFALIST, chptr->chname);
 			return 0;
 		}
 	}
@@ -236,20 +227,21 @@ CMD_FUNC(cmd_mode)
 	}
 #endif
 
+	/* User does not have permission to use the MODE command */
 	if (IsUser(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr) &&
 	    !is_half_op(sptr, chptr) &&
-	    (cptr == sptr || !ValidatePermissionsForPath("channel:override:mode",sptr,NULL,chptr,NULL)))
+	    !ValidatePermissionsForPath("channel:override:mode",sptr,NULL,chptr,NULL))
 	{
-		if (cptr == sptr)
+		if (MyUser(sptr))
 		{
 			sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
 			return 0;
 		}
-		sendto_one(cptr, NULL, ":%s MODE %s -oh %s %s 0",
+		sendto_one(sptr, NULL, ":%s MODE %s -oh %s %s 0",
 		    me.name, chptr->chname, sptr->name, sptr->name);
 		/* Tell the other server that the user is
 		 * de-opped.  Fix op desyncs. */
-		bounce_mode(chptr, cptr, parc - 2, parv + 2);
+		bounce_mode(chptr, sptr, parc - 2, parv + 2);
 		return 0;
 	}
 
@@ -264,7 +256,7 @@ CMD_FUNC(cmd_mode)
 			    "*** TS bounce for %s - %lld(ours) %lld(theirs)",
 			    chptr->chname, (long long)chptr->creationtime,
 			    (long long)sendts);
-			bounce_mode(chptr, cptr, parc - 2, parv + 2);
+			bounce_mode(chptr, sptr, parc - 2, parv + 2);
 		}
 		return 0;
 	}
@@ -285,7 +277,7 @@ aftercheck:
 	/* Filter out the unprivileged FIRST. *
 	 * Now, we can actually do the mode.  */
 
-	(void)do_mode(chptr, cptr, sptr, recv_mtags, parc - 2, parv + 2, sendts, 0);
+	(void)do_mode(chptr, sptr, recv_mtags, parc - 2, parv + 2, sendts, 0);
 	/* After this don't touch 'chptr' anymore, as permanent module may have destroyed the channel */
 	opermode = 0; /* Important since sometimes forgotten. -- Syzop */
 	return 0;
@@ -392,7 +384,7 @@ static void bounce_mode(Channel *chptr, Client *cptr, int parc, char *parv[])
  *	User or server is authorized to do the mode.  This takes care of
  * setting the mode and relaying it to other users and servers.
  */
-void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode)
+void _do_mode(Channel *chptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], time_t sendts, int samode)
 {
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
@@ -412,9 +404,9 @@ void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags
 	samode_in_progress = 0;
 
 	if (MyConnect(sptr))
-		RunHook8(HOOKTYPE_PRE_LOCAL_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
+		RunHook7(HOOKTYPE_PRE_LOCAL_CHANMODE, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
 	else
-		RunHook8(HOOKTYPE_PRE_REMOTE_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
+		RunHook7(HOOKTYPE_PRE_REMOTE_CHANMODE, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
 
 	if (IsServer(sptr))
 	{
@@ -428,9 +420,9 @@ void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags
 				{
 					sendto_realops(
 						"Warning! Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
-						chptr->chname, modebuf, parabuf, (long long)sendts, cptr->name, sptr->name);
+						chptr->chname, modebuf, parabuf, (long long)sendts, sptr->direction->name, sptr->name);
 					ircd_log(LOG_ERROR, "Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
-						chptr->chname, modebuf, parabuf, (long long)sendts, cptr->name, sptr->name);
+						chptr->chname, modebuf, parabuf, (long long)sendts, sptr->direction->name, sptr->name);
 				}
 				/* new chan or our timestamp is wrong */
 				/* now works for double-bounce prevention */
@@ -440,7 +432,7 @@ void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags
 			{
 				/* theirs is wrong but we let it pass anyway */
 				sendts = chptr->creationtime;
-				sendto_one(cptr, NULL, ":%s MODE %s + %lld", me.name,
+				sendto_one(sptr, NULL, ":%s MODE %s + %lld", me.name,
 				    chptr->chname, (long long)chptr->creationtime);
 			}
 		}
@@ -455,11 +447,11 @@ void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags
 			/* relay bounce time changes */
 			if (chptr->creationtime)
 			{
-				sendto_server(cptr, 0, 0, NULL, ":%s MODE %s %s+ %lld",
+				sendto_server(sptr, 0, 0, NULL, ":%s MODE %s %s+ %lld",
 				    me.name, chptr->chname, isbounce ? "&" : "",
 				    (long long)chptr->creationtime);
 			} else {
-				sendto_server(cptr, 0, 0, NULL, ":%s MODE %s %s+",
+				sendto_server(sptr, 0, 0, NULL, ":%s MODE %s %s+",
 				    me.name, chptr->chname, isbounce ? "&" : "");
 			}
 			free_message_tags(mtags);
@@ -511,7 +503,7 @@ void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags
 
 	if (IsServer(sptr) && sendts != -1)
 	{
-		sendto_server(cptr, 0, 0, mtags,
+		sendto_server(sptr, 0, 0, mtags,
 		              ":%s MODE %s %s%s %s %lld",
 		              sptr->name, chptr->chname,
 		              isbounce ? "&" : "", modebuf, parabuf,
@@ -520,12 +512,12 @@ void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags
 	if (samode && IsMe(sptr))
 	{
 		/* SAMODE is a special case: always send a TS of 0 (omitting TS==desynch) */
-		sendto_server(cptr, 0, 0, mtags,
+		sendto_server(sptr, 0, 0, mtags,
 		              ":%s MODE %s %s %s 0",
 		              sptr->name, chptr->chname, modebuf, parabuf);
 	} else
 	{
-		sendto_server(cptr, 0, 0, mtags,
+		sendto_server(sptr, 0, 0, mtags,
 		              ":%s MODE %s %s%s %s",
 		              sptr->name, chptr->chname, isbounce ? "&" : "", modebuf, parabuf);
 		/* tell them it's not a timestamp, in case the last param
@@ -533,9 +525,9 @@ void _do_mode(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags
 	}
 
 	if (MyConnect(sptr))
-		RunHook8(HOOKTYPE_LOCAL_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
+		RunHook7(HOOKTYPE_LOCAL_CHANMODE, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
 	else
-		RunHook8(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
+		RunHook7(HOOKTYPE_REMOTE_CHANMODE, sptr, chptr, mtags, modebuf, parabuf, sendts, samode);
 
 	/* After this, don't touch 'chptr' anymore! As permanent module may have destroyed the channel. */
 
@@ -921,8 +913,7 @@ process_listmode:
 					{
 						char errbuf[NICKLEN+30];
 						ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", member->cptr->name);
-						sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE,
-							modechar, errbuf);
+						sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE, modechar, errbuf);
 						break;
 					}
 				} else {
@@ -948,8 +939,7 @@ process_listmode:
 					{
 						char errbuf[NICKLEN+30];
 						ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", member->cptr->name);
-						sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE,
-							 modechar, errbuf);
+						sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE, modechar, errbuf);
 						break;
 					}
 				} else {
@@ -1672,7 +1662,7 @@ CMD_FUNC(_cmd_umode)
 				{
 					sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", sptr->name, sptr->srvptr->name);
 					sendto_server(NULL, 0, 0, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)", me.name, sptr->name, me.name);
-					return exit_client(cptr, sptr, &me, NULL, "Quarantined: no oper privileges allowed");
+					return exit_client(sptr->direction, sptr, &me, NULL, "Quarantined: no oper privileges allowed");
 				}
 				/* A local user trying to set himself +o/+O is denied here.
 				 * A while later (outside this loop) it is handled as well (and +C, +N, etc too)
@@ -1808,7 +1798,7 @@ CMD_FUNC(_cmd_umode)
 	    ((oldumodes & UMODE_SETHOST) && !IsSetHost(sptr) && IsHidden(sptr)))
 	{
 		if (!dontspread)
-			sendto_server(cptr, PROTO_VHP, 0, NULL, ":%s SETHOST :%s",
+			sendto_server(sptr, PROTO_VHP, 0, NULL, ":%s SETHOST :%s",
 				sptr->name, sptr->user->virthost);
 
 		/* Set the vhost */
@@ -1885,7 +1875,7 @@ CMD_FUNC(_cmd_umode)
 	if (oldumodes != sptr->umodes)
 		RunHook3(HOOKTYPE_UMODE_CHANGE, sptr, oldumodes, sptr->umodes);
 	if (dontspread == 0)
-		send_umode_out(cptr, sptr, oldumodes);
+		send_umode_out(sptr, 1, oldumodes);
 
 	if (MyConnect(sptr) && setsnomask != sptr->user->snomask)
 		sendnumeric(sptr, RPL_SNOMASK, get_sno_str(sptr));
@@ -1913,7 +1903,7 @@ CMD_FUNC(cmd_mlock)
 		return 0;
 
 	if (IsServer(sptr))
-		set_channel_mlock(cptr, sptr, chptr, parv[3], TRUE);
+		set_channel_mlock(sptr, chptr, parv[3], TRUE);
 
 	return 0;
 }

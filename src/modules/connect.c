@@ -65,7 +65,6 @@ CMD_FUNC(cmd_connect)
 	ConfigItem_deny_link *deny;
 	Client *acptr;
 
-
 	if (!IsServer(sptr) && MyConnect(sptr) && !ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && parc > 3)
 	{			/* Only allow LocOps to make */
 		/* local CONNECTS --SRB      */
@@ -77,7 +76,7 @@ CMD_FUNC(cmd_connect)
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
 		return 0;
 	}
-	if (hunt_server(cptr, sptr, recv_mtags, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
+	if (hunt_server(sptr, recv_mtags, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
 		return 0;
 
 	if (parc < 2 || *parv[1] == '\0')
@@ -128,7 +127,7 @@ CMD_FUNC(cmd_connect)
 	}
 
 	/* Notify all operators about remote connect requests */
-	if (!MyUser(cptr))
+	if (!MyUser(sptr))
 	{
 		sendto_server(&me, 0, 0, NULL,
 		    ":%s GLOBOPS :Remote CONNECT %s %s from %s",

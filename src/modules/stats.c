@@ -306,12 +306,12 @@ CMD_FUNC(cmd_stats)
 
 	if (parc == 3 && parv[2][0] != '+' && parv[2][0] != '-')
 	{
-		if (hunt_server(cptr, sptr, recv_mtags, ":%s STATS %s :%s", 2, parc, parv) != HUNTED_ISME)
+		if (hunt_server(sptr, recv_mtags, ":%s STATS %s :%s", 2, parc, parv) != HUNTED_ISME)
 			return 0;
 	}
 	else if (parc == 4 && parv[2][0] != '+' && parv[2][0] != '-')
 	{
-		if (hunt_server(cptr, sptr, recv_mtags, ":%s STATS %s %s %s", 2, parc, parv) != HUNTED_ISME)
+		if (hunt_server(sptr, recv_mtags, ":%s STATS %s %s %s", 2, parc, parv) != HUNTED_ISME)
 			return 0;
 	}
 	if (parc < 2 || !*parv[1])

@@ -65,7 +65,7 @@ CMD_FUNC(cmd_svslusers)
 {
         if (!IsULine(sptr) || parc < 4)
 		return -1;  
-        if (hunt_server(cptr, sptr, NULL, ":%s SVSLUSERS %s %s :%s", 1, parc, parv) == HUNTED_ISME)
+        if (hunt_server(sptr, NULL, ":%s SVSLUSERS %s %s :%s", 1, parc, parv) == HUNTED_ISME)
         {
 		int temp;
 		temp = atoi(parv[2]);

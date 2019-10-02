@@ -69,10 +69,10 @@ CMD_FUNC(cmd_cycle)
 
 	parv[2] = "cycling";
 	strlcpy(channels, parv[1], sizeof(channels));
-	n = do_cmd(cptr, sptr, recv_mtags, "PART", 3, parv);
+	n = do_cmd(sptr, recv_mtags, "PART", 3, parv);
 	if (n == FLUSH_BUFFER)
 		return n;
 	parv[1] = channels;
 	parv[2] = NULL;
-	return do_cmd(cptr, sptr, recv_mtags, "JOIN", 2, parv);
+	return do_cmd(sptr, recv_mtags, "JOIN", 2, parv);
 }

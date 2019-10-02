@@ -113,7 +113,7 @@ CMD_FUNC(cmd_svsnline)
 		  } 
 		 
 		  if (IsULine(sptr))
-			sendto_server(cptr, 0, 0, NULL, ":%s SVSNLINE + %s :%s",
+			sendto_server(sptr, 0, 0, NULL, ":%s SVSNLINE + %s :%s",
 			    sptr->name, parv[2], parv[3]);
 		  break;
 	  }
@@ -141,7 +141,7 @@ CMD_FUNC(cmd_svsnline)
 		  	safe_free(bconf);
 		  	
 		  }
-		  sendto_server(cptr, 0, 0, NULL, ":%s SVSNLINE - %s", sptr->name, parv[2]);
+		  sendto_server(sptr, 0, 0, NULL, ":%s SVSNLINE - %s", sptr->name, parv[2]);
 		  break;
 	  }
 	  case '*':
@@ -149,7 +149,7 @@ CMD_FUNC(cmd_svsnline)
 		  if (!IsULine(sptr))
 			  return 0;
 	          wipe_svsnlines();
-		  sendto_server(cptr, 0, 0, NULL, ":%s SVSNLINE *", sptr->name);
+		  sendto_server(sptr, 0, 0, NULL, ":%s SVSNLINE *", sptr->name);
 		  break;
 	  }
 

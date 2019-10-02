@@ -28,6 +28,7 @@ char backupbuf[8192];
 
 static char *para[MAXPARA + 2];
 
+static int do_numeric(int, Client *, MessageTag *, int, char **);
 static int cancel_clients(Client *, Client *, char *);
 static void remove_unknown(Client *, char *);
 
@@ -399,7 +400,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 	}
 	para[++i] = NULL;
 	if (cmptr == NULL)
-		return do_numeric(numeric, cptr, from, mtags, i, para);
+		return do_numeric(numeric, from, mtags, i, para);
 	cmptr->count++;
 	if (IsUser(cptr) && (cmptr->flags & CMD_RESETIDLE))
 		cptr->local->last = TStime();
@@ -407,22 +408,22 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 #ifndef DEBUGMODE
 	if (cmptr->flags & CMD_ALIAS)
 	{
-		return (*cmptr->aliasfunc) (cptr, from, mtags, i, para, cmptr->cmd);
+		return (*cmptr->aliasfunc) (from, mtags, i, para, cmptr->cmd);
 	} else {
 		if (!cmptr->overriders)
-			return (*cmptr->func) (cptr, from, mtags, i, para);
-		return (*cmptr->overridetail->func) (cmptr->overridetail, cptr, from, mtags, i, para);
+			return (*cmptr->func) (from, mtags, i, para);
+		return (*cmptr->overridetail->func) (cmptr->overridetail, from, mtags, i, para);
 	}
 #else
 	then = clock();
 	if (cmptr->flags & CMD_ALIAS)
 	{
-		retval = (*cmptr->aliasfunc) (cptr, from, mtags, i, para, cmptr->cmd);
+		retval = (*cmptr->aliasfunc) (from, mtags, i, para, cmptr->cmd);
 	} else {
 		if (!cmptr->overriders)
-			retval = (*cmptr->func) (cptr, from, mtags, i, para);
+			retval = (*cmptr->func) (from, mtags, i, para);
 		else
-			retval = (*cmptr->overridetail->func) (cmptr->overridetail, cptr, from, mtags, i, para);
+			retval = (*cmptr->overridetail->func) (cmptr->overridetail, from, mtags, i, para);
 	}
 	if (retval != FLUSH_BUFFER)
 	{
@@ -447,7 +448,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
  * @notes In general you should NOT send anything back if you receive
  *        a numeric, this to prevent creating loops.
  */
-int do_numeric(int numeric, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+static int do_numeric(int numeric, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
 {
 	Client *acptr;
 	Channel *chptr;
@@ -458,7 +459,7 @@ int do_numeric(int numeric, Client *cptr, Client *sptr, MessageTag *recv_mtags, 
 	if ((numeric < 0) || (numeric > 999))
 		return -1;
 
-	if (!IsServer(sptr) && !IsUser(sptr) && IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr))
+	if (MyConnect(sptr) && !IsServer(sptr) && !IsUser(sptr) && IsHandshake(sptr) && sptr->serv && !IsServerSent(sptr))
 	{
 		/* This is an outgoing server connect that is currently not yet IsServer() but in 'unknown' state.
 		 * We need to handle a few responses here.
@@ -477,29 +478,29 @@ int do_numeric(int numeric, Client *cptr, Client *sptr, MessageTag *recv_mtags, 
 		/* STARTTLS: unknown command */
 		if ((numeric == 451) && (parc > 2) && strstr(parv[1], "STARTTLS"))
 		{
-			if (cptr->serv->conf && (cptr->serv->conf->outgoing.options & CONNECT_INSECURE))
-				start_server_handshake(cptr);
+			if (sptr->serv->conf && (sptr->serv->conf->outgoing.options & CONNECT_INSECURE))
+				start_server_handshake(sptr);
 			else
-				reject_insecure_server(cptr);
+				reject_insecure_server(sptr);
 			return 0;
 		}
 
 		/* STARTTLS failed */
 		if (numeric == 691)
 		{
-			sendto_umode(UMODE_OPER, "STARTTLS failed for link %s. Please check the other side of the link.", cptr->name);
-			reject_insecure_server(cptr);
+			sendto_umode(UMODE_OPER, "STARTTLS failed for link %s. Please check the other side of the link.", sptr->name);
+			reject_insecure_server(sptr);
 			return 0;
 		}
 
 		/* STARTTLS OK */
 		if (numeric == 670)
 		{
-			int ret = client_starttls(cptr);
+			int ret = client_starttls(sptr);
 			if (ret < 0)
 			{
-				sendto_umode(UMODE_OPER, "STARTTLS handshake failed for link %s. Strange.", cptr->name);
-				reject_insecure_server(cptr);
+				sendto_umode(UMODE_OPER, "STARTTLS handshake failed for link %s. Strange.", sptr->name);
+				reject_insecure_server(sptr);
 				return ret;
 			}
 			/* We don't call start_server_handshake() here. First the TLS handshake will
@@ -535,13 +536,13 @@ int do_numeric(int numeric, Client *cptr, Client *sptr, MessageTag *recv_mtags, 
 				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
 				    sptr->name, numeric, nick, buffer);
 			}
-			else if (IsServer(acptr) && acptr->direction != cptr)
+			else if (IsServer(acptr) && acptr->direction != sptr->direction)
 				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
 				    sptr->name, numeric, nick, buffer);
 		}
 		else if ((acptr = find_server_quick(nick)))
 		{
-			if (!IsMe(acptr) && acptr->direction != cptr)
+			if (!IsMe(acptr) && acptr->direction != sptr->direction)
 				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
 				    sptr->name, numeric, nick, buffer);
 		}

@@ -283,7 +283,7 @@ int remote_include(ConfigEntry *ce);
 void unload_notloaded_includes(void);
 void load_includes(void);
 void unload_loaded_includes(void);
-int rehash_internal(Client *cptr, Client *sptr, int sig);
+int rehash_internal(Client *sptr, int sig);
 int is_blacklisted_module(char *name);
 
 /** Return the printable string of a 'cep' location, such as set::something::xyz */
@@ -9954,11 +9954,11 @@ static void conf_download_complete(const char *url, const char *file, const char
 		if (inc->flag.type & INCLUDE_DLQUEUED)
 			return;
 	}
-	rehash_internal(loop.rehash_save_cptr, loop.rehash_save_sptr, loop.rehash_save_sig);
+	rehash_internal(loop.rehash_save_sptr, loop.rehash_save_sig);
 }
 #endif
 
-int     rehash(Client *cptr, Client *sptr, int sig)
+int     rehash(Client *sptr, int sig)
 {
 #ifdef USE_LIBCURL
 	ConfigItem_include *inc;
@@ -9971,7 +9971,6 @@ int     rehash(Client *cptr, Client *sptr, int sig)
 	}
 
 	loop.ircd_rehashing = 1;
-	loop.rehash_save_cptr = cptr;
 	loop.rehash_save_sptr = sptr;
 	loop.rehash_save_sig = sig;
 	for (inc = conf_include; inc; inc = inc->next)
@@ -9993,15 +9992,15 @@ int     rehash(Client *cptr, Client *sptr, int sig)
 		download_file_async(inc->url, modtime, conf_download_complete, (void *)inc);
 	}
 	if (!found_remote)
-		return rehash_internal(cptr, sptr, sig);
+		return rehash_internal(sptr, sig);
 	return 0;
 #else
 	loop.ircd_rehashing = 1;
-	return rehash_internal(cptr, sptr, sig);
+	return rehash_internal(sptr, sig);
 #endif
 }
 
-int	rehash_internal(Client *cptr, Client *sptr, int sig)
+int	rehash_internal(Client *sptr, int sig)
 {
 	if (sig == 1)
 		sendto_ops("Got signal SIGHUP, reloading %s file", configfile);

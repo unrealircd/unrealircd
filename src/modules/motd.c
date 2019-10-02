@@ -67,7 +67,7 @@ CMD_FUNC(cmd_motd)
 	if (IsServer(sptr))
 		return 0;
 
-	if (hunt_server(cptr, sptr, recv_mtags, ":%s MOTD :%s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(sptr, recv_mtags, ":%s MOTD :%s", 1, parc, parv) != HUNTED_ISME)
 	{
 		if (MyUser(sptr))
 			sptr->local->since += 15;

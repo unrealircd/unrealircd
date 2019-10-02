@@ -34,14 +34,14 @@ static Efunction *Efunctions[MAXEFUNCTIONS]; /* Efunction objects (used for reha
 static EfunctionsList efunction_table[MAXEFUNCTIONS];
 
 /* Efuncs */
-int (*do_join)(Client *cptr, Client *sptr, int parc, char *parv[]);
-void (*join_channel)(Channel *chptr, Client *cptr, Client *sptr, MessageTag *mtags, int flags);
-int (*can_join)(Client *cptr, Client *sptr, Channel *chptr, char *key, char *parv[]);
-void (*do_mode)(Channel *chptr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
+int (*do_join)(Client *sptr, int parc, char *parv[]);
+void (*join_channel)(Channel *chptr, Client *sptr, MessageTag *mtags, int flags);
+int (*can_join)(Client *sptr, Channel *chptr, char *key, char *parv[]);
+void (*do_mode)(Channel *chptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
 void (*set_mode)(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-int (*cmd_umode)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
-int (*register_user)(Client *cptr, Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
+int (*cmd_umode)(Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+int (*register_user)(Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
 int (*tkl_chartotype)(char c);
@@ -65,7 +65,7 @@ TKL *(*find_qline)(Client *cptr, char *nick, int *ishold);
 TKL *(*find_tkline_match_zap)(Client *cptr);
 void (*tkl_stats)(Client *cptr, int type, char *para);
 void (*tkl_synch)(Client *sptr);
-int (*cmd_tkl)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+int (*cmd_tkl)(Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 int (*place_host_ban)(Client *sptr, BanAction action, char *reason, long duration);
 int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
 int (*join_viruschan)(Client *sptr, TKL *tk, int type);
@@ -73,7 +73,7 @@ unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
 void (*spamfilter_build_user_string)(char *buf, char *nick, Client *acptr);
 void (*send_protoctl_servers)(Client *sptr, int response);
-int (*verify_link)(Client *cptr, Client *sptr, char *servername, ConfigItem_link **link_out);
+int (*verify_link)(Client *sptr, char *servername, ConfigItem_link **link_out);
 void (*introduce_user)(Client *to, Client *acptr);
 void (*send_server_message)(Client *sptr);
 void (*broadcast_md_client)(ModDataInfo *mdi, Client *acptr, ModData *md);

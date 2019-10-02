@@ -24,9 +24,9 @@
 
 /* Forward declarations */
 CMD_FUNC(cmd_join);
-void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *mtags, int flags);
-int _do_join(Client *cptr, Client *sptr, int parc, char *parv[]);
-int _can_join(Client *cptr, Client *sptr, Channel *chptr, char *key, char *parv[]);
+void _join_channel(Channel *chptr, Client *sptr, MessageTag *mtags, int flags);
+int _do_join(Client *sptr, int parc, char *parv[]);
+int _can_join(Client *sptr, Channel *chptr, char *key, char *parv[]);
 void _userhost_save_current(Client *sptr);
 void _userhost_changed(Client *sptr);
 void _send_join_to_local_users(Client *sptr, Channel *chptr, MessageTag *mtags);
@@ -87,12 +87,12 @@ MOD_UNLOAD()
  * (eg: bans at the end), so don't change it unless you have a good reason
  * to do so -- Syzop.
  */
-int _can_join(Client *cptr, Client *sptr, Channel *chptr, char *key, char *parv[])
+int _can_join(Client *sptr, Channel *chptr, char *key, char *parv[])
 {
-Link *lp;
-Ban *banned;
-Hook *h;
-int i=0,j=0;
+	Link *lp;
+	Ban *banned;
+	Hook *h;
+	int i=0, j=0;
 
 	for (h = Hooks[HOOKTYPE_CAN_JOIN]; h; h = h->next)
 	{
@@ -176,7 +176,7 @@ CMD_FUNC(cmd_join)
 	bouncedtimes = 0;
 	if (IsServer(sptr))
 		return 0;
-	r = do_join(cptr, sptr, parc, parv);
+	r = do_join(sptr, parc, parv);
 	bouncedtimes = 0;
 
 	return r;
@@ -233,7 +233,7 @@ void _send_join_to_local_users(Client *sptr, Channel *chptr, MessageTag *mtags)
 /* Routine that actually makes a user join the channel
  * this does no actual checking (banned, etc.) it just adds the user
  */
-void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int flags)
+void _join_channel(Channel *chptr, Client *sptr, MessageTag *recv_mtags, int flags)
 {
 	MessageTag *mtags = NULL; /** Message tags to send to local users (sender is :user) */
 	MessageTag *mtags_sjoin = NULL; /* Message tags to send to remote servers for SJOIN (sender is :me.name) */
@@ -249,15 +249,15 @@ void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_
 	send_join_to_local_users(sptr, chptr, mtags);
 
 	/* old non-SJOINv3 servers */
-	sendto_server(cptr, 0, PROTO_SJ3, mtags, ":%s JOIN :%s", sptr->name, chptr->chname);
+	sendto_server(sptr, 0, PROTO_SJ3, mtags, ":%s JOIN :%s", sptr->name, chptr->chname);
 
 	/* I _know_ that the "@%s " look a bit wierd
 	   with the space and all .. but its to get around
 	   a SJOIN bug --stskeeps */
-	sendto_server(cptr, PROTO_SID | PROTO_SJ3, 0, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
+	sendto_server(sptr, PROTO_SID | PROTO_SJ3, 0, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
 		me.id, (long long)chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), ID(sptr));
-	sendto_server(cptr, PROTO_SJ3, PROTO_SID, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
+	sendto_server(sptr, PROTO_SJ3, PROTO_SID, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
 		me.name, (long long)chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
 
@@ -271,7 +271,7 @@ void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_
 		if (chptr->creationtime == 0)
 		{
 			chptr->creationtime = TStime();
-			sendto_server(cptr, 0, 0, NULL, ":%s MODE %s + %lld",
+			sendto_server(sptr, 0, 0, NULL, ":%s MODE %s + %lld",
 			    me.name, chptr->chname, (long long)chptr->creationtime);
 		}
 		del_invite(sptr, chptr);
@@ -285,14 +285,14 @@ void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_
 			if ((flags & CHFL_CHANOWNER) || (flags & CHFL_CHANADMIN))
 			{
 				/* +ao / +qo for when PREFIX_AQ is off */
-				sendto_server(cptr, 0, PROTO_SJ3, NULL, ":%s MODE %s +o%c %s %s %lld",
+				sendto_server(sptr, 0, PROTO_SJ3, NULL, ":%s MODE %s +o%c %s %s %lld",
 				    me.name,
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name, sptr->name,
 				    (long long)chptr->creationtime);
 			} else {
 #endif
 				/* +v/+h/+o (and +a/+q if PREFIX_AQ is on) */
-				sendto_server(cptr, 0, PROTO_SJ3, NULL, ":%s MODE %s +%c %s %lld",
+				sendto_server(sptr, 0, PROTO_SJ3, NULL, ":%s MODE %s +%c %s %lld",
 				    me.name,
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name,
 				    (long long)chptr->creationtime);
@@ -342,11 +342,11 @@ void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_
 
 		parv[0] = sptr->name;
 		parv[1] = chptr->chname;
-		(void)do_cmd(cptr, sptr, NULL, "NAMES", 2, parv);
+		(void)do_cmd(sptr, NULL, "NAMES", 2, parv);
 
-		RunHook5(HOOKTYPE_LOCAL_JOIN, cptr, sptr, chptr, mtags, parv);
+		RunHook4(HOOKTYPE_LOCAL_JOIN, sptr, chptr, mtags, parv);
 	} else {
-		RunHook5(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, mtags, parv);
+		RunHook4(HOOKTYPE_REMOTE_JOIN, sptr, chptr, mtags, parv);
 	}
 
 	free_message_tags(mtags);
@@ -360,7 +360,7 @@ void _join_channel(Channel *chptr, Client *cptr, Client *sptr, MessageTag *recv_
  * increased every time we enter this loop and decreased anytime we leave the
  * loop. So be carefull not to use a simple 'return' after bouncedtimes++. -- Syzop
  */
-int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
+int _do_join(Client *sptr, int parc, char *parv[])
 {
 	char jbuf[BUFSIZE];
 	Membership *lp;
@@ -467,10 +467,10 @@ int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
 				sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, NULL,
 				               ":%s PART %s :%s",
 				               sptr->name, chptr->chname, "Left all channels");
-				sendto_server(cptr, 0, 0, mtags, ":%s PART %s :Left all channels", sptr->name, chptr->chname);
+				sendto_server(sptr, 0, 0, mtags, ":%s PART %s :Left all channels", sptr->name, chptr->chname);
 
 				if (MyConnect(sptr))
-					RunHook5(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, mtags, "Left all channels");
+					RunHook4(HOOKTYPE_LOCAL_PART, sptr, chptr, mtags, "Left all channels");
 
 				remove_user_from_channel(sptr, chptr);
 				free_message_tags(mtags);
@@ -506,7 +506,7 @@ int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
 				if (!ValidatePermissionsForPath("immune:server-ban:deny-channel",sptr,NULL,NULL,NULL))
 				{
 					ConfigItem_deny_channel *d;
-					if ((d = Find_channel_allowed(cptr, name)))
+					if ((d = Find_channel_allowed(sptr, name)))
 					{
 						if (d->warn)
 						{
@@ -520,7 +520,7 @@ int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
 							sendnotice(sptr, "*** Redirecting you to %s", d->redirect);
 							parv[0] = sptr->name;
 							parv[1] = d->redirect;
-							do_join(cptr, sptr, 2, parv);
+							do_join(sptr, 2, parv);
 						}
 						if (d->class)
 							sendnotice(sptr, "*** Can not join %s: Your class is not allowed", name);
@@ -586,7 +586,7 @@ int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
 			}
 			/* If they are allowed, don't check can_join */
 			if (i != HOOK_ALLOW && 
-			   (i = can_join(cptr, sptr, chptr, key, parv)))
+			   (i = can_join(sptr, chptr, key, parv)))
 			{
 				if (i != -1)
 				{
@@ -607,7 +607,7 @@ int _do_join(Client *cptr, Client *sptr, int parc, char *parv[])
 		 * and so on, each with their own unique msgid and such.
 		 */
 		new_message(sptr, NULL, &mtags);
-		join_channel(chptr, cptr, sptr, mtags, flags);
+		join_channel(chptr, sptr, mtags, flags);
 		free_message_tags(mtags);
 	}
 	RET(0)

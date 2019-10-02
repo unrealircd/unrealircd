@@ -57,10 +57,13 @@ CMD_FUNC(cmd_links)
 	Client *acptr;
 	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;
 
+	if (!MyUser(sptr))
+		return 0;
+
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		/* Some checks */
-		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL))
+		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("server:info:map:ulines",sptr,NULL,NULL,NULL))
 			continue;
 		if (flat)
 			sendnumeric(sptr, RPL_LINKS, acptr->name, me.name,

@@ -66,11 +66,11 @@ CMD_FUNC(cmd_eos)
 	sptr->serv->flags.synced = 1;
 	/* pass it on ^_- */
 #ifdef DEBUGMODE
-	ircd_log(LOG_ERROR, "[EOSDBG] cmd_eos: got sync from %s (path:%s)", sptr->name, cptr->name);
-	ircd_log(LOG_ERROR, "[EOSDBG] cmd_eos: broadcasting it back to everyone except route from %s", cptr->name);
+	ircd_log(LOG_ERROR, "[EOSDBG] cmd_eos: got sync from %s (path:%s)", sptr->name, sptr->direction->name);
+	ircd_log(LOG_ERROR, "[EOSDBG] cmd_eos: broadcasting it back to everyone except route from %s", sptr->direction->name);
 #endif
-	sendto_server(cptr, 0, 0, NULL, ":%s EOS", sptr->name);
+	sendto_server(sptr, 0, 0, NULL, ":%s EOS", sptr->name);
 
-	RunHook(HOOKTYPE_SERVER_SYNCHED, cptr);
+	RunHook(HOOKTYPE_SERVER_SYNCHED, sptr);
 	return 0;
 }

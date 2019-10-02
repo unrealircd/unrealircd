@@ -59,7 +59,7 @@ int jointhrottle_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int jointhrottle_config_run(ConfigFile *, ConfigEntry *, int);
 void jointhrottle_md_free(ModData *m);
 int jointhrottle_can_join(Client *sptr, Channel *chptr, char *key, char *parv[]);
-int jointhrottle_local_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
+int jointhrottle_local_join(Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
 static int isjthrottled(Client *cptr, Channel *chptr);
 static void jointhrottle_increase_usercounter(Client *cptr, Channel *chptr);
 EVENT(jointhrottle_cleanup_structs);
@@ -214,9 +214,9 @@ int jointhrottle_can_join(Client *sptr, Channel *chptr, char *key, char *parv[])
 }
 
 
-int jointhrottle_local_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[])
+int jointhrottle_local_join(Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[])
 {
-	jointhrottle_increase_usercounter(cptr, chptr);
+	jointhrottle_increase_usercounter(sptr, chptr);
 	return 0;
 }
 

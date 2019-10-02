@@ -101,7 +101,7 @@ CMD_FUNC(cmd_kick)
 		/* Store "sptr" access flags */
 		if (IsUser(sptr))
 			sptr_flags = get_access(sptr, chptr);
-		if (!IsServer(cptr) && !IsULine(sptr) && !op_can_override("channel:override:kick:no-ops",sptr,chptr,NULL)
+		if (MyUser(sptr) && !IsULine(sptr) && !op_can_override("channel:override:kick:no-ops",sptr,chptr,NULL)
 		    && !(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP))
 		{
 			sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
@@ -287,9 +287,9 @@ CMD_FUNC(cmd_kick)
 				/* The same message is actually sent at 5 places below (though max 4 at most) */
 
 				if (MyUser(sptr))
-					RunHook6(HOOKTYPE_LOCAL_KICK, cptr, sptr, who, chptr, mtags, comment);
+					RunHook5(HOOKTYPE_LOCAL_KICK, sptr, who, chptr, mtags, comment);
 				else
-					RunHook6(HOOKTYPE_REMOTE_KICK, cptr, sptr, who, chptr, mtags, comment);
+					RunHook5(HOOKTYPE_REMOTE_KICK, sptr, who, chptr, mtags, comment);
 
 				if (lp)
 				{
@@ -314,9 +314,9 @@ CMD_FUNC(cmd_kick)
 						               sptr->name, chptr->chname, who->name, comment);
 					}
 				}
-				sendto_server(cptr, PROTO_SID, 0, mtags, ":%s KICK %s %s :%s",
+				sendto_server(sptr, PROTO_SID, 0, mtags, ":%s KICK %s %s :%s",
 				    ID(sptr), chptr->chname, ID(who), comment);
-				sendto_server(cptr, 0, PROTO_SID, mtags, ":%s KICK %s %s :%s",
+				sendto_server(sptr, 0, PROTO_SID, mtags, ":%s KICK %s %s :%s",
 				    sptr->name, chptr->chname, who->name, comment);
 				free_message_tags(mtags);
 				if (lp)
@@ -327,7 +327,7 @@ CMD_FUNC(cmd_kick)
 			else if (MyUser(sptr))
 				sendnumeric(sptr, ERR_USERNOTINCHANNEL, user, name);
 		}		/* loop on parv[2] */
-		if (MyUser(cptr))
+		if (MyUser(sptr))
 			break;
 	}			/* loop on parv[1] */
 

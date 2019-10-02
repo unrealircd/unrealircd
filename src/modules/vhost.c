@@ -99,7 +99,7 @@ CMD_FUNC(cmd_vhost)
 		return 0;
 	}
 
-	if (!Auth_Check(cptr, vhost->auth, password))
+	if (!Auth_Check(sptr, vhost->auth, password))
 	{
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
@@ -143,12 +143,12 @@ CMD_FUNC(cmd_vhost)
 	{
 		strcpy(olduser, sptr->user->username);
 		strlcpy(sptr->user->username, vhost->virtuser, USERLEN);
-		sendto_server(cptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name,
+		sendto_server(sptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name,
 		    sptr->user->username);
 	}
 	sptr->umodes |= UMODE_HIDE;
 	sptr->umodes |= UMODE_SETHOST;
-	sendto_server(cptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, sptr->user->virthost);
+	sendto_server(sptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, sptr->user->virthost);
 	sendto_one(sptr, NULL, ":%s MODE %s :+tx", sptr->name, sptr->name);
 	if (vhost->swhois)
 	{

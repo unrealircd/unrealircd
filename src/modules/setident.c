@@ -119,7 +119,7 @@ CMD_FUNC(cmd_setident)
 
 	strlcpy(sptr->user->username, vident, sizeof(sptr->user->username));
 
-	sendto_server(cptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name, parv[1]);
+	sendto_server(sptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name, parv[1]);
 
 	userhost_changed(sptr);
 

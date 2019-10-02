@@ -71,7 +71,7 @@ CMD_FUNC(cmd_trace)
 	// set some kind of flag? or?
 
 	if (parc > 2)
-		if (hunt_server(cptr, sptr, NULL, ":%s TRACE %s :%s", 2, parc, parv))
+		if (hunt_server(sptr, NULL, ":%s TRACE %s :%s", 2, parc, parv))
 			return 0;
 
 	if (parc > 1)
@@ -96,7 +96,7 @@ CMD_FUNC(cmd_trace)
 		}
 	}
 
-	switch (hunt_server(cptr, sptr, NULL, ":%s TRACE :%s", 1, parc, parv))
+	switch (hunt_server(sptr, NULL, ":%s TRACE :%s", 1, parc, parv))
 	{
 	  case HUNTED_PASS:	/* note: gets here only if parv[1] exists */
 	  {

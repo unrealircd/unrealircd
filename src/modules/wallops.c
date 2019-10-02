@@ -73,8 +73,8 @@ CMD_FUNC(cmd_wallops)
 		return 0;
 	}
 
-	sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,
-	    ":%s WALLOPS :%s", sptr->name, message);
+	// FIXME: verify: not sure about direction @ sptr, here or in send.c
+	sendto_ops_butone(sptr, sptr, ":%s WALLOPS :%s", sptr->name, message);
 
 	return 0;
 }

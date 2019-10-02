@@ -233,7 +233,7 @@ extern int verify_hostname(char *name);
 extern void report_error(char *, Client *);
 extern int setup_ping();
 
-extern void set_channel_mlock(Client *, Client *, Channel *, const char *, int);
+extern void set_channel_mlock(Client *, Channel *, const char *, int);
 
 extern void restart(char *);
 extern void server_reboot(char *);
@@ -297,8 +297,7 @@ extern char *make_nick_user_host(char *, char *, char *);
 extern char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host);
 extern char *make_user_host(char *, char *);
 extern int parse(Client *cptr, char *buffer, int length);
-extern int do_numeric(int, Client *, Client *, MessageTag *, int, char **);
-extern int hunt_server(Client *, Client *, MessageTag *, char *, int, int, char **);
+extern int hunt_server(Client *, MessageTag *, char *, int, int, char **);
 extern int cmd_server_estab(Client *);
 extern void umode_init(void);
 #define UMODE_GLOBAL 1
@@ -308,8 +307,8 @@ extern int umode_allow_unset(Client *sptr, int what);
 extern int umode_allow_opers(Client *sptr, int what);
 extern int umode_allow_none(Client *sptr, int what);
 extern int  umode_delete(char ch, long val);
-extern void send_umode(Client *, Client *, long, long, char *);
-extern void send_umode_out(Client *, Client *, long);
+extern void build_umode_string(Client *sptr, long old, long sendmask, char *umode_buf);
+extern void send_umode_out(Client *sptr, int show_to_user, long old);
 
 extern void free_client(Client *);
 extern void free_link(Link *);
@@ -466,7 +465,7 @@ extern void report_dynconf(Client *sptr);
 extern void count_memory(Client *cptr, char *nick);
 extern void list_scache(Client *sptr);
 extern char *oflagstr(long oflag);
-extern int rehash(Client *cptr, Client *sptr, int sig);
+extern int rehash(Client *sptr, int sig);
 extern int match_simple(const char *mask, const char *name);
 extern int match_esc(const char *mask, const char *name);
 extern int add_listener(ConfigItem_listen *conf);
@@ -655,7 +654,7 @@ extern void efunctions_switchover(void);
 extern char *encode_ip(char *);
 extern char *decode_ip(char *);
 extern void sendto_fconnectnotice(Client *sptr, int disconnect, char *comment);
-extern void sendto_one_nickcmd(Client *cptr, Client *sptr, char *umodes);
+extern void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
 extern int on_dccallow_list(Client *to, Client *from);
 extern int add_dccallow(Client *sptr, Client *optr);
 extern int del_dccallow(Client *sptr, Client *optr);
@@ -665,20 +664,20 @@ extern void del_async_connects(void);
 extern void isupport_init(void);
 extern void clicap_init(void);
 extern void efunctions_init(void);
-extern int do_cmd(Client *cptr, Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[]);
+extern int do_cmd(Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[]);
 extern MODVAR char *me_hash;
 extern MODVAR int dontspread;
 extern MODVAR int labeled_response_inhibit;
 
 /* Efuncs */
-extern MODVAR int (*do_join)(Client *, Client *, int, char **);
-extern MODVAR void (*join_channel)(Channel *chptr, Client *cptr, Client *sptr, MessageTag *mtags, int flags);
-extern MODVAR int (*can_join)(Client *cptr, Client *sptr, Channel *chptr, char *key, char *parv[]);
-extern MODVAR void (*do_mode)(Channel *chptr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
+extern MODVAR int (*do_join)(Client *, int, char **);
+extern MODVAR void (*join_channel)(Channel *chptr, Client *sptr, MessageTag *mtags, int flags);
+extern MODVAR int (*can_join)(Client *sptr, Channel *chptr, char *key, char *parv[]);
+extern MODVAR void (*do_mode)(Channel *chptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
 extern MODVAR void (*set_mode)(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-extern MODVAR int (*cmd_umode)(Client *, Client *, MessageTag *, int, char **);
-extern MODVAR int (*register_user)(Client *cptr, Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
+extern MODVAR int (*cmd_umode)(Client *, MessageTag *, int, char **);
+extern MODVAR int (*register_user)(Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 extern MODVAR int (*tkl_hash)(unsigned int c);
 extern MODVAR char (*tkl_typetochar)(int type);
 extern MODVAR int (*tkl_chartotype)(char c);
@@ -709,7 +708,7 @@ extern MODVAR TKL *(*find_qline)(Client *cptr, char *nick, int *ishold);
 extern MODVAR TKL *(*find_tkline_match_zap)(Client *cptr);
 extern MODVAR void (*tkl_stats)(Client *cptr, int type, char *para);
 extern MODVAR void (*tkl_synch)(Client *sptr);
-extern MODVAR int (*cmd_tkl)(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[]);
+extern MODVAR int (*cmd_tkl)(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[]);
 extern MODVAR int (*place_host_ban)(Client *sptr, BanAction action, char *reason, long duration);
 extern MODVAR int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
 extern MODVAR int (*join_viruschan)(Client *sptr, TKL *tk, int type);
@@ -717,7 +716,7 @@ extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
 extern MODVAR void (*spamfilter_build_user_string)(char *buf, char *nick, Client *acptr);
 extern MODVAR void (*send_protoctl_servers)(Client *sptr, int response);
-extern MODVAR int (*verify_link)(Client *cptr, Client *sptr, char *servername, ConfigItem_link **link_out);
+extern MODVAR int (*verify_link)(Client *sptr, char *servername, ConfigItem_link **link_out);
 extern MODVAR void (*send_server_message)(Client *sptr);
 extern MODVAR void (*broadcast_md_client)(ModDataInfo *mdi, Client *acptr, ModData *md);
 extern MODVAR void (*broadcast_md_channel)(ModDataInfo *mdi, Channel *chptr, ModData *md);
@@ -860,7 +859,7 @@ extern CMD_FUNC(cmd_module);
 extern CMD_FUNC(cmd_rehash);
 extern CMD_FUNC(cmd_die);
 extern CMD_FUNC(cmd_restart);
-extern int cmd_alias(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], char *cmd); /* special! */
+extern int cmd_alias(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], char *cmd); /* special! */
 extern int ban_flooder(Client *cptr);
 extern char *pcre2_version(void);
 extern int has_common_channels(Client *c1, Client *c2);

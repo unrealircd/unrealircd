@@ -62,7 +62,7 @@ CMD_FUNC(cmd_userhost)
 {
 	char *p;		/* scratch end pointer */
 	char *cn;		/* current name */
-	struct Client *acptr;
+	Client *acptr;
 	char response[5][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
 	int  i;			/* loop counter */
 

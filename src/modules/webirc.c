@@ -415,7 +415,7 @@ CMD_FUNC(cmd_webirc)
 
 	if ((parc < 5) || BadPtr(parv[4]))
 	{
-		sendnumeric(cptr, ERR_NEEDMOREPARAMS, "WEBIRC");
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "WEBIRC");
 		return -1;
 	}
 
@@ -427,10 +427,10 @@ CMD_FUNC(cmd_webirc)
 	/* Check if allowed host */
 	e = Find_webirc(sptr, password, WEBIRC_WEBIRC, &error);
 	if (!e)
-		return exit_client(cptr, sptr, &me, NULL, error);
+		return exit_client(sptr, sptr, &me, NULL, error);
 
 	/* And do our job.. */
-	return dowebirc(cptr, ip, host, options);
+	return dowebirc(sptr, ip, host, options);
 }
 
 

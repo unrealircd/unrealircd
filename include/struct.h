@@ -829,45 +829,13 @@ struct SWhois {
  * @param recv_mtags  Received message tags for this command.
  * @param parc        Parameter count *plus* 1.
  * @param parv        Parameter values.
- * @note  The use of sptr and cptr often confuse people. The short answer is that in most cases you
- *        will use 'sptr' (source client pointer) since that is the actual client that you should be
- *        dealing with. The 'cptr' is the connected client from which the command was received.
- *        This is best illustrated with an example. Consider the following toplogy:
- *
- *            serverA--serverB--serverC
- *                |               |
- *            clientA           clientC
- *
- *
- *        Say, *clientA* sends a message to a channel, the IRC protocol message is
- *        `PRIVMSG #test :hi`. When *serverA* receives this message and calls the cmd_message()
- *        command handler, *sptr* will point to clientA, and *cptr* will point to clientA as well.
- *
- *        Now, *serverA* will send the channel message to serverB to deliver it to other clients.
- *        The IRC protocol message is `:clientA PRIVMSG #test :hi`. When *serverB* receives this
- *        message and calls the cmd_message() command handler, *sptr* will point to *clientA*,
- *        but this time *cptr* will point to *serverA* (!!). That is because cptr points to the
- *        local client on which this message was received, which is *serverA* in this case.
- *
- *        Let's continue this example: *serverB* will send the channel message to *serverC*,
- *        sending `:clientA PRIVMSG #test :hi`. On *serverC*, when it receives this
- *        message it will call cmd_message() with *sptr* pointing to *clientA*, and
- *        *cptr* pointing to *serverB*. It will point *cptr* to *serverB* because *serverB* is
- *        the directly connected client from which this message was received.
- *
- *        As you can see, **cptr says nothing about which server the client (*sptr*) is on**,
- *        the only thing it specifies is the *direction* from which the message was received.
- *
- *        In almost all cases you will use *sptr*. It's just that sometimes you need the direction
- *        as well, such as for sending functions.
- *
  * @note  Slightly confusing, but parc will be 2 if 1 parameter was provided.
  *        It is two because parv will still have 2 elements, parv[1] will be your first parameter,
  *        and parv[2] will be NULL.
  *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
  *        E.g. parv[3] in the above example is out of bounds.
  */
-#define CMD_FUNC(x) int (x) (Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+#define CMD_FUNC(x) int (x) (Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
 /* @} */
 
 /** Command override function - used by all command override handlers.
@@ -884,13 +852,13 @@ struct SWhois {
  *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
  *        E.g. parv[3] in the above example.
  */
-#define CMD_OVERRIDE_FUNC(x) int (x)(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+#define CMD_OVERRIDE_FUNC(x) int (x)(CommandOverride *ovr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
 
 
 
-typedef int (*CmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
-typedef int (*AliasCmdFunc)(Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
-typedef int (*OverrideCmdFunc)(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+typedef int (*CmdFunc)(Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+typedef int (*AliasCmdFunc)(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
+typedef int (*OverrideCmdFunc)(CommandOverride *ovr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 
 
 /* tkl:

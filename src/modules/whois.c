@@ -80,7 +80,7 @@ CMD_FUNC(cmd_whois)
 
 	if (parc > 2)
 	{
-		if (hunt_server(cptr, sptr, recv_mtags, ":%s WHOIS %s :%s", 1, parc, parv) != HUNTED_ISME)
+		if (hunt_server(sptr, recv_mtags, ":%s WHOIS %s :%s", 1, parc, parv) != HUNTED_ISME)
 			return 0;
 		parv[1] = parv[2];
 	}

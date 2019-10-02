@@ -66,7 +66,7 @@ CMD_FUNC(cmd_userip)
 	char *p;		/* scratch end pointer */
 	char *cn;		/* current name */
 	char *ip, ipbuf[HOSTLEN+1];
-	struct Client *acptr;
+	Client *acptr;
 	char response[5][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
 	int  i;			/* loop counter */
 

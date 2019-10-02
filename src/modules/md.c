@@ -114,7 +114,7 @@ CMD_FUNC(cmd_md)
 			memset(&moddata_client(acptr, md), 0, sizeof(ModData));
 		}
 		/* Pass on to other servers */
-		broadcast_md_client_cmd(cptr, sptr, acptr, varname, value);
+		broadcast_md_client_cmd(sptr->direction, sptr, acptr, varname, value);
 	} else
 	if (!strcmp(type, "channel"))
 	{
@@ -131,7 +131,7 @@ CMD_FUNC(cmd_md)
 			memset(&moddata_channel(chptr, md), 0, sizeof(ModData));
 		}
 		/* Pass on to other servers */
-		broadcast_md_channel_cmd(cptr, sptr, chptr, varname, value);
+		broadcast_md_channel_cmd(sptr->direction, sptr, chptr, varname, value);
 	} else
 	if (!strcmp(type, "member"))
 	{
@@ -171,7 +171,7 @@ CMD_FUNC(cmd_md)
 			memset(&moddata_member(m, md), 0, sizeof(ModData));
 		}
 		/* Pass on to other servers */
-		broadcast_md_member_cmd(cptr, sptr, chptr, acptr, varname, value);
+		broadcast_md_member_cmd(sptr->direction, sptr, chptr, acptr, varname, value);
 	} else
 	if (!strcmp(type, "membership"))
 	{
@@ -211,7 +211,7 @@ CMD_FUNC(cmd_md)
 			memset(&moddata_membership(m, md), 0, sizeof(ModData));
 		}
 		/* Pass on to other servers */
-		broadcast_md_membership_cmd(cptr, sptr, acptr, chptr, varname, value);
+		broadcast_md_membership_cmd(sptr->direction, sptr, acptr, chptr, varname, value);
 	} else
 	if (!strcmp(type, "globalvar"))
 	{
@@ -228,7 +228,7 @@ CMD_FUNC(cmd_md)
 			memset(&moddata_global_variable(md), 0, sizeof(ModData));
 		}
 		/* Pass on to other servers */
-		broadcast_md_globalvar_cmd(cptr, sptr, varname, value);
+		broadcast_md_globalvar_cmd(sptr->direction, sptr, varname, value);
 	}
 	return 0;
 }

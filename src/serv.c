@@ -155,13 +155,13 @@ void send_version(Client* sptr, int reply)
 CMD_FUNC(cmd_version)
 {
 	/* Only allow remote VERSIONs if registered -- Syzop */
-	if (!IsUser(sptr) && !IsServer(cptr))
+	if (!IsUser(sptr) && !IsServer(sptr))
 	{
-		send_version(sptr,RPL_ISUPPORT);
+		send_version(sptr, RPL_ISUPPORT);
 		return 0;
 	}
 
-	if (hunt_server(cptr, sptr, recv_mtags, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(sptr, recv_mtags, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		sendnumeric(sptr, RPL_VERSION, version, debugmode, me.name,
 			    (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? serveropts : "0"),
@@ -299,7 +299,7 @@ CMD_FUNC(cmd_info)
 	if (remotecmdfilter(sptr, parc, parv))
 		return 0;
 
-	if (hunt_server(cptr, sptr, recv_mtags, ":%s INFO :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(sptr, recv_mtags, ":%s INFO :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		cmd_info_send(sptr);
 	}
@@ -318,7 +318,7 @@ CMD_FUNC(cmd_dalinfo)
 	if (remotecmdfilter(sptr, parc, parv))
 		return 0;
 
-	if (hunt_server(cptr, sptr, recv_mtags, ":%s DALINFO :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(sptr, recv_mtags, ":%s DALINFO :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
 			sendnumeric(sptr, RPL_INFO, *text++);
@@ -344,7 +344,7 @@ CMD_FUNC(cmd_license)
 	if (remotecmdfilter(sptr, parc, parv))
 		return 0;
 
-	if (hunt_server(cptr, sptr, recv_mtags, ":%s LICENSE :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(sptr, recv_mtags, ":%s LICENSE :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
 			sendnumeric(sptr, RPL_INFO, *text++);
@@ -367,7 +367,7 @@ CMD_FUNC(cmd_credits)
 	if (remotecmdfilter(sptr, parc, parv))
 		return 0;
 
-	if (hunt_server(cptr, sptr, recv_mtags, ":%s CREDITS :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(sptr, recv_mtags, ":%s CREDITS :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
 			sendnumeric(sptr, RPL_INFO, *text++);
@@ -464,6 +464,9 @@ CMD_FUNC(cmd_error)
 {
 	char *para;
 
+	if (!MyConnect(sptr))
+		return 0;
+
 	para = (parc > 1 && *parv[1] != '\0') ? parv[1] : "<>";
 
 	Debug((DEBUG_ERROR, "Received ERROR message from %s: %s",
@@ -474,15 +477,15 @@ CMD_FUNC(cmd_error)
 	 * This to prevent flooding and confusing IRCOps by
 	 * malicious users.
 	 */
-	if (!IsServer(cptr) && !cptr->serv)
+	if (!IsServer(sptr) && !sptr->serv)
 	{
 		sendto_snomask(SNO_JUNK, "ERROR from %s -- %s",
-			get_client_name(cptr, FALSE), para);
+			get_client_name(sptr, FALSE), para);
 		return 0;
 	}
 
 	sendto_umode_global(UMODE_OPER, "ERROR from %s -- %s",
-	    get_client_name(cptr, FALSE), para);
+	    get_client_name(sptr, FALSE), para);
 
 	return 0;
 }
@@ -582,13 +585,13 @@ CMD_FUNC(cmd_rehash)
 		if (parv[1] && (parv[1][0] == '-'))
 			x = HUNTED_ISME;
 		else
-			x = hunt_server(cptr, sptr, recv_mtags, ":%s REHASH :%s", 1, parc, parv);
+			x = hunt_server(sptr, recv_mtags, ":%s REHASH :%s", 1, parc, parv);
 	} else {
 		if (match_simple("-glob*", parv[1])) /* This is really ugly... hack to make /rehash -global -something work */
 		{
 			x = HUNTED_ISME;
 		} else {
-			x = hunt_server(cptr, sptr, NULL, ":%s REHASH %s :%s", 1, parc, parv);
+			x = hunt_server(sptr, NULL, ":%s REHASH %s :%s", 1, parc, parv);
 			// XXX: FIXME: labeled-response can't handle this, multiple servers.
 		}
 	}
@@ -611,7 +614,7 @@ CMD_FUNC(cmd_rehash)
 		return 0;
 	}
 
-	if (cptr != sptr)
+	if (!MyConnect(sptr))
 	{
 #ifndef REMOTE_REHASH
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
@@ -627,12 +630,12 @@ CMD_FUNC(cmd_rehash)
 			sendto_umode_global(UMODE_OPER, "%s is remotely rehashing server %s config file", sptr->name, me.name);
 			remote_rehash_client = sptr;
 			reread_motdsandrules();
-			return rehash(cptr, sptr,
-			    (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
+			// TODO: clean this next line up, wtf man.
+			return rehash(sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 		}
 		parv[1] = parv[2];
 	} else {
-		/* Ok this is in an 'else' because it should be only executed for sptr == cptr,
+		/* Ok this is in an 'else' because it should be only executed for local clients,
 		 * but it's totally unrelated to the above ;).
 		 */
 		if (parv[1] && match_simple("-glob*", parv[1]))
@@ -687,7 +690,7 @@ CMD_FUNC(cmd_rehash)
 			if (!strncasecmp("-gar", parv[1], 4))
 			{
 				loop.do_garbage_collect = 1;
-				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
+				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
 				return 0;
 			}
 			if (!strncasecmp("-dns", parv[1], 4))
@@ -702,36 +705,35 @@ CMD_FUNC(cmd_rehash)
 			}
 			if (match_simple("-o*motd", parv[1]))
 			{
-				if (cptr != sptr)
-					sendto_umode_global(UMODE_OPER, "Remotely rehashing OPERMOTD on request of %s", sptr->name);
-				else
+				if (MyUser(sptr))
 					sendto_ops("Rehashing OPERMOTD on request of %s", sptr->name);
+				else
+					sendto_umode_global(UMODE_OPER, "Remotely rehashing OPERMOTD on request of %s", sptr->name);
 				read_motd(conf_files->opermotd_file, &opermotd);
-				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
+				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
 				return 0;
 			}
 			if (match_simple("-b*motd", parv[1]))
 			{
-				if (cptr != sptr)
-					sendto_umode_global(UMODE_OPER, "Remotely rehashing BOTMOTD on request of %s", sptr->name);
-				else
+				if (MyUser(sptr))
 					sendto_ops("Rehashing BOTMOTD on request of %s", sptr->name);
-				read_motd(conf_files->botmotd_file, &botmotd);
-				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
-				return 0;
-			}
-			if (!strncasecmp("-motd", parv[1], 5)
-			    || !strncasecmp("-rules", parv[1], 6))
-			{
-				if (cptr != sptr)
-					sendto_umode_global(UMODE_OPER, "Remotely rehasing all MOTDs and RULES on request of %s", sptr->name);
 				else
-					sendto_ops("Rehashing all MOTDs and RULES on request of %s", sptr->name);
-				rehash_motdrules();
-				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
+					sendto_umode_global(UMODE_OPER, "Remotely rehashing BOTMOTD on request of %s", sptr->name);
+				read_motd(conf_files->botmotd_file, &botmotd);
+				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
 				return 0;
 			}
-			RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
+			if (!strncasecmp("-motd", parv[1], 5) || !strncasecmp("-rules", parv[1], 6))
+			{
+				if (MyUser(sptr))
+					sendto_ops("Rehashing all MOTDs and RULES on request of %s", sptr->name);
+				else
+					sendto_umode_global(UMODE_OPER, "Remotely rehasing all MOTDs and RULES on request of %s", sptr->name);
+				rehash_motdrules();
+				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
+				return 0;
+			}
+			RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
 			return 0;
 		}
 	}
@@ -746,9 +748,9 @@ CMD_FUNC(cmd_rehash)
 	}
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
-	if (cptr == sptr)
-		sendnumeric(sptr, RPL_REHASHING, configfile);
-	x = rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
+	sendnumeric(sptr, RPL_REHASHING, configfile);
+	// TODO: fix next line - occurence #2
+	x = rehash(sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 	reread_motdsandrules();
 	return x;
 }
@@ -761,8 +763,11 @@ CMD_FUNC(cmd_rehash)
 */
 CMD_FUNC(cmd_restart)
 {
-char *reason = parv[1];
+	char *reason = parv[1];
 	Client *acptr;
+
+	if (!MyUser(sptr))
+		return 0;
 
 	/* Check permissions */
 	if (!ValidatePermissionsForPath("server:restart",sptr,NULL,NULL,NULL))
@@ -785,7 +790,7 @@ char *reason = parv[1];
 		/* Syntax: /restart <pass> [reason] */
 		if (conf_drpass)
 		{
-			if (!Auth_Check(cptr, conf_drpass->restartauth, parv[1]))
+			if (!Auth_Check(sptr, conf_drpass->restartauth, parv[1]))
 			{
 				sendnumeric(sptr, ERR_PASSWDMISMATCH);
 				return 0;
@@ -1089,6 +1094,9 @@ CMD_FUNC(cmd_die)
 {
 	Client *acptr;
 
+	if (!MyUser(sptr))
+		return 0;
+
 	if (!ValidatePermissionsForPath("server:die",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
@@ -1102,7 +1110,7 @@ CMD_FUNC(cmd_die)
 			sendnumeric(sptr, ERR_NEEDMOREPARAMS, "DIE");
 			return 0;
 		}
-		if (!Auth_Check(cptr, conf_drpass->dieauth, parv[1]))
+		if (!Auth_Check(sptr, conf_drpass->dieauth, parv[1]))
 		{
 			sendnumeric(sptr, ERR_PASSWDMISMATCH);
 			return 0;
@@ -1132,7 +1140,7 @@ CMD_FUNC(cmd_die)
  * Added to let the local console shutdown the server without just
  * calling exit(-1), in Windows mode.  -Cabal95
  */
-int  localdie(void)
+int localdie(void)
 {
 	Client *acptr;
 

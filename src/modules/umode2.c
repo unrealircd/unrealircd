@@ -55,7 +55,7 @@ MOD_UNLOAD()
 /*
     cmd_umode2 added by Stskeeps
     parv[1] - modes to change
-    Small wrapper to bandwidth save
+    Small wrapper to save bandwidth
 */
 
 CMD_FUNC(cmd_umode2)
@@ -70,5 +70,5 @@ CMD_FUNC(cmd_umode2)
 
 	if (!parv[1])
 		return 0;
-	return cmd_umode(cptr, sptr, recv_mtags, (parc > 3) ? 4 : 3, xparv);
+	return cmd_umode(sptr, recv_mtags, (parc > 3) ? 4 : 3, xparv);
 }

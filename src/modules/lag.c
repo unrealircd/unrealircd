@@ -76,7 +76,7 @@ CMD_FUNC(cmd_lag)
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "LAG");
 		return 0;
 	}
-	if (hunt_server(cptr, sptr, recv_mtags, ":%s LAG :%s", 1, parc, parv) == HUNTED_NOSUCH)
+	if (hunt_server(sptr, recv_mtags, ":%s LAG :%s", 1, parc, parv) == HUNTED_NOSUCH)
 	{
 		return 0;
 	}

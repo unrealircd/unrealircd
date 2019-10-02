@@ -72,7 +72,7 @@ CMD_FUNC(cmd_svsfline)
 
 			if (IsULine(sptr))
 			{
-				sendto_server(cptr, 0, 0, NULL, ":%s SVSFLINE + %s :%s",
+				sendto_server(sptr, 0, 0, NULL, ":%s SVSFLINE + %s :%s",
 				    sptr->name, parv[2], parv[3]);
 			}
 
@@ -94,7 +94,7 @@ CMD_FUNC(cmd_svsfline)
 
 			DCCdeny_del(deny);
 
-			sendto_server(cptr, 0, 0, NULL, ":%s SVSFLINE %s", sptr->name, parv[2]);
+			sendto_server(sptr, 0, 0, NULL, ":%s SVSFLINE %s", sptr->name, parv[2]);
 
 			break;
 		}
@@ -106,7 +106,7 @@ CMD_FUNC(cmd_svsfline)
 
 			dcc_wipe_services();
 
-			sendto_server(cptr, 0, 0, NULL, ":%s SVSFLINE *", sptr->name);
+			sendto_server(sptr, 0, 0, NULL, ":%s SVSFLINE *", sptr->name);
 
 			break;
 		}

@@ -115,14 +115,14 @@ char *cmodef_conv_param(char *param_in, Client *cptr);
 void cmodef_free_param(void *r);
 void *cmodef_dup_struct(void *r_in);
 int cmodef_sjoin_check(Channel *chptr, void *ourx, void *theirx);
-int floodprot_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
+int floodprot_join(Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
 EVENT(modef_event);
 int cmodef_channel_destroy(Channel *chptr, int *should_destroy);
 char *floodprot_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
 int floodprot_post_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
 int floodprot_knock(Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
 int floodprot_local_nickchange(Client *sptr, char *oldnick);
-int floodprot_remote_nickchange(Client *cptr, Client *sptr, char *oldnick);
+int floodprot_remote_nickchange(Client *sptr, char *oldnick);
 int floodprot_chanmode_del(Channel *chptr, int m);
 void memberflood_free(ModData *md);
 int floodprot_stats(Client *sptr, char *flag);
@@ -849,7 +849,7 @@ int cmodef_sjoin_check(Channel *chptr, void *ourx, void *theirx)
 	return EXSJ_MERGE;
 }
 
-int floodprot_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[])
+int floodprot_join(Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[])
 {
 	/* I'll explain this only once:
 	 * 1. if channel is +f
@@ -997,7 +997,7 @@ int floodprot_local_nickchange(Client *sptr, char *oldnick)
 	return gotnickchange(sptr);
 }
 
-int floodprot_remote_nickchange(Client *cptr, Client *sptr, char *oldnick)
+int floodprot_remote_nickchange(Client *sptr, char *oldnick)
 {
 	if (IsULine(sptr))
 		return 0;

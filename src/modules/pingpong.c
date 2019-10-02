@@ -68,23 +68,17 @@ CMD_FUNC(cmd_ping)
 	Client *acptr;
 	char *origin, *destination;
 
-	if (parc < 2 || *parv[1] == '\0')
+	if (parc < 2 || BadPtr(parv[1]))
 	{
 		sendnumeric(sptr, ERR_NOORIGIN);
 		return 0;
 	}
+
 	origin = parv[1];
 	destination = parv[2];	/* Will get NULL or pointer (parc >= 2!!) */
 
 	if (!MyUser(sptr))
-	{
-		/* I've no idea who invented this or what it is supposed to do.. */
-		acptr = find_client(origin, NULL);
-		if (!acptr)
-			acptr = find_server_quick(origin);
-		if (acptr && acptr != sptr)
-			origin = cptr->name;
-	}
+		origin = sptr->name;
 
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0 && mycmp(destination, me.id) != 0)
 	{
@@ -112,9 +106,9 @@ CMD_FUNC(cmd_nospoof)
 {
 	unsigned long result;
 
-	if (IsNotSpoof(cptr))
+	if (IsNotSpoof(sptr))
 		return 0;
-	if (IsRegistered(cptr))
+	if (IsRegistered(sptr))
 		return 0;
 	if (!*sptr->name)
 		return 0;
@@ -136,13 +130,12 @@ CMD_FUNC(cmd_nospoof)
 			   me.name, sptr->name);
 
 	if (is_handshake_finished(sptr))
-		return register_user(cptr, sptr, sptr->name,
-		    sptr->user->username, NULL, NULL, NULL);
+		return register_user(sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
 	return 0;
       temp:
 	/* Homer compatibility */
-	sendto_one(cptr, NULL, ":%X!nospoof@%s PRIVMSG %s :\1VERSION\1",
-	    cptr->local->nospoof, me.name, cptr->name);
+	sendto_one(sptr, NULL, ":%X!nospoof@%s PRIVMSG %s :\1VERSION\1",
+	    sptr->local->nospoof, me.name, sptr->name);
 	return 0;
 }
 
@@ -156,8 +149,8 @@ CMD_FUNC(cmd_pong)
 	Client *acptr;
 	char *origin, *destination;
 
-	if (!IsRegistered(cptr))
-		return cmd_nospoof(cptr, sptr, recv_mtags, parc, parv);
+	if (!IsRegistered(sptr))
+		return cmd_nospoof(sptr, recv_mtags, parc, parv);
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
@@ -168,26 +161,27 @@ CMD_FUNC(cmd_pong)
 	origin = parv[1];
 	destination = parv[2];
 	ClearPingSent(sptr);
-	ClearPingSent(cptr);
-	ClearPingWarning(cptr);
+	ClearPingWarning(sptr);
 
 	/* Remote pongs for clients? uhh... */
 	if (MyUser(sptr) || !IsRegistered(sptr))
-		destination = NULL;
+		return 0;
 
+	/* PONG from a server - either for us, or needs relaying.. */
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{
 		if ((acptr = find_client(destination, NULL)) ||
 		    (acptr = find_server_quick(destination)))
 		{
-			if (!IsServer(cptr) && !IsServer(acptr))
+			if (IsUser(sptr) && !IsServer(acptr))
 			{
 				sendnumeric(sptr, ERR_NOSUCHSERVER, destination);
 				return 0;
-			}
-			else
+			} else
+			{
 				sendto_one(acptr, NULL, ":%s PONG %s %s",
 				    sptr->name, origin, destination);
+			}
 		}
 		else
 		{

@@ -115,19 +115,20 @@ CMD_FUNC(cmd_pass)
 {
 	char *password = parc > 1 ? parv[1] : NULL;
 
-	if (BadPtr(password))
+	if (!MyConnect(sptr) || (!IsUnknown(sptr) && !IsHandshake(sptr)))
 	{
-		sendnumeric(cptr, ERR_NEEDMOREPARAMS, "PASS");
+		sendnumeric(sptr, ERR_ALREADYREGISTRED);
 		return 0;
 	}
-	if (!MyConnect(sptr) || (!IsUnknown(cptr) && !IsHandshake(cptr)))
+
+	if (BadPtr(password))
 	{
-		sendnumeric(cptr, ERR_ALREADYREGISTRED);
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "PASS");
 		return 0;
 	}
 
 	/* Store the password */
-	safe_strldup(cptr->local->passwd, password, PASSWDLEN+1);
+	safe_strldup(sptr->local->passwd, password, PASSWDLEN+1);
 
 	/* note: the original non-truncated password is supplied as 2nd parameter. */
 	RunHookReturnInt2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);

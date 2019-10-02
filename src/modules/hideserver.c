@@ -326,7 +326,7 @@ CMD_OVERRIDE_FUNC(override_map)
 		parv[1] = "*";
 	
 	if (IsOper(sptr))
-		return CallCommandOverride(ovr, cptr, sptr, recv_mtags, parc, parv);
+		return CallCommandOverride(ovr, sptr, recv_mtags, parc, parv);
 
 	if (Settings.disable_map)
 	{
@@ -366,7 +366,7 @@ CMD_OVERRIDE_FUNC(override_links)
 	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;
 
 	if (IsOper(sptr))
-		return CallCommandOverride(ovr, cptr, sptr, recv_mtags, parc, parv);
+		return CallCommandOverride(ovr, sptr, recv_mtags, parc, parv);
 
 	if (Settings.disable_links)
 	{
@@ -381,7 +381,7 @@ CMD_OVERRIDE_FUNC(override_links)
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		/* Some checks */
-		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL))
+		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("server:info:map:ulines",sptr,NULL,NULL,NULL))
 			continue;
 		if (FindHiddenServer(acptr->name))
 			continue;

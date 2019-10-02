@@ -173,11 +173,11 @@ CMD_FUNC(cmd_topic)
 			chptr->topic_time = ttime;
 
 			new_message(sptr, recv_mtags, &mtags);
-			RunHook5(HOOKTYPE_TOPIC, cptr, sptr, chptr, mtags, topic);
-			sendto_server(cptr, PROTO_SID, 0, mtags, ":%s TOPIC %s %s %lld :%s",
+			RunHook4(HOOKTYPE_TOPIC, sptr, chptr, mtags, topic);
+			sendto_server(sptr, PROTO_SID, 0, mtags, ":%s TOPIC %s %s %lld :%s",
 			    ID(sptr), chptr->chname, chptr->topic_nick,
 			    (long long)chptr->topic_time, chptr->topic);
-			sendto_server(cptr, 0, PROTO_SID, mtags, ":%s TOPIC %s %s %lld :%s",
+			sendto_server(sptr, 0, PROTO_SID, mtags, ":%s TOPIC %s %s %lld :%s",
 			    sptr->name, chptr->chname, chptr->topic_nick,
 			    (long long)chptr->topic_time, chptr->topic);
 			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
@@ -267,14 +267,14 @@ CMD_FUNC(cmd_topic)
 	safe_strldup(chptr->topic, topic, iConf.topic_length+1);
 	safe_strldup(chptr->topic_nick, tnick, NICKLEN+USERLEN+HOSTLEN+5);
 
-	if (ttime && IsServer(cptr))
+	if (ttime && !MyUser(sptr))
 		chptr->topic_time = ttime;
 	else
 		chptr->topic_time = TStime();
 
 	new_message(sptr, recv_mtags, &mtags);
-	RunHook5(HOOKTYPE_TOPIC, cptr, sptr, chptr, mtags, topic);
-	sendto_server(cptr, 0, 0, mtags, ":%s TOPIC %s %s %lld :%s",
+	RunHook4(HOOKTYPE_TOPIC, sptr, chptr, mtags, topic);
+	sendto_server(sptr, 0, 0, mtags, ":%s TOPIC %s %s %lld :%s",
 	    sptr->name, chptr->chname, chptr->topic_nick,
 	    (long long)chptr->topic_time, chptr->topic);
 	sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,

@@ -144,7 +144,7 @@ CMD_FUNC(cmd_chghost)
                   
 		acptr->umodes |= UMODE_HIDE;
 		acptr->umodes |= UMODE_SETHOST;
-		sendto_server(cptr, 0, 0, NULL, ":%s CHGHOST %s %s", sptr->name, acptr->name, parv[2]);
+		sendto_server(sptr, 0, 0, NULL, ":%s CHGHOST %s %s", sptr->name, acptr->name, parv[2]);
 		safe_strdup(acptr->user->virthost, parv[2]);
 		
 		userhost_changed(acptr);

@@ -70,7 +70,7 @@ CMD_FUNC(cmd_unsqline)
 	if (parc < 2)
 		return 0;
 
-	cmd_tkl(&me, &me, NULL, 6, tkllayer);
+	cmd_tkl(&me, NULL, 6, tkllayer);
 	
 	return 0;
 }

@@ -354,7 +354,7 @@ int link_doforward(Client *sptr, Channel *chptr, char *linked, linkType type)
 	parv[0] = sptr->name;
 	parv[1] = linked;
 	parv[2] = NULL;
-	do_join(sptr, sptr, 2, parv);
+	do_join(sptr, 2, parv);
 	return HOOK_DENY; // Original channel join = ignored
 }
 
@@ -393,7 +393,7 @@ int link_pre_localjoin_cb(Client *sptr, Channel *chptr, char *parv[])
 		return HOOK_CONTINUE;
 
 	// can_join() actually returns 0 if we *can* join a channel, so we don't need to bother checking any further conditions
-	if (!(canjoin = can_join(sptr, sptr, chptr, NULL, parv)))
+	if (!(canjoin = can_join(sptr, chptr, NULL, parv)))
 		return HOOK_CONTINUE;
 
 	// Oper only channel

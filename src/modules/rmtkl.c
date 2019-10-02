@@ -40,7 +40,7 @@ typedef struct {
 static int dump_str(Client *sptr, char **buf);
 static TKLType *find_TKLType_by_flag(char flag);
 void rmtkl_check_options(char *param, int *skipperm, int *silent);
-int rmtkl_tryremove(Client *sptr, Client *cptr, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent);
+int rmtkl_tryremove(Client *sptr, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent);
 CMD_FUNC(rmtkl);
 
 TKLType tkl_types[] = {
@@ -134,7 +134,7 @@ void rmtkl_check_options(char *param, int *skipperm, int *silent) {
 		*silent = 1;
 }
 
-int rmtkl_tryremove(Client *sptr, Client *cptr, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent)
+int rmtkl_tryremove(Client *sptr, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent)
 {
 	if (tkl->type != tkltype->type)
 		return 0;
@@ -172,7 +172,7 @@ int rmtkl_tryremove(Client *sptr, Client *cptr, TKLType *tkltype, TKL *tkl, char
 	if (!silent)
 		sendnotice_tkl_del(sptr->name, tkl);
 
-	RunHook5(HOOKTYPE_TKL_DEL, cptr, sptr, tkl, NULL, NULL);
+	RunHook4(HOOKTYPE_TKL_DEL, sptr, tkl, NULL, NULL);
 
 	if (tkl->type & TKL_SHUN)
 		tkl_check_local_remove_shun(tkl);
@@ -272,7 +272,7 @@ CMD_FUNC(rmtkl) {
 				for (tkl = tklines_ip_hash[tklindex][tklindex2]; tkl; tkl = next)
 				{
 					next = tkl->next;
-					count += rmtkl_tryremove(sptr, cptr, tkltype, tkl, uhmask, commentmask, skipperm, silent);
+					count += rmtkl_tryremove(sptr, tkltype, tkl, uhmask, commentmask, skipperm, silent);
 				}
 			}
 		}
@@ -282,7 +282,7 @@ CMD_FUNC(rmtkl) {
 		for (tkl = tklines[tklindex]; tkl; tkl = next)
 		{
 			next = tkl->next;
-			count += rmtkl_tryremove(sptr, cptr, tkltype, tkl, uhmask, commentmask, skipperm, silent);
+			count += rmtkl_tryremove(sptr, tkltype, tkl, uhmask, commentmask, skipperm, silent);
 		}
 	}
 

@@ -41,11 +41,11 @@ MOD_UNLOAD()
  * https://www.unrealircd.org/docs/Server_protocol:SINFO_command
  * ^ contains important remarks regarding when to send it and when not.
  */
-int sinfo_server(Client *cptr, Client *sptr, int parc, char *parv[])
+int sinfo_server(Client *sptr, int parc, char *parv[])
 {
 	char buf[512];
 
-	if (cptr == sptr)
+	if (MyConnect(sptr))
 	{
 		/* It is a protocol violation to send an SINFO for yourself,
 		 * eg if you are server 001, then you cannot send :001 SINFO ....
@@ -57,7 +57,7 @@ int sinfo_server(Client *cptr, Client *sptr, int parc, char *parv[])
 		 * failure to do so will lead to potential desyncs or other major
 		 * issues.
 		 */
-		return exit_client(cptr, sptr, &me, NULL, "Protocol error: you cannot send SINFO about yourself");
+		return exit_client(sptr, sptr, &me, NULL, "Protocol error: you cannot send SINFO about yourself");
 	}
 
 	/* :SID SINFO up_since protocol umodes chanmodes nickchars :software name
@@ -105,13 +105,13 @@ int sinfo_server(Client *cptr, Client *sptr, int parc, char *parv[])
 
 	/* Broadcast to 'the other side' of the net */
 	concat_params(buf, sizeof(buf), parc, parv);
-	sendto_server(cptr, 0, 0, NULL, ":%s SINFO %s", sptr->name, buf);
+	sendto_server(sptr, 0, 0, NULL, ":%s SINFO %s", sptr->name, buf);
 
 	return 0;
 }
 
 #define SafeDisplayStr(x)  ((x && *(x)) ? (x) : "-")
-int sinfo_user(Client *cptr, Client *sptr, int parc, char *parv[])
+int sinfo_user(Client *sptr, int parc, char *parv[])
 {
 	Client *acptr;
 
@@ -160,8 +160,8 @@ int sinfo_user(Client *cptr, Client *sptr, int parc, char *parv[])
 CMD_FUNC(cmd_sinfo)
 {
 	if (IsServer(sptr))
-		return sinfo_server(cptr, sptr, parc, parv);
+		return sinfo_server(sptr, parc, parv);
 	else if (MyUser(sptr))
-		return sinfo_user(cptr, sptr, parc, parv);
+		return sinfo_user(sptr, parc, parv);
 	return 0;
 }

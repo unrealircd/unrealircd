@@ -63,7 +63,7 @@ void *history_chanmode_dup_struct(void *r_in);
 int history_chanmode_sjoin_check(Channel *chptr, void *ourx, void *theirx);
 int history_channel_destroy(Channel *chptr, int *should_destroy);
 int history_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
-int history_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
+int history_join(Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
 EVENT(history_clean);
 
 MOD_TEST()
@@ -506,7 +506,7 @@ int history_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, cha
 	return 0;
 }
 
-int history_join(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[])
+int history_join(Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[])
 {
 	if (!HistoryEnabled(chptr))
 		return 0;

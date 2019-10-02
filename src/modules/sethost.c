@@ -136,7 +136,7 @@ CMD_FUNC(cmd_sethost)
 	/* get it in */
 	safe_strdup(sptr->user->virthost, vhost);
 	/* spread it out */
-	sendto_server(cptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, parv[1]);
+	sendto_server(sptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, parv[1]);
 
 	userhost_changed(sptr);
 

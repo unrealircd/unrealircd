@@ -75,7 +75,7 @@ CMD_FUNC(cmd_svspart)
 		parv[1] = parv[2];
 		parv[2] = comment;
 		parv[3] = NULL;
-		(void)do_cmd(acptr, acptr, NULL, "PART", comment ? 3 : 2, parv);
+		(void)do_cmd(acptr, NULL, "PART", comment ? 3 : 2, parv);
 		/* NOTE: acptr may be killed now by spamfilter due to the part reason */
 	}
 	else

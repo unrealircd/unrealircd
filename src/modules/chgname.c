@@ -120,7 +120,7 @@ CMD_FUNC(cmd_chgname)
 			}
 		}
 
-		sendto_server(cptr, 0, 0, NULL, ":%s CHGNAME %s :%s",
+		sendto_server(sptr, 0, 0, NULL, ":%s CHGNAME %s :%s",
 		    sptr->name, acptr->name, parv[2]);
 		return 0;
 	}

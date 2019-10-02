@@ -53,21 +53,8 @@ MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }
-/***********************************************************************
- * cmd_away() - Added 14 Dec 1988 by jto.
- *            Not currently really working, I don't like this
- *            call at all...
- *
- *            ...trying to make it work. I don't like it either,
- *            but perhaps it's worth the load it causes to net.
- *            This requires flooding of the whole net like NICK,
- *            USER, MODE, etc messages...  --msa
- ***********************************************************************/
 
-/*
-** cmd_away
-**      parv[1] = away message
-*/
+/** Mark client as AWAY or mark them as back (in case of empty reason) */
 CMD_FUNC(cmd_away)
 {
 	char *new_reason = parv[1];
@@ -85,8 +72,8 @@ CMD_FUNC(cmd_away)
 			safe_free(sptr->user->away);
 
 			new_message(sptr, recv_mtags, &mtags);
-			sendto_server(cptr, 0, 0, mtags, ":%s AWAY", sptr->name);
-			hash_check_watch(cptr, RPL_NOTAWAY);
+			sendto_server(sptr, 0, 0, mtags, ":%s AWAY", sptr->name);
+			hash_check_watch(sptr, RPL_NOTAWAY);
 			sendto_local_common_channels(sptr, sptr, ClientCapabilityBit("away-notify"), mtags,
 			                             ":%s AWAY", sptr->name);
 			RunHook3(HOOKTYPE_AWAY, sptr, mtags, NULL);
@@ -137,7 +124,7 @@ CMD_FUNC(cmd_away)
 	
 	new_message(sptr, recv_mtags, &mtags);
 
-	sendto_server(cptr, 0, 0, mtags, ":%s AWAY :%s", sptr->name, new_reason);
+	sendto_server(sptr, 0, 0, mtags, ":%s AWAY :%s", sptr->name, new_reason);
 
 	if (sptr->user->away)
 	{
@@ -150,7 +137,7 @@ CMD_FUNC(cmd_away)
 	if (MyConnect(sptr))
 		sendnumeric(sptr, RPL_NOWAWAY);
 
-	hash_check_watch(cptr, already_as_away ? RPL_REAWAY : RPL_GONEAWAY);
+	hash_check_watch(sptr, already_as_away ? RPL_REAWAY : RPL_GONEAWAY);
 
 	sendto_local_common_channels(sptr, sptr,
 	                             ClientCapabilityBit("away-notify"), mtags,

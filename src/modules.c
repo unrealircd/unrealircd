@@ -794,10 +794,10 @@ CMD_FUNC(cmd_module)
 	if (MyUser(sptr) && !IsOper(sptr) && all)
 		sptr->local->since += 7; /* Lag them up. Big list. */
 
-	if ((parc > 2) && (hunt_server(cptr, sptr, recv_mtags, ":%s MODULE %s :%s", 2, parc, parv) != HUNTED_ISME))
+	if ((parc > 2) && (hunt_server(sptr, recv_mtags, ":%s MODULE %s :%s", 2, parc, parv) != HUNTED_ISME))
 		return 0;
 
-	if ((parc == 2) && (parv[1][0] != '-') && (hunt_server(cptr, sptr, recv_mtags, ":%s MODULE :%s", 1, parc, parv) != HUNTED_ISME))
+	if ((parc == 2) && (parv[1][0] != '-') && (hunt_server(sptr, recv_mtags, ":%s MODULE :%s", 1, parc, parv) != HUNTED_ISME))
 		return 0;
 
 	if (all)
@@ -1162,11 +1162,11 @@ void CommandOverrideDel(CommandOverride *cmd)
 	safe_free(cmd);
 }
 
-int CallCommandOverride(CommandOverride *ovr, Client *cptr, Client *sptr, MessageTag *mtags, int parc, char *parv[])
+int CallCommandOverride(CommandOverride *ovr, Client *sptr, MessageTag *mtags, int parc, char *parv[])
 {
 	if (ovr->next)
-		return ovr->next->func(ovr->next, cptr, sptr, mtags, parc, parv);
-	return ovr->command->func(cptr, sptr, mtags, parc, parv);
+		return ovr->next->func(ovr->next, sptr, mtags, parc, parv);
+	return ovr->command->func(sptr, mtags, parc, parv);
 }
 
 EVENT(e_unload_module_delayed)

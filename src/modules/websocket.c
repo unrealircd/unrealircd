@@ -514,7 +514,7 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 			if (is_module_loaded("webredir"))
 			{
 				char *parx[2] = { NULL, NULL };
-				do_cmd(sptr, sptr, NULL, "GET", 1, parx);
+				do_cmd(sptr, NULL, "GET", 1, parx);
 			}
 			dead_link(sptr, "Invalid WebSocket request");
 			return -1;

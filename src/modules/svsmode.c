@@ -195,7 +195,7 @@ void clear_bans(Client *sptr, Channel *chptr, char chmode)
  *
  * OLD syntax had a 'ts' parameter. No services are known to use this.
  */
-int channel_svsmode(Client *cptr, Client *sptr, int parc, char *parv[]) 
+int channel_svsmode(Client *sptr, int parc, char *parv[]) 
 {
 	Channel *chptr;
 	Client *acptr;
@@ -269,7 +269,7 @@ int channel_svsmode(Client *cptr, Client *sptr, int parc, char *parv[])
 			default:
 				sendto_realops("Warning! Invalid mode `%c' used with 'SVSMODE %s %s %s' (from %s %s)",
 					       *m, chptr->chname, parv[2], parv[3] ? parv[3] : "",
-					       cptr->name, sptr->name);
+					       sptr->direction->name, sptr->name);
 				break;
 		}
 	}
@@ -287,7 +287,7 @@ int channel_svsmode(Client *cptr, Client *sptr, int parc, char *parv[])
 		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
 
 		/* Activate this hook just like cmd_mode.c */
-		RunHook8(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, mtags, modebuf, parabuf, 0, 0);
+		RunHook7(HOOKTYPE_REMOTE_CHANMODE, sptr, chptr, mtags, modebuf, parabuf, 0, 0);
 
 		free_message_tags(mtags);
 
@@ -305,7 +305,7 @@ int channel_svsmode(Client *cptr, Client *sptr, int parc, char *parv[])
  *
  * show_change can be 0 (for svsmode) or 1 (for svs2mode).
  */
-int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int show_change)
+int do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int show_change)
 {
 	int i;
 	char *m;
@@ -322,7 +322,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 		return 0;
 
 	if (parv[1][0] == '#') 
-		return channel_svsmode(cptr, sptr, parc, parv);
+		return channel_svsmode(sptr, parc, parv);
 
 	if (!(acptr = find_person(parv[1], NULL)))
 		return 0;
@@ -497,11 +497,11 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 		} /*switch*/
 
 	if (parc > 3)
-		sendto_server(cptr, 0, 0, NULL, ":%s %s %s %s %s",
+		sendto_server(sptr, 0, 0, NULL, ":%s %s %s %s %s",
 		    sptr->name, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2], parv[3]);
 	else
-		sendto_server(cptr, 0, 0, NULL, ":%s %s %s %s",
+		sendto_server(sptr, 0, 0, NULL, ":%s %s %s %s",
 		    sptr->name, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2]);
 
@@ -514,8 +514,8 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
 	if (show_change)
 	{
 		char buf[BUFSIZE];
-		send_umode(NULL, acptr, setflags, ALL_UMODES, buf);
-		if (MyUser(acptr) && buf[0] && buf[1])
+		build_umode_string(acptr, setflags, ALL_UMODES, buf);
+		if (MyUser(acptr) && *buf)
 			sendto_one(acptr, NULL, ":%s MODE %s :%s", sptr->name, acptr->name, buf);
 	}
 
@@ -533,7 +533,7 @@ int do_svsmode(Client *cptr, Client *sptr, MessageTag *recv_mtags, int parc, cha
  */
 CMD_FUNC(cmd_svsmode)
 {
-	return do_svsmode(cptr, sptr, recv_mtags, parc, parv, 0);
+	return do_svsmode(sptr, recv_mtags, parc, parv, 0);
 }
 
 /*
@@ -544,7 +544,7 @@ CMD_FUNC(cmd_svsmode)
  */
 CMD_FUNC(cmd_svs2mode)
 {
-	return do_svsmode(cptr, sptr, recv_mtags, parc, parv, 1);
+	return do_svsmode(sptr, recv_mtags, parc, parv, 1);
 }
 
 void add_send_mode_param(Channel *chptr, Client *from, char what, char mode, char *param)

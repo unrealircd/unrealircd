@@ -61,7 +61,9 @@ CMD_FUNC(cmd_squit)
 {
 	char *server;
 	Client *acptr;
-	char *comment = (parc > 2 && parv[parc - 1]) ? parv[parc - 1] : cptr->name;
+	char *comment = (parc > 2 && parv[parc - 1]) ? parv[parc - 1] : sptr->name;
+
+	// FIXME: this function is way too confusing, and full of old shit?
 
 	if (!ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL))
 	{
@@ -69,25 +71,19 @@ CMD_FUNC(cmd_squit)
 		return 0;
 	}
 
-	if (parc > 1)
+	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		server = parv[1];
-
-		acptr = find_server_quick(server);
-		if (acptr && IsMe(acptr))
-		{
-			acptr = cptr;
-			server = cptr->local->sockhost;
-		}
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SQUIT");
+		return 0;
 	}
-	else
+
+	server = parv[1];
+
+	acptr = find_server_quick(server);
+	if (acptr && IsMe(acptr))
 	{
-		/*
-		   ** This is actually protocol error. But, well, closing
-		   ** the link is very proper answer to that...
-		 */
-		server = cptr->local->sockhost;
-		acptr = cptr;
+		acptr = sptr->direction;
+		server = sptr->direction->local->sockhost;
 	}
 
 	/*
@@ -95,7 +91,7 @@ CMD_FUNC(cmd_squit)
 	   **
 	   ** The old (irc2.2PL1 and earlier) code just cleans away the
 	   ** server client from the links (because it is never true
-	   ** "cptr == acptr".
+	   ** "sptr->direction == acptr".
 	   **
 	   ** This logic here works the same way until "SQUIT host" hits
 	   ** the server having the target "host" as local link. Then it
@@ -132,7 +128,7 @@ CMD_FUNC(cmd_squit)
 	/*
 	   **  Notify all opers, if my local link is remotely squitted
 	 */
-	if (MyConnect(acptr) && !MyUser(cptr))
+	if (MyConnect(acptr) && !MyUser(sptr))
 	{
 		sendto_umode_global(UMODE_OPER, "Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
@@ -164,5 +160,5 @@ CMD_FUNC(cmd_squit)
 		SetSQuit(acptr);
 	}
 
-	return exit_client(cptr, acptr, sptr, recv_mtags, comment);
+	return exit_client(sptr->direction, acptr, sptr, recv_mtags, comment);
 }

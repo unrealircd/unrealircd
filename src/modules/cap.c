@@ -240,7 +240,7 @@ static int cap_end(Client *sptr, const char *arg)
 	ClearCapabilityFast(sptr, CAP_IN_PROGRESS);
 
 	if (*sptr->name && sptr->user && *sptr->user->username && IsNotSpoof(sptr))
-		return register_user(sptr, sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
+		return register_user(sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
 
 	return 0;
 }
@@ -351,7 +351,7 @@ static int cap_req(Client *sptr, const char *arg)
 
 struct clicap_cmd {
 	const char *cmd;
-	int (*func)(struct Client *source_p, const char *arg);
+	int (*func)(Client *source_p, const char *arg);
 };
 
 static struct clicap_cmd clicap_cmdtable[] = {
@@ -392,7 +392,7 @@ CMD_FUNC(cmd_cap)
 	 * This will speed up connections considerably.
 	 */
 	if (sptr->local->receiveM > 15)
-		cptr->local->since++;
+		sptr->local->since++;
 
 	if (DISABLE_CAP)
 	{

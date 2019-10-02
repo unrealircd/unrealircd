@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_ADMIN, cmd_admin, MAXPARA, CMD_UNREGISTERED|CMD_USER|CMD_SHUN|CMD_VIRUS);
+	CommandAdd(modinfo->handle, MSG_ADMIN, cmd_admin, MAXPARA, CMD_USER|CMD_SHUN|CMD_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -52,19 +52,18 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/*
-** cmd_admin
-**	parv[1] = servername
-*/
+/** ADMIN [servername].
+ * Shows administrative information about this server to users.
+ */
 CMD_FUNC(cmd_admin)
 {
 	ConfigItem_admin *admin;
-	/* Users may want to get the address in case k-lined, etc. -- Barubary
 
-	   * Only allow remote ADMINs if registered -- Barubary */
-	if (IsUser(sptr) || IsServer(cptr))
-		if (hunt_server(cptr, sptr, recv_mtags, ":%s ADMIN :%s", 1, parc, parv) != HUNTED_ISME)
+	if (IsUser(sptr))
+	{
+		if (hunt_server(sptr, recv_mtags, ":%s ADMIN :%s", 1, parc, parv) != HUNTED_ISME)
 			return 0;
+	}
 
 	if (!conf_admin_tail)
 	{

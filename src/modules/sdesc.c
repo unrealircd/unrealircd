@@ -85,7 +85,7 @@ CMD_FUNC(cmd_sdesc)
 
 	ircsnprintf(sptr->srvptr->info, sizeof(sptr->srvptr->info), "%s", parv[1]);
 
-	sendto_server(cptr, 0, 0, NULL, ":%s SDESC :%s", sptr->name, parv[1]);
+	sendto_server(sptr, 0, 0, NULL, ":%s SDESC :%s", sptr->name, parv[1]);
 
 	if (MyConnect(sptr))
 		sendnotice(sptr,

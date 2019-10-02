@@ -25,15 +25,9 @@
 
 #include "unrealircd.h"
 
-void send_umode_out(Client *, Client *, long);
-void send_umode(Client *, Client *, long, long, char *);
-void set_snomask(Client *, char *);
 extern int short_motd(Client *sptr);
-extern Channel *get_channel(Client *cptr, char *chname, int flag);
-/* static  Link    *is_banned(Client *, Channel *); */
-int  dontspread = 0;
-extern char *me_hash;
-extern char backupbuf[];
+
+int dontspread = 0;
 static char buf[BUFSIZE];
 
 MODVAR int labeled_response_inhibit = 0;
@@ -179,7 +173,7 @@ long set_usermode(char *umode)
 ** complex and no longer understandable. It also was responsible
 ** for mysterious issues and crashes. Hence rewritten.
 */
-int hunt_server(Client *cptr, Client *sptr, MessageTag *mtags, char *command, int server, int parc, char *parv[])
+int hunt_server(Client *sptr, MessageTag *mtags, char *command, int server, int parc, char *parv[])
 {
 	Client *acptr;
 	char *saved;
@@ -444,16 +438,15 @@ void set_snomask(Client *sptr, char *snomask) {
 	}
 }
 
-/*
- * send the MODE string for user (user) to connection cptr
- * -avalon
+/** Build the MODE line with (modified) user modes for this user.
+ * Originally by avalon.
  */
-void send_umode(Client *cptr, Client *sptr, long old, long sendmask, char *umode_buf)
+void build_umode_string(Client *sptr, long old, long sendmask, char *umode_buf)
 {
 	int i;
 	long flag;
 	char *m;
-	int  what = MODE_NULL;
+	int what = MODE_NULL;
 
 	/*
 	 * build a string in umode_buf to represent the change in the user's
@@ -492,32 +485,29 @@ void send_umode(Client *cptr, Client *sptr, long old, long sendmask, char *umode
 		}
 	}
 	*m = '\0';
-	if (*umode_buf && cptr)
-		sendto_one(cptr, NULL, ":%s MODE %s :%s", sptr->name,
-		    sptr->name, umode_buf);
 }
 
-/*
- * added Sat Jul 25 07:30:42 EST 1992
- */
-void send_umode_out(Client *cptr, Client *sptr, long old)
+void send_umode_out(Client *sptr, int show_to_user, long old)
 {
 	Client *acptr;
 
-	send_umode(NULL, sptr, old, SEND_UMODES, buf);
+	build_umode_string(sptr, old, SEND_UMODES, buf);
 
 	list_for_each_entry(acptr, &server_list, special_node)
 	{
-		if ((acptr != cptr) && (acptr != sptr) && *buf)
+		if ((acptr != sptr) && (acptr != sptr->direction) && *buf)
 		{
 			sendto_one(acptr, NULL, ":%s UMODE2 %s",
-				    sptr->name,
-				    buf);
+			           sptr->name, buf);
 		}
 	}
 
-	if (cptr && MyUser(cptr))
-		send_umode(cptr, sptr, old, ALL_UMODES, buf);
+	if (MyUser(sptr) && show_to_user)
+	{
+		build_umode_string(sptr, old, ALL_UMODES, buf);
+		if (*buf)
+			sendto_one(sptr, NULL, ":%s MODE %s :%s", sptr->name, sptr->name, buf);
+	}
 }
 
 static MaxTarget *maxtargets = NULL; /**< For set::max-targets-per-command configuration */

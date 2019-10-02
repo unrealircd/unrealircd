@@ -482,9 +482,10 @@ static void set_channel_mode(Channel *chptr, char *modes, char *parameters)
 	myparv[myparc] = NULL;
 
 	SetULine(&me); // hack for crash.. set ulined so no access checks.
-	do_mode(chptr, &me, &me, NULL, myparc, myparv, 0, 0);
+	do_mode(chptr, &me, NULL, myparc, myparv, 0, 0);
 	SetULine(&me); // and clear it again..
 
 	for (i = 0; i < myparc; i++)
 		safe_free(myparv[i]);
 }
+// FIXME: move above function to m_mode and make efunc, available for all modules anyway

@@ -47,7 +47,7 @@ CMD_FUNC(cmd_kline);
 CMD_FUNC(cmd_zline);
 CMD_FUNC(cmd_spamfilter);
 CMD_FUNC(cmd_eline);
-int cmd_tkl_line(Client *cptr, Client *sptr, int parc, char *parv[], char* type);
+int cmd_tkl_line(Client *sptr, int parc, char *parv[], char* type);
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
@@ -873,10 +873,10 @@ CMD_FUNC(cmd_gline)
 		parv[0] = NULL;
 		parv[1] = "gline";
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
+		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
 	}
 
-	return cmd_tkl_line(cptr, sptr, parc, parv, "G");
+	return cmd_tkl_line(sptr, parc, parv, "G");
 }
 
 /** GZLINE - Global zline.
@@ -898,10 +898,10 @@ CMD_FUNC(cmd_gzline)
 		parv[0] = NULL;
 		parv[1] = "gline"; /* (there's no /STATS gzline, it's included in /STATS gline output) */
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
+		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
 	}
 
-	return cmd_tkl_line(cptr, sptr, parc, parv, "Z");
+	return cmd_tkl_line(sptr, parc, parv, "Z");
 
 }
 
@@ -924,10 +924,10 @@ CMD_FUNC(cmd_shun)
 		parv[0] = NULL;
 		parv[1] = "shun";
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
+		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
 	}
 
-	return cmd_tkl_line(cptr, sptr, parc, parv, "s");
+	return cmd_tkl_line(sptr, parc, parv, "s");
 
 }
 
@@ -1023,7 +1023,7 @@ CMD_FUNC(cmd_kline)
 		parv[0] = NULL;
 		parv[1] = "kline";
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
+		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
 	}
 
 	if (!ValidatePermissionsForPath("server-ban:kline:remove",sptr,NULL,NULL,NULL) && *parv[1] == '-')
@@ -1032,7 +1032,7 @@ CMD_FUNC(cmd_kline)
 		return 0;
 	}
 
-	return cmd_tkl_line(cptr, sptr, parc, parv, "k");
+	return cmd_tkl_line(sptr, parc, parv, "k");
 }
 
 /** Generate stats for '/GLINE -stats' and such */
@@ -1091,7 +1091,7 @@ CMD_FUNC(cmd_zline)
 		parv[0] = NULL;
 		parv[1] = "kline"; /* (there's no /STATS zline, it's included in /STATS kline output) */
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
+		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
 	}
 
 	if ((parc > 1) && !BadPtr(parv[1]) && !strcasecmp(parv[1], "-stats"))
@@ -1101,7 +1101,7 @@ CMD_FUNC(cmd_zline)
 		return 0;
 	}
 
-	return cmd_tkl_line(cptr, sptr, parc, parv, "z");
+	return cmd_tkl_line(sptr, parc, parv, "z");
 
 }
 
@@ -1153,7 +1153,7 @@ int ban_too_broad(char *usermask, char *hostmask)
  * This allows us doing some syntax checking and other helpful
  * things that are the same for many types of *LINES.
  */
-int cmd_tkl_line(Client *cptr, Client *sptr, int parc, char *parv[], char *type)
+int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 {
 	time_t secs;
 	int whattodo = 0;	/* 0 = add  1 = del */
@@ -1339,12 +1339,12 @@ int cmd_tkl_line(Client *cptr, Client *sptr, int parc, char *parv[], char *type)
 		}
 
 		/* call the tkl layer .. */
-		cmd_tkl(&me, &me, NULL, 9, tkllayer);
+		cmd_tkl(&me, NULL, 9, tkllayer);
 	}
 	else
 	{
 		/* call the tkl layer .. */
-		cmd_tkl(&me, &me, NULL, 6, tkllayer);
+		cmd_tkl(&me, NULL, 6, tkllayer);
 
 	}
 	return 0;
@@ -1550,13 +1550,13 @@ CMD_FUNC(cmd_eline)
 		tkllayer[8] = bantypes;
 		tkllayer[9] = reason;
 		/* call the tkl layer .. */
-		cmd_tkl(&me, &me, NULL, 10, tkllayer);
+		cmd_tkl(&me, NULL, 10, tkllayer);
 	}
 	else
 	{
 		/* Remove ELINE */
 		/* call the tkl layer .. */
-		cmd_tkl(&me, &me, NULL, 10, tkllayer);
+		cmd_tkl(&me, NULL, 10, tkllayer);
 
 	}
 	return 0;
@@ -1574,7 +1574,7 @@ int spamfilter_usage(Client *sptr)
 }
 
 /** Helper function for cmd_spamfilter, explaining usage has changed. */
-int spamfilter_new_usage(Client *cptr, Client *sptr, char *parv[])
+int spamfilter_new_usage(Client *sptr, char *parv[])
 {
 	sendnotice(sptr, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes), "
 	                 "-posix (old unreal 3.2.x posix regexes) or "
@@ -1584,7 +1584,7 @@ int spamfilter_new_usage(Client *cptr, Client *sptr, char *parv[])
 	if (*parv[2] != '-')
 		sendnotice(sptr, "Using the old 3.2.x /SPAMFILTER syntax? Note the new -regex/-posix/-simple field!!");
 
-	return spamfilter_usage(cptr);
+	return spamfilter_usage(sptr);
 } 
 
 /** Delete a spamfilter by ID (the ID can be obtained via '/SPAMFILTER del' */
@@ -1644,7 +1644,7 @@ int spamfilter_del_by_id(Client *sptr, char *id)
 	ircsnprintf(mo2, sizeof(mo2), "%lld", (long long)TStime());
 	tkllayer[7] = mo2; /* deletion time */
 
-	cmd_tkl(&me, &me, NULL, 12, tkllayer);
+	cmd_tkl(&me, NULL, 12, tkllayer);
 
 	return 0;
 }
@@ -1697,7 +1697,7 @@ CMD_FUNC(cmd_spamfilter)
 		parv[0] = NULL;
 		parv[1] = "spamfilter";
 		parv[2] = NULL;
-		return do_cmd(sptr, sptr, recv_mtags, "STATS", 2, parv);
+		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
 	}
 
 	if ((parc <= 3) && !strcmp(parv[1], "del"))
@@ -1711,13 +1711,13 @@ CMD_FUNC(cmd_spamfilter)
 			parv[2] = me.name;
 			parv[3] = "del";
 			parv[4] = NULL;
-			return do_cmd(sptr, sptr, recv_mtags, "STATS", 4, parv);
+			return do_cmd(sptr, recv_mtags, "STATS", 4, parv);
 		}
 		return spamfilter_del_by_id(sptr, parv[2]);
 	}
 
 	if ((parc == 7) && (*parv[2] != '-'))
-		return spamfilter_new_usage(cptr,sptr,parv);
+		return spamfilter_new_usage(sptr,parv);
 
 	if ((parc < 8) || BadPtr(parv[7]))
 		return spamfilter_usage(sptr);
@@ -1750,7 +1750,7 @@ CMD_FUNC(cmd_spamfilter)
 	match_type = unreal_match_method_strtoval(parv[2]+1);
 	if (!match_type)
 	{
-		return spamfilter_new_usage(cptr,sptr,parv);
+		return spamfilter_new_usage(sptr,parv);
 	}
 
 	targets = spamfilter_gettargets(parv[3], sptr);
@@ -1824,7 +1824,7 @@ CMD_FUNC(cmd_spamfilter)
 		tkllayer[7] = mo2;
 	}
 
-	cmd_tkl(&me, &me, NULL, 12, tkllayer);
+	cmd_tkl(&me, NULL, 12, tkllayer);
 
 	return 0;
 }
@@ -3833,14 +3833,14 @@ CMD_FUNC(cmd_tkl_add)
 				safe_strdup(tkl->set_by, parv[5]);
 
 			if (type & TKL_GLOBAL)
-				tkl_broadcast_entry(1, sptr, cptr, tkl);
+				tkl_broadcast_entry(1, sptr, sptr, tkl);
 		}
 		return 0;
 	}
 
 	/* Below this line we will only use 'tkl'. No parc/parv reading anymore. */
 
-	RunHook3(HOOKTYPE_TKL_ADD, cptr, sptr, tkl);
+	RunHook2(HOOKTYPE_TKL_ADD, sptr, tkl);
 
 	sendnotice_tkl_add(tkl);
 
@@ -3852,7 +3852,7 @@ CMD_FUNC(cmd_tkl_add)
 	loop.do_bancheck = 1;
 
 	if (type & TKL_GLOBAL)
-		tkl_broadcast_entry(1, sptr, cptr, tkl);
+		tkl_broadcast_entry(1, sptr, sptr, tkl);
 
 	return 0;
 }
@@ -3967,10 +3967,10 @@ CMD_FUNC(cmd_tkl_del)
 	if (type & TKL_SHUN)
 		tkl_check_local_remove_shun(tkl);
 
-	RunHook3(HOOKTYPE_TKL_DEL, cptr, sptr, tkl);
+	RunHook2(HOOKTYPE_TKL_DEL, sptr, tkl);
 
 	if (type & TKL_GLOBAL)
-		tkl_broadcast_entry(0, sptr, cptr, tkl);
+		tkl_broadcast_entry(0, sptr, sptr, tkl);
 
 
 	if (TKLIsBanException(tkl))
@@ -4029,9 +4029,9 @@ CMD_FUNC(_cmd_tkl)
 	switch (*parv[1])
 	{
 		case '+':
-			return cmd_tkl_add(cptr, sptr, recv_mtags, parc, parv);
+			return cmd_tkl_add(sptr, recv_mtags, parc, parv);
 		case '-':
-			return cmd_tkl_del(cptr, sptr, recv_mtags, parc, parv);
+			return cmd_tkl_del(sptr, recv_mtags, parc, parv);
 		default:
 			break;
 	}
@@ -4138,7 +4138,7 @@ int _place_host_ban(Client *sptr, BanAction action, char *reason, long duration)
 			tkllayer[6] = mo;
 			tkllayer[7] = mo2;
 			tkllayer[8] = reason;
-			cmd_tkl(&me, &me, NULL, 9, tkllayer);
+			cmd_tkl(&me, NULL, 9, tkllayer);
 			if ((action == BAN_ACT_SHUN) || (action == BAN_ACT_SOFT_SHUN))
 			{
 				find_shun(sptr);
@@ -4231,7 +4231,7 @@ int _join_viruschan(Client *sptr, TKL *tkl, int type)
 
 	/* RECURSIVE CAUTION in case we ever add blacklisted chans */
 	spamf_ugly_vchanoverride = 1;
-	ret = do_cmd(sptr, sptr, NULL, "JOIN", 2, xparv);
+	ret = do_cmd(sptr, NULL, "JOIN", 2, xparv);
 	spamf_ugly_vchanoverride = 0;
 
 	if (ret == FLUSH_BUFFER)

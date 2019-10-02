@@ -87,7 +87,7 @@ CMD_FUNC(cmd_sendumode)
 
 	new_message(sptr, recv_mtags, &mtags);
 
-	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0, mtags,
+	sendto_server(sptr, 0, 0, mtags,
 	    ":%s SENDUMODE %s :%s", sptr->name, parv[1], message);
 
 	for (p = parv[1]; *p; p++)

@@ -65,16 +65,16 @@ CMD_FUNC(cmd_quit)
 	if (parv[1] && (strlen(comment) > iConf.quit_length))
 		comment[iConf.quit_length] = '\0';
 
-	if (!IsServer(cptr) && IsUser(sptr))
+	if (MyUser(sptr))
 	{
 		int n;
 		Hook *tmphook;
 
 		if (STATIC_QUIT)
-			return exit_client(cptr, sptr, sptr, recv_mtags, STATIC_QUIT);
+			return exit_client(sptr->direction, sptr, sptr, recv_mtags, STATIC_QUIT);
 
 		if (IsVirus(sptr))
-			return exit_client(cptr, sptr, sptr, recv_mtags, "Client exited");
+			return exit_client(sptr->direction, sptr, sptr, recv_mtags, "Client exited");
 
 		n = run_spamfilter(sptr, comment, SPAMF_QUIT, NULL, 0, NULL);
 		if (n == FLUSH_BUFFER)
@@ -121,7 +121,7 @@ CMD_FUNC(cmd_quit)
 					parx[2] = newcomment;
 					parx[3] = NULL;
 
-					ret = do_cmd(cptr, sptr, recv_mtags, "PART", newcomment ? 3 : 2, parx);
+					ret = do_cmd(sptr, recv_mtags, "PART", newcomment ? 3 : 2, parx);
 					/* This would be unusual, but possible (somewhere in the future perhaps): */
 					if (ret == FLUSH_BUFFER)
 						return ret;
@@ -144,13 +144,13 @@ CMD_FUNC(cmd_quit)
 		else
 			strlcpy(commentbuf, comment, sizeof(commentbuf));
 
-		return exit_client(cptr, sptr, sptr, recv_mtags, commentbuf);
+		return exit_client(sptr->direction, sptr, sptr, recv_mtags, commentbuf);
 	}
 	else
 	{
 		/* Remote quits and non-person quits always use their original comment.
 		 * Also pass recv_mtags so to keep the msgid and such.
 		 */
-		return exit_client(cptr, sptr, sptr, recv_mtags, comment);
+		return exit_client(sptr->direction, sptr, sptr, recv_mtags, comment);
 	}
 }

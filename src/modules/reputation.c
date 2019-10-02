@@ -788,15 +788,15 @@ CMD_FUNC(reputation_server_cmd)
 	e = find_reputation_entry(ip);
 	if (allow_reply && e && (e->score > score) && (e->score - score > UPDATE_SCORE_MARGIN))
 	{
-		/* We have a higher score, inform the cptr direction about it.
+		/* We have a higher score, inform the sptr direction about it.
 		 * This will prefix the score with a * so servers will never reply to it.
 		 */
-		sendto_one(cptr, NULL, ":%s REPUTATION %s *%d", me.name, parv[1], e->score);
+		sendto_one(sptr, NULL, ":%s REPUTATION %s *%d", me.name, parv[1], e->score);
 #ifdef DEBUGMODE
 		ircd_log(LOG_ERROR, "[reputation] Score for '%s' from %s is %d, but we have %d, sending back %d",
 			ip, sptr->name, score, e->score, e->score);
 #endif
-		score = e->score; /* Update for propagation in the non-cptr direction */
+		score = e->score; /* Update for propagation in the non-sptr direction */
 	}
 
 	/* Update our score if sender has a higher score */
@@ -823,8 +823,8 @@ CMD_FUNC(reputation_server_cmd)
 		add_reputation_entry(e);
 	}
 
-	/* Propagate to the non-cptr direction (score may be updated) */
-	sendto_server(cptr, 0, 0, NULL,
+	/* Propagate to the non-sptr direction (score may be updated) */
+	sendto_server(sptr, 0, 0, NULL,
 	              ":%s REPUTATION %s %s%d",
 	              sptr->name,
 	              parv[1],
@@ -837,10 +837,10 @@ CMD_FUNC(reputation_server_cmd)
 CMD_FUNC(reputation_cmd)
 {
 	if (MyUser(sptr))
-		return reputation_user_cmd(cptr, sptr, recv_mtags, parc, parv);
+		return reputation_user_cmd(sptr, recv_mtags, parc, parv);
 
 	if (IsServer(sptr))
-		return reputation_server_cmd(cptr, sptr, recv_mtags, parc, parv);
+		return reputation_server_cmd(sptr, recv_mtags, parc, parv);
 
 	return 0;
 }

@@ -26,9 +26,9 @@ static Cmode_t EXTMODE_POST_DELAYED;
 int visible_in_channel( Client *cptr, Channel *chptr);
 int moded_check_part( Client *cptr, Channel *chptr);
 int moded_join(Client *cptr, Channel *chptr);
-int moded_part(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
+int moded_part(Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
 int deny_all(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what);
-int moded_chanmode(Client *cptr, Client *sptr, Channel *chptr,
+int moded_chanmode(Client *sptr, Channel *chptr,
                    MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
 char *moded_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
 char *moded_serialize(ModData *m);
@@ -272,16 +272,15 @@ int moded_join(Client *cptr, Channel *chptr)
 	return 0;
 }
 
-int moded_part(Client *cptr, Client *sptr, Channel *chptr, MessageTag *mtags, char *comment)
+int moded_part(Client *sptr, Channel *chptr, MessageTag *mtags, char *comment)
 {
 	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
-		clear_user_invisible(chptr,cptr);
+		clear_user_invisible(chptr, sptr);
 
 	return 0;
 }
 
-int moded_chanmode(Client *cptr, Client *sptr, Channel *chptr,
-                   MessageTag *recv_mtags, char *modebuf, char *parabuf, time_t sendts, int samode)
+int moded_chanmode(Client *sptr, Channel *chptr, MessageTag *recv_mtags, char *modebuf, char *parabuf, time_t sendts, int samode)
 {
 	long CAP_EXTENDED_JOIN = ClientCapabilityBit("extended-join");
 

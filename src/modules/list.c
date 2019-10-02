@@ -143,8 +143,8 @@ CMD_FUNC(cmd_list)
 		NULL
 	};
 
-	/* Some starting san checks -- No interserver lists allowed. */
-	if (cptr != sptr || !sptr->user)
+	/* Remote /LIST is not supported */
+	if (!MyUser(sptr))
 		return 0;
 
 	/* If a /LIST is in progress then a new one will cancel it */
@@ -161,8 +161,8 @@ CMD_FUNC(cmd_list)
 		ALLOCATE_CHANNELLISTOPTIONS(sptr);
 		CHANNELLISTOPTIONS(sptr)->showall = 1;
 
-		if (DBufLength(&cptr->local->sendQ) < 2048)
-			send_list(cptr);
+		if (DBufLength(&sptr->local->sendQ) < 2048)
+			send_list(sptr);
 
 		return 0;
 	}
@@ -298,8 +298,8 @@ CMD_FUNC(cmd_list)
 		CHANNELLISTOPTIONS(sptr)->nolist = nolist;
 		CHANNELLISTOPTIONS(sptr)->yeslist = yeslist;
 
-		if (DBufLength(&cptr->local->sendQ) < 2048)
-			send_list(cptr);
+		if (DBufLength(&sptr->local->sendQ) < 2048)
+			send_list(sptr);
 		return 0;
 	}
 

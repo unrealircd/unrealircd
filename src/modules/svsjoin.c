@@ -76,12 +76,12 @@ CMD_FUNC(cmd_svsjoin)
 		if (parc == 3)
 		{
 			parv[2] = NULL;
-			(void)do_cmd(acptr, acptr, NULL, "JOIN", 2, parv);
+			(void)do_cmd(acptr, NULL, "JOIN", 2, parv);
 			/* NOTE: 'acptr' may be killed if we ever implement spamfilter join channel target */
 		} else {
 			parv[2] = parv[3];
 			parv[3] = NULL;
-			(void)do_cmd(acptr, acptr, NULL, "JOIN", 3, parv);
+			(void)do_cmd(acptr, NULL, "JOIN", 3, parv);
 			/* NOTE: 'acptr' may be killed if we ever implement spamfilter join channel target */
 		}
 	}

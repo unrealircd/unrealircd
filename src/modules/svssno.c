@@ -61,7 +61,7 @@ MOD_UNLOAD()
  * parv[2] - snomasks to change
  * show_change determines whether to show the change to the user
  */
-int  do_svssno(Client *cptr, Client *sptr, int parc, char *parv[], int show_change)
+int do_svssno(Client *sptr, int parc, char *parv[], int show_change)
 {
 	char *p;
 	Client *acptr;
@@ -79,7 +79,7 @@ int  do_svssno(Client *cptr, Client *sptr, int parc, char *parv[], int show_chan
 	if (!(acptr = find_person(parv[1], NULL)))
 		return 0;
 
-	if (hunt_server(cptr, sptr, NULL,
+	if (hunt_server(sptr, NULL,
 	                      show_change ? ":%s SVS2SNO %s %s" : ":%s SVSSNO %s %s",
 	                      1, parc, parv) != HUNTED_ISME)
 	{
@@ -126,10 +126,10 @@ int  do_svssno(Client *cptr, Client *sptr, int parc, char *parv[], int show_chan
 
 CMD_FUNC(cmd_svssno)
 {
-	return do_svssno(cptr, sptr, parc, parv, 0);
+	return do_svssno(sptr, parc, parv, 0);
 }
 
 CMD_FUNC(cmd_svs2sno)
 {
-	return do_svssno(cptr, sptr, parc, parv, 1);
+	return do_svssno(sptr, parc, parv, 1);
 }

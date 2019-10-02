@@ -54,7 +54,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int do_svsnolag(Client *cptr, Client *sptr, int parc, char *parv[], int show_change)
+int do_svsnolag(Client *sptr, int parc, char *parv[], int show_change)
 {
 	Client *acptr;
 	char *cmd = show_change ? MSG_SVS2NOLAG : MSG_SVSNOLAG;
@@ -98,10 +98,10 @@ int do_svsnolag(Client *cptr, Client *sptr, int parc, char *parv[], int show_cha
 
 CMD_FUNC(cmd_svsnolag)
 {
-	return do_svsnolag(cptr, sptr, parc, parv, 0);
+	return do_svsnolag(sptr, parc, parv, 0);
 }
 
 CMD_FUNC(cmd_svs2nolag)
 {
-	return do_svsnolag(cptr, sptr, parc, parv, 1);
+	return do_svsnolag(sptr, parc, parv, 1);
 }

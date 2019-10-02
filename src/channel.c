@@ -1157,14 +1157,14 @@ void send_user_joins(Client *cptr, Client *user)
  * output	- 
  * side effects - channel mlock is changed / MLOCK is propagated
  */
-void set_channel_mlock(Client *cptr, Client *sptr, Channel *chptr, const char *newmlock, int propagate)
+void set_channel_mlock(Client *sptr, Channel *chptr, const char *newmlock, int propagate)
 {
 	safe_strdup(chptr->mode_lock, newmlock);
 
 	if (propagate)
 	{
-		sendto_server(cptr, 0, 0, NULL, ":%s MLOCK %lld %s :%s",
-			      cptr->name, (long long)chptr->creationtime, chptr->chname,
+		sendto_server(sptr, 0, 0, NULL, ":%s MLOCK %lld %s :%s",
+			      sptr->name, (long long)chptr->creationtime, chptr->chname,
 			      BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
 	}
 }

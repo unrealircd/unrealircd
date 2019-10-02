@@ -72,17 +72,19 @@ CMD_FUNC(cmd_user)
 	char *virthost = NULL;
 	char *ip = NULL;
 	char *sstamp = NULL;
+	Client *cptr = sptr->direction; /* Lazyness, since this function should be rewritten anyway */
 
-	if (IsServer(cptr) && !IsUnknown(sptr))
+	// Eh, this is for old remote USER shit (which we currently still use indirectly via do_cmd).
+	// TODO: cleanup. Also, hope this is right:
+	if (!MyConnect(sptr) && !IsUnknown(sptr))
 		return 0;
 
 	if (MyConnect(sptr) && (sptr->local->listener->options & LISTENER_SERVERSONLY))
-	{
-		return exit_client(cptr, sptr, sptr, NULL, "This port is for servers only");
-	}
+		return exit_client(sptr->direction, sptr, sptr, NULL, "This port is for servers only");
 
 	if (parc > 2 && (username = strchr(parv[1], '@')))
 		*username = '\0';
+
 	if (parc < 5 || *parv[1] == '\0' || *parv[2] == '\0' ||
 	    *parv[3] == '\0' || *parv[4] == '\0')
 	{
@@ -179,9 +181,7 @@ CMD_FUNC(cmd_user)
 				me.name, sptr->name);
 		if (strlen(username) > USERLEN)
 			username[USERLEN] = '\0'; /* cut-off */
-		return(
-		    register_user(cptr, sptr, sptr->name, username, umodex,
-		    virthost,ip));
+		return register_user(sptr, sptr->name, username, umodex, virthost, ip);
 	}
 
 	return 0;

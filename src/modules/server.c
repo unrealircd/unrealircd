@@ -28,7 +28,7 @@ void send_channel_modes_sjoin(Client *cptr, Channel *chptr);
 void send_channel_modes_sjoin3(Client *cptr, Channel *chptr);
 CMD_FUNC(cmd_server);
 CMD_FUNC(cmd_server_remote);
-int _verify_link(Client *cptr, Client *sptr, char *servername, ConfigItem_link **link_out);
+int _verify_link(Client *sptr, char *servername, ConfigItem_link **link_out);
 void _send_protoctl_servers(Client *sptr, int response);
 void _send_server_message(Client *sptr);
 void _introduce_user(Client *to, Client *acptr);
@@ -228,29 +228,29 @@ void _send_server_message(Client *sptr)
  * @returns This function returns 0 on succesful auth, other values should be returned by
  *          the calling function, as it will always be FLUSH_BUFFER due to exit_client().
  */
-int _verify_link(Client *cptr, Client *sptr, char *servername, ConfigItem_link **link_out)
+int _verify_link(Client *sptr, char *servername, ConfigItem_link **link_out)
 {
 	char xerrmsg[256];
 	ConfigItem_link *link;
-	char *inpath = get_client_name(cptr, TRUE);
+	char *inpath = get_client_name(sptr, TRUE);
 	Client *acptr = NULL, *ocptr = NULL;
 	ConfigItem_ban *bconf;
 
 	/* We set the sockhost here so you can have incoming masks based on hostnames.
 	 * Perhaps a bit late to do it here, but does anyone care?
 	 */
-	if (cptr->local->hostp && cptr->local->hostp->h_name)
-		set_sockhost(cptr, cptr->local->hostp->h_name);
+	if (sptr->local->hostp && sptr->local->hostp->h_name)
+		set_sockhost(sptr, sptr->local->hostp->h_name);
 
 	if (link_out)
 		*link_out = NULL;
 	
 	strcpy(xerrmsg, "No matching link configuration");
 
-	if (!cptr->local->passwd)
+	if (!sptr->local->passwd)
 	{
-		sendto_one(cptr, NULL, "ERROR :Missing password");
-		return exit_client(cptr, sptr, &me, NULL, "Missing password");
+		sendto_one(sptr, NULL, "ERROR :Missing password");
+		return exit_client(sptr, sptr, &me, NULL, "Missing password");
 	}
 
 	/* First check if the server is in the list */
@@ -259,26 +259,26 @@ int _verify_link(Client *cptr, Client *sptr, char *servername, ConfigItem_link *
 		goto errlink;
 	}
 	
-	if (cptr->serv && cptr->serv->conf)
+	if (sptr->serv && sptr->serv->conf)
 	{
 		/* This is an outgoing connect so we already know what link block we are
-		 * dealing with. It's the one in: cptr->serv->conf
+		 * dealing with. It's the one in: sptr->serv->conf
 		 */
 
 		/* Actually we still need to double check the servername to avoid confusion. */
-		if (strcasecmp(servername, cptr->serv->conf->servername))
+		if (strcasecmp(servername, sptr->serv->conf->servername))
 		{
 			ircsnprintf(xerrmsg, sizeof(xerrmsg), "Outgoing connect from link block '%s' but server "
 				"introduced himself as '%s'. Server name mismatch.",
-				cptr->serv->conf->servername,
+				sptr->serv->conf->servername,
 				servername);
 
-			sendto_one(cptr, NULL, "ERROR :%s", xerrmsg);
+			sendto_one(sptr, NULL, "ERROR :%s", xerrmsg);
 			sendto_ops_and_log("Outgoing link aborted to %s(%s@%s) (%s) %s",
-				cptr->serv->conf->servername, cptr->ident, cptr->local->sockhost, xerrmsg, inpath);
-			return exit_client(cptr, sptr, &me, NULL, xerrmsg);
+				sptr->serv->conf->servername, sptr->ident, sptr->local->sockhost, xerrmsg, inpath);
+			return exit_client(sptr, sptr, &me, NULL, xerrmsg);
 		}
-		link = cptr->serv->conf;
+		link = sptr->serv->conf;
 		goto skip_host_check;
 	} else {
 		/* Hunt the linkblock down ;) */
@@ -299,26 +299,26 @@ int _verify_link(Client *cptr, Client *sptr, char *servername, ConfigItem_link *
 		goto errlink;
 	}
 
-	link = Find_link(servername, cptr);
+	link = Find_link(servername, sptr);
 
 	if (!link)
 	{
 		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Server is in link block but link::incoming::mask didn't match");
 errlink:
 		/* Send the "simple" error msg to the server */
-		sendto_one(cptr, NULL,
+		sendto_one(sptr, NULL,
 		    "ERROR :Link denied (No link block found named '%s' or link::incoming::mask did not match your IP %s) %s",
-		    servername, GetIP(cptr), inpath);
+		    servername, GetIP(sptr), inpath);
 		/* And send the "verbose" error msg only to locally connected ircops */
 		sendto_ops_and_log("Link denied for %s(%s@%s) (%s) %s",
-		    servername, cptr->ident, cptr->local->sockhost, xerrmsg, inpath);
-		return exit_client(cptr, sptr, &me, NULL,
+		    servername, sptr->ident, sptr->local->sockhost, xerrmsg, inpath);
+		return exit_client(sptr, sptr, &me, NULL,
 		    "Link denied (No link block found with your server name or link::incoming::mask did not match)");
 	}
 
 skip_host_check:
 	/* Now for checking passwords */
-	if (!Auth_Check(cptr, link->auth, cptr->local->passwd))
+	if (!Auth_Check(sptr, link->auth, sptr->local->passwd))
 	{
 		/* Let's help admins a bit with a good error message in case
 		 * they mix different authentication systems (plaintext password
@@ -327,8 +327,8 @@ skip_host_check:
 		 * 1. Check if our side expects a plaintext password but we did not receive one
 		 * 2. Check if our side expects a non-plaintext password but we did receive one
 		 */
-		if (((link->auth->type == AUTHTYPE_PLAINTEXT) && cptr->local->passwd && !strcmp(cptr->local->passwd, "*")) ||
-		    ((link->auth->type != AUTHTYPE_PLAINTEXT) && cptr->local->passwd && strcmp(cptr->local->passwd, "*")))
+		if (((link->auth->type == AUTHTYPE_PLAINTEXT) && sptr->local->passwd && !strcmp(sptr->local->passwd, "*")) ||
+		    ((link->auth->type != AUTHTYPE_PLAINTEXT) && sptr->local->passwd && strcmp(sptr->local->passwd, "*")))
 		{
 			sendto_ops_and_log("Link denied for '%s' (Authentication failed due to different password types on both sides of the link) %s",
 				servername, inpath);
@@ -353,10 +353,10 @@ skip_host_check:
 			sendto_ops_and_log("Link denied for '%s' (Authentication failed [Bad password?]) %s",
 				servername, inpath);
 		}
-		sendto_one(cptr, NULL,
+		sendto_one(sptr, NULL,
 		    "ERROR :Link '%s' denied (Authentication failed) %s",
 		    servername, inpath);
-		return exit_client(cptr, sptr, &me, NULL,
+		return exit_client(sptr, sptr, &me, NULL,
 		    "Link denied (Authentication failed)");
 	}
 
@@ -365,25 +365,25 @@ skip_host_check:
 	{
 		char *errstr = NULL;
 
-		if (!IsTLS(cptr))
+		if (!IsTLS(sptr))
 		{
-			sendto_one(cptr, NULL,
+			sendto_one(sptr, NULL,
 				"ERROR :Link '%s' denied (Not using SSL/TLS) %s",
 				servername, inpath);
 			sendto_ops_and_log("Link denied for '%s' (Not using SSL/TLS and verify-certificate is on) %s",
 				servername, inpath);
-			return exit_client(cptr, sptr, &me, NULL,
+			return exit_client(sptr, sptr, &me, NULL,
 				"Link denied (Not using SSL/TLS)");
 		}
-		if (!verify_certificate(cptr->local->ssl, link->servername, &errstr))
+		if (!verify_certificate(sptr->local->ssl, link->servername, &errstr))
 		{
-			sendto_one(cptr, NULL,
+			sendto_one(sptr, NULL,
 				"ERROR :Link '%s' denied (Certificate verification failed) %s",
 				servername, inpath);
 			sendto_ops_and_log("Link denied for '%s' (Certificate verification failed) %s",
 				servername, inpath);
 			sendto_ops_and_log("Reason for certificate verification failure: %s", errstr);
-			return exit_client(cptr, sptr, &me, NULL,
+			return exit_client(sptr, sptr, &me, NULL,
 				"Link denied (Certificate verification failed)");
 		}
 	}
@@ -405,10 +405,8 @@ skip_host_check:
 		}
 
 		acptr = acptr->direction;
-		ocptr =
-		    (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
-		acptr =
-		    (cptr->local->firsttime > acptr->local->firsttime) ? cptr : acptr;
+		ocptr = (sptr->local->firsttime > acptr->local->firsttime) ? acptr : sptr;
+		acptr = (sptr->local->firsttime > acptr->local->firsttime) ? sptr : acptr;
 		sendto_one(acptr, NULL,
 		    "ERROR :Server %s already exists from %s",
 		    servername,
@@ -424,27 +422,27 @@ skip_host_check:
 	{
 		sendto_ops_and_log
 			("Cancelling link %s, banned server",
-			get_client_name(cptr, TRUE));
-		sendto_one(cptr, NULL, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
-		return exit_client(cptr, cptr, &me, NULL, "Banned server");
+			get_client_name(sptr, TRUE));
+		sendto_one(sptr, NULL, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
+		return exit_client(sptr, sptr, &me, NULL, "Banned server");
 	}
 	if (link->class->clients + 1 > link->class->maxclients)
 	{
 		sendto_ops_and_log("Cancelling link %s, full class",
-				get_client_name(cptr, TRUE));
-		return exit_client(cptr, cptr, &me, NULL, "Full class");
+				get_client_name(sptr, TRUE));
+		return exit_client(sptr, sptr, &me, NULL, "Full class");
 	}
-	if (!IsLocalhost(cptr) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(cptr))
+	if (!IsLocalhost(sptr) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(sptr))
 	{
-		sendto_one(cptr, NULL, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
-		sendto_ops_and_log("Rejected insecure server %s. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS", cptr->name);
-		return exit_client(cptr, sptr, &me, NULL, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
+		sendto_one(sptr, NULL, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
+		sendto_ops_and_log("Rejected insecure server %s. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS", sptr->name);
+		return exit_client(sptr, sptr, &me, NULL, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 	}
-	if (IsSecure(cptr) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(cptr))
+	if (IsSecure(sptr) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(sptr))
 	{
-		sendto_one(cptr, NULL, "ERROR :Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
-		sendto_ops_and_log("Rejected server %s using outdated %s. See https://www.unrealircd.org/docs/FAQ#server-outdated-tls", tls_get_cipher(cptr->local->ssl), cptr->name);
-		return exit_client(cptr, sptr, &me, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
+		sendto_one(sptr, NULL, "ERROR :Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
+		sendto_ops_and_log("Rejected server %s using outdated %s. See https://www.unrealircd.org/docs/FAQ#server-outdated-tls", tls_get_cipher(sptr->local->ssl), sptr->name);
+		return exit_client(sptr, sptr, &me, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 	}
 	if (link_out)
 		*link_out = link;
@@ -473,7 +471,6 @@ skip_host_check:
 CMD_FUNC(cmd_server)
 {
 	char *servername = NULL;	/* Pointer for servername */
- /*	char *password = NULL; */
 	char *ch = NULL;	/* */
 	char descbuf[BUFSIZE];
 	int  hop = 0;
@@ -482,14 +479,10 @@ CMD_FUNC(cmd_server)
 	ConfigItem_deny_link *deny;
 	char *flags = NULL, *protocol = NULL, *inf = NULL, *num = NULL;
 
-
-	/* Ignore it  */
 	if (IsUser(sptr))
 	{
-		sendnumeric(cptr, ERR_ALREADYREGISTRED);
-		sendnotice(cptr,
-		    "*** Sorry, but your IRC program doesn't appear to support changing servers.");
-		sptr->local->since += 7;
+		sendnumeric(sptr, ERR_ALREADYREGISTRED);
+		sendnotice(sptr, "*** Sorry, but your IRC program doesn't appear to support changing servers.");
 		return 0;
 	}
 
@@ -499,14 +492,11 @@ CMD_FUNC(cmd_server)
 	if (parc < 4 || (!*parv[3]))
 	{
 		sendto_one(sptr, NULL, "ERROR :Not enough SERVER parameters");
-		return exit_client(cptr, sptr, &me, NULL,  "Not enough parameters");		
+		return exit_client(sptr->direction, sptr, &me, NULL,  "Not enough parameters");		
 	}
 
-	if (IsUnknown(cptr) && (cptr->local->listener->options & LISTENER_CLIENTSONLY))
-	{
-		return exit_client(cptr, sptr, &me, NULL,
-		    "This port is for clients only");
-	}
+	if (MyConnect(sptr) && IsUnknown(sptr) && (sptr->local->listener->options & LISTENER_CLIENTSONLY))
+		return exit_client(sptr, sptr, &me, NULL, "This port is for clients only");
 
 	/* Now, let us take a look at the parameters we got
 	 * Passes here:
@@ -527,34 +517,34 @@ CMD_FUNC(cmd_server)
 		sendto_snomask
 		    (SNO_JUNK,
 		    "WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
-		    servername, get_client_name(cptr, TRUE));
+		    servername, get_client_name(sptr, TRUE));
 
-		return exit_client(cptr, sptr, &me, NULL, "Bogus server name");
+		return exit_client(sptr->direction, sptr, &me, NULL, "Bogus server name");
 	}
 
-	if ((IsUnknown(cptr) || IsHandshake(cptr)) && !cptr->local->passwd)
+	if ((IsUnknown(sptr) || IsHandshake(sptr)) && !sptr->local->passwd)
 	{
 		sendto_one(sptr, NULL, "ERROR :Missing password");
-		return exit_client(cptr, sptr, &me, NULL, "Missing password");
+		return exit_client(sptr, sptr, &me, NULL, "Missing password");
 	}
 
 	/*
 	 * Now, we can take a look at it all
 	 */
-	if (IsUnknown(cptr) || IsHandshake(cptr))
+	if (IsUnknown(sptr) || IsHandshake(sptr))
 	{
 		int ret;
-		ret = verify_link(cptr, sptr, servername, &aconf);
+		ret = verify_link(sptr, servername, &aconf);
 		if (ret < 0)
 			return ret; /* FLUSH_BUFFER / failure */
 			
 		/* OK, let us check in the data now now */
 		hop = atol(parv[2]);
 		strlcpy(info, parv[parc - 1], sizeof(info));
-		strlcpy(cptr->name, servername, sizeof(cptr->name));
-		cptr->hopcount = hop;
+		strlcpy(sptr->name, servername, sizeof(sptr->name));
+		sptr->hopcount = hop;
 		/* Add ban server stuff */
-		if (SupportVL(cptr))
+		if (SupportVL(sptr))
 		{
 			char tmp[REALLEN + 61];
 			inf = protocol = flags = num = NULL;
@@ -575,16 +565,16 @@ CMD_FUNC(cmd_server)
 			{
 				int ret;
 				
-				strlcpy(cptr->info, inf[0] ? inf : "server", sizeof(cptr->info)); /* set real description */
+				strlcpy(sptr->info, inf[0] ? inf : "server", sizeof(sptr->info)); /* set real description */
 				
-				ret = _check_deny_version(cptr, NULL, atoi(protocol), flags);
+				ret = _check_deny_version(sptr, NULL, atoi(protocol), flags);
 				if (ret < 0)
 					return ret;
 			} else {
-				strlcpy(cptr->info, info[0] ? info : "server", sizeof(cptr->info));
+				strlcpy(sptr->info, info[0] ? info : "server", sizeof(sptr->info));
 			}
 		} else {
-			strlcpy(cptr->info, info[0] ? info : "server", sizeof(cptr->info));
+			strlcpy(sptr->info, info[0] ? info : "server", sizeof(sptr->info));
 		}
 
 		for (deny = conf_deny_link; deny; deny = deny->next)
@@ -592,24 +582,23 @@ CMD_FUNC(cmd_server)
 			if (deny->flag.type == CRULE_ALL && match_simple(deny->mask, servername)
 				&& crule_eval(deny->rule)) {
 				sendto_ops_and_log("Refused connection from %s. Rejected by deny link { } block.",
-					get_client_host(cptr));
-				return exit_client(cptr, cptr, cptr, NULL,
-					"Disallowed by connection rule");
+					get_client_host(sptr));
+				return exit_client(sptr, sptr, sptr, NULL, "Disallowed by connection rule");
 			}
 		}
 		if (aconf->options & CONNECT_QUARANTINE)
-			SetQuarantined(cptr);
+			SetQuarantined(sptr);
 
 		ircsnprintf(descbuf, sizeof descbuf, "Server: %s", servername);
-		fd_desc(cptr->local->fd, descbuf);
+		fd_desc(sptr->local->fd, descbuf);
 
 		/* Start synch now */
-		if (cmd_server_synch(cptr, aconf) == FLUSH_BUFFER)
+		if (cmd_server_synch(sptr, aconf) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
 	}
 	else
 	{
-		return cmd_server_remote(cptr, sptr, recv_mtags, parc, parv);
+		return cmd_server_remote(sptr, recv_mtags, parc, parv);
 	}
 	return 0;
 }
@@ -622,6 +611,7 @@ CMD_FUNC(cmd_server_remote)
 	int 	hop;
 	char	info[REALLEN + 61];
 	char	*servername = parv[1];
+	Client *cptr = sptr->direction; /* lazy, since this function may be removed soon */
 
 	if (parc < 4 || (!*parv[3]))
 	{
@@ -629,6 +619,7 @@ CMD_FUNC(cmd_server_remote)
 		return 0;
 	}
 
+	/* Check if server already exists... */
 	if ((acptr = find_server(servername, NULL)))
 	{
 		/* Found. Bad. Quit. */
@@ -641,11 +632,10 @@ CMD_FUNC(cmd_server_remote)
 			return exit_client(sptr, sptr, sptr, NULL, "Server Exists");
 		}
 
+		// FIXME: verify this code:
 		acptr = acptr->direction;
-		ocptr =
-		    (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
-		acptr =
-		    (cptr->local->firsttime > acptr->local->firsttime) ? cptr : acptr;
+		ocptr = (cptr->local->firsttime > acptr->local->firsttime) ? acptr : cptr;
+		acptr = (cptr->local->firsttime > acptr->local->firsttime) ? cptr : acptr;
 		sendto_one(acptr, NULL,
 		    "ERROR :Server %s already exists from %s",
 		    servername,
@@ -740,13 +730,13 @@ CMD_FUNC(cmd_server_remote)
 
 	if (*acptr->id)
 	{
-		sendto_server(cptr, PROTO_SID, 0, NULL, ":%s SID %s %d %s :%s",
+		sendto_server(sptr, PROTO_SID, 0, NULL, ":%s SID %s %d %s :%s",
 			    acptr->srvptr->id, acptr->name, hop + 1, acptr->id, acptr->info);
-		sendto_server(cptr, 0, PROTO_SID, NULL, ":%s SERVER %s %d :%s",
+		sendto_server(sptr, 0, PROTO_SID, NULL, ":%s SERVER %s %d :%s",
 				acptr->srvptr->name,
 				acptr->name, hop + 1, acptr->info);
 	} else {
-		sendto_server(cptr, 0, 0, NULL, ":%s SERVER %s %d :%s",
+		sendto_server(sptr, 0, 0, NULL, ":%s SERVER %s %d :%s",
 				acptr->srvptr->name,
 				acptr->name, hop + 1, acptr->info);
 	}
@@ -757,7 +747,7 @@ CMD_FUNC(cmd_server_remote)
 
 void _introduce_user(Client *to, Client *acptr)
 {
-	send_umode(NULL, acptr, 0, SEND_UMODES, buf);
+	build_umode_string(acptr, 0, SEND_UMODES, buf);
 
 	sendto_one_nickcmd(to, acptr, buf);
 	

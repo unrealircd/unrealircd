@@ -159,9 +159,9 @@ CMD_FUNC(cmd_part)
 		new_message_special(sptr, recv_mtags, &mtags, ":%s PART %s", sptr->name, chptr->chname);
 
 		/* Send to other servers... */
-		sendto_server(cptr, PROTO_SID, 0, mtags, ":%s PART %s :%s",
+		sendto_server(sptr, PROTO_SID, 0, mtags, ":%s PART %s :%s",
 			ID(sptr), chptr->chname, comment ? comment : "");
-		sendto_server(cptr, 0, PROTO_SID, mtags, ":%s PART %s :%s",
+		sendto_server(sptr, 0, PROTO_SID, mtags, ":%s PART %s :%s",
 			sptr->name, chptr->chname, comment ? comment : "");
 
 		if (invisible_user_in_channel(sptr, chptr))
@@ -212,9 +212,9 @@ CMD_FUNC(cmd_part)
 		}
 
 		if (MyUser(sptr))
-			RunHook5(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, mtags, comment);
+			RunHook4(HOOKTYPE_LOCAL_PART, sptr, chptr, mtags, comment);
 		else
-			RunHook5(HOOKTYPE_REMOTE_PART, cptr, sptr, chptr, mtags, comment);
+			RunHook4(HOOKTYPE_REMOTE_PART, sptr, chptr, mtags, comment);
 
 		free_message_tags(mtags);
 

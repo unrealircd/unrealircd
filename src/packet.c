@@ -166,12 +166,12 @@ RealCommand *find_Command_simple(char *cmd)
  *    of 1024 bytes, most of the ircd code depends on the max size of the
  *    total command being less than 512 bytes. Same for parc < MAXPARA.
  */
-int do_cmd(Client *cptr, Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[])
+int do_cmd(Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[])
 {
 RealCommand *cmptr;
 
 	cmptr = find_Command_simple(cmd);
 	if (!cmptr)
 		return -99;
-	return (*cmptr->func) (cptr, sptr, mtags, parc, parv);
+	return (*cmptr->func) (sptr, mtags, parc, parv);
 }

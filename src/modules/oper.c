@@ -161,7 +161,7 @@ CMD_FUNC(cmd_oper)
 		return 0;
 	}
 
-	if (!Auth_Check(cptr, operblock->auth, password))
+	if (!Auth_Check(sptr, operblock->auth, password))
 	{
 		sendnumeric(sptr, ERR_PASSWDMISMATCH);
 		if (FAILOPER_WARN)
@@ -279,7 +279,7 @@ CMD_FUNC(cmd_oper)
 		sptr->umodes |= UMODE_SERVNOTICE;
 	}
 	
-	send_umode_out(cptr, sptr, old_umodes);
+	send_umode_out(sptr, 1, old_umodes);
 	sendnumeric(sptr, RPL_SNOMASK, get_sno_str(sptr));
 
 	list_add(&sptr->special_node, &oper_list);
@@ -295,7 +295,7 @@ CMD_FUNC(cmd_oper)
 		irccounts.operators++;
 
 	if (SHOWOPERMOTD == 1)
-		(void)do_cmd(cptr, sptr, NULL, "OPERMOTD", parc, parv);
+		(void)do_cmd(sptr, NULL, "OPERMOTD", parc, parv);
 
 	if (!BadPtr(OPER_AUTO_JOIN_CHANS) && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
 	{
@@ -304,7 +304,7 @@ CMD_FUNC(cmd_oper)
 			OPER_AUTO_JOIN_CHANS,
 			NULL
 		};
-		if (do_cmd(cptr, sptr, NULL, "JOIN", 3, chans) == FLUSH_BUFFER)
+		if (do_cmd(sptr, NULL, "JOIN", 3, chans) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
 	}
 

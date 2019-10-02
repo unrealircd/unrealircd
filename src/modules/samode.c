@@ -82,7 +82,7 @@ CMD_FUNC(cmd_samode)
 	}
 
 	opermode = 0;
-	(void)do_mode(chptr, cptr, sptr, NULL, parc - 2, parv + 2, 0, 1);
+	(void)do_mode(chptr, sptr, NULL, parc - 2, parv + 2, 0, 1);
 
 	return 0;
 }

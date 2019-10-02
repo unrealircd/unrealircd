@@ -515,7 +515,7 @@ int authprompt_sasl_result(Client *sptr, int success)
 	/* Authentication was a success */
 	if (*sptr->name && sptr->user && *sptr->user->username && IsNotSpoof(sptr))
 	{
-		register_user(sptr, sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
+		register_user(sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
 		/* NOTE: register_user() may return FLUSH_BUFFER here, but since the caller
 		 * won't continue processing (won't touch 'sptr') it's safe.
 		 * That is, as long as we 'return 1'.

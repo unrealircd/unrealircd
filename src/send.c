@@ -24,7 +24,7 @@
 
 void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl);
 void sendbufto_one(Client *to, char *msg, unsigned int quick);
-static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *from, const char *pattern, va_list vl);
+static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, const char *pattern, va_list vl);
 
 #define ADD_CRLF(buf, len) { if (len > 510) len = 510; \
                              buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
@@ -34,7 +34,7 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *fr
 static char sendbuf[2048];
 static char sendbuf2[4096];
 
-void vsendto_prefix_one(struct Client *to, struct Client *from, MessageTag *mtags,
+void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags,
     const char *pattern, va_list vl);
 
 MODVAR int  current_serial;
@@ -854,7 +854,7 @@ void sendto_ops_butone(Client *one, Client *from, FORMAT_STRING(const char *patt
  *       they do not want or need the expanded prefix. In that case, simply
  *       use ircvsnprintf() directly.
  */
-static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *from, const char *pattern, va_list vl)
+static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, const char *pattern, va_list vl)
 {
 	int len;
 
@@ -899,8 +899,7 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *fr
 	return len;
 }
 
-void vsendto_prefix_one(struct Client *to, struct Client *from, MessageTag *mtags,
-                        const char *pattern, va_list vl)
+void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl)
 {
 	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
 
@@ -1066,51 +1065,51 @@ void sendto_serv_butone_nickcmd(Client *one, Client *sptr, char *umodes)
  * @param sptr Client to introduce
  * @param umodes User modes of client
  */
-void sendto_one_nickcmd(Client *cptr, Client *sptr, char *umodes)
+void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
 {
 	char *vhost;
 
 	if (!*umodes)
 		umodes = "+";
 
-	if (SupportVHP(cptr))
+	if (SupportVHP(server))
 	{
-		if (IsHidden(sptr))
-			vhost = sptr->user->virthost;
+		if (IsHidden(client))
+			vhost = client->user->virthost;
 		else
-			vhost = sptr->user->realhost;
+			vhost = client->user->realhost;
 	}
 	else
 	{
-		if (IsHidden(sptr) && sptr->umodes & UMODE_SETHOST)
-			vhost = sptr->user->virthost;
+		if (IsHidden(client) && client->umodes & UMODE_SETHOST)
+			vhost = client->user->virthost;
 		else
 			vhost = "*";
 	}
 
-	if (CHECKPROTO(cptr, PROTO_SID) && *sptr->id)
+	if (CHECKPROTO(server, PROTO_SID) && *client->id)
 	{
-		sendto_one(cptr, NULL,
+		sendto_one(server, NULL,
 			":%s UID %s %d %lld %s %s %s %s %s %s %s %s :%s",
-			sptr->srvptr->id, sptr->name, sptr->hopcount,
-			(long long)sptr->lastnick,
-			sptr->user->username, sptr->user->realhost, sptr->id,
-			sptr->user->svid, umodes, vhost, getcloak(sptr),
-			encode_ip(sptr->ip), sptr->info);
+			client->srvptr->id, client->name, client->hopcount,
+			(long long)client->lastnick,
+			client->user->username, client->user->realhost, client->id,
+			client->user->svid, umodes, vhost, getcloak(client),
+			encode_ip(client->ip), client->info);
 		return;
 	}
 
-	sendto_one(cptr, NULL,
+	sendto_one(server, NULL,
 		    "NICK %s %d %lld %s %s %s %s %s %s %s%s%s%s:%s",
-		    sptr->name, sptr->hopcount+1,
-		    (long long)sptr->lastnick, sptr->user->username,
-		    sptr->user->realhost, sptr->srvptr->name,
-		    sptr->user->svid, umodes, vhost,
-		    CHECKPROTO(cptr, PROTO_CLK) ? getcloak(sptr) : "",
-		    CHECKPROTO(cptr, PROTO_CLK) ? " " : "",
-		    CHECKPROTO(cptr, PROTO_NICKIP) ? encode_ip(sptr->ip) : "",
-		    CHECKPROTO(cptr, PROTO_NICKIP) ? " " : "",
-		    sptr->info);
+		    client->name, client->hopcount+1,
+		    (long long)client->lastnick, client->user->username,
+		    client->user->realhost, client->srvptr->name,
+		    client->user->svid, umodes, vhost,
+		    CHECKPROTO(server, PROTO_CLK) ? getcloak(client) : "",
+		    CHECKPROTO(server, PROTO_CLK) ? " " : "",
+		    CHECKPROTO(server, PROTO_NICKIP) ? encode_ip(client->ip) : "",
+		    CHECKPROTO(server, PROTO_NICKIP) ? " " : "",
+		    client->info);
 
 	return;
 }

@@ -220,9 +220,9 @@ CMD_FUNC(cmd_sajoin)
 					sendto_channel(chptr, acptr, NULL, 0, 0, SEND_LOCAL, NULL,
 					               ":%s PART %s :%s",
 					               acptr->name, chptr->chname, "Left all channels");
-					sendto_server(cptr, 0, 0, mtags, ":%s PART %s :Left all channels", acptr->name, chptr->chname);
+					sendto_server(sptr, 0, 0, mtags, ":%s PART %s :Left all channels", acptr->name, chptr->chname);
 					if (MyConnect(acptr))
-						RunHook5(HOOKTYPE_LOCAL_PART, acptr, acptr, chptr, mtags, "Left all channels");
+						RunHook4(HOOKTYPE_LOCAL_PART, acptr, chptr, mtags, "Left all channels");
 					free_message_tags(mtags);
 					remove_user_from_channel(acptr, chptr);
 				}
@@ -251,7 +251,7 @@ CMD_FUNC(cmd_sajoin)
 			 * Each with their own unique msgid.
 			 */
 			new_message(acptr, NULL, &mtags);
-			join_channel(chptr, acptr, acptr, mtags, flags);
+			join_channel(chptr, acptr, mtags, flags);
 			if (sjmode)
 			{
 				opermode = 0;
@@ -261,7 +261,7 @@ CMD_FUNC(cmd_sajoin)
 				mode_args[0][1] = '\0';
 				mode_args[1] = acptr->name;
 				mode_args[2] = 0;
-				(void)do_mode(chptr, &me, acptr, NULL, 3, mode_args, 0, 1);
+				(void)do_mode(chptr, acptr, NULL, 3, mode_args, 0, 1);
 				sajoinmode = 0;
 				safe_free(mode_args[0]);
 			}
