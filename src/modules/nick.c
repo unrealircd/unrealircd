@@ -158,7 +158,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 			/* Exit the client */
 			ircstats.is_kill++;
 			SetKilled(new);
-			(void)exit_client(NULL, new, &me, mtags, comment);
+			(void)exit_client(new, mtags, comment);
 
 			free_message_tags(mtags);
 		}
@@ -193,7 +193,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 		/* Exit the client */
 		ircstats.is_kill++;
 		SetKilled(existing);
-		(void)exit_client(NULL, existing, &me, mtags, comment);
+		(void)exit_client(existing, mtags, comment);
 
 		free_message_tags(mtags);
 	}
@@ -352,7 +352,7 @@ CMD_FUNC(cmd_uid)
 		    me.name, sptr->name, me.name, acptr->direction->name,
 		    get_client_name(sptr, FALSE));
 		SetKilled(sptr);
-		return exit_client(sptr->direction, sptr, &me, NULL, "Nick/Server collision");
+		return exit_client(sptr, NULL, "Nick/Server collision");
 	}
 
 	/* Now check if 'nick' already exists - collision with a user (or still in handshake, unknown) */
@@ -364,7 +364,7 @@ CMD_FUNC(cmd_uid)
 		if (MyConnect(acptr) && IsUnknown(acptr))
 		{
 			SetKilled(acptr);
-			exit_client(NULL, acptr, &me, NULL, "Overridden");
+			exit_client(acptr, NULL, "Overridden");
 			goto nickkill2done;
 		}
 
@@ -542,7 +542,7 @@ CMD_FUNC(cmd_nick)
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
 				SetKilled(sptr);
-				n = exit_client(cptr, sptr, &me, mtags, "BadNick");
+				n = exit_client(sptr, mtags, "BadNick");
 
 				free_message_tags(mtags);
 
@@ -682,7 +682,7 @@ CMD_FUNC(cmd_nick)
 		     */
 		    get_client_name(cptr, FALSE));
 		SetKilled(sptr);
-		return exit_client(cptr, sptr, &me, NULL, "Nick/Server collision");
+		return exit_client(sptr, NULL, "Nick/Server collision");
 	}
 
 	if (MyUser(cptr) && !ValidatePermissionsForPath("immune:nick-flood",sptr,NULL,NULL,NULL))
@@ -703,7 +703,7 @@ CMD_FUNC(cmd_nick)
 		if (acptr == cptr)
 			return 0;
 		SetKilled(acptr);
-		exit_client(NULL, acptr, &me, NULL, "Overridden");
+		exit_client(acptr, NULL, "Overridden");
 		goto nickkilldone;
 	}
 	/* A sanity check in the user field... */
@@ -720,7 +720,7 @@ CMD_FUNC(cmd_nick)
 		   messed up, trash the old one and accept the new one.
 		   Remember - at this point there is a new nick coming in!
 		   Handle appropriately. -- Barubary */
-		exit_client(NULL, acptr, &me, NULL, "Lost user field");
+		exit_client(acptr, NULL, "Lost user field");
 		goto nickkilldone;
 	}
 	/*
@@ -1115,7 +1115,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			 * so have a generic exit_client() here to be safe.
 			 */
 			if (i != FLUSH_BUFFER)
-				return exit_client(sptr->direction, sptr, &me, NULL, "Rejected");
+				return exit_client(sptr, NULL, "Rejected");
 			return FLUSH_BUFFER;
 		}
 
@@ -1212,7 +1212,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 		{
 			if (stripuser[0] == '\0')
 			{
-				return exit_client(sptr, sptr, sptr, NULL, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
+				return exit_client(sptr, NULL, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
 			}
 
 			strlcpy(olduser, user->username + noident, USERLEN+1);
@@ -1361,7 +1361,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			sendto_one(sptr, NULL, ":%s KILL %s :%s (No such server: %s)",
 			    me.name, sptr->name, me.name, user->server);
 			SetKilled(sptr);
-			return exit_client(sptr, sptr, &me, NULL,
+			return exit_client(sptr, NULL,
 			    "USER without prefix(2.8) or wrong prefix");
 		}
 		else if (acptr->direction != sptr->direction)
@@ -1373,7 +1373,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			    me.name, sptr->name, me.name, user->server,
 			    acptr->direction->name, acptr->direction->local->sockhost);
 			SetKilled(sptr);
-			return exit_client(sptr, sptr, &me, NULL,
+			return exit_client(sptr, NULL,
 			    "USER server wrong direction");
 		} else
 		{
@@ -1399,7 +1399,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 				sendto_ops("USER with invalid IP (%s) (%s) -- "
 				           "IP must be base64 encoded binary representation of either IPv4 or IPv6",
 				           sptr->name, ip);
-				return exit_client(sptr, sptr, &me, NULL, "USER with invalid IP");
+				return exit_client(sptr, NULL, "USER with invalid IP");
 			}
 			safe_strdup(sptr->ip, ipstring);
 		}
@@ -1586,13 +1586,13 @@ int AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 
 	if (!IsSecure(cptr) && !IsLocalhost(cptr) && (iConf.plaintext_policy_user == POLICY_DENY))
 	{
-		return exit_client(cptr, cptr, &me, NULL, iConf.plaintext_policy_user_message);
+		return exit_client(cptr, NULL, iConf.plaintext_policy_user_message);
 	}
 
 	if (IsSecure(cptr) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(cptr))
 	{
 		char *msg = outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, cptr);
-		return exit_client(cptr, cptr, &me, NULL, msg);
+		return exit_client(cptr, NULL, msg);
 	}
 
 	for (aconf = conf_allow; aconf; aconf = aconf->next)
@@ -1681,7 +1681,7 @@ int AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 					if (cnt > aconf->maxperip)
 					{
 						/* Already got too many with that ip# */
-						return exit_client(cptr, cptr, &me, NULL, iConf.reject_message_too_many_connections);
+						return exit_client(cptr, NULL, iConf.reject_message_too_many_connections);
 					}
 				}
 			}
@@ -1702,9 +1702,9 @@ int AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 		else
 		{
 			sendnumeric(cptr, RPL_REDIR, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
-			return exit_client(cptr, cptr, &me, NULL, iConf.reject_message_server_full);
+			return exit_client(cptr, NULL, iConf.reject_message_server_full);
 		}
 		return 0;
 	}
-	return exit_client(cptr, cptr, &me, NULL, iConf.reject_message_unauthorized);
+	return exit_client(cptr, NULL, iConf.reject_message_unauthorized);
 }

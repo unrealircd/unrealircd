@@ -79,7 +79,7 @@ CMD_FUNC(cmd_svsnick)
 
 	if ((ocptr = find_client(parv[2], NULL)) && ocptr != acptr) /* Collision */
 	{
-		exit_client(acptr, acptr, sptr, NULL,
+		exit_client(acptr, NULL,
 		                   "Nickname collision due to Services enforced "
 		                   "nickname change, your nick was overruled");
 		return 0;

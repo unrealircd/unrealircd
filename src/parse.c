@@ -45,7 +45,7 @@ int ban_flooder(Client *cptr)
 	 * from the same IP.
 	 */
 	if (find_tkl_exception(TKL_UNKNOWN_DATA_FLOOD, cptr))
-		return exit_client(cptr, cptr, &me, NULL, "Flood from unknown connection");
+		return exit_client(cptr, NULL, "Flood from unknown connection");
 	/* place_host_ban also takes care of removing any other clients with same host/ip */
 	return place_host_ban(cptr, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
 }
@@ -559,7 +559,7 @@ static int do_numeric(int numeric, Client *sptr, MessageTag *recv_mtags, int par
 static int cancel_clients(Client *cptr, Client *sptr, char *cmd)
 {
 	if (IsServer(cptr) || IsServer(sptr) || IsMe(sptr)) return 0;
-	return exit_client(cptr, cptr, &me, NULL, "Fake prefix");
+	return exit_client(cptr, NULL, "Fake prefix");
 }
 
 static void remove_unknown(Client *cptr, char *sender)

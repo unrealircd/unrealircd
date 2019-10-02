@@ -1149,7 +1149,7 @@ int process_packet(Client *cptr, char *readbuf, int length, int killsafely)
 			cptr->user ? cptr->user->realhost : "*",
 			DBufLength(&cptr->local->recvQ), get_recvq(cptr));
 		if (!killsafely)
-			exit_client(cptr, cptr, cptr, NULL, "Excess Flood");
+			exit_client(cptr, NULL, "Excess Flood");
 		else
 			dead_link(cptr, "Excess Flood");
 		return 0;
@@ -1236,7 +1236,7 @@ void read_packet(int fd, int revents, void *data)
 					get_client_name(cptr, FALSE));
 			}
 
-			exit_client(cptr, cptr, cptr, NULL, "Read error");
+			exit_client(cptr, NULL, "Read error");
 			return;
 		}
 

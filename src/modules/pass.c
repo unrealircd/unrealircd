@@ -94,7 +94,7 @@ int _check_banned(Client *cptr, int exitflags)
 				            "Throttled: Reconnecting too fast - "
 				            "Email %s for more information.",
 				            KLINE_ADDRESS);
-				return exit_client(cptr, cptr, &me, NULL, zlinebuf);
+				return exit_client(cptr, NULL, zlinebuf);
 			}
 		}
 		else if (val == 1)

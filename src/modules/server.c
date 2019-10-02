@@ -132,7 +132,7 @@ int _check_deny_version(Client *cptr, char *software, int protocol, char *flags)
 			result = 0;
 
 		if (result)
-			return exit_client(cptr, cptr, cptr, NULL, "Denied by deny version { } block");
+			return exit_client(cptr, NULL, "Denied by deny version { } block");
 
 		if (flags)
 		{
@@ -158,7 +158,7 @@ int _check_deny_version(Client *cptr, char *software, int protocol, char *flags)
 		}
 
 		if (result)
-			return exit_client(cptr, cptr, cptr, NULL, "Denied by deny version { } block");
+			return exit_client(cptr, NULL, "Denied by deny version { } block");
 	}
 	
 	return 0;
@@ -250,7 +250,7 @@ int _verify_link(Client *sptr, char *servername, ConfigItem_link **link_out)
 	if (!sptr->local->passwd)
 	{
 		sendto_one(sptr, NULL, "ERROR :Missing password");
-		return exit_client(sptr, sptr, &me, NULL, "Missing password");
+		return exit_client(sptr, NULL, "Missing password");
 	}
 
 	/* First check if the server is in the list */
@@ -276,7 +276,7 @@ int _verify_link(Client *sptr, char *servername, ConfigItem_link **link_out)
 			sendto_one(sptr, NULL, "ERROR :%s", xerrmsg);
 			sendto_ops_and_log("Outgoing link aborted to %s(%s@%s) (%s) %s",
 				sptr->serv->conf->servername, sptr->ident, sptr->local->sockhost, xerrmsg, inpath);
-			return exit_client(sptr, sptr, &me, NULL, xerrmsg);
+			return exit_client(sptr, NULL, xerrmsg);
 		}
 		link = sptr->serv->conf;
 		goto skip_host_check;
@@ -312,7 +312,7 @@ errlink:
 		/* And send the "verbose" error msg only to locally connected ircops */
 		sendto_ops_and_log("Link denied for %s(%s@%s) (%s) %s",
 		    servername, sptr->ident, sptr->local->sockhost, xerrmsg, inpath);
-		return exit_client(sptr, sptr, &me, NULL,
+		return exit_client(sptr, NULL,
 		    "Link denied (No link block found with your server name or link::incoming::mask did not match)");
 	}
 
@@ -356,7 +356,7 @@ skip_host_check:
 		sendto_one(sptr, NULL,
 		    "ERROR :Link '%s' denied (Authentication failed) %s",
 		    servername, inpath);
-		return exit_client(sptr, sptr, &me, NULL,
+		return exit_client(sptr, NULL,
 		    "Link denied (Authentication failed)");
 	}
 
@@ -372,7 +372,7 @@ skip_host_check:
 				servername, inpath);
 			sendto_ops_and_log("Link denied for '%s' (Not using SSL/TLS and verify-certificate is on) %s",
 				servername, inpath);
-			return exit_client(sptr, sptr, &me, NULL,
+			return exit_client(sptr, NULL,
 				"Link denied (Not using SSL/TLS)");
 		}
 		if (!verify_certificate(sptr->local->ssl, link->servername, &errstr))
@@ -383,7 +383,7 @@ skip_host_check:
 			sendto_ops_and_log("Link denied for '%s' (Certificate verification failed) %s",
 				servername, inpath);
 			sendto_ops_and_log("Reason for certificate verification failure: %s", errstr);
-			return exit_client(sptr, sptr, &me, NULL,
+			return exit_client(sptr, NULL,
 				"Link denied (Certificate verification failed)");
 		}
 	}
@@ -401,7 +401,7 @@ skip_host_check:
 			sendto_ops_and_log("Link %s rejected, server trying to link with my name (%s)",
 				get_client_name(sptr, TRUE), me.name);
 			sendto_one(sptr, NULL, "ERROR: Server %s exists (it's me!)", me.name);
-			return exit_client(sptr, sptr, sptr, NULL, "Server Exists");
+			return exit_client(sptr, NULL, "Server Exists");
 		}
 
 		acptr = acptr->direction;
@@ -415,7 +415,7 @@ skip_host_check:
 		    ("Link %s cancelled, server %s already exists from %s",
 		    get_client_name(acptr, TRUE), servername,
 		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
-		return exit_client(acptr, acptr, acptr, NULL,
+		return exit_client(acptr, NULL,
 		    "Server Exists");
 	}
 	if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
@@ -424,25 +424,25 @@ skip_host_check:
 			("Cancelling link %s, banned server",
 			get_client_name(sptr, TRUE));
 		sendto_one(sptr, NULL, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
-		return exit_client(sptr, sptr, &me, NULL, "Banned server");
+		return exit_client(sptr, NULL, "Banned server");
 	}
 	if (link->class->clients + 1 > link->class->maxclients)
 	{
 		sendto_ops_and_log("Cancelling link %s, full class",
 				get_client_name(sptr, TRUE));
-		return exit_client(sptr, sptr, &me, NULL, "Full class");
+		return exit_client(sptr, NULL, "Full class");
 	}
 	if (!IsLocalhost(sptr) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(sptr))
 	{
 		sendto_one(sptr, NULL, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 		sendto_ops_and_log("Rejected insecure server %s. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS", sptr->name);
-		return exit_client(sptr, sptr, &me, NULL, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
+		return exit_client(sptr, NULL, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 	}
 	if (IsSecure(sptr) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(sptr))
 	{
 		sendto_one(sptr, NULL, "ERROR :Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 		sendto_ops_and_log("Rejected server %s using outdated %s. See https://www.unrealircd.org/docs/FAQ#server-outdated-tls", tls_get_cipher(sptr->local->ssl), sptr->name);
-		return exit_client(sptr, sptr, &me, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
+		return exit_client(sptr, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 	}
 	if (link_out)
 		*link_out = link;
@@ -492,11 +492,11 @@ CMD_FUNC(cmd_server)
 	if (parc < 4 || (!*parv[3]))
 	{
 		sendto_one(sptr, NULL, "ERROR :Not enough SERVER parameters");
-		return exit_client(sptr->direction, sptr, &me, NULL,  "Not enough parameters");		
+		return exit_client(sptr, NULL,  "Not enough parameters");		
 	}
 
 	if (MyConnect(sptr) && IsUnknown(sptr) && (sptr->local->listener->options & LISTENER_CLIENTSONLY))
-		return exit_client(sptr, sptr, &me, NULL, "This port is for clients only");
+		return exit_client(sptr, NULL, "This port is for clients only");
 
 	/* Now, let us take a look at the parameters we got
 	 * Passes here:
@@ -519,13 +519,13 @@ CMD_FUNC(cmd_server)
 		    "WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
 		    servername, get_client_name(sptr, TRUE));
 
-		return exit_client(sptr->direction, sptr, &me, NULL, "Bogus server name");
+		return exit_client(sptr, NULL, "Bogus server name");
 	}
 
 	if ((IsUnknown(sptr) || IsHandshake(sptr)) && !sptr->local->passwd)
 	{
 		sendto_one(sptr, NULL, "ERROR :Missing password");
-		return exit_client(sptr, sptr, &me, NULL, "Missing password");
+		return exit_client(sptr, NULL, "Missing password");
 	}
 
 	/*
@@ -583,7 +583,7 @@ CMD_FUNC(cmd_server)
 				&& crule_eval(deny->rule)) {
 				sendto_ops_and_log("Refused connection from %s. Rejected by deny link { } block.",
 					get_client_host(sptr));
-				return exit_client(sptr, sptr, sptr, NULL, "Disallowed by connection rule");
+				return exit_client(sptr, NULL, "Disallowed by connection rule");
 			}
 		}
 		if (aconf->options & CONNECT_QUARANTINE)
@@ -629,7 +629,7 @@ CMD_FUNC(cmd_server_remote)
 			sendto_ops_and_log("Link %s rejected, server trying to link with my name (%s)",
 				get_client_name(sptr, TRUE), me.name);
 			sendto_one(sptr, NULL, "ERROR: Server %s exists (it's me!)", me.name);
-			return exit_client(sptr, sptr, sptr, NULL, "Server Exists");
+			return exit_client(sptr, NULL, "Server Exists");
 		}
 
 		// FIXME: verify this code:
@@ -645,14 +645,14 @@ CMD_FUNC(cmd_server_remote)
 		    get_client_name(acptr, TRUE), servername,
 		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
 		if (acptr == cptr) {
-			return exit_client(acptr, acptr, acptr, NULL, "Server Exists");
+			return exit_client(acptr, NULL, "Server Exists");
 		} else {
 			/* AFAIK this can cause crashes if this happends remotely because
 			 * we will still receive msgs for some time because of lag.
 			 * Two possible solutions: unlink the directly connected server (cptr)
 			 * and/or fix all those commands which blindly trust server input. -- Syzop
 			 */
-			exit_client(acptr, acptr, acptr, NULL, "Server Exists");
+			exit_client(acptr, NULL, "Server Exists");
 			return 0;
 		}
 	}
@@ -661,7 +661,7 @@ CMD_FUNC(cmd_server_remote)
 		sendto_ops_and_log("Cancelling link %s, banned server %s",
 			get_client_name(cptr, TRUE), servername);
 		sendto_one(cptr, NULL, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
-		return exit_client(cptr, cptr, &me, NULL, "Brought in banned server");
+		return exit_client(cptr, NULL, "Brought in banned server");
 	}
 	/* OK, let us check in the data now now */
 	hop = atol(parv[2]);
@@ -669,20 +669,20 @@ CMD_FUNC(cmd_server_remote)
 	if (!cptr->serv->conf)
 	{
 		sendto_ops_and_log("Internal error: lost conf for %s!!, dropping link", cptr->name);
-		return exit_client(cptr, cptr, cptr, NULL, "Lost configuration");
+		return exit_client(cptr, NULL, "Lost configuration");
 	}
 	aconf = cptr->serv->conf;
 	if (!aconf->hub)
 	{
 		sendto_ops_and_log("Link %s cancelled, is Non-Hub but introduced Leaf %s",
 			cptr->name, servername);
-		return exit_client(cptr, cptr, cptr, NULL, "Non-Hub Link");
+		return exit_client(cptr, NULL, "Non-Hub Link");
 	}
 	if (!match_simple(aconf->hub, servername))
 	{
 		sendto_ops_and_log("Link %s cancelled, linked in %s, which hub config disallows",
 			cptr->name, servername);
-		return exit_client(cptr, cptr, cptr, NULL, "Not matching hub configuration");
+		return exit_client(cptr, NULL, "Not matching hub configuration");
 	}
 	if (aconf->leaf)
 	{
@@ -690,14 +690,14 @@ CMD_FUNC(cmd_server_remote)
 		{
 			sendto_ops_and_log("Link %s(%s) cancelled, disallowed by leaf configuration",
 				cptr->name, servername);
-			return exit_client(cptr, cptr, cptr, NULL, "Disallowed by leaf configuration");
+			return exit_client(cptr, NULL, "Disallowed by leaf configuration");
 		}
 	}
 	if (aconf->leaf_depth && (hop > aconf->leaf_depth))
 	{
 			sendto_ops_and_log("Link %s(%s) cancelled, too deep depth",
 				cptr->name, servername);
-			return exit_client(cptr, cptr, cptr, NULL, "Too deep link depth (leaf)");
+			return exit_client(cptr, NULL, "Too deep link depth (leaf)");
 	}
 	acptr = make_client(cptr, find_server(sptr->name, cptr));
 	(void)make_server(acptr);

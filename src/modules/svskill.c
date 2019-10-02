@@ -83,7 +83,7 @@ CMD_FUNC(cmd_svskill)
 	new_message(acptr, recv_mtags, &mtags);
 	sendto_server(sptr, 0, 0, mtags, ":%s SVSKILL %s :%s", sptr->name, parv[1], comment);
 	SetKilled(acptr);
-	n = exit_client(sptr->direction, acptr, sptr, mtags, comment);
+	n = exit_client(acptr, mtags, comment);
 	free_message_tags(mtags);
 	return n;
 }

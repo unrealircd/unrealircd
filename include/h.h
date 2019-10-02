@@ -290,7 +290,7 @@ extern char *get_client_host(Client *);
 extern char *myctime(time_t);
 extern char *short_date(time_t, char *buf);
 extern char *long_date(time_t);
-extern int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags, char *comment);
+extern int exit_client(Client *sptr, MessageTag *recv_mtags, char *comment);
 extern void initstats(), tstats(Client *, char *);
 extern char *check_string(char *);
 extern char *make_nick_user_host(char *, char *, char *);

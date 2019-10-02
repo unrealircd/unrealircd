@@ -513,18 +513,20 @@ static void exit_one_client(Client *sptr, MessageTag *mtags_i, const char *comme
 	remove_client_from_list(sptr);
 }
 
-/* Exit this IRC client, and all the dependents if this is a server.
- *
- * For convenience, this function returns a suitable value for
- * cmd_function() return values:
- *	FLUSH_BUFFER	if (cptr == sptr)
- *	0		if (cptr != sptr)
+/** Exit this IRC client, and all the dependents (users, servers) if this is a server.
+ * @param sptr        The client to exit.
+ * @param recv_mtags  Message tags to use as a base (if any).
+ * @param comment     The (s)quit message
+ * @returns FLUSH_BUFFER is returned if a local client disconnects,
+ *          otherwise 0 is returned. This so it can be used from
+ *          command functions like: return exit_client(sptr, ....);
  */
-int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags, char *comment)
+int exit_client(Client *sptr, MessageTag *recv_mtags, char *comment)
 {
 	long long on_for;
 	ConfigItem_listen *listen_conf;
 	MessageTag *mtags_generated = NULL;
+	int my_client = MyConnect(sptr) ? 1 : 0; /* needs to flag early */
 
 	/* We replace 'recv_mtags' here with a newly
 	 * generated id if 'recv_mtags' is NULL or is
@@ -604,14 +606,8 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 
 		if (sptr->local->fd >= 0 && !IsConnecting(sptr))
 		{
-			if (cptr != NULL && sptr != cptr)
-				sendto_one(sptr, NULL,
-				    "ERROR :Closing Link: %s %s (%s)",
-				    get_client_name(sptr, FALSE), cptr->name,
-				    comment);
-			else
-				sendto_one(sptr, NULL, "ERROR :Closing Link: %s (%s)",
-				    get_client_name(sptr, FALSE), comment);
+			sendto_one(sptr, NULL, "ERROR :Closing Link: %s (%s)",
+			    get_client_name(sptr, FALSE), comment);
 		}
 		/*
 		   ** Currently only server connections can have
@@ -650,14 +646,14 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 		else
 			ircsnprintf(splitstr, sizeof splitstr, "%s %s", sptr->srvptr->name, sptr->name);
 
-		remove_dependents(sptr, cptr, recv_mtags, comment, splitstr);
+		remove_dependents(sptr, sptr->direction, recv_mtags, comment, splitstr);
 
 		RunHook2(HOOKTYPE_SERVER_QUIT, sptr, recv_mtags);
 	}
 	else if (IsUser(sptr) && !IsKilled(sptr))
 	{
-		sendto_server(cptr, PROTO_SID, 0, recv_mtags, ":%s QUIT :%s", ID(sptr), comment);
-		sendto_server(cptr, 0, PROTO_SID, recv_mtags, ":%s QUIT :%s", sptr->name, comment);
+		sendto_server(sptr, PROTO_SID, 0, recv_mtags, ":%s QUIT :%s", ID(sptr), comment);
+		sendto_server(sptr, 0, PROTO_SID, recv_mtags, ":%s QUIT :%s", sptr->name, comment);
 	}
 
 	/* Finally, the client/server itself exits.. */
@@ -665,7 +661,7 @@ int exit_client(Client *cptr, Client *sptr, Client *from, MessageTag *recv_mtags
 
 	free_message_tags(mtags_generated);
 
-	return cptr == sptr ? FLUSH_BUFFER : 0;
+	return my_client ? FLUSH_BUFFER : 0;
 }
 
 void initstats(void)
@@ -1152,7 +1148,7 @@ int banned_client(Client *acptr, char *bantype, char *reason, int global, int no
 
 	if (noexit != NO_EXIT_CLIENT)
 	{
-		return exit_client(acptr, acptr, acptr, NULL, buf);
+		return exit_client(acptr, NULL, buf);
 	} else {
 		/* Special handling for direct Z-line code */
 		send_raw_direct(acptr, "ERROR :Closing Link: [%s] (%s)",

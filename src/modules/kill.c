@@ -257,7 +257,7 @@ CMD_FUNC(cmd_kill)
 		if (MyUser(sptr))
 			RunHook3(HOOKTYPE_LOCAL_KILL, sptr, acptr, parv[2]);
 
-		n = exit_client(sptr->direction, acptr, sptr, mtags, buf2);
+		n = exit_client(acptr, mtags, buf2);
 
 		free_message_tags(mtags);
 

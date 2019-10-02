@@ -80,7 +80,7 @@ CMD_FUNC(cmd_user)
 		return 0;
 
 	if (MyConnect(sptr) && (sptr->local->listener->options & LISTENER_SERVERSONLY))
-		return exit_client(sptr->direction, sptr, sptr, NULL, "This port is for servers only");
+		return exit_client(sptr, NULL, "This port is for servers only");
 
 	if (parc > 2 && (username = strchr(parv[1], '@')))
 		*username = '\0';

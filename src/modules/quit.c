@@ -71,10 +71,10 @@ CMD_FUNC(cmd_quit)
 		Hook *tmphook;
 
 		if (STATIC_QUIT)
-			return exit_client(sptr->direction, sptr, sptr, recv_mtags, STATIC_QUIT);
+			return exit_client(sptr, recv_mtags, STATIC_QUIT);
 
 		if (IsVirus(sptr))
-			return exit_client(sptr->direction, sptr, sptr, recv_mtags, "Client exited");
+			return exit_client(sptr, recv_mtags, "Client exited");
 
 		n = run_spamfilter(sptr, comment, SPAMF_QUIT, NULL, 0, NULL);
 		if (n == FLUSH_BUFFER)
@@ -144,13 +144,13 @@ CMD_FUNC(cmd_quit)
 		else
 			strlcpy(commentbuf, comment, sizeof(commentbuf));
 
-		return exit_client(sptr->direction, sptr, sptr, recv_mtags, commentbuf);
+		return exit_client(sptr, recv_mtags, commentbuf);
 	}
 	else
 	{
 		/* Remote quits and non-person quits always use their original comment.
 		 * Also pass recv_mtags so to keep the msgid and such.
 		 */
-		return exit_client(sptr->direction, sptr, sptr, recv_mtags, comment);
+		return exit_client(sptr, recv_mtags, comment);
 	}
 }

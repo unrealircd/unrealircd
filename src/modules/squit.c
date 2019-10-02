@@ -160,5 +160,5 @@ CMD_FUNC(cmd_squit)
 		SetSQuit(acptr);
 	}
 
-	return exit_client(sptr->direction, acptr, sptr, recv_mtags, comment);
+	return exit_client(acptr, recv_mtags, comment);
 }
