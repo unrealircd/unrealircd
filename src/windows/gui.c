@@ -565,13 +565,13 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				case IDM_RHALL:
 					MessageBox(NULL, "Rehashing all files", "Rehashing", MB_OK);
 					sendto_realops("Rehashing all files via the console");
-					rehash(&me,&me,0);
+					rehash(&me,0);
 					reread_motdsandrules();
 					break;
 				case IDM_RHCONF:
 					MessageBox(NULL, "Rehashing the Config file", "Rehashing", MB_OK);
 					sendto_realops("Rehashing the Config file via the console");
-					rehash(&me,&me,0);
+					rehash(&me,0);
 					break;
 				case IDM_RHMOTD: 
 				{
