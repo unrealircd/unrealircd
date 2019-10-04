@@ -1341,10 +1341,11 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 		if (u1)
 			sendnumeric(sptr, ERR_HOSTILENAME, olduser, userbad, stripuser);
 	}
-	else if (IsServer(sptr))
+	else
 	{
 		Client *acptr;
 
+		/* Remote client */
 		if (!(acptr = find_server_quick(user->server)))
 		{
 			sendto_ops("Bad USER [%s] :%s USER %s %s : No such server",

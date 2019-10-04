@@ -1163,7 +1163,6 @@ struct LocalClient {
 	char sasl_agent[NICKLEN + 1];	/**< SASL: SASL Agent the user is interacting with */
 	unsigned char sasl_out;		/**< SASL: Number of outgoing sasl messages */
 	unsigned char sasl_complete;	/**< SASL: >0 if SASL authentication was successful */
-	u_short sasl_cookie;		/**< SASL: Temporary SASL cookie (TODO: get rid of this pseudo-nick code and use UID) */
 	char *sni_servername;		/**< Servername as sent by client via SNI (Server Name Indication) in SSL/TLS, otherwise NULL */
 	int cap_protocol;		/**< CAP protocol in use. At least 300 for any CAP capable client. 302 for 3.2, etc.. */
 	uint32_t nospoof;		/**< Anti-spoofing random number (used in user handshake PING/PONG) */

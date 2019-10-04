@@ -274,20 +274,6 @@ int parse_nickpass(const char *str, char **username, char **password)
 	return 1;
 }
 
-/* NOTE: This function is stolen from cmd_sasl. Not good. */
-static const char *encode_puid(Client *client)
-{
-	static char buf[HOSTLEN + 20];
-
-	/* create a cookie if necessary (and in case getrandom16 returns 0, then run again) */
-	while (!client->local->sasl_cookie)
-		client->local->sasl_cookie = getrandom16();
-
-	snprintf(buf, sizeof buf, "%s!0.%d", me.name, client->local->sasl_cookie);
-
-	return buf;
-}
-
 char *make_authbuf(const char *username, const char *password)
 {
 	char inbuf[256];
@@ -328,14 +314,14 @@ void send_first_auth(Client *sptr)
 	}
 
 	sendto_one(acptr, NULL, ":%s SASL %s %s H %s %s",
-	    me.name, SASL_SERVER, encode_puid(sptr), addr, addr);
+	    me.name, SASL_SERVER, sptr->id, addr, addr);
 
 	if (certfp)
 		sendto_one(acptr, NULL, ":%s SASL %s %s S %s %s",
-		    me.name, SASL_SERVER, encode_puid(sptr), "PLAIN", certfp);
+		    me.name, SASL_SERVER, sptr->id, "PLAIN", certfp);
 	else
 		sendto_one(acptr, NULL, ":%s SASL %s %s S %s",
-		    me.name, SASL_SERVER, encode_puid(sptr), "PLAIN");
+		    me.name, SASL_SERVER, sptr->id, "PLAIN");
 
 	/* The rest is sent from authprompt_sasl_continuation() */
 
@@ -491,7 +477,7 @@ int authprompt_sasl_continuation(Client *sptr, char *buf)
 		if (agent)
 		{
 			sendto_one(agent, NULL, ":%s SASL %s %s C %s",
-				me.name, AGENT_SID(agent), encode_puid(sptr), SEUSER(sptr)->authmsg);
+				me.name, AGENT_SID(agent), sptr->id, SEUSER(sptr)->authmsg);
 		}
 		SEUSER(sptr)->authmsg = NULL;
 	}

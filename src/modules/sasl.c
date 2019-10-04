@@ -48,11 +48,7 @@ int sasl_server_synched(Client *sptr);
 long CAP_SASL = 0L;
 
 /*
- * This is a "lightweight" SASL implementation/stack which uses psuedo-identifiers
- * to identify connecting clients.  In Unreal 3.3, we should use real identifiers
- * so that SASL sessions can be correlated.
- *
- * The following people were involved in making the current iteration of SASL over
+ * The following people were involved in making the previous iteration of SASL over
  * IRC which allowed psuedo-identifiers:
  *
  * danieldg, Daniel de Graff <danieldg@inspircd.org>
@@ -68,64 +64,10 @@ long CAP_SASL = 0L;
  */
 
 /*
- * decode_puid
- *
- * Decode PUID sent from a SASL agent.  If the servername in the PUID doesn't match
- * ours, we reject the PUID (by returning NULL).
- */
-static Client *decode_puid(char *puid)
-{
-	Client *cptr;
-	char *it, *it2;
-	int cookie = 0;
-
-	if ((it = strrchr(puid, '!')) == NULL)
-		return NULL;
-
-	*it++ = '\0';
-
-	if ((it2 = strrchr(it, '.')) != NULL)
-	{
-		*it2++ = '\0';
-		cookie = atoi(it2);
-	}
-
-	if (strcasecmp(me.name, puid))
-		return NULL;
-
-	list_for_each_entry(cptr, &unknown_list, lclient_node)
-		if (cptr->local->sasl_cookie == cookie)
-			return cptr;
-
-	return NULL;
-}
-
-/*
- * encode_puid
- *
- * Encode PUID based on Client.
- */
-static const char *encode_puid(Client *client)
-{
-	static char buf[HOSTLEN + 20];
-
-	if (MyUser(client))
-		return client->id;
-
-	/* create a cookie if necessary (and in case getrandom16 returns 0, then run again) */
-	while (!client->local->sasl_cookie)
-		client->local->sasl_cookie = getrandom16();
-
-	snprintf(buf, sizeof buf, "%s!0.%d", me.name, client->local->sasl_cookie);
-
-	return buf;
-}
-
-/*
  * SVSLOGIN message
  *
  * parv[1]: propagation mask
- * parv[2]: target PUID
+ * parv[2]: target
  * parv[3]: ESVID
  */
 CMD_FUNC(cmd_svslogin)
@@ -138,11 +80,7 @@ CMD_FUNC(cmd_svslogin)
 		Client *target_p;
 
 		target_p = find_client(parv[2], NULL);
-		if (target_p && !MyConnect(target_p))
-			return;
-
-		/* is the PUID valid? */
-		if (!target_p && ((target_p = decode_puid(parv[2])) == NULL))
+		if (!target_p || !MyConnect(target_p))
 			return;
 
 		if (target_p->user == NULL)
@@ -168,7 +106,7 @@ CMD_FUNC(cmd_svslogin)
  * SASL message
  *
  * parv[1]: distribution mask
- * parv[2]: target PUID
+ * parv[2]: target
  * parv[3]: mode/state
  * parv[4]: data
  * parv[5]: out-of-bound data
@@ -183,11 +121,7 @@ CMD_FUNC(cmd_sasl)
 		Client *target_p;
 
 		target_p = find_client(parv[2], NULL);
-		if (target_p && !MyConnect(target_p))
-			return;
-
-		/* is the PUID valid? */
-		if (!target_p && ((target_p = decode_puid(parv[2])) == NULL))
+		if (!target_p || !MyConnect(target_p))
 			return;
 
 		if (target_p->user == NULL)
@@ -265,18 +199,18 @@ CMD_FUNC(cmd_authenticate)
 		char *certfp = moddata_client_get(sptr, "certfp");
 
 		sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s H %s %s",
-		    me.name, SASL_SERVER, encode_puid(sptr), addr, addr);
+		    me.name, SASL_SERVER, sptr->id, addr, addr);
 
 		if (certfp)
 			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s %s",
-			    me.name, SASL_SERVER, encode_puid(sptr), parv[1], certfp);
+			    me.name, SASL_SERVER, sptr->id, parv[1], certfp);
 		else
 			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s",
-			    me.name, SASL_SERVER, encode_puid(sptr), parv[1]);
+			    me.name, SASL_SERVER, sptr->id, parv[1]);
 	}
 	else
 		sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s C %s",
-		    me.name, AGENT_SID(agent_p), encode_puid(sptr), parv[1]);
+		    me.name, AGENT_SID(agent_p), sptr->id, parv[1]);
 
 	sptr->local->sasl_out++;
 }
@@ -296,12 +230,12 @@ static int abort_sasl(Client *cptr)
 		if (agent_p != NULL)
 		{
 			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s D A",
-			    me.name, AGENT_SID(agent_p), encode_puid(cptr));
+			    me.name, AGENT_SID(agent_p), cptr->id);
 			return 0;
 		}
 	}
 
-	sendto_server(NULL, 0, 0, NULL, ":%s SASL * %s D A", me.name, encode_puid(cptr));
+	sendto_server(NULL, 0, 0, NULL, ":%s SASL * %s D A", me.name, cptr->id);
 	return 0;
 }
 
