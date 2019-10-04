@@ -289,6 +289,18 @@ It is therefore best to wait until beta1. You have been warned ;).
   message tags like 'account', 'msgid', 'time', etc.
 * Many send functions now take an extra MessageTag *mtags parameter,
   including but not limited to: sendto_one() and sendto_server().
+* Command functions (CMD_FUNC) have an extra MessageTag *mtags,
+  on the other hand *cptr has been removed.
+* Command functions no longer return int, the same is true for
+  exit_client, and FLUSH_BUFFER has been removed too.
+  All this is a consequence of removing this (limited) signaling
+  of client exits. From now on, if you call exit_client() it will free
+  a lot of the client data and exit the user (close socket, send [s]quit),
+  but it will not free 'sptr' itself, so you can simply check if some
+  upstream function killed the client by checking IsDead(sptr).
+  This is highly recommended after running do_cmd() or calling other
+  functions that could kill a client. In which case you should return
+  rather than continue doing anything with 'sptr'.
 * New single unified sendto_channel() and sendto_local_common_channels()
   functions that are used by all the channel commands.
 * Numerics should now be sent using sendnumeric(). There's also
@@ -333,6 +345,9 @@ It is therefore best to wait until beta1. You have been warned ;).
   was dropped in src/s_*.c since it no longer had meaning. Also some
   files have been deleted and integrated elsewhere or renamed to
   have a name that better reflects their true meaning.
+* HOOKTYPE_CHECK_INIT and HOOKTYPE_PRE_LOCAL_CONNECT
+  have their return value changed. You should now return HOOK_*, such
+  as HOOK_DENY or HOOK_CONTINUE.
 
 Server protocol
 ----------------
