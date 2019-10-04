@@ -200,7 +200,6 @@ ClientUser *make_user(Client *cptr)
 		user->away = NULL;
 		user->flood.away_t = 0;
 		user->flood.away_c = 0;
-		user->refcnt = 1;
 		user->joined = 0;
 		user->channel = NULL;
 		user->invited = NULL;
@@ -259,35 +258,26 @@ Server *make_server(Client *cptr)
 */
 void free_user(Client *cptr)
 {
-	// FIXME: reference counting is unused right? get rid of it.
-	if (cptr->user->refcnt == 0)
-		sendto_realops("[BUG] free_user: ref count for '%s' was already 0!?", cptr->user->username);
-	else
-		cptr->user->refcnt--;
-
-	if (cptr->user->refcnt == 0)
+	RunHook(HOOKTYPE_FREE_USER, cptr);
+	safe_free(cptr->user->away);
+	if (cptr->user->swhois)
 	{
-		RunHook(HOOKTYPE_FREE_USER, cptr);
-		safe_free(cptr->user->away);
-		if (cptr->user->swhois)
+		SWhois *s, *s_next;
+		for (s = cptr->user->swhois; s; s = s_next)
 		{
-			SWhois *s, *s_next;
-			for (s = cptr->user->swhois; s; s = s_next)
-			{
-				s_next = s->next;
-				safe_free(s->line);
-				safe_free(s->setby);
-				safe_free(s);
-			}
-			cptr->user->swhois = NULL;
+			s_next = s->next;
+			safe_free(s->line);
+			safe_free(s->setby);
+			safe_free(s);
 		}
-		safe_free(cptr->user->virthost);
-		safe_free(cptr->user->operlogin);
-		mp_pool_release(cptr->user);
-#ifdef	DEBUGMODE
-		users.inuse--;
-#endif
+		cptr->user->swhois = NULL;
 	}
+	safe_free(cptr->user->virthost);
+	safe_free(cptr->user->operlogin);
+	mp_pool_release(cptr->user);
+#ifdef	DEBUGMODE
+	users.inuse--;
+#endif
 	cptr->user = NULL;
 }
 
