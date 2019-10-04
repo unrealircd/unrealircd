@@ -323,7 +323,8 @@ EVENT(try_connections)
 	}
 }
 
-int check_tkls(Client *cptr)
+/** Does this user match any TKL's? */
+int match_tkls(Client *cptr)
 {
 	ConfigItem_ban *bconf = NULL;
 	char banbuf[1024];
@@ -332,7 +333,7 @@ int check_tkls(Client *cptr)
 
 	/* Process dynamic *LINES */
 	if (find_tkline_match(cptr, 0))
-		return 0; /* stop processing this user, as (s)he is dead now. */
+		return 1; /* user killed */
 
 	find_shun(cptr); /* check for shunned and take action, if so */
 
@@ -368,42 +369,25 @@ int check_tkls(Client *cptr)
 			else
 				(void)exit_client(cptr, NULL, "Banned");
 		}
-		return 0; /* stop processing this user, as (s)he is dead now. */
+		return 1; /* stop processing this user, as (s)he is dead now. */
 	}
 
 	if (loop.do_bancheck_spamf_user && IsUser(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
-		return 0;
+		return 1;
 
 	if (loop.do_bancheck_spamf_away && IsUser(cptr) &&
 	    cptr->user->away != NULL &&
 	    match_spamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL))
 	{
-		return 0;
+		return 1;
 	}
 
-	return 1;
+	return 0;
 }
 
-/*
- * TODO:
- * This is really messy at the moment, but the k-line stuff is recurse-safe, so I removed it
- * a while back (see above).
- *
- * Other things that should likely go:
- *      - identd/dns timeout checking (should go to it's own event, idea here is that we just
- *        keep you in "unknown" state until you actually get 001, so we can cull the unknown list)
- *
- * No need to worry about server list vs lclient list because servers are on lclient.  There are
- * no good reasons for it not to be, considering that 95% of iterations of the lclient list apply
- * to both clients and servers.
- *      - nenolod
+/** Time out connections that are still in handshake.
  */
-
-/*
- * Check UNKNOWN connections - if they have been in this state
- * for more than CONNECTTIMEOUT seconds, close them.
- */
-EVENT(check_unknowns)
+EVENT(handshake_timeout)
 {
 	Client *cptr, *cptr2;
 
@@ -502,7 +486,7 @@ EVENT(check_pings)
 	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
 	{
 		/* Check TKLs for this user */
-		if (loop.do_bancheck && !check_tkls(cptr))
+		if (loop.do_bancheck && match_tkls(cptr))
 			continue;
 		check_ping(cptr);
 		/* don't touch 'cptr' after this as it may have been killed */

@@ -189,6 +189,6 @@ void SetupEvents(void)
 	EventAdd(NULL, "unrealdns_removeoldrecords", unrealdns_removeoldrecords, NULL, 15000, 0);
 	EventAdd(NULL, "check_pings", check_pings, NULL, 1000, 0);
 	EventAdd(NULL, "check_deadsockets", check_deadsockets, NULL, 1000, 0);
-	EventAdd(NULL, "check_unknowns", check_unknowns, NULL, 1000, 0);
+	EventAdd(NULL, "handshake_timeout", handshake_timeout, NULL, 1000, 0);
 	EventAdd(NULL, "try_connections", try_connections, NULL, 2000, 0);
 }

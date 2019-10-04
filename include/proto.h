@@ -42,7 +42,7 @@ extern void sendto_realops(FORMAT_STRING(const char *pattern), ...) __attribute_
 extern EVENT(garbage_collect);
 extern EVENT(loop_event);
 extern EVENT(check_pings);
-extern EVENT(check_unknowns);
+extern EVENT(handshake_timeout);
 extern EVENT(check_deadsockets);
 extern EVENT(try_connections);
 /* support.c */
