@@ -473,10 +473,10 @@ int authprompt_pre_connect(Client *sptr)
 	if (SEUSER(sptr) && !IsLoggedIn(sptr))
 	{
 		authprompt_send_auth_required_message(sptr);
-		return -1; /* do not process register_user() */
+		return HOOK_DENY; /* do not process register_user() */
 	}
 
-	return 0; /* no action taken, proceed normally */
+	return HOOK_CONTINUE; /* no action taken, proceed normally */
 }
 
 int authprompt_sasl_continuation(Client *sptr, char *buf)
@@ -514,10 +514,7 @@ int authprompt_sasl_result(Client *sptr, int success)
 	if (*sptr->name && sptr->user && *sptr->user->username && IsNotSpoof(sptr))
 	{
 		register_user(sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
-		/* NOTE: register_user() may return FLUSH_BUFFER here, but since the caller
-		 * won't continue processing (won't touch 'sptr') it's safe.
-		 * That is, as long as we 'return 1'.
-		 */
+		/* User MAY be killed now. But since we 'return 1' below, it's safe */
 	}
 
 	return 1; /* inhibit success/failure message */

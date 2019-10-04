@@ -84,7 +84,11 @@ MOD_UNLOAD()
 int server_sync(Client *cptr, ConfigItem_link *conf);
 
 /** Check deny version { } blocks.
- * NOTE: cptr will always be valid, but all the other values may be NULL or 0 !!!
+ * @param cptr		Client (a server)
+ * @param software	Software version in use (can be NULL)
+ * @param protoctol	UnrealIRCd protocol version in use (can be 0)
+ * @param flags		Server flags (hardly ever used, can be NULL)
+ * @returns 1 if link is denied (client is already killed), 0 if not.
  */
 int _check_deny_version(Client *cptr, char *software, int protocol, char *flags)
 {
@@ -134,7 +138,7 @@ int _check_deny_version(Client *cptr, char *software, int protocol, char *flags)
 		if (result)
 		{
 			exit_client(cptr, NULL, "Denied by deny version { } block");
-			return FLUSH_BUFFER;
+			return 0;
 		}
 
 		if (flags)
@@ -163,11 +167,11 @@ int _check_deny_version(Client *cptr, char *software, int protocol, char *flags)
 		if (result)
 		{
 			exit_client(cptr, NULL, "Denied by deny version { } block");
-			return FLUSH_BUFFER;
+			return 0;
 		}
 	}
 	
-	return 0;
+	return 1;
 }
 
 /** Send our PROTOCTL SERVERS=x,x,x,x stuff.
@@ -231,8 +235,7 @@ void _send_server_message(Client *sptr)
  * @param sptr The client which (originally) issued the server command (sptr).
  * @param servername The server name provided by the client.
  * @param link_out Pointer-to-pointer-to-link block. Will be set when auth OK. Caller may pass NULL if he doesn't care.
- * @returns This function returns 0 on succesful auth, other values should be returned by
- *          the calling function, as it will always be FLUSH_BUFFER due to exit_client().
+ * @returns This function returns 1 on successful authentication, 0 otherwise - in which case the client has been killed.
  */
 int _verify_link(Client *sptr, char *servername, ConfigItem_link **link_out)
 {
@@ -257,7 +260,7 @@ int _verify_link(Client *sptr, char *servername, ConfigItem_link **link_out)
 	{
 		sendto_one(sptr, NULL, "ERROR :Missing password");
 		exit_client(sptr, NULL, "Missing password");
-		return FLUSH_BUFFER;
+		return 0;
 	}
 
 	/* First check if the server is in the list */
@@ -284,7 +287,7 @@ int _verify_link(Client *sptr, char *servername, ConfigItem_link **link_out)
 			sendto_ops_and_log("Outgoing link aborted to %s(%s@%s) (%s) %s",
 				sptr->serv->conf->servername, sptr->ident, sptr->local->sockhost, xerrmsg, inpath);
 			exit_client(sptr, NULL, xerrmsg);
-			return FLUSH_BUFFER;
+			return 0;
 		}
 		link = sptr->serv->conf;
 		goto skip_host_check;
@@ -321,7 +324,7 @@ errlink:
 		sendto_ops_and_log("Link denied for %s(%s@%s) (%s) %s",
 		    servername, sptr->ident, sptr->local->sockhost, xerrmsg, inpath);
 		exit_client(sptr, NULL, "Link denied (No link block found with your server name or link::incoming::mask did not match)");
-		return FLUSH_BUFFER;
+		return 0;
 	}
 
 skip_host_check:
@@ -365,7 +368,7 @@ skip_host_check:
 		    "ERROR :Link '%s' denied (Authentication failed) %s",
 		    servername, inpath);
 		exit_client(sptr, NULL, "Link denied (Authentication failed)");
-		return FLUSH_BUFFER;
+		return 0;
 	}
 
 	/* Verify the TLS certificate (if requested) */
@@ -381,7 +384,7 @@ skip_host_check:
 			sendto_ops_and_log("Link denied for '%s' (Not using SSL/TLS and verify-certificate is on) %s",
 				servername, inpath);
 			exit_client(sptr, NULL, "Link denied (Not using SSL/TLS)");
-			return FLUSH_BUFFER;
+			return 0;
 		}
 		if (!verify_certificate(sptr->local->ssl, link->servername, &errstr))
 		{
@@ -392,7 +395,7 @@ skip_host_check:
 				servername, inpath);
 			sendto_ops_and_log("Reason for certificate verification failure: %s", errstr);
 			exit_client(sptr, NULL, "Link denied (Certificate verification failed)");
-			return FLUSH_BUFFER;
+			return 0;
 		}
 	}
 
@@ -410,7 +413,7 @@ skip_host_check:
 				get_client_name(sptr, TRUE), me.name);
 			sendto_one(sptr, NULL, "ERROR: Server %s exists (it's me!)", me.name);
 			exit_client(sptr, NULL, "Server Exists");
-			return FLUSH_BUFFER;
+			return 0;
 		}
 
 		acptr = acptr->direction;
@@ -425,7 +428,7 @@ skip_host_check:
 		    get_client_name(acptr, TRUE), servername,
 		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
 		exit_client(acptr, NULL, "Server Exists");
-		return FLUSH_BUFFER;
+		return 0;
 	}
 	if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
@@ -434,32 +437,32 @@ skip_host_check:
 			get_client_name(sptr, TRUE));
 		sendto_one(sptr, NULL, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
 		exit_client(sptr, NULL, "Banned server");
-		return FLUSH_BUFFER;
+		return 0;
 	}
 	if (link->class->clients + 1 > link->class->maxclients)
 	{
 		sendto_ops_and_log("Cancelling link %s, full class",
 				get_client_name(sptr, TRUE));
 		exit_client(sptr, NULL, "Full class");
-		return FLUSH_BUFFER;
+		return 0;
 	}
 	if (!IsLocalhost(sptr) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(sptr))
 	{
 		sendto_one(sptr, NULL, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 		sendto_ops_and_log("Rejected insecure server %s. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS", sptr->name);
 		exit_client(sptr, NULL, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
-		return FLUSH_BUFFER;
+		return 0;
 	}
 	if (IsSecure(sptr) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(sptr))
 	{
 		sendto_one(sptr, NULL, "ERROR :Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 		sendto_ops_and_log("Rejected server %s using outdated %s. See https://www.unrealircd.org/docs/FAQ#server-outdated-tls", tls_get_cipher(sptr->local->ssl), sptr->name);
 		exit_client(sptr, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
-		return FLUSH_BUFFER;
+		return 0;
 	}
 	if (link_out)
 		*link_out = link;
-	return 0;
+	return 1;
 }
 
 /*
@@ -547,8 +550,7 @@ CMD_FUNC(cmd_server)
 	if (IsUnknown(sptr) || IsHandshake(sptr))
 	{
 		int ret;
-		ret = verify_link(sptr, servername, &aconf);
-		if (ret < 0)
+		if (!verify_link(sptr, servername, &aconf))
 			return; /* Rejected */
 			
 		/* OK, let us check in the data now now */
@@ -580,8 +582,7 @@ CMD_FUNC(cmd_server)
 				
 				strlcpy(sptr->info, inf[0] ? inf : "server", sizeof(sptr->info)); /* set real description */
 				
-				ret = _check_deny_version(sptr, NULL, atoi(protocol), flags);
-				if (ret < 0)
+				if (!_check_deny_version(sptr, NULL, atoi(protocol), flags))
 					return; /* Rejected */
 			} else {
 				strlcpy(sptr->info, info[0] ? info : "server", sizeof(sptr->info));

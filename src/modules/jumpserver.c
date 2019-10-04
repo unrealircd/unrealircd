@@ -100,9 +100,9 @@ int jumpserver_preconnect(Client *sptr)
 	if (jss)
 	{
 		do_jumpserver_exit_client(sptr);
-		return FLUSH_BUFFER;
+		return HOOK_DENY;
 	}
-	return 0;
+	return HOOK_CONTINUE;
 }
 
 void free_jss(void)

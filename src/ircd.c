@@ -372,7 +372,7 @@ int match_tkls(Client *cptr)
 		return 1; /* stop processing this user, as (s)he is dead now. */
 	}
 
-	if (loop.do_bancheck_spamf_user && IsUser(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
+	if (loop.do_bancheck_spamf_user && IsUser(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN))
 		return 1;
 
 	if (loop.do_bancheck_spamf_away && IsUser(cptr) &&

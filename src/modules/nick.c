@@ -37,8 +37,7 @@ ModuleHeader MOD_HEADER
 CMD_FUNC(cmd_nick);
 CMD_FUNC(cmd_uid);
 int _register_user(Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
-int AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username);
-int check_client(Client *cptr, char *username);
+int AllowClient(Client *cptr, char *username);
 
 MOD_TEST()
 {
@@ -998,9 +997,7 @@ CMD_FUNC(cmd_nick)
 					me.name, nick);
 
 			sptr->lastnick = TStime();
-			if (register_user(sptr, nick, sptr->user->username, NULL, NULL, NULL) == FLUSH_BUFFER)
-				return;
-			if (IsDead(sptr))
+			if (!register_user(sptr, nick, sptr->user->username, NULL, NULL, NULL))
 				return;
 			strlcpy(nick, sptr->name, sizeof(nick)); /* don't ask, but I need this. do not remove! -- Syzop */
 			update_watch = 0;
@@ -1049,38 +1046,27 @@ CMD_FUNC(cmd_nick)
 	}
 }
 
-/*
-** register_user
-**	This function is called when both NICK and USER messages
-**	have been accepted for the client, in whatever order. Only
-**	after this the USER message is propagated.
-**
-**	NICK's must be propagated at once when received, although
-**	it would be better to delay them too until full info is
-**	available. Doing it is not so simple though, would have
-**	to implement the following:
-**
-**	1) user telnets in and gives only "NICK foobar" and waits
-**	2) another user far away logs in normally with the nick
-**	   "foobar" (quite legal, as this server didn't propagate
-**	   it).
-**	3) now this server gets nick "foobar" from outside, but
-**	   has already the same defined locally. Current server
-**	   would just issue "KILL foobar" to clean out dups. But,
-**	   this is not fair. It should actually request another
-**	   nick from local user or kill him/her...
-*/
-
+/** Register the connection as a User.
+ * This is called after NICK + USER (in no particular order)
+ * and possibly other protocol messages as well (eg CAP).
+ * @param sptr		Client to be made a user.
+ * @param nick		Nick name
+ * @param username	Username
+ * @param umode		User modes
+ * @param virthost	Virtual host (can be NULL)
+ * @param ip		IP address string (can be NULL)
+ * @returns 1 if successfully registered, 0 if not (client might be killed).
+ */
 int _register_user(Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip)
 {
 	ConfigItem_ban *bconf;
 	char *tmpstr;
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
-	int  xx;
+	int i, xx;
+	Hook *h;
 	ClientUser *user = sptr->user;
 	Client *nsptr;
-	int  i;
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -1102,16 +1088,13 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 	{
 	        char temp[USERLEN + 1];
 
-		if ((i = check_client(sptr, username)))
+		if (!AllowClient(sptr, username))
 		{
 			ircstats.is_ref++;
-			/* Usually the return value of check_client is 0 (allow) or -5 (reject),
-			 * but there are some rare cases where the client is not yet killed,
-			 * so have a generic exit_client() here to be safe.
-			 */
-			if (i != FLUSH_BUFFER)
+			/* For safety, we have an extra kill here */
+			if (!IsDead(sptr))
 				exit_client(sptr, NULL, "Rejected");
-			return FLUSH_BUFFER;
+			return 0;
 		}
 
 		if (sptr->local->hostp)
@@ -1208,7 +1191,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			if (stripuser[0] == '\0')
 			{
 				exit_client(sptr, NULL, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
-				return -1;
+				return 0;
 			}
 
 			strlcpy(olduser, user->username + noident, USERLEN+1);
@@ -1224,13 +1207,13 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 		{
 			ircstats.is_ref++;
 			banned_client(sptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
-			return FLUSH_BUFFER;
+			return 0;
 		}
 		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
 		if (find_tkline_match(sptr, 0))
 		{
 			ircstats.is_ref++;
-			return FLUSH_BUFFER;
+			return 0;
 		}
 		find_shun(sptr);
 
@@ -1251,7 +1234,14 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			}
 		}
 
-		RunHookReturnInt(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, !=0);
+		for (h = Hooks[HOOKTYPE_PRE_LOCAL_CONNECT]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(sptr);
+			if (i == HOOK_DENY)
+				return 0;
+			if (i == HOOK_ALLOW)
+				break;
+		}
 	}
 	else
 	{
@@ -1329,7 +1319,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			parv[1] = NULL;
 			do_cmd(sptr, NULL, "LUSERS", 1, parv);
 			if (IsDead(sptr))
-				return FLUSH_BUFFER;
+				return 0;
 		}
 
 		RunHook2(HOOKTYPE_WELCOME, sptr, 266);
@@ -1363,7 +1353,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			    me.name, sptr->name, me.name, user->server);
 			SetKilled(sptr);
 			exit_client(sptr, NULL, "USER without prefix(2.8) or wrong prefix");
-			return FLUSH_BUFFER;
+			return 0;
 		}
 		else if (acptr->direction != sptr->direction)
 		{
@@ -1375,7 +1365,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			    acptr->direction->name, acptr->direction->local->sockhost);
 			SetKilled(sptr);
 			exit_client(sptr, NULL, "USER server wrong direction");
-			return FLUSH_BUFFER;
+			return 0;
 		} else
 		{
 			sptr->flags |= acptr->flags;
@@ -1401,7 +1391,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 				           "IP must be base64 encoded binary representation of either IPv4 or IPv6",
 				           sptr->name, ip);
 				exit_client(sptr, NULL, "USER with invalid IP");
-				return FLUSH_BUFFER;
+				return 0;
 			}
 			safe_strdup(sptr->ip, ipstring);
 		}
@@ -1487,6 +1477,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 		/* NOTE: Code after this 'if (savetkl)' will not be executed for quarantined-
 		 *       virus-users. So be carefull with the order. -- Syzop
 		 */
+		// FIXME: verify if this works, trace code path upstream!!!!
 		if (savetkl)
 			return join_viruschan(sptr, savetkl, SPAMF_USER); /* [RETURN!] */
 
@@ -1501,7 +1492,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			};
 			do_cmd(sptr, NULL, "JOIN", 3, chans);
 			if (IsDead(sptr))
-				return FLUSH_BUFFER;
+				return 0;
 		}
 		else if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
 		{
@@ -1512,7 +1503,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			};
 			do_cmd(sptr, NULL, "JOIN", 3, chans);
 			if (IsDead(sptr))
-				return FLUSH_BUFFER;
+				return 0;
 		}
 		/* NOTE: If you add something here.. be sure to check the 'if (savetkl)' note above */
 	}
@@ -1522,7 +1513,9 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 		safe_free(sptr->local->passwd);
 		sptr->local->passwd = NULL;
 	}
-	return 0;
+
+	/* User successfully registered */
+	return 1;
 }
 
 /* This used to initialize the various name strings used to store hostnames.
@@ -1533,7 +1526,7 @@ int check_init(Client *cptr, char *sockn, size_t size)
 {
 	strlcpy(sockn, cptr->local->sockhost, HOSTLEN);
 
-	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, ==0);
+	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, !=0);
 
 	/* Some silly hack to convert 127.0.0.1 and such into 'localhost' */
 	if (!strcmp(GetIP(cptr), "127.0.0.1") || !strcmp(GetIP(cptr), "0:0:0:0:0:0:0:1") || !strcmp(GetIP(cptr), "0:0:0:0:0:ffff:127.0.0.1"))
@@ -1546,59 +1539,42 @@ int check_init(Client *cptr, char *sockn, size_t size)
 		strlcpy(sockn, "localhost", HOSTLEN);
 	}
 
-	return 0;
-}
-
-/*
- * Ordinary client access check. Look for conf lines which have the same
- * status as the flags passed.
- *  0 = Success
- * -1 = Access denied
- * -2 = Bad socket.
- */
-int check_client(Client *cptr, char *username)
-{
-	static char sockname[HOSTLEN + 1];
-	struct hostent *hp = NULL;
-	int  i;
-
-	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]", cptr->name, cptr->local->sockhost));
-
-	if (check_init(cptr, sockname, sizeof(sockname)))
-		return -2;
-
-	hp = cptr->local->hostp;
-
-	if ((i = AllowClient(cptr, hp, sockname, username)))
-		return i;
-
-	Debug((DEBUG_DNS, "ch_cl: access ok: %s[%s]", cptr->name, sockname));
-
-	return 0;
+	return 1;
 }
 
 /** Allow or reject the client based on allow { } blocks and all other restrictions.
- * @returns Must return 0 if user is permitted. If the client should be rejected then
- * use return exit_client(...)
+ * @param cptr     Client to check (local)
+ * @param username Username, for some reason...
+ * @returns 1 if OK, 0 if client is rejected (likely killed too)
  */
-int AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username)
+int AllowClient(Client *cptr, char *username)
 {
+	static char sockhost[HOSTLEN + 1];
+	struct hostent *hp = NULL;
+	int i;
 	ConfigItem_allow *aconf;
 	char *hname;
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
 
+	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]", cptr->name, cptr->local->sockhost));
+
+	if (!check_init(cptr, sockhost, sizeof(sockhost)))
+		return 0;
+
+	hp = cptr->local->hostp;
+
 	if (!IsSecure(cptr) && !IsLocalhost(cptr) && (iConf.plaintext_policy_user == POLICY_DENY))
 	{
 		exit_client(cptr, NULL, iConf.plaintext_policy_user_message);
-		return FLUSH_BUFFER;
+		return 0;
 	}
 
 	if (IsSecure(cptr) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(cptr))
 	{
 		char *msg = outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, cptr);
 		exit_client(cptr, NULL, msg);
-		return FLUSH_BUFFER;
+		return 0;
 	}
 
 	for (aconf = conf_allow; aconf; aconf = aconf->next)
@@ -1664,8 +1640,7 @@ int AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 		}
 
 		continue;
-	      attach:
-/*		if (strchr(uhost, '@'))  now flag based -- codemastr */
+	attach:
 		if (!aconf->flags.noident)
 			SetUseIdent(cptr);
 		if (!aconf->flags.useip && hp)
@@ -1688,14 +1663,14 @@ int AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 					{
 						/* Already got too many with that ip# */
 						exit_client(cptr, NULL, iConf.reject_message_too_many_connections);
-						return FLUSH_BUFFER;
+						return 0;
 					}
 				}
 			}
 		}
 		if (aconf->auth && !Auth_Check(cptr, aconf->auth, cptr->local->passwd))
 		{
-			/* Always do continue if password was wrong. */
+			/* Always continue if password was wrong. */
 			continue;
 		}
 		/* Password (or other auth method) was correct */
@@ -1708,12 +1683,14 @@ int AllowClient(Client *cptr, struct hostent *hp, char *sockhost, char *username
 		}
 		else
 		{
+			/* Class is full */
 			sendnumeric(cptr, RPL_REDIR, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
 			exit_client(cptr, NULL, iConf.reject_message_server_full);
-			return FLUSH_BUFFER;
+			return 0;
 		}
-		return 0;
+		return 1;
 	}
+	/* User did not match any allow { } blocks: */
 	exit_client(cptr, NULL, iConf.reject_message_unauthorized);
-	return FLUSH_BUFFER;
+	return 0;
 }

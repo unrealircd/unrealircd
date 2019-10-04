@@ -963,7 +963,7 @@ refuse_client:
 	}
 
 	/* Check (G)Z-Lines and set::anti-flood::connect-flood */
-	if (check_banned(acptr, NO_EXIT_CLIENT) < 0)
+	if (check_banned(acptr, NO_EXIT_CLIENT))
 		goto refuse_client;
 
 	acptr->local->listener = listener;

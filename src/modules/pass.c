@@ -65,7 +65,11 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/** Handles zlines/gzlines/throttling/unknown connections */
+/** Handles zlines/gzlines/throttling/unknown connections
+ * @param cptr       Client to be checked
+ * @param exitflags  Special flag (NO_EXIT_CLIENT) -- only used in very early stages of the connection
+ * @returns 1 if user is banned and is or should be killed, 0 if not.
+ */
 int _check_banned(Client *cptr, int exitflags)
 {
 	TKL *tk;
@@ -73,7 +77,7 @@ int _check_banned(Client *cptr, int exitflags)
 	if ((tk = find_tkline_match_zap(cptr)))
 	{
 		banned_client(cptr, "Z-Lined", tk->ptr.serverban->reason, (tk->type & TKL_GLOBAL)?1:0, exitflags);
-		return FLUSH_BUFFER;
+		return 1;
 	}
 	else
 	{
@@ -89,14 +93,14 @@ int _check_banned(Client *cptr, int exitflags)
 					"Email %s for more information.\r\n",
 					cptr->ip, KLINE_ADDRESS);
 				(void)send(cptr->local->fd, zlinebuf, strlen(zlinebuf), 0);
-				return FLUSH_BUFFER;
+				return 1;
 			} else {
 				ircsnprintf(zlinebuf, sizeof(zlinebuf),
 				            "Throttled: Reconnecting too fast - "
 				            "Email %s for more information.",
 				            KLINE_ADDRESS);
 				exit_client(cptr, NULL, zlinebuf);
-				return FLUSH_BUFFER;
+				return 1;
 			}
 		}
 		else if (val == 1)

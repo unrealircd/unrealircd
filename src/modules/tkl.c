@@ -4226,7 +4226,7 @@ int _join_viruschan(Client *sptr, TKL *tkl, int type)
 	spamf_ugly_vchanoverride = 0;
 
 	if (IsDead(sptr))
-		return FLUSH_BUFFER; /* killed due to JOIN */
+		return 0; /* killed due to JOIN */
 
 	sendnotice(sptr, "You are now restricted to talking in %s: %s",
 		SPAMFILTER_VIRUSCHAN, unreal_decodespace(tkl->ptr.spamfilter->tkl_reason));
@@ -4246,7 +4246,7 @@ int _join_viruschan(Client *sptr, TKL *tkl, int type)
 		free_message_tags(mtags);
 	}
 	SetVirus(sptr);
-	return 0;
+	return 1;
 }
 
 /** match_spamfilter: executes the spamfilter on the input string.

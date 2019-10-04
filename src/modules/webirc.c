@@ -438,10 +438,10 @@ int webirc_check_init(Client *cptr, char *sockn, size_t size)
 	if (IsWEBIRC(cptr))
 	{
 		strlcpy(sockn, GetIP(cptr), size); /* use already set value */
-		return 0;
+		return HOOK_DENY;
 	}
 	
-	return 1; /* nothing to do */
+	return HOOK_CONTINUE; /* nothing to do */
 }
 
 int webirc_local_pass(Client *sptr, char *password)
@@ -465,7 +465,7 @@ int webirc_local_pass(Client *sptr, char *password)
 			if (!host)
 			{
 				exit_client(sptr, NULL, "Invalid CGI:IRC IP received");
-				return FLUSH_BUFFER;
+				return HOOK_DENY;
 			}
 			*host++ = '\0';
 		
@@ -475,7 +475,7 @@ int webirc_local_pass(Client *sptr, char *password)
 		/* fallthrough if not in webirc block.. */
 	}
 
-	return 0; /* not webirc */
+	return HOOK_CONTINUE; /* not webirc */
 }
 
 /** Called from register_user() right after setting user +z */

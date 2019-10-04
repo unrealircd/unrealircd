@@ -517,7 +517,6 @@ static void exit_one_client(Client *sptr, MessageTag *mtags_i, const char *comme
  * @param sptr        The client to exit.
  * @param recv_mtags  Message tags to use as a base (if any).
  * @param comment     The (s)quit message
- * @returns FLUSH_BUFFER
  */
 void exit_client(Client *sptr, MessageTag *recv_mtags, char *comment)
 {
@@ -1092,8 +1091,6 @@ extern void send_raw_direct(Client *user, FORMAT_STRING(const char *pattern), ..
  *                use it anywhere else. No really, never.
  *
  * @notes This function will call exit_client() appropriately.
- * @retval Usually FLUSH_BUFFER. In any case: do not touch 'acptr' after
- *         calling this function!
  */
 void banned_client(Client *acptr, char *bantype, char *reason, int global, int noexit)
 {

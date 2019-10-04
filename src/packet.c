@@ -141,28 +141,23 @@ RealCommand *find_Command_simple(char *cmd)
 	return NULL;
 }
 
-/** Calls the specified command.
- * PURPOSE:
- *  This function is especially meant for calling modulized commands,
- *  both from the core and from (eg:) module A to a command in module B.
- *  An alternative to this is MOD_Dep, but this requires a lot more
- *  effort, is more error phrone and is not a general solution
- *  (but it is slightly faster).
- * PARAMETERS:
- *  Parameters are clear.. the usual cptr, sptr, parc, parv stuff.
- *  'cmd' is the command string, eg: "JOIN"
- * RETURN VALUE:
- *  The value returned by the command function, or -99 if command not found.
- * IMPORTANT NOTES:
- *  - make sure you terminate the last parv[] parameter with NULL,
- *    this can easily be forgotten, but certain functions depend on it,
- *    you risk crashes otherwise.
- *  - be sure to check for FLUSH_BUFFER (-5) return value, especially
- *    if you are calling functions that might cause an immediate kill
- *    (eg: due to spamfilter).
- *  - obvious, but... do not stuff in insane parameters, like a parameter
- *    of 1024 bytes, most of the ircd code depends on the max size of the
- *    total command being less than 512 bytes. Same for parc < MAXPARA.
+/** Calls the specified command for the user, as if it was received
+ * that way on IRC.
+ * @param sptr		Client that is the source.
+ * @param mtags		Message tags for this command.
+ * @param cmd		Command to run, eg "JOIN".
+ * @param parc		Parameter count plus 1.
+ * @param parv		Parameter array.
+ * @note Make sure you terminate the last parv[] parameter with NULL,
+ *       this can easily be forgotten, but certain functions depend on it,
+ *       you risk crashes otherwise.
+ * @note Once do_cmd() has returned, be sure to check IsDead(sptr) to
+ *       see if the client has been killed. This may happen due to various
+ *       reasons, including spamfilter kicking in or some other security
+ *       measure.
+ * @note Do not pass insane parameters. The combined size of all parameters
+ *       should not exceed 510 bytes, since that is what all code expects.
+ *       Similarly, you should not exceed MAXPARA for parc.
  */
 void do_cmd(Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[])
 {
