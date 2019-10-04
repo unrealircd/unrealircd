@@ -2697,19 +2697,22 @@ int _find_tkline_match(Client *cptr, int skip_soft)
 	return 0;
 }
 
-/** Check if user is shunned. Returns 2 in such a case (FIXME: why 2 ?) */
+/** Check if user is shunned.
+ * @param cptr   Client to check.
+ * @returns 1 if shunned, 0 if not.
+ */
 int _find_shun(Client *cptr)
 {
 	TKL *tkl;
 
 	if (IsServer(cptr) || IsMe(cptr))
-		return -1;
+		return 0;
 
 	if (IsShunned(cptr))
 		return 1;
 
 	if (ValidatePermissionsForPath("immune:server-ban:shun",cptr,NULL,NULL,NULL))
-		return 1;
+		return 0;
 
 	for (tkl = tklines[tkl_hash('s')]; tkl; tkl = tkl->next)
 	{
@@ -2728,14 +2731,14 @@ int _find_shun(Client *cptr)
 			{
 				/* Found match. Now check for exception... */
 				if (find_tkl_exception(TKL_SHUN, cptr))
-					return 1;
+					return 0;
 				SetShunned(cptr);
-				return 2; /* Shunned */
+				return 1;
 			}
 		}
 	}
 
-	return 1; /* No match */
+	return 0;
 }
 
 /** Helper function for spamfilter_build_user_string().
