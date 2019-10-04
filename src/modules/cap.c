@@ -38,8 +38,8 @@ ModuleHeader MOD_HEADER
 	};
 
 /* Forward declarations */
-int cap_is_handshake_finished(Client *acptr);
-int cap_never_visible(Client *acptr);
+int cap_is_handshake_finished(Client *client);
+int cap_never_visible(Client *client);
 
 /* Variables */
 long CAP_IN_PROGRESS = 0L;
@@ -109,7 +109,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static ClientCapability *clicap_find(Client *sptr, const char *data, int *negate, int *finished, int *errors)
+static ClientCapability *clicap_find(Client *client, const char *data, int *negate, int *finished, int *errors)
 {
 	static char buf[BUFSIZE];
 	static char *p;
@@ -152,7 +152,7 @@ static ClientCapability *clicap_find(Client *sptr, const char *data, int *negate
 	if((s = strchr(p, ' ')))
 		*s++ = '\0';
 
-	cap = ClientCapabilityFind(p, sptr);
+	cap = ClientCapabilityFind(p, client);
 	if (!s)
 		*finished = 1;
 	
@@ -167,7 +167,7 @@ static ClientCapability *clicap_find(Client *sptr, const char *data, int *negate
 	return cap;
 }
 
-static void clicap_generate(Client *sptr, const char *subcmd, int flags)
+static void clicap_generate(Client *client, const char *subcmd, int flags)
 {
 	ClientCapability *cap;
 	char buf[BUFSIZE];
@@ -176,14 +176,14 @@ static void clicap_generate(Client *sptr, const char *subcmd, int flags)
 	int buflen = 0;
 	int curlen, mlen;
 
-	mlen = snprintf(buf, BUFSIZE, ":%s CAP %s %s", me.name,	BadPtr(sptr->name) ? "*" : sptr->name, subcmd);
+	mlen = snprintf(buf, BUFSIZE, ":%s CAP %s %s", me.name,	BadPtr(client->name) ? "*" : client->name, subcmd);
 
 	p = capbuf;
 	buflen = mlen;
 
 	if (flags == -1)
 	{
-		sendto_one(sptr, NULL, "%s :", buf);
+		sendto_one(client, NULL, "%s :", buf);
 		return;
 	}
 
@@ -192,17 +192,17 @@ static void clicap_generate(Client *sptr, const char *subcmd, int flags)
 		char name[256];
 		char *param;
 
-		if (cap->visible && !cap->visible(sptr))
+		if (cap->visible && !cap->visible(client))
 			continue; /* hidden */
 
-		if ((sptr->local->cap_protocol >= 302) && cap->parameter && (param = cap->parameter(sptr)))
+		if ((client->local->cap_protocol >= 302) && cap->parameter && (param = cap->parameter(client)))
 			snprintf(name, sizeof(name), "%s=%s", cap->name, param);
 		else
 			strlcpy(name, cap->name, sizeof(name));
 
 		if (flags)
 		{
-			if (!cap->cap || !CHECKPROTO(sptr, cap->cap))
+			if (!cap->cap || !CHECKPROTO(client, cap->cap))
 				continue;
 		}
 
@@ -214,7 +214,7 @@ static void clicap_generate(Client *sptr, const char *subcmd, int flags)
 			else
 				*p = '\0';
 
-			sendto_one(sptr, NULL, "%s * :%s", buf, capbuf);
+			sendto_one(client, NULL, "%s * :%s", buf, capbuf);
 			p = capbuf;
 			buflen = mlen;
 		}
@@ -229,46 +229,46 @@ static void clicap_generate(Client *sptr, const char *subcmd, int flags)
 	else
 		*p = '\0';
 
-	sendto_one(sptr, NULL, "%s :%s", buf, capbuf);
+	sendto_one(client, NULL, "%s :%s", buf, capbuf);
 }
 
-static void cap_end(Client *sptr, const char *arg)
+static void cap_end(Client *client, const char *arg)
 {
-	if (IsUser(sptr))
+	if (IsUser(client))
 		return;
 
-	ClearCapabilityFast(sptr, CAP_IN_PROGRESS);
+	ClearCapabilityFast(client, CAP_IN_PROGRESS);
 
-	if (*sptr->name && sptr->user && *sptr->user->username && IsNotSpoof(sptr))
-		register_user(sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
+	if (*client->name && client->user && *client->user->username && IsNotSpoof(client))
+		register_user(client, client->name, client->user->username, NULL, NULL, NULL);
 }
 
-static void cap_list(Client *sptr, const char *arg)
+static void cap_list(Client *client, const char *arg)
 {
-	clicap_generate(sptr, "LIST", sptr->local->caps ? sptr->local->caps : -1);
+	clicap_generate(client, "LIST", client->local->caps ? client->local->caps : -1);
 }
 
-static void cap_ls(Client *sptr, const char *arg)
+static void cap_ls(Client *client, const char *arg)
 {
-	if (!IsUser(sptr))
-		SetCapabilityFast(sptr, CAP_IN_PROGRESS);
+	if (!IsUser(client))
+		SetCapabilityFast(client, CAP_IN_PROGRESS);
 
 	if (arg)
-		sptr->local->cap_protocol = atoi(arg);
+		client->local->cap_protocol = atoi(arg);
 
 	/* Since the client did a "CAP LS" it apparently supports CAP
 	 * and thus at least protocol version 300.
 	 */
-	if (sptr->local->cap_protocol < 300)
-		sptr->local->cap_protocol = 300;
+	if (client->local->cap_protocol < 300)
+		client->local->cap_protocol = 300;
 
-	if (sptr->local->cap_protocol >= 302)
-		SetCapabilityFast(sptr, CAP_NOTIFY); /* Implicit support (JIT) */
+	if (client->local->cap_protocol >= 302)
+		SetCapabilityFast(client, CAP_NOTIFY); /* Implicit support (JIT) */
 
-	clicap_generate(sptr, "LS", 0);
+	clicap_generate(client, "LS", 0);
 }
 
-static void cap_req(Client *sptr, const char *arg)
+static void cap_req(Client *client, const char *arg)
 {
 	char buf[BUFSIZE];
 	char pbuf[2][BUFSIZE];
@@ -279,20 +279,20 @@ static void cap_req(Client *sptr, const char *arg)
 	int finished = 0, negate;
 	int errors = 0;
 
-	if (!IsUser(sptr))
-		SetCapabilityFast(sptr, CAP_IN_PROGRESS);
+	if (!IsUser(client))
+		SetCapabilityFast(client, CAP_IN_PROGRESS);
 
 	if (BadPtr(arg))
 		return;
 
 	buflen = snprintf(buf, sizeof(buf), ":%s CAP %s ACK",
-			  me.name, BadPtr(sptr->name) ? "*" : sptr->name);
+			  me.name, BadPtr(client->name) ? "*" : client->name);
 
 	pbuf[0][0] = '\0';
 	plen = 0;
 
-	for(cap = clicap_find(sptr, arg, &negate, &finished, &errors); cap;
-	    cap = clicap_find(sptr, NULL, &negate, &finished, &errors))
+	for(cap = clicap_find(client, arg, &negate, &finished, &errors); cap;
+	    cap = clicap_find(client, NULL, &negate, &finished, &errors))
 	{
 		/* filled the first array, but cant send it in case the
 		 * request fails.  one REQ should never fill more than two
@@ -323,25 +323,25 @@ static void cap_req(Client *sptr, const char *arg)
 	}
 
 	/* This one is special */
-	if ((sptr->local->cap_protocol >= 302) && (capdel & CAP_NOTIFY))
+	if ((client->local->cap_protocol >= 302) && (capdel & CAP_NOTIFY))
 		errors++; /* Reject "CAP REQ -cap-notify" */
 
 	if (errors)
 	{
-		sendto_one(sptr, NULL, ":%s CAP %s NAK :%s", me.name, BadPtr(sptr->name) ? "*" : sptr->name, arg);
+		sendto_one(client, NULL, ":%s CAP %s NAK :%s", me.name, BadPtr(client->name) ? "*" : client->name, arg);
 		return;
 	}
 
 	if (i)
 	{
-		sendto_one(sptr, NULL, "%s * :%s", buf, pbuf[0]);
-		sendto_one(sptr, NULL, "%s :%s", buf, pbuf[1]);
+		sendto_one(client, NULL, "%s * :%s", buf, pbuf[0]);
+		sendto_one(client, NULL, "%s :%s", buf, pbuf[1]);
 	}
 	else
-		sendto_one(sptr, NULL, "%s :%s", buf, pbuf[0]);
+		sendto_one(client, NULL, "%s :%s", buf, pbuf[0]);
 
-	sptr->local->caps |= capadd;
-	sptr->local->caps &= ~capdel;
+	client->local->caps |= capadd;
+	client->local->caps &= ~capdel;
 }
 
 struct clicap_cmd {
@@ -361,15 +361,15 @@ static int clicap_cmd_search(const char *command, struct clicap_cmd *entry)
 	return strcasecmp(command, entry->cmd);
 }
 
-int cap_never_visible(Client *acptr)
+int cap_never_visible(Client *client)
 {
 	return 0;
 }
 
 /** Is our handshake done? */
-int cap_is_handshake_finished(Client *acptr)
+int cap_is_handshake_finished(Client *client)
 {
-	if (HasCapabilityFast(acptr, CAP_IN_PROGRESS))
+	if (HasCapabilityFast(client, CAP_IN_PROGRESS))
 		return 0; /* We are in CAP LS stage, waiting for a CAP END */
 
 	return 1;
@@ -379,29 +379,29 @@ CMD_FUNC(cmd_cap)
 {
 	struct clicap_cmd *cmd;
 
-	if (!MyConnect(sptr))
+	if (!MyConnect(client))
 		return;
 
 	/* CAP is marked as "no fake lag" because we use custom fake lag rules:
 	 * Only add a 1 second fake lag penalty if this is the XXth command.
 	 * This will speed up connections considerably.
 	 */
-	if (sptr->local->receiveM > 15)
-		sptr->local->since++;
+	if (client->local->receiveM > 15)
+		client->local->since++;
 
 	if (DISABLE_CAP)
 	{
 		/* I know nothing! */
-		if (IsUser(sptr))
-			sendnumeric(sptr, ERR_UNKNOWNCOMMAND, "CAP");
+		if (IsUser(client))
+			sendnumeric(client, ERR_UNKNOWNCOMMAND, "CAP");
 		else
-			sendnumeric(sptr, ERR_NOTREGISTERED);
+			sendnumeric(client, ERR_NOTREGISTERED);
 		return;
 	}
 
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CAP");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "CAP");
 
 		return;
 	}
@@ -410,10 +410,10 @@ CMD_FUNC(cmd_cap)
 			   sizeof(clicap_cmdtable) / sizeof(struct clicap_cmd),
 			   sizeof(struct clicap_cmd), (bqcmp) clicap_cmd_search)))
 	{
-		sendnumeric(sptr, ERR_INVALIDCAPCMD, parv[1]);
+		sendnumeric(client, ERR_INVALIDCAPCMD, parv[1]);
 
 		return;
 	}
 
-	return (cmd->func)(sptr, parv[2]);
+	return (cmd->func)(client, parv[2]);
 }

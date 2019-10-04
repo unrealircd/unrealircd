@@ -57,19 +57,19 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_svssilence)
 {
-	Client *acptr;
+	Client *target;
 	int mine;
 	char *p, *cp, c;
 	
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 		return;
 
-	if (parc < 3 || BadPtr(parv[2]) || !(acptr = find_person(parv[1], NULL)))
+	if (parc < 3 || BadPtr(parv[2]) || !(target = find_person(parv[1], NULL)))
 		return;
 	
-	if (!MyUser(acptr))
+	if (!MyUser(target))
 	{
-		sendto_one(acptr, NULL, ":%s SVSSILENCE %s :%s", sptr->name, parv[1], parv[2]);
+		sendto_one(target, NULL, ":%s SVSSILENCE %s :%s", client->name, parv[1], parv[2]);
 		return;
 	}
 
@@ -87,10 +87,10 @@ CMD_FUNC(cmd_svssilence)
 		else
 			c = '+';
 		cp = pretty_mask(p);
-		if ((c == '-' && !del_silence(acptr, cp)) ||
-		    (c != '-' && !add_silence(acptr, cp, 0)))
+		if ((c == '-' && !del_silence(target, cp)) ||
+		    (c != '-' && !add_silence(target, cp, 0)))
 		{
-			sendto_prefix_one(acptr, acptr, NULL, ":%s SILENCE %c%s", sptr->name, c, cp);
+			sendto_prefix_one(target, target, NULL, ":%s SILENCE %c%s", client->name, c, cp);
 		}
 	}
 }

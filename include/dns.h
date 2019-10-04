@@ -20,7 +20,7 @@ struct DNSReq {
 	char *name; /**< Name being resolved (only for DNSREQ_LINKCONF and DNSREQ_CONNECT) */
 	char ipv6; /**< Resolving for ipv6 or ipv4? */
 	DNSReqType type; /**< DNS Request type (DNSREQ_*) */
-	Client *cptr; /**< Client the request is for, NULL if client died OR unavailable */
+	Client *client; /**< Client the request is for, NULL if client died OR unavailable */
 	ConfigItem_link *linkblock; /**< Linkblock */
 };
 

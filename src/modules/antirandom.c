@@ -532,8 +532,8 @@ static void free_config(void);
 int antirandom_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int antirandom_config_run(ConfigFile *, ConfigEntry *, int);
 int antirandom_config_posttest(int *);
-int antirandom_preconnect(Client *sptr);
-static int is_exempt(Client *sptr);
+int antirandom_preconnect(Client *client);
+static int is_exempt(Client *client);
 
 MOD_TEST()
 {
@@ -881,11 +881,11 @@ void strtolower_safe(char *dst, char *src, int size)
 /** Returns "spam score".
  * @note a user is expected, do not call for anything else (eg: servers)
  */
-static int get_spam_score(Client *sptr)
+static int get_spam_score(Client *client)
 {
-	char *nick = sptr->name;
-	char *user = sptr->user->username;
-	char *gecos = sptr->info;
+	char *nick = client->name;
+	char *user = client->user->username;
+	char *gecos = client->info;
 	char nbuf[NICKLEN+1], ubuf[USERLEN+1], rbuf[REALLEN+1];
 	int nscore, uscore, gscore, score;
 #ifdef TIMING
@@ -924,23 +924,23 @@ static int get_spam_score(Client *sptr)
 
 void check_all_users(void)
 {
-	Client *acptr;
+	Client *client;
 	int matches=0, score;
 	
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
-		if (IsUser(acptr))
+		if (IsUser(client))
 		{
-			if (is_exempt(acptr))
+			if (is_exempt(client))
 				continue;
 
-			score = get_spam_score(acptr);
+			score = get_spam_score(client);
 			if (score > cfg.threshold)
 			{
 				if (!matches)
 					sendto_realops("[antirandom] Full status report follows:");
 				sendto_realops("%d points: %s!%s@%s:%s",
-					score, acptr->name, acptr->user->username, acptr->user->realhost, acptr->info);
+					score, client->name, client->user->username, client->user->realhost, client->info);
 				matches++;
 			}
 		}
@@ -949,25 +949,25 @@ void check_all_users(void)
 		sendto_realops("[antirandom] %d match%s", matches, matches == 1 ? "" : "es");
 }
 
-int antirandom_preconnect(Client *sptr)
+int antirandom_preconnect(Client *client)
 {
 	int score;
 
-	if (!is_exempt(sptr))
+	if (!is_exempt(client))
 	{
-		score = get_spam_score(sptr);
+		score = get_spam_score(client);
 		if (score > cfg.threshold)
 		{
 			if (cfg.ban_action == BAN_ACT_WARN)
 			{
 				sendto_ops_and_log("[antirandom] would have denied access to user with score %d: %s!%s@%s:%s",
-					score, sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
+					score, client->name, client->user->username, client->user->realhost, client->info);
 				return 0;
 			}
 			if (cfg.show_failedconnects)
 				sendto_ops_and_log("[antirandom] denied access to user with score %d: %s!%s@%s:%s",
-					score, sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
-			return place_host_ban(sptr, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
+					score, client->name, client->user->username, client->user->realhost, client->info);
+			return place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
 		}
 	}
 	return 0;
@@ -986,23 +986,23 @@ static void free_stuff(void)
 }
 
 /** Is this user exempt from antirandom interventions? */
-static int is_exempt(Client *sptr)
+static int is_exempt(Client *client)
 {
 	/* WEBIRC gateway and exempt? */
 	if (cfg.except_webirc)
 	{
-		char *val = moddata_client_get(sptr, "webirc");
+		char *val = moddata_client_get(client, "webirc");
 		if (val && (atoi(val)>0))
 			return 1;
 	}
 
-	if (find_tkl_exception(TKL_ANTIRANDOM, sptr))
+	if (find_tkl_exception(TKL_ANTIRANDOM, client))
 		return 1;
 
 	/* Soft ban and logged in? */
-	if (IsSoftBanAction(cfg.ban_action) && IsLoggedIn(sptr))
+	if (IsSoftBanAction(cfg.ban_action) && IsLoggedIn(client))
 		return 1;
 
 	/* On except host? */
-	return unreal_mask_match(sptr, cfg.except_hosts);
+	return unreal_mask_match(client, cfg.except_hosts);
 }

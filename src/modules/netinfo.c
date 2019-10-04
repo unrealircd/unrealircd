@@ -78,12 +78,12 @@ CMD_FUNC(cmd_netinfo)
 		return;
 
 	/* Only allow from directly connected servers */
-	if (!MyConnect(sptr))
+	if (!MyConnect(client))
 		return;
 
-	if (IsNetInfo(sptr))
+	if (IsNetInfo(client))
 	{
-		sendto_realops("Already got NETINFO from Link %s", sptr->name);
+		sendto_realops("Already got NETINFO from Link %s", client->name);
 		return;
 	}
 
@@ -97,7 +97,7 @@ CMD_FUNC(cmd_netinfo)
 	{
 		irccounts.global_max = lmax;
 		sendto_realops("Max Global Count is now %li (set by link %s)",
-		    lmax, sptr->name);
+		    lmax, client->name);
 	}
 
 	xx = TStime();
@@ -110,38 +110,38 @@ CMD_FUNC(cmd_netinfo)
 		}
 		sendto_realops
 		    ("Possible negative TS split at link %s (%lld - %lld = %lld)%s",
-		    sptr->name, (long long)(xx), (long long)(endsync), (long long)(xx - endsync), emsg);
+		    client->name, (long long)(xx), (long long)(endsync), (long long)(xx - endsync), emsg);
 		sendto_server(&me, 0, 0, NULL,
 		    ":%s SMO o :\2(sync)\2 Possible negative TS split at link %s (%lld - %lld = %lld)%s",
-		    me.name, sptr->name, (long long)(xx), (long long)(endsync), (long long)(xx - endsync), emsg);
+		    me.name, client->name, (long long)(xx), (long long)(endsync), (long long)(xx - endsync), emsg);
 	}
 	sendto_realops
 	    ("Link %s -> %s is now synced [secs: %lld recv: %ld.%hu sent: %ld.%hu]",
-	    sptr->name, me.name, (long long)(TStime() - endsync), sptr->local->receiveK,
-	    sptr->local->receiveB, sptr->local->sendK, sptr->local->sendB);
+	    client->name, me.name, (long long)(TStime() - endsync), client->local->receiveK,
+	    client->local->receiveB, client->local->sendK, client->local->sendB);
 
 	sendto_server(&me, 0, 0, NULL,
 	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %lld recv: %ld.%hu sent: %ld.%hu]",
-	    me.name, sptr->name, me.name, (long long)(TStime() - endsync), sptr->local->receiveK,
-	    sptr->local->receiveB, sptr->local->sendK, sptr->local->sendB);
+	    me.name, client->name, me.name, (long long)(TStime() - endsync), client->local->receiveK,
+	    client->local->receiveB, client->local->sendK, client->local->sendB);
 
 	if (!(strcmp(ircnetwork, parv[8]) == 0))
 	{
 		sendto_realops("Network name mismatch from link %s (%s != %s)",
-		    sptr->name, parv[8], ircnetwork);
+		    client->name, parv[8], ircnetwork);
 		sendto_server(&me, 0, 0, NULL,
 		    ":%s SMO o :\2(sync)\2 Network name mismatch from link %s (%s != %s)",
-		    me.name, sptr->name, parv[8], ircnetwork);
+		    me.name, client->name, parv[8], ircnetwork);
 	}
 
 	if ((protocol != UnrealProtocol) && (protocol != 0))
 	{
 		sendto_realops
 		    ("Link %s is running Protocol u%li while we are running %d!",
-		    sptr->name, protocol, UnrealProtocol);
+		    client->name, protocol, UnrealProtocol);
 		sendto_server(&me, 0, 0, NULL,
 		    ":%s SMO o :\2(sync)\2 Link %s is running u%li while %s is running %d!",
-		    me.name, sptr->name, protocol, me.name, UnrealProtocol);
+		    me.name, client->name, protocol, me.name, UnrealProtocol);
 
 	}
 	strlcpy(buf, CLOAK_KEYCRC, sizeof(buf));
@@ -149,7 +149,7 @@ CMD_FUNC(cmd_netinfo)
 	{
 		sendto_realops
 			("Link %s has a DIFFERENT CLOAK KEY - %s != %s. \002YOU SHOULD CORRECT THIS ASAP\002.",
-				sptr->name, parv[4], buf);
+				client->name, parv[4], buf);
 	}
-	SetNetInfo(sptr);
+	SetNetInfo(client);
 }

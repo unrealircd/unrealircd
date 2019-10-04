@@ -36,8 +36,8 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 CMD_FUNC(cmd_nick);
 CMD_FUNC(cmd_uid);
-int _register_user(Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
-int AllowClient(Client *cptr, char *username);
+int _register_user(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip);
+int AllowClient(Client *client, char *username);
 
 MOD_TEST()
 {
@@ -272,16 +272,16 @@ CMD_FUNC(cmd_uid)
 
 	if (parc < 13)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "UID");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "UID");
 		return;
 	}
 
 	/* It's not just the directly attached client which must be a
 	 * server. The source itself needs to be a server.
 	 */
-	if (!IsServer(sptr))
+	if (!IsServer(client))
 	{
-		sendnumeric(sptr, ERR_NOTFORUSERS, "UID");
+		sendnumeric(client, ERR_NOTFORUSERS, "UID");
 		return;
 	}
 
@@ -292,50 +292,50 @@ CMD_FUNC(cmd_uid)
 	 */
 	if (!do_remote_nick_name(nick))
 	{
-		sendnumeric(sptr, ERR_ERRONEUSNICKNAME, parv[1], "Illegal characters");
+		sendnumeric(client, ERR_ERRONEUSNICKNAME, parv[1], "Illegal characters");
 
 		ircstats.is_kill++;
 		sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
-		    parv[1], sptr->name, get_client_name(sptr, FALSE));
+		    parv[1], client->name, get_client_name(client, FALSE));
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(sptr, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
+		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
 		    me.name, parv[1], me.name, parv[1],
-		    nick, sptr->name);
+		    nick, client->name);
 		return;
 	}
 
 	/* Kill quarantined opers early... */
-	if (IsQuarantined(sptr->direction) && strchr(parv[8], 'o'))
+	if (IsQuarantined(client->direction) && strchr(parv[8], 'o'))
 	{
 		ircstats.is_kill++;
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(sptr, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
+		sendto_one(client, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
 			me.name, parv[1], me.name);
 		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
-			parv[1], sptr->name);
+			parv[1], client->name);
 		return;
 	}
 
 	/* This one is never allowed, even from remotes */
 	if (!strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
 	{
-		sendnumeric(sptr, ERR_ERRONEUSNICKNAME, nick, "Reserved for internal IRCd purposes");
-		sendto_one(sptr, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
+		sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, "Reserved for internal IRCd purposes");
+		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
 		    me.name, parv[1], me.name, parv[1],
-		    nick, sptr->name);
+		    nick, client->name);
 		return;
 	}
 
-	if (!IsULine(sptr) && (tklban = find_qline(sptr, nick, &ishold)))
+	if (!IsULine(client) && (tklban = find_qline(client, nick, &ishold)))
 	{
-		if (IsServer(sptr) && !ishold) /* server introducing new client */
+		if (IsServer(client) && !ishold) /* server introducing new client */
 		{
-			acptrs = find_server(sptr->user == NULL ? parv[6] : sptr->user->server, NULL);
+			acptrs = find_server(client->user == NULL ? parv[6] : client->user->server, NULL);
 			/* (NEW: no unregistered Q-Line msgs anymore during linking) */
 			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
 				sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
-				    (*sptr->name != 0
-				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
+				    (*client->name != 0
+				    && !IsServer(client) ? client->name : "<unregistered>"),
 				    acptrs ? acptrs->name : "unknown server");
 		}
 	}
@@ -344,12 +344,12 @@ CMD_FUNC(cmd_uid)
 	if ((acptr = find_server(nick, NULL)) != NULL)
 	{
 		sendto_umode(UMODE_OPER, "Nick collision on %s(%s <- %s)",
-		    sptr->name, acptr->direction->name,
-		    get_client_name(sptr, FALSE));
+		    client->name, acptr->direction->name,
+		    get_client_name(client, FALSE));
 		ircstats.is_kill++;
-		sendto_one(sptr, NULL, ":%s KILL %s :%s (%s <- %s)",
+		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s)",
 		    me.name, parv[1], me.name, acptr->direction->name,
-		    get_client_name(sptr, FALSE));
+		    get_client_name(client, FALSE));
 		return;
 	}
 
@@ -370,7 +370,7 @@ CMD_FUNC(cmd_uid)
 		differ = (mycmp(acptr->user->username, parv[4]) || mycmp(acptr->user->realhost, parv[5]));
 		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %lld <- %s %lld)",
 		    acptr->name, acptr->direction->name, (long long)acptr->lastnick,
-		    sptr->direction->name, (long long)lastnick);
+		    client->direction->name, (long long)lastnick);
 		/*
 		   **    I'm putting the KILL handling here just to make it easier
 		   ** to read, it's hard to follow it the way it used to be.
@@ -386,14 +386,14 @@ CMD_FUNC(cmd_uid)
 		 */
 		if (acptr->lastnick == lastnick)
 		{
-			nick_collision(sptr, parv[1], ((parc > 6) ? parv[6] : NULL), NULL, acptr, NICKCOL_EQUAL);
+			nick_collision(client, parv[1], ((parc > 6) ? parv[6] : NULL), NULL, acptr, NICKCOL_EQUAL);
 			return;	/* We killed both users, now stop the process. */
 		}
 
 		if ((differ && (acptr->lastnick > lastnick)) ||
-		    (!differ && (acptr->lastnick < lastnick)) || acptr->direction == sptr->direction)	/* we missed a QUIT somewhere ? */
+		    (!differ && (acptr->lastnick < lastnick)) || acptr->direction == client->direction)	/* we missed a QUIT somewhere ? */
 		{
-			nick_collision(sptr, parv[1], ((parc > 6) ? parv[6] : NULL), NULL, acptr, NICKCOL_NEW_WON);
+			nick_collision(client, parv[1], ((parc > 6) ? parv[6] : NULL), NULL, acptr, NICKCOL_NEW_WON);
 			/* We got rid of the "wrong" user. Introduce the correct one. */
 			/* ^^ hmm.. why was this absent in nenolod's code, resulting in a 'return 0'? seems wrong. */
 			goto nickkill2done;
@@ -401,34 +401,34 @@ CMD_FUNC(cmd_uid)
 
 		if ((differ && (acptr->lastnick < lastnick)) || (!differ && (acptr->lastnick > lastnick)))
 		{
-			nick_collision(sptr, parv[1], ((parc > 6) ? parv[6] : NULL), NULL, acptr, NICKCOL_EXISTING_WON);
+			nick_collision(client, parv[1], ((parc > 6) ? parv[6] : NULL), NULL, acptr, NICKCOL_EXISTING_WON);
 			return;	/* Ignore the NICK */
 		}
 		return; /* just in case */
 	}
 
 nickkill2done:
-	/* Proceed with introducing the new client, change source (replace sptr) */
+	/* Proceed with introducing the new client, change source (replace client) */
 
-	serv = sptr;
-	sptr = make_client(serv->direction, serv);
-	strlcpy(sptr->id, parv[6], IDLEN);
-	add_client_to_list(sptr);
-	add_to_id_hash_table(sptr->id, sptr);
-	sptr->lastnick = atol(parv[3]);
-	strlcpy(sptr->name, nick, NICKLEN+1);
-	add_to_client_hash_table(nick, sptr);
+	serv = client;
+	client = make_client(serv->direction, serv);
+	strlcpy(client->id, parv[6], IDLEN);
+	add_client_to_list(client);
+	add_to_id_hash_table(client->id, client);
+	client->lastnick = atol(parv[3]);
+	strlcpy(client->name, nick, NICKLEN+1);
+	add_to_client_hash_table(nick, client);
 
 	/* FIXME: we need to split this out into register_remote_user() or something. */
 	parv[3] = nick;
-	parv[6] = sptr->name;
-	do_cmd(sptr, recv_mtags, "USER", parc - 3, &parv[3]);
-	if (IsDead(sptr))
+	parv[6] = client->name;
+	do_cmd(client, recv_mtags, "USER", parc - 3, &parv[3]);
+	if (IsDead(client))
 		return;
 	if (!IsULine(serv) && IsSynched(serv))
-		sendto_fconnectnotice(sptr, 0, NULL);
+		sendto_fconnectnotice(client, 0, NULL);
 
-	RunHook(HOOKTYPE_REMOTE_CONNECT, sptr);
+	RunHook(HOOKTYPE_REMOTE_CONNECT, client);
 }
 
 /*
@@ -465,26 +465,26 @@ CMD_FUNC(cmd_nick)
 	long lastnick = 0l;
 	int  differ = 1, update_watch = 1;
 	unsigned char newusr = 0;
-	unsigned char removemoder = (sptr->umodes & UMODE_REGNICK) ? 1 : 0;
+	unsigned char removemoder = (client->umodes & UMODE_REGNICK) ? 1 : 0;
 	Hook *h;
 	int i = 0;
-	char *nickid = (IsUser(sptr) && *sptr->id) ? sptr->id : NULL;
-	Client *cptr = sptr->direction; /* Pending a complete overhaul... (TODO) */
+	char *nickid = (IsUser(client) && *client->id) ? client->id : NULL;
+	Client *cptr = client->direction; /* Pending a complete overhaul... (TODO) */
 	/*
 	 * If the user didn't specify a nickname, complain
 	 */
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NONICKNAMEGIVEN);
+		sendnumeric(client, ERR_NONICKNAMEGIVEN);
 		return;
 	}
 
 	if (!IsServer(cptr))
 	{
-		if (MyConnect(sptr) && iConf.min_nick_length && !IsOper(sptr) && !IsULine(sptr) && strlen(parv[1]) < iConf.min_nick_length)
+		if (MyConnect(client) && iConf.min_nick_length && !IsOper(client) && !IsULine(client) && strlen(parv[1]) < iConf.min_nick_length)
 		{
 			snprintf(descbuf, sizeof descbuf, "A minimum length of %d chars is required", iConf.min_nick_length);
-			sendnumeric(sptr, ERR_ERRONEUSNICKNAME, parv[1], descbuf);
+			sendnumeric(client, ERR_ERRONEUSNICKNAME, parv[1], descbuf);
 			return;
 		}
 		strlcpy(nick, parv[1], iConf.nick_length + 1);
@@ -492,14 +492,14 @@ CMD_FUNC(cmd_nick)
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
 
-	if (MyConnect(sptr) && sptr->user && !ValidatePermissionsForPath("immune:nick-flood",sptr,NULL,NULL,NULL))
+	if (MyConnect(client) && client->user && !ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
 	{
-		if ((sptr->user->flood.nick_c >= NICK_COUNT) &&
-		    (TStime() - sptr->user->flood.nick_t < NICK_PERIOD))
+		if ((client->user->flood.nick_c >= NICK_COUNT) &&
+		    (TStime() - client->user->flood.nick_t < NICK_PERIOD))
 		{
 			/* Throttle... */
-			sendnumeric(sptr, ERR_NCHANGETOOFAST, nick,
-				(int)(NICK_PERIOD - (TStime() - sptr->user->flood.nick_t)));
+			sendnumeric(client, ERR_NCHANGETOOFAST, nick,
+				(int)(NICK_PERIOD - (TStime() - client->user->flood.nick_t)));
 			return;
 		}
 	}
@@ -512,34 +512,34 @@ CMD_FUNC(cmd_nick)
 	if ((IsServer(cptr) && !do_remote_nick_name(nick)) ||
 	    (!IsServer(cptr) && !do_nick_name(nick)))
 	{
-		sendnumeric(sptr, ERR_ERRONEUSNICKNAME, parv[1], "Illegal characters");
+		sendnumeric(client, ERR_ERRONEUSNICKNAME, parv[1], "Illegal characters");
 
 		if (IsServer(cptr))
 		{
 			ircstats.is_kill++;
 			sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
-			    parv[1], sptr->name, get_client_name(cptr, FALSE));
+			    parv[1], client->name, get_client_name(cptr, FALSE));
 			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
 			    me.name, parv[1], me.name, parv[1],
 			    nick, cptr->name);
-			if (sptr != cptr)
+			if (client != cptr)
 			{
 				/* bad nick change */
 				MessageTag *mtags = NULL;
 				int n;
 
-				new_message(sptr, NULL, &mtags);
+				new_message(client, NULL, &mtags);
 
-				sendto_server(sptr, 0, 0, mtags,
+				sendto_server(client, 0, 0, mtags,
 				    ":%s KILL %s :%s (%s <- %s!%s@%s)",
-				    me.name, sptr->name, me.name,
+				    me.name, client->name, me.name,
 				    get_client_name(cptr, FALSE),
-				    sptr->name,
-				    sptr->user ? sptr->ident : "",
-				    sptr->user ? sptr->user->server :
+				    client->name,
+				    client->user ? client->ident : "",
+				    client->user ? client->user->server :
 				    cptr->name);
-				SetKilled(sptr);
-				exit_client(sptr, mtags, "BadNick");
+				SetKilled(client);
+				exit_client(client, mtags, "BadNick");
 
 				free_message_tags(mtags);
 
@@ -550,7 +550,7 @@ CMD_FUNC(cmd_nick)
 	}
 
 	/* Kill quarantined opers early... */
-	if (IsServer(cptr) && IsQuarantined(sptr->direction) &&
+	if (IsServer(cptr) && IsQuarantined(client->direction) &&
 	    (parc >= 11) && strchr(parv[8], 'o'))
 	{
 		ircstats.is_kill++;
@@ -558,7 +558,7 @@ CMD_FUNC(cmd_nick)
 		sendto_one(cptr, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
 			me.name, parv[1], me.name);
 		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
-			parv[1], sptr->name);
+			parv[1], client->name);
 		/* (nothing to exit_client or to free, since user was never added) */
 		return;
 	}
@@ -591,9 +591,9 @@ CMD_FUNC(cmd_nick)
 	 */
 	if ((acptr = find_server(nick, NULL)))
 	{
-		if (MyConnect(sptr))
+		if (MyConnect(client))
 		{
-			sendnumeric(sptr, ERR_NICKNAMEINUSE, nick);
+			sendnumeric(client, ERR_NICKNAMEINUSE, nick);
 			return;	/* NICK message ignored */
 		}
 	}
@@ -605,47 +605,47 @@ CMD_FUNC(cmd_nick)
 	 */
 	if (!strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
 	{
-		sendnumeric(sptr, ERR_ERRONEUSNICKNAME, nick,
+		sendnumeric(client, ERR_ERRONEUSNICKNAME, nick,
 		    "Reserved for internal IRCd purposes");
 		return;
 	}
-	if (MyUser(sptr)) /* local client changin nick afterwards.. */
+	if (MyUser(client)) /* local client changin nick afterwards.. */
 	{
 		int xx;
-		spamfilter_build_user_string(spamfilter_user, nick, sptr);
-		if (match_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL))
+		spamfilter_build_user_string(spamfilter_user, nick, client);
+		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, 0, NULL))
 			return;
 	}
-	if (!IsULine(sptr) && (tklban = find_qline(sptr, nick, &ishold)))
+	if (!IsULine(client) && (tklban = find_qline(client, nick, &ishold)))
 	{
-		if (IsServer(sptr) && !ishold) /* server introducing new client */
+		if (IsServer(client) && !ishold) /* server introducing new client */
 		{
-			acptrs = find_server(sptr->user == NULL ? parv[6] : sptr->user->server, NULL);
+			acptrs = find_server(client->user == NULL ? parv[6] : client->user->server, NULL);
 			/* (NEW: no unregistered Q-Line msgs anymore during linking) */
 			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
 				sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
-				    (*sptr->name != 0
-				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
+				    (*client->name != 0
+				    && !IsServer(client) ? client->name : "<unregistered>"),
 				    acptrs ? acptrs->name : "unknown server");
 		}
 
-		if (IsServer(cptr) && IsUser(sptr) && !ishold) /* remote user changing nick */
+		if (IsServer(cptr) && IsUser(client) && !ishold) /* remote user changing nick */
 		{
 			sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
-				sptr->name, sptr->srvptr ? sptr->srvptr->name : "<unknown>");
+				client->name, client->srvptr ? client->srvptr->name : "<unknown>");
 		}
 
 		if (!IsServer(cptr)) /* local */
 		{
 			if (ishold)
 			{
-				sendnumeric(sptr, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
+				sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
 				return;
 			}
-			if (!ValidatePermissionsForPath("immune:server-ban:ban-nick",sptr,NULL,NULL,nick))
+			if (!ValidatePermissionsForPath("immune:server-ban:ban-nick",client,NULL,NULL,nick))
 			{
-				sptr->local->since += 4; /* lag them up */
-				sendnumeric(sptr, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
+				client->local->since += 4; /* lag them up */
+				sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
 				sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
 				    nick, get_client_name(cptr, FALSE));
 				return;	/* NICK message ignored */
@@ -665,7 +665,7 @@ CMD_FUNC(cmd_nick)
 		   ** Ultimate way to jupiter a nick ? >;-). -avalon
 		 */
 		sendto_umode(UMODE_OPER, "Nick collision on %s(%s <- %s)",
-		    sptr->name, acptr->direction->name,
+		    client->name, acptr->direction->name,
 		    get_client_name(cptr, FALSE));
 		ircstats.is_kill++;
 		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s <- %s)",
@@ -679,7 +679,7 @@ CMD_FUNC(cmd_nick)
 		return;
 	}
 
-	if (MyUser(cptr) && !ValidatePermissionsForPath("immune:nick-flood",sptr,NULL,NULL,NULL))
+	if (MyUser(cptr) && !ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
 		cptr->local->since += 3;	/* Nick-flood prot. -Donwulff */
 
 	if (!(acptr = find_client(nick, NULL)))
@@ -718,12 +718,12 @@ CMD_FUNC(cmd_nick)
 		goto nickkilldone;
 	}
 	/*
-	   ** If acptr == sptr, then we have a client doing a nick
+	   ** If acptr == client, then we have a client doing a nick
 	   ** change between *equivalent* nicknames as far as server
 	   ** is concerned (user is changing the case of their
 	   ** nickname or somesuch)
 	 */
-	if (acptr == sptr) {
+	if (acptr == client) {
 		if (strcmp(acptr->name, nick) != 0)
 		{
 			/* Allows change of case in their nick */
@@ -741,7 +741,7 @@ CMD_FUNC(cmd_nick)
 	}
 	/*
 	   ** Note: From this point forward it can be assumed that
-	   ** acptr != sptr (point to different client structures).
+	   ** acptr != client (point to different client structures).
 	 */
 	/*
 	   ** Decide, we really have a nick collision and deal with it
@@ -752,7 +752,7 @@ CMD_FUNC(cmd_nick)
 		   ** NICK is coming from local client connection. Just
 		   ** send error reply and ignore the command.
 		 */
-		sendnumeric(sptr, ERR_NICKNAMEINUSE, nick);
+		sendnumeric(client, ERR_NICKNAMEINUSE, nick);
 		return;	/* NICK message ignored */
 	}
 	/*
@@ -770,7 +770,7 @@ CMD_FUNC(cmd_nick)
 	   ** --Run
 	   **
 	 */
-	if (IsServer(sptr))
+	if (IsServer(client))
 	{
 		/*
 		   ** A new NICK being introduced by a neighbouring
@@ -801,14 +801,14 @@ CMD_FUNC(cmd_nick)
 		 */
 		if (!(parc > 3) || (acptr->lastnick == lastnick))
 		{
-			nick_collision(sptr, parv[1], nickid, NULL, acptr, NICKCOL_EQUAL);
+			nick_collision(client, parv[1], nickid, NULL, acptr, NICKCOL_EQUAL);
 			return; /* We killed both users, now stop the process. */
 		}
 
 		if ((differ && (acptr->lastnick > lastnick)) ||
 		    (!differ && (acptr->lastnick < lastnick)) || acptr->direction == cptr)	/* we missed a QUIT somewhere ? */
 		{
-			nick_collision(sptr, parv[1], nickid, NULL, acptr, NICKCOL_NEW_WON);
+			nick_collision(client, parv[1], nickid, NULL, acptr, NICKCOL_NEW_WON);
 			/* OK, we got rid of the "wrong" user, now we're going to add the
 			 * user the other server introduced.
 			 */
@@ -818,7 +818,7 @@ CMD_FUNC(cmd_nick)
 		if ((differ && (acptr->lastnick < lastnick)) ||
 		    (!differ && (acptr->lastnick > lastnick)))
 		{
-			nick_collision(sptr, parv[1], nickid, NULL, acptr, NICKCOL_EXISTING_WON);
+			nick_collision(client, parv[1], nickid, NULL, acptr, NICKCOL_EXISTING_WON);
 			return; /* Ignore the NICK. */
 		}
 		return;
@@ -830,57 +830,57 @@ CMD_FUNC(cmd_nick)
 		 */
 		if (parc > 2)
 			lastnick = atol(parv[2]);
-		differ = (mycmp(acptr->user->username, sptr->user->username) ||
-		    mycmp(acptr->user->realhost, sptr->user->realhost));
+		differ = (mycmp(acptr->user->username, client->user->username) ||
+		    mycmp(acptr->user->realhost, client->user->realhost));
 		sendto_umode(UMODE_OPER, "Nick change collision from %s to %s (%s %lld <- %s %lld)",
-		    sptr->name, acptr->name, acptr->direction->name,
+		    client->name, acptr->name, acptr->direction->name,
 		    (long long)acptr->lastnick,
-		    sptr->direction->name, (long long)lastnick);
+		    client->direction->name, (long long)lastnick);
 		if (!(parc > 2) || lastnick == acptr->lastnick)
 		{
-			nick_collision(sptr, parv[1], nickid, sptr, acptr, NICKCOL_EQUAL);
+			nick_collision(client, parv[1], nickid, client, acptr, NICKCOL_EQUAL);
 			return; /* Now that I killed them both, ignore the NICK */
 		}
 		if ((differ && (acptr->lastnick > lastnick)) ||
 		    (!differ && (acptr->lastnick < lastnick)))
 		{
-			nick_collision(sptr, parv[1], nickid, sptr, acptr, NICKCOL_NEW_WON);
+			nick_collision(client, parv[1], nickid, client, acptr, NICKCOL_NEW_WON);
 			goto nickkilldone;	/* their user won, introduce new nick */
 		}
 		if ((differ && (acptr->lastnick < lastnick)) ||
 		    (!differ && (acptr->lastnick > lastnick)))
 		{
-			nick_collision(sptr, parv[1], nickid, sptr, acptr, NICKCOL_EXISTING_WON);
+			nick_collision(client, parv[1], nickid, client, acptr, NICKCOL_EXISTING_WON);
 			return; /* their user lost, ignore the NICK */
 		}
 
 	}
 	return;		/* just in case */
       nickkilldone:
-	if (IsServer(sptr))
+	if (IsServer(client))
 	{
 		/* A server introducing a new client, change source */
 
 		if (serv == NULL)
-			serv = sptr;
-		sptr = make_client(cptr, serv);
-		add_client_to_list(sptr);
+			serv = client;
+		client = make_client(cptr, serv);
+		add_client_to_list(client);
 		if (parc > 2)
-			sptr->hopcount = atol(parv[2]);
+			client->hopcount = atol(parv[2]);
 		if (parc > 3)
-			sptr->lastnick = atol(parv[3]);
+			client->lastnick = atol(parv[3]);
 		else		/* Little bit better, as long as not all upgraded */
-			sptr->lastnick = TStime();
-		if (sptr->lastnick < 0)
+			client->lastnick = TStime();
+		if (client->lastnick < 0)
 		{
 			sendto_realops
 			    ("Negative timestamp recieved from %s, resetting to TStime (%s)",
 			    cptr->name, backupbuf);
-			sptr->lastnick = TStime();
+			client->lastnick = TStime();
 		}
 		newusr = 1;
 	}
-	else if (sptr->name[0] && IsUser(sptr))
+	else if (client->name[0] && IsUser(client))
 	{
 		MessageTag *mtags = NULL;
 
@@ -891,83 +891,83 @@ CMD_FUNC(cmd_nick)
 		   ** change to occur.
 		   ** Also set 'lastnick' to current time, if changed.
 		 */
-		if (MyUser(sptr))
+		if (MyUser(client))
 		{
-			for (mp = sptr->user->channel; mp; mp = mp->next)
+			for (mp = client->user->channel; mp; mp = mp->next)
 			{
-				if (!is_skochanop(sptr, mp->chptr) && is_banned(sptr, mp->chptr, BANCHK_NICK, NULL, NULL))
+				if (!is_skochanop(client, mp->chptr) && is_banned(client, mp->chptr, BANCHK_NICK, NULL, NULL))
 				{
-					sendnumeric(sptr, ERR_BANNICKCHANGE,
+					sendnumeric(client, ERR_BANNICKCHANGE,
 					    mp->chptr->chname);
 					return;
 				}
-				if (CHECK_TARGET_NICK_BANS && !is_skochanop(sptr, mp->chptr) && is_banned_with_nick(sptr, mp->chptr, BANCHK_NICK, nick, NULL, NULL))
+				if (CHECK_TARGET_NICK_BANS && !is_skochanop(client, mp->chptr) && is_banned_with_nick(client, mp->chptr, BANCHK_NICK, nick, NULL, NULL))
 				{
-					sendnumeric(sptr, ERR_BANNICKCHANGE, mp->chptr->chname);
+					sendnumeric(client, ERR_BANNICKCHANGE, mp->chptr->chname);
 					return;
 				}
 
 				for (h = Hooks[HOOKTYPE_CHAN_PERMIT_NICK_CHANGE]; h; h = h->next)
 				{
-					i = (*(h->func.intfunc))(sptr,mp->chptr);
+					i = (*(h->func.intfunc))(client,mp->chptr);
 					if (i != HOOK_CONTINUE)
 						break;
 				}
 
 				if (i == HOOK_DENY)
 				{
-					sendnumeric(sptr, ERR_NONICKCHANGE,
+					sendnumeric(client, ERR_NONICKCHANGE,
 					    mp->chptr->chname);
 					return;
 				}
 			}
 
-			if (TStime() - sptr->user->flood.nick_t >= NICK_PERIOD)
+			if (TStime() - client->user->flood.nick_t >= NICK_PERIOD)
 			{
-				sptr->user->flood.nick_t = TStime();
-				sptr->user->flood.nick_c = 1;
+				client->user->flood.nick_t = TStime();
+				client->user->flood.nick_c = 1;
 			} else
-				sptr->user->flood.nick_c++;
+				client->user->flood.nick_c++;
 
 			sendto_snomask(SNO_NICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
-				sptr->name, sptr->user->username, sptr->user->realhost, nick);
+				client->name, client->user->username, client->user->realhost, nick);
 
-			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
+			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, client, nick);
 		} else {
-			if (!IsULine(sptr))
+			if (!IsULine(client))
 				sendto_snomask(SNO_FNICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
-					sptr->name, sptr->user->username, sptr->user->realhost, nick);
+					client->name, client->user->username, client->user->realhost, nick);
 
-			RunHook2(HOOKTYPE_REMOTE_NICKCHANGE, sptr, nick);
+			RunHook2(HOOKTYPE_REMOTE_NICKCHANGE, client, nick);
 		}
 		/*
 		 * Client just changing their nick. If he/she is
 		 * on a channel, send note of change to all clients
 		 * on that channel. Propagate notice to other servers.
 		 */
-		if (mycmp(sptr->name, nick) ||
+		if (mycmp(client->name, nick) ||
 		    /* Next line can be removed when all upgraded  --Run */
-		    (!MyUser(sptr) && parc > 2
-		    && atol(parv[2]) < sptr->lastnick))
-			sptr->lastnick = (MyUser(sptr)
+		    (!MyUser(client) && parc > 2
+		    && atol(parv[2]) < client->lastnick))
+			client->lastnick = (MyUser(client)
 			    || parc < 3) ? TStime() : atol(parv[2]);
-		if (sptr->lastnick < 0)
+		if (client->lastnick < 0)
 		{
 			sendto_realops("Negative timestamp (%s)", backupbuf);
-			sptr->lastnick = TStime();
+			client->lastnick = TStime();
 		}
-		add_history(sptr, 1);
-		new_message(sptr, recv_mtags, &mtags);
-		sendto_server(sptr, PROTO_SID, 0, mtags, ":%s NICK %s %lld",
-		    ID(sptr), nick, (long long)sptr->lastnick);
-		sendto_server(sptr, 0, PROTO_SID, mtags, ":%s NICK %s %lld",
-		    sptr->name, nick, (long long)sptr->lastnick);
-		sendto_local_common_channels(sptr, NULL, 0, mtags, ":%s NICK :%s", sptr->name, nick);
+		add_history(client, 1);
+		new_message(client, recv_mtags, &mtags);
+		sendto_server(client, PROTO_SID, 0, mtags, ":%s NICK %s %lld",
+		    ID(client), nick, (long long)client->lastnick);
+		sendto_server(client, 0, PROTO_SID, mtags, ":%s NICK %s %lld",
+		    client->name, nick, (long long)client->lastnick);
+		sendto_local_common_channels(client, NULL, 0, mtags, ":%s NICK :%s", client->name, nick);
 		free_message_tags(mtags);
 		if (removemoder)
-			sptr->umodes &= ~UMODE_REGNICK;
+			client->umodes &= ~UMODE_REGNICK;
 	}
-	else if (!sptr->name[0])
+	else if (!client->name[0])
 	{
 		if (iConf.ping_cookie)
 		{
@@ -976,30 +976,30 @@ CMD_FUNC(cmd_nick)
 			 *
 			 * Generate a random string for them to pong with.
 			 */
-			sptr->local->nospoof = getrandom32();
+			client->local->nospoof = getrandom32();
 
-			sendto_one(sptr, NULL, "PING :%X", sptr->local->nospoof);
+			sendto_one(client, NULL, "PING :%X", client->local->nospoof);
 		}
 
 		/* Copy password to the passwd field if it's given after NICK */
 		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN))
-			safe_strdup(sptr->local->passwd, parv[2]);
+			safe_strdup(client->local->passwd, parv[2]);
 
 		/* This had to be copied here to avoid problems.. */
-		strlcpy(sptr->name, nick, sizeof(sptr->name));
+		strlcpy(client->name, nick, sizeof(client->name));
 
 		/* Let's see if we can get online now... */
-		if (is_handshake_finished(sptr))
+		if (is_handshake_finished(client))
 		{
 			/* Send a CTCP VERSION */
-			if (!iConf.ping_cookie && USE_BAN_VERSION && MyConnect(sptr))
-				sendto_one(sptr, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
+			if (!iConf.ping_cookie && USE_BAN_VERSION && MyConnect(client))
+				sendto_one(client, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 					me.name, nick);
 
-			sptr->lastnick = TStime();
-			if (!register_user(sptr, nick, sptr->user->username, NULL, NULL, NULL))
+			client->lastnick = TStime();
+			if (!register_user(client, nick, client->user->username, NULL, NULL, NULL))
 				return;
-			strlcpy(nick, sptr->name, sizeof(nick)); /* don't ask, but I need this. do not remove! -- Syzop */
+			strlcpy(nick, client->name, sizeof(nick)); /* don't ask, but I need this. do not remove! -- Syzop */
 			update_watch = 0;
 			newusr = 1;
 		}
@@ -1007,49 +1007,49 @@ CMD_FUNC(cmd_nick)
 	/*
 	 *  Finally set new nick name.
 	 */
-	if (update_watch && sptr->name[0])
+	if (update_watch && client->name[0])
 	{
-		(void)del_from_client_hash_table(sptr->name, sptr);
-		if (IsUser(sptr))
-			hash_check_watch(sptr, RPL_LOGOFF);
+		(void)del_from_client_hash_table(client->name, client);
+		if (IsUser(client))
+			hash_check_watch(client, RPL_LOGOFF);
 	}
 
 	/* update fdlist --nenolod */
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 	{
 		snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
-		fd_desc(sptr->local->fd, descbuf);
+		fd_desc(client->local->fd, descbuf);
 	}
 
-	(void)strcpy(sptr->name, nick);
-	(void)add_to_client_hash_table(nick, sptr);
+	(void)strcpy(client->name, nick);
+	(void)add_to_client_hash_table(nick, client);
 	if (IsServer(cptr) && parc > 7)
 	{
 		parv[3] = nick;
-		do_cmd(sptr, recv_mtags, "USER", parc - 3, &parv[3]);
-		if (IsDead(sptr))
+		do_cmd(client, recv_mtags, "USER", parc - 3, &parv[3]);
+		if (IsDead(client))
 			return;
-		if (IsNetInfo(cptr) && !IsULine(sptr)) // FIXME: use IsSynced here too to match cmd_uid
-			sendto_fconnectnotice(sptr, 0, NULL);
+		if (IsNetInfo(cptr) && !IsULine(client)) // FIXME: use IsSynced here too to match cmd_uid
+			sendto_fconnectnotice(client, 0, NULL);
 	}
-	else if (IsUser(sptr) && update_watch)
-		hash_check_watch(sptr, RPL_LOGON);
+	else if (IsUser(client) && update_watch)
+		hash_check_watch(client, RPL_LOGON);
 
-	if (newusr && !MyUser(sptr) && IsUser(sptr))
+	if (newusr && !MyUser(client) && IsUser(client))
 	{
-		RunHook(HOOKTYPE_REMOTE_CONNECT, sptr);
+		RunHook(HOOKTYPE_REMOTE_CONNECT, client);
 	}
 
-	if (removemoder && MyUser(sptr))
+	if (removemoder && MyUser(client))
 	{
-		sendto_one(sptr, NULL, ":%s MODE %s :-r", me.name, sptr->name);
+		sendto_one(client, NULL, ":%s MODE %s :-r", me.name, client->name);
 	}
 }
 
 /** Register the connection as a User.
  * This is called after NICK + USER (in no particular order)
  * and possibly other protocol messages as well (eg CAP).
- * @param sptr		Client to be made a user.
+ * @param client		Client to be made a user.
  * @param nick		Nick name
  * @param username	Username
  * @param umode		User modes
@@ -1057,7 +1057,7 @@ CMD_FUNC(cmd_nick)
  * @param ip		IP address string (can be NULL)
  * @returns 1 if successfully registered, 0 if not (client might be killed).
  */
-int _register_user(Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip)
+int _register_user(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip)
 {
 	ConfigItem_ban *bconf;
 	char *tmpstr;
@@ -1065,8 +1065,8 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
 	int i, xx;
 	Hook *h;
-	ClientUser *user = sptr->user;
-	Client *nsptr;
+	ClientUser *user = client->user;
+	Client *nclient;
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -1081,42 +1081,42 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 	TKL *savetkl = NULL;
 	ConfigItem_tld *tlds;
 
-	nick = sptr->name; /* <- The data is always the same, but the pointer is sometimes not,
+	nick = client->name; /* <- The data is always the same, but the pointer is sometimes not,
 	                    *    I need this for one of my modules, so do not remove! ;) -- Syzop */
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 	{
 	        char temp[USERLEN + 1];
 
-		if (!AllowClient(sptr, username))
+		if (!AllowClient(client, username))
 		{
 			ircstats.is_ref++;
 			/* For safety, we have an extra kill here */
-			if (!IsDead(sptr))
-				exit_client(sptr, NULL, "Rejected");
+			if (!IsDead(client))
+				exit_client(client, NULL, "Rejected");
 			return 0;
 		}
 
-		if (sptr->local->hostp)
+		if (client->local->hostp)
 		{
 			/* reject ASCII < 32 and ASCII >= 127 (note: upper resolver might be even more strict). */
-			for (tmpstr = sptr->local->sockhost; *tmpstr > ' ' && *tmpstr < 127; tmpstr++);
+			for (tmpstr = client->local->sockhost; *tmpstr > ' ' && *tmpstr < 127; tmpstr++);
 
 			/* if host contained invalid ASCII _OR_ the DNS reply is an IP-like reply
 			 * (like: 1.2.3.4 or ::ffff:1.2.3.4), then reject it and use IP instead.
 			 */
-			if (*tmpstr || !*user->realhost || (isdigit(*sptr->local->sockhost) && (sptr->local->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
-			    || (sptr->local->sockhost[0] == ':'))
-				strlcpy(sptr->local->sockhost, sptr->ip, sizeof(sptr->local->sockhost));
+			if (*tmpstr || !*user->realhost || (isdigit(*client->local->sockhost) && (client->local->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
+			    || (client->local->sockhost[0] == ':'))
+				strlcpy(client->local->sockhost, client->ip, sizeof(client->local->sockhost));
 		}
-		if (sptr->local->sockhost[0])
+		if (client->local->sockhost[0])
 		{
-			strlcpy(user->realhost, sptr->local->sockhost, sizeof(sptr->local->sockhost)); /* SET HOSTNAME */
+			strlcpy(user->realhost, client->local->sockhost, sizeof(client->local->sockhost)); /* SET HOSTNAME */
 		} else {
-			sendto_realops("[HOSTNAME BUG] sptr->local->sockhost is empty for user %s (%s, %s)",
-				sptr->name, sptr->ip ? sptr->ip : "<null>", user->realhost);
-			ircd_log(LOG_ERROR, "[HOSTNAME BUG] sptr->local->sockhost is empty for user %s (%s, %s)",
-				sptr->name, sptr->ip ? sptr->ip : "<null>", user->realhost);
+			sendto_realops("[HOSTNAME BUG] client->local->sockhost is empty for user %s (%s, %s)",
+				client->name, client->ip ? client->ip : "<null>", user->realhost);
+			ircd_log(LOG_ERROR, "[HOSTNAME BUG] client->local->sockhost is empty for user %s (%s, %s)",
+				client->name, client->ip ? client->ip : "<null>", user->realhost);
 		}
 
 		/*
@@ -1128,7 +1128,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 		 * username. -Donwulff
 		 *
 		 * I do, We only allow a-z A-Z 0-9 _ - and . now so the
-		 * !strchr(sptr->ident, '@') check is out of date. -Cabal95
+		 * !strchr(client->ident, '@') check is out of date. -Cabal95
 		 *
 		 * Moved the noident stuff here. -OnyxDragon
 		 */
@@ -1136,10 +1136,10 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 		/* because username may point to user->username */
 		strlcpy(temp, username, USERLEN + 1);
 
-		if (!IsUseIdent(sptr))
+		if (!IsUseIdent(client))
 			strlcpy(user->username, temp, USERLEN + 1);
-		else if (IsIdentSuccess(sptr))
-			strlcpy(user->username, sptr->ident, USERLEN+1);
+		else if (IsIdentSuccess(client))
+			strlcpy(user->username, client->ident, USERLEN+1);
 		else
 		{
 			if (IDENT_CHECK == 0) {
@@ -1190,7 +1190,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 		{
 			if (stripuser[0] == '\0')
 			{
-				exit_client(sptr, NULL, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
+				exit_client(client, NULL, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
 				return 0;
 			}
 
@@ -1203,22 +1203,22 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			u1 = NULL;
 
 		/* Check ban realname { } blocks */
-		if ((bconf = Find_ban(NULL, sptr->info, CONF_BAN_REALNAME)))
+		if ((bconf = Find_ban(NULL, client->info, CONF_BAN_REALNAME)))
 		{
 			ircstats.is_ref++;
-			banned_client(sptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
+			banned_client(client, "realname", bconf->reason?bconf->reason:"", 0, 0);
 			return 0;
 		}
 		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
-		if (find_tkline_match(sptr, 0))
+		if (find_tkline_match(client, 0))
 		{
 			ircstats.is_ref++;
 			return 0;
 		}
-		find_shun(sptr);
+		find_shun(client);
 
-		spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
-		if (match_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl))
+		spamfilter_build_user_string(spamfilter_user, client->name, client);
+		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl))
 		{
 			if (savetkl && ((savetkl->ptr.spamfilter->action == BAN_ACT_VIRUSCHAN) ||
 			                (savetkl->ptr.spamfilter->action == BAN_ACT_SOFT_VIRUSCHAN)))
@@ -1236,7 +1236,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 
 		for (h = Hooks[HOOKTYPE_PRE_LOCAL_CONNECT]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(sptr);
+			i = (*(h->func.intfunc))(client);
 			if (i == HOOK_DENY)
 				return 0;
 			if (i == HOOK_ALLOW)
@@ -1247,89 +1247,89 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 	{
 		strlcpy(user->username, username, USERLEN+1);
 	}
-	SetUser(sptr);
+	SetUser(client);
 	irccounts.clients++;
-	if (sptr->srvptr && sptr->srvptr->serv)
-		sptr->srvptr->serv->users++;
+	if (client->srvptr && client->srvptr->serv)
+		client->srvptr->serv->users++;
 
-	make_virthost(sptr, user->realhost, user->cloakedhost, 0);
+	make_virthost(client, user->realhost, user->cloakedhost, 0);
 	safe_strdup(user->virthost, user->cloakedhost);
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 	{
 		char descbuf[BUFSIZE];
 		int i;
 
 		snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
-		fd_desc(sptr->local->fd, descbuf);
+		fd_desc(client->local->fd, descbuf);
 
-		list_move(&sptr->lclient_node, &lclient_list);
+		list_move(&client->lclient_node, &lclient_list);
 
 		irccounts.unknown--;
 		irccounts.me_clients++;
 
-		if (IsSecure(sptr))
+		if (IsSecure(client))
 		{
-			sptr->umodes |= UMODE_SECURE;
-			RunHook(HOOKTYPE_SECURE_CONNECT, sptr);
+			client->umodes |= UMODE_SECURE;
+			RunHook(HOOKTYPE_SECURE_CONNECT, client);
 		}
 
-		if (IsHidden(sptr))
+		if (IsHidden(client))
 			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [VHOST %s]", nick,
 				user->username, user->realhost, user->virthost);
 		else
 			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username,
 				user->realhost);
-		RunHook2(HOOKTYPE_WELCOME, sptr, 0);
-		sendnumeric(sptr, RPL_WELCOME,
+		RunHook2(HOOKTYPE_WELCOME, client, 0);
+		sendnumeric(client, RPL_WELCOME,
 		    ircnetwork, nick, user->username, user->realhost);
-		RunHook2(HOOKTYPE_WELCOME, sptr, 1);
-		sendnumeric(sptr, RPL_YOURHOST,
+		RunHook2(HOOKTYPE_WELCOME, client, 1);
+		sendnumeric(client, RPL_YOURHOST,
 		    me.name, version);
-		RunHook2(HOOKTYPE_WELCOME, sptr, 2);
-		sendnumeric(sptr, RPL_CREATED, creation);
-		RunHook2(HOOKTYPE_WELCOME, sptr, 3);
-		sendnumeric(sptr, RPL_MYINFO,
+		RunHook2(HOOKTYPE_WELCOME, client, 2);
+		sendnumeric(client, RPL_CREATED, creation);
+		RunHook2(HOOKTYPE_WELCOME, client, 3);
+		sendnumeric(client, RPL_MYINFO,
 		    me.name, version, umodestring, cmodestring);
-		RunHook2(HOOKTYPE_WELCOME, sptr, 4);
+		RunHook2(HOOKTYPE_WELCOME, client, 4);
 
 		for (i = 0; ISupportStrings[i]; i++)
-			sendnumeric(sptr, RPL_ISUPPORT, ISupportStrings[i]);
+			sendnumeric(client, RPL_ISUPPORT, ISupportStrings[i]);
 
-		RunHook2(HOOKTYPE_WELCOME, sptr, 5);
+		RunHook2(HOOKTYPE_WELCOME, client, 5);
 
-		if (IsHidden(sptr))
+		if (IsHidden(client))
 		{
-			sendnumeric(sptr, RPL_HOSTHIDDEN, user->virthost);
-			RunHook2(HOOKTYPE_WELCOME, sptr, 396);
+			sendnumeric(client, RPL_HOSTHIDDEN, user->virthost);
+			RunHook2(HOOKTYPE_WELCOME, client, 396);
 		}
 
-		if (IsSecureConnect(sptr))
+		if (IsSecureConnect(client))
 		{
-			if (sptr->local->ssl && !iConf.no_connect_tls_info)
+			if (client->local->ssl && !iConf.no_connect_tls_info)
 			{
-				sendnotice(sptr, "*** You are connected to %s with %s",
-					me.name, tls_get_cipher(sptr->local->ssl));
+				sendnotice(client, "*** You are connected to %s with %s",
+					me.name, tls_get_cipher(client->local->ssl));
 			}
 		}
 
 		{
 			char *parv[2];
-			parv[0] = sptr->name;
+			parv[0] = client->name;
 			parv[1] = NULL;
-			do_cmd(sptr, NULL, "LUSERS", 1, parv);
-			if (IsDead(sptr))
+			do_cmd(client, NULL, "LUSERS", 1, parv);
+			if (IsDead(client))
 				return 0;
 		}
 
-		RunHook2(HOOKTYPE_WELCOME, sptr, 266);
+		RunHook2(HOOKTYPE_WELCOME, client, 266);
 
-		short_motd(sptr);
+		short_motd(client);
 
-		RunHook2(HOOKTYPE_WELCOME, sptr, 376);
+		RunHook2(HOOKTYPE_WELCOME, client, 376);
 
 #ifdef EXPERIMENTAL
-		sendnotice(sptr,
+		sendnotice(client,
 			"*** \2NOTE:\2 This server is running experimental IRC server software (UnrealIRCd %s). "
 			"If you find any bugs or problems, please report them at https://bugs.unrealircd.org/",
 			VERSIONONLY);
@@ -1339,7 +1339,7 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 		 * anything, happened.
 		 */
 		if (u1)
-			sendnumeric(sptr, ERR_HOSTILENAME, olduser, userbad, stripuser);
+			sendnumeric(client, ERR_HOSTILENAME, olduser, userbad, stripuser);
 	}
 	else
 	{
@@ -1349,33 +1349,33 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 		if (!(acptr = find_server_quick(user->server)))
 		{
 			sendto_ops("Bad USER [%s] :%s USER %s %s : No such server",
-			           sptr->name, nick, user->username, user->server);
-			sendto_one(sptr, NULL, ":%s KILL %s :%s (No such server: %s)",
-			    me.name, sptr->name, me.name, user->server);
-			SetKilled(sptr);
-			exit_client(sptr, NULL, "USER without prefix(2.8) or wrong prefix");
+			           client->name, nick, user->username, user->server);
+			sendto_one(client, NULL, ":%s KILL %s :%s (No such server: %s)",
+			    me.name, client->name, me.name, user->server);
+			SetKilled(client);
+			exit_client(client, NULL, "USER without prefix(2.8) or wrong prefix");
 			return 0;
 		}
-		else if (acptr->direction != sptr->direction)
+		else if (acptr->direction != client->direction)
 		{
 			sendto_ops("Bad User [%s] :%s USER %s %s, != %s[%s]",
-			    sptr->name, nick, user->username, user->server,
+			    client->name, nick, user->username, user->server,
 			    acptr->name, acptr->direction->name);
-			sendto_one(sptr, NULL, ":%s KILL %s :%s (%s != %s[%s])",
-			    me.name, sptr->name, me.name, user->server,
+			sendto_one(client, NULL, ":%s KILL %s :%s (%s != %s[%s])",
+			    me.name, client->name, me.name, user->server,
 			    acptr->direction->name, acptr->direction->local->sockhost);
-			SetKilled(sptr);
-			exit_client(sptr, NULL, "USER server wrong direction");
+			SetKilled(client);
+			exit_client(client, NULL, "USER server wrong direction");
 			return 0;
 		} else
 		{
-			sptr->flags |= acptr->flags;
+			client->flags |= acptr->flags;
 		}
 
-		if (IsULine(sptr->srvptr))
-			SetULine(sptr);
+		if (IsULine(client->srvptr))
+			SetULine(client);
 	}
-	if (sptr->umodes & UMODE_INVISIBLE)
+	if (client->umodes & UMODE_INVISIBLE)
 	{
 		irccounts.invisible++;
 	}
@@ -1390,17 +1390,17 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			{
 				sendto_ops("USER with invalid IP (%s) (%s) -- "
 				           "IP must be base64 encoded binary representation of either IPv4 or IPv6",
-				           sptr->name, ip);
-				exit_client(sptr, NULL, "USER with invalid IP");
+				           client->name, ip);
+				exit_client(client, NULL, "USER with invalid IP");
 				return 0;
 			}
-			safe_strdup(sptr->ip, ipstring);
+			safe_strdup(client->ip, ipstring);
 		}
 
 		/* For remote clients we recalculate the cloakedhost here because
 		 * it may depend on the IP address (bug #5064).
 		 */
-		make_virthost(sptr, user->realhost, user->cloakedhost, 0);
+		make_virthost(client, user->realhost, user->cloakedhost, 0);
 		safe_strdup(user->virthost, user->cloakedhost);
 
 		/* Set the umodes */
@@ -1409,36 +1409,36 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 		tkllayer[2] = umode;
 		tkllayer[3] = NULL;
 		dontspread = 1;
-		do_cmd(sptr, NULL, "MODE", 3, tkllayer);
+		do_cmd(client, NULL, "MODE", 3, tkllayer);
 		dontspread = 0;
 
 		/* Set the vhost */
 		if (virthost && *virthost != '*')
-			safe_strdup(sptr->user->virthost, virthost);
+			safe_strdup(client->user->virthost, virthost);
 	}
 
-	hash_check_watch(sptr, RPL_LOGON);	/* Uglier hack */
-	build_umode_string(sptr, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
+	hash_check_watch(client, RPL_LOGON);	/* Uglier hack */
+	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
 
 	/* NICKv2 Servers ! */
-	sendto_serv_butone_nickcmd(sptr->direction, sptr, (*buf == '\0' ? "+" : buf));
+	sendto_serv_butone_nickcmd(client->direction, client, (*buf == '\0' ? "+" : buf));
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 	{
-		broadcast_moddata_client(sptr);
-		sendto_connectnotice(sptr, 0, NULL); /* moved down, for modules. */
+		broadcast_moddata_client(client);
+		sendto_connectnotice(client, 0, NULL); /* moved down, for modules. */
 
-		/* Send password from sptr->local->passwd to NickServ for identification,
+		/* Send password from client->local->passwd to NickServ for identification,
 		 * if passwd given and if NickServ is online.
 		 * - by taz, modified by Wizzu
 		 */
-		if (sptr->local->passwd && !IsLoggedIn(sptr) && SERVICES_NAME && (nsptr = find_person(NickServ, NULL)))
+		if (client->local->passwd && !IsLoggedIn(client) && SERVICES_NAME && (nclient = find_person(NickServ, NULL)))
 		{
 			int do_identify = 1;
 			Hook *h;
 			for (h = Hooks[HOOKTYPE_LOCAL_NICKPASS]; h; h = h->next)
 			{
-				i = (*(h->func.intfunc))(sptr,nsptr);
+				i = (*(h->func.intfunc))(client,nclient);
 				if (i == HOOK_DENY)
 				{
 					do_identify = 0;
@@ -1446,73 +1446,73 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 				}
 			}
 			if (do_identify)
-				sendto_one(nsptr, NULL, ":%s PRIVMSG %s@%s :IDENTIFY %s",
-				    sptr->name,
-				    NickServ, SERVICES_NAME, sptr->local->passwd);
+				sendto_one(nclient, NULL, ":%s PRIVMSG %s@%s :IDENTIFY %s",
+				    client->name,
+				    NickServ, SERVICES_NAME, client->local->passwd);
 		}
 		if (buf[0] != '\0' && buf[1] != '\0')
-			sendto_one(sptr, NULL, ":%s MODE %s :%s", sptr->name,
-			    sptr->name, buf);
+			sendto_one(client, NULL, ":%s MODE %s :%s", client->name,
+			    client->name, buf);
 		if (user->snomask)
-			sendnumeric(sptr, RPL_SNOMASK, get_snostr(user->snomask));
+			sendnumeric(client, RPL_SNOMASK, get_snostr(user->snomask));
 
-		if (!IsSecure(sptr) && !IsLocalhost(sptr) && (iConf.plaintext_policy_user == POLICY_WARN))
-			sendnotice(sptr, "%s", iConf.plaintext_policy_user_message);
+		if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_WARN))
+			sendnotice(client, "%s", iConf.plaintext_policy_user_message);
 
-		if (IsSecure(sptr) && (iConf.outdated_tls_policy_user == POLICY_WARN) && outdated_tls_client(sptr))
-			sendnotice(sptr, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, sptr));
+		if (IsSecure(client) && (iConf.outdated_tls_policy_user == POLICY_WARN) && outdated_tls_client(client))
+			sendnotice(client, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, client));
 
 		/* Make creation time the real 'online since' time, excluding registration time.
 		 * Otherwise things like set::anti-spam-quit-messagetime 10s could mean
 		 * 1 second in practice (#2174).
 		 */
-		sptr->local->firsttime = TStime();
+		client->local->firsttime = TStime();
 
 		/* Give the user a fresh start as far as fake-lag is concerned.
 		 * Otherwise the user could be lagged up already due to all the CAP stuff.
 		 */
-		sptr->local->since = TStime();
+		client->local->since = TStime();
 
-		RunHook2(HOOKTYPE_WELCOME, sptr, 999);
+		RunHook2(HOOKTYPE_WELCOME, client, 999);
 
 		/* NOTE: Code after this 'if (savetkl)' will not be executed for quarantined-
 		 *       virus-users. So be carefull with the order. -- Syzop
 		 */
 		// FIXME: verify if this works, trace code path upstream!!!!
 		if (savetkl)
-			return join_viruschan(sptr, savetkl, SPAMF_USER); /* [RETURN!] */
+			return join_viruschan(client, savetkl, SPAMF_USER); /* [RETURN!] */
 
 		/* Force the user to join the given chans -- codemastr */
-		tlds = Find_tld(sptr);
+		tlds = Find_tld(client);
 
 		if (tlds && !BadPtr(tlds->channel)) {
 			char *chans[3] = {
-				sptr->name,
+				client->name,
 				tlds->channel,
 				NULL
 			};
-			do_cmd(sptr, NULL, "JOIN", 3, chans);
-			if (IsDead(sptr))
+			do_cmd(client, NULL, "JOIN", 3, chans);
+			if (IsDead(client))
 				return 0;
 		}
 		else if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
 		{
 			char *chans[3] = {
-				sptr->name,
+				client->name,
 				AUTO_JOIN_CHANS,
 				NULL
 			};
-			do_cmd(sptr, NULL, "JOIN", 3, chans);
-			if (IsDead(sptr))
+			do_cmd(client, NULL, "JOIN", 3, chans);
+			if (IsDead(client))
 				return 0;
 		}
 		/* NOTE: If you add something here.. be sure to check the 'if (savetkl)' note above */
 	}
 
-	if (MyConnect(sptr) && !BadPtr(sptr->local->passwd))
+	if (MyConnect(client) && !BadPtr(client->local->passwd))
 	{
-		safe_free(sptr->local->passwd);
-		sptr->local->passwd = NULL;
+		safe_free(client->local->passwd);
+		client->local->passwd = NULL;
 	}
 
 	/* User successfully registered */
@@ -1523,19 +1523,21 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
  * But nowadays this takes place much earlier (in add_connection?).
  * It's mainly used for "localhost" and WEBIRC magic only now...
  */
-int check_init(Client *cptr, char *sockn, size_t size)
+int check_init(Client *client, char *sockn, size_t size)
 {
-	strlcpy(sockn, cptr->local->sockhost, HOSTLEN);
+	strlcpy(sockn, client->local->sockhost, HOSTLEN);
 
-	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, !=0);
+	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, client, sockn, size, !=0);
 
 	/* Some silly hack to convert 127.0.0.1 and such into 'localhost' */
-	if (!strcmp(GetIP(cptr), "127.0.0.1") || !strcmp(GetIP(cptr), "0:0:0:0:0:0:0:1") || !strcmp(GetIP(cptr), "0:0:0:0:0:ffff:127.0.0.1"))
+	if (!strcmp(GetIP(client), "127.0.0.1") ||
+	    !strcmp(GetIP(client), "0:0:0:0:0:0:0:1") ||
+	    !strcmp(GetIP(client), "0:0:0:0:0:ffff:127.0.0.1"))
 	{
-		if (cptr->local->hostp)
+		if (client->local->hostp)
 		{
-			unreal_free_hostent(cptr->local->hostp);
-			cptr->local->hostp = NULL;
+			unreal_free_hostent(client->local->hostp);
+			client->local->hostp = NULL;
 		}
 		strlcpy(sockn, "localhost", HOSTLEN);
 	}
@@ -1544,11 +1546,11 @@ int check_init(Client *cptr, char *sockn, size_t size)
 }
 
 /** Allow or reject the client based on allow { } blocks and all other restrictions.
- * @param cptr     Client to check (local)
- * @param username Username, for some reason...
+ * @param client     Client to check (local)
+ * @param username   Username, for some reason...
  * @returns 1 if OK, 0 if client is rejected (likely killed too)
  */
-int AllowClient(Client *cptr, char *username)
+int AllowClient(Client *client, char *username)
 {
 	static char sockhost[HOSTLEN + 1];
 	struct hostent *hp = NULL;
@@ -1558,23 +1560,23 @@ int AllowClient(Client *cptr, char *username)
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
 
-	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]", cptr->name, cptr->local->sockhost));
+	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]", client->name, client->local->sockhost));
 
-	if (!check_init(cptr, sockhost, sizeof(sockhost)))
+	if (!check_init(client, sockhost, sizeof(sockhost)))
 		return 0;
 
-	hp = cptr->local->hostp;
+	hp = client->local->hostp;
 
-	if (!IsSecure(cptr) && !IsLocalhost(cptr) && (iConf.plaintext_policy_user == POLICY_DENY))
+	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_DENY))
 	{
-		exit_client(cptr, NULL, iConf.plaintext_policy_user_message);
+		exit_client(client, NULL, iConf.plaintext_policy_user_message);
 		return 0;
 	}
 
-	if (IsSecure(cptr) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(cptr))
+	if (IsSecure(client) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(client))
 	{
-		char *msg = outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, cptr);
-		exit_client(cptr, NULL, msg);
+		char *msg = outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, client);
+		exit_client(client, NULL, msg);
 		return 0;
 	}
 
@@ -1582,9 +1584,9 @@ int AllowClient(Client *cptr, char *username)
 	{
 		if (!aconf->hostname || !aconf->ip)
 			goto attach;
-		if (aconf->auth && !cptr->local->passwd)
+		if (aconf->auth && !client->local->passwd)
 			continue;
-		if (aconf->flags.tls && !IsSecure(cptr))
+		if (aconf->flags.tls && !IsSecure(client))
 			continue;
 		if (hp && hp->h_name)
 		{
@@ -1596,7 +1598,7 @@ int AllowClient(Client *cptr, char *username)
 				if (aconf->flags.noident)
 					strlcpy(uhost, username, sizeof(uhost));
 				else
-					strlcpy(uhost, cptr->ident, sizeof(uhost));
+					strlcpy(uhost, client->ident, sizeof(uhost));
 				strlcat(uhost, "@", sizeof(uhost));
 			}
 			else
@@ -1611,14 +1613,14 @@ int AllowClient(Client *cptr, char *username)
 			if (aconf->flags.noident)
 				strlcpy(uhost, username, sizeof(uhost));
 			else
-				strlcpy(uhost, cptr->ident, sizeof(uhost));
+				strlcpy(uhost, client->ident, sizeof(uhost));
 			(void)strlcat(uhost, "@", sizeof(uhost));
 		}
 		else
 			*uhost = '\0';
 		strlcat(uhost, sockhost, sizeof(uhost));
 		/* Check the IP */
-		if (match_user(aconf->ip, cptr, MATCH_CHECK_IP))
+		if (match_user(aconf->ip, client, MATCH_CHECK_IP))
 			goto attach;
 
 		/* Hmm, localhost is a special case, hp == NULL and sockhost contains
@@ -1630,7 +1632,7 @@ int AllowClient(Client *cptr, char *username)
 				if (aconf->flags.noident)
 					strlcpy(uhost, username, sizeof(uhost));
 				else
-					strlcpy(uhost, cptr->ident, sizeof(uhost));
+					strlcpy(uhost, client->ident, sizeof(uhost));
 				strlcat(uhost, "@localhost", sizeof(uhost));
 			}
 			else
@@ -1643,12 +1645,12 @@ int AllowClient(Client *cptr, char *username)
 		continue;
 	attach:
 		if (!aconf->flags.noident)
-			SetUseIdent(cptr);
+			SetUseIdent(client);
 		if (!aconf->flags.useip && hp)
 			strlcpy(uhost, fullname, sizeof(uhost));
 		else
 			strlcpy(uhost, sockhost, sizeof(uhost));
-		set_sockhost(cptr, uhost);
+		set_sockhost(client, uhost);
 
 		if (aconf->maxperip)
 		{
@@ -1657,41 +1659,41 @@ int AllowClient(Client *cptr, char *username)
 
 			list_for_each_entry_safe(acptr, acptr2, &lclient_list, lclient_node)
 			{
-				if (!strcmp(GetIP(acptr), GetIP(cptr)))
+				if (!strcmp(GetIP(acptr), GetIP(client)))
 				{
 					cnt++;
 					if (cnt > aconf->maxperip)
 					{
 						/* Already got too many with that ip# */
-						exit_client(cptr, NULL, iConf.reject_message_too_many_connections);
+						exit_client(client, NULL, iConf.reject_message_too_many_connections);
 						return 0;
 					}
 				}
 			}
 		}
-		if (aconf->auth && !Auth_Check(cptr, aconf->auth, cptr->local->passwd))
+		if (aconf->auth && !Auth_Check(client, aconf->auth, client->local->passwd))
 		{
 			/* Always continue if password was wrong. */
 			continue;
 		}
 		/* Password (or other auth method) was correct */
-		safe_free(cptr->local->passwd);
+		safe_free(client->local->passwd);
 
 		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
 		{
-			cptr->local->class = aconf->class;
-			cptr->local->class->clients++;
+			client->local->class = aconf->class;
+			client->local->class->clients++;
 		}
 		else
 		{
 			/* Class is full */
-			sendnumeric(cptr, RPL_REDIR, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
-			exit_client(cptr, NULL, iConf.reject_message_server_full);
+			sendnumeric(client, RPL_REDIR, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
+			exit_client(client, NULL, iConf.reject_message_server_full);
 			return 0;
 		}
 		return 1;
 	}
 	/* User did not match any allow { } blocks: */
-	exit_client(cptr, NULL, iConf.reject_message_unauthorized);
+	exit_client(client, NULL, iConf.reject_message_unauthorized);
 	return 0;
 }

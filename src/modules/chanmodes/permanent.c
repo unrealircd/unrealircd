@@ -38,12 +38,12 @@ static int permanent_channel_destroy(Channel *chptr, int *should_destroy)
 	return 0;
 }
 
-static int permanent_is_ok(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what)
+static int permanent_is_ok(Client *client, Channel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (!IsOper(cptr))
+	if (!IsOper(client))
 	{
 		if (checkt == EXCHK_ACCESS_ERR)
-			sendnumeric(cptr, ERR_NOPRIVILEGES);
+			sendnumeric(client, ERR_NOPRIVILEGES);
 
 		return EX_DENY;
 	}
@@ -51,7 +51,7 @@ static int permanent_is_ok(Client *cptr, Channel *chptr, char mode, char *para, 
 	return EX_ALLOW;
 }
 
-int permanent_chanmode(Client *sptr, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode)
+int permanent_chanmode(Client *client, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode)
 {
 	/* Destroy the channel if it was set '(SA)MODE #chan -P' with nobody in it (#4442) */
 	if (!(chptr->mode.extmode & EXTMODE_PERMANENT) && (chptr->users <= 0))

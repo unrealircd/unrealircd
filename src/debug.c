@@ -150,7 +150,7 @@ void debug(int level, FORMAT_STRING(const char *form), ...)
  * different field names for "struct rusage".
  * -avalon
  */
-void send_usage(Client *cptr, char *nick)
+void send_usage(Client *client, char *nick)
 {
 
 #ifdef GETRUSAGE_2
@@ -171,7 +171,7 @@ void send_usage(Client *cptr, char *nick)
 
 	if (getrusage(RUSAGE_SELF, &rus) == -1)
 	{
-		sendnotice(cptr, "Getruseage error: %s.", strerror(errno));
+		sendnotice(client, "Getruseage error: %s.", strerror(errno));
 		return;
 	}
 	secs = rus.ru_utime.tv_sec + rus.ru_stime.tv_sec;
@@ -179,22 +179,22 @@ void send_usage(Client *cptr, char *nick)
 	if (secs == 0)
 		secs = 1;
 
-	sendnumericfmt(cptr, RPL_STATSDEBUG,
+	sendnumericfmt(client, RPL_STATSDEBUG,
 	    "CPU Secs %ld:%ld User %ld:%ld System %ld:%ld",
 	    secs / 60, secs % 60,
 	    rus.ru_utime.tv_sec / 60, rus.ru_utime.tv_sec % 60,
 	    rus.ru_stime.tv_sec / 60, rus.ru_stime.tv_sec % 60);
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "RSS %ld ShMem %ld Data %ld Stack %ld",
+	sendnumericfmt(client, RPL_STATSDEBUG, "RSS %ld ShMem %ld Data %ld Stack %ld",
 	    rus.ru_maxrss,
 	    rus.ru_ixrss / (rup * hzz), rus.ru_idrss / (rup * hzz),
 	    rus.ru_isrss / (rup * hzz));
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "Swaps %ld Reclaims %ld Faults %ld",
+	sendnumericfmt(client, RPL_STATSDEBUG, "Swaps %ld Reclaims %ld Faults %ld",
 	    rus.ru_nswap, rus.ru_minflt, rus.ru_majflt);
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "Block in %ld out %ld",
+	sendnumericfmt(client, RPL_STATSDEBUG, "Block in %ld out %ld",
 	    rus.ru_inblock, rus.ru_oublock);
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "Msg Rcv %ld Send %ld",
+	sendnumericfmt(client, RPL_STATSDEBUG, "Msg Rcv %ld Send %ld",
 	    rus.ru_msgrcv, rus.ru_msgsnd);
-	sendnumericfmt(cptr, RPL_STATSDEBUG, "Signals %ld Context Vol. %ld Invol %ld",
+	sendnumericfmt(client, RPL_STATSDEBUG, "Signals %ld Context Vol. %ld Invol %ld",
 	    rus.ru_nsignals, rus.ru_nvcsw, rus.ru_nivcsw);
 #else
 # ifdef TIMES_2
@@ -218,12 +218,12 @@ void send_usage(Client *cptr, char *nick)
 
 	if (times(&tmsbuf) == -1)
 	{
-		sendnumericfmt(cptr, RPL_STATSDEBUG, "times(2) error: %s.", STRERROR(ERRNO));
+		sendnumericfmt(client, RPL_STATSDEBUG, "times(2) error: %s.", STRERROR(ERRNO));
 		return;
 	}
 	secs = tmsbuf.tms_utime + tmsbuf.tms_stime;
 
-	sendnumericfmt(cptr, RPL_STATSDEBUG,
+	sendnumericfmt(client, RPL_STATSDEBUG,
 	    "CPU Secs %d:%d User %d:%d System %d:%d",
 	    mins, secs, umin, usec, smin, ssec);
 # endif
@@ -231,11 +231,11 @@ void send_usage(Client *cptr, char *nick)
 	return;
 }
 
-int checkprotoflags(Client *sptr, int flags, char *file, int line)
+int checkprotoflags(Client *client, int flags, char *file, int line)
 {
-	if (!MyConnect(sptr))
+	if (!MyConnect(client))
 		ircd_log(LOG_ERROR, "[Debug] [BUG] ERROR: %s:%d: IsToken(<%s>,%d) on remote client",
-		         file, line, sptr->name, flags);
-	return ((sptr->local->proto & flags) == flags) ? 1 : 0;
+		         file, line, client->name, flags);
+	return ((client->local->proto & flags) == flags) ? 1 : 0;
 }
 #endif

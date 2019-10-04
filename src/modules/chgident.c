@@ -62,26 +62,26 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_chgident)
 {
-	Client *acptr;
+	Client *target;
 	char *s;
 	int legalident = 1;
 
-	if (!ValidatePermissionsForPath("client:set:ident",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("client:set:ident",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 
 	if ((parc < 3) || !*parv[2])
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CHGIDENT");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "CHGIDENT");
 		return;
 	}
 
 	if (strlen(parv[2]) > (USERLEN))
 	{
-		sendnotice(sptr, "*** ChgIdent Error: Requested ident too long -- rejected.");
+		sendnotice(client, "*** ChgIdent Error: Requested ident too long -- rejected.");
 		return;
 	}
 
@@ -98,23 +98,23 @@ CMD_FUNC(cmd_chgident)
 
 	if (legalident == 0)
 	{
-		sendnotice(sptr, "*** /ChgIdent Error: A ident may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them");
+		sendnotice(client, "*** /ChgIdent Error: A ident may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them");
 		return;
 	}
 
-	if (!(acptr = find_person(parv[1], NULL)))
+	if (!(target = find_person(parv[1], NULL)))
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
+		sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 		return;
 	}
-	userhost_save_current(acptr);
+	userhost_save_current(target);
 
 	switch (UHOST_ALLOWED)
 	{
 		case UHALLOW_NEVER:
-			if (MyUser(sptr))
+			if (MyUser(client))
 			{
-				sendnumeric(sptr, ERR_DISABLED, "CHGIDENT",
+				sendnumeric(client, ERR_DISABLED, "CHGIDENT",
 					"This command is disabled on this server");
 				return;
 			}
@@ -122,9 +122,9 @@ CMD_FUNC(cmd_chgident)
 		case UHALLOW_ALWAYS:
 			break;
 		case UHALLOW_NOCHANS:
-			if (IsUser(acptr) && MyUser(sptr) && acptr->user->joined)
+			if (IsUser(target) && MyUser(client) && target->user->joined)
 			{
-				sendnotice(sptr, "*** /ChgIdent can not be used while %s is on a channel", acptr->name);
+				sendnotice(client, "*** /ChgIdent can not be used while %s is on a channel", target->name);
 				return;
 			}
 			break;
@@ -132,22 +132,22 @@ CMD_FUNC(cmd_chgident)
 			/* join sent later when the ident has been changed */
 			break;
 	}
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 	{
 		sendto_snomask(SNO_EYES,
 		    "%s changed the virtual ident of %s (%s@%s) to be %s",
-		    sptr->name, acptr->name, acptr->user->username,
-		    GetHost(acptr), parv[2]);
+		    client->name, target->name, target->user->username,
+		    GetHost(target), parv[2]);
 		/* Logging ability added by XeRXeS */
 		ircd_log(LOG_CHGCMDS,
 			"CHGIDENT: %s changed the virtual ident of %s (%s@%s) to be %s",
-			sptr->name, acptr->name, acptr->user->username,    
-			GetHost(acptr), parv[2]);
+			client->name, target->name, target->user->username,    
+			GetHost(target), parv[2]);
 	}
 
-	sendto_server(sptr, 0, 0, NULL, ":%s CHGIDENT %s %s",
-	    sptr->name, acptr->name, parv[2]);
-	ircsnprintf(acptr->user->username, sizeof(acptr->user->username), "%s", parv[2]);
+	sendto_server(client, 0, 0, NULL, ":%s CHGIDENT %s %s",
+	    client->name, target->name, parv[2]);
+	ircsnprintf(target->user->username, sizeof(target->user->username), "%s", parv[2]);
 
-	userhost_changed(acptr);
+	userhost_changed(target);
 }

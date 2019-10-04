@@ -70,12 +70,12 @@ CMD_FUNC(cmd_userip)
 	char response[5][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
 	int  i;			/* loop counter */
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 		
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "USERIP");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "USERIP");
 		return;
 	}
 
@@ -99,7 +99,7 @@ CMD_FUNC(cmd_userip)
 		{
 			if (!(ip = GetIP(acptr)))
 				ip = "<unknown>";
-			if (sptr != acptr && !ValidatePermissionsForPath("client:see:ip",sptr,acptr,NULL,NULL) && IsHidden(acptr))
+			if (client != acptr && !ValidatePermissionsForPath("client:see:ip",client,acptr,NULL,NULL) && IsHidden(acptr))
 			{
 				make_virthost(acptr, GetIP(acptr), ipbuf, 0);
 				ip = ipbuf;
@@ -107,17 +107,17 @@ CMD_FUNC(cmd_userip)
 
 			ircsnprintf(response[i], NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30, "%s%s=%c%s@%s",
 			    acptr->name,
-			    (IsOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsOper(sptr)))
+			    (IsOper(acptr) && (!IsHideOper(acptr) || client == acptr || IsOper(client)))
 				? "*" : "",
 			    (acptr->user->away) ? '-' : '+',
 			    acptr->user->username, ip);
 			/* add extra fakelag (penalty) because of all the work we need to do: 1s per entry: */
-			sptr->local->since += 1;
+			client->local->since += 1;
 		}
 		if (p)
 			p++;
 		cn = p;
 	}
 
-	sendnumeric(sptr, RPL_USERIP, response[0], response[1], response[2], response[3], response[4]);
+	sendnumeric(client, RPL_USERIP, response[0], response[1], response[2], response[3], response[4]);
 }

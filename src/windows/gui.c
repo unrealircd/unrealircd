@@ -393,7 +393,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 						{
 							if (!tlds->flag.motdptr)
 								AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
-							if (!tlds->flag.rulesptr)
+							if (!tlds->flag.ruleclient)
 								AppendMenu(hConfig, MF_STRING, i++, tlds->rules_file);
 							if (tlds->smotd_file)
 								AppendMenu(hConfig, MF_STRING, i++, tlds->smotd_file);
@@ -501,7 +501,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					{
 						if (!tlds->flag.motdptr)
 							AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
-						if (!tlds->flag.rulesptr)
+						if (!tlds->flag.ruleclient)
 							AppendMenu(hConfig, MF_STRING, i++, tlds->rules_file);
 						if (tlds->smotd_file)
 							AppendMenu(hConfig, MF_STRING, i++, tlds->smotd_file);
@@ -1003,15 +1003,15 @@ HTREEITEM AddItemToTree(HWND hWnd, LPSTR lpszItem, int nLevel, short remap)
  */
 void win_map(Client *server, HWND hwTreeView, short remap)
 {
+/*
 	Client *acptr;
 	Link *lp;
 
-/*
 	AddItemToTree(hwTreeView,server->name,server->hopcount+1, remap);
 
 	for (lp = Servers; lp; lp = lp->next)
         {
-                acptr = lp->value.cptr;
+                acptr = lp->value.client;
                 if (acptr->srvptr != server)
                         continue;
                 win_map(acptr, hwTreeView, 0);

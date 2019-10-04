@@ -63,33 +63,33 @@ CMD_FUNC(cmd_connect)
 	int  retval;
 	ConfigItem_link	*aconf;
 	ConfigItem_deny_link *deny;
-	Client *acptr;
+	Client *server;
 
-	if (!IsServer(sptr) && MyConnect(sptr) && !ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && parc > 3)
+	if (!IsServer(client) && MyConnect(client) && !ValidatePermissionsForPath("route:global",client,NULL,NULL,NULL) && parc > 3)
 	{			/* Only allow LocOps to make */
 		/* local CONNECTS --SRB      */
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
-	if (!IsServer(sptr) && MyUser(sptr) && !ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL) && parc <= 3)
+	if (!IsServer(client) && MyUser(client) && !ValidatePermissionsForPath("route:local",client,NULL,NULL,NULL) && parc <= 3)
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
-	if (hunt_server(sptr, recv_mtags, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
 		return;
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CONNECT");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "CONNECT");
 		return;
 	}
 
-	if ((acptr = find_server_quick(parv[1])))
+	if ((server = find_server_quick(parv[1])))
 	{
-		sendnotice(sptr, "*** Connect: Server %s %s %s.",
+		sendnotice(client, "*** Connect: Server %s %s %s.",
 		    parv[1], "already exists from",
-		    acptr->direction->name);
+		    server->direction->name);
 		return;
 	}
 
@@ -101,7 +101,7 @@ CMD_FUNC(cmd_connect)
 
 	if (!aconf)
 	{
-		sendnotice(sptr,
+		sendnotice(client,
 		    "*** Connect: Server %s is not configured for linking",
 		    parv[1]);
 		return;
@@ -109,7 +109,7 @@ CMD_FUNC(cmd_connect)
 
 	if (!aconf->outgoing.hostname)
 	{
-		sendnotice(sptr,
+		sendnotice(client,
 		    "*** Connect: Server %s is not configured to be an outgoing link (has a link block, but no link::outgoing::hostname)",
 		    parv[1]);
 		return;
@@ -121,36 +121,36 @@ CMD_FUNC(cmd_connect)
 		if (deny->flag.type == CRULE_ALL && match_simple(deny->mask, aconf->servername)
 			&& crule_eval(deny->rule))
 		{
-			sendnotice(sptr, "*** Connect: Disallowed by connection rule");
+			sendnotice(client, "*** Connect: Disallowed by connection rule");
 			return;
 		}
 	}
 
 	/* Notify all operators about remote connect requests */
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 	{
 		sendto_server(&me, 0, 0, NULL,
 		    ":%s GLOBOPS :Remote CONNECT %s %s from %s",
 		    me.name, parv[1], parv[2] ? parv[2] : "",
-		    get_client_name(sptr, FALSE));
+		    get_client_name(client, FALSE));
 	}
 
-	switch (retval = connect_server(aconf, sptr, NULL))
+	switch (retval = connect_server(aconf, client, NULL))
 	{
 	  case 0:
-		  sendnotice(sptr, "*** Connecting to %s[%s].",
+		  sendnotice(client, "*** Connecting to %s[%s].",
 		      aconf->servername, aconf->outgoing.hostname);
 		  break;
 	  case -1:
-		  sendnotice(sptr, "*** Couldn't connect to %s[%s]",
+		  sendnotice(client, "*** Couldn't connect to %s[%s]",
 		  	aconf->servername, aconf->outgoing.hostname);
 		  break;
 	  case -2:
-		  sendnotice(sptr, "*** Resolving hostname '%s'...",
+		  sendnotice(client, "*** Resolving hostname '%s'...",
 		  	aconf->outgoing.hostname);
 		  break;
 	  default:
-		  sendnotice(sptr, "*** Connection to %s[%s] failed: %s",
+		  sendnotice(client, "*** Connection to %s[%s] failed: %s",
 		  	aconf->servername, aconf->outgoing.hostname, STRERROR(retval));
 	}
 }

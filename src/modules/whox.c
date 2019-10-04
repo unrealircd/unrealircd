@@ -62,11 +62,11 @@ struct who_format
 };
 
 CMD_FUNC(cmd_whox);
-static void who_global(Client *sptr, char *mask, int operspy, struct who_format *fmt);
-static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_format *fmt);
-static void do_who_on_channel(Client *sptr, Channel *chptr,
+static void who_global(Client *client, char *mask, int operspy, struct who_format *fmt);
+static void do_who(Client *client, Client *acptr, Channel *chptr, struct who_format *fmt);
+static void do_who_on_channel(Client *client, Channel *chptr,
                               int member, int operspy, struct who_format *fmt);
-static int convert_classical_who_request(Client *sptr, int *parc, char *parv[], char **orig_mask, struct who_format *fmt);
+static int convert_classical_who_request(Client *client, int *parc, char *parv[], char **orig_mask, struct who_format *fmt);
 
 ModuleHeader MOD_HEADER
   = {
@@ -143,12 +143,12 @@ CMD_FUNC(cmd_whox)
 
 	memset(&fmt, 0, sizeof(fmt));
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 
 	if ((parc < 2))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "WHO");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "WHO");
 		return;
 	}
 
@@ -157,7 +157,7 @@ CMD_FUNC(cmd_whox)
 	else
 		orig_mask = parv[1];
 
-	if (!convert_classical_who_request(sptr, &parc, parv, &orig_mask, &fmt))
+	if (!convert_classical_who_request(client, &parc, parv, &orig_mask, &fmt))
 		return;
 
 	/* Evaluate the flags now, we consider the second parameter
@@ -180,11 +180,11 @@ CMD_FUNC(cmd_whox)
 				case 'a': fmt.matchsel |= WMATCH_ACCOUNT; continue;
 				case 'm': fmt.matchsel |= WMATCH_MODES; continue;
 				case 'R':
-					if (IsOper(sptr))
+					if (IsOper(client))
 						fmt.show_realhost = 1;
 					continue;
 				case 'I':
-					if (IsOper(sptr))
+					if (IsOper(client))
 						fmt.show_ip = 1;
 					continue;
 			}
@@ -230,8 +230,8 @@ CMD_FUNC(cmd_whox)
 
 	collapse(mask);
 
-	if ((ValidatePermissionsForPath("channel:see:who:secret",sptr,NULL,NULL,NULL) &&
-	     ValidatePermissionsForPath("channel:see:whois",sptr,NULL,NULL,NULL)))
+	if ((ValidatePermissionsForPath("channel:see:who:secret",client,NULL,NULL,NULL) &&
+	     ValidatePermissionsForPath("channel:see:whois",client,NULL,NULL,NULL)))
 	{
 		operspy = 1;
 	}
@@ -277,7 +277,7 @@ CMD_FUNC(cmd_whox)
 			s++;
 		}
 
-		if (!IsOper(sptr))
+		if (!IsOper(client))
 		{
 			/* these are usermodes regular users may search for. just oper now. */
 			fmt.umodes &= UMODE_OPER;
@@ -293,13 +293,13 @@ CMD_FUNC(cmd_whox)
 		/* List all users on a given channel */
 		if ((chptr = find_channel(orig_mask, NULL)) != NULL)
 		{
-			if (IsMember(sptr, chptr) || operspy)
-				do_who_on_channel(sptr, chptr, 1, operspy, &fmt);
+			if (IsMember(client, chptr) || operspy)
+				do_who_on_channel(client, chptr, 1, operspy, &fmt);
 			else if (!SecretChannel(chptr))
-				do_who_on_channel(sptr, chptr, 0, operspy, &fmt);
+				do_who_on_channel(client, chptr, 0, operspy, &fmt);
 		}
 
-		sendnumeric(sptr, RPL_ENDOFWHO, mask);
+		sendnumeric(client, RPL_ENDOFWHO, mask);
 		return;
 	}
 
@@ -315,7 +315,7 @@ CMD_FUNC(cmd_whox)
 		isinvis = IsInvisible(acptr);
 		for (lp = acptr->user->channel; lp; lp = lp->next)
 		{
-			member = IsMember(sptr, lp->chptr);
+			member = IsMember(client, lp->chptr);
 
 			if (isinvis && !member)
 				continue;
@@ -327,23 +327,23 @@ CMD_FUNC(cmd_whox)
 					break;
 			}
 
-			if (i != 0 && !(is_skochanop(sptr, lp->chptr)) && !(is_skochanop(acptr, lp->chptr) || has_voice(acptr,lp->chptr)))
+			if (i != 0 && !(is_skochanop(client, lp->chptr)) && !(is_skochanop(acptr, lp->chptr) || has_voice(acptr,lp->chptr)))
 				continue;
 
 			if (member || (!isinvis && PubChannel(lp->chptr)))
 				break;
 		}
 		if (lp != NULL)
-			do_who(sptr, acptr, lp->chptr, &fmt);
+			do_who(client, acptr, lp->chptr, &fmt);
 		else
-			do_who(sptr, acptr, NULL, &fmt);
+			do_who(client, acptr, NULL, &fmt);
 
-		sendnumeric(sptr, RPL_ENDOFWHO, orig_mask);
+		sendnumeric(client, RPL_ENDOFWHO, orig_mask);
 		return;
 	}
 
-	if (ValidatePermissionsForPath("channel:see:who:secret",sptr,NULL,NULL,NULL) ||
-                ValidatePermissionsForPath("channel:see:whois",sptr,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("channel:see:who:secret",client,NULL,NULL,NULL) ||
+                ValidatePermissionsForPath("channel:see:whois",client,NULL,NULL,NULL))
 	{
 		operspy = 1;
 	}
@@ -353,11 +353,11 @@ CMD_FUNC(cmd_whox)
 	 * with "/who" ;) --fl
 	 */
 	if (!strcmp(mask, "0"))
-		who_global(sptr, NULL, 0, &fmt);
+		who_global(client, NULL, 0, &fmt);
 	else
-		who_global(sptr, mask, operspy, &fmt);
+		who_global(client, mask, operspy, &fmt);
 
-	sendnumeric(sptr, RPL_ENDOFWHO, mask);
+	sendnumeric(client, RPL_ENDOFWHO, mask);
 }
 
 /* do_match
@@ -368,7 +368,7 @@ CMD_FUNC(cmd_whox)
  * output	- 1 if match, 0 if no match
  * side effects	- NONE
  */
-static int do_match(Client *sptr, Client *acptr, char *mask, struct who_format *fmt)
+static int do_match(Client *client, Client *acptr, char *mask, struct who_format *fmt)
 {
 	if (mask == NULL)
 		return 1;
@@ -377,7 +377,7 @@ static int do_match(Client *sptr, Client *acptr, char *mask, struct who_format *
 	if (fmt->matchsel == 0 && (match_simple(mask, acptr->name) ||
 		match_simple(mask, acptr->user->username) ||
 		match_simple(mask, GetHost(acptr)) ||
-		(IsOper(sptr) &&
+		(IsOper(client) &&
 		(match_simple(mask, acptr->user->realhost) ||
 		(acptr->ip &&
 		match_simple(mask, acptr->ip))))))
@@ -394,12 +394,12 @@ static int do_match(Client *sptr, Client *acptr, char *mask, struct who_format *
 		return 1;
 
 	/* match server */
-	if (IsMatch(fmt, WMATCH_SERVER) && IsOper(sptr) && match_simple(mask, acptr->user->server))
+	if (IsMatch(fmt, WMATCH_SERVER) && IsOper(client) && match_simple(mask, acptr->user->server))
 		return 1;
 
 	/* match hostname */
 	if (IsMatch(fmt, WMATCH_HOST) && (match_simple(mask, GetHost(acptr)) ||
-		(IsOper(sptr) && (match_simple(mask, acptr->user->realhost) ||
+		(IsOper(client) && (match_simple(mask, acptr->user->realhost) ||
 		(acptr->ip && match_simple(mask, acptr->ip))))))
 	{
 		return 1;
@@ -410,7 +410,7 @@ static int do_match(Client *sptr, Client *acptr, char *mask, struct who_format *
 		return 1;
 
 	/* match ip address */
-	if (IsMatch(fmt, WMATCH_IP) && IsOper(sptr) && acptr->ip &&
+	if (IsMatch(fmt, WMATCH_IP) && IsOper(client) && acptr->ip &&
 		match_user(mask, acptr, MATCH_CHECK_IP))
 		return 1;
 
@@ -425,7 +425,7 @@ static int do_match(Client *sptr, Client *acptr, char *mask, struct who_format *
 	if (IsMatch(fmt, WMATCH_MODES) &&
 		((acptr->umodes & fmt->umodes) &&
 		!(acptr->umodes & fmt->noumodes) &&
-		(!(acptr->umodes & UMODE_HIDEOPER) || IsOper(sptr))))
+		(!(acptr->umodes & UMODE_HIDEOPER) || IsOper(client))))
 	{
 		return 1;
 	}
@@ -445,7 +445,7 @@ static int do_match(Client *sptr, Client *acptr, char *mask, struct who_format *
  *			  marks matched clients.
  */
 
-static void who_common_channel(Client *sptr, Channel *chptr,
+static void who_common_channel(Client *client, Channel *chptr,
 	char *mask, int *maxmatches, struct who_format *fmt)
 {
 	Member *cm = chptr->members;
@@ -455,7 +455,7 @@ static void who_common_channel(Client *sptr, Channel *chptr,
 
 	for (cm = chptr->members; cm; cm = cm->next)
 	{
-		acptr = cm->cptr;
+		acptr = cm->client;
 
 		if (!IsInvisible(acptr) || IsMarked(acptr))
 			continue;
@@ -470,16 +470,16 @@ static void who_common_channel(Client *sptr, Channel *chptr,
 				break;
 		}
 
-		if (i != 0 && !(is_skochanop(sptr, chptr)) && !(is_skochanop(acptr, chptr) || has_voice(acptr,chptr)))
+		if (i != 0 && !(is_skochanop(client, chptr)) && !(is_skochanop(acptr, chptr) || has_voice(acptr,chptr)))
 			continue;
 
 		SetMark(acptr);
 
 		if(*maxmatches > 0)
 		{
-			if (do_match(sptr, acptr, mask, fmt))
+			if (do_match(client, acptr, mask, fmt))
 			{
-				do_who(sptr, acptr, NULL, fmt);
+				do_who(client, acptr, NULL, fmt);
 				--(*maxmatches);
 			}
 		}
@@ -501,7 +501,7 @@ static void who_common_channel(Client *sptr, Channel *chptr,
  *			  and will be left cleared on return
  */
 
-static void who_global(Client *sptr, char *mask, int operspy, struct who_format *fmt)
+static void who_global(Client *client, char *mask, int operspy, struct who_format *fmt)
 {
 	Client *acptr;
 	int maxmatches = WHOLIMIT ? WHOLIMIT : 100;
@@ -513,8 +513,8 @@ static void who_global(Client *sptr, char *mask, int operspy, struct who_format 
 	{
 		Membership *lp;
 
-		for (lp = sptr->user->channel; lp; lp = lp->next)
-			who_common_channel(sptr, lp->chptr, mask, &maxmatches, fmt);
+		for (lp = client->user->channel; lp; lp = lp->next)
+			who_common_channel(client, lp->chptr, mask, &maxmatches, fmt);
 	}
 
 	/* second, list all matching visible clients and clear all marks
@@ -538,16 +538,16 @@ static void who_global(Client *sptr, char *mask, int operspy, struct who_format 
 
 		if(maxmatches > 0)
 		{
-			if (do_match(sptr, acptr, mask, fmt))
+			if (do_match(client, acptr, mask, fmt))
  			{
-				do_who(sptr, acptr, NULL, fmt);
+				do_who(client, acptr, NULL, fmt);
 				--maxmatches;
  			}
  		}
 	}
 
 	if (maxmatches <= 0)
-		sendnumeric(sptr, ERR_TOOMANYMATCHES, "WHO", "output too large, truncated");
+		sendnumeric(client, ERR_TOOMANYMATCHES, "WHO", "output too large, truncated");
 }
 
 /*
@@ -556,14 +556,14 @@ static void who_global(Client *sptr, char *mask, int operspy, struct who_format 
  * inputs		- pointer to client requesting who
  *			- pointer to channel to do who on
  *			- The "real name" of this channel
- *			- int if sptr is a server oper or not
+ *			- int if client is a server oper or not
  *			- int if client is member or not
  *			- format options
  * output		- NONE
  * side effects		- do a who on given channel
  */
 
-static void do_who_on_channel(Client *sptr, Channel *chptr,
+static void do_who_on_channel(Client *client, Channel *chptr,
 	int member, int operspy, struct who_format *fmt)
 {
 	Member *cm = chptr->members;
@@ -572,7 +572,7 @@ static void do_who_on_channel(Client *sptr, Channel *chptr,
 
 	for (cm = chptr->members; cm; cm = cm->next)
 	{
-		Client *acptr = cm->cptr;
+		Client *acptr = cm->client;
 
 		if (IsMatch(fmt, WMATCH_OPER) && !IsOper(acptr))
 			continue;
@@ -584,11 +584,11 @@ static void do_who_on_channel(Client *sptr, Channel *chptr,
 				break;
 		}
 
-		if (!operspy && (acptr != sptr) && i != 0 && !(is_skochanop(sptr, chptr)) && !(is_skochanop(acptr, chptr) || has_voice(acptr,chptr)))
+		if (!operspy && (acptr != client) && i != 0 && !(is_skochanop(client, chptr)) && !(is_skochanop(acptr, chptr) || has_voice(acptr,chptr)))
 			continue;
 
 		if(member || !IsInvisible(acptr))
-			do_who(sptr, acptr, chptr, fmt);
+			do_who(client, acptr, chptr, fmt);
 	}
 }
 
@@ -621,19 +621,19 @@ static void append_format(char *buf, size_t bufsize, size_t *pos, const char *fm
  * show_ip()		- asks if the true IP should be shown when source is
  *			  asking for info about target
  *
- * Inputs		- sptr who is asking
+ * Inputs		- client who is asking
  *			- acptr who do we want the info on
  * Output		- returns 1 if clear IP can be shown, otherwise 0
  * Side Effects		- none
  */
 
-static int show_ip(Client *sptr, Client *acptr)
+static int show_ip(Client *client, Client *acptr)
 {
 	if (IsServer(acptr))
 		return 0;
-	else if ((sptr != NULL) && (MyConnect(sptr) && !IsOper(sptr)) && (sptr == acptr))
+	else if ((client != NULL) && (MyConnect(client) && !IsOper(client)) && (client == acptr))
 		return 1;
-	else if (IsHidden(acptr) && ((sptr != NULL) && !IsOper(sptr)))
+	else if (IsHidden(acptr) && ((client != NULL) && !IsOper(client)))
 		return 0;
 	else
 		return 1;
@@ -650,12 +650,12 @@ static int show_ip(Client *sptr, Client *acptr)
  * side effects - do a who on given person
  */
 
-static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_format *fmt)
+static void do_who(Client *client, Client *acptr, Channel *chptr, struct who_format *fmt)
 {
 	char status[20];
 	char str[510 + 1];
 	size_t pos;
-	int hide = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;
+	int hide = (FLAT_MAP && !IsOper(client)) ? 1 : 0;
 	int i = 0;
 	Hook *h;
 
@@ -672,15 +672,15 @@ static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_forma
 
 	for (h = Hooks[HOOKTYPE_WHO_STATUS]; h; h = h->next)
 	{
-		int ret = (*(h->func.intfunc))(sptr, acptr, NULL, NULL, status, 0);
+		int ret = (*(h->func.intfunc))(client, acptr, NULL, NULL, status, 0);
 		if (ret != 0)
 			status[i++] = (char)ret;
 	}
 
-	if (IsOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsOper(sptr)))
+	if (IsOper(acptr) && (!IsHideOper(acptr) || client == acptr || IsOper(client)))
 		status[i++] = '*';
 
-	if (IsOper(acptr) && (IsHideOper(acptr) && sptr != acptr && IsOper(sptr)))
+	if (IsOper(acptr) && (IsHideOper(acptr) && client != acptr && IsOper(client)))
 		status[i++] = '!';
 
 	if (chptr)
@@ -689,7 +689,7 @@ static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_forma
 
 		if ((lp = find_membership_link(acptr->user->channel, chptr)))
 		{
-			if (!(fmt->fields || HasCapability(sptr, "multi-prefix")))
+			if (!(fmt->fields || HasCapability(client, "multi-prefix")))
 			{
 				/* Standard NAMES reply */
 #ifdef PREFIX_AQ
@@ -736,7 +736,7 @@ static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_forma
 			host = GetIP(acptr);
 		else
 			host = GetHost(acptr);
-		sendnumeric(sptr, RPL_WHOREPLY,
+		sendnumeric(client, RPL_WHOREPLY,
 			chptr ? chptr->chname : "*",
 			acptr->user->username, host,
 			hide ? "*" : acptr->user->server,
@@ -745,7 +745,7 @@ static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_forma
 	{
 		str[0] = '\0';
 		pos = 0;
-		append_format(str, sizeof str, &pos, ":%s %d %s", me.name, RPL_WHOSPCRPL, sptr->name);
+		append_format(str, sizeof str, &pos, ":%s %d %s", me.name, RPL_WHOSPCRPL, client->name);
 		if (HasField(fmt, FIELD_QUERYTYPE))
 			append_format(str, sizeof str, &pos, " %s", fmt->querytype);
 		if (HasField(fmt, FIELD_CHANNEL))
@@ -754,7 +754,7 @@ static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_forma
 			append_format(str, sizeof str, &pos, " %s", acptr->user->username);
 		if (HasField(fmt, FIELD_IP))
 		{
-			if (show_ip(sptr, acptr) && acptr->ip)
+			if (show_ip(client, acptr) && acptr->ip)
 				append_format(str, sizeof str, &pos, " %s", acptr->ip);
 			else
 				append_format(str, sizeof str, &pos, " %s", "255.255.255.255");
@@ -762,7 +762,7 @@ static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_forma
 
 		if (HasField(fmt, FIELD_HOST) || HasField(fmt, FIELD_REALHOST))
 		{
-			if (IsOper(sptr) && HasField(fmt, FIELD_REALHOST))
+			if (IsOper(client) && HasField(fmt, FIELD_REALHOST))
 				append_format(str, sizeof str, &pos, " %s", acptr->user->realhost);
 			else
 				append_format(str, sizeof str, &pos, " %s", GetHost(acptr));
@@ -776,7 +776,7 @@ static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_forma
 			append_format(str, sizeof str, &pos, " %s", status);
 		if (HasField(fmt, FIELD_MODES))
 		{
-			if (IsOper(sptr))
+			if (IsOper(client))
 				append_format(str, sizeof str, &pos, " %s", strtok(get_mode_str(acptr), "+"));
 			else
 				append_format(str, sizeof str, &pos, " %s", "*");
@@ -785,8 +785,8 @@ static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_forma
 			append_format(str, sizeof str, &pos, " %d", hide ? 0 : acptr->hopcount);
 		if (HasField(fmt, FIELD_IDLE))
 			append_format(str, sizeof str, &pos, " %d", (int)(MyUser(acptr) &&
-				(!(acptr->umodes & UMODE_HIDLE) || IsOper(sptr) ||
-				(sptr == acptr)) ? TStime() - acptr->local->last : 0));
+				(!(acptr->umodes & UMODE_HIDLE) || IsOper(client) ||
+				(client == acptr)) ? TStime() - acptr->local->last : 0));
 		if (HasField(fmt, FIELD_ACCOUNT))
 			append_format(str, sizeof str, &pos, " %s", (!isdigit(*acptr->user->svid)) ? acptr->user->svid : "0");
 		if (HasField(fmt, FIELD_OPLEVEL))
@@ -798,15 +798,15 @@ static void do_who(Client *sptr, Client *acptr, Channel *chptr, struct who_forma
 		{
 			static int warned = 0;
 			if (!warned)
-				sendto_snomask(SNO_JUNK, "*** WHOX overflow while sending information about %s to %s", acptr->name, sptr->name);
+				sendto_snomask(SNO_JUNK, "*** WHOX overflow while sending information about %s to %s", acptr->name, client->name);
 			warned = 1;
  		}
-		sendto_one(sptr, NULL, "%s", str);
+		sendto_one(client, NULL, "%s", str);
 	}
 }
 
 /* Yeah, this is fun. Thank you WHOX !!! */
-static int convert_classical_who_request(Client *sptr, int *parc, char *parv[], char **orig_mask, struct who_format *fmt)
+static int convert_classical_who_request(Client *client, int *parc, char *parv[], char **orig_mask, struct who_format *fmt)
 {
 	char *p;
 	static char pbuf1[256];
@@ -885,12 +885,12 @@ static int convert_classical_who_request(Client *sptr, int *parc, char *parv[], 
 
 			if (strchr(parv[2], 'a'))
 			{
-				sendnotice(sptr, "WHO request '%s' failed: flag 'a' no longer exists with WHOX.", oldrequest);
+				sendnotice(client, "WHO request '%s' failed: flag 'a' no longer exists with WHOX.", oldrequest);
 				return 0;
 			}
 			if (strchr(parv[2], 'c'))
 			{
-				sendnotice(sptr, "WHO request '%s' failed: flag 'c' no longer exists with WHOX.", oldrequest);
+				sendnotice(client, "WHO request '%s' failed: flag 'c' no longer exists with WHOX.", oldrequest);
 				return 0;
 			}
 			for (p = parv[2]; *p; p++)
@@ -927,7 +927,7 @@ static int convert_classical_who_request(Client *sptr, int *parc, char *parv[], 
 			if ((*parv[2] == '+') || (*parv[2] == '-'))
 				parv[2] = parv[2]+1; /* strip '+'/'-' prefix, which does not exist in WHOX */
 
-			sendnotice(sptr, "WHO request '%s' changed to match new WHOX syntax: 'WHO %s %s'",
+			sendnotice(client, "WHO request '%s' changed to match new WHOX syntax: 'WHO %s %s'",
 				oldrequest, parv[1], parv[2]);
 			*orig_mask = parv[1];
 		}

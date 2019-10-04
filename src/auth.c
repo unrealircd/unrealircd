@@ -286,7 +286,7 @@ void Auth_FreeAuthConfig(AuthConfig *as)
 #define RAWSALTLEN		6
 #define REALSALTLEN		12
 
-static int authcheck_argon2(Client *cptr, AuthConfig *as, char *para)
+static int authcheck_argon2(Client *client, AuthConfig *as, char *para)
 {
 	argon2_type hashtype;
 
@@ -311,7 +311,7 @@ static int authcheck_argon2(Client *cptr, AuthConfig *as, char *para)
 	return 0; /* NO MATCH or error */
 }
 
-static int authcheck_bcrypt(Client *cptr, AuthConfig *as, char *para)
+static int authcheck_bcrypt(Client *client, AuthConfig *as, char *para)
 {
 	char data[512]; /* NOTE: only 64 required by BF_crypt() */
 	char *str;
@@ -331,15 +331,15 @@ static int authcheck_bcrypt(Client *cptr, AuthConfig *as, char *para)
 	return 0; /* NO MATCH */
 }
 
-static int authcheck_tls_clientcert(Client *cptr, AuthConfig *as, char *para)
+static int authcheck_tls_clientcert(Client *client, AuthConfig *as, char *para)
 {
 	X509 *x509_clientcert = NULL;
 	X509 *x509_filecert = NULL;
 	FILE *x509_f = NULL;
 
-	if (!cptr->local->ssl)
+	if (!client->local->ssl)
 		return 0;
-	x509_clientcert = SSL_get_peer_certificate(cptr->local->ssl);
+	x509_clientcert = SSL_get_peer_certificate(client->local->ssl);
 	if (!x509_clientcert)
 		return 0;
 	if (!(x509_f = fopen(as->data, "r")))
@@ -365,16 +365,16 @@ static int authcheck_tls_clientcert(Client *cptr, AuthConfig *as, char *para)
 	return 1;
 }
 
-static int authcheck_tls_clientcert_fingerprint(Client *cptr, AuthConfig *as, char *para)
+static int authcheck_tls_clientcert_fingerprint(Client *client, AuthConfig *as, char *para)
 {
 	int i, k;
 	char hexcolon[EVP_MAX_MD_SIZE * 3 + 1];
 	char *fp;
 
-	if (!cptr->local->ssl)
+	if (!client->local->ssl)
 		return 0;
 
-	fp = moddata_client_get(cptr, "certfp");
+	fp = moddata_client_get(client, "certfp");
 	if (!fp)
 		return 0;
 
@@ -396,9 +396,9 @@ static int authcheck_tls_clientcert_fingerprint(Client *cptr, AuthConfig *as, ch
 	return 1;
 }
 
-static int authcheck_spkifp(Client *cptr, AuthConfig *as, char *para)
+static int authcheck_spkifp(Client *client, AuthConfig *as, char *para)
 {
-	char *fp = spki_fingerprint(cptr);
+	char *fp = spki_fingerprint(client);
 
 	if (!fp)
 		return 0; /* auth failed: not SSL (or other failure) */
@@ -411,7 +411,7 @@ static int authcheck_spkifp(Client *cptr, AuthConfig *as, char *para)
 
 
 /*
- * cptr MUST be a local client
+ * client MUST be a local client
  * as is what it will be compared with
  * para will used in coordination with the auth type	
 */
@@ -419,7 +419,7 @@ static int authcheck_spkifp(Client *cptr, AuthConfig *as, char *para)
 /** Check authentication, such as a password against the
  * provided AuthConfig (which was parsed from the configuration
  * file earlier).
- * @param cptr    The client.
+ * @param client    The client.
  * @param as      The authentication config.
  * @param para    The provided parameter (NULL allowed)
  * @returns 1 if passed, 0 if incorrect (eg: invalid password)
@@ -427,7 +427,7 @@ static int authcheck_spkifp(Client *cptr, AuthConfig *as, char *para)
  * - The return value was different in versions before UnrealIRCd 5.0.0!
  * - In older versions a NULL 'as' was treated as an allow, now it's deny.
  */
-int Auth_Check(Client *cptr, AuthConfig *as, char *para)
+int Auth_Check(Client *client, AuthConfig *as, char *para)
 {
 	extern char *crypt();
 	char *res;
@@ -452,10 +452,10 @@ int Auth_Check(Client *cptr, AuthConfig *as, char *para)
 			return 0;
 
 		case AUTHTYPE_ARGON2:
-			return authcheck_argon2(cptr, as, para);
+			return authcheck_argon2(client, as, para);
 
 		case AUTHTYPE_BCRYPT:
-			return authcheck_bcrypt(cptr, as, para);
+			return authcheck_bcrypt(client, as, para);
 
 		case AUTHTYPE_UNIXCRYPT:
 			if (!para)
@@ -466,13 +466,13 @@ int Auth_Check(Client *cptr, AuthConfig *as, char *para)
 			return 0;
 
 		case AUTHTYPE_TLS_CLIENTCERT:
-			return authcheck_tls_clientcert(cptr, as, para);
+			return authcheck_tls_clientcert(client, as, para);
 
 		case AUTHTYPE_TLS_CLIENTCERTFP:
-			return authcheck_tls_clientcert_fingerprint(cptr, as, para);
+			return authcheck_tls_clientcert_fingerprint(client, as, para);
 
 		case AUTHTYPE_SPKIFP:
-			return authcheck_spkifp(cptr, as, para);
+			return authcheck_spkifp(client, as, para);
 
 		case AUTHTYPE_INVALID:
 			return 0; /* Should never happen */

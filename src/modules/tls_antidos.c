@@ -24,7 +24,7 @@ ModuleHeader MOD_HEADER
 
 typedef struct SAD SAD;
 struct SAD {
-	Client *acptr; /**< client */
+	Client *client; /**< client */
 	time_t ts; /**< time */
 	int n; /**< number of times */
 };
@@ -32,7 +32,7 @@ struct SAD {
 int tls_antidos_index = 0; /* slot# we acquire from OpenSSL. Hmm.. looks awfully similar to our moddata system ;) */
 
 /* Forward declaration */
-int tls_antidos_handshake(Client *acptr);
+int tls_antidos_handshake(Client *client);
 
 void tls_antidos_free(void *parent, void *ptr, CRYPTO_EX_DATA *ad, int idx, long argl, void *argp);
 
@@ -68,9 +68,9 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
 	if (where & SSL_CB_HANDSHAKE_START)
 	{
 		SAD *e = SSL_get_ex_data(ssl, tls_antidos_index);
-		Client *acptr = e->acptr;
+		Client *client = e->client;
 		
-		if (IsServer(acptr) || IsDeadSocket(acptr))
+		if (IsServer(client) || IsDeadSocket(client))
 			return; /* if it's a server, or already pending to be killed off then we don't care */
 
 		if (e->ts < TStime() - HANDSHAKE_LIMIT_SECS)
@@ -81,9 +81,9 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
 			e->n++;
 			if (e->n >= HANDSHAKE_LIMIT_COUNT)
 			{
-				ircd_log(LOG_ERROR, "TLS Handshake flood detected from %s -- killed", get_client_name(acptr, TRUE));
-				sendto_realops("TLS Handshake flood detected from %s -- killed", get_client_name(acptr, TRUE));
-				dead_socket(acptr, "TLS Handshake flood detected");
+				ircd_log(LOG_ERROR, "TLS Handshake flood detected from %s -- killed", get_client_name(client, TRUE));
+				sendto_realops("TLS Handshake flood detected from %s -- killed", get_client_name(client, TRUE));
+				dead_socket(client, "TLS Handshake flood detected");
 			}
 		}
 	}
@@ -93,14 +93,14 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
  * This function is called quite quickly after accept(),
  * in any case very likely before any data has been received.
  */
-int tls_antidos_handshake(Client *acptr)
+int tls_antidos_handshake(Client *client)
 {
-	if (acptr->local->ssl)
+	if (client->local->ssl)
 	{
 		SAD *sad = safe_alloc(sizeof(SAD));
-		sad->acptr = acptr;
-		SSL_set_info_callback(acptr->local->ssl, ssl_info_callback);
-		SSL_set_ex_data(acptr->local->ssl, tls_antidos_index, sad);
+		sad->client = client;
+		SSL_set_info_callback(client->local->ssl, ssl_info_callback);
+		SSL_set_ex_data(client->local->ssl, tls_antidos_index, sad);
 	}
 	return 0;
 }

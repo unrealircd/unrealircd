@@ -32,12 +32,12 @@ Cmode_t EXTCMODE_SECUREONLY;
 
 #define IsSecureOnly(chptr)    (chptr->mode.extmode & EXTCMODE_SECUREONLY)
 
-int secureonly_check_join(Client *sptr, Channel *chptr, char *key, char *parv[]);
-int secureonly_channel_sync (Channel* chptr, int merge, int removetheirs, int nomode);
-int secureonly_send_channel(Client *acptr, Channel* chptr);
-int secureonly_check_secure(Channel* chptr);
-int secureonly_check_sajoin(Client *acptr, Channel* chptr, Client *sptr);
-int secureonly_specialcheck(Client *sptr, Channel *chptr, char *parv[]);
+int secureonly_check_join(Client *client, Channel *chptr, char *key, char *parv[]);
+int secureonly_channel_sync (Channel *chptr, int merge, int removetheirs, int nomode);
+int secureonly_send_channel(Client *client, Channel *chptr);
+int secureonly_check_secure(Channel *chptr);
+int secureonly_check_sajoin(Client *target, Channel *chptr, Client *requester);
+int secureonly_specialcheck(Client *client, Channel *chptr, char *parv[]);
 
 MOD_TEST()
 {
@@ -83,7 +83,7 @@ MOD_UNLOAD()
 static int secureonly_kick_insecure_users(Channel *chptr)
 {
 	Member *member, *mb2;
-	Client *cptr;
+	Client *client;
 	int i = 0;
 	Hook *h;
 	char *comment = "Insecure user not allowed on secure channel (+z)";
@@ -94,13 +94,13 @@ static int secureonly_kick_insecure_users(Channel *chptr)
 	for (member = chptr->members; member; member = mb2)
 	{
 		mb2 = member->next;
-		cptr = member->cptr;
-		if (MyUser(cptr) && !IsSecureConnect(cptr) && !IsULine(cptr))
+		client = member->client;
+		if (MyUser(client) && !IsSecureConnect(client) && !IsULine(client))
 		{
 			int prefix = 0;
 			MessageTag *mtags = NULL;
 
-			if (invisible_user_in_channel(cptr, chptr))
+			if (invisible_user_in_channel(client, chptr))
 			{
 				/* Send only to chanops */
 				prefix = CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN;
@@ -108,39 +108,39 @@ static int secureonly_kick_insecure_users(Channel *chptr)
 
 			new_message(&me, NULL, &mtags);
 
-			RunHook6(HOOKTYPE_LOCAL_KICK, &me, &me, cptr, chptr, mtags, comment);
+			RunHook6(HOOKTYPE_LOCAL_KICK, &me, &me, client, chptr, mtags, comment);
 
-			sendto_channel(chptr, &me, cptr,
+			sendto_channel(chptr, &me, client,
 				       prefix, 0,
 				       SEND_LOCAL, mtags,
 				       ":%s KICK %s %s :%s",
-				       me.name, chptr->chname, cptr->name, comment);
+				       me.name, chptr->chname, client->name, comment);
 
-			sendto_prefix_one(cptr, &me, mtags, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+			sendto_prefix_one(client, &me, mtags, ":%s KICK %s %s :%s", me.name, chptr->chname, client->name, comment);
 
-			sendto_server(&me, 0, 0, mtags, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+			sendto_server(&me, 0, 0, mtags, ":%s KICK %s %s :%s", me.name, chptr->chname, client->name, comment);
 
 			free_message_tags(mtags);
 
-			if (remove_user_from_channel(cptr, chptr) == 1)
+			if (remove_user_from_channel(client, chptr) == 1)
 				return 1; /* channel was destroyed */
 		}
 	}
 	return 0;
 }
 
-int secureonly_check_join(Client *sptr, Channel *chptr, char *key, char *parv[])
+int secureonly_check_join(Client *client, Channel *chptr, char *key, char *parv[])
 {
 	Link *lp;
 
-	if (IsSecureOnly(chptr) && !(sptr->umodes & UMODE_SECURE))
+	if (IsSecureOnly(chptr) && !(client->umodes & UMODE_SECURE))
 	{
-		if (ValidatePermissionsForPath("channel:override:secureonly",sptr,NULL,chptr,NULL))
+		if (ValidatePermissionsForPath("channel:override:secureonly",client,NULL,chptr,NULL))
 		{
 			/* if the channel is +z we still allow an ircop to bypass it
 			 * if they are invited.
 			 */
-			for (lp = sptr->user->invited; lp; lp = lp->next)
+			for (lp = client->user->invited; lp; lp = lp->next)
 				if (lp->value.chptr == chptr)
 					return HOOK_CONTINUE;
 		}
@@ -166,21 +166,21 @@ int secureonly_channel_sync(Channel *chptr, int merge, int removetheirs, int nom
 	return 0;
 }
 
-int secureonly_send_channel(Client *acptr, Channel *chptr)
+int secureonly_send_channel(Client *client, Channel *chptr)
 {
 	if (IsSecureOnly(chptr))
-		if (!IsSecure(acptr))
+		if (!IsSecure(client))
 			return HOOK_DENY;
 
 	return HOOK_CONTINUE;
 }
 
-int secureonly_check_sajoin(Client *acptr, Channel *chptr, Client *sptr)
+int secureonly_check_sajoin(Client *target, Channel *chptr, Client *requester)
 {
-	if (IsSecureOnly(chptr) && !IsSecure(acptr))
+	if (IsSecureOnly(chptr) && !IsSecure(target))
 	{
-		sendnotice(sptr, "You cannot SAJOIN %s to %s because the channel is +z and the user is not connected via SSL/TLS",
-			acptr->name, chptr->chname);
+		sendnotice(requester, "You cannot SAJOIN %s to %s because the channel is +z and the user is not connected via SSL/TLS",
+			target->name, chptr->chname);
 		return HOOK_DENY;
 	}
 
@@ -190,11 +190,11 @@ int secureonly_check_sajoin(Client *acptr, Channel *chptr, Client *sptr)
 /* Special check for +z in set::modes-on-join. Needs to be done early.
  * Perhaps one day this will be properly handled in the core so this can be removed.
  */
-int secureonly_specialcheck(Client *sptr, Channel *chptr, char *parv[])
+int secureonly_specialcheck(Client *client, Channel *chptr, char *parv[])
 {
-	if ((chptr->users == 0) && (iConf.modes_on_join.extmodes & EXTCMODE_SECUREONLY) && !IsSecure(sptr) && !IsOper(sptr))
+	if ((chptr->users == 0) && (iConf.modes_on_join.extmodes & EXTCMODE_SECUREONLY) && !IsSecure(client) && !IsOper(client))
 	{
-		sendnumeric(sptr, ERR_SECUREONLYCHAN, chptr->chname);
+		sendnumeric(client, ERR_SECUREONLYCHAN, chptr->chname);
 		return HOOK_DENY;
 	}
 	return HOOK_CONTINUE;

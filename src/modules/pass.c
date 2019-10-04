@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
     };
 
 /* Forward declarations */
-int _check_banned(Client *cptr, int exitflags);
+int _check_banned(Client *client, int exitflags);
 
 MOD_TEST()
 {
@@ -66,17 +66,17 @@ MOD_UNLOAD()
 }
 
 /** Handles zlines/gzlines/throttling/unknown connections
- * @param cptr       Client to be checked
+ * @param client     Client to be checked
  * @param exitflags  Special flag (NO_EXIT_CLIENT) -- only used in very early stages of the connection
  * @returns 1 if user is banned and is or should be killed, 0 if not.
  */
-int _check_banned(Client *cptr, int exitflags)
+int _check_banned(Client *client, int exitflags)
 {
 	TKL *tk;
 
-	if ((tk = find_tkline_match_zap(cptr)))
+	if ((tk = find_tkline_match_zap(client)))
 	{
-		banned_client(cptr, "Z-Lined", tk->ptr.serverban->reason, (tk->type & TKL_GLOBAL)?1:0, exitflags);
+		banned_client(client, "Z-Lined", tk->ptr.serverban->reason, (tk->type & TKL_GLOBAL)?1:0, exitflags);
 		return 1;
 	}
 	else
@@ -84,27 +84,27 @@ int _check_banned(Client *cptr, int exitflags)
 		int val;
 		char zlinebuf[512];
 
-		if (!(val = throttle_can_connect(cptr)))
+		if (!(val = throttle_can_connect(client)))
 		{
 			if (exitflags & NO_EXIT_CLIENT)
 			{
 				ircsnprintf(zlinebuf, sizeof(zlinebuf),
 					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) - "
 					"Email %s for more information.\r\n",
-					cptr->ip, KLINE_ADDRESS);
-				(void)send(cptr->local->fd, zlinebuf, strlen(zlinebuf), 0);
+					client->ip, KLINE_ADDRESS);
+				(void)send(client->local->fd, zlinebuf, strlen(zlinebuf), 0);
 				return 1;
 			} else {
 				ircsnprintf(zlinebuf, sizeof(zlinebuf),
 				            "Throttled: Reconnecting too fast - "
 				            "Email %s for more information.",
 				            KLINE_ADDRESS);
-				exit_client(cptr, NULL, zlinebuf);
+				exit_client(client, NULL, zlinebuf);
 				return 1;
 			}
 		}
 		else if (val == 1)
-			add_throttling_bucket(cptr);
+			add_throttling_bucket(client);
 	}
 
 	return 0;
@@ -121,21 +121,21 @@ CMD_FUNC(cmd_pass)
 {
 	char *password = parc > 1 ? parv[1] : NULL;
 
-	if (!MyConnect(sptr) || (!IsUnknown(sptr) && !IsHandshake(sptr)))
+	if (!MyConnect(client) || (!IsUnknown(client) && !IsHandshake(client)))
 	{
-		sendnumeric(sptr, ERR_ALREADYREGISTRED);
+		sendnumeric(client, ERR_ALREADYREGISTRED);
 		return;
 	}
 
 	if (BadPtr(password))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "PASS");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "PASS");
 		return;
 	}
 
 	/* Store the password */
-	safe_strldup(sptr->local->passwd, password, PASSWDLEN+1);
+	safe_strldup(client->local->passwd, password, PASSWDLEN+1);
 
 	/* note: the original non-truncated password is supplied as 2nd parameter. */
-	RunHookReturn2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);
+	RunHookReturn2(HOOKTYPE_LOCAL_PASS, client, password, !=0);
 }

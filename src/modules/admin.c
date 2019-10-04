@@ -59,28 +59,28 @@ CMD_FUNC(cmd_admin)
 {
 	ConfigItem_admin *admin;
 
-	if (IsUser(sptr))
+	if (IsUser(client))
 	{
-		if (hunt_server(sptr, recv_mtags, ":%s ADMIN :%s", 1, parc, parv) != HUNTED_ISME)
+		if (hunt_server(client, recv_mtags, ":%s ADMIN :%s", 1, parc, parv) != HUNTED_ISME)
 			return;
 	}
 
 	if (!conf_admin_tail)
 	{
-		sendnumeric(sptr, ERR_NOADMININFO, me.name);
+		sendnumeric(client, ERR_NOADMININFO, me.name);
 		return;
 	}
 
-	sendnumeric(sptr, RPL_ADMINME, me.name);
+	sendnumeric(client, RPL_ADMINME, me.name);
 
 	/* cycle through the list backwards */
 	for (admin = conf_admin_tail; admin; admin = admin->prev)
 	{
 		if (!admin->next)
-			sendnumeric(sptr, RPL_ADMINLOC1, admin->line);
+			sendnumeric(client, RPL_ADMINLOC1, admin->line);
 		else if (!admin->next->next)
-			sendnumeric(sptr, RPL_ADMINLOC2, admin->line);
+			sendnumeric(client, RPL_ADMINLOC2, admin->line);
 		else
-			sendnumeric(sptr, RPL_ADMINEMAIL, admin->line);
+			sendnumeric(client, RPL_ADMINEMAIL, admin->line);
 	}
 }

@@ -70,10 +70,10 @@ CMD_FUNC(cmd_svsfline)
 			if (!Find_deny_dcc(parv[2]))
 				DCCdeny_add(parv[2], parv[3], DCCDENY_HARD, CONF_BAN_TYPE_AKILL);
 
-			if (IsULine(sptr))
+			if (IsULine(client))
 			{
-				sendto_server(sptr, 0, 0, NULL, ":%s SVSFLINE + %s :%s",
-				    sptr->name, parv[2], parv[3]);
+				sendto_server(client, 0, 0, NULL, ":%s SVSFLINE + %s :%s",
+				    client->name, parv[2], parv[3]);
 			}
 
 			break;
@@ -83,7 +83,7 @@ CMD_FUNC(cmd_svsfline)
 		{
 			ConfigItem_deny_dcc *deny;
 
-			if (!IsULine(sptr))
+			if (!IsULine(client))
 				return;
 
 			if (parc < 3)
@@ -94,19 +94,19 @@ CMD_FUNC(cmd_svsfline)
 
 			DCCdeny_del(deny);
 
-			sendto_server(sptr, 0, 0, NULL, ":%s SVSFLINE %s", sptr->name, parv[2]);
+			sendto_server(client, 0, 0, NULL, ":%s SVSFLINE %s", client->name, parv[2]);
 
 			break;
 		}
 
 		case '*':
 		{
-			if (!IsULine(sptr))
+			if (!IsULine(client))
 				return;
 
 			dcc_wipe_services();
 
-			sendto_server(sptr, 0, 0, NULL, ":%s SVSFLINE *", sptr->name);
+			sendto_server(client, 0, 0, NULL, ":%s SVSFLINE *", client->name);
 
 			break;
 		}

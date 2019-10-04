@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 char *link_security_md_serialize(ModData *m);
 void link_security_md_unserialize(char *str, ModData *m);
 EVENT(checklinksec);
-char *link_security_capability_parameter(Client *acptr);
+char *link_security_capability_parameter(Client *client);
 CMD_FUNC(cmd_linksecurity);
 
 /* Global variables */
@@ -112,15 +112,15 @@ void link_security_md_unserialize(char *str, ModData *m)
 }
 
 /** Return 1 if the server certificate is verified for
- * server 'acptr', return 0 if not.
+ * server 'client', return 0 if not.
  */
-int certificate_verification_active(Client *acptr)
+int certificate_verification_active(Client *client)
 {
 	ConfigItem_link *conf;
 	
-	if (!acptr->serv || !acptr->serv->conf)
+	if (!client->serv || !client->serv->conf)
 		return 0; /* wtf? */
-	conf = acptr->serv->conf;
+	conf = client->serv->conf;
 	
 	if (conf->verify_certificate)
 		return 1; /* yes, verify-certificate is 'yes' */
@@ -146,16 +146,16 @@ int certificate_verification_active(Client *acptr)
  */
 int our_link_security(void)
 {
-	Client *acptr;
+	Client *client;
 	int level = 2; /* safest */
 	
-	list_for_each_entry(acptr, &server_list, special_node)
+	list_for_each_entry(client, &server_list, special_node)
 	{
-		if (IsLocalhost(acptr))
+		if (IsLocalhost(client))
 			continue; /* server connected via localhost */
-		if (!IsSecure(acptr))
+		if (!IsSecure(client))
 			return 0; /* Any non-SSL server (which is not localhost) results in level 0. */
-		if (!certificate_verification_active(acptr))
+		if (!certificate_verification_active(client))
 			level = 1; /* downgrade to level 1 */
 	}
 	
@@ -176,7 +176,7 @@ EVENT(checklinksec)
 {
 	int last_local_link_security = local_link_security;
 	int last_global_link_security = global_link_security;
-	Client *acptr;
+	Client *client;
 	char *s;
 	int v;
 	int warning_sent = 0;
@@ -191,9 +191,9 @@ EVENT(checklinksec)
 	}
 
 	global_link_security = 2;
-	list_for_each_entry(acptr, &global_server_list, client_node)
+	list_for_each_entry(client, &global_server_list, client_node)
 	{
-		s = moddata_client_get(acptr, "link-security");
+		s = moddata_client_get(client, "link-security");
 		if (s)
 		{
 			v = atoi(s);
@@ -230,7 +230,7 @@ EVENT(checklinksec)
 	}
 }
 
-char *link_security_capability_parameter(Client *acptr)
+char *link_security_capability_parameter(Client *client)
 {
 	return valtostr(effective_link_security);
 }
@@ -242,15 +242,15 @@ CMD_FUNC(cmd_linksecurity)
 	char *s;
 	int v;
 	
-	if (!IsOper(sptr))
+	if (!IsOper(client))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 	
-	sendtxtnumeric(sptr, "== Link Security Report ==");
+	sendtxtnumeric(client, "== Link Security Report ==");
 	
-	sendtxtnumeric(sptr, "= By server =");
+	sendtxtnumeric(client, "= By server =");
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		v = -1;
@@ -258,24 +258,24 @@ CMD_FUNC(cmd_linksecurity)
 		if (s)
 		{
 			v = atoi(s);
-			sendtxtnumeric(sptr, "%s: level %d", acptr->name, v);
+			sendtxtnumeric(client, "%s: level %d", acptr->name, v);
 		} else {
-			sendtxtnumeric(sptr, "%s: level UNKNOWN", acptr->name);
+			sendtxtnumeric(client, "%s: level UNKNOWN", acptr->name);
 		}
 	}
 	
-	sendtxtnumeric(sptr, "-");
-	sendtxtnumeric(sptr, "= Network =");
-	sendtxtnumeric(sptr, "This results in an effective (network-wide) link-security of level %d", effective_link_security);
-	sendtxtnumeric(sptr, "-");
-	sendtxtnumeric(sptr, "= Legend =");
-	sendtxtnumeric(sptr, "Higher level means better link security");
-	sendtxtnumeric(sptr, "Level UNKNOWN: Not an UnrealIRCd server (eg: services) or an old version (<4.0.14)");
-	sendtxtnumeric(sptr, "Level 0: One or more servers linked insecurely (not using SSL/TLS)");
-	sendtxtnumeric(sptr, "Level 1: Servers are linked with SSL/TLS but at least one of them is not verifying certificates");
-	sendtxtnumeric(sptr, "Level 2: Servers linked with SSL/TLS and certificates are properly verified");
-	sendtxtnumeric(sptr, "-");
-	sendtxtnumeric(sptr, "= More information =");
-	sendtxtnumeric(sptr, "To understand more about link security and how to improve your level");
-	sendtxtnumeric(sptr, "see https://www.unrealircd.org/docs/Link_security");
+	sendtxtnumeric(client, "-");
+	sendtxtnumeric(client, "= Network =");
+	sendtxtnumeric(client, "This results in an effective (network-wide) link-security of level %d", effective_link_security);
+	sendtxtnumeric(client, "-");
+	sendtxtnumeric(client, "= Legend =");
+	sendtxtnumeric(client, "Higher level means better link security");
+	sendtxtnumeric(client, "Level UNKNOWN: Not an UnrealIRCd server (eg: services) or an old version (<4.0.14)");
+	sendtxtnumeric(client, "Level 0: One or more servers linked insecurely (not using SSL/TLS)");
+	sendtxtnumeric(client, "Level 1: Servers are linked with SSL/TLS but at least one of them is not verifying certificates");
+	sendtxtnumeric(client, "Level 2: Servers linked with SSL/TLS and certificates are properly verified");
+	sendtxtnumeric(client, "-");
+	sendtxtnumeric(client, "= More information =");
+	sendtxtnumeric(client, "To understand more about link security and how to improve your level");
+	sendtxtnumeric(client, "see https://www.unrealircd.org/docs/Link_security");
 }

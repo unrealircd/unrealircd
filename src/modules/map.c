@@ -57,7 +57,7 @@ MOD_UNLOAD()
  * New /MAP format -Potvin
  * dump_map function.
  */
-static void dump_map(Client *cptr, Client *server, char *mask, int prompt_length, int length)
+static void dump_map(Client *client, Client *server, char *mask, int prompt_length, int length)
 {
 	static char prompt[64];
 	char *p = &prompt[prompt_length];
@@ -67,12 +67,11 @@ static void dump_map(Client *cptr, Client *server, char *mask, int prompt_length
 	*p = '\0';
 
 	if (prompt_length > 60)
-		sendnumeric(cptr, RPL_MAPMORE,
-		    prompt, length, server->name);
+		sendnumeric(client, RPL_MAPMORE, prompt, length, server->name);
 	else
 	{
-		sendnumeric(cptr, RPL_MAP, prompt,
-		    length, server->name, server->serv->users, IsOper(cptr) ? server->id : "");
+		sendnumeric(client, RPL_MAP, prompt,
+		            length, server->name, server->serv->users, IsOper(client) ? server->id : "");
 		cnt = 0;
 	}
 
@@ -90,7 +89,7 @@ static void dump_map(Client *cptr, Client *server, char *mask, int prompt_length
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		if (acptr->srvptr != server ||
- 		    (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL)))
+ 		    (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)))
 			continue;
 		SetMap(acptr);
 		cnt++;
@@ -98,7 +97,7 @@ static void dump_map(Client *cptr, Client *server, char *mask, int prompt_length
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		if (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL))
+		if (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL))
 			continue;
 		if (acptr->srvptr != server)
 			continue;
@@ -106,23 +105,22 @@ static void dump_map(Client *cptr, Client *server, char *mask, int prompt_length
 			continue;
 		if (--cnt == 0)
 			*p = '`';
-		dump_map(cptr, acptr, mask, prompt_length + 2, length - 2);
+		dump_map(client, acptr, mask, prompt_length + 2, length - 2);
 	}
 
 	if (prompt_length > 0)
 		p[-1] = '-';
 }
 
-void dump_flat_map(Client *cptr, Client *server, int length)
+void dump_flat_map(Client *client, Client *server, int length)
 {
-char buf[4];
-Client *acptr;
-int cnt = 0, hide_ulines;
+	char buf[4];
+	Client *acptr;
+	int cnt = 0, hide_ulines;
 
-	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",cptr,NULL,NULL,NULL)) ? 1 : 0;
+	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)) ? 1 : 0;
 
-	sendnumeric(cptr, RPL_MAP, "",
-	    length, server->name, server->serv->users, "");
+	sendnumeric(client, RPL_MAP, "", length, server->name, server->serv->users, "");
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -138,8 +136,7 @@ int cnt = 0, hide_ulines;
 			continue;
 		if (--cnt == 0)
 			*buf = '`';
-		sendnumeric(cptr, RPL_MAP, buf,
-		    length-2, acptr->name, acptr->serv->users, "");
+		sendnumeric(client, RPL_MAP, buf, length-2, acptr->name, acptr->serv->users, "");
 	}
 }
 
@@ -167,10 +164,10 @@ CMD_FUNC(cmd_map)
 		longest = 60;
 	longest += 2;
 
-	if (FLAT_MAP && !ValidatePermissionsForPath("server:info:map:real-map",sptr,NULL,NULL,NULL))
-		dump_flat_map(sptr, &me, longest);
+	if (FLAT_MAP && !ValidatePermissionsForPath("server:info:map:real-map",client,NULL,NULL,NULL))
+		dump_flat_map(client, &me, longest);
 	else
-		dump_map(sptr, &me, "*", 0, longest);
+		dump_map(client, &me, "*", 0, longest);
 
-	sendnumeric(sptr, RPL_MAPEND);
+	sendnumeric(client, RPL_MAPEND);
 }

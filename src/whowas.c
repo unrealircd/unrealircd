@@ -34,7 +34,7 @@ aWhowas MODVAR *WHOWASHASH[WHOWAS_HASH_TABLE_SIZE];
 
 MODVAR int whowas_next = 0;
 
-void add_history(Client *cptr, int online)
+void add_history(Client *client, int online)
 {
 	aWhowas *new;
 
@@ -53,29 +53,29 @@ void add_history(Client *cptr, int online)
 			del_whowas_from_clist(&(new->online->user->whowas), new);
 		del_whowas_from_list(&WHOWASHASH[new->hashv], new);
 	}
-	new->hashv = hash_whowas_name(cptr->name);
+	new->hashv = hash_whowas_name(client->name);
 	new->logoff = TStime();
-	new->umodes = cptr->umodes;
-	safe_strdup(new->name, cptr->name);
-	safe_strdup(new->username, cptr->user->username);
-	safe_strdup(new->hostname, cptr->user->realhost);
-	if (cptr->user->virthost)
-		safe_strdup(new->virthost, cptr->user->virthost);
+	new->umodes = client->umodes;
+	safe_strdup(new->name, client->name);
+	safe_strdup(new->username, client->user->username);
+	safe_strdup(new->hostname, client->user->realhost);
+	if (client->user->virthost)
+		safe_strdup(new->virthost, client->user->virthost);
 	else
 		safe_strdup(new->virthost, "");
-	new->servername = cptr->user->server;
-	safe_strdup(new->realname, cptr->info);
+	new->servername = client->user->server;
+	safe_strdup(new->realname, client->info);
 
 	/* Its not string copied, a pointer to the scache hash is copied
 	   -Dianora
 	 */
-	/*  strlcpy(new->servername, cptr->user->server,HOSTLEN); */
-	new->servername = cptr->user->server;
+	/*  strlcpy(new->servername, client->user->server,HOSTLEN); */
+	new->servername = client->user->server;
 
 	if (online)
 	{
-		new->online = cptr;
-		add_whowas_to_clist(&(cptr->user->whowas), new);
+		new->online = client;
+		add_whowas_to_clist(&(client->user->whowas), new);
 	}
 	else
 		new->online = NULL;
@@ -85,15 +85,15 @@ void add_history(Client *cptr, int online)
 		whowas_next = 0;
 }
 
-void off_history(Client *cptr)
+void off_history(Client *client)
 {
 	aWhowas *temp, *next;
 
-	for (temp = cptr->user->whowas; temp; temp = next)
+	for (temp = client->user->whowas; temp; temp = next)
 	{
 		next = temp->cnext;
 		temp->online = NULL;
-		del_whowas_from_clist(&(cptr->user->whowas), temp);
+		del_whowas_from_clist(&(client->user->whowas), temp);
 	}
 }
 

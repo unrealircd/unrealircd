@@ -32,7 +32,7 @@ extern HWND hwIRCDWnd;
 #define SAFE_SSL_ACCEPT 3
 #define SAFE_SSL_CONNECT 4
 
-static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr);
+static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *client);
 extern int cipher_check(SSL_CTX *ctx, char **errstr);
 extern int certificate_quality_check(SSL_CTX *ctx, char **errstr);
 
@@ -190,9 +190,9 @@ Client *get_client_by_ssl(SSL *ssl)
 
 static void set_client_sni_name(SSL *ssl, char *name)
 {
-	Client *acptr = get_client_by_ssl(ssl);
-	if (acptr)
-		safe_strdup(acptr->local->sni_servername, name);
+	Client *client = get_client_by_ssl(ssl);
+	if (client)
+		safe_strdup(client->local->sni_servername, name);
 }
 
 static int ssl_hostname_callback(SSL *ssl, int *unk, void *arg)
@@ -512,21 +512,21 @@ int init_ssl(void)
 	return 1;
 }
 
-void reinit_ssl(Client *acptr)
+void reinit_ssl(Client *client)
 {
 	SSL_CTX *tmp;
 	ConfigItem_listen *listen;
 	ConfigItem_sni *sni;
 	ConfigItem_link *link;
 
-	if (!acptr)
+	if (!client)
 		mylog("Reloading all SSL related data (./unrealircd reloadtls)");
-	else if (IsUser(acptr))
+	else if (IsUser(client))
 		mylog("%s (%s@%s) requested a reload of all SSL related data (/rehash -ssl)",
-			acptr->name, acptr->user->username, acptr->user->realhost);
+			client->name, client->user->username, client->user->realhost);
 	else
 		mylog("%s requested a reload of all SSL related data (/rehash -ssl)",
-			acptr->name);
+			client->name);
 
 	tmp = init_ctx(iConf.tls_options, 1);
 	if (!tmp)
@@ -617,23 +617,23 @@ char *tls_get_cipher(SSL *ssl)
 /** Get the applicable ::ssl-options block for this local client,
  * which may be defined in the link block, listen block, or set block.
  */
-TLSOptions *get_tls_options_for_client(Client *acptr)
+TLSOptions *get_tls_options_for_client(Client *client)
 {
-	if (!acptr->local)
+	if (!client->local)
 		return NULL;
-	if (acptr->serv && acptr->serv->conf && acptr->serv->conf->tls_options)
-		return acptr->serv->conf->tls_options;
-	if (acptr->local && acptr->local->listener && acptr->local->listener->tls_options)
-		return acptr->local->listener->tls_options;
+	if (client->serv && client->serv->conf && client->serv->conf->tls_options)
+		return client->serv->conf->tls_options;
+	if (client->local && client->local->listener && client->local->listener->tls_options)
+		return client->local->listener->tls_options;
 	return iConf.tls_options;
 }
 
 /** Outgoing SSL connect (read: handshake) to another server. */
 void ircd_SSL_client_handshake(int fd, int revents, void *data)
 {
-	Client *acptr = data;
-	SSL_CTX *ctx = (acptr->serv && acptr->serv->conf && acptr->serv->conf->ssl_ctx) ? acptr->serv->conf->ssl_ctx : ctx_client;
-	TLSOptions *tlsoptions = get_tls_options_for_client(acptr);
+	Client *client = data;
+	SSL_CTX *ctx = (client->serv && client->serv->conf && client->serv->conf->ssl_ctx) ? client->serv->conf->ssl_ctx : ctx_client;
+	TLSOptions *tlsoptions = get_tls_options_for_client(client);
 
 	if (!ctx)
 	{
@@ -641,50 +641,50 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 		return;
 	}
 
-	acptr->local->ssl = SSL_new(ctx);
-	if (!acptr->local->ssl)
+	client->local->ssl = SSL_new(ctx);
+	if (!client->local->ssl)
 	{
 		sendto_realops("Failed to SSL_new(ctx)");
 		return;
 	}
 
-	SSL_set_fd(acptr->local->ssl, acptr->local->fd);
-	SSL_set_connect_state(acptr->local->ssl);
-	SSL_set_nonblocking(acptr->local->ssl);
+	SSL_set_fd(client->local->ssl, client->local->fd);
+	SSL_set_connect_state(client->local->ssl);
+	SSL_set_nonblocking(client->local->ssl);
 
 	if (tlsoptions->renegotiate_bytes > 0)
 	{
-		BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->local->ssl), tlsoptions->renegotiate_bytes);
-		BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->local->ssl), tlsoptions->renegotiate_bytes);
+		BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(client->local->ssl), tlsoptions->renegotiate_bytes);
+		BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(client->local->ssl), tlsoptions->renegotiate_bytes);
 	}
 
 	if (tlsoptions->renegotiate_timeout > 0)
 	{
-		BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->local->ssl), tlsoptions->renegotiate_timeout);
-		BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->local->ssl), tlsoptions->renegotiate_timeout);
+		BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(client->local->ssl), tlsoptions->renegotiate_timeout);
+		BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(client->local->ssl), tlsoptions->renegotiate_timeout);
 	}
 
-	if (acptr->serv && acptr->serv->conf)
+	if (client->serv && client->serv->conf)
 	{
 		/* Client: set hostname for SNI */
-		SSL_set_tlsext_host_name(acptr->local->ssl, acptr->serv->conf->servername);
+		SSL_set_tlsext_host_name(client->local->ssl, client->serv->conf->servername);
 	}
 
-	SetTLS(acptr);
+	SetTLS(client);
 
-	switch (ircd_SSL_connect(acptr, fd))
+	switch (ircd_SSL_connect(client, fd))
 	{
 		case -1:
 			fd_close(fd);
-			acptr->local->fd = -1;
+			client->local->fd = -1;
 			--OpenFiles;
 			return;
 		case 0: 
-			Debug((DEBUG_DEBUG, "SetTLSConnectHandshake(%s)", get_client_name(acptr, TRUE)));
-			SetTLSConnectHandshake(acptr);
+			Debug((DEBUG_DEBUG, "SetTLSConnectHandshake(%s)", get_client_name(client, TRUE)));
+			SetTLSConnectHandshake(client);
 			return;
 		case 1:
-			Debug((DEBUG_DEBUG, "SSL_init_finished should finish this job (%s)", get_client_name(acptr, TRUE)));
+			Debug((DEBUG_DEBUG, "SSL_init_finished should finish this job (%s)", get_client_name(client, TRUE)));
 			return;
 		default:
 			return;
@@ -694,16 +694,16 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 
 static void ircd_SSL_accept_retry(int fd, int revents, void *data)
 {
-	Client *acptr = data;
-	ircd_SSL_accept(acptr, fd);
+	Client *client = data;
+	ircd_SSL_accept(client, fd);
 }
 
-int ircd_SSL_accept(Client *acptr, int fd)
+int ircd_SSL_accept(Client *client, int fd)
 {
 	int ssl_err;
 
 #ifdef MSG_PEEK
-	if (!IsNextCall(acptr))
+	if (!IsNextCall(client))
 	{
 		char buf[1024];
 		int n;
@@ -716,7 +716,7 @@ int ircd_SSL_accept(Client *acptr, int fd)
 				"ERROR :STARTTLS received but this is an SSL-only port. Check your connect settings. "
 				"If this is a server linking in then add 'ssl' in your link::outgoing::options block.\r\n");
 			(void)send(fd, buf, strlen(buf), 0);
-			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, acptr);
+			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, client);
 		}
 		if ((n >= 4) && (!strncmp(buf, "USER", 4) || !strncmp(buf, "NICK", 4) || !strncmp(buf, "PASS", 4) || !strncmp(buf, "CAP ", 4)))
 		{
@@ -724,7 +724,7 @@ int ircd_SSL_accept(Client *acptr, int fd)
 			snprintf(buf, sizeof(buf),
 				"ERROR :NON-SSL command received on SSL-only port. Check your connection settings.\r\n");
 			(void)send(fd, buf, strlen(buf), 0);
-			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, acptr);
+			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, client);
 		}
 		if ((n >= 8) && (!strncmp(buf, "PROTOCTL", 8) || !strncmp(buf, "SERVER", 6)))
 		{
@@ -732,55 +732,55 @@ int ircd_SSL_accept(Client *acptr, int fd)
 			snprintf(buf, sizeof(buf),
 				"ERROR :NON-SSL command received on SSL-only port. Check your connection settings.\r\n");
 			(void)send(fd, buf, strlen(buf), 0);
-			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, acptr);
+			return fatal_ssl_error(SSL_ERROR_SSL, SAFE_SSL_ACCEPT, ERRNO, client);
 		}
 		if (n > 0)
-			SetNextCall(acptr);
+			SetNextCall(client);
 	}
 #endif
-	if ((ssl_err = SSL_accept(acptr->local->ssl)) <= 0)
+	if ((ssl_err = SSL_accept(client->local->ssl)) <= 0)
 	{
-		switch (ssl_err = SSL_get_error(acptr->local->ssl, ssl_err))
+		switch (ssl_err = SSL_get_error(client->local->ssl, ssl_err))
 		{
 			case SSL_ERROR_SYSCALL:
 				if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
 				{
 					return 1;
 				}
-				return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, ERRNO, acptr);
+				return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, ERRNO, client);
 			case SSL_ERROR_WANT_READ:
-				fd_setselect(fd, FD_SELECT_READ, ircd_SSL_accept_retry, acptr);
-				fd_setselect(fd, FD_SELECT_WRITE, NULL, acptr);
+				fd_setselect(fd, FD_SELECT_READ, ircd_SSL_accept_retry, client);
+				fd_setselect(fd, FD_SELECT_WRITE, NULL, client);
 				return 1;
 			case SSL_ERROR_WANT_WRITE:
-				fd_setselect(fd, FD_SELECT_READ, NULL, acptr);
-				fd_setselect(fd, FD_SELECT_WRITE, ircd_SSL_accept_retry, acptr);
+				fd_setselect(fd, FD_SELECT_READ, NULL, client);
+				fd_setselect(fd, FD_SELECT_WRITE, ircd_SSL_accept_retry, client);
 				return 1;
 			default:
-				return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, ERRNO, acptr);
+				return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, ERRNO, client);
 		}
 		/* NOTREACHED */
 		return -1;
 	}
 
-	start_of_normal_client_handshake(acptr);
+	start_of_normal_client_handshake(client);
 
 	return 1;
 }
 
 static void ircd_SSL_connect_retry(int fd, int revents, void *data)
 {
-	Client *acptr = data;
-	ircd_SSL_connect(acptr, fd);
+	Client *client = data;
+	ircd_SSL_connect(client, fd);
 }
 
-int ircd_SSL_connect(Client *acptr, int fd)
+int ircd_SSL_connect(Client *client, int fd)
 {
 	int ssl_err;
 
-	if ((ssl_err = SSL_connect(acptr->local->ssl)) <= 0)
+	if ((ssl_err = SSL_connect(client->local->ssl)) <= 0)
 	{
-		ssl_err = SSL_get_error(acptr->local->ssl, ssl_err);
+		ssl_err = SSL_get_error(client->local->ssl, ssl_err);
 		switch(ssl_err)
 		{
 			case SSL_ERROR_SYSCALL:
@@ -789,27 +789,27 @@ int ircd_SSL_connect(Client *acptr, int fd)
 					/* Hmmm. This implementation is different than in ircd_SSL_accept().
 					 * One of them must be wrong -- better check! (TODO)
 					 */
-					fd_setselect(fd, FD_SELECT_READ|FD_SELECT_WRITE, ircd_SSL_connect_retry, acptr);
+					fd_setselect(fd, FD_SELECT_READ|FD_SELECT_WRITE, ircd_SSL_connect_retry, client);
 					return 0;
 				}
-				return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, ERRNO, acptr);
+				return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, ERRNO, client);
 			case SSL_ERROR_WANT_READ:
-				fd_setselect(fd, FD_SELECT_READ, ircd_SSL_connect_retry, acptr);
-				fd_setselect(fd, FD_SELECT_WRITE, NULL, acptr);
+				fd_setselect(fd, FD_SELECT_READ, ircd_SSL_connect_retry, client);
+				fd_setselect(fd, FD_SELECT_WRITE, NULL, client);
 				return 0;
 			case SSL_ERROR_WANT_WRITE:
-				fd_setselect(fd, FD_SELECT_READ, NULL, acptr);
-				fd_setselect(fd, FD_SELECT_WRITE, ircd_SSL_connect_retry, acptr);
+				fd_setselect(fd, FD_SELECT_READ, NULL, client);
+				fd_setselect(fd, FD_SELECT_WRITE, ircd_SSL_connect_retry, client);
 				return 0;
 			default:
-				return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, ERRNO, acptr);
+				return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, ERRNO, client);
 		}
 		/* NOTREACHED */
 		return -1;
 	}
 
-	fd_setselect(fd, FD_SELECT_READ | FD_SELECT_WRITE, NULL, acptr);
-	completed_connection(fd, FD_SELECT_READ | FD_SELECT_WRITE, acptr);
+	fd_setselect(fd, FD_SELECT_READ | FD_SELECT_WRITE, NULL, client);
+	completed_connection(fd, FD_SELECT_READ | FD_SELECT_WRITE, client);
 
 	return 1;
 }
@@ -833,9 +833,9 @@ int SSL_smart_shutdown(SSL *ssl)
  * \param ssl_error The error as from OpenSSL.
  * \param where The location, one of the SAFE_SSL_* defines.
  * \param my_errno A preserved value of errno to pass to ssl_error_str().
- * \param sptr The client the error is associated with.
+ * \param client The client the error is associated with.
  */
-static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr)
+static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *client)
 {
 	/* don`t alter ERRNO */
 	int errtmp = ERRNO;
@@ -844,12 +844,12 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr)
 	char additional_info[256];
 	const char *one, *two;
 
-	if (IsDeadSocket(sptr))
+	if (IsDeadSocket(client))
 	{
 #ifdef DEBUGMODE
 		/* This is quite possible I guess.. especially if we don't pay attention upstream :p */
 		ircd_log(LOG_ERROR, "Warning: fatal_ssl_error() called for already-dead-socket (%d/%s)",
-			sptr->local->fd, sptr->name);
+			client->local->fd, client->name);
 #endif
 		return -1;
 	}
@@ -890,9 +890,9 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr)
 	 * the only way to do it.
 	 * IRC protocol wasn`t SSL enabled .. --vejeta
 	 */
-	SetDeadSocket(sptr);
+	SetDeadSocket(client);
 	sendto_snomask(SNO_JUNK, "Exiting ssl client %s: %s: %s%s",
-		get_client_name(sptr, TRUE), ssl_func, ssl_errstr, additional_info);
+		get_client_name(client, TRUE), ssl_func, ssl_errstr, additional_info);
 
 	if (where == SAFE_SSL_CONNECT)
 	{
@@ -902,61 +902,61 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *sptr)
 		{
 			snprintf(extra, sizeof(extra),
 			         ". Please verify that listen::options::ssl is enabled on port %d in %s's configuration file.",
-			         (sptr->serv && sptr->serv->conf) ? sptr->serv->conf->outgoing.port : -1,
-			         sptr->name);
+			         (client->serv && client->serv->conf) ? client->serv->conf->outgoing.port : -1,
+			         client->name);
 		}
 		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s%s%s",
-			get_client_name(sptr, FALSE), ssl_func, ssl_errstr, additional_info, extra);
+			get_client_name(client, FALSE), ssl_func, ssl_errstr, additional_info, extra);
 		/* This is a connect() that fails, we don't broadcast that for non-SSL either (noisy) */
 	} else
-	if ((IsServer(sptr) || (sptr->serv && sptr->serv->conf)) && (where != SAFE_SSL_WRITE))
+	if ((IsServer(client) || (client->serv && client->serv->conf)) && (where != SAFE_SSL_WRITE))
 	{
 		/* if server (either judged by IsServer() or clearly an outgoing connect),
 		 * and not writing (since otherwise deliver_it will take care of the error), THEN
 		 * send a closing link error...
 		 */
 		sendto_umode_global(UMODE_OPER, "Lost connection to %s: %s: %d (%s%s)",
-			get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr, additional_info);
+			get_client_name(client, FALSE), ssl_func, ssl_error, ssl_errstr, additional_info);
 	}
 
 	if (errtmp)
 	{
 		SET_ERRNO(errtmp);
-		safe_strdup(sptr->local->error_str, strerror(errtmp));
+		safe_strdup(client->local->error_str, strerror(errtmp));
 	} else {
 		SET_ERRNO(P_EIO);
-		safe_strdup(sptr->local->error_str, ssl_errstr);
+		safe_strdup(client->local->error_str, ssl_errstr);
 	}
 
 	/* deregister I/O notification since we don't care anymore. the actual closing of socket will happen later. */
-	if (sptr->local->fd >= 0)
-		fd_unnotify(sptr->local->fd);
+	if (client->local->fd >= 0)
+		fd_unnotify(client->local->fd);
 
 	return -1;
 }
 
-int client_starttls(Client *acptr)
+int client_starttls(Client *client)
 {
-	if ((acptr->local->ssl = SSL_new(ctx_client)) == NULL)
+	if ((client->local->ssl = SSL_new(ctx_client)) == NULL)
 		goto fail_starttls;
 
-	SetTLS(acptr);
+	SetTLS(client);
 
-	SSL_set_fd(acptr->local->ssl, acptr->local->fd);
-	SSL_set_nonblocking(acptr->local->ssl);
+	SSL_set_fd(client->local->ssl, client->local->fd);
+	SSL_set_nonblocking(client->local->ssl);
 
-	if (acptr->serv && acptr->serv->conf)
+	if (client->serv && client->serv->conf)
 	{
 		/* Client: set hostname for SNI */
-		SSL_set_tlsext_host_name(acptr->local->ssl, acptr->serv->conf->servername);
+		SSL_set_tlsext_host_name(client->local->ssl, client->serv->conf->servername);
 	}
 
-	if (ircd_SSL_connect(acptr, acptr->local->fd) < 0)
+	if (ircd_SSL_connect(client, client->local->fd) < 0)
 	{
-		Debug((DEBUG_DEBUG, "Failed SSL connect handshake in instance 1: %s", acptr->name));
-		SSL_set_shutdown(acptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
-		SSL_smart_shutdown(acptr->local->ssl);
-		SSL_free(acptr->local->ssl);
+		Debug((DEBUG_DEBUG, "Failed SSL connect handshake in instance 1: %s", client->name));
+		SSL_set_shutdown(client->local->ssl, SSL_RECEIVED_SHUTDOWN);
+		SSL_smart_shutdown(client->local->ssl);
+		SSL_free(client->local->ssl);
 		goto fail_starttls;
 	}
 
@@ -964,10 +964,10 @@ int client_starttls(Client *acptr)
 	return 0;
 fail_starttls:
 	/* Failure */
-	sendnumeric(acptr, ERR_STARTTLS, "STARTTLS failed");
-	acptr->local->ssl = NULL;
-	ClearTLS(acptr);
-	SetUnknown(acptr);
+	sendnumeric(client, ERR_STARTTLS, "STARTTLS failed");
+	client->local->ssl = NULL;
+	ClearTLS(client);
+	SetUnknown(client);
 	return 0; /* hm. we allow to continue anyway. not sure if we want that. */
 }
 
@@ -975,18 +975,18 @@ fail_starttls:
  * NOTE: The default global SSL options will be returned if not found,
  *       or NULL if no such options are available (unlikely, but possible?).
  */
-TLSOptions *FindTLSOptionsForUser(Client *acptr)
+TLSOptions *FindTLSOptionsForUser(Client *client)
 {
 	ConfigItem_sni *sni;
 	TLSOptions *sslopt = iConf.tls_options; /* default */
 	
-	if (!MyConnect(acptr) || !IsSecure(acptr))
+	if (!MyConnect(client) || !IsSecure(client))
 		return NULL;
 
 	/* Different sts-policy depending on SNI: */
-	if (acptr->local->sni_servername)
+	if (client->local->sni_servername)
 	{
-		sni = Find_sni(acptr->local->sni_servername);
+		sni = Find_sni(client->local->sni_servername);
 		if (sni)
 		{
 			sslopt = sni->tls_options;
@@ -1265,12 +1265,12 @@ char *spki_fingerprint(Client *cptr)
 }
 
 /** Returns 1 if the client is using an outdated protocol or cipher, 0 otherwise */
-int outdated_tls_client(Client *acptr)
+int outdated_tls_client(Client *client)
 {
-	TLSOptions *tlsoptions = get_tls_options_for_client(acptr);
+	TLSOptions *tlsoptions = get_tls_options_for_client(client);
 	char buf[1024], *name, *p;
-	const char *client_protocol = SSL_get_version(acptr->local->ssl);
-	const char *client_ciphersuite = SSL_get_cipher(acptr->local->ssl);
+	const char *client_protocol = SSL_get_version(client->local->ssl);
+	const char *client_ciphersuite = SSL_get_cipher(client->local->ssl);
 
 	if (!tlsoptions)
 		return 0; /* odd.. */
@@ -1292,17 +1292,17 @@ int outdated_tls_client(Client *acptr)
 	return 0; /* OK, not outdated */
 }
 
-char *outdated_tls_client_build_string(char *pattern, Client *acptr)
+char *outdated_tls_client_build_string(char *pattern, Client *client)
 {
 	static char buf[512];
 	const char *name[3], *value[3];
 	const char *str;
 
-	str = SSL_get_version(acptr->local->ssl);
+	str = SSL_get_version(client->local->ssl);
 	name[0] = "protocol";
 	value[0] = str ? str : "???";
 
-	str = SSL_get_cipher(acptr->local->ssl);
+	str = SSL_get_cipher(client->local->ssl);
 	name[1] = "cipher";
 	value[1] = str ? str : "???";
 

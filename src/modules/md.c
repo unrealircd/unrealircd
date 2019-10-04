@@ -18,20 +18,20 @@ ModuleHeader MOD_HEADER
     };
 
 CMD_FUNC(cmd_md);
-void _broadcast_md_client(ModDataInfo *mdi, Client *acptr, ModData *md);
+void _broadcast_md_client(ModDataInfo *mdi, Client *client, ModData *md);
 void _broadcast_md_channel(ModDataInfo *mdi, Channel *chptr, ModData *md);
 void _broadcast_md_member(ModDataInfo *mdi, Channel *chptr, Member *m, ModData *md);
-void _broadcast_md_membership(ModDataInfo *mdi, Client *acptr, Membership *m, ModData *md);
+void _broadcast_md_membership(ModDataInfo *mdi, Client *client, Membership *m, ModData *md);
 void _broadcast_md_globalvar(ModDataInfo *mdi, ModData *md);
-void _broadcast_md_client_cmd(Client *except, Client *sender, Client *acptr, char *varname, char *value);
+void _broadcast_md_client_cmd(Client *except, Client *sender, Client *client, char *varname, char *value);
 void _broadcast_md_channel_cmd(Client *except, Client *sender, Channel *chptr, char *varname, char *value);
-void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *chptr, Client *acptr, char *varname, char *value);
-void _broadcast_md_membership_cmd(Client *except, Client *sender, Client *acptr, Channel *chptr, char *varname, char *value);
+void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *chptr, Client *client, char *varname, char *value);
+void _broadcast_md_membership_cmd(Client *except, Client *sender, Client *client, Channel *chptr, char *varname, char *value);
 void _broadcast_md_globalvar_cmd(Client *except, Client *sender, char *varname, char *value);
-void _send_moddata_client(Client *srv, Client *acptr);
+void _send_moddata_client(Client *srv, Client *client);
 void _send_moddata_channel(Client *srv, Channel *chptr);
 void _send_moddata_members(Client *srv);
-void _broadcast_moddata_client(Client *acptr);
+void _broadcast_moddata_client(Client *client);
 
 extern MODVAR ModDataInfo *MDInfo;
 
@@ -91,7 +91,7 @@ CMD_FUNC(cmd_md)
 	char *type, *objname, *varname, *value;
 	ModDataInfo *md;
 
-	if (!IsServer(sptr) || (parc < 4) || BadPtr(parv[3]))
+	if (!IsServer(client) || (parc < 4) || BadPtr(parv[3]))
 		return;
 
 	type = parv[1];
@@ -101,20 +101,20 @@ CMD_FUNC(cmd_md)
 
 	if (!strcmp(type, "client"))
 	{
-		Client *acptr = find_client(objname, NULL);
+		Client *target = find_client(objname, NULL);
 		md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
-		if (!md || !md->unserialize || !acptr)
+		if (!md || !md->unserialize || !target)
 			return;
 		if (value)
-			md->unserialize(value, &moddata_client(acptr, md));
+			md->unserialize(value, &moddata_client(target, md));
 		else
 		{
 			if (md->free)
-				md->free(&moddata_client(acptr, md));
-			memset(&moddata_client(acptr, md), 0, sizeof(ModData));
+				md->free(&moddata_client(target, md));
+			memset(&moddata_client(target, md), 0, sizeof(ModData));
 		}
 		/* Pass on to other servers */
-		broadcast_md_client_cmd(sptr->direction, sptr, acptr, varname, value);
+		broadcast_md_client_cmd(client->direction, client, target, varname, value);
 	} else
 	if (!strcmp(type, "channel"))
 	{
@@ -131,11 +131,11 @@ CMD_FUNC(cmd_md)
 			memset(&moddata_channel(chptr, md), 0, sizeof(ModData));
 		}
 		/* Pass on to other servers */
-		broadcast_md_channel_cmd(sptr->direction, sptr, chptr, varname, value);
+		broadcast_md_channel_cmd(client->direction, client, chptr, varname, value);
 	} else
 	if (!strcmp(type, "member"))
 	{
-		Client *acptr;
+		Client *target;
 		Channel *chptr;
 		Member *m;
 		char *p;
@@ -150,11 +150,11 @@ CMD_FUNC(cmd_md)
 		if (!chptr)
 			return;
 
-		acptr = find_person(p, NULL);
-		if (!acptr)
+		target = find_person(p, NULL);
+		if (!target)
 			return;
 
-		m = find_member_link(chptr->members, acptr);
+		m = find_member_link(chptr->members, target);
 		if (!m)
 			return;
 
@@ -171,11 +171,11 @@ CMD_FUNC(cmd_md)
 			memset(&moddata_member(m, md), 0, sizeof(ModData));
 		}
 		/* Pass on to other servers */
-		broadcast_md_member_cmd(sptr->direction, sptr, chptr, acptr, varname, value);
+		broadcast_md_member_cmd(client->direction, client, chptr, target, varname, value);
 	} else
 	if (!strcmp(type, "membership"))
 	{
-		Client *acptr;
+		Client *target;
 		Channel *chptr;
 		Membership *m;
 		char *p;
@@ -186,15 +186,15 @@ CMD_FUNC(cmd_md)
 			return;
 		*p++ = '\0';
 
-		acptr = find_person(objname, NULL);
-		if (!acptr)
+		target = find_person(objname, NULL);
+		if (!target)
 			return;
 
 		chptr = find_channel(p, NULL);
 		if (!chptr)
 			return;
 
-		m = find_membership_link(acptr->user->channel, chptr);
+		m = find_membership_link(target->user->channel, chptr);
 		if (!m)
 			return;
 
@@ -211,7 +211,7 @@ CMD_FUNC(cmd_md)
 			memset(&moddata_membership(m, md), 0, sizeof(ModData));
 		}
 		/* Pass on to other servers */
-		broadcast_md_membership_cmd(sptr->direction, sptr, acptr, chptr, varname, value);
+		broadcast_md_membership_cmd(client->direction, client, target, chptr, varname, value);
 	} else
 	if (!strcmp(type, "globalvar"))
 	{
@@ -228,25 +228,25 @@ CMD_FUNC(cmd_md)
 			memset(&moddata_global_variable(md), 0, sizeof(ModData));
 		}
 		/* Pass on to other servers */
-		broadcast_md_globalvar_cmd(sptr->direction, sptr, varname, value);
+		broadcast_md_globalvar_cmd(client->direction, client, varname, value);
 	}
 }
 
-void _broadcast_md_client_cmd(Client *except, Client *sender, Client *acptr, char *varname, char *value)
+void _broadcast_md_client_cmd(Client *except, Client *sender, Client *client, char *varname, char *value)
 {
 	if (value)
 	{
 		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s %s :%s",
-			sender->name, "client", ID(acptr), varname, value);
+			sender->name, "client", ID(client), varname, value);
 		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s %s :%s",
-			sender->name, "client", acptr->name, varname, value);
+			sender->name, "client", client->name, varname, value);
 	}
 	else
 	{
 		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s %s",
-			sender->name, "client", ID(acptr), varname);
+			sender->name, "client", ID(client), varname);
 		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s %s",
-			sender->name, "client", acptr->name, varname);
+			sender->name, "client", client->name, varname);
 	}
 }
 
@@ -260,39 +260,39 @@ void _broadcast_md_channel_cmd(Client *except, Client *sender, Channel *chptr, c
 			sender->name, "channel", chptr->chname, varname);
 }
 
-void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *chptr, Client *acptr, char *varname, char *value)
+void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *chptr, Client *client, char *varname, char *value)
 {
 	if (value)
 	{
 		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->name, "member", chptr->chname, ID(acptr), varname, value);
+			sender->name, "member", chptr->chname, ID(client), varname, value);
 		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->name, "member", chptr->chname, acptr->name, varname, value);
+			sender->name, "member", chptr->chname, client->name, varname, value);
 	}
 	else
 	{
 		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s",
-			sender->name, "member", chptr->chname, ID(acptr), varname);
+			sender->name, "member", chptr->chname, ID(client), varname);
 		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s",
-			sender->name, "member", chptr->chname, acptr->name, varname);
+			sender->name, "member", chptr->chname, client->name, varname);
 	}
 }
 
-void _broadcast_md_membership_cmd(Client *except, Client *sender, Client *acptr, Channel *chptr, char *varname, char *value)
+void _broadcast_md_membership_cmd(Client *except, Client *sender, Client *client, Channel *chptr, char *varname, char *value)
 {
 	if (value)
 	{
 		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->name, "membership", ID(acptr), chptr->chname, varname, value);
+			sender->name, "membership", ID(client), chptr->chname, varname, value);
 		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->name, "membership", acptr->name, chptr->chname, varname, value);
+			sender->name, "membership", client->name, chptr->chname, varname, value);
 	}
 	else
 	{
 		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s",
-			sender->name, "membership", ID(acptr), chptr->chname, varname);
+			sender->name, "membership", ID(client), chptr->chname, varname);
 		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s",
-			sender->name, "membership", acptr->name, chptr->chname, varname);
+			sender->name, "membership", client->name, chptr->chname, varname);
 	}
 }
 
@@ -315,16 +315,16 @@ void _broadcast_md_globalvar_cmd(Client *except, Client *sender, char *varname, 
 }
 
 /** Send module data update to all servers.
- * @param mdi   Module Data Info structure (which you received from ModDataAdd)
- * @param acptr The affected client
- * @param md    The ModData. May be NULL for unset.
+ * @param mdi    Module Data Info structure (which you received from ModDataAdd)
+ * @param client The affected client
+ * @param md     The ModData. May be NULL for unset.
  */
  
-void _broadcast_md_client(ModDataInfo *mdi, Client *acptr, ModData *md)
+void _broadcast_md_client(ModDataInfo *mdi, Client *client, ModData *md)
 {
 	char *value = md ? mdi->serialize(md) : NULL;
 
-	broadcast_md_client_cmd(NULL, &me, acptr, mdi->name, value);
+	broadcast_md_client_cmd(NULL, &me, client, mdi->name, value);
 }
 
 void _broadcast_md_channel(ModDataInfo *mdi, Channel *chptr, ModData *md)
@@ -338,14 +338,14 @@ void _broadcast_md_member(ModDataInfo *mdi, Channel *chptr, Member *m, ModData *
 {
 	char *value = md ? mdi->serialize(md) : NULL;
 
-	broadcast_md_member_cmd(NULL, &me, chptr, m->cptr, mdi->name, value);
+	broadcast_md_member_cmd(NULL, &me, chptr, m->client, mdi->name, value);
 }
 
-void _broadcast_md_membership(ModDataInfo *mdi, Client *acptr, Membership *m, ModData *md)
+void _broadcast_md_membership(ModDataInfo *mdi, Client *client, Membership *m, ModData *md)
 {
 	char *value = md ? mdi->serialize(md) : NULL;
 
-	broadcast_md_membership_cmd(NULL, &me, acptr, m->chptr, mdi->name, value);
+	broadcast_md_membership_cmd(NULL, &me, client, m->chptr, mdi->name, value);
 }
 
 void _broadcast_md_globalvar(ModDataInfo *mdi, ModData *md)
@@ -355,17 +355,17 @@ void _broadcast_md_globalvar(ModDataInfo *mdi, ModData *md)
 	broadcast_md_globalvar_cmd(NULL, &me, mdi->name, value);
 }
 
-/** Send all moddata attached to client 'acptr' to remote server 'srv' (if the module wants this), called by .. */
-void _send_moddata_client(Client *srv, Client *acptr)
+/** Send all moddata attached to client 'client' to remote server 'srv' (if the module wants this), called by .. */
+void _send_moddata_client(Client *srv, Client *client)
 {
 	ModDataInfo *mdi;
-	char *user = CHECKPROTO(srv, PROTO_SID) ? ID(acptr) : acptr->name;
+	char *user = CHECKPROTO(srv, PROTO_SID) ? ID(client) : client->name;
 
 	for (mdi = MDInfo; mdi; mdi = mdi->next)
 	{
 		if ((mdi->type == MODDATATYPE_CLIENT) && mdi->sync && mdi->serialize)
 		{
-			char *value = mdi->serialize(&moddata_client(acptr, mdi));
+			char *value = mdi->serialize(&moddata_client(client, mdi));
 			if (value)
 				sendto_one(srv, NULL, ":%s MD %s %s %s :%s",
 					me.name, "client", user, mdi->name, value);
@@ -395,16 +395,16 @@ void _send_moddata_members(Client *srv)
 {
 	ModDataInfo *mdi;
 	Channel *chptr;
-	Client *acptr;
+	Client *client;
 
 	for (chptr = channel; chptr; chptr = chptr->nextch)
 	{
 		Member *m;
 		for (m = chptr->members; m; m = m->next)
 		{
-			char *user = CHECKPROTO(srv, PROTO_SID) ? ID(m->cptr) : m->cptr->name;
+			char *user = CHECKPROTO(srv, PROTO_SID) ? ID(m->client) : m->client->name;
 
-			if (m->cptr->direction == srv)
+			if (m->client->direction == srv)
 				continue; /* from srv's direction */
 			for (mdi = MDInfo; mdi; mdi = mdi->next)
 			{
@@ -419,18 +419,18 @@ void _send_moddata_members(Client *srv)
 		}
 	}
 
-	list_for_each_entry(acptr, &client_list, client_node)
+	list_for_each_entry(client, &client_list, client_node)
 	{
 		Membership *m;
-		if (!IsUser(acptr) || !acptr->user)
+		if (!IsUser(client) || !client->user)
 			continue;
 
-		if (acptr->direction == srv)
+		if (client->direction == srv)
 			continue; /* from srv's direction */
 
-		for (m = acptr->user->channel; m; m = m->next)
+		for (m = client->user->channel; m; m = m->next)
 		{
-			char *user = CHECKPROTO(srv, PROTO_SID) ? ID(acptr) : acptr->name;
+			char *user = CHECKPROTO(srv, PROTO_SID) ? ID(client) : client->name;
 
 			for (mdi = MDInfo; mdi; mdi = mdi->next)
 			{
@@ -446,13 +446,13 @@ void _send_moddata_members(Client *srv)
 	}
 }
 
-/** Broadcast moddata attached to client 'acptr' to all servers. */
-void _broadcast_moddata_client(Client *acptr)
+/** Broadcast moddata attached to client 'client' to all servers. */
+void _broadcast_moddata_client(Client *client)
 {
-	Client *cptr;
+	Client *acptr;
 
-	list_for_each_entry(cptr, &server_list, special_node)
+	list_for_each_entry(acptr, &server_list, special_node)
 	{
-		send_moddata_client(cptr, acptr);
+		send_moddata_client(acptr, client);
 	}
 }

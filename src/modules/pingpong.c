@@ -65,35 +65,35 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_ping)
 {
-	Client *acptr;
+	Client *target;
 	char *origin, *destination;
 
 	if (parc < 2 || BadPtr(parv[1]))
 	{
-		sendnumeric(sptr, ERR_NOORIGIN);
+		sendnumeric(client, ERR_NOORIGIN);
 		return;
 	}
 
 	origin = parv[1];
 	destination = parv[2];	/* Will get NULL or pointer (parc >= 2!!) */
 
-	if (!MyUser(sptr))
-		origin = sptr->name;
+	if (!MyUser(client))
+		origin = client->name;
 
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0 && mycmp(destination, me.id) != 0)
 	{
-		if (MyUser(sptr))
-			origin = sptr->name; /* Make sure origin is not spoofed */
-		if ((acptr = find_server_quick(destination)) && (acptr != &me))
-			sendto_one(acptr, NULL, ":%s PING %s :%s", sptr->name, origin, destination);
+		if (MyUser(client))
+			origin = client->name; /* Make sure origin is not spoofed */
+		if ((target = find_server_quick(destination)) && (target != &me))
+			sendto_one(target, NULL, ":%s PING %s :%s", client->name, origin, destination);
 		else
 		{
-			sendnumeric(sptr, ERR_NOSUCHSERVER, destination);
+			sendnumeric(client, ERR_NOSUCHSERVER, destination);
 			return;
 		}
 	}
 	else
-		sendto_one(sptr, NULL, ":%s PONG %s :%s", me.name,
+		sendto_one(client, NULL, ":%s PONG %s :%s", me.name,
 		    (destination) ? destination : me.name, origin);
 }
 
@@ -105,44 +105,44 @@ CMD_FUNC(cmd_nospoof)
 {
 	unsigned long result;
 
-	if (IsNotSpoof(sptr))
+	if (IsNotSpoof(client))
 		return;
-	if (IsRegistered(sptr))
+	if (IsRegistered(client))
 		return;
-	if (!*sptr->name)
+	if (!*client->name)
 		return;
 	if (BadPtr(parv[1]))
 	{
-		sendnotice(sptr, "ERROR: Invalid PING response. Your client must respond back with PONG :<cookie>");
+		sendnotice(client, "ERROR: Invalid PING response. Your client must respond back with PONG :<cookie>");
 		return;
 	}
 
 	result = strtoul(parv[1], NULL, 16);
 
-	if (result != sptr->local->nospoof)
+	if (result != client->local->nospoof)
 	{
 		/* Apparently we also accept PONG <irrelevant> <cookie>... */
 		if (BadPtr(parv[2]))
 		{
-			sendnotice(sptr, "ERROR: Invalid PING response. Your client must respond back with PONG :<cookie>");
+			sendnotice(client, "ERROR: Invalid PING response. Your client must respond back with PONG :<cookie>");
 			return;
 		}
 		result = strtoul(parv[2], NULL, 16);
-		if (result != sptr->local->nospoof)
+		if (result != client->local->nospoof)
 		{
-			sendnotice(sptr, "ERROR: Invalid PING response. Your client must respond back with PONG :<cookie>");
+			sendnotice(client, "ERROR: Invalid PING response. Your client must respond back with PONG :<cookie>");
 			return;
 		}
 	}
 
-	sptr->local->nospoof = 0;
+	client->local->nospoof = 0;
 
-	if (USE_BAN_VERSION && MyConnect(sptr))
-		sendto_one(sptr, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
-			   me.name, sptr->name);
+	if (USE_BAN_VERSION && MyConnect(client))
+		sendto_one(client, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
+			   me.name, client->name);
 
-	if (is_handshake_finished(sptr))
-		register_user(sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
+	if (is_handshake_finished(client))
+		register_user(client, client->name, client->user->username, NULL, NULL, NULL);
 }
 
 /*
@@ -152,46 +152,45 @@ CMD_FUNC(cmd_nospoof)
 */
 CMD_FUNC(cmd_pong)
 {
-	Client *acptr;
+	Client *target;
 	char *origin, *destination;
 
-	if (!IsRegistered(sptr))
-		return cmd_nospoof(sptr, recv_mtags, parc, parv);
+	if (!IsRegistered(client))
+		return cmd_nospoof(client, recv_mtags, parc, parv);
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NOORIGIN);
+		sendnumeric(client, ERR_NOORIGIN);
 		return;
 	}
 
 	origin = parv[1];
 	destination = parv[2];
-	ClearPingSent(sptr);
-	ClearPingWarning(sptr);
+	ClearPingSent(client);
+	ClearPingWarning(client);
 
 	/* Remote pongs for clients? uhh... */
-	if (MyUser(sptr) || !IsRegistered(sptr))
+	if (MyUser(client) || !IsRegistered(client))
 		return;
 
 	/* PONG from a server - either for us, or needs relaying.. */
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{
-		if ((acptr = find_client(destination, NULL)) ||
-		    (acptr = find_server_quick(destination)))
+		if ((target = find_client(destination, NULL)) ||
+		    (target = find_server_quick(destination)))
 		{
-			if (IsUser(sptr) && !IsServer(acptr))
+			if (IsUser(client) && !IsServer(target))
 			{
-				sendnumeric(sptr, ERR_NOSUCHSERVER, destination);
+				sendnumeric(client, ERR_NOSUCHSERVER, destination);
 				return;
 			} else
 			{
-				sendto_one(acptr, NULL, ":%s PONG %s %s",
-				    sptr->name, origin, destination);
+				sendto_one(target, NULL, ":%s PONG %s %s", client->name, origin, destination);
 			}
 		}
 		else
 		{
-			sendnumeric(sptr, ERR_NOSUCHSERVER, destination);
+			sendnumeric(client, ERR_NOSUCHSERVER, destination);
 			return;
 		}
 	}

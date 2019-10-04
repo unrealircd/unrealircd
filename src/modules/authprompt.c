@@ -56,12 +56,12 @@ static void init_config(void);
 static void config_postdefaults(void);
 int authprompt_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int authprompt_config_run(ConfigFile *, ConfigEntry *, int);
-int authprompt_require_sasl(Client *acptr, char *reason);
-int authprompt_sasl_continuation(Client *acptr, char *buf);
-int authprompt_sasl_result(Client *acptr, int success);
-int authprompt_place_host_ban(Client *sptr, int action, char *reason, long duration);
-int authprompt_find_tkline_match(Client *sptr, TKL *tk);
-int authprompt_pre_connect(Client *sptr);
+int authprompt_require_sasl(Client *client, char *reason);
+int authprompt_sasl_continuation(Client *client, char *buf);
+int authprompt_sasl_result(Client *client, int success);
+int authprompt_place_host_ban(Client *client, int action, char *reason, long duration);
+int authprompt_find_tkline_match(Client *client, TKL *tk);
+int authprompt_pre_connect(Client *client);
 CMD_FUNC(cmd_auth);
 void authprompt_md_free(ModData *md);
 
@@ -301,31 +301,31 @@ char *make_authbuf(const char *username, const char *password)
  * Among other things, this is used to discover the agent
  * which will later be used for this session.
  */
-void send_first_auth(Client *sptr)
+void send_first_auth(Client *client)
 {
-	Client *acptr;
-	char *addr = BadPtr(sptr->ip) ? "0" : sptr->ip;
-	char *certfp = moddata_client_get(sptr, "certfp");
-	acptr = find_client(SASL_SERVER, NULL);
-	if (!acptr)
+	Client *sasl_server;
+	char *addr = BadPtr(client->ip) ? "0" : client->ip;
+	char *certfp = moddata_client_get(client, "certfp");
+	sasl_server = find_client(SASL_SERVER, NULL);
+	if (!sasl_server)
 	{
 		/* Services down. */
 		return;
 	}
 
-	sendto_one(acptr, NULL, ":%s SASL %s %s H %s %s",
-	    me.name, SASL_SERVER, sptr->id, addr, addr);
+	sendto_one(sasl_server, NULL, ":%s SASL %s %s H %s %s",
+	    me.name, SASL_SERVER, client->id, addr, addr);
 
 	if (certfp)
-		sendto_one(acptr, NULL, ":%s SASL %s %s S %s %s",
-		    me.name, SASL_SERVER, sptr->id, "PLAIN", certfp);
+		sendto_one(sasl_server, NULL, ":%s SASL %s %s S %s %s",
+		    me.name, SASL_SERVER, client->id, "PLAIN", certfp);
 	else
-		sendto_one(acptr, NULL, ":%s SASL %s %s S %s",
-		    me.name, SASL_SERVER, sptr->id, "PLAIN");
+		sendto_one(sasl_server, NULL, ":%s SASL %s %s S %s",
+		    me.name, SASL_SERVER, client->id, "PLAIN");
 
 	/* The rest is sent from authprompt_sasl_continuation() */
 
-	sptr->local->sasl_out++;
+	client->local->sasl_out++;
 }
 
 CMD_FUNC(cmd_auth)
@@ -334,172 +334,172 @@ CMD_FUNC(cmd_auth)
 	char *password = NULL;
 	char *authbuf;
 
-	if (!SEUSER(sptr))
+	if (!SEUSER(client))
 	{
-		if (HasCapability(sptr, "sasl"))
-			sendnotice(sptr, "ERROR: Cannot use /AUTH when your client is doing SASL.");
+		if (HasCapability(client, "sasl"))
+			sendnotice(client, "ERROR: Cannot use /AUTH when your client is doing SASL.");
 		else
-			sendnotice(sptr, "ERROR: /AUTH authentication request received before authentication prompt (too early!)");
+			sendnotice(client, "ERROR: /AUTH authentication request received before authentication prompt (too early!)");
 		return;
 	}
 
 	if ((parc < 2) || BadPtr(parv[1]) || !parse_nickpass(parv[1], &username, &password))
 	{
-		sendnotice(sptr, "ERROR: Syntax is: /AUTH <nickname>:<password>");
-		sendnotice(sptr, "Example: /AUTH mynick:secretpass");
+		sendnotice(client, "ERROR: Syntax is: /AUTH <nickname>:<password>");
+		sendnotice(client, "Example: /AUTH mynick:secretpass");
 		return;
 	}
 
 	if (!SASL_SERVER)
 	{
-		sendnotice(sptr, "ERROR: SASL is not configured on this server, or services are down.");
+		sendnotice(client, "ERROR: SASL is not configured on this server, or services are down.");
 		// numeric instead? SERVICESDOWN?
 		return;
 	}
 
 	/* Presumably if the user is really fast, this could happen.. */
-	if (*sptr->local->sasl_agent || SEUSER(sptr)->authmsg)
+	if (*client->local->sasl_agent || SEUSER(client)->authmsg)
 	{
-		sendnotice(sptr, "ERROR: Previous authentication request is still in progress. Please wait.");
+		sendnotice(client, "ERROR: Previous authentication request is still in progress. Please wait.");
 		return;
 	}
 
 	authbuf = make_authbuf(username, password);
 	if (!authbuf)
 	{
-		sendnotice(sptr, "ERROR: Internal error. Oversized username/password?");
+		sendnotice(client, "ERROR: Internal error. Oversized username/password?");
 		return;
 	}
 
-	safe_strdup(SEUSER(sptr)->authmsg, authbuf);
+	safe_strdup(SEUSER(client)->authmsg, authbuf);
 
-	send_first_auth(sptr);
+	send_first_auth(client);
 }
 
-void send_multinotice(Client *sptr, MultiLine *m)
+void send_multinotice(Client *client, MultiLine *m)
 {
 	for (; m; m = m->next)
-		sendnotice(sptr, "%s", m->line);
+		sendnotice(client, "%s", m->line);
 }
 
-void authprompt_tag_as_auth_required(Client *sptr)
+void authprompt_tag_as_auth_required(Client *client)
 {
 	/* Allocate, and therefore indicate, that we are going to handle SASL for this user */
-	if (!SEUSER(sptr))
-		SetAPUser(sptr, safe_alloc(sizeof(APUser)));
+	if (!SEUSER(client))
+		SetAPUser(client, safe_alloc(sizeof(APUser)));
 }
 
-void authprompt_send_auth_required_message(Client *sptr)
+void authprompt_send_auth_required_message(Client *client)
 {
 	/* Display set::authentication-prompt::message */
-	send_multinotice(sptr, cfg.message);
+	send_multinotice(client, cfg.message);
 }
 
-int authprompt_require_sasl(Client *sptr, char *reason)
+int authprompt_require_sasl(Client *client, char *reason)
 {
 	/* If the client did SASL then we (authprompt) will not kick in */
-	if (HasCapability(sptr, "sasl"))
+	if (HasCapability(client, "sasl"))
 		return 0;
 
-	authprompt_tag_as_auth_required(sptr);
+	authprompt_tag_as_auth_required(client);
 
 	/* Display the require authentication::reason */
 	if (reason && strcmp(reason, "-") && strcmp(reason, "*"))
-		sendnotice(sptr, "%s", reason);
+		sendnotice(client, "%s", reason);
 
-	authprompt_send_auth_required_message(sptr);
+	authprompt_send_auth_required_message(client);
 
 	return 1;
 }
 
 /* Called upon "place a host ban on this user" (eg: spamfilter, blacklist, ..) */
-int authprompt_place_host_ban(Client *sptr, int action, char *reason, long duration)
+int authprompt_place_host_ban(Client *client, int action, char *reason, long duration)
 {
 	/* If it's a soft-xx action and the user is not logged in
 	 * and the user is not yet online, then we will handle this user.
 	 */
-	if (IsSoftBanAction(action) && !IsLoggedIn(sptr) && !IsUser(sptr))
+	if (IsSoftBanAction(action) && !IsLoggedIn(client) && !IsUser(client))
 	{
 		/* Send ban reason */
 		if (reason)
-			sendnotice(sptr, "%s", reason);
+			sendnotice(client, "%s", reason);
 
 		/* And tag the user */
-		authprompt_tag_as_auth_required(sptr);
+		authprompt_tag_as_auth_required(client);
 		return 0; /* pretend user is exempt */
 	}
 	return 99; /* no action taken, proceed normally */
 }
 
 /** Called upon "check for KLINE/GLINE" */
-int authprompt_find_tkline_match(Client *sptr, TKL *tkl)
+int authprompt_find_tkline_match(Client *client, TKL *tkl)
 {
 	/* If it's a soft-xx action and the user is not logged in
 	 * and the user is not yet online, then we will handle this user.
 	 */
 	if (TKLIsServerBan(tkl) &&
 	   (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) &&
-	   !IsLoggedIn(sptr) &&
-	   !IsUser(sptr))
+	   !IsLoggedIn(client) &&
+	   !IsUser(client))
 	{
 		/* Send ban reason */
 		if (tkl->ptr.serverban->reason)
-			sendnotice(sptr, "%s", tkl->ptr.serverban->reason);
+			sendnotice(client, "%s", tkl->ptr.serverban->reason);
 
 		/* And tag the user */
-		authprompt_tag_as_auth_required(sptr);
+		authprompt_tag_as_auth_required(client);
 		return 0; /* pretend user is exempt */
 	}
 	return 99; /* no action taken, proceed normally */
 }
 
-int authprompt_pre_connect(Client *sptr)
+int authprompt_pre_connect(Client *client)
 {
 	/* If the user is tagged as auth required and not logged in, then.. */
-	if (SEUSER(sptr) && !IsLoggedIn(sptr))
+	if (SEUSER(client) && !IsLoggedIn(client))
 	{
-		authprompt_send_auth_required_message(sptr);
+		authprompt_send_auth_required_message(client);
 		return HOOK_DENY; /* do not process register_user() */
 	}
 
 	return HOOK_CONTINUE; /* no action taken, proceed normally */
 }
 
-int authprompt_sasl_continuation(Client *sptr, char *buf)
+int authprompt_sasl_continuation(Client *client, char *buf)
 {
 	/* If it's not for us (eg: user is doing real SASL) then return 0. */
-	if (!SEUSER(sptr) || !SEUSER(sptr)->authmsg)
+	if (!SEUSER(client) || !SEUSER(client)->authmsg)
 		return 0;
 
 	if (!strcmp(buf, "+"))
 	{
-		Client *agent = find_client(sptr->local->sasl_agent, NULL);
+		Client *agent = find_client(client->local->sasl_agent, NULL);
 		if (agent)
 		{
 			sendto_one(agent, NULL, ":%s SASL %s %s C %s",
-				me.name, AGENT_SID(agent), sptr->id, SEUSER(sptr)->authmsg);
+				me.name, AGENT_SID(agent), client->id, SEUSER(client)->authmsg);
 		}
-		SEUSER(sptr)->authmsg = NULL;
+		SEUSER(client)->authmsg = NULL;
 	}
 	return 1; /* inhibit displaying of message */
 }
 
-int authprompt_sasl_result(Client *sptr, int success)
+int authprompt_sasl_result(Client *client, int success)
 {
 	/* If it's not for us (eg: user is doing real SASL) then return 0. */
-	if (!SEUSER(sptr))
+	if (!SEUSER(client))
 		return 0;
 
 	if (!success)
 	{
-		send_multinotice(sptr, cfg.fail_message);
+		send_multinotice(client, cfg.fail_message);
 		return 1;
 	}
 
 	/* Authentication was a success */
-	if (*sptr->name && sptr->user && *sptr->user->username && IsNotSpoof(sptr))
+	if (*client->name && client->user && *client->user->username && IsNotSpoof(client))
 	{
-		register_user(sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
+		register_user(client, client->name, client->user->username, NULL, NULL, NULL);
 		/* User MAY be killed now. But since we 'return 1' below, it's safe */
 	}
 

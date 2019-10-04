@@ -60,21 +60,21 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_svswatch)
 {
-	Client *acptr;
+	Client *target;
 
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 		return;
 
-	if (parc < 3 || BadPtr(parv[2]) || !(acptr = find_person(parv[1], NULL)))
+	if (parc < 3 || BadPtr(parv[2]) || !(target = find_person(parv[1], NULL)))
 		return;
 
-	if (MyUser(acptr))
+	if (MyUser(target))
 	{
-		parv[0] = acptr->name;
+		parv[0] = target->name;
 		parv[1] = parv[2];
 		parv[2] = NULL;
-		(void)do_cmd(acptr, NULL, "WATCH", 2, parv);
+		(void)do_cmd(target, NULL, "WATCH", 2, parv);
 	}
 	else
-		sendto_one(acptr, NULL, ":%s SVSWATCH %s :%s", sptr->name, parv[1], parv[2]);
+		sendto_one(target, NULL, ":%s SVSWATCH %s :%s", client->name, parv[1], parv[2]);
 }

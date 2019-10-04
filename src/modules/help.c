@@ -54,8 +54,8 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-#define HDR(str) sendto_one(sptr, NULL, ":%s 290 %s :%s", me.name, sptr->name, str);
-#define SND(str) sendto_one(sptr, NULL, ":%s 292 %s :%s", me.name, sptr->name, str);
+#define HDR(str) sendto_one(client, NULL, ":%s 290 %s :%s", me.name, client->name, str);
+#define SND(str) sendto_one(client, NULL, ":%s 292 %s :%s", me.name, client->name, str);
 
 ConfigItem_help *Find_Help(char *command)
 {
@@ -80,7 +80,7 @@ ConfigItem_help *Find_Help(char *command)
 	return NULL;
 }
 
-void parse_help(Client *sptr, char *name, char *help)
+void parse_help(Client *client, char *name, char *help)
 {
 	ConfigItem_help *helpitem;
 	MOTDLine *text;
@@ -108,15 +108,15 @@ void parse_help(Client *sptr, char *name, char *help)
 		SND(" -");
 		SND("   We're sorry, we don't have help available for the command you requested.");
 		SND(" -");
-		sendto_one(sptr, NULL, ":%s 292 %s : ***** Go to %s if you have any further questions *****",
-		    me.name, sptr->name, helpchan);
+		sendto_one(client, NULL, ":%s 292 %s : ***** Go to %s if you have any further questions *****",
+		    me.name, client->name, helpchan);
 		SND(" -");
 		return;
 	}
 	text = helpitem->text;
 	SND(" -");
-	sendto_one(sptr, NULL, ":%s 290 %s :***** %s *****",
-	    me.name, sptr->name, helpitem->command);
+	sendto_one(client, NULL, ":%s 290 %s :***** %s *****",
+	    me.name, client->name, helpitem->command);
 	SND(" -");
 	while (text) {
 		SND(text->line);
@@ -133,7 +133,7 @@ CMD_FUNC(cmd_help)
 {
 	char *helptopic;
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return; /* never remote */
 
 	helptopic = parc > 1 ? parv[1] : NULL;
@@ -141,5 +141,5 @@ CMD_FUNC(cmd_help)
 	if (helptopic && (*helptopic == '?'))
 		helptopic++;
 
-	parse_help(sptr, sptr->name, BadPtr(helptopic) ? NULL : helptopic);
+	parse_help(client, client->name, BadPtr(helptopic) ? NULL : helptopic);
 }

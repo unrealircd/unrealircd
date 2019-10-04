@@ -70,54 +70,54 @@ CMD_FUNC(cmd_knock)
 	int i = 0;
 	MessageTag *mtags = NULL;
 
-	if (IsServer(sptr))
+	if (IsServer(client))
 		return;
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "KNOCK");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "KNOCK");
 		return;
 	}
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 		clean_channelname(parv[1]);
 
 	/* bugfix for /knock PRv Please? */
 	if (*parv[1] != '#')
 	{
-		sendnumeric(sptr, ERR_CANNOTKNOCK,
+		sendnumeric(client, ERR_CANNOTKNOCK,
 		    parv[1], "Remember to use a # prefix in channel name");
 
 		return;
 	}
 	if (!(chptr = find_channel(parv[1], NULL)))
 	{
-		sendnumeric(sptr, ERR_CANNOTKNOCK, parv[1], "Channel does not exist!");
+		sendnumeric(client, ERR_CANNOTKNOCK, parv[1], "Channel does not exist!");
 		return;
 	}
 
 	/* IsMember bugfix by codemastr */
-	if (IsMember(sptr, chptr) == 1)
+	if (IsMember(client, chptr) == 1)
 	{
-		sendnumeric(sptr, ERR_CANNOTKNOCK, chptr->chname, "You're already there!");
+		sendnumeric(client, ERR_CANNOTKNOCK, chptr->chname, "You're already there!");
 		return;
 	}
 
 	if (!(chptr->mode.mode & MODE_INVITEONLY))
 	{
-		sendnumeric(sptr, ERR_CANNOTKNOCK, chptr->chname, "Channel is not invite only!");
+		sendnumeric(client, ERR_CANNOTKNOCK, chptr->chname, "Channel is not invite only!");
 		return;
 	}
 
-	if (is_banned(sptr, chptr, BANCHK_JOIN, NULL, NULL))
+	if (is_banned(client, chptr, BANCHK_JOIN, NULL, NULL))
 	{
-		sendnumeric(sptr, ERR_CANNOTKNOCK, chptr->chname, "You're banned!");
+		sendnumeric(client, ERR_CANNOTKNOCK, chptr->chname, "You're banned!");
 		return;
 	}
 
 	for (h = Hooks[HOOKTYPE_PRE_KNOCK]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(sptr,chptr);
+		i = (*(h->func.intfunc))(client,chptr);
 		if (i == HOOK_DENY || i == HOOK_ALLOW)
 			break;
 	}
@@ -125,18 +125,18 @@ CMD_FUNC(cmd_knock)
 	if (i == HOOK_DENY)
 		return;
 
-	if (MyUser(sptr) && !ValidatePermissionsForPath("immune:knock-flood",sptr,NULL,NULL,NULL))
+	if (MyUser(client) && !ValidatePermissionsForPath("immune:knock-flood",client,NULL,NULL,NULL))
 	{
-		if ((sptr->user->flood.knock_t + KNOCK_PERIOD) <= timeofday)
+		if ((client->user->flood.knock_t + KNOCK_PERIOD) <= timeofday)
 		{
-			sptr->user->flood.knock_c = 0;
-			sptr->user->flood.knock_t = timeofday;
+			client->user->flood.knock_c = 0;
+			client->user->flood.knock_t = timeofday;
 		}
-		if (sptr->user->flood.knock_c <= KNOCK_COUNT)
-			sptr->user->flood.knock_c++;
-		if (sptr->user->flood.knock_c > KNOCK_COUNT)
+		if (client->user->flood.knock_c <= KNOCK_COUNT)
+			client->user->flood.knock_c++;
+		if (client->user->flood.knock_c > KNOCK_COUNT)
 		{
-			sendnumeric(sptr, ERR_CANNOTKNOCK, parv[1],
+			sendnumeric(client, ERR_CANNOTKNOCK, parv[1],
 			    "You are KNOCK flooding");
 			return;
 		}
@@ -147,12 +147,12 @@ CMD_FUNC(cmd_knock)
 	               0, SEND_ALL, mtags,
 	               ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)",
 	               me.name, chptr->chname,
-	               sptr->name, sptr->user->username, GetHost(sptr),
+	               client->name, client->user->username, GetHost(client),
 	               parv[2] ? parv[2] : "no reason specified");
 
-	sendnotice(sptr, "Knocked on %s", chptr->chname);
+	sendnotice(client, "Knocked on %s", chptr->chname);
 
-        RunHook4(HOOKTYPE_KNOCK, sptr, chptr, mtags, parv[2]);
+        RunHook4(HOOKTYPE_KNOCK, client, chptr, mtags, parv[2]);
 
 	free_message_tags(mtags);
 }

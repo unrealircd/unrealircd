@@ -63,25 +63,25 @@ CMD_FUNC(cmd_globops)
 
 	if (BadPtr(message))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "GLOBOPS");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "GLOBOPS");
 		return;
 	}
 
-	if (MyUser(sptr) && !ValidatePermissionsForPath("chat:globops",sptr,NULL,NULL,NULL))
+	if (MyUser(client) && !ValidatePermissionsForPath("chat:globops",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
-	if (MyUser(sptr))
+	if (MyUser(client))
 	{
 		/* Easy */
-		sendto_umode_global(UMODE_OPER, "from %s: %s", sptr->name, message);
+		sendto_umode_global(UMODE_OPER, "from %s: %s", client->name, message);
 	} else
 	{
 		/* Backward-compatible (3.2.x) */
-		sendto_umode(UMODE_OPER, "from %s: %s", sptr->name, message);
-		sendto_server(sptr, 0, 0, NULL, ":%s SENDUMODE o :from %s: %s",
-		    me.name, sptr->name, message);
+		sendto_umode(UMODE_OPER, "from %s: %s", client->name, message);
+		sendto_server(client, 0, 0, NULL, ":%s SENDUMODE o :from %s: %s",
+		    me.name, client->name, message);
 	}
 }

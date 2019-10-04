@@ -28,9 +28,9 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_msgbypass_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
-int msgbypass_can_bypass(Client *sptr, Channel *chptr, BypassChannelMessageRestrictionType bypass_type);
-int msgbypass_extban_is_ok(Client* sptr, Channel* chptr, char* para, int checkt, int what, int what2);
+int extban_msgbypass_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
+int msgbypass_can_bypass(Client *client, Channel *chptr, BypassChannelMessageRestrictionType bypass_type);
+int msgbypass_extban_is_ok(Client* client, Channel* chptr, char* para, int checkt, int what, int what2);
 char *msgbypass_extban_conv_param(char *para);
 
 /** Called upon module init */
@@ -68,13 +68,13 @@ MOD_UNLOAD()
 }
 
 /** Is the user banned? No, never by us anyway. */
-int extban_msgbypass_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
+int extban_msgbypass_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
 {
 	return 0; /* not banned by us */
 }
 
 /** Can the user bypass restrictions? */
-int msgbypass_can_bypass(Client *sptr, Channel *chptr, BypassChannelMessageRestrictionType bypass_type)
+int msgbypass_can_bypass(Client *client, Channel *chptr, BypassChannelMessageRestrictionType bypass_type)
 {
 	Ban *ban;
 	char *p;
@@ -97,7 +97,7 @@ int msgbypass_can_bypass(Client *sptr, Channel *chptr, BypassChannelMessageRestr
 					continue;
 				matchby++;
 				
-				if (ban_check_mask(sptr, chptr, matchby, BANCHK_MSG, NULL, NULL, 0))
+				if (ban_check_mask(client, chptr, matchby, BANCHK_MSG, NULL, NULL, 0))
 					return HOOK_ALLOW; /* Yes, user may bypass */
 			}
 		}
@@ -158,20 +158,20 @@ char *msgbypass_extban_conv_param(char *para_in)
 	return retbuf;
 }
 
-int msgbypass_extban_syntax(Client *sptr, int checkt, char *reason)
+int msgbypass_extban_syntax(Client *client, int checkt, char *reason)
 {
-	if (MyUser(sptr) && (checkt == EXBCHK_PARAM))
+	if (MyUser(client) && (checkt == EXBCHK_PARAM))
 	{
-		sendnotice(sptr, "Error when setting ban exception: %s", reason);
-		sendnotice(sptr, " Syntax: +e ~m:type:mask");
-		sendnotice(sptr, "Example: +e ~m:moderated:~a:TrustedUser");
-		sendnotice(sptr, "Valid types are: external, moderated, color, notice");
-		sendnotice(sptr, "Valid masks are: nick!user@host or another extban type such as ~a, ~c, ~S, ..");
+		sendnotice(client, "Error when setting ban exception: %s", reason);
+		sendnotice(client, " Syntax: +e ~m:type:mask");
+		sendnotice(client, "Example: +e ~m:moderated:~a:TrustedUser");
+		sendnotice(client, "Valid types are: external, moderated, color, notice");
+		sendnotice(client, "Valid masks are: nick!user@host or another extban type such as ~a, ~c, ~S, ..");
 	}
 	return 0; /* FAIL: ban rejected */
 }
 
-int msgbypass_extban_is_ok(Client* sptr, Channel* chptr, char* para_in, int checkt, int what, int what2)
+int msgbypass_extban_is_ok(Client* client, Channel* chptr, char* para_in, int checkt, int what, int what2)
 {
 	char para[MAX_LENGTH+1];
 	char tmpmask[MAX_LENGTH+1];
@@ -186,7 +186,7 @@ int msgbypass_extban_is_ok(Client* sptr, Channel* chptr, char* para_in, int chec
 	if (what2 != EXBTYPE_EXCEPT)
 	{
 		if (checkt == EXBCHK_PARAM)
-			sendnotice(sptr, "Ban type ~m only works with exceptions (+e) and not with bans or invex (+b/+I)");
+			sendnotice(client, "Ban type ~m only works with exceptions (+e) and not with bans or invex (+b/+I)");
 		return 0; /* reject */
 	}
 
@@ -199,24 +199,24 @@ int msgbypass_extban_is_ok(Client* sptr, Channel* chptr, char* para_in, int chec
 	type = para;
 	matchby = strchr(para, ':');
 	if (!matchby || !matchby[1])
-		return msgbypass_extban_syntax(sptr, checkt, "Invalid syntax");
+		return msgbypass_extban_syntax(client, checkt, "Invalid syntax");
 	*matchby++ = '\0';
 
 	if (!msgbypass_extban_type_ok(type))
-		return msgbypass_extban_syntax(sptr, checkt, "Unknown type");
+		return msgbypass_extban_syntax(client, checkt, "Unknown type");
 
 	/* This is quite silly, we have to create a fake extban here due to
 	 * the current API of extban_conv_param_nuh and extban_conv_param_nuh_or_extban
 	 * expecting the full banmask rather than the portion that actually matters.
 	 */
 	snprintf(tmpmask, sizeof(tmpmask), "~?:%s", matchby);
-	if (extban_is_ok_nuh_extban(sptr, chptr, tmpmask, checkt, what, what2) == 0)
+	if (extban_is_ok_nuh_extban(client, chptr, tmpmask, checkt, what, what2) == 0)
 	{
 		/* This could be anything ranging from:
 		 * invalid n!u@h syntax, unknown (sub)extbantype,
 		 * disabled extban type in conf, too much recursion, etc.
 		 */
-		return msgbypass_extban_syntax(sptr, checkt, "Invalid matcher");
+		return msgbypass_extban_syntax(client, checkt, "Invalid matcher");
 	}
 
 	return 1; /* OK */

@@ -60,7 +60,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-void unban_user(Client *sptr, Channel *chptr, Client *acptr, char chmode)
+void unban_user(Client *client, Channel *chptr, Client *acptr, char chmode)
 {
 	Extban *extban;
 	Ban *ban, *bnext;
@@ -122,7 +122,7 @@ void unban_user(Client *sptr, Channel *chptr, Client *acptr, char chmode)
 		    (*ihost && match_simple(ban->banstr, ihost)) ||
 		    (*chost && match_simple(ban->banstr, chost)))
 		{
-			add_send_mode_param(chptr, sptr, '-',  chmode, 
+			add_send_mode_param(chptr, client, '-',  chmode, 
 				ban->banstr);
 			del_listmode(banlist, chptr, ban->banstr);
 		}
@@ -140,7 +140,7 @@ void unban_user(Client *sptr, Channel *chptr, Client *acptr, char chmode)
 	}
 }
 
-void clear_bans(Client *sptr, Channel *chptr, char chmode)
+void clear_bans(Client *client, Channel *chptr, char chmode)
 {
 	Extban *extban;
 	Ban *ban, *bnext;
@@ -169,7 +169,7 @@ void clear_bans(Client *sptr, Channel *chptr, char chmode)
 			if (!(extban->options & EXTBOPT_CHSVSMODE))							
 				continue;
 		}
-		add_send_mode_param(chptr, sptr, '-',  chmode, ban->banstr);
+		add_send_mode_param(chptr, client, '-',  chmode, ban->banstr);
 		del_listmode(banlist, chptr, ban->banstr);
 	}
 }
@@ -195,10 +195,10 @@ void clear_bans(Client *sptr, Channel *chptr, char chmode)
  *
  * OLD syntax had a 'ts' parameter. No services are known to use this.
  */
-void channel_svsmode(Client *sptr, int parc, char *parv[]) 
+void channel_svsmode(Client *client, int parc, char *parv[]) 
 {
 	Channel *chptr;
-	Client *acptr;
+	Client *target;
 	char *m;
 	int what = MODE_ADD;
 	int i = 4; // wtf is this
@@ -231,7 +231,7 @@ void channel_svsmode(Client *sptr, int parc, char *parv[])
 				if (what != MODE_DEL)
 				{
 					sendto_realops("Warning! Received SVS(2)MODE with +%c for %s from %s, which is invalid!!",
-						*m, chptr->chname, sptr->name);
+						*m, chptr->chname, client->name);
 					continue;
 				}
 				channel_flags = char_to_channelflag(*m);
@@ -240,8 +240,8 @@ void channel_svsmode(Client *sptr, int parc, char *parv[])
 					if (cm->flags & channel_flags)
 					{
 						Membership *mb;
-						mb = find_membership_link(cm->cptr->user->channel, chptr);
-						add_send_mode_param(chptr, sptr, '-', *m, cm->cptr->name);
+						mb = find_membership_link(cm->client->user->channel, chptr);
+						add_send_mode_param(chptr, client, '-', *m, cm->client->name);
 						cm->flags &= ~channel_flags;
 						if (mb)
 							mb->flags = cm->flags;
@@ -253,23 +253,23 @@ void channel_svsmode(Client *sptr, int parc, char *parv[])
 			case 'I':
 				if (parc >= i)
 				{
-					if (!(acptr = find_person(parv[i-1], NULL)))
+					if (!(target = find_person(parv[i-1], NULL)))
 					{
 						i++;
 						break;
 					}
 					i++;
 
-					unban_user(sptr, chptr, acptr, *m);
+					unban_user(client, chptr, target, *m);
 				}
 				else {
-					clear_bans(sptr, chptr, *m);
+					clear_bans(client, chptr, *m);
 				}
 				break;
 			default:
 				sendto_realops("Warning! Invalid mode `%c' used with 'SVSMODE %s %s %s' (from %s %s)",
 					       *m, chptr->chname, parv[2], parv[3] ? parv[3] : "",
-					       sptr->direction->name, sptr->name);
+					       client->direction->name, client->name);
 				break;
 		}
 	}
@@ -279,15 +279,15 @@ void channel_svsmode(Client *sptr, int parc, char *parv[])
 	{
 		MessageTag *mtags = NULL;
 		/* NOTE: cannot use 'recv_mtag' here because MODE could be rewrapped. Not ideal :( */
-		new_message(sptr, NULL, &mtags);
+		new_message(client, NULL, &mtags);
 
-		sendto_channel(chptr, sptr, sptr, 0, 0, SEND_LOCAL, mtags,
+		sendto_channel(chptr, client, client, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
-		               sptr->name, chptr->chname,  modebuf, parabuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
+		               client->name, chptr->chname,  modebuf, parabuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", client->name, chptr->chname, modebuf, parabuf);
 
 		/* Activate this hook just like cmd_mode.c */
-		RunHook7(HOOKTYPE_REMOTE_CHANMODE, sptr, chptr, mtags, modebuf, parabuf, 0, 0);
+		RunHook7(HOOKTYPE_REMOTE_CHANMODE, client, chptr, mtags, modebuf, parabuf, 0, 0);
 
 		free_message_tags(mtags);
 
@@ -304,15 +304,15 @@ void channel_svsmode(Client *sptr, int parc, char *parv[])
  *
  * show_change can be 0 (for svsmode) or 1 (for svs2mode).
  */
-void do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int show_change)
+void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], int show_change)
 {
 	int i;
 	char *m;
-	Client *acptr;
+	Client *target;
 	int  what;
 	long setflags = 0;
 
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 		return;
 
 	what = MODE_ADD;
@@ -321,16 +321,16 @@ void do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 		return;
 
 	if (parv[1][0] == '#') 
-		return channel_svsmode(sptr, parc, parv);
+		return channel_svsmode(client, parc, parv);
 
-	if (!(acptr = find_person(parv[1], NULL)))
+	if (!(target = find_person(parv[1], NULL)))
 		return;
 
-	userhost_save_current(acptr);
+	userhost_save_current(target);
 
 	/* initialize setflag to be the user's pre-SVSMODE flags */
 	for (i = 0; i <= Usermode_highest; i++)
-		if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
+		if (Usermode_Table[i].flag && (target->umodes & Usermode_Table[i].mode))
 			setflags |= Usermode_Table[i].mode;
 
 	/* parse mode change string(s) */
@@ -351,66 +351,66 @@ void do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 			case '\t':
 				break;
 			case 'i':
-				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_INVISIBLE))
+				if ((what == MODE_ADD) && !(target->umodes & UMODE_INVISIBLE))
 					irccounts.invisible++;
-				if ((what == MODE_DEL) && (acptr->umodes & UMODE_INVISIBLE))
+				if ((what == MODE_DEL) && (target->umodes & UMODE_INVISIBLE))
 					irccounts.invisible--;
 				goto setmodex;
 			case 'o':
-				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_OPER))
+				if ((what == MODE_ADD) && !(target->umodes & UMODE_OPER))
 				{
-					if (!IsOper(acptr) && MyUser(acptr))
-						list_add(&acptr->special_node, &oper_list);
+					if (!IsOper(target) && MyUser(target))
+						list_add(&target->special_node, &oper_list);
 
 					irccounts.operators++;
 				}
-				if ((what == MODE_DEL) && (acptr->umodes & UMODE_OPER))
+				if ((what == MODE_DEL) && (target->umodes & UMODE_OPER))
 				{
-					if (acptr->umodes & UMODE_HIDEOPER)
+					if (target->umodes & UMODE_HIDEOPER)
 					{
 						/* clear 'H' too, and opercount stays the same.. */
-						acptr->umodes &= ~UMODE_HIDEOPER;
+						target->umodes &= ~UMODE_HIDEOPER;
 					} else {
 						irccounts.operators--;
 					}
 
-					if (MyUser(acptr) && !list_empty(&acptr->special_node))
-						list_del(&acptr->special_node);
+					if (MyUser(target) && !list_empty(&target->special_node))
+						list_del(&target->special_node);
 					
 					/* User is no longer oper (after the goto below, anyway)...
 					 * so remove all oper-only modes and snomasks.
 					 */
-					remove_oper_privileges(acptr, 0);
+					remove_oper_privileges(target, 0);
 				}
 				goto setmodex;
 			case 'H':
-				if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))
+				if (what == MODE_ADD && !(target->umodes & UMODE_HIDEOPER))
 				{
-					if (!IsOper(acptr) && !strchr(parv[2], 'o')) /* (ofcoz this strchr() is flawed) */
+					if (!IsOper(target) && !strchr(parv[2], 'o')) /* (ofcoz this strchr() is flawed) */
 					{
 						/* isn't an oper, and would not become one either.. abort! */
 						sendto_realops(
 							"[BUG] server %s tried to set +H while user not an oper, para=%s/%s, "
 							"umodes=%ld, please fix your services or if you think it's our fault, "
-							"report at https://bugs.unrealircd.org/", sptr->name, parv[1], parv[2], acptr->umodes);
+							"report at https://bugs.unrealircd.org/", client->name, parv[1], parv[2], target->umodes);
 						break; /* abort! */
 					}
 					irccounts.operators--;
 				}
-				if (what == MODE_DEL && (acptr->umodes & UMODE_HIDEOPER))
+				if (what == MODE_DEL && (target->umodes & UMODE_HIDEOPER))
 					irccounts.operators++;
 				goto setmodex;
 			case 'd':
 				if (parv[3])
 				{
 					MessageTag *mtags = NULL;
-					strlcpy(acptr->user->svid, parv[3], sizeof(acptr->user->svid));
-					new_message(acptr, recv_mtags, &mtags);
-					sendto_local_common_channels(acptr, acptr,
+					strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
+					new_message(target, recv_mtags, &mtags);
+					sendto_local_common_channels(target, target,
 					                             ClientCapabilityBit("account-notify"), mtags,
 					                             ":%s ACCOUNT %s",
-					                             acptr->name,
-					                             !isdigit(*acptr->user->svid) ? acptr->user->svid : "*");
+					                             target->name,
+					                             !isdigit(*target->user->svid) ? target->user->svid : "*");
 					free_message_tags(mtags);
 				}
 				else
@@ -423,20 +423,20 @@ void do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 				if (what == MODE_DEL)
 				{
 					/* -x */
-					if (acptr->user->virthost)
+					if (target->user->virthost)
 					{
 						/* Removing mode +x and virthost set... recalculate host then (but don't activate it!) */
-						safe_strdup(acptr->user->virthost, acptr->user->cloakedhost);
+						safe_strdup(target->user->virthost, target->user->cloakedhost);
 					}
 				} else
 				{
 					/* +x */
-					if (!acptr->user->virthost)
+					if (!target->user->virthost)
 					{
 						/* Hmm... +x but no virthost set, that's bad... use cloakedhost.
 						 * Not sure if this could ever happen, but just in case... -- Syzop
 						 */
-						safe_strdup(acptr->user->virthost, acptr->user->cloakedhost);
+						safe_strdup(target->user->virthost, target->user->cloakedhost);
 					}
 					/* Announce the new host to VHP servers if we're setting the virthost to the cloakedhost.
 					 * In other cases, we can assume that the host has been broadcasted already (after all,
@@ -446,9 +446,9 @@ void do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 					 * in which case we would have needlessly announced it. Ok I didn't test it but that's
 					 * the idea behind it :P. -- Syzop
 					 */
-					if (MyUser(acptr) && !strcasecmp(acptr->user->virthost, acptr->user->cloakedhost))
-						sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", acptr->name,
-							acptr->user->virthost);
+					if (MyUser(target) && !strcasecmp(target->user->virthost, target->user->cloakedhost))
+						sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", target->name,
+							target->user->virthost);
 				}
 				goto setmodex;
 			case 't':
@@ -462,14 +462,14 @@ void do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 					 * Also, check to make sure user->cloakedhost exists at all.
 					 * This so we won't crash in weird cases like non-conformant servers.
 					 */
-					if (acptr->user->virthost && *acptr->user->cloakedhost && strcasecmp(acptr->user->cloakedhost, GetHost(acptr)))
+					if (target->user->virthost && *target->user->cloakedhost && strcasecmp(target->user->cloakedhost, GetHost(target)))
 					{
 						/* Make the change effective: */
-						safe_strdup(acptr->user->virthost, acptr->user->cloakedhost);
+						safe_strdup(target->user->virthost, target->user->cloakedhost);
 						/* And broadcast the change to VHP servers */
-						if (MyUser(acptr))
-							sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", acptr->name,
-								acptr->user->virthost);
+						if (MyUser(target))
+							sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", target->name,
+								target->user->virthost);
 					}
 					goto setmodex;
 				}
@@ -486,9 +486,9 @@ void do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 					if (*m == Usermode_Table[i].flag)
 					{
 						if (what == MODE_ADD)
-							acptr->umodes |= Usermode_Table[i].mode;
+							target->umodes |= Usermode_Table[i].mode;
 						else
-							acptr->umodes &= ~Usermode_Table[i].mode;
+							target->umodes &= ~Usermode_Table[i].mode;
 						break;
 					}
 				}
@@ -496,31 +496,31 @@ void do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 		} /*switch*/
 
 	if (parc > 3)
-		sendto_server(sptr, 0, 0, NULL, ":%s %s %s %s %s",
-		    sptr->name, show_change ? "SVS2MODE" : "SVSMODE",
+		sendto_server(client, 0, 0, NULL, ":%s %s %s %s %s",
+		    client->name, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2], parv[3]);
 	else
-		sendto_server(sptr, 0, 0, NULL, ":%s %s %s %s",
-		    sptr->name, show_change ? "SVS2MODE" : "SVSMODE",
+		sendto_server(client, 0, 0, NULL, ":%s %s %s %s",
+		    client->name, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2]);
 
 	/* Here we trigger the same hooks that cmd_mode does and, likewise,
 	   only if the old flags (setflags) are different than the newly-
 	   set ones */
-	if (setflags != acptr->umodes)
-		RunHook3(HOOKTYPE_UMODE_CHANGE, sptr, setflags, acptr->umodes);
+	if (setflags != target->umodes)
+		RunHook3(HOOKTYPE_UMODE_CHANGE, client, setflags, target->umodes);
 
 	if (show_change)
 	{
 		char buf[BUFSIZE];
-		build_umode_string(acptr, setflags, ALL_UMODES, buf);
-		if (MyUser(acptr) && *buf)
-			sendto_one(acptr, NULL, ":%s MODE %s :%s", sptr->name, acptr->name, buf);
+		build_umode_string(target, setflags, ALL_UMODES, buf);
+		if (MyUser(target) && *buf)
+			sendto_one(target, NULL, ":%s MODE %s :%s", client->name, target->name, buf);
 	}
 
-	userhost_changed(acptr); /* we can safely call this, even if nothing changed */
+	userhost_changed(target); /* we can safely call this, even if nothing changed */
 
-	VERIFY_OPERCOUNT(acptr, "svsmodeX");
+	VERIFY_OPERCOUNT(target, "svsmodeX");
 }
 
 /*
@@ -531,7 +531,7 @@ void do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
  */
 CMD_FUNC(cmd_svsmode)
 {
-	return do_svsmode(sptr, recv_mtags, parc, parv, 0);
+	return do_svsmode(client, recv_mtags, parc, parv, 0);
 }
 
 /*
@@ -542,7 +542,7 @@ CMD_FUNC(cmd_svsmode)
  */
 CMD_FUNC(cmd_svs2mode)
 {
-	return do_svsmode(sptr, recv_mtags, parc, parv, 1);
+	return do_svsmode(client, recv_mtags, parc, parv, 1);
 }
 
 void add_send_mode_param(Channel *chptr, Client *from, char what, char mode, char *param)

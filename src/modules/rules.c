@@ -63,10 +63,10 @@ CMD_FUNC(cmd_rules)
 
 	temp = NULL;
 
-	if (hunt_server(sptr, recv_mtags, ":%s RULES :%s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, ":%s RULES :%s", 1, parc, parv) != HUNTED_ISME)
 		return;
 
-	ptr = Find_tld(sptr);
+	ptr = Find_tld(client);
 
 	if (ptr)
 		temp = ptr->rules.lines;
@@ -75,18 +75,18 @@ CMD_FUNC(cmd_rules)
 
 	if (temp == NULL)
 	{
-		sendnumeric(sptr, ERR_NORULES);
+		sendnumeric(client, ERR_NORULES);
 		return;
 
 	}
 
-	sendnumeric(sptr, RPL_RULESSTART, me.name);
+	sendnumeric(client, RPL_RULESSTART, me.name);
 
 	while (temp)
 	{
-		sendnumeric(sptr, RPL_RULES,
+		sendnumeric(client, RPL_RULES,
 		    temp->line);
 		temp = temp->next;
 	}
-	sendnumeric(sptr, RPL_ENDOFRULES);
+	sendnumeric(client, RPL_ENDOFRULES);
 }

@@ -53,16 +53,16 @@ MOD_UNLOAD()
 }
 
 /* Send the user their list of active invites */
-void send_invite_list(Client *sptr)
+void send_invite_list(Client *client)
 {
 	Link *inv;
 
-	for (inv = sptr->user->invited; inv; inv = inv->next)
+	for (inv = client->user->invited; inv; inv = inv->next)
 	{
-		sendnumeric(sptr, RPL_INVITELIST,
+		sendnumeric(client, RPL_INVITELIST,
 			   inv->value.chptr->chname);	
 	}
-	sendnumeric(sptr, RPL_ENDOFINVITELIST);
+	sendnumeric(client, RPL_ENDOFINVITELIST);
 }
 
 /*
@@ -72,81 +72,81 @@ void send_invite_list(Client *sptr)
 */
 CMD_FUNC(cmd_invite)
 {
-	Client *acptr;
+	Client *target;
 	Channel *chptr;
 	int override = 0;
 	int i = 0;
 	Hook *h;
 
 	if (parc == 1)
-		return send_invite_list(sptr);
+		return send_invite_list(client);
 	
 	if (parc < 3 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "INVITE");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "INVITE");
 		return;
 	}
 
-	if (!(acptr = find_person(parv[1], NULL)))
+	if (!(target = find_person(parv[1], NULL)))
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
+		sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 		return;
 	}
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 		clean_channelname(parv[2]);
 
 	if (!(chptr = find_channel(parv[2], NULL)))
 	{
-		sendnumeric(sptr, ERR_NOSUCHCHANNEL, parv[2]);
+		sendnumeric(client, ERR_NOSUCHCHANNEL, parv[2]);
 		return;
 	}
 
 	for (h = Hooks[HOOKTYPE_PRE_INVITE]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(sptr,acptr,chptr,&override);
+		i = (*(h->func.intfunc))(client,target,chptr,&override);
 		if (i == HOOK_DENY)
 			return;
 		if (i == HOOK_ALLOW)
 			break;
 	}
 
-	if (!IsMember(sptr, chptr) && !IsULine(sptr))
+	if (!IsMember(client, chptr) && !IsULine(client))
 	{
-		if (ValidatePermissionsForPath("channel:override:invite:notinchannel",sptr,NULL,chptr,NULL) && sptr == acptr)
+		if (ValidatePermissionsForPath("channel:override:invite:notinchannel",client,NULL,chptr,NULL) && client == target)
 		{
 			override = 1;
 		} else {
-			sendnumeric(sptr, ERR_NOTONCHANNEL, parv[2]);
+			sendnumeric(client, ERR_NOTONCHANNEL, parv[2]);
 			return;
 		}
 	}
 
-	if (IsMember(acptr, chptr))
+	if (IsMember(target, chptr))
 	{
-		sendnumeric(sptr, ERR_USERONCHANNEL, parv[1], parv[2]);
+		sendnumeric(client, ERR_USERONCHANNEL, parv[1], parv[2]);
 		return;
 	}
 
 	if (chptr->mode.mode & MODE_INVITEONLY)
 	{
-		if (!is_chan_op(sptr, chptr) && !IsULine(sptr))
+		if (!is_chan_op(client, chptr) && !IsULine(client))
 		{
-			if (ValidatePermissionsForPath("channel:override:invite:invite-only",sptr,NULL,chptr,NULL) && sptr == acptr)
+			if (ValidatePermissionsForPath("channel:override:invite:invite-only",client,NULL,chptr,NULL) && client == target)
 			{
 				override = 1;
 			} else {
-				sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
+				sendnumeric(client, ERR_CHANOPRIVSNEEDED, chptr->chname);
 				return;
 			}
 		}
-		else if (!IsMember(sptr, chptr) && !IsULine(sptr))
+		else if (!IsMember(client, chptr) && !IsULine(client))
 		{
-			if (ValidatePermissionsForPath("channel:override:invite:invite-only",sptr,NULL,chptr,NULL) && sptr == acptr)
+			if (ValidatePermissionsForPath("channel:override:invite:invite-only",client,NULL,chptr,NULL) && client == target)
 			{
 				override = 1;
 			} else {
-				sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
+				sendnumeric(client, ERR_CHANOPRIVSNEEDED, chptr->chname);
 				return;
 			}
 		}
@@ -154,77 +154,77 @@ CMD_FUNC(cmd_invite)
 
 	if (SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
 	    !strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN) &&
-	    !is_chan_op(sptr, chptr) && !ValidatePermissionsForPath("immune:server-ban:viruschan",sptr,NULL,NULL,NULL))
+	    !is_chan_op(client, chptr) && !ValidatePermissionsForPath("immune:server-ban:viruschan",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
+		sendnumeric(client, ERR_CHANOPRIVSNEEDED, chptr->chname);
 		return;
 	}
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 	{
-		if (check_for_target_limit(sptr, acptr, acptr->name))
+		if (check_for_target_limit(client, target, target->name))
 			return;
 
-		if (!ValidatePermissionsForPath("immune:invite-flood",sptr,NULL,NULL,NULL))
+		if (!ValidatePermissionsForPath("immune:invite-flood",client,NULL,NULL,NULL))
 		{
-			if ((sptr->user->flood.invite_t + INVITE_PERIOD) <= timeofday)
+			if ((client->user->flood.invite_t + INVITE_PERIOD) <= timeofday)
 			{
-				sptr->user->flood.invite_c = 0;
-				sptr->user->flood.invite_t = timeofday;
+				client->user->flood.invite_c = 0;
+				client->user->flood.invite_t = timeofday;
 			}
-			if (sptr->user->flood.invite_c <= INVITE_COUNT)
-				sptr->user->flood.invite_c++;
-			if (sptr->user->flood.invite_c > INVITE_COUNT)
+			if (client->user->flood.invite_c <= INVITE_COUNT)
+				client->user->flood.invite_c++;
+			if (client->user->flood.invite_c > INVITE_COUNT)
 			{
-				sendnumeric(sptr, RPL_TRYAGAIN, "INVITE");
+				sendnumeric(client, RPL_TRYAGAIN, "INVITE");
 				return;
 			}
 		}
 
 		if (!override)
 		{
-			sendnumeric(sptr, RPL_INVITING, acptr->name, chptr->chname);
-			if (acptr->user->away)
+			sendnumeric(client, RPL_INVITING, target->name, chptr->chname);
+			if (target->user->away)
 			{
-				sendnumeric(sptr, RPL_AWAY, acptr->name, acptr->user->away);
+				sendnumeric(client, RPL_AWAY, target->name, target->user->away);
 			}
 		}
 	}
 
 	/* Send OperOverride messages */
-	if (override && MyConnect(acptr))
+	if (override && MyConnect(target))
 	{
-		if (is_banned(sptr, chptr, BANCHK_JOIN, NULL, NULL))
+		if (is_banned(client, chptr, BANCHK_JOIN, NULL, NULL))
 		{
 			sendto_snomask_global(SNO_EYES,
 			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
-			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+			  client->name, client->user->username, client->user->realhost, chptr->chname);
 
 			/* Logging implementation added by XeRXeS */
 			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Ban).",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+				client->name, client->user->username, client->user->realhost, chptr->chname);
 
 		}
 		else if (chptr->mode.mode & MODE_INVITEONLY)
 		{
 			sendto_snomask_global(SNO_EYES,
 			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
-			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+			  client->name, client->user->username, client->user->realhost, chptr->chname);
 
 			/* Logging implementation added by XeRXeS */
 			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Invite Only)",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+				client->name, client->user->username, client->user->realhost, chptr->chname);
 
 		}
 		else if (chptr->mode.limit)
 		{
 			sendto_snomask_global(SNO_EYES,
 			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
-			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+			  client->name, client->user->username, client->user->realhost, chptr->chname);
 
 			/* Logging implementation added by XeRXeS */
 			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Limit)",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+				client->name, client->user->username, client->user->realhost, chptr->chname);
 
 		}
 
@@ -232,22 +232,22 @@ CMD_FUNC(cmd_invite)
 		{
 			sendto_snomask_global(SNO_EYES,
 			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
-			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+			  client->name, client->user->username, client->user->realhost, chptr->chname);
 
 			/* Logging implementation added by XeRXeS */
 			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Key)",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+				client->name, client->user->username, client->user->realhost, chptr->chname);
 
 		}
 		else if (has_channel_mode(chptr, 'z'))
 		{
 			sendto_snomask_global(SNO_EYES,
 			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +z).",
-			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+			  client->name, client->user->username, client->user->realhost, chptr->chname);
 
 			/* Logging implementation added by XeRXeS */
 			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding SSL/TLS-Only)",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+				client->name, client->user->username, client->user->realhost, chptr->chname);
 		}
 #ifdef OPEROVERRIDE_VERIFY
 		else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
@@ -257,12 +257,12 @@ CMD_FUNC(cmd_invite)
 			return;
 	}
 
-	if (MyConnect(acptr))
+	if (MyConnect(target))
 	{
-		if (IsUser(sptr) 
-		    && (is_chan_op(sptr, chptr)
-		    || IsULine(sptr)
-		    || ValidatePermissionsForPath("channel:override:invite:self",sptr,NULL,chptr,NULL)
+		if (IsUser(client) 
+		    && (is_chan_op(client, chptr)
+		    || IsULine(client)
+		    || ValidatePermissionsForPath("channel:override:invite:self",client,NULL,chptr,NULL)
 		    ))
 		{
 			MessageTag *mtags = NULL;
@@ -273,24 +273,24 @@ CMD_FUNC(cmd_invite)
 				sendto_channel(chptr, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 				               0, SEND_ALL, mtags,
 				               ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
-				               me.name, chptr->chname, sptr->name);
+				               me.name, chptr->chname, client->name);
 			} else
 			if (override == 0)
 			{
 				sendto_channel(chptr, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 				               0, SEND_ALL, mtags,
 				               ":%s NOTICE @%s :%s invited %s into the channel.",
-				               me.name, chptr->chname, sptr->name, acptr->name);
+				               me.name, chptr->chname, client->name, target->name);
 			}
-			add_invite(sptr, acptr, chptr, mtags);
+			add_invite(client, target, chptr, mtags);
 			free_message_tags(mtags);
 		}
 	}
 
 	/* Notify the person who got invited */
-	if (!is_silenced(sptr, acptr))
+	if (!is_silenced(client, target))
 	{
-		sendto_prefix_one(acptr, sptr, NULL, ":%s INVITE %s :%s", sptr->name,
-			acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
+		sendto_prefix_one(target, client, NULL, ":%s INVITE %s :%s", client->name,
+			target->name, ((chptr) ? (chptr->chname) : parv[2]));
 	}
 }

@@ -28,9 +28,9 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_certfp_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int what, int what2);
+int extban_certfp_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2);
 char *extban_certfp_conv_param(char *para);
-int extban_certfp_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
+int extban_certfp_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /* Called upon module init */
 MOD_INIT()
@@ -67,25 +67,25 @@ MOD_UNLOAD()
 
 #define CERT_FP_LEN 64
 
-int extban_certfp_usage(Client *sptr)
+int extban_certfp_usage(Client *client)
 {
-	sendnotice(sptr, "ERROR: ExtBan ~S expects an SHA256 fingerprint in hexadecimal format (no colons). "
+	sendnotice(client, "ERROR: ExtBan ~S expects an SHA256 fingerprint in hexadecimal format (no colons). "
 					 "For example: +e ~S:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef)");
 	return EX_DENY;
 }
 
-int extban_certfp_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int what, int what2)
+int extban_certfp_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2)
 {
 	if (checkt == EXCHK_PARAM)
 	{
 		char *p;
 		
 		if (strlen(para) != 3 + CERT_FP_LEN)
-			return extban_certfp_usage(sptr);
+			return extban_certfp_usage(client);
 		
 		for (p = para + 3; *p; p++)
 			if (!isxdigit(*p))
-				return extban_certfp_usage(sptr);
+				return extban_certfp_usage(client);
 
 		return EX_ALLOW;
 	}
@@ -108,12 +108,12 @@ char *extban_certfp_conv_param(char *para)
 	return retbuf;
 }
 
-int extban_certfp_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
+int extban_certfp_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
 {
 	char *ban = banin+3;
 	char *fp;
 
-	fp = moddata_client_get(sptr, "certfp");
+	fp = moddata_client_get(client, "certfp");
 
 	if (!fp)
 		return 0; /* not using TLS */

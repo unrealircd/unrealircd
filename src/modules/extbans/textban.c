@@ -81,8 +81,8 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 char *extban_modeT_conv_param(char *para_in);
-int extban_modeT_is_banned(Client *sptr, Channel *chptr, char *ban, int type, char **msg, char **errmsg);
-int extban_modeT_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int what, int what2);
+int extban_modeT_is_banned(Client *client, Channel *chptr, char *ban, int type, char **msg, char **errmsg);
+int extban_modeT_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2);
 void parse_word(const char *s, char **word, int *type);
 
 MOD_INIT()
@@ -257,21 +257,21 @@ unsigned int counttextbans(Channel *chptr)
 }
 
 
-int extban_modeT_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int what, int what2)
+int extban_modeT_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2)
 {
 	int n;
 
-	if ((what == MODE_ADD) && (what2 == EXBTYPE_EXCEPT) && MyUser(sptr))
+	if ((what == MODE_ADD) && (what2 == EXBTYPE_EXCEPT) && MyUser(client))
 		return 0; /* except is not supported */
 
 	/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
 	if ((what == MODE_ADD) && (checkt == EXBCHK_PARAM) &&
-	     MyUser(sptr) && !IsOper(sptr) &&
+	     MyUser(client) && !IsOper(client) &&
 	    ((n = counttextbans(chptr)) >= MAX_EXTBANT_PER_CHAN))
 	{
 		/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
-		sendnumeric(sptr, ERR_BANLISTFULL, chptr->chname, para);
-		sendnotice(sptr, "Too many textbans for this channel");
+		sendnumeric(client, ERR_BANLISTFULL, chptr->chname, para);
+		sendnotice(client, "Too many textbans for this channel");
 		return 0;
 	}
 	return 1;
@@ -382,7 +382,7 @@ char *extban_modeT_conv_param(char *para_in)
 	return retbuf;
 }
 
-int extban_modeT_is_banned(Client *sptr, Channel *chptr, char *ban, int checktype, char **msg, char **errmsg)
+int extban_modeT_is_banned(Client *client, Channel *chptr, char *ban, int checktype, char **msg, char **errmsg)
 {
 	static char filtered[512]; /* temp buffer */
 	long fl;
@@ -406,7 +406,7 @@ int extban_modeT_is_banned(Client *sptr, Channel *chptr, char *ban, int checktyp
 	filtered[0] = '\0'; /* NOT needed, but... :P */
 
 #ifdef UHOSTFEATURE
-	ircsprintf(uhost, "%s@%s", sptr->user->username, GetHost(sptr));
+	ircsprintf(uhost, "%s@%s", client->user->username, GetHost(client));
 #endif
 	strlcpy(filtered, StripControlCodes(*msg), sizeof(filtered));
 
@@ -450,7 +450,7 @@ int extban_modeT_is_banned(Client *sptr, Channel *chptr, char *ban, int checktyp
 	gettimeofday(&tv_beta, NULL);
 	ircd_log(LOG_ERROR, "TextBan Timing: %ld microseconds (%s / %s / %d)",
 		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec),
-		sptr->name, chptr->chname, strlen(*msg));
+		client->name, chptr->chname, strlen(*msg));
 #endif
 
 	if (cleaned)

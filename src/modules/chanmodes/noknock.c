@@ -32,8 +32,8 @@ Cmode_t EXTCMODE_NOKNOCK;
 
 #define IsNoKnock(chptr)    (chptr->mode.extmode & EXTCMODE_NOKNOCK)
 
-int noknock_check (Client *sptr, Channel *chptr);
-int noknock_mode_allow(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what);
+int noknock_check (Client *client, Channel *chptr);
+int noknock_mode_allow(Client *client, Channel *chptr, char mode, char *para, int checkt, int what);
 int noknock_mode_del (Channel *chptr, int modeChar);
 
 MOD_TEST()
@@ -70,11 +70,11 @@ MOD_UNLOAD()
 }
 
 
-int noknock_check (Client *sptr, Channel *chptr)
+int noknock_check (Client *client, Channel *chptr)
 {
-	if (MyUser(sptr) && IsNoKnock(chptr))
+	if (MyUser(client) && IsNoKnock(chptr))
 	{
-		sendnumeric(sptr, ERR_CANNOTKNOCK, chptr->chname, "No knocks are allowed! (+K)");
+		sendnumeric(client, ERR_CANNOTKNOCK, chptr->chname, "No knocks are allowed! (+K)");
 		return HOOK_DENY;
 	}
 
@@ -90,16 +90,16 @@ int noknock_mode_del (Channel *chptr, int modeChar)
 	return 0;
 }
 
-int noknock_mode_allow(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what)
+int noknock_mode_allow(Client *client, Channel *chptr, char mode, char *para, int checkt, int what)
 {
 	if (!(chptr->mode.mode & MODE_INVITEONLY))
 	{
 		if (checkt == EXCHK_ACCESS_ERR)
 		{
-			sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE, 'K', "+i must be set");
+			sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'K', "+i must be set");
 		}
 		return EX_DENY;
 	}
 
-	return extcmode_default_requirehalfop(cptr,chptr,mode,para,checkt,what);
+	return extcmode_default_requirehalfop(client, chptr, mode, para, checkt, what);
 }

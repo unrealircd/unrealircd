@@ -97,32 +97,32 @@ moddataadd_isok:
 	return m;
 }
 
-void moddata_free_client(Client *acptr)
+void moddata_free_client(Client *client)
 {
 	ModDataInfo *md;
 
 	for (md = MDInfo; md; md = md->next)
 		if (md->type == MODDATATYPE_CLIENT)
 		{
-			if (md->free && moddata_client(acptr, md).ptr)
-				md->free(&moddata_client(acptr, md));
+			if (md->free && moddata_client(client, md).ptr)
+				md->free(&moddata_client(client, md));
 		}
 
-	memset(acptr->moddata, 0, sizeof(acptr->moddata));
+	memset(client->moddata, 0, sizeof(client->moddata));
 }
 
-void moddata_free_local_client(Client *acptr)
+void moddata_free_local_client(Client *client)
 {
 	ModDataInfo *md;
 
 	for (md = MDInfo; md; md = md->next)
 		if (md->type == MODDATATYPE_LOCAL_CLIENT)
 		{
-			if (md->free && moddata_local_client(acptr, md).ptr)
-				md->free(&moddata_local_client(acptr, md));
+			if (md->free && moddata_local_client(client, md).ptr)
+				md->free(&moddata_local_client(client, md));
 		}
 
-	memset(acptr->moddata, 0, sizeof(acptr->moddata));
+	memset(client->moddata, 0, sizeof(client->moddata));
 }
 
 // FIXME: this is never called
@@ -185,23 +185,23 @@ void unload_moddata_commit(ModDataInfo *md)
 			break;
 		case MODDATATYPE_CLIENT:
 		{
-			Client *acptr;
-			list_for_each_entry(acptr, &client_list, client_node)
+			Client *client;
+			list_for_each_entry(client, &client_list, client_node)
 			{
-				if (md->free && moddata_client(acptr, md).ptr)
-					md->free(&moddata_client(acptr, md));
-				memset(&moddata_client(acptr, md), 0, sizeof(ModData));
+				if (md->free && moddata_client(client, md).ptr)
+					md->free(&moddata_client(client, md));
+				memset(&moddata_client(client, md), 0, sizeof(ModData));
 			}
 			break;
 		}
 		case MODDATATYPE_LOCAL_CLIENT:
 		{
-			Client *acptr;
-			list_for_each_entry(acptr, &lclient_list, lclient_node)
+			Client *client;
+			list_for_each_entry(client, &lclient_list, lclient_node)
 			{
-				if (md->free && moddata_local_client(acptr, md).ptr)
-					md->free(&moddata_local_client(acptr, md));
-				memset(&moddata_local_client(acptr, md), 0, sizeof(ModData));
+				if (md->free && moddata_local_client(client, md).ptr)
+					md->free(&moddata_local_client(client, md));
+				memset(&moddata_local_client(client, md), 0, sizeof(ModData));
 			}
 			break;
 		}
@@ -233,13 +233,13 @@ void unload_moddata_commit(ModDataInfo *md)
 		}
 		case MODDATATYPE_MEMBERSHIP:
 		{
-			Client *acptr;
+			Client *client;
 			Membership *m;
-			list_for_each_entry(acptr, &lclient_list, lclient_node)
+			list_for_each_entry(client, &lclient_list, lclient_node)
 			{
-				if (!acptr->user)
+				if (!client->user)
 					continue;
-				for (m = acptr->user->channel; m; m = m->next)
+				for (m = client->user->channel; m; m = m->next)
 				{
 					if (md->free && moddata_membership(m, md).ptr)
 						md->free(&moddata_membership(m, md));
@@ -314,7 +314,7 @@ int module_has_moddata(Module *mod)
 }
 
 /** Set ModData for client (via variable name, string value) */
-int moddata_client_set(Client *acptr, char *varname, char *value)
+int moddata_client_set(Client *client, char *varname, char *value)
 {
 	ModDataInfo *md;
 
@@ -326,26 +326,26 @@ int moddata_client_set(Client *acptr, char *varname, char *value)
 	if (value)
 	{
 		/* SET */
-		md->unserialize(value, &moddata_client(acptr, md));
+		md->unserialize(value, &moddata_client(client, md));
 	}
 	else
 	{
 		/* UNSET */
-		md->free(&moddata_client(acptr, md));
-		memset(&moddata_client(acptr, md), 0, sizeof(ModData));
+		md->free(&moddata_client(client, md));
+		memset(&moddata_client(client, md), 0, sizeof(ModData));
 	}
 
 	/* If 'sync' field is set and the client is not in pre-registered
 	 * state then broadcast the new setting.
 	 */
-	if (md->sync && (IsUser(acptr) || IsServer(acptr) || IsMe(acptr)))
-		broadcast_md_client_cmd(NULL, &me, acptr, md->name, value);
+	if (md->sync && (IsUser(client) || IsServer(client) || IsMe(client)))
+		broadcast_md_client_cmd(NULL, &me, client, md->name, value);
 
 	return 1;
 }
 
 /** Get ModData for client (via variable name) */
-char *moddata_client_get(Client *acptr, char *varname)
+char *moddata_client_get(Client *client, char *varname)
 {
 	ModDataInfo *md;
 
@@ -354,15 +354,15 @@ char *moddata_client_get(Client *acptr, char *varname)
 	if (!md)
 		return NULL;
 
-	return md->serialize(&moddata_client(acptr, md)); /* can be NULL */
+	return md->serialize(&moddata_client(client, md)); /* can be NULL */
 }
 
 /** Set ModData for LocalClient (via variable name, string value) */
-int moddata_local_client_set(Client *acptr, char *varname, char *value)
+int moddata_local_client_set(Client *client, char *varname, char *value)
 {
 	ModDataInfo *md;
 
-	if (!MyConnect(acptr))
+	if (!MyConnect(client))
 		abort();
 
 	md = findmoddata_byname(varname, MODDATATYPE_LOCAL_CLIENT);
@@ -373,30 +373,30 @@ int moddata_local_client_set(Client *acptr, char *varname, char *value)
 	if (value)
 	{
 		/* SET */
-		md->unserialize(value, &moddata_local_client(acptr, md));
+		md->unserialize(value, &moddata_local_client(client, md));
 	}
 	else
 	{
 		/* UNSET */
-		md->free(&moddata_local_client(acptr, md));
-		memset(&moddata_local_client(acptr, md), 0, sizeof(ModData));
+		md->free(&moddata_local_client(client, md));
+		memset(&moddata_local_client(client, md), 0, sizeof(ModData));
 	}
 
 	/* If 'sync' field is set and the client is not in pre-registered
 	 * state then broadcast the new setting.
 	 */
-	if (md->sync && (IsUser(acptr) || IsServer(acptr) || IsMe(acptr)))
-		broadcast_md_client_cmd(NULL, &me, acptr, md->name, value);
+	if (md->sync && (IsUser(client) || IsServer(client) || IsMe(client)))
+		broadcast_md_client_cmd(NULL, &me, client, md->name, value);
 
 	return 1;
 }
 
 /** Get ModData for LocalClient (via variable name) */
-char *moddata_local_client_get(Client *acptr, char *varname)
+char *moddata_local_client_get(Client *client, char *varname)
 {
 	ModDataInfo *md;
 
-	if (!MyConnect(acptr))
+	if (!MyConnect(client))
 		abort();
 
 	md = findmoddata_byname(varname, MODDATATYPE_LOCAL_CLIENT);
@@ -404,7 +404,7 @@ char *moddata_local_client_get(Client *acptr, char *varname)
 	if (!md)
 		return NULL;
 
-	return md->serialize(&moddata_local_client(acptr, md)); /* can be NULL */
+	return md->serialize(&moddata_local_client(client, md)); /* can be NULL */
 }
 
 /** Set local variable moddata (via variable name, string value) */

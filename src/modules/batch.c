@@ -37,7 +37,7 @@ CMD_FUNC(cmd_batch);
 /* Variables */
 long CAP_BATCH = 0L;
 
-int batch_mtag_is_ok(Client *acptr, char *name, char *value);
+int batch_mtag_is_ok(Client *client, char *name, char *value);
 
 MOD_INIT()
 {
@@ -77,26 +77,26 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_batch)
 {
-	Client *acptr;
+	Client *target;
 	char buf[512];
 
-	if (MyUser(sptr) || (parc < 3))
+	if (MyUser(client) || (parc < 3))
 		return;
 
-	acptr = find_client(parv[1], NULL);
-	if (!acptr)
+	target = find_client(parv[1], NULL);
+	if (!target)
 		return; /* race condition */
 
 	/* If the recipient does not support message tags or
 	 * does not support batch, then don't do anything.
 	 */
-	if (MyConnect(acptr) && !IsServer(acptr) && !HasCapability(acptr, "batch"))
+	if (MyConnect(target) && !IsServer(target) && !HasCapability(target, "batch"))
 		return;
 
 	/* Relay the batch message to the client (or server) */
 	parv[1] = "BATCH";
 	concat_params(buf, sizeof(buf), parc, parv);
-	sendto_prefix_one(acptr, sptr, recv_mtags, "%s", buf);
+	sendto_prefix_one(target, client, recv_mtags, "%s", buf);
 }
 
 /** This function verifies if the client sending
@@ -104,9 +104,9 @@ CMD_FUNC(cmd_batch)
  * syntax.
  * We simply allow batch ONLY from servers and with any syntax.
  */
-int batch_mtag_is_ok(Client *acptr, char *name, char *value)
+int batch_mtag_is_ok(Client *client, char *name, char *value)
 {
-	if (IsServer(acptr))
+	if (IsServer(client))
 		return 1;
 
 	return 0;

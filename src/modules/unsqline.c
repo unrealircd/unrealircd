@@ -64,7 +64,7 @@ CMD_FUNC(cmd_unsqline)
 		"Q",               /*2  Q   */
 		"*",               /*3  unused */
 		parv[1],           /*4  host */
-		sptr->name         /*5  whoremoved */
+		client->name         /*5  whoremoved */
 	};
 
 	if (parc < 2)

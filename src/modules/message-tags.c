@@ -32,8 +32,8 @@ ModuleHeader MOD_HEADER
 	};
 
 long CAP_MESSAGE_TAGS = 0L;
-char *_mtags_to_string(MessageTag *m, Client *acptr);
-void _parse_message_tags(Client *cptr, char **str, MessageTag **mtag_list);
+char *_mtags_to_string(MessageTag *m, Client *client);
+void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list);
 CMD_FUNC(cmd_tagmsg);
 
 MOD_TEST()
@@ -144,7 +144,7 @@ void message_tag_escape(char *in, char *out)
 }
 
 /** Incoming filter for message tags */
-int message_tag_ok(Client *cptr, char *name, char *value)
+int message_tag_ok(Client *client, char *name, char *value)
 {
 	MessageTagHandler *m;
 
@@ -152,13 +152,13 @@ int message_tag_ok(Client *cptr, char *name, char *value)
 	if (!m)
 		return 0;
 
-	if (m->is_ok(cptr, name, value))
+	if (m->is_ok(client, name, value))
 		return 1;
 
 	return 0;
 }
 
-void _parse_message_tags(Client *cptr, char **str, MessageTag **mtag_list)
+void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list)
 {
 	char *remainder;
 	char *element, *p, *x;
@@ -195,7 +195,7 @@ void _parse_message_tags(Client *cptr, char **str, MessageTag **mtag_list)
 		/* Let the message tag handler check if this mtag is
 		 * acceptable. If so, we add it to the list.
 		 */
-		if (message_tag_ok(cptr, name, value))
+		if (message_tag_ok(client, name, value))
 		{
 			m = safe_alloc(sizeof(MessageTag));
 			safe_strdup(m->name, name);
@@ -212,7 +212,7 @@ void _parse_message_tags(Client *cptr, char **str, MessageTag **mtag_list)
 }
 
 /** Outgoing filter for tags */
-int client_accepts_tag(const char *token, Client *acptr)
+int client_accepts_tag(const char *token, Client *client)
 {
 	MessageTagHandler *m;
 
@@ -221,7 +221,7 @@ int client_accepts_tag(const char *token, Client *acptr)
 	 * with message tags to links without PROTOCTL MTAGS, so we can
 	 * simply always return 1 here, regardless of checking (again).
 	 */
-	if (IsServer(acptr) || !MyConnect(acptr))
+	if (IsServer(client) || !MyConnect(client))
 		return 1;
 
 	m = MessageTagHandlerFind(token);
@@ -231,7 +231,7 @@ int client_accepts_tag(const char *token, Client *acptr)
 	/* If the client has indicated 'message-tags' support then we can
 	 * send any message tag, regardless of other CAP's.
 	 */
-	if (HasCapability(acptr, "message-tags"))
+	if (HasCapability(client, "message-tags"))
 		return 1;
 
 	/* We continue here if the client did not indicate 'message-tags' support... */
@@ -245,17 +245,17 @@ int client_accepts_tag(const char *token, Client *acptr)
 	/* Otherwise, check if the capability is set:
 	 * eg 'account-tag' for 'account', 'time' for 'server-time' and so on..
 	 */
-	if (m->clicap_handler && (acptr->local->caps & m->clicap_handler->cap))
+	if (m->clicap_handler && (client->local->caps & m->clicap_handler->cap))
 		return 1;
 
 	return 0;
 }
 
 /** Return the message tag string (without @) of the message tag linked list.
- * Taking into account the restrictions that 'acptr' may have.
+ * Taking into account the restrictions that 'client' may have.
  * @returns A string (static buffer) or NULL if no tags at all (!)
  */
-char *_mtags_to_string(MessageTag *m, Client *acptr)
+char *_mtags_to_string(MessageTag *m, Client *client)
 {
 	static char buf[4096], name[8192], value[8192];
 	char tbuf[512];
@@ -264,13 +264,13 @@ char *_mtags_to_string(MessageTag *m, Client *acptr)
 		return NULL;
 
 	/* Remote servers need to indicate support via PROTOCTL MTAGS */
-	if (acptr->direction && IsServer(acptr->direction) && !SupportMTAGS(acptr->direction))
+	if (client->direction && IsServer(client->direction) && !SupportMTAGS(client->direction))
 		return NULL;
 
 	*buf = '\0';
 	for (; m; m = m->next)
 	{
-		if (!client_accepts_tag(m->name, acptr))
+		if (!client_accepts_tag(m->name, client))
 			continue;
 		if (m->value)
 		{

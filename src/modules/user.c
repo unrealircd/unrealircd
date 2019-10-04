@@ -72,15 +72,15 @@ CMD_FUNC(cmd_user)
 	char *virthost = NULL;
 	char *ip = NULL;
 	char *sstamp = NULL;
-	Client *cptr = sptr->direction; /* Lazyness, since this function should be rewritten anyway */
+	Client *cptr = client->direction; /* Lazyness, since this function should be rewritten anyway */
 
 	// Eh, this is for old remote USER shit (which we currently still use indirectly via do_cmd).
 	// TODO: cleanup. Also, hope this is right:
-	if (!MyConnect(sptr) && !IsUnknown(sptr))
+	if (!MyConnect(client) && !IsUnknown(client))
 		return;
 
-	if (MyConnect(sptr) && (sptr->local->listener->options & LISTENER_SERVERSONLY))
-		return exit_client(sptr, NULL, "This port is for servers only");
+	if (MyConnect(client) && (client->local->listener->options & LISTENER_SERVERSONLY))
+		return exit_client(client, NULL, "This port is for servers only");
 
 	if (parc > 2 && (username = strchr(parv[1], '@')))
 		*username = '\0';
@@ -88,10 +88,10 @@ CMD_FUNC(cmd_user)
 	if (parc < 5 || *parv[1] == '\0' || *parv[2] == '\0' ||
 	    *parv[3] == '\0' || *parv[4] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "USER");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "USER");
 		if (IsServer(cptr))
 			sendto_ops("bad USER param count for %s from %s",
-			    sptr->name, get_client_name(cptr, FALSE));
+			    client->name, get_client_name(cptr, FALSE));
 		else
 			return;
 	}
@@ -139,49 +139,49 @@ CMD_FUNC(cmd_user)
 		realname = (BadPtr(parv[4])) ? "<bad-realname>" : parv[4];
 	}
 	
-	make_user(sptr);
+	make_user(client);
 
-	if (!MyConnect(sptr))
+	if (!MyConnect(client))
 	{
-		if (sptr->srvptr == NULL)
+		if (client->srvptr == NULL)
 			sendto_ops("WARNING, User %s introduced as being "
-			    "on non-existant server %s.", sptr->name, server);
-		sptr->user->server = find_or_add(sptr->srvptr->name);
-		strlcpy(sptr->user->realhost, host, sizeof(sptr->user->realhost));
+			    "on non-existant server %s.", client->name, server);
+		client->user->server = find_or_add(client->srvptr->name);
+		strlcpy(client->user->realhost, host, sizeof(client->user->realhost));
 		goto user_finish;
 	}
 
-	if (!IsUnknown(sptr))
+	if (!IsUnknown(client))
 	{
-		sendnumeric(sptr, ERR_ALREADYREGISTRED);
+		sendnumeric(client, ERR_ALREADYREGISTRED);
 		return;
 	}
 
 	if (!IsServer(cptr))
 	{
 		/* set::modes-on-connect */
-		sptr->umodes |= CONN_MODES;
+		client->umodes |= CONN_MODES;
 	}
 
-	sptr->user->server = me_hash;
+	client->user->server = me_hash;
       user_finish:
 	if (sstamp != NULL && *sstamp != '*')
-		strlcpy(sptr->user->svid, sstamp, sizeof(sptr->user->svid));
+		strlcpy(client->user->svid, sstamp, sizeof(client->user->svid));
 
-	strlcpy(sptr->info, realname, sizeof(sptr->info));
-	strlcpy(sptr->user->username, username, USERLEN + 1);
+	strlcpy(client->info, realname, sizeof(client->info));
+	strlcpy(client->user->username, username, USERLEN + 1);
 
-	if (*sptr->name &&
+	if (*client->name &&
 		(IsServer(cptr) || is_handshake_finished(cptr))
            )
 		/* NICK and no-spoof already received, now we have USER... */
 	{
-		if (USE_BAN_VERSION && MyConnect(sptr))
-			sendto_one(sptr, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
-				me.name, sptr->name);
+		if (USE_BAN_VERSION && MyConnect(client))
+			sendto_one(client, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
+				me.name, client->name);
 		if (strlen(username) > USERLEN)
 			username[USERLEN] = '\0'; /* cut-off */
-		register_user(sptr, sptr->name, username, umodex, virthost, ip);
+		register_user(client, client->name, username, umodex, virthost, ip);
 		return;
 	}
 }

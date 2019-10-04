@@ -63,44 +63,44 @@ CMD_FUNC(cmd_mkpasswd)
 	short	type;
 	char	*result = NULL;
 
-	if (!MKPASSWD_FOR_EVERYONE && !IsOper(sptr))
+	if (!MKPASSWD_FOR_EVERYONE && !IsOper(client))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
-	if (!IsOper(sptr))
+	if (!IsOper(client))
 	{
 		/* Non-opers /mkpasswd usage: lag them up, and send a notice to eyes snomask.
 		 * This notice is always sent, even in case of bad usage/bad auth methods/etc.
 		 */
-		sptr->local->since += 7;
+		client->local->since += 7;
 		sendto_snomask(SNO_EYES, "*** /mkpasswd used by %s (%s@%s)",
-			sptr->name, sptr->user->username, GetHost(sptr));
+			client->name, client->user->username, GetHost(client));
 	}
 
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
-		sendnotice(sptr, "*** Syntax: /mkpasswd <authmethod> :parameter");
+		sendnotice(client, "*** Syntax: /mkpasswd <authmethod> :parameter");
 		return;
 	}
 	/* Don't want to take any risk ;p. -- Syzop */
 	if (strlen(parv[2]) > 64)
 	{
-		sendnotice(sptr, "*** Your parameter (text-to-hash) is too long.");
+		sendnotice(client, "*** Your parameter (text-to-hash) is too long.");
 		return;
 	}
 	if ((type = Auth_FindType(NULL, parv[1])) == -1)
 	{
-		sendnotice(sptr, "*** %s is not an enabled authentication method", parv[1]);
+		sendnotice(client, "*** %s is not an enabled authentication method", parv[1]);
 		return;
 	}
 
 	if (!(result = Auth_Hash(type, parv[2])))
 	{
-		sendnotice(sptr, "*** Authentication method %s failed", parv[1]);
+		sendnotice(client, "*** Authentication method %s failed", parv[1]);
 		return;
 	}
 
-	sendnotice(sptr, "*** Authentication phrase (method=%s, para=%s) is: %s",
+	sendnotice(client, "*** Authentication phrase (method=%s, para=%s) is: %s",
 		parv[1], parv[2], result);
 }

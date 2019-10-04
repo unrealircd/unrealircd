@@ -61,30 +61,30 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_svspart)
 {
-	Client *acptr;
+	Client *target;
 	char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 		return;
 
-	if (parc < 3 || !(acptr = find_person(parv[1], NULL))) 
+	if (parc < 3 || !(target = find_person(parv[1], NULL))) 
 		return;
 
-	if (MyUser(acptr))
+	if (MyUser(target))
 	{
-		parv[0] = acptr->name;
+		parv[0] = target->name;
 		parv[1] = parv[2];
 		parv[2] = comment;
 		parv[3] = NULL;
-		(void)do_cmd(acptr, NULL, "PART", comment ? 3 : 2, parv);
-		/* NOTE: acptr may be killed now by spamfilter due to the part reason */
+		do_cmd(target, NULL, "PART", comment ? 3 : 2, parv);
+		/* NOTE: target may be killed now by spamfilter due to the part reason */
 	}
 	else
 	{
 		if (comment)
-			sendto_one(acptr, NULL, ":%s SVSPART %s %s :%s", sptr->name,
+			sendto_one(target, NULL, ":%s SVSPART %s %s :%s", client->name,
 			    parv[1], parv[2], parv[3]);
 		else
-			sendto_one(acptr, NULL, ":%s SVSPART %s %s", sptr->name,
+			sendto_one(target, NULL, ":%s SVSPART %s %s", client->name,
 			    parv[1], parv[2]);
 	}
 }

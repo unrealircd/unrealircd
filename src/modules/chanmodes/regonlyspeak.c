@@ -34,8 +34,8 @@ static char errMsg[2048];
 
 #define IsRegOnlySpeak(chptr)    (chptr->mode.extmode & EXTCMODE_REGONLYSPEAK)
 
-int regonlyspeak_can_send(Client *cptr, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice);
-char *regonlyspeak_part_message (Client* sptr, Channel *chptr, char* comment);
+int regonlyspeak_can_send(Client *client, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice);
+char *regonlyspeak_part_message (Client* client, Channel *chptr, char* comment);
 
 MOD_TEST()
 {
@@ -70,30 +70,30 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *regonlyspeak_part_message (Client *sptr, Channel *chptr, char *comment)
+char *regonlyspeak_part_message (Client *client, Channel *chptr, char *comment)
 {
 	if (!comment)
 		return NULL;
 
-	if (IsRegOnlySpeak(chptr) && !IsLoggedIn(sptr) && !ValidatePermissionsForPath("channel:override:message:regonlyspeak",sptr,NULL,NULL,NULL))
+	if (IsRegOnlySpeak(chptr) && !IsLoggedIn(client) && !ValidatePermissionsForPath("channel:override:message:regonlyspeak",client,NULL,NULL,NULL))
 		return NULL;
 
 	return comment;
 }
 
-int regonlyspeak_can_send(Client *cptr, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice)
+int regonlyspeak_can_send(Client *client, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice)
 {
 	Hook *h;
 	int i;
 
-	if (IsRegOnlySpeak(chptr) && !op_can_override("channel:override:message:regonlyspeak",cptr,chptr,NULL) && !IsLoggedIn(cptr) &&
+	if (IsRegOnlySpeak(chptr) && !op_can_override("channel:override:message:regonlyspeak",client,chptr,NULL) && !IsLoggedIn(client) &&
 		    (!lp
 		    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 		    CHFL_HALFOP | CHFL_CHANADMIN))))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_CHANMSG_MODERATED);
+			i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_MODERATED);
 			if (i == HOOK_ALLOW)
 				return HOOK_CONTINUE; /* bypass +M restriction */
 			if (i != HOOK_CONTINUE)

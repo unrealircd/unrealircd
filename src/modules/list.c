@@ -23,7 +23,7 @@
 #include "unrealircd.h"
 
 CMD_FUNC(cmd_list);
-void send_list(Client *cptr);
+void send_list(Client *client);
 
 #define MSG_LIST 	"LIST"	
 
@@ -56,8 +56,8 @@ ModDataInfo *list_md = NULL;
 
 /* Macros */
 #define CHANNELLISTOPTIONS(x)       ((ChannelListOptions *)moddata_local_client(x, list_md).ptr)
-#define ALLOCATE_CHANNELLISTOPTIONS(cptr)	do { moddata_local_client(cptr, list_md).ptr = safe_alloc(sizeof(ChannelListOptions)); } while(0)
-#define free_list_options(sptr)		list_md_free(&moddata_local_client(sptr, list_md))
+#define ALLOCATE_CHANNELLISTOPTIONS(client)	do { moddata_local_client(client, list_md).ptr = safe_alloc(sizeof(ChannelListOptions)); } while(0)
+#define free_list_options(client)		list_md_free(&moddata_local_client(client, list_md))
 
 #define DoList(x)               (MyUser((x)) && CHANNELLISTOPTIONS((x)))
 #define IsSendable(x)		(DBufLength(&x->local->sendQ) < 2048)
@@ -144,25 +144,25 @@ CMD_FUNC(cmd_list)
 	};
 
 	/* Remote /LIST is not supported */
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 
 	/* If a /LIST is in progress then a new one will cancel it */
-	if (CHANNELLISTOPTIONS(sptr))
+	if (CHANNELLISTOPTIONS(client))
 	{
-		sendnumeric(sptr, RPL_LISTEND);
-		free_list_options(sptr);
+		sendnumeric(client, RPL_LISTEND);
+		free_list_options(client);
 		return;
 	}
 
 	if (parc < 2 || BadPtr(parv[1]))
 	{
-		sendnumeric(sptr, RPL_LISTSTART);
-		ALLOCATE_CHANNELLISTOPTIONS(sptr);
-		CHANNELLISTOPTIONS(sptr)->showall = 1;
+		sendnumeric(client, RPL_LISTSTART);
+		ALLOCATE_CHANNELLISTOPTIONS(client);
+		CHANNELLISTOPTIONS(client)->showall = 1;
 
-		if (DBufLength(&sptr->local->sendQ) < 2048)
-			send_list(sptr);
+		if (DBufLength(&client->local->sendQ) < 2048)
+			send_list(client);
 
 		return;
 	}
@@ -171,11 +171,11 @@ CMD_FUNC(cmd_list)
 	{
 		char **ptr = usage;
 		for (; *ptr; ptr++)
-			sendnumeric(sptr, RPL_LISTSYNTAX, *ptr);
+			sendnumeric(client, RPL_LISTSYNTAX, *ptr);
 		return;
 	}
 
-	sendnumeric(sptr, RPL_LISTSTART);
+	sendnumeric(client, RPL_LISTSTART);
 
 	chantimemax = topictimemax = currenttime + 86400;
 	chantimemin = topictimemin = 0;
@@ -185,9 +185,9 @@ CMD_FUNC(cmd_list)
 	for (name = strtoken(&p, parv[1], ","); name && !error;
 	    name = strtoken(&p, NULL, ","))
 	{
-		if (MyUser(sptr) && (++ntargets > maxtargets))
+		if (MyUser(client) && (++ntargets > maxtargets))
 		{
-			sendnumeric(sptr, ERR_TOOMANYTARGETS, name, maxtargets, "LIST");
+			sendnumeric(client, ERR_TOOMANYTARGETS, name, maxtargets, "LIST");
 			break;
 		}
 		switch (*name)
@@ -214,7 +214,7 @@ CMD_FUNC(cmd_list)
 				    doall = 1;
 				    break;
 			    default:
-				    sendnumeric(sptr, ERR_LISTSYNTAX);
+				    sendnumeric(client, ERR_LISTSYNTAX);
 				    error = 1;
 			  }
 			  break;
@@ -235,7 +235,7 @@ CMD_FUNC(cmd_list)
 				    doall = 1;
 				    break;
 			    default:
-				    sendnumeric(sptr, ERR_LISTSYNTAX,
+				    sendnumeric(client, ERR_LISTSYNTAX,
 					"Bad list syntax, type /list ?");
 				    error = 1;
 			  }
@@ -265,16 +265,16 @@ CMD_FUNC(cmd_list)
 			  else	/* Just a normal channel */
 			  {
 				  chptr = find_channel(name, NULL);
-				  if (chptr && (ShowChannel(sptr, chptr) || ValidatePermissionsForPath("channel:see:list:secret",sptr,NULL,chptr,NULL))) {
+				  if (chptr && (ShowChannel(client, chptr) || ValidatePermissionsForPath("channel:see:list:secret",client,NULL,chptr,NULL))) {
 #ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';
-					channel_modes(sptr, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), chptr);
+					channel_modes(client, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), chptr);
 					if (modebuf[2] == '\0')
 						modebuf[0] = '\0';
 					else
 						strlcat(modebuf, "]", sizeof modebuf);
 #endif
-					  sendnumeric(sptr, RPL_LIST,
+					  sendnumeric(client, RPL_LIST,
 					      name, chptr->users,
 #ifdef LIST_SHOW_MODES
 					      modebuf,
@@ -288,36 +288,36 @@ CMD_FUNC(cmd_list)
 
 	if (doall)
 	{
-		ALLOCATE_CHANNELLISTOPTIONS(sptr);
-		CHANNELLISTOPTIONS(sptr)->usermin = usermin;
-		CHANNELLISTOPTIONS(sptr)->usermax = usermax;
-		CHANNELLISTOPTIONS(sptr)->topictimemax = topictimemax;
-		CHANNELLISTOPTIONS(sptr)->topictimemin = topictimemin;
-		CHANNELLISTOPTIONS(sptr)->chantimemax = chantimemax;
-		CHANNELLISTOPTIONS(sptr)->chantimemin = chantimemin;
-		CHANNELLISTOPTIONS(sptr)->nolist = nolist;
-		CHANNELLISTOPTIONS(sptr)->yeslist = yeslist;
+		ALLOCATE_CHANNELLISTOPTIONS(client);
+		CHANNELLISTOPTIONS(client)->usermin = usermin;
+		CHANNELLISTOPTIONS(client)->usermax = usermax;
+		CHANNELLISTOPTIONS(client)->topictimemax = topictimemax;
+		CHANNELLISTOPTIONS(client)->topictimemin = topictimemin;
+		CHANNELLISTOPTIONS(client)->chantimemax = chantimemax;
+		CHANNELLISTOPTIONS(client)->chantimemin = chantimemin;
+		CHANNELLISTOPTIONS(client)->nolist = nolist;
+		CHANNELLISTOPTIONS(client)->yeslist = yeslist;
 
-		if (DBufLength(&sptr->local->sendQ) < 2048)
-			send_list(sptr);
+		if (DBufLength(&client->local->sendQ) < 2048)
+			send_list(client);
 		return;
 	}
 
-	sendnumeric(sptr, RPL_LISTEND);
+	sendnumeric(client, RPL_LISTEND);
 }
 /*
  * The function which sends the actual channel list back to the user.
  * Operates by stepping through the hashtable, sending the entries back if
  * they match the criteria.
- * cptr = Local client to send the output back to.
+ * client = Local client to send the output back to.
  * Taken from bahamut, modified for Unreal by codemastr.
  */
-void send_list(Client *cptr)
+void send_list(Client *client)
 {
 	Channel *chptr;
-	ChannelListOptions *lopt = CHANNELLISTOPTIONS(cptr);
+	ChannelListOptions *lopt = CHANNELLISTOPTIONS(client);
 	unsigned int  hashnum;
-	int numsend = (get_sendq(cptr) / 768) + 1; /* (was previously hard-coded) */
+	int numsend = (get_sendq(client) / 768) + 1; /* (was previously hard-coded) */
 	/* ^
 	 * numsend = Number (roughly) of lines to send back. Once this number has
 	 * been exceeded, send_list will finish with the current hash bucket,
@@ -336,7 +336,7 @@ void send_list(Client *cptr)
 		{
 			if (find_channel(x->chname, NULL))
 				continue; /* exists, >0 users.. will be sent later */
-			sendnumeric(cptr, RPL_LIST, x->chname,
+			sendnumeric(client, RPL_LIST, x->chname,
 			    0,
 #ifdef LIST_SHOW_MODES
 			    "",
@@ -352,12 +352,12 @@ void send_list(Client *cptr)
 			    chptr; chptr = chptr->hnextch)
 			{
 				if (SecretChannel(chptr)
-				    && !IsMember(cptr, chptr)
-				    && !ValidatePermissionsForPath("channel:see:list:secret",cptr,NULL,chptr,NULL))
+				    && !IsMember(client, chptr)
+				    && !ValidatePermissionsForPath("channel:see:list:secret",client,NULL,chptr,NULL))
 					continue;
 
 				/* set::hide-list { deny-channel } */
-				if (!IsOper(cptr) && iConf.hide_list && Find_channel_allowed(cptr, chptr->chname))
+				if (!IsOper(client) && iConf.hide_list && Find_channel_allowed(client, chptr->chname))
 					continue;
 
 				/* Much more readable like this -- codemastr */
@@ -390,26 +390,26 @@ void send_list(Client *cptr)
 				}
 #ifdef LIST_SHOW_MODES
 				modebuf[0] = '[';
-				channel_modes(cptr, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), chptr);
+				channel_modes(client, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), chptr);
 				if (modebuf[2] == '\0')
 					modebuf[0] = '\0';
 				else
 					strlcat(modebuf, "]", sizeof modebuf);
 #endif
-				if (!ValidatePermissionsForPath("channel:see:list:secret",cptr,NULL,chptr,NULL))
-					sendnumeric(cptr, RPL_LIST,
-					    ShowChannel(cptr,
+				if (!ValidatePermissionsForPath("channel:see:list:secret",client,NULL,chptr,NULL))
+					sendnumeric(client, RPL_LIST,
+					    ShowChannel(client,
 					    chptr) ? chptr->chname :
 					    "*", chptr->users,
 #ifdef LIST_SHOW_MODES
-					    ShowChannel(cptr, chptr) ?
+					    ShowChannel(client, chptr) ?
 					    modebuf : "",
 #endif
-					    ShowChannel(cptr,
+					    ShowChannel(client,
 					    chptr) ? (chptr->topic ?
 					    chptr->topic : "") : "");
 				else
-					sendnumeric(cptr, RPL_LIST, chptr->chname,
+					sendnumeric(client, RPL_LIST, chptr->chname,
 					    chptr->users,
 #ifdef LIST_SHOW_MODES
 					    modebuf,
@@ -424,8 +424,8 @@ void send_list(Client *cptr)
 	/* All done */
 	if (hashnum == CHAN_HASH_TABLE_SIZE)
 	{
-		sendnumeric(cptr, RPL_LISTEND);
-		free_list_options(cptr);
+		sendnumeric(client, RPL_LISTEND);
+		free_list_options(client);
 		return;
 	}
 
@@ -439,11 +439,11 @@ void send_list(Client *cptr)
 
 EVENT(send_queued_list_data)
 {
-	Client *acptr, *saved;
-	list_for_each_entry_safe(acptr, saved, &lclient_list, lclient_node)
+	Client *client, *saved;
+	list_for_each_entry_safe(client, saved, &lclient_list, lclient_node)
 	{
-		if (DoList(acptr) && IsSendable(acptr))
-			send_list(acptr);
+		if (DoList(client) && IsSendable(client))
+			send_list(client);
 	}
 }
 

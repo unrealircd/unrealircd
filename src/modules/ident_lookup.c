@@ -15,10 +15,10 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 static EVENT(check_ident_timeout);
-static int ident_lookup_connect(Client *cptr);
+static int ident_lookup_connect(Client *client);
 static void ident_lookup_send(int fd, int revents, void *data);
 static void ident_lookup_receive(int fd, int revents, void *data);
-static char *ident_lookup_parse(Client *acptr, char *buf);
+static char *ident_lookup_parse(Client *client, char *buf);
 
 MOD_INIT()
 {
@@ -41,73 +41,73 @@ MOD_UNLOAD()
 }
 
 
-static void ident_lookup_failed(Client *cptr)
+static void ident_lookup_failed(Client *client)
 {
-	Debug((DEBUG_NOTICE, "ident_lookup_failed() for %p", cptr));
+	Debug((DEBUG_NOTICE, "ident_lookup_failed() for %p", client));
 	ircstats.is_abad++;
-	if (cptr->local->authfd != -1)
+	if (client->local->authfd != -1)
 	{
-		fd_close(cptr->local->authfd);
+		fd_close(client->local->authfd);
 		--OpenFiles;
-		cptr->local->authfd = -1;
+		client->local->authfd = -1;
 	}
-	ClearIdentLookupSent(cptr);
-	ClearIdentLookup(cptr);
-	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
-		sendto_one(cptr, NULL, "%s", REPORT_FAIL_ID);
-	if (!IsDNSLookup(cptr))
-		finish_auth(cptr);
+	ClearIdentLookupSent(client);
+	ClearIdentLookup(client);
+	if (SHOWCONNECTINFO && !client->serv && !IsServersOnlyListener(client->local->listener))
+		sendto_one(client, NULL, "%s", REPORT_FAIL_ID);
+	if (!IsDNSLookup(client))
+		finish_auth(client);
 }
 
 static EVENT(check_ident_timeout)
 {
-	Client *cptr, *cptr2;
+	Client *client, *next;
 
-	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
+	list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
 	{
-		if (IsIdentLookup(cptr) && ((TStime() - cptr->local->firsttime) > IDENT_CONNECT_TIMEOUT))
-			ident_lookup_failed(cptr);
+		if (IsIdentLookup(client) && ((TStime() - client->local->firsttime) > IDENT_CONNECT_TIMEOUT))
+			ident_lookup_failed(client);
 	}
 }
 
 /** Start the ident lookup for this user */
-static int ident_lookup_connect(Client *cptr)
+static int ident_lookup_connect(Client *client)
 {
 	char buf[BUFSIZE];
 
-	snprintf(buf, sizeof buf, "identd: %s", get_client_name(cptr, TRUE));
-	if ((cptr->local->authfd = fd_socket(IsIPV6(cptr) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf)) == -1)
+	snprintf(buf, sizeof buf, "identd: %s", get_client_name(client, TRUE));
+	if ((client->local->authfd = fd_socket(IsIPV6(client) ? AF_INET6 : AF_INET, SOCK_STREAM, 0, buf)) == -1)
 	{
-		ident_lookup_failed(cptr);
+		ident_lookup_failed(client);
 		return 0;
 	}
 	if (++OpenFiles >= maxclients+1)
 	{
 		sendto_ops("Can't allocate fd, too many connections.");
-		fd_close(cptr->local->authfd);
+		fd_close(client->local->authfd);
 		--OpenFiles;
-		cptr->local->authfd = -1;
+		client->local->authfd = -1;
 		return 0;
 	}
 
-	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
-		sendto_one(cptr, NULL, "%s", REPORT_DO_ID);
+	if (SHOWCONNECTINFO && !client->serv && !IsServersOnlyListener(client->local->listener))
+		sendto_one(client, NULL, "%s", REPORT_DO_ID);
 
-	set_sock_opts(cptr->local->authfd, cptr, IsIPV6(cptr));
+	set_sock_opts(client->local->authfd, client, IsIPV6(client));
 
 	/* Bind to the IP the user got in */
-	unreal_bind(cptr->local->authfd, cptr->local->listener->ip, 0, IsIPV6(cptr));
+	unreal_bind(client->local->authfd, client->local->listener->ip, 0, IsIPV6(client));
 
 	/* And connect... */
-	if (!unreal_connect(cptr->local->authfd, cptr->ip, 113, IsIPV6(cptr)))
+	if (!unreal_connect(client->local->authfd, client->ip, 113, IsIPV6(client)))
 	{
-		ident_lookup_failed(cptr);
+		ident_lookup_failed(client);
 		return 0;
 	}
-	SetIdentLookupSent(cptr);
-	SetIdentLookup(cptr);
+	SetIdentLookupSent(client);
+	SetIdentLookup(client);
 
-	fd_setselect(cptr->local->authfd, FD_SELECT_WRITE, ident_lookup_send, cptr);
+	fd_setselect(client->local->authfd, FD_SELECT_WRITE, ident_lookup_send, client);
 
 	return 0;
 }
@@ -116,23 +116,23 @@ static int ident_lookup_connect(Client *cptr)
 static void ident_lookup_send(int fd, int revents, void *data)
 {
 	char authbuf[32];
-	Client *cptr = data;
+	Client *client = data;
 
 	ircsnprintf(authbuf, sizeof(authbuf), "%d , %d\r\n",
-		cptr->local->port,
-		cptr->local->listener->port);
+		client->local->port,
+		client->local->listener->port);
 
-	if (WRITE_SOCK(cptr->local->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
+	if (WRITE_SOCK(client->local->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
 	{
 		if (ERRNO == P_EAGAIN)
 			return; /* Not connected yet, try again later */
-		ident_lookup_failed(cptr);
+		ident_lookup_failed(client);
 		return;
 	}
-	ClearIdentLookupSent(cptr);
+	ClearIdentLookupSent(client);
 
-	fd_setselect(cptr->local->authfd, FD_SELECT_READ, ident_lookup_receive, cptr);
-	fd_setselect(cptr->local->authfd, FD_SELECT_WRITE, NULL, cptr);
+	fd_setselect(client->local->authfd, FD_SELECT_READ, ident_lookup_receive, client);
+	fd_setselect(client->local->authfd, FD_SELECT_WRITE, NULL, client);
 
 	return;
 }
@@ -140,12 +140,12 @@ static void ident_lookup_send(int fd, int revents, void *data)
 /** Receive the ident response */
 static void ident_lookup_receive(int fd, int revents, void *userdata)
 {
-	Client *cptr = userdata;
+	Client *client = userdata;
 	char *ident = NULL;
 	char buf[512];
 	int len;
 
-	len = READ_SOCK(cptr->local->authfd, buf, sizeof(buf)-1);
+	len = READ_SOCK(client->local->authfd, buf, sizeof(buf)-1);
 	if (ERRNO == P_EAGAIN)
 		return; /* Try again later */
 
@@ -157,26 +157,26 @@ static void ident_lookup_receive(int fd, int revents, void *userdata)
 	/* Before we continue, we can already tear down the connection
 	 * and set the appropriate flags that we are finished.
 	 */
-	fd_close(cptr->local->authfd);
+	fd_close(client->local->authfd);
 	--OpenFiles;
-	cptr->local->authfd = -1;
-	cptr->local->identbufcnt = 0;
-	ClearIdentLookup(cptr);
-	if (!IsDNSLookup(cptr))
-		finish_auth(cptr);
+	client->local->authfd = -1;
+	client->local->identbufcnt = 0;
+	ClearIdentLookup(client);
+	if (!IsDNSLookup(client))
+		finish_auth(client);
 
-	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->local->listener))
-		sendto_one(cptr, NULL, "%s", REPORT_FIN_ID);
+	if (SHOWCONNECTINFO && !client->serv && !IsServersOnlyListener(client->local->listener))
+		sendto_one(client, NULL, "%s", REPORT_FIN_ID);
 
 	if (len > 0)
 	{
 		buf[len] = '\0'; /* safe, due to the READ_SOCK() being on sizeof(buf)-1 */
-		ident = ident_lookup_parse(cptr, buf);
+		ident = ident_lookup_parse(client, buf);
 	}
 	if (ident)
 	{
-		strlcpy(cptr->ident, ident, USERLEN + 1);
-		SetIdentSuccess(cptr);
+		strlcpy(client->ident, ident, USERLEN + 1);
+		SetIdentSuccess(client);
 		ircstats.is_asuc++;
 	} else {
 		ircstats.is_abad++;
@@ -184,7 +184,7 @@ static void ident_lookup_receive(int fd, int revents, void *userdata)
 	return;
 }
 
-static char *ident_lookup_parse(Client *acptr, char *buf)
+static char *ident_lookup_parse(Client *client, char *buf)
 {
 	/* <port> , <port> : USERID : <OSTYPE>: <username>
 	 * Actually the only thing we care about is <username>

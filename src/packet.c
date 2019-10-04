@@ -25,26 +25,26 @@ RealCommand *CommandHash[256]; /* one per letter */
 
 /*
 ** dopacket
-**	cptr - pointer to client structure for which the buffer data
+**	client - pointer to client structure for which the buffer data
 **	       applies.
 **	buffer - pointr to the buffer containing the newly read data
 **	length - number of valid bytes of data in the buffer
 **
 ** Note:
 **	It is implicitly assumed that dopacket is called only
-**	with cptr of "local" variation, which contains all the
+**	with client of "local" variation, which contains all the
 **	necessary fields (buffer etc..)
 **
 ** Rewritten for linebufs, 19th May 2013. --kaniini
 */
-void dopacket(Client *cptr, char *buffer, int length)
+void dopacket(Client *client, char *buffer, int length)
 {
 	me.local->receiveB += length;	/* Update bytes received */
-	cptr->local->receiveB += length;
-	if (cptr->local->receiveB > 1023)
+	client->local->receiveB += length;
+	if (client->local->receiveB > 1023)
 	{
-		cptr->local->receiveK += (cptr->local->receiveB >> 10);
-		cptr->local->receiveB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
+		client->local->receiveK += (client->local->receiveB >> 10);
+		client->local->receiveB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
 	}
 	if (me.local->receiveB > 1023)
 	{
@@ -53,9 +53,9 @@ void dopacket(Client *cptr, char *buffer, int length)
 	}
 
 	me.local->receiveM += 1;	/* Update messages received */
-	cptr->local->receiveM += 1;
+	client->local->receiveM += 1;
 
-	parse(cptr, buffer, length);
+	parse(client, buffer, length);
 }
 
 void	init_CommandHash(void)
@@ -143,7 +143,7 @@ RealCommand *find_Command_simple(char *cmd)
 
 /** Calls the specified command for the user, as if it was received
  * that way on IRC.
- * @param sptr		Client that is the source.
+ * @param client		Client that is the source.
  * @param mtags		Message tags for this command.
  * @param cmd		Command to run, eg "JOIN".
  * @param parc		Parameter count plus 1.
@@ -151,7 +151,7 @@ RealCommand *find_Command_simple(char *cmd)
  * @note Make sure you terminate the last parv[] parameter with NULL,
  *       this can easily be forgotten, but certain functions depend on it,
  *       you risk crashes otherwise.
- * @note Once do_cmd() has returned, be sure to check IsDead(sptr) to
+ * @note Once do_cmd() has returned, be sure to check IsDead(client) to
  *       see if the client has been killed. This may happen due to various
  *       reasons, including spamfilter kicking in or some other security
  *       measure.
@@ -159,11 +159,11 @@ RealCommand *find_Command_simple(char *cmd)
  *       should not exceed 510 bytes, since that is what all code expects.
  *       Similarly, you should not exceed MAXPARA for parc.
  */
-void do_cmd(Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[])
+void do_cmd(Client *client, MessageTag *mtags, char *cmd, int parc, char *parv[])
 {
 	RealCommand *cmptr;
 
 	cmptr = find_Command_simple(cmd);
 	if (cmptr)
-		(*cmptr->func) (sptr, mtags, parc, parv);
+		(*cmptr->func) (client, mtags, parc, parv);
 }

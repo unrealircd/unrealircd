@@ -61,37 +61,37 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_svsjoin)
 {
-	Client *acptr;
+	Client *target;
 
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 		return;
 
-	if ((parc < 3) || !(acptr = find_person(parv[1], NULL)))
+	if ((parc < 3) || !(target = find_person(parv[1], NULL)))
 		return;
 
-	if (MyUser(acptr))
+	if (MyUser(target))
 	{
-		parv[0] = acptr->name;
+		parv[0] = target->name;
 		parv[1] = parv[2];
 		if (parc == 3)
 		{
 			parv[2] = NULL;
-			(void)do_cmd(acptr, NULL, "JOIN", 2, parv);
-			/* NOTE: 'acptr' may be killed if we ever implement spamfilter join channel target */
+			(void)do_cmd(target, NULL, "JOIN", 2, parv);
+			/* NOTE: 'target' may be killed if we ever implement spamfilter join channel target */
 		} else {
 			parv[2] = parv[3];
 			parv[3] = NULL;
-			(void)do_cmd(acptr, NULL, "JOIN", 3, parv);
-			/* NOTE: 'acptr' may be killed if we ever implement spamfilter join channel target */
+			(void)do_cmd(target, NULL, "JOIN", 3, parv);
+			/* NOTE: 'target' may be killed if we ever implement spamfilter join channel target */
 		}
 	}
 	else
 	{
 		if (parc == 3)
-			sendto_one(acptr, NULL, ":%s SVSJOIN %s %s", sptr->name,
+			sendto_one(target, NULL, ":%s SVSJOIN %s %s", client->name,
 			    parv[1], parv[2]);
 		else
-			sendto_one(acptr, NULL, ":%s SVSJOIN %s %s %s", sptr->name,
+			sendto_one(target, NULL, ":%s SVSJOIN %s %s %s", client->name,
 				parv[1], parv[2], parv[3]);
 	}
 }

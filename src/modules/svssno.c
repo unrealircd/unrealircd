@@ -61,13 +61,13 @@ MOD_UNLOAD()
  * parv[2] - snomasks to change
  * show_change determines whether to show the change to the user
  */
-void do_svssno(Client *sptr, int parc, char *parv[], int show_change)
+void do_svssno(Client *client, int parc, char *parv[], int show_change)
 {
 	char *p;
-	Client *acptr;
+	Client *target;
 	int what = MODE_ADD, i;
 
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 		return;
 
 	if (parc < 2)
@@ -76,20 +76,20 @@ void do_svssno(Client *sptr, int parc, char *parv[], int show_change)
 	if (parv[1][0] == '#') 
 		return;
 
-	if (!(acptr = find_person(parv[1], NULL)))
+	if (!(target = find_person(parv[1], NULL)))
 		return;
 
-	if (hunt_server(sptr, NULL,
+	if (hunt_server(client, NULL,
 	                      show_change ? ":%s SVS2SNO %s %s" : ":%s SVSSNO %s %s",
 	                      1, parc, parv) != HUNTED_ISME)
 	{
 		return;
 	}
 
-	if (MyUser(acptr))
+	if (MyUser(target))
 	{
 		if (parc == 2)
-			acptr->user->snomask = 0;
+			target->user->snomask = 0;
 		else
 		{
 			for (p = parv[2]; p && *p; p++) {
@@ -108,9 +108,9 @@ void do_svssno(Client *sptr, int parc, char *parv[], int show_change)
 		 	 			if (*p == Snomask_Table[i].flag)
 				 	 	{
 				 	 		if (what == MODE_ADD)
-					 	 		acptr->user->snomask |= Snomask_Table[i].mode;
+					 	 		target->user->snomask |= Snomask_Table[i].mode;
 			 			 	else
-			 	 				acptr->user->snomask &= ~Snomask_Table[i].mode;
+			 	 				target->user->snomask &= ~Snomask_Table[i].mode;
 				 	 	}
 				 	 }				
 				}
@@ -119,15 +119,15 @@ void do_svssno(Client *sptr, int parc, char *parv[], int show_change)
 	}
 
 	if (show_change)
-		sendnumeric(acptr, RPL_SNOMASK, get_sno_str(acptr));
+		sendnumeric(target, RPL_SNOMASK, get_sno_str(target));
 }
 
 CMD_FUNC(cmd_svssno)
 {
-	return do_svssno(sptr, parc, parv, 0);
+	return do_svssno(client, parc, parv, 0);
 }
 
 CMD_FUNC(cmd_svs2sno)
 {
-	return do_svssno(sptr, parc, parv, 1);
+	return do_svssno(client, parc, parv, 1);
 }

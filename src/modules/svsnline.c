@@ -112,14 +112,14 @@ CMD_FUNC(cmd_svsnline)
 			AddListItem(bconf, conf_ban);
 		  } 
 		 
-		  if (IsULine(sptr))
-			sendto_server(sptr, 0, 0, NULL, ":%s SVSNLINE + %s :%s",
-			    sptr->name, parv[2], parv[3]);
+		  if (IsULine(client))
+			sendto_server(client, 0, 0, NULL, ":%s SVSNLINE + %s :%s",
+			    client->name, parv[2], parv[3]);
 		  break;
 	  }
 	  case '-':
 	  {
-		  if (!IsULine(sptr))
+		  if (!IsULine(client))
 			  return;
 		  if (parc < 3)
 			  return;
@@ -141,15 +141,15 @@ CMD_FUNC(cmd_svsnline)
 		  	safe_free(bconf);
 		  	
 		  }
-		  sendto_server(sptr, 0, 0, NULL, ":%s SVSNLINE - %s", sptr->name, parv[2]);
+		  sendto_server(client, 0, 0, NULL, ":%s SVSNLINE - %s", client->name, parv[2]);
 		  break;
 	  }
 	  case '*':
 	  {
-		  if (!IsULine(sptr))
+		  if (!IsULine(client))
 			  return;
 	          wipe_svsnlines();
-		  sendto_server(sptr, 0, 0, NULL, ":%s SVSNLINE *", sptr->name);
+		  sendto_server(client, 0, 0, NULL, ":%s SVSNLINE *", client->name);
 		  break;
 	  }
 

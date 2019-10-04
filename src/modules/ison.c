@@ -71,16 +71,16 @@ CMD_FUNC(cmd_ison)
 	char *s, *user;
 	char *p = NULL;
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "ISON");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "ISON");
 		return;
 	}
 
-	ircsnprintf(buf, sizeof(buf), rpl_str(RPL_ISON), me.name, sptr->name);
+	ircsnprintf(buf, sizeof(buf), rpl_str(RPL_ISON), me.name, client->name);
 
 	for (s = strtoken(&p, parv[1], " "); s; s = strtoken(&p, NULL, " "))
 	{
@@ -100,5 +100,5 @@ CMD_FUNC(cmd_ison)
 		}
 	}
 
-	sendto_one(sptr, NULL, "%s", buf);
+	sendto_one(client, NULL, "%s", buf);
 }

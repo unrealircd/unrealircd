@@ -20,7 +20,7 @@
 
 #include "unrealircd.h"
 
-#define IsSecureOnlyMsg(cptr)    (cptr->umodes & UMODE_SECUREONLYMSG)
+#define IsSecureOnlyMsg(client)    (client->umodes & UMODE_SECUREONLYMSG)
 
 /* Module header */
 ModuleHeader MOD_HEADER
@@ -36,7 +36,7 @@ ModuleHeader MOD_HEADER
 long UMODE_SECUREONLYMSG = 0L;
 
 /* Forward declarations */
-char *secureonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int notice);
+char *secureonlymsg_pre_usermsg(Client *client, Client *target, char *text, int notice);
                     
 MOD_INIT()
 {
@@ -58,11 +58,11 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *secureonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int notice)
+char *secureonlymsg_pre_usermsg(Client *client, Client *target, char *text, int notice)
 {
-	if (IsSecureOnlyMsg(target) && !IsServer(sptr) && !IsULine(sptr) && !IsSecureConnect(sptr))
+	if (IsSecureOnlyMsg(target) && !IsServer(client) && !IsULine(client) && !IsSecureConnect(client))
 	{
-		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",sptr,target,NULL,text))
+		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",client,target,NULL,text))
 			return text; /* TODO: this is actually an override */
 
 		/* A numeric is preferred to indicate the user cannot message.
@@ -70,14 +70,14 @@ char *secureonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int no
 		 * general "cannot send message" numeric (similar to the generic
 		 * ERR_CANNOTSENDTOCHAN for channel messaging).
 		 */
-		sendto_one(sptr, NULL, ":%s 492 %s :Cannot send to user %s (You must be connected via SSL/TLS to message this user)",
-			me.name, sptr->name, target->name);
+		sendto_one(client, NULL, ":%s 492 %s :Cannot send to user %s (You must be connected via SSL/TLS to message this user)",
+			me.name, client->name, target->name);
 
 		return NULL; /* Block the message */
 	} else
-	if (IsSecureOnlyMsg(sptr) && !IsSecureConnect(target) && !IsULine(target))
+	if (IsSecureOnlyMsg(client) && !IsSecureConnect(target) && !IsULine(target))
 	{
-		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",sptr,target,NULL,text))
+		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",client,target,NULL,text))
 			return text; /* TODO: this is actually an override */
 		
 		/* Similar to above but in this case we are +Z and are trying to message
@@ -85,8 +85,8 @@ char *secureonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int no
 		 * make sense since they could never message back to us. Better block the
 		 * message than leave the user confused.
 		 */
-		sendto_one(sptr, NULL, ":%s 492 %s :Cannot send to user %s (You have user mode +Z set but are not connected via SSL/TLS)",
-			me.name, sptr->name, target->name);
+		sendto_one(client, NULL, ":%s 492 %s :Cannot send to user %s (You have user mode +Z set but are not connected via SSL/TLS)",
+			me.name, client->name, target->name);
 	}
 
 	return text;

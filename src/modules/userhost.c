@@ -68,7 +68,7 @@ CMD_FUNC(cmd_userhost)
 
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "USERHOST");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "USERHOST");
 		return;
 	}
 
@@ -93,11 +93,11 @@ CMD_FUNC(cmd_userhost)
 			ircsnprintf(response[i], NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30,
                             "%s%s=%c%s@%s",
 			    acptr->name,
-			    (IsOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsOper(sptr)))
+			    (IsOper(acptr) && (!IsHideOper(acptr) || client == acptr || IsOper(client)))
 				? "*" : "",
 			    (acptr->user->away) ? '-' : '+',
 			    acptr->user->username,
-			    ((acptr != sptr) && !IsOper(sptr)
+			    ((acptr != client) && !IsOper(client)
 			    && IsHidden(acptr) ? acptr->user->virthost :
 			    acptr->user->realhost));
 		}
@@ -106,5 +106,5 @@ CMD_FUNC(cmd_userhost)
 		cn = p;
 	}
 
-	sendnumeric(sptr, RPL_USERHOST, response[0], response[1], response[2], response[3], response[4]);
+	sendnumeric(client, RPL_USERHOST, response[0], response[1], response[2], response[3], response[4]);
 }

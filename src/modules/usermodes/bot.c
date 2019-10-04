@@ -35,9 +35,9 @@ ModuleHeader MOD_HEADER
 long UMODE_BOT = 0L;
 
 /* Forward declarations */
-int bot_whois(Client *sptr, Client *acptr);
-int bot_who_status(Client *sptr, Client *acptr, Channel *chptr, Member *cm, char *status, int cansee);
-int bot_umode_change(Client *sptr, long oldmode, long newmode);
+int bot_whois(Client *client, Client *acptr);
+int bot_who_status(Client *client, Client *acptr, Channel *chptr, Member *cm, char *status, int cansee);
+int bot_umode_change(Client *client, long oldmode, long newmode);
 
 MOD_TEST()
 {
@@ -66,15 +66,15 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int bot_whois(Client *sptr, Client *acptr)
+int bot_whois(Client *requester, Client *acptr)
 {
 	if (IsBot(acptr))
-		sendnumeric(sptr, RPL_WHOISBOT, acptr->name, ircnetwork);
+		sendnumeric(requester, RPL_WHOISBOT, acptr->name, ircnetwork);
 
 	return 0;
 }
 
-int bot_who_status(Client *sptr, Client *acptr, Channel *chptr, Member *cm, char *status, int cansee)
+int bot_who_status(Client *requester, Client *acptr, Channel *chptr, Member *cm, char *status, int cansee)
 {
 	if (IsBot(acptr))
 		return 'B';
@@ -82,15 +82,15 @@ int bot_who_status(Client *sptr, Client *acptr, Channel *chptr, Member *cm, char
 	return 0;
 }
 
-int bot_umode_change(Client *sptr, long oldmode, long newmode)
+int bot_umode_change(Client *client, long oldmode, long newmode)
 {
-	if ((newmode & UMODE_BOT) && !(oldmode & UMODE_BOT) && MyUser(sptr))
+	if ((newmode & UMODE_BOT) && !(oldmode & UMODE_BOT) && MyUser(client))
 	{
 		/* now +B */
 		char *parv[2];
-		parv[0] = sptr->name;
+		parv[0] = client->name;
 		parv[1] = NULL;
-		(void)do_cmd(sptr, NULL, "BOTMOTD", 1, parv);
+		(void)do_cmd(client, NULL, "BOTMOTD", 1, parv);
 	}
 
 	return 0;

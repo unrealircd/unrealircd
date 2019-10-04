@@ -63,16 +63,16 @@ CMD_FUNC(cmd_wallops)
 
 	if (BadPtr(message))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "WALLOPS");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "WALLOPS");
 		return;
 	}
 
-	if (!ValidatePermissionsForPath("chat:wallops",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("chat:wallops",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
-	// FIXME: verify: not sure about direction @ sptr, here or in send.c
-	sendto_ops_butone(sptr, sptr, ":%s WALLOPS :%s", sptr->name, message);
+	// FIXME: verify: not sure about direction @ client, here or in send.c
+	sendto_ops_butone(client, client, ":%s WALLOPS :%s", client->name, message);
 }

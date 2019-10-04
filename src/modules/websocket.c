@@ -35,9 +35,9 @@ struct WebSocketUser {
 #define WEBSOCKET_TYPE_BINARY	0x1
 #define WEBSOCKET_TYPE_TEXT	0x2
 
-#define WSU(cptr)	((WebSocketUser *)moddata_client(cptr, websocket_md).ptr)
+#define WSU(client)	((WebSocketUser *)moddata_client(client, websocket_md).ptr)
 
-#define WEBSOCKET_TYPE(cptr)	((cptr->local && cptr->local->listener) ? cptr->local->listener->websocket_options : 0)
+#define WEBSOCKET_TYPE(client)	((client->local && client->local->listener) ? client->local->listener->websocket_options : 0)
 
 #define WEBSOCKET_MAGIC_KEY "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" /* see RFC6455 */
 
@@ -52,15 +52,15 @@ struct WebSocketUser {
 int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
 int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);
-int websocket_packet_in(Client *sptr, char *readbuf, int *length);
+int websocket_packet_in(Client *client, char *readbuf, int *length);
 void websocket_mdata_free(ModData *m);
-int websocket_handle_packet(Client *sptr, char *readbuf, int length);
-int websocket_handle_handshake(Client *sptr, char *readbuf, int *length);
-int websocket_complete_handshake(Client *sptr);
-int websocket_handle_packet_ping(Client *sptr, char *buf, int len);
-int websocket_handle_packet_pong(Client *sptr, char *buf, int len);
+int websocket_handle_packet(Client *client, char *readbuf, int length);
+int websocket_handle_handshake(Client *client, char *readbuf, int *length);
+int websocket_complete_handshake(Client *client);
+int websocket_handle_packet_ping(Client *client, char *buf, int len);
+int websocket_handle_packet_pong(Client *client, char *buf, int len);
 int websocket_create_frame(int opcode, char **buf, int *len);
-int websocket_send_frame(Client *sptr, int opcode, char *buf, int len);
+int websocket_send_frame(Client *client, int opcode, char *buf, int len);
 
 /* Global variables */
 ModDataInfo *websocket_md;
@@ -252,40 +252,40 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
 	return 0;
 }
 
-int websocket_handle_websocket(Client *sptr, char *readbuf2, int length2)
+int websocket_handle_websocket(Client *client, char *readbuf2, int length2)
 {
 	int n;
 	char *ptr;
 	int length;
-	int length1 = WSU(sptr)->lefttoparselen;
+	int length1 = WSU(client)->lefttoparselen;
 	char readbuf[4096];
 
 	length = length1 + length2;
 	if (length > sizeof(readbuf)-1)
 	{
-		dead_socket(sptr, "Illegal buffer stacking/Excess flood");
+		dead_socket(client, "Illegal buffer stacking/Excess flood");
 		return 0;
 	}
 
 	if (length1 > 0)
-		memcpy(readbuf, WSU(sptr)->lefttoparse, length1);
+		memcpy(readbuf, WSU(client)->lefttoparse, length1);
 	memcpy(readbuf+length1, readbuf2, length2);
 
-	safe_free(WSU(sptr)->lefttoparse);
-	WSU(sptr)->lefttoparselen = 0;
+	safe_free(WSU(client)->lefttoparse);
+	WSU(client)->lefttoparselen = 0;
 
 	ptr = readbuf;
 	do {
-		n = websocket_handle_packet(sptr, ptr, length);
+		n = websocket_handle_packet(client, ptr, length);
 		if (n < 0)
 			return -1; /* killed -- STOP processing */
 		if (n == 0)
 		{
 			/* Short read. Stop processing for now, but save data for next time */
-			safe_free(WSU(sptr)->lefttoparse);
-			WSU(sptr)->lefttoparse = safe_alloc(length);
-			WSU(sptr)->lefttoparselen = length;
-			memcpy(WSU(sptr)->lefttoparse, ptr, length);
+			safe_free(WSU(client)->lefttoparse);
+			WSU(client)->lefttoparse = safe_alloc(length);
+			WSU(client)->lefttoparselen = length;
+			memcpy(WSU(client)->lefttoparse, ptr, length);
 			return 0;
 		}
 		length -= n;
@@ -304,22 +304,22 @@ int websocket_handle_websocket(Client *sptr, char *readbuf2, int length2)
  * 0 means: don't process this data, but you can read another packet if you want
  * >0 means: process this data (regular IRC data, non-websocket stuff)
  */
-int websocket_packet_in(Client *sptr, char *readbuf, int *length)
+int websocket_packet_in(Client *client, char *readbuf, int *length)
 {
-	if ((sptr->local->receiveM == 0) && WEBSOCKET_TYPE(sptr) && !WSU(sptr) && (*length > 8) && !strncmp(readbuf, "GET ", 4))
+	if ((client->local->receiveM == 0) && WEBSOCKET_TYPE(client) && !WSU(client) && (*length > 8) && !strncmp(readbuf, "GET ", 4))
 	{
 		/* Allocate a new WebSocketUser struct for this session */
-		moddata_client(sptr, websocket_md).ptr = safe_alloc(sizeof(WebSocketUser));
-		WSU(sptr)->get = 1;
+		moddata_client(client, websocket_md).ptr = safe_alloc(sizeof(WebSocketUser));
+		WSU(client)->get = 1;
 	}
 
-	if (!WSU(sptr))
+	if (!WSU(client))
 		return 1; /* "normal" IRC client */
 
-	if (WSU(sptr)->handshake_completed)
-		return websocket_handle_websocket(sptr, readbuf, *length);
+	if (WSU(client)->handshake_completed)
+		return websocket_handle_websocket(client, readbuf, *length);
 	/* else.. */
-	return websocket_handle_handshake(sptr, readbuf, length);
+	return websocket_handle_handshake(client, readbuf, length);
 }
 
 /** Helper function to parse the HTTP header consisting of multiple 'Key: value' pairs */
@@ -459,7 +459,7 @@ int websocket_handshake_helper(char *buffer, int len, char **key, char **value, 
 /** Handle client GET WebSocket handshake.
  * Yes, I'm going to assume that the header fits in one packet and one packet only.
  */
-int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
+int websocket_handle_handshake(Client *client, char *readbuf, int *length)
 {
 	char *key, *value;
 	int r, end_of_request;
@@ -469,9 +469,9 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 
 	/** Frame re-assembling starts here **/
 	*netbuf = '\0';
-	if (WSU(sptr)->lefttoparse)
+	if (WSU(client)->lefttoparse)
 	{
-		strlcpy(netbuf, WSU(sptr)->lefttoparse, sizeof(netbuf));
+		strlcpy(netbuf, WSU(client)->lefttoparse, sizeof(netbuf));
 		nprefix = strlen(netbuf);
 	}
 	maxcopy = sizeof(netbuf) - nprefix - 1;
@@ -483,12 +483,12 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 		n = maxcopy;
 	if (n <= 0)
 	{
-		dead_socket(sptr, "Oversized line");
+		dead_socket(client, "Oversized line");
 		return -1;
 	}
 	memcpy(netbuf+nprefix, readbuf, n); /* SAFE: see checking above */
 	netbuf[n+nprefix] = '\0';
-	safe_free(WSU(sptr)->lefttoparse);
+	safe_free(WSU(client)->lefttoparse);
 
 	/** Now step through the lines.. **/
 	for (r = websocket_handshake_helper(netbuf, strlen(netbuf), &key, &value, &lastloc, &end_of_request);
@@ -500,47 +500,47 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 			if (strchr(value, ':'))
 			{
 				/* This would cause unserialization issues. Should be base64 anyway */
-				dead_socket(sptr, "Invalid characters in Sec-WebSocket-Key");
+				dead_socket(client, "Invalid characters in Sec-WebSocket-Key");
 				return -1;
 			}
-			safe_strdup(WSU(sptr)->handshake_key, value);
+			safe_strdup(WSU(client)->handshake_key, value);
 		}
 	}
 
 	if (end_of_request)
 	{
-		if (!WSU(sptr)->handshake_key)
+		if (!WSU(client)->handshake_key)
 		{
 			if (is_module_loaded("webredir"))
 			{
 				char *parx[2] = { NULL, NULL };
-				do_cmd(sptr, NULL, "GET", 1, parx);
+				do_cmd(client, NULL, "GET", 1, parx);
 			}
-			dead_socket(sptr, "Invalid WebSocket request");
+			dead_socket(client, "Invalid WebSocket request");
 			return -1;
 		}
-		websocket_complete_handshake(sptr);
+		websocket_complete_handshake(client);
 		return 0;
 	}
 
 	if (lastloc)
 	{
 		/* Last line was cut somewhere, save it for next round. */
-		safe_strdup(WSU(sptr)->lefttoparse, lastloc);
+		safe_strdup(WSU(client)->lefttoparse, lastloc);
 	}
 	return 0; /* don't let UnrealIRCd process this */
 }
 
 /** Complete the handshake by sending the appropriate HTTP 101 response etc. */
-int websocket_complete_handshake(Client *sptr)
+int websocket_complete_handshake(Client *client)
 {
 	char buf[512], hashbuf[64];
 	SHA_CTX hash;
 	char sha1out[20]; /* 160 bits */
 
-	WSU(sptr)->handshake_completed = 1;
+	WSU(client)->handshake_completed = 1;
 
-	snprintf(buf, sizeof(buf), "%s%s", WSU(sptr)->handshake_key, WEBSOCKET_MAGIC_KEY);
+	snprintf(buf, sizeof(buf), "%s%s", WSU(client)->handshake_key, WEBSOCKET_MAGIC_KEY);
 	SHA1_Init(&hash);
 	SHA1_Update(&hash, buf, strlen(buf));
 	SHA1_Final(sha1out, &hash);
@@ -559,8 +559,8 @@ int websocket_complete_handshake(Client *sptr)
 	 * Risk is minimal, though, as we only permit limited text only
 	 * once per session.
 	 */
-	dbuf_put(&sptr->local->sendQ, buf, strlen(buf));
-	send_queued(sptr);
+	dbuf_put(&client->local->sendQ, buf, strlen(buf));
+	send_queued(client);
 
 	return 0;
 }
@@ -595,7 +595,7 @@ void add_lf_if_needed(char **buf, int *len)
  *          OR 0 to indicate a possible short read (want more data)
  *          OR -1 in case of an error.
  */
-int websocket_handle_packet(Client *sptr, char *readbuf, int length)
+int websocket_handle_packet(Client *client, char *readbuf, int length)
 {
 	char opcode; /**< Opcode */
 	char masked; /**< Masked */
@@ -620,13 +620,13 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 
 	if (!masked)
 	{
-		dead_socket(sptr, "WebSocket packet not masked");
+		dead_socket(client, "WebSocket packet not masked");
 		return -1; /* Having the masked bit set is required (RFC6455 p29) */
 	}
 
 	if (len == 127)
 	{
-		dead_socket(sptr, "WebSocket packet with insane size");
+		dead_socket(client, "WebSocket packet with insane size");
 		return -1; /* Packets requiring 64bit lengths are not supported. Would be insane. */
 	}
 
@@ -646,7 +646,7 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 		len = (readbuf[2] << 8) + readbuf[3];
 		if (len < 126)
 		{
-			dead_socket(sptr, "WebSocket protocol violation (extended payload length too short)");
+			dead_socket(client, "WebSocket protocol violation (extended payload length too short)");
 			return -1; /* This is a violation (not a short read), see page 29 */
 		}
 		p += 2; /* advance pointer 2 bytes */
@@ -685,46 +685,46 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 			if (len > 0)
 			{
 				add_lf_if_needed(&payload, &len);
-				if (!process_packet(sptr, payload, len, 1)) /* let UnrealIRCd process this data */
+				if (!process_packet(client, payload, len, 1)) /* let UnrealIRCd process this data */
 					return -1; /* fatal error occured (such as flood kill) */
 			}
 			return total_packet_size;
 
 		case WSOP_CLOSE:
-			dead_socket(sptr, "Connection closed"); /* TODO: Improve I guess */
+			dead_socket(client, "Connection closed"); /* TODO: Improve I guess */
 			return -1;
 
 		case WSOP_PING:
-			if (websocket_handle_packet_ping(sptr, payload, len) < 0)
+			if (websocket_handle_packet_ping(client, payload, len) < 0)
 				return -1;
 			return total_packet_size;
 
 		case WSOP_PONG:
-			if (websocket_handle_packet_pong(sptr, payload, len) < 0)
+			if (websocket_handle_packet_pong(client, payload, len) < 0)
 				return -1;
 			return total_packet_size;
 
 		default:
-			dead_socket(sptr, "WebSocket: Unknown opcode");
+			dead_socket(client, "WebSocket: Unknown opcode");
 			return -1;
 	}
 
 	return -1; /* NOTREACHED */
 }
 
-int websocket_handle_packet_ping(Client *sptr, char *buf, int len)
+int websocket_handle_packet_ping(Client *client, char *buf, int len)
 {
 	if (len > 500)
 	{
-		dead_socket(sptr, "WebSocket: oversized PING request");
+		dead_socket(client, "WebSocket: oversized PING request");
 		return -1;
 	}
-	websocket_send_frame(sptr, WSOP_PONG, buf, len);
-	sptr->local->since++; /* lag penalty of 1 second */
+	websocket_send_frame(client, WSOP_PONG, buf, len);
+	client->local->since++; /* lag penalty of 1 second */
 	return 0;
 }
 
-int websocket_handle_packet_pong(Client *sptr, char *buf, int len)
+int websocket_handle_packet_pong(Client *client, char *buf, int len)
 {
 	/* We don't care */
 	return 0;
@@ -773,7 +773,7 @@ int websocket_create_frame(int opcode, char **buf, int *len)
 }
 
 /** Create and send a frame */
-int websocket_send_frame(Client *sptr, int opcode, char *buf, int len)
+int websocket_send_frame(Client *client, int opcode, char *buf, int len)
 {
 	char *b = buf;
 	int l = len;
@@ -781,13 +781,13 @@ int websocket_send_frame(Client *sptr, int opcode, char *buf, int len)
 	if (websocket_create_frame(opcode, &b, &l) < 0)
 		return -1;
 
-	if (DBufLength(&sptr->local->sendQ) > get_sendq(sptr))
+	if (DBufLength(&client->local->sendQ) > get_sendq(client))
 	{
-		dead_socket(sptr, "Max SendQ exceeded");
+		dead_socket(client, "Max SendQ exceeded");
 		return -1;
 	}
 
-	dbuf_put(&sptr->local->sendQ, b, l);
-	send_queued(sptr);
+	dbuf_put(&client->local->sendQ, b, l);
+	send_queued(client);
 	return 0;
 }

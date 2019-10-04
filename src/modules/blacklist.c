@@ -70,12 +70,12 @@ struct Blacklist {
 };
 
 /* Blacklist user struct. In the c-ares DNS reply callback we need to pass
- * some metadata. We can't use cptr directly there as the client may
+ * some metadata. We can't use client directly there as the client may
  * be gone already by the time we receive the DNS reply.
  */
 typedef struct BLUser BLUser;
 struct BLUser {
-	Client *cptr;
+	Client *client;
 	int is_ipv6;
 	int refcnt;
 	/* The following save_* fields are used by softbans: */
@@ -95,12 +95,12 @@ int blacklist_config_run(ConfigFile *, ConfigEntry *, int);
 void blacklist_free_conf(void);
 void delete_blacklist_block(Blacklist *e);
 void blacklist_md_free(ModData *md);
-int blacklist_handshake(Client *cptr);
-int blacklist_quit(Client *cptr, MessageTag *mtags, char *comment);
-int blacklist_preconnect(Client *sptr);
+int blacklist_handshake(Client *client);
+int blacklist_quit(Client *client, MessageTag *mtags, char *comment);
+int blacklist_preconnect(Client *client);
 void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hostent *he);
-int blacklist_start_check(Client *cptr);
-int blacklist_dns_request(Client *cptr, Blacklist *bl);
+int blacklist_start_check(Client *client);
+int blacklist_dns_request(Client *client, Blacklist *bl);
 int blacklist_rehash(void);
 int blacklist_rehash_complete(void);
 void blacklist_set_handshake_delay(void);
@@ -542,51 +542,51 @@ void blacklist_md_free(ModData *md)
 {
 	BLUser *bl = md->ptr;
 
-	/* Mark bl->cptr as dead. Free the struct, if able. */
+	/* Mark bl->client as dead. Free the struct, if able. */
 	blacklist_free_bluser_if_able(bl);
 
 	md->ptr = NULL;
 }
 
-int blacklist_handshake(Client *cptr)
+int blacklist_handshake(Client *client)
 {
-	blacklist_start_check(cptr);
+	blacklist_start_check(client);
 	return 0;
 }
 
-int blacklist_start_check(Client *cptr)
+int blacklist_start_check(Client *client)
 {
 	Blacklist *bl;
 
 	/* If the user is on 'except blacklist' then don't bother checking... */
-	if (find_tkl_exception(TKL_BLACKLIST, cptr))
+	if (find_tkl_exception(TKL_BLACKLIST, client))
 		return 0;
 	
-	if (!BLUSER(cptr))
+	if (!BLUSER(client))
 	{
-		SetBLUser(cptr, safe_alloc(sizeof(BLUser)));
-		BLUSER(cptr)->cptr = cptr;
+		SetBLUser(client, safe_alloc(sizeof(BLUser)));
+		BLUSER(client)->client = client;
 	}
 
 	for (bl = conf_blacklist; bl; bl = bl->next)
 	{
 		/* Stop processing if client is (being) killed already */
-		if (!BLUSER(cptr))
+		if (!BLUSER(client))
 			break;
 
 		/* Initiate blacklist requests */
 		if (bl->backend_type == BLACKLIST_BACKEND_DNS)
-			blacklist_dns_request(cptr, bl);
+			blacklist_dns_request(client, bl);
 	}
 	
 	return 0;
 }
 
-int blacklist_dns_request(Client *cptr, Blacklist *d)
+int blacklist_dns_request(Client *client, Blacklist *d)
 {
 	char buf[256], wbuf[128];
 	unsigned int e[8];
-	char *ip = GetIP(cptr);
+	char *ip = GetIP(client);
 	
 	if (!ip)
 		return 0;
@@ -605,7 +605,7 @@ int blacklist_dns_request(Client *cptr, Blacklist *d)
 	{
 		/* IPv6 */
 		int i;
-		BLUSER(cptr)->is_ipv6 = 1;
+		BLUSER(client)->is_ipv6 = 1;
 		if (sscanf(ip, "%x:%x:%x:%x:%x:%x:%x:%x",
 		    &e[0], &e[1], &e[2], &e[3], &e[4], &e[5], &e[6], &e[7]) != 8)
 		{
@@ -626,22 +626,22 @@ int blacklist_dns_request(Client *cptr, Blacklist *d)
 	else
 		return 0; /* unknown IP format */
 
-	BLUSER(cptr)->refcnt++; /* one (more) blacklist result remaining */
+	BLUSER(client)->refcnt++; /* one (more) blacklist result remaining */
 	
-	unreal_gethostbyname(buf, AF_INET, blacklist_resolver_callback, BLUSER(cptr));
+	unreal_gethostbyname(buf, AF_INET, blacklist_resolver_callback, BLUSER(client));
 	
 	return 0;
 }
 
 void blacklist_cancel(BLUser *bl)
 {
-	bl->cptr = NULL;
+	bl->client = NULL;
 }
 
-int blacklist_quit(Client *cptr, MessageTag *mtags, char *comment)
+int blacklist_quit(Client *client, MessageTag *mtags, char *comment)
 {
-	if (BLUSER(cptr))
-		blacklist_cancel(BLUSER(cptr));
+	if (BLUSER(client))
+		blacklist_cancel(BLUSER(client));
 
 	return 0;
 }
@@ -656,8 +656,8 @@ int blacklist_quit(Client *cptr, MessageTag *mtags, char *comment)
  */
 void blacklist_free_bluser_if_able(BLUser *bl)
 {
-	if (bl->cptr)
-		bl->cptr = NULL;
+	if (bl->client)
+		bl->client = NULL;
 
 	if (bl->refcnt > 0)
 		return; /* unable, still have DNS requests/replies in-flight */
@@ -667,22 +667,28 @@ void blacklist_free_bluser_if_able(BLUser *bl)
 	safe_free(bl);
 }
 
-char *getdnsblname(char *p, Client *cptr)
+char *getdnsblname(char *p, Client *client)
 {
-int dots = 0;
+	int dots = 0;
 	int dots_count;
-	if(!cptr) return NULL;
-	if(BLUSER(cptr)->is_ipv6)
+
+	if (!client)
+		return NULL;
+
+	if (BLUSER(client)->is_ipv6)
 		dots_count = 32;
 	else
 		dots_count = 4;
+
 	for (; *p; p++)
+	{
 		if (*p == '.')
 		{
 			dots++;
 			if (dots == dots_count)
 				return p+1;
 		}
+	}
 	return NULL;
 }
 
@@ -713,31 +719,31 @@ int blacklist_parse_reply(struct hostent *he, int entry)
  * from blacklist_preconnect() for softbans that need to be delayed
  * as to give the user the opportunity to do SASL Authentication.
  */
-int blacklist_action(Client *acptr, char *opernotice, BanAction ban_action, char *ban_reason, long ban_time)
+int blacklist_action(Client *client, char *opernotice, BanAction ban_action, char *ban_reason, long ban_time)
 {
 	sendto_snomask(SNO_BLACKLIST, "%s", opernotice);
 	ircd_log(LOG_KILL, "%s", opernotice);
-	return place_host_ban(acptr, ban_action, ban_reason, ban_time);
+	return place_host_ban(client, ban_action, ban_reason, ban_time);
 }
 
-void blacklist_hit(Client *acptr, Blacklist *bl, int reply)
+void blacklist_hit(Client *client, Blacklist *bl, int reply)
 {
 	char opernotice[512], banbuf[512];
 	const char *name[4], *value[4];
-	BLUser *blu = BLUSER(acptr);
+	BLUser *blu = BLUSER(client);
 
-	if (find_tkline_match(acptr, 1))
+	if (find_tkline_match(client, 1))
 		return; /* already klined/glined. Don't send the warning from below. */
 
-	if (IsUser(acptr))
+	if (IsUser(client))
 		snprintf(opernotice, sizeof(opernotice), "[Blacklist] IP %s (%s) matches blacklist %s (%s/reply=%d)",
-			GetIP(acptr), acptr->name, bl->name, bl->backend->dns->name, reply);
+			GetIP(client), client->name, bl->name, bl->backend->dns->name, reply);
 	else
 		snprintf(opernotice, sizeof(opernotice), "[Blacklist] IP %s matches blacklist %s (%s/reply=%d)",
-			GetIP(acptr), bl->name, bl->backend->dns->name, reply);
+			GetIP(client), bl->name, bl->backend->dns->name, reply);
 
 	name[0] = "ip";
-	value[0] = GetIP(acptr);
+	value[0] = GetIP(client);
 	name[1] = "server";
 	value[1] = me.name;
 	name[2] = NULL;
@@ -754,11 +760,11 @@ void blacklist_hit(Client *acptr, Blacklist *bl, int reply)
 		safe_strdup(blu->save_reason, banbuf);
 	} else {
 		/* Otherwise, execute the action immediately */
-		blacklist_action(acptr, opernotice, bl->action, banbuf, bl->ban_time);
+		blacklist_action(client, opernotice, bl->action, banbuf, bl->ban_time);
 	}
 }
 
-void blacklist_process_result(Client *acptr, int status, struct hostent *he)
+void blacklist_process_result(Client *client, int status, struct hostent *he)
 {
 	Blacklist *bl;
 	char *domain;
@@ -769,7 +775,7 @@ void blacklist_process_result(Client *acptr, int status, struct hostent *he)
 	if ((status != 0) || (he->h_length != 4) || !he->h_name)
 		return; /* invalid reply */
 	
-	domain = getdnsblname(he->h_name, acptr);
+	domain = getdnsblname(he->h_name, client);
 	if (!domain)
 		return; /* odd */
 	bl = blacklist_find_block_by_dns(domain);
@@ -787,7 +793,7 @@ void blacklist_process_result(Client *acptr, int status, struct hostent *he)
 				( (bl->backend->dns->type == DNSBL_BITMASK) && (reply & bl->backend->dns->reply[i]) ) ||
 				( (bl->backend->dns->type == DNSBL_RECORD) && (bl->backend->dns->reply[i] == reply) ) )
 			{
-				blacklist_hit(acptr, bl, reply);
+				blacklist_hit(client, bl, reply);
 				return;
 			}
 		}
@@ -797,35 +803,35 @@ void blacklist_process_result(Client *acptr, int status, struct hostent *he)
 void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hostent *he)
 {
 	BLUser *blu = (BLUser *)arg;
-	Client *acptr = blu->cptr;
+	Client *client = blu->client;
 
 	blu->refcnt--; /* one less outstanding DNS request remaining */
 
 	/* If we are the last to resolve something and the client is gone
 	 * already then free the struct.
 	 */
-	if ((blu->refcnt == 0) && !acptr)
+	if ((blu->refcnt == 0) && !client)
 		blacklist_free_bluser_if_able(blu);
 
 	blu = NULL;
 
-	if (!acptr)
+	if (!client)
 		return; /* Client left already */
 	/* ^^ note: do not merge this with the other 'if' a few lines up (refcnt!) */
 
-	blacklist_process_result(acptr, status, he);
+	blacklist_process_result(client, status, he);
 }
 
-int blacklist_preconnect(Client *acptr)
+int blacklist_preconnect(Client *client)
 {
-	BLUser *blu = BLUSER(acptr);
+	BLUser *blu = BLUSER(client);
 
 	if (!blu || !blu->save_action)
 		return 0;
 
 	/* There was a pending softban... has the user authenticated via SASL by now? */
-	if (IsLoggedIn(acptr))
+	if (IsLoggedIn(client))
 		return 0; /* yup, so the softban does not apply. */
 
-	return blacklist_action(acptr, blu->save_opernotice, blu->save_action, blu->save_reason, blu->save_tkltime);
+	return blacklist_action(client, blu->save_opernotice, blu->save_action, blu->save_reason, blu->save_tkltime);
 }

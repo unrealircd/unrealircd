@@ -54,7 +54,7 @@ int reqmods_configtest_set(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 int reqmods_configrun_set(ConfigFile *cf, ConfigEntry *ce, int type);
 
 CMD_FUNC(cmd_smod);
-int reqmods_hook_serverconnect(Client *sptr);
+int reqmods_hook_serverconnect(Client *client);
 
 // Globals
 extern Module *Modules;
@@ -414,8 +414,8 @@ CMD_FUNC(cmd_smod)
 	int i;
 	int abort;
 
-	// A non-server sptr shouldn't really be possible here, but still :D
-	if (!MyConnect(sptr) || !IsServer(sptr) || BadPtr(parv[1]))
+	// A non-server client shouldn't really be possible here, but still :D
+	if (!MyConnect(client) || !IsServer(client) || BadPtr(parv[1]))
 		return;
 
 	// Module strings are passed as 1 space-delimited parameter
@@ -439,7 +439,7 @@ CMD_FUNC(cmd_smod)
 		if ((dmod = find_denymod_byname(name)))
 		{
 			// Send this particular notice to local opers only
-			sendto_umode_global(UMODE_OPER, "Server %s is using module '%s' which is specified in a deny module { } config block (reason: %s)", sptr->name, name, dmod->reason);
+			sendto_umode_global(UMODE_OPER, "Server %s is using module '%s' which is specified in a deny module { } config block (reason: %s)", client->name, name, dmod->reason);
 			if (cfg.squit_on_deny)
 				abort = 1;
 			continue;
@@ -475,12 +475,12 @@ CMD_FUNC(cmd_smod)
 
 	if (abort)
 	{
-		sendto_umode_global(UMODE_OPER, "ABORTING LINK: %s <=> %s", me.name, sptr->name);
-		return exit_client(sptr, NULL, "ABORTING LINK");
+		sendto_umode_global(UMODE_OPER, "ABORTING LINK: %s <=> %s", me.name, client->name);
+		return exit_client(client, NULL, "ABORTING LINK");
 	}
 }
 
-int reqmods_hook_serverconnect(Client *sptr)
+int reqmods_hook_serverconnect(Client *client)
 {
 	/* This function simply dumps a list of modules and their version to the other server,
 	 * which will then run through the received list and check the names/versions
@@ -494,7 +494,7 @@ int reqmods_hook_serverconnect(Client *sptr)
 	/* Let's not have leaves directly connected to the hub send their module list to other *leaves* as well =]
 	 * Since the hub will introduce all servers currently linked to it, this hook is actually called for every separate node
 	 */
-	if (!MyConnect(sptr))
+	if (!MyConnect(client))
 		return HOOK_CONTINUE;
 
 	sendbuf[0] = '\0';
@@ -510,7 +510,7 @@ int reqmods_hook_serverconnect(Client *sptr)
 		if (len + modlen + 2 > sizeof(sendbuf)) // Account for space and nullbyte, otherwise the last module string might be cut off
 		{
 			// "Flush" current list =]
-			sendto_one(sptr, NULL, ":%s %s :%s", me.id, MSG_SMOD, sendbuf);
+			sendto_one(client, NULL, ":%s %s :%s", me.id, MSG_SMOD, sendbuf);
 			sendbuf[0] = '\0';
 			len = 0;
 		}
@@ -527,6 +527,6 @@ int reqmods_hook_serverconnect(Client *sptr)
 
 	// May have something left
 	if (sendbuf[0])
-		sendto_one(sptr, NULL, ":%s %s :%s", me.id, MSG_SMOD, sendbuf);
+		sendto_one(client, NULL, ":%s %s :%s", me.id, MSG_SMOD, sendbuf);
 	return HOOK_CONTINUE;
 }

@@ -114,7 +114,7 @@ typedef struct {
         long mode; /**< Mode mask */
         char flag; /**< Mode character */
         int unset_on_deoper; /**< When set to 1 then this user mode will be unset on de-oper */
-        int (*allowed)(Client *sptr, int what); /**< The 'is this user allowed to set this mode?' routine */
+        int (*allowed)(Client *client, int what); /**< The 'is this user allowed to set this mode?' routine */
         char unloaded; /**< Internal flag to indicate module is being unloaded */
         Module *owner; /**< Module that owns this user mode */
 } Umode;
@@ -123,7 +123,7 @@ typedef struct {
         long mode; /**< Snomask mask */
         char flag; /**< Snomask character */
         int unset_on_deoper; /**< When set to 1 then this snomask will be unset on de-oper */
-        int (*allowed)(Client *sptr, int what); /**< The 'is this user allowed to set this snomask?' routine */
+        int (*allowed)(Client *client, int what); /**< The 'is this user allowed to set this snomask?' routine */
         char unloaded; /**< Internal flag to indicate module is being unloaded */
         Module *owner; /**< Module that owns this snomask */
 } Snomask;
@@ -371,7 +371,7 @@ typedef struct {
 	 * char **: optionally a message, can be NULL!! (for some BANCHK_ types)
 	 * char **: optionally for setting an error message, can be NULL!!
 	 */
-	int			(*is_banned)(Client *sptr, Channel *chptr, char *para, int checktype, char **msg, char **errormsg);
+	int			(*is_banned)(Client *client, Channel *chptr, char *para, int checktype, char **msg, char **errormsg);
 } Extban;
 
 typedef struct {
@@ -647,7 +647,7 @@ extern Event *EventMarkDel(Event *event);
 extern Event *EventFind(char *name);
 extern int EventMod(Event *event, EventInfo *mods);
 extern void DoEvents(void);
-extern void EventStatus(Client *sptr);
+extern void EventStatus(Client *client);
 extern void SetupEvents(void);
 
 
@@ -681,7 +681,7 @@ extern void ISupportSet(Module *module, const char *name, const char *value);
 extern void ISupportSetFmt(Module *module, const char *name, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
 extern void ISupportDelByName(const char *name);
 
-extern ClientCapability *ClientCapabilityFind(const char *token, Client *sptr);
+extern ClientCapability *ClientCapabilityFind(const char *token, Client *client);
 extern ClientCapability *ClientCapabilityFindReal(const char *token);
 extern ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clicap_request, long *cap);
 extern void ClientCapabilityDel(ClientCapability *clicap);
@@ -842,7 +842,7 @@ extern int CommandExists(char *name);
 extern CommandOverride *CommandOverrideAdd(Module *module, char *cmd, OverrideCmdFunc func);
 extern CommandOverride *CommandOverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc func);
 extern void CommandOverrideDel(CommandOverride *ovr);
-extern void CallCommandOverride(CommandOverride *ovr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+extern void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[]);
 
 extern void moddata_free_client(Client *acptr);
 extern void moddata_free_local_client(Client *acptr);
@@ -982,106 +982,106 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
  */
 
 /* Hook prototypes */
-int hooktype_local_connect(Client *sptr);
-int hooktype_remote_connect(Client *sptr);
-int hooktype_server_connect(Client *sptr);
-int hooktype_post_server_connect(Client *sptr);
-char *hooktype_pre_local_quit(Client *sptr, char *comment);
-int hooktype_local_quit(Client *sptr, MessageTag *mtags, char *comment);
-int hooktype_remote_quit(Client *sptr, MessageTag *mtags, char *comment);
-int hooktype_unkuser_quit(Client *sptr, MessageTag *mtags, char *comment);
-int hooktype_pre_local_connect(Client *sptr);
-int hooktype_server_quit(Client *sptr, MessageTag *mtags);
-int hooktype_local_nickchange(Client *sptr, char *newnick);
-int hooktype_remote_nickchange(Client *sptr, char *newnick);
-int hooktype_can_join(Client *sptr, Channel *chptr, char *key, char *parv[]);
-int hooktype_pre_local_join(Client *sptr, Channel *chptr, char *parv[]);
-int hooktype_local_join(Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
-int hooktype_remote_join(Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
-char *hooktype_pre_local_part(Client *sptr, Channel *chptr, char *comment);
-int hooktype_local_part(Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
-int hooktype_remote_part(Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
-char *hooktype_pre_local_kick(Client *sptr, Client *victim, Channel *chptr, char *comment);
-int hooktype_can_kick(Client *sptr, Client *victim, Channel *chptr, char *comment, long sptr_flags, long victim_flags, char **error);
-int hooktype_local_kick(Client *sptr, Client *victim, Channel *chptr, MessageTag *mtags, char *comment);
-int hooktype_remote_kick(Client *sptr, Client *victim, Channel *chptr, MessageTag *mtags, char *comment);
-char *hooktype_pre_usermsg(Client *sptr, Client *to, char *text, int notice);
-int hooktype_usermsg(Client *sptr, Client *to, MessageTag *mtags, char *text, int notice);
-int hooktype_can_send(Client *sptr, Channel *chptr, Membership *member, char **text, char **errmsg, int notice);
-char *hooktype_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
-int hooktype_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
-char *hooktype_pre_local_topic(Client *sptr, Channel *chptr, char *topic);
-int hooktype_local_topic(Client *sptr, Channel *chptr, char *topic);
-int hooktype_topic(Client *sptr, Channel *chptr, char *topic);
-int hooktype_pre_local_chanmode(Client *sptr, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_pre_remote_chanmode(Client *sptr, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_local_chanmode(Client *sptr, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int hooktype_remote_chanmode(Client *sptr, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_local_connect(Client *client);
+int hooktype_remote_connect(Client *client);
+int hooktype_server_connect(Client *client);
+int hooktype_post_server_connect(Client *client);
+char *hooktype_pre_local_quit(Client *client, char *comment);
+int hooktype_local_quit(Client *client, MessageTag *mtags, char *comment);
+int hooktype_remote_quit(Client *client, MessageTag *mtags, char *comment);
+int hooktype_unkuser_quit(Client *client, MessageTag *mtags, char *comment);
+int hooktype_pre_local_connect(Client *client);
+int hooktype_server_quit(Client *client, MessageTag *mtags);
+int hooktype_local_nickchange(Client *client, char *newnick);
+int hooktype_remote_nickchange(Client *client, char *newnick);
+int hooktype_can_join(Client *client, Channel *chptr, char *key, char *parv[]);
+int hooktype_pre_local_join(Client *client, Channel *chptr, char *parv[]);
+int hooktype_local_join(Client *client, Channel *chptr, MessageTag *mtags, char *parv[]);
+int hooktype_remote_join(Client *client, Channel *chptr, MessageTag *mtags, char *parv[]);
+char *hooktype_pre_local_part(Client *client, Channel *chptr, char *comment);
+int hooktype_local_part(Client *client, Channel *chptr, MessageTag *mtags, char *comment);
+int hooktype_remote_part(Client *client, Channel *chptr, MessageTag *mtags, char *comment);
+char *hooktype_pre_local_kick(Client *client, Client *victim, Channel *chptr, char *comment);
+int hooktype_can_kick(Client *client, Client *victim, Channel *chptr, char *comment, long client_flags, long victim_flags, char **error);
+int hooktype_local_kick(Client *client, Client *victim, Channel *chptr, MessageTag *mtags, char *comment);
+int hooktype_remote_kick(Client *client, Client *victim, Channel *chptr, MessageTag *mtags, char *comment);
+char *hooktype_pre_usermsg(Client *client, Client *to, char *text, int notice);
+int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, char *text, int notice);
+int hooktype_can_send(Client *client, Channel *chptr, Membership *member, char **text, char **errmsg, int notice);
+char *hooktype_pre_chanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
+int hooktype_chanmsg(Client *client, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
+char *hooktype_pre_local_topic(Client *client, Channel *chptr, char *topic);
+int hooktype_local_topic(Client *client, Channel *chptr, char *topic);
+int hooktype_topic(Client *client, Channel *chptr, char *topic);
+int hooktype_pre_local_chanmode(Client *client, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_pre_remote_chanmode(Client *client, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_local_chanmode(Client *client, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
+int hooktype_remote_chanmode(Client *client, Channel *chptr, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
 int hooktype_modechar_del(Channel *chptr, int modechar);
 int hooktype_modechar_add(Channel *chptr, int modechar);
-int hooktype_away(Client *sptr, MessageTag *mtags, char *reason);
-int hooktype_pre_invite(Client *sptr, Client *acptr, Channel *chptr, int *override);
+int hooktype_away(Client *client, MessageTag *mtags, char *reason);
+int hooktype_pre_invite(Client *client, Client *acptr, Channel *chptr, int *override);
 int hooktype_invite(Client *from, Client *to, Channel *chptr, MessageTag *mtags);
-int hooktype_pre_knock(Client *sptr, Channel *chptr);
-int hooktype_knock(Client *sptr, Channel *chptr, MessageTag *mtags, char *comment);
-int hooktype_whois(Client *sptr, Client *target);
-int hooktype_who_status(Client *sptr, Client *target, Channel *chptr, Member *member, char *status, int cansee);
-int hooktype_pre_kill(Client *sptr, Client *victim, char *killpath);
-int hooktype_local_kill(Client *sptr, Client *victim, char *comment);
-int hooktype_rehashflag(Client *sptr, char *str);
+int hooktype_pre_knock(Client *client, Channel *chptr);
+int hooktype_knock(Client *client, Channel *chptr, MessageTag *mtags, char *comment);
+int hooktype_whois(Client *client, Client *target);
+int hooktype_who_status(Client *client, Client *target, Channel *chptr, Member *member, char *status, int cansee);
+int hooktype_pre_kill(Client *client, Client *victim, char *killpath);
+int hooktype_local_kill(Client *client, Client *victim, char *comment);
+int hooktype_rehashflag(Client *client, char *str);
 int hooktype_configposttest(int *errors);
 int hooktype_rehash(void);
-int hooktype_stats(Client *sptr, char *str);
+int hooktype_stats(Client *client, char *str);
 int hooktype_configtest(ConfigFile *cfptr, ConfigEntry *ce, int section, int *errors);
 int hooktype_configrun(ConfigFile *cfptr, ConfigEntry *ce, int section);
 int hooktype_configrun_ex(ConfigFile *cfptr, ConfigEntry *ce, int section, void *ptr);
-int hooktype_local_oper(Client *sptr, int add);
-int hooktype_local_pass(Client *sptr, char *password);
-int hooktype_channel_create(Client *sptr, Channel *chptr);
+int hooktype_local_oper(Client *client, int add);
+int hooktype_local_pass(Client *client, char *password);
+int hooktype_channel_create(Client *client, Channel *chptr);
 int hooktype_channel_destroy(Channel *chptr, int *should_destroy);
 int hooktype_tkl_except(Client *cptr, int ban_type);
-int hooktype_umode_change(Client *sptr, long setflags, long newflags);
+int hooktype_umode_change(Client *client, long setflags, long newflags);
 int hooktype_rehash_complete(void);
-int hooktype_tkl_add(Client *sptr, TKL *tkl);
-int hooktype_tkl_del(Client *sptr, TKL *tkl);
+int hooktype_tkl_add(Client *client, TKL *tkl);
+int hooktype_tkl_del(Client *client, TKL *tkl);
 int hooktype_log(int flags, char *timebuf, char *buf);
 int hooktype_local_spamfilter(Client *acptr, char *str, char *str_in, int type, char *target, TKL *tkl);
-int hooktype_silenced(Client *sptr, Client *to, int notice);
-int hooktype_rawpacket_in(Client *sptr, char *readbuf, int *length);
-int hooktype_local_nickpass(Client *sptr, Client *nickserv);
+int hooktype_silenced(Client *client, Client *to, int notice);
+int hooktype_rawpacket_in(Client *client, char *readbuf, int *length);
+int hooktype_local_nickpass(Client *client, Client *nickserv);
 int hooktype_packet(Client *from, Client *to, Client *intended_to, char **msg, int *length);
-int hooktype_handshake(Client *sptr);
+int hooktype_handshake(Client *client);
 int hooktype_free_client(Client *acptr);
 int hooktype_free_user(ClientUser *user, Client *acptr);
-int hooktype_can_join_limitexceeded(Client *sptr, Channel *chptr, char *key, char *parv[]);
-int hooktype_visible_in_channel(Client *sptr, Channel *chptr);
+int hooktype_can_join_limitexceeded(Client *client, Channel *chptr, char *key, char *parv[]);
+int hooktype_visible_in_channel(Client *client, Channel *chptr);
 int hooktype_join_data(Client *who, Channel *chptr);
-int hooktype_oper_invite_ban(Client *sptr, Channel *chptr);
-int hooktype_view_topic_outside_channel(Client *sptr, Channel *chptr);
-int hooktype_chan_permit_nick_change(Client *sptr, Channel *chptr);
+int hooktype_oper_invite_ban(Client *client, Channel *chptr);
+int hooktype_view_topic_outside_channel(Client *client, Channel *chptr);
+int hooktype_chan_permit_nick_change(Client *client, Channel *chptr);
 int hooktype_is_channel_secure(Channel *chptr);
-int hooktype_can_send_secure(Client *sptr, Channel *chptr);
+int hooktype_can_send_secure(Client *client, Channel *chptr);
 int hooktype_channel_synced(Channel *chptr, int merge, int removetheirs, int nomode);
-int hooktype_can_sajoin(Client *target, Channel *chptr, Client *sptr);
+int hooktype_can_sajoin(Client *target, Channel *chptr, Client *client);
 int hooktype_check_init(Client *cptr, char *sockname, size_t size);
-int hooktype_mode_deop(Client *sptr, Client *victim, Channel *chptr, u_int what, int modechar, long my_access, char **badmode);
-int hooktype_see_channel_in_whois(Client *sptr, Client *target, Channel *chptr);
-int hooktype_dcc_denied(Client *sptr, Client *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
-int hooktype_server_handshake_out(Client *sptr);
-int hooktype_server_synched(Client *sptr);
-int hooktype_secure_connect(Client *sptr);
-int hooktype_can_bypass_channel_message_restriction(Client *sptr, Channel *chptr, BypassChannelMessageRestrictionType bypass_type);
-int hooktype_require_sasl(Client *sptr, char *reason);
-int hooktype_sasl_continuation(Client *sptr, char *buf);
-int hooktype_sasl_result(Client *sptr, int success);
-int hooktype_place_host_ban(Client *sptr, int action, char *reason, long duration);
-int hooktype_find_tkline_match(Client *sptr, TKL *tk);
-int hooktype_welcome(Client *sptr, int after_numeric);
+int hooktype_mode_deop(Client *client, Client *victim, Channel *chptr, u_int what, int modechar, long my_access, char **badmode);
+int hooktype_see_channel_in_whois(Client *client, Client *target, Channel *chptr);
+int hooktype_dcc_denied(Client *client, Client *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
+int hooktype_server_handshake_out(Client *client);
+int hooktype_server_synched(Client *client);
+int hooktype_secure_connect(Client *client);
+int hooktype_can_bypass_channel_message_restriction(Client *client, Channel *chptr, BypassChannelMessageRestrictionType bypass_type);
+int hooktype_require_sasl(Client *client, char *reason);
+int hooktype_sasl_continuation(Client *client, char *buf);
+int hooktype_sasl_result(Client *client, int success);
+int hooktype_place_host_ban(Client *client, int action, char *reason, long duration);
+int hooktype_find_tkline_match(Client *client, TKL *tk);
+int hooktype_welcome(Client *client, int after_numeric);
 int hooktype_pre_command(Client *from, MessageTag *mtags, char *buf);
 int hooktype_post_command(Client *from, MessageTag *mtags, char *buf);
 void hooktype_new_message(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 int hooktype_is_handshake_finished(Client *acptr);
-char *hooktype_pre_local_quit_chan(Client *sptr, Channel *chptr, char *comment);
+char *hooktype_pre_local_quit_chan(Client *client, Channel *chptr, char *comment);
 int hooktype_ident_lookup(Client *acptr);
 
 #ifdef GCC_TYPECHECKING

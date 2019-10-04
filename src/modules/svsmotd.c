@@ -62,20 +62,20 @@ CMD_FUNC(cmd_svsmotd)
 {
         FILE *conf = NULL;
 
-        if (!IsULine(sptr))
+        if (!IsULine(client))
         {
-                sendnumeric(sptr, ERR_NOPRIVILEGES);
+                sendnumeric(client, ERR_NOPRIVILEGES);
                 return;
         }
         if (parc < 2)
         {
-                sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SVSMOTD");
+                sendnumeric(client, ERR_NEEDMOREPARAMS, "SVSMOTD");
                 return;
         }
 
         if ((*parv[1] != '!') && parc < 3)
         {
-                sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SVSMOTD");
+                sendnumeric(client, ERR_NEEDMOREPARAMS, "SVSMOTD");
                 return;
         }
 
@@ -96,9 +96,9 @@ CMD_FUNC(cmd_svsmotd)
                   return;
         }
         if (parv[2])
-                sendto_server(sptr, 0, 0, NULL, ":%s SVSMOTD %s :%s", sptr->name, parv[1], parv[2]);
+                sendto_server(client, 0, 0, NULL, ":%s SVSMOTD %s :%s", client->name, parv[1], parv[2]);
         else
-                sendto_server(sptr, 0, 0, NULL, ":%s SVSMOTD %s", sptr->name, parv[1]);
+                sendto_server(client, 0, 0, NULL, ":%s SVSMOTD %s", client->name, parv[1]);
 
         if (conf == NULL)
                 return;

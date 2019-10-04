@@ -30,7 +30,7 @@ short	 Usermode_highest = 0;
 Snomask *Snomask_Table = NULL;
 short	 Snomask_highest = 0;
 
-/* cptr->umodes (32 bits): 26 used, 6 free */
+/* client->umodes (32 bits): 26 used, 6 free */
 long UMODE_INVISIBLE = 0L;     /* makes user invisible */
 long UMODE_OPER = 0L;          /* Operator */
 long UMODE_WALLOP = 0L;        /* send wallops to them */
@@ -154,7 +154,7 @@ void umodes_check_for_changes(void)
  * Add a usermode with character 'ch', if global is set to 1 the usermode is global
  * (sent to other servers) otherwise it's a local usermode
  */
-Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*allowed)(Client *sptr, int what), long *mode)
+Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*allowed)(Client *client, int what), long *mode)
 {
 	short	 i = 0;
 	short	 j = 0;
@@ -225,16 +225,16 @@ void UmodeDel(Umode *umode)
 		umode->unloaded = 1;
 	else	
 	{
-		Client *cptr;
-		list_for_each_entry(cptr, &client_list, client_node)
+		Client *client;
+		list_for_each_entry(client, &client_list, client_node)
 		{
 			long oldumode = 0;
-			if (!IsUser(cptr))
+			if (!IsUser(client))
 				continue;
-			oldumode = cptr->umodes;
-			cptr->umodes &= ~umode->mode;
-			if (MyUser(cptr))
-				send_umode_out(cptr, 1, oldumode);
+			oldumode = client->umodes;
+			client->umodes &= ~umode->mode;
+			if (MyUser(client))
+				send_umode_out(client, 1, oldumode);
 		}
 		umode->flag = '\0';
 		AllUmodes &= ~(umode->mode);
@@ -256,7 +256,7 @@ void UmodeDel(Umode *umode)
 	return;
 }
 
-Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(Client *sptr, int what), long *mode)
+Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(Client *client, int what), long *mode)
 {
 	short	 i = 0;
 	short	 j = 0;
@@ -320,17 +320,17 @@ void SnomaskDel(Snomask *sno)
 		sno->unloaded = 1;
 	else	
 	{
-		Client *cptr;
+		Client *client;
 
-		list_for_each_entry(cptr, &lclient_list, lclient_node)
+		list_for_each_entry(client, &lclient_list, lclient_node)
 		{
 			long oldsno;
-			if (!cptr || !IsUser(cptr))
+			if (!client || !IsUser(client))
 				continue;
-			oldsno = cptr->user->snomask;
-			cptr->user->snomask &= ~sno->mode;
-			if (oldsno != cptr->user->snomask)
-				sendnumeric(cptr, RPL_SNOMASK, get_snostr(cptr->user->snomask));
+			oldsno = client->user->snomask;
+			client->user->snomask &= ~sno->mode;
+			if (oldsno != client->user->snomask)
+				sendnumeric(client, RPL_SNOMASK, get_snostr(client->user->snomask));
 		}
 
 		sno->flag = '\0';
@@ -349,31 +349,31 @@ void SnomaskDel(Snomask *sno)
 	return;
 }
 
-int umode_allow_all(Client *sptr, int what)
+int umode_allow_all(Client *client, int what)
 {
 	return 1;
 }
 
-int umode_allow_unset(Client *sptr, int what)
+int umode_allow_unset(Client *client, int what)
 {
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return 1;
 	if (what == MODE_DEL)
 		return 1;
 	return 0;
 }
 
-int umode_allow_none(Client *sptr, int what)
+int umode_allow_none(Client *client, int what)
 {
-	if (MyUser(sptr))
+	if (MyUser(client))
 		return 0;
 	return 1;
 }
 
-int umode_allow_opers(Client *sptr, int what)
+int umode_allow_opers(Client *client, int what)
 {
-	if (MyUser(sptr))
-		return IsOper(sptr) ? 1 : 0;
+	if (MyUser(client))
+		return IsOper(client) ? 1 : 0;
 	else
 		return 1;
 }
@@ -382,7 +382,7 @@ void unload_all_unused_umodes(void)
 {
 	long removed_umode = 0;
 	int i;
-	Client *cptr;
+	Client *client;
 	for (i = 0; i < UMODETABLESZ; i++)
 	{
 		if (Usermode_Table[i].unloaded)
@@ -390,15 +390,15 @@ void unload_all_unused_umodes(void)
 	}
 	if (!removed_umode) /* Nothing was unloaded */
 		return;
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
 		long oldumode = 0;
-		if (!IsUser(cptr))
+		if (!IsUser(client))
 			continue;
-		oldumode = cptr->umodes;
-		cptr->umodes &= ~(removed_umode);
-		if (MyUser(cptr))
-			send_umode_out(cptr, 1, oldumode);
+		oldumode = client->umodes;
+		client->umodes &= ~(removed_umode);
+		if (MyUser(client))
+			send_umode_out(client, 1, oldumode);
 	}
 	for (i = 0; i < UMODETABLESZ; i++)
 	{
@@ -415,7 +415,7 @@ void unload_all_unused_umodes(void)
 
 void unload_all_unused_snomasks(void)
 {
-	Client *cptr;
+	Client *client;
 	long removed_sno = 0;
 	int i;
 
@@ -431,15 +431,15 @@ void unload_all_unused_snomasks(void)
 	if (!removed_sno) /* Nothing was unloaded */
 		return;
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
 		long oldsno;
-		if (!cptr || !IsUser(cptr))
+		if (!client || !IsUser(client))
 			continue;
-		oldsno = cptr->user->snomask;
-		cptr->user->snomask &= ~(removed_sno);
-		if (oldsno != cptr->user->snomask)
-			sendnumeric(cptr, RPL_SNOMASK, get_snostr(cptr->user->snomask));
+		oldsno = client->user->snomask;
+		client->user->snomask &= ~(removed_sno);
+		if (oldsno != client->user->snomask)
+			sendnumeric(client, RPL_SNOMASK, get_snostr(client->user->snomask));
 	}
 }
 
@@ -449,16 +449,16 @@ void unload_all_unused_snomasks(void)
  * This used to be a bit more complex but nowadays we just erase all
  * snomasks since all of them are IRCOp-only. Easy.
  */
-void remove_oper_snomasks(Client *sptr)
+void remove_oper_snomasks(Client *client)
 {
-	sptr->user->snomask = 0;
+	client->user->snomask = 0;
 }
 
 /*
  * This function removes any oper-only user modes from the user.
  * You may also want to call remove_oper_snomasks(), see above.
  */
-void remove_oper_modes(Client *sptr)
+void remove_oper_modes(Client *client)
 {
 int i;
 
@@ -467,19 +467,19 @@ int i;
 		if (!Usermode_Table[i].flag)
 			continue;
 		if (Usermode_Table[i].unset_on_deoper)
-			sptr->umodes &= ~Usermode_Table[i].mode;
+			client->umodes &= ~Usermode_Table[i].mode;
 	}
 }
 
-void remove_oper_privileges(Client *sptr, int broadcast_mode_change)
+void remove_oper_privileges(Client *client, int broadcast_mode_change)
 {
-	long oldumodes = sptr->umodes;
-	remove_oper_modes(sptr);
-	remove_oper_snomasks(sptr);
-	if (broadcast_mode_change && (sptr->umodes != oldumodes))
-		send_umode_out(sptr, 1, oldumodes);
-	if (MyUser(sptr)) /* only do if it's our client, remote servers will send a SWHOIS cmd */
-		swhois_delete(sptr, "oper", "*", &me, NULL);
+	long oldumodes = client->umodes;
+	remove_oper_modes(client);
+	remove_oper_snomasks(client);
+	if (broadcast_mode_change && (client->umodes != oldumodes))
+		send_umode_out(client, 1, oldumodes);
+	if (MyUser(client)) /* only do if it's our client, remote servers will send a SWHOIS cmd */
+		swhois_delete(client, "oper", "*", &me, NULL);
 }
 
 /** Return long integer mode for a user mode character (eg: 'x' -> 0x10) */
@@ -496,11 +496,11 @@ long find_user_mode(char flag)
 }
 
 /** Returns 1 if user has this user mode set and 0 if not */
-int has_user_mode(Client *acptr, char mode)
+int has_user_mode(Client *client, char mode)
 {
 	long m = find_user_mode(mode);
 
-	if (acptr->umodes & m)
+	if (client->umodes & m)
 		return 1; /* Yes, user has this mode */
 
 	return 0; /* Mode does not exist or not set */

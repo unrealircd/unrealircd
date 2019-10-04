@@ -34,8 +34,8 @@ ModuleHeader MOD_HEADER
 /* Variables */
 long CAP_ACCOUNT_TAG = 0L;
 
-int account_tag_mtag_is_ok(Client *acptr, char *name, char *value);
-void mtag_add_account(Client *acptr, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
+int account_tag_mtag_is_ok(Client *client, char *name, char *value);
+void mtag_add_account(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature);
 
 MOD_INIT()
 {
@@ -75,23 +75,23 @@ MOD_UNLOAD()
  * syntax.
  * We simply allow account-tag ONLY from servers and with any syntax.
  */
-int account_tag_mtag_is_ok(Client *acptr, char *name, char *value)
+int account_tag_mtag_is_ok(Client *client, char *name, char *value)
 {
-	if (IsServer(acptr))
+	if (IsServer(client))
 		return 1;
 
 	return 0;
 }
 
-void mtag_add_account(Client *acptr, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
+void mtag_add_account(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, char *signature)
 {
 	MessageTag *m;
 
-	if (acptr && acptr->user && (*acptr->user->svid != '*') && !isdigit(*acptr->user->svid))
+	if (client && client->user && (*client->user->svid != '*') && !isdigit(*client->user->svid))
 	{
 		m = safe_alloc(sizeof(MessageTag));
 		safe_strdup(m->name, "account");
-		safe_strdup(m->value, acptr->user->svid);
+		safe_strdup(m->value, client->user->svid);
 
 		AddListItem(m, *mtag_list);
 	}

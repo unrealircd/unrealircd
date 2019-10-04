@@ -32,9 +32,9 @@ ModuleHeader MOD_HEADER
 
 long UMODE_NOCTCP = 0L;
 
-#define IsNoCTCP(cptr)    (cptr->umodes & UMODE_NOCTCP)
+#define IsNoCTCP(client)    (client->umodes & UMODE_NOCTCP)
 
-char *noctcp_preusermsg(Client *sptr, Client *acptr, char *text, int notice);
+char *noctcp_preusermsg(Client *client, Client *target, char *text, int notice);
 
 MOD_TEST()
 {
@@ -74,11 +74,11 @@ static int IsACTCP(char *s)
 	return 0;
 }
 
-char *noctcp_preusermsg(Client *sptr, Client *acptr, char *text, int notice)
+char *noctcp_preusermsg(Client *client, Client *target, char *text, int notice)
 {
-	if (MyUser(sptr) && !notice && IsNoCTCP(acptr) && !IsOper(sptr) && IsACTCP(text))
+	if (MyUser(client) && !notice && IsNoCTCP(target) && !IsOper(client) && IsACTCP(text))
 	{
-		sendnumeric(sptr, ERR_NOCTCP, acptr->name);
+		sendnumeric(client, ERR_NOCTCP, target->name);
 		return NULL;
 	}
 	return text;

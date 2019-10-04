@@ -18,7 +18,7 @@
 #include "unrealircd.h"
 
 /* mode = 0, just use strlcpy, 1 = Realloc new and return new pointer */
-char *make_virthost(Client *sptr, char *curr, char *new, int mode)
+char *make_virthost(Client *client, char *curr, char *new, int mode)
 {
 	char host[256], *mask, *p, *q;
 
@@ -32,7 +32,7 @@ char *make_virthost(Client *sptr, char *curr, char *new, int mode)
 
 	/* Call the cloaking layer */
 	if (RCallbacks[CALLBACKTYPE_CLOAK_EX] != NULL)
-		mask = RCallbacks[CALLBACKTYPE_CLOAK_EX]->func.pcharfunc(sptr, host);
+		mask = RCallbacks[CALLBACKTYPE_CLOAK_EX]->func.pcharfunc(client, host);
 	else if (RCallbacks[CALLBACKTYPE_CLOAK] != NULL)
 		mask = RCallbacks[CALLBACKTYPE_CLOAK]->func.pcharfunc(host);
 	else

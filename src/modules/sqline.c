@@ -71,7 +71,7 @@ CMD_FUNC(cmd_sqline)
 		"Q",            /*2  G   */
 		"*" ,           /*3  user */
 		parv[1],        /*4  host */
-		sptr->name,     /*5  setby */
+		client->name,     /*5  setby */
 		"0",            /*6  expire_at */
 		NULL,           /*7  set_at */
 		"no reason"     /*8  reason */

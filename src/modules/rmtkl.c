@@ -37,10 +37,10 @@ typedef struct {
 	char *operpriv;
 } TKLType;
 
-static void dump_str(Client *sptr, char **buf);
+static void dump_str(Client *client, char **buf);
 static TKLType *find_TKLType_by_flag(char flag);
 void rmtkl_check_options(char *param, int *skipperm, int *silent);
-int rmtkl_tryremove(Client *sptr, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent);
+int rmtkl_tryremove(Client *client, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent);
 CMD_FUNC(rmtkl);
 
 TKLType tkl_types[] = {
@@ -104,17 +104,17 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static void dump_str(Client *sptr, char **buf)
+static void dump_str(Client *client, char **buf)
 {
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 
 	// Using sendto_one() instead of sendnumericfmt() because the latter strips indentation and stuff ;]
 	for (; *buf != NULL; buf++)
-		sendto_one(sptr, NULL, ":%s %03d %s :%s", me.name, RPL_TEXT, sptr->name, *buf);
+		sendto_one(client, NULL, ":%s %03d %s :%s", me.name, RPL_TEXT, client->name, *buf);
 
 	// Let user take 8 seconds to read it
-	sptr->local->since += 8;
+	client->local->since += 8;
 }
 
 static TKLType *find_TKLType_by_flag(char flag)
@@ -133,7 +133,7 @@ void rmtkl_check_options(char *param, int *skipperm, int *silent) {
 		*silent = 1;
 }
 
-int rmtkl_tryremove(Client *sptr, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent)
+int rmtkl_tryremove(Client *client, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent)
 {
 	if (tkl->type != tkltype->type)
 		return 0;
@@ -169,9 +169,9 @@ int rmtkl_tryremove(Client *sptr, TKLType *tkltype, TKL *tkl, char *uhmask, char
 		return 0;
 
 	if (!silent)
-		sendnotice_tkl_del(sptr->name, tkl);
+		sendnotice_tkl_del(client->name, tkl);
 
-	RunHook4(HOOKTYPE_TKL_DEL, sptr, tkl, NULL, NULL);
+	RunHook4(HOOKTYPE_TKL_DEL, client, tkl, NULL, NULL);
 
 	if (tkl->type & TKL_SHUN)
 		tkl_check_local_remove_shun(tkl);
@@ -188,18 +188,18 @@ CMD_FUNC(rmtkl) {
 	unsigned int count;
 	char broadcast[BUFSIZE];
 
-	if (!IsULine(sptr) && !IsOper(sptr))
+	if (!IsULine(client) && !IsOper(client))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	if (IsNotParam(1))
-		return dump_str(sptr, rmtkl_help);
+		return dump_str(client, rmtkl_help);
 
 	if (IsNotParam(2))
 	{
-		sendnotice(sptr, "Not enough parameters. Type /RMTKL for help.");
+		sendnotice(client, "Not enough parameters. Type /RMTKL for help.");
 		return;
 	}
 
@@ -209,7 +209,7 @@ CMD_FUNC(rmtkl) {
 	skipperm = 0;
 	silent = 0;
 	count = 0;
-	snprintf(broadcast, sizeof(broadcast), ":%s RMTKL %s %s", sptr->name, types, uhmask);
+	snprintf(broadcast, sizeof(broadcast), ":%s RMTKL %s %s", client->name, types, uhmask);
 
 	// Check for optionals
 	if (IsParam(3))
@@ -237,7 +237,7 @@ CMD_FUNC(rmtkl) {
 		types = "kzGZs";
 
 	// Make sure the oper actually has the privileges to remove the *-Lines he wants
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 	{
 		for (p = types; *p; p++)
 		{
@@ -245,9 +245,9 @@ CMD_FUNC(rmtkl) {
 			if (!tkltype->type)
 				continue;
 
-			if (!ValidatePermissionsForPath(tkltype->operpriv, sptr, NULL, NULL, NULL))
+			if (!ValidatePermissionsForPath(tkltype->operpriv, client, NULL, NULL, NULL))
 			{
-				sendnumeric(sptr, ERR_NOPRIVILEGES);
+				sendnumeric(client, ERR_NOPRIVILEGES);
 				return;
 			}
 		}
@@ -271,7 +271,7 @@ CMD_FUNC(rmtkl) {
 				for (tkl = tklines_ip_hash[tklindex][tklindex2]; tkl; tkl = next)
 				{
 					next = tkl->next;
-					count += rmtkl_tryremove(sptr, tkltype, tkl, uhmask, commentmask, skipperm, silent);
+					count += rmtkl_tryremove(client, tkltype, tkl, uhmask, commentmask, skipperm, silent);
 				}
 			}
 		}
@@ -281,9 +281,9 @@ CMD_FUNC(rmtkl) {
 		for (tkl = tklines[tklindex]; tkl; tkl = next)
 		{
 			next = tkl->next;
-			count += rmtkl_tryremove(sptr, tkltype, tkl, uhmask, commentmask, skipperm, silent);
+			count += rmtkl_tryremove(client, tkltype, tkl, uhmask, commentmask, skipperm, silent);
 		}
 	}
 
-	sendto_snomask(SNO_TKL, "*** %s removed %d TKLine(s) using /rmtkl", sptr->name, count);
+	sendto_snomask(SNO_TKL, "*** %s removed %d TKLine(s) using /rmtkl", client->name, count);
 }

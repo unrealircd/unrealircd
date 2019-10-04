@@ -69,16 +69,16 @@ CMD_FUNC(cmd_whowas)
 
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NONICKNAMEGIVEN);
+		sendnumeric(client, ERR_NONICKNAMEGIVEN);
 		return;
 	}
 	if (parc > 2)
 		max = atoi(parv[2]);
 	if (parc > 3)
-		if (hunt_server(sptr, recv_mtags, ":%s WHOWAS %s %s :%s", 3, parc, parv))
+		if (hunt_server(client, recv_mtags, ":%s WHOWAS %s %s :%s", 3, parc, parv))
 			return;
 
-	if (!MyConnect(sptr) && (max > 20))
+	if (!MyConnect(client) && (max > 20))
 		max = 20;
 
 	p = strchr(parv[1], ',');
@@ -91,14 +91,14 @@ CMD_FUNC(cmd_whowas)
 	{
 		if (!mycmp(nick, temp->name))
 		{
-			sendnumeric(sptr, RPL_WHOWASUSER, temp->name,
+			sendnumeric(client, RPL_WHOWASUSER, temp->name,
 			    temp->username,
-			    (IsOper(sptr) ? temp->hostname :
+			    (IsOper(client) ? temp->hostname :
 			    (*temp->virthost !=
 			    '\0') ? temp->virthost : temp->hostname),
 			    temp->realname);
-                	if (!((Find_uline(temp->servername)) && !IsOper(sptr) && HIDE_ULINES))
-				sendnumeric(sptr, RPL_WHOISSERVER, temp->name, temp->servername,
+                	if (!((Find_uline(temp->servername)) && !IsOper(client) && HIDE_ULINES))
+				sendnumeric(client, RPL_WHOISSERVER, temp->name, temp->servername,
 				    myctime(temp->logoff));
 			cur++;
 			found++;
@@ -107,7 +107,7 @@ CMD_FUNC(cmd_whowas)
 			break;
 	}
 	if (!found)
-		sendnumeric(sptr, ERR_WASNOSUCHNICK, nick);
+		sendnumeric(client, ERR_WASNOSUCHNICK, nick);
 
-	sendnumeric(sptr, RPL_ENDOFWHOWAS, parv[1]);
+	sendnumeric(client, RPL_ENDOFWHOWAS, parv[1]);
 }

@@ -22,7 +22,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 int hbn_history_add(char *object, MessageTag *mtags, char *line);
 int hbn_history_del(char *object, int max_lines, long max_time);
-int hbn_history_request(Client *acptr, char *object, HistoryFilter *filter);
+int hbn_history_request(Client *client, char *object, HistoryFilter *filter);
 int hbn_history_destroy(char *object);
 
 MOD_INIT()
@@ -59,7 +59,7 @@ int hbn_history_add(char *object, MessageTag *mtags, char *line)
 	return 1;
 }
 
-int hbn_history_request(Client *acptr, char *object, HistoryFilter *filter)
+int hbn_history_request(Client *client, char *object, HistoryFilter *filter)
 {
 	return 0;
 }

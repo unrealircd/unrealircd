@@ -279,24 +279,24 @@ OperPermission ValidatePermissionsForPathEx(OperClassACL* acl, OperClassACLPath*
 	return OPER_DENY;
 }
 
-OperPermission ValidatePermissionsForPath(char* path, Client *sptr, Client *victim, Channel *channel, void* extra)
+OperPermission ValidatePermissionsForPath(char* path, Client *client, Client *victim, Channel *channel, void* extra)
 {
 	ConfigItem_oper *ce_oper;
 	ConfigItem_operclass *ce_operClass;
 	OperClass *oc = NULL;
 	OperClassACLPath *operPath;
 
-	if (!sptr)
+	if (!client)
 		return OPER_DENY;
 
 	/* Trust Servers, U-Lines and remote opers */
-	if (IsServer(sptr) || IsULine(sptr) || (IsOper(sptr) && !MyUser(sptr)))
+	if (IsServer(client) || IsULine(client) || (IsOper(client) && !MyUser(client)))
 		return OPER_ALLOW;
 
-	if (!IsOper(sptr))
+	if (!IsOper(client))
 		return OPER_DENY;
 
-	ce_oper = Find_oper(sptr->user->operlogin);
+	ce_oper = Find_oper(client->user->operlogin);
 	if (!ce_oper)
 	{
 		return OPER_DENY;
@@ -317,7 +317,7 @@ OperPermission ValidatePermissionsForPath(char* path, Client *sptr, Client *vict
 		{
 			OperPermission perm;
 			OperClassCheckParams *params = safe_alloc(sizeof(OperClassCheckParams));
-			params->sptr = sptr;
+			params->client = client;
 			params->victim = victim;
 			params->channel = channel;
 			params->extra = extra;

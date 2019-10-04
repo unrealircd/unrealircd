@@ -58,31 +58,29 @@ MOD_UNLOAD()
  * RPL_WATCHOFF	- Successfully removed from WATCH-list.
  * ERR_TOOMANYWATCH - Take a guess :>  Too many WATCH entries.
  */
-static void show_watch(Client *cptr, char *name, int rpl1, int rpl2, int awaynotify)
+static void show_watch(Client *client, char *name, int rpl1, int rpl2, int awaynotify)
 {
-	Client *acptr;
+	Client *target;
 
-
-	if ((acptr = find_person(name, NULL)))
+	if ((target = find_person(name, NULL)))
 	{
-		if (awaynotify && acptr->user->away)
+		if (awaynotify && target->user->away)
 		{
-			sendnumeric(cptr, RPL_NOWISAWAY,
-			    acptr->name, acptr->user->username,
-			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
-			    realhost, acptr->user->lastaway);
+			sendnumeric(client, RPL_NOWISAWAY,
+			    target->name, target->user->username,
+			    IsHidden(target) ? target->user->virthost : target->user->
+			    realhost, target->user->lastaway);
 			return;
 		}
 		
-		sendnumeric(cptr, rpl1,
-		    acptr->name, acptr->user->username,
-		    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
-		    realhost, acptr->lastnick);
+		sendnumeric(client, rpl1,
+		    target->name, target->user->username,
+		    IsHidden(target) ? target->user->virthost : target->user->
+		    realhost, target->lastnick);
 	}
 	else
 	{
-		sendnumeric(cptr, rpl2,
-		    name, "*", "*", 0L);
+		sendnumeric(client, rpl2, name, "*", "*", 0L);
 	}
 }
 
@@ -93,13 +91,13 @@ static char buf[BUFSIZE];
  */
 CMD_FUNC(cmd_watch)
 {
-	Client *acptr;
+	Client *target;
 	char *s, **pav = parv, *user;
 	char *p = NULL, *def = "l";
 	int awaynotify = 0;
 	int did_l=0, did_s=0;
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 
 	if (parc < 2)
@@ -129,16 +127,16 @@ CMD_FUNC(cmd_watch)
 				continue;
 			if (do_nick_name(s + 1))
 			{
-				if (sptr->local->watches >= MAXWATCH)
+				if (client->local->watches >= MAXWATCH)
 				{
-					sendnumeric(sptr, ERR_TOOMANYWATCH, s + 1);
+					sendnumeric(client, ERR_TOOMANYWATCH, s + 1);
 					continue;
 				}
 
-				add_to_watch_hash_table(s + 1, sptr, awaynotify);
+				add_to_watch_hash_table(s + 1, client, awaynotify);
 			}
 
-			show_watch(sptr, s + 1, RPL_NOWON, RPL_NOWOFF, awaynotify);
+			show_watch(client, s + 1, RPL_NOWON, RPL_NOWOFF, awaynotify);
 			continue;
 		}
 
@@ -150,8 +148,8 @@ CMD_FUNC(cmd_watch)
 		{
 			if (!*(s+1))
 				continue;
-			del_from_watch_hash_table(s + 1, sptr);
-			show_watch(sptr, s + 1, RPL_WATCHOFF, RPL_WATCHOFF, 0);
+			del_from_watch_hash_table(s + 1, client);
+			show_watch(client, s + 1, RPL_WATCHOFF, RPL_WATCHOFF, 0);
 
 			continue;
 		}
@@ -162,7 +160,7 @@ CMD_FUNC(cmd_watch)
 		 */
 		if (*s == 'C' || *s == 'c')
 		{
-			hash_del_watch_list(sptr);
+			hash_del_watch_list(client);
 
 			continue;
 		}
@@ -184,45 +182,45 @@ CMD_FUNC(cmd_watch)
 			 * Send a list of how many users they have on their WATCH list
 			 * and how many WATCH lists they are on.
 			 */
-			anptr = hash_get_watch(sptr->name);
+			anptr = hash_get_watch(client->name);
 			if (anptr)
 				for (lp = anptr->watch, count = 1;
 				    (lp = lp->next); count++)
 					;
-			sendnumeric(sptr, RPL_WATCHSTAT, sptr->local->watches, count);
+			sendnumeric(client, RPL_WATCHSTAT, client->local->watches, count);
 
 			/*
 			 * Send a list of everybody in their WATCH list. Be careful
 			 * not to buffer overflow.
 			 */
-			if ((lp = sptr->local->watch) == NULL)
+			if ((lp = client->local->watch) == NULL)
 			{
-				sendnumeric(sptr, RPL_ENDOFWATCHLIST, *s);
+				sendnumeric(client, RPL_ENDOFWATCHLIST, *s);
 				continue;
 			}
 			*buf = '\0';
 			strlcpy(buf, lp->value.wptr->nick, sizeof buf);
 			count =
-			    strlen(sptr->name) + strlen(me.name) + 10 +
+			    strlen(client->name) + strlen(me.name) + 10 +
 			    strlen(buf);
 			while ((lp = lp->next))
 			{
 				if (count + strlen(lp->value.wptr->nick) + 1 >
 				    BUFSIZE - 2)
 				{
-					sendnumeric(sptr, RPL_WATCHLIST, buf);
+					sendnumeric(client, RPL_WATCHLIST, buf);
 					*buf = '\0';
 					count =
-					    strlen(sptr->name) + strlen(me.name) +
+					    strlen(client->name) + strlen(me.name) +
 					    10;
 				}
 				strcat(buf, " ");
 				strcat(buf, lp->value.wptr->nick);
 				count += (strlen(lp->value.wptr->nick) + 1);
 			}
-			sendnumeric(sptr, RPL_WATCHLIST, buf);
+			sendnumeric(client, RPL_WATCHLIST, buf);
 
-			sendnumeric(sptr, RPL_ENDOFWATCHLIST, *s);
+			sendnumeric(client, RPL_ENDOFWATCHLIST, *s);
 			continue;
 		}
 
@@ -233,33 +231,32 @@ CMD_FUNC(cmd_watch)
 		 */
 		if ((*s == 'L' || *s == 'l') && !did_l)
 		{
-			Link *lp = sptr->local->watch;
+			Link *lp = client->local->watch;
 
 			did_l = 1;
 
 			while (lp)
 			{
-				if ((acptr =
-				    find_person(lp->value.wptr->nick, NULL)))
+				if ((target = find_person(lp->value.wptr->nick, NULL)))
 				{
-					sendnumeric(sptr, RPL_NOWON, acptr->name,
-					    acptr->user->username,
-					    IsHidden(acptr) ? acptr->user->
-					    virthost : acptr->user->realhost,
-					    acptr->lastnick);
+					sendnumeric(client, RPL_NOWON, target->name,
+					    target->user->username,
+					    IsHidden(target) ? target->user->
+					    virthost : target->user->realhost,
+					    target->lastnick);
 				}
 				/*
 				 * But actually, only show them offline if its a capital
 				 * 'L' (full list wanted).
 				 */
 				else if (isupper(*s))
-					sendnumeric(sptr, RPL_NOWOFF,
+					sendnumeric(client, RPL_NOWOFF,
 					    lp->value.wptr->nick, "*", "*",
 					    lp->value.wptr->lasttime);
 				lp = lp->next;
 			}
 
-			sendnumeric(sptr, RPL_ENDOFWATCHLIST, *s);
+			sendnumeric(client, RPL_ENDOFWATCHLIST, *s);
 
 			continue;
 		}

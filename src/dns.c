@@ -47,7 +47,7 @@ static void unrealdns_freeandremovereq(DNSReq *r);
 void unrealdns_removecacherecord(DNSCache *c);
 
 /* Externs */
-extern void proceed_normal_client_handshake(Client *acptr, struct hostent *he);
+extern void proceed_normal_client_handshake(Client *client, struct hostent *he);
 
 /* Global variables */
 
@@ -170,11 +170,11 @@ void init_resolver(int firsttime)
 	unrealdns_timeout_hdl = EventAdd(NULL, "unrealdns_timeout", unrealdns_timeout, NULL, 500, 0);
 }
 
-void reinit_resolver(Client *sptr)
+void reinit_resolver(Client *client)
 {
 	EventDel(unrealdns_timeout_hdl);
 
-	sendto_ops_and_log("%s requested reinitalization of resolver!", sptr->name);
+	sendto_ops_and_log("%s requested reinitalization of resolver!", client->name);
 	sendto_realops("Destroying resolver channel, along with all currently pending queries...");
 	ares_destroy(resolver_channel);
 	sendto_realops("Initializing resolver again...");
@@ -199,19 +199,19 @@ void unrealdns_addreqtolist(DNSReq *r)
  *   We return NULL in this case and an asynchronic request is done.
  *   When done, proceed_normal_client_handshake() is called.
  */
-struct hostent *unrealdns_doclient(Client *cptr)
+struct hostent *unrealdns_doclient(Client *client)
 {
 	DNSReq *r;
 	char *cache_name;
 
-	cache_name = unrealdns_findcache_ip(cptr->ip);
+	cache_name = unrealdns_findcache_ip(client->ip);
 	if (cache_name)
-		return unreal_create_hostent(cache_name, cptr->ip);
+		return unreal_create_hostent(cache_name, client->ip);
 
 	/* Create a request */
 	r = safe_alloc(sizeof(DNSReq));
-	r->cptr = cptr;
-	r->ipv6 = IsIPV6(cptr);
+	r->client = client;
+	r->ipv6 = IsIPV6(client);
 	unrealdns_addreqtolist(r);
 
 	/* Execute it */
@@ -219,12 +219,12 @@ struct hostent *unrealdns_doclient(Client *cptr)
 	{
 		struct in6_addr addr;
 		memset(&addr, 0, sizeof(addr));
-		inet_pton(AF_INET6, cptr->ip, &addr);
+		inet_pton(AF_INET6, client->ip, &addr);
 		ares_gethostbyaddr(resolver_channel, &addr, 16, AF_INET6, unrealdns_cb_iptoname, r);
 	} else {
 		struct in_addr addr;
 		memset(&addr, 0, sizeof(addr));
-		inet_pton(AF_INET, cptr->ip, &addr);
+		inet_pton(AF_INET, client->ip, &addr);
 		ares_gethostbyaddr(resolver_channel, &addr, 4, AF_INET, unrealdns_cb_iptoname, r);
 	}
 
@@ -255,27 +255,27 @@ void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf, int ipv4_on
 
 void unrealdns_cb_iptoname(void *arg, int status, int timeouts, struct hostent *he)
 {
-DNSReq *r = (DNSReq *)arg;
-DNSReq *newr;
-Client *acptr = r->cptr;
-char ipv6 = r->ipv6;
+	DNSReq *r = (DNSReq *)arg;
+	DNSReq *newr;
+	Client *client = r->client;
+	char ipv6 = r->ipv6;
 
 	unrealdns_freeandremovereq(r);
 
-	if (!acptr)
+	if (!client)
 		return; 
 	
 	/* Check for status and null name (yes, we must) */
 	if ((status != 0) || !he->h_name || !*he->h_name)
 	{
 		/* Failed */
-		proceed_normal_client_handshake(acptr, NULL);
+		proceed_normal_client_handshake(client, NULL);
 		return;
 	}
 
 	/* Good, we got a valid response, now prepare for name -> ip */
 	newr = safe_alloc(sizeof(DNSReq));
-	newr->cptr = acptr;
+	newr->client = client;
 	newr->ipv6 = ipv6;
 	safe_strdup(newr->name, he->h_name);
 	unrealdns_addreqtolist(newr);
@@ -307,18 +307,18 @@ char *p;
 void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct hostent *he)
 {
 	DNSReq *r = (DNSReq *)arg;
-	Client *acptr = r->cptr;
+	Client *client = r->client;
 	char ipv6 = r->ipv6;
 	int i;
 	struct hostent *he2;
 
-	if (!acptr)
+	if (!client)
 		goto bad;
 
 	if ((status != 0) || (ipv6 && (he->h_length != 16)) || (!ipv6 && (he->h_length != 4)))
 	{
 		/* Failed: error code, or data length is incorrect */
-		proceed_normal_client_handshake(acptr, NULL);
+		proceed_normal_client_handshake(client, NULL);
 		goto bad;
 	}
 
@@ -328,13 +328,13 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 		if (r->ipv6)
 		{
 			struct in6_addr addr;
-			if (inet_pton(AF_INET6, acptr->ip, &addr) != 1)
+			if (inet_pton(AF_INET6, client->ip, &addr) != 1)
 				continue; /* something fucked */
 			if (!memcmp(he->h_addr_list[i], &addr, 16))
 				break; /* MATCH */
 		} else {
 			struct in_addr addr;
-			if (inet_pton(AF_INET, acptr->ip, &addr) != 1)
+			if (inet_pton(AF_INET, client->ip, &addr) != 1)
 				continue; /* something fucked */
 			if (!memcmp(he->h_addr_list[i], &addr, 4))
 				break; /* MATCH */
@@ -344,23 +344,23 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 	if (!he->h_addr_list[i])
 	{
 		/* Failed name <-> IP mapping */
-		proceed_normal_client_handshake(acptr, NULL);
+		proceed_normal_client_handshake(client, NULL);
 		goto bad;
 	}
 
 	if (!verify_hostname(r->name))
 	{
 		/* Hostname is bad, don't cache and consider unresolved */
-		proceed_normal_client_handshake(acptr, NULL);
+		proceed_normal_client_handshake(client, NULL);
 		goto bad;
 	}
 
 	/* Entry was found, verified, and can be added to cache */
 
-	unrealdns_addtocache(r->name, acptr->ip);
+	unrealdns_addtocache(r->name, client->ip);
 	
-	he2 = unreal_create_hostent(r->name, acptr->ip);
-	proceed_normal_client_handshake(acptr, he2);
+	he2 = unreal_create_hostent(r->name, client->ip);
+	proceed_normal_client_handshake(client, he2);
 
 bad:
 	unrealdns_freeandremovereq(r);
@@ -417,7 +417,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	safe_strdup(r->linkblock->connect_ip, ip);
 	he2 = unreal_create_hostent(he->h_name, ip);
 
-	switch ((n = connect_server(r->linkblock, r->cptr, he2)))
+	switch ((n = connect_server(r->linkblock, r->client, he2)))
 	{
 		case 0:
 			sendto_ops_and_log("Connecting to server %s[%s].", r->linkblock->servername, ip);
@@ -564,7 +564,7 @@ DNSCache *c, *next;
 		if (c->expires < TStime())
 		{
 #if 0
-			sendto_realops(sptr, "[Syzop/DNS] Expire: %s [%s] (%ld < %ld)",
+			sendto_realops(client, "[Syzop/DNS] Expire: %s [%s] (%ld < %ld)",
 				c->name, c->ip, c->expires, TStime());
 #endif
 			unrealdns_removecacherecord(c);
@@ -620,16 +620,16 @@ static void unrealdns_freeandremovereq(DNSReq *r)
 	safe_free(r);
 }
 
-/** Delete requests for client 'cptr'.
+/** Delete requests for client 'client'.
  * Actually we DO NOT (and should not) delete them, but simply mark them as 'dead'.
  */
-void unrealdns_delreq_bycptr(Client *cptr)
+void unrealdns_delreq_bycptr(Client *client)
 {
 	DNSReq *r;
 
 	for (r = requests; r; r = r->next)
-		if (r->cptr == cptr)
-			r->cptr = NULL;
+		if (r->client == client)
+			r->client = NULL;
 }
 
 void unrealdns_delasyncconnects(void)
@@ -648,9 +648,9 @@ CMD_FUNC(cmd_dns)
 	DNSReq *r;
 	char *param;
 
-	if (!ValidatePermissionsForPath("server:dns",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:dns",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
@@ -661,20 +661,20 @@ CMD_FUNC(cmd_dns)
 
 	if (*param == 'l') /* LIST CACHE */
 	{
-		sendtxtnumeric(sptr, "DNS CACHE List (%u items):", unrealdns_num_cache);
+		sendtxtnumeric(client, "DNS CACHE List (%u items):", unrealdns_num_cache);
 		for (c = cache_list; c; c = c->next)
-			sendtxtnumeric(sptr, " %s [%s]", c->name, c->ip);
+			sendtxtnumeric(client, " %s [%s]", c->name, c->ip);
 	} else
 	if (*param == 'r') /* LIST REQUESTS */
 	{
-		sendtxtnumeric(sptr, "DNS Request List:");
+		sendtxtnumeric(client, "DNS Request List:");
 		for (r = requests; r; r = r->next)
-			sendtxtnumeric(sptr, " %s", r->cptr ? r->cptr->ip : "<client lost>");
+			sendtxtnumeric(client, " %s", r->client ? r->client->ip : "<client lost>");
 	} else
 	if (*param == 'c') /* CLEAR CACHE */
 	{
 		sendto_realops("%s (%s@%s) cleared the DNS cache list (/QUOTE DNS c)",
-			sptr->name, sptr->user->username, sptr->user->realhost);
+			client->name, client->user->username, client->user->realhost);
 		
 		while (cache_list)
 		{
@@ -685,7 +685,7 @@ CMD_FUNC(cmd_dns)
 		}
 		memset(&cache_hashtbl, 0, sizeof(cache_hashtbl));
 		unrealdns_num_cache = 0;
-		sendnotice(sptr, "DNS Cache has been cleared");
+		sendnotice(client, "DNS Cache has been cleared");
 	} else
 	if (*param == 'i') /* INFORMATION */
 	{
@@ -694,8 +694,8 @@ CMD_FUNC(cmd_dns)
 		int i;
 		int optmask;
 
-		sendtxtnumeric(sptr, "****** DNS Configuration Information ******");
-		sendtxtnumeric(sptr, " c-ares version: %s",ares_version(NULL));
+		sendtxtnumeric(client, "****** DNS Configuration Information ******");
+		sendtxtnumeric(client, " c-ares version: %s",ares_version(NULL));
 		
 		i = 0;
 		ares_get_servers(resolver_channel, &serverlist);
@@ -705,29 +705,29 @@ CMD_FUNC(cmd_dns)
 			i++;
 			
 			ip = inetntop(ns->family, &ns->addr, ipbuf, sizeof(ipbuf));
-			sendtxtnumeric(sptr, "      server #%d: %s", i, ip ? ip : "<error>");
+			sendtxtnumeric(client, "      server #%d: %s", i, ip ? ip : "<error>");
 		}
 		ares_free_data(serverlist);
 
 		ares_save_options(resolver_channel, &inf, &optmask);
 		if (optmask & ARES_OPT_TIMEOUTMS)
-			sendtxtnumeric(sptr, "        timeout: %d", inf.timeout);
+			sendtxtnumeric(client, "        timeout: %d", inf.timeout);
 		if (optmask & ARES_OPT_TRIES)
-			sendtxtnumeric(sptr, "          tries: %d", inf.tries);
+			sendtxtnumeric(client, "          tries: %d", inf.tries);
 		if (optmask & ARES_OPT_DOMAINS)
 		{
-			sendtxtnumeric(sptr, "   # of search domains: %d", inf.ndomains);
+			sendtxtnumeric(client, "   # of search domains: %d", inf.ndomains);
 			for (i = 0; i < inf.ndomains; i++)
-				sendtxtnumeric(sptr, "      domain #%d: %s", i+1, inf.domains[i]);
+				sendtxtnumeric(client, "      domain #%d: %s", i+1, inf.domains[i]);
 		}
-		sendtxtnumeric(sptr, "****** End of DNS Configuration Info ******");
+		sendtxtnumeric(client, "****** End of DNS Configuration Info ******");
 		
 		ares_destroy_options(&inf);
 	} else /* STATISTICS */
 	{
-		sendtxtnumeric(sptr, "DNS CACHE Stats:");
-		sendtxtnumeric(sptr, " hits: %d", dnsstats.cache_hits);
-		sendtxtnumeric(sptr, " misses: %d", dnsstats.cache_misses);
+		sendtxtnumeric(client, "DNS CACHE Stats:");
+		sendtxtnumeric(client, " hits: %d", dnsstats.cache_hits);
+		sendtxtnumeric(client, " misses: %d", dnsstats.cache_misses);
 	}
 	return;
 }

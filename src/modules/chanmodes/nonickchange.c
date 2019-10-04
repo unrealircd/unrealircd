@@ -33,7 +33,7 @@ Cmode_t EXTCMODE_NONICKCHANGE;
 
 #define IsNoNickChange(chptr)    (chptr->mode.extmode & EXTCMODE_NONICKCHANGE)
 
-int nonickchange_check (Client *sptr, Channel *chptr);
+int nonickchange_check (Client *client, Channel *chptr);
 
 MOD_TEST()
 {
@@ -67,11 +67,11 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int nonickchange_check (Client *sptr, Channel *chptr)
+int nonickchange_check (Client *client, Channel *chptr)
 {
-	if (!IsOper(sptr) && !IsULine(sptr)
+	if (!IsOper(client) && !IsULine(client)
 		&& IsNoNickChange(chptr)
-		&& !is_chan_op(sptr, chptr))
+		&& !is_chan_op(client, chptr))
 	{
 		return HOOK_DENY;
 	}

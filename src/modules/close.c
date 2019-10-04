@@ -57,25 +57,25 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_close)
 {
-	Client *acptr, *acptr2;
+	Client *target, *next;
 	int  closed = 0;
 
-	if (!ValidatePermissionsForPath("server:close",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:close",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
-	list_for_each_entry_safe(acptr, acptr2, &unknown_list, lclient_node)
+	list_for_each_entry_safe(target, next, &unknown_list, lclient_node)
 	{
-		sendnumeric(sptr, RPL_CLOSING,
-		    get_client_name(acptr, TRUE), acptr->status);
-		(void)exit_client(acptr, NULL, "Oper Closing");
+		sendnumeric(client, RPL_CLOSING,
+		    get_client_name(target, TRUE), target->status);
+		exit_client(target, NULL, "Oper Closing");
 		closed++;
 	}
 
-	sendnumeric(sptr, RPL_CLOSEEND, closed);
-	sendto_realops("%s!%s@%s closed %d unknown connections", sptr->name,
-	    sptr->user->username, GetHost(sptr), closed);
+	sendnumeric(client, RPL_CLOSEEND, closed);
+	sendto_realops("%s!%s@%s closed %d unknown connections", client->name,
+	    client->user->username, GetHost(client), closed);
 	irccounts.unknown = 0;
 }

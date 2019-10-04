@@ -32,7 +32,7 @@ Cmode_t EXTCMODE_NONOTICE;
 
 #define IsNoNotice(chptr)    (chptr->mode.extmode & EXTCMODE_NONOTICE)
 
-int nonotice_check_can_send(Client *cptr, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice);
+int nonotice_check_can_send(Client *client, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice);
 
 MOD_TEST()
 {
@@ -65,7 +65,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int nonotice_check_can_send(Client *cptr, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice)
+int nonotice_check_can_send(Client *client, Channel *chptr, Membership *lp, char **msg, char **errmsg, int notice)
 {
 	Hook *h;
 	int i;
@@ -75,7 +75,7 @@ int nonotice_check_can_send(Client *cptr, Channel *chptr, Membership *lp, char *
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(cptr, chptr, BYPASS_CHANMSG_NOTICE);
+			i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_NOTICE);
 			if (i == HOOK_ALLOW)
 				return HOOK_CONTINUE; /* bypass restriction */
 			if (i != HOOK_CONTINUE)

@@ -66,7 +66,7 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_swhois)
 {
-	Client *acptr;
+	Client *target;
 	char tag[HOSTLEN+1];
 	char swhois[SWHOISLEN+1];
 	int add;
@@ -77,8 +77,8 @@ CMD_FUNC(cmd_swhois)
 	if (parc < 3)
 		return;
 
-	acptr = find_person(parv[1], NULL);
-	if (!acptr)
+	target = find_person(parv[1], NULL);
+	if (!target)
 		return;
 
 	if ((parc > 5) && !BadPtr(parv[5]))
@@ -90,7 +90,7 @@ CMD_FUNC(cmd_swhois)
 		strlcpy(swhois, parv[5], sizeof(swhois));
 	} else {
 		/* Old syntax */
-		strlcpy(tag, sptr->name, sizeof(tag));
+		strlcpy(tag, client->name, sizeof(tag));
 		if (BadPtr(parv[2]))
 		{
 			/* Delete. Hmmmm. Let's just delete anything with that tag. */
@@ -104,7 +104,7 @@ CMD_FUNC(cmd_swhois)
 	}
 
 	if (add)
-		swhois_add(acptr, tag, priority, swhois, sptr, sptr);
+		swhois_add(target, tag, priority, swhois, client, client);
 	else
-		swhois_delete(acptr, tag, swhois, sptr, sptr);
+		swhois_delete(target, tag, swhois, client, client);
 }

@@ -265,91 +265,91 @@ char *myctime(time_t value)
 **	  "name".
 **
 ** NOTE 1:
-**	Watch out the allocation of "nbuf", if either sptr->name
-**	or sptr->local->sockhost gets changed into pointers instead of
+**	Watch out the allocation of "nbuf", if either client->name
+**	or client->local->sockhost gets changed into pointers instead of
 **	directly allocated within the structure...
 **
 ** NOTE 2:
-**	Function return either a pointer to the structure (sptr) or
+**	Function return either a pointer to the structure (client) or
 **	to internal buffer (nbuf). *NEVER* use the returned pointer
 **	to modify what it points!!!
 */
-char *get_client_name(Client *sptr, int showip)
+char *get_client_name(Client *client, int showip)
 {
 	static char nbuf[HOSTLEN * 2 + USERLEN + 5];
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 	{
 		if (showip)
 			(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%s@%s.%u]",
-			    sptr->name,
-			    IsIdentSuccess(sptr) ? sptr->ident : "",
-			    sptr->ip ? sptr->ip : "???",
-			    (unsigned int)sptr->local->port);
+			    client->name,
+			    IsIdentSuccess(client) ? client->ident : "",
+			    client->ip ? client->ip : "???",
+			    (unsigned int)client->local->port);
 		else
 		{
-			if (mycmp(sptr->name, sptr->local->sockhost))
+			if (mycmp(client->name, client->local->sockhost))
 				(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%s]",
-				    sptr->name, sptr->local->sockhost);
+				    client->name, client->local->sockhost);
 			else
-				return sptr->name;
+				return client->name;
 		}
 		return nbuf;
 	}
-	return sptr->name;
+	return client->name;
 }
 
-char *get_client_host(Client *cptr)
+char *get_client_host(Client *client)
 {
 	static char nbuf[HOSTLEN * 2 + USERLEN + 5];
 
-	if (!MyConnect(cptr))
-		return cptr->name;
-	if (!cptr->local->hostp)
-		return get_client_name(cptr, FALSE);
+	if (!MyConnect(client))
+		return client->name;
+	if (!client->local->hostp)
+		return get_client_name(client, FALSE);
 	(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%-.*s@%-.*s]",
-	    cptr->name, USERLEN,
-  	    IsIdentSuccess(cptr) ? cptr->ident : "",
-	    HOSTLEN, cptr->local->hostp->h_name);
+	    client->name, USERLEN,
+  	    IsIdentSuccess(client) ? client->ident : "",
+	    HOSTLEN, client->local->hostp->h_name);
 	return nbuf;
 }
 
 /*
  * Set sockhost to 'host'. Skip the user@ part of 'host' if necessary.
  */
-void set_sockhost(Client *cptr, char *host)
+void set_sockhost(Client *client, char *host)
 {
 	char *s;
 	if ((s = strchr(host, '@')))
 		s++;
 	else
 		s = host;
-	strlcpy(cptr->local->sockhost, s, sizeof(cptr->local->sockhost));
+	strlcpy(client->local->sockhost, s, sizeof(client->local->sockhost));
 }
 
-void remove_dcc_references(Client *sptr)
+void remove_dcc_references(Client *client)
 {
 	Client *acptr;
 	Link *lp, *nextlp;
 	Link **lpp, *tmp;
 	int found;
 
-	lp = sptr->user->dccallow;
+	lp = client->user->dccallow;
 	while(lp)
 	{
 		nextlp = lp->next;
-		acptr = lp->value.cptr;
+		acptr = lp->value.client;
 		for(found = 0, lpp = &(acptr->user->dccallow); *lpp; lpp=&((*lpp)->next))
 		{
 			if(lp->flags == (*lpp)->flags)
 				continue; /* match only opposite types for sanity */
-			if((*lpp)->value.cptr == sptr)
+			if((*lpp)->value.client == client)
 			{
 				if((*lpp)->flags == DCC_LINK_ME)
 				{
 					sendto_one(acptr, NULL, ":%s %d %s :%s has been removed from "
 						"your DCC allow list for signing off",
-						me.name, RPL_DCCINFO, acptr->name, sptr->name);
+						me.name, RPL_DCCINFO, acptr->name, client->name);
 				}
 				tmp = *lpp;
 				*lpp = tmp->next;
@@ -362,7 +362,7 @@ void remove_dcc_references(Client *sptr)
 		if(!found)
 			sendto_realops("[BUG] remove_dcc_references:  %s was in dccallowme "
 				"list[%d] of %s but not in dccallowrem list!",
-				acptr->name, lp->flags, sptr->name);
+				acptr->name, lp->flags, client->name);
 
 		free_link(lp);
 		lp = nextlp;
@@ -374,7 +374,7 @@ void remove_dcc_references(Client *sptr)
  * clients.  A server needs the client QUITs if it does not support NOQUIT.
  *    - kaniini
  */
-static void recurse_send_quits(Client *cptr, Client *sptr, Client *from, Client *to,
+static void recurse_send_quits(Client *cptr, Client *client, Client *from, Client *to,
                                MessageTag *mtags, const char *comment, const char *splitstr)
 {
 	Client *acptr, *next;
@@ -386,7 +386,7 @@ static void recurse_send_quits(Client *cptr, Client *sptr, Client *from, Client 
 	{
 		list_for_each_entry_safe(acptr, next, &client_list, client_node)
 		{
-			if (acptr->srvptr != sptr)
+			if (acptr->srvptr != client)
 				continue;
 
 			sendto_one(to, NULL, ":%s QUIT :%s", acptr->name, splitstr);
@@ -395,14 +395,14 @@ static void recurse_send_quits(Client *cptr, Client *sptr, Client *from, Client 
 
 	list_for_each_entry_safe(acptr, next, &global_server_list, client_node)
 	{
-		if (acptr->srvptr != sptr)
+		if (acptr->srvptr != client)
 			continue;
 
 		recurse_send_quits(cptr, acptr, from, to, mtags, comment, splitstr);
 	}
 
-	if ((cptr == sptr && to != from) || !CHECKPROTO(to, PROTO_NOQUIT))
-		sendto_one(to, mtags, "SQUIT %s :%s", sptr->name, comment);
+	if ((cptr == client && to != from) || !CHECKPROTO(to, PROTO_NOQUIT))
+		sendto_one(to, mtags, "SQUIT %s :%s", client->name, comment);
 }
 
 /*
@@ -411,13 +411,13 @@ static void recurse_send_quits(Client *cptr, Client *sptr, Client *from, Client 
  * and servers before the server itself; exit_one_client takes care of
  * actually removing things off llists.   tweaked from +CSr31  -orabidoo
  */
-static void recurse_remove_clients(Client *sptr, MessageTag *mtags, const char *comment)
+static void recurse_remove_clients(Client *client, MessageTag *mtags, const char *comment)
 {
 	Client *acptr, *next;
 
 	list_for_each_entry_safe(acptr, next, &client_list, client_node)
 	{
-		if (acptr->srvptr != sptr)
+		if (acptr->srvptr != client)
 			continue;
 
 		exit_one_client(acptr, mtags, comment);
@@ -425,7 +425,7 @@ static void recurse_remove_clients(Client *sptr, MessageTag *mtags, const char *
 
 	list_for_each_entry_safe(acptr, next, &global_server_list, client_node)
 	{
-		if (acptr->srvptr != sptr)
+		if (acptr->srvptr != client)
 			continue;
 
 		recurse_remove_clients(acptr, mtags, comment);
@@ -438,14 +438,14 @@ static void recurse_remove_clients(Client *sptr, MessageTag *mtags, const char *
 ** all necessary QUITs and SQUITs.  source_p itself is still on the lists,
 ** and its SQUITs have been sent except for the upstream one  -orabidoo
 */
-static void remove_dependents(Client *sptr, Client *from, MessageTag *mtags, const char *comment, const char *splitstr)
+static void remove_dependents(Client *client, Client *from, MessageTag *mtags, const char *comment, const char *splitstr)
 {
 	Client *acptr;
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
-		recurse_send_quits(sptr, sptr, from, acptr, mtags, comment, splitstr);
+		recurse_send_quits(client, client, from, acptr, mtags, comment, splitstr);
 
-	recurse_remove_clients(sptr, mtags, splitstr);
+	recurse_remove_clients(client, mtags, splitstr);
 }
 
 /*
@@ -454,77 +454,77 @@ static void remove_dependents(Client *sptr, Client *from, MessageTag *mtags, con
 */
 /* DANGER: Ugly hack follows. */
 /* Yeah :/ */
-static void exit_one_client(Client *sptr, MessageTag *mtags_i, const char *comment)
+static void exit_one_client(Client *client, MessageTag *mtags_i, const char *comment)
 {
 	Link *lp;
 	Membership *mp;
 
-	assert(!IsMe(sptr));
+	assert(!IsMe(client));
 
-	if (IsUser(sptr))
+	if (IsUser(client))
 	{
 		MessageTag *mtags_o = NULL;
 
-		if (!MyUser(sptr))
-			RunHook3(HOOKTYPE_REMOTE_QUIT, sptr, mtags_i, comment);
+		if (!MyUser(client))
+			RunHook3(HOOKTYPE_REMOTE_QUIT, client, mtags_i, comment);
 
-		new_message_special(sptr, mtags_i, &mtags_o, ":%s QUIT", sptr->name);
-		sendto_local_common_channels(sptr, NULL, 0, mtags_o, ":%s QUIT :%s", sptr->name, comment);
+		new_message_special(client, mtags_i, &mtags_o, ":%s QUIT", client->name);
+		sendto_local_common_channels(client, NULL, 0, mtags_o, ":%s QUIT :%s", client->name, comment);
 		free_message_tags(mtags_o);
 
-		while ((mp = sptr->user->channel))
-			remove_user_from_channel(sptr, mp->chptr);
+		while ((mp = client->user->channel))
+			remove_user_from_channel(client, mp->chptr);
 
 		/* Clean up invitefield */
-		while ((lp = sptr->user->invited))
-			del_invite(sptr, lp->value.chptr);
+		while ((lp = client->user->invited))
+			del_invite(client, lp->value.chptr);
 		/* again, this is all that is needed */
 
 		/* Clean up dccallow list and (if needed) notify other clients
 		 * that have this person on DCCALLOW that the user just left/got removed.
 		 */
-		remove_dcc_references(sptr);
+		remove_dcc_references(client);
 
 		/* For remote clients, we need to check for any outstanding async
-		 * connects attached to this 'sptr', and set those records to NULL.
+		 * connects attached to this 'client', and set those records to NULL.
 		 * Why not for local? Well, we already do that in close_connection ;)
 		 */
-		if (!MyConnect(sptr))
-			unrealdns_delreq_bycptr(sptr);
+		if (!MyConnect(client))
+			unrealdns_delreq_bycptr(client);
 	}
 
 	/* Free module related data for this client */
-	moddata_free_client(sptr);
-	if (MyConnect(sptr))
-		moddata_free_local_client(sptr);
+	moddata_free_client(client);
+	if (MyConnect(client))
+		moddata_free_local_client(client);
 
-	/* Remove sptr from the client list */
-	if (*sptr->id)
+	/* Remove client from the client list */
+	if (*client->id)
 	{
-		del_from_id_hash_table(sptr->id, sptr);
-		*sptr->id = '\0';
+		del_from_id_hash_table(client->id, client);
+		*client->id = '\0';
 	}
-	if (*sptr->name)
-		del_from_client_hash_table(sptr->name, sptr);
-	if (IsUser(sptr))
-		hash_check_watch(sptr, RPL_LOGOFF);
-	if (remote_rehash_client == sptr)
+	if (*client->name)
+		del_from_client_hash_table(client->name, client);
+	if (IsUser(client))
+		hash_check_watch(client, RPL_LOGOFF);
+	if (remote_rehash_client == client)
 		remote_rehash_client = NULL; /* client did a /REHASH and QUIT before rehash was complete */
-	remove_client_from_list(sptr);
+	remove_client_from_list(client);
 }
 
 /** Exit this IRC client, and all the dependents (users, servers) if this is a server.
- * @param sptr        The client to exit.
+ * @param client        The client to exit.
  * @param recv_mtags  Message tags to use as a base (if any).
  * @param comment     The (s)quit message
  */
-void exit_client(Client *sptr, MessageTag *recv_mtags, char *comment)
+void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
 {
 	long long on_for;
 	ConfigItem_listen *listen_conf;
 	MessageTag *mtags_generated = NULL;
 
-	if (IsDead(sptr))
+	if (IsDead(client))
 		return; /* Already marked as exited */
 
 	/* We replace 'recv_mtags' here with a newly
@@ -534,45 +534,45 @@ void exit_client(Client *sptr, MessageTag *recv_mtags, char *comment)
 	 * prior to the exit_client() call at around
 	 * 100+ places elsewhere in the code.
 	 */
-	new_message(sptr, recv_mtags, &mtags_generated);
+	new_message(client, recv_mtags, &mtags_generated);
 	recv_mtags = mtags_generated;
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 	{
-		if (sptr->local->class)
+		if (client->local->class)
 		{
-			sptr->local->class->clients--;
-			if ((sptr->local->class->flag.temporary) && !sptr->local->class->clients && !sptr->local->class->xrefcount)
+			client->local->class->clients--;
+			if ((client->local->class->flag.temporary) && !client->local->class->clients && !client->local->class->xrefcount)
 			{
-				delete_classblock(sptr->local->class);
-				sptr->local->class = NULL;
+				delete_classblock(client->local->class);
+				client->local->class = NULL;
 			}
 		}
-		if (IsUser(sptr))
+		if (IsUser(client))
 			irccounts.me_clients--;
-		if (sptr->serv && sptr->serv->conf)
+		if (client->serv && client->serv->conf)
 		{
-			sptr->serv->conf->refcount--;
+			client->serv->conf->refcount--;
 			Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
-				sptr->name, sptr->serv->conf->servername, sptr->serv->conf->refcount));
-			if (!sptr->serv->conf->refcount
-			  && sptr->serv->conf->flag.temporary)
+				client->name, client->serv->conf->servername, client->serv->conf->refcount));
+			if (!client->serv->conf->refcount
+			  && client->serv->conf->flag.temporary)
 			{
-				Debug((DEBUG_ERROR, "deleting temporary block %s", sptr->serv->conf->servername));
-				delete_linkblock(sptr->serv->conf);
-				sptr->serv->conf = NULL;
+				Debug((DEBUG_ERROR, "deleting temporary block %s", client->serv->conf->servername));
+				delete_linkblock(client->serv->conf);
+				client->serv->conf = NULL;
 			}
 		}
-		if (IsServer(sptr))
+		if (IsServer(client))
 		{
 			irccounts.me_servers--;
-			ircd_log(LOG_SERVER, "SQUIT %s (%s)", sptr->name, comment);
+			ircd_log(LOG_SERVER, "SQUIT %s (%s)", client->name, comment);
 		}
-		free_pending_net(sptr);
-		if (sptr->local->listener)
-			if (sptr->local->listener && !IsOutgoing(sptr))
+		free_pending_net(client);
+		if (client->local->listener)
+			if (client->local->listener && !IsOutgoing(client))
 			{
-				listen_conf = sptr->local->listener;
+				listen_conf = client->local->listener;
 				listen_conf->clients--;
 				if (listen_conf->flag.temporary && (listen_conf->clients == 0))
 				{
@@ -580,53 +580,40 @@ void exit_client(Client *sptr, MessageTag *recv_mtags, char *comment)
 					listen_cleanup();
 				}
 			}
-		SetClosing(sptr);
-		if (IsUser(sptr))
+		SetClosing(client);
+		if (IsUser(client))
 		{
-			RunHook3(HOOKTYPE_LOCAL_QUIT, sptr, recv_mtags, comment);
-			sendto_connectnotice(sptr, 1, comment);
+			RunHook3(HOOKTYPE_LOCAL_QUIT, client, recv_mtags, comment);
+			sendto_connectnotice(client, 1, comment);
 			/* Clean out list and watch structures -Donwulff */
-			hash_del_watch_list(sptr);
-			on_for = TStime() - sptr->local->firsttime;
-			if (IsHidden(sptr))
+			hash_del_watch_list(client);
+			on_for = TStime() - client->local->firsttime;
+			if (IsHidden(client))
 				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s [VHOST %s] (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
-					sptr->name, sptr->user->username,
-					sptr->user->realhost, sptr->user->virthost, comment);
+					client->name, client->user->username,
+					client->user->realhost, client->user->virthost, comment);
 			else
 				ircd_log(LOG_CLIENT, "Disconnect - (%lld:%lld:%lld) %s!%s@%s (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
-					sptr->name, sptr->user->username, sptr->user->realhost, comment);
+					client->name, client->user->username, client->user->realhost, comment);
 		} else
-		if (IsUnknown(sptr))
+		if (IsUnknown(client))
 		{
-			RunHook3(HOOKTYPE_UNKUSER_QUIT, sptr, recv_mtags, comment);
+			RunHook3(HOOKTYPE_UNKUSER_QUIT, client, recv_mtags, comment);
 		}
 
-		if (sptr->local->fd >= 0 && !IsConnecting(sptr))
+		if (client->local->fd >= 0 && !IsConnecting(client))
 		{
-			sendto_one(sptr, NULL, "ERROR :Closing Link: %s (%s)",
-			    get_client_name(sptr, FALSE), comment);
+			sendto_one(client, NULL, "ERROR :Closing Link: %s (%s)",
+			    get_client_name(client, FALSE), comment);
 		}
-		/*
-		   ** Currently only server connections can have
-		   ** depending remote clients here, but it does no
-		   ** harm to check for all local clients. In
-		   ** future some other clients than servers might
-		   ** have remotes too...
-		   **
-		   ** Close the Client connection first and mark it
-		   ** so that no messages are attempted to send to it.
-		   ** (The following *must* make MyConnect(sptr) == FALSE!).
-		   ** It also makes sptr->direction == NULL, thus it's unnecessary
-		   ** to test whether "sptr != acptr" in the following loops.
-		 */
-		close_connection(sptr);
+		close_connection(client);
 	}
-	else if (IsUser(sptr) && !IsULine(sptr))
+	else if (IsUser(client) && !IsULine(client))
 	{
-		if (sptr->srvptr != &me)
-			sendto_fconnectnotice(sptr, 1, comment);
+		if (client->srvptr != &me)
+			sendto_fconnectnotice(client, 1, comment);
 	}
 
 	/*
@@ -634,29 +621,29 @@ void exit_client(Client *sptr, MessageTag *recv_mtags, char *comment)
 	 * longer connected to the network (from my point of view)
 	 * Only do this expensive stuff if exited==server -Donwulff
 	 */
-	if (IsServer(sptr))
+	if (IsServer(client))
 	{
 		char splitstr[HOSTLEN + HOSTLEN + 2];
 
-		assert(sptr->serv != NULL && sptr->srvptr != NULL);
+		assert(client->serv != NULL && client->srvptr != NULL);
 
 		if (FLAT_MAP)
 			strlcpy(splitstr, "*.net *.split", sizeof splitstr);
 		else
-			ircsnprintf(splitstr, sizeof splitstr, "%s %s", sptr->srvptr->name, sptr->name);
+			ircsnprintf(splitstr, sizeof splitstr, "%s %s", client->srvptr->name, client->name);
 
-		remove_dependents(sptr, sptr->direction, recv_mtags, comment, splitstr);
+		remove_dependents(client, client->direction, recv_mtags, comment, splitstr);
 
-		RunHook2(HOOKTYPE_SERVER_QUIT, sptr, recv_mtags);
+		RunHook2(HOOKTYPE_SERVER_QUIT, client, recv_mtags);
 	}
-	else if (IsUser(sptr) && !IsKilled(sptr))
+	else if (IsUser(client) && !IsKilled(client))
 	{
-		sendto_server(sptr, PROTO_SID, 0, recv_mtags, ":%s QUIT :%s", ID(sptr), comment);
-		sendto_server(sptr, 0, PROTO_SID, recv_mtags, ":%s QUIT :%s", sptr->name, comment);
+		sendto_server(client, PROTO_SID, 0, recv_mtags, ":%s QUIT :%s", ID(client), comment);
+		sendto_server(client, 0, PROTO_SID, recv_mtags, ":%s QUIT :%s", client->name, comment);
 	}
 
 	/* Finally, the client/server itself exits.. */
-	exit_one_client(sptr, recv_mtags, comment);
+	exit_one_client(client, recv_mtags, comment);
 
 	free_message_tags(mtags_generated);
 	
@@ -669,13 +656,13 @@ void initstats(void)
 
 void verify_opercount(Client *orig, char *tag)
 {
-int counted = 0;
-Client *acptr;
-char text[2048];
+	int counted = 0;
+	Client *client;
+	char text[2048];
 
-	list_for_each_entry(acptr, &client_list, client_node)
+	list_for_each_entry(client, &client_list, client_node)
 	{
-		if (IsOper(acptr) && !IsHideOper(acptr))
+		if (IsOper(client) && !IsHideOper(client))
 			counted++;
 	}
 	if (counted == irccounts.operators)
@@ -758,7 +745,7 @@ char *banact_valtostring(BanAction val)
 /*|| BAN TARGET ROUTINES FOLLOW ||*/
 
 /** Extract target flags from string 's'. */
-int spamfilter_gettargets(char *s, Client *sptr)
+int spamfilter_gettargets(char *s, Client *client)
 {
 SpamfilterTargetTable *e;
 int flags = 0;
@@ -771,9 +758,9 @@ int flags = 0;
 				flags |= e->value;
 				break;
 			}
-		if (!e->value && sptr)
+		if (!e->value && client)
 		{
-			sendnotice(sptr, "Unknown target type '%c'", *s);
+			sendnotice(client, "Unknown target type '%c'", *s);
 			return 0;
 		}
 	}
@@ -904,27 +891,27 @@ int char_to_channelflag(char c)
 	return 0;
 }
 
-char *getcloak(Client *sptr)
+char *getcloak(Client *client)
 {
-	if (!*sptr->user->cloakedhost)
+	if (!*client->user->cloakedhost)
 	{
 		/* need to calculate (first-time) */
-		make_virthost(sptr, sptr->user->realhost, sptr->user->cloakedhost, 0);
+		make_virthost(client, client->user->realhost, client->user->cloakedhost, 0);
 	}
 
-	return sptr->user->cloakedhost;
+	return client->user->cloakedhost;
 }
 
 // FIXME: should detect <U5 ;)
 int mixed_network(void)
 {
-	Client *acptr;
+	Client *client;
 	
-	list_for_each_entry(acptr, &server_list, special_node)
+	list_for_each_entry(client, &server_list, special_node)
 	{
-		if (!IsServer(acptr) || IsULine(acptr))
+		if (!IsServer(client) || IsULine(client))
 			continue; /* skip u-lined servers (=non-unreal, unless you configure your ulines badly, that is) */
-		if (SupportTKLEXT(acptr) && !SupportTKLEXT2(acptr))
+		if (SupportTKLEXT(client) && !SupportTKLEXT2(client))
 			return 1; /* yup, something below 3.4-alpha3 is linked */
 	}
 	return 0;
@@ -974,17 +961,17 @@ void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce)
 }
 
 /** Check if a client matches any of the masks in the mask list */
-int unreal_mask_match(Client *acptr, ConfigItem_mask *m)
+int unreal_mask_match(Client *client, ConfigItem_mask *m)
 {
 	for (; m; m = m->next)
 	{
 		/* With special support for '!' prefix (negative matching like "!192.168.*") */
 		if (m->mask[0] == '!')
 		{
-			if (!match_user(m->mask+1, acptr, MATCH_CHECK_REAL))
+			if (!match_user(m->mask+1, client, MATCH_CHECK_REAL))
 				return 1;
 		} else {
-			if (match_user(m->mask, acptr, MATCH_CHECK_REAL))
+			if (match_user(m->mask, client, MATCH_CHECK_REAL))
 				return 1;
 		}
 	}
@@ -1011,12 +998,12 @@ int hlength = strlen (haystack);
   return NULL; /* not found */
 }
 
-int swhois_add(Client *acptr, char *tag, int priority, char *swhois, Client *from, Client *skip)
+int swhois_add(Client *client, char *tag, int priority, char *swhois, Client *from, Client *skip)
 {
 	SWhois *s;
 
 	/* Make sure the line isn't added yet. If so, then bail out silently. */
-	for (s = acptr->user->swhois; s; s = s->next)
+	for (s = client->user->swhois; s; s = s->next)
 		if (!strcmp(s->line, swhois))
 			return -1; /* exists */
 
@@ -1024,13 +1011,13 @@ int swhois_add(Client *acptr, char *tag, int priority, char *swhois, Client *fro
 	safe_strdup(s->line, swhois);
 	safe_strdup(s->setby, tag);
 	s->priority = priority;
-	AddListItemPrio(s, acptr->user->swhois, s->priority);
+	AddListItemPrio(s, client->user->swhois, s->priority);
 	
 	sendto_server(skip, 0, PROTO_EXTSWHOIS, NULL, ":%s SWHOIS %s :%s",
-		from->name, acptr->name, swhois);
+		from->name, client->name, swhois);
 
 	sendto_server(skip, PROTO_EXTSWHOIS, 0, NULL, ":%s SWHOIS %s + %s %d :%s",
-		from->name, acptr->name, tag, priority, swhois);
+		from->name, client->name, tag, priority, swhois);
 
 	return 0;
 }
@@ -1039,12 +1026,12 @@ int swhois_add(Client *acptr, char *tag, int priority, char *swhois, Client *fro
  * Delete swhois by tag and swhois. Then broadcast this change to all other servers.
  * Remark: if you use swhois "*" then it will remove all swhois titles for that tag
  */
-int swhois_delete(Client *acptr, char *tag, char *swhois, Client *from, Client *skip)
+int swhois_delete(Client *client, char *tag, char *swhois, Client *from, Client *skip)
 {
 	SWhois *s, *s_next;
 	int ret = -1; /* default to 'not found' */
 	
-	for (s = acptr->user->swhois; s; s = s_next)
+	for (s = client->user->swhois; s; s = s_next)
 	{
 		s_next = s->next;
 		
@@ -1052,16 +1039,16 @@ int swhois_delete(Client *acptr, char *tag, char *swhois, Client *from, Client *
 		if ( ((!strcmp(s->line, swhois) || !strcmp(swhois, "*")) &&
 		    !strcmp(s->setby, tag)))
 		{
-			DelListItem(s, acptr->user->swhois);
+			DelListItem(s, client->user->swhois);
 			safe_free(s->line);
 			safe_free(s->setby);
 			safe_free(s);
 
 			sendto_server(skip, 0, PROTO_EXTSWHOIS, NULL, ":%s SWHOIS %s :",
-				from->name, acptr->name);
+				from->name, client->name);
 
 			sendto_server(skip, PROTO_EXTSWHOIS, 0, NULL, ":%s SWHOIS %s - %s %d :%s",
-				from->name, acptr->name, tag, 0, swhois);
+				from->name, client->name, tag, 0, swhois);
 			
 			ret = 0;
 		}
@@ -1071,34 +1058,34 @@ int swhois_delete(Client *acptr, char *tag, char *swhois, Client *from, Client *
 }
 
 /** Is this user using a websocket? (LOCAL USERS ONLY) */
-int IsWebsocket(Client *acptr)
+int IsWebsocket(Client *client)
 {
 	ModDataInfo *md = findmoddata_byname("websocket", MODDATATYPE_CLIENT);
 	if (!md)
 		return 0; /* websocket module not loaded */
-	return (MyConnect(acptr) && moddata_client(acptr, md).ptr) ? 1 : 0;
+	return (MyConnect(client) && moddata_client(client, md).ptr) ? 1 : 0;
 }
 
 extern void send_raw_direct(Client *user, FORMAT_STRING(const char *pattern), ...);
 
 /** Generic function to inform the user he/she has been banned.
- * @param acptr   The affected client.
- * @param bantype The ban type, such as: "K-Lined", "G-Lined" or "realname".
- * @param reason  The specified reason.
- * @param global  Whether the ban is global (1) or for this server only (0)
- * @param noexit  Set this to NO_EXIT_CLIENT to make us not call exit_client().
- *                This is really only needed from the accept code, do not
- *                use it anywhere else. No really, never.
+ * @param client   The affected client.
+ * @param bantype  The ban type, such as: "K-Lined", "G-Lined" or "realname".
+ * @param reason   The specified reason.
+ * @param global   Whether the ban is global (1) or for this server only (0)
+ * @param noexit   Set this to NO_EXIT_CLIENT to make us not call exit_client().
+ *                 This is really only needed from the accept code, do not
+ *                 use it anywhere else. No really, never.
  *
  * @notes This function will call exit_client() appropriately.
  */
-void banned_client(Client *acptr, char *bantype, char *reason, int global, int noexit)
+void banned_client(Client *client, char *bantype, char *reason, int global, int noexit)
 {
 	char buf[512];
 	char *fmt = global ? iConf.reject_message_gline : iConf.reject_message_kline;
 	const char *vars[6], *values[6];
 
-	if (!MyConnect(acptr))
+	if (!MyConnect(client))
 		abort(); /* hmm... or be more flexible? */
 
 	/* This was: "You are not welcome on this %s. %s: %s. %s" but is now dynamic: */
@@ -1111,7 +1098,7 @@ void banned_client(Client *acptr, char *bantype, char *reason, int global, int n
 	vars[3] = "glineaddr";
 	values[3] = GLINE_ADDRESS ? GLINE_ADDRESS : KLINE_ADDRESS; /* fallback to klineaddr */
 	vars[4] = "ip";
-	values[4] = GetIP(acptr);
+	values[4] = GetIP(client);
 	vars[5] = NULL;
 	values[5] = NULL;
 	buildvarstring(fmt, buf, sizeof(buf), vars, values);
@@ -1125,30 +1112,30 @@ void banned_client(Client *acptr, char *bantype, char *reason, int global, int n
 	 */
 	if (noexit != NO_EXIT_CLIENT)
 	{
-		sendnumeric(acptr, ERR_YOUREBANNEDCREEP, buf);
-		sendnotice(acptr, "%s", buf);
+		sendnumeric(client, ERR_YOUREBANNEDCREEP, buf);
+		sendnotice(client, "%s", buf);
 	} else {
-		send_raw_direct(acptr, ":%s %d %s :%s",
+		send_raw_direct(client, ":%s %d %s :%s",
 		         me.name, ERR_YOUREBANNEDCREEP,
-		         (*acptr->name ? acptr->name : "*"),
+		         (*client->name ? client->name : "*"),
 		         buf);
-		send_raw_direct(acptr, ":%s NOTICE %s :%s",
-		         me.name, (*acptr->name ? acptr->name : "*"), buf);
+		send_raw_direct(client, ":%s NOTICE %s :%s",
+		         me.name, (*client->name ? client->name : "*"), buf);
 	}
 
 	/* The final message in the ERROR is shorter. */
-	if (HIDE_BAN_REASON && IsRegistered(acptr))
+	if (HIDE_BAN_REASON && IsRegistered(client))
 		snprintf(buf, sizeof(buf), "Banned (%s)", bantype);
 	else
 		snprintf(buf, sizeof(buf), "Banned (%s): %s", bantype, reason);
 
 	if (noexit != NO_EXIT_CLIENT)
 	{
-		exit_client(acptr, NULL, buf);
+		exit_client(client, NULL, buf);
 	} else {
 		/* Special handling for direct Z-line code */
-		send_raw_direct(acptr, "ERROR :Closing Link: [%s] (%s)",
-		           acptr->ip, buf);
+		send_raw_direct(client, "ERROR :Closing Link: [%s] (%s)",
+		           client->ip, buf);
 	}
 }
 
@@ -1196,7 +1183,7 @@ size_t add_sjsby(char *buf, char *setby, time_t seton)
  * @example
  * char buf[512];
  * concat_params(buf, sizeof(buf), parc, parv);
- * sendto_server(cptr, 0, 0, recv_mtags, ":%s SOMECOMMAND %s", sptr->name, buf);
+ * sendto_server(client, 0, 0, recv_mtags, ":%s SOMECOMMAND %s", client->name, buf);
  */
 void concat_params(char *buf, int len, int parc, char *parv[])
 {
@@ -1316,7 +1303,7 @@ void new_message_special(Client *sender, MessageTag *recv_mtags, MessageTag **mt
  * This is only used if the 'mtags' module is NOT loaded,
  * which would be quite unusual, but possible.
  */
-void parse_message_tags_default_handler(Client *cptr, char **str, MessageTag **mtag_list)
+void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list)
 {
 	/* Just skip everything until the space character */
 	for (; **str && **str != ' '; *str = *str + 1);
@@ -1326,7 +1313,7 @@ void parse_message_tags_default_handler(Client *cptr, char **str, MessageTag **m
  * This is only used if the 'mtags' module is NOT loaded,
  * which would be quite unusual, but possible.
  */
-char *mtags_to_string_default_handler(MessageTag *m, Client *acptr)
+char *mtags_to_string_default_handler(MessageTag *m, Client *client)
 {
 	return NULL;
 }

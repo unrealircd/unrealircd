@@ -579,7 +579,7 @@ typedef enum ClientStatus {
 #define DCC_LINK_ME		1 /* My dcc allow */
 #define DCC_LINK_REMOTE	2 /* I need to remove dccallows from these clients when I die */
 
-#define ID(sptr)	(*sptr->id ? sptr->id : sptr->name)
+#define ID(client)	(*client->id ? client->id : client->name)
 
 /** Union for moddata objects */
 typedef union ModData ModData;
@@ -759,7 +759,7 @@ struct LoopStruct {
 	unsigned do_bancheck_spamf_away : 1; /* perform 'away' spamfilter bancheck */
 	unsigned ircd_rehashing : 1;
 	unsigned tainted : 1;
-	Client *rehash_save_cptr, *rehash_save_sptr;
+	Client *rehash_save_cptr, *rehash_save_client;
 	int rehash_save_sig;
 };
 
@@ -829,7 +829,7 @@ struct SWhois {
 /** Command function - used by all command handlers.
  * This is used in the code like <pre>CMD_FUNC(cmd_yourcmd)</pre> as a function definition.
  * @param cptr        The client direction pointer.
- * @param sptr        The source client pointer (you usually need this one).
+ * @param client        The source client pointer (you usually need this one).
  * @param recv_mtags  Received message tags for this command.
  * @param parc        Parameter count *plus* 1.
  * @param parv        Parameter values.
@@ -839,14 +839,14 @@ struct SWhois {
  *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
  *        E.g. parv[3] in the above example is out of bounds.
  */
-#define CMD_FUNC(x) void (x) (Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+#define CMD_FUNC(x) void (x) (Client *client, MessageTag *recv_mtags, int parc, char *parv[])
 /* @} */
 
 /** Command override function - used by all command override handlers.
  * This is used in the code like <pre>CMD_OVERRIDE_FUNC(ovr_somecmd)</pre> as a function definition.
  * @param ovr         The command override structure.
  * @param cptr        The client direction pointer.
- * @param sptr        The source client pointer (you usually need this one).
+ * @param client        The source client pointer (you usually need this one).
  * @param recv_mtags  Received message tags for this command.
  * @param parc        Parameter count *plus* 1.
  * @param parv        Parameter values.
@@ -856,13 +856,13 @@ struct SWhois {
  *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
  *        E.g. parv[3] in the above example.
  */
-#define CMD_OVERRIDE_FUNC(x) void (x)(CommandOverride *ovr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+#define CMD_OVERRIDE_FUNC(x) void (x)(CommandOverride *ovr, Client *client, MessageTag *recv_mtags, int parc, char *parv[])
 
 
 
-typedef void (*CmdFunc)(Client *sptr, MessageTag *mtags, int parc, char *parv[]);
-typedef void (*AliasCmdFunc)(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
-typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+typedef void (*CmdFunc)(Client *client, MessageTag *mtags, int parc, char *parv[]);
+typedef void (*AliasCmdFunc)(Client *client, MessageTag *mtags, int parc, char *parv[], char *cmd);
+typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[]);
 
 
 /* tkl:
@@ -1059,10 +1059,10 @@ extern MODVAR short Snomask_highest;
 extern MODVAR Cmode *Channelmode_Table;
 extern MODVAR unsigned short Channelmode_highest;
 
-extern Umode *UmodeAdd(Module *module, char ch, int options, int unset_on_deoper, int (*allowed)(Client *sptr, int what), long *mode);
+extern Umode *UmodeAdd(Module *module, char ch, int options, int unset_on_deoper, int (*allowed)(Client *client, int what), long *mode);
 extern void UmodeDel(Umode *umode);
 
-extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(Client *sptr, int what), long *mode);
+extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(Client *client, int what), long *mode);
 extern void SnomaskDel(Snomask *sno);
 
 extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);
@@ -1127,7 +1127,7 @@ struct Client {
 	ModData moddata[MODDATA_MAX_CLIENT];	/**< Client attached module data, used by the ModData system */
 };
 
-/** Local client information, use sptr->local to access these (see also @link Client @endlink).
+/** Local client information, use client->local to access these (see also @link Client @endlink).
  */
 struct LocalClient {
 	int fd;				/**< File descriptor, can be <0 if socket has been closed already. */
@@ -1174,7 +1174,7 @@ struct LocalClient {
 	u_short port;			/**< Remote TCP port of client */
 };
 
-/** User information (persons, not servers), you use sptr->user to access these (see also @link Client @endlink).
+/** User information (persons, not servers), you use client->user to access these (see also @link Client @endlink).
  */
 struct User {
 	Membership *channel;		/**< Channels that the user is in (linked list) */
@@ -1205,7 +1205,7 @@ struct User {
 	time_t lastaway;		/**< Last time the user went AWAY */
 };
 
-/** Server information (local servers and remote servers), you use sptr->serv to access these (see also @link Client @endlink).
+/** Server information (local servers and remote servers), you use client->serv to access these (see also @link Client @endlink).
  */
 struct Server {
 	char *up;			/**< Name of uplink for this server */
@@ -1337,7 +1337,7 @@ struct ConfigFlag_tld
 {
 	unsigned	temporary : 1;
 	unsigned	motdptr   : 1;
-	unsigned	rulesptr  : 1;
+	unsigned	ruleclient  : 1;
 };
 
 #define CONF_BAN_SERVER          1
@@ -1440,7 +1440,7 @@ struct OperClass
 
 struct OperClassCheckParams
 {
-        Client *sptr;
+        Client *client;
         Client *victim;
         Channel *channel;
         void *extra;
@@ -1809,7 +1809,7 @@ struct Link {
 	struct Link *next;
 	int flags;
 	union {
-		Client *cptr;
+		Client *client;
 		Channel *chptr;
 		Watch *wptr;
 		/* there used to be 'char *cp' here too,
@@ -1847,19 +1847,19 @@ struct Channel {
 
 /** user/channel member struct (chptr->members).
  * This is Member which is used in the linked list chptr->members for each channel.
- * There is also Membership which is used in sptr->user->channels (see Membership for that).
+ * There is also Membership which is used in client->user->channels (see Membership for that).
  * Both must be kept synchronized 100% at all times.
  */
 struct Member
 {
 	struct Member *next;				/**< Next entry in list */
-	Client	      *cptr;				/**< The client */
+	Client	      *client;				/**< The client */
 	int		flags;				/**< The access of the user on this channel (one or more of CHFL_*) */
 	ModData moddata[MODDATA_MAX_MEMBER];		/** Member attached module data, used by the ModData system */
 };
 
-/** user/channel membership struct (sptr->user->channels).
- * This is Membership which is used in the linked list sptr->user->channels for each user.
+/** user/channel membership struct (client->user->channels).
+ * This is Membership which is used in the linked list client->user->channels for each user.
  * There is also Member which is used in chptr->members (see Member for that).
  * Both must be kept synchronized 100% at all times.
  */
@@ -2072,7 +2072,7 @@ struct PendingServer {
 typedef struct PendingNet PendingNet;
 struct PendingNet {
 	PendingNet *prev, *next; /* Previous and next in list */
-	Client *sptr; /**< Client to which these servers belong */
+	Client *client; /**< Client to which these servers belong */
 	PendingServer *servers; /**< The list of servers connected to the client */
 };
 

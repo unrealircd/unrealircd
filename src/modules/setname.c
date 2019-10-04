@@ -68,50 +68,50 @@ CMD_FUNC(cmd_setname)
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SETNAME");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "SETNAME");
 		return;
 	}
 
 	if (strlen(parv[1]) > REALLEN)
 	{
-		if (MyConnect(sptr))
+		if (MyConnect(client))
 		{
-			sendnotice(sptr, "*** /SetName Error: \"Real names\" may maximum be %i characters of length",
+			sendnotice(client, "*** /SetName Error: \"Real names\" may maximum be %i characters of length",
 				REALLEN);
 		}
 		return;
 	}
 
-	if (MyUser(sptr))
+	if (MyUser(client))
 	{
 		/* set temp info for spamfilter check*/
-		strcpy(tmpinfo, sptr->info);
+		strcpy(tmpinfo, client->info);
 		/* set the new name before we check, but don't send to servers unless it is ok */
-		strcpy(sptr->info, parv[1]);
-		spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
-		if (!match_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL))
+		strcpy(client->info, parv[1]);
+		spamfilter_build_user_string(spamfilter_user, client->name, client);
+		if (!match_spamfilter(client, spamfilter_user, SPAMF_USER, NULL, 0, NULL))
 		{
 			/* Was rejected by spamfilter, restore the realname */
-			strcpy(sptr->info, tmpinfo);
+			strcpy(client->info, tmpinfo);
 			return;
 		}
 
 		/* Check for realname bans here too */
-		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",sptr,NULL,NULL,NULL) &&
-		    ((bconf = Find_ban(NULL, sptr->info, CONF_BAN_REALNAME))))
+		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",client,NULL,NULL,NULL) &&
+		    ((bconf = Find_ban(NULL, client->info, CONF_BAN_REALNAME))))
 		{
-			return banned_client(sptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
+			return banned_client(client, "realname", bconf->reason?bconf->reason:"", 0, 0);
 		}
 	} else {
 		/* remote user */
-		strcpy(sptr->info, parv[1]);
+		strcpy(client->info, parv[1]);
 	}
 
-	sendto_server(sptr, 0, 0, NULL, ":%s SETNAME :%s", sptr->name, parv[1]);
+	sendto_server(client, 0, 0, NULL, ":%s SETNAME :%s", client->name, parv[1]);
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 	{
-		sendnotice(sptr, "Your \"real name\" is now set to be %s - you have to set it manually to undo it",
+		sendnotice(client, "Your \"real name\" is now set to be %s - you have to set it manually to undo it",
 		           parv[1]);
 	}
 }

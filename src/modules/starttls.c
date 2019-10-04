@@ -65,49 +65,49 @@ CMD_FUNC(cmd_starttls)
 	SSL_CTX *ctx;
 	int tls_options;
 
-	if (!MyConnect(sptr) || !IsUnknown(sptr))
+	if (!MyConnect(client) || !IsUnknown(client))
 		return;
 
-	ctx = sptr->local->listener->ssl_ctx ? sptr->local->listener->ssl_ctx : ctx_server;
-	tls_options = sptr->local->listener->tls_options ? sptr->local->listener->tls_options->options : iConf.tls_options->options;
+	ctx = client->local->listener->ssl_ctx ? client->local->listener->ssl_ctx : ctx_server;
+	tls_options = client->local->listener->tls_options ? client->local->listener->tls_options->options : iConf.tls_options->options;
 
 	/* Is SSL support enabled? (may not, if failed to load cert/keys/..) */
 	if (!ctx)
 	{
 		/* Pretend STARTTLS is an unknown command, this is the safest approach */
-		sendnumeric(sptr, ERR_NOTREGISTERED);
+		sendnumeric(client, ERR_NOTREGISTERED);
 		return;
 	}
 
 	/* Is STARTTLS disabled? (same response as above) */
 	if (tls_options & TLSFLAG_NOSTARTTLS)
 	{
-		sendnumeric(sptr, ERR_NOTREGISTERED);
+		sendnumeric(client, ERR_NOTREGISTERED);
 		return;
 	}
 
-	if (IsSecure(sptr))
+	if (IsSecure(client))
 	{
-		sendnumeric(sptr, ERR_STARTTLS, "STARTTLS failed. Already using TLS.");
+		sendnumeric(client, ERR_STARTTLS, "STARTTLS failed. Already using TLS.");
 		return;
 	}
 
-	dbuf_delete(&sptr->local->recvQ, DBufLength(&sptr->local->recvQ)); /* Clear up any remaining plaintext commands */
-	sendnumeric(sptr, RPL_STARTTLS);
-	send_queued(sptr);
+	dbuf_delete(&client->local->recvQ, DBufLength(&client->local->recvQ)); /* Clear up any remaining plaintext commands */
+	sendnumeric(client, RPL_STARTTLS);
+	send_queued(client);
 
-	SetStartTLSHandshake(sptr);
-	Debug((DEBUG_DEBUG, "Starting SSL handshake (due to STARTTLS) for %s", sptr->local->sockhost));
-	if ((sptr->local->ssl = SSL_new(ctx)) == NULL)
+	SetStartTLSHandshake(client);
+	Debug((DEBUG_DEBUG, "Starting SSL handshake (due to STARTTLS) for %s", client->local->sockhost));
+	if ((client->local->ssl = SSL_new(ctx)) == NULL)
 		goto fail;
-	SetTLS(sptr);
-	SSL_set_fd(sptr->local->ssl, sptr->local->fd);
-	SSL_set_nonblocking(sptr->local->ssl);
-	if (!ircd_SSL_accept(sptr, sptr->local->fd)) {
-		Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", sptr->local->sockhost));
-		SSL_set_shutdown(sptr->local->ssl, SSL_RECEIVED_SHUTDOWN);
-		SSL_smart_shutdown(sptr->local->ssl);
-		SSL_free(sptr->local->ssl);
+	SetTLS(client);
+	SSL_set_fd(client->local->ssl, client->local->fd);
+	SSL_set_nonblocking(client->local->ssl);
+	if (!ircd_SSL_accept(client, client->local->fd)) {
+		Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", client->local->sockhost));
+		SSL_set_shutdown(client->local->ssl, SSL_RECEIVED_SHUTDOWN);
+		SSL_smart_shutdown(client->local->ssl);
+		SSL_free(client->local->ssl);
 		goto fail;
 	}
 
@@ -115,8 +115,8 @@ CMD_FUNC(cmd_starttls)
 	return;
 fail:
 	/* Failure */
-	sendnumeric(sptr, ERR_STARTTLS, "STARTTLS failed");
-	sptr->local->ssl = NULL;
-	ClearTLS(sptr);
-	SetUnknown(sptr);
+	sendnumeric(client, ERR_STARTTLS, "STARTTLS failed");
+	client->local->ssl = NULL;
+	ClearTLS(client);
+	SetUnknown(client);
 }

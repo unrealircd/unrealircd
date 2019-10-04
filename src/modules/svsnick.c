@@ -65,10 +65,10 @@ CMD_FUNC(cmd_svsnick)
 	Client *ocptr; /* Other client */
 	MessageTag *mtags = NULL;
 
-	if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
+	if (!IsULine(client) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return; /* This looks like an error anyway -Studded */
 
-	if (hunt_server(sptr, NULL, ":%s SVSNICK %s %s :%s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, NULL, ":%s SVSNICK %s %s :%s", 1, parc, parv) != HUNTED_ISME)
 		return; /* Forwarded, done */
 
 	if (do_nick_name(parv[2]) == 0)

@@ -61,7 +61,7 @@ CMD_FUNC(cmd_dccallow)
 {
 	Link *lp;
 	char *p, *s;
-	Client *acptr;
+	Client *friend;
 	int didlist = 0, didhelp = 0, didanything = 0;
 	char **ptr;
 	int ntargets = 0;
@@ -82,21 +82,21 @@ CMD_FUNC(cmd_dccallow)
 		NULL
 	};
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 	
 	if (parc < 2)
 	{
-		sendnotice(sptr, "No command specified for DCCALLOW. "
+		sendnotice(client, "No command specified for DCCALLOW. "
 			"Type '/DCCALLOW HELP' for more information.");
 		return;
 	}
 
 	for (p = NULL, s = strtoken(&p, parv[1], ", "); s; s = strtoken(&p, NULL, ", "))
 	{
-		if (MyUser(sptr) && (++ntargets > maxtargets))
+		if (MyUser(client) && (++ntargets > maxtargets))
 		{
-			sendnumeric(sptr, ERR_TOOMANYTARGETS, s, maxtargets, "DCCALLOW");
+			sendnumeric(client, ERR_TOOMANYTARGETS, s, maxtargets, "DCCALLOW");
 			break;
 		}
 		if (*s == '+')
@@ -105,17 +105,17 @@ CMD_FUNC(cmd_dccallow)
 			if (!*++s)
 				continue;
 			
-			acptr = find_person(s, NULL);
+			friend = find_person(s, NULL);
 			
-			if (acptr == sptr)
+			if (friend == client)
 				continue;
 			
-			if (!acptr)
+			if (!friend)
 			{
-				sendnumeric(sptr, ERR_NOSUCHNICK, s);
+				sendnumeric(client, ERR_NOSUCHNICK, s);
 				continue;
 			}
-			add_dccallow(sptr, acptr);
+			add_dccallow(client, friend);
 		} else
 		if (*s == '-')
 		{
@@ -123,41 +123,41 @@ CMD_FUNC(cmd_dccallow)
 			if (!*++s)
 				continue;
 			
-			acptr = find_person(s, NULL);
-			if (acptr == sptr)
+			friend = find_person(s, NULL);
+			if (friend == client)
 				continue;
-			if (!acptr)
+			if (!friend)
 			{
-				sendnumeric(sptr, ERR_NOSUCHNICK, s);
+				sendnumeric(client, ERR_NOSUCHNICK, s);
 				continue;
 			}
-			del_dccallow(sptr, acptr);
+			del_dccallow(client, friend);
 		} else
 		if (!didlist && !strncasecmp(s, "list", 4))
 		{
 			didanything = didlist = 1;
-			sendnumericfmt(sptr, RPL_DCCINFO, "The following users are on your dcc allow list:");
-			for(lp = sptr->user->dccallow; lp; lp = lp->next)
+			sendnumericfmt(client, RPL_DCCINFO, "The following users are on your dcc allow list:");
+			for(lp = client->user->dccallow; lp; lp = lp->next)
 			{
 				if (lp->flags == DCC_LINK_REMOTE)
 					continue;
-				sendnumericfmt(sptr, RPL_DCCLIST, "%s (%s@%s)", lp->value.cptr->name,
-					lp->value.cptr->user->username,
-					GetHost(lp->value.cptr));
+				sendnumericfmt(client, RPL_DCCLIST, "%s (%s@%s)", lp->value.client->name,
+					lp->value.client->user->username,
+					GetHost(lp->value.client));
 			}
-			sendnumeric(sptr, RPL_ENDOFDCCLIST, s);
+			sendnumeric(client, RPL_ENDOFDCCLIST, s);
 		} else
 		if (!didhelp && !strncasecmp(s, "help", 4))
 		{
 			didanything = didhelp = 1;
 			for(ptr = dcc_help; *ptr; ptr++)
-				sendnumericfmt(sptr, RPL_DCCINFO, "%s", *ptr);
-			sendnumeric(sptr, RPL_ENDOFDCCLIST, s);
+				sendnumericfmt(client, RPL_DCCINFO, "%s", *ptr);
+			sendnumeric(client, RPL_ENDOFDCCLIST, s);
 		}
 	}
 	if (!didanything)
 	{
-		sendnotice(sptr, "Invalid syntax for DCCALLOW. Type '/DCCALLOW HELP' for more information.");
+		sendnotice(client, "Invalid syntax for DCCALLOW. Type '/DCCALLOW HELP' for more information.");
 		return;
 	}
 }

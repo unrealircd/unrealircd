@@ -71,7 +71,7 @@ CMD_FUNC(cmd_trace)
 	// set some kind of flag? or?
 
 	if (parc > 2)
-		if (hunt_server(sptr, NULL, ":%s TRACE %s :%s", 2, parc, parv))
+		if (hunt_server(client, NULL, ":%s TRACE %s :%s", 2, parc, parv))
 			return;
 
 	if (parc > 1)
@@ -79,31 +79,31 @@ CMD_FUNC(cmd_trace)
 	else
 		tname = me.name;
 
-	if (!ValidatePermissionsForPath("client:see:trace:global",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("client:see:trace:global",client,NULL,NULL,NULL))
 	{
-		if (ValidatePermissionsForPath("client:see:trace:local",sptr,NULL,NULL,NULL))
+		if (ValidatePermissionsForPath("client:see:trace:local",client,NULL,NULL,NULL))
 		{
 			/* local opers may not /TRACE remote servers! */
 			if (strcasecmp(tname, me.name))
 			{
-				sendnotice(sptr, "You can only /TRACE local servers as a locop");
-				sendnumeric(sptr, ERR_NOPRIVILEGES);
+				sendnotice(client, "You can only /TRACE local servers as a locop");
+				sendnumeric(client, ERR_NOPRIVILEGES);
 				return;
 			}
 		} else {
-			sendnumeric(sptr, ERR_NOPRIVILEGES);
+			sendnumeric(client, ERR_NOPRIVILEGES);
 			return;
 		}
 	}
 
-	switch (hunt_server(sptr, NULL, ":%s TRACE :%s", 1, parc, parv))
+	switch (hunt_server(client, NULL, ":%s TRACE :%s", 1, parc, parv))
 	{
 	  case HUNTED_PASS:	/* note: gets here only if parv[1] exists */
 	  {
 		  Client *ac2ptr;
 
 		  ac2ptr = find_client(tname, NULL);
-		  sendnumeric(sptr, RPL_TRACELINK,
+		  sendnumeric(client, RPL_TRACELINK,
 		      version, debugmode, tname, ac2ptr->direction->name);
 		  return;
 	  }
@@ -141,7 +141,7 @@ CMD_FUNC(cmd_trace)
 		char *name;
 		char *class;
 
-		if (!ValidatePermissionsForPath("client:see:trace:invisible-users",sptr,acptr,NULL,NULL) && (acptr != sptr))
+		if (!ValidatePermissionsForPath("client:see:trace:invisible-users",client,acptr,NULL,NULL) && (acptr != client))
 			continue;
 		if (!doall && wilds && !match_simple(tname, acptr->name))
 			continue;
@@ -152,12 +152,12 @@ CMD_FUNC(cmd_trace)
 		switch (acptr->status)
 		{
 			case CLIENT_STATUS_CONNECTING:
-				sendnumeric(sptr, RPL_TRACECONNECTING, class, name);
+				sendnumeric(client, RPL_TRACECONNECTING, class, name);
 				cnt++;
 				break;
 
 			case CLIENT_STATUS_HANDSHAKE:
-				sendnumeric(sptr, RPL_TRACEHANDSHAKE, class, name);
+				sendnumeric(client, RPL_TRACEHANDSHAKE, class, name);
 				cnt++;
 				break;
 
@@ -165,7 +165,7 @@ CMD_FUNC(cmd_trace)
 				break;
 
 			case CLIENT_STATUS_UNKNOWN:
-				sendnumeric(sptr, RPL_TRACEUNKNOWN, class, name);
+				sendnumeric(client, RPL_TRACEUNKNOWN, class, name);
 				cnt++;
 				break;
 
@@ -173,16 +173,16 @@ CMD_FUNC(cmd_trace)
 				/* Only opers see users if there is a wildcard
 				 * but anyone can see all the opers.
 				 */
-				if (ValidatePermissionsForPath("client:see:trace:invisible-users",sptr,acptr,NULL,NULL) ||
-				    (!IsInvisible(acptr) && ValidatePermissionsForPath("client:see:trace",sptr,acptr,NULL,NULL)))
+				if (ValidatePermissionsForPath("client:see:trace:invisible-users",client,acptr,NULL,NULL) ||
+				    (!IsInvisible(acptr) && ValidatePermissionsForPath("client:see:trace",client,acptr,NULL,NULL)))
 				{
-					if (ValidatePermissionsForPath("client:see:trace",sptr,acptr,NULL,NULL) || ValidatePermissionsForPath("client:see:trace:invisible-users",sptr,acptr,NULL,NULL))
-						sendnumeric(sptr, RPL_TRACEOPERATOR,
+					if (ValidatePermissionsForPath("client:see:trace",client,acptr,NULL,NULL) || ValidatePermissionsForPath("client:see:trace:invisible-users",client,acptr,NULL,NULL))
+						sendnumeric(client, RPL_TRACEOPERATOR,
 						    class, acptr->name,
 						    GetHost(acptr),
 						    now - acptr->local->lasttime);
 					else
-						sendnumeric(sptr, RPL_TRACEUSER,
+						sendnumeric(client, RPL_TRACEUSER,
 						    class, acptr->name,
 						    acptr->user->realhost,
 						    now - acptr->local->lasttime);
@@ -191,7 +191,7 @@ CMD_FUNC(cmd_trace)
 				break;
 
 			case CLIENT_STATUS_SERVER:
-				sendnumeric(sptr, RPL_TRACESERVER, class, acptr->local->fd >= 0 ? link_s[acptr->local->fd] : -1,
+				sendnumeric(client, RPL_TRACESERVER, class, acptr->local->fd >= 0 ? link_s[acptr->local->fd] : -1,
 				    acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name, *(acptr->serv->by) ?
 				    acptr->serv->by : "*", "*", me.name,
 				    now - acptr->local->lasttime);
@@ -199,22 +199,22 @@ CMD_FUNC(cmd_trace)
 				break;
 
 			case CLIENT_STATUS_LOG:
-				sendnumeric(sptr, RPL_TRACELOG, LOGFILE, acptr->local->port);
+				sendnumeric(client, RPL_TRACELOG, LOGFILE, acptr->local->port);
 				cnt++;
 				break;
 
 			case CLIENT_STATUS_TLS_CONNECT_HANDSHAKE:
-				sendnumeric(sptr, RPL_TRACENEWTYPE, "TLS-Connect-Handshake", name);
+				sendnumeric(client, RPL_TRACENEWTYPE, "TLS-Connect-Handshake", name);
 				cnt++;
 				break;
 
 			case CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE:
-				sendnumeric(sptr, RPL_TRACENEWTYPE, "TLS-Accept-Handshake", name);
+				sendnumeric(client, RPL_TRACENEWTYPE, "TLS-Accept-Handshake", name);
 				cnt++;
 				break;
 
 			default:	/* ...we actually shouldn't come here... --msa */
-				sendnumeric(sptr, RPL_TRACENEWTYPE, "<newtype>", name);
+				sendnumeric(client, RPL_TRACENEWTYPE, "<newtype>", name);
 				cnt++;
 				break;
 		}
@@ -223,10 +223,10 @@ CMD_FUNC(cmd_trace)
 	 * Add these lines to summarize the above which can get rather long
 	 * and messy when done remotely - Avalon
 	 */
-	if (!ValidatePermissionsForPath("client:see:trace",sptr,acptr,NULL,NULL) || !cnt)
+	if (!ValidatePermissionsForPath("client:see:trace",client,acptr,NULL,NULL) || !cnt)
 		return;
 
 	for (cltmp = conf_class; doall && cltmp; cltmp = cltmp->next)
 	/*	if (cltmp->clients > 0) */
-			sendnumeric(sptr, RPL_TRACECLASS, cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
+			sendnumeric(client, RPL_TRACECLASS, cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
 }

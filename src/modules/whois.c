@@ -63,7 +63,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_whois)
 {
 	Membership *lp;
-	Client *acptr;
+	Client *target;
 	Channel *chptr;
 	char *nick, *tmp, *name;
 	char *p = NULL;
@@ -74,13 +74,13 @@ CMD_FUNC(cmd_whois)
 
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NONICKNAMEGIVEN);
+		sendnumeric(client, ERR_NONICKNAMEGIVEN);
 		return;
 	}
 
 	if (parc > 2)
 	{
-		if (hunt_server(sptr, recv_mtags, ":%s WHOIS %s :%s", 1, parc, parv) != HUNTED_ISME)
+		if (hunt_server(client, recv_mtags, ":%s WHOIS %s :%s", 1, parc, parv) != HUNTED_ISME)
 			return;
 		parv[1] = parv[2];
 	}
@@ -91,9 +91,9 @@ CMD_FUNC(cmd_whois)
 	{
 		unsigned char showchannel, wilds, hideoper; /* <- these are all boolean-alike */
 
-		if (MyUser(sptr) && (++ntargets > maxtargets))
+		if (MyUser(client) && (++ntargets > maxtargets))
 		{
-			sendnumeric(sptr, ERR_TOOMANYTARGETS, nick, maxtargets, "WHOIS");
+			sendnumeric(client, ERR_TOOMANYTARGETS, nick, maxtargets, "WHOIS");
 			break;
 		}
 
@@ -103,14 +103,14 @@ CMD_FUNC(cmd_whois)
 		if (wilds)
 			continue;
 
-		if ((acptr = find_client(nick, NULL)))
+		if ((target = find_client(nick, NULL)))
 		{
-			if (IsServer(acptr))
+			if (IsServer(target))
 				continue;
 			/*
-			 * I'm always last :-) and acptr->next == NULL!!
+			 * I'm always last :-) and target->next == NULL!!
 			 */
-			if (IsMe(acptr))
+			if (IsMe(target))
 				break;
 			/*
 			 * 'Rules' established for sending a WHOIS reply:
@@ -118,42 +118,42 @@ CMD_FUNC(cmd_whois)
 			 *   the target user(s) are on;
 			 */
 
-			if (!IsUser(acptr))
+			if (!IsUser(target))
 				continue;
 
-			name = (!*acptr->name) ? "?" : acptr->name;
+			name = (!*target->name) ? "?" : target->name;
 
 			hideoper = 0;
-			if (IsHideOper(acptr) && (acptr != sptr) && !IsOper(sptr))
+			if (IsHideOper(target) && (target != client) && !IsOper(client))
 				hideoper = 1;
 
-			sendnumeric(sptr, RPL_WHOISUSER, name,
-			    acptr->user->username,
-			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,
-			    acptr->info);
+			sendnumeric(client, RPL_WHOISUSER, name,
+			    target->user->username,
+			    IsHidden(target) ? target->user->virthost : target->user->realhost,
+			    target->info);
 
-			if (IsOper(sptr) || acptr == sptr)
+			if (IsOper(client) || target == client)
 			{
 				char sno[128];
-				strlcpy(sno, get_sno_str(acptr), sizeof(sno));
+				strlcpy(sno, get_sno_str(target), sizeof(sno));
 				
 				/* send the target user's modes */
-				sendnumeric(sptr, RPL_WHOISMODES, name,
-				    get_mode_str(acptr), sno[1] == 0 ? "" : sno);
+				sendnumeric(client, RPL_WHOISMODES, name,
+				    get_mode_str(target), sno[1] == 0 ? "" : sno);
 			}
-			if ((acptr == sptr) || IsOper(sptr))
+			if ((target == client) || IsOper(client))
 			{
-				sendnumeric(sptr, RPL_WHOISHOST, acptr->name,
-					(MyConnect(acptr) && strcmp(acptr->ident, "unknown")) ? acptr->ident : "*",
-					acptr->user->realhost, acptr->ip ? acptr->ip : "");
+				sendnumeric(client, RPL_WHOISHOST, target->name,
+					(MyConnect(target) && strcmp(target->ident, "unknown")) ? target->ident : "*",
+					target->user->realhost, target->ip ? target->ip : "");
 			}
 
-			if (IsARegNick(acptr))
-				sendnumeric(sptr, RPL_WHOISREGNICK, name);
+			if (IsARegNick(target))
+				sendnumeric(client, RPL_WHOISREGNICK, name);
 			
 			found = 1;
-			mlen = strlen(me.name) + strlen(sptr->name) + 10 + strlen(name);
-			for (len = 0, *buf = '\0', lp = acptr->user->channel; lp; lp = lp->next)
+			mlen = strlen(me.name) + strlen(client->name) + 10 + strlen(name);
+			for (len = 0, *buf = '\0', lp = target->user->channel; lp; lp = lp->next)
 			{
 				Hook *h;
 				int ret = EX_ALLOW;
@@ -162,12 +162,12 @@ CMD_FUNC(cmd_whois)
 				chptr = lp->chptr;
 				showchannel = 0;
 
-				if (ShowChannel(sptr, chptr))
+				if (ShowChannel(client, chptr))
 					showchannel = 1;
 
 				for (h = Hooks[HOOKTYPE_SEE_CHANNEL_IN_WHOIS]; h; h = h->next)
 				{
-					int n = (*(h->func.intfunc))(sptr, acptr, chptr);
+					int n = (*(h->func.intfunc))(client, target, chptr);
 					/* Hook return values:
 					 * EX_ALLOW means 'yes is ok, as far as modules are concerned'
 					 * EX_DENY means 'hide this channel, unless oper overriding'
@@ -188,16 +188,16 @@ CMD_FUNC(cmd_whois)
 				if (ret == EX_DENY)
 					showchannel = 0;
 				
-				if (!showchannel && (ValidatePermissionsForPath("channel:see:whois",sptr,NULL,chptr,NULL)))
+				if (!showchannel && (ValidatePermissionsForPath("channel:see:whois",client,NULL,chptr,NULL)))
 				{
 					showchannel = 1; /* OperOverride */
 					operoverride = 1;
 				}
 				
-				if ((ret == EX_ALWAYS_DENY) && (acptr != sptr))
+				if ((ret == EX_ALWAYS_DENY) && (target != client))
 					continue; /* a module asked us to really not expose this channel, so we don't (except target==ourselves). */
 
-				if (acptr == sptr)
+				if (target == client)
 					showchannel = 1;
 
 				if (showchannel)
@@ -205,11 +205,11 @@ CMD_FUNC(cmd_whois)
 					long access;
 					if (len + strlen(chptr->chname) > (size_t)BUFSIZE - 4 - mlen)
 					{
-						sendto_one(sptr, NULL,
+						sendto_one(client, NULL,
 						    ":%s %d %s %s :%s",
 						    me.name,
 						    RPL_WHOISCHANNELS,
-						    sptr->name, name, buf);
+						    client->name, name, buf);
 						*buf = '\0';
 						len = 0;
 					}
@@ -231,8 +231,8 @@ CMD_FUNC(cmd_whois)
 						}
 					}
 
-					access = get_access(acptr, chptr);
-					if (!MyUser(sptr) || !HasCapability(sptr, "multi-prefix"))
+					access = get_access(target, chptr);
+					if (!MyUser(client) || !HasCapability(client, "multi-prefix"))
 					{
 #ifdef PREFIX_AQ
 						if (access & CHFL_CHANOWNER)
@@ -273,55 +273,55 @@ CMD_FUNC(cmd_whois)
 			}
 
 			if (buf[0] != '\0')
-				sendnumeric(sptr, RPL_WHOISCHANNELS, name, buf); 
+				sendnumeric(client, RPL_WHOISCHANNELS, name, buf); 
 
-                        if (!(IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES))
-				sendnumeric(sptr, RPL_WHOISSERVER, name, acptr->user->server,
-				    acptr->srvptr ? acptr->srvptr->info : "*Not On This Net*");
+                        if (!(IsULine(target) && !IsOper(client) && HIDE_ULINES))
+				sendnumeric(client, RPL_WHOISSERVER, name, target->user->server,
+				    target->srvptr ? target->srvptr->info : "*Not On This Net*");
 
-			if (acptr->user->away)
-				sendnumeric(sptr, RPL_AWAY, name, acptr->user->away);
+			if (target->user->away)
+				sendnumeric(client, RPL_AWAY, name, target->user->away);
 
-			if (IsOper(acptr) && !hideoper)
+			if (IsOper(target) && !hideoper)
 			{
 				buf[0] = '\0';
-				if (IsOper(acptr))
+				if (IsOper(target))
 					strlcat(buf, "an IRC Operator", sizeof buf);
 
 				else
 					strlcat(buf, "a Local IRC Operator", sizeof buf);
 				if (buf[0])
 				{
-					if (IsOper(sptr) && MyUser(acptr))
+					if (IsOper(client) && MyUser(target))
 					{
 						char *operclass = "???";
-						ConfigItem_oper *oper = Find_oper(acptr->user->operlogin);
+						ConfigItem_oper *oper = Find_oper(target->user->operlogin);
 						if (oper && oper->operclass)
 							operclass = oper->operclass;
-						sendto_one(sptr, NULL,
+						sendto_one(client, NULL,
 						    ":%s 313 %s %s :is %s (%s) [%s]", me.name,
-						    sptr->name, name, buf,
-						    acptr->user->operlogin ? acptr->user->operlogin : "unknown",
+						    client->name, name, buf,
+						    target->user->operlogin ? target->user->operlogin : "unknown",
 						    operclass);
 					}
 					else
-						sendnumeric(sptr, RPL_WHOISOPERATOR, name, buf);
+						sendnumeric(client, RPL_WHOISOPERATOR, name, buf);
 				}
 			}
 
-			if (acptr->umodes & UMODE_SECURE)
-				sendnumeric(sptr, RPL_WHOISSECURE, name,
+			if (target->umodes & UMODE_SECURE)
+				sendnumeric(client, RPL_WHOISSECURE, name,
 					"is using a Secure Connection");
 			
-			RunHook2(HOOKTYPE_WHOIS, sptr, acptr);
+			RunHook2(HOOKTYPE_WHOIS, client, target);
 
-			if (acptr->user->swhois && !hideoper)
+			if (target->user->swhois && !hideoper)
 			{
 				SWhois *s;
 				
-				for (s = acptr->user->swhois; s; s = s->next)
-					sendto_one(sptr, NULL, ":%s %d %s %s :%s",
-					    me.name, RPL_WHOISSPECIAL, sptr->name,
+				for (s = target->user->swhois; s; s = s->next)
+					sendto_one(client, NULL, ":%s %d %s %s :%s",
+					    me.name, RPL_WHOISSPECIAL, client->name,
 					    name, s->line);
 			}
 
@@ -329,21 +329,21 @@ CMD_FUNC(cmd_whois)
 			 * display services account name if it's actually a services account name and
 			 * not a legacy timestamp.  --nenolod
 			 */
-			if (!isdigit(*acptr->user->svid))
-				sendnumeric(sptr, RPL_WHOISLOGGEDIN, name, acptr->user->svid);
+			if (!isdigit(*target->user->svid))
+				sendnumeric(client, RPL_WHOISLOGGEDIN, name, target->user->svid);
 
 			/*
 			 * Umode +I hides an oper's idle time from regular users.
 			 * -Nath.
 			 */
-			if (MyConnect(acptr) && (IsOper(sptr) || !(acptr->umodes & UMODE_HIDLE)))
+			if (MyConnect(target) && (IsOper(client) || !(target->umodes & UMODE_HIDLE)))
 			{
-				sendnumeric(sptr, RPL_WHOISIDLE, name,
-				    TStime() - acptr->local->last, acptr->local->firsttime);
+				sendnumeric(client, RPL_WHOISIDLE, name,
+				    TStime() - target->local->last, target->local->firsttime);
 			}
 		}
 		if (!found)
-			sendnumeric(sptr, ERR_NOSUCHNICK, nick);
+			sendnumeric(client, ERR_NOSUCHNICK, nick);
 	}
-	sendnumeric(sptr, RPL_ENDOFWHOIS, querybuf);
+	sendnumeric(client, RPL_ENDOFWHOIS, querybuf);
 }

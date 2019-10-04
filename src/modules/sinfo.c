@@ -45,7 +45,7 @@ CMD_FUNC(sinfo_server)
 {
 	char buf[512];
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 	{
 		/* It is a protocol violation to send an SINFO for yourself,
 		 * eg if you are server 001, then you cannot send :001 SINFO ....
@@ -57,7 +57,7 @@ CMD_FUNC(sinfo_server)
 		 * failure to do so will lead to potential desyncs or other major
 		 * issues.
 		 */
-		return exit_client(sptr, NULL, "Protocol error: you cannot send SINFO about yourself");
+		return exit_client(client, NULL, "Protocol error: you cannot send SINFO about yourself");
 	}
 
 	/* :SID SINFO up_since protocol umodes chanmodes nickchars :software name
@@ -68,44 +68,44 @@ CMD_FUNC(sinfo_server)
 
 	if ((parc < 6) || BadPtr(parv[6]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SINFO");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "SINFO");
 		return;
 	}
 
-	sptr->serv->boottime = atol(parv[1]);
-	sptr->serv->features.protocol = atoi(parv[2]);
+	client->serv->boottime = atol(parv[1]);
+	client->serv->features.protocol = atoi(parv[2]);
 
 	if (!strcmp(parv[3], "*"))
-		safe_free(sptr->serv->features.usermodes);
+		safe_free(client->serv->features.usermodes);
 	else
-		safe_strdup(sptr->serv->features.usermodes, parv[3]);
+		safe_strdup(client->serv->features.usermodes, parv[3]);
 
 	if (!strcmp(parv[4], "*"))
 	{
-		safe_free(sptr->serv->features.chanmodes[0]);
-		safe_free(sptr->serv->features.chanmodes[1]);
-		safe_free(sptr->serv->features.chanmodes[2]);
-		safe_free(sptr->serv->features.chanmodes[3]);
+		safe_free(client->serv->features.chanmodes[0]);
+		safe_free(client->serv->features.chanmodes[1]);
+		safe_free(client->serv->features.chanmodes[2]);
+		safe_free(client->serv->features.chanmodes[3]);
 	} else {
-		parse_chanmodes_protoctl(sptr, parv[4]);
+		parse_chanmodes_protoctl(client, parv[4]);
 	}
 
 	if (!strcmp(parv[5], "*"))
-		safe_free(sptr->serv->features.nickchars);
+		safe_free(client->serv->features.nickchars);
 	else
-		safe_strdup(sptr->serv->features.nickchars, parv[5]);
+		safe_strdup(client->serv->features.nickchars, parv[5]);
 
 	/* Software is always the last parameter. It is currently parv[6]
 	 * but may change later. So always use parv[parc-1].
 	 */
 	if (!strcmp(parv[parc-1], "*"))
-		safe_free(sptr->serv->features.software);
+		safe_free(client->serv->features.software);
 	else
-		safe_strdup(sptr->serv->features.software, parv[parc-1]);
+		safe_strdup(client->serv->features.software, parv[parc-1]);
 
 	/* Broadcast to 'the other side' of the net */
 	concat_params(buf, sizeof(buf), parc, parv);
-	sendto_server(sptr, 0, 0, NULL, ":%s SINFO %s", sptr->name, buf);
+	sendto_server(client, 0, 0, NULL, ":%s SINFO %s", client->name, buf);
 }
 
 #define SafeDisplayStr(x)  ((x && *(x)) ? (x) : "-")
@@ -113,50 +113,50 @@ CMD_FUNC(sinfo_user)
 {
 	Client *acptr;
 
-	if (!IsOper(sptr))
+	if (!IsOper(client))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		sendtxtnumeric(sptr, "*** Server %s:", acptr->name);
-		sendtxtnumeric(sptr, "Protocol: %d",
+		sendtxtnumeric(client, "*** Server %s:", acptr->name);
+		sendtxtnumeric(client, "Protocol: %d",
 		               acptr->serv->features.protocol);
-		sendtxtnumeric(sptr, "Software: %s",
+		sendtxtnumeric(client, "Software: %s",
 		               SafeDisplayStr(acptr->serv->features.software));
 		if (!acptr->serv->boottime)
 		{
-			sendtxtnumeric(sptr, "Up since: -");
-			sendtxtnumeric(sptr, "Uptime: -");
+			sendtxtnumeric(client, "Up since: -");
+			sendtxtnumeric(client, "Uptime: -");
 		} else {
-			sendtxtnumeric(sptr, "Up since: %s",
+			sendtxtnumeric(client, "Up since: %s",
 			               pretty_date(acptr->serv->boottime));
-			sendtxtnumeric(sptr, "Uptime: %s",
+			sendtxtnumeric(client, "Uptime: %s",
 			               pretty_time_val(TStime() - acptr->serv->boottime));
 		}
-		sendtxtnumeric(sptr, "User modes: %s",
+		sendtxtnumeric(client, "User modes: %s",
 		               SafeDisplayStr(acptr->serv->features.usermodes));
 		if (!acptr->serv->features.chanmodes[0])
 		{
-			sendtxtnumeric(sptr, "Channel modes: -");
+			sendtxtnumeric(client, "Channel modes: -");
 		} else {
-			sendtxtnumeric(sptr, "Channel modes: %s,%s,%s,%s",
+			sendtxtnumeric(client, "Channel modes: %s,%s,%s,%s",
 			               SafeDisplayStr(acptr->serv->features.chanmodes[0]),
 			               SafeDisplayStr(acptr->serv->features.chanmodes[1]),
 			               SafeDisplayStr(acptr->serv->features.chanmodes[2]),
 			               SafeDisplayStr(acptr->serv->features.chanmodes[3]));
 		}
-		sendtxtnumeric(sptr, "Allowed nick characters: %s",
+		sendtxtnumeric(client, "Allowed nick characters: %s",
 		               SafeDisplayStr(acptr->serv->features.nickchars));
 	}
 }
 
 CMD_FUNC(cmd_sinfo)
 {
-	if (IsServer(sptr))
-		return sinfo_server(sptr, recv_mtags, parc, parv);
-	else if (MyUser(sptr))
-		return sinfo_user(sptr, recv_mtags, parc, parv);
+	if (IsServer(client))
+		return sinfo_server(client, recv_mtags, parc, parv);
+	else if (MyUser(client))
+		return sinfo_user(client, recv_mtags, parc, parv);
 }

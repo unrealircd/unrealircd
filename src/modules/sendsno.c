@@ -70,16 +70,16 @@ CMD_FUNC(cmd_sendsno)
 
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SENDSNO");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "SENDSNO");
 		return;
 	}
 	sno = parv[1];
 	msg = parv[2];
 
-	new_message(sptr, recv_mtags, &mtags);
+	new_message(client, recv_mtags, &mtags);
 
 	/* Forward to others... */
-	sendto_server(sptr, 0, 0, mtags, ":%s SENDSNO %s :%s", sptr->name, parv[1], parv[2]);
+	sendto_server(client, 0, 0, mtags, ":%s SENDSNO %s :%s", client->name, parv[1], parv[2]);
 
 	for (p = sno; *p; p++)
 	{
@@ -96,7 +96,7 @@ CMD_FUNC(cmd_sendsno)
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{
 		if (acptr->user->snomask & snomask)
-			sendto_one(acptr, mtags, ":%s NOTICE %s :%s", sptr->name, acptr->name, msg);
+			sendto_one(acptr, mtags, ":%s NOTICE %s :%s", client->name, acptr->name, msg);
 	}
 
 	free_message_tags(mtags);

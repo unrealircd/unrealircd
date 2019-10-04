@@ -66,8 +66,8 @@ static char buf[BUFSIZE];
 #define TRUNCATED_NAMES 64
 CMD_FUNC(cmd_names)
 {
-	int multiprefix = (MyConnect(sptr) && HasCapability(sptr, "multi-prefix"));
-	int uhnames = (MyConnect(sptr) && HasCapability(sptr, "userhost-in-names")); // cache UHNAMES support
+	int multiprefix = (MyConnect(client) && HasCapability(client, "multi-prefix"));
+	int uhnames = (MyConnect(client) && HasCapability(client, "userhost-in-names")); // cache UHNAMES support
 	int bufLen = NICKLEN + (!uhnames ? 0 : (1 + USERLEN + 1 + HOSTLEN));
 	int  mlen = strlen(me.name) + bufLen + 7;
 	Channel *chptr;
@@ -78,9 +78,9 @@ CMD_FUNC(cmd_names)
 	char *s, *para = parv[1];
 	char nuhBuffer[NICKLEN+USERLEN+HOSTLEN+3];
 
-	if (parc < 2 || !MyConnect(sptr))
+	if (parc < 2 || !MyConnect(client))
 	{
-		sendnumeric(sptr, RPL_ENDOFNAMES, "*");
+		sendnumeric(client, RPL_ENDOFNAMES, "*");
 		return;
 	}
 
@@ -91,22 +91,22 @@ CMD_FUNC(cmd_names)
 			if (strlen(para) > TRUNCATED_NAMES)
 				para[TRUNCATED_NAMES] = '\0';
 			sendto_realops("names abuser %s %s",
-			    get_client_name(sptr, FALSE), para);
-			sendnumeric(sptr, ERR_TOOMANYTARGETS, s+1, 1, "NAMES");
+			    get_client_name(client, FALSE), para);
+			sendnumeric(client, ERR_TOOMANYTARGETS, s+1, 1, "NAMES");
 			return;
 		}
 	}
 
 	chptr = find_channel(para, NULL);
 
-	if (!chptr || (!ShowChannel(sptr, chptr) && !ValidatePermissionsForPath("channel:see:names:secret",sptr,NULL,chptr,NULL)))
+	if (!chptr || (!ShowChannel(client, chptr) && !ValidatePermissionsForPath("channel:see:names:secret",client,NULL,chptr,NULL)))
 	{
-		sendnumeric(sptr, RPL_ENDOFNAMES, para);
+		sendnumeric(client, RPL_ENDOFNAMES, para);
 		return;
 	}
 
 	/* cache whether this user is a member of this channel or not */
-	member = IsMember(sptr, chptr);
+	member = IsMember(client, chptr);
 
 	if (PubChannel(chptr))
 		buf[0] = '=';
@@ -131,11 +131,11 @@ CMD_FUNC(cmd_names)
 
 	for (cm = chptr->members; cm; cm = cm->next)
 	{
-		acptr = cm->cptr;
-		if (IsInvisible(acptr) && !member && !ValidatePermissionsForPath("channel:see:names:invisible",sptr,acptr,chptr,NULL))
+		acptr = cm->client;
+		if (IsInvisible(acptr) && !member && !ValidatePermissionsForPath("channel:see:names:invisible",client,acptr,chptr,NULL))
 			continue;
 
-		if (!user_can_see_member(sptr, acptr, chptr))
+		if (!user_can_see_member(client, acptr, chptr))
 			continue; /* invisible (eg: due to delayjoin) */
 
 		if (!multiprefix)
@@ -188,14 +188,14 @@ CMD_FUNC(cmd_names)
 		flag = 1;
 		if (mlen + idx + bufLen > BUFSIZE - 7)
 		{
-			sendnumeric(sptr, RPL_NAMREPLY, buf);
+			sendnumeric(client, RPL_NAMREPLY, buf);
 			idx = spos;
 			flag = 0;
 		}
 	}
 
 	if (flag)
-		sendnumeric(sptr, RPL_NAMREPLY, buf);
+		sendnumeric(client, RPL_NAMREPLY, buf);
 
-	sendnumeric(sptr, RPL_ENDOFNAMES, para);
+	sendnumeric(client, RPL_ENDOFNAMES, para);
 }

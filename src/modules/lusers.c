@@ -59,10 +59,10 @@ CMD_FUNC(cmd_lusers)
 {
 char flatmap;
 
-	if (hunt_server(sptr, recv_mtags, ":%s LUSERS :%s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, ":%s LUSERS :%s", 1, parc, parv) != HUNTED_ISME)
 		return;
 
-	flatmap = (FLAT_MAP && !ValidatePermissionsForPath("server:info:lusers",sptr,NULL,NULL,NULL)) ? 1 : 0;
+	flatmap = (FLAT_MAP && !ValidatePermissionsForPath("server:info:lusers",client,NULL,NULL,NULL)) ? 1 : 0;
 
 	/* Just to correct results ---Stskeeps */
 	if (irccounts.clients > irccounts.global_max)
@@ -70,19 +70,19 @@ char flatmap;
 	if (irccounts.me_clients > irccounts.me_max)
 		irccounts.me_max = irccounts.me_clients;
 
-	sendnumeric(sptr, RPL_LUSERCLIENT,
+	sendnumeric(client, RPL_LUSERCLIENT,
 	    irccounts.clients - irccounts.invisible, irccounts.invisible,
 	    irccounts.servers);
 
 	if (irccounts.operators)
-		sendnumeric(sptr, RPL_LUSEROP, irccounts.operators);
+		sendnumeric(client, RPL_LUSEROP, irccounts.operators);
 	if (irccounts.unknown)
-		sendnumeric(sptr, RPL_LUSERUNKNOWN, irccounts.unknown);
+		sendnumeric(client, RPL_LUSERUNKNOWN, irccounts.unknown);
 	if (irccounts.channels)
-		sendnumeric(sptr, RPL_LUSERCHANNELS, irccounts.channels);
-	sendnumeric(sptr, RPL_LUSERME, irccounts.me_clients, flatmap ? 0 : irccounts.me_servers);
-	sendnumeric(sptr, RPL_LOCALUSERS, irccounts.me_clients, irccounts.me_max, irccounts.me_clients, irccounts.me_max);
-	sendnumeric(sptr, RPL_GLOBALUSERS, irccounts.clients, irccounts.global_max, irccounts.clients, irccounts.global_max);
+		sendnumeric(client, RPL_LUSERCHANNELS, irccounts.channels);
+	sendnumeric(client, RPL_LUSERME, irccounts.me_clients, flatmap ? 0 : irccounts.me_servers);
+	sendnumeric(client, RPL_LOCALUSERS, irccounts.me_clients, irccounts.me_max, irccounts.me_clients, irccounts.me_max);
+	sendnumeric(client, RPL_GLOBALUSERS, irccounts.clients, irccounts.global_max, irccounts.clients, irccounts.global_max);
 	if ((irccounts.me_clients + irccounts.me_servers) > max_connection_count)
 	{
 		max_connection_count =

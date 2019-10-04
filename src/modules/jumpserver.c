@@ -69,25 +69,25 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static void do_jumpserver_exit_client(Client *sptr)
+static void do_jumpserver_exit_client(Client *client)
 {
-	if (IsSecure(sptr) && jss->ssl_server)
-		sendnumeric(sptr, RPL_REDIR, jss->ssl_server, NULL, jss->ssl_port);
+	if (IsSecure(client) && jss->ssl_server)
+		sendnumeric(client, RPL_REDIR, jss->ssl_server, NULL, jss->ssl_port);
 	else
-		sendnumeric(sptr, RPL_REDIR, jss->server, jss->port);
-	exit_client(sptr, NULL, jss->reason);
+		sendnumeric(client, RPL_REDIR, jss->server, jss->port);
+	exit_client(client, NULL, jss->reason);
 }
 
 static void redirect_all_clients(void)
 {
 	int count = 0;
-	Client *acptr, *saved;
+	Client *client, *next;
 
-	list_for_each_entry_safe(acptr, saved, &lclient_list, lclient_node)
+	list_for_each_entry_safe(client, next, &lclient_list, lclient_node)
 	{
-		if (IsUser(acptr) && !IsOper(acptr))
+		if (IsUser(client) && !IsOper(client))
 		{
-			do_jumpserver_exit_client(acptr);
+			do_jumpserver_exit_client(client);
 			count++;
 		}
 	}
@@ -95,11 +95,11 @@ static void redirect_all_clients(void)
 		count, count == 1 ? "" : "s"); /* Language fun... ;p */
 }
 
-int jumpserver_preconnect(Client *sptr)
+int jumpserver_preconnect(Client *client)
 {
 	if (jss)
 	{
-		do_jumpserver_exit_client(sptr);
+		do_jumpserver_exit_client(client);
 		return HOOK_DENY;
 	}
 	return HOOK_CONTINUE;
@@ -128,23 +128,23 @@ CMD_FUNC(cmd_jumpserver)
 	int all=0, port=6667, sslport=6697;
 	char logbuf[512];
 
-	if (!IsOper(sptr))
+	if (!IsOper(client))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		if (jss && jss->ssl_server)
-			sendnotice(sptr, "JumpServer is \002ENABLED\002 to %s:%d (SSL/TLS: %s:%d) with reason '%s'",
+			sendnotice(client, "JumpServer is \002ENABLED\002 to %s:%d (SSL/TLS: %s:%d) with reason '%s'",
 				jss->server, jss->port, jss->ssl_server, jss->ssl_port, jss->reason);
 		else
 		if (jss)
-			sendnotice(sptr, "JumpServer is \002ENABLED\002 to %s:%d with reason '%s'",
+			sendnotice(client, "JumpServer is \002ENABLED\002 to %s:%d with reason '%s'",
 				jss->server, jss->port, jss->reason);
 		else
-			sendnotice(sptr, "JumpServer is \002DISABLED\002");
+			sendnotice(client, "JumpServer is \002DISABLED\002");
 		return;
 	}
 
@@ -152,12 +152,12 @@ CMD_FUNC(cmd_jumpserver)
 	{
 		if (!jss)
 		{
-			sendnotice(sptr, "JUMPSERVER: No redirect active (already OFF)");
+			sendnotice(client, "JUMPSERVER: No redirect active (already OFF)");
 			return;
 		}
 		free_jss();
 		snprintf(logbuf, sizeof(logbuf), "%s (%s@%s) turned JUMPSERVER OFF",
-			sptr->name, sptr->user->username, sptr->user->realhost);
+			client->name, client->user->username, client->user->realhost);
 		sendto_realops("%s", logbuf);
 		ircd_log(LOG_ERROR, "%s", logbuf);
 		return;
@@ -166,14 +166,14 @@ CMD_FUNC(cmd_jumpserver)
 	if (parc < 4)
 	{
 		/* Waah, pretty verbose usage info ;) */
-		sendnotice(sptr, "Use: /JUMPSERVER <server>[:port] <NEW|ALL> <reason>");
-		sendnotice(sptr, " Or: /JUMPSERVER <server>[:port]/<sslserver>[:port] <NEW|ALL> <reason>");
-		sendnotice(sptr, "if 'NEW' is chosen then only new (incoming) connections will be redirected");
-		sendnotice(sptr, "if 'ALL' is chosen then all clients except opers will be redirected immediately (+incoming connections)");
-		sendnotice(sptr, "Example: /JUMPSERVER irc2.test.net NEW This server will be upgraded, please use irc2.test.net for now");
-		sendnotice(sptr, "And then for example 10 minutes later...");
-		sendnotice(sptr, "         /JUMPSERVER irc2.test.net ALL This server will be upgraded, please use irc2.test.net for now");
-		sendnotice(sptr, "Use: '/JUMPSERVER OFF' to turn off any redirects");
+		sendnotice(client, "Use: /JUMPSERVER <server>[:port] <NEW|ALL> <reason>");
+		sendnotice(client, " Or: /JUMPSERVER <server>[:port]/<sslserver>[:port] <NEW|ALL> <reason>");
+		sendnotice(client, "if 'NEW' is chosen then only new (incoming) connections will be redirected");
+		sendnotice(client, "if 'ALL' is chosen then all clients except opers will be redirected immediately (+incoming connections)");
+		sendnotice(client, "Example: /JUMPSERVER irc2.test.net NEW This server will be upgraded, please use irc2.test.net for now");
+		sendnotice(client, "And then for example 10 minutes later...");
+		sendnotice(client, "         /JUMPSERVER irc2.test.net ALL This server will be upgraded, please use irc2.test.net for now");
+		sendnotice(client, "Use: '/JUMPSERVER OFF' to turn off any redirects");
 		return;
 	}
 
@@ -199,7 +199,7 @@ CMD_FUNC(cmd_jumpserver)
 		port = atoi(p);
 		if ((port < 1) || (port > 65535))
 		{
-			sendnotice(sptr, "Invalid serverport specified (%d)", port);
+			sendnotice(client, "Invalid serverport specified (%d)", port);
 			return;
 		}
 	}
@@ -212,7 +212,7 @@ CMD_FUNC(cmd_jumpserver)
 			sslport = atoi(p);
 			if ((sslport < 1) || (sslport > 65535))
 			{
-				sendnotice(sptr, "Invalid SSL/TLS serverport specified (%d)", sslport);
+				sendnotice(client, "Invalid SSL/TLS serverport specified (%d)", sslport);
 				return;
 			}
 		}
@@ -224,7 +224,7 @@ CMD_FUNC(cmd_jumpserver)
 	else if (!strcasecmp(parv[2], "all"))
 		all = 1;
 	else {
-		sendnotice(sptr, "ERROR: Invalid action '%s', should be 'NEW' or 'ALL' (see /jumpserver help for usage)", parv[2]);
+		sendnotice(client, "ERROR: Invalid action '%s', should be 'NEW' or 'ALL' (see /jumpserver help for usage)", parv[2]);
 		return;
 	}
 
@@ -249,12 +249,12 @@ CMD_FUNC(cmd_jumpserver)
 	/* Broadcast/log */
 	if (sslserv)
 		snprintf(logbuf, sizeof(logbuf), "%s (%s@%s) added JUMPSERVER redirect for %s to %s:%d [SSL/TLS: %s:%d] with reason '%s'",
-			sptr->name, sptr->user->username, sptr->user->realhost,
+			client->name, client->user->username, client->user->realhost,
 			all ? "ALL CLIENTS" : "all new clients",
 			jss->server, jss->port, jss->ssl_server, jss->ssl_port, jss->reason);
 	else
 		snprintf(logbuf, sizeof(logbuf), "%s (%s@%s) added JUMPSERVER redirect for %s to %s:%d with reason '%s'",
-			sptr->name, sptr->user->username, sptr->user->realhost,
+			client->name, client->user->username, client->user->realhost,
 			all ? "ALL CLIENTS" : "all new clients",
 			jss->server, jss->port, jss->reason);
 

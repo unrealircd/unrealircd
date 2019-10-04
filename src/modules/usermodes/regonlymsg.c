@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-#define IsRegOnlyMsg(cptr)    (cptr->umodes & UMODE_REGONLYMSG)
+#define IsRegOnlyMsg(client)    (client->umodes & UMODE_REGONLYMSG)
 
 /* Module header */
 ModuleHeader MOD_HEADER
@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 long UMODE_REGONLYMSG = 0L;
 
 /* Forward declarations */
-char *regonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int notice);
+char *regonlymsg_pre_usermsg(Client *client, Client *target, char *text, int notice);
                     
 MOD_INIT()
 {
@@ -57,14 +57,14 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *regonlymsg_pre_usermsg(Client *sptr, Client *target, char *text, int notice)
+char *regonlymsg_pre_usermsg(Client *client, Client *target, char *text, int notice)
 {
-	if (IsRegOnlyMsg(target) && !IsServer(sptr) && !IsULine(sptr) && !IsLoggedIn(sptr))
+	if (IsRegOnlyMsg(target) && !IsServer(client) && !IsULine(client) && !IsLoggedIn(client))
 	{
-		if (ValidatePermissionsForPath("client:override:message:regonlymsg",sptr,target,NULL,text))
+		if (ValidatePermissionsForPath("client:override:message:regonlymsg",client,target,NULL,text))
 			return text; /* TODO: this is actually an override */
 
-		sendnumeric(sptr, ERR_NONONREG, target->name);
+		sendnumeric(client, ERR_NONONREG, target->name);
 
 		return NULL; /* Block the message */
 	}

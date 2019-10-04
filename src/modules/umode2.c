@@ -61,8 +61,8 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_umode2)
 {
 	char *xparv[5] = {
-		sptr->name,
-		sptr->name,
+		client->name,
+		client->name,
 		parv[1],
 		(parc > 3) ? parv[3] : NULL,
 		NULL
@@ -70,5 +70,5 @@ CMD_FUNC(cmd_umode2)
 
 	if (!parv[1])
 		return;
-	return cmd_umode(sptr, recv_mtags, (parc > 3) ? 4 : 3, xparv);
+	return cmd_umode(client, recv_mtags, (parc > 3) ? 4 : 3, xparv);
 }

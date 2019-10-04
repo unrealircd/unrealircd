@@ -35,8 +35,8 @@ ModuleHeader MOD_HEADER
 void saslmechlist_free(ModData *m);
 char *saslmechlist_serialize(ModData *m);
 void saslmechlist_unserialize(char *str, ModData *m);
-char *sasl_capability_parameter(Client *acptr);
-int sasl_server_synched(Client *sptr);
+char *sasl_capability_parameter(Client *client);
+int sasl_server_synched(Client *client);
 
 /* Macros */
 #define MSG_AUTHENTICATE "AUTHENTICATE"
@@ -72,34 +72,34 @@ long CAP_SASL = 0L;
  */
 CMD_FUNC(cmd_svslogin)
 {
-	if (!SASL_SERVER || MyUser(sptr) || (parc < 3) || !parv[3])
+	if (!SASL_SERVER || MyUser(client) || (parc < 3) || !parv[3])
 		return;
 
 	if (!strcasecmp(parv[1], me.name))
 	{
-		Client *target_p;
+		Client *target;
 
-		target_p = find_client(parv[2], NULL);
-		if (!target_p || !MyConnect(target_p))
+		target = find_client(parv[2], NULL);
+		if (!target || !MyConnect(target))
 			return;
 
-		if (target_p->user == NULL)
-			make_user(target_p);
+		if (target->user == NULL)
+			make_user(target);
 
-		strlcpy(target_p->user->svid, parv[3], sizeof(target_p->user->svid));
+		strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
 
-		sendnumeric(target_p, RPL_LOGGEDIN,
-			   BadPtr(target_p->name) ? "*" : target_p->name,
-			   BadPtr(target_p->user->username) ? "*" : target_p->user->username,
-			   BadPtr(target_p->user->realhost) ? "*" : target_p->user->realhost,
-			   target_p->user->svid, target_p->user->svid);
+		sendnumeric(target, RPL_LOGGEDIN,
+			   BadPtr(target->name) ? "*" : target->name,
+			   BadPtr(target->user->username) ? "*" : target->user->username,
+			   BadPtr(target->user->realhost) ? "*" : target->user->realhost,
+			   target->user->svid, target->user->svid);
 
 		return;
 	}
 
 	/* not for us; propagate. */
-	sendto_server(sptr, 0, 0, NULL, ":%s SVSLOGIN %s %s %s",
-	    sptr->name, parv[1], parv[2], parv[3]);
+	sendto_server(client, 0, 0, NULL, ":%s SVSLOGIN %s %s %s",
+	    client->name, parv[1], parv[2], parv[3]);
 }
 
 /*
@@ -113,56 +113,56 @@ CMD_FUNC(cmd_svslogin)
  */
 CMD_FUNC(cmd_sasl)
 {
-	if (!SASL_SERVER || MyUser(sptr) || (parc < 4) || !parv[4])
+	if (!SASL_SERVER || MyUser(client) || (parc < 4) || !parv[4])
 		return;
 
 	if (!strcasecmp(parv[1], me.name))
 	{
-		Client *target_p;
+		Client *target;
 
-		target_p = find_client(parv[2], NULL);
-		if (!target_p || !MyConnect(target_p))
+		target = find_client(parv[2], NULL);
+		if (!target || !MyConnect(target))
 			return;
 
-		if (target_p->user == NULL)
-			make_user(target_p);
+		if (target->user == NULL)
+			make_user(target);
 
 		/* reject if another SASL agent is answering */
-		if (*target_p->local->sasl_agent && strcasecmp(sptr->name, target_p->local->sasl_agent))
+		if (*target->local->sasl_agent && strcasecmp(client->name, target->local->sasl_agent))
 			return;
 		else
-			strlcpy(target_p->local->sasl_agent, sptr->name, sizeof(target_p->local->sasl_agent));
+			strlcpy(target->local->sasl_agent, client->name, sizeof(target->local->sasl_agent));
 
 		if (*parv[3] == 'C')
 		{
-			RunHookReturn2(HOOKTYPE_SASL_CONTINUATION, target_p, parv[4], !=0);
-			sendto_one(target_p, NULL, "AUTHENTICATE %s", parv[4]);
+			RunHookReturn2(HOOKTYPE_SASL_CONTINUATION, target, parv[4], !=0);
+			sendto_one(target, NULL, "AUTHENTICATE %s", parv[4]);
 		}
 		else if (*parv[3] == 'D')
 		{
-			*target_p->local->sasl_agent = '\0';
+			*target->local->sasl_agent = '\0';
 			if (*parv[4] == 'F')
 			{
-				target_p->local->since += 7; /* bump fakelag due to failed authentication attempt */
-				RunHookReturn2(HOOKTYPE_SASL_RESULT, target_p, 0, !=0);
-				sendnumeric(target_p, ERR_SASLFAIL);
+				target->local->since += 7; /* bump fakelag due to failed authentication attempt */
+				RunHookReturn2(HOOKTYPE_SASL_RESULT, target, 0, !=0);
+				sendnumeric(target, ERR_SASLFAIL);
 			}
 			else if (*parv[4] == 'S')
 			{
-				target_p->local->sasl_complete++;
-				RunHookReturn2(HOOKTYPE_SASL_RESULT, target_p, 1, !=0);
-				sendnumeric(target_p, RPL_SASLSUCCESS);
+				target->local->sasl_complete++;
+				RunHookReturn2(HOOKTYPE_SASL_RESULT, target, 1, !=0);
+				sendnumeric(target, RPL_SASLSUCCESS);
 			}
 		}
 		else if (*parv[3] == 'M')
-			sendnumeric(target_p, RPL_SASLMECHS, parv[4]);
+			sendnumeric(target, RPL_SASLMECHS, parv[4]);
 
 		return;
 	}
 
 	/* not for us; propagate. */
-	sendto_server(sptr, 0, 0, NULL, ":%s SASL %s %s %c %s %s",
-	    sptr->name, parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
+	sendto_server(client, 0, 0, NULL, ":%s SASL %s %s %c %s %s",
+	    client->name, parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
 }
 
 /*
@@ -175,74 +175,74 @@ CMD_FUNC(cmd_authenticate)
 	Client *agent_p = NULL;
 
 	/* Failing to use CAP REQ for sasl is a protocol violation. */
-	if (!SASL_SERVER || !MyConnect(sptr) || BadPtr(parv[1]) || !HasCapability(sptr, "sasl"))
+	if (!SASL_SERVER || !MyConnect(client) || BadPtr(parv[1]) || !HasCapability(client, "sasl"))
 		return;
 
 	if ((parv[1][0] == ':') || strchr(parv[1], ' '))
 	{
-		sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "AUTHENTICATE", "Invalid parameter");
+		sendnumeric(client, ERR_CANNOTDOCOMMAND, "AUTHENTICATE", "Invalid parameter");
 		return;
 	}
 
 	if (strlen(parv[1]) > 400)
 	{
-		sendnumeric(sptr, ERR_SASLTOOLONG);
+		sendnumeric(client, ERR_SASLTOOLONG);
 		return;
 	}
 
-	if (*sptr->local->sasl_agent)
-		agent_p = find_client(sptr->local->sasl_agent, NULL);
+	if (*client->local->sasl_agent)
+		agent_p = find_client(client->local->sasl_agent, NULL);
 
 	if (agent_p == NULL)
 	{
-		char *addr = BadPtr(sptr->ip) ? "0" : sptr->ip;
-		char *certfp = moddata_client_get(sptr, "certfp");
+		char *addr = BadPtr(client->ip) ? "0" : client->ip;
+		char *certfp = moddata_client_get(client, "certfp");
 
 		sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s H %s %s",
-		    me.name, SASL_SERVER, sptr->id, addr, addr);
+		    me.name, SASL_SERVER, client->id, addr, addr);
 
 		if (certfp)
 			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s %s",
-			    me.name, SASL_SERVER, sptr->id, parv[1], certfp);
+			    me.name, SASL_SERVER, client->id, parv[1], certfp);
 		else
 			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s S %s",
-			    me.name, SASL_SERVER, sptr->id, parv[1]);
+			    me.name, SASL_SERVER, client->id, parv[1]);
 	}
 	else
 		sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s C %s",
-		    me.name, AGENT_SID(agent_p), sptr->id, parv[1]);
+		    me.name, AGENT_SID(agent_p), client->id, parv[1]);
 
-	sptr->local->sasl_out++;
+	client->local->sasl_out++;
 }
 
-static int abort_sasl(Client *cptr)
+static int abort_sasl(Client *client)
 {
-	if (cptr->local->sasl_out == 0 || cptr->local->sasl_complete)
+	if (client->local->sasl_out == 0 || client->local->sasl_complete)
 		return 0;
 
-	cptr->local->sasl_out = cptr->local->sasl_complete = 0;
-	sendnumeric(cptr, ERR_SASLABORTED);
+	client->local->sasl_out = client->local->sasl_complete = 0;
+	sendnumeric(client, ERR_SASLABORTED);
 
-	if (*cptr->local->sasl_agent)
+	if (*client->local->sasl_agent)
 	{
-		Client *agent_p = find_client(cptr->local->sasl_agent, NULL);
+		Client *agent_p = find_client(client->local->sasl_agent, NULL);
 
 		if (agent_p != NULL)
 		{
 			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s D A",
-			    me.name, AGENT_SID(agent_p), cptr->id);
+			    me.name, AGENT_SID(agent_p), client->id);
 			return 0;
 		}
 	}
 
-	sendto_server(NULL, 0, 0, NULL, ":%s SASL * %s D A", me.name, cptr->id);
+	sendto_server(NULL, 0, 0, NULL, ":%s SASL * %s D A", me.name, client->id);
 	return 0;
 }
 
 /** Is this capability visible?
- * Note that 'sptr' may be NULL when queried from CAP DEL / CAP NEW
+ * Note that 'client' may be NULL when queried from CAP DEL / CAP NEW
  */
-int sasl_capability_visible(Client *sptr)
+int sasl_capability_visible(Client *client)
 {
 	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
 		return 0;
@@ -252,35 +252,35 @@ int sasl_capability_visible(Client *sptr)
 	 * won't attempt SASL authentication and thus it prevents the client
 	 * from sending the password unencrypted (in case of method PLAIN).
 	 */
-	if (sptr && !IsSecure(sptr) && !IsLocalhost(sptr) && (iConf.plaintext_policy_user == POLICY_DENY))
+	if (client && !IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_DENY))
 		return 0;
 
 	/* Similarly, don't advertise when we are going to reject the user
 	 * due to set::outdated-tls-policy.
 	 */
-	if (IsSecure(sptr) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(sptr))
+	if (IsSecure(client) && (iConf.outdated_tls_policy_user == POLICY_DENY) && outdated_tls_client(client))
 		return 0;
 
 	return 1;
 }
 
-int sasl_connect(Client *sptr)
+int sasl_connect(Client *client)
 {
-	return abort_sasl(sptr);
+	return abort_sasl(client);
 }
 
-int sasl_quit(Client *sptr, MessageTag *mtags, char *comment)
+int sasl_quit(Client *client, MessageTag *mtags, char *comment)
 {
-	return abort_sasl(sptr);
+	return abort_sasl(client);
 }
 
-int sasl_server_quit(Client *sptr, MessageTag *mtags)
+int sasl_server_quit(Client *client, MessageTag *mtags)
 {
 	if (!SASL_SERVER)
 		return 0;
 
 	/* If the set::sasl-server is gone, let everyone know 'sasl' is no longer available */
-	if (!strcasecmp(sptr->name, SASL_SERVER))
+	if (!strcasecmp(client->name, SASL_SERVER))
 		send_cap_notify(0, "sasl");
 
 	return 0;
@@ -290,8 +290,8 @@ void auto_discover_sasl_server(int justlinked)
 {
 	if (!SASL_SERVER && SERVICES_NAME)
 	{
-		Client *acptr = find_server(SERVICES_NAME, NULL);
-		if (acptr && moddata_client_get(acptr, "saslmechlist"))
+		Client *client = find_server(SERVICES_NAME, NULL);
+		if (client && moddata_client_get(client, "saslmechlist"))
 		{
 			/* SASL server found */
 			if (justlinked)
@@ -307,12 +307,12 @@ void auto_discover_sasl_server(int justlinked)
 			}
 			safe_strdup(SASL_SERVER, SERVICES_NAME);
 			if (justlinked)
-				sasl_server_synched(acptr);
+				sasl_server_synched(client);
 		}
 	}
 }
 
-int sasl_server_synched(Client *sptr)
+int sasl_server_synched(Client *client)
 {
 	if (!SASL_SERVER)
 	{
@@ -321,7 +321,7 @@ int sasl_server_synched(Client *sptr)
 	}
 
 	/* If the set::sasl-server is gone, let everyone know 'sasl' is no longer available */
-	if (!strcasecmp(sptr->name, SASL_SERVER))
+	if (!strcasecmp(client->name, SASL_SERVER))
 		send_cap_notify(1, "sasl");
 
 	return 0;
@@ -389,7 +389,7 @@ void saslmechlist_unserialize(char *str, ModData *m)
 	safe_strdup(m->str, str);
 }
 
-char *sasl_capability_parameter(Client *acptr)
+char *sasl_capability_parameter(Client *client)
 {
 	Client *server;
 

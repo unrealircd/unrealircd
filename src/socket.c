@@ -40,32 +40,32 @@
  *             zero return. Upper level routine will have to
  *             decide what to do with those unwritten bytes...
  */
-int  deliver_it(Client *cptr, char *str, int len, int *want_read)
+int deliver_it(Client *client, char *str, int len, int *want_read)
 {
 	int  retval;
 
 	*want_read = 0;
 
-	if (IsDeadSocket(cptr) || (!IsServer(cptr) && !IsUser(cptr)
-	    && !IsHandshake(cptr) 
-	    && !IsTLSHandshake(cptr)
+	if (IsDeadSocket(client) || (!IsServer(client) && !IsUser(client)
+	    && !IsHandshake(client) 
+	    && !IsTLSHandshake(client)
  
-	    && !IsUnknown(cptr)))
+	    && !IsUnknown(client)))
 	{
 		str[len] = '\0';
 		sendto_ops
 		    ("* * * DEBUG ERROR * * * !!! Calling deliver_it() for %s, status %d %s, with message: %s",
-		    cptr->name, cptr->status, IsDeadSocket(cptr) ? "DEAD" : "", str);
+		    client->name, client->status, IsDeadSocket(client) ? "DEAD" : "", str);
 		return -1;
 	}
 
-	if (IsTLS(cptr) && cptr->local->ssl != NULL)
+	if (IsTLS(client) && client->local->ssl != NULL)
 	{
-		retval = SSL_write(cptr->local->ssl, str, len);
+		retval = SSL_write(client->local->ssl, str, len);
 
 		if (retval < 0)
 		{
-			switch (SSL_get_error(cptr->local->ssl, retval))
+			switch (SSL_get_error(client->local->ssl, retval))
 			{
 			case SSL_ERROR_WANT_READ:
 				SET_ERRNO(P_EWOULDBLOCK);
@@ -86,7 +86,7 @@ int  deliver_it(Client *cptr, char *str, int len, int *want_read)
 		}
 	}
 	else
-		retval = send(cptr->local->fd, str, len, 0);
+		retval = send(client->local->fd, str, len, 0);
 	/*
 	   ** Convert WOULDBLOCK to a return of "0 bytes moved". This
 	   ** should occur only if socket was non-blocking. Note, that
@@ -106,12 +106,12 @@ int  deliver_it(Client *cptr, char *str, int len, int *want_read)
 
 	if (retval > 0)
 	{
-		cptr->local->sendB += retval;
+		client->local->sendB += retval;
 		me.local->sendB += retval;
-		if (cptr->local->sendB > 1023)
+		if (client->local->sendB > 1023)
 		{
-			cptr->local->sendK += (cptr->local->sendB >> 10);
-			cptr->local->sendB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
+			client->local->sendK += (client->local->sendB >> 10);
+			client->local->sendB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
 		}
 		if (me.local->sendB > 1023)
 		{

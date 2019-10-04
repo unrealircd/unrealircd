@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 long UMODE_SHOWWHOIS = 0L;
 
 /* Forward declarations */
-int showwhois_whois(Client *sptr, Client *acptr);
+int showwhois_whois(Client *requester, Client *target);
 
 MOD_TEST()
 {
@@ -62,14 +62,14 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int showwhois_whois(Client *sptr, Client *acptr)
+int showwhois_whois(Client *requester, Client *target)
 {
-	if (IsWhois(acptr) && (sptr != acptr))
+	if (IsWhois(target) && (requester != target))
 	{
-		sendnotice(acptr,
+		sendnotice(target,
 			"*** %s (%s@%s) did a /whois on you.",
-			sptr->name,
-			sptr->user->username, sptr->user->realhost);
+			requester->name,
+			requester->user->username, requester->user->realhost);
 	}
 
 	return 0;

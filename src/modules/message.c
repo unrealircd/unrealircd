@@ -23,12 +23,12 @@
 char *_StripColors(unsigned char *text);
 char *_StripControlCodes(unsigned char *text);
 
-int ban_version(Client *sptr, char *text);
+int ban_version(Client *client, char *text);
 
 CMD_FUNC(cmd_private);
 CMD_FUNC(cmd_notice);
-void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice);
-int _can_send(Client *sptr, Channel *chptr, char **msgtext, char **errmsg, int notice);
+void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[], int notice);
+int _can_send(Client *client, Channel *chptr, char **msgtext, char **errmsg, int notice);
 
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
@@ -73,14 +73,14 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static int check_dcc(Client *sptr, char *target, Client *targetcli, char *text);
+static int check_dcc(Client *client, char *target, Client *targetcli, char *text);
 static int check_dcc_soft(Client *from, Client *to, char *text);
 
 #define CANPRIVMSG_CONTINUE		100
 #define CANPRIVMSG_SEND			101
 /** Check if PRIVMSG's are permitted from a person to another person.
- * sptr:	source client
- * acptr:	target client
+ * client:	source client
+ * target:	target client
  * notice:	1 if notice, 0 if privmsg
  * text:	Pointer to a pointer to a text [in, out]
  * cmd:		Pointer to a pointer which contains the command to use [in, out]
@@ -90,45 +90,45 @@ static int check_dcc_soft(Client *from, Client *to, char *text);
  * CANPRIVMSG_SEND: send the message (use text/newcmd!)
  * Other: return with this value (can be anything)
  */
-static int can_privmsg(Client *sptr, Client *acptr, int notice, char **text, char **cmd)
+static int can_privmsg(Client *client, Client *target, int notice, char **text, char **cmd)
 {
 	int ret;
 
-	if (IsVirus(sptr))
+	if (IsVirus(client))
 	{
-		sendnotice(sptr, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
+		sendnotice(client, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
 		return CANPRIVMSG_CONTINUE;
 	}
 
-	if (MyUser(sptr) && !strncasecmp(*text, "\001DCC", 4))
+	if (MyUser(client) && !strncasecmp(*text, "\001DCC", 4))
 	{
-		ret = check_dcc(sptr, acptr->name, acptr, *text);
-		if (IsDead(sptr))
+		ret = check_dcc(client, target->name, target, *text);
+		if (IsDead(client))
 			return 0;
 		if (ret == 0)
 			return CANPRIVMSG_CONTINUE;
 	}
-	if (MyUser(acptr) && !strncasecmp(*text, "\001DCC", 4) &&
-	    !check_dcc_soft(sptr, acptr, *text))
+	if (MyUser(target) && !strncasecmp(*text, "\001DCC", 4) &&
+	    !check_dcc_soft(client, target, *text))
 		return CANPRIVMSG_CONTINUE;
 
-	if (MyUser(sptr) && check_for_target_limit(sptr, acptr, acptr->name))
+	if (MyUser(client) && check_for_target_limit(client, target, target->name))
 		return CANPRIVMSG_CONTINUE;
 
-	if (!is_silenced(sptr, acptr))
+	if (!is_silenced(client, target))
 	{
 		Hook *tmphook;
 
-		if (!notice && MyConnect(sptr) &&
-		    acptr->user && acptr->user->away)
-			sendnumeric(sptr, RPL_AWAY, acptr->name,
-			    acptr->user->away);
+		if (!notice && MyConnect(client) &&
+		    target->user && target->user->away)
+			sendnumeric(client, RPL_AWAY, target->name,
+			    target->user->away);
 
-		if (MyUser(sptr) && match_spamfilter(sptr, *text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), acptr->name, 0, NULL))
+		if (MyUser(client) && match_spamfilter(client, *text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), target->name, 0, NULL))
 			return 0;
 
 		for (tmphook = Hooks[HOOKTYPE_PRE_USERMSG]; tmphook; tmphook = tmphook->next) {
-			*text = (*(tmphook->func.pcharfunc))(sptr, acptr, *text, notice);
+			*text = (*(tmphook->func.pcharfunc))(client, target, *text, notice);
 			if (!*text)
 				break;
 		}
@@ -138,7 +138,7 @@ static int can_privmsg(Client *sptr, Client *acptr, int notice, char **text, cha
 		return CANPRIVMSG_SEND;
 	} else {
 		/* Silenced */
-		RunHook3(HOOKTYPE_SILENCED, sptr, acptr, notice);
+		RunHook3(HOOKTYPE_SILENCED, client, target, notice);
 	}
 	return CANPRIVMSG_CONTINUE;
 }
@@ -154,9 +154,9 @@ static int can_privmsg(Client *sptr, Client *acptr, int notice, char **text, cha
 ** rev argv 6/91
 **
 */
-void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice)
+void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[], int notice)
 {
-	Client *acptr;
+	Client *target;
 	Channel *chptr;
 	char *nick, *p, *p2, *pc, *text, *errmsg, *newcmd;
 	int  prefix = 0;
@@ -171,39 +171,39 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NORECIPIENT, cmd);
+		sendnumeric(client, ERR_NORECIPIENT, cmd);
 		return;
 	}
 
 	if (parc < 3 || *parv[2] == '\0')
 	{
-		sendnumeric(sptr, ERR_NOTEXTTOSEND);
+		sendnumeric(client, ERR_NOTEXTTOSEND);
 		return;
 	}
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 		parv[1] = (char *)canonize(parv[1]);
 
 	for (p = NULL, nick = strtoken(&p, parv[1], ","); nick; nick = strtoken(&p, NULL, ","))
 	{
-		if (MyUser(sptr) && (++ntargets > maxtargets))
+		if (MyUser(client) && (++ntargets > maxtargets))
 		{
-			sendnumeric(sptr, ERR_TOOMANYTARGETS, nick, maxtargets, cmd);
+			sendnumeric(client, ERR_TOOMANYTARGETS, nick, maxtargets, cmd);
 			break;
 		}
 		/* The nicks "ircd" and "irc" are special (and reserved) */
-		if (!strcasecmp(nick, "ircd") && MyUser(sptr))
+		if (!strcasecmp(nick, "ircd") && MyUser(client))
 			return;
 
-		if (!strcasecmp(nick, "irc") && MyUser(sptr))
+		if (!strcasecmp(nick, "irc") && MyUser(client))
 		{
 			/* When ban version { } is enabled the IRCd sends a CTCP VERSION request
 			 * from the "IRC" nick. So we need to handle CTCP VERSION replies to "IRC".
 			 */
 			if (!strncmp(parv[2], "\1VERSION ", 9))
-				ban_version(sptr, parv[2] + 9);
+				ban_version(client, parv[2] + 9);
 			else if (!strncmp(parv[2], "\1SCRIPT ", 8))
-				ban_version(sptr, parv[2] + 8);
+				ban_version(client, parv[2] + 8);
 			return;
 		}
 
@@ -255,22 +255,22 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 
 				if (prefix)
 				{
-					if (MyUser(sptr) && !op_can_override("channel:override:message:prefix",sptr,chptr,NULL))
+					if (MyUser(client) && !op_can_override("channel:override:message:prefix",client,chptr,NULL))
 					{
-						Membership *lp = find_membership_link(sptr->user->channel, chptr);
+						Membership *lp = find_membership_link(client->user->channel, chptr);
 						/* Check if user is allowed to send. RULES:
 						 * Need at least voice (+) in order to send to +,% or @
 						 * Need at least ops (@) in order to send to & or ~
 						 */
 						if (!lp || !(lp->flags & (CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
 						{
-							sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
+							sendnumeric(client, ERR_CHANOPRIVSNEEDED, chptr->chname);
 							return;
 						}
 						if (!(prefix & PREFIX_OP) && ((prefix & PREFIX_OWNER) || (prefix & PREFIX_ADMIN)) &&
 						    !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
 						{
-							sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
+							sendnumeric(client, ERR_CHANOPRIVSNEEDED, chptr->chname);
 							return;
 						}
 					}
@@ -297,32 +297,32 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 				}
 			}
 
-			if (MyUser(sptr) && (*parv[2] == 1))
+			if (MyUser(client) && (*parv[2] == 1))
 			{
-				ret = check_dcc(sptr, chptr->chname, NULL, parv[2]);
-				if (IsDead(sptr))
+				ret = check_dcc(client, chptr->chname, NULL, parv[2]);
+				if (IsDead(client))
 					return;
 				if (ret == 0)
 					continue;
 			}
 
-			if (IsVirus(sptr) && strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN))
+			if (IsVirus(client) && strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN))
 			{
-				sendnotice(sptr, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
+				sendnotice(client, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
 				continue;
 			}
 
 			text = parv[2];
 			errmsg = NULL;
-			if (MyUser(sptr) && !IsULine(sptr))
+			if (MyUser(client) && !IsULine(client))
 			{
-				if (!can_send(sptr, chptr, &text, &errmsg, notice))
+				if (!can_send(client, chptr, &text, &errmsg, notice))
 				{
 					if (!notice)
 					{
 						/* Send error message */
 						// TODO: move all the cansend shit to *errmsg ? if possible?
-						sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname, errmsg, p2);
+						sendnumeric(client, ERR_CANNOTSENDTOCHAN, chptr->chname, errmsg, p2);
 					}
 					continue; /* skip */
 				}
@@ -338,14 +338,14 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 
 			text = parv[2];
 
-			if (MyUser(sptr) && match_spamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname, 0, NULL))
+			if (MyUser(client) && match_spamfilter(client, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname, 0, NULL))
 				return;
 
-			new_message(sptr, recv_mtags, &mtags);
+			new_message(client, recv_mtags, &mtags);
 
 			for (h = Hooks[HOOKTYPE_PRE_CHANMSG]; h; h = h->next)
 			{
-				text = (*(h->func.pcharfunc))(sptr, chptr, mtags, text, notice);
+				text = (*(h->func.pcharfunc))(client, chptr, mtags, text, notice);
 				if (!text)
 					break;
 			}
@@ -356,12 +356,12 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 				continue;
 			}
 
-			sendto_channel(chptr, sptr, sptr,
+			sendto_channel(chptr, client, client,
 				       prefix, 0, sendflags, mtags,
 				       notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
-				       sptr->name, nick, text);
+				       client->name, nick, text);
 
-			RunHook8(HOOKTYPE_CHANMSG, sptr, chptr, sendflags, prefix, nick, mtags, text, notice);
+			RunHook8(HOOKTYPE_CHANMSG, client, chptr, sendflags, prefix, nick, mtags, text, notice);
 
 			free_message_tags(mtags);
 
@@ -369,7 +369,7 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 		}
 		else if (p2)
 		{
-			sendnumeric(sptr, ERR_NOSUCHNICK, p2);
+			sendnumeric(client, ERR_NOSUCHNICK, p2);
 			continue;
 		}
 
@@ -379,47 +379,47 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 		{
 			MessageTag *mtags = NULL;
 
-			if (!ValidatePermissionsForPath("chat:notice:global", sptr, NULL, NULL, NULL))
+			if (!ValidatePermissionsForPath("chat:notice:global", client, NULL, NULL, NULL))
 			{
 				/* Apparently no other IRCd does this, but I think it's confusing not to
 				 * send an error message, especially with our new privilege system.
 				 * Error message could be more descriptive perhaps.
 				 */
-				sendnumeric(sptr, ERR_NOPRIVILEGES);
+				sendnumeric(client, ERR_NOPRIVILEGES);
 				continue;
 			}
-			new_message(sptr, recv_mtags, &mtags);
-			sendto_match_butone(IsServer(sptr->direction) ? sptr->direction : NULL,
-			    sptr, nick + 1,
+			new_message(client, recv_mtags, &mtags);
+			sendto_match_butone(IsServer(client->direction) ? client->direction : NULL,
+			    client, nick + 1,
 			    (*nick == '#') ? MATCH_HOST :
 			    MATCH_SERVER,
 			    mtags,
-			    ":%s %s %s :%s", sptr->name, cmd, nick, parv[2]);
+			    ":%s %s %s :%s", client->name, cmd, nick, parv[2]);
 			free_message_tags(mtags);
 			continue;
 		}
 
 		/* nickname addressed? */
-		acptr = hash_find_nickatserver(nick, NULL);
-		if (acptr)
+		target = hash_find_nickatserver(nick, NULL);
+		if (target)
 		{
 			text = parv[2];
 			newcmd = cmd;
-			ret = can_privmsg(sptr, acptr, notice, &text, &newcmd);
-			if (IsDead(sptr))
+			ret = can_privmsg(client, target, notice, &text, &newcmd);
+			if (IsDead(client))
 				return;
 			if (ret == CANPRIVMSG_SEND)
 			{
 				MessageTag *mtags = NULL;
-				new_message(sptr, recv_mtags, &mtags);
+				new_message(client, recv_mtags, &mtags);
 				labeled_response_inhibit = 1;
-				sendto_prefix_one(acptr, sptr, mtags, ":%s %s %s :%s",
-				                  CHECKPROTO(acptr->direction, PROTO_SID) ? ID(sptr) : sptr->name,
+				sendto_prefix_one(target, client, mtags, ":%s %s %s :%s",
+				                  CHECKPROTO(target->direction, PROTO_SID) ? ID(client) : client->name,
 				                  newcmd,
-				                  (MyUser(acptr) ? acptr->name : nick),
+				                  (MyUser(target) ? target->name : nick),
 				                  text);
 				labeled_response_inhibit = 0;
-				RunHook5(HOOKTYPE_USERMSG, sptr, acptr, mtags, text, notice);
+				RunHook5(HOOKTYPE_USERMSG, client, target, mtags, text, notice);
 				free_message_tags(mtags);
 				continue;
 			} else
@@ -430,18 +430,18 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 		}
 
 		/* If nick@server -and- the @server portion was set::services-server then send a special message */
-		if (!acptr && SERVICES_NAME)
+		if (!target && SERVICES_NAME)
 		{
 			char *server = strchr(nick, '@');
 			if (server && strncasecmp(server + 1, SERVICES_NAME, strlen(SERVICES_NAME)) == 0)
 			{
-				sendnumeric(sptr, ERR_SERVICESDOWN, nick);
+				sendnumeric(client, ERR_SERVICESDOWN, nick);
 				continue;
 			}
 		}
 
 		/* nothing, nada, not anything found */
-		sendnumeric(sptr, ERR_NOSUCHNICK, nick);
+		sendnumeric(client, ERR_NOSUCHNICK, nick);
 		continue;
 	}
 }
@@ -453,7 +453,7 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 */
 CMD_FUNC(cmd_private)
 {
-	return cmd_message(sptr, recv_mtags, parc, parv, 0);
+	return cmd_message(client, recv_mtags, parc, parv, 0);
 }
 
 /*
@@ -463,7 +463,7 @@ CMD_FUNC(cmd_private)
 */
 CMD_FUNC(cmd_notice)
 {
-	return cmd_message(sptr, recv_mtags, parc, parv, 1);
+	return cmd_message(client, recv_mtags, parc, parv, 1);
 }
 
 /** Make a viewable dcc filename.
@@ -505,20 +505,20 @@ size_t n = strlen(f);
 }
 
 /** Checks if a DCC SEND is allowed.
- * @param sptr        Sending client
+ * @param client        Sending client
  * @param target      Target name (user or channel)
  * @param targetcli   Target client (NULL in case of channel!)
  * @param text        The entire message
  * @returns 1 if DCC SEND allowed, 0 if rejected
  */
-static int check_dcc(Client *sptr, char *target, Client *targetcli, char *text)
+static int check_dcc(Client *client, char *target, Client *targetcli, char *text)
 {
 	char *ctcp;
 	ConfigItem_deny_dcc *fl;
 	char *end, realfile[BUFSIZE];
 	int size_string, ret;
 
-	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",sptr,targetcli,NULL,NULL) || (targetcli && ValidatePermissionsForPath("self:getbaddcc",targetcli,NULL,NULL,NULL)))
+	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",client,targetcli,NULL,NULL) || (targetcli && ValidatePermissionsForPath("self:getbaddcc",targetcli,NULL,NULL,NULL)))
 		return 1;
 
 	ctcp = &text[1];
@@ -530,9 +530,9 @@ static int check_dcc(Client *sptr, char *target, Client *targetcli, char *text)
 	else
 		return 1; /* something else, allow */
 
-	if (IsDCCBlock(sptr))
+	if (IsDCCBlock(client))
 	{
-		sendnotice(sptr, "*** You are blocked from sending files as you have tried to "
+		sendnotice(client, "*** You are blocked from sending files as you have tried to "
 		                 "send a forbidden file - reconnect to regain ability to send");
 		return 0;
 	}
@@ -554,27 +554,27 @@ static int check_dcc(Client *sptr, char *target, Client *targetcli, char *text)
 
 	strlcpy(realfile, ctcp, size_string+1);
 
-	if (match_spamfilter(sptr, realfile, SPAMF_DCC, target, 0, NULL))
+	if (match_spamfilter(client, realfile, SPAMF_DCC, target, 0, NULL))
 		return 0; /* deny */
 
-	if ((fl = dcc_isforbidden(sptr, realfile)))
+	if ((fl = dcc_isforbidden(client, realfile)))
 	{
 		char *displayfile = dcc_displayfile(realfile);
-		sendnumericfmt(sptr,
+		sendnumericfmt(client,
 		    RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, target, fl->reason);
-		sendnotice(sptr, "*** You have been blocked from sending files, reconnect to regain permission to send files");
-		SetDCCBlock(sptr);
+		sendnotice(client, "*** You have been blocked from sending files, reconnect to regain permission to send files");
+		SetDCCBlock(client);
 
-		RunHook5(HOOKTYPE_DCC_DENIED, sptr, target, realfile, displayfile, fl);
+		RunHook5(HOOKTYPE_DCC_DENIED, client, target, realfile, displayfile, fl);
 
 		return 0; /* block */
 	}
 
 	/* Channel dcc (???) and discouraged? just block */
-	if (!targetcli && ((fl = dcc_isdiscouraged(sptr, realfile))))
+	if (!targetcli && ((fl = dcc_isdiscouraged(client, realfile))))
 	{
 		char *displayfile = dcc_displayfile(realfile);
-		sendnumericfmt(sptr, RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, target, fl->reason);
+		sendnumericfmt(client, RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, target, fl->reason);
 		return 0; /* block */
 	}
 	return 1; /* allowed */
@@ -815,7 +815,7 @@ char *_StripControlCodes(unsigned char *text)
 }
 
 /** Check ban version { } blocks, returns 1  if banned and  0 if not. */
-int ban_version(Client *sptr, char *text)
+int ban_version(Client *client, char *text)
 {
 	int len;
 	ConfigItem_ban *ban;
@@ -829,13 +829,13 @@ int ban_version(Client *sptr, char *text)
 
 	if ((ban = Find_ban(NULL, text, CONF_BAN_VERSION)))
 	{
-		if (IsSoftBanAction(ban->action) && IsLoggedIn(sptr))
+		if (IsSoftBanAction(ban->action) && IsLoggedIn(client))
 			return 0; /* soft ban does not apply to us, we are logged in */
 
-		if (find_tkl_exception(TKL_BAN_VERSION, sptr))
+		if (find_tkl_exception(TKL_BAN_VERSION, client))
 			return 0; /* we are exempt */
 
-		place_host_ban(sptr, ban->action, ban->reason, BAN_VERSION_TKL_TIME);
+		place_host_ban(client, ban->action, ban->reason, BAN_VERSION_TKL_TIME);
 		return 1;
 	}
 
@@ -843,7 +843,7 @@ int ban_version(Client *sptr, char *text)
 }
 
 /** Can user send a message to this channel?
- * @param sptr    The client
+ * @param client    The client
  * @param chptr   The channel
  * @param msgtext The message to send (MAY be changed, even if user is allowed to send)
  * @param errmsg  The error message (will be filled in)
@@ -851,18 +851,18 @@ int ban_version(Client *sptr, char *text)
  * @returns Returns 1 if the user is allowed to send, otherwise 0.
  * (note that this behavior was reversed in UnrealIRCd versions <5.x.
  */
-int _can_send(Client *sptr, Channel *chptr, char **msgtext, char **errmsg, int notice)
+int _can_send(Client *client, Channel *chptr, char **msgtext, char **errmsg, int notice)
 {
 	Membership *lp;
 	int  member, i = 0;
 	Hook *h;
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return 1;
 
 	*errmsg = NULL;
 
-	member = IsMember(sptr, chptr);
+	member = IsMember(client, chptr);
 
 	if (chptr->mode.mode & MODE_NOPRIVMSGS && !member)
 	{
@@ -871,7 +871,7 @@ int _can_send(Client *sptr, Channel *chptr, char **msgtext, char **errmsg, int n
 		 */
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(sptr, chptr, BYPASS_CHANMSG_EXTERNAL);
+			i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_EXTERNAL);
 			if (i != HOOK_CONTINUE)
 				break;
 		}
@@ -882,9 +882,9 @@ int _can_send(Client *sptr, Channel *chptr, char **msgtext, char **errmsg, int n
 		}
 	}
 
-	lp = find_membership_link(sptr->user->channel, chptr);
+	lp = find_membership_link(client->user->channel, chptr);
 	if (chptr->mode.mode & MODE_MODERATED &&
-	    !op_can_override("channel:override:message:moderated",sptr,chptr,NULL) &&
+	    !op_can_override("channel:override:message:moderated",client,chptr,NULL) &&
 	    (!lp /* FIXME: UGLY */
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER | CHFL_HALFOP | CHFL_CHANADMIN))))
 	{
@@ -893,7 +893,7 @@ int _can_send(Client *sptr, Channel *chptr, char **msgtext, char **errmsg, int n
 		 */
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(sptr, chptr, BYPASS_CHANMSG_MODERATED);
+			i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_MODERATED);
 			if (i != HOOK_CONTINUE)
 				break;
 		}
@@ -907,7 +907,7 @@ int _can_send(Client *sptr, Channel *chptr, char **msgtext, char **errmsg, int n
 	/* Modules can plug in as well */
 	for (h = Hooks[HOOKTYPE_CAN_SEND]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(sptr, chptr, lp, msgtext, errmsg, notice);
+		i = (*(h->func.intfunc))(client, chptr, lp, msgtext, errmsg, notice);
 		if (i != HOOK_CONTINUE)
 		{
 #ifdef DEBUGMODE
@@ -930,13 +930,13 @@ int _can_send(Client *sptr, Channel *chptr, char **msgtext, char **errmsg, int n
 	/* Now we are going to check bans */
 
 	/* ..but first: exempt ircops */
-	if (op_can_override("channel:override:message:ban",sptr,chptr,NULL))
+	if (op_can_override("channel:override:message:ban",client,chptr,NULL))
 		return 1;
 
 	if ((!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
-	    CHFL_HALFOP | CHFL_CHANADMIN))) && MyUser(sptr)
-	    && is_banned(sptr, chptr, BANCHK_MSG, msgtext, errmsg))
+	    CHFL_HALFOP | CHFL_CHANADMIN))) && MyUser(client)
+	    && is_banned(client, chptr, BANCHK_MSG, msgtext, errmsg))
 	{
 		/* Modules can set 'errmsg', otherwise we default to this: */
 		if (!*errmsg)

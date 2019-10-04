@@ -70,24 +70,23 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_sendumode)
 {
 	MessageTag *mtags = NULL;
+	Client *acptr;
 	char *message;
 	char *p;
 	int i;
 	long umode_s = 0;
 
-	Client* acptr;
-
 	message = (parc > 3) ? parv[3] : parv[2];
 
 	if (parc < 3)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SENDUMODE");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "SENDUMODE");
 		return;
 	}
 
-	new_message(sptr, recv_mtags, &mtags);
+	new_message(client, recv_mtags, &mtags);
 
-	sendto_server(sptr, 0, 0, mtags, ":%s SENDUMODE %s :%s", sptr->name, parv[1], message);
+	sendto_server(client, 0, 0, mtags, ":%s SENDUMODE %s :%s", client->name, parv[1], message);
 
 	for (p = parv[1]; *p; p++)
 	{
@@ -106,7 +105,7 @@ CMD_FUNC(cmd_sendumode)
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{
 		if (acptr->umodes & umode_s)
-			sendto_one(acptr, mtags, ":%s NOTICE %s :%s", sptr->name, acptr->name, message);
+			sendto_one(acptr, mtags, ":%s NOTICE %s :%s", client->name, acptr->name, message);
 	}
 
 	free_message_tags(mtags);

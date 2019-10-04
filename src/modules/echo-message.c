@@ -35,8 +35,8 @@ ModuleHeader MOD_HEADER
 long CAP_ECHO_MESSAGE = 0L;
 
 /* Forward declarations */
-int em_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
-int em_usermsg(Client *sptr, Client *to, MessageTag *mtags, char *text, int notice);
+int em_chanmsg(Client *client, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
+int em_usermsg(Client *client, Client *to, MessageTag *mtags, char *text, int notice);
 
 MOD_INIT()
 {
@@ -64,12 +64,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int em_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
+int em_chanmsg(Client *client, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
 {
-	if (MyUser(sptr) && HasCapabilityFast(sptr, CAP_ECHO_MESSAGE))
+	if (MyUser(client) && HasCapabilityFast(client, CAP_ECHO_MESSAGE))
 	{
-		sendto_prefix_one(sptr, sptr, mtags, ":%s %s %s :%s",
-			sptr->name,
+		sendto_prefix_one(client, client, mtags, ":%s %s %s :%s",
+			client->name,
 			notice ? "NOTICE" : "PRIVMSG",
 			target,
 			text);
@@ -77,12 +77,12 @@ int em_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *ta
 	return 0;
 }
 
-int em_usermsg(Client *sptr, Client *to, MessageTag *mtags, char *text, int notice)
+int em_usermsg(Client *client, Client *to, MessageTag *mtags, char *text, int notice)
 {
-	if (MyUser(sptr) && HasCapabilityFast(sptr, CAP_ECHO_MESSAGE))
+	if (MyUser(client) && HasCapabilityFast(client, CAP_ECHO_MESSAGE))
 	{
-		sendto_prefix_one(sptr, sptr, mtags, ":%s %s %s :%s",
-			sptr->name,
+		sendto_prefix_one(client, client, mtags, ":%s %s %s :%s",
+			client->name,
 			notice ? "NOTICE" : "PRIVMSG",
 			to->name,
 			text);

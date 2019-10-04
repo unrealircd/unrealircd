@@ -20,7 +20,7 @@ long UMODE_CENSOR = 0L;
 
 #define IsCensored(x) (x->umodes & UMODE_CENSOR)
 
-char *censor_pre_usermsg(Client *sptr, Client *target, char *text, int notice);
+char *censor_pre_usermsg(Client *client, Client *target, char *text, int notice);
 
 int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int censor_config_run(ConfigFile *, ConfigEntry *, int);
@@ -237,17 +237,17 @@ char *stripbadwords_message(char *str, int *blocked)
 	return stripbadwords(str, conf_badword_message, blocked);
 }
 
-char *censor_pre_usermsg(Client *sptr, Client *target, char *text, int notice)
+char *censor_pre_usermsg(Client *client, Client *target, char *text, int notice)
 {
 int blocked;
 
-	if (MyUser(sptr) && IsCensored(target))
+	if (MyUser(client) && IsCensored(target))
 	{
 		text = stripbadwords_message(text, &blocked);
 		if (blocked)
 		{
 			if (!notice)
-				sendnumeric(sptr, ERR_NOSWEAR, target->name);
+				sendnumeric(client, ERR_NOSWEAR, target->name);
 			return NULL;
 		}
 	}
@@ -256,13 +256,13 @@ int blocked;
 }
 
 // TODO: when stats is modular, make it call this for badwords
-int stats_badwords(Client *sptr, char *para)
+int stats_badwords(Client *client, char *para)
 {
 	ConfigItem_badword *words;
 
 	for (words = conf_badword_message; words; words = words->next)
 	{
-		sendtxtnumeric(sptr, "m %c %s%s%s %s", words->type & BADW_TYPE_REGEX ? 'R' : 'F',
+		sendtxtnumeric(client, "m %c %s%s%s %s", words->type & BADW_TYPE_REGEX ? 'R' : 'F',
 		           (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
 		           (words->type & BADW_TYPE_FAST_R) ? "*" : "",
 		           words->action == BADWORD_REPLACE ? (words->replace ? words->replace : "<censored>") : "");

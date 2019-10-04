@@ -32,10 +32,10 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_OPERONLY;
 
-int operonly_require_oper(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what);
-int operonly_check (Client *cptr, Channel *chptr, char *key, char *parv[]);
-int operonly_topic_allow (Client *sptr, Channel *chptr);
-int operonly_check_ban(Client *cptr, Channel *chptr);
+int operonly_require_oper(Client *client, Channel *chptr, char mode, char *para, int checkt, int what);
+int operonly_check (Client *client, Channel *chptr, char *key, char *parv[]);
+int operonly_topic_allow (Client *client, Channel *chptr);
+int operonly_check_ban(Client *client, Channel *chptr);
 
 MOD_TEST()
 {
@@ -71,37 +71,37 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int operonly_check (Client *cptr, Channel *chptr, char *key, char *parv[])
+int operonly_check (Client *client, Channel *chptr, char *key, char *parv[])
 {
-	if ((chptr->mode.extmode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join",cptr,NULL,chptr,NULL))
+	if ((chptr->mode.extmode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join",client,NULL,chptr,NULL))
 		return ERR_OPERONLY;
 	return 0;
 }
 
-int operonly_check_ban(Client *cptr, Channel *chptr)
+int operonly_check_ban(Client *client, Channel *chptr)
 {
 	 if ((chptr->mode.extmode & EXTCMODE_OPERONLY) &&
-		    !ValidatePermissionsForPath("channel:operonly:ban",cptr,NULL,NULL,NULL))
+		    !ValidatePermissionsForPath("channel:operonly:ban",client,NULL,NULL,NULL))
 		 return HOOK_DENY;
 
 	 return HOOK_CONTINUE;
 }
 
-int operonly_topic_allow (Client *sptr, Channel *chptr)
+int operonly_topic_allow (Client *client, Channel *chptr)
 {
-	if (chptr->mode.extmode & EXTCMODE_OPERONLY && !ValidatePermissionsForPath("channel:operonly:topic",sptr,NULL,chptr,NULL))
+	if (chptr->mode.extmode & EXTCMODE_OPERONLY && !ValidatePermissionsForPath("channel:operonly:topic",client,NULL,chptr,NULL))
 		return HOOK_DENY;
 
 	return HOOK_CONTINUE;
 }
 
-int operonly_require_oper(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what)
+int operonly_require_oper(Client *client, Channel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (!MyUser(cptr) || ValidatePermissionsForPath("channel:operonly:set",cptr,NULL,chptr,NULL))
+	if (!MyUser(client) || ValidatePermissionsForPath("channel:operonly:set",client,NULL,chptr,NULL))
 		return EX_ALLOW;
 
 	if (checkt == EXCHK_ACCESS_ERR)
-		sendnumeric(cptr, ERR_CANNOTCHANGECHANMODE, 'O', "You are not an IRC operator");
+		sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'O', "You are not an IRC operator");
 
 	return EX_DENY;
 }

@@ -60,13 +60,13 @@ CMD_FUNC(cmd_opermotd)
 	MOTDLine *motdline;
 	ConfigItem_tld *tld;
 
-	if (!ValidatePermissionsForPath("server:opermotd",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:opermotd",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
-	tld = Find_tld(sptr);
+	tld = Find_tld(client);
 
 	motdline = NULL;
 	if (tld)
@@ -76,17 +76,17 @@ CMD_FUNC(cmd_opermotd)
 
 	if (!motdline)
 	{
-		sendnumeric(sptr, ERR_NOOPERMOTD);
+		sendnumeric(client, ERR_NOOPERMOTD);
 		return;
 	}
-	sendnumeric(sptr, RPL_MOTDSTART, me.name);
-	sendnumeric(sptr, RPL_MOTD, "IRC Operator Message of the Day");
+	sendnumeric(client, RPL_MOTDSTART, me.name);
+	sendnumeric(client, RPL_MOTD, "IRC Operator Message of the Day");
 
 	while (motdline)
 	{
-		sendnumeric(sptr, RPL_MOTD,
+		sendnumeric(client, RPL_MOTD,
 			   motdline->line);
 		motdline = motdline->next;
 	}
-	sendnumeric(sptr, RPL_ENDOFMOTD);
+	sendnumeric(client, RPL_ENDOFMOTD);
 }

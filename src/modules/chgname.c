@@ -67,61 +67,61 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_chgname)
 {
-	Client *acptr;
+	Client *target;
 	ConfigItem_ban *bconf;
 
-	if (!ValidatePermissionsForPath("client:set:name",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("client:set:name",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	if ((parc < 3) || !*parv[2])
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CHGNAME");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "CHGNAME");
 		return;
 	}
 
 	if (strlen(parv[2]) > (REALLEN))
 	{
-		sendnotice(sptr, "*** ChgName Error: Requested realname too long -- rejected.");
+		sendnotice(client, "*** ChgName Error: Requested realname too long -- rejected.");
 		return;
 	}
 
-	if (!(acptr = find_person(parv[1], NULL)))
+	if (!(target = find_person(parv[1], NULL)))
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
+		sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 		return;
 	}
 
 	/* Let's log this first */
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 	{
 		sendto_snomask(SNO_EYES,
 		    "%s changed the GECOS of %s (%s@%s) to be %s",
-		    sptr->name, acptr->name, acptr->user->username,
-		    GetHost(acptr), parv[2]);
+		    client->name, target->name, target->user->username,
+		    GetHost(target), parv[2]);
 		/* Logging ability added by XeRXeS */
 		ircd_log(LOG_CHGCMDS,
 			"CHGNAME: %s changed the GECOS of %s (%s@%s) to be %s",
-			sptr->name, acptr->name, acptr->user->username,
-			GetHost(acptr), parv[2]);
+			client->name, target->name, target->user->username,
+			GetHost(target), parv[2]);
 	}
 
 	/* set the realname to make ban checking work */
-	ircsnprintf(acptr->info, sizeof(acptr->info), "%s", parv[2]);
+	ircsnprintf(target->info, sizeof(target->info), "%s", parv[2]);
 
-	if (MyUser(acptr))
+	if (MyUser(target))
 	{
 		/* only check for realname bans if the person who's name is being changed is NOT an oper */
-		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",acptr,NULL,NULL,NULL) &&
-		    ((bconf = Find_ban(NULL, acptr->info, CONF_BAN_REALNAME))))
+		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",target,NULL,NULL,NULL) &&
+		    ((bconf = Find_ban(NULL, target->info, CONF_BAN_REALNAME))))
 		{
-			banned_client(acptr, "realname", bconf->reason?bconf->reason:"", 0, 0);
+			banned_client(target, "realname", bconf->reason?bconf->reason:"", 0, 0);
 			return;
 		}
 	}
 
-	sendto_server(sptr, 0, 0, NULL, ":%s CHGNAME %s :%s",
-	    sptr->name, acptr->name, parv[2]);
+	sendto_server(client, 0, 0, NULL, ":%s CHGNAME %s :%s",
+	    client->name, target->name, parv[2]);
 }

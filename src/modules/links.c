@@ -55,23 +55,23 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_links)
 {
 	Client *acptr;
-	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;
+	int flat = (FLAT_MAP && !IsOper(client)) ? 1 : 0;
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		/* Some checks */
-		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("server:info:map:ulines",sptr,NULL,NULL,NULL))
+		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL))
 			continue;
 		if (flat)
-			sendnumeric(sptr, RPL_LINKS, acptr->name, me.name,
+			sendnumeric(client, RPL_LINKS, acptr->name, me.name,
 			    1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 		else
-			sendnumeric(sptr, RPL_LINKS, acptr->name, acptr->serv->up,
+			sendnumeric(client, RPL_LINKS, acptr->name, acptr->serv->up,
 			    acptr->hopcount, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 	}
 
-	sendnumeric(sptr, RPL_ENDOFLINKS, "*");
+	sendnumeric(client, RPL_ENDOFLINKS, "*");
 }

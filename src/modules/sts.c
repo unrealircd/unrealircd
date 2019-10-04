@@ -53,24 +53,24 @@ MOD_UNLOAD()
 }
 
 /** Check if this capability should be visible.
- * Note that 'acptr' may be NULL.
+ * Note that 'client' may be NULL.
  */
-int sts_capability_visible(Client *acptr)
+int sts_capability_visible(Client *client)
 {
 	TLSOptions *ssl;
 
 	/* This is possible if queried from the CAP NEW/DEL code */
-	if (acptr == NULL)
+	if (client == NULL)
 		return (iConf.tls_options && iConf.tls_options->sts_port) ? 1 : 0;
 
-	if (!IsSecure(acptr))
+	if (!IsSecure(client))
 	{
 		if (iConf.tls_options && iConf.tls_options->sts_port)
 			return 1; /* YES, non-SSL user and set::tls::sts-policy configured */
 		return 0; /* NO, there is no sts-policy */
 	}
 
-	ssl = FindTLSOptionsForUser(acptr);
+	ssl = FindTLSOptionsForUser(client);
 
 	if (ssl && ssl->sts_port)
 		return 1;
@@ -78,13 +78,13 @@ int sts_capability_visible(Client *acptr)
 	return 0;
 }
 
-char *sts_capability_parameter(Client *acptr)
+char *sts_capability_parameter(Client *client)
 {
 	TLSOptions *ssl;
 	static char buf[256];
 
-	if (IsSecure(acptr))
-		ssl = FindTLSOptionsForUser(acptr);
+	if (IsSecure(client))
+		ssl = FindTLSOptionsForUser(client);
 	else
 		ssl = iConf.tls_options;
 

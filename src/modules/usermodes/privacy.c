@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-#define IsPrivacy(cptr)    (cptr->umodes & UMODE_PRIVACY)
+#define IsPrivacy(client)    (client->umodes & UMODE_PRIVACY)
 
 /* Module header */
 ModuleHeader MOD_HEADER
@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 long UMODE_PRIVACY = 0L;
 
 /* Forward declarations */
-int privacy_see_channel_in_whois(Client *sptr, Client *target, Channel *chptr);
+int privacy_see_channel_in_whois(Client *client, Client *target, Channel *chptr);
                     
 MOD_INIT()
 {
@@ -60,9 +60,9 @@ MOD_UNLOAD()
 /* This hides channels in /WHOIS output, unless the requestor is in the same channel
  * or some IRCOp is overriding.
  */
-int privacy_see_channel_in_whois(Client *sptr, Client *target, Channel *chptr)
+int privacy_see_channel_in_whois(Client *client, Client *target, Channel *chptr)
 {
-	if (IsPrivacy(target) && !IsMember(sptr, chptr))
+	if (IsPrivacy(target) && !IsMember(client, chptr))
 		return EX_DENY;
 	
 	return EX_ALLOW;

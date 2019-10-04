@@ -45,20 +45,20 @@ typedef enum {
 	LINKTYPE_BADKEY = 7, // +k
 } linkType;
 
-int cmodeL_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, int what);
+int cmodeL_is_ok(Client *client, Channel *chptr, char mode, char *para, int type, int what);
 void *cmodeL_put_param(void *r_in, char *param);
 char *cmodeL_get_param(void *r_in);
-char *cmodeL_conv_param(char *param_in, Client *sptr);
+char *cmodeL_conv_param(char *param_in, Client *client);
 void cmodeL_free_param(void *r);
 void *cmodeL_dup_struct(void *r_in);
 int cmodeL_sjoin_check(Channel *chptr, void *ourx, void *theirx);
 
-int extban_link_syntax(Client *sptr, int checkt, char *reason);
-int extban_link_is_ok(Client *sptr, Channel *chptr, char *param, int checkt, int what, int what2);
+int extban_link_syntax(Client *client, int checkt, char *reason);
+int extban_link_is_ok(Client *client, Channel *chptr, char *param, int checkt, int what, int what2);
 char *extban_link_conv_param(char *param);
-int extban_link_is_banned(Client *sptr, Channel *chptr, char *ban, int type, char **msg, char **errmsg);
-int link_doforward(Client *sptr, Channel *chptr, char *linked, linkType linktype);
-int link_pre_localjoin_cb(Client *sptr, Channel *chptr, char *parv[]);
+int extban_link_is_banned(Client *client, Channel *chptr, char *ban, int type, char **msg, char **errmsg);
+int link_doforward(Client *client, Channel *chptr, char *linked, linkType linktype);
+int link_pre_localjoin_cb(Client *client, Channel *chptr, char *parv[]);
 
 MOD_INIT()
 {
@@ -107,14 +107,14 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int cmodeL_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, int what)
+int cmodeL_is_ok(Client *client, Channel *chptr, char mode, char *para, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
-		if (IsUser(sptr) && is_chanowner(sptr, chptr))
+		if (IsUser(client) && is_chanowner(client, chptr))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-			sendnumeric(sptr, ERR_CHANOWNPRIVNEEDED, chptr->chname);
+			sendnumeric(client, ERR_CHANOWNPRIVNEEDED, chptr->chname);
 		return EX_DENY;
 	} else
 	if (type == EXCHK_PARAM)
@@ -126,8 +126,8 @@ int cmodeL_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, 
 			return EX_DENY; /* multiple channels not permitted */
 		if (!IsChannelName(para))
 		{
-			if (MyUser(sptr))
-				sendnumeric(sptr, ERR_NOSUCHCHANNEL, para);
+			if (MyUser(client))
+				sendnumeric(client, ERR_NOSUCHCHANNEL, para);
 			return EX_DENY;
 		}
 
@@ -138,8 +138,8 @@ int cmodeL_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, 
 			*p = '\0';
 		if (find_channel(buf, NULL) == chptr)
 		{
-			if (MyUser(sptr))
-				sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'L',
+			if (MyUser(client))
+				sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'L',
 					   "a channel cannot be linked to itself");
 			return EX_DENY;
 		}
@@ -176,9 +176,9 @@ char *cmodeL_get_param(void *r_in)
 }
 
 /** Convert parameter to something proper.
- * NOTE: cptr may be NULL
+ * NOTE: client may be NULL
  */
-char *cmodeL_conv_param(char *param_in, Client *sptr)
+char *cmodeL_conv_param(char *param_in, Client *client)
 {
 	static char buf[CHANNELLEN+1];
 	char *p;
@@ -220,22 +220,22 @@ int cmodeL_sjoin_check(Channel *chptr, void *ourx, void *theirx)
 	return EXSJ_THEYWON;
 }
 
-int extban_link_syntax(Client *sptr, int checkt, char *reason)
+int extban_link_syntax(Client *client, int checkt, char *reason)
 {
-	if (MyUser(sptr) && (checkt == EXBCHK_PARAM))
+	if (MyUser(client) && (checkt == EXBCHK_PARAM))
 	{
-		sendnotice(sptr, "Error when setting ban: %s", reason);
-		sendnotice(sptr, "  Syntax: +b ~f:#channel:mask");
-		sendnotice(sptr, "Examples:");
-		sendnotice(sptr, "  +b ~f:#public:*!*@badisp.org");
-		sendnotice(sptr, "  +b ~f:#public:~c:#badchannel");
-		sendnotice(sptr, "Multiple channels are not supported");
-		sendnotice(sptr, "Valid masks are nick!user@host or another extban type such as ~a, ~c, ~S, etc");
+		sendnotice(client, "Error when setting ban: %s", reason);
+		sendnotice(client, "  Syntax: +b ~f:#channel:mask");
+		sendnotice(client, "Examples:");
+		sendnotice(client, "  +b ~f:#public:*!*@badisp.org");
+		sendnotice(client, "  +b ~f:#public:~c:#badchannel");
+		sendnotice(client, "Multiple channels are not supported");
+		sendnotice(client, "Valid masks are nick!user@host or another extban type such as ~a, ~c, ~S, etc");
 	}
 	return 0; // Reject ban
 }
 
-int extban_link_is_ok(Client *sptr, Channel *chptr, char *param, int checkt, int what, int what2)
+int extban_link_is_ok(Client *client, Channel *chptr, char *param, int checkt, int what, int what2)
 {
 	char paramtmp[MAX_EB_LEN + 1];
 	char tmpmask[MAX_EB_LEN + 1];
@@ -249,7 +249,7 @@ int extban_link_is_ok(Client *sptr, Channel *chptr, char *param, int checkt, int
 	if (what2 != EXBTYPE_BAN)
 	{
 		if (checkt == EXBCHK_PARAM)
-			sendnotice(sptr, "Ban type ~f only works with bans (+b) and not with exceptions or invex (+e/+I)");
+			sendnotice(client, "Ban type ~f only works with bans (+b) and not with exceptions or invex (+e/+I)");
 		return 0; // Reject
 	}
 
@@ -257,16 +257,16 @@ int extban_link_is_ok(Client *sptr, Channel *chptr, char *param, int checkt, int
 	chan = paramtmp;
 	matchby = strchr(paramtmp, ':');
 	if (!matchby || !matchby[1])
-		return extban_link_syntax(sptr, checkt, "Invalid syntax");
+		return extban_link_syntax(client, checkt, "Invalid syntax");
 	*matchby++ = '\0';
 
 	if (*chan != '#' || strchr(param, ','))
-		return extban_link_syntax(sptr, checkt, "Invalid channel");
+		return extban_link_syntax(client, checkt, "Invalid channel");
 
 	// Possibly stack multiple extbans, this is a little convoluted due to extban API limitations
 	snprintf(tmpmask, sizeof(tmpmask), "~?:%s", matchby);
-	if (extban_is_ok_nuh_extban(sptr, chptr, tmpmask, checkt, what, what2) == 0)
-		return extban_link_syntax(sptr, checkt, "Invalid matcher");
+	if (extban_is_ok_nuh_extban(client, chptr, tmpmask, checkt, what, what2) == 0)
+		return extban_link_syntax(client, checkt, "Invalid matcher");
 
 	return 1; // Is ok
 }
@@ -304,13 +304,13 @@ char *extban_link_conv_param(char *param)
 	return retbuf;
 }
 
-int extban_link_is_banned(Client *sptr, Channel *chptr, char *ban, int type, char **msg, char **errmsg)
+int extban_link_is_banned(Client *client, Channel *chptr, char *ban, int type, char **msg, char **errmsg)
 {
 	// We don't actually ban here because we have to extract the channel name in PRE_LOCAL_JOIN anyways
 	return 0;
 }
 
-int link_doforward(Client *sptr, Channel *chptr, char *linked, linkType type)
+int link_doforward(Client *client, Channel *chptr, char *linked, linkType type)
 {
 	char desc[64];
 	char *parv[3];
@@ -350,15 +350,15 @@ int link_doforward(Client *sptr, Channel *chptr, char *linked, linkType type)
 			break;
 	}
 
-	sendto_one(sptr, NULL, ":%s %d %s [Link] Cannot join channel %s (%s) -- transferring you to %s", me.name, ERR_LINKCHANNEL, sptr->name, chptr->chname, desc, linked);
-	parv[0] = sptr->name;
+	sendto_one(client, NULL, ":%s %d %s [Link] Cannot join channel %s (%s) -- transferring you to %s", me.name, ERR_LINKCHANNEL, client->name, chptr->chname, desc, linked);
+	parv[0] = client->name;
 	parv[1] = linked;
 	parv[2] = NULL;
-	do_join(sptr, 2, parv);
+	do_join(client, 2, parv);
 	return HOOK_DENY; // Original channel join = ignored
 }
 
-int link_pre_localjoin_cb(Client *sptr, Channel *chptr, char *parv[])
+int link_pre_localjoin_cb(Client *client, Channel *chptr, char *parv[])
 {
 	char *linked;
 	int canjoin;
@@ -368,7 +368,7 @@ int link_pre_localjoin_cb(Client *sptr, Channel *chptr, char *parv[])
 	char *banmask;
 
 	// User might already be on this channel, let's also exclude any possible services bots early
-	if (IsULine(sptr) || find_membership_link(sptr->user->channel, chptr))
+	if (IsULine(client) || find_membership_link(client->user->channel, chptr))
 		return HOOK_CONTINUE;
 
 	// Extbans take precedence over +L #channel and other restrictions
@@ -384,8 +384,8 @@ int link_pre_localjoin_cb(Client *sptr, Channel *chptr, char *parv[])
 			continue;
 		*banmask++ = '\0';
 
-		if (ban_check_mask(sptr, chptr, banmask, BANCHK_JOIN, NULL, NULL, 0))
-			return link_doforward(sptr, chptr, banchan, LINKTYPE_BAN);
+		if (ban_check_mask(client, chptr, banmask, BANCHK_JOIN, NULL, NULL, 0))
+			return link_doforward(client, chptr, banchan, LINKTYPE_BAN);
 	}
 
 	// Either +L is not set, or it is set but the parameter isn't stored somehow
@@ -393,38 +393,38 @@ int link_pre_localjoin_cb(Client *sptr, Channel *chptr, char *parv[])
 		return HOOK_CONTINUE;
 
 	// can_join() actually returns 0 if we *can* join a channel, so we don't need to bother checking any further conditions
-	if (!(canjoin = can_join(sptr, chptr, NULL, parv)))
+	if (!(canjoin = can_join(client, chptr, NULL, parv)))
 		return HOOK_CONTINUE;
 
 	// Oper only channel
-	if (has_channel_mode(chptr, 'O') && !IsOper(sptr))
-		return link_doforward(sptr, chptr, linked, LINKTYPE_OPER);
+	if (has_channel_mode(chptr, 'O') && !IsOper(client))
+		return link_doforward(client, chptr, linked, LINKTYPE_OPER);
 
 	// SSL/TLS connected users only
-	if (has_channel_mode(chptr, 'z') && !IsSecureConnect(sptr))
-		return link_doforward(sptr, chptr, linked, LINKTYPE_SSL);
+	if (has_channel_mode(chptr, 'z') && !IsSecureConnect(client))
+		return link_doforward(client, chptr, linked, LINKTYPE_SSL);
 
 	// Registered/identified users only
-	if (has_channel_mode(chptr, 'R') && !IsRegNick(sptr))
-		return link_doforward(sptr, chptr, linked, LINKTYPE_REG);
+	if (has_channel_mode(chptr, 'R') && !IsRegNick(client))
+		return link_doforward(client, chptr, linked, LINKTYPE_REG);
 
 	// For a couple of conditions we can use the return value from can_join() =]
 	switch(canjoin) {
 		// Any ban other than our own ~f: extban
 		case ERR_BANNEDFROMCHAN:
-			return link_doforward(sptr, chptr, linked, LINKTYPE_BAN);
+			return link_doforward(client, chptr, linked, LINKTYPE_BAN);
 
 		// Invite only
 		case ERR_INVITEONLYCHAN:
-			return link_doforward(sptr, chptr, linked, LINKTYPE_INVITE);
+			return link_doforward(client, chptr, linked, LINKTYPE_INVITE);
 
 		// User limit
 		case ERR_CHANNELISFULL:
-			return link_doforward(sptr, chptr, linked, LINKTYPE_LIMIT);
+			return link_doforward(client, chptr, linked, LINKTYPE_LIMIT);
 
 		// Specified channel key doesn't match
 		case ERR_BADCHANNELKEY:
-			return link_doforward(sptr, chptr, linked, LINKTYPE_BADKEY);
+			return link_doforward(client, chptr, linked, LINKTYPE_BADKEY);
 
 		default:
 			break;

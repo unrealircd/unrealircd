@@ -54,52 +54,52 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-void do_svsnolag(Client *sptr, int parc, char *parv[], int show_change)
+void do_svsnolag(Client *client, int parc, char *parv[], int show_change)
 {
-	Client *acptr;
+	Client *target;
 	char *cmd = show_change ? MSG_SVS2NOLAG : MSG_SVSNOLAG;
 
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 		return;
 
 	if (parc < 3)
 		return;
 
-	if (!(acptr = find_person(parv[2], NULL)))
+	if (!(target = find_person(parv[2], NULL)))
 		return;
 
-	if (!MyUser(acptr))
+	if (!MyUser(target))
 	{
-		sendto_one(acptr, NULL, ":%s %s %s %s", sptr->name, cmd, parv[1], parv[2]);
+		sendto_one(target, NULL, ":%s %s %s %s", client->name, cmd, parv[1], parv[2]);
 		return;
 	}
 
 	if (*parv[1] == '+')
 	{
-		if (!IsNoFakeLag(acptr))
+		if (!IsNoFakeLag(target))
 		{
-			SetNoFakeLag(acptr);
+			SetNoFakeLag(target);
 			if (show_change)
-				sendnotice(acptr, "You are now exempted from fake lag");
+				sendnotice(target, "You are now exempted from fake lag");
 		}
 	}
 	if (*parv[1] == '-')
 	{
-		if (IsNoFakeLag(acptr))
+		if (IsNoFakeLag(target))
 		{
-			ClearNoFakeLag(acptr);
+			ClearNoFakeLag(target);
 			if (show_change)
-				sendnotice(acptr, "You are no longer exempted from fake lag");
+				sendnotice(target, "You are no longer exempted from fake lag");
 		}
 	}
 }
 
 CMD_FUNC(cmd_svsnolag)
 {
-	return do_svsnolag(sptr, parc, parv, 0);
+	return do_svsnolag(client, parc, parv, 0);
 }
 
 CMD_FUNC(cmd_svs2nolag)
 {
-	return do_svsnolag(sptr, parc, parv, 1);
+	return do_svsnolag(client, parc, parv, 1);
 }

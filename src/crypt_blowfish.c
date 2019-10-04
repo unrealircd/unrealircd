@@ -386,20 +386,20 @@ static int BF_decode(BF_word *dst, const char *src, int size)
 {
 	unsigned char *dptr = (unsigned char *)dst;
 	unsigned char *end = dptr + size;
-	const unsigned char *sptr = (const unsigned char *)src;
+	const unsigned char *client = (const unsigned char *)src;
 	unsigned int tmp, c1, c2, c3, c4;
 
 	do {
-		BF_safe_atoi64(c1, *sptr++);
-		BF_safe_atoi64(c2, *sptr++);
+		BF_safe_atoi64(c1, *client++);
+		BF_safe_atoi64(c2, *client++);
 		*dptr++ = (c1 << 2) | ((c2 & 0x30) >> 4);
 		if (dptr >= end) break;
 
-		BF_safe_atoi64(c3, *sptr++);
+		BF_safe_atoi64(c3, *client++);
 		*dptr++ = ((c2 & 0x0F) << 4) | ((c3 & 0x3C) >> 2);
 		if (dptr >= end) break;
 
-		BF_safe_atoi64(c4, *sptr++);
+		BF_safe_atoi64(c4, *client++);
 		*dptr++ = ((c3 & 0x03) << 6) | c4;
 	} while (dptr < end);
 
@@ -408,34 +408,34 @@ static int BF_decode(BF_word *dst, const char *src, int size)
 
 static void BF_encode(char *dst, const BF_word *src, int size)
 {
-	const unsigned char *sptr = (const unsigned char *)src;
-	const unsigned char *end = sptr + size;
+	const unsigned char *client = (const unsigned char *)src;
+	const unsigned char *end = client + size;
 	unsigned char *dptr = (unsigned char *)dst;
 	unsigned int c1, c2;
 
 	do {
-		c1 = *sptr++;
+		c1 = *client++;
 		*dptr++ = BF_itoa64[c1 >> 2];
 		c1 = (c1 & 0x03) << 4;
-		if (sptr >= end) {
+		if (client >= end) {
 			*dptr++ = BF_itoa64[c1];
 			break;
 		}
 
-		c2 = *sptr++;
+		c2 = *client++;
 		c1 |= c2 >> 4;
 		*dptr++ = BF_itoa64[c1];
 		c1 = (c2 & 0x0f) << 2;
-		if (sptr >= end) {
+		if (client >= end) {
 			*dptr++ = BF_itoa64[c1];
 			break;
 		}
 
-		c2 = *sptr++;
+		c2 = *client++;
 		c1 |= c2 >> 6;
 		*dptr++ = BF_itoa64[c1];
 		*dptr++ = BF_itoa64[c2 & 0x3f];
-	} while (sptr < end);
+	} while (client < end);
 }
 
 static void BF_swap(BF_word *x, int count)

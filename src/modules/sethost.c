@@ -63,9 +63,9 @@ CMD_FUNC(cmd_sethost)
 {
 	char *vhost;
 
-	if (MyUser(sptr) && !ValidatePermissionsForPath("self:set:host",sptr,NULL,NULL,NULL))
+	if (MyUser(client) && !ValidatePermissionsForPath("self:set:host",client,NULL,NULL,NULL))
 	{
-  		sendnumeric(sptr, ERR_NOPRIVILEGES);
+  		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
@@ -76,52 +76,52 @@ CMD_FUNC(cmd_sethost)
 
 	if (BadPtr(vhost))
 	{	
-		if (MyConnect(sptr))
-			sendnotice(sptr, "*** Syntax: /SetHost <new host>");
+		if (MyConnect(client))
+			sendnotice(client, "*** Syntax: /SetHost <new host>");
 		return;
 	}
 
 	if (strlen(parv[1]) > (HOSTLEN))
 	{
-		if (MyConnect(sptr))
-			sendnotice(sptr, "*** /SetHost Error: Hostnames are limited to %i characters.", HOSTLEN);
+		if (MyConnect(client))
+			sendnotice(client, "*** /SetHost Error: Hostnames are limited to %i characters.", HOSTLEN);
 		return;
 	}
 
 	if (!valid_host(vhost))
 	{
-		sendnotice(sptr, "*** /SetHost Error: A hostname may only contain a-z, A-Z, 0-9, '-' & '.'.");
+		sendnotice(client, "*** /SetHost Error: A hostname may only contain a-z, A-Z, 0-9, '-' & '.'.");
 		return;
 	}
 	if (vhost[0] == ':')
 	{
-		sendnotice(sptr, "*** A hostname cannot start with ':'");
+		sendnotice(client, "*** A hostname cannot start with ':'");
 		return;
 	}
 
-	if (MyUser(sptr) && !strcmp(GetHost(sptr), vhost))
+	if (MyUser(client) && !strcmp(GetHost(client), vhost))
 	{
-		sendnotice(sptr, "/SetHost Error: requested host is same as current host.");
+		sendnotice(client, "/SetHost Error: requested host is same as current host.");
 		return;
 	}
 
-	userhost_save_current(sptr);
+	userhost_save_current(client);
 
 	switch (UHOST_ALLOWED)
 	{
 		case UHALLOW_NEVER:
-			if (MyUser(sptr))
+			if (MyUser(client))
 			{
-				sendnotice(sptr, "*** /SetHost is disabled");
+				sendnotice(client, "*** /SetHost is disabled");
 				return;
 			}
 			break;
 		case UHALLOW_ALWAYS:
 			break;
 		case UHALLOW_NOCHANS:
-			if (MyUser(sptr) && sptr->user->joined)
+			if (MyUser(client) && client->user->joined)
 			{
-				sendnotice(sptr, "*** /SetHost can not be used while you are on a channel");
+				sendnotice(client, "*** /SetHost can not be used while you are on a channel");
 				return;
 			}
 			break;
@@ -131,22 +131,22 @@ CMD_FUNC(cmd_sethost)
 	}
 
 	/* hide it */
-	sptr->umodes |= UMODE_HIDE;
-	sptr->umodes |= UMODE_SETHOST;
+	client->umodes |= UMODE_HIDE;
+	client->umodes |= UMODE_SETHOST;
 	/* get it in */
-	safe_strdup(sptr->user->virthost, vhost);
+	safe_strdup(client->user->virthost, vhost);
 	/* spread it out */
-	sendto_server(sptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, parv[1]);
+	sendto_server(client, 0, 0, NULL, ":%s SETHOST %s", client->name, parv[1]);
 
-	userhost_changed(sptr);
+	userhost_changed(client);
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 	{
-		sendto_one(sptr, NULL, ":%s MODE %s :+xt", sptr->name, sptr->name);
-		sendnumeric(sptr, RPL_HOSTHIDDEN, vhost);
-		sendnotice(sptr, 
+		sendto_one(client, NULL, ":%s MODE %s :+xt", client->name, client->name);
+		sendnumeric(client, RPL_HOSTHIDDEN, vhost);
+		sendnotice(client, 
 		    "Your nick!user@host-mask is now (%s!%s@%s) - To disable it type /mode %s -x",
-		     sptr->name, sptr->user->username, vhost,
-		    sptr->name);
+		     client->name, client->user->username, vhost,
+		    client->name);
 	}
 }

@@ -51,65 +51,6 @@ extern MOTDLine *Find_file(char *, short);
 
 void reread_motdsandrules();
 
-
-/*
-** cmd_functions execute protocol messages on this server:
-**      CMD_FUNC(functionname) causes it to use the header
-**            int functionname (Client *cptr,
-**  	      	Client *sptr, int parc, char *parv[])
-**
-**
-**	cptr	is always NON-NULL, pointing to a *LOCAL* client
-**		structure (with an open socket connected!). This
-**		identifies the physical socket where the message
-**		originated (or which caused the cmd_function to be
-**		executed--some cmd_functions may call others...).
-**
-**	sptr	is the source of the message, defined by the
-**		prefix part of the message if present. If not
-**		or prefix not found, then sptr==cptr.
-**
-**		(!IsServer(cptr)) => (cptr == sptr), because
-**		prefixes are taken *only* from servers...
-**
-**		(IsServer(cptr))
-**			(sptr == cptr) => the message didn't
-**			have the prefix.
-**
-**			(sptr != cptr && IsServer(sptr) means
-**			the prefix specified servername. (?)
-**
-**			(sptr != cptr && !IsServer(sptr) means
-**			that message originated from a remote
-**			user (not local).
-**
-**		combining
-**
-**		(!IsServer(sptr)) means that, sptr can safely
-**		taken as defining the target structure of the
-**		message in this server.
-**
-**	*Always* true (if 'parse' and others are working correct):
-**
-**	1)	sptr->direction == cptr  (note: cptr->direction == cptr)
-**
-**	2)	MyConnect(sptr) <=> sptr == cptr (e.g. sptr
-**		*cannot* be a local connection, unless it's
-**		actually cptr!). [MyConnect(x) should probably
-**		be defined as (x == x->direction) --msa ]
-**
-**	parc	number of variable parameter strings (if zero,
-**		parv is allowed to be NULL)
-**
-**	parv	a NULL terminated list of parameter pointers,
-**
-**			parv[1]...parv[parc-1]
-**				pointers to additional parameters
-**			parv[parc] == NULL, *always*
-**
-**		note:	it is guaranteed that parv[1]..parv[parc-1] are all
-**			non-NULL pointers.
-*/
 #ifndef _WIN32
 char *getosname(void)
 {
@@ -138,13 +79,13 @@ char *getosname(void)
 #endif
 
 
-void send_version(Client* sptr, int reply)
+void send_version(Client* client, int reply)
 {
 	int i;
 
 	for (i = 0; ISupportStrings[i]; i++)
 	{
-		sendnumeric(sptr, reply, ISupportStrings[i]);
+		sendnumeric(client, reply, ISupportStrings[i]);
 	}
 }
 
@@ -155,32 +96,32 @@ void send_version(Client* sptr, int reply)
 CMD_FUNC(cmd_version)
 {
 	/* Only allow remote VERSIONs if registered -- Syzop */
-	if (!IsUser(sptr) && !IsServer(sptr))
+	if (!IsUser(client) && !IsServer(client))
 	{
-		send_version(sptr, RPL_ISUPPORT);
+		send_version(client, RPL_ISUPPORT);
 		return;
 	}
 
-	if (hunt_server(sptr, recv_mtags, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
 	{
-		sendnumeric(sptr, RPL_VERSION, version, debugmode, me.name,
-			    (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? serveropts : "0"),
+		sendnumeric(client, RPL_VERSION, version, debugmode, me.name,
+			    (ValidatePermissionsForPath("server:info",client,NULL,NULL,NULL) ? serveropts : "0"),
 			    extraflags ? extraflags : "",
 			    tainted ? "3" : "",
-			    (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) ? MYOSNAME : "*"),
+			    (ValidatePermissionsForPath("server:info",client,NULL,NULL,NULL) ? MYOSNAME : "*"),
 			    UnrealProtocol);
-		if (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
+		if (ValidatePermissionsForPath("server:info",client,NULL,NULL,NULL))
 		{
-			sendnotice(sptr, "%s", SSLeay_version(SSLEAY_VERSION));
-			sendnotice(sptr, "%s", pcre2_version());
+			sendnotice(client, "%s", SSLeay_version(SSLEAY_VERSION));
+			sendnotice(client, "%s", pcre2_version());
 #ifdef USE_LIBCURL
-			sendnotice(sptr, "%s", curl_version());
+			sendnotice(client, "%s", curl_version());
 #endif
 		}
-		if (MyUser(sptr))
-			send_version(sptr,RPL_ISUPPORT);
+		if (MyUser(client))
+			send_version(client,RPL_ISUPPORT);
 		else
-			send_version(sptr,RPL_REMOTEISUPPORT);
+			send_version(client,RPL_REMOTEISUPPORT);
 	}
 }
 
@@ -193,7 +134,7 @@ char *num = NULL;
  * too many for a single line. If this breaks your services because
  * you fail to maintain PROTOCTL state, then fix them!
  */
-void send_proto(Client *cptr, ConfigItem_link *aconf)
+void send_proto(Client *client, ConfigItem_link *aconf)
 {
 	ISupport *prefix = ISupportFind("PREFIX");
 
@@ -202,12 +143,12 @@ void send_proto(Client *cptr, ConfigItem_link *aconf)
 	 */
 
 	/* First line */
-	sendto_one(cptr, NULL, "PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID %s %s",
+	sendto_one(client, NULL, "PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID %s %s",
 	           iConf.ban_setter_sync ? "SJSBY" : "",
 	           ClientCapabilityFindReal("message-tags") ? "MTAGS" : "");
 
 	/* Second line */
-	sendto_one(cptr, NULL, "PROTOCTL CHANMODES=%s%s,%s%s,%s%s,%s%s USERMODES=%s BOOTED=%lld PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%lld EXTSWHOIS",
+	sendto_one(client, NULL, "PROTOCTL CHANMODES=%s%s,%s%s,%s%s,%s%s USERMODES=%s BOOTED=%lld PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%lld EXTSWHOIS",
 		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4,
 		umodestring, (long long)me.local->since, prefix->value,
 		charsys_get_current_languages(), me.id, (long long)TStime());
@@ -217,17 +158,17 @@ void send_proto(Client *cptr, ConfigItem_link *aconf)
 #define IRCDTOTALVERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
 
-int remotecmdfilter(Client *sptr, int parc, char *parv[])
+int remotecmdfilter(Client *client, int parc, char *parv[])
 {
 	/* no remote requests permitted from non-ircops */
-	if (MyUser(sptr) && !ValidatePermissionsForPath("server:remote",sptr,NULL,NULL,NULL) && !BadPtr(parv[1]))
+	if (MyUser(client) && !ValidatePermissionsForPath("server:remote",client,NULL,NULL,NULL) && !BadPtr(parv[1]))
 	{
 		parv[1] = NULL;
 		parc = 1;
 	}
 
 	/* same as above, but in case an old server forwards a request to us: we ignore it */
-	if (!MyUser(sptr) && !ValidatePermissionsForPath("server:remote",sptr,NULL,NULL,NULL))
+	if (!MyUser(client) && !ValidatePermissionsForPath("server:remote",client,NULL,NULL,NULL))
 		return 1; /* STOP (return) */
 	
 	return 0; /* Continue */
@@ -235,7 +176,7 @@ int remotecmdfilter(Client *sptr, int parc, char *parv[])
 
 
 /*
- * sends cmd_info into to sptr
+ * sends cmd_info into to client
 */
 
 char *unrealinfo[] =
@@ -260,31 +201,31 @@ char *unrealinfo[] =
 	NULL
 };
 
-void cmd_info_send(Client *sptr)
+void cmd_info_send(Client *client)
 {
 char **text = unrealinfo;
 
-	sendnumericfmt(sptr, RPL_INFO, "========== %s ==========", IRCDTOTALVERSION);
+	sendnumericfmt(client, RPL_INFO, "========== %s ==========", IRCDTOTALVERSION);
 
 	while (*text)
-		sendnumericfmt(sptr, RPL_INFO, "| %s", *text++);
+		sendnumericfmt(client, RPL_INFO, "| %s", *text++);
 
-	sendnumericfmt(sptr, RPL_INFO, "|");
-	sendnumericfmt(sptr, RPL_INFO, "|");
-	sendnumericfmt(sptr, RPL_INFO, "| Credits - Type /Credits");
-	sendnumericfmt(sptr, RPL_INFO, "| DALnet Credits - Type /DalInfo");
-	sendnumericfmt(sptr, RPL_INFO, "|");
-	sendnumericfmt(sptr, RPL_INFO, "| This is an UnrealIRCd-style server");
-	sendnumericfmt(sptr, RPL_INFO, "| If you find any bugs, please report them at:");
-	sendnumericfmt(sptr, RPL_INFO, "|  https://bugs.unrealircd.org/");
-	sendnumericfmt(sptr,
+	sendnumericfmt(client, RPL_INFO, "|");
+	sendnumericfmt(client, RPL_INFO, "|");
+	sendnumericfmt(client, RPL_INFO, "| Credits - Type /Credits");
+	sendnumericfmt(client, RPL_INFO, "| DALnet Credits - Type /DalInfo");
+	sendnumericfmt(client, RPL_INFO, "|");
+	sendnumericfmt(client, RPL_INFO, "| This is an UnrealIRCd-style server");
+	sendnumericfmt(client, RPL_INFO, "| If you find any bugs, please report them at:");
+	sendnumericfmt(client, RPL_INFO, "|  https://bugs.unrealircd.org/");
+	sendnumericfmt(client,
 	    RPL_INFO, "| UnrealIRCd Homepage: https://www.unrealircd.org");
-	sendnumericfmt(sptr,
+	sendnumericfmt(client,
 	    RPL_INFO, "============================================");
-	sendnumericfmt(sptr, RPL_INFO, "Birth Date: %s, compile # %s", creation, generation);
-	sendnumericfmt(sptr, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
-	sendnumericfmt(sptr, RPL_INFO, "ReleaseID (%s)", buildid);
-	sendnumeric(sptr, RPL_ENDOFINFO);
+	sendnumericfmt(client, RPL_INFO, "Birth Date: %s, compile # %s", creation, generation);
+	sendnumericfmt(client, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
+	sendnumericfmt(client, RPL_INFO, "ReleaseID (%s)", buildid);
+	sendnumeric(client, RPL_ENDOFINFO);
 }
 
 /*
@@ -295,11 +236,11 @@ char **text = unrealinfo;
 
 CMD_FUNC(cmd_info)
 {
-	if (remotecmdfilter(sptr, parc, parv))
+	if (remotecmdfilter(client, parc, parv))
 		return;
 
-	if (hunt_server(sptr, recv_mtags, ":%s INFO :%s", 1, parc, parv) == HUNTED_ISME)
-		cmd_info_send(sptr);
+	if (hunt_server(client, recv_mtags, ":%s INFO :%s", 1, parc, parv) == HUNTED_ISME)
+		cmd_info_send(client);
 }
 
 /*
@@ -310,19 +251,19 @@ CMD_FUNC(cmd_dalinfo)
 {
 	char **text = dalinfotext;
 
-	if (remotecmdfilter(sptr, parc, parv))
+	if (remotecmdfilter(client, parc, parv))
 		return;
 
-	if (hunt_server(sptr, recv_mtags, ":%s DALINFO :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, ":%s DALINFO :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
-			sendnumeric(sptr, RPL_INFO, *text++);
+			sendnumeric(client, RPL_INFO, *text++);
 
-		sendnumeric(sptr, RPL_INFO, "");
-		sendnumericfmt(sptr,
+		sendnumeric(client, RPL_INFO, "");
+		sendnumericfmt(client,
 		    RPL_INFO, "Birth Date: %s, compile # %s", creation, generation);
-		sendnumericfmt(sptr, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
-		sendnumeric(sptr, RPL_ENDOFINFO);
+		sendnumericfmt(client, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
+		sendnumeric(client, RPL_ENDOFINFO);
 	}
 }
 
@@ -334,16 +275,16 @@ CMD_FUNC(cmd_license)
 {
 	char **text = gnulicense;
 
-	if (remotecmdfilter(sptr, parc, parv))
+	if (remotecmdfilter(client, parc, parv))
 		return;
 
-	if (hunt_server(sptr, recv_mtags, ":%s LICENSE :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, ":%s LICENSE :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
-			sendnumeric(sptr, RPL_INFO, *text++);
+			sendnumeric(client, RPL_INFO, *text++);
 
-		sendnumeric(sptr, RPL_INFO, "");
-		sendnumeric(sptr, RPL_ENDOFINFO);
+		sendnumeric(client, RPL_INFO, "");
+		sendnumeric(client, RPL_ENDOFINFO);
 	}
 }
 
@@ -355,43 +296,43 @@ CMD_FUNC(cmd_credits)
 {
 	char **text = unrealcredits;
 
-	if (remotecmdfilter(sptr, parc, parv))
+	if (remotecmdfilter(client, parc, parv))
 		return;
 
-	if (hunt_server(sptr, recv_mtags, ":%s CREDITS :%s", 1, parc, parv) == HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, ":%s CREDITS :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
-			sendnumeric(sptr, RPL_INFO, *text++);
+			sendnumeric(client, RPL_INFO, *text++);
 
-		sendnumeric(sptr, RPL_INFO, "");
-		sendnumericfmt(sptr,
+		sendnumeric(client, RPL_INFO, "");
+		sendnumericfmt(client,
 		    RPL_INFO, "Birth Date: %s, compile # %s", creation, generation);
-		sendnumericfmt(sptr, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
-		sendnumeric(sptr, RPL_ENDOFINFO);
+		sendnumericfmt(client, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
+		sendnumeric(client, RPL_ENDOFINFO);
 	}
 }
 
-char *get_cptr_status(Client *acptr)
+char *get_client_status(Client *client)
 {
 	static char buf[10];
 	char *p = buf;
 
 	*p = '\0';
 	*p++ = '[';
-	if (IsListening(acptr))
+	if (IsListening(client))
 	{
-		if (acptr->umodes & LISTENER_NORMAL)
+		if (client->umodes & LISTENER_NORMAL)
 			*p++ = '*';
-		if (acptr->umodes & LISTENER_SERVERSONLY)
+		if (client->umodes & LISTENER_SERVERSONLY)
 			*p++ = 'S';
-		if (acptr->umodes & LISTENER_CLIENTSONLY)
+		if (client->umodes & LISTENER_CLIENTSONLY)
 			*p++ = 'C';
-		if (acptr->umodes & LISTENER_TLS)
+		if (client->umodes & LISTENER_TLS)
 			*p++ = 's';
 	}
 	else
 	{
-		if (IsTLS(acptr))
+		if (IsTLS(client))
 			*p++ = 's';
 	}
 	*p++ = ']';
@@ -400,9 +341,9 @@ char *get_cptr_status(Client *acptr)
 }
 
 /* Used to blank out ports -- Barubary */
-char *get_client_name2(Client *acptr, int showports)
+char *get_client_name2(Client *client, int showports)
 {
-	char *pointer = get_client_name(acptr, TRUE);
+	char *pointer = get_client_name(client, TRUE);
 
 	if (!pointer)
 		return NULL;
@@ -431,28 +372,28 @@ CMD_FUNC(cmd_error)
 {
 	char *para;
 
-	if (!MyConnect(sptr))
+	if (!MyConnect(client))
 		return;
 
 	para = (parc > 1 && *parv[1] != '\0') ? parv[1] : "<>";
 
 	Debug((DEBUG_ERROR, "Received ERROR message from %s: %s",
-	    sptr->name, para));
+	    client->name, para));
 
 	/* Errors from untrusted sources only go to the junk snomask
 	 * (which is only for debugging issues and such).
 	 * This to prevent flooding and confusing IRCOps by
 	 * malicious users.
 	 */
-	if (!IsServer(sptr) && !sptr->serv)
+	if (!IsServer(client) && !client->serv)
 	{
 		sendto_snomask(SNO_JUNK, "ERROR from %s -- %s",
-			get_client_name(sptr, FALSE), para);
+			get_client_name(client, FALSE), para);
 		return;
 	}
 
 	sendto_umode_global(UMODE_OPER, "ERROR from %s -- %s",
-	    get_client_name(sptr, FALSE), para);
+	    get_client_name(client, FALSE), para);
 }
 
 EVENT(save_tunefile)
@@ -521,7 +462,7 @@ void reread_motdsandrules()
 	read_motd(conf_files->svsmotd_file, &svsmotd);
 }
 
-extern void reinit_resolver(Client *sptr);
+extern void reinit_resolver(Client *client);
 
 /*
 ** cmd_rehash
@@ -537,9 +478,9 @@ CMD_FUNC(cmd_rehash)
 {
 	int x = 0;
 
-	if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:rehash",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
@@ -550,22 +491,22 @@ CMD_FUNC(cmd_rehash)
 		if (parv[1] && (parv[1][0] == '-'))
 			x = HUNTED_ISME;
 		else
-			x = hunt_server(sptr, recv_mtags, ":%s REHASH :%s", 1, parc, parv);
+			x = hunt_server(client, recv_mtags, ":%s REHASH :%s", 1, parc, parv);
 	} else {
 		if (match_simple("-glob*", parv[1])) /* This is really ugly... hack to make /rehash -global -something work */
 		{
 			x = HUNTED_ISME;
 		} else {
-			x = hunt_server(sptr, NULL, ":%s REHASH %s :%s", 1, parc, parv);
+			x = hunt_server(client, NULL, ":%s REHASH %s :%s", 1, parc, parv);
 			// XXX: FIXME: labeled-response can't handle this, multiple servers.
 		}
 	}
 	if (x != HUNTED_ISME)
 		return; /* Now forwarded or server didnt exist */
 
-	if (MyUser(sptr) && IsWebsocket(sptr))
+	if (MyUser(client) && IsWebsocket(client))
 	{
-		sendnotice(sptr, "Sorry, for technical reasons it is not possible to REHASH "
+		sendnotice(client, "Sorry, for technical reasons it is not possible to REHASH "
 		                 "the local server from a WebSocket connection.");
 		/* Issue details:
 		 * websocket_handle_packet -> process_packet -> parse_client_queued ->
@@ -579,24 +520,24 @@ CMD_FUNC(cmd_rehash)
 		return;
 	}
 
-	if (!MyConnect(sptr))
+	if (!MyConnect(client))
 	{
 #ifndef REMOTE_REHASH
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 #endif
 		if (parv[2] == NULL)
 		{
 			if (loop.ircd_rehashing)
 			{
-				sendnotice(sptr, "A rehash is already in progress");
+				sendnotice(client, "A rehash is already in progress");
 				return;
 			}
-			sendto_umode_global(UMODE_OPER, "%s is remotely rehashing server %s config file", sptr->name, me.name);
-			remote_rehash_client = sptr;
+			sendto_umode_global(UMODE_OPER, "%s is remotely rehashing server %s config file", client->name, me.name);
+			remote_rehash_client = client;
 			reread_motdsandrules();
 			// TODO: clean this next line up, wtf man.
-			rehash(sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
+			rehash(client, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 			return;
 		}
 		parv[1] = parv[2];
@@ -617,15 +558,15 @@ CMD_FUNC(cmd_rehash)
 			 * a) it makes sense
 			 * b) remote servers don't support remote rehashes by non-netadmins
 			 */
-			if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
+			if (!ValidatePermissionsForPath("server:rehash",client,NULL,NULL,NULL))
 			{
-				sendnumeric(sptr, ERR_NOPRIVILEGES);
-				sendnotice(sptr, "'/REHASH -global' requires you to have server::rehash permissions");
+				sendnumeric(client, ERR_NOPRIVILEGES);
+				sendnotice(client, "'/REHASH -global' requires you to have server::rehash permissions");
 				return;
 			}
 			if (parv[1] && *parv[1] != '-')
 			{
-				sendnotice(sptr, "You cannot specify a server name after /REHASH -global, for obvious reasons");
+				sendnotice(client, "You cannot specify a server name after /REHASH -global, for obvious reasons");
 				return;
 			}
 			/* Broadcast it in an inefficient, but backwards compatible way. */
@@ -634,7 +575,7 @@ CMD_FUNC(cmd_rehash)
 				if (acptr == &me)
 					continue;
 				sendto_one(acptr, NULL, ":%s REHASH %s %s",
-					sptr->name,
+					client->name,
 					acptr->name,
 					parv[1] ? parv[1] : "-all");
 			}
@@ -645,9 +586,9 @@ CMD_FUNC(cmd_rehash)
 	if (!BadPtr(parv[1]) && strcasecmp(parv[1], "-all"))
 	{
 
-		if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
+		if (!ValidatePermissionsForPath("server:rehash",client,NULL,NULL,NULL))
 		{
-			sendnumeric(sptr, ERR_NOPRIVILEGES);
+			sendnumeric(client, ERR_NOPRIVILEGES);
 			return;
 		}
 
@@ -656,50 +597,50 @@ CMD_FUNC(cmd_rehash)
 			if (!strncasecmp("-gar", parv[1], 4))
 			{
 				loop.do_garbage_collect = 1;
-				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
+				RunHook2(HOOKTYPE_REHASHFLAG, client, parv[1]);
 				return;
 			}
 			if (!strncasecmp("-dns", parv[1], 4))
 			{
-				reinit_resolver(sptr);
+				reinit_resolver(client);
 				return;
 			}
 			if (match_simple("-ssl*", parv[1]) || match_simple("-tls*", parv[1]))
 			{
-				reinit_ssl(sptr);
+				reinit_ssl(client);
 				return;
 			}
 			if (match_simple("-o*motd", parv[1]))
 			{
-				if (MyUser(sptr))
-					sendto_ops("Rehashing OPERMOTD on request of %s", sptr->name);
+				if (MyUser(client))
+					sendto_ops("Rehashing OPERMOTD on request of %s", client->name);
 				else
-					sendto_umode_global(UMODE_OPER, "Remotely rehashing OPERMOTD on request of %s", sptr->name);
+					sendto_umode_global(UMODE_OPER, "Remotely rehashing OPERMOTD on request of %s", client->name);
 				read_motd(conf_files->opermotd_file, &opermotd);
-				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
+				RunHook2(HOOKTYPE_REHASHFLAG, client, parv[1]);
 				return;
 			}
 			if (match_simple("-b*motd", parv[1]))
 			{
-				if (MyUser(sptr))
-					sendto_ops("Rehashing BOTMOTD on request of %s", sptr->name);
+				if (MyUser(client))
+					sendto_ops("Rehashing BOTMOTD on request of %s", client->name);
 				else
-					sendto_umode_global(UMODE_OPER, "Remotely rehashing BOTMOTD on request of %s", sptr->name);
+					sendto_umode_global(UMODE_OPER, "Remotely rehashing BOTMOTD on request of %s", client->name);
 				read_motd(conf_files->botmotd_file, &botmotd);
-				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
+				RunHook2(HOOKTYPE_REHASHFLAG, client, parv[1]);
 				return;
 			}
 			if (!strncasecmp("-motd", parv[1], 5) || !strncasecmp("-rules", parv[1], 6))
 			{
-				if (MyUser(sptr))
-					sendto_ops("Rehashing all MOTDs and RULES on request of %s", sptr->name);
+				if (MyUser(client))
+					sendto_ops("Rehashing all MOTDs and RULES on request of %s", client->name);
 				else
-					sendto_umode_global(UMODE_OPER, "Remotely rehasing all MOTDs and RULES on request of %s", sptr->name);
+					sendto_umode_global(UMODE_OPER, "Remotely rehasing all MOTDs and RULES on request of %s", client->name);
 				rehash_motdrules();
-				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
+				RunHook2(HOOKTYPE_REHASHFLAG, client, parv[1]);
 				return;
 			}
-			RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
+			RunHook2(HOOKTYPE_REHASHFLAG, client, parv[1]);
 			return;
 		}
 	}
@@ -707,16 +648,16 @@ CMD_FUNC(cmd_rehash)
 	{
 		if (loop.ircd_rehashing)
 		{
-			sendnotice(sptr, "A rehash is already in progress");
+			sendnotice(client, "A rehash is already in progress");
 			return;
 		}
-		sendto_ops("%s is rehashing server config file", sptr->name);
+		sendto_ops("%s is rehashing server config file", client->name);
 	}
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
-	sendnumeric(sptr, RPL_REHASHING, configfile);
+	sendnumeric(client, RPL_REHASHING, configfile);
 	// TODO: fix next line - occurence #2
-	x = rehash(sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
+	x = rehash(client, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 	reread_motdsandrules();
 }
 
@@ -731,13 +672,13 @@ CMD_FUNC(cmd_restart)
 	char *reason = parv[1];
 	Client *acptr;
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 
 	/* Check permissions */
-	if (!ValidatePermissionsForPath("server:restart",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:restart",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
@@ -746,7 +687,7 @@ CMD_FUNC(cmd_restart)
 	{
 		if (conf_drpass)
 		{
-			sendnumeric(sptr, ERR_NEEDMOREPARAMS, "RESTART");
+			sendnumeric(client, ERR_NEEDMOREPARAMS, "RESTART");
 			return;
 		}
 	} else
@@ -755,23 +696,23 @@ CMD_FUNC(cmd_restart)
 		/* Syntax: /restart <pass> [reason] */
 		if (conf_drpass)
 		{
-			if (!Auth_Check(sptr, conf_drpass->restartauth, parv[1]))
+			if (!Auth_Check(client, conf_drpass->restartauth, parv[1]))
 			{
-				sendnumeric(sptr, ERR_PASSWDMISMATCH);
+				sendnumeric(client, ERR_PASSWDMISMATCH);
 				return;
 			}
 			reason = parv[2];
 		}
 	}
-	sendto_ops("Server is Restarting by request of %s", sptr->name);
+	sendto_ops("Server is Restarting by request of %s", client->name);
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
 		if (IsUser(acptr))
-			sendnotice(acptr, "Server Restarted by %s", sptr->name);
+			sendnotice(acptr, "Server Restarted by %s", client->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, NULL, ":%s ERROR :Restarted by %s: %s",
-			    me.name, get_client_name(sptr, TRUE), reason ? reason : "No reason");
+			    me.name, get_client_name(client, TRUE), reason ? reason : "No reason");
 	}
 
 	server_reboot(reason ? reason : "No reason");
@@ -781,7 +722,7 @@ CMD_FUNC(cmd_restart)
  * Heavily modified from the ircu cmd_motd by codemastr
  * Also svsmotd support added
  */
-void short_motd(Client *sptr)
+void short_motd(Client *client)
 {
        ConfigItem_tld *tld;
        MOTDFile *themotd;
@@ -792,7 +733,7 @@ void short_motd(Client *sptr)
        tm = NULL;
        is_short = 1;
 
-       tld = Find_tld(sptr);
+       tld = Find_tld(client);
 
        /*
 	* Try different sources of short MOTDs, falling back to the
@@ -814,20 +755,20 @@ void short_motd(Client *sptr)
 
        if (!themotd->lines)
        {
-               sendnumeric(sptr, ERR_NOMOTD);
+               sendnumeric(client, ERR_NOMOTD);
                return;
        }
        if (themotd->last_modified.tm_year)
        {
 	       tm = &themotd->last_modified; /* for readability */
-               sendnumeric(sptr, RPL_MOTDSTART, me.name);
-               sendnumericfmt(sptr, RPL_MOTD, "- %d/%d/%d %d:%02d", tm->tm_mday, tm->tm_mon + 1,
+               sendnumeric(client, RPL_MOTDSTART, me.name);
+               sendnumericfmt(client, RPL_MOTD, "- %d/%d/%d %d:%02d", tm->tm_mday, tm->tm_mon + 1,
                    1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
        }
        if (is_short)
        {
-               sendnumeric(sptr, RPL_MOTD, "This is the short MOTD. To view the complete MOTD type /motd");
-               sendnumeric(sptr, RPL_MOTD, "");
+               sendnumeric(client, RPL_MOTD, "This is the short MOTD. To view the complete MOTD type /motd");
+               sendnumeric(client, RPL_MOTD, "");
        }
 
        motdline = NULL;
@@ -835,10 +776,10 @@ void short_motd(Client *sptr)
 	       motdline = themotd->lines;
        while (motdline)
        {
-               sendnumeric(sptr, RPL_MOTD, motdline->line);
+               sendnumeric(client, RPL_MOTD, motdline->line);
                motdline = motdline->next;
        }
-       sendnumeric(sptr, RPL_ENDOFMOTD);
+       sendnumeric(client, RPL_ENDOFMOTD);
 }
 
 
@@ -1057,12 +998,12 @@ CMD_FUNC(cmd_die)
 {
 	Client *acptr;
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 
-	if (!ValidatePermissionsForPath("server:die",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:die",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
@@ -1070,27 +1011,27 @@ CMD_FUNC(cmd_die)
 	{
 		if (parc < 2)	/* And if so, require a password :) */
 		{
-			sendnumeric(sptr, ERR_NEEDMOREPARAMS, "DIE");
+			sendnumeric(client, ERR_NEEDMOREPARAMS, "DIE");
 			return;
 		}
-		if (!Auth_Check(sptr, conf_drpass->dieauth, parv[1]))
+		if (!Auth_Check(client, conf_drpass->dieauth, parv[1]))
 		{
-			sendnumeric(sptr, ERR_PASSWDMISMATCH);
+			sendnumeric(client, ERR_PASSWDMISMATCH);
 			return;
 		}
 	}
 
 	/* Let the +s know what is going on */
-	sendto_ops("Server Terminating by request of %s", sptr->name);
+	sendto_ops("Server Terminating by request of %s", client->name);
 
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
 		if (IsUser(acptr))
 			sendnotice(acptr, "Server Terminated by %s", 
-				sptr->name);
+				client->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, NULL, ":%s ERROR :Terminated by %s",
-			    me.name, get_client_name(sptr, TRUE));
+			    me.name, get_client_name(client, TRUE));
 	}
 
 	(void)s_die();
@@ -1103,14 +1044,14 @@ CMD_FUNC(cmd_die)
  */
 int localdie(void)
 {
-	Client *acptr;
+	Client *client;
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
-		if (IsUser(acptr))
-			sendnotice(acptr, "Server Terminated by local console");
-		else if (IsServer(acptr))
-			sendto_one(acptr, NULL,
+		if (IsUser(client))
+			sendnotice(client, "Server Terminated by local console");
+		else if (IsServer(client))
+			sendto_one(client, NULL,
 			    ":%s ERROR :Terminated by local console", me.name);
 	}
 	(void)s_die();
@@ -1121,18 +1062,18 @@ int localdie(void)
 
 PendingNet *pendingnet = NULL;
 
-void add_pending_net(Client *sptr, char *str)
+void add_pending_net(Client *client, char *str)
 {
 	PendingNet *net;
 	PendingServer *srv;
 	char *p, *name;
 
-	if (BadPtr(str) || !sptr)
+	if (BadPtr(str) || !client)
 		return;
 
 	/* Allocate */
 	net = safe_alloc(sizeof(PendingNet));
-	net->sptr = sptr;
+	net->client = client;
 
 	/* Fill in */
 	if (*str == '*')
@@ -1150,7 +1091,7 @@ void add_pending_net(Client *sptr, char *str)
 	AddListItem(net, pendingnet);
 }
 
-void free_pending_net(Client *sptr)
+void free_pending_net(Client *client)
 {
 	PendingNet *net, *net_next;
 	PendingServer *srv, *srv_next;
@@ -1158,7 +1099,7 @@ void free_pending_net(Client *sptr)
 	for (net = pendingnet; net; net = net_next)
 	{
 		net_next = net->next;
-		if (net->sptr == sptr)
+		if (net->client == client)
 		{
 			for (srv = net->servers; srv; srv = srv_next)
 			{
@@ -1182,7 +1123,7 @@ PendingNet *find_pending_net_by_sid_butone(char *sid, Client *exempt)
 
 	for (net = pendingnet; net; net = net->next)
 	{
-		if (net->sptr == exempt)
+		if (net->client == exempt)
 			continue;
 		for (srv = net->servers; srv; srv = srv->next)
 			if (!strcmp(srv->sid, sid))
@@ -1202,7 +1143,7 @@ Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid)
 	
 	for (net = pendingnet; net; net = net->next)
 	{
-		if (net->sptr != cptr)
+		if (net->client != cptr)
 			continue;
 		/* Ok, found myself */
 		for (s = net->servers; s; s = s->next)
@@ -1211,9 +1152,9 @@ Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid)
 			other = find_pending_net_by_sid_butone(curr_sid, cptr);
 			if (other)
 			{
-				*srv = net->sptr;
+				*srv = net->client;
 				*sid = s->sid;
-				return other->sptr; /* Found another (pending) server with identical numeric */
+				return other->client; /* Found another (pending) server with identical numeric */
 			}
 		}
 	}
@@ -1221,7 +1162,7 @@ Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid)
 	return NULL;
 }
 
-Client *find_non_pending_net_duplicates(Client *cptr)
+Client *find_non_pending_net_duplicates(Client *client)
 {
 	PendingNet *net;
 	PendingServer *s;
@@ -1229,7 +1170,7 @@ Client *find_non_pending_net_duplicates(Client *cptr)
 
 	for (net = pendingnet; net; net = net->next)
 	{
-		if (net->sptr != cptr)
+		if (net->client != client)
 			continue;
 		/* Ok, found myself */
 		for (s = net->servers; s; s = s->next)
@@ -1243,7 +1184,7 @@ Client *find_non_pending_net_duplicates(Client *cptr)
 	return NULL;
 }
 
-void parse_chanmodes_protoctl(Client *sptr, char *str)
+void parse_chanmodes_protoctl(Client *client, char *str)
 {
 	char *modes, *p;
 	char copy[256];
@@ -1253,19 +1194,19 @@ void parse_chanmodes_protoctl(Client *sptr, char *str)
 	modes = strtoken(&p, copy, ",");
 	if (modes)
 	{
-		safe_strdup(sptr->serv->features.chanmodes[0], modes);
+		safe_strdup(client->serv->features.chanmodes[0], modes);
 		modes = strtoken(&p, NULL, ",");
 		if (modes)
 		{
-			safe_strdup(sptr->serv->features.chanmodes[1], modes);
+			safe_strdup(client->serv->features.chanmodes[1], modes);
 			modes = strtoken(&p, NULL, ",");
 			if (modes)
 			{
-				safe_strdup(sptr->serv->features.chanmodes[2], modes);
+				safe_strdup(client->serv->features.chanmodes[2], modes);
 				modes = strtoken(&p, NULL, ",");
 				if (modes)
 				{
-					safe_strdup(sptr->serv->features.chanmodes[3], modes);
+					safe_strdup(client->serv->features.chanmodes[3], modes);
 				}
 			}
 		}

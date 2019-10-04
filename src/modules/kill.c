@@ -64,9 +64,9 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_kill)
 {
-	Client *acptr;
+	Client *target;
 	char inpath[HOSTLEN * 2 + USERLEN + 5];
-	char *oinpath = get_client_name(sptr->direction, FALSE);
+	char *oinpath = get_client_name(client->direction, FALSE);
 	char *user, *path, *killer, *nick, *p, *s;
 	int kcount = 0;
 	Hook *h;
@@ -75,12 +75,12 @@ CMD_FUNC(cmd_kill)
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "KILL");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "KILL");
 		return;
 	}
 
 	// FIXME: clean all this killpath shit, nobody cares anymore these days.
-	// FYI, I just replaced 'cptr' with 'sptr->direction' for now, but
+	// FYI, I just replaced 'cptr' with 'client->direction' for now, but
 	// we should clean up this mess later, see the FIXME.
 
 	user = parv[1];
@@ -88,72 +88,72 @@ CMD_FUNC(cmd_kill)
 
 	strlcpy(inpath, oinpath, sizeof inpath);
 
-	if (IsServer(sptr->direction) && (s = strchr(inpath, '.')) != NULL)
+	if (IsServer(client->direction) && (s = strchr(inpath, '.')) != NULL)
 		*s = '\0';	/* Truncate at first "." -- hmm... why ? */
 
-	if (!IsServer(sptr->direction) && !ValidatePermissionsForPath("kill:global",sptr,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",sptr,NULL,NULL,NULL))
+	if (!IsServer(client->direction) && !ValidatePermissionsForPath("kill:global",client,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	if (BadPtr(path))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "KILL");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "KILL");
 		return;
 	}
 
 	if (strlen(path) > iConf.quit_length)
 		path[iConf.quit_length] = '\0';
 
-	if (MyUser(sptr))
+	if (MyUser(client))
 		user = canonize(user);
 
 	for (p = NULL, nick = strtoken(&p, user, ","); nick; nick = strtoken(&p, NULL, ","))
 	{
 		MessageTag *mtags = NULL;
 
-		if (MyUser(sptr) && (++ntargets > maxtargets))
+		if (MyUser(client) && (++ntargets > maxtargets))
 		{
-			sendnumeric(sptr, ERR_TOOMANYTARGETS, nick, maxtargets, "KILL");
+			sendnumeric(client, ERR_TOOMANYTARGETS, nick, maxtargets, "KILL");
 			break;
 		}
 
-		acptr = find_person(nick, NULL);
+		target = find_person(nick, NULL);
 
 		/* If a local user issued the /KILL then we will "chase" the user.
 		 * In other words: we'll check the history for recently changed nicks.
 		 * We don't do this for remote KILL requests as we have UID for that.
 		 */
-		if (!acptr && MyUser(sptr))
+		if (!target && MyUser(client))
 		{
-			acptr = get_history(nick, KILLCHASETIMELIMIT);
-			if (acptr)
-				sendnotice(sptr, "*** KILL changed from %s to %s", nick, acptr->name);
+			target = get_history(nick, KILLCHASETIMELIMIT);
+			if (target)
+				sendnotice(client, "*** KILL changed from %s to %s", nick, target->name);
 		}
 
-		if (!acptr)
+		if (!target)
 		{
-			sendnumeric(sptr, ERR_NOSUCHNICK, nick);
+			sendnumeric(client, ERR_NOSUCHNICK, nick);
 			continue;
 		}
 
-		if ((!MyConnect(acptr) && MyUser(sptr) && !ValidatePermissionsForPath("kill:global",sptr,acptr,NULL,NULL))
-		    || (MyConnect(acptr) && MyUser(sptr)
-		    && !ValidatePermissionsForPath("kill:local",sptr,acptr,NULL,NULL)))
+		if ((!MyConnect(target) && MyUser(client) && !ValidatePermissionsForPath("kill:global",client,target,NULL,NULL))
+		    || (MyConnect(target) && MyUser(client)
+		    && !ValidatePermissionsForPath("kill:local",client,target,NULL,NULL)))
 		{
-			sendnumeric(sptr, ERR_NOPRIVILEGES);
+			sendnumeric(client, ERR_NOPRIVILEGES);
 			continue;
 		}
 
 		/* Hooks can plug-in here to reject a kill */
-		if (MyUser(sptr))
+		if (MyUser(client))
 		{
 			int ret = EX_ALLOW;
 			for (h = Hooks[HOOKTYPE_PRE_KILL]; h; h = h->next)
 			{
-				/* note: parameters are: sptr, victim, reason. reason can be NULL !! */
-				ret = (*(h->func.intfunc))(sptr, acptr, path);
+				/* note: parameters are: client, victim, reason. reason can be NULL !! */
+				ret = (*(h->func.intfunc))(client, target, path);
 				if (ret != EX_ALLOW)
 					break;
 			}
@@ -165,15 +165,15 @@ CMD_FUNC(cmd_kill)
 
 		kcount++;
 
-		if (!IsServer(sptr) && (kcount > MAXKILLS))
+		if (!IsServer(client) && (kcount > MAXKILLS))
 		{
-			sendnotice(sptr,
+			sendnotice(client,
 			    "*** Too many targets, kill list was truncated. Maximum is %d.",
 			    MAXKILLS);
 			break;
 		}
 
-		if (!IsServer(sptr->direction))
+		if (!IsServer(client->direction))
 		{
 			/*
 			   ** The kill originates from this server, initialize path.
@@ -183,10 +183,10 @@ CMD_FUNC(cmd_kill)
 			   **   ...!operhost!oper
 			   **   ...!operhost!oper (comment)
 			 */
-			strlcpy(inpath, GetHost(sptr->direction), sizeof inpath);
+			strlcpy(inpath, GetHost(client->direction), sizeof inpath);
 			if (kcount == 1)
 			{
-				ircsnprintf(buf, sizeof(buf), "%s (%s)", sptr->direction->name, path);
+				ircsnprintf(buf, sizeof(buf), "%s (%s)", client->direction->name, path);
 				path = buf;
 			}
 		}
@@ -195,49 +195,49 @@ CMD_FUNC(cmd_kill)
 		   ** originating the kill, if from this server--the special numeric
 		   ** reply message is not generated anymore).
 		   **
-		   ** Note: "acptr->name" is used instead of "user" because we may
+		   ** Note: "target->name" is used instead of "user" because we may
 		   **    have changed the target because of the nickname change.
 		 */
 
 		sendto_snomask(SNO_KILLS,
 		    "*** Received KILL message for %s!%s@%s from %s Path: %s!%s",
-		    acptr->name, acptr->user->username,
-		    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,
-		    sptr->name, inpath, path);
+		    target->name, target->user->username,
+		    IsHidden(target) ? target->user->virthost : target->user->realhost,
+		    client->name, inpath, path);
 
 		ircd_log(LOG_KILL, "KILL (%s) by %s(%s!%s)",
-			make_nick_user_host(acptr->name, acptr->user->username, GetHost(acptr)),
-			sptr->name, inpath, path);
+			make_nick_user_host(target->name, target->user->username, GetHost(target)),
+			client->name, inpath, path);
 
-		new_message(sptr, recv_mtags, &mtags);
+		new_message(client, recv_mtags, &mtags);
 
 		/* Victim gets a little notification (s)he is about to die */
-		if (MyConnect(acptr))
+		if (MyConnect(target))
 		{
-			sendto_prefix_one(acptr, sptr, NULL, ":%s KILL %s :%s!%s",
-			    sptr->name, acptr->name, inpath, path);
+			sendto_prefix_one(target, client, NULL, ":%s KILL %s :%s!%s",
+			    client->name, target->name, inpath, path);
 		}
 
-		if (MyConnect(acptr) && MyConnect(sptr))
+		if (MyConnect(target) && MyConnect(client))
 		{
 			/* Local kill. This is handled as if it were a QUIT */
 			/* Prepare buffer for exit_client */
 			ircsnprintf(buf2, sizeof(buf2), "[%s] Local kill by %s (%s)",
-			    me.name, sptr->name,
-			    BadPtr(parv[2]) ? sptr->name : parv[2]);
+			    me.name, client->name,
+			    BadPtr(parv[2]) ? client->name : parv[2]);
 		}
 		else
 		{
 			/* Kill from one server to another (we may be src, victim or something in-between) */
 
 			/* Broadcast it to other SID and non-SID servers (may be a NOOP, obviously) */
-			sendto_server(sptr, PROTO_SID, 0, mtags, ":%s KILL %s :%s!%s",
-			    sptr->name, ID(acptr), inpath, path);
-			sendto_server(sptr, 0, PROTO_SID, mtags, ":%s KILL %s :%s!%s",
-			    sptr->name, acptr->name, inpath, path);
+			sendto_server(client, PROTO_SID, 0, mtags, ":%s KILL %s :%s!%s",
+			    client->name, ID(target), inpath, path);
+			sendto_server(client, 0, PROTO_SID, mtags, ":%s KILL %s :%s!%s",
+			    client->name, target->name, inpath, path);
 
 			/* Don't send a QUIT for this */
-			SetKilled(acptr);
+			SetKilled(target);
 			
 			/* Prepare the buffer for exit_client */
 			if ((killer = strchr(path, ' ')))
@@ -254,14 +254,14 @@ CMD_FUNC(cmd_kill)
 			ircsnprintf(buf2, sizeof(buf2), "Killed (%s)", killer);
 		}
 
-		if (MyUser(sptr))
-			RunHook3(HOOKTYPE_LOCAL_KILL, sptr, acptr, parv[2]);
+		if (MyUser(client))
+			RunHook3(HOOKTYPE_LOCAL_KILL, client, target, parv[2]);
 
-		exit_client(acptr, mtags, buf2);
+		exit_client(target, mtags, buf2);
 
 		free_message_tags(mtags);
 
-		if (IsDead(sptr))
+		if (IsDead(client))
 			return; /* stop processing if we killed ourselves */
 	}
 }

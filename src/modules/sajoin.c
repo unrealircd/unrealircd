@@ -61,7 +61,7 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_sajoin)
 {
-	Client *acptr;
+	Client *target;
 	char jbuf[BUFSIZE];
 	char mode = '\0';
 	char sjmode = '\0';
@@ -72,31 +72,31 @@ CMD_FUNC(cmd_sajoin)
 
 	if (parc < 3)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SAJOIN");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "SAJOIN");
 		return;
 	}
 
-	if (!(acptr = find_person(parv[1], NULL)))
+	if (!(target = find_person(parv[1], NULL)))
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
+		sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 		return;
 	}
 
 	/* Is this user disallowed from operating on this victim at all? */
-	if (!IsULine(sptr) && !ValidatePermissionsForPath("sacmd:sajoin",sptr,acptr,NULL,NULL))
+	if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sajoin",client,target,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	/* If it's not for our client, then simply pass on the message... */
-	if (!MyUser(acptr))
+	if (!MyUser(target))
 	{
-		sendto_one(acptr, NULL, ":%s SAJOIN %s %s", sptr->name, parv[1], parv[2]);
+		sendto_one(target, NULL, ":%s SAJOIN %s %s", client->name, parv[1], parv[2]);
 
 		/* Logging function added by XeRXeS */
 		ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-			sptr->name, parv[1], parv[2]);
+			client->name, parv[1], parv[2]);
 
 		return;
 	}
@@ -118,7 +118,7 @@ CMD_FUNC(cmd_sajoin)
 
 			if (++ntargets > maxtargets)
 			{
-				sendnumeric(sptr, ERR_TOOMANYTARGETS, name, maxtargets, "SAJOIN");
+				sendnumeric(client, ERR_TOOMANYTARGETS, name, maxtargets, "SAJOIN");
 				break;
 			}
 
@@ -168,22 +168,22 @@ CMD_FUNC(cmd_sajoin)
 			}
 			if (*name == '0' || !IsChannelName(name))
 			{
-				sendnumeric(sptr, ERR_NOSUCHCHANNEL, name);
+				sendnumeric(client, ERR_NOSUCHCHANNEL, name);
 				continue;
 			}
 
-			chptr = get_channel(acptr, name, 0);
+			chptr = get_channel(target, name, 0);
 
 			/* If this _specific_ channel is not permitted, skip it */
-			if (!IsULine(sptr) && !ValidatePermissionsForPath("sacmd:sajoin",sptr,acptr,chptr,NULL))
+			if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sajoin",client,target,chptr,NULL))
 			{
-				sendnumeric(sptr, ERR_NOPRIVILEGES);
+				sendnumeric(client, ERR_NOPRIVILEGES);
 				continue;
 			}
 
-			if (!parted && chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
+			if (!parted && chptr && (lp = find_membership_link(target->user->channel, chptr)))
 			{
-				sendnumeric(sptr, ERR_USERONCHANNEL, parv[1], name);
+				sendnumeric(client, ERR_USERONCHANNEL, parv[1], name);
 				continue;
 			}
 			if (*jbuf)
@@ -211,33 +211,33 @@ CMD_FUNC(cmd_sajoin)
 				 * so the same msgid is used for each part on all servers. -- Syzop
 				 */
 				did_anything = 1;
-				while ((lp = acptr->user->channel))
+				while ((lp = target->user->channel))
 				{
 					MessageTag *mtags = NULL;
 					chptr = lp->chptr;
 
-					new_message(acptr, NULL, &mtags);
-					sendto_channel(chptr, acptr, NULL, 0, 0, SEND_LOCAL, NULL,
+					new_message(target, NULL, &mtags);
+					sendto_channel(chptr, target, NULL, 0, 0, SEND_LOCAL, NULL,
 					               ":%s PART %s :%s",
-					               acptr->name, chptr->chname, "Left all channels");
-					sendto_server(sptr, 0, 0, mtags, ":%s PART %s :Left all channels", acptr->name, chptr->chname);
-					if (MyConnect(acptr))
-						RunHook4(HOOKTYPE_LOCAL_PART, acptr, chptr, mtags, "Left all channels");
+					               target->name, chptr->chname, "Left all channels");
+					sendto_server(client, 0, 0, mtags, ":%s PART %s :Left all channels", target->name, chptr->chname);
+					if (MyConnect(target))
+						RunHook4(HOOKTYPE_LOCAL_PART, target, chptr, mtags, "Left all channels");
 					free_message_tags(mtags);
-					remove_user_from_channel(acptr, chptr);
+					remove_user_from_channel(target, chptr);
 				}
 				strcpy(jbuf, "0");
 				continue;
 			}
 			flags = (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;
-			chptr = get_channel(acptr, name, CREATE);
-			if (chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
+			chptr = get_channel(target, name, CREATE);
+			if (chptr && (lp = find_membership_link(target->user->channel, chptr)))
 				continue;
 
 			i = HOOK_CONTINUE;
 			for (h = Hooks[HOOKTYPE_CAN_SAJOIN]; h; h = h->next)
 			{
-				i = (*(h->func.intfunc))(acptr,chptr,sptr);
+				i = (*(h->func.intfunc))(target,chptr,client);
 				if (i != HOOK_CONTINUE)
 					break;
 			}
@@ -250,8 +250,8 @@ CMD_FUNC(cmd_sajoin)
 			 * will send a JOIN for each channel due to this loop.
 			 * Each with their own unique msgid.
 			 */
-			new_message(acptr, NULL, &mtags);
-			join_channel(chptr, acptr, mtags, flags);
+			new_message(target, NULL, &mtags);
+			join_channel(chptr, target, mtags, flags);
 			if (sjmode)
 			{
 				opermode = 0;
@@ -259,9 +259,9 @@ CMD_FUNC(cmd_sajoin)
 				mode_args[0] = safe_alloc(2);
 				mode_args[0][0] = mode;
 				mode_args[0][1] = '\0';
-				mode_args[1] = acptr->name;
+				mode_args[1] = target->name;
 				mode_args[2] = 0;
-				(void)do_mode(chptr, acptr, NULL, 3, mode_args, 0, 1);
+				(void)do_mode(chptr, target, NULL, 3, mode_args, 0, 1);
 				sajoinmode = 0;
 				safe_free(mode_args[0]);
 			}
@@ -276,22 +276,22 @@ CMD_FUNC(cmd_sajoin)
 		{
 			if (!sjmode)
 			{
-				sendnotice(acptr, "*** You were forced to join %s", jbuf);
-				sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, acptr->name, jbuf);
+				sendnotice(target, "*** You were forced to join %s", jbuf);
+				sendto_realops("%s used SAJOIN to make %s join %s", client->name, target->name, jbuf);
 				sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
-					me.name, sptr->name, acptr->name, jbuf);
+					me.name, client->name, target->name, jbuf);
 				/* Logging function added by XeRXeS */
 				ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-					sptr->name, parv[1], jbuf);
+					client->name, parv[1], jbuf);
 			}
 			else
 			{
-				sendnotice(acptr, "*** You were forced to join %s with '%c'", jbuf, sjmode);
-				sendto_realops("%s used SAJOIN to make %s join %c%s", sptr->name, acptr->name, sjmode, jbuf);
+				sendnotice(target, "*** You were forced to join %s with '%c'", jbuf, sjmode);
+				sendto_realops("%s used SAJOIN to make %s join %c%s", client->name, target->name, sjmode, jbuf);
 				sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAJOIN to make %s join %c%s",
-					me.name, sptr->name, acptr->name, sjmode, jbuf);
+					me.name, client->name, target->name, sjmode, jbuf);
 				ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %c%s",
-					sptr->name, parv[1], sjmode, jbuf);
+					client->name, parv[1], sjmode, jbuf);
 			}
 		}
 	}

@@ -323,7 +323,7 @@ uint64_t hash_whowas_name(const char *name)
 /*
  * add_to_client_hash_table
  */
-int add_to_client_hash_table(char *name, Client *cptr)
+int add_to_client_hash_table(char *name, Client *client)
 {
 	unsigned int hashv;
 	/*
@@ -342,18 +342,18 @@ int add_to_client_hash_table(char *name, Client *cptr)
 	if (loop.tainted)
 		return 0;
 	hashv = hash_client_name(name);
-	list_add(&cptr->client_hash, &clientTable[hashv]);
+	list_add(&client->client_hash, &clientTable[hashv]);
 	return 0;
 }
 
 /*
  * add_to_client_hash_table
  */
-int add_to_id_hash_table(char *name, Client *cptr)
+int add_to_id_hash_table(char *name, Client *client)
 {
 	unsigned int hashv;
 	hashv = hash_client_name(name);
-	list_add(&cptr->id_hash, &idTable[hashv]);
+	list_add(&client->id_hash, &idTable[hashv]);
 	return 0;
 }
 
@@ -372,22 +372,22 @@ int add_to_channel_hash_table(char *name, Channel *chptr)
 /*
  * del_from_client_hash_table
  */
-int del_from_client_hash_table(char *name, Client *cptr)
+int del_from_client_hash_table(char *name, Client *client)
 {
-	if (!list_empty(&cptr->client_hash))
-		list_del(&cptr->client_hash);
+	if (!list_empty(&client->client_hash))
+		list_del(&client->client_hash);
 
-	INIT_LIST_HEAD(&cptr->client_hash);
+	INIT_LIST_HEAD(&client->client_hash);
 
 	return 0;
 }
 
-int del_from_id_hash_table(char *name, Client *cptr)
+int del_from_id_hash_table(char *name, Client *client)
 {
-	if (!list_empty(&cptr->id_hash))
-		list_del(&cptr->id_hash);
+	if (!list_empty(&client->id_hash))
+		list_del(&client->id_hash);
 
-	INIT_LIST_HEAD(&cptr->id_hash);
+	INIT_LIST_HEAD(&client->id_hash);
 
 	return 0;
 }
@@ -420,7 +420,7 @@ void del_from_channel_hash_table(char *name, Channel *chptr)
 /*
  * hash_find_client
  */
-Client *hash_find_client(const char *name, Client *cptr)
+Client *hash_find_client(const char *name, Client *client)
 {
 	Client *tmp;
 	unsigned int hashv;
@@ -432,10 +432,10 @@ Client *hash_find_client(const char *name, Client *cptr)
 			return tmp;
 	}
 
-	return cptr;
+	return client;
 }
 
-Client *hash_find_id(const char *name, Client *cptr)
+Client *hash_find_id(const char *name, Client *client)
 {
 	Client *tmp;
 	unsigned int hashv;
@@ -447,17 +447,17 @@ Client *hash_find_id(const char *name, Client *cptr)
 			return tmp;
 	}
 
-	return cptr;
+	return client;
 }
 
 /*
  * hash_find_nickatserver
  */
-Client *hash_find_nickatserver(const char *str, Client *cptr)
+Client *hash_find_nickatserver(const char *str, Client *def)
 {
 	char *serv;
 	char nick[NICKLEN+HOSTLEN+1];
-	Client *acptr;
+	Client *client;
 	
 	strlcpy(nick, str, sizeof(nick)); /* let's work on a copy */
 
@@ -465,23 +465,23 @@ Client *hash_find_nickatserver(const char *str, Client *cptr)
 	if (serv)
 		*serv++ = '\0';
 
-	acptr = find_client(nick, NULL);
-	if (!acptr)
+	client = find_client(nick, NULL);
+	if (!client)
 		return NULL; /* client not found */
 	
 	if (!serv)
-		return acptr; /* validated: was just 'nick' and not 'nick@serv' */
+		return client; /* validated: was just 'nick' and not 'nick@serv' */
 
 	/* Now validate the server portion */
-	if (acptr->user && !smycmp(serv, acptr->user->server))
-		return acptr; /* validated */
+	if (client->user && !smycmp(serv, client->user->server))
+		return client; /* validated */
 	
-	return cptr;
+	return def;
 }
 /*
  * hash_find_server
  */
-Client *hash_find_server(const char *server, Client *cptr)
+Client *hash_find_server(const char *server, Client *def)
 {
 	Client *tmp;
 	unsigned int hashv;
@@ -497,59 +497,59 @@ Client *hash_find_server(const char *server, Client *cptr)
 		}
 	}
 
-	return cptr;
+	return def;
 }
 
 /** Find a client by name.
- * @param name   The name to search for (eg: "nick" or "irc.example.net")
- * @param cptr   The client that is searching for this name
- * @notes If 'cptr' is a server or NULL, then we also check
+ * @param name        The name to search for (eg: "nick" or "irc.example.net")
+ * @param requester   The client that is searching for this name
+ * @notes If 'requester' is a server or NULL, then we also check
  *        the ID table, otherwise not.
  */
-Client *find_client(char *name, Client *cptr)
+Client *find_client(char *name, Client *requester)
 {
-	if (cptr == NULL || IsServer(cptr))
+	if (requester == NULL || IsServer(requester))
 	{
-		Client *acptr;
+		Client *client;
 
-		if ((acptr = hash_find_id(name, NULL)) != NULL)
-			return acptr;
+		if ((client = hash_find_id(name, NULL)) != NULL)
+			return client;
 	}
 
 	return hash_find_client(name, NULL);
 }
 
 /** Find a server by name.
- * @param name   The server name to search for (eg: 'irc.example.net'
- *               or '001')
- * @param cptr   The client searching for the name.
- * @notes If 'cptr' is a server or NULL, then we also check
+ * @param name        The server name to search for (eg: 'irc.example.net'
+ *                    or '001')
+ * @param requester   The client searching for the name.
+ * @notes If 'requester' is a server or NULL, then we also check
  *        the ID table, otherwise not.
  */
-Client *find_server(char *name, Client *cptr)
+Client *find_server(char *name, Client *requester)
 {
 	if (name)
 	{
-		Client *acptr;
+		Client *client;
 
-		if ((acptr = find_client(name, NULL)) != NULL && (IsServer(acptr) || IsMe(acptr)))
-			return acptr;
+		if ((client = find_client(name, NULL)) != NULL && (IsServer(client) || IsMe(client)))
+			return client;
 	}
 
 	return NULL;
 }
 
 /** Find a person.
- * @param name   The name to search for (eg: "nick" or "001ABCDEFG")
- * @param cptr   The client that is searching for this name
- * @notes If 'cptr' is a server or NULL, then we also check
+ * @param name        The name to search for (eg: "nick" or "001ABCDEFG")
+ * @param requester   The client that is searching for this name
+ * @notes If 'requester' is a server or NULL, then we also check
  *        the ID table, otherwise not.
  */
-Client *find_person(char *name, Client *cptr)
+Client *find_person(char *name, Client *requester)
 {
 	Client *c2ptr;
 
-	c2ptr = find_client(name, cptr);
+	c2ptr = find_client(name, requester);
 
 	if (c2ptr && IsUser(c2ptr) && c2ptr->user)
 		return c2ptr;
@@ -603,7 +603,7 @@ void  count_watch_memory(int *count, u_long *memory)
 /*
  * add_to_watch_hash_table
  */
-int add_to_watch_hash_table(char *nick, Client *cptr, int awaynotify)
+int add_to_watch_hash_table(char *nick, Client *client, int awaynotify)
 {
 	unsigned int hashv;
 	Watch  *anptr;
@@ -631,23 +631,23 @@ int add_to_watch_hash_table(char *nick, Client *cptr, int awaynotify)
 	}
 	/* Is this client already on the watch-list? */
 	if ((lp = anptr->watch))
-	  while (lp && (lp->value.cptr != cptr))
+	  while (lp && (lp->value.client != client))
 		 lp = lp->next;
 	
 	/* No it isn't, so add it in the bucket and client addint it */
 	if (!lp) {
 		lp = anptr->watch;
 		anptr->watch = make_link();
-		anptr->watch->value.cptr = cptr;
+		anptr->watch->value.client = client;
 		anptr->watch->flags = awaynotify;
 		anptr->watch->next = lp;
 		
 		lp = make_link();
-		lp->next = cptr->local->watch;
+		lp->next = client->local->watch;
 		lp->value.wptr = anptr;
 		lp->flags = awaynotify;
-		cptr->local->watch = lp;
-		cptr->local->watches++;
+		client->local->watch = lp;
+		client->local->watches++;
 	}
 	
 	return 0;
@@ -656,7 +656,7 @@ int add_to_watch_hash_table(char *nick, Client *cptr, int awaynotify)
 /*
  *  hash_check_watch
  */
-int hash_check_watch(Client *cptr, int reply)
+int hash_check_watch(Client *client, int reply)
 {
 	unsigned int hashv;
 	Watch  *anptr;
@@ -665,14 +665,13 @@ int hash_check_watch(Client *cptr, int reply)
 	
 	if ((reply == RPL_GONEAWAY) || (reply == RPL_NOTAWAY) || (reply == RPL_REAWAY))
 		awaynotify = 1;
-	
-	
+
 	/* Get us the right bucket */
-	hashv = hash_watch_nick_name(cptr->name);
+	hashv = hash_watch_nick_name(client->name);
 	
 	/* Find the right header in this bucket */
 	if ((anptr = (Watch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, cptr->name))
+	  while (anptr && mycmp(anptr->nick, client->name))
 		 anptr = anptr->hnext;
 	if (!anptr)
 	  return 0;   /* This nick isn't on watch */
@@ -685,12 +684,12 @@ int hash_check_watch(Client *cptr, int reply)
 	{
 		if (!awaynotify)
 		{
-			sendnumeric(lp->value.cptr, reply,
-			    cptr->name,
-			    (IsUser(cptr) ? cptr->user->username : "<N/A>"),
-			    (IsUser(cptr) ?
-			    (IsHidden(cptr) ? cptr->user->virthost : cptr->
-			    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
+			sendnumeric(lp->value.client, reply,
+			    client->name,
+			    (IsUser(client) ? client->user->username : "<N/A>"),
+			    (IsUser(client) ?
+			    (IsHidden(client) ? client->user->virthost : client->
+			    user->realhost) : "<N/A>"), anptr->lasttime, client->info);
 		}
 		else
 		{
@@ -699,19 +698,19 @@ int hash_check_watch(Client *cptr, int reply)
 				continue; /* skip away/unaway notification for users not interested in them */
 
 			if (reply == RPL_NOTAWAY)
-				sendnumeric(lp->value.cptr, reply,
-				    cptr->name,
-				    (IsUser(cptr) ? cptr->user->username : "<N/A>"),
-				    (IsUser(cptr) ?
-				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
-				    user->realhost) : "<N/A>"), cptr->user->lastaway);
+				sendnumeric(lp->value.client, reply,
+				    client->name,
+				    (IsUser(client) ? client->user->username : "<N/A>"),
+				    (IsUser(client) ?
+				    (IsHidden(client) ? client->user->virthost : client->
+				    user->realhost) : "<N/A>"), client->user->lastaway);
 			else /* RPL_GONEAWAY / RPL_REAWAY */
-				sendnumeric(lp->value.cptr, reply,
-				    cptr->name,
-				    (IsUser(cptr) ? cptr->user->username : "<N/A>"),
-				    (IsUser(cptr) ?
-				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
-				    user->realhost) : "<N/A>"), cptr->user->lastaway, cptr->user->away);
+				sendnumeric(lp->value.client, reply,
+				    client->name,
+				    (IsUser(client) ? client->user->username : "<N/A>"),
+				    (IsUser(client) ?
+				    (IsHidden(client) ? client->user->virthost : client->
+				    user->realhost) : "<N/A>"), client->user->lastaway, client->user->away);
 		}
 	}
 	
@@ -738,7 +737,7 @@ Watch  *hash_get_watch(char *nick)
 /*
  * del_from_watch_hash_table
  */
-int del_from_watch_hash_table(char *nick, Client *cptr)
+int del_from_watch_hash_table(char *nick, Client *client)
 {
 	unsigned int hashv;
 	Watch  *anptr, *nlast = NULL;
@@ -758,7 +757,7 @@ int del_from_watch_hash_table(char *nick, Client *cptr)
 	
 	/* Find this client from the list of notifies... with last-ptr. */
 	if ((lp = anptr->watch))
-	  while (lp && (lp->value.cptr != cptr)) {
+	  while (lp && (lp->value.client != client)) {
 		  last = lp;
 		  lp = lp->next;
 	  }
@@ -774,7 +773,7 @@ int del_from_watch_hash_table(char *nick, Client *cptr)
 	
 	/* Do the same regarding the links in client-record... */
 	last = NULL;
-	if ((lp = cptr->local->watch))
+	if ((lp = client->local->watch))
 	  while (lp && (lp->value.wptr != anptr)) {
 		  last = lp;
 		  lp = lp->next;
@@ -788,10 +787,10 @@ int del_from_watch_hash_table(char *nick, Client *cptr)
 	  sendto_ops("WATCH debug error: del_from_watch_hash_table "
 					 "found a watch entry with no client "
 					 "counterpoint processing nick %s on client %p!",
-					 nick, cptr->user);
+					 nick, client->user);
 	else {
 		if (!last) /* First one matched */
-		  cptr->local->watch = lp->next;
+		  client->local->watch = lp->next;
 		else
 		  last->next = lp->next;
 		free_link(lp);
@@ -806,7 +805,7 @@ int del_from_watch_hash_table(char *nick, Client *cptr)
 	}
 	
 	/* Update count of notifies on nick */
-	cptr->local->watches--;
+	client->local->watches--;
 	
 	return 0;
 }
@@ -814,22 +813,22 @@ int del_from_watch_hash_table(char *nick, Client *cptr)
 /*
  * hash_del_watch_list
  */
-int   hash_del_watch_list(Client *cptr)
+int   hash_del_watch_list(Client *client)
 {
 	unsigned int   hashv;
 	Watch  *anptr;
 	Link  *np, *lp, *last;
 	
 	
-	if (!(np = cptr->local->watch))
+	if (!(np = client->local->watch))
 	  return 0;   /* Nothing to do */
 	
-	cptr->local->watch = NULL; /* Break the watch-list for client */
+	client->local->watch = NULL; /* Break the watch-list for client */
 	while (np) {
 		/* Find the watch-record from hash-table... */
 		anptr = np->value.wptr;
 		last = NULL;
-		for (lp = anptr->watch; lp && (lp->value.cptr != cptr);
+		for (lp = anptr->watch; lp && (lp->value.client != client);
 			  lp = lp->next)
 		  last = lp;
 		
@@ -838,7 +837,7 @@ int   hash_del_watch_list(Client *cptr)
 		  sendto_ops("WATCH Debug error: hash_del_watch_list "
 						 "found a WATCH entry with no table "
 						 "counterpoint processing client %s!",
-						 cptr->name);
+						 client->name);
 		else {
 			/* Fix the watch-list and remove entry */
 			if (!last)
@@ -876,7 +875,7 @@ int   hash_del_watch_list(Client *cptr)
 		free_link(lp); /* Free the previous */
 	}
 	
-	cptr->local->watches = 0;
+	client->local->watches = 0;
 	
 	return 0;
 }
@@ -910,15 +909,15 @@ uint64_t hash_throttling(char *ip)
 	return siphash(ip, siphashkey_throttling) % THROTTLING_HASH_TABLE_SIZE;
 }
 
-struct ThrottlingBucket *find_throttling_bucket(Client *acptr)
+struct ThrottlingBucket *find_throttling_bucket(Client *client)
 {
 	int hash = 0;
 	struct ThrottlingBucket *p;
-	hash = hash_throttling(acptr->ip);
+	hash = hash_throttling(client->ip);
 	
 	for (p = ThrottlingHash[hash]; p; p = p->next)
 	{
-		if (!strcmp(p->ip, acptr->ip))
+		if (!strcmp(p->ip, client->ip))
 			return p;
 	}
 	
@@ -972,17 +971,17 @@ EVENT(e_clean_out_throttling_buckets)
 	return;
 }
 
-void add_throttling_bucket(Client *acptr)
+void add_throttling_bucket(Client *client)
 {
 	int hash;
 	struct ThrottlingBucket *n;
 
 	n = safe_alloc(sizeof(struct ThrottlingBucket));	
 	n->next = n->prev = NULL; 
-	safe_strdup(n->ip, acptr->ip);
+	safe_strdup(n->ip, client->ip);
 	n->since = TStime();
 	n->count = 1;
-	hash = hash_throttling(acptr->ip);
+	hash = hash_throttling(client->ip);
 	AddListItem(n, ThrottlingHash[hash]);
 	return;
 }
@@ -993,18 +992,18 @@ void add_throttling_bucket(Client *acptr)
  * @retval 2 Allowed, not in list or is an exception.
  * @see add_connection()
  */
-int throttle_can_connect(Client *sptr)
+int throttle_can_connect(Client *client)
 {
 	struct ThrottlingBucket *b;
 
 	if (!THROTTLING_PERIOD || !THROTTLING_COUNT)
 		return 2;
 
-	if (!(b = find_throttling_bucket(sptr)))
+	if (!(b = find_throttling_bucket(client)))
 		return 1;
 	else
 	{
-		if (find_tkl_exception(TKL_CONNECT_FLOOD, sptr))
+		if (find_tkl_exception(TKL_CONNECT_FLOOD, client))
 			return 2;
 		if (b->count+1 > (THROTTLING_COUNT ? THROTTLING_COUNT : 3))
 			return 0;

@@ -70,12 +70,12 @@ CMD_FUNC(cmd_cycle)
 	/* First PART the user... */
 	parv[2] = "cycling";
 	strlcpy(channels, parv[1], sizeof(channels));
-	do_cmd(sptr, recv_mtags, "PART", 3, parv);
-	if (IsDead(sptr))
+	do_cmd(client, recv_mtags, "PART", 3, parv);
+	if (IsDead(client))
 		return;
 
 	/* Then JOIN the user again... */
 	parv[1] = channels;
 	parv[2] = NULL;
-	do_cmd(sptr, recv_mtags, "JOIN", 2, parv);
+	do_cmd(client, recv_mtags, "JOIN", 2, parv);
 }

@@ -34,9 +34,9 @@ Cmode_t EXTCMODE_STRIPCOLOR;
 
 #define IsStripColor(chptr)    (chptr->mode.extmode & EXTCMODE_STRIPCOLOR)
 
-char *stripcolor_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
-char *stripcolor_prelocalpart(Client *sptr, Channel *chptr, char *comment);
-char *stripcolor_prelocalquit(Client *sptr, char *comment);
+char *stripcolor_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
+char *stripcolor_prelocalpart(Client *client, Channel *chptr, char *comment);
+char *stripcolor_prelocalquit(Client *client, char *comment);
 
 MOD_TEST()
 {
@@ -73,16 +73,16 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *stripcolor_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
+char *stripcolor_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	Hook *h;
 	int i;
 
-	if (MyUser(sptr) && IsStripColor(chptr))
+	if (MyUser(client) && IsStripColor(chptr))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(sptr, chptr, BYPASS_CHANMSG_COLOR);
+			i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_COLOR);
 			if (i == HOOK_ALLOW)
 				return text; /* bypass */
 			if (i != HOOK_CONTINUE)
@@ -95,35 +95,35 @@ char *stripcolor_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, cha
 	return text;
 }
 
-char *stripcolor_prelocalpart(Client *sptr, Channel *chptr, char *comment)
+char *stripcolor_prelocalpart(Client *client, Channel *chptr, char *comment)
 {
 	if (!comment)
 		return NULL;
 
-	if (MyUser(sptr) && IsStripColor(chptr))
+	if (MyUser(client) && IsStripColor(chptr))
 		comment = StripColors(comment);
 
 	return comment;
 }
 
 /** Is any channel where the user is in +S? */
-static int IsAnyChannelStripColor(Client *sptr)
+static int IsAnyChannelStripColor(Client *client)
 {
 	Membership *lp;
 
-	for (lp = sptr->user->channel; lp; lp = lp->next)
+	for (lp = client->user->channel; lp; lp = lp->next)
 		if (IsStripColor(lp->chptr))
 			return 1;
 	return 0;
 }
 
 
-char *stripcolor_prelocalquit(Client *sptr, char *comment)
+char *stripcolor_prelocalquit(Client *client, char *comment)
 {
 	if (!comment)
 		return NULL;
 
-	if (MyUser(sptr) && !BadPtr(comment) && IsAnyChannelStripColor(sptr))
+	if (MyUser(client) && !BadPtr(comment) && IsAnyChannelStripColor(client))
 		comment = StripColors(comment);
         
 	return comment;

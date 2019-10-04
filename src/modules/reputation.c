@@ -74,7 +74,7 @@ ModuleHeader MOD_HEADER
 
 #define REPUTATION_HASH_TABLE_SIZE 2048
 
-#define Reputation(acptr)	moddata_client(acptr, reputation_md).l
+#define Reputation(client)	moddata_client(client, reputation_md).l
 
 /* Definitions (structs, etc.) */
 
@@ -114,9 +114,9 @@ void reputation_md_unserialize(char *str, ModData *m);
 void config_setdefaults(void);
 CMD_FUNC(reputation_cmd);
 CMD_FUNC(reputationunperm);
-int reputation_whois(Client *sptr, Client *acptr);
-int reputation_set_on_connect(Client *sptr);
-int reputation_pre_lconnect(Client *sptr);
+int reputation_whois(Client *client, Client *target);
+int reputation_set_on_connect(Client *client);
+int reputation_pre_lconnect(Client *client);
 int reputation_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int reputation_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
 int reputation_config_posttest(int *errs);
@@ -481,9 +481,9 @@ ReputationEntry *find_reputation_entry(char *ip)
  * been established, before any data.
  * Remote user: early in the HOOKTYPE_REMOTE_CONNECT hook.
  */
-int reputation_set_on_connect(Client *acptr)
+int reputation_set_on_connect(Client *client)
 {
-	char *ip = acptr->ip;
+	char *ip = client->ip;
 	ReputationEntry *e;
 
 	if (ip)
@@ -491,21 +491,21 @@ int reputation_set_on_connect(Client *acptr)
 		e = find_reputation_entry(ip);
 		if (e)
 		{
-			Reputation(acptr) = e->score; /* SET MODDATA */
+			Reputation(client) = e->score; /* SET MODDATA */
 		}
 	}
 
 	return 0;
 }
 
-int reputation_pre_lconnect(Client *sptr)
+int reputation_pre_lconnect(Client *client)
 {
 	/* User will likely be accepted. Inform other servers about the score
 	 * we have for this user. For more information about this type of
 	 * server to server traffic, see the reputation_server_cmd function.
 	 */
-	ReputationEntry *e = find_reputation_entry(GetIP(sptr));
-	sendto_server(NULL, 0, 0, NULL, ":%s REPUTATION %s %d", me.name, GetIP(sptr), e ? (int)e->score : 0);
+	ReputationEntry *e = find_reputation_entry(GetIP(client));
+	sendto_server(NULL, 0, 0, NULL, ":%s REPUTATION %s %d", me.name, GetIP(client), e ? (int)e->score : 0);
 
 	return 0;
 }
@@ -514,7 +514,7 @@ EVENT(add_scores)
 {
 	static int marker = 0;
 	char *ip;
-	Client *acptr;
+	Client *client;
 	ReputationEntry *e;
 
 	/* This marker is used so we only bump score for an IP entry
@@ -529,12 +529,12 @@ EVENT(add_scores)
 	#define MARKER_UNREGISTERED_USER (marker)
 	#define MARKER_REGISTERED_USER (marker+1)
 	
-	list_for_each_entry(acptr, &client_list, client_node)
+	list_for_each_entry(client, &client_list, client_node)
 	{
-		if (!IsUser(acptr))
+		if (!IsUser(client))
 			continue; /* skip servers, unknowns, etc.. */
 
-		ip = acptr->ip;
+		ip = client->ip;
 		if (!ip)
 			continue;
 
@@ -556,14 +556,14 @@ EVENT(add_scores)
 				/* Regular users receive a point. */
 				e->score++;
 				/* Registered users receive an additional point */
-				if (IsLoggedIn(acptr) && (e->score < REPUTATION_SCORE_CAP))
+				if (IsLoggedIn(client) && (e->score < REPUTATION_SCORE_CAP))
 				{
 					e->score++;
 					e->marker = MARKER_REGISTERED_USER;
 				}
 			}
 		} else
-		if ((e->marker == MARKER_UNREGISTERED_USER) && IsLoggedIn(acptr) && (e->score < REPUTATION_SCORE_CAP))
+		if ((e->marker == MARKER_UNREGISTERED_USER) && IsLoggedIn(client) && (e->score < REPUTATION_SCORE_CAP))
 		{
 			/* This is to catch a special case:
 			 * If there are 2 or more users with the same IP
@@ -578,7 +578,7 @@ EVENT(add_scores)
 		}
 
 		e->last_seen = TStime();
-		Reputation(acptr) = e->score; /* update moddata */
+		Reputation(client) = e->score; /* update moddata */
 	}
 }
 
@@ -638,9 +638,9 @@ EVENT(save_db_evt)
 
 CMD_FUNC(reputationunperm)
 {
-	if (!IsOper(sptr))
+	if (!IsOper(client))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
@@ -648,7 +648,7 @@ CMD_FUNC(reputationunperm)
 
 	sendto_realops("%s used /REPUTATIONUNPERM. On next REHASH the module can be RELOADED or UNLOADED. "
 	               "Note however that for a few minutes the scoring may be skipped, so don't do this too often.",
-	               sptr->name);
+	               client->name);
 }
 
 int count_reputation_records(void)
@@ -669,29 +669,29 @@ CMD_FUNC(reputation_user_cmd)
 	ReputationEntry *e;
 	char *ip;
 
-	if (!IsOper(sptr))
+	if (!IsOper(client))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 	
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendnotice(sptr, "Reputation module statistics:");
-		sendnotice(sptr, "Recording for: %lld seconds (since unixtime %lld)",
+		sendnotice(client, "Reputation module statistics:");
+		sendnotice(client, "Recording for: %lld seconds (since unixtime %lld)",
 			(long long)(TStime() - reputation_starttime),
 			(long long)reputation_starttime);
 		if (reputation_writtentime)
 		{
-			sendnotice(sptr, "Last successful db write: %lld seconds ago (unixtime %lld)",
+			sendnotice(client, "Last successful db write: %lld seconds ago (unixtime %lld)",
 				(long long)(TStime() - reputation_writtentime),
 				(long long)reputation_writtentime);
 		} else {
-			sendnotice(sptr, "Last successful db write: never");
+			sendnotice(client, "Last successful db write: never");
 		}
-		sendnotice(sptr, "Current number of records (IP's): %d", count_reputation_records());
-		sendnotice(sptr, "-");
-		sendnotice(sptr, "For more specific information, use: /REPUTATION [nick|IP-address]");
+		sendnotice(client, "Current number of records (IP's): %d", count_reputation_records());
+		sendnotice(client, "-");
+		sendnotice(client, "For more specific information, use: /REPUTATION [nick|IP-address]");
 		return;
 	}
 	
@@ -699,16 +699,16 @@ CMD_FUNC(reputation_user_cmd)
 	{
 		ip = parv[1];
 	} else {
-		Client *acptr = find_person(parv[1], NULL);
-		if (!acptr)
+		Client *target = find_person(parv[1], NULL);
+		if (!target)
 		{
-			sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
+			sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 			return;
 		}
-		ip = acptr->ip;
+		ip = target->ip;
 		if (!ip)
 		{
-			sendnotice(sptr, "No IP address information available for user '%s'.", parv[1]); /* e.g. services */
+			sendnotice(client, "No IP address information available for user '%s'.", parv[1]); /* e.g. services */
 			return;
 		}
 	}
@@ -716,17 +716,17 @@ CMD_FUNC(reputation_user_cmd)
 	e = find_reputation_entry(ip);
 	if (!e)
 	{
-		sendnotice(sptr, "No reputation record found for IP %s", ip);
+		sendnotice(client, "No reputation record found for IP %s", ip);
 		return;
 	}
 
-	sendnotice(sptr, "****************************************************");
-	sendnotice(sptr, "Reputation record for IP %s:", ip);
-	sendnotice(sptr, "    Score: %hd", e->score);
-	sendnotice(sptr, "Last seen: %lld seconds ago (unixtime: %lld)",
+	sendnotice(client, "****************************************************");
+	sendnotice(client, "Reputation record for IP %s:", ip);
+	sendnotice(client, "    Score: %hd", e->score);
+	sendnotice(client, "Last seen: %lld seconds ago (unixtime: %lld)",
 		(long long)(TStime() - e->last_seen),
 		(long long)e->last_seen);
-	sendnotice(sptr, "****************************************************");
+	sendnotice(client, "****************************************************");
 }
 
 /** The REPUTATION server command handler.
@@ -765,7 +765,7 @@ CMD_FUNC(reputation_server_cmd)
 	/* :server REPUTATION <ip> <score> */
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "REPUTATION");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "REPUTATION");
 		return;
 	}
 	
@@ -786,15 +786,15 @@ CMD_FUNC(reputation_server_cmd)
 	e = find_reputation_entry(ip);
 	if (allow_reply && e && (e->score > score) && (e->score - score > UPDATE_SCORE_MARGIN))
 	{
-		/* We have a higher score, inform the sptr direction about it.
+		/* We have a higher score, inform the client direction about it.
 		 * This will prefix the score with a * so servers will never reply to it.
 		 */
-		sendto_one(sptr, NULL, ":%s REPUTATION %s *%d", me.name, parv[1], e->score);
+		sendto_one(client, NULL, ":%s REPUTATION %s *%d", me.name, parv[1], e->score);
 #ifdef DEBUGMODE
 		ircd_log(LOG_ERROR, "[reputation] Score for '%s' from %s is %d, but we have %d, sending back %d",
-			ip, sptr->name, score, e->score, e->score);
+			ip, client->name, score, e->score, e->score);
 #endif
-		score = e->score; /* Update for propagation in the non-sptr direction */
+		score = e->score; /* Update for propagation in the non-client direction */
 	}
 
 	/* Update our score if sender has a higher score */
@@ -802,7 +802,7 @@ CMD_FUNC(reputation_server_cmd)
 	{
 #ifdef DEBUGMODE
 		ircd_log(LOG_ERROR, "[reputation] Score for '%s' from %s is %d, but we have %d, updating our score to %d",
-			ip, sptr->name, score, e->score, score);
+			ip, client->name, score, e->score, score);
 #endif
 		e->score = score;
 	}
@@ -812,7 +812,7 @@ CMD_FUNC(reputation_server_cmd)
 	{
 #ifdef DEBUGMODE
 		ircd_log(LOG_ERROR, "[reputation] Score for '%s' from %s is %d, we had no entry, adding it",
-			ip, sptr->name, score);
+			ip, client->name, score);
 #endif
 		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip));
 		strcpy(e->ip, ip); /* safe, see alloc above */
@@ -821,10 +821,10 @@ CMD_FUNC(reputation_server_cmd)
 		add_reputation_entry(e);
 	}
 
-	/* Propagate to the non-sptr direction (score may be updated) */
-	sendto_server(sptr, 0, 0, NULL,
+	/* Propagate to the non-client direction (score may be updated) */
+	sendto_server(client, 0, 0, NULL,
 	              ":%s REPUTATION %s %s%d",
-	              sptr->name,
+	              client->name,
 	              parv[1],
 	              allow_reply ? "" : "*",
 	              score);
@@ -832,25 +832,25 @@ CMD_FUNC(reputation_server_cmd)
 
 CMD_FUNC(reputation_cmd)
 {
-	if (MyUser(sptr))
-		return reputation_user_cmd(sptr, recv_mtags, parc, parv);
+	if (MyUser(client))
+		return reputation_user_cmd(client, recv_mtags, parc, parv);
 
-	if (IsServer(sptr))
-		return reputation_server_cmd(sptr, recv_mtags, parc, parv);
+	if (IsServer(client))
+		return reputation_server_cmd(client, recv_mtags, parc, parv);
 }
 
-int reputation_whois(Client *sptr, Client *acptr)
+int reputation_whois(Client *client, Client *target)
 {
-	int reputation = Reputation(acptr);
+	int reputation = Reputation(target);
 
-	if (!IsOper(sptr))
+	if (!IsOper(client))
 		return 0; /* only opers can see this.. */
 	
 	if (reputation > 0)
 	{
-		sendto_one(sptr, NULL, ":%s %d %s %s :is using an IP with a reputation score of %d",
-			me.name, RPL_WHOISSPECIAL, sptr->name,
-			acptr->name, reputation);
+		sendto_one(client, NULL, ":%s %d %s %s :is using an IP with a reputation score of %d",
+			me.name, RPL_WHOISSPECIAL, client->name,
+			target->name, reputation);
 	}
 	return 0;
 }

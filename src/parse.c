@@ -35,22 +35,22 @@ static void remove_unknown(Client *, char *);
 /** Ban user that is "flooding from an unknown connection".
  * This is basically a client sending lots of data but not registering.
  * Note that "lots" in terms of IRC is a few KB's, since more is rather unusual.
- * @param cptr The client.
+ * @param client The client.
  */
-void ban_flooder(Client *cptr)
+void ban_flooder(Client *client)
 {
-	if (find_tkl_exception(TKL_UNKNOWN_DATA_FLOOD, cptr))
+	if (find_tkl_exception(TKL_UNKNOWN_DATA_FLOOD, client))
 	{
 		/* If the user is exempt we will still KILL the client, since it is
 		 * clearly misbehaving. We just won't ZLINE the host, so it won't
 		 * affect any other connections from the same IP address.
 		 */
-		exit_client(cptr, NULL, "Flood from unknown connection");
+		exit_client(client, NULL, "Flood from unknown connection");
 	}
 	else
 	{
 		/* place_host_ban also takes care of removing any other clients with same host/ip */
-		place_host_ban(cptr, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
+		place_host_ban(client, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
 	}
 }
 
@@ -67,22 +67,22 @@ void ban_flooder(Client *cptr)
  * be able to flood at full speed causing potentially many Mbits or even
  * GBits of data to be sent out to other clients.
  *
- * @param cptr   The client.
- * @param cptr   Number of bytes in the command.
+ * @param client    The client.
+ * @param cmdbytes  Number of bytes in the command.
  */
-void parse_addlag(Client *cptr, int cmdbytes)
+void parse_addlag(Client *client, int cmdbytes)
 {
-	if (!IsServer(cptr) && !IsNoFakeLag(cptr) &&
+	if (!IsServer(client) && !IsNoFakeLag(client) &&
 #ifdef FAKELAG_CONFIGURABLE
-		!(cptr->local->class && (cptr->local->class->options & CLASS_OPT_NOFAKELAG)) && 
+		!(client->local->class && (client->local->class->options & CLASS_OPT_NOFAKELAG)) && 
 #endif
-	!ValidatePermissionsForPath("immune:lag",cptr,NULL,NULL,NULL))
+	!ValidatePermissionsForPath("immune:lag",client,NULL,NULL,NULL))
 	{
-		cptr->local->since += (1 + cmdbytes/90);
+		client->local->since += (1 + cmdbytes/90);
 	}		
 }
 
-void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch);
+void parse2(Client *client, Client **fromptr, MessageTag *mtags, char *ch);
 
 /** Parse an incoming line.
  * A line was received previously, buffered via dbuf, now popped from the dbuf stack,
@@ -458,7 +458,7 @@ void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
  * @notes In general you should NOT send anything back if you receive
  *        a numeric, this to prevent creating loops.
  */
-static int do_numeric(int numeric, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int parc, char *parv[])
 {
 	Client *acptr;
 	Channel *chptr;
@@ -469,7 +469,7 @@ static int do_numeric(int numeric, Client *sptr, MessageTag *recv_mtags, int par
 	if ((numeric < 0) || (numeric > 999))
 		return -1;
 
-	if (MyConnect(sptr) && !IsServer(sptr) && !IsUser(sptr) && IsHandshake(sptr) && sptr->serv && !IsServerSent(sptr))
+	if (MyConnect(client) && !IsServer(client) && !IsUser(client) && IsHandshake(client) && client->serv && !IsServerSent(client))
 	{
 		/* This is an outgoing server connect that is currently not yet IsServer() but in 'unknown' state.
 		 * We need to handle a few responses here.
@@ -481,36 +481,36 @@ static int do_numeric(int numeric, Client *sptr, MessageTag *recv_mtags, int par
 		 */
 		if ((numeric == 451) && (parc > 2) && strstr(parv[1], "__PANGPANG__"))
 		{
-			send_server_message(sptr);
+			send_server_message(client);
 			return 0;
 		}
 
 		/* STARTTLS: unknown command */
 		if ((numeric == 451) && (parc > 2) && strstr(parv[1], "STARTTLS"))
 		{
-			if (sptr->serv->conf && (sptr->serv->conf->outgoing.options & CONNECT_INSECURE))
-				start_server_handshake(sptr);
+			if (client->serv->conf && (client->serv->conf->outgoing.options & CONNECT_INSECURE))
+				start_server_handshake(client);
 			else
-				reject_insecure_server(sptr);
+				reject_insecure_server(client);
 			return 0;
 		}
 
 		/* STARTTLS failed */
 		if (numeric == 691)
 		{
-			sendto_umode(UMODE_OPER, "STARTTLS failed for link %s. Please check the other side of the link.", sptr->name);
-			reject_insecure_server(sptr);
+			sendto_umode(UMODE_OPER, "STARTTLS failed for link %s. Please check the other side of the link.", client->name);
+			reject_insecure_server(client);
 			return 0;
 		}
 
 		/* STARTTLS OK */
 		if (numeric == 670)
 		{
-			int ret = client_starttls(sptr);
+			int ret = client_starttls(client);
 			if (ret < 0)
 			{
-				sendto_umode(UMODE_OPER, "STARTTLS handshake failed for link %s. Strange.", sptr->name);
-				reject_insecure_server(sptr);
+				sendto_umode(UMODE_OPER, "STARTTLS handshake failed for link %s. Strange.", client->name);
+				reject_insecure_server(client);
 				return ret;
 			}
 			/* We don't call start_server_handshake() here. First the TLS handshake will
@@ -524,7 +524,7 @@ static int do_numeric(int numeric, Client *sptr, MessageTag *recv_mtags, int par
 	/* Other than the (strange) code from above, we actually
 	 * don't process numerics from non-servers. So return here.
 	 */
-	if ((parc < 2) || BadPtr(parv[1]) || !IsServer(sptr))
+	if ((parc < 2) || BadPtr(parv[1]) || !IsServer(client))
 		return 0;
 
 	/* Remap low number numerics. */
@@ -543,23 +543,23 @@ static int do_numeric(int numeric, Client *sptr, MessageTag *recv_mtags, int par
 		{
 			if (!IsMe(acptr) && IsUser(acptr))
 			{
-				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
-				    sptr->name, numeric, nick, buffer);
+				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s%s",
+				    client->name, numeric, nick, buffer);
 			}
-			else if (IsServer(acptr) && acptr->direction != sptr->direction)
-				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
-				    sptr->name, numeric, nick, buffer);
+			else if (IsServer(acptr) && acptr->direction != client->direction)
+				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s%s",
+				    client->name, numeric, nick, buffer);
 		}
 		else if ((acptr = find_server_quick(nick)))
 		{
-			if (!IsMe(acptr) && acptr->direction != sptr->direction)
-				sendto_prefix_one(acptr, sptr, recv_mtags, ":%s %d %s%s",
-				    sptr->name, numeric, nick, buffer);
+			if (!IsMe(acptr) && acptr->direction != client->direction)
+				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s%s",
+				    client->name, numeric, nick, buffer);
 		}
 		else if ((chptr = find_channel(nick, NULL)))
 		{
-			sendto_channel(chptr, sptr, sptr, 0, 0, SEND_ALL, recv_mtags,
-			               ":%s %d %s%s", sptr->name, numeric, chptr->chname, buffer);
+			sendto_channel(chptr, client, client, 0, 0, SEND_ALL, recv_mtags,
+			               ":%s %d %s%s", client->name, numeric, chptr->chname, buffer);
 		}
 	}
 
@@ -567,21 +567,21 @@ static int do_numeric(int numeric, Client *sptr, MessageTag *recv_mtags, int par
 }
 
 // FIXME: aren't we exiting the wrong client?
-static void cancel_clients(Client *cptr, Client *sptr, char *cmd)
+static void cancel_clients(Client *cptr, Client *client, char *cmd)
 {
-	if (IsServer(cptr) || IsServer(sptr) || IsMe(sptr))
+	if (IsServer(cptr) || IsServer(client) || IsMe(client))
 		return;
 	exit_client(cptr, NULL, "Fake prefix");
 }
 
-static void remove_unknown(Client *cptr, char *sender)
+static void remove_unknown(Client *client, char *sender)
 {
-	if (!IsRegistered(cptr) || IsUser(cptr))
+	if (!IsRegistered(client) || IsUser(client))
 		return;
 	/*
 	 * Not from a server so don't need to worry about it.
 	 */
-	if (!IsServer(cptr))
+	if (!IsServer(client))
 		return;
 
 #ifdef DEVELOP
@@ -593,9 +593,9 @@ static void remove_unknown(Client *cptr, char *sender)
 	 * user on the other server which needs to be removed. -avalon
 	 */
 	if ((isdigit(*sender) && strlen(sender) <= SIDLEN) || strchr(sender, '.'))
-		sendto_one(cptr, NULL, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
-		    me.name, sender, sender, cptr->name);
+		sendto_one(client, NULL, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
+		    me.name, sender, sender, client->name);
 	else
-		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s(?) <- %s)",
-		    me.name, sender, me.name, sender, cptr->name);
+		sendto_one(client, NULL, ":%s KILL %s :%s (%s(?) <- %s)",
+		    me.name, sender, me.name, sender, client->name);
 }

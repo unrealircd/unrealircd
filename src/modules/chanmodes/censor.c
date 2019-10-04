@@ -20,9 +20,9 @@ Cmode_t EXTMODE_CENSOR = 0L;
 
 #define IsCensored(x) ((x)->mode.extmode & EXTMODE_CENSOR)
 
-char *censor_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
-char *censor_pre_local_part(Client *sptr, Channel *chptr, char *text);
-char *censor_pre_local_quit(Client *sptr, char *text);
+char *censor_pre_chanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
+char *censor_pre_local_part(Client *client, Channel *chptr, char *text);
+char *censor_pre_local_quit(Client *client, char *text);
 
 int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int censor_config_run(ConfigFile *, ConfigEntry *, int);
@@ -253,7 +253,7 @@ char *stripbadwords_channel(char *str, int *blocked)
 	return stripbadwords(str, conf_badword_channel, blocked);
 }
 
-char *censor_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
+char *censor_pre_chanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
 	int blocked;
 	Hook *h;
@@ -264,7 +264,7 @@ char *censor_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *
 
 	for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(sptr, chptr, BYPASS_CHANMSG_CENSOR);
+		i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_CENSOR);
 		if (i == HOOK_ALLOW)
 			return text; /* bypass */
 		if (i != HOOK_CONTINUE)
@@ -275,7 +275,7 @@ char *censor_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *
 	if (blocked)
 	{
 		if (!notice)
-			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
+			sendnumeric(client, ERR_CANNOTSENDTOCHAN, chptr->chname,
 				"Swearing is not permitted in this channel", chptr->chname);
 		return NULL;
 	}
@@ -283,7 +283,7 @@ char *censor_pre_chanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *
 	return text;
 }
 
-char *censor_pre_local_part(Client *sptr, Channel *chptr, char *text)
+char *censor_pre_local_part(Client *client, Channel *chptr, char *text)
 {
 	int blocked;
 
@@ -298,37 +298,37 @@ char *censor_pre_local_part(Client *sptr, Channel *chptr, char *text)
 }
 
 /** Is any channel where the user is in +G? */
-static int IsAnyChannelCensored(Client *sptr)
+static int IsAnyChannelCensored(Client *client)
 {
 	Membership *lp;
 
-	for (lp = sptr->user->channel; lp; lp = lp->next)
+	for (lp = client->user->channel; lp; lp = lp->next)
 		if (IsCensored(lp->chptr))
 			return 1;
 	return 0;
 }
 
-char *censor_pre_local_quit(Client *sptr, char *text)
+char *censor_pre_local_quit(Client *client, char *text)
 {
 	int blocked = 0;
 
 	if (!text)
 		return NULL;
 
-	if (IsAnyChannelCensored(sptr))
+	if (IsAnyChannelCensored(client))
 		text = stripbadwords_channel(text, &blocked);
 
 	return blocked ? NULL : text;
 }
 
 // TODO: when stats is modular, make it call this for badwords
-int stats_badwords(Client *sptr, char *para)
+int stats_badwords(Client *client, char *para)
 {
 	ConfigItem_badword *words;
 
 	for (words = conf_badword_channel; words; words = words->next)
 	{
-		sendtxtnumeric(sptr, "c %c %s%s%s %s", words->type & BADW_TYPE_REGEX ? 'R' : 'F',
+		sendtxtnumeric(client, "c %c %s%s%s %s", words->type & BADW_TYPE_REGEX ? 'R' : 'F',
 		           (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
 		           (words->type & BADW_TYPE_FAST_R) ? "*" : "",
 		           words->action == BADWORD_REPLACE ? (words->replace ? words->replace : "<censored>") : "");

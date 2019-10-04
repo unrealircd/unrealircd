@@ -50,8 +50,8 @@ ModDataInfo *silence_md = NULL;
 
 /* Forward declarations */
 int _is_silenced(Client *, Client *);
-int _del_silence(Client *sptr, const char *mask);
-int _add_silence(Client *sptr, const char *mask, int senderr);
+int _del_silence(Client *client, const char *mask);
+int _add_silence(Client *client, const char *mask, int senderr);
 void silence_md_free(ModData *md);
 
 MOD_TEST()
@@ -103,17 +103,16 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_silence)
 {
-	Client *acptr;
 	Silence *s;
 	char action, *p;
 
-	if (MyUser(sptr))
+	if (MyUser(client))
 	{
 		if (parc < 2 || BadPtr(parv[1]))
 		{
-			for (s = SILENCELIST(sptr); s; s = s->next)
-				sendnumeric(sptr, RPL_SILELIST, sptr->name, s->mask);
-			sendnumeric(sptr, RPL_ENDOFSILELIST);
+			for (s = SILENCELIST(client); s; s = s->next)
+				sendnumeric(client, RPL_SILELIST, client->name, s->mask);
+			sendnumeric(client, RPL_ENDOFSILELIST);
 			return;
 		}
 		p = parv[1];
@@ -124,18 +123,18 @@ CMD_FUNC(cmd_silence)
 		} else
 		if (!strchr(p, '@') && !strchr(p, '.') && !strchr(p, '!') && !strchr(p, '*') && !find_person(p, NULL))
 		{
-			sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
+			sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 			return;
 		} else
 		{
 			action = '+';
 		}
 		p = pretty_mask(p);
-		if ((action == '-' && !del_silence(sptr, p)) ||
-		    (action != '-' && !add_silence(sptr, p, 1)))
+		if ((action == '-' && !del_silence(client, p)) ||
+		    (action != '-' && !add_silence(client, p, 1)))
 		{
-			sendto_prefix_one(sptr, sptr, NULL, ":%s SILENCE %c%s",
-			    sptr->name, action, p);
+			sendto_prefix_one(client, client, NULL, ":%s SILENCE %c%s",
+			    client->name, action, p);
 		}
 		return;
 	}
@@ -146,19 +145,19 @@ CMD_FUNC(cmd_silence)
 }
 
 /** Delete item from the silence list.
- * @param sptr The client.
+ * @param client The client.
  * @param mask The mask to delete from the list.
  * @returns 1 if entry was found and deleted, 0 if not found.
  */
-int _del_silence(Client *sptr, const char *mask)
+int _del_silence(Client *client, const char *mask)
 {
 	Silence *s;
 
-	for (s = SILENCELIST(sptr); s; s = s->next)
+	for (s = SILENCELIST(client); s; s = s->next)
 	{
 		if (mycmp(mask, s->mask) == 0)
 		{
-			DelListItemUnchecked(s, moddata_local_client(sptr, silence_md).ptr);
+			DelListItemUnchecked(s, moddata_local_client(client, silence_md).ptr);
 			safe_free(s);
 			return 1;
 		}
@@ -167,25 +166,25 @@ int _del_silence(Client *sptr, const char *mask)
 }
 
 /** Add item to the silence list.
- * @param sptr The client.
+ * @param client The client.
  * @param mask The mask to add to the list.
  * @returns 1 if silence entry added,
  *          0 if not added, eg: full or already covered by an existing silence entry.
  */
-int _add_silence(Client *sptr, const char *mask, int senderr)
+int _add_silence(Client *client, const char *mask, int senderr)
 {
 	Silence *s;
 	int cnt = 0;
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return 0;
 
-	for (s = SILENCELIST(sptr); s; s = s->next)
+	for (s = SILENCELIST(client); s; s = s->next)
 	{
 		if ((strlen(s->mask) > MAXSILELENGTH) || (++cnt >= SILENCE_LIMIT))
 		{
 			if (senderr)
-				sendnumeric(sptr, ERR_SILELISTFULL, mask);
+				sendnumeric(client, ERR_SILELISTFULL, mask);
 			return 0;
 		}
 		else
@@ -198,7 +197,7 @@ int _add_silence(Client *sptr, const char *mask, int senderr)
 	/* Add the new entry */
 	s = safe_alloc(sizeof(Silence)+strlen(mask));
 	strcpy(s->mask, mask); /* safe, allocated above */
-	AddListItemUnchecked(s, moddata_local_client(sptr, silence_md).ptr);
+	AddListItemUnchecked(s, moddata_local_client(client, silence_md).ptr);
 	return 0;
 }
 

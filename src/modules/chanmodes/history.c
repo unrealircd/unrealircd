@@ -54,16 +54,16 @@ static void init_config(void);
 int history_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int history_config_run(ConfigFile *, ConfigEntry *, int);
 static int compare_history_modes(HistoryChanMode *a, HistoryChanMode *b);
-int history_chanmode_is_ok(Client *sptr, Channel *chptr, char mode, char *para, int type, int what);
+int history_chanmode_is_ok(Client *client, Channel *chptr, char mode, char *para, int type, int what);
 void *history_chanmode_put_param(void *r_in, char *param);
 char *history_chanmode_get_param(void *r_in);
-char *history_chanmode_conv_param(char *param, Client *cptr);
+char *history_chanmode_conv_param(char *param, Client *client);
 void history_chanmode_free_param(void *r);
 void *history_chanmode_dup_struct(void *r_in);
 int history_chanmode_sjoin_check(Channel *chptr, void *ourx, void *theirx);
 int history_channel_destroy(Channel *chptr, int *should_destroy);
-int history_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
-int history_join(Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[]);
+int history_chanmsg(Client *client, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
+int history_join(Client *client, Channel *chptr, MessageTag *mtags, char *parv[]);
 EVENT(history_clean);
 
 MOD_TEST()
@@ -338,14 +338,14 @@ int history_parse_chanmode(char *param, int *lines, long *t)
  * Does the user have rights to add/remove this channel mode?
  * Is the supplied mode parameter ok?
  */
-int history_chanmode_is_ok(Client *sptr, Channel *chptr, char mode, char *param, int type, int what)
+int history_chanmode_is_ok(Client *client, Channel *chptr, char mode, char *param, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
-		if (IsUser(sptr) && is_chan_op(sptr, chptr))
+		if (IsUser(client) && is_chan_op(client, chptr))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-			sendnumeric(sptr, ERR_NOTFORHALFOPS, 'H');
+			sendnumeric(client, ERR_NOTFORHALFOPS, 'H');
 		return EX_DENY;
 	} else
 	if (type == EXCHK_PARAM)
@@ -355,7 +355,7 @@ int history_chanmode_is_ok(Client *sptr, Channel *chptr, char mode, char *param,
 
 		if (!history_parse_chanmode(param, &lines, &t))
 		{
-			sendnumeric(sptr, ERR_CANNOTCHANGECHANMODE, 'H', "Invalid syntax for MODE +H. Use +H count:period");
+			sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'H', "Invalid syntax for MODE +H. Use +H count:period");
 			return EX_DENY;
 		}
 		/* Don't bother about lines/t limits here, we will auto-convert in .conv_param */
@@ -368,9 +368,9 @@ int history_chanmode_is_ok(Client *sptr, Channel *chptr, char mode, char *param,
 }
 
 /** Convert channel parameter to something proper.
- * NOTE: cptr may be NULL if called for e.g. set::modes-playback-on-join
+ * NOTE: client may be NULL if called for e.g. set::modes-playback-on-join
  */
-char *history_chanmode_conv_param(char *param, Client *cptr)
+char *history_chanmode_conv_param(char *param, Client *client)
 {
 	static char buf[64];
 	int lines = 0;
@@ -469,7 +469,7 @@ int history_channel_destroy(Channel *chptr, int *should_destroy)
 	return 0;
 }
 
-int history_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
+int history_chanmsg(Client *client, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
 {
 	char buf[512];
 	char source[64];
@@ -488,10 +488,10 @@ int history_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, cha
 	if (prefix)
 		return 0;
 
-	if (IsUser(sptr))
-		snprintf(source, sizeof(source), "%s!%s@%s", sptr->name, sptr->user->username, GetHost(sptr));
+	if (IsUser(client))
+		snprintf(source, sizeof(source), "%s!%s@%s", client->name, client->user->username, GetHost(client));
 	else
-		strlcpy(source, sptr->name, sizeof(source));
+		strlcpy(source, client->name, sizeof(source));
 
 	snprintf(buf, sizeof(buf), ":%s %s %s :%s",
 		source,
@@ -506,16 +506,16 @@ int history_chanmsg(Client *sptr, Channel *chptr, int sendflags, int prefix, cha
 	return 0;
 }
 
-int history_join(Client *sptr, Channel *chptr, MessageTag *mtags, char *parv[])
+int history_join(Client *client, Channel *chptr, MessageTag *mtags, char *parv[])
 {
 	if (!HistoryEnabled(chptr))
 		return 0;
 
-	if (MyUser(sptr))
+	if (MyUser(client))
 	{
 		HistoryChanMode *settings = (HistoryChanMode *)GETPARASTRUCT(chptr, 'H');
 		history_del(chptr->chname, settings->max_lines, settings->max_time);
-		history_request(sptr, chptr->chname, NULL);
+		history_request(client, chptr->chname, NULL);
 	}
 
 	return 0;

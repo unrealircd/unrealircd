@@ -65,13 +65,13 @@ UCounter *ucounter = NULL;
 
 #define MSG_THROTTLE "THROTTLE"
 
-#define GetReputation(acptr)     (moddata_client_get(acptr, "reputation") ? atoi(moddata_client_get(acptr, "reputation")) : 0)
+#define GetReputation(client)     (moddata_client_get(client, "reputation") ? atoi(moddata_client_get(client, "reputation")) : 0)
 
 /* Forward declarations */
 int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int ct_config_posttest(int *errs);
 int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
-int ct_pre_lconnect(Client *sptr);
+int ct_pre_lconnect(Client *client);
 int ct_lconnect(Client *);
 int ct_rconnect(Client *);
 CMD_FUNC(ct_throttle);
@@ -378,7 +378,7 @@ EVENT(connthrottle_evt)
 
 #define THROT_LOCAL 1
 #define THROT_GLOBAL 2
-int ct_pre_lconnect(Client *sptr)
+int ct_pre_lconnect(Client *client)
 {
 	int throttle=0;
 	int score;
@@ -392,13 +392,13 @@ int ct_pre_lconnect(Client *sptr)
 	if (still_reputation_gathering())
 		return 0; /* still gathering reputation data */
 
-	if (cfg.sasl_bypass && IsLoggedIn(sptr))
+	if (cfg.sasl_bypass && IsLoggedIn(client))
 	{
 		/* Allowed in: user authenticated using SASL */
 		return 0;
 	}
 
-	score = GetReputation(sptr);
+	score = GetReputation(client);
 	if (score >= cfg.minimum_reputation_score)
 	{
 		/* Allowed in: IP has enough reputation ("known user") */
@@ -428,7 +428,7 @@ int ct_pre_lconnect(Client *sptr)
 			sendto_realops("[ConnThrottle] For more information see https://www.unrealircd.org/docs/ConnThrottle");
 			ucounter->throttling_banner_displayed = 1;
 		}
-		exit_client(sptr, NULL, cfg.reason);
+		exit_client(client, NULL, cfg.reason);
 		return -1;
 	}
 
@@ -460,7 +460,7 @@ void bump_connect_counter(int local_connect)
 	}
 }
 
-int ct_lconnect(Client *sptr)
+int ct_lconnect(Client *client)
 {
 	int score;
 
@@ -473,14 +473,14 @@ int ct_lconnect(Client *sptr)
 	if (still_reputation_gathering())
 		return 0; /* still gathering reputation data */
 
-	if (cfg.sasl_bypass && IsLoggedIn(sptr))
+	if (cfg.sasl_bypass && IsLoggedIn(client))
 	{
 		/* Allowed in: user authenticated using SASL */
 		ucounter->allowed_sasl++;
 		return 0;
 	}
 
-	score = GetReputation(sptr);
+	score = GetReputation(client);
 	if (score >= cfg.minimum_reputation_score)
 	{
 		/* Allowed in: IP has enough reputation ("known user") */
@@ -496,14 +496,14 @@ int ct_lconnect(Client *sptr)
 	return 0;
 }
 
-int ct_rconnect(Client *sptr)
+int ct_rconnect(Client *client)
 {
 	int score;
 
-	if (sptr->srvptr && !IsSynched(sptr->srvptr))
+	if (client->srvptr && !IsSynched(client->srvptr))
 		return 0; /* Netmerge: skip */
 
-	if (IsULine(sptr))
+	if (IsULine(client))
 		return 0; /* U:lined, such as services: skip */
 
 #if UNREAL_VERSION_TIME >= 201915
@@ -512,14 +512,14 @@ int ct_rconnect(Client *sptr)
 	 * set::disabled-when::start-delay restriction on remote
 	 * servers as well.
 	 */
-	if (sptr->srvptr && sptr->srvptr->serv && sptr->srvptr->serv->boottime &&
-	    (TStime() - sptr->srvptr->serv->boottime < cfg.start_delay))
+	if (client->srvptr && client->srvptr->serv && client->srvptr->serv->boottime &&
+	    (TStime() - client->srvptr->serv->boottime < cfg.start_delay))
 	{
 		return 0;
 	}
 #endif
 
-	score = GetReputation(sptr);
+	score = GetReputation(client);
 	if (score >= cfg.minimum_reputation_score)
 		return 0; /* sufficient reputation: "known-user" */
 
@@ -528,48 +528,48 @@ int ct_rconnect(Client *sptr)
 	return 0;
 }
 
-static void ct_throttle_usage(Client *sptr)
+static void ct_throttle_usage(Client *client)
 {
-	sendnotice(sptr, "Usage: /THROTTLE [ON|OFF|STATUS|RESET]");
-	sendnotice(sptr, " ON:     Enabled protection");
-	sendnotice(sptr, " OFF:    Disables protection");
-	sendnotice(sptr, " STATUS: Status report");
-	sendnotice(sptr, " RESET:  Resets all counters(&more)");
-	sendnotice(sptr, "NOTE: All commands only affect this server. Remote servers are not affected.");
+	sendnotice(client, "Usage: /THROTTLE [ON|OFF|STATUS|RESET]");
+	sendnotice(client, " ON:     Enabled protection");
+	sendnotice(client, " OFF:    Disables protection");
+	sendnotice(client, " STATUS: Status report");
+	sendnotice(client, " RESET:  Resets all counters(&more)");
+	sendnotice(client, "NOTE: All commands only affect this server. Remote servers are not affected.");
 }
 
 CMD_FUNC(ct_throttle)
 {
-	if (!IsOper(sptr))
+	if (!IsOper(client))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		ct_throttle_usage(sptr);
+		ct_throttle_usage(client);
 		return;
 	}
 
 	if (!strcasecmp(parv[1], "STATS") || !strcasecmp(parv[1], "STATUS"))
 	{
-		sendnotice(sptr, "STATUS:");
+		sendnotice(client, "STATUS:");
 		if (ucounter->disabled)
 		{
-			sendnotice(sptr, "Module DISABLED on oper request. To re-enable, type: /THROTTLE ON");
+			sendnotice(client, "Module DISABLED on oper request. To re-enable, type: /THROTTLE ON");
 		} else {
 			if (still_reputation_gathering())
 			{
-				sendnotice(sptr, "Module DISABLED because the 'reputation' module has not gathered enough data yet (set::connthrottle::disabled-when::reputation-gathering).");
+				sendnotice(client, "Module DISABLED because the 'reputation' module has not gathered enough data yet (set::connthrottle::disabled-when::reputation-gathering).");
 			} else
 			if (me.local->firsttime + cfg.start_delay > TStime())
 			{
-				sendnotice(sptr, "Module DISABLED due to start-delay (set::connthrottle::disabled-when::start-delay), will be enabled in %lld second(s).",
+				sendnotice(client, "Module DISABLED due to start-delay (set::connthrottle::disabled-when::start-delay), will be enabled in %lld second(s).",
 					(long long)((me.local->firsttime + cfg.start_delay) - TStime()));
 			} else
 			{
-				sendnotice(sptr, "Module ENABLED");
+				sendnotice(client, "Module ENABLED");
 			}
 		}
 	} else 
@@ -577,33 +577,33 @@ CMD_FUNC(ct_throttle)
 	{
 		if (ucounter->disabled == 1)
 		{
-			sendnotice(sptr, "Already OFF");
+			sendnotice(client, "Already OFF");
 			return;
 		}
 		ucounter->disabled = 1;
 		sendto_realops("[connthrottle] %s (%s@%s) DISABLED the connthrottle module.",
-			sptr->name, sptr->user->username, sptr->user->realhost);
+			client->name, client->user->username, client->user->realhost);
 	} else
 	if (!strcasecmp(parv[1], "ON"))
 	{
 		if (ucounter->disabled == 0)
 		{
-			sendnotice(sptr, "Already ON");
+			sendnotice(client, "Already ON");
 			return;
 		}
 		sendto_realops("[connthrottle] %s (%s@%s) ENABLED the connthrottle module.",
-			sptr->name, sptr->user->username, sptr->user->realhost);
+			client->name, client->user->username, client->user->realhost);
 		ucounter->disabled = 0;
 	} else
 	if (!strcasecmp(parv[1], "RESET"))
 	{
 		memset(ucounter, 0, sizeof(UCounter));
 		sendto_realops("[connthrottle] %s (%s@%s) did a RESET on the stats/counters!!",
-			sptr->name, sptr->user->username, sptr->user->realhost);
+			client->name, client->user->username, client->user->realhost);
 	} else
 	{
-		sendnotice(sptr, "Unknown option '%s'", parv[1]);
-		ct_throttle_usage(sptr);
+		sendnotice(client, "Unknown option '%s'", parv[1]);
+		ct_throttle_usage(client);
 	}
 }
 

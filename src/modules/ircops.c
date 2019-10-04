@@ -111,11 +111,11 @@ CMD_FUNC(cmd_ircops)
 		if (IsULine(acptr) || !IsUser(acptr) || !IsOper(acptr))
 			continue;
 		/* Don't list +H users */
-		if (!IsOper(sptr) && IsHideOper(acptr))
+		if (!IsOper(client) && IsHideOper(acptr))
 			continue;
 
-		sendto_one(sptr, NULL, ":%s %d %s :\2%s\2 is %s on %s" "%s",
-			me.name, RPL_TEXT, sptr->name,
+		sendto_one(client, NULL, ":%s %d %s :\2%s\2 is %s on %s" "%s",
+			me.name, RPL_TEXT, client->name,
 			acptr->name,
 			"an IRC Operator", /* find_otype(acptr->umodes), */
 			acptr->user->server,
@@ -136,6 +136,6 @@ CMD_FUNC(cmd_ircops)
 		opers, opers != 1 ? "s" : "",
 		aways);
 
-	sendnumericfmt(sptr, RPL_TEXT, "%s", buf);
-	sendnumericfmt(sptr, RPL_TEXT, "End of /IRCOPS list");
+	sendnumericfmt(client, RPL_TEXT, "%s", buf);
+	sendnumericfmt(client, RPL_TEXT, "End of /IRCOPS list");
 }

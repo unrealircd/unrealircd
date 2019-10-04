@@ -59,29 +59,29 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_dccdeny)
 {
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 
-	if (!ValidatePermissionsForPath("server-ban:dccdeny",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server-ban:dccdeny",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	if ((parc < 2) || BadPtr(parv[2]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "DCCDENY");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "DCCDENY");
 		return;
 	}
 
 	if (!Find_deny_dcc(parv[1]))
 	{
-		sendto_ops("%s added a temp dccdeny for %s (%s)", sptr->name,
+		sendto_ops("%s added a temp dccdeny for %s (%s)", client->name,
 		    parv[1], parv[2]);
 		DCCdeny_add(parv[1], parv[2], DCCDENY_HARD, CONF_BAN_TYPE_TEMPORARY);
 		return;
 	} else
 	{
-		sendnotice(sptr, "*** %s already has a dccdeny", parv[1]);
+		sendnotice(client, "*** %s already has a dccdeny", parv[1]);
 	}
 }

@@ -60,12 +60,12 @@ CMD_FUNC(cmd_vhost)
 	char *login, *password;
 	char olduser[USERLEN+1];
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "VHOST");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "VHOST");
 		return;
 
 	}
@@ -83,30 +83,30 @@ CMD_FUNC(cmd_vhost)
 	{
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
-		    login, sptr->name,
-		    sptr->user->username,
-		    sptr->user->realhost);
-		sendnotice(sptr, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
+		    login, client->name,
+		    client->user->username,
+		    client->user->realhost);
+		sendnotice(client, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
 		return;
 	}
 	
-	if (!unreal_mask_match(sptr, vhost->mask))
+	if (!unreal_mask_match(client, vhost->mask))
 	{
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - host does not match",
-		    login, sptr->name, sptr->user->username, sptr->user->realhost);
-		sendnotice(sptr, "*** No vHost lines available for your host");
+		    login, client->name, client->user->username, client->user->realhost);
+		sendnotice(client, "*** No vHost lines available for your host");
 		return;
 	}
 
-	if (!Auth_Check(sptr, vhost->auth, password))
+	if (!Auth_Check(client, vhost->auth, password))
 	{
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
-		    login, sptr->name,
-		    sptr->user->username,
-		    sptr->user->realhost);
-		sendnotice(sptr, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
+		    login, client->name,
+		    client->user->username,
+		    client->user->realhost);
+		sendnotice(client, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
 		return;
 	}
 
@@ -114,18 +114,18 @@ CMD_FUNC(cmd_vhost)
 	switch (UHOST_ALLOWED)
 	{
 		case UHALLOW_NEVER:
-			if (MyUser(sptr))
+			if (MyUser(client))
 			{
-				sendnotice(sptr, "*** /vhost is disabled");
+				sendnotice(client, "*** /vhost is disabled");
 				return;
 			}
 			break;
 		case UHALLOW_ALWAYS:
 			break;
 		case UHALLOW_NOCHANS:
-			if (MyUser(sptr) && sptr->user->joined)
+			if (MyUser(client) && client->user->joined)
 			{
-				sendnotice(sptr, "*** /vhost can not be used while you are on a channel");
+				sendnotice(client, "*** /vhost can not be used while you are on a channel");
 				return;
 			}
 			break;
@@ -136,37 +136,37 @@ CMD_FUNC(cmd_vhost)
 
 	/* All checks passed, now let's go ahead and change the host */
 
-	userhost_save_current(sptr);
+	userhost_save_current(client);
 
-	safe_strdup(sptr->user->virthost, vhost->virthost);
+	safe_strdup(client->user->virthost, vhost->virthost);
 	if (vhost->virtuser)
 	{
-		strcpy(olduser, sptr->user->username);
-		strlcpy(sptr->user->username, vhost->virtuser, USERLEN);
-		sendto_server(sptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name,
-		    sptr->user->username);
+		strcpy(olduser, client->user->username);
+		strlcpy(client->user->username, vhost->virtuser, USERLEN);
+		sendto_server(client, 0, 0, NULL, ":%s SETIDENT %s", client->name,
+		    client->user->username);
 	}
-	sptr->umodes |= UMODE_HIDE;
-	sptr->umodes |= UMODE_SETHOST;
-	sendto_server(sptr, 0, 0, NULL, ":%s SETHOST %s", sptr->name, sptr->user->virthost);
-	sendto_one(sptr, NULL, ":%s MODE %s :+tx", sptr->name, sptr->name);
+	client->umodes |= UMODE_HIDE;
+	client->umodes |= UMODE_SETHOST;
+	sendto_server(client, 0, 0, NULL, ":%s SETHOST %s", client->name, client->user->virthost);
+	sendto_one(client, NULL, ":%s MODE %s :+tx", client->name, client->name);
 	if (vhost->swhois)
 	{
 		SWhois *s;
 		for (s = vhost->swhois; s; s = s->next)
-			swhois_add(sptr, "vhost", -100, s->line, &me, NULL);
+			swhois_add(client, "vhost", -100, s->line, &me, NULL);
 	}
-	sendnumeric(sptr, RPL_HOSTHIDDEN, vhost->virthost);
-	sendnotice(sptr, "*** Your vhost is now %s%s%s",
+	sendnumeric(client, RPL_HOSTHIDDEN, vhost->virthost);
+	sendnotice(client, "*** Your vhost is now %s%s%s",
 		vhost->virtuser ? vhost->virtuser : "",
 		vhost->virtuser ? "@" : "",
 		vhost->virthost);
 	sendto_snomask(SNO_VHOST,
 	    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s%s%s",
-	    login, sptr->name,
-	    vhost->virtuser ? olduser : sptr->user->username,
-	    sptr->user->realhost, vhost->virtuser ? vhost->virtuser : "", 
+	    login, client->name,
+	    vhost->virtuser ? olduser : client->user->username,
+	    client->user->realhost, vhost->virtuser ? vhost->virtuser : "", 
 		vhost->virtuser ? "@" : "", vhost->virthost);
 
-	userhost_changed(sptr);
+	userhost_changed(client);
 }

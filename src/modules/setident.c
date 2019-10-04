@@ -66,8 +66,8 @@ CMD_FUNC(cmd_setident)
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		if (MyConnect(sptr))
-			sendnotice(sptr, "*** Syntax: /SETIDENT <new ident>");
+		if (MyConnect(client))
+			sendnotice(client, "*** Syntax: /SETIDENT <new ident>");
 		return;
 	}
 
@@ -78,16 +78,16 @@ CMD_FUNC(cmd_setident)
 		case UHALLOW_ALWAYS:
 			break;
 		case UHALLOW_NEVER:
-			if (MyUser(sptr))
+			if (MyUser(client))
 			{
-				sendnotice(sptr, "*** /SETIDENT is disabled");
+				sendnotice(client, "*** /SETIDENT is disabled");
 				return;
 			}
 			break;
 		case UHALLOW_NOCHANS:
-			if (MyUser(sptr) && sptr->user->joined)
+			if (MyUser(client) && client->user->joined)
 			{
-				sendnotice(sptr, "*** /SETIDENT cannot be used while you are on a channel");
+				sendnotice(client, "*** /SETIDENT cannot be used while you are on a channel");
 				return;
 			}
 			break;
@@ -98,8 +98,8 @@ CMD_FUNC(cmd_setident)
 
 	if (strlen(vident) > USERLEN)
 	{
-		if (MyConnect(sptr))
-			sendnotice(sptr, "*** /SETIDENT Error: Usernames are limited to %i characters.", USERLEN);
+		if (MyConnect(client))
+			sendnotice(client, "*** /SETIDENT Error: Usernames are limited to %i characters.", USERLEN);
 		return;
 	}
 
@@ -110,22 +110,22 @@ CMD_FUNC(cmd_setident)
 			continue;
 		if (!isallowed(*s))
 		{
-			sendnotice(sptr, "*** /SETIDENT Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.'.");
+			sendnotice(client, "*** /SETIDENT Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.'.");
 			return;
 		}
 	}
 
-	userhost_save_current(sptr);
+	userhost_save_current(client);
 
-	strlcpy(sptr->user->username, vident, sizeof(sptr->user->username));
+	strlcpy(client->user->username, vident, sizeof(client->user->username));
 
-	sendto_server(sptr, 0, 0, NULL, ":%s SETIDENT %s", sptr->name, parv[1]);
+	sendto_server(client, 0, 0, NULL, ":%s SETIDENT %s", client->name, parv[1]);
 
-	userhost_changed(sptr);
+	userhost_changed(client);
 
-	if (MyConnect(sptr))
+	if (MyConnect(client))
 	{
-		sendnotice(sptr, "Your nick!user@host-mask is now (%s!%s@%s)",
-		                 sptr->name, sptr->user->username, GetHost(sptr));
+		sendnotice(client, "Your nick!user@host-mask is now (%s!%s@%s)",
+		                 client->name, client->user->username, GetHost(client));
 	}
 }

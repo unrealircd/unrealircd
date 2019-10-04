@@ -47,12 +47,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *privdeaf_checkmsg(Client *sptr, Client *acptr, char *text, int notice)
+char *privdeaf_checkmsg(Client *client, Client *target, char *text, int notice)
 {
-	if ((acptr->umodes & UMODE_PRIVDEAF) && !IsOper(sptr) &&
-	    !IsULine(sptr) && !IsServer(sptr) && (sptr != acptr))
+	if ((target->umodes & UMODE_PRIVDEAF) && !IsOper(client) &&
+	    !IsULine(client) && !IsServer(client) && (client != target))
 	{
-		sendnotice(sptr, "Message to '%s' not delivered: User does not accept private messages", acptr->name);
+		sendnotice(client, "Message to '%s' not delivered: User does not accept private messages", target->name);
 		return NULL;
 	} else
 		return text;

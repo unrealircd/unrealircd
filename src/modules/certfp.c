@@ -24,9 +24,9 @@ ModuleHeader MOD_HEADER
 void certfp_free(ModData *m);
 char *certfp_serialize(ModData *m);
 void certfp_unserialize(char *str, ModData *m);
-int certfp_handshake(Client *sptr);
-int certfp_connect(Client *sptr);
-int certfp_whois(Client *sptr, Client *acptr);
+int certfp_handshake(Client *client);
+int certfp_connect(Client *client);
+int certfp_whois(Client *client, Client *target);
 
 ModDataInfo *certfp_md; /* Module Data structure which we acquire */
 
@@ -71,7 +71,7 @@ MOD_UNLOAD()
 /* 
  * Obtain client's fingerprint.
  */
-char *get_fingerprint_for_client(Client *cptr)
+char *get_fingerprint_for_client(Client *client)
 {
 	unsigned int n;
 	unsigned int l;
@@ -81,10 +81,10 @@ char *get_fingerprint_for_client(Client *cptr)
 	const EVP_MD *digest = EVP_sha256();
 	X509 *x509_clientcert = NULL;
 
-	if (!MyConnect(cptr) || !cptr->local->ssl)
+	if (!MyConnect(client) || !client->local->ssl)
 		return NULL;
 	
-	x509_clientcert = SSL_get_peer_certificate(cptr->local->ssl);
+	x509_clientcert = SSL_get_peer_certificate(client->local->ssl);
 
 	if (x509_clientcert)
 	{
@@ -103,39 +103,39 @@ char *get_fingerprint_for_client(Client *cptr)
 	return NULL;
 }
 
-int certfp_handshake(Client *acptr)
+int certfp_handshake(Client *client)
 {
-	if (acptr->local->ssl)
+	if (client->local->ssl)
 	{
-		char *fp = get_fingerprint_for_client(acptr);
+		char *fp = get_fingerprint_for_client(client);
 
 		if (!fp)
 			return 0;
 
-		moddata_client_set(acptr, "certfp", fp); /* set & broadcast */
+		moddata_client_set(client, "certfp", fp); /* set & broadcast */
 	}
 	return 0;
 }
 
-int certfp_connect(Client *acptr)
+int certfp_connect(Client *client)
 {
-	if (IsSecure(acptr))
+	if (IsSecure(client))
 	{
-		char *fp = moddata_client_get(acptr, "certfp");
+		char *fp = moddata_client_get(client, "certfp");
 	
 		if (fp && !iConf.no_connect_tls_info)
-			sendnotice(acptr, "*** Your TLS certificate fingerprint is %s", fp);
+			sendnotice(client, "*** Your TLS certificate fingerprint is %s", fp);
 	}
 
 	return 0;
 }
 
-int certfp_whois(Client *sptr, Client *acptr)
+int certfp_whois(Client *client, Client *target)
 {
-	char *fp = moddata_client_get(acptr, "certfp");
+	char *fp = moddata_client_get(target, "certfp");
 	
 	if (fp)
-		sendnumeric(sptr, RPL_WHOISCERTFP, acptr->name, fp);
+		sendnumeric(client, RPL_WHOISCERTFP, target->name, fp);
 	return 0;
 }
 

@@ -55,7 +55,7 @@ ClientCapability *ClientCapabilityFindReal(const char *token)
  * @return Returns the handle to the clicap token if it was found,
  *         otherwise NULL is returned.
  */
-ClientCapability *ClientCapabilityFind(const char *token, Client *sptr)
+ClientCapability *ClientCapabilityFind(const char *token, Client *client)
 {
 	ClientCapability *clicap;
 
@@ -63,7 +63,7 @@ ClientCapability *ClientCapabilityFind(const char *token, Client *sptr)
 	{
 		if (!strcasecmp(token, clicap->name))
 		{
-			if (clicap->visible && !clicap->visible(sptr))
+			if (clicap->visible && !clicap->visible(client))
 				return NULL; /* hidden */
 			return clicap;
 		}
@@ -86,14 +86,14 @@ long ClientCapabilityBit(const char *token)
 	return clicap ? clicap->cap : 0L;
 }
 
-void SetCapability(Client *acptr, const char *token)
+void SetCapability(Client *client, const char *token)
 {
-	acptr->local->caps |= ClientCapabilityBit(token);
+	client->local->caps |= ClientCapabilityBit(token);
 }
 
-void ClearCapability(Client *acptr, const char *token)
+void ClearCapability(Client *client, const char *token)
 {
-	acptr->local->caps &= ~(ClientCapabilityBit(token));
+	client->local->caps &= ~(ClientCapabilityBit(token));
 }
 
 long clicap_allocate_cap(void)
@@ -290,18 +290,18 @@ void clicap_pre_rehash(void)
 /** Clear 'proto' protocol for all users */
 void clear_cap_for_users(long cap)
 {
-	Client *acptr;
+	Client *client;
 
 	if (cap == 0)
 		return;
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
-		acptr->local->caps &= ~cap;
+		client->local->caps &= ~cap;
 	}
-	list_for_each_entry(acptr, &unknown_list, lclient_node)
+	list_for_each_entry(client, &unknown_list, lclient_node)
 	{
-		acptr->local->caps &= ~cap;
+		client->local->caps &= ~cap;
 	}
 }
 

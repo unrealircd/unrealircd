@@ -116,11 +116,11 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 else {\
 	MessageTag *mtags = NULL; \
 	/* for old servers without sjoin: */ \
-	sendto_server(sptr, 0, PROTO_SJOIN, NULL, ":%s MODE %s %s %s %lld", sptr->name, chptr->chname,\
+	sendto_server(client, 0, PROTO_SJOIN, NULL, ":%s MODE %s %s %s %lld", client->name, chptr->chname,\
 		modebuf, parabuf, (long long)chptr->creationtime); \
-	new_message_special(sptr, recv_mtags, &mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf); \
-	sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags, \
-	               ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf); \
+	new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, chptr->chname, modebuf, parabuf); \
+	sendto_channel(chptr, client, NULL, 0, 0, SEND_LOCAL, mtags, \
+	               ":%s MODE %s %s %s", client->name, chptr->chname, modebuf, parabuf); \
 	free_message_tags(mtags); \
 	strcpy(parabuf,param);\
 	/* modebuf[0] should stay what it was ('+' or '-') */ \
@@ -158,7 +158,7 @@ CMD_FUNC(cmd_sjoin)
 	long modeflags;
 	char queue_s=0, queue_c=0; /* oh this is soooooo ugly :p */
 	
-	if (!IsServer(sptr) || parc < 4)
+	if (!IsServer(client) || parc < 4)
 		return;
 
 	if (!IsChannelName(parv[2]))
@@ -166,16 +166,16 @@ CMD_FUNC(cmd_sjoin)
 
 	merge = nopara = nomode = removeours = removetheirs = 0;
 
-	if (SupportSJOIN(sptr->direction) && !SupportSJ3(sptr->direction) && !strncmp(parv[4], "<none>", 6))
+	if (SupportSJOIN(client->direction) && !SupportSJ3(client->direction) && !strncmp(parv[4], "<none>", 6))
 		nopara = 1;
 
-	if (SupportSJOIN2(sptr->direction) && !SupportSJ3(sptr->direction) && !strncmp(parv[4], "<->", 6))
+	if (SupportSJOIN2(client->direction) && !SupportSJ3(client->direction) && !strncmp(parv[4], "<->", 6))
 		nopara = 1;
 
-	if (SupportSJ3(sptr->direction) && (parc < 6))
+	if (SupportSJ3(client->direction) && (parc < 6))
 		nopara = 1;
 
-	if (SupportSJ3(sptr->direction))
+	if (SupportSJ3(client->direction))
 	{
 		if (parc < 5)
 			nomode = 1;
@@ -186,7 +186,7 @@ CMD_FUNC(cmd_sjoin)
 			nomode = 1;
 	}
 
-	chptr = get_channel(sptr, parv[2], CREATE);
+	chptr = get_channel(client, parv[2], CREATE);
 
 	ts = (time_t)atol(parv[1]);
 
@@ -221,7 +221,7 @@ CMD_FUNC(cmd_sjoin)
 		if (ts != 0)
 			sendto_ops
 			    ("Warning! Possible desynch: SJOIN for channel %s has a fishy timestamp (%lld) [%s/%s]",
-			    chptr->chname, (long long)ts, sptr->name, sptr->direction->name);
+			    chptr->chname, (long long)ts, client->name, client->direction->name);
 	}
 
 	parabuf[0] = '\0';
@@ -229,7 +229,7 @@ CMD_FUNC(cmd_sjoin)
 	modebuf[1] = '\0';
 
 	/* Grab current modes -> modebuf & parabuf */
-	channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
+	channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
 
 	/* Do we need to remove all our modes, bans/exempt/inves lists and -vhoaq our users? */
 	if (removeours)
@@ -244,19 +244,19 @@ CMD_FUNC(cmd_sjoin)
 		{
 			MessageTag *mtags = NULL;
 			ap = mp2parv(modebuf, parabuf);
-			set_mode(chptr, sptr, ap->parc, ap->parv, &pcount, pvar, 0);
+			set_mode(chptr, client, ap->parc, ap->parv, &pcount, pvar, 0);
 
 			/* for old servers without SJOIN: */
-			sendto_server(sptr, 0, PROTO_SJOIN, mtags,
+			sendto_server(client, 0, PROTO_SJOIN, mtags,
 			    ":%s MODE %s %s %s %lld",
-			    sptr->name, chptr->chname, modebuf, parabuf,
+			    client->name, chptr->chname, modebuf, parabuf,
 			    (long long)chptr->creationtime);
 
 			/* send to all local users: */
-			new_message_special(sptr, recv_mtags, &mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
-			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
+			new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, chptr->chname, modebuf, parabuf);
+			sendto_channel(chptr, client, NULL, 0, 0, SEND_LOCAL, mtags,
 			               ":%s MODE %s %s %s",
-			               sptr->name, chptr->chname, modebuf, parabuf);
+			               client->name, chptr->chname, modebuf, parabuf);
 			free_message_tags(mtags);
 		}
 		/* remove bans */
@@ -294,7 +294,7 @@ CMD_FUNC(cmd_sjoin)
 		}
 		for (lp = chptr->members; lp; lp = lp->next)
 		{
-			lp2 = find_membership_link(lp->cptr->user->channel, chptr);
+			lp2 = find_membership_link(lp->client->user->channel, chptr);
 			if (!lp2)
 			{
 				sendto_realops("Oops! chptr->members && !find_membership_link");
@@ -303,27 +303,27 @@ CMD_FUNC(cmd_sjoin)
 			if (lp->flags & MODE_CHANOWNER)
 			{
 				lp->flags &= ~MODE_CHANOWNER;
-				Addit('q', lp->cptr->name);
+				Addit('q', lp->client->name);
 			}
 			if (lp->flags & MODE_CHANADMIN)
 			{
 				lp->flags &= ~MODE_CHANADMIN;
-				Addit('a', lp->cptr->name);
+				Addit('a', lp->client->name);
 			}
 			if (lp->flags & MODE_CHANOP)
 			{
 				lp->flags &= ~MODE_CHANOP;
-				Addit('o', lp->cptr->name);
+				Addit('o', lp->client->name);
 			}
 			if (lp->flags & MODE_HALFOP)
 			{
 				lp->flags &= ~MODE_HALFOP;
-				Addit('h', lp->cptr->name);
+				Addit('h', lp->client->name);
 			}
 			if (lp->flags & MODE_VOICE)
 			{
 				lp->flags &= ~MODE_VOICE;
-				Addit('v', lp->cptr->name);
+				Addit('v', lp->client->name);
 			}
 			/* Those should always match anyways  */
 			lp2->flags = lp->flags;
@@ -335,21 +335,21 @@ CMD_FUNC(cmd_sjoin)
 			modebuf[b] = '\0';
 
 			/* for old servers without sjoin: */
-			sendto_server(sptr, 0, PROTO_SJOIN, mtags,
+			sendto_server(client, 0, PROTO_SJOIN, mtags,
 			    ":%s MODE %s %s %s %lld",
-			    sptr->name, chptr->chname,
+			    client->name, chptr->chname,
 			    modebuf, parabuf, (long long)chptr->creationtime);
 
 			/* send to all local users: */
-			new_message_special(sptr, recv_mtags, &mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
-			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
+			new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, chptr->chname, modebuf, parabuf);
+			sendto_channel(chptr, client, NULL, 0, 0, SEND_LOCAL, mtags,
 			               ":%s MODE %s %s %s",
-			               sptr->name, chptr->chname, modebuf, parabuf);
+			               client->name, chptr->chname, modebuf, parabuf);
 			free_message_tags(mtags);
 		}
 
 		/* since we're dropping our modes, we want to clear the mlock as well. --nenolod */
-		set_channel_mlock(sptr, chptr, NULL, FALSE);
+		set_channel_mlock(client, chptr, NULL, FALSE);
 	}
 	/* Mode setting done :), now for our beloved clients */
 	parabuf[0] = 0;
@@ -373,13 +373,13 @@ CMD_FUNC(cmd_sjoin)
 
 	/* Now process adding of users & adding of list modes (bans/exempt/invex) */
 
-	snprintf(nick_buf, sizeof nick_buf, ":%s SJOIN %lld %s :", sptr->name, (long long)ts, sj3_parabuf);
-	snprintf(uid_buf, sizeof uid_buf, ":%s SJOIN %lld %s :", ID(sptr), (long long)ts, sj3_parabuf);
-	snprintf(uid_sjsby_buf, sizeof uid_sjsby_buf, ":%s SJOIN %lld %s :", ID(sptr), (long long)ts, sj3_parabuf);
+	snprintf(nick_buf, sizeof nick_buf, ":%s SJOIN %lld %s :", client->name, (long long)ts, sj3_parabuf);
+	snprintf(uid_buf, sizeof uid_buf, ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
+	snprintf(uid_sjsby_buf, sizeof uid_sjsby_buf, ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
 
 	for (s = strtoken(&saved, cbuf, " "); s; s = strtoken(&saved, NULL, " "))
 	{
-		char *setby = sptr->name; /**< Set by (nick, nick!user@host, or server name) */
+		char *setby = client->name; /**< Set by (nick, nick!user@host, or server name) */
 		time_t setat = TStime(); /**< Set at timestamp */
 		int sjsby_info = 0; /**< Set to 1 if we receive SJSBY info to alter the above 2 vars */
 
@@ -390,7 +390,7 @@ CMD_FUNC(cmd_sjoin)
 		/* UnrealIRCd 4.2.2 and later support "SJSBY" which allows communicating
 		 * setat/setby information for bans, ban exempts and invite exceptions.
 		 */
-		if (SupportSJSBY(sptr->direction) && (*tp == '<'))
+		if (SupportSJSBY(client->direction) && (*tp == '<'))
 		{
 			/* Special prefix to communicate timestamp and setter:
 			 * "<" + timestamp + "," + nick[!user@host] + ">" + normal SJOIN stuff
@@ -401,7 +401,7 @@ CMD_FUNC(cmd_sjoin)
 			{
 				/* this obviously should never happen */
 				sendto_ops("Malformed SJOIN piece from %s for channel %s: %s",
-					sptr->name, chptr->chname, tp);
+					client->name, chptr->chname, tp);
 				continue;
 			}
 			*end++ = '\0';
@@ -411,7 +411,7 @@ CMD_FUNC(cmd_sjoin)
 			{
 				/* missing setby parameter */
 				sendto_ops("Malformed SJOIN piece from %s for channel %s: %s",
-					sptr->name, chptr->chname, tp);
+					client->name, chptr->chname, tp);
 				continue;
 			}
 			*p++ = '\0';
@@ -511,7 +511,7 @@ getnick:
 			if (!(acptr = find_person(nick, NULL)))
 				continue;
 
-			if (acptr->direction != sptr->direction)
+			if (acptr->direction != client->direction)
 			{
 				if (IsMember(acptr, chptr))
 				{
@@ -519,14 +519,14 @@ getnick:
 					continue;
 				}
 			
-				sendto_one(sptr, NULL,
+				sendto_one(client, NULL,
 				    ":%s KICK %s %s :Fake direction",
 				    me.name, chptr->chname,
 				    acptr->name);
 				sendto_realops
 				    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
-				    nick, sptr->srvptr->name,
-				    sptr->name, chptr->chname);
+				    nick, client->srvptr->name,
+				    client->name, chptr->chname);
 				continue;
 			}
 
@@ -549,7 +549,7 @@ getnick:
 			}
 
 			/* old servers without SJOIN: */
-			sendto_server(sptr, 0, PROTO_SJOIN, NULL, ":%s JOIN %s", acptr->name, chptr->chname);
+			sendto_server(client, 0, PROTO_SJOIN, NULL, ":%s JOIN %s", acptr->name, chptr->chname);
 
 			CheckStatus('q', CHFL_CHANOWNER);
 			CheckStatus('a', CHFL_CHANADMIN);
@@ -560,8 +560,8 @@ getnick:
 			if (strlen(nick_buf) + strlen(prefix) + strlen(acptr->name) > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(sptr, PROTO_SJOIN | PROTO_SJ3, PROTO_SID, recv_mtags, "%s", nick_buf);
-				snprintf(nick_buf, sizeof(nick_buf), ":%s SJOIN %lld %s :", sptr->name, (long long)ts, sj3_parabuf);
+				sendto_server(client, PROTO_SJOIN | PROTO_SJ3, PROTO_SID, recv_mtags, "%s", nick_buf);
+				snprintf(nick_buf, sizeof(nick_buf), ":%s SJOIN %lld %s :", client->name, (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(nick_buf) + strlen(prefix) + strlen(acptr->name) > BUFSIZE - 5)
 				{
@@ -576,8 +576,8 @@ getnick:
 			if (strlen(uid_buf) + strlen(prefix) + IDLEN > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(sptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
-				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", ID(sptr), (long long)ts, sj3_parabuf);
+				sendto_server(client, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
+				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_buf) + strlen(prefix) + strlen(ID(acptr)) > BUFSIZE - 5)
 				{
@@ -592,8 +592,8 @@ getnick:
 			if (strlen(uid_sjsby_buf) + strlen(prefix) + IDLEN > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(sptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, PROTO_SJSBY, recv_mtags, "%s", uid_sjsby_buf);
-				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", ID(sptr), (long long)ts, sj3_parabuf);
+				sendto_server(client, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, PROTO_SJSBY, recv_mtags, "%s", uid_sjsby_buf);
+				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_sjsby_buf) + strlen(prefix) + strlen(ID(acptr)) > BUFSIZE - 5)
 				{
@@ -619,7 +619,7 @@ getnick:
 				if ((nick[0] != '~') && (!strchr(nick, '!') || !strchr(nick, '@') || (nick[0] == '!')))
 					continue;
 				
-				str = clean_ban_mask(nick, MODE_ADD, sptr);
+				str = clean_ban_mask(nick, MODE_ADD, client);
 				if (!str)
 					continue; /* invalid ban syntax */
 				strlcpy(nick, str, sizeof(nick));
@@ -628,21 +628,21 @@ getnick:
 			/* Adding of list modes */
 			if (modeflags & CHFL_BAN)
 			{
-				if (add_listmode_ex(&chptr->banlist, sptr, chptr, nick, setby, setat) != -1)
+				if (add_listmode_ex(&chptr->banlist, client, chptr, nick, setby, setat) != -1)
 				{
 					Addit('b', nick);
 				}
 			}
 			if (modeflags & CHFL_EXCEPT)
 			{
-				if (add_listmode_ex(&chptr->exlist, sptr, chptr, nick, setby, setat) != -1)
+				if (add_listmode_ex(&chptr->exlist, client, chptr, nick, setby, setat) != -1)
 				{
 					Addit('e', nick);
 				}
 			}
 			if (modeflags & CHFL_INVEX)
 			{
-				if (add_listmode_ex(&chptr->invexlist, sptr, chptr, nick, setby, setat) != -1)
+				if (add_listmode_ex(&chptr->invexlist, client, chptr, nick, setby, setat) != -1)
 				{
 					Addit('I', nick);
 				}
@@ -651,8 +651,8 @@ getnick:
 			if (strlen(nick_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(sptr, PROTO_SJOIN | PROTO_SJ3, PROTO_SID, recv_mtags, "%s", nick_buf);
-				snprintf(nick_buf, sizeof(nick_buf), ":%s SJOIN %lld %s :", sptr->name, (long long)ts, sj3_parabuf);
+				sendto_server(client, PROTO_SJOIN | PROTO_SJ3, PROTO_SID, recv_mtags, "%s", nick_buf);
+				snprintf(nick_buf, sizeof(nick_buf), ":%s SJOIN %lld %s :", client->name, (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(nick_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 5)
 				{
@@ -667,8 +667,8 @@ getnick:
 			if (strlen(uid_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(sptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
-				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", ID(sptr), (long long)ts, sj3_parabuf);
+				sendto_server(client, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
+				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 5)
 				{
@@ -689,8 +689,8 @@ getnick:
 			if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(sptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID | PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
-				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", ID(sptr), (long long)ts, sj3_parabuf);
+				sendto_server(client, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID | PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
+				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 5)
 				{
@@ -706,9 +706,9 @@ getnick:
 
 	/* Send out any possible remainder.. */
 	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3", ts, parabuf, parv[parc - 1]));
-	sendto_server(sptr, PROTO_SJOIN | PROTO_SJ3, PROTO_SID, recv_mtags, "%s", nick_buf);
-	sendto_server(sptr, PROTO_SID | PROTO_SJOIN | PROTO_SJ3, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
-	sendto_server(sptr, PROTO_SID | PROTO_SJOIN | PROTO_SJ3 | PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
+	sendto_server(client, PROTO_SJOIN | PROTO_SJ3, PROTO_SID, recv_mtags, "%s", nick_buf);
+	sendto_server(client, PROTO_SID | PROTO_SJOIN | PROTO_SJ3, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
+	sendto_server(client, PROTO_SID | PROTO_SJOIN | PROTO_SJ3 | PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
 
 	if (modebuf[1])
 	{
@@ -717,14 +717,14 @@ getnick:
 		modebuf[b] = '\0';
 
 		/* for old servers without sjoin: */
-		sendto_server(sptr, 0, PROTO_SJOIN, mtags,
+		sendto_server(client, 0, PROTO_SJOIN, mtags,
 		    ":%s MODE %s %s %s %lld",
-		    sptr->name, chptr->chname, modebuf, parabuf,
+		    client->name, chptr->chname, modebuf, parabuf,
 		    (long long)chptr->creationtime);
-		new_message_special(sptr, recv_mtags, &mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
-		sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
+		new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, chptr->chname, modebuf, parabuf);
+		sendto_channel(chptr, client, NULL, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
-		               sptr->name, chptr->chname, modebuf, parabuf);
+		               client->name, chptr->chname, modebuf, parabuf);
 		free_message_tags(mtags);
 	}
 	
@@ -746,17 +746,17 @@ getnick:
 		strlcpy(paraback, parabuf, sizeof paraback);
 		ap = mp2parv(modebuf, parabuf);
 
-		set_mode(chptr, sptr, ap->parc, ap->parv, &pcount, pvar, 0);
+		set_mode(chptr, client, ap->parc, ap->parv, &pcount, pvar, 0);
 
 		/* for old servers without SJOIN: */
-		sendto_server(sptr, 0, PROTO_SJOIN, NULL,
+		sendto_server(client, 0, PROTO_SJOIN, NULL,
 		    ":%s MODE %s %s %s %lld",
-		    sptr->name, chptr->chname, modebuf, paraback,
+		    client->name, chptr->chname, modebuf, paraback,
 		    (long long)chptr->creationtime);
-		new_message_special(sptr, recv_mtags, &mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
-		sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
+		new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, chptr->chname, modebuf, parabuf);
+		sendto_channel(chptr, client, NULL, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
-		               sptr->name, chptr->chname, modebuf, parabuf);
+		               client->name, chptr->chname, modebuf, parabuf);
 		free_message_tags(mtags);
 	}
 
@@ -782,7 +782,7 @@ getnick:
 			}
 		}
 		ap = mp2parv(modebuf, parabuf);
-		set_mode(chptr, sptr, ap->parc, ap->parv, &pcount, pvar, 0);
+		set_mode(chptr, client, ap->parc, ap->parv, &pcount, pvar, 0);
 
 		/* Good, now we got modes, now for the differencing and outputting of modes
 		 * We first see if any para modes are set.
@@ -964,14 +964,14 @@ getnick:
 			MessageTag *mtags = NULL;
 
 			/* for old servers without SJOIN: */
-			sendto_server(sptr, 0, PROTO_SJOIN, NULL,
+			sendto_server(client, 0, PROTO_SJOIN, NULL,
 			    ":%s MODE %s %s %s %lld",
-			    sptr->name, chptr->chname, modebuf, parabuf,
+			    client->name, chptr->chname, modebuf, parabuf,
 			    (long long)chptr->creationtime);
-			new_message_special(sptr, recv_mtags, &mtags, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
-			sendto_channel(chptr, sptr, NULL, 0, 0, SEND_LOCAL, mtags,
+			new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, chptr->chname, modebuf, parabuf);
+			sendto_channel(chptr, client, NULL, 0, 0, SEND_LOCAL, mtags,
 			               ":%s MODE %s %s %s",
-			               sptr->name, chptr->chname, modebuf, parabuf);
+			               client->name, chptr->chname, modebuf, parabuf);
 			free_message_tags(mtags);
 		}
 
@@ -991,7 +991,7 @@ getnick:
 	if ((oldts != -1) && (oldts != chptr->creationtime))
 	{
 		MessageTag *mtags = NULL;
-		new_message(sptr, NULL, &mtags);
+		new_message(client, NULL, &mtags);
 		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, NULL,
 			":%s NOTICE %s :*** TS for %s changed from %lld to %lld",
 			me.name, chptr->chname, chptr->chname,

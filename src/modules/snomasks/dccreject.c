@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 long SNO_DCCREJECT = 0L;
 
 /* Forward declarations */
-int dccreject_dcc_denied(Client *sptr, Client *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *dccdeny);
+int dccreject_dcc_denied(Client *client, Client *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *dccdeny);
 
 MOD_TEST()
 {
@@ -60,11 +60,11 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int dccreject_dcc_denied(Client *sptr, Client *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *dccdeny)
+int dccreject_dcc_denied(Client *client, Client *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *dccdeny)
 {
 	sendto_snomask_global(SNO_DCCREJECT, 
 		"%s tried to send forbidden file %s (%s) to %s (is blocked now)",
-		sptr->name, displayfile, dccdeny->reason, target->name);
+		client->name, displayfile, dccdeny->reason, target->name);
 
 	return 0;
 }

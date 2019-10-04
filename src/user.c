@@ -33,21 +33,21 @@ MODVAR int labeled_response_inhibit = 0;
 /** Set to 1 if an UTF8 incompatible nick character set is in use */
 MODVAR int non_utf8_nick_chars_in_use = 0;
 
-void iNAH_host(Client *sptr, char *host)
+void iNAH_host(Client *client, char *host)
 {
-	if (!sptr->user)
+	if (!client->user)
 		return;
 
-	userhost_save_current(sptr);
+	userhost_save_current(client);
 
-	safe_strdup(sptr->user->virthost, host);
-	if (MyConnect(sptr))
-		sendto_server(&me, 0, 0, NULL, ":%s SETHOST :%s", sptr->name, sptr->user->virthost);
-	sptr->umodes |= UMODE_SETHOST;
+	safe_strdup(client->user->virthost, host);
+	if (MyConnect(client))
+		sendto_server(&me, 0, 0, NULL, ":%s SETHOST :%s", client->name, client->user->virthost);
+	client->umodes |= UMODE_SETHOST;
 
-	userhost_changed(sptr);
+	userhost_changed(client);
 
-	sendnumeric(sptr, RPL_HOSTHIDDEN, sptr->user->virthost);
+	sendnumeric(client, RPL_HOSTHIDDEN, client->user->virthost);
 }
 
 long set_usermode(char *umode)
@@ -92,61 +92,6 @@ long set_usermode(char *umode)
 }
 
 /*
-** cmd_functions execute protocol messages on this server:
-**
-**	cptr	is always NON-NULL, pointing to a *LOCAL* client
-**		structure (with an open socket connected!). This
-**		identifies the physical socket where the message
-**		originated (or which caused the cmd_function to be
-**		executed--some cmd_functions may call others...).
-**
-**	sptr	is the source of the message, defined by the
-**		prefix part of the message if present. If not
-**		or prefix not found, then sptr==cptr.
-**
-**		(!IsServer(cptr)) => (cptr == sptr), because
-**		prefixes are taken *only* from servers...
-**
-**		(IsServer(cptr))
-**			(sptr == cptr) => the message didn't
-**			have the prefix.
-**
-**			(sptr != cptr && IsServer(sptr) means
-**			the prefix specified servername. (?)
-**
-**			(sptr != cptr && !IsServer(sptr) means
-**			that message originated from a remote
-**			user (not local).
-**
-**		combining
-**
-**		(!IsServer(sptr)) means that, sptr can safely
-**		taken as defining the target structure of the
-**		message in this server.
-**
-**	*Always* true (if 'parse' and others are working correct):
-**
-**	1)	sptr->direction == cptr  (note: cptr->direction == cptr)
-**
-**	2)	MyConnect(sptr) <=> sptr == cptr (e.g. sptr
-**		*cannot* be a local connection, unless it's
-**		actually cptr!). [MyConnect(x) should probably
-**		be defined as (x == x->direction) --msa ]
-**
-**	parc	number of variable parameter strings (if zero,
-**		parv is allowed to be NULL)
-**
-**	parv	a NULL terminated list of parameter pointers,
-**
-**			parv[1]...parv[parc-1]
-**				pointers to additional parameters
-**			parv[parc] == NULL, *always*
-**
-**		note:	it is guaranteed that parv[1]..parv[parc-1] are all
-**			non-NULL pointers.
-*/
-
-/*
 ** hunt_server
 **
 **	Do the basic thing in delivering the message (command)
@@ -171,7 +116,7 @@ long set_usermode(char *umode)
 ** complex and no longer understandable. It also was responsible
 ** for mysterious issues and crashes. Hence rewritten.
 */
-int hunt_server(Client *sptr, MessageTag *mtags, char *command, int server, int parc, char *parv[])
+int hunt_server(Client *client, MessageTag *mtags, char *command, int server, int parc, char *parv[])
 {
 	Client *acptr;
 	char *saved;
@@ -188,7 +133,7 @@ int hunt_server(Client *sptr, MessageTag *mtags, char *command, int server, int 
 
 	if (!acptr)
 	{
-		sendnumeric(sptr, ERR_NOSUCHSERVER, parv[server]);
+		sendnumeric(client, ERR_NOSUCHSERVER, parv[server]);
 		return HUNTED_NOSUCH;
 	}
 	
@@ -196,9 +141,9 @@ int hunt_server(Client *sptr, MessageTag *mtags, char *command, int server, int 
 		return HUNTED_ISME;
 
 	/* Never send the message back from where it came from */
-	if (acptr->direction == sptr->direction)
+	if (acptr->direction == client->direction)
 	{
-		sendnumeric(sptr, ERR_NOSUCHSERVER, parv[server]);
+		sendnumeric(client, ERR_NOSUCHSERVER, parv[server]);
 		return HUNTED_NOSUCH;
 	}
 
@@ -208,7 +153,7 @@ int hunt_server(Client *sptr, MessageTag *mtags, char *command, int server, int 
 	saved = parv[server];
 	parv[server] = acptr->name;
 
-	sendto_one(acptr, mtags, command, sptr->name,
+	sendto_one(acptr, mtags, command, client->name,
 	    parv[1], parv[2], parv[3], parv[4],
 	    parv[5], parv[6], parv[7], parv[8]);
 
@@ -229,58 +174,58 @@ unsigned char hash_target(void *target)
 }
 
 /** check_for_target_limit
- * @param sptr   The client.
+ * @param client   The client.
  * @param target The target client
  * @param name   The name of the target client (used in the error message)
  * @retval Returns 1 if too many targets were addressed (do not send!), 0 if ok to send.
  */
-int check_for_target_limit(Client *sptr, void *target, const char *name)
+int check_for_target_limit(Client *client, void *target, const char *name)
 {
 	u_char hash = hash_target(target);
 	int i;
 
-	if (ValidatePermissionsForPath("immune:target-limit",sptr,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("immune:target-limit",client,NULL,NULL,NULL))
 		return 0;
-	if (sptr->local->targets[0] == hash)
+	if (client->local->targets[0] == hash)
 		return 0;
 
 	for (i = 1; i < iConf.max_concurrent_conversations_users; i++)
 	{
-		if (sptr->local->targets[i] == hash)
+		if (client->local->targets[i] == hash)
 		{
 			/* Move this target hash to the first position */
-			memmove(&sptr->local->targets[1], &sptr->local->targets[0], i);
-			sptr->local->targets[0] = hash;
+			memmove(&client->local->targets[1], &client->local->targets[0], i);
+			client->local->targets[0] = hash;
 			return 0;
 		}
 	}
 
-	if (TStime() < sptr->local->nexttarget)
+	if (TStime() < client->local->nexttarget)
 	{
 		/* Target limit reached */
-		sptr->local->nexttarget += 2; /* punish them some more */
-		sptr->local->since += 2; /* lag them up as well */
+		client->local->nexttarget += 2; /* punish them some more */
+		client->local->since += 2; /* lag them up as well */
 
-		sendnumeric(sptr, ERR_TARGETTOOFAST,
-			name, sptr->local->nexttarget - TStime());
+		sendnumeric(client, ERR_TARGETTOOFAST,
+			name, client->local->nexttarget - TStime());
 
 		return 1;
 	}
 
 	/* If not set yet or in the very past, then adjust it.
-	 * This is so sptr->local->nexttarget=0 will become sptr->local->nexttarget=currenttime-...
+	 * This is so client->local->nexttarget=0 will become client->local->nexttarget=currenttime-...
 	 */
-	if (TStime() > sptr->local->nexttarget +
+	if (TStime() > client->local->nexttarget +
 	    (iConf.max_concurrent_conversations_users * iConf.max_concurrent_conversations_new_user_every))
 	{
-		sptr->local->nexttarget = TStime() - ((iConf.max_concurrent_conversations_users-1) * iConf.max_concurrent_conversations_new_user_every);
+		client->local->nexttarget = TStime() - ((iConf.max_concurrent_conversations_users-1) * iConf.max_concurrent_conversations_new_user_every);
 	}
 
-	sptr->local->nexttarget += iConf.max_concurrent_conversations_new_user_every;
+	client->local->nexttarget += iConf.max_concurrent_conversations_new_user_every;
 
 	/* Add the new target (first move the rest, then add us at position 0 */
-	memmove(&sptr->local->targets[1], &sptr->local->targets[0], iConf.max_concurrent_conversations_users - 1);
-	sptr->local->targets[0] = hash;
+	memmove(&client->local->targets[1], &client->local->targets[0], iConf.max_concurrent_conversations_users - 1);
+	client->local->targets[0] = hash;
 
 	return 0;
 }
@@ -341,7 +286,7 @@ char *canonize(char *buffer)
 ** by vmlinuz
 ** returns an ascii string of modes
 */
-char *get_sno_str(Client *sptr) {
+char *get_sno_str(Client *client) {
 	int i;
 	char *m;
 
@@ -349,13 +294,13 @@ char *get_sno_str(Client *sptr) {
 
 	*m++ = '+';
 	for (i = 0; i <= Snomask_highest && (m - buf < BUFSIZE - 4); i++)
-		if (Snomask_Table[i].flag && sptr->user->snomask & Snomask_Table[i].mode)
+		if (Snomask_Table[i].flag && client->user->snomask & Snomask_Table[i].mode)
 			*m++ = Snomask_Table[i].flag;
 	*m = 0;
 	return buf;
 }
 
-char *get_mode_str(Client *acptr)
+char *get_mode_str(Client *client)
 {
 	int  i;
 	char *m;
@@ -363,7 +308,7 @@ char *get_mode_str(Client *acptr)
 	m = buf;
 	*m++ = '+';
 	for (i = 0; (i <= Usermode_highest) && (m - buf < BUFSIZE - 4); i++)
-		if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
+		if (Usermode_Table[i].flag && (client->umodes & Usermode_Table[i].mode))
 			*m++ = Usermode_Table[i].flag;
 	*m = '\0';
 	return buf;
@@ -400,12 +345,12 @@ char *get_snostr(long sno) {
 }
 
 
-void set_snomask(Client *sptr, char *snomask) {
+void set_snomask(Client *client, char *snomask) {
 	int what = MODE_ADD; /* keep this an int. -- Syzop */
 	char *p;
 	int i;
 	if (snomask == NULL) {
-		sptr->user->snomask = 0;
+		client->user->snomask = 0;
 		return;
 	}
 	
@@ -424,12 +369,12 @@ void set_snomask(Client *sptr, char *snomask) {
 		 	 		continue;
 		 	 	if (*p == Snomask_Table[i].flag)
 		 	 	{
-					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr,what))
+					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(client,what))
 						continue;
 		 	 		if (what == MODE_ADD)
-			 	 		sptr->user->snomask |= Snomask_Table[i].mode;
+			 	 		client->user->snomask |= Snomask_Table[i].mode;
 			 	 	else
-			 	 		sptr->user->snomask &= ~Snomask_Table[i].mode;
+			 	 		client->user->snomask &= ~Snomask_Table[i].mode;
 		 	 	}
 		 	 }				
 		}
@@ -439,7 +384,7 @@ void set_snomask(Client *sptr, char *snomask) {
 /** Build the MODE line with (modified) user modes for this user.
  * Originally by avalon.
  */
-void build_umode_string(Client *sptr, long old, long sendmask, char *umode_buf)
+void build_umode_string(Client *client, long old, long sendmask, char *umode_buf)
 {
 	int i;
 	long flag;
@@ -448,7 +393,7 @@ void build_umode_string(Client *sptr, long old, long sendmask, char *umode_buf)
 
 	/*
 	 * build a string in umode_buf to represent the change in the user's
-	 * mode between the new (sptr->flag) and 'old'.
+	 * mode between the new (client->flag) and 'old'.
 	 */
 	m = umode_buf;
 	*m = '\0';
@@ -457,9 +402,9 @@ void build_umode_string(Client *sptr, long old, long sendmask, char *umode_buf)
 		if (!Usermode_Table[i].flag)
 			continue;
 		flag = Usermode_Table[i].mode;
-		if (MyUser(sptr) && !(flag & sendmask))
+		if (MyUser(client) && !(flag & sendmask))
 			continue;
-		if ((flag & old) && !(sptr->umodes & flag))
+		if ((flag & old) && !(client->umodes & flag))
 		{
 			if (what == MODE_DEL)
 				*m++ = Usermode_Table[i].flag;
@@ -470,7 +415,7 @@ void build_umode_string(Client *sptr, long old, long sendmask, char *umode_buf)
 				*m++ = Usermode_Table[i].flag;
 			}
 		}
-		else if (!(flag & old) && (sptr->umodes & flag))
+		else if (!(flag & old) && (client->umodes & flag))
 		{
 			if (what == MODE_ADD)
 				*m++ = Usermode_Table[i].flag;
@@ -485,26 +430,26 @@ void build_umode_string(Client *sptr, long old, long sendmask, char *umode_buf)
 	*m = '\0';
 }
 
-void send_umode_out(Client *sptr, int show_to_user, long old)
+void send_umode_out(Client *client, int show_to_user, long old)
 {
 	Client *acptr;
 
-	build_umode_string(sptr, old, SEND_UMODES, buf);
+	build_umode_string(client, old, SEND_UMODES, buf);
 
 	list_for_each_entry(acptr, &server_list, special_node)
 	{
-		if ((acptr != sptr) && (acptr != sptr->direction) && *buf)
+		if ((acptr != client) && (acptr != client->direction) && *buf)
 		{
 			sendto_one(acptr, NULL, ":%s UMODE2 %s",
-			           sptr->name, buf);
+			           client->name, buf);
 		}
 	}
 
-	if (MyUser(sptr) && show_to_user)
+	if (MyUser(client) && show_to_user)
 	{
-		build_umode_string(sptr, old, ALL_UMODES, buf);
+		build_umode_string(client, old, ALL_UMODES, buf);
 		if (*buf)
-			sendto_one(sptr, NULL, ":%s MODE %s :%s", sptr->name, sptr->name, buf);
+			sendto_one(client, NULL, ":%s MODE %s :%s", client->name, client->name, buf);
 	}
 }
 
@@ -658,20 +603,20 @@ void set_targmax_defaults(void)
  * eg: the cap module checks if client capability negotiation
  * is in progress
  */
-int is_handshake_finished(Client *sptr)
+int is_handshake_finished(Client *client)
 {
 	Hook *h;
 	int n;
 
 	for (h = Hooks[HOOKTYPE_IS_HANDSHAKE_FINISHED]; h; h = h->next)
 	{
-		n = (*(h->func.intfunc))(sptr);
+		n = (*(h->func.intfunc))(client);
 		if (n == 0)
 			return 0; /* We can stop already */
 	}
 
 	/* I figured these can be here, in the core: */
-	if (sptr->user && *sptr->user->username && sptr->name[0] && IsNotSpoof(sptr))
+	if (client->user && *client->user->username && client->name[0] && IsNotSpoof(client))
 		return 1;
 
 	return 0;

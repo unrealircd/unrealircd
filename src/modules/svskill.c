@@ -62,7 +62,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_svskill)
 {
 	MessageTag *mtags = NULL;
-	Client *acptr;
+	Client *target;
 	char *comment = "SVS Killed";
 	int n;
 
@@ -73,16 +73,16 @@ CMD_FUNC(cmd_svskill)
 	if (parc == 3)
 		comment = parv[2];
 
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 		return;
 
-	if (!(acptr = find_person(parv[1], NULL)))
+	if (!(target = find_person(parv[1], NULL)))
 		return;
 
-	/* for new_message() we use acptr here, makes sense for the exit_client, right? */
-	new_message(acptr, recv_mtags, &mtags);
-	sendto_server(sptr, 0, 0, mtags, ":%s SVSKILL %s :%s", sptr->name, parv[1], comment);
-	SetKilled(acptr);
-	exit_client(acptr, mtags, comment);
+	/* for new_message() we use target here, makes sense for the exit_client, right? */
+	new_message(target, recv_mtags, &mtags);
+	sendto_server(client, 0, 0, mtags, ":%s SVSKILL %s :%s", client->name, parv[1], comment);
+	SetKilled(target);
+	exit_client(target, mtags, comment);
 	free_message_tags(mtags);
 }

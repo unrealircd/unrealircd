@@ -60,26 +60,26 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_lag)
 {
-	if (!ValidatePermissionsForPath("server:info:lag",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:info:lag",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "LAG");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "LAG");
 		return;
 	}
 
 	if (*parv[1] == '\0')
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "LAG");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "LAG");
 		return;
 	}
 
-	if (hunt_server(sptr, recv_mtags, ":%s LAG :%s", 1, parc, parv) == HUNTED_NOSUCH)
+	if (hunt_server(client, recv_mtags, ":%s LAG :%s", 1, parc, parv) == HUNTED_NOSUCH)
 		return;
 
-	sendnotice(sptr, "Lag reply -- %s %s %lld", me.name, parv[1], (long long)TStime());
+	sendnotice(client, "Lag reply -- %s %s %lld", me.name, parv[1], (long long)TStime());
 }

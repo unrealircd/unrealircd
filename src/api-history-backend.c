@@ -175,12 +175,12 @@ int history_del(char *object, int max_lines, long max_time)
 	return 1;
 }
 
-int history_request(Client *acptr, char *object, HistoryFilter *filter)
+int history_request(Client *client, char *object, HistoryFilter *filter)
 {
 	HistoryBackend *hb;
 
 	for (hb = historybackends; hb; hb=hb->next)
-		hb->history_request(acptr, object, filter);
+		hb->history_request(client, object, filter);
 
 	return 1;
 }

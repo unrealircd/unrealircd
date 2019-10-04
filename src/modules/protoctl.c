@@ -63,14 +63,14 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_protoctl)
 {
 	int  i;
-	int first_protoctl = IsProtoctlReceived(sptr) ? 0 : 1; /**< First PROTOCTL we receive? Special ;) */
+	int first_protoctl = IsProtoctlReceived(client) ? 0 : 1; /**< First PROTOCTL we receive? Special ;) */
 	char proto[512];
 	char *name, *value, *p;
 
-	if (!MyConnect(sptr))
+	if (!MyConnect(client))
 		return; /* Remote PROTOCTL's are not supported */
 
-	SetProtoctlReceived(sptr);
+	SetProtoctlReceived(client);
 
 	for (i = 1; i < parc; i++)
 	{
@@ -88,72 +88,72 @@ CMD_FUNC(cmd_protoctl)
 
 		if (!strcmp(name, "NAMESX"))
 		{
-			SetCapability(sptr, "multi-prefix");
+			SetCapability(client, "multi-prefix");
 		}
 		else if (!strcmp(name, "UHNAMES") && UHNAMES_ENABLED)
 		{
-			SetCapability(sptr, "userhost-in-names");
+			SetCapability(client, "userhost-in-names");
 		}
 		else if (!strcmp(name, "NOQUIT"))
 		{
-			SetNoQuit(sptr);
+			SetNoQuit(client);
 		}
 		else if (!strcmp(name, "SJOIN"))
 		{
-			SetSJOIN(sptr);
+			SetSJOIN(client);
 		}
 		else if (!strcmp(name, "SJOIN2"))
 		{
-			SetSJOIN2(sptr);
+			SetSJOIN2(client);
 		}
 		else if (!strcmp(name, "NICKv2"))
 		{
-			SetNICKv2(sptr);
+			SetNICKv2(client);
 		}
 		else if (!strcmp(name, "UMODE2"))
 		{
-			SetUMODE2(sptr);
+			SetUMODE2(client);
 		}
 		else if (!strcmp(name, "VL"))
 		{
-			SetVL(sptr);
+			SetVL(client);
 		}
 		else if (!strcmp(name, "VHP"))
 		{
-			SetVHP(sptr);
+			SetVHP(client);
 		}
 		else if (!strcmp(name, "CLK"))
 		{
-			SetCLK(sptr);
+			SetCLK(client);
 		}
 		else if (!strcmp(name, "SJ3"))
 		{
-			SetSJ3(sptr);
+			SetSJ3(client);
 		}
 		else if (!strcmp(name, "SJSBY") && iConf.ban_setter_sync)
 		{
-			SetSJSBY(sptr);
+			SetSJSBY(client);
 		}
 		else if (!strcmp(name, "TKLEXT"))
 		{
-			SetTKLEXT(sptr);
+			SetTKLEXT(client);
 		}
 		else if (!strcmp(name, "TKLEXT2"))
 		{
-			SetTKLEXT2(sptr);
-			SetTKLEXT(sptr); /* TKLEXT is implied as well. always. */
+			SetTKLEXT2(client);
+			SetTKLEXT(client); /* TKLEXT is implied as well. always. */
 		}
 		else if (!strcmp(name, "NICKIP"))
 		{
-			sptr->local->proto |= PROTO_NICKIP;
+			client->local->proto |= PROTO_NICKIP;
 		}
 		else if (!strcmp(name, "MTAGS"))
 		{
-			SetMTAGS(sptr);
+			SetMTAGS(client);
 		}
 		else if (!strcmp(name, "NICKCHARS") && value)
 		{
-			if (!IsServer(sptr) && !IsEAuth(sptr) && !IsHandshake(sptr))
+			if (!IsServer(client) && !IsEAuth(client) && !IsHandshake(client))
 				continue;
 			/* Ok, server is either authenticated, or is an outgoing connect... */
 			/* Some combinations are fatal because they would lead to mass-kills:
@@ -163,52 +163,52 @@ CMD_FUNC(cmd_protoctl)
 			{
 				char buf[512];
 				snprintf(buf, sizeof(buf), "Server %s has utf8 in set::allowed-nickchars but %s does not. Link rejected.",
-					me.name, *sptr->name ? sptr->name : "other side");
+					me.name, *client->name ? client->name : "other side");
 				sendto_realops("\002ERROR\001 %s", buf);
-				return exit_client(sptr, NULL, buf);
+				return exit_client(client, NULL, buf);
 			}
 			/* We compare the character sets to see if we should warn opers about any mismatch... */
 			if (strcmp(value, charsys_get_current_languages()))
 			{
 				sendto_realops("\002WARNING!!!!\002 Link %s does not have the same set::allowed-nickchars settings (or is "
 							"a different UnrealIRCd version), this MAY cause display issues. Our charset: '%s', theirs: '%s'",
-					get_client_name(sptr, FALSE), charsys_get_current_languages(), value);
-				/* return exit_client(sptr, NULL, "Nick charset mismatch"); */
+					get_client_name(client, FALSE), charsys_get_current_languages(), value);
+				/* return exit_client(client, NULL, "Nick charset mismatch"); */
 			}
-			if (sptr->serv)
-				safe_strdup(sptr->serv->features.nickchars, value);
+			if (client->serv)
+				safe_strdup(client->serv->features.nickchars, value);
 
 			/* If this is a runtime change (so post-handshake): */
-			if (IsServer(sptr))
-				broadcast_sinfo(sptr, NULL, sptr);
+			if (IsServer(client))
+				broadcast_sinfo(client, NULL, client);
 		}
 		else if (!strcmp(name, "SID") && value)
 		{
-			Client *asptr;
+			Client *aclient;
 			char *sid = value;
 
-			if (!IsServer(sptr) && !IsEAuth(sptr) && !IsHandshake(sptr))
-				return exit_client(sptr, NULL, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
+			if (!IsServer(client) && !IsEAuth(client) && !IsHandshake(client))
+				return exit_client(client, NULL, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
 
-			if (*sptr->id && (strlen(sptr->id)==3))
-				return exit_client(sptr, NULL, "Got PROTOCTL SID twice");
+			if (*client->id && (strlen(client->id)==3))
+				return exit_client(client, NULL, "Got PROTOCTL SID twice");
 
-			if (IsServer(sptr))
-				return exit_client(sptr, NULL, "Got PROTOCTL SID after SERVER, that's the wrong order!");
+			if (IsServer(client))
+				return exit_client(client, NULL, "Got PROTOCTL SID after SERVER, that's the wrong order!");
 
-			if ((asptr = hash_find_id(sid, NULL)) != NULL)
+			if ((aclient = hash_find_id(sid, NULL)) != NULL)
 			{
-				sendto_one(sptr, NULL, "ERROR :SID %s already exists from %s", asptr->id, asptr->name);
+				sendto_one(client, NULL, "ERROR :SID %s already exists from %s", aclient->id, aclient->name);
 				sendto_snomask(SNO_SNOTICE, "Link %s rejected - SID %s already exists from %s",
-						get_client_name(sptr, FALSE), asptr->id, asptr->name);
-				return exit_client(sptr, NULL, "SID collision");
+						get_client_name(client, FALSE), aclient->id, aclient->name);
+				return exit_client(client, NULL, "SID collision");
 			}
 
-			if (*sptr->id)
-				del_from_id_hash_table(sptr->id, sptr); /* delete old UID entry (created on connect) */
-			strlcpy(sptr->id, sid, IDLEN);
-			add_to_id_hash_table(sptr->id, sptr); /* add SID */
-			sptr->local->proto |= PROTO_SID;
+			if (*client->id)
+				del_from_id_hash_table(client->id, client); /* delete old UID entry (created on connect) */
+			strlcpy(client->id, sid, IDLEN);
+			add_to_id_hash_table(client->id, client); /* add SID */
+			client->local->proto |= PROTO_SID;
 		}
 		else if (!strcmp(name, "EAUTH") && value && NEW_LINKING_PROTOCOL)
 		{
@@ -232,13 +232,13 @@ CMD_FUNC(cmd_protoctl)
 			servername = strtoken(&p, buf, ",");
 			if (!servername || (strlen(servername) > HOSTLEN) || !strchr(servername, '.'))
 			{
-				sendto_one(sptr, NULL, "ERROR :Bogus server name in EAUTH (%s)", servername ? servername : "");
+				sendto_one(client, NULL, "ERROR :Bogus server name in EAUTH (%s)", servername ? servername : "");
 				sendto_snomask
 				    (SNO_JUNK,
 				    "WARNING: Bogus server name (%s) from %s in EAUTH (maybe just a fishy client)",
-				    servername ? servername : "", get_client_name(sptr, TRUE));
+				    servername ? servername : "", get_client_name(client, TRUE));
 
-				return exit_client(sptr, NULL, "Bogus server name");
+				return exit_client(client, NULL, "Bogus server name");
 			}
 			
 			
@@ -252,36 +252,36 @@ CMD_FUNC(cmd_protoctl)
 				}
 			}
 			
-			if (!verify_link(sptr, servername, &aconf))
+			if (!verify_link(client, servername, &aconf))
 				return;
 
 			/* note: software, protocol and flags may be NULL */
-			if (!check_deny_version(sptr, software, protocol ? atoi(protocol) : 0, flags))
+			if (!check_deny_version(client, software, protocol ? atoi(protocol) : 0, flags))
 				return;
 
-			SetEAuth(sptr);
-			make_server(sptr); /* allocate and set sptr->serv */
-			/* Set sptr->name but don't add to hash list. The real work on
+			SetEAuth(client);
+			make_server(client); /* allocate and set client->serv */
+			/* Set client->name but don't add to hash list. The real work on
 			 * that is done in cmd_server. We just set it here for display
 			 * purposes of error messages (such as reject due to clock).
 			 */
-			strlcpy(sptr->name, servername, sizeof(sptr->name));
+			strlcpy(client->name, servername, sizeof(client->name));
 			if (protocol)
-				sptr->serv->features.protocol = atoi(protocol);
+				client->serv->features.protocol = atoi(protocol);
 			if (software)
-				safe_strdup(sptr->serv->features.software, software);
-			if (!IsHandshake(sptr) && aconf) /* Send PASS early... */
-				sendto_one(sptr, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
+				safe_strdup(client->serv->features.software, software);
+			if (!IsHandshake(client) && aconf) /* Send PASS early... */
+				sendto_one(client, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		}
 		else if (!strcmp(name, "SERVERS") && value && NEW_LINKING_PROTOCOL)
 		{
-			Client *asptr, *srv;
+			Client *aclient, *srv;
 			char *sid = NULL;
 			
-			if (!IsEAuth(sptr))
+			if (!IsEAuth(client))
 				continue;
 				
-			if (sptr->serv->features.protocol < 2351)
+			if (client->serv->features.protocol < 2351)
 				continue; /* old SERVERS= version */
 			
 			/* Other side lets us know which servers are behind it.
@@ -289,34 +289,34 @@ CMD_FUNC(cmd_protoctl)
 			 * Eg: SERVER=001,002,0AB,004,005
 			 */
 
-			add_pending_net(sptr, value);
+			add_pending_net(client, value);
 
-			asptr = find_non_pending_net_duplicates(sptr);
-			if (asptr)
+			aclient = find_non_pending_net_duplicates(client);
+			if (aclient)
 			{
-				sendto_one(sptr, NULL, "ERROR :Server with SID %s (%s) already exists",
-					asptr->id, asptr->name);
+				sendto_one(client, NULL, "ERROR :Server with SID %s (%s) already exists",
+					aclient->id, aclient->name);
 				sendto_realops("Link %s cancelled, server with SID %s (%s) already exists",
-					get_client_name(asptr, TRUE), asptr->id, asptr->name);
-				return exit_client(sptr, NULL, "Server Exists (or non-unique me::sid)");
+					get_client_name(aclient, TRUE), aclient->id, aclient->name);
+				return exit_client(client, NULL, "Server Exists (or non-unique me::sid)");
 			}
 			
-			asptr = find_pending_net_duplicates(sptr, &srv, &sid);
-			if (asptr)
+			aclient = find_pending_net_duplicates(client, &srv, &sid);
+			if (aclient)
 			{
-				sendto_one(sptr, NULL, "ERROR :Server with SID %s is being introduced by another server as well. "
+				sendto_one(client, NULL, "ERROR :Server with SID %s is being introduced by another server as well. "
 				                 "Just wait a moment for it to synchronize...", sid);
 				sendto_realops("Link %s cancelled, server would introduce server with SID %s, which "
 				               "server %s is also about to introduce. Just wait a moment for it to synchronize...",
-				               get_client_name(asptr, TRUE), sid, get_client_name(srv, TRUE));
-				return exit_client(sptr, NULL, "Server Exists (just wait a moment)");
+				               get_client_name(aclient, TRUE), sid, get_client_name(srv, TRUE));
+				return exit_client(client, NULL, "Server Exists (just wait a moment)");
 			}
 
 			/* Send our PROTOCTL SERVERS= back if this was NOT a response */
 			if (*value != '*')
-				send_protoctl_servers(sptr, 1);
+				send_protoctl_servers(client, 1);
 		}
-		else if (!strcmp(name, "TS") && value && (IsServer(sptr) || IsEAuth(sptr)))
+		else if (!strcmp(name, "TS") && value && (IsServer(client) || IsEAuth(client)))
 		{
 			long t = atol(value);
 			char msg[512], linkerr[512];
@@ -338,9 +338,9 @@ CMD_FUNC(cmd_protoctl)
 				         "Correct time is very important in IRC. Please "
 				         "verify the clock on both %s (them) and %s (us), "
 				         "fix it and then try linking again",
-				         get_client_name(sptr, TRUE),
+				         get_client_name(client, TRUE),
 				         (long long)(TStime() - t),
-				         sptr->name, me.name);
+				         client->name, me.name);
 			} else
 			if ((t - TStime()) > MAX_SERVER_TIME_OFFSET)
 			{
@@ -354,43 +354,43 @@ CMD_FUNC(cmd_protoctl)
 				         "Correct time is very important in IRC. Please "
 				         "verify the clock on both %s (them) and %s (us), "
 				         "fix it and then try linking again",
-					get_client_name(sptr, TRUE),
+					get_client_name(client, TRUE),
 					(long long)(t - TStime()),
-					sptr->name, me.name);
+					client->name, me.name);
 			}
 			
 			if (*msg)
 			{
 				sendto_realops("%s", msg);
 				ircd_log(LOG_ERROR, "%s", msg);
-				return exit_client(sptr, NULL, linkerr);
+				return exit_client(client, NULL, linkerr);
 			}
 		}
 		else if (!strcmp(name, "MLOCK"))
 		{
-			sptr->local->proto |= PROTO_MLOCK;
+			client->local->proto |= PROTO_MLOCK;
 		}
-		else if (!strcmp(name, "CHANMODES") && value && sptr->serv)
+		else if (!strcmp(name, "CHANMODES") && value && client->serv)
 		{
-			parse_chanmodes_protoctl(sptr, value);
+			parse_chanmodes_protoctl(client, value);
 			/* If this is a runtime change (so post-handshake): */
-			if (IsServer(sptr))
-				broadcast_sinfo(sptr, NULL, sptr);
+			if (IsServer(client))
+				broadcast_sinfo(client, NULL, client);
 		}
-		else if (!strcmp(name, "USERMODES") && value && sptr->serv)
+		else if (!strcmp(name, "USERMODES") && value && client->serv)
 		{
-			safe_strdup(sptr->serv->features.usermodes, value);
+			safe_strdup(client->serv->features.usermodes, value);
 			/* If this is a runtime change (so post-handshake): */
-			if (IsServer(sptr))
-				broadcast_sinfo(sptr, NULL, sptr);
+			if (IsServer(client))
+				broadcast_sinfo(client, NULL, client);
 		}
-		else if (!strcmp(name, "BOOTED") && value && sptr->serv)
+		else if (!strcmp(name, "BOOTED") && value && client->serv)
 		{
-			sptr->serv->boottime = atol(value);
+			client->serv->boottime = atol(value);
 		}
 		else if (!strcmp(name, "EXTSWHOIS"))
 		{
-			sptr->local->proto |= PROTO_EXTSWHOIS;
+			client->local->proto |= PROTO_EXTSWHOIS;
 		}
 		/* You can add protocol extensions here.
 		 * Use 'name' and 'value' (the latter may be NULL).
@@ -400,13 +400,13 @@ CMD_FUNC(cmd_protoctl)
 		 */
 	}
 
-	if (first_protoctl && IsHandshake(sptr) && sptr->serv && !IsServerSent(sptr)) /* first & outgoing connection to server */
+	if (first_protoctl && IsHandshake(client) && client->serv && !IsServerSent(client)) /* first & outgoing connection to server */
 	{
 		/* SERVER message moved from completed_connection() to here due to EAUTH/SERVERS PROTOCTL stuff,
 		 * which needed to be delayed until after both sides have received SERVERS=xx (..or not.. in case
 		 * of older servers).
 		 * Actually, this is often not reached, as the PANGPANG stuff in do_numeric() is reached first.
 		 */
-		send_server_message(sptr);
+		send_server_message(client);
 	}
 }

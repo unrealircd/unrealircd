@@ -35,7 +35,7 @@ ID_Copyright("(C) Carsten Munk 1999");
 
 /* checks if the dcc is blacklisted.
  */
-ConfigItem_deny_dcc *dcc_isforbidden(Client *sptr, char *filename)
+ConfigItem_deny_dcc *dcc_isforbidden(Client *client, char *filename)
 {
 ConfigItem_deny_dcc *d;
 ConfigItem_allow_dcc *a;
@@ -61,7 +61,7 @@ ConfigItem_allow_dcc *a;
 
 /* checks if the dcc is discouraged ('soft bans').
  */
-ConfigItem_deny_dcc *dcc_isdiscouraged(Client *sptr, char *filename)
+ConfigItem_deny_dcc *dcc_isdiscouraged(Client *client, char *filename)
 {
 ConfigItem_deny_dcc *d;
 ConfigItem_allow_dcc *a;
@@ -85,13 +85,13 @@ ConfigItem_allow_dcc *a;
 	return NULL;
 }
 
-void dcc_sync(Client *sptr)
+void dcc_sync(Client *client)
 {
 	ConfigItem_deny_dcc *p;
 	for (p = conf_deny_dcc; p; p = p->next)
 	{
 		if (p->flag.type2 == CONF_BAN_TYPE_AKILL)
-			sendto_one(sptr, NULL, ":%s SVSFLINE + %s :%s", me.name,
+			sendto_one(client, NULL, ":%s SVSFLINE + %s :%s", me.name,
 			    p->filename, p->reason);
 	}
 }
@@ -142,57 +142,57 @@ int on_dccallow_list(Client *to, Client *from)
 Link *lp;
 
 	for(lp = to->user->dccallow; lp; lp = lp->next)
-		if(lp->flags == DCC_LINK_ME && lp->value.cptr == from)
+		if(lp->flags == DCC_LINK_ME && lp->value.client == from)
 			return 1;
 	return 0;
 }
-int add_dccallow(Client *sptr, Client *optr)
+int add_dccallow(Client *client, Client *optr)
 {
 Link *lp;
 int cnt = 0;
 
-	for (lp = sptr->user->dccallow; lp; lp = lp->next)
+	for (lp = client->user->dccallow; lp; lp = lp->next)
 	{
 		if (lp->flags != DCC_LINK_ME)
 			continue;
 		cnt++;
-		if (lp->value.cptr == optr)
+		if (lp->value.client == optr)
 			return 0;
 	}
 
 	if (cnt >= MAXDCCALLOW)
 	{
-		sendnumeric(sptr, ERR_TOOMANYDCC,
+		sendnumeric(client, ERR_TOOMANYDCC,
 			optr->name, MAXDCCALLOW);
 		return 0;
 	}
 	
 	lp = make_link();
-	lp->value.cptr = optr;
+	lp->value.client = optr;
 	lp->flags = DCC_LINK_ME;
-	lp->next = sptr->user->dccallow;
-	sptr->user->dccallow = lp;
+	lp->next = client->user->dccallow;
+	client->user->dccallow = lp;
 	
 	lp = make_link();
-	lp->value.cptr = sptr;
+	lp->value.client = client;
 	lp->flags = DCC_LINK_REMOTE;
 	lp->next = optr->user->dccallow;
 	optr->user->dccallow = lp;
 	
-	sendnumeric(sptr, RPL_DCCSTATUS, optr->name, "added to");
+	sendnumeric(client, RPL_DCCSTATUS, optr->name, "added to");
 	return 0;
 }
 
-int del_dccallow(Client *sptr, Client *optr)
+int del_dccallow(Client *client, Client *optr)
 {
 Link **lpp, *lp;
 int found = 0;
 
-	for (lpp = &(sptr->user->dccallow); *lpp; lpp=&((*lpp)->next))
+	for (lpp = &(client->user->dccallow); *lpp; lpp=&((*lpp)->next))
 	{
 		if ((*lpp)->flags != DCC_LINK_ME)
 			continue;
-		if ((*lpp)->value.cptr == optr)
+		if ((*lpp)->value.client == optr)
 		{
 			lp = *lpp;
 			*lpp = lp->next;
@@ -203,7 +203,7 @@ int found = 0;
 	}
 	if (!found)
 	{
-		sendnumericfmt(sptr, RPL_DCCINFO, "%s is not in your DCC allow list", optr->name);
+		sendnumericfmt(client, RPL_DCCINFO, "%s is not in your DCC allow list", optr->name);
 		return 0;
 	}
 	
@@ -211,7 +211,7 @@ int found = 0;
 	{
 		if ((*lpp)->flags != DCC_LINK_REMOTE)
 			continue;
-		if ((*lpp)->value.cptr == sptr)
+		if ((*lpp)->value.client == client)
 		{
 			lp = *lpp;
 			*lpp = lp->next;
@@ -222,9 +222,9 @@ int found = 0;
 	}
 	if (!found)
 		sendto_realops("[BUG!] %s was in dccallowme list of %s but not in dccallowrem list!",
-			optr->name, sptr->name);
+			optr->name, client->name);
 
-	sendnumeric(sptr, RPL_DCCSTATUS, optr->name, "removed from");
+	sendnumeric(client, RPL_DCCSTATUS, optr->name, "removed from");
 
 	return 0;
 }

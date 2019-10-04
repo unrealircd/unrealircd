@@ -369,7 +369,7 @@ void sendto_channel(Channel *chptr, Client *from, Client *skip,
 	++current_serial;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->cptr;
+		acptr = lp->client;
 
 		/* Skip sending to 'skip' */
 		if ((acptr == skip) || (acptr->direction == skip))
@@ -480,27 +480,27 @@ good:
  */
 void sendto_server(Client *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...)
 {
-	Client *cptr;
+	Client *acptr;
 
 	/* noone to send to.. */
 	if (list_empty(&server_list))
 		return;
 
-	list_for_each_entry(cptr, &server_list, special_node)
+	list_for_each_entry(acptr, &server_list, special_node)
 	{
 		va_list vl;
 
-		if (one && cptr == one->direction)
+		if (one && acptr == one->direction)
 			continue;
 
-		if (caps && !CHECKPROTO(cptr, caps))
+		if (caps && !CHECKPROTO(acptr, caps))
 			continue;
 
-		if (nocaps && CHECKPROTO(cptr, nocaps))
+		if (nocaps && CHECKPROTO(acptr, nocaps))
 			continue;
 
 		va_start(vl, format);
-		vsendto_one(cptr, mtags, format, vl);
+		vsendto_one(acptr, mtags, format, vl);
 		va_end(vl);
 	}
 }
@@ -523,7 +523,7 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 	va_list vl;
 	Membership *channels;
 	Member *users;
-	Client *cptr;
+	Client *acptr;
 
 	/* We now create the buffer _before_ we send it to the clients. -- Syzop */
 	*sendbuf = '\0';
@@ -539,25 +539,25 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 		{
 			for (users = channels->chptr->members; users; users = users->next)
 			{
-				cptr = users->cptr;
+				acptr = users->client;
 
-				if (!MyConnect(cptr))
+				if (!MyConnect(acptr))
 					continue; /* only process local clients */
 
-				if (cptr->local->serial == current_serial)
+				if (acptr->local->serial == current_serial)
 					continue; /* message already sent to this client */
 
-				if (clicap && !HasCapabilityFast(cptr, clicap))
+				if (clicap && !HasCapabilityFast(acptr, clicap))
 					continue; /* client does not have the specified capability */
 
-				if (cptr == skip)
+				if (acptr == skip)
 					continue; /* the one to skip */
 
-				if (!user_can_see_member(cptr, user, channels->chptr))
+				if (!user_can_see_member(acptr, user, channels->chptr))
 					continue; /* the sending user (quit'ing or nick changing) is 'invisible' -- skip */
 
-				cptr->local->serial = current_serial;
-				sendto_one(cptr, mtags, "%s", sendbuf);
+				acptr->local->serial = current_serial;
+				sendto_one(acptr, mtags, "%s", sendbuf);
 			}
 		}
 	}
@@ -589,10 +589,10 @@ static int match_it(Client *one, char *mask, int what)
  * either by user hostname or user servername.
  */
 void sendto_match_butone(Client *one, Client *from, char *mask, int what,
-    MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
+                         MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	Client *cptr;
+	Client *acptr;
 	char cansendlocal, cansendglobal;
 
 	if (MyConnect(from))
@@ -618,12 +618,12 @@ void sendto_match_butone(Client *one, Client *from, char *mask, int what,
 	/* To local clients... */
 	if (cansendlocal)
 	{
-		list_for_each_entry(cptr, &lclient_list, lclient_node)
+		list_for_each_entry(acptr, &lclient_list, lclient_node)
 		{
-			if (!IsMe(cptr) && (cptr != one) && IsUser(cptr) && match_it(cptr, mask, what))
+			if (!IsMe(acptr) && (acptr != one) && IsUser(acptr) && match_it(acptr, mask, what))
 			{
 				va_start(vl, pattern);
-				vsendto_prefix_one(cptr, from, mtags, pattern, vl);
+				vsendto_prefix_one(acptr, from, mtags, pattern, vl);
 				va_end(vl);
 			}
 		}
@@ -638,17 +638,17 @@ void sendto_match_butone(Client *one, Client *from, char *mask, int what,
 void sendto_ops(FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	Client *cptr;
+	Client *acptr;
 	char nbuf[1024];
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
-		if (!IsServer(cptr) && !IsMe(cptr) && SendServNotice(cptr))
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
+		if (!IsServer(acptr) && !IsMe(acptr) && SendServNotice(acptr))
 		{
-			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, cptr->name);
+			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, acptr->name);
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
-			vsendto_one(cptr, NULL, nbuf, vl);
+			vsendto_one(acptr, NULL, nbuf, vl);
 			va_end(vl);
 		}
 }
@@ -661,18 +661,18 @@ void sendto_ops(FORMAT_STRING(const char *pattern), ...)
 void sendto_umode(int umodes, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	Client *cptr;
+	Client *acptr;
 	char nbuf[1024];
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
-		if (IsUser(cptr) && (cptr->umodes & umodes) == umodes)
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
+		if (IsUser(acptr) && (acptr->umodes & umodes) == umodes)
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :",
-			    me.name, cptr->name);
+			    me.name, acptr->name);
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
-			vsendto_one(cptr, NULL, nbuf, vl);
+			vsendto_one(acptr, NULL, nbuf, vl);
 			va_end(vl);
 		}
 }
@@ -685,7 +685,7 @@ void sendto_umode(int umodes, FORMAT_STRING(const char *pattern), ...)
 void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	Client *cptr;
+	Client *acptr;
 	char nbuf[1024];
 	int i;
 	char modestr[128];
@@ -703,23 +703,23 @@ void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 	}
 	*p = '\0';
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (IsUser(cptr) && (cptr->umodes & umodes) == umodes)
+		if (IsUser(acptr) && (acptr->umodes & umodes) == umodes)
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :",
-			    me.name, cptr->name);
+			    me.name, acptr->name);
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
-			vsendto_one(cptr, NULL, nbuf, vl);
+			vsendto_one(acptr, NULL, nbuf, vl);
 			va_end(vl);
 		} else
-		if (IsServer(cptr) && *modestr)
+		if (IsServer(acptr) && *modestr)
 		{
 			snprintf(nbuf, sizeof(nbuf), ":%s SENDUMODE %s :%s", me.name, modestr, pattern);
 			va_start(vl, pattern);
-			vsendto_one(cptr, NULL, nbuf, vl);
+			vsendto_one(acptr, NULL, nbuf, vl);
 			va_end(vl);
 		}
 	}
@@ -733,17 +733,17 @@ void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 void sendto_snomask(int snomask, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	Client *cptr;
+	Client *acptr;
 	char nbuf[2048];
 
 	va_start(vl, pattern);
 	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry(acptr, &oper_list, special_node)
 	{
-		if (cptr->user->snomask & snomask)
-			sendnotice(cptr, "%s", nbuf);
+		if (acptr->user->snomask & snomask)
+			sendnotice(acptr, "%s", nbuf);
 	}
 }
 
@@ -755,7 +755,7 @@ void sendto_snomask(int snomask, FORMAT_STRING(const char *pattern), ...)
 void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	Client *cptr;
+	Client *acptr;
 	int  i;
 	char nbuf[2048], snobuf[32], *p;
 
@@ -763,10 +763,10 @@ void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
 	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry(acptr, &oper_list, special_node)
 	{
-		if (cptr->user->snomask & snomask)
-			sendnotice(cptr, "%s", nbuf);
+		if (acptr->user->snomask & snomask)
+			sendnotice(acptr, "%s", nbuf);
 	}
 
 	/* Build snomasks-to-send-to buffer */
@@ -786,35 +786,35 @@ void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
  */
 void send_cap_notify(int add, char *token)
 {
-	Client *cptr;
+	Client *client;
 	ClientCapability *clicap = ClientCapabilityFindReal(token);
 	long CAP_NOTIFY = ClientCapabilityBit("cap-notify");
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
-		if (HasCapabilityFast(cptr, CAP_NOTIFY))
+		if (HasCapabilityFast(client, CAP_NOTIFY))
 		{
 			if (add)
 			{
 				char *args = NULL;
 				if (clicap)
 				{
-					if (clicap->visible && !clicap->visible(cptr))
+					if (clicap->visible && !clicap->visible(client))
 						continue; /* invisible CAP, so don't announce it */
-					if (clicap->parameter && (cptr->local->cap_protocol >= 302))
-						args = clicap->parameter(cptr);
+					if (clicap->parameter && (client->local->cap_protocol >= 302))
+						args = clicap->parameter(client);
 				}
 				if (!args)
 				{
-					sendto_one(cptr, NULL, ":%s CAP %s NEW :%s",
-						me.name, (*cptr->name ? cptr->name : "*"), token);
+					sendto_one(client, NULL, ":%s CAP %s NEW :%s",
+						me.name, (*client->name ? client->name : "*"), token);
 				} else {
-					sendto_one(cptr, NULL, ":%s CAP %s NEW :%s=%s",
-						me.name, (*cptr->name ? cptr->name : "*"), token, args);
+					sendto_one(client, NULL, ":%s CAP %s NEW :%s=%s",
+						me.name, (*client->name ? client->name : "*"), token, args);
 				}
 			} else {
-				sendto_one(cptr, NULL, ":%s CAP %s DEL :%s",
-					me.name, (*cptr->name ? cptr->name : "*"), token);
+				sendto_one(client, NULL, ":%s CAP %s DEL :%s",
+					me.name, (*client->name ? client->name : "*"), token);
 			}
 		}
 	}
@@ -828,21 +828,21 @@ void send_cap_notify(int add, char *token)
 void sendto_ops_butone(Client *one, Client *from, FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	Client *cptr;
+	Client *acptr;
 
 	++current_serial;
-	list_for_each_entry(cptr, &client_list, client_node)
+	list_for_each_entry(acptr, &client_list, client_node)
 	{
-		if (!SendWallops(cptr))
+		if (!SendWallops(acptr))
 			continue;
-		if (cptr->direction->local->serial == current_serial)	/* sent message along it already ? */
+		if (acptr->direction->local->serial == current_serial)	/* sent message along it already ? */
 			continue;
-		if (cptr->direction == one)
+		if (acptr->direction == one)
 			continue;	/* ...was the one I should skip */
-		cptr->direction->local->serial = current_serial;
+		acptr->direction->local->serial = current_serial;
 
 		va_start(vl, pattern);
-		vsendto_prefix_one(cptr->direction, from, NULL, pattern, vl);
+		vsendto_prefix_one(acptr->direction, from, NULL, pattern, vl);
 		va_end(vl);
 	}
 }
@@ -945,17 +945,17 @@ void sendto_prefix_one(Client *to, Client *from, MessageTag *mtags, FORMAT_STRIN
 void sendto_realops(FORMAT_STRING(const char *pattern), ...)
 {
 	va_list vl;
-	Client *cptr;
+	Client *acptr;
 	char nbuf[1024];
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry(acptr, &oper_list, special_node)
 	{
 		(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ",
-		    me.name, cptr->name);
+		    me.name, acptr->name);
 		(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 		va_start(vl, pattern);
-		vsendto_one(cptr, NULL, nbuf, vl);
+		vsendto_one(acptr, NULL, nbuf, vl);
 		va_end(vl);
 	}
 }
@@ -974,96 +974,96 @@ static char buf[2048];
 	ircd_log(LOG_ERROR, "%s", buf);
 }
 
-void sendto_connectnotice(Client *acptr, int disconnect, char *comment)
+void sendto_connectnotice(Client *newuser, int disconnect, char *comment)
 {
-	Client *cptr;
+	Client *acptr;
 	char connect[512], secure[256];
 
 	if (!disconnect)
 	{
-		RunHook(HOOKTYPE_LOCAL_CONNECT, acptr);
+		RunHook(HOOKTYPE_LOCAL_CONNECT, newuser);
 
 		*secure = '\0';
-		if (IsSecure(acptr))
-			snprintf(secure, sizeof(secure), " [secure %s]", SSL_get_cipher(acptr->local->ssl));
+		if (IsSecure(newuser))
+			snprintf(secure, sizeof(secure), " [secure %s]", SSL_get_cipher(newuser->local->ssl));
 
 		ircsnprintf(connect, sizeof(connect),
-		    "*** Client connecting: %s (%s@%s) [%s] {%s}%s", acptr->name,
-		    acptr->user->username, acptr->user->realhost, acptr->ip,
-		    acptr->local->class ? acptr->local->class->name : "0",
+		    "*** Client connecting: %s (%s@%s) [%s] {%s}%s", newuser->name,
+		    newuser->user->username, newuser->user->realhost, newuser->ip,
+		    newuser->local->class ? newuser->local->class->name : "0",
 		    secure);
 	}
 	else
 	{
 		ircsnprintf(connect, sizeof(connect), "*** Client exiting: %s (%s@%s) [%s] (%s)",
-			acptr->name, acptr->user->username, acptr->user->realhost, acptr->ip, comment);
+			newuser->name, newuser->user->username, newuser->user->realhost, newuser->ip, comment);
 	}
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry(acptr, &oper_list, special_node)
 	{
-		if (cptr->user->snomask & SNO_CLIENT)
-			sendnotice(cptr, "%s", connect);
+		if (acptr->user->snomask & SNO_CLIENT)
+			sendnotice(acptr, "%s", connect);
 	}
 }
 
-void sendto_fconnectnotice(Client *acptr, int disconnect, char *comment)
+void sendto_fconnectnotice(Client *newuser, int disconnect, char *comment)
 {
-	Client *cptr;
+	Client *acptr;
 	char connect[512], secure[256];
 
 	if (!disconnect)
 	{
 		*secure = '\0';
-		if (IsSecureConnect(acptr))
+		if (IsSecureConnect(newuser))
 			strcpy(secure, " [secure]"); /* will we ever expand this? */
 
 		ircsnprintf(connect, sizeof(connect),
-		    "*** Client connecting: %s (%s@%s) [%s] {0}%s", acptr->name,
-		    acptr->user->username, acptr->user->realhost, acptr->ip ? acptr->ip : "0",
+		    "*** Client connecting: %s (%s@%s) [%s] {0}%s", newuser->name,
+		    newuser->user->username, newuser->user->realhost, newuser->ip ? newuser->ip : "0",
 		    secure);
 	}
 	else
 	{
 		ircsnprintf(connect, sizeof(connect), "*** Client exiting: %s (%s@%s) [%s] (%s)",
-			acptr->name, acptr->user->username, acptr->user->realhost,
-			acptr->ip ? acptr->ip : "0", comment);
+			newuser->name, newuser->user->username, newuser->user->realhost,
+			newuser->ip ? newuser->ip : "0", comment);
 	}
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry(acptr, &oper_list, special_node)
 	{
-		if (cptr->user->snomask & SNO_FCLIENT)
-			sendnotice(cptr, ":%s NOTICE %s :%s", acptr->user->server, cptr->name, connect);
+		if (acptr->user->snomask & SNO_FCLIENT)
+			sendnotice(acptr, ":%s NOTICE %s :%s", newuser->user->server, acptr->name, connect);
 	}
 }
 
 /** Introduce user to NICKv2-capable and SID-capable servers.
- * @param cptr Server to skip
- * @param sptr Client to introduce
+ * @param one    Server to skip
+ * @param client Client to introduce
  * @param umodes User modes of client
  */
-void sendto_serv_butone_nickcmd(Client *one, Client *sptr, char *umodes)
+void sendto_serv_butone_nickcmd(Client *one, Client *client, char *umodes)
 {
-	Client *cptr;
+	Client *acptr;
 
 	if (BadPtr(umodes))
 		umodes = "+";
 	
-	list_for_each_entry(cptr, &server_list, special_node)
+	list_for_each_entry(acptr, &server_list, special_node)
 	{
-		if (one && cptr == one->direction)
+		if (one && acptr == one->direction)
 			continue;
 		
-		if (!CHECKPROTO(cptr, PROTO_SID) && !CHECKPROTO(cptr, PROTO_NICKv2))
+		if (!CHECKPROTO(acptr, PROTO_SID) && !CHECKPROTO(acptr, PROTO_NICKv2))
 			continue;
 		
-		sendto_one_nickcmd(cptr, sptr, umodes);
+		sendto_one_nickcmd(acptr, client, umodes);
 	}
 }
 
 /** Introduce user to NICKv2-capable and SID-capable servers.
- * @param cptr Server to send to (locally connected!)
- * @param sptr Client to introduce
- * @param umodes User modes of client
+ * @param server  Server to send to (locally connected!)
+ * @param client  Client to introduce
+ * @param umodes  User modes of client
  */
 void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
 {

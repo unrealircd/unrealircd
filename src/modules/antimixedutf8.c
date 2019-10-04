@@ -174,34 +174,34 @@ CMD_OVERRIDE_FUNC(override_msg)
 {
 	int score, ret;
 	
-	if (!MyUser(sptr) || (parc < 3) || BadPtr(parv[2]))
+	if (!MyUser(client) || (parc < 3) || BadPtr(parv[2]))
 	{
 		/* Short circuit for: remote clients or insufficient parameters */
-		return CallCommandOverride(ovr, sptr, recv_mtags, parc, parv);
+		return CallCommandOverride(ovr, client, recv_mtags, parc, parv);
 	}
 
 	score = lookalikespam_score(StripControlCodes(parv[2]));
-	if ((score >= cfg.score) && !find_tkl_exception(TKL_ANTIMIXEDUTF8, sptr))
+	if ((score >= cfg.score) && !find_tkl_exception(TKL_ANTIMIXEDUTF8, client))
 	{
 		if (cfg.ban_action == BAN_ACT_KILL)
 		{
 			sendto_realops("[antimixedutf8] Killed connection from %s (score %d)",
-				GetIP(sptr), score);
+				GetIP(client), score);
 		} /* no else here!! */
 
 		if ((cfg.ban_action == BAN_ACT_BLOCK) ||
-		    ((cfg.ban_action == BAN_ACT_SOFT_BLOCK) && !IsLoggedIn(sptr)))
+		    ((cfg.ban_action == BAN_ACT_SOFT_BLOCK) && !IsLoggedIn(client)))
 		{
-			sendnotice(sptr, "%s", cfg.ban_reason);
+			sendnotice(client, "%s", cfg.ban_reason);
 			return;
 		} else {
-			if (place_host_ban(sptr, cfg.ban_action, cfg.ban_reason, cfg.ban_time))
+			if (place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time))
 				return;
 			/* a return value of 0 means the user is exempted, so fallthrough.. */
 		}
 	}
 
-	return CallCommandOverride(ovr, sptr, recv_mtags, parc, parv);
+	return CallCommandOverride(ovr, client, recv_mtags, parc, parv);
 }
 
 /*** rest is module and config stuff ****/

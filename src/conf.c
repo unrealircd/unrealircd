@@ -283,7 +283,7 @@ int remote_include(ConfigEntry *ce);
 void unload_notloaded_includes(void);
 void load_includes(void);
 void unload_loaded_includes(void);
-int rehash_internal(Client *sptr, int sig);
+int rehash_internal(Client *client, int sig);
 int is_blacklisted_module(char *name);
 
 /** Return the printable string of a 'cep' location, such as set::something::xyz */
@@ -2806,11 +2806,11 @@ ConfigItem_operclass *Find_operclass(char *name)
 int count_oper_sessions(char *name)
 {
 	int count = 0;
-	Client *cptr;
+	Client *client;
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry(client, &oper_list, special_node)
 	{
-		if (cptr->user->operlogin != NULL && !strcmp(cptr->user->operlogin, name))
+		if (client->user->operlogin != NULL && !strcmp(client->user->operlogin, name))
 			count++;
 	}
 
@@ -2873,7 +2873,7 @@ ConfigItem_ulines *Find_uline(char *host)
 }
 
 
-ConfigItem_except *Find_except(Client *sptr, short type)
+ConfigItem_except *Find_except(Client *client, short type)
 {
 	ConfigItem_except *excepts;
 
@@ -2881,24 +2881,24 @@ ConfigItem_except *Find_except(Client *sptr, short type)
 	{
 		if (excepts->flag.type == type)
 		{
-			if (match_user(excepts->mask, sptr, MATCH_CHECK_REAL))
+			if (match_user(excepts->mask, client, MATCH_CHECK_REAL))
 				return excepts;
 		}
 	}
 	return NULL;
 }
 
-ConfigItem_tld *Find_tld(Client *cptr)
+ConfigItem_tld *Find_tld(Client *client)
 {
 	ConfigItem_tld *tld;
 
 	for (tld = conf_tld; tld; tld = tld->next)
 	{
-		if (match_user(tld->mask, cptr, MATCH_CHECK_REAL))
+		if (match_user(tld->mask, client, MATCH_CHECK_REAL))
 		{
-			if ((tld->options & TLD_TLS) && !IsSecureConnect(cptr))
+			if ((tld->options & TLD_TLS) && !IsSecureConnect(client))
 				continue;
-			if ((tld->options & TLD_REMOTE) && MyUser(cptr))
+			if ((tld->options & TLD_REMOTE) && MyUser(client))
 				continue;
 			return tld;
 		}
@@ -2908,13 +2908,13 @@ ConfigItem_tld *Find_tld(Client *cptr)
 }
 
 
-ConfigItem_link *Find_link(char *servername, Client *acptr)
+ConfigItem_link *Find_link(char *servername, Client *client)
 {
 	ConfigItem_link	*link;
 
 	for (link = conf_link; link; link = link->next)
 	{
-		if (match_simple(link->servername, servername) && unreal_mask_match(acptr, link->incoming.mask))
+		if (match_simple(link->servername, servername) && unreal_mask_match(client, link->incoming.mask))
 		{
 		    return link;
 		}
@@ -2925,7 +2925,7 @@ ConfigItem_link *Find_link(char *servername, Client *acptr)
 /** Find a ban of type CONF_BAN_*, which is currently only
  * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
  */
-ConfigItem_ban *Find_ban(Client *sptr, char *host, short type)
+ConfigItem_ban *Find_ban(Client *client, char *host, short type)
 {
 	ConfigItem_ban *ban;
 
@@ -2933,9 +2933,9 @@ ConfigItem_ban *Find_ban(Client *sptr, char *host, short type)
 	{
 		if (ban->flag.type == type)
 		{
-			if (sptr)
+			if (client)
 			{
-				if (match_user(ban->mask, sptr, MATCH_CHECK_REAL))
+				if (match_user(ban->mask, client, MATCH_CHECK_REAL))
 					return ban;
 			}
 			else if (match_simple(ban->mask, host))
@@ -2949,7 +2949,7 @@ ConfigItem_ban *Find_ban(Client *sptr, char *host, short type)
  * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
  * This is the extended version, only used by cmd_svsnline.
  */
-ConfigItem_ban 	*Find_banEx(Client *sptr, char *host, short type, short type2)
+ConfigItem_ban 	*Find_banEx(Client *client, char *host, short type, short type2)
 {
 	ConfigItem_ban *ban;
 
@@ -2957,9 +2957,9 @@ ConfigItem_ban 	*Find_banEx(Client *sptr, char *host, short type, short type2)
 	{
 		if ((ban->flag.type == type) && (ban->flag.type2 == type2))
 		{
-			if (sptr)
+			if (client)
 			{
-				if (match_user(ban->mask, sptr, MATCH_CHECK_REAL))
+				if (match_user(ban->mask, client, MATCH_CHECK_REAL))
 					return ban;
 			}
 			else if (match_simple(ban->mask, host))
@@ -2984,7 +2984,7 @@ ConfigItem_vhost *Find_vhost(char *name)
 
 
 /** returns NULL if allowed and struct if denied */
-ConfigItem_deny_channel *Find_channel_allowed(Client *cptr, char *name)
+ConfigItem_deny_channel *Find_channel_allowed(Client *client, char *name)
 {
 	ConfigItem_deny_channel *dchannel;
 	ConfigItem_allow_channel *achannel;
@@ -2993,9 +2993,9 @@ ConfigItem_deny_channel *Find_channel_allowed(Client *cptr, char *name)
 	{
 		if (match_simple(dchannel->channel, name))
 		{
-			if (dchannel->class && strcmp(cptr->local->class->name, dchannel->class))
+			if (dchannel->class && strcmp(client->local->class->name, dchannel->class))
 				continue;
-			if (dchannel->mask && !unreal_mask_match(cptr, dchannel->mask))
+			if (dchannel->mask && !unreal_mask_match(client, dchannel->mask))
 				continue;
 			break; /* MATCH deny channel { } */
 		}
@@ -3008,9 +3008,9 @@ ConfigItem_deny_channel *Find_channel_allowed(Client *cptr, char *name)
 		{
 			if (match_simple(achannel->channel, name))
 			{
-				if (achannel->class && strcmp(cptr->local->class->name, achannel->class))
+				if (achannel->class && strcmp(client->local->class->name, achannel->class))
 					continue;
-				if (achannel->mask && !unreal_mask_match(cptr, achannel->mask))
+				if (achannel->mask && !unreal_mask_match(client, achannel->mask))
 					continue;
 				break; /* MATCH allow channel { } */
 			}
@@ -9954,11 +9954,11 @@ static void conf_download_complete(const char *url, const char *file, const char
 		if (inc->flag.type & INCLUDE_DLQUEUED)
 			return;
 	}
-	rehash_internal(loop.rehash_save_sptr, loop.rehash_save_sig);
+	rehash_internal(loop.rehash_save_client, loop.rehash_save_sig);
 }
 #endif
 
-int     rehash(Client *sptr, int sig)
+int     rehash(Client *client, int sig)
 {
 #ifdef USE_LIBCURL
 	ConfigItem_include *inc;
@@ -9966,12 +9966,12 @@ int     rehash(Client *sptr, int sig)
 	if (loop.ircd_rehashing)
 	{
 		if (!sig)
-			sendnotice(sptr, "A rehash is already in progress");
+			sendnotice(client, "A rehash is already in progress");
 		return 0;
 	}
 
 	loop.ircd_rehashing = 1;
-	loop.rehash_save_sptr = sptr;
+	loop.rehash_save_client = client;
 	loop.rehash_save_sig = sig;
 	for (inc = conf_include; inc; inc = inc->next)
 	{
@@ -9992,15 +9992,15 @@ int     rehash(Client *sptr, int sig)
 		download_file_async(inc->url, modtime, conf_download_complete, (void *)inc);
 	}
 	if (!found_remote)
-		return rehash_internal(sptr, sig);
+		return rehash_internal(client, sig);
 	return 0;
 #else
 	loop.ircd_rehashing = 1;
-	return rehash_internal(sptr, sig);
+	return rehash_internal(client, sig);
 #endif
 }
 
-int	rehash_internal(Client *sptr, int sig)
+int	rehash_internal(Client *client, int sig)
 {
 	if (sig == 1)
 		sendto_ops("Got signal SIGHUP, reloading %s file", configfile);

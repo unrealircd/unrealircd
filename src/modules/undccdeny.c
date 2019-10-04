@@ -59,28 +59,28 @@ CMD_FUNC(cmd_undccdeny)
 {
 	ConfigItem_deny_dcc *d;
 
-	if (!MyUser(sptr))
+	if (!MyUser(client))
 		return;
 
-	if (!ValidatePermissionsForPath("server-ban:dccdeny",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server-ban:dccdeny",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "UNDCCDENY");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "UNDCCDENY");
 		return;
 	}
 
 	if ((d = Find_deny_dcc(parv[1])) && d->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 	{
-		sendto_ops("%s removed a temp dccdeny for %s", sptr->name, parv[1]);
+		sendto_ops("%s removed a temp dccdeny for %s", client->name, parv[1]);
 		DCCdeny_del(d);
 		return;
 	} else
 	{
-		sendnotice(sptr, "*** Unable to find a temp dccdeny matching %s", parv[1]);
+		sendnotice(client, "*** Unable to find a temp dccdeny matching %s", parv[1]);
 	}
 }

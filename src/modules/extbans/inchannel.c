@@ -28,9 +28,9 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_inchannel_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int what, int what2);
+int extban_inchannel_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2);
 char *extban_inchannel_conv_param(char *para);
-int extban_inchannel_is_banned(Client *sptr, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
+int extban_inchannel_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
 MOD_INIT()
@@ -94,11 +94,11 @@ char *extban_inchannel_conv_param(char *para)
 }
 
 /* The only purpose of this function is a temporary workaround to prevent a desynch.. pfff */
-int extban_inchannel_is_ok(Client *sptr, Channel *chptr, char *para, int checkt, int what, int what2)
+int extban_inchannel_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2)
 {
 	char *p;
 
-	if ((checkt == EXBCHK_PARAM) && MyUser(sptr) && (what == MODE_ADD) && (strlen(para) > 3))
+	if ((checkt == EXBCHK_PARAM) && MyUser(client) && (what == MODE_ADD) && (strlen(para) > 3))
 	{
 		p = para + 3;
 		if ((*p == '+') || (*p == '%') || (*p == '%') ||
@@ -107,7 +107,7 @@ int extban_inchannel_is_ok(Client *sptr, Channel *chptr, char *para, int checkt,
 
 		if (*p != '#')
 		{
-			sendnotice(sptr, "Please use a # in the channelname (eg: ~c:#*blah*)");
+			sendnotice(client, "Please use a # in the channelname (eg: ~c:#*blah*)");
 			return 0;
 		}
 	}
@@ -135,7 +135,7 @@ static int extban_inchannel_compareflags(char symbol, int flags)
 	return 0;
 }
 
-int extban_inchannel_is_banned(Client *sptr, Channel *chptr, char *ban, int type, char **msg, char **errmsg)
+int extban_inchannel_is_banned(Client *client, Channel *chptr, char *ban, int type, char **msg, char **errmsg)
 {
 	Membership *lp;
 	char *p = ban+3, symbol = '\0';
@@ -146,7 +146,7 @@ int extban_inchannel_is_banned(Client *sptr, Channel *chptr, char *ban, int type
 		p++;
 	}
 
-	for (lp = sptr->user->channel; lp; lp = lp->next)
+	for (lp = client->user->channel; lp; lp = lp->next)
 	{
 		if (match_esc(p, lp->chptr->chname))
 		{

@@ -38,7 +38,7 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
 
 /* Our special version of SupportBatch() assumes that remote servers always handle it */
 #define SupportBatch(x)		(MyConnect(x) ? HasCapability((x), "batch") : 1)
-#define SupportLabel(x)		(HasCapabilityFast(acptr, CAP_LABELED_RESPONSE))
+#define SupportLabel(x)		(HasCapabilityFast((x), CAP_LABELED_RESPONSE))
 
 struct {
 	Client *client; /**< The client who issued the original command with a label */
@@ -51,7 +51,7 @@ struct {
 
 long CAP_LABELED_RESPONSE = 0L;
 
-int labeled_response_mtag_is_ok(Client *acptr, char *name, char *value);
+int labeled_response_mtag_is_ok(Client *client, char *name, char *value);
 
 MOD_INIT()
 {
@@ -262,12 +262,12 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
 /** This function verifies if the client sending the
  * tag is permitted to do so and uses a permitted syntax.
  */
-int labeled_response_mtag_is_ok(Client *acptr, char *name, char *value)
+int labeled_response_mtag_is_ok(Client *client, char *name, char *value)
 {
 	if (BadPtr(value))
 		return 0;
 
-	if (IsServer(acptr))
+	if (IsServer(client))
 		return 1;
 
 	/* Ignore the label if the client does not support both
@@ -275,7 +275,7 @@ int labeled_response_mtag_is_ok(Client *acptr, char *name, char *value)
 	 * it's too much hassle to support labeled-response without
 	 * batch and the end result is quite broken too.
 	 */
-	if (MyUser(acptr) && (!SupportLabel(acptr) || !SupportBatch(acptr)))
+	if (MyUser(client) && (!SupportLabel(client) || !SupportBatch(client)))
 		return 0;
 
 	/* Do some basic sanity checking for non-servers */

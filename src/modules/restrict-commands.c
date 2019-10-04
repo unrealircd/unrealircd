@@ -27,7 +27,7 @@ ModuleHeader MOD_HEADER = {
 	"unrealircd-5",
 };
 
-#define GetReputation(acptr) (moddata_client_get(acptr, "reputation") ? atoi(moddata_client_get(acptr, "reputation")) : 0)
+#define GetReputation(client) (moddata_client_get(client, "reputation") ? atoi(moddata_client_get(client, "reputation")) : 0)
 
 typedef struct RestrictedCommand RestrictedCommand;
 struct RestrictedCommand {
@@ -51,9 +51,9 @@ RestrictedCommand *find_restrictions_bycmd(char *cmd);
 RestrictedCommand *find_restrictions_byconftag(char *conftag);
 int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
-char *rcmd_hook_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
-char *rcmd_hook_preusermsg(Client *sptr, Client *to, char *text, int notice);
-char *rcmd_hook_wrapper(Client *sptr, char *text, int notice, char *display, char *conftag);
+char *rcmd_hook_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
+char *rcmd_hook_preusermsg(Client *client, Client *to, char *text, int notice);
+char *rcmd_hook_wrapper(Client *client, char *text, int notice, char *display, char *conftag);
 CMD_OVERRIDE_FUNC(rcmd_override);
 
 // Globals
@@ -294,37 +294,37 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
-int rcmd_canbypass(Client *sptr, RestrictedCommand *rcmd) {
-	if (!sptr || !rcmd)
+int rcmd_canbypass(Client *client, RestrictedCommand *rcmd) {
+	if (!client || !rcmd)
 		return 1;
-	if (rcmd->exempt_identified && IsLoggedIn(sptr))
+	if (rcmd->exempt_identified && IsLoggedIn(client))
 		return 1;
-	if (rcmd->exempt_reputation_score > 0 && (GetReputation(sptr) >= rcmd->exempt_reputation_score))
+	if (rcmd->exempt_reputation_score > 0 && (GetReputation(client) >= rcmd->exempt_reputation_score))
 		return 1;
-	if (sptr->local && (TStime() - sptr->local->firsttime < rcmd->connect_delay))
+	if (client->local && (TStime() - client->local->firsttime < rcmd->connect_delay))
 		return 0;
 	return 1; // Default to yes so we don't drop too many commands
 }
 
-char *rcmd_hook_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
+char *rcmd_hook_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
-	return rcmd_hook_wrapper(sptr, text, notice, "channel", (notice ? "channel-notice" : "channel-message"));
+	return rcmd_hook_wrapper(client, text, notice, "channel", (notice ? "channel-notice" : "channel-message"));
 }
 
-char *rcmd_hook_preusermsg(Client *sptr, Client *to, char *text, int notice)
+char *rcmd_hook_preusermsg(Client *client, Client *to, char *text, int notice)
 {
 	// Need a few extra exceptions for user messages only =]
-	if ((sptr == to) || IsULine(to))
+	if ((client == to) || IsULine(to))
 		return text;
-	return rcmd_hook_wrapper(sptr, text, notice, "user", (notice ? "private-notice" : "private-message"));
+	return rcmd_hook_wrapper(client, text, notice, "user", (notice ? "private-notice" : "private-message"));
 }
 
-char *rcmd_hook_wrapper(Client *sptr, char *text, int notice, char *display, char *conftag)
+char *rcmd_hook_wrapper(Client *client, char *text, int notice, char *display, char *conftag)
 {
 	RestrictedCommand *rcmd;
 
 	// Let's allow non-local users, opers and U:Lines early =]
-	if (!MyUser(sptr) || !sptr->local || IsOper(sptr) || IsULine(sptr))
+	if (!MyUser(client) || !client->local || IsOper(client) || IsULine(client))
 		return text;
 
 	rcmd = find_restrictions_byconftag(conftag);
@@ -332,12 +332,12 @@ char *rcmd_hook_wrapper(Client *sptr, char *text, int notice, char *display, cha
 	{
 		if (rcmd->disable)
 		{
-			sendnotice(sptr, "Sending of %ss to %ss been disabled by the network administrators", (notice ? "notice" : "message"), display);
+			sendnotice(client, "Sending of %ss to %ss been disabled by the network administrators", (notice ? "notice" : "message"), display);
 			return NULL;
 		}
-		if (!rcmd_canbypass(sptr, rcmd))
+		if (!rcmd_canbypass(client, rcmd))
 		{
-			sendnotice(sptr, "You cannot send %ss to %ss until you've been connected for %ld seconds or more", (notice ? "notice" : "message"), display, rcmd->connect_delay);
+			sendnotice(client, "You cannot send %ss to %ss until you've been connected for %ld seconds or more", (notice ? "notice" : "message"), display, rcmd->connect_delay);
 			return NULL;
 		}
 	}
@@ -350,24 +350,24 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 {
 	RestrictedCommand *rcmd;
 
-	if (!MyUser(sptr) || !sptr->local || IsOper(sptr) || IsULine(sptr))
-		return CallCommandOverride(ovr, sptr, recv_mtags, parc, parv);
+	if (!MyUser(client) || !client->local || IsOper(client) || IsULine(client))
+		return CallCommandOverride(ovr, client, recv_mtags, parc, parv);
 
 	rcmd = find_restrictions_bycmd(ovr->command->cmd);
 	if (rcmd)
 	{
 		if (rcmd->disable)
 		{
-			sendnotice(sptr, "The command %s has been disabled by the network administrators", ovr->command->cmd);
+			sendnotice(client, "The command %s has been disabled by the network administrators", ovr->command->cmd);
 			return;
 		}
-		if (!rcmd_canbypass(sptr, rcmd))
+		if (!rcmd_canbypass(client, rcmd))
 		{
-			sendnotice(sptr, "You cannot use the %s command until you've been connected for %ld seconds or more", ovr->command->cmd, rcmd->connect_delay);
+			sendnotice(client, "You cannot use the %s command until you've been connected for %ld seconds or more", ovr->command->cmd, rcmd->connect_delay);
 			return;
 		}
 	}
 
 	// No restrictions apply, process command as normal =]
-	return CallCommandOverride(ovr, sptr, recv_mtags, parc, parv);
+	return CallCommandOverride(ovr, client, recv_mtags, parc, parv);
 }

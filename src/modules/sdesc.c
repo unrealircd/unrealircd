@@ -60,33 +60,33 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_sdesc)
 {
-	if (!ValidatePermissionsForPath("server:description",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:description",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 	
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SDESC");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "SDESC");
 		return;
 	}
 
 	if (strlen(parv[1]) > REALLEN)
 	{
-		if (MyConnect(sptr))
+		if (MyConnect(client))
 		{
-			sendnotice(sptr, "*** /SDESC Error: \"Server info\" may maximum be %i characters of length",
+			sendnotice(client, "*** /SDESC Error: \"Server info\" may maximum be %i characters of length",
 				REALLEN);
 			return;
 		}
 		parv[1][REALLEN] = '\0';
 	}
 
-	ircsnprintf(sptr->srvptr->info, sizeof(sptr->srvptr->info), "%s", parv[1]);
+	ircsnprintf(client->srvptr->info, sizeof(client->srvptr->info), "%s", parv[1]);
 
-	sendto_server(sptr, 0, 0, NULL, ":%s SDESC :%s", sptr->name, parv[1]);
+	sendto_server(client, 0, 0, NULL, ":%s SDESC :%s", client->name, parv[1]);
 
 	sendto_ops("Server description for %s is now '%s' (changed by %s)",
-		sptr->srvptr->name, sptr->srvptr->info, sptr->name);
+		client->srvptr->name, client->srvptr->info, client->name);
 }

@@ -49,8 +49,8 @@ ConfigItem_webirc *conf_webirc = NULL;
 
 /* Forward declarations */
 CMD_FUNC(cmd_webirc);
-int webirc_check_init(Client *cptr, char *sockn, size_t size);
-int webirc_local_pass(Client *sptr, char *password);
+int webirc_check_init(Client *client, char *sockn, size_t size);
+int webirc_local_pass(Client *client, char *password);
 int webirc_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int webirc_config_run(ConfigFile *, ConfigEntry *, int);
 void webirc_free_conf(void);
@@ -58,7 +58,7 @@ void delete_webircblock(ConfigItem_webirc *e);
 char *webirc_md_serialize(ModData *m);
 void webirc_md_unserialize(char *str, ModData *m);
 void webirc_md_free(ModData *md);
-int webirc_secure_connect(Client *acptr);
+int webirc_secure_connect(Client *client);
 
 #define IsWEBIRC(x)			(moddata_client(x, webirc_md).l)
 #define IsWEBIRCSecure(x)	(moddata_client(x, webirc_md).l == 2)
@@ -303,19 +303,19 @@ void webirc_md_free(ModData *md)
 	md->l = 0;
 }
 
-ConfigItem_webirc *Find_webirc(Client *sptr, char *password, WEBIRCType type, char **errorstr)
+ConfigItem_webirc *Find_webirc(Client *client, char *password, WEBIRCType type, char **errorstr)
 {
 	ConfigItem_webirc *e;
 	char *error = NULL;
 
 	for (e = conf_webirc; e; e = e->next)
 	{
-		if ((e->type == type) && unreal_mask_match(sptr, e->mask))
+		if ((e->type == type) && unreal_mask_match(client, e->mask))
 		{
 			if (type == WEBIRC_WEBIRC)
 			{
 				/* Check password */
-				if (!Auth_Check(sptr, e->auth, password))
+				if (!Auth_Check(client, e->auth, password))
 					error = "CGI:IRC -- Invalid password";
 				else
 					return e; /* Found matching block, return straight away */
@@ -337,47 +337,47 @@ ConfigItem_webirc *Find_webirc(Client *sptr, char *password, WEBIRCType type, ch
 #define WEBIRC_STRINGLEN  (sizeof(WEBIRC_STRING)-1)
 
 /* Does the CGI:IRC host spoofing work */
-void dowebirc(Client *cptr, char *ip, char *host, char *options)
+void dowebirc(Client *client, char *ip, char *host, char *options)
 {
 	char scratch[64];
 
-	if (IsWEBIRC(cptr))
-		return exit_client(cptr, NULL, "Double CGI:IRC request (already identified)");
+	if (IsWEBIRC(client))
+		return exit_client(client, NULL, "Double CGI:IRC request (already identified)");
 
 	if (host && !strcmp(ip, host))
 		host = NULL; /* host did not resolve, make it NULL */
 
-	/* STEP 1: Update cptr->local->ip
+	/* STEP 1: Update client->local->ip
 	   inet_pton() returns 1 on success, 0 on bad input, -1 on bad AF */
 	if ((inet_pton(AF_INET, ip, scratch) != 1) &&
 	    (inet_pton(AF_INET6, ip, scratch) != 1))
 	{
 		/* then we have an invalid IP */
-		return exit_client(cptr, NULL, "Invalid IP address");
+		return exit_client(client, NULL, "Invalid IP address");
 	}
 
 	/* STEP 2: Update GetIP() */
-	safe_strdup(cptr->ip, ip);
+	safe_strdup(client->ip, ip);
 		
-	/* STEP 3: Update cptr->local->hostp */
+	/* STEP 3: Update client->local->hostp */
 	/* (free old) */
-	if (cptr->local->hostp)
+	if (client->local->hostp)
 	{
-		unreal_free_hostent(cptr->local->hostp);
-		cptr->local->hostp = NULL;
+		unreal_free_hostent(client->local->hostp);
+		client->local->hostp = NULL;
 	}
 	/* (create new) */
 	if (host && verify_hostname(host))
-		cptr->local->hostp = unreal_create_hostent(host, cptr->ip);
+		client->local->hostp = unreal_create_hostent(host, client->ip);
 
 	/* STEP 4: Update sockhost
 	   Make sure that if this any IPv4 address is _not_ prefixed with
 	   "::ffff:" by using Inet_ia2p().
 	 */
 	// Hmm I ignored above warning. May be bad during transition period.
-	strlcpy(cptr->local->sockhost, cptr->ip, sizeof(cptr->local->sockhost));
+	strlcpy(client->local->sockhost, client->ip, sizeof(client->local->sockhost));
 
-	SetWEBIRC(cptr);
+	SetWEBIRC(client);
 
 	if (options)
 	{
@@ -387,23 +387,23 @@ void dowebirc(Client *cptr, char *ip, char *host, char *options)
 			p2 = strchr(name, '=');
 			if (p2)
 				*p2 = '\0';
-			if (!strcmp(name, "secure") && IsSecure(cptr))
+			if (!strcmp(name, "secure") && IsSecure(client))
 			{
 				/* The entire [client]--[webirc gw]--[server] chain is secure */
-				SetWEBIRCSecure(cptr);
+				SetWEBIRCSecure(client);
 			}
 		}
 	}
 
 	/* blacklist_start_check() */
 	if (RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK] != NULL)
-		RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK]->func.intfunc(cptr);
+		RCallbacks[CALLBACKTYPE_BLACKLIST_CHECK]->func.intfunc(client);
 
 	/* Check (g)zlines right now; these are normally checked upon accept(),
 	 * but since we know the IP only now after PASS/WEBIRC, we have to check
 	 * here again...
 	 */
-	check_banned(cptr, 0);
+	check_banned(client, 0);
 }
 
 /* WEBIRC <pass> "cgiirc" <hostname> <ip> [:option1 [option2...]]*/
@@ -415,7 +415,7 @@ CMD_FUNC(cmd_webirc)
 
 	if ((parc < 5) || BadPtr(parv[4]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "WEBIRC");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "WEBIRC");
 		return;
 	}
 
@@ -425,26 +425,26 @@ CMD_FUNC(cmd_webirc)
 	options = parv[5]; /* can be NULL */
 
 	/* Check if allowed host */
-	e = Find_webirc(sptr, password, WEBIRC_WEBIRC, &error);
+	e = Find_webirc(client, password, WEBIRC_WEBIRC, &error);
 	if (!e)
-		return exit_client(sptr, NULL, error);
+		return exit_client(client, NULL, error);
 
 	/* And do our job.. */
-	return dowebirc(sptr, ip, host, options);
+	return dowebirc(client, ip, host, options);
 }
 
-int webirc_check_init(Client *cptr, char *sockn, size_t size)
+int webirc_check_init(Client *client, char *sockn, size_t size)
 {
-	if (IsWEBIRC(cptr))
+	if (IsWEBIRC(client))
 	{
-		strlcpy(sockn, GetIP(cptr), size); /* use already set value */
+		strlcpy(sockn, GetIP(client), size); /* use already set value */
 		return HOOK_DENY;
 	}
 	
 	return HOOK_CONTINUE; /* nothing to do */
 }
 
-int webirc_local_pass(Client *sptr, char *password)
+int webirc_local_pass(Client *client, char *password)
 {
 	if (!strncmp(password, WEBIRC_STRING, WEBIRC_STRINGLEN))
 	{
@@ -452,7 +452,7 @@ int webirc_local_pass(Client *sptr, char *password)
 		ConfigItem_webirc *e;
 		char *error = NULL;
 
-		e = Find_webirc(sptr, NULL, WEBIRC_PASS, &error);
+		e = Find_webirc(client, NULL, WEBIRC_PASS, &error);
 		if (e)
 		{
 			/* Ok now we got that sorted out, proceed:
@@ -464,12 +464,12 @@ int webirc_local_pass(Client *sptr, char *password)
 			host = strchr(ip, '_');
 			if (!host)
 			{
-				exit_client(sptr, NULL, "Invalid CGI:IRC IP received");
+				exit_client(client, NULL, "Invalid CGI:IRC IP received");
 				return HOOK_DENY;
 			}
 			*host++ = '\0';
 		
-			dowebirc(sptr, ip, host, NULL);
+			dowebirc(client, ip, host, NULL);
 			return HOOK_DENY;
 		}
 		/* fallthrough if not in webirc block.. */
@@ -479,13 +479,13 @@ int webirc_local_pass(Client *sptr, char *password)
 }
 
 /** Called from register_user() right after setting user +z */
-int webirc_secure_connect(Client *acptr)
+int webirc_secure_connect(Client *client)
 {
 	/* Remove secure mode (-z) if the WEBIRC gateway did not ensure
 	 * us that their [client]--[webirc gateway] connection is also
 	 * secure (eg: using https)
 	 */
-	if (IsWEBIRC(acptr) && IsSecureConnect(acptr) && !IsWEBIRCSecure(acptr))
-		acptr->umodes &= ~UMODE_SECURE;
+	if (IsWEBIRC(client) && IsSecureConnect(client) && !IsWEBIRCSecure(client))
+		client->umodes &= ~UMODE_SECURE;
 	return 0;
 }

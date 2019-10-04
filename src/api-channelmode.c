@@ -432,19 +432,19 @@ void cm_freeparameter_ex(void **p, char mode, char *str)
 	GETPARASTRUCTEX(p, mode) = NULL;
 }
 
-int extcmode_default_requirechop(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what)
+int extcmode_default_requirechop(Client *client, Channel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (IsUser(cptr) && is_chan_op(cptr, chptr))
+	if (IsUser(client) && is_chan_op(client, chptr))
 		return EX_ALLOW;
 	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-		sendnumeric(cptr, ERR_NOTFORHALFOPS, mode);
+		sendnumeric(client, ERR_NOTFORHALFOPS, mode);
 	return EX_DENY;
 }
 
-int extcmode_default_requirehalfop(Client *cptr, Channel *chptr, char mode, char *para, int checkt, int what)
+int extcmode_default_requirehalfop(Client *client, Channel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (IsUser(cptr) &&
-	    (is_chan_op(cptr, chptr) || is_half_op(cptr, chptr)))
+	if (IsUser(client) &&
+	    (is_chan_op(client, chptr) || is_half_op(client, chptr)))
 		return EX_ALLOW;
 	return EX_DENY;
 }

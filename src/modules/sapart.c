@@ -63,7 +63,7 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_sapart)
 {
-	Client *acptr;
+	Client *target;
 	Channel *chptr;
 	Membership *lp;
 	char *name, *p = NULL;
@@ -76,24 +76,24 @@ CMD_FUNC(cmd_sapart)
 
 	if (parc < 3)
         {
-                sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SAPART");
+                sendnumeric(client, ERR_NEEDMOREPARAMS, "SAPART");
                 return;
         }
 
-        if (!(acptr = find_person(parv[1], NULL)))
+        if (!(target = find_person(parv[1], NULL)))
         {
-                sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
+                sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
                 return;
         }
 
 	/* See if we can operate on this vicim/this command */
-	if (!ValidatePermissionsForPath("sacmd:sapart",sptr,acptr,NULL,NULL))
+	if (!ValidatePermissionsForPath("sacmd:sapart",client,target,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
-	if (MyUser(acptr))
+	if (MyUser(target))
 	{
 		/* Now works like cmd_join */
 		*jbuf = 0;
@@ -103,26 +103,26 @@ CMD_FUNC(cmd_sapart)
 		{
 			if (++ntargets > maxtargets)
 			{
-				sendnumeric(sptr, ERR_TOOMANYTARGETS, name, maxtargets, "SAPART");
+				sendnumeric(client, ERR_TOOMANYTARGETS, name, maxtargets, "SAPART");
 				break;
 			}
-			if (!(chptr = get_channel(acptr, name, 0)))
+			if (!(chptr = get_channel(target, name, 0)))
 			{
-				sendnumeric(sptr, ERR_NOSUCHCHANNEL,
+				sendnumeric(client, ERR_NOSUCHCHANNEL,
 					name);
 				continue;
 			}
 
 			/* Validate oper can do this on chan/victim */
-			if (!IsULine(sptr) && !ValidatePermissionsForPath("sacmd:sapart",sptr,acptr,chptr,NULL))
+			if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sapart",client,target,chptr,NULL))
         		{
-                		sendnumeric(sptr, ERR_NOPRIVILEGES);
+                		sendnumeric(client, ERR_NOPRIVILEGES);
 				continue;
         		}
 	
-			if (!(lp = find_membership_link(acptr->user->channel, chptr)))
+			if (!(lp = find_membership_link(target->user->channel, chptr)))
 			{
-				sendnumeric(sptr, ERR_USERNOTINCHANNEL,
+				sendnumeric(client, ERR_USERNOTINCHANNEL,
 					parv[1], name);
 				continue;
 			}
@@ -143,54 +143,54 @@ CMD_FUNC(cmd_sapart)
 			strlcat(commentx, comment, 512);
 		}
 
-		parv[0] = acptr->name; // nick
+		parv[0] = target->name; // nick
 		parv[1] = parv[2]; // chan
 		parv[2] = comment ? commentx : NULL; // comment
 		if (comment)
 		{
-			sendnotice(acptr,
+			sendnotice(target,
 			    "*** You were forced to part %s (%s)",
 			    parv[1], commentx);
-			sendto_realops("%s used SAPART to make %s part %s (%s)", sptr->name, acptr->name,
+			sendto_realops("%s used SAPART to make %s part %s (%s)", client->name, target->name,
 				parv[1], comment);
 			sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
-				me.name, sptr->name, acptr->name, parv[1], comment);
+				me.name, client->name, target->name, parv[1], comment);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
-				sptr->name, acptr->name, parv[1], comment);
+				client->name, target->name, parv[1], comment);
 		}
 		else
 		{
-			sendnotice(acptr,
+			sendnotice(target,
 			    "*** You were forced to part %s", parv[1]);
-			sendto_realops("%s used SAPART to make %s part %s", sptr->name, acptr->name,
+			sendto_realops("%s used SAPART to make %s part %s", client->name, target->name,
 				parv[1]);
 			sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAPART to make %s part %s",
-				me.name, sptr->name, acptr->name, parv[1]);
+				me.name, client->name, target->name, parv[1]);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
-				sptr->name, acptr->name, parv[1]);
+				client->name, target->name, parv[1]);
 		}
-		(void)do_cmd(acptr, NULL, "PART", comment ? 3 : 2, parv);
-		/* acptr may be killed now due to the part reason @ spamfilter */
+		(void)do_cmd(target, NULL, "PART", comment ? 3 : 2, parv);
+		/* target may be killed now due to the part reason @ spamfilter */
 	}
 	else
 	{
 		if (comment)
 		{
-			sendto_one(acptr, NULL, ":%s SAPART %s %s :%s", sptr->name,
+			sendto_one(target, NULL, ":%s SAPART %s %s :%s", client->name,
 			    parv[1], parv[2], comment);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
-				sptr->name, parv[1], parv[2], comment);
+				client->name, parv[1], parv[2], comment);
 		}
 		else
 		{
-			sendto_one(acptr, NULL, ":%s SAPART %s %s", sptr->name, parv[1],
+			sendto_one(target, NULL, ":%s SAPART %s %s", client->name, parv[1],
 				   parv[2]);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
-				sptr->name, parv[1], parv[2]);
+				client->name, parv[1], parv[2]);
 		}
 	}
 }

@@ -63,58 +63,58 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_chghost)
 {
-	Client *acptr;
+	Client *target;
 
-	if (MyUser(sptr) && !ValidatePermissionsForPath("client:set:host",sptr,NULL,NULL,NULL))
+	if (MyUser(client) && !ValidatePermissionsForPath("client:set:host",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	if ((parc < 3) || !*parv[2])
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CHGHOST");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "CHGHOST");
 		return;
 	}
 
 	if (strlen(parv[2]) > (HOSTLEN))
 	{
-		sendnotice(sptr, "*** ChgName Error: Requested hostname too long -- rejected.");
+		sendnotice(client, "*** ChgName Error: Requested hostname too long -- rejected.");
 		return;
 	}
 
 	if (!valid_host(parv[2]))
 	{
-		sendnotice(sptr, "*** /ChgHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them");
+		sendnotice(client, "*** /ChgHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them");
 		return;
 	}
 
 	if (parv[2][0] == ':')
 	{
-		sendnotice(sptr, "*** A hostname cannot start with ':'");
+		sendnotice(client, "*** A hostname cannot start with ':'");
 		return;
 	}
 
-	if (!(acptr = find_person(parv[1], NULL)))
+	if (!(target = find_person(parv[1], NULL)))
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
+		sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 		return;
 	}
 
-	if (!strcmp(GetHost(acptr), parv[2]))
+	if (!strcmp(GetHost(target), parv[2]))
 	{
-		sendnotice(sptr, "*** /ChgHost Error: requested host is same as current host.");
+		sendnotice(client, "*** /ChgHost Error: requested host is same as current host.");
 		return;
 	}
 
-	userhost_save_current(acptr);
+	userhost_save_current(target);
 
 	switch (UHOST_ALLOWED)
 	{
 		case UHALLOW_NEVER:
-			if (MyUser(sptr))
+			if (MyUser(client))
 			{
-				sendnumeric(sptr, ERR_DISABLED, "CHGHOST",
+				sendnumeric(client, ERR_DISABLED, "CHGHOST",
 					"This command is disabled on this server");
 				return;
 			}
@@ -122,9 +122,9 @@ CMD_FUNC(cmd_chghost)
 		case UHALLOW_ALWAYS:
 			break;
 		case UHALLOW_NOCHANS:
-			if (IsUser(acptr) && MyUser(sptr) && acptr->user->joined)
+			if (IsUser(target) && MyUser(client) && target->user->joined)
 			{
-				sendnotice(sptr, "*** /ChgHost can not be used while %s is on a channel", acptr->name);
+				sendnotice(client, "*** /ChgHost can not be used while %s is on a channel", target->name);
 				return;
 			}
 			break;
@@ -133,25 +133,25 @@ CMD_FUNC(cmd_chghost)
 			break;
 	}
 
-	if (!IsULine(sptr))
+	if (!IsULine(client))
 	{
 		sendto_snomask(SNO_EYES,
 		    "%s changed the virtual hostname of %s (%s@%s) to be %s",
-		    sptr->name, acptr->name, acptr->user->username,
-		    acptr->user->realhost, parv[2]);
+		    client->name, target->name, target->user->username,
+		    target->user->realhost, parv[2]);
 		/* Logging added by XeRXeS */
 		ircd_log(LOG_CHGCMDS,                                         
 			"CHGHOST: %s changed the virtual hostname of %s (%s@%s) to be %s",
-			sptr->name, acptr->name, acptr->user->username, acptr->user->realhost, parv[2]); 
+			client->name, target->name, target->user->username, target->user->realhost, parv[2]); 
 	}
 
-	acptr->umodes |= UMODE_HIDE;
-	acptr->umodes |= UMODE_SETHOST;
-	sendto_server(sptr, 0, 0, NULL, ":%s CHGHOST %s %s", sptr->name, acptr->name, parv[2]);
-	safe_strdup(acptr->user->virthost, parv[2]);
+	target->umodes |= UMODE_HIDE;
+	target->umodes |= UMODE_SETHOST;
+	sendto_server(client, 0, 0, NULL, ":%s CHGHOST %s %s", client->name, target->name, parv[2]);
+	safe_strdup(target->user->virthost, parv[2]);
 	
-	userhost_changed(acptr);
+	userhost_changed(target);
 
-	if (MyUser(acptr))
-		sendnumeric(acptr, RPL_HOSTHIDDEN, parv[2]);
+	if (MyUser(target))
+		sendnumeric(target, RPL_HOSTHIDDEN, parv[2]);
 }

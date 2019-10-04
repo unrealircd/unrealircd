@@ -791,19 +791,19 @@ CMD_FUNC(cmd_module)
 	if ((parc > 1) && !strcmp(parv[1], "-all"))
 		all = 1;
 
-	if (MyUser(sptr) && !IsOper(sptr) && all)
-		sptr->local->since += 7; /* Lag them up. Big list. */
+	if (MyUser(client) && !IsOper(client) && all)
+		client->local->since += 7; /* Lag them up. Big list. */
 
-	if ((parc > 2) && (hunt_server(sptr, recv_mtags, ":%s MODULE %s :%s", 2, parc, parv) != HUNTED_ISME))
+	if ((parc > 2) && (hunt_server(client, recv_mtags, ":%s MODULE %s :%s", 2, parc, parv) != HUNTED_ISME))
 		return;
 
-	if ((parc == 2) && (parv[1][0] != '-') && (hunt_server(sptr, recv_mtags, ":%s MODULE :%s", 1, parc, parv) != HUNTED_ISME))
+	if ((parc == 2) && (parv[1][0] != '-') && (hunt_server(client, recv_mtags, ":%s MODULE :%s", 1, parc, parv) != HUNTED_ISME))
 		return;
 
 	if (all)
-		sendtxtnumeric(sptr, "Showing ALL loaded modules:");
+		sendtxtnumeric(client, "Showing ALL loaded modules:");
 	else
-		sendtxtnumeric(sptr, "Showing loaded 3rd party modules (use \"MODULE -all\" to show all modules):");
+		sendtxtnumeric(client, "Showing loaded 3rd party modules (use \"MODULE -all\" to show all modules):");
 
 	for (mi = Modules; mi; mi = mi->next)
 	{
@@ -820,14 +820,14 @@ CMD_FUNC(cmd_module)
 			strlcat(tmp, "[PERM] ", sizeof(tmp));
 		if (!(mi->options & MOD_OPT_OFFICIAL))
 			strlcat(tmp, "[3RD] ", sizeof(tmp));
-		if (!ValidatePermissionsForPath("server:module",sptr,NULL,NULL,NULL))
-			sendtxtnumeric(sptr, "*** %s - %s - by %s %s",
+		if (!ValidatePermissionsForPath("server:module",client,NULL,NULL,NULL))
+			sendtxtnumeric(client, "*** %s - %s - by %s %s",
 				mi->header->name,
 				mi->header->description,
 				mi->header->author,
 				mi->options & MOD_OPT_OFFICIAL ? "" : "[3RD]");
 		else
-			sendtxtnumeric(sptr, "*** %s %s - %s - by %s %s",
+			sendtxtnumeric(client, "*** %s %s - %s - by %s %s",
 				mi->header->name,
 				mi->header->version,
 				mi->header->description,
@@ -835,9 +835,9 @@ CMD_FUNC(cmd_module)
 				tmp);
 	}
 
-	sendtxtnumeric(sptr, "End of module list");
+	sendtxtnumeric(client, "End of module list");
 
-	if (!ValidatePermissionsForPath("server:module",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:module",client,NULL,NULL,NULL))
 		return;
 
 	tmp[0] = '\0';
@@ -850,12 +850,12 @@ CMD_FUNC(cmd_module)
 		p += strlen(p);
 		if (p > tmp + 380)
 		{
-			sendtxtnumeric(sptr, "Hooks: %s", tmp);
+			sendtxtnumeric(client, "Hooks: %s", tmp);
 			tmp[0] = '\0';
 			p = tmp;
 		}
 	}
-	sendtxtnumeric(sptr, "Hooks: %s ", tmp);
+	sendtxtnumeric(client, "Hooks: %s ", tmp);
 
 	tmp[0] = '\0';
 	p = tmp;
@@ -868,13 +868,13 @@ CMD_FUNC(cmd_module)
 				p += strlen(p);
 				if (p > tmp+380)
 				{
-					sendtxtnumeric(sptr, "Override: %s", tmp);
+					sendtxtnumeric(client, "Override: %s", tmp);
 					tmp[0] = '\0';
 					p = tmp;
 				}
 			}
 	}
-	sendtxtnumeric(sptr, "Override: %s", tmp);
+	sendtxtnumeric(client, "Override: %s", tmp);
 }
 
 Hooktype *HooktypeFind(char *string) {
@@ -1160,12 +1160,12 @@ void CommandOverrideDel(CommandOverride *cmd)
 	safe_free(cmd);
 }
 
-void CallCommandOverride(CommandOverride *ovr, Client *sptr, MessageTag *mtags, int parc, char *parv[])
+void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[])
 {
 	if (ovr->next)
-		ovr->next->func(ovr->next, sptr, mtags, parc, parv);
+		ovr->next->func(ovr->next, client, mtags, parc, parv);
 	else
-		ovr->command->func(sptr, mtags, parc, parv);
+		ovr->command->func(client, mtags, parc, parv);
 }
 
 EVENT(e_unload_module_delayed)

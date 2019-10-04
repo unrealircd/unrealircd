@@ -92,8 +92,8 @@ void initlists(void)
 */
 Client *make_client(Client *from, Client *servr)
 {
-	Client *cptr = mp_pool_get(client_pool);
-	memset(cptr, 0, sizeof(Client));
+	Client *client = mp_pool_get(client_pool);
+	memset(client, 0, sizeof(Client));
 
 #ifdef	DEBUGMODE
 	if (!from)
@@ -103,91 +103,91 @@ Client *make_client(Client *from, Client *servr)
 #endif
 
 	/* Note: all fields are already NULL/0, no need to set here */
-	cptr->direction = from ? from : cptr;	/* 'from' of local client is self! */
-	cptr->srvptr = servr;
-	cptr->status = CLIENT_STATUS_UNKNOWN;
+	client->direction = from ? from : client;	/* 'from' of local client is self! */
+	client->srvptr = servr;
+	client->status = CLIENT_STATUS_UNKNOWN;
 
-	INIT_LIST_HEAD(&cptr->client_node);
-	INIT_LIST_HEAD(&cptr->client_hash);
-	INIT_LIST_HEAD(&cptr->id_hash);
+	INIT_LIST_HEAD(&client->client_node);
+	INIT_LIST_HEAD(&client->client_hash);
+	INIT_LIST_HEAD(&client->id_hash);
 
-	(void)strcpy(cptr->ident, "unknown");
+	(void)strcpy(client->ident, "unknown");
 	if (!from)
 	{
 		/* Local client */
 		const char *id;
 		
-		cptr->local = mp_pool_get(local_client_pool);
-		memset(cptr->local, 0, sizeof(LocalClient));
+		client->local = mp_pool_get(local_client_pool);
+		memset(client->local, 0, sizeof(LocalClient));
 		
-		INIT_LIST_HEAD(&cptr->lclient_node);
-		INIT_LIST_HEAD(&cptr->special_node);
+		INIT_LIST_HEAD(&client->lclient_node);
+		INIT_LIST_HEAD(&client->special_node);
 
-		cptr->local->since = cptr->local->lasttime =
-		cptr->lastnick = cptr->local->firsttime = TStime();
-		cptr->local->class = NULL;
-		cptr->local->passwd = NULL;
-		cptr->local->sockhost[0] = '\0';
-		cptr->local->authfd = -1;
-		cptr->local->fd = -1;
+		client->local->since = client->local->lasttime =
+		client->lastnick = client->local->firsttime = TStime();
+		client->local->class = NULL;
+		client->local->passwd = NULL;
+		client->local->sockhost[0] = '\0';
+		client->local->authfd = -1;
+		client->local->fd = -1;
 
-		dbuf_queue_init(&cptr->local->recvQ);
-		dbuf_queue_init(&cptr->local->sendQ);
+		dbuf_queue_init(&client->local->recvQ);
+		dbuf_queue_init(&client->local->sendQ);
 
 		while (hash_find_id((id = uid_get()), NULL) != NULL)
 			;
-		strlcpy(cptr->id, id, sizeof cptr->id);
-		add_to_id_hash_table(cptr->id, cptr);
+		strlcpy(client->id, id, sizeof client->id);
+		add_to_id_hash_table(client->id, client);
 	}
-	return (cptr);
+	return client;
 }
 
-void free_client(Client *cptr)
+void free_client(Client *client)
 {
-	if (!list_empty(&cptr->client_node))
-		list_del(&cptr->client_node);
+	if (!list_empty(&client->client_node))
+		list_del(&client->client_node);
 
-	if (MyConnect(cptr))
+	if (MyConnect(client))
 	{
-		if (!list_empty(&cptr->lclient_node))
-			list_del(&cptr->lclient_node);
-		if (!list_empty(&cptr->special_node))
-			list_del(&cptr->special_node);
+		if (!list_empty(&client->lclient_node))
+			list_del(&client->lclient_node);
+		if (!list_empty(&client->special_node))
+			list_del(&client->special_node);
 
-		RunHook(HOOKTYPE_FREE_CLIENT, cptr);
-		if (cptr->local)
+		RunHook(HOOKTYPE_FREE_CLIENT, client);
+		if (client->local)
 		{
-			safe_free(cptr->local->passwd);
-			safe_free(cptr->local->error_str);
-			if (cptr->local->hostp)
-				unreal_free_hostent(cptr->local->hostp);
+			safe_free(client->local->passwd);
+			safe_free(client->local->error_str);
+			if (client->local->hostp)
+				unreal_free_hostent(client->local->hostp);
 			
-			mp_pool_release(cptr->local);
+			mp_pool_release(client->local);
 		}
-		if (*cptr->id)
+		if (*client->id)
 		{
 			/* This is already del'd in exit_one_client, so we
 			 * only have it here in case a shortcut was taken,
 			 * such as from add_connection() to free_client().
 			 */
-			del_from_id_hash_table(cptr->id, cptr);
+			del_from_id_hash_table(client->id, client);
 		}
 	}
 	
-	safe_free(cptr->ip);
+	safe_free(client->ip);
 
-	mp_pool_release(cptr);
+	mp_pool_release(client);
 }
 
 /*
 ** 'make_user' add's an User information block to a client
 ** if it was not previously allocated.
 */
-ClientUser *make_user(Client *cptr)
+ClientUser *make_user(Client *client)
 {
 	ClientUser *user;
 
-	user = cptr->user;
+	user = client->user;
 	if (!user)
 	{
 		user = mp_pool_get(user_pool);
@@ -207,22 +207,22 @@ ClientUser *make_user(Client *cptr)
 		strlcpy(user->svid, "0", sizeof(user->svid));
 		user->whowas = NULL;
 		user->snomask = 0;
-		if (cptr->ip)
+		if (client->ip)
 		{
-			/* initially set cptr->user->realhost to IP */
-			strlcpy(user->realhost, cptr->ip, sizeof(user->realhost));
+			/* initially set client->user->realhost to IP */
+			strlcpy(user->realhost, client->ip, sizeof(user->realhost));
 		} else {
 			*user->realhost = '\0';
 		}
 		user->virthost = NULL;
-		cptr->user = user;		
+		client->user = user;		
 	}
 	return user;
 }
 
-Server *make_server(Client *cptr)
+Server *make_server(Client *client)
 {
-	Server *serv = cptr->serv;
+	Server *serv = client->serv;
 
 	if (!serv)
 	{
@@ -233,22 +233,22 @@ Server *make_server(Client *cptr)
 		*serv->by = '\0';
 		serv->users = 0;
 		serv->up = NULL;
-		cptr->serv = serv;
+		client->serv = serv;
 	}
-	if (strlen(cptr->id) > 3)
+	if (strlen(client->id) > 3)
 	{
 		/* Probably the auto-generated UID for a server that
 		 * still uses the old protocol (without SID).
 		 */
-		del_from_id_hash_table(cptr->id, cptr);
-		*cptr->id = '\0';
+		del_from_id_hash_table(client->id, client);
+		*client->id = '\0';
 	}
-	if (MyConnect(cptr) && (cptr->local->fd >= 0))
+	if (MyConnect(client) && (client->local->fd >= 0))
 	{
 		/* Give servers a large socket buffer for performance */
-		set_socket_buffers(cptr->local->fd, SERVER_SOCKET_RECEIVE_BUFFER, SERVER_SOCKET_SEND_BUFFER);
+		set_socket_buffers(client->local->fd, SERVER_SOCKET_RECEIVE_BUFFER, SERVER_SOCKET_SEND_BUFFER);
 	}
-	return cptr->serv;
+	return client->serv;
 }
 
 /*
@@ -256,109 +256,109 @@ Server *make_server(Client *cptr)
 **	Decrease user reference count by one and realease block,
 **	if count reaches 0
 */
-void free_user(Client *cptr)
+void free_user(Client *client)
 {
-	RunHook(HOOKTYPE_FREE_USER, cptr);
-	safe_free(cptr->user->away);
-	if (cptr->user->swhois)
+	RunHook(HOOKTYPE_FREE_USER, client);
+	safe_free(client->user->away);
+	if (client->user->swhois)
 	{
 		SWhois *s, *s_next;
-		for (s = cptr->user->swhois; s; s = s_next)
+		for (s = client->user->swhois; s; s = s_next)
 		{
 			s_next = s->next;
 			safe_free(s->line);
 			safe_free(s->setby);
 			safe_free(s);
 		}
-		cptr->user->swhois = NULL;
+		client->user->swhois = NULL;
 	}
-	safe_free(cptr->user->virthost);
-	safe_free(cptr->user->operlogin);
-	mp_pool_release(cptr->user);
+	safe_free(client->user->virthost);
+	safe_free(client->user->operlogin);
+	mp_pool_release(client->user);
 #ifdef	DEBUGMODE
 	users.inuse--;
 #endif
-	cptr->user = NULL;
+	client->user = NULL;
 }
 
 /*
  * taken the code from ExitOneClient() for this and placed it here.
  * - avalon
  */
-void remove_client_from_list(Client *cptr)
+void remove_client_from_list(Client *client)
 {
-	list_del(&cptr->client_node);
-	if (MyConnect(cptr))
+	list_del(&client->client_node);
+	if (MyConnect(client))
 	{
-		if (!list_empty(&cptr->lclient_node))
-			list_del(&cptr->lclient_node);
-		if (!list_empty(&cptr->special_node))
-			list_del(&cptr->special_node);
+		if (!list_empty(&client->lclient_node))
+			list_del(&client->lclient_node);
+		if (!list_empty(&client->special_node))
+			list_del(&client->special_node);
 	}
-	if (IsServer(cptr))
+	if (IsServer(client))
 	{
 		irccounts.servers--;
 	}
-	if (IsUser(cptr))
+	if (IsUser(client))
 	{
-		if (IsInvisible(cptr))
+		if (IsInvisible(client))
 		{
 			irccounts.invisible--;
 		}
-		if (IsOper(cptr) && !IsHideOper(cptr))
+		if (IsOper(client) && !IsHideOper(client))
 		{
 			irccounts.operators--;
-			VERIFY_OPERCOUNT(cptr, "rmvlist");
+			VERIFY_OPERCOUNT(client, "rmvlist");
 		}
 		irccounts.clients--;
-		if (cptr->srvptr && cptr->srvptr->serv)
-			cptr->srvptr->serv->users--;
+		if (client->srvptr && client->srvptr->serv)
+			client->srvptr->serv->users--;
 	}
-	if (IsUnknown(cptr) || IsConnecting(cptr) || IsHandshake(cptr)
-		|| IsTLSHandshake(cptr)
+	if (IsUnknown(client) || IsConnecting(client) || IsHandshake(client)
+		|| IsTLSHandshake(client)
 	)
 		irccounts.unknown--;
 
-	if (IsUser(cptr))	/* Only persons can have been added before */
+	if (IsUser(client))	/* Only persons can have been added before */
 	{
-		add_history(cptr, 0);
-		off_history(cptr);	/* Remove all pointers to cptr */
+		add_history(client, 0);
+		off_history(client);	/* Remove all pointers to client */
 	}
 	
-	if (cptr->user)
-		free_user(cptr);
-	if (cptr->serv)
+	if (client->user)
+		free_user(client);
+	if (client->serv)
 	{
-		safe_free(cptr->serv->features.usermodes);
-		safe_free(cptr->serv->features.chanmodes[0]);
-		safe_free(cptr->serv->features.chanmodes[1]);
-		safe_free(cptr->serv->features.chanmodes[2]);
-		safe_free(cptr->serv->features.chanmodes[3]);
-		safe_free(cptr->serv->features.software);
-		safe_free(cptr->serv->features.nickchars);
-		safe_free(cptr->serv);
+		safe_free(client->serv->features.usermodes);
+		safe_free(client->serv->features.chanmodes[0]);
+		safe_free(client->serv->features.chanmodes[1]);
+		safe_free(client->serv->features.chanmodes[2]);
+		safe_free(client->serv->features.chanmodes[3]);
+		safe_free(client->serv->features.software);
+		safe_free(client->serv->features.nickchars);
+		safe_free(client->serv);
 #ifdef	DEBUGMODE
 		servs.inuse--;
 #endif
 	}
 #ifdef	DEBUGMODE
-	if (cptr->local && cptr->local->fd == -2)
+	if (client->local && client->local->fd == -2)
 		cloc.inuse--;
 	else
 		crem.inuse--;
 #endif
-	if (!list_empty(&cptr->client_node))
+	if (!list_empty(&client->client_node))
 		abort();
-	if (!list_empty(&cptr->client_hash))
+	if (!list_empty(&client->client_hash))
 		abort();
-	if (!list_empty(&cptr->id_hash))
+	if (!list_empty(&client->id_hash))
 		abort();
 	numclients--;
 	/* Add to killed clients list */
-	list_add(&cptr->client_node, &dead_list);
-	// THIS IS NOW DONE IN THE MAINLOOP --> (void)free_client(cptr);
-	SetDead(cptr);
-	SetDeadSocket(cptr);
+	list_add(&client->client_node, &dead_list);
+	// THIS IS NOW DONE IN THE MAINLOOP --> (void)free_client(client);
+	SetDead(client);
+	SetDeadSocket(client);
 	return;
 }
 
@@ -368,9 +368,9 @@ void remove_client_from_list(Client *cptr)
  * in this file, shouldnt they ?  after all, this is list.c, isnt it ?
  * -avalon
  */
-void add_client_to_list(Client *cptr)
+void add_client_to_list(Client *client)
 {
-	list_add(&cptr->client_node, &client_list);
+	list_add(&client->client_node, &client_list);
 }
 
 /** Make a new link entry.

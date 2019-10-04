@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_NOCTCP;
 
 #define IsNoCTCP(chptr)    (chptr->mode.extmode & EXTCMODE_NOCTCP)
 
-char *noctcp_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice);
+char *noctcp_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
 
 MOD_TEST()
 {
@@ -78,13 +78,13 @@ static int IsACTCP(char *s)
 	return 0;
 }
 
-char *noctcp_prechanmsg(Client *sptr, Channel *chptr, MessageTag *mtags, char *text, int notice)
+char *noctcp_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice)
 {
-	if (MyUser(sptr) && IsNoCTCP(chptr) && IsACTCP(text))
+	if (MyUser(client) && IsNoCTCP(chptr) && IsACTCP(text))
 	{
 		if (!notice)
 		{
-			sendnumeric(sptr, ERR_CANNOTSENDTOCHAN, chptr->chname,
+			sendnumeric(client, ERR_CANNOTSENDTOCHAN, chptr->chname,
 				   "CTCPs are not permitted in this channel", chptr->chname);
 		}
 

@@ -50,7 +50,7 @@ HistoryLogObject *history_hash_table[HISTORY_BACKEND_MEM_HASH_TABLE_SIZE];
 /* Forward declarations */
 int hbm_history_add(char *object, MessageTag *mtags, char *line);
 int hbm_history_del(char *object, int max_lines, long max_time);
-int hbm_history_request(Client *acptr, char *object, HistoryFilter *filter);
+int hbm_history_request(Client *client, char *object, HistoryFilter *filter);
 int hbm_history_destroy(char *object);
 
 MOD_INIT()
@@ -227,26 +227,26 @@ int hbm_history_add(char *object, MessageTag *mtags, char *line)
 	return 0;
 }
 
-int can_receive_history(Client *acptr)
+int can_receive_history(Client *client)
 {
-	if (HasCapability(acptr, "server-time"))
+	if (HasCapability(client, "server-time"))
 		return 1;
 	return 0;
 }
 
-void hbm_send_line(Client *acptr, HistoryLogLine *l, char *batchid)
+void hbm_send_line(Client *client, HistoryLogLine *l, char *batchid)
 {
-	if (can_receive_history(acptr))
+	if (can_receive_history(client))
 	{
 		if (BadPtr(batchid))
 		{
-			sendto_one(acptr, l->mtags, "%s", l->line);
+			sendto_one(client, l->mtags, "%s", l->line);
 		} else {
 			MessageTag *m = safe_alloc(sizeof(MessageTag));
 			m->name = "batch";
 			m->value = batchid;
 			AddListItem(m, l->mtags);
-			sendto_one(acptr, l->mtags, "%s", l->line);
+			sendto_one(client, l->mtags, "%s", l->line);
 			DelListItem(m, l->mtags);
 			safe_free(m);
 		}
@@ -255,30 +255,30 @@ void hbm_send_line(Client *acptr, HistoryLogLine *l, char *batchid)
 	}
 }
 
-int hbm_history_request(Client *acptr, char *object, HistoryFilter *filter)
+int hbm_history_request(Client *client, char *object, HistoryFilter *filter)
 {
 	HistoryLogObject *h = hbm_find_object(object);
 	HistoryLogLine *l;
 	char batch[BATCHLEN+1];
 
-	if (!h || !can_receive_history(acptr))
+	if (!h || !can_receive_history(client))
 		return 0;
 
 	batch[0] = '\0';
 
-	if (HasCapability(acptr, "batch"))
+	if (HasCapability(client, "batch"))
 	{
 		/* Start a new batch */
 		generate_batch_id(batch);
-		sendto_one(acptr, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, object);
+		sendto_one(client, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, object);
 	}
 
 	for (l = h->head; l; l = l->next)
-		hbm_send_line(acptr, l, batch);
+		hbm_send_line(client, l, batch);
 
 	/* End of batch */
 	if (*batch)
-		sendto_one(acptr, NULL, ":%s BATCH -%s", me.name, batch);
+		sendto_one(client, NULL, ":%s BATCH -%s", me.name, batch);
 	return 1;
 }
 

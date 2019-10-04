@@ -64,17 +64,17 @@ CMD_FUNC(cmd_addmotd)
 
 	text = parc > 1 ? parv[1] : NULL;
 
-	if (!MyConnect(sptr))
+	if (!MyConnect(client))
 		return;
 
-	if (!ValidatePermissionsForPath("server:addmotd",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:addmotd",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 	if (parc < 2)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "ADDMOTD");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "ADDMOTD");
 		return;
 	}
 
@@ -84,5 +84,5 @@ CMD_FUNC(cmd_addmotd)
 	fprintf(conf, "%s\n", text);
 	fclose(conf);
 
-	sendnotice(sptr, "*** Wrote (%s) to file: ircd.motd", text);
+	sendnotice(client, "*** Wrote (%s) to file: ircd.motd", text);
 }

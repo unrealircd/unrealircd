@@ -59,43 +59,43 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_quit)
 {
-	char *comment = (parc > 1 && parv[1]) ? parv[1] : sptr->name;
+	char *comment = (parc > 1 && parv[1]) ? parv[1] : client->name;
 	static char commentbuf[MAXQUITLEN + 1];
 
 	if (parv[1] && (strlen(comment) > iConf.quit_length))
 		comment[iConf.quit_length] = '\0';
 
-	if (MyUser(sptr))
+	if (MyUser(client))
 	{
 		int n;
 		Hook *tmphook;
 
 		if (STATIC_QUIT)
-			return exit_client(sptr, recv_mtags, STATIC_QUIT);
+			return exit_client(client, recv_mtags, STATIC_QUIT);
 
-		if (IsVirus(sptr))
-			return exit_client(sptr, recv_mtags, "Client exited");
+		if (IsVirus(client))
+			return exit_client(client, recv_mtags, "Client exited");
 
-		if (match_spamfilter(sptr, comment, SPAMF_QUIT, NULL, 0, NULL))
+		if (match_spamfilter(client, comment, SPAMF_QUIT, NULL, 0, NULL))
 		{
-			comment = sptr->name;
-			if (IsDead(sptr))
+			comment = client->name;
+			if (IsDead(client))
 				return;
 		}
 		
-		if (!ValidatePermissionsForPath("immune:anti-spam-quit-message-time",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
+		if (!ValidatePermissionsForPath("immune:anti-spam-quit-message-time",client,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
 		{
-			if (sptr->local->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
-				comment = sptr->name;
+			if (client->local->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+				comment = client->name;
 		}
 
-		if (iConf.part_instead_of_quit_on_comment_change && MyUser(sptr))
+		if (iConf.part_instead_of_quit_on_comment_change && MyUser(client))
 		{
 			Membership *lp, *lp_next;
 			char *newcomment;
 			Channel *chptr;
 
-			for (lp = sptr->user->channel; lp; lp = lp_next)
+			for (lp = client->user->channel; lp; lp = lp_next)
 			{
 				chptr = lp->chptr;
 				newcomment = comment;
@@ -103,12 +103,12 @@ CMD_FUNC(cmd_quit)
 
 				for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT_CHAN]; tmphook; tmphook = tmphook->next)
 				{
-					newcomment = (*(tmphook->func.pcharfunc))(sptr, chptr, comment);
+					newcomment = (*(tmphook->func.pcharfunc))(client, chptr, comment);
 					if (!newcomment)
 						break;
 				}
 
-				if (newcomment && is_banned(sptr, chptr, BANCHK_LEAVE_MSG, &newcomment, NULL))
+				if (newcomment && is_banned(client, chptr, BANCHK_LEAVE_MSG, &newcomment, NULL))
 					newcomment = NULL;
 
 				/* Comment changed? Then PART the user before we do the QUIT. */
@@ -122,9 +122,9 @@ CMD_FUNC(cmd_quit)
 					parx[2] = newcomment;
 					parx[3] = NULL;
 
-					do_cmd(sptr, recv_mtags, "PART", newcomment ? 3 : 2, parx);
+					do_cmd(client, recv_mtags, "PART", newcomment ? 3 : 2, parx);
 					/* This would be unusual, but possible (somewhere in the future perhaps): */
-					if (IsDead(sptr))
+					if (IsDead(client))
 						return;
 				}
 			}
@@ -132,10 +132,10 @@ CMD_FUNC(cmd_quit)
 
 		for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT]; tmphook; tmphook = tmphook->next)
 		{
-			comment = (*(tmphook->func.pcharfunc))(sptr, comment);
+			comment = (*(tmphook->func.pcharfunc))(client, comment);
 			if (!comment)
 			{			
-				comment = sptr->name;
+				comment = client->name;
 				break;
 			}
 		}
@@ -145,13 +145,13 @@ CMD_FUNC(cmd_quit)
 		else
 			strlcpy(commentbuf, comment, sizeof(commentbuf));
 
-		exit_client(sptr, recv_mtags, commentbuf);
+		exit_client(client, recv_mtags, commentbuf);
 	}
 	else
 	{
 		/* Remote quits and non-person quits always use their original comment.
 		 * Also pass recv_mtags so to keep the msgid and such.
 		 */
-		exit_client(sptr, recv_mtags, comment);
+		exit_client(client, recv_mtags, comment);
 	}
 }

@@ -64,23 +64,23 @@ CMD_FUNC(cmd_samode)
 
 	if (parc <= 2)
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SAMODE");
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "SAMODE");
 		return;
 	}
 
 	chptr = find_channel(parv[1], NULL);
 	if (!chptr)
 	{
-		sendnumeric(sptr, ERR_NOSUCHCHANNEL, parv[1]);
+		sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);
 		return;
 	}
 
-	if (!ValidatePermissionsForPath("sacmd:samode", sptr, NULL, chptr, NULL))
+	if (!ValidatePermissionsForPath("sacmd:samode", client, NULL, chptr, NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	opermode = 0;
-	(void)do_mode(chptr, sptr, NULL, parc - 2, parv + 2, 0, 1);
+	(void)do_mode(chptr, client, NULL, parc - 2, parv + 2, 0, 1);
 }

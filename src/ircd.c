@@ -82,13 +82,13 @@ MODVAR int  booted = FALSE;
 void s_die()
 {
 #ifdef _WIN32
-	Client *cptr;
+	Client *client;
 	if (!IsService)
 	{
 		unload_all_modules();
 
-		list_for_each_entry(cptr, &lclient_list, lclient_node)
-			(void) send_queued(cptr);
+		list_for_each_entry(client, &lclient_list, lclient_node)
+			(void) send_queued(client);
 
 		exit(-1);
 	}
@@ -178,12 +178,12 @@ void ignore_this_signal()
 void server_reboot(char *mesg)
 {
 	int i;
-	Client *cptr;
+	Client *client;
 	sendto_realops("Aieeeee!!!  Restarting server... %s", mesg);
 	Debug((DEBUG_NOTICE, "Restarting server... %s", mesg));
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
-		(void) send_queued(cptr);
+	list_for_each_entry(client, &lclient_list, lclient_node)
+		(void) send_queued(client);
 
 	/*
 	 * ** fd 0 must be 'preserved' if either the -d or -i options have
@@ -286,7 +286,7 @@ EVENT(try_connections)
 {
 	ConfigItem_link *aconf;
 	ConfigItem_deny_link *deny;
-	Client *cptr;
+	Client *client;
 	int  confrq;
 	ConfigItem_class *class;
 
@@ -304,8 +304,8 @@ EVENT(try_connections)
 		confrq = class->connfreq;
 		aconf->hold = TStime() + confrq;
 
-		cptr = find_client(aconf->servername, NULL);
-		if (cptr)
+		client = find_client(aconf->servername, NULL);
+		if (client)
 			continue; /* Server already connected (or connecting) */
 
 		if (class->clients >= class->maxclients)
@@ -324,7 +324,7 @@ EVENT(try_connections)
 }
 
 /** Does this user match any TKL's? */
-int match_tkls(Client *cptr)
+int match_tkls(Client *client)
 {
 	ConfigItem_ban *bconf = NULL;
 	char banbuf[1024];
@@ -332,52 +332,52 @@ int match_tkls(Client *cptr)
 	char killflag = 0;
 
 	/* Process dynamic *LINES */
-	if (find_tkline_match(cptr, 0))
+	if (find_tkline_match(client, 0))
 		return 1; /* user killed */
 
-	find_shun(cptr); /* check for shunned and take action, if so */
+	find_shun(client); /* check for shunned and take action, if so */
 
-	if (IsUser(cptr))
+	if (IsUser(client))
 	{
 		/* Check ban realname { } */
-		if (!ValidatePermissionsForPath("immune",cptr,NULL,NULL,NULL) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
+		if (!ValidatePermissionsForPath("immune",client,NULL,NULL,NULL) && (bconf = Find_ban(NULL, client->info, CONF_BAN_REALNAME)))
 			killflag++;
 	}
 
 	/* If user is meant to be killed, take action: */
 	if (killflag)
 	{
-		if (IsUser(cptr))
+		if (IsUser(client))
 			sendto_realops("Ban active for %s (%s)",
-				get_client_name(cptr, FALSE),
+				get_client_name(client, FALSE),
 				bconf->reason ? bconf->reason : "no reason");
 
-		if (IsServer(cptr))
+		if (IsServer(client))
 			sendto_realops("Ban active for server %s (%s)",
-				get_client_name(cptr, FALSE),
+				get_client_name(client, FALSE),
 				bconf->reason ? bconf->reason : "no reason");
 
 		if (bconf->reason) {
-			if (IsUser(cptr))
+			if (IsUser(client))
 				snprintf(banbuf, sizeof(banbuf), "User has been banned (%s)", bconf->reason);
 			else
 				snprintf(banbuf, sizeof(banbuf), "Banned (%s)", bconf->reason);
-			(void)exit_client(cptr, NULL, banbuf);
+			(void)exit_client(client, NULL, banbuf);
 		} else {
-			if (IsUser(cptr))
-				(void)exit_client(cptr, NULL, "User has been banned");
+			if (IsUser(client))
+				(void)exit_client(client, NULL, "User has been banned");
 			else
-				(void)exit_client(cptr, NULL, "Banned");
+				(void)exit_client(client, NULL, "Banned");
 		}
 		return 1; /* stop processing this user, as (s)he is dead now. */
 	}
 
-	if (loop.do_bancheck_spamf_user && IsUser(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN))
+	if (loop.do_bancheck_spamf_user && IsUser(client) && find_spamfilter_user(client, SPAMFLAG_NOWARN))
 		return 1;
 
-	if (loop.do_bancheck_spamf_away && IsUser(cptr) &&
-	    cptr->user->away != NULL &&
-	    match_spamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL))
+	if (loop.do_bancheck_spamf_away && IsUser(client) &&
+	    client->user->away != NULL &&
+	    match_spamfilter(client, client->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL))
 	{
 		return 1;
 	}
@@ -389,86 +389,86 @@ int match_tkls(Client *cptr)
  */
 EVENT(handshake_timeout)
 {
-	Client *cptr, *cptr2;
+	Client *client, *next;
 
-	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
+	list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
 	{
-		if (cptr->local->firsttime && ((TStime() - cptr->local->firsttime) > iConf.handshake_timeout))
+		if (client->local->firsttime && ((TStime() - client->local->firsttime) > iConf.handshake_timeout))
 		{
-			if (cptr->serv && *cptr->serv->by)
+			if (client->serv && *client->serv->by)
 			{
 				/* If this is a handshake timeout to an outgoing server then notify ops & log it */
 				sendto_ops_and_log("Connection handshake timeout while connecting to server '%s' (%s)",
-					cptr->name, cptr->ip?cptr->ip:"<unknown ip>");
+					client->name, client->ip?client->ip:"<unknown ip>");
 			}
 
-			(void)exit_client(cptr, NULL, "Registration Timeout");
+			(void)exit_client(client, NULL, "Registration Timeout");
 			continue;
 		}
 	}
 }
 
 /** Ping individual user, and check for ping timeout */
-void check_ping(Client *cptr)
+void check_ping(Client *client)
 {
 	char scratch[64];
 	int ping = 0;
 
-	ping = cptr->local->class ? cptr->local->class->pingfreq : iConf.handshake_timeout;
-	Debug((DEBUG_DEBUG, "c(%s)=%d p %d a %lld", cptr->name,
-		cptr->status, ping,
-		(long long)(TStime() - cptr->local->lasttime)));
+	ping = client->local->class ? client->local->class->pingfreq : iConf.handshake_timeout;
+	Debug((DEBUG_DEBUG, "c(%s)=%d p %d a %lld", client->name,
+		client->status, ping,
+		(long long)(TStime() - client->local->lasttime)));
 
 	/* If ping is less than or equal to the last time we received a command from them */
-	if (ping > (TStime() - cptr->local->lasttime))
+	if (ping > (TStime() - client->local->lasttime))
 		return; /* some recent command was executed */
 
 	if (
 		/* If we have sent a ping */
-		(IsPingSent(cptr)
+		(IsPingSent(client)
 		/* And they had 2x ping frequency to respond */
-		&& ((TStime() - cptr->local->lasttime) >= (2 * ping)))
+		&& ((TStime() - client->local->lasttime) >= (2 * ping)))
 		||
 		/* Or isn't registered and time spent is larger than ping (CONNECTTIMEOUT).. */
-		(!IsRegistered(cptr) && (TStime() - cptr->local->since >= ping))
+		(!IsRegistered(client) && (TStime() - client->local->since >= ping))
 		)
 	{
-		if (IsServer(cptr) || IsConnecting(cptr) ||
-		    IsHandshake(cptr) || IsTLSConnectHandshake(cptr))
+		if (IsServer(client) || IsConnecting(client) ||
+		    IsHandshake(client) || IsTLSConnectHandshake(client))
 		{
 			sendto_ops_and_log
 				("No response from %s, closing link",
-				get_client_name(cptr, FALSE));
+				get_client_name(client, FALSE));
 			sendto_server(&me, 0, 0, NULL,
 				":%s GLOBOPS :No response from %s, closing link",
-				me.name, get_client_name(cptr,
+				me.name, get_client_name(client,
 				FALSE));
 		}
-		if (IsTLSAcceptHandshake(cptr))
-			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%lld-%lld > %lld)", cptr->local->sockhost,
-				(long long)TStime(), (long long)cptr->local->since, (long long)ping));
+		if (IsTLSAcceptHandshake(client))
+			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%lld-%lld > %lld)", client->local->sockhost,
+				(long long)TStime(), (long long)client->local->since, (long long)ping));
 		(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %lld seconds",
-			(long long) (TStime() - cptr->local->lasttime));
-		exit_client(cptr, NULL, scratch);
+			(long long) (TStime() - client->local->lasttime));
+		exit_client(client, NULL, scratch);
 		return;
 	}
-	else if (IsRegistered(cptr) && !IsPingSent(cptr))
+	else if (IsRegistered(client) && !IsPingSent(client))
 	{
 		/* Time to send a PING */
-		SetPingSent(cptr);
-		ClearPingWarning(cptr);
+		SetPingSent(client);
+		ClearPingWarning(client);
 		/* not nice but does the job */
-		cptr->local->lasttime = TStime() - ping;
-		sendto_one(cptr, NULL, "PING :%s", me.name);
+		client->local->lasttime = TStime() - ping;
+		sendto_one(client, NULL, "PING :%s", me.name);
 	}
-	else if (!IsPingWarning(cptr) && PINGWARNING > 0 &&
-		(IsServer(cptr) || IsHandshake(cptr) || IsConnecting(cptr) ||
-		IsTLSConnectHandshake(cptr)) &&
-		(TStime() - cptr->local->lasttime) >= (ping + PINGWARNING))
+	else if (!IsPingWarning(client) && PINGWARNING > 0 &&
+		(IsServer(client) || IsHandshake(client) || IsConnecting(client) ||
+		IsTLSConnectHandshake(client)) &&
+		(TStime() - client->local->lasttime) >= (ping + PINGWARNING))
 	{
-		SetPingWarning(cptr);
+		SetPingWarning(client);
 		sendto_realops("Warning, no response from %s for %d seconds",
-			get_client_name(cptr, FALSE), PINGWARNING);
+			get_client_name(client, FALSE), PINGWARNING);
 	}
 
 	return;
@@ -481,20 +481,20 @@ void check_ping(Client *cptr)
  */
 EVENT(check_pings)
 {
-	Client *cptr, *cptr2;
+	Client *client, *next;
 
-	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
+	list_for_each_entry_safe(client, next, &lclient_list, lclient_node)
 	{
 		/* Check TKLs for this user */
-		if (loop.do_bancheck && match_tkls(cptr))
+		if (loop.do_bancheck && match_tkls(client))
 			continue;
-		check_ping(cptr);
-		/* don't touch 'cptr' after this as it may have been killed */
+		check_ping(client);
+		/* don't touch 'client' after this as it may have been killed */
 	}
 
-	list_for_each_entry_safe(cptr, cptr2, &server_list, special_node)
+	list_for_each_entry_safe(client, next, &server_list, special_node)
 	{
-		check_ping(cptr);
+		check_ping(client);
 	}
 
 	loop.do_bancheck = loop.do_bancheck_spamf_user = loop.do_bancheck_spamf_away = 0;
@@ -503,32 +503,32 @@ EVENT(check_pings)
 
 EVENT(check_deadsockets)
 {
-	Client *cptr, *cptr2;
+	Client *client, *next;
 
-	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
+	list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
 	{
 		/* No need to notify opers here. It's already done when dead socket is set */
-		if (IsDeadSocket(cptr))
+		if (IsDeadSocket(client))
 		{
 #ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->local->fd, cptr->name);
+			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", client->local->fd, client->name);
 #endif
-			ClearDeadSocket(cptr); /* CPR. So we send the error. */
-			(void)exit_client(cptr, NULL, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
+			ClearDeadSocket(client); /* CPR. So we send the error. */
+			(void)exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
 			continue;
 		}
 	}
 
-	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
+	list_for_each_entry_safe(client, next, &lclient_list, lclient_node)
 	{
 		/* No need to notify opers here. It's already done when dead socket is set */
-		if (IsDeadSocket(cptr))
+		if (IsDeadSocket(client))
 		{
 #ifdef DEBUGMODE
-			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->local->fd, cptr->name);
+			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", client->local->fd, client->name);
 #endif
-			ClearDeadSocket(cptr); /* CPR. So we send the error. */
-			(void)exit_client(cptr, NULL, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
+			ClearDeadSocket(client); /* CPR. So we send the error. */
+			(void)exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
 			continue;
 		}
 	}
@@ -538,15 +538,15 @@ EVENT(check_deadsockets)
 	 * and 90% has been freed. Here we actually free the remaining parts.
 	 * We don't have to send anything anymore.
 	 */
-	list_for_each_entry_safe(cptr, cptr2, &dead_list, client_node)
+	list_for_each_entry_safe(client, next, &dead_list, client_node)
 	{
-		if (!IsDead(cptr))
+		if (!IsDead(client))
 			abort(); /* impossible */
 #ifdef DEBUGMODE
-		ircd_log(LOG_ERROR, "Closing deadsock2: %s", cptr->name);
+		ircd_log(LOG_ERROR, "Closing deadsock2: %s", client->name);
 #endif
-		list_del(&cptr->client_node);
-		free_client(cptr);
+		list_del(&client->client_node);
+		free_client(client);
 	}
 }
 
@@ -691,46 +691,46 @@ extern MODVAR Event *events;
 void fix_timers(void)
 {
 	int i, cnt;
-	Client *acptr;
+	Client *client;
 	Event *e;
 	struct ThrottlingBucket *thr;
 	ConfigItem_link *lnk;
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
-		if (acptr->local->since > TStime())
+		if (client->local->since > TStime())
 		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->local->since %ld -> %ld",
-				acptr->name, acptr->local->since, TStime()));
-			acptr->local->since = TStime();
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: client->local->since %ld -> %ld",
+				client->name, client->local->since, TStime()));
+			client->local->since = TStime();
 		}
-		if (acptr->local->lasttime > TStime())
+		if (client->local->lasttime > TStime())
 		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->local->lasttime %ld -> %ld",
-				acptr->name, acptr->local->lasttime, TStime()));
-			acptr->local->lasttime = TStime();
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: client->local->lasttime %ld -> %ld",
+				client->name, client->local->lasttime, TStime()));
+			client->local->lasttime = TStime();
 		}
-		if (acptr->local->last > TStime())
+		if (client->local->last > TStime())
 		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->local->last %ld -> %ld",
-				acptr->name, acptr->local->last, TStime()));
-			acptr->local->last = TStime();
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: client->local->last %ld -> %ld",
+				client->name, client->local->last, TStime()));
+			client->local->last = TStime();
 		}
 
 		/* users */
-		if (MyUser(acptr))
+		if (MyUser(client))
 		{
-			if (acptr->local->nextnick > TStime())
+			if (client->local->nextnick > TStime())
 			{
-				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->local->nextnick %ld -> %ld",
-					acptr->name, acptr->local->nextnick, TStime()));
-				acptr->local->nextnick = TStime();
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: client->local->nextnick %ld -> %ld",
+					client->name, client->local->nextnick, TStime()));
+				client->local->nextnick = TStime();
 			}
-			if (acptr->local->nexttarget > TStime())
+			if (client->local->nexttarget > TStime())
 			{
-				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->local->nexttarget %ld -> %ld",
-					acptr->name, acptr->local->nexttarget, TStime()));
-				acptr->local->nexttarget = TStime();
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: client->local->nexttarget %ld -> %ld",
+					client->name, client->local->nexttarget, TStime()));
+				client->local->nexttarget = TStime();
 			}
 
 		}
@@ -1454,15 +1454,15 @@ static void open_debugfile(void)
 {
 #ifdef	DEBUGMODE
 	int  fd;
-	Client *cptr;
+	Client *client;
 	if (debuglevel >= 0) {
-		cptr = make_client(NULL, NULL);
-		cptr->local->fd = 2;
-		SetLog(cptr);
-		cptr->local->port = debuglevel;
-		cptr->flags = 0;
+		client = make_client(NULL, NULL);
+		client->local->fd = 2;
+		SetLog(client);
+		client->local->port = debuglevel;
+		client->flags = 0;
 
-		(void)strlcpy(cptr->local->sockhost, me.local->sockhost, sizeof cptr->local->sockhost);
+		(void)strlcpy(client->local->sockhost, me.local->sockhost, sizeof client->local->sockhost);
 # ifndef _WIN32
 		/*(void)printf("isatty = %d ttyname = %#x\n",
 		    isatty(2), (u_int)ttyname(2)); */
@@ -1474,7 +1474,7 @@ static void open_debugfile(void)
 					exit(-1);
 
 #if 1
-			cptr->local->fd = fd;
+			client->local->fd = fd;
 			debugfd = fd;
 #else
 			/* if (fd != 2) {
@@ -1482,15 +1482,15 @@ static void open_debugfile(void)
 				(void)close(fd);
 			} -- hands off stderr! */
 #endif
-			strlcpy(cptr->name, LOGFILE, sizeof(cptr->name));
+			strlcpy(client->name, LOGFILE, sizeof(client->name));
 		} else if (isatty(2) && ttyname(2))
-			strlcpy(cptr->name, ttyname(2), sizeof(cptr->name));
+			strlcpy(client->name, ttyname(2), sizeof(client->name));
 		else
 # endif
-			strlcpy(cptr->name, "FD2-Pipe", sizeof(cptr->name));
+			strlcpy(client->name, "FD2-Pipe", sizeof(client->name));
 		Debug((DEBUG_FATAL,
-		    "Debug: File <%s> Level: %d at %s", cptr->name,
-		    cptr->local->port, myctime(time(NULL))));
+		    "Debug: File <%s> Level: %d at %s", client->name,
+		    client->local->port, myctime(time(NULL))));
 	}
 #endif
 }

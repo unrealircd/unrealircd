@@ -47,11 +47,11 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 static void unload_motd_file(MOTDFile *list);
 CMD_FUNC(cmd_staff);
-static int cb_rehashflag(Client *sptr, char *flag);
+static int cb_rehashflag(Client *client, char *flag);
 static int cb_test(ConfigFile *, ConfigEntry *, int, int *);
 static int cb_conf(ConfigFile *, ConfigEntry *, int);
 static int cb_rehash();
-static int cb_stats(Client *sptr, char *flag);
+static int cb_stats(Client *client, char *flag);
 #ifdef USE_LIBCURL
 static int download_staff_file(ConfigEntry *ce);
 static void download_staff_file_complete(char *url, char *file, char *errorbuf, int cached, void *dummy);
@@ -327,15 +327,15 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 0;
 }
 
-static int cb_stats(Client *sptr, char *flag)
+static int cb_stats(Client *client, char *flag)
 {
 	if (*flag == 'S')
-		sendtxtnumeric(sptr, "staff-file: %s", STAFF_FILE);
+		sendtxtnumeric(client, "staff-file: %s", STAFF_FILE);
 
 	return 0;
 }
 
-static int cb_rehashflag(Client *sptr, char *flag)
+static int cb_rehashflag(Client *client, char *flag)
 {
 	int myflag = 0;
 
@@ -344,7 +344,7 @@ static int cb_rehashflag(Client *sptr, char *flag)
 	{
 		if (myflag)
 			sendto_ops("%sRehashing network staff file on the request of %s",
-                                MyUser(sptr) ? "Remotely " : "", sptr->name);
+                                MyUser(client) ? "Remotely " : "", client->name);
 
 #ifdef USE_LIBCURL
 		if (Download.is_url)
@@ -363,24 +363,24 @@ CMD_FUNC(cmd_staff)
 	MOTDFile *temp;
 	MOTDLine *aLine;
 
-	if (!IsUser(sptr))
+	if (!IsUser(client))
 		return;
 
-	if (hunt_server(sptr, recv_mtags, ":%s STAFF", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, ":%s STAFF", 1, parc, parv) != HUNTED_ISME)
 		return;
 
 	if (!staff.lines)
 	{
-		sendto_one(sptr, NULL, RPL_NOSTAFF, me.name, sptr->name);
+		sendto_one(client, NULL, RPL_NOSTAFF, me.name, client->name);
 		return;
 	}
 
-	sendto_one(sptr, NULL, RPL_STAFFSTART, me.name, sptr->name, ircnetwork);
+	sendto_one(client, NULL, RPL_STAFFSTART, me.name, client->name, ircnetwork);
 
 	temp = &staff;
 
 	for (aLine = temp->lines; aLine; aLine = aLine->next)
-		sendto_one(sptr, NULL, RPL_STAFF, me.name, sptr->name, aLine->line);
+		sendto_one(client, NULL, RPL_STAFF, me.name, client->name, aLine->line);
 
-	sendto_one(sptr, NULL, RPL_ENDOFSTAFF, me.name, sptr->name);
+	sendto_one(client, NULL, RPL_ENDOFSTAFF, me.name, client->name);
 }

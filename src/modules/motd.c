@@ -63,17 +63,17 @@ CMD_FUNC(cmd_motd)
 	MOTDLine *motdline;
 	int  svsnofile = 0;
 
-	if (IsServer(sptr))
+	if (IsServer(client))
 		return;
 
-	if (hunt_server(sptr, recv_mtags, ":%s MOTD :%s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(client, recv_mtags, ":%s MOTD :%s", 1, parc, parv) != HUNTED_ISME)
 	{
-		if (MyUser(sptr))
-			sptr->local->since += 15;
+		if (MyUser(client))
+			client->local->since += 15;
 		return;
 	}
 
-	ptr = Find_tld(sptr);
+	ptr = Find_tld(client);
 
 	if (ptr)
 		themotd = &ptr->motd;
@@ -82,17 +82,17 @@ CMD_FUNC(cmd_motd)
 
 	if (themotd == NULL || themotd->lines == NULL)
 	{
-		sendnumeric(sptr, ERR_NOMOTD);
+		sendnumeric(client, ERR_NOMOTD);
 		svsnofile = 1;
 		goto svsmotd;
 	}
 
-	sendnumeric(sptr, RPL_MOTDSTART, me.name);
+	sendnumeric(client, RPL_MOTDSTART, me.name);
 
 	/* tm_year should be zero only if the struct is zero-ed */
 	if (themotd && themotd->lines && themotd->last_modified.tm_year)
 	{
-		sendnumericfmt(sptr, RPL_MOTD, "- %d/%d/%d %d:%02d", themotd->last_modified.tm_mday,
+		sendnumericfmt(client, RPL_MOTD, "- %d/%d/%d %d:%02d", themotd->last_modified.tm_mday,
 			themotd->last_modified.tm_mon + 1,
 			themotd->last_modified.tm_year + 1900,
 			themotd->last_modified.tm_hour,
@@ -104,7 +104,7 @@ CMD_FUNC(cmd_motd)
 		motdline = themotd->lines;
 	while (motdline)
 	{
-		sendnumeric(sptr, RPL_MOTD,
+		sendnumeric(client, RPL_MOTD,
 			motdline->line);
 		motdline = motdline->next;
 	}
@@ -113,10 +113,10 @@ CMD_FUNC(cmd_motd)
 	motdline = svsmotd.lines;
 	while (motdline)
 	{
-		sendnumeric(sptr, RPL_MOTD,
+		sendnumeric(client, RPL_MOTD,
 			motdline->line);
 		motdline = motdline->next;
 	}
 	if (svsnofile == 0)
-		sendnumeric(sptr, RPL_ENDOFMOTD);
+		sendnumeric(client, RPL_ENDOFMOTD);
 }

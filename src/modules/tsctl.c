@@ -50,23 +50,23 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_tsctl)
 {
-	if (!ValidatePermissionsForPath("server:tsctl:view",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:tsctl:view",client,NULL,NULL,NULL))
 	{
-		sendnumeric(sptr, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
-	if (MyUser(sptr) && (!parv[1] || strcasecmp(parv[1], "alltime")))
+	if (MyUser(client) && (!parv[1] || strcasecmp(parv[1], "alltime")))
 	{
-		sendnotice(sptr, "/TSCTL now shows the time on all servers. You can no longer modify the time.");
+		sendnotice(client, "/TSCTL now shows the time on all servers. You can no longer modify the time.");
 		parv[1] = "alltime";
 	}
 
 	if (parv[1] && !strcasecmp(parv[1], "alltime"))
 	{
-		sendnotice(sptr, "*** Server=%s TStime=%lld",
+		sendnotice(client, "*** Server=%s TStime=%lld",
 			me.name, (long long)TStime());
-		sendto_server(sptr, 0, 0, NULL, ":%s TSCTL alltime", sptr->name);
+		sendto_server(client, 0, 0, NULL, ":%s TSCTL alltime", client->name);
 		return;
 	}
 }
