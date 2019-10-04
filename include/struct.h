@@ -1159,7 +1159,7 @@ struct LocalClient {
 #ifdef DEBUGMODE
 	time_t cputime;			/**< Something with debugging (why is this a time_t? TODO) */
 #endif
-	char *error_str;		/**< Quit reason set by dead_link() in case of socket/buffer error, later used by exit_client() */
+	char *error_str;		/**< Quit reason set by dead_socket() in case of socket/buffer error, later used by exit_client() */
 	char sasl_agent[NICKLEN + 1];	/**< SASL: SASL Agent the user is interacting with */
 	unsigned char sasl_out;		/**< SASL: Number of outgoing sasl messages */
 	unsigned char sasl_complete;	/**< SASL: >0 if SASL authentication was successful */

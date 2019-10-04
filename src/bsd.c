@@ -563,7 +563,7 @@ void reject_insecure_server(Client *cptr)
 	                         "If you insist with insecure linking then you can set link::options::outgoing::insecure "
 	                         "(NOT recommended!).",
 	                         cptr->name);
-	dead_link(cptr, "Rejected link without SSL/TLS");
+	dead_socket(cptr, "Rejected link without SSL/TLS");
 }
 
 void start_server_handshake(Client *cptr)
@@ -1112,7 +1112,7 @@ static void parse_client_queued(Client *cptr)
  * @param readbuf     The read buffer
  * @param length      The length of the data
  * @param killsafely  If 1 then we may call exit_client() if the client
- *                    is flooding. If 0 then we use dead_link().
+ *                    is flooding. If 0 then we use dead_socket().
  * @returns 1 in normal circumstances, 0 if client was killed.
  * @notes If killsafely is 1 and the return value is 0 then
  *        you may not touch 'cptr' after calling this function
@@ -1138,7 +1138,7 @@ int process_packet(Client *cptr, char *readbuf, int length, int killsafely)
 		if (!killsafely)
 			ban_flooder(cptr);
 		else
-			dead_link(cptr, "Flood from unknown connection");
+			dead_socket(cptr, "Flood from unknown connection");
 		return 0;
 	}
 
@@ -1154,7 +1154,7 @@ int process_packet(Client *cptr, char *readbuf, int length, int killsafely)
 		if (!killsafely)
 			exit_client(cptr, NULL, "Excess Flood");
 		else
-			dead_link(cptr, "Excess Flood");
+			dead_socket(cptr, "Excess Flood");
 		return 0;
 	}
 

@@ -83,7 +83,7 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
 			{
 				ircd_log(LOG_ERROR, "TLS Handshake flood detected from %s -- killed", get_client_name(acptr, TRUE));
 				sendto_realops("TLS Handshake flood detected from %s -- killed", get_client_name(acptr, TRUE));
-				dead_link(acptr, "TLS Handshake flood detected");
+				dead_socket(acptr, "TLS Handshake flood detected");
 			}
 		}
 	}

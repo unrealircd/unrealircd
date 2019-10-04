@@ -39,7 +39,7 @@ void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags,
 
 MODVAR int  current_serial;
 /*
-** dead_link
+** dead_socket
 **	An error has been detected. The link *must* be closed,
 **	but *cannot* call ExitClient (cmd_bye) from here.
 **	Instead, mark it as a dead socket. This should
@@ -48,7 +48,7 @@ MODVAR int  current_serial;
 **	notice will be the quit message. notice will also be
 **	sent to locally connected IRCOps in case 'to' is a server.
 */
-int dead_link(Client *to, char *notice)
+int dead_socket(Client *to, char *notice)
 {
 	DBufClear(&to->local->recvQ);
 	DBufClear(&to->local->sendQ);
@@ -67,7 +67,7 @@ int dead_link(Client *to, char *notice)
 	if (!IsUser(to) && !IsUnknown(to) && !IsClosing(to))
 		sendto_ops_and_log("Link to server %s (%s) closed: %s",
 			to->name, to->ip?to->ip:"<no-ip>", notice);
-	Debug((DEBUG_ERROR, "dead_link: %s - %s", notice, get_client_name(to, FALSE)));
+	Debug((DEBUG_ERROR, "dead_socket: %s - %s", notice, get_client_name(to, FALSE)));
 	safe_strdup(to->local->error_str, notice);
 	return -1;
 }
@@ -109,7 +109,7 @@ int send_queued(Client *to)
 		{
 			char buf[256];
 			snprintf(buf, 256, "Write error: %s", STRERROR(ERRNO));
-			return dead_link(to, buf);
+			return dead_socket(to, buf);
 		}
 		(void)dbuf_delete(&to->local->sendQ, rlen);
 		to->local->lastsq = DBufLength(&to->local->sendQ) / 1024;
@@ -317,7 +317,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 			sendto_ops("Max SendQ limit exceeded for %s: %u > %d",
 			    get_client_name(to, FALSE), DBufLength(&to->local->sendQ),
 			    get_sendq(to));
-		dead_link(to, "Max SendQ exceeded");
+		dead_socket(to, "Max SendQ exceeded");
 		return;
 	}
 

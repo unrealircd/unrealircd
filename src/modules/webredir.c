@@ -197,5 +197,5 @@ CMD_FUNC(webredir)
 
 	sendto_one(sptr, NULL, "HTTP/1.1 301 Moved Permanently");
 	sendto_one(sptr, NULL, "Location: %s\r\n\r\n", cfg.url);
-	dead_link(sptr, "Connection closed");
+	dead_socket(sptr, "Connection closed");
 }

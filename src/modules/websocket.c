@@ -263,7 +263,7 @@ int websocket_handle_websocket(Client *sptr, char *readbuf2, int length2)
 	length = length1 + length2;
 	if (length > sizeof(readbuf)-1)
 	{
-		dead_link(sptr, "Illegal buffer stacking/Excess flood");
+		dead_socket(sptr, "Illegal buffer stacking/Excess flood");
 		return 0;
 	}
 
@@ -483,7 +483,7 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 		n = maxcopy;
 	if (n <= 0)
 	{
-		dead_link(sptr, "Oversized line");
+		dead_socket(sptr, "Oversized line");
 		return -1;
 	}
 	memcpy(netbuf+nprefix, readbuf, n); /* SAFE: see checking above */
@@ -500,7 +500,7 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 			if (strchr(value, ':'))
 			{
 				/* This would cause unserialization issues. Should be base64 anyway */
-				dead_link(sptr, "Invalid characters in Sec-WebSocket-Key");
+				dead_socket(sptr, "Invalid characters in Sec-WebSocket-Key");
 				return -1;
 			}
 			safe_strdup(WSU(sptr)->handshake_key, value);
@@ -516,7 +516,7 @@ int websocket_handle_handshake(Client *sptr, char *readbuf, int *length)
 				char *parx[2] = { NULL, NULL };
 				do_cmd(sptr, NULL, "GET", 1, parx);
 			}
-			dead_link(sptr, "Invalid WebSocket request");
+			dead_socket(sptr, "Invalid WebSocket request");
 			return -1;
 		}
 		websocket_complete_handshake(sptr);
@@ -620,13 +620,13 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 
 	if (!masked)
 	{
-		dead_link(sptr, "WebSocket packet not masked");
+		dead_socket(sptr, "WebSocket packet not masked");
 		return -1; /* Having the masked bit set is required (RFC6455 p29) */
 	}
 
 	if (len == 127)
 	{
-		dead_link(sptr, "WebSocket packet with insane size");
+		dead_socket(sptr, "WebSocket packet with insane size");
 		return -1; /* Packets requiring 64bit lengths are not supported. Would be insane. */
 	}
 
@@ -646,7 +646,7 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 		len = (readbuf[2] << 8) + readbuf[3];
 		if (len < 126)
 		{
-			dead_link(sptr, "WebSocket protocol violation (extended payload length too short)");
+			dead_socket(sptr, "WebSocket protocol violation (extended payload length too short)");
 			return -1; /* This is a violation (not a short read), see page 29 */
 		}
 		p += 2; /* advance pointer 2 bytes */
@@ -691,7 +691,7 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 			return total_packet_size;
 
 		case WSOP_CLOSE:
-			dead_link(sptr, "Connection closed"); /* TODO: Improve I guess */
+			dead_socket(sptr, "Connection closed"); /* TODO: Improve I guess */
 			return -1;
 
 		case WSOP_PING:
@@ -705,7 +705,7 @@ int websocket_handle_packet(Client *sptr, char *readbuf, int length)
 			return total_packet_size;
 
 		default:
-			dead_link(sptr, "WebSocket: Unknown opcode");
+			dead_socket(sptr, "WebSocket: Unknown opcode");
 			return -1;
 	}
 
@@ -716,7 +716,7 @@ int websocket_handle_packet_ping(Client *sptr, char *buf, int len)
 {
 	if (len > 500)
 	{
-		dead_link(sptr, "WebSocket: oversized PING request");
+		dead_socket(sptr, "WebSocket: oversized PING request");
 		return -1;
 	}
 	websocket_send_frame(sptr, WSOP_PONG, buf, len);
@@ -783,7 +783,7 @@ int websocket_send_frame(Client *sptr, int opcode, char *buf, int len)
 
 	if (DBufLength(&sptr->local->sendQ) > get_sendq(sptr))
 	{
-		dead_link(sptr, "Max SendQ exceeded");
+		dead_socket(sptr, "Max SendQ exceeded");
 		return -1;
 	}
 
