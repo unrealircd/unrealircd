@@ -76,11 +76,12 @@ CMD_FUNC(cmd_quit)
 		if (IsVirus(sptr))
 			return exit_client(sptr, recv_mtags, "Client exited");
 
-		n = run_spamfilter(sptr, comment, SPAMF_QUIT, NULL, 0, NULL);
-		if (n == FLUSH_BUFFER)
-			return;
-		if (n < 0)
+		if (match_spamfilter(sptr, comment, SPAMF_QUIT, NULL, 0, NULL))
+		{
 			comment = sptr->name;
+			if (IsDead(sptr))
+				return;
+		}
 		
 		if (!ValidatePermissionsForPath("immune:anti-spam-quit-message-time",sptr,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
 		{

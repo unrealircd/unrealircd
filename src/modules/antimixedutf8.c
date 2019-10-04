@@ -195,8 +195,7 @@ CMD_OVERRIDE_FUNC(override_msg)
 			sendnotice(sptr, "%s", cfg.ban_reason);
 			return;
 		} else {
-			ret = place_host_ban(sptr, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
-			if (ret != 0)
+			if (place_host_ban(sptr, cfg.ban_action, cfg.ban_reason, cfg.ban_time))
 				return;
 			/* a return value of 0 means the user is exempted, so fallthrough.. */
 		}

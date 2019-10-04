@@ -88,11 +88,11 @@ static int check_dcc_soft(Client *from, Client *to, char *text);
  * RETURN VALUES:
  * CANPRIVMSG_CONTINUE: issue a 'continue' in target nickname list (aka: skip further processing this target)
  * CANPRIVMSG_SEND: send the message (use text/newcmd!)
- * Other: return with this value (can be anything like 0, -1, FLUSH_BUFFER, etc)
+ * Other: return with this value (can be anything)
  */
 static int can_privmsg(Client *sptr, Client *acptr, int notice, char **text, char **cmd)
 {
-int ret;
+	int ret;
 
 	if (IsVirus(sptr))
 	{
@@ -103,8 +103,8 @@ int ret;
 	if (MyUser(sptr) && !strncasecmp(*text, "\001DCC", 4))
 	{
 		ret = check_dcc(sptr, acptr->name, acptr, *text);
-		if (ret < 0)
-			return ret;
+		if (IsDead(sptr))
+			return 0;
 		if (ret == 0)
 			return CANPRIVMSG_CONTINUE;
 	}
@@ -124,12 +124,8 @@ int ret;
 			sendnumeric(sptr, RPL_AWAY, acptr->name,
 			    acptr->user->away);
 
-		if (MyUser(sptr))
-		{
-			ret = run_spamfilter(sptr, *text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), acptr->name, 0, NULL);
-			if (ret < 0)
-				return ret;
-		}
+		if (MyUser(sptr) && match_spamfilter(sptr, *text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), acptr->name, 0, NULL))
+			return 0;
 
 		for (tmphook = Hooks[HOOKTYPE_PRE_USERMSG]; tmphook; tmphook = tmphook->next) {
 			*text = (*(tmphook->func.pcharfunc))(sptr, acptr, *text, notice);
@@ -304,7 +300,7 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 			if (MyUser(sptr) && (*parv[2] == 1))
 			{
 				ret = check_dcc(sptr, chptr->chname, NULL, parv[2]);
-				if (ret < 0)
+				if (IsDead(sptr))
 					return;
 				if (ret == 0)
 					continue;
@@ -342,12 +338,8 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 
 			text = parv[2];
 
-			if (MyUser(sptr))
-			{
-				ret = run_spamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname, 0, NULL);
-				if (ret < 0)
-					return;
-			}
+			if (MyUser(sptr) && match_spamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname, 0, NULL))
+				return;
 
 			new_message(sptr, recv_mtags, &mtags);
 
@@ -414,6 +406,8 @@ void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], i
 			text = parv[2];
 			newcmd = cmd;
 			ret = can_privmsg(sptr, acptr, notice, &text, &newcmd);
+			if (IsDead(sptr))
+				return;
 			if (ret == CANPRIVMSG_SEND)
 			{
 				MessageTag *mtags = NULL;
@@ -510,26 +504,19 @@ size_t n = strlen(f);
 	return buf;
 }
 
-/** Checks if a DCC is allowed.
- * PARAMETERS:
- * sptr:		the client to check for
- * target:		the target (eg a user or a channel)
- * targetcli:	the target client, NULL in case of a channel
- * text:		the whole msg
- * RETURNS:
- * 1:			allowed (no dcc, etc)
- * 0:			block
- * <0:			immediately return with this value (could be FLUSH_BUFFER)
- * HISTORY:
- * Dcc ban stuff by _Jozeph_ added by Stskeeps with comments.
- * moved and various improvements by Syzop.
+/** Checks if a DCC SEND is allowed.
+ * @param sptr        Sending client
+ * @param target      Target name (user or channel)
+ * @param targetcli   Target client (NULL in case of channel!)
+ * @param text        The entire message
+ * @returns 1 if DCC SEND allowed, 0 if rejected
  */
 static int check_dcc(Client *sptr, char *target, Client *targetcli, char *text)
 {
-char *ctcp;
-ConfigItem_deny_dcc *fl;
-char *end, realfile[BUFSIZE];
-int size_string, ret;
+	char *ctcp;
+	ConfigItem_deny_dcc *fl;
+	char *end, realfile[BUFSIZE];
+	int size_string, ret;
 
 	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",sptr,targetcli,NULL,NULL) || (targetcli && ValidatePermissionsForPath("self:getbaddcc",targetcli,NULL,NULL,NULL)))
 		return 1;
@@ -567,8 +554,8 @@ int size_string, ret;
 
 	strlcpy(realfile, ctcp, size_string+1);
 
-	if ((ret = run_spamfilter(sptr, realfile, SPAMF_DCC, target, 0, NULL)) < 0)
-		return ret;
+	if (match_spamfilter(sptr, realfile, SPAMF_DCC, target, 0, NULL))
+		return 0; /* deny */
 
 	if ((fl = dcc_isforbidden(sptr, realfile)))
 	{
@@ -587,8 +574,7 @@ int size_string, ret;
 	if (!targetcli && ((fl = dcc_isdiscouraged(sptr, realfile))))
 	{
 		char *displayfile = dcc_displayfile(realfile);
-		sendnumericfmt(sptr,
-		    RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, target, fl->reason);
+		sendnumericfmt(sptr, RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, target, fl->reason);
 		return 0; /* block */
 	}
 	return 1; /* allowed */
@@ -605,10 +591,10 @@ int size_string, ret;
  */
 static int check_dcc_soft(Client *from, Client *to, char *text)
 {
-char *ctcp;
-ConfigItem_deny_dcc *fl;
-char *end, realfile[BUFSIZE];
-int size_string;
+	char *ctcp;
+	ConfigItem_deny_dcc *fl;
+	char *end, realfile[BUFSIZE];
+	int size_string;
 
 	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",from,to,NULL,NULL)|| ValidatePermissionsForPath("self:getbaddcc",to,NULL,NULL,NULL))
 		return 1;

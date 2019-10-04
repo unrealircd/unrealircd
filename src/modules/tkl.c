@@ -34,7 +34,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 int tkl_config_test_spamfilter(ConfigFile *, ConfigEntry *, int, int *);
-int tkl_config_run_spamfilter(ConfigFile *, ConfigEntry *, int);
+int tkl_config_match_spamfilter(ConfigFile *, ConfigEntry *, int);
 int tkl_config_test_ban(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_ban(ConfigFile *, ConfigEntry *, int);
 int tkl_config_test_except(ConfigFile *, ConfigEntry *, int, int *);
@@ -79,7 +79,7 @@ void _tkl_stats(Client *cptr, int type, char *para);
 void _tkl_synch(Client *sptr);
 CMD_FUNC(_cmd_tkl);
 int _place_host_ban(Client *sptr, BanAction action, char *reason, long duration);
-int _run_spamfilter(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
+int _match_spamfilter(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
 int _join_viruschan(Client *sptr, TKL *tk, int type);
 void _spamfilter_build_user_string(char *buf, char *nick, Client *acptr);
 int _match_user(char *rmask, Client *acptr, int options);
@@ -162,7 +162,7 @@ MOD_TEST()
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_SYNCH, _tkl_synch);
 	EfunctionAddVoid(modinfo->handle, EFUNC_CMD_TKL, _cmd_tkl);
 	EfunctionAdd(modinfo->handle, EFUNC_PLACE_HOST_BAN, _place_host_ban);
-	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER, _run_spamfilter);
+	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER, _match_spamfilter);
 	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER_VIRUSCHAN, _join_viruschan);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SPAMFILTER_BUILD_USER_STRING, _spamfilter_build_user_string);
 	EfunctionAdd(modinfo->handle, EFUNC_MATCH_USER, _match_user);
@@ -177,7 +177,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamfilter);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_match_spamfilter);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_ban);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_except);
 	CommandAdd(modinfo->handle, "GLINE", cmd_gline, 3, CMD_OPER);
@@ -421,7 +421,7 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 }
 
 /** Process a spamfilter { } block in the configuration file */
-int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
+int tkl_config_match_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
@@ -2625,8 +2625,9 @@ int find_tkline_match_matcher(Client *cptr, int skip_soft, TKL *tkl)
 }
 
 /** Check if user matches a *LINE. If so, kill the user.
- * @retval <0 if client is banned (user is killed, don't touch 'cptr' anymore),
- *         otherwise the client is not banned (either no match or on an exception list).
+ * @retval 1 if client is banned, 0 if not
+ * @note Do not continue processing if the client is killed (0 return value).
+ * @note Return value changed with regards to UnrealIRCd 4!
  */
 int _find_tkline_match(Client *cptr, int skip_soft)
 {
@@ -2635,7 +2636,7 @@ int _find_tkline_match(Client *cptr, int skip_soft)
 	int index, index2;
 
 	if (IsServer(cptr) || IsMe(cptr))
-		return 1;
+		return 0;
 
 	/* First, the TKL ip hash table entries.. */
 	index2 = tkl_ip_hash(GetIP(cptr));
@@ -2671,7 +2672,7 @@ int _find_tkline_match(Client *cptr, int skip_soft)
 	}
 
 	if (!banned)
-		return 1;
+		return 0;
 
 	/* User is banned... */
 
@@ -2684,16 +2685,16 @@ int _find_tkline_match(Client *cptr, int skip_soft)
 			banned_client(cptr, "G-Lined", tkl->ptr.serverban->reason, 1, 0);
 		else
 			banned_client(cptr, "K-Lined", tkl->ptr.serverban->reason, 0, 0);
-		return -1; /* killed */
+		return 1; /* killed */
 	} else
 	if (tkl->type & TKL_ZAP)
 	{
 		ircstats.is_ref++;
 		banned_client(cptr, "Z-Lined", tkl->ptr.serverban->reason, (tkl->type & TKL_GLOBAL)?1:0, 0);
-		return -1; /* killed */
+		return 1; /* killed */
 	}
 
-	return 3;
+	return 0;
 }
 
 /** Check if user is shunned. Returns 2 in such a case (FIXME: why 2 ?) */
@@ -2769,7 +2770,7 @@ void _spamfilter_build_user_string(char *buf, char *nick, Client *acptr)
  * nick!user@host:realname ban).
  * Written by: Syzop
  * Assumes: only call for clients, possible assume on local clients [?]
- * Return values: see run_spamfilter()
+ * Return values: see match_spamfilter()
  */
 int _find_spamfilter_user(Client *sptr, int flags)
 {
@@ -2779,7 +2780,7 @@ int _find_spamfilter_user(Client *sptr, int flags)
 		return 0;
 
 	spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
-	return run_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, flags, NULL);
+	return match_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, flags, NULL);
 }
 
 /** Check a spamfilter against all local users and print a message.
@@ -4034,11 +4035,9 @@ CMD_FUNC(_cmd_tkl)
  * @param reason   The ban reason.
  * @param duration The ban duration in seconds.
  * @note This function assumes that sptr is a locally connected user.
- * @retval -1 in case of block/tempshun.
- * @retval -2 in case of kill/zline/gline/etc (-2 = FLUSH_BUFFER).
- *            one should no longer read from 'sptr' as the client
- *            has been freed.
- * @retval 0  no action is taken, the user is exempted.
+ * @retval 1 if action is taken, 0 if user is exempted.
+ * @note Be sure to check IsDead(sptr) if return value is 1 and you are
+ *       considering to continue processing.
  */
 int _place_host_ban(Client *sptr, BanAction action, char *reason, long duration)
 {
@@ -4130,7 +4129,7 @@ int _place_host_ban(Client *sptr, BanAction action, char *reason, long duration)
 			if ((action == BAN_ACT_SHUN) || (action == BAN_ACT_SOFT_SHUN))
 			{
 				find_shun(sptr);
-				return -1;
+				return 1;
 			} else
 				return find_tkline_match(sptr, 0);
 		}
@@ -4138,7 +4137,7 @@ int _place_host_ban(Client *sptr, BanAction action, char *reason, long duration)
 		case BAN_ACT_KILL:
 		default:
 			exit_client(sptr, NULL, reason);
-			return FLUSH_BUFFER;
+			return 1;
 	}
 	return 0; /* no action taken (weird) */
 }
@@ -4247,19 +4246,17 @@ int _join_viruschan(Client *sptr, TKL *tkl, int type)
 	return 0;
 }
 
-/** run_spamfilter: executes the spamfilter on the input string.
+/** match_spamfilter: executes the spamfilter on the input string.
  * @param str		The text (eg msg text, notice text, part text, quit text, etc
  * @param target	The spamfilter target (SPAMF_*)
  * @param destination	The destination as a text string (eg: "somenick", can be NULL.. eg for away)
  * @param flags		Any flags (SPAMFLAG_*)
  * @param rettkl	Pointer to an aTKLline struct, _used for special circumstances only_
  * RETURN VALUE:
- * 0 if not matched, non-0 if it should be blocked.
- * Return value can be FLUSH_BUFFER (-2) which means 'sptr' is
- * _NOT_ valid anymore so you should return immediately
- * (like from cmd_message, cmd_part, cmd_quit, etc).
+ * 1 if spamfilter matched and it should be blocked (or client exited), 0 if not matched.
+ * In case of 1, be sure to check IsDead(sptr)..
  */
-int _run_spamfilter(Client *sptr, char *str_in, int target, char *destination, int flags, TKL **rettkl)
+int _match_spamfilter(Client *sptr, char *str_in, int target, char *destination, int flags, TKL **rettkl)
 {
 	TKL *tkl;
 	TKL *winner_tkl = NULL;
@@ -4413,7 +4410,7 @@ int _run_spamfilter(Client *sptr, char *str_in, int target, char *destination, i
 			default:
 				break;
 		}
-		return -1;
+		return 1;
 	} else
 	if ((tkl->ptr.spamfilter->action == BAN_ACT_WARN) || (tkl->ptr.spamfilter->action == BAN_ACT_SOFT_WARN))
 	{
@@ -4429,7 +4426,7 @@ int _run_spamfilter(Client *sptr, char *str_in, int target, char *destination, i
 			sendnotice(sptr, "*** You have been blocked from sending files, reconnect to regain permission to send files");
 			SetDCCBlock(sptr);
 		}
-		return -1;
+		return 1;
 	} else
 	if ((tkl->ptr.spamfilter->action == BAN_ACT_VIRUSCHAN) || (tkl->ptr.spamfilter->action == BAN_ACT_SOFT_VIRUSCHAN))
 	{
@@ -4443,13 +4440,15 @@ int _run_spamfilter(Client *sptr, char *str_in, int target, char *destination, i
 		{
 			if (rettkl)
 				*rettkl = tkl;
-			return -5;
+			return 1;
 		}
 
 		join_viruschan(sptr, tkl, target);
-		return -5;
+		return 1;
 	} else
+	{
 		return place_host_ban(sptr, tkl->ptr.spamfilter->action, reason, tkl->ptr.spamfilter->tkl_duration);
+	}
 
 	return 0; /* NOTREACHED */
 }

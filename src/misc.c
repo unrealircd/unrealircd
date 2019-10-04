@@ -848,10 +848,10 @@ static char buf[512], *i, *o;
 	return buf;
 }
 
-/** This is basically only used internally by run_spamfilter()... */
+/** This is basically only used internally by match_spamfilter()... */
 char *cmdname_by_spamftarget(int target)
 {
-SpamfilterTargetTable *e;
+	SpamfilterTargetTable *e;
 
 	for (e = &spamfiltertargettable[0]; e->value; e++)
 		if (e->value == target)
@@ -861,8 +861,8 @@ SpamfilterTargetTable *e;
 
 int is_autojoin_chan(char *chname)
 {
-char buf[512];
-char *p, *name;
+	char buf[512];
+	char *p, *name;
 
 	if (OPER_AUTO_JOIN_CHANS)
 	{

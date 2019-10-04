@@ -614,8 +614,7 @@ CMD_FUNC(cmd_nick)
 	{
 		int xx;
 		spamfilter_build_user_string(spamfilter_user, nick, sptr);
-		xx = run_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
-		if (xx < 0)
+		if (match_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL))
 			return;
 	}
 	if (!IsULine(sptr) && (tklban = find_qline(sptr, nick, &ishold)))
@@ -1228,26 +1227,29 @@ int _register_user(Client *sptr, char *nick, char *username, char *umode, char *
 			return FLUSH_BUFFER;
 		}
 		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
-		if ((xx = find_tkline_match(sptr, 0)) < 0)
+		if (find_tkline_match(sptr, 0))
 		{
 			ircstats.is_ref++;
-			return xx;
+			return FLUSH_BUFFER;
 		}
 		find_shun(sptr);
 
-		/* Technical note regarding next few lines of code:
-		 * If the spamfilter matches, depending on the action:
-		 *  If it's block/dccblock/whatever the retval is -1 ===> we return, client stays "locked forever".
-		 *  If it's kill/tklline the retval is -2 ==> we return with -2 (aka: FLUSH_BUFFER)
-		 *  If it's action is viruschan the retval is -5 ==> we continue, and at the end of this return
-		 *    take special actions. We cannot do that directly here since the user is not fully registered
-		 *    yet (at all).
-		 *  -- Syzop
-		 */
 		spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
-		xx = run_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl);
-		if ((xx < 0) && (xx != -5))
-			return xx;
+		if (match_spamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl))
+		{
+			if (savetkl && ((savetkl->ptr.spamfilter->action == BAN_ACT_VIRUSCHAN) ||
+			                (savetkl->ptr.spamfilter->action == BAN_ACT_SOFT_VIRUSCHAN)))
+			{
+				/* 'viruschan' action:
+				 * Continue with registering the client, and at the end
+				 * of this function we will do the actual joining to the
+				 * virus channel.
+				 */
+			} else {
+				/* Client is either dead or blocked (will hang, on purpose, and timeout) */
+				return 0;
+			}
+		}
 
 		RunHookReturnInt(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, !=0);
 	}

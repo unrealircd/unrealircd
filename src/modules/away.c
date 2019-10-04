@@ -86,12 +86,8 @@ CMD_FUNC(cmd_away)
 	}
 
 	/* Check spamfilters */
-	if (MyUser(sptr))
-	{
-		n = run_spamfilter(sptr, new_reason, SPAMF_AWAY, NULL, 0, NULL);
-		if (n < 0)
-			return;
-	}
+	if (MyUser(sptr) && match_spamfilter(sptr, new_reason, SPAMF_AWAY, NULL, 0, NULL))
+		return;
 
 	/* Check set::anti-flood::away-flood */
 	if (MyUser(sptr) && AWAY_PERIOD && !ValidatePermissionsForPath("immune:away-flood",sptr,NULL,NULL,NULL))

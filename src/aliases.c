@@ -66,7 +66,7 @@ void cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cm
 	{
 		if (SERVICES_NAME && (acptr = find_person(alias->nick, NULL)))
 		{
-			if (alias->spamfilter && (ret = run_spamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
+			if (alias->spamfilter && match_spamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL))
 				return;
 			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 				alias->nick, SERVICES_NAME, parv[1]);
@@ -78,7 +78,7 @@ void cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cm
 	{
 		if (STATS_SERVER && (acptr = find_person(alias->nick, NULL)))
 		{
-			if (alias->spamfilter && (ret = run_spamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
+			if (alias->spamfilter && match_spamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL))
 				return;
 			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 				alias->nick, STATS_SERVER, parv[1]);
@@ -90,7 +90,7 @@ void cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cm
 	{
 		if ((acptr = find_person(alias->nick, NULL))) 
 		{
-			if (alias->spamfilter && (ret = run_spamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
+			if (alias->spamfilter && match_spamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL))
 				return;
 			if (MyUser(acptr))
 				sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
@@ -112,7 +112,7 @@ void cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cm
 			char *errmsg = NULL;
 			if (!can_send(sptr, chptr, &msg, &errmsg, 0))
 			{
-				if (alias->spamfilter && (ret = run_spamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
+				if (alias->spamfilter && match_spamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0, NULL))
 					return;
 				new_message(sptr, NULL, &mtags);
 				sendto_channel(chptr, sptr, sptr,
@@ -203,7 +203,7 @@ void cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cm
 				{
 					if (SERVICES_NAME && (acptr = find_person(format->nick, NULL)))
 					{
-						if (alias->spamfilter && (ret = run_spamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
+						if (alias->spamfilter && match_spamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL))
 							return;
 						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 							format->nick, SERVICES_NAME, output);
@@ -214,7 +214,7 @@ void cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cm
 				{
 					if (STATS_SERVER && (acptr = find_person(format->nick, NULL)))
 					{
-						if (alias->spamfilter && (ret = run_spamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
+						if (alias->spamfilter && match_spamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL))
 							return;
 						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 							format->nick, STATS_SERVER, output);
@@ -225,7 +225,7 @@ void cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cm
 				{
 					if ((acptr = find_person(format->nick, NULL))) 
 					{
-						if (alias->spamfilter && (ret = run_spamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
+						if (alias->spamfilter && match_spamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL))
 							return;
 						if (MyUser(acptr))
 							sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
@@ -247,7 +247,7 @@ void cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cm
 						char *errmsg = NULL;
 						if (!can_send(sptr, chptr, &msg, &errmsg, 0))
 						{
-							if (alias->spamfilter && (ret = run_spamfilter(sptr, output, SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
+							if (alias->spamfilter && match_spamfilter(sptr, output, SPAMF_CHANMSG, chptr->chname, 0, NULL))
 								return;
 							new_message(sptr, NULL, &mtags);
 							sendto_channel(chptr, sptr, sptr,

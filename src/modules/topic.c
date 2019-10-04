@@ -245,7 +245,7 @@ CMD_FUNC(cmd_topic)
 			Hook *tmphook;
 			int n;
 
-			if ((n = run_spamfilter(sptr, topic, SPAMF_TOPIC, chptr->chname, 0, NULL)) < 0)
+			if (match_spamfilter(sptr, topic, SPAMF_TOPIC, chptr->chname, 0, NULL))
 				return;
 
 			for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {

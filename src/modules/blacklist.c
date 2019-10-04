@@ -726,7 +726,7 @@ void blacklist_hit(Client *acptr, Blacklist *bl, int reply)
 	const char *name[4], *value[4];
 	BLUser *blu = BLUSER(acptr);
 
-	if (find_tkline_match(acptr, 1) < 0)
+	if (find_tkline_match(acptr, 1))
 		return; /* already klined/glined. Don't send the warning from below. */
 
 	if (IsUser(acptr))

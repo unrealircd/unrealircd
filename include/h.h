@@ -715,7 +715,7 @@ extern MODVAR void (*tkl_stats)(Client *cptr, int type, char *para);
 extern MODVAR void (*tkl_synch)(Client *sptr);
 extern MODVAR void (*cmd_tkl)(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[]);
 extern MODVAR int (*place_host_ban)(Client *sptr, BanAction action, char *reason, long duration);
-extern MODVAR int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
+extern MODVAR int (*match_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
 extern MODVAR int (*join_viruschan)(Client *sptr, TKL *tk, int type);
 extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);

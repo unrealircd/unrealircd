@@ -331,7 +331,7 @@ int check_tkls(Client *cptr)
 	char killflag = 0;
 
 	/* Process dynamic *LINES */
-	if (find_tkline_match(cptr, 0) < 0)
+	if (find_tkline_match(cptr, 0))
 		return 0; /* stop processing this user, as (s)he is dead now. */
 
 	find_shun(cptr); /* check for shunned and take action, if so */
@@ -374,9 +374,12 @@ int check_tkls(Client *cptr)
 	if (loop.do_bancheck_spamf_user && IsUser(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
 		return 0;
 
-	if (loop.do_bancheck_spamf_away && IsUser(cptr) && cptr->user->away != NULL &&
-		run_spamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
+	if (loop.do_bancheck_spamf_away && IsUser(cptr) &&
+	    cptr->user->away != NULL &&
+	    match_spamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL))
+	{
 		return 0;
+	}
 
 	return 1;
 }

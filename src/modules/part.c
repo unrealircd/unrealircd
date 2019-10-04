@@ -89,11 +89,10 @@ CMD_FUNC(cmd_part)
 		}
 		if (commentx)
 		{
-			n = run_spamfilter(sptr, commentx, SPAMF_PART, parv[1], 0, NULL);
-			if (n == FLUSH_BUFFER)
-				return;
-			if (n < 0)
+			if (match_spamfilter(sptr, commentx, SPAMF_PART, parv[1], 0, NULL))
 				commentx = NULL;
+			if (IsDead(sptr))
+				return;
 		}
 	}
 
