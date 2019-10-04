@@ -428,7 +428,8 @@ int ct_pre_lconnect(Client *sptr)
 			sendto_realops("[ConnThrottle] For more information see https://www.unrealircd.org/docs/ConnThrottle");
 			ucounter->throttling_banner_displayed = 1;
 		}
-		return exit_client(sptr, NULL, cfg.reason);
+		exit_client(sptr, NULL, cfg.reason);
+		return -1;
 	}
 
 	return 0;
@@ -542,13 +543,13 @@ CMD_FUNC(ct_throttle)
 	if (!IsOper(sptr))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		ct_throttle_usage(sptr);
-		return 0;
+		return;
 	}
 
 	if (!strcasecmp(parv[1], "STATS") || !strcasecmp(parv[1], "STATUS"))
@@ -577,7 +578,7 @@ CMD_FUNC(ct_throttle)
 		if (ucounter->disabled == 1)
 		{
 			sendnotice(sptr, "Already OFF");
-			return 0;
+			return;
 		}
 		ucounter->disabled = 1;
 		sendto_realops("[connthrottle] %s (%s@%s) DISABLED the connthrottle module.",
@@ -588,7 +589,7 @@ CMD_FUNC(ct_throttle)
 		if (ucounter->disabled == 0)
 		{
 			sendnotice(sptr, "Already ON");
-			return 0;
+			return;
 		}
 		sendto_realops("[connthrottle] %s (%s@%s) ENABLED the connthrottle module.",
 			sptr->name, sptr->user->username, sptr->user->realhost);
@@ -604,7 +605,6 @@ CMD_FUNC(ct_throttle)
 		sendnotice(sptr, "Unknown option '%s'", parv[1]);
 		ct_throttle_usage(sptr);
 	}
-	return 0;
 }
 
 void ucounter_free(ModData *m)

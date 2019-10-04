@@ -25,8 +25,6 @@
 
 #include "unrealircd.h"
 
-extern int short_motd(Client *sptr);
-
 int dontspread = 0;
 static char buf[BUFSIZE];
 

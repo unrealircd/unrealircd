@@ -92,7 +92,7 @@ CMD_FUNC(cmd_md)
 	ModDataInfo *md;
 
 	if (!IsServer(sptr) || (parc < 4) || BadPtr(parv[3]))
-		return 0;
+		return;
 
 	type = parv[1];
 	objname = parv[2];
@@ -104,7 +104,7 @@ CMD_FUNC(cmd_md)
 		Client *acptr = find_client(objname, NULL);
 		md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
 		if (!md || !md->unserialize || !acptr)
-			return 0;
+			return;
 		if (value)
 			md->unserialize(value, &moddata_client(acptr, md));
 		else
@@ -121,7 +121,7 @@ CMD_FUNC(cmd_md)
 		Channel *chptr = find_channel(objname, NULL);
 		md = findmoddata_byname(varname, MODDATATYPE_CHANNEL);
 		if (!md || !md->unserialize || !chptr)
-			return 0;
+			return;
 		if (value)
 			md->unserialize(value, &moddata_channel(chptr, md));
 		else
@@ -143,24 +143,24 @@ CMD_FUNC(cmd_md)
 		/* for member the object name is like '#channel/Syzop' */
 		p = strchr(objname, ':');
 		if (!p)
-			return 0;
+			return;
 		*p++ = '\0';
 
 		chptr = find_channel(objname, NULL);
 		if (!chptr)
-			return 0;
+			return;
 
 		acptr = find_person(p, NULL);
 		if (!acptr)
-			return 0;
+			return;
 
 		m = find_member_link(chptr->members, acptr);
 		if (!m)
-			return 0;
+			return;
 
 		md = findmoddata_byname(varname, MODDATATYPE_MEMBER);
 		if (!md || !md->unserialize)
-			return 0;
+			return;
 
 		if (value)
 			md->unserialize(value, &moddata_member(m, md));
@@ -183,24 +183,24 @@ CMD_FUNC(cmd_md)
 		/* for membership the object name is like 'Syzop/#channel' */
 		p = strchr(objname, ':');
 		if (!p)
-			return 0;
+			return;
 		*p++ = '\0';
 
 		acptr = find_person(objname, NULL);
 		if (!acptr)
-			return 0;
+			return;
 
 		chptr = find_channel(p, NULL);
 		if (!chptr)
-			return 0;
+			return;
 
 		m = find_membership_link(acptr->user->channel, chptr);
 		if (!m)
-			return 0;
+			return;
 
 		md = findmoddata_byname(varname, MODDATATYPE_MEMBERSHIP);
 		if (!md || !md->unserialize)
-			return 0;
+			return;
 
 		if (value)
 			md->unserialize(value, &moddata_membership(m, md));
@@ -218,7 +218,7 @@ CMD_FUNC(cmd_md)
 		/* objname is ignored */
 		md = findmoddata_byname(varname, MODDATATYPE_GLOBAL_VARIABLE);
 		if (!md || !md->unserialize)
-			return 0;
+			return;
 		if (value)
 			md->unserialize(value, &moddata_global_variable(md));
 		else
@@ -230,7 +230,6 @@ CMD_FUNC(cmd_md)
 		/* Pass on to other servers */
 		broadcast_md_globalvar_cmd(sptr->direction, sptr, varname, value);
 	}
-	return 0;
 }
 
 void _broadcast_md_client_cmd(Client *except, Client *sender, Client *acptr, char *varname, char *value)

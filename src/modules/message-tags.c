@@ -299,5 +299,4 @@ char *_mtags_to_string(MessageTag *m, Client *acptr)
  */
 CMD_FUNC(cmd_tagmsg)
 {
-	return 0;
 }

@@ -69,20 +69,20 @@ CMD_FUNC(cmd_chgident)
 	if (!ValidatePermissionsForPath("client:set:ident",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 
 	if ((parc < 3) || !*parv[2])
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CHGIDENT");
-		return 0;
+		return;
 	}
 
 	if (strlen(parv[2]) > (USERLEN))
 	{
 		sendnotice(sptr, "*** ChgIdent Error: Requested ident too long -- rejected.");
-		return 0;
+		return;
 	}
 
 	/* illegal?! */
@@ -99,61 +99,55 @@ CMD_FUNC(cmd_chgident)
 	if (legalident == 0)
 	{
 		sendnotice(sptr, "*** /ChgIdent Error: A ident may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them");
-		return 0;
+		return;
 	}
 
-	if ((acptr = find_person(parv[1], NULL)))
+	if (!(acptr = find_person(parv[1], NULL)))
 	{
-		userhost_save_current(acptr);
-
-		switch (UHOST_ALLOWED)
-		{
-			case UHALLOW_NEVER:
-				if (MyUser(sptr))
-				{
-					sendnumeric(sptr, ERR_DISABLED, "CHGIDENT",
-						"This command is disabled on this server");
-					return 0;
-				}
-				break;
-			case UHALLOW_ALWAYS:
-				break;
-			case UHALLOW_NOCHANS:
-				if (IsUser(acptr) && MyUser(sptr) && acptr->user->joined)
-				{
-					sendnotice(sptr, "*** /ChgIdent can not be used while %s is on a channel", acptr->name);
-					return 0;
-				}
-				break;
-			case UHALLOW_REJOIN:
-				/* join sent later when the ident has been changed */
-				break;
-		}
-		if (!IsULine(sptr))
-		{
-			sendto_snomask(SNO_EYES,
-			    "%s changed the virtual ident of %s (%s@%s) to be %s",
-			    sptr->name, acptr->name, acptr->user->username,
-			    GetHost(acptr), parv[2]);
-			/* Logging ability added by XeRXeS */
-			ircd_log(LOG_CHGCMDS,
-				"CHGIDENT: %s changed the virtual ident of %s (%s@%s) to be %s",
-				sptr->name, acptr->name, acptr->user->username,    
-				GetHost(acptr), parv[2]);
-		}
-
-		sendto_server(sptr, 0, 0, NULL, ":%s CHGIDENT %s %s",
-		    sptr->name, acptr->name, parv[2]);
-		ircsnprintf(acptr->user->username, sizeof(acptr->user->username), "%s", parv[2]);
-
-		userhost_changed(acptr);
-		return 0;
+		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
+		return;
 	}
-	else
+	userhost_save_current(acptr);
+
+	switch (UHOST_ALLOWED)
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK,
-		    parv[1]);
-		return 0;
+		case UHALLOW_NEVER:
+			if (MyUser(sptr))
+			{
+				sendnumeric(sptr, ERR_DISABLED, "CHGIDENT",
+					"This command is disabled on this server");
+				return;
+			}
+			break;
+		case UHALLOW_ALWAYS:
+			break;
+		case UHALLOW_NOCHANS:
+			if (IsUser(acptr) && MyUser(sptr) && acptr->user->joined)
+			{
+				sendnotice(sptr, "*** /ChgIdent can not be used while %s is on a channel", acptr->name);
+				return;
+			}
+			break;
+		case UHALLOW_REJOIN:
+			/* join sent later when the ident has been changed */
+			break;
 	}
-	return 0;
+	if (!IsULine(sptr))
+	{
+		sendto_snomask(SNO_EYES,
+		    "%s changed the virtual ident of %s (%s@%s) to be %s",
+		    sptr->name, acptr->name, acptr->user->username,
+		    GetHost(acptr), parv[2]);
+		/* Logging ability added by XeRXeS */
+		ircd_log(LOG_CHGCMDS,
+			"CHGIDENT: %s changed the virtual ident of %s (%s@%s) to be %s",
+			sptr->name, acptr->name, acptr->user->username,    
+			GetHost(acptr), parv[2]);
+	}
+
+	sendto_server(sptr, 0, 0, NULL, ":%s CHGIDENT %s %s",
+	    sptr->name, acptr->name, parv[2]);
+	ircsnprintf(acptr->user->username, sizeof(acptr->user->username), "%s", parv[2]);
+
+	userhost_changed(acptr);
 }

@@ -71,12 +71,12 @@ CMD_FUNC(cmd_knock)
 	MessageTag *mtags = NULL;
 
 	if (IsServer(sptr))
-		return 0;
+		return;
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "KNOCK");
-		return -1;
+		return;
 	}
 
 	if (MyConnect(sptr))
@@ -88,31 +88,31 @@ CMD_FUNC(cmd_knock)
 		sendnumeric(sptr, ERR_CANNOTKNOCK,
 		    parv[1], "Remember to use a # prefix in channel name");
 
-		return 0;
+		return;
 	}
 	if (!(chptr = find_channel(parv[1], NULL)))
 	{
 		sendnumeric(sptr, ERR_CANNOTKNOCK, parv[1], "Channel does not exist!");
-		return 0;
+		return;
 	}
 
 	/* IsMember bugfix by codemastr */
 	if (IsMember(sptr, chptr) == 1)
 	{
 		sendnumeric(sptr, ERR_CANNOTKNOCK, chptr->chname, "You're already there!");
-		return 0;
+		return;
 	}
 
 	if (!(chptr->mode.mode & MODE_INVITEONLY))
 	{
 		sendnumeric(sptr, ERR_CANNOTKNOCK, chptr->chname, "Channel is not invite only!");
-		return 0;
+		return;
 	}
 
 	if (is_banned(sptr, chptr, BANCHK_JOIN, NULL, NULL))
 	{
 		sendnumeric(sptr, ERR_CANNOTKNOCK, chptr->chname, "You're banned!");
-		return 0;
+		return;
 	}
 
 	for (h = Hooks[HOOKTYPE_PRE_KNOCK]; h; h = h->next)
@@ -123,7 +123,7 @@ CMD_FUNC(cmd_knock)
 	}
 
 	if (i == HOOK_DENY)
-		return 0;
+		return;
 
 	if (MyUser(sptr) && !ValidatePermissionsForPath("immune:knock-flood",sptr,NULL,NULL,NULL))
 	{
@@ -138,7 +138,7 @@ CMD_FUNC(cmd_knock)
 		{
 			sendnumeric(sptr, ERR_CANNOTKNOCK, parv[1],
 			    "You are KNOCK flooding");
-			return 0;
+			return;
 		}
 	}
 
@@ -155,5 +155,4 @@ CMD_FUNC(cmd_knock)
         RunHook4(HOOKTYPE_KNOCK, sptr, chptr, mtags, parv[2]);
 
 	free_message_tags(mtags);
-	return 0;
 }

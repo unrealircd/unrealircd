@@ -62,15 +62,15 @@ CMD_FUNC(cmd_svssilence)
 	char *p, *cp, c;
 	
 	if (!IsULine(sptr))
-		return 0;
+		return;
 
 	if (parc < 3 || BadPtr(parv[2]) || !(acptr = find_person(parv[1], NULL)))
-		return 0;
+		return;
 	
 	if (!MyUser(acptr))
 	{
 		sendto_one(acptr, NULL, ":%s SVSSILENCE %s :%s", sptr->name, parv[1], parv[2]);
-		return 0;
+		return;
 	}
 
 	/* It's for our client */
@@ -93,5 +93,4 @@ CMD_FUNC(cmd_svssilence)
 			sendto_prefix_one(acptr, acptr, NULL, ":%s SILENCE %c%s", sptr->name, c, cp);
 		}
 	}
-	return 0;
 }

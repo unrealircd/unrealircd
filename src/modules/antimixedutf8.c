@@ -193,11 +193,11 @@ CMD_OVERRIDE_FUNC(override_msg)
 		    ((cfg.ban_action == BAN_ACT_SOFT_BLOCK) && !IsLoggedIn(sptr)))
 		{
 			sendnotice(sptr, "%s", cfg.ban_reason);
-			return 0;
+			return;
 		} else {
 			ret = place_host_ban(sptr, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
 			if (ret != 0)
-				return ret;
+				return;
 			/* a return value of 0 means the user is exempted, so fallthrough.. */
 		}
 	}

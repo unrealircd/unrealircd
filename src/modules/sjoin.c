@@ -159,10 +159,10 @@ CMD_FUNC(cmd_sjoin)
 	char queue_s=0, queue_c=0; /* oh this is soooooo ugly :p */
 	
 	if (!IsServer(sptr) || parc < 4)
-		return 0;
+		return;
 
 	if (!IsChannelName(parv[2]))
-		return 0;
+		return;
 
 	merge = nopara = nomode = removeours = removetheirs = 0;
 
@@ -984,7 +984,7 @@ getnick:
 	{
 		int i = (*(h->func.intfunc))(chptr,merge,removetheirs,nomode);
 		if (i == 1)
-			return -1; /* channel no longer exists */
+			return; /* channel no longer exists */
 	}
 
 	/* we should be synched by now, */
@@ -1006,8 +1006,6 @@ getnick:
 	if (!chptr->users)
 	{
 		sub1_from_channel(chptr);
-		return -1;
+		return;
 	}
-
-	return 0;
 }

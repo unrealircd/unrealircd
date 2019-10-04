@@ -55,7 +55,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_svsfline)
 {
 	if (parc < 2)
-		return 0;
+		return;
 
 	switch (*parv[1])
 	{
@@ -65,7 +65,7 @@ CMD_FUNC(cmd_svsfline)
 		case '+':
 		{
 			if (parc < 4)
-				return 0;
+				return;
 
 			if (!Find_deny_dcc(parv[2]))
 				DCCdeny_add(parv[2], parv[3], DCCDENY_HARD, CONF_BAN_TYPE_AKILL);
@@ -84,10 +84,10 @@ CMD_FUNC(cmd_svsfline)
 			ConfigItem_deny_dcc *deny;
 
 			if (!IsULine(sptr))
-				return 0;
+				return;
 
 			if (parc < 3)
-				return 0;
+				return;
 
 			if (!(deny = Find_deny_dcc(parv[2])))
 				break;
@@ -102,7 +102,7 @@ CMD_FUNC(cmd_svsfline)
 		case '*':
 		{
 			if (!IsULine(sptr))
-				return 0;
+				return;
 
 			dcc_wipe_services();
 
@@ -111,6 +111,4 @@ CMD_FUNC(cmd_svsfline)
 			break;
 		}
 	}
-
-	return 0;
 }

@@ -72,12 +72,12 @@ CMD_FUNC(cmd_ison)
 	char *p = NULL;
 
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	if (parc < 2)
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "ISON");
-		return 0;
+		return;
 	}
 
 	ircsnprintf(buf, sizeof(buf), rpl_str(RPL_ISON), me.name, sptr->name);
@@ -101,5 +101,4 @@ CMD_FUNC(cmd_ison)
 	}
 
 	sendto_one(sptr, NULL, "%s", buf);
-	return 0;
 }

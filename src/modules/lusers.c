@@ -60,7 +60,7 @@ CMD_FUNC(cmd_lusers)
 char flatmap;
 
 	if (hunt_server(sptr, recv_mtags, ":%s LUSERS :%s", 1, parc, parv) != HUNTED_ISME)
-		return 0;
+		return;
 
 	flatmap = (FLAT_MAP && !ValidatePermissionsForPath("server:info:lusers",sptr,NULL,NULL,NULL)) ? 1 : 0;
 
@@ -91,5 +91,4 @@ char flatmap;
 			sendto_ops("New record on this server: %d connections (%d clients)",
 			    max_connection_count, irccounts.me_clients);
 	}
-	return 0;
 }

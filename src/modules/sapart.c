@@ -77,20 +77,20 @@ CMD_FUNC(cmd_sapart)
 	if (parc < 3)
         {
                 sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SAPART");
-                return 0;
+                return;
         }
 
         if (!(acptr = find_person(parv[1], NULL)))
         {
                 sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
-                return 0;
+                return;
         }
 
 	/* See if we can operate on this vicim/this command */
 	if (!ValidatePermissionsForPath("sacmd:sapart",sptr,acptr,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (MyUser(acptr))
@@ -133,7 +133,7 @@ CMD_FUNC(cmd_sapart)
 		}
 
 		if (!*jbuf)
-			return -1;
+			return;
 
 		strcpy(parv[2], jbuf);
 
@@ -193,6 +193,4 @@ CMD_FUNC(cmd_sapart)
 				sptr->name, parv[1], parv[2]);
 		}
 	}
-
-	return 0;
 }

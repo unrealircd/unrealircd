@@ -359,12 +359,12 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 		if (rcmd->disable)
 		{
 			sendnotice(sptr, "The command %s has been disabled by the network administrators", ovr->command->cmd);
-			return 0;
+			return;
 		}
 		if (!rcmd_canbypass(sptr, rcmd))
 		{
 			sendnotice(sptr, "You cannot use the %s command until you've been connected for %ld seconds or more", ovr->command->cmd, rcmd->connect_delay);
-			return 0;
+			return;
 		}
 	}
 

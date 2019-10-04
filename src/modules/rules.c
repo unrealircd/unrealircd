@@ -64,7 +64,7 @@ CMD_FUNC(cmd_rules)
 	temp = NULL;
 
 	if (hunt_server(sptr, recv_mtags, ":%s RULES :%s", 1, parc, parv) != HUNTED_ISME)
-		return 0;
+		return;
 
 	ptr = Find_tld(sptr);
 
@@ -76,7 +76,7 @@ CMD_FUNC(cmd_rules)
 	if (temp == NULL)
 	{
 		sendnumeric(sptr, ERR_NORULES);
-		return 0;
+		return;
 
 	}
 
@@ -89,5 +89,4 @@ CMD_FUNC(cmd_rules)
 		temp = temp->next;
 	}
 	sendnumeric(sptr, RPL_ENDOFRULES);
-	return 0;
 }

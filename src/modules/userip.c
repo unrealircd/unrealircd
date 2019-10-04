@@ -71,12 +71,12 @@ CMD_FUNC(cmd_userip)
 	int  i;			/* loop counter */
 
 	if (!MyUser(sptr))
-		return -1;
+		return;
 		
 	if (parc < 2)
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "USERIP");
-		return 0;
+		return;
 	}
 
 	/* The idea is to build up the response string out of pieces
@@ -119,8 +119,5 @@ CMD_FUNC(cmd_userip)
 		cn = p;
 	}
 
-	sendnumeric(sptr, RPL_USERIP,
-	    response[0], response[1], response[2], response[3], response[4]);
-
-	return 0;
+	sendnumeric(sptr, RPL_USERIP, response[0], response[1], response[2], response[3], response[4]);
 }

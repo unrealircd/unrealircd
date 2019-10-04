@@ -245,7 +245,7 @@ CMD_FUNC(cmd_linksecurity)
 	if (!IsOper(sptr))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 	
 	sendtxtnumeric(sptr, "== Link Security Report ==");
@@ -278,5 +278,4 @@ CMD_FUNC(cmd_linksecurity)
 	sendtxtnumeric(sptr, "= More information =");
 	sendtxtnumeric(sptr, "To understand more about link security and how to improve your level");
 	sendtxtnumeric(sptr, "see https://www.unrealircd.org/docs/Link_security");
-	return 0;
 }

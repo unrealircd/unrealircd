@@ -288,33 +288,34 @@ typedef enum ClientStatus {
  * @{
  */
 #define	CLIENT_FLAG_PINGSENT		0x00000001	/**< PING sent, no reply yet */
-#define	CLIENT_FLAG_DEADSOCKET		0x00000002	/**< Local socket is dead--Exiting soon */
-#define	CLIENT_FLAG_KILLED		0x00000004	/**< Prevents "QUIT" from being sent for this */
-#define CLIENT_FLAG_IPV6		0x00000008	/**< Connection is using IPv6 */
-#define CLIENT_FLAG_OUTGOING		0x00000010	/**< Outgoing connection (do not touch cptr->listener->clients) */
-#define	CLIENT_FLAG_CLOSING		0x00000020	/**< Set when closing to suppress errors */
-#define	CLIENT_FLAG_LISTEN		0x00000040	/**< Used to mark clients which we listen() on */
-#define	CLIENT_FLAG_DNSLOOKUP		0x00000080	/**< Client is doing a DNS lookup */
-#define	CLIENT_FLAG_IDENTLOOKUP		0x00000100	/**< Client is doing an Ident lookup (RFC931) */
-#define	CLIENT_FLAG_IDENTLOOKUPSENT	0x00000200	/**< Set if we havent writen to ident server */
-#define	CLIENT_FLAG_LOCALHOST		0x00000400	/**< Set for localhost clients */
-#define	CLIENT_FLAG_IDENTSUCCESS	0x00000800	/**< Successful ident lookup achieved */
-#define	CLIENT_FLAG_USEIDENT		0x00001000	/**< The allow { } block says we should use the ident (if available) */
-#define CLIENT_FLAG_NEXTCALL		0x00002000	/**< Next call (don't ask...) */
-#define CLIENT_FLAG_ULINE		0x00004000	/**< User/server is considered U-lined (eg: services) */
-#define CLIENT_FLAG_SQUIT		0x00008000	/**< Server has been /SQUIT by an oper */
-#define CLIENT_FLAG_PROTOCTL		0x00010000	/**< Received at least 1 PROTOCTL message */
-#define CLIENT_FLAG_EAUTH		0x00020000	/**< Server authenticated via PROTOCTL EAUTH */
-#define CLIENT_FLAG_NETINFO		0x00040000	/**< Received a NETINFO message */
-#define CLIENT_FLAG_QUARANTINE		0x00080000	/**< Quarantined server (don't allow ircops on this server) */
-#define CLIENT_FLAG_DCCNOTICE		0x00100000	/**< Has the user seen a notice on how to use DCCALLOW already? */
-#define CLIENT_FLAG_SHUNNED		0x00200000	/**< Connection is shunned (user cannot execute any commands) */
-#define CLIENT_FLAG_VIRUS		0x00400000	/**< Tagged by spamfilter as a virus */
-#define CLIENT_FLAG_TLS			0x00800000	/**< Connection is using SSL/TLS */
-#define CLIENT_FLAG_NOFAKELAG		0x01000000	/**< Exemption from fake lag */
-#define CLIENT_FLAG_DCCBLOCK		0x02000000	/**< Block all DCC send requests */
-#define CLIENT_FLAG_MAP			0x04000000	/**< Show this entry in /MAP (only used in map module) */
-#define CLIENT_FLAG_PINGWARN		0x08000000	/**< Server ping warning (remote server slow with responding to PINGs) */
+#define	CLIENT_FLAG_DEAD		0x00000002	/**< Client is dead: already quit/exited and removed from all lists -- Remaining part will soon be freed in main loop */
+#define	CLIENT_FLAG_DEADSOCKET		0x00000004	/**< Local socket is dead but otherwise the client still exists fully -- Will soon exit in main loop */
+#define	CLIENT_FLAG_KILLED		0x00000008	/**< Prevents "QUIT" from being sent for this */
+#define CLIENT_FLAG_IPV6		0x00000010	/**< Connection is using IPv6 */
+#define CLIENT_FLAG_OUTGOING		0x00000020	/**< Outgoing connection (do not touch cptr->listener->clients) */
+#define	CLIENT_FLAG_CLOSING		0x00000040	/**< Set when closing to suppress errors */
+#define	CLIENT_FLAG_LISTEN		0x00000080	/**< Used to mark clients which we listen() on */
+#define	CLIENT_FLAG_DNSLOOKUP		0x00000100	/**< Client is doing a DNS lookup */
+#define	CLIENT_FLAG_IDENTLOOKUP		0x00000200	/**< Client is doing an Ident lookup (RFC931) */
+#define	CLIENT_FLAG_IDENTLOOKUPSENT	0x00000400	/**< Set if we havent writen to ident server */
+#define	CLIENT_FLAG_LOCALHOST		0x00000800	/**< Set for localhost clients */
+#define	CLIENT_FLAG_IDENTSUCCESS	0x00001000	/**< Successful ident lookup achieved */
+#define	CLIENT_FLAG_USEIDENT		0x00002000	/**< The allow { } block says we should use the ident (if available) */
+#define CLIENT_FLAG_NEXTCALL		0x00004000	/**< Next call (don't ask...) */
+#define CLIENT_FLAG_ULINE		0x00008000	/**< User/server is considered U-lined (eg: services) */
+#define CLIENT_FLAG_SQUIT		0x00010000	/**< Server has been /SQUIT by an oper */
+#define CLIENT_FLAG_PROTOCTL		0x00020000	/**< Received at least 1 PROTOCTL message */
+#define CLIENT_FLAG_EAUTH		0x00040000	/**< Server authenticated via PROTOCTL EAUTH */
+#define CLIENT_FLAG_NETINFO		0x00080000	/**< Received a NETINFO message */
+#define CLIENT_FLAG_QUARANTINE		0x00100000	/**< Quarantined server (don't allow ircops on this server) */
+#define CLIENT_FLAG_DCCNOTICE		0x00200000	/**< Has the user seen a notice on how to use DCCALLOW already? */
+#define CLIENT_FLAG_SHUNNED		0x00400000	/**< Connection is shunned (user cannot execute any commands) */
+#define CLIENT_FLAG_VIRUS		0x00800000	/**< Tagged by spamfilter as a virus */
+#define CLIENT_FLAG_TLS			0x01000000	/**< Connection is using SSL/TLS */
+#define CLIENT_FLAG_NOFAKELAG		0x02000000	/**< Exemption from fake lag */
+#define CLIENT_FLAG_DCCBLOCK		0x04000000	/**< Block all DCC send requests */
+#define CLIENT_FLAG_MAP			0x08000000	/**< Show this entry in /MAP (only used in map module) */
+#define CLIENT_FLAG_PINGWARN		0x10000000	/**< Server ping warning (remote server slow with responding to PINGs) */
 /** @} */
 
 #define SNO_DEFOPER "+kscfvGqobS"
@@ -406,6 +407,7 @@ typedef enum ClientStatus {
 #define IsClosing(x)			((x)->flags & CLIENT_FLAG_CLOSING)	/**< Is closing the connection */
 #define IsDCCBlock(x)			((x)->flags & CLIENT_FLAG_DCCBLOCK)
 #define IsDCCNotice(x)			((x)->flags & CLIENT_FLAG_DCCNOTICE)
+#define IsDead(x)			((x)->flags & CLIENT_FLAG_DEAD)
 #define IsDeadSocket(x)			((x)->flags & CLIENT_FLAG_DEADSOCKET)
 #define IsUseIdent(x)			((x)->flags & CLIENT_FLAG_USEIDENT)
 #define IsDNSLookup(x)			((x)->flags & CLIENT_FLAG_DNSLOOKUP)
@@ -435,6 +437,7 @@ typedef enum ClientStatus {
 #define SetClosing(x)			do { (x)->flags |= CLIENT_FLAG_CLOSING; } while(0)
 #define SetDCCBlock(x)			do { (x)->flags |= CLIENT_FLAG_DCCBLOCK; } while(0)
 #define SetDCCNotice(x)			do { (x)->flags |= CLIENT_FLAG_DCCNOTICE; } while(0)
+#define SetDead(x)			do { (x)->flags |= CLIENT_FLAG_DEAD; } while(0)
 #define SetDeadSocket(x)		do { (x)->flags |= CLIENT_FLAG_DEADSOCKET; } while(0)
 #define SetUseIdent(x)			do { (x)->flags |= CLIENT_FLAG_USEIDENT; } while(0)
 #define SetDNSLookup(x)			do { (x)->flags |= CLIENT_FLAG_DNSLOOKUP; } while(0)
@@ -463,6 +466,7 @@ typedef enum ClientStatus {
 #define ClearClosing(x)			do { (x)->flags &= ~CLIENT_FLAG_CLOSING; } while(0)
 #define ClearDCCBlock(x)		do { (x)->flags &= ~CLIENT_FLAG_DCCBLOCK; } while(0)
 #define ClearDCCNotice(x)		do { (x)->flags &= ~CLIENT_FLAG_DCCNOTICE; } while(0)
+#define ClearDead(x)			do { (x)->flags &= ~CLIENT_FLAG_DEAD; } while(0)
 #define ClearDeadSocket(x)		do { (x)->flags &= ~CLIENT_FLAG_DEADSOCKET; } while(0)
 #define ClearUseIdent(x)		do { (x)->flags &= ~CLIENT_FLAG_USEIDENT; } while(0)
 #define ClearDNSLookup(x)		do { (x)->flags &= ~CLIENT_FLAG_DNSLOOKUP; } while(0)
@@ -835,7 +839,7 @@ struct SWhois {
  *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
  *        E.g. parv[3] in the above example is out of bounds.
  */
-#define CMD_FUNC(x) int (x) (Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+#define CMD_FUNC(x) void (x) (Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
 /* @} */
 
 /** Command override function - used by all command override handlers.
@@ -852,13 +856,13 @@ struct SWhois {
  *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.
  *        E.g. parv[3] in the above example.
  */
-#define CMD_OVERRIDE_FUNC(x) int (x)(CommandOverride *ovr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
+#define CMD_OVERRIDE_FUNC(x) void (x)(CommandOverride *ovr, Client *sptr, MessageTag *recv_mtags, int parc, char *parv[])
 
 
 
-typedef int (*CmdFunc)(Client *sptr, MessageTag *mtags, int parc, char *parv[]);
-typedef int (*AliasCmdFunc)(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
-typedef int (*OverrideCmdFunc)(CommandOverride *ovr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+typedef void (*CmdFunc)(Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+typedef void (*AliasCmdFunc)(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd);
+typedef void (*OverrideCmdFunc)(CommandOverride *ovr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 
 
 /* tkl:

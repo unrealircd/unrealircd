@@ -62,7 +62,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_eos)
 {
 	if (!IsServer(sptr))
-		return 0;
+		return;
 	sptr->serv->flags.synced = 1;
 	/* pass it on ^_- */
 #ifdef DEBUGMODE
@@ -72,5 +72,4 @@ CMD_FUNC(cmd_eos)
 	sendto_server(sptr, 0, 0, NULL, ":%s EOS", sptr->name);
 
 	RunHook(HOOKTYPE_SERVER_SYNCHED, sptr);
-	return 0;
 }

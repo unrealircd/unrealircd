@@ -64,13 +64,13 @@ CMD_FUNC(cmd_globops)
 	if (BadPtr(message))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "GLOBOPS");
-		return 0;
+		return;
 	}
 
 	if (MyUser(sptr) && !ValidatePermissionsForPath("chat:globops",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (MyUser(sptr))
@@ -84,6 +84,4 @@ CMD_FUNC(cmd_globops)
 		sendto_server(sptr, 0, 0, NULL, ":%s SENDUMODE o :from %s: %s",
 		    me.name, sptr->name, message);
 	}
-
-	return 0;
 }

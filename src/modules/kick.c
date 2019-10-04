@@ -81,7 +81,7 @@ CMD_FUNC(cmd_kick)
 	if (parc < 3 || *parv[1] == '\0')
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "KICK");
-		return 0;
+		return;
 	}
 
 	comment = (BadPtr(parv[3])) ? sptr->name : parv[3];
@@ -330,6 +330,4 @@ CMD_FUNC(cmd_kick)
 		if (MyUser(sptr))
 			break;
 	}			/* loop on parv[1] */
-
-	return 0;
 }

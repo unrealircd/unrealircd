@@ -76,7 +76,7 @@ CMD_FUNC(cmd_kill)
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "KILL");
-		return 0;
+		return;
 	}
 
 	// FIXME: clean all this killpath shit, nobody cares anymore these days.
@@ -94,13 +94,13 @@ CMD_FUNC(cmd_kill)
 	if (!IsServer(sptr->direction) && !ValidatePermissionsForPath("kill:global",sptr,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (BadPtr(path))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "KILL");
-		return 0;
+		return;
 	}
 
 	if (strlen(path) > iConf.quit_length)
@@ -257,12 +257,11 @@ CMD_FUNC(cmd_kill)
 		if (MyUser(sptr))
 			RunHook3(HOOKTYPE_LOCAL_KILL, sptr, acptr, parv[2]);
 
-		n = exit_client(acptr, mtags, buf2);
+		exit_client(acptr, mtags, buf2);
 
 		free_message_tags(mtags);
 
-		if ((n == FLUSH_BUFFER) && (sptr == acptr))
-			return FLUSH_BUFFER; /* return if we killed ourselves */
+		if (IsDead(sptr))
+			return; /* stop processing if we killed ourselves */
 	}
-	return 0;
 }

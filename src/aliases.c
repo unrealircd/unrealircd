@@ -42,7 +42,7 @@ void strrangetok(char *in, char *out, char tok, short first, short last) {
 /* cmd_alias is a special type of command, it has an extra argument 'cmd'. */
 static int recursive_alias = 0;
 
-int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd)
+void cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd)
 {
 	ConfigItem_alias *alias;
 	Client *acptr;
@@ -52,14 +52,14 @@ int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd
 	{
 		sendto_one(sptr, NULL, ":%s %d %s %s :Unknown command",
 			me.name, ERR_UNKNOWNCOMMAND, sptr->name, cmd);
-		return 0;
+		return;
 	}
 	
 	/* If it isn't an ALIAS_COMMAND, we require a paramter ... We check ALIAS_COMMAND LATER */
 	if (alias->type != ALIAS_COMMAND && (parc < 2 || *parv[1] == '\0'))
 	{
 		sendnumeric(sptr, ERR_NOTEXTTOSEND);
-		return -1;
+		return;
 	}
 
 	if (alias->type == ALIAS_SERVICES) 
@@ -67,7 +67,7 @@ int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd
 		if (SERVICES_NAME && (acptr = find_person(alias->nick, NULL)))
 		{
 			if (alias->spamfilter && (ret = run_spamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
-				return ret;
+				return;
 			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 				alias->nick, SERVICES_NAME, parv[1]);
 		}
@@ -79,7 +79,7 @@ int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd
 		if (STATS_SERVER && (acptr = find_person(alias->nick, NULL)))
 		{
 			if (alias->spamfilter && (ret = run_spamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
-				return ret;
+				return;
 			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 				alias->nick, STATS_SERVER, parv[1]);
 		}
@@ -91,7 +91,7 @@ int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd
 		if ((acptr = find_person(alias->nick, NULL))) 
 		{
 			if (alias->spamfilter && (ret = run_spamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
-				return ret;
+				return;
 			if (MyUser(acptr))
 				sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
 					sptr->user->username, GetHost(sptr),
@@ -113,14 +113,14 @@ int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd
 			if (!can_send(sptr, chptr, &msg, &errmsg, 0))
 			{
 				if (alias->spamfilter && (ret = run_spamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
-					return ret;
+					return;
 				new_message(sptr, NULL, &mtags);
 				sendto_channel(chptr, sptr, sptr,
 				               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
 				               ":%s PRIVMSG %s :%s",
 				               sptr->name, chptr->chname, parv[1]);
 				free_message_tags(mtags);
-				return 0;
+				return;
 			}
 		}
 		sendnumeric(sptr, ERR_CANNOTDOCOMMAND,
@@ -196,7 +196,7 @@ int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd
 				if (strlen(output) == 0)
 				{
 					sendnumeric(sptr, ERR_NEEDMOREPARAMS, cmd);
-					return -1;
+					return;
 				}
 				
 				if (format->type == ALIAS_SERVICES) 
@@ -204,7 +204,7 @@ int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd
 					if (SERVICES_NAME && (acptr = find_person(format->nick, NULL)))
 					{
 						if (alias->spamfilter && (ret = run_spamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
-							return ret;
+							return;
 						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 							format->nick, SERVICES_NAME, output);
 					} else
@@ -215,7 +215,7 @@ int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd
 					if (STATS_SERVER && (acptr = find_person(format->nick, NULL)))
 					{
 						if (alias->spamfilter && (ret = run_spamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
-							return ret;
+							return;
 						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", sptr->name,
 							format->nick, STATS_SERVER, output);
 					} else
@@ -226,7 +226,7 @@ int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd
 					if ((acptr = find_person(format->nick, NULL))) 
 					{
 						if (alias->spamfilter && (ret = run_spamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
-							return ret;
+							return;
 						if (MyUser(acptr))
 							sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", sptr->name, 
 							sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
@@ -248,14 +248,14 @@ int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd
 						if (!can_send(sptr, chptr, &msg, &errmsg, 0))
 						{
 							if (alias->spamfilter && (ret = run_spamfilter(sptr, output, SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
-								return ret;
+								return;
 							new_message(sptr, NULL, &mtags);
 							sendto_channel(chptr, sptr, sptr,
 							               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
 							               ":%s PRIVMSG %s :%s",
 							               sptr->name, chptr->chname, parv[1]);
 							free_message_tags(mtags);
-							return 0;
+							return;
 						}
 					}
 					sendnumeric(sptr, ERR_CANNOTDOCOMMAND, cmd, 
@@ -271,19 +271,17 @@ int cmd_alias(Client *sptr, MessageTag *mtags, int parc, char *parv[], char *cmd
 					if (recursive_alias)
 					{
 						sendnumeric(sptr, ERR_CANNOTDOCOMMAND, cmd, "You may not use this command at this time -- recursion");
-						return -1;
+						return;
 					}
 
 					recursive_alias = 1;
-					ret = parse(sptr, mybuf, strlen(mybuf));
+					parse(sptr, mybuf, strlen(mybuf));
 					recursive_alias = 0;
 
-					return ret;
+					return;
 				}
 				break;
 			}
 		}
-		return 0;
 	}
-	return 0;
 }

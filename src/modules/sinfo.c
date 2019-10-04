@@ -41,7 +41,7 @@ MOD_UNLOAD()
  * https://www.unrealircd.org/docs/Server_protocol:SINFO_command
  * ^ contains important remarks regarding when to send it and when not.
  */
-int sinfo_server(Client *sptr, int parc, char *parv[])
+CMD_FUNC(sinfo_server)
 {
 	char buf[512];
 
@@ -69,7 +69,7 @@ int sinfo_server(Client *sptr, int parc, char *parv[])
 	if ((parc < 6) || BadPtr(parv[6]))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SINFO");
-		return 0;
+		return;
 	}
 
 	sptr->serv->boottime = atol(parv[1]);
@@ -106,19 +106,17 @@ int sinfo_server(Client *sptr, int parc, char *parv[])
 	/* Broadcast to 'the other side' of the net */
 	concat_params(buf, sizeof(buf), parc, parv);
 	sendto_server(sptr, 0, 0, NULL, ":%s SINFO %s", sptr->name, buf);
-
-	return 0;
 }
 
 #define SafeDisplayStr(x)  ((x && *(x)) ? (x) : "-")
-int sinfo_user(Client *sptr, int parc, char *parv[])
+CMD_FUNC(sinfo_user)
 {
 	Client *acptr;
 
 	if (!IsOper(sptr))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
@@ -153,15 +151,12 @@ int sinfo_user(Client *sptr, int parc, char *parv[])
 		sendtxtnumeric(sptr, "Allowed nick characters: %s",
 		               SafeDisplayStr(acptr->serv->features.nickchars));
 	}
-
-	return 0;
 }
 
 CMD_FUNC(cmd_sinfo)
 {
 	if (IsServer(sptr))
-		return sinfo_server(sptr, parc, parv);
+		return sinfo_server(sptr, recv_mtags, parc, parv);
 	else if (MyUser(sptr))
-		return sinfo_user(sptr, parc, parv);
-	return 0;
+		return sinfo_user(sptr, recv_mtags, parc, parv);
 }

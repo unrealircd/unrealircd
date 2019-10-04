@@ -67,23 +67,22 @@ CMD_FUNC(cmd_svskill)
 	int n;
 
 	if (parc < 2)
-		return -1;
+		return;
 	if (parc > 3)
-		return -1;
+		return;
 	if (parc == 3)
 		comment = parv[2];
 
 	if (!IsULine(sptr))
-		return -1;
+		return;
 
 	if (!(acptr = find_person(parv[1], NULL)))
-		return 0;
+		return;
 
 	/* for new_message() we use acptr here, makes sense for the exit_client, right? */
 	new_message(acptr, recv_mtags, &mtags);
 	sendto_server(sptr, 0, 0, mtags, ":%s SVSKILL %s :%s", sptr->name, parv[1], comment);
 	SetKilled(acptr);
-	n = exit_client(acptr, mtags, comment);
+	exit_client(acptr, mtags, comment);
 	free_message_tags(mtags);
-	return n;
 }

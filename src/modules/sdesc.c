@@ -63,13 +63,13 @@ CMD_FUNC(cmd_sdesc)
 	if (!ValidatePermissionsForPath("server:description",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 	
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SDESC");
-		return 0;
+		return;
 	}
 
 	if (strlen(parv[1]) > REALLEN)
@@ -78,7 +78,7 @@ CMD_FUNC(cmd_sdesc)
 		{
 			sendnotice(sptr, "*** /SDESC Error: \"Server info\" may maximum be %i characters of length",
 				REALLEN);
-			return 0;
+			return;
 		}
 		parv[1][REALLEN] = '\0';
 	}
@@ -87,12 +87,6 @@ CMD_FUNC(cmd_sdesc)
 
 	sendto_server(sptr, 0, 0, NULL, ":%s SDESC :%s", sptr->name, parv[1]);
 
-	if (MyConnect(sptr))
-		sendnotice(sptr,
-			"Your \"server description\" is now set to be %s - you have to set it manually to undo it",
-			parv[1]);
-
-	sendto_ops("Server description for %s is now '%s' changed by %s",
+	sendto_ops("Server description for %s is now '%s' (changed by %s)",
 		sptr->srvptr->name, sptr->srvptr->info, sptr->name);
-	return 0;
 }

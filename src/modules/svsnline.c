@@ -88,7 +88,7 @@ CMD_FUNC(cmd_svsnline)
 	char		*s;
 
 	if (parc < 2)
-		return 0;
+		return;
 
 	switch (*parv[1])
 	{
@@ -97,7 +97,7 @@ CMD_FUNC(cmd_svsnline)
 	  case '+':
 	  {
 		  if (parc < 4)
-			  return 0;
+			  return;
 		 
 		  if (!Find_banEx(NULL, parv[3], CONF_BAN_REALNAME, CONF_BAN_TYPE_AKILL))
 		  {
@@ -120,9 +120,9 @@ CMD_FUNC(cmd_svsnline)
 	  case '-':
 	  {
 		  if (!IsULine(sptr))
-			  return 0;
+			  return;
 		  if (parc < 3)
-			  return 0;
+			  return;
 		  
 		  for (bconf = conf_ban; bconf; bconf = bconf->next)
 		  {
@@ -147,12 +147,11 @@ CMD_FUNC(cmd_svsnline)
 	  case '*':
 	  {
 		  if (!IsULine(sptr))
-			  return 0;
+			  return;
 	          wipe_svsnlines();
 		  sendto_server(sptr, 0, 0, NULL, ":%s SVSNLINE *", sptr->name);
 		  break;
 	  }
 
 	}
-	return 0;
 }

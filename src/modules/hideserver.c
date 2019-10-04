@@ -334,8 +334,7 @@ CMD_OVERRIDE_FUNC(override_map)
 			sendnotice(sptr, "%s", Settings.map_deny_message);
 		else
 			sendnumeric(sptr, RPL_MAPEND);
-
-		return 0;
+		return;
 	}
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
@@ -356,8 +355,6 @@ CMD_OVERRIDE_FUNC(override_map)
 		dump_map(sptr, &me, "*", 0, longest);
 
 	sendnumeric(sptr, RPL_MAPEND);
-
-	return 0;
 }
 
 CMD_OVERRIDE_FUNC(override_links)
@@ -374,8 +371,6 @@ CMD_OVERRIDE_FUNC(override_links)
 			sendnotice(sptr, "%s", Settings.links_deny_message);
 		else
 			sendnumeric(sptr, RPL_ENDOFLINKS, "*");
-
-		return 0;
 	}
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
@@ -394,5 +389,4 @@ CMD_OVERRIDE_FUNC(override_links)
 	}
 
 	sendnumeric(sptr, RPL_ENDOFLINKS, "*");
-	return 0;
 }

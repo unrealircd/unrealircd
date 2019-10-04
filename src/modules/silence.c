@@ -114,7 +114,7 @@ CMD_FUNC(cmd_silence)
 			for (s = SILENCELIST(sptr); s; s = s->next)
 				sendnumeric(sptr, RPL_SILELIST, sptr->name, s->mask);
 			sendnumeric(sptr, RPL_ENDOFSILELIST);
-			return 0;
+			return;
 		}
 		p = parv[1];
 		action = *p;
@@ -125,7 +125,7 @@ CMD_FUNC(cmd_silence)
 		if (!strchr(p, '@') && !strchr(p, '.') && !strchr(p, '!') && !strchr(p, '*') && !find_person(p, NULL))
 		{
 			sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
-			return -1;
+			return;
 		} else
 		{
 			action = '+';
@@ -137,13 +137,12 @@ CMD_FUNC(cmd_silence)
 			sendto_prefix_one(sptr, sptr, NULL, ":%s SILENCE %c%s",
 			    sptr->name, action, p);
 		}
-		return 0;
+		return;
 	}
 
 	/* Probably server to server traffic.
 	 * We don't care about this anymore on UnrealIRCd 5 and later.
 	 */
-	return 0;
 }
 
 /** Delete item from the silence list.

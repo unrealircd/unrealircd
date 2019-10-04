@@ -68,97 +68,90 @@ CMD_FUNC(cmd_chghost)
 	if (MyUser(sptr) && !ValidatePermissionsForPath("client:set:host",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if ((parc < 3) || !*parv[2])
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CHGHOST");
-		return 0;
+		return;
 	}
 
 	if (strlen(parv[2]) > (HOSTLEN))
 	{
 		sendnotice(sptr, "*** ChgName Error: Requested hostname too long -- rejected.");
-		return 0;
+		return;
 	}
 
 	if (!valid_host(parv[2]))
 	{
 		sendnotice(sptr, "*** /ChgHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them");
-		return 0;
+		return;
 	}
 
 	if (parv[2][0] == ':')
 	{
 		sendnotice(sptr, "*** A hostname cannot start with ':'");
-		return 0;
+		return;
 	}
 
-	if ((acptr = find_person(parv[1], NULL)))
+	if (!(acptr = find_person(parv[1], NULL)))
 	{
-		if (!strcmp(GetHost(acptr), parv[2]))
-		{
-			sendnotice(sptr, "*** /ChgHost Error: requested host is same as current host.");
-			return 0;
-		}
-
-		userhost_save_current(acptr);
-
-		switch (UHOST_ALLOWED)
-		{
-			case UHALLOW_NEVER:
-				if (MyUser(sptr))
-				{
-					sendnumeric(sptr, ERR_DISABLED, "CHGHOST",
-						"This command is disabled on this server");
-					return 0;
-				}
-				break;
-			case UHALLOW_ALWAYS:
-				break;
-			case UHALLOW_NOCHANS:
-				if (IsUser(acptr) && MyUser(sptr) && acptr->user->joined)
-				{
-					sendnotice(sptr, "*** /ChgHost can not be used while %s is on a channel", acptr->name);
-					return 0;
-				}
-				break;
-			case UHALLOW_REJOIN:
-				/* rejoin sent later when the host has been changed */
-				break;
-		}
-				
-		if (!IsULine(sptr))
-		{
-			sendto_snomask(SNO_EYES,
-			    "%s changed the virtual hostname of %s (%s@%s) to be %s",
-			    sptr->name, acptr->name, acptr->user->username,
-			    acptr->user->realhost, parv[2]);
-			/* Logging added by XeRXeS */
- 		      	ircd_log(LOG_CHGCMDS,                                         
-				"CHGHOST: %s changed the virtual hostname of %s (%s@%s) to be %s",
-				sptr->name, acptr->name, acptr->user->username, acptr->user->realhost, parv[2]); 
-		}
- 
-                  
-		acptr->umodes |= UMODE_HIDE;
-		acptr->umodes |= UMODE_SETHOST;
-		sendto_server(sptr, 0, 0, NULL, ":%s CHGHOST %s %s", sptr->name, acptr->name, parv[2]);
-		safe_strdup(acptr->user->virthost, parv[2]);
-		
-		userhost_changed(acptr);
-
-		if (MyUser(acptr))
-			sendnumeric(acptr, RPL_HOSTHIDDEN, parv[2]);
-		
-		return 0;
+		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
+		return;
 	}
-	else
+
+	if (!strcmp(GetHost(acptr), parv[2]))
 	{
-		sendnumeric(sptr, ERR_NOSUCHNICK,
-		    parv[1]);
-		return 0;
+		sendnotice(sptr, "*** /ChgHost Error: requested host is same as current host.");
+		return;
 	}
-	return 0;
+
+	userhost_save_current(acptr);
+
+	switch (UHOST_ALLOWED)
+	{
+		case UHALLOW_NEVER:
+			if (MyUser(sptr))
+			{
+				sendnumeric(sptr, ERR_DISABLED, "CHGHOST",
+					"This command is disabled on this server");
+				return;
+			}
+			break;
+		case UHALLOW_ALWAYS:
+			break;
+		case UHALLOW_NOCHANS:
+			if (IsUser(acptr) && MyUser(sptr) && acptr->user->joined)
+			{
+				sendnotice(sptr, "*** /ChgHost can not be used while %s is on a channel", acptr->name);
+				return;
+			}
+			break;
+		case UHALLOW_REJOIN:
+			/* rejoin sent later when the host has been changed */
+			break;
+	}
+
+	if (!IsULine(sptr))
+	{
+		sendto_snomask(SNO_EYES,
+		    "%s changed the virtual hostname of %s (%s@%s) to be %s",
+		    sptr->name, acptr->name, acptr->user->username,
+		    acptr->user->realhost, parv[2]);
+		/* Logging added by XeRXeS */
+		ircd_log(LOG_CHGCMDS,                                         
+			"CHGHOST: %s changed the virtual hostname of %s (%s@%s) to be %s",
+			sptr->name, acptr->name, acptr->user->username, acptr->user->realhost, parv[2]); 
+	}
+
+	acptr->umodes |= UMODE_HIDE;
+	acptr->umodes |= UMODE_SETHOST;
+	sendto_server(sptr, 0, 0, NULL, ":%s CHGHOST %s %s", sptr->name, acptr->name, parv[2]);
+	safe_strdup(acptr->user->virthost, parv[2]);
+	
+	userhost_changed(acptr);
+
+	if (MyUser(acptr))
+		sendnumeric(acptr, RPL_HOSTHIDDEN, parv[2]);
 }

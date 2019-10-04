@@ -83,13 +83,13 @@ CMD_FUNC(cmd_dccallow)
 	};
 
 	if (!MyUser(sptr))
-		return 0;
+		return;
 	
 	if (parc < 2)
 	{
 		sendnotice(sptr, "No command specified for DCCALLOW. "
 			"Type '/DCCALLOW HELP' for more information.");
-		return 0;
+		return;
 	}
 
 	for (p = NULL, s = strtoken(&p, parv[1], ", "); s; s = strtoken(&p, NULL, ", "))
@@ -158,7 +158,6 @@ CMD_FUNC(cmd_dccallow)
 	if (!didanything)
 	{
 		sendnotice(sptr, "Invalid syntax for DCCALLOW. Type '/DCCALLOW HELP' for more information.");
-		return 0;
+		return;
 	}
-	return 0;
 }

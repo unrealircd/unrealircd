@@ -64,17 +64,15 @@ CMD_FUNC(cmd_wallops)
 	if (BadPtr(message))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "WALLOPS");
-		return 0;
+		return;
 	}
 
 	if (!ValidatePermissionsForPath("chat:wallops",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	// FIXME: verify: not sure about direction @ sptr, here or in send.c
 	sendto_ops_butone(sptr, sptr, ":%s WALLOPS :%s", sptr->name, message);
-
-	return 0;
 }

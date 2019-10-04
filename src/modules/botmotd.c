@@ -61,10 +61,10 @@ CMD_FUNC(cmd_botmotd)
 	ConfigItem_tld *tld;
 
 	if (hunt_server(sptr, recv_mtags, ":%s BOTMOTD :%s", 1, parc, parv) != HUNTED_ISME)
-		return 0;
+		return;
 
 	if (!IsUser(sptr))
-		return 0;
+		return;
 
 	tld = Find_tld(sptr);
 
@@ -77,7 +77,7 @@ CMD_FUNC(cmd_botmotd)
 	if (!motdline)
 	{
 		sendnotice(sptr, "BOTMOTD File not found");
-		return 0;
+		return;
 	}
 	sendnotice(sptr, "- %s Bot Message of the Day - ", me.name);
 
@@ -87,5 +87,4 @@ CMD_FUNC(cmd_botmotd)
 		motdline = motdline->next;
 	}
 	sendnotice(sptr, "End of /BOTMOTD command.");
-	return 0;
 }

@@ -364,15 +364,15 @@ CMD_FUNC(cmd_staff)
 	MOTDLine *aLine;
 
 	if (!IsUser(sptr))
-		return -1;
+		return;
 
 	if (hunt_server(sptr, recv_mtags, ":%s STAFF", 1, parc, parv) != HUNTED_ISME)
-		return 0;
+		return;
 
 	if (!staff.lines)
 	{
 		sendto_one(sptr, NULL, RPL_NOSTAFF, me.name, sptr->name);
-		return 0;
+		return;
 	}
 
 	sendto_one(sptr, NULL, RPL_STAFFSTART, me.name, sptr->name, ircnetwork);
@@ -383,6 +383,4 @@ CMD_FUNC(cmd_staff)
 		sendto_one(sptr, NULL, RPL_STAFF, me.name, sptr->name, aLine->line);
 
 	sendto_one(sptr, NULL, RPL_ENDOFSTAFF, me.name, sptr->name);
-
-	return 0;
 }

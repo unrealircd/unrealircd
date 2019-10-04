@@ -75,16 +75,16 @@ CMD_FUNC(cmd_netinfo)
 	char		buf[512];
 
 	if (parc < 9)
-		return 0;
+		return;
 
 	/* Only allow from directly connected servers */
 	if (!MyConnect(sptr))
-		return 0;
+		return;
 
 	if (IsNetInfo(sptr))
 	{
 		sendto_realops("Already got NETINFO from Link %s", sptr->name);
-		return 0;
+		return;
 	}
 
 	/* is a long therefore not ATOI */
@@ -152,5 +152,4 @@ CMD_FUNC(cmd_netinfo)
 				sptr->name, parv[4], buf);
 	}
 	SetNetInfo(sptr);
-	return 0;
 }

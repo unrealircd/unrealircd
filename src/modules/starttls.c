@@ -66,7 +66,7 @@ CMD_FUNC(cmd_starttls)
 	int tls_options;
 
 	if (!MyConnect(sptr) || !IsUnknown(sptr))
-		return 0;
+		return;
 
 	ctx = sptr->local->listener->ssl_ctx ? sptr->local->listener->ssl_ctx : ctx_server;
 	tls_options = sptr->local->listener->tls_options ? sptr->local->listener->tls_options->options : iConf.tls_options->options;
@@ -76,20 +76,20 @@ CMD_FUNC(cmd_starttls)
 	{
 		/* Pretend STARTTLS is an unknown command, this is the safest approach */
 		sendnumeric(sptr, ERR_NOTREGISTERED);
-		return 0;
+		return;
 	}
 
 	/* Is STARTTLS disabled? (same response as above) */
 	if (tls_options & TLSFLAG_NOSTARTTLS)
 	{
 		sendnumeric(sptr, ERR_NOTREGISTERED);
-		return 0;
+		return;
 	}
 
 	if (IsSecure(sptr))
 	{
 		sendnumeric(sptr, ERR_STARTTLS, "STARTTLS failed. Already using TLS.");
-		return 0;
+		return;
 	}
 
 	dbuf_delete(&sptr->local->recvQ, DBufLength(&sptr->local->recvQ)); /* Clear up any remaining plaintext commands */
@@ -112,12 +112,11 @@ CMD_FUNC(cmd_starttls)
 	}
 
 	/* HANDSHAKE IN PROGRESS */
-	return 0;
+	return;
 fail:
 	/* Failure */
 	sendnumeric(sptr, ERR_STARTTLS, "STARTTLS failed");
 	sptr->local->ssl = NULL;
 	ClearTLS(sptr);
 	SetUnknown(sptr);
-	return 0;
 }

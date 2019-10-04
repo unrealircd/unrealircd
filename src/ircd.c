@@ -422,7 +422,7 @@ EVENT(check_unknowns)
 }
 
 /** Ping individual user, and check for ping timeout */
-int check_ping(Client *cptr)
+void check_ping(Client *cptr)
 {
 	char scratch[64];
 	int ping = 0;
@@ -434,7 +434,7 @@ int check_ping(Client *cptr)
 
 	/* If ping is less than or equal to the last time we received a command from them */
 	if (ping > (TStime() - cptr->local->lasttime))
-		return 0; /* some recent command was executed */
+		return; /* some recent command was executed */
 
 	if (
 		/* If we have sent a ping */
@@ -462,7 +462,8 @@ int check_ping(Client *cptr)
 				(long long)TStime(), (long long)cptr->local->since, (long long)ping));
 		(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %lld seconds",
 			(long long) (TStime() - cptr->local->lasttime));
-		return exit_client(cptr, NULL, scratch);
+		exit_client(cptr, NULL, scratch);
+		return;
 	}
 	else if (IsRegistered(cptr) && !IsPingSent(cptr))
 	{
@@ -483,7 +484,7 @@ int check_ping(Client *cptr)
 			get_client_name(cptr, FALSE), PINGWARNING);
 	}
 
-	return 0;
+	return;
 }
 
 /*
@@ -543,6 +544,22 @@ EVENT(check_deadsockets)
 			(void)exit_client(cptr, NULL, cptr->local->error_str ? cptr->local->error_str : "Dead socket");
 			continue;
 		}
+	}
+
+	/* Next is for clients that are already exited (unlike the above).
+	 * The client is already out of all lists (channels, invites, etc etc)
+	 * and 90% has been freed. Here we actually free the remaining parts.
+	 * We don't have to send anything anymore.
+	 */
+	list_for_each_entry_safe(cptr, cptr2, &dead_list, client_node)
+	{
+		if (!IsDead(cptr))
+			abort(); /* impossible */
+#ifdef DEBUGMODE
+		ircd_log(LOG_ERROR, "Closing deadsock2: %s", cptr->name);
+#endif
+		list_del(&cptr->client_node);
+		free_client(cptr);
 	}
 }
 

@@ -72,7 +72,7 @@ CMD_FUNC(cmd_trace)
 
 	if (parc > 2)
 		if (hunt_server(sptr, NULL, ":%s TRACE %s :%s", 2, parc, parv))
-			return 0;
+			return;
 
 	if (parc > 1)
 		tname = parv[1];
@@ -88,11 +88,11 @@ CMD_FUNC(cmd_trace)
 			{
 				sendnotice(sptr, "You can only /TRACE local servers as a locop");
 				sendnumeric(sptr, ERR_NOPRIVILEGES);
-				return 0;
+				return;
 			}
 		} else {
 			sendnumeric(sptr, ERR_NOPRIVILEGES);
-			return 0;
+			return;
 		}
 	}
 
@@ -105,12 +105,12 @@ CMD_FUNC(cmd_trace)
 		  ac2ptr = find_client(tname, NULL);
 		  sendnumeric(sptr, RPL_TRACELINK,
 		      version, debugmode, tname, ac2ptr->direction->name);
-		  return 0;
+		  return;
 	  }
 	  case HUNTED_ISME:
 		  break;
 	  default:
-		  return 0;
+		  return;
 	}
 
 	doall = (parv[1] && (parc > 1)) ? match_simple(tname, me.name) : TRUE;
@@ -224,10 +224,9 @@ CMD_FUNC(cmd_trace)
 	 * and messy when done remotely - Avalon
 	 */
 	if (!ValidatePermissionsForPath("client:see:trace",sptr,acptr,NULL,NULL) || !cnt)
-		return 0;
+		return;
 
 	for (cltmp = conf_class; doall && cltmp; cltmp = cltmp->next)
 	/*	if (cltmp->clients > 0) */
 			sendnumeric(sptr, RPL_TRACECLASS, cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
-	return 0;
 }

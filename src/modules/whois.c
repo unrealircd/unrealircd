@@ -75,13 +75,13 @@ CMD_FUNC(cmd_whois)
 	if (parc < 2)
 	{
 		sendnumeric(sptr, ERR_NONICKNAMEGIVEN);
-		return 0;
+		return;
 	}
 
 	if (parc > 2)
 	{
 		if (hunt_server(sptr, recv_mtags, ":%s WHOIS %s :%s", 1, parc, parv) != HUNTED_ISME)
-			return 0;
+			return;
 		parv[1] = parv[2];
 	}
 
@@ -346,6 +346,4 @@ CMD_FUNC(cmd_whois)
 			sendnumeric(sptr, ERR_NOSUCHNICK, nick);
 	}
 	sendnumeric(sptr, RPL_ENDOFWHOIS, querybuf);
-
-	return 0;
 }

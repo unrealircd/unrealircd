@@ -69,13 +69,13 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static int do_jumpserver_exit_client(Client *sptr)
+static void do_jumpserver_exit_client(Client *sptr)
 {
 	if (IsSecure(sptr) && jss->ssl_server)
 		sendnumeric(sptr, RPL_REDIR, jss->ssl_server, NULL, jss->ssl_port);
 	else
 		sendnumeric(sptr, RPL_REDIR, jss->server, jss->port);
-	return exit_client(sptr, NULL, jss->reason);
+	exit_client(sptr, NULL, jss->reason);
 }
 
 static void redirect_all_clients(void)
@@ -98,7 +98,10 @@ static void redirect_all_clients(void)
 int jumpserver_preconnect(Client *sptr)
 {
 	if (jss)
-		return do_jumpserver_exit_client(sptr);
+	{
+		do_jumpserver_exit_client(sptr);
+		return FLUSH_BUFFER;
+	}
 	return 0;
 }
 
@@ -128,7 +131,7 @@ CMD_FUNC(cmd_jumpserver)
 	if (!IsOper(sptr))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if ((parc < 2) || BadPtr(parv[1]))
@@ -142,7 +145,7 @@ CMD_FUNC(cmd_jumpserver)
 				jss->server, jss->port, jss->reason);
 		else
 			sendnotice(sptr, "JumpServer is \002DISABLED\002");
-		return 0;
+		return;
 	}
 
 	if ((parc > 1) && (!strcasecmp(parv[1], "OFF") || !strcasecmp(parv[1], "STOP")))
@@ -150,14 +153,14 @@ CMD_FUNC(cmd_jumpserver)
 		if (!jss)
 		{
 			sendnotice(sptr, "JUMPSERVER: No redirect active (already OFF)");
-			return 0;
+			return;
 		}
 		free_jss();
 		snprintf(logbuf, sizeof(logbuf), "%s (%s@%s) turned JUMPSERVER OFF",
 			sptr->name, sptr->user->username, sptr->user->realhost);
 		sendto_realops("%s", logbuf);
 		ircd_log(LOG_ERROR, "%s", logbuf);
-		return 0;
+		return;
 	}
 
 	if (parc < 4)
@@ -171,7 +174,7 @@ CMD_FUNC(cmd_jumpserver)
 		sendnotice(sptr, "And then for example 10 minutes later...");
 		sendnotice(sptr, "         /JUMPSERVER irc2.test.net ALL This server will be upgraded, please use irc2.test.net for now");
 		sendnotice(sptr, "Use: '/JUMPSERVER OFF' to turn off any redirects");
-		return 0;
+		return;
 	}
 
 	/* Parsing code follows...
@@ -197,7 +200,7 @@ CMD_FUNC(cmd_jumpserver)
 		if ((port < 1) || (port > 65535))
 		{
 			sendnotice(sptr, "Invalid serverport specified (%d)", port);
-			return 0;
+			return;
 		}
 	}
 	if (sslserv)
@@ -210,7 +213,7 @@ CMD_FUNC(cmd_jumpserver)
 			if ((sslport < 1) || (sslport > 65535))
 			{
 				sendnotice(sptr, "Invalid SSL/TLS serverport specified (%d)", sslport);
-				return 0;
+				return;
 			}
 		}
 		if (!*sslserv)
@@ -222,7 +225,7 @@ CMD_FUNC(cmd_jumpserver)
 		all = 1;
 	else {
 		sendnotice(sptr, "ERROR: Invalid action '%s', should be 'NEW' or 'ALL' (see /jumpserver help for usage)", parv[2]);
-		return 0;
+		return;
 	}
 
 	reason = parv[3];
@@ -260,6 +263,4 @@ CMD_FUNC(cmd_jumpserver)
 
 	if (all)
 		redirect_all_clients();
-
-	return 0;
 }

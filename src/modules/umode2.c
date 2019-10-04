@@ -69,6 +69,6 @@ CMD_FUNC(cmd_umode2)
 	};
 
 	if (!parv[1])
-		return 0;
+		return;
 	return cmd_umode(sptr, recv_mtags, (parc > 3) ? 4 : 3, xparv);
 }

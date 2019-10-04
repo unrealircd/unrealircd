@@ -65,18 +65,18 @@ CMD_FUNC(cmd_svsmotd)
         if (!IsULine(sptr))
         {
                 sendnumeric(sptr, ERR_NOPRIVILEGES);
-                return 0;
+                return;
         }
         if (parc < 2)
         {
                 sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SVSMOTD");
-                return 0;
+                return;
         }
 
         if ((*parv[1] != '!') && parc < 3)
         {
                 sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SVSMOTD");
-                return 0;
+                return;
         }
 
         switch (*parv[1])
@@ -93,7 +93,7 @@ CMD_FUNC(cmd_svsmotd)
                   break;
           }
           default:
-                  return 0;
+                  return;
         }
         if (parv[2])
                 sendto_server(sptr, 0, 0, NULL, ":%s SVSMOTD %s :%s", sptr->name, parv[1], parv[2]);
@@ -101,14 +101,12 @@ CMD_FUNC(cmd_svsmotd)
                 sendto_server(sptr, 0, 0, NULL, ":%s SVSMOTD %s", sptr->name, parv[1]);
 
         if (conf == NULL)
-        {
-                return 0;
-        }
+                return;
 
         if (parc < 3 && (*parv[1] == '!'))
         {
                 fclose(conf);
-                return 1;
+                return;
         }
         fprintf(conf, "%s\n", parv[2]);
         if (*parv[1] == '!')
@@ -117,5 +115,4 @@ CMD_FUNC(cmd_svsmotd)
         fclose(conf);
         /* We editted it, so rehash it -- codemastr */
         read_motd(conf_files->svsmotd_file, &svsmotd);
-        return 1;
 }

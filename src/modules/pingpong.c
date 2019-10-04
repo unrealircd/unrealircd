@@ -71,7 +71,7 @@ CMD_FUNC(cmd_ping)
 	if (parc < 2 || BadPtr(parv[1]))
 	{
 		sendnumeric(sptr, ERR_NOORIGIN);
-		return 0;
+		return;
 	}
 
 	origin = parv[1];
@@ -89,13 +89,12 @@ CMD_FUNC(cmd_ping)
 		else
 		{
 			sendnumeric(sptr, ERR_NOSUCHSERVER, destination);
-			return 0;
+			return;
 		}
 	}
 	else
 		sendto_one(sptr, NULL, ":%s PONG %s :%s", me.name,
 		    (destination) ? destination : me.name, origin);
-	return 0;
 }
 
 /*
@@ -107,36 +106,43 @@ CMD_FUNC(cmd_nospoof)
 	unsigned long result;
 
 	if (IsNotSpoof(sptr))
-		return 0;
+		return;
 	if (IsRegistered(sptr))
-		return 0;
+		return;
 	if (!*sptr->name)
-		return 0;
+		return;
 	if (BadPtr(parv[1]))
-		goto temp;
+	{
+		sendnotice(sptr, "ERROR: Invalid PING response. Your client must respond back with PONG :<cookie>");
+		return;
+	}
+
 	result = strtoul(parv[1], NULL, 16);
-	/* Accept code in second parameter (ircserv) */
+
 	if (result != sptr->local->nospoof)
 	{
+		/* Apparently we also accept PONG <irrelevant> <cookie>... */
 		if (BadPtr(parv[2]))
-			goto temp;
+		{
+			sendnotice(sptr, "ERROR: Invalid PING response. Your client must respond back with PONG :<cookie>");
+			return;
+		}
 		result = strtoul(parv[2], NULL, 16);
 		if (result != sptr->local->nospoof)
-			goto temp;
+		{
+			sendnotice(sptr, "ERROR: Invalid PING response. Your client must respond back with PONG :<cookie>");
+			return;
+		}
 	}
+
 	sptr->local->nospoof = 0;
+
 	if (USE_BAN_VERSION && MyConnect(sptr))
 		sendto_one(sptr, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 			   me.name, sptr->name);
 
 	if (is_handshake_finished(sptr))
-		return register_user(sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
-	return 0;
-      temp:
-	/* Homer compatibility */
-	sendto_one(sptr, NULL, ":%X!nospoof@%s PRIVMSG %s :\1VERSION\1",
-	    sptr->local->nospoof, me.name, sptr->name);
-	return 0;
+		register_user(sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
 }
 
 /*
@@ -155,7 +161,7 @@ CMD_FUNC(cmd_pong)
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendnumeric(sptr, ERR_NOORIGIN);
-		return 0;
+		return;
 	}
 
 	origin = parv[1];
@@ -165,7 +171,7 @@ CMD_FUNC(cmd_pong)
 
 	/* Remote pongs for clients? uhh... */
 	if (MyUser(sptr) || !IsRegistered(sptr))
-		return 0;
+		return;
 
 	/* PONG from a server - either for us, or needs relaying.. */
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
@@ -176,7 +182,7 @@ CMD_FUNC(cmd_pong)
 			if (IsUser(sptr) && !IsServer(acptr))
 			{
 				sendnumeric(sptr, ERR_NOSUCHSERVER, destination);
-				return 0;
+				return;
 			} else
 			{
 				sendto_one(acptr, NULL, ":%s PONG %s %s",
@@ -186,9 +192,7 @@ CMD_FUNC(cmd_pong)
 		else
 		{
 			sendnumeric(sptr, ERR_NOSUCHSERVER, destination);
-			return 0;
+			return;
 		}
 	}
-
-	return 0;
 }

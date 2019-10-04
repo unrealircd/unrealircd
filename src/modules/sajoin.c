@@ -73,20 +73,20 @@ CMD_FUNC(cmd_sajoin)
 	if (parc < 3)
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SAJOIN");
-		return 0;
+		return;
 	}
 
 	if (!(acptr = find_person(parv[1], NULL)))
 	{
 		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
-		return 0;
+		return;
 	}
 
 	/* Is this user disallowed from operating on this victim at all? */
 	if (!IsULine(sptr) && !ValidatePermissionsForPath("sacmd:sajoin",sptr,acptr,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	/* If it's not for our client, then simply pass on the message... */
@@ -98,7 +98,7 @@ CMD_FUNC(cmd_sajoin)
 		ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
 			sptr->name, parv[1], parv[2]);
 
-		return 0;
+		return;
 	}
 
 	/* Can't this just use do_join() or something with a parameter to bypass some checks?
@@ -192,7 +192,7 @@ CMD_FUNC(cmd_sajoin)
 			i += strlen(name) + 1;
 		}
 		if (!*jbuf)
-			return -1;
+			return;
 		i = 0;
 		strcpy(parv[2], jbuf);
 		*jbuf = 0;
@@ -295,6 +295,4 @@ CMD_FUNC(cmd_sajoin)
 			}
 		}
 	}
-
-	return 0;
 }

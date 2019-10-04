@@ -131,7 +131,7 @@ static const char *encode_puid(Client *client)
 CMD_FUNC(cmd_svslogin)
 {
 	if (!SASL_SERVER || MyUser(sptr) || (parc < 3) || !parv[3])
-		return 0;
+		return;
 
 	if (!strcasecmp(parv[1], me.name))
 	{
@@ -139,11 +139,11 @@ CMD_FUNC(cmd_svslogin)
 
 		target_p = find_client(parv[2], NULL);
 		if (target_p && !MyConnect(target_p))
-			return 0;
+			return;
 
 		/* is the PUID valid? */
 		if (!target_p && ((target_p = decode_puid(parv[2])) == NULL))
-			return 0;
+			return;
 
 		if (target_p->user == NULL)
 			make_user(target_p);
@@ -156,14 +156,12 @@ CMD_FUNC(cmd_svslogin)
 			   BadPtr(target_p->user->realhost) ? "*" : target_p->user->realhost,
 			   target_p->user->svid, target_p->user->svid);
 
-		return 0;
+		return;
 	}
 
 	/* not for us; propagate. */
 	sendto_server(sptr, 0, 0, NULL, ":%s SVSLOGIN %s %s %s",
 	    sptr->name, parv[1], parv[2], parv[3]);
-
-	return 0;
 }
 
 /*
@@ -178,7 +176,7 @@ CMD_FUNC(cmd_svslogin)
 CMD_FUNC(cmd_sasl)
 {
 	if (!SASL_SERVER || MyUser(sptr) || (parc < 4) || !parv[4])
-		return 0;
+		return;
 
 	if (!strcasecmp(parv[1], me.name))
 	{
@@ -186,24 +184,24 @@ CMD_FUNC(cmd_sasl)
 
 		target_p = find_client(parv[2], NULL);
 		if (target_p && !MyConnect(target_p))
-			return 0;
+			return;
 
 		/* is the PUID valid? */
 		if (!target_p && ((target_p = decode_puid(parv[2])) == NULL))
-			return 0;
+			return;
 
 		if (target_p->user == NULL)
 			make_user(target_p);
 
 		/* reject if another SASL agent is answering */
 		if (*target_p->local->sasl_agent && strcasecmp(sptr->name, target_p->local->sasl_agent))
-			return 0;
+			return;
 		else
 			strlcpy(target_p->local->sasl_agent, sptr->name, sizeof(target_p->local->sasl_agent));
 
 		if (*parv[3] == 'C')
 		{
-			RunHookReturnInt2(HOOKTYPE_SASL_CONTINUATION, target_p, parv[4], !=0);
+			RunHookReturn2(HOOKTYPE_SASL_CONTINUATION, target_p, parv[4], !=0);
 			sendto_one(target_p, NULL, "AUTHENTICATE %s", parv[4]);
 		}
 		else if (*parv[3] == 'D')
@@ -212,27 +210,25 @@ CMD_FUNC(cmd_sasl)
 			if (*parv[4] == 'F')
 			{
 				target_p->local->since += 7; /* bump fakelag due to failed authentication attempt */
-				RunHookReturnInt2(HOOKTYPE_SASL_RESULT, target_p, 0, !=0);
+				RunHookReturn2(HOOKTYPE_SASL_RESULT, target_p, 0, !=0);
 				sendnumeric(target_p, ERR_SASLFAIL);
 			}
 			else if (*parv[4] == 'S')
 			{
 				target_p->local->sasl_complete++;
-				RunHookReturnInt2(HOOKTYPE_SASL_RESULT, target_p, 1, !=0);
+				RunHookReturn2(HOOKTYPE_SASL_RESULT, target_p, 1, !=0);
 				sendnumeric(target_p, RPL_SASLSUCCESS);
 			}
 		}
 		else if (*parv[3] == 'M')
 			sendnumeric(target_p, RPL_SASLMECHS, parv[4]);
 
-		return 0;
+		return;
 	}
 
 	/* not for us; propagate. */
 	sendto_server(sptr, 0, 0, NULL, ":%s SASL %s %s %c %s %s",
 	    sptr->name, parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
-
-	return 0;
 }
 
 /*
@@ -246,18 +242,18 @@ CMD_FUNC(cmd_authenticate)
 
 	/* Failing to use CAP REQ for sasl is a protocol violation. */
 	if (!SASL_SERVER || !MyConnect(sptr) || BadPtr(parv[1]) || !HasCapability(sptr, "sasl"))
-		return 0;
+		return;
 
 	if ((parv[1][0] == ':') || strchr(parv[1], ' '))
 	{
 		sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "AUTHENTICATE", "Invalid parameter");
-		return 0;
+		return;
 	}
 
 	if (strlen(parv[1]) > 400)
 	{
 		sendnumeric(sptr, ERR_SASLTOOLONG);
-		return 0;
+		return;
 	}
 
 	if (*sptr->local->sasl_agent)
@@ -283,8 +279,6 @@ CMD_FUNC(cmd_authenticate)
 		    me.name, AGENT_SID(agent_p), encode_puid(sptr), parv[1]);
 
 	sptr->local->sasl_out++;
-
-	return 0;
 }
 
 static int abort_sasl(Client *cptr)

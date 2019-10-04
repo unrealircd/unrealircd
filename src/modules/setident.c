@@ -68,7 +68,7 @@ CMD_FUNC(cmd_setident)
 	{
 		if (MyConnect(sptr))
 			sendnotice(sptr, "*** Syntax: /SETIDENT <new ident>");
-		return 1;
+		return;
 	}
 
 	vident = parv[1];
@@ -81,14 +81,14 @@ CMD_FUNC(cmd_setident)
 			if (MyUser(sptr))
 			{
 				sendnotice(sptr, "*** /SETIDENT is disabled");
-				return 0;
+				return;
 			}
 			break;
 		case UHALLOW_NOCHANS:
 			if (MyUser(sptr) && sptr->user->joined)
 			{
 				sendnotice(sptr, "*** /SETIDENT cannot be used while you are on a channel");
-				return 0;
+				return;
 			}
 			break;
 		case UHALLOW_REJOIN:
@@ -100,7 +100,7 @@ CMD_FUNC(cmd_setident)
 	{
 		if (MyConnect(sptr))
 			sendnotice(sptr, "*** /SETIDENT Error: Usernames are limited to %i characters.", USERLEN);
-		return 0;
+		return;
 	}
 
 	/* Check if the new ident contains illegal characters */
@@ -111,7 +111,7 @@ CMD_FUNC(cmd_setident)
 		if (!isallowed(*s))
 		{
 			sendnotice(sptr, "*** /SETIDENT Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.'.");
-			return 0;
+			return;
 		}
 	}
 
@@ -128,5 +128,4 @@ CMD_FUNC(cmd_setident)
 		sendnotice(sptr, "Your nick!user@host-mask is now (%s!%s@%s)",
 		                 sptr->name, sptr->user->username, GetHost(sptr));
 	}
-	return 0;
 }

@@ -63,7 +63,7 @@ CMD_FUNC(cmd_close)
 	if (!ValidatePermissionsForPath("server:close",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	list_for_each_entry_safe(acptr, acptr2, &unknown_list, lclient_node)
@@ -78,6 +78,4 @@ CMD_FUNC(cmd_close)
 	sendto_realops("%s!%s@%s closed %d unknown connections", sptr->name,
 	    sptr->user->username, GetHost(sptr), closed);
 	irccounts.unknown = 0;
-
-	return 0;
 }

@@ -795,10 +795,10 @@ CMD_FUNC(cmd_module)
 		sptr->local->since += 7; /* Lag them up. Big list. */
 
 	if ((parc > 2) && (hunt_server(sptr, recv_mtags, ":%s MODULE %s :%s", 2, parc, parv) != HUNTED_ISME))
-		return 0;
+		return;
 
 	if ((parc == 2) && (parv[1][0] != '-') && (hunt_server(sptr, recv_mtags, ":%s MODULE :%s", 1, parc, parv) != HUNTED_ISME))
-		return 0;
+		return;
 
 	if (all)
 		sendtxtnumeric(sptr, "Showing ALL loaded modules:");
@@ -838,7 +838,7 @@ CMD_FUNC(cmd_module)
 	sendtxtnumeric(sptr, "End of module list");
 
 	if (!ValidatePermissionsForPath("server:module",sptr,NULL,NULL,NULL))
-		return 0;
+		return;
 
 	tmp[0] = '\0';
 	p = tmp;
@@ -875,8 +875,6 @@ CMD_FUNC(cmd_module)
 			}
 	}
 	sendtxtnumeric(sptr, "Override: %s", tmp);
-
-	return 1;
 }
 
 Hooktype *HooktypeFind(char *string) {
@@ -1162,11 +1160,12 @@ void CommandOverrideDel(CommandOverride *cmd)
 	safe_free(cmd);
 }
 
-int CallCommandOverride(CommandOverride *ovr, Client *sptr, MessageTag *mtags, int parc, char *parv[])
+void CallCommandOverride(CommandOverride *ovr, Client *sptr, MessageTag *mtags, int parc, char *parv[])
 {
 	if (ovr->next)
-		return ovr->next->func(ovr->next, sptr, mtags, parc, parv);
-	return ovr->command->func(sptr, mtags, parc, parv);
+		ovr->next->func(ovr->next, sptr, mtags, parc, parv);
+	else
+		ovr->command->func(sptr, mtags, parc, parv);
 }
 
 EVENT(e_unload_module_delayed)

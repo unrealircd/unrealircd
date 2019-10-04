@@ -66,28 +66,28 @@ CMD_FUNC(cmd_svsnick)
 	MessageTag *mtags = NULL;
 
 	if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
-		return -1; /* This looks like an error anyway -Studded */
+		return; /* This looks like an error anyway -Studded */
 
 	if (hunt_server(sptr, NULL, ":%s SVSNICK %s %s :%s", 1, parc, parv) != HUNTED_ISME)
-		return 0; /* Forwarded, done */
+		return; /* Forwarded, done */
 
 	if (do_nick_name(parv[2]) == 0)
-		return 0;
+		return;
 
 	if (!(acptr = find_person(parv[1], NULL)))
-		return 0; /* User not found, bail out */
+		return; /* User not found, bail out */
 
 	if ((ocptr = find_client(parv[2], NULL)) && ocptr != acptr) /* Collision */
 	{
 		exit_client(acptr, NULL,
 		                   "Nickname collision due to Services enforced "
 		                   "nickname change, your nick was overruled");
-		return 0;
+		return;
 	}
 
 	/* if the new nickname is identical to the old one, ignore it */
 	if (!strcmp(acptr->name, parv[2]))
-		return 0;
+		return;
 
 	if (acptr != ocptr)
 		acptr->umodes &= ~UMODE_REGNICK;
@@ -111,6 +111,4 @@ CMD_FUNC(cmd_svsnick)
 	strlcpy(acptr->name, parv[2], sizeof acptr->name);
 	add_to_client_hash_table(parv[2], acptr);
 	hash_check_watch(acptr, RPL_LOGON);
-
-	return 0;
 }

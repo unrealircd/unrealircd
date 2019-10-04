@@ -23,11 +23,11 @@
 char *_StripColors(unsigned char *text);
 char *_StripControlCodes(unsigned char *text);
 
-int	ban_version(Client *sptr, char *text);
+int ban_version(Client *sptr, char *text);
 
 CMD_FUNC(cmd_private);
 CMD_FUNC(cmd_notice);
-int cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice);
+void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice);
 int _can_send(Client *sptr, Channel *chptr, char **msgtext, char **errmsg, int notice);
 
 /* Place includes here */
@@ -158,7 +158,7 @@ int ret;
 ** rev argv 6/91
 **
 */
-int cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice)
+void cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int notice)
 {
 	Client *acptr;
 	Channel *chptr;
@@ -176,13 +176,13 @@ int cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendnumeric(sptr, ERR_NORECIPIENT, cmd);
-		return -1;
+		return;
 	}
 
 	if (parc < 3 || *parv[2] == '\0')
 	{
 		sendnumeric(sptr, ERR_NOTEXTTOSEND);
-		return -1;
+		return;
 	}
 
 	if (MyConnect(sptr))
@@ -197,7 +197,7 @@ int cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 		}
 		/* The nicks "ircd" and "irc" are special (and reserved) */
 		if (!strcasecmp(nick, "ircd") && MyUser(sptr))
-			return 0;
+			return;
 
 		if (!strcasecmp(nick, "irc") && MyUser(sptr))
 		{
@@ -205,10 +205,10 @@ int cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 			 * from the "IRC" nick. So we need to handle CTCP VERSION replies to "IRC".
 			 */
 			if (!strncmp(parv[2], "\1VERSION ", 9))
-				return ban_version(sptr, parv[2] + 9);
-			if (!strncmp(parv[2], "\1SCRIPT ", 8))
-				return ban_version(sptr, parv[2] + 8);
-			return 0;
+				ban_version(sptr, parv[2] + 9);
+			else if (!strncmp(parv[2], "\1SCRIPT ", 8))
+				ban_version(sptr, parv[2] + 8);
+			return;
 		}
 
 		p2 = strchr(nick, '#');
@@ -269,13 +269,13 @@ int cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 						if (!lp || !(lp->flags & (CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
 						{
 							sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
-							return 0;
+							return;
 						}
 						if (!(prefix & PREFIX_OP) && ((prefix & PREFIX_OWNER) || (prefix & PREFIX_ADMIN)) &&
 						    !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
 						{
 							sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
-							return 0;
+							return;
 						}
 					}
 					/* Now find out the lowest prefix and use that.. (so @&~#chan becomes @#chan) */
@@ -305,7 +305,7 @@ int cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 			{
 				ret = check_dcc(sptr, chptr->chname, NULL, parv[2]);
 				if (ret < 0)
-					return ret;
+					return;
 				if (ret == 0)
 					continue;
 			}
@@ -346,7 +346,7 @@ int cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 			{
 				ret = run_spamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname, 0, NULL);
 				if (ret < 0)
-					return ret;
+					return;
 			}
 
 			new_message(sptr, recv_mtags, &mtags);
@@ -432,7 +432,7 @@ int cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 			if (ret == CANPRIVMSG_CONTINUE)
 				continue;
 			else
-				return ret;
+				return;
 		}
 
 		/* If nick@server -and- the @server portion was set::services-server then send a special message */
@@ -450,7 +450,6 @@ int cmd_message(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], in
 		sendnumeric(sptr, ERR_NOSUCHNICK, nick);
 		continue;
 	}
-	return 0;
 }
 
 /*
@@ -829,6 +828,7 @@ char *_StripControlCodes(unsigned char *text)
 	return new_str;
 }
 
+/** Check ban version { } blocks, returns 1  if banned and  0 if not. */
 int ban_version(Client *sptr, char *text)
 {
 	int len;
@@ -849,7 +849,8 @@ int ban_version(Client *sptr, char *text)
 		if (find_tkl_exception(TKL_BAN_VERSION, sptr))
 			return 0; /* we are exempt */
 
-		return place_host_ban(sptr, ban->action, ban->reason, BAN_VERSION_TKL_TIME);
+		place_host_ban(sptr, ban->action, ban->reason, BAN_VERSION_TKL_TIME);
+		return 1;
 	}
 
 	return 0;

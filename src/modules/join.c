@@ -175,11 +175,9 @@ CMD_FUNC(cmd_join)
 
 	bouncedtimes = 0;
 	if (IsServer(sptr))
-		return 0;
-	r = do_join(sptr, parc, parv);
+		return;
+	do_join(sptr, parc, parv);
 	bouncedtimes = 0;
-
-	return r;
 }
 
 /** Send JOIN message for 'sptr' to all users in 'chptr'.

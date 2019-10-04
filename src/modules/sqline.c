@@ -63,25 +63,25 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_sqline)
 {
-	char    mo[1024];
+	char mo[32];
 	char *comment = (parc == 3) ? parv[2] : NULL;
 	char *tkllayer[9] = {
-                me.name,        /*0  server.name */
-                "+",            /*1  +|- */
-                "Q",            /*2  G   */
-                "*" ,           /*3  user */
-                parv[1],           /*4  host */
-                sptr->name,           /*5  setby */
-                "0",            /*6  expire_at */
-                NULL,           /*7  set_at */
-                "no reason"     /*8  reason */
-        };
+		me.name,        /*0  server.name */
+		"+",            /*1  +|- */
+		"Q",            /*2  G   */
+		"*" ,           /*3  user */
+		parv[1],        /*4  host */
+		sptr->name,     /*5  setby */
+		"0",            /*6  expire_at */
+		NULL,           /*7  set_at */
+		"no reason"     /*8  reason */
+	};
 
 	if (parc < 2)
-		return 0;
+		return;
 
 	ircsnprintf(mo, sizeof(mo), "%lld", (long long)TStime());
 	tkllayer[7] = mo;
-        tkllayer[8] = comment ? comment : "no reason";
-        return cmd_tkl(&me, NULL, 9, tkllayer);
+	tkllayer[8] = comment ? comment : "no reason";
+	cmd_tkl(&me, NULL, 9, tkllayer);
 }

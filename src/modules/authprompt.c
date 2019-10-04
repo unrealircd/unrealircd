@@ -354,42 +354,40 @@ CMD_FUNC(cmd_auth)
 			sendnotice(sptr, "ERROR: Cannot use /AUTH when your client is doing SASL.");
 		else
 			sendnotice(sptr, "ERROR: /AUTH authentication request received before authentication prompt (too early!)");
-		return 0;
+		return;
 	}
 
 	if ((parc < 2) || BadPtr(parv[1]) || !parse_nickpass(parv[1], &username, &password))
 	{
 		sendnotice(sptr, "ERROR: Syntax is: /AUTH <nickname>:<password>");
 		sendnotice(sptr, "Example: /AUTH mynick:secretpass");
-		return 0;
+		return;
 	}
 
 	if (!SASL_SERVER)
 	{
 		sendnotice(sptr, "ERROR: SASL is not configured on this server, or services are down.");
 		// numeric instead? SERVICESDOWN?
-		return 0;
+		return;
 	}
 
 	/* Presumably if the user is really fast, this could happen.. */
 	if (*sptr->local->sasl_agent || SEUSER(sptr)->authmsg)
 	{
 		sendnotice(sptr, "ERROR: Previous authentication request is still in progress. Please wait.");
-		return 0;
+		return;
 	}
 
 	authbuf = make_authbuf(username, password);
 	if (!authbuf)
 	{
 		sendnotice(sptr, "ERROR: Internal error. Oversized username/password?");
-		return 0;
+		return;
 	}
 
 	safe_strdup(SEUSER(sptr)->authmsg, authbuf);
 
 	send_first_auth(sptr);
-
-	return 0;
 }
 
 void send_multinotice(Client *sptr, MultiLine *m)

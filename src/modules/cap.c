@@ -232,26 +232,23 @@ static void clicap_generate(Client *sptr, const char *subcmd, int flags)
 	sendto_one(sptr, NULL, "%s :%s", buf, capbuf);
 }
 
-static int cap_end(Client *sptr, const char *arg)
+static void cap_end(Client *sptr, const char *arg)
 {
 	if (IsUser(sptr))
-		return 0;
+		return;
 
 	ClearCapabilityFast(sptr, CAP_IN_PROGRESS);
 
 	if (*sptr->name && sptr->user && *sptr->user->username && IsNotSpoof(sptr))
-		return register_user(sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
-
-	return 0;
+		register_user(sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
 }
 
-static int cap_list(Client *sptr, const char *arg)
+static void cap_list(Client *sptr, const char *arg)
 {
 	clicap_generate(sptr, "LIST", sptr->local->caps ? sptr->local->caps : -1);
-	return 0;
 }
 
-static int cap_ls(Client *sptr, const char *arg)
+static void cap_ls(Client *sptr, const char *arg)
 {
 	if (!IsUser(sptr))
 		SetCapabilityFast(sptr, CAP_IN_PROGRESS);
@@ -269,10 +266,9 @@ static int cap_ls(Client *sptr, const char *arg)
 		SetCapabilityFast(sptr, CAP_NOTIFY); /* Implicit support (JIT) */
 
 	clicap_generate(sptr, "LS", 0);
-	return 0;
 }
 
-static int cap_req(Client *sptr, const char *arg)
+static void cap_req(Client *sptr, const char *arg)
 {
 	char buf[BUFSIZE];
 	char pbuf[2][BUFSIZE];
@@ -287,7 +283,7 @@ static int cap_req(Client *sptr, const char *arg)
 		SetCapabilityFast(sptr, CAP_IN_PROGRESS);
 
 	if (BadPtr(arg))
-		return 0;
+		return;
 
 	buflen = snprintf(buf, sizeof(buf), ":%s CAP %s ACK",
 			  me.name, BadPtr(sptr->name) ? "*" : sptr->name);
@@ -333,7 +329,7 @@ static int cap_req(Client *sptr, const char *arg)
 	if (errors)
 	{
 		sendto_one(sptr, NULL, ":%s CAP %s NAK :%s", me.name, BadPtr(sptr->name) ? "*" : sptr->name, arg);
-		return 0;
+		return;
 	}
 
 	if (i)
@@ -346,12 +342,11 @@ static int cap_req(Client *sptr, const char *arg)
 
 	sptr->local->caps |= capadd;
 	sptr->local->caps &= ~capdel;
-	return 0;
 }
 
 struct clicap_cmd {
 	const char *cmd;
-	int (*func)(Client *source_p, const char *arg);
+	void (*func)(Client *source_p, const char *arg);
 };
 
 static struct clicap_cmd clicap_cmdtable[] = {
@@ -385,7 +380,7 @@ CMD_FUNC(cmd_cap)
 	struct clicap_cmd *cmd;
 
 	if (!MyConnect(sptr))
-		return 0;
+		return;
 
 	/* CAP is marked as "no fake lag" because we use custom fake lag rules:
 	 * Only add a 1 second fake lag penalty if this is the XXth command.
@@ -401,14 +396,14 @@ CMD_FUNC(cmd_cap)
 			sendnumeric(sptr, ERR_UNKNOWNCOMMAND, "CAP");
 		else
 			sendnumeric(sptr, ERR_NOTREGISTERED);
-		return 0;
+		return;
 	}
 
 	if (parc < 2)
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CAP");
 
-		return 0;
+		return;
 	}
 
 	if(!(cmd = bsearch(parv[1], clicap_cmdtable,
@@ -417,9 +412,8 @@ CMD_FUNC(cmd_cap)
 	{
 		sendnumeric(sptr, ERR_INVALIDCAPCMD, parv[1]);
 
-		return 0;
+		return;
 	}
 
 	return (cmd->func)(sptr, parv[2]);
 }
-

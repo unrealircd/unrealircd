@@ -53,6 +53,7 @@ MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }
+
 /*
 ** cmd_svslusers
 **      parv[1] = server to update
@@ -64,7 +65,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_svslusers)
 {
         if (!IsULine(sptr) || parc < 4)
-		return -1;  
+		return;  
         if (hunt_server(sptr, NULL, ":%s SVSLUSERS %s %s :%s", 1, parc, parv) == HUNTED_ISME)
         {
 		int temp;
@@ -75,5 +76,4 @@ CMD_FUNC(cmd_svslusers)
 		if (temp >= 0) 
 			irccounts.me_max = temp;
         }
-        return 0;
 }

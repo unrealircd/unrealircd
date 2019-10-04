@@ -517,16 +517,16 @@ static void exit_one_client(Client *sptr, MessageTag *mtags_i, const char *comme
  * @param sptr        The client to exit.
  * @param recv_mtags  Message tags to use as a base (if any).
  * @param comment     The (s)quit message
- * @returns FLUSH_BUFFER is returned if a local client disconnects,
- *          otherwise 0 is returned. This so it can be used from
- *          command functions like: return exit_client(sptr, ....);
+ * @returns FLUSH_BUFFER
  */
-int exit_client(Client *sptr, MessageTag *recv_mtags, char *comment)
+void exit_client(Client *sptr, MessageTag *recv_mtags, char *comment)
 {
 	long long on_for;
 	ConfigItem_listen *listen_conf;
 	MessageTag *mtags_generated = NULL;
-	int my_client = MyConnect(sptr) ? 1 : 0; /* needs to flag early */
+
+	if (IsDead(sptr))
+		return; /* Already marked as exited */
 
 	/* We replace 'recv_mtags' here with a newly
 	 * generated id if 'recv_mtags' is NULL or is
@@ -660,8 +660,7 @@ int exit_client(Client *sptr, MessageTag *recv_mtags, char *comment)
 	exit_one_client(sptr, recv_mtags, comment);
 
 	free_message_tags(mtags_generated);
-
-	return my_client ? FLUSH_BUFFER : 0;
+	
 }
 
 void initstats(void)
@@ -1096,7 +1095,7 @@ extern void send_raw_direct(Client *user, FORMAT_STRING(const char *pattern), ..
  * @retval Usually FLUSH_BUFFER. In any case: do not touch 'acptr' after
  *         calling this function!
  */
-int banned_client(Client *acptr, char *bantype, char *reason, int global, int noexit)
+void banned_client(Client *acptr, char *bantype, char *reason, int global, int noexit)
 {
 	char buf[512];
 	char *fmt = global ? iConf.reject_message_gline : iConf.reject_message_kline;
@@ -1148,12 +1147,11 @@ int banned_client(Client *acptr, char *bantype, char *reason, int global, int no
 
 	if (noexit != NO_EXIT_CLIENT)
 	{
-		return exit_client(acptr, NULL, buf);
+		exit_client(acptr, NULL, buf);
 	} else {
 		/* Special handling for direct Z-line code */
 		send_raw_direct(acptr, "ERROR :Closing Link: [%s] (%s)",
 		           acptr->ip, buf);
-		return 0;
 	}
 }
 

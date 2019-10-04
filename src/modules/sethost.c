@@ -66,7 +66,7 @@ CMD_FUNC(cmd_sethost)
 	if (MyUser(sptr) && !ValidatePermissionsForPath("self:set:host",sptr,NULL,NULL,NULL))
 	{
   		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (parc < 2)
@@ -78,31 +78,31 @@ CMD_FUNC(cmd_sethost)
 	{	
 		if (MyConnect(sptr))
 			sendnotice(sptr, "*** Syntax: /SetHost <new host>");
-		return 0;
+		return;
 	}
 
 	if (strlen(parv[1]) > (HOSTLEN))
 	{
 		if (MyConnect(sptr))
 			sendnotice(sptr, "*** /SetHost Error: Hostnames are limited to %i characters.", HOSTLEN);
-		return 0;
+		return;
 	}
 
 	if (!valid_host(vhost))
 	{
 		sendnotice(sptr, "*** /SetHost Error: A hostname may only contain a-z, A-Z, 0-9, '-' & '.'.");
-		return 0;
+		return;
 	}
 	if (vhost[0] == ':')
 	{
 		sendnotice(sptr, "*** A hostname cannot start with ':'");
-		return 0;
+		return;
 	}
 
 	if (MyUser(sptr) && !strcmp(GetHost(sptr), vhost))
 	{
 		sendnotice(sptr, "/SetHost Error: requested host is same as current host.");
-		return 0;
+		return;
 	}
 
 	userhost_save_current(sptr);
@@ -113,7 +113,7 @@ CMD_FUNC(cmd_sethost)
 			if (MyUser(sptr))
 			{
 				sendnotice(sptr, "*** /SetHost is disabled");
-				return 0;
+				return;
 			}
 			break;
 		case UHALLOW_ALWAYS:
@@ -122,7 +122,7 @@ CMD_FUNC(cmd_sethost)
 			if (MyUser(sptr) && sptr->user->joined)
 			{
 				sendnotice(sptr, "*** /SetHost can not be used while you are on a channel");
-				return 0;
+				return;
 			}
 			break;
 		case UHALLOW_REJOIN:
@@ -149,5 +149,4 @@ CMD_FUNC(cmd_sethost)
 		     sptr->name, sptr->user->username, vhost,
 		    sptr->name);
 	}
-	return 0;
 }

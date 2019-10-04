@@ -62,13 +62,13 @@ CMD_FUNC(cmd_admin)
 	if (IsUser(sptr))
 	{
 		if (hunt_server(sptr, recv_mtags, ":%s ADMIN :%s", 1, parc, parv) != HUNTED_ISME)
-			return 0;
+			return;
 	}
 
 	if (!conf_admin_tail)
 	{
 		sendnumeric(sptr, ERR_NOADMININFO, me.name);
-		return 0;
+		return;
 	}
 
 	sendnumeric(sptr, RPL_ADMINME, me.name);
@@ -83,5 +83,4 @@ CMD_FUNC(cmd_admin)
 		else
 			sendnumeric(sptr, RPL_ADMINEMAIL, admin->line);
 	}
-	return 0;
 }

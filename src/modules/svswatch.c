@@ -63,10 +63,10 @@ CMD_FUNC(cmd_svswatch)
 	Client *acptr;
 
 	if (!IsULine(sptr))
-		return 0;
+		return;
 
 	if (parc < 3 || BadPtr(parv[2]) || !(acptr = find_person(parv[1], NULL)))
-		return 0;
+		return;
 
 	if (MyUser(acptr))
 	{
@@ -77,6 +77,4 @@ CMD_FUNC(cmd_svswatch)
 	}
 	else
 		sendto_one(acptr, NULL, ":%s SVSWATCH %s :%s", sptr->name, parv[1], parv[2]);
-
-	return 0;
 }

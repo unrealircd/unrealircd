@@ -416,7 +416,7 @@ CMD_FUNC(cmd_smod)
 
 	// A non-server sptr shouldn't really be possible here, but still :D
 	if (!MyConnect(sptr) || !IsServer(sptr) || BadPtr(parv[1]))
-		return 0;
+		return;
 
 	// Module strings are passed as 1 space-delimited parameter
 	strlcpy(buf, parv[1], sizeof(buf));
@@ -478,8 +478,6 @@ CMD_FUNC(cmd_smod)
 		sendto_umode_global(UMODE_OPER, "ABORTING LINK: %s <=> %s", me.name, sptr->name);
 		return exit_client(sptr, NULL, "ABORTING LINK");
 	}
-
-	return 0;
 }
 
 int reqmods_hook_serverconnect(Client *sptr)

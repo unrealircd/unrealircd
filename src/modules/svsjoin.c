@@ -64,10 +64,10 @@ CMD_FUNC(cmd_svsjoin)
 	Client *acptr;
 
 	if (!IsULine(sptr))
-		return 0;
+		return;
 
 	if ((parc < 3) || !(acptr = find_person(parv[1], NULL)))
-		return 0;
+		return;
 
 	if (MyUser(acptr))
 	{
@@ -94,6 +94,4 @@ CMD_FUNC(cmd_svsjoin)
 			sendto_one(acptr, NULL, ":%s SVSJOIN %s %s %s", sptr->name,
 				parv[1], parv[2], parv[3]);
 	}
-
-	return 0;
 }

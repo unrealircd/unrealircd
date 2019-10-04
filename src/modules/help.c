@@ -80,7 +80,7 @@ ConfigItem_help *Find_Help(char *command)
 	return NULL;
 }
 
-int  parse_help(Client *sptr, char *name, char *help)
+void parse_help(Client *sptr, char *name, char *help)
 {
 	ConfigItem_help *helpitem;
 	MOTDLine *text;
@@ -88,7 +88,7 @@ int  parse_help(Client *sptr, char *name, char *help)
 	{
 		helpitem = Find_Help(NULL);
 		if (!helpitem)
-			return 1;
+			return;
 		SND(" -");
 		HDR("        ***** UnrealIRCd Help System *****");
 		SND(" -");
@@ -98,7 +98,7 @@ int  parse_help(Client *sptr, char *name, char *help)
 			text = text->next;
 		}
 		SND(" -");
-		return 1;
+		return;
 		
 	}
 	helpitem = Find_Help(help);
@@ -111,7 +111,7 @@ int  parse_help(Client *sptr, char *name, char *help)
 		sendto_one(sptr, NULL, ":%s 292 %s : ***** Go to %s if you have any further questions *****",
 		    me.name, sptr->name, helpchan);
 		SND(" -");
-		return 0;
+		return;
 	}
 	text = helpitem->text;
 	SND(" -");
@@ -123,7 +123,6 @@ int  parse_help(Client *sptr, char *name, char *help)
 		text = text->next;
 	}
 	SND(" -");
-	return 1;
 }
 
 /*
@@ -135,7 +134,7 @@ CMD_FUNC(cmd_help)
 	char *helptopic;
 
 	if (!MyUser(sptr))
-		return 0; /* never remote */
+		return; /* never remote */
 
 	helptopic = parc > 1 ? parv[1] : NULL;
 	
@@ -143,6 +142,4 @@ CMD_FUNC(cmd_help)
 		helptopic++;
 
 	parse_help(sptr, sptr->name, BadPtr(helptopic) ? NULL : helptopic);
-
-	return 0;
 }

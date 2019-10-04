@@ -60,7 +60,7 @@ CMD_FUNC(cmd_svsnoop)
 	Client *acptr;
 
 	if (!(IsULine(sptr) && parc > 2))
-		return 0;
+		return;
 
 	if (hunt_server(sptr, NULL, ":%s SVSNOOP %s :%s", 1, parc, parv) == HUNTED_ISME)
 	{
@@ -92,5 +92,4 @@ CMD_FUNC(cmd_svsnoop)
 			sendto_ops("This server is no longer in NOOP mode");
 		}
 	}
-	return 0;
 }

@@ -92,7 +92,7 @@ CMD_FUNC(cmd_topic)
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "TOPIC");
-		return 0;
+		return;
 	}
 
 	name = parv[1];
@@ -101,7 +101,7 @@ CMD_FUNC(cmd_topic)
 	if (!chptr)
 	{
 		sendnumeric(sptr, ERR_NOSUCHCHANNEL, name);
-		return 0;
+		return;
 	}
 
 	ismember = IsMember(sptr, chptr); /* CACHE */
@@ -114,7 +114,7 @@ CMD_FUNC(cmd_topic)
 		    && !ValidatePermissionsForPath("channel:see:list:secret",sptr,NULL,chptr,NULL) && !IsULine(sptr))
 		{
 			sendnumeric(sptr, ERR_NOTONCHANNEL, name);
-			return 0;
+			return;
 		}
 		if (parc > 2)
 			topic = parv[2];
@@ -130,7 +130,7 @@ CMD_FUNC(cmd_topic)
 	if (!topic)
 	{
 		if (IsServer(sptr))
-			return 0; /* Servers must maintain state, not ask */
+			return; /* Servers must maintain state, not ask */
 
 		for (h = Hooks[HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL]; h; h = h->next)
 		{
@@ -145,7 +145,7 @@ CMD_FUNC(cmd_topic)
 		     !ValidatePermissionsForPath("channel:see:topic",sptr,NULL,chptr,NULL)))
 		{
 			sendnumeric(sptr, ERR_NOTONCHANNEL, name);
-			return 0;
+			return;
 		}
 
 		if (!chptr->topic)
@@ -157,7 +157,7 @@ CMD_FUNC(cmd_topic)
 			sendnumeric(sptr, RPL_TOPICWHOTIME, chptr->chname,
 			    chptr->topic_nick, chptr->topic_time);
 		}
-		return 0;
+		return;
 	}
 
 	if (ttime && topic && (IsServer(sptr) || IsULine(sptr)))
@@ -185,7 +185,7 @@ CMD_FUNC(cmd_topic)
 				       sptr->name, chptr->chname, chptr->topic);
 			free_message_tags(mtags);
 		}
-		return 0;
+		return;
 	}
 
 	/* Topic change. Either locally (check permissions!) or remote, check permissions: */
@@ -200,7 +200,7 @@ CMD_FUNC(cmd_topic)
 			if (MyUser(sptr) && !ValidatePermissionsForPath("channel:override:topic", sptr, NULL, chptr, NULL))
 			{
 				sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
-				return 0;
+				return;
 			}
 			topicoverride(sptr, chptr, topic);
 		}
@@ -216,7 +216,7 @@ CMD_FUNC(cmd_topic)
 			{
 				ircsnprintf(buf, sizeof(buf), "You cannot change the topic on %s while being banned", chptr->chname);
 				sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
-				return -1;
+				return;
 			}
 			topicoverride(sptr, chptr, topic);
 		}
@@ -235,7 +235,7 @@ CMD_FUNC(cmd_topic)
 				/* With +m and -t, only voice and higher may change the topic */
 				ircsnprintf(buf, sizeof(buf), "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", chptr->chname);
 				sendnumeric(sptr, ERR_CANNOTDOCOMMAND, "TOPIC",  buf);
-				return -1;
+				return;
 			}
 		}
 
@@ -246,12 +246,12 @@ CMD_FUNC(cmd_topic)
 			int n;
 
 			if ((n = run_spamfilter(sptr, topic, SPAMF_TOPIC, chptr->chname, 0, NULL)) < 0)
-				return n;
+				return;
 
 			for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {
 				topic = (*(tmphook->func.pcharfunc))(sptr, chptr, topic);
 				if (!topic)
-					return 0;
+					return;
 			}
 		}
 
@@ -281,6 +281,4 @@ CMD_FUNC(cmd_topic)
 		       ":%s TOPIC %s :%s",
 		       sptr->name, chptr->chname, chptr->topic);
 	free_message_tags(mtags);
-
-	return 0;
 }

@@ -726,7 +726,46 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
 
 #define RunHook0(hooktype) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next)(*(h->func.intfunc))(); } while(0)
 #define RunHook(hooktype,x) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(x); } while(0)
-#define RunHookReturn(hooktype,x,ret) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) if((*(h->func.intfunc))(x) ret) return -1; } while(0)
+#define RunHookReturn(hooktype,x,retchk) \
+{ \
+ int retval; \
+ Hook *h; \
+ for (h = Hooks[hooktype]; h; h = h->next) \
+ { \
+  retval = (*(h->func.intfunc))(x); \
+  if (retval retchk) return; \
+ } \
+}
+#define RunHookReturn2(hooktype,x,y,retchk) \
+{ \
+ int retval; \
+ Hook *h; \
+ for (h = Hooks[hooktype]; h; h = h->next) \
+ { \
+  retval = (*(h->func.intfunc))(x,y); \
+  if (retval retchk) return; \
+ } \
+}
+#define RunHookReturn3(hooktype,x,y,z,retchk) \
+{ \
+ int retval; \
+ Hook *h; \
+ for (h = Hooks[hooktype]; h; h = h->next) \
+ { \
+  retval = (*(h->func.intfunc))(x,y,z); \
+  if (retval retchk) return; \
+ } \
+}
+#define RunHookReturn4(hooktype,a,b,c,d,retchk) \
+{ \
+ int retval; \
+ Hook *h; \
+ for (h = Hooks[hooktype]; h; h = h->next) \
+ { \
+  retval = (*(h->func.intfunc))(a,b,c,d); \
+  if (retval retchk) return; \
+ } \
+}
 #define RunHookReturnInt(hooktype,x,retchk) \
 { \
  int retval; \
@@ -803,7 +842,7 @@ extern int CommandExists(char *name);
 extern CommandOverride *CommandOverrideAdd(Module *module, char *cmd, OverrideCmdFunc func);
 extern CommandOverride *CommandOverrideAddEx(Module *module, char *name, int priority, OverrideCmdFunc func);
 extern void CommandOverrideDel(CommandOverride *ovr);
-extern int CallCommandOverride(CommandOverride *ovr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+extern void CallCommandOverride(CommandOverride *ovr, Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 
 extern void moddata_free_client(Client *acptr);
 extern void moddata_free_local_client(Client *acptr);

@@ -65,14 +65,17 @@ CMD_FUNC(cmd_cycle)
 	int n;
 	
 	if (parc < 2)
-		return 0;
+		return;
 
+	/* First PART the user... */
 	parv[2] = "cycling";
 	strlcpy(channels, parv[1], sizeof(channels));
-	n = do_cmd(sptr, recv_mtags, "PART", 3, parv);
-	if (n == FLUSH_BUFFER)
-		return n;
+	do_cmd(sptr, recv_mtags, "PART", 3, parv);
+	if (IsDead(sptr))
+		return;
+
+	/* Then JOIN the user again... */
 	parv[1] = channels;
 	parv[2] = NULL;
-	return do_cmd(sptr, recv_mtags, "JOIN", 2, parv);
+	do_cmd(sptr, recv_mtags, "JOIN", 2, parv);
 }

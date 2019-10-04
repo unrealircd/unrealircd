@@ -625,7 +625,7 @@ static void unrealdns_freeandremovereq(DNSReq *r)
  */
 void unrealdns_delreq_bycptr(Client *cptr)
 {
-DNSReq *r;
+	DNSReq *r;
 
 	for (r = requests; r; r = r->next)
 		if (r->cptr == cptr)
@@ -634,7 +634,8 @@ DNSReq *r;
 
 void unrealdns_delasyncconnects(void)
 {
-DNSReq *r;
+	DNSReq *r;
+
 	for (r = requests; r; r = r->next)
 		if (r->type == DNSREQ_CONNECT)
 			r->linkblock = NULL;
@@ -643,14 +644,14 @@ DNSReq *r;
 
 CMD_FUNC(cmd_dns)
 {
-DNSCache *c;
-DNSReq *r;
-char *param;
+	DNSCache *c;
+	DNSReq *r;
+	char *param;
 
 	if (!ValidatePermissionsForPath("server:dns",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if ((parc > 1) && !BadPtr(parv[1]))
@@ -728,7 +729,7 @@ char *param;
 		sendtxtnumeric(sptr, " hits: %d", dnsstats.cache_hits);
 		sendtxtnumeric(sptr, " misses: %d", dnsstats.cache_misses);
 	}
-	return 0;
+	return;
 }
 
 /* Little helper function for dnsbl module.

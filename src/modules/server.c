@@ -81,7 +81,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int cmd_server_synch(Client *cptr, ConfigItem_link *conf);
+int server_sync(Client *cptr, ConfigItem_link *conf);
 
 /** Check deny version { } blocks.
  * NOTE: cptr will always be valid, but all the other values may be NULL or 0 !!!
@@ -132,7 +132,10 @@ int _check_deny_version(Client *cptr, char *software, int protocol, char *flags)
 			result = 0;
 
 		if (result)
-			return exit_client(cptr, NULL, "Denied by deny version { } block");
+		{
+			exit_client(cptr, NULL, "Denied by deny version { } block");
+			return FLUSH_BUFFER;
+		}
 
 		if (flags)
 		{
@@ -158,7 +161,10 @@ int _check_deny_version(Client *cptr, char *software, int protocol, char *flags)
 		}
 
 		if (result)
-			return exit_client(cptr, NULL, "Denied by deny version { } block");
+		{
+			exit_client(cptr, NULL, "Denied by deny version { } block");
+			return FLUSH_BUFFER;
+		}
 	}
 	
 	return 0;
@@ -250,7 +256,8 @@ int _verify_link(Client *sptr, char *servername, ConfigItem_link **link_out)
 	if (!sptr->local->passwd)
 	{
 		sendto_one(sptr, NULL, "ERROR :Missing password");
-		return exit_client(sptr, NULL, "Missing password");
+		exit_client(sptr, NULL, "Missing password");
+		return FLUSH_BUFFER;
 	}
 
 	/* First check if the server is in the list */
@@ -276,7 +283,8 @@ int _verify_link(Client *sptr, char *servername, ConfigItem_link **link_out)
 			sendto_one(sptr, NULL, "ERROR :%s", xerrmsg);
 			sendto_ops_and_log("Outgoing link aborted to %s(%s@%s) (%s) %s",
 				sptr->serv->conf->servername, sptr->ident, sptr->local->sockhost, xerrmsg, inpath);
-			return exit_client(sptr, NULL, xerrmsg);
+			exit_client(sptr, NULL, xerrmsg);
+			return FLUSH_BUFFER;
 		}
 		link = sptr->serv->conf;
 		goto skip_host_check;
@@ -312,8 +320,8 @@ errlink:
 		/* And send the "verbose" error msg only to locally connected ircops */
 		sendto_ops_and_log("Link denied for %s(%s@%s) (%s) %s",
 		    servername, sptr->ident, sptr->local->sockhost, xerrmsg, inpath);
-		return exit_client(sptr, NULL,
-		    "Link denied (No link block found with your server name or link::incoming::mask did not match)");
+		exit_client(sptr, NULL, "Link denied (No link block found with your server name or link::incoming::mask did not match)");
+		return FLUSH_BUFFER;
 	}
 
 skip_host_check:
@@ -356,8 +364,8 @@ skip_host_check:
 		sendto_one(sptr, NULL,
 		    "ERROR :Link '%s' denied (Authentication failed) %s",
 		    servername, inpath);
-		return exit_client(sptr, NULL,
-		    "Link denied (Authentication failed)");
+		exit_client(sptr, NULL, "Link denied (Authentication failed)");
+		return FLUSH_BUFFER;
 	}
 
 	/* Verify the TLS certificate (if requested) */
@@ -372,8 +380,8 @@ skip_host_check:
 				servername, inpath);
 			sendto_ops_and_log("Link denied for '%s' (Not using SSL/TLS and verify-certificate is on) %s",
 				servername, inpath);
-			return exit_client(sptr, NULL,
-				"Link denied (Not using SSL/TLS)");
+			exit_client(sptr, NULL, "Link denied (Not using SSL/TLS)");
+			return FLUSH_BUFFER;
 		}
 		if (!verify_certificate(sptr->local->ssl, link->servername, &errstr))
 		{
@@ -383,8 +391,8 @@ skip_host_check:
 			sendto_ops_and_log("Link denied for '%s' (Certificate verification failed) %s",
 				servername, inpath);
 			sendto_ops_and_log("Reason for certificate verification failure: %s", errstr);
-			return exit_client(sptr, NULL,
-				"Link denied (Certificate verification failed)");
+			exit_client(sptr, NULL, "Link denied (Certificate verification failed)");
+			return FLUSH_BUFFER;
 		}
 	}
 
@@ -401,7 +409,8 @@ skip_host_check:
 			sendto_ops_and_log("Link %s rejected, server trying to link with my name (%s)",
 				get_client_name(sptr, TRUE), me.name);
 			sendto_one(sptr, NULL, "ERROR: Server %s exists (it's me!)", me.name);
-			return exit_client(sptr, NULL, "Server Exists");
+			exit_client(sptr, NULL, "Server Exists");
+			return FLUSH_BUFFER;
 		}
 
 		acptr = acptr->direction;
@@ -415,8 +424,8 @@ skip_host_check:
 		    ("Link %s cancelled, server %s already exists from %s",
 		    get_client_name(acptr, TRUE), servername,
 		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
-		return exit_client(acptr, NULL,
-		    "Server Exists");
+		exit_client(acptr, NULL, "Server Exists");
+		return FLUSH_BUFFER;
 	}
 	if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
@@ -424,25 +433,29 @@ skip_host_check:
 			("Cancelling link %s, banned server",
 			get_client_name(sptr, TRUE));
 		sendto_one(sptr, NULL, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
-		return exit_client(sptr, NULL, "Banned server");
+		exit_client(sptr, NULL, "Banned server");
+		return FLUSH_BUFFER;
 	}
 	if (link->class->clients + 1 > link->class->maxclients)
 	{
 		sendto_ops_and_log("Cancelling link %s, full class",
 				get_client_name(sptr, TRUE));
-		return exit_client(sptr, NULL, "Full class");
+		exit_client(sptr, NULL, "Full class");
+		return FLUSH_BUFFER;
 	}
 	if (!IsLocalhost(sptr) && (iConf.plaintext_policy_server == POLICY_DENY) && !IsSecure(sptr))
 	{
 		sendto_one(sptr, NULL, "ERROR :Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
 		sendto_ops_and_log("Rejected insecure server %s. See https://www.unrealircd.org/docs/FAQ#ERROR:_Servers_need_to_use_SSL.2FTLS", sptr->name);
-		return exit_client(sptr, NULL, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
+		exit_client(sptr, NULL, "Servers need to use SSL/TLS (set::plaintext-policy::server is 'deny')");
+		return FLUSH_BUFFER;
 	}
 	if (IsSecure(sptr) && (iConf.outdated_tls_policy_server == POLICY_DENY) && outdated_tls_client(sptr))
 	{
 		sendto_one(sptr, NULL, "ERROR :Server is using an outdated SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
 		sendto_ops_and_log("Rejected server %s using outdated %s. See https://www.unrealircd.org/docs/FAQ#server-outdated-tls", tls_get_cipher(sptr->local->ssl), sptr->name);
-		return exit_client(sptr, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
+		exit_client(sptr, NULL, "Server using outdates SSL/TLS protocol or cipher (set::outdated-tls-policy::server is 'deny')");
+		return FLUSH_BUFFER;
 	}
 	if (link_out)
 		*link_out = link;
@@ -483,7 +496,7 @@ CMD_FUNC(cmd_server)
 	{
 		sendnumeric(sptr, ERR_ALREADYREGISTRED);
 		sendnotice(sptr, "*** Sorry, but your IRC program doesn't appear to support changing servers.");
-		return 0;
+		return;
 	}
 
 	/*
@@ -536,7 +549,7 @@ CMD_FUNC(cmd_server)
 		int ret;
 		ret = verify_link(sptr, servername, &aconf);
 		if (ret < 0)
-			return ret; /* FLUSH_BUFFER / failure */
+			return; /* Rejected */
 			
 		/* OK, let us check in the data now now */
 		hop = atol(parv[2]);
@@ -569,7 +582,7 @@ CMD_FUNC(cmd_server)
 				
 				ret = _check_deny_version(sptr, NULL, atoi(protocol), flags);
 				if (ret < 0)
-					return ret;
+					return; /* Rejected */
 			} else {
 				strlcpy(sptr->info, info[0] ? info : "server", sizeof(sptr->info));
 			}
@@ -580,7 +593,8 @@ CMD_FUNC(cmd_server)
 		for (deny = conf_deny_link; deny; deny = deny->next)
 		{
 			if (deny->flag.type == CRULE_ALL && match_simple(deny->mask, servername)
-				&& crule_eval(deny->rule)) {
+				&& crule_eval(deny->rule))
+			{
 				sendto_ops_and_log("Refused connection from %s. Rejected by deny link { } block.",
 					get_client_host(sptr));
 				return exit_client(sptr, NULL, "Disallowed by connection rule");
@@ -593,14 +607,14 @@ CMD_FUNC(cmd_server)
 		fd_desc(sptr->local->fd, descbuf);
 
 		/* Start synch now */
-		if (cmd_server_synch(sptr, aconf) == FLUSH_BUFFER)
-			return FLUSH_BUFFER;
+		server_sync(sptr, aconf);
+		if (IsDead(sptr))
+			return;
 	}
 	else
 	{
 		return cmd_server_remote(sptr, recv_mtags, parc, parv);
 	}
-	return 0;
 }
 
 CMD_FUNC(cmd_server_remote)
@@ -616,7 +630,7 @@ CMD_FUNC(cmd_server_remote)
 	if (parc < 4 || (!*parv[3]))
 	{
 		sendto_one(sptr, NULL, "ERROR :Not enough SERVER parameters");
-		return 0;
+		return;
 	}
 
 	/* Check if server already exists... */
@@ -644,17 +658,7 @@ CMD_FUNC(cmd_server_remote)
 		    ("Link %s cancelled, server %s already exists from %s",
 		    get_client_name(acptr, TRUE), servername,
 		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
-		if (acptr == cptr) {
-			return exit_client(acptr, NULL, "Server Exists");
-		} else {
-			/* AFAIK this can cause crashes if this happends remotely because
-			 * we will still receive msgs for some time because of lag.
-			 * Two possible solutions: unlink the directly connected server (cptr)
-			 * and/or fix all those commands which blindly trust server input. -- Syzop
-			 */
-			exit_client(acptr, NULL, "Server Exists");
-			return 0;
-		}
+		return exit_client(acptr, NULL, "Server Exists");
 	}
 	if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
@@ -742,7 +746,6 @@ CMD_FUNC(cmd_server_remote)
 	}
 
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, acptr);
-	return 0;
 }
 
 void _introduce_user(Client *to, Client *acptr)
@@ -877,7 +880,7 @@ void _broadcast_sinfo(Client *acptr, Client *to, Client *except)
 	}
 }
 
-int	cmd_server_synch(Client *cptr, ConfigItem_link *aconf)
+int	server_sync(Client *cptr, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
 	Client		*acptr;
@@ -1024,7 +1027,7 @@ int	cmd_server_synch(Client *cptr, ConfigItem_link *aconf)
 			{
 				sendto_one(cptr, NULL, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name);
 #ifdef DEBUGMODE
-				ircd_log(LOG_ERROR, "[EOSDBG] cmd_server_synch: sending to uplink '%s' with src %s...",
+				ircd_log(LOG_ERROR, "[EOSDBG] server_sync: sending to uplink '%s' with src %s...",
 					cptr->name, acptr->name);
 #endif
 			}
@@ -1087,7 +1090,7 @@ int	cmd_server_synch(Client *cptr, ConfigItem_link *aconf)
 	/* Send EOS (End Of Sync) to the just linked server... */
 	sendto_one(cptr, NULL, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name);
 #ifdef DEBUGMODE
-	ircd_log(LOG_ERROR, "[EOSDBG] cmd_server_synch: sending to justlinked '%s' with src ME...",
+	ircd_log(LOG_ERROR, "[EOSDBG] server_sync: sending to justlinked '%s' with src ME...",
 			cptr->name);
 #endif
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, cptr);

@@ -123,7 +123,7 @@ CMD_FUNC(cmd_who)
 	int i = 0;
 
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	who_flags = 0;
 	memset(&wfl, 0, sizeof(wfl));
@@ -134,7 +134,7 @@ CMD_FUNC(cmd_who)
 		if (i < 0)
 		{
 			sendnumeric(sptr, RPL_ENDOFWHO, mask);
-			return 0;
+			return;
 		}
 	}
 
@@ -152,14 +152,14 @@ CMD_FUNC(cmd_who)
 	{
 		/* no mask given */
 		sendnumeric(sptr, RPL_ENDOFWHO, "*");
-		return 0;
+		return;
 	}
 
 	if ((target_channel = find_channel(mask, NULL)) != NULL)
 	{
 		do_channel_who(sptr, target_channel, mask);
 		sendnumeric(sptr, RPL_ENDOFWHO, mask);
-		return 0;
+		return;
 	}
 
 	if (wfl.channel && wfl.want_channel == WHO_WANT && 
@@ -167,16 +167,16 @@ CMD_FUNC(cmd_who)
 	{
 		do_channel_who(sptr, target_channel, mask);
 		sendnumeric(sptr, RPL_ENDOFWHO, mask);
-		return 0;
+		return;
 	}
 	else
 	{
 		do_other_who(sptr, mask);
 		sendnumeric(sptr, RPL_ENDOFWHO, mask);
-		return 0;
+		return;
 	}
 
-	return 0;
+	return;
 }
 
 static void who_sendhelp(Client *sptr)

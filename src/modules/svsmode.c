@@ -195,7 +195,7 @@ void clear_bans(Client *sptr, Channel *chptr, char chmode)
  *
  * OLD syntax had a 'ts' parameter. No services are known to use this.
  */
-int channel_svsmode(Client *sptr, int parc, char *parv[]) 
+void channel_svsmode(Client *sptr, int parc, char *parv[]) 
 {
 	Channel *chptr;
 	Client *acptr;
@@ -208,10 +208,10 @@ int channel_svsmode(Client *sptr, int parc, char *parv[])
 	*parabuf = *modebuf = '\0';
 
 	if ((parc < 3) || BadPtr(parv[2]))
-		return 0;
+		return;
 
 	if (!(chptr = find_channel(parv[1], NULL)))
-		return 0;
+		return;
 
 	for(m = parv[2]; *m; m++)
 	{
@@ -293,7 +293,6 @@ int channel_svsmode(Client *sptr, int parc, char *parv[])
 
 		*parabuf = 0;
 	}
-	return 0;
 }
 
 /** Special User MODE command for Services.
@@ -305,7 +304,7 @@ int channel_svsmode(Client *sptr, int parc, char *parv[])
  *
  * show_change can be 0 (for svsmode) or 1 (for svs2mode).
  */
-int do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int show_change)
+void do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int show_change)
 {
 	int i;
 	char *m;
@@ -314,18 +313,18 @@ int do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int
 	long setflags = 0;
 
 	if (!IsULine(sptr))
-		return 0;
+		return;
 
 	what = MODE_ADD;
 
 	if (parc < 3)
-		return 0;
+		return;
 
 	if (parv[1][0] == '#') 
 		return channel_svsmode(sptr, parc, parv);
 
 	if (!(acptr = find_person(parv[1], NULL)))
-		return 0;
+		return;
 
 	userhost_save_current(acptr);
 
@@ -522,7 +521,6 @@ int do_svsmode(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], int
 	userhost_changed(acptr); /* we can safely call this, even if nothing changed */
 
 	VERIFY_OPERCOUNT(acptr, "svsmodeX");
-	return 0;
 }
 
 /*

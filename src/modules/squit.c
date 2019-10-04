@@ -68,13 +68,13 @@ CMD_FUNC(cmd_squit)
 	if (!ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SQUIT");
-		return 0;
+		return;
 	}
 
 	server = parv[1];
@@ -117,13 +117,13 @@ CMD_FUNC(cmd_squit)
 	if (!acptr)
 	{
 		sendnumeric(sptr, ERR_NOSUCHSERVER, server);
-		return 0;
+		return;
 	}
 	if (MyUser(sptr) && ((!ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && !MyConnect(acptr)) ||
 	    (!ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL) && MyConnect(acptr))))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 	/*
 	   **  Notify all opers, if my local link is remotely squitted
@@ -145,7 +145,7 @@ CMD_FUNC(cmd_squit)
 			sendto_server(&me, 0, 0, NULL,
 			    ":%s GLOBOPS :%s tried to fake kill using SQUIT (%s (%s))",
 			    me.name, sptr->name, acptr->name, comment);
-			return 0;
+			return;
 		}
 		sendto_umode_global(UMODE_OPER, "Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
@@ -160,5 +160,5 @@ CMD_FUNC(cmd_squit)
 		SetSQuit(acptr);
 	}
 
-	return exit_client(acptr, recv_mtags, comment);
+	exit_client(acptr, recv_mtags, comment);
 }

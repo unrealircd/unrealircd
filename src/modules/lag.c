@@ -63,25 +63,23 @@ CMD_FUNC(cmd_lag)
 	if (!ValidatePermissionsForPath("server:info:lag",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (parc < 2)
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "LAG");
-		return 0;
+		return;
 	}
+
 	if (*parv[1] == '\0')
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "LAG");
-		return 0;
+		return;
 	}
+
 	if (hunt_server(sptr, recv_mtags, ":%s LAG :%s", 1, parc, parv) == HUNTED_NOSUCH)
-	{
-		return 0;
-	}
+		return;
 
 	sendnotice(sptr, "Lag reply -- %s %s %lld", me.name, parv[1], (long long)TStime());
-
-	return 0;
 }

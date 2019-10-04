@@ -58,7 +58,7 @@ CMD_FUNC(cmd_links)
 	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;
 
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -74,5 +74,4 @@ CMD_FUNC(cmd_links)
 	}
 
 	sendnumeric(sptr, RPL_ENDOFLINKS, "*");
-	return 0;
 }

@@ -64,10 +64,10 @@ CMD_FUNC(cmd_svspart)
 	Client *acptr;
 	char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
 	if (!IsULine(sptr))
-		return 0;
+		return;
 
 	if (parc < 3 || !(acptr = find_person(parv[1], NULL))) 
-		return 0;
+		return;
 
 	if (MyUser(acptr))
 	{
@@ -87,6 +87,4 @@ CMD_FUNC(cmd_svspart)
 			sendto_one(acptr, NULL, ":%s SVSPART %s %s", sptr->name,
 			    parv[1], parv[2]);
 	}
-
-	return 0;
 }

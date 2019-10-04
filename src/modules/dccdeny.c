@@ -60,35 +60,28 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_dccdeny)
 {
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	if (!ValidatePermissionsForPath("server-ban:dccdeny",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
-	/* fixup --Stskeeps */
-	if (parc < 2)
+
+	if ((parc < 2) || BadPtr(parv[2]))
 	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    "DCCDENY");
-		return 0;
+		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "DCCDENY");
+		return;
 	}
-	
-	if (BadPtr(parv[2]))
-	{
-		sendnumeric(sptr, ERR_NEEDMOREPARAMS,
-		    "DCCDENY");
-		return 0;
-	}
+
 	if (!Find_deny_dcc(parv[1]))
 	{
 		sendto_ops("%s added a temp dccdeny for %s (%s)", sptr->name,
 		    parv[1], parv[2]);
 		DCCdeny_add(parv[1], parv[2], DCCDENY_HARD, CONF_BAN_TYPE_TEMPORARY);
-		return 0;
-	}
-	else
+		return;
+	} else
+	{
 		sendnotice(sptr, "*** %s already has a dccdeny", parv[1]);
-	return 0;
+	}
 }

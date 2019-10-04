@@ -54,24 +54,24 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int do_svsnolag(Client *sptr, int parc, char *parv[], int show_change)
+void do_svsnolag(Client *sptr, int parc, char *parv[], int show_change)
 {
 	Client *acptr;
 	char *cmd = show_change ? MSG_SVS2NOLAG : MSG_SVSNOLAG;
 
 	if (!IsULine(sptr))
-		return 0;
+		return;
 
 	if (parc < 3)
-		return 0;
+		return;
 
 	if (!(acptr = find_person(parv[2], NULL)))
-		return 0;
+		return;
 
 	if (!MyUser(acptr))
 	{
 		sendto_one(acptr, NULL, ":%s %s %s %s", sptr->name, cmd, parv[1], parv[2]);
-		return 0;
+		return;
 	}
 
 	if (*parv[1] == '+')
@@ -92,8 +92,6 @@ int do_svsnolag(Client *sptr, int parc, char *parv[], int show_change)
 				sendnotice(acptr, "You are no longer exempted from fake lag");
 		}
 	}
-
-	return 0;
 }
 
 CMD_FUNC(cmd_svsnolag)

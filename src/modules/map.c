@@ -154,22 +154,23 @@ CMD_FUNC(cmd_map)
 	Client *acptr;
 	int  longest = strlen(me.name);
 
-
 	if (parc < 2)
 		parv[1] = "*";
+
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		if ((strlen(acptr->name) + acptr->hopcount * 2) > longest)
 			longest = strlen(acptr->name) + acptr->hopcount * 2;
 	}
+
 	if (longest > 60)
 		longest = 60;
 	longest += 2;
+
 	if (FLAT_MAP && !ValidatePermissionsForPath("server:info:map:real-map",sptr,NULL,NULL,NULL))
 		dump_flat_map(sptr, &me, longest);
 	else
 		dump_map(sptr, &me, "*", 0, longest);
-	sendnumeric(sptr, RPL_MAPEND);
 
-	return 0;
+	sendnumeric(sptr, RPL_MAPEND);
 }

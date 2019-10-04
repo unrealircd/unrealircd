@@ -307,18 +307,18 @@ CMD_FUNC(cmd_stats)
 	if (parc == 3 && parv[2][0] != '+' && parv[2][0] != '-')
 	{
 		if (hunt_server(sptr, recv_mtags, ":%s STATS %s :%s", 2, parc, parv) != HUNTED_ISME)
-			return 0;
+			return;
 	}
 	else if (parc == 4 && parv[2][0] != '+' && parv[2][0] != '-')
 	{
 		if (hunt_server(sptr, recv_mtags, ":%s STATS %s %s %s", 2, parc, parv) != HUNTED_ISME)
-			return 0;
+			return;
 	}
 	if (parc < 2 || !*parv[1])
 	{
 		stats_help(sptr);
 		sendnumeric(sptr, RPL_ENDOFSTATS, '*');
-		return 0;
+		return;
 	}
 
 	/* Decide if we are looking for 1 char or a string */
@@ -327,7 +327,7 @@ CMD_FUNC(cmd_stats)
 		if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL) && stats_operonly_short(parv[1][0]))
 		{
 			sendnumeric(sptr, ERR_NOPRIVILEGES);
-			return 0;
+			return;
 		}
 		/* Old style, we can use a binary search here */
 		stat = stats_binary_search(parv[1][0]);
@@ -337,7 +337,7 @@ CMD_FUNC(cmd_stats)
 		if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL) && stats_operonly_long(parv[1]))
 		{
 			sendnumeric(sptr, ERR_NOPRIVILEGES);
-			return 0;
+			return;
 		}
 		/* New style, search the hard way */
 		stat = stats_search(parv[1]);
@@ -350,7 +350,7 @@ CMD_FUNC(cmd_stats)
 			if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL) && stats_operonly_long(stat->longflag))
 			{
 				sendnumeric(sptr, ERR_NOPRIVILEGES);
-				return 0;
+				return;
 			}
 		}
 		/* It was a long flag, so check oper only on short flags */
@@ -359,7 +359,7 @@ CMD_FUNC(cmd_stats)
 			if (!ValidatePermissionsForPath("server:info:stats",sptr,NULL,NULL,NULL) && stats_operonly_short(stat->flag))
 			{
 				sendnumeric(sptr, ERR_NOPRIVILEGES);
-				return 0;
+				return;
 			}
 		}
 		if (stat->options & FLAGS_AS_PARA)
@@ -397,9 +397,8 @@ CMD_FUNC(cmd_stats)
 	{
 		stats_help(sptr);
 		sendnumeric(sptr, RPL_ENDOFSTATS, '*');
-		return 0;
+		return;
 	}
-	return 0;
 }
 
 int stats_banversion(Client *sptr, char *para)

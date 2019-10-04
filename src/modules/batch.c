@@ -81,24 +81,22 @@ CMD_FUNC(cmd_batch)
 	char buf[512];
 
 	if (MyUser(sptr) || (parc < 3))
-		return 0;
+		return;
 
 	acptr = find_client(parv[1], NULL);
 	if (!acptr)
-		return 0; /* race condition */
+		return; /* race condition */
 
 	/* If the recipient does not support message tags or
 	 * does not support batch, then don't do anything.
 	 */
 	if (MyConnect(acptr) && !IsServer(acptr) && !HasCapability(acptr, "batch"))
-		return 0;
+		return;
 
 	/* Relay the batch message to the client (or server) */
 	parv[1] = "BATCH";
 	concat_params(buf, sizeof(buf), parc, parv);
 	sendto_prefix_one(acptr, sptr, recv_mtags, "%s", buf);
-
-	return 0;
 }
 
 /** This function verifies if the client sending

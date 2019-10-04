@@ -144,12 +144,12 @@ CMD_FUNC(cmd_whox)
 	memset(&fmt, 0, sizeof(fmt));
 
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	if ((parc < 2))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "WHO");
-		return 0;
+		return;
 	}
 
 	if ((parc > 3) && parv[3])
@@ -158,7 +158,7 @@ CMD_FUNC(cmd_whox)
 		orig_mask = parv[1];
 
 	if (!convert_classical_who_request(sptr, &parc, parv, &orig_mask, &fmt))
-		return -1;
+		return;
 
 	/* Evaluate the flags now, we consider the second parameter
 	 * as "matchFlags%fieldsToInclude,querytype" */
@@ -300,7 +300,7 @@ CMD_FUNC(cmd_whox)
 		}
 
 		sendnumeric(sptr, RPL_ENDOFWHO, mask);
-		return 0;
+		return;
 	}
 
 	/* '/who nick' */
@@ -339,7 +339,7 @@ CMD_FUNC(cmd_whox)
 			do_who(sptr, acptr, NULL, &fmt);
 
 		sendnumeric(sptr, RPL_ENDOFWHO, orig_mask);
-		return 0;
+		return;
 	}
 
 	if (ValidatePermissionsForPath("channel:see:who:secret",sptr,NULL,NULL,NULL) ||
@@ -358,8 +358,6 @@ CMD_FUNC(cmd_whox)
 		who_global(sptr, mask, operspy, &fmt);
 
 	sendnumeric(sptr, RPL_ENDOFWHO, mask);
-
-	return 0;
 }
 
 /* do_match

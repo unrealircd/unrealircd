@@ -66,7 +66,7 @@ CMD_FUNC(cmd_mkpasswd)
 	if (!MKPASSWD_FOR_EVERYONE && !IsOper(sptr))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return -1;
+		return;
 	}
 	if (!IsOper(sptr))
 	{
@@ -81,28 +81,26 @@ CMD_FUNC(cmd_mkpasswd)
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
 		sendnotice(sptr, "*** Syntax: /mkpasswd <authmethod> :parameter");
-		return 0;
+		return;
 	}
 	/* Don't want to take any risk ;p. -- Syzop */
 	if (strlen(parv[2]) > 64)
 	{
 		sendnotice(sptr, "*** Your parameter (text-to-hash) is too long.");
-		return 0;
+		return;
 	}
 	if ((type = Auth_FindType(NULL, parv[1])) == -1)
 	{
 		sendnotice(sptr, "*** %s is not an enabled authentication method", parv[1]);
-		return 0;
+		return;
 	}
 
 	if (!(result = Auth_Hash(type, parv[2])))
 	{
 		sendnotice(sptr, "*** Authentication method %s failed", parv[1]);
-		return 0;
+		return;
 	}
 
 	sendnotice(sptr, "*** Authentication phrase (method=%s, para=%s) is: %s",
 		parv[1], parv[2], result);
-
-	return 0;
 }

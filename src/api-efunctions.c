@@ -40,7 +40,7 @@ int (*can_join)(Client *sptr, Channel *chptr, char *key, char *parv[]);
 void (*do_mode)(Channel *chptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
 void (*set_mode)(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-int (*cmd_umode)(Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+void (*cmd_umode)(Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 int (*register_user)(Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
@@ -65,7 +65,7 @@ TKL *(*find_qline)(Client *cptr, char *nick, int *ishold);
 TKL *(*find_tkline_match_zap)(Client *cptr);
 void (*tkl_stats)(Client *cptr, int type, char *para);
 void (*tkl_synch)(Client *sptr);
-int (*cmd_tkl)(Client *sptr, MessageTag *mtags, int parc, char *parv[]);
+void (*cmd_tkl)(Client *sptr, MessageTag *mtags, int parc, char *parv[]);
 int (*place_host_ban)(Client *sptr, BanAction action, char *reason, long duration);
 int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
 int (*join_viruschan)(Client *sptr, TKL *tk, int type);

@@ -41,8 +41,15 @@ MODVAR Member *freemember = NULL;
 MODVAR Membership *freemembership = NULL;
 MODVAR int  numclients = 0;
 
-/* unless documented otherwise, these are all local-only, except client_list. */
-MODVAR struct list_head client_list, lclient_list, server_list, oper_list, unknown_list, global_server_list;
+// TODO: Document whether servers are included or excluded in these lists...
+
+MODVAR struct list_head unknown_list;		/**< Local clients in handshake (may become a user or server later) */
+MODVAR struct list_head lclient_list;		/**< Local clients (users only, right?) */
+MODVAR struct list_head client_list;		/**< All clients - local and remote (not in handshake) */
+MODVAR struct list_head server_list;		/**< Locally connected servers */
+MODVAR struct list_head oper_list;		/**< Locally connected IRC Operators */
+MODVAR struct list_head global_server_list;	/**< All servers (local and remote) */
+MODVAR struct list_head dead_list;		/**< All dead clients (local and remote) that will soon be freed in the main loop */
 
 static mp_pool_t *client_pool = NULL;
 static mp_pool_t *local_client_pool = NULL;
@@ -65,6 +72,7 @@ void initlists(void)
 	INIT_LIST_HEAD(&oper_list);
 	INIT_LIST_HEAD(&unknown_list);
 	INIT_LIST_HEAD(&global_server_list);
+	INIT_LIST_HEAD(&dead_list);
 
 	client_pool = mp_pool_new(sizeof(Client), 512 * 1024);
 	local_client_pool = mp_pool_new(sizeof(LocalClient), 512 * 1024);
@@ -249,37 +257,38 @@ Server *make_server(Client *cptr)
 **	Decrease user reference count by one and realease block,
 **	if count reaches 0
 */
-void free_user(ClientUser *user, Client *cptr)
+void free_user(Client *cptr)
 {
-	if (user->refcnt == 0)
-		sendto_realops("[BUG] free_user: ref count for '%s' was already 0!?", user->username);
+	// FIXME: reference counting is unused right? get rid of it.
+	if (cptr->user->refcnt == 0)
+		sendto_realops("[BUG] free_user: ref count for '%s' was already 0!?", cptr->user->username);
 	else
-		--user->refcnt;
-	if (user->refcnt == 0)
+		cptr->user->refcnt--;
+
+	if (cptr->user->refcnt == 0)
 	{
-		RunHook2(HOOKTYPE_FREE_USER, user, cptr);
-		if (user->away)
-			safe_free(user->away);
-		if (user->swhois)
+		RunHook(HOOKTYPE_FREE_USER, cptr);
+		safe_free(cptr->user->away);
+		if (cptr->user->swhois)
 		{
 			SWhois *s, *s_next;
-			for (s = user->swhois; s; s = s_next)
+			for (s = cptr->user->swhois; s; s = s_next)
 			{
 				s_next = s->next;
 				safe_free(s->line);
 				safe_free(s->setby);
 				safe_free(s);
 			}
+			cptr->user->swhois = NULL;
 		}
-		if (user->virthost)
-			safe_free(user->virthost);
-		if (user->operlogin)
-			safe_free(user->operlogin);
-		mp_pool_release(user);
+		safe_free(cptr->user->virthost);
+		safe_free(cptr->user->operlogin);
+		mp_pool_release(cptr->user);
 #ifdef	DEBUGMODE
 		users.inuse--;
 #endif
 	}
+	cptr->user = NULL;
 }
 
 /*
@@ -289,6 +298,13 @@ void free_user(ClientUser *user, Client *cptr)
 void remove_client_from_list(Client *cptr)
 {
 	list_del(&cptr->client_node);
+	if (MyConnect(cptr))
+	{
+		if (!list_empty(&cptr->lclient_node))
+			list_del(&cptr->lclient_node);
+		if (!list_empty(&cptr->special_node))
+			list_del(&cptr->special_node);
+	}
 	if (IsServer(cptr))
 	{
 		irccounts.servers--;
@@ -320,7 +336,7 @@ void remove_client_from_list(Client *cptr)
 	}
 	
 	if (cptr->user)
-		(void)free_user(cptr->user, cptr);
+		free_user(cptr);
 	if (cptr->serv)
 	{
 		safe_free(cptr->serv->features.usermodes);
@@ -347,8 +363,12 @@ void remove_client_from_list(Client *cptr)
 		abort();
 	if (!list_empty(&cptr->id_hash))
 		abort();
-	(void)free_client(cptr);
 	numclients--;
+	/* Add to killed clients list */
+	list_add(&cptr->client_node, &dead_list);
+	// THIS IS NOW DONE IN THE MAINLOOP --> (void)free_client(cptr);
+	SetDead(cptr);
+	SetDeadSocket(cptr);
 	return;
 }
 

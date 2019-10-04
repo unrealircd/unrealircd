@@ -61,12 +61,12 @@ CMD_FUNC(cmd_vhost)
 	char olduser[USERLEN+1];
 
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "VHOST");
-		return 0;
+		return;
 
 	}
 
@@ -87,7 +87,7 @@ CMD_FUNC(cmd_vhost)
 		    sptr->user->username,
 		    sptr->user->realhost);
 		sendnotice(sptr, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
-		return 0;
+		return;
 	}
 	
 	if (!unreal_mask_match(sptr, vhost->mask))
@@ -96,7 +96,7 @@ CMD_FUNC(cmd_vhost)
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - host does not match",
 		    login, sptr->name, sptr->user->username, sptr->user->realhost);
 		sendnotice(sptr, "*** No vHost lines available for your host");
-		return 0;
+		return;
 	}
 
 	if (!Auth_Check(sptr, vhost->auth, password))
@@ -107,7 +107,7 @@ CMD_FUNC(cmd_vhost)
 		    sptr->user->username,
 		    sptr->user->realhost);
 		sendnotice(sptr, "*** [\2vhost\2] Login for %s failed - password incorrect", login);
-		return 0;
+		return;
 	}
 
 	/* Authentication passed, but.. there could still be other restrictions: */
@@ -117,7 +117,7 @@ CMD_FUNC(cmd_vhost)
 			if (MyUser(sptr))
 			{
 				sendnotice(sptr, "*** /vhost is disabled");
-				return 0;
+				return;
 			}
 			break;
 		case UHALLOW_ALWAYS:
@@ -126,7 +126,7 @@ CMD_FUNC(cmd_vhost)
 			if (MyUser(sptr) && sptr->user->joined)
 			{
 				sendnotice(sptr, "*** /vhost can not be used while you are on a channel");
-				return 0;
+				return;
 			}
 			break;
 		case UHALLOW_REJOIN:
@@ -169,6 +169,4 @@ CMD_FUNC(cmd_vhost)
 		vhost->virtuser ? "@" : "", vhost->virthost);
 
 	userhost_changed(sptr);
-
-	return 0;
 }

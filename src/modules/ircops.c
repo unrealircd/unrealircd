@@ -138,7 +138,4 @@ CMD_FUNC(cmd_ircops)
 
 	sendnumericfmt(sptr, RPL_TEXT, "%s", buf);
 	sendnumericfmt(sptr, RPL_TEXT, "End of /IRCOPS list");
-
-	return 0;
 }
-

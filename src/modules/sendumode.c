@@ -82,13 +82,12 @@ CMD_FUNC(cmd_sendumode)
 	if (parc < 3)
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SENDUMODE");
-		return 0;
+		return;
 	}
 
 	new_message(sptr, recv_mtags, &mtags);
 
-	sendto_server(sptr, 0, 0, mtags,
-	    ":%s SENDUMODE %s :%s", sptr->name, parv[1], message);
+	sendto_server(sptr, 0, 0, mtags, ":%s SENDUMODE %s :%s", sptr->name, parv[1], message);
 
 	for (p = parv[1]; *p; p++)
 	{
@@ -106,12 +105,9 @@ CMD_FUNC(cmd_sendumode)
 
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{
-	    if (acptr->umodes & umode_s)
+		if (acptr->umodes & umode_s)
 			sendto_one(acptr, mtags, ":%s NOTICE %s :%s", sptr->name, acptr->name, message);
 	}
 
 	free_message_tags(mtags);
-
-	return 0;
 }
-

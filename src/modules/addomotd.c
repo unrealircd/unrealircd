@@ -65,33 +65,24 @@ CMD_FUNC(cmd_addomotd)
 	text = parc > 1 ? parv[1] : NULL;
 
 	if (!MyConnect(sptr))
-		return 0;
+		return;
 
 	if (!ValidatePermissionsForPath("server:addomotd",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 	if (parc < 2)
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "ADDOMOTD");
-		return 0;
+		return;
 	}
+
 	conf = fopen(conf_files->opermotd_file, "a");
 	if (conf == NULL)
-	{
-		return 0;
-	}
-	sendnotice(sptr, "*** Wrote (%s) to OperMotd", text);
-	/*      for (i=1 ; i<parc ; i++)
-	   {
-	   if (i!=parc-1)
-	   fprintf (conf,"%s ",parv[i]);
-	   else
-	   fprintf (conf,"%s\n",parv[i]);
-	   } */
+		return;
 	fprintf(conf, "%s\n", text);
-
 	fclose(conf);
-	return 1;
+
+	sendnotice(sptr, "*** Wrote (%s) to OperMotd", text);
 }

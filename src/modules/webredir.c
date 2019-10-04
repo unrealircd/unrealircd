@@ -192,11 +192,10 @@ int webredir_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 CMD_FUNC(webredir)
 {
-	if (MyConnect(sptr))
-	{
-		sendto_one(sptr, NULL, "HTTP/1.1 301 Moved Permanently");
-		sendto_one(sptr, NULL, "Location: %s\r\n\r\n", cfg.url);
-		dead_link(sptr, "Connection closed");
-	}
-	return 0;
+	if (!MyConnect(sptr))
+		return;
+
+	sendto_one(sptr, NULL, "HTTP/1.1 301 Moved Permanently");
+	sendto_one(sptr, NULL, "Location: %s\r\n\r\n", cfg.url);
+	dead_link(sptr, "Connection closed");
 }

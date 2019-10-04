@@ -63,7 +63,7 @@ CMD_FUNC(cmd_opermotd)
 	if (!ValidatePermissionsForPath("server:opermotd",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	tld = Find_tld(sptr);
@@ -77,11 +77,10 @@ CMD_FUNC(cmd_opermotd)
 	if (!motdline)
 	{
 		sendnumeric(sptr, ERR_NOOPERMOTD);
-		return 0;
+		return;
 	}
 	sendnumeric(sptr, RPL_MOTDSTART, me.name);
-	sendnumeric(sptr, RPL_MOTD,
-	    "IRC Operator Message of the Day");
+	sendnumeric(sptr, RPL_MOTD, "IRC Operator Message of the Day");
 
 	while (motdline)
 	{
@@ -90,5 +89,4 @@ CMD_FUNC(cmd_opermotd)
 		motdline = motdline->next;
 	}
 	sendnumeric(sptr, RPL_ENDOFMOTD);
-	return 0;
 }

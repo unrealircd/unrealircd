@@ -37,7 +37,7 @@ typedef struct {
 	char *operpriv;
 } TKLType;
 
-static int dump_str(Client *sptr, char **buf);
+static void dump_str(Client *sptr, char **buf);
 static TKLType *find_TKLType_by_flag(char flag);
 void rmtkl_check_options(char *param, int *skipperm, int *silent);
 int rmtkl_tryremove(Client *sptr, TKLType *tkltype, TKL *tkl, char *uhmask, char *commentmask, int skipperm, int silent);
@@ -104,10 +104,10 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static int dump_str(Client *sptr, char **buf)
+static void dump_str(Client *sptr, char **buf)
 {
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	// Using sendto_one() instead of sendnumericfmt() because the latter strips indentation and stuff ;]
 	for (; *buf != NULL; buf++)
@@ -115,7 +115,6 @@ static int dump_str(Client *sptr, char **buf)
 
 	// Let user take 8 seconds to read it
 	sptr->local->since += 8;
-	return 0;
 }
 
 static TKLType *find_TKLType_by_flag(char flag)
@@ -192,7 +191,7 @@ CMD_FUNC(rmtkl) {
 	if (!IsULine(sptr) && !IsOper(sptr))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return -1;
+		return;
 	}
 
 	if (IsNotParam(1))
@@ -201,7 +200,7 @@ CMD_FUNC(rmtkl) {
 	if (IsNotParam(2))
 	{
 		sendnotice(sptr, "Not enough parameters. Type /RMTKL for help.");
-		return 0;
+		return;
 	}
 
 	uhmask = parv[1];
@@ -249,7 +248,7 @@ CMD_FUNC(rmtkl) {
 			if (!ValidatePermissionsForPath(tkltype->operpriv, sptr, NULL, NULL, NULL))
 			{
 				sendnumeric(sptr, ERR_NOPRIVILEGES);
-				return -1;
+				return;
 			}
 		}
 	}
@@ -287,5 +286,4 @@ CMD_FUNC(rmtkl) {
 	}
 
 	sendto_snomask(SNO_TKL, "*** %s removed %d TKLine(s) using /rmtkl", sptr->name, count);
-	return 0;
 }

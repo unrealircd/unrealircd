@@ -37,7 +37,7 @@ RealCommand *CommandHash[256]; /* one per letter */
 **
 ** Rewritten for linebufs, 19th May 2013. --kaniini
 */
-int  dopacket(Client *cptr, char *buffer, int length)
+void dopacket(Client *cptr, char *buffer, int length)
 {
 	me.local->receiveB += length;	/* Update bytes received */
 	cptr->local->receiveB += length;
@@ -55,7 +55,7 @@ int  dopacket(Client *cptr, char *buffer, int length)
 	me.local->receiveM += 1;	/* Update messages received */
 	cptr->local->receiveM += 1;
 
-	return parse(cptr, buffer, length);
+	parse(cptr, buffer, length);
 }
 
 void	init_CommandHash(void)
@@ -69,8 +69,6 @@ void	init_CommandHash(void)
 	memset(CommandHash, 0, sizeof(CommandHash));
 	CommandAdd(NULL, MSG_ERROR, cmd_error, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
 	CommandAdd(NULL, MSG_VERSION, cmd_version, MAXPARA, CMD_UNREGISTERED|CMD_USER|CMD_SERVER);
-	CommandAdd(NULL, MSG_SUMMON, cmd_summon, 1, CMD_USER);
-	CommandAdd(NULL, MSG_USERS, cmd_users, MAXPARA, CMD_USER);
 	CommandAdd(NULL, MSG_INFO, cmd_info, MAXPARA, CMD_USER);
 	CommandAdd(NULL, MSG_DNS, cmd_dns, MAXPARA, CMD_USER);
 	CommandAdd(NULL, MSG_REHASH, cmd_rehash, MAXPARA, CMD_USER|CMD_SERVER);
@@ -166,12 +164,11 @@ RealCommand *find_Command_simple(char *cmd)
  *    of 1024 bytes, most of the ircd code depends on the max size of the
  *    total command being less than 512 bytes. Same for parc < MAXPARA.
  */
-int do_cmd(Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[])
+void do_cmd(Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[])
 {
-RealCommand *cmptr;
+	RealCommand *cmptr;
 
 	cmptr = find_Command_simple(cmd);
-	if (!cmptr)
-		return -99;
-	return (*cmptr->func) (sptr, mtags, parc, parv);
+	if (cmptr)
+		(*cmptr->func) (sptr, mtags, parc, parv);
 }

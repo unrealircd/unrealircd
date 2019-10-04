@@ -68,7 +68,7 @@ CMD_FUNC(cmd_protoctl)
 	char *name, *value, *p;
 
 	if (!MyConnect(sptr))
-		return 0; /* Remote PROTOCTL's are not supported */
+		return; /* Remote PROTOCTL's are not supported */
 
 	SetProtoctlReceived(sptr);
 
@@ -254,12 +254,12 @@ CMD_FUNC(cmd_protoctl)
 			
 			ret = verify_link(sptr, servername, &aconf);
 			if (ret < 0)
-				return ret; /* FLUSH_BUFFER */
+				return; /* FLUSH_BUFFER */
 
 			/* note: software, protocol and flags may be NULL */
 			ret = check_deny_version(sptr, software, protocol ? atoi(protocol) : 0, flags);
 			if (ret < 0)
-				return ret; /* FLUSH_BUFFER */
+				return; /* FLUSH_BUFFER */
 
 			SetEAuth(sptr);
 			make_server(sptr); /* allocate and set sptr->serv */
@@ -411,6 +411,4 @@ CMD_FUNC(cmd_protoctl)
 		 */
 		send_server_message(sptr);
 	}
-
-	return 0;
 }

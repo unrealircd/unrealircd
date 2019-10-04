@@ -337,7 +337,7 @@ ConfigItem_webirc *Find_webirc(Client *sptr, char *password, WEBIRCType type, ch
 #define WEBIRC_STRINGLEN  (sizeof(WEBIRC_STRING)-1)
 
 /* Does the CGI:IRC host spoofing work */
-int dowebirc(Client *cptr, char *ip, char *host, char *options)
+void dowebirc(Client *cptr, char *ip, char *host, char *options)
 {
 	char scratch[64];
 
@@ -403,7 +403,7 @@ int dowebirc(Client *cptr, char *ip, char *host, char *options)
 	 * but since we know the IP only now after PASS/WEBIRC, we have to check
 	 * here again...
 	 */
-	return check_banned(cptr, 0);
+	check_banned(cptr, 0);
 }
 
 /* WEBIRC <pass> "cgiirc" <hostname> <ip> [:option1 [option2...]]*/
@@ -416,7 +416,7 @@ CMD_FUNC(cmd_webirc)
 	if ((parc < 5) || BadPtr(parv[4]))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "WEBIRC");
-		return -1;
+		return;
 	}
 
 	password = parv[1];
@@ -432,7 +432,6 @@ CMD_FUNC(cmd_webirc)
 	/* And do our job.. */
 	return dowebirc(sptr, ip, host, options);
 }
-
 
 int webirc_check_init(Client *cptr, char *sockn, size_t size)
 {
@@ -464,10 +463,14 @@ int webirc_local_pass(Client *sptr, char *password)
 			ip = password + WEBIRC_STRINGLEN;
 			host = strchr(ip, '_');
 			if (!host)
-				return exit_client(sptr, NULL, "Invalid CGI:IRC IP received");
+			{
+				exit_client(sptr, NULL, "Invalid CGI:IRC IP received");
+				return FLUSH_BUFFER;
+			}
 			*host++ = '\0';
 		
-			return dowebirc(sptr, ip, host, NULL);
+			dowebirc(sptr, ip, host, NULL);
+			return HOOK_DENY;
 		}
 		/* fallthrough if not in webirc block.. */
 	}

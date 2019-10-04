@@ -77,7 +77,7 @@ CMD_FUNC(cmd_user)
 	// Eh, this is for old remote USER shit (which we currently still use indirectly via do_cmd).
 	// TODO: cleanup. Also, hope this is right:
 	if (!MyConnect(sptr) && !IsUnknown(sptr))
-		return 0;
+		return;
 
 	if (MyConnect(sptr) && (sptr->local->listener->options & LISTENER_SERVERSONLY))
 		return exit_client(sptr, NULL, "This port is for servers only");
@@ -93,7 +93,7 @@ CMD_FUNC(cmd_user)
 			sendto_ops("bad USER param count for %s from %s",
 			    sptr->name, get_client_name(cptr, FALSE));
 		else
-			return 0;
+			return;
 	}
 
 
@@ -154,7 +154,7 @@ CMD_FUNC(cmd_user)
 	if (!IsUnknown(sptr))
 	{
 		sendnumeric(sptr, ERR_ALREADYREGISTRED);
-		return 0;
+		return;
 	}
 
 	if (!IsServer(cptr))
@@ -181,8 +181,7 @@ CMD_FUNC(cmd_user)
 				me.name, sptr->name);
 		if (strlen(username) > USERLEN)
 			username[USERLEN] = '\0'; /* cut-off */
-		return register_user(sptr, sptr->name, username, umodex, virthost, ip);
+		register_user(sptr, sptr->name, username, umodex, virthost, ip);
+		return;
 	}
-
-	return 0;
 }

@@ -71,7 +71,7 @@ CMD_FUNC(cmd_part)
 	if (parc < 2 || parv[1][0] == '\0')
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "PART");
-		return 0;
+		return;
 	}
 
 	if (MyUser(sptr))
@@ -91,7 +91,7 @@ CMD_FUNC(cmd_part)
 		{
 			n = run_spamfilter(sptr, commentx, SPAMF_PART, parv[1], 0, NULL);
 			if (n == FLUSH_BUFFER)
-				return n;
+				return;
 			if (n < 0)
 				commentx = NULL;
 		}
@@ -220,5 +220,4 @@ CMD_FUNC(cmd_part)
 
 		remove_user_from_channel(sptr, chptr);
 	}
-	return 0;
 }

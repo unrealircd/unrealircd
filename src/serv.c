@@ -158,7 +158,7 @@ CMD_FUNC(cmd_version)
 	if (!IsUser(sptr) && !IsServer(sptr))
 	{
 		send_version(sptr, RPL_ISUPPORT);
-		return 0;
+		return;
 	}
 
 	if (hunt_server(sptr, recv_mtags, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
@@ -182,7 +182,6 @@ CMD_FUNC(cmd_version)
 		else
 			send_version(sptr,RPL_REMOTEISUPPORT);
 	}
-	return 0;
 }
 
 char *num = NULL;
@@ -297,14 +296,10 @@ char **text = unrealinfo;
 CMD_FUNC(cmd_info)
 {
 	if (remotecmdfilter(sptr, parc, parv))
-		return 0;
+		return;
 
 	if (hunt_server(sptr, recv_mtags, ":%s INFO :%s", 1, parc, parv) == HUNTED_ISME)
-	{
 		cmd_info_send(sptr);
-	}
-
-	return 0;
 }
 
 /*
@@ -316,7 +311,7 @@ CMD_FUNC(cmd_dalinfo)
 	char **text = dalinfotext;
 
 	if (remotecmdfilter(sptr, parc, parv))
-		return 0;
+		return;
 
 	if (hunt_server(sptr, recv_mtags, ":%s DALINFO :%s", 1, parc, parv) == HUNTED_ISME)
 	{
@@ -329,8 +324,6 @@ CMD_FUNC(cmd_dalinfo)
 		sendnumericfmt(sptr, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
 		sendnumeric(sptr, RPL_ENDOFINFO);
 	}
-
-	return 0;
 }
 
 /*
@@ -342,7 +335,7 @@ CMD_FUNC(cmd_license)
 	char **text = gnulicense;
 
 	if (remotecmdfilter(sptr, parc, parv))
-		return 0;
+		return;
 
 	if (hunt_server(sptr, recv_mtags, ":%s LICENSE :%s", 1, parc, parv) == HUNTED_ISME)
 	{
@@ -352,8 +345,6 @@ CMD_FUNC(cmd_license)
 		sendnumeric(sptr, RPL_INFO, "");
 		sendnumeric(sptr, RPL_ENDOFINFO);
 	}
-
-	return 0;
 }
 
 /*
@@ -365,7 +356,7 @@ CMD_FUNC(cmd_credits)
 	char **text = unrealcredits;
 
 	if (remotecmdfilter(sptr, parc, parv))
-		return 0;
+		return;
 
 	if (hunt_server(sptr, recv_mtags, ":%s CREDITS :%s", 1, parc, parv) == HUNTED_ISME)
 	{
@@ -378,8 +369,6 @@ CMD_FUNC(cmd_credits)
 		sendnumericfmt(sptr, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
 		sendnumeric(sptr, RPL_ENDOFINFO);
 	}
-
-	return 0;
 }
 
 char *get_cptr_status(Client *acptr)
@@ -432,28 +421,6 @@ char *get_client_name2(Client *acptr, int showports)
 }
 
 /*
-** cmd_summon
-*/
-CMD_FUNC(cmd_summon)
-{
-	/* /summon is old and out dated, we just return an error as
-	 * required by RFC1459 -- codemastr
-	 */ sendnumeric(sptr, ERR_SUMMONDISABLED);
-	return 0;
-}
-/*
-** cmd_users
-**	parv[1] = servername
-*/ 
-CMD_FUNC(cmd_users)
-{
-	/* /users is out of date, just return an error as  required by
-	 * RFC1459 -- codemastr
-	 */ sendnumeric(sptr, ERR_USERSDISABLED);
-	return 0;
-}
-
-/*
 ** Note: At least at protocol level ERROR has only one parameter,
 ** although this is called internally from other functions
 ** --msa
@@ -465,7 +432,7 @@ CMD_FUNC(cmd_error)
 	char *para;
 
 	if (!MyConnect(sptr))
-		return 0;
+		return;
 
 	para = (parc > 1 && *parv[1] != '\0') ? parv[1] : "<>";
 
@@ -481,13 +448,11 @@ CMD_FUNC(cmd_error)
 	{
 		sendto_snomask(SNO_JUNK, "ERROR from %s -- %s",
 			get_client_name(sptr, FALSE), para);
-		return 0;
+		return;
 	}
 
 	sendto_umode_global(UMODE_OPER, "ERROR from %s -- %s",
 	    get_client_name(sptr, FALSE), para);
-
-	return 0;
 }
 
 EVENT(save_tunefile)
@@ -575,7 +540,7 @@ CMD_FUNC(cmd_rehash)
 	if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if ((parc < 3) || BadPtr(parv[2])) {
@@ -596,7 +561,7 @@ CMD_FUNC(cmd_rehash)
 		}
 	}
 	if (x != HUNTED_ISME)
-		return 0; /* Now forwarded or server didnt exist */
+		return; /* Now forwarded or server didnt exist */
 
 	if (MyUser(sptr) && IsWebsocket(sptr))
 	{
@@ -611,27 +576,28 @@ CMD_FUNC(cmd_rehash)
 		 * The latter removes all our ability to upgrade the module on the fly
 		 * and the former is rather ugly.. not going to do that hassle now anyway.
 		 */
-		return 0;
+		return;
 	}
 
 	if (!MyConnect(sptr))
 	{
 #ifndef REMOTE_REHASH
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 #endif
 		if (parv[2] == NULL)
 		{
 			if (loop.ircd_rehashing)
 			{
 				sendnotice(sptr, "A rehash is already in progress");
-				return 0;
+				return;
 			}
 			sendto_umode_global(UMODE_OPER, "%s is remotely rehashing server %s config file", sptr->name, me.name);
 			remote_rehash_client = sptr;
 			reread_motdsandrules();
 			// TODO: clean this next line up, wtf man.
-			return rehash(sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
+			rehash(sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
+			return;
 		}
 		parv[1] = parv[2];
 	} else {
@@ -655,12 +621,12 @@ CMD_FUNC(cmd_rehash)
 			{
 				sendnumeric(sptr, ERR_NOPRIVILEGES);
 				sendnotice(sptr, "'/REHASH -global' requires you to have server::rehash permissions");
-				return 0;
+				return;
 			}
 			if (parv[1] && *parv[1] != '-')
 			{
 				sendnotice(sptr, "You cannot specify a server name after /REHASH -global, for obvious reasons");
-				return 0;
+				return;
 			}
 			/* Broadcast it in an inefficient, but backwards compatible way. */
 			list_for_each_entry(acptr, &global_server_list, client_node)
@@ -682,7 +648,7 @@ CMD_FUNC(cmd_rehash)
 		if (!ValidatePermissionsForPath("server:rehash",sptr,NULL,NULL,NULL))
 		{
 			sendnumeric(sptr, ERR_NOPRIVILEGES);
-			return 0;
+			return;
 		}
 
 		if (*parv[1] == '-')
@@ -691,17 +657,17 @@ CMD_FUNC(cmd_rehash)
 			{
 				loop.do_garbage_collect = 1;
 				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
-				return 0;
+				return;
 			}
 			if (!strncasecmp("-dns", parv[1], 4))
 			{
 				reinit_resolver(sptr);
-				return 0;
+				return;
 			}
 			if (match_simple("-ssl*", parv[1]) || match_simple("-tls*", parv[1]))
 			{
 				reinit_ssl(sptr);
-				return 0;
+				return;
 			}
 			if (match_simple("-o*motd", parv[1]))
 			{
@@ -711,7 +677,7 @@ CMD_FUNC(cmd_rehash)
 					sendto_umode_global(UMODE_OPER, "Remotely rehashing OPERMOTD on request of %s", sptr->name);
 				read_motd(conf_files->opermotd_file, &opermotd);
 				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
-				return 0;
+				return;
 			}
 			if (match_simple("-b*motd", parv[1]))
 			{
@@ -721,7 +687,7 @@ CMD_FUNC(cmd_rehash)
 					sendto_umode_global(UMODE_OPER, "Remotely rehashing BOTMOTD on request of %s", sptr->name);
 				read_motd(conf_files->botmotd_file, &botmotd);
 				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
-				return 0;
+				return;
 			}
 			if (!strncasecmp("-motd", parv[1], 5) || !strncasecmp("-rules", parv[1], 6))
 			{
@@ -731,10 +697,10 @@ CMD_FUNC(cmd_rehash)
 					sendto_umode_global(UMODE_OPER, "Remotely rehasing all MOTDs and RULES on request of %s", sptr->name);
 				rehash_motdrules();
 				RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
-				return 0;
+				return;
 			}
 			RunHook2(HOOKTYPE_REHASHFLAG, sptr, parv[1]);
-			return 0;
+			return;
 		}
 	}
 	else
@@ -742,7 +708,7 @@ CMD_FUNC(cmd_rehash)
 		if (loop.ircd_rehashing)
 		{
 			sendnotice(sptr, "A rehash is already in progress");
-			return 0;
+			return;
 		}
 		sendto_ops("%s is rehashing server config file", sptr->name);
 	}
@@ -752,7 +718,6 @@ CMD_FUNC(cmd_rehash)
 	// TODO: fix next line - occurence #2
 	x = rehash(sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 	reread_motdsandrules();
-	return x;
 }
 
 /*
@@ -767,13 +732,13 @@ CMD_FUNC(cmd_restart)
 	Client *acptr;
 
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	/* Check permissions */
 	if (!ValidatePermissionsForPath("server:restart",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	/* Syntax: /restart */
@@ -782,7 +747,7 @@ CMD_FUNC(cmd_restart)
 		if (conf_drpass)
 		{
 			sendnumeric(sptr, ERR_NEEDMOREPARAMS, "RESTART");
-			return 0;
+			return;
 		}
 	} else
 	if (parc >= 2)
@@ -793,7 +758,7 @@ CMD_FUNC(cmd_restart)
 			if (!Auth_Check(sptr, conf_drpass->restartauth, parv[1]))
 			{
 				sendnumeric(sptr, ERR_PASSWDMISMATCH);
-				return 0;
+				return;
 			}
 			reason = parv[2];
 		}
@@ -810,14 +775,13 @@ CMD_FUNC(cmd_restart)
 	}
 
 	server_reboot(reason ? reason : "No reason");
-	return 0;
 }
 
 /*
  * Heavily modified from the ircu cmd_motd by codemastr
  * Also svsmotd support added
  */
-int short_motd(Client *sptr)
+void short_motd(Client *sptr)
 {
        ConfigItem_tld *tld;
        MOTDFile *themotd;
@@ -851,7 +815,7 @@ int short_motd(Client *sptr)
        if (!themotd->lines)
        {
                sendnumeric(sptr, ERR_NOMOTD);
-               return 0;
+               return;
        }
        if (themotd->last_modified.tm_year)
        {
@@ -875,7 +839,6 @@ int short_motd(Client *sptr)
                motdline = motdline->next;
        }
        sendnumeric(sptr, RPL_ENDOFMOTD);
-       return 0;
 }
 
 
@@ -1095,12 +1058,12 @@ CMD_FUNC(cmd_die)
 	Client *acptr;
 
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	if (!ValidatePermissionsForPath("server:die",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (conf_drpass)	/* See if we have and DIE/RESTART password */
@@ -1108,12 +1071,12 @@ CMD_FUNC(cmd_die)
 		if (parc < 2)	/* And if so, require a password :) */
 		{
 			sendnumeric(sptr, ERR_NEEDMOREPARAMS, "DIE");
-			return 0;
+			return;
 		}
 		if (!Auth_Check(sptr, conf_drpass->dieauth, parv[1]))
 		{
 			sendnumeric(sptr, ERR_PASSWDMISMATCH);
-			return 0;
+			return;
 		}
 	}
 
@@ -1131,8 +1094,6 @@ CMD_FUNC(cmd_die)
 	}
 
 	(void)s_die();
-
-	return 0;
 }
 
 #ifdef _WIN32

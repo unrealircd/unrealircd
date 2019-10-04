@@ -71,7 +71,7 @@ CMD_FUNC(cmd_sendsno)
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SENDSNO");
-		return 0;
+		return;
 	}
 	sno = parv[1];
 	msg = parv[2];
@@ -100,7 +100,4 @@ CMD_FUNC(cmd_sendsno)
 	}
 
 	free_message_tags(mtags);
-
-	return 0;
 }
-

@@ -78,11 +78,10 @@ CMD_FUNC(cmd_names)
 	char *s, *para = parv[1];
 	char nuhBuffer[NICKLEN+USERLEN+HOSTLEN+3];
 
-
 	if (parc < 2 || !MyConnect(sptr))
 	{
 		sendnumeric(sptr, RPL_ENDOFNAMES, "*");
-		return 0;
+		return;
 	}
 
 	for (s = para; *s; s++)
@@ -94,7 +93,7 @@ CMD_FUNC(cmd_names)
 			sendto_realops("names abuser %s %s",
 			    get_client_name(sptr, FALSE), para);
 			sendnumeric(sptr, ERR_TOOMANYTARGETS, s+1, 1, "NAMES");
-			return 0;
+			return;
 		}
 	}
 
@@ -103,7 +102,7 @@ CMD_FUNC(cmd_names)
 	if (!chptr || (!ShowChannel(sptr, chptr) && !ValidatePermissionsForPath("channel:see:names:secret",sptr,NULL,chptr,NULL)))
 	{
 		sendnumeric(sptr, RPL_ENDOFNAMES, para);
-		return 0;
+		return;
 	}
 
 	/* cache whether this user is a member of this channel or not */
@@ -199,7 +198,4 @@ CMD_FUNC(cmd_names)
 		sendnumeric(sptr, RPL_NAMREPLY, buf);
 
 	sendnumeric(sptr, RPL_ENDOFNAMES, para);
-
-	return 0;
-
 }

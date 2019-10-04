@@ -75,11 +75,11 @@ CMD_FUNC(cmd_swhois)
 	*tag = *swhois = '\0';
 
 	if (parc < 3)
-		return 0;
+		return;
 
 	acptr = find_person(parv[1], NULL);
 	if (!acptr)
-		return 0;
+		return;
 
 	if ((parc > 5) && !BadPtr(parv[5]))
 	{
@@ -107,6 +107,4 @@ CMD_FUNC(cmd_swhois)
 		swhois_add(acptr, tag, priority, swhois, sptr, sptr);
 	else
 		swhois_delete(acptr, tag, swhois, sptr, sptr);
-
-	return 0;
 }

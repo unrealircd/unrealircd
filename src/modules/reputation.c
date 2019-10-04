@@ -641,7 +641,7 @@ CMD_FUNC(reputationunperm)
 	if (!IsOper(sptr))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	ModuleSetOptions(ModInf.handle, MOD_OPT_PERM, 0);
@@ -649,7 +649,6 @@ CMD_FUNC(reputationunperm)
 	sendto_realops("%s used /REPUTATIONUNPERM. On next REHASH the module can be RELOADED or UNLOADED. "
 	               "Note however that for a few minutes the scoring may be skipped, so don't do this too often.",
 	               sptr->name);
-	return 0;
 }
 
 int count_reputation_records(void)
@@ -673,7 +672,7 @@ CMD_FUNC(reputation_user_cmd)
 	if (!IsOper(sptr))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 	
 	if ((parc < 2) || BadPtr(parv[1]))
@@ -693,7 +692,7 @@ CMD_FUNC(reputation_user_cmd)
 		sendnotice(sptr, "Current number of records (IP's): %d", count_reputation_records());
 		sendnotice(sptr, "-");
 		sendnotice(sptr, "For more specific information, use: /REPUTATION [nick|IP-address]");
-		return 0;
+		return;
 	}
 	
 	if (strchr(parv[1], '.') || strchr(parv[1], ':'))
@@ -704,13 +703,13 @@ CMD_FUNC(reputation_user_cmd)
 		if (!acptr)
 		{
 			sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
-			return 0;
+			return;
 		}
 		ip = acptr->ip;
 		if (!ip)
 		{
 			sendnotice(sptr, "No IP address information available for user '%s'.", parv[1]); /* e.g. services */
-			return 0;
+			return;
 		}
 	}
 	
@@ -718,7 +717,7 @@ CMD_FUNC(reputation_user_cmd)
 	if (!e)
 	{
 		sendnotice(sptr, "No reputation record found for IP %s", ip);
-		return 0;
+		return;
 	}
 
 	sendnotice(sptr, "****************************************************");
@@ -728,7 +727,6 @@ CMD_FUNC(reputation_user_cmd)
 		(long long)(TStime() - e->last_seen),
 		(long long)e->last_seen);
 	sendnotice(sptr, "****************************************************");
-	return 0;
 }
 
 /** The REPUTATION server command handler.
@@ -768,7 +766,7 @@ CMD_FUNC(reputation_server_cmd)
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "REPUTATION");
-		return 0;
+		return;
 	}
 	
 	ip = parv[1];
@@ -830,8 +828,6 @@ CMD_FUNC(reputation_server_cmd)
 	              parv[1],
 	              allow_reply ? "" : "*",
 	              score);
-
-	return 0;
 }
 
 CMD_FUNC(reputation_cmd)
@@ -841,8 +837,6 @@ CMD_FUNC(reputation_cmd)
 
 	if (IsServer(sptr))
 		return reputation_server_cmd(sptr, recv_mtags, parc, parv);
-
-	return 0;
 }
 
 int reputation_whois(Client *sptr, Client *acptr)

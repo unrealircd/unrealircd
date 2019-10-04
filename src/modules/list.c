@@ -145,14 +145,14 @@ CMD_FUNC(cmd_list)
 
 	/* Remote /LIST is not supported */
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	/* If a /LIST is in progress then a new one will cancel it */
 	if (CHANNELLISTOPTIONS(sptr))
 	{
 		sendnumeric(sptr, RPL_LISTEND);
 		free_list_options(sptr);
-		return 0;
+		return;
 	}
 
 	if (parc < 2 || BadPtr(parv[1]))
@@ -164,7 +164,7 @@ CMD_FUNC(cmd_list)
 		if (DBufLength(&sptr->local->sendQ) < 2048)
 			send_list(sptr);
 
-		return 0;
+		return;
 	}
 
 	if ((parc == 2) && (parv[1][0] == '?') && (parv[1][1] == '\0'))
@@ -172,7 +172,7 @@ CMD_FUNC(cmd_list)
 		char **ptr = usage;
 		for (; *ptr; ptr++)
 			sendnumeric(sptr, RPL_LISTSYNTAX, *ptr);
-		return 0;
+		return;
 	}
 
 	sendnumeric(sptr, RPL_LISTSTART);
@@ -300,12 +300,10 @@ CMD_FUNC(cmd_list)
 
 		if (DBufLength(&sptr->local->sendQ) < 2048)
 			send_list(sptr);
-		return 0;
+		return;
 	}
 
 	sendnumeric(sptr, RPL_LISTEND);
-
-	return 0;
 }
 /*
  * The function which sends the actual channel list back to the user.

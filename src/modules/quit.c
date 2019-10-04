@@ -78,7 +78,7 @@ CMD_FUNC(cmd_quit)
 
 		n = run_spamfilter(sptr, comment, SPAMF_QUIT, NULL, 0, NULL);
 		if (n == FLUSH_BUFFER)
-			return n;
+			return;
 		if (n < 0)
 			comment = sptr->name;
 		
@@ -121,10 +121,10 @@ CMD_FUNC(cmd_quit)
 					parx[2] = newcomment;
 					parx[3] = NULL;
 
-					ret = do_cmd(sptr, recv_mtags, "PART", newcomment ? 3 : 2, parx);
+					do_cmd(sptr, recv_mtags, "PART", newcomment ? 3 : 2, parx);
 					/* This would be unusual, but possible (somewhere in the future perhaps): */
-					if (ret == FLUSH_BUFFER)
-						return ret;
+					if (IsDead(sptr))
+						return;
 				}
 			}
 		}
@@ -144,13 +144,13 @@ CMD_FUNC(cmd_quit)
 		else
 			strlcpy(commentbuf, comment, sizeof(commentbuf));
 
-		return exit_client(sptr, recv_mtags, commentbuf);
+		exit_client(sptr, recv_mtags, commentbuf);
 	}
 	else
 	{
 		/* Remote quits and non-person quits always use their original comment.
 		 * Also pass recv_mtags so to keep the msgid and such.
 		 */
-		return exit_client(sptr, recv_mtags, comment);
+		exit_client(sptr, recv_mtags, comment);
 	}
 }

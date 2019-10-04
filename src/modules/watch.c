@@ -100,7 +100,7 @@ CMD_FUNC(cmd_watch)
 	int did_l=0, did_s=0;
 
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	if (parc < 2)
 	{
@@ -268,6 +268,4 @@ CMD_FUNC(cmd_watch)
 		 * Hmm.. unknown prefix character.. Ignore it. :-)
 		 */
 	}
-
-	return 0;
 }

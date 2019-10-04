@@ -72,7 +72,8 @@ int _check_banned(Client *cptr, int exitflags)
 
 	if ((tk = find_tkline_match_zap(cptr)))
 	{
-		return banned_client(cptr, "Z-Lined", tk->ptr.serverban->reason, (tk->type & TKL_GLOBAL)?1:0, exitflags);
+		banned_client(cptr, "Z-Lined", tk->ptr.serverban->reason, (tk->type & TKL_GLOBAL)?1:0, exitflags);
+		return FLUSH_BUFFER;
 	}
 	else
 	{
@@ -94,7 +95,8 @@ int _check_banned(Client *cptr, int exitflags)
 				            "Throttled: Reconnecting too fast - "
 				            "Email %s for more information.",
 				            KLINE_ADDRESS);
-				return exit_client(cptr, NULL, zlinebuf);
+				exit_client(cptr, NULL, zlinebuf);
+				return FLUSH_BUFFER;
 			}
 		}
 		else if (val == 1)
@@ -118,19 +120,18 @@ CMD_FUNC(cmd_pass)
 	if (!MyConnect(sptr) || (!IsUnknown(sptr) && !IsHandshake(sptr)))
 	{
 		sendnumeric(sptr, ERR_ALREADYREGISTRED);
-		return 0;
+		return;
 	}
 
 	if (BadPtr(password))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "PASS");
-		return 0;
+		return;
 	}
 
 	/* Store the password */
 	safe_strldup(sptr->local->passwd, password, PASSWDLEN+1);
 
 	/* note: the original non-truncated password is supplied as 2nd parameter. */
-	RunHookReturnInt2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);
-	return 0;
+	RunHookReturn2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);
 }

@@ -162,7 +162,13 @@ extern MODVAR int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
     R_do_id, R_fin_id, R_fail_id;
 
 #endif
-extern MODVAR struct list_head client_list, lclient_list, server_list, oper_list, unknown_list, global_server_list;
+extern MODVAR struct list_head client_list;
+extern MODVAR struct list_head lclient_list;
+extern MODVAR struct list_head server_list;
+extern MODVAR struct list_head oper_list;
+extern MODVAR struct list_head unknown_list;
+extern MODVAR struct list_head global_server_list;
+extern MODVAR struct list_head dead_list;
 extern RealCommand *find_Command(char *cmd, short token, int flags);
 extern RealCommand *find_Command_simple(char *cmd);
 extern Channel *find_channel(char *, Channel *);
@@ -186,7 +192,6 @@ extern char *extban_conv_param_nuh_or_extban(char *);
 extern char *extban_conv_param_nuh(char *);
 extern Ban *is_banned(Client *, Channel *, int, char **, char **);
 extern Ban *is_banned_with_nick(Client *, Channel *, int, char *, char **, char **);
-extern int parse_help(Client *, char *, char *);
 
 extern void ircd_log(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
 extern Client *find_client(char *, Client *);
@@ -290,13 +295,13 @@ extern char *get_client_host(Client *);
 extern char *myctime(time_t);
 extern char *short_date(time_t, char *buf);
 extern char *long_date(time_t);
-extern int exit_client(Client *sptr, MessageTag *recv_mtags, char *comment);
+extern void exit_client(Client *sptr, MessageTag *recv_mtags, char *comment);
 extern void initstats(), tstats(Client *, char *);
 extern char *check_string(char *);
 extern char *make_nick_user_host(char *, char *, char *);
 extern char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host);
 extern char *make_user_host(char *, char *);
-extern int parse(Client *cptr, char *buffer, int length);
+extern void parse(Client *cptr, char *buffer, int length);
 extern int hunt_server(Client *, MessageTag *, char *, int, int, char **);
 extern int cmd_server_estab(Client *);
 extern void umode_init(void);
@@ -313,7 +318,7 @@ extern void send_umode_out(Client *sptr, int show_to_user, long old);
 extern void free_client(Client *);
 extern void free_link(Link *);
 extern void free_ban(Ban *);
-extern void free_user(ClientUser *, Client *);
+extern void free_user(Client *);
 extern int find_str_match_link(Link *, char *);
 extern void free_str_list(Link *);
 extern Link *make_link();
@@ -416,7 +421,7 @@ extern size_t strlncat(char *dst, const char *src, size_t size, size_t n);
 #endif
 extern char *strldup(const char *src, size_t n);
 
-extern int dopacket(Client *, char *, int);
+extern void dopacket(Client *, char *, int);
 
 extern void debug(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
 #if defined(DEBUGMODE)
@@ -664,7 +669,7 @@ extern void del_async_connects(void);
 extern void isupport_init(void);
 extern void clicap_init(void);
 extern void efunctions_init(void);
-extern int do_cmd(Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[]);
+extern void do_cmd(Client *sptr, MessageTag *mtags, char *cmd, int parc, char *parv[]);
 extern MODVAR char *me_hash;
 extern MODVAR int dontspread;
 extern MODVAR int labeled_response_inhibit;
@@ -676,7 +681,7 @@ extern MODVAR int (*can_join)(Client *sptr, Channel *chptr, char *key, char *par
 extern MODVAR void (*do_mode)(Channel *chptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
 extern MODVAR void (*set_mode)(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-extern MODVAR int (*cmd_umode)(Client *, MessageTag *, int, char **);
+extern MODVAR void (*cmd_umode)(Client *, MessageTag *, int, char **);
 extern MODVAR int (*register_user)(Client *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 extern MODVAR int (*tkl_hash)(unsigned int c);
 extern MODVAR char (*tkl_typetochar)(int type);
@@ -708,7 +713,7 @@ extern MODVAR TKL *(*find_qline)(Client *cptr, char *nick, int *ishold);
 extern MODVAR TKL *(*find_tkline_match_zap)(Client *cptr);
 extern MODVAR void (*tkl_stats)(Client *cptr, int type, char *para);
 extern MODVAR void (*tkl_synch)(Client *sptr);
-extern MODVAR int (*cmd_tkl)(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[]);
+extern MODVAR void (*cmd_tkl)(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[]);
 extern MODVAR int (*place_host_ban)(Client *sptr, BanAction action, char *reason, long duration);
 extern MODVAR int (*run_spamfilter)(Client *sptr, char *str_in, int type, char *target, int flags, TKL **rettk);
 extern MODVAR int (*join_viruschan)(Client *sptr, TKL *tk, int type);
@@ -859,8 +864,8 @@ extern CMD_FUNC(cmd_module);
 extern CMD_FUNC(cmd_rehash);
 extern CMD_FUNC(cmd_die);
 extern CMD_FUNC(cmd_restart);
-extern int cmd_alias(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], char *cmd); /* special! */
-extern int ban_flooder(Client *cptr);
+extern void cmd_alias(Client *sptr, MessageTag *recv_mtags, int parc, char *parv[], char *cmd); /* special! */
+extern void ban_flooder(Client *cptr);
 extern char *pcre2_version(void);
 extern int has_common_channels(Client *c1, Client *c2);
 extern int user_can_see_member(Client *user, Client *target, Channel *chptr);
@@ -882,7 +887,7 @@ extern MODVAR int current_serial;
 extern char *spki_fingerprint(Client *acptr);
 extern int is_module_loaded(char *name);
 extern void close_std_descriptors(void);
-extern int banned_client(Client *acptr, char *bantype, char *reason, int global, int noexit);
+extern void banned_client(Client *acptr, char *bantype, char *reason, int global, int noexit);
 extern char *mystpcpy(char *dst, const char *src);
 extern size_t add_sjsby(char *buf, char *setby, time_t seton);
 extern MaxTarget *findmaxtarget(char *cmd);
@@ -935,3 +940,4 @@ extern int unrl_utf8_validate(const char *str, const char **end);
 extern char *unrl_utf8_make_valid(const char *str);
 extern void utf8_test(void);
 extern MODVAR int non_utf8_nick_chars_in_use;
+extern void short_motd(Client *sptr);

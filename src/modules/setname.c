@@ -69,7 +69,7 @@ CMD_FUNC(cmd_setname)
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "SETNAME");
-		return 0;
+		return;
 	}
 
 	if (strlen(parv[1]) > REALLEN)
@@ -79,7 +79,7 @@ CMD_FUNC(cmd_setname)
 			sendnotice(sptr, "*** /SetName Error: \"Real names\" may maximum be %i characters of length",
 				REALLEN);
 		}
-		return 0;
+		return;
 	}
 
 	if (MyUser(sptr))
@@ -94,7 +94,7 @@ CMD_FUNC(cmd_setname)
 		{
 			if (xx != FLUSH_BUFFER)
 				strcpy(sptr->info, tmpinfo); /* restore (if client wasn't killed already, that is) */
-			return xx;
+			return;
 		}
 
 		/* Check for realname bans here too */
@@ -115,6 +115,4 @@ CMD_FUNC(cmd_setname)
 		sendnotice(sptr, "Your \"real name\" is now set to be %s - you have to set it manually to undo it",
 		           parv[1]);
 	}
-
-	return 0;
 }

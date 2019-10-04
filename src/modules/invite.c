@@ -53,7 +53,7 @@ MOD_UNLOAD()
 }
 
 /* Send the user their list of active invites */
-int send_invite_list(Client *sptr)
+void send_invite_list(Client *sptr)
 {
 	Link *inv;
 
@@ -63,7 +63,6 @@ int send_invite_list(Client *sptr)
 			   inv->value.chptr->chname);	
 	}
 	sendnumeric(sptr, RPL_ENDOFINVITELIST);
-	return 0;
 }
 
 /*
@@ -85,13 +84,13 @@ CMD_FUNC(cmd_invite)
 	if (parc < 3 || *parv[1] == '\0')
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "INVITE");
-		return -1;
+		return;
 	}
 
 	if (!(acptr = find_person(parv[1], NULL)))
 	{
 		sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
-		return -1;
+		return;
 	}
 
 	if (MyConnect(sptr))
@@ -100,14 +99,14 @@ CMD_FUNC(cmd_invite)
 	if (!(chptr = find_channel(parv[2], NULL)))
 	{
 		sendnumeric(sptr, ERR_NOSUCHCHANNEL, parv[2]);
-		return -1;
+		return;
 	}
 
 	for (h = Hooks[HOOKTYPE_PRE_INVITE]; h; h = h->next)
 	{
 		i = (*(h->func.intfunc))(sptr,acptr,chptr,&override);
 		if (i == HOOK_DENY)
-			return -1;
+			return;
 		if (i == HOOK_ALLOW)
 			break;
 	}
@@ -119,14 +118,14 @@ CMD_FUNC(cmd_invite)
 			override = 1;
 		} else {
 			sendnumeric(sptr, ERR_NOTONCHANNEL, parv[2]);
-			return -1;
+			return;
 		}
 	}
 
 	if (IsMember(acptr, chptr))
 	{
 		sendnumeric(sptr, ERR_USERONCHANNEL, parv[1], parv[2]);
-		return 0;
+		return;
 	}
 
 	if (chptr->mode.mode & MODE_INVITEONLY)
@@ -138,7 +137,7 @@ CMD_FUNC(cmd_invite)
 				override = 1;
 			} else {
 				sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
-				return -1;
+				return;
 			}
 		}
 		else if (!IsMember(sptr, chptr) && !IsULine(sptr))
@@ -148,7 +147,7 @@ CMD_FUNC(cmd_invite)
 				override = 1;
 			} else {
 				sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
-				return -1;
+				return;
 			}
 		}
 	}
@@ -158,13 +157,13 @@ CMD_FUNC(cmd_invite)
 	    !is_chan_op(sptr, chptr) && !ValidatePermissionsForPath("immune:server-ban:viruschan",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
-		return -1;
+		return;
 	}
 
 	if (MyConnect(sptr))
 	{
 		if (check_for_target_limit(sptr, acptr, acptr->name))
-			return 0;
+			return;
 
 		if (!ValidatePermissionsForPath("immune:invite-flood",sptr,NULL,NULL,NULL))
 		{
@@ -178,7 +177,7 @@ CMD_FUNC(cmd_invite)
 			if (sptr->user->flood.invite_c > INVITE_COUNT)
 			{
 				sendnumeric(sptr, RPL_TRYAGAIN, "INVITE");
-				return 0;
+				return;
 			}
 		}
 
@@ -255,7 +254,7 @@ CMD_FUNC(cmd_invite)
 		       override = -1;
 #endif
 		else
-			return 0;
+			return;
 	}
 
 	if (MyConnect(acptr))
@@ -294,6 +293,4 @@ CMD_FUNC(cmd_invite)
 		sendto_prefix_one(acptr, sptr, NULL, ":%s INVITE %s :%s", sptr->name,
 			acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
 	}
-
-	return 0;
 }

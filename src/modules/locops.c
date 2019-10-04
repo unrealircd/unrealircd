@@ -65,13 +65,12 @@ CMD_FUNC(cmd_locops)
 	if (BadPtr(message))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "LOCOPS");
-		return 0;
+		return;
 	}
 	if (MyUser(sptr) && !ValidatePermissionsForPath("chat:locops",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 	sendto_umode(UMODE_OPER, "from %s: %s", sptr->name, message);
-	return 0;
 }

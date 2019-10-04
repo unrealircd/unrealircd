@@ -86,26 +86,26 @@ CMD_FUNC(cmd_oper)
 	long old_umodes = sptr->umodes & ALL_UMODES;
 
 	if (!MyUser(sptr))
-		return 0;
+		return;
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "OPER");
-		return 0;
+		return;
 	}
 
 	if (SVSNOOP)
 	{
 		sendnotice(sptr,
 		    "*** This server is in NOOP mode, you cannot /oper");
-		return 0;
+		return;
 	}
 
 	if (IsOper(sptr))
 	{
 		sendnumeric(sptr, RPL_YOUREOPER);
 		// TODO: de-confuse this ? ;)
-		return 0;
+		return;
 	}
 
 	name = parv[1];
@@ -121,7 +121,7 @@ CMD_FUNC(cmd_oper)
 		ircd_log(LOG_OPER, "OPER NO-SSL/TLS (%s) by (%s!%s@%s)", name, sptr->name,
 			sptr->user->username, sptr->local->sockhost);
 		sptr->local->since += 7;
-		return 0;
+		return;
 	}
 
 	/* set::outdated-tls-policy::oper 'deny' */
@@ -134,7 +134,7 @@ CMD_FUNC(cmd_oper)
 		ircd_log(LOG_OPER, "OPER OUTDATED-SSL/TLS (%s) by (%s!%s@%s)", name, sptr->name,
 			sptr->user->username, sptr->local->sockhost);
 		sptr->local->since += 7;
-		return 0;
+		return;
 	}
 
 	if (!(operblock = Find_oper(name)))
@@ -146,7 +146,7 @@ CMD_FUNC(cmd_oper)
 		ircd_log(LOG_OPER, "OPER UNKNOWNOPER (%s) by (%s!%s@%s)", name, sptr->name,
 			sptr->user->username, sptr->local->sockhost);
 		sptr->local->since += 7;
-		return 0;
+		return;
 	}
 
 	if (!unreal_mask_match(sptr, operblock->mask))
@@ -158,7 +158,7 @@ CMD_FUNC(cmd_oper)
 		ircd_log(LOG_OPER, "OPER NOHOSTMATCH (%s) by (%s!%s@%s)", name, sptr->name,
 			sptr->user->username, sptr->local->sockhost);
 		sptr->local->since += 7;
-		return 0;
+		return;
 	}
 
 	if (!Auth_Check(sptr, operblock->auth, password))
@@ -173,7 +173,7 @@ CMD_FUNC(cmd_oper)
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [FAILEDAUTH]",
 		    sptr->name, sptr->user->username, sptr->local->sockhost, name);
 		sptr->local->since += 7;
-		return 0;
+		return;
 	}
 
 	/* Authentication of the oper succeeded (like, password, ssl cert),
@@ -192,7 +192,7 @@ CMD_FUNC(cmd_oper)
 			 name, sptr->name, sptr->user->username, sptr->local->sockhost,
 			 get_modestr(operblock->require_modes & ~sptr->umodes));
 		sptr->local->since += 7;
-		return 0;
+		return;
 	}
 
 	if (!Find_operclass(operblock->operclass))
@@ -204,7 +204,7 @@ CMD_FUNC(cmd_oper)
 		sendto_snomask_global
 			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) [oper::operclass does not exist: '%s']",
 			sptr->name, sptr->user->username, sptr->local->sockhost, operblock->operclass);
-		return 0;
+		return;
 	}
 
 	if (operblock->maxlogins && (count_oper_sessions(operblock->name) >= operblock->maxlogins))
@@ -218,7 +218,7 @@ CMD_FUNC(cmd_oper)
 		ircd_log(LOG_OPER, "OPER TOOMANYLOGINS (%s) by (%s!%s@%s)", name, sptr->name,
 			sptr->user->username, sptr->local->sockhost);
 		sptr->local->since += 4;
-		return 0;
+		return;
 	}
 
 	/* /OPER really succeeded now. Start processing it. */
@@ -295,7 +295,7 @@ CMD_FUNC(cmd_oper)
 		irccounts.operators++;
 
 	if (SHOWOPERMOTD == 1)
-		(void)do_cmd(sptr, NULL, "OPERMOTD", parc, parv);
+		do_cmd(sptr, NULL, "OPERMOTD", parc, parv);
 
 	if (!BadPtr(OPER_AUTO_JOIN_CHANS) && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
 	{
@@ -304,8 +304,10 @@ CMD_FUNC(cmd_oper)
 			OPER_AUTO_JOIN_CHANS,
 			NULL
 		};
-		if (do_cmd(sptr, NULL, "JOIN", 3, chans) == FLUSH_BUFFER)
-			return FLUSH_BUFFER;
+		do_cmd(sptr, NULL, "JOIN", 3, chans);
+		/* Theoretically the oper may be killed on join. Would be fun, though */
+		if (IsDead(sptr))
+			return;
 	}
 
 	/* set::plaintext-policy::oper 'warn' */
@@ -325,6 +327,4 @@ CMD_FUNC(cmd_oper)
 		    (SNO_OPER, "OPER %s [%s] used a connection with an outdated SSL/TLS protocol or cipher to /OPER.",
 		    sptr->name, name);
 	}
-
-	return 0;
 }

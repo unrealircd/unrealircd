@@ -47,7 +47,7 @@ CMD_FUNC(cmd_kline);
 CMD_FUNC(cmd_zline);
 CMD_FUNC(cmd_spamfilter);
 CMD_FUNC(cmd_eline);
-int cmd_tkl_line(Client *sptr, int parc, char *parv[], char* type);
+void cmd_tkl_line(Client *sptr, int parc, char *parv[], char* type);
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
@@ -160,7 +160,7 @@ MOD_TEST()
 	EfunctionAddPVoid(modinfo->handle, EFUNC_FIND_TKL_SPAMFILTER, TO_PVOIDFUNC(_find_tkl_spamfilter));
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_STATS, _tkl_stats);
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_SYNCH, _tkl_synch);
-	EfunctionAdd(modinfo->handle, EFUNC_CMD_TKL, _cmd_tkl);
+	EfunctionAddVoid(modinfo->handle, EFUNC_CMD_TKL, _cmd_tkl);
 	EfunctionAdd(modinfo->handle, EFUNC_PLACE_HOST_BAN, _place_host_ban);
 	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER, _run_spamfilter);
 	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER_VIRUSCHAN, _join_viruschan);
@@ -859,12 +859,12 @@ char *spamfilter_id(TKL *tk)
 CMD_FUNC(cmd_gline)
 {
 	if (IsServer(sptr))
-		return 0;
-	if (!ValidatePermissionsForPath("server-ban:gline",sptr,NULL,NULL,NULL))
+		return;
 
+	if (!ValidatePermissionsForPath("server-ban:gline",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (parc == 1)
@@ -873,10 +873,11 @@ CMD_FUNC(cmd_gline)
 		parv[0] = NULL;
 		parv[1] = "gline";
 		parv[2] = NULL;
-		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+		do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+	} else
+	{
+		cmd_tkl_line(sptr, parc, parv, "G");
 	}
-
-	return cmd_tkl_line(sptr, parc, parv, "G");
 }
 
 /** GZLINE - Global zline.
@@ -884,12 +885,12 @@ CMD_FUNC(cmd_gline)
 CMD_FUNC(cmd_gzline)
 {
 	if (IsServer(sptr))
-		return 0;
+		return;
 
 	if (!ValidatePermissionsForPath("server-ban:zline:global",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (parc == 1)
@@ -898,11 +899,10 @@ CMD_FUNC(cmd_gzline)
 		parv[0] = NULL;
 		parv[1] = "gline"; /* (there's no /STATS gzline, it's included in /STATS gline output) */
 		parv[2] = NULL;
-		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+		do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+	} else {
+		cmd_tkl_line(sptr, parc, parv, "Z");
 	}
-
-	return cmd_tkl_line(sptr, parc, parv, "Z");
-
 }
 
 /** SHUN - Shun a user so it can no longer execute any meaningful commands.
@@ -910,12 +910,12 @@ CMD_FUNC(cmd_gzline)
 CMD_FUNC(cmd_shun)
 {
 	if (IsServer(sptr))
-		return 0;
+		return;
 
 	if (!ValidatePermissionsForPath("server-ban:shun",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (parc == 1)
@@ -924,11 +924,10 @@ CMD_FUNC(cmd_shun)
 		parv[0] = NULL;
 		parv[1] = "shun";
 		parv[2] = NULL;
-		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+		do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+	} else {
+		cmd_tkl_line(sptr, parc, parv, "s");
 	}
-
-	return cmd_tkl_line(sptr, parc, parv, "s");
-
 }
 
 /** TEMPSHUN - Temporarily shun a user so it can no longer execute
@@ -944,12 +943,12 @@ CMD_FUNC(cmd_tempshun)
 	if (MyUser(sptr) && (!ValidatePermissionsForPath("server-ban:shun:temporary",sptr,NULL,NULL,NULL)))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "TEMPSHUN");
-		return 0;
+		return;
 	}
 	if (parv[1][0] == '+')
 		name = parv[1]+1;
@@ -964,7 +963,7 @@ CMD_FUNC(cmd_tempshun)
 	if (!acptr)
 	{
 		sendnumeric(sptr, ERR_NOSUCHNICK, name);
-		return 0;
+		return;
 	}
 	if (!MyUser(acptr))
 	{
@@ -1001,7 +1000,6 @@ CMD_FUNC(cmd_tempshun)
 			}
 		}
 	}
-	return 0;
 }
 
 /** KLINE - Kill line (ban user from local server)
@@ -1009,12 +1007,12 @@ CMD_FUNC(cmd_tempshun)
 CMD_FUNC(cmd_kline)
 {
 	if (IsServer(sptr))
-		return 0;
+		return;
 
 	if (!ValidatePermissionsForPath("server-ban:kline:local:add",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (parc == 1)
@@ -1023,16 +1021,17 @@ CMD_FUNC(cmd_kline)
 		parv[0] = NULL;
 		parv[1] = "kline";
 		parv[2] = NULL;
-		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+		do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+		return;
 	}
 
 	if (!ValidatePermissionsForPath("server-ban:kline:remove",sptr,NULL,NULL,NULL) && *parv[1] == '-')
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
-	return cmd_tkl_line(sptr, parc, parv, "k");
+	cmd_tkl_line(sptr, parc, parv, "k");
 }
 
 /** Generate stats for '/GLINE -stats' and such */
@@ -1077,12 +1076,12 @@ void tkl_general_stats(Client *sptr)
 CMD_FUNC(cmd_zline)
 {
 	if (IsServer(sptr))
-		return 0;
+		return;
 
 	if (!ValidatePermissionsForPath("server-ban:zline:local:add",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (parc == 1)
@@ -1091,18 +1090,18 @@ CMD_FUNC(cmd_zline)
 		parv[0] = NULL;
 		parv[1] = "kline"; /* (there's no /STATS zline, it's included in /STATS kline output) */
 		parv[2] = NULL;
-		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+		do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+		return;
 	}
 
 	if ((parc > 1) && !BadPtr(parv[1]) && !strcasecmp(parv[1], "-stats"))
 	{
 		/* Print some statistics */
 		tkl_general_stats(sptr);
-		return 0;
+		return;
 	}
 
-	return cmd_tkl_line(sptr, parc, parv, "z");
-
+	cmd_tkl_line(sptr, parc, parv, "z");
 }
 
 /** Check if a ban is placed with a too broad mask (like '*') */
@@ -1153,7 +1152,7 @@ int ban_too_broad(char *usermask, char *hostmask)
  * This allows us doing some syntax checking and other helpful
  * things that are the same for many types of *LINES.
  */
-int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
+void cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 {
 	time_t secs;
 	int whattodo = 0;	/* 0 = add  1 = del */
@@ -1177,7 +1176,7 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 	struct tm *t;
 
 	if (parc == 1)
-		return 0; /* shouldn't happen */
+		return; /* shouldn't happen */
 
 	mask = parv[1];
 	if (*mask == '-')
@@ -1194,15 +1193,15 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 	if (strchr(mask, '!'))
 	{
 		sendnotice(sptr, "[error] Cannot have '!' in masks.");
-		return 0;
+		return;
 	}
 	if (*mask == ':')
 	{
 		sendnotice(sptr, "[error] Mask cannot start with a ':'.");
-		return 0;
+		return;
 	}
 	if (strchr(mask, ' '))
-		return 0;
+		return;
 
 	/* Check if it's a softban */
 	if (*mask == '%')
@@ -1211,7 +1210,7 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 		{
 			sendnotice(sptr, "The %% prefix (soft ban) is only available for KLINE, GLINE and SHUN."
 			                 "For technical reasons this will not work for (G)ZLINE.");
-			return 0;
+			return;
 		}
 	}
 	/* Check if it's a hostmask and legal .. */
@@ -1220,13 +1219,13 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 		if ((p == mask) || !p[1])
 		{
 			sendnotice(sptr, "Error: no user@host specified");
-			return 0;
+			return;
 		}
 		usermask = strtok(mask, "@");
 		hostmask = strtok(NULL, "");
 		if (BadPtr(hostmask)) {
 			if (BadPtr(usermask)) {
-				return 0;
+				return;
 			}
 			hostmask = usermask;
 			usermask = "*";
@@ -1234,7 +1233,7 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 		if (*hostmask == ':')
 		{
 			sendnotice(sptr, "[error] For technical reasons you cannot start the host with a ':', sorry");
-			return 0;
+			return;
 		}
 		if (((*type == 'z') || (*type == 'Z')) && !whattodo)
 		{
@@ -1246,7 +1245,7 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 				sendnotice(sptr, "ERROR: (g)zlines must be placed at \037*\037@ipmask, not \037user\037@ipmask. This is "
 				                 "because (g)zlines are processed BEFORE dns and ident lookups are done. "
 				                 "If you want to use usermasks, use a KLINE/GLINE instead.");
-				return -1;
+				return;
 			}
 			for (p=hostmask; *p; p++)
 				if (isalpha(*p) && !isxdigit(*p))
@@ -1255,7 +1254,7 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 					                 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
 					                 "This is because (g)zlines are processed BEFORE dns and ident lookups are done. "
 					                 "If you want to use hostmasks instead of ipmasks, use a KLINE/GLINE instead.");
-					return -1;
+					return;
 				}
 		}
 		/* set 'p' right for later... */
@@ -1274,7 +1273,7 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 				if (!hostmask)
 				{
 					sendnotice(sptr, "Could not get IP for user '%s'", acptr->name);
-					return 0;
+					return;
 				}
 			} else {
 				/* Fill in host */
@@ -1285,13 +1284,13 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 		else
 		{
 			sendnumeric(sptr, ERR_NOSUCHNICK, mask);
-			return 0;
+			return;
 		}
 	}
 	if (!whattodo && ban_too_broad(usermask, hostmask))
 	{
 		sendnotice(sptr, "*** [error] Too broad mask");
-		return 0;
+		return;
 	}
 
 	secs = 0;
@@ -1302,7 +1301,7 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 		if (secs < 0)
 		{
 			sendnotice(sptr, "*** [error] The time you specified is out of range!");
-			return 0;
+			return;
 		}
 	}
 	tkllayer[1] = whattodo == 0 ? "+" : "-";
@@ -1335,7 +1334,7 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 		if (!t)
 		{
 			sendnotice(sptr, "*** [error] The time you specified is out of range");
-			return 0;
+			return;
 		}
 
 		/* call the tkl layer .. */
@@ -1347,10 +1346,9 @@ int cmd_tkl_line(Client *sptr, int parc, char *parv[], char *type)
 		cmd_tkl(&me, NULL, 6, tkllayer);
 
 	}
-	return 0;
 }
 
-int eline_syntax(Client *sptr)
+void eline_syntax(Client *sptr)
 {
 	sendnotice(sptr, " Syntax: /ELINE <user@host> <bantypes> <expiry-time> <reason>");
 	sendnotice(sptr, "Valid bantypes are:");
@@ -1369,7 +1367,6 @@ int eline_syntax(Client *sptr)
 	sendnotice(sptr, "Example: /ELINE *@unrealircd.org kgzZ 0 This user is exempt");
 	sendnotice(sptr, "-");
 	sendnotice(sptr, "To get a list of all current ELINEs, type: /STATS except");
-	return 0;
 }
 
 /** Check if any of the specified types require the
@@ -1406,12 +1403,12 @@ CMD_FUNC(cmd_eline)
 	};
 
 	if (IsServer(sptr))
-		return 0;
+		return;
 
 	if (!ValidatePermissionsForPath("server-ban:eline",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	/* For del we need at least:
@@ -1447,15 +1444,15 @@ CMD_FUNC(cmd_eline)
 	if (strchr(mask, '!'))
 	{
 		sendnotice(sptr, "[error] Cannot have '!' in masks.");
-		return 0;
+		return;
 	}
 	if (*mask == ':')
 	{
 		sendnotice(sptr, "[error] Mask cannot start with a ':'.");
-		return 0;
+		return;
 	}
 	if (strchr(mask, ' '))
-		return 0;
+		return;
 
 	/* Check if it's a hostmask and legal .. */
 	p = strchr(mask, '@');
@@ -1464,13 +1461,13 @@ CMD_FUNC(cmd_eline)
 		if ((p == mask) || !p[1])
 		{
 			sendnotice(sptr, "Error: no user@host specified");
-			return 0;
+			return;
 		}
 		usermask = strtok(mask, "@");
 		hostmask = strtok(NULL, "");
 		if (BadPtr(hostmask)) {
 			if (BadPtr(usermask)) {
-				return 0;
+				return;
 			}
 			hostmask = usermask;
 			usermask = "*";
@@ -1478,7 +1475,7 @@ CMD_FUNC(cmd_eline)
 		if (*hostmask == ':')
 		{
 			sendnotice(sptr, "[error] For technical reasons you cannot start the host with a ':', sorry");
-			return 0;
+			return;
 		}
 		if (add && eline_type_requires_ip(bantypes))
 		{
@@ -1489,7 +1486,7 @@ CMD_FUNC(cmd_eline)
 			{
 				sendnotice(sptr, "ERROR: Ban exceptions with type z/Z/c/b need to be placed at \037*\037@ipmask, not \037user\037@ipmask. "
 				                 "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE any dns and ident lookups.");
-				return -1;
+				return;
 			}
 			for (p=hostmask; *p; p++)
 				if (isalpha(*p) && !isxdigit(*p))
@@ -1497,7 +1494,7 @@ CMD_FUNC(cmd_eline)
 					sendnotice(sptr, "ERROR: Ban exceptions with type z/Z/c/b need to be placed at *@\037ipmask\037, not *@\037hostmask\037. "
 					                 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
 				                         "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE any dns and ident lookups.");
-					return -1;
+					return;
 				}
 		}
 	}
@@ -1511,13 +1508,13 @@ CMD_FUNC(cmd_eline)
 			if (!hostmask)
 			{
 				sendnotice(sptr, "Could not get IP for user '%s'", acptr->name);
-				return 0;
+				return;
 			}
 		}
 		else
 		{
 			sendnumeric(sptr, ERR_NOSUCHNICK, mask);
-			return 0;
+			return;
 		}
 	}
 
@@ -1559,22 +1556,19 @@ CMD_FUNC(cmd_eline)
 		cmd_tkl(&me, NULL, 10, tkllayer);
 
 	}
-	return 0;
 }
 
 
-
 /** Helper function for cmd_spamfilter, explaining usage. */
-int spamfilter_usage(Client *sptr)
+void spamfilter_usage(Client *sptr)
 {
 	sendnotice(sptr, "Use: /spamfilter [add|del|remove|+|-] [-simple|-regex|-posix] [type] [action] [tkltime] [tklreason] [regex]");
 	sendnotice(sptr, "See '/helpop ?spamfilter' for more information.");
 	sendnotice(sptr, "For an easy way to remove an existing spamfilter, use '/spamfilter del' without additional parameters");
-	return 0;
 }
 
 /** Helper function for cmd_spamfilter, explaining usage has changed. */
-int spamfilter_new_usage(Client *sptr, char *parv[])
+void spamfilter_new_usage(Client *sptr, char *parv[])
 {
 	sendnotice(sptr, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes), "
 	                 "-posix (old unreal 3.2.x posix regexes) or "
@@ -1588,7 +1582,7 @@ int spamfilter_new_usage(Client *sptr, char *parv[])
 } 
 
 /** Delete a spamfilter by ID (the ID can be obtained via '/SPAMFILTER del' */
-int spamfilter_del_by_id(Client *sptr, char *id)
+void spamfilter_del_by_id(Client *sptr, char *id)
 {
 	int index;
 	TKL *tk;
@@ -1627,7 +1621,7 @@ int spamfilter_del_by_id(Client *sptr, char *id)
 	if (!tk)
 	{
 		sendnotice(sptr, "Sorry, no spamfilter found with that ID. Did you run '/spamfilter del' to get the appropriate id?");
-		return 0;
+		return;
 	}
 
 	/* Spamfilter found. Now fill the tkllayer */
@@ -1645,8 +1639,6 @@ int spamfilter_del_by_id(Client *sptr, char *id)
 	tkllayer[7] = mo2; /* deletion time */
 
 	cmd_tkl(&me, NULL, 12, tkllayer);
-
-	return 0;
 }
 
 /** Spamfilter to fight spam, advertising, worms and other bad things on IRC.
@@ -1683,12 +1675,12 @@ CMD_FUNC(cmd_spamfilter)
 	char *err = NULL;
 
 	if (IsServer(sptr))
-		return 0;
+		return;
 
 	if (!ValidatePermissionsForPath("server-ban:spamfilter",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (parc == 1)
@@ -1697,7 +1689,8 @@ CMD_FUNC(cmd_spamfilter)
 		parv[0] = NULL;
 		parv[1] = "spamfilter";
 		parv[2] = NULL;
-		return do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+		do_cmd(sptr, recv_mtags, "STATS", 2, parv);
+		return;
 	}
 
 	if ((parc <= 3) && !strcmp(parv[1], "del"))
@@ -1711,7 +1704,8 @@ CMD_FUNC(cmd_spamfilter)
 			parv[2] = me.name;
 			parv[3] = "del";
 			parv[4] = NULL;
-			return do_cmd(sptr, recv_mtags, "STATS", 4, parv);
+			do_cmd(sptr, recv_mtags, "STATS", 4, parv);
+			return;
 		}
 		return spamfilter_del_by_id(sptr, parv[2]);
 	}
@@ -1744,7 +1738,7 @@ CMD_FUNC(cmd_spamfilter)
 	{
 		sendnotice(sptr, "ERROR: Spamfilter type 'posix' is DEPRECATED. You must use type 'regex' instead.");
 		sendnotice(sptr, "See https://www.unrealircd.org/docs/FAQ#spamfilter-posix-deprecated");
-		return 0;
+		return;
 	}
 
 	match_type = unreal_match_method_strtoval(parv[2]+1);
@@ -1775,7 +1769,7 @@ CMD_FUNC(cmd_spamfilter)
 		if (!m)
 		{
 			sendnotice(sptr, "Error in regex '%s': %s", parv[7], err);
-			return 0;
+			return;
 		}
 		unreal_delete_match(m);
 	}
@@ -1815,7 +1809,7 @@ CMD_FUNC(cmd_spamfilter)
 	{
 		sendnotice(sptr, "Sorry, spamfilter too long. You'll either have to trim down the "
 		                 "reason or the regex (exceeded by %d bytes)", n - 500);
-		return 0;
+		return;
 	}
 
 	if (whattodo == 0)
@@ -1825,8 +1819,6 @@ CMD_FUNC(cmd_spamfilter)
 	}
 
 	cmd_tkl(&me, NULL, 12, tkllayer);
-
-	return 0;
 }
 
 /** tkl hash method.
@@ -2643,7 +2635,7 @@ int _find_tkline_match(Client *cptr, int skip_soft)
 	int index, index2;
 
 	if (IsServer(cptr) || IsMe(cptr))
-		return -1;
+		return 1;
 
 	/* First, the TKL ip hash table entries.. */
 	index2 = tkl_ip_hash(GetIP(cptr));
@@ -2689,14 +2681,16 @@ int _find_tkline_match(Client *cptr, int skip_soft)
 	{
 		ircstats.is_ref++;
 		if (tkl->type & TKL_GLOBAL)
-			return banned_client(cptr, "G-Lined", tkl->ptr.serverban->reason, 1, 0);
+			banned_client(cptr, "G-Lined", tkl->ptr.serverban->reason, 1, 0);
 		else
-			return banned_client(cptr, "K-Lined", tkl->ptr.serverban->reason, 0, 0);
-	}
+			banned_client(cptr, "K-Lined", tkl->ptr.serverban->reason, 0, 0);
+		return -1; /* killed */
+	} else
 	if (tkl->type & TKL_ZAP)
 	{
 		ircstats.is_ref++;
-		return banned_client(cptr, "Z-Lined", tkl->ptr.serverban->reason, (tkl->type & TKL_GLOBAL)?1:0, 0);
+		banned_client(cptr, "Z-Lined", tkl->ptr.serverban->reason, (tkl->type & TKL_GLOBAL)?1:0, 0);
+		return -1; /* killed */
 	}
 
 	return 3;
@@ -3581,14 +3575,14 @@ CMD_FUNC(cmd_tkl_add)
 
 	/* we rely on servers to be failsafe.. */
 	if (!IsServer(sptr) && !IsMe(sptr))
-		return 0;
+		return;
 
 	if (parc < 9)
-		return 0;
+		return;
 
 	type = tkl_chartotype(parv[2][0]);
 	if (!type)
-		return 0;
+		return;
 
 	/* All TKL types have the following fields in common when adding:
 	 * parv[5]: set_by
@@ -3606,13 +3600,13 @@ CMD_FUNC(cmd_tkl_add)
 	{
 		sendto_realops("Invalid TKL entry from %s, set-at time is out of range (%lld) -- not added. Clock on other server incorrect or bogus entry.",
 			sptr->name, (long long)set_at);
-		return 0;
+		return;
 	}
 	if ((expire_at < 0) || !short_date(expire_at, NULL))
 	{
 		sendto_realops("Invalid TKL entry from %s, expiry time is out of range (%lld) -- not added. Clock on other server incorrect or bogus entry.",
 			sptr->name, (long long)expire_at);
-		return 0;
+		return;
 	}
 
 	/* Now comes type-specific validation
@@ -3636,7 +3630,7 @@ CMD_FUNC(cmd_tkl_add)
 			sendto_realops("Ignoring TKL entry %s@%s from %s. "
 			               "Invalid usermask '%s' or hostmask '%s'.",
 			               usermask, hostmask, sptr->name, usermask, hostmask);
-			return 0;
+			return;
 		}
 
 		/* In case of a soft ban, strip the percent sign early,
@@ -3668,7 +3662,7 @@ CMD_FUNC(cmd_tkl_add)
 		char *reason;
 
 		if (parc < 10)
-			return 0;
+			return;
 
 		reason = parv[9];
 
@@ -3681,7 +3675,7 @@ CMD_FUNC(cmd_tkl_add)
 			sendto_realops("Ignoring TKL exception entry %s@%s from %s. "
 			               "Invalid usermask '%s' or hostmask '%s'.",
 			               usermask, hostmask, sptr->name, usermask, hostmask);
-			return 0;
+			return;
 		}
 
 		/* In case of a soft ban, strip the percent sign early,
@@ -3741,7 +3735,7 @@ CMD_FUNC(cmd_tkl_add)
 		if (parc < 12)
 		{
 			sendto_realops("Ignoring spamfilter from %s. Running very old UnrealIRCd protocol (3.2.X?)", sptr->name);
-			return 0;
+			return;
 		}
 
 		match_string = parv[11];
@@ -3751,28 +3745,28 @@ CMD_FUNC(cmd_tkl_add)
 			sendto_realops("Ignoring spamfilter from %s. Spamfilter is of type 'posix' (TRE) which "
 				       "is not supported in UnrealIRCd 5. Suggestion: upgrade the other server.",
 				       sptr->name);
-			return 0;
+			return;
 		}
 		match_method = unreal_match_method_strtoval(parv[10]);
 		if (match_method == 0)
 		{
 			sendto_realops("Ignoring spamfilter '%s' from %s with unknown match type '%s'",
 				match_string, sptr->name, parv[10]);
-			return 0;
+			return;
 		}
 
 		if (!(target = spamfilter_gettargets(parv[3], NULL)))
 		{
 			sendto_realops("Ignoring spamfilter '%s' from %s with unknown target type '%s'",
 				match_string, sptr->name, parv[3]);
-			return 0;
+			return;
 		}
 
 		if (!(action = banact_chartoval(*parv[4])))
 		{
 			sendto_realops("Ignoring spamfilter '%s' from %s with unknown action type '%s'",
 				match_string, sptr->name, parv[4]);
-			return 0;
+			return;
 		}
 
 		tkl_duration = config_checkval(parv[8], CFG_TIME);
@@ -3790,7 +3784,7 @@ CMD_FUNC(cmd_tkl_add)
 				sendto_realops("[TKL ERROR] ERROR: Trying to add a spamfilter which does not compile. "
 					       " ERROR='%s', Spamfilter='%s', from='%s'",
 					       err, match_string, sptr->name);
-				return 0;
+				return;
 			}
 			tkl = tkl_add_spamfilter(type, target, action, m, set_by, expire_at, set_at,
 			                         tkl_duration, tkl_reason, 0);
@@ -3802,7 +3796,7 @@ CMD_FUNC(cmd_tkl_add)
 	}
 
 	if (!tkl)
-		return 0;
+		return;
 
 	if (tkl_entry_exists)
 	{
@@ -3835,7 +3829,7 @@ CMD_FUNC(cmd_tkl_add)
 			if (type & TKL_GLOBAL)
 				tkl_broadcast_entry(1, sptr, sptr, tkl);
 		}
-		return 0;
+		return;
 	}
 
 	/* Below this line we will only use 'tkl'. No parc/parv reading anymore. */
@@ -3853,8 +3847,6 @@ CMD_FUNC(cmd_tkl_add)
 
 	if (type & TKL_GLOBAL)
 		tkl_broadcast_entry(1, sptr, sptr, tkl);
-
-	return 0;
 }
 
 /** Delete a TKL using the TKL layer. See cmd_tkl for parv[] and protocol documentation. */
@@ -3865,14 +3857,14 @@ CMD_FUNC(cmd_tkl_del)
 	char *removed_by;
 
 	if (!IsServer(sptr) && !IsMe(sptr))
-		return 0;
+		return;
 
 	if (parc < 6)
-		return 0;
+		return;
 
 	type = tkl_chartotype(parv[2][0]);
 	if (type == 0)
-		return 0;
+		return;
 
 	removed_by = parv[5];
 
@@ -3924,7 +3916,7 @@ CMD_FUNC(cmd_tkl_del)
 		{
 			sendto_realops("[BUG] cmd_tkl called with bogus spamfilter removal request [f/F], from=%s, parc=%d",
 				       sptr->name, parc);
-			return 0; /* bogus */
+			return; /* bogus */
 		}
 		if (parc >= 12)
 			match_string = parv[11];
@@ -3937,14 +3929,14 @@ CMD_FUNC(cmd_tkl_del)
 		{
 			sendto_realops("Ignoring spamfilter deletion request for '%s' from %s with unknown target type '%s'",
 				match_string, sptr->name, parv[3]);
-			return 0;
+			return;
 		}
 
 		if (!(action = banact_chartoval(*parv[4])))
 		{
 			sendto_realops("Ignoring spamfilter deletion request for '%s' from %s with unknown action type '%s'",
 				match_string, sptr->name, parv[4]);
-			return 0;
+			return;
 		}
 		tkl = find_tkl_spamfilter(type, match_string, action, target);
 	} else
@@ -3956,10 +3948,10 @@ CMD_FUNC(cmd_tkl_del)
 	}
 
 	if (!tkl)
-		return 0; /* Item not found, nothing to remove. */
+		return; /* Item not found, nothing to remove. */
 
 	if (tkl->flags & TKL_FLAG_CONFIG)
-		return 0; /* Item is in the configuration file (persistent) */
+		return; /* Item is in the configuration file (persistent) */
 
 	/* broadcast remove msg to opers... */
 	sendnotice_tkl_del(removed_by, tkl);
@@ -3983,8 +3975,6 @@ CMD_FUNC(cmd_tkl_del)
 	}
 
 	tkl_del_line(tkl);
-
-	return 0;
 }
 
 /** TKL command: server to server handling of *LINEs and SPAMFILTERs.
@@ -4021,10 +4011,10 @@ CMD_FUNC(cmd_tkl_del)
 CMD_FUNC(_cmd_tkl)
 {
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
-		return 0;
+		return;
 
 	if (parc < 2)
-		return 0;
+		return;
 
 	switch (*parv[1])
 	{
@@ -4035,8 +4025,6 @@ CMD_FUNC(_cmd_tkl)
 		default:
 			break;
 	}
-
-	return 0;
 }
 
 /** Take an action on the user, such as banning or killing.
@@ -4047,7 +4035,7 @@ CMD_FUNC(_cmd_tkl)
  * @param duration The ban duration in seconds.
  * @note This function assumes that sptr is a locally connected user.
  * @retval -1 in case of block/tempshun.
- * @retval -5 in case of kill/zline/gline/etc (-5 = FLUSH_BUFFER).
+ * @retval -2 in case of kill/zline/gline/etc (-2 = FLUSH_BUFFER).
  *            one should no longer read from 'sptr' as the client
  *            has been freed.
  * @retval 0  no action is taken, the user is exempted.
@@ -4149,9 +4137,10 @@ int _place_host_ban(Client *sptr, BanAction action, char *reason, long duration)
 		case BAN_ACT_SOFT_KILL:
 		case BAN_ACT_KILL:
 		default:
-			return exit_client(sptr, NULL, reason);
+			exit_client(sptr, NULL, reason);
+			return FLUSH_BUFFER;
 	}
-	return -1;
+	return 0; /* no action taken (weird) */
 }
 
 /** This function compares two spamfilters ('one' and 'two') and will return
@@ -4231,11 +4220,11 @@ int _join_viruschan(Client *sptr, TKL *tkl, int type)
 
 	/* RECURSIVE CAUTION in case we ever add blacklisted chans */
 	spamf_ugly_vchanoverride = 1;
-	ret = do_cmd(sptr, NULL, "JOIN", 2, xparv);
+	do_cmd(sptr, NULL, "JOIN", 2, xparv);
 	spamf_ugly_vchanoverride = 0;
 
-	if (ret == FLUSH_BUFFER)
-		return FLUSH_BUFFER; /* don't ask me how we could have died... */
+	if (IsDead(sptr))
+		return FLUSH_BUFFER; /* killed due to JOIN */
 
 	sendnotice(sptr, "You are now restricted to talking in %s: %s",
 		SPAMFILTER_VIRUSCHAN, unreal_decodespace(tkl->ptr.spamfilter->tkl_reason));

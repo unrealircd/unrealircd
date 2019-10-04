@@ -69,20 +69,20 @@ CMD_FUNC(cmd_connect)
 	{			/* Only allow LocOps to make */
 		/* local CONNECTS --SRB      */
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 	if (!IsServer(sptr) && MyUser(sptr) && !ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL) && parc <= 3)
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 	if (hunt_server(sptr, recv_mtags, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
-		return 0;
+		return;
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "CONNECT");
-		return -1;
+		return;
 	}
 
 	if ((acptr = find_server_quick(parv[1])))
@@ -90,7 +90,7 @@ CMD_FUNC(cmd_connect)
 		sendnotice(sptr, "*** Connect: Server %s %s %s.",
 		    parv[1], "already exists from",
 		    acptr->direction->name);
-		return 0;
+		return;
 	}
 
 	for (aconf = conf_link; aconf; aconf = aconf->next)
@@ -104,7 +104,7 @@ CMD_FUNC(cmd_connect)
 		sendnotice(sptr,
 		    "*** Connect: Server %s is not configured for linking",
 		    parv[1]);
-		return 0;
+		return;
 	}
 
 	if (!aconf->outgoing.hostname)
@@ -112,7 +112,7 @@ CMD_FUNC(cmd_connect)
 		sendnotice(sptr,
 		    "*** Connect: Server %s is not configured to be an outgoing link (has a link block, but no link::outgoing::hostname)",
 		    parv[1]);
-		return 0;
+		return;
 	}
 
 	/* Evaluate deny link */
@@ -122,7 +122,7 @@ CMD_FUNC(cmd_connect)
 			&& crule_eval(deny->rule))
 		{
 			sendnotice(sptr, "*** Connect: Disallowed by connection rule");
-			return 0;
+			return;
 		}
 	}
 
@@ -153,6 +153,4 @@ CMD_FUNC(cmd_connect)
 		  sendnotice(sptr, "*** Connection to %s[%s] failed: %s",
 		  	aconf->servername, aconf->outgoing.hostname, STRERROR(retval));
 	}
-
-	return 0;
 }

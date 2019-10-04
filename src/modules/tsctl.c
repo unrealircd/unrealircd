@@ -53,7 +53,7 @@ CMD_FUNC(cmd_tsctl)
 	if (!ValidatePermissionsForPath("server:tsctl:view",sptr,NULL,NULL,NULL))
 	{
 		sendnumeric(sptr, ERR_NOPRIVILEGES);
-		return 0;
+		return;
 	}
 
 	if (MyUser(sptr) && (!parv[1] || strcasecmp(parv[1], "alltime")))
@@ -67,8 +67,6 @@ CMD_FUNC(cmd_tsctl)
 		sendnotice(sptr, "*** Server=%s TStime=%lld",
 			me.name, (long long)TStime());
 		sendto_server(sptr, 0, 0, NULL, ":%s TSCTL alltime", sptr->name);
-		return 0;
+		return;
 	}
-
-	return 0;
 }

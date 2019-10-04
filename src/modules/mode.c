@@ -63,7 +63,7 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_DO_MODE, _do_mode);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SET_MODE, _set_mode);
-	EfunctionAdd(modinfo->handle, EFUNC_CMD_UMODE, _cmd_umode);
+	EfunctionAddVoid(modinfo->handle, EFUNC_CMD_UMODE, _cmd_umode);
 	return MOD_SUCCESS;
 }
 
@@ -117,7 +117,7 @@ CMD_FUNC(cmd_mode)
 	else
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "MODE");
-		return 0;
+		return;
 	}
 
 	if (MyConnect(sptr))
@@ -131,7 +131,7 @@ CMD_FUNC(cmd_mode)
 		channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
 		sendnumeric(sptr, RPL_CHANNELMODEIS, chptr->chname, modebuf, parabuf);
 		sendnumeric(sptr, RPL_CREATIONTIME, chptr->chname, chptr->creationtime);
-		return 0;
+		return;
 	}
 
 	if (MyUser(sptr))
@@ -146,33 +146,33 @@ CMD_FUNC(cmd_mode)
 		if (strstr(parv[2], "b") && BadPtr(parv[3]))
 		{
 			if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",sptr,NULL,chptr,NULL))
-				return 0;
+				return;
 			/* send ban list */
 			for (ban = chptr->banlist; ban; ban = ban->next)
 				sendnumeric(sptr, RPL_BANLIST, chptr->chname, ban->banstr, ban->who, ban->when);
 			sendnumeric(sptr, RPL_ENDOFBANLIST, chptr->chname);
-			return 0;
+			return;
 		}
 
 		if (strstr(parv[2], "e") && BadPtr(parv[3]))
 		{
 			if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",sptr,NULL,chptr,NULL))
-				return 0;
+				return;
 			/* send exban list */
 			for (ban = chptr->exlist; ban; ban = ban->next)
 				sendnumeric(sptr, RPL_EXLIST, chptr->chname, ban->banstr, ban->who, ban->when);
 			sendnumeric(sptr, RPL_ENDOFEXLIST, chptr->chname);
-			return 0;
+			return;
 		}
 
 		if (strstr(parv[2], "I") && BadPtr(parv[3]))
 		{
 			if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteinvexlist",sptr,NULL,chptr,NULL))
-				return 0;
+				return;
 			for (ban = chptr->invexlist; ban; ban = ban->next)
 				sendnumeric(sptr, RPL_INVEXLIST, chptr->chname, ban->banstr, ban->who, ban->when);
 			sendnumeric(sptr, RPL_ENDOFINVEXLIST, chptr->chname);
-			return 0;
+			return;
 		}
 
 		if (strstr(parv[2], "q") && BadPtr(parv[3]))
@@ -180,7 +180,7 @@ CMD_FUNC(cmd_mode)
 			Member *member;
 
 			if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",sptr,NULL,chptr,NULL))
-				return 0;
+				return;
 
 			for (member = chptr->members; member; member = member->next)
 			{
@@ -188,7 +188,7 @@ CMD_FUNC(cmd_mode)
 					sendnumeric(sptr, RPL_QLIST, chptr->chname, member->cptr->name);
 			}
 			sendnumeric(sptr, RPL_ENDOFQLIST, chptr->chname);
-			return 0;
+			return;
 		}
 
 		if (strstr(parv[2], "a") && BadPtr(parv[3]))
@@ -196,7 +196,7 @@ CMD_FUNC(cmd_mode)
 			Member *member;
 
 			if (!IsMember(sptr, chptr) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",sptr,NULL,chptr,NULL))
-				return 0;
+				return;
 
 			for (member = chptr->members; member; member = member->next)
 			{
@@ -204,7 +204,7 @@ CMD_FUNC(cmd_mode)
 					sendnumeric(sptr, RPL_ALIST, chptr->chname, member->cptr->name);
 			}
 			sendnumeric(sptr, RPL_ENDOFALIST, chptr->chname);
-			return 0;
+			return;
 		}
 	}
 
@@ -235,14 +235,14 @@ CMD_FUNC(cmd_mode)
 		if (MyUser(sptr))
 		{
 			sendnumeric(sptr, ERR_CHANOPRIVSNEEDED, chptr->chname);
-			return 0;
+			return;
 		}
 		sendto_one(sptr, NULL, ":%s MODE %s -oh %s %s 0",
 		    me.name, chptr->chname, sptr->name, sptr->name);
 		/* Tell the other server that the user is
 		 * de-opped.  Fix op desyncs. */
 		bounce_mode(chptr, sptr, parc - 2, parv + 2);
-		return 0;
+		return;
 	}
 
 	if (IsServer(sptr) && (sendts = atol(parv[parc - 1])) &&
@@ -258,7 +258,7 @@ CMD_FUNC(cmd_mode)
 			    (long long)sendts);
 			bounce_mode(chptr, sptr, parc - 2, parv + 2);
 		}
-		return 0;
+		return;
 	}
 	if (IsServer(sptr) && !sendts && *parv[parc - 1] != '0')
 		sendts = -1;
@@ -280,7 +280,6 @@ aftercheck:
 	(void)do_mode(chptr, sptr, recv_mtags, parc - 2, parv + 2, sendts, 0);
 	/* After this don't touch 'chptr' anymore, as permanent module may have destroyed the channel */
 	opermode = 0; /* Important since sometimes forgotten. -- Syzop */
-	return 0;
 }
 
 /** Cut off mode string (eg: +abcdfjkdsgfgs) at MAXMODEPARAMS modes.
@@ -1562,7 +1561,7 @@ CMD_FUNC(_cmd_umode)
 	if (parc < 2)
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "MODE");
-		return 0;
+		return;
 	}
 
 	if (!(acptr = find_person(parv[1], NULL)))
@@ -1571,12 +1570,12 @@ CMD_FUNC(_cmd_umode)
 		{
 			sendnumeric(sptr, ERR_NOSUCHNICK, parv[1]);
 		}
-		return 0;
+		return;
 	}
 	if (acptr != sptr)
 	{
 		sendnumeric(sptr, ERR_USERSDONTMATCH);
-		return 0;
+		return;
 	}
 
 	if (parc < 3)
@@ -1584,7 +1583,7 @@ CMD_FUNC(_cmd_umode)
 		sendnumeric(sptr, RPL_UMODEIS, get_mode_str(sptr));
 		if (sptr->user->snomask)
 			sendnumeric(sptr, RPL_SNOMASK, get_sno_str(sptr));
-		return 0;
+		return;
 	}
 
 	userhost_save_current(sptr); /* save host, in case we do any +x/-x or similar */
@@ -1879,8 +1878,6 @@ CMD_FUNC(_cmd_umode)
 
 	if (MyConnect(sptr) && setsnomask != sptr->user->snomask)
 		sendnumeric(sptr, RPL_SNOMASK, get_sno_str(sptr));
-
-	return 0;
 }
 
 CMD_FUNC(cmd_mlock)
@@ -1889,21 +1886,19 @@ CMD_FUNC(cmd_mlock)
 	time_t t;
 
 	if ((parc < 3) || BadPtr(parv[2]))
-		return 0;
+		return;
 
 	t = (time_t) atol(parv[1]);
 
 	/* Now, try to find the channel in question */
 	chptr = find_channel(parv[2], NULL);
 	if (!chptr)
-		return 0;
+		return;
 
 	/* Senders' Channel t is higher, drop it. */
 	if (t > chptr->creationtime)
-		return 0;
+		return;
 
 	if (IsServer(sptr))
 		set_channel_mlock(sptr, chptr, parv[3], TRUE);
-
-	return 0;
 }

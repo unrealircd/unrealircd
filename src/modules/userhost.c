@@ -69,7 +69,7 @@ CMD_FUNC(cmd_userhost)
 	if (parc < 2)
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "USERHOST");
-		return 0;
+		return;
 	}
 
 	/* The idea is to build up the response string out of pieces
@@ -106,8 +106,5 @@ CMD_FUNC(cmd_userhost)
 		cn = p;
 	}
 
-	sendnumeric(sptr, RPL_USERHOST,
-	    response[0], response[1], response[2], response[3], response[4]);
-
-	return 0;
+	sendnumeric(sptr, RPL_USERHOST, response[0], response[1], response[2], response[3], response[4]);
 }

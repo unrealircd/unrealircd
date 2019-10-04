@@ -1073,22 +1073,22 @@ void proceed_normal_client_handshake(Client *acptr, struct hostent *he)
 ** after we're done reading crap.
 **    -- nenolod
 */
-static int parse_client_queued(Client *cptr)
+static void parse_client_queued(Client *cptr)
 {
 	int dolen = 0;
 	time_t now = TStime();
 	char buf[READBUFSIZE];
 
 	if (IsDNSLookup(cptr))
-		return 0; /* we delay processing of data until the host is resolved */
+		return; /* we delay processing of data until the host is resolved */
 
 	if (IsIdentLookup(cptr))
-		return 0; /* we delay processing of data until identd has replied */
+		return; /* we delay processing of data until identd has replied */
 
 	if (!IsUser(cptr) && !IsServer(cptr) && (iConf.handshake_delay > 0) &&
 	    (TStime() - cptr->local->firsttime < iConf.handshake_delay))
 	{
-		return 0; /* we delay processing of data until set::handshake-delay is reached */
+		return; /* we delay processing of data until set::handshake-delay is reached */
 	}
 
 	while (DBufLength(&cptr->local->recvQ) &&
@@ -1097,13 +1097,13 @@ static int parse_client_queued(Client *cptr)
 		dolen = dbuf_getmsg(&cptr->local->recvQ, buf);
 
 		if (dolen == 0)
-			return 0;
+			return;
 
-		if (dopacket(cptr, buf, dolen) == FLUSH_BUFFER)
-			return FLUSH_BUFFER;
+		dopacket(cptr, buf, dolen);
+		
+		if (IsDead(cptr))
+			return;
 	}
-
-	return 0;
 }
 
 /** Put a packet in the client receive queue and process the data (if
@@ -1124,7 +1124,10 @@ int process_packet(Client *cptr, char *readbuf, int length, int killsafely)
 	dbuf_put(&cptr->local->recvQ, readbuf, length);
 
 	/* parse some of what we have (inducing fakelag, etc) */
-	if (parse_client_queued(cptr) == FLUSH_BUFFER)
+	parse_client_queued(cptr);
+
+	/* We may be killed now, so check for it.. */
+	if (IsDead(cptr))
 		return 0;
 
 	/* flood from unknown connection */
@@ -1268,21 +1271,22 @@ void read_packet(int fd, int revents, void *data)
 /* Process input from clients that may have been deliberately delayed due to fake lag */
 void process_clients(void)
 {
-	Client *cptr;
+	Client *cptr, *cptr2;
         
 	/* Problem:
-	 * 1) When 'cptr' exits we can't check 'current_element->next' since this
-	 *    has been freed.
-	 * 2) We can't use list_for_each_entry_safe() which would take care of #1
-	 *    (like if 'cptr' exited). This is because it would set
-	 *    next = current_element->next, however parse_client_queued may
-	 *    potentially kill 'next' (eg /KILL user) so then we would follow
-	 *    an invalid pointer.
-	 * So I'm just re-running the loop. We could use some kind of 'tagging'
-	 * to mark already processed clients, however parse_client_queued() already
-	 * takes care not to read (fake) lagged up clients, and we don't actually
-	 * read/recv anything, so clients in the beginning of the list won't
-	 * benefit/get higher prio.
+	 * When processing a client, that current client may exit due to eg QUIT.
+	 * Similarly, current->next may be killed due to /KILL.
+	 * When a client is killed, in the past we were not allowed to touch it anymore
+	 * so that was a bit problematic. Now we can touch current->next, but it may
+	 * have been removed from the lclient_list or unknown_list.
+	 * In other words, current->next->next may be NULL even though there are more
+	 * clients on the list.
+	 * This is why the whole thing is wrapped in an additional do { } while() loop
+	 * to make sure we re-run the list if we ended prematurely.
+	 * We could use some kind of 'tagging' to mark already processed clients.
+	 * However, parse_client_queued() already takes care not to read (fake) lagged
+	 * clients, and we don't actually read/recv anything in the meantime, so clients
+	 * in the beginning of the list won't benefit, they won't get higher prio.
 	 * Another alternative is not to run the loop again, but that WOULD be
 	 * unfair to clients later in the list which wouldn't be processed then
 	 * under a heavy (kill) load scenario.
@@ -1290,18 +1294,19 @@ void process_clients(void)
 	 */
 
 	do {
-		list_for_each_entry(cptr, &lclient_list, lclient_node)
-			if ((cptr->local->fd >= 0) && DBufLength(&cptr->local->recvQ))
-				if (parse_client_queued(cptr) == FLUSH_BUFFER)
-					break;
+		list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
+		{
+			if ((cptr->local->fd >= 0) && DBufLength(&cptr->local->recvQ) && !IsDead(cptr))
+				parse_client_queued(cptr);
+		}
 	} while(&cptr->lclient_node != &lclient_list);
 
-	/* For unknown_list we also have to take into account the unknown->client transition */
 	do {
-		list_for_each_entry(cptr, &unknown_list, lclient_node)
-			if ((cptr->local->fd >= 0) && DBufLength(&cptr->local->recvQ))
-				if ((parse_client_queued(cptr) == FLUSH_BUFFER) || (cptr->status > CLIENT_STATUS_UNKNOWN))
-					break;
+		list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
+		{
+			if ((cptr->local->fd >= 0) && DBufLength(&cptr->local->recvQ) && !IsDead(cptr))
+				parse_client_queued(cptr);
+		}
 	} while(&cptr->lclient_node != &unknown_list);
 }
 

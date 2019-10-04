@@ -62,7 +62,7 @@ CMD_FUNC(cmd_away)
 	MessageTag *mtags = NULL;
 
 	if (IsServer(sptr))
-		return 0;
+		return;
 
 	if (parc < 2 || !*new_reason)
 	{
@@ -82,7 +82,7 @@ CMD_FUNC(cmd_away)
 
 		if (MyConnect(sptr))
 			sendnumeric(sptr, RPL_UNAWAY);
-		return 0;
+		return;
 	}
 
 	/* Check spamfilters */
@@ -90,7 +90,7 @@ CMD_FUNC(cmd_away)
 	{
 		n = run_spamfilter(sptr, new_reason, SPAMF_AWAY, NULL, 0, NULL);
 		if (n < 0)
-			return n;
+			return;
 	}
 
 	/* Check set::anti-flood::away-flood */
@@ -106,7 +106,7 @@ CMD_FUNC(cmd_away)
 		if (sptr->user->flood.away_c > AWAY_COUNT)
 		{
 			sendnumeric(sptr, ERR_TOOMANYAWAY);
-			return 0;
+			return;
 		}
 	}
 
@@ -116,7 +116,7 @@ CMD_FUNC(cmd_away)
 
 	/* Check if the new away reason is the same as the current reason - if so then return (no change) */
 	if ((sptr->user->away) && !strcmp(sptr->user->away, new_reason))
-		return 0;
+		return;
 
 	/* All tests passed. Now marking as away (or still away but changing the away reason) */
 
@@ -147,5 +147,5 @@ CMD_FUNC(cmd_away)
 
 	free_message_tags(mtags);
 
-	return 0;
+	return;
 }

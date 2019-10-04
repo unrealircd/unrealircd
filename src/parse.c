@@ -29,7 +29,7 @@ char backupbuf[8192];
 static char *para[MAXPARA + 2];
 
 static int do_numeric(int, Client *, MessageTag *, int, char **);
-static int cancel_clients(Client *, Client *, char *);
+static void cancel_clients(Client *, Client *, char *);
 static void remove_unknown(Client *, char *);
 
 /** Ban user that is "flooding from an unknown connection".
@@ -37,17 +37,21 @@ static void remove_unknown(Client *, char *);
  * Note that "lots" in terms of IRC is a few KB's, since more is rather unusual.
  * @param cptr The client.
  */
-int ban_flooder(Client *cptr)
+void ban_flooder(Client *cptr)
 {
-	/* First, check if user is exempt.
-	 * Note that we will still kill the client, since it's clearly misbehaving,
-	 * but we won't ZLINE the host, so it won't affect other connections
-	 * from the same IP.
-	 */
 	if (find_tkl_exception(TKL_UNKNOWN_DATA_FLOOD, cptr))
-		return exit_client(cptr, NULL, "Flood from unknown connection");
-	/* place_host_ban also takes care of removing any other clients with same host/ip */
-	return place_host_ban(cptr, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
+	{
+		/* If the user is exempt we will still KILL the client, since it is
+		 * clearly misbehaving. We just won't ZLINE the host, so it won't
+		 * affect any other connections from the same IP address.
+		 */
+		exit_client(cptr, NULL, "Flood from unknown connection");
+	}
+	else
+	{
+		/* place_host_ban also takes care of removing any other clients with same host/ip */
+		place_host_ban(cptr, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
+	}
 }
 
 /** Add "fake lag" if needed.
@@ -78,7 +82,7 @@ void parse_addlag(Client *cptr, int cmdbytes)
 	}		
 }
 
-int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch);
+void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch);
 
 /** Parse an incoming line.
  * A line was received previously, buffered via dbuf, now popped from the dbuf stack,
@@ -88,7 +92,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch);
  * @param length  The length of the buffer
  * @notes parse() cannot not be called recusively by any other functions!
  */
-int parse(Client *cptr, char *buffer, int length)
+void parse(Client *cptr, char *buffer, int length)
 {
 	Hook *h;
 	Client *from = cptr;
@@ -104,19 +108,21 @@ int parse(Client *cptr, char *buffer, int length)
 	for (h = Hooks[HOOKTYPE_PACKET]; h; h = h->next)
 	{
 		(*(h->func.intfunc))(from, &me, NULL, &buffer, &length);
-		if(!buffer) return 0;
+		if(!buffer)
+			return;
 	}
 
 	Debug((DEBUG_ERROR, "Parsing: %s (from %s)", buffer, (*cptr->name ? cptr->name : "*")));
 
 	if (IsDeadSocket(cptr))
-		return 0;
+		return;
 
 	if ((cptr->local->receiveK >= UNKNOWN_FLOOD_AMOUNT) && IsUnknown(cptr))
 	{
 		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
 			cptr->local->sockhost);
-		return ban_flooder(cptr);
+		ban_flooder(cptr);
+		return;
 	}
 
 	/* This stores the last executed command in 'backupbuf', useful for debugging crashes */
@@ -143,14 +149,15 @@ int parse(Client *cptr, char *buffer, int length)
 			;
 	}
 
-	ret = parse2(cptr, &from, mtags, ch);
-	if (ret == FLUSH_BUFFER)
+	parse2(cptr, &from, mtags, ch);
+
+	if (IsDead(cptr))
 		RunHook3(HOOKTYPE_POST_COMMAND, NULL, mtags, ch);
 	else
 		RunHook3(HOOKTYPE_POST_COMMAND, from, mtags, ch);
 
 	free_message_tags(mtags);
-	return ret;
+	return;
 }
 
 /** Parse the remaining line - helper function for parse().
@@ -160,7 +167,7 @@ int parse(Client *cptr, char *buffer, int length)
  * @param mtags  Message tags received for this message.
  * @param ch     The incoming line received (buffer), excluding message tags.
  */
-int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
+void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 {
 	Client *from = cptr;
 	char *s;
@@ -220,7 +227,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 			{
 				ircstats.is_unpf++;
 				remove_unknown(cptr, sender);
-				return -1;
+				return;
 			}
 			/* This is more severe. The server gave a source of a client
 			 * that cannot exist from that direction.
@@ -237,7 +244,8 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 			if (from->direction != cptr)
 			{
 				ircstats.is_wrdi++;
-				return cancel_clients(cptr, from, ch);
+				cancel_clients(cptr, from, ch);
+				return;
 			}
 			*fromptr = from; /* Update source client */
 		}
@@ -251,7 +259,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 	{
 		if (!IsServer(cptr))
 			cptr->local->since++; /* 1s fake lag */
-		return -1;
+		return;
 	}
 
 	/* Recalculate string length, now that we have skipped the sender */
@@ -304,13 +312,13 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 			if (!IsRegistered(cptr) && strcasecmp(ch, "NOTICE"))
 			{
 				sendnumericfmt(from, ERR_NOTREGISTERED, "You have not registered");
-				return -1;
+				return;
 			}
 			/* If the user is shunned then don't send anything back in case
 			 * of an unknown command, since we want to save data.
 			 */
 			if (IsShunned(cptr))
-				return -1;
+				return;
 				
 			if (ch[0] != '\0')
 			{
@@ -324,7 +332,7 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 				}
 			}
 			ircstats.is_unco++;
-			return (-1);
+			return;
 		}
 		if (cmptr->flags != 0) { /* temporary until all commands are updated */
 
@@ -334,19 +342,19 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		if ((flags & CMD_USER) && !(cmptr->flags & CMD_USER) && !(cmptr->flags & CMD_OPER))
 		{
 			sendnumeric(cptr, ERR_NOTFORUSERS, cmptr->cmd);
-			return -1;
+			return;
 		}
 
 		/* If you're a server, but command doesn't want servers, deny */
 		if ((flags & CMD_SERVER) && !(cmptr->flags & CMD_SERVER))
-			return -1;
+			return;
 		}
 
 		/* If you're a user, but not an operator, and this requires operators, deny */
 		if ((cmptr->flags & CMD_OPER) && (flags & CMD_USER) && !(flags & CMD_OPER))
 		{
 			sendnumeric(cptr, ERR_NOPRIVILEGES);
-			return -1;
+			return;
 		}
 		paramcount = cmptr->parameters;
 		cmptr->bytes += bytes;
@@ -400,7 +408,10 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 	}
 	para[++i] = NULL;
 	if (cmptr == NULL)
-		return do_numeric(numeric, from, mtags, i, para);
+	{
+		do_numeric(numeric, from, mtags, i, para);
+		return;
+	}
 	cmptr->count++;
 	if (IsUser(cptr) && (cmptr->flags & CMD_RESETIDLE))
 		cptr->local->last = TStime();
@@ -408,24 +419,25 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 #ifndef DEBUGMODE
 	if (cmptr->flags & CMD_ALIAS)
 	{
-		return (*cmptr->aliasfunc) (from, mtags, i, para, cmptr->cmd);
+		(*cmptr->aliasfunc) (from, mtags, i, para, cmptr->cmd);
 	} else {
 		if (!cmptr->overriders)
-			return (*cmptr->func) (from, mtags, i, para);
-		return (*cmptr->overridetail->func) (cmptr->overridetail, from, mtags, i, para);
+			(*cmptr->func) (from, mtags, i, para);
+		else
+			(*cmptr->overridetail->func) (cmptr->overridetail, from, mtags, i, para);
 	}
 #else
 	then = clock();
 	if (cmptr->flags & CMD_ALIAS)
 	{
-		retval = (*cmptr->aliasfunc) (from, mtags, i, para, cmptr->cmd);
+		(*cmptr->aliasfunc) (from, mtags, i, para, cmptr->cmd);
 	} else {
 		if (!cmptr->overriders)
-			retval = (*cmptr->func) (from, mtags, i, para);
+			(*cmptr->func) (from, mtags, i, para);
 		else
-			retval = (*cmptr->overridetail->func) (cmptr->overridetail, from, mtags, i, para);
+			(*cmptr->overridetail->func) (cmptr->overridetail, from, mtags, i, para);
 	}
-	if (retval != FLUSH_BUFFER)
+	if (!IsDead(cptr))
 	{
 		ticks = (clock() - then);
 		if (IsServer(cptr))
@@ -434,8 +446,6 @@ int parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 			cmptr->lticks += ticks;
 		cptr->local->cputime += ticks;
 	}
-
-	return retval;
 #endif
 }
 
@@ -556,10 +566,12 @@ static int do_numeric(int numeric, Client *sptr, MessageTag *recv_mtags, int par
 	return 0;
 }
 
-static int cancel_clients(Client *cptr, Client *sptr, char *cmd)
+// FIXME: aren't we exiting the wrong client?
+static void cancel_clients(Client *cptr, Client *sptr, char *cmd)
 {
-	if (IsServer(cptr) || IsServer(sptr) || IsMe(sptr)) return 0;
-	return exit_client(cptr, NULL, "Fake prefix");
+	if (IsServer(cptr) || IsServer(sptr) || IsMe(sptr))
+		return;
+	exit_client(cptr, NULL, "Fake prefix");
 }
 
 static void remove_unknown(Client *cptr, char *sender)

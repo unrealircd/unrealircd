@@ -63,15 +63,14 @@ CMD_FUNC(cmd_motd)
 	MOTDLine *motdline;
 	int  svsnofile = 0;
 
-
 	if (IsServer(sptr))
-		return 0;
+		return;
 
 	if (hunt_server(sptr, recv_mtags, ":%s MOTD :%s", 1, parc, parv) != HUNTED_ISME)
 	{
 		if (MyUser(sptr))
 			sptr->local->since += 15;
-		return 0;
+		return;
 	}
 
 	ptr = Find_tld(sptr);
@@ -120,5 +119,4 @@ CMD_FUNC(cmd_motd)
 	}
 	if (svsnofile == 0)
 		sendnumeric(sptr, RPL_ENDOFMOTD);
-	return 0;
 }
