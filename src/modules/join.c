@@ -25,7 +25,7 @@
 /* Forward declarations */
 CMD_FUNC(cmd_join);
 void _join_channel(Channel *chptr, Client *sptr, MessageTag *mtags, int flags);
-int _do_join(Client *sptr, int parc, char *parv[]);
+void _do_join(Client *sptr, int parc, char *parv[]);
 int _can_join(Client *sptr, Channel *chptr, char *key, char *parv[]);
 void _userhost_save_current(Client *sptr);
 void _userhost_changed(Client *sptr);
@@ -55,7 +55,7 @@ MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_JOIN_CHANNEL, _join_channel);
-	EfunctionAdd(modinfo->handle, EFUNC_DO_JOIN, _do_join);
+	EfunctionAddVoid(modinfo->handle, EFUNC_DO_JOIN, _do_join);
 	EfunctionAdd(modinfo->handle, EFUNC_CAN_JOIN, _can_join);
 	EfunctionAddVoid(modinfo->handle, EFUNC_USERHOST_SAVE_CURRENT, _userhost_save_current);
 	EfunctionAddVoid(modinfo->handle, EFUNC_USERHOST_CHANGED, _userhost_changed);
@@ -358,7 +358,7 @@ void _join_channel(Channel *chptr, Client *sptr, MessageTag *recv_mtags, int fla
  * increased every time we enter this loop and decreased anytime we leave the
  * loop. So be carefull not to use a simple 'return' after bouncedtimes++. -- Syzop
  */
-int _do_join(Client *sptr, int parc, char *parv[])
+void _do_join(Client *sptr, int parc, char *parv[])
 {
 	char jbuf[BUFSIZE];
 	Membership *lp;
@@ -370,15 +370,15 @@ int _do_join(Client *sptr, int parc, char *parv[])
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("JOIN");
 
-#define RET(x) { bouncedtimes--; return x; }
+#define RET() { bouncedtimes--; return; }
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendnumeric(sptr, ERR_NEEDMOREPARAMS, "JOIN");
-		return 0;
+		return;
 	}
 	bouncedtimes++;
-	/* don't use 'return x;' but 'RET(x)' from here ;p */
+	/* don't use 'return;' but 'RET()' from here ;p */
 
 	if (bouncedtimes > MAXBOUNCE)
 	{
@@ -386,7 +386,7 @@ int _do_join(Client *sptr, int parc, char *parv[])
 		sendnotice(sptr,
 		    "*** Couldn't join %s ! - Link setting was too bouncy",
 		    parv[1]);
-		RET(0)
+		RET()
 	}
 
 	*jbuf = '\0';
@@ -496,7 +496,7 @@ int _do_join(Client *sptr, int parc, char *parv[])
 				if (sptr->user->joined >= MAXCHANNELSPERUSER)
 				{
 					sendnumeric(sptr, ERR_TOOMANYCHANNELS, name);
-					RET(0)
+					RET()
 				}
 /* RESTRICTCHAN */
 			if (conf_deny_channel)
@@ -608,7 +608,7 @@ int _do_join(Client *sptr, int parc, char *parv[])
 		join_channel(chptr, sptr, mtags, flags);
 		free_message_tags(mtags);
 	}
-	RET(0)
+	RET()
 #undef RET
 }
 

@@ -675,7 +675,7 @@ extern MODVAR int dontspread;
 extern MODVAR int labeled_response_inhibit;
 
 /* Efuncs */
-extern MODVAR int (*do_join)(Client *, int, char **);
+extern MODVAR void (*do_join)(Client *, int, char **);
 extern MODVAR void (*join_channel)(Channel *chptr, Client *sptr, MessageTag *mtags, int flags);
 extern MODVAR int (*can_join)(Client *sptr, Channel *chptr, char *key, char *parv[]);
 extern MODVAR void (*do_mode)(Channel *chptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);

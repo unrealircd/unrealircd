@@ -34,7 +34,7 @@ static Efunction *Efunctions[MAXEFUNCTIONS]; /* Efunction objects (used for reha
 static EfunctionsList efunction_table[MAXEFUNCTIONS];
 
 /* Efuncs */
-int (*do_join)(Client *sptr, int parc, char *parv[]);
+void (*do_join)(Client *sptr, int parc, char *parv[]);
 void (*join_channel)(Channel *chptr, Client *sptr, MessageTag *mtags, int flags);
 int (*can_join)(Client *sptr, Channel *chptr, char *key, char *parv[]);
 void (*do_mode)(Channel *chptr, Client *sptr, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
