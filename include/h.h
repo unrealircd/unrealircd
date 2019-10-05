@@ -673,6 +673,7 @@ extern void do_cmd(Client *client, MessageTag *mtags, char *cmd, int parc, char 
 extern MODVAR char *me_hash;
 extern MODVAR int dontspread;
 extern MODVAR int labeled_response_inhibit;
+extern MODVAR int labeled_response_inhibit_end;
 extern MODVAR int labeled_response_force;
 
 /* Efuncs */
@@ -758,7 +759,16 @@ extern MODVAR int (*find_tkl_exception)(int ban_type, Client *cptr);
 extern MODVAR int (*del_silence)(Client *client, const char *mask);
 extern MODVAR int (*add_silence)(Client *client, const char *mask, int senderr);
 extern MODVAR int (*is_silenced)(Client *client, Client *acptr);
+extern MODVAR void *(*labeled_response_save_context)(void);
+extern MODVAR void (*labeled_response_set_context)(void *ctx);
+extern MODVAR void (*labeled_response_force_end)(void);
 /* /Efuncs */
+
+extern void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list);
+extern char *mtags_to_string_default_handler(MessageTag *m, Client *client);
+extern void *labeled_response_save_context_default_handler(void);
+extern void labeled_response_set_context_default_handler(void *ctx);
+extern void labeled_response_force_end_default_handler(void);
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;
 extern MODVAR int max_connection_count;

@@ -99,9 +99,7 @@ int (*do_remote_nick_name)(char *nick);
 char *(*charsys_get_current_languages)(void);
 void (*broadcast_sinfo)(Client *client, Client *to, Client *except);
 void (*parse_message_tags)(Client *client, char **str, MessageTag **mtag_list);
-extern void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list);
 char *(*mtags_to_string)(MessageTag *m, Client *client);
-extern char *mtags_to_string_default_handler(MessageTag *m, Client *client);
 int (*can_send_to_channel)(Client *client, Channel *channel, char **msgtext, char **errmsg, int notice);
 void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, char *varname, char *value);
@@ -118,6 +116,9 @@ int (*find_tkl_exception)(int ban_type, Client *client);
 int (*is_silenced)(Client *client, Client *acptr);
 int (*del_silence)(Client *client, const char *mask);
 int (*add_silence)(Client *client, const char *mask, int senderr);
+void *(*labeled_response_save_context)(void);
+void (*labeled_response_set_context)(void *ctx);
+void (*labeled_response_force_end)(void);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
 {
@@ -357,4 +358,8 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_ADD_SILENCE, add_silence, NULL);
 	efunc_init_function(EFUNC_DEL_SILENCE, del_silence, NULL);
 	efunc_init_function(EFUNC_IS_SILENCED, is_silenced, NULL);
+	efunc_init_function(EFUNC_IS_SILENCED, is_silenced, NULL);
+	efunc_init_function(EFUNC_LABELED_RESPONSE_SAVE_CONTEXT, labeled_response_save_context, labeled_response_save_context_default_handler);
+	efunc_init_function(EFUNC_LABELED_RESPONSE_SET_CONTEXT, labeled_response_set_context, labeled_response_set_context_default_handler);
+	efunc_init_function(EFUNC_LABELED_RESPONSE_FORCE_END, labeled_response_force_end, labeled_response_force_end_default_handler);
 }

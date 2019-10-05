@@ -1326,6 +1326,25 @@ void generate_batch_id(char *str)
 	gen_random_alnum(str, BATCHLEN);
 }
 
+/* A default handler if labeled-response module is not loaded.
+ * Normally a NOOP, but since caller will safe_free it
+ * later we do actually allocate something.
+ */
+void *labeled_response_save_context_default_handler(void)
+{
+	return safe_alloc(8);
+}
+
+/* A default handler for if labeled-response module is not loaded */
+void labeled_response_set_context_default_handler(void *ctx)
+{
+}
+
+/* A default handler for if labeled-response module is not loaded */
+void labeled_response_force_end_default_handler(void)
+{
+}
+
 /** my_timegm: mktime()-like function which will use GMT/UTC.
  * Strangely enough there is no standard function for this.
  * On some *NIX OS's timegm() may be available, sometimes only

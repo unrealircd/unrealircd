@@ -31,16 +31,9 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
 	};
 
-/* Forward declarations */
-int lr_pre_command(Client *from, MessageTag *mtags, char *buf);
-int lr_post_command(Client *from, MessageTag *mtags, char *buf);
-int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len);
-
-/* Our special version of SupportBatch() assumes that remote servers always handle it */
-#define SupportBatch(x)		(MyConnect(x) ? HasCapability((x), "batch") : 1)
-#define SupportLabel(x)		(HasCapabilityFast((x), CAP_LABELED_RESPONSE))
-
-struct {
+/* Data structures */
+typedef struct LabeledResponseContext LabeledResponseContext;
+struct LabeledResponseContext {
 	Client *client; /**< The client who issued the original command with a label */
 	char label[256]; /**< The label attached to this command */
 	char batch[BATCHLEN+1]; /**< The generated batch id */
@@ -48,13 +41,37 @@ struct {
 	int sent_remote; /**< Command has been sent to remote server */
 	int version; /**< Which version? Zero for official, non-zero is draft */
 	char firstbuf[4096]; /**< First buffered response */
-} currentcmd;
+};
 
-long CAP_LABELED_RESPONSE = 0L;
+/* Forward declarations */
+int lr_pre_command(Client *from, MessageTag *mtags, char *buf);
+int lr_post_command(Client *from, MessageTag *mtags, char *buf);
+int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len);
+void *_labeled_response_save_context(void);
+void _labeled_response_set_context(void *ctx);
+void _labeled_response_force_end(void);
+
+/* Our special version of SupportBatch() assumes that remote servers always handle it */
+#define SupportBatch(x)		(MyConnect(x) ? HasCapability((x), "batch") : 1)
+#define SupportLabel(x)		(HasCapabilityFast((x), CAP_LABELED_RESPONSE))
+
+/* Variables */
+static LabeledResponseContext currentcmd;
+static long CAP_LABELED_RESPONSE = 0L;
 
 static char packet[8192];
 
 int labeled_response_mtag_is_ok(Client *client, char *name, char *value);
+
+MOD_TEST()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAddPVoid(modinfo->handle, EFUNC_LABELED_RESPONSE_SAVE_CONTEXT, _labeled_response_save_context);
+	EfunctionAddVoid(modinfo->handle, EFUNC_LABELED_RESPONSE_SET_CONTEXT, _labeled_response_set_context);
+	EfunctionAddVoid(modinfo->handle, EFUNC_LABELED_RESPONSE_FORCE_END, _labeled_response_force_end);
+
+	return MOD_SUCCESS;
+}
 
 MOD_INIT()
 {
@@ -96,7 +113,7 @@ MOD_UNLOAD()
 int lr_pre_command(Client *from, MessageTag *mtags, char *buf)
 {
 	memset(&currentcmd, 0, sizeof(currentcmd));
-	labeled_response_inhibit = labeled_response_force = 0;
+	labeled_response_inhibit = labeled_response_inhibit_end = labeled_response_force = 0;
 
 	for (; mtags; mtags = mtags->next)
 	{
@@ -215,16 +232,19 @@ int lr_post_command(Client *from, MessageTag *mtags, char *buf)
 		}
 
 		/* End the batch */
-		savedptr = currentcmd.client;
-		currentcmd.client = NULL;
-		if (MyConnect(savedptr))
-			sendto_one(from, NULL, ":%s BATCH -%s", me.name, currentcmd.batch);
-		else
-			sendto_one(from, NULL, ":%s BATCH %s -%s", me.name, savedptr->name, currentcmd.batch);
+		if (!labeled_response_inhibit_end)
+		{
+			savedptr = currentcmd.client;
+			currentcmd.client = NULL;
+			if (MyConnect(savedptr))
+				sendto_one(from, NULL, ":%s BATCH -%s", me.name, currentcmd.batch);
+			else
+				sendto_one(from, NULL, ":%s BATCH %s -%s", me.name, savedptr->name, currentcmd.batch);
+		}
 	}
 done:
 	memset(&currentcmd, 0, sizeof(currentcmd));
-	labeled_response_inhibit = labeled_response_force = 0;
+	labeled_response_inhibit = labeled_response_inhibit_end = labeled_response_force = 0;
 	return 0;
 }
 
@@ -339,4 +359,39 @@ int labeled_response_mtag_is_ok(Client *client, char *name, char *value)
 		return 1;
 
 	return 0;
+}
+
+/** Save current context for later use in labeled-response.
+ * Currently used in /LIST. Is not planned for other places tbh.
+ */
+void *_labeled_response_save_context(void)
+{
+	LabeledResponseContext *ctx = safe_alloc(sizeof(LabeledResponseContext));
+	memcpy(ctx, &currentcmd, sizeof(LabeledResponseContext));
+	return (void *)ctx;
+}
+
+/** Set previously saved context 'ctx', or clear the context.
+ * @param ctx    The context, or NULL to clear the context.
+ * @note The client from the previously saved context should be
+ *       the same. Don't save one context when processing
+ *       client A and then restore it when processing client B (duh).
+ */
+void _labeled_response_set_context(void *ctx)
+{
+	if (ctx == NULL)
+	{
+		/* This means: clear the current context */
+		memset(&currentcmd, 0, sizeof(currentcmd));
+	} else {
+		/* Set the current context to the provided one */
+		memcpy(&currentcmd, ctx, sizeof(LabeledResponseContext));
+	}
+}
+
+/** Force an end of the labeled-response (only used in /LIST atm) */
+void _labeled_response_force_end(void)
+{
+	if (currentcmd.client)
+		lr_post_command(currentcmd.client, NULL, NULL);
 }

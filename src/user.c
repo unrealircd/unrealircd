@@ -31,9 +31,10 @@ static char buf[BUFSIZE];
 /** Inhibit labeled/response reply. This means it will result in an empty ACK
  *  because we cannot handle the command via labeled-reponse. Rare, but
  *  possible in for example /TRACE which multiple servers handle and which
- *  has no clear end. /LIST is another common example.
+ *  has no clear end.
  */
 MODVAR int labeled_response_inhibit = 0;
+
 /** Force a labeled/response reply (of course, only if a label is present etc.).
  * This is used in case the "a remote server is handling the request" was
  * incorrect and there were 0 responses. This is the case for PRIVMSG.
@@ -42,6 +43,10 @@ MODVAR int labeled_response_inhibit = 0;
  * (labeled_response_inhibit) has priority over this one (labeled_response_force).
  */
 MODVAR int labeled_response_force = 0;
+
+/** Inhibit labeled/response END. Only used in /LIST.
+ */
+MODVAR int labeled_response_inhibit_end = 0;
 
 /** Set to 1 if an UTF8 incompatible nick character set is in use */
 MODVAR int non_utf8_nick_chars_in_use = 0;

@@ -23,7 +23,7 @@
 #include "unrealircd.h"
 
 CMD_FUNC(cmd_list);
-void send_list(Client *client);
+int send_list(Client *client);
 
 #define MSG_LIST 	"LIST"	
 
@@ -49,6 +49,7 @@ struct ChannelListOptions {
 	time_t chantimemax;
 	time_t topictimemin;
 	time_t topictimemax;
+	void *lr_context;
 };
 
 /* Global variables */
@@ -161,8 +162,12 @@ CMD_FUNC(cmd_list)
 		ALLOCATE_CHANNELLISTOPTIONS(client);
 		CHANNELLISTOPTIONS(client)->showall = 1;
 
-		if (DBufLength(&client->local->sendQ) < 2048)
-			send_list(client);
+		if (send_list(client))
+		{
+			/* Save context since there is more to be sent */
+			CHANNELLISTOPTIONS(client)->lr_context = labeled_response_save_context();
+			labeled_response_inhibit_end = 1;
+		}
 
 		return;
 	}
@@ -298,8 +303,12 @@ CMD_FUNC(cmd_list)
 		CHANNELLISTOPTIONS(client)->nolist = nolist;
 		CHANNELLISTOPTIONS(client)->yeslist = yeslist;
 
-		if (DBufLength(&client->local->sendQ) < 2048)
-			send_list(client);
+		if (send_list(client))
+		{
+			/* Save context since there is more to be sent */
+			CHANNELLISTOPTIONS(client)->lr_context = labeled_response_save_context();
+			labeled_response_inhibit_end = 1;
+		}
 		return;
 	}
 
@@ -312,7 +321,7 @@ CMD_FUNC(cmd_list)
  * client = Local client to send the output back to.
  * Taken from bahamut, modified for Unreal by codemastr.
  */
-void send_list(Client *client)
+int send_list(Client *client)
 {
 	Channel *channel;
 	ChannelListOptions *lopt = CHANNELLISTOPTIONS(client);
@@ -426,7 +435,7 @@ void send_list(Client *client)
 	{
 		sendnumeric(client, RPL_LISTEND);
 		free_list_options(client);
-		return;
+		return 0;
 	}
 
 	/* 
@@ -434,7 +443,7 @@ void send_list(Client *client)
 	 * at once.
 	 */
 	lopt->starthash = hashnum;
-	return;
+	return 1;
 }
 
 EVENT(send_queued_list_data)
@@ -443,7 +452,15 @@ EVENT(send_queued_list_data)
 	list_for_each_entry_safe(client, saved, &lclient_list, lclient_node)
 	{
 		if (DoList(client) && IsSendable(client))
-			send_list(client);
+		{
+			labeled_response_set_context(CHANNELLISTOPTIONS(client)->lr_context);
+			if (!send_list(client))
+			{
+				/* We are done! */
+				labeled_response_force_end();
+			}
+			labeled_response_set_context(NULL);
+		}
 	}
 }
 
@@ -457,6 +474,7 @@ void list_md_free(ModData *md)
 
 	free_entire_name_list(lopt->yeslist);
 	free_entire_name_list(lopt->nolist);
+	safe_free(lopt->lr_context);
 
 	safe_free(md->ptr);
 }
