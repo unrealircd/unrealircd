@@ -147,10 +147,12 @@ int can_send_to_user(Client *client, Client *target, char **msgtext, char **errm
 			}
 			return 0;
 		}
+		if (!*msgtext || !**msgtext)
+			return 0;
 	}
 
 	/* This may happen, if nothing is left to send anymore (don't send empty messages) */
-	if (!*msgtext)
+	if (!*msgtext || !**msgtext)
 		return 0;
 
 	return 1;
@@ -349,7 +351,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 					 */
 					if (IsDead(client))
 						return;
-					if (!IsDead(client) && find_membership_link(client->user->channel, channel) && !notice)
+					if (!IsDead(client) && find_membership_link(client->user->channel, channel) && !notice && errmsg)
 						sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, errmsg, p2);
 					continue; /* skip delivery to this target */
 				}
@@ -943,13 +945,19 @@ int _can_send_to_channel(Client *client, Channel *channel, char **msgtext, char 
 			}
 			break;
 		}
+		if (!*msgtext || !**msgtext)
+			return 0;
 	}
+
 	if (i != HOOK_CONTINUE)
 	{
 		if (!*errmsg)
 			*errmsg = "You are banned";
 		return 0;
 	}
+	if (!*msgtext || !**msgtext)
+		return 0;
+
 
 	/* Now we are going to check bans */
 
