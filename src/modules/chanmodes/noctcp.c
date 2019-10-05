@@ -85,5 +85,5 @@ int noctcp_can_send_to_channel(Client *client, Channel *channel, Membership *lp,
 		*errmsg = "CTCPs are not permitted in this channel";
 		return HOOK_DENY;
 	}
-	return HOOK_ALLOW;
+	return HOOK_CONTINUE;
 }
