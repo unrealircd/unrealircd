@@ -277,7 +277,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 	if (cmode->paracount == 0)
 	{
 		/* Paramless mode, easy */
-		for (chptr = channel; chptr; chptr = chptr->nextch)
+		for (chptr = channels; chptr; chptr = chptr->nextch)
 		{
 			if (chptr->mode.extmode && cmode->mode)
 			{
@@ -298,7 +298,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 	} else
 	{
 		/* Parameter mode, more complicated */
-		for (chptr = channel; chptr; chptr = chptr->nextch)
+		for (chptr = channels; chptr; chptr = chptr->nextch)
 		{
 			if (chptr->mode.extmode && cmode->mode)
 			{

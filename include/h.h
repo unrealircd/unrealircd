@@ -37,7 +37,7 @@ extern char *getreply(int);
 extern MODVAR Member *freemember;
 extern MODVAR Membership *freemembership;
 extern MODVAR Client me;
-extern MODVAR Channel *channel;
+extern MODVAR Channel *channels;
 extern MODVAR ModData local_variable_moddata[MODDATA_MAX_LOCAL_VARIABLE];
 extern MODVAR ModData global_variable_moddata[MODDATA_MAX_GLOBAL_VARIABLE];
 extern MODVAR IRCStatistics ircstats;

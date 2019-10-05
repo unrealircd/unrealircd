@@ -392,7 +392,7 @@ EVENT(timedban_timeout)
 	if (++current_iteration >= TIMEDBAN_TIMER_ITERATION_SPLIT)
 		current_iteration = 0;
 
-	for (chptr = channel; chptr; chptr = chptr->nextch)
+	for (chptr = channels; chptr; chptr = chptr->nextch)
 	{
 		/* This is a very quick check, at the cost of it being
 		 * biased since there's always a tendency of more channel

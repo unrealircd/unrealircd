@@ -208,7 +208,7 @@ void unload_moddata_commit(ModDataInfo *md)
 		case MODDATATYPE_CHANNEL:
 		{
 			Channel *chptr;
-			for (chptr = channel; chptr; chptr=chptr->nextch)
+			for (chptr = channels; chptr; chptr=chptr->nextch)
 			{
 				if (md->free && moddata_channel(chptr, md).ptr)
 					md->free(&moddata_channel(chptr, md));
@@ -220,7 +220,7 @@ void unload_moddata_commit(ModDataInfo *md)
 		{
 			Channel *chptr;
 			Member *m;
-			for (chptr = channel; chptr; chptr=chptr->nextch)
+			for (chptr = channels; chptr; chptr=chptr->nextch)
 			{
 				for (m = chptr->members; m; m = m->next)
 				{

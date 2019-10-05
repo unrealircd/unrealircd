@@ -788,7 +788,7 @@ int stats_mem(Client *client, char *para)
 	lcm = lc * sizeof(Client)+sizeof(LocalClient);
 	rcm = rc * sizeof(Client);
 
-	for (chptr = channel; chptr; chptr = chptr->nextch)
+	for (chptr = channels; chptr; chptr = chptr->nextch)
 	{
 		Member *member;
 

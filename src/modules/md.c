@@ -397,7 +397,7 @@ void _send_moddata_members(Client *srv)
 	Channel *chptr;
 	Client *client;
 
-	for (chptr = channel; chptr; chptr = chptr->nextch)
+	for (chptr = channels; chptr; chptr = chptr->nextch)
 	{
 		Member *m;
 		for (m = chptr->members; m; m = m->next)

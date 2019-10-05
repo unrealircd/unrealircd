@@ -26,7 +26,7 @@
 
 long opermode = 0;
 long sajoinmode = 0;
-Channel *channel = NULL;
+Channel *channels = NULL;
 
 /* some buffers for rebuilding channel/nick lists with comma's */
 static char buf[BUFSIZE];
@@ -940,14 +940,14 @@ Channel *get_channel(Client *client, char *chname, int flag)
 	{
 		chptr = safe_alloc(sizeof(Channel) + len);
 		strlcpy(chptr->chname, chname, len + 1);
-		if (channel)
-			channel->prevch = chptr;
+		if (channels)
+			channels->prevch = chptr;
 		chptr->topic = NULL;
 		chptr->topic_nick = NULL;
 		chptr->prevch = NULL;
-		chptr->nextch = channel;
+		chptr->nextch = channels;
 		chptr->creationtime = MyUser(client) ? TStime() : 0;
-		channel = chptr;
+		channels = chptr;
 		(void)add_to_channel_hash_table(chname, chptr);
 		irccounts.channels++;
 		RunHook2(HOOKTYPE_CHANNEL_CREATE, client, chptr);
@@ -1094,7 +1094,7 @@ int sub1_from_channel(Channel *chptr)
 	if (chptr->prevch)
 		chptr->prevch->nextch = chptr->nextch;
 	else
-		channel = chptr->nextch;
+		channels = chptr->nextch;
 
 	if (chptr->nextch)
 		chptr->nextch->prevch = chptr->prevch;

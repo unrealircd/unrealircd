@@ -211,12 +211,12 @@ int write_channeldb(void)
 	W_SAFE(write_data(fd, &channeldb_version, sizeof(channeldb_version)));
 
 	/* First, count +P channels and write the count to the database */
-	for (chptr = channel; chptr; chptr=chptr->nextch)
+	for (chptr = channels; chptr; chptr=chptr->nextch)
 		if (has_channel_mode(chptr, 'P'))
 			cnt++;
 	W_SAFE(write_int64(fd, cnt));
 
-	for (chptr = channel; chptr; chptr=chptr->nextch)
+	for (chptr = channels; chptr; chptr=chptr->nextch)
 	{
 		/* We only care about +P (persistent) channels */
 		if (has_channel_mode(chptr, 'P'))

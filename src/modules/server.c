@@ -1056,7 +1056,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	 */
 	{
 		Channel *chptr;
-		for (chptr = channel; chptr; chptr = chptr->nextch)
+		for (chptr = channels; chptr; chptr = chptr->nextch)
 		{
 			if (!SupportSJOIN(cptr))
 				send_channel_modes(cptr, chptr);
