@@ -80,7 +80,7 @@ CMD_FUNC(cmd_ison)
 		return;
 	}
 
-	ircsnprintf(buf, sizeof(buf), rpl_str(RPL_ISON), me.name, client->name);
+	ircsnprintf(buf, sizeof(buf), ":%s %d %s :", me.name, RPL_ISON, client->name);
 
 	for (s = strtoken(&p, parv[1], " "); s; s = strtoken(&p, NULL, " "))
 	{
