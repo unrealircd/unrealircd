@@ -182,6 +182,12 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 	MessageTag *mtags;
 	int sendflags;
 
+	/* Force a labeled-response, even if we don't send anything
+	 * and the request was sent to other servers (which won't
+	 * reply either :D).
+	 */
+	labeled_response_force = 1;
+
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendnumeric(client, ERR_NORECIPIENT, cmd);

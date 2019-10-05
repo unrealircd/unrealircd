@@ -66,9 +66,11 @@ CMD_FUNC(cmd_trace)
 	int  cnt = 0, wilds, dow;
 	time_t now;
 
-	// XXX: FIXME: This would be one of those asynch/multi-server
-	// commands that cannot be handled by labeled-response!
-	// set some kind of flag? or?
+	/* This is one of the (few) commands that cannot be handled
+	 * by labeled-response because responses from multiple servers
+	 * are involved.
+	 */
+	labeled_response_inhibit = 1;
 
 	if (parc > 2)
 		if (hunt_server(client, NULL, ":%s TRACE %s :%s", 2, parc, parv))

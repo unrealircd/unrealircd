@@ -478,6 +478,11 @@ CMD_FUNC(cmd_rehash)
 {
 	int x = 0;
 
+	/* This is one of the (few) commands that cannot be handled
+	 * by labeled-response accurately in all circumstances.
+	 */
+	labeled_response_inhibit = 1;
+
 	if (!ValidatePermissionsForPath("server:rehash",client,NULL,NULL,NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
@@ -498,7 +503,6 @@ CMD_FUNC(cmd_rehash)
 			x = HUNTED_ISME;
 		} else {
 			x = hunt_server(client, NULL, ":%s REHASH %s :%s", 1, parc, parv);
-			// XXX: FIXME: labeled-response can't handle this, multiple servers.
 		}
 	}
 	if (x != HUNTED_ISME)

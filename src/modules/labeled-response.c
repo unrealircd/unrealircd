@@ -47,9 +47,12 @@ struct {
 	int responses; /**< Number of lines sent back to client */
 	int sent_remote; /**< Command has been sent to remote server */
 	int version; /**< Which version? Zero for official, non-zero is draft */
+	char firstbuf[4096]; /**< First buffered response */
 } currentcmd;
 
 long CAP_LABELED_RESPONSE = 0L;
+
+static char packet[8192];
 
 int labeled_response_mtag_is_ok(Client *client, char *name, char *value);
 
@@ -77,7 +80,6 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_POST_COMMAND, -2000000000, lr_post_command);
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, 0, lr_packet);
 
-	config_warn("The labeled-response module is currently in development !!");
 	return MOD_SUCCESS;
 }
 
@@ -94,6 +96,7 @@ MOD_UNLOAD()
 int lr_pre_command(Client *from, MessageTag *mtags, char *buf)
 {
 	memset(&currentcmd, 0, sizeof(currentcmd));
+	labeled_response_inhibit = labeled_response_force = 0;
 
 	for (; mtags; mtags = mtags->next)
 	{
@@ -108,6 +111,14 @@ int lr_pre_command(Client *from, MessageTag *mtags, char *buf)
 	}
 
 	return 0;
+}
+
+char *labeled_response_tag_type(int version)
+{
+	if (version == 0)
+		return "label";
+	else
+		return "draft/label";
 }
 
 char *labeled_response_batch_type(int version)
@@ -156,16 +167,24 @@ char *gen_start_batch(void)
 
 int lr_post_command(Client *from, MessageTag *mtags, char *buf)
 {
-	/* We may have to start or end a BATCH here, if all of
+	/* ** IMPORTANT **
+	 * Take care NOT to return here, use 'goto done' instead
+	 * as some variables need to be cleared.
+	 */
+
+	/* We may have to send a response or end a BATCH here, if all of
 	 * the following is true:
 	 * 1. The client is still online (from is not NULL)
 	 * 2. A "label" was attached
 	 * 3. The client supports BATCH (or is remote)
 	 * 4. The command has not been forwarded to a remote server
 	 *    (in which case they would be handling it, and not us)
+	 * 5. Unless labeled_response_force is set, in which case
+	 *    we are assumed to have handled it anyway (necessary for
+	 *    commands like PRIVMSG, quite rare).
 	 */
-	if (from && currentcmd.client && SupportBatch(from) &&
-	    !(currentcmd.sent_remote && !currentcmd.responses))
+	if (from && currentcmd.client &&
+	    !(currentcmd.sent_remote && !currentcmd.responses && !labeled_response_force))
 	{
 		Client *savedptr;
 
@@ -176,7 +195,23 @@ int lr_post_command(Client *from, MessageTag *mtags, char *buf)
 			 */
 			memset(&currentcmd, 0, sizeof(currentcmd));
 			sendto_one(from, mtags, ":%s ACK", me.name);
-			return 0;
+			goto done;
+		} else
+		if (currentcmd.responses == 1)
+		{
+			/* We have buffered this response earlier,
+			 * now we will send it
+			 */
+			int more_tags = currentcmd.firstbuf[0] == '@';
+			currentcmd.client = NULL; /* prevent lr_packet from interfering */
+			snprintf(packet, sizeof(packet),
+				 "@%s=%s%s%s\r\n",
+				 labeled_response_tag_type(currentcmd.version),
+				 currentcmd.label,
+				 more_tags ? ";" : " ",
+				 more_tags ? currentcmd.firstbuf+1 : currentcmd.firstbuf);
+			sendbufto_one(from, packet, 0);
+			goto done;
 		}
 
 		/* End the batch */
@@ -187,7 +222,9 @@ int lr_post_command(Client *from, MessageTag *mtags, char *buf)
 		else
 			sendto_one(from, NULL, ":%s BATCH %s -%s", me.name, savedptr->name, currentcmd.batch);
 	}
+done:
 	memset(&currentcmd, 0, sizeof(currentcmd));
+	labeled_response_inhibit = labeled_response_force = 0;
 	return 0;
 }
 
@@ -210,8 +247,6 @@ char *skip_tags(char *msg)
 
 int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len)
 {
-	static char packet[8192];
-
 	if (currentcmd.client && !labeled_response_inhibit)
 	{
 		/* Labeled response is active */
@@ -220,21 +255,42 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
 			/* Add the label */
 			if (currentcmd.responses == 0)
 			{
+				int n = *len;
+				if (n > sizeof(currentcmd.firstbuf))
+					n = sizeof(currentcmd.firstbuf);
+				strlcpy(currentcmd.firstbuf, *msg, n);
+				/* Don't send anything -- yet */
+				*msg = NULL;
+				*len = 0;
+			} else
+			if (currentcmd.responses == 1)
+			{
 				/* Start the batch now, normally this would be a sendto_one()
-				 * but doing so is not possible since we are in the sending code ;)
+				 * but doing so is not possible since we are in the sending code :(
+				 * The code below is almost unbearable to see, but the alternative
+				 * is to use an intermediate buffer or pointer jugling, of which
+				 * the former is slower than this implementation and with the latter
+				 * it is easy to make a mistake and create an overflow issue.
+				 * So guess I'll stick with this...
 				 */
 				char *batchstr = gen_start_batch();
-				int more_tags = **msg == '@';
+				int more_tags_one = currentcmd.firstbuf[0] == '@';
+				int more_tags_two = **msg == '@';
 				snprintf(packet, sizeof(packet),
 				         "%s\r\n"
+				         "@batch=%s%s%s\r\n"
 				         "@batch=%s%s%s",
 				         batchstr,
 				         currentcmd.batch,
-				         more_tags ? ";" : " ",
-				         more_tags ? *msg+1 : *msg);
+				         more_tags_one ? ";" : " ",
+				         more_tags_one ? currentcmd.firstbuf+1 : currentcmd.firstbuf,
+				         currentcmd.batch,
+				         more_tags_two ? ";" : " ",
+				         more_tags_two ? *msg+1 : *msg);
 				*msg = packet;
 				*len = strlen(*msg);
 			} else {
+				/* >2 responses.... the first 2 have already been sent */
 				if (!strncmp(*msg, "@batch", 6))
 				{
 					/* No buffer change needed, already contains a (now inner) batch */

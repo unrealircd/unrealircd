@@ -673,6 +673,7 @@ extern void do_cmd(Client *client, MessageTag *mtags, char *cmd, int parc, char 
 extern MODVAR char *me_hash;
 extern MODVAR int dontspread;
 extern MODVAR int labeled_response_inhibit;
+extern MODVAR int labeled_response_force;
 
 /* Efuncs */
 extern MODVAR void (*do_join)(Client *, int, char **);
