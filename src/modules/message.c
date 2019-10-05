@@ -28,7 +28,7 @@ int ban_version(Client *client, char *text);
 CMD_FUNC(cmd_private);
 CMD_FUNC(cmd_notice);
 void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[], int notice);
-int _can_send(Client *client, Channel *channel, char **msgtext, char **errmsg, int notice);
+int _can_send_to_channel(Client *client, Channel *channel, char **msgtext, char **errmsg, int notice);
 
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
@@ -48,7 +48,7 @@ MOD_TEST()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCONTROLCODES, _StripControlCodes);
-	EfunctionAdd(modinfo->handle, EFUNC_CAN_SEND, _can_send);
+	EfunctionAdd(modinfo->handle, EFUNC_CAN_SEND_TO_CHANNEL, _can_send_to_channel);
 	return MOD_SUCCESS;
 }
 
@@ -316,15 +316,18 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 			errmsg = NULL;
 			if (MyUser(client) && !IsULine(client))
 			{
-				if (!can_send(client, channel, &text, &errmsg, notice))
+				if (!can_send_to_channel(client, channel, &text, &errmsg, notice))
 				{
-					if (!notice)
-					{
-						/* Send error message */
-						// TODO: move all the cansend shit to *errmsg ? if possible?
+					/* Send the error message, but only if:
+					 * 1) The user has not been killed
+					 * 2) The user is still in the channel (might be kicked)
+					 * 3) It is not a NOTICE
+					 */
+					if (IsDead(client))
+						return;
+					if (!IsDead(client) && find_membership_link(client->user->channel, channel) && !notice)
 						sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, errmsg, p2);
-					}
-					continue; /* skip */
+					continue; /* skip delivery to this target */
 				}
 			}
 			mtags = NULL;
@@ -336,19 +339,12 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 			if ((*parv[2] == '\001') && strncmp(&parv[2][1], "ACTION ", 7))
 				sendflags |= SKIP_CTCP;
 
-			text = parv[2];
-
 			if (MyUser(client) && match_spamfilter(client, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, channel->chname, 0, NULL))
 				return;
 
 			new_message(client, recv_mtags, &mtags);
 
-			for (h = Hooks[HOOKTYPE_PRE_CHANMSG]; h; h = h->next)
-			{
-				text = (*(h->func.pcharfunc))(client, channel, mtags, text, notice);
-				if (!text)
-					break;
-			}
+			RunHook5(HOOKTYPE_PRE_CHANMSG, client, channel, mtags, text, notice);
 
 			if (!text)
 			{
@@ -851,7 +847,7 @@ int ban_version(Client *client, char *text)
  * @returns Returns 1 if the user is allowed to send, otherwise 0.
  * (note that this behavior was reversed in UnrealIRCd versions <5.x.
  */
-int _can_send(Client *client, Channel *channel, char **msgtext, char **errmsg, int notice)
+int _can_send_to_channel(Client *client, Channel *channel, char **msgtext, char **errmsg, int notice)
 {
 	Membership *lp;
 	int  member, i = 0;
@@ -905,7 +901,7 @@ int _can_send(Client *client, Channel *channel, char **msgtext, char **errmsg, i
 	}
 
 	/* Modules can plug in as well */
-	for (h = Hooks[HOOKTYPE_CAN_SEND]; h; h = h->next)
+	for (h = Hooks[HOOKTYPE_CAN_SEND_TO_CHANNEL]; h; h = h->next)
 	{
 		i = (*(h->func.intfunc))(client, channel, lp, msgtext, errmsg, notice);
 		if (i != HOOK_CONTINUE)

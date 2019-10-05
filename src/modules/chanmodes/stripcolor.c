@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_STRIPCOLOR;
 
 #define IsStripColor(channel)    (channel->mode.extmode & EXTCMODE_STRIPCOLOR)
 
-char *stripcolor_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+int stripcolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
 char *stripcolor_prelocalpart(Client *client, Channel *channel, char *comment);
 char *stripcolor_prelocalquit(Client *client, char *comment);
 
@@ -54,7 +54,7 @@ CmodeInfo req;
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_STRIPCOLOR);
 	
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, stripcolor_prechanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, stripcolor_can_send_to_channel);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, stripcolor_prelocalpart);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT_CHAN, 0, stripcolor_prelocalpart);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, stripcolor_prelocalquit);
@@ -73,7 +73,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *stripcolor_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
+int stripcolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
 {
 	Hook *h;
 	int i;
@@ -84,15 +84,15 @@ char *stripcolor_prechanmsg(Client *client, Channel *channel, MessageTag *mtags,
 		{
 			i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_COLOR);
 			if (i == HOOK_ALLOW)
-				return text; /* bypass */
+				return HOOK_CONTINUE; /* bypass this restriction */
 			if (i != HOOK_CONTINUE)
 				break;
 		}
 
-		text = StripColors(text);
+		*msg = StripColors(*msg);
 	}
 
-	return text;
+	return HOOK_CONTINUE;
 }
 
 char *stripcolor_prelocalpart(Client *client, Channel *channel, char *comment)

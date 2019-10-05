@@ -20,7 +20,7 @@ Cmode_t EXTMODE_CENSOR = 0L;
 
 #define IsCensored(x) ((x)->mode.extmode & EXTMODE_CENSOR)
 
-char *censor_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
 char *censor_pre_local_part(Client *client, Channel *channel, char *text);
 char *censor_pre_local_quit(Client *client, char *text);
 
@@ -52,7 +52,7 @@ MOD_INIT()
 	req.flag = 'G';
 	CmodeAdd(modinfo->handle, req, &EXTMODE_CENSOR);
 
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, censor_pre_chanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, censor_can_send_to_channel);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, censor_pre_local_part);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, censor_pre_local_quit);
 	
@@ -253,34 +253,32 @@ char *stripbadwords_channel(char *str, int *blocked)
 	return stripbadwords(str, conf_badword_channel, blocked);
 }
 
-char *censor_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
+int censor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
 {
 	int blocked;
 	Hook *h;
 	int i;
 
 	if (!IsCensored(channel))
-		return text;
+		return HOOK_CONTINUE;
 
 	for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 	{
 		i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_CENSOR);
 		if (i == HOOK_ALLOW)
-			return text; /* bypass */
+			return HOOK_CONTINUE; /* bypass censor restriction */
 		if (i != HOOK_CONTINUE)
 			break;
 	}
 
-	text = stripbadwords_channel(text, &blocked);
+	*msg = stripbadwords_channel(*msg, &blocked);
 	if (blocked)
 	{
-		if (!notice)
-			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname,
-				"Swearing is not permitted in this channel", channel->chname);
-		return NULL;
+		*errmsg = "Swearing is not permitted in this channel";
+		return HOOK_DENY;
 	}
 
-	return text;
+	return HOOK_CONTINUE;
 }
 
 char *censor_pre_local_part(Client *client, Channel *channel, char *text)

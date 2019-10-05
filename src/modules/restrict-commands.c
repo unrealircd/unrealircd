@@ -51,7 +51,7 @@ RestrictedCommand *find_restrictions_bycmd(char *cmd);
 RestrictedCommand *find_restrictions_byconftag(char *conftag);
 int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
-char *rcmd_hook_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
 char *rcmd_hook_preusermsg(Client *client, Client *to, char *text, int notice);
 char *rcmd_hook_wrapper(Client *client, char *text, int notice, char *display, char *conftag);
 CMD_OVERRIDE_FUNC(rcmd_override);
@@ -81,7 +81,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, rcmd_configrun);
 
 	// Due to the nature of PRIVMSG/NOTICE we're gonna need to hook into PRE_* stuff instead of using command overrides
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, -1000000, rcmd_hook_prechanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, -1000000, rcmd_can_send_to_channel);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, -1000000, rcmd_hook_preusermsg);
 	return MOD_SUCCESS;
 }
@@ -306,9 +306,12 @@ int rcmd_canbypass(Client *client, RestrictedCommand *rcmd) {
 	return 1; // Default to yes so we don't drop too many commands
 }
 
-char *rcmd_hook_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
+int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
 {
-	return rcmd_hook_wrapper(client, text, notice, "channel", (notice ? "channel-notice" : "channel-message"));
+	if (!rcmd_hook_wrapper(client, *msg, notice, "channel", (notice ? "channel-notice" : "channel-message")))
+		return HOOK_DENY;
+	// FIXME ^^^^ may not send notices from the wrapper, but will convert when preusermsg is done as well
+	return HOOK_CONTINUE;
 }
 
 char *rcmd_hook_preusermsg(Client *client, Client *to, char *text, int notice)

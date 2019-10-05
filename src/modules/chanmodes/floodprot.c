@@ -104,7 +104,6 @@ static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned shor
 static int compare_floodprot_modes(ChannelFloodProtection *a, ChannelFloodProtection *b);
 static int do_floodprot(Channel *channel, int what);
 char *channel_modef_string(ChannelFloodProtection *x, char *str);
-int  check_for_chan_flood(Client *client, Channel *channel, char *text);
 void do_floodprot_action(Channel *channel, int what, char *text);
 void floodprottimer_add(Channel *channel, char mflag, time_t when);
 uint64_t gen_floodprot_msghash(char *text);
@@ -118,7 +117,7 @@ int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int floodprot_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
 EVENT(modef_event);
 int cmodef_channel_destroy(Channel *channel, int *should_destroy);
-char *floodprot_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
 int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
 int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment);
 int floodprot_local_nickchange(Client *client, char *oldnick);
@@ -174,7 +173,7 @@ MOD_INIT()
 	}
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, floodprot_config_run);
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, floodprot_pre_chanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, floodprot_can_send_to_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANMSG, 0, floodprot_post_chanmsg);
 	HookAdd(modinfo->handle, HOOKTYPE_KNOCK, 0, floodprot_knock);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_NICKCHANGE, 0, floodprot_local_nickchange);
@@ -940,11 +939,135 @@ char *channel_modef_string(ChannelFloodProtection *x, char *retbuf)
 	return retbuf;
 }
 
-char *floodprot_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
+int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
 {
-	if (MyUser(client) && (check_for_chan_flood(client, channel, text) == 1))
-		return NULL; /* don't send it */
-	return text;
+	Membership *mb;
+	ChannelFloodProtection *chp;
+	MemberFlood *memberflood;
+	uint64_t msghash;
+	unsigned char is_flooding_text=0, is_flooding_repeat=0;
+	static char errbuf[256];
+
+	/* This is redundant, right? */
+	if (!MyUser(client))
+		return HOOK_CONTINUE;
+
+
+	if (ValidatePermissionsForPath("channel:override:flood",client,NULL,channel,NULL) || !IsFloodLimit(channel) || is_skochanop(client, channel))
+		return HOOK_CONTINUE;
+
+	if (!(mb = find_membership_link(client->user->channel, channel)))
+		return HOOK_CONTINUE; /* not in channel */
+
+	chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
+
+	if (!chp || !(chp->limit[FLD_TEXT] || chp->limit[FLD_REPEAT]))
+		return HOOK_CONTINUE;
+
+	if (moddata_membership(mb, mdflood).ptr == NULL)
+	{
+		/* Alloc a new entry if it doesn't exist yet */
+		moddata_membership(mb, mdflood).ptr = safe_alloc(sizeof(MemberFlood));
+	}
+
+	memberflood = (MemberFlood *)moddata_membership(mb, mdflood).ptr;
+
+	if ((TStime() - memberflood->firstmsg) >= chp->per)
+	{
+		/* Reset due to moving into a new time slot */
+		memberflood->firstmsg = TStime();
+		memberflood->nmsg = 1;
+		memberflood->nmsg_repeat = 1;
+		if (chp->limit[FLD_REPEAT])
+		{
+			memberflood->lastmsg = gen_floodprot_msghash(*msg);
+			memberflood->prevmsg = 0;
+		}
+		return HOOK_CONTINUE; /* forget about it.. */
+	}
+
+	/* Anti-repeat ('r') */
+	if (chp->limit[FLD_REPEAT])
+	{
+		msghash = gen_floodprot_msghash(*msg);
+		if (memberflood->lastmsg)
+		{
+			if ((memberflood->lastmsg == msghash) || (memberflood->prevmsg == msghash))
+			{
+				memberflood->nmsg_repeat++;
+				if (memberflood->nmsg_repeat > chp->limit[FLD_REPEAT])
+					is_flooding_repeat = 1;
+			}
+			memberflood->prevmsg = memberflood->lastmsg;
+		}
+		memberflood->lastmsg = msghash;
+	}
+
+	if (chp->limit[FLD_TEXT])
+	{
+		/* increase msgs */
+		memberflood->nmsg++;
+		if (memberflood->nmsg > chp->limit[FLD_TEXT])
+			is_flooding_text = 1;
+	}
+
+	/* Do we need to take any action? */
+	if (is_flooding_text || is_flooding_repeat)
+	{
+		char mask[256];
+		MessageTag *mtags;
+		int flood_type;
+
+		/* Repeat takes precedence over text flood */
+		if (is_flooding_repeat)
+		{
+			snprintf(errbuf, sizeof(errbuf), "Flooding (Your last message is too similar to previous ones)");
+			flood_type = FLD_REPEAT;
+		} else
+		{
+			snprintf(errbuf, sizeof(errbuf), "Flooding (Limit is %i lines per %i seconds)", chp->limit[FLD_TEXT], chp->per);
+			flood_type = FLD_TEXT;
+		}
+
+		if (chp->action[flood_type] == 'd')
+		{
+			/* Drop the message */
+			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, errbuf, channel->chname);
+			*errmsg = errbuf;
+			return HOOK_DENY;
+		}
+
+		if (chp->action[flood_type] == 'b')
+		{
+			/* Ban the user */
+			if (timedban_available && (chp->remove_after[flood_type] > 0))
+				snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", chp->remove_after[flood_type], GetHost(client));
+			else
+				snprintf(mask, sizeof(mask), "*!*@%s", GetHost(client));
+			if (add_listmode(&channel->banlist, &me, channel, mask) == 0)
+			{
+				mtags = NULL;
+				new_message(&me, NULL, &mtags);
+				sendto_server(&me, 0, 0, mtags, ":%s MODE %s +b %s 0",
+				    me.name, channel->chname, mask);
+				sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+				    ":%s MODE %s +b %s", me.name, channel->chname, mask);
+				free_message_tags(mtags);
+			} /* else.. ban list is full */
+		}
+		mtags = NULL;
+		new_message(&me, NULL, &mtags);
+		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+		    ":%s KICK %s %s :%s", me.name,
+		    channel->chname, client->name, errbuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s KICK %s %s :%s",
+		   me.name, channel->chname, client->name, errbuf);
+		free_message_tags(mtags);
+		remove_user_from_channel(client, channel);
+		*errmsg = errbuf; /* not used, but needs to be set */
+		return HOOK_DENY;
+	}
+	return HOOK_CONTINUE;
 }
 
 int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
@@ -1045,129 +1168,6 @@ int floodprot_chanmode_del(Channel *channel, int modechar)
 			break;
 	}
 	floodprottimer_del(channel, modechar);
-	return 0;
-}
-
-int check_for_chan_flood(Client *client, Channel *channel, char *text)
-{
-	Membership *mb;
-	ChannelFloodProtection *chp;
-	MemberFlood *memberflood;
-	uint64_t msghash;
-	unsigned char is_flooding_text=0, is_flooding_repeat=0;
-
-	if (ValidatePermissionsForPath("channel:override:flood",client,NULL,channel,NULL) || !IsFloodLimit(channel) || is_skochanop(client, channel))
-		return 0;
-
-	if (!(mb = find_membership_link(client->user->channel, channel)))
-		return 0; /* not in channel */
-
-	chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
-
-	if (!chp || !(chp->limit[FLD_TEXT] || chp->limit[FLD_REPEAT]))
-		return 0;
-
-	if (moddata_membership(mb, mdflood).ptr == NULL)
-	{
-		/* Alloc a new entry if it doesn't exist yet */
-		moddata_membership(mb, mdflood).ptr = safe_alloc(sizeof(MemberFlood));
-	}
-
-	memberflood = (MemberFlood *)moddata_membership(mb, mdflood).ptr;
-
-	if ((TStime() - memberflood->firstmsg) >= chp->per)
-	{
-		/* Reset due to moving into a new time slot */
-		memberflood->firstmsg = TStime();
-		memberflood->nmsg = 1;
-		memberflood->nmsg_repeat = 1;
-		if (chp->limit[FLD_REPEAT])
-		{
-			memberflood->lastmsg = gen_floodprot_msghash(text);
-			memberflood->prevmsg = 0;
-		}
-		return 0; /* forget about it.. */
-	}
-
-	/* Anti-repeat ('r') */
-	if (chp->limit[FLD_REPEAT])
-	{
-		msghash = gen_floodprot_msghash(text);
-		if (memberflood->lastmsg)
-		{
-			if ((memberflood->lastmsg == msghash) || (memberflood->prevmsg == msghash))
-			{
-				memberflood->nmsg_repeat++;
-				if (memberflood->nmsg_repeat > chp->limit[FLD_REPEAT])
-					is_flooding_repeat = 1;
-			}
-			memberflood->prevmsg = memberflood->lastmsg;
-		}
-		memberflood->lastmsg = msghash;
-	}
-
-	if (chp->limit[FLD_TEXT])
-	{
-		/* increase msgs */
-		memberflood->nmsg++;
-		if (memberflood->nmsg > chp->limit[FLD_TEXT])
-			is_flooding_text = 1;
-	}
-
-	/* Do we need to take any action? */
-	if (is_flooding_text || is_flooding_repeat)
-	{
-		char comment[256], mask[256];
-		MessageTag *mtags;
-		int flood_type;
-
-		/* Repeat takes precedence over text flood */
-		if (is_flooding_repeat)
-		{
-			snprintf(comment, sizeof(comment), "Flooding (Your last message is too similar to previous ones)");
-			flood_type = FLD_REPEAT;
-		} else
-		{
-			snprintf(comment, sizeof(comment), "Flooding (Limit is %i lines per %i seconds)", chp->limit[FLD_TEXT], chp->per);
-			flood_type = FLD_TEXT;
-		}
-
-		if (chp->action[flood_type] == 'd')
-		{
-			/* Drop the message */
-			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, comment, channel->chname);
-			return 1;
-		}
-
-		if (chp->action[flood_type] == 'b')
-		{
-			/* Ban the user */
-			if (timedban_available && (chp->remove_after[flood_type] > 0))
-				snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", chp->remove_after[flood_type], GetHost(client));
-			else
-				snprintf(mask, sizeof(mask), "*!*@%s", GetHost(client));
-			if (add_listmode(&channel->banlist, &me, channel, mask) == 0)
-			{
-				mtags = NULL;
-				new_message(&me, NULL, &mtags);
-				sendto_server(&me, 0, 0, mtags, ":%s MODE %s +b %s 0",
-				    me.name, channel->chname, mask);
-				sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-				    ":%s MODE %s +b %s", me.name, channel->chname, mask);
-				free_message_tags(mtags);
-			} /* else.. ban list is full */
-		}
-		mtags = NULL;
-		new_message(&me, NULL, &mtags);
-		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-		    ":%s KICK %s %s :%s", me.name,
-		    channel->chname, client->name, comment);
-		sendto_server(NULL, 0, 0, mtags, ":%s KICK %s %s :%s",
-		   me.name, channel->chname, client->name, comment);
-		free_message_tags(mtags);
-		remove_user_from_channel(client, channel);
-		return 1;
-	}
 	return 0;
 }
 

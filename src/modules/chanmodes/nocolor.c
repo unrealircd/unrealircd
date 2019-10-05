@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_NOCOLOR;
 
 #define IsNoColor(channel)    (channel->mode.extmode & EXTCMODE_NOCOLOR)
 
-char *nocolor_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+int nocolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
 char *nocolor_prelocalpart(Client *client, Channel *channel, char *comment);
 char *nocolor_prelocalquit(Client *client, char *comment);
 
@@ -54,7 +54,7 @@ CmodeInfo req;
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOCOLOR);
 	
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, nocolor_prechanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, nocolor_can_send_to_channel);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, nocolor_prelocalpart);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT_CHAN, 0, nocolor_prelocalpart);
 	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, nocolor_prelocalquit);
@@ -85,31 +85,27 @@ static int IsUsingColor(char *s)
         return 0;
 }
 
-char *nocolor_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
+int nocolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
 {
 	Hook *h;
 	int i;
 
-	if (MyUser(client) && IsNoColor(channel) && IsUsingColor(text))
+	if (MyUser(client) && IsNoColor(channel) && IsUsingColor(*msg))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
 			i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_COLOR);
 			if (i == HOOK_ALLOW)
-				return text; /* bypass */
+				return HOOK_CONTINUE; /* bypass this restriction */
 			if (i != HOOK_CONTINUE)
 				break;
 		}
 
-		if (!notice)
-		{
-			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname,
-			           "Color is not permitted in this channel", channel->chname);
-		}
-		return NULL; /* block */
+		*errmsg = "Color is not permitted in this channel";
+		return HOOK_DENY;
 	}
 
-	return text;
+	return HOOK_CONTINUE;
 }
 
 char *nocolor_prelocalpart(Client *client, Channel *channel, char *comment)

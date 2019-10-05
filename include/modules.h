@@ -926,7 +926,7 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_AWAY 53
 #define HOOKTYPE_INVITE 55
 #define HOOKTYPE_CAN_JOIN 56
-#define HOOKTYPE_CAN_SEND 57
+#define HOOKTYPE_CAN_SEND_TO_CHANNEL 57
 #define HOOKTYPE_CAN_KICK 58
 #define HOOKTYPE_FREE_CLIENT 59
 #define HOOKTYPE_FREE_USER 60
@@ -1007,8 +1007,8 @@ int hooktype_local_kick(Client *client, Client *victim, Channel *channel, Messag
 int hooktype_remote_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, char *comment);
 char *hooktype_pre_usermsg(Client *client, Client *to, char *text, int notice);
 int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, char *text, int notice);
-int hooktype_can_send(Client *client, Channel *channel, Membership *member, char **text, char **errmsg, int notice);
-char *hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *member, char **text, char **errmsg, int notice);
+int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
 int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
 char *hooktype_pre_local_topic(Client *client, Channel *channel, char *topic);
 int hooktype_local_topic(Client *client, Channel *channel, char *topic);
@@ -1060,7 +1060,7 @@ int hooktype_oper_invite_ban(Client *client, Channel *channel);
 int hooktype_view_topic_outside_channel(Client *client, Channel *channel);
 int hooktype_chan_permit_nick_change(Client *client, Channel *channel);
 int hooktype_is_channel_secure(Channel *channel);
-int hooktype_can_send_secure(Client *client, Channel *channel);
+int hooktype_can_send_to_channel_secure(Client *client, Channel *channel);
 int hooktype_channel_synced(Channel *channel, int merge, int removetheirs, int nomode);
 int hooktype_can_sajoin(Client *target, Channel *channel, Client *client);
 int hooktype_check_init(Client *cptr, char *sockname, size_t size);
@@ -1144,7 +1144,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_AWAY) && !ValidateHook(hooktype_away, func)) || \
         ((hooktype == HOOKTYPE_INVITE) && !ValidateHook(hooktype_invite, func)) || \
         ((hooktype == HOOKTYPE_CAN_JOIN) && !ValidateHook(hooktype_can_join, func)) || \
-        ((hooktype == HOOKTYPE_CAN_SEND) && !ValidateHook(hooktype_can_send, func)) || \
+        ((hooktype == HOOKTYPE_CAN_SEND_TO_CHANNEL) && !ValidateHook(hooktype_can_send_to_channel, func)) || \
         ((hooktype == HOOKTYPE_CAN_KICK) && !ValidateHook(hooktype_can_kick, func)) || \
         ((hooktype == HOOKTYPE_FREE_CLIENT) && !ValidateHook(hooktype_free_client, func)) || \
         ((hooktype == HOOKTYPE_FREE_USER) && !ValidateHook(hooktype_free_user, func)) || \
@@ -1164,7 +1164,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL) && !ValidateHook(hooktype_view_topic_outside_channel, func)) || \
         ((hooktype == HOOKTYPE_CHAN_PERMIT_NICK_CHANGE) && !ValidateHook(hooktype_chan_permit_nick_change, func)) || \
         ((hooktype == HOOKTYPE_IS_CHANNEL_SECURE) && !ValidateHook(hooktype_is_channel_secure, func)) || \
-        ((hooktype == HOOKTYPE_SEND_CHANNEL) && !ValidateHook(hooktype_can_send_secure, func)) || \
+        ((hooktype == HOOKTYPE_SEND_CHANNEL) && !ValidateHook(hooktype_can_send_to_channel_secure, func)) || \
         ((hooktype == HOOKTYPE_CHANNEL_SYNCED) && !ValidateHook(hooktype_channel_synced, func)) || \
         ((hooktype == HOOKTYPE_CAN_SAJOIN) && !ValidateHook(hooktype_can_sajoin, func)) || \
         ((hooktype == HOOKTYPE_WHOIS) && !ValidateHook(hooktype_whois, func)) || \
@@ -1275,7 +1275,7 @@ enum EfunctionType {
 	EFUNC_MTAGS_TO_STRING,
 	EFUNC_TKL_CHARTOTYPE,
 	EFUNC_TKL_TYPE_STRING,
-	EFUNC_CAN_SEND,
+	EFUNC_CAN_SEND_TO_CHANNEL,
 	EFUNC_BROADCAST_MD_GLOBALVAR,
 	EFUNC_BROADCAST_MD_GLOBALVAR_CMD,
 	EFUNC_TKL_IP_HASH,

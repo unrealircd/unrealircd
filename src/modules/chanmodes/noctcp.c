@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_NOCTCP;
 
 #define IsNoCTCP(channel)    (channel->mode.extmode & EXTCMODE_NOCTCP)
 
-char *noctcp_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+int noctcp_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
 
 MOD_TEST()
 {
@@ -51,7 +51,7 @@ CmodeInfo req;
 	req.is_ok = extcmode_default_requirehalfop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOCTCP);
 	
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, noctcp_prechanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, noctcp_can_send_to_channel);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -78,17 +78,12 @@ static int IsACTCP(char *s)
 	return 0;
 }
 
-char *noctcp_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
+int noctcp_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
 {
-	if (MyUser(client) && IsNoCTCP(channel) && IsACTCP(text))
+	if (IsNoCTCP(channel) && IsACTCP(*msg))
 	{
-		if (!notice)
-		{
-			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname,
-				   "CTCPs are not permitted in this channel", channel->chname);
-		}
-
-		return NULL;
+		*errmsg = "CTCPs are not permitted in this channel";
+		return HOOK_DENY;
 	}
-	return text;
+	return HOOK_ALLOW;
 }

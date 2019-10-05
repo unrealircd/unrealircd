@@ -29,13 +29,13 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
 };
 
-char *nocodes_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+int nocodes_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
 
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, nocodes_pre_chanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, nocodes_can_send_to_channel);
 	return MOD_SUCCESS;
 }
 
@@ -57,7 +57,7 @@ static int has_controlcodes(char *p)
 	return 0;
 }
 
-char *nocodes_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
+int nocodes_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
 {
 	static char retbuf[4096];
 	Hook *h;
@@ -65,37 +65,38 @@ char *nocodes_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, c
 
 	if (has_channel_mode(channel, 'S'))
 	{
+		if (!has_controlcodes(*msg))
+			return HOOK_CONTINUE;
+
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
 			i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_COLOR);
 			if (i == HOOK_ALLOW)
-				return text; /* bypass */
+				return HOOK_CONTINUE; /* bypass +S restriction */
 			if (i != HOOK_CONTINUE)
 				break;
 		}
 
-		strlcpy(retbuf, StripControlCodes(text), sizeof(retbuf));
-		return retbuf;
+		strlcpy(retbuf, StripControlCodes(*msg), sizeof(retbuf));
+		*msg = retbuf;
+		return HOOK_CONTINUE;
 	} else
 	if (has_channel_mode(channel, 'c'))
 	{
-		if (has_controlcodes(text))
-		{
-			for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
-			{
-				i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_COLOR);
-				if (i == HOOK_ALLOW)
-					return text; /* bypass */
-				if (i != HOOK_CONTINUE)
-					break;
-			}
+		if (!has_controlcodes(*msg))
+			return HOOK_CONTINUE;
 
-			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname,
-				"Control codes (bold/underline/reverse) are not permitted in this channel",
-				channel->chname);
-			return NULL;
-		} else
-			return text;
-	} else
-		return text;
+		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_COLOR);
+			if (i == HOOK_ALLOW)
+				return HOOK_CONTINUE; /* bypass +c restriction */
+			if (i != HOOK_CONTINUE)
+				break;
+		}
+
+		*errmsg = "Control codes (bold/underline/reverse) are not permitted in this channel";
+		return HOOK_DENY;
+	}
+	return HOOK_CONTINUE;
 }

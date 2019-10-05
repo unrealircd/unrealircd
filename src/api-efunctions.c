@@ -102,7 +102,7 @@ void (*parse_message_tags)(Client *client, char **str, MessageTag **mtag_list);
 extern void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list);
 char *(*mtags_to_string)(MessageTag *m, Client *client);
 extern char *mtags_to_string_default_handler(MessageTag *m, Client *client);
-int (*can_send)(Client *client, Channel *channel, char **msgtext, char **errmsg, int notice);
+int (*can_send_to_channel)(Client *client, Channel *channel, char **msgtext, char **errmsg, int notice);
 void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, char *varname, char *value);
 int (*tkl_ip_hash)(char *ip);
@@ -339,7 +339,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_MTAGS_TO_STRING, mtags_to_string, &mtags_to_string_default_handler);
 	efunc_init_function(EFUNC_TKL_CHARTOTYPE, tkl_chartotype, NULL);
 	efunc_init_function(EFUNC_TKL_TYPE_STRING, tkl_type_string, NULL);
-	efunc_init_function(EFUNC_CAN_SEND, can_send, NULL);
+	efunc_init_function(EFUNC_CAN_SEND_TO_CHANNEL, can_send_to_channel, NULL);
 	efunc_init_function(EFUNC_BROADCAST_MD_GLOBALVAR, broadcast_md_globalvar, NULL);
 	efunc_init_function(EFUNC_BROADCAST_MD_GLOBALVAR_CMD, broadcast_md_globalvar_cmd, NULL);
 	efunc_init_function(EFUNC_TKL_IP_HASH, tkl_ip_hash, NULL);

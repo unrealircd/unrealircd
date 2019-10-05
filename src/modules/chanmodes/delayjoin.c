@@ -30,7 +30,7 @@ int moded_part(Client *client, Channel *channel, MessageTag *mtags, char *commen
 int deny_all(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
 int moded_chanmode(Client *client, Channel *channel,
                    MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-char *moded_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+int moded_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
 char *moded_serialize(ModData *m);
 void moded_unserialize(char *str, ModData *m);
 
@@ -78,7 +78,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_PART, 0, moded_part);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, 0, moded_chanmode);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, 0, moded_chanmode);
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 99999999, moded_prechanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, moded_prechanmsg);
 
 	return MOD_SUCCESS;
 }
@@ -367,13 +367,12 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, cha
 	return 0;
 }
 
-char *moded_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
+int moded_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
 {
-
 	if ((channel_is_delayed(channel) || channel_is_post_delayed(channel)) && (moded_user_invisible(client, channel)))
 		clear_user_invisible_announce(channel, client, mtags);
 
-	return text;
+	return 0;
 }
 
 char *moded_serialize(ModData *m)
