@@ -953,24 +953,25 @@ int antirandom_preconnect(Client *client)
 {
 	int score;
 
-	if (!is_exempt(client))
+	if (is_exempt(client))
+		return HOOK_CONTINUE;
+
+	score = get_spam_score(client);
+	if (score > cfg.threshold)
 	{
-		score = get_spam_score(client);
-		if (score > cfg.threshold)
+		if (cfg.ban_action == BAN_ACT_WARN)
 		{
-			if (cfg.ban_action == BAN_ACT_WARN)
-			{
-				sendto_ops_and_log("[antirandom] would have denied access to user with score %d: %s!%s@%s:%s",
-					score, client->name, client->user->username, client->user->realhost, client->info);
-				return 0;
-			}
-			if (cfg.show_failedconnects)
-				sendto_ops_and_log("[antirandom] denied access to user with score %d: %s!%s@%s:%s",
-					score, client->name, client->user->username, client->user->realhost, client->info);
-			return place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
+			sendto_ops_and_log("[antirandom] would have denied access to user with score %d: %s!%s@%s:%s",
+				score, client->name, client->user->username, client->user->realhost, client->info);
+			return HOOK_CONTINUE;
 		}
+		if (cfg.show_failedconnects)
+			sendto_ops_and_log("[antirandom] denied access to user with score %d: %s!%s@%s:%s",
+				score, client->name, client->user->username, client->user->realhost, client->info);
+		place_host_ban(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
+		return HOOK_DENY;
 	}
-	return 0;
+	return HOOK_CONTINUE;
 }
 
 static void free_stuff(void)

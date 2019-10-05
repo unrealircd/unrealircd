@@ -719,11 +719,11 @@ int blacklist_parse_reply(struct hostent *he, int entry)
  * from blacklist_preconnect() for softbans that need to be delayed
  * as to give the user the opportunity to do SASL Authentication.
  */
-int blacklist_action(Client *client, char *opernotice, BanAction ban_action, char *ban_reason, long ban_time)
+void blacklist_action(Client *client, char *opernotice, BanAction ban_action, char *ban_reason, long ban_time)
 {
 	sendto_snomask(SNO_BLACKLIST, "%s", opernotice);
 	ircd_log(LOG_KILL, "%s", opernotice);
-	return place_host_ban(client, ban_action, ban_reason, ban_time);
+	place_host_ban(client, ban_action, ban_reason, ban_time);
 }
 
 void blacklist_hit(Client *client, Blacklist *bl, int reply)
@@ -827,11 +827,12 @@ int blacklist_preconnect(Client *client)
 	BLUser *blu = BLUSER(client);
 
 	if (!blu || !blu->save_action)
-		return 0;
+		return HOOK_CONTINUE;
 
 	/* There was a pending softban... has the user authenticated via SASL by now? */
 	if (IsLoggedIn(client))
-		return 0; /* yup, so the softban does not apply. */
+		return HOOK_CONTINUE; /* yup, so the softban does not apply. */
 
-	return blacklist_action(client, blu->save_opernotice, blu->save_action, blu->save_reason, blu->save_tkltime);
+	blacklist_action(client, blu->save_opernotice, blu->save_action, blu->save_reason, blu->save_tkltime);
+	return HOOK_DENY;
 }

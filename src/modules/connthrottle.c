@@ -384,25 +384,25 @@ int ct_pre_lconnect(Client *client)
 	int score;
 
 	if (me.local->firsttime + cfg.start_delay > TStime())
-		return 0; /* no throttle: start delay */
+		return HOOK_CONTINUE; /* no throttle: start delay */
 
 	if (ucounter->disabled)
-		return 0; /* protection disabled: allow user */
+		return HOOK_CONTINUE; /* protection disabled: allow user */
 
 	if (still_reputation_gathering())
-		return 0; /* still gathering reputation data */
+		return HOOK_CONTINUE; /* still gathering reputation data */
 
 	if (cfg.sasl_bypass && IsLoggedIn(client))
 	{
 		/* Allowed in: user authenticated using SASL */
-		return 0;
+		return HOOK_CONTINUE;
 	}
 
 	score = GetReputation(client);
 	if (score >= cfg.minimum_reputation_score)
 	{
 		/* Allowed in: IP has enough reputation ("known user") */
-		return 0;
+		return HOOK_CONTINUE;
 	}
 
 	/* If we reach this then the user is NEW */
@@ -429,10 +429,10 @@ int ct_pre_lconnect(Client *client)
 			ucounter->throttling_banner_displayed = 1;
 		}
 		exit_client(client, NULL, cfg.reason);
-		return -1;
+		return HOOK_DENY;
 	}
 
-	return 0;
+	return HOOK_CONTINUE;
 }
 
 /** Increase the connect counter(s), nothing else. */
