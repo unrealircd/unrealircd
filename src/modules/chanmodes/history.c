@@ -31,7 +31,7 @@ struct HistoryChanMode {
 };
 
 Cmode_t EXTMODE_HISTORY = 0L;
-#define HistoryEnabled(chptr)    (chptr->mode.extmode & EXTMODE_HISTORY)
+#define HistoryEnabled(channel)    (channel->mode.extmode & EXTMODE_HISTORY)
 
 /* The regular history cleaning (by timer) is spread out
  * a bit, rather than doing ALL channels every T time.
@@ -54,16 +54,16 @@ static void init_config(void);
 int history_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int history_config_run(ConfigFile *, ConfigEntry *, int);
 static int compare_history_modes(HistoryChanMode *a, HistoryChanMode *b);
-int history_chanmode_is_ok(Client *client, Channel *chptr, char mode, char *para, int type, int what);
+int history_chanmode_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
 void *history_chanmode_put_param(void *r_in, char *param);
 char *history_chanmode_get_param(void *r_in);
 char *history_chanmode_conv_param(char *param, Client *client);
 void history_chanmode_free_param(void *r);
 void *history_chanmode_dup_struct(void *r_in);
-int history_chanmode_sjoin_check(Channel *chptr, void *ourx, void *theirx);
-int history_channel_destroy(Channel *chptr, int *should_destroy);
-int history_chanmsg(Client *client, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
-int history_join(Client *client, Channel *chptr, MessageTag *mtags, char *parv[]);
+int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx);
+int history_channel_destroy(Channel *channel, int *should_destroy);
+int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
+int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
 EVENT(history_clean);
 
 MOD_TEST()
@@ -338,11 +338,11 @@ int history_parse_chanmode(char *param, int *lines, long *t)
  * Does the user have rights to add/remove this channel mode?
  * Is the supplied mode parameter ok?
  */
-int history_chanmode_is_ok(Client *client, Channel *chptr, char mode, char *param, int type, int what)
+int history_chanmode_is_ok(Client *client, Channel *channel, char mode, char *param, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
-		if (IsUser(client) && is_chan_op(client, chptr))
+		if (IsUser(client) && is_chan_op(client, channel))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
 			sendnumeric(client, ERR_NOTFORHALFOPS, 'H');
@@ -444,7 +444,7 @@ void *history_chanmode_dup_struct(void *r_in)
  * we have to deal with merging the settings on different sides
  * (if they differ at all). That's what we do here.
  */
-int history_chanmode_sjoin_check(Channel *chptr, void *ourx, void *theirx)
+int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx)
 {
 	HistoryChanMode *our = (HistoryChanMode *)ourx;
 	HistoryChanMode *their = (HistoryChanMode *)theirx;
@@ -459,23 +459,23 @@ int history_chanmode_sjoin_check(Channel *chptr, void *ourx, void *theirx)
 }
 
 /** Channel is destroyed (or is it?) */
-int history_channel_destroy(Channel *chptr, int *should_destroy)
+int history_channel_destroy(Channel *channel, int *should_destroy)
 {
 	if (*should_destroy == 0)
 		return 0; /* channel will not be destroyed */
 
-	history_destroy(chptr->chname);
+	history_destroy(channel->chname);
 
 	return 0;
 }
 
-int history_chanmsg(Client *client, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
+int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
 {
 	char buf[512];
 	char source[64];
 	HistoryChanMode *settings;
 
-	if (!HistoryEnabled(chptr))
+	if (!HistoryEnabled(channel))
 		return 0;
 
 	/* Filter out CTCP / CTCP REPLY */
@@ -496,26 +496,26 @@ int history_chanmsg(Client *client, Channel *chptr, int sendflags, int prefix, c
 	snprintf(buf, sizeof(buf), ":%s %s %s :%s",
 		source,
 		notice ? "NOTICE" : "PRIVMSG",
-		chptr->chname,
+		channel->chname,
 		text);
 
-	history_add(chptr->chname, mtags, buf);
-	settings = (HistoryChanMode *)GETPARASTRUCT(chptr, 'H');
-	history_del(chptr->chname, settings->max_lines, settings->max_time);
+	history_add(channel->chname, mtags, buf);
+	settings = (HistoryChanMode *)GETPARASTRUCT(channel, 'H');
+	history_del(channel->chname, settings->max_lines, settings->max_time);
 
 	return 0;
 }
 
-int history_join(Client *client, Channel *chptr, MessageTag *mtags, char *parv[])
+int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
 {
-	if (!HistoryEnabled(chptr))
+	if (!HistoryEnabled(channel))
 		return 0;
 
 	if (MyUser(client))
 	{
-		HistoryChanMode *settings = (HistoryChanMode *)GETPARASTRUCT(chptr, 'H');
-		history_del(chptr->chname, settings->max_lines, settings->max_time);
-		history_request(client, chptr->chname, NULL);
+		HistoryChanMode *settings = (HistoryChanMode *)GETPARASTRUCT(channel, 'H');
+		history_del(channel->chname, settings->max_lines, settings->max_time);
+		history_request(client, channel->chname, NULL);
 	}
 
 	return 0;
@@ -530,17 +530,17 @@ EVENT(history_clean)
 {
 	static int hashnum = 0;
 	int loopcnt = 0;
-	Channel *chptr;
+	Channel *channel;
 
 	do
 	{
-		for (chptr = hash_get_chan_bucket(hashnum); chptr; chptr = chptr->hnextch)
+		for (channel = hash_get_chan_bucket(hashnum); channel; channel = channel->hnextch)
 		{
-			if (HistoryEnabled(chptr))
+			if (HistoryEnabled(channel))
 			{
-				HistoryChanMode *settings = (HistoryChanMode *)GETPARASTRUCT(chptr, 'H');
+				HistoryChanMode *settings = (HistoryChanMode *)GETPARASTRUCT(channel, 'H');
 				if (settings)
-					history_del(chptr->chname, settings->max_lines, settings->max_time);
+					history_del(channel->chname, settings->max_lines, settings->max_time);
 			}
 		}
 		hashnum++;

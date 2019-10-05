@@ -70,7 +70,7 @@ CMD_FUNC(cmd_names)
 	int uhnames = (MyConnect(client) && HasCapability(client, "userhost-in-names")); // cache UHNAMES support
 	int bufLen = NICKLEN + (!uhnames ? 0 : (1 + USERLEN + 1 + HOSTLEN));
 	int  mlen = strlen(me.name) + bufLen + 7;
-	Channel *chptr;
+	Channel *channel;
 	Client *acptr;
 	int  member;
 	Member *cm;
@@ -97,27 +97,27 @@ CMD_FUNC(cmd_names)
 		}
 	}
 
-	chptr = find_channel(para, NULL);
+	channel = find_channel(para, NULL);
 
-	if (!chptr || (!ShowChannel(client, chptr) && !ValidatePermissionsForPath("channel:see:names:secret",client,NULL,chptr,NULL)))
+	if (!channel || (!ShowChannel(client, channel) && !ValidatePermissionsForPath("channel:see:names:secret",client,NULL,channel,NULL)))
 	{
 		sendnumeric(client, RPL_ENDOFNAMES, para);
 		return;
 	}
 
 	/* cache whether this user is a member of this channel or not */
-	member = IsMember(client, chptr);
+	member = IsMember(client, channel);
 
-	if (PubChannel(chptr))
+	if (PubChannel(channel))
 		buf[0] = '=';
-	else if (SecretChannel(chptr))
+	else if (SecretChannel(channel))
 		buf[0] = '@';
 	else
 		buf[0] = '*';
 
 	idx = 1;
 	buf[idx++] = ' ';
-	for (s = chptr->chname; *s; s++)
+	for (s = channel->chname; *s; s++)
 		buf[idx++] = *s;
 	buf[idx++] = ' ';
 	buf[idx++] = ':';
@@ -129,13 +129,13 @@ CMD_FUNC(cmd_names)
 
 	spos = idx;		/* starting point in buffer for names! */
 
-	for (cm = chptr->members; cm; cm = cm->next)
+	for (cm = channel->members; cm; cm = cm->next)
 	{
 		acptr = cm->client;
-		if (IsInvisible(acptr) && !member && !ValidatePermissionsForPath("channel:see:names:invisible",client,acptr,chptr,NULL))
+		if (IsInvisible(acptr) && !member && !ValidatePermissionsForPath("channel:see:names:invisible",client,acptr,channel,NULL))
 			continue;
 
-		if (!user_can_see_member(client, acptr, chptr))
+		if (!user_can_see_member(client, acptr, channel))
 			continue; /* invisible (eg: due to delayjoin) */
 
 		if (!multiprefix)

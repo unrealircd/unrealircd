@@ -24,16 +24,16 @@
 
 /* Forward declarations */
 CMD_FUNC(cmd_join);
-void _join_channel(Channel *chptr, Client *client, MessageTag *mtags, int flags);
+void _join_channel(Channel *channel, Client *client, MessageTag *mtags, int flags);
 void _do_join(Client *client, int parc, char *parv[]);
-int _can_join(Client *client, Channel *chptr, char *key, char *parv[]);
+int _can_join(Client *client, Channel *channel, char *key, char *parv[]);
 void _userhost_save_current(Client *client);
 void _userhost_changed(Client *client);
-void _send_join_to_local_users(Client *client, Channel *chptr, MessageTag *mtags);
+void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mtags);
 
 /* Externs */
 extern MODVAR int spamf_ugly_vchanoverride;
-extern int find_invex(Channel *chptr, Client *client);
+extern int find_invex(Channel *channel, Client *client);
 
 /* Local vars */
 static int bouncedtimes = 0;
@@ -87,7 +87,7 @@ MOD_UNLOAD()
  * (eg: bans at the end), so don't change it unless you have a good reason
  * to do so -- Syzop.
  */
-int _can_join(Client *client, Channel *chptr, char *key, char *parv[])
+int _can_join(Client *client, Channel *channel, char *key, char *parv[])
 {
 	Link *lp;
 	Ban *banned;
@@ -96,34 +96,34 @@ int _can_join(Client *client, Channel *chptr, char *key, char *parv[])
 
 	for (h = Hooks[HOOKTYPE_CAN_JOIN]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(client,chptr,key,parv);
+		i = (*(h->func.intfunc))(client,channel,key,parv);
 		if (i != 0)
 			return i;
 	}
 
 	for (h = Hooks[HOOKTYPE_OPER_INVITE_BAN]; h; h = h->next)
 	{
-		j = (*(h->func.intfunc))(client,chptr);
+		j = (*(h->func.intfunc))(client,channel);
 		if (j != 0)
 			break;
 	}
 
 	/* See if we can evade this ban */
-	banned = is_banned(client, chptr, BANCHK_JOIN, NULL, NULL);
+	banned = is_banned(client, channel, BANCHK_JOIN, NULL, NULL);
 	if (banned && j == HOOK_DENY)
 		return (ERR_BANNEDFROMCHAN);
 
 	for (lp = client->user->invited; lp; lp = lp->next)
-		if (lp->value.chptr == chptr)
+		if (lp->value.channel == channel)
 			return 0;
 
-        if (chptr->users >= chptr->mode.limit)
+        if (channel->users >= channel->mode.limit)
         {
                 /* Hmmm.. don't really like this.. and not at this place */
                 
                 for (h = Hooks[HOOKTYPE_CAN_JOIN_LIMITEXCEEDED]; h; h = h->next) 
                 {
-                        i = (*(h->func.intfunc))(client,chptr,key,parv);
+                        i = (*(h->func.intfunc))(client,channel,key,parv);
                         if (i != 0)
                                 return i;
                 }
@@ -132,13 +132,13 @@ int _can_join(Client *client, Channel *chptr, char *key, char *parv[])
         }
 
 
-        if (*chptr->mode.key && (BadPtr(key) || strcmp(chptr->mode.key, key)))
+        if (*channel->mode.key && (BadPtr(key) || strcmp(channel->mode.key, key)))
                 return (ERR_BADCHANNELKEY);
 
-        if ((chptr->mode.mode & MODE_INVITEONLY) && !find_invex(chptr, client))
+        if ((channel->mode.mode & MODE_INVITEONLY) && !find_invex(channel, client))
                 return (ERR_INVITEONLYCHAN);
 
-        if ((chptr->mode.limit && chptr->users >= chptr->mode.limit))
+        if ((channel->mode.limit && channel->users >= channel->mode.limit))
                 return (ERR_CHANNELISFULL);
 
         if (banned)
@@ -146,8 +146,8 @@ int _can_join(Client *client, Channel *chptr, char *key, char *parv[])
 
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
-        if (ValidatePermissionsForPath("channel:override:privsecret",client,NULL,chptr,NULL) && (chptr->mode.mode & MODE_SECRET ||
-            chptr->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(chptr->chname))
+        if (ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL) && (channel->mode.mode & MODE_SECRET ||
+            channel->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(channel->chname))
                 return (ERR_OPERSPVERIFY);
 #endif
 #endif
@@ -180,13 +180,13 @@ CMD_FUNC(cmd_join)
 	bouncedtimes = 0;
 }
 
-/** Send JOIN message for 'client' to all users in 'chptr'.
- * Taking into account that not everyone in chptr should see the JOIN (mode +D)
+/** Send JOIN message for 'client' to all users in 'channel'.
+ * Taking into account that not everyone in channel should see the JOIN (mode +D)
  * and taking into account the different types of JOIN (due to CAP extended-join).
  */
-void _send_join_to_local_users(Client *client, Channel *chptr, MessageTag *mtags)
+void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mtags)
 {
-	int chanops_only = invisible_user_in_channel(client, chptr);
+	int chanops_only = invisible_user_in_channel(client, channel);
 	Member *lp;
 	Client *acptr;
 	char joinbuf[512];
@@ -195,14 +195,14 @@ void _send_join_to_local_users(Client *client, Channel *chptr, MessageTag *mtags
 	long CAP_AWAY_NOTIFY = ClientCapabilityBit("away-notify");
 
 	ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN :%s",
-		client->name, client->user->username, GetHost(client), chptr->chname);
+		client->name, client->user->username, GetHost(client), channel->chname);
 
 	ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
-		client->name, client->user->username, GetHost(client), chptr->chname,
+		client->name, client->user->username, GetHost(client), channel->chname,
 		!isdigit(*client->user->svid) ? client->user->svid : "*",
 		client->info);
 
-	for (lp = chptr->members; lp; lp = lp->next)
+	for (lp = channel->members; lp; lp = lp->next)
 	{
 		acptr = lp->client;
 
@@ -231,33 +231,33 @@ void _send_join_to_local_users(Client *client, Channel *chptr, MessageTag *mtags
 /* Routine that actually makes a user join the channel
  * this does no actual checking (banned, etc.) it just adds the user
  */
-void _join_channel(Channel *chptr, Client *client, MessageTag *recv_mtags, int flags)
+void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int flags)
 {
 	MessageTag *mtags = NULL; /** Message tags to send to local users (sender is :user) */
 	MessageTag *mtags_sjoin = NULL; /* Message tags to send to remote servers for SJOIN (sender is :me.name) */
 	char *parv[] = { 0, 0 };
 
 	/* Same way as in SJOIN */
-	new_message_special(client, recv_mtags, &mtags, ":%s JOIN %s", client->name, chptr->chname);
+	new_message_special(client, recv_mtags, &mtags, ":%s JOIN %s", client->name, channel->chname);
 
 	new_message(&me, recv_mtags, &mtags_sjoin);
 
-	add_user_to_channel(chptr, client, flags);
+	add_user_to_channel(channel, client, flags);
 
-	send_join_to_local_users(client, chptr, mtags);
+	send_join_to_local_users(client, channel, mtags);
 
 	/* old non-SJOINv3 servers */
-	sendto_server(client, 0, PROTO_SJ3, mtags, ":%s JOIN :%s", client->name, chptr->chname);
+	sendto_server(client, 0, PROTO_SJ3, mtags, ":%s JOIN :%s", client->name, channel->chname);
 
 	/* I _know_ that the "@%s " look a bit wierd
 	   with the space and all .. but its to get around
 	   a SJOIN bug --stskeeps */
 	sendto_server(client, PROTO_SID | PROTO_SJ3, 0, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
-		me.id, (long long)chptr->creationtime,
-		chptr->chname, chfl_to_sjoin_symbol(flags), ID(client));
+		me.id, (long long)channel->creationtime,
+		channel->chname, chfl_to_sjoin_symbol(flags), ID(client));
 	sendto_server(client, PROTO_SJ3, PROTO_SID, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
-		me.name, (long long)chptr->creationtime,
-		chptr->chname, chfl_to_sjoin_symbol(flags), client->name);
+		me.name, (long long)channel->creationtime,
+		channel->chname, chfl_to_sjoin_symbol(flags), client->name);
 
 	if (MyUser(client))
 	{
@@ -266,13 +266,13 @@ void _join_channel(Channel *chptr, Client *client, MessageTag *recv_mtags, int f
 		   ** during a net.reconnect : between remote join and
 		   ** the mode with TS. --Run
 		 */
-		if (chptr->creationtime == 0)
+		if (channel->creationtime == 0)
 		{
-			chptr->creationtime = TStime();
+			channel->creationtime = TStime();
 			sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
-			    me.name, chptr->chname, (long long)chptr->creationtime);
+			    me.name, channel->chname, (long long)channel->creationtime);
 		}
-		del_invite(client, chptr);
+		del_invite(client, channel);
 		if (flags && !(flags & CHFL_DEOPPED))
 		{
 			/* We could generate mtags here but this is only for
@@ -285,66 +285,66 @@ void _join_channel(Channel *chptr, Client *client, MessageTag *recv_mtags, int f
 				/* +ao / +qo for when PREFIX_AQ is off */
 				sendto_server(client, 0, PROTO_SJ3, NULL, ":%s MODE %s +o%c %s %s %lld",
 				    me.name,
-				    chptr->chname, chfl_to_chanmode(flags), client->name, client->name,
-				    (long long)chptr->creationtime);
+				    channel->chname, chfl_to_chanmode(flags), client->name, client->name,
+				    (long long)channel->creationtime);
 			} else {
 #endif
 				/* +v/+h/+o (and +a/+q if PREFIX_AQ is on) */
 				sendto_server(client, 0, PROTO_SJ3, NULL, ":%s MODE %s +%c %s %lld",
 				    me.name,
-				    chptr->chname, chfl_to_chanmode(flags), client->name,
-				    (long long)chptr->creationtime);
+				    channel->chname, chfl_to_chanmode(flags), client->name,
+				    (long long)channel->creationtime);
 #ifndef PREFIX_AQ
 			}
 #endif
 		}
 
-		if (chptr->topic)
+		if (channel->topic)
 		{
-			sendnumeric(client, RPL_TOPIC, chptr->chname, chptr->topic);
-			sendnumeric(client, RPL_TOPICWHOTIME, chptr->chname, chptr->topic_nick,
-			    chptr->topic_time);
+			sendnumeric(client, RPL_TOPIC, channel->chname, channel->topic);
+			sendnumeric(client, RPL_TOPICWHOTIME, channel->chname, channel->topic_nick,
+			    channel->topic_time);
 		}
 		
 		/* Set default channel modes (set::modes-on-join).
 		 * Set only if it's the 1st user and only if no other modes have been set
 		 * already (eg: +P, permanent).
 		 */
-		if ((chptr->users == 1) && !chptr->mode.mode && !chptr->mode.extmode &&
+		if ((channel->users == 1) && !channel->mode.mode && !channel->mode.extmode &&
 		    (MODES_ON_JOIN || iConf.modes_on_join.extmodes))
 		{
 			int i;
 			MessageTag *mtags_mode = NULL;
 
-			chptr->mode.extmode =  iConf.modes_on_join.extmodes;
+			channel->mode.extmode =  iConf.modes_on_join.extmodes;
 			/* Param fun */
 			for (i = 0; i <= Channelmode_highest; i++)
 			{
 				if (!Channelmode_Table[i].flag || !Channelmode_Table[i].paracount)
 					continue;
-				if (chptr->mode.extmode & Channelmode_Table[i].mode)
-				        cm_putparameter(chptr, Channelmode_Table[i].flag, iConf.modes_on_join.extparams[i]);
+				if (channel->mode.extmode & Channelmode_Table[i].mode)
+				        cm_putparameter(channel, Channelmode_Table[i].flag, iConf.modes_on_join.extparams[i]);
 			}
 
-			chptr->mode.mode = MODES_ON_JOIN;
+			channel->mode.mode = MODES_ON_JOIN;
 
 			*modebuf = *parabuf = 0;
-			channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
+			channel_modes(client, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
 			/* This should probably be in the SJOIN stuff */
-			new_message_special(&me, recv_mtags, &mtags_mode, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
+			new_message_special(&me, recv_mtags, &mtags_mode, ":%s MODE %s %s %s", me.name, channel->chname, modebuf, parabuf);
 			sendto_server(&me, 0, 0, mtags_mode, ":%s MODE %s %s %s %lld",
-			    me.name, chptr->chname, modebuf, parabuf, (long long)chptr->creationtime);
-			sendto_one(client, mtags_mode, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
+			    me.name, channel->chname, modebuf, parabuf, (long long)channel->creationtime);
+			sendto_one(client, mtags_mode, ":%s MODE %s %s %s", me.name, channel->chname, modebuf, parabuf);
 			free_message_tags(mtags_mode);
 		}
 
 		parv[0] = client->name;
-		parv[1] = chptr->chname;
+		parv[1] = channel->chname;
 		(void)do_cmd(client, NULL, "NAMES", 2, parv);
 
-		RunHook4(HOOKTYPE_LOCAL_JOIN, client, chptr, mtags, parv);
+		RunHook4(HOOKTYPE_LOCAL_JOIN, client, channel, mtags, parv);
 	} else {
-		RunHook4(HOOKTYPE_REMOTE_JOIN, client, chptr, mtags, parv);
+		RunHook4(HOOKTYPE_REMOTE_JOIN, client, channel, mtags, parv);
 	}
 
 	free_message_tags(mtags);
@@ -362,7 +362,7 @@ void _do_join(Client *client, int parc, char *parv[])
 {
 	char jbuf[BUFSIZE];
 	Membership *lp;
-	Channel *chptr;
+	Channel *channel;
 	char *name, *key = NULL;
 	int  i, flags = 0, ishold;
 	char *p = NULL, *p2 = NULL;
@@ -458,19 +458,19 @@ void _do_join(Client *client, int parc, char *parv[])
 			while ((lp = client->user->channel))
 			{
 				MessageTag *mtags = NULL;
-				chptr = lp->chptr;
+				channel = lp->channel;
 
 				new_message(client, NULL, &mtags);
 
-				sendto_channel(chptr, client, NULL, 0, 0, SEND_LOCAL, NULL,
+				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, NULL,
 				               ":%s PART %s :%s",
-				               client->name, chptr->chname, "Left all channels");
-				sendto_server(client, 0, 0, mtags, ":%s PART %s :Left all channels", client->name, chptr->chname);
+				               client->name, channel->chname, "Left all channels");
+				sendto_server(client, 0, 0, mtags, ":%s PART %s :Left all channels", client->name, channel->chname);
 
 				if (MyConnect(client))
-					RunHook4(HOOKTYPE_LOCAL_PART, client, chptr, mtags, "Left all channels");
+					RunHook4(HOOKTYPE_LOCAL_PART, client, channel, mtags, "Left all channels");
 
-				remove_user_from_channel(client, chptr);
+				remove_user_from_channel(client, channel);
 				free_message_tags(mtags);
 			}
 			continue;
@@ -538,12 +538,12 @@ void _do_join(Client *client, int parc, char *parv[])
 			{
 				int invited = 0;
 				Link *lp;
-				Channel *chptr = find_channel(name, NULL);
+				Channel *channel = find_channel(name, NULL);
 				
-				if (chptr)
+				if (channel)
 				{
 					for (lp = client->user->invited; lp; lp = lp->next)
-						if (lp->value.chptr == chptr)
+						if (lp->value.channel == channel)
 							invited = 1;
 				}
 				if (!invited)
@@ -555,11 +555,11 @@ void _do_join(Client *client, int parc, char *parv[])
 			}
 		}
 
-		chptr = get_channel(client, name, CREATE);
-		if (chptr && (lp = find_membership_link(client->user->channel, chptr)))
+		channel = get_channel(client, name, CREATE);
+		if (channel && (lp = find_membership_link(client->user->channel, channel)))
 			continue;
 
-		if (!chptr)
+		if (!channel)
 			continue;
 
 		i = HOOK_CONTINUE;
@@ -570,7 +570,7 @@ void _do_join(Client *client, int parc, char *parv[])
 			Hook *h;
 			for (h = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; h; h = h->next) 
 			{
-				i = (*(h->func.intfunc))(client,chptr,parv);
+				i = (*(h->func.intfunc))(client,channel,parv);
 				if (i == HOOK_DENY || i == HOOK_ALLOW)
 					break;
 			}
@@ -578,13 +578,13 @@ void _do_join(Client *client, int parc, char *parv[])
 			if (i == HOOK_DENY)
 			{
 				/* Rejected... if we just created a new chan we should destroy it too. -- Syzop */
-				if (!chptr->users)
-					sub1_from_channel(chptr);
+				if (!channel->users)
+					sub1_from_channel(channel);
 				continue;
 			}
 			/* If they are allowed, don't check can_join */
 			if (i != HOOK_ALLOW && 
-			   (i = can_join(client, chptr, key, parv)))
+			   (i = can_join(client, channel, key, parv)))
 			{
 				if (i != -1)
 				{
@@ -605,7 +605,7 @@ void _do_join(Client *client, int parc, char *parv[])
 		 * and so on, each with their own unique msgid and such.
 		 */
 		new_message(client, NULL, &mtags);
-		join_channel(chptr, client, mtags, flags);
+		join_channel(channel, client, mtags, flags);
 		free_message_tags(mtags);
 	}
 	RET()
@@ -716,40 +716,40 @@ void _userhost_changed(Client *client)
 		/* Walk through all channels of this user.. */
 		for (channels = client->user->channel; channels; channels = channels->next)
 		{
-			Channel *chptr = channels->chptr;
+			Channel *channel = channels->channel;
 			int flags = channels->flags;
 			char *modes;
 			char partbuf[512]; /* PART */
 			char joinbuf[512]; /* JOIN */
 			char exjoinbuf[512]; /* JOIN (for CAP extended-join) */
 			char modebuf[512]; /* MODE (if any) */
-			int chanops_only = invisible_user_in_channel(client, chptr);
+			int chanops_only = invisible_user_in_channel(client, channel);
 
 			modebuf[0] = '\0';
 
 			/* If the user is banned, don't send any rejoins, it would only be annoying */
-			if (is_banned(client, chptr, BANCHK_JOIN, NULL, NULL))
+			if (is_banned(client, channel, BANCHK_JOIN, NULL, NULL))
 				continue;
 
 			/* Prepare buffers for PART, JOIN, MODE */
 			ircsnprintf(partbuf, sizeof(partbuf), ":%s!%s@%s PART %s :%s",
 						remember_nick, remember_user, remember_host,
-						chptr->chname,
+						channel->chname,
 						"Changing host");
 
 			ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN %s",
-						client->name, client->user->username, GetHost(client), chptr->chname);
+						client->name, client->user->username, GetHost(client), channel->chname);
 
 			ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
-				client->name, client->user->username, GetHost(client), chptr->chname,
+				client->name, client->user->username, GetHost(client), channel->chname,
 				!isdigit(*client->user->svid) ? client->user->svid : "*",
 				client->info);
 
 			modes = get_chmodes_for_user(client, flags);
 			if (!BadPtr(modes))
-				ircsnprintf(modebuf, sizeof(modebuf), ":%s MODE %s %s", me.name, chptr->chname, modes);
+				ircsnprintf(modebuf, sizeof(modebuf), ":%s MODE %s %s", me.name, channel->chname, modes);
 
-			for (lp = chptr->members; lp; lp = lp->next)
+			for (lp = channel->members; lp; lp = lp->next)
 			{
 				acptr = lp->client;
 
@@ -796,7 +796,7 @@ void _userhost_changed(Client *client)
 	current_serial++;
 	for (channels = client->user->channel; channels; channels = channels->next)
 	{
-		for (lp = channels->chptr->members; lp; lp = lp->next)
+		for (lp = channels->channel->members; lp; lp = lp->next)
 		{
 			acptr = lp->client;
 			if (MyUser(acptr) && HasCapabilityFast(acptr, CAP_CHGHOST) &&

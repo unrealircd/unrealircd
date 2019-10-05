@@ -36,7 +36,7 @@ long UMODE_BOT = 0L;
 
 /* Forward declarations */
 int bot_whois(Client *client, Client *acptr);
-int bot_who_status(Client *client, Client *acptr, Channel *chptr, Member *cm, char *status, int cansee);
+int bot_who_status(Client *client, Client *acptr, Channel *channel, Member *cm, char *status, int cansee);
 int bot_umode_change(Client *client, long oldmode, long newmode);
 
 MOD_TEST()
@@ -74,7 +74,7 @@ int bot_whois(Client *requester, Client *acptr)
 	return 0;
 }
 
-int bot_who_status(Client *requester, Client *acptr, Channel *chptr, Member *cm, char *status, int cansee)
+int bot_who_status(Client *requester, Client *acptr, Channel *channel, Member *cm, char *status, int cansee)
 {
 	if (IsBot(acptr))
 		return 'B';

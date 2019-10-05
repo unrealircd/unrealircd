@@ -32,9 +32,9 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NOCTCP;
 
-#define IsNoCTCP(chptr)    (chptr->mode.extmode & EXTCMODE_NOCTCP)
+#define IsNoCTCP(channel)    (channel->mode.extmode & EXTCMODE_NOCTCP)
 
-char *noctcp_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
+char *noctcp_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
 
 MOD_TEST()
 {
@@ -78,14 +78,14 @@ static int IsACTCP(char *s)
 	return 0;
 }
 
-char *noctcp_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice)
+char *noctcp_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
 {
-	if (MyUser(client) && IsNoCTCP(chptr) && IsACTCP(text))
+	if (MyUser(client) && IsNoCTCP(channel) && IsACTCP(text))
 	{
 		if (!notice)
 		{
-			sendnumeric(client, ERR_CANNOTSENDTOCHAN, chptr->chname,
-				   "CTCPs are not permitted in this channel", chptr->chname);
+			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname,
+				   "CTCPs are not permitted in this channel", channel->chname);
 		}
 
 		return NULL;

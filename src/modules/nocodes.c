@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
 };
 
-char *nocodes_pre_chanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
+char *nocodes_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
 
 MOD_INIT()
 {
@@ -57,17 +57,17 @@ static int has_controlcodes(char *p)
 	return 0;
 }
 
-char *nocodes_pre_chanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice)
+char *nocodes_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
 {
 	static char retbuf[4096];
 	Hook *h;
 	int i;
 
-	if (has_channel_mode(chptr, 'S'))
+	if (has_channel_mode(channel, 'S'))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_COLOR);
+			i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_COLOR);
 			if (i == HOOK_ALLOW)
 				return text; /* bypass */
 			if (i != HOOK_CONTINUE)
@@ -77,22 +77,22 @@ char *nocodes_pre_chanmsg(Client *client, Channel *chptr, MessageTag *mtags, cha
 		strlcpy(retbuf, StripControlCodes(text), sizeof(retbuf));
 		return retbuf;
 	} else
-	if (has_channel_mode(chptr, 'c'))
+	if (has_channel_mode(channel, 'c'))
 	{
 		if (has_controlcodes(text))
 		{
 			for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 			{
-				i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_COLOR);
+				i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_COLOR);
 				if (i == HOOK_ALLOW)
 					return text; /* bypass */
 				if (i != HOOK_CONTINUE)
 					break;
 			}
 
-			sendnumeric(client, ERR_CANNOTSENDTOCHAN, chptr->chname,
+			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname,
 				"Control codes (bold/underline/reverse) are not permitted in this channel",
-				chptr->chname);
+				channel->chname);
 			return NULL;
 		} else
 			return text;

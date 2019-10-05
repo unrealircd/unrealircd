@@ -64,7 +64,7 @@ CMD_FUNC(cmd_whois)
 {
 	Membership *lp;
 	Client *target;
-	Channel *chptr;
+	Channel *channel;
 	char *nick, *tmp, *name;
 	char *p = NULL;
 	int  found, len, mlen;
@@ -159,15 +159,15 @@ CMD_FUNC(cmd_whois)
 				int ret = EX_ALLOW;
 				int operoverride = 0;
 				
-				chptr = lp->chptr;
+				channel = lp->channel;
 				showchannel = 0;
 
-				if (ShowChannel(client, chptr))
+				if (ShowChannel(client, channel))
 					showchannel = 1;
 
 				for (h = Hooks[HOOKTYPE_SEE_CHANNEL_IN_WHOIS]; h; h = h->next)
 				{
-					int n = (*(h->func.intfunc))(client, target, chptr);
+					int n = (*(h->func.intfunc))(client, target, channel);
 					/* Hook return values:
 					 * EX_ALLOW means 'yes is ok, as far as modules are concerned'
 					 * EX_DENY means 'hide this channel, unless oper overriding'
@@ -188,7 +188,7 @@ CMD_FUNC(cmd_whois)
 				if (ret == EX_DENY)
 					showchannel = 0;
 				
-				if (!showchannel && (ValidatePermissionsForPath("channel:see:whois",client,NULL,chptr,NULL)))
+				if (!showchannel && (ValidatePermissionsForPath("channel:see:whois",client,NULL,channel,NULL)))
 				{
 					showchannel = 1; /* OperOverride */
 					operoverride = 1;
@@ -203,7 +203,7 @@ CMD_FUNC(cmd_whois)
 				if (showchannel)
 				{
 					long access;
-					if (len + strlen(chptr->chname) > (size_t)BUFSIZE - 4 - mlen)
+					if (len + strlen(channel->chname) > (size_t)BUFSIZE - 4 - mlen)
 					{
 						sendto_one(client, NULL,
 						    ":%s %d %s %s :%s",
@@ -219,7 +219,7 @@ CMD_FUNC(cmd_whois)
 						/* '?' and '!' both mean we can see the channel in /WHOIS and normally wouldn't,
 						 * but there's still a slight difference between the two...
 						 */
-						if (!PubChannel(chptr))
+						if (!PubChannel(channel))
 						{
 							/* '?' means it's a secret/private channel (too) */
 							*(buf + len++) = '?';
@@ -231,7 +231,7 @@ CMD_FUNC(cmd_whois)
 						}
 					}
 
-					access = get_access(target, chptr);
+					access = get_access(target, channel);
 					if (!MyUser(client) || !HasCapability(client, "multi-prefix"))
 					{
 #ifdef PREFIX_AQ
@@ -265,8 +265,8 @@ CMD_FUNC(cmd_whois)
 					}
 					if (len)
 						*(buf + len) = '\0';
-					(void)strcpy(buf + len, chptr->chname);
-					len += strlen(chptr->chname);
+					(void)strcpy(buf + len, channel->chname);
+					len += strlen(channel->chname);
 					(void)strcat(buf + len, " ");
 					len++;
 				}

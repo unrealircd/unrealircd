@@ -28,9 +28,9 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_inchannel_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2);
+int extban_inchannel_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2);
 char *extban_inchannel_conv_param(char *para);
-int extban_inchannel_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
+int extban_inchannel_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
 MOD_INIT()
@@ -94,7 +94,7 @@ char *extban_inchannel_conv_param(char *para)
 }
 
 /* The only purpose of this function is a temporary workaround to prevent a desynch.. pfff */
-int extban_inchannel_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2)
+int extban_inchannel_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2)
 {
 	char *p;
 
@@ -135,7 +135,7 @@ static int extban_inchannel_compareflags(char symbol, int flags)
 	return 0;
 }
 
-int extban_inchannel_is_banned(Client *client, Channel *chptr, char *ban, int type, char **msg, char **errmsg)
+int extban_inchannel_is_banned(Client *client, Channel *channel, char *ban, int type, char **msg, char **errmsg)
 {
 	Membership *lp;
 	char *p = ban+3, symbol = '\0';
@@ -148,7 +148,7 @@ int extban_inchannel_is_banned(Client *client, Channel *chptr, char *ban, int ty
 
 	for (lp = client->user->channel; lp; lp = lp->next)
 	{
-		if (match_esc(p, lp->chptr->chname))
+		if (match_esc(p, lp->channel->chname))
 		{
 			/* Channel matched, check symbol if needed (+/%/@/etc) */
 			if (symbol)

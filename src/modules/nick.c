@@ -233,7 +233,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 				*p = '\0';
 
 				sendto_one(cptr, NULL, ":%s SJOIN %ld %s + :%s%s",
-					me.name, lp->chptr->creationtime, lp->chptr->chname,
+					me.name, lp->channel->creationtime, lp->channel->chname,
 					flags, existing->name);
 			}
 		}
@@ -895,21 +895,21 @@ CMD_FUNC(cmd_nick)
 		{
 			for (mp = client->user->channel; mp; mp = mp->next)
 			{
-				if (!is_skochanop(client, mp->chptr) && is_banned(client, mp->chptr, BANCHK_NICK, NULL, NULL))
+				if (!is_skochanop(client, mp->channel) && is_banned(client, mp->channel, BANCHK_NICK, NULL, NULL))
 				{
 					sendnumeric(client, ERR_BANNICKCHANGE,
-					    mp->chptr->chname);
+					    mp->channel->chname);
 					return;
 				}
-				if (CHECK_TARGET_NICK_BANS && !is_skochanop(client, mp->chptr) && is_banned_with_nick(client, mp->chptr, BANCHK_NICK, nick, NULL, NULL))
+				if (CHECK_TARGET_NICK_BANS && !is_skochanop(client, mp->channel) && is_banned_with_nick(client, mp->channel, BANCHK_NICK, nick, NULL, NULL))
 				{
-					sendnumeric(client, ERR_BANNICKCHANGE, mp->chptr->chname);
+					sendnumeric(client, ERR_BANNICKCHANGE, mp->channel->chname);
 					return;
 				}
 
 				for (h = Hooks[HOOKTYPE_CHAN_PERMIT_NICK_CHANGE]; h; h = h->next)
 				{
-					i = (*(h->func.intfunc))(client,mp->chptr);
+					i = (*(h->func.intfunc))(client,mp->channel);
 					if (i != HOOK_CONTINUE)
 						break;
 				}
@@ -917,7 +917,7 @@ CMD_FUNC(cmd_nick)
 				if (i == HOOK_DENY)
 				{
 					sendnumeric(client, ERR_NONICKCHANGE,
-					    mp->chptr->chname);
+					    mp->channel->chname);
 					return;
 				}
 			}

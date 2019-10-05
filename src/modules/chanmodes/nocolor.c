@@ -32,10 +32,10 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NOCOLOR;
 
-#define IsNoColor(chptr)    (chptr->mode.extmode & EXTCMODE_NOCOLOR)
+#define IsNoColor(channel)    (channel->mode.extmode & EXTCMODE_NOCOLOR)
 
-char *nocolor_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
-char *nocolor_prelocalpart(Client *client, Channel *chptr, char *comment);
+char *nocolor_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+char *nocolor_prelocalpart(Client *client, Channel *channel, char *comment);
 char *nocolor_prelocalquit(Client *client, char *comment);
 
 MOD_TEST()
@@ -85,16 +85,16 @@ static int IsUsingColor(char *s)
         return 0;
 }
 
-char *nocolor_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice)
+char *nocolor_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
 {
 	Hook *h;
 	int i;
 
-	if (MyUser(client) && IsNoColor(chptr) && IsUsingColor(text))
+	if (MyUser(client) && IsNoColor(channel) && IsUsingColor(text))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_COLOR);
+			i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_COLOR);
 			if (i == HOOK_ALLOW)
 				return text; /* bypass */
 			if (i != HOOK_CONTINUE)
@@ -103,8 +103,8 @@ char *nocolor_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char
 
 		if (!notice)
 		{
-			sendnumeric(client, ERR_CANNOTSENDTOCHAN, chptr->chname,
-			           "Color is not permitted in this channel", chptr->chname);
+			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname,
+			           "Color is not permitted in this channel", channel->chname);
 		}
 		return NULL; /* block */
 	}
@@ -112,12 +112,12 @@ char *nocolor_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char
 	return text;
 }
 
-char *nocolor_prelocalpart(Client *client, Channel *chptr, char *comment)
+char *nocolor_prelocalpart(Client *client, Channel *channel, char *comment)
 {
 	if (!comment)
 		return NULL;
 
-	if (MyUser(client) && IsNoColor(chptr) && IsUsingColor(comment))
+	if (MyUser(client) && IsNoColor(channel) && IsUsingColor(comment))
 		return NULL;
 
 	return comment;
@@ -129,7 +129,7 @@ static int IsAnyChannelNoColor(Client *client)
 	Membership *lp;
 
 	for (lp = client->user->channel; lp; lp = lp->next)
-		if (IsNoColor(lp->chptr))
+		if (IsNoColor(lp->channel))
 			return 1;
 	return 0;
 }

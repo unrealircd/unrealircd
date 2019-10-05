@@ -30,11 +30,11 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NOKNOCK;
 
-#define IsNoKnock(chptr)    (chptr->mode.extmode & EXTCMODE_NOKNOCK)
+#define IsNoKnock(channel)    (channel->mode.extmode & EXTCMODE_NOKNOCK)
 
-int noknock_check (Client *client, Channel *chptr);
-int noknock_mode_allow(Client *client, Channel *chptr, char mode, char *para, int checkt, int what);
-int noknock_mode_del (Channel *chptr, int modeChar);
+int noknock_check (Client *client, Channel *channel);
+int noknock_mode_allow(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
+int noknock_mode_del (Channel *channel, int modeChar);
 
 MOD_TEST()
 {
@@ -70,29 +70,29 @@ MOD_UNLOAD()
 }
 
 
-int noknock_check (Client *client, Channel *chptr)
+int noknock_check (Client *client, Channel *channel)
 {
-	if (MyUser(client) && IsNoKnock(chptr))
+	if (MyUser(client) && IsNoKnock(channel))
 	{
-		sendnumeric(client, ERR_CANNOTKNOCK, chptr->chname, "No knocks are allowed! (+K)");
+		sendnumeric(client, ERR_CANNOTKNOCK, channel->chname, "No knocks are allowed! (+K)");
 		return HOOK_DENY;
 	}
 
 	return HOOK_CONTINUE;
 }
 
-int noknock_mode_del (Channel *chptr, int modeChar)
+int noknock_mode_del (Channel *channel, int modeChar)
 {
 	// Remove noknock when we're removing invite only
 	if (modeChar == 'i')
-		chptr->mode.extmode &= ~EXTCMODE_NOKNOCK;
+		channel->mode.extmode &= ~EXTCMODE_NOKNOCK;
 
 	return 0;
 }
 
-int noknock_mode_allow(Client *client, Channel *chptr, char mode, char *para, int checkt, int what)
+int noknock_mode_allow(Client *client, Channel *channel, char mode, char *para, int checkt, int what)
 {
-	if (!(chptr->mode.mode & MODE_INVITEONLY))
+	if (!(channel->mode.mode & MODE_INVITEONLY))
 	{
 		if (checkt == EXCHK_ACCESS_ERR)
 		{
@@ -101,5 +101,5 @@ int noknock_mode_allow(Client *client, Channel *chptr, char mode, char *para, in
 		return EX_DENY;
 	}
 
-	return extcmode_default_requirehalfop(client, chptr, mode, para, checkt, what);
+	return extcmode_default_requirehalfop(client, channel, mode, para, checkt, what);
 }

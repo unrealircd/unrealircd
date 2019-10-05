@@ -23,9 +23,9 @@
 #include "unrealircd.h"
 
 /* Forward declarations */
-void send_channel_modes(Client *to, Channel *chptr);
-void send_channel_modes_sjoin(Client *to, Channel *chptr);
-void send_channel_modes_sjoin3(Client *to, Channel *chptr);
+void send_channel_modes(Client *to, Channel *channel);
+void send_channel_modes_sjoin(Client *to, Channel *channel);
+void send_channel_modes_sjoin3(Client *to, Channel *channel);
 CMD_FUNC(cmd_server);
 CMD_FUNC(cmd_server_remote);
 int _verify_link(Client *client, char *servername, ConfigItem_link **link_out);
@@ -1055,22 +1055,22 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	   ** Last, pass all channels plus statuses
 	 */
 	{
-		Channel *chptr;
-		for (chptr = channels; chptr; chptr = chptr->nextch)
+		Channel *channel;
+		for (channel = channels; channel; channel = channel->nextch)
 		{
 			if (!SupportSJOIN(cptr))
-				send_channel_modes(cptr, chptr);
+				send_channel_modes(cptr, channel);
 			else if (SupportSJOIN(cptr) && !SupportSJ3(cptr))
 			{
-				send_channel_modes_sjoin(cptr, chptr);
+				send_channel_modes_sjoin(cptr, channel);
 			}
 			else
-				send_channel_modes_sjoin3(cptr, chptr);
-			if (chptr->topic_time)
+				send_channel_modes_sjoin3(cptr, channel);
+			if (channel->topic_time)
 				sendto_one(cptr, NULL, "TOPIC %s %s %lld :%s",
-				    chptr->chname, chptr->topic_nick,
-				    (long long)chptr->topic_time, chptr->topic);
-			send_moddata_channel(cptr, chptr);
+				    channel->chname, channel->topic_nick,
+				    (long long)channel->topic_time, channel->topic);
+			send_moddata_channel(cptr, channel);
 		}
 	}
 	
@@ -1102,7 +1102,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
  * Previously this function was called send_mode_list() when it was dual-function.
  * (only for old severs lacking SJOIN/SJ3
  */
-static void send_channel_modes_members(Client *to, Channel *chptr, int mask, char flag)
+static void send_channel_modes_members(Client *to, Channel *channel, int mask, char flag)
 {
 	Member *lp;
 	char *cp, *name;
@@ -1111,7 +1111,7 @@ static void send_channel_modes_members(Client *to, Channel *chptr, int mask, cha
 	cp = modebuf + strlen(modebuf);
 	if (*parabuf)		/* mode +l or +k xx */
 		count = 1;
-	for (lp = chptr->members; lp; lp = lp->next)
+	for (lp = channel->members; lp; lp = lp->next)
 	{
 		if (!(lp->flags & mask))
 			continue;
@@ -1134,7 +1134,7 @@ static void send_channel_modes_members(Client *to, Channel *chptr, int mask, cha
 		if (send)
 		{
 			/* to is always a server! So we send creationtime */
-			sendmodeto_one(to, me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
+			sendmodeto_one(to, me.name, channel->chname, modebuf, parabuf, channel->creationtime);
 			send = 0;
 			*parabuf = '\0';
 			cp = modebuf;
@@ -1154,7 +1154,7 @@ static void send_channel_modes_members(Client *to, Channel *chptr, int mask, cha
  * Previously this was combined with +vhoaq stuff in the send_mode_list() function.
  * (only for old severs lacking SJOIN/SJ3
  */
-static void send_channel_modes_list_mode(Client *to, Channel *chptr, Ban *lp, char flag)
+static void send_channel_modes_list_mode(Client *to, Channel *channel, Ban *lp, char flag)
 {
 	char *cp, *name;
 	int count = 0, send = 0;
@@ -1186,7 +1186,7 @@ static void send_channel_modes_list_mode(Client *to, Channel *chptr, Ban *lp, ch
 		if (send)
 		{
 			/* to is always a server! So we send creationtime */
-			sendmodeto_one(to, me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
+			sendmodeto_one(to, me.name, channel->chname, modebuf, parabuf, channel->creationtime);
 			send = 0;
 			*parabuf = '\0';
 			cp = modebuf;
@@ -1203,61 +1203,61 @@ static void send_channel_modes_list_mode(Client *to, Channel *chptr, Ban *lp, ch
 }
 
 /* (only for old severs lacking SJOIN/SJ3 */
-static inline void send_channel_mode(Client *to, char *from, Channel *chptr)
+static inline void send_channel_mode(Client *to, char *from, Channel *channel)
 {
 	if (*parabuf)
 		sendto_one(to, NULL, ":%s MODE %s %s %s %lld", from,
-			chptr->chname,
-			modebuf, parabuf, (long long)chptr->creationtime);
+			channel->chname,
+			modebuf, parabuf, (long long)channel->creationtime);
 	else
 		sendto_one(to, NULL, ":%s MODE %s %s %lld", from,
-			chptr->chname,
-			modebuf, (long long)chptr->creationtime);
+			channel->chname,
+			modebuf, (long long)channel->creationtime);
 }
 
-/**  Send "to" a full list of the MODEs for channel chptr.
+/**  Send "to" a full list of the MODEs for channel channel.
  * Note that this function is only used for servers lacking SJOIN/SJOIN3.
  */
-void send_channel_modes(Client *to, Channel *chptr)
+void send_channel_modes(Client *to, Channel *channel)
 {
-	if (*chptr->chname != '#')
+	if (*channel->chname != '#')
 		return;
 
 	/* Send the "property" channel modes like +lks */
 	*modebuf = *parabuf = '\0';
-	channel_modes(to, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
-	send_channel_mode(to, me.name, chptr);
+	channel_modes(to, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
+	send_channel_mode(to, me.name, channel);
 
 	/* Then send the +qaohv in one go */
 	modebuf[0] = '+';
 	modebuf[1] = '\0';
 	parabuf[0] = '\0';
-	send_channel_modes_members(to, chptr, CHFL_CHANOWNER, 'q');
-	send_channel_modes_members(to, chptr, CHFL_CHANADMIN, 'a');
-	send_channel_modes_members(to, chptr, CHFL_CHANOP, 'o');
-	send_channel_modes_members(to, chptr, CHFL_HALFOP, 'h');
-	send_channel_modes_members(to, chptr, CHFL_VOICE, 'v');
+	send_channel_modes_members(to, channel, CHFL_CHANOWNER, 'q');
+	send_channel_modes_members(to, channel, CHFL_CHANADMIN, 'a');
+	send_channel_modes_members(to, channel, CHFL_CHANOP, 'o');
+	send_channel_modes_members(to, channel, CHFL_HALFOP, 'h');
+	send_channel_modes_members(to, channel, CHFL_VOICE, 'v');
 	/* ..including any remainder in the buffer.. */
 	if (modebuf[1] || *parabuf)
-		sendmodeto_one(to, me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
+		sendmodeto_one(to, me.name, channel->chname, modebuf, parabuf, channel->creationtime);
 
 	/* Then send the +beI in one go */
 	modebuf[0] = '+';
 	modebuf[1] = '\0';
 	parabuf[0] = '\0';
-	send_channel_modes_list_mode(to, chptr, chptr->banlist, 'b');
-	send_channel_modes_list_mode(to, chptr, chptr->exlist, 'e');
-	send_channel_modes_list_mode(to, chptr, chptr->invexlist, 'I');
+	send_channel_modes_list_mode(to, channel, channel->banlist, 'b');
+	send_channel_modes_list_mode(to, channel, channel->exlist, 'e');
+	send_channel_modes_list_mode(to, channel, channel->invexlist, 'I');
 	/* ..including any remainder in the buffer.. */
 	if (modebuf[1] || *parabuf)
-		sendmodeto_one(to, me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
+		sendmodeto_one(to, me.name, channel->chname, modebuf, parabuf, channel->creationtime);
 
 	/* send MLOCK here too... --nenolod */
 	if (CHECKPROTO(to, PROTO_MLOCK))
 	{
 		sendto_one(to, NULL, "MLOCK %lld %s :%s",
-			   (long long)chptr->creationtime, chptr->chname,
-			   BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
+			   (long long)channel->creationtime, channel->chname,
+			   BadPtr(channel->mode_lock) ? "" : channel->mode_lock);
 	}
 }
 
@@ -1389,10 +1389,10 @@ static int send_ban_list(Client *to, char *chname, time_t creationtime, Channel 
 
 
 /* 
- * This will send "to" a full list of the modes for channel chptr,
+ * This will send "to" a full list of the modes for channel channel,
  * NOTE: this is only for old servers who do not support SJ3.
  */
-void send_channel_modes_sjoin(Client *to, Channel *chptr)
+void send_channel_modes_sjoin(Client *to, Channel *channel)
 {
 	Member *members;
 	Member *lp;
@@ -1401,15 +1401,15 @@ void send_channel_modes_sjoin(Client *to, Channel *chptr)
 
 	int  n = 0;
 
-	if (*chptr->chname != '#')
+	if (*channel->chname != '#')
 		return;
 
-	members = chptr->members;
+	members = channel->members;
 
 	/* First we'll send channel, channel modes and members and status */
 
 	*modebuf = *parabuf = '\0';
-	channel_modes(to, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
+	channel_modes(to, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
 
 	if (*parabuf)
 	{
@@ -1423,7 +1423,7 @@ void send_channel_modes_sjoin(Client *to, Channel *chptr)
 	}
 
 	ircsnprintf(buf, sizeof(buf), "SJOIN %lld %s %s %s :",
-	    (long long)chptr->creationtime, chptr->chname, modebuf, parabuf);
+	    (long long)channel->creationtime, channel->chname, modebuf, parabuf);
 
 	bufptr = buf + strlen(buf);
 
@@ -1460,7 +1460,7 @@ void send_channel_modes_sjoin(Client *to, Channel *chptr)
 			sendto_one(to, NULL, "%s", buf);
 
 			ircsnprintf(buf, sizeof(buf), "SJOIN %lld %s %s %s :",
-			    (long long)chptr->creationtime, chptr->chname, modebuf,
+			    (long long)channel->creationtime, channel->chname, modebuf,
 			    parabuf);
 			n = 0;
 
@@ -1479,23 +1479,23 @@ void send_channel_modes_sjoin(Client *to, Channel *chptr)
 	*parabuf = '\0';
 	*modebuf = '+';
 	modebuf[1] = '\0';
-	send_ban_list(to, chptr->chname, chptr->creationtime, chptr);
+	send_ban_list(to, channel->chname, channel->creationtime, channel);
 
 	if (modebuf[1] || *parabuf)
 		sendto_one(to, NULL, "MODE %s %s %s %lld",
-		    chptr->chname, modebuf, parabuf,
-		    (long long)chptr->creationtime);
+		    channel->chname, modebuf, parabuf,
+		    (long long)channel->creationtime);
 
 	return;
 }
 
-/** This will send "to" a full list of the modes for channel chptr,
+/** This will send "to" a full list of the modes for channel channel,
  *
  * Half of it recoded by Syzop: the whole buffering and size checking stuff
  * looked weird and just plain inefficient. We now fill up our send-buffer
  * really as much as we can, without causing any overflows of course.
  */
-void send_channel_modes_sjoin3(Client *to, Channel *chptr)
+void send_channel_modes_sjoin3(Client *to, Channel *channel)
 {
 	MessageTag *mtags = NULL;
 	Member *members;
@@ -1509,17 +1509,17 @@ void send_channel_modes_sjoin3(Client *to, Channel *chptr)
 	int prebuflen = 0; /* points to after the <sjointoken> <TS> <chan> <fixmodes> <fixparas <..>> : part */
 	int sent = 0; /* we need this so we send at least 1 message about the channel (eg if +P and no members, no bans, #4459) */
 
-	if (*chptr->chname != '#')
+	if (*channel->chname != '#')
 		return;
 
 	nomode = 0;
 	nopara = 0;
-	members = chptr->members;
+	members = channel->members;
 
 	/* First we'll send channel, channel modes and members and status */
 
 	*modebuf = *parabuf = '\0';
-	channel_modes(to, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
+	channel_modes(to, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
 
 	if (!modebuf[1])
 		nomode = 1;
@@ -1538,19 +1538,19 @@ void send_channel_modes_sjoin3(Client *to, Channel *chptr)
 	{
 		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %lld %s :", CHECKPROTO(to, PROTO_SID) ? me.id : me.name,
-		    (long long)chptr->creationtime, chptr->chname);
+		    (long long)channel->creationtime, channel->chname);
 	}
 	if (nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %lld %s %s :", CHECKPROTO(to, PROTO_SID) ? me.id : me.name,
-		    (long long)chptr->creationtime, chptr->chname, modebuf);
+		    (long long)channel->creationtime, channel->chname, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %lld %s %s %s :", CHECKPROTO(to, PROTO_SID) ? me.id : me.name,
-		    (long long)chptr->creationtime, chptr->chname, modebuf, parabuf);
+		    (long long)channel->creationtime, channel->chname, modebuf, parabuf);
 	}
 
 	prebuflen = strlen(buf);
@@ -1609,7 +1609,7 @@ void send_channel_modes_sjoin3(Client *to, Channel *chptr)
 		bufptr = mystpcpy(bufptr, tbuf);
 	}
 
-	for (ban = chptr->banlist; ban; ban = ban->next)
+	for (ban = channel->banlist; ban; ban = ban->next)
 	{
 		p = tbuf;
 		if (SupportSJSBY(to))
@@ -1632,7 +1632,7 @@ void send_channel_modes_sjoin3(Client *to, Channel *chptr)
 		bufptr = mystpcpy(bufptr, tbuf);
 	}
 
-	for (ban = chptr->exlist; ban; ban = ban->next)
+	for (ban = channel->exlist; ban; ban = ban->next)
 	{
 		p = tbuf;
 		if (SupportSJSBY(to))
@@ -1655,7 +1655,7 @@ void send_channel_modes_sjoin3(Client *to, Channel *chptr)
 		bufptr = mystpcpy(bufptr, tbuf);
 	}
 
-	for (ban = chptr->invexlist; ban; ban = ban->next)
+	for (ban = channel->invexlist; ban; ban = ban->next)
 	{
 		p = tbuf;
 		if (SupportSJSBY(to))

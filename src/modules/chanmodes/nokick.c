@@ -31,9 +31,9 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NOKICK;
 
-#define IsNoKick(chptr)    (chptr->mode.extmode & EXTCMODE_NOKICK)
+#define IsNoKick(channel)    (channel->mode.extmode & EXTCMODE_NOKICK)
 
-int nokick_check (Client* client, Client* who, Channel *chptr, char* comment, long client_flags, long who_flags, char **reject_reason);
+int nokick_check (Client* client, Client* who, Channel *channel, char* comment, long client_flags, long who_flags, char **reject_reason);
 
 MOD_TEST()
 {
@@ -67,11 +67,11 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int nokick_check (Client* client, Client* who, Channel *chptr, char* comment, long client_flags, long who_flags, char **reject_reason)
+int nokick_check (Client* client, Client* who, Channel *channel, char* comment, long client_flags, long who_flags, char **reject_reason)
 {
 	static char errmsg[256];
 
-	if (MyUser(client) && IsNoKick(chptr))
+	if (MyUser(client) && IsNoKick(channel))
 	{
 		ircsnprintf(errmsg, sizeof(errmsg), ":%s %d %s %s :%s",
 		            me.name, ERR_CANNOTDOCOMMAND, client->name,

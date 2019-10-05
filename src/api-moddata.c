@@ -126,18 +126,18 @@ void moddata_free_local_client(Client *client)
 }
 
 // FIXME: this is never called
-void moddata_free_channel(Channel *chptr)
+void moddata_free_channel(Channel *channel)
 {
 	ModDataInfo *md;
 
 	for (md = MDInfo; md; md = md->next)
 		if (md->type == MODDATATYPE_CHANNEL)
 		{
-			if (md->free && moddata_channel(chptr, md).ptr)
-				md->free(&moddata_channel(chptr, md));
+			if (md->free && moddata_channel(channel, md).ptr)
+				md->free(&moddata_channel(channel, md));
 		}
 
-	memset(chptr->moddata, 0, sizeof(chptr->moddata));
+	memset(channel->moddata, 0, sizeof(channel->moddata));
 }
 
 void moddata_free_member(Member *m)
@@ -207,22 +207,22 @@ void unload_moddata_commit(ModDataInfo *md)
 		}
 		case MODDATATYPE_CHANNEL:
 		{
-			Channel *chptr;
-			for (chptr = channels; chptr; chptr=chptr->nextch)
+			Channel *channel;
+			for (channel = channels; channel; channel=channel->nextch)
 			{
-				if (md->free && moddata_channel(chptr, md).ptr)
-					md->free(&moddata_channel(chptr, md));
-				memset(&moddata_channel(chptr, md), 0, sizeof(ModData));
+				if (md->free && moddata_channel(channel, md).ptr)
+					md->free(&moddata_channel(channel, md));
+				memset(&moddata_channel(channel, md), 0, sizeof(ModData));
 			}
 			break;
 		}
 		case MODDATATYPE_MEMBER:
 		{
-			Channel *chptr;
+			Channel *channel;
 			Member *m;
-			for (chptr = channels; chptr; chptr=chptr->nextch)
+			for (channel = channels; channel; channel=channel->nextch)
 			{
-				for (m = chptr->members; m; m = m->next)
+				for (m = channel->members; m; m = m->next)
 				{
 					if (md->free && moddata_member(m, md).ptr)
 						md->free(&moddata_member(m, md));

@@ -141,8 +141,8 @@ extern void append_ListItem(ListStruct *item, ListStruct **list);
 extern void add_ListItemPrio(ListStructPrio *, ListStructPrio **, int);
 extern void del_ListItem(ListStruct *, ListStruct **);
 extern MODVAR LoopStruct loop;
-extern int del_banid(Channel *chptr, char *banid);
-extern int del_exbanid(Channel *chptr, char *banid);
+extern int del_banid(Channel *channel, char *banid);
+extern int del_exbanid(Channel *channel, char *banid);
 #ifdef SHOWCONNECTINFO
 
 
@@ -257,7 +257,7 @@ extern void    sendto_message_one(Client *to, Client *from, char *sender,
 #define PREFIX_OP	0x4
 #define PREFIX_ADMIN	0x08
 #define PREFIX_OWNER	0x10
-extern void sendto_channel(Channel *chptr, Client *from, Client *skip,
+extern void sendto_channel(Channel *channel, Client *from, Client *skip,
                            int prefix, long clicap, int sendflags,
                            MessageTag *mtags,
                            FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,8,9)));
@@ -369,7 +369,7 @@ extern Channel *hash_get_chan_bucket(uint64_t);
 extern Client *hash_find_client(const char *, Client *);
 extern Client *hash_find_id(const char *, Client *);
 extern Client *hash_find_nickatserver(const char *, Client *);
-extern Channel *hash_find_channel(char *name, Channel *chptr);
+extern Channel *hash_find_channel(char *name, Channel *channel);
 extern Client *hash_find_server(const char *, Client *);
 extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
 
@@ -633,15 +633,15 @@ extern char *spamfilter_inttostring_long(int v);
 extern Channel *get_channel(Client *cptr, char *chname, int flag);
 extern MODVAR char backupbuf[];
 extern void add_invite(Client *, Client *, Channel *, MessageTag *);
-extern void channel_modes(Client *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *chptr);
+extern void channel_modes(Client *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel);
 extern MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 extern int op_can_override(char* acl, Client *client,Channel *channel,void* extra);
 extern Client *find_chasing(Client *client, char *user, int *chasing);
 extern MODVAR long opermode;
 extern MODVAR long sajoinmode;
-extern void add_user_to_channel(Channel *chptr, Client *who, int flags);
+extern void add_user_to_channel(Channel *channel, Client *who, int flags);
 extern int add_banid(Client *, Channel *, char *);
-extern int add_exbanid(Client *cptr, Channel *chptr, char *banid);
+extern int add_exbanid(Client *cptr, Channel *channel, char *banid);
 extern int sub1_from_channel(Channel *);
 extern MODVAR CoreChannelModeTable corechannelmodetable[];
 extern char *unreal_encodespace(char *s);
@@ -676,10 +676,10 @@ extern MODVAR int labeled_response_inhibit;
 
 /* Efuncs */
 extern MODVAR void (*do_join)(Client *, int, char **);
-extern MODVAR void (*join_channel)(Channel *chptr, Client *client, MessageTag *mtags, int flags);
-extern MODVAR int (*can_join)(Client *client, Channel *chptr, char *key, char *parv[]);
-extern MODVAR void (*do_mode)(Channel *chptr, Client *client, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
-extern MODVAR void (*set_mode)(Channel *chptr, Client *cptr, int parc, char *parv[], u_int *pcount,
+extern MODVAR void (*join_channel)(Channel *channel, Client *client, MessageTag *mtags, int flags);
+extern MODVAR int (*can_join)(Client *client, Channel *channel, char *key, char *parv[]);
+extern MODVAR void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
+extern MODVAR void (*set_mode)(Channel *channel, Client *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 extern MODVAR void (*cmd_umode)(Client *, MessageTag *, int, char **);
 extern MODVAR int (*register_user)(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip);
@@ -724,15 +724,15 @@ extern MODVAR void (*send_protoctl_servers)(Client *client, int response);
 extern MODVAR int (*verify_link)(Client *client, char *servername, ConfigItem_link **link_out);
 extern MODVAR void (*send_server_message)(Client *client);
 extern MODVAR void (*broadcast_md_client)(ModDataInfo *mdi, Client *acptr, ModData *md);
-extern MODVAR void (*broadcast_md_channel)(ModDataInfo *mdi, Channel *chptr, ModData *md);
-extern MODVAR void (*broadcast_md_member)(ModDataInfo *mdi, Channel *chptr, Member *m, ModData *md);
+extern MODVAR void (*broadcast_md_channel)(ModDataInfo *mdi, Channel *channel, ModData *md);
+extern MODVAR void (*broadcast_md_member)(ModDataInfo *mdi, Channel *channel, Member *m, ModData *md);
 extern MODVAR void (*broadcast_md_membership)(ModDataInfo *mdi, Client *acptr, Membership *m, ModData *md);
 extern MODVAR void (*broadcast_md_client_cmd)(Client *except, Client *sender, Client *acptr, char *varname, char *value);
-extern MODVAR void (*broadcast_md_channel_cmd)(Client *except, Client *sender, Channel *chptr, char *varname, char *value);
-extern MODVAR void (*broadcast_md_member_cmd)(Client *except, Client *sender, Channel *chptr, Client *acptr, char *varname, char *value);
-extern MODVAR void (*broadcast_md_membership_cmd)(Client *except, Client *sender, Client *acptr, Channel *chptr, char *varname, char *value);
+extern MODVAR void (*broadcast_md_channel_cmd)(Client *except, Client *sender, Channel *channel, char *varname, char *value);
+extern MODVAR void (*broadcast_md_member_cmd)(Client *except, Client *sender, Channel *channel, Client *acptr, char *varname, char *value);
+extern MODVAR void (*broadcast_md_membership_cmd)(Client *except, Client *sender, Client *acptr, Channel *channel, char *varname, char *value);
 extern MODVAR void (*send_moddata_client)(Client *srv, Client *acptr);
-extern MODVAR void (*send_moddata_channel)(Client *srv, Channel *chptr);
+extern MODVAR void (*send_moddata_channel)(Client *srv, Channel *channel);
 extern MODVAR void (*send_moddata_members)(Client *srv);
 extern MODVAR void (*broadcast_moddata_client)(Client *acptr);
 extern MODVAR int (*check_banned)(Client *cptr, int exitflags);
@@ -741,14 +741,14 @@ extern MODVAR int (*check_deny_version)(Client *cptr, char *software, int protoc
 extern MODVAR int (*match_user)(char *rmask, Client *acptr, int options);
 extern MODVAR void (*userhost_save_current)(Client *client);
 extern MODVAR void (*userhost_changed)(Client *client);
-extern MODVAR void (*send_join_to_local_users)(Client *client, Channel *chptr, MessageTag *mtags);
+extern MODVAR void (*send_join_to_local_users)(Client *client, Channel *channel, MessageTag *mtags);
 extern MODVAR int (*do_nick_name)(char *nick);
 extern MODVAR int (*do_remote_nick_name)(char *nick);
 extern MODVAR char *(*charsys_get_current_languages)(void);
 extern MODVAR void (*broadcast_sinfo)(Client *acptr, Client *to, Client *except);
 extern MODVAR void (*parse_message_tags)(Client *cptr, char **str, MessageTag **mtag_list);
 extern MODVAR char *(*mtags_to_string)(MessageTag *m, Client *acptr);
-extern MODVAR int (*can_send)(Client *cptr, Channel *chptr, char **msgtext, char **errmsg, int notice);
+extern MODVAR int (*can_send)(Client *cptr, Channel *channel, char **msgtext, char **errmsg, int notice);
 extern MODVAR void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 extern MODVAR void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, char *varname, char *value);
 extern MODVAR int (*tkl_ip_hash)(char *ip);
@@ -761,12 +761,12 @@ extern MODVAR int (*is_silenced)(Client *client, Client *acptr);
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;
 extern MODVAR int max_connection_count;
-extern int add_listmode(Ban **list, Client *cptr, Channel *chptr, char *banid);
-extern int add_listmode_ex(Ban **list, Client *cptr, Channel *chptr, char *banid, char *setby, time_t seton);
-extern int del_listmode(Ban **list, Channel *chptr, char *banid);
+extern int add_listmode(Ban **list, Client *cptr, Channel *channel, char *banid);
+extern int add_listmode_ex(Ban **list, Client *cptr, Channel *channel, char *banid, char *setby, time_t seton);
+extern int del_listmode(Ban **list, Channel *channel, char *banid);
 extern int Halfop_mode(long mode);
 extern char *clean_ban_mask(char *, int, Client *);
-extern int find_invex(Channel *chptr, Client *client);
+extern int find_invex(Channel *channel, Client *client);
 extern void DoMD5(unsigned char *mdout, const unsigned char *src, unsigned long n);
 extern char *md5hash(unsigned char *dst, const unsigned char *src, unsigned long n);
 extern MODVAR TKL *tklines[TKLISTLEN];
@@ -783,9 +783,9 @@ extern char *unreal_time_synch_error(void);
 extern int unreal_time_synch(int timeout);
 extern char *getcloak(Client *client);
 extern MODVAR unsigned char param_to_slot_mapping[256];
-extern char *cm_getparameter(Channel *chptr, char mode);
-extern void cm_putparameter(Channel *chptr, char mode, char *str);
-extern void cm_freeparameter(Channel *chptr, char mode);
+extern char *cm_getparameter(Channel *channel, char mode);
+extern void cm_putparameter(Channel *channel, char mode, char *str);
+extern void cm_freeparameter(Channel *channel, char mode);
 extern char *cm_getparameter_ex(void **p, char mode);
 extern void cm_putparameter_ex(void **p, char mode, char *str);
 extern void cm_freeparameter_ex(void **p, char mode, char *str);
@@ -844,7 +844,7 @@ extern MODVAR Client *remote_rehash_client;
 extern MODVAR int debugfd;
 extern void convert_to_absolute_path(char **path, char *reldir);
 extern int has_user_mode(Client *acptr, char mode);
-extern int has_channel_mode(Channel *chptr, char mode);
+extern int has_channel_mode(Channel *channel, char mode);
 extern Cmode_t get_extmode_bitbychar(char m);
 extern long get_mode_bitbychar(char m);
 extern long find_user_mode(char mode);
@@ -868,8 +868,8 @@ extern void cmd_alias(Client *client, MessageTag *recv_mtags, int parc, char *pa
 extern void ban_flooder(Client *cptr);
 extern char *pcre2_version(void);
 extern int has_common_channels(Client *c1, Client *c2);
-extern int user_can_see_member(Client *user, Client *target, Channel *chptr);
-extern int invisible_user_in_channel(Client *target, Channel *chptr);
+extern int user_can_see_member(Client *user, Client *target, Channel *channel);
+extern int invisible_user_in_channel(Client *target, Channel *channel);
 extern MODVAR int ssl_client_index;
 extern TLSOptions *FindTLSOptionsForUser(Client *acptr);
 extern int IsWebsocket(Client *acptr);

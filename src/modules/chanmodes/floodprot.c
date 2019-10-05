@@ -54,7 +54,7 @@ typedef struct RemoveChannelModeTimer RemoveChannelModeTimer;
 
 struct RemoveChannelModeTimer {
 	struct RemoveChannelModeTimer *prev, *next;
-	Channel *chptr;
+	Channel *channel;
 	char m; /* mode to be removed */
 	time_t when; /* scheduled at */
 };
@@ -98,32 +98,32 @@ static void init_config(void);
 int floodprot_rehash_complete(void);
 int floodprot_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int floodprot_config_run(ConfigFile *, ConfigEntry *, int);
-void floodprottimer_del(Channel *chptr, char mflag);
-void floodprottimer_stopchantimers(Channel *chptr);
+void floodprottimer_del(Channel *channel, char mflag);
+void floodprottimer_stopchantimers(Channel *channel);
 static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r);
 static int compare_floodprot_modes(ChannelFloodProtection *a, ChannelFloodProtection *b);
-static int do_floodprot(Channel *chptr, int what);
+static int do_floodprot(Channel *channel, int what);
 char *channel_modef_string(ChannelFloodProtection *x, char *str);
-int  check_for_chan_flood(Client *client, Channel *chptr, char *text);
-void do_floodprot_action(Channel *chptr, int what, char *text);
-void floodprottimer_add(Channel *chptr, char mflag, time_t when);
+int  check_for_chan_flood(Client *client, Channel *channel, char *text);
+void do_floodprot_action(Channel *channel, int what, char *text);
+void floodprottimer_add(Channel *channel, char mflag, time_t when);
 uint64_t gen_floodprot_msghash(char *text);
-int cmodef_is_ok(Client *client, Channel *chptr, char mode, char *para, int type, int what);
+int cmodef_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
 void *cmodef_put_param(void *r_in, char *param);
 char *cmodef_get_param(void *r_in);
 char *cmodef_conv_param(char *param_in, Client *client);
 void cmodef_free_param(void *r);
 void *cmodef_dup_struct(void *r_in);
-int cmodef_sjoin_check(Channel *chptr, void *ourx, void *theirx);
-int floodprot_join(Client *client, Channel *chptr, MessageTag *mtags, char *parv[]);
+int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx);
+int floodprot_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
 EVENT(modef_event);
-int cmodef_channel_destroy(Channel *chptr, int *should_destroy);
-char *floodprot_pre_chanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
-int floodprot_post_chanmsg(Client *client, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
-int floodprot_knock(Client *client, Channel *chptr, MessageTag *mtags, char *comment);
+int cmodef_channel_destroy(Channel *channel, int *should_destroy);
+char *floodprot_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
+int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment);
 int floodprot_local_nickchange(Client *client, char *oldnick);
 int floodprot_remote_nickchange(Client *client, char *oldnick);
-int floodprot_chanmode_del(Channel *chptr, int m);
+int floodprot_chanmode_del(Channel *channel, int m);
 void memberflood_free(ModData *md);
 int floodprot_stats(Client *client, char *flag);
 void floodprot_free_removechannelmodetimer_list(ModData *m);
@@ -300,11 +300,11 @@ int floodprot_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
-int cmodef_is_ok(Client *client, Channel *chptr, char mode, char *param, int type, int what)
+int cmodef_is_ok(Client *client, Channel *channel, char mode, char *param, int type, int what)
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
-		if (IsUser(client) && is_chan_op(client, chptr))
+		if (IsUser(client) && is_chan_op(client, channel))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
 			sendnumeric(client, ERR_NOTFORHALFOPS, 'f');
@@ -829,7 +829,7 @@ void *cmodef_dup_struct(void *r_in)
 	return (void *)w;
 }
 
-int cmodef_sjoin_check(Channel *chptr, void *ourx, void *theirx)
+int cmodef_sjoin_check(Channel *channel, void *ourx, void *theirx)
 {
 	ChannelFloodProtection *our = (ChannelFloodProtection *)ourx;
 	ChannelFloodProtection *their = (ChannelFloodProtection *)theirx;
@@ -849,7 +849,7 @@ int cmodef_sjoin_check(Channel *chptr, void *ourx, void *theirx)
 	return EXSJ_MERGE;
 }
 
-int floodprot_join(Client *client, Channel *chptr, MessageTag *mtags, char *parv[])
+int floodprot_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
 {
 	/* I'll explain this only once:
 	 * 1. if channel is +f
@@ -861,14 +861,14 @@ int floodprot_join(Client *client, Channel *chptr, MessageTag *mtags, char *parv
 	 * Nr 6 is done because otherwise you would have a noticeflood with 'joinflood detected'
 	 * from all servers.
 	 */
-	if (IsFloodLimit(chptr) &&
+	if (IsFloodLimit(channel) &&
 	    (MyUser(client) || client->srvptr->serv->flags.synced) &&
 	    (client->srvptr->serv->boottime && (TStime() - client->srvptr->serv->boottime >= MODEF_BOOT_DELAY)) &&
 	    !IsULine(client) &&
-	    do_floodprot(chptr, FLD_JOIN) &&
+	    do_floodprot(channel, FLD_JOIN) &&
 	    MyUser(client))
 	{
-		do_floodprot_action(chptr, FLD_JOIN, "join");
+		do_floodprot_action(channel, FLD_JOIN, "join");
 	}
 	return 0;
 }
@@ -878,9 +878,9 @@ int cmodef_cleanup_user2(Client *client)
 	return 0;
 }
 
-int cmodef_channel_destroy(Channel *chptr, int *should_destroy)
+int cmodef_channel_destroy(Channel *channel, int *should_destroy)
 {
-	floodprottimer_stopchantimers(chptr);
+	floodprottimer_stopchantimers(channel);
 	return 0;
 }
 
@@ -940,36 +940,36 @@ char *channel_modef_string(ChannelFloodProtection *x, char *retbuf)
 	return retbuf;
 }
 
-char *floodprot_pre_chanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice)
+char *floodprot_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
 {
-	if (MyUser(client) && (check_for_chan_flood(client, chptr, text) == 1))
+	if (MyUser(client) && (check_for_chan_flood(client, channel, text) == 1))
 		return NULL; /* don't send it */
 	return text;
 }
 
-int floodprot_post_chanmsg(Client *client, Channel *chptr, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
+int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
 {
-	if (!IsFloodLimit(chptr) || is_skochanop(client, chptr) || IsULine(client))
+	if (!IsFloodLimit(channel) || is_skochanop(client, channel) || IsULine(client))
 		return 0;
 
 	/* HINT: don't be so stupid to reorder the items in the if's below.. you'll break things -- Syzop. */
 
-	if (do_floodprot(chptr, FLD_MSG) && MyUser(client))
-		do_floodprot_action(chptr, FLD_MSG, "msg/notice");
+	if (do_floodprot(channel, FLD_MSG) && MyUser(client))
+		do_floodprot_action(channel, FLD_MSG, "msg/notice");
 
 	if ((text[0] == '\001') && strncmp(text+1, "ACTION ", 7) &&
-	    do_floodprot(chptr, FLD_CTCP) && MyUser(client))
+	    do_floodprot(channel, FLD_CTCP) && MyUser(client))
 	{
-		do_floodprot_action(chptr, FLD_CTCP, "CTCP");
+		do_floodprot_action(channel, FLD_CTCP, "CTCP");
 	}
 
 	return 0;
 }
 
-int floodprot_knock(Client *client, Channel *chptr, MessageTag *mtags, char *comment)
+int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment)
 {
-	if (IsFloodLimit(chptr) && !IsULine(client) && do_floodprot(chptr, FLD_KNOCK) && MyUser(client))
-		do_floodprot_action(chptr, FLD_KNOCK, "knock");
+	if (IsFloodLimit(channel) && !IsULine(client) && do_floodprot(channel, FLD_KNOCK) && MyUser(client))
+		do_floodprot_action(channel, FLD_KNOCK, "knock");
 	return 0;
 }
 
@@ -979,12 +979,12 @@ Membership *mp;
 
 	for (mp = client->user->channel; mp; mp = mp->next)
 	{
-		Channel *chptr = mp->chptr;
-		if (chptr && IsFloodLimit(chptr) &&
+		Channel *channel = mp->channel;
+		if (channel && IsFloodLimit(channel) &&
 		    !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANADMIN)) &&
-		    do_floodprot(chptr, FLD_NICK) && MyUser(client))
+		    do_floodprot(channel, FLD_NICK) && MyUser(client))
 		{
-			do_floodprot_action(chptr, FLD_NICK, "nick");
+			do_floodprot_action(channel, FLD_NICK, "nick");
 		}
 	}
 	return 0;
@@ -1004,14 +1004,14 @@ int floodprot_remote_nickchange(Client *client, char *oldnick)
 	return gotnickchange(client);
 }
 
-int floodprot_chanmode_del(Channel *chptr, int modechar)
+int floodprot_chanmode_del(Channel *channel, int modechar)
 {
 	ChannelFloodProtection *chp;
 
-	if (!IsFloodLimit(chptr))
+	if (!IsFloodLimit(channel))
 		return 0;
 
-	chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
+	chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 	if (!chp)
 		return 0;
 
@@ -1044,11 +1044,11 @@ int floodprot_chanmode_del(Channel *chptr, int modechar)
 		default:
 			break;
 	}
-	floodprottimer_del(chptr, modechar);
+	floodprottimer_del(channel, modechar);
 	return 0;
 }
 
-int check_for_chan_flood(Client *client, Channel *chptr, char *text)
+int check_for_chan_flood(Client *client, Channel *channel, char *text)
 {
 	Membership *mb;
 	ChannelFloodProtection *chp;
@@ -1056,13 +1056,13 @@ int check_for_chan_flood(Client *client, Channel *chptr, char *text)
 	uint64_t msghash;
 	unsigned char is_flooding_text=0, is_flooding_repeat=0;
 
-	if (ValidatePermissionsForPath("channel:override:flood",client,NULL,chptr,NULL) || !IsFloodLimit(chptr) || is_skochanop(client, chptr))
+	if (ValidatePermissionsForPath("channel:override:flood",client,NULL,channel,NULL) || !IsFloodLimit(channel) || is_skochanop(client, channel))
 		return 0;
 
-	if (!(mb = find_membership_link(client->user->channel, chptr)))
+	if (!(mb = find_membership_link(client->user->channel, channel)))
 		return 0; /* not in channel */
 
-	chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
+	chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 
 	if (!chp || !(chp->limit[FLD_TEXT] || chp->limit[FLD_REPEAT]))
 		return 0;
@@ -1135,7 +1135,7 @@ int check_for_chan_flood(Client *client, Channel *chptr, char *text)
 		if (chp->action[flood_type] == 'd')
 		{
 			/* Drop the message */
-			sendnumeric(client, ERR_CANNOTSENDTOCHAN, chptr->chname, comment, chptr->chname);
+			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, comment, channel->chname);
 			return 1;
 		}
 
@@ -1146,38 +1146,38 @@ int check_for_chan_flood(Client *client, Channel *chptr, char *text)
 				snprintf(mask, sizeof(mask), "~t:%d:*!*@%s", chp->remove_after[flood_type], GetHost(client));
 			else
 				snprintf(mask, sizeof(mask), "*!*@%s", GetHost(client));
-			if (add_listmode(&chptr->banlist, &me, chptr, mask) == 0)
+			if (add_listmode(&channel->banlist, &me, channel, mask) == 0)
 			{
 				mtags = NULL;
 				new_message(&me, NULL, &mtags);
 				sendto_server(&me, 0, 0, mtags, ":%s MODE %s +b %s 0",
-				    me.name, chptr->chname, mask);
-				sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-				    ":%s MODE %s +b %s", me.name, chptr->chname, mask);
+				    me.name, channel->chname, mask);
+				sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+				    ":%s MODE %s +b %s", me.name, channel->chname, mask);
 				free_message_tags(mtags);
 			} /* else.. ban list is full */
 		}
 		mtags = NULL;
 		new_message(&me, NULL, &mtags);
-		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 		    ":%s KICK %s %s :%s", me.name,
-		    chptr->chname, client->name, comment);
+		    channel->chname, client->name, comment);
 		sendto_server(NULL, 0, 0, mtags, ":%s KICK %s %s :%s",
-		   me.name, chptr->chname, client->name, comment);
+		   me.name, channel->chname, client->name, comment);
 		free_message_tags(mtags);
-		remove_user_from_channel(client, chptr);
+		remove_user_from_channel(client, channel);
 		return 1;
 	}
 	return 0;
 }
 
-RemoveChannelModeTimer *floodprottimer_find(Channel *chptr, char mflag)
+RemoveChannelModeTimer *floodprottimer_find(Channel *channel, char mflag)
 {
 	RemoveChannelModeTimer *e;
 
 	for (e=removechannelmodetimer_list; e; e=e->next)
 	{
-		if ((e->chptr == chptr) && (e->m == mflag))
+		if ((e->channel == channel) && (e->m == mflag))
 			return e;
 	}
 	return NULL;
@@ -1193,26 +1193,26 @@ void strccat(char *s, char c)
 
 /*
  * Adds a "remove channelmode set by +f" timer.
- * chptr	Channel
+ * channel	Channel
  * mflag	Mode flag, eg 'C'
  * when		when it should be removed
  * NOTES:
  * - This function takes care of overwriting of any previous timer
  *   for the same modechar.
- * - The function takes care of chptr->mode.floodprot->timers_running,
+ * - The function takes care of channel->mode.floodprot->timers_running,
  *   do not modify it yourself.
- * - chptr->mode.floodprot is asumed to be non-NULL.
+ * - channel->mode.floodprot is asumed to be non-NULL.
  */
-void floodprottimer_add(Channel *chptr, char mflag, time_t when)
+void floodprottimer_add(Channel *channel, char mflag, time_t when)
 {
 	RemoveChannelModeTimer *e = NULL;
 	unsigned char add=1;
-	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
+	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 
 	if (strchr(chp->timers_running, mflag))
 	{
 		/* Already exists... */
-		e = floodprottimer_find(chptr, mflag);
+		e = floodprottimer_find(channel, mflag);
 		if (e)
 			add = 0;
 	}
@@ -1222,7 +1222,7 @@ void floodprottimer_add(Channel *chptr, char mflag, time_t when)
 		if (strlen(chp->timers_running)+1 >= sizeof(chp->timers_running))
 		{
 			sendto_realops_and_log("floodprottimer_add: too many timers running for %s (%s)!!!",
-				chptr->chname, chp->timers_running);
+				channel->chname, chp->timers_running);
 			return;
 		}
 		strccat(chp->timers_running, mflag); /* bounds already checked ^^ */
@@ -1231,7 +1231,7 @@ void floodprottimer_add(Channel *chptr, char mflag, time_t when)
 	if (add)
 		e = safe_alloc(sizeof(RemoveChannelModeTimer));
 
-	e->chptr = chptr;
+	e->channel = channel;
 	e->m = mflag;
 	e->when = when;
 
@@ -1239,14 +1239,14 @@ void floodprottimer_add(Channel *chptr, char mflag, time_t when)
 		AddListItem(e, removechannelmodetimer_list);
 }
 
-void floodprottimer_del(Channel *chptr, char mflag)
+void floodprottimer_del(Channel *channel, char mflag)
 {
 	RemoveChannelModeTimer *e;
-	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
+	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 
 	if (chp && !strchr(chp->timers_running, mflag))
 		return; /* nothing to remove.. */
-	e = floodprottimer_find(chptr, mflag);
+	e = floodprottimer_find(channel, mflag);
 	if (!e)
 		return;
 
@@ -1281,26 +1281,26 @@ EVENT(modef_event)
 			long mode = 0;
 			Cmode_t extmode = 0;
 #ifdef NEWFLDDBG
-			sendto_realops("modef_event: chan %s mode -%c EXPIRED", e->chptr->chname, e->m);
+			sendto_realops("modef_event: chan %s mode -%c EXPIRED", e->channel->chname, e->m);
 #endif
 			mode = get_mode_bitbychar(e->m);
 			if (mode == 0)
 			        extmode = get_extmode_bitbychar(e->m);
 
-			if ((mode && (e->chptr->mode.mode & mode)) ||
-			    (extmode && (e->chptr->mode.extmode & extmode)))
+			if ((mode && (e->channel->mode.mode & mode)) ||
+			    (extmode && (e->channel->mode.extmode & extmode)))
 			{
 				MessageTag *mtags = NULL;
 
 				new_message(&me, NULL, &mtags);
-				sendto_server(&me, 0, 0, mtags, ":%s MODE %s -%c 0", me.name, e->chptr->chname, e->m);
-				sendto_channel(e->chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+				sendto_server(&me, 0, 0, mtags, ":%s MODE %s -%c 0", me.name, e->channel->chname, e->m);
+				sendto_channel(e->channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s MODE %s -%c",
-				               me.name, e->chptr->chname, e->m);
+				               me.name, e->channel->chname, e->m);
 				free_message_tags(mtags);
 
-				e->chptr->mode.mode &= ~mode;
-				e->chptr->mode.extmode &= ~extmode;
+				e->channel->mode.mode &= ~mode;
+				e->channel->mode.extmode &= ~extmode;
 			}
 
 			/* And delete... */
@@ -1309,20 +1309,20 @@ EVENT(modef_event)
 		} else {
 #ifdef NEWFLDDBG
 			sendto_realops("modef_event: chan %s mode -%c about %d seconds",
-				e->chptr->chname, e->m, e->when - now);
+				e->channel->chname, e->m, e->when - now);
 #endif
 		}
 	}
 }
 
-void floodprottimer_stopchantimers(Channel *chptr)
+void floodprottimer_stopchantimers(Channel *channel)
 {
 	RemoveChannelModeTimer *e, *e_next;
 
 	for (e = removechannelmodetimer_list; e; e = e_next)
 	{
 		e_next = e->next;
-		if (e->chptr == chptr)
+		if (e->channel == channel)
 		{
 			DelListItem(e, removechannelmodetimer_list);
 			safe_free(e);
@@ -1330,9 +1330,9 @@ void floodprottimer_stopchantimers(Channel *chptr)
 	}
 }
 
-int do_floodprot(Channel *chptr, int what)
+int do_floodprot(Channel *channel, int what)
 {
-	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
+	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 
 	if (!chp || !chp->limit[what]) /* no +f or not restricted */
 		return 0;
@@ -1360,12 +1360,12 @@ int do_floodprot(Channel *chptr, int what)
 	return 0;
 }
 
-void do_floodprot_action(Channel *chptr, int what, char *text)
+void do_floodprot_action(Channel *channel, int what, char *text)
 {
 	char m;
 	int mode = 0;
 	Cmode_t extmode = 0;
-	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(chptr, 'f');
+	ChannelFloodProtection *chp = (ChannelFloodProtection *)GETPARASTRUCT(channel, 'f');
 
 	m = chp->action[what];
 	if (!m)
@@ -1384,8 +1384,8 @@ void do_floodprot_action(Channel *chptr, int what, char *text)
 	if (!mode && !extmode)
 		return;
 
-	if (!(mode && (chptr->mode.mode & mode)) &&
-		!(extmode && (chptr->mode.extmode & extmode)))
+	if (!(mode && (channel->mode.mode & mode)) &&
+		!(extmode && (channel->mode.extmode & extmode)))
 	{
 		char comment[512], target[CHANNELLEN + 8];
 		MessageTag *mtags;
@@ -1395,8 +1395,8 @@ void do_floodprot_action(Channel *chptr, int what, char *text)
 		new_message(&me, NULL, &mtags);
 		ircsnprintf(comment, sizeof(comment), "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
 			text, chp->limit[what], chp->per, m);
-		ircsnprintf(target, sizeof(target), "%%%s", chptr->chname);
-		sendto_channel(chptr, &me, NULL, PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		ircsnprintf(target, sizeof(target), "%%%s", channel->chname);
+		sendto_channel(channel, &me, NULL, PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 		               0, SEND_ALL, mtags,
 		               ":%s NOTICE %s :%s", me.name, target, comment);
 		free_message_tags(mtags);
@@ -1404,18 +1404,18 @@ void do_floodprot_action(Channel *chptr, int what, char *text)
 		/* Then the MODE broadcast */
 		mtags = NULL;
 		new_message(&me, NULL, &mtags);
-		sendto_server(&me, 0, 0, mtags, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
-		sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +%c", me.name, chptr->chname, m);
+		sendto_server(&me, 0, 0, mtags, ":%s MODE %s +%c 0", me.name, channel->chname, m);
+		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +%c", me.name, channel->chname, m);
 		free_message_tags(mtags);
 
 		/* Actually set the mode internally */
-		chptr->mode.mode |= mode;
-		chptr->mode.extmode |= extmode;
+		channel->mode.mode |= mode;
+		channel->mode.extmode |= extmode;
 
 		/* Add remove-chanmode timer */
 		if (chp->remove_after[what])
 		{
-			floodprottimer_add(chptr, m, TStime() + ((long)chp->remove_after[what] * 60) - 5);
+			floodprottimer_add(channel, m, TStime() + ((long)chp->remove_after[what] * 60) - 5);
 			/* (since the floodprot timer event is called every 10s, we do -5 here so the accurancy will
 			 *  be -5..+5, without it it would be 0..+10.)
 			 */

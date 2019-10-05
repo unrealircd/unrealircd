@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 long UMODE_NOKICK = 0L;
 
 /* Forward declarations */
-int nokick_can_kick(Client *client, Client *target, Channel *chptr,
+int nokick_can_kick(Client *client, Client *target, Channel *channel,
                     char *comment, long client_flags, long target_flags, char **reject_reason);
 
 MOD_TEST()
@@ -63,12 +63,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int nokick_can_kick(Client *client, Client *target, Channel *chptr, char *comment,
+int nokick_can_kick(Client *client, Client *target, Channel *channel, char *comment,
                     long client_flags, long target_flags, char **reject_reason)
 {
 	static char errmsg[NICKLEN+256];
 
-	if (IsNokick(target) && !IsULine(client) && MyUser(client) && !ValidatePermissionsForPath("channel:override:kick:nokick",client,target,chptr,NULL))
+	if (IsNokick(target) && !IsULine(client) && MyUser(client) && !ValidatePermissionsForPath("channel:override:kick:nokick",client,target,channel,NULL))
 	{
 		ircsnprintf(errmsg, sizeof(errmsg), ":%s %d %s %s :%s",
 		            me.name, ERR_CANNOTDOCOMMAND, client->name, "KICK",
@@ -78,7 +78,7 @@ int nokick_can_kick(Client *client, Client *target, Channel *chptr, char *commen
 
 		sendnotice(target,
 			"*** umode q: %s tried to kick you from channel %s (%s)",
-			client->name, chptr->chname, comment);
+			client->name, channel->chname, comment);
 		
 		return EX_ALWAYS_DENY;
 	}

@@ -122,7 +122,7 @@ void ExtbanDel(Extban *eb)
 
 /** General is_ok for n!u@h stuff that also deals with recursive extbans.
  */
-int extban_is_ok_nuh_extban(Client* client, Channel* chptr, char* para, int checkt, int what, int what2)
+int extban_is_ok_nuh_extban(Client* client, Channel* channel, char* para, int checkt, int what, int what2)
 {
 	char *mask = (para + 3);
 	Extban *p = NULL;
@@ -135,7 +135,7 @@ int extban_is_ok_nuh_extban(Client* client, Channel* chptr, char* para, int chec
 		if (extban_is_ok_recursion)
 			return 0; /* Fail: more than one stacked extban */
 
-		if ((checkt == EXBCHK_PARAM) && RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,chptr,NULL))
+		if ((checkt == EXBCHK_PARAM) && RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,channel,NULL))
 		{
 			/* Test if this specific extban has been disabled.
 			 * (We can be sure RESTRICT_EXTENDEDBANS is not *. Else this extended ban wouldn't be happening at all.)
@@ -159,7 +159,7 @@ int extban_is_ok_nuh_extban(Client* client, Channel* chptr, char* para, int chec
 		if (p->is_ok)
 		{
 			extban_is_ok_recursion++;
-			isok = p->is_ok(client, chptr, mask, checkt, what, what2);
+			isok = p->is_ok(client, channel, mask, checkt, what, what2);
 			extban_is_ok_recursion--;
 			return isok;
 		}

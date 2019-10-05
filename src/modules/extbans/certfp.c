@@ -28,9 +28,9 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_certfp_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2);
+int extban_certfp_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2);
 char *extban_certfp_conv_param(char *para);
-int extban_certfp_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
+int extban_certfp_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
 
 /* Called upon module init */
 MOD_INIT()
@@ -74,7 +74,7 @@ int extban_certfp_usage(Client *client)
 	return EX_DENY;
 }
 
-int extban_certfp_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2)
+int extban_certfp_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2)
 {
 	if (checkt == EXCHK_PARAM)
 	{
@@ -108,7 +108,7 @@ char *extban_certfp_conv_param(char *para)
 	return retbuf;
 }
 
-int extban_certfp_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
+int extban_certfp_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
 {
 	char *ban = banin+3;
 	char *fp;

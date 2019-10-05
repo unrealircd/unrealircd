@@ -32,10 +32,10 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_STRIPCOLOR;
 
-#define IsStripColor(chptr)    (chptr->mode.extmode & EXTCMODE_STRIPCOLOR)
+#define IsStripColor(channel)    (channel->mode.extmode & EXTCMODE_STRIPCOLOR)
 
-char *stripcolor_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
-char *stripcolor_prelocalpart(Client *client, Channel *chptr, char *comment);
+char *stripcolor_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+char *stripcolor_prelocalpart(Client *client, Channel *channel, char *comment);
 char *stripcolor_prelocalquit(Client *client, char *comment);
 
 MOD_TEST()
@@ -73,16 +73,16 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *stripcolor_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice)
+char *stripcolor_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
 {
 	Hook *h;
 	int i;
 
-	if (MyUser(client) && IsStripColor(chptr))
+	if (MyUser(client) && IsStripColor(channel))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_COLOR);
+			i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_COLOR);
 			if (i == HOOK_ALLOW)
 				return text; /* bypass */
 			if (i != HOOK_CONTINUE)
@@ -95,12 +95,12 @@ char *stripcolor_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, c
 	return text;
 }
 
-char *stripcolor_prelocalpart(Client *client, Channel *chptr, char *comment)
+char *stripcolor_prelocalpart(Client *client, Channel *channel, char *comment)
 {
 	if (!comment)
 		return NULL;
 
-	if (MyUser(client) && IsStripColor(chptr))
+	if (MyUser(client) && IsStripColor(channel))
 		comment = StripColors(comment);
 
 	return comment;
@@ -112,7 +112,7 @@ static int IsAnyChannelStripColor(Client *client)
 	Membership *lp;
 
 	for (lp = client->user->channel; lp; lp = lp->next)
-		if (IsStripColor(lp->chptr))
+		if (IsStripColor(lp->channel))
 			return 1;
 	return 0;
 }

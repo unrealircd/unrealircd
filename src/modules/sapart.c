@@ -64,7 +64,7 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_sapart)
 {
 	Client *target;
-	Channel *chptr;
+	Channel *channel;
 	Membership *lp;
 	char *name, *p = NULL;
 	int i;
@@ -106,7 +106,7 @@ CMD_FUNC(cmd_sapart)
 				sendnumeric(client, ERR_TOOMANYTARGETS, name, maxtargets, "SAPART");
 				break;
 			}
-			if (!(chptr = get_channel(target, name, 0)))
+			if (!(channel = get_channel(target, name, 0)))
 			{
 				sendnumeric(client, ERR_NOSUCHCHANNEL,
 					name);
@@ -114,13 +114,13 @@ CMD_FUNC(cmd_sapart)
 			}
 
 			/* Validate oper can do this on chan/victim */
-			if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sapart",client,target,chptr,NULL))
+			if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sapart",client,target,channel,NULL))
         		{
                 		sendnumeric(client, ERR_NOPRIVILEGES);
 				continue;
         		}
 	
-			if (!(lp = find_membership_link(target->user->channel, chptr)))
+			if (!(lp = find_membership_link(target->user->channel, channel)))
 			{
 				sendnumeric(client, ERR_USERNOTINCHANNEL,
 					parv[1], name);

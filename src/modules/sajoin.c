@@ -113,7 +113,7 @@ CMD_FUNC(cmd_sajoin)
 		/* Now works like cmd_join */
 		for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
 		{
-			Channel *chptr;
+			Channel *channel;
 			Membership *lp;
 
 			if (++ntargets > maxtargets)
@@ -172,16 +172,16 @@ CMD_FUNC(cmd_sajoin)
 				continue;
 			}
 
-			chptr = get_channel(target, name, 0);
+			channel = get_channel(target, name, 0);
 
 			/* If this _specific_ channel is not permitted, skip it */
-			if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sajoin",client,target,chptr,NULL))
+			if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sajoin",client,target,channel,NULL))
 			{
 				sendnumeric(client, ERR_NOPRIVILEGES);
 				continue;
 			}
 
-			if (!parted && chptr && (lp = find_membership_link(target->user->channel, chptr)))
+			if (!parted && channel && (lp = find_membership_link(target->user->channel, channel)))
 			{
 				sendnumeric(client, ERR_USERONCHANNEL, parv[1], name);
 				continue;
@@ -200,7 +200,7 @@ CMD_FUNC(cmd_sajoin)
 		{
 			MessageTag *mtags = NULL;
 			int flags;
-			Channel *chptr;
+			Channel *channel;
 			Membership *lp;
 			Hook *h;
 			int i = 0;
@@ -214,30 +214,30 @@ CMD_FUNC(cmd_sajoin)
 				while ((lp = target->user->channel))
 				{
 					MessageTag *mtags = NULL;
-					chptr = lp->chptr;
+					channel = lp->channel;
 
 					new_message(target, NULL, &mtags);
-					sendto_channel(chptr, target, NULL, 0, 0, SEND_LOCAL, NULL,
+					sendto_channel(channel, target, NULL, 0, 0, SEND_LOCAL, NULL,
 					               ":%s PART %s :%s",
-					               target->name, chptr->chname, "Left all channels");
-					sendto_server(client, 0, 0, mtags, ":%s PART %s :Left all channels", target->name, chptr->chname);
+					               target->name, channel->chname, "Left all channels");
+					sendto_server(client, 0, 0, mtags, ":%s PART %s :Left all channels", target->name, channel->chname);
 					if (MyConnect(target))
-						RunHook4(HOOKTYPE_LOCAL_PART, target, chptr, mtags, "Left all channels");
+						RunHook4(HOOKTYPE_LOCAL_PART, target, channel, mtags, "Left all channels");
 					free_message_tags(mtags);
-					remove_user_from_channel(target, chptr);
+					remove_user_from_channel(target, channel);
 				}
 				strcpy(jbuf, "0");
 				continue;
 			}
 			flags = (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;
-			chptr = get_channel(target, name, CREATE);
-			if (chptr && (lp = find_membership_link(target->user->channel, chptr)))
+			channel = get_channel(target, name, CREATE);
+			if (channel && (lp = find_membership_link(target->user->channel, channel)))
 				continue;
 
 			i = HOOK_CONTINUE;
 			for (h = Hooks[HOOKTYPE_CAN_SAJOIN]; h; h = h->next)
 			{
-				i = (*(h->func.intfunc))(target,chptr,client);
+				i = (*(h->func.intfunc))(target,channel,client);
 				if (i != HOOK_CONTINUE)
 					break;
 			}
@@ -251,7 +251,7 @@ CMD_FUNC(cmd_sajoin)
 			 * Each with their own unique msgid.
 			 */
 			new_message(target, NULL, &mtags);
-			join_channel(chptr, target, mtags, flags);
+			join_channel(channel, target, mtags, flags);
 			if (sjmode)
 			{
 				opermode = 0;
@@ -261,7 +261,7 @@ CMD_FUNC(cmd_sajoin)
 				mode_args[0][1] = '\0';
 				mode_args[1] = target->name;
 				mode_args[2] = 0;
-				(void)do_mode(chptr, target, NULL, 3, mode_args, 0, 1);
+				(void)do_mode(channel, target, NULL, 3, mode_args, 0, 1);
 				sajoinmode = 0;
 				safe_free(mode_args[0]);
 			}

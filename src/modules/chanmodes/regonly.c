@@ -31,9 +31,9 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_REGONLY;
 
-#define IsRegOnly(chptr)    (chptr->mode.extmode & EXTCMODE_REGONLY)
+#define IsRegOnly(channel)    (channel->mode.extmode & EXTCMODE_REGONLY)
 
-int regonly_check (Client *client, Channel *chptr, char *key, char *parv[]);
+int regonly_check (Client *client, Channel *channel, char *key, char *parv[]);
 
 
 MOD_TEST()
@@ -68,9 +68,9 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int regonly_check (Client *client, Channel *chptr, char *key, char *parv[])
+int regonly_check (Client *client, Channel *channel, char *key, char *parv[])
 {
-	if (IsRegOnly(chptr) && !IsLoggedIn(client))
+	if (IsRegOnly(channel) && !IsLoggedIn(client))
 		return ERR_NEEDREGGEDNICK;
 	return 0;
 }

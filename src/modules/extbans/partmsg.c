@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
 };
 
-int extban_partmsg_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
+int extban_partmsg_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
 
 MOD_INIT()
 {
@@ -62,7 +62,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int extban_partmsg_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
+int extban_partmsg_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
 {
 	if (type == BANCHK_LEAVE_MSG)
 		*msg = NULL;

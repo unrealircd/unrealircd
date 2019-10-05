@@ -1810,7 +1810,7 @@ struct Link {
 	int flags;
 	union {
 		Client *client;
-		Channel *chptr;
+		Channel *channel;
 		Watch *wptr;
 		/* there used to be 'char *cp' here too,
 		 * but in such a case you better use NameList
@@ -1845,8 +1845,8 @@ struct Channel {
 	char chname[1];				/**< Channel name */
 };
 
-/** user/channel member struct (chptr->members).
- * This is Member which is used in the linked list chptr->members for each channel.
+/** user/channel member struct (channel->members).
+ * This is Member which is used in the linked list channel->members for each channel.
  * There is also Membership which is used in client->user->channels (see Membership for that).
  * Both must be kept synchronized 100% at all times.
  */
@@ -1860,13 +1860,13 @@ struct Member
 
 /** user/channel membership struct (client->user->channels).
  * This is Membership which is used in the linked list client->user->channels for each user.
- * There is also Member which is used in chptr->members (see Member for that).
+ * There is also Member which is used in channel->members (see Member for that).
  * Both must be kept synchronized 100% at all times.
  */
 struct Membership
 {
 	struct Membership 	*next;			/**< Next entry in list */
-	struct Channel		*chptr;			/**< The channel */
+	struct Channel		*channel;			/**< The channel */
 	int			flags;			/**< The access of the user on this channel (one or more of CHFL_*) */
 	ModData moddata[MODDATA_MAX_MEMBERSHIP];	/**< Membership attached module data, used by the ModData system */
 };
@@ -1901,17 +1901,17 @@ struct Ban {
  * @{
  */
 /** Is channel owner (+q) */
-#define is_chanowner(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANOWNER)
+#define is_chanowner(cptr,channel) (get_access(cptr,channel) & CHFL_CHANOWNER)
 /** Is channel admin (+a) */
-#define is_chanadmin(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANADMIN)
+#define is_chanadmin(cptr,channel) (get_access(cptr,channel) & CHFL_CHANADMIN)
 /** Is channel operator or higher (+o/+a/+q) */
-#define is_chan_op(cptr,chptr) (get_access(cptr,chptr) & CHFL_CHANOP_OR_HIGHER)
+#define is_chan_op(cptr,channel) (get_access(cptr,channel) & CHFL_CHANOP_OR_HIGHER)
 /** Is some kind of channel op (+h/+o/+a/+q) */
-#define is_skochanop(cptr,chptr) (get_access(cptr,chptr) & CHFL_HALFOP_OR_HIGHER)
+#define is_skochanop(cptr,channel) (get_access(cptr,channel) & CHFL_HALFOP_OR_HIGHER)
 /** Is half-op (+h) */
-#define is_half_op(cptr,chptr) (get_access(cptr,chptr) & CHFL_HALFOP)
+#define is_half_op(cptr,channel) (get_access(cptr,channel) & CHFL_HALFOP)
 /** Has voice (+v) */
-#define has_voice(cptr,chptr) (get_access(cptr,chptr) & CHFL_VOICE)
+#define has_voice(cptr,channel) (get_access(cptr,channel) & CHFL_VOICE)
 #define CHFL_CHANOWNER	0x0040	/**< Channel owner (+q) */
 #define CHFL_CHANADMIN	0x0080	/**< Channel admin (+a) */
 #define	CHFL_CHANOP     0x0001	/**< Channel operator (+o) */

@@ -713,7 +713,7 @@ int stats_mem(Client *client, char *para)
 	Client *acptr;
 	Ban *ban;
 	Link *link;
-	Channel *chptr;
+	Channel *channel;
 
 	int  lc = 0,		/* local clients */
 	     ch = 0,		/* channels */
@@ -788,29 +788,29 @@ int stats_mem(Client *client, char *para)
 	lcm = lc * sizeof(Client)+sizeof(LocalClient);
 	rcm = rc * sizeof(Client);
 
-	for (chptr = channels; chptr; chptr = chptr->nextch)
+	for (channel = channels; channel; channel = channel->nextch)
 	{
 		Member *member;
 
 		ch++;
-		chm += (strlen(chptr->chname) + sizeof(Channel));
-		for (member = chptr->members; member; member = member->next)
+		chm += (strlen(channel->chname) + sizeof(Channel));
+		for (member = channel->members; member; member = member->next)
 			chu++;
-		for (link = chptr->invites; link; link = link->next)
+		for (link = channel->invites; link; link = link->next)
 			chi++;
-		for (ban = chptr->banlist; ban; ban = ban->next)
+		for (ban = channel->banlist; ban; ban = ban->next)
 		{
 			chb++;
 			chbm += (strlen(ban->banstr) + 1 +
 			    strlen(ban->who) + 1 + sizeof(Ban));
 		}
-		for (ban = chptr->exlist; ban; ban = ban->next)
+		for (ban = channel->exlist; ban; ban = ban->next)
 		{
 			chb++;
 			chbm += (strlen(ban->banstr) + 1 +
 			    strlen(ban->who) + 1 + sizeof(Ban));
 		}
-		for (ban = chptr->invexlist; ban; ban = ban->next)
+		for (ban = channel->invexlist; ban; ban = ban->next)
 		{
 			chb++;
 			chbm += (strlen(ban->banstr) + 1 +

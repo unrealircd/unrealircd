@@ -35,10 +35,10 @@ static EfunctionsList efunction_table[MAXEFUNCTIONS];
 
 /* Efuncs */
 void (*do_join)(Client *client, int parc, char *parv[]);
-void (*join_channel)(Channel *chptr, Client *client, MessageTag *mtags, int flags);
-int (*can_join)(Client *client, Channel *chptr, char *key, char *parv[]);
-void (*do_mode)(Channel *chptr, Client *client, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
-void (*set_mode)(Channel *chptr, Client *client, int parc, char *parv[], u_int *pcount,
+void (*join_channel)(Channel *channel, Client *client, MessageTag *mtags, int flags);
+int (*can_join)(Client *client, Channel *channel, char *key, char *parv[]);
+void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, char *parv[], time_t sendts, int samode);
+void (*set_mode)(Channel *channel, Client *client, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 void (*cmd_umode)(Client *client, MessageTag *mtags, int parc, char *parv[]);
 int (*register_user)(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip);
@@ -77,23 +77,23 @@ int (*verify_link)(Client *client, char *servername, ConfigItem_link **link_out)
 void (*introduce_user)(Client *to, Client *client);
 void (*send_server_message)(Client *client);
 void (*broadcast_md_client)(ModDataInfo *mdi, Client *client, ModData *md);
-void (*broadcast_md_channel)(ModDataInfo *mdi, Channel *chptr, ModData *md);
-void (*broadcast_md_member)(ModDataInfo *mdi, Channel *chptr, Member *m, ModData *md);
+void (*broadcast_md_channel)(ModDataInfo *mdi, Channel *channel, ModData *md);
+void (*broadcast_md_member)(ModDataInfo *mdi, Channel *channel, Member *m, ModData *md);
 void (*broadcast_md_membership)(ModDataInfo *mdi, Client *client, Membership *m, ModData *md);
 int (*check_banned)(Client *client, int exitflags);
 int (*check_deny_version)(Client *client, char *software, int protocol, char *flags);
 void (*broadcast_md_client_cmd)(Client *except, Client *sender, Client *acptr, char *varname, char *value);
-void (*broadcast_md_channel_cmd)(Client *except, Client *sender, Channel *chptr, char *varname, char *value);
-void (*broadcast_md_member_cmd)(Client *except, Client *sender, Channel *chptr, Client *acptr, char *varname, char *value);
-void (*broadcast_md_membership_cmd)(Client *except, Client *sender, Client *acptr, Channel *chptr, char *varname, char *value);
+void (*broadcast_md_channel_cmd)(Client *except, Client *sender, Channel *channel, char *varname, char *value);
+void (*broadcast_md_member_cmd)(Client *except, Client *sender, Channel *channel, Client *acptr, char *varname, char *value);
+void (*broadcast_md_membership_cmd)(Client *except, Client *sender, Client *acptr, Channel *channel, char *varname, char *value);
 void (*send_moddata_client)(Client *srv, Client *client);
-void (*send_moddata_channel)(Client *srv, Channel *chptr);
+void (*send_moddata_channel)(Client *srv, Channel *channel);
 void (*send_moddata_members)(Client *srv);
 void (*broadcast_moddata_client)(Client *client);
 int (*match_user)(char *rmask, Client *client, int options);
 void (*userhost_changed)(Client *client);
 void (*userhost_save_current)(Client *client);
-void (*send_join_to_local_users)(Client *client, Channel *chptr, MessageTag *mtags);
+void (*send_join_to_local_users)(Client *client, Channel *channel, MessageTag *mtags);
 int (*do_nick_name)(char *nick);
 int (*do_remote_nick_name)(char *nick);
 char *(*charsys_get_current_languages)(void);
@@ -102,7 +102,7 @@ void (*parse_message_tags)(Client *client, char **str, MessageTag **mtag_list);
 extern void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list);
 char *(*mtags_to_string)(MessageTag *m, Client *client);
 extern char *mtags_to_string_default_handler(MessageTag *m, Client *client);
-int (*can_send)(Client *client, Channel *chptr, char **msgtext, char **errmsg, int notice);
+int (*can_send)(Client *client, Channel *channel, char **msgtext, char **errmsg, int notice);
 void (*broadcast_md_globalvar)(ModDataInfo *mdi, ModData *md);
 void (*broadcast_md_globalvar_cmd)(Client *except, Client *sender, char *varname, char *value);
 int (*tkl_ip_hash)(char *ip);

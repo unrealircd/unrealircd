@@ -59,7 +59,7 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_part)
 {
-	Channel *chptr;
+	Channel *channel;
 	Membership *lp;
 	char *p = NULL, *name;
 	char *commentx = (parc > 2 && parv[2]) ? parv[2] : NULL;
@@ -106,8 +106,8 @@ CMD_FUNC(cmd_part)
 			break;
 		}
 
-		chptr = get_channel(client, name, 0);
-		if (!chptr)
+		channel = get_channel(client, name, 0);
+		if (!channel)
 		{
 			sendnumeric(client, ERR_NOSUCHCHANNEL, name);
 			continue;
@@ -119,7 +119,7 @@ CMD_FUNC(cmd_part)
 		 */
 		comment = commentx;
 
-		if (!(lp = find_membership_link(client->user->channel, chptr)))
+		if (!(lp = find_membership_link(client->user->channel, channel)))
 		{
 			/* Normal to get get when our client did a kick
 			   ** for a remote client (who sends back a PART),
@@ -130,15 +130,15 @@ CMD_FUNC(cmd_part)
 			continue;
 		}
 
-		if (!ValidatePermissionsForPath("channel:override:banpartmsg",client,NULL,chptr,NULL) && !is_chan_op(client, chptr)) {
+		if (!ValidatePermissionsForPath("channel:override:banpartmsg",client,NULL,channel,NULL) && !is_chan_op(client, channel)) {
 			/* Banned? No comment allowed ;) */
-			if (comment && is_banned(client, chptr, BANCHK_MSG, &comment, NULL))
+			if (comment && is_banned(client, channel, BANCHK_MSG, &comment, NULL))
 				comment = NULL;
-			if (comment && is_banned(client, chptr, BANCHK_LEAVE_MSG, &comment, NULL))
+			if (comment && is_banned(client, channel, BANCHK_LEAVE_MSG, &comment, NULL))
 				comment = NULL;
 			/* Same for +m */
-			if ((chptr->mode.mode & MODE_MODERATED) && comment &&
-				 !has_voice(client, chptr) && !is_half_op(client, chptr))
+			if ((channel->mode.mode & MODE_MODERATED) && comment &&
+				 !has_voice(client, channel) && !is_half_op(client, channel))
 			{
 				comment = NULL;
 			}
@@ -148,50 +148,50 @@ CMD_FUNC(cmd_part)
 		{
 			Hook *tmphook;
 			for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_PART]; tmphook; tmphook = tmphook->next) {
-				comment = (*(tmphook->func.pcharfunc))(client, chptr, comment);
+				comment = (*(tmphook->func.pcharfunc))(client, channel, comment);
 				if (!comment)
 					break;
 			}
 		}
 
 		/* Create a new message, this one is actually used by 8 calls (though at most 4 max) */
-		new_message_special(client, recv_mtags, &mtags, ":%s PART %s", client->name, chptr->chname);
+		new_message_special(client, recv_mtags, &mtags, ":%s PART %s", client->name, channel->chname);
 
 		/* Send to other servers... */
 		sendto_server(client, PROTO_SID, 0, mtags, ":%s PART %s :%s",
-			ID(client), chptr->chname, comment ? comment : "");
+			ID(client), channel->chname, comment ? comment : "");
 		sendto_server(client, 0, PROTO_SID, mtags, ":%s PART %s :%s",
-			client->name, chptr->chname, comment ? comment : "");
+			client->name, channel->chname, comment ? comment : "");
 
-		if (invisible_user_in_channel(client, chptr))
+		if (invisible_user_in_channel(client, channel))
 		{
 			/* Show PART only to chanops and self */
 			if (!comment)
 			{
-				sendto_channel(chptr, client, client,
+				sendto_channel(channel, client, client,
 					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s",
-					       client->name, chptr->chname);
+					       client->name, channel->chname);
 				if (MyUser(client))
 				{
 					sendto_one(client, mtags, ":%s!%s@%s PART %s",
-						client->name, client->user->username, GetHost(client), chptr->chname);
+						client->name, client->user->username, GetHost(client), channel->chname);
 				}
 			}
 			else
 			{
-				sendto_channel(chptr, client, client,
+				sendto_channel(channel, client, client,
 					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s %s",
-					       client->name, chptr->chname, comment);
+					       client->name, channel->chname, comment);
 				if (MyUser(client))
 				{
 					sendto_one(client, mtags,
 						":%s!%s@%s PART %s %s",
 						client->name, client->user->username, GetHost(client),
-						chptr->chname, comment);
+						channel->chname, comment);
 				}
 			}
 		}
@@ -200,23 +200,23 @@ CMD_FUNC(cmd_part)
 			/* Show PART to all users in channel */
 			if (!comment)
 			{
-				sendto_channel(chptr, client, NULL, 0, 0, SEND_LOCAL, mtags,
+				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s PART %s",
-				               client->name, chptr->chname);
+				               client->name, channel->chname);
 			} else {
-				sendto_channel(chptr, client, NULL, 0, 0, SEND_LOCAL, mtags,
+				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s PART %s :%s",
-				               client->name, chptr->chname, comment);
+				               client->name, channel->chname, comment);
 			}
 		}
 
 		if (MyUser(client))
-			RunHook4(HOOKTYPE_LOCAL_PART, client, chptr, mtags, comment);
+			RunHook4(HOOKTYPE_LOCAL_PART, client, channel, mtags, comment);
 		else
-			RunHook4(HOOKTYPE_REMOTE_PART, client, chptr, mtags, comment);
+			RunHook4(HOOKTYPE_REMOTE_PART, client, channel, mtags, comment);
 
 		free_message_tags(mtags);
 
-		remove_user_from_channel(client, chptr);
+		remove_user_from_channel(client, channel);
 	}
 }

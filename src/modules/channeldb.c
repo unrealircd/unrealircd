@@ -49,9 +49,9 @@ int channeldb_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int channeldb_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 EVENT(write_channeldb_evt);
 int write_channeldb(void);
-int write_channel_entry(FILE *fd, const char *tmpfname, Channel *chptr);
+int write_channel_entry(FILE *fd, const char *tmpfname, Channel *channel);
 int read_channeldb(void);
-static void set_channel_mode(Channel *chptr, char *modes, char *parameters);
+static void set_channel_mode(Channel *channel, char *modes, char *parameters);
 
 /* Global variables */
 static uint32_t channeldb_version = CHANNELDB_VERSION;
@@ -191,7 +191,7 @@ int write_channeldb(void)
 {
 	char tmpfname[512];
 	FILE *fd;
-	Channel *chptr;
+	Channel *channel;
 	int cnt = 0;
 #ifdef BENCHMARK
 	struct timeval tv_alpha, tv_beta;
@@ -211,17 +211,17 @@ int write_channeldb(void)
 	W_SAFE(write_data(fd, &channeldb_version, sizeof(channeldb_version)));
 
 	/* First, count +P channels and write the count to the database */
-	for (chptr = channels; chptr; chptr=chptr->nextch)
-		if (has_channel_mode(chptr, 'P'))
+	for (channel = channels; channel; channel=channel->nextch)
+		if (has_channel_mode(channel, 'P'))
 			cnt++;
 	W_SAFE(write_int64(fd, cnt));
 
-	for (chptr = channels; chptr; chptr=chptr->nextch)
+	for (channel = channels; channel; channel=channel->nextch)
 	{
 		/* We only care about +P (persistent) channels */
-		if (has_channel_mode(chptr, 'P'))
+		if (has_channel_mode(channel, 'P'))
 		{
-			if (!write_channel_entry(fd, tmpfname, chptr))
+			if (!write_channel_entry(fd, tmpfname, channel))
 				return 0;
 		}
 	}
@@ -266,29 +266,29 @@ int write_listmode(FILE *fd, const char *tmpfname, Ban *lst)
 	return 1;
 }
 
-int write_channel_entry(FILE *fd, const char *tmpfname, Channel *chptr)
+int write_channel_entry(FILE *fd, const char *tmpfname, Channel *channel)
 {
 	W_SAFE(write_int32(fd, MAGIC_CHANNEL_START));
 	/* Channel name */
-	W_SAFE(write_str(fd, chptr->chname));
+	W_SAFE(write_str(fd, channel->chname));
 	/* Channel creation time */
-	W_SAFE(write_int64(fd, chptr->creationtime));
+	W_SAFE(write_int64(fd, channel->creationtime));
 	/* Topic (topic, setby, seton) */
-	W_SAFE(write_str(fd, chptr->topic));
-	W_SAFE(write_str(fd, chptr->topic_nick));
-	W_SAFE(write_int64(fd, chptr->topic_time));
+	W_SAFE(write_str(fd, channel->topic));
+	W_SAFE(write_str(fd, channel->topic_nick));
+	W_SAFE(write_int64(fd, channel->topic_time));
 	/* Basic channel modes (eg: +sntkl key 55) */
-	channel_modes(&me, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
+	channel_modes(&me, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), channel);
 	W_SAFE(write_str(fd, modebuf));
 	W_SAFE(write_str(fd, parabuf));
 	/* Mode lock */
-	W_SAFE(write_str(fd, chptr->mode_lock));
+	W_SAFE(write_str(fd, channel->mode_lock));
 	/* List modes (bans, exempts, invex) */
-	if (!write_listmode(fd, tmpfname, chptr->banlist))
+	if (!write_listmode(fd, tmpfname, channel->banlist))
 		return 0;
-	if (!write_listmode(fd, tmpfname, chptr->exlist))
+	if (!write_listmode(fd, tmpfname, channel->exlist))
 		return 0;
-	if (!write_listmode(fd, tmpfname, chptr->invexlist))
+	if (!write_listmode(fd, tmpfname, channel->invexlist))
 		return 0;
 	W_SAFE(write_int32(fd, MAGIC_CHANNEL_END));
 	return 1;
@@ -413,7 +413,7 @@ int read_channeldb(void)
 		modes2 = NULL;
 		mode_lock = NULL;
 		
-		Channel *chptr;
+		Channel *channel;
 		R_SAFE(read_data(fd, &magic, sizeof(magic)));
 		if (magic != MAGIC_CHANNEL_START)
 		{
@@ -429,16 +429,16 @@ int read_channeldb(void)
 		R_SAFE(read_str(fd, &modes2));
 		R_SAFE(read_str(fd, &mode_lock));
 		/* If we got this far, we can create/initialize the channel with the above */
-		chptr = get_channel(&me, chname, CREATE);
-		chptr->creationtime = creationtime;
-		safe_strdup(chptr->topic, topic);
-		safe_strdup(chptr->topic_nick, topic_nick);
-		chptr->topic_time = topic_time;
-		safe_strdup(chptr->mode_lock, mode_lock);
-		set_channel_mode(chptr, modes1, modes2);
-		R_SAFE(read_listmode(fd, &chptr->banlist));
-		R_SAFE(read_listmode(fd, &chptr->exlist));
-		R_SAFE(read_listmode(fd, &chptr->invexlist));
+		channel = get_channel(&me, chname, CREATE);
+		channel->creationtime = creationtime;
+		safe_strdup(channel->topic, topic);
+		safe_strdup(channel->topic_nick, topic_nick);
+		channel->topic_time = topic_time;
+		safe_strdup(channel->mode_lock, mode_lock);
+		set_channel_mode(channel, modes1, modes2);
+		R_SAFE(read_listmode(fd, &channel->banlist));
+		R_SAFE(read_listmode(fd, &channel->exlist));
+		R_SAFE(read_listmode(fd, &channel->invexlist));
 		R_SAFE(read_data(fd, &magic, sizeof(magic)));
 		FreeChannelEntry();
 		added++;
@@ -466,7 +466,7 @@ int read_channeldb(void)
 #undef FreeChannelEntry
 #undef R_SAFE
 
-static void set_channel_mode(Channel *chptr, char *modes, char *parameters)
+static void set_channel_mode(Channel *channel, char *modes, char *parameters)
 {
 	char buf[512];
 	char *p, *param;
@@ -482,7 +482,7 @@ static void set_channel_mode(Channel *chptr, char *modes, char *parameters)
 	myparv[myparc] = NULL;
 
 	SetULine(&me); // hack for crash.. set ulined so no access checks.
-	do_mode(chptr, &me, NULL, myparc, myparv, 0, 0);
+	do_mode(channel, &me, NULL, myparc, myparv, 0, 0);
 	SetULine(&me); // and clear it again..
 
 	for (i = 0; i < myparc; i++)

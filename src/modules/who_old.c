@@ -807,7 +807,7 @@ static char *first_visible_channel(Client *client, Client *acptr, int *flg)
 
 	for (lp = acptr->user->channel; lp; lp = lp->next)
 	{
-		Channel *chptr = lp->chptr;
+		Channel *channel = lp->channel;
 		Hook *h;
 		int ret = EX_ALLOW;
 		int operoverride = 0;
@@ -815,12 +815,12 @@ static char *first_visible_channel(Client *client, Client *acptr, int *flg)
 		
 		/* Note that the code below is almost identical to the one in /WHOIS */
 
-		if (ShowChannel(client, chptr))
+		if (ShowChannel(client, channel))
 			showchannel = 1;
 
 		for (h = Hooks[HOOKTYPE_SEE_CHANNEL_IN_WHOIS]; h; h = h->next)
 		{
-			int n = (*(h->func.intfunc))(client, acptr, chptr);
+			int n = (*(h->func.intfunc))(client, acptr, channel);
 			/* Hook return values:
 			 * EX_ALLOW means 'yes is ok, as far as modules are concerned'
 			 * EX_DENY means 'hide this channel, unless oper overriding'
@@ -841,7 +841,7 @@ static char *first_visible_channel(Client *client, Client *acptr, int *flg)
 		if (ret == EX_DENY)
 			showchannel = 0;
 		
-		if (!showchannel && (ValidatePermissionsForPath("channel:see:who:secret",client,NULL,chptr,NULL) || ValidatePermissionsForPath("channel:see:whois",client,NULL,chptr,NULL)))
+		if (!showchannel && (ValidatePermissionsForPath("channel:see:who:secret",client,NULL,channel,NULL) || ValidatePermissionsForPath("channel:see:whois",client,NULL,channel,NULL)))
 		{
 			showchannel = 1; /* OperOverride */
 			operoverride = 1;
@@ -857,7 +857,7 @@ static char *first_visible_channel(Client *client, Client *acptr, int *flg)
 			*flg |= FVC_HIDDEN;
 
 		if (showchannel)
-			return chptr->chname;
+			return channel->chname;
 	}
 
 	/* no channels that they can see */

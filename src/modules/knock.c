@@ -65,7 +65,7 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_knock)
 {
-	Channel *chptr;
+	Channel *channel;
 	Hook *h;
 	int i = 0;
 	MessageTag *mtags = NULL;
@@ -90,34 +90,34 @@ CMD_FUNC(cmd_knock)
 
 		return;
 	}
-	if (!(chptr = find_channel(parv[1], NULL)))
+	if (!(channel = find_channel(parv[1], NULL)))
 	{
 		sendnumeric(client, ERR_CANNOTKNOCK, parv[1], "Channel does not exist!");
 		return;
 	}
 
 	/* IsMember bugfix by codemastr */
-	if (IsMember(client, chptr) == 1)
+	if (IsMember(client, channel) == 1)
 	{
-		sendnumeric(client, ERR_CANNOTKNOCK, chptr->chname, "You're already there!");
+		sendnumeric(client, ERR_CANNOTKNOCK, channel->chname, "You're already there!");
 		return;
 	}
 
-	if (!(chptr->mode.mode & MODE_INVITEONLY))
+	if (!(channel->mode.mode & MODE_INVITEONLY))
 	{
-		sendnumeric(client, ERR_CANNOTKNOCK, chptr->chname, "Channel is not invite only!");
+		sendnumeric(client, ERR_CANNOTKNOCK, channel->chname, "Channel is not invite only!");
 		return;
 	}
 
-	if (is_banned(client, chptr, BANCHK_JOIN, NULL, NULL))
+	if (is_banned(client, channel, BANCHK_JOIN, NULL, NULL))
 	{
-		sendnumeric(client, ERR_CANNOTKNOCK, chptr->chname, "You're banned!");
+		sendnumeric(client, ERR_CANNOTKNOCK, channel->chname, "You're banned!");
 		return;
 	}
 
 	for (h = Hooks[HOOKTYPE_PRE_KNOCK]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(client,chptr);
+		i = (*(h->func.intfunc))(client,channel);
 		if (i == HOOK_DENY || i == HOOK_ALLOW)
 			break;
 	}
@@ -143,16 +143,16 @@ CMD_FUNC(cmd_knock)
 	}
 
 	new_message(&me, NULL, &mtags);
-	sendto_channel(chptr, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+	sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 	               0, SEND_ALL, mtags,
 	               ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)",
-	               me.name, chptr->chname,
+	               me.name, channel->chname,
 	               client->name, client->user->username, GetHost(client),
 	               parv[2] ? parv[2] : "no reason specified");
 
-	sendnotice(client, "Knocked on %s", chptr->chname);
+	sendnotice(client, "Knocked on %s", channel->chname);
 
-        RunHook4(HOOKTYPE_KNOCK, client, chptr, mtags, parv[2]);
+        RunHook4(HOOKTYPE_KNOCK, client, channel, mtags, parv[2]);
 
 	free_message_tags(mtags);
 }

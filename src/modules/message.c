@@ -28,7 +28,7 @@ int ban_version(Client *client, char *text);
 CMD_FUNC(cmd_private);
 CMD_FUNC(cmd_notice);
 void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[], int notice);
-int _can_send(Client *client, Channel *chptr, char **msgtext, char **errmsg, int notice);
+int _can_send(Client *client, Channel *channel, char **msgtext, char **errmsg, int notice);
 
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
@@ -157,7 +157,7 @@ static int can_privmsg(Client *client, Client *target, int notice, char **text, 
 void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[], int notice)
 {
 	Client *target;
-	Channel *chptr;
+	Channel *channel;
 	char *nick, *p, *p2, *pc, *text, *errmsg, *newcmd;
 	int  prefix = 0;
 	char pfixchan[CHANNELLEN + 4];
@@ -211,7 +211,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 		prefix = 0;
 
 		/* Message to channel */
-		if (p2 && (chptr = find_channel(p2, NULL)))
+		if (p2 && (channel = find_channel(p2, NULL)))
 		{
 			if (p2 != nick)
 			{
@@ -255,22 +255,22 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 
 				if (prefix)
 				{
-					if (MyUser(client) && !op_can_override("channel:override:message:prefix",client,chptr,NULL))
+					if (MyUser(client) && !op_can_override("channel:override:message:prefix",client,channel,NULL))
 					{
-						Membership *lp = find_membership_link(client->user->channel, chptr);
+						Membership *lp = find_membership_link(client->user->channel, channel);
 						/* Check if user is allowed to send. RULES:
 						 * Need at least voice (+) in order to send to +,% or @
 						 * Need at least ops (@) in order to send to & or ~
 						 */
 						if (!lp || !(lp->flags & (CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
 						{
-							sendnumeric(client, ERR_CHANOPRIVSNEEDED, chptr->chname);
+							sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->chname);
 							return;
 						}
 						if (!(prefix & PREFIX_OP) && ((prefix & PREFIX_OWNER) || (prefix & PREFIX_ADMIN)) &&
 						    !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN)))
 						{
-							sendnumeric(client, ERR_CHANOPRIVSNEEDED, chptr->chname);
+							sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->chname);
 							return;
 						}
 					}
@@ -299,14 +299,14 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 
 			if (MyUser(client) && (*parv[2] == 1))
 			{
-				ret = check_dcc(client, chptr->chname, NULL, parv[2]);
+				ret = check_dcc(client, channel->chname, NULL, parv[2]);
 				if (IsDead(client))
 					return;
 				if (ret == 0)
 					continue;
 			}
 
-			if (IsVirus(client) && strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN))
+			if (IsVirus(client) && strcasecmp(channel->chname, SPAMFILTER_VIRUSCHAN))
 			{
 				sendnotice(client, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
 				continue;
@@ -316,13 +316,13 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 			errmsg = NULL;
 			if (MyUser(client) && !IsULine(client))
 			{
-				if (!can_send(client, chptr, &text, &errmsg, notice))
+				if (!can_send(client, channel, &text, &errmsg, notice))
 				{
 					if (!notice)
 					{
 						/* Send error message */
 						// TODO: move all the cansend shit to *errmsg ? if possible?
-						sendnumeric(client, ERR_CANNOTSENDTOCHAN, chptr->chname, errmsg, p2);
+						sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, errmsg, p2);
 					}
 					continue; /* skip */
 				}
@@ -338,14 +338,14 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 
 			text = parv[2];
 
-			if (MyUser(client) && match_spamfilter(client, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname, 0, NULL))
+			if (MyUser(client) && match_spamfilter(client, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, channel->chname, 0, NULL))
 				return;
 
 			new_message(client, recv_mtags, &mtags);
 
 			for (h = Hooks[HOOKTYPE_PRE_CHANMSG]; h; h = h->next)
 			{
-				text = (*(h->func.pcharfunc))(client, chptr, mtags, text, notice);
+				text = (*(h->func.pcharfunc))(client, channel, mtags, text, notice);
 				if (!text)
 					break;
 			}
@@ -356,12 +356,12 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 				continue;
 			}
 
-			sendto_channel(chptr, client, client,
+			sendto_channel(channel, client, client,
 				       prefix, 0, sendflags, mtags,
 				       notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
 				       client->name, nick, text);
 
-			RunHook8(HOOKTYPE_CHANMSG, client, chptr, sendflags, prefix, nick, mtags, text, notice);
+			RunHook8(HOOKTYPE_CHANMSG, client, channel, sendflags, prefix, nick, mtags, text, notice);
 
 			free_message_tags(mtags);
 
@@ -844,14 +844,14 @@ int ban_version(Client *client, char *text)
 
 /** Can user send a message to this channel?
  * @param client    The client
- * @param chptr   The channel
+ * @param channel   The channel
  * @param msgtext The message to send (MAY be changed, even if user is allowed to send)
  * @param errmsg  The error message (will be filled in)
  * @param notice  If it's a NOTICE then this is set to 1. Set to 0 for PRIVMSG.
  * @returns Returns 1 if the user is allowed to send, otherwise 0.
  * (note that this behavior was reversed in UnrealIRCd versions <5.x.
  */
-int _can_send(Client *client, Channel *chptr, char **msgtext, char **errmsg, int notice)
+int _can_send(Client *client, Channel *channel, char **msgtext, char **errmsg, int notice)
 {
 	Membership *lp;
 	int  member, i = 0;
@@ -862,16 +862,16 @@ int _can_send(Client *client, Channel *chptr, char **msgtext, char **errmsg, int
 
 	*errmsg = NULL;
 
-	member = IsMember(client, chptr);
+	member = IsMember(client, channel);
 
-	if (chptr->mode.mode & MODE_NOPRIVMSGS && !member)
+	if (channel->mode.mode & MODE_NOPRIVMSGS && !member)
 	{
 		/* Channel does not accept external messages (+n).
 		 * Reject, unless HOOKTYPE_CAN_BYPASS_NO_EXTERNAL_MSGS tells otherwise.
 		 */
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_EXTERNAL);
+			i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_EXTERNAL);
 			if (i != HOOK_CONTINUE)
 				break;
 		}
@@ -882,9 +882,9 @@ int _can_send(Client *client, Channel *chptr, char **msgtext, char **errmsg, int
 		}
 	}
 
-	lp = find_membership_link(client->user->channel, chptr);
-	if (chptr->mode.mode & MODE_MODERATED &&
-	    !op_can_override("channel:override:message:moderated",client,chptr,NULL) &&
+	lp = find_membership_link(client->user->channel, channel);
+	if (channel->mode.mode & MODE_MODERATED &&
+	    !op_can_override("channel:override:message:moderated",client,channel,NULL) &&
 	    (!lp /* FIXME: UGLY */
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER | CHFL_HALFOP | CHFL_CHANADMIN))))
 	{
@@ -893,7 +893,7 @@ int _can_send(Client *client, Channel *chptr, char **msgtext, char **errmsg, int
 		 */
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{
-			i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_MODERATED);
+			i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_MODERATED);
 			if (i != HOOK_CONTINUE)
 				break;
 		}
@@ -907,7 +907,7 @@ int _can_send(Client *client, Channel *chptr, char **msgtext, char **errmsg, int
 	/* Modules can plug in as well */
 	for (h = Hooks[HOOKTYPE_CAN_SEND]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(client, chptr, lp, msgtext, errmsg, notice);
+		i = (*(h->func.intfunc))(client, channel, lp, msgtext, errmsg, notice);
 		if (i != HOOK_CONTINUE)
 		{
 #ifdef DEBUGMODE
@@ -930,13 +930,13 @@ int _can_send(Client *client, Channel *chptr, char **msgtext, char **errmsg, int
 	/* Now we are going to check bans */
 
 	/* ..but first: exempt ircops */
-	if (op_can_override("channel:override:message:ban",client,chptr,NULL))
+	if (op_can_override("channel:override:message:ban",client,channel,NULL))
 		return 1;
 
 	if ((!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANADMIN))) && MyUser(client)
-	    && is_banned(client, chptr, BANCHK_MSG, msgtext, errmsg))
+	    && is_banned(client, channel, BANCHK_MSG, msgtext, errmsg))
 	{
 		/* Modules can set 'errmsg', otherwise we default to this: */
 		if (!*errmsg)

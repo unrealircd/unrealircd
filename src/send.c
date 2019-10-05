@@ -343,7 +343,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
  * Previously there were 6, now there is 1. This means there
  * are likely some parameters that you will pass as NULL or 0
  * but at least we can all use one single function.
- * @param chptr       The channel to send to
+ * @param channel       The channel to send to
  * @param from        The source of the message
  * @param skip        The client to skip (can be NULL)
  * @param prefix      Any combination of PREFIX_* (can be 0 for all)
@@ -357,7 +357,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
  * @param pattern     The pattern (eg: ":%s PRIVMSG %s :%s")
  * @param ...         The parameters for the pattern.
  */
-void sendto_channel(Channel *chptr, Client *from, Client *skip,
+void sendto_channel(Channel *channel, Client *from, Client *skip,
                     int prefix, long clicap, int sendflags,
                     MessageTag *mtags,
                     FORMAT_STRING(const char *pattern), ...)
@@ -367,7 +367,7 @@ void sendto_channel(Channel *chptr, Client *from, Client *skip,
 	Client *acptr;
 
 	++current_serial;
-	for (lp = chptr->members; lp; lp = lp->next)
+	for (lp = channel->members; lp; lp = lp->next)
 	{
 		acptr = lp->client;
 
@@ -438,7 +438,7 @@ good:
 		 */
 
 		if ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_ALWAYS) ||
-		    ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_AUTO) && has_channel_mode(chptr, 'H')))
+		    ((iConf.broadcast_channel_messages == BROADCAST_CHANNEL_MESSAGES_AUTO) && has_channel_mode(channel, 'H')))
 		{
 			list_for_each_entry(acptr, &server_list, special_node)
 			{
@@ -537,7 +537,7 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 	{
 		for (channels = user->user->channel; channels; channels = channels->next)
 		{
-			for (users = channels->chptr->members; users; users = users->next)
+			for (users = channels->channel->members; users; users = users->next)
 			{
 				acptr = users->client;
 
@@ -553,7 +553,7 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 				if (acptr == skip)
 					continue; /* the one to skip */
 
-				if (!user_can_see_member(acptr, user, channels->chptr))
+				if (!user_can_see_member(acptr, user, channels->channel))
 					continue; /* the sending user (quit'ing or nick changing) is 'invisible' -- skip */
 
 				acptr->local->serial = current_serial;

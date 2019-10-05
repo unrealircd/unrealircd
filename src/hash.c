@@ -360,13 +360,13 @@ int add_to_id_hash_table(char *name, Client *client)
 /*
  * add_to_channel_hash_table
  */
-int add_to_channel_hash_table(char *name, Channel *chptr)
+int add_to_channel_hash_table(char *name, Channel *channel)
 {
 	unsigned int hashv;
 
 	hashv = hash_channel_name(name);
-	chptr->hnextch = channelTable[hashv];
-	channelTable[hashv] = chptr;
+	channel->hnextch = channelTable[hashv];
+	channelTable[hashv] = channel;
 	return 0;
 }
 /*
@@ -395,7 +395,7 @@ int del_from_id_hash_table(char *name, Client *client)
 /*
  * del_from_channel_hash_table
  */
-void del_from_channel_hash_table(char *name, Channel *chptr)
+void del_from_channel_hash_table(char *name, Channel *channel)
 {
 	Channel *tmp, *prev = NULL;
 	unsigned int hashv;
@@ -403,7 +403,7 @@ void del_from_channel_hash_table(char *name, Channel *chptr)
 	hashv = hash_channel_name(name);
 	for (tmp = channelTable[hashv]; tmp; tmp = tmp->hnextch)
 	{
-		if (tmp == chptr)
+		if (tmp == channel)
 		{
 			if (prev)
 				prev->hnextch = tmp->hnextch;
@@ -561,7 +561,7 @@ Client *find_person(char *name, Client *requester)
 /*
  * hash_find_channel
  */
-Channel *hash_find_channel(char *name, Channel *chptr)
+Channel *hash_find_channel(char *name, Channel *channel)
 {
 	unsigned int hashv;
 	Channel *tmp;
@@ -573,7 +573,7 @@ Channel *hash_find_channel(char *name, Channel *chptr)
 		if (smycmp(name, tmp->chname) == 0)
 			return tmp;
 	}
-	return chptr;
+	return channel;
 }
 
 Channel *hash_get_chan_bucket(uint64_t hashv)

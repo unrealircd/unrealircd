@@ -32,10 +32,10 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_NOINVITE;
 
-#define IsNoInvite(chptr)    (chptr->mode.extmode & EXTCMODE_NOINVITE)
+#define IsNoInvite(channel)    (channel->mode.extmode & EXTCMODE_NOINVITE)
 
-int noinvite_pre_knock(Client *client, Channel *chptr);
-int noinvite_pre_invite(Client *client, Client *target, Channel *chptr, int *override);
+int noinvite_pre_knock(Client *client, Channel *channel);
+int noinvite_pre_invite(Client *client, Client *target, Channel *channel, int *override);
 
 MOD_TEST()
 {
@@ -70,27 +70,27 @@ MOD_UNLOAD()
 }
 
 
-int noinvite_pre_knock(Client *client, Channel *chptr)
+int noinvite_pre_knock(Client *client, Channel *channel)
 {
-	if (MyUser(client) && IsNoInvite(chptr))
+	if (MyUser(client) && IsNoInvite(channel))
 	{
 		sendnumeric(client, ERR_CANNOTKNOCK,
-				    chptr->chname, "The channel does not allow invites (+V)");
+				    channel->chname, "The channel does not allow invites (+V)");
 		return HOOK_DENY;
 	}
 
 	return HOOK_CONTINUE;
 }
 
-int noinvite_pre_invite(Client *client, Client *target, Channel *chptr, int *override)
+int noinvite_pre_invite(Client *client, Client *target, Channel *channel, int *override)
 {
-	if (MyUser(client) && IsNoInvite(chptr))
+	if (MyUser(client) && IsNoInvite(channel))
 	{
-		if (ValidatePermissionsForPath("channel:override:invite:noinvite",client,NULL,chptr,NULL) && client == target)
+		if (ValidatePermissionsForPath("channel:override:invite:noinvite",client,NULL,channel,NULL) && client == target)
 		{
 			*override = 1;
 		} else {
-			sendnumeric(client, ERR_NOINVITE, chptr->chname);
+			sendnumeric(client, ERR_NOINVITE, channel->chname);
 			return HOOK_DENY;
 		}
 	}

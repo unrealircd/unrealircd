@@ -4212,7 +4212,7 @@ static int target_is_spamexcept(char *target)
 int _join_viruschan(Client *client, TKL *tkl, int type)
 {
 	char *xparv[3], chbuf[CHANNELLEN + 16], buf[2048];
-	Channel *chptr;
+	Channel *channel;
 	int ret;
 
 	snprintf(buf, sizeof(buf), "0,%s", SPAMFILTER_VIRUSCHAN);
@@ -4231,16 +4231,16 @@ int _join_viruschan(Client *client, TKL *tkl, int type)
 	sendnotice(client, "You are now restricted to talking in %s: %s",
 		SPAMFILTER_VIRUSCHAN, unreal_decodespace(tkl->ptr.spamfilter->tkl_reason));
 
-	chptr = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
-	if (chptr)
+	channel = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
+	if (channel)
 	{
 		MessageTag *mtags = NULL;
-		ircsnprintf(chbuf, sizeof(chbuf), "@%s", chptr->chname);
+		ircsnprintf(chbuf, sizeof(chbuf), "@%s", channel->chname);
 		ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s matched filter '%s' [%s] [%s]",
 			client->name, tkl->ptr.spamfilter->match->str, cmdname_by_spamftarget(type),
 			unreal_decodespace(tkl->ptr.spamfilter->tkl_reason));
 		new_message(&me, NULL, &mtags);
-		sendto_channel(chptr, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 		               0, SEND_ALL|SKIP_DEAF, mtags,
 		               ":%s NOTICE %s :%s", me.name, chbuf, buf);
 		free_message_tags(mtags);

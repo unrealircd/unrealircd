@@ -81,8 +81,8 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 char *extban_modeT_conv_param(char *para_in);
-int extban_modeT_is_banned(Client *client, Channel *chptr, char *ban, int type, char **msg, char **errmsg);
-int extban_modeT_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2);
+int extban_modeT_is_banned(Client *client, Channel *channel, char *ban, int type, char **msg, char **errmsg);
+int extban_modeT_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2);
 void parse_word(const char *s, char **word, int *type);
 
 MOD_INIT()
@@ -242,22 +242,22 @@ int textban_replace(int type, char *badword, char *line, char *buf)
 }
 #endif
 
-unsigned int counttextbans(Channel *chptr)
+unsigned int counttextbans(Channel *channel)
 {
 	Ban *ban;
 	unsigned int cnt = 0;
 
-	for (ban = chptr->banlist; ban; ban=ban->next)
+	for (ban = channel->banlist; ban; ban=ban->next)
 		if ((ban->banstr[0] == '~') && (ban->banstr[1] == 'T') && (ban->banstr[2] == ':'))
 			cnt++;
-	for (ban = chptr->exlist; ban; ban=ban->next)
+	for (ban = channel->exlist; ban; ban=ban->next)
 		if ((ban->banstr[0] == '~') && (ban->banstr[1] == 'T') && (ban->banstr[2] == ':'))
 			cnt++;
 	return cnt;
 }
 
 
-int extban_modeT_is_ok(Client *client, Channel *chptr, char *para, int checkt, int what, int what2)
+int extban_modeT_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2)
 {
 	int n;
 
@@ -267,10 +267,10 @@ int extban_modeT_is_ok(Client *client, Channel *chptr, char *para, int checkt, i
 	/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
 	if ((what == MODE_ADD) && (checkt == EXBCHK_PARAM) &&
 	     MyUser(client) && !IsOper(client) &&
-	    ((n = counttextbans(chptr)) >= MAX_EXTBANT_PER_CHAN))
+	    ((n = counttextbans(channel)) >= MAX_EXTBANT_PER_CHAN))
 	{
 		/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
-		sendnumeric(client, ERR_BANLISTFULL, chptr->chname, para);
+		sendnumeric(client, ERR_BANLISTFULL, channel->chname, para);
 		sendnotice(client, "Too many textbans for this channel");
 		return 0;
 	}
@@ -382,7 +382,7 @@ char *extban_modeT_conv_param(char *para_in)
 	return retbuf;
 }
 
-int extban_modeT_is_banned(Client *client, Channel *chptr, char *ban, int checktype, char **msg, char **errmsg)
+int extban_modeT_is_banned(Client *client, Channel *channel, char *ban, int checktype, char **msg, char **errmsg)
 {
 	static char filtered[512]; /* temp buffer */
 	long fl;
@@ -450,7 +450,7 @@ int extban_modeT_is_banned(Client *client, Channel *chptr, char *ban, int checkt
 	gettimeofday(&tv_beta, NULL);
 	ircd_log(LOG_ERROR, "TextBan Timing: %ld microseconds (%s / %s / %d)",
 		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec),
-		client->name, chptr->chname, strlen(*msg));
+		client->name, channel->chname, strlen(*msg));
 #endif
 
 	if (cleaned)

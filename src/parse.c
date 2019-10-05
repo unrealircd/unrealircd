@@ -461,7 +461,7 @@ void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int parc, char *parv[])
 {
 	Client *acptr;
-	Channel *chptr;
+	Channel *channel;
 	char *nick, *p;
 	int i;
 	char buffer[BUFSIZE];
@@ -556,10 +556,10 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s%s",
 				    client->name, numeric, nick, buffer);
 		}
-		else if ((chptr = find_channel(nick, NULL)))
+		else if ((channel = find_channel(nick, NULL)))
 		{
-			sendto_channel(chptr, client, client, 0, 0, SEND_ALL, recv_mtags,
-			               ":%s %d %s%s", client->name, numeric, chptr->chname, buffer);
+			sendto_channel(channel, client, client, 0, 0, SEND_ALL, recv_mtags,
+			               ":%s %d %s%s", client->name, numeric, channel->chname, buffer);
 		}
 	}
 

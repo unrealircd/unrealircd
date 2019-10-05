@@ -104,23 +104,23 @@ CMD_FUNC(cmd_mdex)
 		} else
 		if (!strcmp(type, "channel"))
 		{
-			Channel *chptr = find_channel(objname, NULL);
+			Channel *channel = find_channel(objname, NULL);
 			md = findmoddata_byname(varname, MODDATATYPE_CHANNEL);
-			if (!md || !md->unserialize || !md->free || !chptr)
+			if (!md || !md->unserialize || !md->free || !channel)
 				return 0;
 			if (value)
-				md->unserialize(value, &moddata_channel(chptr, md));
+				md->unserialize(value, &moddata_channel(channel, md));
 			else
 			{
-				md->free(&moddata_channel(chptr, md));
-				memset(&moddata_channel(chptr, md), 0, sizeof(ModData));
+				md->free(&moddata_channel(channel, md));
+				memset(&moddata_channel(channel, md), 0, sizeof(ModData));
 			}
-			broadcast_md_channel(md, chptr, &moddata_channel(chptr, md));
+			broadcast_md_channel(md, channel, &moddata_channel(channel, md));
 		} else
 		if (!strcmp(type, "member"))
 		{
 			Client *target;
-			Channel *chptr;
+			Channel *channel;
 			Member *m;
 			char *p;
 			
@@ -130,15 +130,15 @@ CMD_FUNC(cmd_mdex)
 				return 0;
 			*p++ = '\0';
 
-			chptr = find_channel(objname, NULL);
-			if (!chptr)
+			channel = find_channel(objname, NULL);
+			if (!channel)
 				return 0;
 			
 			target = find_person(p, NULL);
 			if (!target)
 				return 0;
 
-			m = find_member_link(chptr->members, target);
+			m = find_member_link(channel->members, target);
 			if (!m)
 				return 0;
 			
@@ -153,12 +153,12 @@ CMD_FUNC(cmd_mdex)
 				md->free(&moddata_member(m, md));
 				memset(&moddata_member(m, md), 0, sizeof(ModData));
 			}
-			broadcast_md_member(md, chptr, m, &moddata_member(m, md));
+			broadcast_md_member(md, channel, m, &moddata_member(m, md));
 		} else
 		if (!strcmp(type, "membership"))
 		{
 			Client *target;
-			Channel *chptr;
+			Channel *channel;
 			Membership *m;
 			char *p;
 			
@@ -172,11 +172,11 @@ CMD_FUNC(cmd_mdex)
 			if (!target)
 				return 0;
 			
-			chptr = find_channel(p, NULL);
-			if (!chptr)
+			channel = find_channel(p, NULL);
+			if (!channel)
 				return 0;
 
-			m = find_membership_link(target->user->channel, chptr);
+			m = find_membership_link(target->user->channel, channel);
 			if (!m)
 				return 0;
 			
@@ -212,13 +212,13 @@ CMD_FUNC(cmd_mdex)
 		} else
 		if (!strcmp(type, "channel"))
 		{
-			Channel *chptr = find_channel(objname, NULL);
+			Channel *channel = find_channel(objname, NULL);
 			char *str;
 			
 			md = findmoddata_byname(varname, MODDATATYPE_CHANNEL);
-			if (!md || !md->serialize || !chptr)
+			if (!md || !md->serialize || !channel)
 				return 0;
-			str = md->serialize(&moddata_channel(chptr, md));
+			str = md->serialize(&moddata_channel(channel, md));
 			if (str)
 				sendnotice(client, "Value: %s", str ? str : "<null>");
 			else
@@ -227,7 +227,7 @@ CMD_FUNC(cmd_mdex)
 		if (!strcmp(type, "member"))
 		{
 			Client *target;
-			Channel *chptr;
+			Channel *channel;
 			Member *m;
 			char *p, *str;
 			
@@ -237,15 +237,15 @@ CMD_FUNC(cmd_mdex)
 				return 0;
 			*p++ = '\0';
 
-			chptr = find_channel(objname, NULL);
-			if (!chptr)
+			channel = find_channel(objname, NULL);
+			if (!channel)
 				return 0;
 			
 			target = find_person(p, NULL);
 			if (!target)
 				return 0;
 
-			m = find_member_link(chptr->members, target);
+			m = find_member_link(channel->members, target);
 			if (!m)
 				return 0;
 			
@@ -262,7 +262,7 @@ CMD_FUNC(cmd_mdex)
 		if (!strcmp(type, "membership"))
 		{
 			Client *target;
-			Channel *chptr;
+			Channel *channel;
 			Membership *m;
 			char *p, *str;
 			
@@ -276,11 +276,11 @@ CMD_FUNC(cmd_mdex)
 			if (!target)
 				return 0;
 			
-			chptr = find_channel(p, NULL);
-			if (!chptr)
+			channel = find_channel(p, NULL);
+			if (!channel)
 				return 0;
 
-			m = find_membership_link(target->user->channel, chptr);
+			m = find_membership_link(target->user->channel, channel);
 			if (!m)
 				return 0;
 			

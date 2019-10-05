@@ -105,20 +105,20 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 	}
 	else if (alias->type == ALIAS_CHANNEL)
 	{
-		Channel *chptr;
-		if ((chptr = find_channel(alias->nick, NULL)))
+		Channel *channel;
+		if ((channel = find_channel(alias->nick, NULL)))
 		{
 			char *msg = parv[1];
 			char *errmsg = NULL;
-			if (!can_send(client, chptr, &msg, &errmsg, 0))
+			if (!can_send(client, channel, &msg, &errmsg, 0))
 			{
-				if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_CHANMSG, chptr->chname, 0, NULL))
+				if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_CHANMSG, channel->chname, 0, NULL))
 					return;
 				new_message(client, NULL, &mtags);
-				sendto_channel(chptr, client, client,
+				sendto_channel(channel, client, client,
 				               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
 				               ":%s PRIVMSG %s :%s",
-				               client->name, chptr->chname, parv[1]);
+				               client->name, channel->chname, parv[1]);
 				free_message_tags(mtags);
 				return;
 			}
@@ -240,20 +240,20 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 				}
 				else if (format->type == ALIAS_CHANNEL)
 				{
-					Channel *chptr;
-					if ((chptr = find_channel(format->nick, NULL)))
+					Channel *channel;
+					if ((channel = find_channel(format->nick, NULL)))
 					{
 						char *msg = output;
 						char *errmsg = NULL;
-						if (!can_send(client, chptr, &msg, &errmsg, 0))
+						if (!can_send(client, channel, &msg, &errmsg, 0))
 						{
-							if (alias->spamfilter && match_spamfilter(client, output, SPAMF_CHANMSG, chptr->chname, 0, NULL))
+							if (alias->spamfilter && match_spamfilter(client, output, SPAMF_CHANMSG, channel->chname, 0, NULL))
 								return;
 							new_message(client, NULL, &mtags);
-							sendto_channel(chptr, client, client,
+							sendto_channel(channel, client, client,
 							               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
 							               ":%s PRIVMSG %s :%s",
-							               client->name, chptr->chname, parv[1]);
+							               client->name, channel->chname, parv[1]);
 							free_message_tags(mtags);
 							return;
 						}

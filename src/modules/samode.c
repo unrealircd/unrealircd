@@ -60,7 +60,7 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_samode)
 {
-	Channel *chptr;
+	Channel *channel;
 
 	if (parc <= 2)
 	{
@@ -68,19 +68,19 @@ CMD_FUNC(cmd_samode)
 		return;
 	}
 
-	chptr = find_channel(parv[1], NULL);
-	if (!chptr)
+	channel = find_channel(parv[1], NULL);
+	if (!channel)
 	{
 		sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);
 		return;
 	}
 
-	if (!ValidatePermissionsForPath("sacmd:samode", client, NULL, chptr, NULL))
+	if (!ValidatePermissionsForPath("sacmd:samode", client, NULL, channel, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
 	opermode = 0;
-	(void)do_mode(chptr, client, NULL, parc - 2, parv + 2, 0, 1);
+	(void)do_mode(channel, client, NULL, parc - 2, parv + 2, 0, 1);
 }

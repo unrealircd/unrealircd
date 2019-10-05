@@ -26,7 +26,7 @@
 
 #include "unrealircd.h"
 
-void add_send_mode_param(Channel *chptr, Client *from, char what, char mode, char *param);
+void add_send_mode_param(Channel *channel, Client *from, char what, char mode, char *param);
 CMD_FUNC(cmd_svsmode);
 CMD_FUNC(cmd_svs2mode);
 
@@ -60,7 +60,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-void unban_user(Client *client, Channel *chptr, Client *acptr, char chmode)
+void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 {
 	Extban *extban;
 	Ban *ban, *bnext;
@@ -100,13 +100,13 @@ void unban_user(Client *client, Channel *chptr, Client *acptr, char chmode)
 	switch (chmode)
 	{
 		case 'b':
-			banlist = &chptr->banlist;
+			banlist = &channel->banlist;
 			break;
 		case 'e':
-			banlist = &chptr->exlist;
+			banlist = &channel->exlist;
 			break;
 		case 'I':
-			banlist = &chptr->invexlist;
+			banlist = &channel->invexlist;
 			break;
 		default:
 			abort();
@@ -122,25 +122,25 @@ void unban_user(Client *client, Channel *chptr, Client *acptr, char chmode)
 		    (*ihost && match_simple(ban->banstr, ihost)) ||
 		    (*chost && match_simple(ban->banstr, chost)))
 		{
-			add_send_mode_param(chptr, client, '-',  chmode, 
+			add_send_mode_param(channel, client, '-',  chmode, 
 				ban->banstr);
-			del_listmode(banlist, chptr, ban->banstr);
+			del_listmode(banlist, channel, ban->banstr);
 		}
 		else if (chmode != 'I' && *ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
 		{
 			if (extban->options & EXTBOPT_CHSVSMODE) 
 			{
-				if (extban->is_banned(acptr, chptr, ban->banstr, BANCHK_JOIN, NULL, NULL))
+				if (extban->is_banned(acptr, channel, ban->banstr, BANCHK_JOIN, NULL, NULL))
 				{
-					add_send_mode_param(chptr, acptr, '-', chmode, ban->banstr);
-					del_listmode(banlist, chptr, ban->banstr);
+					add_send_mode_param(channel, acptr, '-', chmode, ban->banstr);
+					del_listmode(banlist, channel, ban->banstr);
 				}
 			}
 		}
 	}
 }
 
-void clear_bans(Client *client, Channel *chptr, char chmode)
+void clear_bans(Client *client, Channel *channel, char chmode)
 {
 	Extban *extban;
 	Ban *ban, *bnext;
@@ -149,13 +149,13 @@ void clear_bans(Client *client, Channel *chptr, char chmode)
 	switch (chmode)
 	{
 		case 'b':
-			banlist = &chptr->banlist;
+			banlist = &channel->banlist;
 			break;
 		case 'e':
-			banlist = &chptr->exlist;
+			banlist = &channel->exlist;
 			break;
 		case 'I':
-			banlist = &chptr->invexlist;
+			banlist = &channel->invexlist;
 			break;
 		default:
 			abort();
@@ -169,8 +169,8 @@ void clear_bans(Client *client, Channel *chptr, char chmode)
 			if (!(extban->options & EXTBOPT_CHSVSMODE))							
 				continue;
 		}
-		add_send_mode_param(chptr, client, '-',  chmode, ban->banstr);
-		del_listmode(banlist, chptr, ban->banstr);
+		add_send_mode_param(channel, client, '-',  chmode, ban->banstr);
+		del_listmode(banlist, channel, ban->banstr);
 	}
 }
 
@@ -197,7 +197,7 @@ void clear_bans(Client *client, Channel *chptr, char chmode)
  */
 void channel_svsmode(Client *client, int parc, char *parv[]) 
 {
-	Channel *chptr;
+	Channel *channel;
 	Client *target;
 	char *m;
 	int what = MODE_ADD;
@@ -210,7 +210,7 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 	if ((parc < 3) || BadPtr(parv[2]))
 		return;
 
-	if (!(chptr = find_channel(parv[1], NULL)))
+	if (!(channel = find_channel(parv[1], NULL)))
 		return;
 
 	for(m = parv[2]; *m; m++)
@@ -231,17 +231,17 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 				if (what != MODE_DEL)
 				{
 					sendto_realops("Warning! Received SVS(2)MODE with +%c for %s from %s, which is invalid!!",
-						*m, chptr->chname, client->name);
+						*m, channel->chname, client->name);
 					continue;
 				}
 				channel_flags = char_to_channelflag(*m);
-				for (cm = chptr->members; cm; cm = cm->next)
+				for (cm = channel->members; cm; cm = cm->next)
 				{
 					if (cm->flags & channel_flags)
 					{
 						Membership *mb;
-						mb = find_membership_link(cm->client->user->channel, chptr);
-						add_send_mode_param(chptr, client, '-', *m, cm->client->name);
+						mb = find_membership_link(cm->client->user->channel, channel);
+						add_send_mode_param(channel, client, '-', *m, cm->client->name);
 						cm->flags &= ~channel_flags;
 						if (mb)
 							mb->flags = cm->flags;
@@ -260,15 +260,15 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 					}
 					i++;
 
-					unban_user(client, chptr, target, *m);
+					unban_user(client, channel, target, *m);
 				}
 				else {
-					clear_bans(client, chptr, *m);
+					clear_bans(client, channel, *m);
 				}
 				break;
 			default:
 				sendto_realops("Warning! Invalid mode `%c' used with 'SVSMODE %s %s %s' (from %s %s)",
-					       *m, chptr->chname, parv[2], parv[3] ? parv[3] : "",
+					       *m, channel->chname, parv[2], parv[3] ? parv[3] : "",
 					       client->direction->name, client->name);
 				break;
 		}
@@ -281,13 +281,13 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 		/* NOTE: cannot use 'recv_mtag' here because MODE could be rewrapped. Not ideal :( */
 		new_message(client, NULL, &mtags);
 
-		sendto_channel(chptr, client, client, 0, 0, SEND_LOCAL, mtags,
+		sendto_channel(channel, client, client, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
-		               client->name, chptr->chname,  modebuf, parabuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", client->name, chptr->chname, modebuf, parabuf);
+		               client->name, channel->chname,  modebuf, parabuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
 
 		/* Activate this hook just like cmd_mode.c */
-		RunHook7(HOOKTYPE_REMOTE_CHANMODE, client, chptr, mtags, modebuf, parabuf, 0, 0);
+		RunHook7(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0);
 
 		free_message_tags(mtags);
 
@@ -545,7 +545,7 @@ CMD_FUNC(cmd_svs2mode)
 	return do_svsmode(client, recv_mtags, parc, parv, 1);
 }
 
-void add_send_mode_param(Channel *chptr, Client *from, char what, char mode, char *param)
+void add_send_mode_param(Channel *channel, Client *from, char what, char mode, char *param)
 {
 	static char *modes = NULL, lastwhat;
 	static short count = 0;
@@ -588,10 +588,10 @@ void add_send_mode_param(Channel *chptr, Client *from, char what, char mode, cha
 		MessageTag *mtags = NULL;
 		/* NOTE: cannot use 'recv_mtag' here because MODE could be rewrapped. Not ideal :( */
 		new_message(from, NULL, &mtags);
-		sendto_channel(chptr, from, from, 0, 0, SEND_LOCAL, mtags,
+		sendto_channel(channel, from, from, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
-		               from->name, chptr->chname, modebuf, parabuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
+		               from->name, channel->chname, modebuf, parabuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", from->name, channel->chname, modebuf, parabuf);
 		free_message_tags(mtags);
 		send = 0;
 		*parabuf = 0;

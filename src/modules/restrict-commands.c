@@ -51,7 +51,7 @@ RestrictedCommand *find_restrictions_bycmd(char *cmd);
 RestrictedCommand *find_restrictions_byconftag(char *conftag);
 int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
-char *rcmd_hook_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
+char *rcmd_hook_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
 char *rcmd_hook_preusermsg(Client *client, Client *to, char *text, int notice);
 char *rcmd_hook_wrapper(Client *client, char *text, int notice, char *display, char *conftag);
 CMD_OVERRIDE_FUNC(rcmd_override);
@@ -306,7 +306,7 @@ int rcmd_canbypass(Client *client, RestrictedCommand *rcmd) {
 	return 1; // Default to yes so we don't drop too many commands
 }
 
-char *rcmd_hook_prechanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice)
+char *rcmd_hook_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
 {
 	return rcmd_hook_wrapper(client, text, notice, "channel", (notice ? "channel-notice" : "channel-message"));
 }

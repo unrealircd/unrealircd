@@ -28,9 +28,9 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_msgbypass_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
-int msgbypass_can_bypass(Client *client, Channel *chptr, BypassChannelMessageRestrictionType bypass_type);
-int msgbypass_extban_is_ok(Client* client, Channel* chptr, char* para, int checkt, int what, int what2);
+int extban_msgbypass_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
+int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
+int msgbypass_extban_is_ok(Client* client, Channel* channel, char* para, int checkt, int what, int what2);
 char *msgbypass_extban_conv_param(char *para);
 
 /** Called upon module init */
@@ -68,18 +68,18 @@ MOD_UNLOAD()
 }
 
 /** Is the user banned? No, never by us anyway. */
-int extban_msgbypass_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
+int extban_msgbypass_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
 {
 	return 0; /* not banned by us */
 }
 
 /** Can the user bypass restrictions? */
-int msgbypass_can_bypass(Client *client, Channel *chptr, BypassChannelMessageRestrictionType bypass_type)
+int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type)
 {
 	Ban *ban;
 	char *p;
 	
-	for (ban = chptr->exlist; ban; ban=ban->next)
+	for (ban = channel->exlist; ban; ban=ban->next)
 	{
 		if ((ban->banstr[0] == '~') && (ban->banstr[1] == 'm') && (ban->banstr[2] == ':'))
 		{
@@ -97,7 +97,7 @@ int msgbypass_can_bypass(Client *client, Channel *chptr, BypassChannelMessageRes
 					continue;
 				matchby++;
 				
-				if (ban_check_mask(client, chptr, matchby, BANCHK_MSG, NULL, NULL, 0))
+				if (ban_check_mask(client, channel, matchby, BANCHK_MSG, NULL, NULL, 0))
 					return HOOK_ALLOW; /* Yes, user may bypass */
 			}
 		}
@@ -171,7 +171,7 @@ int msgbypass_extban_syntax(Client *client, int checkt, char *reason)
 	return 0; /* FAIL: ban rejected */
 }
 
-int msgbypass_extban_is_ok(Client* client, Channel* chptr, char* para_in, int checkt, int what, int what2)
+int msgbypass_extban_is_ok(Client* client, Channel* channel, char* para_in, int checkt, int what, int what2)
 {
 	char para[MAX_LENGTH+1];
 	char tmpmask[MAX_LENGTH+1];
@@ -210,7 +210,7 @@ int msgbypass_extban_is_ok(Client* client, Channel* chptr, char* para_in, int ch
 	 * expecting the full banmask rather than the portion that actually matters.
 	 */
 	snprintf(tmpmask, sizeof(tmpmask), "~?:%s", matchby);
-	if (extban_is_ok_nuh_extban(client, chptr, tmpmask, checkt, what, what2) == 0)
+	if (extban_is_ok_nuh_extban(client, channel, tmpmask, checkt, what, what2) == 0)
 	{
 		/* This could be anything ranging from:
 		 * invalid n!u@h syntax, unknown (sub)extbantype,

@@ -267,7 +267,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 
 static void unload_extcmode_commit(Cmode *cmode)
 {
-	Channel *chptr;
+	Channel *channel;
 
 	if (!cmode)
 		return;	
@@ -277,55 +277,55 @@ static void unload_extcmode_commit(Cmode *cmode)
 	if (cmode->paracount == 0)
 	{
 		/* Paramless mode, easy */
-		for (chptr = channels; chptr; chptr = chptr->nextch)
+		for (channel = channels; channel; channel = channel->nextch)
 		{
-			if (chptr->mode.extmode && cmode->mode)
+			if (channel->mode.extmode && cmode->mode)
 			{
 				MessageTag *mtags = NULL;
 
 				new_message(&me, NULL, &mtags);
-				sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+				sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 					       ":%s MODE %s -%c",
-					       me.name, chptr->chname, cmode->flag);
+					       me.name, channel->chname, cmode->flag);
 				sendto_server(NULL, 0, 0, mtags,
 					":%s MODE %s -%c 0",
-					me.name, chptr->chname, cmode->flag);
+					me.name, channel->chname, cmode->flag);
 				free_message_tags(mtags);
 
-				chptr->mode.extmode &= ~cmode->mode;
+				channel->mode.extmode &= ~cmode->mode;
 			}
 		}
 	} else
 	{
 		/* Parameter mode, more complicated */
-		for (chptr = channels; chptr; chptr = chptr->nextch)
+		for (channel = channels; channel; channel = channel->nextch)
 		{
-			if (chptr->mode.extmode && cmode->mode)
+			if (channel->mode.extmode && cmode->mode)
 			{
 				MessageTag *mtags = NULL;
 
 				new_message(&me, NULL, &mtags);
 				if (cmode->unset_with_param)
 				{
-					char *param = cmode->get_param(GETPARASTRUCT(chptr, cmode->flag));
-					sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+					char *param = cmode->get_param(GETPARASTRUCT(channel, cmode->flag));
+					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 						       ":%s MODE %s -%c %s",
-						       me.name, chptr->chname, cmode->flag, param);
+						       me.name, channel->chname, cmode->flag, param);
 					sendto_server(NULL, 0, 0, mtags,
 						":%s MODE %s -%c %s 0",
-						me.name, chptr->chname, cmode->flag, param);
+						me.name, channel->chname, cmode->flag, param);
 				} else {
-					sendto_channel(chptr, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 						       ":%s MODE %s -%c",
-						       me.name, chptr->chname, cmode->flag);
+						       me.name, channel->chname, cmode->flag);
 					sendto_server(NULL, 0, 0, mtags,
 						":%s MODE %s -%c 0",
-						me.name, chptr->chname, cmode->flag);
+						me.name, channel->chname, cmode->flag);
 				}
 				free_message_tags(mtags);
 
-				cmode->free_param(GETPARASTRUCT(chptr, cmode->flag));
-				chptr->mode.extmode &= ~cmode->mode;
+				cmode->free_param(GETPARASTRUCT(channel, cmode->flag));
+				channel->mode.extmode &= ~cmode->mode;
 			}
 		}
 	}
@@ -400,20 +400,20 @@ void extcmode_free_paramlist(void **ar)
 	}
 }
 
-char *cm_getparameter(Channel *chptr, char mode)
+char *cm_getparameter(Channel *channel, char mode)
 {
-	return GETPARAMHANDLERBYLETTER(mode)->get_param(GETPARASTRUCT(chptr, mode));
+	return GETPARAMHANDLERBYLETTER(mode)->get_param(GETPARASTRUCT(channel, mode));
 }
 
-void cm_putparameter(Channel *chptr, char mode, char *str)
+void cm_putparameter(Channel *channel, char mode, char *str)
 {
-	GETPARASTRUCT(chptr, mode) = GETPARAMHANDLERBYLETTER(mode)->put_param(GETPARASTRUCT(chptr, mode), str);
+	GETPARASTRUCT(channel, mode) = GETPARAMHANDLERBYLETTER(mode)->put_param(GETPARASTRUCT(channel, mode), str);
 }
 
-void cm_freeparameter(Channel *chptr, char mode)
+void cm_freeparameter(Channel *channel, char mode)
 {
-	GETPARAMHANDLERBYLETTER(mode)->free_param(GETPARASTRUCT(chptr, mode));
-	GETPARASTRUCT(chptr, mode) = NULL;
+	GETPARAMHANDLERBYLETTER(mode)->free_param(GETPARASTRUCT(channel, mode));
+	GETPARASTRUCT(channel, mode) = NULL;
 }
 
 char *cm_getparameter_ex(void **p, char mode)
@@ -432,19 +432,19 @@ void cm_freeparameter_ex(void **p, char mode, char *str)
 	GETPARASTRUCTEX(p, mode) = NULL;
 }
 
-int extcmode_default_requirechop(Client *client, Channel *chptr, char mode, char *para, int checkt, int what)
+int extcmode_default_requirechop(Client *client, Channel *channel, char mode, char *para, int checkt, int what)
 {
-	if (IsUser(client) && is_chan_op(client, chptr))
+	if (IsUser(client) && is_chan_op(client, channel))
 		return EX_ALLOW;
 	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
 		sendnumeric(client, ERR_NOTFORHALFOPS, mode);
 	return EX_DENY;
 }
 
-int extcmode_default_requirehalfop(Client *client, Channel *chptr, char mode, char *para, int checkt, int what)
+int extcmode_default_requirehalfop(Client *client, Channel *channel, char mode, char *para, int checkt, int what)
 {
 	if (IsUser(client) &&
-	    (is_chan_op(client, chptr) || is_half_op(client, chptr)))
+	    (is_chan_op(client, channel) || is_half_op(client, channel)))
 		return EX_ALLOW;
 	return EX_DENY;
 }

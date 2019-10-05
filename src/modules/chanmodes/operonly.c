@@ -32,10 +32,10 @@ ModuleHeader MOD_HEADER
 
 Cmode_t EXTCMODE_OPERONLY;
 
-int operonly_require_oper(Client *client, Channel *chptr, char mode, char *para, int checkt, int what);
-int operonly_check (Client *client, Channel *chptr, char *key, char *parv[]);
-int operonly_topic_allow (Client *client, Channel *chptr);
-int operonly_check_ban(Client *client, Channel *chptr);
+int operonly_require_oper(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
+int operonly_check (Client *client, Channel *channel, char *key, char *parv[]);
+int operonly_topic_allow (Client *client, Channel *channel);
+int operonly_check_ban(Client *client, Channel *channel);
 
 MOD_TEST()
 {
@@ -71,33 +71,33 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int operonly_check (Client *client, Channel *chptr, char *key, char *parv[])
+int operonly_check (Client *client, Channel *channel, char *key, char *parv[])
 {
-	if ((chptr->mode.extmode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join",client,NULL,chptr,NULL))
+	if ((channel->mode.extmode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join",client,NULL,channel,NULL))
 		return ERR_OPERONLY;
 	return 0;
 }
 
-int operonly_check_ban(Client *client, Channel *chptr)
+int operonly_check_ban(Client *client, Channel *channel)
 {
-	 if ((chptr->mode.extmode & EXTCMODE_OPERONLY) &&
+	 if ((channel->mode.extmode & EXTCMODE_OPERONLY) &&
 		    !ValidatePermissionsForPath("channel:operonly:ban",client,NULL,NULL,NULL))
 		 return HOOK_DENY;
 
 	 return HOOK_CONTINUE;
 }
 
-int operonly_topic_allow (Client *client, Channel *chptr)
+int operonly_topic_allow (Client *client, Channel *channel)
 {
-	if (chptr->mode.extmode & EXTCMODE_OPERONLY && !ValidatePermissionsForPath("channel:operonly:topic",client,NULL,chptr,NULL))
+	if (channel->mode.extmode & EXTCMODE_OPERONLY && !ValidatePermissionsForPath("channel:operonly:topic",client,NULL,channel,NULL))
 		return HOOK_DENY;
 
 	return HOOK_CONTINUE;
 }
 
-int operonly_require_oper(Client *client, Channel *chptr, char mode, char *para, int checkt, int what)
+int operonly_require_oper(Client *client, Channel *channel, char mode, char *para, int checkt, int what)
 {
-	if (!MyUser(client) || ValidatePermissionsForPath("channel:operonly:set",client,NULL,chptr,NULL))
+	if (!MyUser(client) || ValidatePermissionsForPath("channel:operonly:set",client,NULL,channel,NULL))
 		return EX_ALLOW;
 
 	if (checkt == EXCHK_ACCESS_ERR)

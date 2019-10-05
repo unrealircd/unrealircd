@@ -93,22 +93,22 @@ CMD_FUNC(cmd_quit)
 		{
 			Membership *lp, *lp_next;
 			char *newcomment;
-			Channel *chptr;
+			Channel *channel;
 
 			for (lp = client->user->channel; lp; lp = lp_next)
 			{
-				chptr = lp->chptr;
+				channel = lp->channel;
 				newcomment = comment;
 				lp_next = lp->next;
 
 				for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT_CHAN]; tmphook; tmphook = tmphook->next)
 				{
-					newcomment = (*(tmphook->func.pcharfunc))(client, chptr, comment);
+					newcomment = (*(tmphook->func.pcharfunc))(client, channel, comment);
 					if (!newcomment)
 						break;
 				}
 
-				if (newcomment && is_banned(client, chptr, BANCHK_LEAVE_MSG, &newcomment, NULL))
+				if (newcomment && is_banned(client, channel, BANCHK_LEAVE_MSG, &newcomment, NULL))
 					newcomment = NULL;
 
 				/* Comment changed? Then PART the user before we do the QUIT. */
@@ -118,7 +118,7 @@ CMD_FUNC(cmd_quit)
 					int ret;
 
 					parx[0] = NULL;
-					parx[1] = chptr->chname;
+					parx[1] = channel->chname;
 					parx[2] = newcomment;
 					parx[3] = NULL;
 

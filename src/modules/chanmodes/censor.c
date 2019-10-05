@@ -20,8 +20,8 @@ Cmode_t EXTMODE_CENSOR = 0L;
 
 #define IsCensored(x) ((x)->mode.extmode & EXTMODE_CENSOR)
 
-char *censor_pre_chanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice);
-char *censor_pre_local_part(Client *client, Channel *chptr, char *text);
+char *censor_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+char *censor_pre_local_part(Client *client, Channel *channel, char *text);
 char *censor_pre_local_quit(Client *client, char *text);
 
 int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
@@ -253,18 +253,18 @@ char *stripbadwords_channel(char *str, int *blocked)
 	return stripbadwords(str, conf_badword_channel, blocked);
 }
 
-char *censor_pre_chanmsg(Client *client, Channel *chptr, MessageTag *mtags, char *text, int notice)
+char *censor_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
 {
 	int blocked;
 	Hook *h;
 	int i;
 
-	if (!IsCensored(chptr))
+	if (!IsCensored(channel))
 		return text;
 
 	for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(client, chptr, BYPASS_CHANMSG_CENSOR);
+		i = (*(h->func.intfunc))(client, channel, BYPASS_CHANMSG_CENSOR);
 		if (i == HOOK_ALLOW)
 			return text; /* bypass */
 		if (i != HOOK_CONTINUE)
@@ -275,22 +275,22 @@ char *censor_pre_chanmsg(Client *client, Channel *chptr, MessageTag *mtags, char
 	if (blocked)
 	{
 		if (!notice)
-			sendnumeric(client, ERR_CANNOTSENDTOCHAN, chptr->chname,
-				"Swearing is not permitted in this channel", chptr->chname);
+			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname,
+				"Swearing is not permitted in this channel", channel->chname);
 		return NULL;
 	}
 
 	return text;
 }
 
-char *censor_pre_local_part(Client *client, Channel *chptr, char *text)
+char *censor_pre_local_part(Client *client, Channel *channel, char *text)
 {
 	int blocked;
 
 	if (!text)
 		return NULL;
 
-	if (!IsCensored(chptr))
+	if (!IsCensored(channel))
 		return text;
 
 	text = stripbadwords_channel(text, &blocked);
@@ -303,7 +303,7 @@ static int IsAnyChannelCensored(Client *client)
 	Membership *lp;
 
 	for (lp = client->user->channel; lp; lp = lp->next)
-		if (IsCensored(lp->chptr))
+		if (IsCensored(lp->channel))
 			return 1;
 	return 0;
 }

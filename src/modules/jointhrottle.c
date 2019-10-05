@@ -58,12 +58,12 @@ struct JoinFlood {
 int jointhrottle_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int jointhrottle_config_run(ConfigFile *, ConfigEntry *, int);
 void jointhrottle_md_free(ModData *m);
-int jointhrottle_can_join(Client *client, Channel *chptr, char *key, char *parv[]);
-int jointhrottle_local_join(Client *client, Channel *chptr, MessageTag *mtags, char *parv[]);
-static int isjthrottled(Client *client, Channel *chptr);
-static void jointhrottle_increase_usercounter(Client *client, Channel *chptr);
+int jointhrottle_can_join(Client *client, Channel *channel, char *key, char *parv[]);
+int jointhrottle_local_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
+static int isjthrottled(Client *client, Channel *channel);
+static void jointhrottle_increase_usercounter(Client *client, Channel *channel);
 EVENT(jointhrottle_cleanup_structs);
-JoinFlood *jointhrottle_addentry(Client *client, Channel *chptr);
+JoinFlood *jointhrottle_addentry(Client *client, Channel *channel);
 
 MOD_TEST()
 {
@@ -151,7 +151,7 @@ int jointhrottle_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 0;
 }
 
-static int isjthrottled(Client *client, Channel *chptr)
+static int isjthrottled(Client *client, Channel *channel)
 {
 	JoinFlood *e;
 	int num = cfg.num;
@@ -162,7 +162,7 @@ static int isjthrottled(Client *client, Channel *chptr)
 
 	/* Grab user<->chan entry.. */
 	for (e = moddata_local_client(client, jointhrottle_md).ptr; e; e=e->next)
-		if (!strcasecmp(e->chname, chptr->chname))
+		if (!strcasecmp(e->chname, channel->chname))
 			break;
 	
 	if (!e)
@@ -177,7 +177,7 @@ static int isjthrottled(Client *client, Channel *chptr)
 	return 0;
 }
 
-static void jointhrottle_increase_usercounter(Client *client, Channel *chptr)
+static void jointhrottle_increase_usercounter(Client *client, Channel *channel)
 {
 	JoinFlood *e;
 
@@ -186,13 +186,13 @@ static void jointhrottle_increase_usercounter(Client *client, Channel *chptr)
 		
 	/* Grab user<->chan entry.. */
 	for (e = moddata_local_client(client, jointhrottle_md).ptr; e; e=e->next)
-		if (!strcasecmp(e->chname, chptr->chname))
+		if (!strcasecmp(e->chname, channel->chname))
 			break;
 	
 	if (!e)
 	{
 		/* Allocate one */
-		e = jointhrottle_addentry(client, chptr);
+		e = jointhrottle_addentry(client, channel);
 		e->firstjoin = TStime();
 		e->numjoins = 1;
 	} else
@@ -206,24 +206,24 @@ static void jointhrottle_increase_usercounter(Client *client, Channel *chptr)
 	}
 }
 
-int jointhrottle_can_join(Client *client, Channel *chptr, char *key, char *parv[])
+int jointhrottle_can_join(Client *client, Channel *channel, char *key, char *parv[])
 {
-	if (!ValidatePermissionsForPath("immune:join-flood",client,NULL,chptr,NULL) && isjthrottled(client, chptr))
+	if (!ValidatePermissionsForPath("immune:join-flood",client,NULL,channel,NULL) && isjthrottled(client, channel))
 		return ERR_TOOMANYJOINS;
 	return 0;
 }
 
 
-int jointhrottle_local_join(Client *client, Channel *chptr, MessageTag *mtags, char *parv[])
+int jointhrottle_local_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[])
 {
-	jointhrottle_increase_usercounter(client, chptr);
+	jointhrottle_increase_usercounter(client, channel);
 	return 0;
 }
 
 /** Adds a JoinFlood entry to user & channel and returns entry.
  * NOTE: Does not check for already-existing-entry
  */
-JoinFlood *jointhrottle_addentry(Client *client, Channel *chptr)
+JoinFlood *jointhrottle_addentry(Client *client, Channel *channel)
 {
 	JoinFlood *e;
 
@@ -232,12 +232,12 @@ JoinFlood *jointhrottle_addentry(Client *client, Channel *chptr)
 		abort();
 
 	for (e=moddata_local_client(client, jointhrottle_md).ptr; e; e=e->next)
-		if (!strcasecmp(e->chname, chptr->chname))
+		if (!strcasecmp(e->chname, channel->chname))
 			abort(); /* already exists -- should never happen */
 #endif
 
 	e = safe_alloc(sizeof(JoinFlood));
-	strlcpy(e->chname, chptr->chname, sizeof(e->chname));
+	strlcpy(e->chname, channel->chname, sizeof(e->chname));
 
 	/* Insert our new entry as (new) head */
 	if (moddata_local_client(client, jointhrottle_md).ptr)

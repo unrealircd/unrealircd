@@ -28,7 +28,7 @@ ModuleHeader MOD_HEADER
 };
 
 /* Forward declarations */
-int extban_modej_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg);
+int extban_modej_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
 
 /** Called upon module init */
 MOD_INIT()
@@ -64,7 +64,7 @@ MOD_UNLOAD()
 }
 
 /** This ban that affects JOINs only */
-int extban_modej_is_banned(Client *client, Channel *chptr, char *banin, int type, char **msg, char **errmsg)
+int extban_modej_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg)
 {
 	char *sub_ban;
 
@@ -73,6 +73,6 @@ int extban_modej_is_banned(Client *client, Channel *chptr, char *banin, int type
 
 	sub_ban = banin + 3;
 
-	return ban_check_mask(client, chptr, sub_ban, type, msg, errmsg, 0);
+	return ban_check_mask(client, channel, sub_ban, type, msg, errmsg, 0);
 }
 
