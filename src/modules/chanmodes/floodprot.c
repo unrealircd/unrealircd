@@ -120,8 +120,7 @@ int cmodef_channel_destroy(Channel *channel, int *should_destroy);
 int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
 int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
 int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, char *comment);
-int floodprot_local_nickchange(Client *client, char *oldnick);
-int floodprot_remote_nickchange(Client *client, char *oldnick);
+int floodprot_nickchange(Client *client, char *oldnick);
 int floodprot_chanmode_del(Channel *channel, int m);
 void memberflood_free(ModData *md);
 int floodprot_stats(Client *client, char *flag);
@@ -176,8 +175,8 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, floodprot_can_send_to_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANMSG, 0, floodprot_post_chanmsg);
 	HookAdd(modinfo->handle, HOOKTYPE_KNOCK, 0, floodprot_knock);
-	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_NICKCHANGE, 0, floodprot_local_nickchange);
-	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_NICKCHANGE, 0, floodprot_remote_nickchange);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_NICKCHANGE, 0, floodprot_nickchange);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_NICKCHANGE, 0, floodprot_nickchange);
 	HookAdd(modinfo->handle, HOOKTYPE_MODECHAR_DEL, 0, floodprot_chanmode_del);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, floodprot_join);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_JOIN, 0, floodprot_join);
@@ -1096,9 +1095,12 @@ int floodprot_knock(Client *client, Channel *channel, MessageTag *mtags, char *c
 	return 0;
 }
 
-static int gotnickchange(Client *client)
+int floodprot_nickchange(Client *client, char *oldnick)
 {
-Membership *mp;
+	Membership *mp;
+
+	if (IsULine(client))
+		return 0;
 
 	for (mp = client->user->channel; mp; mp = mp->next)
 	{
@@ -1111,20 +1113,6 @@ Membership *mp;
 		}
 	}
 	return 0;
-}
-
-int floodprot_local_nickchange(Client *client, char *oldnick)
-{
-	if (IsULine(client))
-		return 0;
-	return gotnickchange(client);
-}
-
-int floodprot_remote_nickchange(Client *client, char *oldnick)
-{
-	if (IsULine(client))
-		return 0;
-	return gotnickchange(client);
 }
 
 int floodprot_chanmode_del(Channel *channel, int modechar)
