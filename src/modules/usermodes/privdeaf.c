@@ -17,7 +17,7 @@ ModuleHeader MOD_HEADER
 static long UMODE_PRIVDEAF = 0;
 static Umode *UmodePrivdeaf = NULL;
 
-char *privdeaf_checkmsg(Client *, Client *, char *, int);
+int privdeaf_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice);
 
 MOD_INIT()
 {
@@ -32,7 +32,7 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 	
-	 HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, 0, privdeaf_checkmsg);
+	 HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, privdeaf_can_send_to_user);
 
 	return MOD_SUCCESS;
 }
@@ -47,13 +47,13 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *privdeaf_checkmsg(Client *client, Client *target, char *text, int notice)
+int privdeaf_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice)
 {
 	if ((target->umodes & UMODE_PRIVDEAF) && !IsOper(client) &&
 	    !IsULine(client) && !IsServer(client) && (client != target))
 	{
-		sendnotice(client, "Message to '%s' not delivered: User does not accept private messages", target->name);
-		return NULL;
-	} else
-		return text;
+		*errmsg = "User does not accept private messages";
+		return HOOK_DENY;
+	}
+	return HOOK_CONTINUE;
 }

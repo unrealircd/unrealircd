@@ -34,7 +34,7 @@ long UMODE_NOCTCP = 0L;
 
 #define IsNoCTCP(client)    (client->umodes & UMODE_NOCTCP)
 
-char *noctcp_preusermsg(Client *client, Client *target, char *text, int notice);
+int noctcp_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice);
 
 MOD_TEST()
 {
@@ -47,7 +47,7 @@ CmodeInfo req;
 
 	UmodeAdd(modinfo->handle, 'T', UMODE_GLOBAL, 0, NULL, &UMODE_NOCTCP);
 	
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, 0, noctcp_preusermsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, noctcp_can_send_to_user);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -74,12 +74,12 @@ static int IsACTCP(char *s)
 	return 0;
 }
 
-char *noctcp_preusermsg(Client *client, Client *target, char *text, int notice)
+int noctcp_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice)
 {
-	if (MyUser(client) && !notice && IsNoCTCP(target) && !IsOper(client) && IsACTCP(text))
+	if (MyUser(client) && !notice && IsNoCTCP(target) && !IsOper(client) && IsACTCP(*text))
 	{
-		sendnumeric(client, ERR_NOCTCP, target->name);
-		return NULL;
+		*errmsg = "User does not accept CTCPs";
+		return HOOK_DENY;
 	}
-	return text;
+	return HOOK_CONTINUE;
 }

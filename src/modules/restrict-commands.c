@@ -52,8 +52,8 @@ RestrictedCommand *find_restrictions_byconftag(char *conftag);
 int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
 int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
-char *rcmd_hook_preusermsg(Client *client, Client *to, char *text, int notice);
-char *rcmd_hook_wrapper(Client *client, char *text, int notice, char *display, char *conftag);
+int rcmd_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice);
+int rcmd_block_message(Client *client, char *text, int notice, char **errmsg, char *display, char *conftag);
 CMD_OVERRIDE_FUNC(rcmd_override);
 
 // Globals
@@ -82,7 +82,7 @@ MOD_INIT()
 
 	// Due to the nature of PRIVMSG/NOTICE we're gonna need to hook into PRE_* stuff instead of using command overrides
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, -1000000, rcmd_can_send_to_channel);
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, -1000000, rcmd_hook_preusermsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, -1000000, rcmd_can_send_to_user);
 	return MOD_SUCCESS;
 }
 
@@ -294,7 +294,8 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 	return 1;
 }
 
-int rcmd_canbypass(Client *client, RestrictedCommand *rcmd) {
+int rcmd_canbypass(Client *client, RestrictedCommand *rcmd)
+{
 	if (!client || !rcmd)
 		return 1;
 	if (rcmd->exempt_identified && IsLoggedIn(client))
@@ -308,45 +309,56 @@ int rcmd_canbypass(Client *client, RestrictedCommand *rcmd) {
 
 int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
 {
-	if (!rcmd_hook_wrapper(client, *msg, notice, "channel", (notice ? "channel-notice" : "channel-message")))
+	if (rcmd_block_message(client, *msg, notice, errmsg, "channel", (notice ? "channel-notice" : "channel-message")))
 		return HOOK_DENY;
-	// FIXME ^^^^ may not send notices from the wrapper, but will convert when preusermsg is done as well
+
 	return HOOK_CONTINUE;
 }
 
-char *rcmd_hook_preusermsg(Client *client, Client *to, char *text, int notice)
+int rcmd_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice)
 {
 	// Need a few extra exceptions for user messages only =]
-	if ((client == to) || IsULine(to))
-		return text;
-	return rcmd_hook_wrapper(client, text, notice, "user", (notice ? "private-notice" : "private-message"));
+	if ((client == target) || IsULine(target))
+		return HOOK_CONTINUE; /* bypass/exempt */
+
+	if (rcmd_block_message(client, *text, notice, errmsg, "user", (notice ? "private-notice" : "private-message")))
+		return HOOK_DENY;
+
+	return HOOK_CONTINUE;
 }
 
-char *rcmd_hook_wrapper(Client *client, char *text, int notice, char *display, char *conftag)
+int rcmd_block_message(Client *client, char *text, int notice, char **errmsg, char *display, char *conftag)
 {
 	RestrictedCommand *rcmd;
+	static char errbuf[256];
 
 	// Let's allow non-local users, opers and U:Lines early =]
 	if (!MyUser(client) || !client->local || IsOper(client) || IsULine(client))
-		return text;
+		return 0;
 
 	rcmd = find_restrictions_byconftag(conftag);
 	if (rcmd)
 	{
 		if (rcmd->disable)
 		{
-			sendnotice(client, "Sending of %ss to %ss been disabled by the network administrators", (notice ? "notice" : "message"), display);
-			return NULL;
+			ircsnprintf(errbuf, sizeof(errbuf),
+			            "Sending of %ss to %ss been disabled by the network administrators",
+			            (notice ? "notice" : "message"), display);
+			*errmsg = errbuf;
+			return 1;
 		}
 		if (!rcmd_canbypass(client, rcmd))
 		{
-			sendnotice(client, "You cannot send %ss to %ss until you've been connected for %ld seconds or more", (notice ? "notice" : "message"), display, rcmd->connect_delay);
-			return NULL;
+			ircsnprintf(errbuf, sizeof(errbuf),
+			            "You cannot send %ss to %ss until you've been connected for %ld seconds or more",
+			            (notice ? "notice" : "message"), display, rcmd->connect_delay);
+			*errmsg = errbuf;
+			return 1;
 		}
 	}
 
 	// No restrictions apply, process command as normal =]
-	return text;
+	return 0;
 }
 
 CMD_OVERRIDE_FUNC(rcmd_override)

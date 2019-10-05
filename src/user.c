@@ -173,19 +173,20 @@ unsigned char hash_target(void *target)
 	return (unsigned char)((v >> 17) ^ (v >> 9));
 }
 
-/** check_for_target_limit
+/** target_limit_exceeded
  * @param client   The client.
  * @param target The target client
  * @param name   The name of the target client (used in the error message)
  * @retval Returns 1 if too many targets were addressed (do not send!), 0 if ok to send.
  */
-int check_for_target_limit(Client *client, void *target, const char *name)
+int target_limit_exceeded(Client *client, void *target, const char *name)
 {
 	u_char hash = hash_target(target);
 	int i;
 
 	if (ValidatePermissionsForPath("immune:target-limit",client,NULL,NULL,NULL))
 		return 0;
+
 	if (client->local->targets[0] == hash)
 		return 0;
 
@@ -206,8 +207,7 @@ int check_for_target_limit(Client *client, void *target, const char *name)
 		client->local->nexttarget += 2; /* punish them some more */
 		client->local->since += 2; /* lag them up as well */
 
-		sendnumeric(client, ERR_TARGETTOOFAST,
-			name, client->local->nexttarget - TStime());
+		sendnumeric(client, ERR_TARGETTOOFAST, name, client->local->nexttarget - TStime());
 
 		return 1;
 	}

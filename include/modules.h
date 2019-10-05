@@ -931,7 +931,6 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_FREE_CLIENT 59
 #define HOOKTYPE_FREE_USER 60
 #define HOOKTYPE_PRE_CHANMSG 61
-#define HOOKTYPE_PRE_USERMSG 62
 #define HOOKTYPE_KNOCK 63
 #define HOOKTYPE_MODECHAR_ADD 64
 #define HOOKTYPE_MODECHAR_DEL 65
@@ -973,6 +972,8 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_PRE_LOCAL_QUIT_CHAN 102
 #define HOOKTYPE_IDENT_LOOKUP 103
 #define HOOKTYPE_CONFIGRUN_EX 104
+#define HOOKTYPE_CAN_SEND_TO_USER 105
+// FIXME: ^^ make this enums? or..?
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -1008,6 +1009,7 @@ int hooktype_remote_kick(Client *client, Client *victim, Channel *channel, Messa
 char *hooktype_pre_usermsg(Client *client, Client *to, char *text, int notice);
 int hooktype_usermsg(Client *client, Client *to, MessageTag *mtags, char *text, int notice);
 int hooktype_can_send_to_channel(Client *client, Channel *channel, Membership *member, char **text, char **errmsg, int notice);
+int hooktype_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice);
 int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
 int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
 char *hooktype_pre_local_topic(Client *client, Channel *channel, char *topic);
@@ -1145,11 +1147,11 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_INVITE) && !ValidateHook(hooktype_invite, func)) || \
         ((hooktype == HOOKTYPE_CAN_JOIN) && !ValidateHook(hooktype_can_join, func)) || \
         ((hooktype == HOOKTYPE_CAN_SEND_TO_CHANNEL) && !ValidateHook(hooktype_can_send_to_channel, func)) || \
+        ((hooktype == HOOKTYPE_CAN_SEND_TO_USER) && !ValidateHook(hooktype_can_send_to_user, func)) || \
         ((hooktype == HOOKTYPE_CAN_KICK) && !ValidateHook(hooktype_can_kick, func)) || \
         ((hooktype == HOOKTYPE_FREE_CLIENT) && !ValidateHook(hooktype_free_client, func)) || \
         ((hooktype == HOOKTYPE_FREE_USER) && !ValidateHook(hooktype_free_user, func)) || \
         ((hooktype == HOOKTYPE_PRE_CHANMSG) && !ValidateHook(hooktype_pre_chanmsg, func)) || \
-        ((hooktype == HOOKTYPE_PRE_USERMSG) && !ValidateHook(hooktype_pre_usermsg, func)) || \
         ((hooktype == HOOKTYPE_KNOCK) && !ValidateHook(hooktype_knock, func)) || \
         ((hooktype == HOOKTYPE_MODECHAR_ADD) && !ValidateHook(hooktype_modechar_add, func)) || \
         ((hooktype == HOOKTYPE_MODECHAR_DEL) && !ValidateHook(hooktype_modechar_del, func)) || \
@@ -1276,6 +1278,7 @@ enum EfunctionType {
 	EFUNC_TKL_CHARTOTYPE,
 	EFUNC_TKL_TYPE_STRING,
 	EFUNC_CAN_SEND_TO_CHANNEL,
+	EFUNC_CAN_SEND_TO_USER,
 	EFUNC_BROADCAST_MD_GLOBALVAR,
 	EFUNC_BROADCAST_MD_GLOBALVAR_CMD,
 	EFUNC_TKL_IP_HASH,

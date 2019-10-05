@@ -148,6 +148,7 @@
 #define ERR_OPERONLY		 520
 #define ERR_LISTSYNTAX       521
 
+#define ERR_CANTSENDTOUSER	531
 /*
  * Numberic replies from server commands.
  * These are currently in the range 200-399.

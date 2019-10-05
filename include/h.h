@@ -284,7 +284,7 @@ extern void sendto_ops_and_log(FORMAT_STRING(const char *pattern), ...) __attrib
 
 extern MODVAR int writecalls, writeb[];
 extern int deliver_it(Client *cptr, char *str, int len, int *want_read);
-extern int  check_for_target_limit(Client *client, void *target, const char *name);
+extern int target_limit_exceeded(Client *client, void *target, const char *name);
 extern char *canonize(char *buffer);
 extern ConfigItem_deny_dcc *dcc_isforbidden(Client *client, char *filename);
 extern ConfigItem_deny_dcc *dcc_isdiscouraged(Client *client, char *filename);
@@ -311,7 +311,7 @@ extern int umode_allow_all(Client *client, int what);
 extern int umode_allow_unset(Client *client, int what);
 extern int umode_allow_opers(Client *client, int what);
 extern int umode_allow_none(Client *client, int what);
-extern int  umode_delete(char ch, long val);
+extern int umode_delete(char ch, long val);
 extern void build_umode_string(Client *client, long old, long sendmask, char *umode_buf);
 extern void send_umode_out(Client *client, int show_to_user, long old);
 

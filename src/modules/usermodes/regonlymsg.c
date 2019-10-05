@@ -35,13 +35,13 @@ ModuleHeader MOD_HEADER
 long UMODE_REGONLYMSG = 0L;
 
 /* Forward declarations */
-char *regonlymsg_pre_usermsg(Client *client, Client *target, char *text, int notice);
+int regonlymsg_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice);
                     
 MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'R', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_REGONLYMSG);
 	
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, 0, regonlymsg_pre_usermsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, regonlymsg_can_send_to_user);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -57,17 +57,16 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *regonlymsg_pre_usermsg(Client *client, Client *target, char *text, int notice)
+int regonlymsg_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice)
 {
 	if (IsRegOnlyMsg(target) && !IsServer(client) && !IsULine(client) && !IsLoggedIn(client))
 	{
 		if (ValidatePermissionsForPath("client:override:message:regonlymsg",client,target,NULL,text))
-			return text; /* TODO: this is actually an override */
+			return HOOK_CONTINUE; /* bypass this restriction */
 
-		sendnumeric(client, ERR_NONONREG, target->name);
-
-		return NULL; /* Block the message */
+		*errmsg = "You must identify to a registered nick to private message this user";
+		return HOOK_DENY;
 	}
 
-	return text;
+	return HOOK_CONTINUE;
 }

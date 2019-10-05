@@ -36,13 +36,13 @@ ModuleHeader MOD_HEADER
 long UMODE_SECUREONLYMSG = 0L;
 
 /* Forward declarations */
-char *secureonlymsg_pre_usermsg(Client *client, Client *target, char *text, int notice);
+int secureonlymsg_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice);
                     
 MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'Z', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_SECUREONLYMSG);
 	
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, 0, secureonlymsg_pre_usermsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, secureonlymsg_can_send_to_user);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -58,36 +58,29 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *secureonlymsg_pre_usermsg(Client *client, Client *target, char *text, int notice)
+int secureonlymsg_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice)
 {
 	if (IsSecureOnlyMsg(target) && !IsServer(client) && !IsULine(client) && !IsSecureConnect(client))
 	{
 		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",client,target,NULL,text))
-			return text; /* TODO: this is actually an override */
+			return HOOK_CONTINUE; /* bypass this restriction */
 
-		/* A numeric is preferred to indicate the user cannot message.
-		 * 492 is ERR_NOCTCP but apparently is also used by some other ircd(s) as a
-		 * general "cannot send message" numeric (similar to the generic
-		 * ERR_CANNOTSENDTOCHAN for channel messaging).
-		 */
-		sendto_one(client, NULL, ":%s 492 %s :Cannot send to user %s (You must be connected via SSL/TLS to message this user)",
-			me.name, client->name, target->name);
-
-		return NULL; /* Block the message */
+		*errmsg = "You must be connected via SSL/TLS to message this user";
+		return HOOK_DENY;
 	} else
 	if (IsSecureOnlyMsg(client) && !IsSecureConnect(target) && !IsULine(target))
 	{
 		if (ValidatePermissionsForPath("client:override:message:secureonlymsg",client,target,NULL,text))
-			return text; /* TODO: this is actually an override */
+			return HOOK_CONTINUE; /* bypass this restriction */
 		
 		/* Similar to above but in this case we are +Z and are trying to message
 		 * an SSL user (who does not have +Z set, note the 'else'). This does not
 		 * make sense since they could never message back to us. Better block the
 		 * message than leave the user confused.
 		 */
-		sendto_one(client, NULL, ":%s 492 %s :Cannot send to user %s (You have user mode +Z set but are not connected via SSL/TLS)",
-			me.name, client->name, target->name);
+		*errmsg = "Recipient is not connected via SSL/TLS and you are +Z";
+		return HOOK_DENY;
 	}
 
-	return text;
+	return HOOK_CONTINUE;
 }

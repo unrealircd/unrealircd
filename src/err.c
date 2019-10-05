@@ -570,7 +570,7 @@ static char *replies[] = {
 /* 528 */ NULL,
 /* 529 */ NULL,
 /* 530 */ NULL,
-/* 531 */ NULL,
+/* 531    ERR_CANTSENDTOUSER */ "%s :%s",
 /* 532 */ NULL,
 /* 533 */ NULL,
 /* 534 */ NULL,

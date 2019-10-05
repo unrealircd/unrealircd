@@ -4385,16 +4385,27 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *destinatio
 		{
 			case SPAMF_USERMSG:
 			case SPAMF_USERNOTICE:
-				sendnotice(client, "Message to %s blocked: %s", destination, reason);
+			{
+				char errmsg[512];
+				ircsnprintf(errmsg, sizeof(errmsg), "Message blocked: %s", reason);
+				sendnumeric(client, ERR_CANTSENDTOUSER, destination, errmsg);
 				break;
-			case SPAMF_CHANMSG:
+			}
 			case SPAMF_CHANNOTICE:
+				break; /* no replies to notices */
+			case SPAMF_CHANMSG:
+			{
 				sendto_one(client, NULL, ":%s 404 %s %s :Message blocked: %s",
 					me.name, client->name, destination, reason);
 				break;
+			}
 			case SPAMF_DCC:
-				sendnotice(client, "DCC to %s blocked: %s", destination, reason);
+			{
+				char errmsg[512];
+				ircsnprintf(errmsg, sizeof(errmsg), "DCC blocked: %s", reason);
+				sendnumeric(client, ERR_CANTSENDTOUSER, destination, errmsg);
 				break;
+			}
 			case SPAMF_AWAY:
 				/* hack to deal with 'after-away-was-set-filters' */
 				if (client->user->away && !strcmp(str_in, client->user->away))

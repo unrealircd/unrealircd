@@ -29,6 +29,7 @@ CMD_FUNC(cmd_private);
 CMD_FUNC(cmd_notice);
 void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[], int notice);
 int _can_send_to_channel(Client *client, Channel *channel, char **msgtext, char **errmsg, int notice);
+int can_send_to_user(Client *client, Client *target, char **msgtext, char **errmsg, int notice);
 
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
@@ -73,8 +74,9 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-static int check_dcc(Client *client, char *target, Client *targetcli, char *text);
-static int check_dcc_soft(Client *from, Client *to, char *text);
+char *get_dcc_filename(const char *text);
+static int can_dcc(Client *client, char *target, Client *targetcli, char *filename, char **errmsg);
+static int can_dcc_soft(Client *from, Client *to, char *filename, char **errmsg);
 
 #define CANPRIVMSG_CONTINUE		100
 #define CANPRIVMSG_SEND			101
@@ -84,63 +86,74 @@ static int check_dcc_soft(Client *from, Client *to, char *text);
  * notice:	1 if notice, 0 if privmsg
  * text:	Pointer to a pointer to a text [in, out]
  * cmd:		Pointer to a pointer which contains the command to use [in, out]
- *
- * RETURN VALUES:
- * CANPRIVMSG_CONTINUE: issue a 'continue' in target nickname list (aka: skip further processing this target)
- * CANPRIVMSG_SEND: send the message (use text/newcmd!)
- * Other: return with this value (can be anything)
  */
-static int can_privmsg(Client *client, Client *target, int notice, char **text, char **cmd)
+int can_send_to_user(Client *client, Client *target, char **msgtext, char **errmsg, int notice)
 {
 	int ret;
+	Hook *h;
+	int n;
+	static char errbuf[256];
+
+	*errmsg = NULL;
 
 	if (IsVirus(client))
 	{
-		sendnotice(client, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
-		return CANPRIVMSG_CONTINUE;
+		ircsnprintf(errbuf, sizeof(errbuf), "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
+		*errmsg = errbuf;
+		return 0;
 	}
 
-	if (MyUser(client) && !strncasecmp(*text, "\001DCC", 4))
+	if (**msgtext == '\001')
 	{
-		ret = check_dcc(client, target->name, target, *text);
-		if (IsDead(client))
-			return 0;
-		if (ret == 0)
-			return CANPRIVMSG_CONTINUE;
-	}
-	if (MyUser(target) && !strncasecmp(*text, "\001DCC", 4) &&
-	    !check_dcc_soft(client, target, *text))
-		return CANPRIVMSG_CONTINUE;
-
-	if (MyUser(client) && check_for_target_limit(client, target, target->name))
-		return CANPRIVMSG_CONTINUE;
-
-	if (!is_silenced(client, target))
-	{
-		Hook *tmphook;
-
-		if (!notice && MyConnect(client) &&
-		    target->user && target->user->away)
-			sendnumeric(client, RPL_AWAY, target->name,
-			    target->user->away);
-
-		if (MyUser(client) && match_spamfilter(client, *text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), target->name, 0, NULL))
-			return 0;
-
-		for (tmphook = Hooks[HOOKTYPE_PRE_USERMSG]; tmphook; tmphook = tmphook->next) {
-			*text = (*(tmphook->func.pcharfunc))(client, target, *text, notice);
-			if (!*text)
-				break;
+		char *filename = get_dcc_filename(*msgtext);
+		if (filename)
+		{
+			if (MyUser(client) && !can_dcc(client, target->name, target, filename, errmsg))
+				return 0;
+			if (MyUser(target) && !can_dcc_soft(client, target, filename, errmsg))
+				return 0;
 		}
-		if (!*text)
-			return CANPRIVMSG_CONTINUE;
-
-		return CANPRIVMSG_SEND;
-	} else {
-		/* Silenced */
-		RunHook3(HOOKTYPE_SILENCED, client, target, notice);
 	}
-	return CANPRIVMSG_CONTINUE;
+
+	if (MyUser(client) && target_limit_exceeded(client, target, target->name))
+	{
+		/* target_limit_exceeded() is an exception, in the sense that
+		 * it will send a different numeric. So we don't set errmsg.
+		 */
+		return 0;
+	}
+
+	if (is_silenced(client, target))
+	{
+		RunHook3(HOOKTYPE_SILENCED, client, target, notice);
+		/* Silently discarded, no error message */
+		return 0;
+	}
+
+	// Possible FIXME: make match_spamfilter also use errmsg, or via a wrapper? or use same numeric?
+	if (MyUser(client) && match_spamfilter(client, *msgtext, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), target->name, 0, NULL))
+		return 0;
+
+	n = HOOK_CONTINUE;
+	for (h = Hooks[HOOKTYPE_CAN_SEND_TO_USER]; h; h = h->next)
+	{
+		n = (*(h->func.intfunc))(client, target, msgtext, errmsg, notice);
+		if (n == HOOK_DENY)
+		{
+			if (!*errmsg)
+			{
+				ircd_log(LOG_ERROR, "Module %s did not set errmsg!!!", h->owner->header->name);
+				abort();
+			}
+			return 0;
+		}
+	}
+
+	/* This may happen, if nothing is left to send anymore (don't send empty messages) */
+	if (!*msgtext)
+		return 0;
+
+	return 1;
 }
 
 /*
@@ -158,7 +171,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 {
 	Client *target;
 	Channel *channel;
-	char *nick, *p, *p2, *pc, *text, *errmsg, *newcmd;
+	char *nick, *p, *p2, *pc, *text, *errmsg;
 	int  prefix = 0;
 	char pfixchan[CHANNELLEN + 4];
 	int ret;
@@ -297,13 +310,18 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 				}
 			}
 
-			if (MyUser(client) && (*parv[2] == 1))
+			if (MyUser(client) && (*parv[2] == '\001'))
 			{
-				ret = check_dcc(client, channel->chname, NULL, parv[2]);
-				if (IsDead(client))
-					return;
-				if (ret == 0)
+				char *errmsg = NULL;
+				char *filename = get_dcc_filename(parv[2]);
+				if (filename && !can_dcc(client, channel->chname, NULL, filename, &errmsg))
+				{
+					if (IsDead(client))
+						return;
+					if (!IsDead(client) && !notice)
+						sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, errmsg, p2);
 					continue;
+				}
 			}
 
 			if (IsVirus(client) && strcasecmp(channel->chname, SPAMFILTER_VIRUSCHAN))
@@ -399,30 +417,37 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 		target = hash_find_nickatserver(nick, NULL);
 		if (target)
 		{
+			char *errmsg = NULL;
 			text = parv[2];
-			newcmd = cmd;
-			ret = can_privmsg(client, target, notice, &text, &newcmd);
-			if (IsDead(client))
-				return;
-			if (ret == CANPRIVMSG_SEND)
+			if (!can_send_to_user(client, target, &text, &errmsg, notice))
 			{
+				/* Message is discarded */
+				if (IsDead(client))
+					return;
+				if (!notice && errmsg)
+					sendnumeric(client, ERR_CANTSENDTOUSER, target->name, errmsg);
+			} else
+			{
+				/* We may send the message */
 				MessageTag *mtags = NULL;
+
+				/* Inform sender that recipient is away, if this is so */
+				if (!notice && MyConnect(client) && target->user && target->user->away)
+					sendnumeric(client, RPL_AWAY, target->name, target->user->away);
+
 				new_message(client, recv_mtags, &mtags);
 				labeled_response_inhibit = 1;
 				sendto_prefix_one(target, client, mtags, ":%s %s %s :%s",
 				                  CHECKPROTO(target->direction, PROTO_SID) ? ID(client) : client->name,
-				                  newcmd,
+				                  cmd,
 				                  (MyUser(target) ? target->name : nick),
 				                  text);
 				labeled_response_inhibit = 0;
 				RunHook5(HOOKTYPE_USERMSG, client, target, mtags, text, notice);
 				free_message_tags(mtags);
 				continue;
-			} else
-			if (ret == CANPRIVMSG_CONTINUE)
-				continue;
-			else
-				return;
+			}
+			continue; /* Message has been delivered or rejected, continue with next target */
 		}
 
 		/* If nick@server -and- the @server portion was set::services-server then send a special message */
@@ -468,9 +493,9 @@ CMD_FUNC(cmd_notice)
  */
 char *dcc_displayfile(char *f)
 {
-static char buf[512];
-char *i, *o = buf;
-size_t n = strlen(f);
+	static char buf[512];
+	char *i, *o = buf;
+	size_t n = strlen(f);
 
 	if (n < 300)
 	{
@@ -500,80 +525,95 @@ size_t n = strlen(f);
 	return buf;
 }
 
+char *get_dcc_filename(const char *text)
+{
+	static char filename[BUFSIZE+1];
+	char *end;
+	int size_string;
+
+	if (*text != '\001')
+		return 0;
+
+	if (!strncasecmp(text+1, "DCC SEND ", 9))
+		text = text + 10;
+	else if (!strncasecmp(text+1, "DCC RESUME ", 11))
+		text = text + 12;
+	else
+		return 0;
+
+	for (; *text == ' '; text++); /* skip leading spaces */
+
+	if (*text == '"' && *(text+1))
+		end = strchr(text+1, '"');
+	else
+		end = strchr(text, ' ');
+
+	if (!end || (end < text))
+		return 0;
+
+	size_string = (int)(end - text);
+
+	if (!size_string || (size_string > (BUFSIZE - 1)))
+		return 0;
+
+	strlcpy(filename, text, size_string+1);
+	return filename;
+}
+
 /** Checks if a DCC SEND is allowed.
- * @param client        Sending client
+ * @param client      Sending client
  * @param target      Target name (user or channel)
  * @param targetcli   Target client (NULL in case of channel!)
  * @param text        The entire message
  * @returns 1 if DCC SEND allowed, 0 if rejected
  */
-static int check_dcc(Client *client, char *target, Client *targetcli, char *text)
+static int can_dcc(Client *client, char *target, Client *targetcli, char *filename, char **errmsg)
 {
-	char *ctcp;
 	ConfigItem_deny_dcc *fl;
-	char *end, realfile[BUFSIZE];
+	static char errbuf[256];
 	int size_string, ret;
 
-	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",client,targetcli,NULL,NULL) || (targetcli && ValidatePermissionsForPath("self:getbaddcc",targetcli,NULL,NULL,NULL)))
+	/* User (IRCOp) may bypass send restrictions */
+	if (ValidatePermissionsForPath("immune:dcc",client,targetcli,NULL,NULL))
 		return 1;
 
-	ctcp = &text[1];
-	/* Most likely a DCC send .. */
-	if (!strncasecmp(ctcp, "DCC SEND ", 9))
-		ctcp = text + 10;
-	else if (!strncasecmp(ctcp, "DCC RESUME ", 11))
-		ctcp = text + 12;
-	else
-		return 1; /* something else, allow */
+	/* User (IRCOp) likes to receive bad dcc's */
+	if (targetcli && ValidatePermissionsForPath("self:getbaddcc",targetcli,NULL,NULL,NULL))
+		return 1;
 
+	/* Check if user is already blocked (from the past) */
 	if (IsDCCBlock(client))
 	{
-		sendnotice(client, "*** You are blocked from sending files as you have tried to "
-		                 "send a forbidden file - reconnect to regain ability to send");
+		*errmsg = "*** You are blocked from sending files as you have tried to "
+		          "send a forbidden file - reconnect to regain ability to send";
 		return 0;
 	}
-	for (; *ctcp == ' '; ctcp++); /* skip leading spaces */
 
-	if (*ctcp == '"' && *(ctcp+1))
-		end = strchr(ctcp+1, '"');
-	else
-		end = strchr(ctcp, ' ');
+	if (match_spamfilter(client, filename, SPAMF_DCC, target, 0, NULL))
+		return 0;
 
-	/* check if it was fake.. just pass it along then .. */
-	if (!end || (end < ctcp))
-		return 1; /* allow */
-
-	size_string = (int)(end - ctcp);
-
-	if (!size_string || (size_string > (BUFSIZE - 1)))
-		return 1; /* allow */
-
-	strlcpy(realfile, ctcp, size_string+1);
-
-	if (match_spamfilter(client, realfile, SPAMF_DCC, target, 0, NULL))
-		return 0; /* deny */
-
-	if ((fl = dcc_isforbidden(client, realfile)))
+	if ((fl = dcc_isforbidden(client, filename)))
 	{
-		char *displayfile = dcc_displayfile(realfile);
-		sendnumericfmt(client,
-		    RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, target, fl->reason);
-		sendnotice(client, "*** You have been blocked from sending files, reconnect to regain permission to send files");
+		char *displayfile = dcc_displayfile(filename);
+
+		RunHook5(HOOKTYPE_DCC_DENIED, client, target, filename, displayfile, fl);
+
+		ircsnprintf(errbuf, sizeof(errbuf), "Cannot DCC SEND file: %s", fl->reason);
+		*errmsg = errbuf;
 		SetDCCBlock(client);
-
-		RunHook5(HOOKTYPE_DCC_DENIED, client, target, realfile, displayfile, fl);
-
-		return 0; /* block */
+		return 0;
 	}
 
 	/* Channel dcc (???) and discouraged? just block */
-	if (!targetcli && ((fl = dcc_isdiscouraged(client, realfile))))
+	if (!targetcli && ((fl = dcc_isdiscouraged(client, filename))))
 	{
-		char *displayfile = dcc_displayfile(realfile);
-		sendnumericfmt(client, RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, target, fl->reason);
-		return 0; /* block */
+		ircsnprintf(errbuf, sizeof(errbuf), "Cannot DCC SEND file: %s", fl->reason);
+		*errmsg = errbuf;
+		return 0;
 	}
-	return 1; /* allowed */
+
+	/* If we get here, the file is allowed */
+	return 1;
 }
 
 /** Checks if a DCC is allowed by DCCALLOW rules (only SOFT bans are checked).
@@ -585,63 +625,46 @@ static int check_dcc(Client *client, char *target, Client *targetcli, char *text
  * 1:			allowed
  * 0:			block
  */
-static int check_dcc_soft(Client *from, Client *to, char *text)
+static int can_dcc_soft(Client *from, Client *to, char *filename, char **errmsg)
 {
-	char *ctcp;
 	ConfigItem_deny_dcc *fl;
-	char *end, realfile[BUFSIZE];
-	int size_string;
+	char *displayfile;
+	static char errbuf[256];
 
-	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",from,to,NULL,NULL)|| ValidatePermissionsForPath("self:getbaddcc",to,NULL,NULL,NULL))
+	/* User (IRCOp) may bypass send restrictions */
+	if (ValidatePermissionsForPath("immune:dcc",from,to,NULL,NULL))
 		return 1;
 
-	ctcp = &text[1];
-	/* Most likely a DCC send .. */
-	if (!strncasecmp(ctcp, "DCC SEND ", 9))
-		ctcp = text + 10;
-	else
-		return 1; /* something else, allow */
+	/* User (IRCOp) likes to receive bad dcc's */
+	if (ValidatePermissionsForPath("self:getbaddcc",to,NULL,NULL,NULL))
+		return 1;
 
-	if (*ctcp == '"' && *(ctcp+1))
-		end = strchr(ctcp+1, '"');
-	else
-		end = strchr(ctcp, ' ');
+	/* On the 'soft' blocklist ? */
+	if (!(fl = dcc_isdiscouraged(from, filename)))
+		return 1; /* No, so is OK */
 
-	/* check if it was fake.. just pass it along then .. */
-	if (!end || (end < ctcp))
-		return 1; /* allow */
+	/* If on DCCALLOW list then the user is OK with it */
+	if (on_dccallow_list(to, from))
+		return 1;
 
-	size_string = (int)(end - ctcp);
+	/* Soft-blocked */
+	displayfile = dcc_displayfile(filename);
 
-	if (!size_string || (size_string > (BUFSIZE - 1)))
-		return 1; /* allow */
+	ircsnprintf(errbuf, sizeof(errbuf), "Cannot DCC SEND file: %s", fl->reason);
+	*errmsg = errbuf;
 
-	strlcpy(realfile, ctcp, size_string+1);
-
-	if ((fl = dcc_isdiscouraged(from, realfile)))
+	/* Inform target ('to') about the /DCCALLOW functionality */
+	sendnotice(to, "%s (%s@%s) tried to DCC SEND you a file named '%s', the request has been blocked.",
+		from->name, from->user->username, GetHost(from), displayfile);
+	if (!IsDCCNotice(to))
 	{
-		if (!on_dccallow_list(to, from))
-		{
-			char *displayfile = dcc_displayfile(realfile);
-			sendnumericfmt(from,
-				RPL_TEXT, "*** Cannot DCC SEND file %s to %s (%s)", displayfile, to->name, fl->reason);
-			sendnotice(from, "User %s is currently not accepting DCC SENDs with such a filename/filetype from you. "
-				"Your file %s was not sent.", to->name, displayfile);
-			sendnotice(to, "%s (%s@%s) tried to DCC SEND you a file named '%s', the request has been blocked.",
-				from->name, from->user->username, GetHost(from), displayfile);
-			if (!IsDCCNotice(to))
-			{
-				SetDCCNotice(to);
-				sendnotice(to, "Files like these might contain malicious content (viruses, trojans). "
-					"Therefore, you must explicitly allow anyone that tries to send you such files.");
-				sendnotice(to, "If you trust %s, and want him/her to send you this file, you may obtain "
-					"more information on using the dccallow system by typing '/DCCALLOW HELP'", from->name);
-			}
-			return 0;
-		}
+		SetDCCNotice(to);
+		sendnotice(to, "Files like these might contain malicious content (viruses, trojans). "
+			"Therefore, you must explicitly allow anyone that tries to send you such files.");
+		sendnotice(to, "If you trust %s, and want him/her to send you this file, you may obtain "
+			"more information on using the dccallow system by typing '/DCCALLOW HELP'", from->name);
 	}
-
-	return 1; /* allowed */
+	return 0;
 }
 
 /* Taken from xchat by Peter Zelezny
@@ -649,7 +672,8 @@ static int check_dcc_soft(Client *from, Client *to, char *text)
  * RGB color stripping support added -- codemastr
  */
 
-char *_StripColors(unsigned char *text) {
+char *_StripColors(unsigned char *text)
+{
 	int i = 0, len = strlen(text), save_len=0;
 	char nc = 0, col = 0, rgb = 0, *save_text=NULL;
 	static unsigned char new_str[4096];
@@ -906,13 +930,11 @@ int _can_send_to_channel(Client *client, Channel *channel, char **msgtext, char 
 		i = (*(h->func.intfunc))(client, channel, lp, msgtext, errmsg, notice);
 		if (i != HOOK_CONTINUE)
 		{
-#ifdef DEBUGMODE
 			if (!*errmsg)
 			{
 				ircd_log(LOG_ERROR, "Module %s did not set errmsg!!!", h->owner->header->name);
 				abort();
 			}
-#endif
 			break;
 		}
 	}

@@ -20,7 +20,7 @@ long UMODE_CENSOR = 0L;
 
 #define IsCensored(x) (x->umodes & UMODE_CENSOR)
 
-char *censor_pre_usermsg(Client *client, Client *target, char *text, int notice);
+int censor_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice);
 
 int censor_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int censor_config_run(ConfigFile *, ConfigEntry *, int);
@@ -46,7 +46,7 @@ MOD_INIT()
 
 	UmodeAdd(modinfo->handle, 'G', UMODE_GLOBAL, 0, NULL, &UMODE_CENSOR);
 
-	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, 0, censor_pre_usermsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, censor_can_send_to_user);
 	
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, censor_config_run);
 	return MOD_SUCCESS;
@@ -237,22 +237,21 @@ char *stripbadwords_message(char *str, int *blocked)
 	return stripbadwords(str, conf_badword_message, blocked);
 }
 
-char *censor_pre_usermsg(Client *client, Client *target, char *text, int notice)
+int censor_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice)
 {
-int blocked;
+	int blocked = 0;
 
 	if (MyUser(client) && IsCensored(target))
 	{
-		text = stripbadwords_message(text, &blocked);
+		*text = stripbadwords_message(*text, &blocked);
 		if (blocked)
 		{
-			if (!notice)
-				sendnumeric(client, ERR_NOSWEAR, target->name);
-			return NULL;
+			*errmsg = "User does not accept private messages containing swearing";
+			return HOOK_DENY;
 		}
 	}
 
-	return text;
+	return HOOK_CONTINUE;
 }
 
 // TODO: when stats is modular, make it call this for badwords

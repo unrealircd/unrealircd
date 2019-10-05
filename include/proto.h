@@ -23,7 +23,7 @@
 #ifndef proto_h
 #define proto_h
 /* channel.c */
-extern int  sendmodeto_one(Client *cptr, char *from, char *name, char *mode, char *param, time_t creationtime);
+extern int sendmodeto_one(Client *cptr, char *from, char *name, char *mode, char *param, time_t creationtime);
 
 /* lusers.c */
 extern void init_irccounts(void);
@@ -54,7 +54,7 @@ extern EVENT(save_tunefile);
 extern void read_motd(const char *filename, MOTDFile *motd);
 
 /* s_user.c */
-extern int  check_for_target_limit(Client *client, void *target, const char *name);
+extern int target_limit_exceeded(Client *client, void *target, const char *name);
 extern void make_umodestr(void);
 extern char *get_mode_str(Client *acptr);
 

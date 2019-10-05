@@ -360,3 +360,16 @@ Server protocol
   such as SID, NICKv2, TKLEXT2, etc.
   (more precise information will follow)
   In particular this means UnrealIRCd 3.2.x will not link with 5.x.
+
+Client protocol
+----------------
+TODO: expand with other new things / changes
+* When a message is blocked, for whatever reason, we now use a generic
+  numeric response: :server 531 yourname targetname :reason for the block
+  This replaces all the various NOTICEs, ERR_NOCTCP, ERR_NONONREG, etc.
+  with just one single numeric.
+  The only other numerics that you may still encounter when PM'ing are
+  ERR_NOSUCHNICK, ERR_TOOMANYTARGETS and ERR_TARGETTOOFAST, which are
+  generic errors to any command involving targets. And ERR_SERVICESDOWN.
+  Note that channel messages already had a generic numeric for signaling
+  blocked messages for a very long time, ERR_CANNOTSENDTOCHAN.

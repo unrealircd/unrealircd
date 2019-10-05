@@ -162,7 +162,7 @@ CMD_FUNC(cmd_invite)
 
 	if (MyConnect(client))
 	{
-		if (check_for_target_limit(client, target, target->name))
+		if (target_limit_exceeded(client, target, target->name))
 			return;
 
 		if (!ValidatePermissionsForPath("immune:invite-flood",client,NULL,NULL,NULL))
