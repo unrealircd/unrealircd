@@ -143,9 +143,6 @@ extern void del_ListItem(ListStruct *, ListStruct **);
 extern MODVAR LoopStruct loop;
 extern int del_banid(Channel *channel, char *banid);
 extern int del_exbanid(Channel *channel, char *banid);
-#ifdef SHOWCONNECTINFO
-
-
 #define BREPORT_DO_DNS	"NOTICE * :*** Looking up your hostname...\r\n"
 #define BREPORT_FIN_DNS	"NOTICE * :*** Found your hostname\r\n"
 #define BREPORT_FIN_DNSC "NOTICE * :*** Found your hostname (cached)\r\n"
@@ -158,10 +155,7 @@ extern MODVAR char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256]
     REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
     REPORT_FAIL_ID[256];
 
-extern MODVAR int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
-    R_do_id, R_fin_id, R_fail_id;
-
-#endif
+extern MODVAR int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 extern MODVAR struct list_head client_list;
 extern MODVAR struct list_head lclient_list;
 extern MODVAR struct list_head server_list;
@@ -952,3 +946,4 @@ extern char *unrl_utf8_make_valid(const char *str);
 extern void utf8_test(void);
 extern MODVAR int non_utf8_nick_chars_in_use;
 extern void short_motd(Client *client);
+extern int should_show_connect_info(Client *client);

@@ -95,13 +95,6 @@ MOD_INIT()
 
 MOD_LOAD()
 {
-	if (SHOWCONNECTINFO)
-	{
-		config_warn("I'm disabling set::options::show-connect-info for you "
-		            "as this setting is incompatible with the websocket module.");
-		SHOWCONNECTINFO = 0;
-	}
-
 	return MOD_SUCCESS;
 }
 

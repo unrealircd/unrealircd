@@ -53,7 +53,7 @@ static void ident_lookup_failed(Client *client)
 	}
 	ClearIdentLookupSent(client);
 	ClearIdentLookup(client);
-	if (SHOWCONNECTINFO && !client->serv && !IsServersOnlyListener(client->local->listener))
+	if (should_show_connect_info(client))
 		sendto_one(client, NULL, "%s", REPORT_FAIL_ID);
 	if (!IsDNSLookup(client))
 		finish_auth(client);
@@ -90,7 +90,7 @@ static int ident_lookup_connect(Client *client)
 		return 0;
 	}
 
-	if (SHOWCONNECTINFO && !client->serv && !IsServersOnlyListener(client->local->listener))
+	if (should_show_connect_info(client))
 		sendto_one(client, NULL, "%s", REPORT_DO_ID);
 
 	set_sock_opts(client->local->authfd, client, IsIPV6(client));
@@ -165,7 +165,7 @@ static void ident_lookup_receive(int fd, int revents, void *userdata)
 	if (!IsDNSLookup(client))
 		finish_auth(client);
 
-	if (SHOWCONNECTINFO && !client->serv && !IsServersOnlyListener(client->local->listener))
+	if (should_show_connect_info(client))
 		sendto_one(client, NULL, "%s", REPORT_FIN_ID);
 
 	if (len > 0)

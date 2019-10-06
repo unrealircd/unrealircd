@@ -1019,7 +1019,7 @@ struct hostent *he;
 
 	if (!DONT_RESOLVE)
 	{
-		if (SHOWCONNECTINFO && !client->serv && !IsServersOnlyListener(client->local->listener))
+		if (should_show_connect_info(client))
 			sendto_one(client, NULL, "%s", REPORT_DO_DNS);
 		dns_special_flag = 1;
 		he = unrealdns_doclient(client);
@@ -1035,7 +1035,7 @@ struct hostent *he;
 		} else {
 			/* Host was in our cache */
 			client->local->hostp = he;
-			if (SHOWCONNECTINFO && !client->serv && !IsServersOnlyListener(client->local->listener))
+			if (should_show_connect_info(client))
 				sendto_one(client, NULL, "%s", REPORT_FIN_DNSC);
 		}
 	}
@@ -1049,7 +1049,7 @@ void proceed_normal_client_handshake(Client *client, struct hostent *he)
 {
 	ClearDNSLookup(client);
 	client->local->hostp = he;
-	if (SHOWCONNECTINFO && !client->serv && !IsServersOnlyListener(client->local->listener))
+	if (should_show_connect_info(client))
 		sendto_one(client, NULL, "%s", client->local->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 
 	if (!dns_special_flag && !IsIdentLookup(client))
