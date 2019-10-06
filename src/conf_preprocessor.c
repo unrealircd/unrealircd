@@ -29,7 +29,7 @@ static inline int ValidVarCharacter(char x)
 	return 0;
 }
 
-int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, ConditionalConfig **cc_out)
+PreprocessorItem evaluate_preprocessor_if(char *statement, char *filename, int linenumber, ConditionalConfig **cc_out)
 {
 	char *p=statement, *name;
 	int negative = 0;
@@ -186,7 +186,7 @@ int evaluate_preprocessor_if(char *statement, char *filename, int linenumber, Co
 	return PREPROCESSOR_ERROR;
 }
 
-int evaluate_preprocessor_define(char *statement, char *filename, int linenumber)
+PreprocessorItem  evaluate_preprocessor_define(char *statement, char *filename, int linenumber)
 {
 	char *p = statement;
 	char *name, *name_terminator;
@@ -256,7 +256,7 @@ int evaluate_preprocessor_define(char *statement, char *filename, int linenumber
 	return PREPROCESSOR_DEFINE;
 }
 
-int parse_preprocessor_item(char *start, char *end, char *filename, int linenumber, ConditionalConfig **cc)
+PreprocessorItem  parse_preprocessor_item(char *start, char *end, char *filename, int linenumber, ConditionalConfig **cc)
 {
 	char buf[512];
 	int max;
@@ -348,7 +348,7 @@ NameValueList *find_config_define(const char *name)
 }
 
 /** Resolve a preprocessor condition to true (=default) or false */
-int preprocessor_resolve_if(ConditionalConfig *cc, int phase)
+int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 {
 	int result = 0;
 
@@ -390,7 +390,7 @@ int preprocessor_resolve_if(ConditionalConfig *cc, int phase)
 	return result;
 }
 
-void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, int phase)
+void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, PreprocessorPhase phase)
 {
 	ConfigEntry *ce, *ce_next, *ce_prev;
 	ConfigEntry *cep, *cep_next, *cep_prev;
@@ -440,7 +440,7 @@ void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, int phase)
 	}
 }
 
-void preprocessor_resolve_conditionals_all(int phase)
+void preprocessor_resolve_conditionals_all(PreprocessorPhase phase)
 {
 	ConfigFile *cfptr;
 

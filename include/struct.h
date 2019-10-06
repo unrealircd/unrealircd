@@ -1243,17 +1243,17 @@ struct NameValueList {
 };
 
 /* conf preprocessor */
-// FIXME: make these enums ? 
-#define PREPROCESSOR_ERROR 0
-#define PREPROCESSOR_DEFINE 1
-#define PREPROCESSOR_IF 2
-#define PREPROCESSOR_ENDIF 3
-// TODO: support $else and $elseif or $else if as well? is very similar logic
-//       after all...
+typedef enum PreprocessorItem {
+	PREPROCESSOR_ERROR		= 0,
+	PREPROCESSOR_DEFINE		= 1,
+	PREPROCESSOR_IF			= 2,
+	PREPROCESSOR_ENDIF		= 3
+} PreprocessorItem;
 
-// FIXME: make these enums ?
-#define PREPROCESSOR_PHASE_INITIAL	1
-#define PREPROCESSOR_PHASE_MODULE	2
+typedef enum PreprocessorPhase {
+	PREPROCESSOR_PHASE_INITIAL	= 1,
+	PREPROCESSOR_PHASE_MODULE	= 2
+} PreprocessorPhase;
 
 typedef enum AuthenticationType {
 	AUTHTYPE_INVALID		= -1,

@@ -973,7 +973,6 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_IDENT_LOOKUP 103
 #define HOOKTYPE_CONFIGRUN_EX 104
 #define HOOKTYPE_CAN_SEND_TO_USER 105
-// FIXME: ^^ make this enums? or..?
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number

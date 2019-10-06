@@ -52,12 +52,12 @@ extern MODVAR char umodestring[UMODETABLESZ+1];
 #define get_recvq(x) ((x)->local->class->recvq ? (x)->local->class->recvq : DEFAULT_RECVQ)
 
 /* Configuration preprocessor */
-extern int parse_preprocessor_item(char *start, char *end, char *filename, int linenumber, ConditionalConfig **cc);
+extern PreprocessorItem parse_preprocessor_item(char *start, char *end, char *filename, int linenumber, ConditionalConfig **cc);
 extern void preprocessor_cc_duplicate_list(ConditionalConfig *r, ConditionalConfig **out);
 extern void preprocessor_cc_free_level(ConditionalConfig **cc_list, int level);
 extern void preprocessor_cc_free_list(ConditionalConfig *cc);
-extern void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, int phase);
-extern void preprocessor_resolve_conditionals_all(int phase);
+extern void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, PreprocessorPhase phase);
+extern void preprocessor_resolve_conditionals_all(PreprocessorPhase phase);
 extern void free_config_defines(void);
 extern void preprocessor_replace_defines(char **item, ConfigEntry *ce);
 
