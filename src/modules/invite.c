@@ -291,6 +291,6 @@ CMD_FUNC(cmd_invite)
 	if (!is_silenced(client, target))
 	{
 		sendto_prefix_one(target, client, NULL, ":%s INVITE %s :%s", client->name,
-			target->name, ((channel) ? (channel->chname) : parv[2]));
+			target->name, channel->chname);
 	}
 }

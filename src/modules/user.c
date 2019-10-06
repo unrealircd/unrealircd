@@ -143,9 +143,6 @@ CMD_FUNC(cmd_user)
 
 	if (!MyConnect(client))
 	{
-		if (client->srvptr == NULL)
-			sendto_ops("WARNING, User %s introduced as being "
-			    "on non-existant server %s.", client->name, server);
 		client->user->server = find_or_add(client->srvptr->name);
 		strlcpy(client->user->realhost, host, sizeof(client->user->realhost));
 		goto user_finish;
