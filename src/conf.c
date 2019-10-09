@@ -723,6 +723,33 @@ char policy_valtochar(Policy policy)
 	return '?';
 }
 
+AllowedChannelChars allowed_channelchars_strtoval(char *str)
+{
+	if (!strcmp(str, "ascii"))
+		return ALLOWED_CHANNELCHARS_ASCII;
+	else if (!strcmp(str, "utf8"))
+		return ALLOWED_CHANNELCHARS_UTF8;
+	else if (!strcmp(str, "any"))
+		return ALLOWED_CHANNELCHARS_ANY;
+	return 0;
+}
+
+char *allowed_channelchars_valtostr(AllowedChannelChars v)
+{
+	switch(v)
+	{
+		case ALLOWED_CHANNELCHARS_ASCII:
+			return "ascii";
+		case ALLOWED_CHANNELCHARS_UTF8:
+			return "utf8";
+		case ALLOWED_CHANNELCHARS_ANY:
+			return "any";
+		default:
+			/* Not possible */
+			abort();
+	}
+}
+
 ConfigFile *config_load(char *filename)
 {
 	struct stat sb;

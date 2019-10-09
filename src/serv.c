@@ -148,10 +148,15 @@ void send_proto(Client *client, ConfigItem_link *aconf)
 	           ClientCapabilityFindReal("message-tags") ? "MTAGS" : "");
 
 	/* Second line */
-	sendto_one(client, NULL, "PROTOCTL CHANMODES=%s%s,%s%s,%s%s,%s%s USERMODES=%s BOOTED=%lld PREFIX=%s NICKCHARS=%s SID=%s MLOCK TS=%lld EXTSWHOIS",
+	sendto_one(client, NULL, "PROTOCTL CHANMODES=%s%s,%s%s,%s%s,%s%s USERMODES=%s BOOTED=%lld PREFIX=%s SID=%s MLOCK TS=%lld EXTSWHOIS",
 		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4,
 		umodestring, (long long)me.local->since, prefix->value,
-		charsys_get_current_languages(), me.id, (long long)TStime());
+		me.id, (long long)TStime());
+
+	/* Third line */
+	sendto_one(client, NULL, "PROTOCTL NICKCHARS=%s CHANNELCHARS=%s",
+		charsys_get_current_languages(),
+		allowed_channelchars_valtostr(iConf.allowed_channelchars));
 }
 
 #ifndef IRCDTOTALVERSION
@@ -1245,4 +1250,3 @@ void charsys_check_for_changes(void)
 
 	strlcpy(previous_langsinuse, langsinuse, sizeof(previous_langsinuse));
 }
-

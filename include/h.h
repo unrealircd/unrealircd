@@ -910,6 +910,8 @@ extern char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked
 extern int badword_config_process(ConfigItem_badword *ca, char *str);
 extern void badword_config_free(ConfigItem_badword *ca);
 extern char *badword_config_check_regex(char *s, int fastsupport, int check_broadness);
+extern AllowedChannelChars allowed_channelchars_strtoval(char *str);
+extern char *allowed_channelchars_valtostr(AllowedChannelChars v);
 extern long ClientCapabilityBit(const char *token);
 extern int is_handshake_finished(Client *client);
 extern void SetCapability(Client *acptr, const char *token);

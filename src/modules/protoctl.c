@@ -182,6 +182,28 @@ CMD_FUNC(cmd_protoctl)
 			if (IsServer(client))
 				broadcast_sinfo(client, NULL, client);
 		}
+		else if (!strcmp(name, "CHANNELCHARS") && value)
+		{
+			int their_value;
+
+			if (!IsServer(client) && !IsEAuth(client) && !IsHandshake(client))
+				continue;
+
+			their_value = allowed_channelchars_strtoval(value);
+			if (their_value != iConf.allowed_channelchars)
+			{
+				char linkerr[256];
+				ircsnprintf(linkerr, sizeof(linkerr),
+					"Link rejected. Server %s has set::allowed-channelchars '%s' "
+					"while %s has a value of '%s'. "
+					"Please choose the same value on all servers.",
+					client->name, value,
+					me.name, allowed_channelchars_valtostr(iConf.allowed_channelchars));
+				sendto_realops("ERROR: %s", linkerr);
+				exit_client(client, NULL, linkerr);
+				return;
+			}
+		}
 		else if (!strcmp(name, "SID") && value)
 		{
 			Client *aclient;
