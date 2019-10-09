@@ -321,7 +321,10 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 		return;
 
 	if (parv[1][0] == '#') 
-		return channel_svsmode(client, parc, parv);
+	{
+		channel_svsmode(client, parc, parv);
+		return;
+	}
 
 	if (!(target = find_person(parv[1], NULL)))
 		return;
@@ -531,7 +534,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
  */
 CMD_FUNC(cmd_svsmode)
 {
-	return do_svsmode(client, recv_mtags, parc, parv, 0);
+	do_svsmode(client, recv_mtags, parc, parv, 0);
 }
 
 /*
@@ -542,7 +545,7 @@ CMD_FUNC(cmd_svsmode)
  */
 CMD_FUNC(cmd_svs2mode)
 {
-	return do_svsmode(client, recv_mtags, parc, parv, 1);
+	do_svsmode(client, recv_mtags, parc, parv, 1);
 }
 
 void add_send_mode_param(Channel *channel, Client *from, char what, char mode, char *param)
