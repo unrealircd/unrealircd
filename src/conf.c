@@ -747,8 +747,8 @@ char *allowed_channelchars_valtostr(AllowedChannelChars v)
 		default:
 			/* Not possible */
 			abort();
+			return "NOTREACHED"; /* Windows.. */
 	}
-	abort(); /* Windows does not understand... */
 }
 
 ConfigFile *config_load(char *filename)
