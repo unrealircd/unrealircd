@@ -178,7 +178,7 @@ extern int check_tkls(Client *cptr);
 /* for services */
 extern void del_invite(Client *, Channel *);
 extern void send_user_joins(Client *, Client *);
-extern void clean_channelname(char *);
+extern int valid_channelname(const char *);
 extern long get_access(Client *, Channel *);
 extern int ban_check_mask(Client *, Channel *, char *, int, char **, char **, int);
 extern int extban_is_ok_nuh_extban(Client *, Channel *, char *, int, int, int);
@@ -949,3 +949,4 @@ extern void utf8_test(void);
 extern MODVAR int non_utf8_nick_chars_in_use;
 extern void short_motd(Client *client);
 extern int should_show_connect_info(Client *client);
+extern void send_invalid_channelname(Client *client, char *channelname);

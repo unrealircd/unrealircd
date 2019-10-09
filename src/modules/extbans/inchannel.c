@@ -80,10 +80,8 @@ char *extban_inchannel_conv_param(char *para)
 	if ((*chan != '#') && (*chan != '*') && (*chan != '?'))
 		return NULL;
 
-	if (strlen(chan) > CHANNELLEN)
-		chan[CHANNELLEN] = '\0';
-
-	clean_channelname(chan);
+	if (!valid_channelname(chan))
+		return NULL;
 
 	p = strchr(chan, ':'); /* ~r:#chan:*.blah.net is not allowed (for now) */
 	if (p)

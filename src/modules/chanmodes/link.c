@@ -120,23 +120,16 @@ int cmodeL_is_ok(Client *client, Channel *channel, char mode, char *para, int ty
 	if (type == EXCHK_PARAM)
 	{
 		/* Check parameter.. syntax is +L #channel */
-		char buf[CHANNELLEN+1], *p;
-
 		if (strchr(para, ','))
 			return EX_DENY; /* multiple channels not permitted */
-		if (!IsChannelName(para))
+		if (!valid_channelname(para))
 		{
 			if (MyUser(client))
 				sendnumeric(client, ERR_NOSUCHCHANNEL, para);
 			return EX_DENY;
 		}
 
-		/* This needs to be exactly the same as in conv_param... */
-		strlcpy(buf, para, sizeof(buf));
-		clean_channelname(buf);
-		if ((p = strchr(buf, ':')))
-			*p = '\0';
-		if (find_channel(buf, NULL) == channel)
+		if (find_channel(para, NULL) == channel)
 		{
 			if (MyUser(client))
 				sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'L',
@@ -178,20 +171,14 @@ char *cmodeL_get_param(void *r_in)
 /** Convert parameter to something proper.
  * NOTE: client may be NULL
  */
-char *cmodeL_conv_param(char *param_in, Client *client)
+char *cmodeL_conv_param(char *param, Client *client)
 {
-	static char buf[CHANNELLEN+1];
 	char *p;
 
-	strlcpy(buf, param_in, sizeof(buf));
-	clean_channelname(buf);
-	if ((p = strchr(buf, ':')))
-		*p = '\0';
+	if (!valid_channelname(param))
+		return NULL;
 
-	if (*buf == '\0')
-		strcpy(buf, "#<INVALID>"); /* better safe than sorry */
-
-	return buf;
+	return param;
 }
 
 void cmodeL_free_param(void *r)
@@ -287,12 +274,8 @@ char *extban_link_conv_param(char *param)
 		return NULL;
 	*matchby++ = '\0';
 
-	if (*chan != '#' || strchr(param, ','))
+	if (!valid_channelname(chan))
 		return NULL;
-
-	if (strlen(chan) > CHANNELLEN)
-		chan[CHANNELLEN] = '\0';
-	clean_channelname(chan);
 
 	// Possibly stack multiple extbans, this is a little convoluted due to extban API limitations
 	snprintf(tmpmask, sizeof(tmpmask), "~?:%s", matchby);

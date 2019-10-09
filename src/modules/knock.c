@@ -79,17 +79,12 @@ CMD_FUNC(cmd_knock)
 		return;
 	}
 
-	if (MyConnect(client))
-		clean_channelname(parv[1]);
-
-	/* bugfix for /knock PRv Please? */
-	if (*parv[1] != '#')
+	if (MyConnect(client) && !valid_channelname(parv[1]))
 	{
-		sendnumeric(client, ERR_CANNOTKNOCK,
-		    parv[1], "Remember to use a # prefix in channel name");
-
+		sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);
 		return;
 	}
+
 	if (!(channel = find_channel(parv[1], NULL)))
 	{
 		sendnumeric(client, ERR_CANNOTKNOCK, parv[1], "Channel does not exist!");

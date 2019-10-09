@@ -360,11 +360,11 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
  */
 void _do_join(Client *client, int parc, char *parv[])
 {
-	char jbuf[BUFSIZE];
+	char jbuf[BUFSIZE], jbuf2[BUFSIZE];
 	Membership *lp;
 	Channel *channel;
 	char *name, *key = NULL;
-	int  i, flags = 0, ishold;
+	int i, flags = 0, ishold;
 	char *p = NULL, *p2 = NULL;
 	TKL *tklban;
 	int ntargets = 0;
@@ -394,30 +394,40 @@ void _do_join(Client *client, int parc, char *parv[])
 	   ** Rebuild list of channels joined to be the actual result of the
 	   ** JOIN.  Note that "JOIN 0" is the destructive problem.
 	 */
-	for (i = 0, name = strtoken(&p, parv[1], ","); name;
-	    name = strtoken(&p, NULL, ","))
+	for (i = 0, name = strtoken(&p, parv[1], ",");
+	     name;
+	     i++, name = strtoken(&p, NULL, ","))
 	{
 		if (MyUser(client) && (++ntargets > maxtargets))
 		{
 			sendnumeric(client, ERR_TOOMANYTARGETS, name, maxtargets, "JOIN");
 			break;
 		}
-		/* pathological case only on longest channel name.
-		   ** If not dealt with here, causes desynced channel ops
-		   ** since ChannelExists() doesn't see the same channel
-		   ** as one being joined. cute bug. Oct 11 1997, Dianora/comstud
-		   ** Copied from Dianora's "hybrid 5" ircd.
-		 */
-
-		if (strlen(name) > CHANNELLEN)	/* same thing is done in get_channel() */
-			name[CHANNELLEN] = '\0';
-
-		if (MyConnect(client))
-			clean_channelname(name);
 		if (*name == '0' && !atoi(name))
 		{
-			(void)strcpy(jbuf, "0");
-			i = 1;
+			/* UnrealIRCd 5: we only support "JOIN 0",
+			 * "JOIN 0,#somechan" etc... so only at the beginning.
+			 * We do not support it half-way like "JOIN #a,0,#b"
+			 * since that doesn't make sense, unless you are flooding...
+			 * We still support it in remote joins for compatibility.
+			 */
+			if (MyUser(client) && (i != 0))
+				continue;
+			strlcpy(jbuf, "0", sizeof(jbuf));
+			continue;
+		} else
+		if (MyConnect(client) && !valid_channelname(name))
+		{
+			send_invalid_channelname(client, name);
+			if (IsOper(client) && find_channel(name, NULL))
+			{
+				/* Give IRCOps a bit more information */
+				sendnotice(client, "Channel '%s' is unjoinable because it contains illegal characters. "
+				                   "However, it does exist because another server in your "
+				                   "network, which has a more loose restriction, created it. "
+				                   "See https://www.unrealircd.org/docs/Set_block#set::allowed-channelchars",
+				                   name);
+			}
 			continue;
 		}
 		else if (!IsChannelName(name))
@@ -427,22 +437,25 @@ void _do_join(Client *client, int parc, char *parv[])
 			continue;
 		}
 		if (*jbuf)
-			(void)strlcat(jbuf, ",", sizeof jbuf);
-		(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
-		i += strlen(name) + 1;
+			strlcat(jbuf, ",", sizeof jbuf);
+		strlcat(jbuf, name, sizeof(jbuf));
 	}
-	/* This strcpy should be safe since jbuf contains the "filtered"
-	 * result of parv[1] which should never be larger than the source.
+
+	/* We are going to overwrite 'jbuf' with the calls to strtoken()
+	 * a few lines further down. Copy it to 'jbuf2' and make that
+	 * the new parv[1].
 	 */
-	(void)strcpy(parv[1], jbuf);
+	strlcpy(jbuf2, jbuf, sizeof(jbuf2));
+	parv[1] = jbuf2;
 
 	p = NULL;
 	if (parv[2])
 		key = strtoken(&p2, parv[2], ",");
 	parv[2] = NULL;		/* for cmd_names call later, parv[parc] must == NULL */
-	for (name = strtoken(&p, jbuf, ","); name;
-	    key = (key) ? strtoken(&p2, NULL, ",") : NULL,
-	    name = strtoken(&p, NULL, ","))
+
+	for (name = strtoken(&p, jbuf, ",");
+	     name;
+	     key = key ? strtoken(&p2, NULL, ",") : NULL, name = strtoken(&p, NULL, ","))
 	{
 		MessageTag *mtags = NULL;
 

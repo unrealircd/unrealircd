@@ -93,8 +93,11 @@ CMD_FUNC(cmd_invite)
 		return;
 	}
 
-	if (MyConnect(client))
-		clean_channelname(parv[2]);
+	if (MyConnect(client) && !valid_channelname(parv[2]))
+	{
+		sendnumeric(client, ERR_NOSUCHCHANNEL, parv[2]);
+		return;
+	}
 
 	if (!(channel = find_channel(parv[2], NULL)))
 	{

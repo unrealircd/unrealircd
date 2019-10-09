@@ -369,6 +369,10 @@ int send_list(Client *client)
 				if (!IsOper(client) && iConf.hide_list && Find_channel_allowed(client, channel->chname))
 					continue;
 
+				/* Similarly, hide unjoinable channels for non-ircops since it would be confusing */
+				if (!IsOper(client) && !valid_channelname(channel->chname))
+					continue;
+
 				/* Much more readable like this -- codemastr */
 				if ((!lopt->showall))
 				{

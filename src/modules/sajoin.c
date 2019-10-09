@@ -157,8 +157,11 @@ CMD_FUNC(cmd_sajoin)
 			}
 
 			if (strlen(name) > CHANNELLEN)
-				name[CHANNELLEN] = 0;
-			clean_channelname(name);
+			{
+				sendnotice(client, "Channel name too long: %s", name);
+				continue;
+			}
+
 			if (*name == '0' && !atoi(name) && !sjmode)
 			{
 				(void)strcpy(jbuf, "0");
@@ -166,9 +169,10 @@ CMD_FUNC(cmd_sajoin)
 				parted = 1;
 				continue;
 			}
-			if (*name == '0' || !IsChannelName(name))
+
+			if (!valid_channelname(name))
 			{
-				sendnumeric(client, ERR_NOSUCHCHANNEL, name);
+				send_invalid_channelname(client, name);
 				continue;
 			}
 

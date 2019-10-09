@@ -62,7 +62,6 @@ char cmodestring[512];
 char *clean_ban_mask(char *, int, Client *);
 void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel);
 int sub1_from_channel(Channel *);
-void clean_channelname(char *);
 void del_invite(Client *, Channel *);
 
 inline int op_can_override(char* acl, Client *client,Channel *channel,void* extra)
@@ -866,54 +865,52 @@ int find_invex(Channel *channel, Client *client)
  * You must call this before creating a new channel,
  * eg in case of /JOIN.
  */
-void clean_channelname(char *cname)
+int valid_channelname(const char *cname)
 {
-	char *ch = cname;
-	char *end;
+	const char *p;
+
+	/* Channel name must start with a dash */
+	if (*cname != '#')
+		return 0;
+
+	if (strlen(cname) > CHANNELLEN)
+		return 0;
 
 	if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY)
 	{
 		/* The default up to and including UnrealIRCd 4 */
-		for (; *ch; ch++)
+		for (p = cname; *p; p++)
 		{
-			if (*ch < 33 || *ch == ',' || *ch == ':')
-			{
-				*ch = '\0';
-				break;
-			}
+			if (*p < 33 || *p == ',' || *p == ':')
+				return 0;
 		}
 	} else
 	if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ASCII)
 	{
 		/* The strict setting: only allow ASCII 32-128, except some chars */
-		for (; *ch; ch++)
+		for (p = cname; *p; p++)
 		{
-			if (*ch < 33 || *ch == ',' || *ch == ':' || *ch > 127)
-			{
-				*ch = '\0';
-				break;
-			}
+			if (*p < 33 || *p == ',' || *p == ':' || *p > 127)
+				return 0;
 		}
 	} else
 	if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_UTF8)
 	{
 		/* Only allow UTF8, and also disallow some chars */
-		for (; *ch; ch++)
+		for (p = cname; *p; p++)
 		{
-			if (*ch < 33 || *ch == ',' || *ch == ':')
-			{
-				*ch = '\0';
-				break;
-			}
+			if (*p < 33 || *p == ',' || *p == ':')
+				return 0;
 		}
 		/* And run it through the UTF8 validator */
-		if (!unrl_utf8_validate(cname, (const char **)&end))
-			*end = '\0';
+		if (!unrl_utf8_validate(cname, (const char **)&p))
+			return 0;
 	} else
 	{
 		/* Impossible */
 		abort();
 	}
+	return 1; /* Valid */
 }
 
 /*
@@ -1365,4 +1362,34 @@ int invisible_user_in_channel(Client *target, Channel *channel)
 		return 1;
 
 	return 0;
+}
+
+/** Send a message to the user that (s)he is using an invalid channel name.
+ * This is usually called after an if (MyUser(client) && !valid_channelname(name)).
+ * @param client      The client to send the message to.
+ * @param channelname The (invalid) channel that the user tried to join.
+ */
+void send_invalid_channelname(Client *client, char *channelname)
+{
+	char *reason;
+
+	if (strlen(channelname) > CHANNELLEN)
+	{
+		reason = "Channel name is too long";
+	} else {
+		switch(iConf.allowed_channelchars)
+		{
+			case ALLOWED_CHANNELCHARS_ASCII:
+				reason = "Channel name contains illegal characters (must be ASCII)";
+				break;
+			case ALLOWED_CHANNELCHARS_UTF8:
+				reason = "Channel name contains illegal characters (must be valid UTF8)";
+				break;
+			case ALLOWED_CHANNELCHARS_ANY:
+			default:
+				reason = "Channel name contains illegal characters";
+		}
+	}
+
+	sendnumeric(client, ERR_FORBIDDENCHANNEL, channelname, reason);
 }

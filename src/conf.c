@@ -9090,7 +9090,6 @@ int	_test_offchans(ConfigFile *conf, ConfigEntry *ce)
 {
 	int errors = 0;
 	ConfigEntry *cep, *cep2;
-	char checkchan[CHANNELLEN + 1];
 
 	if (!ce->ce_entries)
 	{
@@ -9107,9 +9106,7 @@ int	_test_offchans(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 			continue;
 		}
-		strcpy(checkchan, cep->ce_varname); /* safe */
-		clean_channelname(checkchan);
-		if (strcmp(checkchan, cep->ce_varname) || (*cep->ce_varname != '#'))
+		if (!valid_channelname(cep->ce_varname))
 		{
 			config_error("%s:%i: official-channels: '%s' is not a valid channel name.",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);

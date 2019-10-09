@@ -120,8 +120,11 @@ CMD_FUNC(cmd_mode)
 		return;
 	}
 
-	if (MyConnect(client))
-		clean_channelname(parv[1]);
+	if (MyConnect(client) && !valid_channelname(parv[1]))
+	{
+		sendnumeric(client, ERR_NOSUCHCHANNEL, parv[1]);
+		return;
+	}
 
 	if (parc < 3)
 	{
