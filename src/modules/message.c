@@ -482,7 +482,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 */
 CMD_FUNC(cmd_private)
 {
-	return cmd_message(client, recv_mtags, parc, parv, 0);
+	cmd_message(client, recv_mtags, parc, parv, 0);
 }
 
 /*
@@ -492,7 +492,7 @@ CMD_FUNC(cmd_private)
 */
 CMD_FUNC(cmd_notice)
 {
-	return cmd_message(client, recv_mtags, parc, parv, 1);
+	cmd_message(client, recv_mtags, parc, parv, 1);
 }
 
 /** Make a viewable dcc filename.
