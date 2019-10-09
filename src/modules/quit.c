@@ -71,10 +71,16 @@ CMD_FUNC(cmd_quit)
 		Hook *tmphook;
 
 		if (STATIC_QUIT)
-			return exit_client(client, recv_mtags, STATIC_QUIT);
+		{
+			exit_client(client, recv_mtags, STATIC_QUIT);
+			return;
+		}
 
 		if (IsVirus(client))
-			return exit_client(client, recv_mtags, "Client exited");
+		{
+			exit_client(client, recv_mtags, "Client exited");
+			return;
+		}
 
 		if (match_spamfilter(client, comment, SPAMF_QUIT, NULL, 0, NULL))
 		{

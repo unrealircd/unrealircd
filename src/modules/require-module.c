@@ -476,7 +476,8 @@ CMD_FUNC(cmd_smod)
 	if (abort)
 	{
 		sendto_umode_global(UMODE_OPER, "ABORTING LINK: %s <=> %s", me.name, client->name);
-		return exit_client(client, NULL, "ABORTING LINK");
+		exit_client(client, NULL, "ABORTING LINK");
+		return;
 	}
 }
 

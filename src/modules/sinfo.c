@@ -57,7 +57,8 @@ CMD_FUNC(sinfo_server)
 		 * failure to do so will lead to potential desyncs or other major
 		 * issues.
 		 */
-		return exit_client(client, NULL, "Protocol error: you cannot send SINFO about yourself");
+		exit_client(client, NULL, "Protocol error: you cannot send SINFO about yourself");
+		return;
 	}
 
 	/* :SID SINFO up_since protocol umodes chanmodes nickchars :software name

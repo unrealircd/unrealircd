@@ -508,11 +508,15 @@ CMD_FUNC(cmd_server)
 	if (parc < 4 || (!*parv[3]))
 	{
 		sendto_one(client, NULL, "ERROR :Not enough SERVER parameters");
-		return exit_client(client, NULL,  "Not enough parameters");		
+		exit_client(client, NULL,  "Not enough parameters");
+		return;
 	}
 
 	if (MyConnect(client) && IsUnknown(client) && (client->local->listener->options & LISTENER_CLIENTSONLY))
-		return exit_client(client, NULL, "This port is for clients only");
+	{
+		exit_client(client, NULL, "This port is for clients only");
+		return;
+	}
 
 	/* Now, let us take a look at the parameters we got
 	 * Passes here:
@@ -534,14 +538,15 @@ CMD_FUNC(cmd_server)
 		    (SNO_JUNK,
 		    "WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
 		    servername, get_client_name(client, TRUE));
-
-		return exit_client(client, NULL, "Bogus server name");
+		exit_client(client, NULL, "Bogus server name");
+		return;
 	}
 
 	if ((IsUnknown(client) || IsHandshake(client)) && !client->local->passwd)
 	{
 		sendto_one(client, NULL, "ERROR :Missing password");
-		return exit_client(client, NULL, "Missing password");
+		exit_client(client, NULL, "Missing password");
+		return;
 	}
 
 	/*
@@ -598,7 +603,8 @@ CMD_FUNC(cmd_server)
 			{
 				sendto_ops_and_log("Refused connection from %s. Rejected by deny link { } block.",
 					get_client_host(client));
-				return exit_client(client, NULL, "Disallowed by connection rule");
+				exit_client(client, NULL, "Disallowed by connection rule");
+				return;
 			}
 		}
 		if (aconf->options & CONNECT_QUARANTINE)
@@ -644,7 +650,8 @@ CMD_FUNC(cmd_server_remote)
 			sendto_ops_and_log("Link %s rejected, server trying to link with my name (%s)",
 				get_client_name(client, TRUE), me.name);
 			sendto_one(client, NULL, "ERROR: Server %s exists (it's me!)", me.name);
-			return exit_client(client, NULL, "Server Exists");
+			exit_client(client, NULL, "Server Exists");
+			return;
 		}
 
 		// FIXME: verify this code:
@@ -659,14 +666,16 @@ CMD_FUNC(cmd_server_remote)
 		    ("Link %s cancelled, server %s already exists from %s",
 		    get_client_name(acptr, TRUE), servername,
 		    (ocptr->direction ? ocptr->direction->name : "<nobody>"));
-		return exit_client(acptr, NULL, "Server Exists");
+		exit_client(acptr, NULL, "Server Exists");
+		return;
 	}
 	if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
 		sendto_ops_and_log("Cancelling link %s, banned server %s",
 			get_client_name(cptr, TRUE), servername);
 		sendto_one(cptr, NULL, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
-		return exit_client(cptr, NULL, "Brought in banned server");
+		exit_client(cptr, NULL, "Brought in banned server");
+		return;
 	}
 	/* OK, let us check in the data now now */
 	hop = atol(parv[2]);
@@ -674,20 +683,23 @@ CMD_FUNC(cmd_server_remote)
 	if (!cptr->serv->conf)
 	{
 		sendto_ops_and_log("Internal error: lost conf for %s!!, dropping link", cptr->name);
-		return exit_client(cptr, NULL, "Lost configuration");
+		exit_client(cptr, NULL, "Lost configuration");
+		return;
 	}
 	aconf = cptr->serv->conf;
 	if (!aconf->hub)
 	{
 		sendto_ops_and_log("Link %s cancelled, is Non-Hub but introduced Leaf %s",
 			cptr->name, servername);
-		return exit_client(cptr, NULL, "Non-Hub Link");
+		exit_client(cptr, NULL, "Non-Hub Link");
+		return;
 	}
 	if (!match_simple(aconf->hub, servername))
 	{
 		sendto_ops_and_log("Link %s cancelled, linked in %s, which hub config disallows",
 			cptr->name, servername);
-		return exit_client(cptr, NULL, "Not matching hub configuration");
+		exit_client(cptr, NULL, "Not matching hub configuration");
+		return;
 	}
 	if (aconf->leaf)
 	{
@@ -695,14 +707,16 @@ CMD_FUNC(cmd_server_remote)
 		{
 			sendto_ops_and_log("Link %s(%s) cancelled, disallowed by leaf configuration",
 				cptr->name, servername);
-			return exit_client(cptr, NULL, "Disallowed by leaf configuration");
+			exit_client(cptr, NULL, "Disallowed by leaf configuration");
+			return;
 		}
 	}
 	if (aconf->leaf_depth && (hop > aconf->leaf_depth))
 	{
-			sendto_ops_and_log("Link %s(%s) cancelled, too deep depth",
-				cptr->name, servername);
-			return exit_client(cptr, NULL, "Too deep link depth (leaf)");
+		sendto_ops_and_log("Link %s(%s) cancelled, too deep depth",
+			cptr->name, servername);
+		exit_client(cptr, NULL, "Too deep link depth (leaf)");
+		return;
 	}
 	acptr = make_client(cptr, find_server(client->name, cptr));
 	(void)make_server(acptr);

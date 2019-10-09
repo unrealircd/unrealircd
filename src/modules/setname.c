@@ -100,7 +100,8 @@ CMD_FUNC(cmd_setname)
 		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",client,NULL,NULL,NULL) &&
 		    ((bconf = Find_ban(NULL, client->info, CONF_BAN_REALNAME))))
 		{
-			return banned_client(client, "realname", bconf->reason?bconf->reason:"", 0, 0);
+			banned_client(client, "realname", bconf->reason?bconf->reason:"", 0, 0);
+			return;
 		}
 	} else {
 		/* remote user */

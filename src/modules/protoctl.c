@@ -165,7 +165,8 @@ CMD_FUNC(cmd_protoctl)
 				snprintf(buf, sizeof(buf), "Server %s has utf8 in set::allowed-nickchars but %s does not. Link rejected.",
 					me.name, *client->name ? client->name : "other side");
 				sendto_realops("\002ERROR\001 %s", buf);
-				return exit_client(client, NULL, buf);
+				exit_client(client, NULL, buf);
+				return;
 			}
 			/* We compare the character sets to see if we should warn opers about any mismatch... */
 			if (strcmp(value, charsys_get_current_languages()))
@@ -173,7 +174,6 @@ CMD_FUNC(cmd_protoctl)
 				sendto_realops("\002WARNING!!!!\002 Link %s does not have the same set::allowed-nickchars settings (or is "
 							"a different UnrealIRCd version), this MAY cause display issues. Our charset: '%s', theirs: '%s'",
 					get_client_name(client, FALSE), charsys_get_current_languages(), value);
-				/* return exit_client(client, NULL, "Nick charset mismatch"); */
 			}
 			if (client->serv)
 				safe_strdup(client->serv->features.nickchars, value);
@@ -210,20 +210,30 @@ CMD_FUNC(cmd_protoctl)
 			char *sid = value;
 
 			if (!IsServer(client) && !IsEAuth(client) && !IsHandshake(client))
-				return exit_client(client, NULL, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
+			{
+				exit_client(client, NULL, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
+				return;
+			}
 
 			if (*client->id && (strlen(client->id)==3))
-				return exit_client(client, NULL, "Got PROTOCTL SID twice");
+			{
+				exit_client(client, NULL, "Got PROTOCTL SID twice");
+				return;
+			}
 
 			if (IsServer(client))
-				return exit_client(client, NULL, "Got PROTOCTL SID after SERVER, that's the wrong order!");
+			{
+				exit_client(client, NULL, "Got PROTOCTL SID after SERVER, that's the wrong order!");
+				return;
+			}
 
 			if ((aclient = hash_find_id(sid, NULL)) != NULL)
 			{
 				sendto_one(client, NULL, "ERROR :SID %s already exists from %s", aclient->id, aclient->name);
 				sendto_snomask(SNO_SNOTICE, "Link %s rejected - SID %s already exists from %s",
 						get_client_name(client, FALSE), aclient->id, aclient->name);
-				return exit_client(client, NULL, "SID collision");
+				exit_client(client, NULL, "SID collision");
+				return;
 			}
 
 			if (*client->id)
@@ -244,7 +254,10 @@ CMD_FUNC(cmd_protoctl)
 			ConfigItem_link *aconf = NULL;
 
 			if (IsEAuth(client))
-				return exit_client(client, NULL, "PROTOCTL EAUTH received twice");
+			{
+				exit_client(client, NULL, "PROTOCTL EAUTH received twice");
+				return;
+			}
 
 			strlcpy(buf, value, sizeof(buf));
 			p = strchr(buf, ' ');
@@ -262,8 +275,8 @@ CMD_FUNC(cmd_protoctl)
 				    (SNO_JUNK,
 				    "WARNING: Bogus server name (%s) from %s in EAUTH (maybe just a fishy client)",
 				    servername ? servername : "", get_client_name(client, TRUE));
-
-				return exit_client(client, NULL, "Bogus server name");
+				exit_client(client, NULL, "Bogus server name");
+				return;
 			}
 			
 			
@@ -323,7 +336,8 @@ CMD_FUNC(cmd_protoctl)
 					aclient->id, aclient->name);
 				sendto_realops("Link %s cancelled, server with SID %s (%s) already exists",
 					get_client_name(aclient, TRUE), aclient->id, aclient->name);
-				return exit_client(client, NULL, "Server Exists (or non-unique me::sid)");
+				exit_client(client, NULL, "Server Exists (or non-unique me::sid)");
+				return;
 			}
 			
 			aclient = find_pending_net_duplicates(client, &srv, &sid);
@@ -334,7 +348,8 @@ CMD_FUNC(cmd_protoctl)
 				sendto_realops("Link %s cancelled, server would introduce server with SID %s, which "
 				               "server %s is also about to introduce. Just wait a moment for it to synchronize...",
 				               get_client_name(aclient, TRUE), sid, get_client_name(srv, TRUE));
-				return exit_client(client, NULL, "Server Exists (just wait a moment)");
+				exit_client(client, NULL, "Server Exists (just wait a moment)");
+				return;
 			}
 
 			/* Send our PROTOCTL SERVERS= back if this was NOT a response */
@@ -388,7 +403,8 @@ CMD_FUNC(cmd_protoctl)
 			{
 				sendto_realops("%s", msg);
 				ircd_log(LOG_ERROR, "%s", msg);
-				return exit_client(client, NULL, linkerr);
+				exit_client(client, NULL, linkerr);
+				return;
 			}
 		}
 		else if (!strcmp(name, "MLOCK"))

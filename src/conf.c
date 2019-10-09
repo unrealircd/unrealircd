@@ -748,6 +748,7 @@ char *allowed_channelchars_valtostr(AllowedChannelChars v)
 			/* Not possible */
 			abort();
 	}
+	abort(); /* Windows does not understand... */
 }
 
 ConfigFile *config_load(char *filename)
