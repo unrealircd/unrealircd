@@ -361,6 +361,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 void _do_join(Client *client, int parc, char *parv[])
 {
 	char jbuf[BUFSIZE], jbuf2[BUFSIZE];
+	char *orig_parv1;
 	Membership *lp;
 	Channel *channel;
 	char *name, *key = NULL;
@@ -370,7 +371,7 @@ void _do_join(Client *client, int parc, char *parv[])
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("JOIN");
 
-#define RET() { bouncedtimes--; return; }
+#define RET() do { bouncedtimes--; parv[1] = orig_parv1; return; } while(0)
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
@@ -378,15 +379,14 @@ void _do_join(Client *client, int parc, char *parv[])
 		return;
 	}
 	bouncedtimes++;
-	/* don't use 'return;' but 'RET()' from here ;p */
+	orig_parv1 = parv[1];
+	/* don't use 'return;' but 'RET();' from here ;p */
 
 	if (bouncedtimes > MAXBOUNCE)
 	{
 		/* bounced too many times. yeah.. should be in the link module, I know.. then again, who cares.. */
-		sendnotice(client,
-		    "*** Couldn't join %s ! - Link setting was too bouncy",
-		    parv[1]);
-		RET()
+		sendnotice(client, "*** Couldn't join %s ! - Link setting was too bouncy", parv[1]);
+		RET();
 	}
 
 	*jbuf = '\0';
@@ -443,7 +443,7 @@ void _do_join(Client *client, int parc, char *parv[])
 
 	/* We are going to overwrite 'jbuf' with the calls to strtoken()
 	 * a few lines further down. Copy it to 'jbuf2' and make that
-	 * the new parv[1].
+	 * the new parv[1].. or at least temporarily.
 	 */
 	strlcpy(jbuf2, jbuf, sizeof(jbuf2));
 	parv[1] = jbuf2;
@@ -509,7 +509,7 @@ void _do_join(Client *client, int parc, char *parv[])
 				if (client->user->joined >= MAXCHANNELSPERUSER)
 				{
 					sendnumeric(client, ERR_TOOMANYCHANNELS, name);
-					RET()
+					RET();
 				}
 /* RESTRICTCHAN */
 			if (conf_deny_channel)
@@ -621,7 +621,7 @@ void _do_join(Client *client, int parc, char *parv[])
 		join_channel(channel, client, mtags, flags);
 		free_message_tags(mtags);
 	}
-	RET()
+	RET();
 #undef RET
 }
 
