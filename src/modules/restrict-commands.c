@@ -21,7 +21,7 @@
 
 ModuleHeader MOD_HEADER = {
 	"restrict-commands",
-	"1.0",
+	"1.0.1",
 	"Restrict specific commands unless certain conditions have been met",
 	"UnrealIRCd Team",
 	"unrealircd-5",
@@ -373,12 +373,12 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 	{
 		if (rcmd->disable)
 		{
-			sendnotice(client, "The command %s has been disabled by the network administrators", ovr->command->cmd);
+			sendnumericfmt(client, ERR_UNKNOWNCOMMAND, "The command %s has been disabled by the network administrators", ovr->command->cmd);
 			return;
 		}
 		if (!rcmd_canbypass(client, rcmd))
 		{
-			sendnotice(client, "You cannot use the %s command until you've been connected for %ld seconds or more", ovr->command->cmd, rcmd->connect_delay);
+			sendnumericfmt(client, ERR_UNKNOWNCOMMAND, "You cannot use the %s command until you've been connected for %ld seconds or more", ovr->command->cmd, rcmd->connect_delay);
 			return;
 		}
 	}
