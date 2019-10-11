@@ -1114,6 +1114,8 @@ int stats_set(Client *client, char *para)
 		sendtxtnumeric(client, "anti-flood::away-flood: %d per %s", AWAY_COUNT, pretty_time_val(AWAY_PERIOD));
 	}
 	sendtxtnumeric(client, "anti-flood::nick-flood: %d per %s", NICK_COUNT, pretty_time_val(NICK_PERIOD));
+	sendtxtnumeric(client, "handshake-timeout: %s", pretty_time_val(iConf.handshake_timeout));
+	sendtxtnumeric(client, "sasl-timeout: %s", pretty_time_val(iConf.sasl_timeout));
 	sendtxtnumeric(client, "ident::connect-timeout: %s", pretty_time_val(IDENT_CONNECT_TIMEOUT));
 	sendtxtnumeric(client, "ident::read-timeout: %s", pretty_time_val(IDENT_READ_TIMEOUT));
 	sendtxtnumeric(client, "spamfilter::ban-time: %s", pretty_time_val(SPAMFILTER_BAN_TIME));

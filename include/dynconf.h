@@ -155,6 +155,7 @@ struct Configuration {
 	int hide_list;
 	int max_unknown_connections_per_ip;
 	long handshake_timeout;
+	long sasl_timeout;
 	long handshake_delay;
 	int ban_include_username;
 	char *reject_message_too_many_connections;

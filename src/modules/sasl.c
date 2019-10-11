@@ -37,6 +37,7 @@ char *saslmechlist_serialize(ModData *m);
 void saslmechlist_unserialize(char *str, ModData *m);
 char *sasl_capability_parameter(Client *client);
 int sasl_server_synched(Client *client);
+EVENT(sasl_timeout);
 
 /* Macros */
 #define MSG_AUTHENTICATE "AUTHENTICATE"
@@ -143,12 +144,14 @@ CMD_FUNC(cmd_sasl)
 			*target->local->sasl_agent = '\0';
 			if (*parv[4] == 'F')
 			{
+				client->local->sasl_sent_time = 0;
 				target->local->since += 7; /* bump fakelag due to failed authentication attempt */
 				RunHookReturn2(HOOKTYPE_SASL_RESULT, target, 0, !=0);
 				sendnumeric(target, ERR_SASLFAIL);
 			}
 			else if (*parv[4] == 'S')
 			{
+				client->local->sasl_sent_time = 0;
 				target->local->sasl_complete++;
 				RunHookReturn2(HOOKTYPE_SASL_RESULT, target, 1, !=0);
 				sendnumeric(target, RPL_SASLSUCCESS);
@@ -213,10 +216,13 @@ CMD_FUNC(cmd_authenticate)
 		    me.name, AGENT_SID(agent_p), client->id, parv[1]);
 
 	client->local->sasl_out++;
+	client->local->sasl_sent_time = TStime();
 }
 
 static int abort_sasl(Client *client)
 {
+	client->local->sasl_sent_time = 0;
+
 	if (client->local->sasl_out == 0 || client->local->sasl_complete)
 		return 0;
 
@@ -358,6 +364,8 @@ MOD_INIT()
 	mreq.type = MODDATATYPE_CLIENT;
 	ModDataAdd(modinfo->handle, mreq);
 
+	EventAdd(modinfo->handle, "sasl_timeout", sasl_timeout, NULL, 2000, 0);
+
 	return MOD_SUCCESS;
 }
 
@@ -401,4 +409,19 @@ char *sasl_capability_parameter(Client *client)
 	}
 
 	return NULL;
+}
+
+EVENT(sasl_timeout)
+{
+	Client *client;
+
+	list_for_each_entry(client, &unknown_list, lclient_node)
+	{
+		if (client->local->sasl_sent_time &&
+		    (TStime() - client->local->sasl_sent_time > iConf.sasl_timeout))
+		{
+			sendnotice(client, "SASL request timed out (server or client misbehaving) -- aborting SASL and continuing connection...");
+			abort_sasl(client);
+		}
+	}
 }

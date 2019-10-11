@@ -1543,6 +1543,7 @@ void config_setdefaultsettings(Configuration *i)
 	safe_strdup(i->network.x_prefix_quit, "Quit");
 	i->max_unknown_connections_per_ip = 3;
 	i->handshake_timeout = 30;
+	i->sasl_timeout = 15;
 	i->handshake_delay = -1;
 	i->broadcast_channel_messages = BROADCAST_CHANNEL_MESSAGES_AUTO;
 
@@ -7630,6 +7631,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.handshake_timeout = config_checkval(cep->ce_vardata, CFG_TIME);
 		}
+		else if (!strcmp(cep->ce_varname, "sasl-timeout"))
+		{
+			tempiConf.sasl_timeout = config_checkval(cep->ce_vardata, CFG_TIME);
+		}
 		else if (!strcmp(cep->ce_varname, "handshake-delay"))
 		{
 			tempiConf.handshake_delay = config_checkval(cep->ce_vardata, CFG_TIME);
@@ -8753,6 +8758,17 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			if (v < 5)
 			{
 				config_error("%s:%i: set::handshake-timeout: value should be at least 5 seconds.",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "sasl-timeout")) {
+			int v;
+			CheckNull(cep);
+			v = config_checkval(cep->ce_vardata, CFG_TIME);
+			if (v < 5)
+			{
+				config_error("%s:%i: set::sasl-timeout: value should be at least 5 seconds.",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
