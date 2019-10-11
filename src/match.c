@@ -410,6 +410,7 @@ Match *unreal_create_match(MatchType type, char *str, char **error)
 		m->ext.pcre2_expr = pcre2_compile(str, PCRE2_ZERO_TERMINATED, options, &errorcode, &erroroffset, NULL);
 		if (m->ext.pcre2_expr == NULL)
 		{
+			*buf2 = '\0';
 			pcre2_get_error_message(errorcode, buf2, sizeof(buf2));
 			if (error)
 			{
