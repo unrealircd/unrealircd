@@ -376,12 +376,16 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 	{
 		if (rcmd->disable)
 		{
-			sendnumericfmt(client, ERR_UNKNOWNCOMMAND, ":The command %s has been disabled by the network administrators", ovr->command->cmd);
+			sendnumericfmt(client, ERR_UNKNOWNCOMMAND,
+			               "%s :This command is disabled by the network administrator",
+			               ovr->command->cmd);
 			return;
 		}
 		if (!rcmd_canbypass(client, rcmd))
 		{
-			sendnumericfmt(client, ERR_UNKNOWNCOMMAND, ":You cannot use the %s command until you've been connected for %ld seconds or more", ovr->command->cmd, rcmd->connect_delay);
+			sendnumericfmt(client, ERR_UNKNOWNCOMMAND,
+			               "%s :You must be connected for at least %ld seconds before you can use this command",
+			               ovr->command->cmd, rcmd->connect_delay);
 			return;
 		}
 	}
