@@ -57,7 +57,7 @@ CMD_FUNC(cmd_smod);
 int reqmods_hook_serverconnect(Client *client);
 
 // Globals
-extern Module *Modules;
+extern MODVAR Module *Modules;
 DenyMod *DenyModList = NULL;
 
 struct cfgstruct {
