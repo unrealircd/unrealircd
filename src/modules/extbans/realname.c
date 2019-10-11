@@ -74,6 +74,9 @@ char *extban_realname_conv_param(char *para)
 
 	mask = retbuf+3;
 
+	if (!*mask)
+		return NULL; /* don't allow "~r:" */
+
 	if (strlen(mask) > REALLEN + 3)
 		mask[REALLEN + 3] = '\0';
 

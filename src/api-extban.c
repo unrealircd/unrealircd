@@ -122,7 +122,7 @@ void ExtbanDel(Extban *eb)
 
 /** General is_ok for n!u@h stuff that also deals with recursive extbans.
  */
-int extban_is_ok_nuh_extban(Client* client, Channel* channel, char* para, int checkt, int what, int what2)
+int extban_is_ok_nuh_extban(Client *client, Channel* channel, char *para, int checkt, int what, int what2)
 {
 	char *mask = (para + 3);
 	Extban *p = NULL;
@@ -173,15 +173,20 @@ int extban_is_ok_nuh_extban(Client* client, Channel* channel, char* para, int ch
  */
 char *extban_conv_param_nuh(char *para)
 {
-char *cp, *user, *host, *mask, *ret = NULL;
-static char retbuf[USERLEN + NICKLEN + HOSTLEN + 32];
-char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
-char pfix[8];
+	char *cp, *user, *host, *mask, *ret = NULL;
+	static char retbuf[USERLEN + NICKLEN + HOSTLEN + 32];
+	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
+	char pfix[8];
+
+	if (strlen(para)<3)
+		return NULL; /* normally impossible */
 
 	strlcpy(tmpbuf, para, sizeof(retbuf));
 	mask = tmpbuf + 3;
 	strlcpy(pfix, tmpbuf, mask - tmpbuf + 1);
 
+	if (!*mask)
+		return NULL; /* empty extban */
 	if ((*mask == '~') && !strchr(mask, '@'))
 		return NULL; /* not a user@host ban, too confusing. */
 	if ((user = strchr((cp = mask), '!')))
@@ -203,7 +208,7 @@ char pfix[8];
 
 /** conv_param to deal with stacked extbans.
  */
-char* extban_conv_param_nuh_or_extban(char* para)
+char *extban_conv_param_nuh_or_extban(char *para)
 {
 #if (USERLEN + NICKLEN + HOSTLEN + 32) > 256
  #error "wtf?"
@@ -217,7 +222,7 @@ char* extban_conv_param_nuh_or_extban(char* para)
 	Extban *p = NULL;
 	static int extban_recursion = 0;
 
-	if (is_extended_ban(para+3))
+	if ((strlen(para)>3) && is_extended_ban(para+3))
 	{
 		/* We're dealing with a stacked extended ban.
 		 * Rules:

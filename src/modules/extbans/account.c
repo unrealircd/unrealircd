@@ -67,12 +67,15 @@ MOD_UNLOAD()
 /** Account bans */
 char *extban_account_conv_param(char *para)
 {
-	char *mask;
+	char *mask, *acc;
 	static char retbuf[NICKLEN + 4];
 
 	strlcpy(retbuf, para, sizeof(retbuf)); /* truncate */
 
-	if (!strcmp(retbuf+3, "0"))
+	acc = retbuf+3;
+	if (!*acc)
+		return NULL; /* don't allow "~a:" */
+	if (!strcmp(acc, "0"))
 		return NULL; /* ~a:0 would mean ban all non-regged, but we already have +R for that. */
 
 	return retbuf;

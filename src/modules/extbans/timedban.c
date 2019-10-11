@@ -233,21 +233,22 @@ int generic_ban_is_ok(Client *client, Channel *channel, char *mask, int checkt, 
 		Extban *p;
 
 		/* This portion is copied from clean_ban_mask() */
-		if (is_extended_ban(mask) &&
-		    RESTRICT_EXTENDEDBANS && MyUser(client) &&
-		    !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,NULL,NULL))
+		if (is_extended_ban(mask) && MyUser(client))
 		{
-			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
+			if (RESTRICT_EXTENDEDBANS && !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,NULL,NULL))
 			{
-				if (checkt == EXBCHK_ACCESS_ERR)
-					sendnotice(client, "Setting/removing of extended bans has been disabled");
-				return 0; /* REJECT */
-			}
-			if (strchr(RESTRICT_EXTENDEDBANS, mask[1]))
-			{
-				if (checkt == EXBCHK_ACCESS_ERR)
-					sendnotice(client, "Setting/removing of extended bantypes '%s' has been disabled", RESTRICT_EXTENDEDBANS);
-				return 0; /* REJECT */
+				if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
+				{
+					if (checkt == EXBCHK_ACCESS_ERR)
+						sendnotice(client, "Setting/removing of extended bans has been disabled");
+					return 0; /* REJECT */
+				}
+				if (strchr(RESTRICT_EXTENDEDBANS, mask[1]))
+				{
+					if (checkt == EXBCHK_ACCESS_ERR)
+						sendnotice(client, "Setting/removing of extended bantypes '%s' has been disabled", RESTRICT_EXTENDEDBANS);
+					return 0; /* REJECT */
+				}
 			}
 			/* And next is inspired by cmd_mode */
 			p = findmod_by_bantype(mask[1]);
