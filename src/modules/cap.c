@@ -415,5 +415,5 @@ CMD_FUNC(cmd_cap)
 		return;
 	}
 
-	return (cmd->func)(client, parv[2]);
+	cmd->func(client, parv[2]);
 }

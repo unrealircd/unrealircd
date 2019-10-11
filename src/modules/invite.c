@@ -79,7 +79,10 @@ CMD_FUNC(cmd_invite)
 	Hook *h;
 
 	if (parc == 1)
-		return send_invite_list(client);
+	{
+		send_invite_list(client);
+		return;
+	}
 	
 	if (parc < 3 || *parv[1] == '\0')
 	{

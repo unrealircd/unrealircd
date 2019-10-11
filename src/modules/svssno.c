@@ -124,10 +124,10 @@ void do_svssno(Client *client, int parc, char *parv[], int show_change)
 
 CMD_FUNC(cmd_svssno)
 {
-	return do_svssno(client, parc, parv, 0);
+	do_svssno(client, parc, parv, 0);
 }
 
 CMD_FUNC(cmd_svs2sno)
 {
-	return do_svssno(client, parc, parv, 1);
+	do_svssno(client, parc, parv, 1);
 }

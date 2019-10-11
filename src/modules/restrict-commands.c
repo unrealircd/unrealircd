@@ -366,7 +366,10 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 	RestrictedCommand *rcmd;
 
 	if (!MyUser(client) || !client->local || IsOper(client) || IsULine(client))
-		return CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+	{
+		CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+		return;
+	}
 
 	rcmd = find_restrictions_bycmd(ovr->command->cmd);
 	if (rcmd)
@@ -384,5 +387,5 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 	}
 
 	// No restrictions apply, process command as normal =]
-	return CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+	CallCommandOverride(ovr, client, recv_mtags, parc, parv);
 }

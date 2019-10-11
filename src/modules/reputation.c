@@ -833,10 +833,9 @@ CMD_FUNC(reputation_server_cmd)
 CMD_FUNC(reputation_cmd)
 {
 	if (MyUser(client))
-		return reputation_user_cmd(client, recv_mtags, parc, parv);
-
-	if (IsServer(client))
-		return reputation_server_cmd(client, recv_mtags, parc, parv);
+		reputation_user_cmd(client, recv_mtags, parc, parv);
+	else if (IsServer(client))
+		reputation_server_cmd(client, recv_mtags, parc, parv);
 }
 
 int reputation_whois(Client *client, Client *target)

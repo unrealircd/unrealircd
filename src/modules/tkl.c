@@ -1416,7 +1416,10 @@ CMD_FUNC(cmd_eline)
 	 * The 'add' case is checked later.
 	 */
 	if ((parc < 2) || BadPtr(parv[1]))
-		return eline_syntax(client);
+	{
+		eline_syntax(client);
+		return;
+	}
 
 	mask = parv[1];
 	if (*mask == '-')
@@ -1436,7 +1439,10 @@ CMD_FUNC(cmd_eline)
 	if (add)
 	{
 		if ((parc < 5) || BadPtr(parv[4]))
-			return eline_syntax(client);
+		{
+			eline_syntax(client);
+			return;
+		}
 		bantypes = parv[2];
 		reason = parv[4];
 	}
@@ -1524,7 +1530,8 @@ CMD_FUNC(cmd_eline)
 		if ((secs <= 0) && (*parv[3] != '0'))
 		{
 			sendnotice(client, "*** [error] The expiry time you specified is out of range!");
-			return eline_syntax(client);
+			eline_syntax(client);
+			return;
 		}
 	}
 
@@ -1578,7 +1585,7 @@ void spamfilter_new_usage(Client *client, char *parv[])
 	if (*parv[2] != '-')
 		sendnotice(client, "Using the old 3.2.x /SPAMFILTER syntax? Note the new -regex/-posix/-simple field!!");
 
-	return spamfilter_usage(client);
+	spamfilter_usage(client);
 } 
 
 /** Delete a spamfilter by ID (the ID can be obtained via '/SPAMFILTER del' */
@@ -1707,14 +1714,21 @@ CMD_FUNC(cmd_spamfilter)
 			do_cmd(client, recv_mtags, "STATS", 4, parv);
 			return;
 		}
-		return spamfilter_del_by_id(client, parv[2]);
+		spamfilter_del_by_id(client, parv[2]);
+		return;
 	}
 
 	if ((parc == 7) && (*parv[2] != '-'))
-		return spamfilter_new_usage(client,parv);
+	{
+		spamfilter_new_usage(client,parv);
+		return;
+	}
 
 	if ((parc < 8) || BadPtr(parv[7]))
-		return spamfilter_usage(client);
+	{
+		spamfilter_usage(client);
+		return;
+	}
 
 	/* parv[1]: [add|del|+|-]
 	 * parv[2]: match-type
@@ -1731,7 +1745,8 @@ CMD_FUNC(cmd_spamfilter)
 	else
 	{
 		sendnotice(client, "1st parameter invalid");
-		return spamfilter_usage(client);
+		spamfilter_usage(client);
+		return;
 	}
 
 	if ((whattodo == 0) && !strcasecmp(parv[2]+1, "posix"))
@@ -1744,12 +1759,16 @@ CMD_FUNC(cmd_spamfilter)
 	match_type = unreal_match_method_strtoval(parv[2]+1);
 	if (!match_type)
 	{
-		return spamfilter_new_usage(client,parv);
+		spamfilter_new_usage(client, parv);
+		return;
 	}
 
 	targets = spamfilter_gettargets(parv[3], client);
 	if (!targets)
-		return spamfilter_usage(client);
+	{
+		spamfilter_usage(client);
+		return;
+	}
 
 	strlcpy(targetbuf, spamfilter_target_inttostring(targets), sizeof(targetbuf));
 
@@ -1757,7 +1776,8 @@ CMD_FUNC(cmd_spamfilter)
 	if (!action)
 	{
 		sendnotice(client, "Invalid 'action' field (%s)", parv[4]);
-		return spamfilter_usage(client);
+		spamfilter_usage(client);
+		return;
 	}
 	actionbuf[0] = banact_valtochar(action);
 	actionbuf[1] = '\0';
@@ -4023,9 +4043,9 @@ CMD_FUNC(_cmd_tkl)
 	switch (*parv[1])
 	{
 		case '+':
-			return cmd_tkl_add(client, recv_mtags, parc, parv);
+			cmd_tkl_add(client, recv_mtags, parc, parv);
 		case '-':
-			return cmd_tkl_del(client, recv_mtags, parc, parv);
+			cmd_tkl_del(client, recv_mtags, parc, parv);
 		default:
 			break;
 	}

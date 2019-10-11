@@ -157,7 +157,7 @@ CMD_FUNC(sinfo_user)
 CMD_FUNC(cmd_sinfo)
 {
 	if (IsServer(client))
-		return sinfo_server(client, recv_mtags, parc, parv);
+		sinfo_server(client, recv_mtags, parc, parv);
 	else if (MyUser(client))
-		return sinfo_user(client, recv_mtags, parc, parv);
+		sinfo_user(client, recv_mtags, parc, parv);
 }

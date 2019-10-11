@@ -437,7 +437,7 @@ CMD_FUNC(cmd_webirc)
 	}
 
 	/* And do our job.. */
-	return dowebirc(client, ip, host, options);
+	dowebirc(client, ip, host, options);
 }
 
 int webirc_check_init(Client *client, char *sockn, size_t size)

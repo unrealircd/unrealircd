@@ -156,7 +156,10 @@ CMD_FUNC(cmd_pong)
 	char *origin, *destination;
 
 	if (!IsRegistered(client))
-		return cmd_nospoof(client, recv_mtags, parc, parv);
+	{
+		cmd_nospoof(client, recv_mtags, parc, parv);
+		return;
+	}
 
 	if (parc < 2 || *parv[1] == '\0')
 	{

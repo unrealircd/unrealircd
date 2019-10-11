@@ -620,7 +620,8 @@ CMD_FUNC(cmd_server)
 	}
 	else
 	{
-		return cmd_server_remote(client, recv_mtags, parc, parv);
+		cmd_server_remote(client, recv_mtags, parc, parv);
+		return;
 	}
 }
 

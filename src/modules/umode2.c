@@ -70,5 +70,5 @@ CMD_FUNC(cmd_umode2)
 
 	if (!parv[1])
 		return;
-	return cmd_umode(client, recv_mtags, (parc > 3) ? 4 : 3, xparv);
+	cmd_umode(client, recv_mtags, (parc > 3) ? 4 : 3, xparv);
 }

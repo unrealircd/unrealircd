@@ -323,7 +323,10 @@ CMD_OVERRIDE_FUNC(override_map)
 		parv[1] = "*";
 	
 	if (IsOper(client))
-		return CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+	{
+		CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+		return;
+	}
 
 	if (Settings.disable_map)
 	{
@@ -360,7 +363,10 @@ CMD_OVERRIDE_FUNC(override_links)
 	int flat = (FLAT_MAP && !IsOper(client)) ? 1 : 0;
 
 	if (IsOper(client))
-		return CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+	{
+		CallCommandOverride(ovr, client, recv_mtags, parc, parv);
+		return;
+	}
 
 	if (Settings.disable_links)
 	{

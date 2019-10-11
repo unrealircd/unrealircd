@@ -179,7 +179,8 @@ int rmtkl_tryremove(Client *client, TKLType *tkltype, TKL *tkl, char *uhmask, ch
 	return 1;
 }
 
-CMD_FUNC(rmtkl) {
+CMD_FUNC(rmtkl)
+{
 	TKL *tkl, *next;
 	TKLType *tkltype;
 	char *types, *uhmask, *commentmask, *p;
@@ -195,7 +196,10 @@ CMD_FUNC(rmtkl) {
 	}
 
 	if (IsNotParam(1))
-		return dump_str(client, rmtkl_help);
+	{
+		dump_str(client, rmtkl_help);
+		return;
+	}
 
 	if (IsNotParam(2))
 	{

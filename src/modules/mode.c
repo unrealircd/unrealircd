@@ -108,13 +108,15 @@ CMD_FUNC(cmd_mode)
 			channel = find_channel(parv[1], NULL);
 			if (!channel)
 			{
-				return cmd_umode(client, recv_mtags, parc, parv);
+				cmd_umode(client, recv_mtags, parc, parv);
+				return;
 			}
+		} else
+		{
+			cmd_umode(client, recv_mtags, parc, parv);
+			return;
 		}
-		else
-			return cmd_umode(client, recv_mtags, parc, parv);
-	}
-	else
+	} else
 	{
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "MODE");
 		return;

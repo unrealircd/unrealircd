@@ -96,10 +96,10 @@ void do_svsnolag(Client *client, int parc, char *parv[], int show_change)
 
 CMD_FUNC(cmd_svsnolag)
 {
-	return do_svsnolag(client, parc, parv, 0);
+	do_svsnolag(client, parc, parv, 0);
 }
 
 CMD_FUNC(cmd_svs2nolag)
 {
-	return do_svsnolag(client, parc, parv, 1);
+	do_svsnolag(client, parc, parv, 1);
 }
