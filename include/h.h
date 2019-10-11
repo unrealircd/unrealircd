@@ -950,3 +950,4 @@ extern MODVAR int non_utf8_nick_chars_in_use;
 extern void short_motd(Client *client);
 extern int should_show_connect_info(Client *client);
 extern void send_invalid_channelname(Client *client, char *channelname);
+extern int is_extended_ban(const char *str);

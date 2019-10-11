@@ -134,7 +134,7 @@ char *generic_clean_ban_mask(char *mask)
 			return NULL;
 
 	/* Extended ban? */
-	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
+	if (is_extended_ban(mask))
 	{
 		p = findmod_by_bantype(mask[1]);
 		if (!p)
@@ -233,7 +233,7 @@ int generic_ban_is_ok(Client *client, Channel *channel, char *mask, int checkt, 
 		Extban *p;
 
 		/* This portion is copied from clean_ban_mask() */
-		if (mask[1] && (mask[2] == ':') &&
+		if (is_extended_ban(mask) &&
 		    RESTRICT_EXTENDEDBANS && MyUser(client) &&
 		    !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,NULL,NULL))
 		{
@@ -249,36 +249,33 @@ int generic_ban_is_ok(Client *client, Channel *channel, char *mask, int checkt, 
 					sendnotice(client, "Setting/removing of extended bantypes '%s' has been disabled", RESTRICT_EXTENDEDBANS);
 				return 0; /* REJECT */
 			}
-		}
-		/* End of portion */
-
-		/* This portion is inspired by cmd_mode */
-		p = findmod_by_bantype(mask[1]);
-		if (checkt == EXBCHK_ACCESS)
-		{
-			if (p && p->is_ok && !p->is_ok(client, channel, mask, EXBCHK_ACCESS, what, what2) &&
-			    !ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
+			/* And next is inspired by cmd_mode */
+			p = findmod_by_bantype(mask[1]);
+			if (checkt == EXBCHK_ACCESS)
 			{
-				return 0; /* REJECT */
-			}
-		} else
-		if (checkt == EXBCHK_ACCESS_ERR)
-		{
-			if (p && p->is_ok && !p->is_ok(client, channel, mask, EXBCHK_ACCESS, what, what2) &&
-			    !ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
+				if (p && p->is_ok && !p->is_ok(client, channel, mask, EXBCHK_ACCESS, what, what2) &&
+				    !ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
+				{
+					return 0; /* REJECT */
+				}
+			} else
+			if (checkt == EXBCHK_ACCESS_ERR)
 			{
-				p->is_ok(client, channel, mask, EXBCHK_ACCESS_ERR, what, what2);
-				return 0; /* REJECT */
-			}
-		} else
-		if (checkt == EXBCHK_PARAM)
-		{
-			if (p && p->is_ok && !p->is_ok(client, channel, mask, EXBCHK_PARAM, what, what2))
+				if (p && p->is_ok && !p->is_ok(client, channel, mask, EXBCHK_ACCESS, what, what2) &&
+				    !ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
+				{
+					p->is_ok(client, channel, mask, EXBCHK_ACCESS_ERR, what, what2);
+					return 0; /* REJECT */
+				}
+			} else
+			if (checkt == EXBCHK_PARAM)
 			{
-				return 0; /* REJECT */
+				if (p && p->is_ok && !p->is_ok(client, channel, mask, EXBCHK_PARAM, what, what2))
+				{
+					return 0; /* REJECT */
+				}
 			}
 		}
-		/* End of portion */
 	}
 	
 	/* ACCEPT:

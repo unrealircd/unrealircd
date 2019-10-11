@@ -1056,8 +1056,8 @@ process_listmode:
 			tmpstr = clean_ban_mask(param, what, client);
 			if (BadPtr(tmpstr))
 			{
-				/* Invalid ban. See if we can send an error about that */
-				if ((param[0] == '~') && MyUser(client) && !bounce && (strlen(param) > 2))
+				/* Invalid ban. See if we can send an error about that (only for extbans) */
+				if (MyUser(client) && !bounce && is_extended_ban(param))
 				{
 					Extban *p = findmod_by_bantype(param[1]);
 					if (p && p->is_ok)
@@ -1066,7 +1066,7 @@ process_listmode:
 
 				break; /* ignore ban, but eat param */
 			}
-			if ((tmpstr[0] == '~') && MyUser(client) && !bounce)
+			if (MyUser(client) && !bounce && is_extended_ban(param))
 			{
 				/* extban: check access if needed */
 				Extban *p = findmod_by_bantype(tmpstr[1]);
@@ -1104,8 +1104,18 @@ process_listmode:
 			REQUIRE_PARAMETER()
 			tmpstr = clean_ban_mask(param, what, client);
 			if (BadPtr(tmpstr))
+			{
+				/* Invalid except. See if we can send an error about that (only for extbans) */
+				if (MyUser(client) && !bounce && is_extended_ban(param))
+				{
+					Extban *p = findmod_by_bantype(param[1]);
+					if (p && p->is_ok)
+						p->is_ok(client, channel, param, EXBCHK_PARAM, what, EXBTYPE_EXCEPT);
+				}
+
 				break; /* ignore except, but eat param */
-			if ((tmpstr[0] == '~') && MyUser(client) && !bounce && (strlen(param) > 2))
+			}
+			if (MyUser(client) && !bounce && is_extended_ban(param))
 			{
 				/* extban: check access if needed */
 				Extban *p = findmod_by_bantype(tmpstr[1]);
@@ -1143,8 +1153,18 @@ process_listmode:
 			REQUIRE_PARAMETER()
 			tmpstr = clean_ban_mask(param, what, client);
 			if (BadPtr(tmpstr))
-				break; /* ignore except, but eat param */
-			if ((tmpstr[0] == '~') && MyUser(client) && !bounce && (strlen(param) > 2))
+			{
+				/* Invalid invex. See if we can send an error about that (only for extbans) */
+				if (MyUser(client) && !bounce && is_extended_ban(param))
+				{
+					Extban *p = findmod_by_bantype(param[1]);
+					if (p && p->is_ok)
+						p->is_ok(client, channel, param, EXBCHK_PARAM, what, EXBTYPE_INVEX);
+				}
+
+				break; /* ignore invex, but eat param */
+			}
+			if (MyUser(client) && !bounce && is_extended_ban(param))
 			{
 				/* extban: check access if needed */
 				Extban *p = findmod_by_bantype(tmpstr[1]);
@@ -1152,18 +1172,17 @@ process_listmode:
 				{
 					if (!(p->options & EXTBOPT_INVEX))
 						break; /* this extended ban type does not support INVEX */
-
-					if (p->is_ok && !p->is_ok(client, channel, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
+					if (p->is_ok && !p->is_ok(client, channel, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_INVEX))
 					{
 						if (ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
 						{
 							/* TODO: send operoverride notice */
 						} else {
-							p->is_ok(client, channel, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_EXCEPT);
+							p->is_ok(client, channel, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_INVEX);
 							break;
 						}
 					}
-					if (p->is_ok && !p->is_ok(client, channel, tmpstr, EXBCHK_PARAM, what, EXBTYPE_EXCEPT))
+					if (p->is_ok && !p->is_ok(client, channel, tmpstr, EXBCHK_PARAM, what, EXBTYPE_INVEX))
 						break;
 				}
 			}

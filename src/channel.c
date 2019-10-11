@@ -232,7 +232,7 @@ Client *find_chasing(Client *client, char *user, int *chasing)
 /** Return 1 if the bans are identical, taking into account special handling for extbans */
 int identical_ban(char *one, char *two)
 {
-	if ((*one == '~') && (strlen(one) > 3))
+	if (is_extended_ban(one))
 	{
 		/* compare the first 3 characters case-sensitive and if identical then compare
 		 * the remainder of the string case-insensitive.
@@ -393,7 +393,7 @@ inline Ban *is_banned(Client *client, Channel *channel, int type, char **msg, ch
 inline int ban_check_mask(Client *client, Channel *channel, char *banstr, int type, char **msg, char **errmsg, int no_extbans)
 {
 	Extban *extban = NULL;
-	if (!no_extbans && banstr[0] == '~' && banstr[1] != '\0' && banstr[2] == ':')
+	if (!no_extbans && is_extended_ban(banstr))
 	{
 		/* Is an extended ban. */
 		extban = findmod_by_bantype(banstr[1]);
@@ -791,7 +791,7 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 			return NULL;
 
 	/* Extended ban? */
-	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
+	if (is_extended_ban(mask))
 	{
 		if (RESTRICT_EXTENDEDBANS && MyUser(client) && !ValidatePermissionsForPath("immune:restrict-extendedbans",client,NULL,NULL,NULL))
 		{
@@ -1392,4 +1392,14 @@ void send_invalid_channelname(Client *client, char *channelname)
 	}
 
 	sendnumeric(client, ERR_FORBIDDENCHANNEL, channelname, reason);
+}
+
+/** Is the provided string possibly an extended ban?
+ * Note that it still may not exist, it just tests the first part.
+ */
+int is_extended_ban(const char *str)
+{
+	if ((str[0] == '~') && (str[1] != '\0') && (str[2] == ':'))
+		return 1;
+	return 0;
 }

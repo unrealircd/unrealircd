@@ -130,7 +130,7 @@ int extban_is_ok_nuh_extban(Client* client, Channel* channel, char* para, int ch
 	static int extban_is_ok_recursion = 0;
 
 	/* Mostly copied from clean_ban_mask - but note MyUser checks aren't needed here: extban->is_ok() according to cmd_mode isn't called for nonlocal. */
-	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
+	if (is_extended_ban(mask))
 	{
 		if (extban_is_ok_recursion)
 			return 0; /* Fail: more than one stacked extban */
@@ -217,7 +217,7 @@ char* extban_conv_param_nuh_or_extban(char* para)
 	Extban *p = NULL;
 	static int extban_recursion = 0;
 
-	if (para[3] == '~' && para[4] && para[5] == ':')
+	if (is_extended_ban(para+3))
 	{
 		/* We're dealing with a stacked extended ban.
 		 * Rules:

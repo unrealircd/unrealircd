@@ -81,7 +81,7 @@ int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageR
 	
 	for (ban = channel->exlist; ban; ban=ban->next)
 	{
-		if ((ban->banstr[0] == '~') && (ban->banstr[1] == 'm') && (ban->banstr[2] == ':'))
+		if (!strncmp(ban->banstr, "~m:", 3))
 		{
 			char *type = ban->banstr + 3;
 			char *matchby;
