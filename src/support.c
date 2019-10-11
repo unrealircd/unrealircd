@@ -1077,16 +1077,16 @@ char *encode_ip(char *ip)
 /** Decode a BASE64 encoded string to an IP address string. Used for S2S traffic. */
 char *decode_ip(char *buf)
 {
-	int len = strlen(buf);
+	int n;
 	char targ[25];
 	static char result[64];
 
-	b64_decode(buf, targ, sizeof(targ));
-	if (len == 24) /* IPv6 */
-		return inetntop(AF_INET6, targ, result, sizeof(result));
-	else if (len == 8) /* IPv4 */
+	n = b64_decode(buf, targ, sizeof(targ));
+	if (n == 4) /* should be IPv4 */
 		return inetntop(AF_INET, targ, result, sizeof(result));
-	else /* Error?? */
+	else if (n == 16) /* should be IPv6 */
+		return inetntop(AF_INET6, targ, result, sizeof(result));
+	else /* Error! */
 		return NULL;
 }
 

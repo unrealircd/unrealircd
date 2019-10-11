@@ -253,23 +253,19 @@ char buf[512], result[16];
 char *hidehost(Client *client, char *host)
 {
 	char *p;
+	int host_type;
 
 	if (CLOAK_IP_ONLY)
 		host = GetIP(client);
 
-	/* IPv6 ? */	
-	if (strchr(host, ':'))
-		return hidehost_ipv6(host);
+	host_type = is_valid_ip(host);
 
-	/* Is this a IPv4 IP? */
-	for (p = host; *p; p++)
-		if (!isdigit(*p) && !(*p == '.'))
-			break;
-	if (!(*p))
+	if (host_type == 4)
 		return hidehost_ipv4(host);
-	
-	/* Normal host */
-	return hidehost_normalhost(host);
+	else if (host_type == 6)
+		return hidehost_ipv6(host);
+	else
+		return hidehost_normalhost(host);
 }
 
 char *cloakcsum()
