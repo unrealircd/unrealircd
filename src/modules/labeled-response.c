@@ -84,7 +84,7 @@ MOD_INIT()
 	memset(&currentcmd, 0, sizeof(currentcmd));
 
 	memset(&cap, 0, sizeof(cap));
-	cap.name = "draft/labeled-response";
+	cap.name = "draft/labeled-response-0.2";
 	c = ClientCapabilityAdd(modinfo->handle, &cap, &CAP_LABELED_RESPONSE);
 
 	memset(&mtag, 0, sizeof(mtag));
