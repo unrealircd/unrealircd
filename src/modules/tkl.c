@@ -4044,8 +4044,10 @@ CMD_FUNC(_cmd_tkl)
 	{
 		case '+':
 			cmd_tkl_add(client, recv_mtags, parc, parv);
+			break;
 		case '-':
 			cmd_tkl_del(client, recv_mtags, parc, parv);
+			break;
 		default:
 			break;
 	}
