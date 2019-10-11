@@ -30,7 +30,7 @@ ModuleHeader MOD_HEADER
 /* Forward declarations */
 int extban_msgbypass_is_banned(Client *client, Channel *channel, char *banin, int type, char **msg, char **errmsg);
 int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
-int msgbypass_extban_is_ok(Client* client, Channel* channel, char* para, int checkt, int what, int what2);
+int msgbypass_extban_is_ok(Client *client, Channel* channel, char *para, int checkt, int what, int what2);
 char *msgbypass_extban_conv_param(char *para);
 
 /** Called upon module init */
@@ -171,7 +171,7 @@ int msgbypass_extban_syntax(Client *client, int checkt, char *reason)
 	return 0; /* FAIL: ban rejected */
 }
 
-int msgbypass_extban_is_ok(Client* client, Channel* channel, char* para_in, int checkt, int what, int what2)
+int msgbypass_extban_is_ok(Client *client, Channel* channel, char *para_in, int checkt, int what, int what2)
 {
 	char para[MAX_LENGTH+1];
 	char tmpmask[MAX_LENGTH+1];

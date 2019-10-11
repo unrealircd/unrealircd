@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER
 
 /* Forward declarations */
 char *timedban_extban_conv_param(char *para_in);
-int timedban_extban_is_ok(Client* client, Channel* channel, char* para_in, int checkt, int what, int what2);
+int timedban_extban_is_ok(Client *client, Channel* channel, char *para_in, int checkt, int what, int what2);
 int timedban_is_banned(Client *client, Channel *channel, char *ban, int chktype, char **msg, char **errmsg);
 void add_send_mode_param(Channel *channel, Client *from, char what, char mode, char *param);
 char *timedban_chanmsg(Client *, Client *, Channel *, char *, int);
@@ -288,7 +288,7 @@ int generic_ban_is_ok(Client *client, Channel *channel, char *mask, int checkt, 
 }
 
 /** Validate ban ("is this ban ok?") */
-int timedban_extban_is_ok(Client* client, Channel* channel, char* para_in, int checkt, int what, int what2)
+int timedban_extban_is_ok(Client *client, Channel* channel, char *para_in, int checkt, int what, int what2)
 {
 	char para[MAX_LENGTH+1];
 	char tmpmask[MAX_LENGTH+1];

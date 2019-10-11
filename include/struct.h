@@ -1406,14 +1406,14 @@ struct ConfigItem_allow {
 struct OperClassACLPath
 {
 	OperClassACLPath *prev,*next;
-	char* identifier;
+	char *identifier;
 };
 
 struct OperClassACLEntryVar
 {
         OperClassACLEntryVar *prev,*next;
-        char* name;
-        char* value;
+        char *name;
+        char *value;
 };
 
 struct OperClassACLEntry

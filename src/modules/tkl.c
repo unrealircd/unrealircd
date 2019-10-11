@@ -47,7 +47,7 @@ CMD_FUNC(cmd_kline);
 CMD_FUNC(cmd_zline);
 CMD_FUNC(cmd_spamfilter);
 CMD_FUNC(cmd_eline);
-void cmd_tkl_line(Client *client, int parc, char *parv[], char* type);
+void cmd_tkl_line(Client *client, int parc, char *parv[], char *type);
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);

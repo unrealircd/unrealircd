@@ -64,7 +64,7 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 int sub1_from_channel(Channel *);
 void del_invite(Client *, Channel *);
 
-inline int op_can_override(char* acl, Client *client,Channel *channel,void* extra)
+inline int op_can_override(char *acl, Client *client,Channel *channel,void* extra)
 {
 #ifndef NO_OPEROVERRIDE
 	if (MyUser(client) && !(ValidatePermissionsForPath(acl,client,NULL,channel,extra)))

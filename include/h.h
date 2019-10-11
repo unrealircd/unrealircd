@@ -629,7 +629,7 @@ extern MODVAR char backupbuf[];
 extern void add_invite(Client *, Client *, Channel *, MessageTag *);
 extern void channel_modes(Client *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel);
 extern MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
-extern int op_can_override(char* acl, Client *client,Channel *channel,void* extra);
+extern int op_can_override(char *acl, Client *client,Channel *channel,void* extra);
 extern Client *find_chasing(Client *client, char *user, int *chasing);
 extern MODVAR long opermode;
 extern MODVAR long sajoinmode;
@@ -794,7 +794,7 @@ extern void cm_freeparameter(Channel *channel, char mode);
 extern char *cm_getparameter_ex(void **p, char mode);
 extern void cm_putparameter_ex(void **p, char mode, char *str);
 extern void cm_freeparameter_ex(void **p, char mode, char *str);
-extern int file_exists(char* file);
+extern int file_exists(char *file);
 extern void free_motd(MOTDFile *motd); /* s_serv.c */
 extern void fix_timers(void);
 extern char *chfl_to_sjoin_symbol(int s);

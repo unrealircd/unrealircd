@@ -299,7 +299,7 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, cha
 			if (pm.what == MODE_ADD && (pm.modechar == 'o' || pm.modechar == 'h' || pm.modechar == 'a' || pm.modechar == 'q' || pm.modechar == 'v'))
 			{
 				Member* i;
-				Client* user = find_client(pm.param,NULL);
+				Client *user = find_client(pm.param,NULL);
 				if (!user)
 					continue;
 
@@ -336,7 +336,7 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, cha
 			if (pm.what == MODE_DEL && (pm.modechar == 'o' || pm.modechar == 'h' || pm.modechar == 'a' || pm.modechar == 'q' || pm.modechar == 'v'))
 			{
 				Member* i;
-				Client* user = find_client(pm.param,NULL);
+				Client *user = find_client(pm.param,NULL);
 				if (!user)
 					continue;
 

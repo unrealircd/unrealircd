@@ -3656,7 +3656,7 @@ OperClassACLEntry* _conf_parseACLEntry(ConfigEntry *ce)
 	return entry;
 }
 
-OperClassACL* _conf_parseACL(char* name, ConfigEntry *ce)
+OperClassACL* _conf_parseACL(char *name, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	OperClassACL *acl = NULL;

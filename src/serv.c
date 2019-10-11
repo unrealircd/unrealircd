@@ -79,7 +79,7 @@ char *getosname(void)
 #endif
 
 
-void send_version(Client* client, int reply)
+void send_version(Client *client, int reply)
 {
 	int i;
 
