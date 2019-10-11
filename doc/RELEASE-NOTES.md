@@ -46,27 +46,32 @@ Enhancements
 * Support for IRCv3 [BATCH](https://ircv3.net/specs/extensions/batch-3.2), needed for some other features.
 * Recording and playback of [channel history](https://www.unrealircd.org/docs/Channel_history) when channel mode +H is set.
   The syntax is: ```MODE #chan +H max-lines-to-record:max-time-to-record-in-minutes```.
+
   For example: ```MODE #chan +H 50:1440``` means the last 50 messages will be stored and no
   message will be stored longer than 1440 minutes (1 day).
+
   The channel history is then played back when joining such a channel,
   but with two things to keep in mind:
   1) The client must support the 'server-time' CAP ('time' message tag),
      otherwise history is not shown. Any modern IRC client supports this.
   2) Only a maximum of 15 lines are played back on-join by default
+
   The reason for the maximum 15 lines on-join playback is that this can
   be quite annoying if you rejoin repeatedly and as to not flood the users
   screen too much (unwanted). In the future we will support a mechanism
   for clients to "fetch" history - rather than sending it on-join - so
   they can fetch more than the 15 lines, up to the number of lines and
   time configured in the +H channel mode.
+
   You can configure the exact number of lines that are played back and
-  all the limits that apply to +H via set::history::channel.
+  all the limits that apply to +H via [set::history::channel](https://www.unrealircd.org/docs/Set_block#set::history).
 * For saving and retrieving history we currently have the following options:
-  * history_backend_mem: channel history is stored in memory.
+  * *history_backend_mem*: channel history is stored in memory.
     This is very fast but also means history is lost on restart.
-  * history_backend_null: don't store channel history at all.
+  * *history_backend_null*: don't store channel history at all.
     This can be useful to load on servers with no users on it, such as a
     hub server, where storing history is unnecessary.
+
   As you can see there is currently no 'disk' backend. However, in the
   future more options may be added. Also note that 3rd party modules
   can add history backends as well.
