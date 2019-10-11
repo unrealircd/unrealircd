@@ -11,6 +11,10 @@ the planned functionality is there.
 For those users who do dare to run it, feel free to report any issues
 you may find or comment on the many U5 features on https://bugs.unrealircd.org/.
 
+WARNING: if you are using anope, then note that you need to apply the
+following patch. It is pending since February 2019 unfortunately:
+https://github.com/anope/anope/commit/da6e2730c259d6d6356a0a948e85730ae34663ab.patch
+
 Summary
 --------
 The most visible change to end-users is channel history. A lot of IRCv3 features were added.

@@ -8,3 +8,7 @@ Please report issues at https://bugs.unrealircd.org/
 The full release notes are available in doc/RELEASE-NOTES.md
 For easier viewing, check out the latest online release notes at:
 https://github.com/unrealircd/unrealircd/blob/unreal50/doc/RELEASE-NOTES.md
+
+WARNING: if you are using anope, then note that you need to apply the
+following patch. It is pending since February 2019 unfortunately:
+https://github.com/anope/anope/commit/da6e2730c259d6d6356a0a948e85730ae34663ab.patch
