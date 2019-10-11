@@ -1,27 +1,33 @@
 UnrealIRCd 5.0.0-alpha3 Release Notes
 ======================================
 
-IMPORTANT: UnrealIRCd 5 is currently in "alpha" phase. This means it
-may crash or behave weird. Do not run this on production servers!
+***IMPORTANT:*** UnrealIRCd 5 is currently in "alpha" phase. This means it
+**may crash** or behave weird. Do not run this on production servers!
+
 The alpha releases are there to show the current state of UnrealIRCd 5.
 UnrealIRCd 5 is not yet feature complete at this point; about 90% of
 the planned functionality is there.
 
+For those users who do dare to run it, feel free to report any issues
+you may find or comment on the many U5 features on https://bugs.unrealircd.org/.
+
 Summary
 --------
-The most visible change to end-users is channel history.
+The most visible change to end-users is channel history. A lot of IRCv3 features were added.
 Various modules from Gottem have been integrated and enhanced.
-Channel settings of +P channels and *LINES are saved in a database and
+Channel settings of ```+P``` channels and *LINES are saved in a database and
 restored on startup (via 'channeldb' and 'tkldb' respectively).
-Channel mode +L has a slight change of meaning, the existing floodprot
-mode (+f) has a new type to prevent repeated messages and a new drop action.
-A few extended bans have been added as well (~f and ~p).
-IRCOps now have the ability to add ban exceptions via the /ELINE command.
+Channel mode ```+L``` has a slight change of meaning, the existing floodprot
+mode (```+f```) has a new type to prevent repeated messages and a new drop action.
+A few extended bans have been added as well (```~f``` and ```~p```).
+IRCOps now have the ability to add ban exceptions via the ```/ELINE``` command.
 Advanced admins can use more dynamic configuration options where you can
 define variables and use them later in the configuration file.
 Finally, there have been speed improvements, we use better defaults and
 have added more countermeasures and options against spambots.
-Under the hood a lot of the source code was changed and cleaned up.
+Under the hood *a significant amount* of the source code was changed and cleaned up.
+
+Read below for the full list of enhancements, changes and removals (and information for developers too).
 
 Enhancements
 -------------
