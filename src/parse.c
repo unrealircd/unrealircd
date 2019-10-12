@@ -543,23 +543,23 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 		{
 			if (!IsMe(acptr) && IsUser(acptr))
 			{
-				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s%s",
-				    client->name, numeric, nick, buffer);
+				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s",
+				    client->name, numeric, buffer);
 			}
 			else if (IsServer(acptr) && acptr->direction != client->direction)
-				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s%s",
-				    client->name, numeric, nick, buffer);
+				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s",
+				    client->name, numeric, buffer);
 		}
 		else if ((acptr = find_server_quick(nick)))
 		{
 			if (!IsMe(acptr) && acptr->direction != client->direction)
-				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s%s",
-				    client->name, numeric, nick, buffer);
+				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s",
+				    client->name, numeric, buffer);
 		}
 		else if ((channel = find_channel(nick, NULL)))
 		{
 			sendto_channel(channel, client, client, 0, 0, SEND_ALL, recv_mtags,
-			               ":%s %d %s%s", client->name, numeric, channel->chname, buffer);
+			               ":%s %d %s", client->name, numeric, buffer);
 		}
 	}
 
