@@ -962,7 +962,8 @@ CMD_FUNC(cmd_nick)
 		    ID(client), nick, (long long)client->lastnick);
 		sendto_server(client, 0, PROTO_SID, mtags, ":%s NICK %s %lld",
 		    client->name, nick, (long long)client->lastnick);
-		sendto_local_common_channels(client, NULL, 0, mtags, ":%s NICK :%s", client->name, nick);
+		sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
+		sendto_one(client, mtags, ":%s NICK :%s", client->name, nick);
 		free_message_tags(mtags);
 		if (removemoder)
 			client->umodes &= ~UMODE_REGNICK;
