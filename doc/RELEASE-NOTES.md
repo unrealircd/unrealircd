@@ -83,6 +83,16 @@ Enhancements
   to add exceptions for regular bans (KLINE/GLINE/ZLINE/etc), but also
   for connection throttling and blacklist checking.
   For more information, just type ```/ELINE ``` in your IRC client as an IRCOp.
+* [Websocket](https://www.unrealircd.org/docs/WebSocket_support) support now includes type 'text'
+  in addition to 'binary', which should work with [KiwiIRC](https://kiwiirc.com/)'s nextclient.
+
+  Also, websockets are longer active on all ports by default. You have to explicitly
+  enable the websocket option in the listen block and also specify type *text* or *binary*,
+  eg: ```listen { ip *; port 6667; options { websocket { type text; } } }```
+
+  Also note that websockets require nick names and channels to consist of UTF8
+  characters only, due to
+  [WebSocket being incompatible with non-UTF8](https://www.unrealircd.org/docs/WebSocket_support#Problems_with_websockets_and_non-UTF8)
 * Channel mode +L now kicks in for any rejected join, so not just for +l but
   also for +b, +i, +O, +z, +R and +k. If, for example, the channel is
   +L #insecure and also +z then, when an insecure user ties to join, they
@@ -148,6 +158,10 @@ Enhancements
   with this module, you can now send a HTTP redirect in case some user
   enters your IRC server name in their browser. Eg https://irc.example.org/
   can be made to redirect to https://www.example.org/
+* We now protect against misbehaving SASL servers and will time out
+  SASL sessions after
+  [set::sasl-timeout](https://www.unrealircd.org/docs/Set_block#set::sasl-timeout),
+  which is 15 seconds by default.
 
 Changed
 --------
@@ -356,6 +370,9 @@ Server protocol
   such as SID, NICKv2, TKLEXT2, etc.
   (more precise information will follow)
   In particular this means UnrealIRCd 3.2.x will not link with 5.x.
+* Pseudo ID support in SASL was removed. We now use real UID's.
+  This breaks anope, up to 2.0.6 stable, due lacking
+  [this patch](https://github.com/anope/anope/commit/da6e2730c259d6d6356a0a948e85730ae34663ab.patch)
 
 Client protocol
 ----------------
