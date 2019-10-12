@@ -90,6 +90,7 @@ MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *m
 		/* New message tag handler */
 		m = safe_alloc(sizeof(MessageTagHandler));
 		safe_strdup(m->name, mreq->name);
+		AddListItem(m, mtaghandlers);
 	}
 	/* Add or update the following fields: */
 	m->owner = module;
@@ -100,8 +101,6 @@ MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *m
 	/* Update reverse dependency (if any) */
 	if (m->clicap_handler)
 		m->clicap_handler->mtag_handler = m;
-
-	AddListItem(m, mtaghandlers);
 
 	if (module)
 	{
