@@ -144,14 +144,14 @@ CMD_FUNC(cmd_sasl)
 			*target->local->sasl_agent = '\0';
 			if (*parv[4] == 'F')
 			{
-				client->local->sasl_sent_time = 0;
+				target->local->sasl_sent_time = 0;
 				target->local->since += 7; /* bump fakelag due to failed authentication attempt */
 				RunHookReturn2(HOOKTYPE_SASL_RESULT, target, 0, !=0);
 				sendnumeric(target, ERR_SASLFAIL);
 			}
 			else if (*parv[4] == 'S')
 			{
-				client->local->sasl_sent_time = 0;
+				target->local->sasl_sent_time = 0;
 				target->local->sasl_complete++;
 				RunHookReturn2(HOOKTYPE_SASL_RESULT, target, 1, !=0);
 				sendnumeric(target, RPL_SASLSUCCESS);
