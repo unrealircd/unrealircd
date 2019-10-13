@@ -37,7 +37,7 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_USER, cmd_user, 4, CMD_USER|CMD_UNREGISTERED);
+	CommandAdd(modinfo->handle, MSG_USER, cmd_user, 4, CMD_UNREGISTERED);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -52,31 +52,23 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/*
-** cmd_user
-**	parv[1] = username (login name, account)
-**	parv[2] = client host name (used only from other servers)
-**	parv[3] = server host name (used only from other servers)
-**	parv[4] = users real name info
-**
-** NOTE: Be advised that multiple USER messages are possible,
-**       hence, always check if a certain struct is already allocated... -- Syzop
-*/
+/** The USER command, together with NICK this will register a user.
+ * As per UnrealIRCd 5 this command is only available to local clients.
+ * Intraserver traffic is handled through the UID command.
+ *	parv[1] = username
+ *	parv[2] = client host name (ignored)
+ *	parv[3] = server host name (ignored)
+ *	parv[4] = real name / gecos
+ *
+ * NOTE: Be advised that multiple USER messages are possible,
+ *       hence, always check if a certain struct is already allocated... -- Syzop
+ */
 CMD_FUNC(cmd_user)
 {
 	char *username;
-	char *host;
-	char *server;
 	char *realname;
-	char *umodex = NULL;
-	char *virthost = NULL;
-	char *ip = NULL;
-	char *sstamp = NULL;
-	Client *cptr = client->direction; /* Lazyness, since this function should be rewritten anyway */
 
-	// Eh, this is for old remote USER shit (which we currently still use indirectly via do_cmd).
-	// TODO: cleanup. Also, hope this is right:
-	if (!MyConnect(client) && !IsUnknown(client))
+	if (!MyConnect(client) || IsServer(client))
 		return;
 
 	if (MyConnect(client) && (client->local->listener->options & LISTENER_SERVERSONLY))
@@ -85,103 +77,39 @@ CMD_FUNC(cmd_user)
 		return;
 	}
 
-	if (parc > 2 && (username = strchr(parv[1], '@')))
-		*username = '\0';
-
-	if (parc < 5 || *parv[1] == '\0' || *parv[2] == '\0' ||
-	    *parv[3] == '\0' || *parv[4] == '\0')
+	if ((parc < 5) || BadPtr(parv[4]))
 	{
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "USER");
-		if (IsServer(cptr))
-			sendto_ops("bad USER param count for %s from %s",
-			    client->name, get_client_name(cptr, FALSE));
-		else
-			return;
-	}
-
-
-	/* Copy parameters into better documenting variables */
-
-	username = (parc < 2 || BadPtr(parv[1])) ? "<bad-boy>" : parv[1];
-	host = (parc < 3 || BadPtr(parv[2])) ? "<nohost>" : parv[2];
-	server = (parc < 4 || BadPtr(parv[3])) ? "<noserver>" : parv[3];
-
-	/* This we can remove as soon as all servers have upgraded. */
-
-	if (parc == 6 && IsServer(cptr))
-	{
-		sstamp = (BadPtr(parv[4])) ? "0" : parv[4];
-		realname = (BadPtr(parv[5])) ? "<bad-realname>" : parv[5];
-		umodex = NULL;
-	}
-	else if (parc == 8 && IsServer(cptr))
-	{
-		sstamp = (BadPtr(parv[4])) ? "0" : parv[4];
-		realname = (BadPtr(parv[7])) ? "<bad-realname>" : parv[7];
-		umodex = parv[5];
-		virthost = parv[6];
-	}
-	else if (parc == 9 && IsServer(cptr))
-	{
-		sstamp = (BadPtr(parv[4])) ? "0" : parv[4];
-		realname = (BadPtr(parv[8])) ? "<bad-realname>" : parv[8];
-		umodex = parv[5];
-		virthost = parv[6];
-		ip = parv[7];
-	}
-	else if (parc == 10 && IsServer(cptr))
-	{
-		sstamp = (BadPtr(parv[4])) ? "0" : parv[4];
-		realname = (BadPtr(parv[9])) ? "<bad-realname>" : parv[9];
-		umodex = parv[5];
-		virthost = parv[6];
-		ip = parv[8];
-	}
-	else
-	{
-		realname = (BadPtr(parv[4])) ? "<bad-realname>" : parv[4];
-	}
-	
-	make_user(client);
-
-	if (!MyConnect(client))
-	{
-		client->user->server = find_or_add(client->srvptr->name);
-		strlcpy(client->user->realhost, host, sizeof(client->user->realhost));
-		goto user_finish;
-	}
-
-	if (!IsUnknown(client))
-	{
-		sendnumeric(client, ERR_ALREADYREGISTRED);
 		return;
 	}
 
-	if (!IsServer(cptr))
-	{
-		/* set::modes-on-connect */
-		client->umodes |= CONN_MODES;
-	}
+	/* This cuts the username off at @, uh okay.. */
+	if ((username = strchr(parv[1], '@')))
+		*username = '\0';
 
+	username = parv[1];
+	realname = parv[4];
+	
+	if (strlen(username) > USERLEN)
+		username[USERLEN] = '\0'; /* cut-off */
+
+	make_user(client);
+
+	/* set::modes-on-connect */
+	client->umodes |= CONN_MODES;
 	client->user->server = me_hash;
-      user_finish:
-	if (sstamp != NULL && *sstamp != '*')
-		strlcpy(client->user->svid, sstamp, sizeof(client->user->svid));
-
 	strlcpy(client->info, realname, sizeof(client->info));
 	strlcpy(client->user->username, username, USERLEN + 1);
 
-	if (*client->name &&
-		(IsServer(cptr) || is_handshake_finished(cptr))
-           )
-		/* NICK and no-spoof already received, now we have USER... */
+	if (*client->name && is_handshake_finished(client))
 	{
+		/* NICK and no-spoof already received, now we have USER... */
 		if (USE_BAN_VERSION && MyConnect(client))
+		{
 			sendto_one(client, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 				me.name, client->name);
-		if (strlen(username) > USERLEN)
-			username[USERLEN] = '\0'; /* cut-off */
-		register_user(client, client->name, username, umodex, virthost, ip);
+		}
+		register_user(client, client->name, username, NULL, NULL, NULL);
 		return;
 	}
 }

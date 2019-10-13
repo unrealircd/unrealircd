@@ -188,9 +188,10 @@ CMD_FUNC(cmd_uid)
 	int ishold;
 	Client *acptr, *serv = NULL;
 	Client *acptrs;
-	char nick[NICKLEN + 2]; // FIXME: why +2 and not +1?
+	char nick[NICKLEN + 1];
 	long lastnick = 0l;
 	int differ = 1;
+	char *hostname, *username, *sstamp, *umodes, *virthost, *ip, *realname;
 
 	if (parc < 13)
 	{
@@ -207,7 +208,7 @@ CMD_FUNC(cmd_uid)
 		return;
 	}
 
-	strlcpy(nick, parv[1], NICKLEN + 1);
+	strlcpy(nick, parv[1], sizeof(nick));
 
 	/* Do some *MINIMAL* nick name checking for remote nicknames.
 	 * This will only catch things that severely break things. -- Syzop
@@ -341,10 +342,27 @@ nickkill2done:
 	strlcpy(client->name, nick, NICKLEN+1);
 	add_to_client_hash_table(nick, client);
 
-	/* FIXME: we need to split this out into register_remote_user() or something. */
-	parv[3] = nick;
-	parv[6] = client->name;
-	do_cmd(client, recv_mtags, "USER", parc - 3, &parv[3]);
+	make_user(client);
+
+	hostname = parv[5];
+	sstamp = parv[7];
+	username = parv[4];
+	umodes = parv[8];
+	virthost = parv[9];
+	ip = parv[11];
+	realname = parv[12];
+	/* Note that cloaked host aka parv[10] is unused */
+
+	client->user->server = find_or_add(client->srvptr->name);
+	strlcpy(client->user->realhost, hostname, sizeof(client->user->realhost));
+	// FIXME: some validation would be nice ^
+
+	if (*sstamp != '*')
+		strlcpy(client->user->svid, sstamp, sizeof(client->user->svid));
+
+	strlcpy(client->info, realname, sizeof(client->info));
+	strlcpy(client->user->username, username, USERLEN + 1);
+	register_user(client, client->name, username, umodes, virthost, ip);
 	if (IsDead(client))
 		return;
 	if (!IsULine(serv) && IsSynched(serv))
