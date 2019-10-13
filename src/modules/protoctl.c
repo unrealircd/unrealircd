@@ -94,10 +94,6 @@ CMD_FUNC(cmd_protoctl)
 		{
 			SetCapability(client, "userhost-in-names");
 		}
-		else if (!strcmp(name, "UMODE2"))
-		{
-			SetUMODE2(client);
-		}
 		else if (!strcmp(name, "VL"))
 		{
 			SetVL(client);

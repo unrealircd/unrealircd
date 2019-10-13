@@ -331,7 +331,6 @@ typedef enum ClientStatus {
  * Note that client protocol extensions have been moved
  * to the ClientCapability API which uses acptr->local->caps.
  */
-#define PROTO_UMODE2	0x000010	/* Negotiated UMODE2 protocol */
 #define PROTO_TKLEXT2	0x000020	/* TKL extension 2: 11 parameters instead of 8 or 10 */
 #define PROTO_VL	0x000040	/* Negotiated VL protocol */
 #define PROTO_VHP	0x000100	/* Send hostnames in NICKv2 even if not sethosted */
@@ -502,7 +501,6 @@ typedef enum ClientStatus {
 #define CHECKPROTO(x,y) (checkprotoflags(x, y, __FILE__, __LINE__))
 #endif
 
-#define SupportUMODE2(x)	(CHECKPROTO(x, PROTO_UMODE2))
 #define SupportVL(x)		(CHECKPROTO(x, PROTO_VL))
 #define SupportSJSBY(x)		(CHECKPROTO(x, PROTO_SJSBY))
 #define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
@@ -511,7 +509,6 @@ typedef enum ClientStatus {
 #define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
 #define SupportMTAGS(x)		(CHECKPROTO(x, PROTO_MTAGS))
 
-#define SetUMODE2(x)		((x)->local->proto |= PROTO_UMODE2)
 #define SetVL(x)		((x)->local->proto |= PROTO_VL)
 #define SetSJSBY(x)		((x)->local->proto |= PROTO_SJSBY)
 #define SetVHP(x)		((x)->local->proto |= PROTO_VHP)
@@ -520,7 +517,6 @@ typedef enum ClientStatus {
 #define SetCLK(x)		((x)->local->proto |= PROTO_CLK)
 #define SetMTAGS(x)		((x)->local->proto |= PROTO_MTAGS)
 
-#define ClearUMODE2(x)		((x)->local->proto &= ~PROTO_UMODE2)
 #define ClearVL(x)		((x)->local->proto &= ~PROTO_VL)
 #define ClearVHP(x)		((x)->local->proto &= ~PROTO_VHP)
 #define ClearTKLEXT(x)		((x)->local->proto &= ~PROTO_TKLEXT)
