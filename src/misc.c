@@ -627,8 +627,7 @@ void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
 	}
 	else if (IsUser(client) && !IsKilled(client))
 	{
-		sendto_server(client, PROTO_SID, 0, recv_mtags, ":%s QUIT :%s", ID(client), comment);
-		sendto_server(client, 0, PROTO_SID, recv_mtags, ":%s QUIT :%s", client->name, comment);
+		sendto_server(client, 0, 0, recv_mtags, ":%s QUIT :%s", ID(client), comment);
 	}
 
 	/* Finally, the client/server itself exits.. */

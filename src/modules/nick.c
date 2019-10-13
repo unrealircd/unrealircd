@@ -115,12 +115,13 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 		 */
 
 		/* cptr case first... this side knows the user by newnick/newid */
-		if (CHECKPROTO(cptr, PROTO_SID) && !BadPtr(newid))
+		if (!BadPtr(newid))
 		{
 			/* SID server can kill 'new' by ID */
 			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s)",
 				me.name, newid, me.name, comment);
 		} else {
+			// FIXME: this never happens, right? after the old proto ripout...
 #ifndef ASSUME_NICK_IN_FLIGHT
 			/* cptr is not SID-capable or user has no UID */
 			sendto_one(cptr, NULL, ":%s KILL %s :%s (%s)",
@@ -146,13 +147,9 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 			new_message(new, NULL, &mtags);
 
 			/* non-cptr side knows this user by their old nick name */
-			sendto_server(cptr, PROTO_SID, 0, mtags,
+			sendto_server(cptr, 0, 0, mtags,
 				":%s KILL %s :%s (%s)",
 				me.name, ID(new), me.name, comment);
-
-			sendto_server(cptr, 0, PROTO_SID, mtags,
-				":%s KILL %s :%s (%s)",
-				me.name, new->name, me.name, comment);
 
 			/* Exit the client */
 			ircstats.is_kill++;
@@ -170,20 +167,9 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 		new_message(existing, NULL, &mtags);
 
 		/* Now let's kill 'existing' */
-		sendto_server(NULL, PROTO_SID, 0, mtags,
+		sendto_server(NULL, 0, 0, mtags,
 			":%s KILL %s :%s (%s)",
 			me.name, ID(existing), me.name, comment);
-
-#ifndef ASSUME_NICK_IN_FLIGHT
-		/* This is not ideal on non-SID servers, may kill the wrong person. */
-		sendto_server(NULL, 0, PROTO_SID, mtags,
-			":%s KILL %s :%s (%s)",
-			 me.name, existing->name, me.name, comment);
-#else
-		sendto_server(cptr, 0, PROTO_SID, mtags,
-			":%s KILL %s :%s (%s)",
-			 me.name, existing->name, me.name, comment);
-#endif
 
 		/* NOTE: we may have sent two KILLs on the same nick in some cases.
 		 * Should be acceptable and only happens in a non-100% UID network.
@@ -959,10 +945,8 @@ CMD_FUNC(cmd_nick)
 		}
 		add_history(client, 1);
 		new_message(client, recv_mtags, &mtags);
-		sendto_server(client, PROTO_SID, 0, mtags, ":%s NICK %s %lld",
+		sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
 		    ID(client), nick, (long long)client->lastnick);
-		sendto_server(client, 0, PROTO_SID, mtags, ":%s NICK %s %lld",
-		    client->name, nick, (long long)client->lastnick);
 		sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
 		sendto_one(client, mtags, ":%s NICK :%s", client->name, nick);
 		free_message_tags(mtags);

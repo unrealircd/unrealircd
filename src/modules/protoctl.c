@@ -220,7 +220,6 @@ CMD_FUNC(cmd_protoctl)
 				del_from_id_hash_table(client->id, client); /* delete old UID entry (created on connect) */
 			strlcpy(client->id, sid, IDLEN);
 			add_to_id_hash_table(client->id, client); /* add SID */
-			client->local->proto |= PROTO_SID;
 		}
 		else if (!strcmp(name, "EAUTH") && value && NEW_LINKING_PROTOCOL)
 		{

@@ -230,11 +230,9 @@ CMD_FUNC(cmd_kill)
 		{
 			/* Kill from one server to another (we may be src, victim or something in-between) */
 
-			/* Broadcast it to other SID and non-SID servers (may be a NOOP, obviously) */
-			sendto_server(client, PROTO_SID, 0, mtags, ":%s KILL %s :%s!%s",
+			/* Broadcast it to other servers */
+			sendto_server(client, 0, 0, mtags, ":%s KILL %s :%s!%s",
 			    client->name, ID(target), inpath, path);
-			sendto_server(client, 0, PROTO_SID, mtags, ":%s KILL %s :%s!%s",
-			    client->name, target->name, inpath, path);
 
 			/* Don't send a QUIT for this */
 			SetKilled(target);

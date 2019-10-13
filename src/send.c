@@ -1081,30 +1081,13 @@ void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
 			vhost = "*";
 	}
 
-	if (CHECKPROTO(server, PROTO_SID) && *client->id)
-	{
-		sendto_one(server, NULL,
-			":%s UID %s %d %lld %s %s %s %s %s %s %s %s :%s",
-			client->srvptr->id, client->name, client->hopcount,
-			(long long)client->lastnick,
-			client->user->username, client->user->realhost, client->id,
-			client->user->svid, umodes, vhost, getcloak(client),
-			encode_ip(client->ip), client->info);
-		return;
-	}
-
 	sendto_one(server, NULL,
-		    "NICK %s %d %lld %s %s %s %s %s %s %s%s %s:%s",
-		    client->name, client->hopcount+1,
-		    (long long)client->lastnick, client->user->username,
-		    client->user->realhost, client->srvptr->name,
-		    client->user->svid, umodes, vhost,
-		    CHECKPROTO(server, PROTO_CLK) ? getcloak(client) : "",
-		    CHECKPROTO(server, PROTO_CLK) ? " " : "",
-		    encode_ip(client->ip),
-		    client->info);
-
-	return;
+		":%s UID %s %d %lld %s %s %s %s %s %s %s %s :%s",
+		client->srvptr->id, client->name, client->hopcount,
+		(long long)client->lastnick,
+		client->user->username, client->user->realhost, client->id,
+		client->user->svid, umodes, vhost, getcloak(client),
+		encode_ip(client->ip), client->info);
 }
 
 /* sidenote: sendnotice() and sendtxtnumeric() assume no client or server

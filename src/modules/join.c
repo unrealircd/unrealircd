@@ -249,15 +249,9 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 	/* old non-SJOINv3 servers */
 	sendto_server(client, 0, PROTO_SJ3, mtags, ":%s JOIN :%s", client->name, channel->chname);
 
-	/* I _know_ that the "@%s " look a bit wierd
-	   with the space and all .. but its to get around
-	   a SJOIN bug --stskeeps */
-	sendto_server(client, PROTO_SID | PROTO_SJ3, 0, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
+	sendto_server(client, 0, 0, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
 		me.id, (long long)channel->creationtime,
 		channel->chname, chfl_to_sjoin_symbol(flags), ID(client));
-	sendto_server(client, PROTO_SJ3, PROTO_SID, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
-		me.name, (long long)channel->creationtime,
-		channel->chname, chfl_to_sjoin_symbol(flags), client->name);
 
 	if (MyUser(client))
 	{

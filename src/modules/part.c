@@ -158,10 +158,8 @@ CMD_FUNC(cmd_part)
 		new_message_special(client, recv_mtags, &mtags, ":%s PART %s", client->name, channel->chname);
 
 		/* Send to other servers... */
-		sendto_server(client, PROTO_SID, 0, mtags, ":%s PART %s :%s",
+		sendto_server(client, 0, 0, mtags, ":%s PART %s :%s",
 			ID(client), channel->chname, comment ? comment : "");
-		sendto_server(client, 0, PROTO_SID, mtags, ":%s PART %s :%s",
-			client->name, channel->chname, comment ? comment : "");
 
 		if (invisible_user_in_channel(client, channel))
 		{

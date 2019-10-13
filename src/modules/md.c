@@ -236,17 +236,13 @@ void _broadcast_md_client_cmd(Client *except, Client *sender, Client *client, ch
 {
 	if (value)
 	{
-		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s %s :%s",
+		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s :%s",
 			sender->name, "client", ID(client), varname, value);
-		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s %s :%s",
-			sender->name, "client", client->name, varname, value);
 	}
 	else
 	{
-		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s %s",
+		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s",
 			sender->name, "client", ID(client), varname);
-		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s %s",
-			sender->name, "client", client->name, varname);
 	}
 }
 
@@ -264,17 +260,13 @@ void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *channel, 
 {
 	if (value)
 	{
-		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s :%s",
+		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s :%s",
 			sender->name, "member", channel->chname, ID(client), varname, value);
-		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->name, "member", channel->chname, client->name, varname, value);
 	}
 	else
 	{
-		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s",
+		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s",
 			sender->name, "member", channel->chname, ID(client), varname);
-		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s",
-			sender->name, "member", channel->chname, client->name, varname);
 	}
 }
 
@@ -282,17 +274,13 @@ void _broadcast_md_membership_cmd(Client *except, Client *sender, Client *client
 {
 	if (value)
 	{
-		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s :%s",
+		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s :%s",
 			sender->name, "membership", ID(client), channel->chname, varname, value);
-		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->name, "membership", client->name, channel->chname, varname, value);
 	}
 	else
 	{
-		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s:%s %s",
+		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s",
 			sender->name, "membership", ID(client), channel->chname, varname);
-		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s:%s %s",
-			sender->name, "membership", client->name, channel->chname, varname);
 	}
 }
 
@@ -300,16 +288,12 @@ void _broadcast_md_globalvar_cmd(Client *except, Client *sender, char *varname, 
 {
 	if (value)
 	{
-		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s :%s",
-			sender->name, "globalvar", varname, value);
-		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s :%s",
+		sendto_server(except, 0, 0, NULL, ":%s MD %s %s :%s",
 			sender->name, "globalvar", varname, value);
 	}
 	else
 	{
-		sendto_server(except, PROTO_SID, 0, NULL, ":%s MD %s %s",
-			sender->name, "globalvar", varname);
-		sendto_server(except, 0, PROTO_SID, NULL, ":%s MD %s %s",
+		sendto_server(except, 0, 0, NULL, ":%s MD %s %s",
 			sender->name, "globalvar", varname);
 	}
 }
@@ -359,7 +343,6 @@ void _broadcast_md_globalvar(ModDataInfo *mdi, ModData *md)
 void _send_moddata_client(Client *srv, Client *client)
 {
 	ModDataInfo *mdi;
-	char *user = CHECKPROTO(srv, PROTO_SID) ? ID(client) : client->name;
 
 	for (mdi = MDInfo; mdi; mdi = mdi->next)
 	{
@@ -368,7 +351,7 @@ void _send_moddata_client(Client *srv, Client *client)
 			char *value = mdi->serialize(&moddata_client(client, mdi));
 			if (value)
 				sendto_one(srv, NULL, ":%s MD %s %s %s :%s",
-					me.name, "client", user, mdi->name, value);
+					me.name, "client", ID(client), mdi->name, value);
 		}
 	}
 }
@@ -402,9 +385,8 @@ void _send_moddata_members(Client *srv)
 		Member *m;
 		for (m = channel->members; m; m = m->next)
 		{
-			char *user = CHECKPROTO(srv, PROTO_SID) ? ID(m->client) : m->client->name;
-
-			if (m->client->direction == srv)
+			client = m->client;
+			if (client->direction == srv)
 				continue; /* from srv's direction */
 			for (mdi = MDInfo; mdi; mdi = mdi->next)
 			{
@@ -413,7 +395,7 @@ void _send_moddata_members(Client *srv)
 					char *value = mdi->serialize(&moddata_member(m, mdi));
 					if (value)
 						sendto_one(srv, NULL, ":%s MD %s %s:%s %s :%s",
-							me.name, "member", channel->chname, user, mdi->name, value);
+							me.name, "member", channel->chname, ID(client), mdi->name, value);
 				}
 			}
 		}
@@ -430,8 +412,6 @@ void _send_moddata_members(Client *srv)
 
 		for (m = client->user->channel; m; m = m->next)
 		{
-			char *user = CHECKPROTO(srv, PROTO_SID) ? ID(client) : client->name;
-
 			for (mdi = MDInfo; mdi; mdi = mdi->next)
 			{
 				if ((mdi->type == MODDATATYPE_MEMBERSHIP) && mdi->sync && mdi->serialize)
@@ -439,7 +419,7 @@ void _send_moddata_members(Client *srv)
 					char *value = mdi->serialize(&moddata_membership(m, mdi));
 					if (value)
 						sendto_one(srv, NULL, ":%s MD %s %s:%s %s :%s",
-							me.name, "membership", user, m->channel->chname, mdi->name, value);
+							me.name, "membership", ID(client), m->channel->chname, mdi->name, value);
 				}
 			}
 		}

@@ -314,10 +314,8 @@ CMD_FUNC(cmd_kick)
 						               client->name, channel->chname, who->name, comment);
 					}
 				}
-				sendto_server(client, PROTO_SID, 0, mtags, ":%s KICK %s %s :%s",
+				sendto_server(client, 0, 0, mtags, ":%s KICK %s %s :%s",
 				    ID(client), channel->chname, ID(who), comment);
-				sendto_server(client, 0, PROTO_SID, mtags, ":%s KICK %s %s :%s",
-				    client->name, channel->chname, who->name, comment);
 				free_message_tags(mtags);
 				if (lp)
 				{

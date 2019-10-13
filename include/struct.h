@@ -336,7 +336,6 @@ typedef enum ClientStatus {
 #define PROTO_VL	0x000040	/* Negotiated VL protocol */
 #define PROTO_SJ3	0x000080	/* Negotiated SJ3 protocol */
 #define PROTO_VHP	0x000100	/* Send hostnames in NICKv2 even if not sethosted */
-#define PROTO_SID	0x000200	/* SID/UID mode */
 #define PROTO_TKLEXT	0x000400	/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
 #define PROTO_CLK	0x001000	/* Send cloaked host in the NICK command (regardless of +x/-x) */
 #define PROTO_MLOCK	0x002000	/* server supports MLOCK */
@@ -512,7 +511,6 @@ typedef enum ClientStatus {
 #define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
 #define SupportTKLEXT2(x)	(CHECKPROTO(x, PROTO_TKLEXT2))
 #define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
-#define SupportSID(x)		(CHECKPROTO(x, PROTO_SID))
 #define SupportMTAGS(x)		(CHECKPROTO(x, PROTO_MTAGS))
 
 #define SetUMODE2(x)		((x)->local->proto |= PROTO_UMODE2)

@@ -750,12 +750,10 @@ CMD_FUNC(cmd_server_remote)
 
 	if (*acptr->id)
 	{
-		sendto_server(client, PROTO_SID, 0, NULL, ":%s SID %s %d %s :%s",
+		sendto_server(client, 0, 0, NULL, ":%s SID %s %d %s :%s",
 			    acptr->srvptr->id, acptr->name, hop + 1, acptr->id, acptr->info);
-		sendto_server(client, 0, PROTO_SID, NULL, ":%s SERVER %s %d :%s",
-				acptr->srvptr->name,
-				acptr->name, hop + 1, acptr->info);
 	} else {
+		// FIXME: this should never happen
 		sendto_server(client, 0, 0, NULL, ":%s SERVER %s %d :%s",
 				acptr->srvptr->name,
 				acptr->name, hop + 1, acptr->info);
@@ -773,8 +771,7 @@ void _introduce_user(Client *to, Client *acptr)
 	send_moddata_client(to, acptr);
 
 	if (acptr->user->away)
-		sendto_one(to, NULL, ":%s AWAY :%s", CHECKPROTO(to, PROTO_SID) ? ID(acptr) : acptr->name,
-			acptr->user->away);
+		sendto_one(to, NULL, ":%s AWAY :%s", ID(acptr), acptr->user->away);
 
 	if (acptr->user->swhois)
 	{
@@ -993,15 +990,8 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	RunHook(HOOKTYPE_SERVER_CONNECT, cptr);
 
 	/* Broadcast new server to the rest of the network */
-	if (*cptr->id)
-	{
-		sendto_server(cptr, PROTO_SID, 0, NULL, ":%s SID %s 2 %s :%s",
-			    cptr->srvptr->id, cptr->name, cptr->id, cptr->info);
-	}
-
-	sendto_server(cptr, 0, *cptr->id ? PROTO_SID : 0, NULL, ":%s SERVER %s 2 :%s",
-		    cptr->serv->up,
-		    cptr->name, cptr->info);
+	sendto_server(cptr, 0, 0, NULL, ":%s SID %s 2 %s :%s",
+		    cptr->srvptr->id, cptr->name, cptr->id, cptr->info);
 
 	/* Broadcast the just-linked-in featureset to other servers on our side */
 	broadcast_sinfo(cptr, NULL, cptr);
@@ -1017,18 +1007,10 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 
 		if (IsServer(acptr))
 		{
-			if (SupportSID(cptr) && *acptr->id)
-			{
-				sendto_one(cptr, NULL, ":%s SID %s %d %s :%s",
-				    acptr->srvptr->id,
-				    acptr->name, acptr->hopcount + 1,
-				    acptr->id, acptr->info);
-			}
-			else
-				sendto_one(cptr, NULL, ":%s SERVER %s %d :%s",
-				    acptr->serv->up,
-				    acptr->name, acptr->hopcount + 1,
-				    acptr->info);
+			sendto_one(cptr, NULL, ":%s SID %s %d %s :%s",
+			    acptr->srvptr->id,
+			    acptr->name, acptr->hopcount + 1,
+			    acptr->id, acptr->info);
 
 			/* Also signal to the just-linked server which
 			 * servers are fully linked.
@@ -1041,7 +1023,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 			 */
 			if (acptr->serv->flags.synced)
 			{
-				sendto_one(cptr, NULL, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name);
+				sendto_one(cptr, NULL, ":%s EOS", ID(acptr));
 #ifdef DEBUGMODE
 				ircd_log(LOG_ERROR, "[EOSDBG] server_sync: sending to uplink '%s' with src %s...",
 					cptr->name, acptr->name);
@@ -1093,7 +1075,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	    ircnetwork);
 
 	/* Send EOS (End Of Sync) to the just linked server... */
-	sendto_one(cptr, NULL, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name);
+	sendto_one(cptr, NULL, ":%s EOS", me.id);
 #ifdef DEBUGMODE
 	ircd_log(LOG_ERROR, "[EOSDBG] server_sync: sending to justlinked '%s' with src ME...",
 			cptr->name);
@@ -1446,7 +1428,7 @@ void send_channel_modes_sjoin(Client *to, Channel *channel)
 
 
 
-		name = CHECKPROTO(to, PROTO_SID) ? ID(lp->client) : lp->client->name;
+		name = ID(lp->client);
 
 		strcpy(bufptr, name);
 		bufptr += strlen(bufptr);
@@ -1538,19 +1520,19 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 	if (nomode && nopara)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %lld %s :", CHECKPROTO(to, PROTO_SID) ? me.id : me.name,
+		    ":%s SJOIN %lld %s :", me.id,
 		    (long long)channel->creationtime, channel->chname);
 	}
 	if (nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %lld %s %s :", CHECKPROTO(to, PROTO_SID) ? me.id : me.name,
+		    ":%s SJOIN %lld %s %s :", me.id,
 		    (long long)channel->creationtime, channel->chname, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %lld %s %s %s :", CHECKPROTO(to, PROTO_SID) ? me.id : me.name,
+		    ":%s SJOIN %lld %s %s %s :", me.id,
 		    (long long)channel->creationtime, channel->chname, modebuf, parabuf);
 	}
 
@@ -1593,7 +1575,7 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 		if (lp->flags & MODE_CHANADMIN)
 			*p++ = '~';
 
-		p = mystpcpy(p, CHECKPROTO(to, PROTO_SID) ? ID(lp->client) : lp->client->name);
+		p = mystpcpy(p, ID(lp->client));
 		*p++ = ' ';
 		*p = '\0';
 
