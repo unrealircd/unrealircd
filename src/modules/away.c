@@ -120,7 +120,7 @@ CMD_FUNC(cmd_away)
 	
 	new_message(client, recv_mtags, &mtags);
 
-	sendto_server(client, 0, 0, mtags, ":%s AWAY :%s", client->name, new_reason);
+	sendto_server(client, 0, 0, mtags, ":%s AWAY :%s", client->id, new_reason);
 
 	if (client->user->away)
 	{

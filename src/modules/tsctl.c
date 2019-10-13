@@ -66,7 +66,7 @@ CMD_FUNC(cmd_tsctl)
 	{
 		sendnotice(client, "*** Server=%s TStime=%lld",
 			me.name, (long long)TStime());
-		sendto_server(client, 0, 0, NULL, ":%s TSCTL alltime", client->name);
+		sendto_server(client, 0, 0, NULL, ":%s TSCTL alltime", client->id);
 		return;
 	}
 }

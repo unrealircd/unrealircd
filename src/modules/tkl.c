@@ -968,7 +968,7 @@ CMD_FUNC(cmd_tempshun)
 	if (!MyUser(target))
 	{
 		sendto_one(target->direction, NULL, ":%s TEMPSHUN %s :%s",
-			client->name, parv[1], comment);
+			client->id, target->id, comment);
 	} else {
 		char buf[1024];
 		if (!remove)
@@ -4435,7 +4435,7 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *destinatio
 					/* free away & broadcast the unset */
 					safe_free(client->user->away);
 					client->user->away = NULL;
-					sendto_server(client, 0, 0, NULL, ":%s AWAY", client->name);
+					sendto_server(client, 0, 0, NULL, ":%s AWAY", client->id);
 				}
 				break;
 			case SPAMF_TOPIC:

@@ -79,7 +79,7 @@ CMD_FUNC(cmd_sendsno)
 	new_message(client, recv_mtags, &mtags);
 
 	/* Forward to others... */
-	sendto_server(client, 0, 0, mtags, ":%s SENDSNO %s :%s", client->name, parv[1], parv[2]);
+	sendto_server(client, 0, 0, mtags, ":%s SENDSNO %s :%s", client->id, parv[1], parv[2]);
 
 	for (p = sno; *p; p++)
 	{

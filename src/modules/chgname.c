@@ -123,5 +123,5 @@ CMD_FUNC(cmd_chgname)
 	}
 
 	sendto_server(client, 0, 0, NULL, ":%s CHGNAME %s :%s",
-	    client->name, target->name, parv[2]);
+	    client->id, target->name, parv[2]);
 }

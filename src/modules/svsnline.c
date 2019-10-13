@@ -114,7 +114,7 @@ CMD_FUNC(cmd_svsnline)
 		 
 		  if (IsULine(client))
 			sendto_server(client, 0, 0, NULL, ":%s SVSNLINE + %s :%s",
-			    client->name, parv[2], parv[3]);
+			    client->id, parv[2], parv[3]);
 		  break;
 	  }
 	  case '-':
@@ -141,7 +141,7 @@ CMD_FUNC(cmd_svsnline)
 		  	safe_free(bconf);
 		  	
 		  }
-		  sendto_server(client, 0, 0, NULL, ":%s SVSNLINE - %s", client->name, parv[2]);
+		  sendto_server(client, 0, 0, NULL, ":%s SVSNLINE - %s", client->id, parv[2]);
 		  break;
 	  }
 	  case '*':
@@ -149,7 +149,7 @@ CMD_FUNC(cmd_svsnline)
 		  if (!IsULine(client))
 			  return;
 	          wipe_svsnlines();
-		  sendto_server(client, 0, 0, NULL, ":%s SVSNLINE *", client->name);
+		  sendto_server(client, 0, 0, NULL, ":%s SVSNLINE *", client->id);
 		  break;
 	  }
 

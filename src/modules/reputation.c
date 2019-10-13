@@ -824,7 +824,7 @@ CMD_FUNC(reputation_server_cmd)
 	/* Propagate to the non-client direction (score may be updated) */
 	sendto_server(client, 0, 0, NULL,
 	              ":%s REPUTATION %s %s%d",
-	              client->name,
+	              client->id,
 	              parv[1],
 	              allow_reply ? "" : "*",
 	              score);

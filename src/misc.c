@@ -1001,10 +1001,10 @@ int swhois_add(Client *client, char *tag, int priority, char *swhois, Client *fr
 	AddListItemPrio(s, client->user->swhois, s->priority);
 	
 	sendto_server(skip, 0, PROTO_EXTSWHOIS, NULL, ":%s SWHOIS %s :%s",
-		from->name, client->name, swhois);
+		from->id, client->id, swhois);
 
 	sendto_server(skip, PROTO_EXTSWHOIS, 0, NULL, ":%s SWHOIS %s + %s %d :%s",
-		from->name, client->name, tag, priority, swhois);
+		from->id, client->id, tag, priority, swhois);
 
 	return 0;
 }
@@ -1032,10 +1032,10 @@ int swhois_delete(Client *client, char *tag, char *swhois, Client *from, Client 
 			safe_free(s);
 
 			sendto_server(skip, 0, PROTO_EXTSWHOIS, NULL, ":%s SWHOIS %s :",
-				from->name, client->name);
+				from->id, client->id);
 
 			sendto_server(skip, PROTO_EXTSWHOIS, 0, NULL, ":%s SWHOIS %s - %s %d :%s",
-				from->name, client->name, tag, 0, swhois);
+				from->id, client->id, tag, 0, swhois);
 			
 			ret = 0;
 		}

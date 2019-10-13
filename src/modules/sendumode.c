@@ -86,7 +86,7 @@ CMD_FUNC(cmd_sendumode)
 
 	new_message(client, recv_mtags, &mtags);
 
-	sendto_server(client, 0, 0, mtags, ":%s SENDUMODE %s :%s", client->name, parv[1], message);
+	sendto_server(client, 0, 0, mtags, ":%s SENDUMODE %s :%s", client->id, parv[1], message);
 
 	for (p = parv[1]; *p; p++)
 	{

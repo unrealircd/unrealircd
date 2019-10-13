@@ -284,7 +284,7 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 		sendto_channel(channel, client, client, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
 		               client->name, channel->chname,  modebuf, parabuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", client->id, channel->chname, modebuf, parabuf);
 
 		/* Activate this hook just like cmd_mode.c */
 		RunHook7(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0);

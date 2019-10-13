@@ -179,7 +179,7 @@ CMD_FUNC(cmd_topic)
 			    (long long)channel->topic_time, channel->topic);
 			sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 				       ":%s TOPIC %s :%s",
-				       client->name, channel->chname, channel->topic);
+				       client->id, channel->chname, channel->topic);
 			free_message_tags(mtags);
 		}
 		return;
@@ -272,7 +272,7 @@ CMD_FUNC(cmd_topic)
 	new_message(client, recv_mtags, &mtags);
 	RunHook4(HOOKTYPE_TOPIC, client, channel, mtags, topic);
 	sendto_server(client, 0, 0, mtags, ":%s TOPIC %s %s %lld :%s",
-	    client->name, channel->chname, channel->topic_nick,
+	    client->id, channel->chname, channel->topic_nick,
 	    (long long)channel->topic_time, channel->topic);
 	sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 		       ":%s TOPIC %s :%s",

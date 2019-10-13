@@ -60,7 +60,7 @@ void iNAH_host(Client *client, char *host)
 
 	safe_strdup(client->user->virthost, host);
 	if (MyConnect(client))
-		sendto_server(&me, 0, 0, NULL, ":%s SETHOST :%s", client->name, client->user->virthost);
+		sendto_server(&me, 0, 0, NULL, ":%s SETHOST :%s", client->id, client->user->virthost);
 	client->umodes |= UMODE_SETHOST;
 
 	userhost_changed(client);

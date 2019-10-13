@@ -1162,7 +1162,7 @@ void set_channel_mlock(Client *client, Channel *channel, const char *newmlock, i
 	if (propagate)
 	{
 		sendto_server(client, 0, 0, NULL, ":%s MLOCK %lld %s :%s",
-			      client->name, (long long)channel->creationtime, channel->chname,
+			      client->id, (long long)channel->creationtime, channel->chname,
 			      BadPtr(channel->mode_lock) ? "" : channel->mode_lock);
 	}
 }

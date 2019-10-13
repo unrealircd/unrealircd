@@ -108,7 +108,7 @@ CMD_FUNC(cmd_setname)
 		strcpy(client->info, parv[1]);
 	}
 
-	sendto_server(client, 0, 0, NULL, ":%s SETNAME :%s", client->name, parv[1]);
+	sendto_server(client, 0, 0, NULL, ":%s SETNAME :%s", client->id, parv[1]);
 
 	if (MyConnect(client))
 	{

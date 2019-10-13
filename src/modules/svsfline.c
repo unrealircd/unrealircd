@@ -73,7 +73,7 @@ CMD_FUNC(cmd_svsfline)
 			if (IsULine(client))
 			{
 				sendto_server(client, 0, 0, NULL, ":%s SVSFLINE + %s :%s",
-				    client->name, parv[2], parv[3]);
+				    client->id, parv[2], parv[3]);
 			}
 
 			break;
@@ -94,7 +94,7 @@ CMD_FUNC(cmd_svsfline)
 
 			DCCdeny_del(deny);
 
-			sendto_server(client, 0, 0, NULL, ":%s SVSFLINE %s", client->name, parv[2]);
+			sendto_server(client, 0, 0, NULL, ":%s SVSFLINE %s", client->id, parv[2]);
 
 			break;
 		}
@@ -106,7 +106,7 @@ CMD_FUNC(cmd_svsfline)
 
 			dcc_wipe_services();
 
-			sendto_server(client, 0, 0, NULL, ":%s SVSFLINE *", client->name);
+			sendto_server(client, 0, 0, NULL, ":%s SVSFLINE *", client->id);
 
 			break;
 		}

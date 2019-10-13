@@ -509,7 +509,7 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 	{
 		sendto_server(client, 0, 0, mtags,
 		              ":%s MODE %s %s%s %s %lld",
-		              client->name, channel->chname,
+		              client->id, channel->chname,
 		              isbounce ? "&" : "", modebuf, parabuf,
 		              (long long)sendts);
 	} else
@@ -518,12 +518,12 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 		/* SAMODE is a special case: always send a TS of 0 (omitting TS==desynch) */
 		sendto_server(client, 0, 0, mtags,
 		              ":%s MODE %s %s %s 0",
-		              client->name, channel->chname, modebuf, parabuf);
+		              client->id, channel->chname, modebuf, parabuf);
 	} else
 	{
 		sendto_server(client, 0, 0, mtags,
 		              ":%s MODE %s %s%s %s",
-		              client->name, channel->chname, isbounce ? "&" : "", modebuf, parabuf);
+		              client->id, channel->chname, isbounce ? "&" : "", modebuf, parabuf);
 		/* tell them it's not a timestamp, in case the last param
 		   ** is a number. */
 	}

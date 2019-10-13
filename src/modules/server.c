@@ -899,10 +899,10 @@ void _broadcast_sinfo(Client *acptr, Client *to, Client *except)
 	if (to)
 	{
 		/* Targetted to one server */
-		sendto_one(to, NULL, ":%s SINFO %s", acptr->name, buf);
+		sendto_one(to, NULL, ":%s SINFO %s", acptr->id, buf);
 	} else {
 		/* Broadcast (except one side...) */
-		sendto_server(except, 0, 0, NULL, ":%s SINFO %s", acptr->name, buf);
+		sendto_server(except, 0, 0, NULL, ":%s SINFO %s", acptr->id, buf);
 	}
 }
 

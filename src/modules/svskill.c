@@ -81,7 +81,7 @@ CMD_FUNC(cmd_svskill)
 
 	/* for new_message() we use target here, makes sense for the exit_client, right? */
 	new_message(target, recv_mtags, &mtags);
-	sendto_server(client, 0, 0, mtags, ":%s SVSKILL %s :%s", client->name, parv[1], comment);
+	sendto_server(client, 0, 0, mtags, ":%s SVSKILL %s :%s", client->id, target->id, comment);
 	SetKilled(target);
 	exit_client(target, mtags, comment);
 	free_message_tags(mtags);

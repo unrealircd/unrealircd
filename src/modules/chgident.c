@@ -146,7 +146,7 @@ CMD_FUNC(cmd_chgident)
 	}
 
 	sendto_server(client, 0, 0, NULL, ":%s CHGIDENT %s %s",
-	    client->name, target->name, parv[2]);
+	    client->id, target->id, parv[2]);
 	ircsnprintf(target->user->username, sizeof(target->user->username), "%s", parv[2]);
 
 	userhost_changed(target);

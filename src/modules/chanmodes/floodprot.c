@@ -1060,7 +1060,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		    ":%s KICK %s %s :%s", me.name,
 		    channel->chname, client->name, errbuf);
 		sendto_server(NULL, 0, 0, mtags, ":%s KICK %s %s :%s",
-		   me.name, channel->chname, client->name, errbuf);
+		   me.name, channel->chname, client->id, errbuf);
 		free_message_tags(mtags);
 		remove_user_from_channel(client, channel);
 		*errmsg = errbuf; /* not used, but needs to be set */

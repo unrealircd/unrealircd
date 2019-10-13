@@ -67,7 +67,7 @@ void set_oper_host(Client *client, char *host)
 	        *p++ = '\0';
 		strlcpy(client->user->username, uhost, sizeof(client->user->username));
 		sendto_server(NULL, 0, 0, NULL, ":%s SETIDENT %s",
-		    client->name, client->user->username);
+		    client->id, client->user->username);
 	        host = p;
 	}
 	iNAH_host(client, host);

@@ -143,12 +143,12 @@ CMD_FUNC(cmd_vhost)
 	{
 		strcpy(olduser, client->user->username);
 		strlcpy(client->user->username, vhost->virtuser, USERLEN);
-		sendto_server(client, 0, 0, NULL, ":%s SETIDENT %s", client->name,
+		sendto_server(client, 0, 0, NULL, ":%s SETIDENT %s", client->id,
 		    client->user->username);
 	}
 	client->umodes |= UMODE_HIDE;
 	client->umodes |= UMODE_SETHOST;
-	sendto_server(client, 0, 0, NULL, ":%s SETHOST %s", client->name, client->user->virthost);
+	sendto_server(client, 0, 0, NULL, ":%s SETHOST %s", client->id, client->user->virthost);
 	sendto_one(client, NULL, ":%s MODE %s :+tx", client->name, client->name);
 	if (vhost->swhois)
 	{

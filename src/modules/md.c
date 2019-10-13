@@ -237,12 +237,12 @@ void _broadcast_md_client_cmd(Client *except, Client *sender, Client *client, ch
 	if (value)
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s :%s",
-			sender->name, "client", client->id, varname, value);
+			sender->id, "client", client->id, varname, value);
 	}
 	else
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s",
-			sender->name, "client", client->id, varname);
+			sender->id, "client", client->id, varname);
 	}
 }
 
@@ -250,10 +250,10 @@ void _broadcast_md_channel_cmd(Client *except, Client *sender, Channel *channel,
 {
 	if (value)
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s :%s",
-			sender->name, "channel", channel->chname, varname, value);
+			sender->id, "channel", channel->chname, varname, value);
 	else
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s",
-			sender->name, "channel", channel->chname, varname);
+			sender->id, "channel", channel->chname, varname);
 }
 
 void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *channel, Client *client, char *varname, char *value)
@@ -261,12 +261,12 @@ void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *channel, 
 	if (value)
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->name, "member", channel->chname, client->id, varname, value);
+			sender->id, "member", channel->chname, client->id, varname, value);
 	}
 	else
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s",
-			sender->name, "member", channel->chname, client->id, varname);
+			sender->id, "member", channel->chname, client->id, varname);
 	}
 }
 
@@ -275,12 +275,12 @@ void _broadcast_md_membership_cmd(Client *except, Client *sender, Client *client
 	if (value)
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->name, "membership", client->id, channel->chname, varname, value);
+			sender->id, "membership", client->id, channel->chname, varname, value);
 	}
 	else
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s",
-			sender->name, "membership", client->id, channel->chname, varname);
+			sender->id, "membership", client->id, channel->chname, varname);
 	}
 }
 
@@ -289,12 +289,12 @@ void _broadcast_md_globalvar_cmd(Client *except, Client *sender, char *varname, 
 	if (value)
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s :%s",
-			sender->name, "globalvar", varname, value);
+			sender->id, "globalvar", varname, value);
 	}
 	else
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s",
-			sender->name, "globalvar", varname);
+			sender->id, "globalvar", varname);
 	}
 }
 

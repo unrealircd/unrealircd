@@ -106,7 +106,7 @@ CMD_FUNC(sinfo_server)
 
 	/* Broadcast to 'the other side' of the net */
 	concat_params(buf, sizeof(buf), parc, parv);
-	sendto_server(client, 0, 0, NULL, ":%s SINFO %s", client->name, buf);
+	sendto_server(client, 0, 0, NULL, ":%s SINFO %s", client->id, buf);
 }
 
 #define SafeDisplayStr(x)  ((x && *(x)) ? (x) : "-")
