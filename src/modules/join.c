@@ -246,9 +246,6 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 
 	send_join_to_local_users(client, channel, mtags);
 
-	/* old non-SJOINv3 servers */
-	sendto_server(client, 0, PROTO_SJ3, mtags, ":%s JOIN :%s", client->name, channel->chname);
-
 	sendto_server(client, 0, 0, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
 		me.id, (long long)channel->creationtime,
 		channel->chname, chfl_to_sjoin_symbol(flags), ID(client));
@@ -267,31 +264,6 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 			    me.name, channel->chname, (long long)channel->creationtime);
 		}
 		del_invite(client, channel);
-		if (flags && !(flags & CHFL_DEOPPED))
-		{
-			/* We could generate mtags here but this is only for
-			 * old non-SJ3 servers, so we don't bother since they
-			 * won't support mtags anyway.
-			 */
-#ifndef PREFIX_AQ
-			if ((flags & CHFL_CHANOWNER) || (flags & CHFL_CHANADMIN))
-			{
-				/* +ao / +qo for when PREFIX_AQ is off */
-				sendto_server(client, 0, PROTO_SJ3, NULL, ":%s MODE %s +o%c %s %s %lld",
-				    me.name,
-				    channel->chname, chfl_to_chanmode(flags), client->name, client->name,
-				    (long long)channel->creationtime);
-			} else {
-#endif
-				/* +v/+h/+o (and +a/+q if PREFIX_AQ is on) */
-				sendto_server(client, 0, PROTO_SJ3, NULL, ":%s MODE %s +%c %s %lld",
-				    me.name,
-				    channel->chname, chfl_to_chanmode(flags), client->name,
-				    (long long)channel->creationtime);
-#ifndef PREFIX_AQ
-			}
-#endif
-		}
 
 		if (channel->topic)
 		{

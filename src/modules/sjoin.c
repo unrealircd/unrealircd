@@ -162,19 +162,11 @@ CMD_FUNC(cmd_sjoin)
 
 	merge = nopara = nomode = removeours = removetheirs = 0;
 
-	if (SupportSJ3(client->direction) && (parc < 6))
+	if (parc < 6)
 		nopara = 1;
 
-	if (SupportSJ3(client->direction))
-	{
-		if (parc < 5)
-			nomode = 1;
-	}
-	else
-	{
-		if (parv[3][0] && (parv[3][1] == '\0'))
-			nomode = 1;
-	}
+	if (parc < 5)
+		nomode = 1;
 
 	channel = get_channel(client, parv[2], CREATE);
 
@@ -534,7 +526,7 @@ getnick:
 			if (strlen(uid_buf) + strlen(prefix) + IDLEN > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(client, PROTO_SJ3, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
+				sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
 				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_buf) + strlen(prefix) + strlen(ID(acptr)) > BUFSIZE - 5)
@@ -550,7 +542,7 @@ getnick:
 			if (strlen(uid_sjsby_buf) + strlen(prefix) + IDLEN > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(client, PROTO_SJ3, PROTO_SJSBY, recv_mtags, "%s", uid_sjsby_buf);
+				sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_sjsby_buf);
 				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_sjsby_buf) + strlen(prefix) + strlen(ID(acptr)) > BUFSIZE - 5)
@@ -609,7 +601,7 @@ getnick:
 			if (strlen(uid_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(client, PROTO_SJ3, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
+				sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
 				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 5)
@@ -631,7 +623,7 @@ getnick:
 			if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
-				sendto_server(client, PROTO_SJ3 | PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
+				sendto_server(client, PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
 				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 5)
@@ -647,9 +639,9 @@ getnick:
 	}
 
 	/* Send out any possible remainder.. */
-	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3", ts, parabuf, parv[parc - 1]));
-	sendto_server(client, PROTO_SJ3, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
-	sendto_server(client, PROTO_SJ3 | PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
+	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to ", ts, parabuf, parv[parc - 1]));
+	sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
+	sendto_server(client, PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
 
 	if (modebuf[1])
 	{

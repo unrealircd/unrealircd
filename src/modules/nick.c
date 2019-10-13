@@ -191,39 +191,32 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 		 * So we re-introduce the user here.
 		 * This is not ideal but if we don't do this then 'cptr'-side would be desynced.
 		 */
+		Membership *lp;
+		char flags[16], *p;
+
 		introduce_user(cptr, existing);
-		if (!SupportSJ3(cptr))
-		{
-			/* Wow. Old. */
-			send_user_joins(cptr, existing);
-			/* Didn't bother to do the +vhoaq stuff for this. Shouldn't we rip out SJOIN/SJOIN2 anyway? */
-		} else
-		{
-			/* Hmmm duplicate code... hmmmmmm. taken from send_channel_modes_sjoin3. */
-			Membership *lp;
-			char flags[16], *p;
 
-			for (lp = existing->user->channel; lp; lp = lp->next)
-			{
-				p = flags;
-				if (lp->flags & MODE_CHANOP)
-					*p++ = '@';
-				if (lp->flags & MODE_VOICE)
-					*p++ = '+';
-				if (lp->flags & MODE_HALFOP)
-					*p++ = '%';
-				if (lp->flags & MODE_CHANOWNER)
-					*p++ = '*';
-				if (lp->flags & MODE_CHANADMIN)
-					*p++ = '~';
-				*p = '\0';
+		for (lp = existing->user->channel; lp; lp = lp->next)
+		{
+			p = flags;
+			if (lp->flags & MODE_CHANOP)
+				*p++ = '@';
+			if (lp->flags & MODE_VOICE)
+				*p++ = '+';
+			if (lp->flags & MODE_HALFOP)
+				*p++ = '%';
+			if (lp->flags & MODE_CHANOWNER)
+				*p++ = '*';
+			if (lp->flags & MODE_CHANADMIN)
+				*p++ = '~';
+			*p = '\0';
 
-				sendto_one(cptr, NULL, ":%s SJOIN %ld %s + :%s%s",
-					me.name, lp->channel->creationtime, lp->channel->chname,
-					flags, existing->name);
-			}
+			sendto_one(cptr, NULL, ":%s SJOIN %ld %s + :%s%s",
+				me.name, lp->channel->creationtime, lp->channel->chname,
+				flags, existing->name);
 		}
 		/* Could synch channel-member-data here. But this is apparently an old server anyway.. */
+		// TODO, wait, perhaps the whole reintroduce_existing_user can be removed? or not?
 	}
 #endif
 }

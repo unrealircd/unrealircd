@@ -110,10 +110,6 @@ CMD_FUNC(cmd_protoctl)
 		{
 			SetCLK(client);
 		}
-		else if (!strcmp(name, "SJ3"))
-		{
-			SetSJ3(client);
-		}
 		else if (!strcmp(name, "SJSBY") && iConf.ban_setter_sync)
 		{
 			SetSJSBY(client);

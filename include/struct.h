@@ -334,7 +334,6 @@ typedef enum ClientStatus {
 #define PROTO_UMODE2	0x000010	/* Negotiated UMODE2 protocol */
 #define PROTO_TKLEXT2	0x000020	/* TKL extension 2: 11 parameters instead of 8 or 10 */
 #define PROTO_VL	0x000040	/* Negotiated VL protocol */
-#define PROTO_SJ3	0x000080	/* Negotiated SJ3 protocol */
 #define PROTO_VHP	0x000100	/* Send hostnames in NICKv2 even if not sethosted */
 #define PROTO_TKLEXT	0x000400	/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
 #define PROTO_CLK	0x001000	/* Send cloaked host in the NICK command (regardless of +x/-x) */
@@ -505,7 +504,6 @@ typedef enum ClientStatus {
 
 #define SupportUMODE2(x)	(CHECKPROTO(x, PROTO_UMODE2))
 #define SupportVL(x)		(CHECKPROTO(x, PROTO_VL))
-#define SupportSJ3(x)		(CHECKPROTO(x, PROTO_SJ3))
 #define SupportSJSBY(x)		(CHECKPROTO(x, PROTO_SJSBY))
 #define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
 #define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
@@ -515,7 +513,6 @@ typedef enum ClientStatus {
 
 #define SetUMODE2(x)		((x)->local->proto |= PROTO_UMODE2)
 #define SetVL(x)		((x)->local->proto |= PROTO_VL)
-#define SetSJ3(x)		((x)->local->proto |= PROTO_SJ3)
 #define SetSJSBY(x)		((x)->local->proto |= PROTO_SJSBY)
 #define SetVHP(x)		((x)->local->proto |= PROTO_VHP)
 #define SetTKLEXT(x)	((x)->local->proto |= PROTO_TKLEXT)
@@ -526,7 +523,6 @@ typedef enum ClientStatus {
 #define ClearUMODE2(x)		((x)->local->proto &= ~PROTO_UMODE2)
 #define ClearVL(x)		((x)->local->proto &= ~PROTO_VL)
 #define ClearVHP(x)		((x)->local->proto &= ~PROTO_VHP)
-#define ClearSJ3(x)		((x)->local->proto &= ~PROTO_SJ3)
 #define ClearTKLEXT(x)		((x)->local->proto &= ~PROTO_TKLEXT)
 #define ClearTKLEXT2(x)		((x)->local->proto &= ~PROTO_TKLEXT2)
 
