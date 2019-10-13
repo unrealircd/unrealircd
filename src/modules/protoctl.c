@@ -106,10 +106,6 @@ CMD_FUNC(cmd_protoctl)
 		{
 			SetSJOIN2(client);
 		}
-		else if (!strcmp(name, "NICKv2"))
-		{
-			SetNICKv2(client);
-		}
 		else if (!strcmp(name, "UMODE2"))
 		{
 			SetUMODE2(client);

@@ -1036,8 +1036,8 @@ void sendto_fconnectnotice(Client *newuser, int disconnect, char *comment)
 	}
 }
 
-/** Introduce user to NICKv2-capable and SID-capable servers.
- * @param one    Server to skip
+/** Introduce user to all other servers, except the one to skip.
+ * @param one    Server to skip (can be NULL)
  * @param client Client to introduce
  * @param umodes User modes of client
  */
@@ -1045,22 +1045,16 @@ void sendto_serv_butone_nickcmd(Client *one, Client *client, char *umodes)
 {
 	Client *acptr;
 
-	if (BadPtr(umodes))
-		umodes = "+";
-	
 	list_for_each_entry(acptr, &server_list, special_node)
 	{
 		if (one && acptr == one->direction)
-			continue;
-		
-		if (!CHECKPROTO(acptr, PROTO_SID) && !CHECKPROTO(acptr, PROTO_NICKv2))
 			continue;
 		
 		sendto_one_nickcmd(acptr, client, umodes);
 	}
 }
 
-/** Introduce user to NICKv2-capable and SID-capable servers.
+/** Introduce user to a server.
  * @param server  Server to send to (locally connected!)
  * @param client  Client to introduce
  * @param umodes  User modes of client

@@ -333,7 +333,6 @@ typedef enum ClientStatus {
  */
 #define PROTO_NOQUIT	0x000001	/* Negotiated NOQUIT protocol */
 #define PROTO_SJOIN	0x000002	/* Negotiated SJOIN protocol */
-#define PROTO_NICKv2	0x000004	/* Negotiated NICKv2 protocol */
 #define PROTO_SJOIN2	0x000008	/* Negotiated SJOIN2 protocol */
 #define PROTO_UMODE2	0x000010	/* Negotiated UMODE2 protocol */
 #define PROTO_TKLEXT2	0x000020	/* TKL extension 2: 11 parameters instead of 8 or 10 */
@@ -511,7 +510,6 @@ typedef enum ClientStatus {
 
 #define DontSendQuit(x)		(CHECKPROTO(x, PROTO_NOQUIT))
 #define SupportSJOIN(x)		(CHECKPROTO(x, PROTO_SJOIN))
-#define SupportNICKv2(x)	(CHECKPROTO(x, PROTO_NICKv2))
 #define SupportNICKIP(x)	(CHECKPROTO(x, PROTO_NICKIP))
 #define SupportSJOIN2(x)	(CHECKPROTO(x, PROTO_SJOIN2))
 #define SupportUMODE2(x)	(CHECKPROTO(x, PROTO_UMODE2))
@@ -527,7 +525,6 @@ typedef enum ClientStatus {
 
 #define SetSJOIN(x)		((x)->local->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->local->proto |= PROTO_NOQUIT)
-#define SetNICKv2(x)		((x)->local->proto |= PROTO_NICKv2)
 #define SetSJOIN2(x)		((x)->local->proto |= PROTO_SJOIN2)
 #define SetUMODE2(x)		((x)->local->proto |= PROTO_UMODE2)
 #define SetVL(x)		((x)->local->proto |= PROTO_VL)
@@ -541,7 +538,6 @@ typedef enum ClientStatus {
 
 #define ClearSJOIN(x)		((x)->local->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->local->proto &= ~PROTO_NOQUIT)
-#define ClearNICKv2(x)		((x)->local->proto &= ~PROTO_NICKv2)
 #define ClearSJOIN2(x)		((x)->local->proto &= ~PROTO_SJOIN2)
 #define ClearUMODE2(x)		((x)->local->proto &= ~PROTO_UMODE2)
 #define ClearVL(x)		((x)->local->proto &= ~PROTO_VL)

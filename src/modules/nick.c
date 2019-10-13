@@ -1421,7 +1421,6 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	hash_check_watch(client, RPL_LOGON);	/* Uglier hack */
 	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
 
-	/* NICKv2 Servers ! */
 	sendto_serv_butone_nickcmd(client->direction, client, (*buf == '\0' ? "+" : buf));
 
 	if (MyConnect(client))
