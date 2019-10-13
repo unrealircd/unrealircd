@@ -343,8 +343,8 @@ CMD_FUNC(cmd_sjoin)
 
 	/* Now process adding of users & adding of list modes (bans/exempt/invex) */
 
-	snprintf(uid_buf, sizeof uid_buf, ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
-	snprintf(uid_sjsby_buf, sizeof uid_sjsby_buf, ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
+	snprintf(uid_buf, sizeof uid_buf, ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
+	snprintf(uid_sjsby_buf, sizeof uid_sjsby_buf, ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
 
 	for (s = strtoken(&saved, cbuf, " "); s; s = strtoken(&saved, NULL, " "))
 	{
@@ -527,33 +527,33 @@ getnick:
 			{
 				/* Send what we have and start a new buffer */
 				sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
-				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
+				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
-				if (strlen(uid_buf) + strlen(prefix) + strlen(ID(acptr)) > BUFSIZE - 5)
+				if (strlen(uid_buf) + strlen(prefix) + strlen(acptr->id) > BUFSIZE - 5)
 				{
 					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s%s'",
-						uid_buf, prefix, ID(acptr));
+						uid_buf, prefix, acptr->id);
 					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->chname);
 					continue;
 				}
 			}
-			sprintf(uid_buf+strlen(uid_buf), "%s%s ", prefix, ID(acptr));
+			sprintf(uid_buf+strlen(uid_buf), "%s%s ", prefix, acptr->id);
 
 			if (strlen(uid_sjsby_buf) + strlen(prefix) + IDLEN > BUFSIZE - 10)
 			{
 				/* Send what we have and start a new buffer */
 				sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_sjsby_buf);
-				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
+				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
-				if (strlen(uid_sjsby_buf) + strlen(prefix) + strlen(ID(acptr)) > BUFSIZE - 5)
+				if (strlen(uid_sjsby_buf) + strlen(prefix) + strlen(acptr->id) > BUFSIZE - 5)
 				{
 					ircd_log(LOG_ERROR, "Oversized SJOIN: '%s' + '%s%s'",
-						uid_sjsby_buf, prefix, ID(acptr));
+						uid_sjsby_buf, prefix, acptr->id);
 					sendto_realops("Oversized SJOIN for %s -- see ircd log", channel->chname);
 					continue;
 				}
 			}
-			sprintf(uid_sjsby_buf+strlen(uid_sjsby_buf), "%s%s ", prefix, ID(acptr));
+			sprintf(uid_sjsby_buf+strlen(uid_sjsby_buf), "%s%s ", prefix, acptr->id);
 		}
 		else
 		{
@@ -602,7 +602,7 @@ getnick:
 			{
 				/* Send what we have and start a new buffer */
 				sendto_server(client, 0, PROTO_SJSBY, recv_mtags, "%s", uid_buf);
-				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
+				snprintf(uid_buf, sizeof(uid_buf), ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_buf) + strlen(prefix) + strlen(nick) > BUFSIZE - 5)
 				{
@@ -624,7 +624,7 @@ getnick:
 			{
 				/* Send what we have and start a new buffer */
 				sendto_server(client, PROTO_SJSBY, 0, recv_mtags, "%s", uid_sjsby_buf);
-				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", ID(client), (long long)ts, sj3_parabuf);
+				snprintf(uid_sjsby_buf, sizeof(uid_sjsby_buf), ":%s SJOIN %lld %s :", client->id, (long long)ts, sj3_parabuf);
 				/* Double-check the new buffer is sufficient to concat the data */
 				if (strlen(uid_sjsby_buf) + strlen(scratch_buf) > BUFSIZE - 5)
 				{

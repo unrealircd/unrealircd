@@ -237,12 +237,12 @@ void _broadcast_md_client_cmd(Client *except, Client *sender, Client *client, ch
 	if (value)
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s :%s",
-			sender->name, "client", ID(client), varname, value);
+			sender->name, "client", client->id, varname, value);
 	}
 	else
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s",
-			sender->name, "client", ID(client), varname);
+			sender->name, "client", client->id, varname);
 	}
 }
 
@@ -261,12 +261,12 @@ void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *channel, 
 	if (value)
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->name, "member", channel->chname, ID(client), varname, value);
+			sender->name, "member", channel->chname, client->id, varname, value);
 	}
 	else
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s",
-			sender->name, "member", channel->chname, ID(client), varname);
+			sender->name, "member", channel->chname, client->id, varname);
 	}
 }
 
@@ -275,12 +275,12 @@ void _broadcast_md_membership_cmd(Client *except, Client *sender, Client *client
 	if (value)
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->name, "membership", ID(client), channel->chname, varname, value);
+			sender->name, "membership", client->id, channel->chname, varname, value);
 	}
 	else
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s",
-			sender->name, "membership", ID(client), channel->chname, varname);
+			sender->name, "membership", client->id, channel->chname, varname);
 	}
 }
 
@@ -351,7 +351,7 @@ void _send_moddata_client(Client *srv, Client *client)
 			char *value = mdi->serialize(&moddata_client(client, mdi));
 			if (value)
 				sendto_one(srv, NULL, ":%s MD %s %s %s :%s",
-					me.name, "client", ID(client), mdi->name, value);
+					me.name, "client", client->id, mdi->name, value);
 		}
 	}
 }
@@ -395,7 +395,7 @@ void _send_moddata_members(Client *srv)
 					char *value = mdi->serialize(&moddata_member(m, mdi));
 					if (value)
 						sendto_one(srv, NULL, ":%s MD %s %s:%s %s :%s",
-							me.name, "member", channel->chname, ID(client), mdi->name, value);
+							me.name, "member", channel->chname, client->id, mdi->name, value);
 				}
 			}
 		}
@@ -419,7 +419,7 @@ void _send_moddata_members(Client *srv)
 					char *value = mdi->serialize(&moddata_membership(m, mdi));
 					if (value)
 						sendto_one(srv, NULL, ":%s MD %s %s:%s %s :%s",
-							me.name, "membership", ID(client), m->channel->chname, mdi->name, value);
+							me.name, "membership", client->id, m->channel->chname, mdi->name, value);
 				}
 			}
 		}

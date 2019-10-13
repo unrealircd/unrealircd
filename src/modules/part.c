@@ -159,7 +159,7 @@ CMD_FUNC(cmd_part)
 
 		/* Send to other servers... */
 		sendto_server(client, 0, 0, mtags, ":%s PART %s :%s",
-			ID(client), channel->chname, comment ? comment : "");
+			client->id, channel->chname, comment ? comment : "");
 
 		if (invisible_user_in_channel(client, channel))
 		{

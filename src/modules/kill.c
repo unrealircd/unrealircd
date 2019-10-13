@@ -232,7 +232,7 @@ CMD_FUNC(cmd_kill)
 
 			/* Broadcast it to other servers */
 			sendto_server(client, 0, 0, mtags, ":%s KILL %s :%s!%s",
-			    client->name, ID(target), inpath, path);
+			    client->name, target->id, inpath, path);
 
 			/* Don't send a QUIT for this */
 			SetKilled(target);

@@ -784,7 +784,7 @@ void _introduce_user(Client *to, Client *acptr)
 	send_moddata_client(to, acptr);
 
 	if (acptr->user->away)
-		sendto_one(to, NULL, ":%s AWAY :%s", ID(acptr), acptr->user->away);
+		sendto_one(to, NULL, ":%s AWAY :%s", acptr->id, acptr->user->away);
 
 	if (acptr->user->swhois)
 	{
@@ -1036,7 +1036,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 			 */
 			if (acptr->serv->flags.synced)
 			{
-				sendto_one(cptr, NULL, ":%s EOS", ID(acptr));
+				sendto_one(cptr, NULL, ":%s EOS", acptr->id);
 #ifdef DEBUGMODE
 				ircd_log(LOG_ERROR, "[EOSDBG] server_sync: sending to uplink '%s' with src %s...",
 					cptr->name, acptr->name);
@@ -1200,7 +1200,7 @@ void send_channel_modes_sjoin3(Client *to, Channel *channel)
 		if (lp->flags & MODE_CHANADMIN)
 			*p++ = '~';
 
-		p = mystpcpy(p, ID(lp->client));
+		p = mystpcpy(p, lp->client->id);
 		*p++ = ' ';
 		*p = '\0';
 

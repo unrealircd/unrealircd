@@ -224,7 +224,7 @@ CMD_FUNC(cmd_nick_remote)
 	add_history(client, 1);
 	new_message(client, recv_mtags, &mtags);
 	sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
-	    ID(client), nick, (long long)client->lastnick);
+	    client->id, nick, (long long)client->lastnick);
 	sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
 	free_message_tags(mtags);
 	if (removemoder)
@@ -458,7 +458,7 @@ CMD_FUNC(cmd_nick_local)
 		add_history(client, 1);
 		new_message(client, recv_mtags, &mtags);
 		sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
-		    ID(client), nick, (long long)client->lastnick);
+		    client->id, nick, (long long)client->lastnick);
 		sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
 		sendto_one(client, mtags, ":%s NICK :%s", client->name, nick);
 		free_message_tags(mtags);
@@ -1231,7 +1231,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 			/* non-cptr side knows this user by their old nick name */
 			sendto_server(cptr, 0, 0, mtags,
 				":%s KILL %s :%s (%s)",
-				me.name, ID(new), me.name, comment);
+				me.name, new->id, me.name, comment);
 
 			/* Exit the client */
 			ircstats.is_kill++;
@@ -1251,7 +1251,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 		/* Now let's kill 'existing' */
 		sendto_server(NULL, 0, 0, mtags,
 			":%s KILL %s :%s (%s)",
-			me.name, ID(existing), me.name, comment);
+			me.name, existing->id, me.name, comment);
 
 		/* NOTE: we may have sent two KILLs on the same nick in some cases.
 		 * Should be acceptable and only happens in a non-100% UID network.

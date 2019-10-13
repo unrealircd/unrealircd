@@ -540,8 +540,6 @@ typedef enum ClientStatus {
 #define DCC_LINK_ME		1 /* My dcc allow */
 #define DCC_LINK_REMOTE	2 /* I need to remove dccallows from these clients when I die */
 
-#define ID(client)	(*client->id ? client->id : client->name)
-
 /** Union for moddata objects */
 typedef union ModData ModData;
 union ModData

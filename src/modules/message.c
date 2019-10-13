@@ -446,7 +446,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 				new_message(client, recv_mtags, &mtags);
 				labeled_response_inhibit = 1;
 				sendto_prefix_one(target, client, mtags, ":%s %s %s :%s",
-				                  ID(client),
+				                  client->id,
 				                  cmd,
 				                  (MyUser(target) ? target->name : nick),
 				                  text);

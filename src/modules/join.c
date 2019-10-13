@@ -248,7 +248,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 
 	sendto_server(client, 0, 0, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
 		me.id, (long long)channel->creationtime,
-		channel->chname, chfl_to_sjoin_symbol(flags), ID(client));
+		channel->chname, chfl_to_sjoin_symbol(flags), client->id);
 
 	if (MyUser(client))
 	{
