@@ -94,14 +94,6 @@ CMD_FUNC(cmd_protoctl)
 		{
 			SetCapability(client, "userhost-in-names");
 		}
-		else if (!strcmp(name, "SJOIN"))
-		{
-			SetSJOIN(client);
-		}
-		else if (!strcmp(name, "SJOIN2"))
-		{
-			SetSJOIN2(client);
-		}
 		else if (!strcmp(name, "UMODE2"))
 		{
 			SetUMODE2(client);

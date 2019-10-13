@@ -1060,11 +1060,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 		if (acptr->direction == cptr)
 			continue;
 		if (IsUser(acptr))
-		{
 			introduce_user(cptr, acptr);
-			if (!SupportSJOIN(cptr))
-				send_user_joins(cptr, acptr);
-		}
 	}
 	/*
 	   ** Last, pass all channels plus statuses
@@ -1073,14 +1069,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 		Channel *channel;
 		for (channel = channels; channel; channel = channel->nextch)
 		{
-			if (!SupportSJOIN(cptr))
-				send_channel_modes(cptr, channel);
-			else if (SupportSJOIN(cptr) && !SupportSJ3(cptr))
-			{
-				send_channel_modes_sjoin(cptr, channel);
-			}
-			else
-				send_channel_modes_sjoin3(cptr, channel);
+			send_channel_modes_sjoin3(cptr, channel);
 			if (channel->topic_time)
 				sendto_one(cptr, NULL, "TOPIC %s %s %lld :%s",
 				    channel->chname, channel->topic_nick,
@@ -1431,10 +1420,7 @@ void send_channel_modes_sjoin(Client *to, Channel *channel)
 	}
 	else
 	{
-		if (!SupportSJOIN2(to))
-			strlcpy(parabuf, "<none>", sizeof parabuf);
-		else
-			strlcpy(parabuf, "<->", sizeof parabuf);
+		strlcpy(parabuf, "<->", sizeof parabuf);
 	}
 
 	ircsnprintf(buf, sizeof(buf), "SJOIN %lld %s %s %s :",

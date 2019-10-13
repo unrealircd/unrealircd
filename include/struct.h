@@ -331,8 +331,6 @@ typedef enum ClientStatus {
  * Note that client protocol extensions have been moved
  * to the ClientCapability API which uses acptr->local->caps.
  */
-#define PROTO_SJOIN	0x000002	/* Negotiated SJOIN protocol */
-#define PROTO_SJOIN2	0x000008	/* Negotiated SJOIN2 protocol */
 #define PROTO_UMODE2	0x000010	/* Negotiated UMODE2 protocol */
 #define PROTO_TKLEXT2	0x000020	/* TKL extension 2: 11 parameters instead of 8 or 10 */
 #define PROTO_VL	0x000040	/* Negotiated VL protocol */
@@ -506,8 +504,6 @@ typedef enum ClientStatus {
 #define CHECKPROTO(x,y) (checkprotoflags(x, y, __FILE__, __LINE__))
 #endif
 
-#define SupportSJOIN(x)		(CHECKPROTO(x, PROTO_SJOIN))
-#define SupportSJOIN2(x)	(CHECKPROTO(x, PROTO_SJOIN2))
 #define SupportUMODE2(x)	(CHECKPROTO(x, PROTO_UMODE2))
 #define SupportVL(x)		(CHECKPROTO(x, PROTO_VL))
 #define SupportSJ3(x)		(CHECKPROTO(x, PROTO_SJ3))
@@ -519,8 +515,6 @@ typedef enum ClientStatus {
 #define SupportSID(x)		(CHECKPROTO(x, PROTO_SID))
 #define SupportMTAGS(x)		(CHECKPROTO(x, PROTO_MTAGS))
 
-#define SetSJOIN(x)		((x)->local->proto |= PROTO_SJOIN)
-#define SetSJOIN2(x)		((x)->local->proto |= PROTO_SJOIN2)
 #define SetUMODE2(x)		((x)->local->proto |= PROTO_UMODE2)
 #define SetVL(x)		((x)->local->proto |= PROTO_VL)
 #define SetSJ3(x)		((x)->local->proto |= PROTO_SJ3)
@@ -531,8 +525,6 @@ typedef enum ClientStatus {
 #define SetCLK(x)		((x)->local->proto |= PROTO_CLK)
 #define SetMTAGS(x)		((x)->local->proto |= PROTO_MTAGS)
 
-#define ClearSJOIN(x)		((x)->local->proto &= ~PROTO_SJOIN)
-#define ClearSJOIN2(x)		((x)->local->proto &= ~PROTO_SJOIN2)
 #define ClearUMODE2(x)		((x)->local->proto &= ~PROTO_UMODE2)
 #define ClearVL(x)		((x)->local->proto &= ~PROTO_VL)
 #define ClearVHP(x)		((x)->local->proto &= ~PROTO_VHP)
