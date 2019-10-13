@@ -899,8 +899,7 @@ int mixed_network(void)
 	{
 		if (!IsServer(client) || IsULine(client))
 			continue; /* skip u-lined servers (=non-unreal, unless you configure your ulines badly, that is) */
-		if (SupportTKLEXT(client) && !SupportTKLEXT2(client))
-			return 1; /* yup, something below 3.4-alpha3 is linked */
+		// uh.. right.. bit hard to detect u4 this way now :D
 	}
 	return 0;
 }

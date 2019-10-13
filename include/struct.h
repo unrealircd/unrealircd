@@ -331,10 +331,8 @@ typedef enum ClientStatus {
  * Note that client protocol extensions have been moved
  * to the ClientCapability API which uses acptr->local->caps.
  */
-#define PROTO_TKLEXT2	0x000020	/* TKL extension 2: 11 parameters instead of 8 or 10 */
 #define PROTO_VL	0x000040	/* Negotiated VL protocol */
 #define PROTO_VHP	0x000100	/* Send hostnames in NICKv2 even if not sethosted */
-#define PROTO_TKLEXT	0x000400	/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
 #define PROTO_CLK	0x001000	/* Send cloaked host in the NICK command (regardless of +x/-x) */
 #define PROTO_MLOCK	0x002000	/* server supports MLOCK */
 #define PROTO_EXTSWHOIS 0x004000	/* extended SWHOIS support */
@@ -504,23 +502,17 @@ typedef enum ClientStatus {
 #define SupportVL(x)		(CHECKPROTO(x, PROTO_VL))
 #define SupportSJSBY(x)		(CHECKPROTO(x, PROTO_SJSBY))
 #define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
-#define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
-#define SupportTKLEXT2(x)	(CHECKPROTO(x, PROTO_TKLEXT2))
 #define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
 #define SupportMTAGS(x)		(CHECKPROTO(x, PROTO_MTAGS))
 
 #define SetVL(x)		((x)->local->proto |= PROTO_VL)
 #define SetSJSBY(x)		((x)->local->proto |= PROTO_SJSBY)
 #define SetVHP(x)		((x)->local->proto |= PROTO_VHP)
-#define SetTKLEXT(x)	((x)->local->proto |= PROTO_TKLEXT)
-#define SetTKLEXT2(x)	((x)->local->proto |= PROTO_TKLEXT2)
 #define SetCLK(x)		((x)->local->proto |= PROTO_CLK)
 #define SetMTAGS(x)		((x)->local->proto |= PROTO_MTAGS)
 
 #define ClearVL(x)		((x)->local->proto &= ~PROTO_VL)
 #define ClearVHP(x)		((x)->local->proto &= ~PROTO_VHP)
-#define ClearTKLEXT(x)		((x)->local->proto &= ~PROTO_TKLEXT)
-#define ClearTKLEXT2(x)		((x)->local->proto &= ~PROTO_TKLEXT2)
 
 /*
  * defined debugging levels

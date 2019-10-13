@@ -110,15 +110,6 @@ CMD_FUNC(cmd_protoctl)
 		{
 			SetSJSBY(client);
 		}
-		else if (!strcmp(name, "TKLEXT"))
-		{
-			SetTKLEXT(client);
-		}
-		else if (!strcmp(name, "TKLEXT2"))
-		{
-			SetTKLEXT2(client);
-			SetTKLEXT(client); /* TKLEXT is implied as well. always. */
-		}
 		else if (!strcmp(name, "MTAGS"))
 		{
 			SetMTAGS(client);
