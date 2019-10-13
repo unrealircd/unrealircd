@@ -1250,3 +1250,35 @@ void charsys_check_for_changes(void)
 
 	strlcpy(previous_langsinuse, langsinuse, sizeof(previous_langsinuse));
 }
+
+/** Check if supplied server name is valid, that is: does not contain forbidden characters etc */
+int valid_server_name(char *name)
+{
+	char *p;
+
+	if (strlen(name) >= HOSTLEN)
+		return 0;
+
+	for (p = name; *p; p++)
+		if ((*p <= ' ') || (*p > '~'))
+			return 0;
+
+	if (!strchr(name, '.'))
+		return 0;
+
+	return 1;
+}
+
+/** Check if the supplied name is a valid SID, as in: syntax. */
+int valid_sid(char *name)
+{
+	if (strlen(name) != 3)
+		return 0;
+	if (!isdigit(*name))
+		return 0;
+	if (!isdigit(name[1]) && !isupper(name[1]))
+		return 0;
+	if (!isdigit(name[2]) && !isupper(name[2]))
+		return 0;
+	return 1;
+}

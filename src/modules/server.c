@@ -25,7 +25,7 @@
 /* Forward declarations */
 void send_channel_modes_sjoin3(Client *to, Channel *channel);
 CMD_FUNC(cmd_server);
-CMD_FUNC(cmd_server_remote);
+CMD_FUNC(cmd_sid);
 int _verify_link(Client *client, char *servername, ConfigItem_link **link_out);
 void _send_protoctl_servers(Client *client, int response);
 void _send_server_message(Client *client);
@@ -62,7 +62,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_SERVER, cmd_server, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
-	CommandAdd(modinfo->handle, "SID", cmd_server_remote, MAXPARA, CMD_SERVER);
+	CommandAdd(modinfo->handle, "SID", cmd_sid, MAXPARA, CMD_SERVER);
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -190,8 +190,7 @@ void _send_protoctl_servers(Client *client, int response)
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		if (*acptr->id)
-			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%s,", acptr->id);
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%s,", acptr->id);
 		if (strlen(buf) > sizeof(buf)-12)
 			break; /* prevent overflow/cutoff if you have a network with more than 90 servers or something. */
 	}
@@ -213,14 +212,8 @@ void _send_server_message(Client *client)
 		return;
 	}
 
-	if (1) /* SupportVL(client)) -- always send like 3.2.x for now. */
-	{
-		sendto_one(client, NULL, "SERVER %s 1 :U%d-%s%s-%s %s",
-			me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.id, me.info);
-	} else {
-		sendto_one(client, NULL, "SERVER %s 1 :%s",
-			me.name, me.info);
-	}
+	sendto_one(client, NULL, "SERVER %s 1 :U%d-%s%s-%s %s",
+		me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.id, me.info);
 
 	if (client->serv)
 		client->serv->flags.server_sent = 1;
@@ -463,25 +456,11 @@ skip_host_check:
 	return 1;
 }
 
-/*
-** cmd_sid
-**      parv[1] = servername
-**      parv[2] = hopcount
-**      parv[3] = sid
-**      parv[4] = serverinfo
-*/
-
-/*
-** cmd_server
-**	parv[1] = servername
-**      parv[2] = hopcount
-**      parv[3] = numeric { ignored }
-**      parv[4] = serverinfo
-**
-** on old protocols, serverinfo is parv[3], and numeric is left out
-**
-**  Recode 2001 by Stskeeps
-*/
+/** Server command. Only for locally connected servers!!.
+ * parv[1] = server name
+ * parv[2] = hop count
+ * parv[3] = server description, may include protocol version and other stuff too (VL)
+ */
 CMD_FUNC(cmd_server)
 {
 	char *servername = NULL;	/* Pointer for servername */
@@ -500,9 +479,6 @@ CMD_FUNC(cmd_server)
 		return;
 	}
 
-	/*
-	 *  We do some parameter checks now. We want atleast upto serverinfo now
-	 */
 	if (parc < 4 || (!*parv[3]))
 	{
 		sendto_one(client, NULL, "ERROR :Not enough SERVER parameters");
@@ -510,26 +486,26 @@ CMD_FUNC(cmd_server)
 		return;
 	}
 
-	if (MyConnect(client) && IsUnknown(client) && (client->local->listener->options & LISTENER_CLIENTSONLY))
+	servername = parv[1];
+
+	/* Remote 'SERVER' command is not possible on a 100% SID network */
+	if (!MyConnect(client))
+	{
+		char buf[256];
+		sendto_umode_global(UMODE_OPER, "Server %s introduced %s which is using old unsupported protocol from UnrealIRCd 3.2.x or earlier. " 
+		                                "See https://www.unrealircd.org/docs/FAQ#old-server-protocol",
+		                                client->direction->name, servername);
+		exit_client(client->direction, NULL, "Introduced another server with unsupported protocol");
+		return;
+	}
+
+	if (client->local->listener && (client->local->listener->options & LISTENER_CLIENTSONLY))
 	{
 		exit_client(client, NULL, "This port is for clients only");
 		return;
 	}
 
-	/* Now, let us take a look at the parameters we got
-	 * Passes here:
-	 *    Check for bogus server name
-	 */
-
-	servername = parv[1];
-	/* Cut off if too big */
-	if (strlen(servername) > HOSTLEN)
-		servername[HOSTLEN] = '\0';
-	/* Check if bogus, like spaces and ~'s */
-	for (ch = servername; *ch; ch++)
-		if (*ch <= ' ' || *ch > '~')
-			break;
-	if (*ch || !strchr(servername, '.'))
+	if (!valid_server_name(servername))
 	{
 		sendto_one(client, NULL, "ERROR :Bogus server name (%s)", servername);
 		sendto_snomask
@@ -540,102 +516,124 @@ CMD_FUNC(cmd_server)
 		return;
 	}
 
-	if ((IsUnknown(client) || IsHandshake(client)) && !client->local->passwd)
+	if (!client->local->passwd)
 	{
 		sendto_one(client, NULL, "ERROR :Missing password");
 		exit_client(client, NULL, "Missing password");
 		return;
 	}
 
-	/*
-	 * Now, we can take a look at it all
+	if (!verify_link(client, servername, &aconf))
+		return; /* Rejected */
+
+	/* From this point the server is authenticated, so we can be more verbose
+	 * with notices to ircops and in exit_client() and such.
 	 */
-	if (IsUnknown(client) || IsHandshake(client))
+
+	strlcpy(client->name, servername, sizeof(client->name));
+
+	if (strlen(client->id) != 3)
 	{
-		int ret;
-		if (!verify_link(client, servername, &aconf))
-			return; /* Rejected */
-			
-		/* OK, let us check in the data now now */
-		hop = atol(parv[2]);
-		strlcpy(info, parv[parc - 1], sizeof(info));
-		strlcpy(client->name, servername, sizeof(client->name));
-		client->hopcount = hop;
-		/* Add ban server stuff */
-		if (SupportVL(client))
+		sendto_umode_global(UMODE_OPER, "Server %s is using old unsupported protocol from UnrealIRCd 3.2.x or earlier. " 
+		                                "See https://www.unrealircd.org/docs/FAQ#old-server-protocol",
+		                                servername);
+		ircd_log(LOG_ERROR, "Server using old unsupported protocol from UnrealIRCd 3.2.x or earlier. "
+		                    "See https://www.unrealircd.org/docs/FAQ#old-server-protocol");
+		exit_client(client, NULL, "Server using old unsupported protocol from UnrealIRCd 3.2.x or earlier. "
+		                          "See https://www.unrealircd.org/docs/FAQ#old-server-protocol");
+		return;
+	}
+
+	hop = atol(parv[2]);
+	if (hop != 1)
+	{
+		sendto_umode_global(UMODE_OPER, "Directly linked server %s provided a hopcount of %d, while 1 was expected",
+		                                servername, hop);
+		exit_client(client, NULL, "Invalid SERVER message, hop count must be 1");
+	}
+	client->hopcount = hop;
+
+	strlcpy(info, parv[parc - 1], sizeof(info));
+
+	/* Parse "VL" data in description */
+	if (SupportVL(client))
+	{
+		char tmp[REALLEN + 61];
+		inf = protocol = flags = num = NULL;
+		strlcpy(tmp, info, sizeof(tmp)); /* work on a copy */
+
+		/* We are careful here to allow invalid syntax or missing
+		 * stuff, which mean that particular variable will stay NULL.
+		 */
+
+		protocol = strtok(tmp, "-");
+		if (protocol)
+			flags = strtok(NULL, "-");
+		if (flags)
+			num = strtok(NULL, " ");
+		if (num)
+			inf = strtok(NULL, "");
+		if (inf)
 		{
-			char tmp[REALLEN + 61];
-			inf = protocol = flags = num = NULL;
-			strlcpy(tmp, info, sizeof(tmp)); /* work on a copy */
+			strlcpy(client->info, inf[0] ? inf : "server", sizeof(client->info)); /* set real description */
 
-			/* we also have a fail safe incase they say they are sending
-			 * VL stuff and don't -- codemastr
-			 */
-
-			protocol = strtok(tmp, "-");
-			if (protocol)
-				flags = strtok(NULL, "-");
-			if (flags)
-				num = strtok(NULL, " ");
-			if (num)
-				inf = strtok(NULL, "");
-			if (inf)
-			{
-				int ret;
-				
-				strlcpy(client->info, inf[0] ? inf : "server", sizeof(client->info)); /* set real description */
-				
-				if (!_check_deny_version(client, NULL, atoi(protocol), flags))
-					return; /* Rejected */
-			} else {
-				strlcpy(client->info, info[0] ? info : "server", sizeof(client->info));
-			}
+			if (!_check_deny_version(client, NULL, atoi(protocol), flags))
+				return; /* Rejected */
 		} else {
 			strlcpy(client->info, info[0] ? info : "server", sizeof(client->info));
 		}
-
-		for (deny = conf_deny_link; deny; deny = deny->next)
-		{
-			if (deny->flag.type == CRULE_ALL && match_simple(deny->mask, servername)
-				&& crule_eval(deny->rule))
-			{
-				sendto_ops_and_log("Refused connection from %s. Rejected by deny link { } block.",
-					get_client_host(client));
-				exit_client(client, NULL, "Disallowed by connection rule");
-				return;
-			}
-		}
-		if (aconf->options & CONNECT_QUARANTINE)
-			SetQuarantined(client);
-
-		ircsnprintf(descbuf, sizeof descbuf, "Server: %s", servername);
-		fd_desc(client->local->fd, descbuf);
-
-		/* Start synch now */
-		server_sync(client, aconf);
-		if (IsDead(client))
-			return;
+	} else {
+		strlcpy(client->info, info[0] ? info : "server", sizeof(client->info));
 	}
-	else
+
+	/* Process deny server { } restrictions */
+	for (deny = conf_deny_link; deny; deny = deny->next)
 	{
-		cmd_server_remote(client, recv_mtags, parc, parv);
-		return;
+		if (deny->flag.type == CRULE_ALL && match_simple(deny->mask, servername)
+			&& crule_eval(deny->rule))
+		{
+			sendto_ops_and_log("Refused connection from %s. Rejected by deny link { } block.",
+				get_client_host(client));
+			exit_client(client, NULL, "Disallowed by connection rule");
+			return;
+		}
 	}
+
+	if (aconf->options & CONNECT_QUARANTINE)
+		SetQuarantined(client);
+
+	ircsnprintf(descbuf, sizeof descbuf, "Server: %s", servername);
+	fd_desc(client->local->fd, descbuf);
+
+	/* Start synch now */
+	server_sync(client, aconf);
 }
 
-CMD_FUNC(cmd_server_remote)
+/** Remote server command (SID).
+ * parv[1] = server name
+ * parv[2] = hop count (always >1)
+ * parv[3] = SID
+ * parv[4] = server description
+ */
+CMD_FUNC(cmd_sid)
 {
 	Client *acptr, *ocptr;
 	ConfigItem_link	*aconf;
 	ConfigItem_ban *bconf;
 	int 	hop;
-	char	info[REALLEN + 61];
 	char	*servername = parv[1];
 	Client *cptr = client->direction; /* lazy, since this function may be removed soon */
 
-	if (parc < 4 || (!*parv[3]))
+	/* Only allow this command from server sockets */
+	if (!IsServer(client->direction))
 	{
-		sendto_one(client, NULL, "ERROR :Not enough SERVER parameters");
+		sendnumeric(client, ERR_NOTFORUSERS, "SID");
+		return;
+	}
+
+	if (parc < 4 || BadPtr(parv[3]))
+	{
+		sendto_one(client, NULL, "ERROR :Not enough SID parameters");
 		return;
 	}
 
@@ -668,6 +666,8 @@ CMD_FUNC(cmd_server_remote)
 		exit_client(acptr, NULL, "Server Exists");
 		return;
 	}
+
+	/* Check deny server { } */
 	if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
 		sendto_ops_and_log("Cancelling link %s, banned server %s",
@@ -676,16 +676,42 @@ CMD_FUNC(cmd_server_remote)
 		exit_client(cptr, NULL, "Brought in banned server");
 		return;
 	}
-	/* OK, let us check in the data now now */
+
+	/* OK, let us check the data now */
+	if (!valid_server_name(servername))
+	{
+		sendto_ops_and_log("Link %s introduced server with bad server name '%s' -- disconnecting",
+		                   client->name, servername);
+		exit_client(cptr, NULL, "Introduced server with bad server name");
+		return;
+	}
+
 	hop = atol(parv[2]);
-	strlcpy(info, parv[parc - 1], sizeof(info));
+	if (hop < 2)
+	{
+		sendto_ops_and_log("Server %s introduced server %s with hop count of %d, while >1 was expected",
+		                   client->name, servername, hop);
+		exit_client(cptr, NULL, "ERROR :Invalid hop count");
+		return;
+	}
+
+	if (!valid_sid(parv[3]))
+	{
+		sendto_ops_and_log("Server %s introduced server %s with invalid SID '%s' -- disconnecting",
+		                   client->name, servername, parv[3]);
+		exit_client(cptr, NULL, "ERROR :Invalid SID");
+		return;
+	}
+
 	if (!cptr->serv->conf)
 	{
 		sendto_ops_and_log("Internal error: lost conf for %s!!, dropping link", cptr->name);
-		exit_client(cptr, NULL, "Lost configuration");
+		exit_client(cptr, NULL, "Internal error: lost configuration");
 		return;
 	}
+
 	aconf = cptr->serv->conf;
+
 	if (!aconf->hub)
 	{
 		sendto_ops_and_log("Link %s cancelled, is Non-Hub but introduced Leaf %s",
@@ -693,6 +719,7 @@ CMD_FUNC(cmd_server_remote)
 		exit_client(cptr, NULL, "Non-Hub Link");
 		return;
 	}
+
 	if (!match_simple(aconf->hub, servername))
 	{
 		sendto_ops_and_log("Link %s cancelled, linked in %s, which hub config disallows",
@@ -700,6 +727,7 @@ CMD_FUNC(cmd_server_remote)
 		exit_client(cptr, NULL, "Not matching hub configuration");
 		return;
 	}
+
 	if (aconf->leaf)
 	{
 		if (!match_simple(aconf->leaf, servername))
@@ -710,6 +738,7 @@ CMD_FUNC(cmd_server_remote)
 			return;
 		}
 	}
+
 	if (aconf->leaf_depth && (hop > aconf->leaf_depth))
 	{
 		sendto_ops_and_log("Link %s(%s) cancelled, too deep depth",
@@ -717,45 +746,31 @@ CMD_FUNC(cmd_server_remote)
 		exit_client(cptr, NULL, "Too deep link depth (leaf)");
 		return;
 	}
+
+	/* All approved, add the server */
 	acptr = make_client(cptr, find_server(client->name, cptr));
-	(void)make_server(acptr);
-	acptr->hopcount = hop;
-
 	strlcpy(acptr->name, servername, sizeof(acptr->name));
-	strlcpy(acptr->info, info, sizeof(acptr->info));
-
-	if (isdigit(*parv[3]) && parc > 4)
-		strlcpy(acptr->id, parv[3], sizeof(acptr->id));
-
+	acptr->hopcount = hop;
+	strlcpy(acptr->id, parv[3], sizeof(acptr->id));
+	strlcpy(acptr->info, parv[parc - 1], sizeof(acptr->info));
+	make_server(acptr);
 	acptr->serv->up = find_or_add(acptr->srvptr->name);
 	SetServer(acptr);
 	ircd_log(LOG_SERVER, "SERVER %s (from %s)", acptr->name, acptr->srvptr->name);
-	/* Taken from bahamut makes it so all servers behind a U-Lined
-	 * server are also U-Lined, very helpful if HIDE_ULINES is on
-	 */
-	if (IsULine(client) || (Find_uline(acptr->name)))
+	/* If this server is U-lined, or the parent is, then mark it as U-lined */
+	if (IsULine(client) || Find_uline(acptr->name))
 		SetULine(acptr);
 	irccounts.servers++;
-	(void)find_or_add(acptr->name);
+	find_or_add(acptr->name);
 	add_client_to_list(acptr);
-	(void)add_to_client_hash_table(acptr->name, acptr);
-
-	if (*acptr->id)
-		add_to_id_hash_table(acptr->id, acptr);
-
+	add_to_client_hash_table(acptr->name, acptr);
+	add_to_id_hash_table(acptr->id, acptr);
 	list_move(&acptr->client_node, &global_server_list);
+
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
 
-	if (*acptr->id)
-	{
-		sendto_server(client, 0, 0, NULL, ":%s SID %s %d %s :%s",
-			    acptr->srvptr->id, acptr->name, hop + 1, acptr->id, acptr->info);
-	} else {
-		// FIXME: this should never happen
-		sendto_server(client, 0, 0, NULL, ":%s SERVER %s %d :%s",
-				acptr->srvptr->name,
-				acptr->name, hop + 1, acptr->info);
-	}
+	sendto_server(client, 0, 0, NULL, ":%s SID %s %d %s :%s",
+		    acptr->srvptr->id, acptr->name, hop + 1, acptr->id, acptr->info);
 
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, acptr);
 }

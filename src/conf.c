@@ -3404,10 +3404,12 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 			}
 			has_sid = 1;
 
-			if (strlen(cep->ce_vardata) != 3)
+			if (!valid_sid(cep->ce_vardata))
 			{
-				config_error("%s:%i: me::sid must be 3 characters long and begin with a number",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				config_error("%s:%i: me::sid must be 3 characters long, begin with a number, "
+				             "and the 2nd and 3rd character must be a number or uppercase letter. "
+				             "Example: \"001\" and \"0AB\" is good. \"AAA\" and \"0ab\" are bad. ",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
 
