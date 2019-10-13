@@ -37,6 +37,7 @@ CMD_FUNC(cmd_nick_local);
 CMD_FUNC(cmd_nick_remote);
 CMD_FUNC(cmd_uid);
 int _register_user(Client *client, char *nick, char *username, char *umode, char *virthost, char *ip);
+void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Client *existing, int type);
 int AllowClient(Client *client, char *username);
 
 MOD_TEST()
@@ -78,311 +79,6 @@ static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
  * Should use UID/SID anyway, then this whole problem doesn't exist.
  */
 #define ASSUME_NICK_IN_FLIGHT
-
-/** Nick collission detected. A winner has been decided upstream. Deal with killing.
- * I moved this all to a single routine here rather than having all code duplicated
- * due to SID vs NICK and some code quadruplicated.
- */
-void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Client *existing, int type)
-{
-	char comment[512];
-	char *new_server, *existing_server;
-
-	ircd_log(LOG_ERROR, "Nick collision: %s[%s]@%s (new) vs %s[%s]@%s (existing). Winner: %s. Type: %s",
-		newnick, newid, cptr->name,
-		existing->name, existing->id, existing->srvptr->name,
-		(type == NICKCOL_EQUAL) ? "None (equal)" : ((type == NICKCOL_NEW_WON) ? "New won" : "Existing won"),
-		new ? "nick-change" : "new user connecting");
-
-	new_server = cptr->name;
-	existing_server = (existing == existing->direction) ? me.name : existing->direction->name;
-	if (type == NICKCOL_EXISTING_WON)
-		snprintf(comment, sizeof(comment), "Nick collision: %s <- %s", new_server, existing_server);
-	else if (type == NICKCOL_NEW_WON)
-		snprintf(comment, sizeof(comment), "Nick collision: %s <- %s", existing_server, new_server);
-	else
-		snprintf(comment, sizeof(comment), "Nick collision: %s <-> %s", existing_server, new_server);
-
-	/* We only care about the direction from this point, not about the originally sending server */
-	cptr = cptr->direction;
-
-	if ((type == NICKCOL_EQUAL) || (type == NICKCOL_EXISTING_WON))
-	{
-		/* Kill 'new':
-		 * - 'new' is known by the cptr-side as 'newnick' already
-		 * - if not nick-changing then the other servers don't know this user
-		 * - if nick-changing, then the the other servers know the user as new->name
-		 */
-
-		/* cptr case first... this side knows the user by newnick/newid */
-		/* SID server can kill 'new' by ID */
-		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s)",
-			me.name, newid, me.name, comment);
-
-		/* non-cptr case... only necessary if nick-changing. */
-		if (new)
-		{
-			MessageTag *mtags = NULL;
-
-			new_message(new, NULL, &mtags);
-
-			/* non-cptr side knows this user by their old nick name */
-			sendto_server(cptr, 0, 0, mtags,
-				":%s KILL %s :%s (%s)",
-				me.name, ID(new), me.name, comment);
-
-			/* Exit the client */
-			ircstats.is_kill++;
-			SetKilled(new);
-			exit_client(new, mtags, comment);
-
-			free_message_tags(mtags);
-		}
-	}
-
-	if ((type == NICKCOL_EQUAL) || (type == NICKCOL_NEW_WON))
-	{
-		MessageTag *mtags = NULL;
-
-		new_message(existing, NULL, &mtags);
-
-		/* Now let's kill 'existing' */
-		sendto_server(NULL, 0, 0, mtags,
-			":%s KILL %s :%s (%s)",
-			me.name, ID(existing), me.name, comment);
-
-		/* NOTE: we may have sent two KILLs on the same nick in some cases.
-		 * Should be acceptable and only happens in a non-100% UID network.
-		 */
-
-		/* Exit the client */
-		ircstats.is_kill++;
-		SetKilled(existing);
-		exit_client(existing, mtags, comment);
-
-		free_message_tags(mtags);
-	}
-}
-
-/*
-** cmd_uid
-**	parv[1] = nickname
-**      parv[2] = hopcount
-**      parv[3] = timestamp
-**      parv[4] = username
-**      parv[5] = hostname
-**      parv[6] = UID
-**	parv[7] = servicestamp
-**      parv[8] = umodes
-**	parv[9] = virthost, * if none
-**	parv[10] = cloaked host, * if none
-**	parv[11] = ip
-**	parv[12] = info
-**
-** Technical documentation is available at:
-** https://www.unrealircd.org/docs/Server_protocol:UID_command
-*/
-CMD_FUNC(cmd_uid)
-{
-	TKL *tklban;
-	int ishold;
-	Client *acptr, *serv = NULL;
-	Client *acptrs;
-	char nick[NICKLEN + 1];
-	long lastnick = 0l;
-	int differ = 1;
-	char *hostname, *username, *sstamp, *umodes, *virthost, *ip, *realname;
-
-	if (parc < 13)
-	{
-		sendnumeric(client, ERR_NEEDMOREPARAMS, "UID");
-		return;
-	}
-
-	/* It's not just the directly attached client which must be a
-	 * server. The source itself needs to be a server.
-	 */
-	if (!IsServer(client))
-	{
-		sendnumeric(client, ERR_NOTFORUSERS, "UID");
-		return;
-	}
-
-	strlcpy(nick, parv[1], sizeof(nick));
-
-	/* Do some *MINIMAL* nick name checking for remote nicknames.
-	 * This will only catch things that severely break things. -- Syzop
-	 */
-	if (!do_remote_nick_name(nick))
-	{
-		sendnumeric(client, ERR_ERRONEUSNICKNAME, parv[1], "Illegal characters");
-
-		ircstats.is_kill++;
-		sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
-		    parv[1], client->name, get_client_name(client, FALSE));
-		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
-		    me.name, parv[1], me.name, parv[1],
-		    nick, client->name);
-		return;
-	}
-
-	/* Kill quarantined opers early... */
-	if (IsQuarantined(client->direction) && strchr(parv[8], 'o'))
-	{
-		ircstats.is_kill++;
-		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(client, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
-			me.name, parv[1], me.name);
-		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
-			parv[1], client->name);
-		return;
-	}
-
-	/* This one is never allowed, even from remotes */
-	if (!strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
-	{
-		sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, "Reserved for internal IRCd purposes");
-		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
-		    me.name, parv[1], me.name, parv[1],
-		    nick, client->name);
-		return;
-	}
-
-	if (!IsULine(client) && (tklban = find_qline(client, nick, &ishold)))
-	{
-		if (IsServer(client) && !ishold) /* server introducing new client */
-		{
-			acptrs = find_server(client->user == NULL ? parv[6] : client->user->server, NULL);
-			/* (NEW: no unregistered Q-Line msgs anymore during linking) */
-			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
-				sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
-				    (*client->name != 0
-				    && !IsServer(client) ? client->name : "<unregistered>"),
-				    acptrs ? acptrs->name : "unknown server");
-		}
-	}
-
-	/* Now check if 'nick' already exists - first, collisions with server names/ids (extremely rare) */
-	if ((acptr = find_server(nick, NULL)) != NULL)
-	{
-		sendto_umode(UMODE_OPER, "Nick collision on %s(%s <- %s)",
-		    client->name, acptr->direction->name,
-		    get_client_name(client, FALSE));
-		ircstats.is_kill++;
-		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s)",
-		    me.name, parv[1], me.name, acptr->direction->name,
-		    get_client_name(client, FALSE));
-		return;
-	}
-
-	/* Now check if 'nick' already exists - collision with a user (or still in handshake, unknown) */
-	if ((acptr = find_client(nick, NULL)) != NULL)
-	{
-		/* If there's a collision with a user that is still in handshake, on our side,
-		 * then we can just kill our client and continue.
-		 */
-		if (MyConnect(acptr) && IsUnknown(acptr))
-		{
-			SetKilled(acptr);
-			exit_client(acptr, NULL, "Overridden");
-			goto nickkill2done;
-		}
-
-		lastnick = atol(parv[3]);
-		differ = (mycmp(acptr->user->username, parv[4]) || mycmp(acptr->user->realhost, parv[5]));
-		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %lld <- %s %lld)",
-		    acptr->name, acptr->direction->name, (long long)acptr->lastnick,
-		    client->direction->name, (long long)lastnick);
-		/*
-		   **    I'm putting the KILL handling here just to make it easier
-		   ** to read, it's hard to follow it the way it used to be.
-		   ** Basically, this is what it will do.  It will kill both
-		   ** users if no timestamp is given, or they are equal.  It will
-		   ** kill the user on our side if the other server is "correct"
-		   ** (user@host differ and their user is older, or user@host are
-		   ** the same and their user is younger), otherwise just kill the
-		   ** user an reintroduce our correct user.
-		   **    The old code just sat there and "hoped" the other server
-		   ** would kill their user.  Not anymore.
-		   **                                               -- binary
-		 */
-		if (acptr->lastnick == lastnick)
-		{
-			nick_collision(client, parv[1], parv[6], NULL, acptr, NICKCOL_EQUAL);
-			return;	/* We killed both users, now stop the process. */
-		}
-
-		if ((differ && (acptr->lastnick > lastnick)) ||
-		    (!differ && (acptr->lastnick < lastnick)) || acptr->direction == client->direction)	/* we missed a QUIT somewhere ? */
-		{
-			nick_collision(client, parv[1], parv[6], NULL, acptr, NICKCOL_NEW_WON);
-			/* We got rid of the "wrong" user. Introduce the correct one. */
-			/* ^^ hmm.. why was this absent in nenolod's code, resulting in a 'return 0'? seems wrong. */
-			goto nickkill2done;
-		}
-
-		if ((differ && (acptr->lastnick < lastnick)) || (!differ && (acptr->lastnick > lastnick)))
-		{
-			nick_collision(client, parv[1], parv[6], NULL, acptr, NICKCOL_EXISTING_WON);
-			return;	/* Ignore the NICK */
-		}
-		return; /* just in case */
-	}
-
-nickkill2done:
-	/* Proceed with introducing the new client, change source (replace client) */
-
-	serv = client;
-	client = make_client(serv->direction, serv);
-	strlcpy(client->id, parv[6], IDLEN);
-	add_client_to_list(client);
-	add_to_id_hash_table(client->id, client);
-	client->lastnick = atol(parv[3]);
-	strlcpy(client->name, nick, NICKLEN+1);
-	add_to_client_hash_table(nick, client);
-
-	make_user(client);
-
-	hostname = parv[5];
-	sstamp = parv[7];
-	username = parv[4];
-	umodes = parv[8];
-	virthost = parv[9];
-	ip = parv[11];
-	realname = parv[12];
-	/* Note that cloaked host aka parv[10] is unused */
-
-	client->user->server = find_or_add(client->srvptr->name);
-	strlcpy(client->user->realhost, hostname, sizeof(client->user->realhost));
-	// FIXME: some validation would be nice ^
-
-	if (*sstamp != '*')
-		strlcpy(client->user->svid, sstamp, sizeof(client->user->svid));
-
-	strlcpy(client->info, realname, sizeof(client->info));
-	strlcpy(client->user->username, username, USERLEN + 1);
-	register_user(client, client->name, username, umodes, virthost, ip);
-	if (IsDead(client))
-		return;
-	if (!IsULine(serv) && IsSynched(serv))
-		sendto_fconnectnotice(client, 0, NULL);
-
-	RunHook(HOOKTYPE_REMOTE_CONNECT, client);
-}
-
-/** The NICK command.
- * In UnrealIRCd 4/5 this is only used in 2 cases:
- * 1) A local user setting or changing the nick name ("NICK xyz")
- * 2) A remote user changing their nick name (":<uid> NICK <newnick>")
- */
-CMD_FUNC(cmd_nick)
-{
-	if (MyConnect(client) && !IsServer(client))
-		cmd_nick_local(client, recv_mtags, parc, parv);
-	else
-		cmd_nick_remote(client, recv_mtags, parc, parv);
-}
 
 /** The NICK command.
  * In UnrealIRCd 4/5 this is only used in 2 cases:
@@ -791,6 +487,226 @@ CMD_FUNC(cmd_nick_local)
 
 	if (removemoder && MyUser(client))
 		sendto_one(client, NULL, ":%s MODE %s :-r", me.name, client->name);
+}
+
+/*
+** cmd_uid
+**	parv[1] = nickname
+**      parv[2] = hopcount
+**      parv[3] = timestamp
+**      parv[4] = username
+**      parv[5] = hostname
+**      parv[6] = UID
+**	parv[7] = servicestamp
+**      parv[8] = umodes
+**	parv[9] = virthost, * if none
+**	parv[10] = cloaked host, * if none
+**	parv[11] = ip
+**	parv[12] = info
+**
+** Technical documentation is available at:
+** https://www.unrealircd.org/docs/Server_protocol:UID_command
+*/
+CMD_FUNC(cmd_uid)
+{
+	TKL *tklban;
+	int ishold;
+	Client *acptr, *serv = NULL;
+	Client *acptrs;
+	char nick[NICKLEN + 1];
+	long lastnick = 0l;
+	int differ = 1;
+	char *hostname, *username, *sstamp, *umodes, *virthost, *ip, *realname;
+
+	if (parc < 13)
+	{
+		sendnumeric(client, ERR_NEEDMOREPARAMS, "UID");
+		return;
+	}
+
+	/* It's not just the directly attached client which must be a
+	 * server. The source itself needs to be a server.
+	 */
+	if (!IsServer(client))
+	{
+		sendnumeric(client, ERR_NOTFORUSERS, "UID");
+		return;
+	}
+
+	strlcpy(nick, parv[1], sizeof(nick));
+
+	/* Do some *MINIMAL* nick name checking for remote nicknames.
+	 * This will only catch things that severely break things. -- Syzop
+	 */
+	if (!do_remote_nick_name(nick))
+	{
+		sendnumeric(client, ERR_ERRONEUSNICKNAME, parv[1], "Illegal characters");
+
+		ircstats.is_kill++;
+		sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
+		    parv[1], client->name, get_client_name(client, FALSE));
+		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
+		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
+		    me.name, parv[1], me.name, parv[1],
+		    nick, client->name);
+		return;
+	}
+
+	/* Kill quarantined opers early... */
+	if (IsQuarantined(client->direction) && strchr(parv[8], 'o'))
+	{
+		ircstats.is_kill++;
+		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
+		sendto_one(client, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
+			me.name, parv[1], me.name);
+		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
+			parv[1], client->name);
+		return;
+	}
+
+	/* This one is never allowed, even from remotes */
+	if (!strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
+	{
+		sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, "Reserved for internal IRCd purposes");
+		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
+		    me.name, parv[1], me.name, parv[1],
+		    nick, client->name);
+		return;
+	}
+
+	if (!IsULine(client) && (tklban = find_qline(client, nick, &ishold)))
+	{
+		if (IsServer(client) && !ishold) /* server introducing new client */
+		{
+			acptrs = find_server(client->user == NULL ? parv[6] : client->user->server, NULL);
+			/* (NEW: no unregistered Q-Line msgs anymore during linking) */
+			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
+				sendto_snomask(SNO_QLINE, "Q-Lined nick %s from %s on %s", nick,
+				    (*client->name != 0
+				    && !IsServer(client) ? client->name : "<unregistered>"),
+				    acptrs ? acptrs->name : "unknown server");
+		}
+	}
+
+	/* Now check if 'nick' already exists - first, collisions with server names/ids (extremely rare) */
+	if ((acptr = find_server(nick, NULL)) != NULL)
+	{
+		sendto_umode(UMODE_OPER, "Nick collision on %s(%s <- %s)",
+		    client->name, acptr->direction->name,
+		    get_client_name(client, FALSE));
+		ircstats.is_kill++;
+		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s)",
+		    me.name, parv[1], me.name, acptr->direction->name,
+		    get_client_name(client, FALSE));
+		return;
+	}
+
+	/* Now check if 'nick' already exists - collision with a user (or still in handshake, unknown) */
+	if ((acptr = find_client(nick, NULL)) != NULL)
+	{
+		/* If there's a collision with a user that is still in handshake, on our side,
+		 * then we can just kill our client and continue.
+		 */
+		if (MyConnect(acptr) && IsUnknown(acptr))
+		{
+			SetKilled(acptr);
+			exit_client(acptr, NULL, "Overridden");
+			goto nickkill2done;
+		}
+
+		lastnick = atol(parv[3]);
+		differ = (mycmp(acptr->user->username, parv[4]) || mycmp(acptr->user->realhost, parv[5]));
+		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %lld <- %s %lld)",
+		    acptr->name, acptr->direction->name, (long long)acptr->lastnick,
+		    client->direction->name, (long long)lastnick);
+		/*
+		   **    I'm putting the KILL handling here just to make it easier
+		   ** to read, it's hard to follow it the way it used to be.
+		   ** Basically, this is what it will do.  It will kill both
+		   ** users if no timestamp is given, or they are equal.  It will
+		   ** kill the user on our side if the other server is "correct"
+		   ** (user@host differ and their user is older, or user@host are
+		   ** the same and their user is younger), otherwise just kill the
+		   ** user an reintroduce our correct user.
+		   **    The old code just sat there and "hoped" the other server
+		   ** would kill their user.  Not anymore.
+		   **                                               -- binary
+		 */
+		if (acptr->lastnick == lastnick)
+		{
+			nick_collision(client, parv[1], parv[6], NULL, acptr, NICKCOL_EQUAL);
+			return;	/* We killed both users, now stop the process. */
+		}
+
+		if ((differ && (acptr->lastnick > lastnick)) ||
+		    (!differ && (acptr->lastnick < lastnick)) || acptr->direction == client->direction)	/* we missed a QUIT somewhere ? */
+		{
+			nick_collision(client, parv[1], parv[6], NULL, acptr, NICKCOL_NEW_WON);
+			/* We got rid of the "wrong" user. Introduce the correct one. */
+			/* ^^ hmm.. why was this absent in nenolod's code, resulting in a 'return 0'? seems wrong. */
+			goto nickkill2done;
+		}
+
+		if ((differ && (acptr->lastnick < lastnick)) || (!differ && (acptr->lastnick > lastnick)))
+		{
+			nick_collision(client, parv[1], parv[6], NULL, acptr, NICKCOL_EXISTING_WON);
+			return;	/* Ignore the NICK */
+		}
+		return; /* just in case */
+	}
+
+nickkill2done:
+	/* Proceed with introducing the new client, change source (replace client) */
+
+	serv = client;
+	client = make_client(serv->direction, serv);
+	strlcpy(client->id, parv[6], IDLEN);
+	add_client_to_list(client);
+	add_to_id_hash_table(client->id, client);
+	client->lastnick = atol(parv[3]);
+	strlcpy(client->name, nick, NICKLEN+1);
+	add_to_client_hash_table(nick, client);
+
+	make_user(client);
+
+	hostname = parv[5];
+	sstamp = parv[7];
+	username = parv[4];
+	umodes = parv[8];
+	virthost = parv[9];
+	ip = parv[11];
+	realname = parv[12];
+	/* Note that cloaked host aka parv[10] is unused */
+
+	client->user->server = find_or_add(client->srvptr->name);
+	strlcpy(client->user->realhost, hostname, sizeof(client->user->realhost));
+	// FIXME: some validation would be nice ^
+
+	if (*sstamp != '*')
+		strlcpy(client->user->svid, sstamp, sizeof(client->user->svid));
+
+	strlcpy(client->info, realname, sizeof(client->info));
+	strlcpy(client->user->username, username, USERLEN + 1);
+	register_user(client, client->name, username, umodes, virthost, ip);
+	if (IsDead(client))
+		return;
+	if (!IsULine(serv) && IsSynched(serv))
+		sendto_fconnectnotice(client, 0, NULL);
+
+	RunHook(HOOKTYPE_REMOTE_CONNECT, client);
+}
+
+/** The NICK command.
+ * In UnrealIRCd 4/5 this is only used in 2 cases:
+ * 1) A local user setting or changing the nick name ("NICK xyz")
+ * 2) A remote user changing their nick name (":<uid> NICK <newnick>")
+ */
+CMD_FUNC(cmd_nick)
+{
+	if (MyConnect(client) && !IsServer(client))
+		cmd_nick_local(client, recv_mtags, parc, parv);
+	else
+		cmd_nick_remote(client, recv_mtags, parc, parv);
 }
 
 /** Register the connection as a User.
@@ -1263,6 +1179,91 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 
 	/* User successfully registered */
 	return 1;
+}
+
+/** Nick collission detected. A winner has been decided upstream. Deal with killing.
+ * I moved this all to a single routine here rather than having all code duplicated
+ * due to SID vs NICK and some code quadruplicated.
+ */
+void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Client *existing, int type)
+{
+	char comment[512];
+	char *new_server, *existing_server;
+
+	ircd_log(LOG_ERROR, "Nick collision: %s[%s]@%s (new) vs %s[%s]@%s (existing). Winner: %s. Type: %s",
+		newnick, newid, cptr->name,
+		existing->name, existing->id, existing->srvptr->name,
+		(type == NICKCOL_EQUAL) ? "None (equal)" : ((type == NICKCOL_NEW_WON) ? "New won" : "Existing won"),
+		new ? "nick-change" : "new user connecting");
+
+	new_server = cptr->name;
+	existing_server = (existing == existing->direction) ? me.name : existing->direction->name;
+	if (type == NICKCOL_EXISTING_WON)
+		snprintf(comment, sizeof(comment), "Nick collision: %s <- %s", new_server, existing_server);
+	else if (type == NICKCOL_NEW_WON)
+		snprintf(comment, sizeof(comment), "Nick collision: %s <- %s", existing_server, new_server);
+	else
+		snprintf(comment, sizeof(comment), "Nick collision: %s <-> %s", existing_server, new_server);
+
+	/* We only care about the direction from this point, not about the originally sending server */
+	cptr = cptr->direction;
+
+	if ((type == NICKCOL_EQUAL) || (type == NICKCOL_EXISTING_WON))
+	{
+		/* Kill 'new':
+		 * - 'new' is known by the cptr-side as 'newnick' already
+		 * - if not nick-changing then the other servers don't know this user
+		 * - if nick-changing, then the the other servers know the user as new->name
+		 */
+
+		/* cptr case first... this side knows the user by newnick/newid */
+		/* SID server can kill 'new' by ID */
+		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s)",
+			me.name, newid, me.name, comment);
+
+		/* non-cptr case... only necessary if nick-changing. */
+		if (new)
+		{
+			MessageTag *mtags = NULL;
+
+			new_message(new, NULL, &mtags);
+
+			/* non-cptr side knows this user by their old nick name */
+			sendto_server(cptr, 0, 0, mtags,
+				":%s KILL %s :%s (%s)",
+				me.name, ID(new), me.name, comment);
+
+			/* Exit the client */
+			ircstats.is_kill++;
+			SetKilled(new);
+			exit_client(new, mtags, comment);
+
+			free_message_tags(mtags);
+		}
+	}
+
+	if ((type == NICKCOL_EQUAL) || (type == NICKCOL_NEW_WON))
+	{
+		MessageTag *mtags = NULL;
+
+		new_message(existing, NULL, &mtags);
+
+		/* Now let's kill 'existing' */
+		sendto_server(NULL, 0, 0, mtags,
+			":%s KILL %s :%s (%s)",
+			me.name, ID(existing), me.name, comment);
+
+		/* NOTE: we may have sent two KILLs on the same nick in some cases.
+		 * Should be acceptable and only happens in a non-100% UID network.
+		 */
+
+		/* Exit the client */
+		ircstats.is_kill++;
+		SetKilled(existing);
+		exit_client(existing, mtags, comment);
+
+		free_message_tags(mtags);
+	}
 }
 
 /* This used to initialize the various name strings used to store hostnames.
