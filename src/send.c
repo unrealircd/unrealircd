@@ -1032,7 +1032,7 @@ void sendto_fconnectnotice(Client *newuser, int disconnect, char *comment)
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{
 		if (acptr->user->snomask & SNO_FCLIENT)
-			sendnotice(acptr, ":%s NOTICE %s :%s", newuser->user->server, acptr->name, connect);
+			sendto_one(acptr, NULL, ":%s NOTICE %s :%s", newuser->user->server, acptr->name, connect);
 	}
 }
 
