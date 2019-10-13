@@ -331,7 +331,6 @@ typedef enum ClientStatus {
  * Note that client protocol extensions have been moved
  * to the ClientCapability API which uses acptr->local->caps.
  */
-#define PROTO_NOQUIT	0x000001	/* Negotiated NOQUIT protocol */
 #define PROTO_SJOIN	0x000002	/* Negotiated SJOIN protocol */
 #define PROTO_SJOIN2	0x000008	/* Negotiated SJOIN2 protocol */
 #define PROTO_UMODE2	0x000010	/* Negotiated UMODE2 protocol */
@@ -508,7 +507,6 @@ typedef enum ClientStatus {
 #define CHECKPROTO(x,y) (checkprotoflags(x, y, __FILE__, __LINE__))
 #endif
 
-#define DontSendQuit(x)		(CHECKPROTO(x, PROTO_NOQUIT))
 #define SupportSJOIN(x)		(CHECKPROTO(x, PROTO_SJOIN))
 #define SupportNICKIP(x)	(CHECKPROTO(x, PROTO_NICKIP))
 #define SupportSJOIN2(x)	(CHECKPROTO(x, PROTO_SJOIN2))
@@ -524,7 +522,6 @@ typedef enum ClientStatus {
 #define SupportMTAGS(x)		(CHECKPROTO(x, PROTO_MTAGS))
 
 #define SetSJOIN(x)		((x)->local->proto |= PROTO_SJOIN)
-#define SetNoQuit(x)		((x)->local->proto |= PROTO_NOQUIT)
 #define SetSJOIN2(x)		((x)->local->proto |= PROTO_SJOIN2)
 #define SetUMODE2(x)		((x)->local->proto |= PROTO_UMODE2)
 #define SetVL(x)		((x)->local->proto |= PROTO_VL)
@@ -537,7 +534,6 @@ typedef enum ClientStatus {
 #define SetMTAGS(x)		((x)->local->proto |= PROTO_MTAGS)
 
 #define ClearSJOIN(x)		((x)->local->proto &= ~PROTO_SJOIN)
-#define ClearNoQuit(x)		((x)->local->proto &= ~PROTO_NOQUIT)
 #define ClearSJOIN2(x)		((x)->local->proto &= ~PROTO_SJOIN2)
 #define ClearUMODE2(x)		((x)->local->proto &= ~PROTO_UMODE2)
 #define ClearVL(x)		((x)->local->proto &= ~PROTO_VL)

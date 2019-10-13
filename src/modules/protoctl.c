@@ -94,10 +94,6 @@ CMD_FUNC(cmd_protoctl)
 		{
 			SetCapability(client, "userhost-in-names");
 		}
-		else if (!strcmp(name, "NOQUIT"))
-		{
-			SetNoQuit(client);
-		}
 		else if (!strcmp(name, "SJOIN"))
 		{
 			SetSJOIN(client);

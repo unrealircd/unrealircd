@@ -382,17 +382,6 @@ static void recurse_send_quits(Client *cptr, Client *client, Client *from, Clien
 	if (!MyConnect(to))
 		return; /* We shouldn't even be called for non-remotes */
 
-	if (!CHECKPROTO(to, PROTO_NOQUIT))
-	{
-		list_for_each_entry_safe(acptr, next, &client_list, client_node)
-		{
-			if (acptr->srvptr != client)
-				continue;
-
-			sendto_one(to, NULL, ":%s QUIT :%s", acptr->name, splitstr);
-		}
-	}
-
 	list_for_each_entry_safe(acptr, next, &global_server_list, client_node)
 	{
 		if (acptr->srvptr != client)
@@ -401,7 +390,7 @@ static void recurse_send_quits(Client *cptr, Client *client, Client *from, Clien
 		recurse_send_quits(cptr, acptr, from, to, mtags, comment, splitstr);
 	}
 
-	if ((cptr == client && to != from) || !CHECKPROTO(to, PROTO_NOQUIT))
+	if (cptr == client && to != from)
 		sendto_one(to, mtags, "SQUIT %s :%s", client->name, comment);
 }
 
