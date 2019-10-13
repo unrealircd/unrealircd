@@ -1094,15 +1094,14 @@ void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
 	}
 
 	sendto_one(server, NULL,
-		    "NICK %s %d %lld %s %s %s %s %s %s %s%s%s%s:%s",
+		    "NICK %s %d %lld %s %s %s %s %s %s %s%s %s:%s",
 		    client->name, client->hopcount+1,
 		    (long long)client->lastnick, client->user->username,
 		    client->user->realhost, client->srvptr->name,
 		    client->user->svid, umodes, vhost,
 		    CHECKPROTO(server, PROTO_CLK) ? getcloak(client) : "",
 		    CHECKPROTO(server, PROTO_CLK) ? " " : "",
-		    CHECKPROTO(server, PROTO_NICKIP) ? encode_ip(client->ip) : "",
-		    CHECKPROTO(server, PROTO_NICKIP) ? " " : "",
+		    encode_ip(client->ip),
 		    client->info);
 
 	return;

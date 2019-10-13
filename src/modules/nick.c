@@ -454,6 +454,7 @@ nickkill2done:
 **      parv[10] = ip
 **      parv[11] = info
 */
+/* FIXME: update above docs and this function since NICKv2 and NICKIP are now always true ;) */
 CMD_FUNC(cmd_nick)
 {
 	TKL *tklban;

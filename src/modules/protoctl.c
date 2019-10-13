@@ -135,10 +135,6 @@ CMD_FUNC(cmd_protoctl)
 			SetTKLEXT2(client);
 			SetTKLEXT(client); /* TKLEXT is implied as well. always. */
 		}
-		else if (!strcmp(name, "NICKIP"))
-		{
-			client->local->proto |= PROTO_NICKIP;
-		}
 		else if (!strcmp(name, "MTAGS"))
 		{
 			SetMTAGS(client);
