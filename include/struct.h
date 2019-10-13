@@ -511,9 +511,6 @@ typedef enum ClientStatus {
 #define SetCLK(x)		((x)->local->proto |= PROTO_CLK)
 #define SetMTAGS(x)		((x)->local->proto |= PROTO_MTAGS)
 
-#define ClearVL(x)		((x)->local->proto &= ~PROTO_VL)
-#define ClearVHP(x)		((x)->local->proto &= ~PROTO_VHP)
-
 /*
  * defined debugging levels
  */
