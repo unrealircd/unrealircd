@@ -39,13 +39,8 @@ uid_t irc_uid = 0;
 gid_t irc_gid = 0;
 #endif
 
-int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
-
-char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
-    REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
-    REPORT_FAIL_ID[256];
-IRCCounts irccounts;
-Client me;			/* That's me */
+MODVAR IRCCounts irccounts;
+MODVAR Client me;			/* That's me */
 MODVAR char *me_hash;
 extern char backupbuf[8192];
 #ifdef _WIN32
@@ -1348,20 +1343,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifdef _WIN32
 	loop.ircd_forked = 1;
 #endif
-	ircsnprintf(REPORT_DO_DNS, sizeof(REPORT_DO_DNS), ":%s %s", me.name, BREPORT_DO_DNS);
-	ircsnprintf(REPORT_FIN_DNS, sizeof(REPORT_FIN_DNS), ":%s %s", me.name, BREPORT_FIN_DNS);
-	ircsnprintf(REPORT_FIN_DNSC, sizeof(REPORT_FIN_DNSC), ":%s %s", me.name, BREPORT_FIN_DNSC);
-	ircsnprintf(REPORT_FAIL_DNS, sizeof(REPORT_FAIL_DNS), ":%s %s", me.name, BREPORT_FAIL_DNS);
-	ircsnprintf(REPORT_DO_ID, sizeof(REPORT_DO_ID), ":%s %s", me.name, BREPORT_DO_ID);
-	ircsnprintf(REPORT_FIN_ID, sizeof(REPORT_FIN_ID), ":%s %s", me.name, BREPORT_FIN_ID);
-	ircsnprintf(REPORT_FAIL_ID, sizeof(REPORT_FAIL_ID), ":%s %s", me.name, BREPORT_FAIL_ID);
-	R_do_dns = strlen(REPORT_DO_DNS);
-	R_fin_dns = strlen(REPORT_FIN_DNS);
-	R_fin_dnsc = strlen(REPORT_FIN_DNSC);
-	R_fail_dns = strlen(REPORT_FAIL_DNS);
-	R_do_id = strlen(REPORT_DO_ID);
-	R_fin_id = strlen(REPORT_FIN_ID);
-	R_fail_id = strlen(REPORT_FAIL_ID);
 
 	fix_timers();
 	write_pidfile();

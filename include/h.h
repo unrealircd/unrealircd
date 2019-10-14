@@ -143,18 +143,13 @@ extern void del_ListItem(ListStruct *, ListStruct **);
 extern MODVAR LoopStruct loop;
 extern int del_banid(Channel *channel, char *banid);
 extern int del_exbanid(Channel *channel, char *banid);
-#define BREPORT_DO_DNS	"NOTICE * :*** Looking up your hostname...\r\n"
-#define BREPORT_FIN_DNS	"NOTICE * :*** Found your hostname\r\n"
-#define BREPORT_FIN_DNSC "NOTICE * :*** Found your hostname (cached)\r\n"
-#define BREPORT_FAIL_DNS "NOTICE * :*** Couldn't resolve your hostname; using your IP address instead\r\n"
-#define BREPORT_DO_ID	"NOTICE * :*** Checking ident...\r\n"
-#define BREPORT_FIN_ID	"NOTICE * :*** Received identd response\r\n"
-#define BREPORT_FAIL_ID	"NOTICE * :*** No ident response; username prefixed with ~\r\n"
-
-extern MODVAR char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
-    REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
-    REPORT_FAIL_ID[256];
-
+#define REPORT_DO_DNS	"NOTICE * :*** Looking up your hostname...\r\n"
+#define REPORT_FIN_DNS	"NOTICE * :*** Found your hostname\r\n"
+#define REPORT_FIN_DNSC "NOTICE * :*** Found your hostname (cached)\r\n"
+#define REPORT_FAIL_DNS "NOTICE * :*** Couldn't resolve your hostname; using your IP address instead\r\n"
+#define REPORT_DO_ID	"NOTICE * :*** Checking ident...\r\n"
+#define REPORT_FIN_ID	"NOTICE * :*** Received identd response\r\n"
+#define REPORT_FAIL_ID	"NOTICE * :*** No ident response; username prefixed with ~\r\n"
 extern MODVAR int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 extern MODVAR struct list_head client_list;
 extern MODVAR struct list_head lclient_list;
