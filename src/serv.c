@@ -51,6 +51,68 @@ extern MOTDLine *Find_file(char *, short);
 
 void reread_motdsandrules();
 
+/** Send a message upstream if necessary and check if it's for us.
+ * @param client	The sender
+ * @param mtags		Message tags associated with this message
+ * @param command	The command (eg: "NOTICE")
+ * @param server	This indicates parv[server] contains the destination
+ * @param parc		Parameter count (MAX 8!!)
+ * @param parv		Parameter values (MAX 8!!)
+ * @note Command can have only max 8 parameters (parv[8])
+ * @note parv[server] is replaced with the name of the matched client.
+ */
+int hunt_server(Client *client, MessageTag *mtags, char *command, int server, int parc, char *parv[])
+{
+	Client *acptr;
+	char *saved;
+
+	if (parc > 9)
+	{
+		ircd_log(LOG_ERROR, "Oversized hunt_server()");
+		abort();
+	}
+
+	/* This would be strange and bad. Previous version assumed "it's for me". Hmm.. okay. */
+	if (parc <= server || BadPtr(parv[server]))
+		return HUNTED_ISME;
+
+	acptr = find_client(parv[server], NULL);
+
+	/* find_client() may find a variety of clients. Only servers/persons please, no 'unknowns'. */
+	if (acptr && MyConnect(acptr) && !IsMe(acptr) && !IsUser(acptr) && !IsServer(acptr))
+		acptr = NULL;
+
+	if (!acptr)
+	{
+		sendnumeric(client, ERR_NOSUCHSERVER, parv[server]);
+		return HUNTED_NOSUCH;
+	}
+
+	if (IsMe(acptr) || MyUser(acptr))
+		return HUNTED_ISME;
+
+	/* Never send the message back from where it came from */
+	if (acptr->direction == client->direction)
+	{
+		sendnumeric(client, ERR_NOSUCHSERVER, parv[server]);
+		return HUNTED_NOSUCH;
+	}
+
+	/* Replace "server" part with actual servername (eg: 'User' -> 'x.y.net')
+	 * Ugly. Previous version didn't even restore the state, now we do.
+	 */
+	saved = parv[server];
+	parv[server] = acptr->name;
+
+	sendto_one(acptr, mtags, command, client->name,
+	    parv[1], parv[2], parv[3], parv[4],
+	    parv[5], parv[6], parv[7], parv[8]);
+
+	parv[server] = saved;
+
+	return HUNTED_PASS;
+}
+
 #ifndef _WIN32
 char *getosname(void)
 {
