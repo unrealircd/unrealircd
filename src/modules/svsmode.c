@@ -450,7 +450,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 					 * the idea behind it :P. -- Syzop
 					 */
 					if (MyUser(target) && !strcasecmp(target->user->virthost, target->user->cloakedhost))
-						sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", target->name,
+						sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", target->id,
 							target->user->virthost);
 				}
 				goto setmodex;
@@ -471,7 +471,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 						safe_strdup(target->user->virthost, target->user->cloakedhost);
 						/* And broadcast the change to VHP servers */
 						if (MyUser(target))
-							sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", target->name,
+							sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", target->id,
 								target->user->virthost);
 					}
 					goto setmodex;
@@ -500,11 +500,11 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 
 	if (parc > 3)
 		sendto_server(client, 0, 0, NULL, ":%s %s %s %s %s",
-		    client->name, show_change ? "SVS2MODE" : "SVSMODE",
+		    client->id, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2], parv[3]);
 	else
 		sendto_server(client, 0, 0, NULL, ":%s %s %s %s",
-		    client->name, show_change ? "SVS2MODE" : "SVSMODE",
+		    client->id, show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2]);
 
 	/* Here we trigger the same hooks that cmd_mode does and, likewise,
@@ -594,7 +594,7 @@ void add_send_mode_param(Channel *channel, Client *from, char what, char mode, c
 		sendto_channel(channel, from, from, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
 		               from->name, channel->chname, modebuf, parabuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", from->name, channel->chname, modebuf, parabuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s", from->id, channel->chname, modebuf, parabuf);
 		free_message_tags(mtags);
 		send = 0;
 		*parabuf = 0;
