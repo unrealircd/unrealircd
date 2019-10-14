@@ -876,7 +876,7 @@ int valid_channelname(const char *cname)
 	if (strlen(cname) > CHANNELLEN)
 		return 0;
 
-	if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY)
+	if ((iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY) || !iConf.allowed_channelchars)
 	{
 		/* The default up to and including UnrealIRCd 4 */
 		for (p = cname; *p; p++)

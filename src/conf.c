@@ -9116,6 +9116,12 @@ int	_test_offchans(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
+
+	config_warn("set::oficial-channels is deprecated. It often does not do what you want. "
+	            "You're better of creating a channel, setting all modes, topic, etc. to your liking "
+	            "and then making the channel permanent (MODE #channel +P). "
+	            "The channel will then be stored in a database to preserve it between restarts.");
+
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (strlen(cep->ce_varname) > CHANNELLEN)
