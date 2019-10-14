@@ -111,7 +111,7 @@ Client *make_client(Client *from, Client *servr)
 	INIT_LIST_HEAD(&client->client_hash);
 	INIT_LIST_HEAD(&client->id_hash);
 
-	(void)strcpy(client->ident, "unknown");
+	strcpy(client->ident, "unknown");
 	if (!from)
 	{
 		/* Local client */
@@ -356,7 +356,7 @@ void remove_client_from_list(Client *client)
 	numclients--;
 	/* Add to killed clients list */
 	list_add(&client->client_node, &dead_list);
-	// THIS IS NOW DONE IN THE MAINLOOP --> (void)free_client(client);
+	// THIS IS NOW DONE IN THE MAINLOOP --> free_client(client);
 	SetDead(client);
 	SetDeadSocket(client);
 	return;

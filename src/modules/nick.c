@@ -467,7 +467,7 @@ CMD_FUNC(cmd_nick_local)
 
 	if (update_watch && client->name[0])
 	{
-		(void)del_from_client_hash_table(client->name, client);
+		del_from_client_hash_table(client->name, client);
 		if (IsUser(client))
 			hash_check_watch(client, RPL_LOGOFF);
 	}
@@ -1361,7 +1361,7 @@ int AllowClient(Client *client, char *username)
 				strlcpy(uhost, username, sizeof(uhost));
 			else
 				strlcpy(uhost, client->ident, sizeof(uhost));
-			(void)strlcat(uhost, "@", sizeof(uhost));
+			strlcat(uhost, "@", sizeof(uhost));
 		}
 		else
 			*uhost = '\0';

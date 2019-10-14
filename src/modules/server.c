@@ -953,7 +953,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 		}
 		SetULine(cptr);
 	}
-	(void)find_or_add(cptr->name);
+	find_or_add(cptr->name);
 	if (IsSecure(cptr))
 	{
 		sendto_server(&me, 0, 0, NULL, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
@@ -985,9 +985,9 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 			               tls_get_cipher(cptr->local->ssl));
 		}
 	}
-	(void)add_to_client_hash_table(cptr->name, cptr);
+	add_to_client_hash_table(cptr->name, cptr);
 	/* doesnt duplicate cptr->serv if allocted this struct already */
-	(void)make_server(cptr);
+	make_server(cptr);
 	cptr->serv->up = me.name;
 	cptr->srvptr = &me;
 	if (!cptr->serv->conf)

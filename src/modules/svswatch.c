@@ -73,7 +73,7 @@ CMD_FUNC(cmd_svswatch)
 		parv[0] = target->name;
 		parv[1] = parv[2];
 		parv[2] = NULL;
-		(void)do_cmd(target, NULL, "WATCH", 2, parv);
+		do_cmd(target, NULL, "WATCH", 2, parv);
 	}
 	else
 		sendto_one(target, NULL, ":%s SVSWATCH %s :%s", client->name, parv[1], parv[2]);

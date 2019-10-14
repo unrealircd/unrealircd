@@ -127,8 +127,8 @@ CMD_FUNC(cmd_sapart)
 				continue;
 			}
 			if (*jbuf)
-				(void)strlcat(jbuf, ",", sizeof jbuf);
-			(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
+				strlcat(jbuf, ",", sizeof jbuf);
+			strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
 			i += strlen(name) + 1;
 		}
 
@@ -171,7 +171,7 @@ CMD_FUNC(cmd_sapart)
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
 				client->name, target->name, parv[1]);
 		}
-		(void)do_cmd(target, NULL, "PART", comment ? 3 : 2, parv);
+		do_cmd(target, NULL, "PART", comment ? 3 : 2, parv);
 		/* target may be killed now due to the part reason @ spamfilter */
 	}
 	else

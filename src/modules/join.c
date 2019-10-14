@@ -306,7 +306,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 
 		parv[0] = client->name;
 		parv[1] = channel->chname;
-		(void)do_cmd(client, NULL, "NAMES", 2, parv);
+		do_cmd(client, NULL, "NAMES", 2, parv);
 
 		RunHook4(HOOKTYPE_LOCAL_JOIN, client, channel, mtags, parv);
 	} else {

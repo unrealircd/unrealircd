@@ -362,12 +362,12 @@ int match_tkls(Client *client)
 				snprintf(banbuf, sizeof(banbuf), "User has been banned (%s)", bconf->reason);
 			else
 				snprintf(banbuf, sizeof(banbuf), "Banned (%s)", bconf->reason);
-			(void)exit_client(client, NULL, banbuf);
+			exit_client(client, NULL, banbuf);
 		} else {
 			if (IsUser(client))
-				(void)exit_client(client, NULL, "User has been banned");
+				exit_client(client, NULL, "User has been banned");
 			else
-				(void)exit_client(client, NULL, "Banned");
+				exit_client(client, NULL, "Banned");
 		}
 		return 1; /* stop processing this user, as (s)he is dead now. */
 	}
@@ -402,7 +402,7 @@ EVENT(handshake_timeout)
 					client->name, client->ip?client->ip:"<unknown ip>");
 			}
 
-			(void)exit_client(client, NULL, "Registration Timeout");
+			exit_client(client, NULL, "Registration Timeout");
 			continue;
 		}
 	}
@@ -446,7 +446,7 @@ void check_ping(Client *client)
 		if (IsTLSAcceptHandshake(client))
 			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%lld-%lld > %lld)", client->local->sockhost,
 				(long long)TStime(), (long long)client->local->since, (long long)ping));
-		(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %lld seconds",
+		ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %lld seconds",
 			(long long) (TStime() - client->local->lasttime));
 		exit_client(client, NULL, scratch);
 		return;
@@ -513,7 +513,7 @@ EVENT(check_deadsockets)
 			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", client->local->fd, client->name);
 #endif
 			ClearDeadSocket(client); /* CPR. So we send the error. */
-			(void)exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
+			exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
 			continue;
 		}
 	}
@@ -527,7 +527,7 @@ EVENT(check_deadsockets)
 			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", client->local->fd, client->name);
 #endif
 			ClearDeadSocket(client); /* CPR. So we send the error. */
-			(void)exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
+			exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
 			continue;
 		}
 	}
@@ -1290,7 +1290,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #endif
 	open_debugfile();
 	me.local->port = 6667; /* pointless? */
-	(void)init_sys();
+	init_sys();
 	applymeblock();
 #ifdef HAVE_SYSLOG
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
@@ -1320,8 +1320,8 @@ int InitUnrealIRCd(int argc, char *argv[])
 	me.local->lasttime = me.local->since = me.local->firsttime = me.serv->boottime = TStime();
 	me.serv->features.protocol = UnrealProtocol;
 	safe_strdup(me.serv->features.software, version);
-	(void)add_to_client_hash_table(me.name, &me);
-	(void)add_to_id_hash_table(me.id, &me);
+	add_to_client_hash_table(me.name, &me);
+	add_to_id_hash_table(me.id, &me);
 	list_add(&me.client_node, &global_server_list);
 #if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)
 	if (!(bootopt & BOOT_NOFORK))
@@ -1348,13 +1348,13 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifdef _WIN32
 	loop.ircd_forked = 1;
 #endif
-	(void)ircsnprintf(REPORT_DO_DNS, sizeof(REPORT_DO_DNS), ":%s %s", me.name, BREPORT_DO_DNS);
-	(void)ircsnprintf(REPORT_FIN_DNS, sizeof(REPORT_FIN_DNS), ":%s %s", me.name, BREPORT_FIN_DNS);
-	(void)ircsnprintf(REPORT_FIN_DNSC, sizeof(REPORT_FIN_DNSC), ":%s %s", me.name, BREPORT_FIN_DNSC);
-	(void)ircsnprintf(REPORT_FAIL_DNS, sizeof(REPORT_FAIL_DNS), ":%s %s", me.name, BREPORT_FAIL_DNS);
-	(void)ircsnprintf(REPORT_DO_ID, sizeof(REPORT_DO_ID), ":%s %s", me.name, BREPORT_DO_ID);
-	(void)ircsnprintf(REPORT_FIN_ID, sizeof(REPORT_FIN_ID), ":%s %s", me.name, BREPORT_FIN_ID);
-	(void)ircsnprintf(REPORT_FAIL_ID, sizeof(REPORT_FAIL_ID), ":%s %s", me.name, BREPORT_FAIL_ID);
+	ircsnprintf(REPORT_DO_DNS, sizeof(REPORT_DO_DNS), ":%s %s", me.name, BREPORT_DO_DNS);
+	ircsnprintf(REPORT_FIN_DNS, sizeof(REPORT_FIN_DNS), ":%s %s", me.name, BREPORT_FIN_DNS);
+	ircsnprintf(REPORT_FIN_DNSC, sizeof(REPORT_FIN_DNSC), ":%s %s", me.name, BREPORT_FIN_DNSC);
+	ircsnprintf(REPORT_FAIL_DNS, sizeof(REPORT_FAIL_DNS), ":%s %s", me.name, BREPORT_FAIL_DNS);
+	ircsnprintf(REPORT_DO_ID, sizeof(REPORT_DO_ID), ":%s %s", me.name, BREPORT_DO_ID);
+	ircsnprintf(REPORT_FIN_ID, sizeof(REPORT_FIN_ID), ":%s %s", me.name, BREPORT_FIN_ID);
+	ircsnprintf(REPORT_FAIL_ID, sizeof(REPORT_FAIL_ID), ":%s %s", me.name, BREPORT_FAIL_ID);
 	R_do_dns = strlen(REPORT_DO_DNS);
 	R_fin_dns = strlen(REPORT_FIN_DNS);
 	R_fin_dnsc = strlen(REPORT_FIN_DNSC);
@@ -1461,7 +1461,7 @@ static void open_debugfile(void)
 		client->local->port = debuglevel;
 		client->flags = 0;
 
-		(void)strlcpy(client->local->sockhost, me.local->sockhost, sizeof client->local->sockhost);
+		strlcpy(client->local->sockhost, me.local->sockhost, sizeof client->local->sockhost);
 # ifndef _WIN32
 		/*(void)printf("isatty = %d ttyname = %#x\n",
 		    isatty(2), (u_int)ttyname(2)); */

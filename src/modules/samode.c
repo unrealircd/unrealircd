@@ -82,5 +82,5 @@ CMD_FUNC(cmd_samode)
 	}
 
 	opermode = 0;
-	(void)do_mode(channel, client, NULL, parc - 2, parv + 2, 0, 1);
+	do_mode(channel, client, NULL, parc - 2, parv + 2, 0, 1);
 }

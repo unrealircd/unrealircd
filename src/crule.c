@@ -626,7 +626,7 @@ int  crule_parsearglist(crule_treeptr argrootp, int *next_tokp, char **ruleptr)
 			  break;
 		  default:
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-			  (void)collapse(currarg);
+			  collapse(currarg);
 #endif
 			  if (*currarg)
 			  {

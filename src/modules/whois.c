@@ -265,9 +265,9 @@ CMD_FUNC(cmd_whois)
 					}
 					if (len)
 						*(buf + len) = '\0';
-					(void)strcpy(buf + len, channel->chname);
+					strcpy(buf + len, channel->chname);
 					len += strlen(channel->chname);
-					(void)strcat(buf + len, " ");
+					strcat(buf + len, " ");
 					len++;
 				}
 			}

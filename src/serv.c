@@ -1043,7 +1043,7 @@ CMD_FUNC(cmd_die)
 			    me.name, get_client_name(client, TRUE));
 	}
 
-	(void)s_die();
+	s_die();
 }
 
 #ifdef _WIN32
@@ -1063,7 +1063,7 @@ int localdie(void)
 			sendto_one(client, NULL,
 			    ":%s ERROR :Terminated by local console", me.name);
 	}
-	(void)s_die();
+	s_die();
 	return 0;
 }
 

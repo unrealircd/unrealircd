@@ -262,7 +262,7 @@ static void listener_accept(int listener_fd, int revents, void *data)
 	}
 
 	/* add_connection() may fail. we just don't care. */
-	(void)add_connection(listener, cli_fd);
+	add_connection(listener, cli_fd);
 }
 
 /*
@@ -1403,7 +1403,7 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 		return -1;
 	}
 	/* The socket has been connected or connect is in progress. */
-	(void)make_server(client);
+	make_server(client);
 	client->serv->conf = aconf;
 	client->serv->conf->refcount++;
 #ifdef DEBUGMODE

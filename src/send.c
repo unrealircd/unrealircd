@@ -111,7 +111,7 @@ int send_queued(Client *to)
 			snprintf(buf, 256, "Write error: %s", STRERROR(ERRNO));
 			return dead_socket(to, buf);
 		}
-		(void)dbuf_delete(&to->local->sendQ, rlen);
+		dbuf_delete(&to->local->sendQ, rlen);
 		to->local->lastsq = DBufLength(&to->local->sendQ) / 1024;
 		if (want_read)
 		{
@@ -644,8 +644,8 @@ void sendto_ops(FORMAT_STRING(const char *pattern), ...)
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 		if (!IsServer(acptr) && !IsMe(acptr) && SendServNotice(acptr))
 		{
-			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, acptr->name);
-			(void)strlcat(nbuf, pattern, sizeof nbuf);
+			ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, acptr->name);
+			strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
 			vsendto_one(acptr, NULL, nbuf, vl);
@@ -1093,9 +1093,9 @@ void sendto_one_nickcmd(Client *server, Client *client, char *umodes)
  
 void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...)
 {
-static char realpattern[1024];
-va_list vl;
-char *name = *to->name ? to->name : "*";
+	static char realpattern[1024];
+	va_list vl;
+	char *name = *to->name ? to->name : "*";
 
 	ircsnprintf(realpattern, sizeof(realpattern), ":%s NOTICE %s :%s", me.name, name, pattern);
 
@@ -1106,8 +1106,8 @@ char *name = *to->name ? to->name : "*";
 
 void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...)
 {
-static char realpattern[1024];
-va_list vl;
+	static char realpattern[1024];
+	va_list vl;
 
 	ircsnprintf(realpattern, sizeof(realpattern), ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
 

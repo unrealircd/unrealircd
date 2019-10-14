@@ -164,7 +164,7 @@ CMD_FUNC(cmd_sajoin)
 
 			if (*name == '0' && !atoi(name) && !sjmode)
 			{
-				(void)strcpy(jbuf, "0");
+				strcpy(jbuf, "0");
 				i = 1;
 				parted = 1;
 				continue;
@@ -191,8 +191,8 @@ CMD_FUNC(cmd_sajoin)
 				continue;
 			}
 			if (*jbuf)
-				(void)strlcat(jbuf, ",", sizeof jbuf);
-			(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
+				strlcat(jbuf, ",", sizeof jbuf);
+			strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
 			i += strlen(name) + 1;
 		}
 		if (!*jbuf)
@@ -265,7 +265,7 @@ CMD_FUNC(cmd_sajoin)
 				mode_args[0][1] = '\0';
 				mode_args[1] = target->name;
 				mode_args[2] = 0;
-				(void)do_mode(channel, target, NULL, 3, mode_args, 0, 1);
+				do_mode(channel, target, NULL, 3, mode_args, 0, 1);
 				sajoinmode = 0;
 				safe_free(mode_args[0]);
 			}

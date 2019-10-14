@@ -90,7 +90,7 @@ int bot_umode_change(Client *client, long oldmode, long newmode)
 		char *parv[2];
 		parv[0] = client->name;
 		parv[1] = NULL;
-		(void)do_cmd(client, NULL, "BOTMOTD", 1, parv);
+		do_cmd(client, NULL, "BOTMOTD", 1, parv);
 	}
 
 	return 0;

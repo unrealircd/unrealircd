@@ -257,7 +257,7 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, char *banid, c
 	int do_not_add = 0;
 
 	if (MyUser(client))
-		(void)collapse(banid);
+		collapse(banid);
 
 	len = strlen(banid);
 	if (!*list && ((len > MAXBANLENGTH) || (MAXBANS < 1)))
@@ -945,7 +945,7 @@ Channel *get_channel(Client *client, char *chname, int flag)
 		channel->nextch = channels;
 		channel->creationtime = MyUser(client) ? TStime() : 0;
 		channels = channel;
-		(void)add_to_channel_hash_table(chname, channel);
+		add_to_channel_hash_table(chname, channel);
 		irccounts.channels++;
 		RunHook2(HOOKTYPE_CHANNEL_CREATE, client, channel);
 	}
@@ -1095,7 +1095,7 @@ int sub1_from_channel(Channel *channel)
 
 	if (channel->nextch)
 		channel->nextch->prevch = channel->prevch;
-	(void)del_from_channel_hash_table(channel->chname, channel);
+	del_from_channel_hash_table(channel->chname, channel);
 
 	irccounts.channels--;
 	safe_free(channel);
@@ -1134,13 +1134,13 @@ void send_user_joins(Client *client, Client *user)
 			len = strlen(buf);
 			cnt = 0;
 		}
-		(void)strlcpy(buf + len, channel->chname, sizeof buf-len);
+		strlcpy(buf + len, channel->chname, sizeof buf-len);
 		cnt++;
 		len += clen;
 		if (lp->next)
 		{
 			len++;
-			(void)strlcat(buf, ",", sizeof buf);
+			strlcat(buf, ",", sizeof buf);
 		}
 	}
 	if (*buf && cnt)

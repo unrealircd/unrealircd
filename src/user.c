@@ -289,7 +289,7 @@ char *canonize(char *buffer)
 				*(cp - 1) = ',';
 			else
 				l = 1;
-			(void)strcpy(cp, s);
+			strcpy(cp, s);
 			if (p)
 				cp += (p - s);
 		}

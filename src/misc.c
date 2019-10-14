@@ -281,7 +281,7 @@ char *get_client_name(Client *client, int showip)
 	if (MyConnect(client))
 	{
 		if (showip)
-			(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%s@%s.%u]",
+			ircsnprintf(nbuf, sizeof(nbuf), "%s[%s@%s.%u]",
 			    client->name,
 			    IsIdentSuccess(client) ? client->ident : "",
 			    client->ip ? client->ip : "???",
@@ -289,7 +289,7 @@ char *get_client_name(Client *client, int showip)
 		else
 		{
 			if (mycmp(client->name, client->local->sockhost))
-				(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%s]",
+				ircsnprintf(nbuf, sizeof(nbuf), "%s[%s]",
 				    client->name, client->local->sockhost);
 			else
 				return client->name;
@@ -307,7 +307,7 @@ char *get_client_host(Client *client)
 		return client->name;
 	if (!client->local->hostp)
 		return get_client_name(client, FALSE);
-	(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%-.*s@%-.*s]",
+	ircsnprintf(nbuf, sizeof(nbuf), "%s[%-.*s@%-.*s]",
 	    client->name, USERLEN,
   	    IsIdentSuccess(client) ? client->ident : "",
 	    HOSTLEN, client->local->hostp->h_name);
