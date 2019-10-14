@@ -101,48 +101,34 @@ CMD_FUNC(cmd_netinfo)
 	}
 
 	xx = TStime();
-	if ((xx - endsync) < 0)
+	if ((xx - endsync) < -2)
 	{
 		char *emsg = "";
 		if (xx - endsync < -10)
 		{
 			emsg = " [\002PLEASE SYNC YOUR CLOCKS!\002]";
 		}
-		sendto_realops
-		    ("Possible negative TS split at link %s (%lld - %lld = %lld)%s",
-		    client->name, (long long)(xx), (long long)(endsync), (long long)(xx - endsync), emsg);
-		sendto_server(&me, 0, 0, NULL,
-		    ":%s SMO o :\2(sync)\2 Possible negative TS split at link %s (%lld - %lld = %lld)%s",
-		    me.id, client->name, (long long)(xx), (long long)(endsync), (long long)(xx - endsync), emsg);
+		sendto_umode_global(UMODE_OPER,
+			"Possible negative TS split at link %s (%lld - %lld = %lld)%s",
+			client->name, (long long)(xx), (long long)(endsync), (long long)(xx - endsync), emsg);
 	}
-	sendto_realops
-	    ("Link %s -> %s is now synced [secs: %lld recv: %ld.%hu sent: %ld.%hu]",
+	sendto_umode_global(UMODE_OPER,
+	    "Link %s -> %s is now synced [secs: %lld recv: %ld.%hu sent: %ld.%hu]",
 	    client->name, me.name, (long long)(TStime() - endsync), client->local->receiveK,
-	    client->local->receiveB, client->local->sendK, client->local->sendB);
-
-	sendto_server(&me, 0, 0, NULL,
-	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %lld recv: %ld.%hu sent: %ld.%hu]",
-	    me.id, client->name, me.name, (long long)(TStime() - endsync), client->local->receiveK,
 	    client->local->receiveB, client->local->sendK, client->local->sendB);
 
 	if (!(strcmp(ircnetwork, parv[8]) == 0))
 	{
-		sendto_realops("Network name mismatch from link %s (%s != %s)",
-		    client->name, parv[8], ircnetwork);
-		sendto_server(&me, 0, 0, NULL,
-		    ":%s SMO o :\2(sync)\2 Network name mismatch from link %s (%s != %s)",
-		    me.id, client->name, parv[8], ircnetwork);
+		sendto_umode_global(UMODE_OPER,
+			"Network name mismatch from link %s (%s != %s)",
+			client->name, parv[8], ircnetwork);
 	}
 
 	if ((protocol != UnrealProtocol) && (protocol != 0))
 	{
-		sendto_realops
-		    ("Link %s is running Protocol u%li while we are running %d!",
-		    client->name, protocol, UnrealProtocol);
-		sendto_server(&me, 0, 0, NULL,
-		    ":%s SMO o :\2(sync)\2 Link %s is running u%li while %s is running %d!",
-		    me.id, client->name, protocol, me.name, UnrealProtocol);
-
+		sendto_umode_global(UMODE_OPER,
+			"Link %s is running Protocol %li while %s is running %d",
+			client->name, protocol, me.name, UnrealProtocol);
 	}
 	strlcpy(buf, CLOAK_KEYCRC, sizeof(buf));
 	if (*parv[4] != '*' && strcmp(buf, parv[4]))

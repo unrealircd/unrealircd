@@ -956,19 +956,15 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	find_or_add(cptr->name);
 	if (IsSecure(cptr))
 	{
-		sendto_server(&me, 0, 0, NULL, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
-			me.id,
-			me.name, inpath, tls_get_cipher(cptr->local->ssl));
-		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
+		sendto_umode_global(UMODE_OPER,
+			"(\2link\2) Secure link %s -> %s established (%s)",
 			me.name, inpath, tls_get_cipher(cptr->local->ssl));
 		tls_link_notification_verify(cptr, aconf);
 	}
 	else
 	{
-		sendto_server(&me, 0, 0, NULL, ":%s SMO o :(\2link\2) Link %s -> %s established",
-			me.id,
-			me.name, inpath);
-		sendto_realops("(\2link\2) Link %s -> %s established",
+		sendto_umode_global(UMODE_OPER,
+			"(\2link\2) Link %s -> %s established",
 			me.name, inpath);
 		/* Print out a warning if linking to a non-TLS server unless it's localhost.
 		 * Yeah.. there are still other cases when non-TLS links are fine (eg: local IP
