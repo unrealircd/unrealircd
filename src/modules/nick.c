@@ -1331,7 +1331,7 @@ int AllowClient(Client *client, char *username)
 	{
 		if (!aconf->hostname || !aconf->ip)
 			goto attach;
-		if (aconf->auth && !client->local->passwd)
+		if (aconf->auth && !client->local->passwd && !moddata_client_get(client, "certfp"))
 			continue;
 		if (aconf->flags.tls && !IsSecure(client))
 			continue;
