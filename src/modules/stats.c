@@ -241,40 +241,38 @@ static inline void stats_help(Client *client)
 	sendnumeric(client, RPL_STATSHELP, "Z - mem - Send memory usage information");
 }
 
-static inline int stats_operonly_short(char c)
+static inline int allow_user_stats_short(char c)
 {
 	char l;
-	if (!OPER_ONLY_STATS)
+	if (!ALLOW_USER_STATS)
 		return 0;
-	if (*OPER_ONLY_STATS == '*')
-		return 1;
-	if (strchr(OPER_ONLY_STATS, c))
+	if (strchr(ALLOW_USER_STATS, c))
 		return 1;
 	l = tolower(c);
 	/* Hack for the flags that are case insensitive */
 	if (l == 'o' || l == 'y' || l == 'k' || l == 'g' || l == 'x' || l == 'c' ||
 		l =='f' || l == 'i' || l == 'h' || l == 'm')
 	{
-		if (islower(c) && strchr(OPER_ONLY_STATS, toupper(c)))
+		if (islower(c) && strchr(ALLOW_USER_STATS, toupper(c)))
 			return 1;
-		else if (isupper(c) && strchr(OPER_ONLY_STATS, tolower(c)))
+		else if (isupper(c) && strchr(ALLOW_USER_STATS, tolower(c)))
 			return 1;
 	}
 	/* Hack for c/C/H/h */
 	if (l == 'c')
 	{
-		if (strpbrk(OPER_ONLY_STATS, "hH"))
+		if (strpbrk(ALLOW_USER_STATS, "hH"))
 			return 1;
 	} else if (l == 'h')
-		if (strpbrk(OPER_ONLY_STATS, "cC"))
+		if (strpbrk(ALLOW_USER_STATS, "cC"))
 			return 1;
 	return 0;
 }
 
-static inline int stats_operonly_long(char *s)
+static inline int allow_user_stats_long(char *s)
 {
 	OperStat *os;
-	for (os = iConf.oper_only_stats_ext; os; os = os->next)
+	for (os = iConf.allow_user_stats_ext; os; os = os->next)
 	{
 		if (!strcasecmp(os->flag, s))
 			return 1;
@@ -283,17 +281,17 @@ static inline int stats_operonly_long(char *s)
 }
 
 /* This is pretty slow, but it isn't used often so it isn't a big deal */
-static inline char *stats_operonly_long_to_short()
+static inline char *allow_user_stats_long_to_short()
 {
 	static char buffer[BUFSIZE+1];
 	int i = 0;
 	OperStat *os;
-	for (os = iConf.oper_only_stats_ext; os; os = os->next)
+	for (os = iConf.allow_user_stats_ext; os; os = os->next)
 	{
 		struct statstab *stat = stats_search(os->flag);
 		if (!stat)
 			continue;
-		if (!strchr(OPER_ONLY_STATS, stat->flag))
+		if (!strchr(ALLOW_USER_STATS, stat->flag))
 			buffer[i++] = stat->flag;
 	}
 	buffer[i] = 0;
@@ -324,7 +322,7 @@ CMD_FUNC(cmd_stats)
 	/* Decide if we are looking for 1 char or a string */
 	if (parv[1][0] && !parv[1][1])
 	{
-		if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL) && stats_operonly_short(parv[1][0]))
+		if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL) && !allow_user_stats_short(parv[1][0]))
 		{
 			sendnumeric(client, ERR_NOPRIVILEGES);
 			return;
@@ -334,7 +332,7 @@ CMD_FUNC(cmd_stats)
 	}
 	else
 	{
-		if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL) && stats_operonly_long(parv[1]))
+		if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL) && !allow_user_stats_long(parv[1]))
 		{
 			sendnumeric(client, ERR_NOPRIVILEGES);
 			return;
@@ -342,63 +340,44 @@ CMD_FUNC(cmd_stats)
 		/* New style, search the hard way */
 		stat = stats_search(parv[1]);
 	}
-	if (stat)
-	{
-		/* It was a short flag, so check oper only on long flags */
-		if (!parv[1][1])
-		{
-			if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL) && stats_operonly_long(stat->longflag))
-			{
-				sendnumeric(client, ERR_NOPRIVILEGES);
-				return;
-			}
-		}
-		/* It was a long flag, so check oper only on short flags */
-		else
-		{
-			if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL) && stats_operonly_short(stat->flag))
-			{
-				sendnumeric(client, ERR_NOPRIVILEGES);
-				return;
-			}
-		}
-		if (stat->options & FLAGS_AS_PARA)
-		{
-			if (parc > 2 && (parv[2][0] == '+' || parv[2][0] == '-'))
-			{
-				if (parc > 3)
-					stat->func(client, stats_combine_parv(parv[2],parv[3]));
-				else
-					stat->func(client, parv[2]);
-			}
-			else if (parc > 3)
-				stat->func(client, parv[3]);
-			else
-				stat->func(client, NULL);
-		}
-		else if (stat->options & SERVER_AS_PARA)
-		{
-			if (parc > 2)
-				stat->func(client, parv[2]);
-			else
-				stat->func(client, NULL);
-		}
-		else
-			stat->func(client, NULL);
-		sendnumeric(client, RPL_ENDOFSTATS, stat->flag);
-		if (!IsULine(client))
-			sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
-				stat->flag, client->name, client->user->username, GetHost(client));
-		else
-			sendto_snomask(SNO_JUNK, "Stats \'%c\' requested by %s (%s@%s) [ulined]",
-				stat->flag, client->name, client->user->username, GetHost(client));
-	}
-	else
+
+	if (!stat)
 	{
 		stats_help(client);
 		sendnumeric(client, RPL_ENDOFSTATS, '*');
 		return;
 	}
+
+	if (stat->options & FLAGS_AS_PARA)
+	{
+		if (parc > 2 && (parv[2][0] == '+' || parv[2][0] == '-'))
+		{
+			if (parc > 3)
+				stat->func(client, stats_combine_parv(parv[2],parv[3]));
+			else
+				stat->func(client, parv[2]);
+		}
+		else if (parc > 3)
+			stat->func(client, parv[3]);
+		else
+			stat->func(client, NULL);
+	}
+	else if (stat->options & SERVER_AS_PARA)
+	{
+		if (parc > 2)
+			stat->func(client, parv[2]);
+		else
+			stat->func(client, NULL);
+	}
+	else
+		stat->func(client, NULL);
+	sendnumeric(client, RPL_ENDOFSTATS, stat->flag);
+	if (!IsULine(client))
+		sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
+			stat->flag, client->name, client->user->username, GetHost(client));
+	else
+		sendto_snomask(SNO_JUNK, "Stats \'%c\' requested by %s (%s@%s) [ulined]",
+			stat->flag, client->name, client->user->username, GetHost(client));
 }
 
 int stats_banversion(Client *client, char *para)
@@ -1047,10 +1026,10 @@ int stats_set(Client *client, char *para)
 		sendtxtnumeric(client, "min-nick-length: %i", iConf.min_nick_length);
 	sendtxtnumeric(client, "nick-length: %i", iConf.nick_length);
 	sendtxtnumeric(client, "snomask-on-oper: %s", OPER_SNOMASK);
-	if (OPER_ONLY_STATS)
+	if (ALLOW_USER_STATS)
 	{
-		char *longflags = stats_operonly_long_to_short();
-		sendtxtnumeric(client, "oper-only-stats: %s%s", OPER_ONLY_STATS, longflags ? longflags : "");
+		char *longflags = allow_user_stats_long_to_short();
+		sendtxtnumeric(client, "allow-user-stats: %s%s", ALLOW_USER_STATS, longflags ? longflags : "");
 	}
 	if (RESTRICT_USERMODES)
 		sendtxtnumeric(client, "restrict-usermodes: %s", RESTRICT_USERMODES);

@@ -1458,7 +1458,7 @@ void	free_iConf(Configuration *i)
 	safe_free(i->gline_address);
 	safe_free(i->auto_join_chans);
 	safe_free(i->oper_auto_join_chans);
-	safe_free(i->oper_only_stats);
+	safe_free(i->allow_user_stats);
 	safe_free(i->channel_command_prefix);
 	safe_free(i->oper_snomask);
 	safe_free(i->static_quit);
@@ -1536,7 +1536,6 @@ void config_setdefaultsettings(Configuration *i)
 	i->kick_length = 307;
 	i->quit_length = 307;
 	safe_strdup(i->link_bindip, "*");
-	safe_strdup(i->oper_only_stats, "*");
 	safe_strdup(i->network.x_hidden_host, "Clk");
 	if (!ipv6_capable())
 		DISABLE_IPV6 = 1;
@@ -2426,13 +2425,13 @@ void	config_rehash()
 		DelListItem(help_ptr, conf_help);
 		safe_free(help_ptr);
 	}
-	for (os_ptr = iConf.oper_only_stats_ext; os_ptr; os_ptr = (OperStat *)next)
+	for (os_ptr = iConf.allow_user_stats_ext; os_ptr; os_ptr = (OperStat *)next)
 	{
 		next = (ListStruct *)os_ptr->next;
 		safe_free(os_ptr->flag);
 		safe_free(os_ptr);
 	}
-	iConf.oper_only_stats_ext = NULL;
+	iConf.allow_user_stats_ext = NULL;
 	for (spamex_ptr = iConf.spamexcept; spamex_ptr; spamex_ptr = (SpamExcept *)next)
 	{
 		next = (ListStruct *)spamex_ptr->next;
@@ -7273,10 +7272,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
-		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
+		else if (!strcmp(cep->ce_varname, "allow-user-stats")) {
 			if (!cep->ce_entries)
 			{
-				safe_strdup(tempiConf.oper_only_stats, cep->ce_vardata);
+				safe_strdup(tempiConf.allow_user_stats, cep->ce_vardata);
 			}
 			else
 			{
@@ -7284,7 +7283,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					OperStat *os = safe_alloc(sizeof(OperStat));
 					safe_strdup(os->flag, cepp->ce_varname);
-					AddListItem(os, tempiConf.oper_only_stats_ext);
+					AddListItem(os, tempiConf.allow_user_stats_ext);
 				}
 			}
 		}
@@ -7912,8 +7911,23 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			CheckDuplicate(cep, anti_spam_quit_message_time, "anti-spam-quit-message-time");
 		}
-		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
-			CheckDuplicate(cep, oper_only_stats, "oper-only-stats");
+		else if (!strcmp(cep->ce_varname, "oper-only-stats"))
+		{
+			config_error("%s:%d: We no longer use a blacklist for stats (set::oper-only-stats) but "
+			             "have a whitelist now instead (set::allow-user-stats). ",
+			             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			if (cep->ce_vardata && !strcmp(cep->ce_vardata, "*"))
+				config_error("Simply DELETE the oper-only-stats line from your configuration file %s around line %d",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			else
+				config_status("In most cases you should simply remove the oper-only-stats line from your "
+				              "configuration file.");
+			errors++;
+			continue;
+		}
+		else if (!strcmp(cep->ce_varname, "allow-user-stats"))
+		{
+			CheckDuplicate(cep, allow_user_stats, "allow-user-stats");
 			if (!cep->ce_entries)
 			{
 				CheckNull(cep);

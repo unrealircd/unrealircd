@@ -84,8 +84,8 @@ struct Configuration {
 	char *oper_snomask;
 	char *auto_join_chans;
 	char *oper_auto_join_chans;
-	char *oper_only_stats;
-	OperStat *oper_only_stats_ext;
+	char *allow_user_stats;
+	OperStat *allow_user_stats_ext;
 	int  ping_warning;
 	int  maxchannelsperuser;
 	int  maxdccallow;
@@ -196,7 +196,7 @@ extern MODVAR int ipv6_disabled;
 #define FAILOPER_WARN			iConf.fail_oper_warn
 #define SHOWCONNECTINFO			iConf.show_connect_info
 #define NOCONNECTTLSLINFO		iConf.no_connect_tls_info
-#define OPER_ONLY_STATS			iConf.oper_only_stats
+#define ALLOW_USER_STATS			iConf.allow_user_stats
 #define ANTI_SPAM_QUIT_MSG_TIME		iConf.anti_spam_quit_message_time
 #ifdef HAVE_RAND_EGD
 #define USE_EGD				iConf.use_egd
@@ -309,7 +309,7 @@ struct SetCheck {
 	unsigned has_check_target_nick_bans:1;
 	unsigned has_watch_away_notification:1;
 	unsigned has_uhnames:1;
-	unsigned has_oper_only_stats:1;
+	unsigned has_allow_user_stats:1;
 	unsigned has_ping_warning:1;
 	unsigned has_maxchannelsperuser:1;
 	unsigned has_maxdccallow:1;
