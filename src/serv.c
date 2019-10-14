@@ -102,9 +102,9 @@ int hunt_server(Client *client, MessageTag *mtags, char *command, int server, in
 	 * Ugly. Previous version didn't even restore the state, now we do.
 	 */
 	saved = parv[server];
-	parv[server] = acptr->name;
+	parv[server] = acptr->id;
 
-	sendto_one(acptr, mtags, command, client->name,
+	sendto_one(acptr, mtags, command, client->id,
 	    parv[1], parv[2], parv[3], parv[4],
 	    parv[5], parv[6], parv[7], parv[8]);
 
