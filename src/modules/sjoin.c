@@ -490,8 +490,7 @@ getnick:
 			
 				sendto_one(client, NULL,
 				    ":%s KICK %s %s :Fake direction",
-				    me.name, channel->chname,
-				    acptr->name);
+				    me.id, channel->chname, acptr->name);
 				sendto_realops
 				    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
 				    nick, client->srvptr->name,

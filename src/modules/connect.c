@@ -131,7 +131,7 @@ CMD_FUNC(cmd_connect)
 	{
 		sendto_server(&me, 0, 0, NULL,
 		    ":%s GLOBOPS :Remote CONNECT %s %s from %s",
-		    me.name, parv[1], parv[2] ? parv[2] : "",
+		    me.id, parv[1], parv[2] ? parv[2] : "",
 		    get_client_name(client, FALSE));
 	}
 

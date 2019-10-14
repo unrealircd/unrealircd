@@ -441,8 +441,7 @@ void check_ping(Client *client)
 				get_client_name(client, FALSE));
 			sendto_server(&me, 0, 0, NULL,
 				":%s GLOBOPS :No response from %s, closing link",
-				me.name, get_client_name(client,
-				FALSE));
+				me.id, get_client_name(client, FALSE));
 		}
 		if (IsTLSAcceptHandshake(client))
 			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%lld-%lld > %lld)", client->local->sockhost,

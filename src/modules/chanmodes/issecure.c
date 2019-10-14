@@ -144,8 +144,9 @@ void issecure_unset(Channel *channel, Client *client, MessageTag *recv_mtags, in
 	{
 		mtags = NULL;
 		new_message_special(&me, recv_mtags, &mtags, "NOTICE %s :setting -Z", channel->chname);
-		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s NOTICE %s :User '%s' joined and is not connected through SSL/TLS, setting channel -Z (insecure)",
-			me.name, channel->chname, client->name);
+		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
+		               ":%s NOTICE %s :User '%s' joined and is not connected through SSL/TLS, setting channel -Z (insecure)",
+		               me.id, channel->chname, client->name);
 		free_message_tags(mtags);
 	}
 		

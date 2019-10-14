@@ -594,8 +594,8 @@ static void remove_unknown(Client *client, char *sender)
 	 */
 	if ((isdigit(*sender) && strlen(sender) <= SIDLEN) || strchr(sender, '.'))
 		sendto_one(client, NULL, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
-		    me.name, sender, sender, client->name);
+		    me.id, sender, sender, client->name);
 	else
 		sendto_one(client, NULL, ":%s KILL %s :%s (%s(?) <- %s)",
-		    me.name, sender, me.name, sender, client->name);
+		    me.id, sender, me.name, sender, client->name);
 }

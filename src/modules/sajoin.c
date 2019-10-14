@@ -283,7 +283,7 @@ CMD_FUNC(cmd_sajoin)
 				sendnotice(target, "*** You were forced to join %s", jbuf);
 				sendto_realops("%s used SAJOIN to make %s join %s", client->name, target->name, jbuf);
 				sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
-					me.name, client->name, target->name, jbuf);
+					me.id, client->name, target->name, jbuf);
 				/* Logging function added by XeRXeS */
 				ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
 					client->name, parv[1], jbuf);
@@ -293,7 +293,7 @@ CMD_FUNC(cmd_sajoin)
 				sendnotice(target, "*** You were forced to join %s with '%c'", jbuf, sjmode);
 				sendto_realops("%s used SAJOIN to make %s join %c%s", client->name, target->name, sjmode, jbuf);
 				sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAJOIN to make %s join %c%s",
-					me.name, client->name, target->name, sjmode, jbuf);
+					me.id, client->name, target->name, sjmode, jbuf);
 				ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %c%s",
 					client->name, parv[1], sjmode, jbuf);
 			}

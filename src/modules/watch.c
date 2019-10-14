@@ -210,9 +210,7 @@ CMD_FUNC(cmd_watch)
 				{
 					sendnumeric(client, RPL_WATCHLIST, buf);
 					*buf = '\0';
-					count =
-					    strlen(client->name) + strlen(me.name) +
-					    10;
+					count = strlen(client->name) + strlen(me.name) + 10;
 				}
 				strcat(buf, " ");
 				strcat(buf, lp->value.wptr->nick);

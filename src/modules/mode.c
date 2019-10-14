@@ -375,10 +375,10 @@ static void bounce_mode(Channel *channel, Client *client, int parc, char *parv[]
 	set_mode(channel, client, parc, parv, &pcount, pvar, 1);
 
 	if (channel->creationtime)
-		sendto_one(client, NULL, ":%s MODE %s &%s %s %lld", me.name,
+		sendto_one(client, NULL, ":%s MODE %s &%s %s %lld", me.id,
 		    channel->chname, modebuf, parabuf, (long long)channel->creationtime);
 	else
-		sendto_one(client, NULL, ":%s MODE %s &%s %s", me.name, channel->chname,
+		sendto_one(client, NULL, ":%s MODE %s &%s %s", me.id, channel->chname,
 		    modebuf, parabuf);
 
 	/* the '&' denotes a bounce so servers won't bounce a bounce */
@@ -452,11 +452,11 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 			if (channel->creationtime)
 			{
 				sendto_server(client, 0, 0, NULL, ":%s MODE %s %s+ %lld",
-				    me.name, channel->chname, isbounce ? "&" : "",
+				    me.id, channel->chname, isbounce ? "&" : "",
 				    (long long)channel->creationtime);
 			} else {
 				sendto_server(client, 0, 0, NULL, ":%s MODE %s %s+",
-				    me.name, channel->chname, isbounce ? "&" : "");
+				    me.id, channel->chname, isbounce ? "&" : "");
 			}
 			free_message_tags(mtags);
 			return; /* nothing to send */
@@ -1685,7 +1685,7 @@ CMD_FUNC(_cmd_umode)
 				if (IsQuarantined(client->direction))
 				{
 					sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", client->name, client->srvptr->name);
-					sendto_server(NULL, 0, 0, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)", me.name, client->name, me.name);
+					sendto_server(NULL, 0, 0, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)", me.id, client->name, me.name);
 					exit_client(client, NULL, "Quarantined: no oper privileges allowed");
 					return;
 				}

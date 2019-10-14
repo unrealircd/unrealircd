@@ -667,9 +667,8 @@ void sendto_umode(int umodes, FORMAT_STRING(const char *pattern), ...)
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 		if (IsUser(acptr) && (acptr->umodes & umodes) == umodes)
 		{
-			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :",
-			    me.name, acptr->name);
-			(void)strlcat(nbuf, pattern, sizeof nbuf);
+			ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :", me.name, acptr->name);
+			strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
 			vsendto_one(acptr, NULL, nbuf, vl);
@@ -707,9 +706,8 @@ void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 	{
 		if (IsUser(acptr) && (acptr->umodes & umodes) == umodes)
 		{
-			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :",
-			    me.name, acptr->name);
-			(void)strlcat(nbuf, pattern, sizeof nbuf);
+			ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :", me.name, acptr->name);
+			strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
 			vsendto_one(acptr, NULL, nbuf, vl);
@@ -717,7 +715,7 @@ void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 		} else
 		if (IsServer(acptr) && *modestr)
 		{
-			snprintf(nbuf, sizeof(nbuf), ":%s SENDUMODE %s :%s", me.name, modestr, pattern);
+			snprintf(nbuf, sizeof(nbuf), ":%s SENDUMODE %s :%s", me.id, modestr, pattern);
 			va_start(vl, pattern);
 			vsendto_one(acptr, NULL, nbuf, vl);
 			va_end(vl);
@@ -776,7 +774,7 @@ void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
 			*p++ = Snomask_Table[i].flag;
 	*p = '\0';
 
-	sendto_server(&me, 0, 0, NULL, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
+	sendto_server(&me, 0, 0, NULL, ":%s SENDSNO %s :%s", me.id, snobuf, nbuf);
 }
 
 /*
@@ -950,9 +948,8 @@ void sendto_realops(FORMAT_STRING(const char *pattern), ...)
 
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{
-		(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ",
-		    me.name, acptr->name);
-		(void)strlcat(nbuf, pattern, sizeof nbuf);
+		ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** ", me.name, acptr->name);
+		strlcat(nbuf, pattern, sizeof nbuf);
 
 		va_start(vl, pattern);
 		vsendto_one(acptr, NULL, nbuf, vl);

@@ -234,7 +234,7 @@ void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mta
 void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int flags)
 {
 	MessageTag *mtags = NULL; /** Message tags to send to local users (sender is :user) */
-	MessageTag *mtags_sjoin = NULL; /* Message tags to send to remote servers for SJOIN (sender is :me.name) */
+	MessageTag *mtags_sjoin = NULL; /* Message tags to send to remote servers for SJOIN (sender is :me.id) */
 	char *parv[] = { 0, 0 };
 
 	/* Same way as in SJOIN */
@@ -261,7 +261,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 		{
 			channel->creationtime = TStime();
 			sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
-			    me.name, channel->chname, (long long)channel->creationtime);
+			    me.id, channel->chname, (long long)channel->creationtime);
 		}
 		del_invite(client, channel);
 
@@ -299,7 +299,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, int
 			/* This should probably be in the SJOIN stuff */
 			new_message_special(&me, recv_mtags, &mtags_mode, ":%s MODE %s %s %s", me.name, channel->chname, modebuf, parabuf);
 			sendto_server(&me, 0, 0, mtags_mode, ":%s MODE %s %s %s %lld",
-			    me.name, channel->chname, modebuf, parabuf, (long long)channel->creationtime);
+			    me.id, channel->chname, modebuf, parabuf, (long long)channel->creationtime);
 			sendto_one(client, mtags_mode, ":%s MODE %s %s %s", me.name, channel->chname, modebuf, parabuf);
 			free_message_tags(mtags_mode);
 		}

@@ -154,7 +154,7 @@ CMD_FUNC(cmd_sapart)
 			sendto_realops("%s used SAPART to make %s part %s (%s)", client->name, target->name,
 				parv[1], comment);
 			sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
-				me.name, client->name, target->name, parv[1], comment);
+				me.id, client->name, target->name, parv[1], comment);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
 				client->name, target->name, parv[1], comment);
@@ -166,7 +166,7 @@ CMD_FUNC(cmd_sapart)
 			sendto_realops("%s used SAPART to make %s part %s", client->name, target->name,
 				parv[1]);
 			sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAPART to make %s part %s",
-				me.name, client->name, target->name, parv[1]);
+				me.id, client->name, target->name, parv[1]);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
 				client->name, target->name, parv[1]);

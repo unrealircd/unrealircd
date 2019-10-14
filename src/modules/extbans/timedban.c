@@ -434,7 +434,7 @@ EVENT(timedban_timeout)
 			MessageTag *mtags = NULL;
 			new_message(&me, NULL, &mtags);
 			sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s %s %s", me.name, channel->chname, mbuf, pbuf);
-			sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s 0", me.name, channel->chname, mbuf, pbuf);
+			sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s 0", me.id, channel->chname, mbuf, pbuf);
 			free_message_tags(mtags);
 			*pbuf = 0;
 		}
@@ -485,7 +485,7 @@ void add_send_mode_param(Channel *channel, Client *from, char what, char mode, c
 
 		new_message(&me, NULL, &mtags);
 		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s %s %s", me.name, channel->chname, mbuf, pbuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s 0", me.name, channel->chname, mbuf, pbuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s 0", me.id, channel->chname, mbuf, pbuf);
 		free_message_tags(mtags);
 		send = 0;
 		*pbuf = 0;

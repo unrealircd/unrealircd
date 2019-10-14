@@ -91,7 +91,7 @@ void dcc_sync(Client *client)
 	for (p = conf_deny_dcc; p; p = p->next)
 	{
 		if (p->flag.type2 == CONF_BAN_TYPE_AKILL)
-			sendto_one(client, NULL, ":%s SVSFLINE + %s :%s", me.name,
+			sendto_one(client, NULL, ":%s SVSFLINE + %s :%s", me.id,
 			    p->filename, p->reason);
 	}
 }

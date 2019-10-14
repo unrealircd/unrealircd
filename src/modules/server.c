@@ -794,11 +794,11 @@ void _introduce_user(Client *to, Client *acptr)
 			if (CHECKPROTO(to, PROTO_EXTSWHOIS))
 			{
 				sendto_one(to, NULL, ":%s SWHOIS %s + %s %d :%s",
-					me.name, acptr->name, s->setby, s->priority, s->line);
+					me.id, acptr->name, s->setby, s->priority, s->line);
 			} else
 			{
 				sendto_one(to, NULL, ":%s SWHOIS %s :%s",
-					me.name, acptr->name, s->line);
+					me.id, acptr->name, s->line);
 			}
 		}
 	}
@@ -957,7 +957,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	if (IsSecure(cptr))
 	{
 		sendto_server(&me, 0, 0, NULL, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
-			me.name,
+			me.id,
 			me.name, inpath, tls_get_cipher(cptr->local->ssl));
 		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
 			me.name, inpath, tls_get_cipher(cptr->local->ssl));
@@ -966,7 +966,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	else
 	{
 		sendto_server(&me, 0, 0, NULL, ":%s SMO o :(\2link\2) Link %s -> %s established",
-			me.name,
+			me.id,
 			me.name, inpath);
 		sendto_realops("(\2link\2) Link %s -> %s established",
 			me.name, inpath);

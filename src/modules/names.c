@@ -69,12 +69,12 @@ CMD_FUNC(cmd_names)
 	int multiprefix = (MyConnect(client) && HasCapability(client, "multi-prefix"));
 	int uhnames = (MyConnect(client) && HasCapability(client, "userhost-in-names")); // cache UHNAMES support
 	int bufLen = NICKLEN + (!uhnames ? 0 : (1 + USERLEN + 1 + HOSTLEN));
-	int  mlen = strlen(me.name) + bufLen + 7;
+	int mlen = strlen(me.name) + bufLen + 7;
 	Channel *channel;
 	Client *acptr;
-	int  member;
+	int member;
 	Member *cm;
-	int  idx, flag = 1, spos;
+	int idx, flag = 1, spos;
 	char *s, *para = parv[1];
 	char nuhBuffer[NICKLEN+USERLEN+HOSTLEN+3];
 

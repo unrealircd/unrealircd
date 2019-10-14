@@ -333,7 +333,9 @@ int link_doforward(Client *client, Channel *channel, char *linked, linkType type
 			break;
 	}
 
-	sendto_one(client, NULL, ":%s %d %s [Link] Cannot join channel %s (%s) -- transferring you to %s", me.name, ERR_LINKCHANNEL, client->name, channel->chname, desc, linked);
+	sendto_one(client, NULL,
+	           ":%s %d %s [Link] Cannot join channel %s (%s) -- transferring you to %s",
+	           me.name, ERR_LINKCHANNEL, client->name, channel->chname, desc, linked);
 	parv[0] = client->name;
 	parv[1] = linked;
 	parv[2] = NULL;

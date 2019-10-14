@@ -144,7 +144,7 @@ CMD_FUNC(cmd_squit)
 			    client->name, target->name, comment);
 			sendto_server(&me, 0, 0, NULL,
 			    ":%s GLOBOPS :%s tried to fake kill using SQUIT (%s (%s))",
-			    me.name, client->name, target->name, comment);
+			    me.id, client->name, target->name, comment);
 			return;
 		}
 		sendto_umode_global(UMODE_OPER, "Received SQUIT %s from %s (%s)",

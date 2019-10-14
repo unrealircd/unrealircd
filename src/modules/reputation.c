@@ -505,7 +505,7 @@ int reputation_pre_lconnect(Client *client)
 	 * server to server traffic, see the reputation_server_cmd function.
 	 */
 	ReputationEntry *e = find_reputation_entry(GetIP(client));
-	sendto_server(NULL, 0, 0, NULL, ":%s REPUTATION %s %d", me.name, GetIP(client), e ? (int)e->score : 0);
+	sendto_server(NULL, 0, 0, NULL, ":%s REPUTATION %s %d", me.id, GetIP(client), e ? (int)e->score : 0);
 
 	return 0;
 }
@@ -789,7 +789,7 @@ CMD_FUNC(reputation_server_cmd)
 		/* We have a higher score, inform the client direction about it.
 		 * This will prefix the score with a * so servers will never reply to it.
 		 */
-		sendto_one(client, NULL, ":%s REPUTATION %s *%d", me.name, parv[1], e->score);
+		sendto_one(client, NULL, ":%s REPUTATION %s *%d", me.id, parv[1], e->score);
 #ifdef DEBUGMODE
 		ircd_log(LOG_ERROR, "[reputation] Score for '%s' from %s is %d, but we have %d, sending back %d",
 			ip, client->name, score, e->score, e->score);
