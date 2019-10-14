@@ -585,6 +585,11 @@ union ModData
  #define CHECK_PRIO_LIST_ENTRY(list)	/* not available on Windows, typeof() not reliable */
 #endif
 
+#define CHECK_NULL_LIST_ITEM(item)	if ((item)->prev || (item)->next) \
+					{ \
+						ircd_log(LOG_ERROR, "[BUG] %s:%d: List operation on item with non-NULL 'prev' or 'next' -- are you adding to a list twice?", __FILE__, __LINE__); \
+						abort(); \
+					}
 
 /** These are the generic list functions that are used all around in UnrealIRCd.
  * @defgroup ListFunctions List functions
@@ -606,6 +611,8 @@ struct ListStructPrio {
  */
 #define AddListItem(item,list)		do { \
 						CHECK_LIST_ENTRY(list) \
+						CHECK_LIST_ENTRY(item) \
+						CHECK_NULL_LIST_ITEM(item) \
 						add_ListItem((ListStruct *)item, (ListStruct **)&list); \
 					} while(0)
 
@@ -613,6 +620,8 @@ struct ListStructPrio {
 */
 #define AppendListItem(item,list)	do { \
 						CHECK_LIST_ENTRY(list) \
+						CHECK_LIST_ENTRY(item) \
+						CHECK_NULL_LIST_ITEM(item) \
 						append_ListItem((ListStruct *)item, (ListStruct **)&list); \
 					} while(0)
 
@@ -620,6 +629,7 @@ struct ListStructPrio {
 */
 #define DelListItem(item,list)		do { \
 						CHECK_LIST_ENTRY(list) \
+						CHECK_LIST_ENTRY(item) \
 						del_ListItem((ListStruct *)item, (ListStruct **)&list); \
 					} while(0)
 
@@ -634,12 +644,15 @@ struct ListStructPrio {
 #define DelListItemUnchecked(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
 
 #define AddListItemPrio(item,list,prio)	do { \
-						CHECK_PRIO_LIST_ENTRY(list); \
+						CHECK_PRIO_LIST_ENTRY(list) \
+						CHECK_PRIO_LIST_ENTRY(item) \
+						CHECK_NULL_LIST_ITEM(item) \
 						add_ListItemPrio((ListStructPrio *)item, (ListStructPrio **)&list, prio); \
 					} while(0)
 
 #define DelListItemPrio(item,list,prio)	do { \
-						CHECK_PRIO_LIST_ENTRY(list); \
+						CHECK_PRIO_LIST_ENTRY(list) \
+						CHECK_PRIO_LIST_ENTRY(item) \
 						del_ListItem((ListStruct *)item, (ListStruct **)&list); \
 					} while(0)
 
