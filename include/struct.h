@@ -174,7 +174,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	BUFSIZE		512	/* WARNING: *DONT* CHANGE THIS!!!! */
 #define READBUFSIZE	8192	/* for the read buffer */
 #define	MAXRECIPIENTS 	20
-#define	MAXKILLS	20
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
 #define IDLEN		10
 #define SIDLEN           3
