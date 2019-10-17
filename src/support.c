@@ -1269,6 +1269,8 @@ literal:
 			break;
 		*o++ = *i;
 		left--;
+		if (!left)
+			break;
 	}
 	*o = '\0';
 }
