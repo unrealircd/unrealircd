@@ -593,9 +593,8 @@ static void remove_unknown(Client *client, char *sender)
 	 * user on the other server which needs to be removed. -avalon
 	 */
 	if ((isdigit(*sender) && strlen(sender) <= SIDLEN) || strchr(sender, '.'))
-		sendto_one(client, NULL, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
+		sendto_one(client, NULL, ":%s SQUIT %s :Unknown prefix (%s) from %s",
 		    me.id, sender, sender, client->name);
 	else
-		sendto_one(client, NULL, ":%s KILL %s :%s (%s(?) <- %s)",
-		    me.id, sender, me.name, sender, client->name);
+		sendto_one(client, NULL, ":%s KILL %s :Ghost user", me.id, sender);
 }

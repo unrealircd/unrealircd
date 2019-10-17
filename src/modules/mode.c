@@ -1685,7 +1685,7 @@ CMD_FUNC(_cmd_umode)
 				if (IsQuarantined(client->direction))
 				{
 					sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine", client->name, client->srvptr->name);
-					sendto_server(NULL, 0, 0, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)", me.id, client->name, me.name);
+					sendto_server(NULL, 0, 0, NULL, ":%s KILL %s :Quarantined: no oper privileges allowed", me.id, client->name);
 					exit_client(client, NULL, "Quarantined: no oper privileges allowed");
 					return;
 				}

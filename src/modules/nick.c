@@ -545,9 +545,7 @@ CMD_FUNC(cmd_uid)
 		sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
 		    parv[1], client->name, get_client_name(client, FALSE));
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
-		    me.id, parv[1], me.name, parv[1],
-		    nick, client->name);
+		sendto_one(client, NULL, ":%s KILL %s :Bad nick", me.id, parv[1]);
 		return;
 	}
 
@@ -556,9 +554,9 @@ CMD_FUNC(cmd_uid)
 	{
 		ircstats.is_kill++;
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
-		sendto_one(client, NULL, ":%s KILL %s :%s (Quarantined: no oper privileges allowed)",
-			me.id, parv[1], me.name);
-		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
+		sendto_one(client, NULL, ":%s KILL %s :Quarantined: no oper privileges allowed",
+			me.id, parv[1]);
+		sendto_umode_global(UMODE_OPER, "QUARANTINE: Oper %s on server %s killed, due to quarantine",
 			parv[1], client->name);
 		return;
 	}
@@ -567,9 +565,7 @@ CMD_FUNC(cmd_uid)
 	if (!strcasecmp("ircd", nick) || !strcasecmp("irc", nick))
 	{
 		sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, "Reserved for internal IRCd purposes");
-		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s[%s])",
-		    me.id, parv[1], me.name, parv[1],
-		    nick, client->name);
+		sendto_one(client, NULL, ":%s KILL %s :Bad reserved nick", me.id, parv[1]);
 		return;
 	}
 
@@ -594,9 +590,7 @@ CMD_FUNC(cmd_uid)
 		    client->name, acptr->direction->name,
 		    get_client_name(client, FALSE));
 		ircstats.is_kill++;
-		sendto_one(client, NULL, ":%s KILL %s :%s (%s <- %s)",
-		    me.id, parv[1], me.name, acptr->direction->name,
-		    get_client_name(client, FALSE));
+		sendto_one(client, NULL, ":%s KILL %s :Nick-server-collision", me.id, parv[1]);
 		return;
 	}
 
@@ -1009,12 +1003,13 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		Client *acptr;
 
 		/* Remote client */
+		/* The following two cases probably cannot happen anymore? at all? */
 		if (!(acptr = find_server_quick(user->server)))
 		{
 			sendto_ops("Bad USER [%s] :%s USER %s %s : No such server",
 			           client->name, nick, user->username, user->server);
-			sendto_one(client, NULL, ":%s KILL %s :%s (No such server: %s)",
-			    me.id, client->name, me.name, user->server);
+			sendto_one(client, NULL, ":%s KILL %s :No such server: %s",
+			    me.id, client->id, user->server);
 			SetKilled(client);
 			exit_client(client, NULL, "USER without prefix(2.8) or wrong prefix");
 			return 0;
@@ -1024,9 +1019,8 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 			sendto_ops("Bad User [%s] :%s USER %s %s, != %s[%s]",
 			    client->name, nick, user->username, user->server,
 			    acptr->name, acptr->direction->name);
-			sendto_one(client, NULL, ":%s KILL %s :%s (%s != %s[%s])",
-			    me.id, client->name, me.name, user->server,
-			    acptr->direction->name, acptr->direction->local->sockhost);
+			sendto_one(client, NULL, ":%s KILL %s :Wrong user-server-direction",
+			    me.id, client->id);
 			SetKilled(client);
 			exit_client(client, NULL, "USER server wrong direction");
 			return 0;
@@ -1218,8 +1212,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 
 		/* cptr case first... this side knows the user by newnick/newid */
 		/* SID server can kill 'new' by ID */
-		sendto_one(cptr, NULL, ":%s KILL %s :%s (%s)",
-			me.id, newid, me.name, comment);
+		sendto_one(cptr, NULL, ":%s KILL %s :%s", me.id, newid, comment);
 
 		/* non-cptr case... only necessary if nick-changing. */
 		if (new)
@@ -1229,9 +1222,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 			new_message(new, NULL, &mtags);
 
 			/* non-cptr side knows this user by their old nick name */
-			sendto_server(cptr, 0, 0, mtags,
-				":%s KILL %s :%s (%s)",
-				me.id, new->id, me.name, comment);
+			sendto_server(cptr, 0, 0, mtags, ":%s KILL %s :%s", me.id, new->id, comment);
 
 			/* Exit the client */
 			ircstats.is_kill++;
@@ -1249,13 +1240,7 @@ void nick_collision(Client *cptr, char *newnick, char *newid, Client *new, Clien
 		new_message(existing, NULL, &mtags);
 
 		/* Now let's kill 'existing' */
-		sendto_server(NULL, 0, 0, mtags,
-			":%s KILL %s :%s (%s)",
-			me.id, existing->id, me.name, comment);
-
-		/* NOTE: we may have sent two KILLs on the same nick in some cases.
-		 * Should be acceptable and only happens in a non-100% UID network.
-		 */
+		sendto_server(NULL, 0, 0, mtags, ":%s KILL %s :%s", me.id, existing->id, comment);
 
 		/* Exit the client */
 		ircstats.is_kill++;
