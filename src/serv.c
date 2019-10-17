@@ -66,12 +66,6 @@ int hunt_server(Client *client, MessageTag *mtags, char *command, int server, in
 	Client *acptr;
 	char *saved;
 
-	if (parc > 9)
-	{
-		ircd_log(LOG_ERROR, "Oversized hunt_server()");
-		abort();
-	}
-
 	/* This would be strange and bad. Previous version assumed "it's for me". Hmm.. okay. */
 	if (parc <= server || BadPtr(parv[server]))
 		return HUNTED_ISME;
