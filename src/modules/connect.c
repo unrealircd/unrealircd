@@ -87,9 +87,8 @@ CMD_FUNC(cmd_connect)
 
 	if ((server = find_server_quick(parv[1])))
 	{
-		sendnotice(client, "*** Connect: Server %s %s %s.",
-		    parv[1], "already exists from",
-		    server->direction->name);
+		sendnotice(client, "*** Connect: Server %s already exists from %s.",
+		    parv[1], server->direction->name);
 		return;
 	}
 

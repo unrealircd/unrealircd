@@ -56,17 +56,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-/*
-** cmd_sendumode - Stskeeps
-**      parv[1] = target
-**      parv[2] = message text
-** Pretty handy proc.. 
-** Servers can use this to f.x:
-**   :server.unreal.net SENDUMODE o :Client connecting at server server.unreal.net port 4141 usw..
-**
-** Silly half-snomask support ripped out in 2015. Very confusing, and broken.
-** We have SENDSNO for snomask sending since 2004. -- Syzop
-*/
+/** SENDUMODE - Send to usermode command (S2S traffic only).
+ * parv[1] = target user modes
+ * parv[2] = message text
+ * For example:
+ * :server SENDUMODE o :Serious problem: blablabla
+ */
 CMD_FUNC(cmd_sendumode)
 {
 	MessageTag *mtags = NULL;

@@ -56,7 +56,7 @@ MOD_UNLOAD()
 /* 
  * cmd_chghost - 12/07/1999 (two months after I made SETIDENT) - Stskeeps
  * :prefix CHGHOST <nick> <new hostname>
- * parv[1] - nickname
+ * parv[1] - target user
  * parv[2] - hostname
  *
 */
@@ -71,7 +71,7 @@ CMD_FUNC(cmd_chghost)
 		return;
 	}
 
-	if ((parc < 3) || !*parv[2])
+	if ((parc < 3) || BadPtr(parv[2]))
 	{
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "CHGHOST");
 		return;

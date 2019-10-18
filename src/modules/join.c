@@ -495,7 +495,7 @@ void _do_join(Client *client, int parc, char *parv[])
 						if (d->redirect)
 						{
 							sendnotice(client, "*** Redirecting you to %s", d->redirect);
-							parv[0] = client->name;
+							parv[0] = NULL;
 							parv[1] = d->redirect;
 							do_join(client, 2, parv);
 						}
