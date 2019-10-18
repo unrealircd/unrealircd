@@ -315,20 +315,13 @@ clear
 
     if [ -f "doc/Config.header" -a -z "$NOINTRO" ] ; then
         more doc/Config.header
-        echo $n "[Enter to continue]"
-        read cc
-        clear
-    fi
-    if [ -f "doc/RELEASE-NOTES" -a -z "$NOINTRO" ] ; then
-        more doc/RELEASE-NOTES
-        echo $n "[Enter to continue]"
+        echo ""
+        echo $n "[Press Enter to continue]"
         read cc
         clear
     fi
 
-echo "We will now ask you a number of questions."
-echo "You can just press ENTER to accept the defaults!"
-echo ""
+echo "We will now ask you a number of questions. You can just press ENTER to accept the defaults!"
 
 if [ -z "$NOCACHE" ] ; then
 	# This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:

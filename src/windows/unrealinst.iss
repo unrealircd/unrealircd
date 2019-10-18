@@ -41,7 +41,6 @@ Name: "fixperm"; Description: "Make UnrealIRCd folder writable by current user";
 [Files]
 Source: "UnrealIRCd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "UnrealIRCd.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "doc\RELEASE-NOTES"; DestDir: "{app}\doc"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
 
 Source: "doc\conf\*.default.conf"; DestDir: "{app}\conf"; Flags: ignoreversion
 Source: "doc\conf\*.optional.conf"; DestDir: "{app}\conf"; Flags: ignoreversion
@@ -174,10 +173,8 @@ Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\bin\UnrealIRCd.exe"; WorkingD
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\bin\UnrealIRCd.exe"; WorkingDir: "{app}\bin"; Tasks: quicklaunchicon
 
 [Run]
-;Filename: "notepad"; Description: "View example.conf"; Parameters: "{app}\conf\examples\example.conf"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "https://www.unrealircd.org/docs/"; Description: "View documentation"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "https://www.unrealircd.org/docs/Installing_%28Windows%29"; Description: "View installation instructions"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
-Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\doc\RELEASE.NOTES.txt"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "{app}\bin\unrealsvc.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
 Filename: "{app}\bin\unrealsvc.exe"; Parameters: "config startup manual"; Flags: runminimized nowait; Tasks: installservice/startdemand
 Filename: "{app}\bin\unrealsvc.exe"; Parameters: "config startup auto"; Flags: runminimized nowait; Tasks: installservice/startboot
