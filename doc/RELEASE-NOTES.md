@@ -183,6 +183,10 @@ Changed
 * The "except tkl" block is now called [except ban](https://www.unrealircd.org/docs/Except_ban_block#UnrealIRCd_5). If no type
   is specified in an except ban { } block then we exempt the entry
   from kline, gline, zline, gzline and shun.
+* We no longer use a blacklist for stats (set::oper-only-stats).
+  We use a whitelist now instead: [set::allow-user-starts](https://www.unrealircd.org/docs/Set_block#set::allow-user-stats).
+  Most users can just remove their old set::oper-only-stats line,
+  since the new default set::allow-user-starts setting is fine.
 * Windows: we now require a 64-bit version, Windows 7 or later.
   The new program path is: C:\Program Files\UnrealIRCd 5
   and the binaries have been moved to a new subdirectory: bin\
@@ -247,6 +251,12 @@ Minor issues fixed
 
 Removed
 --------
+* Support for old server protocols has been removed.
+  This means UnrealIRCd 5.x cannot link to 3.2.x. It also means you need
+  to use reasonably new services. Generally, if your services can link to
+  4.x then they should be able to link to 5.x as well. More information
+  about this change and why it was done
+  [can be found here](https://www.unrealircd.org/docs/FAQ#old-server-protocol).
 * Extended ban ~R (registered nick): this was the old method to match
   registered users. Everyone should use ~a (services account) instead.
 * The old TRE **posix** regex method has been removed because the TRE
@@ -261,6 +271,21 @@ Removed
 * The *nopost* module was removed since it no longer serves any useful
   purpose. UnrealIRCd already protects against these kind of attacks
   via ping cookies ([set::ping-cookie](https://www.unrealircd.org/docs/Set_block#set::ping-cookie), enabled by default).
+
+Deprecated
+-----------
+* The set::official-channels block is now deprecated. This provided a
+  mechanism to pre-configure channels that would have 0 members and
+  would appear in /LIST with those settings, but once you joined all
+  those settings would be gone. Rather confusing.
+
+  Since UnrealIRCd 4.x we have permanent channels (+P) and since 5.x
+  we store these permanent channels in a database so all settings are
+  saved every few minutes and across restarts.
+
+  Since permanent channels (+P) are much better, the official-channels
+  support will be removed in a later version. There's no reason to
+  use official-channels anymore.
 
 Developers
 -----------
@@ -361,8 +386,13 @@ It is therefore best to wait until beta1. You have been warned ;).
 
 Server protocol
 ----------------
-* Surprisingly little has been changed in the server to server protocol
-  between UnrealIRCd 4 and UnrealIRCd 5:
+* UnrealIRCd 5 now assumes you support the following PROTOCTL options:
+  ```NOQUIT EAUTH SID NICKv2 SJOIN SJ3 NICKIP TKLEXT2```.
+  If you fail to use ```SID``` or ```EAUTH``` then you will receive an
+  error. For the other options, support is *assumed*, no warning or
+  error is shown when you lack support. These are options that most,
+  if not all, services support since UnrealIRCd 4.x so it shouldn't be
+  a problem. More information (here)[https://www.unrealircd.org/docs/FAQ#old-server-protocol]
 * ```PROTOCTL MTAGS``` indicates that the server is capable of handling
   message tags and that the server can cope with 4K lines. (Note that
   the ordinary non-message-tag part is still limited to 512 bytes).
