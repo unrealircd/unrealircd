@@ -173,7 +173,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 {
 	Client *target;
 	Channel *channel;
-	char *nick, *p, *p2, *pc, *text, *errmsg;
+	char *targetstr, *p, *p2, *pc, *text, *errmsg;
 	int  prefix = 0;
 	char pfixchan[CHANNELLEN + 4];
 	int ret;
@@ -205,18 +205,18 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 	if (MyConnect(client))
 		parv[1] = (char *)canonize(parv[1]);
 
-	for (p = NULL, nick = strtoken(&p, parv[1], ","); nick; nick = strtoken(&p, NULL, ","))
+	for (p = NULL, targetstr = strtoken(&p, parv[1], ","); targetstr; targetstr = strtoken(&p, NULL, ","))
 	{
 		if (MyUser(client) && (++ntargets > maxtargets))
 		{
-			sendnumeric(client, ERR_TOOMANYTARGETS, nick, maxtargets, cmd);
+			sendnumeric(client, ERR_TOOMANYTARGETS, targetstr, maxtargets, cmd);
 			break;
 		}
 		/* The nicks "ircd" and "irc" are special (and reserved) */
-		if (!strcasecmp(nick, "ircd") && MyUser(client))
+		if (!strcasecmp(targetstr, "ircd") && MyUser(client))
 			return;
 
-		if (!strcasecmp(nick, "irc") && MyUser(client))
+		if (!strcasecmp(targetstr, "irc") && MyUser(client))
 		{
 			/* When ban version { } is enabled the IRCd sends a CTCP VERSION request
 			 * from the "IRC" nick. So we need to handle CTCP VERSION replies to "IRC".
@@ -228,15 +228,15 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 			return;
 		}
 
-		p2 = strchr(nick, '#');
+		p2 = strchr(targetstr, '#');
 		prefix = 0;
 
 		/* Message to channel */
 		if (p2 && (channel = find_channel(p2, NULL)))
 		{
-			if (p2 != nick)
+			if (p2 != targetstr)
 			{
-				for (pc = nick; pc != p2; pc++)
+				for (pc = targetstr; pc != p2; pc++)
 				{
 #ifdef PREFIX_AQ
  #define PREFIX_REST (PREFIX_ADMIN|PREFIX_OWNER)
@@ -311,10 +311,10 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 					else
 						abort();
 					strlcpy(pfixchan+1, p2, sizeof(pfixchan)-1);
-					nick = pfixchan;
+					targetstr = pfixchan;
 				} else {
 					strlcpy(pfixchan, p2, sizeof(pfixchan));
-					nick = pfixchan;
+					targetstr = pfixchan;
 				}
 			}
 
@@ -378,12 +378,13 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 				continue;
 			}
 
+			// FIXME: don't use 'targetstr' here, but use prefix + channel->name
 			sendto_channel(channel, client, client,
 				       prefix, 0, sendflags, mtags,
 				       notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
-				       client->name, nick, text);
+				       client->name, targetstr, text);
 
-			RunHook8(HOOKTYPE_CHANMSG, client, channel, sendflags, prefix, nick, mtags, text, notice);
+			RunHook8(HOOKTYPE_CHANMSG, client, channel, sendflags, prefix, targetstr, mtags, text, notice);
 
 			free_message_tags(mtags);
 
@@ -397,7 +398,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 
 
 		/* Message to $servermask */
-		if (*nick == '$')
+		if (*targetstr == '$')
 		{
 			MessageTag *mtags = NULL;
 
@@ -412,17 +413,17 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 			}
 			new_message(client, recv_mtags, &mtags);
 			sendto_match_butone(IsServer(client->direction) ? client->direction : NULL,
-			    client, nick + 1,
-			    (*nick == '#') ? MATCH_HOST :
+			    client, targetstr + 1,
+			    (*targetstr == '#') ? MATCH_HOST :
 			    MATCH_SERVER,
 			    mtags,
-			    ":%s %s %s :%s", client->name, cmd, nick, parv[2]);
+			    ":%s %s %s :%s", client->name, cmd, targetstr, parv[2]);
 			free_message_tags(mtags);
 			continue;
 		}
 
 		/* nickname addressed? */
-		target = hash_find_nickatserver(nick, NULL);
+		target = hash_find_nickatserver(targetstr, NULL);
 		if (target)
 		{
 			char *errmsg = NULL;
@@ -445,11 +446,16 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 
 				new_message(client, recv_mtags, &mtags);
 				labeled_response_inhibit = 1;
-				sendto_prefix_one(target, client, mtags, ":%s %s %s :%s",
-				                  client->id,
-				                  cmd,
-				                  (MyUser(target) ? target->name : nick),
-				                  text);
+				if (MyUser(target))
+				{
+					/* Deliver to end-user */
+					sendto_prefix_one(target, client, mtags, ":%s %s %s :%s",
+							  client->name, cmd, target->name, text);
+				} else {
+					/* Send to another server */
+					sendto_prefix_one(target, client, mtags, ":%s %s %s :%s",
+							  client->id, cmd, target->id, text);
+				}
 				labeled_response_inhibit = 0;
 				RunHook5(HOOKTYPE_USERMSG, client, target, mtags, text, notice);
 				free_message_tags(mtags);
@@ -461,16 +467,16 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 		/* If nick@server -and- the @server portion was set::services-server then send a special message */
 		if (!target && SERVICES_NAME)
 		{
-			char *server = strchr(nick, '@');
+			char *server = strchr(targetstr, '@');
 			if (server && strncasecmp(server + 1, SERVICES_NAME, strlen(SERVICES_NAME)) == 0)
 			{
-				sendnumeric(client, ERR_SERVICESDOWN, nick);
+				sendnumeric(client, ERR_SERVICESDOWN, targetstr);
 				continue;
 			}
 		}
 
 		/* nothing, nada, not anything found */
-		sendnumeric(client, ERR_NOSUCHNICK, nick);
+		sendnumeric(client, ERR_NOSUCHNICK, targetstr);
 		continue;
 	}
 }
