@@ -184,6 +184,12 @@ CMD_FUNC(cmd_protoctl)
 				return;
 			}
 
+			if (!valid_sid(value))
+			{
+				exit_client(client, NULL, "Invalid SID. The first character must be a digit and the other two characters must be A-Z0-9. Eg: 0AA.");
+				return;
+			}
+
 			if (IsServer(client))
 			{
 				exit_client(client, NULL, "Got PROTOCTL SID after SERVER, that's the wrong order!");
