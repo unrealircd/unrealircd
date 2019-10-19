@@ -92,11 +92,11 @@ CMD_FUNC(cmd_sajoin)
 	/* If it's not for our client, then simply pass on the message... */
 	if (!MyUser(target))
 	{
-		sendto_one(target, NULL, ":%s SAJOIN %s %s", client->name, parv[1], parv[2]);
+		sendto_one(target, NULL, ":%s SAJOIN %s %s", client->id, target->id, parv[2]);
 
 		/* Logging function added by XeRXeS */
 		ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-			client->name, parv[1], parv[2]);
+			client->name, target->name, parv[2]);
 
 		return;
 	}
@@ -187,7 +187,7 @@ CMD_FUNC(cmd_sajoin)
 
 			if (!parted && channel && (lp = find_membership_link(target->user->channel, channel)))
 			{
-				sendnumeric(client, ERR_USERONCHANNEL, parv[1], name);
+				sendnumeric(client, ERR_USERONCHANNEL, target->name, name);
 				continue;
 			}
 			if (*jbuf)
@@ -281,21 +281,17 @@ CMD_FUNC(cmd_sajoin)
 			if (!sjmode)
 			{
 				sendnotice(target, "*** You were forced to join %s", jbuf);
-				sendto_realops("%s used SAJOIN to make %s join %s", client->name, target->name, jbuf);
-				sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
-					me.id, client->name, target->name, jbuf);
+				sendto_umode_global(UMODE_OPER, "%s used SAJOIN to make %s join %s", client->name, target->name, jbuf);
 				/* Logging function added by XeRXeS */
 				ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-					client->name, parv[1], jbuf);
+					client->name, target->name, jbuf);
 			}
 			else
 			{
 				sendnotice(target, "*** You were forced to join %s with '%c'", jbuf, sjmode);
-				sendto_realops("%s used SAJOIN to make %s join %c%s", client->name, target->name, sjmode, jbuf);
-				sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAJOIN to make %s join %c%s",
-					me.id, client->name, target->name, sjmode, jbuf);
+				sendto_umode_global(UMODE_OPER, "%s used SAJOIN to make %s join %c%s", client->name, target->name, sjmode, jbuf);
 				ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %c%s",
-					client->name, parv[1], sjmode, jbuf);
+					client->name, target->name, sjmode, jbuf);
 			}
 		}
 	}

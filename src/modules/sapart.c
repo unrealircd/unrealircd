@@ -74,7 +74,7 @@ CMD_FUNC(cmd_sapart)
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("SAPART");
 
-	if (parc < 3)
+	if ((parc < 3) || BadPtr(parv[2]))
         {
                 sendnumeric(client, ERR_NEEDMOREPARAMS, "SAPART");
                 return;
@@ -93,104 +93,88 @@ CMD_FUNC(cmd_sapart)
 		return;
 	}
 
-	if (MyUser(target))
+	/* Relay it on, if it's not my target */
+	if (!MyUser(target))
 	{
-		/* Now works like cmd_join */
-		*jbuf = 0;
-
-		for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p,
-			NULL, ","))
-		{
-			if (++ntargets > maxtargets)
-			{
-				sendnumeric(client, ERR_TOOMANYTARGETS, name, maxtargets, "SAPART");
-				break;
-			}
-			if (!(channel = get_channel(target, name, 0)))
-			{
-				sendnumeric(client, ERR_NOSUCHCHANNEL,
-					name);
-				continue;
-			}
-
-			/* Validate oper can do this on chan/victim */
-			if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sapart",client,target,channel,NULL))
-        		{
-                		sendnumeric(client, ERR_NOPRIVILEGES);
-				continue;
-        		}
-	
-			if (!(lp = find_membership_link(target->user->channel, channel)))
-			{
-				sendnumeric(client, ERR_USERNOTINCHANNEL,
-					parv[1], name);
-				continue;
-			}
-			if (*jbuf)
-				strlcat(jbuf, ",", sizeof jbuf);
-			strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
-			i += strlen(name) + 1;
-		}
-
-		if (!*jbuf)
-			return;
-
-		strcpy(parv[2], jbuf);
-
 		if (comment)
 		{
-			strcpy(commentx, "SAPart: ");
-			strlcat(commentx, comment, 512);
-		}
-
-		parv[0] = target->name; // nick
-		parv[1] = parv[2]; // chan
-		parv[2] = comment ? commentx : NULL; // comment
-		if (comment)
-		{
-			sendnotice(target,
-			    "*** You were forced to part %s (%s)",
-			    parv[1], commentx);
-			sendto_realops("%s used SAPART to make %s part %s (%s)", client->name, target->name,
-				parv[1], comment);
-			sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
-				me.id, client->name, target->name, parv[1], comment);
-			/* Logging function added by XeRXeS */
+			sendto_one(target, NULL, ":%s SAPART %s %s :%s", client->id, target->id, parv[2], comment);
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
-				client->name, target->name, parv[1], comment);
+			         client->name, target->name, parv[2], comment);
 		}
 		else
 		{
-			sendnotice(target,
-			    "*** You were forced to part %s", parv[1]);
-			sendto_realops("%s used SAPART to make %s part %s", client->name, target->name,
-				parv[1]);
-			sendto_server(&me, 0, 0, NULL, ":%s GLOBOPS :%s used SAPART to make %s part %s",
-				me.id, client->name, target->name, parv[1]);
-			/* Logging function added by XeRXeS */
+			sendto_one(target, NULL, ":%s SAPART %s %s", client->id, target->id, parv[2]);
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
-				client->name, target->name, parv[1]);
+			         client->name, target->name, parv[2]);
 		}
-		do_cmd(target, NULL, "PART", comment ? 3 : 2, parv);
-		/* target may be killed now due to the part reason @ spamfilter */
+		return;
+	}
+
+	/* Now works like cmd_join */
+	*jbuf = 0;
+	for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
+	{
+		if (++ntargets > maxtargets)
+		{
+			sendnumeric(client, ERR_TOOMANYTARGETS, name, maxtargets, "SAPART");
+			break;
+		}
+		if (!(channel = get_channel(target, name, 0)))
+		{
+			sendnumeric(client, ERR_NOSUCHCHANNEL,
+				name);
+			continue;
+		}
+
+		/* Validate oper can do this on chan/victim */
+		if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sapart",client,target,channel,NULL))
+		{
+			sendnumeric(client, ERR_NOPRIVILEGES);
+			continue;
+		}
+
+		if (!(lp = find_membership_link(target->user->channel, channel)))
+		{
+			sendnumeric(client, ERR_USERNOTINCHANNEL, target->name, name);
+			continue;
+		}
+		if (*jbuf)
+			strlcat(jbuf, ",", sizeof jbuf);
+		strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
+		i += strlen(name) + 1;
+	}
+
+	if (!*jbuf)
+		return;
+
+	strcpy(parv[2], jbuf);
+
+	if (comment)
+	{
+		strcpy(commentx, "SAPart: ");
+		strlcat(commentx, comment, 512);
+	}
+
+	parv[0] = target->name; // nick
+	parv[1] = parv[2]; // chan
+	parv[2] = comment ? commentx : NULL; // comment
+	if (comment)
+	{
+		sendnotice(target, "*** You were forced to part %s (%s)", parv[1], commentx);
+		sendto_umode_global(UMODE_OPER, "%s used SAPART to make %s part %s (%s)",
+				    client->name, target->name, parv[1], comment);
+		ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
+			client->name, target->name, parv[1], comment);
 	}
 	else
 	{
-		if (comment)
-		{
-			sendto_one(target, NULL, ":%s SAPART %s %s :%s", client->name,
-			    parv[1], parv[2], comment);
-			/* Logging function added by XeRXeS */
-			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
-				client->name, parv[1], parv[2], comment);
-		}
-		else
-		{
-			sendto_one(target, NULL, ":%s SAPART %s %s", client->name, parv[1],
-				   parv[2]);
-			/* Logging function added by XeRXeS */
-			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
-				client->name, parv[1], parv[2]);
-		}
+		sendnotice(target, "*** You were forced to part %s", parv[1]);
+		sendto_umode_global(UMODE_OPER, "%s used SAPART to make %s part %s",
+				    client->name, target->name, parv[1]);
+		ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
+			client->name, target->name, parv[1]);
 	}
+	do_cmd(target, NULL, "PART", comment ? 3 : 2, parv);
+	/* target may be killed now due to the part reason @ spamfilter */
 }
