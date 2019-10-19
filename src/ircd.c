@@ -431,12 +431,10 @@ void check_ping(Client *client)
 		if (IsServer(client) || IsConnecting(client) ||
 		    IsHandshake(client) || IsTLSConnectHandshake(client))
 		{
-			sendto_ops_and_log
-				("No response from %s, closing link",
-				get_client_name(client, FALSE));
-			sendto_server(&me, 0, 0, NULL,
-				":%s GLOBOPS :No response from %s, closing link",
-				me.id, get_client_name(client, FALSE));
+			sendto_umode_global(UMODE_OPER, "No response from %s, closing link",
+			                    get_client_name(client, FALSE));
+			ircd_log(LOG_ERROR, "No response from %s, closing link",
+			         get_client_name(client, FALSE));
 		}
 		if (IsTLSAcceptHandshake(client))
 			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%lld-%lld > %lld)", client->local->sockhost,

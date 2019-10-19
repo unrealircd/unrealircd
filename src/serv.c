@@ -1056,7 +1056,7 @@ void free_motd(MOTDFile *themotd)
 
 
 /* cmd_die, this terminates the server, and it intentionally does not
- * have a reason. If you use it you should first do a GLOBOPS and
+ * have a reason. If you use it you should first use /GLOBOPS and
  * then a server notice to let everyone know what is going down...
  */
 CMD_FUNC(cmd_die)

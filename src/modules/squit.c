@@ -137,14 +137,8 @@ CMD_FUNC(cmd_squit)
 	{
 		if (target->user)
 		{
-			sendnotice(client,
-			    "*** Cannot do fake kill by SQUIT !!!");
-			sendto_ops
-			    ("%s tried to do a fake kill using SQUIT (%s (%s))",
-			    client->name, target->name, comment);
-			sendto_server(&me, 0, 0, NULL,
-			    ":%s GLOBOPS :%s tried to fake kill using SQUIT (%s (%s))",
-			    me.id, client->name, target->name, comment);
+			sendnotice(client, "ERROR: You're connected to %s, we cannot SQUIT ourselves",
+			           me.name);
 			return;
 		}
 		sendto_umode_global(UMODE_OPER, "Received SQUIT %s from %s (%s)",

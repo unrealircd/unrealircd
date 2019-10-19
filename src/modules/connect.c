@@ -129,7 +129,7 @@ CMD_FUNC(cmd_connect)
 	if (!MyUser(client))
 	{
 		sendto_server(&me, 0, 0, NULL,
-		    ":%s GLOBOPS :Remote CONNECT %s %s from %s",
+		    ":%s SENDUMODE o :Remote CONNECT %s %s from %s",
 		    me.id, parv[1], parv[2] ? parv[2] : "",
 		    get_client_name(client, FALSE));
 	}
