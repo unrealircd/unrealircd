@@ -396,10 +396,6 @@ Server protocol
 * ```PROTOCTL MTAGS``` indicates that the server is capable of handling
   message tags and that the server can cope with 4K lines. (Note that
   the ordinary non-message-tag part is still limited to 512 bytes).
-* We now assume at least UnrealIRCd 4 like protocol abilities,
-  such as SID, NICKv2, TKLEXT2, etc.
-  (more precise information will follow)
-  In particular this means UnrealIRCd 3.2.x will not link with 5.x.
 * Pseudo ID support in SASL was removed. We now use real UID's.
   This breaks anope, up to 2.0.6 stable, due lacking
   [this patch](https://github.com/anope/anope/commit/da6e2730c259d6d6356a0a948e85730ae34663ab.patch)
