@@ -21,6 +21,10 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/** @file
+ * @brief Server-related functions
+ */
+
 /* s_serv.c 2.55 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
 #include "unrealircd.h"
@@ -114,6 +118,7 @@ int hunt_server(Client *client, MessageTag *mtags, char *command, int server, in
 }
 
 #ifndef _WIN32
+/** Grab operating system name on Windows (outdated) */
 char *getosname(void)
 {
 	static char buf[1024];
@@ -140,21 +145,18 @@ char *getosname(void)
 }
 #endif
 
-
+/** Helper function to send version strings */
 void send_version(Client *client, int reply)
 {
 	int i;
 
 	for (i = 0; ISupportStrings[i]; i++)
-	{
 		sendnumeric(client, reply, ISupportStrings[i]);
-	}
 }
 
-/*
-** cmd_version
-**	parv[1] = remote server
-*/
+/** VERSION command:
+ * Syntax: VERSION [server]
+ */
 CMD_FUNC(cmd_version)
 {
 	/* Only allow remote VERSIONs if registered -- Syzop */
@@ -189,12 +191,9 @@ CMD_FUNC(cmd_version)
 
 char *num = NULL;
 
-/*
- * send_proto:
- * Sends PROTOCTL message to server
- * Now split up into multiple PROTOCTL messages (again), since we have
- * too many for a single line. If this breaks your services because
- * you fail to maintain PROTOCTL state, then fix them!
+/** Send all our PROTOCTL messages to remote server.
+ * We send multiple PROTOCTL's since 4.x. If this breaks your services
+ * because you fail to maintain PROTOCTL state, then fix them!
  */
 void send_proto(Client *client, ConfigItem_link *aconf)
 {
@@ -225,6 +224,7 @@ void send_proto(Client *client, ConfigItem_link *aconf)
 #define IRCDTOTALVERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
 
+/** Special filter for remote commands */
 int remotecmdfilter(Client *client, int parc, char *parv[])
 {
 	/* no remote requests permitted from non-ircops */
@@ -241,11 +241,7 @@ int remotecmdfilter(Client *client, int parc, char *parv[])
 	return 0; /* Continue */
 }
 
-
-/*
- * sends cmd_info into to client
-*/
-
+/** Output for /INFO */
 char *unrealinfo[] =
 {
 	"This release was brought to you by the following people:",
@@ -268,9 +264,10 @@ char *unrealinfo[] =
 	NULL
 };
 
+/** Send /INFO output */
 void cmd_info_send(Client *client)
 {
-char **text = unrealinfo;
+	char **text = unrealinfo;
 
 	sendnumericfmt(client, RPL_INFO, "========== %s ==========", IRCDTOTALVERSION);
 
@@ -279,8 +276,7 @@ char **text = unrealinfo;
 
 	sendnumericfmt(client, RPL_INFO, "|");
 	sendnumericfmt(client, RPL_INFO, "|");
-	sendnumericfmt(client, RPL_INFO, "| Credits - Type /Credits");
-	sendnumericfmt(client, RPL_INFO, "| DALnet Credits - Type /DalInfo");
+	sendnumericfmt(client, RPL_INFO, "| Credits - Type /CREDITS");
 	sendnumericfmt(client, RPL_INFO, "|");
 	sendnumericfmt(client, RPL_INFO, "| This is an UnrealIRCd-style server");
 	sendnumericfmt(client, RPL_INFO, "| If you find any bugs, please report them at:");
@@ -295,12 +291,9 @@ char **text = unrealinfo;
 	sendnumeric(client, RPL_ENDOFINFO);
 }
 
-/*
-** cmd_info
-**	parv[1] = servername
-**  Modified for hardcode by Stskeeps
-*/
-
+/** The INFO command.
+ * Syntax: INFO [server]
+ */
 CMD_FUNC(cmd_info)
 {
 	if (remotecmdfilter(client, parc, parv))
@@ -310,34 +303,9 @@ CMD_FUNC(cmd_info)
 		cmd_info_send(client);
 }
 
-/*
-** cmd_dalinfo
-**      parv[1] = servername
-*/
-CMD_FUNC(cmd_dalinfo)
-{
-	char **text = dalinfotext;
-
-	if (remotecmdfilter(client, parc, parv))
-		return;
-
-	if (hunt_server(client, recv_mtags, ":%s DALINFO :%s", 1, parc, parv) == HUNTED_ISME)
-	{
-		while (*text)
-			sendnumeric(client, RPL_INFO, *text++);
-
-		sendnumeric(client, RPL_INFO, "");
-		sendnumericfmt(client,
-		    RPL_INFO, "Birth Date: %s, compile # %s", creation, generation);
-		sendnumericfmt(client, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
-		sendnumeric(client, RPL_ENDOFINFO);
-	}
-}
-
-/*
-** cmd_license
-**      parv[1] = servername
-*/
+/** LICENSE command
+ * Syntax: LICENSE [server]
+ */
 CMD_FUNC(cmd_license)
 {
 	char **text = gnulicense;
@@ -355,10 +323,9 @@ CMD_FUNC(cmd_license)
 	}
 }
 
-/*
-** cmd_credits
-**      parv[1] = servername
-*/
+/** CREDITS command
+ * Syntax: CREDITS [servername]
+ */
 CMD_FUNC(cmd_credits)
 {
 	char **text = unrealcredits;
@@ -379,6 +346,7 @@ CMD_FUNC(cmd_credits)
 	}
 }
 
+/** Return flags for a client (connection), eg 's' for SSL/TLS - used in STATS L/l */
 char *get_client_status(Client *client)
 {
 	static char buf[10];
@@ -407,7 +375,7 @@ char *get_client_status(Client *client)
 	return (buf);
 }
 
-/* Used to blank out ports -- Barubary */
+/** Used to blank out ports -- Barubary - only used in STATS l/L */
 char *get_client_name2(Client *client, int showports)
 {
 	char *pointer = get_client_name(client, TRUE);
@@ -428,13 +396,9 @@ char *get_client_name2(Client *client, int showports)
 	return pointer;
 }
 
-/*
-** Note: At least at protocol level ERROR has only one parameter,
-** although this is called internally from other functions
-** --msa
-**
-**	parv[*] = parameters
-*/ 
+/** ERROR command - used by servers to indicate errors.
+ * Syntax: ERROR :<reason>
+ */
 CMD_FUNC(cmd_error)
 {
 	char *para;
@@ -463,6 +427,7 @@ CMD_FUNC(cmd_error)
 	    get_client_name(client, FALSE), para);
 }
 
+/** Save the tunefile (such as: highest seen connection count) */
 EVENT(save_tunefile)
 {
 	FILE *tunefile;
@@ -482,6 +447,7 @@ EVENT(save_tunefile)
 	fclose(tunefile);
 }
 
+/** Load the tunefile (such as: highest seen connection count) */
 void load_tunefile(void)
 {
 	FILE *tunefile;
@@ -519,6 +485,7 @@ ConfigItem_tld *tlds;
 	}
 }
 
+/** Rehash motd and rules (only the default files) */
 void reread_motdsandrules()
 {
 	read_motd(conf_files->motd_file, &motd);
@@ -531,16 +498,9 @@ void reread_motdsandrules()
 
 extern void reinit_resolver(Client *client);
 
-/*
-** cmd_rehash
-** remote rehash by binary
-** now allows the -flags in remote rehash
-** ugly code but it seems to work :) -- codemastr
-** added -all and fixed up a few lines -- niquil (niquil@programmer.net)
-** fixed remote rehashing, but it's getting a bit weird code again -- Syzop
-** removed '-all' code, this is now considered as '/rehash', this is ok
-** since we rehash everything with simple '/rehash' now. Syzop/20040205
-*/
+/** REHASH command - reload configuration file on server(s).
+ * Syntax: see HELPOP REHASH
+ */
 CMD_FUNC(cmd_rehash)
 {
 	int x = 0;
@@ -732,12 +692,10 @@ CMD_FUNC(cmd_rehash)
 	reread_motdsandrules();
 }
 
-/*
-** cmd_restart
-**
-** parv[1] - password *OR* reason if no drpass { } block exists
-** parv[2] - reason for restart (optional & only if drpass block exists)
-*/
+/** RESTART command - restart the server (discouraged command)
+ * parv[1] - password *OR* reason if no drpass { } block exists
+ * parv[2] - reason for restart (optional & only if drpass block exists)
+ */
 CMD_FUNC(cmd_restart)
 {
 	char *reason = parv[1];
@@ -789,10 +747,7 @@ CMD_FUNC(cmd_restart)
 	server_reboot(reason ? reason : "No reason");
 }
 
-/*
- * Heavily modified from the ircu cmd_motd by codemastr
- * Also svsmotd support added
- */
+/** Send short message of the day to the client */
 void short_motd(Client *client)
 {
        ConfigItem_tld *tld;
@@ -853,14 +808,11 @@ void short_motd(Client *client)
        sendnumeric(client, RPL_ENDOFMOTD);
 }
 
-
-
 /*
  * A merge from ircu and bahamut, and some extra stuff added by codemastr
  * we can now use 1 function for multiple files -- codemastr
  * Merged read_motd/read_rules stuff into this -- Syzop
  */
-
 
 /** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
  *  Multiplexes to either directly reading the MOTD or downloading it asynchronously.
@@ -909,13 +861,11 @@ void read_motd(const char *filename, MOTDFile *themotd)
 }
 
 #ifdef USE_LIBCURL
-/**
-   Callback for download_file_async() called from read_motd()
-   below.
-   @param url the URL curl groked or NULL if the MOTD is stored locally.
-   @param filename the path to the local copy of the MOTD or NULL if either cached=1 or there's an error.
-   @param errorbuf NULL or an errorstring if there was an error while downloading the MOTD.
-   @param cached 0 if the URL was downloaded freshly or 1 if the last download was canceled and the local copy should be used.
+/** Callback for download_file_async() called from read_motd() below.
+ * @param url the URL curl groked or NULL if the MOTD is stored locally.
+ * @param filename the path to the local copy of the MOTD or NULL if either cached=1 or there's an error.
+ * @param errorbuf NULL or an errorstring if there was an error while downloading the MOTD.
+ * @param cached 0 if the URL was downloaded freshly or 1 if the last download was canceled and the local copy should be used.
  */
 void read_motd_async_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDDownload *motd_download)
 {
@@ -971,9 +921,7 @@ void read_motd_async_downloaded(const char *url, const char *filename, const cha
 #endif /* USE_LIBCURL */
 
 
-/**
-   Does the actual reading of the MOTD. To be called only by
-   read_motd() or read_motd_async_downloaded().
+/** The actual reading of the MOTD - used by read_motd() and read_motd_async_downloaded()
  */
 void do_read_motd(const char *filename, MOTDFile *themotd)
 {
@@ -1031,11 +979,10 @@ void do_read_motd(const char *filename, MOTDFile *themotd)
 	return;
 }
 
-/**
-   Frees the contents of a MOTDFile structure.
-   The MOTDFile structure itself should be statically
-   allocated and deallocated. If the caller wants, it must
-   manually free the MOTDFile structure itself.
+/** Free the contents of a MOTDFile structure.
+ * The MOTDFile structure itself should be statically
+ * allocated and deallocated. If the caller wants, it must
+ * manually free the MOTDFile structure itself.
  */
 void free_motd(MOTDFile *themotd)
 {
@@ -1060,10 +1007,8 @@ void free_motd(MOTDFile *themotd)
 #endif
 }
 
-
-/* cmd_die, this terminates the server, and it intentionally does not
- * have a reason. If you use it you should first use /GLOBOPS and
- * then a server notice to let everyone know what is going down...
+/** DIE command - terminate the server
+ * DIE [password]
  */
 CMD_FUNC(cmd_die)
 {
@@ -1108,31 +1053,10 @@ CMD_FUNC(cmd_die)
 	s_die();
 }
 
-#ifdef _WIN32
-/*
- * Added to let the local console shutdown the server without just
- * calling exit(-1), in Windows mode.  -Cabal95
- */
-int localdie(void)
-{
-	Client *client;
-
-	list_for_each_entry(client, &lclient_list, lclient_node)
-	{
-		if (IsUser(client))
-			sendnotice(client, "Server Terminated by local console");
-		else if (IsServer(client))
-			sendto_one(client, NULL,
-			    ":%s ERROR :Terminated by local console", me.name);
-	}
-	s_die();
-	return 0;
-}
-
-#endif
-
+/** Server list (network) of pending connections */
 PendingNet *pendingnet = NULL;
 
+/** Add server list (network) from 'client' connection */
 void add_pending_net(Client *client, char *str)
 {
 	PendingNet *net;
@@ -1162,6 +1086,7 @@ void add_pending_net(Client *client, char *str)
 	AddListItem(net, pendingnet);
 }
 
+/** Free server list (network) previously added by 'client' */
 void free_pending_net(Client *client)
 {
 	PendingNet *net, *net_next;
@@ -1184,6 +1109,7 @@ void free_pending_net(Client *client)
 	}
 }
 
+/** Find SID in any server list (network) that is pending, except 'exempt' */
 PendingNet *find_pending_net_by_sid_butone(char *sid, Client *exempt)
 {
 	PendingNet *net;
@@ -1233,6 +1159,7 @@ Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid)
 	return NULL;
 }
 
+/** Like find_pending_net_duplicates() but the other way around? Eh.. */
 Client *find_non_pending_net_duplicates(Client *client)
 {
 	PendingNet *net;
@@ -1255,6 +1182,7 @@ Client *find_non_pending_net_duplicates(Client *client)
 	return NULL;
 }
 
+/** Parse CHANMODES= in PROTOCTL */
 void parse_chanmodes_protoctl(Client *client, char *str)
 {
 	char *modes, *p;
@@ -1287,6 +1215,9 @@ void parse_chanmodes_protoctl(Client *client, char *str)
 static char previous_langsinuse[512];
 static int previous_langsinuse_ready = 0;
 
+/** Check the nick character system (set::allowed-nickchars) for changes.
+ * If there are changes, then we broadcast the new PROTOCTL NICKCHARS= to all servers.
+ */
 void charsys_check_for_changes(void)
 {
 	char *langsinuse = charsys_get_current_languages();
@@ -1345,6 +1276,7 @@ int valid_sid(char *name)
 	return 1;
 }
 
+/** Initialize the TKL subsystem */
 void tkl_init(void)
 {
 	memset(tklines, 0, sizeof(tklines));

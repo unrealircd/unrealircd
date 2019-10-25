@@ -172,7 +172,6 @@ void init_CommandHash(void)
 	CommandAdd(NULL, MSG_REHASH, cmd_rehash, MAXPARA, CMD_USER|CMD_SERVER);
 	CommandAdd(NULL, MSG_RESTART, cmd_restart, 2, CMD_USER);
 	CommandAdd(NULL, MSG_DIE, cmd_die, MAXPARA, CMD_USER);
-	CommandAdd(NULL, MSG_DALINFO, cmd_dalinfo, MAXPARA, CMD_USER);
 	CommandAdd(NULL, MSG_CREDITS, cmd_credits, MAXPARA, CMD_USER);
 	CommandAdd(NULL, MSG_LICENSE, cmd_license, MAXPARA, CMD_USER);
 	CommandAdd(NULL, MSG_MODULE, cmd_module, MAXPARA, CMD_USER);
