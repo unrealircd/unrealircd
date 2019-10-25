@@ -161,3 +161,92 @@ CMD_FUNC(cmd_dccallow)
 		return;
 	}
 }
+
+/* The dccallow functions below are all taken from bahamut (1.8.1).
+ * Well, with some small modifications of course. -- Syzop
+ */
+
+/** Adds 'optr' to the DCCALLOW list of 'client' */
+int add_dccallow(Client *client, Client *optr)
+{
+	Link *lp;
+	int cnt = 0;
+
+	for (lp = client->user->dccallow; lp; lp = lp->next)
+	{
+		if (lp->flags != DCC_LINK_ME)
+			continue;
+		cnt++;
+		if (lp->value.client == optr)
+			return 0;
+	}
+
+	if (cnt >= MAXDCCALLOW)
+	{
+		sendnumeric(client, ERR_TOOMANYDCC,
+			optr->name, MAXDCCALLOW);
+		return 0;
+	}
+
+	lp = make_link();
+	lp->value.client = optr;
+	lp->flags = DCC_LINK_ME;
+	lp->next = client->user->dccallow;
+	client->user->dccallow = lp;
+
+	lp = make_link();
+	lp->value.client = client;
+	lp->flags = DCC_LINK_REMOTE;
+	lp->next = optr->user->dccallow;
+	optr->user->dccallow = lp;
+
+	sendnumeric(client, RPL_DCCSTATUS, optr->name, "added to");
+	return 0;
+}
+
+/** Removes 'optr' from the DCCALLOW list of 'client' */
+int del_dccallow(Client *client, Client *optr)
+{
+	Link **lpp, *lp;
+	int found = 0;
+
+	for (lpp = &(client->user->dccallow); *lpp; lpp=&((*lpp)->next))
+	{
+		if ((*lpp)->flags != DCC_LINK_ME)
+			continue;
+		if ((*lpp)->value.client == optr)
+		{
+			lp = *lpp;
+			*lpp = lp->next;
+			free_link(lp);
+			found++;
+			break;
+		}
+	}
+	if (!found)
+	{
+		sendnumericfmt(client, RPL_DCCINFO, "%s is not in your DCC allow list", optr->name);
+		return 0;
+	}
+
+	for (found = 0, lpp = &(optr->user->dccallow); *lpp; lpp=&((*lpp)->next))
+	{
+		if ((*lpp)->flags != DCC_LINK_REMOTE)
+			continue;
+		if ((*lpp)->value.client == client)
+		{
+			lp = *lpp;
+			*lpp = lp->next;
+			free_link(lp);
+			found++;
+			break;
+		}
+	}
+	if (!found)
+		sendto_realops("[BUG!] %s was in dccallowme list of %s but not in dccallowrem list!",
+			optr->name, client->name);
+
+	sendnumeric(client, RPL_DCCSTATUS, optr->name, "removed from");
+
+	return 0;
+}

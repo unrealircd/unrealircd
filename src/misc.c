@@ -327,6 +327,17 @@ void set_sockhost(Client *client, char *host)
 	strlcpy(client->local->sockhost, s, sizeof(client->local->sockhost));
 }
 
+/** Returns 1 if 'from' is on the allow list of 'to' */
+int on_dccallow_list(Client *to, Client *from)
+{
+	Link *lp;
+
+	for(lp = to->user->dccallow; lp; lp = lp->next)
+		if(lp->flags == DCC_LINK_ME && lp->value.client == from)
+			return 1;
+	return 0;
+}
+
 void remove_dcc_references(Client *client)
 {
 	Client *acptr;
