@@ -2601,9 +2601,9 @@ int	config_run()
 	 *     and remove it here.
 	 */
 
-	close_listeners();
+	close_unbound_listeners();
 	listen_cleanup();
-	close_listeners();
+	close_unbound_listeners();
 	loop.do_bancheck = 1;
 	free_iConf(&iConf);
 	memcpy(&iConf, &tempiConf, sizeof(iConf));
@@ -10155,7 +10155,7 @@ void	listen_cleanup()
 	}
 
 	if (i)
-		close_listeners();
+		close_unbound_listeners();
 }
 
 #ifdef USE_LIBCURL

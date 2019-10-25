@@ -55,8 +55,6 @@ static void ident_lookup_failed(Client *client)
 	ClearIdentLookup(client);
 	if (should_show_connect_info(client))
 		sendto_one(client, NULL, ":%s %s", me.name, REPORT_FAIL_ID);
-	if (!IsDNSLookup(client))
-		finish_auth(client);
 }
 
 static EVENT(check_ident_timeout)
@@ -162,8 +160,6 @@ static void ident_lookup_receive(int fd, int revents, void *userdata)
 	client->local->authfd = -1;
 	client->local->identbufcnt = 0;
 	ClearIdentLookup(client);
-	if (!IsDNSLookup(client))
-		finish_auth(client);
 
 	if (should_show_connect_info(client))
 		sendto_one(client, NULL, ":%s %s", me.name, REPORT_FIN_ID);

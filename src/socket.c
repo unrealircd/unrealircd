@@ -31,7 +31,6 @@
 int OpenFiles = 0;    /* GLOBAL - number of files currently open */
 int readcalls = 0;
 
-int connect_inet(ConfigItem_link *, Client *);
 void completed_connection(int, int, void *);
 void set_sock_opts(int, Client *, int);
 void set_ipv6_opts(int);
@@ -48,7 +47,7 @@ extern void url_do_transfers_async(void);
 void start_of_normal_client_handshake(Client *client);
 void proceed_normal_client_handshake(Client *client, struct hostent *he);
 
-/* winlocal */
+/** Close all connections - only used when we terminate the server (eg: /DIE or SIGTERM) */
 void close_connections(void)
 {
 	Client *client;
@@ -77,7 +76,7 @@ void close_connections(void)
 		}
 	}
 
-	close_listeners();
+	close_unbound_listeners();
 
 	OpenFiles = 0;
 
@@ -86,25 +85,14 @@ void close_connections(void)
 #endif
 }
 
-/*
-** Cannot use perror() within daemon. stderr is closed in
-** ircd and cannot be used. And, worse yet, it might have
-** been reassigned to a normal connection...
-*/
-
-/*
-** report_error
-**	This a replacement for perror(). Record error to log and
-**	also send a copy to all *LOCAL* opers online.
-**
-**	text	is a *format* string for outputting error. It must
-**		contain only two '%s', the first will be replaced
-**		by the sockhost from the client, and the latter will
-**		be taken from strerror(errno).
-**
-**	client	if not NULL, is the *LOCAL* client associated with
-**		the error.
-*/
+/** Report an error to the log and also send to all local opers.
+ * @param text		Format string for outputting the error.
+ *			It must contain only two '%s'. The first
+ *			one is replaced by the sockhost from the
+ *			client, and the latter will be the error
+ *			message from strerror(errno).
+ * @param client	The client - ALWAYS locally connected.
+ */
 void report_error(char *text, Client *client)
 {
 	int errtmp = ERRNO, origerr = ERRNO;
@@ -143,6 +131,15 @@ void report_error(char *text, Client *client)
 	return;
 }
 
+/** Report a BAD error to the log and also send to all local opers.
+ * TODO: Document the difference between report_error() and report_baderror()
+ * @param text		Format string for outputting the error.
+ *			It must contain only two '%s'. The first
+ *			one is replaced by the sockhost from the
+ *			client, and the latter will be the error
+ *			message from strerror(errno).
+ * @param client	The client - ALWAYS locally connected.
+ */
 void report_baderror(char *text, Client *client)
 {
 #ifndef _WIN32
@@ -155,8 +152,6 @@ void report_baderror(char *text, Client *client)
 
 	host = (client) ? get_client_name(client, FALSE) : "";
 
-/*	fprintf(stderr, text, host, strerror(errtmp));
-	fputc('\n', stderr); */
 	Debug((DEBUG_ERROR, text, host, STRERROR(errtmp)));
 
 	/*
@@ -175,7 +170,10 @@ void report_baderror(char *text, Client *client)
 	return;
 }
 
-/** Accept an incoming client. */
+/** Accept an incoming connection.
+ * @param listener_fd	The file descriptor of a listen() socket.
+ * @param data		The listen { } block configuration data.
+ */
 static void listener_accept(int listener_fd, int revents, void *data)
 {
 	ConfigItem_listen *listener = data;
@@ -224,13 +222,14 @@ static void listener_accept(int listener_fd, int revents, void *data)
 	add_connection(listener, cli_fd);
 }
 
-/*
- * inetport
- *
- * Create a socket, bind it to the 'ip' and 'port' and listen to it.
- * Returns the fd of the socket created or -1 on error.
+/** Create a listener port.
+ * @param listener	The listen { } block configuration
+ * @param ip		IP address to bind on
+ * @param port		Port to bind on
+ * @param ipv6		IPv6 (1) or IPv4 (0)
+ * @returns 0 on success and <0 on error. Yeah, confusing.
  */
-int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
+int unreal_listen(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 {
 	if (BadPtr(ip))
 		ip = "*";
@@ -309,22 +308,20 @@ int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 	}
 #endif
 
-	/* ircd_log(LOG_ERROR, "FD #%d: Listener on %s:%d", listener->fd, ipname, port); */
-
 	fd_setselect(listener->fd, FD_SELECT_READ, listener_accept, listener);
 
 	return 0;
 }
 
+/** Activate a listen { } block */
 int add_listener(ConfigItem_listen *conf)
 {
-	if (inetport(conf, conf->ip, conf->port, conf->ipv6))
+	if (unreal_listen(conf, conf->ip, conf->port, conf->ipv6))
 	{
-		/* This error is already handled upstream:
-		 * ircd_log(LOG_ERROR, "inetport failed for %s:%u", conf->ip, conf->port);
-		 */
+		/* Error is already handled upstream */
 		conf->fd = -2;
 	}
+
 	if (conf->fd >= 0)
 	{
 		conf->options |= LISTENER_BOUND;
@@ -337,12 +334,11 @@ int add_listener(ConfigItem_listen *conf)
 	}
 }
 
-/*
- * close_listeners
- *
- * Close the listener. Note that this won't *free* the listen block, it
- * just makes it so no new clients are accepted (and marks the listener
- * as "not bound").
+/** Close the listener socket, but do not free it (yet).
+ * This will only close the socket so no new clients are accepted.
+ * It also marks the listener as no longer "bound".
+ * Once the last client exits the listener will actually be freed.
+ * @param listener	The listen { } block.
  */
 void close_listener(ConfigItem_listen *listener)
 {
@@ -358,6 +354,9 @@ void close_listener(ConfigItem_listen *listener)
 
 	listener->options &= ~LISTENER_BOUND;
 	listener->fd = -1;
+	/* We can already free the SSL/TLS context, since it is only
+	 * used for new connections, which we no longer accept.
+	 */
 	if (listener->ssl_ctx)
 	{
 		SSL_CTX_free(listener->ssl_ctx);
@@ -365,7 +364,8 @@ void close_listener(ConfigItem_listen *listener)
 	}
 }
 
-void close_listeners(void)
+/** Close all listeners that were pending to be closed. */
+void close_unbound_listeners(void)
 {
 	ConfigItem_listen *aconf, *aconf_next;
 
@@ -380,6 +380,8 @@ void close_listeners(void)
 
 int maxclients = 1024 - CLIENTS_RESERVE;
 
+/** Check the maximum number of sockets (users) that we can handle - called on startup.
+ */
 void check_user_limit(void)
 {
 #ifdef RLIMIT_FD_MAX
@@ -439,6 +441,7 @@ void check_user_limit(void)
 #endif
 }
 
+/** Initialize some systems - called on startup */
 void init_sys(void)
 {
 #ifndef _WIN32
@@ -451,6 +454,7 @@ void init_sys(void)
 }
 
 /** Replace a file descriptor (*NIX only).
+ * See close_std_descriptors() as for why.
  * @param oldfd: the old FD to close and re-use
  * @param name: descriptive string of the old fd, eg: "stdin".
  * @param mode: an open() mode, such as O_WRONLY.
@@ -477,7 +481,7 @@ void replacefd(int oldfd, char *name, int mode)
 #endif
 }
 
-/* Mass close standard file descriptors.
+/** Mass close standard file descriptors (stdin, stdout, stderr).
  * We used to really just close them here (or in init_sys() actually),
  * making the fd's available for other purposes such as internet sockets.
  * For safety we now dup2() them to /dev/null. This in case someone
@@ -494,6 +498,7 @@ void close_std_descriptors(void)
 #endif
 }
 
+/** Write PID file */
 void write_pidfile(void)
 {
 #ifdef IRCD_PIDFILE
@@ -525,6 +530,9 @@ void reject_insecure_server(Client *client)
 	dead_socket(client, "Rejected link without SSL/TLS");
 }
 
+/** Start server handshake - called after the outgoing connection has been established.
+ * @param client	The remote server
+ */
 void start_server_handshake(Client *client)
 {
 	ConfigItem_link *aconf = client->serv ? client->serv->conf : NULL;
@@ -558,6 +566,9 @@ void start_server_handshake(Client *client)
 	}
 }
 
+/** Do an ident lookup if necessary.
+ * @param client	The incoming client
+ */
 void consider_ident_lookup(Client *client)
 {
 	char buf[BUFSIZE];
@@ -567,8 +578,6 @@ void consider_ident_lookup(Client *client)
 	{
 		ClearIdentLookupSent(client);
 		ClearIdentLookup(client);
-		if (!IsDNSLookup(client))
-			finish_auth(client);
 		return;
 	}
 	RunHook(HOOKTYPE_IDENT_LOOKUP, client);
@@ -577,14 +586,7 @@ void consider_ident_lookup(Client *client)
 }
 
 
-/*
-** completed_connection
-**	Complete non-blocking connect()-sequence. Check access and
-**	terminate connection, if trouble detected.
-**
-**	Return	TRUE, if successfully completed
-**		FALSE, if failed and ClientExit
-*/
+/** Called when TCP/IP connection is established (outgoing server connect) */
 void completed_connection(int fd, int revents, void *data)
 {
 	Client *client = data;
@@ -620,13 +622,14 @@ void completed_connection(int fd, int revents, void *data)
 	fd_setselect(fd, FD_SELECT_READ, read_packet, client);
 }
 
-/*
-** close_connection
-**	Close the physical connection. This function must make
-**	MyConnect(client) == FALSE, and set client->direction == NULL.
-*/
+/** Close the physical connection.
+ * @param client	The client connection to close (LOCAL!)
+ */
 void close_connection(Client *client)
 {
+	/* This function must make MyConnect(client) == FALSE,
+	 * and set client->direction == NULL.
+	 */
 	if (IsServer(client))
 	{
 		ircstats.is_sv++;
@@ -697,11 +700,10 @@ void close_connection(Client *client)
 
 	}
 
-	client->direction = NULL;	/* ...this should catch them! >:) --msa */
-
-	return;
+	client->direction = NULL;
 }
 
+/** Set IPv6 socket options, if possible. */
 void set_ipv6_opts(int fd)
 {
 #if defined(IPV6_V6ONLY)
@@ -727,9 +729,7 @@ void set_socket_buffers(int fd, int rcvbuf, int sndbuf)
 	setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (void *)&opt, sizeof(opt));
 }
 
-/*
-** set_sock_opts
-*/
+/** Set the appropriate socket options */
 void set_sock_opts(int fd, Client *client, int ipv6)
 {
 	int opt;
@@ -775,26 +775,11 @@ void set_sock_opts(int fd, Client *client, int ipv6)
 #endif
 }
 
-
-int  get_sockerr(Client *client)
-{
-#ifndef _WIN32
-	int  errtmp = errno, err = 0, len = sizeof(err);
-#else
-	int  errtmp = WSAGetLastError(), err = 0, len = sizeof(err);
-#endif
-#ifdef	SO_ERROR
-	if (client->local->fd >= 0)
-		if (!getsockopt(client->local->fd, SOL_SOCKET, SO_ERROR, (void *)&err, &len))
-			if (err)
-				errtmp = err;
-#endif
-	return errtmp;
-}
-
 /** Returns 1 if using a loopback IP (127.0.0.1) or
  * using a local IP number on the same machine (effectively the same;
  * no network traffic travels outside this machine).
+ * @param ip	The IP address to check
+ * @returns 1 if loopback, 0 if not.
  */
 int is_loopback_ip(char *ip)
 {
@@ -811,6 +796,12 @@ int is_loopback_ip(char *ip)
 	return 0;
 }
 
+/** Retrieve the remote IP address and port of a socket.
+ * @param client	Client to check
+ * @param fd		File descriptor
+ * @param port		Remote port (will be written)
+ * @returns The IP address
+ */
 char *getpeerip(Client *client, int fd, int *port)
 {
 	static char ret[HOSTLEN+1];
@@ -860,11 +851,16 @@ static int check_too_many_unknown_connections(Client *client)
 	return 0;
 }
 
-/*
- * Creates a client which has just connected to us on the given fd.
+/** Process the incoming connection which has just been accepted.
+ * This creates a client structure for the user.
  * The sockhost field is initialized with the ip# of the host.
  * The client is added to the linked list of clients but isnt added to any
  * hash tables yuet since it doesnt have a name.
+ * @param listener	The listen { } block on which the client was accepted.
+ * @param fd		The file descriptor of the client
+ * @returns The new client, or NULL in case of trouble.
+ * @notes When NULL is returned, the client at socket 'fd' will be
+ *        closed by this function and OpenFiles is adjusted appropriately.
  */
 Client *add_connection(ConfigItem_listen *listener, int fd)
 {
@@ -968,6 +964,11 @@ refuse_client:
 
 static int dns_special_flag = 0; /* This is for an "interesting" race condition  very ugly. */
 
+/** Start of normal client handshake - DNS and ident lookups, etc.
+ * @param client	The client
+ * @note This is called directly after accept() -> add_connection() for plaintext.
+ *       For SSL/TLS connections this is called after the SSL/TLS handshake is completed.
+ */
 void start_of_normal_client_handshake(Client *client)
 {
 	struct hostent *he;
@@ -1004,6 +1005,10 @@ doauth:
 	fd_setselect(client->local->fd, FD_SELECT_READ, read_packet, client);
 }
 
+/** Called when DNS lookup has been completed and we can proceed with the client handshake.
+ * @param client	The client
+ * @param he		The resolved or unresolved host
+ */
 void proceed_normal_client_handshake(Client *client, struct hostent *he)
 {
 	ClearDNSLookup(client);
@@ -1014,11 +1019,13 @@ void proceed_normal_client_handshake(Client *client, struct hostent *he)
 		           me.name,
 		           client->local->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 	}
-
-	if (!dns_special_flag && !IsIdentLookup(client))
-		finish_auth(client);
 }
 
+/** Read a packet from a client.
+ * @param fd		File descriptor
+ * @param revents	Read events (ignored)
+ * @param data		Associated data (the client)
+ */
 void read_packet(int fd, int revents, void *data)
 {
 	Client *client = data;
@@ -1168,11 +1175,6 @@ void process_clients(void)
 	} while(&client->lclient_node != &unknown_list);
 }
 
-/* When auth is finished, go back and parse all prior input. */
-void finish_auth(Client *client)
-{
-}
-
 /** Returns 4 if 'str' is a valid IPv4 address
  * and 6 if 'str' is a valid IPv6 IP address.
  * Zero (0) is returned in any other case (eg: hostname).
@@ -1190,10 +1192,15 @@ int is_valid_ip(char *str)
 	return 0; /* not an IP address */
 }
 
-/*
- * connect_server
+static int connect_server_helper(ConfigItem_link *, Client *);
+
+/** Start an outgoing connection to a server, for server linking.
+ * @param aconf		Configuration attached to this server
+ * @param by		The user initiating the connection (can be NULL)
+ * @param hp		The address to connect to.
+ * @returns <0 on error, 0 on success. Rather confusing.
  */
-int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
+int connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 {
 	Client *client;
 
@@ -1246,7 +1253,7 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	strlcpy(client->name, aconf->servername, sizeof(client->name));
 	strlcpy(client->local->sockhost, aconf->outgoing.hostname, HOSTLEN + 1);
 
-	if (!connect_inet(aconf, client))
+	if (!connect_server_helper(aconf, client))
 	{
 		int errtmp = ERRNO;
 		report_error("Connect to host %s failed: %s", client);
@@ -1294,7 +1301,12 @@ int  connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 	return 0;
 }
 
-int connect_inet(ConfigItem_link *aconf, Client *client)
+/** Helper function for connect_server() to prepare the actual bind()'ing and connect().
+ * @param aconf		Configuration entry of the server.
+ * @param client	The client entry that we will use and fill in.
+ * @returns 1 on success, 0 on failure.
+ */
+static int connect_server_helper(ConfigItem_link *aconf, Client *client)
 {
 	char *bindip;
 	char buf[BUFSIZE];
@@ -1313,9 +1325,9 @@ int connect_inet(ConfigItem_link *aconf, Client *client)
 	{
 		if (ERRNO == P_EMFILE)
 		{
-		  sendto_realops("opening stream socket to server %s: No more sockets",
-					 get_client_name(client, TRUE));
-		  return 0;
+			sendto_realops("opening stream socket to server %s: No more sockets",
+				get_client_name(client, TRUE));
+			return 0;
 		}
 		report_baderror("opening stream socket to server %s:%s", client);
 		return 0;
