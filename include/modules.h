@@ -973,6 +973,7 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_IDENT_LOOKUP 103
 #define HOOKTYPE_CONFIGRUN_EX 104
 #define HOOKTYPE_CAN_SEND_TO_USER 105
+#define HOOKTYPE_SERVER_SYNC 106
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -985,6 +986,7 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 int hooktype_local_connect(Client *client);
 int hooktype_remote_connect(Client *client);
 int hooktype_server_connect(Client *client);
+int hooktype_server_sync(Client *client);
 int hooktype_post_server_connect(Client *client);
 char *hooktype_pre_local_quit(Client *client, char *comment);
 int hooktype_local_quit(Client *client, MessageTag *mtags, char *comment);
@@ -1067,7 +1069,7 @@ int hooktype_can_sajoin(Client *target, Channel *channel, Client *client);
 int hooktype_check_init(Client *cptr, char *sockname, size_t size);
 int hooktype_mode_deop(Client *client, Client *victim, Channel *channel, u_int what, int modechar, long my_access, char **badmode);
 int hooktype_see_channel_in_whois(Client *client, Client *target, Channel *channel);
-int hooktype_dcc_denied(Client *client, Client *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
+int hooktype_dcc_denied(Client *client, char *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
 int hooktype_server_handshake_out(Client *client);
 int hooktype_server_synched(Client *client);
 int hooktype_secure_connect(Client *client);
@@ -1101,6 +1103,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_PRE_LOCAL_CONNECT) && !ValidateHook(hooktype_pre_local_connect, func)) || \
         ((hooktype == HOOKTYPE_PRE_LOCAL_QUIT) && !ValidateHook(hooktype_pre_local_quit, func)) || \
         ((hooktype == HOOKTYPE_SERVER_CONNECT) && !ValidateHook(hooktype_server_connect, func)) || \
+        ((hooktype == HOOKTYPE_SERVER_SYNC) && !ValidateHook(hooktype_server_sync, func)) || \
         ((hooktype == HOOKTYPE_SERVER_QUIT) && !ValidateHook(hooktype_server_quit, func)) || \
         ((hooktype == HOOKTYPE_STATS) && !ValidateHook(hooktype_stats, func)) || \
         ((hooktype == HOOKTYPE_LOCAL_JOIN) && !ValidateHook(hooktype_local_join, func)) || \

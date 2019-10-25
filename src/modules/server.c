@@ -1072,8 +1072,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	/* pass on TKLs */
 	tkl_synch(cptr);
 
-	/* send out SVSFLINEs */
-	dcc_sync(cptr);
+	RunHook(HOOKTYPE_SERVER_SYNC, cptr);
 
 	sendto_one(cptr, NULL, "NETINFO %i %lld %i %s 0 0 0 :%s",
 	    irccounts.global_max, (long long)TStime(), UnrealProtocol,

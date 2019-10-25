@@ -74,10 +74,6 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *get_dcc_filename(const char *text);
-static int can_dcc(Client *client, char *target, Client *targetcli, char *filename, char **errmsg);
-static int can_dcc_soft(Client *from, Client *to, char *filename, char **errmsg);
-
 #define CANPRIVMSG_CONTINUE		100
 #define CANPRIVMSG_SEND			101
 /** Check if PRIVMSG's are permitted from a person to another person.
@@ -101,18 +97,6 @@ int can_send_to_user(Client *client, Client *target, char **msgtext, char **errm
 		ircsnprintf(errbuf, sizeof(errbuf), "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
 		*errmsg = errbuf;
 		return 0;
-	}
-
-	if (**msgtext == '\001')
-	{
-		char *filename = get_dcc_filename(*msgtext);
-		if (filename)
-		{
-			if (MyUser(client) && !can_dcc(client, target->name, target, filename, errmsg))
-				return 0;
-			if (MyUser(target) && !can_dcc_soft(client, target, filename, errmsg))
-				return 0;
-		}
 	}
 
 	if (MyUser(client) && target_limit_exceeded(client, target, target->name))
@@ -358,20 +342,6 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 				targetstr = pfixchan;
 			}
 
-			if (MyUser(client) && (*parv[2] == '\001'))
-			{
-				char *errmsg = NULL;
-				char *filename = get_dcc_filename(parv[2]);
-				if (filename && !can_dcc(client, channel->chname, NULL, filename, &errmsg))
-				{
-					if (IsDead(client))
-						return;
-					if (!IsDead(client) && !notice)
-						sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, errmsg, p2);
-					continue;
-				}
-			}
-
 			if (IsVirus(client) && strcasecmp(channel->chname, SPAMFILTER_VIRUSCHAN))
 			{
 				sendnotice(client, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
@@ -538,186 +508,6 @@ CMD_FUNC(cmd_private)
 CMD_FUNC(cmd_notice)
 {
 	cmd_message(client, recv_mtags, parc, parv, 1);
-}
-
-/** Make a viewable dcc filename.
- * This is to protect a bit against tricks like 'flood-it-off-the-buffer'
- * and color 1,1 etc...
- */
-char *dcc_displayfile(char *f)
-{
-	static char buf[512];
-	char *i, *o = buf;
-	size_t n = strlen(f);
-
-	if (n < 300)
-	{
-		for (i = f; *i; i++)
-			if (*i < 32)
-				*o++ = '?';
-			else
-				*o++ = *i;
-		*o = '\0';
-		return buf;
-	}
-
-	/* Else, we show it as: [first 256 chars]+"[..TRUNCATED..]"+[last 20 chars] */
-	for (i = f; i < f+256; i++)
-		if (*i < 32)
-			*o++ = '?';
-		else
-			*o++ = *i;
-	strcpy(o, "[..TRUNCATED..]");
-	o += sizeof("[..TRUNCATED..]");
-	for (i = f+n-20; *i; i++)
-		if (*i < 32)
-			*o++ = '?';
-		else
-			*o++ = *i;
-	*o = '\0';
-	return buf;
-}
-
-char *get_dcc_filename(const char *text)
-{
-	static char filename[BUFSIZE+1];
-	char *end;
-	int size_string;
-
-	if (*text != '\001')
-		return 0;
-
-	if (!strncasecmp(text+1, "DCC SEND ", 9))
-		text = text + 10;
-	else if (!strncasecmp(text+1, "DCC RESUME ", 11))
-		text = text + 12;
-	else
-		return 0;
-
-	for (; *text == ' '; text++); /* skip leading spaces */
-
-	if (*text == '"' && *(text+1))
-		end = strchr(text+1, '"');
-	else
-		end = strchr(text, ' ');
-
-	if (!end || (end < text))
-		return 0;
-
-	size_string = (int)(end - text);
-
-	if (!size_string || (size_string > (BUFSIZE - 1)))
-		return 0;
-
-	strlcpy(filename, text, size_string+1);
-	return filename;
-}
-
-/** Checks if a DCC SEND is allowed.
- * @param client      Sending client
- * @param target      Target name (user or channel)
- * @param targetcli   Target client (NULL in case of channel!)
- * @param text        The entire message
- * @returns 1 if DCC SEND allowed, 0 if rejected
- */
-static int can_dcc(Client *client, char *target, Client *targetcli, char *filename, char **errmsg)
-{
-	ConfigItem_deny_dcc *fl;
-	static char errbuf[256];
-	int size_string, ret;
-
-	/* User (IRCOp) may bypass send restrictions */
-	if (ValidatePermissionsForPath("immune:dcc",client,targetcli,NULL,NULL))
-		return 1;
-
-	/* User (IRCOp) likes to receive bad dcc's */
-	if (targetcli && ValidatePermissionsForPath("self:getbaddcc",targetcli,NULL,NULL,NULL))
-		return 1;
-
-	/* Check if user is already blocked (from the past) */
-	if (IsDCCBlock(client))
-	{
-		*errmsg = "*** You are blocked from sending files as you have tried to "
-		          "send a forbidden file - reconnect to regain ability to send";
-		return 0;
-	}
-
-	if (match_spamfilter(client, filename, SPAMF_DCC, target, 0, NULL))
-		return 0;
-
-	if ((fl = dcc_isforbidden(client, filename)))
-	{
-		char *displayfile = dcc_displayfile(filename);
-
-		RunHook5(HOOKTYPE_DCC_DENIED, client, target, filename, displayfile, fl);
-
-		ircsnprintf(errbuf, sizeof(errbuf), "Cannot DCC SEND file: %s", fl->reason);
-		*errmsg = errbuf;
-		SetDCCBlock(client);
-		return 0;
-	}
-
-	/* Channel dcc (???) and discouraged? just block */
-	if (!targetcli && ((fl = dcc_isdiscouraged(client, filename))))
-	{
-		ircsnprintf(errbuf, sizeof(errbuf), "Cannot DCC SEND file: %s", fl->reason);
-		*errmsg = errbuf;
-		return 0;
-	}
-
-	/* If we get here, the file is allowed */
-	return 1;
-}
-
-/** Checks if a DCC is allowed by DCCALLOW rules (only SOFT bans are checked).
- * PARAMETERS:
- * from:		the sender client (possibly remote)
- * to:			the target client (always local)
- * text:		the whole msg
- * RETURNS:
- * 1:			allowed
- * 0:			block
- */
-static int can_dcc_soft(Client *from, Client *to, char *filename, char **errmsg)
-{
-	ConfigItem_deny_dcc *fl;
-	char *displayfile;
-	static char errbuf[256];
-
-	/* User (IRCOp) may bypass send restrictions */
-	if (ValidatePermissionsForPath("immune:dcc",from,to,NULL,NULL))
-		return 1;
-
-	/* User (IRCOp) likes to receive bad dcc's */
-	if (ValidatePermissionsForPath("self:getbaddcc",to,NULL,NULL,NULL))
-		return 1;
-
-	/* On the 'soft' blocklist ? */
-	if (!(fl = dcc_isdiscouraged(from, filename)))
-		return 1; /* No, so is OK */
-
-	/* If on DCCALLOW list then the user is OK with it */
-	if (on_dccallow_list(to, from))
-		return 1;
-
-	/* Soft-blocked */
-	displayfile = dcc_displayfile(filename);
-
-	ircsnprintf(errbuf, sizeof(errbuf), "Cannot DCC SEND file: %s", fl->reason);
-	*errmsg = errbuf;
-
-	/* Inform target ('to') about the /DCCALLOW functionality */
-	sendnotice(to, "%s (%s@%s) tried to DCC SEND you a file named '%s', the request has been blocked.",
-		from->name, from->user->username, GetHost(from), displayfile);
-	if (!IsDCCNotice(to))
-	{
-		SetDCCNotice(to);
-		sendnotice(to, "Files like these might contain malicious content (viruses, trojans). "
-			"Therefore, you must explicitly allow anyone that tries to send you such files.");
-		sendnotice(to, "If you trust %s, and want him/her to send you this file, you may obtain "
-			"more information on using the dccallow system by typing '/DCCALLOW HELP'", from->name);
-	}
-	return 0;
 }
 
 /* Taken from xchat by Peter Zelezny

@@ -59,13 +59,11 @@ static int	_conf_link		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_ban		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_set		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny		(ConfigFile *conf, ConfigEntry *ce);
-static int	_conf_deny_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_link		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_version	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_require		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
-static int	_conf_allow_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
@@ -97,7 +95,6 @@ static int	_test_require		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_set		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_deny		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
-static int	_test_allow_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_blacklist_module	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
@@ -246,10 +243,8 @@ ConfigItem_except	*conf_except = NULL;
 ConfigItem_vhost	*conf_vhost = NULL;
 ConfigItem_link		*conf_link = NULL;
 ConfigItem_ban		*conf_ban = NULL;
-ConfigItem_deny_dcc     *conf_deny_dcc = NULL;
 ConfigItem_deny_channel *conf_deny_channel = NULL;
 ConfigItem_allow_channel *conf_allow_channel = NULL;
-ConfigItem_allow_dcc    *conf_allow_dcc = NULL;
 ConfigItem_deny_link	*conf_deny_link = NULL;
 ConfigItem_deny_version *conf_deny_version = NULL;
 ConfigItem_log		*conf_log = NULL;
@@ -2157,8 +2152,6 @@ void	config_rehash()
 	ConfigItem_listen	 	*listen_ptr;
 	ConfigItem_tld			*tld_ptr;
 	ConfigItem_vhost		*vhost_ptr;
-	ConfigItem_deny_dcc		*deny_dcc_ptr;
-	ConfigItem_allow_dcc		*allow_dcc_ptr;
 	ConfigItem_deny_link		*deny_link_ptr;
 	ConfigItem_deny_channel		*deny_channel_ptr;
 	ConfigItem_allow_channel	*allow_channel_ptr;
@@ -2313,17 +2306,6 @@ void	config_rehash()
 
 	remove_config_tkls();
 
-	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *)next)
-	{
-		next = (ListStruct *)deny_dcc_ptr->next;
-		if (deny_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
-		{
-			safe_free(deny_dcc_ptr->filename);
-			safe_free(deny_dcc_ptr->reason);
-			DelListItem(deny_dcc_ptr, conf_deny_dcc);
-			safe_free(deny_dcc_ptr);
-		}
-	}
 	for (deny_link_ptr = conf_deny_link; deny_link_ptr; deny_link_ptr = (ConfigItem_deny_link *) next) {
 		next = (ListStruct *)deny_link_ptr->next;
 		safe_free(deny_link_ptr->prettyrule);
@@ -2360,16 +2342,6 @@ void	config_rehash()
 		DelListItem(allow_channel_ptr, conf_allow_channel);
 		unreal_delete_masks(allow_channel_ptr->mask);
 		safe_free(allow_channel_ptr);
-	}
-	for (allow_dcc_ptr = conf_allow_dcc; allow_dcc_ptr; allow_dcc_ptr = (ConfigItem_allow_dcc *)next)
-	{
-		next = (ListStruct *)allow_dcc_ptr->next;
-		if (allow_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
-		{
-			safe_free(allow_dcc_ptr->filename);
-			DelListItem(allow_dcc_ptr, conf_allow_dcc);
-			safe_free(allow_dcc_ptr);
-		}
 	}
 
 	if (conf_drpass)
@@ -2753,21 +2725,6 @@ int	config_test()
 /*
  * Service functions
 */
-
-ConfigItem_deny_dcc	*Find_deny_dcc(char *name)
-{
-	ConfigItem_deny_dcc	*e;
-
-	if (!name)
-		return NULL;
-
-	for (e = conf_deny_dcc; e; e = e->next)
-	{
-		if (match_simple(name, e->filename))
-			return e;
-	}
-	return NULL;
-}
 
 ConfigItem_alias *Find_alias(char *name)
 {
@@ -5146,8 +5103,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(ce->ce_vardata, "channel"))
 			return (_conf_allow_channel(conf, ce));
-		else if (!strcmp(ce->ce_vardata, "dcc"))
-			return (_conf_allow_dcc(conf, ce));
 		else
 		{
 			int value;
@@ -5236,8 +5191,6 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(ce->ce_vardata, "channel"))
 			return (_test_allow_channel(conf, ce));
-		else if (!strcmp(ce->ce_vardata, "dcc"))
-			return (_test_allow_dcc(conf, ce));
 		else
 		{
 			int used = 0;
@@ -5544,76 +5497,6 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"allow channel::channel");
-		errors++;
-	}
-	return errors;
-}
-
-int	_conf_allow_dcc(ConfigFile *conf, ConfigEntry *ce)
-{
-	ConfigItem_allow_dcc *allow = NULL;
-	ConfigEntry *cep;
-
-	allow = safe_alloc(sizeof(ConfigItem_allow_dcc));
-
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-	{
-		if (!strcmp(cep->ce_varname, "filename"))
-			safe_strdup(allow->filename, cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "soft"))
-		{
-			int x = config_checkval(cep->ce_vardata,CFG_YESNO);
-			if (x)
-				allow->flag.type = DCCDENY_SOFT;
-		}
-	}
-	AddListItem(allow, conf_allow_dcc);
-	return 1;
-}
-
-int	_test_allow_dcc(ConfigFile *conf, ConfigEntry *ce)
-{
-	ConfigEntry *cep;
-	int errors = 0, has_filename = 0, has_soft = 0;
-
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-	{
-		if (config_is_blankorempty(cep, "allow dcc"))
-		{
-			errors++;
-			continue;
-		}
-		if (!strcmp(cep->ce_varname, "filename"))
-		{
-			if (has_filename)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "allow dcc::filename");
-				continue;
-			}
-			has_filename = 1;
-		}
-		else if (!strcmp(cep->ce_varname, "soft"))
-		{
-			if (has_soft)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "allow dcc::soft");
-				continue;
-			}
-			has_soft = 1;
-		}
-		else
-		{
-			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"allow dcc", cep->ce_varname);
-			errors++;
-		}
-	}
-	if (!has_filename)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"allow dcc::filename");
 		errors++;
 	}
 	return errors;
@@ -9454,9 +9337,7 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 {
 Hook *h;
 
-	if (!strcmp(ce->ce_vardata, "dcc"))
-		_conf_deny_dcc(conf, ce);
-	else if (!strcmp(ce->ce_vardata, "channel"))
+	if (!strcmp(ce->ce_vardata, "channel"))
 		_conf_deny_channel(conf, ce);
 	else if (!strcmp(ce->ce_vardata, "link"))
 		_conf_deny_link(conf, ce);
@@ -9473,40 +9354,6 @@ Hook *h;
 		}
 		return 0;
 	}
-	return 0;
-}
-
-int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
-{
-	ConfigItem_deny_dcc 	*deny = NULL;
-	ConfigEntry 	    	*cep;
-
-	deny = safe_alloc(sizeof(ConfigItem_deny_dcc));
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-	{
-		if (!strcmp(cep->ce_varname, "filename"))
-		{
-			safe_strdup(deny->filename, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "reason"))
-		{
-			safe_strdup(deny->reason, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "soft"))
-		{
-			int x = config_checkval(cep->ce_vardata,CFG_YESNO);
-			if (x == 1)
-				deny->flag.type = DCCDENY_SOFT;
-		}
-	}
-	if (!deny->reason)
-	{
-		if (deny->flag.type == DCCDENY_HARD)
-			safe_strdup(deny->reason, "Possible infected virus file");
-		else
-			safe_strdup(deny->reason, "Possible executable content");
-	}
-	AddListItem(deny, conf_deny_dcc);
 	return 0;
 }
 
@@ -9611,67 +9458,7 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
-	if (!strcmp(ce->ce_vardata, "dcc"))
-	{
-		char has_filename = 0, has_reason = 0, has_soft = 0;
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		{
-			if (config_is_blankorempty(cep, "deny dcc"))
-			{
-				errors++;
-				continue;
-			}
-			if (!strcmp(cep->ce_varname, "filename"))
-			{
-				if (has_filename)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "deny dcc::filename");
-					continue;
-				}
-				has_filename = 1;
-			}
-			else if (!strcmp(cep->ce_varname, "reason"))
-			{
-				if (has_reason)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "deny dcc::reason");
-					continue;
-				}
-				has_reason = 1;
-			}
-			else if (!strcmp(cep->ce_varname, "soft"))
-			{
-				if (has_soft)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "deny dcc::soft");
-					continue;
-				}
-				has_soft = 1;
-			}
-			else
-			{
-				config_error_unknown(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "deny dcc", cep->ce_varname);
-				errors++;
-			}
-		}
-		if (!has_filename)
-		{
-			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				"deny dcc::filename");
-			errors++;
-		}
-		if (!has_reason)
-		{
-			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				"deny dcc::reason");
-			errors++;
-		}
-	}
-	else if (!strcmp(ce->ce_vardata, "channel"))
+	if (!strcmp(ce->ce_vardata, "channel"))
 	{
 		char has_channel = 0, has_warn = 0, has_reason = 0, has_redirect = 0, has_class = 0;
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)

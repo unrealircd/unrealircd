@@ -69,7 +69,6 @@ int stats_traffic(Client *, char *);
 int stats_uline(Client *, char *);
 int stats_vhost(Client *, char *);
 int stats_denylinkauto(Client *, char *);
-int stats_denydcc(Client *, char *);
 int stats_kline(Client *, char *);
 int stats_banrealname(Client *, char *);
 int stats_sqline(Client *, char *);
@@ -104,7 +103,6 @@ struct statstab StatsTable[] = {
 	{ 'B', "banversion",	stats_banversion,	0		},
 	{ 'C', "link", 		stats_links,		0 		},
 	{ 'D', "denylinkall",	stats_denylinkall,	0		},
-	{ 'F', "denydcc",	stats_denydcc,		0 		},
 	{ 'G', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'H', "link",	 	stats_links,		0 		},
 	{ 'I', "allow",		stats_allow,		0 		},
@@ -677,43 +675,6 @@ int stats_denylinkauto(Client *client, char *para)
 		if (links->flag.type == CRULE_AUTO)
 			sendnumeric(client, RPL_STATSDLINE,
 			'd', links->mask, links->prettyrule);
-	}
-	return 0;
-}
-
-int stats_denydcc(Client *client, char *para)
-{
-	ConfigItem_deny_dcc *denytmp;
-	ConfigItem_allow_dcc *allowtmp;
-	char *filemask, *reason;
-	char a = 0;
-
-	for (denytmp = conf_deny_dcc; denytmp; denytmp = denytmp->next)
-	{
-		filemask = BadPtr(denytmp->filename) ? "<NULL>" : denytmp->filename;
-		reason = BadPtr(denytmp->reason) ? "<NULL>" : denytmp->reason;
-		if (denytmp->flag.type2 == CONF_BAN_TYPE_CONF)
-			a = 'c';
-		if (denytmp->flag.type2 == CONF_BAN_TYPE_AKILL)
-			a = 's';
-		if (denytmp->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
-			a = 'o';
-		/* <d> <s|h> <howadded> <filemask> <reason> */
-		sendtxtnumeric(client, "d %c %c %s %s", (denytmp->flag.type == DCCDENY_SOFT) ? 's' : 'h',
-			a, filemask, reason);
-	}
-	for (allowtmp = conf_allow_dcc; allowtmp; allowtmp = allowtmp->next)
-	{
-		filemask = BadPtr(allowtmp->filename) ? "<NULL>" : allowtmp->filename;
-		if (allowtmp->flag.type2 == CONF_BAN_TYPE_CONF)
-			a = 'c';
-		if (allowtmp->flag.type2 == CONF_BAN_TYPE_AKILL)
-			a = 's';
-		if (allowtmp->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
-			a = 'o';
-		/* <a> <s|h> <howadded> <filemask> */
-		sendtxtnumeric(client, "a %c %c %s", (allowtmp->flag.type == DCCDENY_SOFT) ? 's' : 'h',
-			a, filemask);
 	}
 	return 0;
 }

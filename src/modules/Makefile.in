@@ -52,7 +52,7 @@ R_MODULES= \
 	wallops.so admin.so globops.so locops.so \
 	trace.so netinfo.so links.so help.so rules.so \
 	close.so map.so eos.so server.so stats.so \
-	svsfline.so dccdeny.so undccdeny.so whowas.so \
+	dccdeny.so whowas.so \
 	connect.so dccallow.so userip.so nick.so user.so \
 	mode.so watch.so part.so join.so motd.so opermotd.so \
 	botmotd.so lusers.so names.so svsnolag.so addmotd.so \
@@ -376,17 +376,9 @@ stats.so: stats.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o stats.so stats.c
 
-svsfline.so: svsfline.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o svsfline.so svsfline.c
-
 dccdeny.so: dccdeny.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o dccdeny.so dccdeny.c
-
-undccdeny.so: undccdeny.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o undccdeny.so undccdeny.c
 
 whowas.so: whowas.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
