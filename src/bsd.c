@@ -1060,6 +1060,19 @@ void proceed_normal_client_handshake(Client *client, struct hostent *he)
 		finish_auth(client);
 }
 
+int client_lagged_up(Client *client)
+{
+	if (client->status < CLIENT_STATUS_UNKNOWN)
+		return 0;
+	if (IsServer(client))
+		return 0;
+	if (ValidatePermissionsForPath("immune:lag",client,NULL,NULL,NULL))
+		return 0;
+	if (client->local->since - TStime() < 10)
+		return 0;
+	return 1;
+}
+
 /*
 ** read_packet
 **
@@ -1080,7 +1093,6 @@ void proceed_normal_client_handshake(Client *client, struct hostent *he)
 static void parse_client_queued(Client *client)
 {
 	int dolen = 0;
-	time_t now = TStime();
 	char buf[READBUFSIZE];
 
 	if (IsDNSLookup(client))
@@ -1095,8 +1107,7 @@ static void parse_client_queued(Client *client)
 		return; /* we delay processing of data until set::handshake-delay is reached */
 	}
 
-	while (DBufLength(&client->local->recvQ) &&
-	    ((client->status < CLIENT_STATUS_UNKNOWN) || (client->local->since - now < 10)))
+	while (DBufLength(&client->local->recvQ) && !client_lagged_up(client))
 	{
 		dolen = dbuf_getmsg(&client->local->recvQ, buf);
 
