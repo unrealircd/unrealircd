@@ -50,7 +50,7 @@ int MODVAR spamf_ugly_vchanoverride = 0;
 void read_motd(const char *filename, MOTDFile *motd);
 void do_read_motd(const char *filename, MOTDFile *themotd);
 #ifdef USE_LIBCURL
-void read_motd_asynch_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDDownload *motd_download);
+void read_motd_async_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDDownload *motd_download);
 #endif
 
 extern MOTDLine *Find_file(char *, short);
@@ -882,7 +882,7 @@ void read_motd(const char *filename, MOTDFile *themotd)
 		themotd->motd_download->themotd = NULL;
 		/*
 		 * It is not our job to free() motd_download, the
-		 * read_motd_asynch_downloaded() function will do that
+		 * read_motd_async_downloaded() function will do that
 		 * when it sees that ->themod == NULL.
 		 */
 		themotd->motd_download = NULL;
@@ -891,14 +891,14 @@ void read_motd(const char *filename, MOTDFile *themotd)
 	/* if filename is NULL, do_read_motd will catch it */
 	if(filename && url_is_valid(filename))
 	{
-		/* prepare our payload for read_motd_asynch_downloaded() */
+		/* prepare our payload for read_motd_async_downloaded() */
 		motd_download = safe_alloc(sizeof(MOTDDownload));
 		motd_download->themotd = themotd;
 		themotd->motd_download = motd_download;
 
 		modtime = unreal_getfilemodtime(unreal_mkcache(filename));
 
-		download_file_async(filename, modtime, (vFP)read_motd_asynch_downloaded, motd_download);
+		download_file_async(filename, modtime, (vFP)read_motd_async_downloaded, motd_download);
 		return;
 	}
 #endif /* USE_LIBCURL */
@@ -917,7 +917,7 @@ void read_motd(const char *filename, MOTDFile *themotd)
    @param errorbuf NULL or an errorstring if there was an error while downloading the MOTD.
    @param cached 0 if the URL was downloaded freshly or 1 if the last download was canceled and the local copy should be used.
  */
-void read_motd_asynch_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDDownload *motd_download)
+void read_motd_async_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDDownload *motd_download)
 {
 	MOTDFile *themotd;
 
@@ -973,7 +973,7 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 
 /**
    Does the actual reading of the MOTD. To be called only by
-   read_motd() or read_motd_asynch_downloaded().
+   read_motd() or read_motd_async_downloaded().
  */
 void do_read_motd(const char *filename, MOTDFile *themotd)
 {

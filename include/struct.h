@@ -163,8 +163,8 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	USERLEN		10
 #define	REALLEN	 	50
 #define SVIDLEN		30
-#define MAXTOPICLEN	360	/* absolute maximum permitted topic length (above this = potential desynch) */
-#define MAXAWAYLEN	360	/* absolute maximum permitted away length (above this = potential desynch) */
+#define MAXTOPICLEN	360	/* absolute maximum permitted topic length (above this = potential desync) */
+#define MAXAWAYLEN	360	/* absolute maximum permitted away length (above this = potential desync) */
 #define MAXKICKLEN	360	/* absolute maximum kick length (above this = only cutoff danger) */
 #define MAXQUITLEN	395	/* absolute maximum quit length (above this = only cutoff danger) */
 #define	CHANNELLEN	32
@@ -702,14 +702,14 @@ struct MOTDFile
 	  1. read_motd() is called with a URL. A new MOTDDownload is
 	     allocated and the pointer is placed here. This pointer is
 	     also passed to the asynchrnous download handler.
-	  2.a. The download is completed and read_motd_asynch_downloaded()
+	  2.a. The download is completed and read_motd_async_downloaded()
 	       is called with the same pointer. From this function, this pointer
 	       if free()d. No other code may free() the pointer. Not even free_motd().
 	    OR
 	  2.b. The user rehashes the IRCd before the download is completed.
 	       free_motd() is called, which sets motd_download->themotd to NULL
-	       to signal to read_motd_asynch_downloaded() that it should ignore
-	       the download. read_motd_asynch_downloaded() is eventually called
+	       to signal to read_motd_async_downloaded() that it should ignore
+	       the download. read_motd_async_downloaded() is eventually called
 	       and frees motd_download.
 	 */
 	struct MOTDDownload *motd_download;

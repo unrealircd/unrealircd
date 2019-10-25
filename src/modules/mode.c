@@ -423,9 +423,9 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 				if (sendts < 750000)
 				{
 					sendto_realops(
-						"Warning! Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
+						"Warning! Possible desync: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
 						channel->chname, modebuf, parabuf, (long long)sendts, client->direction->name, client->name);
-					ircd_log(LOG_ERROR, "Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
+					ircd_log(LOG_ERROR, "Possible desync: MODE for channel %s ('%s %s') has fishy timestamp (%lld) (from %s/%s)",
 						channel->chname, modebuf, parabuf, (long long)sendts, client->direction->name, client->name);
 				}
 				/* new chan or our timestamp is wrong */
@@ -515,7 +515,7 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 	} else
 	if (samode && IsMe(client))
 	{
-		/* SAMODE is a special case: always send a TS of 0 (omitting TS==desynch) */
+		/* SAMODE is a special case: always send a TS of 0 (omitting TS==desync) */
 		sendto_server(client, 0, 0, mtags,
 		              ":%s MODE %s %s %s 0",
 		              client->id, channel->chname, modebuf, parabuf);
@@ -1328,7 +1328,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, char *param, u_int what,
 }
 
 /** In 2003 I introduced PROTOCTL CHANMODES= so remote servers (and services)
- * could deal with unknown "parameter eating" channel modes, minimizing desynchs.
+ * could deal with unknown "parameter eating" channel modes, minimizing desyncs.
  * Now, in 2015, I finally added the code to deal with this. -- Syzop
  */
 int paracount_for_chanmode_from_server(Client *client, u_int what, char mode)

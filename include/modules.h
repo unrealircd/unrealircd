@@ -956,7 +956,7 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_SEE_CHANNEL_IN_WHOIS 86
 #define HOOKTYPE_DCC_DENIED 87
 #define HOOKTYPE_SERVER_HANDSHAKE_OUT 88
-#define HOOKTYPE_SERVER_SYNCHED	89
+#define HOOKTYPE_SERVER_SYNCED	89
 #define HOOKTYPE_SECURE_CONNECT 90
 #define HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION 91
 #define HOOKTYPE_REQUIRE_SASL 92
@@ -1071,7 +1071,7 @@ int hooktype_mode_deop(Client *client, Client *victim, Channel *channel, u_int w
 int hooktype_see_channel_in_whois(Client *client, Client *target, Channel *channel);
 int hooktype_dcc_denied(Client *client, char *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *denydcc);
 int hooktype_server_handshake_out(Client *client);
-int hooktype_server_synched(Client *client);
+int hooktype_server_synced(Client *client);
 int hooktype_secure_connect(Client *client);
 int hooktype_can_bypass_channel_message_restriction(Client *client, Channel *channel, BypassChannelMessageRestrictionType bypass_type);
 int hooktype_require_sasl(Client *client, char *reason);
@@ -1179,7 +1179,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_SEE_CHANNEL_IN_WHOIS) && !ValidateHook(hooktype_see_channel_in_whois, func)) || \
         ((hooktype == HOOKTYPE_DCC_DENIED) && !ValidateHook(hooktype_dcc_denied, func)) || \
         ((hooktype == HOOKTYPE_SERVER_HANDSHAKE_OUT) && !ValidateHook(hooktype_server_handshake_out, func)) || \
-        ((hooktype == HOOKTYPE_SERVER_SYNCHED) && !ValidateHook(hooktype_server_synched, func)) || \
+        ((hooktype == HOOKTYPE_SERVER_SYNCED) && !ValidateHook(hooktype_server_synced, func)) || \
         ((hooktype == HOOKTYPE_SECURE_CONNECT) && !ValidateHook(hooktype_secure_connect, func)) || \
         ((hooktype == HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION) && !ValidateHook(hooktype_can_bypass_channel_message_restriction, func)) || \
         ((hooktype == HOOKTYPE_REQUIRE_SASL) && !ValidateHook(hooktype_require_sasl, func)) || \

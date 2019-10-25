@@ -64,7 +64,7 @@ int(*find_spamfilter_user)(Client *client, int flags);
 TKL *(*find_qline)(Client *client, char *nick, int *ishold);
 TKL *(*find_tkline_match_zap)(Client *client);
 void (*tkl_stats)(Client *client, int type, char *para);
-void (*tkl_synch)(Client *client);
+void (*tkl_sync)(Client *client);
 void (*cmd_tkl)(Client *client, MessageTag *mtags, int parc, char *parv[]);
 int (*place_host_ban)(Client *client, BanAction action, char *reason, long duration);
 int (*match_spamfilter)(Client *client, char *str_in, int type, char *target, int flags, TKL **rettk);
@@ -302,7 +302,7 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_FIND_QLINE, find_qline, NULL);
 	efunc_init_function(EFUNC_FIND_TKLINE_MATCH_ZAP, find_tkline_match_zap, NULL);
 	efunc_init_function(EFUNC_TKL_STATS, tkl_stats, NULL);
-	efunc_init_function(EFUNC_TKL_SYNCH, tkl_synch, NULL);
+	efunc_init_function(EFUNC_TKL_SYNCH, tkl_sync, NULL);
 	efunc_init_function(EFUNC_CMD_TKL, cmd_tkl, NULL);
 	efunc_init_function(EFUNC_PLACE_HOST_BAN, place_host_ban, NULL);
 	efunc_init_function(EFUNC_DOSPAMFILTER, match_spamfilter, NULL);

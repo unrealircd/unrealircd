@@ -71,5 +71,5 @@ CMD_FUNC(cmd_eos)
 #endif
 	sendto_server(client, 0, 0, NULL, ":%s EOS", client->id);
 
-	RunHook(HOOKTYPE_SERVER_SYNCHED, client);
+	RunHook(HOOKTYPE_SERVER_SYNCED, client);
 }

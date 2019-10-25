@@ -123,7 +123,7 @@ char *generic_clean_ban_mask(char *mask)
 	if (cp)
 		*cp = '\0';
 
-	/* Strip any ':' at beginning since that would cause a desynch */
+	/* Strip any ':' at beginning since that would cause a desync */
 	for (; (*mask && (*mask == ':')); mask++);
 	if (!*mask)
 		return NULL;

@@ -91,7 +91,7 @@ char *extban_inchannel_conv_param(char *para)
 	return retbuf;
 }
 
-/* The only purpose of this function is a temporary workaround to prevent a desynch.. pfff */
+/* The only purpose of this function is a temporary workaround to prevent a desync.. pfff */
 int extban_inchannel_is_ok(Client *client, Channel *channel, char *para, int checkt, int what, int what2)
 {
 	char *p;

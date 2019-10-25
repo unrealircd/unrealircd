@@ -75,7 +75,7 @@ static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
 /* Assume that on collision a NICK is in flight and the other server will take
  * the exact same decision we would do, and thus we don't send a KILL to cptr?
  * This works great with this code, seems to kill the correct person and not
- * cause desynchs even without UID/SID. HOWEVER.. who knows what code the other servers run?
+ * cause desyncs even without UID/SID. HOWEVER.. who knows what code the other servers run?
  * Should use UID/SID anyway, then this whole problem doesn't exist.
  */
 #define ASSUME_NICK_IN_FLIGHT

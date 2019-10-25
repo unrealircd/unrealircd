@@ -76,7 +76,7 @@ int _find_spamfilter_user(Client *client, int flags);
 TKL *_find_qline(Client *client, char *nick, int *ishold);
 TKL *_find_tkline_match_zap(Client *client);
 void _tkl_stats(Client *client, int type, char *para);
-void _tkl_synch(Client *client);
+void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
 int _place_host_ban(Client *client, BanAction action, char *reason, long duration);
 int _match_spamfilter(Client *client, char *str_in, int type, char *target, int flags, TKL **rettk);
@@ -159,7 +159,7 @@ MOD_TEST()
 	EfunctionAddPVoid(modinfo->handle, EFUNC_FIND_TKL_NAMEBAN, TO_PVOIDFUNC(_find_tkl_nameban));
 	EfunctionAddPVoid(modinfo->handle, EFUNC_FIND_TKL_SPAMFILTER, TO_PVOIDFUNC(_find_tkl_spamfilter));
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_STATS, _tkl_stats);
-	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_SYNCH, _tkl_synch);
+	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_SYNCH, _tkl_sync);
 	EfunctionAddVoid(modinfo->handle, EFUNC_CMD_TKL, _cmd_tkl);
 	EfunctionAdd(modinfo->handle, EFUNC_PLACE_HOST_BAN, _place_host_ban);
 	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER, _match_spamfilter);
@@ -3248,7 +3248,7 @@ void _tkl_stats(Client *client, int type, char *para)
  * @param to      The remote server.
  * @param tkl     The TKL entry.
  */
-void tkl_synch_send_entry(int add, Client *sender, Client *to, TKL *tkl)
+void tkl_sync_send_entry(int add, Client *sender, Client *to, TKL *tkl)
 {
 	char typ;
 
@@ -3305,7 +3305,7 @@ void tkl_synch_send_entry(int add, Client *sender, Client *to, TKL *tkl)
 			   tkl->ptr.banexception->reason);
 	} else
 	{
-		sendto_ops_and_log("[BUG] tkl_synch_send_entry() called, but unknown type %d/'%c'",
+		sendto_ops_and_log("[BUG] tkl_sync_send_entry() called, but unknown type %d/'%c'",
 			tkl->type, typ);
 		abort();
 	}
@@ -3325,14 +3325,14 @@ void tkl_broadcast_entry(int add, Client *sender, Client *skip, TKL *tkl)
 		if (skip && acptr == skip->direction)
 			continue;
 
-		tkl_synch_send_entry(add, sender, acptr, tkl);
+		tkl_sync_send_entry(add, sender, acptr, tkl);
 	}
 }
 
 /** Synchronize all TKL entries with this server.
  * @param client The server to synchronize with.
  */
-void _tkl_synch(Client *client)
+void _tkl_sync(Client *client)
 {
 	TKL *tkl;
 	int index, index2;
@@ -3344,7 +3344,7 @@ void _tkl_synch(Client *client)
 		{
 			for (tkl = tklines_ip_hash[index][index2]; tkl; tkl = tkl->next)
 			{
-				tkl_synch_send_entry(1, &me, client, tkl);
+				tkl_sync_send_entry(1, &me, client, tkl);
 			}
 		}
 	}
@@ -3354,7 +3354,7 @@ void _tkl_synch(Client *client)
 	{
 		for (tkl = tklines[index]; tkl; tkl = tkl->next)
 		{
-			tkl_synch_send_entry(1, &me, client, tkl);
+			tkl_sync_send_entry(1, &me, client, tkl);
 		}
 	}
 }

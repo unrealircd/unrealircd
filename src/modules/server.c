@@ -602,7 +602,6 @@ CMD_FUNC(cmd_server)
 	ircsnprintf(descbuf, sizeof descbuf, "Server: %s", servername);
 	fd_desc(client->local->fd, descbuf);
 
-	/* Start synch now */
 	server_sync(client, aconf);
 }
 
@@ -1070,7 +1069,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	send_moddata_members(cptr);
 	
 	/* pass on TKLs */
-	tkl_synch(cptr);
+	tkl_sync(cptr);
 
 	RunHook(HOOKTYPE_SERVER_SYNC, cptr);
 

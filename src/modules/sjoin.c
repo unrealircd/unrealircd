@@ -202,7 +202,7 @@ CMD_FUNC(cmd_sjoin)
 	{
 		if (ts != 0)
 			sendto_ops
-			    ("Warning! Possible desynch: SJOIN for channel %s has a fishy timestamp (%lld) [%s/%s]",
+			    ("Warning! Possible desync: SJOIN for channel %s has a fishy timestamp (%lld) [%s/%s]",
 			    channel->chname, (long long)ts, client->name, client->direction->name);
 	}
 
@@ -484,7 +484,7 @@ getnick:
 			{
 				if (IsMember(acptr, channel))
 				{
-					/* Nick collision, don't kick or it desynchs -Griever*/
+					/* Nick collision, don't kick or it desyncs -Griever*/
 					continue;
 				}
 			
@@ -904,7 +904,7 @@ getnick:
 			return; /* channel no longer exists */
 	}
 
-	/* we should be synched by now, */
+	/* we should be synced by now, */
 	if ((oldts != -1) && (oldts != channel->creationtime))
 	{
 		MessageTag *mtags = NULL;

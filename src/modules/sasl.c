@@ -36,7 +36,7 @@ void saslmechlist_free(ModData *m);
 char *saslmechlist_serialize(ModData *m);
 void saslmechlist_unserialize(char *str, ModData *m);
 char *sasl_capability_parameter(Client *client);
-int sasl_server_synched(Client *client);
+int sasl_server_synced(Client *client);
 EVENT(sasl_timeout);
 
 /* Macros */
@@ -313,12 +313,12 @@ void auto_discover_sasl_server(int justlinked)
 			}
 			safe_strdup(SASL_SERVER, SERVICES_NAME);
 			if (justlinked)
-				sasl_server_synched(client);
+				sasl_server_synced(client);
 		}
 	}
 }
 
-int sasl_server_synched(Client *client)
+int sasl_server_synced(Client *client)
 {
 	if (!SASL_SERVER)
 	{
@@ -347,7 +347,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, sasl_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, sasl_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, sasl_server_quit);
-	HookAdd(modinfo->handle, HOOKTYPE_SERVER_SYNCHED, 0, sasl_server_synched);
+	HookAdd(modinfo->handle, HOOKTYPE_SERVER_SYNCED, 0, sasl_server_synced);
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "sasl";

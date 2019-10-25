@@ -780,7 +780,7 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 	if (cp)
 		*cp = '\0';
 
-	/* Strip any ':' at beginning since that would cause a desynch */
+	/* Strip any ':' at beginning since that would cause a desync */
 	for (; (*mask && (*mask == ':')); mask++);
 	if (!*mask)
 		return NULL;
@@ -813,7 +813,7 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 			/* extended bantype not supported, what to do?
 			 * Here are the rules:
 			 * - if from a remote client/server: allow it (easy upgrading,
-			 *   no desynch)
+			 *   no desync)
 			 * - if from a local client trying to REMOVE the extban,
 			 *   allow it too (so you don't get "unremovable" extbans).
 			 */

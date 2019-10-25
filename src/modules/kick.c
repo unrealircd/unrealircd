@@ -129,7 +129,7 @@ CMD_FUNC(cmd_kick)
 
 				/* Note for coders regarding oper override:
 				 * always let a remote kick (=from a user on another server) through or
-				 * else we will get desynched. In short this means all the denying should
+				 * else we will get desynced. In short this means all the denying should
 				 * always contain a && MyUser(client) and at the end
 				 * a remote kick should always be allowed (pass through). -- Syzop
 				 */
