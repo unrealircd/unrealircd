@@ -1297,7 +1297,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 
 	if (whattodo == 0 && (parc > 3))
 	{
-		secs = atime(parv[2]);
+		secs = config_checkval(parv[2], CFG_TIME);
 		if (secs < 0)
 		{
 			sendnotice(client, "*** [error] The time you specified is out of range!");
@@ -1526,7 +1526,7 @@ CMD_FUNC(cmd_eline)
 
 	if (add)
 	{
-		secs = atime(parv[3]);
+		secs = config_checkval(parv[3], CFG_TIME);
 		if ((secs <= 0) && (*parv[3] != '0'))
 		{
 			sendnotice(client, "*** [error] The expiry time you specified is out of range!");

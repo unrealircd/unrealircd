@@ -17,6 +17,14 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/** @file
+ * @brief Functions that don't always exist on every OS are provided here.
+ * That was the original idea, anyway. Right now it also contains some
+ * functions that should probably be in src/misc.c instead.
+ * In any case, most functions here don't have any special meaning
+ * specific for IRC, they could just as well be used in non-IRC code.
+ */
+
 /* support.c 2.21 4/13/94 1990, 1991 Armin Gruner; 1992, 1993 Darren Reed */
 
 #include "unrealircd.h"
@@ -25,22 +33,26 @@ extern void outofmemory();
 
 #define is_enabled match
 
-char	*my_itoa(int i)
+/** Convert integer to string */
+char *my_itoa(int i)
 {
 	static char buf[128];
-#ifndef _WIN32	
 	ircsnprintf(buf, sizeof(buf), "%d", i);
-#else
-	_itoa_s(i, buf, sizeof(buf), 10);
-#endif
-	return (buf);
+	return buf;
 }
 
-/*
-** 	strtoken.c --  	walk through a string of tokens, using a set
-**			of separators
-**			argv 9/90
-*/
+/** Walk through a string of tokens, using a set of separators.
+ * @param save	Pointer used for saving between calls
+ * @param str	String to parse (will be altered!)
+ * @param fs	Separator character(s)
+ * @returns substring (token)
+ * @note This function works similar to (but not identical?) to strtok_r().
+ * @example
+ * for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
+ * {
+ *      ircd_log(LOG_ERROR, "Got: %s", name);
+ * }
+ */
 char *strtoken(char **save, char *str, char *fs)
 {
 	char *pos, *tmp;
@@ -70,8 +82,13 @@ char *strtoken(char **save, char *str, char *fs)
 	return (tmp);
 }
 
-/** inetntop() returns the : notation of a given IPv6 internet number.
- * It will always return the uncompressed form (without ::).
+/** Convert binary address to an IP string - like inet_ntop but will always return the uncompressed IPv6 form.
+ * @param af	Address family (AF_INET, AF_INET6)
+ * @param in	Address (binary)
+ * @param out	Buffer to use for storing the returned IP string
+ * @param size	Size of the 'out' buffer
+ * @returns IP address as a string (IPv4 or IPv6, in case of the latter:
+ *          always the uncompressed form without ::)
  */
 char *inetntop(int af, const void *in, char *out, size_t size)
 {
@@ -126,54 +143,6 @@ char *inetntop(int af, const void *in, char *out, size_t size)
 	return out;
 }
 
-/* Made by Potvin originally, i guess */
-time_t	atime_exp(char *base, char *ptr)
-{
-	time_t	tmp;
-	char	*p, c = *ptr;
-	
-	p = ptr;
-	*ptr-- = '\0';
-	while (ptr-- > base)
-		if (isalpha(*ptr))
-			break;
-	tmp = atoi(ptr + 1);
-	*p = c;
-
-	return tmp;
-}
-
-#define Xtract(x, y) if (x) y = atime_exp(xtime, x)
-
-time_t	atime(char *xtime)
-{
-	char *d, *h, *m, *s;
-	time_t D, H, M, S;
-	int i;
-	
-	d = h = m = s = NULL;
-	D = H = M = S = 0;
-	
-	
-	i = 0;
-	for (d = xtime; *d; d++)
-		if (isalpha(*d) && (i != 1))
-			i = 1;
-	if (i == 0)
-		return (atol(xtime)); 
-	d = strchr(xtime, 'd');
-	h = strchr(xtime, 'h');
-	m = strchr(xtime, 'm');
-	s = strchr(xtime, 's');
-	
-	Xtract(d, D);
-	Xtract(h, H);
-	Xtract(m, M);
-	Xtract(s, S);
-
-	return ((D * 86400) + (H * 3600) + (M * 60) + S);		
-}
-
 /** Cut string off at the first occurance of CR or LF */
 void stripcrlf(char *c)
 {
@@ -188,14 +157,12 @@ void stripcrlf(char *c)
 }
 
 #ifndef HAVE_STRLCPY
-/*
- * bsd'sh strlcpy().
+/** BSD'ish strlcpy().
  * The strlcpy() function copies up to size-1 characters from the
  * NUL-terminated string src to dst, NUL-terminating the result.
  * Return: total length of the string tried to create.
  */
-size_t
-strlcpy(char *dst, const char *src, size_t size)
+size_t strlcpy(char *dst, const char *src, size_t size)
 {
 	size_t len = strlen(src);
 	size_t ret = len;
@@ -212,14 +179,12 @@ strlcpy(char *dst, const char *src, size_t size)
 #endif
 
 #ifndef HAVE_STRLCAT
-/*
- * bsd'sh strlcat().
+/* BSD'ish strlcat().
  * The strlcat() function appends the NUL-terminated string src to the end of
  * dst. It will append at most size - strlen(dst) - 1 bytes, NUL-terminating
  * the result.
  */
-size_t
-strlcat(char *dst, const char *src, size_t size)
+size_t strlcat(char *dst, const char *src, size_t size)
 {
 	size_t len1 = strlen(dst);
 	size_t len2 = strlen(src);
@@ -240,11 +205,9 @@ strlcat(char *dst, const char *src, size_t size)
 #endif
 
 #ifndef HAVE_STRLNCAT
-/*
- * see strlcat(), but never cat more then n characters.
+/** BSD'ish strlncat() - similar to strlcat but never cat more then n characters.
  */
-size_t
-strlncat(char *dst, const char *src, size_t size, size_t n)
+size_t strlncat(char *dst, const char *src, size_t size, size_t n)
 {
 	size_t len1 = strlen(dst);
 	size_t len2 = strlen(src);
@@ -268,17 +231,15 @@ strlncat(char *dst, const char *src, size_t size, size_t n)
 }
 #endif
 
-/* strldup(str,max) copies a string and ensures the new buffer
- * is at most 'max' size, including nul byte. The syntax is pretty
- * much identical to strlcpy() except that the buffer is newly
- * allocated.
+/** Copies a string and ensure the new buffer is at most 'max' size, including NUL.
+ * The syntax is pretty much identical to strlcpy() except that
+ * the buffer is newly allocated.
  * If you wonder why not use strndup() instead?
  * I feel that mixing code with strlcpy() and strndup() would be
- * rather confusing since strlcpy() assumes buffer size including
- * the nul byte and strndup() assumes without the nul byte and
+ * rather confusing since strlcpy() assumes buffer size INCLUDING
+ * the nul byte and strndup() assumes WITHOUT the nul byte and
  * will write one character extra. Hence this strldup(). -- Syzop
  */
-// WAS: #define strldup(buf, sz) (sz > 0 ? strndup(buf, sz-1) : NULL)
 char *strldup(const char *src, size_t max)
 {
 	char *ptr;
@@ -298,8 +259,7 @@ char *strldup(const char *src, size_t max)
 	return ptr;
 }
 
-static const char Base64[] =
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static const char Base64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 static const char Pad64 = '=';
 
 /* (From RFC1521 and draft-ietf-dnssec-secext-03.txt)
@@ -365,6 +325,13 @@ static const char Pad64 = '=';
 	   characters followed by one "=" padding character.
    */
 
+/** Base64 encode data.
+ * @param src		The data to encode (input)
+ * @param srclength	The length of the data to encode (input length)
+ * @param target	The output buffer to use (output)
+ * @param targetsize	The length of the output buffer to use (maximum output length)
+ * @returns length of the targetsize, or -1 in case of error.
+ */
 int b64_encode(unsigned char const *src, size_t srclength, char *target, size_t targsize)
 {
 	size_t datalength = 0;
@@ -418,12 +385,14 @@ int b64_encode(unsigned char const *src, size_t srclength, char *target, size_t 
 	return (datalength);
 }
 
-/* skips all whitespace anywhere.
-   converts characters, four at a time, starting at (or after)
-   src from base - 64 numbers into three 8 bit bytes in the target area.
-   it returns the number of data bytes stored at the target, or -1 on error.
+/** Base64 decode a string.
+ * @param src		The data to decode (input)
+ * @param srclength	The length of the data to decode (input length)
+ * @param target	The output buffer to use (output)
+ * @param targetsize	The length of the output buffer to use (maximum output length)
+ * @returns length of the targetsize, or -1 in case of error.
+ * @notes Skips whitespace, and hmm.. I think we don't require padding? Not sure.
  */
-
 int b64_decode(char const *src, unsigned char *target, size_t targsize)
 {
 	int tarindex, state, ch;
@@ -719,6 +688,7 @@ void *safe_alloc(size_t size)
 	return p;
 }
 
+/** Safely duplicate a string */
 char *our_strdup(const char *str)
 {
 	char *ret = strdup(str);
@@ -727,6 +697,7 @@ char *our_strdup(const char *str)
 	return ret;
 }
 
+/** Safely duplicate a string with a maximum size */
 char *our_strldup(const char *str, size_t max)
 {
 	char *ret = strldup(str, max);
@@ -751,6 +722,7 @@ void outofmemory(size_t bytes)
 	exit(7);
 }
 
+/** Check if the specified file exists */
 int file_exists(char *file)
 {
 	FILE *fd;
@@ -761,7 +733,7 @@ int file_exists(char *file)
 	return 1;
 }
 
-/* Returns a unique filename in the specified directory
+/** Returns a unique filename in the specified directory
  * using the specified suffix. The returned value will
  * be of the form <dir>/<random-hex>.<suffix>
  */
@@ -784,9 +756,8 @@ char *unreal_mktemp(const char *dir, const char *suffix)
 	return NULL; 
 }
 
-/* Returns the path portion of the given path/file
- * in the specified location (must be at least PATH_MAX
- * bytes).
+/** Returns the path portion of the given path/file
+ * in the specified location (must be at least PATH_MAX bytes).
  */
 char *unreal_getpathname(char *filepath, char *path)
 {
@@ -810,7 +781,7 @@ char *unreal_getpathname(char *filepath, char *path)
 	return path;
 }
 
-/* Returns the filename portion of the given path
+/** Returns the filename portion of the given path.
  * The original string is not modified
  */
 char *unreal_getfilename(char *path)
@@ -834,8 +805,8 @@ char *unreal_getfilename(char *path)
         return end;
 }
 
-/* Returns the special module tmp name for a given path
- * The original string is not modified
+/** Returns the special module tmp name for a given path.
+ * The original string is not modified.
  */
 char *unreal_getmodfilename(char *path)
 {
@@ -893,13 +864,13 @@ char *unreal_mkcache(const char *url)
 	return tempbuf;
 }
 
-/* Returns 1 if a cached version of the url exists, otherwise 0. */
+/** Returns 1 if a cached version of the url exists, otherwise 0. */
 int has_cached_version(const char *url)
 {
 	return file_exists(unreal_mkcache(url));
 }
 
-/* Used to blow away result of bad copy or cancel file copy */
+/** Used to blow away result of bad copy or cancel file copy */
 void cancel_copy(int srcfd, int destfd, const char *dest)
 {
         close(srcfd);
@@ -907,7 +878,7 @@ void cancel_copy(int srcfd, int destfd, const char *dest)
         unlink(dest);
 }
 
-/* Copys the contents of the src file to the dest file.
+/** Copys the contents of the src file to the dest file.
  * The dest file will have permissions r-x------
  */
 int unreal_copyfile(const char *src, const char *dest)
@@ -968,7 +939,7 @@ int unreal_copyfile(const char *src, const char *dest)
 	return 1;
 }
 
-/* Same as unreal_copyfile, but with an option to try hardlinking first */
+/** Same as unreal_copyfile, but with an option to try hardlinking first */
 int unreal_copyfileex(const char *src, const char *dest, int tryhardlink)
 {
 #ifndef _WIN32
@@ -979,7 +950,7 @@ int unreal_copyfileex(const char *src, const char *dest, int tryhardlink)
 	return unreal_copyfile(src, dest);
 }
 
-
+/** Set the modification time on a file */
 void unreal_setfilemodtime(const char *filename, time_t mtime)
 {
 #ifndef _WIN32
@@ -1002,6 +973,7 @@ void unreal_setfilemodtime(const char *filename, time_t mtime)
 #endif
 }
 
+/** Get the modification time ("last modified") of a file */
 time_t unreal_getfilemodtime(const char *filename)
 {
 #ifndef _WIN32
@@ -1168,6 +1140,7 @@ struct u_WSA_errors WSAErrors[] = {
  { 0,NULL}
 };
 
+/** Get socket error string */
 char *sock_strerror(int error)
 {
 	static char unkerr[64];
@@ -1201,6 +1174,14 @@ char *sock_strerror(int error)
 }
 #endif
 
+/** Build a string and replace $variables where needed.
+ * @param inbuf		The input string
+ * @param outbuf	The output string
+ * @param len		The maximum size of the output string (including NUL)
+ * @param name		Array of variables names
+ * @param value		Array of variable values
+ * @example See src/modules/blacklist.c for an example.
+ */
 void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *name[], const char *value[])
 {
 	const char *i, *p;
@@ -1275,6 +1256,7 @@ literal:
 	*o = '\0';
 }
 
+/** Return the PCRE2 library version in use */
 char *pcre2_version(void)
 {
 	static char buf[256];
@@ -1286,6 +1268,7 @@ char *pcre2_version(void)
 
 
 #ifdef _WIN32
+/** POSIX gettimeofday function for Windows (ignoring timezones) */
 int gettimeofday(struct timeval *tp, void *tzp)
 {
 	// This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
