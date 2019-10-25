@@ -18,6 +18,10 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/** @file
+ * @brief SSL/TLS functions
+ */
+
 #include "unrealircd.h"
 #include "openssl_hostname_validation.h"
 
@@ -42,7 +46,6 @@ SSL_CTX *ctx_client;
 
 char *SSLKeyPasswd;
 
-
 typedef struct {
 	int *size;
 	char **buffer;
@@ -52,7 +55,9 @@ MODVAR int ssl_client_index = 0;
 
 #define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
 #ifdef _WIN32
-LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
+/** Ask SSL private key password (Windows GUI mode only) */
+LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam)
+{
 	static StreamIO *stream;
 	switch (Message) {
 		case WM_INITDIALOG:
@@ -77,11 +82,10 @@ LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
 }
 #endif				
 
-/**
- * Retrieve a static string for the given SSL error.
- *
- * \param err The error to look up.
- * \param my_errno The value of errno to use in case we want to call strerror().
+/** Return error string for OpenSSL error.
+ * @param err		OpenSSL error number to lookup
+ * @param my_errno	The value of errno to use in case we want to call strerror().
+ * @returns Error string, only valid until next call to this function.
  */
 char *ssl_error_str(int err, int my_errno)
 {
@@ -139,8 +143,9 @@ char buf[512];
 		config_status(" %s", buf);
 	} while(e);
 }
-				
-int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
+
+/** Ask SSL private key password (rare) */
+int ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 {
 	char *pass;
 	static int before = 0;
@@ -174,6 +179,7 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 	return 0;
 }
 
+/** Verify certificate callback. */
 static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 {
 	/* We accept the connection. Certificate verifiction takes
@@ -182,12 +188,13 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 	return 1;
 }
 
-/** get Client pointerd by SSL pointer */
+/** Get Client pointer by SSL pointer */
 Client *get_client_by_ssl(SSL *ssl)
 {
 	return SSL_get_ex_data(ssl, ssl_client_index);
 }
 
+/** Set requested server name as indicated by SNI */
 static void set_client_sni_name(SSL *ssl, char *name)
 {
 	Client *client = get_client_by_ssl(ssl);
@@ -195,6 +202,7 @@ static void set_client_sni_name(SSL *ssl, char *name)
 		safe_strdup(client->local->sni_servername, name);
 }
 
+/** Hostname callback, used for SNI */
 static int ssl_hostname_callback(SSL *ssl, int *unk, void *arg)
 {
 	char *name = (char *)SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
@@ -209,10 +217,11 @@ static int ssl_hostname_callback(SSL *ssl, int *unk, void *arg)
 	return SSL_TLSEXT_ERR_OK;
 }
 
+/** Special logging function for SSL/TLS (? make more generic?) */
 static void mylog(char *fmt, ...)
 {
-va_list vl;
-static char buf[2048];
+	va_list vl;
+	static char buf[2048];
 
 	va_start(vl, fmt);
 	ircvsnprintf(buf, sizeof(buf), fmt, vl);
@@ -221,6 +230,11 @@ static char buf[2048];
 	ircd_log(LOG_ERROR, "%s", buf);
 }
 
+/** Set DH (Diffie-Hellman) parameters.
+ * We don't use this anymore, unless explicitly instructed,
+ * as we use the more secure ECDHE/EECDH instead
+ * (Ephemeral Elliptic-Curve Diffie-Hellman)
+ */
 static int setup_dh_params(SSL_CTX *ctx)
 {
 	DH *dh;
@@ -310,6 +324,11 @@ void disable_ssl_protocols(SSL_CTX *ctx, TLSOptions *tlsoptions)
 #endif
 }
 
+/** Initialize SSL/TLS context
+ * @param tlsoptions	The ::tls-options configuration
+ * @param server	Set to 1 if we are initializing a server, 0 for client.
+ * @returns The SSL/TLS context (SSL_CTX) or NULL in case of error.
+ */
 SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 {
 	SSL_CTX *ctx;
@@ -490,6 +509,7 @@ fail:
 	return NULL;
 }
 
+/** Early initalization of SSL/TLS subsystem - called on startup */
 int early_init_ssl(void)
 {
 	SSL_load_error_strings();
@@ -500,6 +520,9 @@ int early_init_ssl(void)
 	return 1;
 }
 
+/** Initialize the server and client contexts.
+ * This is only possible after reading the configuration file.
+ */
 int init_ssl(void)
 {
 	/* SSL preliminaries. We keep the certificate and key with the context. */
@@ -512,6 +535,8 @@ int init_ssl(void)
 	return 1;
 }
 
+/** Reinitialize SSL/TLS server and client contexts - after REHASH -tls
+ */
 void reinit_ssl(Client *client)
 {
 	SSL_CTX *tmp;
@@ -522,10 +547,10 @@ void reinit_ssl(Client *client)
 	if (!client)
 		mylog("Reloading all SSL related data (./unrealircd reloadtls)");
 	else if (IsUser(client))
-		mylog("%s (%s@%s) requested a reload of all SSL related data (/rehash -ssl)",
+		mylog("%s (%s@%s) requested a reload of all SSL related data (/rehash -tls)",
 			client->name, client->user->username, client->user->realhost);
 	else
-		mylog("%s requested a reload of all SSL related data (/rehash -ssl)",
+		mylog("%s requested a reload of all SSL related data (/rehash -tls)",
 			client->name);
 
 	tmp = init_ctx(iConf.tls_options, 1);
@@ -546,7 +571,7 @@ void reinit_ssl(Client *client)
 	}
 	ctx_client = tmp; /* activate */
 
-	/* listen::ssl-options.... */
+	/* listen::tls-options.... */
 	for (listen = conf_listen; listen; listen = listen->next)
 	{
 		if (listen->tls_options)
@@ -554,7 +579,7 @@ void reinit_ssl(Client *client)
 			tmp = init_ctx(listen->tls_options, 1);
 			if (!tmp)
 			{
-				config_error("SSL Reload partially failed. listen::ssl-options error, see above");
+				config_error("SSL Reload partially failed. listen::tls-options error, see above");
 				config_report_ssl_error();
 				return;
 			}
@@ -562,7 +587,7 @@ void reinit_ssl(Client *client)
 		}
 	}
 
-	/* sni::ssl-options.... */
+	/* sni::tls-options.... */
 	for (sni = conf_sni; sni; sni = sni->next)
 	{
 		if (sni->tls_options)
@@ -570,7 +595,7 @@ void reinit_ssl(Client *client)
 			tmp = init_ctx(sni->tls_options, 1);
 			if (!tmp)
 			{
-				config_error("SSL Reload partially failed. sni::ssl-options error, see above");
+				config_error("SSL Reload partially failed. sni::tls-options error, see above");
 				config_report_ssl_error();
 				return;
 			}
@@ -578,7 +603,7 @@ void reinit_ssl(Client *client)
 		}
 	}
 
-	/* link::outgoing::ssl-options.... */
+	/* link::outgoing::tls-options.... */
 	for (link = conf_link; link; link = link->next)
 	{
 		if (link->tls_options)
@@ -586,7 +611,7 @@ void reinit_ssl(Client *client)
 			tmp = init_ctx(link->tls_options, 1);
 			if (!tmp)
 			{
-				config_error("SSL Reload partially failed. link::outgoing::ssl-options error in link %s { }, see above",
+				config_error("SSL Reload partially failed. link::outgoing::tls-options error in link %s { }, see above",
 					link->servername);
 				config_report_ssl_error();
 				return;
@@ -596,12 +621,14 @@ void reinit_ssl(Client *client)
 	}
 }
 
+/** Set SSL connection as nonblocking */
 void SSL_set_nonblocking(SSL *s)
 {
 	BIO_set_nbio(SSL_get_rbio(s),1);
 	BIO_set_nbio(SSL_get_wbio(s),1);
 }
 
+/** Get SSL/TLS ciphersuite */
 char *tls_get_cipher(SSL *ssl)
 {
 	static char buf[256];
@@ -614,7 +641,7 @@ char *tls_get_cipher(SSL *ssl)
 	return buf;
 }
 
-/** Get the applicable ::ssl-options block for this local client,
+/** Get the applicable ::tls-options block for this local client,
  * which may be defined in the link block, listen block, or set block.
  */
 TLSOptions *get_tls_options_for_client(Client *client)
@@ -692,12 +719,14 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 
 }
 
+/** Called by I/O engine to (re)try accepting an SSL/TLS connection */
 static void ircd_SSL_accept_retry(int fd, int revents, void *data)
 {
 	Client *client = data;
 	ircd_SSL_accept(client, fd);
 }
 
+/** Accept an SSL/TLS connection - that is: do the TLS handshake */
 int ircd_SSL_accept(Client *client, int fd)
 {
 	int ssl_err;
@@ -768,12 +797,14 @@ int ircd_SSL_accept(Client *client, int fd)
 	return 1;
 }
 
+/** Called by the I/O engine to (re)try to connect to a remote host */
 static void ircd_SSL_connect_retry(int fd, int revents, void *data)
 {
 	Client *client = data;
 	ircd_SSL_connect(client, fd);
 }
 
+/** Connect to a remote host - that is: connect and do the TLS handshake */
 int ircd_SSL_connect(Client *client, int fd)
 {
 	int ssl_err;
@@ -814,6 +845,7 @@ int ircd_SSL_connect(Client *client, int fd)
 	return 1;
 }
 
+/** Shutdown a SSL/TLS connection (gracefully) */
 int SSL_smart_shutdown(SSL *ssl)
 {
 	char i;
@@ -830,10 +862,10 @@ int SSL_smart_shutdown(SSL *ssl)
 /**
  * Report a fatal SSL error and disconnect the associated client.
  *
- * \param ssl_error The error as from OpenSSL.
- * \param where The location, one of the SAFE_SSL_* defines.
- * \param my_errno A preserved value of errno to pass to ssl_error_str().
- * \param client The client the error is associated with.
+ * @param ssl_error The error as from OpenSSL.
+ * @param where The location, one of the SAFE_SSL_* defines.
+ * @param my_errno A preserved value of errno to pass to ssl_error_str().
+ * @param client The client the error is associated with.
  */
 static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *client)
 {
@@ -935,6 +967,7 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *clien
 	return -1;
 }
 
+/** Do a SSL/TLS handshake after a STARTTLS, as a client */
 int client_starttls(Client *client)
 {
 	if ((client->local->ssl = SSL_new(ctx_client)) == NULL)
@@ -1292,6 +1325,7 @@ int outdated_tls_client(Client *client)
 	return 0; /* OK, not outdated */
 }
 
+/** Returns the expanded string used for set::outdated-tls-policy::user-message etc. */
 char *outdated_tls_client_build_string(char *pattern, Client *client)
 {
 	static char buf[512];
