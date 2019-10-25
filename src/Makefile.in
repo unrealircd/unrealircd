@@ -28,7 +28,7 @@ OBJS=dns.o auth.o channel.o cloak.o crule.o dbuf.o \
 	misc.o serv.o aliases.o socket.o \
 	tls.o user.o scache.o send.o support.o \
 	version.o whowas.o random.o api-usermode.o api-channelmode.o \
-	api-moddata.o uid.o api-extban.o api-isupport.o api-command.o \
+	api-moddata.o api-extban.o api-isupport.o api-command.o \
 	api-clicap.o api-messagetag.o api-history-backend.o api-efunctions.o \
 	api-event.o \
 	crypt_blowfish.o updconf.o crashreport.o \
@@ -115,9 +115,6 @@ support.o: support.c $(INCLUDES)
 
 userload.o: userload.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c userload.c
-
-uid.o: uid.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c uid.c
 
 aliases.o: aliases.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c aliases.c

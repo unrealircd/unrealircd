@@ -1288,7 +1288,6 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifdef HAVE_SYSLOG
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
 #endif
-	uid_init();
 	run_configuration();
 	ircd_log(LOG_ERROR, "UnrealIRCd started.");
 

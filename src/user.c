@@ -586,3 +586,38 @@ int should_show_connect_info(Client *client)
 	}
 	return 0;
 }
+
+static char uid_int_to_char(int v)
+{
+	if (v < 10)
+		return '0'+v;
+	else
+		return 'A'+v-10;
+}
+
+/** Acquire a new unique UID */
+const char *uid_get(void)
+{
+	Client *acptr;
+	static char uid[IDLEN];
+	static int uidcounter = 0;
+
+	uidcounter++;
+	if (uidcounter == 36*36)
+		uidcounter = 0;
+
+	do
+	{
+		snprintf(uid, sizeof(uid), "%s%c%c%c%c%c%c",
+			me.id,
+			uid_int_to_char(getrandom8() % 36),
+			uid_int_to_char(getrandom8() % 36),
+			uid_int_to_char(getrandom8() % 36),
+			uid_int_to_char(getrandom8() % 36),
+			uid_int_to_char(uidcounter / 36),
+			uid_int_to_char(uidcounter % 36));
+		acptr = find_client(uid, NULL);
+	} while (acptr);
+
+	return uid;
+}
