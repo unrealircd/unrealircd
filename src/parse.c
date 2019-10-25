@@ -28,61 +28,137 @@ char backupbuf[8192];
 
 static char *para[MAXPARA + 2];
 
+/* Forward declarations of functions that are local (static) */
 static int do_numeric(int, Client *, MessageTag *, int, char **);
 static void cancel_clients(Client *, Client *, char *);
 static void remove_unknown(Client *, char *);
+static void parse2(Client *client, Client **fromptr, MessageTag *mtags, char *ch);
+static void parse_addlag(Client *client, int cmdbytes);
+static int client_lagged_up(Client *client);
 
-/** Ban user that is "flooding from an unknown connection".
- * This is basically a client sending lots of data but not registering.
- * Note that "lots" in terms of IRC is a few KB's, since more is rather unusual.
- * @param client The client.
+/** Put a packet in the client receive queue and process the data (if
+ * the 'fake lag' rules permit doing so).
+ * @param client      The client
+ * @param readbuf     The read buffer
+ * @param length      The length of the data
+ * @param killsafely  If 1 then we may call exit_client() if the client
+ *                    is flooding. If 0 then we use dead_socket().
+ * @returns 1 in normal circumstances, 0 if client was killed.
+ * @notes If killsafely is 1 and the return value is 0 then
+ *        the client was killed - IsDead() is true.
+ *        If this is a problem, then set killsafely to 0 when calling.
  */
-void ban_flooder(Client *client)
+int process_packet(Client *client, char *readbuf, int length, int killsafely)
 {
-	if (find_tkl_exception(TKL_UNKNOWN_DATA_FLOOD, client))
+	dbuf_put(&client->local->recvQ, readbuf, length);
+
+	/* parse some of what we have (inducing fakelag, etc) */
+	parse_client_queued(client);
+
+	/* We may be killed now, so check for it.. */
+	if (IsDead(client))
+		return 0;
+
+	/* flood from unknown connection */
+	if (IsUnknown(client) && (DBufLength(&client->local->recvQ) > UNKNOWN_FLOOD_AMOUNT*1024))
 	{
-		/* If the user is exempt we will still KILL the client, since it is
-		 * clearly misbehaving. We just won't ZLINE the host, so it won't
-		 * affect any other connections from the same IP address.
-		 */
-		exit_client(client, NULL, "Flood from unknown connection");
+		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
+			client->local->sockhost);
+		if (!killsafely)
+			ban_flooder(client);
+		else
+			dead_socket(client, "Flood from unknown connection");
+		return 0;
 	}
-	else
+
+	/* excess flood check */
+	if (IsUser(client) && DBufLength(&client->local->recvQ) > get_recvq(client))
 	{
-		/* place_host_ban also takes care of removing any other clients with same host/ip */
-		place_host_ban(client, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
+		sendto_snomask(SNO_FLOOD,
+			"*** Flood -- %s!%s@%s (%d) exceeds %d recvQ",
+			client->name[0] ? client->name : "*",
+			client->user ? client->user->username : "*",
+			client->user ? client->user->realhost : "*",
+			DBufLength(&client->local->recvQ), get_recvq(client));
+		if (!killsafely)
+			exit_client(client, NULL, "Excess Flood");
+		else
+			dead_socket(client, "Excess Flood");
+		return 0;
+	}
+
+	return 1;
+}
+
+/** Parse any queued data for 'client', if permitted.
+ * @param client	The client.
+ */
+void parse_client_queued(Client *client)
+{
+	int dolen = 0;
+	char buf[READBUFSIZE];
+
+	if (IsDNSLookup(client))
+		return; /* we delay processing of data until the host is resolved */
+
+	if (IsIdentLookup(client))
+		return; /* we delay processing of data until identd has replied */
+
+	if (!IsUser(client) && !IsServer(client) && (iConf.handshake_delay > 0) &&
+	    (TStime() - client->local->firsttime < iConf.handshake_delay))
+	{
+		return; /* we delay processing of data until set::handshake-delay is reached */
+	}
+
+	while (DBufLength(&client->local->recvQ) && !client_lagged_up(client))
+	{
+		dolen = dbuf_getmsg(&client->local->recvQ, buf);
+
+		if (dolen == 0)
+			return;
+
+		dopacket(client, buf, dolen);
+		
+		if (IsDead(client))
+			return;
 	}
 }
 
-/** Add "fake lag" if needed.
- * The main purpose of fake lag is to create artificial lag when
- * processing incoming data from the client. So, if a client sends
- * a lot of commands, then next command will be processed at a rate
- * of 1 per second, or even slower. The exact algorithm is defined in this function.
- *
- * Servers are exempt from fake lag, so are IRCOps and clients tagged as
- * 'no fake lag' by services (rarely used). Finally, there is also an
- * option called class::options::nofakelag which exempts fakelag.
- * Exemptions should be granted with extreme care, since a client will
- * be able to flood at full speed causing potentially many Mbits or even
- * GBits of data to be sent out to other clients.
- *
- * @param client    The client.
- * @param cmdbytes  Number of bytes in the command.
- */
-void parse_addlag(Client *client, int cmdbytes)
+/*
+** dopacket
+**	client - pointer to client structure for which the buffer data
+**	       applies.
+**	buffer - pointr to the buffer containing the newly read data
+**	length - number of valid bytes of data in the buffer
+**
+** Note:
+**	It is implicitly assumed that dopacket is called only
+**	with client of "local" variation, which contains all the
+**	necessary fields (buffer etc..)
+**
+** Rewritten for linebufs, 19th May 2013. --kaniini
+*/
+void dopacket(Client *client, char *buffer, int length)
 {
-	if (!IsServer(client) && !IsNoFakeLag(client) &&
-#ifdef FAKELAG_CONFIGURABLE
-		!(client->local->class && (client->local->class->options & CLASS_OPT_NOFAKELAG)) && 
-#endif
-	!ValidatePermissionsForPath("immune:lag",client,NULL,NULL,NULL))
+	me.local->receiveB += length;	/* Update bytes received */
+	client->local->receiveB += length;
+	if (client->local->receiveB > 1023)
 	{
-		client->local->since += (1 + cmdbytes/90);
-	}		
+		client->local->receiveK += (client->local->receiveB >> 10);
+		client->local->receiveB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
+	}
+	if (me.local->receiveB > 1023)
+	{
+		me.local->receiveK += (me.local->receiveB >> 10);
+		me.local->receiveB &= 0x03ff;
+	}
+
+	me.local->receiveM += 1;	/* Update messages received */
+	client->local->receiveM += 1;
+
+	parse(client, buffer, length);
 }
 
-void parse2(Client *client, Client **fromptr, MessageTag *mtags, char *ch);
 
 /** Parse an incoming line.
  * A line was received previously, buffered via dbuf, now popped from the dbuf stack,
@@ -167,7 +243,7 @@ void parse(Client *cptr, char *buffer, int length)
  * @param mtags  Message tags received for this message.
  * @param ch     The incoming line received (buffer), excluding message tags.
  */
-void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
+static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 {
 	Client *from = cptr;
 	char *s;
@@ -448,6 +524,75 @@ void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 	}
 #endif
 }
+
+/** Ban user that is "flooding from an unknown connection".
+ * This is basically a client sending lots of data but not registering.
+ * Note that "lots" in terms of IRC is a few KB's, since more is rather unusual.
+ * @param client The client.
+ */
+void ban_flooder(Client *client)
+{
+	if (find_tkl_exception(TKL_UNKNOWN_DATA_FLOOD, client))
+	{
+		/* If the user is exempt we will still KILL the client, since it is
+		 * clearly misbehaving. We just won't ZLINE the host, so it won't
+		 * affect any other connections from the same IP address.
+		 */
+		exit_client(client, NULL, "Flood from unknown connection");
+	}
+	else
+	{
+		/* place_host_ban also takes care of removing any other clients with same host/ip */
+		place_host_ban(client, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
+	}
+}
+
+/** Add "fake lag" if needed.
+ * The main purpose of fake lag is to create artificial lag when
+ * processing incoming data from the client. So, if a client sends
+ * a lot of commands, then next command will be processed at a rate
+ * of 1 per second, or even slower. The exact algorithm is defined in this function.
+ *
+ * Servers are exempt from fake lag, so are IRCOps and clients tagged as
+ * 'no fake lag' by services (rarely used). Finally, there is also an
+ * option called class::options::nofakelag which exempts fakelag.
+ * Exemptions should be granted with extreme care, since a client will
+ * be able to flood at full speed causing potentially many Mbits or even
+ * GBits of data to be sent out to other clients.
+ *
+ * @param client    The client.
+ * @param cmdbytes  Number of bytes in the command.
+ */
+void parse_addlag(Client *client, int cmdbytes)
+{
+	if (!IsServer(client) && !IsNoFakeLag(client) &&
+#ifdef FAKELAG_CONFIGURABLE
+	    !(client->local->class && (client->local->class->options & CLASS_OPT_NOFAKELAG)) &&
+#endif
+	    !ValidatePermissionsForPath("immune:lag",client,NULL,NULL,NULL))
+	{
+		client->local->since += (1 + cmdbytes/90);
+	}
+}
+
+/** Returns 1 if the client is lagged up and data should NOT be parsed.
+ * See also parse_addlag() for more information on "fake lag".
+ * @param client	The client to check
+ * @returns 1 if client is lagged up and data should not be parsed, 0 otherwise.
+ */
+static int client_lagged_up(Client *client)
+{
+	if (client->status < CLIENT_STATUS_UNKNOWN)
+		return 0;
+	if (IsServer(client))
+		return 0;
+	if (ValidatePermissionsForPath("immune:lag",client,NULL,NULL,NULL))
+		return 0;
+	if (client->local->since - TStime() < 10)
+		return 0;
+	return 1;
+}
+
 
 /** Numeric received from a connection.
  * @param numeric     The numeric code (range 000-999)

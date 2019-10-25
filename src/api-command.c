@@ -128,3 +128,102 @@ void CommandDel(Command *command)
 {
 	CommandDelX(command, command->cmd);
 }
+
+/** Calls the specified command for the user, as if it was received
+ * that way on IRC.
+ * @param client		Client that is the source.
+ * @param mtags		Message tags for this command.
+ * @param cmd		Command to run, eg "JOIN".
+ * @param parc		Parameter count plus 1.
+ * @param parv		Parameter array.
+ * @note Make sure you terminate the last parv[] parameter with NULL,
+ *       this can easily be forgotten, but certain functions depend on it,
+ *       you risk crashes otherwise.
+ * @note Once do_cmd() has returned, be sure to check IsDead(client) to
+ *       see if the client has been killed. This may happen due to various
+ *       reasons, including spamfilter kicking in or some other security
+ *       measure.
+ * @note Do not pass insane parameters. The combined size of all parameters
+ *       should not exceed 510 bytes, since that is what all code expects.
+ *       Similarly, you should not exceed MAXPARA for parc.
+ */
+void do_cmd(Client *client, MessageTag *mtags, char *cmd, int parc, char *parv[])
+{
+	RealCommand *cmptr;
+
+	cmptr = find_Command_simple(cmd);
+	if (cmptr)
+		(*cmptr->func) (client, mtags, parc, parv);
+}
+
+/**** This is the "real command" API *****
+ * Perhaps one day we will merge the two, if possible.
+ */
+
+RealCommand *CommandHash[256]; /* one per letter */
+
+void init_CommandHash(void)
+{
+	memset(CommandHash, 0, sizeof(CommandHash));
+	CommandAdd(NULL, MSG_ERROR, cmd_error, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
+	CommandAdd(NULL, MSG_VERSION, cmd_version, MAXPARA, CMD_UNREGISTERED|CMD_USER|CMD_SERVER);
+	CommandAdd(NULL, MSG_INFO, cmd_info, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_DNS, cmd_dns, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_REHASH, cmd_rehash, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(NULL, MSG_RESTART, cmd_restart, 2, CMD_USER);
+	CommandAdd(NULL, MSG_DIE, cmd_die, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_DALINFO, cmd_dalinfo, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_CREDITS, cmd_credits, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_LICENSE, cmd_license, MAXPARA, CMD_USER);
+	CommandAdd(NULL, MSG_MODULE, cmd_module, MAXPARA, CMD_USER);
+}
+
+RealCommand *add_Command_backend(char *cmd)
+{
+	RealCommand *c = safe_alloc(sizeof(RealCommand));
+
+	safe_strdup(c->cmd, cmd);
+
+	/* Add in hash with hash value = first byte */
+	AddListItem(c, CommandHash[toupper(*cmd)]);
+
+	return c;
+}
+
+static inline RealCommand *find_Cmd(char *cmd, int flags)
+{
+	RealCommand *p;
+	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
+		if ((flags & CMD_UNREGISTERED) && !(p->flags & CMD_UNREGISTERED))
+			continue;
+		if ((flags & CMD_SHUN) && !(p->flags & CMD_SHUN))
+			continue;
+		if ((flags & CMD_VIRUS) && !(p->flags & CMD_VIRUS))
+			continue;
+		if ((flags & CMD_ALIAS) && !(p->flags & CMD_ALIAS))
+			continue;
+		if (!strcasecmp(p->cmd, cmd))
+			return p;
+	}
+	return NULL;
+}
+
+RealCommand *find_Command(char *cmd, short token, int flags)
+{
+	Debug((DEBUG_NOTICE, "FindCommand %s", cmd));
+
+	return find_Cmd(cmd, flags);
+}
+
+RealCommand *find_Command_simple(char *cmd)
+{
+	RealCommand *c;
+
+	for (c = CommandHash[toupper(*cmd)]; c; c = c->next)
+	{
+		if (!strcasecmp(c->cmd, cmd))
+				return c;
+	}
+
+	return NULL;
+}
