@@ -152,7 +152,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/WHOWAS.OBJ \
  SRC/MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ \
  SRC/DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
- SRC/ERR.OBJ \
+ SRC/NUMERIC.OBJ \
  SRC/SERV.OBJ SRC/USER.OBJ \
  SRC/VERSION.OBJ SRC/KLINE.OBJ SRC/EXTRA.OBJ SRC/IRCSPRINTF.OBJ \
  SRC/SCACHE.OBJ SRC/DNS.OBJ SRC/MODULES.OBJ \
@@ -407,8 +407,8 @@ src/conf_preprocessor.obj: src/conf_preprocessor.c $(INCLUDES)
 src/debug.obj: src/debug.c $(INCLUDES)
         $(CC) $(CFLAGS) src/debug.c
 
-src/err.obj: src/err.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/err.c
+src/numeric.obj: src/numeric.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/numeric.c
 
 src/kline.obj: src/kline.c $(INCLUDES)
         $(CC) $(CFLAGS) src/kline.c

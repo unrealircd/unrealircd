@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/err.c
+ *   Unreal Internet Relay Chat Daemon, src/numeric.c
  *   Copyright (C) 1992 Darren Reed
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -17,8 +17,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/** @file
+ * @brief Numeric replies in the IRC protocol.
+ */
+
 #include "unrealircd.h"
 
+/** Numeric replies */
 static char *replies[] = {
 /* 000 */ NULL,
 /* 001    RPL_WELCOME */  ":Welcome to the %s IRC Network %s!%s@%s",
