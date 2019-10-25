@@ -41,6 +41,12 @@ MOTDFile svsmotd;
 MOTDFile botmotd;
 MOTDFile smotd;
 
+/** Hash list of TKL entries */
+MODVAR TKL *tklines[TKLISTLEN];
+/** 2D hash list of TKL entries + IP address */
+MODVAR TKL *tklines_ip_hash[TKLIPHASHLEN1][TKLIPHASHLEN2];
+int MODVAR spamf_ugly_vchanoverride = 0;
+
 void read_motd(const char *filename, MOTDFile *motd);
 void do_read_motd(const char *filename, MOTDFile *themotd);
 #ifdef USE_LIBCURL
@@ -1337,4 +1343,10 @@ int valid_sid(char *name)
 	if (!isdigit(name[2]) && !isupper(name[2]))
 		return 0;
 	return 1;
+}
+
+void tkl_init(void)
+{
+	memset(tklines, 0, sizeof(tklines));
+	memset(tklines_ip_hash, 0, sizeof(tklines_ip_hash));
 }
