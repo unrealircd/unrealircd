@@ -292,6 +292,7 @@ static inline char *allow_user_stats_long_to_short()
 CMD_FUNC(cmd_stats)
 {
 	struct statstab *stat;
+	char flags[2];
 
 	if (parc == 3 && parv[2][0] != '+' && parv[2][0] != '-')
 	{
@@ -334,10 +335,23 @@ CMD_FUNC(cmd_stats)
 
 	if (!stat)
 	{
-		stats_help(client);
+		/* Not found. Perhaps a module provides it? */
+		Hook *h;
+		int found = 0, n;
+		for (h = Hooks[HOOKTYPE_STATS]; h; h = h->next)
+		{
+			n = (*(h->func.intfunc))(client, parv[1]);
+			if (n == 1)
+				found = 1;
+		}
+		if (!found)
+			stats_help(client);
 		sendnumeric(client, RPL_ENDOFSTATS, '*');
 		return;
 	}
+
+	flags[0] = stat->flag;
+	flags[1] = '\0';
 
 	if (stat->options & FLAGS_AS_PARA)
 	{
@@ -362,7 +376,12 @@ CMD_FUNC(cmd_stats)
 	}
 	else
 		stat->func(client, NULL);
+
+	/* Modules can append data: */
+	RunHook2(HOOKTYPE_STATS, client, flags);
+
 	sendnumeric(client, RPL_ENDOFSTATS, stat->flag);
+
 	if (!IsULine(client))
 		sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
 			stat->flag, client->name, client->user->username, GetHost(client));

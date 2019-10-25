@@ -330,7 +330,10 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 static int cb_stats(Client *client, char *flag)
 {
 	if (*flag == 'S')
+	{
 		sendtxtnumeric(client, "staff-file: %s", STAFF_FILE);
+		return 1;
+	}
 
 	return 0;
 }

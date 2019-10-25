@@ -40,6 +40,7 @@ int dccdeny_configtest_deny_dcc(ConfigFile *cf, ConfigEntry *ce, int type, int *
 int dccdeny_configtest_allow_dcc(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int dccdeny_configrun_deny_dcc(ConfigFile *cf, ConfigEntry *ce, int type);
 int dccdeny_configrun_allow_dcc(ConfigFile *cf, ConfigEntry *ce, int type);
+int dccdeny_stats(Client *client, char *para);
 CMD_FUNC(cmd_dccdeny);
 CMD_FUNC(cmd_undccdeny);
 CMD_FUNC(cmd_svsfline);
@@ -75,6 +76,7 @@ MOD_INIT()
 	CommandAdd(modinfo->handle, "DCCDENY", cmd_dccdeny, 2, CMD_USER);
 	CommandAdd(modinfo->handle, "UNDCCDENY", cmd_undccdeny, MAXPARA, CMD_USER);
 	CommandAdd(modinfo->handle, "SVSFLINE", cmd_svsfline, MAXPARA, CMD_SERVER);
+	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, dccdeny_stats);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, dccdeny_can_send_to_user);
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, dccdeny_can_send_to_channel);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_SYNC, 0, dccdeny_server_sync);
@@ -818,13 +820,16 @@ static void dcc_wipe_services(void)
 
 }
 
-// FIXME: hook into HOOKTYPE_STATS
-int stats_denydcc(Client *client, char *para)
+int dccdeny_stats(Client *client, char *para)
 {
 	ConfigItem_deny_dcc *denytmp;
 	ConfigItem_allow_dcc *allowtmp;
 	char *filemask, *reason;
 	char a = 0;
+
+	/* '/STATS F' or '/STATS denydcc' is for us... */
+	if (strcmp(para, "F") && strcasecmp(para, "denydcc"))
+		return 0;
 
 	for (denytmp = conf_deny_dcc; denytmp; denytmp = denytmp->next)
 	{
@@ -853,8 +858,5 @@ int stats_denydcc(Client *client, char *para)
 		sendtxtnumeric(client, "a %c %c %s", (allowtmp->flag.type == DCCDENY_SOFT) ? 's' : 'h',
 			a, filemask);
 	}
-	return 0;
+	return 1;
 }
-
-//	{ 'F', "denydcc",	stats_denydcc,		0 		},
-

@@ -1472,9 +1472,12 @@ void memberflood_free(ModData *md)
 
 int floodprot_stats(Client *client, char *flag)
 {
+	if (*flag != 'S')
+		return 0;
+
 	sendtxtnumeric(client, "modef-default-unsettime: %hd", (unsigned short)MODEF_DEFAULT_UNSETTIME);
 	sendtxtnumeric(client, "modef-max-unsettime: %hd", (unsigned short)MODEF_MAX_UNSETTIME);
-	return 0;
+	return 1;
 }
 
 /** Admin unloading the floodprot module for good. Bad. */
