@@ -199,4 +199,28 @@ extern char OSName[256];
  #define abort()  do { char *crash = NULL; *crash = 'x'; } while(0)
 #endif
 
+#ifndef SOMAXCONN
+# define LISTEN_SIZE	(5)
+#else
+# define LISTEN_SIZE	(SOMAXCONN)
+#endif
+
+/*
+ * Try and find the correct name to use with getrlimit() for setting the max.
+ * number of files allowed to be open by this process.
+ */
+#ifdef RLIMIT_FDMAX
+# define RLIMIT_FD_MAX   RLIMIT_FDMAX
+#else
+# ifdef RLIMIT_NOFILE
+#  define RLIMIT_FD_MAX RLIMIT_NOFILE
+# else
+#  ifdef RLIMIT_OPEN_MAX
+#   define RLIMIT_FD_MAX RLIMIT_OPEN_MAX
+#  else
+#   undef RLIMIT_FD_MAX
+#  endif
+# endif
+#endif
+
 #endif /* __sys_include__ */

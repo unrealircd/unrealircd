@@ -1,4 +1,4 @@
- /*
+/*
  *   Unreal Internet Relay Chat Daemon, src/socket.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -18,16 +18,16 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/** @file
+ * @brief Socket functions such as reading, writing, connecting.
+ *
+ * The actual data parsing functions (for incoming data) are in
+ * src/parse.c.
+ */
+
 #include "unrealircd.h"
 #include "dns.h"
 
-#ifndef SOMAXCONN
-# define LISTEN_SIZE	(5)
-#else
-# define LISTEN_SIZE	(SOMAXCONN)
-#endif
-
-extern char backupbuf[8192];
 int OpenFiles = 0;    /* GLOBAL - number of files currently open */
 int readcalls = 0;
 
@@ -43,24 +43,6 @@ MODVAR time_t last_allinuse = 0;
 
 #ifdef USE_LIBCURL
 extern void url_do_transfers_async(void);
-#endif
-
-/*
- * Try and find the correct name to use with getrlimit() for setting the max.
- * number of files allowed to be open by this process.
- */
-#ifdef RLIMIT_FDMAX
-# define RLIMIT_FD_MAX   RLIMIT_FDMAX
-#else
-# ifdef RLIMIT_NOFILE
-#  define RLIMIT_FD_MAX RLIMIT_NOFILE
-# else
-#  ifdef RLIMIT_OPEN_MAX
-#   define RLIMIT_FD_MAX RLIMIT_OPEN_MAX
-#  else
-#   undef RLIMIT_FD_MAX
-#  endif
-# endif
 #endif
 
 void start_of_normal_client_handshake(Client *client);
@@ -288,10 +270,10 @@ int inetport(ConfigItem_listen *listener, char *ip, int port, int ipv6)
 
 	if (!unreal_bind(listener->fd, ip, port, ipv6))
 	{
-		ircsnprintf(backupbuf, sizeof(backupbuf), "Error binding stream socket to IP %s port %i",
-			ip, port);
-		strlcat(backupbuf, " - %s:%s", sizeof backupbuf);
-		report_baderror(backupbuf, NULL);
+		char buf[512];
+		ircsnprintf(buf, sizeof(buf), "Error binding stream socket to IP %s port %d", ip, port);
+		strlcat(buf, " - %s:%s", sizeof(buf));
+		report_baderror(buf, NULL);
 		fd_close(listener->fd);
 		listener->fd = -1;
 		--OpenFiles;
@@ -816,16 +798,16 @@ int  get_sockerr(Client *client)
  */
 int is_loopback_ip(char *ip)
 {
-    ConfigItem_listen *e;
+	ConfigItem_listen *e;
 
 	if (!strcmp(ip, "127.0.0.1") || !strcmp(ip, "0:0:0:0:0:0:0:1") || !strcmp(ip, "0:0:0:0:0:ffff:127.0.0.1"))
 		return 1;
 
-    for (e = conf_listen; e; e = e->next)
-    {
-        if ((e->options & LISTENER_BOUND) && !strcmp(ip, e->ip))
-            return 1;
-    }
+	for (e = conf_listen; e; e = e->next)
+	{
+		if ((e->options & LISTENER_BOUND) && !strcmp(ip, e->ip))
+			return 1;
+	}
 	return 0;
 }
 
@@ -988,7 +970,7 @@ static int dns_special_flag = 0; /* This is for an "interesting" race condition 
 
 void start_of_normal_client_handshake(Client *client)
 {
-struct hostent *he;
+	struct hostent *he;
 
 	client->status = CLIENT_STATUS_UNKNOWN; /* reset, to be sure (TLS handshake has ended) */
 
@@ -1144,7 +1126,7 @@ void read_packet(int fd, int revents, void *data)
 	}
 }
 
-/* Process input from clients that may have been deliberately delayed due to fake lag */
+/** Process input from clients that may have been deliberately delayed due to fake lag */
 void process_clients(void)
 {
 	Client *client, *next;
@@ -1379,8 +1361,6 @@ int ipv6_capable(void)
 	CLOSE_SOCK(s);
 	return 1; /* YES */
 }
-
-
 
 /** Attempt to deliver data to a client.
  * This function is only called from send_queued() and will deal
