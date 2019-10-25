@@ -620,16 +620,6 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 		 * We need to handle a few responses here.
 		 */
 
-		/* If we get a numeric 451 (not registered) back for the magic command __PANGPANG__
-		 * Then this means we are dealing with an Unreal server <3.2.9 and we should send the
-		 * SERVER command right now.
-		 */
-		if ((numeric == 451) && (parc > 2) && strstr(parv[1], "__PANGPANG__"))
-		{
-			send_server_message(client);
-			return 0;
-		}
-
 		/* STARTTLS: unknown command */
 		if ((numeric == 451) && (parc > 2) && strstr(parv[1], "STARTTLS"))
 		{

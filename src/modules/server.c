@@ -180,9 +180,6 @@ void _send_protoctl_servers(Client *client, int response)
 	char buf[512];
 	Client *acptr;
 
-	if (!NEW_LINKING_PROTOCOL)
-		return;
-
 	sendto_one(client, NULL, "PROTOCTL EAUTH=%s,%d,%s%s,%s",
 		me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", version);
 		

@@ -1524,7 +1524,6 @@ void config_setdefaultsettings(Configuration *i)
 	i->maxbanlength = 2048;
 	i->level_on_join = CHFL_CHANOP;
 	i->watch_away_notification = 1;
-	i->new_linking_protocol = 1;
 	i->uhnames = 1;
 	i->ping_cookie = 1;
 	i->ping_warning = 15; /* default ping warning notices 15 seconds */
@@ -7266,9 +7265,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "restrict-extendedbans")) {
 			safe_strdup(tempiConf.restrict_extendedbans, cep->ce_vardata);
 		}
-		else if (!strcmp(cep->ce_varname, "new-linking-protocol")) {
-			tempiConf.new_linking_protocol = atoi(cep->ce_vardata);
-		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
@@ -8109,11 +8105,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "restrict-extendedbans"))
 		{
 			CheckDuplicate(cep, restrict_extendedbans, "restrict-extendedbans");
-			CheckNull(cep);
-		}
-		else if (!strcmp(cep->ce_varname, "new-linking-protocol"))
-		{
-			CheckDuplicate(cep, new_linking_protocol, "new-linking-protocol");
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "link")) {

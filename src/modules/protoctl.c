@@ -210,7 +210,7 @@ CMD_FUNC(cmd_protoctl)
 			strlcpy(client->id, sid, IDLEN);
 			add_to_id_hash_table(client->id, client); /* add SID */
 		}
-		else if (!strcmp(name, "EAUTH") && value && NEW_LINKING_PROTOCOL)
+		else if (!strcmp(name, "EAUTH") && value)
 		{
 			/* Early authorization: EAUTH=servername,protocol,flags,software
 			 * (Only servername is mandatory, rest is optional)
@@ -279,7 +279,7 @@ CMD_FUNC(cmd_protoctl)
 			if (!IsHandshake(client) && aconf) /* Send PASS early... */
 				sendto_one(client, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		}
-		else if (!strcmp(name, "SERVERS") && value && NEW_LINKING_PROTOCOL)
+		else if (!strcmp(name, "SERVERS") && value)
 		{
 			Client *aclient, *srv;
 			char *sid = NULL;
@@ -414,7 +414,6 @@ CMD_FUNC(cmd_protoctl)
 		/* SERVER message moved from completed_connection() to here due to EAUTH/SERVERS PROTOCTL stuff,
 		 * which needed to be delayed until after both sides have received SERVERS=xx (..or not.. in case
 		 * of older servers).
-		 * Actually, this is often not reached, as the PANGPANG stuff in do_numeric() is reached first.
 		 */
 		send_server_message(client);
 	}

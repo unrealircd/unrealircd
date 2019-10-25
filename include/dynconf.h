@@ -108,7 +108,6 @@ struct Configuration {
 	char *restrict_usermodes;
 	char *restrict_channelmodes;
 	char *restrict_extendedbans;
-	int new_linking_protocol;
 	char *channel_command_prefix;
 	long unknown_flood_bantime;
 	long unknown_flood_amount;
@@ -222,7 +221,6 @@ extern MODVAR int ipv6_disabled;
 #define RESTRICT_USERMODES		iConf.restrict_usermodes
 #define RESTRICT_CHANNELMODES		iConf.restrict_channelmodes
 #define RESTRICT_EXTENDEDBANS		iConf.restrict_extendedbans
-#define NEW_LINKING_PROTOCOL		iConf.new_linking_protocol
 #define THROTTLING_PERIOD		iConf.throttle_period
 #define THROTTLING_COUNT		iConf.throttle_count
 #define USE_BAN_VERSION			iConf.use_ban_version
@@ -321,7 +319,6 @@ struct SetCheck {
 	unsigned has_restrict_usermodes:1;
 	unsigned has_restrict_channelmodes:1;
 	unsigned has_restrict_extendedbans:1;
-	unsigned has_new_linking_protocol:1;
 	unsigned has_channel_command_prefix:1;
 	unsigned has_anti_flood_unknown_flood_bantime:1;
 	unsigned has_anti_flood_unknown_flood_amount:1;

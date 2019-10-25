@@ -550,20 +550,9 @@ void start_server_handshake(Client *client)
 
 	send_protoctl_servers(client, 0);
 	send_proto(client, aconf);
-	if (NEW_LINKING_PROTOCOL)
-	{
-		/* Sending SERVER message moved to cmd_protoctl, so it's send after the first PROTOCTL
-		 * we receive from the remote server. Of course, this assumes that the remote server
-		 * to which we are connecting will at least send one PROTOCTL... but since it's an
-		 * outgoing connect, we can safely assume it's a remote UnrealIRCd server (or some
-		 * other advanced server..). -- Syzop
-		 */
-
-		/* Use this nasty hack, to make 3.2.9<->pre-3.2.9 linking work */
-		sendto_one(client, NULL, "__PANGPANG__");
-	} else {
-		send_server_message(client);
-	}
+	/* Sending SERVER message moved to cmd_protoctl, so it's send after the first PROTOCTL
+	 * that we receive from the remote server. -- Syzop
+	 */
 }
 
 /** Do an ident lookup if necessary.
