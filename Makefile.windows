@@ -154,7 +154,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
  SRC/NUMERIC.OBJ \
  SRC/SERV.OBJ SRC/USER.OBJ \
- SRC/VERSION.OBJ SRC/EXTRA.OBJ SRC/IRCSPRINTF.OBJ \
+ SRC/VERSION.OBJ SRC/IRCSPRINTF.OBJ \
  SRC/SCACHE.OBJ SRC/DNS.OBJ SRC/MODULES.OBJ \
  SRC/ALIASES.OBJ SRC/API-EVENT.OBJ SRC/API-USERMODE.OBJ SRC/AUTH.OBJ SRC/TLS.OBJ \
  SRC/RANDOM.OBJ SRC/API-CHANNELMODE.OBJ SRC/API-MODDATA.OBJ SRC/MEMPOOL.OBJ \
@@ -424,10 +424,6 @@ src/aliases.obj: src/aliases.c $(INCLUDES)
 src/user.obj: src/user.c $(INCLUDES) ./include/dbuf.h \
                 ./include/channel.h ./include/whowas.h
         $(CC) $(CFLAGS) src/user.c
-
-src/extra.obj: src/extra.c $(INCLUDES) ./include/dbuf.h \
-                ./include/channel.h ./include/whowas.h
-        $(CC) $(CFLAGS) src/extra.c
 
 src/serv.obj: src/serv.c $(INCLUDES) ./include/dbuf.h ./include/whowas.h
         $(CC) $(CFLAGS) src/serv.c
