@@ -108,6 +108,7 @@ void	flag_del(char ch)
 
 
 #ifdef DEBUGMODE
+
 #ifndef _WIN32
 #define SET_ERRNO(x) errno = x
 #else
@@ -141,94 +142,6 @@ void debug(int level, FORMAT_STRING(const char *form), ...)
 	}
 	va_end(vl);
 	SET_ERRNO(err);
-}
-
-/*
- * This is part of the STATS replies. There is no offical numeric for this
- * since this isnt an official command, in much the same way as HASH isnt.
- * It is also possible that some systems wont support this call or have
- * different field names for "struct rusage".
- * -avalon
- */
-void send_usage(Client *client, char *nick)
-{
-
-#ifdef GETRUSAGE_2
-	struct rusage rus;
-	time_t secs, rup;
-#ifdef	hz
-# define hzz hz
-#else
-# ifdef HZ
-#  define hzz HZ
-# else
-	int  hzz = 1;
-#  ifdef HPUX
-	hzz = (int)sysconf(_SC_CLK_TCK);
-#  endif
-# endif
-#endif
-
-	if (getrusage(RUSAGE_SELF, &rus) == -1)
-	{
-		sendnotice(client, "Getruseage error: %s.", strerror(errno));
-		return;
-	}
-	secs = rus.ru_utime.tv_sec + rus.ru_stime.tv_sec;
-	rup = TStime() - me.local->since;
-	if (secs == 0)
-		secs = 1;
-
-	sendnumericfmt(client, RPL_STATSDEBUG,
-	    "CPU Secs %ld:%ld User %ld:%ld System %ld:%ld",
-	    secs / 60, secs % 60,
-	    rus.ru_utime.tv_sec / 60, rus.ru_utime.tv_sec % 60,
-	    rus.ru_stime.tv_sec / 60, rus.ru_stime.tv_sec % 60);
-	sendnumericfmt(client, RPL_STATSDEBUG, "RSS %ld ShMem %ld Data %ld Stack %ld",
-	    rus.ru_maxrss,
-	    rus.ru_ixrss / (rup * hzz), rus.ru_idrss / (rup * hzz),
-	    rus.ru_isrss / (rup * hzz));
-	sendnumericfmt(client, RPL_STATSDEBUG, "Swaps %ld Reclaims %ld Faults %ld",
-	    rus.ru_nswap, rus.ru_minflt, rus.ru_majflt);
-	sendnumericfmt(client, RPL_STATSDEBUG, "Block in %ld out %ld",
-	    rus.ru_inblock, rus.ru_oublock);
-	sendnumericfmt(client, RPL_STATSDEBUG, "Msg Rcv %ld Send %ld",
-	    rus.ru_msgrcv, rus.ru_msgsnd);
-	sendnumericfmt(client, RPL_STATSDEBUG, "Signals %ld Context Vol. %ld Invol %ld",
-	    rus.ru_nsignals, rus.ru_nvcsw, rus.ru_nivcsw);
-#else
-# ifdef TIMES_2
-	struct tms tmsbuf;
-	time_t secs, mins;
-	int  hzz = 1, ticpermin;
-	int  umin, smin, usec, ssec;
-
-#  ifdef HPUX
-	hzz = sysconf(_SC_CLK_TCK);
-#  endif
-	ticpermin = hzz * 60;
-
-	umin = tmsbuf.tms_utime / ticpermin;
-	usec = (tmsbuf.tms_utime % ticpermin) / (float)hzz;
-	smin = tmsbuf.tms_stime / ticpermin;
-	ssec = (tmsbuf.tms_stime % ticpermin) / (float)hzz;
-	secs = usec + ssec;
-	mins = (secs / 60) + umin + smin;
-	secs %= hzz;
-
-	if (times(&tmsbuf) == -1)
-	{
-		sendnumericfmt(client, RPL_STATSDEBUG, "times(2) error: %s.", STRERROR(ERRNO));
-		return;
-	}
-	secs = tmsbuf.tms_utime + tmsbuf.tms_stime;
-
-	sendnumericfmt(client, RPL_STATSDEBUG,
-	    "CPU Secs %d:%d User %d:%d System %d:%d",
-	    mins, secs, umin, usec, smin, ssec);
-# endif
-#endif
-	return;
 }
 
 int checkprotoflags(Client *client, int flags, char *file, int line)

@@ -65,11 +65,9 @@ int stats_command(Client *, char *);
 int stats_oper(Client *, char *);
 int stats_port(Client *, char *);
 int stats_bannick(Client *, char *);
-int stats_usage(Client *, char *);
 int stats_traffic(Client *, char *);
 int stats_uline(Client *, char *);
 int stats_vhost(Client *, char *);
-int stats_mem(Client *, char *);
 int stats_denylinkauto(Client *, char *);
 int stats_denydcc(Client *, char *);
 int stats_kline(Client *, char *);
@@ -116,7 +114,6 @@ struct statstab StatsTable[] = {
 	{ 'O', "oper",		stats_oper,		0 		},
 	{ 'P', "port",		stats_port,		0 		},
 	{ 'Q', "sqline",	stats_sqline,		FLAGS_AS_PARA 	},
-	{ 'R', "usage",		stats_usage,		0 		},
 	{ 'S', "set",		stats_set,		0		},
 	{ 'T', "traffic",	stats_traffic,		0 		},
 	{ 'U', "uline",		stats_uline,		0 		},
@@ -124,7 +121,6 @@ struct statstab StatsTable[] = {
 	{ 'W', "fdtable",       stats_fdtable,          0               },
 	{ 'X', "notlink",	stats_notlink,		0 		},
 	{ 'Y', "class",		stats_class,		0 		},
-	{ 'Z', "mem",		stats_mem,		0 		},
 	{ 'c', "link", 		stats_links,		0 		},
 	{ 'd', "denylinkauto",	stats_denylinkauto,	0 		},
 	{ 'e', "except",	stats_except,		0 		},
@@ -220,9 +216,6 @@ static inline void stats_help(Client *client)
 	sendnumeric(client, RPL_STATSHELP, "q - bannick - Send the ban nick block list");
 	sendnumeric(client, RPL_STATSHELP, "Q - sqline - Send the global qline list");
 	sendnumeric(client, RPL_STATSHELP, "r - chanrestrict - Send the channel deny/allow block list");
-#ifdef DEBUGMODE
-	sendnumeric(client, RPL_STATSHELP, "R - usage - Send usage information");
-#endif
 	sendnumeric(client, RPL_STATSHELP, "S - set - Send the set block list");
 	sendnumeric(client, RPL_STATSHELP, "s - shun - Send the shun list");
 	sendnumeric(client, RPL_STATSHELP, "  Extended flags: [+/-mrs] [mask] [reason] [setby]");
@@ -560,14 +553,6 @@ int stats_bannick(Client *client, char *para)
 	return 0;
 }
 
-int stats_usage(Client *client, char *para)
-{
-#ifdef DEBUGMODE
-	send_usage(client, client->name);
-#endif
-	return 0;
-}
-
 int stats_traffic(Client *client, char *para)
 {
 	Client *acptr;
@@ -680,197 +665,6 @@ int stats_vhost(Client *client, char *para)
 			     vhosts->virthost, vhosts->login, m->mask);
 		}
 	}
-	return 0;
-}
-
-int stats_mem(Client *client, char *para)
-{
-	extern MODVAR int flinks;
-	extern MODVAR Link *freelink;
-	extern MODVAR MemoryInfo StatsZ;
-
-	Client *acptr;
-	Ban *ban;
-	Link *link;
-	Channel *channel;
-
-	int  lc = 0,		/* local clients */
-	     ch = 0,		/* channels */
-	     lcc = 0,		/* local client conf links */
-	     rc = 0,		/* remote clients */
-	     us = 0,		/* user structs */
-	     chu = 0,		/* channel users */
-	     chi = 0,		/* channel invites */
-	     chb = 0,		/* channel bans */
-	     wwu = 0,		/* whowas users */
-	     fl = 0,		/* free links */
-	     cl = 0,		/* classes */
-	     co = 0;		/* conf lines */
-
-	int  usi = 0,		/* users invited */
-	     usc = 0,		/* users in channels */
-	     aw = 0,		/* aways set */
-	     wwa = 0,		/* whowas aways */
-	     wlh = 0,		/* watchlist headers */
-	     wle = 0;		/* watchlist entries */
-
-	u_long chm = 0,		/* memory used by channels */
-	     chbm = 0,		/* memory used by channel bans */
-	     lcm = 0,		/* memory used by local clients */
-	     rcm = 0,		/* memory used by remote clients */
-	     awm = 0,		/* memory used by aways */
-	     wwam = 0,		/* whowas away memory used */
-	     com = 0,		/* memory used by conf lines */
-	     wlhm = 0,		/* watchlist memory used */
-	     db = 0,		/* memory used by dbufs */
-	     rm = 0,		/* res memory used */
-	     totcl = 0, totch = 0, totww = 0, tot = 0;
-
-	if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
-	{
-		sendnumeric(client, ERR_NOPRIVILEGES);
-		return 0;
-	}
-
-	count_whowas_memory(&wwu, &wwam);
-	count_watch_memory(&wlh, &wlhm);
-
-	list_for_each_entry(acptr, &client_list, client_node)
-	{
-		if (MyConnect(acptr))
-		{
-			lc++;
-			/*for (link = acptr->confs; link; link = link->next)
-				lcc++;
-			wle += acptr->notifies;*/
-
-		}
-		else
-			rc++;
-		if (acptr->user)
-		{
-			Membership *mb;
-			us++;
-			for (link = acptr->user->invited; link;
-			    link = link->next)
-				usi++;
-			for (mb = acptr->user->channel; mb;
-			    mb = mb->next)
-				usc++;
-			if (acptr->user->away)
-			{
-				aw++;
-				awm += (strlen(acptr->user->away) + 1);
-			}
-		}
-	}
-	lcm = lc * sizeof(Client)+sizeof(LocalClient);
-	rcm = rc * sizeof(Client);
-
-	for (channel = channels; channel; channel = channel->nextch)
-	{
-		Member *member;
-
-		ch++;
-		chm += (strlen(channel->chname) + sizeof(Channel));
-		for (member = channel->members; member; member = member->next)
-			chu++;
-		for (link = channel->invites; link; link = link->next)
-			chi++;
-		for (ban = channel->banlist; ban; ban = ban->next)
-		{
-			chb++;
-			chbm += (strlen(ban->banstr) + 1 +
-			    strlen(ban->who) + 1 + sizeof(Ban));
-		}
-		for (ban = channel->exlist; ban; ban = ban->next)
-		{
-			chb++;
-			chbm += (strlen(ban->banstr) + 1 +
-			    strlen(ban->who) + 1 + sizeof(Ban));
-		}
-		for (ban = channel->invexlist; ban; ban = ban->next)
-		{
-			chb++;
-			chbm += (strlen(ban->banstr) + 1 +
-			    strlen(ban->who) + 1 + sizeof(Ban));
-		}
-	}
-
-	sendnumericfmt(client, RPL_STATSDEBUG, "Client Local %d(%ld) Remote %d(%ld)",
-	    lc, lcm, rc, rcm);
-	sendnumericfmt(client, RPL_STATSDEBUG, "Users %d(%ld) Invites %d(%ld)",
-	    us, (long)(us * sizeof(ClientUser)),
-	    usi, (long)(usi * sizeof(Link)));
-	sendnumericfmt(client, RPL_STATSDEBUG, "User channels %d(%ld) Aways %d(%ld)",
-	    usc, (long)(usc * sizeof(Link)), aw, awm);
-	sendnumericfmt(client, RPL_STATSDEBUG, "WATCH headers %d(%ld) entries %d(%ld)",
-	    wlh, wlhm, wle, (long)(wle * sizeof(Link)));
-	sendnumericfmt(client, RPL_STATSDEBUG, "Attached confs %d(%ld)",
-	    lcc, (long)(lcc * sizeof(Link)));
-
-	totcl = lcm + rcm + us * sizeof(ClientUser) + usc * sizeof(Link) + awm;
-	totcl += lcc * sizeof(Link) + usi * sizeof(Link) + wlhm;
-	totcl += wle * sizeof(Link);
-
-	sendnumericfmt(client, RPL_STATSDEBUG, "Conflines %d(%ld)", co, com);
-
-	sendnumericfmt(client, RPL_STATSDEBUG, "Classes %d(%ld)",
-		StatsZ.classes, StatsZ.classesmem);
-
-	sendnumericfmt(client, RPL_STATSDEBUG, "Channels %d(%ld) Bans %d(%ld)",
-	    ch, chm, chb, chbm);
-	sendnumericfmt(client, RPL_STATSDEBUG, "Channel members %d(%ld) invite %d(%ld)",
-	    chu, (long)(chu * sizeof(Link)),
-	    chi, (long)(chi * sizeof(Link)));
-
-	totch = chm + chbm + chu * sizeof(Link) + chi * sizeof(Link);
-
-	sendnumericfmt(client, RPL_STATSDEBUG, "Whowas users %d(%ld) away %d(%ld)",
-	    wwu, (long)(wwu * sizeof(ClientUser)),
-	    wwa, wwam);
-
-	totww = wwu * sizeof(ClientUser) + wwam;
-
-	sendnumericfmt(client, RPL_STATSDEBUG,
-	    "Hash: client %d(%ld) chan %d(%ld) watch %d(%ld)",
-	    NICK_HASH_TABLE_SIZE,
-	    (long)(sizeof(struct list_head) * NICK_HASH_TABLE_SIZE),
-	    CHAN_HASH_TABLE_SIZE,
-	    (long)(sizeof(Channel *) * CHAN_HASH_TABLE_SIZE), WATCH_HASH_TABLE_SIZE,
-	    (long)(sizeof(Watch *) * WATCH_HASH_TABLE_SIZE));
-
-	for (link = freelink; link; link = link->next)
-		fl++;
-	sendnumericfmt(client, RPL_STATSDEBUG, "Link blocks free %d(%ld) total %d(%ld)",
-	    fl, (long)(fl * sizeof(Link)),
-	    flinks, (long)(flinks * sizeof(Link)));
-
-/*	rm = cres_mem(client,client->name); */
-	rm = 0; /* syzop: todo ?????????? */
-
-	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
-	tot += fl * sizeof(Link);
-	tot += sizeof(struct list_head) * NICK_HASH_TABLE_SIZE;
-	tot += sizeof(Channel *) * CHAN_HASH_TABLE_SIZE;
-	tot += sizeof(Watch *) * WATCH_HASH_TABLE_SIZE;
-
-	sendnumericfmt(client, RPL_STATSDEBUG, "Total: ww %ld ch %ld cl %ld co %ld db %ld",
-	    totww, totch, totcl, com, db);
-#if !defined(_WIN32) && !defined(_AMIGA)
-#ifdef __alpha
-	sendnumericfmt(client, RPL_STATSDEBUG, "TOTAL: %d sbrk(0)-etext: %u",
-	    tot,
-	    (u_int)sbrk((size_t)0) - (u_int)sbrk0);
-#else
-	sendnumericfmt(client, RPL_STATSDEBUG, "TOTAL: %ld sbrk(0)-etext: %lu",
-	    tot,
-	    (u_long)sbrk((size_t)0) - (u_long)sbrk0);
-
-#endif
-#else
-	sendnumericfmt(client, RPL_STATSDEBUG, "TOTAL: %lu", tot);
-#endif
 	return 0;
 }
 
