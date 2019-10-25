@@ -23,7 +23,7 @@ CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
 
 OBJS=dns.o bsd.o auth.o channel.o cloak.o crule.o dbuf.o \
 	fdlist.o hash.o ircd.o ircsprintf.o list.o \
-	match.o modules.o packet.o parse.o mempool.o operclass.o \
+	match.o modules.o parse.o mempool.o operclass.o \
 	conf_preprocessor.o conf.o debug.o dispatch.o err.o extra.o kline.o \
 	misc.o serv.o aliases.o socket.o \
 	tls.o user.o scache.o send.o support.o \
@@ -91,9 +91,6 @@ dispatch.o: dispatch.c $(INCLUDES)
 
 dbuf.o: dbuf.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c dbuf.c
-
-packet.o: packet.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c packet.c
 
 auth.o: auth.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c auth.c
