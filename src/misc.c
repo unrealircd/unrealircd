@@ -879,17 +879,6 @@ int char_to_channelflag(char c)
 	return 0;
 }
 
-char *getcloak(Client *client)
-{
-	if (!*client->user->cloakedhost)
-	{
-		/* need to calculate (first-time) */
-		make_virthost(client, client->user->realhost, client->user->cloakedhost, 0);
-	}
-
-	return client->user->cloakedhost;
-}
-
 // FIXME: should detect <U5 ;)
 int mixed_network(void)
 {

@@ -148,7 +148,7 @@ INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
 EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/CONF.OBJ SRC/CONF_PREPROCESSOR.OBJ \
  SRC/FDLIST.OBJ SRC/DBUF.OBJ  \
- SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
+ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
  SRC/WHOWAS.OBJ \
  SRC/MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ \
  SRC/DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
@@ -210,7 +210,6 @@ DLL_FILES=SRC/MODULES/CHGHOST.DLL SRC/MODULES/SDESC.DLL SRC/MODULES/SETIDENT.DLL
  SRC/MODULES/TLS_ANTIDOS.DLL \
  SRC/MODULES/MD.DLL \
  SRC/MODULES/CERTFP.DLL \
- SRC/MODULES/CLOAK.DLL \
  SRC/MODULES/WEBIRC.DLL \
  SRC/MODULES/WEBSOCKET.DLL \
  SRC/MODULES/BLACKLIST.DLL \
@@ -825,9 +824,6 @@ src/modules/md.dll: src/modules/md.c $(INCLUDES)
 
 src/modules/certfp.dll: src/modules/certfp.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/certfp.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
-
-src/modules/cloak.dll: src/modules/cloak.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/cloak.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/webirc.dll: src/modules/webirc.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/webirc.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)

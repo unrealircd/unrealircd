@@ -21,7 +21,7 @@
 
 CC = "==== DO NOT RUN MAKE FROM THIS DIRECTORY ===="
 
-OBJS=dns.o auth.o channel.o cloak.o crule.o dbuf.o \
+OBJS=dns.o auth.o channel.o crule.o dbuf.o \
 	fdlist.o hash.o ircd.o ircsprintf.o list.o \
 	match.o modules.o parse.o mempool.o operclass.o \
 	conf_preprocessor.o conf.o debug.o dispatch.o numeric.o extra.o \
@@ -139,9 +139,6 @@ list.o: list.c $(INCLUDES)
 
 dns.o: dns.c $(INCLUDES) ../include/dns.h
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c dns.c
-
-cloak.o: cloak.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(BINCFLAGS) -c cloak.c
 
 fdlist.o: fdlist.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c fdlist.c

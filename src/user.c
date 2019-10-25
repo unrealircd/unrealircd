@@ -621,3 +621,45 @@ const char *uid_get(void)
 
 	return uid;
 }
+
+/** Get cloaked host for user */
+char *getcloak(Client *client)
+{
+	if (!*client->user->cloakedhost)
+	{
+		/* need to calculate (first-time) */
+		make_virthost(client, client->user->realhost, client->user->cloakedhost, 0);
+	}
+
+	return client->user->cloakedhost;
+}
+
+/* mode = 0, just use strlcpy, 1 = Realloc new and return new pointer */
+char *make_virthost(Client *client, char *curr, char *new, int mode)
+{
+	char host[256], *mask, *p, *q;
+
+	if (!curr)
+		return NULL;
+
+	/* Convert host to lowercase and cut off at 255 bytes just to be sure */
+	for (p = curr, q = host; *p && (q < host+sizeof(host)-1); p++, q++)
+		*q =  tolower(*p);
+	*q = '\0';
+
+	/* Call the cloaking layer */
+	if (RCallbacks[CALLBACKTYPE_CLOAK_EX] != NULL)
+		mask = RCallbacks[CALLBACKTYPE_CLOAK_EX]->func.pcharfunc(client, host);
+	else if (RCallbacks[CALLBACKTYPE_CLOAK] != NULL)
+		mask = RCallbacks[CALLBACKTYPE_CLOAK]->func.pcharfunc(host);
+	else
+		mask = curr;
+
+	if (mode == 0)
+	{
+		strlcpy(new, mask, HOSTLEN + 1);
+		return NULL;
+	}
+	safe_free(new);
+	return raw_strdup(mask);
+}
