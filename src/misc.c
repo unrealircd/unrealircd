@@ -2,6 +2,7 @@
  *   Unreal Internet Relay Chat Daemon, src/misc.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
+ *   Copyright (C) 1999-present UnrealIRCd team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -21,9 +22,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "unrealircd.h"
+/** @file
+ * @brief Miscellaneous functions that don't fit in other files.
+ * Generally these are either simple helper functions or larger
+ * functions that don't fit in either user.c, channel.c.
+ */
 
-extern char	*me_hash;
+#include "unrealircd.h"
 
 static void exit_one_client(Client *, MessageTag *mtags_i, const char *);
 
@@ -89,10 +94,7 @@ SpamfilterTargetTable spamfiltertargettable[] = {
 	{ 0, 0, 0, 0 }
 };
 
-
-/*
- * stats stuff
- */
+/** IRC Statistics (quite useless?) */
 struct IRCStatistics ircstats;
 
 /** Main IRCd logging function.
@@ -227,7 +229,7 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 	recursion_trap = 0;
 }
 
-
+/** Returns the date in rather long string */
 char *long_date(time_t clock)
 {
 	static char buf[80], plus;
@@ -292,8 +294,28 @@ char *short_date(time_t ts, char *buf)
 	return buf;
 }
 
-/*
- *  Fixes a string so that the first white space found becomes an end of
+/** Return a string with the "pretty date" - yeah, another variant */
+char *pretty_date(time_t t)
+{
+	static char buf[128];
+	struct tm *tm;
+
+	if (!t)
+		time(&t);
+	tm = gmtime(&t);
+	snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d GMT",
+	         1900 + tm->tm_year,
+	         tm->tm_mon + 1,
+	         tm->tm_mday,
+	         tm->tm_hour,
+	         tm->tm_min,
+	         tm->tm_sec);
+
+	return buf;
+}
+
+/** Helper function for make_user_host() and friends.
+ * Fixes a string so that the first white space found becomes an end of
  * string marker (`\-`).  returns the 'fixed' string or "*" if the string
  * was NULL length or a NULL pointer.
  */
@@ -315,6 +337,7 @@ char *check_string(char *s)
 	return (BadPtr(str)) ? star : str;
 }
 
+/** Create a user@host based on the provided name and host */
 char *make_user_host(char *name, char *host)
 {
 	static char namebuf[USERLEN + HOSTLEN + 6];
@@ -332,10 +355,9 @@ char *make_user_host(char *name, char *host)
 	return (namebuf);
 }
 
-
-/*
- * create a string of form "foo!bar@fubar" given foo, bar and fubar
- * as the parameters.  If NULL, they become "*".
+/** Create a nick!user@host string based on the provided variables.
+ * If any of the variables are NULL, it becomes * (asterisk)
+ * This is the reentrant safe version.
  */
 char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host)
 {
@@ -356,9 +378,9 @@ char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host)
 	return namebuf;
 }
 
-/*
- * create a string of form "foo!bar@fubar" given foo, bar and fubar
- * as the parameters.  If NULL, they become "*".
+/** Create a nick!user@host string based on the provided variables.
+ * If any of the variables are NULL, it becomes * (asterisk)
+ * This version uses static storage.
  */
 char *make_nick_user_host(char *nick, char *name, char *host)
 {
@@ -471,6 +493,9 @@ int on_dccallow_list(Client *to, Client *from)
 	return 0;
 }
 
+/** Delete all DCCALLOW references.
+ * Ultimately, this should be moved to modules/dccallow.c
+ */
 void remove_dcc_references(Client *client)
 {
 	Client *acptr;
@@ -585,8 +610,6 @@ static void remove_dependents(Client *client, Client *from, MessageTag *mtags, c
 ** Exit one client, local or remote. Assuming all dependants have
 ** been already removed, and socket closed for local client.
 */
-/* DANGER: Ugly hack follows. */
-/* Yeah :/ */
 static void exit_one_client(Client *client, MessageTag *mtags_i, const char *comment)
 {
 	Link *lp;
@@ -781,11 +804,13 @@ void exit_client(Client *client, MessageTag *recv_mtags, char *comment)
 	
 }
 
+/** Initialize the (quite useless) IRC statistics */
 void initstats(void)
 {
 	memset(&ircstats, 0, sizeof(ircstats));
 }
 
+/** Verify operator count, to catch bugs introduced by flawed services */
 void verify_opercount(Client *orig, char *tag)
 {
 	int counted = 0;
@@ -924,9 +949,13 @@ char *p = buf;
 	return buf;
 }
 
+/** Replace underscores back to the space character.
+ * This is used for the spamfilter reason.
+ */
 char *unreal_decodespace(char *s)
 {
-static char buf[512], *i, *o;
+	static char buf[512], *i, *o;
+
 	for (i = s, o = buf; (*i) && (o < buf+510); i++)
 		if (*i == '_')
 		{
@@ -943,9 +972,12 @@ static char buf[512], *i, *o;
 	return buf;
 }
 
+/** Replace spaces to underscore characters.
+ * This is used for the spamfilter reason.
+ */
 char *unreal_encodespace(char *s)
 {
-static char buf[512], *i, *o;
+	static char buf[512], *i, *o;
 
 	if (!s)
 		return NULL; /* NULL in = NULL out */
@@ -977,6 +1009,7 @@ char *cmdname_by_spamftarget(int target)
 	return "???";
 }
 
+/** Returns 1 if this is a channel from set::auto-join or set::oper-auto-join */
 int is_autojoin_chan(char *chname)
 {
 	char buf[512];
@@ -1099,25 +1132,42 @@ int unreal_mask_match(Client *client, ConfigItem_mask *m)
 	return 0;
 }
 
-/*
- * our own strcasestr implementation because strcasestr is often not
- * available or is not working correctly.
+/** Our own strcasestr implementation because strcasestr is
+ * often not available or is not working correctly.
  */
-char *our_strcasestr(char *haystack, char *needle) {
-int i;
-int nlength = strlen (needle);
-int hlength = strlen (haystack);
+char *our_strcasestr(char *haystack, char *needle)
+{
+	int i;
+	int nlength = strlen(needle);
+	int hlength = strlen(haystack);
 
-	if (nlength > hlength) return NULL;
-	if (hlength <= 0) return NULL;
-	if (nlength <= 0) return haystack;
-	for (i = 0; i <= (hlength - nlength); i++) {
+	if (nlength > hlength)
+		return NULL;
+
+	if (hlength <= 0)
+		return NULL;
+
+	if (nlength <= 0)
+		return haystack;
+
+	for (i = 0; i <= (hlength - nlength); i++)
+	{
 		if (strncasecmp (haystack + i, needle, nlength) == 0)
 			return haystack + i;
 	}
-  return NULL; /* not found */
+
+	return NULL; /* not found */
 }
 
+/** Add a title to the users' WHOIS ("special whois"). Broadcast change to servers.
+ * @param client	The client
+ * @param tag		A tag used internally and for server-to-server traffic,
+ *			not visible to end-users.
+ * @param priority	Priority - for ordering multiple swhois entries
+ * @param swhois	The actual special whois title (string) you want to add to the user
+ * @param from		Who added this entry
+ * @param skip		Which server(-side) to skip broadcasting this entry to.
+ */
 int swhois_add(Client *client, char *tag, int priority, char *swhois, Client *from, Client *skip)
 {
 	SWhois *s;
@@ -1142,9 +1192,15 @@ int swhois_add(Client *client, char *tag, int priority, char *swhois, Client *fr
 	return 0;
 }
 
-/** Delete swhois title(s)
+/** Delete swhois title(s).
  * Delete swhois by tag and swhois. Then broadcast this change to all other servers.
- * Remark: if you use swhois "*" then it will remove all swhois titles for that tag
+ * @param client	The client
+ * @param tag		A tag used internally and for server-to-server traffic,
+ *			not visible to end-users.
+ * @param swhois	The actual special whois title (string) you are removing
+ * @param from		Who added this entry earlier on
+ * @param skip		Which server(-side) to skip broadcasting this entry to.
+ * @note If you use swhois "*" then it will remove all swhois titles for that tag
  */
 int swhois_delete(Client *client, char *tag, char *swhois, Client *from, Client *skip)
 {
@@ -1259,6 +1315,7 @@ void banned_client(Client *client, char *bantype, char *reason, int global, int 
 	}
 }
 
+/** Our stpcpy implementation - discouraged due to lack of bounds checking */
 char *mystpcpy(char *dst, const char *src)
 {
 	for (; *src; src++)
@@ -1331,25 +1388,6 @@ void concat_params(char *buf, int len, int parc, char *parv[])
 	}
 }
 
-char *pretty_date(time_t t)
-{
-	static char buf[128];
-	struct tm *tm;
-
-	if (!t)
-		time(&t);
-	tm = gmtime(&t);
-	snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d GMT",
-	         1900 + tm->tm_year,
-	         tm->tm_mon + 1,
-	         tm->tm_mday,
-	         tm->tm_hour,
-	         tm->tm_min,
-	         tm->tm_sec);
-
-	return buf;
-}
-
 /** Find a particular message-tag in the 'mtags' list */
 MessageTag *find_mtag(MessageTag *mtags, const char *token)
 {
@@ -1359,6 +1397,7 @@ MessageTag *find_mtag(MessageTag *mtags, const char *token)
 	return NULL;
 }
 
+/** Free all message tags in the list 'm' */
 void free_message_tags(MessageTag *m)
 {
 	MessageTag *m_next;
@@ -1446,7 +1485,7 @@ void generate_batch_id(char *str)
 	gen_random_alnum(str, BATCHLEN);
 }
 
-/* A default handler if labeled-response module is not loaded.
+/** A default handler if labeled-response module is not loaded.
  * Normally a NOOP, but since caller will safe_free it
  * later we do actually allocate something.
  */
@@ -1455,12 +1494,12 @@ void *labeled_response_save_context_default_handler(void)
 	return safe_alloc(8);
 }
 
-/* A default handler for if labeled-response module is not loaded */
+/** A default handler for if labeled-response module is not loaded */
 void labeled_response_set_context_default_handler(void *ctx)
 {
 }
 
-/* A default handler for if labeled-response module is not loaded */
+/** A default handler for if labeled-response module is not loaded */
 void labeled_response_force_end_default_handler(void)
 {
 }
