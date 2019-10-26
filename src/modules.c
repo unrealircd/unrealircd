@@ -1084,7 +1084,7 @@ CommandOverride *CommandOverrideAddEx(Module *module, char *name, int priority, 
 	RealCommand *p;
 	CommandOverride *ovr;
 	
-	if (!(p = find_Command_simple(name)))
+	if (!(p = find_command_simple(name)))
 	{
 		if (module)
 			module->errorcode = MODERR_NOTFOUND;

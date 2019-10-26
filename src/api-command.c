@@ -89,7 +89,7 @@ static Command *CommandAddInternal(Module *module, char *cmd, CmdFunc func, Alia
 	Command *command = NULL;
 	RealCommand *c;
 
-	if (find_Command_simple(cmd))
+	if (find_command_simple(cmd))
 	{
 		if (module)
 			module->errorcode = MODERR_EXISTS;
@@ -193,7 +193,7 @@ void do_cmd(Client *client, MessageTag *mtags, char *cmd, int parc, char *parv[]
 {
 	RealCommand *cmptr;
 
-	cmptr = find_Command_simple(cmd);
+	cmptr = find_command_simple(cmd);
 	if (cmptr)
 		(*cmptr->func) (client, mtags, parc, parv);
 }
@@ -241,7 +241,7 @@ static RealCommand *add_Command_backend(char *cmd)
  */
 
 /** Find a command by name and flags */
-RealCommand *find_Command(char *cmd, int flags)
+RealCommand *find_command(char *cmd, int flags)
 {
 	RealCommand *p;
 	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
@@ -260,7 +260,7 @@ RealCommand *find_Command(char *cmd, int flags)
 }
 
 /** Find a command by name (no access rights check) */
-RealCommand *find_Command_simple(char *cmd)
+RealCommand *find_command_simple(char *cmd)
 {
 	RealCommand *c;
 

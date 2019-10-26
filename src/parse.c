@@ -374,7 +374,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 			flags |= CMD_VIRUS;
 		if (IsOper(from))
 			flags |= CMD_OPER;
-		cmptr = find_Command(ch, flags);
+		cmptr = find_command(ch, flags);
 		if (!cmptr || !(cmptr->flags & CMD_NOLAG))
 		{
 			/* Add fake lag (doing this early in the code, so we don't forget) */

@@ -1712,7 +1712,7 @@ static void do_weird_shun_stuff()
 {
 RealCommand *cmptr;
 
-	if ((cmptr = find_Command_simple("PART")))
+	if ((cmptr = find_command_simple("PART")))
 	{
 		if (ALLOW_PART_IF_SHUNNED)
 			cmptr->flags |= CMD_SHUN;
@@ -2361,7 +2361,7 @@ void	config_rehash()
 		safe_free(log_ptr);
 	}
 	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)next) {
-		RealCommand *cmptr = find_Command(alias_ptr->alias, 0);
+		RealCommand *cmptr = find_command(alias_ptr->alias, 0);
 		ConfigItem_alias_format *fmt;
 		next = (ListStruct *)alias_ptr->next;
 		safe_free(alias_ptr->nick);
@@ -9064,9 +9064,9 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry 	    	*cep, *cepp;
 	RealCommand *cmptr;
 
-	if ((cmptr = find_Command(ce->ce_vardata, CMD_ALIAS)))
+	if ((cmptr = find_command(ce->ce_vardata, CMD_ALIAS)))
 		CommandDelX(NULL, cmptr);
-	if (find_Command_simple(ce->ce_vardata))
+	if (find_command_simple(ce->ce_vardata))
 	{
 		config_warn("%s:%i: Alias '%s' would conflict with command (or server token) '%s', alias not added.",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
@@ -9157,7 +9157,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
-	else if (!find_Command(ce->ce_vardata, CMD_ALIAS) && find_Command(ce->ce_vardata, 0)) {
+	else if (!find_command(ce->ce_vardata, CMD_ALIAS) && find_command(ce->ce_vardata, 0)) {
 		config_status("%s:%i: %s is an existing command, can not add alias",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
 		errors++;

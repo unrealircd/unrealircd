@@ -51,7 +51,6 @@ typedef struct Class {
 
 extern aClass *classes;
 
-extern aClass *find_class(int);
 extern int get_client_class(Client *);
 extern int get_client_ping(Client *);
 extern int get_con_freq(aClass *);

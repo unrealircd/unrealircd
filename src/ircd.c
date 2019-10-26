@@ -1260,7 +1260,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	umodes_check_for_changes();
 	charsys_check_for_changes();
 	clicap_init();
-	if (!find_Command_simple("PRIVMSG"))
+	if (!find_command_simple("PRIVMSG"))
 	{
 		config_error("Someone forgot to load modules with proper commands in them. READ THE DOCUMENTATION");
 		exit(-4);
