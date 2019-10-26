@@ -425,11 +425,11 @@ void charsys_finish(void)
 }
 
 /** Add a character range to the multibyte list.
+ * Eg: charsys_addmultibyterange(0xaa, 0xbb, 0x00, 0xff) for 0xaa00-0xbbff.
  * @param s1 Start of highest byte
  * @param e1 End of highest byte
  * @param s2 Start of lowest byte
  * @param e2 End of lowest byte
- * @example charsys_addmultibyterange(0xaa, 0xbb, 0x00, 0xff) for 0xaa00-0xbbff
  */
 void charsys_addmultibyterange(char s1, char e1, char s2, char e2)
 {

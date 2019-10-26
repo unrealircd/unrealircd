@@ -1128,8 +1128,8 @@ void set_channel_mlock(Client *client, Channel *channel, const char *newmlock, i
  * @in modebuf_in Buffer pointing to mode characters (eg: +snk-l)
  * @in parabuf_in Buffer pointing to all parameters (eg: key 123)
  * @retval Returns 1 if we have valid data to return, 0 if at end of mode line.
- * @example
- *
+ * @section ex1 Example:
+ * @code
  * ParseMode pm;
  * int ret;
  * for (ret = parse_chanmode(&pm, modebuf, parabuf); ret; ret = parse_chanmode(&pm, NULL, NULL))
@@ -1139,6 +1139,7 @@ void set_channel_mlock(Client *client, Channel *channel, const char *newmlock, i
  *                  pm.modechar,
  *                  pm.param ? pm.param : "");
  * }
+ * @endcode
  */
 int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 {

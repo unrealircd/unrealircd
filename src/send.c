@@ -188,7 +188,7 @@ void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl)
  * @param to    The client to which the buffer should be send.
  * @param msg   The message.
  * @param quick Normally set to 0, see the notes.
- * @notes
+ * @note
  * - Neither 'to' or 'msg' may be NULL.
  * - If quick is set to 0 then the length is calculated,
  *   the string is cut off at 510 bytes if needed, and

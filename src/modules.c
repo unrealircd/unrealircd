@@ -1306,7 +1306,7 @@ const char *our_dlerror(void)
 /** Check if a module is loaded.
  * @param name Name of the module by relative path (eg: 'extbans/timedban')
  * @returns 1 if module is loaded, 0 if not.
- * @notes The name is checked against the module name,
+ * @note  The name is checked against the module name,
  *        this can be a problem if two modules have the same name.
  */
 int is_module_loaded(char *name)

@@ -47,11 +47,13 @@ char *my_itoa(int i)
  * @param fs	Separator character(s)
  * @returns substring (token)
  * @note This function works similar to (but not identical?) to strtok_r().
- * @example
+ * @section Ex1 Example
+ * @code
  * for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
  * {
  *      ircd_log(LOG_ERROR, "Got: %s", name);
  * }
+ * @endcode
  */
 char *strtoken(char **save, char *str, char *fs)
 {
@@ -391,7 +393,7 @@ int b64_encode(unsigned char const *src, size_t srclength, char *target, size_t 
  * @param target	The output buffer to use (output)
  * @param targetsize	The length of the output buffer to use (maximum output length)
  * @returns length of the targetsize, or -1 in case of error.
- * @notes Skips whitespace, and hmm.. I think we don't require padding? Not sure.
+ * @note Skips whitespace, and hmm.. I think we don't require padding? Not sure.
  */
 int b64_decode(char const *src, unsigned char *target, size_t targsize)
 {
@@ -675,7 +677,7 @@ int strnatcasecmp(char const *a, char const *b)
 /** Allocate memory - should always be used instead of malloc/calloc.
  * @param size How many bytes to allocate
  * @returns A pointer to the newly allocated memory.
- * @notes If out of memory then the IRCd will exit.
+ * @note If out of memory then the IRCd will exit.
  */
 void *safe_alloc(size_t size)
 {
@@ -1175,12 +1177,12 @@ char *sock_strerror(int error)
 #endif
 
 /** Build a string and replace $variables where needed.
+ * See src/modules/blacklist.c for an example.
  * @param inbuf		The input string
  * @param outbuf	The output string
  * @param len		The maximum size of the output string (including NUL)
  * @param name		Array of variables names
  * @param value		Array of variable values
- * @example See src/modules/blacklist.c for an example.
  */
 void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *name[], const char *value[])
 {

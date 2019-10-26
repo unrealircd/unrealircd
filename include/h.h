@@ -511,7 +511,7 @@ extern void *safe_alloc(size_t size);
 /** Return a copy of the string. Do not free any existing memory.
  * @param str   The string to duplicate
  * @returns A pointer to the new copy.
- * @notes
+ * @note
  * Generally you need to use safe_strdup() instead(!). But when clearly initializing
  * a variable that does not have a previous value, then raw_strdup() usage is fine, eg:
  * int somefunc()
@@ -533,7 +533,7 @@ extern void *safe_alloc(size_t size);
  * @param str   The string you want to copy
  * @param sz    Length limit including the NUL byte, usually sizeof(dst)
  * @returns A pointer to the new copy.
- * @notes
+ * @note
  * Generally you need to use safe_strldup() instead(!). But when clearly initializing
  * a variable that does not have a previous value, then raw_strldup() usage is fine, eg:
  * int somefunc(char *str)

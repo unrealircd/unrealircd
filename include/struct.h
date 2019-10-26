@@ -821,7 +821,7 @@ struct SWhois {
  * @param recv_mtags  Received message tags for this command.
  * @param parc        Parameter count *plus* 1.
  * @param parv        Parameter values.
- * @notes Slightly confusing, but parc will be 2 if 1 parameter was provided.
+ * @note  Slightly confusing, but parc will be 2 if 1 parameter was provided.
  *        It is two because parv will still have 2 elements, parv[1] will be your first parameter,
  *        and parv[2] will be NULL.
  *        Note that reading parv[parc] and beyond is OUT OF BOUNDS and will cause a crash.

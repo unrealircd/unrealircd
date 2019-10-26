@@ -503,7 +503,7 @@ uint32_t getrandom32()
 /** Generate an alphanumeric string (eg: XzHe5G).
  * @param buf      The buffer
  * @param numbytes The number of random bytes.
- * @notes Note that numbytes+1 bytes are written to buf.
+ * @note  Note that numbytes+1 bytes are written to buf.
  *        In other words, numbytes does NOT include the NUL byte.
  */
 void gen_random_alnum(char *buf, int numbytes)

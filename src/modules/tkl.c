@@ -1843,7 +1843,7 @@ CMD_FUNC(cmd_spamfilter)
 
 /** tkl hash method.
  * @param c   The tkl type character, see tkl_typetochar().
- * @notes     The input value 'c' is assumed to be in range a-z or A-Z!
+ * @note      The input value 'c' is assumed to be in range a-z or A-Z!
  *            Also, don't blindly change the hashmethod here, some things
  *            depend on 'z' and 'Z' ending up in the same bucket.
  */
@@ -2136,7 +2136,7 @@ TKL *_tkl_add_spamfilter(int type, unsigned short target, unsigned short action,
  * @param flags               Any TKL_FLAG_* (TKL_FLAG_CONFIG, etc..)
  * @returns                   The TKL entry, or NULL in case of a problem,
  *                            such as a regex failing to compile, memory problem, ..
- * @notes
+ * @note
  * Be sure not to call this function for spamfilters,
  * qlines or exempts, which have their own function!
  */
@@ -2196,7 +2196,7 @@ TKL *_tkl_add_serverban(int type, char *usermask, char *hostmask, char *reason, 
  * @param flags               Any TKL_FLAG_* (TKL_FLAG_CONFIG, etc..)
  * @returns                   The TKL entry, or NULL in case of a problem,
  *                            such as a regex failing to compile, memory problem, ..
- * @notes
+ * @note
  * Be sure not to call this function for spamfilters,
  * qlines or exempts, which have their own function!
  */
@@ -2256,7 +2256,7 @@ TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, char *reaso
  * @param flags               Any TKL_FLAG_* (TKL_FLAG_CONFIG, etc..)
  * @returns                   The TKL entry, or NULL in case of a problem,
  *                            such as a regex failing to compile, memory problem, ..
- * @notes
+ * @note
  * Be sure not to call this function for spamfilters,
  * qlines or exempts, which have their own function!
  */
@@ -2876,7 +2876,7 @@ int spamfilter_check_all_users(Client *from, TKL *tkl)
  * @param name     The nick or channel to check.
  * @param is_hold  This will be SET (so OUT) if it's a services hold.
  *
- * @notes Special handling:
+ * @note Special handling:
  * #*ble* will match with #bbleh
  * *ble* will NOT match with #bbleh, will with bbleh
  */
@@ -4490,8 +4490,8 @@ int _match_spamfilter(Client *client, char *str_in, int target, char *destinatio
 }
 
 /** CIDR function to compare the first 'mask' bits.
+ * @author Taken from atheme
  * @returns 1 if equal, 0 if not.
- * @notes Taken from atheme
  */
 static int comp_with_mask(void *addr, void *dest, u_int mask)
 {

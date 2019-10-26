@@ -72,7 +72,7 @@ MOD_UNLOAD()
 /** Unescape a message tag (name or value).
  * @param in  The input string
  * @param out The output string for writing
- * @notes No size checking, so ensure that the output buffer
+ * @note  No size checking, so ensure that the output buffer
  *        is at least as long as the input buffer.
  */
 void message_tag_unescape(char *in, char *out)
@@ -104,7 +104,7 @@ void message_tag_unescape(char *in, char *out)
 /** Escape a message tag (name or value).
  * @param in  The input string
  * @param out The output string for writing
- * @notes No size checking, so ensure that the output buffer
+ * @note  No size checking, so ensure that the output buffer
  *        is at least twice as long as the input buffer + 1.
  */
 void message_tag_escape(char *in, char *out)

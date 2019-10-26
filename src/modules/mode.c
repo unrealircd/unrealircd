@@ -289,7 +289,7 @@ aftercheck:
 
 /** Cut off mode string (eg: +abcdfjkdsgfgs) at MAXMODEPARAMS modes.
  * @param s The mode string (modes only, no parameters)
- * @notes Should only used on local clients
+ * @note Should only used on local clients
  * @author Syzop
  */
 static void mode_cutoff(char *s)

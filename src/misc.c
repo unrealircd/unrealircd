@@ -1253,7 +1253,7 @@ extern void send_raw_direct(Client *user, FORMAT_STRING(const char *pattern), ..
  *                 This is really only needed from the accept code, do not
  *                 use it anywhere else. No really, never.
  *
- * @notes This function will call exit_client() appropriately.
+ * @note This function will call exit_client() appropriately.
  */
 void banned_client(Client *client, char *bantype, char *reason, int global, int noexit)
 {
@@ -1357,10 +1357,12 @@ size_t add_sjsby(char *buf, char *setby, time_t seton)
  * @param len   Length of the buffer.
  * @param parc  Parameter count, ircd style.
  * @param parv  Parameters, ircd style, so we will start at parv[1].
- * @example
+ * @section ex1 Example
+ * @code
  * char buf[512];
  * concat_params(buf, sizeof(buf), parc, parv);
  * sendto_server(client, 0, 0, recv_mtags, ":%s SOMECOMMAND %s", client->name, buf);
+ * @endcode
  */
 void concat_params(char *buf, int len, int parc, char *parv[])
 {
@@ -1412,7 +1414,7 @@ void free_message_tags(MessageTag *m)
 }
 
 /** Duplicate a MessageTag structure.
- * @notes This duplicate a single MessageTag.
+ * @note  This duplicate a single MessageTag.
  *        It does not duplicate an entire linked list.
  */
 MessageTag *duplicate_mtag(MessageTag *mtag)
@@ -1582,10 +1584,9 @@ time_t server_time_to_unix_time(const char *tbuf)
 	return ret;
 }
 
-/** Write a 64 bit integer.
+/** Write a 64 bit integer to a file.
  * @param fd   File descriptor
  * @param t    The value to write
- * @example write_int64(fd, 1234);
  * @returns 1 on success, 0 on failure.
  */
 int write_int64(FILE *fd, uint64_t t)
@@ -1595,10 +1596,9 @@ int write_int64(FILE *fd, uint64_t t)
 	return 1;
 }
 
-/** Write a 32 bit integer.
+/** Write a 32 bit integer to a file.
  * @param fd   File descriptor
  * @param t    The value to write
- * @example write_int32(fd, 1234);
  * @returns 1 on success, 0 on failure.
  */
 int write_int32(FILE *fd, uint32_t t)
@@ -1608,10 +1608,9 @@ int write_int32(FILE *fd, uint32_t t)
 	return 1;
 }
 
-/** Read a 64 bit integer.
+/** Read a 64 bit integer from a file.
  * @param fd   File descriptor
  * @param t    The value to write
- * @example read_int64(fd, &var);
  * @returns 1 on success, 0 on failure.
  */
 int read_int64(FILE *fd, uint64_t *t)
@@ -1621,10 +1620,9 @@ int read_int64(FILE *fd, uint64_t *t)
 	return 1;
 }
 
-/** Read a 64 bit integer.
+/** Read a 32 bit integer from a file.
  * @param fd   File descriptor
  * @param t    The value to write
- * @example read_int64(fd, &var);
  * @returns 1 on success, 0 on failure.
  */
 int read_int32(FILE *fd, uint32_t *t)
@@ -1634,12 +1632,11 @@ int read_int32(FILE *fd, uint32_t *t)
 	return 1;
 }
 
-/** Read binary data.
+/** Read binary data from a file.
  * @param fd   File descriptor
  * @param buf  Pointer to buffer
  * @param len  Size of buffer
- * @example read_data(fd, buf, sizeof(buf));
- * @notes This function is not used much, in most cases
+ * @note  This function is not used much, in most cases
  *        you should use read_str(), read_int32() or
  *        read_int64() instead.
  * @returns 1 on success, 0 on failure.
@@ -1651,12 +1648,11 @@ int read_data(FILE *fd, void *buf, size_t len)
 	return 1;
 }
 
-/** Write binary data.
+/** Write binary data to a file.
  * @param fd   File descriptor
  * @param buf  Pointer to buffer
  * @param len  Size of buffer
- * @example write_data(fd, buf, sizeof(buf));
- * @notes This function is not used much, in most cases
+ * @note  This function is not used much, in most cases
  *        you should use write_str(), write_int32() or
  *        write_int64() instead.
  * @returns 1 on success, 0 on failure.
@@ -1668,11 +1664,10 @@ int write_data(FILE *fd, const void *buf, size_t len)
 	return 1;
 }
 
-/** Write a string.
+/** Write a string to a file.
  * @param fd   File descriptor
  * @param x    Pointer to string
- * @example write_str(fd, "hello there!");
- * @notes This function can write a string up to 65534
+ * @note  This function can write a string up to 65534
  *        characters, which should be plenty for usage
  *        in UnrealIRCd.
  *        Note that 'x' can safely be NULL.
@@ -1693,11 +1688,10 @@ int write_str(FILE *fd, char *x)
 	return 1;
 }
 
-/** Read a string.
+/** Read a string from a file.
  * @param fd   File descriptor
  * @param x    Pointer to string pointer
- * @example write_str(fd, &str);
- * @notes This function will allocate memory for the data
+ * @note  This function will allocate memory for the data
  *        and set the string pointer to this value.
  *        If a NULL pointer was written via write_str()
  *        then read_str() may also return a NULL pointer.

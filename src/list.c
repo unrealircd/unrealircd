@@ -374,7 +374,7 @@ void add_client_to_list(Client *client)
 }
 
 /** Make a new link entry.
- * @notes When you no longer need it, call free_link()
+ * @note  When you no longer need it, call free_link()
  *        NEVER call free() or safe_free() on it.
  */
 Link *make_link(void)

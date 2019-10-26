@@ -104,7 +104,7 @@ error:
  * @param str   The string to validate
  * @param end   Pointer to char *, as explained in notes below.
  * @returns 1 if the string is valid UTF8, 0 if not.
- * @notes The variable *end will be set to the first invalid UTF8 sequence.
+ * @note  The variable *end will be set to the first invalid UTF8 sequence.
  *        If no invalid UTF8 sequence is encountered then it points to the NUL byte.
  */
 int unrl_utf8_validate(const char *str, const char **end)

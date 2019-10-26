@@ -436,7 +436,7 @@ Match *unreal_create_match(MatchType type, char *str, char **error)
 
 /** Try to match an Match entry ('m') against a string ('str').
  * @returns 1 if matched, 0 if not.
- * @notes These (more logical) return values are opposite to the match_simple() function.
+ * @note These (more logical) return values are opposite to the match_simple() function.
  */
 int unreal_match(Match *m, char *str)
 {

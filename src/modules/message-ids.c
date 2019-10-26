@@ -87,7 +87,7 @@ int msgid_mtag_is_ok(Client *client, char *name, char *value)
 
 /** Generate a msgid.
  * @returns a MessageTag struct that you can use directly.
- * @notes
+ * @note
  * Apparently there has been some discussion on what method to use to
  * generate msgid's. I am not going to list them here. Just saying that
  * they have been considered and we chose to go for a string that contains

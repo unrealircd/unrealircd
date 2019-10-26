@@ -37,7 +37,7 @@ extern EVENT(unrealdns_removeoldrecords);
  * @param every_msec	Every <this> milliseconds the event will be called, but see notes.
  * @param count		After how many times we should stop calling this even (0 = infinite times)
  * @returns an Event struct
- * @notes UnrealIRCd will try to call the event every 'every_msec' milliseconds.
+ * @note  UnrealIRCd will try to call the event every 'every_msec' milliseconds.
  *        However, in case of low traffic the minimum time is at least SOCKETLOOP_MAX_DELAY
  *        which is 250ms at the time of writing. Also, we reject any value below 100 msecs.
  *        The actual calling time will not be quicker than the specified every_msec but

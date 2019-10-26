@@ -93,7 +93,7 @@
  * @param k     The key to use for hashing (SIPHASH_KEY_LENGTH bytes,
  *              which is actually 16, not NUL terminated)
  * @returns Hash result as a 64 bit unsigned integer.
- * @notes The key (k) should be random and must stay the same for
+ * @note  The key (k) should be random and must stay the same for
  *        as long as you use the function for your specific hash table.
  *        Simply use the following on boot: siphash_generate_key(k);
  *
@@ -166,7 +166,7 @@ uint64_t siphash_raw(const char *in, size_t inlen, const char *k)
  * @param k     The key to use for hashing (SIPHASH_KEY_LENGTH bytes,
  *              which is actually 16, not NUL terminated)
  * @returns Hash result as a 64 bit unsigned integer.
- * @notes The key (k) should be random and must stay the same for
+ * @note  The key (k) should be random and must stay the same for
  *        as long as you use the function for your specific hash table.
  *        Simply use the following on boot: siphash_generate_key(k);
  */
@@ -237,7 +237,7 @@ uint64_t siphash_nocase(const char *in, const char *k)
  * @param k     The key to use for hashing (SIPHASH_KEY_LENGTH bytes,
  *              which is actually 16, not NUL terminated)
  * @returns Hash result as a 64 bit unsigned integer.
- * @notes The key (k) should be random and must stay the same for
+ * @note  The key (k) should be random and must stay the same for
  *        as long as you use the function for your specific hash table.
  *        Simply use the following on boot: siphash_generate_key(k);
  */
@@ -503,7 +503,7 @@ Client *hash_find_server(const char *server, Client *def)
 /** Find a client by name.
  * @param name        The name to search for (eg: "nick" or "irc.example.net")
  * @param requester   The client that is searching for this name
- * @notes If 'requester' is a server or NULL, then we also check
+ * @note  If 'requester' is a server or NULL, then we also check
  *        the ID table, otherwise not.
  */
 Client *find_client(char *name, Client *requester)
@@ -523,7 +523,7 @@ Client *find_client(char *name, Client *requester)
  * @param name        The server name to search for (eg: 'irc.example.net'
  *                    or '001')
  * @param requester   The client searching for the name.
- * @notes If 'requester' is a server or NULL, then we also check
+ * @note  If 'requester' is a server or NULL, then we also check
  *        the ID table, otherwise not.
  */
 Client *find_server(char *name, Client *requester)
@@ -542,7 +542,7 @@ Client *find_server(char *name, Client *requester)
 /** Find a person.
  * @param name        The name to search for (eg: "nick" or "001ABCDEFG")
  * @param requester   The client that is searching for this name
- * @notes If 'requester' is a server or NULL, then we also check
+ * @note  If 'requester' is a server or NULL, then we also check
  *        the ID table, otherwise not.
  */
 Client *find_person(char *name, Client *requester)

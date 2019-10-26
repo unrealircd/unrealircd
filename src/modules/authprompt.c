@@ -251,7 +251,7 @@ void authprompt_md_free(ModData *md)
  * @param username Pointer to the username string.
  * @param password Pointer to the password string.
  * @retval 1 if the format is correct, 0 if not.
- * @notes The returned 'username' and 'password' are valid until next call to parse_nickpass().
+ * @note The returned 'username' and 'password' are valid until next call to parse_nickpass().
  */
 int parse_nickpass(const char *str, char **username, char **password)
 {

@@ -175,7 +175,7 @@ void clear_bans(Client *client, Channel *channel, char chmode)
 }
 
 /** Special Channel MODE command for services, used by SVSMODE and SVS2MODE.
- * @notes
+ * @note
  * This SVSMODE/SVS2MODE for channels is not simply the regular MODE "but for
  * services". No, it does different things.
  *
@@ -296,7 +296,7 @@ void channel_svsmode(Client *client, int parc, char *parv[])
 }
 
 /** Special User MODE command for Services.
- * @notes
+ * @note
  * This is used by both SVSMODE and SVS2MODE, when dealing with users (not channels).
  * parv[1] - nick to change mode for
  * parv[2] - modes to change

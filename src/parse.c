@@ -44,7 +44,7 @@ static int client_lagged_up(Client *client);
  * @param killsafely  If 1 then we may call exit_client() if the client
  *                    is flooding. If 0 then we use dead_socket().
  * @returns 1 in normal circumstances, 0 if client was killed.
- * @notes If killsafely is 1 and the return value is 0 then
+ * @note  If killsafely is 1 and the return value is 0 then
  *        the client was killed - IsDead() is true.
  *        If this is a problem, then set killsafely to 0 when calling.
  */
@@ -166,7 +166,7 @@ void dopacket(Client *client, char *buffer, int length)
  * @param cptr    The client from which the message was received
  * @param buffer  The buffer
  * @param length  The length of the buffer
- * @notes parse() cannot not be called recusively by any other functions!
+ * @note parse() cannot not be called recusively by any other functions!
  */
 void parse(Client *cptr, char *buffer, int length)
 {
@@ -600,7 +600,7 @@ static int client_lagged_up(Client *client)
  * @param recv_mtags  Received message tags
  * @param parc        Parameter count
  * @param parv        Parameters
- * @notes In general you should NOT send anything back if you receive
+ * @note  In general you should NOT send anything back if you receive
  *        a numeric, this to prevent creating loops.
  */
 static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int parc, char *parv[])

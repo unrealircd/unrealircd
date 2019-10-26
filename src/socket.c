@@ -848,7 +848,7 @@ static int check_too_many_unknown_connections(Client *client)
  * @param listener	The listen { } block on which the client was accepted.
  * @param fd		The file descriptor of the client
  * @returns The new client, or NULL in case of trouble.
- * @notes When NULL is returned, the client at socket 'fd' will be
+ * @note  When NULL is returned, the client at socket 'fd' will be
  *        closed by this function and OpenFiles is adjusted appropriately.
  */
 Client *add_connection(ConfigItem_listen *listener, int fd)

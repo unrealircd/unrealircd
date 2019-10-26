@@ -423,7 +423,7 @@ static int authcheck_spkifp(Client *client, AuthConfig *as, char *para)
  * @param as      The authentication config.
  * @param para    The provided parameter (NULL allowed)
  * @returns 1 if passed, 0 if incorrect (eg: invalid password)
- * @notes
+ * @note
  * - The return value was different in versions before UnrealIRCd 5.0.0!
  * - In older versions a NULL 'as' was treated as an allow, now it's deny.
  */
