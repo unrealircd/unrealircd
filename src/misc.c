@@ -123,6 +123,11 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 		return;
 
 	recursion_trap = 1;
+
+	/* NOTE: past this point you CANNOT just 'return'.
+	 * You must set 'recursion_trap = 0;' before 'return'!
+	 */
+
 	va_start(ap, format);
 	ircvsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
@@ -133,6 +138,13 @@ void ircd_log(int flags, FORMAT_STRING(const char *format), ...)
 
 	if (!loop.ircd_forked && (flags & LOG_ERROR))
 		fprintf(stderr, "%s", buf);
+
+	/* In case of './unrealircd configtest': don't write to log file, only to stderr */
+	if (loop.config_test)
+	{
+		recursion_trap = 0;
+		return;
+	}
 
 	for (logs = conf_log; logs; logs = logs->next) {
 #ifdef HAVE_SYSLOG

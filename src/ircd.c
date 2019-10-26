@@ -1113,6 +1113,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 		  case 'C':
 			  config_verbose = atoi(p);
 			  break;
+		  case 'c':
+			  loop.config_test = 1;
+			  break;
 		  case 'x':
 #ifdef	DEBUGMODE
 			  debuglevel = atoi(p);
@@ -1227,7 +1230,8 @@ int InitUnrealIRCd(int argc, char *argv[])
 	init_CommandHash();
 	initwhowas();
 	initstats();
-	DeleteTempModules();
+	if (!loop.config_test)
+		DeleteTempModules();
 	booted = FALSE;
 #if !defined(_WIN32) && !defined(_AMIGA) && !defined(OSXTIGER) && DEFAULT_PERMISSIONS != 0
 	/* Hack to stop people from being able to read the config file */
@@ -1276,6 +1280,12 @@ int InitUnrealIRCd(int argc, char *argv[])
 		win_error(); /* display error dialog box */
 #endif
 		exit(9);
+	}
+	if (loop.config_test)
+	{
+		ircd_log(LOG_ERROR, "Configuration test passed OK");
+		fflush(stderr);
+		exit(0);
 	}
 #ifndef _WIN32
 	fprintf(stderr, "Dynamic configuration initialized.. booting IRCd.\n");

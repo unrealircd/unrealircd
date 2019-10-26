@@ -108,6 +108,8 @@ elif [ "$1" = "croncheck" ] ; then
 	# PID file not found or found but stale
 	echo "UnrealIRCd is not running. Starting now..."
 	$0 start
+elif [ "$1" = "configtest" ] ; then
+	@BINDIR@/unrealircd -c
 elif [ "$1" = "reloadtls" ] ; then
 	echo "Reloading SSL/TLS certificates"
 	if [ ! -r $PID_FILE ] ; then

@@ -1953,7 +1953,7 @@ int	init_conf(char *rootconf, int rehash)
 		RunHook0(HOOKTYPE_REHASH_COMPLETE);
 	}
 	postconf();
-	config_status("Configuration loaded without any problems.");
+	config_status("Configuration loaded.");
 	clicap_post_rehash();
 	return 0;
 }

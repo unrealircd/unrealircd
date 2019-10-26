@@ -75,7 +75,8 @@ void *obsd_dlsym(void *handle, char *symbol)
 void deletetmp(char *path)
 {
 #ifndef NOREMOVETMP
-	remove(path);
+	if (!loop.config_test)
+		remove(path);
 #endif
 }
 
@@ -309,25 +310,34 @@ char  *Module_Create(char *path_)
 	if (module_already_in_testing(relpath))
 		return 0;
 
-	tmppath = unreal_mktemp(TMPDIR, unreal_getmodfilename(path));
-	if (!tmppath)
-		return "Unable to create temporary file!";
-
 	if (!file_exists(path))
 	{
 		snprintf(errorbuf, sizeof(errorbuf), "Cannot open module file: %s", strerror(errno));
 		return errorbuf;
 	}
-	/* For OpenBSD, do not do a hardlinkink attempt first because it checks inode
-	 * numbers to see if a certain module is already loaded. -- Syzop
-	 * EDIT (2009): Looks like Linux got smart too, from now on we always copy....
-	 */
-	ret = unreal_copyfileex(path, tmppath, 0);
-	if (!ret)
+
+	if (loop.config_test)
 	{
-		snprintf(errorbuf, sizeof(errorbuf), "Failed to copy module file.");
-		return errorbuf;
+		/* For './unrealircd configtest' we don't have to do any copying and shit */
+		tmppath = path;
+	} else {
+		tmppath = unreal_mktemp(TMPDIR, unreal_getmodfilename(path));
+		if (!tmppath)
+			return "Unable to create temporary file!";
+
+		/* We have to copy the module, because otherwise the dynamic loader
+		 * will not load the new .so if we rehash while holding the original .so
+		 * We used to hardlink here instead of copy, but then OpenBSD and Linux
+		 * got smart and detected that, so now we always copy.
+		 */
+		ret = unreal_copyfileex(path, tmppath, 0);
+		if (!ret)
+		{
+			snprintf(errorbuf, sizeof(errorbuf), "Failed to copy module file.");
+			return errorbuf;
+		}
 	}
+
 	if ((Mod = irc_dlopen(tmppath, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */

@@ -722,6 +722,7 @@ struct MOTDLine {
 
 struct LoopStruct {
 	unsigned do_garbage_collect : 1;
+	unsigned config_test : 1;
 	unsigned ircd_booted : 1;
 	unsigned ircd_forked : 1;
 	unsigned do_bancheck : 1; /* perform *line bancheck? */
