@@ -18,10 +18,16 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/** @file
+ * @brief Some debugging functions that should probably be moved elsewhere.
+ */
+
 /* debug.c 2.30 1/3/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
 #include "unrealircd.h"
 
+/** String of server options in this compile (eg 'D' for debug mode).
+ */
 MODVAR char serveropts[] = {
 #ifdef	DEBUGMODE
 	'D',

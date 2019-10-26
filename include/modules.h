@@ -161,10 +161,6 @@ struct ModDataInfo {
 #define moddata_local_variable(md)         local_variable_moddata[md->slot]
 #define moddata_global_variable(md)        global_variable_moddata[md->slot]
 
-#define EXCHK_ACCESS		0 /* Check access */
-#define EXCHK_ACCESS_ERR	1 /* Check access and send error if needed */
-#define EXCHK_PARAM		2 /* Check parameter and send error if needed */
-
 /* Can bypass message restriction - Types */
 typedef enum BypassChannelMessageRestrictionType {
 	BYPASS_CHANMSG_EXTERNAL = 1,
@@ -174,24 +170,35 @@ typedef enum BypassChannelMessageRestrictionType {
 	BYPASS_CHANMSG_NOTICE = 5,
 } BypassChannelMessageRestrictionType;
 
-#define EXSJ_SAME		0 /* Parameters are the same */
-#define EXSJ_WEWON		1 /* We won! w00t */
-#define EXSJ_THEYWON		2 /* They won :( */
-#define EXSJ_MERGE		3 /* Merging of modes.. neither won nor lost (merged params are in 'our' on return) */
+/** @defgroup ChannelModeAPI Channel mode API
+ * @{
+ */
+
+#define EXCHK_ACCESS		0 /**< Check user access */
+#define EXCHK_ACCESS_ERR	1 /**< Check user access and send error to user */
+#define EXCHK_PARAM		2 /**< Check parameter */
 
 /* return values for EXCHK_ACCESS*: */
-#define EX_DENY			0  /* Disallowed, except in case of operoverride */
-#define EX_ALLOW		1  /* Allowed */
-#define EX_ALWAYS_DENY		-1 /* Disallowed, even in case of operoverride
-                                * (eg: for operlevel modes like +A)
-                                */
+#define EX_DENY			0  /**< MODE change disallowed, except in case of operoverride */
+#define EX_ALLOW		1  /**< MODE change allowed */
+#define EX_ALWAYS_DENY		-1 /**< MODE change disallowed, even in case of operoverride */
 
-/** Extended channel mode table.
- * This table contains all extended channelmode info like the flag, mode, their
- * functions, etc..
- */
+#define EXSJ_SAME		0 /**< SJOIN: Parameters are the same */
+#define EXSJ_WEWON		1 /**< SJOIN: We won! w00t */
+#define EXSJ_THEYWON		2 /**< SJOIN: They won :( */
+#define EXSJ_MERGE		3 /**< SJOIN: Merging of modes, neither won nor lost */
+
+/** Channel mode bit/value */
 typedef unsigned long Cmode_t;
 
+/** Channel mode handler.
+ * This struct contains all extended channel mode information,
+ * like the flag, mode, their handler functions, etc.
+ *
+ * @note For a channel mode without parameters you only need to set 'flag'
+ * and set the 'is_ok' function. All the rest is for parameter modes
+ * or is optional.
+ */
 typedef struct {
 	/** mode character (like 'Z') */
 	char		flag;
@@ -199,69 +206,78 @@ typedef struct {
 	/** unique flag (like 0x10) */
 	Cmode_t		mode;
 
-	/** # of paramters (1 or 0) */
+	/** Number of paramters (1 or 0) */
 	int			paracount;
 
-	/** access and parameter checking.
-	 * Client *: the client
-	 * Channel *: the channel
-	 * para *: the parameter (NULL for paramless modes)
-	 * int: check type (see EXCHK_*)
-	 * int: what (MODE_ADD or MODE_DEL)
-	 * return value: 1=ok, 0=bad
+	/** Check access or parameter of the channel mode.
+	 * @param client	The client
+	 * @param channel	The channel
+	 * @param para		The parameter (NULL for paramless modes)
+	 * @param checkt	Check type, see EXCHK_* macros
+	 * @param what		MODE_ADD or MODE_DEL
+	 * @returns EX_DENY, EX_ALLOW or EX_ALWAYS_DENY
 	 */
-	int			(*is_ok)(Client *,Channel *, char mode, char *para, int, int);
+	int (*is_ok)(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
 
-	/** NOTE: The routines below are NULL for paramless modes */
-	
 	/** Store parameter in memory for channel.
-	 * aExtCMtableParam *: the list (usually channel->mode.extmodeparams).
-	 * char *: the parameter.
-	 * return value: the head of the list, RTFS if you wonder why.
-	 * design notes: only alloc a new paramstruct if you need to, search for
-	 * any current one first (like in case of mode +y 5 and then +y 6 later without -y).
+	 * This function pointer is NULL (unused) for modes without parameters.
+	 * @param list		The list, this usually points to channel->mode.extmodeparams.
+	 * @param para		The parameter to store.
+	 * @returns the head of the list, RTFS if you wonder why.
+	 * @note IMPORTANT: only allocate a new paramstruct if you need to.
+	 *       Search for any current one first! Eg: in case of mode +y 5 and then +y 6 later without -y.
 	 */
-	void *		(*put_param)(void *, char *);
+	void *(*put_param)(void *list, char *para);
 
-	/** Get readable string version" of the stored parameter.
-	 * aExtCMtableParam *: the list (usually channel->mode.extmodeparams).
-	 * return value: a pointer to the string (temp. storage)
+	/** Get the stored parameter as a readable/printable string.
+	 * This function pointer is NULL (unused) for modes without parameters.
+	 * @param parastruct	The parameter struct
+	 * @returns a pointer to the string (temporary storage)
 	 */
-	char *		(*get_param)(void *);
+	char *(*get_param)(void *parastruct);
 
 	/** Convert input parameter to output.
-	 * Like +l "1aaa" becomes "1".
-	 * char *: the input parameter.
-	 * Client *: the client that the mode request came from:
-	 *            1. Can be NULL! (eg: if called for set::modes-on-join)
-	 *            2. Probably only used in rare cases, see also next remark
-	 *            3. ERRORS SHOULD NOT BE SENT BY conv_param BUT BY is_ok!
-	 * return value: pointer to output string (temp. storage)
+	 * This converts stuff like where a MODE +l "1aaa" becomes "1".
+	 *
+	 * This function pointer is NULL (unused) for modes without parameters.
+	 * @param para		The input parameter.
+	 * @param client	The client that the mode request came from (can be NULL)
+	 * @returns pointer to output string (temporary storage)
+	 * @note The 'client' field will be NULL if for example called for set::modes-on-join.
+	 * @note You should probably not use 'client' in most cases.
+	 *       In particular you MUST NOT SEND ERRORS to the client.
+	 *       This should be done in is_ok() and not in conv_param().
 	 */
-	char *		(*conv_param)(char *, Client *);
+	char *(*conv_param)(char *para, Client *client);
 
-	/** free and remove parameter from list.
-	 * aExtCMtableParam *: the list (usually channel->mode.extmodeparams).
+	/** Free and remove parameter from list.
+	 * This function pointer is NULL (unused) for modes without parameters.
+	 * @param parastruct		The parameter struct
+	 * @note In most cases you will just call safe_free() on 'list'
 	 */
-	void		(*free_param)(void *);
+	void (*free_param)(void *parastruct);
 
 	/** duplicate a struct and return a pointer to duplicate.
-	 * This is usually just a malloc + memcpy.
-	 * aExtCMtableParam *: source struct itself (no list).
-	 * return value: pointer to newly allocated struct.
+	 * This function pointer is NULL (unused) for modes without parameters.
+	 * @param parastruct		The parameter struct
+	 * @returns pointer to newly allocated struct.
+	 * @note In most cases you will simply safe_alloc() and memcpy()
 	 */
-	void *	(*dup_struct)(void *);
+	void *(*dup_struct)(void *parastruct);
 
-	/** Compares 2 parameters and decides who wins the sjoin fight.
+	/** Compares two parameters and decides who wins the SJOIN fight.
 	 * When syncing channel modes (cmd_sjoin) a parameter conflict may occur, things like
-	 * +l 5 vs +l 10. This function should determinate who wins the fight, this decision
-	 * should of course not be random but the same at every server on the net.
-	 * examples of such comparisons are "highest wins" (+l) and a strcmp() check (+k/+L).
-	 * Channel *: channel the fight is about.
-	 * aExtCMtableParam *: our parameter
-	 * aExtCMtableParam *: their parameter
+	 * "+l 5" vs "+l 10". This function should determinate who wins the fight.
+	 * This decision should, of course, not be random. It needs to decide according to
+	 * the same principles on all servers on the IRC network. Examples of such
+	 * comparisons are "highest wins" (+l) and a strcmp() check (+k/+L).
+	 * 
+	 * This function pointer is NULL (unused) for modes without parameters.
+	 * @param channel	The channel that the fight is about
+	 * @param our		Our parameter struct
+	 * @param their		Their parameter struct
 	 */
-	int			(*sjoin_check)(Channel *, void *, void *);
+	int (*sjoin_check)(Channel *channel, void *our, void *their);
 
 	/** Local channel mode? Prevents remote servers from setting/unsetting this */
 	char local;
@@ -277,13 +293,16 @@ typedef struct {
 	 */
 	char unloaded;
 	
-	/* Slot#.. Can be used instead of GETPARAMSLOT() */
+	/** Slot number - Can be used instead of GETPARAMSLOT() */
 	int slot;
 	
 	/** Module owner */
         Module *owner;
 } Cmode;
 
+/** The struct used to register a channel mode handler.
+ * For documentation, see Cmode struct.
+ */
 typedef struct {
 	char		flag;
 	int		paracount;
@@ -298,19 +317,21 @@ typedef struct {
 	char		unset_with_param;
 } CmodeInfo;
 
-/* Get a slot# for a param.. eg... GETPARAMSLOT('k') ;p */
+/** Get a slot number for a param - eg GETPARAMSLOT('k') */
 #define GETPARAMSLOT(x)	param_to_slot_mapping[x]
 
-/* Get a cmode handler by slot.. for example for [dont use this]: GETPARAMHANDLERBYSLOT(5)->get_param(channel) */
+/** Get a cmode handler by slot - for example for [dont use this]: GETPARAMHANDLERBYSLOT(5)->get_param(channel) */
 #define GETPARAMHANDLERBYSLOT(slotid)	ParamTable[slotid]
 
-/* Same as GETPARAMHANDLERBYSLOT but then by letter.. like [dont use this]: GETPARAMHANDLERBYSLOT('k')->get_param(channel) */
+/** Same as GETPARAMHANDLERBYSLOT but then by letter - like [dont use this]: GETPARAMHANDLERBYSLOT('k')->get_param(channel) */
 #define GETPARAMHANDLERBYLETTER(x)	ParamTable[GETPARAMSLOT(x)]
 
-/* Get paramter data struct.. for like: ((aModejEntry *)GETPARASTRUCT(channel, 'j'))->t */
+/** Get paramter data struct - for like: ((aModejEntry *)GETPARASTRUCT(channel, 'j'))->t */
 #define GETPARASTRUCT(mychannel, mychar)	channel->mode.extmodeparams[GETPARAMSLOT(mychar)]
 
 #define GETPARASTRUCTEX(v, mychar)	v[GETPARAMSLOT(mychar)]
+
+/** @} */
 
 #define CMP_GETSLOT(x) GETPARAMSLOT(x)
 #define CMP_GETHANDLERBYSLOT(x) GETPARAMHANDLERBYSLOT(x)
@@ -422,7 +443,13 @@ typedef struct {
 	char *(*parameter)(Client *);
 } ClientCapabilityInfo;
 
+/** @defgroup MessagetagAPI Message tag API
+ * @{
+ */
+
+/** No special message-tag handler flags */
 #define MTAG_HANDLER_FLAGS_NONE			0x0
+/** This message-tag does not have a CAP REQ xx (eg: for "msgid") */
 #define MTAG_HANDLER_FLAGS_NO_CAP_NEEDED	0x1
 
 /** Message Tag Handler */
@@ -445,6 +472,8 @@ typedef struct {
 	int (*is_ok)(Client *, char *, char *);
 	ClientCapability *clicap_handler;
 } MessageTagHandlerInfo;
+
+/** @} */
 
 /** Filter for history get requests */
 typedef struct HistoryFilter HistoryFilter;

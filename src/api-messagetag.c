@@ -20,38 +20,25 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/** @file
+ * @brief Message tag API
+ */
 #include "unrealircd.h"
 
-MODVAR MessageTagHandler *mtaghandlers = NULL; /**< List of message tag handlers */
-
-void mtag_handler_init(void)
-{
-}
-
-/**
- * Returns a message tag handler based on the given token name.
- *
- * @param token The message-tag token to search for.
- * @return Returns the handle to the message tag handler,
- *         or NULL if not found.
+/** This is the message tags API (message-tags)
+ * @defgroup MessagetagAPI Message tag API
+ * @{
  */
-MessageTagHandler *MessageTagHandlerFind(const char *token)
-{
-	MessageTagHandler *m;
 
-	for (m = mtaghandlers; m; m = m->next)
-	{
-		if (!strcasecmp(token, m->name))
-			return m;
-	}
-	return NULL;
-}
+/** List of message tag handlers */
+MODVAR MessageTagHandler *mtaghandlers = NULL;
 
-/**
- * Adds a new message tag handler.
- *
+/* Forward declarations */
+static void unload_mtag_handler_commit(MessageTagHandler *m);
+
+/** Adds a new message tag handler.
  * @param module The module which owns this message-tag handler.
- * @param mreq   The details of the request such as token name, access check handler, etc.
+ * @param mreq   The details of the request such as which message tag, the handler, etc.
  * @return Returns the handle to the new token if successful, otherwise NULL.
  *         The module's error code contains specific information about the
  *         error.
@@ -114,25 +101,25 @@ MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *m
 	return m;
 }
 
-void unload_mtag_handler_commit(MessageTagHandler *m)
+/** Returns the message tag handler for the given name.
+ * @param name The message-tag name to search for.
+ * @return Returns the handle to the message tag handler,
+ *         or NULL if not found.
+ */
+MessageTagHandler *MessageTagHandlerFind(const char *name)
 {
-	/* This is an unusual operation, I think we should log it. */
-	ircd_log(LOG_ERROR, "Unloading message-tag handler for '%s'", m->name);
-	sendto_realops("Unloading message-tag handler for '%s'", m->name);
+	MessageTagHandler *m;
 
-	/* Remove reverse dependency, if any */
-	if (m->clicap_handler)
-		m->clicap_handler->mtag_handler = NULL;
-
-	/* Destroy the object */
-	DelListItem(m, mtaghandlers);
-	safe_free(m->name);
-	safe_free(m);
+	for (m = mtaghandlers; m; m = m->next)
+	{
+		if (!strcasecmp(name, m->name))
+			return m;
+	}
+	return NULL;
 }
 
-/**
- * Removes the specified message tag handler.
- *
+/** Remove the specified message tag handler - modules should not call this.
+ * This is done automatically for modules on unload, so is only called internally.
  * @param m The message tag handler to remove.
  */
 void MessageTagHandlerDel(MessageTagHandler *m)
@@ -155,6 +142,24 @@ void MessageTagHandlerDel(MessageTagHandler *m)
 		m->unloaded = 1;
 	else
 		unload_mtag_handler_commit(m);
+}
+
+/** @} */
+
+static void unload_mtag_handler_commit(MessageTagHandler *m)
+{
+	/* This is an unusual operation, I think we should log it. */
+	ircd_log(LOG_ERROR, "Unloading message-tag handler for '%s'", m->name);
+	sendto_realops("Unloading message-tag handler for '%s'", m->name);
+
+	/* Remove reverse dependency, if any */
+	if (m->clicap_handler)
+		m->clicap_handler->mtag_handler = NULL;
+
+	/* Destroy the object */
+	DelListItem(m, mtaghandlers);
+	safe_free(m->name);
+	safe_free(m);
 }
 
 void unload_all_unused_mtag_handlers(void)
