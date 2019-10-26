@@ -24,13 +24,19 @@
 
 #include "unrealircd.h"
 
+/** Lazy way to signal an OperOverride MODE */
 long opermode = 0;
+/** Lazy way to signal an SAJOIN MODE */
 long sajoinmode = 0;
+/** List of all channels on the server */
 Channel *channels = NULL;
 
 /* some buffers for rebuilding channel/nick lists with comma's */
 static char buf[BUFSIZE];
-MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
+/** Mode buffer (eg: "+sntkl") */
+MODVAR char modebuf[BUFSIZE];
+/** Parameter buffer (eg: "key 123") */
+MODVAR char parabuf[BUFSIZE];
 
 /** This describes the letters, modes and options for core channel modes.
  * These are +ntmispklr and also the list modes +vhoaq and +beI.
@@ -56,6 +62,7 @@ CoreChannelModeTable corechannelmodetable[] = {
 	{0x0, 0x0, 0x0, 0x0}
 };
 
+/** The advertised supported channel modes in the 004 numeric */
 char cmodestring[512];
 
 /* Some forward declarations */
@@ -64,6 +71,7 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 int sub1_from_channel(Channel *);
 void del_invite(Client *, Channel *);
 
+/** Returns 1 if the IRCOp can override or is a remote connection */
 inline int op_can_override(char *acl, Client *client,Channel *channel,void* extra)
 {
 #ifndef NO_OPEROVERRIDE
@@ -75,7 +83,8 @@ inline int op_can_override(char *acl, Client *client,Channel *channel,void* extr
 #endif
 }
 
-int  Halfop_mode(long mode)
+/** Returns 1 if a half-op can set this channel mode */
+int Halfop_mode(long mode)
 {
 	CoreChannelModeTable *tab = &corechannelmodetable[0];
 
@@ -89,9 +98,7 @@ int  Halfop_mode(long mode)
 }
 
 
-/*
- * return the length (>=0) of a chain of links.
- */
+/** Returns the length (entry count) of a +beI list */
 static int list_length(Link *lp)
 {
 	int  count = 0;
@@ -101,7 +108,8 @@ static int list_length(Link *lp)
 	return count;
 }
 
-Member	*find_member_link(Member *lp, Client *ptr)
+/** Find client in a Member linked list (eg: channel->members) */
+Member *find_member_link(Member *lp, Client *ptr)
 {
 	if (ptr)
 	{
@@ -115,6 +123,7 @@ Member	*find_member_link(Member *lp, Client *ptr)
 	return NULL;
 }
 
+/** Find channel in a Membership linked list (eg: client->user->channel) */
 Membership *find_membership_link(Membership *lp, Channel *ptr)
 {
 	if (ptr)
@@ -127,6 +136,7 @@ Membership *find_membership_link(Membership *lp, Channel *ptr)
 	return NULL;
 }
 
+/** Allocate and return an empty Member struct */
 static Member *make_member(void)
 {
 	Member *lp;
@@ -149,6 +159,7 @@ static Member *make_member(void)
 	return lp;
 }
 
+/** Free a Member struct */
 static void free_member(Member *lp)
 {
 	if (!lp)
@@ -161,6 +172,7 @@ static void free_member(Member *lp)
 	freemember = lp;
 }
 
+/** Allocate and return an empty Membership struct */
 static Membership *make_membership(void)
 {
 	Membership *m = NULL;
@@ -186,6 +198,7 @@ static Membership *make_membership(void)
 	return m;
 }
 
+/** Free a Membership struct */
 static void free_membership(Membership *m)
 {
 	if (m)
@@ -197,13 +210,15 @@ static void free_membership(Membership *m)
 	}
 }
 
-/*
-** find_chasing
-**	Find the client structure for a nick name (user) using history
-**	mechanism if necessary. If the client is not found, an error
-**	message (NO SUCH NICK) is generated. If the client was found
-**	through the history, chasing will be 1 and otherwise 0.
-*/
+/** Find a client by nickname, hunt for older nick names if not found.
+ * This can be handy, for example for /KILL nick, if 'nick' keeps
+ * nick-changing and you are slow with typing.
+ * @param client	The requestor
+ * @param user		The nick name (or server name)
+ * @param chasing	This will be set to 1 if the client was found
+ *			only after searching through the nick history.
+ * @returns The client (if found) or NULL (if not found).
+ */
 Client *find_chasing(Client *client, char *user, int *chasing)
 {
 	Client *who = find_client(user, NULL);
@@ -332,9 +347,7 @@ int add_listmode(Ban **list, Client *client, Channel *channel, char *banid)
 	return add_listmode_ex(list, client, channel, banid, setby, TStime());
 }
 
-/*
- * del_listmode - delete a listmode (+beI) from a channel
- *                that matches the specified banid.
+/** Delete a listmode (+beI) from a channel that matches the specified banid.
  */
 int del_listmode(Ban **list, Channel *channel, char *banid)
 {
@@ -357,11 +370,6 @@ int del_listmode(Ban **list, Channel *channel, char *banid)
 	}
 	return -1;
 }
-
-/*
- * IsMember - returns 1 if a person is joined
- * Moved to struct.h
- */
 
 /** is_banned - Check if a user is banned on a channel.
  * @param client   Client to check (can be remote client)
@@ -477,9 +485,10 @@ Ban *is_banned_with_nick(Client *client, Channel *channel, int type, char *nick,
 	return ban;
 }
 
-/*
- * adds a user to a channel by adding another link to the channels member
- * chain.
+/** Add user to the channel.
+ * This adds both the Member struct to the channel->members linked list
+ * and also the Membership struct to the client->user->channel linked list.
+ * @note This does NOT send the JOIN, it only does the linked list stuff.
  */
 void add_user_to_channel(Channel *channel, Client *who, int flags)
 {
@@ -501,7 +510,7 @@ void add_user_to_channel(Channel *channel, Client *who, int flags)
 		mb->flags = flags;
 		who->user->channel = mb;
 		who->user->joined++;
-		RunHook2(HOOKTYPE_JOIN_DATA,who,channel);
+		RunHook2(HOOKTYPE_JOIN_DATA, who, channel);
 	}
 }
 
@@ -549,6 +558,13 @@ int remove_user_from_channel(Client *client, Channel *channel)
 	return sub1_from_channel(channel);
 }
 
+/** Get channel access flags (CHFL_*) for a client in a channel.
+ * @param client	The client
+ * @param channel	The channel
+ * @returns One or more of CHFL_* (eg: CHFL_CHANOP|CHFL_CHANADMIN)
+ * @note If the user is not found, then 0 is returned.
+ *       If the user has no access rights, then 0 is returned as well.
+ */
 long get_access(Client *client, Channel *channel)
 {
 	Membership *lp;
@@ -590,6 +606,7 @@ int has_channel_mode(Channel *channel, char mode)
 	return 0; /* Not found */
 }
 
+/** Get the extended channel mode 'bit' value (eg: 0x20) by character (eg: 'Z') */
 Cmode_t get_extmode_bitbychar(char m)
 {
         int extm;
@@ -601,6 +618,7 @@ Cmode_t get_extmode_bitbychar(char m)
         return 0;
 }
 
+/** Get the extended channel mode character (eg: 'Z') by the 'bit' value (eg: 0x20) */
 long get_mode_bitbychar(char m)
 {
 	CoreChannelModeTable *tab = &corechannelmodetable[0];
@@ -614,9 +632,7 @@ long get_mode_bitbychar(char m)
 	return 0;
 }
 
-/*
- * write the "simple" list of channel modes for channel channel onto buffer mbuf
- * with the parameters in pbuf.
+/** Write the "simple" list of channel modes for channel channel onto buffer mbuf with the parameters in pbuf.
  */
 /* TODO: this function has many security issues and needs an audit, maybe even a recode */
 void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel)
@@ -703,29 +719,8 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 	return;
 }
 
-
-int  DoesOp(char *modebuf)
-{
-	modebuf--;		/* Is it possible that a mode starts with o and not +o ? */
-	while (*++modebuf)
-		if (*modebuf == 'h' || *modebuf == 'o'
-		    || *modebuf == 'v' || *modebuf == 'q')
-			return (1);
-	return 0;
-}
-
-/* This function is only used for non-SJOIN servers. So don't bother with mtags support.. */
-int  sendmodeto_one(Client *client, char *from, char *name, char *mode, char *param, time_t creationtime)
-{
-	if ((IsServer(client) && DoesOp(mode) && creationtime) || IsULine(client))
-		sendto_one(client, NULL, ":%s MODE %s %s %s %lld", from,
-		    name, mode, param, (long long)creationtime);
-	else
-		sendto_one(client, NULL, ":%s MODE %s %s %s", from, name, mode, param);
-
-	return 0;
-}
-
+/** Make a pretty mask from the input string - only used by SILENCE
+ */
 char *pretty_mask(char *mask)
 {
 	char *cp;
@@ -745,6 +740,9 @@ char *pretty_mask(char *mask)
 	return make_nick_user_host(cp, user, host);
 }
 
+/** Trim a string - rather than cutting it off sharply, this adds a * at the end.
+ * So "toolong" becomes "toolon*"
+ */
 char *trim_str(char *str, int len)
 {
 	int l;
@@ -758,11 +756,16 @@ char *trim_str(char *str, int len)
 	return str;
 }
 
-/* clean_ban_mask:	makes a proper banmask
- * RETURNS: pointer to correct banmask or NULL in case of error
- * NOTES:
- * - A pointer is returned to a static buffer, which is overwritten
- *   on next clean_ban_mask or make_nick_user_host call.
+/** Make a proper ban mask.
+ * This takes user input (eg: "nick") and converts it to a mask suitable
+ * in the +beI lists (eg: "nick!*@*"). It also deals with extended bans,
+ * in which case it will call the extban->conv_param() function.
+ * @param mask		The ban mask
+ * @param what		MODE_DEL or MODE_ADD
+ * @param client	The client adding/removing this ban mask
+ * @returns pointer to correct banmask or NULL in case of error
+ * @note A pointer is returned to a static buffer, which is overwritten
+ *       on next clean_ban_mask or make_nick_user_host call.
  */
 char *clean_ban_mask(char *mask, int what, Client *client)
 {
@@ -841,15 +844,14 @@ char *clean_ban_mask(char *mask, int what, Client *client)
 		*host++ = '\0';
 
 		if (!user)
-			return make_nick_user_host(NULL, trim_str(cp,USERLEN), 
-				trim_str(host,HOSTLEN));
+			return make_nick_user_host(NULL, trim_str(cp,USERLEN), trim_str(host,HOSTLEN));
 	}
 	else if (!user && strchr(cp, '.'))
 		return make_nick_user_host(NULL, NULL, trim_str(cp,HOSTLEN));
-	return make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), 
-		trim_str(host,HOSTLEN));
+	return make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
 }
 
+/** Check if 'client' matches an invite exception (+I) on 'channel' */
 int find_invex(Channel *channel, Client *client)
 {
 	Ban *inv;
@@ -913,10 +915,15 @@ int valid_channelname(const char *cname)
 	return 1; /* Valid */
 }
 
-/*
-**  Get Channel block for i (and allocate a new channel
-**  block, if it didn't exists before).
-*/
+/** Get existing channel 'chname' or create a new one.
+ * @param client	User creating or searching this channel
+ * @param chname	Channel name
+ * @param flag		If set to 'CREATE' then the channel is
+ *			created if it does not exist.
+ * @returns Pointer to channel (new or existing).
+ * @note Be sure to call valid_channelname() first before
+ *       you blindly call this function!
+ */
 Channel *get_channel(Client *client, char *chname, int flag)
 {
 	Channel *channel;
@@ -952,22 +959,18 @@ Channel *get_channel(Client *client, char *chname, int flag)
 	return channel;
 }
 
-/*
- * Slight changes in routine, now working somewhat symmetrical:
- *   First try to remove the client & channel pair to avoid duplicates
- *   Second check client & channel invite-list lengths and remove tail
- *   Finally add new invite-links to both client and channel
- * Should U-lined clients have higher limits?   -Donwulff
+/** Register an invite from someone to a channel - so they can bypass +i etc.
+ * @param from		The person sending the invite
+ * @param to		The person who is invited to join
+ * @param channel	The channel
+ * @param mtags		Message tags associated with this INVITE command
  */
-
 void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags)
 {
 	Link *inv, *tmp;
 
 	del_invite(to, channel);
-	/*
-	 * delete last link in chain if the list is max length
-	 */
+	/* If too many invite entries then delete the oldest one */
 	if (list_length(to->user->invited) >= MAXCHANNELSPERUSER)
 	{
 		for (tmp = to->user->invited; tmp->next; tmp = tmp->next)
@@ -1003,8 +1006,9 @@ void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags)
 	RunHook4(HOOKTYPE_INVITE, from, to, channel, mtags);
 }
 
-/*
- * Delete Invite block from channel invite list and client invite list
+/** Delete a previous invite of someone to a channel.
+ * @param client	The client who was invited
+ * @param channel	The channel to which the person was invited
  */
 void del_invite(Client *client, Channel *channel)
 {
@@ -1102,58 +1106,10 @@ int sub1_from_channel(Channel *channel)
 	return 1;
 }
 
-/* This function is only used for non-SJOIN servers. So don't bother with mtags support.. */
-// FIXME: remove this function in the cleanup
-void send_user_joins(Client *client, Client *user)
-{
-	Membership *lp;
-	Channel *channel;
-	int  cnt = 0, len = 0, clen;
-	char *mask;
-
-	snprintf(buf, sizeof buf, ":%s JOIN ", user->name);
-	len = strlen(buf);
-
-	for (lp = user->user->channel; lp; lp = lp->next)
-	{
-		channel = lp->channel;
-		if ((mask = strchr(channel->chname, ':')))
-			if (!match_simple(++mask, client->name))
-				continue;
-		if (*channel->chname == '&')
-			continue;
-		clen = strlen(channel->chname);
-		if (clen + 1 + len > BUFSIZE - 3)
-		{
-			if (cnt)
-			{
-				buf[len - 1] = '\0';
-				sendto_one(client, NULL, "%s", buf);
-			}
-			snprintf(buf, sizeof buf, ":%s JOIN ", user->name);
-			len = strlen(buf);
-			cnt = 0;
-		}
-		strlcpy(buf + len, channel->chname, sizeof buf-len);
-		cnt++;
-		len += clen;
-		if (lp->next)
-		{
-			len++;
-			strlcat(buf, ",", sizeof buf);
-		}
-	}
-	if (*buf && cnt)
-		sendto_one(client, NULL, "%s", buf);
-
-	return;
-}
-
-/* set_channel_mlock()
- *
- * inputs	- client, source, channel, params
- * output	- 
- * side effects - channel mlock is changed / MLOCK is propagated
+/** Set channel mode lock on the channel, these are modes that users cannot change.
+ * @param client	The client or server issueing the MLOCK
+ * @param channel	The channel that will be MLOCK'ed
+ * @param newmlock	The MLOCK string: list of mode characters that are locked
  */
 void set_channel_mlock(Client *client, Channel *channel, const char *newmlock, int propagate)
 {
@@ -1304,6 +1260,7 @@ int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
 	}
 }
 
+/** Returns 1 if both clients are at least in 1 same channel */
 int has_common_channels(Client *c1, Client *c2)
 {
 	Membership *lp;

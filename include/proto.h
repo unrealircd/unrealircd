@@ -22,9 +22,6 @@
 
 #ifndef proto_h
 #define proto_h
-/* channel.c */
-extern int sendmodeto_one(Client *cptr, char *from, char *name, char *mode, char *param, time_t creationtime);
-
 /* lusers.c */
 extern void init_irccounts(void);
 
