@@ -152,7 +152,6 @@ typedef struct OperClassCheckParams OperClassCheckParams;
 typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* variables,OperClassCheckParams* params);
 
 #ifndef VMSP
-#include "class.h"
 #include "dbuf.h"		/* THIS REALLY SHOULDN'T BE HERE!!! --msa */
 #endif
 
