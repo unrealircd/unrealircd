@@ -1110,7 +1110,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 			sendto_one(client, NULL, ":%s MODE %s :%s", client->name,
 			    client->name, buf);
 		if (user->snomask)
-			sendnumeric(client, RPL_SNOMASK, get_snostr(user->snomask));
+			sendnumeric(client, RPL_SNOMASK, get_snomask_string_raw(user->snomask));
 
 		if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_WARN))
 			sendnotice(client, "%s", iConf.plaintext_policy_user_message);

@@ -187,10 +187,10 @@ CMD_FUNC(cmd_oper)
 		sendnumericfmt(client, ERR_NOOPERHOST, "You are missing user modes required to OPER");
 		sendto_snomask_global
 			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) [lacking modes '%s' in oper::require-modes]",
-			 client->name, client->user->username, client->local->sockhost, get_modestr(operblock->require_modes & ~client->umodes));
+			 client->name, client->user->username, client->local->sockhost, get_usermode_string_raw(operblock->require_modes & ~client->umodes));
 		ircd_log(LOG_OPER, "OPER MISSINGMODES (%s) by (%s!%s@%s), needs modes=%s",
 			 name, client->name, client->user->username, client->local->sockhost,
-			 get_modestr(operblock->require_modes & ~client->umodes));
+			 get_usermode_string_raw(operblock->require_modes & ~client->umodes));
 		client->local->since += 7;
 		return;
 	}
@@ -280,7 +280,7 @@ CMD_FUNC(cmd_oper)
 	}
 	
 	send_umode_out(client, 1, old_umodes);
-	sendnumeric(client, RPL_SNOMASK, get_sno_str(client));
+	sendnumeric(client, RPL_SNOMASK, get_snomask_string(client));
 
 	list_add(&client->special_node, &oper_list);
 

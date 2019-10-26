@@ -777,7 +777,7 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		if (HasField(fmt, FIELD_MODES))
 		{
 			if (IsOper(client))
-				append_format(str, sizeof str, &pos, " %s", strtok(get_mode_str(acptr), "+"));
+				append_format(str, sizeof str, &pos, " %s", strtok(get_usermode_string(acptr), "+"));
 			else
 				append_format(str, sizeof str, &pos, " %s", "*");
 		}

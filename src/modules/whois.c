@@ -135,11 +135,11 @@ CMD_FUNC(cmd_whois)
 			if (IsOper(client) || target == client)
 			{
 				char sno[128];
-				strlcpy(sno, get_sno_str(target), sizeof(sno));
+				strlcpy(sno, get_snomask_string(target), sizeof(sno));
 				
 				/* send the target user's modes */
 				sendnumeric(client, RPL_WHOISMODES, name,
-				    get_mode_str(target), sno[1] == 0 ? "" : sno);
+				    get_usermode_string(target), sno[1] == 0 ? "" : sno);
 			}
 			if ((target == client) || IsOper(client))
 			{

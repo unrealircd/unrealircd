@@ -119,7 +119,7 @@ void do_svssno(Client *client, int parc, char *parv[], int show_change)
 	}
 
 	if (show_change)
-		sendnumeric(target, RPL_SNOMASK, get_sno_str(target));
+		sendnumeric(target, RPL_SNOMASK, get_snomask_string(target));
 }
 
 CMD_FUNC(cmd_svssno)

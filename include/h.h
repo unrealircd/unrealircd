@@ -99,7 +99,7 @@ extern EVENT(e_clean_out_throttling_buckets);
 
 extern void  module_loadall(void);
 extern long set_usermode(char *umode);
-extern char *get_modestr(long umodes);
+extern char *get_usermode_string_raw(long umodes);
 extern void config_error(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
 extern void config_warn(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
 extern void config_error_missing(const char *filename, int line, const char *entry);
@@ -168,7 +168,7 @@ extern void add_server_to_table(Client *);
 extern void remove_server_from_table(Client *);
 extern void iNAH_host(Client *client, char *host);
 extern void set_snomask(Client *client, char *snomask);
-extern char *get_sno_str(Client *client);
+extern char *get_snomask_string(Client *client);
 extern int check_tkls(Client *cptr);
 /* for services */
 extern void del_invite(Client *, Channel *);
@@ -571,7 +571,7 @@ extern void extcmode_free_paramlist(void **ar);
 
 extern void chmode_str(struct ChMode *, char *, char *, size_t, size_t);
 extern char *get_client_status(Client *);
-extern char *get_snostr(long);
+extern char *get_snomask_string_raw(long);
 extern void SocketLoop(void *);
 #ifdef _WIN32
 extern void InitDebug(void);

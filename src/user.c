@@ -242,7 +242,7 @@ char *canonize(char *buffer)
  * @param client	The client
  * @returns string of snomasks (temporary storage)
  */
-char *get_sno_str(Client *client)
+char *get_snomask_string(Client *client)
 {
 	int i;
 	char *m;
@@ -261,7 +261,7 @@ char *get_sno_str(Client *client)
  * @param client	The client
  * @returns string of user modes (temporary storage)
  */
-char *get_mode_str(Client *client)
+char *get_usermode_string(Client *client)
 {
 	int  i;
 	char *m;
@@ -280,7 +280,7 @@ char *get_mode_str(Client *client)
  * @param umodes	The user modes that are set
  * @returns string of user modes (temporary storage)
  */
-char *get_modestr(long umodes)
+char *get_usermode_string_raw(long umodes)
 {
 	int  i;
 	char *m;
@@ -299,7 +299,7 @@ char *get_modestr(long umodes)
  * @param sno	The snomasks that are set
  * @returns string of snomasks (temporary storage)
  */
-char *get_snostr(long sno)
+char *get_snomask_string_raw(long sno)
 {
 	int i;
 	char *m;

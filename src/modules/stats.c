@@ -791,8 +791,8 @@ int stats_set(Client *client, char *para)
 	sendtxtnumeric(client, "kline-address: %s", KLINE_ADDRESS);
 	if (GLINE_ADDRESS)
 		sendtxtnumeric(client, "gline-address: %s", GLINE_ADDRESS);
-	sendtxtnumeric(client, "modes-on-connect: %s", get_modestr(CONN_MODES));
-	sendtxtnumeric(client, "modes-on-oper: %s", get_modestr(OPER_MODES));
+	sendtxtnumeric(client, "modes-on-connect: %s", get_usermode_string_raw(CONN_MODES));
+	sendtxtnumeric(client, "modes-on-oper: %s", get_usermode_string_raw(OPER_MODES));
 	*modebuf = *parabuf = 0;
 	chmode_str(&iConf.modes_on_join, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
 	sendtxtnumeric(client, "modes-on-join: %s %s", modebuf, parabuf);

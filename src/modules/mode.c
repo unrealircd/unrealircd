@@ -1605,9 +1605,9 @@ CMD_FUNC(_cmd_umode)
 
 	if (parc < 3)
 	{
-		sendnumeric(client, RPL_UMODEIS, get_mode_str(client));
+		sendnumeric(client, RPL_UMODEIS, get_usermode_string(client));
 		if (client->user->snomask)
-			sendnumeric(client, RPL_SNOMASK, get_sno_str(client));
+			sendnumeric(client, RPL_SNOMASK, get_snomask_string(client));
 		return;
 	}
 
@@ -1903,7 +1903,7 @@ CMD_FUNC(_cmd_umode)
 		send_umode_out(client, 1, oldumodes);
 
 	if (MyConnect(client) && setsnomask != client->user->snomask)
-		sendnumeric(client, RPL_SNOMASK, get_sno_str(client));
+		sendnumeric(client, RPL_SNOMASK, get_snomask_string(client));
 }
 
 CMD_FUNC(cmd_mlock)

@@ -330,7 +330,7 @@ void SnomaskDel(Snomask *sno)
 			oldsno = client->user->snomask;
 			client->user->snomask &= ~sno->mode;
 			if (oldsno != client->user->snomask)
-				sendnumeric(client, RPL_SNOMASK, get_snostr(client->user->snomask));
+				sendnumeric(client, RPL_SNOMASK, get_snomask_string_raw(client->user->snomask));
 		}
 
 		sno->flag = '\0';
@@ -439,7 +439,7 @@ void unload_all_unused_snomasks(void)
 		oldsno = client->user->snomask;
 		client->user->snomask &= ~(removed_sno);
 		if (oldsno != client->user->snomask)
-			sendnumeric(client, RPL_SNOMASK, get_snostr(client->user->snomask));
+			sendnumeric(client, RPL_SNOMASK, get_snomask_string_raw(client->user->snomask));
 	}
 }
 

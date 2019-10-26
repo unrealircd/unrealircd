@@ -53,7 +53,7 @@ extern void read_motd(const char *filename, MOTDFile *motd);
 /* s_user.c */
 extern int target_limit_exceeded(Client *client, void *target, const char *name);
 extern void make_umodestr(void);
-extern char *get_mode_str(Client *acptr);
+extern char *get_usermode_string(Client *acptr);
 
 /* s_misc.c */
 extern char *convert_time(time_t ltime);
