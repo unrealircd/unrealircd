@@ -447,7 +447,7 @@ extern int		Auth_Check(Client *cptr, AuthConfig *as, char *para);
 extern char   		*Auth_Hash(int type, char *para);
 extern int   		Auth_CheckError(ConfigEntry *ce);
 
-extern char *make_virthost(Client *client, char *curr, char *new, int mode);
+extern void make_cloakedhost(Client *client, char *curr, char *buf, size_t buflen);
 extern int  channel_canjoin(Client *client, char *name);
 extern char *collapse(char *pattern);
 extern void dcc_sync(Client *client);

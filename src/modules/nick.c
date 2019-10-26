@@ -908,7 +908,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	if (client->srvptr && client->srvptr->serv)
 		client->srvptr->serv->users++;
 
-	make_virthost(client, user->realhost, user->cloakedhost, 0);
+	make_cloakedhost(client, user->realhost, user->cloakedhost, sizeof(user->cloakedhost));
 	safe_strdup(user->virthost, user->cloakedhost);
 
 	if (MyConnect(client))
@@ -1057,7 +1057,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		/* For remote clients we recalculate the cloakedhost here because
 		 * it may depend on the IP address (bug #5064).
 		 */
-		make_virthost(client, user->realhost, user->cloakedhost, 0);
+		make_cloakedhost(client, user->realhost, user->cloakedhost, sizeof(user->cloakedhost));
 		safe_strdup(user->virthost, user->cloakedhost);
 
 		/* Set the umodes */

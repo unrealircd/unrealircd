@@ -101,7 +101,7 @@ CMD_FUNC(cmd_userip)
 				ip = "<unknown>";
 			if (client != acptr && !ValidatePermissionsForPath("client:see:ip",client,acptr,NULL,NULL) && IsHidden(acptr))
 			{
-				make_virthost(acptr, GetIP(acptr), ipbuf, 0);
+				make_cloakedhost(acptr, GetIP(acptr), ipbuf, sizeof(ipbuf));
 				ip = ipbuf;
 			}
 

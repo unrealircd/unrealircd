@@ -21,11 +21,15 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/** @file
+ * @brief User-related functions
+ */
+
 /* s_user.c 2.74 2/8/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
 #include "unrealircd.h"
 
-int dontspread = 0;
+MODVAR int dontspread = 0;
 static char buf[BUFSIZE];
 
 /** Inhibit labeled/response reply. This means it will result in an empty ACK
@@ -51,6 +55,10 @@ MODVAR int labeled_response_inhibit_end = 0;
 /** Set to 1 if an UTF8 incompatible nick character set is in use */
 MODVAR int non_utf8_nick_chars_in_use = 0;
 
+/** Set a new vhost on the user
+ * @param client	The client (user)
+ * @param host		The new vhost
+ */
 void iNAH_host(Client *client, char *host)
 {
 	if (!client->user)
@@ -68,6 +76,10 @@ void iNAH_host(Client *client, char *host)
 	sendnumeric(client, RPL_HOSTHIDDEN, client->user->virthost);
 }
 
+/** Convert a user mode string to a bitmask - only used by config.
+ * @param umode		The user mode string
+ * @returns the user mode value (long)
+ */
 long set_usermode(char *umode)
 {
 	int  newumode;
@@ -177,12 +189,10 @@ int target_limit_exceeded(Client *client, void *target, const char *name)
 	return 0;
 }
 
-/*
-** canonize
-**
-** reduce a string of duplicate list entries to contain only the unique
-** items.  Unavoidably O(n^2).
-*/
+/** De-duplicate a string of "x,x,y,z" to "x,y,z"
+ * @param buffer	Input string
+ * @returns The new de-duplicated buffer (temporary storage, only valid until next canonize call)
+ */
 char *canonize(char *buffer)
 {
 	static char cbuf[2048];
@@ -228,12 +238,12 @@ char *canonize(char *buffer)
 	return cbuf;
 }
 
-/*
-** get_mode_str
-** by vmlinuz
-** returns an ascii string of modes
-*/
-char *get_sno_str(Client *client) {
+/** Get snomasks as a string.
+ * @param client	The client
+ * @returns string of snomasks (temporary storage)
+ */
+char *get_sno_str(Client *client)
+{
 	int i;
 	char *m;
 
@@ -247,6 +257,10 @@ char *get_sno_str(Client *client) {
 	return buf;
 }
 
+/** Get user modes as a string.
+ * @param client	The client
+ * @returns string of user modes (temporary storage)
+ */
 char *get_mode_str(Client *client)
 {
 	int  i;
@@ -262,6 +276,10 @@ char *get_mode_str(Client *client)
 }
 
 
+/** Get user modes as a string - this one does not work on 'client' but directly on 'umodes'.
+ * @param umodes	The user modes that are set
+ * @returns string of user modes (temporary storage)
+ */
 char *get_modestr(long umodes)
 {
 	int  i;
@@ -277,7 +295,12 @@ char *get_modestr(long umodes)
 	return buf;
 }
 
-char *get_snostr(long sno) {
+/** Get snomasks as a string - this one does not work on 'client' but directly on 'sno'.
+ * @param sno	The snomasks that are set
+ * @returns string of snomasks (temporary storage)
+ */
+char *get_snostr(long sno)
+{
 	int i;
 	char *m;
 
@@ -291,8 +314,13 @@ char *get_snostr(long sno) {
 	return buf;
 }
 
-
-void set_snomask(Client *client, char *snomask) {
+/** Set a new snomask on the user.
+ * The user is not informed of the change by this function.
+ * @param client	The client
+ * @param snomask	The snomask to add or delete (eg: "+k-c")
+ */
+void set_snomask(Client *client, char *snomask)
+{
 	int what = MODE_ADD; /* keep this an int. -- Syzop */
 	char *p;
 	int i;
@@ -329,7 +357,7 @@ void set_snomask(Client *client, char *snomask) {
 }
 
 /** Build the MODE line with (modified) user modes for this user.
- * Originally by avalon.
+ * @author Originally by avalon.
  */
 void build_umode_string(Client *client, long old, long sendmask, char *umode_buf)
 {
@@ -377,6 +405,11 @@ void build_umode_string(Client *client, long old, long sendmask, char *umode_buf
 	*m = '\0';
 }
 
+/** Send usermode change to other servers.
+ * @param client	The client
+ * @param show_to_user	Set to 1 to show the MODE change to the user
+ * @param old		The old user modes set on the client
+ */
 void send_umode_out(Client *client, int show_to_user, long old)
 {
 	Client *acptr;
@@ -587,6 +620,7 @@ int should_show_connect_info(Client *client)
 	return 0;
 }
 
+/* (helper function for uid_get) */
 static char uid_int_to_char(int v)
 {
 	if (v < 10)
@@ -628,19 +662,21 @@ char *getcloak(Client *client)
 	if (!*client->user->cloakedhost)
 	{
 		/* need to calculate (first-time) */
-		make_virthost(client, client->user->realhost, client->user->cloakedhost, 0);
+		make_cloakedhost(client, client->user->realhost, client->user->cloakedhost, sizeof(client->user->cloakedhost));
 	}
 
 	return client->user->cloakedhost;
 }
 
-/* mode = 0, just use strlcpy, 1 = Realloc new and return new pointer */
-char *make_virthost(Client *client, char *curr, char *new, int mode)
+/** Calculate the cloaked host for a client.
+ * @param client	The client
+ * @param curr		The real host or real IP
+ * @param buf		Buffer to store the new cloaked host in
+ * @param buflen	Length of the buffer (should be HOSTLEN+1)
+ */
+void make_cloakedhost(Client *client, char *curr, char *buf, size_t buflen)
 {
 	char host[256], *mask, *p, *q;
-
-	if (!curr)
-		return NULL;
 
 	/* Convert host to lowercase and cut off at 255 bytes just to be sure */
 	for (p = curr, q = host; *p && (q < host+sizeof(host)-1); p++, q++)
@@ -655,11 +691,5 @@ char *make_virthost(Client *client, char *curr, char *new, int mode)
 	else
 		mask = curr;
 
-	if (mode == 0)
-	{
-		strlcpy(new, mask, HOSTLEN + 1);
-		return NULL;
-	}
-	safe_free(new);
-	return raw_strdup(mask);
+	strlcpy(buf, mask, buflen);
 }
