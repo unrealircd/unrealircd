@@ -17,8 +17,21 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/** @file
+ * @brief Command API - both for modules and the core
+ */
 #include "unrealircd.h"
 
+/* Forward declarations */
+static Command *CommandAddInternal(Module *module, char *cmd, CmdFunc func, AliasCmdFunc aliasfunc, unsigned char params, int flags);
+static RealCommand *add_Command_backend(char *cmd);
+
+/** @defgroup CommandAPI Command API
+ * @{
+ */
+
+/** Returns 1 if the specified command exists
+ */
 int CommandExists(char *name)
 {
 	RealCommand *p;
@@ -32,7 +45,46 @@ int CommandExists(char *name)
 	return 0;
 }
 
-Command *CommandAddInternal(Module *module, char *cmd, CmdFunc func, AliasCmdFunc aliasfunc, unsigned char params, int flags)
+/** Register a new command.
+ * @param module	The module (usually modinfo->handle)
+ * @param cmd		The command name (eg: "SOMECMD")
+ * @param func		The command handler function
+ * @param params	Number of parameters or MAXPARA
+ * @param flags		Who may execute this command - one or more CMD_* flags
+ * @returns The newly registered command, or NULL in case of error (eg: already exist)
+ */
+Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned char params, int flags)
+{
+	if (flags & CMD_ALIAS)
+	{
+		config_error("Command '%s' used CommandAdd() to add a command alias, "
+		             "but should have used AliasAdd() instead. "
+		             "Old 3rd party module %s? Check for updates!",
+		             cmd,
+		             module ? module->header->name : "");
+		return NULL;
+	}
+	return CommandAddInternal(module, cmd, func, NULL, params, flags);
+}
+
+/** Register a new alias.
+ * @param module	The module (usually modinfo->handle)
+ * @param cmd		The alias name (eg: "SOMECMD")
+ * @param func		The alias handler function
+ * @param params	Number of parameters or MAXPARA
+ * @param flags		Who may execute this command - one or more CMD_* flags
+ * @returns The newly registered command (alias), or NULL in case of error (eg: already exist)
+ */
+Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned char params, int flags)
+{
+	if (!(flags & CMD_ALIAS))
+		flags |= CMD_ALIAS;
+	return CommandAddInternal(module, cmd, NULL, aliasfunc, params, flags);
+}
+
+/** @} */
+
+static Command *CommandAddInternal(Module *module, char *cmd, CmdFunc func, AliasCmdFunc aliasfunc, unsigned char params, int flags)
 {
 	Command *command = NULL;
 	RealCommand *c;
@@ -74,27 +126,10 @@ Command *CommandAddInternal(Module *module, char *cmd, CmdFunc func, AliasCmdFun
 	return command;
 }
 
-Command *CommandAdd(Module *module, char *cmd, CmdFunc func, unsigned char params, int flags)
-{
-	if (flags & CMD_ALIAS)
-	{
-		config_error("Command '%s' used CommandAdd() to add a command alias, "
-		             "but should have used AliasAdd() instead. "
-		             "Old 3rd party module %s? Check for updates!",
-		             cmd,
-		             module ? module->header->name : "");
-		return NULL;
-	}
-	return CommandAddInternal(module, cmd, func, NULL, params, flags);
-}
-
-Command *AliasAdd(Module *module, char *cmd, AliasCmdFunc aliasfunc, unsigned char params, int flags)
-{
-	if (!(flags & CMD_ALIAS))
-		flags |= CMD_ALIAS;
-	return CommandAddInternal(module, cmd, NULL, aliasfunc, params, flags);
-}
-
+/** Delete a command - only used internally.
+ * @param command	The command (can be NULL)
+ * @param cmd		The "real" command
+ */
 void CommandDelX(Command *command, RealCommand *cmd)
 {
 	CommandOverride *ovr, *ovrnext;
@@ -124,10 +159,17 @@ void CommandDelX(Command *command, RealCommand *cmd)
 		safe_free(command);
 }
 
+/** De-register a command - not called by modules, only internally.
+ * For modules this is done automatically.
+ */
 void CommandDel(Command *command)
 {
 	CommandDelX(command, command->cmd);
 }
+
+/** @defgroup CommandAPI Command API
+ * @{
+ */
 
 /** Calls the specified command for the user, as if it was received
  * that way on IRC.
@@ -156,12 +198,17 @@ void do_cmd(Client *client, MessageTag *mtags, char *cmd, int parc, char *parv[]
 		(*cmptr->func) (client, mtags, parc, parv);
 }
 
+/** @} */
+
 /**** This is the "real command" API *****
  * Perhaps one day we will merge the two, if possible.
  */
 
 RealCommand *CommandHash[256]; /* one per letter */
 
+/** Initialize the command API - executed on startup.
+ * This also registers some core functions.
+ */
 void init_CommandHash(void)
 {
 	memset(CommandHash, 0, sizeof(CommandHash));
@@ -177,7 +224,7 @@ void init_CommandHash(void)
 	CommandAdd(NULL, MSG_MODULE, cmd_module, MAXPARA, CMD_USER);
 }
 
-RealCommand *add_Command_backend(char *cmd)
+static RealCommand *add_Command_backend(char *cmd)
 {
 	RealCommand *c = safe_alloc(sizeof(RealCommand));
 
@@ -189,7 +236,12 @@ RealCommand *add_Command_backend(char *cmd)
 	return c;
 }
 
-static inline RealCommand *find_Cmd(char *cmd, int flags)
+/** @defgroup CommandAPI Command API
+ * @{
+ */
+
+/** Find a command by name and flags */
+RealCommand *find_Command(char *cmd, int flags)
 {
 	RealCommand *p;
 	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
@@ -207,13 +259,7 @@ static inline RealCommand *find_Cmd(char *cmd, int flags)
 	return NULL;
 }
 
-RealCommand *find_Command(char *cmd, short token, int flags)
-{
-	Debug((DEBUG_NOTICE, "FindCommand %s", cmd));
-
-	return find_Cmd(cmd, flags);
-}
-
+/** Find a command by name (no access rights check) */
 RealCommand *find_Command_simple(char *cmd)
 {
 	RealCommand *c;
@@ -226,3 +272,5 @@ RealCommand *find_Command_simple(char *cmd)
 
 	return NULL;
 }
+
+/** @} */

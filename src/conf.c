@@ -2361,7 +2361,7 @@ void	config_rehash()
 		safe_free(log_ptr);
 	}
 	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)next) {
-		RealCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
+		RealCommand *cmptr = find_Command(alias_ptr->alias, 0);
 		ConfigItem_alias_format *fmt;
 		next = (ListStruct *)alias_ptr->next;
 		safe_free(alias_ptr->nick);
@@ -9064,7 +9064,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry 	    	*cep, *cepp;
 	RealCommand *cmptr;
 
-	if ((cmptr = find_Command(ce->ce_vardata, 0, CMD_ALIAS)))
+	if ((cmptr = find_Command(ce->ce_vardata, CMD_ALIAS)))
 		CommandDelX(NULL, cmptr);
 	if (find_Command_simple(ce->ce_vardata))
 	{
@@ -9157,7 +9157,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
-	else if (!find_Command(ce->ce_vardata, 0, CMD_ALIAS) && find_Command(ce->ce_vardata, 0, 0)) {
+	else if (!find_Command(ce->ce_vardata, CMD_ALIAS) && find_Command(ce->ce_vardata, 0)) {
 		config_status("%s:%i: %s is an existing command, can not add alias",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
 		errors++;

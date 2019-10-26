@@ -158,7 +158,7 @@ extern MODVAR struct list_head oper_list;
 extern MODVAR struct list_head unknown_list;
 extern MODVAR struct list_head global_server_list;
 extern MODVAR struct list_head dead_list;
-extern RealCommand *find_Command(char *cmd, short token, int flags);
+extern RealCommand *find_Command(char *cmd, int flags);
 extern RealCommand *find_Command_simple(char *cmd);
 extern Channel *find_channel(char *, Channel *);
 extern Membership *find_membership_link(Membership *lp, Channel *ptr);
@@ -423,7 +423,6 @@ extern char *inetntop(int af, const void *in, char *local_dummy, size_t the_size
 /* Internal command stuff - not for modules */
 extern MODVAR RealCommand *CommandHash[256];
 extern void init_CommandHash(void);
-extern RealCommand *add_Command_backend(char *cmd);
 
 /* CRULE */
 char *crule_parse(char *);
