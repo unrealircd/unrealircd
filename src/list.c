@@ -124,7 +124,8 @@ Client *make_client(Client *from, Client *servr)
 		INIT_LIST_HEAD(&client->special_node);
 
 		client->local->since = client->local->lasttime =
-		client->lastnick = client->local->firsttime = TStime();
+		client->lastnick = client->local->firsttime =
+		client->local->last = TStime();
 		client->local->class = NULL;
 		client->local->passwd = NULL;
 		client->local->sockhost[0] = '\0';
