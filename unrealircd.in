@@ -242,5 +242,5 @@ elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
 	echo "password \"$HASH\" { spkifp; };"
 	echo ""
 else
-	echo "Usage: unrealircd start|stop|rehash|restart|mkpasswd|version|croncheck|gencloak|reloadtls|spkifp|upgrade-conf"
+	echo "Usage: unrealircd start|stop|configtest|rehash|restart|mkpasswd|version|croncheck|gencloak|reloadtls|spkifp|upgrade-conf"
 fi
