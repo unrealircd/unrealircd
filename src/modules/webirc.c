@@ -303,7 +303,7 @@ void webirc_md_free(ModData *md)
 	md->l = 0;
 }
 
-ConfigItem_webirc *Find_webirc(Client *client, char *password, WEBIRCType type, char **errorstr)
+ConfigItem_webirc *find_webirc(Client *client, char *password, WEBIRCType type, char **errorstr)
 {
 	ConfigItem_webirc *e;
 	char *error = NULL;
@@ -429,7 +429,7 @@ CMD_FUNC(cmd_webirc)
 	options = parv[5]; /* can be NULL */
 
 	/* Check if allowed host */
-	e = Find_webirc(client, password, WEBIRC_WEBIRC, &error);
+	e = find_webirc(client, password, WEBIRC_WEBIRC, &error);
 	if (!e)
 	{
 		exit_client(client, NULL, error);
@@ -459,7 +459,7 @@ int webirc_local_pass(Client *client, char *password)
 		ConfigItem_webirc *e;
 		char *error = NULL;
 
-		e = Find_webirc(client, NULL, WEBIRC_PASS, &error);
+		e = find_webirc(client, NULL, WEBIRC_PASS, &error);
 		if (e)
 		{
 			/* Ok now we got that sorted out, proceed:

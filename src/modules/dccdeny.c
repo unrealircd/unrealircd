@@ -369,7 +369,7 @@ CMD_FUNC(cmd_dccdeny)
 		return;
 	}
 
-	if (!Find_deny_dcc(parv[1]))
+	if (!find_deny_dcc(parv[1]))
 	{
 		sendto_ops("%s added a temp dccdeny for %s (%s)", client->name,
 		    parv[1], parv[2]);
@@ -403,7 +403,7 @@ CMD_FUNC(cmd_undccdeny)
 		return;
 	}
 
-	if ((d = Find_deny_dcc(parv[1])) && d->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
+	if ((d = find_deny_dcc(parv[1])) && d->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 	{
 		sendto_ops("%s removed a temp dccdeny for %s", client->name, parv[1]);
 		DCCdeny_del(d);
@@ -429,7 +429,7 @@ CMD_FUNC(cmd_svsfline)
 			if (parc < 4)
 				return;
 
-			if (!Find_deny_dcc(parv[2]))
+			if (!find_deny_dcc(parv[2]))
 				DCCdeny_add(parv[2], parv[3], DCCDENY_HARD, CONF_BAN_TYPE_AKILL);
 
 			if (IsULine(client))
@@ -451,7 +451,7 @@ CMD_FUNC(cmd_svsfline)
 			if (parc < 3)
 				return;
 
-			if (!(deny = Find_deny_dcc(parv[2])))
+			if (!(deny = find_deny_dcc(parv[2])))
 				break;
 
 			DCCdeny_del(deny);
@@ -787,7 +787,7 @@ static void DCCdeny_del(ConfigItem_deny_dcc *deny)
 	safe_free(deny);
 }
 
-ConfigItem_deny_dcc *Find_deny_dcc(char *name)
+ConfigItem_deny_dcc *find_deny_dcc(char *name)
 {
 	ConfigItem_deny_dcc	*e;
 

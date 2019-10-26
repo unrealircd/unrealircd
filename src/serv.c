@@ -57,7 +57,7 @@ void do_read_motd(const char *filename, MOTDFile *themotd);
 void read_motd_async_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, MOTDDownload *motd_download);
 #endif
 
-extern MOTDLine *Find_file(char *, short);
+extern MOTDLine *find_file(char *, short);
 
 void reread_motdsandrules();
 
@@ -759,7 +759,7 @@ void short_motd(Client *client)
        tm = NULL;
        is_short = 1;
 
-       tld = Find_tld(client);
+       tld = find_tld(client);
 
        /*
 	* Try different sources of short MOTDs, falling back to the

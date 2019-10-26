@@ -97,7 +97,7 @@ CMD_FUNC(cmd_whowas)
 			    (*temp->virthost !=
 			    '\0') ? temp->virthost : temp->hostname),
 			    temp->realname);
-                	if (!((Find_uline(temp->servername)) && !IsOper(client) && HIDE_ULINES))
+                	if (!((find_uline(temp->servername)) && !IsOper(client) && HIDE_ULINES))
 				sendnumeric(client, RPL_WHOISSERVER, temp->name, temp->servername,
 				    myctime(temp->logoff));
 			cur++;

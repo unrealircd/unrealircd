@@ -137,7 +137,7 @@ CMD_FUNC(cmd_oper)
 		return;
 	}
 
-	if (!(operblock = Find_oper(name)))
+	if (!(operblock = find_oper(name)))
 	{
 		sendnumeric(client, ERR_NOOPERHOST);
 		sendto_snomask_global
@@ -195,7 +195,7 @@ CMD_FUNC(cmd_oper)
 		return;
 	}
 
-	if (!Find_operclass(operblock->operclass))
+	if (!find_operclass(operblock->operclass))
 	{
 		sendnotice(client, "ERROR: There is a non-existant oper::operclass specified for your oper block");
 		ircd_log(LOG_ERROR, "OPER MISSINGOPERCLASS (%s) by (%s!%s@%s), oper::operclass does not exist: %s",

@@ -690,7 +690,7 @@ int ban_version(Client *client, char *text)
 	if (text[len-1] == '\1')
 		text[len-1] = '\0'; /* remove CTCP REPLY terminator (ASCII 1) */
 
-	if ((ban = Find_ban(NULL, text, CONF_BAN_VERSION)))
+	if ((ban = find_ban(NULL, text, CONF_BAN_VERSION)))
 	{
 		if (IsSoftBanAction(ban->action) && IsLoggedIn(client))
 			return 0; /* soft ban does not apply to us, we are logged in */

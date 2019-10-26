@@ -48,7 +48,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 	Client *acptr;
 	int ret;
 
-	if (!(alias = Find_alias(cmd))) 
+	if (!(alias = find_alias(cmd))) 
 	{
 		sendto_one(client, NULL, ":%s %d %s %s :Unknown command",
 			me.name, ERR_UNKNOWNCOMMAND, client->name, cmd);

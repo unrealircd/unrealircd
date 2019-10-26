@@ -298,7 +298,7 @@ int _verify_link(Client *client, char *servername, ConfigItem_link **link_out)
 		goto errlink;
 	}
 
-	link = Find_link(servername, client);
+	link = find_link(servername, client);
 
 	if (!link)
 	{
@@ -418,7 +418,7 @@ skip_host_check:
 		exit_client(acptr, NULL, "Server Exists");
 		return 0;
 	}
-	if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
+	if ((bconf = find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
 		sendto_ops_and_log
 			("Cancelling link %s, banned server",
@@ -664,7 +664,7 @@ CMD_FUNC(cmd_sid)
 	}
 
 	/* Check deny server { } */
-	if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
+	if ((bconf = find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
 		sendto_ops_and_log("Cancelling link %s, banned server %s",
 			get_client_name(cptr, TRUE), servername);
@@ -754,7 +754,7 @@ CMD_FUNC(cmd_sid)
 	SetServer(acptr);
 	ircd_log(LOG_SERVER, "SERVER %s (from %s)", acptr->name, acptr->srvptr->name);
 	/* If this server is U-lined, or the parent is, then mark it as U-lined */
-	if (IsULine(client) || Find_uline(acptr->name))
+	if (IsULine(client) || find_uline(acptr->name))
 		SetULine(acptr);
 	irccounts.servers++;
 	find_or_add(acptr->name);
@@ -936,7 +936,7 @@ int	server_sync(Client *cptr, ConfigItem_link *aconf)
 	list_move(&cptr->client_node, &global_server_list);
 	list_move(&cptr->lclient_node, &lclient_list);
 	list_add(&cptr->special_node, &server_list);
-	if (Find_uline(cptr->name))
+	if (find_uline(cptr->name))
 	{
 		if (cptr->serv && cptr->serv->features.software && !strncmp(cptr->serv->features.software, "UnrealIRCd-", 11))
 		{

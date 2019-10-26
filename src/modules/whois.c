@@ -295,7 +295,7 @@ CMD_FUNC(cmd_whois)
 					if (IsOper(client) && MyUser(target))
 					{
 						char *operclass = "???";
-						ConfigItem_oper *oper = Find_oper(target->user->operlogin);
+						ConfigItem_oper *oper = find_oper(target->user->operlogin);
 						if (oper && oper->operclass)
 							operclass = oper->operclass;
 						sendto_one(client, NULL,

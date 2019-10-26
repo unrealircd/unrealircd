@@ -66,7 +66,7 @@ CMD_FUNC(cmd_opermotd)
 		return;
 	}
 
-	tld = Find_tld(client);
+	tld = find_tld(client);
 
 	motdline = NULL;
 	if (tld)

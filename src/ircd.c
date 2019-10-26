@@ -335,7 +335,7 @@ int match_tkls(Client *client)
 	if (IsUser(client))
 	{
 		/* Check ban realname { } */
-		if (!ValidatePermissionsForPath("immune",client,NULL,NULL,NULL) && (bconf = Find_ban(NULL, client->info, CONF_BAN_REALNAME)))
+		if (!ValidatePermissionsForPath("immune",client,NULL,NULL,NULL) && (bconf = find_ban(NULL, client->info, CONF_BAN_REALNAME)))
 			killflag++;
 	}
 

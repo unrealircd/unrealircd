@@ -296,13 +296,13 @@ OperPermission ValidatePermissionsForPath(char *path, Client *client, Client *vi
 	if (!IsOper(client))
 		return OPER_DENY;
 
-	ce_oper = Find_oper(client->user->operlogin);
+	ce_oper = find_oper(client->user->operlogin);
 	if (!ce_oper)
 	{
 		return OPER_DENY;
 	}
 	
-	ce_operClass = Find_operclass(ce_oper->operclass);
+	ce_operClass = find_operclass(ce_oper->operclass);
 	if (!ce_operClass)
 	{
 		return OPER_DENY;
@@ -331,7 +331,7 @@ OperPermission ValidatePermissionsForPath(char *path, Client *client, Client *vi
 		{
 			break;
 		}
-		ce_operClass = Find_operclass(oc->ISA);
+		ce_operClass = find_operclass(oc->ISA);
 		if (ce_operClass)
 		{
 			oc = ce_operClass->classStruct;

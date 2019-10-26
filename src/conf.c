@@ -2726,7 +2726,7 @@ int	config_test()
  * Service functions
 */
 
-ConfigItem_alias *Find_alias(char *name)
+ConfigItem_alias *find_alias(char *name)
 {
 	ConfigItem_alias *e;
 
@@ -2741,7 +2741,7 @@ ConfigItem_alias *Find_alias(char *name)
 	return NULL;
 }
 
-ConfigItem_class *Find_class(char *name)
+ConfigItem_class *find_class(char *name)
 {
 	ConfigItem_class *e;
 
@@ -2757,7 +2757,7 @@ ConfigItem_class *Find_class(char *name)
 }
 
 
-ConfigItem_oper	*Find_oper(char *name)
+ConfigItem_oper	*find_oper(char *name)
 {
 	ConfigItem_oper	*e;
 
@@ -2772,7 +2772,7 @@ ConfigItem_oper	*Find_oper(char *name)
 	return NULL;
 }
 
-ConfigItem_operclass *Find_operclass(char *name)
+ConfigItem_operclass *find_operclass(char *name)
 {
 	ConfigItem_operclass *e;
 
@@ -2801,7 +2801,7 @@ int count_oper_sessions(char *name)
 	return count;
 }
 
-ConfigItem_listen *Find_listen(char *ipmask, int port, int ipv6)
+ConfigItem_listen *find_listen(char *ipmask, int port, int ipv6)
 {
 	ConfigItem_listen *e;
 
@@ -2826,7 +2826,7 @@ ConfigItem_listen *Find_listen(char *ipmask, int port, int ipv6)
 /** Find an SNI match.
  * @param name The hostname to look for (eg: irc.xyz.com).
  */
-ConfigItem_sni *Find_sni(char *name)
+ConfigItem_sni *find_sni(char *name)
 {
 	ConfigItem_sni *e;
 
@@ -2841,7 +2841,7 @@ ConfigItem_sni *Find_sni(char *name)
 	return NULL;
 }
 
-ConfigItem_ulines *Find_uline(char *host)
+ConfigItem_ulines *find_uline(char *host)
 {
 	ConfigItem_ulines *ulines;
 
@@ -2857,7 +2857,7 @@ ConfigItem_ulines *Find_uline(char *host)
 }
 
 
-ConfigItem_except *Find_except(Client *client, short type)
+ConfigItem_except *find_except(Client *client, short type)
 {
 	ConfigItem_except *excepts;
 
@@ -2872,7 +2872,7 @@ ConfigItem_except *Find_except(Client *client, short type)
 	return NULL;
 }
 
-ConfigItem_tld *Find_tld(Client *client)
+ConfigItem_tld *find_tld(Client *client)
 {
 	ConfigItem_tld *tld;
 
@@ -2892,7 +2892,7 @@ ConfigItem_tld *Find_tld(Client *client)
 }
 
 
-ConfigItem_link *Find_link(char *servername, Client *client)
+ConfigItem_link *find_link(char *servername, Client *client)
 {
 	ConfigItem_link	*link;
 
@@ -2909,7 +2909,7 @@ ConfigItem_link *Find_link(char *servername, Client *client)
 /** Find a ban of type CONF_BAN_*, which is currently only
  * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
  */
-ConfigItem_ban *Find_ban(Client *client, char *host, short type)
+ConfigItem_ban *find_ban(Client *client, char *host, short type)
 {
 	ConfigItem_ban *ban;
 
@@ -2933,7 +2933,7 @@ ConfigItem_ban *Find_ban(Client *client, char *host, short type)
  * CONF_BAN_SERVER, CONF_BAN_VERSION and CONF_BAN_REALNAME
  * This is the extended version, only used by cmd_svsnline.
  */
-ConfigItem_ban 	*Find_banEx(Client *client, char *host, short type, short type2)
+ConfigItem_ban 	*find_banEx(Client *client, char *host, short type, short type2)
 {
 	ConfigItem_ban *ban;
 
@@ -2953,7 +2953,7 @@ ConfigItem_ban 	*Find_banEx(Client *client, char *host, short type, short type2)
 	return NULL;
 }
 
-ConfigItem_vhost *Find_vhost(char *name)
+ConfigItem_vhost *find_vhost(char *name)
 {
 	ConfigItem_vhost *vhost;
 
@@ -2968,7 +2968,7 @@ ConfigItem_vhost *Find_vhost(char *name)
 
 
 /** returns NULL if allowed and struct if denied */
-ConfigItem_deny_channel *Find_channel_allowed(Client *client, char *name)
+ConfigItem_deny_channel *find_channel_allowed(Client *client, char *name)
 {
 	ConfigItem_deny_channel *dchannel;
 	ConfigItem_allow_channel *achannel;
@@ -3765,7 +3765,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 			oper->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
-			oper->class = Find_class(cep->ce_vardata);
+			oper->class = find_class(cep->ce_vardata);
 			if (!oper->class || (oper->class->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal oper::class, unknown class '%s' using default of class 'default'",
@@ -4090,7 +4090,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_class *class;
 	unsigned char isnew = 0;
 
-	if (!(class = Find_class(ce->ce_vardata)))
+	if (!(class = find_class(ce->ce_vardata)))
 	{
 		class = safe_alloc(sizeof(ConfigItem_class));
 		safe_strdup(class->name, ce->ce_vardata);
@@ -4713,7 +4713,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		/* First deal with IPv4 */
 		if (!strchr(ip, ':'))
 		{
-			if (!(listen = Find_listen(ip, port, 0)))
+			if (!(listen = find_listen(ip, port, 0)))
 			{
 				listen = safe_alloc(sizeof(ConfigItem_listen));
 				safe_strdup(listen->ip, ip);
@@ -4796,7 +4796,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		{
 			if (strchr(ip, ':') || (*ip == '*'))
 			{
-				if (!(listen = Find_listen(ip, port, 1)))
+				if (!(listen = find_listen(ip, port, 1)))
 				{
 					listen = safe_alloc(sizeof(ConfigItem_listen));
 					safe_strdup(listen->ip, ip);
@@ -5129,7 +5129,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			allow->auth = AuthBlockToAuthConfig(cep);
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
-			allow->class = Find_class(cep->ce_vardata);
+			allow->class = find_class(cep->ce_vardata);
 			if (!allow->class || (allow->class->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal allow::class, unknown class '%s' using default of class 'default'",
@@ -6065,7 +6065,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			link->leaf_depth = atoi(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
-			link->class = Find_class(cep->ce_vardata);
+			link->class = find_class(cep->ce_vardata);
 			if (!link->class || (link->class->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal link::class, unknown class '%s' using default of class 'default'",
@@ -9073,7 +9073,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_vardata, ce->ce_vardata);
 		return 0;
 	}
-	if ((alias = Find_alias(ce->ce_vardata)))
+	if ((alias = find_alias(ce->ce_vardata)))
 		DelListItem(alias, conf_alias);
 	alias = safe_alloc(sizeof(ConfigItem_alias));
 	safe_strdup(alias->alias, ce->ce_vardata);

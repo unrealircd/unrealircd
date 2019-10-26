@@ -859,7 +859,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 			u1 = NULL;
 
 		/* Check ban realname { } blocks */
-		if ((bconf = Find_ban(NULL, client->info, CONF_BAN_REALNAME)))
+		if ((bconf = find_ban(NULL, client->info, CONF_BAN_REALNAME)))
 		{
 			ircstats.is_ref++;
 			banned_client(client, "realname", bconf->reason?bconf->reason:"", 0, 0);
@@ -1139,7 +1139,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 			return join_viruschan(client, savetkl, SPAMF_USER); /* [RETURN!] */
 
 		/* Force the user to join the given chans -- codemastr */
-		tlds = Find_tld(client);
+		tlds = find_tld(client);
 
 		if (tlds && !BadPtr(tlds->channel)) {
 			char *chans[3] = {

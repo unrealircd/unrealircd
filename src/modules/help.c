@@ -57,7 +57,7 @@ MOD_UNLOAD()
 #define HDR(str) sendto_one(client, NULL, ":%s 290 %s :%s", me.name, client->name, str);
 #define SND(str) sendto_one(client, NULL, ":%s 292 %s :%s", me.name, client->name, str);
 
-ConfigItem_help *Find_Help(char *command)
+ConfigItem_help *find_Help(char *command)
 {
 	ConfigItem_help *help;
 
@@ -86,7 +86,7 @@ void parse_help(Client *client, char *name, char *help)
 	MOTDLine *text;
 	if (BadPtr(help))
 	{
-		helpitem = Find_Help(NULL);
+		helpitem = find_Help(NULL);
 		if (!helpitem)
 			return;
 		SND(" -");
@@ -101,7 +101,7 @@ void parse_help(Client *client, char *name, char *help)
 		return;
 		
 	}
-	helpitem = Find_Help(help);
+	helpitem = find_Help(help);
 	if (!helpitem) {
 		SND(" -");
 		HDR("        ***** No Help Available *****");

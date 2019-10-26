@@ -79,7 +79,7 @@ CMD_FUNC(cmd_vhost)
 	if (strlen(login) > HOSTLEN)
 		login[HOSTLEN] = '\0';
 
-	if (!(vhost = Find_vhost(login)))
+	if (!(vhost = find_vhost(login)))
 	{
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",

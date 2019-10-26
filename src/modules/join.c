@@ -483,7 +483,7 @@ void _do_join(Client *client, int parc, char *parv[])
 				if (!ValidatePermissionsForPath("immune:server-ban:deny-channel",client,NULL,NULL,NULL))
 				{
 					ConfigItem_deny_channel *d;
-					if ((d = Find_channel_allowed(client, name)))
+					if ((d = find_channel_allowed(client, name)))
 					{
 						if (d->warn)
 						{

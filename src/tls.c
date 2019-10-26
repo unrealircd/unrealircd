@@ -208,7 +208,7 @@ static int ssl_hostname_callback(SSL *ssl, int *unk, void *arg)
 	char *name = (char *)SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
 	ConfigItem_sni *sni;
 
-	if (name && (sni = Find_sni(name)))
+	if (name && (sni = find_sni(name)))
 	{
 		SSL_set_SSL_CTX(ssl, sni->ssl_ctx);
 		set_client_sni_name(ssl, name);
@@ -1019,7 +1019,7 @@ TLSOptions *FindTLSOptionsForUser(Client *client)
 	/* Different sts-policy depending on SNI: */
 	if (client->local->sni_servername)
 	{
-		sni = Find_sni(client->local->sni_servername);
+		sni = find_sni(client->local->sni_servername);
 		if (sni)
 		{
 			sslopt = sni->tls_options;

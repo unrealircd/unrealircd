@@ -99,7 +99,7 @@ CMD_FUNC(cmd_svsnline)
 		  if (parc < 4)
 			  return;
 		 
-		  if (!Find_banEx(NULL, parv[3], CONF_BAN_REALNAME, CONF_BAN_TYPE_AKILL))
+		  if (!find_banEx(NULL, parv[3], CONF_BAN_REALNAME, CONF_BAN_TYPE_AKILL))
 		  {
 			bconf = safe_alloc(sizeof(ConfigItem_ban));
 			bconf->flag.type = CONF_BAN_REALNAME;

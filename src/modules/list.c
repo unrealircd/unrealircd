@@ -366,7 +366,7 @@ int send_list(Client *client)
 					continue;
 
 				/* set::hide-list { deny-channel } */
-				if (!IsOper(client) && iConf.hide_list && Find_channel_allowed(client, channel->chname))
+				if (!IsOper(client) && iConf.hide_list && find_channel_allowed(client, channel->chname))
 					continue;
 
 				/* Similarly, hide unjoinable channels for non-ircops since it would be confusing */

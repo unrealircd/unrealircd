@@ -115,7 +115,7 @@ CMD_FUNC(cmd_chgname)
 	{
 		/* only check for realname bans if the person who's name is being changed is NOT an oper */
 		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",target,NULL,NULL,NULL) &&
-		    ((bconf = Find_ban(NULL, target->info, CONF_BAN_REALNAME))))
+		    ((bconf = find_ban(NULL, target->info, CONF_BAN_REALNAME))))
 		{
 			banned_client(target, "realname", bconf->reason?bconf->reason:"", 0, 0);
 			return;

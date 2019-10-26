@@ -73,7 +73,7 @@ CMD_FUNC(cmd_motd)
 		return;
 	}
 
-	ptr = Find_tld(client);
+	ptr = find_tld(client);
 
 	if (ptr)
 		themotd = &ptr->motd;
