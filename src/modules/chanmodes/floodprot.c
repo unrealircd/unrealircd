@@ -196,6 +196,7 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	SavePersistentPointer(modinfo, removechannelmodetimer_list);
+	SavePersistentPointer(modinfo, floodprot_msghash_key);
 	return MOD_SUCCESS;
 }
 
