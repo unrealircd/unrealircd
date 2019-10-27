@@ -1180,18 +1180,14 @@ void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags
 
 EVENT(e_unload_module_delayed)
 {
-	char *name = raw_strdup(data);
+	char *name = (char *)data;
 	int i; 
 	i = Module_Unload(name);
-	if (i == -1)
-	{
-		sendto_realops("Failed to unload '%s'", name);
-	}
 	if (i == 1)
-	{
 		sendto_realops("Unloaded module %s", name);
-	}
 	safe_free(name);
+	extcmodes_check_for_changes();
+	umodes_check_for_changes();
 	return;
 }
 
@@ -1458,9 +1454,10 @@ void special_delayed_unloading(void)
 			}
 			if (!found)
 			{
-			    config_warn("Delaying module unloading of '%s' a few seconds...", m->header->name);
-			    m->flags |= MODFLAG_DELAYED;
-			    EventAdd(NULL, "e_unload_module_delayed", e_unload_module_delayed, m->header->name, 5000, 1);
+				char *name = strdup(m->header->name);
+				config_warn("Delaying module unloading of '%s' a few seconds...", name);
+				m->flags |= MODFLAG_DELAYED;
+				EventAdd(NULL, "e_unload_module_delayed", e_unload_module_delayed, name, 0, 1);
 			}
 		}
 	}
