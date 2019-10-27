@@ -1491,6 +1491,33 @@ char *mtags_to_string_default_handler(MessageTag *m, Client *client)
 	return NULL;
 }
 
+/** Default handler for add_silence().
+ * This is only used if the 'silence' module is NOT loaded,
+ * which would be unusual, but possible.
+ */
+int add_silence_default_handler(Client *client, const char *mask, int senderr)
+{
+	return 0;
+}
+
+/** Default handler for del_silence().
+ * This is only used if the 'silence' module is NOT loaded,
+ * which would be unusual, but possible.
+ */
+int del_silence_default_handler(Client *client, const char *mask)
+{
+	return 0;
+}
+
+/** Default handler for is_silenced().
+ * This is only used if the 'silence' module is NOT loaded,
+ * which would be unusual, but possible.
+ */
+int is_silenced_default_handler(Client *client, Client *acptr)
+{
+	return 0;
+}
+
 /** Generate a BATCH id.
  * This can be used in a :serv BATCH +%s ... message
  */

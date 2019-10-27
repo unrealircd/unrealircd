@@ -355,10 +355,9 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_FIND_TKL_NAMEBAN, find_tkl_nameban, NULL);
 	efunc_init_function(EFUNC_FIND_TKL_SPAMFILTER, find_tkl_spamfilter, NULL);
 	efunc_init_function(EFUNC_FIND_TKL_EXCEPTION, find_tkl_exception, NULL);
-	efunc_init_function(EFUNC_ADD_SILENCE, add_silence, NULL);
-	efunc_init_function(EFUNC_DEL_SILENCE, del_silence, NULL);
-	efunc_init_function(EFUNC_IS_SILENCED, is_silenced, NULL);
-	efunc_init_function(EFUNC_IS_SILENCED, is_silenced, NULL);
+	efunc_init_function(EFUNC_ADD_SILENCE, add_silence, add_silence_default_handler);
+	efunc_init_function(EFUNC_DEL_SILENCE, del_silence, del_silence_default_handler);
+	efunc_init_function(EFUNC_IS_SILENCED, is_silenced, is_silenced_default_handler);
 	efunc_init_function(EFUNC_LABELED_RESPONSE_SAVE_CONTEXT, labeled_response_save_context, labeled_response_save_context_default_handler);
 	efunc_init_function(EFUNC_LABELED_RESPONSE_SET_CONTEXT, labeled_response_set_context, labeled_response_set_context_default_handler);
 	efunc_init_function(EFUNC_LABELED_RESPONSE_FORCE_END, labeled_response_force_end, labeled_response_force_end_default_handler);

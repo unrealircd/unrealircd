@@ -753,6 +753,9 @@ extern char *mtags_to_string_default_handler(MessageTag *m, Client *client);
 extern void *labeled_response_save_context_default_handler(void);
 extern void labeled_response_set_context_default_handler(void *ctx);
 extern void labeled_response_force_end_default_handler(void);
+extern int add_silence_default_handler(Client *client, const char *mask, int senderr);
+extern int del_silence_default_handler(Client *client, const char *mask);
+extern int is_silenced_default_handler(Client *client, Client *acptr);
 
 extern MODVAR MOTDFile opermotd, svsmotd, motd, botmotd, smotd, rules;
 extern MODVAR int max_connection_count;
