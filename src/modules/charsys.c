@@ -481,8 +481,8 @@ int _do_nick_name(char *nick)
 
 static int do_nick_name_standard(char *nick)
 {
-int len;
-char *ch;
+	int len;
+	char *ch;
 
 	if ((*nick == '-') || isdigit(*nick))
 		return 0;
@@ -552,8 +552,13 @@ static int do_nick_name_multibyte(char *nick)
  */
 int _do_remote_nick_name(char *nick)
 {
-char *c;
+	char *c;
 
+	/* Don't allow nicks to start with a digit, ever. */
+	if ((*nick == '-') || isdigit(*nick))
+		return 0;
+
+	/* Now the other, more relaxed checks.. */
 	for (c=nick; *c; c++)
 		if ((*c <= 32) || strchr(illegalnickchars, *c))
 			return 0;
@@ -563,9 +568,9 @@ char *c;
 
 static LangList *charsys_find_language(char *name)
 {
-int start = 0;
-int stop = ARRAY_SIZEOF(langlist)-1;
-int mid;
+	int start = 0;
+	int stop = ARRAY_SIZEOF(langlist)-1;
+	int mid;
 
 	while (start <= stop)
 	{
