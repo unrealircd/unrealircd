@@ -715,7 +715,7 @@ int Module_Unload(char *name)
 	{
 		return -1;
 	}
-	ret = (*Mod_Unload)(m->modinfo);
+	ret = (*Mod_Unload)(&m->modinfo);
 	if (ret == MOD_DELAY)
 	{
 		m->flags |= MODFLAG_DELAYED;
