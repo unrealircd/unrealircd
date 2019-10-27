@@ -329,7 +329,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 		/* Paramless mode, easy */
 		for (channel = channels; channel; channel = channel->nextch)
 		{
-			if (channel->mode.extmode && cmode->mode)
+			if (channel->mode.extmode & cmode->mode)
 			{
 				MessageTag *mtags = NULL;
 
@@ -350,7 +350,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 		/* Parameter mode, more complicated */
 		for (channel = channels; channel; channel = channel->nextch)
 		{
-			if (channel->mode.extmode && cmode->mode)
+			if (channel->mode.extmode & cmode->mode)
 			{
 				MessageTag *mtags = NULL;
 
@@ -378,10 +378,10 @@ static void unload_extcmode_commit(Cmode *cmode)
 				channel->mode.extmode &= ~cmode->mode;
 			}
 		}
+		extcmode_para_delslot(cmode, cmode->slot);
 	}
 
 	cmode->flag = '\0';
-	extcmode_para_delslot(cmode, cmode->slot);
 }
 
 /** Unload all unused channel modes after a REHASH */
