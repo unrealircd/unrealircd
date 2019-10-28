@@ -1,0 +1,21 @@
+#
+# This file contains the list of repositories that are used
+# by the './unrealircd module' command.
+# Note that 3rd party modules are NOT written by the UnrealIRCd team.
+# Use such modules at your own risk. In case of problems, contact
+# the module author. For more information, see:
+# https://www.unrealircd.org/docs/Module_manager
+#
+
+#
+# This is the unrealircd-contrib repository which is added by default in
+# UnrealIRCd 5 to make it easy for users to install 3rd party modules.
+# If you are a module coder and want to add your module to this repository
+# as well, then read the rules and procedure at:
+# https://www.unrealircd.org/docs/Rules_for_3rd_party_modules_in_unrealircd-contrib
+#
+https://modules.unrealircd.org/modules.list
+
+# You can add more repositories here. However, do note that all
+# URLs MUST start with https://
+

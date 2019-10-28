@@ -28,12 +28,6 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
 };
 
-typedef struct MultiLine MultiLine;
-struct MultiLine {
-	MultiLine *prev, *next;
-	char *line;
-};
-
 /** Configuration settings */
 struct {
 	int enabled;
@@ -126,24 +120,6 @@ static void init_config(void)
 	/* This sets some default values */
 	memset(&cfg, 0, sizeof(cfg));
 	cfg.enabled = 0;
-}
-
-static void addmultiline(MultiLine **l, char *line)
-{
-	MultiLine *m = safe_alloc(sizeof(MultiLine));
-	safe_strdup(m->line, line);
-	append_ListItem((ListStruct *)m, (ListStruct **)l);
-}
-
-static void freemultiline(MultiLine *l)
-{
-	MultiLine *l_next;
-	for (; l; l = l_next)
-	{
-		l_next = l->next;
-		safe_free(l->line);
-		safe_free(l);
-	}
 }
 
 static void config_postdefaults(void)
@@ -374,12 +350,6 @@ CMD_FUNC(cmd_auth)
 	safe_strdup(SEUSER(client)->authmsg, authbuf);
 
 	send_first_auth(client);
-}
-
-void send_multinotice(Client *client, MultiLine *m)
-{
-	for (; m; m = m->next)
-		sendnotice(client, "%s", m->line);
 }
 
 void authprompt_tag_as_auth_required(Client *client)

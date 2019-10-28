@@ -1152,6 +1152,11 @@ int InitUnrealIRCd(int argc, char *argv[])
 		  case 'R':
 		      report_crash();
 		      exit(0);
+#ifndef _WIN32
+		  case 'm':
+		      modulemanager(argc, argv);
+		      exit(0);
+#endif
 		  case '8':
 		      utf8_test();
 		      exit(0);

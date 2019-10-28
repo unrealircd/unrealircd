@@ -196,7 +196,7 @@ extern char OSName[256];
  * It's silly but this works:
  */
 #ifdef _WIN32
- #define abort()  do { char *crash = NULL; *crash = 'x'; } while(0)
+ #define abort()  do { char *crash = NULL; *crash = 'x'; exit(1); } while(0)
 #endif
 
 #ifndef SOMAXCONN

@@ -31,7 +31,7 @@ OBJS=dns.o auth.o channel.o crule.o dbuf.o \
 	api-moddata.o api-extban.o api-isupport.o api-command.o \
 	api-clicap.o api-messagetag.o api-history-backend.o api-efunctions.o \
 	api-event.o \
-	crypt_blowfish.o updconf.o crashreport.o \
+	crypt_blowfish.o updconf.o crashreport.o modulemanager.o \
 	utf8.o \
 	openssl_hostname_validation.o $(URL)
 
@@ -57,7 +57,10 @@ INCLUDES = ../include/channel.h \
 
 all: build
 
-build: ircd mods
+build:
+	# Force build of 'ircd', before we start building any modules:
+	$(MAKE) ircd
+	$(MAKE) mods
 
 custommodule:
 	+cd modules/third; $(MAKE) MODULEFILE=$(MODULEFILE) 'EXLIBS=$(EXLIBS)' custommodule
@@ -226,6 +229,9 @@ updconf.o: updconf.c $(INCLUDES)
 
 crashreport.o: crashreport.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c crashreport.c
+
+modulemanager.o: modulemanager.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(BINCFLAGS) -c modulemanager.c
 
 utf8.o: utf8.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(BINCFLAGS) -c utf8.c

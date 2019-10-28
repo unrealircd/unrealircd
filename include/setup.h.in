@@ -3,6 +3,9 @@
 /* Define the directory where the unrealircd binary is located */
 #undef BINDIR
 
+/* Specify the build directory */
+#undef BUILDDIR
+
 /* Define the location of the cached remote include files */
 #undef CACHEDIR
 

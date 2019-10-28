@@ -194,9 +194,9 @@ long	config_checkval(char *value, unsigned short flags);
  * Parser
 */
 
-ConfigFile		*config_load(char *filename);
+ConfigFile		*config_load(char *filename, char *displayname);
 void			config_free(ConfigFile *cfptr);
-static ConfigFile 	*config_parse(char *filename, char *confdata);
+ConfigFile	 	*config_parse(char *filename, char *confdata);
 ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name);
 
 extern void add_entropy_configfile(struct stat *st, char *buf);
@@ -746,13 +746,16 @@ char *allowed_channelchars_valtostr(AllowedChannelChars v)
 	}
 }
 
-ConfigFile *config_load(char *filename)
+ConfigFile *config_load(char *filename, char *displayname)
 {
 	struct stat sb;
 	int			fd;
 	int			ret;
 	char		*buf = NULL;
 	ConfigFile	*cfptr;
+
+	if (!displayname)
+		displayname = filename;
 
 #ifndef _WIN32
 	fd = open(filename, O_RDONLY);
@@ -797,7 +800,7 @@ ConfigFile *config_load(char *filename)
 	buf[ret] = '\0';
 	close(fd);
 	add_entropy_configfile(&sb, buf);
-	cfptr = config_parse(filename, buf);
+	cfptr = config_parse(displayname, buf);
 	safe_free(buf);
 	return cfptr;
 }
@@ -817,7 +820,7 @@ void config_free(ConfigFile *cfptr)
 }
 
 /** Remove quotes so that 'hello \"all\" \\ lala' becomes 'hello "all" \ lala' */
-void unreal_delquotes(char *i)
+void unreal_del_quotes(char *i)
 {
 	char *o;
 
@@ -837,10 +840,56 @@ void unreal_delquotes(char *i)
 	*o = '\0';
 }
 
+/** Add quotes to a line, eg some"thing becomes some\"thing - extended version */
+int unreal_add_quotes_r(char *i, char *o, size_t len)
+{
+	if (len == 0)
+		return 0;
+	
+	len--; /* reserve room for nul byte */
+
+	if (len == 0)
+	{
+		*o = '\0';
+		return 0;
+	}
+	
+	for (; *i; i++)
+	{
+		if ((*i == '"') || (*i == '\\')) /* only " and \ need to be quoted */
+		{
+			if (len < 2)
+				break;
+			*o++ = '\\';
+			*o++ = *i;
+			len -= 2;
+		} else
+		{
+			if (len == 0)
+				break;
+			*o++ = *i;
+			len--;
+		}
+	}
+	*o = '\0';
+	
+	return 1;
+}	
+
+/** Add quotes to a line, eg some"thing becomes some\"thing */
+char *unreal_add_quotes(char *str)
+{
+	static char qbuf[2048];
+	
+	*qbuf = '\0';
+	unreal_add_quotes_r(str, qbuf, sizeof(qbuf));
+	return qbuf;
+}
+
 /* This is the internal parser, made by Chris Behrens & Fred Jacobs <2005.
  * Enhanced (or mutilated) by Bram Matthys over the years (2015-2019).
  */
-static ConfigFile *config_parse(char *filename, char *confdata)
+ConfigFile *config_parse(char *filename, char *confdata)
 {
 	char		*ptr;
 	char		*start;
@@ -1034,7 +1083,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					{
 						safe_strldup(curce->ce_vardata, start, ptr-start+1);
 						preprocessor_replace_defines(&curce->ce_vardata, curce);
-						unreal_delquotes(curce->ce_vardata);
+						unreal_del_quotes(curce->ce_vardata);
 					}
 				}
 				else
@@ -1046,7 +1095,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					curce->ce_fileposstart = (start - confdata);
 					safe_strldup(curce->ce_varname, start, ptr-start+1);
 					preprocessor_replace_defines(&curce->ce_varname, curce);
-					unreal_delquotes(curce->ce_varname);
+					unreal_del_quotes(curce->ce_varname);
 					preprocessor_cc_duplicate_list(cc_list, &curce->ce_cond);
 				}
 				break;
@@ -2051,7 +2100,7 @@ int	load_conf(char *filename, const char *original_path)
 	}
 	/* end include recursion checking code */
 
-	if ((cfptr = config_load(filename)))
+	if ((cfptr = config_load(filename, NULL)))
 	{
 		for (cfptr3 = &conf, cfptr2 = conf; cfptr2; cfptr2 = cfptr2->cf_next)
 			cfptr3 = &cfptr2->cf_next;

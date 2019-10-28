@@ -676,6 +676,15 @@ struct NameList {
 
 /** @} */
 
+typedef struct MultiLine MultiLine;
+/** Multi-line list.
+ * @see addmultiline(), freemultiline(), sendnotice_multiline()
+ */
+struct MultiLine {
+	MultiLine *prev, *next;
+	char *line;
+};
+
 #ifdef USE_LIBCURL
 struct MOTDDownload
 {

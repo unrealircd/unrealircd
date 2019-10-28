@@ -11,8 +11,8 @@ the planned functionality is there.
 For those users who do dare to run it, feel free to report any issues
 you may find or comment on the many U5 features on https://bugs.unrealircd.org/.
 
-WARNING: if you are using anope, then note that you need to apply the
-following patch. It is pending since February 2019 unfortunately:
+***WARNING:*** if you are using anope, then note that you need to apply the
+following SASL patch to anope. It is pending since February 2019 unfortunately:
 https://github.com/anope/anope/commit/da6e2730c259d6d6356a0a948e85730ae34663ab.patch
 
 Summary
@@ -93,6 +93,15 @@ Enhancements
   Also note that websockets require nick names and channels to consist of UTF8
   characters only, due to
   [WebSocket being incompatible with non-UTF8](https://www.unrealircd.org/docs/WebSocket_support#Problems_with_websockets_and_non-UTF8)
+* There's now a [Module manager](https://www.unrealircd.org/docs/Module_manager)
+  which allows you to install and upgrade 3rd party modules in an easy way:
+  * ```./unrealircd module list``` - to list all available 3rd party modules
+  * ```./unrealircd module install third/something``` - to install the specified module.
+* You can now test for configuration errors without actually starting the
+  IRC server. This is ideal if you are upgrading UnrealIRCd to a newer
+  version: simply run ```./unrealircd configtest``` to make sure it passes
+  the configuration test, and then you can safely restart the server for
+  the upgrade (in this example case).
 * Channel mode +L now kicks in for any rejected join, so not just for +l but
   also for +b, +i, +O, +z, +R and +k. If, for example, the channel is
   +L #insecure and also +z then, when an insecure user ties to join, they
@@ -244,6 +253,8 @@ Changed
   old compilers / systems).
 * We now default to system libs (eg: ```--with-system-pcre2``` is assumed)
 * Spamfilter should catch some more spam evasion techniques.
+* All /DCCDENY and deny dcc { } parsing and checking is now moved to
+  the 'dccdeny' module.
 
 Minor issues fixed
 -------------------

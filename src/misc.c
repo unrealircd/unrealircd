@@ -1798,6 +1798,7 @@ void DoMD5(char *mdout, const char *src, unsigned long n)
 char *md5hash(char *dst, const char *src, unsigned long n)
 {
 	char tmp[16];
+	SHA256_CTX hash;
 
 	DoMD5(tmp, src, n);
 	sprintf(dst, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -1805,4 +1806,112 @@ char *md5hash(char *dst, const char *src, unsigned long n)
 		tmp[9], tmp[10], tmp[11], tmp[12], tmp[13], tmp[14], tmp[15]);
 
 	return dst;
+}
+
+/** Convert binary 'data' of size 'len' to a hexadecimal string 'str'.
+ * The caller is responsible to ensure that 'str' is sufficiently large.
+ */
+void binarytohex(void *data, size_t len, char *str)
+{
+	const char hexchars[16] = "0123456789abcdef";
+	char *datastr = (char *)data;
+	int i, n = 0;
+
+	for (i=0; i<len; i++)
+	{
+		str[n++] = hexchars[(datastr[i] >> 4) & 0xF];
+		str[n++] = hexchars[datastr[i] & 0xF];
+	}
+	str[n] = '\0';
+}
+
+/** Calculate the SHA256 checksum of a file */
+char *sha256sum_file(const char *fname)
+{
+	FILE *fd;
+	char buf[2048];
+	SHA256_CTX hash;
+	char binaryhash[SHA256_DIGEST_LENGTH];
+	static char hexhash[SHA256_DIGEST_LENGTH*2+1];
+	int n;
+
+	fd = fopen(fname, "rb");
+	if (!fd)
+		return NULL;
+
+	SHA256_Init(&hash);
+	while ((n = fread(buf, 1, sizeof(buf), fd)) > 0)
+	{
+		SHA256_Update(&hash, buf, n);
+	}
+	fclose(fd);
+	SHA256_Final(binaryhash, &hash);
+	binarytohex(binaryhash, sizeof(binaryhash), hexhash);
+	return hexhash;
+}
+
+/** Remove a suffix from a filename, eg ".c" (if it is present) */
+char *filename_strip_suffix(const char *fname, const char *suffix)
+{
+	static char buf[512];
+
+	strlcpy(buf, fname, sizeof(buf));
+
+	if (suffix)
+	{
+		int buf_len = strlen(buf);
+		int suffix_len = strlen(suffix);
+		if (buf_len >= suffix_len)
+		{
+			if (!strncmp(buf+buf_len-suffix_len, suffix, suffix_len))
+				buf[buf_len-suffix_len] = '\0';
+		}
+	} else {
+		char *p = strrchr(buf, '.');
+		if (p)
+			*p = '\0';
+	}
+	return buf;
+}
+
+/** Add a suffix to a filename, eg ".c" */
+char *filename_add_suffix(const char *fname, const char *suffix)
+{
+	static char buf[512];
+	snprintf(buf, sizeof(buf), "%s%s", fname, suffix);
+	return buf;
+}
+
+/* Returns 1 if the filename has the suffix, eg ".c" */
+int filename_has_suffix(const char *fname, const char *suffix)
+{
+	char buf[256];
+	char *p;
+	strlcpy(buf, fname, sizeof(buf));
+	p = strrchr(buf, '.');
+	if (!p)
+		return 0;
+	if (!strcmp(p, suffix))
+		return 1;
+	return 0;
+}
+
+/** Add a line to a MultiLine list */
+void addmultiline(MultiLine **l, char *line)
+{
+	MultiLine *m = safe_alloc(sizeof(MultiLine));
+	safe_strdup(m->line, line);
+	append_ListItem((ListStruct *)m, (ListStruct **)l);
+}
+
+/** Free an entire MultiLine list */
+void freemultiline(MultiLine *l)
+{
+	MultiLine *l_next;
+	for (; l; l = l_next)
+	{
+		l_next = l->next;
+		safe_free(l->line);
+		safe_free(l);
+	}
 }

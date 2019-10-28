@@ -22,8 +22,7 @@ dnl Save CFLAGS, use this when building the libraries like c-ares
 orig_cflags="$CFLAGS"
 
 dnl Save build directory early on (used in our m4 macros too)
-BUILDDIR="`pwd`"
-AC_SUBST(BUILDDIR)
+BUILDDIR_NOW="`pwd`"
 
 dnl Calculate the versions. Perhaps the use of expr is a little too extravagant
 # Generation version number (e.g.: X in X.Y.Z)
@@ -384,6 +383,13 @@ AC_ARG_WITH(confdir, [AS_HELP_STRING([--with-confdir=path],[Specify the director
 	[AC_DEFINE_UNQUOTED([CONFDIR], ["$HOME/unrealircd/conf"], [Define the location of the configuration files])
 		CONFDIR="$HOME/unrealircd/conf"])
 
+dnl We have to pass the builddir as well, for the module manager
+AC_ARG_WITH(builddir, [AS_HELP_STRING([--with-builddir=path],[Specify the build directory])],
+	[AC_DEFINE_UNQUOTED([BUILDDIR], ["$withval"], [Define the build directory])
+		BUILDDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([BUILDDIR], ["$BUILDDIR_NOW"], [Specify the build directory])
+		BUILDDIR="$BUILDDIR_NOW"])
+
 AC_ARG_WITH(modulesdir, [AS_HELP_STRING([--with-modulesdir=path],[Specify the directory for loadable modules])],
 	[AC_DEFINE_UNQUOTED([MODULESDIR], ["$withval"], [Define the location of the modules])
 		MODULESDIR="$withval"],
@@ -443,6 +449,7 @@ AS_IF([test "x$PRIVATELIBDIR" = "x"],
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS])
 
+AC_SUBST(BUILDDIR)
 AC_SUBST(BINDIR)
 AC_SUBST(SCRIPTDIR)
 AC_SUBST(CONFDIR)

@@ -40,9 +40,7 @@ char *find_best_coredump(void)
 	while ((dir = readdir(fd)))
 	{
 		char *fname = dir->d_name;
-		if (strstr(fname, "core") && !strstr(fname, ".so") &&
-		    !strstr(fname, ".conf") && !strstr(fname, ".txt") &&
-		    !strstr(fname, ".done"))
+		if (filename_has_suffix(fname, ".core"))
 		{
 			char buf[512];
 			

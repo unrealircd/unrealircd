@@ -7,7 +7,6 @@
  
 #include "unrealircd.h"
 
-extern ConfigFile *config_load(char *filename);
 extern void config_free(ConfigFile *cfptr);
 
 char configfiletmp[512];
@@ -206,50 +205,6 @@ void replace_section(ConfigEntry *ce, char *buf)
 }
 
 static char buf[8192];
-
-int updconf_addquotes_r(char *i, char *o, size_t len)
-{
-	if (len == 0)
-		return 0;
-	
-	len--; /* reserve room for nul byte */
-
-	if (len == 0)
-	{
-		*o = '\0';
-		return 0;
-	}
-	
-	for (; *i; i++)
-	{
-		if ((*i == '"') || (*i == '\\')) /* only " and \ need to be quoted */
-		{
-			if (len < 2)
-				break;
-			*o++ = '\\';
-			*o++ = *i;
-			len -= 2;
-		} else
-		{
-			if (len == 0)
-				break;
-			*o++ = *i;
-			len--;
-		}
-	}
-	*o = '\0';
-	
-	return 1;
-}	
-
-char *updconf_addquotes(char *str)
-{
-	static char qbuf[2048];
-	
-	*qbuf = '\0';
-	updconf_addquotes_r(str, qbuf, sizeof(qbuf));
-	return qbuf;
-}
 
 int upgrade_me_block(ConfigEntry *ce)
 {
@@ -725,13 +680,13 @@ int upgrade_spamfilter_block(ConfigEntry *ce)
 	                           "\ttarget %s;\n"
 	                           "\taction %s;\n",
 	                           match_type,
-	                           updconf_addquotes(regex),
+	                           unreal_add_quotes(regex),
 	                           targets,
 	                           action);
 
 	/* optional: reason */
 	if (reason)
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\treason \"%s\";\n", updconf_addquotes(reason));
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\treason \"%s\";\n", unreal_add_quotes(reason));
 	
 	/* optional: ban-time */
 	if (ban_time)
@@ -1389,7 +1344,7 @@ void update_read_settings(char *cfgfile)
 	ConfigFile *cf = NULL;
 	ConfigEntry *ce = NULL, *cep, *cepp;
 
-	cf = config_load(cfgfile);
+	cf = config_load(cfgfile, NULL);
 	if (!cf)
 		return;
 		
@@ -1461,7 +1416,7 @@ again:
 		cf = NULL;
 	}
 
-	cf = config_load(configfiletmp);
+	cf = config_load(configfiletmp, NULL);
 	if (!cf)
 	{
 		config_error("could not load configuration file '%s'", configfile);
@@ -1613,7 +1568,7 @@ void build_include_list_ex(char *fname, ConfigFile **cf_list)
 
 	add_include_list(fname, cf_list);
 
-	cf = config_load(fname);
+	cf = config_load(fname, NULL);
 	if (!cf)
 		return;
 

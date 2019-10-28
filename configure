@@ -659,6 +659,7 @@ MODULESDIR
 CONFDIR
 SCRIPTDIR
 BINDIR
+BUILDDIR
 DYNAMIC_LDFLAGS
 MODULEFLAGS
 CRYPTOLIB
@@ -685,7 +686,6 @@ OPENSSLPATH
 TOUCH
 CP
 RM
-BUILDDIR
 target_alias
 host_alias
 build_alias
@@ -734,6 +734,7 @@ with_permissions
 with_bindir
 with_scriptdir
 with_confdir
+with_builddir
 with_modulesdir
 with_logdir
 with_cachedir
@@ -1426,6 +1427,7 @@ Optional Packages:
                           script
   --with-confdir=path     Specify the directory where configuration files are
                           stored
+  --with-builddir=path    Specify the build directory
   --with-modulesdir=path  Specify the directory for loadable modules
   --with-logdir=path      Specify the directory where log files are stored
   --with-cachedir=path    Specify the directory where cached files are stored
@@ -2300,8 +2302,7 @@ fi
 
 orig_cflags="$CFLAGS"
 
-BUILDDIR="`pwd`"
-
+BUILDDIR_NOW="`pwd`"
 
 # Generation version number (e.g.: X in X.Y.Z)
 UNREAL_VERSION_GENERATION="5"
@@ -5894,6 +5895,25 @@ fi
 
 
 
+# Check whether --with-builddir was given.
+if test "${with_builddir+set}" = set; then :
+  withval=$with_builddir;
+cat >>confdefs.h <<_ACEOF
+#define BUILDDIR "$withval"
+_ACEOF
+
+		BUILDDIR="$withval"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define BUILDDIR "$BUILDDIR_NOW"
+_ACEOF
+
+		BUILDDIR="$BUILDDIR_NOW"
+fi
+
+
+
 # Check whether --with-modulesdir was given.
 if test "${with_modulesdir+set}" = set; then :
   withval=$with_modulesdir;
@@ -6053,6 +6073,7 @@ _ACEOF
 		LDFLAGS="$LDFLAGS $LDFLAGS_PRIVATELIBS"
 		export LDFLAGS
 fi
+
 
 
 

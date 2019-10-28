@@ -110,6 +110,9 @@ elif [ "$1" = "croncheck" ] ; then
 	$0 start
 elif [ "$1" = "configtest" ] ; then
 	@BINDIR@/unrealircd -c
+elif [ "$1" = "module" ] ; then
+	shift
+	@BINDIR@/unrealircd -m $*
 elif [ "$1" = "reloadtls" ] ; then
 	echo "Reloading SSL/TLS certificates"
 	if [ ! -r $PID_FILE ] ; then
@@ -242,5 +245,20 @@ elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
 	echo "password \"$HASH\" { spkifp; };"
 	echo ""
 else
-	echo "Usage: unrealircd start|stop|configtest|rehash|restart|mkpasswd|version|croncheck|gencloak|reloadtls|spkifp|upgrade-conf"
+	echo "This script expects a parameter. Use:"
+	echo "unrealircd configtest    Test the configuration file"
+	echo "unrealircd start         Start the IRC Server"
+	echo "unrealircd stop          Stop (kill) the IRC Server"
+	echo "unrealircd rehash        Reload the configuration file"
+	echo "unrealircd reloadtls     Reload the SSL/TLS certificate and settings"
+	echo "unrealircd restart       Restart the IRC Server (stop+start)"
+	echo "unrealircd mkpasswd      Hash a password"
+	echo "unrealircd version       Display the UnrealIRCd version"
+	echo "unrealircd module        Install and uninstall 3rd party modules"
+	echo "unrealircd croncheck     For use in crontab: this checks if the server"
+	echo "                         is running. If not, the server is started."
+	echo "unrealircd gencloak      Display 3 random cloak keys"
+	echo "unrealircd spkifp        Display SPKI Fingerprint"
+	echo "unrealircd upgrade-conf  Upgrade the configuration file from UnrealIRCd"
+	echo "                         3.2.x/4.x to 5.x format"
 fi

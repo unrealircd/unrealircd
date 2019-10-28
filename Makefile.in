@@ -171,6 +171,9 @@ install: all
 	$(INSTALL) -m 0700 -d @CONFDIR@
 	$(INSTALL) -m 0600 doc/conf/*.default.conf @CONFDIR@
 	$(INSTALL) -m 0600 doc/conf/*.optional.conf @CONFDIR@
+	-@if [ ! -f "@CONFDIR@/modules.sources.list" ] ; then \
+		$(INSTALL) -m 0600 doc/conf/modules.sources.list @CONFDIR@ ; \
+	fi
 	-@if [ ! -f "@CONFDIR@/spamfilter.conf" ] ; then \
 		$(INSTALL) -m 0600 doc/conf/spamfilter.conf @CONFDIR@ ; \
 	fi
@@ -189,14 +192,19 @@ install: all
 	$(INSTALL) -m 0600 doc/conf/examples/*.conf @CONFDIR@/examples
 	$(INSTALL) -m 0700 unrealircd @SCRIPTDIR@
 	$(INSTALL) -m 0700 -d @MODULESDIR@
+	@rm -f @MODULESDIR@/*.so 1>/dev/null 2>&1
 	$(INSTALL) -m 0700 src/modules/*.so @MODULESDIR@
 	$(INSTALL) -m 0700 -d @MODULESDIR@/usermodes
+	@rm -f @MODULESDIR@/usermodes/*.so 1>/dev/null 2>&1
 	$(INSTALL) -m 0700 src/modules/usermodes/*.so @MODULESDIR@/usermodes
 	$(INSTALL) -m 0700 -d @MODULESDIR@/chanmodes
+	@rm -f @MODULESDIR@/chanmodes/*.so 1>/dev/null 2>&1
 	$(INSTALL) -m 0700 src/modules/chanmodes/*.so @MODULESDIR@/chanmodes
 	$(INSTALL) -m 0700 -d @MODULESDIR@/snomasks
+	@rm -f @MODULESDIR@/snomasks/*.so 1>/dev/null 2>&1
 	$(INSTALL) -m 0700 src/modules/snomasks/*.so @MODULESDIR@/snomasks
 	$(INSTALL) -m 0700 -d @MODULESDIR@/extbans
+	@rm -f @MODULESDIR@/extbans/*.so 1>/dev/null 2>&1
 	$(INSTALL) -m 0700 src/modules/extbans/*.so @MODULESDIR@/extbans
 	@#If the conf/ssl directory exists then rename it here to conf/tls
 	@#and add a symlink for backwards compatibility (so that f.e. certbot
@@ -210,10 +218,9 @@ install: all
 	@# delete modules/cap directory, to avoid confusing with U4 to U5 upgrades:
 	rm -rf @MODULESDIR@/cap
 	$(INSTALL) -m 0700 -d @MODULESDIR@/third
-	@#Ugly stuff to detect 0 files in this directory:
-	@+for f in src/modules/third/*.so; do \
-		[ -e $f ] && $(INSTALL) -m 0700 src/modules/third/*.so @MODULESDIR@/third || echo; \
-	done
+	@rm -f @MODULESDIR@/third/*.so 1>/dev/null 2>&1
+	@#This step can fail with zero files, so we ignore exit status:
+	-$(INSTALL) -m 0700 src/modules/third/*.so @MODULESDIR@/third
 	$(INSTALL) -m 0700 -d @TMPDIR@
 	$(INSTALL) -m 0700 -d @CACHEDIR@
 	$(INSTALL) -m 0700 -d @PERMDATADIR@

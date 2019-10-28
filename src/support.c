@@ -944,6 +944,7 @@ int unreal_copyfile(const char *src, const char *dest)
 /** Same as unreal_copyfile, but with an option to try hardlinking first */
 int unreal_copyfileex(const char *src, const char *dest, int tryhardlink)
 {
+	unlink(dest);
 #ifndef _WIN32
 	/* Try a hardlink first... */
 	if (tryhardlink && !link(src, dest))
@@ -1291,3 +1292,15 @@ int gettimeofday(struct timeval *tp, void *tzp)
 	return 0;
 }
 #endif
+
+/** Get the numer of characters per line that fit on the terminal (the width) */
+int get_terminal_width(void)
+{
+#if defined(_WIN32) || !defined(TIOCGWINSZ)
+	return 80;
+#else
+	struct winsize w;
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+	return w.ws_col;
+#endif
+}

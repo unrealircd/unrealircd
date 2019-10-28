@@ -1104,6 +1104,12 @@ void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...)
 	va_end(vl);
 }
 
+/** Send MultiLine list as a notice, one for each line */
+void sendnotice_multiline(Client *client, MultiLine *m)
+{
+	for (; m; m = m->next)
+		sendnotice(client, "%s", m->line);
+}
 void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...)
 {
 	static char realpattern[1024];
