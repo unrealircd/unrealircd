@@ -322,6 +322,7 @@ clear
     fi
 
 echo "We will now ask you a number of questions. You can just press ENTER to accept the defaults!"
+echo ""
 
 if [ -z "$NOCACHE" ] ; then
 	# This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
@@ -367,13 +368,21 @@ if [ -z "$NOCACHE" ] ; then
 				echo "Directory $IMPORTEDSETTINGS does not exist or does not contain a config.settings file"
 				exit
 			fi
+			COPYMODULES="1"
+			if grep -q TOPICNICKISNUH $IMPORTEDSETTINGS/config.settings; then
+				echo "Directory $IMPORTEDSETTINGS seems to be UnrealIRCd 4.x (or older)."
+				echo "I will copy the settings but not any 3rd party modules, as they are incompatible with 5.x."
+				COPYMODULES="0"
+			fi
 			# Actually load the settings
 			. $IMPORTEDSETTINGS/config.settings
-			# Copy over 3rd party modules (also deals with 0 file cases, hence the silly looking code)
-			for f in $IMPORTEDSETTINGS/src/modules/third/*.c
-			do
-				[ -e "$f" ] && cp $f src/modules/third/
-			done
+			if [ "$COPYMODULES" = "1" ]; then
+				# Copy over 3rd party modules (also deals with 0 file cases, hence the silly looking code)
+				for f in $IMPORTEDSETTINGS/src/modules/third/*.c
+				do
+					[ -e "$f" ] && cp $f src/modules/third/
+				done
+			fi
 		fi
 	fi
 	# If we just imported settings and the curl dir is set to
