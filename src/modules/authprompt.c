@@ -362,7 +362,7 @@ void authprompt_tag_as_auth_required(Client *client)
 void authprompt_send_auth_required_message(Client *client)
 {
 	/* Display set::authentication-prompt::message */
-	send_multinotice(client, cfg.message);
+	sendnotice_multiline(client, cfg.message);
 }
 
 int authprompt_require_sasl(Client *client, char *reason)
@@ -462,7 +462,7 @@ int authprompt_sasl_result(Client *client, int success)
 
 	if (!success)
 	{
-		send_multinotice(client, cfg.fail_message);
+		sendnotice_multiline(client, cfg.fail_message);
 		return 1;
 	}
 

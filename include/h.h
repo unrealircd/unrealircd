@@ -956,7 +956,7 @@ extern char *filename_add_suffix(const char *fname, const char *suffix);
 extern int filename_has_suffix(const char *fname, const char *suffix);
 extern void addmultiline(MultiLine **l, char *line);
 extern void freemultiline(MultiLine *l);
-extern void send_multinotice(Client *client, MultiLine *m);
+extern void sendnotice_multiline(Client *client, MultiLine *m);
 extern void unreal_del_quotes(char *i);
 extern char *unreal_add_quotes(char *str);
 extern int unreal_add_quotes_r(char *i, char *o, size_t len);
