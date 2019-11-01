@@ -1,19 +1,20 @@
-UnrealIRCd 5.0.0-alpha4 Release Notes
+UnrealIRCd 5.0.0-beta1 Release Notes
 ======================================
 
-***IMPORTANT:*** UnrealIRCd 5 is currently in "alpha" phase. This means it
+***IMPORTANT:*** UnrealIRCd 5 is currently in "beta" phase. This means it
 **may crash** or behave weird. Do not run this on production servers!
 
-The alpha releases are there to show the current state of UnrealIRCd 5.
-UnrealIRCd 5 is not yet feature complete at this point; about 90% of
-the planned functionality is there.
+The fact that UnrealIRCd 5 is "beta" means it's mostly feature-complete.
+Now it's time to test things thoroughly and get rid of bugs.
 
 For those users who do dare to run it, feel free to report any issues
-you may find or comment on the many U5 features on https://bugs.unrealircd.org/.
+on https://bugs.unrealircd.org/.
 
 ***WARNING:*** if you are using anope, then note that you need to apply the
-following SASL patch to anope. It is pending since February 2019 unfortunately:
+following SASL patch to anope:
 https://github.com/anope/anope/commit/da6e2730c259d6d6356a0a948e85730ae34663ab.patch
+The patch has been accepted by anope on Feb 2019. However, unfortunately
+there haven't been any anope stable releases since Dec 2017.
 
 Summary
 --------
