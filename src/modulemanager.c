@@ -1049,6 +1049,9 @@ void mm_list(char *searchname)
 
 	memset(&largest_column, 0, sizeof(largest_column));
 	largest_column[COLUMN_STATUS] = strlen("inst/UNAV");
+	largest_column[COLUMN_NAME] = strlen("Name:");
+	largest_column[COLUMN_VERSION] = strlen("Version:");
+
 	for (m = managed_modules; m; m = m->next)
 	{
 		if (strlen(m->name) > largest_column[COLUMN_NAME])
