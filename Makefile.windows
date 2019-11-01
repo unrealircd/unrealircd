@@ -196,8 +196,8 @@ DLL_FILES=SRC/MODULES/CHGHOST.DLL SRC/MODULES/SDESC.DLL SRC/MODULES/SETIDENT.DLL
  SRC/MODULES/ADMIN.DLL SRC/MODULES/TRACE.DLL SRC/MODULES/NETINFO.DLL \
  SRC/MODULES/LINKS.DLL SRC/MODULES/HELP.DLL SRC/MODULES/RULES.DLL \
  SRC/MODULES/CLOSE.DLL SRC/MODULES/MAP.DLL SRC/MODULES/EOS.DLL \
- SRC/MODULES/SERVER.DLL SRC/MODULES/STATS.DLL SRC/MODULES/SVSFLINE.DLL \
- SRC/MODULES/DCCDENY.DLL SRC/MODULES/UNDCCDENY.DLL SRC/MODULES/WHOWAS.DLL \
+ SRC/MODULES/SERVER.DLL SRC/MODULES/STATS.DLL \
+ SRC/MODULES/DCCDENY.DLL SRC/MODULES/WHOWAS.DLL \
  SRC/MODULES/CONNECT.DLL SRC/MODULES/DCCALLOW.DLL SRC/MODULES/USERIP.DLL \
  SRC/MODULES/NICK.DLL SRC/MODULES/USER.DLL SRC/MODULES/MODE.DLL \
  SRC/MODULES/WATCH.DLL SRC/MODULES/PART.DLL SRC/MODULES/JOIN.DLL \
@@ -761,14 +761,8 @@ src/modules/server.dll: src/modules/server.c $(INCLUDES)
 src/modules/stats.dll: src/modules/stats.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/stats.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
-src/modules/svsfline.dll: src/modules/svsfline.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/svsfline.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
-
 src/modules/dccdeny.dll: src/modules/dccdeny.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/dccdeny.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
-
-src/modules/undccdeny.dll: src/modules/undccdeny.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/undccdeny.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
 
 src/modules/whowas.dll: src/modules/whowas.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/whowas.c /Fesrc/modules/ /Fosrc/modules/ $(MODLFLAGS)
