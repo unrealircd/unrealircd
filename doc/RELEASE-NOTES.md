@@ -6,7 +6,6 @@ UnrealIRCd 5.0.0-beta1 Release Notes
 
 The fact that UnrealIRCd 5 is "beta" means it's mostly feature-complete.
 Now it's time to test things thoroughly and get rid of bugs.
-
 For those users who do dare to run it, feel free to report any issues
 on https://bugs.unrealircd.org/.
 
@@ -20,6 +19,7 @@ Summary
 --------
 The most visible change to end-users is channel history. A lot of IRCv3 features were added.
 Various modules from Gottem have been integrated and enhanced.
+We now have a 3rd party module manager so you can install modules with 1 simple command.
 Channel settings of ```+P``` channels and *LINES are saved in a database and
 restored on startup (via 'channeldb' and 'tkldb' respectively).
 Channel mode ```+L``` has a slight change of meaning, the existing floodprot
