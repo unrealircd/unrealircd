@@ -275,16 +275,15 @@ int mm_http_request(char *url, char *fname, int follow_redirects)
 		}
 	}
 
-	fclose(fd);
-	BIO_free_all(socket);
-	SSL_CTX_free(ctx_client);
-
 	if (!got_data)
 	{
 		fprintf(stderr, "Error while fetching %s: unable to retrieve data\n", url);
 		goto out3;
 	}
 
+	fclose(fd);
+	BIO_free_all(socket);
+	SSL_CTX_free(ctx_client);
 	return 1;
 out3:
 	fclose(fd);
@@ -536,6 +535,7 @@ ManagedModule *mm_parse_module_c_file(char *modulename, char *fname)
 				break;
 		}
 	}
+	fclose(fd);
 
 	if (!*module_header_name || !*module_header_version ||
 	    !*module_header_description || !*module_header_author)
@@ -807,7 +807,10 @@ int mm_parse_repo_db(char *url, char *filename)
 		{
 			m = mm_repo_module_config(url, ce);
 			if (!m)
+			{
+				config_free(cf);
 				return 0;
+			}
 			AddListItem(m, managed_modules);
 		}
 	}
@@ -825,7 +828,7 @@ int mm_refresh_repository(void)
 
 	if (!file_exists(TMPDIR))
 	{
-		mkdir(TMPDIR, S_IRUSR|S_IWUSR|S_IXUSR); /* Create the tmp dir, if it doesn't exist */
+		(void)mkdir(TMPDIR, S_IRUSR|S_IWUSR|S_IXUSR); /* Create the tmp dir, if it doesn't exist */
 		if (!file_exists(TMPDIR))
 		{
 			/* This is possible if the directory structure does not exist,
@@ -1146,7 +1149,7 @@ int mm_compile(ManagedModule *m, char *tmpfile, int test)
 		char backupfile[512];
 		snprintf(backupfile, sizeof(backupfile), "%s.bak", newpath);
 		unlink(backupfile);
-		rename(newpath, backupfile);
+		(void)rename(newpath, backupfile);
 	}
 	if (!unreal_copyfileex(tmpfile, newpath, 0))
 		return 0;
@@ -1584,6 +1587,7 @@ void mm_generate_repository(int argc, char *args[])
 		}
 	}
 	closedir(fd);
+	fclose(fdo);
 }
 
 void mm_parse_c_file(int argc, char *args[])
