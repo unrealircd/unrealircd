@@ -9,11 +9,8 @@ Now it's time to test things thoroughly and get rid of bugs.
 For those users who do dare to run it, feel free to report any issues
 on https://bugs.unrealircd.org/.
 
-***WARNING:*** if you are using anope, then note that you need to apply the
-following SASL patch to anope:
-https://github.com/anope/anope/commit/da6e2730c259d6d6356a0a948e85730ae34663ab.patch
-The patch has been accepted by anope on Feb 2019. However, unfortunately
-there haven't been any anope stable releases since Dec 2017.
+***WARNING:*** if you are using anope, then you must run anope 2.0.7
+(or later) with the unreal4 protocol module.
 
 Summary
 --------
