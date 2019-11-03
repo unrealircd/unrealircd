@@ -10,7 +10,7 @@ For those users who do dare to run it, feel free to report any issues
 on https://bugs.unrealircd.org/.
 
 ***WARNING:*** if you are using anope, then you must run anope 2.0.7
-(or later) with the unreal4 protocol module.
+(or later) with the unreal4 protocol module. If you are using git, then `git pull` in the Anope cloned repo and recompile Anope
 
 Summary
 --------
