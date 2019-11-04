@@ -8,6 +8,9 @@
 #ifndef _WIN32
 #include <dirent.h>
 
+#define MODULEMANAGER_CONNECT_TIMEOUT	7
+#define MODULEMANAGER_READ_TIMEOUT	20
+
 typedef struct ManagedModule ManagedModule;
 
 struct ManagedModule
@@ -131,14 +134,16 @@ int mm_http_request(char *url, char *fname, int follow_redirects)
 		return 0;
 
 	snprintf(hostandport, sizeof(hostandport), "%s:%d", host, port);
-	
+
 	ctx_client = mm_init_ssl();
 	if (!ctx_client)
 	{
 		fprintf(stderr, "ERROR: TLS initalization failure (I)\n");
 		return 0;
 	}
-	
+
+	alarm(MODULEMANAGER_CONNECT_TIMEOUT);
+
 	socket = BIO_new_ssl_connect(ctx_client);
 	if (!socket)
 	{
@@ -192,7 +197,7 @@ int mm_http_request(char *url, char *fname, int follow_redirects)
 		goto out2;
 	}
 
-	// TODO: set alarm? timeout?
+	alarm(MODULEMANAGER_READ_TIMEOUT);
 	while ((n = BIO_read(socket, buf, sizeof(buf)-1)) > 0)
 	{
 		buf[n] = '\0';
@@ -291,6 +296,7 @@ out2:
 	BIO_free_all(socket);
 out1:
 	SSL_CTX_free(ctx_client);
+	alarm(0);
 	return 0;
 }
 
@@ -825,6 +831,8 @@ int mm_refresh_repository(void)
 	char buf[512];
 	char *tmpfile;
 	int linenr = 0;
+	int success = 0;
+	int numrepos = 0;
 
 	if (!file_exists(TMPDIR))
 	{
@@ -868,6 +876,7 @@ int mm_refresh_repository(void)
 			return 0;
 		}
 		printf("Checking module repository %s...\n", line);
+		numrepos++;
 		tmpfile = unreal_mktemp(TMPDIR, "mm");
 		if (mm_http_request(line, tmpfile, 1))
 		{
@@ -876,10 +885,20 @@ int mm_refresh_repository(void)
 				fclose(fd);
 				return 0;
 			}
+			success++;
 		}
 	}
 	fclose(fd);
-	return 1;
+
+	if (numrepos == 0)
+	{
+		fprintf(stderr, "ERROR: No repositories listed in module repository list. "
+		                "Did you remove the default UnrealIRCd repository?\n"
+		                "All commands, except for './unrealircd module uninstall third/name-of-module', are unavailable.\n");
+		return 0;
+	}
+
+	return success ? 1 : 0;
 }
 
 #define COLUMN_STATUS	0
@@ -1597,9 +1616,14 @@ void mm_parse_c_file(int argc, char *args[])
 	char modname[256];
 	ManagedModule *m;
 
-	if (!fullname || !file_exists(fullname))
+	if (!fullname)
 	{
 		fprintf(stderr, "Usage: ./unrealircd module parse-c-file path/to/file.c\n");
+		exit(-1);
+	}
+	if (!file_exists(fullname))
+	{
+		fprintf(stderr, "ERROR: Unable to open C file '%s'\n", fullname);
 		exit(-1);
 	}
 	basename = unreal_getfilename(fullname);
@@ -1623,11 +1647,33 @@ void modulemanager(int argc, char *args[])
 {
 	if (!args[0])
 		mm_usage();
+
+	/* The following operations do not require reading
+	 * of the repository list and are always available:
+	 */
+	if (!strcasecmp(args[0], "uninstall"))
+	{
+		mm_uninstall(argc, args);
+		exit(0);
+	}
+	else if (!strcasecmp(args[0], "generate-repository"))
+	{
+		mm_generate_repository(argc, args);
+		exit(0);
+	}
+	else if (!strcasecmp(args[0], "parse-c-file"))
+	{
+		mm_parse_c_file(argc, args);
+		exit(0);
+	}
+
+	/* Fetch the repository list */
 	if (!mm_refresh_repository())
 	{
 		fprintf(stderr, "Fatal error encountered\n");
 		exit(-1);
 	}
+
 	if (!strcasecmp(args[0], "list"))
 		mm_list(args[1]);
 	else if (!strcasecmp(args[0], "info"))
@@ -1637,14 +1683,8 @@ void modulemanager(int argc, char *args[])
 		mm_install(argc, args, 0);
 		fprintf(stderr, "All actions were successful.\n");
 	}
-	else if (!strcasecmp(args[0], "uninstall"))
-		mm_uninstall(argc, args);
 	else if (!strcasecmp(args[0], "upgrade"))
 		mm_upgrade(argc, args);
-	else if (!strcasecmp(args[0], "generate-repository"))
-		mm_generate_repository(argc, args);
-	else if (!strcasecmp(args[0], "parse-c-file"))
-		mm_parse_c_file(argc, args);
 	else
 		mm_usage();
 }
