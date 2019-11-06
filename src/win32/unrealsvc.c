@@ -66,9 +66,9 @@ int main(int argc, char *argv[]) {
 		strcpy(binpath,path);
 		strcat(binpath, "\\UnrealIRCd.exe");
 		hService = CreateService(hSCManager, "UnrealIRCd", "UnrealIRCd",
-				 SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
+				 SERVICE_CHANGE_CONFIG, SERVICE_WIN32_OWN_PROCESS,
 				 SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, binpath,
-				 NULL, NULL, NULL, NULL, NULL); 
+				 NULL, NULL, NULL, TEXT("NT AUTHORITY\\NetworkService"), ""); 
 		if (hService) 
 		{
 			printf("UnrealIRCd NT Service successfully installed");
