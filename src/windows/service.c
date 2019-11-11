@@ -97,11 +97,6 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 
 	IsService = TRUE;
 
-	/* Go one level up, since we are currently in the bin\ subdir
-	 * and we want to be in (f.e.) "C:\Program Files\UnrealIRCd 5"
-	 */
-	chdir("..");
-
 	/* Initialize the service structure */
 	IRCDStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
 	IRCDStatus.dwCurrentState = SERVICE_START_PENDING;
@@ -115,6 +110,11 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	folder = strrchr(path, '\\');
 	*folder = 0;
 	chdir(path);
+
+	/* Go one level up, since we are currently in the bin\ subdir
+	 * and we want to be in (f.e.) "C:\Program Files\UnrealIRCd 5"
+	 */
+	chdir("..");
 
 	/* Register the service controller */
 	IRCDStatusHandle = RegisterServiceCtrlHandler("UnrealIRCd", IRCDCtrlHandler); 
