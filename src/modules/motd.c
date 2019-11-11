@@ -92,9 +92,10 @@ CMD_FUNC(cmd_motd)
 	/* tm_year should be zero only if the struct is zero-ed */
 	if (themotd && themotd->lines && themotd->last_modified.tm_year)
 	{
-		sendnumericfmt(client, RPL_MOTD, "- %d/%d/%d %d:%02d", themotd->last_modified.tm_mday,
-			themotd->last_modified.tm_mon + 1,
+		sendnumericfmt(client, RPL_MOTD, ":- %.04d-%.02d-%.02d %.02d:%02d",
 			themotd->last_modified.tm_year + 1900,
+			themotd->last_modified.tm_mon + 1,
+			themotd->last_modified.tm_mday,
 			themotd->last_modified.tm_hour,
 			themotd->last_modified.tm_min);
 	}
