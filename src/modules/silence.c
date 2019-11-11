@@ -111,7 +111,7 @@ CMD_FUNC(cmd_silence)
 		if (parc < 2 || BadPtr(parv[1]))
 		{
 			for (s = SILENCELIST(client); s; s = s->next)
-				sendnumeric(client, RPL_SILELIST, client->name, s->mask);
+				sendnumeric(client, RPL_SILELIST, s->mask);
 			sendnumeric(client, RPL_ENDOFSILELIST);
 			return;
 		}

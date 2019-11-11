@@ -300,7 +300,7 @@ static char *replies[] = {
 /* 268 */ NULL, /* aircd */
 /* 269 */ NULL, /* aircd */
 /* 270 */ NULL, /* ircu */
-/* 271    RPL_SILELIST */ "%s %s",
+/* 271    RPL_SILELIST */ "%s",
 /* 272    RPL_ENDOFSILELIST */ ":End of Silence List",
 /* 273 */ NULL, /* aircd */
 /* 274 */ NULL, /* ircnet */
