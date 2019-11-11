@@ -93,63 +93,64 @@ Name: "{app}\modules\third"
 
 [Code]
 var
-  uninstaller: String;
-  ErrorCode: Integer;
+	uninstaller: String;
+	ErrorCode: Integer;
 
 //*********************************************************************************
 // This is where all starts.
 //*********************************************************************************
 function InitializeSetup(): Boolean;
 var
-  major: Cardinal;
+	major: Cardinal;
 begin
 	Result := true;
-  if Not RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Major', major) then
-    begin
-      MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2019 to be installed.' #13 +
-             'After you click OK you will be taken to a download page from Microsoft:' #13 +
-             '1) Scroll down to the section "Visual Studio 2015, 2017 and 2019"' #13 +
-             '2) Click on the x64 "vc_redist.x64.exe" to download the 64 bit installer' #13 +
-             '3) Run the installer.' #13 + #13 +
-             'If you are already absolutely sure that you have this package installed then you can skip this step.', mbInformation, MB_OK);
-      ShellExec('open', 'https://support.microsoft.com/help/2977003/the-latest-supported-visual-c-downloads', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
-      MsgBox('Your browser was launched. After you have installed the Microsoft Visual C++ Redistributable for Visual Studio 2019 (vc_redist.x64.exe), click OK below to continue the UnrealIRCd installer', mbInformation, MB_OK);
+
+	if Not RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Major', major) then
+	begin
+		MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2019 to be installed.' #13 +
+		       'After you click OK you will be taken to a download page from Microsoft:' #13 +
+		       '1) Scroll down to the section "Visual Studio 2015, 2017 and 2019"' #13 +
+		       '2) Click on the x64 "vc_redist.x64.exe" to download the 64 bit installer' #13 +
+		       '3) Run the installer.' #13 + #13 +
+		       'If you are already absolutely sure that you have this package installed then you can skip this step.', mbInformation, MB_OK);
+		ShellExec('open', 'https://support.microsoft.com/help/2977003/the-latest-supported-visual-c-downloads', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
+		MsgBox('Your browser was launched. After you have installed the Microsoft Visual C++ Redistributable for Visual Studio 2019 (vc_redist.x64.exe), click OK below to continue the UnrealIRCd installer', mbInformation, MB_OK);
 	end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 
 var
-  hWnd: Integer;
-  ResultCode: Integer;
-  ResultXP: boolean;
-  Result2003: boolean;
-  Res: Integer;
-  s: String;
-  d: String;
+	hWnd: Integer;
+	ResultCode: Integer;
+	ResultXP: boolean;
+	Result2003: boolean;
+	Res: Integer;
+	s: String;
+	d: String;
 begin
 if CurStep = ssPostInstall then
 	begin
-     d := ExpandConstant('{app}');
-	   if IsTaskSelected('fixperm') then
-	   begin
-	     // This fixes the permissions in the UnrealIRCd folder by granting full access to the user
-	     // running the install.
-	     s := '-on "'+d+'" -ot file -actn ace -ace "n:'+GetUserNameString()+';p:full;m:set"';
-	     Exec(d+'\tmp\setacl.exe', s, d, SW_HIDE, ewWaitUntilTerminated, Res);
-	   end
-	   else
-	   begin
-	     MsgBox('You have chosen to not have the installer automatically set write access. Please ensure that the user running the IRCd can write to '+d+', otherwise the IRCd will fail to load.',mbConfirmation, MB_OK);
-	   end
-     if IsTaskSelected('installservice') then
-	   begin
-	     // Similar to above, but this adds full access to NetworkService,
-       // otherwise it cannot copy modules, cannot write to logs, etc etc.
-	     s := '-on "'+d+'" -ot file -actn ace -ace "n:NetworkService;p:full;m:set"';
-	     Exec(d+'\tmp\setacl.exe', s, d, SW_HIDE, ewWaitUntilTerminated, Res);
-	   end
-  end;
+		d := ExpandConstant('{app}');
+		if IsTaskSelected('fixperm') then
+		begin
+			// This fixes the permissions in the UnrealIRCd folder by granting full access to the user
+			// running the install.
+			s := '-on "'+d+'" -ot file -actn ace -ace "n:'+GetUserNameString()+';p:full;m:set"';
+			Exec(d+'\tmp\setacl.exe', s, d, SW_HIDE, ewWaitUntilTerminated, Res);
+		end
+		else
+		begin
+			MsgBox('You have chosen to not have the installer automatically set write access. Please ensure that the user running the IRCd can write to '+d+', otherwise the IRCd will fail to load.',mbConfirmation, MB_OK);
+		end;
+		if IsTaskSelected('installservice') then
+		begin
+			// Similar to above, but this adds full access to NetworkService,
+			// otherwise it cannot copy modules, cannot write to logs, etc etc.
+			s := '-on "'+d+'" -ot file -actn ace -ace "n:NetworkService;p:full;m:set"';
+			Exec(d+'\tmp\setacl.exe', s, d, SW_HIDE, ewWaitUntilTerminated, Res);
+		end;
+	end;
 end;
 
 //*********************************************************************************
@@ -158,17 +159,17 @@ end;
 
 procedure CurPageChanged(CurPage: Integer);
 begin
-  if (CurPage = wpSelectTasks)then
-  begin
-     if FileExists(ExpandConstant('{app}\conf\tls\server.cert.pem')) then
-     begin
-        WizardForm.TasksList.Checked[9]:=false;
-     end
-     else
-     begin
-        WizardForm.TasksList.Checked[9]:=true;
-     end
-  end
+	if (CurPage = wpSelectTasks) then
+	begin
+		if FileExists(ExpandConstant('{app}\conf\tls\server.cert.pem')) then
+		begin
+			WizardForm.TasksList.Checked[9]:=false;
+		end
+		else
+		begin
+			WizardForm.TasksList.Checked[9]:=true;
+		end;
+	end;
 end;
 
 [Icons]
