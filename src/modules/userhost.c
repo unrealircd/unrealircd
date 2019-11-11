@@ -58,13 +58,16 @@ MOD_UNLOAD()
  * information only (no spurious AWAY labels or channels).
  * Re-written by Dianora 1999
  */
+/* Keep this at 5!!!! */
+#define MAXUSERHOSTREPLIES 5
 CMD_FUNC(cmd_userhost)
 {
 	char *p;		/* scratch end pointer */
 	char *cn;		/* current name */
 	Client *acptr;
-	char response[5][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
-	int  i;			/* loop counter */
+	char response[MAXUSERHOSTREPLIES][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
+	int i;			/* loop counter */
+	int w;
 
 	if (parc < 2)
 	{
@@ -74,23 +77,22 @@ CMD_FUNC(cmd_userhost)
 
 	/* The idea is to build up the response string out of pieces
 	 * none of this strlen() nonsense.
-	 * 5 * (NICKLEN*2+CHANNELLEN+USERLEN+HOSTLEN+30) is still << sizeof(buf)
+	 * MAXUSERHOSTREPLIES * (NICKLEN*2+CHANNELLEN+USERLEN+HOSTLEN+30) is still << sizeof(buf)
 	 * and our ircsnprintf() truncates it to fit anyway. There is
 	 * no danger of an overflow here. -Dianora
 	 */
-	response[0][0] = response[1][0] = response[2][0] =
-	    response[3][0] = response[4][0] = '\0';
+	response[0][0] = response[1][0] = response[2][0] = response[3][0] = response[4][0] = '\0';
 
 	cn = parv[1];
 
-	for (i = 0; (i < 5) && cn; i++)
+	for (w = 0, i = 0; (i < MAXUSERHOSTREPLIES) && cn; i++)
 	{
 		if ((p = strchr(cn, ' ')))
 			*p = '\0';
 
 		if ((acptr = find_person(cn, NULL)))
 		{
-			ircsnprintf(response[i], NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30,
+			ircsnprintf(response[w], NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30,
                             "%s%s=%c%s@%s",
 			    acptr->name,
 			    (IsOper(acptr) && (!IsHideOper(acptr) || client == acptr || IsOper(client)))
@@ -100,6 +102,7 @@ CMD_FUNC(cmd_userhost)
 			    ((acptr != client) && !IsOper(client)
 			    && IsHidden(acptr) ? acptr->user->virthost :
 			    acptr->user->realhost));
+			w++;
 		}
 		if (p)
 			p++;
