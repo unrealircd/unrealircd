@@ -202,8 +202,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	GetOSName(OSName);
 
 	/* Check if we are running as a service... */
-	hSCManager = OpenSCManager(NULL, NULL, GENERIC_EXECUTE);
-	if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_EXECUTE)))
+	hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
+	if ((hService = OpenService(hSCManager, "UnrealIRCd", SC_MANAGER_CONNECT)))
 	{
 		int save_err = 0;
 		StartServiceCtrlDispatcher(DispatchTable);

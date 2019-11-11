@@ -135,12 +135,19 @@ if CurStep = ssPostInstall then
 	   begin
 	     // This fixes the permissions in the UnrealIRCd folder by granting full access to the user
 	     // running the install.
-	     s := '-on "'+d+'" -ot file -actn ace -ace "n:'+GetUserNameString()+';p:full;m:set';
+	     s := '-on "'+d+'" -ot file -actn ace -ace "n:'+GetUserNameString()+';p:full;m:set"';
 	     Exec(d+'\tmp\setacl.exe', s, d, SW_HIDE, ewWaitUntilTerminated, Res);
 	   end
 	   else
 	   begin
 	     MsgBox('You have chosen to not have the installer automatically set write access. Please ensure that the user running the IRCd can write to '+d+', otherwise the IRCd will fail to load.',mbConfirmation, MB_OK);
+	   end
+     if IsTaskSelected('installservice') then
+	   begin
+	     // Similar to above, but this adds full access to NetworkService,
+       // otherwise it cannot copy modules, cannot write to logs, etc etc.
+	     s := '-on "'+d+'" -ot file -actn ace -ace "n:NetworkService;p:full;m:set"';
+	     Exec(d+'\tmp\setacl.exe', s, d, SW_HIDE, ewWaitUntilTerminated, Res);
 	   end
   end;
 end;
