@@ -130,8 +130,8 @@ CMD_FUNC(cmd_silence)
 			action = '+';
 		}
 		p = pretty_mask(p);
-		if ((action == '-' && !del_silence(client, p)) ||
-		    (action != '-' && !add_silence(client, p, 1)))
+		if ((action == '-' && del_silence(client, p)) ||
+		    (action != '-' && add_silence(client, p, 1)))
 		{
 			sendto_prefix_one(client, client, NULL, ":%s SILENCE %c%s",
 			    client->name, action, p);
@@ -198,7 +198,7 @@ int _add_silence(Client *client, const char *mask, int senderr)
 	s = safe_alloc(sizeof(Silence)+strlen(mask));
 	strcpy(s->mask, mask); /* safe, allocated above */
 	AddListItemUnchecked(s, moddata_local_client(client, silence_md).ptr);
-	return 0;
+	return 1;
 }
 
 /** Check whether sender is silenced by receiver.
