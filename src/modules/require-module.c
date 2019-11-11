@@ -367,7 +367,6 @@ int reqmods_configrun_require(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (strcmp(ce->ce_vardata, "module"))
 		return 0;
 
-	rmod = safe_alloc(sizeof(ReqMod));
 	name = minversion = NULL;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -395,6 +394,7 @@ int reqmods_configrun_require(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (!name)
 		return 1;
 
+	rmod = safe_alloc(sizeof(ReqMod));
 	safe_strdup(rmod->name, name);
 	if (minversion)
 		safe_strdup(rmod->minversion, minversion);
