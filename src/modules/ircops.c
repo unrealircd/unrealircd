@@ -136,6 +136,6 @@ CMD_FUNC(cmd_ircops)
 		opers, opers != 1 ? "s" : "",
 		aways);
 
-	sendnumericfmt(client, RPL_TEXT, "%s", buf);
-	sendnumericfmt(client, RPL_TEXT, "End of /IRCOPS list");
+	sendnumericfmt(client, RPL_TEXT, ":%s", buf);
+	sendnumericfmt(client, RPL_TEXT, ":End of /IRCOPS list");
 }

@@ -269,25 +269,23 @@ void cmd_info_send(Client *client)
 {
 	char **text = unrealinfo;
 
-	sendnumericfmt(client, RPL_INFO, "========== %s ==========", IRCDTOTALVERSION);
+	sendnumericfmt(client, RPL_INFO, ":========== %s ==========", IRCDTOTALVERSION);
 
 	while (*text)
-		sendnumericfmt(client, RPL_INFO, "| %s", *text++);
+		sendnumericfmt(client, RPL_INFO, ":| %s", *text++);
 
-	sendnumericfmt(client, RPL_INFO, "|");
-	sendnumericfmt(client, RPL_INFO, "|");
-	sendnumericfmt(client, RPL_INFO, "| Credits - Type /CREDITS");
-	sendnumericfmt(client, RPL_INFO, "|");
-	sendnumericfmt(client, RPL_INFO, "| This is an UnrealIRCd-style server");
-	sendnumericfmt(client, RPL_INFO, "| If you find any bugs, please report them at:");
-	sendnumericfmt(client, RPL_INFO, "|  https://bugs.unrealircd.org/");
-	sendnumericfmt(client,
-	    RPL_INFO, "| UnrealIRCd Homepage: https://www.unrealircd.org");
-	sendnumericfmt(client,
-	    RPL_INFO, "============================================");
-	sendnumericfmt(client, RPL_INFO, "Birth Date: %s, compile # %s", creation, generation);
-	sendnumericfmt(client, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
-	sendnumericfmt(client, RPL_INFO, "ReleaseID (%s)", buildid);
+	sendnumericfmt(client, RPL_INFO, ":|");
+	sendnumericfmt(client, RPL_INFO, ":|");
+	sendnumericfmt(client, RPL_INFO, ":| Credits - Type /CREDITS");
+	sendnumericfmt(client, RPL_INFO, ":|");
+	sendnumericfmt(client, RPL_INFO, ":| This is an UnrealIRCd-style server");
+	sendnumericfmt(client, RPL_INFO, ":| If you find any bugs, please report them at:");
+	sendnumericfmt(client, RPL_INFO, ":|  https://bugs.unrealircd.org/");
+	sendnumericfmt(client, RPL_INFO, ":| UnrealIRCd Homepage: https://www.unrealircd.org");
+	sendnumericfmt(client, RPL_INFO, ":============================================");
+	sendnumericfmt(client, RPL_INFO, ":Birth Date: %s, compile # %s", creation, generation);
+	sendnumericfmt(client, RPL_INFO, ":On-line since %s", myctime(me.local->firsttime));
+	sendnumericfmt(client, RPL_INFO, ":ReleaseID (%s)", buildid);
 	sendnumeric(client, RPL_ENDOFINFO);
 }
 
@@ -339,9 +337,8 @@ CMD_FUNC(cmd_credits)
 			sendnumeric(client, RPL_INFO, *text++);
 
 		sendnumeric(client, RPL_INFO, "");
-		sendnumericfmt(client,
-		    RPL_INFO, "Birth Date: %s, compile # %s", creation, generation);
-		sendnumericfmt(client, RPL_INFO, "On-line since %s", myctime(me.local->firsttime));
+		sendnumericfmt(client, RPL_INFO, ":Birth Date: %s, compile # %s", creation, generation);
+		sendnumericfmt(client, RPL_INFO, ":On-line since %s", myctime(me.local->firsttime));
 		sendnumeric(client, RPL_ENDOFINFO);
 	}
 }
@@ -788,7 +785,7 @@ void short_motd(Client *client)
        {
 	       tm = &themotd->last_modified; /* for readability */
                sendnumeric(client, RPL_MOTDSTART, me.name);
-               sendnumericfmt(client, RPL_MOTD, "- %d/%d/%d %d:%02d", tm->tm_mday, tm->tm_mon + 1,
+               sendnumericfmt(client, RPL_MOTD, ":- %d/%d/%d %d:%02d", tm->tm_mday, tm->tm_mon + 1,
                    1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
        }
        if (is_short)

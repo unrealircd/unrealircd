@@ -387,7 +387,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 			 */
 			if (!IsRegistered(cptr) && strcasecmp(ch, "NOTICE"))
 			{
-				sendnumericfmt(from, ERR_NOTREGISTERED, "You have not registered");
+				sendnumericfmt(from, ERR_NOTREGISTERED, ":You have not registered");
 				return;
 			}
 			/* If the user is shunned then don't send anything back in case

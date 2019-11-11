@@ -136,12 +136,12 @@ CMD_FUNC(cmd_dccallow)
 		if (!didlist && !strncasecmp(s, "list", 4))
 		{
 			didanything = didlist = 1;
-			sendnumericfmt(client, RPL_DCCINFO, "The following users are on your dcc allow list:");
+			sendnumeric(client, RPL_DCCINFO, "The following users are on your dcc allow list:");
 			for(lp = client->user->dccallow; lp; lp = lp->next)
 			{
 				if (lp->flags == DCC_LINK_REMOTE)
 					continue;
-				sendnumericfmt(client, RPL_DCCLIST, "%s (%s@%s)", lp->value.client->name,
+				sendnumericfmt(client, RPL_DCCLIST, ":%s (%s@%s)", lp->value.client->name,
 					lp->value.client->user->username,
 					GetHost(lp->value.client));
 			}
@@ -151,7 +151,7 @@ CMD_FUNC(cmd_dccallow)
 		{
 			didanything = didhelp = 1;
 			for(ptr = dcc_help; *ptr; ptr++)
-				sendnumericfmt(client, RPL_DCCINFO, "%s", *ptr);
+				sendnumeric(client, RPL_DCCINFO, *ptr);
 			sendnumeric(client, RPL_ENDOFDCCLIST, s);
 		}
 	}
@@ -225,7 +225,7 @@ int del_dccallow(Client *client, Client *optr)
 	}
 	if (!found)
 	{
-		sendnumericfmt(client, RPL_DCCINFO, "%s is not in your DCC allow list", optr->name);
+		sendnumericfmt(client, RPL_DCCINFO, ":%s is not in your DCC allow list", optr->name);
 		return 0;
 	}
 
