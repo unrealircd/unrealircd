@@ -31,6 +31,8 @@ fi
 ./Config -quick || (tail -n 5000 config.log; exit 1)
 $MAKE
 yes ''|make pem
+make
+./unrealircd module install third/dumpcmds
 make install
 
 set +x
