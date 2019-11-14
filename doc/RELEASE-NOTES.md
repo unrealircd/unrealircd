@@ -1,13 +1,14 @@
-UnrealIRCd 5.0.0-beta1 Release Notes
+UnrealIRCd 5.0.0-rc1 Release Notes
 ======================================
 
-***IMPORTANT:*** UnrealIRCd 5 is currently in "beta" phase. This means it
-**may crash** or behave weird. Do not run this on production servers!
+***IMPORTANT:*** UnrealIRCd 5 is currently in "Release Candidate" phase.
+This means it is not yet stable. Do not run this on production servers.
 
-The fact that UnrealIRCd 5 is "beta" means it's mostly feature-complete.
-Now it's time to test things thoroughly and get rid of bugs.
-For those users who do dare to run it, feel free to report any issues
-on https://bugs.unrealircd.org/.
+There will be no module API changes anymore and no new features will be
+added in the "release candidate" stage. Focus is 100% on fixing bugs
+and have a stable UnrealIRCd 5 release in December 2019.
+You can help us a lot by testing this release.
+If you do, please report any issues on https://bugs.unrealircd.org/.
 
 ***WARNING:*** if you are using anope, then you must run anope 2.0.7
 (or later) with the unreal4 protocol module.
@@ -253,6 +254,9 @@ Changed
 * Spamfilter should catch some more spam evasion techniques.
 * All /DCCDENY and deny dcc { } parsing and checking is now moved to
   the 'dccdeny' module.
+* Windows: If you choose to run UnrealIRCd as a service then it now
+  runs under the low-privilege NetworkService account rather than
+  the high-privilege LocalSystem account.
 
 Minor issues fixed
 -------------------
@@ -298,11 +302,8 @@ Deprecated
 
 Developers
 -----------
-IMPORTANT: As long as UnrealIRCd 5 is in alpha stage, we do not suggest
-3rd party module authors to start porting modules yet from U4 to U5.
-Of course you may, but the module API is still very likely to change
-so you may have to do certain (other) changes again next alpha release.
-It is therefore best to wait until beta1. You have been warned ;).
+The API is stable now that UnrealIRCd 5 is in Release Candidate stage.
+Module coders can start porting modules from U4 to U5 now.
 * The module header is now as follows:
 
       ModuleHeader MOD_HEADER
@@ -346,7 +347,9 @@ It is therefore best to wait until beta1. You have been warned ;).
 * New single unified ```sendto_channel()``` and ```sendto_local_common_channels()```
   functions that are used by all the channel commands.
 * Numerics should now be sent using ```sendnumeric()```. There's also
-  a format string version ```sendnumericfmt()``` in case you need it.
+  a format string version ```sendnumericfmt()``` in case you need it,
+  in which case you need to pass the numeric format string yourself.
+  In such a case, don't forget the colon character, like ":%s", where needed.
 * The parameters in several hooks have changed. Many now have an
   extra ```MessageTag *mtags``` parameter. Sometimes there are other changes
   as well, for example ```HOOKTYPE_CHANMSG``` now has 4 extra parameters.
@@ -412,6 +415,8 @@ Server protocol
 Client protocol
 ----------------
 TODO: expand with other new things / changes
+* Support for message tags and other IRCv3 features. See the IRCv3
+  specifications for more details.
 * When a message is blocked, for whatever reason, we now use a generic
   numeric response: ```:server 531 yourname targetname :reason``` for the block
   This replaces all the various NOTICEs, ```ERR_NOCTCP```, ```ERR_NONONREG```, etc.
@@ -421,4 +426,6 @@ TODO: expand with other new things / changes
   generic errors to any command involving targets. And ```ERR_SERVICESDOWN```.
   Note that channel messages already had a generic numeric for signaling
   blocked messages for a very long time, ```ERR_CANNOTSENDTOCHAN```.
-
+* The 271 response to the SILENCE command is now:
+  ```:server 271 yournick listentry!*@*```
+  Previously the nick name appeared twice, which was a mistake.

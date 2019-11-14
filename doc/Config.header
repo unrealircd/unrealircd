@@ -7,7 +7,7 @@
  \___/|_| |_|_|  \___|\__,_|_|\___/\_| \_| \____/\__,_|
 
                                Configuration Program
-                                for UnrealIRCd 5.0.0-beta1
+                                for UnrealIRCd 5.0.0-rc1
                                     
 This program will help you to compile your IRC server, and ask you
 questions regarding the compile-time settings of it during the process. 
@@ -21,8 +21,7 @@ https://www.unrealircd.org/docs/UnrealIRCd_5_documentation
 
 --------------------------------------------------------------------------------------
 
-IMPORTANT: UnrealIRCd 5 is currently in "beta" phase. This means it
-may crash or behave weird. Do not run this on production servers!
+IMPORTANT: This is a "release candidate". Do not run on production servers.
 Please report issues at https://bugs.unrealircd.org/
 
 The full release notes are available in doc/RELEASE-NOTES.md
