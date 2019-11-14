@@ -1501,6 +1501,7 @@ void mm_usage(void)
 	                "unrealircd module list                     List all the available and installed modules\n"
 	                "unrealircd module info name-of-module      Show more information about the module\n"
 	                "unrealircd module install name-of-module   Install the specified module\n"
+	                "unrealircd module uninstall name-of-module Uninstall the specified module\n"
 	                "unrealircd module upgrade name-of-module   Upgrade the specified module (if needed)\n"
 	                "unrealircd module upgrade                  Upgrade all modules (if needed)\n"
 	                "unrealircd module generate-repository      Generate a repository index (you are\n"
@@ -1651,7 +1652,8 @@ void modulemanager(int argc, char *args[])
 	/* The following operations do not require reading
 	 * of the repository list and are always available:
 	 */
-	if (!strcasecmp(args[0], "uninstall"))
+	if (!strcasecmp(args[0], "uninstall") ||
+	    !strcasecmp(args[0], "remove"))
 	{
 		mm_uninstall(argc, args);
 		exit(0);
