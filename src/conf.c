@@ -1414,6 +1414,16 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 		else
 			return 0;
 	}
+#else
+	if (strstr(cep->ce_vardata, "://"))
+	{
+		config_error("%s:%d: %s: UnrealIRCd was not compiled with remote includes support "
+		             "so you cannot use URLs here.",
+		             cep->ce_fileptr->cf_filename,
+		             cep->ce_varlinenum,
+		             entry);
+		return 1;
+	}
 #endif /* USE_LIBCURL */
 
 	/*
@@ -3139,6 +3149,18 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 #ifdef USE_LIBCURL
 	if (url_is_valid(ce->ce_vardata))
 		return remote_include(ce);
+#else
+	if (strstr(ce->ce_vardata, "://"))
+	{
+		config_error("%s:%d: URL specified: %s",
+		             ce->ce_fileptr->cf_filename,
+		             ce->ce_varlinenum,
+		             ce->ce_vardata);
+		config_error("UnrealIRCd was not compiled with remote includes support "
+		             "so you cannot use URLs. You are suggested to re-run ./Config "
+		             "and answer YES to the question about remote includes.");
+		return -1;
+	}
 #endif
 #if !defined(_WIN32) && !defined(_AMIGA) && !defined(OSXTIGER) && DEFAULT_PERMISSIONS != 0
 	(void)chmod(ce->ce_vardata, DEFAULT_PERMISSIONS);
