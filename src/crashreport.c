@@ -63,7 +63,7 @@ char *find_best_coredump(void)
 	if (hFile == INVALID_HANDLE_VALUE)
 		return NULL;
 	
-	while (FindNextFile(hFile, &hData))
+	do
 	{
 		char *fname = hData.cFileName;
 		if (!strstr(fname, ".done"))
@@ -77,7 +77,7 @@ char *find_best_coredump(void)
 				strlcpy(best_fname, buf, sizeof(best_fname));
 			}
 		}
-	}
+	} while (FindNextFile(hFile, &hData));
 	FindClose(hFile);
 #endif	
 	
