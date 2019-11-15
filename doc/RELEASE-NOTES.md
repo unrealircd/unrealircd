@@ -1,5 +1,5 @@
 UnrealIRCd 5.0.0-rc1 Release Notes
-======================================
+===================================
 
 ***IMPORTANT:*** UnrealIRCd 5 is currently in "Release Candidate" phase.
 This means it is not yet stable. Do not run this on production servers.
