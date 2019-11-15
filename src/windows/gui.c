@@ -658,6 +658,7 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 	{
 		case WM_INITDIALOG: 
 		{
+#if 0
 			unsigned char	String[16384];
 			int size;
 			unsigned char *RTFString;
@@ -685,6 +686,9 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			safe_free(RTFString);
 			safe_free(stream);
 			return TRUE;
+#else
+			return FALSE;
+#endif
 		}
 
 		case WM_COMMAND: 
@@ -729,7 +733,7 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			break;
 		case WM_DESTROY:
 			break;
-		}
+	}
 	return (FALSE);
 }
 
