@@ -483,7 +483,7 @@ static void set_channel_mode(Channel *channel, char *modes, char *parameters)
 
 	SetULine(&me); // hack for crash.. set ulined so no access checks.
 	do_mode(channel, &me, NULL, myparc, myparv, 0, 0);
-	SetULine(&me); // and clear it again..
+	ClearULine(&me); // and clear it again..
 
 	for (i = 0; i < myparc; i++)
 		safe_free(myparv[i]);
