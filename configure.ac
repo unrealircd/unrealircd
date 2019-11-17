@@ -62,6 +62,11 @@ exit 1
 AC_PATH_PROG(INSTALL,install)
 AC_CHECK_PROG(MAKER, gmake, gmake, make)
 AC_PATH_PROG(GMAKE,gmake)
+
+AS_IF([$MAKER --version | grep -q "GNU Make"],
+        [GNUMAKE="0"],
+        [AC_MSG_ERROR([It seems your system does not have gmake installed. Please install gmake.])])
+
 AC_PATH_PROG(GUNZIP, gunzip)
 AC_PATH_PROG(PKGCONFIG, pkg-config)
 

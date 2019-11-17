@@ -2629,6 +2629,13 @@ $as_echo "no" >&6; }
 fi
 
 
+
+if $MAKER --version | grep -q "GNU Make"; then :
+  GNUMAKE="0"
+else
+  as_fn_error $? "It seems your system does not have gmake installed. Please install gmake." "$LINENO" 5
+fi
+
 # Extract the first word of "gunzip", so it can be a program name with args.
 set dummy gunzip; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
