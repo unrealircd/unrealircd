@@ -1,7 +1,5 @@
 # create RSA certs - Server
 
-RANDFILE = tls.rnd
-
 [ req ]
 # Note: RSA bits is ignored, as we use ECC now
 default_bits = 2048
