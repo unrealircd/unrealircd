@@ -35,4 +35,4 @@ if [[ "$OSTYPE" != "freebsd"* ]]; then
 	cd -
 fi
 
-killall -15 unrealircd || true
+killall -15 unrealircd atheme-services services anope || true
