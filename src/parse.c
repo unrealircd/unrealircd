@@ -693,7 +693,8 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 		}
 		else if ((channel = find_channel(nick, NULL)))
 		{
-			sendto_channel(channel, client, client, 0, 0, SEND_ALL, recv_mtags,
+			sendto_channel(channel, client, client->direction,
+			               0, 0, SEND_ALL, recv_mtags,
 			               ":%s %d %s", client->name, numeric, buffer);
 		}
 	}

@@ -345,7 +345,9 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
  * but at least we can all use one single function.
  * @param channel       The channel to send to
  * @param from        The source of the message
- * @param skip        The client to skip (can be NULL)
+ * @param skip        The client to skip (can be NULL).
+ *                    Note that if you specify a remote link then
+ *                    you usually mean xyz->direction and not xyz.
  * @param prefix      Any combination of PREFIX_* (can be 0 for all)
  * @param clicap      Client capability the recipient should have
  *                    (this only works for local clients, we will

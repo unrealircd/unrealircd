@@ -115,7 +115,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 				if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_CHANMSG, channel->chname, 0, NULL))
 					return;
 				new_message(client, NULL, &mtags);
-				sendto_channel(channel, client, client,
+				sendto_channel(channel, client, client->direction,
 				               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
 				               ":%s PRIVMSG %s :%s",
 				               client->name, channel->chname, parv[1]);
@@ -250,7 +250,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 							if (alias->spamfilter && match_spamfilter(client, output, SPAMF_CHANMSG, channel->chname, 0, NULL))
 								return;
 							new_message(client, NULL, &mtags);
-							sendto_channel(channel, client, client,
+							sendto_channel(channel, client, client->direction,
 							               PREFIX_ALL, 0, SEND_ALL|SKIP_DEAF, mtags,
 							               ":%s PRIVMSG %s :%s",
 							               client->name, channel->chname, parv[1]);

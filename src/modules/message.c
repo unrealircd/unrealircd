@@ -388,7 +388,7 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 				continue;
 			}
 
-			sendto_channel(channel, client, client,
+			sendto_channel(channel, client, client->direction,
 				       prefix, 0, sendflags, mtags,
 				       notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
 				       client->name, targetstr, text);
