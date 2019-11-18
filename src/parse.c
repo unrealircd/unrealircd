@@ -678,8 +678,19 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 		{
 			if (!IsMe(acptr) && IsUser(acptr))
 			{
-				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s",
-				    client->name, numeric, buffer);
+				if (MyConnect(acptr) && isdigit(*nick))
+				{
+					/* Hack to prevent leaking UID */
+					char *skip = strchr(buffer, ' ');
+					if (skip)
+					{
+						sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s %s",
+						    client->name, numeric, acptr->name, skip+1);
+					} /* else.. malformed (no content) */
+				} else {
+					sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s",
+					    client->name, numeric, buffer);
+				}
 			}
 			else if (IsServer(acptr) && acptr->direction != client->direction)
 				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s",
