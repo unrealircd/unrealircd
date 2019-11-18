@@ -406,15 +406,8 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, char *parv[], 
 			case 'd':
 				if (parv[3])
 				{
-					MessageTag *mtags = NULL;
 					strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
-					new_message(target, recv_mtags, &mtags);
-					sendto_local_common_channels(target, target,
-					                             ClientCapabilityBit("account-notify"), mtags,
-					                             ":%s ACCOUNT %s",
-					                             target->name,
-					                             !isdigit(*target->user->svid) ? target->user->svid : "*");
-					free_message_tags(mtags);
+					user_account_login(recv_mtags, target);
 				}
 				else
 				{

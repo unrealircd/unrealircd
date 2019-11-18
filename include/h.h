@@ -958,3 +958,4 @@ extern void sendnotice_multiline(Client *client, MultiLine *m);
 extern void unreal_del_quotes(char *i);
 extern char *unreal_add_quotes(char *str);
 extern int unreal_add_quotes_r(char *i, char *o, size_t len);
+extern void user_account_login(MessageTag *recv_mtags, Client *client);

@@ -73,34 +73,42 @@ long CAP_SASL = 0L;
  */
 CMD_FUNC(cmd_svslogin)
 {
+	Client *target;
+
 	if (!SASL_SERVER || MyUser(client) || (parc < 3) || !parv[3])
 		return;
 
-	if (!strcasecmp(parv[1], me.name) || !strncmp(parv[1], me.id, 3))
+	/* We actually ignore parv[1] since this is a broadcast message.
+	 * It is a broadcast message because we want ALL servers to know
+	 * that the user is now logged in under account xyz.
+	 */
+	target = find_client(parv[2], NULL);
+	if (!target)
+		return; /* client not found */
+
+	if (IsServer(target))
+		return;
+
+	if (target->user == NULL)
+		make_user(target);
+
+	strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
+
+	if (MyConnect(target))
 	{
-		Client *target;
-
-		target = find_client(parv[2], NULL);
-		if (!target || !MyConnect(target))
-			return;
-
-		if (target->user == NULL)
-			make_user(target);
-
-		strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
-
+		/* Notify user */
 		sendnumeric(target, RPL_LOGGEDIN,
 			   BadPtr(target->name) ? "*" : target->name,
 			   BadPtr(target->user->username) ? "*" : target->user->username,
 			   BadPtr(target->user->realhost) ? "*" : target->user->realhost,
 			   target->user->svid, target->user->svid);
-
-		return;
 	}
 
-	/* not for us; propagate. */
+	user_account_login(recv_mtags, target);
+
+	/* Propagate to the rest of the network */
 	sendto_server(client, 0, 0, NULL, ":%s SVSLOGIN %s %s %s",
-	    client->name, parv[1], parv[2], parv[3]);
+	              client->name, parv[1], parv[2], parv[3]);
 }
 
 /*
