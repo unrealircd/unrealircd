@@ -144,8 +144,6 @@ static void ident_lookup_receive(int fd, int revents, void *userdata)
 	int len;
 
 	len = READ_SOCK(client->local->authfd, buf, sizeof(buf)-1);
-	if (ERRNO == P_EAGAIN)
-		return; /* Try again later */
 
 	/* We received a response. We don't bother with fragmentation
 	 * since that is not going to happen for such a short string.
@@ -180,6 +178,16 @@ static void ident_lookup_receive(int fd, int revents, void *userdata)
 	return;
 }
 
+void skip_whitespace(char **p)
+{
+	for (; **p == ' ' || **p == '\t'; *p = *p + 1);
+}
+
+void read_until(char **p, char *stopchars)
+{
+	for (; **p && !strchr(stopchars, **p); *p = *p + 1);
+}
+
 static char *ident_lookup_parse(Client *client, char *buf)
 {
 	/* <port> , <port> : USERID : <OSTYPE>: <username>
@@ -190,29 +198,41 @@ static char *ident_lookup_parse(Client *client, char *buf)
 	char *username = NULL;
 	char *p, *p2;
 
-	/* First port */
-	p = strstr(buf, " , ");
+	skip_whitespace(&buf);
+	p = strchr(buf, ',');
 	if (!p)
 		return NULL;
 	*p = '\0';
-	port1 = atoi(buf);
-	buf = p+ strlen(" , ");
+	port1 = atoi(buf); /* port1 is set */
 
-	/* Second port */
-	p = strstr(buf, " : USERID : ");
+	/*  <port> : USERID : <OSTYPE>: <username> */
+	buf = p + 1;
+	p = strchr(buf, ':');
 	if (!p)
 		return NULL;
 	*p = '\0';
-	port2 = atoi(buf);
-	buf = p+ strlen(" : USERID : ");
+	port2 = atoi(buf); /* port2 is set */
 
-	/* USERID */
-	p = strstr(buf, " : ");
+	/*  USERID : <OSTYPE>: <username> */
+	buf = p + 1;
+	skip_whitespace(&buf);
+	if (strncmp(buf, "USERID", 6))
+		return NULL;
+	buf += 6; /* skip over strlen("USERID") */
+	skip_whitespace(&buf);
+	if (*buf != ':')
+		return NULL;
+	buf++;
+	skip_whitespace(&buf);
+
+	/*  <OSTYPE>: <username> */
+	p = strchr(buf, ':');
 	if (!p)
 		return NULL;
-	*p = '\0';
-	ostype = buf;
-	buf = p+ strlen(" : ");
+
+	/*  <username> */
+	buf = p+1;
+	skip_whitespace(&buf);
 
 	/* Username */
 	// A) Skip any ~ or ^ at the start
@@ -221,11 +241,13 @@ static char *ident_lookup_parse(Client *client, char *buf)
 			break;
 	// B) Stop at the end, IOTW stop at newline, space, etc.
 	for (p=buf; *p; p++)
+	{
 		if (strchr("\n\r@:", *p) || (*p <= 32))
 		{
 			*p = '\0';
 			break;
 		}
+	}
 	if (*buf == '\0')
 		return NULL;
 	return buf;
