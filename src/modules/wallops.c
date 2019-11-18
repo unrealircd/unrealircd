@@ -73,6 +73,5 @@ CMD_FUNC(cmd_wallops)
 		return;
 	}
 
-	// FIXME: verify: not sure about direction @ client, here or in send.c
-	sendto_ops_butone(client, client, ":%s WALLOPS :%s", client->name, message);
+	sendto_ops_butone(client->direction, client, ":%s WALLOPS :%s", client->name, message);
 }
