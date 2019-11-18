@@ -117,7 +117,7 @@ CMD_FUNC(cmd_sasl)
 	if (!SASL_SERVER || MyUser(client) || (parc < 4) || !parv[4])
 		return;
 
-	if (!strcasecmp(parv[1], me.name))
+	if (!strcasecmp(parv[1], me.name) || !strncmp(parv[1], me.id, 3))
 	{
 		Client *target;
 
