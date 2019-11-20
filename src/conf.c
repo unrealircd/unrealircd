@@ -1508,22 +1508,39 @@ ConfigCommand *config_binary_search(char *cmd) {
 
 void	free_iConf(Configuration *i)
 {
+	safe_free(i->dns_bindip);
+	safe_free(i->link_bindip);
 	safe_free(i->kline_address);
 	safe_free(i->gline_address);
+	safe_free(i->oper_snomask);
 	safe_free(i->auto_join_chans);
 	safe_free(i->oper_auto_join_chans);
 	safe_free(i->allow_user_stats);
-	safe_free(i->channel_command_prefix);
-	safe_free(i->oper_snomask);
+	// allow_user_stats_ext is freed elsewhere
+	safe_free(i->egd_path);
 	safe_free(i->static_quit);
-	if (i->tls_options)
-	{
-	    free_tls_options(i->tls_options);
-	    i->tls_options = NULL;
-	}
+	safe_free(i->static_part);
+	free_tls_options(i->tls_options);
+	i->tls_options = NULL;
+	safe_free(i->tls_options);
+	safe_free(i->plaintext_policy_user_message);
+	safe_free(i->plaintext_policy_oper_message);
+	safe_free(i->outdated_tls_policy_user_message);
+	safe_free(i->outdated_tls_policy_oper_message);
 	safe_free(i->restrict_usermodes);
 	safe_free(i->restrict_channelmodes);
 	safe_free(i->restrict_extendedbans);
+	safe_free(i->channel_command_prefix);
+	safe_free(i->spamfilter_ban_reason);
+	safe_free(i->spamfilter_virus_help_channel);
+	// spamexcept is freed elsewhere
+	safe_free(i->spamexcept_line);
+	safe_free(i->reject_message_too_many_connections);
+	safe_free(i->reject_message_server_full);
+	safe_free(i->reject_message_unauthorized);
+	safe_free(i->reject_message_kline);
+	safe_free(i->reject_message_gline);
+	// network struct:
 	safe_free(i->network.x_ircnetwork);
 	safe_free(i->network.x_ircnet005);
 	safe_free(i->network.x_defserv);
@@ -1533,17 +1550,6 @@ void	free_iConf(Configuration *i)
 	safe_free(i->network.x_helpchan);
 	safe_free(i->network.x_stats_server);
 	safe_free(i->network.x_sasl_server);
-	safe_free(i->spamfilter_ban_reason);
-	safe_free(i->spamfilter_virus_help_channel);
-	safe_free(i->spamexcept_line);
-	safe_free(i->link_bindip);
-	safe_free(i->outdated_tls_policy_user_message);
-	safe_free(i->outdated_tls_policy_oper_message);
-	safe_free(i->reject_message_too_many_connections);
-	safe_free(i->reject_message_server_full);
-	safe_free(i->reject_message_unauthorized);
-	safe_free(i->reject_message_kline);
-	safe_free(i->reject_message_gline);
 }
 
 int	config_test();
