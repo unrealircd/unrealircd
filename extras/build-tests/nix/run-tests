@@ -23,8 +23,8 @@ fi
 git clone -q https://github.com/unrealircd/unrealircd-tests.git
 cd unrealircd-tests
 
-# Run the test framework, tsting both services:
-###FIXME!! ./run -services anope || exit 1
+# Run the test framework, testing both services:
+./run -services anope || exit 1
 ./run -services atheme || exit 1
 
 # Do cipherscan test at the end
