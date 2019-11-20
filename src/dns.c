@@ -680,6 +680,7 @@ CMD_FUNC(cmd_dns)
 		{
 			c = cache_list->next;
 			safe_free(cache_list->name);
+			safe_free(cache_list->ip);
 			safe_free(cache_list);
 			cache_list = c;
 		}
