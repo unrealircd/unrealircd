@@ -356,12 +356,11 @@ void cmd_message(Client *client, MessageTag *recv_mtags, int parc, char *parv[],
 				{
 					/* Send the error message, but only if:
 					 * 1) The user has not been killed
-					 * 2) The user is still in the channel (might be kicked)
-					 * 3) It is not a NOTICE
+					 * 2) It is not a NOTICE
 					 */
 					if (IsDead(client))
 						return;
-					if (!IsDead(client) && find_membership_link(client->user->channel, channel) && !notice && errmsg)
+					if (!IsDead(client) && !notice && errmsg)
 						sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, errmsg, p2);
 					continue; /* skip delivery to this target */
 				}
