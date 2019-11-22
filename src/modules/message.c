@@ -787,6 +787,11 @@ int _can_send_to_channel(Client *client, Channel *channel, char **msgtext, char 
 	{
 		if (!*errmsg)
 			*errmsg = "You are banned";
+		/* Don't send message if the user was previously a member
+		 * and isn't anymore, so if the user is KICK'ed, eg by floodprot.
+		 */
+		if (member && !IsDead(client) && !find_membership_link(client->user->channel, channel))
+			*errmsg = NULL;
 		return 0;
 	}
 	if (!*msgtext || !**msgtext)
