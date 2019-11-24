@@ -110,7 +110,7 @@ void cmd_alias(Client *client, MessageTag *mtags, int parc, char *parv[], char *
 		{
 			char *msg = parv[1];
 			char *errmsg = NULL;
-			if (!can_send_to_channel(client, channel, &msg, &errmsg, 0))
+			if (can_send_to_channel(client, channel, &msg, &errmsg, 0))
 			{
 				if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_CHANMSG, channel->chname, 0, NULL))
 					return;
