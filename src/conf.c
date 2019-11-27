@@ -3124,6 +3124,16 @@ void convert_to_absolute_path(char **path, char *reldir)
 	*path = s;
 }
 
+/* Similar to convert_to_absolute_path() but returns a duplicated string.
+ * Don't forget to free!
+ */
+char *convert_to_absolute_path_duplicate(char *path, char *reldir)
+{
+	char *xpath = strdup(path);
+	convert_to_absolute_path(&xpath, reldir);
+	return xpath;
+}
+
 /*
  * Actual config parser funcs
 */
@@ -6876,21 +6886,23 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 				errors++;
 			}
 		}
-		else if (!strcmp(cepp->ce_varname, "certificate"))
+		else if (!strcmp(cepp->ce_varname, "certificate") ||
+		         !strcmp(cepp->ce_varname, "dh") ||
+		         !strcmp(cepp->ce_varname, "key") ||
+		         !strcmp(cepp->ce_varname, "trusted-ca-file"))
 		{
+			char *path;
 			CheckNull(cepp);
-		}
-		else if (!strcmp(cepp->ce_varname, "dh"))
-		{
-			CheckNull(cepp);
-		}
-		else if (!strcmp(cepp->ce_varname, "key"))
-		{
-			CheckNull(cepp);
-		}
-		else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
-		{
-			CheckNull(cepp);
+			path = convert_to_absolute_path_duplicate(cepp->ce_vardata, CONFDIR);
+			if (!file_exists(path))
+			{
+				config_error("%s:%i: %s: could not open '%s': %s",
+					cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, config_var(cepp),
+					path, strerror(errno));
+				safe_free(path);
+				errors++;
+			}
+			safe_free(path);
 		}
 		else if (!strcmp(cepp->ce_varname, "options"))
 		{
