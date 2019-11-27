@@ -414,28 +414,7 @@ void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, PreprocessorPha
 			config_entry_free(ce);
 			continue;
 		}
-
-		cep_prev = NULL;
-		for (cep = ce->ce_entries; cep; cep = cep_next)
-		{
-			cep_next = cep->ce_next;
-			if (!preprocessor_resolve_if(cep->ce_cond, phase))
-			{
-				/* Delete this entry */
-				if (cep == ce->ce_entries)
-				{
-					/* we are head, so new head */
-					ce->ce_entries = cep->ce_next; /* can be NULL now */
-				} else {
-					/* non-head */
-					ce_prev->ce_next = cep->ce_next;
-				}
-				config_entry_free(cep);
-				continue;
-			}
-			preprocessor_resolve_conditionals_ce(&cep, phase);
-			cep_prev = cep;
-		}
+		preprocessor_resolve_conditionals_ce(&ce->ce_entries, phase);
 		ce_prev = ce;
 	}
 }

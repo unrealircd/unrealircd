@@ -813,7 +813,7 @@ void config_free(ConfigFile *cfptr)
 	{
 		nptr = cfptr->cf_next;
 		if (cfptr->cf_entries)
-			config_entry_free(cfptr->cf_entries);
+			config_entry_free_all(cfptr->cf_entries);
 		safe_free(cfptr->cf_filename);
 		safe_free(cfptr);
 	}
@@ -956,7 +956,7 @@ ConfigFile *config_parse(char *filename, char *confdata)
 				{
 					config_error("%s:%i: Missing semicolon (';') before close brace. Check line %d and the line(s) before.\n",
 						filename, linenumber, linenumber);
-					config_entry_free(curce);
+					config_entry_free_all(curce);
 					config_free(curcf);
 					errors++;
 					return NULL;
@@ -1027,7 +1027,7 @@ ConfigFile *config_parse(char *filename, char *confdata)
 						config_error("%s:%i Comment on line %d does not end\n",
 							filename, commentstart, commentstart);
 						errors++;
-						config_entry_free(curce);
+						config_entry_free_all(curce);
 						config_free(curcf);
 						return NULL;
 					}
@@ -1067,7 +1067,7 @@ ConfigFile *config_parse(char *filename, char *confdata)
 					config_error("%s:%i: Unterminated quote found\n",
 							filename, linenumber);
 					errors++;
-					config_entry_free(curce);
+					config_entry_free_all(curce);
 					config_free(curcf);
 					return NULL;
 				}
@@ -1174,7 +1174,7 @@ ConfigFile *config_parse(char *filename, char *confdata)
 						config_error("%s: Unexpected end of file. Some line or block did not end properly. "
 						             "Look for any missing } and };\n", filename);
 					errors++;
-					config_entry_free(curce);
+					config_entry_free_all(curce);
 					config_free(curcf);
 					return NULL;
 				}
@@ -1220,7 +1220,7 @@ breakout:
 		             "Perhaps a missing ; (semicolon) somewhere?\n",
 			filename, curce->ce_varlinenum);
 		errors++;
-		config_entry_free(curce);
+		config_entry_free_all(curce);
 	}
 	else if (cursection)
 	{
@@ -1238,8 +1238,11 @@ breakout:
 	return curcf;
 }
 
-/** Free a ConfigEntry struct (and all it's children) */
-void config_entry_free(ConfigEntry *ce)
+/** Free a ConfigEntry struct, all it's children, and all it's next entries.
+ * Consider calling config_entry_free() instead of this one.. or at least
+ * check which one of the two you actually need ;)
+ */
+void config_entry_free_all(ConfigEntry *ce)
 {
 	ConfigEntry	*nptr;
 
@@ -1247,13 +1250,27 @@ void config_entry_free(ConfigEntry *ce)
 	{
 		nptr = ce->ce_next;
 		if (ce->ce_entries)
-			config_entry_free(ce->ce_entries);
+			config_entry_free_all(ce->ce_entries);
 		safe_free(ce->ce_varname);
 		safe_free(ce->ce_vardata);
 		if (ce->ce_cond)
 			preprocessor_cc_free_list(ce->ce_cond);
 		safe_free(ce);
 	}
+}
+
+/** Free a specific ConfigEntry struct (and it's children).
+ * Caller must ensure that the entry is not in the linked list anymore.
+ */
+void config_entry_free(ConfigEntry *ce)
+{
+	if (ce->ce_entries)
+		config_entry_free_all(ce->ce_entries);
+	safe_free(ce->ce_varname);
+	safe_free(ce->ce_vardata);
+	if (ce->ce_cond)
+		preprocessor_cc_free_list(ce->ce_cond);
+	safe_free(ce);
 }
 
 ConfigEntry *config_find_entry(ConfigEntry *ce, char *name)

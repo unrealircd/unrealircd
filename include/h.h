@@ -113,6 +113,7 @@ extern int config_is_blankorempty(ConfigEntry *cep, const char *block);
 extern MODVAR int config_verbose;
 extern void config_progress(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
 extern void config_entry_free(ConfigEntry *ce);
+extern void config_entry_free_all(ConfigEntry *ce);
 extern ConfigFile *config_load(char *filename, char *displayname);
 extern void config_free(ConfigFile *cfptr);
 extern void ipport_seperate(char *string, char **ip, char **port);
