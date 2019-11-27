@@ -62,6 +62,15 @@ MOD_UNLOAD()
 ** Additional bugfixes/ideas by codemastr
 ** (C) codemastr & Stskeeps
 ** 
+** 2019-11-27: Behavior change. We now send the KNOCK
+** across servers and only deliver the channel notice
+** to local channel members. The reason for this is that
+** otherwise we cannot count KNOCKs network-wide which
+** caused knock-floods per-channel to be per-server
+** rather than global, which undesirable.
+** Unfortunately, this means that if you have a mixed
+** U4 and U5 network you will see KNOCK notices twice
+** for every attempt.
 */
 CMD_FUNC(cmd_knock)
 {
@@ -69,6 +78,7 @@ CMD_FUNC(cmd_knock)
 	Hook *h;
 	int i = 0;
 	MessageTag *mtags = NULL;
+	char *reason;
 
 	if (IsServer(client))
 		return;
@@ -78,6 +88,8 @@ CMD_FUNC(cmd_knock)
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "KNOCK");
 		return;
 	}
+
+	reason = parv[2] ? parv[2] : "no reason specified";
 
 	if (MyConnect(client) && !valid_channelname(parv[1]))
 	{
@@ -138,14 +150,18 @@ CMD_FUNC(cmd_knock)
 	}
 
 	new_message(&me, NULL, &mtags);
+
 	sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-	               0, SEND_ALL, mtags,
+	               0, SEND_LOCAL, mtags,
 	               ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)",
 	               me.name, channel->chname,
 	               client->name, client->user->username, GetHost(client),
-	               parv[2] ? parv[2] : "no reason specified");
+	               reason);
 
-	sendnotice(client, "Knocked on %s", channel->chname);
+	sendto_server(client, 0, 0, mtags, ":%s KNOCK %s :%s", client->id, channel->chname, reason);
+
+	if (MyUser(client))
+		sendnotice(client, "Knocked on %s", channel->chname);
 
         RunHook4(HOOKTYPE_KNOCK, client, channel, mtags, parv[2]);
 
