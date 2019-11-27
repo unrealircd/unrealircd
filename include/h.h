@@ -747,6 +747,7 @@ extern MODVAR int (*is_silenced)(Client *client, Client *acptr);
 extern MODVAR void *(*labeled_response_save_context)(void);
 extern MODVAR void (*labeled_response_set_context)(void *ctx);
 extern MODVAR void (*labeled_response_force_end)(void);
+extern MODVAR void (*kick_user)(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
 /* /Efuncs */
 
 extern void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list);

@@ -1056,14 +1056,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 			} /* else.. ban list is full */
 		}
 		mtags = NULL;
-		new_message(&me, NULL, &mtags);
-		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-		    ":%s KICK %s %s :%s", me.name,
-		    channel->chname, client->name, errbuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s KICK %s %s :%s",
-		   me.id, channel->chname, client->id, errbuf);
-		free_message_tags(mtags);
-		remove_user_from_channel(client, channel);
+		kick_user(NULL, channel, &me, client, errbuf);
 		*errmsg = errbuf; /* not used, but needs to be set */
 		return HOOK_DENY;
 	}

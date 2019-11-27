@@ -119,6 +119,7 @@ int (*add_silence)(Client *client, const char *mask, int senderr);
 void *(*labeled_response_save_context)(void);
 void (*labeled_response_set_context)(void *ctx);
 void (*labeled_response_force_end)(void);
+void (*kick_user)(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
 
 Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
 {
@@ -361,4 +362,5 @@ void efunctions_init(void)
 	efunc_init_function(EFUNC_LABELED_RESPONSE_SAVE_CONTEXT, labeled_response_save_context, labeled_response_save_context_default_handler);
 	efunc_init_function(EFUNC_LABELED_RESPONSE_SET_CONTEXT, labeled_response_set_context, labeled_response_set_context_default_handler);
 	efunc_init_function(EFUNC_LABELED_RESPONSE_FORCE_END, labeled_response_force_end, labeled_response_force_end_default_handler);
+	efunc_init_function(EFUNC_KICK_USER, kick_user, NULL);
 }

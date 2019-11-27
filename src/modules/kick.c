@@ -22,10 +22,6 @@
 
 #include "unrealircd.h"
 
-CMD_FUNC(cmd_kick);
-
-#define MSG_KICK 	"KICK"
-
 ModuleHeader MOD_HEADER
   = {
 	"kick",
@@ -35,9 +31,20 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
     };
 
+/* Forward declarations */
+CMD_FUNC(cmd_kick);
+void _kick_user(MessageTag *mtags, Channel *channel, Client *client, Client *victim, char *comment);
+
+MOD_TEST()
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAddVoid(modinfo->handle, EFUNC_KICK_USER, _kick_user);
+	return MOD_SUCCESS;
+}
+
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_KICK, cmd_kick, 3, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, "KICK", cmd_kick, 3, CMD_USER|CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -50,6 +57,73 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
+}
+
+/** Kick a user from a channel.
+ * @param initial_mtags	Message tags associated with this KICK (can be NULL)
+ * @param channel	The channel where the KICK should happen
+ * @param client	The evil user doing the kick, can be &me
+ * @param victim	The target user that will be kicked
+ * @param comment	The KICK comment (cannot be NULL)
+ * @notes The msgid in initial_mtags is actually used as a prefix.
+ *        The actual mtag will be "initial_mtags_msgid-suffix_msgid"
+ *        All this is done in order for message tags to be
+ *        consistent accross servers.
+ *        The suffix is necessary to handle multi-target-kicks.
+ *        If initial_mtags is NULL then we will autogenerate one.
+ */
+void _kick_user(MessageTag *initial_mtags, Channel *channel, Client *client, Client *victim, char *comment)
+{
+	MessageTag *mtags = NULL;
+	int initial_mtags_generated = 0;
+
+	if (!initial_mtags)
+	{
+		/* Yeah, we allow callers to be lazy.. */
+		initial_mtags_generated = 1;
+		new_message(client, NULL, &initial_mtags);
+	}
+
+	new_message_special(client, initial_mtags, &mtags, ":%s KICK %s %s", client->name, channel->chname, victim->name);
+	/* The same message is actually sent at 5 places below (though max 4 at most) */
+
+	if (MyUser(client))
+		RunHook5(HOOKTYPE_LOCAL_KICK, client, victim, channel, mtags, comment);
+	else
+		RunHook5(HOOKTYPE_REMOTE_KICK, client, victim, channel, mtags, comment);
+
+	if (invisible_user_in_channel(victim, channel))
+	{
+		/* Send it only to chanops & victim */
+		sendto_channel(channel, client, victim,
+			       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
+			       SEND_LOCAL, mtags,
+			       ":%s KICK %s %s :%s",
+			       client->name, channel->chname, victim->name, comment);
+
+		if (MyUser(victim))
+		{
+			sendto_prefix_one(victim, client, mtags, ":%s KICK %s %s :%s",
+				client->name, channel->chname, victim->name, comment);
+		}
+	} else {
+		/* NORMAL */
+		sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
+			       ":%s KICK %s %s :%s",
+			       client->name, channel->chname, victim->name, comment);
+	}
+
+	sendto_server(client, 0, 0, mtags, ":%s KICK %s %s :%s",
+	    client->id, channel->chname, victim->id, comment);
+
+	free_message_tags(mtags);
+	if (initial_mtags_generated)
+	{
+		free_message_tags(initial_mtags);
+		initial_mtags = NULL;
+	}
+
+	remove_user_from_channel(victim, channel);
 }
 
 /*
@@ -291,42 +365,7 @@ CMD_FUNC(cmd_kick)
 					continue;
 			}
 
-			mtags = NULL;
-			new_message_special(client, recv_mtags, &mtags, ":%s KICK %s %s", client->name, channel->chname, who->name);
-			/* The same message is actually sent at 5 places below (though max 4 at most) */
-
-			if (MyUser(client))
-				RunHook5(HOOKTYPE_LOCAL_KICK, client, who, channel, mtags, comment);
-			else
-				RunHook5(HOOKTYPE_REMOTE_KICK, client, who, channel, mtags, comment);
-
-			if (invisible_user_in_channel(who, channel))
-			{
-				/* Send it only to chanops & victim */
-				sendto_channel(channel, client, who,
-					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
-					       SEND_LOCAL, mtags,
-					       ":%s KICK %s %s :%s",
-					       client->name, channel->chname, who->name, comment);
-
-				if (MyUser(who))
-				{
-					sendto_prefix_one(who, client, mtags, ":%s KICK %s %s :%s",
-						client->name, channel->chname, who->name, comment);
-				}
-			} else {
-				/* NORMAL */
-				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
-					       ":%s KICK %s %s :%s",
-					       client->name, channel->chname, who->name, comment);
-			}
-
-			sendto_server(client, 0, 0, mtags, ":%s KICK %s %s :%s",
-			    client->id, channel->chname, who->id, comment);
-
-			free_message_tags(mtags);
-
-			remove_user_from_channel(who, channel);
+			kick_user(recv_mtags, channel, client, who, comment);
 		} /* loop on parv[2] */
 		if (MyUser(client))
 			break;
