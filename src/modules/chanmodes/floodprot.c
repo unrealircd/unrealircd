@@ -1032,7 +1032,6 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 		if (chp->action[flood_type] == 'd')
 		{
 			/* Drop the message */
-			sendnumeric(client, ERR_CANNOTSENDTOCHAN, channel->chname, errbuf, channel->chname);
 			*errmsg = errbuf;
 			return HOOK_DENY;
 		}
