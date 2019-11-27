@@ -360,10 +360,28 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 	// Extbans take precedence over +L #channel and other restrictions
 	for(ban = channel->banlist; ban; ban = ban->next)
 	{
-		if (strncmp(ban->banstr, "~f:", 3))
+		if (!strncmp(ban->banstr, "~f:", 3))
+		{
+			strlcpy(bantmp, ban->banstr + 3, sizeof(bantmp));
+		} else
+		if (!strncmp(ban->banstr, "~t:", 3))
+		{
+			/* A timed ban, but is it for us? Need to parse a little:
+			 * ~t:dddd:~f:...
+			 */
+			char *p = strchr(ban->banstr + 3, ':');
+			if (p && !strncmp(p, ":~f:", 4))
+			{
+				strlcpy(bantmp, p + 4, sizeof(bantmp));
+			} else {
+				/* Not for us - some other ~t ban */
+				continue;
+			}
+		} else
+		{
+			/* Not for us */
 			continue;
-
-		strlcpy(bantmp, ban->banstr + 3, sizeof(bantmp));
+		}
 		banchan = bantmp;
 		banmask = strchr(bantmp, ':');
 		if (!banmask || !banmask[1])
