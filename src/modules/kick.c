@@ -24,13 +24,13 @@
 
 CMD_FUNC(cmd_kick);
 
-#define MSG_KICK 	"KICK"	
+#define MSG_KICK 	"KICK"
 
 ModuleHeader MOD_HEADER
   = {
 	"kick",
 	"5.0",
-	"command /kick", 
+	"command /kick",
 	"UnrealIRCd Team",
 	"unrealircd-5",
     };
@@ -120,212 +120,215 @@ CMD_FUNC(cmd_kick)
 
 			if (!(who = find_chasing(client, user, &chasing)))
 				continue;	/* No such user left! */
+
 			if (!who->user)
-				continue;
-			if ((lp = find_membership_link(who->user->channel, channel)))
+				continue; /* non-user */
+
+			lp = find_membership_link(who->user->channel, channel);
+			if (!lp)
 			{
-				if (IsULine(client) || IsServer(client))
-					goto attack;
+				if (MyUser(client))
+					sendnumeric(client, ERR_USERNOTINCHANNEL, user, name);
+				continue;
+			}
 
-				/* Note for coders regarding oper override:
-				 * always let a remote kick (=from a user on another server) through or
-				 * else we will get desynced. In short this means all the denying should
-				 * always contain a && MyUser(client) and at the end
-				 * a remote kick should always be allowed (pass through). -- Syzop
-				 */
+			if (IsULine(client) || IsServer(client))
+				goto attack;
 
-				/* Store "who" access flags */
-				who_flags = get_access(who, channel);
+			/* Note for coders regarding oper override:
+			 * always let a remote kick (=from a user on another server) through or
+			 * else we will get desynced. In short this means all the denying should
+			 * always contain a && MyUser(client) and at the end
+			 * a remote kick should always be allowed (pass through). -- Syzop
+			 */
 
-				badkick = NULL;
-				ret = EX_ALLOW;
-				for (h = Hooks[HOOKTYPE_CAN_KICK]; h; h = h->next) {
-					int n = (*(h->func.intfunc))(client, who, channel, comment, client_flags, who_flags, &badkick);
+			/* Store "who" access flags */
+			who_flags = get_access(who, channel);
 
-					if (n == EX_DENY)
-						ret = n;
-					else if (n == EX_ALWAYS_DENY)
-					{
-						ret = n;
-						break;
-					}
-				}
+			badkick = NULL;
+			ret = EX_ALLOW;
+			for (h = Hooks[HOOKTYPE_CAN_KICK]; h; h = h->next) {
+				int n = (*(h->func.intfunc))(client, who, channel, comment, client_flags, who_flags, &badkick);
 
-				if (ret == EX_ALWAYS_DENY)
+				if (n == EX_DENY)
+					ret = n;
+				else if (n == EX_ALWAYS_DENY)
 				{
+					ret = n;
+					break;
+				}
+			}
+
+			if (ret == EX_ALWAYS_DENY)
+			{
+				if (MyUser(client) && badkick)
+					sendto_one(client, NULL, "%s", badkick); /* send error, if any */
+
+				if (MyUser(client))
+					continue; /* reject the kick (note: we never block remote kicks) */
+			}
+
+			if (ret == EX_DENY)
+			{
+				/* If set it means 'not allowed to kick'.. now check if (s)he can override that.. */
+				if (op_can_override("channel:override:kick:no-ops",client,channel,NULL))
+				{
+					sendto_snomask(SNO_EYES,
+						"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+						client->name, client->user->username, client->user->realhost,
+						channel->chname, who->name, comment);
+					ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
+						client->name, client->user->username, client->user->realhost,
+						channel->chname, who->name, comment);
+					goto attack; /* all other checks don't matter anymore (and could cause double msgs) */
+				} else {
+					/* Not an oper overriding */
 					if (MyUser(client) && badkick)
 						sendto_one(client, NULL, "%s", badkick); /* send error, if any */
 
-					if (MyUser(client))
-						continue; /* reject the kick (note: we never block remote kicks) */
-				}
-				
-				if (ret == EX_DENY)
-				{
-					/* If set it means 'not allowed to kick'.. now check if (s)he can override that.. */
-					if (op_can_override("channel:override:kick:no-ops",client,channel,NULL))
-					{
-						sendto_snomask(SNO_EYES,
-							"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
-							client->name, client->user->username, client->user->realhost,
-							channel->chname, who->name, comment);
-						ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
-							client->name, client->user->username, client->user->realhost,
-							channel->chname, who->name, comment);
-						goto attack; /* all other checks don't matter anymore (and could cause double msgs) */
-					} else {
-						/* Not an oper overriding */
-						if (MyUser(client) && badkick)
-							sendto_one(client, NULL, "%s", badkick); /* send error, if any */
-
-						continue; /* reject the kick */
-					}
-				}
-
-				/* we are neither +o nor +h, OR..
-				 * we are +h but victim is +o, OR...
-				 * we are +h and victim is +h
-				 */
-				if (op_can_override("channel:override:kick:no-ops",client,channel,NULL))
-				{
-					if ((!(client_flags & CHFL_ISOP) && !(client_flags & CHFL_HALFOP)) ||
-					    ((client_flags & CHFL_HALFOP) && (who_flags & CHFL_ISOP)) ||
-					    ((client_flags & CHFL_HALFOP) && (who_flags & CHFL_HALFOP)))
-					{
-						sendto_snomask(SNO_EYES,
-						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
-						    client->name, client->user->username, client->user->realhost,
-						    channel->chname, who->name, comment);
-
-						/* Logging Implementation added by XeRXeS */
-						ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
-							client->name, client->user->username, client->user->realhost,
-							channel->chname, who->name, comment);
-
-						goto attack;
-					}	/* is_chan_op */
-
-				}				
-				/* victim is +a or +q, we are not +q */
-				if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANADMIN))
-					 && !(client_flags & CHFL_CHANOWNER)) {
-					if (client == who)
-						goto attack; /* kicking self == ok */
-					if (op_can_override("channel:override:kick:owner",client,channel,NULL)) /* (and f*ck local ops) */
-					{	/* IRCop kicking owner/prot */
-						sendto_snomask(SNO_EYES,
-						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
-						    client->name, client->user->username, client->user->realhost,
-						    channel->chname, who->name, comment);
-
-						/* Logging Implementation added by XeRXeS */
-						ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
-							client->name, client->user->username, client->user->realhost, 
-							channel->chname, who->name, comment);
-
-						goto attack;
-					}
-					else if (!IsULine(client) && (who != client) && MyUser(client))
-					{
-						char errbuf[NICKLEN+25];
-						if (who_flags & CHFL_CHANOWNER)
-							ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", 
-								   who->name);
-						else
-							ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", 
-								   who->name);
-						sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
-							   errbuf);
-						goto deny;
-					}	/* chanadmin/chanowner */
-				}
-				
-				/* victim is +o, we are +h [operoverride is already taken care of 2 blocks above] */
-				if ((who_flags & CHFL_ISOP) && (client_flags & CHFL_HALFOP)
-				    && !(client_flags & CHFL_ISOP) && !IsULine(client) && MyUser(client))
-				{
-					char errbuf[NICKLEN+30];
-					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel operator", who->name);
-					sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
-						   errbuf);
-					goto deny;
-				}
-
-				/* victim is +h, we are +h [operoverride is already taken care of 3 blocks above] */
-				if ((who_flags & CHFL_HALFOP) && (client_flags & CHFL_HALFOP)
-				    && !(client_flags & CHFL_ISOP) && MyUser(client))
-				{
-					char errbuf[NICKLEN+15];
-					ircsnprintf(errbuf, sizeof(errbuf), "%s is a halfop", who->name);
-					sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
-						   errbuf);
-					goto deny;
-				}	/* halfop */
-
-				/* allowed (either coz access granted or a remote kick), so attack! */
-				goto attack;
-
-			      deny:
-				continue;
-
-			      attack:
-				if (MyConnect(client)) {
-					int breakit = 0;
-					Hook *h;
-					for (h = Hooks[HOOKTYPE_PRE_LOCAL_KICK]; h; h = h->next) {
-						if((*(h->func.intfunc))(client,who,channel,comment) > 0) {
-							breakit = 1;
-							break;
-						}
-					}
-					if (breakit)
-						continue;
-				}
-
-				mtags = NULL;
-				new_message_special(client, recv_mtags, &mtags, ":%s KICK %s %s", client->name, channel->chname, who->name);
-				/* The same message is actually sent at 5 places below (though max 4 at most) */
-
-				if (MyUser(client))
-					RunHook5(HOOKTYPE_LOCAL_KICK, client, who, channel, mtags, comment);
-				else
-					RunHook5(HOOKTYPE_REMOTE_KICK, client, who, channel, mtags, comment);
-
-				if (lp)
-				{
-					if (invisible_user_in_channel(who, channel))
-					{
-						/* Send it only to chanops & victim */
-						sendto_channel(channel, client, who,
-						               CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
-						               SEND_LOCAL, mtags,
-						               ":%s KICK %s %s :%s",
-						               client->name, channel->chname, who->name, comment);
-
-						if (MyUser(who))
-						{
-							sendto_prefix_one(who, client, mtags, ":%s KICK %s %s :%s",
-								client->name, channel->chname, who->name, comment);
-						}
-					} else {
-						/* NORMAL */
-						sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
-						               ":%s KICK %s %s :%s",
-						               client->name, channel->chname, who->name, comment);
-					}
-				}
-				sendto_server(client, 0, 0, mtags, ":%s KICK %s %s :%s",
-				    client->id, channel->chname, who->id, comment);
-				free_message_tags(mtags);
-				if (lp)
-				{
-					remove_user_from_channel(who, channel);
+					continue; /* reject the kick */
 				}
 			}
-			else if (MyUser(client))
-				sendnumeric(client, ERR_USERNOTINCHANNEL, user, name);
-		}		/* loop on parv[2] */
+
+			/* we are neither +o nor +h, OR..
+			 * we are +h but victim is +o, OR...
+			 * we are +h and victim is +h
+			 */
+			if (op_can_override("channel:override:kick:no-ops",client,channel,NULL))
+			{
+				if ((!(client_flags & CHFL_ISOP) && !(client_flags & CHFL_HALFOP)) ||
+				    ((client_flags & CHFL_HALFOP) && (who_flags & CHFL_ISOP)) ||
+				    ((client_flags & CHFL_HALFOP) && (who_flags & CHFL_HALFOP)))
+				{
+					sendto_snomask(SNO_EYES,
+					    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+					    client->name, client->user->username, client->user->realhost,
+					    channel->chname, who->name, comment);
+
+					/* Logging Implementation added by XeRXeS */
+					ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
+						client->name, client->user->username, client->user->realhost,
+						channel->chname, who->name, comment);
+
+					goto attack;
+				}	/* is_chan_op */
+
+			}
+
+			/* victim is +a or +q, we are not +q */
+			if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANADMIN))
+				 && !(client_flags & CHFL_CHANOWNER)) {
+				if (client == who)
+					goto attack; /* kicking self == ok */
+				if (op_can_override("channel:override:kick:owner",client,channel,NULL)) /* (and f*ck local ops) */
+				{	/* IRCop kicking owner/prot */
+					sendto_snomask(SNO_EYES,
+					    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+					    client->name, client->user->username, client->user->realhost,
+					    channel->chname, who->name, comment);
+
+					/* Logging Implementation added by XeRXeS */
+					ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
+						client->name, client->user->username, client->user->realhost,
+						channel->chname, who->name, comment);
+
+					goto attack;
+				}
+				else if (!IsULine(client) && (who != client) && MyUser(client))
+				{
+					char errbuf[NICKLEN+25];
+					if (who_flags & CHFL_CHANOWNER)
+						ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner",
+							   who->name);
+					else
+						ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin",
+							   who->name);
+					sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
+						   errbuf);
+					goto deny;
+				}	/* chanadmin/chanowner */
+			}
+
+			/* victim is +o, we are +h [operoverride is already taken care of 2 blocks above] */
+			if ((who_flags & CHFL_ISOP) && (client_flags & CHFL_HALFOP)
+			    && !(client_flags & CHFL_ISOP) && !IsULine(client) && MyUser(client))
+			{
+				char errbuf[NICKLEN+30];
+				ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel operator", who->name);
+				sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
+					   errbuf);
+				goto deny;
+			}
+
+			/* victim is +h, we are +h [operoverride is already taken care of 3 blocks above] */
+			if ((who_flags & CHFL_HALFOP) && (client_flags & CHFL_HALFOP)
+			    && !(client_flags & CHFL_ISOP) && MyUser(client))
+			{
+				char errbuf[NICKLEN+15];
+				ircsnprintf(errbuf, sizeof(errbuf), "%s is a halfop", who->name);
+				sendnumeric(client, ERR_CANNOTDOCOMMAND, "KICK",
+					   errbuf);
+				goto deny;
+			}	/* halfop */
+
+			/* allowed (either coz access granted or a remote kick), so attack! */
+			goto attack;
+
+		      deny:
+			continue;
+
+		      attack:
+			if (MyConnect(client)) {
+				int breakit = 0;
+				Hook *h;
+				for (h = Hooks[HOOKTYPE_PRE_LOCAL_KICK]; h; h = h->next) {
+					if((*(h->func.intfunc))(client,who,channel,comment) > 0) {
+						breakit = 1;
+						break;
+					}
+				}
+				if (breakit)
+					continue;
+			}
+
+			mtags = NULL;
+			new_message_special(client, recv_mtags, &mtags, ":%s KICK %s %s", client->name, channel->chname, who->name);
+			/* The same message is actually sent at 5 places below (though max 4 at most) */
+
+			if (MyUser(client))
+				RunHook5(HOOKTYPE_LOCAL_KICK, client, who, channel, mtags, comment);
+			else
+				RunHook5(HOOKTYPE_REMOTE_KICK, client, who, channel, mtags, comment);
+
+			if (invisible_user_in_channel(who, channel))
+			{
+				/* Send it only to chanops & victim */
+				sendto_channel(channel, client, who,
+					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
+					       SEND_LOCAL, mtags,
+					       ":%s KICK %s %s :%s",
+					       client->name, channel->chname, who->name, comment);
+
+				if (MyUser(who))
+				{
+					sendto_prefix_one(who, client, mtags, ":%s KICK %s %s :%s",
+						client->name, channel->chname, who->name, comment);
+				}
+			} else {
+				/* NORMAL */
+				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
+					       ":%s KICK %s %s :%s",
+					       client->name, channel->chname, who->name, comment);
+			}
+
+			sendto_server(client, 0, 0, mtags, ":%s KICK %s %s :%s",
+			    client->id, channel->chname, who->id, comment);
+
+			free_message_tags(mtags);
+
+			remove_user_from_channel(who, channel);
+		} /* loop on parv[2] */
 		if (MyUser(client))
 			break;
-	}			/* loop on parv[1] */
+	} /* loop on parv[1] */
 }
