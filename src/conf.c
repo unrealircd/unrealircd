@@ -6867,7 +6867,7 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 								 "Valid protocols are: TLSv1,TLSv1.1,TLSv1.2",
 								 cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, config_var(cepp), name);
 #endif
-                }
+				}
 
 				if (option)
 				{
@@ -6917,52 +6917,53 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 		}
 		else if (!strcmp(cepp->ce_varname, "sts-policy"))
 		{
-		    int has_port = 0;
-		    int has_duration = 0;
+			int has_port = 0;
+			int has_duration = 0;
+
 			for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
 			{
-			    if (!strcmp(ceppp->ce_varname, "port"))
-			    {
-			        int port;
-			        CheckNull(ceppp);
-			        port = atoi(ceppp->ce_vardata);
-			        if ((port < 1) || (port > 65535))
-			        {
-			            config_error("%s:%i: invalid port number specified in sts-policy::port (%d)",
-			                ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, port);
-                        errors++;
-			        }
-			        has_port = 1;
-                }
-			    else if (!strcmp(ceppp->ce_varname, "duration"))
-			    {
-			        long duration;
-			        CheckNull(ceppp);
-			        duration = config_checkval(ceppp->ce_vardata, CFG_TIME);
-			        if (duration < 1)
-			        {
-			            config_error("%s:%i: invalid duration specified in sts-policy::duration (%ld seconds)",
-			                ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, duration);
-                        errors++;
-			        }
-			        has_duration = 1;
-                }
-			    else if (!strcmp(ceppp->ce_varname, "preload"))
-			    {
-			        CheckNull(ceppp);
-                }
+				if (!strcmp(ceppp->ce_varname, "port"))
+				{
+					int port;
+					CheckNull(ceppp);
+					port = atoi(ceppp->ce_vardata);
+					if ((port < 1) || (port > 65535))
+					{
+						config_error("%s:%i: invalid port number specified in sts-policy::port (%d)",
+						             ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, port);
+						errors++;
+					}
+					has_port = 1;
+				}
+				else if (!strcmp(ceppp->ce_varname, "duration"))
+				{
+					long duration;
+					CheckNull(ceppp);
+					duration = config_checkval(ceppp->ce_vardata, CFG_TIME);
+					if (duration < 1)
+					{
+						config_error("%s:%i: invalid duration specified in sts-policy::duration (%ld seconds)",
+						             ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, duration);
+						errors++;
+					}
+					has_duration = 1;
+				}
+				else if (!strcmp(ceppp->ce_varname, "preload"))
+				{
+					CheckNull(ceppp);
+				}
 			}
 			if (!has_port)
 			{
-			    config_error("%s:%i: sts-policy block without port",
-			        cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-                errors++;
+				config_error("%s:%i: sts-policy block without port",
+				             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+				errors++;
 			}
 			if (!has_duration)
 			{
-			    config_error("%s:%i: sts-policy block without duration",
-			        cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-                errors++;
+				config_error("%s:%i: sts-policy block without duration",
+				             cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+				errors++;
 			}
 		}
 		else
@@ -7116,18 +7117,18 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 		}
 		else if (!strcmp(cepp->ce_varname, "sts-policy"))
 		{
-		    /* We do not inherit ::sts-policy if there is a specific block for this one... */
+			/* We do not inherit ::sts-policy if there is a specific block for this one... */
 			tlsoptions->sts_port = 0;
 			tlsoptions->sts_duration = 0;
 			tlsoptions->sts_preload = 0;
 			for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
 			{
-			    if (!strcmp(ceppp->ce_varname, "port"))
-			        tlsoptions->sts_port = atoi(ceppp->ce_vardata);
-			    else if (!strcmp(ceppp->ce_varname, "duration"))
-			        tlsoptions->sts_duration = config_checkval(ceppp->ce_vardata, CFG_TIME);
-			    else if (!strcmp(ceppp->ce_varname, "preload"))
-			        tlsoptions->sts_preload = config_checkval(ceppp->ce_vardata, CFG_YESNO);
+				if (!strcmp(ceppp->ce_varname, "port"))
+					tlsoptions->sts_port = atoi(ceppp->ce_vardata);
+				else if (!strcmp(ceppp->ce_varname, "duration"))
+					tlsoptions->sts_duration = config_checkval(ceppp->ce_vardata, CFG_TIME);
+				else if (!strcmp(ceppp->ce_varname, "preload"))
+					tlsoptions->sts_preload = config_checkval(ceppp->ce_vardata, CFG_YESNO);
 			}
 		}
 	}
@@ -7685,9 +7686,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
-	int		tempi;
-	int	    errors = 0;
-	Hook	*h;
+	int tempi;
+	int errors = 0;
+	Hook *h;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
