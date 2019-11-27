@@ -111,10 +111,10 @@ int cmodeL_is_ok(Client *client, Channel *channel, char mode, char *para, int ty
 {
 	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
 	{
-		if (IsUser(client) && is_chanowner(client, channel))
+		if (IsUser(client) && is_chan_op(client, channel))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-			sendnumeric(client, ERR_CHANOWNPRIVNEEDED, channel->chname);
+			sendnumeric(client, ERR_NOTFORHALFOPS, 'H');
 		return EX_DENY;
 	} else
 	if (type == EXCHK_PARAM)
