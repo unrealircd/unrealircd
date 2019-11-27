@@ -35,6 +35,7 @@ ModuleHeader MOD_HEADER
 long UMODE_NOKICK = 0L;
 
 /* Forward declarations */
+int umode_allow_unkickable_oper(Client *client, int what);
 int nokick_can_kick(Client *client, Client *target, Channel *channel,
                     char *comment, long client_flags, long target_flags, char **reject_reason);
 
@@ -45,7 +46,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	UmodeAdd(modinfo->handle, 'q', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_NOKICK); // TODO: limit more!!
+	UmodeAdd(modinfo->handle, 'q', UMODE_GLOBAL, 1, umode_allow_unkickable_oper, &UMODE_NOKICK);
 	
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_KICK, 0, nokick_can_kick);
 	
@@ -61,6 +62,18 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
+}
+
+int umode_allow_unkickable_oper(Client *client, int what)
+{
+	if (MyUser(client))
+	{
+		if (IsOper(client) && ValidatePermissionsForPath("self:unkickablemode",client,NULL,NULL,NULL))
+			return 1;
+		return 0;
+	}
+	/* Always allow remotes: */
+	return 1;
 }
 
 int nokick_can_kick(Client *client, Client *target, Channel *channel, char *comment,
