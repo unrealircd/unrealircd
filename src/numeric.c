@@ -514,7 +514,7 @@ static char *replies[] = {
 /* 467    ERR_KEYSET */ "%s :Channel key already set",
 /* 468    ERR_ONLYSERVERSCANCHANGE */ "%s :Only servers can change that mode",
 /* 469    ERR_LINKSET */ "%s :Channel link already set",
-/* 470    ERR_LINKCHANNEL */ "[Link] %s has become full, so you are automatically being transferred to the linked channel %s",
+/* 470    ERR_LINKCHANNEL */ "%s %s :[Link] %s has become full, so you are automatically being transferred to the linked channel %s",
 /* 471    ERR_CHANNELISFULL */ "%s :Cannot join channel (+l)",
 /* 472    ERR_UNKNOWNMODE */ "%c :is unknown mode char to me",
 /* 473    ERR_INVITEONLYCHAN */ "%s :Cannot join channel (+i)",
