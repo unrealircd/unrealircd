@@ -2874,16 +2874,8 @@ ConfigItem_listen *find_listen(char *ipmask, int port, int ipv6)
 		return NULL;
 
 	for (e = conf_listen; e; e = e->next)
-	{
-		if (e->ipv6 != ipv6)
-			continue;
-
-		if (match_simple(e->ip, ipmask) && (port == e->port))
+		if ((e->ipv6 == ipv6) && (e->port == port) && !strcmp(e->ip, ipmask))
 			return e;
-
-		if (match_simple(ipmask, e->ip) && (port == e->port))
-			return e;
-	}
 
 	return NULL;
 }
