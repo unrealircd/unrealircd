@@ -1,8 +1,8 @@
-UnrealIRCd 5.0.0-rc1 Release Notes
+UnrealIRCd 5.0.0-rc2 Release Notes
 ===================================
 
 ***IMPORTANT:*** UnrealIRCd 5 is currently in "Release Candidate" phase.
-This means it is not yet stable. Do not run this on production servers.
+This means it is not yet fully stable.
 
 There will be no module API changes anymore and no new features will be
 added in the "release candidate" stage. Focus is 100% on fixing bugs
@@ -10,8 +10,11 @@ and have a stable UnrealIRCd 5 release in December 2019.
 You can help us a lot by testing this release.
 If you do, please report any issues on https://bugs.unrealircd.org/.
 
-***WARNING:*** if you are using anope, then you must run anope 2.0.7
-(or later) with the unreal4 protocol module.
+UnrealIRCd 5 is compatible with the following services:
+* [anope](https://www.anope.org/) (version 2.0.7 or higher) -
+  with the "unreal4" protocol module
+* [atheme](https://atheme.github.io/atheme.html) (version 7.2.9 or higher) -
+  with the "unreal4" protocol module
 
 Summary
 --------
@@ -173,6 +176,8 @@ Enhancements
 
 Changed
 --------
+* Channel mode +L can now be set by chanops (+o and higher) instead of only
+  by +q (channel owner)
 * Channel names must now be valid UTF8 by default.
   We actually have 3 possible settings of [set::allowed-channelchars](https://www.unrealircd.org/docs/Set_block#set::allowed-channelchars):
   * **utf8**:  Channel must be valid UTF8, this is the new default
@@ -205,6 +210,10 @@ Changed
   in case of a bug and also more control for admins at runtime.
   Only <5 modules out of 173 are permanent now.
 * User mode +T now blocks channel CTCPs as well.
+* User mode +q (unkickable) could previously be set by any IRCOp.
+  This has been changed to require the self:unkickablemode operclass
+  permission. This is included in the *-with-override operclasses
+  (eg: netadmin-with-operoverride).
 * [set::modes-on-join](https://www.unrealircd.org/docs/Set_block#set::modes-on-join) is now ```+nt``` by default.
 * The [authprompt](https://www.unrealircd.org/docs/Authentication#How_it_looks_like) module is now loaded by default. This means that if
   you do a soft kline on someone (eg: KLINE %*@*.badisp) then the user
@@ -429,3 +438,6 @@ TODO: expand with other new things / changes
 * The 271 response to the SILENCE command is now:
   ```:server 271 yournick listentry!*@*```
   Previously the nick name appeared twice, which was a mistake.
+* The 470 numeric, which is sent on /JOIN #channel redirect to #redirect
+  now uses the following format:
+  ```:server 470 yournick #channel #redirect :[Link] Cannot join channel...etc..```
