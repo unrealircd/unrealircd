@@ -1903,6 +1903,13 @@ int config_loadmodules(void)
 		{
 			if (!strcmp(ce->ce_varname, "loadmodule"))
 			{
+				if (ce->ce_cond)
+				{
+					config_error("%s:%d: Currently you cannot have a 'loadmodule' statement "
+						     "within an @if block, sorry.",
+						     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					return 0;
+				}
 				ret = _conf_loadmodule(cfptr, ce);
 				if (ret < fatal_ret)
 					fatal_ret = ret; /* lowest wins */
@@ -2160,11 +2167,19 @@ int	load_conf(char *filename, const char *original_path)
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 			if (!strcmp(ce->ce_varname, "include"))
 			{
-				 ret = _conf_include(cfptr, ce);
-				 if (need_34_upgrade)
-				 	upgrade_conf_to_34();
-				 if (ret < 0)
-					 	return ret;
+				if (ce->ce_cond)
+				{
+					config_error("%s:%d: Currently you cannot have an 'include' statement "
+					             "within an @if block, sorry. However, you CAN do it the other "
+					             "way around, that is: put the @if within the included file itself.",
+					             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					return -1;
+				}
+				ret = _conf_include(cfptr, ce);
+				if (need_34_upgrade)
+					upgrade_conf_to_34();
+				if (ret < 0)
+					return ret;
 			}
 		my_inc->flag.type |= INCLUDE_USED;
 		return 1;
