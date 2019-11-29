@@ -21,13 +21,15 @@ https://www.unrealircd.org/docs/UnrealIRCd_5_documentation
 
 --------------------------------------------------------------------------------------
 
-IMPORTANT: This is a "release candidate". Do not run on production servers.
-Please report issues at https://bugs.unrealircd.org/
+IMPORTANT: This is a "release candidate". Please report any issues you may
+find at https://bugs.unrealircd.org/
 
 The full release notes are available in doc/RELEASE-NOTES.md
 For easier viewing, check out the latest online release notes at:
 https://github.com/unrealircd/unrealircd/blob/unreal50/doc/RELEASE-NOTES.md
 
-WARNING: If you are using anope, then be sure to use anope 2.0.7 or later.
+UnrealIRCd 5 is compatible with the following services:
+* anope with the "unreal4" protocol module - version 2.0.7 or higher required!
+* atheme with the "unreal4" protocol module - tested with version 7.2.9
 
 --------------------------------------------------------------------------------------
