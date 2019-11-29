@@ -1044,7 +1044,7 @@ int hooktype_pre_chanmsg(Client *client, Channel *channel, MessageTag *mtags, ch
 int hooktype_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
 char *hooktype_pre_local_topic(Client *client, Channel *channel, char *topic);
 int hooktype_local_topic(Client *client, Channel *channel, char *topic);
-int hooktype_topic(Client *client, Channel *channel, char *topic);
+int hooktype_topic(Client *client, Channel *channel, MessageTag *mtags, char *topic);
 int hooktype_pre_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
 int hooktype_pre_remote_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
 int hooktype_local_chanmode(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
