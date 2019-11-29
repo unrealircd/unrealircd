@@ -354,7 +354,6 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
  *                     always send the message to remote clients and
  *                     assume the server there will handle it)
  * @param sendflags   Determines whether to send the message to local/remote users
- * @param senddeaf    Send message to 'deaf' clients
  * @param mtags       The message tags to attach to this message
  * @param pattern     The pattern (eg: ":%s PRIVMSG %s :%s")
  * @param ...         The parameters for the pattern.
