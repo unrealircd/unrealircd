@@ -88,7 +88,7 @@ Enhancements
 * [Websocket](https://www.unrealircd.org/docs/WebSocket_support) support now includes type 'text'
   in addition to 'binary', which should work with [KiwiIRC](https://kiwiirc.com/)'s nextclient.
 
-  Also, websockets are longer active on all ports by default. You have to explicitly
+  Also, websockets are no longer active on all ports by default. You have to explicitly
   enable the websocket option in the listen block and also specify type *text* or *binary*,
   eg: ```listen { ip *; port 6667; options { websocket { type text; } } }```
 
