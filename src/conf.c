@@ -1833,6 +1833,11 @@ void applymeblock(void)
 	/* Name can only be set once (on boot) */
 	if (!*me.name)
 		strlcpy(me.name, conf_me->name, sizeof(me.name));
+	else if (strcmp(me.name, conf_me->name))
+	{
+		config_warn("You changed the servername (me::name). "
+		            "This change will NOT be effective unless you restart the IRC Server.");
+	}
 
 	if (!*me.id)
 		strlcpy(me.id, conf_me->sid, sizeof(me.id));
