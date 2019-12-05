@@ -1410,8 +1410,8 @@ Optional Features:
                           rather than dynamically (noone knows if disabling
                           dynamic linking actually does anything or not)
   --enable-werror         Turn compilation warnings into errors (-Werror)
-  --disable-asan          Disable address sanitizer and other debugging
-                          options
+  --enable-asan           Enable address sanitizer and other debugging
+                          options, not recommended for production servers!
   --enable-libcurl=DIR    enable libcurl (remote include) support
 
 Optional Packages:
@@ -6553,12 +6553,11 @@ else
 fi
 
 
-
 # Check whether --enable-asan was given.
 if test "${enable_asan+set}" = set; then :
-  enableval=$enable_asan; ac_cv_asan="no"
+  enableval=$enable_asan; ac_cv_asan="$enableval"
 else
-  ac_cv_asan="yes"
+  ac_cv_asan="no"
 fi
 
 

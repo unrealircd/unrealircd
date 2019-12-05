@@ -509,17 +509,11 @@ AC_ARG_ENABLE([werror],
   [ac_cv_werror="$enableval"],
   [ac_cv_werror="no"])
 
-dnl AC_ARG_ENABLE([asan],
-dnl   [AS_HELP_STRING([--enable-asan],
-dnl     [Enable address sanitizer and other debugging options, not recommended for production servers!])],
-dnl   [ac_cv_asan="$enableval"],
-dnl   [ac_cv_asan="no"])
-
 AC_ARG_ENABLE([asan],
-  [AS_HELP_STRING([--disable-asan],
-    [Disable address sanitizer and other debugging options])],
-  [ac_cv_asan="no"],
-  [ac_cv_asan="yes"])
+  [AS_HELP_STRING([--enable-asan],
+    [Enable address sanitizer and other debugging options, not recommended for production servers!])],
+  [ac_cv_asan="$enableval"],
+  [ac_cv_asan="no"])
 
 AC_CHECK_FUNCS([poll],
 	AC_DEFINE([HAVE_POLL], [], [Define if you have poll]))
