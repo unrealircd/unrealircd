@@ -492,16 +492,16 @@ typedef enum ClientStatus {
 
 /* PROTOCTL (Server protocol) stuff */
 #ifndef DEBUGMODE
-#define CHECKPROTO(x,y)	(((x)->local->proto & y) == y)
+#define CHECKSERVERPROTO(x,y)	(((x)->local->proto & y) == y)
 #else
-#define CHECKPROTO(x,y) (checkprotoflags(x, y, __FILE__, __LINE__))
+#define CHECKSERVERPROTO(x,y) (checkprotoflags(x, y, __FILE__, __LINE__))
 #endif
 
-#define SupportVL(x)		(CHECKPROTO(x, PROTO_VL))
-#define SupportSJSBY(x)		(CHECKPROTO(x, PROTO_SJSBY))
-#define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
-#define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
-#define SupportMTAGS(x)		(CHECKPROTO(x, PROTO_MTAGS))
+#define SupportVL(x)		(CHECKSERVERPROTO(x, PROTO_VL))
+#define SupportSJSBY(x)		(CHECKSERVERPROTO(x, PROTO_SJSBY))
+#define SupportVHP(x)		(CHECKSERVERPROTO(x, PROTO_VHP))
+#define SupportCLK(x)		(CHECKSERVERPROTO(x, PROTO_CLK))
+#define SupportMTAGS(x)		(CHECKSERVERPROTO(x, PROTO_MTAGS))
 
 #define SetVL(x)		((x)->local->proto |= PROTO_VL)
 #define SetSJSBY(x)		((x)->local->proto |= PROTO_SJSBY)

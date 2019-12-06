@@ -787,7 +787,7 @@ void _introduce_user(Client *to, Client *acptr)
 		SWhois *s;
 		for (s = acptr->user->swhois; s; s = s->next)
 		{
-			if (CHECKPROTO(to, PROTO_EXTSWHOIS))
+			if (CHECKSERVERPROTO(to, PROTO_EXTSWHOIS))
 			{
 				sendto_one(to, NULL, ":%s SWHOIS %s + %s %d :%s",
 					me.id, acptr->name, s->setby, s->priority, s->line);

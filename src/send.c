@@ -458,28 +458,15 @@ good:
 	}
 }
 
-/*
- * sendto_server
- *
- * inputs       - pointer to client to NOT send to
- *              - caps or'd together which must ALL be present
- *              - caps or'd together which must ALL NOT be present
- *              - printf style format string
- *              - args to format string
- * output       - NONE
- * side effects - Send a message to all connected servers, except the
- *                client 'one' (if non-NULL), as long as the servers
- *                support ALL capabs in 'caps', and NO capabs in 'nocaps'.
- *
- * This function was written in an attempt to merge together the other
- * billion sendto_*serv*() functions, which sprung up with capabs, uids etc
- * -davidt
- *
- * Ported this function over from charybdis 3.5, as it is much cleaner than
- * what we had going on here.
- * - kaniini
+/** Send a message to a server, taking into account server options if needed.
+ * @param one		The client to skip (can be NULL)
+ * @param servercaps	Server capabilities which must be present (OR'd together, if multiple)
+ * @param noservercaps	Server capabilities which must NOT be present (OR'd together, if multiple)
+ * @param mtags		The message tags to attach to this message.
+ * @param format	The format string / pattern, such as ":%s NICK %s".
+ * @param ...		The parameters for the format string
  */
-void sendto_server(Client *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...)
+void sendto_server(Client *one, unsigned long servercaps, unsigned long noservercaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...)
 {
 	Client *acptr;
 
@@ -494,10 +481,10 @@ void sendto_server(Client *one, unsigned long caps, unsigned long nocaps, Messag
 		if (one && acptr == one->direction)
 			continue;
 
-		if (caps && !CHECKPROTO(acptr, caps))
+		if (servercaps && !CHECKSERVERPROTO(acptr, servercaps))
 			continue;
 
-		if (nocaps && CHECKPROTO(acptr, nocaps))
+		if (noservercaps && CHECKSERVERPROTO(acptr, noservercaps))
 			continue;
 
 		va_start(vl, format);
