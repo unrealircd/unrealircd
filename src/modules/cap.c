@@ -195,16 +195,16 @@ static void clicap_generate(Client *client, const char *subcmd, int flags)
 		if (cap->visible && !cap->visible(client))
 			continue; /* hidden */
 
+		if (flags)
+		{
+			if (!cap->cap || !(client->local->caps & cap->cap))
+				continue;
+		}
+
 		if ((client->local->cap_protocol >= 302) && cap->parameter && (param = cap->parameter(client)))
 			snprintf(name, sizeof(name), "%s=%s", cap->name, param);
 		else
 			strlcpy(name, cap->name, sizeof(name));
-
-		if (flags)
-		{
-			if (!cap->cap || !CHECKPROTO(client, cap->cap))
-				continue;
-		}
 
 		/* \r\n\0, possible "-~=", space, " *" */
 		if (buflen + strlen(name) >= BUFSIZE - 10)
