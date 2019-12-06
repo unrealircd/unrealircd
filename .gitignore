@@ -70,3 +70,6 @@ xcuserdata
 src/macosx/build/
 DerivedData
 src/macosx/pods/
+
+# Doxygen generated files
+doc/doxygen/
