@@ -82,29 +82,39 @@ CMD_FUNC(cmd_svslogin)
 	 * It is a broadcast message because we want ALL servers to know
 	 * that the user is now logged in under account xyz.
 	 */
+
 	target = find_client(parv[2], NULL);
-	if (!target)
-		return; /* client not found */
-
-	if (IsServer(target))
-		return;
-
-	if (target->user == NULL)
-		make_user(target);
-
-	strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
-
-	if (MyConnect(target))
+	if (target)
 	{
-		/* Notify user */
-		sendnumeric(target, RPL_LOGGEDIN,
-			   BadPtr(target->name) ? "*" : target->name,
-			   BadPtr(target->user->username) ? "*" : target->user->username,
-			   BadPtr(target->user->realhost) ? "*" : target->user->realhost,
-			   target->user->svid, target->user->svid);
-	}
+		if (IsServer(target))
+			return;
 
-	user_account_login(recv_mtags, target);
+		if (target->user == NULL)
+			make_user(target);
+
+		strlcpy(target->user->svid, parv[3], sizeof(target->user->svid));
+
+		if (MyConnect(target))
+		{
+			/* Notify user */
+			sendnumeric(target, RPL_LOGGEDIN,
+				   BadPtr(target->name) ? "*" : target->name,
+				   BadPtr(target->user->username) ? "*" : target->user->username,
+				   BadPtr(target->user->realhost) ? "*" : target->user->realhost,
+				   target->user->svid, target->user->svid);
+		}
+
+		user_account_login(recv_mtags, target);
+	} else {
+		/* It is perfectly normal for target to be NULL as this
+		 * happens during registration phase (pre-connect).
+		 * It just means we cannot set any properties for this user,
+		 * which is fine in that case, since it will be synced via
+		 * the UID message instead.
+		 * We still have to broadcast the message, which is why
+		 * we do not return here.
+		 */
+	}
 
 	/* Propagate to the rest of the network */
 	sendto_server(client, 0, 0, NULL, ":%s SVSLOGIN %s %s %s",
