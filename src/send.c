@@ -20,34 +20,45 @@
 
 /* send.c 2.32 2/28/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen */
 
+/** @file
+ * @brief The sending functions to users, channels, servers.
+ */
+
 #include "unrealircd.h"
 
+/* Some forward declarions are needed */
 void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl);
-void sendbufto_one(Client *to, char *msg, unsigned int quick);
+void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl);
 static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, const char *pattern, va_list vl);
 
 #define ADD_CRLF(buf, len) { if (len > 510) len = 510; \
                              buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
 
-#define NEWLINE	"\r\n"
-
+/* These are two local (static) buffers used by the various send functions */
 static char sendbuf[2048];
 static char sendbuf2[4096];
 
-void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags,
-    const char *pattern, va_list vl);
-
+/** This is used to ensure no duplicate messages are sent
+ * to the same server uplink/direction. In send functions
+ * that deliver to multiple users or servers the value is
+ * increased by 1 and then for each delivery in the loop
+ * it is checked if to->direction->local->serial == current_serial
+ * and if so, sending is skipped.
+ */
 MODVAR int  current_serial;
-/*
-** dead_socket
-**	An error has been detected. The link *must* be closed,
-**	but *cannot* call ExitClient (cmd_bye) from here.
-**	Instead, mark it as a dead socket. This should
-**	generate ExitClient from the main loop.
-**
-**	notice will be the quit message. notice will also be
-**	sent to locally connected IRCOps in case 'to' is a server.
-*/
+
+/** Mark the socket as "dead".
+ * This is used when exit_client() cannot be used from the
+ * current code because doing so would be (too) unexpected.
+ * The socket is closed later in the main loop.
+ * NOTE: this function is becoming less important, now that
+ *       exit_client() will not actively free the client.
+ *       Still, sometimes we need to use dead_socket()
+ *       since we don't want to be doing IsDead() checks after
+ *       each and every sendto...().
+ * @param to		Client to mark as dead
+ * @param notice	The quit reason to use
+ */
 int dead_socket(Client *to, char *notice)
 {
 	DBufClear(&to->local->recvQ);
@@ -153,8 +164,11 @@ void mark_data_to_send(Client *to)
 	}
 }
 
-/*
- *  send message to single client
+/** Send a message to a single client.
+ * @param to		The client to send to
+ * @param mtags		Any message tags associated with this message (can be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param ...		Format string parameters.
  */
 void sendto_one(Client *to, MessageTag *mtags, FORMAT_STRING(const char *pattern), ...)
 {
@@ -164,6 +178,15 @@ void sendto_one(Client *to, MessageTag *mtags, FORMAT_STRING(const char *pattern
 	va_end(vl);
 }
 
+/** Send a message to a single client - va_list variant.
+ * This function is similar to sendto_one() except that it
+ * doesn't use varargs but a va_list instead.
+ * Generally this is NOT used outside send.c, so not by modules.
+ * @param to		The client to send to
+ * @param mtags		Any message tags associated with this message (can be NULL)
+ * @param pattern	The format string / pattern to use.
+ * @param vl		Format string parameters.
+ */
 void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl)
 {
 	char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
