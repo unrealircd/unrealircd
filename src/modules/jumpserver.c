@@ -72,7 +72,7 @@ MOD_UNLOAD()
 static void do_jumpserver_exit_client(Client *client)
 {
 	if (IsSecure(client) && jss->ssl_server)
-		sendnumeric(client, RPL_REDIR, jss->ssl_server, NULL, jss->ssl_port);
+		sendnumeric(client, RPL_REDIR, jss->ssl_server, jss->ssl_port);
 	else
 		sendnumeric(client, RPL_REDIR, jss->server, jss->port);
 	exit_client(client, NULL, jss->reason);
