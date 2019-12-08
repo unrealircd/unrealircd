@@ -5646,6 +5646,15 @@ int _test_except(ConfigFile *conf, ConfigEntry *ce)
 		return 1;
 	}
 
+	if (!strcmp(ce->ce_vardata, "tkl"))
+	{
+		config_warn("%s:%i: except tkl { } is now called except ban { }. "
+		            "Simply rename the block from 'except tkl' to 'except ban' "
+		            "to get rid of this warning.",
+		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		safe_strdup(ce->ce_vardata, "ban"); /* awww */
+	}
+
 	for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
 	{
 		int value, errs = 0;
@@ -7911,16 +7920,11 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats"))
 		{
-			config_error("%s:%d: We no longer use a blacklist for stats (set::oper-only-stats) but "
+			config_warn("%s:%d: We no longer use a blacklist for stats (set::oper-only-stats) but "
 			             "have a whitelist now instead (set::allow-user-stats). ",
 			             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			if (cep->ce_vardata && !strcmp(cep->ce_vardata, "*"))
-				config_error("Simply DELETE the oper-only-stats line from your configuration file %s around line %d",
-				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			else
-				config_status("In most cases you should simply remove the oper-only-stats line from your "
-				              "configuration file.");
-			errors++;
+			config_warn("Simply delete the oper-only-stats line from your configuration file %s around line %d to get rid of this warning",
+			             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
 		else if (!strcmp(cep->ce_varname, "allow-user-stats"))
