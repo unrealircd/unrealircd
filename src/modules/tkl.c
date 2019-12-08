@@ -59,7 +59,7 @@ TKL *_tkl_add_banexception(int type, char *usermask, char *hostmask, char *reaso
                                time_t expire_at, time_t set_at, int soft, char *bantypes, int flags);
 TKL *_tkl_add_nameban(int type, char *name, int hold, char *reason, char *set_by,
                           time_t expire_at, time_t set_at, int flags);
-TKL *_tkl_add_spamfilter(int type, unsigned short target, unsigned short action, Match *match, char *set_by,
+TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction action, Match *match, char *set_by,
                              time_t expire_at, time_t set_at,
                              time_t spamf_tkl_duration, char *spamf_tkl_reason,
                              int flags);
@@ -88,7 +88,7 @@ int _tkl_ip_hash_type(int type);
 TKL *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softban);
 TKL *_find_tkl_banexception(int type, char *usermask, char *hostmask, int softban);
 TKL *_find_tkl_nameban(int type, char *name, int hold);
-TKL *_find_tkl_spamfilter(int type, char *match_string, unsigned short action, unsigned short target);
+TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsigned short target);
 int _find_tkl_exception(int ban_type, Client *client);
 
 /* Externals (only for us :D) */
@@ -2085,7 +2085,7 @@ TKL *tkl_find_head(char type, char *hostmask, TKL *def)
  * @returns                   The TKL entry, or NULL in case of a problem,
  *                            such as a regex failing to compile, memory problem, ..
  */
-TKL *_tkl_add_spamfilter(int type, unsigned short target, unsigned short action, Match *match, char *set_by,
+TKL *_tkl_add_spamfilter(int type, unsigned short target, BanAction action, Match *match, char *set_by,
                              time_t expire_at, time_t set_at,
                              time_t tkl_duration, char *tkl_reason,
                              int flags)
@@ -3281,11 +3281,11 @@ void tkl_sync_send_entry(int add, Client *sender, Client *to, TKL *tkl)
 	} else
 	if (TKLIsSpamfilter(tkl))
 	{
-		sendto_one(to, NULL, ":%s TKL %c %c %s %s %s %lld %lld %lld %s %s :%s", sender->name,
+		sendto_one(to, NULL, ":%s TKL %c %c %s %c %s %lld %lld %lld %s %s :%s", sender->name,
 			   add ? '+' : '-',
 			   typ,
 			   spamfilter_target_inttostring(tkl->ptr.spamfilter->target),
-			   banact_valtostring(tkl->ptr.spamfilter->action),
+			   banact_valtochar(tkl->ptr.spamfilter->action),
 			   tkl->set_by,
 			   (long long)tkl->expire_at, (long long)tkl->set_at,
 			   (long long)tkl->ptr.spamfilter->tkl_duration, tkl->ptr.spamfilter->tkl_reason,
@@ -3429,7 +3429,7 @@ TKL *_find_tkl_nameban(int type, char *name, int hold)
 }
 
 /** Find a spamfilter TKL - only used to prevent duplicates and for deletion */
-TKL *_find_tkl_spamfilter(int type, char *match_string, unsigned short action, unsigned short target)
+TKL *_find_tkl_spamfilter(int type, char *match_string, BanAction action, unsigned short target)
 {
 	char tpe = tkl_typetochar(type);
 	TKL *tkl;
@@ -3751,7 +3751,7 @@ CMD_FUNC(cmd_tkl_add)
 		Match *m; /* compiled match_string */
 		time_t tkl_duration;
 		char *tkl_reason;
-		unsigned short action;
+		BanAction action;
 		unsigned short target;
 		/* helper variables */
 		char *err;
@@ -3934,7 +3934,7 @@ CMD_FUNC(cmd_tkl_del)
 	{
 		char *match_string;
 		unsigned short target;
-		unsigned short action;
+		BanAction action;
 
 		if (parc < 9)
 		{
