@@ -233,6 +233,10 @@ int write_channeldb(void)
 		return 0;
 	}
 
+#ifdef _WIN32
+	/* The rename operation cannot be atomic on Windows as it will cause a "file exists" error */
+	unlink(cfg.database);
+#endif
 	if (rename(tmpfname, cfg.database) < 0)
 	{
 		config_warn("[channeldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));

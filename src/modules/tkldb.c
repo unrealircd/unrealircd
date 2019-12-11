@@ -309,6 +309,10 @@ int write_tkldb(void)
 		config_warn("[tkldb] Got an error when trying to close database file '%s' (possible corruption occurred, DATABASE NOT SAVED): %s", cfg.database, strerror(errno));
 		return 0;
 	}
+#ifdef _WIN32
+	/* The rename operation cannot be atomic on Windows as it will cause a "file exists" error */
+	unlink(cfg.database);
+#endif
 	if (rename(tmpfname, cfg.database) < 0)
 	{
 		config_warn("[tkldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
