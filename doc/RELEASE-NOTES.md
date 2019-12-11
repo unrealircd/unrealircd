@@ -328,9 +328,6 @@ Module coders can start porting modules from U4 to U5 now.
   So for example third/funmod must also be named third/funmod.
 * The ```MOD_TEST```, ```MOD_INIT```, ```MOD_LOAD``` and ```MOD_UNLOAD``` functions no longer
   take a name argument. So: ```MOD_INIT(mymod)``` is now ```MOD_INIT()```
-* In UnrealIRCd 5, during development, ```--enable-asan``` is ON by default
-  to catch more bugs. This also means an up to 10x slowdown and more
-  memory usage. When we reach 5.0.0 stable this will be turned off.
 * We now use our own BuildBot infrastructure, so Travis-CI and AppVeyor
   have been removed.
 * We now use a new test framework.
