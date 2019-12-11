@@ -1603,8 +1603,32 @@ void update_conf(void)
 	ConfigFile *cf;
 	char *mainconf = configfile;
 	int upgraded_files = 0;
+	char answerbuf[128], *answer;
 
-	config_status("Attempting to upgrade '%s' (and all it's included files) from UnrealIRCd 3.2.x to UnrealIRCd 4.x...", configfile);
+	config_status("You have requested to upgrade your configuration files.");
+	config_status("If you are upgrading from 4.x to 5.x then DO NOT run this script. This script does NOT update config files from 4.x -> 5.x.");
+	config_status("UnrealIRCd 4.2.x configuration files should work OK on 5.x, with only some warnings printed when you boot the IRCd.");
+	config_status("See https://www.unrealircd.org/docs/Upgrading_from_4.x#Configuration_changes");
+	config_status("This upgrade-conf script is only useful if you are upgrading from 3.2.x.");
+	config_status("");
+#ifndef _WIN32
+	do
+	{
+		printf("Continue upgrading 3.2.x to 4.x configuration file format? (Y/N): ");
+		*answerbuf = '\0';
+		answer = fgets(answerbuf, sizeof(answerbuf), stdin);
+		if (answer && (toupper(*answer) == 'N'))
+		{
+			printf("Configuration unchanged.\n");
+			return;
+		}
+		if (answer && (toupper(*answer) == 'Y'))
+		{
+			break;
+		}
+		printf("Invalid response. Please enter either Y or N\n\n");
+	} while(1);
+#endif
 	
 	strlcpy(me.name, "<server>", sizeof(me.name));
 	memset(&upgrade, 0, sizeof(upgrade));
