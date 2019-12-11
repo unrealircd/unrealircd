@@ -418,8 +418,7 @@ Server protocol
   message tags and that the server can cope with 4K lines. (Note that
   the ordinary non-message-tag part is still limited to 512 bytes).
 * Pseudo ID support in SASL was removed. We now use real UID's.
-  This breaks anope, up to 2.0.6 stable, due lacking
-  [this patch](https://github.com/anope/anope/commit/da6e2730c259d6d6356a0a948e85730ae34663ab.patch)
+  This breaks services who rely on the old pseudo ID format.
 
 Client protocol
 ----------------
