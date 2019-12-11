@@ -216,7 +216,7 @@ Changed
   (eg: netadmin-with-operoverride).
 * [set::modes-on-join](https://www.unrealircd.org/docs/Set_block#set::modes-on-join) is now ```+nt``` by default.
 * The [authprompt](https://www.unrealircd.org/docs/Authentication#How_it_looks_like) module is now loaded by default. This means that if
-  you do a soft kline on someone (eg: KLINE %*@*.badisp) then the user
+  you do a soft kline on someone (eg: ```KLINE %*@*.badisp```) then the user
   has a chance to [authenticate](https://www.unrealircd.org/docs/Authentication#How_it_looks_like) to services, even without SASL, and
   bypass the ban if (s)he is authenticated.
 * The WHOX module is now used by default. Previously it was optional.
