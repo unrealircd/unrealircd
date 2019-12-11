@@ -136,7 +136,7 @@ int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 				errors++;
 			}
-			if (!url_is_valid(cep->ce_vardata) || !strcmp(cep->ce_vardata, "https://..."))
+			if (!strstr(cep->ce_vardata, "://") || !strcmp(cep->ce_vardata, "https://..."))
 			{
 				config_error("%s:%i: set::webredir::url needs to be a valid URL",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
