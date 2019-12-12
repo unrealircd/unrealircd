@@ -326,10 +326,7 @@ echo ""
 
 if [ -z "$NOCACHE" ] ; then
 	# This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
-	# FIXME for UnrealIRCd 5: we don't import anything.
-	#       we probably SHOULD import the settings but NOT the modules ?
-	#       let's worry about that later....
-	UNREALRELEASES=""
+	UNREALRELEASES="unrealircd-5.0.0-rc2 unrealircd-5.0.0-rc1"
 	if [ -f "config.settings" ]; then
 		. ./config.settings
 	else
