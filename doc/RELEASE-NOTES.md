@@ -1,14 +1,17 @@
-UnrealIRCd 5.0.0-rc2 Release Notes
-===================================
+UnrealIRCd 5.0.0 Release Notes
+===============================
 
-***IMPORTANT:*** UnrealIRCd 5 is currently in "Release Candidate" phase.
-This means it is not yet fully stable.
+After more than 6 months of hard work, UnrealIRCd 5 is now our new "stable" branch.
+In particular I would like to thank Gottem and 'i' for their source code
+contributions and PeGaSuS and westor for testing releases.
 
-There will be no module API changes anymore and no new features will be
-added in the "release candidate" stage. Focus is 100% on fixing bugs
-and have a stable UnrealIRCd 5 release in December 2019.
-You can help us a lot by testing this release.
-If you do, please report any issues on https://bugs.unrealircd.org/.
+When we transitioned from 3.2.x to 4.0.0 there were 175,000 lines of source code
+added/removed during 3 years of development. This time it was 120,000 lines in
+only 6 months, a major effort!
+
+If you are upgrading from 4.x to 5.x, then it would be wise to read
+[Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
+In any case, be sure to upgrade your services package first! (if you use any)
 
 UnrealIRCd 5 is compatible with the following services:
 * [anope](https://www.anope.org/) (version 2.0.7 or higher) -
