@@ -401,6 +401,7 @@ CMD_FUNC(cmd_nick_local)
 			newusr = 1;
 		}
 	} else
+	if (MyUser(client))
 	{
 		MessageTag *mtags = NULL;
 
@@ -463,6 +464,9 @@ CMD_FUNC(cmd_nick_local)
 		free_message_tags(mtags);
 		if (removemoder)
 			client->umodes &= ~UMODE_REGNICK;
+	} else
+	{
+		/* Someone changing nicks in the pre-registered phase */
 	}
 
 	if (update_watch && client->name[0])
