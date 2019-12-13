@@ -21,9 +21,6 @@ https://www.unrealircd.org/docs/UnrealIRCd_5_documentation
 
 --------------------------------------------------------------------------------------
 
-IMPORTANT: This is a "release candidate". Please report any issues you may
-find at https://bugs.unrealircd.org/
-
 The full release notes are available in doc/RELEASE-NOTES.md
 For easier viewing, check out the latest online release notes at:
 https://github.com/unrealircd/unrealircd/blob/unreal50/doc/RELEASE-NOTES.md

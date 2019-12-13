@@ -314,8 +314,6 @@ Deprecated
 
 Developers
 -----------
-The API is stable now that UnrealIRCd 5 is in Release Candidate stage.
-Module coders can start porting modules from U4 to U5 now.
 * The module header is now as follows:
 
       ModuleHeader MOD_HEADER
