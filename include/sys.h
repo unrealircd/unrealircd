@@ -43,6 +43,7 @@
 #ifndef _WIN32
 #include <unistd.h>
 #include <strings.h>
+#include <sys/resource.h>
 #endif
 
 /* get intptr_t if the system provides it -- otherwise, ./configure will define it for us */
