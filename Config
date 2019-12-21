@@ -361,6 +361,11 @@ if [ -z "$NOCACHE" ] ; then
 			IMPORTEDSETTINGS=""
 		fi
 		if [ "$IMPORTEDSETTINGS" != "" ]; then
+			if [ -d $IMPORTEDSETTINGS/conf ]; then
+				echo "ERROR: Directory $IMPORTEDSETTINGS is an INSTALLATION directory (eg /home/irc/unrealircd)."
+				echo "This question was about a SOURCE directory (eg /home/irc/unrealircd-5.0.0)."
+				exit
+			fi
 			if [ ! -f $IMPORTEDSETTINGS/config.settings ]; then
 				echo "Directory $IMPORTEDSETTINGS does not exist or does not contain a config.settings file"
 				exit
