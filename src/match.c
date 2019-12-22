@@ -40,11 +40,11 @@ u_char touppertab[], tolowertab[];
  * Original by Douglas A Lewis (dalewis@acsu.buffalo.edu).
  * Code based on hybrid7's version (match_esc()).
  * Various modifications by Bram Matthys (Syzop).
+ * Returns 1 on match and 0 for no match.
  * Instead of our previous code, this one is less optimized but actually  _readable_ ;).
  * Modifications I (Syzop) had to do vs the hybrid7 code:
  * - Got rid of (u_char *) casts, since we already compile with
  *   chars defaulting to unsigned [or else major things break] ;).
- * - Use 0 for match and non-zero for no match (a la strcmp), not the reverse.
  * - Support for '_'.
  * - Rip out support for '#'.
  */
