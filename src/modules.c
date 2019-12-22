@@ -1172,8 +1172,8 @@ void CommandOverrideDel(CommandOverride *cmd)
 
 void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[])
 {
-	if (ovr->next)
-		ovr->next->func(ovr->next, client, mtags, parc, parv);
+	if (ovr->prev)
+		ovr->prev->func(ovr->prev, client, mtags, parc, parv);
 	else
 		ovr->command->func(client, mtags, parc, parv);
 }
