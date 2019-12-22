@@ -1586,7 +1586,7 @@ void spamfilter_new_usage(Client *client, char *parv[])
 		sendnotice(client, "Using the old 3.2.x /SPAMFILTER syntax? Note the new -regex/-posix/-simple field!!");
 
 	spamfilter_usage(client);
-} 
+}
 
 /** Delete a spamfilter by ID (the ID can be obtained via '/SPAMFILTER del' */
 void spamfilter_del_by_id(Client *client, char *id)
@@ -2495,6 +2495,17 @@ void tkl_expire_entry(TKL *tkl)
 				whattype, tkl->ptr.nameban->name, tkl->set_by, tkl->ptr.nameban->reason,
 				(long long)(TStime() - tkl->set_at));
 		}
+	}
+	else if (TKLIsBanException(tkl))
+	{
+		sendto_snomask(SNO_TKL,
+		    "*** Expiring %s (%s@%s) for types '%s' made by %s (Reason: %s) set %lld seconds ago",
+		    whattype, tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask, tkl->ptr.banexception->bantypes, tkl->set_by, tkl->ptr.banexception->reason,
+		    (long long)(TStime() - tkl->set_at));
+		ircd_log
+		    (LOG_TKL, "Expiring %s (%s@%s) for types '%s' made by %s (Reason: %s) set %lld seconds ago",
+		    whattype, tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask, tkl->ptr.banexception->bantypes, tkl->set_by, tkl->ptr.banexception->reason,
+		    (long long)(TStime() - tkl->set_at));
 	}
 
 	if (tkl->type & TKL_SHUN)
@@ -4604,7 +4615,7 @@ int _match_user(char *rmask, Client *client, int options)
 			/* Wildcards */
 			if (client->ip && match_simple(hmask, client->ip))
 				return 1; /* MATCH (IP with wildcards) */
-		} else 
+		} else
 		if (strchr(hmask, ':'))
 		{
 			/* IPv6 hostmask */
@@ -4644,7 +4655,7 @@ int _match_user(char *rmask, Client *client, int options)
 				}
 				else if (cidr > 32)
 					return 0; /* NOMATCH: invalid CIDR */
-				else 
+				else
 					return comp_with_mask(clientip, maskip, cidr); /* MATCH/NOMATCH by CIDR */
 			}
 		}
