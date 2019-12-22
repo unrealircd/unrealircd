@@ -383,7 +383,7 @@ int reqmods_configrun_require(ConfigFile *cf, ConfigEntry *ce, int type)
 			continue;
 		}
 
-		if (!strcmp(cep->ce_varname, "minversion"))
+		if (!strcmp(cep->ce_varname, "min-version"))
 		{
 			minversion = cep->ce_vardata;
 			continue;
