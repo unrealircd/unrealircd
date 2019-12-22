@@ -22,6 +22,12 @@ export CPPFLAGS="-DFAKELAG_CONFIGURABLE -DNOREMOVETMP"
 # !! temporary use this:
 cp extras/build-tests/nix/configs/default ./config.settings
 
+# Debian 8 workaround:
+if lsb_release -av 2>&1|egrep 'Debian.*jessie'; then
+	echo "Disabling ASan due to false positives on deb8"
+	echo 'EXTRAPARA="--enable-werror --disable-asan"' >>config.settings
+fi
+
 # Read config.settings, this makes a couple of variables available to us.
 . ./config.settings
 if [ "$SSLDIR" != "" ]; then
