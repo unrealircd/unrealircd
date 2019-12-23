@@ -726,7 +726,6 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	int i, xx;
 	Hook *h;
 	ClientUser *user = client->user;
-	Client *nclient;
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -1087,29 +1086,6 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 	{
 		broadcast_moddata_client(client);
 		sendto_connectnotice(client, 0, NULL); /* moved down, for modules. */
-
-		/* Send password from client->local->passwd to NickServ for identification,
-		 * if passwd given and if NickServ is online.
-		 * - by taz, modified by Wizzu
-		 */
-		if (client->local->passwd && !IsLoggedIn(client) && SERVICES_NAME && (nclient = find_person(NickServ, NULL)))
-		{
-			int do_identify = 1;
-			Hook *h;
-			for (h = Hooks[HOOKTYPE_LOCAL_NICKPASS]; h; h = h->next)
-			{
-				i = (*(h->func.intfunc))(client,nclient);
-				if (i == HOOK_DENY)
-				{
-					do_identify = 0;
-					break;
-				}
-			}
-			if (do_identify)
-				sendto_one(nclient, NULL, ":%s PRIVMSG %s@%s :IDENTIFY %s",
-				    client->name,
-				    NickServ, SERVICES_NAME, client->local->passwd);
-		}
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(client, NULL, ":%s MODE %s :%s", client->name,
 			    client->name, buf);
@@ -1413,8 +1389,6 @@ int AllowClient(Client *client, char *username)
 			/* Always continue if password was wrong. */
 			continue;
 		}
-		/* Password (or other auth method) was correct */
-		safe_free(client->local->passwd);
 
 		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
 		{
