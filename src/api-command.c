@@ -173,8 +173,8 @@ void CommandDel(Command *command)
 
 /** Calls the specified command for the user, as if it was received
  * that way on IRC.
- * @param client		Client that is the source.
- * @param mtags		Message tags for this command.
+ * @param client	Client that is the source.
+ * @param mtags		Message tags for this command (or NULL).
  * @param cmd		Command to run, eg "JOIN".
  * @param parc		Parameter count plus 1.
  * @param parv		Parameter array.
@@ -188,6 +188,8 @@ void CommandDel(Command *command)
  * @note Do not pass insane parameters. The combined size of all parameters
  *       should not exceed 510 bytes, since that is what all code expects.
  *       Similarly, you should not exceed MAXPARA for parc.
+ * @note If mtags is NULL then new message tags are created for the command
+ *       (and destroyed before return).
  */
 void do_cmd(Client *client, MessageTag *mtags, char *cmd, int parc, char *parv[])
 {
@@ -195,7 +197,14 @@ void do_cmd(Client *client, MessageTag *mtags, char *cmd, int parc, char *parv[]
 
 	cmptr = find_command_simple(cmd);
 	if (cmptr)
+	{
+		int gen_mtags = (mtags == NULL) ? 1 : 0;
+		if (gen_mtags)
+			new_message(client, NULL, &mtags);
 		(*cmptr->func) (client, mtags, parc, parv);
+		if (gen_mtags)
+			free_message_tags(mtags);
+	}
 }
 
 /** @} */
