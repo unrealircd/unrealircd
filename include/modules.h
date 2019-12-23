@@ -949,7 +949,6 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_SILENCED 47
 #define HOOKTYPE_POST_SERVER_CONNECT 48
 #define HOOKTYPE_RAWPACKET_IN 49
-#define HOOKTYPE_LOCAL_NICKPASS 50
 #define HOOKTYPE_PACKET 51
 #define HOOKTYPE_HANDSHAKE 52
 #define HOOKTYPE_AWAY 53
@@ -1080,7 +1079,6 @@ int hooktype_log(int flags, char *timebuf, char *buf);
 int hooktype_local_spamfilter(Client *acptr, char *str, char *str_in, int type, char *target, TKL *tkl);
 int hooktype_silenced(Client *client, Client *to, int notice);
 int hooktype_rawpacket_in(Client *client, char *readbuf, int *length);
-int hooktype_local_nickpass(Client *client, Client *nickserv);
 int hooktype_packet(Client *from, Client *to, Client *intended_to, char **msg, int *length);
 int hooktype_handshake(Client *client);
 int hooktype_free_client(Client *acptr);
@@ -1171,7 +1169,6 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_SILENCED) && !ValidateHook(hooktype_silenced, func)) || \
         ((hooktype == HOOKTYPE_POST_SERVER_CONNECT) && !ValidateHook(hooktype_post_server_connect, func)) || \
         ((hooktype == HOOKTYPE_RAWPACKET_IN) && !ValidateHook(hooktype_rawpacket_in, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_NICKPASS) && !ValidateHook(hooktype_local_nickpass, func)) || \
         ((hooktype == HOOKTYPE_PACKET) && !ValidateHook(hooktype_packet, func)) || \
         ((hooktype == HOOKTYPE_HANDSHAKE) && !ValidateHook(hooktype_handshake, func)) || \
         ((hooktype == HOOKTYPE_AWAY) && !ValidateHook(hooktype_away, func)) || \
