@@ -500,7 +500,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		if (!cmptr->overriders)
 			(*cmptr->func) (from, mtags, i, para);
 		else
-			(*cmptr->overridetail->func) (cmptr->overridetail, from, mtags, i, para);
+			(*cmptr->overriders->func) (cmptr->overriders, from, mtags, i, para);
 	}
 #else
 	then = clock();
@@ -511,7 +511,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, char *ch)
 		if (!cmptr->overriders)
 			(*cmptr->func) (from, mtags, i, para);
 		else
-			(*cmptr->overridetail->func) (cmptr->overridetail, from, mtags, i, para);
+			(*cmptr->overriders->func) (cmptr->overriders, from, mtags, i, para);
 	}
 	if (!IsDead(cptr))
 	{

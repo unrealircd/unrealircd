@@ -1014,7 +1014,6 @@ struct RealCommand {
 	Module 			*owner;
 	RealCommand		*friend; /* cmd if token, token if cmd */
 	CommandOverride		*overriders;
-	CommandOverride		*overridetail;
 #ifdef DEBUGMODE
 	unsigned long 		lticks;
 	unsigned long 		rticks;

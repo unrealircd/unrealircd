@@ -1122,13 +1122,9 @@ CommandOverride *CommandOverrideAddEx(Module *module, char *name, int priority, 
 		module->errorcode = MODERR_NOERROR;
 	}
 	ovr->command = p;
-	if (!p->overriders)
-		p->overridetail = ovr;
 	AddListItemPrio(ovr, p->overriders, ovr->priority);
 	if (p->friend)
 	{
-		if (!p->friend->overriders)
-			p->friend->overridetail = ovr;
 		AddListItem(ovr, p->friend->overriders);
 	}
 	return ovr;
@@ -1141,15 +1137,9 @@ CommandOverride *CommandOverrideAdd(Module *module, char *name, OverrideCmdFunc 
 
 void CommandOverrideDel(CommandOverride *cmd)
 {
-	if (!cmd->next)
-		cmd->command->overridetail = cmd->prev;
 	DelListItem(cmd, cmd->command->overriders);
-	if (!cmd->command->overriders)
-		cmd->command->overridetail = NULL;
 	if (cmd->command->friend)
 	{
-		if (!cmd->prev)
-			cmd->command->friend->overridetail = NULL;
 		DelListItem(cmd, cmd->command->friend->overriders);
 	}
 	if (cmd->owner)
@@ -1172,8 +1162,8 @@ void CommandOverrideDel(CommandOverride *cmd)
 
 void CallCommandOverride(CommandOverride *ovr, Client *client, MessageTag *mtags, int parc, char *parv[])
 {
-	if (ovr->prev)
-		ovr->prev->func(ovr->prev, client, mtags, parc, parv);
+	if (ovr->next)
+		ovr->next->func(ovr->next, client, mtags, parc, parv);
 	else
 		ovr->command->func(client, mtags, parc, parv);
 }
