@@ -1047,8 +1047,7 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 			{
 				mtags = NULL;
 				new_message(&me, NULL, &mtags);
-				sendto_server(&me, 0, 0, mtags, ":%s MODE %s +b %s 0",
-				    me.id, channel->chname, mask);
+				sendto_server(NULL, 0, 0, mtags, ":%s MODE %s +b %s 0", me.id, channel->chname, mask);
 				sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 				    ":%s MODE %s +b %s", me.name, channel->chname, mask);
 				free_message_tags(mtags);
@@ -1274,7 +1273,7 @@ EVENT(modef_event)
 				MessageTag *mtags = NULL;
 
 				new_message(&me, NULL, &mtags);
-				sendto_server(&me, 0, 0, mtags, ":%s MODE %s -%c 0", me.id, e->channel->chname, e->m);
+				sendto_server(NULL, 0, 0, mtags, ":%s MODE %s -%c 0", me.id, e->channel->chname, e->m);
 				sendto_channel(e->channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s MODE %s -%c",
 				               me.name, e->channel->chname, e->m);
@@ -1385,7 +1384,7 @@ void do_floodprot_action(Channel *channel, int what, char *text)
 		/* Then the MODE broadcast */
 		mtags = NULL;
 		new_message(&me, NULL, &mtags);
-		sendto_server(&me, 0, 0, mtags, ":%s MODE %s +%c 0", me.id, channel->chname, m);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s +%c 0", me.id, channel->chname, m);
 		sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags, ":%s MODE %s +%c", me.name, channel->chname, m);
 		free_message_tags(mtags);
 

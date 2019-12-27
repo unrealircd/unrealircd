@@ -1235,7 +1235,7 @@ void charsys_check_for_changes(void)
 		sendto_realops("Permitted nick characters changed at runtime: %s -> %s",
 			previous_langsinuse, langsinuse);
 		/* Broadcast change to all (locally connected) servers */
-		sendto_server(&me, 0, 0, NULL, "PROTOCTL NICKCHARS=%s", langsinuse);
+		sendto_server(NULL, 0, 0, NULL, "PROTOCTL NICKCHARS=%s", langsinuse);
 	}
 
 	strlcpy(previous_langsinuse, langsinuse, sizeof(previous_langsinuse));

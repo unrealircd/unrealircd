@@ -258,7 +258,7 @@ CMD_FUNC(rmtkl)
 	}
 
 	// Broadcast the command to other servers *before* we proceed with removal
-	sendto_server(&me, 0, 0, NULL, "%s", broadcast);
+	sendto_server(NULL, 0, 0, NULL, "%s", broadcast);
 
 	// Loop over all supported types
 	for (tkltype = tkl_types; tkltype->type; tkltype++) {

@@ -785,7 +785,7 @@ void sendto_snomask_global(int snomask, FORMAT_STRING(const char *pattern), ...)
 			*p++ = Snomask_Table[i].flag;
 	*p = '\0';
 
-	sendto_server(&me, 0, 0, NULL, ":%s SENDSNO %s :%s", me.id, snobuf, nbuf);
+	sendto_server(NULL, 0, 0, NULL, ":%s SENDSNO %s :%s", me.id, snobuf, nbuf);
 }
 
 /*

@@ -118,7 +118,7 @@ static int secureonly_kick_insecure_users(Channel *channel)
 
 			sendto_prefix_one(client, &me, mtags, ":%s KICK %s %s :%s", me.name, channel->chname, client->name, comment);
 
-			sendto_server(&me, 0, 0, mtags, ":%s KICK %s %s :%s", me.id, channel->chname, client->id, comment);
+			sendto_server(NULL, 0, 0, mtags, ":%s KICK %s %s :%s", me.id, channel->chname, client->id, comment);
 
 			free_message_tags(mtags);
 

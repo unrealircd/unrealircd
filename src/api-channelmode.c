@@ -142,7 +142,7 @@ void extcmodes_check_for_changes(void)
 		sendto_realops("Channel modes changed at runtime: %s -> %s",
 			previous_chanmodes, chanmodes);
 		/* Broadcast change to all (locally connected) servers */
-		sendto_server(&me, 0, 0, NULL, "PROTOCTL CHANMODES=%s", chanmodes);
+		sendto_server(NULL, 0, 0, NULL, "PROTOCTL CHANMODES=%s", chanmodes);
 	}
 
 	strlcpy(previous_chanmodes, chanmodes, sizeof(previous_chanmodes));
