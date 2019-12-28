@@ -150,8 +150,16 @@ int mm_http_request(char *url, char *fname, int follow_redirects)
 		fprintf(stderr, "ERROR: TLS initalization failure (II)\n");
 		goto out1;
 	}
+
+	BIO_get_ssl(socket, &ssl);
+	if (!ssl)
+	{
+		fprintf(stderr, "ERROR: Could not get TLS connection from BIO -- strange\n");
+		goto out2;
+	}
 	
 	BIO_set_conn_hostname(socket, hostandport);
+	SSL_set_tlsext_host_name(ssl, host);
 
 	if (BIO_do_connect(socket) != 1)
 	{
@@ -164,13 +172,6 @@ int mm_http_request(char *url, char *fname, int follow_redirects)
 	{
 		fprintf(stderr, "ERROR: Could not connect to %s (TLS handshake failed)\n", hostandport);
 		config_report_ssl_error();
-		goto out2;
-	}
-
-	BIO_get_ssl(socket, &ssl);
-	if (!ssl)
-	{
-		fprintf(stderr, "ERROR: Could not get TLS connection from BIO -- strange\n");
 		goto out2;
 	}
 
