@@ -124,12 +124,6 @@ int Auth_AutoDetectHashType(char *hash)
 	if (bits <= 0)
 		return AUTHTYPE_UNIXCRYPT; /* decode failed. likely some other crypt() type. */
 
-	/* These are for two old/ancient UnrealIRCd types ('md5' and 'sha1').
-	 * This code is there to make sure they don't end up as AUTHTYPE_UNIXCRYPT...
-	 */
-	if ((bits == 128) || (bits == 160))
-		return AUTHTYPE_INVALID;
-
 	/* else it's likely some other crypt() type */
 	return AUTHTYPE_UNIXCRYPT;
 }
