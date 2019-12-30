@@ -1331,6 +1331,10 @@ void send_invalid_channelname(Client *client, char *channelname)
 {
 	char *reason;
 
+	if (*channelname != '#')
+	{
+		reason = "Channel name must start with a hash mark (#)";
+	} else
 	if (strlen(channelname) > CHANNELLEN)
 	{
 		reason = "Channel name is too long";
