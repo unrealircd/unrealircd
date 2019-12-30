@@ -1442,12 +1442,16 @@ void _set_mode(Channel *channel, Client *client, int parc, char *parv[], u_int *
 			default:
 				if (MyUser(client) && channel->mode_lock && strchr(channel->mode_lock, *curchr) != NULL)
 				{
-					if (!sent_mlock_warning)
+					if (!IsOper(client) || find_server(SERVICES_NAME, NULL) ||
+					    !ValidatePermissionsForPath("channel:override:mlock",client,NULL,channel,NULL))
 					{
-						sendnumeric(client, ERR_MLOCKRESTRICTED, channel->chname, *curchr, channel->mode_lock);
-						sent_mlock_warning++;
+						if (!sent_mlock_warning)
+						{
+							sendnumeric(client, ERR_MLOCKRESTRICTED, channel->chname, *curchr, channel->mode_lock);
+							sent_mlock_warning++;
+						}
+						continue;
 					}
-					continue;
 				}
 				found = 0;
 				tab = &corechannelmodetable[0];
