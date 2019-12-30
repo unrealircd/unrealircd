@@ -46,10 +46,6 @@ ModuleHeader MOD_HEADER
  #define MAX(x,y) ((x) > (y) ? (x) : (y))
 #endif
 
-#ifndef BAN_ACT_WARN
- #define BAN_ACT_WARN 11
-#endif
-
 /* "<char1><char2>" followed by "<rest>" */
 static char *triples_txt[] = {
 	"aj", "fqtvxz",
@@ -629,7 +625,7 @@ int antirandom_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		} else
 		if (!strcmp(cep->ce_varname, "ban-action"))
 		{
-			if (!banact_stringtoval(cep->ce_vardata) && strcmp(cep->ce_vardata, "warn"))
+			if (!banact_stringtoval(cep->ce_vardata))
 			{
 				config_error("%s:%i: set::antirandom::ban-action: unknown action '%s'",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
@@ -693,8 +689,6 @@ int antirandom_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->ce_varname, "ban-action"))
 		{
 			cfg.ban_action = banact_stringtoval(cep->ce_vardata);
-			if (!cfg.ban_action && strcmp(cep->ce_vardata, "warn"))
-				cfg.ban_action = BAN_ACT_WARN;
 		} else
 		if (!strcmp(cep->ce_varname, "ban-reason"))
 		{
