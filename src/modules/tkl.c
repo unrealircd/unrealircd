@@ -124,6 +124,7 @@ TKLTypeTable tkl_types[] = {
 	{ "local-exception",    'f', TKL_SPAMF,                   "Local Spamfilter",   1, 0 },
 	{ "blacklist",          'b', TKL_BLACKLIST,               "Blacklist",          0, 1 },
 	{ "connect-flood",      'c', TKL_CONNECT_FLOOD,           "Connect flood",      0, 1 },
+	{ "maxperip",           'm', TKL_MAXPERIP,                "Max-per-IP",         0, 1 },
 	{ "unknown-data-flood", 'd', TKL_UNKNOWN_DATA_FLOOD,      "Unknown data flood", 0, 1 },
 	{ "antirandom",         'r', TKL_ANTIRANDOM,              "Antirandom",         0, 1 },
 	{ "antimixedutf8",      '8', TKL_ANTIMIXEDUTF8,           "Antimixedutf8",      0, 1 },
@@ -1361,6 +1362,7 @@ void eline_syntax(Client *client)
 	sendnotice(client, "b: Blacklist checking");
 	sendnotice(client, "c: Connect flood (bypass set::anti-flood::connect-flood))");
 	sendnotice(client, "d: Unknown data flood (no ZLINE on too much data before registration)");
+	sendnotice(client, "m: Bypass allow::maxperip restriction");
 	sendnotice(client, "r: Bypass antirandom module");
 	sendnotice(client, "8: Bypass antimixedutf8 module");
 	sendnotice(client, "v: Bypass ban version { } blocks");

@@ -1258,6 +1258,27 @@ int check_init(Client *client, char *sockn, size_t size)
 	return 1;
 }
 
+/** Returns 1 if allow::maxperip is exceeded by 'client' */
+int exceeds_maxperip(Client *client, ConfigItem_allow *aconf)
+{
+	Client *acptr;
+	int cnt = 1;
+
+	if (find_tkl_exception(TKL_MAXPERIP, client))
+		return 0; /* exempt */
+
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	{
+		if (IsUser(acptr) && !strcmp(GetIP(acptr), GetIP(client)))
+		{
+			cnt++;
+			if (cnt > aconf->maxperip)
+				return 1;
+		}
+	}
+	return 0;
+}
+
 /** Allow or reject the client based on allow { } blocks and all other restrictions.
  * @param client     Client to check (local)
  * @param username   Username, for some reason...
@@ -1365,25 +1386,13 @@ int AllowClient(Client *client, char *username)
 			strlcpy(uhost, sockhost, sizeof(uhost));
 		set_sockhost(client, uhost);
 
-		if (aconf->maxperip)
+		if (aconf->maxperip && exceeds_maxperip(client, aconf))
 		{
-			Client *acptr, *acptr2;
-			int cnt = 1;
-
-			list_for_each_entry_safe(acptr, acptr2, &lclient_list, lclient_node)
-			{
-				if (!strcmp(GetIP(acptr), GetIP(client)))
-				{
-					cnt++;
-					if (cnt > aconf->maxperip)
-					{
-						/* Already got too many with that ip# */
-						exit_client(client, NULL, iConf.reject_message_too_many_connections);
-						return 0;
-					}
-				}
-			}
+			/* Already got too many with that ip# */
+			exit_client(client, NULL, iConf.reject_message_too_many_connections);
+			return 0;
 		}
+
 		if (aconf->auth && !Auth_Check(client, aconf->auth, client->local->passwd))
 		{
 			/* Always continue if password was wrong. */
