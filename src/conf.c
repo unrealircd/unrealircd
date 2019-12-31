@@ -9941,7 +9941,7 @@ int     rehash(Client *client, int sig)
 	} else
 	if (client)
 	{
-		ircd_log(LOG_ERROR, "Rehashing configuration file (requested by %s",
+		ircd_log(LOG_ERROR, "Rehashing configuration file (requested by %s)",
 			client->name);
 	}
 
