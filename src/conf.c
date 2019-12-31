@@ -9929,6 +9929,22 @@ int     rehash(Client *client, int sig)
 		return 0;
 	}
 
+	/* Log who or what did the rehash: */
+	if (sig)
+	{
+		ircd_log(LOG_ERROR, "Rehashing configuration file (SIGHUP signal received)");
+	} else
+	if (client && client->user)
+	{
+		ircd_log(LOG_ERROR, "Rehashing configuration file (requested by %s!%s@%s)",
+			client->name, client->user->username, client->user->realhost);
+	} else
+	if (client)
+	{
+		ircd_log(LOG_ERROR, "Rehashing configuration file (requested by %s",
+			client->name);
+	}
+
 	loop.ircd_rehashing = 1;
 	loop.rehash_save_client = client;
 	loop.rehash_save_sig = sig;
