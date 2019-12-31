@@ -422,12 +422,20 @@ static int do_match(Client *client, Client *acptr, char *mask, struct who_format
 	}
 
 	/* match usermodes */
-	if (IsMatch(fmt, WMATCH_MODES) &&
-		((acptr->umodes & fmt->umodes) &&
-		!(acptr->umodes & fmt->noumodes) &&
-		(!(acptr->umodes & UMODE_HIDEOPER) || IsOper(client))))
+	if (IsMatch(fmt, WMATCH_MODES) && (fmt->umodes || fmt->noumodes))
 	{
-		return 1;
+		long umodes = acptr->umodes;
+		if ((acptr->umodes & UMODE_HIDEOPER) && !IsOper(client))
+			umodes &= ~UMODE_OPER; /* pretend -o if +H */
+		/* Now check 'umodes' (not acptr->umodes),
+		 * If multiple conditions are specified it is an
+		 * AND condition and not an OR.
+		 */
+		if (((umodes & fmt->umodes) == fmt->umodes) &&
+		    ((umodes & fmt->noumodes) == 0))
+		{
+			return 1;
+		}
 	}
 
 	return 0;
