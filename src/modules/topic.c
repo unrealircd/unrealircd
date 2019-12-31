@@ -179,7 +179,7 @@ CMD_FUNC(cmd_topic)
 			    (long long)channel->topic_time, channel->topic);
 			sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 				       ":%s TOPIC %s :%s",
-				       client->id, channel->chname, channel->topic);
+				       client->name, channel->chname, channel->topic);
 			free_message_tags(mtags);
 		}
 		return;
