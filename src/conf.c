@@ -196,6 +196,7 @@ long	config_checkval(char *value, unsigned short flags);
 
 ConfigFile		*config_load(char *filename, char *displayname);
 void			config_free(ConfigFile *cfptr);
+ConfigFile		*config_parse_with_offset(char *filename, char *confdata, unsigned int line_offset);
 ConfigFile	 	*config_parse(char *filename, char *confdata);
 ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name);
 
@@ -886,14 +887,18 @@ char *unreal_add_quotes(char *str)
 	return qbuf;
 }
 
+ConfigFile *config_parse(char *filename, char *confdata){
+	return config_parse_with_offset(filename, confdata, 0);
+}
+
 /* This is the internal parser, made by Chris Behrens & Fred Jacobs <2005.
  * Enhanced (or mutilated) by Bram Matthys over the years (2015-2019).
  */
-ConfigFile *config_parse(char *filename, char *confdata)
+ConfigFile *config_parse_with_offset(char *filename, char *confdata, unsigned int line_offset)
 {
 	char		*ptr;
 	char		*start;
-	int		linenumber = 1;
+	int		linenumber = 1+line_offset;
 	int errors = 0;
 	int n;
 	ConfigEntry	*curce;

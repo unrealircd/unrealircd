@@ -99,6 +99,7 @@ extern void  module_loadall(void);
 extern long set_usermode(char *umode);
 extern char *get_usermode_string_raw(long umodes);
 extern ConfigFile *config_parse(char *filename, char *confdata);
+extern ConfigFile *config_parse_with_offset(char *filename, char *confdata, unsigned int line_offset);
 extern void config_error(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
 extern void config_warn(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
 extern void config_error_missing(const char *filename, int line, const char *entry);
