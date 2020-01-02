@@ -89,15 +89,11 @@ CMD_FUNC(cmd_nick_remote)
 {
 	TKL *tklban;
 	int ishold;
-	Client *acptr, *serv = NULL;
-	Client *acptrs;
-	char nick[NICKLEN + 2], descbuf[BUFSIZE];
-	Membership *mp;
+	Client *acptr;
+	char nick[NICKLEN + 2];
 	time_t lastnick = 0;
-	int  differ = 1, update_watch = 1;
+	int differ = 1;
 	unsigned char removemoder = (client->umodes & UMODE_REGNICK) ? 1 : 0;
-	Hook *h;
-	int i = 0;
 	char *nickid = (IsUser(client) && *client->id) ? client->id : NULL;
 	Client *cptr = client->direction; /* Pending a complete overhaul... (TODO) */
 	MessageTag *mtags = NULL;
@@ -231,25 +227,20 @@ CMD_FUNC(cmd_nick_remote)
 		client->umodes &= ~UMODE_REGNICK;
 
 	/* Finally set new nick name. */
-	if (update_watch)
-	{
-		del_from_client_hash_table(client->name, client);
-		hash_check_watch(client, RPL_LOGOFF);
-	}
+	del_from_client_hash_table(client->name, client);
+	hash_check_watch(client, RPL_LOGOFF);
 
 	strcpy(client->name, nick);
 	add_to_client_hash_table(nick, client);
 
-	if (update_watch)
-		hash_check_watch(client, RPL_LOGON);
+	hash_check_watch(client, RPL_LOGON);
 }
 
 CMD_FUNC(cmd_nick_local)
 {
 	TKL *tklban;
 	int ishold;
-	Client *acptr, *serv = NULL;
-	Client *acptrs;
+	Client *acptr;
 	char nick[NICKLEN + 2], descbuf[BUFSIZE];
 	Membership *mp;
 	long lastnick = 0l;
