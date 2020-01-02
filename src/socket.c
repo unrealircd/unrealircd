@@ -1125,7 +1125,7 @@ void read_packet(int fd, int revents, void *data)
 /** Process input from clients that may have been deliberately delayed due to fake lag */
 void process_clients(void)
 {
-	Client *client, *next;
+	Client *client;
         
 	/* Problem:
 	 * When processing a client, that current client may exit due to eg QUIT.
@@ -1148,18 +1148,26 @@ void process_clients(void)
 	 */
 
 	do {
-		list_for_each_entry_safe(client, next, &lclient_list, lclient_node)
+		list_for_each_entry(client, &lclient_list, lclient_node)
 		{
 			if ((client->local->fd >= 0) && DBufLength(&client->local->recvQ) && !IsDead(client))
+			{
 				parse_client_queued(client);
+				if (IsDead(client))
+					break;
+			}
 		}
 	} while(&client->lclient_node != &lclient_list);
 
 	do {
-		list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
+		list_for_each_entry(client, &unknown_list, lclient_node)
 		{
 			if ((client->local->fd >= 0) && DBufLength(&client->local->recvQ) && !IsDead(client))
+			{
 				parse_client_queued(client);
+				if (IsDead(client) || (client->status > CLIENT_STATUS_UNKNOWN))
+					break;
+			}
 		}
 	} while(&client->lclient_node != &unknown_list);
 }
