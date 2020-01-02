@@ -1117,6 +1117,7 @@ ConfigFile *config_parse(char *filename, char *confdata)
 				}
 				cc = NULL;
 				n = parse_preprocessor_item(start, ptr, filename, linenumber, &cc);
+				linenumber++;
 				if (n == PREPROCESSOR_IF)
 				{
 					preprocessor_level++;
