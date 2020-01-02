@@ -4088,8 +4088,6 @@ int _place_host_ban(Client *client, BanAction action, char *reason, long duratio
 	if (IsSoftBanAction(action) && IsLoggedIn(client))
 		return 0;
 
-	RunHookReturnInt4(HOOKTYPE_PLACE_HOST_BAN, client, action, reason, duration, !=99);
-
 	switch(action)
 	{
 		case BAN_ACT_TEMPSHUN:
@@ -4164,16 +4162,18 @@ int _place_host_ban(Client *client, BanAction action, char *reason, long duratio
 			tkllayer[7] = mo2;
 			tkllayer[8] = reason;
 			cmd_tkl(&me, NULL, 9, tkllayer);
+			RunHookReturnInt4(HOOKTYPE_PLACE_HOST_BAN, client, action, reason, duration, !=99);
 			if ((action == BAN_ACT_SHUN) || (action == BAN_ACT_SOFT_SHUN))
 			{
 				find_shun(client);
 				return 1;
-			} else
-				return find_tkline_match(client, 0);
+			} /* else.. */
+			return find_tkline_match(client, 0);
 		}
 		case BAN_ACT_SOFT_KILL:
 		case BAN_ACT_KILL:
 		default:
+			RunHookReturnInt4(HOOKTYPE_PLACE_HOST_BAN, client, action, reason, duration, !=99);
 			exit_client(client, NULL, reason);
 			return 1;
 	}

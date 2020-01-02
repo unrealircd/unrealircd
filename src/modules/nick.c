@@ -254,7 +254,6 @@ CMD_FUNC(cmd_nick_local)
 	Membership *mp;
 	long lastnick = 0l;
 	int  differ = 1, update_watch = 1;
-	unsigned char newusr = 0;
 	unsigned char removemoder = (client->umodes & UMODE_REGNICK) ? 1 : 0;
 	Hook *h;
 	int i = 0;
@@ -395,10 +394,17 @@ CMD_FUNC(cmd_nick_local)
 
 			client->lastnick = TStime();
 			if (!register_user(client, nick, client->user->username, NULL, NULL, NULL))
-				return;
-			strlcpy(nick, client->name, sizeof(nick)); /* don't ask, but I need this. do not remove! -- Syzop */
-			update_watch = 0;
-			newusr = 1;
+			{
+				if (IsDead(client))
+					return;
+				/* ..otherwise.. fallthrough so we run the same code
+				 * as in case of !is_handshake_finished()
+				 */
+			} else {
+				/* New user! */
+				update_watch = 0; /* already done in register_user() */
+				strlcpy(nick, client->name, sizeof(nick)); /* don't ask, but I need this. do not remove! -- Syzop */
+			}
 		}
 	} else
 	if (MyUser(client))
@@ -469,23 +475,18 @@ CMD_FUNC(cmd_nick_local)
 		/* Someone changing nicks in the pre-registered phase */
 	}
 
-	if (update_watch && client->name[0])
-	{
-		del_from_client_hash_table(client->name, client);
-		if (IsUser(client))
-			hash_check_watch(client, RPL_LOGOFF);
-	}
+	del_from_client_hash_table(client->name, client);
+	if (update_watch && IsUser(client))
+		hash_check_watch(client, RPL_LOGOFF);
+
 	strlcpy(client->name, nick, sizeof(client->name));
 	add_to_client_hash_table(nick, client);
 
 	/* update fdlist --nenolod */
-	if (MyConnect(client))
-	{
-		snprintf(descbuf, sizeof(descbuf), "Client: %s", nick);
-		fd_desc(client->local->fd, descbuf);
-	}
+	snprintf(descbuf, sizeof(descbuf), "Client: %s", nick);
+	fd_desc(client->local->fd, descbuf);
 
-	if (IsUser(client) && update_watch)
+	if (update_watch && IsUser(client))
 		hash_check_watch(client, RPL_LOGON);
 
 	if (removemoder && MyUser(client))

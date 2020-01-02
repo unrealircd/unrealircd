@@ -396,7 +396,8 @@ int authprompt_place_host_ban(Client *client, int action, char *reason, long dur
 
 		/* And tag the user */
 		authprompt_tag_as_auth_required(client);
-		return 0; /* pretend user is exempt */
+		authprompt_send_auth_required_message(client);
+		return 1; /* pretend user is killed */
 	}
 	return 99; /* no action taken, proceed normally */
 }
@@ -418,7 +419,8 @@ int authprompt_find_tkline_match(Client *client, TKL *tkl)
 
 		/* And tag the user */
 		authprompt_tag_as_auth_required(client);
-		return 0; /* pretend user is exempt */
+		authprompt_send_auth_required_message(client);
+		return 1; /* pretend user is killed */
 	}
 	return 99; /* no action taken, proceed normally */
 }
