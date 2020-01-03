@@ -266,6 +266,7 @@ Changed
 * IRCOps now need to use SSL/TLS in order to oper up, as the
   [set::plaintext-policy::oper](https://www.unrealircd.org/docs/Set_block#set::plaintext-policy) default setting is now 'deny'.
   Similarly, [set::outdated-tls-policy::oper](https://www.unrealircd.org/docs/Set_block#set::outdated-tls-policy) is now also 'deny'.
+  You can change this, if you want, but it is not recommended.
 * [set::outdated-tls-policy::server](https://www.unrealircd.org/docs/Set_block#set::outdated-tls-policy) is now 'deny' as well, since all
   servers should use reasonable SSL/TLS protocols and ciphers.
 * The default generated certificated has been changed from RSA 4096 bits
@@ -485,6 +486,6 @@ Client protocol
   ```:server 470 yournick #channel #redirect :[Link] Cannot join channel...etc..```
 * Clients are recommended to implement and enable the
   [server-time](https://ircv3.net/specs/extensions/server-time-3.2)
-  extension by default. This way you will see channel history on-join
-  (if any) when the channel has channel mode +H. Otherwise your users
-  will not see channel history.
+  extension by default. When enabled, channel history is played back
+  on-join (if any) when the channel has channel mode +H.
+  Otherwise your users will not see channel history.
