@@ -13,18 +13,21 @@ Fixes:
 
 Enhancements:
 * New /ELINE exception type 'm' to bypass allow::maxperip.
-  Or in the conf file: ```except ban { mask 203.0.113.0/24; type maxperip; };```
+  Or in the configuration file: ```except ban { mask 203.0.113.0/24; type maxperip; };```
 * IRCOps can override MLOCK restrictions when services are down,
   if they have the channel:override:mlock operclass permission,
   such as opers which use the operclass 'netadmin-with-override'.
 
 Other:
-* Gottem and k4be have uploaded their 3rd party modules to unrealircd-contrib
-  so *NIX users can now easily install them using the new
+* Gottem and k4be have [uploaded their 3rd party modules](https://modules.unrealircd.org/)
+  to unrealircd-contrib so *NIX users can now easily install them using the new
   [Module manager](https://www.unrealircd.org/docs/Module_manager)
 
-Below is the original release announcement for 5.0.0:
+Below is the original release announcement for 5.0.0. This is recommended reading,
+if not done so already:
 
+UnrealIRCd 5
+-------------
 After more than 6 months of hard work, UnrealIRCd 5 is now our new "stable" branch.
 In particular I would like to thank Gottem and 'i' for their source code
 contributions and PeGaSuS and westor for testing releases.
@@ -307,7 +310,7 @@ Removed
   about this change and why it was done
   [can be found here](https://www.unrealircd.org/docs/FAQ#old-server-protocol).
 * Connecting with a server password will no longer send that password
-  to NickServ. Use [https://www.unrealircd.org/docs/SASL](SASL) instead!
+  to NickServ. Use [SASL](https://www.unrealircd.org/docs/SASL) instead!
 * Extended ban ~R (registered nick): this was the old method to match
   registered users. Everyone should use ~a (services account) instead.
 * The old TRE **posix** regex method has been removed because the TRE
@@ -454,7 +457,7 @@ Server protocol
   error. For the other options, support is *assumed*, no warning or
   error is shown when you lack support. These are options that most,
   if not all, services support since UnrealIRCd 4.x so it shouldn't be
-  a problem. More information (here)[https://www.unrealircd.org/docs/FAQ#old-server-protocol]
+  a problem. More information [here](https://www.unrealircd.org/docs/FAQ#old-server-protocol)
 * ```PROTOCTL MTAGS``` indicates that the server is capable of handling
   message tags and that the server can cope with 4K lines. (Note that
   the ordinary non-message-tag part is still limited to 512 bytes).
@@ -463,7 +466,6 @@ Server protocol
 
 Client protocol
 ----------------
-TODO: expand with other new things / changes
 * Support for message tags and other IRCv3 features. See the IRCv3
   specifications for more details.
 * When a message is blocked, for whatever reason, we now use a generic
@@ -481,3 +483,8 @@ TODO: expand with other new things / changes
 * The 470 numeric, which is sent on /JOIN #channel redirect to #redirect
   now uses the following format:
   ```:server 470 yournick #channel #redirect :[Link] Cannot join channel...etc..```
+* Clients are recommended to implement and enable the
+  [server-time](https://ircv3.net/specs/extensions/server-time-3.2)
+  extension by default. This way you will see channel history on-join
+  (if any) when the channel has channel mode +H. Otherwise your users
+  will not see channel history.
