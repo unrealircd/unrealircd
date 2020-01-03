@@ -16,7 +16,12 @@ Enhancements:
   Or in the conf file: ```except ban { mask 203.0.113.0/24; type maxperip; };```
 * IRCOps can override MLOCK restrictions when services are down,
   if they have the channel:override:mlock operclass permission,
-  such as operclass 'netadmin-with-override'.
+  such as opers which use the operclass 'netadmin-with-override'.
+
+Other:
+* Gottem and k4be have uploaded their 3rd party modules to unrealircd-contrib
+  so *NIX users can now easily install them using the new
+  [Module manager](https://www.unrealircd.org/docs/Module_manager)
 
 Below is the original release announcement for 5.0.0:
 
@@ -28,9 +33,9 @@ When we transitioned from 3.2.x to 4.0.0 there were 175,000 lines of source code
 added/removed during 3 years of development. This time it was 120,000 lines in
 only 6 months, a major effort!
 
-If you are upgrading from 4.x to 5.x, then it would be wise to read
+**If you are upgrading from 4.x to 5.x, then it would be wise to read
 [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
-In any case, be sure to upgrade your services package first! (if you use any)
+In any case, be sure to upgrade your services package first! (if you use any)**
 
 UnrealIRCd 5 is compatible with the following services:
 * [anope](https://www.anope.org/) (version 2.0.7 or higher) -
@@ -381,6 +386,23 @@ Developers
 * The parameters in several hooks have changed. Many now have an
   extra ```MessageTag *mtags``` parameter. Sometimes there are other changes
   as well, for example ```HOOKTYPE_CHANMSG``` now has 4 extra parameters.
+* You can call do_cmd() with NULL mtags. Usually this is the correct way.
+* If you used ```HOOKTYPE_PRE_USERMSG``` to block a message then you
+  should now use ```HOOKTYPE_CAN_SEND_TO_USER```. Similarly, the hook
+  ```HOOKTYPE_CAN_SEND``` which deals with channels is now called
+  ```HOOKTYPE_CAN_SEND_TO_CHANNEL```. Some other remarks:
+  * You CANNOT use HOOKTYPE_PRE_USERMSG anymore.
+  * The hooks require you to set an error message if you return HOOK_DENY.
+  * You should not send an error message yourself from these hooks.
+    In other words: do not use sendnumeric(). This is done by the
+    hook caller, based on the error message you return.
+  * Thanks to this, all rejecting of user messages now use generic
+    numeric 531 and all rejecting of channel messages use numeric 404.
+    See also under *Client protocol* later in this document.
+* If you use CommandOverrideAddEx() to specify a priority value (rare)
+  then be aware that in 5.0.1 we now use the 4.0.x behavior again to
+  match the same style of priorities in hooks: overrides with the
+  lowest priority are run first.
 * If you ever send a timestamp in a printf-like function, such as
   in ```sendto_server()```, then be sure to use ```%lld``` and cast the timestamp
   to *long long* so that it is compatible with both *NIX and Windows.
