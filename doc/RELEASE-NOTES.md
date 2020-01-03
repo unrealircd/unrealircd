@@ -1,5 +1,24 @@
-UnrealIRCd 5.0.0 Release Notes
+UnrealIRCd 5.0.1 Release Notes
 ===============================
+
+This release fixes a few issues present in UnrealIRCd 5.0.0:
+
+Fixes:
+* IRCd may hang in rare circumstances
+* Windows: fix repeated "ERROR renaming 'data/reputation.db.tmp'" warnings
+* Antirandom and blacklist did not deal properly with 'warn' actions
+* [Authprompt](https://www.unrealircd.org/docs/Authentication#How_it_looks_like)
+  did not always work properly
+* Line numbers were incorrect in config file warnings/errors when using @if or @define
+
+Enhancements:
+* New /ELINE exception type 'm' to bypass allow::maxperip.
+  Or in the conf file: ```except ban { mask 203.0.113.0/24; type maxperip; };```
+* IRCOps can override MLOCK restrictions when services are down,
+  if they have the channel:override:mlock operclass permission,
+  such as operclass 'netadmin-with-override'.
+
+Below is the original release announcement for 5.0.0:
 
 After more than 6 months of hard work, UnrealIRCd 5 is now our new "stable" branch.
 In particular I would like to thank Gottem and 'i' for their source code
@@ -282,6 +301,8 @@ Removed
   4.x then they should be able to link to 5.x as well. More information
   about this change and why it was done
   [can be found here](https://www.unrealircd.org/docs/FAQ#old-server-protocol).
+* Connecting with a server password will no longer send that password
+  to NickServ. Use [https://www.unrealircd.org/docs/SASL](SASL) instead!
 * Extended ban ~R (registered nick): this was the old method to match
   registered users. Everyone should use ~a (services account) instead.
 * The old TRE **posix** regex method has been removed because the TRE
