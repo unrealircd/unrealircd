@@ -155,24 +155,25 @@ int EventMod(Event *event, EventInfo *mods)
 
 void DoEvents(void)
 {
-	Event *eventptr;
-	Event temp;
+	Event *e, *e_next;
 
-	for (eventptr = events; eventptr; eventptr = eventptr->next)
+	for (e = events; e; e = e_next)
 	{
-		if (eventptr->count == -1)
-			goto freeit;
-		if ((eventptr->every_msec == 0) || minimum_msec_since_last_run(&eventptr->last_run, eventptr->every_msec))
+		e_next = e->next;
+		if (e->count == -1)
 		{
-			(*eventptr->event)(eventptr->data);
-			if (eventptr->count > 0)
+			EventDel(e);
+			continue;
+		}
+		if ((e->every_msec == 0) || minimum_msec_since_last_run(&e->last_run, e->every_msec))
+		{
+			(*e->event)(e->data);
+			if (e->count > 0)
 			{
-				eventptr->count--;
-				if (eventptr->count == 0)
+				e->count--;
+				if (e->count == 0)
 				{
-freeit:
-					temp.next = EventDel(eventptr);
-					eventptr = &temp;
+					EventDel(e);
 					continue;
 				}
 			}
