@@ -21,7 +21,7 @@
 
 ModuleHeader MOD_HEADER = {
 	"restrict-commands",
-	"1.0.1",
+	"1.0.2",
 	"Restrict specific commands unless certain conditions have been met",
 	"UnrealIRCd Team",
 	"unrealircd-5",
@@ -37,6 +37,7 @@ struct RestrictedCommand {
 	long connect_delay;
 	int exempt_identified;
 	int exempt_reputation_score;
+	int exempt_webirc;
 	int disable;
 };
 
@@ -148,6 +149,7 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	RestrictedCommand *rcmd;
 	long connect_delay;
 	int exempt_reputation_score;
+	int exempt_webirc;
 	int has_restriction;
 
 	// We are only interested in set::restrict-commands
@@ -189,7 +191,10 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 			if (!strcmp(cep2->ce_varname, "exempt-identified"))
 				continue;
-
+			
+			if (!strcmp(cep2->ce_varname, "exempt-webirc"))
+				continue;
+			
 			if (!strcmp(cep2->ce_varname, "exempt-reputation-score"))
 			{
 				exempt_reputation_score = atoi(cep2->ce_vardata);
@@ -275,6 +280,12 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 				rcmd->exempt_identified = config_checkval(cep2->ce_vardata, CFG_YESNO);
 				continue;
 			}
+			
+			if (!strcmp(cep2->ce_varname, "exempt-webirc"))
+			{
+				rcmd->exempt_webirc = config_checkval(cep2->ce_vardata, CFG_YESNO);
+				continue;
+			}
 
 			if (!strcmp(cep2->ce_varname, "exempt-reputation-score"))
 			{
@@ -299,6 +310,8 @@ int rcmd_canbypass(Client *client, RestrictedCommand *rcmd)
 	if (!client || !rcmd)
 		return 1;
 	if (rcmd->exempt_identified && IsLoggedIn(client))
+		return 1;
+	if (rcmd->exempt_webirc && moddata_client_get(client, "webirc"))
 		return 1;
 	if (rcmd->exempt_reputation_score > 0 && (GetReputation(client) >= rcmd->exempt_reputation_score))
 		return 1;
