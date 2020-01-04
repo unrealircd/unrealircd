@@ -7,7 +7,7 @@
 
 #include "unrealircd.h"
 
-#define CONNTHROTTLE_VERSION "1.2"
+#define CONNTHROTTLE_VERSION "1.3"
 
 #ifndef CALLBACKTYPE_REPUTATION_STARTTIME
  #define CALLBACKTYPE_REPUTATION_STARTTIME 5
@@ -34,6 +34,7 @@ struct cfgstruct {
 	/* set::connthrottle::new-users: */
 	int minimum_reputation_score;
 	int sasl_bypass;
+	int webirc_bypass;
 	/* set::connthrottle::disabled-when: */
 	long reputation_gathering;
 	int start_delay;
@@ -54,6 +55,7 @@ struct UCounter {
 	int rejected_clients;		/**< Number of rejected clients this minute */
 	int allowed_score;		/**< Number of allowed clients of type known-user */
 	int allowed_sasl;		/**< Number of allowed clients of type SASL */
+	int allowed_webirc;		/**< Number of allowed clients of type WEBIRC */
 	int allowed_other;		/**< Number of allowed clients of type other (new) */
 	char disabled;			/**< Module disabled by oper? */
 	int throttling_this_minute;	/**< Did we do any throttling this minute? */
@@ -89,6 +91,7 @@ MOD_TEST()
 	safe_strdup(cfg.reason, "Throttled: Too many users trying to connect, please wait a while and try again");
 	cfg.minimum_reputation_score = 24;
 	cfg.sasl_bypass = 1;
+	cfg.webirc_bypass = 1; /* I am not sure... probably disabled with 0 by default? */
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, ct_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, ct_config_posttest);
@@ -180,6 +183,9 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					}
 				} else
 				if (!strcmp(cepp->ce_varname, "sasl-bypass"))
+				{
+				} else
+				if (!strcmp(cepp->ce_varname, "webirc-bypass"))
 				{
 				} else
 				{
@@ -293,6 +299,8 @@ int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 					cfg.minimum_reputation_score = atoi(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "sasl-bypass"))
 					cfg.sasl_bypass = config_checkval(cepp->ce_vardata, CFG_YESNO);
+				else if (!strcmp(cepp->ce_varname, "webirc-bypass"))
+					cfg.webirc_bypass = config_checkval(cepp->ce_vardata, CFG_YESNO);
 			}
 		} else
 		if (!strcmp(cep->ce_varname, "new-users"))
@@ -355,10 +363,11 @@ EVENT(connthrottle_evt)
 	if (ucounter->rejected_clients)
 	{
 		snprintf(buf, sizeof(buf),
-		         "[ConnThrottle] Stats for this server past 60 secs: Connections rejected: %d. Accepted: %d known user(s), %d SASL and %d new user(s).",
+		         "[ConnThrottle] Stats for this server past 60 secs: Connections rejected: %d. Accepted: %d known user(s), %d SASL %d WEBIRC and %d new user(s).",
 		         ucounter->rejected_clients,
 		         ucounter->allowed_score,
 		         ucounter->allowed_sasl,
+			 ucounter->allowed_webirc,
 		         ucounter->allowed_other);
 
 		sendto_realops("%s", buf);
@@ -369,6 +378,7 @@ EVENT(connthrottle_evt)
 	ucounter->rejected_clients = 0;
 	ucounter->allowed_score = 0;
 	ucounter->allowed_sasl = 0;
+	ucounter->allowed_webirc = 0;
 	ucounter->allowed_other = 0;
 
 	ucounter->throttling_previous_minute = ucounter->throttling_this_minute;
@@ -395,6 +405,12 @@ int ct_pre_lconnect(Client *client)
 	if (cfg.sasl_bypass && IsLoggedIn(client))
 	{
 		/* Allowed in: user authenticated using SASL */
+		return HOOK_CONTINUE;
+	}
+	
+	if (cfg.webirc_bypass && moddata_client_get(client, "webirc"))
+	{
+		/* Allowed in: user using WEBIRC */
 		return HOOK_CONTINUE;
 	}
 
@@ -477,6 +493,13 @@ int ct_lconnect(Client *client)
 	{
 		/* Allowed in: user authenticated using SASL */
 		ucounter->allowed_sasl++;
+		return 0;
+	}
+	
+	if (cfg.webirc_bypass && moddata_client_get(client, "webirc"))
+	{
+		/* Allowed in: user using WEBIRC */
+		ucounter->allowed_webirc++;
 		return 0;
 	}
 
