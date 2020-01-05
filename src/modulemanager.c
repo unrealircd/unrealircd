@@ -429,12 +429,12 @@ int mm_module_file_config(ManagedModule *m, ConfigEntry *ce)
 
 #undef CheckNull
 
-int mm_parse_module_file(ManagedModule *m, char *buf)
+int mm_parse_module_file(ManagedModule *m, char *buf, unsigned int line_offset)
 {
 	ConfigFile *cf;
 	ConfigEntry *ce;
 
-	cf = config_parse(m->name, buf);
+	cf = config_parse_with_offset(m->name, buf, line_offset);
 	if (!cf)
 		return 0; /* eg: parse errors */
 
@@ -462,7 +462,7 @@ ManagedModule *mm_parse_module_c_file(char *modulename, char *fname)
 	ParseModuleHeaderStage parse_module_header = PMH_STAGE_LOOKING;
 	ParseModuleConfigStage parse_module_config = PMC_STAGE_LOOKING;
 	char *moduleconfig = NULL;
-	int linenr = 0;
+	int linenr = 0, module_config_start_line = 0;
 	char module_header_name[128];
 	char module_header_version[64];
 	char module_header_description[256];
@@ -526,8 +526,10 @@ ManagedModule *mm_parse_module_c_file(char *modulename, char *fname)
 		switch (parse_module_config)
 		{
 			case PMC_STAGE_LOOKING:
-				if (strstr(buf, "<<<MODULE MANAGER START>>>"))
+				if (strstr(buf, "<<<MODULE MANAGER START>>>")){
+					module_config_start_line = linenr;
 					parse_module_config = PMC_STAGE_STARTED;
+				}
 				break;
 			case PMC_STAGE_STARTED:
 				if (!strstr(buf, "<<<MODULE MANAGER END>>>"))
@@ -577,12 +579,12 @@ ManagedModule *mm_parse_module_c_file(char *modulename, char *fname)
 	safe_strdup(m->description, module_header_description);
 	safe_strdup(m->author, module_header_author);
 
-	if (!mm_parse_module_file(m, moduleconfig))
+	if (!mm_parse_module_file(m, moduleconfig, module_config_start_line))
 	{
 		fprintf(stderr, "ERROR: Unable to parse module manager data in the %s module.\n"
 		                "-- configuration block within %s --\n"
 		                "%s\n"
-		                "-- end of configiguration within %s --\n"
+		                "-- end of configuration within %s --\n"
 		                "You are suggested to contact the module author and paste the above to him/her\n",
 		                m->name,
 		                m->name,
