@@ -581,14 +581,8 @@ ManagedModule *mm_parse_module_c_file(char *modulename, char *fname)
 
 	if (!mm_parse_module_file(m, moduleconfig, module_config_start_line))
 	{
-		fprintf(stderr, "ERROR: Unable to parse module manager data in the %s module.\n"
-		                "-- configuration block within %s --\n"
-		                "%s\n"
-		                "-- end of configuration within %s --\n"
+		fprintf(stderr, "ERROR: Problem with module manager data block within the %s module C source file.\n"
 		                "You are suggested to contact the module author and paste the above to him/her\n",
-		                m->name,
-		                m->name,
-		                moduleconfig,
 		                m->name);
 		free_managed_module(m);
 		safe_free(moduleconfig);
