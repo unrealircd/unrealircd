@@ -1,6 +1,6 @@
 /*
  * connthrottle - Connection throttler
- * (C) Copyright 2004-2019 Bram Matthys (Syzop) and the UnrealIRCd team
+ * (C) Copyright 2004-2020 Bram Matthys (Syzop) and the UnrealIRCd team
  * License: GPLv2
  * See https://www.unrealircd.org/docs/Connthrottle
  */
@@ -91,7 +91,7 @@ MOD_TEST()
 	safe_strdup(cfg.reason, "Throttled: Too many users trying to connect, please wait a while and try again");
 	cfg.minimum_reputation_score = 24;
 	cfg.sasl_bypass = 1;
-	cfg.webirc_bypass = 1; /* I am not sure... probably disabled with 0 by default? */
+	cfg.webirc_bypass = 0;
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, ct_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, ct_config_posttest);
@@ -363,7 +363,7 @@ EVENT(connthrottle_evt)
 	if (ucounter->rejected_clients)
 	{
 		snprintf(buf, sizeof(buf),
-		         "[ConnThrottle] Stats for this server past 60 secs: Connections rejected: %d. Accepted: %d known user(s), %d SASL %d WEBIRC and %d new user(s).",
+		         "[ConnThrottle] Stats for this server past 60 secs: Connections rejected: %d. Accepted: %d known user(s), %d SASL, %d WEBIRC and %d new user(s).",
 		         ucounter->rejected_clients,
 		         ucounter->allowed_score,
 		         ucounter->allowed_sasl,
