@@ -2513,7 +2513,7 @@ void tkl_expire_entry(TKL *tkl)
 	if (tkl->type & TKL_SHUN)
 		tkl_check_local_remove_shun(tkl);
 
-	RunHook3(HOOKTYPE_TKL_DEL, NULL, NULL, tkl);
+	RunHook2(HOOKTYPE_TKL_DEL, NULL, tkl);
 	tkl_del_line(tkl);
 }
 
