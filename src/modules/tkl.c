@@ -810,7 +810,7 @@ int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 		if (!strcmp(ce->ce_vardata, "ban"))
 			strlcpy(bantypes, "kgzZs", sizeof(bantypes));
 		else if (!strcmp(ce->ce_vardata, "throttle"))
-			strlcpy(bantypes, "t", sizeof(bantypes));
+			strlcpy(bantypes, "c", sizeof(bantypes));
 		else if (!strcmp(ce->ce_vardata, "blacklist"))
 			strlcpy(bantypes, "b", sizeof(bantypes));
 		else if (!strcmp(ce->ce_vardata, "spamfilter"))
