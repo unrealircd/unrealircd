@@ -84,6 +84,7 @@ int _join_viruschan(Client *client, TKL *tk, int type);
 void _spamfilter_build_user_string(char *buf, char *nick, Client *client);
 int _match_user(char *rmask, Client *client, int options);
 int _match_user_extended_server_ban(char *banstr, Client *client);
+void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *client, char **tkl_username, char **tkl_hostname);
 int _tkl_ip_hash(char *ip);
 int _tkl_ip_hash_type(int type);
 TKL *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softban);
@@ -1363,29 +1364,16 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 						return;
 					}
 			}
-			/* set 'p' right for later... */
-			p = hostmask-1;
 		}
 		else
 		{
 			/* It's seemingly a nick .. let's see if we can find the user */
 			if ((acptr = find_person(mask, NULL)))
 			{
-				usermask = "*";
+				BanAction action = BAN_ACT_KLINE; // just a dummy default
 				if ((*type == 'z') || (*type == 'Z'))
-				{
-					/* Fill in IP */
-					hostmask = GetIP(acptr);
-					if (!hostmask)
-					{
-						sendnotice(client, "Could not get IP for user '%s'", acptr->name);
-						return;
-					}
-				} else {
-					/* Fill in host */
-					hostmask = acptr->user->realhost;
-				}
-				p = hostmask - 1;
+					action = BAN_ACT_ZLINE; // to indicate zline (no hostname, no dns, etc)
+				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, &usermask, &hostmask);
 			}
 			else
 			{
