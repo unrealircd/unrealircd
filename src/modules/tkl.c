@@ -588,14 +588,41 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 		{
 			char buf[512], *p;
 			strlcpy(buf, cep->ce_vardata, sizeof(buf));
-			p = strchr(buf, '@');
-			if (p)
+			if (is_extended_ban(buf))
 			{
-				*p++ = '\0';
-				safe_strdup(usermask, buf);
-				safe_strdup(hostmask, p);
-			} else {
-				safe_strdup(hostmask, cep->ce_vardata);
+				char *str;
+				Extban *extban;
+				char buf2[BUFSIZE];
+				extban = findmod_by_bantype(buf[1]);
+				if (!extban || !(extban->options & EXTBOPT_TKL))
+				{
+					config_warn("%s:%d: Invalid or unsupported extended server ban requested: %s",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, buf);
+					goto tcrb_end;
+				}
+				/* is_ok() is not called, since there is no client, similar to like remote bans set */
+				str = extban->conv_param(buf);
+				if (!str || (strlen(str) <= 4))
+				{
+					config_warn("%s:%d: Extended server ban has a problem: %s",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, buf);
+					goto tcrb_end;
+				}
+				strlcpy(buf2, str+3, sizeof(buf2));
+				buf[3] = '\0';
+				safe_strdup(usermask, buf); /* eg ~S: */
+				safe_strdup(hostmask, buf2);
+			} else
+			{
+				p = strchr(buf, '@');
+				if (p)
+				{
+					*p++ = '\0';
+					safe_strdup(usermask, buf);
+					safe_strdup(hostmask, p);
+				} else {
+					safe_strdup(hostmask, cep->ce_vardata);
+				}
 			}
 		} else
 		if (!strcmp(cep->ce_varname, "reason"))
@@ -624,6 +651,7 @@ int tkl_config_run_ban(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	else if (TKLIsServerBanType(tkltype))
 		tkl_add_serverban(tkltype, usermask, hostmask, reason, "-config-", 0, TStime(), 0, TKL_FLAG_CONFIG);
 
+tcrb_end:
 	safe_free(usermask);
 	safe_free(hostmask);
 	safe_free(reason);
@@ -738,7 +766,7 @@ void config_create_tkl_except(char *mask, char *bantypes)
 	char *usermask = NULL;
 	char *hostmask = NULL;
 	int soft = 0;
-	char buf[256], *p;
+	char buf[256], buf2[256], *p;
 
 	if (*mask == '%')
 	{
@@ -746,15 +774,39 @@ void config_create_tkl_except(char *mask, char *bantypes)
 		mask++;
 	}
 	strlcpy(buf, mask, sizeof(buf));
-	p = strchr(buf, '@');
-	if (!p)
+	if (is_extended_ban(buf))
 	{
-		usermask = "*";
-		hostmask = buf;
-	} else {
-		*p++ = '\0';
-		usermask = buf;
-		hostmask = p;
+		char *str;
+		Extban *extban;
+		extban = findmod_by_bantype(buf[1]);
+		if (!extban || !(extban->options & EXTBOPT_TKL))
+		{
+			config_warn("Invalid or unsupported extended server ban exemption requested: %s", buf);
+			return;
+		}
+		/* is_ok() is not called, since there is no client, similar to like remote bans set */
+		str = extban->conv_param(buf);
+		if (!str || (strlen(str) <= 4))
+		{
+			config_warn("Extended server ban exemption has a problem: %s", buf);
+			return;
+		}
+		strlcpy(buf2, str+3, sizeof(buf2));
+		buf[3] = '\0';
+		usermask = buf; /* eg ~S: */
+		hostmask = buf2;
+	} else
+	{
+		p = strchr(buf, '@');
+		if (!p)
+		{
+			usermask = "*";
+			hostmask = buf;
+		} else {
+			*p++ = '\0';
+			usermask = buf;
+			hostmask = p;
+		}
 	}
 
 	if ((*usermask == ':') || (*hostmask == ':'))
@@ -1237,8 +1289,8 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 				sendnotice(client, "Valid types are for example ~a, ~r, ~S");
 				return;
 			}
-			if (extban->is_ok)
-				extban->is_ok(client, NULL, mask, EXBCHK_PARAM, MODE_ADD, EXBTYPE_TKL);
+			if (extban->is_ok && !extban->is_ok(client, NULL, mask, EXBCHK_PARAM, MODE_ADD, EXBTYPE_TKL))
+				return; /* rejected */
 			str = extban->conv_param(mask);
 			if (!str || (strlen(str) <= 4))
 				return; /* rejected */
@@ -1539,8 +1591,8 @@ CMD_FUNC(cmd_eline)
 				sendnotice(client, "Valid types are for example ~a, ~r, ~S");
 				return;
 			}
-			if (extban->is_ok)
-				extban->is_ok(client, NULL, mask, EXBCHK_PARAM, MODE_ADD, EXBTYPE_TKL);
+			if (extban->is_ok && !extban->is_ok(client, NULL, mask, EXBCHK_PARAM, MODE_ADD, EXBTYPE_TKL))
+				return; /* rejected */
 			str = extban->conv_param(mask);
 			if (!str || (strlen(str) <= 4))
 				return; /* rejected */
