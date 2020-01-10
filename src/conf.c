@@ -747,6 +747,46 @@ char *allowed_channelchars_valtostr(AllowedChannelChars v)
 	}
 }
 
+/* Used for set::automatic-ban-target and set::manual-ban-target */
+BanTarget ban_target_strtoval(char *str)
+{
+	if (!strcmp(str, "ip"))
+		return BAN_TARGET_IP;
+	else if (!strcmp(str, "userip"))
+		return BAN_TARGET_USERIP;
+	else if (!strcmp(str, "host"))
+		return BAN_TARGET_HOST;
+	else if (!strcmp(str, "userhost"))
+		return BAN_TARGET_USERHOST;
+	else if (!strcmp(str, "account"))
+		return BAN_TARGET_ACCOUNT;
+	else if (!strcmp(str, "certfp"))
+		return BAN_TARGET_CERTFP;
+	return 0; /* invalid */
+}
+
+/* Used for set::automatic-ban-target and set::manual-ban-target */
+char *ban_target_valtostr(BanTarget v)
+{
+	switch(v)
+	{
+		case BAN_TARGET_IP:
+			return "ip";
+		case BAN_TARGET_USERIP:
+			return "userip";
+		case BAN_TARGET_HOST:
+			return "host";
+		case BAN_TARGET_USERHOST:
+			return "userhost";
+		case BAN_TARGET_ACCOUNT:
+			return "account";
+		case BAN_TARGET_CERTFP:
+			return "certfp";
+		default:
+			return "???";
+	}
+}
+
 ConfigFile *config_load(char *filename, char *displayname)
 {
 	struct stat sb;
@@ -1671,6 +1711,9 @@ void config_setdefaultsettings(Configuration *i)
 	i->max_concurrent_conversations_new_user_every = 15;
 
 	i->allowed_channelchars = ALLOWED_CHANNELCHARS_UTF8;
+
+	i->automatic_ban_target = BAN_TARGET_IP;
+	i->manual_ban_target = BAN_TARGET_HOST;
 }
 
 static void make_default_logblock(void)
@@ -7653,9 +7696,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.handshake_delay = config_checkval(cep->ce_vardata, CFG_TIME);
 		}
-		else if (!strcmp(cep->ce_varname, "ban-include-username"))
+		else if (!strcmp(cep->ce_varname, "automatic-ban-target"))
 		{
-			tempiConf.ban_include_username = config_checkval(cep->ce_vardata, CFG_YESNO);
+			tempiConf.automatic_ban_target = ban_target_strtoval(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "manual-ban-target"))
+		{
+			tempiConf.manual_ban_target = ban_target_strtoval(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "reject-message"))
 		{
@@ -8801,7 +8848,34 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "ban-include-username"))
 		{
+			config_error("%s:%i: set::ban-include-username is no longer supported. "
+			             "Use set { automatic-ban-target userip; }; instead.",
+			             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			config_error("See https://www.unrealircd.org/docs/Set_block#set::automatic-ban-target "
+			             "for more information and options.");
+			errors++;
+		}
+		else if (!strcmp(cep->ce_varname, "automatic-ban-target"))
+		{
 			CheckNull(cep);
+			if (!ban_target_strtoval(cep->ce_vardata))
+			{
+				config_error("%s:%i: set::automatic-ban-target: value '%s' is not recognized. "
+				             "See https://www.unrealircd.org/docs/Set_block#set::automatic-ban-target",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "manual-ban-target"))
+		{
+			CheckNull(cep);
+			if (!ban_target_strtoval(cep->ce_vardata))
+			{
+				config_error("%s:%i: set::manual-ban-target: value '%s' is not recognized. "
+				             "See https://www.unrealircd.org/docs/Set_block#set::manual-ban-target",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+				errors++;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "reject-message"))
 		{

@@ -53,6 +53,8 @@ typedef enum BroadcastChannelMessagesOption { BROADCAST_CHANNEL_MESSAGES_AUTO=1,
 
 typedef enum AllowedChannelChars { ALLOWED_CHANNELCHARS_ANY=1, ALLOWED_CHANNELCHARS_ASCII=2, ALLOWED_CHANNELCHARS_UTF8=3 } AllowedChannelChars;
 
+typedef enum BanTarget { BAN_TARGET_IP=1, BAN_TARGET_USERIP=2, BAN_TARGET_HOST=3, BAN_TARGET_USERHOST=4, BAN_TARGET_ACCOUNT=5, BAN_TARGET_CERTFP=6 } BanTarget;
+
 /** The set { } block configuration */
 typedef struct Configuration Configuration;
 struct Configuration {
@@ -156,7 +158,8 @@ struct Configuration {
 	long handshake_timeout;
 	long sasl_timeout;
 	long handshake_delay;
-	int ban_include_username;
+	BanTarget automatic_ban_target;
+	BanTarget manual_ban_target;
 	char *reject_message_too_many_connections;
 	char *reject_message_server_full;
 	char *reject_message_unauthorized;

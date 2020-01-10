@@ -4266,6 +4266,63 @@ CMD_FUNC(_cmd_tkl)
 	}
 }
 
+/** Configure the username/hostname TKL layer based on the BAN_TARGET_* configuration */
+void ban_target_to_tkl_layer(BanTarget ban_target, BanAction action, Client *client, char **tkl_username, char **tkl_hostname)
+{
+	static char username[USERLEN+1];
+	static char hostname[HOSTLEN+8];
+
+	if ((action == BAN_ACT_ZLINE) || (action == BAN_ACT_GZLINE))
+		ban_target = BAN_TARGET_IP; /* The only possible choice with ZLINE/GZLINE, other info is unavailable */
+
+	if (ban_target == BAN_TARGET_ACCOUNT)
+	{
+		if (client->user && client->user->svid &&
+		    strcmp(client->user->svid, "0") &&
+		    (*client->user->svid != ':'))
+		{
+			/* Place a ban on ~a:Accountname */
+			strlcpy(username, "~a:", sizeof(username));
+			strlcpy(hostname, client->user->svid, sizeof(hostname));
+			*tkl_username = username;
+			*tkl_hostname = hostname;
+			return;
+		}
+		ban_target = BAN_TARGET_IP; /* fallback */
+	} else
+	if (ban_target == BAN_TARGET_CERTFP)
+	{
+		char *fp = moddata_client_get(client, "certfp");
+		if (fp)
+		{
+			/* Place a ban on ~S:sha256sumofclientcertificate */
+			strlcpy(username, "~S:", sizeof(username));
+			strlcpy(hostname, fp, sizeof(hostname));
+			*tkl_username = username;
+			*tkl_hostname = hostname;
+			return;
+		}
+		ban_target = BAN_TARGET_IP; /* fallback */
+	}
+
+	/* Below we deal with the more common choices... */
+
+	/* First, set the username */
+	if (((ban_target == BAN_TARGET_USERIP) || (ban_target == BAN_TARGET_USERHOST)) && client->ident && strcmp(client->ident, "unknown"))
+		strlcpy(username, client->ident, sizeof(username));
+	else
+		strlcpy(username, "*", sizeof(username));
+
+	/* Now set the host-portion of the TKL */
+	if (((ban_target == BAN_TARGET_HOST) || (ban_target == BAN_TARGET_USERHOST)) && client->user && *client->user->realhost)
+		strlcpy(hostname, client->user->realhost, sizeof(hostname));
+	else
+		strlcpy(hostname, GetIP(client), sizeof(hostname));
+
+	*tkl_username = username;
+	*tkl_hostname = hostname;
+}
+
 /** Take an action on the user, such as banning or killing.
  * @author Bram Matthys (Syzop), 2003-present
  * @param client     The client which is affected.
@@ -4321,16 +4378,7 @@ int _place_host_ban(Client *client, BanAction action, char *reason, long duratio
 				NULL		/*8  reason */
 			};
 
-			strlcpy(ip, GetIP(client), sizeof(ip));
-
-			if (iConf.ban_include_username && (action != BAN_ACT_ZLINE) && (action != BAN_ACT_GZLINE))
-			{
-				if (client->user)
-					strlcpy(user, client->user->username, sizeof(user));
-				else
-					strlcpy(user, "*", sizeof(user));
-				tkllayer[3] = user;
-			}
+			ban_target_to_tkl_layer(iConf.automatic_ban_target, action, client, &tkllayer[3], &tkllayer[4]);
 
 			/* For soft bans we need to prefix the % in the username */
 			if (IsSoftBanAction(action))
@@ -4351,7 +4399,6 @@ int _place_host_ban(Client *client, BanAction action, char *reason, long duratio
 				tkllayer[2] = "G";
 			else if ((action == BAN_ACT_SHUN) || (action == BAN_ACT_SOFT_SHUN))
 				tkllayer[2] = "s";
-			tkllayer[4] = ip;
 			tkllayer[5] = me.name;
 			if (!duration)
 				strlcpy(mo, "0", sizeof(mo)); /* perm */
