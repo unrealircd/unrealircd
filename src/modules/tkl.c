@@ -1435,7 +1435,10 @@ void eline_syntax(Client *client)
  */
 int eline_type_requires_ip(char *bantypes)
 {
-	if (strchr(bantypes, 'z') || strchr(bantypes, 'Z') || strchr(bantypes, 'c') || strchr(bantypes, 'b'))
+	if (strchr(bantypes, 'z') || strchr(bantypes, 'Z') ||
+	    strchr(bantypes, 'c') ||
+	    strchr(bantypes, 'b') ||
+	    strchr(bantypes, 'd'))
 		return 1;
 	return 0;
 }
