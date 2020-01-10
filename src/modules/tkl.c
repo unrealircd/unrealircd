@@ -1665,13 +1665,10 @@ CMD_FUNC(cmd_eline)
 			/* It's seemingly a nick .. let's see if we can find the user */
 			if ((acptr = find_person(mask, NULL)))
 			{
-				usermask = "*";
-				hostmask = GetIP(acptr);
-				if (!hostmask)
-				{
-					sendnotice(client, "Could not get IP for user '%s'", acptr->name);
-					return;
-				}
+				BanAction action = BAN_ACT_KLINE; // just a dummy default
+				if (add && eline_type_requires_ip(bantypes))
+					action = BAN_ACT_ZLINE; // to indicate zline (no hostname, no dns, etc)
+				ban_target_to_tkl_layer(iConf.manual_ban_target, action, acptr, &usermask, &hostmask);
 			}
 			else
 			{
