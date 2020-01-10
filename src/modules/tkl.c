@@ -83,6 +83,7 @@ int _match_spamfilter(Client *client, char *str_in, int type, char *target, int 
 int _join_viruschan(Client *client, TKL *tk, int type);
 void _spamfilter_build_user_string(char *buf, char *nick, Client *client);
 int _match_user(char *rmask, Client *client, int options);
+int _match_user_extended_server_ban(char *banstr, Client *client);
 int _tkl_ip_hash(char *ip);
 int _tkl_ip_hash_type(int type);
 TKL *_find_tkl_serverban(int type, char *usermask, char *hostmask, int softban);
@@ -108,6 +109,11 @@ struct TKLTypeTable
 /** This table which defines all TKL types and TKL exception types.
  * If you wonder about the messy order: gline/kline/gzline/zline
  * are at the top for performance reasons. They make up 99% of the TKLs.
+ *
+ * IMPORTANT IF YOU ARE ADDING A NEW TYPE TO THIS TABLE:
+ * - also update eline_syntax()
+ * - also check if eline_type_requires_ip() needs to be updated
+ * - more?
  */
 TKLTypeTable tkl_types[] = {
 	/* <config name> <letter> <TKL_xxx type>               <logging name> <tkl option?> <exempt option?> */
@@ -1160,7 +1166,8 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 	time_t i;
 	Client *acptr = NULL;
 	char *mask = NULL;
-	char mo[1024], mo2[1024];
+	char mo[64], mo2[64];
+	char mask2buf[BUFSIZE];
 	char *p, *usermask, *hostmask;
 	char *tkllayer[10] = {
 		me.name,		/*0  server.name */
@@ -1176,7 +1183,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 	};
 	struct tm *t;
 
-	if (parc == 1)
+	if ((parc == 1) || BadPtr(parv[1]))
 		return; /* shouldn't happen */
 
 	mask = parv[1];
@@ -1214,80 +1221,128 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 			return;
 		}
 	}
-	/* Check if it's a hostmask and legal .. */
-	p = strchr(mask, '@');
-	if (p) {
-		if ((p == mask) || !p[1])
+
+	/* Check if it's an extended server ban */
+	if (is_extended_ban(mask))
+	{
+		if (whattodo == 0)
 		{
-			sendnotice(client, "Error: no user@host specified");
-			return;
-		}
-		usermask = strtok(mask, "@");
-		hostmask = strtok(NULL, "");
-		if (BadPtr(hostmask)) {
-			if (BadPtr(usermask)) {
+			/* Add */
+			char *str;
+			Extban *extban;
+			extban = findmod_by_bantype(mask[1]);
+			if (!extban || !(extban->options & EXTBOPT_TKL))
+			{
+				sendnotice(client, "Invalid or unsupported extended server ban requested: %s", mask);
+				sendnotice(client, "Valid types are for example ~a, ~r, ~S");
 				return;
 			}
-			hostmask = usermask;
-			usermask = "*";
+			if (extban->is_ok)
+				extban->is_ok(client, NULL, mask, EXBCHK_PARAM, MODE_ADD, EXBTYPE_TKL);
+			str = extban->conv_param(mask);
+			if (!str || (strlen(str) <= 4))
+				return; /* rejected */
+			strlcpy(mask2buf, str+3, sizeof(mask2buf));
+			mask[3] = '\0';
+			usermask = mask; /* eg ~S: */
+			hostmask = mask2buf;
+		} else {
+			/* Delete: allow any attempt */
+			strlcpy(mask2buf, mask+3, sizeof(mask2buf));
+			mask[3] = '\0';
+			usermask = mask; /* eg ~S: */
+			hostmask = mask2buf;
 		}
+		/* Make sure we don't screw up S2S traffic ;) */
 		if (*hostmask == ':')
 		{
-			sendnotice(client, "[error] For technical reasons you cannot start the host with a ':', sorry");
+			sendnotice(client, "[error] For technical reasons you cannot use double :: at the beginning "
+					   "of an extended server ban (eg ~a::xyz). You probably don't want to do this either.");
 			return;
 		}
-		if (((*type == 'z') || (*type == 'Z')) && !whattodo)
+		if (!*hostmask)
 		{
-			/* It's a (G)ZLINE, make sure the user isn't specyfing a HOST.
-			 * Just a warning in 3.2.3, but an error in 3.2.4.
-			 */
-			if (strcmp(usermask, "*"))
+			sendnotice(client, "[error] Empty hostmask encountered, eg -~S:");
+			return;
+		}
+	} else
+	{
+		/* Check if it's a hostmask and legal .. */
+		p = strchr(mask, '@');
+		if (p) {
+			if ((p == mask) || !p[1])
 			{
-				sendnotice(client, "ERROR: (g)zlines must be placed at \037*\037@ipmask, not \037user\037@ipmask. This is "
-				                 "because (g)zlines are processed BEFORE dns and ident lookups are done. "
-				                 "If you want to use usermasks, use a KLINE/GLINE instead.");
+				sendnotice(client, "Error: no user@host specified");
 				return;
 			}
-			for (p=hostmask; *p; p++)
-				if (isalpha(*p) && !isxdigit(*p))
-				{
-					sendnotice(client, "ERROR: (g)zlines must be placed at *@\037IPMASK\037, not *@\037HOSTMASK\037 "
-					                 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
-					                 "This is because (g)zlines are processed BEFORE dns and ident lookups are done. "
-					                 "If you want to use hostmasks instead of ipmasks, use a KLINE/GLINE instead.");
+			usermask = strtok(mask, "@");
+			hostmask = strtok(NULL, "");
+			if (BadPtr(hostmask)) {
+				if (BadPtr(usermask)) {
 					return;
 				}
-		}
-		/* set 'p' right for later... */
-		p = hostmask-1;
-	}
-	else
-	{
-		/* It's seemingly a nick .. let's see if we can find the user */
-		if ((acptr = find_person(mask, NULL)))
-		{
-			usermask = "*";
-			if ((*type == 'z') || (*type == 'Z'))
-			{
-				/* Fill in IP */
-				hostmask = GetIP(acptr);
-				if (!hostmask)
-				{
-					sendnotice(client, "Could not get IP for user '%s'", acptr->name);
-					return;
-				}
-			} else {
-				/* Fill in host */
-				hostmask = acptr->user->realhost;
+				hostmask = usermask;
+				usermask = "*";
 			}
-			p = hostmask - 1;
+			if (*hostmask == ':')
+			{
+				sendnotice(client, "[error] For technical reasons you cannot start the host with a ':', sorry");
+				return;
+			}
+			if (((*type == 'z') || (*type == 'Z')) && !whattodo)
+			{
+				/* It's a (G)ZLINE, make sure the user isn't specyfing a HOST.
+				 * Just a warning in 3.2.3, but an error in 3.2.4.
+				 */
+				if (strcmp(usermask, "*"))
+				{
+					sendnotice(client, "ERROR: (g)zlines must be placed at \037*\037@ipmask, not \037user\037@ipmask. This is "
+							 "because (g)zlines are processed BEFORE dns and ident lookups are done. "
+							 "If you want to use usermasks, use a KLINE/GLINE instead.");
+					return;
+				}
+				for (p=hostmask; *p; p++)
+					if (isalpha(*p) && !isxdigit(*p))
+					{
+						sendnotice(client, "ERROR: (g)zlines must be placed at *@\037IPMASK\037, not *@\037HOSTMASK\037 "
+								 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
+								 "This is because (g)zlines are processed BEFORE dns and ident lookups are done. "
+								 "If you want to use hostmasks instead of ipmasks, use a KLINE/GLINE instead.");
+						return;
+					}
+			}
+			/* set 'p' right for later... */
+			p = hostmask-1;
 		}
 		else
 		{
-			sendnumeric(client, ERR_NOSUCHNICK, mask);
-			return;
+			/* It's seemingly a nick .. let's see if we can find the user */
+			if ((acptr = find_person(mask, NULL)))
+			{
+				usermask = "*";
+				if ((*type == 'z') || (*type == 'Z'))
+				{
+					/* Fill in IP */
+					hostmask = GetIP(acptr);
+					if (!hostmask)
+					{
+						sendnotice(client, "Could not get IP for user '%s'", acptr->name);
+						return;
+					}
+				} else {
+					/* Fill in host */
+					hostmask = acptr->user->realhost;
+				}
+				p = hostmask - 1;
+			}
+			else
+			{
+				sendnumeric(client, ERR_NOSUCHNICK, mask);
+				return;
+			}
 		}
 	}
+
 	if (!whattodo && ban_too_broad(usermask, hostmask))
 	{
 		sendnotice(client, "*** [error] Too broad mask");
@@ -1352,6 +1407,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type)
 void eline_syntax(Client *client)
 {
 	sendnotice(client, " Syntax: /ELINE <user@host> <bantypes> <expiry-time> <reason>");
+	sendnotice(client, "     Or: /ELINE <extserverban> <bantypes> <expiry-time> <reason>");
 	sendnotice(client, "Valid bantypes are:");
 	sendnotice(client, "k: K-Line     g: G-Line");
 	sendnotice(client, "z: Z-Line     Z: Global Z-Line");
@@ -1366,7 +1422,9 @@ void eline_syntax(Client *client)
 	sendnotice(client, "r: Bypass antirandom module");
 	sendnotice(client, "8: Bypass antimixedutf8 module");
 	sendnotice(client, "v: Bypass ban version { } blocks");
-	sendnotice(client, "Example: /ELINE *@unrealircd.org kgzZ 0 This user is exempt");
+	sendnotice(client, "Examples:");
+	sendnotice(client, "/ELINE *@unrealircd.org kgf 0 This user is exempt");
+	sendnotice(client, "/ELINE ~S:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef kgf 0 Trusted user with this certificate fingerprint");
 	sendnotice(client, "-");
 	sendnotice(client, "To get a list of all current ELINEs, type: /STATS except");
 }
@@ -1388,7 +1446,8 @@ CMD_FUNC(cmd_eline)
 	int add = 1;
 	Client *acptr = NULL;
 	char *mask = NULL;
-	char mo[1024], mo2[1024];
+	char mo[64], mo2[64];
+	char mask2buf[BUFSIZE];
 	char *p, *usermask, *hostmask, *bantypes=NULL, *reason=NULL;
 	char *tkllayer[11] = {
 		me.name,		/*0  server.name */
@@ -1462,67 +1521,120 @@ CMD_FUNC(cmd_eline)
 	if (strchr(mask, ' '))
 		return;
 
-	/* Check if it's a hostmask and legal .. */
-	p = strchr(mask, '@');
-	if (p)
+	/* Check if it's an extended server ban */
+	if (is_extended_ban(mask))
 	{
-		if ((p == mask) || !p[1])
+		if (add)
 		{
-			sendnotice(client, "Error: no user@host specified");
-			return;
-		}
-		usermask = strtok(mask, "@");
-		hostmask = strtok(NULL, "");
-		if (BadPtr(hostmask)) {
-			if (BadPtr(usermask)) {
+			/* Add */
+			char *str;
+			Extban *extban;
+			extban = findmod_by_bantype(mask[1]);
+			if (!extban || !(extban->options & EXTBOPT_TKL))
+			{
+				sendnotice(client, "Invalid or unsupported extended server ban requested: %s", mask);
+				sendnotice(client, "Valid types are for example ~a, ~r, ~S");
 				return;
 			}
-			hostmask = usermask;
-			usermask = "*";
+			if (extban->is_ok)
+				extban->is_ok(client, NULL, mask, EXBCHK_PARAM, MODE_ADD, EXBTYPE_TKL);
+			str = extban->conv_param(mask);
+			if (!str || (strlen(str) <= 4))
+				return; /* rejected */
+			strlcpy(mask2buf, str+3, sizeof(mask2buf));
+			mask[3] = '\0';
+			usermask = mask; /* eg ~S: */
+			hostmask = mask2buf;
+			if (eline_type_requires_ip(bantypes))
+			{
+				sendnotice(client, "ERROR: Ban exceptions with type z/Z/c/b do not work on extended server bans. "
+				                   "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE "
+				                   "extended bans can be checked.");
+				return;
+			}
+		} else {
+			/* Delete: allow any attempt */
+			strlcpy(mask2buf, mask+3, sizeof(mask2buf));
+			mask[3] = '\0';
+			usermask = mask; /* eg ~S: */
+			hostmask = mask2buf;
 		}
+		/* Make sure we don't screw up S2S traffic ;) */
 		if (*hostmask == ':')
 		{
-			sendnotice(client, "[error] For technical reasons you cannot start the host with a ':', sorry");
+			sendnotice(client, "[error] For technical reasons you cannot use double :: at the beginning "
+					   "of an extended server ban (eg ~a::xyz). You probably don't want to do this either.");
 			return;
 		}
-		if (add && eline_type_requires_ip(bantypes))
+		if (!*hostmask)
 		{
-			/* Trying to exempt a user from a (G)ZLINE,
-			 * make sure the user isn't specifying a host then.
-			 */
-			if (strcmp(usermask, "*"))
+			sendnotice(client, "[error] Empty hostmask encountered, eg -~S:");
+			return;
+		}
+	} else
+	{
+		/* Check if it's a hostmask and legal .. */
+		p = strchr(mask, '@');
+		if (p)
+		{
+			if ((p == mask) || !p[1])
 			{
-				sendnotice(client, "ERROR: Ban exceptions with type z/Z/c/b need to be placed at \037*\037@ipmask, not \037user\037@ipmask. "
-				                 "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE any dns and ident lookups.");
+				sendnotice(client, "Error: no user@host specified");
 				return;
 			}
-			for (p=hostmask; *p; p++)
-				if (isalpha(*p) && !isxdigit(*p))
-				{
-					sendnotice(client, "ERROR: Ban exceptions with type z/Z/c/b need to be placed at *@\037ipmask\037, not *@\037hostmask\037. "
-					                 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
-				                         "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE any dns and ident lookups.");
+			usermask = strtok(mask, "@");
+			hostmask = strtok(NULL, "");
+			if (BadPtr(hostmask)) {
+				if (BadPtr(usermask)) {
 					return;
 				}
-		}
-	}
-	else
-	{
-		/* It's seemingly a nick .. let's see if we can find the user */
-		if ((acptr = find_person(mask, NULL)))
-		{
-			usermask = "*";
-			hostmask = GetIP(acptr);
-			if (!hostmask)
+				hostmask = usermask;
+				usermask = "*";
+			}
+			if (*hostmask == ':')
 			{
-				sendnotice(client, "Could not get IP for user '%s'", acptr->name);
+				sendnotice(client, "[error] For technical reasons you cannot start the host with a ':', sorry");
 				return;
+			}
+			if (add && eline_type_requires_ip(bantypes))
+			{
+				/* Trying to exempt a user from a (G)ZLINE,
+				 * make sure the user isn't specifying a host then.
+				 */
+				if (strcmp(usermask, "*"))
+				{
+					sendnotice(client, "ERROR: Ban exceptions with type z/Z/c/b need to be placed at \037*\037@ipmask, not \037user\037@ipmask. "
+							 "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE any dns and ident lookups.");
+					return;
+				}
+				for (p=hostmask; *p; p++)
+					if (isalpha(*p) && !isxdigit(*p))
+					{
+						sendnotice(client, "ERROR: Ban exceptions with type z/Z/c/b need to be placed at *@\037ipmask\037, not *@\037hostmask\037. "
+								 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
+								 "This is because checking (g)zlines, connect-flood and blacklists is done BEFORE any dns and ident lookups.");
+						return;
+					}
 			}
 		}
 		else
 		{
-			sendnumeric(client, ERR_NOSUCHNICK, mask);
-			return;
+			/* It's seemingly a nick .. let's see if we can find the user */
+			if ((acptr = find_person(mask, NULL)))
+			{
+				usermask = "*";
+				hostmask = GetIP(acptr);
+				if (!hostmask)
+				{
+					sendnotice(client, "Could not get IP for user '%s'", acptr->name);
+					return;
+				}
+			}
+			else
+			{
+				sendnumeric(client, ERR_NOSUCHNICK, mask);
+				return;
+			}
 		}
 	}
 
@@ -2459,6 +2571,44 @@ void _tkl_check_local_remove_shun(TKL *tmp)
 	}
 }
 
+
+/** This returns something like user@host, or %user@host, or ~a:Trusted
+ * that can be used in oper notices like expiring kline, added kline, etc.
+ */
+#define NO_SOFT_PREFIX	1
+char *tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options)
+{
+	if (TKLIsServerBan(tkl))
+	{
+		if (is_extended_ban(tkl->ptr.serverban->usermask))
+		{
+			ircsnprintf(buf, buflen, "%s%s%s",
+				(!(options & NO_SOFT_PREFIX) && (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT)) ? "%" : "",
+				tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask);
+		} else {
+			ircsnprintf(buf, buflen, "%s%s@%s",
+				(!(options & NO_SOFT_PREFIX) && (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT)) ? "%" : "",
+				tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask);
+		}
+	} else
+	if (TKLIsBanException(tkl))
+	{
+		if (is_extended_ban(tkl->ptr.banexception->usermask))
+		{
+			ircsnprintf(buf, buflen, "%s%s%s",
+				(!(options & NO_SOFT_PREFIX) && (tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT)) ? "%" : "",
+				tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask);
+		} else {
+			ircsnprintf(buf, buflen, "%s%s@%s",
+				(!(options & NO_SOFT_PREFIX) && (tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT)) ? "%" : "",
+				tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask);
+		}
+	} else
+		abort();
+
+	return buf;
+}
+
 /** Deal with expiration of a specific TKL entry.
  * This is a helper function for tkl_check_expire().
  */
@@ -2475,13 +2625,15 @@ void tkl_expire_entry(TKL *tkl)
 	} else
 	if (TKLIsServerBan(tkl))
 	{
+		char uhostbuf[BUFSIZE];
+		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
 		sendto_snomask(SNO_TKL,
-		    "*** Expiring %s (%s@%s) made by %s (Reason: %s) set %lld seconds ago",
-		    whattype, tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask, tkl->set_by, tkl->ptr.serverban->reason,
+		    "*** Expiring %s (%s) made by %s (Reason: %s) set %lld seconds ago",
+		    whattype, uhost, tkl->set_by, tkl->ptr.serverban->reason,
 		    (long long)(TStime() - tkl->set_at));
 		ircd_log
-		    (LOG_TKL, "Expiring %s (%s@%s) made by %s (Reason: %s) set %lld seconds ago",
-		    whattype, tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask, tkl->set_by, tkl->ptr.serverban->reason,
+		    (LOG_TKL, "Expiring %s (%s) made by %s (Reason: %s) set %lld seconds ago",
+		    whattype, uhost, tkl->set_by, tkl->ptr.serverban->reason,
 		    (long long)(TStime() - tkl->set_at));
 	}
 	else if (TKLIsNameBan(tkl))
@@ -2500,13 +2652,15 @@ void tkl_expire_entry(TKL *tkl)
 	}
 	else if (TKLIsBanException(tkl))
 	{
+		char uhostbuf[BUFSIZE];
+		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
 		sendto_snomask(SNO_TKL,
-		    "*** Expiring %s (%s@%s) for types '%s' made by %s (Reason: %s) set %lld seconds ago",
-		    whattype, tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask, tkl->ptr.banexception->bantypes, tkl->set_by, tkl->ptr.banexception->reason,
+		    "*** Expiring %s (%s) for types '%s' made by %s (Reason: %s) set %lld seconds ago",
+		    whattype, uhost, tkl->ptr.banexception->bantypes, tkl->set_by, tkl->ptr.banexception->reason,
 		    (long long)(TStime() - tkl->set_at));
 		ircd_log
-		    (LOG_TKL, "Expiring %s (%s@%s) for types '%s' made by %s (Reason: %s) set %lld seconds ago",
-		    whattype, tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask, tkl->ptr.banexception->bantypes, tkl->set_by, tkl->ptr.banexception->reason,
+		    (LOG_TKL, "Expiring %s (%s) for types '%s' made by %s (Reason: %s) set %lld seconds ago",
+		    whattype, uhost, tkl->ptr.banexception->bantypes, tkl->set_by, tkl->ptr.banexception->reason,
 		    (long long)(TStime() - tkl->set_at));
 	}
 
@@ -2567,8 +2721,7 @@ static int find_tkl_exception_matcher(Client *client, int ban_type, TKL *except_
 	if (!tkl_banexception_matches_type(except_tkl, ban_type))
 		return 0;
 
-	snprintf(uhost, sizeof(uhost), "%s@%s",
-	         except_tkl->ptr.banexception->usermask, except_tkl->ptr.banexception->hostmask);
+	tkl_uhost(except_tkl, uhost, sizeof(uhost), NO_SOFT_PREFIX);
 
 	if (match_user(uhost, client, MATCH_CHECK_REAL))
 	{
@@ -2639,7 +2792,7 @@ int find_tkline_match_matcher(Client *client, int skip_soft, TKL *tkl)
 	if (skip_soft && (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT))
 		return 0;
 
-	snprintf(uhost, sizeof(uhost), "%s@%s", tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask);
+	tkl_uhost(tkl, uhost, sizeof(uhost), NO_SOFT_PREFIX);
 
 	if (match_user(uhost, client, MATCH_CHECK_REAL))
 	{
@@ -3130,48 +3283,42 @@ void tkl_stats_matcher(Client *client, int type, char *para, TKLFlag *tklflags, 
 	}
 
 	/***** If we are still here then we have a match and will will send the STATS entry */
-
-	if (tkl->type == (TKL_KILL | TKL_GLOBAL))
+	if (TKLIsServerBan(tkl))
 	{
-		sendnumeric(client, RPL_STATSGLINE, 'G',
-			   (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
-			   tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask,
-			   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-			   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
+		char uhostbuf[BUFSIZE];
+		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
+		if (tkl->type == (TKL_KILL | TKL_GLOBAL))
+		{
+			sendnumeric(client, RPL_STATSGLINE, 'G', uhost,
+				   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
+				   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
+		} else
+		if (tkl->type == (TKL_ZAP | TKL_GLOBAL))
+		{
+			sendnumeric(client, RPL_STATSGLINE, 'Z', uhost,
+				   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
+				   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
+		} else
+		if (tkl->type == (TKL_SHUN | TKL_GLOBAL))
+		{
+			sendnumeric(client, RPL_STATSGLINE, 's', uhost,
+				   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
+				   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
+		} else
+		if (tkl->type == (TKL_KILL))
+		{
+			sendnumeric(client, RPL_STATSGLINE, 'K', uhost,
+				   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
+				   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
+		} else
+		if (tkl->type == (TKL_ZAP))
+		{
+			sendnumeric(client, RPL_STATSGLINE, 'z', uhost,
+				   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
+				   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
+		}
 	} else
-	if (tkl->type == (TKL_ZAP | TKL_GLOBAL))
-	{
-		sendnumeric(client, RPL_STATSGLINE, 'Z',
-			   (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
-			   tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask,
-			   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-			   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
-	} else
-	if (tkl->type == (TKL_SHUN | TKL_GLOBAL))
-	{
-		sendnumeric(client, RPL_STATSGLINE, 's',
-			   (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
-			   tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask,
-			   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-			   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
-	} else
-	if (tkl->type == (TKL_KILL))
-	{
-		sendnumeric(client, RPL_STATSGLINE, 'K',
-			   (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
-			   tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask,
-			   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-			   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
-	} else
-	if (tkl->type == (TKL_ZAP))
-	{
-		sendnumeric(client, RPL_STATSGLINE, 'z',
-			   (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
-			   tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask,
-			   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
-			   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.serverban->reason);
-	} else
-	if (tkl->type & TKL_SPAMF)
+	if (TKLIsSpamfilter(tkl))
 	{
 		sendnumeric(client, RPL_STATSSPAMF,
 			(tkl->type & TKL_GLOBAL) ? 'F' : 'f',
@@ -3196,17 +3343,17 @@ void tkl_stats_matcher(Client *client, int type, char *para, TKLFlag *tklflags, 
 			}
 		}
 	} else
-	if (tkl->type & TKL_NAME)
+	if (TKLIsNameBan(tkl))
 	{
 		sendnumeric(client, RPL_STATSQLINE, (tkl->type & TKL_GLOBAL) ? 'Q' : 'q',
 			tkl->ptr.nameban->name, (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
 			TStime() - tkl->set_at, tkl->set_by, tkl->ptr.nameban->reason);
 	} else
-	if (tkl->type & TKL_EXCEPTION)
+	if (TKLIsBanException(tkl))
 	{
-		sendnumeric(client, RPL_STATSEXCEPTTKL,
-			   (tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
-			   tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask,
+		char uhostbuf[BUFSIZE];
+		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
+		sendnumeric(client, RPL_STATSEXCEPTTKL, uhost,
 			   tkl->ptr.banexception->bantypes,
 			   (tkl->expire_at != 0) ? (tkl->expire_at - TStime()) : 0,
 			   (TStime() - tkl->set_at), tkl->set_by, tkl->ptr.banexception->reason);
@@ -3484,18 +3631,16 @@ void _sendnotice_tkl_add(TKL *tkl)
 
 	if (TKLIsServerBan(tkl))
 	{
+		char uhostbuf[BUFSIZE];
+		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
 		if (tkl->expire_at != 0)
 		{
-			ircsnprintf(buf, sizeof(buf), "%s added for %s%s@%s on %s GMT (from %s to expire at %s GMT: %s)",
-				tkl_type_str,
-				(tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
-				tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask,
+			ircsnprintf(buf, sizeof(buf), "%s added for %s on %s GMT (from %s to expire at %s GMT: %s)",
+				tkl_type_str, uhost,
 				set_at, tkl->set_by, expire_at, tkl->ptr.serverban->reason);
 		} else {
-			ircsnprintf(buf, sizeof(buf), "Permanent %s added for %s%s@%s on %s GMT (from %s: %s)",
-				tkl_type_str,
-				(tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
-				tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask,
+			ircsnprintf(buf, sizeof(buf), "Permanent %s added for %s on %s GMT (from %s: %s)",
+				tkl_type_str, uhost,
 				set_at, tkl->set_by, tkl->ptr.serverban->reason);
 		}
 	} else
@@ -3524,19 +3669,17 @@ void _sendnotice_tkl_add(TKL *tkl)
 	} else
 	if (TKLIsBanException(tkl))
 	{
+		char uhostbuf[BUFSIZE];
+		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
 		if (tkl->expire_at != 0)
 		{
-			ircsnprintf(buf, sizeof(buf), "%s added for %s%s@%s for types '%s' on %s GMT (from %s to expire at %s GMT: %s)",
-				tkl_type_str,
-				(tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
-				tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask,
+			ircsnprintf(buf, sizeof(buf), "%s added for %s for types '%s' on %s GMT (from %s to expire at %s GMT: %s)",
+				tkl_type_str, uhost,
 				tkl->ptr.banexception->bantypes,
 				set_at, tkl->set_by, expire_at, tkl->ptr.banexception->reason);
 		} else {
-			ircsnprintf(buf, sizeof(buf), "Permanent %s added for %s%s@%s for types '%s' on %s GMT (from %s: %s)",
-				tkl_type_str,
-				(tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT) ? "%" : "",
-				tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask,
+			ircsnprintf(buf, sizeof(buf), "Permanent %s added for %s for types '%s' on %s GMT (from %s: %s)",
+				tkl_type_str, uhost,
 				tkl->ptr.banexception->bantypes,
 				set_at, tkl->set_by, tkl->ptr.banexception->reason);
 		}
@@ -3567,10 +3710,11 @@ void _sendnotice_tkl_del(char *removed_by, TKL *tkl)
 
 	if (TKLIsServerBan(tkl))
 	{
+		char uhostbuf[BUFSIZE];
+		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
 		ircsnprintf(buf, sizeof(buf),
-			       "%s removed %s %s@%s (set at %s - reason: %s)",
-			       removed_by, tkl_type_str,
-			       tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask,
+			       "%s removed %s %s (set at %s - reason: %s)",
+			       removed_by, tkl_type_str, uhost,
 			       set_at, tkl->ptr.serverban->reason);
 	} else
 	if (TKLIsNameBan(tkl))
@@ -3587,10 +3731,11 @@ void _sendnotice_tkl_del(char *removed_by, TKL *tkl)
 	} else
 	if (TKLIsBanException(tkl))
 	{
+		char uhostbuf[BUFSIZE];
+		char *uhost = tkl_uhost(tkl, uhostbuf, sizeof(uhostbuf), 0);
 		ircsnprintf(buf, sizeof(buf),
-			       "%s removed exception on %s@%s (set at %s - reason: %s)",
-			       removed_by,
-			       tkl->ptr.banexception->usermask, tkl->ptr.banexception->hostmask,
+			       "%s removed exception on %s (set at %s - reason: %s)",
+			       removed_by, uhost,
 			       set_at, tkl->ptr.banexception->reason);
 	} else
 	{
@@ -4538,6 +4683,14 @@ int _match_user(char *rmask, Client *client, int options)
 
 	strlcpy(mask, rmask, sizeof(mask));
 
+	if ((options & MATCH_CHECK_EXTENDED) &&
+	    is_extended_ban(mask) &&
+	    client && client->user)
+	{
+		/* Check user properties / extbans style */
+		return _match_user_extended_server_ban(rmask, client);
+	}
+
 	if (!(options & MATCH_MASK_IS_UHOST))
 	{
 		p = strchr(mask, '!');
@@ -4672,4 +4825,19 @@ int _match_user(char *rmask, Client *client, int options)
 	}
 
 	return 0; /* NOMATCH: nothing of the above matched */
+}
+
+int _match_user_extended_server_ban(char *banstr, Client *client)
+{
+	char *msg = NULL, *errmsg = NULL;
+	Extban *extban;
+
+	if (!is_extended_ban(banstr))
+		return 0; /* we should never have been called */
+
+	extban = findmod_by_bantype(banstr[1]);
+	if (!extban || !(extban->options & EXTBOPT_TKL))
+		return 0; /* extban not found or of incorrect type (eg ~T) */
+
+	return extban->is_banned(client, NULL, banstr, BANCHK_TKL, &msg, &errmsg);
 }

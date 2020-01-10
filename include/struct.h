@@ -2083,6 +2083,7 @@ struct MaxTarget {
 #define BANCHK_MSG		1	/* checking if a ban forbids the person from sending messages */
 #define BANCHK_NICK		2	/* checking if a ban forbids the person from changing his/her nick */
 #define BANCHK_LEAVE_MSG	3	/* checking if a ban forbids the person from leaving a message in PART or QUIT */
+#define BANCHK_TKL		4	/* called from a server ban routine, or other match_user() usage */
 
 #define TKLISTLEN		26
 #define TKLIPHASHLEN1		4
@@ -2092,9 +2093,10 @@ struct MaxTarget {
 #define MATCH_CHECK_REAL_HOST       0x0002
 #define MATCH_CHECK_CLOAKED_HOST    0x0004
 #define MATCH_CHECK_VISIBLE_HOST    0x0008
+#define MATCH_CHECK_EXTENDED        0x0010
 
-#define MATCH_CHECK_ALL             (MATCH_CHECK_IP|MATCH_CHECK_REAL_HOST|MATCH_CHECK_CLOAKED_HOST|MATCH_CHECK_VISIBLE_HOST)
-#define MATCH_CHECK_REAL            (MATCH_CHECK_IP|MATCH_CHECK_REAL_HOST)
+#define MATCH_CHECK_ALL             (MATCH_CHECK_IP|MATCH_CHECK_REAL_HOST|MATCH_CHECK_CLOAKED_HOST|MATCH_CHECK_VISIBLE_HOST|MATCH_CHECK_EXTENDED)
+#define MATCH_CHECK_REAL            (MATCH_CHECK_IP|MATCH_CHECK_REAL_HOST|MATCH_CHECK_EXTENDED)
 
 #define MATCH_MASK_IS_UHOST         0x1000
 #define MATCH_MASK_IS_HOST          0x2000

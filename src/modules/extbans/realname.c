@@ -40,7 +40,7 @@ MOD_INIT()
 	req.is_ok = NULL;
 	req.conv_param = extban_realname_conv_param;
 	req.is_banned = extban_realname_is_banned;
-	req.options = EXTBOPT_CHSVSMODE|EXTBOPT_INVEX;
+	req.options = EXTBOPT_CHSVSMODE|EXTBOPT_INVEX|EXTBOPT_TKL;
 	if (!ExtbanAdd(modinfo->handle, req))
 	{
 		config_error("could not register extended ban type");

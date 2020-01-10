@@ -340,17 +340,20 @@ typedef struct {
 
 /*** Extended bans ***/
 
+// TODO: These should be enums!
+
 #define EXBCHK_ACCESS		0 /* Check access */
 #define EXBCHK_ACCESS_ERR	1 /* Check access and send error */
 #define EXBCHK_PARAM		2 /* Check if the parameter is valid */
 
-#define EXBTYPE_BAN			0 /* a ban */
+#define EXBTYPE_BAN		0 /* a ban */
 #define EXBTYPE_EXCEPT		1 /* an except */
 #define EXBTYPE_INVEX		2 /* an invite exception */
+#define EXBTYPE_TKL		3 /* TKL or other generic matcher outside banning routines */
 
 #define EXTBANTABLESZ		32
 
-typedef enum ExtbanOptions { EXTBOPT_CHSVSMODE=0x1, EXTBOPT_ACTMODIFIER=0x2, EXTBOPT_NOSTACKCHILD=0x4, EXTBOPT_INVEX=0x8 } ExtbanOptions;
+typedef enum ExtbanOptions { EXTBOPT_CHSVSMODE=0x1, EXTBOPT_ACTMODIFIER=0x2, EXTBOPT_NOSTACKCHILD=0x4, EXTBOPT_INVEX=0x8, EXTBOPT_TKL=0x10 } ExtbanOptions;
 
 typedef struct {
 	/** extbans module */
