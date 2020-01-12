@@ -51,6 +51,7 @@ void cmd_tkl_line(Client *client, int parc, char *parv[], char *type);
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
 int _tkl_chartotype(char c);
+int tkl_banexception_chartotype(char c);
 char *_tkl_type_string(TKL *tk);
 char *tkl_banexception_configname_to_chars(char *name);
 TKL *_tkl_add_serverban(int type, char *usermask, char *hostmask, char *reason, char *set_by,
@@ -1449,12 +1450,11 @@ void eline_syntax(Client *client)
 	sendnotice(client, " Syntax: /ELINE <user@host> <bantypes> <expiry-time> <reason>");
 	sendnotice(client, "     Or: /ELINE <extserverban> <bantypes> <expiry-time> <reason>");
 	sendnotice(client, "Valid bantypes are:");
-	sendnotice(client, "k: K-Line     g: G-Line");
+	sendnotice(client, "k: K-Line     G: G-Line");
 	sendnotice(client, "z: Z-Line     Z: Global Z-Line");
-	sendnotice(client, "q: Q-Line");
+	sendnotice(client, "Q: Q-Line");
 	sendnotice(client, "s: Shun");
-	sendnotice(client, "f: Spamfilter");
-	sendnotice(client, "t: Throttling");
+	sendnotice(client, "F: Spamfilter");
 	sendnotice(client, "b: Blacklist checking");
 	sendnotice(client, "c: Connect flood (bypass set::anti-flood::connect-flood))");
 	sendnotice(client, "d: Unknown data flood (no ZLINE on too much data before registration)");
@@ -1480,6 +1480,21 @@ int eline_type_requires_ip(char *bantypes)
 	    strchr(bantypes, 'b') ||
 	    strchr(bantypes, 'd'))
 		return 1;
+	return 0;
+}
+
+/** Checks a string to see if it contains invalid ban exception types */
+int contains_invalid_server_ban_exception_type(char *str, char *c)
+{
+	char *p;
+	for (p = str; *p; p++)
+	{
+		if (!tkl_banexception_chartotype(*p))
+		{
+			*c = *p;
+			return 1;
+		}
+	}
 	return 0;
 }
 
@@ -1697,6 +1712,7 @@ CMD_FUNC(cmd_eline)
 
 	if (add)
 	{
+		char c;
 		/* Add ELINE */
 		if (secs == 0)
 			ircsnprintf(mo, sizeof(mo), "%lld", (long long)secs); /* "0" */
@@ -1706,6 +1722,14 @@ CMD_FUNC(cmd_eline)
 		tkllayer[6] = mo;
 		tkllayer[7] = mo2;
 		tkllayer[8] = bantypes;
+		if (contains_invalid_server_ban_exception_type(bantypes, &c))
+		{
+			sendnotice(client, "ERROR: bantype '%c' is unrecognized (in '%s'). "
+			                   "Note that the bantypes are case sensitive. "
+			                   "Type /ELINE to see a list of all possible bantypes.",
+			                   c, bantypes);
+			return;
+		}
 		tkllayer[9] = reason;
 		/* call the tkl layer .. */
 		cmd_tkl(&me, NULL, 10, tkllayer);
