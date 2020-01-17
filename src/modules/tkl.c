@@ -3723,8 +3723,9 @@ void _sendnotice_tkl_add(TKL *tkl)
 	{
 		/* Spamfilter */
 		ircsnprintf(buf, sizeof(buf),
-		            "Spamfilter added: '%s' [target: %s] [action: %s] [reason: %s] on %s GMT (from %s)",
+		            "Spamfilter added: '%s' [type: %s] [target: %s] [action: %s] [reason: %s] on %s GMT (from %s)",
 		            tkl->ptr.spamfilter->match->str,
+			    unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type),
 		            spamfilter_target_inttostring(tkl->ptr.spamfilter->target),
 		            banact_valtostring(tkl->ptr.spamfilter->action),
 		            unreal_decodespace(tkl->ptr.spamfilter->tkl_reason),
