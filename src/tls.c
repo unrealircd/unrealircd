@@ -1244,6 +1244,8 @@ int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 	return 1;
 }
 
+char *spki_fingerprint_ex(X509 *x509_cert);
+
 /** Return the SPKI Fingerprint for a client.
  *
  * This is basically the same output as
@@ -1254,45 +1256,50 @@ int certificate_quality_check(SSL_CTX *ctx, char **errstr)
 char *spki_fingerprint(Client *cptr)
 {
 	X509 *x509_cert = NULL;
+	char *ret;
+
+	if (!MyConnect(cptr) || !cptr->local->ssl)
+		return NULL;
+
+	x509_cert = SSL_get_peer_certificate(cptr->local->ssl);
+	if (!x509_cert)
+		return NULL;
+	ret = spki_fingerprint_ex(x509_cert);
+	X509_free(x509_cert);
+	return ret;
+}
+
+char *spki_fingerprint_ex(X509 *x509_cert)
+{
 	unsigned char *der_cert = NULL, *p;
 	int der_cert_len, n;
 	static char retbuf[256];
 	SHA256_CTX ckctx;
 	unsigned char checksum[SHA256_DIGEST_LENGTH];
 
-	if (!MyConnect(cptr) || !cptr->local->ssl)
-		return NULL;
+	memset(retbuf, 0, sizeof(retbuf));
 
-	x509_cert = SSL_get_peer_certificate(cptr->local->ssl);
-
-	if (x509_cert)
+	der_cert_len = i2d_X509_PUBKEY(X509_get_X509_PUBKEY(x509_cert), NULL);
+	if ((der_cert_len > 0) && (der_cert_len < 16384))
 	{
-		memset(retbuf, 0, sizeof(retbuf));
+		der_cert = p = safe_alloc(der_cert_len);
+		n = i2d_X509_PUBKEY(X509_get_X509_PUBKEY(x509_cert), &p);
 
-		der_cert_len = i2d_X509_PUBKEY(X509_get_X509_PUBKEY(x509_cert), NULL);
-		if ((der_cert_len > 0) && (der_cert_len < 16384))
+		if ((n > 0) && ((p - der_cert) == der_cert_len))
 		{
-			der_cert = p = safe_alloc(der_cert_len);
-			n = i2d_X509_PUBKEY(X509_get_X509_PUBKEY(x509_cert), &p);
+			/* The DER encoded SPKI is stored in 'der_cert' with length 'der_cert_len'.
+			 * Now we need to create an SHA256 hash out of it.
+			 */
+			SHA256_Init(&ckctx);
+			SHA256_Update(&ckctx, der_cert, der_cert_len);
+			SHA256_Final(checksum, &ckctx);
 
-			if ((n > 0) && ((p - der_cert) == der_cert_len))
-			{
-				/* The DER encoded SPKI is stored in 'der_cert' with length 'der_cert_len'.
-				 * Now we need to create an SHA256 hash out of it.
-				 */
-				SHA256_Init(&ckctx);
-				SHA256_Update(&ckctx, der_cert, der_cert_len);
-				SHA256_Final(checksum, &ckctx);
-
-				/* And convert the binary to a base64 string... */
-				n = b64_encode(checksum, SHA256_DIGEST_LENGTH, retbuf, sizeof(retbuf));
-				safe_free(der_cert);
-				X509_free(x509_cert);
-				return retbuf; /* SUCCESS */
-			}
+			/* And convert the binary to a base64 string... */
+			n = b64_encode(checksum, SHA256_DIGEST_LENGTH, retbuf, sizeof(retbuf));
 			safe_free(der_cert);
+			return retbuf; /* SUCCESS */
 		}
-		X509_free(x509_cert);
+		safe_free(der_cert);
 	}
 	return NULL;
 }

@@ -289,6 +289,8 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	else
 		echo "Patch applied successfully. You must now restart your IRC server."
 	fi
+elif [ "$1" = "genlinkblock" ] ; then
+	@BINDIR@/unrealircd -L
 else
 	if [ "$1" = "" ]; then
 		echo "This script expects a parameter. Use:"

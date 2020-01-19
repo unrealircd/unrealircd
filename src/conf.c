@@ -10461,3 +10461,79 @@ int reloadable_perm_module_unloaded(void)
 
 	return ret;
 }
+
+char *link_generator_spkifp(TLSOptions *tlsoptions)
+{
+	SSL_CTX *ctx;
+	SSL *ssl;
+	X509 *cert;
+
+	ctx = init_ctx(tlsoptions, 1);
+	if (!ctx)
+		exit(1);
+	ssl = SSL_new(ctx);
+	if (!ssl)
+		exit(1);
+	cert = SSL_get_certificate(ssl);
+	return spki_fingerprint_ex(cert);
+}
+
+void link_generator(void)
+{
+	ConfigItem_listen *lstn;
+	TLSOptions *tlsopt = iConf.tls_options; /* never null */
+	int port = 0;
+	char *ip = NULL;
+	char *spkifp;
+
+	for (lstn = conf_listen; lstn; lstn = lstn->next)
+	{
+		if ((lstn->options & LISTENER_SERVERSONLY) &&
+		    (lstn->options & LISTENER_TLS))
+		{
+			if (lstn->tls_options)
+				tlsopt = lstn->tls_options;
+			port = lstn->port;
+			if (strcmp(lstn->ip, "*"))
+				ip = lstn->ip;
+			/* else NULL */
+			break;
+		}
+	}
+
+	if (!port)
+	{
+		printf("You don't have any listen { } blocks that are serversonly.\n");
+		printf("It is recommended to have at least one. Add this to your configuration file:\n");
+		printf("listen { ip *; port 6900; options { tls; serversonly; }; };\n");
+		exit(1);
+	}
+
+	spkifp = link_generator_spkifp(tlsopt);
+	if (!spkifp)
+	{
+		printf("Could not calculate spkifp. Maybe you have uncommon SSL/TLS options set? Odd...\n");
+		exit(1);
+	}
+
+	printf("\n");
+	printf("Add the following link block to the unrealircd.conf on the OTHER side of the link\n");
+	printf("(so NOT in the unrealircd.conf on THIS machine). Here it is, just copy-paste:\n");
+	printf("################################################################################\n");
+	printf("link %s {\n"
+	       "    incoming {\n"
+	       "        mask *;\n"
+	       "    };\n"
+	       "    outgoing {\n"
+	       "        hostname %s;\n"
+	       "        port %d;\n"
+	       "    }\n"
+	       "    password \"%s\" { spkifp; }\n"
+	       "};\n",
+	       conf_me->name,
+	       ip ? ip : conf_me->name,
+	       port,
+	       spkifp);
+	printf("################################################################################\n");
+	exit(0);
+}

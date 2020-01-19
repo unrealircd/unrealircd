@@ -741,6 +741,7 @@ struct LoopStruct {
 	unsigned tainted : 1;
 	Client *rehash_save_cptr, *rehash_save_client;
 	int rehash_save_sig;
+	void (*boot_function)();
 };
 
 /** Matching types for Match.type */

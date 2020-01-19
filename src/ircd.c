@@ -1160,6 +1160,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 		  case '8':
 		      utf8_test();
 		      exit(0);
+		  case 'L':
+		      loop.boot_function = link_generator;
+		      break;
 		  default:
 #ifndef _WIN32
 			  return bad_command(myargv[0]);
@@ -1292,6 +1295,8 @@ int InitUnrealIRCd(int argc, char *argv[])
 		fflush(stderr);
 		exit(0);
 	}
+	if (loop.boot_function)
+		loop.boot_function();
 #ifndef _WIN32
 	fprintf(stderr, "Dynamic configuration initialized.. booting IRCd.\n");
 #endif
