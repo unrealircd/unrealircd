@@ -242,8 +242,59 @@ elif [ "$1" = "spki" -o "$1" = "spkifp" ] ; then
 	echo "You normally add this password on the other side of the link as:"
 	echo "password \"$HASH\" { spkifp; };"
 	echo ""
+elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
+	if [ ! -d "@BUILDDIR@" ]; then
+		echo "UnrealIRCd source not found. Sorry, it is not possible to patch."
+		exit 1
+	fi
+	if [ "$2" = "" ]; then
+		echo "Argument required: ./unrealircd <hot-patch|cold-patch> <name-of-patch>"
+		exit 1
+	fi
+	if ! wget --help 1>/dev/null 2>&1; then
+		echo "The tool 'wget' is missing, which is used by this script."
+		echo "On Linux consider running 'apt install wget' or a similar command."
+		exit 1
+	fi
+	cd "@BUILDDIR@" || exit 1
+
+	# Weird way to get version, but ok.
+	UNREALVER="`./configure --version|head -n1|awk '{ print $3 }'`"
+	wget -O patch "https://www.unrealircd.org/patch?type=$1&patch=$2&version=$UNREALVER" || exit 1
+
+	# A patch file of 0 bytes means the patch is not needed
+	if [ -f patch -a ! -s patch ]; then
+		echo "This UnrealIRCd version does not require that patch"
+	fi
+
+	if patch --dry-run -p1 -R <patch 1>/dev/null 2>&1; then
+		echo "Patch already applied. Nothing to do."
+		exit 1
+	fi
+
+	if ! patch -p1 <patch; then
+		echo "Patch failed to apply"
+		exit 1
+	fi
+
+	echo "Patch applied successfully. Now recompiling..."
+	make || gmake || exit 1
+	make install || gmake install || exit 1
+
+	cd -
+	if [ "$1" = "hot-patch" ]; then
+		echo "Patch applied successfully and installed. Rehashing your IRCd..."
+		./unrealircd rehash
+		echo "Done! All should be good now."
+	else
+		echo "Patch applied successfully. You must now restart your IRC server."
+	fi
 else
-	echo "This script expects a parameter. Use:"
+	if [ "$1" = "" ]; then
+		echo "This script expects a parameter. Use:"
+	else
+		echo "Unrecognized parameter '$1'. Use:"
+	fi
 	echo "unrealircd configtest    Test the configuration file"
 	echo "unrealircd start         Start the IRC Server"
 	echo "unrealircd stop          Stop (kill) the IRC Server"
