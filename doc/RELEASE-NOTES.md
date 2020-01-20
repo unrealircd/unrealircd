@@ -10,6 +10,9 @@ Fixes:
 * Exempting IPs from throttling via [except throttle](https://www.unrealircd.org/docs/Except_throttle_block) was not working.
 * Unable to customize [set::tls::outdated-protocols](https://www.unrealircd.org/docs/Set_block#set::ssl::outdated-protocols)
   and [set::tls::outdated-ciphers](https://www.unrealircd.org/docs/Set_block#set::ssl::outdated-ciphers).
+* Specifying multiple channels did not work in [set::auto-join](https://www.unrealircd.org/docs/Set_block#set::auto-join),
+  [set::oper-auto-join](https://www.unrealircd.org/docs/Set_block#set::oper-auto-join) and
+  [tld::channel](https://www.unrealircd.org/docs/Tld_block).
 
 Enhancements:
 * [Extended server bans](https://www.unrealircd.org/docs/Extended_server_bans) in *LINE and /ELINE allow
