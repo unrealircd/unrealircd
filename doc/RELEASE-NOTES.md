@@ -1,7 +1,37 @@
-UnrealIRCd 5.0.1 Release Notes
+UnrealIRCd 5.0.2 Release Notes
 ===============================
 
-This release fixes a few issues present in UnrealIRCd 5.0.0:
+UnrealIRCd 5.0.2
+-----------------
+
+Fixes:
+* Docs: to exempt someone from gline via /ELINE you have to use type 'G', not 'g'.
+  Similarly, to exempt from spamfilter, use type 'F' and not 'f'.
+* Exempting IPs from throttling via *except throttle* was not working.
+
+Enhancements:
+* [Extended server bans](https://www.unrealircd.org/docs/Extended_server_bans) in *LINE and /ELINE allow
+  you to ban or exempt users on criteria other than host/IP. These use the
+  same characters as extended bans. Currently supported are ~a, ~S and ~r. Examples:
+  * ```/ELINE ~a:TrustedAccount kG 0 This user can bypass kline/gline when using SASL```
+  * ```/ELINE ~S:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef kGF 0 Trusted user with this certificate fingerprint```
+  * ```/GLINE ~r:*some*stupid*real*name*```
+  * These can also be used in the configuration file, eg: ```except ban { mask ~S:11223344etc; type all; };```
+* New options that may not be used much, but can be useful on specific networks:
+  * The IRCd may add automatic bans, for example due to a blacklist hit,
+    a spamfilter hit, or because of antirandom or antimixedutf8. The new
+    option [set::automatic-ban-target](https://www.unrealircd.org/docs/Set_block#set::automatic-ban-target) specifies on *what* the ban should
+    be placed. The default is *ip*. Other options are: userip, host, userhost, account, certfp.
+  * Similarly, an oper may type ```/GLINE nickname```. The new option
+    [set::manual-ban-target](https://www.unrealircd.org/docs/Set_block#set::manual-ban-target) specifies on what the ban should be placed.
+    By default this is *host* (fallback to *ip*).
+
+Below are the release announcements for 5.0.1 and 5.0.0. Especially the
+latter is recommended reading, if you have not read the UnrealIRCd 5
+release notes already.
+
+UnrealIRCd 5.0.1
+-----------------
 
 Fixes:
 * IRCd may hang in rare circumstances
@@ -22,9 +52,6 @@ Other:
 * Gottem and k4be have [uploaded their 3rd party modules](https://modules.unrealircd.org/)
   to unrealircd-contrib so *NIX users can now easily install them using the new
   [Module manager](https://www.unrealircd.org/docs/Module_manager)
-
-Below is the original release announcement for 5.0.0. This is recommended reading,
-if not done so already:
 
 UnrealIRCd 5
 -------------
