@@ -1894,12 +1894,18 @@ struct Ban {
 #define is_half_op(cptr,channel) (get_access(cptr,channel) & CHFL_HALFOP)
 /** Has voice (+v) */
 #define has_voice(cptr,channel) (get_access(cptr,channel) & CHFL_VOICE)
-#define CHFL_CHANOWNER	0x0040	/**< Channel owner (+q) */
-#define CHFL_CHANADMIN	0x0080	/**< Channel admin (+a) */
+/* Important:
+ * Do not blindly change the value of CHFL_CHANOP and CHFL_VOICE as they are also
+ * used in MODE_CHANOP and MODE_VOICE and should not clash there either.
+ * Or at least not until we have investigated that they can be split.
+ * Not important anyway, just keep it like this:
+ */
 #define	CHFL_CHANOP     0x0001	/**< Channel operator (+o) */
-#define CHFL_HALFOP	0x0100	/**< Channel halfop (+h) */
 #define	CHFL_VOICE      0x0002	/**< Voice (+v, can speak through bans and +m) */
-#define	CHFL_DEOPPED	0x0004	/**< De-oped by a server (temporary state) */
+#define CHFL_HALFOP	0x0004	/**< Channel halfop (+h) */
+#define	CHFL_DEOPPED	0x0008	/**< De-oped by a server (temporary state) */
+#define CHFL_CHANADMIN	0x0010	/**< Channel admin (+a) */
+#define CHFL_CHANOWNER	0x0020	/**< Channel owner (+q) */
 #define	CHFL_BAN     	0x0100	/**< Channel ban (+b) - not a real flag, only used in sjoin.c */
 #define CHFL_EXCEPT	0x0200	/**< Channel except (+e) - not a real flag, only used in sjoin.c */
 #define CHFL_INVEX	0x0400  /**< Channel invite exception (+I) - not a real flag, only used in sjoin.c */
