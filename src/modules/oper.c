@@ -299,12 +299,14 @@ CMD_FUNC(cmd_oper)
 
 	if (!BadPtr(OPER_AUTO_JOIN_CHANS) && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
 	{
-		char *chans[3] = {
+		char *chans = strdup(OPER_AUTO_JOIN_CHANS);
+		char *args[3] = {
 			client->name,
-			OPER_AUTO_JOIN_CHANS,
+			chans,
 			NULL
 		};
-		do_cmd(client, NULL, "JOIN", 3, chans);
+		do_cmd(client, NULL, "JOIN", 3, args);
+		safe_free(chans);
 		/* Theoretically the oper may be killed on join. Would be fun, though */
 		if (IsDead(client))
 			return;

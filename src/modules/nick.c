@@ -1114,24 +1114,29 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 		/* Force the user to join the given chans -- codemastr */
 		tlds = find_tld(client);
 
-		if (tlds && !BadPtr(tlds->channel)) {
-			char *chans[3] = {
+		if (tlds && !BadPtr(tlds->channel))
+		{
+			char *chans = strdup(tlds->channel);
+			char *args[3] = {
 				client->name,
-				tlds->channel,
+				chans,
 				NULL
 			};
-			do_cmd(client, NULL, "JOIN", 3, chans);
+			do_cmd(client, NULL, "JOIN", 3, args);
+			safe_free(chans);
 			if (IsDead(client))
 				return 0;
 		}
 		else if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
 		{
-			char *chans[3] = {
+			char *chans = strdup(AUTO_JOIN_CHANS);
+			char *args[3] = {
 				client->name,
-				AUTO_JOIN_CHANS,
+				chans,
 				NULL
 			};
-			do_cmd(client, NULL, "JOIN", 3, chans);
+			do_cmd(client, NULL, "JOIN", 3, args);
+			safe_free(chans);
 			if (IsDead(client))
 				return 0;
 		}
