@@ -8,6 +8,8 @@ Fixes:
 * Docs: to exempt someone from gline via /ELINE you have to use type 'G', not 'g'.
   Similarly, to exempt from spamfilter, use type 'F' and not 'f'.
 * Exempting IPs from throttling via *except throttle* was not working.
+* Unable to customize [set::tls::outdated-protocols](https://www.unrealircd.org/docs/Set_block#set::ssl::outdated-protocols)
+  and [set::tls::outdated-ciphers](https://www.unrealircd.org/docs/Set_block#set::ssl::outdated-ciphers).
 
 Enhancements:
 * [Extended server bans](https://www.unrealircd.org/docs/Extended_server_bans) in *LINE and /ELINE allow

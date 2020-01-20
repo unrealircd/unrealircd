@@ -6991,6 +6991,45 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 			}
 			safe_free(path);
 		}
+		else if (!strcmp(cepp->ce_varname, "outdated-protocols"))
+		{
+			char copy[512], *p, *name;
+			int v = 0;
+			int option;
+			char modifier;
+
+			CheckNull(cepp);
+			strlcpy(copy, cepp->ce_vardata, sizeof(copy));
+			for (name = strtoken(&p, copy, ","); name; name = strtoken(&p, NULL, ","))
+			{
+				if (!strcasecmp(name, "All"))
+					;
+				else if (!strcasecmp(name, "TLSv1"))
+					;
+				else if (!strcasecmp(name, "TLSv1.1"))
+					;
+				else if (!strcasecmp(name, "TLSv1.2"))
+					;
+				else if (!strcasecmp(name, "TLSv1.3"))
+					;
+				else
+				{
+#ifdef SSL_OP_NO_TLSv1_3
+					config_warn("%s:%i: %s: unknown protocol '%s'. "
+								 "Valid protocols are: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
+								 cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, config_var(cepp), name);
+#else
+					config_warn("%s:%i: %s: unknown protocol '%s'. "
+								 "Valid protocols are: TLSv1,TLSv1.1,TLSv1.2",
+								 cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, config_var(cepp), name);
+#endif
+		                }
+			}
+		}
+		else if (!strcmp(cepp->ce_varname, "outdated-ciphers"))
+		{
+			CheckNull(cepp);
+		}
 		else if (!strcmp(cepp->ce_varname, "options"))
 		{
 			for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
@@ -7183,6 +7222,14 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions)
 		{
 			convert_to_absolute_path(&cepp->ce_vardata, CONFDIR);
 			safe_strdup(tlsoptions->trusted_ca_file, cepp->ce_vardata);
+		}
+		else if (!strcmp(cepp->ce_varname, "outdated-protocols"))
+		{
+			safe_strdup(tlsoptions->outdated_protocols, cepp->ce_vardata);
+		}
+		else if (!strcmp(cepp->ce_varname, "outdated-ciphers"))
+		{
+			safe_strdup(tlsoptions->outdated_ciphers, cepp->ce_vardata);
 		}
 		else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
 		{
