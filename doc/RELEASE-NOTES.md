@@ -5,16 +5,16 @@ UnrealIRCd 5.0.2
 -----------------
 
 Fixes:
-* Docs: to exempt someone from gline via /ELINE you have to use type 'G', not 'g'.
+* Documentation: to exempt someone from gline via /ELINE you have to use type 'G', not 'g'.
   Similarly, to exempt from spamfilter, use type 'F' and not 'f'.
-* Exempting IPs from throttling via *except throttle* was not working.
+* Exempting IPs from throttling via [https://www.unrealircd.org/docs/Except_throttle_block](except throttle) was not working.
 * Unable to customize [set::tls::outdated-protocols](https://www.unrealircd.org/docs/Set_block#set::ssl::outdated-protocols)
   and [set::tls::outdated-ciphers](https://www.unrealircd.org/docs/Set_block#set::ssl::outdated-ciphers).
 
 Enhancements:
 * [Extended server bans](https://www.unrealircd.org/docs/Extended_server_bans) in *LINE and /ELINE allow
-  you to ban or exempt users on criteria other than host/IP. These use the
-  same characters as extended bans. Currently supported are ~a, ~S and ~r. Examples:
+  you to ban or exempt users on criteria other than host/IP. These use a
+  similar syntax to extended bans. Currently supported are ~a, ~S and ~r. Examples:
   * ```/ELINE ~a:TrustedAccount kG 0 This user can bypass kline/gline when using SASL```
   * ```/ELINE ~S:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef kGF 0 Trusted user with this certificate fingerprint```
   * ```/GLINE ~r:*some*stupid*real*name*```
@@ -28,9 +28,9 @@ Enhancements:
     [set::manual-ban-target](https://www.unrealircd.org/docs/Set_block#set::manual-ban-target) specifies on what the ban should be placed.
     By default this is *host* (fallback to *ip*).
 
-Below are the release announcements for 5.0.1 and 5.0.0. Especially the
-latter is recommended reading, if you have not read the UnrealIRCd 5
-release notes already.
+Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5? If so,
+then check out the *UnrealIRCd 5* release notes further down. At the
+very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
 UnrealIRCd 5.0.1
 -----------------
