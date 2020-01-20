@@ -27,6 +27,8 @@ Enhancements:
   * Similarly, an oper may type ```/GLINE nickname```. The new option
     [set::manual-ban-target](https://www.unrealircd.org/docs/Set_block#set::manual-ban-target) specifies on what the ban should be placed.
     By default this is *host* (fallback to *ip*).
+* New options to exempt webirc users: [set::connthrottle::webirc-bypass](https://www.unrealircd.org/docs/Connthrottle),
+  [set::restrict-commands::<commandname>::exempt-webirc](https://www.unrealircd.org/docs/Set_block#set::restrict-commands).
 
 Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5? If so,
 then check out the *UnrealIRCd 5* release notes further down. At the
