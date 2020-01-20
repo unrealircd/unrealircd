@@ -10570,13 +10570,14 @@ void link_generator(void)
 	printf("link %s {\n"
 	       "    incoming {\n"
 	       "        mask *;\n"
-	       "    };\n"
+	       "    }\n"
 	       "    outgoing {\n"
 	       "        hostname %s;\n"
 	       "        port %d;\n"
 	       "    }\n"
 	       "    password \"%s\" { spkifp; }\n"
-	       "};\n",
+	       "    class servers;\n"
+	       "}\n",
 	       conf_me->name,
 	       ip ? ip : conf_me->name,
 	       port,
