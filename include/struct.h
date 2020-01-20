@@ -1895,20 +1895,19 @@ struct Ban {
 /** Has voice (+v) */
 #define has_voice(cptr,channel) (get_access(cptr,channel) & CHFL_VOICE)
 /* Important:
- * Do not blindly change the value of CHFL_CHANOP and CHFL_VOICE as they are also
- * used in MODE_CHANOP and MODE_VOICE and should not clash there either.
- * Or at least not until we have investigated that they can be split.
- * Not important anyway, just keep it like this:
+ * Do not blindly change the values of CHFL_* as they must match the
+ * ones in MODE_*. I already screwed this up twice. -- Syzop
+ * Obviously these should be decoupled in a code cleanup.
  */
 #define	CHFL_CHANOP     0x0001	/**< Channel operator (+o) */
 #define	CHFL_VOICE      0x0002	/**< Voice (+v, can speak through bans and +m) */
-#define CHFL_HALFOP	0x0004	/**< Channel halfop (+h) */
-#define	CHFL_DEOPPED	0x0008	/**< De-oped by a server (temporary state) */
-#define CHFL_CHANADMIN	0x0010	/**< Channel admin (+a) */
-#define CHFL_CHANOWNER	0x0020	/**< Channel owner (+q) */
-#define	CHFL_BAN     	0x0100	/**< Channel ban (+b) - not a real flag, only used in sjoin.c */
-#define CHFL_EXCEPT	0x0200	/**< Channel except (+e) - not a real flag, only used in sjoin.c */
-#define CHFL_INVEX	0x0400  /**< Channel invite exception (+I) - not a real flag, only used in sjoin.c */
+#define	CHFL_DEOPPED	0x0004	/**< De-oped by a server (temporary state) */
+#define CHFL_CHANOWNER	0x0040	/**< Channel owner (+q) */
+#define CHFL_CHANADMIN	0x0080	/**< Channel admin (+a) */
+#define CHFL_HALFOP	0x0100	/**< Channel halfop (+h) */
+#define	CHFL_BAN     	0x0200	/**< Channel ban (+b) - not a real flag, only used in sjoin.c */
+#define CHFL_EXCEPT	0x0400	/**< Channel except (+e) - not a real flag, only used in sjoin.c */
+#define CHFL_INVEX	0x0800  /**< Channel invite exception (+I) - not a real flag, only used in sjoin.c */
 /** @} */
 
 #define CHFL_REJOINING	0x8000  /* used internally by rejoin_* */
@@ -1916,7 +1915,7 @@ struct Ban {
 #define	CHFL_OVERLAP    (CHFL_CHANOWNER|CHFL_CHANADMIN|CHFL_CHANOP|CHFL_VOICE|CHFL_HALFOP)
 
 /* Channel macros */
-
+/* Don't blindly change these MODE_* values, see comment 20 lines up! */
 #define	MODE_CHANOP		CHFL_CHANOP
 #define	MODE_VOICE		CHFL_VOICE
 #define	MODE_PRIVATE		0x0004
