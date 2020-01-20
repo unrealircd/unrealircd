@@ -7,7 +7,7 @@ UnrealIRCd 5.0.2
 Fixes:
 * Documentation: to exempt someone from gline via /ELINE you have to use type 'G', not 'g'.
   Similarly, to exempt from spamfilter, use type 'F' and not 'f'.
-* Exempting IPs from throttling via [https://www.unrealircd.org/docs/Except_throttle_block](except throttle) was not working.
+* Exempting IPs from throttling via [except throttle](https://www.unrealircd.org/docs/Except_throttle_block) was not working.
 * Unable to customize [set::tls::outdated-protocols](https://www.unrealircd.org/docs/Set_block#set::ssl::outdated-protocols)
   and [set::tls::outdated-ciphers](https://www.unrealircd.org/docs/Set_block#set::ssl::outdated-ciphers).
 
