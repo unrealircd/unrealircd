@@ -5,6 +5,11 @@ UnrealIRCd 5.0.2
 -----------------
 
 Fixes:
+* [Channel history](https://www.unrealircd.org/docs/Channel_history) used
+incorrect time internally, resulting in messages expiring too soon.
+The syntax is now really ```/MODE #chan +H lines:time-in-minutes```.
+To make clear that the time is in minutes, an 'm' will be added
+automatically by the server (eg ```+H 15:1440m```).
 * Documentation: to exempt someone from gline via /ELINE you have to use type 'G', not 'g'.
   Similarly, to exempt from spamfilter, use type 'F' and not 'f'.
 * Exempting IPs from throttling via [except throttle](https://www.unrealircd.org/docs/Except_throttle_block) was not working.

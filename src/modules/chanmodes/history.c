@@ -16,8 +16,8 @@ ModuleHeader MOD_HEADER
 
 typedef struct ConfigHistoryExt ConfigHistoryExt;
 struct ConfigHistoryExt {
-	int lines;
-	long time;
+	int lines; /**< number of lines */
+	long time; /**< seconds */
 };
 struct {
 	ConfigHistoryExt playback_on_join; /**< Maximum number of lines & time to playback on-join */
@@ -27,7 +27,7 @@ struct {
 typedef struct HistoryChanMode HistoryChanMode;
 struct HistoryChanMode {
 	unsigned int max_lines; /**< Maximum number of messages to record */
-	unsigned long max_time; /**< Maximum number of time to record */
+	unsigned long max_time; /**< Maximum number of time (in seconds) to record */
 };
 
 Cmode_t EXTMODE_HISTORY = 0L;
@@ -302,7 +302,8 @@ int history_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
   */
 int history_parse_chanmode(char *param, int *lines, long *t)
 {
-	char buf[64], *p;
+	char buf[64], *p, *q;
+	char contains_non_digit = 0;
 
 	/* Work on a copy */
 	strlcpy(buf, param, sizeof(buf));
@@ -315,16 +316,33 @@ int history_parse_chanmode(char *param, int *lines, long *t)
 	if (!p)
 		return 0;
 
+	/* Parse lines */
 	*p++ = '\0';
 	*lines = atoi(buf);
-	*t = config_checkval(param, CFG_TIME);
 
+	/* Parse time value */
+	/* If it is all digits then it is in minutes */
+	for (q=p; *q; q++)
+	{
+		if (!isdigit(*q))
+		{
+			contains_non_digit = 1;
+			break;
+		}
+	}
+	if (contains_non_digit)
+		*t = config_checkval(p, CFG_TIME);
+	else
+		*t = atoi(p) * 60;
+
+	/* Sanity checking... */
 	if (*lines < 1)
 		return 0;
 
-	if (*t < 1)
+	if (*t < 60)
 		return 0;
 
+	/* Check imposed configuration limits... */
 	if (*lines > cfg.max_storage_per_channel.lines)
 		*lines = cfg.max_storage_per_channel.lines;
 
@@ -355,7 +373,7 @@ int history_chanmode_is_ok(Client *client, Channel *channel, char mode, char *pa
 
 		if (!history_parse_chanmode(param, &lines, &t))
 		{
-			sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'H', "Invalid syntax for MODE +H. Use +H count:period");
+			sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'H', "Invalid syntax for MODE +H. Use +H lines:period. The period must be in minutes (eg: 10) or a time value (eg: 1h).");
 			return EX_DENY;
 		}
 		/* Don't bother about lines/t limits here, we will auto-convert in .conv_param */
@@ -379,7 +397,7 @@ char *history_chanmode_conv_param(char *param, Client *client)
 	if (!history_parse_chanmode(param, &lines, &t))
 		return NULL;
 
-	snprintf(buf, sizeof(buf), "%d:%ld", lines, t);
+	snprintf(buf, sizeof(buf), "%d:%ldm", lines, t / 60);
 	return buf;
 }
 
@@ -414,13 +432,13 @@ char *history_chanmode_get_param(void *h_in)
 	if (!h_in)
 		return NULL;
 
-	/* Should we make the time value more readable (eg: 3600 -> 1h)
-	 * or should we keep it easily parseable by machines/scripts.
-	 * I'm leaning towards the latter. That also means there is no
-	 * confusion with regards to the meaning of 'm' (minute or month)
-	 * and different IRCd implementations.
+	/* For now we convert the time to minutes for displaying purposes
+	 * and show it as eg 5:10m.
+	 * In a later release we can have a go at converting to '1h', '1d'
+	 * and such, but not before most people run 5.0.2+ as otherwise you
+	 * get desyncs in channel history retention times.
 	 */
-	snprintf(buf, sizeof(buf), "%d:%ld", h->max_lines, h->max_time);
+	snprintf(buf, sizeof(buf), "%d:%ldm", h->max_lines, h->max_time / 60);
 	return buf;
 }
 
