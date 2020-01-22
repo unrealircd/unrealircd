@@ -5,6 +5,7 @@ UnrealIRCd 5.0.2
 -----------------
 
 Fixes:
+* Halfop users are not synced correctly, resulting in missing users across links.
 * [Channel history](https://www.unrealircd.org/docs/Channel_history) used
 incorrect time internally, resulting in messages expiring too soon.
 The syntax is now really ```/MODE #chan +H lines:time-in-minutes```.
