@@ -167,7 +167,7 @@ CMD_FUNC(cmd_part)
 			if (!comment)
 			{
 				sendto_channel(channel, client, client,
-					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
+					       PREFIX_HALFOP|PREFIX_OP|PREFIX_OWNER|PREFIX_ADMIN, 0,
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s",
 					       client->name, channel->chname);
@@ -180,7 +180,7 @@ CMD_FUNC(cmd_part)
 			else
 			{
 				sendto_channel(channel, client, client,
-					       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
+					       PREFIX_HALFOP|PREFIX_OP|PREFIX_OWNER|PREFIX_ADMIN, 0,
 					       SEND_LOCAL, mtags,
 					       ":%s PART %s %s",
 					       client->name, channel->chname, comment);

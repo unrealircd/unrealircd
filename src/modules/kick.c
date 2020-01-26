@@ -96,7 +96,7 @@ void _kick_user(MessageTag *initial_mtags, Channel *channel, Client *client, Cli
 	{
 		/* Send it only to chanops & victim */
 		sendto_channel(channel, client, victim,
-			       CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANADMIN, 0,
+			       PREFIX_HALFOP|PREFIX_OP|PREFIX_OWNER|PREFIX_ADMIN, 0,
 			       SEND_LOCAL, mtags,
 			       ":%s KICK %s %s :%s",
 			       client->name, channel->chname, victim->name, comment);
