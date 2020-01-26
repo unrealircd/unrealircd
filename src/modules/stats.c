@@ -229,7 +229,6 @@ static inline void stats_help(Client *client)
 	sendnumeric(client, RPL_STATSHELP, "W - fdtable - Send the FD table listing");
 	sendnumeric(client, RPL_STATSHELP, "X - notlink - Send the list of servers that are not current linked");
 	sendnumeric(client, RPL_STATSHELP, "Y - class - Send the class block list");
-	sendnumeric(client, RPL_STATSHELP, "Z - mem - Send memory usage information");
 }
 
 static inline int allow_user_stats_short(char c)
