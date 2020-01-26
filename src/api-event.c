@@ -47,13 +47,15 @@ extern EVENT(unrealdns_removeoldrecords);
 Event *EventAdd(Module *module, char *name, vFP event, void *data, long every_msec, int count)
 {
 	Event *newevent;
+
 	if (!name || (every_msec < 0) || (count < 0) || !event)
 	{
 		if (module)
 			module->errorcode = MODERR_INVALID;
 		return NULL;
 	}
-	if (every_msec < 100)
+
+	if ((every_msec < 100) && (count > 1))
 	{
 		ircd_log(LOG_ERROR, "[BUG] EventAdd() from module %s with suspiciously low every_msec value (%ld). "
 		                    "Note that it is in milliseconds now (1000 = 1 second)!",
@@ -61,6 +63,7 @@ Event *EventAdd(Module *module, char *name, vFP event, void *data, long every_ms
 		                    every_msec);
 		every_msec = 100;
 	}
+
 	newevent = safe_alloc(sizeof(Event));
 	safe_strdup(newevent->name, name);
 	newevent->count = count;

@@ -1445,7 +1445,7 @@ void special_delayed_unloading(void)
 			if (!found)
 			{
 				char *name = strdup(m->header->name);
-				config_warn("Delaying module unloading of '%s' a few seconds...", name);
+				config_warn("Delaying module unloading of '%s' for a millisecond...", name);
 				m->flags |= MODFLAG_DELAYED;
 				EventAdd(NULL, "e_unload_module_delayed", e_unload_module_delayed, name, 0, 1);
 			}
