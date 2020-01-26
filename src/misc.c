@@ -1391,7 +1391,7 @@ void concat_params(char *buf, int len, int parc, char *parv[])
 		if (*buf)
 			strlcat(buf, " ", len);
 
-		if (strchr(param, ' '))
+		if (strchr(param, ' ') || (*param == ':'))
 		{
 			/* Last parameter, with : */
 			strlcat(buf, ":", len);
