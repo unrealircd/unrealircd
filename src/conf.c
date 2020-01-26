@@ -2730,25 +2730,7 @@ int	config_run()
 	free_iConf(&iConf);
 	memcpy(&iConf, &tempiConf, sizeof(iConf));
 	memset(&tempiConf, 0, sizeof(tempiConf));
-
-	{
-		EventInfo eInfo;
-		long v;
-		eInfo.flags = EMOD_EVERY;
-		if (!THROTTLING_PERIOD)
-			v = 120000;
-		else
-		{
-			v = THROTTLING_PERIOD/2;
-			if (v > 5)
-				v = 5000; /* accuracy, please */
-			if (v < 1)
-				v = 1000; /* duh */
-		}
-		eInfo.every_msec = v;
-		EventMod(EventFind("bucketcleaning"), &eInfo);
-	}
-
+	update_throttling_timer_settings();
 
 	/* initialize conf_files with defaults if the block isn't set: */
 	if(!conf_files)

@@ -93,7 +93,7 @@ extern MODVAR ConfigItem_offchans	*conf_offchans;
 extern void		completed_connection(int, int, void *);
 extern void clear_unknown();
 extern EVENT(e_unload_module_delayed);
-extern EVENT(e_clean_out_throttling_buckets);
+extern EVENT(throttling_check_expire);
 
 extern void  module_loadall(void);
 extern long set_usermode(char *umode);
@@ -964,3 +964,4 @@ extern char *unreal_add_quotes(char *str);
 extern int unreal_add_quotes_r(char *i, char *o, size_t len);
 extern void user_account_login(MessageTag *recv_mtags, Client *client);
 extern void link_generator(void);
+extern void update_throttling_timer_settings(void);

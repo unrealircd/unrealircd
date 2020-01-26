@@ -886,22 +886,35 @@ int   hash_del_watch_list(Client *client)
 
 struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_TABLE_SIZE];
 
-void init_throttling()
+void update_throttling_timer_settings(void)
 {
 	long v;
+	EventInfo eInfo;
 
 	if (!THROTTLING_PERIOD)
 	{
-		v = 120;
+		v = 120*1000;
 	} else
 	{
-		v = THROTTLING_PERIOD/2;
-		if (v > 5)
+		v = (THROTTLING_PERIOD*1000)/2;
+		if (v > 5000)
 			v = 5000; /* run at least every 5s */
-		if (v < 1)
+		if (v < 1000)
 			v = 1000; /* run at max once every 1s */
 	}
-	EventAdd(NULL, "bucketcleaning", e_clean_out_throttling_buckets, NULL, v, 0);
+
+	memset(&eInfo, 0, sizeof(eInfo));
+	eInfo.flags = EMOD_EVERY;
+	eInfo.every_msec = v;
+	EventMod(EventFind("throttling_check_expire"), &eInfo);
+}
+
+void init_throttling()
+{
+	EventAdd(NULL, "throttling_check_expire", throttling_check_expire, NULL, 123456, 0);
+	/* Note: the every_ms value (123,456) will be adjusted on boot and rehash
+	 * via the update_throttling_timer_settings() function.
+	 */
 }
 
 uint64_t hash_throttling(char *ip)
@@ -924,7 +937,7 @@ struct ThrottlingBucket *find_throttling_bucket(Client *client)
 	return NULL;
 }
 
-EVENT(e_clean_out_throttling_buckets)
+EVENT(throttling_check_expire)
 {
 	struct ThrottlingBucket *n, *n_next;
 	int	i;
