@@ -57,8 +57,9 @@ Event *EventAdd(Module *module, char *name, vFP event, void *data, long every_ms
 
 	if ((every_msec < 100) && (count > 1))
 	{
-		ircd_log(LOG_ERROR, "[BUG] EventAdd() from module %s with suspiciously low every_msec value (%ld). "
+		ircd_log(LOG_ERROR, "[BUG] EventAdd() '%s' from module '%s' with suspiciously low every_msec value (%ld). "
 		                    "Note that it is in milliseconds now (1000 = 1 second)!",
+		                    name,
 		                    module ? module->header->name : "???",
 		                    every_msec);
 		every_msec = 100;
@@ -142,7 +143,19 @@ int EventMod(Event *event, EventInfo *mods)
 	}
 
 	if (mods->flags & EMOD_EVERY)
+	{
+		if (mods->every_msec < 100)
+		{
+			ircd_log(LOG_ERROR, "[BUG] EventMod() for '%s' from module '%s' with suspiciously low every_msec value (%ld). "
+					    "Note that it is in milliseconds now (1000 = 1 second)!",
+					    event->name,
+					    event->owner ? event->owner->header->name : "???",
+					    mods->every_msec);
+			mods->every_msec = 100;
+		}
+
 		event->every_msec = mods->every_msec;
+	}
 	if (mods->flags & EMOD_HOWMANY)
 		event->count = mods->count;
 	if (mods->flags & EMOD_NAME)
