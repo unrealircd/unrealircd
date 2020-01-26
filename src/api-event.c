@@ -55,7 +55,7 @@ Event *EventAdd(Module *module, char *name, vFP event, void *data, long every_ms
 		return NULL;
 	}
 
-	if ((every_msec < 100) && (count > 1))
+	if ((every_msec < 100) && (count == 0))
 	{
 		ircd_log(LOG_ERROR, "[BUG] EventAdd() '%s' from module '%s' with suspiciously low every_msec value (%ld). "
 		                    "Note that it is in milliseconds now (1000 = 1 second)!",
