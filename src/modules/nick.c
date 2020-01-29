@@ -211,8 +211,8 @@ CMD_FUNC(cmd_nick_remote)
 	/* Existing client nick-changing */
 
 	if (!IsULine(client))
-		sendto_snomask(SNO_FNICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
-			client->name, client->user->username, client->user->realhost, nick);
+		sendto_snomask(SNO_FNICKCHANGE, "*** %s (%s@%s) [%s] has changed their nickname to %s",
+			client->name, client->user->username, client->user->realhost, client->ip, nick);
 
 	RunHook2(HOOKTYPE_REMOTE_NICKCHANGE, client, nick);
 
@@ -447,8 +447,8 @@ CMD_FUNC(cmd_nick_local)
 		} else
 			client->user->flood.nick_c++;
 
-		sendto_snomask(SNO_NICKCHANGE, "*** %s (%s@%s) has changed their nickname to %s",
-			client->name, client->user->username, client->user->realhost, nick);
+		sendto_snomask(SNO_NICKCHANGE, "*** %s (%s@%s) [%s] has changed their nickname to %s",
+			client->name, client->user->username, client->user->realhost, client->ip, nick);
 
 		RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, client, nick);
 		client->lastnick = TStime();
