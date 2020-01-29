@@ -143,7 +143,7 @@ int target_limit_exceeded(Client *client, void *target, const char *name)
 	u_char hash = hash_target(target);
 	int i;
 
-	if (ValidatePermissionsForPath("immune:target-limit",client,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("immune:max-concurrent-conversations",client,NULL,NULL,NULL))
 		return 0;
 
 	if (client->local->targets[0] == hash)
