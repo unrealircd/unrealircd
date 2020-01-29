@@ -50,6 +50,13 @@ ModuleHeader MOD_HEADER = {
 			free_tkl(tkl); \
 	} while(0)
 
+#define WARN_WRITE_ERROR(fname) \
+	do { \
+		sendto_realops_and_log("[tkldb] Error writing to temporary database file " \
+		                       "'%s': %s (DATABASE NOT SAVED)", \
+		                       fname, strerror(errno)); \
+	} while(0)
+
 #define R_SAFE(x) \
 	do { \
 		if (!(x)) { \
@@ -63,7 +70,7 @@ ModuleHeader MOD_HEADER = {
 #define W_SAFE(x) \
 	do { \
 		if (!(x)) { \
-			config_warn("[tkldb] Error writing to temporary database file '%s': %s. DATABASE NOT SAVED!", tmpfname, strerror(errno)); \
+			WARN_WRITE_ERROR(tmpfname); \
 			fclose(fd); \
 			return 0; \
 		} \
@@ -242,7 +249,7 @@ int write_tkldb(void)
 	fd = fopen(tmpfname, "wb");
 	if (!fd)
 	{
-		config_warn("[tkldb] Unable to open temporary database file '%s' for writing: %s. DATABASE NOT SAVED!", tmpfname, strerror(errno));
+		WARN_WRITE_ERROR(tmpfname);
 		return 0;
 	}
 
@@ -306,7 +313,7 @@ int write_tkldb(void)
 	// Everything seems to have gone well, attempt to close and rename the tempfile
 	if (fclose(fd) != 0)
 	{
-		config_warn("[tkldb] Got an error when trying to close database file '%s' (possible corruption occurred, DATABASE NOT SAVED): %s", cfg.database, strerror(errno));
+		WARN_WRITE_ERROR(tmpfname);
 		return 0;
 	}
 #ifdef _WIN32
@@ -315,7 +322,7 @@ int write_tkldb(void)
 #endif
 	if (rename(tmpfname, cfg.database) < 0)
 	{
-		config_warn("[tkldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
+		sendto_realops_and_log("[tkldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
 		return 0;
 	}
 #ifdef BENCHMARK
@@ -680,7 +687,7 @@ int read_tkldb(void)
 	fclose(fd);
 
 	if (added_cnt)
-		config_status("[tkldb] Re-added %d *-Lines", added_cnt);
+		sendto_realops_and_log("[tkldb] Re-added %d *-Lines", added_cnt);
 
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);

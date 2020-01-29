@@ -24,10 +24,17 @@ ModuleHeader MOD_HEADER = {
  #define BENCHMARK
 #endif
 
+#define WARN_WRITE_ERROR(fname) \
+	do { \
+		sendto_realops_and_log("[channeldb] Error writing to temporary database file " \
+		                       "'%s': %s (DATABASE NOT SAVED)", \
+		                       fname, strerror(errno)); \
+	} while(0)
+
 #define W_SAFE(x) \
 	do { \
 		if (!(x)) { \
-			config_warn("[channeldb] Error writing to temporary database file '%s': %s (DATABASE NOT SAVED)", tmpfname, strerror(errno)); \
+			WARN_WRITE_ERROR(tmpfname); \
 			fclose(fd); \
 			return 0; \
 		} \
@@ -204,7 +211,7 @@ int write_channeldb(void)
 	fd = fopen(tmpfname, "wb");
 	if (!fd)
 	{
-		config_warn("[channeldb] Unable to open the temporary database file '%s' for writing: %s. DATABASE NOT SAVED!", tmpfname, strerror(errno));
+		WARN_WRITE_ERROR(tmpfname);
 		return 0;
 	}
 
@@ -229,7 +236,7 @@ int write_channeldb(void)
 	// Everything seems to have gone well, attempt to close and rename the tempfile
 	if (fclose(fd) != 0)
 	{
-		config_warn("[channeldb] Error while writing to temporary database file '%s': %s. DATABASE NOT SAVED CORRECTLY!", cfg.database, strerror(errno));
+		WARN_WRITE_ERROR(tmpfname);
 		return 0;
 	}
 
@@ -239,7 +246,7 @@ int write_channeldb(void)
 #endif
 	if (rename(tmpfname, cfg.database) < 0)
 	{
-		config_warn("[channeldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
+		sendto_realops_and_log("[channeldb] Error renaming '%s' to '%s': %s (DATABASE NOT SAVED)", tmpfname, cfg.database, strerror(errno));
 		return 0;
 	}
 #ifdef BENCHMARK
@@ -456,10 +463,7 @@ int read_channeldb(void)
 	fclose(fd);
 
 	if (added)
-	{
-		ircd_log(LOG_ERROR, "[channeldb] Added %d persistent channels (+P)", added);
-		sendto_realops("[channeldb] Added %d persistent channels (+P)", added); // Probably won't be seen ever, but just in case ;]
-	}
+		sendto_realops_and_log("[channeldb] Added %d persistent channels (+P)", added);
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
 	ircd_log(LOG_ERROR, "[channeldb] Benchmark: LOAD DB: %ld microseconds",
