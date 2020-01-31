@@ -560,9 +560,6 @@ static void recurse_send_quits(Client *cptr, Client *client, Client *from, Clien
 {
 	Client *acptr, *next;
 
-	if (!MyConnect(to))
-		return; /* We shouldn't even be called for non-remotes */
-
 	list_for_each_entry_safe(acptr, next, &global_server_list, client_node)
 	{
 		if (acptr->srvptr != client)
