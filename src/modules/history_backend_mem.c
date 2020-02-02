@@ -251,7 +251,7 @@ int hbm_history_add(char *object, MessageTag *mtags, char *line)
 		abort();
 #else
 		h->max_lines = 50;
-		h->max_t = 86400;
+		h->max_time = 86400;
 #endif
 	}
 	if (h->num_lines >= h->max_lines)
