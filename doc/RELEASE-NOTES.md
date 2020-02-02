@@ -1,5 +1,26 @@
-UnrealIRCd 5.0.2 Release Notes
+UnrealIRCd 5.0.3 Release Notes
 ===============================
+
+UnrealIRCd 5.0.3
+-----------------
+Enhancements:
+* A new HISTORY command for history playback (```HISTORY #channel number-of-lines```)
+  which allows you to fetch more lines than the on-join history playback.
+  Of course, taking into account the set limits in the +H channel mode.
+  This command is one of the [two interfaces](https://www.unrealircd.org/docs/Channel_history#Playback_frontends)
+  to [Channel history](https://www.unrealircd.org/docs/Channel_history).
+
+Fixes:
+* An IRCOp SQUIT'ing a far remote server may cause a broken link topology
+* In channels that are +D (delayed join), PARTs were not shown correctly to
+  channel operators.
+
+Changes:
+* The operclass permission ```immune:target-limit``` is now called
+  ```immune:max-concurrent-conversations```, since it bypasses
+  [set::anti-flood::max-concurrent-conversations](https://www.unrealircd.org/docs/Set_block#set::anti-flood::max-concurrent-conversations).
+  For 99% of the users this change is not important, but it may be
+  if you use highly customized [operclass blocks](https://www.unrealircd.org/docs/Operclass_block)
 
 UnrealIRCd 5.0.2
 -----------------
