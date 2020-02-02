@@ -83,6 +83,7 @@ MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *m
 	m->owner = module;
 	m->flags = mreq->flags;
 	m->is_ok = mreq->is_ok;
+	m->can_send = mreq->can_send;
 	m->clicap_handler = mreq->clicap_handler;
 
 	/* Update reverse dependency (if any) */

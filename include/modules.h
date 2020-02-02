@@ -460,7 +460,8 @@ struct MessageTagHandler {
 	MessageTagHandler *prev, *next;
 	char *name;                                 /**< The name of the message-tag */
 	int flags;                                  /**< A flag of MTAG_HANDLER_FLAGS_* */
-	int (*is_ok)(Client *, char *, char *);    /**< Verify syntax and access rights */
+	int (*is_ok)(Client *, char *, char *);     /**< Verify syntax and access rights */
+	int (*can_send)(Client *);                  /**< Tag may be sent to this client (normally NULL!) */
 	Module *owner;                              /**< Module introducing this CAP. */
 	ClientCapability *clicap_handler;           /**< Client capability handler associated with this */
 	char unloaded;                              /**< Internal flag to indicate module is being unloaded */
@@ -473,6 +474,7 @@ typedef struct {
 	char *name;
 	int flags;
 	int (*is_ok)(Client *, char *, char *);
+	int (*can_send)(Client *);
 	ClientCapability *clicap_handler;
 } MessageTagHandlerInfo;
 
