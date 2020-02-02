@@ -490,8 +490,8 @@ typedef struct HistoryBackend HistoryBackend;
 struct HistoryBackend {
 	HistoryBackend *prev, *next;
 	char *name;                                   /**< The name of the history backend (eg: "mem") */
+	int (*history_set_limit)(char *object, int max_lines, long max_time); /**< Impose a limit on a history object */
 	int (*history_add)(char *object, MessageTag *mtags, char *line); /**< Add to history */
-	int (*history_del)(char *object, int max_lines, long max_time); /**< Delete history, based on lines/time */
 	int (*history_request)(Client *acptr, char *object, HistoryFilter *filter);  /**< Request history */
 	int (*history_destroy)(char *object);  /**< Destroy history of this object completely */
 	Module *owner;                                /**< Module introducing this */
@@ -503,8 +503,8 @@ struct HistoryBackend {
  */
 typedef struct {
 	char *name;
+	int (*history_set_limit)(char *object, int max_lines, long max_time);
 	int (*history_add)(char *object, MessageTag *mtags, char *line);
-	int (*history_del)(char *object, int max_lines, long max_time);
 	int (*history_request)(Client *acptr, char *object, HistoryFilter *filter);
 	int (*history_destroy)(char *object);
 } HistoryBackendInfo;

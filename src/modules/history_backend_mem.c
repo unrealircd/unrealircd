@@ -14,7 +14,7 @@
 ModuleHeader MOD_HEADER
 = {
 	"history_backend_mem",
-	"1.0",
+	"2.0",
 	"History backend: memory",
 	"UnrealIRCd Team",
 	"unrealircd-5",
@@ -23,6 +23,22 @@ ModuleHeader MOD_HEADER
 /* Defines */
 #define OBJECTLEN	((NICKLEN > CHANNELLEN) ? NICKLEN : CHANNELLEN)
 #define HISTORY_BACKEND_MEM_HASH_TABLE_SIZE 1019
+
+/* The regular history cleaning (by timer) is spread out
+ * a bit, rather than doing ALL channels every T time.
+ * HISTORY_SPREAD: how much to spread the "cleaning", eg 1 would be
+ *  to clean everything in 1 go, 2 would mean the first event would
+ *  clean half of the channels, and the 2nd event would clean the rest.
+ *  Obviously more = better to spread the load, but doing a reasonable
+ *  amount of work is also benefitial for performance (think: CPU cache).
+ * HISTORY_MAX_OFF_SECS: how many seconds may the history be 'off',
+ *  that is: how much may we store the history longer than required.
+ * The other 2 macros are calculated based on that target.
+ */
+#define HISTORY_SPREAD	16
+#define HISTORY_MAX_OFF_SECS	128
+#define HISTORY_CLEAN_PER_LOOP	(HISTORY_BACKEND_MEM_HASH_TABLE_SIZE/HISTORY_SPREAD)
+#define HISTORY_TIMER_EVERY	(HISTORY_MAX_OFF_SECS/HISTORY_SPREAD)
 
 /* Definitions (structs, etc.) */
 typedef struct HistoryLogLine HistoryLogLine;
@@ -40,6 +56,8 @@ struct HistoryLogObject {
 	HistoryLogLine *tail; /**< End of the log (the latest entry) */
 	int num_lines; /**< Number of lines of log */
 	time_t oldest_t; /**< Oldest time in log */
+	int max_lines; /**< Maximum number of lines permitted */
+	long max_time; /**< Maximum number of seconds to retain history */
 	char name[OBJECTLEN+1];
 };
 
@@ -49,9 +67,11 @@ HistoryLogObject *history_hash_table[HISTORY_BACKEND_MEM_HASH_TABLE_SIZE];
 
 /* Forward declarations */
 int hbm_history_add(char *object, MessageTag *mtags, char *line);
-int hbm_history_del(char *object, int max_lines, long max_time);
+int hbm_history_cleanup(HistoryLogObject *h);
 int hbm_history_request(Client *client, char *object, HistoryFilter *filter);
 int hbm_history_destroy(char *object);
+int hbm_history_set_limit(char *object, int max_lines, long max_time);
+EVENT(history_mem_clean);
 
 MOD_INIT()
 {
@@ -66,9 +86,9 @@ MOD_INIT()
 	memset(&hbi, 0, sizeof(hbi));
 	hbi.name = "mem";
 	hbi.history_add = hbm_history_add;
-	hbi.history_del = hbm_history_del;
 	hbi.history_request = hbm_history_request;
 	hbi.history_destroy = hbm_history_destroy;
+	hbi.history_set_limit = hbm_history_set_limit;
 	if (!HistoryBackendAdd(modinfo->handle, &hbi))
 		return MOD_FAILED;
 
@@ -77,6 +97,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	EventAdd(modinfo->handle, "history_mem_clean", history_mem_clean, NULL, HISTORY_TIMER_EVERY*1000, 0);
 	return MOD_SUCCESS;
 }
 
@@ -223,6 +244,21 @@ void hbm_history_del_line(HistoryLogObject *h, HistoryLogLine *l)
 int hbm_history_add(char *object, MessageTag *mtags, char *line)
 {
 	HistoryLogObject *h = hbm_find_or_add_object(object);
+	if (!h->max_lines)
+	{
+		sendto_realops("hbm_history_add() for '%s', which has no limit", h->name);
+#ifdef DEBUGMODE
+		abort();
+#else
+		h->max_lines = 50;
+		h->max_t = 86400;
+#endif
+	}
+	if (h->num_lines >= h->max_lines)
+	{
+		/* Delete previous line */
+		hbm_history_del_line(h, h->head);
+	}
 	hbm_history_add_line(h, mtags, line);
 	return 0;
 }
@@ -260,6 +296,8 @@ int hbm_history_request(Client *client, char *object, HistoryFilter *filter)
 	HistoryLogObject *h = hbm_find_object(object);
 	HistoryLogLine *l;
 	char batch[BATCHLEN+1];
+	long redline; /* Imaginary timestamp. Before the red line, history is too old. */
+	int lines_sendable = 0, lines_to_skip = 0, cnt = 0;
 
 	if (!h || !can_receive_history(client))
 		return 0;
@@ -273,8 +311,27 @@ int hbm_history_request(Client *client, char *object, HistoryFilter *filter)
 		sendto_one(client, NULL, ":%s BATCH +%s chathistory %s", me.name, batch, object);
 	}
 
+	redline = TStime() - h->max_time;
+
+	/* Once the filter API expands, the following will change too.
+	 * For now, this is sufficient, since requests are only about lines:
+	 */
+	lines_sendable = 0;
 	for (l = h->head; l; l = l->next)
-		hbm_send_line(client, l, batch);
+		if (l->t >= redline)
+			lines_sendable++;
+	if (filter && (lines_sendable > filter->last_lines))
+		lines_to_skip = lines_sendable - filter->last_lines;
+
+	for (l = h->head; l; l = l->next)
+	{
+		/* Make sure we don't send too old entries:
+		 * We only have to check for time here, as line count is already
+		 * taken into account in hbm_history_add.
+		 */
+		if (l->t >= redline && (++cnt > lines_to_skip))
+			hbm_send_line(client, l, batch);
+	}
 
 	/* End of batch */
 	if (*batch)
@@ -282,16 +339,13 @@ int hbm_history_request(Client *client, char *object, HistoryFilter *filter)
 	return 1;
 }
 
-int hbm_history_del(char *object, int max_lines, long max_time)
+/** Clean up expired entries */
+int hbm_history_cleanup(HistoryLogObject *h)
 {
-	HistoryLogObject *h = hbm_find_object(object);
 	HistoryLogLine *l, *l_next = NULL;
-	long redline = TStime() - max_time;
+	long redline = TStime() - h->max_time;
 
-	if (!h)
-		return 0;
-
-	/* First enforce 'max_time', after that enforce 'max_lines' */
+	/* First enforce 'h->max_time', after that enforce 'h->max_lines' */
 
 	/* Checking for time */
 	if (h->oldest_t < redline)
@@ -311,14 +365,14 @@ int hbm_history_del(char *object, int max_lines, long max_time)
 		}
 	}
 
-	if (h->num_lines > max_lines)
+	if (h->num_lines > h->max_lines)
 	{
 		h->oldest_t = 0; /* recalculate in next loop */
 
 		for (l = h->head; l; l = l_next)
 		{
 			l_next = l->next;
-			if (h->num_lines > max_lines)
+			if (h->num_lines > h->max_lines)
 			{
 				hbm_history_del_line(h, l);
 				continue;
@@ -353,4 +407,40 @@ int hbm_history_destroy(char *object)
 
 	hbm_delete_object_hlo(h);
 	return 1;
+}
+
+/** Set new limit on history object */
+int hbm_history_set_limit(char *object, int max_lines, long max_time)
+{
+	HistoryLogObject *h = hbm_find_or_add_object(object);
+	h->max_lines = max_lines;
+	h->max_time = max_time;
+	hbm_history_cleanup(h); /* impose new restrictions */
+	return 1;
+}
+
+/** Periodically clean the history.
+ * Instead of doing all channels in 1 go, we do a limited number
+ * of channels each call, hence the 'static int' and the do { } while
+ * rather than a regular for loop.
+ * Note that we already impose the line limit in hbm_history_add,
+ * so this history_mem_clean is for removals due to max_time limits.
+ */
+EVENT(history_mem_clean)
+{
+	static int hashnum = 0;
+	int loopcnt = 0;
+	Channel *channel;
+	HistoryLogObject *h;
+
+	do
+	{
+		for (h = history_hash_table[hashnum++]; h; h = h->next)
+			hbm_history_cleanup(h);
+
+		hashnum++;
+
+		if (hashnum >= HISTORY_BACKEND_MEM_HASH_TABLE_SIZE)
+			hashnum = 0;
+	} while(loopcnt++ < HISTORY_CLEAN_PER_LOOP);
 }

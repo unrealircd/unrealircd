@@ -33,26 +33,11 @@ struct HistoryChanMode {
 Cmode_t EXTMODE_HISTORY = 0L;
 #define HistoryEnabled(channel)    (channel->mode.extmode & EXTMODE_HISTORY)
 
-/* The regular history cleaning (by timer) is spread out
- * a bit, rather than doing ALL channels every T time.
- * HISTORY_SPREAD: how much to spread the "cleaning", eg 1 would be
- *  to clean everything in 1 go, 2 would mean the first event would
- *  clean half of the channels, and the 2nd event would clean the rest.
- *  Obviously more = better to spread the load, but doing a reasonable
- *  amount of work is also benefitial for performance (think: CPU cache).
- * HISTORY_MAX_OFF_SECS: how many seconds may the history be 'off',
- *  that is: how much may we store the history longer than required.
- * The other 2 macros are calculated based on that target.
- */
-#define HISTORY_SPREAD	16
-#define HISTORY_MAX_OFF_SECS	128
-#define HISTORY_CLEAN_PER_LOOP	(CHAN_HASH_TABLE_SIZE/HISTORY_SPREAD)
-#define HISTORY_TIMER_EVERY	(HISTORY_MAX_OFF_SECS/HISTORY_SPREAD)
-
 /* Forward declarations */
 static void init_config(void);
 int history_config_test(ConfigFile *, ConfigEntry *, int, int *);
 int history_config_run(ConfigFile *, ConfigEntry *, int);
+int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
 static int compare_history_modes(HistoryChanMode *a, HistoryChanMode *b);
 int history_chanmode_is_ok(Client *client, Channel *channel, char mode, char *para, int type, int what);
 void *history_chanmode_put_param(void *r_in, char *param);
@@ -64,7 +49,6 @@ int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int history_channel_destroy(Channel *channel, int *should_destroy);
 int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
 int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
-EVENT(history_clean);
 
 MOD_TEST()
 {
@@ -94,16 +78,16 @@ MOD_INIT()
 	init_config();
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, history_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CHANMODE, 0, history_chanmode_change);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CHANMODE, 0, history_chanmode_change);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, history_join);
 	HookAdd(modinfo->handle, HOOKTYPE_CHANMSG, 0, history_chanmsg);
-
 	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 1000000, history_channel_destroy);
 	return MOD_SUCCESS;
 }
 
 MOD_LOAD()
 {
-	EventAdd(modinfo->handle, "history_clean", history_clean, NULL, HISTORY_TIMER_EVERY*1000, 0);
 	return MOD_SUCCESS;
 }
 
@@ -476,6 +460,25 @@ int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx)
 	return EXSJ_MERGE;
 }
 
+/** On channel mode change, communicate the +H limits to the history backend layer */
+int history_chanmode_change(Client *client, Channel *channel, MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode)
+{
+	HistoryChanMode *settings;
+
+	/* Did anything change, with regards to channel mode H ? */
+	if (!strchr(modebuf, 'H'))
+		return 0;
+
+	/* If so, grab the settings, and communicate them */
+	settings = (HistoryChanMode *)GETPARASTRUCT(channel, 'H');
+	if (settings)
+		history_set_limit(channel->chname, settings->max_lines, settings->max_time);
+	else
+		history_destroy(channel->chname);
+
+	return 0;
+}
+
 /** Channel is destroyed (or is it?) */
 int history_channel_destroy(Channel *channel, int *should_destroy)
 {
@@ -518,8 +521,6 @@ int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix,
 		text);
 
 	history_add(channel->chname, mtags, buf);
-	settings = (HistoryChanMode *)GETPARASTRUCT(channel, 'H');
-	history_del(channel->chname, settings->max_lines, settings->max_time);
 
 	return 0;
 }
@@ -530,39 +531,7 @@ int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv
 		return 0;
 
 	if (MyUser(client))
-	{
-		HistoryChanMode *settings = (HistoryChanMode *)GETPARASTRUCT(channel, 'H');
-		history_del(channel->chname, settings->max_lines, settings->max_time);
 		history_request(client, channel->chname, NULL);
-	}
 
 	return 0;
-}
-
-/** Periodically clean the history.
- * Instead of doing all channels in 1 go, we do a limited number
- * of channels each call, hence the 'static int' and the do { } while
- * rather than a regular for loop.
- */
-EVENT(history_clean)
-{
-	static int hashnum = 0;
-	int loopcnt = 0;
-	Channel *channel;
-
-	do
-	{
-		for (channel = hash_get_chan_bucket(hashnum); channel; channel = channel->hnextch)
-		{
-			if (HistoryEnabled(channel))
-			{
-				HistoryChanMode *settings = (HistoryChanMode *)GETPARASTRUCT(channel, 'H');
-				if (settings)
-					history_del(channel->chname, settings->max_lines, settings->max_time);
-			}
-		}
-		hashnum++;
-		if (hashnum >= CHAN_HASH_TABLE_SIZE)
-			hashnum = 0;
-	} while(loopcnt++ < HISTORY_CLEAN_PER_LOOP);
 }

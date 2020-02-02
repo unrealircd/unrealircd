@@ -61,11 +61,12 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 	HistoryBackend *m;
 	int exists = 0;
 
-	if (!mreq->history_add || !mreq->history_del || !mreq->history_request || !mreq->history_destroy)
+	if (!mreq->history_add || !mreq->history_request ||
+	    !mreq->history_destroy || !mreq->history_set_limit)
 	{
 		if (module)
 			module->errorcode = MODERR_INVALID;
-		ircd_log(LOG_ERROR, "HistoryBackendAdd(): missing a handler for add/del/request/destroy");
+		ircd_log(LOG_ERROR, "HistoryBackendAdd(): missing a handler for add/del/request/destroy/set_limit");
 		return NULL;
 	}
 	m = HistoryBackendFind(mreq->name);
@@ -89,9 +90,9 @@ HistoryBackend *HistoryBackendAdd(Module *module, HistoryBackendInfo *mreq)
 	/* Add or update the following fields: */
 	m->owner = module;
 	m->history_add = mreq->history_add;
-	m->history_del = mreq->history_del;
 	m->history_request = mreq->history_request;
 	m->history_destroy = mreq->history_destroy;
+	m->history_set_limit = mreq->history_set_limit;
 
 	if (!exists)
 		AddListItem(m, historybackends);
@@ -165,16 +166,6 @@ int history_add(char *object, MessageTag *mtags, char *line)
 	return 1;
 }
 
-int history_del(char *object, int max_lines, long max_time)
-{
-	HistoryBackend *hb;
-
-	for (hb = historybackends; hb; hb=hb->next)
-		hb->history_del(object, max_lines, max_time);
-
-	return 1;
-}
-
 int history_request(Client *client, char *object, HistoryFilter *filter)
 {
 	HistoryBackend *hb;
@@ -191,6 +182,16 @@ int history_destroy(char *object)
 
 	for (hb = historybackends; hb; hb=hb->next)
 		hb->history_destroy(object);
+
+	return 1;
+}
+
+int history_set_limit(char *object, int max_lines, long max_t)
+{
+	HistoryBackend *hb;
+
+	for (hb = historybackends; hb; hb=hb->next)
+		hb->history_set_limit(object, max_lines, max_t);
 
 	return 1;
 }

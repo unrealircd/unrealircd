@@ -69,7 +69,8 @@ R_MODULES= \
 	message-tags.so batch.so \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
-	echo-message.so ident_lookup.so
+	echo-message.so \
+	ident_lookup.so history.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -607,6 +608,10 @@ require-module.so: require-module.c $(INCLUDES)
 ident_lookup.so: ident_lookup.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o ident_lookup.so ident_lookup.c
+
+history.so: history.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o history.so history.c
 
 #############################################################################
 # capabilities

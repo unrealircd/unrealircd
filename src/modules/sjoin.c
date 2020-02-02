@@ -78,6 +78,20 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 	return (&pparv);
 }
 
+void send_local_chan_mode(MessageTag *recv_mtags, Client *client, Channel *channel, char *modebuf, char *parabuf)
+{
+	MessageTag *mtags = NULL;
+
+	new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
+	sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
+	               ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
+	if (MyConnect(client))
+		RunHook7(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0);
+	else
+		RunHook7(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0);
+	free_message_tags(mtags);
+}
+
 /** SJOIN: Synchronize channel modes, +beI lists and users (server-to-server command)
  * Extensive technical documentation is available at:
  * https://www.unrealircd.org/docs/Server_protocol:SJOIN_command
@@ -114,11 +128,7 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 	modebuf[b] = 0;\
 }\
 else {\
-	MessageTag *mtags = NULL; \
-	new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf); \
-	sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags, \
-	               ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf); \
-	free_message_tags(mtags); \
+	send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf); \
 	strcpy(parabuf,param);\
 	/* modebuf[0] should stay what it was ('+' or '-') */ \
 	modebuf[1] = mode;\
@@ -227,13 +237,7 @@ CMD_FUNC(cmd_sjoin)
 			MessageTag *mtags = NULL;
 			ap = mp2parv(modebuf, parabuf);
 			set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar, 0);
-
-			/* send to all local users: */
-			new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
-			sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
-			               ":%s MODE %s %s %s",
-			               client->name, channel->chname, modebuf, parabuf);
-			free_message_tags(mtags);
+			send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
 		}
 		/* remove bans */
 		/* reset the buffers */
@@ -306,16 +310,8 @@ CMD_FUNC(cmd_sjoin)
 		}
 		if (b > 1)
 		{
-			MessageTag *mtags = NULL;
-
 			modebuf[b] = '\0';
-
-			/* send to all local users: */
-			new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
-			sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
-			               ":%s MODE %s %s %s",
-			               client->name, channel->chname, modebuf, parabuf);
-			free_message_tags(mtags);
+			send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
 		}
 
 		/* since we're dropping our modes, we want to clear the mlock as well. --nenolod */
@@ -644,15 +640,8 @@ getnick:
 
 	if (modebuf[1])
 	{
-		MessageTag *mtags = NULL;
-
 		modebuf[b] = '\0';
-
-		new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
-		sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
-		               ":%s MODE %s %s %s",
-		               client->name, channel->chname, modebuf, parabuf);
-		free_message_tags(mtags);
+		send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
 	}
 	
 	if (!merge && !removetheirs && !nomode)
@@ -674,12 +663,7 @@ getnick:
 		ap = mp2parv(modebuf, parabuf);
 
 		set_mode(channel, client, ap->parc, ap->parv, &pcount, pvar, 0);
-
-		new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
-		sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
-		               ":%s MODE %s %s %s",
-		               client->name, channel->chname, modebuf, parabuf);
-		free_message_tags(mtags);
+		send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
 	}
 
 	if (merge && !nomode)
@@ -883,13 +867,7 @@ getnick:
 
 		if (modebuf[1])
 		{
-			MessageTag *mtags = NULL;
-
-			new_message_special(client, recv_mtags, &mtags, ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
-			sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
-			               ":%s MODE %s %s %s",
-			               client->name, channel->chname, modebuf, parabuf);
-			free_message_tags(mtags);
+			send_local_chan_mode(recv_mtags, client, channel, modebuf, parabuf);
 		}
 
 		/* free the oldmode.* crap :( */
