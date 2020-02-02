@@ -7,7 +7,7 @@ Enhancements:
 * A new HISTORY command for history playback (```HISTORY #channel number-of-lines```)
   which allows you to fetch more lines than the on-join history playback.
   Of course, taking into account the set limits in the +H channel mode.
-  This command is one of the [two interfaces](https://www.unrealircd.org/docs/Channel_history#Playback_frontends)
+  This command is one of the [two interfaces](https://www.unrealircd.org/docs/Channel_history#Ways_to_retrieve_history)
   to [Channel history](https://www.unrealircd.org/docs/Channel_history).
 
 Fixes:
