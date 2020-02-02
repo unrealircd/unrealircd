@@ -42,6 +42,7 @@ CMD_FUNC(cmd_history);
 
 MOD_INIT()
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(NULL, "HISTORY", cmd_history, MAXPARA, CMD_USER);
 	return MOD_SUCCESS;
 }
