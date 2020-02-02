@@ -146,11 +146,11 @@ int EventMod(Event *event, EventInfo *mods)
 	{
 		if (mods->every_msec < 100)
 		{
-			ircd_log(LOG_ERROR, "[BUG] EventMod() for '%s' from module '%s' with suspiciously low every_msec value (%ld). "
+			ircd_log(LOG_ERROR, "[BUG] EventMod() for '%s' from module '%s' with suspiciously low every_msec value (%lld). "
 					    "Note that it is in milliseconds now (1000 = 1 second)!",
 					    event->name,
 					    event->owner ? event->owner->header->name : "???",
-					    mods->every_msec);
+					    (long long)mods->every_msec);
 			mods->every_msec = 100;
 		}
 
