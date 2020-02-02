@@ -85,14 +85,19 @@ void mtag_add_userip(Client *client, MessageTag *recv_mtags, MessageTag **mtag_l
 
 	if (IsUser(client) && client->ip)
 	{
-		char nuh[USERLEN+HOSTLEN+1];
+		MessageTag *m = find_mtag(recv_mtags, "unrealircd.org/userip");
+		if (m)
+		{
+			m = duplicate_mtag(m);
+		} else {
+			char nuh[USERLEN+HOSTLEN+1];
 
-		snprintf(nuh, sizeof(nuh), "%s@%s", client->user->username, GetIP(client));
+			snprintf(nuh, sizeof(nuh), "%s@%s", client->user->username, GetIP(client));
 
-		m = safe_alloc(sizeof(MessageTag));
-		safe_strdup(m->name, "unrealircd.org/userip");
-		safe_strdup(m->value, nuh);
-
+			m = safe_alloc(sizeof(MessageTag));
+			safe_strdup(m->name, "unrealircd.org/userip");
+			safe_strdup(m->value, nuh);
+		}
 		AddListItem(m, *mtag_list);
 	}
 }
