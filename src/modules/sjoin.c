@@ -86,9 +86,9 @@ void send_local_chan_mode(MessageTag *recv_mtags, Client *client, Channel *chann
 	sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 	               ":%s MODE %s %s %s", client->name, channel->chname, modebuf, parabuf);
 	if (MyConnect(client))
-		RunHook7(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0);
+		RunHook7(HOOKTYPE_LOCAL_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1);
 	else
-		RunHook7(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0);
+		RunHook7(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, -1);
 	free_message_tags(mtags);
 }
 
