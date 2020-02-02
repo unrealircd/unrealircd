@@ -37,6 +37,8 @@ ModuleHeader MOD_HEADER
 	"unrealircd-5",
 	};
 
+#define HISTORY_LINES_DEFAULT 100
+#define HISTORY_LINES_MAX 100
 
 CMD_FUNC(cmd_history);
 
@@ -62,7 +64,8 @@ void history_usage(Client *client)
 	sendnotice(client, " Use: /HISTORY #channel [lines-to-display]");
 	sendnotice(client, "  Ex: /HISTORY #lobby");
 	sendnotice(client, "  Ex: /HISTORY #lobby 50");
-	sendnotice(client, "The lines-to-display value must be 1-100, the default is 100");
+	sendnotice(client, "The lines-to-display value must be 1-%d, the default is %d",
+		HISTORY_LINES_MAX, HISTORY_LINES_DEFAULT);
 	sendnotice(client, "Naturally, the line count and time limits in channel mode +H are obeyed");
 }
 
@@ -70,9 +73,9 @@ CMD_FUNC(cmd_history)
 {
 	HistoryFilter filter;
 	Channel *channel;
-	int lines;
+	int lines = HISTORY_LINES_DEFAULT;
 
-	if ((parc < 3) || BadPtr(parv[2]))
+	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		history_usage(client);
 		return;
@@ -91,14 +94,23 @@ CMD_FUNC(cmd_history)
 		return;
 	}
 
-	lines = atoi(parv[2]);
-	if (lines < 1)
+	if (!has_channel_mode(channel, 'H'))
 	{
-		history_usage(client);
+		sendnotice(client, "Channel %s does not have channel mode +H set", channel->chname);
 		return;
 	}
-	if (lines > 100)
-		lines = 100;
+
+	if (parv[2])
+	{
+		lines = atoi(parv[2]);
+		if (lines < 1)
+		{
+			history_usage(client);
+			return;
+		}
+		if (lines > HISTORY_LINES_MAX)
+			lines = HISTORY_LINES_MAX;
+	}
 
 	if (!HasCapability(client, "server-time"))
 	{
