@@ -9,6 +9,9 @@ Enhancements:
   Of course, taking into account the set limits in the +H channel mode.
   This command is one of the [two interfaces](https://www.unrealircd.org/docs/Channel_history#Ways_to_retrieve_history)
   to [Channel history](https://www.unrealircd.org/docs/Channel_history).
+* Two new [message tags](https://www.unrealircd.org/docs/Message_tags),
+  ```unrealircd.org/userip``` and ```unrealircd.org/userhost```
+  which communicate the user@ip and real user@host to IRCOps.
 
 Fixes:
 * An IRCOp SQUIT'ing a far remote server may cause a broken link topology
