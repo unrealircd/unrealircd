@@ -93,10 +93,17 @@ CMD_FUNC(cmd_batch)
 	if (MyConnect(target) && !IsServer(target) && !HasCapability(target, "batch"))
 		return;
 
-	/* Relay the batch message to the client (or server) */
-	parv[1] = "BATCH";
-	concat_params(buf, sizeof(buf), parc, parv);
-	sendto_prefix_one(target, client, recv_mtags, "%s", buf);
+	if (MyUser(target))
+	{
+		/* Send the batch message to the client */
+		parv[1] = "BATCH";
+		concat_params(buf, sizeof(buf), parc, parv);
+		sendto_prefix_one(target, client, recv_mtags, ":%s %s", client->name, buf);
+	} else {
+		/* Relay the batch message to the server */
+		concat_params(buf, sizeof(buf), parc, parv);
+		sendto_prefix_one(target, client, recv_mtags, ":%s BATCH %s", client->name, buf);
+	}
 }
 
 /** This function verifies if the client sending

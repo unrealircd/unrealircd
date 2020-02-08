@@ -39,7 +39,6 @@ struct LabeledResponseContext {
 	char batch[BATCHLEN+1]; /**< The generated batch id */
 	int responses; /**< Number of lines sent back to client */
 	int sent_remote; /**< Command has been sent to remote server */
-	int version; /**< Which version? Zero for official, non-zero is draft */
 	char firstbuf[4096]; /**< First buffered response */
 };
 
@@ -84,11 +83,11 @@ MOD_INIT()
 	memset(&currentcmd, 0, sizeof(currentcmd));
 
 	memset(&cap, 0, sizeof(cap));
-	cap.name = "draft/labeled-response-0.2";
+	cap.name = "labeled-response";
 	c = ClientCapabilityAdd(modinfo->handle, &cap, &CAP_LABELED_RESPONSE);
 
 	memset(&mtag, 0, sizeof(mtag));
-	mtag.name = "draft/label";
+	mtag.name = "label";
 	mtag.is_ok = labeled_response_mtag_is_ok;
 	mtag.clicap_handler = c;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
@@ -115,12 +114,13 @@ int lr_pre_command(Client *from, MessageTag *mtags, char *buf)
 	memset(&currentcmd, 0, sizeof(currentcmd));
 	labeled_response_inhibit = labeled_response_inhibit_end = labeled_response_force = 0;
 
+	if (IsServer(from))
+		return 0;
+
 	for (; mtags; mtags = mtags->next)
 	{
-		if ((!strcmp(mtags->name, "draft/label") || !strcmp(mtags->name, "label")) && mtags->value)
+		if (!strcmp(mtags->name, "label") && mtags->value)
 		{
-			if (!strcmp(mtags->name, "draft/label"))
-				currentcmd.version = -1;
 			strlcpy(currentcmd.label, mtags->value, sizeof(currentcmd.label));
 			currentcmd.client = from;
 			break;
@@ -128,30 +128,6 @@ int lr_pre_command(Client *from, MessageTag *mtags, char *buf)
 	}
 
 	return 0;
-}
-
-char *labeled_response_tag_type(int version)
-{
-	if (version == 0)
-		return "label";
-	else
-		return "draft/label";
-}
-
-char *labeled_response_batch_type(int version)
-{
-	if (version == 0)
-		return "labeled-response";
-	else
-		return "draft/labeled-response";
-}
-
-char *labeled_response_message_tag(int version)
-{
-	if (version == 0)
-		return "label";
-	else
-		return "draft/label";
 }
 
 char *gen_start_batch(void)
@@ -163,21 +139,17 @@ char *gen_start_batch(void)
 	if (MyConnect(currentcmd.client))
 	{
 		/* Local connection */
-		snprintf(buf, sizeof(buf), "@%s=%s :%s BATCH +%s %s",
-			labeled_response_message_tag(currentcmd.version),
+		snprintf(buf, sizeof(buf), "@label=%s :%s BATCH +%s labeled-response",
 			currentcmd.label,
 			me.name,
-			currentcmd.batch,
-			labeled_response_batch_type(currentcmd.version));
+			currentcmd.batch);
 	} else {
 		/* Remote connection: requires intra-server BATCH syntax */
-		snprintf(buf, sizeof(buf), "@%s=%s :%s BATCH %s +%s %s",
-			labeled_response_message_tag(currentcmd.version),
+		snprintf(buf, sizeof(buf), "@label=%s :%s BATCH %s +%s labeled-response",
 			currentcmd.label,
 			me.name,
 			currentcmd.client->name,
-			currentcmd.batch,
-			labeled_response_batch_type(currentcmd.version));
+			currentcmd.batch);
 	}
 	return buf;
 }
@@ -222,8 +194,7 @@ int lr_post_command(Client *from, MessageTag *mtags, char *buf)
 			int more_tags = currentcmd.firstbuf[0] == '@';
 			currentcmd.client = NULL; /* prevent lr_packet from interfering */
 			snprintf(packet, sizeof(packet),
-				 "@%s=%s%s%s\r\n",
-				 labeled_response_tag_type(currentcmd.version),
+				 "@label=%s%s%s\r\n",
 				 currentcmd.label,
 				 more_tags ? ";" : " ",
 				 more_tags ? currentcmd.firstbuf+1 : currentcmd.firstbuf);

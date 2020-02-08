@@ -3,6 +3,12 @@ UnrealIRCd 5.0.3 Release Notes
 
 UnrealIRCd 5.0.3
 -----------------
+Fixes:
+* Fix serious flood issue in labeled-response implementation.
+* An IRCOp SQUIT'ing a far remote server may cause a broken link topology
+* In channels that are +D (delayed join), PARTs were not shown correctly to
+  channel operators.
+
 Enhancements:
 * A new HISTORY command for history playback (```HISTORY #channel number-of-lines```)
   which allows you to fetch more lines than the on-join history playback.
@@ -13,12 +19,10 @@ Enhancements:
   ```unrealircd.org/userip``` and ```unrealircd.org/userhost```
   which communicate the user@ip and real user@host to IRCOps.
 
-Fixes:
-* An IRCOp SQUIT'ing a far remote server may cause a broken link topology
-* In channels that are +D (delayed join), PARTs were not shown correctly to
-  channel operators.
-
 Changes:
+* Drop the draft/ prefix now that the IRCv3
+  [labeled-response](https://ircv3.net/specs/extensions/labeled-response.html)
+  specification is out of draft.
 * The operclass permission ```immune:target-limit``` is now called
   ```immune:max-concurrent-conversations```, since it bypasses
   [set::anti-flood::max-concurrent-conversations](https://www.unrealircd.org/docs/Set_block#set::anti-flood::max-concurrent-conversations).
