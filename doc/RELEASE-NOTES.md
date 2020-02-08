@@ -29,6 +29,10 @@ Changes:
   For 99% of the users this change is not important, but it may be
   if you use highly customized [operclass blocks](https://www.unrealircd.org/docs/Operclass_block)
 
+Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5? If so,
+then check out the *UnrealIRCd 5* release notes further down. At the
+very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
+
 UnrealIRCd 5.0.2
 -----------------
 
@@ -66,10 +70,6 @@ Enhancements:
     By default this is *host* (fallback to *ip*).
 * New options to exempt webirc users: [set::connthrottle::webirc-bypass](https://www.unrealircd.org/docs/Connthrottle),
   [set::restrict-commands::name-of-command::exempt-webirc](https://www.unrealircd.org/docs/Set_block#set::restrict-commands).
-
-Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5? If so,
-then check out the *UnrealIRCd 5* release notes further down. At the
-very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
 UnrealIRCd 5.0.1
 -----------------
