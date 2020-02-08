@@ -30,7 +30,7 @@ Changes:
   if you use highly customized [operclass blocks](https://www.unrealircd.org/docs/Operclass_block)
 
 Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5? If so,
-then check out the *UnrealIRCd 5* release notes further down. At the
+then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
 very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
 UnrealIRCd 5.0.2
