@@ -1088,7 +1088,7 @@ int hooktype_rawpacket_in(Client *client, char *readbuf, int *length);
 int hooktype_packet(Client *from, Client *to, Client *intended_to, char **msg, int *length);
 int hooktype_handshake(Client *client);
 int hooktype_free_client(Client *acptr);
-int hooktype_free_user(ClientUser *user, Client *acptr);
+int hooktype_free_user(Client *acptr);
 int hooktype_can_join_limitexceeded(Client *client, Channel *channel, char *key, char *parv[]);
 int hooktype_visible_in_channel(Client *client, Channel *channel);
 int hooktype_join_data(Client *who, Channel *channel);
