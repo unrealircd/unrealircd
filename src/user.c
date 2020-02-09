@@ -697,13 +697,5 @@ void make_cloakedhost(Client *client, char *curr, char *buf, size_t buflen)
 /** Called after a user is logged in (or out) of a services account */
 void user_account_login(MessageTag *recv_mtags, Client *client)
 {
-	MessageTag *mtags = NULL;
-	new_message(client, recv_mtags, &mtags);
-	sendto_local_common_channels(client, client,
-				     ClientCapabilityBit("account-notify"), mtags,
-				     ":%s ACCOUNT %s",
-				     client->name,
-				     !isdigit(*client->user->svid) ? client->user->svid : "*");
-	free_message_tags(mtags);
 	RunHook2(HOOKTYPE_ACCOUNT_LOGIN, client, recv_mtags);
 }

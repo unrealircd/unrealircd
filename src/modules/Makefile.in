@@ -66,6 +66,7 @@ R_MODULES= \
 	reputation.so connthrottle.so history_backend_mem.so \
 	history_backend_null.so tkldb.so channeldb.so \
 	restrict-commands.so rmtkl.so require-module.so \
+	account-notify.so \
 	message-tags.so batch.so \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
@@ -612,6 +613,10 @@ userhost-tag.so: userhost-tag.c $(INCLUDES)
 require-module.so: require-module.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o require-module.so require-module.c
+
+account-notify.so: account-notify.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o account-notify.so account-notify.c
 
 ident_lookup.so: ident_lookup.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

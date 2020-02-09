@@ -269,6 +269,7 @@ DLL_FILES=SRC/MODULES/CLOAK.DLL \
  SRC/MODULES/EXTBANS/MSGBYPASS.DLL \
  SRC/MODULES/EXTBANS/TIMEDBAN.DLL \
  SRC/MODULES/EXTBANS/PARTMSG.DLL \
+ SRC/MODULES/ACCOUNT-NOTIFY.DLL \
  SRC/MODULES/MESSAGE-TAGS.DLL \
  SRC/MODULES/BATCH.DLL \
  SRC/MODULES/ACCOUNT-TAG.DLL \
@@ -1013,6 +1014,9 @@ src/modules/extbans/timedban.dll: src/modules/extbans/timedban.c $(INCLUDES)
 
 src/modules/extbans/partmsg.dll: src/modules/extbans/partmsg.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/partmsg.c $(MODLFLAGS)
+
+src/modules/account-notify.dll: src/modules/account-notify.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/account-notify.c $(MODLFLAGS)
 
 src/modules/message-tags.dll: src/modules/message-tags.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/ /Fesrc/modules/ src/modules/message-tags.c $(MODLFLAGS)
