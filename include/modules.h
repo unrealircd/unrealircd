@@ -1119,7 +1119,7 @@ void hooktype_new_message(Client *sender, MessageTag *recv_mtags, MessageTag **m
 int hooktype_is_handshake_finished(Client *acptr);
 char *hooktype_pre_local_quit_chan(Client *client, Channel *channel, char *comment);
 int hooktype_ident_lookup(Client *acptr);
-int hooktype_account_login(Client *client);
+int hooktype_account_login(Client *client, MessageTag *mtags);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
