@@ -705,5 +705,5 @@ void user_account_login(MessageTag *recv_mtags, Client *client)
 				     client->name,
 				     !isdigit(*client->user->svid) ? client->user->svid : "*");
 	free_message_tags(mtags);
-	RunHook(HOOKTYPE_ACCOUNT_LOGIN, client);
+	RunHook2(HOOKTYPE_ACCOUNT_LOGIN, client, recv_mtags);
 }
