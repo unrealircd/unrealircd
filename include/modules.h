@@ -1007,6 +1007,7 @@ extern void SavePersistentLongX(ModuleInfo *modinfo, char *varshortname, long va
 #define HOOKTYPE_CONFIGRUN_EX 104
 #define HOOKTYPE_CAN_SEND_TO_USER 105
 #define HOOKTYPE_SERVER_SYNC 106
+#define HOOKTYPE_ACCOUNT_LOGIN 107
 
 /* Adding a new hook here?
  * 1) Add the #define HOOKTYPE_.... with a new number
@@ -1118,6 +1119,7 @@ void hooktype_new_message(Client *sender, MessageTag *recv_mtags, MessageTag **m
 int hooktype_is_handshake_finished(Client *acptr);
 char *hooktype_pre_local_quit_chan(Client *client, Channel *channel, char *comment);
 int hooktype_ident_lookup(Client *acptr);
+int hooktype_account_login(Client *client, MessageTag *mtags);
 
 #ifdef GCC_TYPECHECKING
 #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
@@ -1225,7 +1227,8 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
         ((hooktype == HOOKTYPE_IS_HANDSHAKE_FINISHED) && !ValidateHook(hooktype_is_handshake_finished, func)) || \
         ((hooktype == HOOKTYPE_PRE_LOCAL_QUIT_CHAN) && !ValidateHook(hooktype_pre_local_quit_chan, func)) || \
         ((hooktype == HOOKTYPE_IDENT_LOOKUP) && !ValidateHook(hooktype_ident_lookup, func)) || \
-        ((hooktype == HOOKTYPE_CONFIGRUN_EX) && !ValidateHook(hooktype_configrun_ex, func)) ) \
+        ((hooktype == HOOKTYPE_CONFIGRUN_EX) && !ValidateHook(hooktype_configrun_ex, func)) || \
+        ((hooktype == HOOKTYPE_ACCOUNT_LOGIN) && !ValidateHook(hooktype_account_login, func)) ) \
         _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
