@@ -1,5 +1,9 @@
-UnrealIRCd 5.0.3 Release Notes
-===============================
+UnrealIRCd 5.0.3.1 Release Notes
+=================================
+
+UnrealIRCd 5.0.3.1
+-------------------
+This fixes a crash issue after REHASH in 5.0.3.
 
 UnrealIRCd 5.0.3
 -----------------
