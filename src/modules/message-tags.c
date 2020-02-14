@@ -55,7 +55,7 @@ MOD_INIT()
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "message-tags";
 	ClientCapabilityAdd(modinfo->handle, &cap, &CAP_MESSAGE_TAGS);
-	CommandAdd(modinfo->handle, "TAGMSG", cmd_tagmsg, 1, CMD_USER);
+	CommandAdd(modinfo->handle, "TAGMSG", cmd_tagmsg, 1, CMD_USER|CMD_SERVER);
 	return MOD_SUCCESS;
 }
 
