@@ -24,6 +24,8 @@
 
 CMD_FUNC(cmd_invite);
 
+long CAP_INVITE_NOTIFY = 0L;
+
 #define MSG_INVITE 	"INVITE"	
 
 ModuleHeader MOD_HEADER
@@ -37,6 +39,12 @@ ModuleHeader MOD_HEADER
 
 MOD_INIT()
 {
+	ClientCapabilityInfo cap;
+
+	memset(&cap, 0, sizeof(cap));
+	cap.name = "invite-notify";
+	ClientCapabilityAdd(modinfo->handle, &cap, &CAP_INVITE_NOTIFY);
+
 	CommandAdd(modinfo->handle, MSG_INVITE, cmd_invite, MAXPARA, CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -284,10 +292,14 @@ CMD_FUNC(cmd_invite)
 			if (override == 0)
 			{
 				sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-				               0, SEND_ALL, mtags,
+				               CAP_INVITE_NOTIFY | CAP_INVERT, SEND_ALL, mtags,
 				               ":%s NOTICE @%s :%s invited %s into the channel.",
 				               me.name, channel->chname, client->name, target->name);
 			}
+			sendto_channel(channel, &me, NULL, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+			               CAP_INVITE_NOTIFY, SEND_ALL, mtags,
+			               ":%s INVITE %s %s",
+			               client->name, target->name, channel->chname);
 			add_invite(client, target, channel, mtags);
 			free_message_tags(mtags);
 		}
