@@ -1586,8 +1586,8 @@ void	free_iConf(Configuration *i)
 	free_tls_options(i->tls_options);
 	i->tls_options = NULL;
 	safe_free(i->tls_options);
-	safe_free(i->plaintext_policy_user_message);
-	safe_free(i->plaintext_policy_oper_message);
+	safe_free_multiline(i->plaintext_policy_user_message);
+	safe_free_multiline(i->plaintext_policy_oper_message);
 	safe_free(i->outdated_tls_policy_user_message);
 	safe_free(i->outdated_tls_policy_oper_message);
 	safe_free(i->restrict_usermodes);
@@ -1742,18 +1742,21 @@ void postconf_defaults(void)
 	{
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.plaintext_policy_user == POLICY_DENY)
-			safe_strdup(iConf.plaintext_policy_user_message, "Insecure connection. Please reconnect using SSL/TLS.");
+			addmultiline(&iConf.plaintext_policy_user_message, "Insecure connection. Please reconnect using SSL/TLS.");
 		else if (iConf.plaintext_policy_user == POLICY_WARN)
-			safe_strdup(iConf.plaintext_policy_user_message, "WARNING: Insecure connection. Please consider using SSL/TLS.");
+			addmultiline(&iConf.plaintext_policy_user_message, "WARNING: Insecure connection. Please consider using SSL/TLS.");
 	}
 
 	if (!iConf.plaintext_policy_oper_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.plaintext_policy_oper == POLICY_DENY)
-			safe_strdup(iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
+		{
+			addmultiline(&iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
+			addmultiline(&iConf.plaintext_policy_oper_message, "See https://www.unrealircd.org/docs/FAQ#oper-requires-tls");
+		}
 		else if (iConf.plaintext_policy_oper == POLICY_WARN)
-			safe_strdup(iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
+			addmultiline(&iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
 	}
 
 	if (!iConf.outdated_tls_policy_user_message)
@@ -7674,9 +7677,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "server"))
 					tempiConf.plaintext_policy_server = policy_strtoval(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "user-message"))
-					safe_strdup(tempiConf.plaintext_policy_user_message, cepp->ce_vardata);
+					addmultiline(&tempiConf.plaintext_policy_user_message, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "oper-message"))
-					safe_strdup(tempiConf.plaintext_policy_oper_message, cepp->ce_vardata);
+					addmultiline(&tempiConf.plaintext_policy_oper_message, cepp->ce_vardata);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "outdated-tls-policy"))

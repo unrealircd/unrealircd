@@ -97,9 +97,9 @@ struct Configuration {
 	char *static_part;
 	TLSOptions *tls_options;
 	Policy plaintext_policy_user;
-	char *plaintext_policy_user_message;
+	MultiLine *plaintext_policy_user_message;
 	Policy plaintext_policy_oper;
-	char *plaintext_policy_oper_message;
+	MultiLine *plaintext_policy_oper_message;
 	Policy plaintext_policy_server;
 	Policy outdated_tls_policy_user;
 	char *outdated_tls_policy_user_message;

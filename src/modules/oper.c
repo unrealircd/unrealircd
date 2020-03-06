@@ -114,7 +114,7 @@ CMD_FUNC(cmd_oper)
 	/* set::plaintext-policy::oper 'deny' */
 	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_oper == POLICY_DENY))
 	{
-		sendnotice(client, "%s", iConf.plaintext_policy_oper_message);
+		sendnotice_multiline(client, iConf.plaintext_policy_oper_message);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) [not using SSL/TLS]",
 		    client->name, client->user->username, client->local->sockhost);
@@ -315,7 +315,7 @@ CMD_FUNC(cmd_oper)
 	/* set::plaintext-policy::oper 'warn' */
 	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_oper == POLICY_WARN))
 	{
-		sendnotice(client, "%s", iConf.plaintext_policy_oper_message);
+		sendnotice_multiline(client, iConf.plaintext_policy_oper_message);
 		sendto_snomask_global
 		    (SNO_OPER, "OPER %s [%s] used an insecure (non-SSL/TLS) connection to /OPER.",
 		    client->name, name);
