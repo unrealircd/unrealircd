@@ -183,7 +183,8 @@ CMD_FUNC(cmd_names)
 		 */
 		for (; *s; s++)
 			buf[idx++] = *s;
-		buf[idx++] = ' ';
+		if (cm->next)
+			buf[idx++] = ' ';
 		buf[idx] = '\0';
 		flag = 1;
 		if (mlen + idx + bufLen > BUFSIZE - 7)
