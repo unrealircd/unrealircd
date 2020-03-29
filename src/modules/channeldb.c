@@ -84,6 +84,12 @@ MOD_INIT()
 
 	setcfg();
 
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, channeldb_configrun);
+	return MOD_SUCCESS;
+}
+
+MOD_LOAD()
+{
 	if (!channeldb_loaded)
 	{
 		/* If this is the first time that our module is loaded, then read the database. */
@@ -98,12 +104,6 @@ MOD_INIT()
 		}
 		channeldb_loaded = 1;
 	}
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, channeldb_configrun);
-	return MOD_SUCCESS;
-}
-
-MOD_LOAD()
-{
 	EventAdd(modinfo->handle, "channeldb_write_channeldb", write_channeldb_evt, NULL, CHANNELDB_SAVE_EVERY*1000, 0);
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
