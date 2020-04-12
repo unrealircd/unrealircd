@@ -63,8 +63,20 @@ static EVENT(check_ident_timeout)
 
 	list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
 	{
-		if (IsIdentLookup(client) && ((TStime() - client->local->firsttime) > IDENT_CONNECT_TIMEOUT))
-			ident_lookup_failed(client);
+		if (IsIdentLookup(client))
+		{
+			if (IsIdentLookupSent(client))
+			{
+				/* set::ident::connect-timeout */
+				if ((TStime() - client->local->firsttime) > IDENT_CONNECT_TIMEOUT)
+					ident_lookup_failed(client);
+			} else
+			{
+				/* set::ident::read-timeout */
+				if ((TStime() - client->local->firsttime) > IDENT_READ_TIMEOUT)
+					ident_lookup_failed(client);
+			}
+		}
 	}
 }
 
