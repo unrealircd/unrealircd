@@ -547,6 +547,7 @@ CMD_FUNC(cmd_server)
 		sendto_umode_global(UMODE_OPER, "Directly linked server %s provided a hopcount of %d, while 1 was expected",
 		                                servername, hop);
 		exit_client(client, NULL, "Invalid SERVER message, hop count must be 1");
+		return;
 	}
 	client->hopcount = hop;
 
