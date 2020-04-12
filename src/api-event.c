@@ -144,7 +144,7 @@ static void EventDelReal(Event *e)
 static void CleanupEvents(void)
 {
 	Event *e, *e_next;
-	for (e = events; e; e = e->next)
+	for (e = events; e; e = e_next)
 	{
 		e_next = e->next;
 		if (e->deleted)
