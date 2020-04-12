@@ -87,40 +87,69 @@ Event *EventAdd(Module *module, char *name, vFP event, void *data, long every_ms
 	
 }
 
-Event *EventMarkDel(Event *event)
+/** Mark the Event for deletion.
+ * The actual deletion of the event happens later on
+ * (which is of no concern to the caller).
+ */
+void EventDel(Event *e)
 {
-	event->count = -1;
-	return event;
+	char buf[128];
+
+	/* Mark for deletion */
+	e->deleted = 1;
+
+	/* Replace the name so deleted events are clearly labeled */
+	if (e->name)
+	{
+		snprintf(buf, sizeof(buf), "deleted:%s", e->name);
+		safe_strdup(e->name, buf);
+	}
+
+	/* Remove the event from the module, that is something we can safely do straight away */
+	if (e->owner)
+	{
+		ModuleObject *eventobjs;
+		for (eventobjs = e->owner->objects; eventobjs; eventobjs = eventobjs->next)
+		{
+			if (eventobjs->type == MOBJ_EVENT && eventobjs->object.event == e)
+			{
+				DelListItem(eventobjs, e->owner->objects);
+				safe_free(eventobjs);
+				break;
+			}
+		}
+		e->owner = NULL;
+	}
 }
 
-Event *EventDel(Event *event)
+/** Remove the event for real, used only via CleanupEvents(), not for end-users. */
+static void EventDelReal(Event *e)
 {
-	Event *p, *q;
-	for (p = events; p; p = p->next)
+	if (!e->deleted)
 	{
-		if (p == event)
-		{
-			q = p->next;
-			safe_free(p->name);
-			DelListItem(p, events);
-			if (p->owner)
-			{
-				ModuleObject *eventobjs;
-				for (eventobjs = p->owner->objects; eventobjs; eventobjs = eventobjs->next)
-				{
-					if (eventobjs->type == MOBJ_EVENT && eventobjs->object.event == p)
-					{
-						DelListItem(eventobjs, p->owner->objects);
-						safe_free(eventobjs);
-						break;
-					}
-				}
-			}
-			safe_free(p);
-			return q;		
-		}
+		ircd_log(LOG_ERROR, "EventDelReal called while e->deleted is 0. This cannot happen. Event name: %s.", e->name);
+		abort();
 	}
-	return NULL;
+	if (e->owner)
+	{
+		ircd_log(LOG_ERROR, "EventDelReal called while e->owner is non-NULL. This cannot happen. Event name: %s.", e->name);
+		abort();
+	}
+	safe_free(e->name);
+	DelListItem(e, events);
+	safe_free(e);
+}
+
+/** Remove any events that were previously marked for deletion */
+static void CleanupEvents(void)
+{
+	Event *e, *e_next;
+	for (e = events; e; e = e->next)
+	{
+		e_next = e->next;
+		if (e->deleted)
+			EventDelReal(e);
+	}
 }
 
 Event *EventFind(char *name)
@@ -171,11 +200,12 @@ int EventMod(Event *event, EventInfo *mods)
 
 void DoEvents(void)
 {
-	Event *e, *e_next;
+	Event *e;
 
-	for (e = events; e; e = e_next)
+	for (e = events; e; e = e->next)
 	{
-		e_next = e->next;
+		if (e->deleted)
+			continue;
 		if (e->count == -1)
 		{
 			EventDel(e);
@@ -195,6 +225,8 @@ void DoEvents(void)
 			}
 		}
 	}
+
+	CleanupEvents();
 }
 
 void SetupEvents(void)

@@ -650,6 +650,7 @@ struct Event {
 	vFP		event;		/**< Actual function to call */
 	void		*data;		/**< The data to pass in the function call */
 	struct timeval	last_run;	/**< Last time this event ran */
+	char		deleted;	/**< Set to 1 if this event is marked for deletion */
 	Module		*owner;		/**< To which module this event belongs */
 };
 
@@ -676,7 +677,7 @@ extern MODVAR Callback *Callbacks[MAXCALLBACKS], *RCallbacks[MAXCALLBACKS];
 extern MODVAR ClientCapability *clicaps;
 
 extern Event *EventAdd(Module *module, char *name, vFP event, void *data, long every_msec, int count);
-extern Event  *EventDel(Event *event);
+extern void   EventDel(Event *event);
 extern Event *EventMarkDel(Event *event);
 extern Event *EventFind(char *name);
 extern int EventMod(Event *event, EventInfo *mods);
