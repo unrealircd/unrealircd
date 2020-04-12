@@ -1028,8 +1028,8 @@ CMD_FUNC(cmd_tempshun)
 	}
 	if (!MyUser(target))
 	{
-		sendto_one(target->direction, NULL, ":%s TEMPSHUN %s :%s",
-			client->id, target->id, comment);
+		sendto_one(target, NULL, ":%s TEMPSHUN %c%s :%s",
+		           client->id, remove ? '-' : '+', target->id, comment);
 	} else {
 		char buf[1024];
 		if (!remove)
