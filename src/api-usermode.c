@@ -61,6 +61,9 @@ long SNO_OPER = 0L;
 long AllUmodes;		/* All umodes */
 long SendUmodes;	/* All umodes which are sent to other servers (global umodes) */
 
+/* Forward declarations */
+int umode_hidle_allow(Client *client, int what);
+
 void	umode_init(void)
 {
 	long val = 1;
@@ -93,7 +96,7 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'd', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_DEAF);
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDEOPER);
 	UmodeAdd(NULL, 't', UMODE_GLOBAL, 0, umode_allow_unset, &UMODE_SETHOST);
-	UmodeAdd(NULL, 'I', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDLE);
+	UmodeAdd(NULL, 'I', UMODE_GLOBAL, 0, umode_hidle_allow, &UMODE_HIDLE);
 	SnomaskAdd(NULL, 'k', umode_allow_opers, &SNO_KILLS);
 	SnomaskAdd(NULL, 'c', umode_allow_opers, &SNO_CLIENT);
 	SnomaskAdd(NULL, 'f', umode_allow_opers, &SNO_FLOOD);
@@ -378,6 +381,17 @@ int umode_allow_opers(Client *client, int what)
 		return 1;
 }
 
+int umode_hidle_allow(Client *client, int what)
+{
+	if (!MyUser(client))
+		return 1;
+	if (iConf.hide_idle_time == HIDE_IDLE_TIME_OPER_USERMODE)
+		return IsOper(client) ? 1 : 0;
+	if (iConf.hide_idle_time == HIDE_IDLE_TIME_USERMODE)
+		return 1;
+	return 0; /* if set::hide-idle-time is 'never' or 'always' then +I makes no sense */
+}
+
 void unload_all_unused_umodes(void)
 {
 	long removed_umode = 0;
@@ -469,6 +483,10 @@ int i;
 		if (Usermode_Table[i].unset_on_deoper)
 			client->umodes &= ~Usermode_Table[i].mode;
 	}
+
+	/* Bit of a hack, since this is a dynamic permission umode */
+	if (iConf.hide_idle_time == HIDE_IDLE_TIME_OPER_USERMODE)
+		client->umodes &= ~UMODE_HIDLE;
 }
 
 void remove_oper_privileges(Client *client, int broadcast_mode_change)

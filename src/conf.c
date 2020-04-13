@@ -787,6 +787,36 @@ char *ban_target_valtostr(BanTarget v)
 	}
 }
 
+HideIdleTimePolicy hideidletime_strtoval(char *str)
+{
+	if (!strcmp(str, "never"))
+		return HIDE_IDLE_TIME_NEVER;
+	else if (!strcmp(str, "always"))
+		return HIDE_IDLE_TIME_ALWAYS;
+	else if (!strcmp(str, "usermode"))
+		return HIDE_IDLE_TIME_USERMODE;
+	else if (!strcmp(str, "oper-usermode"))
+		return HIDE_IDLE_TIME_OPER_USERMODE;
+	return 0;
+}
+
+char *hideidletime_valtostr(HideIdleTimePolicy v)
+{
+	switch(v)
+	{
+		case HIDE_IDLE_TIME_NEVER:
+			return "never";
+		case HIDE_IDLE_TIME_ALWAYS:
+			return "always";
+		case HIDE_IDLE_TIME_USERMODE:
+			return "usermode";
+		case HIDE_IDLE_TIME_OPER_USERMODE:
+			return "oper-usermode";
+		default:
+			return "INVALID";
+	}
+}
+
 ConfigFile *config_load(char *filename, char *displayname)
 {
 	struct stat sb;
@@ -1714,6 +1744,8 @@ void config_setdefaultsettings(Configuration *i)
 
 	i->automatic_ban_target = BAN_TARGET_IP;
 	i->manual_ban_target = BAN_TARGET_HOST;
+
+	i->hide_idle_time = HIDE_IDLE_TIME_OPER_USERMODE;
 }
 
 static void make_default_logblock(void)
@@ -7792,6 +7824,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->ce_vardata, "any"))
 				tempiConf.allowed_channelchars = ALLOWED_CHANNELCHARS_ANY;
 		}
+		else if (!strcmp(cep->ce_varname, "hide-idle-time"))
+		{
+			tempiConf.hide_idle_time = hideidletime_strtoval(cep->ce_vardata);
+		}
 		else
 		{
 			int value;
@@ -8984,6 +9020,16 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			    strcmp(cep->ce_vardata, "any"))
 			{
 				config_error("%s:%i: set::allowed-channelchars: value should be one of: 'ascii', 'utf8' or 'any'",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "hide-idle-time"))
+		{
+			CheckNull(cep);
+			if (!hideidletime_strtoval(cep->ce_vardata))
+			{
+				config_error("%s:%i: set::hide-idle-time: value should be one of: 'never', 'always', 'usermode' or 'oper-usermode'",
 				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}

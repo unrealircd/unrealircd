@@ -792,9 +792,10 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		if (HasField(fmt, FIELD_HOP))
 			append_format(str, sizeof str, &pos, " %d", hide ? 0 : acptr->hopcount);
 		if (HasField(fmt, FIELD_IDLE))
-			append_format(str, sizeof str, &pos, " %d", (int)(MyUser(acptr) &&
-				(!(acptr->umodes & UMODE_HIDLE) || IsOper(client) ||
-				(client == acptr)) ? TStime() - acptr->local->last : 0));
+		{
+			append_format(str, sizeof str, &pos, " %d",
+				(int)((MyUser(acptr) && !hide_idle_time(client, acptr)) ? (TStime() - acptr->local->last) : 0));
+		}
 		if (HasField(fmt, FIELD_ACCOUNT))
 			append_format(str, sizeof str, &pos, " %s", (!isdigit(*acptr->user->svid)) ? acptr->user->svid : "0");
 		if (HasField(fmt, FIELD_OPLEVEL))

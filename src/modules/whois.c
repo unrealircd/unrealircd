@@ -342,7 +342,7 @@ CMD_FUNC(cmd_whois)
 			 * Umode +I hides an oper's idle time from regular users.
 			 * -Nath.
 			 */
-			if (MyConnect(target) && (IsOper(client) || !(target->umodes & UMODE_HIDLE)))
+			if (MyConnect(target) && !hide_idle_time(client, target))
 			{
 				sendnumeric(client, RPL_WHOISIDLE, name,
 				    TStime() - target->local->last, target->local->firsttime);
