@@ -969,3 +969,4 @@ extern void user_account_login(MessageTag *recv_mtags, Client *client);
 extern void link_generator(void);
 extern void update_throttling_timer_settings(void);
 extern int hide_idle_time(Client *client, Client *target);
+extern void lost_server_link(Client *serv, FORMAT_STRING(const char *fmt), ...);

@@ -405,9 +405,6 @@ CMD_FUNC(cmd_error)
 
 	para = (parc > 1 && *parv[1] != '\0') ? parv[1] : "<>";
 
-	Debug((DEBUG_ERROR, "Received ERROR message from %s: %s",
-	    client->name, para));
-
 	/* Errors from untrusted sources only go to the junk snomask
 	 * (which is only for debugging issues and such).
 	 * This to prevent flooding and confusing IRCOps by
@@ -415,13 +412,15 @@ CMD_FUNC(cmd_error)
 	 */
 	if (!IsServer(client) && !client->serv)
 	{
-		sendto_snomask(SNO_JUNK, "ERROR from %s -- %s",
+		sendto_snomask(SNO_JUNK, "ERROR from server %s: %s",
 			get_client_name(client, FALSE), para);
 		return;
 	}
 
-	sendto_umode_global(UMODE_OPER, "ERROR from %s -- %s",
-	    get_client_name(client, FALSE), para);
+	sendto_umode_global(UMODE_OPER, "ERROR from server %s: %s",
+	                    get_client_name(client, FALSE), para);
+	ircd_log(LOG_ERROR, "ERROR from server %s: %s",
+	                    get_client_name(client, FALSE), para);
 }
 
 /** Save the tunefile (such as: highest seen connection count) */
@@ -1278,4 +1277,33 @@ void tkl_init(void)
 {
 	memset(tklines, 0, sizeof(tklines));
 	memset(tklines_ip_hash, 0, sizeof(tklines_ip_hash));
+}
+
+/** Called when a server link is lost.
+ * Used for logging only, API users can use the HOOKTYPE_SERVER_QUIT hook.
+ */
+void lost_server_link(Client *serv, FORMAT_STRING(const char *fmt), ...)
+{
+	va_list vl;
+	static char buf[1024], buf2[512];
+
+	va_start(vl, fmt);
+	vsnprintf(buf2, sizeof(buf2), fmt, vl);
+	va_end(vl);
+
+	if (IsServer(serv))
+	{
+		/* An already established link is now lost. Broadcast this to all opers. */
+		snprintf(buf, sizeof(buf), "Lost server link to %s: %s",
+			get_client_name(serv, FALSE), buf2);
+		sendto_umode_global(UMODE_OPER, "%s", buf);
+	} else {
+		/* A link attempt failed. Only send this to local opers (can be noisy every xx seconds). */
+		snprintf(buf, sizeof(buf), "Unable to link with server %s: %s",
+			get_client_name(serv, FALSE), buf2);
+		sendto_umode(UMODE_OPER, "%s", buf);
+	}
+
+	/* Always log! */
+	ircd_log(LOG_ERROR, "%s", buf);
 }

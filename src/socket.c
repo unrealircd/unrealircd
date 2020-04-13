@@ -1086,12 +1086,7 @@ void read_packet(int fd, int revents, void *data)
 				return;
 
 			if (IsServer(client) || client->serv) /* server or outgoing connection */
-			{
-				sendto_umode_global(UMODE_OPER, "Lost connection to %s: Read error",
-					get_client_name(client, FALSE));
-				ircd_log(LOG_ERROR, "Lost connection to %s: Read error",
-					get_client_name(client, FALSE));
-			}
+				lost_server_link(client, "Read error or connection closed.");
 
 			exit_client(client, NULL, "Read error");
 			return;

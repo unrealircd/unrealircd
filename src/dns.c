@@ -420,7 +420,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	switch ((n = connect_server(r->linkblock, r->client, he2)))
 	{
 		case 0:
-			sendto_ops_and_log("Connecting to server %s[%s].", r->linkblock->servername, ip);
+			sendto_ops_and_log("Trying to activate link with server %s[%s]...", r->linkblock->servername, ip);
 			break;
 		case -1:
 			sendto_ops_and_log("Couldn't connect to server %s[%s].", r->linkblock->servername, ip);

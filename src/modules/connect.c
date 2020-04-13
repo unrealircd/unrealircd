@@ -137,7 +137,7 @@ CMD_FUNC(cmd_connect)
 	switch (retval = connect_server(aconf, client, NULL))
 	{
 	  case 0:
-		  sendnotice(client, "*** Connecting to %s[%s].",
+		  sendnotice(client, "*** Trying to activate link with server %s[%s]...",
 		      aconf->servername, aconf->outgoing.hostname);
 		  break;
 	  case -1:

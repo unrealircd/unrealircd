@@ -937,18 +937,12 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *clien
 			         (client->serv && client->serv->conf) ? client->serv->conf->outgoing.port : -1,
 			         client->name);
 		}
-		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s%s%s",
-			get_client_name(client, FALSE), ssl_func, ssl_errstr, additional_info, extra);
-		/* This is a connect() that fails, we don't broadcast that for non-SSL either (noisy) */
+		lost_server_link(client, "%s: %s%s%s", ssl_func, ssl_errstr, additional_info, extra);
 	} else
-	if ((IsServer(client) || (client->serv && client->serv->conf)) && (where != SAFE_SSL_WRITE))
+	if (IsServer(client) || (client->serv && client->serv->conf))
 	{
-		/* if server (either judged by IsServer() or clearly an outgoing connect),
-		 * and not writing (since otherwise deliver_it will take care of the error), THEN
-		 * send a closing link error...
-		 */
-		sendto_umode_global(UMODE_OPER, "Lost connection to %s: %s: %d (%s%s)",
-			get_client_name(client, FALSE), ssl_func, ssl_error, ssl_errstr, additional_info);
+		/* Either a trusted fully established server (incoming) or an outgoing server link (established or not) */
+		lost_server_link(client, "%s: %s%s", ssl_func, ssl_errstr, additional_info);
 	}
 
 	if (errtmp)
