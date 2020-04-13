@@ -1745,7 +1745,7 @@ void config_setdefaultsettings(Configuration *i)
 	i->automatic_ban_target = BAN_TARGET_IP;
 	i->manual_ban_target = BAN_TARGET_HOST;
 
-	i->hide_idle_time = HIDE_IDLE_TIME_OPER_USERMODE;
+	i->hide_idle_time = HIDE_IDLE_TIME_USERMODE;
 }
 
 static void make_default_logblock(void)
