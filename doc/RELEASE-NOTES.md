@@ -30,6 +30,9 @@ Changes:
   This message is customizable through
   [set::plaintext-policy::oper-message](https://www.unrealircd.org/docs/Set_block#set::plaintext-policy).
 
+Upgrading from UnrealIRCd 4?
+-----------------------------
+
 Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5? If so,
 then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
 very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
