@@ -1745,7 +1745,7 @@ void config_setdefaultsettings(Configuration *i)
 	i->automatic_ban_target = BAN_TARGET_IP;
 	i->manual_ban_target = BAN_TARGET_HOST;
 
-	i->hide_idle_time = HIDE_IDLE_TIME_USERMODE;
+	i->hide_idle_time = HIDE_IDLE_TIME_OPER_USERMODE;
 }
 
 static void make_default_logblock(void)
@@ -7821,7 +7821,11 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "hide-idle-time"))
 		{
-			tempiConf.hide_idle_time = hideidletime_strtoval(cep->ce_vardata);
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "policy"))
+					tempiConf.hide_idle_time = hideidletime_strtoval(cepp->ce_vardata);
+			}
 		}
 		else
 		{
@@ -9019,12 +9023,26 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "hide-idle-time"))
 		{
-			CheckNull(cep);
-			if (!hideidletime_strtoval(cep->ce_vardata))
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				config_error("%s:%i: set::hide-idle-time: value should be one of: 'never', 'always', 'usermode' or 'oper-usermode'",
-				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
+				CheckNull(cepp);
+				if (!strcmp(cepp->ce_varname, "policy"))
+				{
+					if (!hideidletime_strtoval(cepp->ce_vardata))
+					{
+						config_error("%s:%i: set::hide-idle-time::policy: value should be one of: 'never', 'always', 'usermode' or 'oper-usermode'",
+							     cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++;
+					}
+				}
+				else
+				{
+					config_error_unknown(cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum, "set::hide-idle-time",
+						cepp->ce_varname);
+					errors++;
+					continue;
+				}
 			}
 		}
 		else
