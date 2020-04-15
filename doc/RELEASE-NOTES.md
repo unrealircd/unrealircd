@@ -1,5 +1,38 @@
-UnrealIRCd 5.0.3.1 Release Notes
-=================================
+UnrealIRCd 5.0.4-dev Release Notes
+===============================
+
+This is mostly a bug fix release, with few new features.
+
+Fixes:
+* Channeldb was not properly restoring all channel modes, such as +P.
+* UnrealIRCd was giving up too easily on ident lookups.
+* Crash when unloading a module with moddata.
+* Crash if an authenticated server sends wrong information (rare).
+* Removing a TEMPSHUN did not work if the user was on another server.
+* SAJOIN to 0 (part all channels) resulted in a desync when used on remote users.
+* Forced nick change from services was not showing up if the user
+  was not in any channels.
+
+Enhancements:
+* New option [set::hide-idle-time::policy](https://www.unrealircd.org/docs/Set_block#set%3A%3Ahide-idle-time)
+  by which you can change usermode +I (hide idle time in WHOIS) from
+  oper-only to settable by users. More options will follow in a future
+  release.
+* In WHOIS you can now see if a user is currently (temp)shunned.
+  This only works for locally connected users for technical reasons,
+  so use ```/WHOIS Nick Nick``` to see it for remote users.
+
+Changes:
+* The oper notices and logging with regards to server linking have changed
+  a little. They are more consistent and log more now.
+* When an IRCOp tries to oper up from an insecure connection we will now
+  mention the https://www.unrealircd.org/docs/FAQ#oper-requires-tls page.
+  This message is customizable through
+  [set::plaintext-policy::oper-message](https://www.unrealircd.org/docs/Set_block#set::plaintext-policy).
+
+Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5? If so,
+then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
+very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
 UnrealIRCd 5.0.3.1
 -------------------
