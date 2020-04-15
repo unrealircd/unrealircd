@@ -1,4 +1,4 @@
-UnrealIRCd 5.0.4-dev Release Notes
+UnrealIRCd 5.0.4-rc1 Release Notes
 ===============================
 
 This is mostly a bug fix release.
