@@ -1,7 +1,7 @@
 UnrealIRCd 5.0.4-dev Release Notes
 ===============================
 
-This is mostly a bug fix release, with few new features.
+This is mostly a bug fix release.
 
 Fixes:
 * Channeldb was not properly restoring all channel modes, such as +P.
@@ -29,12 +29,13 @@ Changes:
   mention the https://www.unrealircd.org/docs/FAQ#oper-requires-tls page.
   This message is customizable through
   [set::plaintext-policy::oper-message](https://www.unrealircd.org/docs/Set_block#set::plaintext-policy).
+* The French HELPOP text was updated.
 
 Upgrading from UnrealIRCd 4?
 -----------------------------
 
-Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5? If so,
-then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
+Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5?
+Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
 very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
 UnrealIRCd 5.0.3.1
