@@ -1747,7 +1747,7 @@ CMD_FUNC(cmd_eline)
 /** Helper function for cmd_spamfilter, explaining usage. */
 void spamfilter_usage(Client *client)
 {
-	sendnotice(client, "Use: /spamfilter [add|del|remove|+|-] [-simple|-regex|-posix] [type] [action] [tkltime] [tklreason] [regex]");
+	sendnotice(client, "Use: /spamfilter [add|del|remove|+|-] [-simple|-regex] [type] [action] [tkltime] [tklreason] [regex]");
 	sendnotice(client, "See '/helpop ?spamfilter' for more information.");
 	sendnotice(client, "For an easy way to remove an existing spamfilter, use '/spamfilter del' without additional parameters");
 }
@@ -1755,13 +1755,12 @@ void spamfilter_usage(Client *client)
 /** Helper function for cmd_spamfilter, explaining usage has changed. */
 void spamfilter_new_usage(Client *client, char *parv[])
 {
-	sendnotice(client, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes), "
-	                 "-posix (old unreal 3.2.x posix regexes) or "
+	sendnotice(client, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes) or "
 	                 "-simple (simple text with ? and * wildcards)",
 	                 parv[2]);
 
 	if (*parv[2] != '-')
-		sendnotice(client, "Using the old 3.2.x /SPAMFILTER syntax? Note the new -regex/-posix/-simple field!!");
+		sendnotice(client, "Using the old 3.2.x /SPAMFILTER syntax? Note the new -regex/-simple field!!");
 
 	spamfilter_usage(client);
 }
@@ -4252,7 +4251,7 @@ CMD_FUNC(cmd_tkl_del)
  *
  * [A] tkl reason field must be escaped by caller [eg: use unreal_encodespace()
  *     if cmd_tkl is called internally].
- * [B] match-type must be one of: regex, simple, posix.
+ * [B] match-type must be one of: regex, simple.
  * [C] Could be a regex or a regular string with wildcards, depending on [B]
  */
 CMD_FUNC(_cmd_tkl)
