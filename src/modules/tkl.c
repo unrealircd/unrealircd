@@ -4208,8 +4208,11 @@ CMD_FUNC(cmd_tkl_del)
 	RunHook2(HOOKTYPE_TKL_DEL, client, tkl);
 
 	if (type & TKL_GLOBAL)
+	{
+		/* This is a bit of a hack for #5629. Will consider real fix post-release. */
+		safe_strdup(tkl->set_by, removed_by);
 		tkl_broadcast_entry(0, client, client, tkl);
-
+	}
 
 	if (TKLIsBanException(tkl))
 	{
