@@ -255,7 +255,6 @@ fi
 
 
 #parse arguments
-NOCACHE=""
 IMPORTEDSETTINGS=""
 NOINTRO=""
 QUICK=""
@@ -266,14 +265,11 @@ while [ $# -ge 1 ] ; do
 		echo "Config utility for UnrealIRCd"
 		echo "-----------------------------"
 		echo "Syntax: ./Config [options]"
-		echo "-nocache     Ignore settings saved in config.settings"
 		echo "-nointro     Skip intro (release notes, etc)"
 		echo "-quick       Skip questions, go straight to configure"
 		echo "-advanced    Include additional advanced questions"
 		echo "-clean       Clean ./configure cache"
 		exit 0
-	elif [ $1 = "-nocache" ] ; then
-		NOCACHE="1"
 	elif [ $1 = "-nointro" ] ; then
 		NOINTRO="1"
 	elif [ $1 = "-quick" -o $1 = "-q" ] ; then
@@ -324,77 +320,75 @@ clear
 echo "We will now ask you a number of questions. You can just press ENTER to accept the defaults!"
 echo ""
 
-if [ -z "$NOCACHE" ] ; then
-	# This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
-	UNREALRELEASES="unrealircd-5.0.3.1 unrealircd-5.0.3 unrealircd-5.0.2 unrealircd-5.0.1 unrealircd-5.0.0 unrealircd-5.0.0-rc2 unrealircd-5.0.0-rc1"
-	if [ -f "config.settings" ]; then
-		. ./config.settings
+# This needs to be updated each release so auto-upgrading works for settings, modules, etc!!:
+UNREALRELEASES="unrealircd-5.0.3.1 unrealircd-5.0.3 unrealircd-5.0.2 unrealircd-5.0.1 unrealircd-5.0.0 unrealircd-5.0.0-rc2 unrealircd-5.0.0-rc1"
+if [ -f "config.settings" ]; then
+	. ./config.settings
+else
+	# Try to load a previous config.settings
+	for x in $UNREALRELEASES
+	do
+		if [ -f ../$x/config.settings ]; then
+			IMPORTEDSETTINGS="../$x"
+			break
+		fi
+	done
+	echo "If you have previously installed UnrealIRCd on this shell then you can specify a"
+	echo "directory here so I can import the build settings and third party modules"
+	echo "to make your life a little easier."
+	if [ ! -z "$IMPORTEDSETTINGS" ]; then
+		echo "Found previous installation in: $IMPORTEDSETTINGS."
+		echo "You can enter a different path or type 'none' if you don't want to use it."
+		echo "Just press Enter to accept the default settings."
 	else
-		# Try to load a previous config.settings
-		for x in $UNREALRELEASES
-		do
-			if [ -f ../$x/config.settings ]; then
-				IMPORTEDSETTINGS="../$x"
-				break
-			fi
-		done
-		echo "If you have previously installed UnrealIRCd on this shell then you can specify a"
-		echo "directory here so I can import the build settings and third party modules"
-		echo "to make your life a little easier."
-		if [ ! -z "$IMPORTEDSETTINGS" ]; then
-			echo "Found previous installation in: $IMPORTEDSETTINGS."
-			echo "You can enter a different path or type 'none' if you don't want to use it."
-			echo "Just press Enter to accept the default settings."
-		else
-			echo "If you install UnrealIRCd for the first time on this shell, then just hit Enter";
-		fi
+		echo "If you install UnrealIRCd for the first time on this shell, then just hit Enter";
+	fi
 
-		TEST="$IMPORTEDSETTINGS"
-		echo $n "[$TEST] -> $c"
-		read cc
-		if [ -z "$cc" ]; then
-			IMPORTEDSETTINGS="$TEST"
-		else
-			IMPORTEDSETTINGS="$cc"
+	TEST="$IMPORTEDSETTINGS"
+	echo $n "[$TEST] -> $c"
+	read cc
+	if [ -z "$cc" ]; then
+		IMPORTEDSETTINGS="$TEST"
+	else
+		IMPORTEDSETTINGS="$cc"
+	fi
+	if [ "$IMPORTEDSETTINGS" = "none" ]; then
+		IMPORTEDSETTINGS=""
+	fi
+	if [ "$IMPORTEDSETTINGS" != "" ]; then
+		if [ -d $IMPORTEDSETTINGS/conf ]; then
+			echo "ERROR: Directory $IMPORTEDSETTINGS is an INSTALLATION directory (eg /home/irc/unrealircd)."
+			echo "This question was about a SOURCE directory (eg /home/irc/unrealircd-5.0.0)."
+			exit
 		fi
-		if [ "$IMPORTEDSETTINGS" = "none" ]; then
-			IMPORTEDSETTINGS=""
+		if [ ! -f $IMPORTEDSETTINGS/config.settings ]; then
+			echo "Directory $IMPORTEDSETTINGS does not exist or does not contain a config.settings file"
+			exit
 		fi
-		if [ "$IMPORTEDSETTINGS" != "" ]; then
-			if [ -d $IMPORTEDSETTINGS/conf ]; then
-				echo "ERROR: Directory $IMPORTEDSETTINGS is an INSTALLATION directory (eg /home/irc/unrealircd)."
-				echo "This question was about a SOURCE directory (eg /home/irc/unrealircd-5.0.0)."
-				exit
-			fi
-			if [ ! -f $IMPORTEDSETTINGS/config.settings ]; then
-				echo "Directory $IMPORTEDSETTINGS does not exist or does not contain a config.settings file"
-				exit
-			fi
-			COPYMODULES="1"
-			if grep -q TOPICNICKISNUH $IMPORTEDSETTINGS/config.settings; then
-				echo "Directory $IMPORTEDSETTINGS seems to be UnrealIRCd 4.x (or older)."
-				echo "I will copy the settings but not any 3rd party modules, as they are incompatible with 5.x."
-				COPYMODULES="0"
-			fi
-			# Actually load the settings
-			. $IMPORTEDSETTINGS/config.settings
-			if [ "$COPYMODULES" = "1" ]; then
-				# Copy over 3rd party modules (also deals with 0 file cases, hence the silly looking code)
-				for f in $IMPORTEDSETTINGS/src/modules/third/*.c
-				do
-					[ -e "$f" ] && cp $f src/modules/third/
-				done
-			fi
+		COPYMODULES="1"
+		if grep -q TOPICNICKISNUH $IMPORTEDSETTINGS/config.settings; then
+			echo "Directory $IMPORTEDSETTINGS seems to be UnrealIRCd 4.x (or older)."
+			echo "I will copy the settings but not any 3rd party modules, as they are incompatible with 5.x."
+			COPYMODULES="0"
+		fi
+		# Actually load the settings
+		. $IMPORTEDSETTINGS/config.settings
+		if [ "$COPYMODULES" = "1" ]; then
+			# Copy over 3rd party modules (also deals with 0 file cases, hence the silly looking code)
+			for f in $IMPORTEDSETTINGS/src/modules/third/*.c
+			do
+				[ -e "$f" ] && cp $f src/modules/third/
+			done
 		fi
 	fi
-	# If we just imported settings and the curl dir is set to
-	# something like /home/xxx/unrealircd-5.x.y/extras/curl/
-	# (what we call 'local-curl') then remove this setting as
-	# it would refer to the old UnrealIRCd installation.
-	if [ ! -z "$IMPORTEDSETTINGS" ]; then
-		if echo "$CURLDIR"|grep -qi unrealircd; then
-			CURLDIR=""
-		fi
+fi
+# If we just imported settings and the curl dir is set to
+# something like /home/xxx/unrealircd-5.x.y/extras/curl/
+# (what we call 'local-curl') then remove this setting as
+# it would refer to the old UnrealIRCd installation.
+if [ ! -z "$IMPORTEDSETTINGS" ]; then
+	if echo "$CURLDIR"|grep -qi unrealircd; then
+		CURLDIR=""
 	fi
 fi
 
