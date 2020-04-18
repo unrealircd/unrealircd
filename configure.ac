@@ -497,6 +497,7 @@ AC_ARG_WITH(system-cares, [AS_HELP_STRING([--without-system-cares], [Use bundled
 CHECK_SSL
 CHECK_SSL_CTX_SET1_CURVES_LIST
 CHECK_SSL_CTX_SET_MIN_PROTO_VERSION
+CHECK_SSL_CTX_SET_SECURITY_LEVEL
 AC_ARG_ENABLE(dynamic-linking, [AS_HELP_STRING([--disable-dynamic-linking], [Make the IRCd statically link with shared objects rather than dynamically (noone knows if disabling dynamic linking actually does anything or not)])],
 	[enable_dynamic_linking=$enableval], [enable_dynamic_linking="yes"])
 AS_IF([test $enable_dynamic_linking = "yes"],

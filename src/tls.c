@@ -270,8 +270,25 @@ static int setup_dh_params(SSL_CTX *ctx)
 /** Disable SSL/TLS protocols as set by config */
 void disable_ssl_protocols(SSL_CTX *ctx, TLSOptions *tlsoptions)
 {
-	/* OpenSSL has two mechanisms for protocol version control:
-	 *
+	/* OpenSSL has three mechanisms for protocol version control... */
+
+#ifdef HAS_SSL_CTX_SET_SECURITY_LEVEL
+	/* The first one is setting a "security level" as introduced
+	 * by OpenSSL 1.1.0. Some Linux distro's like Ubuntu 20.04
+	 * seemingly compile with -DOPENSSL_TLS_SECURITY_LEVEL=2.
+	 * This means the application (UnrealIRCd) is unable to allow
+	 * TLSv1.0/1.1 even if the application is configured to do so.
+	 * So here we set the level to 1, but -again- ONLY if we are
+	 * configured to allow TLSv1.0 or v1.1, of course.
+	 */
+	if ((tlsoptions->protocols & TLS_PROTOCOL_TLSV1) ||
+	    (tlsoptions->protocols & TLS_PROTOCOL_TLSV1_1))
+	{
+		SSL_CTX_set_security_level(ctx, 1);
+	}
+#endif
+
+	/* The remaining two mechanisms are:
 	 * The old way, which is most flexible, is to use:
 	 * SSL_CTX_set_options(... SSL_OP_NO_<version>) which allows
 	 * you to disable each and every specific SSL/TLS version.

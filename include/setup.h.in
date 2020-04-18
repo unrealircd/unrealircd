@@ -34,6 +34,9 @@
 /* Define if ssl library has SSL_CTX_set_min_proto_version */
 #undef HAS_SSL_CTX_SET_MIN_PROTO_VERSION
 
+/* Define if ssl library has SSL_CTX_set_security_level */
+#undef HAS_SSL_CTX_SET_SECURITY_LEVEL
+
 /* Define if you have crypt */
 #undef HAVE_CRYPT
 
