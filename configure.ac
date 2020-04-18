@@ -60,13 +60,6 @@ exit 1
 ])
 
 AC_PATH_PROG(INSTALL,install)
-AC_CHECK_PROG(MAKER, gmake, gmake, make)
-AC_PATH_PROG(GMAKE,gmake)
-
-AS_IF([$MAKER --version | grep -q "GNU Make"],
-        [GNUMAKE="0"],
-        [AC_MSG_ERROR([It seems your system does not have gmake installed. Please install gmake.])])
-
 AC_PATH_PROG(GUNZIP, gunzip)
 AC_PATH_PROG(PKGCONFIG, pkg-config)
 
@@ -74,6 +67,13 @@ dnl Check for compiler
 AC_PROG_CC_C99
 AS_IF([test "$ac_cv_prog_cc_c99" = "no"],
 	[AC_MSG_ERROR([No C99 compiler was found. Please install gcc or clang and other build tools. Eg, on Debian/Ubuntu you probably want to run the following as root: apt-get install build-essential ])])
+
+dnl Check for make moved down, so the above compiler check takes precedence.
+AC_CHECK_PROG(MAKER, gmake, gmake, make)
+AC_PATH_PROG(GMAKE,gmake)
+AS_IF([$MAKER --version | grep -q "GNU Make"],
+        [GNUMAKE="0"],
+        [AC_MSG_ERROR([It seems your system does not have make/gmake installed. If you are on Linux then install make, otherwise install gmake.])])
 
 dnl Checks for libraries.
 AC_CHECK_LIB(descrypt, crypt,
