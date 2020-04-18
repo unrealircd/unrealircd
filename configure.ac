@@ -604,6 +604,11 @@ AC_MSG_RESULT(installing Argon2 library)
 $ac_cv_prog_MAKER install PREFIX=$cur_dir/extras/argon2 || exit 1
 # We need to manually copy the libs to PRIVATELIBDIR because
 # there is no way to tell make install in libargon2 to do so.
+# BUT FIRST, delete the old library so it becomes an unlink+create
+# operation rather than overwriting the existing file which would
+# lead to a crash of the currently running IRCd.
+rm -f "$PRIVATELIBDIR/"libargon2*
+# Now copy the new library files:
 cp -av $cur_dir/extras/argon2/lib/* $PRIVATELIBDIR/
 ARGON2_CFLAGS="-I$cur_dir/extras/argon2/include"
 AC_SUBST(ARGON2_CFLAGS)
