@@ -258,7 +258,6 @@ fi
 IMPORTEDSETTINGS=""
 NOINTRO=""
 QUICK=""
-CLEAN=""
 ADVANCED=""
 while [ $# -ge 1 ] ; do
 	if [ $1 = "--help" ] ; then
@@ -268,7 +267,6 @@ while [ $# -ge 1 ] ; do
 		echo "-nointro     Skip intro (release notes, etc)"
 		echo "-quick       Skip questions, go straight to configure"
 		echo "-advanced    Include additional advanced questions"
-		echo "-clean       Clean ./configure cache"
 		exit 0
 	elif [ $1 = "-nointro" ] ; then
 		NOINTRO="1"
@@ -281,8 +279,6 @@ while [ $# -ge 1 ] ; do
 		RUN_CONFIGURE
 		cd "$UNREALCWD"
 		exit 0
-	elif [ $1 = "-clean" -o $1 = "-C" ] ; then
-		CLEAN="1"
 	elif [ $1 = "-advanced" ] ; then
 		PREADVANCED="1"
 	fi
@@ -293,10 +289,6 @@ if [ "$PREADVANCED" = "1" ] ; then
 	ADVANCED="1"
 elif [ "$ADVANCED" = "1" ]; then
 	ADVANCED=""
-fi
-
-if [ -n "$CLEAN" ] ; then
-	rm -f config.cache
 fi
 
 if [ "`id -u`" = "0" ]; then
