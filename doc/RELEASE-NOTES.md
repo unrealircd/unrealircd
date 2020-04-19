@@ -1,7 +1,7 @@
-UnrealIRCd 5.0.4-rc1 Release Notes
+UnrealIRCd 5.0.4 Release Notes
 ===============================
 
-This is mostly a bug fix release.
+This new 5.0.4 version fixes quite a number of bugs. It contains only two small feature improvements.
 
 Fixes:
 * When placing a SHUN on an online user it was not always effective.
