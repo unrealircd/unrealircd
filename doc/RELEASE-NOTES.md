@@ -4,7 +4,11 @@ UnrealIRCd 5.0.4-rc1 Release Notes
 This is mostly a bug fix release.
 
 Fixes:
+* When placing a SHUN on an online user it was not always effective.
 * Channeldb was not properly restoring all channel modes, such as +P.
+* When upgrading UnrealIRCd it could sometimes crash the currently
+  running IRC server (rare), or trigger a crash report on
+  ```./unrealircd restart``` (quite common).
 * UnrealIRCd was giving up too easily on ident lookups.
 * Crash when unloading a module with moddata.
 * Crash if an authenticated server sends wrong information (rare).
