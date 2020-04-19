@@ -1,5 +1,11 @@
-UnrealIRCd 5.0.4 Release Notes
+UnrealIRCd 5.0.5-dev Release Notes
 ===============================
+
+This version is under development, there are no release notes yet.
+
+
+UnrealIRCd 5.0.4
+------------------
 
 This new 5.0.4 version fixes quite a number of bugs. It contains only two small feature improvements.
 
