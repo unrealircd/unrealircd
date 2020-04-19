@@ -88,6 +88,19 @@ fi
 if [ "x$INSTALLCURL" = "x1" ]; then
 	extras/curlinstall "$PRIVATELIBDIR" || exit 1
 fi
+# At least do SOME parallel compiling by default, IF:
+# - the MAKE environment variable is not set
+# - the MAKEFLAGS environment variable is not set
+# - we are using GNU Make
+if [ "x$MAKE" = "x" ]; then
+	if [ "x$MAKEFLAGS" = "x" ]; then
+		if make --version 2>&1|grep -q "GNU Make"; then
+			echo "Running with 4 concurrent build processes by default (make -j4)."
+			export MAKE='make -j4'
+		fi
+	fi
+fi
+
 echo $CONF
 $CONF || exit 1
 cd "$UNREALCWD"
