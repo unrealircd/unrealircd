@@ -312,7 +312,7 @@ EVENT(try_connections)
 				break;
 
 		if (!deny && connect_server(aconf, NULL, NULL) == 0)
-			sendto_realops("Connection to %s[%s] activated.",
+			sendto_ops_and_log("Trying to activate link with server %s[%s]...",
 				aconf->servername, aconf->outgoing.hostname);
 
 	}
@@ -393,7 +393,7 @@ EVENT(handshake_timeout)
 			if (client->serv && *client->serv->by)
 			{
 				/* If this is a handshake timeout to an outgoing server then notify ops & log it */
-				sendto_ops_and_log("Connection handshake timeout while connecting to server '%s' (%s)",
+				sendto_ops_and_log("Connection handshake timeout while trying to link to server '%s' (%s)",
 					client->name, client->ip?client->ip:"<unknown ip>");
 			}
 
@@ -534,9 +534,6 @@ EVENT(check_deadsockets)
 	{
 		if (!IsDead(client))
 			abort(); /* impossible */
-#ifdef DEBUGMODE
-		ircd_log(LOG_ERROR, "Closing deadsock2: %s", client->name);
-#endif
 		list_del(&client->client_node);
 		free_client(client);
 	}

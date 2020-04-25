@@ -1085,7 +1085,7 @@ int _register_user(Client *client, char *nick, char *username, char *umode, char
 			sendnumeric(client, RPL_SNOMASK, get_snomask_string_raw(user->snomask));
 
 		if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_WARN))
-			sendnotice(client, "%s", iConf.plaintext_policy_user_message);
+			sendnotice_multiline(client, iConf.plaintext_policy_user_message);
 
 		if (IsSecure(client) && (iConf.outdated_tls_policy_user == POLICY_WARN) && outdated_tls_client(client))
 			sendnotice(client, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_user_message, client));
@@ -1300,7 +1300,7 @@ int AllowClient(Client *client, char *username)
 
 	if (!IsSecure(client) && !IsLocalhost(client) && (iConf.plaintext_policy_user == POLICY_DENY))
 	{
-		exit_client(client, NULL, iConf.plaintext_policy_user_message);
+		exit_client(client, NULL, iConf.plaintext_policy_user_message->line);
 		return 0;
 	}
 

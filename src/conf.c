@@ -787,6 +787,36 @@ char *ban_target_valtostr(BanTarget v)
 	}
 }
 
+HideIdleTimePolicy hideidletime_strtoval(char *str)
+{
+	if (!strcmp(str, "never"))
+		return HIDE_IDLE_TIME_NEVER;
+	else if (!strcmp(str, "always"))
+		return HIDE_IDLE_TIME_ALWAYS;
+	else if (!strcmp(str, "usermode"))
+		return HIDE_IDLE_TIME_USERMODE;
+	else if (!strcmp(str, "oper-usermode"))
+		return HIDE_IDLE_TIME_OPER_USERMODE;
+	return 0;
+}
+
+char *hideidletime_valtostr(HideIdleTimePolicy v)
+{
+	switch(v)
+	{
+		case HIDE_IDLE_TIME_NEVER:
+			return "never";
+		case HIDE_IDLE_TIME_ALWAYS:
+			return "always";
+		case HIDE_IDLE_TIME_USERMODE:
+			return "usermode";
+		case HIDE_IDLE_TIME_OPER_USERMODE:
+			return "oper-usermode";
+		default:
+			return "INVALID";
+	}
+}
+
 ConfigFile *config_load(char *filename, char *displayname)
 {
 	struct stat sb;
@@ -1586,8 +1616,8 @@ void	free_iConf(Configuration *i)
 	free_tls_options(i->tls_options);
 	i->tls_options = NULL;
 	safe_free(i->tls_options);
-	safe_free(i->plaintext_policy_user_message);
-	safe_free(i->plaintext_policy_oper_message);
+	safe_free_multiline(i->plaintext_policy_user_message);
+	safe_free_multiline(i->plaintext_policy_oper_message);
 	safe_free(i->outdated_tls_policy_user_message);
 	safe_free(i->outdated_tls_policy_oper_message);
 	safe_free(i->restrict_usermodes);
@@ -1714,6 +1744,8 @@ void config_setdefaultsettings(Configuration *i)
 
 	i->automatic_ban_target = BAN_TARGET_IP;
 	i->manual_ban_target = BAN_TARGET_HOST;
+
+	i->hide_idle_time = HIDE_IDLE_TIME_OPER_USERMODE;
 }
 
 static void make_default_logblock(void)
@@ -1742,18 +1774,21 @@ void postconf_defaults(void)
 	{
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.plaintext_policy_user == POLICY_DENY)
-			safe_strdup(iConf.plaintext_policy_user_message, "Insecure connection. Please reconnect using SSL/TLS.");
+			addmultiline(&iConf.plaintext_policy_user_message, "Insecure connection. Please reconnect using SSL/TLS.");
 		else if (iConf.plaintext_policy_user == POLICY_WARN)
-			safe_strdup(iConf.plaintext_policy_user_message, "WARNING: Insecure connection. Please consider using SSL/TLS.");
+			addmultiline(&iConf.plaintext_policy_user_message, "WARNING: Insecure connection. Please consider using SSL/TLS.");
 	}
 
 	if (!iConf.plaintext_policy_oper_message)
 	{
 		/* The message depends on whether it's reject or warn.. */
 		if (iConf.plaintext_policy_oper == POLICY_DENY)
-			safe_strdup(iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
+		{
+			addmultiline(&iConf.plaintext_policy_oper_message, "You need to use a secure connection (SSL/TLS) in order to /OPER.");
+			addmultiline(&iConf.plaintext_policy_oper_message, "See https://www.unrealircd.org/docs/FAQ#oper-requires-tls");
+		}
 		else if (iConf.plaintext_policy_oper == POLICY_WARN)
-			safe_strdup(iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
+			addmultiline(&iConf.plaintext_policy_oper_message, "WARNING: You /OPER'ed up from an insecure connection. Please consider using SSL/TLS.");
 	}
 
 	if (!iConf.outdated_tls_policy_user_message)
@@ -7674,9 +7709,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "server"))
 					tempiConf.plaintext_policy_server = policy_strtoval(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "user-message"))
-					safe_strdup(tempiConf.plaintext_policy_user_message, cepp->ce_vardata);
+					addmultiline(&tempiConf.plaintext_policy_user_message, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "oper-message"))
-					safe_strdup(tempiConf.plaintext_policy_oper_message, cepp->ce_vardata);
+					addmultiline(&tempiConf.plaintext_policy_oper_message, cepp->ce_vardata);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "outdated-tls-policy"))
@@ -7782,12 +7817,15 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "allowed-channelchars"))
 		{
-			if (!strcmp(cep->ce_vardata, "ascii"))
-				tempiConf.allowed_channelchars = ALLOWED_CHANNELCHARS_ASCII;
-			else if (!strcmp(cep->ce_vardata, "utf8"))
-				tempiConf.allowed_channelchars = ALLOWED_CHANNELCHARS_UTF8;
-			else if (!strcmp(cep->ce_vardata, "any"))
-				tempiConf.allowed_channelchars = ALLOWED_CHANNELCHARS_ANY;
+			tempiConf.allowed_channelchars = allowed_channelchars_strtoval(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "hide-idle-time"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "policy"))
+					tempiConf.hide_idle_time = hideidletime_strtoval(cepp->ce_vardata);
+			}
 		}
 		else
 		{
@@ -8976,13 +9014,35 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "allowed-channelchars"))
 		{
 			CheckNull(cep);
-			if (strcmp(cep->ce_vardata, "ascii") &&
-			    strcmp(cep->ce_vardata, "utf8") &&
-			    strcmp(cep->ce_vardata, "any"))
+			if (!allowed_channelchars_strtoval(cep->ce_vardata))
 			{
 				config_error("%s:%i: set::allowed-channelchars: value should be one of: 'ascii', 'utf8' or 'any'",
 				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "hide-idle-time"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				CheckNull(cepp);
+				if (!strcmp(cepp->ce_varname, "policy"))
+				{
+					if (!hideidletime_strtoval(cepp->ce_vardata))
+					{
+						config_error("%s:%i: set::hide-idle-time::policy: value should be one of: 'never', 'always', 'usermode' or 'oper-usermode'",
+							     cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++;
+					}
+				}
+				else
+				{
+					config_error_unknown(cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum, "set::hide-idle-time",
+						cepp->ce_varname);
+					errors++;
+					continue;
+				}
 			}
 		}
 		else

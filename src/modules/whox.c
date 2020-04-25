@@ -8,10 +8,18 @@
 
 #include "unrealircd.h"
 
-#define MSG_WHO 	"WHO"
+/* Module header */
+ModuleHeader MOD_HEADER
+  = {
+	"whox",
+	"5.0",
+	"command /who",
+	"UnrealIRCd Team",
+	"unrealircd-5",
+    };
 
-#define FLAGS_MARK	0x400000 /* marked client (was hybnotice) */
 
+/* Defines */
 #define FIELD_CHANNEL	0x0001
 #define FIELD_HOP	0x0002
 #define FIELD_FLAGS	0x0004
@@ -43,13 +51,14 @@
 #define WHO_ADD 1
 #define WHO_DEL 0
 
-#define SetMark(x) ((x)->flags |= FLAGS_MARK)
-#define ClearMark(x) ((x)->flags &= ~FLAGS_MARK)
-#define IsMarked(x) ((x)->flags & FLAGS_MARK)
-
 #define HasField(x, y) ((x)->fields & (y))
 #define IsMatch(x, y) ((x)->matchsel & (y))
 
+#define IsMarked(x)           (moddata_client(x, whox_md).l)
+#define SetMark(x)            do { moddata_client(x, whox_md).l = 1; } while(0)
+#define ClearMark(x)          do { moddata_client(x, whox_md).l = 0; } while(0)
+
+/* Structs */
 struct who_format
 {
 	int fields;
@@ -61,30 +70,46 @@ struct who_format
 	int show_ip;
 };
 
+/* Global variables */
+ModDataInfo *whox_md = NULL;
+
+/* Forward declarations */
 CMD_FUNC(cmd_whox);
 static void who_global(Client *client, char *mask, int operspy, struct who_format *fmt);
 static void do_who(Client *client, Client *acptr, Channel *channel, struct who_format *fmt);
 static void do_who_on_channel(Client *client, Channel *channel,
                               int member, int operspy, struct who_format *fmt);
 static int convert_classical_who_request(Client *client, int *parc, char *parv[], char **orig_mask, struct who_format *fmt);
-
-ModuleHeader MOD_HEADER
-  = {
-	"whox",
-	"5.0",
-	"command /who",
-	"UnrealIRCd Team",
-	"unrealircd-5",
-    };
+char *whox_md_serialize(ModData *m);
+void whox_md_unserialize(char *str, ModData *m);
+void whox_md_free(ModData *md);
 
 MOD_INIT()
 {
+	ModDataInfo mreq;
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	if (!CommandAdd(modinfo->handle, MSG_WHO, cmd_whox, MAXPARA, CMD_USER))
+
+	if (!CommandAdd(modinfo->handle, "WHO", cmd_whox, MAXPARA, CMD_USER))
 	{
 		config_warn("You cannot load both cmd_whox and cmd_who. You should ONLY load the cmd_whox module.");
 		return MOD_FAILED;
 	}
+
+	memset(&mreq, 0, sizeof(mreq));
+	mreq.name = "whox";
+	mreq.type = MODDATATYPE_CLIENT;
+	mreq.serialize = whox_md_serialize;
+	mreq.unserialize = whox_md_unserialize;
+	mreq.free = whox_md_free;
+	mreq.sync = 0;
+	whox_md = ModDataAdd(modinfo->handle, mreq);
+	if (!whox_md)
+	{
+		config_error("could not register whox moddata");
+		return MOD_FAILED;
+	}
+
 	ISupportAdd(modinfo->handle, "WHOX", NULL);
 	return MOD_SUCCESS;
 }
@@ -97,6 +122,29 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
+}
+
+/** whox module data operations: serialize (rare) */
+char *whox_md_serialize(ModData *m)
+{
+	static char buf[32];
+	if (m->i == 0)
+		return NULL; /* not set */
+	snprintf(buf, sizeof(buf), "%d", m->i);
+	return buf;
+}
+
+/** whox module data operations: unserialize (rare) */
+void whox_md_unserialize(char *str, ModData *m)
+{
+	m->i = atoi(str);
+}
+
+/** whox module data operations: free */
+void whox_md_free(ModData *md)
+{
+	/* we have nothing to free actually, but we must set to zero */
+	md->l = 0;
 }
 
 /** cmd_whox: standardized "extended" version of WHO.
@@ -792,9 +840,10 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		if (HasField(fmt, FIELD_HOP))
 			append_format(str, sizeof str, &pos, " %d", hide ? 0 : acptr->hopcount);
 		if (HasField(fmt, FIELD_IDLE))
-			append_format(str, sizeof str, &pos, " %d", (int)(MyUser(acptr) &&
-				(!(acptr->umodes & UMODE_HIDLE) || IsOper(client) ||
-				(client == acptr)) ? TStime() - acptr->local->last : 0));
+		{
+			append_format(str, sizeof str, &pos, " %d",
+				(int)((MyUser(acptr) && !hide_idle_time(client, acptr)) ? (TStime() - acptr->local->last) : 0));
+		}
 		if (HasField(fmt, FIELD_ACCOUNT))
 			append_format(str, sizeof str, &pos, " %s", (!isdigit(*acptr->user->svid)) ? acptr->user->svid : "0");
 		if (HasField(fmt, FIELD_OPLEVEL))

@@ -1028,8 +1028,8 @@ CMD_FUNC(cmd_tempshun)
 	}
 	if (!MyUser(target))
 	{
-		sendto_one(target->direction, NULL, ":%s TEMPSHUN %s :%s",
-			client->id, target->id, comment);
+		sendto_one(target, NULL, ":%s TEMPSHUN %c%s :%s",
+		           client->id, remove ? '-' : '+', target->id, comment);
 	} else {
 		char buf[1024];
 		if (!remove)
@@ -1747,7 +1747,7 @@ CMD_FUNC(cmd_eline)
 /** Helper function for cmd_spamfilter, explaining usage. */
 void spamfilter_usage(Client *client)
 {
-	sendnotice(client, "Use: /spamfilter [add|del|remove|+|-] [-simple|-regex|-posix] [type] [action] [tkltime] [tklreason] [regex]");
+	sendnotice(client, "Use: /spamfilter [add|del|remove|+|-] [-simple|-regex] [type] [action] [tkltime] [tklreason] [regex]");
 	sendnotice(client, "See '/helpop ?spamfilter' for more information.");
 	sendnotice(client, "For an easy way to remove an existing spamfilter, use '/spamfilter del' without additional parameters");
 }
@@ -1755,13 +1755,12 @@ void spamfilter_usage(Client *client)
 /** Helper function for cmd_spamfilter, explaining usage has changed. */
 void spamfilter_new_usage(Client *client, char *parv[])
 {
-	sendnotice(client, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes), "
-	                 "-posix (old unreal 3.2.x posix regexes) or "
+	sendnotice(client, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes) or "
 	                 "-simple (simple text with ? and * wildcards)",
 	                 parv[2]);
 
 	if (*parv[2] != '-')
-		sendnotice(client, "Using the old 3.2.x /SPAMFILTER syntax? Note the new -regex/-posix/-simple field!!");
+		sendnotice(client, "Using the old 3.2.x /SPAMFILTER syntax? Note the new -regex/-simple field!!");
 
 	spamfilter_usage(client);
 }
@@ -4209,8 +4208,11 @@ CMD_FUNC(cmd_tkl_del)
 	RunHook2(HOOKTYPE_TKL_DEL, client, tkl);
 
 	if (type & TKL_GLOBAL)
+	{
+		/* This is a bit of a hack for #5629. Will consider real fix post-release. */
+		safe_strdup(tkl->set_by, removed_by);
 		tkl_broadcast_entry(0, client, client, tkl);
-
+	}
 
 	if (TKLIsBanException(tkl))
 	{
@@ -4252,7 +4254,7 @@ CMD_FUNC(cmd_tkl_del)
  *
  * [A] tkl reason field must be escaped by caller [eg: use unreal_encodespace()
  *     if cmd_tkl is called internally].
- * [B] match-type must be one of: regex, simple, posix.
+ * [B] match-type must be one of: regex, simple.
  * [C] Could be a regex or a regular string with wildcards, depending on [B]
  */
 CMD_FUNC(_cmd_tkl)

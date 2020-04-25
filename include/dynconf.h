@@ -55,6 +55,8 @@ typedef enum AllowedChannelChars { ALLOWED_CHANNELCHARS_ANY=1, ALLOWED_CHANNELCH
 
 typedef enum BanTarget { BAN_TARGET_IP=1, BAN_TARGET_USERIP=2, BAN_TARGET_HOST=3, BAN_TARGET_USERHOST=4, BAN_TARGET_ACCOUNT=5, BAN_TARGET_CERTFP=6 } BanTarget;
 
+typedef enum HideIdleTimePolicy { HIDE_IDLE_TIME_NEVER=1, HIDE_IDLE_TIME_ALWAYS=2, HIDE_IDLE_TIME_USERMODE=3, HIDE_IDLE_TIME_OPER_USERMODE=4 } HideIdleTimePolicy;
+
 /** The set { } block configuration */
 typedef struct Configuration Configuration;
 struct Configuration {
@@ -97,9 +99,9 @@ struct Configuration {
 	char *static_part;
 	TLSOptions *tls_options;
 	Policy plaintext_policy_user;
-	char *plaintext_policy_user_message;
+	MultiLine *plaintext_policy_user_message;
 	Policy plaintext_policy_oper;
-	char *plaintext_policy_oper_message;
+	MultiLine *plaintext_policy_oper_message;
 	Policy plaintext_policy_server;
 	Policy outdated_tls_policy_user;
 	char *outdated_tls_policy_user_message;
@@ -171,6 +173,7 @@ struct Configuration {
 	int part_instead_of_quit_on_comment_change;
 	BroadcastChannelMessagesOption broadcast_channel_messages;
 	AllowedChannelChars allowed_channelchars;
+	HideIdleTimePolicy hide_idle_time;
 };
 
 extern MODVAR Configuration iConf;

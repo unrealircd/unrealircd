@@ -33,11 +33,8 @@ if [ "$1" = "start" ] ; then
 	if [ ! -f @CONFDIR@/unrealircd.conf ]; then
 		echo ""
 		echo "The configuration file does not exist (@CONFDIR@/unrealircd.conf)."
-		echo "* Create one by following:"
-		echo "  https://www.unrealircd.org/docs/Installing_from_source#Creating_a_configuration_file"
-		echo "* Or if you are upgrading from version 3.2.x then read:"
-		echo "  https://www.unrealircd.org/docs/Upgrading_from_3.2.x and"
-		echo "  https://www.unrealircd.org/docs/UnrealIRCd_files_and_directories"
+		echo "Create one using the example configuration file, see the documentation:"
+		echo "https://www.unrealircd.org/docs/Installing_from_source#Creating_a_configuration_file"
 		exit 1
 	fi
 	@BINDIR@/unrealircd

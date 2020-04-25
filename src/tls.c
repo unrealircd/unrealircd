@@ -270,8 +270,25 @@ static int setup_dh_params(SSL_CTX *ctx)
 /** Disable SSL/TLS protocols as set by config */
 void disable_ssl_protocols(SSL_CTX *ctx, TLSOptions *tlsoptions)
 {
-	/* OpenSSL has two mechanisms for protocol version control:
-	 *
+	/* OpenSSL has three mechanisms for protocol version control... */
+
+#ifdef HAS_SSL_CTX_SET_SECURITY_LEVEL
+	/* The first one is setting a "security level" as introduced
+	 * by OpenSSL 1.1.0. Some Linux distro's like Ubuntu 20.04
+	 * seemingly compile with -DOPENSSL_TLS_SECURITY_LEVEL=2.
+	 * This means the application (UnrealIRCd) is unable to allow
+	 * TLSv1.0/1.1 even if the application is configured to do so.
+	 * So here we set the level to 1, but -again- ONLY if we are
+	 * configured to allow TLSv1.0 or v1.1, of course.
+	 */
+	if ((tlsoptions->protocols & TLS_PROTOCOL_TLSV1) ||
+	    (tlsoptions->protocols & TLS_PROTOCOL_TLSV1_1))
+	{
+		SSL_CTX_set_security_level(ctx, 1);
+	}
+#endif
+
+	/* The remaining two mechanisms are:
 	 * The old way, which is most flexible, is to use:
 	 * SSL_CTX_set_options(... SSL_OP_NO_<version>) which allows
 	 * you to disable each and every specific SSL/TLS version.
@@ -937,18 +954,12 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, Client *clien
 			         (client->serv && client->serv->conf) ? client->serv->conf->outgoing.port : -1,
 			         client->name);
 		}
-		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s%s%s",
-			get_client_name(client, FALSE), ssl_func, ssl_errstr, additional_info, extra);
-		/* This is a connect() that fails, we don't broadcast that for non-SSL either (noisy) */
+		lost_server_link(client, "%s: %s%s%s", ssl_func, ssl_errstr, additional_info, extra);
 	} else
-	if ((IsServer(client) || (client->serv && client->serv->conf)) && (where != SAFE_SSL_WRITE))
+	if (IsServer(client) || (client->serv && client->serv->conf))
 	{
-		/* if server (either judged by IsServer() or clearly an outgoing connect),
-		 * and not writing (since otherwise deliver_it will take care of the error), THEN
-		 * send a closing link error...
-		 */
-		sendto_umode_global(UMODE_OPER, "Lost connection to %s: %s: %d (%s%s)",
-			get_client_name(client, FALSE), ssl_func, ssl_error, ssl_errstr, additional_info);
+		/* Either a trusted fully established server (incoming) or an outgoing server link (established or not) */
+		lost_server_link(client, "%s: %s%s", ssl_func, ssl_errstr, additional_info);
 	}
 
 	if (errtmp)

@@ -124,7 +124,7 @@ long set_usermode(char *umode)
 /** Convert a target pointer to an 8 bit hash, used for target limiting. */
 unsigned char hash_target(void *target)
 {
-	unsigned long long v = (unsigned long long)target;
+	uintptr_t v = (uintptr_t)target;
 	/* ircu does >> 16 and 8 but since our sizeof(Client) is
 	 * towards 512 (and hence the alignment), that bit is useless.
 	 * So we do >> 17 and 9.
@@ -698,4 +698,30 @@ void make_cloakedhost(Client *client, char *curr, char *buf, size_t buflen)
 void user_account_login(MessageTag *recv_mtags, Client *client)
 {
 	RunHook2(HOOKTYPE_ACCOUNT_LOGIN, client, recv_mtags);
+}
+
+/** Should we hide the idle time of 'target' to user 'client'?
+ * This depends on the set::hide-idle-time policy.
+ */
+int hide_idle_time(Client *client, Client *target)
+{
+	/* First of all, IRCOps bypass the restriction */
+	if (IsOper(client))
+		return 0;
+
+	/* Other than that, it depends on the settings: */
+	switch (iConf.hide_idle_time)
+	{
+		case HIDE_IDLE_TIME_NEVER:
+			return 0;
+		case HIDE_IDLE_TIME_ALWAYS:
+			return 1;
+		case HIDE_IDLE_TIME_USERMODE:
+		case HIDE_IDLE_TIME_OPER_USERMODE:
+			if (target->umodes & UMODE_HIDLE)
+				return 1;
+			return 0;
+		default:
+			return 0;
+	}
 }

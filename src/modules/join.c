@@ -441,7 +441,7 @@ void _do_join(Client *client, int parc, char *parv[])
 
 				new_message(client, NULL, &mtags);
 
-				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, NULL,
+				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s PART %s :%s",
 				               client->name, channel->chname, "Left all channels");
 				sendto_server(client, 0, 0, mtags, ":%s PART %s :Left all channels", client->name, channel->chname);

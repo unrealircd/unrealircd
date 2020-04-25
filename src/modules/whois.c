@@ -315,6 +315,12 @@ CMD_FUNC(cmd_whois)
 			
 			RunHook2(HOOKTYPE_WHOIS, client, target);
 
+			if (IsOper(client) && MyUser(target) && IsShunned(target))
+			{
+				sendto_one(client, NULL, ":%s %d %s %s :is shunned",
+				           me.name, RPL_WHOISSPECIAL, client->name, target->name);
+			}
+
 			if (target->user->swhois && !hideoper)
 			{
 				SWhois *s;
@@ -336,7 +342,7 @@ CMD_FUNC(cmd_whois)
 			 * Umode +I hides an oper's idle time from regular users.
 			 * -Nath.
 			 */
-			if (MyConnect(target) && (IsOper(client) || !(target->umodes & UMODE_HIDLE)))
+			if (MyConnect(target) && !hide_idle_time(client, target))
 			{
 				sendnumeric(client, RPL_WHOISIDLE, name,
 				    TStime() - target->local->last, target->local->firsttime);

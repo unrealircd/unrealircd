@@ -438,18 +438,16 @@ void init_random()
 {
 	struct {
 #ifndef _WIN32
-		struct timeval nowt;	/* time */
+		struct timeval nowt;		/* time */
 		char rnd[32];			/* /dev/urandom */
 #else
-		MEMORYSTATUS mstat;		/* memory status */
 		struct _timeb nowt;		/* time */
+		MEMORYSTATUS mstat;		/* memory status */
 #endif
 	} rdat;
 
 #ifndef _WIN32
 	int fd;
-#else
-	MEMORYSTATUS mstat;
 #endif
 
 	_rs_stir();
