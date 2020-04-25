@@ -357,39 +357,43 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, char *parv[])
 	if (IsULine(client) || find_membership_link(client->user->channel, channel))
 		return HOOK_CONTINUE;
 
-	// Extbans take precedence over +L #channel and other restrictions
-	for(ban = channel->banlist; ban; ban = ban->next)
+	// Extbans take precedence over +L #channel and other restrictions,
+	// only /INVITE from chanop bypasses:
+	if (!is_invited(client, channel))
 	{
-		if (!strncmp(ban->banstr, "~f:", 3))
+		for(ban = channel->banlist; ban; ban = ban->next)
 		{
-			strlcpy(bantmp, ban->banstr + 3, sizeof(bantmp));
-		} else
-		if (!strncmp(ban->banstr, "~t:", 3))
-		{
-			/* A timed ban, but is it for us? Need to parse a little:
-			 * ~t:dddd:~f:...
-			 */
-			char *p = strchr(ban->banstr + 3, ':');
-			if (p && !strncmp(p, ":~f:", 4))
+			if (!strncmp(ban->banstr, "~f:", 3))
 			{
-				strlcpy(bantmp, p + 4, sizeof(bantmp));
-			} else {
-				/* Not for us - some other ~t ban */
+				strlcpy(bantmp, ban->banstr + 3, sizeof(bantmp));
+			} else
+			if (!strncmp(ban->banstr, "~t:", 3))
+			{
+				/* A timed ban, but is it for us? Need to parse a little:
+				 * ~t:dddd:~f:...
+				 */
+				char *p = strchr(ban->banstr + 3, ':');
+				if (p && !strncmp(p, ":~f:", 4))
+				{
+					strlcpy(bantmp, p + 4, sizeof(bantmp));
+				} else {
+					/* Not for us - some other ~t ban */
+					continue;
+				}
+			} else
+			{
+				/* Not for us */
 				continue;
 			}
-		} else
-		{
-			/* Not for us */
-			continue;
-		}
-		banchan = bantmp;
-		banmask = strchr(bantmp, ':');
-		if (!banmask || !banmask[1])
-			continue;
-		*banmask++ = '\0';
+			banchan = bantmp;
+			banmask = strchr(bantmp, ':');
+			if (!banmask || !banmask[1])
+				continue;
+			*banmask++ = '\0';
 
-		if (ban_check_mask(client, channel, banmask, BANCHK_JOIN, NULL, NULL, 0))
-			return link_doforward(client, channel, banchan, LINKTYPE_BAN);
+			if (ban_check_mask(client, channel, banmask, BANCHK_JOIN, NULL, NULL, 0))
+				return link_doforward(client, channel, banchan, LINKTYPE_BAN);
+		}
 	}
 
 	// Either +L is not set, or it is set but the parameter isn't stored somehow
