@@ -124,7 +124,7 @@ long set_usermode(char *umode)
 /** Convert a target pointer to an 8 bit hash, used for target limiting. */
 unsigned char hash_target(void *target)
 {
-	unsigned long long v = (unsigned long long)target;
+	uintptr_t v = (uintptr_t)target;
 	/* ircu does >> 16 and 8 but since our sizeof(Client) is
 	 * towards 512 (and hence the alignment), that bit is useless.
 	 * So we do >> 17 and 9.

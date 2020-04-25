@@ -402,9 +402,10 @@ int read_tkldb(void)
 	FILE *fd;
 	TKL *tkl = NULL;
 	uint32_t magic = 0;
+	uint32_t version;
 	uint64_t cnt;
 	uint64_t tklcount = 0;
-	uint32_t version;
+	uint64_t v;
 	int added_cnt = 0;
 	char c;
 	char *str;
@@ -483,8 +484,10 @@ int read_tkldb(void)
 
 		/* Read the common types (same for all TKLs) */
 		R_SAFE(read_str(fd, &tkl->set_by));
-		R_SAFE(read_int64(fd, &tkl->set_at));
-		R_SAFE(read_int64(fd, &tkl->expire_at));
+		R_SAFE(read_int64(fd, &v));
+		tkl->set_at = v;
+		R_SAFE(read_int64(fd, &v));
+		tkl->expire_at = v;
 
 		/* Save some CPU... if it's already expired then don't bother adding */
 		if (tkl->expire_at != 0 && tkl->expire_at <= TStime())
@@ -645,7 +648,8 @@ int read_tkldb(void)
 			}
 
 			R_SAFE(read_str(fd, &tkl->ptr.spamfilter->tkl_reason));
-			R_SAFE(read_int64(fd, &tkl->ptr.spamfilter->tkl_duration));
+			R_SAFE(read_int64(fd, &v));
+			tkl->ptr.spamfilter->tkl_duration = v;
 
 			if (find_tkl_spamfilter(tkl->type, tkl->ptr.spamfilter->match->str,
 			                        tkl->ptr.spamfilter->action,

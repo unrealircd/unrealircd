@@ -101,7 +101,7 @@ long clicap_allocate_cap(void)
 	long v = 1;
 	ClientCapability *clicap;
 
-	for (v=1; v < 2147483648; v = v * 2)
+	for (v=1; v < LONG_MAX; v = v * 2)
 	{
 		unsigned char found = 0;
 		for (clicap = clicaps; clicap; clicap = clicap->next)
