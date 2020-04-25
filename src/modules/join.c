@@ -549,7 +549,17 @@ void _do_join(Client *client, int parc, char *parv[])
 			Hook *h;
 			for (h = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; h; h = h->next) 
 			{
-				i = (*(h->func.intfunc))(client,channel,parv);
+				/* Note: this is just a hack not to break the ABI but still be
+				 * able to fix https://bugs.unrealircd.org/view.php?id=5644
+				 * In the future we should just drop the parv/parx argument
+				 * and use key as an argument instead.
+				 */
+				char *parx[4];
+				parx[0] = NULL;
+				parx[1] = name;
+				parx[2] = key;
+				parx[3] = NULL;
+				i = (*(h->func.intfunc))(client,channel,parx);
 				if (i == HOOK_DENY || i == HOOK_ALLOW)
 					break;
 			}
