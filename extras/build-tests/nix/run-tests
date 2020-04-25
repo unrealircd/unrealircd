@@ -34,7 +34,8 @@ else
 fi
 
 # Do cipherscan test at the end
-if [[ "$OSTYPE" != "freebsd"* ]]; then
+# Has problems on non-Linux-64-bit, so we skip there:
+if [[ "$OSTYPE" != "freebsd"* -a "$HOSTNAME" != "ub18-ia32" ]]; then
 	sleep 2
 	cd ../extras/tests/tls
 	./tls-tests
