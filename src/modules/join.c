@@ -113,9 +113,8 @@ int _can_join(Client *client, Channel *channel, char *key, char *parv[])
 	if (banned && j == HOOK_DENY)
 		return (ERR_BANNEDFROMCHAN);
 
-	for (lp = client->user->invited; lp; lp = lp->next)
-		if (lp->value.channel == channel)
-			return 0;
+	if (is_invited(client, channel))
+		return 0; /* allowed */
 
         if (channel->users >= channel->mode.limit)
         {
@@ -515,20 +514,12 @@ void _do_join(Client *client, int parc, char *parv[])
 			    !strcasecmp(name, SPAMFILTER_VIRUSCHAN) &&
 			    !ValidatePermissionsForPath("immune:server-ban:viruschan",client,NULL,NULL,NULL) && !spamf_ugly_vchanoverride)
 			{
-				int invited = 0;
-				Link *lp;
 				Channel *channel = find_channel(name, NULL);
 				
-				if (channel)
+				if (!channel || !is_invited(client, channel))
 				{
-					for (lp = client->user->invited; lp; lp = lp->next)
-						if (lp->value.channel == channel)
-							invited = 1;
-				}
-				if (!invited)
-				{
-					sendnotice(client, "*** Cannot join '%s' because it's the virus-help-channel which is "
-					                 "reserved for infected users only", name);
+					sendnotice(client, "*** Cannot join '%s' because it's the virus-help-channel "
+					                   "which is reserved for infected users only", name);
 					continue;
 				}
 			}

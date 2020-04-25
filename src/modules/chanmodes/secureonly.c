@@ -140,11 +140,10 @@ int secureonly_check_join(Client *client, Channel *channel, char *key, char *par
 			/* if the channel is +z we still allow an ircop to bypass it
 			 * if they are invited.
 			 */
-			for (lp = client->user->invited; lp; lp = lp->next)
-				if (lp->value.channel == channel)
-					return HOOK_CONTINUE;
+			if (is_invited(client, channel))
+				return HOOK_CONTINUE;
 		}
-		return (ERR_SECUREONLYCHAN);
+		return ERR_SECUREONLYCHAN;
 	}
 	return 0;
 }

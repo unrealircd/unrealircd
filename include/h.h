@@ -174,7 +174,6 @@ extern void set_snomask(Client *client, char *snomask);
 extern char *get_snomask_string(Client *client);
 extern int check_tkls(Client *cptr);
 /* for services */
-extern void del_invite(Client *, Channel *);
 extern void send_user_joins(Client *, Client *);
 extern int valid_channelname(const char *);
 extern int valid_server_name(char *name);
@@ -623,6 +622,8 @@ extern char *spamfilter_inttostring_long(int v);
 extern Channel *get_channel(Client *cptr, char *chname, int flag);
 extern MODVAR char backupbuf[];
 extern void add_invite(Client *, Client *, Channel *, MessageTag *);
+extern void del_invite(Client *, Channel *);
+extern int is_invited(Client *client, Channel *channel);
 extern void channel_modes(Client *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel);
 extern MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 extern int op_can_override(char *acl, Client *client,Channel *channel,void* extra);

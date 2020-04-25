@@ -1031,6 +1031,20 @@ void del_invite(Client *client, Channel *channel)
 		}
 }
 
+/** Is the user 'client' invited to channel 'channel' by a chanop?
+ * @param client	The client who was invited
+ * @param channel	The channel to which the person was invited
+ */
+int is_invited(Client *client, Channel *channel)
+{
+	Link *lp;
+
+	for (lp = client->user->invited; lp; lp = lp->next)
+		if (lp->value.channel == channel)
+			return 1;
+	return 0;
+}
+
 /** Subtract one user from channel i. Free the channel if it became empty.
  * @param channel The channel
  * @returns 1 if the channel was freed, 0 if the channel still exists.
