@@ -23,8 +23,15 @@ fi
 git clone -q https://github.com/unrealircd/unrealircd-tests.git
 cd unrealircd-tests
 
-# Run the test framework, testing both services:
+# FreeBSD has various issues with the tests from us and others,
+# better set a flag to keep it simple:
+FREEBSD=0
 if uname -a|grep -q FreeBSD; then
+	FREEBSD=1
+fi
+
+# Run the test framework, testing both services:
+if [ "$FREEBSD" = 1 ]; then
 	# FreeBSD runs without services since they fail mysteriously:
 	./run -services none || exit 1
 else
@@ -35,7 +42,7 @@ fi
 
 # Do cipherscan test at the end
 # Has problems on non-Linux-64-bit, so we skip there:
-if [[ "$OSTYPE" != "freebsd"* -a "$HOSTNAME" != "ub18-ia32" ]]; then
+if [ "$FREEBSD" = 0 -a "$HOSTNAME" != "ub18-ia32" ]; then
 	sleep 2
 	cd ../extras/tests/tls
 	./tls-tests
