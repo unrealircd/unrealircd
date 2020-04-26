@@ -31,6 +31,12 @@ Changes:
 * We now do parallel builds by default (```make -j4```), unless the ```$MAKE```
   or ```$MAKEFLAGS``` environment variable is set.
 * Translation updates
+* [set::restrict-commands](https://www.unrealircd.org/docs/Set_block#set%3A%3Arestrict-commands):
+  * The ```disable``` option is now removed as it is implied. In other words: if
+    you want to disable a command, then simply don't use ```connect-delay```.
+  * You can now have a block without ```connect-delay``` but still make
+    users bypass the restriction with ```exempt-identified``` and/or
+    ```exempt-reputation-score```. Previously this was not possible.
 
 Upgrading from UnrealIRCd 4?
 -----------------------------
