@@ -1,8 +1,42 @@
 UnrealIRCd 5.0.5-dev Release Notes
 ===============================
 
-This version is under development, there are no release notes yet.
+This version is under development. These release notes will change too.
 
+Fixes:
+* Crash on 32-bit machines in tkldb (on start or rehash)
+* Channel mode ```+L #forward``` and ```+k key```: should forward
+  on wrong key, but was also redirecting on correct key.
+
+Enhancements:
+* [[Spamfilter]] is now UTF8-aware. This means, among other things:
+  * Case insensitive matches work better. For example with extended
+    Latin, a pamfilter on "ę" now also matches "Ę".
+  * Other PCRE2 features such as [\p](https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC5)
+    are now available. For example you can now set a spamfilter with the regex
+    ```\p{Arabic}``` to block all Arabic script, or ```\p{Cyrillic}``` to
+    block all Cyrillic script (such as Russian).
+    Please do use these new tools with care. Blocking an entire language
+    or script is quite a drastic measure.
+  * These new features require the PCRE2 10.34 regex library. If you
+    have a lower version on your system then UnrealIRCd will fall back
+    to using the UnrealIRCd-shipped-library version 10.34. The only
+    downside to that is that compiling during ```./Config``` may take
+    a little longer than usual.
+* If a chanop /INVITE's someone, it will now override ban forwards
+  such as ```+b ~f:#forward:*!*@*```.
+
+Changes:
+* We now do parallel builds by default (-j4), unless the ```$MAKE```
+  or ```$MAKEFLAGS``` environment variable is set.
+* Translation updates
+
+Upgrading from UnrealIRCd 4?
+-----------------------------
+
+Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5?
+Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
+very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
 UnrealIRCd 5.0.4
 ------------------
@@ -40,13 +74,6 @@ Changes:
   This message is customizable through
   [set::plaintext-policy::oper-message](https://www.unrealircd.org/docs/Set_block#set::plaintext-policy).
 * The French HELPOP text was updated.
-
-Upgrading from UnrealIRCd 4?
------------------------------
-
-Are you upgrading from UnrealIRCd 4.x to UnrealIRCd 5?
-Then check out the *UnrealIRCd 5* release notes [further down](#unrealircd-5). At the
-very least, check out [Upgrading from 4.x](https://www.unrealircd.org/docs/Upgrading_from_4.x).
 
 UnrealIRCd 5.0.3.1
 -------------------
