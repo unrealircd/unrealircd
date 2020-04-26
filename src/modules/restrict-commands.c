@@ -38,7 +38,6 @@ struct RestrictedCommand {
 	int exempt_identified;
 	int exempt_reputation_score;
 	int exempt_webirc;
-	int disable;
 };
 
 typedef struct {
@@ -145,12 +144,8 @@ RestrictedCommand *find_restrictions_byconftag(char *conftag) {
 int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
+	int warn_disable = 0;
 	ConfigEntry *cep, *cep2;
-	RestrictedCommand *rcmd;
-	long connect_delay;
-	int exempt_reputation_score;
-	int exempt_webirc;
-	int has_restriction;
 
 	// We are only interested in set::restrict-commands
 	if (type != CONFIG_SET)
@@ -161,12 +156,18 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		has_restriction = 0;
 		for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
 		{
 			if (!strcmp(cep2->ce_varname, "disable"))
 			{
-				has_restriction = 1;
+				config_warn("%s:%i: set::restrict-commands::%s: the 'disable' option has been removed.",
+				            cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname);
+				if (!warn_disable)
+				{
+					config_warn("Simply remove 'disable yes;' from the configuration file and "
+				                   "it will have the same effect without it (will disable the command).");
+					warn_disable = 1;
+				}
 				continue;
 			}
 
@@ -179,9 +180,8 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 			if (!strcmp(cep2->ce_varname, "connect-delay"))
 			{
-				has_restriction = 1;
-				connect_delay = config_checkval(cep2->ce_vardata, CFG_TIME);
-				if (connect_delay < 10 || connect_delay > 3600)
+				long v = config_checkval(cep2->ce_vardata, CFG_TIME);
+				if ((v < 10) || (v > 3600))
 				{
 					config_error("%s:%i: set::restrict-commands::%s::connect-delay should be in range 10-3600", cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname);
 					errors++;
@@ -197,8 +197,8 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			
 			if (!strcmp(cep2->ce_varname, "exempt-reputation-score"))
 			{
-				exempt_reputation_score = atoi(cep2->ce_vardata);
-				if (exempt_reputation_score <= 0)
+				int v = atoi(cep2->ce_vardata);
+				if (v <= 0)
 				{
 					config_error("%s:%i: set::restrict-commands::%s::exempt-reputation-score must be greater than 0", cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname);
 					errors++;
@@ -207,12 +207,6 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			}
 
 			config_error("%s:%i: unknown directive set::restrict-commands::%s::%s", cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, cep2->ce_varname);
-			errors++;
-		}
-
-		if (!has_restriction)
-		{
-			config_error("%s:%i: no restrictions were set for set::restrict-commands::%s (either 'connect-delay' or 'disable' is required)", cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++;
 		}
 	}
@@ -292,12 +286,6 @@ int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 				rcmd->exempt_reputation_score = atoi(cep2->ce_vardata);
 				continue;
 			}
-
-			if (!strcmp(cep2->ce_varname, "disable"))
-			{
-				rcmd->disable = cep2->ce_vardata ? config_checkval(cep2->ce_vardata, CFG_YESNO) : 1;
-				break; // Using break instead of continue since 'disable' takes precedence anyways
-			}
 		}
 		AddListItem(rcmd, RestrictedCommandList);
 	}
@@ -315,9 +303,9 @@ int rcmd_canbypass(Client *client, RestrictedCommand *rcmd)
 		return 1;
 	if (rcmd->exempt_reputation_score > 0 && (GetReputation(client) >= rcmd->exempt_reputation_score))
 		return 1;
-	if (client->local && (TStime() - client->local->firsttime < rcmd->connect_delay))
-		return 0;
-	return 1; // Default to yes so we don't drop too many commands
+	if (rcmd->connect_delay && client->local && (TStime() - client->local->firsttime >= rcmd->connect_delay))
+		return 1;
+	return 0;
 }
 
 int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
@@ -350,24 +338,20 @@ int rcmd_block_message(Client *client, char *text, int notice, char **errmsg, ch
 		return 0;
 
 	rcmd = find_restrictions_byconftag(conftag);
-	if (rcmd)
+	if (rcmd && !rcmd_canbypass(client, rcmd))
 	{
-		if (rcmd->disable)
+		if (rcmd->connect_delay)
 		{
 			ircsnprintf(errbuf, sizeof(errbuf),
-			            "Sending of %ss to %ss been disabled by the network administrators",
-			            (notice ? "notice" : "message"), display);
-			*errmsg = errbuf;
-			return 1;
-		}
-		if (!rcmd_canbypass(client, rcmd))
-		{
+				    "You cannot send %ss to %ss until you've been connected for %ld seconds or more",
+				    (notice ? "notice" : "message"), display, rcmd->connect_delay);
+		} else {
 			ircsnprintf(errbuf, sizeof(errbuf),
-			            "You cannot send %ss to %ss until you've been connected for %ld seconds or more",
-			            (notice ? "notice" : "message"), display, rcmd->connect_delay);
-			*errmsg = errbuf;
-			return 1;
+				    "Sending of %ss to %ss been disabled by the network administrators",
+				    (notice ? "notice" : "message"), display);
 		}
+		*errmsg = errbuf;
+		return 1;
 	}
 
 	// No restrictions apply, process command as normal =]
@@ -385,22 +369,19 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 	}
 
 	rcmd = find_restrictions_bycmd(ovr->command->cmd);
-	if (rcmd)
+	if (rcmd && !rcmd_canbypass(client, rcmd))
 	{
-		if (rcmd->disable)
-		{
-			sendnumericfmt(client, ERR_UNKNOWNCOMMAND,
-			               "%s :This command is disabled by the network administrator",
-			               ovr->command->cmd);
-			return;
-		}
-		if (!rcmd_canbypass(client, rcmd))
+		if (rcmd->connect_delay)
 		{
 			sendnumericfmt(client, ERR_UNKNOWNCOMMAND,
 			               "%s :You must be connected for at least %ld seconds before you can use this command",
 			               ovr->command->cmd, rcmd->connect_delay);
-			return;
+		} else {
+			sendnumericfmt(client, ERR_UNKNOWNCOMMAND,
+			               "%s :This command is disabled by the network administrator",
+			               ovr->command->cmd);
 		}
+		return;
 	}
 
 	// No restrictions apply, process command as normal =]
