@@ -9,9 +9,10 @@ Fixes:
   on wrong key, but was also redirecting on correct key.
 
 Enhancements:
-* [[Spamfilter]] is now UTF8-aware. This means, among other things:
-  * Case insensitive matches work better. For example with extended
-    Latin, a pamfilter on "ę" now also matches "Ę".
+* [Spamfilter](https://www.unrealircd.org/docs/Spamfilter) is now UTF8-aware.
+  This means, among other things:
+  * Case insensitive matches work better. For example, with extended
+    Latin, a spamfilter on ```ę``` now also matches ```Ę```.
   * Other PCRE2 features such as [\p](https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC5)
     are now available. For example you can now set a spamfilter with the regex
     ```\p{Arabic}``` to block all Arabic script, or ```\p{Cyrillic}``` to
@@ -23,11 +24,11 @@ Enhancements:
     to using the UnrealIRCd-shipped-library version 10.34. The only
     downside to that is that compiling during ```./Config``` may take
     a little longer than usual.
-* If a chanop /INVITE's someone, it will now override ban forwards
+* If a chanop /INVITEs someone, it will now override ban forwards
   such as ```+b ~f:#forward:*!*@*```.
 
 Changes:
-* We now do parallel builds by default (-j4), unless the ```$MAKE```
+* We now do parallel builds by default (```make -j4```), unless the ```$MAKE```
   or ```$MAKEFLAGS``` environment variable is set.
 * Translation updates
 
