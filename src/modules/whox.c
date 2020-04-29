@@ -560,7 +560,7 @@ static void who_common_channel(Client *client, Channel *channel,
 static void who_global(Client *client, char *mask, int operspy, struct who_format *fmt)
 {
 	Client *acptr;
-	int maxmatches = WHOLIMIT ? WHOLIMIT : 100;
+	int maxmatches = IsOper(client) ? INT_MAX : WHOLIMIT;
 
 	/* first, list all matching INvisible clients on common channels
 	 * if this is not an operspy who
