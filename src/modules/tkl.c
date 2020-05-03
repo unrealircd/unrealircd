@@ -868,7 +868,7 @@ int tkl_config_run_except(ConfigFile *cf, ConfigEntry *ce, int configtype)
 	{
 		/* Default setting if no 'type' is specified: */
 		if (!strcmp(ce->ce_vardata, "ban"))
-			strlcpy(bantypes, "kgzZs", sizeof(bantypes));
+			strlcpy(bantypes, "kGzZs", sizeof(bantypes));
 		else if (!strcmp(ce->ce_vardata, "throttle"))
 			strlcpy(bantypes, "c", sizeof(bantypes));
 		else if (!strcmp(ce->ce_vardata, "blacklist"))

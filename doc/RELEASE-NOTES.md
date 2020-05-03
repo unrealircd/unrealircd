@@ -7,6 +7,8 @@ Fixes:
 * Crash on 32-bit machines in tkldb (on start or rehash)
 * Channel mode ```+L #forward``` and ```+k key```: should forward
   on wrong key, but was also redirecting on correct key.
+* [except ban { }](https://www.unrealircd.org/docs/Except_ban_block)
+  without 'type' was not exempting from gline.
 
 Enhancements:
 * [Spamfilter](https://www.unrealircd.org/docs/Spamfilter) is now UTF8-aware.
