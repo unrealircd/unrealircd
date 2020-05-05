@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_STRIPCOLOR;
 
 #define IsStripColor(channel)    (channel->mode.extmode & EXTCMODE_STRIPCOLOR)
 
-int stripcolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
+int stripcolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 char *stripcolor_prelocalpart(Client *client, Channel *channel, char *comment);
 char *stripcolor_prelocalquit(Client *client, char *comment);
 
@@ -73,7 +73,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int stripcolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
+int stripcolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
 {
 	Hook *h;
 	int i;

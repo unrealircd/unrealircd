@@ -1912,3 +1912,15 @@ void freemultiline(MultiLine *l)
 		safe_free(l);
 	}
 }
+
+/** Convert a sendtype to a command string */
+char *sendtype_to_cmd(SendType sendtype)
+{
+	if (sendtype == SEND_TYPE_PRIVMSG)
+		return "PRIVMSG";
+	if (sendtype == SEND_TYPE_NOTICE)
+		return "NOTICE";
+	if (sendtype == SEND_TYPE_TAGMSG)
+		return "TAGMSG";
+	return NULL;
+}

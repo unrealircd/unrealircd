@@ -71,6 +71,7 @@ R_MODULES= \
 	account-tag.so labeled-response.so link-security.so \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
 	echo-message.so userip-tag.so userhost-tag.so \
+	typing-indicator.so \
 	ident_lookup.so history.so
 
 MODULES=cloak.so $(R_MODULES)
@@ -609,6 +610,10 @@ userip-tag.so: userip-tag.c $(INCLUDES)
 userhost-tag.so: userhost-tag.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o userhost-tag.so userhost-tag.c
+
+typing-indicator.so: typing-indicator.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o typing-indicator.so typing-indicator.c
 
 require-module.so: require-module.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

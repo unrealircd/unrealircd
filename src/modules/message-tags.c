@@ -34,7 +34,6 @@ ModuleHeader MOD_HEADER
 long CAP_MESSAGE_TAGS = 0L;
 char *_mtags_to_string(MessageTag *m, Client *client);
 void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list);
-CMD_FUNC(cmd_tagmsg);
 
 MOD_TEST()
 {
@@ -55,7 +54,6 @@ MOD_INIT()
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "message-tags";
 	ClientCapabilityAdd(modinfo->handle, &cap, &CAP_MESSAGE_TAGS);
-	CommandAdd(modinfo->handle, "TAGMSG", cmd_tagmsg, 1, CMD_USER);
 	return MOD_SUCCESS;
 }
 
@@ -295,12 +293,4 @@ char *_mtags_to_string(MessageTag *m, Client *client)
 	buf[strlen(buf)-1] = '\0';
 
 	return buf;
-}
-
-/* Dummy handler for TAGMSG.
- * We do not permit user tags, so implementing a real TAGMSG makes no sense.
- * By having a dummy command we avoid clients from getting "Unknown command".
- */
-CMD_FUNC(cmd_tagmsg)
-{
 }

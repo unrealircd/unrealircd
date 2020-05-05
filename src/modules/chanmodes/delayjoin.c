@@ -30,7 +30,7 @@ int moded_part(Client *client, Channel *channel, MessageTag *mtags, char *commen
 int deny_all(Client *client, Channel *channel, char mode, char *para, int checkt, int what);
 int moded_chanmode(Client *client, Channel *channel,
                    MessageTag *mtags, char *modebuf, char *parabuf, time_t sendts, int samode);
-int moded_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice);
+int moded_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, SendType sendtype);
 char *moded_serialize(ModData *m);
 void moded_unserialize(char *str, ModData *m);
 
@@ -367,7 +367,7 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, cha
 	return 0;
 }
 
-int moded_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, int notice)
+int moded_prechanmsg(Client *client, Channel *channel, MessageTag *mtags, char *text, SendType sendtype)
 {
 	if ((channel_is_delayed(channel) || channel_is_post_delayed(channel)) && (moded_user_invisible(client, channel)))
 		clear_user_invisible_announce(channel, client, mtags);

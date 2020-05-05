@@ -51,9 +51,9 @@ RestrictedCommand *find_restrictions_bycmd(char *cmd);
 RestrictedCommand *find_restrictions_byconftag(char *conftag);
 int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rcmd_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
-int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
-int rcmd_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice);
-int rcmd_block_message(Client *client, char *text, int notice, char **errmsg, char *display, char *conftag);
+int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
+int rcmd_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
+int rcmd_block_message(Client *client, char *text, SendType sendtype, char **errmsg, char *display, char *conftag);
 CMD_OVERRIDE_FUNC(rcmd_override);
 
 // Globals
@@ -308,27 +308,27 @@ int rcmd_canbypass(Client *client, RestrictedCommand *rcmd)
 	return 0;
 }
 
-int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
+int rcmd_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
 {
-	if (rcmd_block_message(client, *msg, notice, errmsg, "channel", (notice ? "channel-notice" : "channel-message")))
+	if (rcmd_block_message(client, *msg, sendtype, errmsg, "channel", (sendtype == SEND_TYPE_NOTICE ? "channel-notice" : "channel-message")))
 		return HOOK_DENY;
 
 	return HOOK_CONTINUE;
 }
 
-int rcmd_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice)
+int rcmd_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype)
 {
 	// Need a few extra exceptions for user messages only =]
 	if ((client == target) || IsULine(target))
 		return HOOK_CONTINUE; /* bypass/exempt */
 
-	if (rcmd_block_message(client, *text, notice, errmsg, "user", (notice ? "private-notice" : "private-message")))
+	if (rcmd_block_message(client, *text, sendtype, errmsg, "user", (sendtype == SEND_TYPE_NOTICE ? "private-notice" : "private-message")))
 		return HOOK_DENY;
 
 	return HOOK_CONTINUE;
 }
 
-int rcmd_block_message(Client *client, char *text, int notice, char **errmsg, char *display, char *conftag)
+int rcmd_block_message(Client *client, char *text, SendType sendtype, char **errmsg, char *display, char *conftag)
 {
 	RestrictedCommand *rcmd;
 	static char errbuf[256];
@@ -340,6 +340,7 @@ int rcmd_block_message(Client *client, char *text, int notice, char **errmsg, ch
 	rcmd = find_restrictions_byconftag(conftag);
 	if (rcmd && !rcmd_canbypass(client, rcmd))
 	{
+		int notice = (sendtype == SEND_TYPE_NOTICE ? 1 : 0); // temporary hack FIXME !!!
 		if (rcmd->connect_delay)
 		{
 			ircsnprintf(errbuf, sizeof(errbuf),

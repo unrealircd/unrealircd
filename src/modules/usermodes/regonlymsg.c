@@ -35,7 +35,7 @@ ModuleHeader MOD_HEADER
 long UMODE_REGONLYMSG = 0L;
 
 /* Forward declarations */
-int regonlymsg_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice);
+int regonlymsg_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
                     
 MOD_INIT()
 {
@@ -57,7 +57,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int regonlymsg_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice)
+int regonlymsg_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype)
 {
 	if (IsRegOnlyMsg(target) && !IsServer(client) && !IsULine(client) && !IsLoggedIn(client))
 	{

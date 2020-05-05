@@ -44,8 +44,8 @@ int dccdeny_stats(Client *client, char *para);
 CMD_FUNC(cmd_dccdeny);
 CMD_FUNC(cmd_undccdeny);
 CMD_FUNC(cmd_svsfline);
-int dccdeny_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice);
-int dccdeny_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
+int dccdeny_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
+int dccdeny_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 int dccdeny_server_sync(Client *client);
 static ConfigItem_deny_dcc *dcc_isforbidden(Client *client, char *filename);
 static ConfigItem_deny_dcc *dcc_isdiscouraged(Client *client, char *filename);
@@ -489,7 +489,7 @@ int dccdeny_server_sync(Client *client)
 }
 
 /** Check if a DCC should be blocked (user-to-user) */
-int dccdeny_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice)
+int dccdeny_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype)
 {
 	if (**text == '\001')
 	{
@@ -507,7 +507,7 @@ int dccdeny_can_send_to_user(Client *client, Client *target, char **text, char *
 }
 
 /** Check if a DCC should be blocked (user-to-channel, unusual) */
-int dccdeny_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
+int dccdeny_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
 {
 	static char errbuf[512];
 
@@ -517,7 +517,7 @@ int dccdeny_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 		char *filename = get_dcc_filename(*msg);
 		if (filename && !can_dcc(client, channel->chname, NULL, filename, &err))
 		{
-			if (!IsDead(client) && !notice)
+			if (!IsDead(client) && (sendtype != SEND_TYPE_NOTICE))
 			{
 				strlcpy(errbuf, err, sizeof(errbuf));
 				*errmsg = errbuf;

@@ -32,7 +32,7 @@ Cmode_t EXTCMODE_NONOTICE;
 
 #define IsNoNotice(channel)    (channel->mode.extmode & EXTCMODE_NONOTICE)
 
-int nonotice_check_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
+int nonotice_check_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 
 MOD_TEST()
 {
@@ -65,13 +65,14 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int nonotice_check_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
+int nonotice_check_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
 {
 	Hook *h;
 	int i;
 
-	if (notice && IsNoNotice(channel) &&
-	   (!lp || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANADMIN))))
+	if ((sendtype == SEND_TYPE_NOTICE) &&
+	    IsNoNotice(channel) &&
+	    (!lp || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANADMIN))))
 	{
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
 		{

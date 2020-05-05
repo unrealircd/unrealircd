@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_NOCTCP;
 
 #define IsNoCTCP(channel)    (channel->mode.extmode & EXTCMODE_NOCTCP)
 
-int noctcp_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
+int noctcp_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 
 MOD_TEST()
 {
@@ -78,7 +78,7 @@ static int IsACTCP(char *s)
 	return 0;
 }
 
-int noctcp_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
+int noctcp_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
 {
 	if (IsNoCTCP(channel) && IsACTCP(*msg))
 	{

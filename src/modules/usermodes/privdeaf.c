@@ -17,7 +17,7 @@ ModuleHeader MOD_HEADER
 static long UMODE_PRIVDEAF = 0;
 static Umode *UmodePrivdeaf = NULL;
 
-int privdeaf_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice);
+int privdeaf_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype);
 
 MOD_INIT()
 {
@@ -47,7 +47,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int privdeaf_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, int notice)
+int privdeaf_can_send_to_user(Client *client, Client *target, char **text, char **errmsg, SendType sendtype)
 {
 	if ((target->umodes & UMODE_PRIVDEAF) && !IsOper(client) &&
 	    !IsULine(client) && !IsServer(client) && (client != target))

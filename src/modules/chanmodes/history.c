@@ -47,7 +47,7 @@ void history_chanmode_free_param(void *r);
 void *history_chanmode_dup_struct(void *r_in);
 int history_chanmode_sjoin_check(Channel *channel, void *ourx, void *theirx);
 int history_channel_destroy(Channel *channel, int *should_destroy);
-int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice);
+int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype);
 int history_join(Client *client, Channel *channel, MessageTag *mtags, char *parv[]);
 
 MOD_TEST()
@@ -490,7 +490,7 @@ int history_channel_destroy(Channel *channel, int *should_destroy)
 	return 0;
 }
 
-int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, int notice)
+int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix, char *target, MessageTag *mtags, char *text, SendType sendtype)
 {
 	char buf[512];
 	char source[64];
@@ -501,6 +501,10 @@ int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix,
 
 	/* Filter out CTCP / CTCP REPLY */
 	if ((*text == '\001') && strncmp(text+1, "ACTION", 6))
+		return 0;
+
+	/* Filter out TAGMSG */
+	if (sendtype == SEND_TYPE_TAGMSG)
 		return 0;
 
 	/* Lazy: if any prefix is addressed (eg: @#channel) then don't record it.
@@ -516,7 +520,7 @@ int history_chanmsg(Client *client, Channel *channel, int sendflags, int prefix,
 
 	snprintf(buf, sizeof(buf), ":%s %s %s :%s",
 		source,
-		notice ? "NOTICE" : "PRIVMSG",
+		sendtype_to_cmd(sendtype),
 		channel->chname,
 		text);
 

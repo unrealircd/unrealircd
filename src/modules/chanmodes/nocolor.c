@@ -34,7 +34,7 @@ Cmode_t EXTCMODE_NOCOLOR;
 
 #define IsNoColor(channel)    (channel->mode.extmode & EXTCMODE_NOCOLOR)
 
-int nocolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice);
+int nocolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype);
 char *nocolor_prelocalpart(Client *client, Channel *channel, char *comment);
 char *nocolor_prelocalquit(Client *client, char *comment);
 
@@ -85,7 +85,7 @@ static int IsUsingColor(char *s)
         return 0;
 }
 
-int nocolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, int notice)
+int nocolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, char **msg, char **errmsg, SendType sendtype)
 {
 	Hook *h;
 	int i;
