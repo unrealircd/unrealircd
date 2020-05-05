@@ -72,7 +72,8 @@ R_MODULES= \
 	message-ids.so plaintext-policy.so server-time.so sts.so \
 	echo-message.so userip-tag.so userhost-tag.so \
 	typing-indicator.so \
-	ident_lookup.so history.so
+	ident_lookup.so history.so \
+	targetfloodprot.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -630,6 +631,10 @@ ident_lookup.so: ident_lookup.c $(INCLUDES)
 history.so: history.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o history.so history.c
+
+targetfloodprot.so: targetfloodprot.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o targetfloodprot.so targetfloodprot.c
 
 #############################################################################
 # capabilities
