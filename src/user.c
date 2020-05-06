@@ -552,6 +552,7 @@ void set_targmax_defaults(void)
 	/* Set the defaults */
 	setmaxtargets("PRIVMSG", 4);
 	setmaxtargets("NOTICE", 1);
+	setmaxtargets("TAGMSG", 1);
 	setmaxtargets("NAMES", 1); // >1 is not supported
 	setmaxtargets("WHOIS", 1);
 	setmaxtargets("WHOWAS", 1); // >1 is not supported
