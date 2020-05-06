@@ -952,6 +952,8 @@ int floodprot_can_send_to_channel(Client *client, Channel *channel, Membership *
 	if (!MyUser(client))
 		return HOOK_CONTINUE;
 
+	if (sendtype == SEND_TYPE_TAGMSG)
+		return 0; // TODO: some TAGMSG specific limit? (1 of 2)
 
 	if (ValidatePermissionsForPath("channel:override:flood",client,NULL,channel,NULL) || !IsFloodLimit(channel) || is_skochanop(client, channel))
 		return HOOK_CONTINUE;
@@ -1065,6 +1067,9 @@ int floodprot_post_chanmsg(Client *client, Channel *channel, int sendflags, int 
 {
 	if (!IsFloodLimit(channel) || is_skochanop(client, channel) || IsULine(client))
 		return 0;
+
+	if (sendtype == SEND_TYPE_TAGMSG)
+		return 0; // TODO: some TAGMSG specific limit? (2 of 2)
 
 	/* HINT: don't be so stupid to reorder the items in the if's below.. you'll break things -- Syzop. */
 
