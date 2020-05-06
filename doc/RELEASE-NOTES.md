@@ -26,6 +26,16 @@ Enhancements:
     to using the UnrealIRCd-shipped-library version 10.34. The only
     downside to that is that compiling during ```./Config``` may take
     a little longer than usual.
+* New flood countermeasure,
+  [set::anti-flood::target-flood](https://www.unrealircd.org/docs/Set_block#set%3A%3Aanti-flood%3A%3Atarget-flood),
+  which limits flooding to channels and users. This is only meant as a
+  filter for high rate floods. You are still encouraged to use
+  [channel mode +f](https://www.unrealircd.org/docs/Anti-flood_features#Channel_mode_f)
+  in channels which give you more customized and fine-grained options
+  to deal with low- and medium-rate floods.
+* Support for IRCv3 [+draft/typing](https://ircv3.net/specs/client-tags/typing.html)
+  which adds "user is typing" support to channels and PM (if the client
+  supports it, of course).
 * If a chanop /INVITEs someone, it will now override ban forwards
   such as ```+b ~f:#forward:*!*@*```.
 
