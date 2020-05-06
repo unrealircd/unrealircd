@@ -8337,16 +8337,20 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					}
 					continue; /* required here, due to checknull directly below */
 				}
-				CheckNull(cepp);
 				if (!strcmp(cepp->ce_varname, "unknown-flood-bantime"))
 				{
+					CheckNull(cepp);
 					CheckDuplicate(cepp, anti_flood_unknown_flood_bantime, "anti-flood::unknown-flood-bantime");
 				}
-				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount")) {
+				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount"))
+				{
+					CheckNull(cepp);
 					CheckDuplicate(cepp, anti_flood_unknown_flood_amount, "anti-flood::unknown-flood-amount");
 				}
-				else if (!strcmp(cepp->ce_varname, "away-count")) {
+				else if (!strcmp(cepp->ce_varname, "away-count"))
+				{
 					int temp = atol(cepp->ce_vardata);
+					CheckNull(cepp);
 					CheckDuplicate(cepp, anti_flood_away_count, "anti-flood::away-count");
 					if (temp < 1 || temp > 255)
 					{
@@ -8355,7 +8359,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						errors++;
 					}
 				}
-				else if (!strcmp(cepp->ce_varname, "away-period")) {
+				else if (!strcmp(cepp->ce_varname, "away-period"))
+				{
+					CheckNull(cepp);
 					int temp = config_checkval(cepp->ce_vardata, CFG_TIME);
 					CheckDuplicate(cepp, anti_flood_away_period, "anti-flood::away-period");
 					if (temp < 10)
@@ -8368,6 +8374,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "away-flood"))
 				{
 					int cnt, period;
+					CheckNull(cepp);
 					if (settings.has_anti_flood_away_period)
 					{
 						config_warn("%s:%d: set::anti-flood::away-flood overrides set::anti-flood::away-period",
@@ -8394,6 +8401,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "nick-flood"))
 				{
 					int cnt, period;
+					CheckNull(cepp);
 					CheckDuplicate(cepp, anti_flood_nick_flood, "anti-flood::nick-flood");
 					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
 					    (cnt < 1) || (cnt > 255) || (period < 5))
@@ -8407,6 +8415,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "invite-flood"))
 				{
 					int cnt, period;
+					CheckNull(cepp);
 					CheckDuplicate(cepp, anti_flood_invite_flood, "anti-flood::invite-flood");
 					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
 					    (cnt < 1) || (cnt > 255) || (period < 5))
@@ -8420,6 +8429,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "knock-flood"))
 				{
 					int cnt, period;
+					CheckNull(cepp);
 					CheckDuplicate(cepp, anti_flood_knock_flood, "anti-flood::knock-flood");
 					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
 					    (cnt < 1) || (cnt > 255) || (period < 5))
@@ -8433,6 +8443,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "connect-flood"))
 				{
 					int cnt, period;
+					CheckNull(cepp);
 					CheckDuplicate(cepp, anti_flood_connect_flood, "anti-flood::connect-flood");
 					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
 					    (cnt < 1) || (cnt > 255) || (period < 1) || (period > 3600))
